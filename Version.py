@@ -1,0 +1,1 @@
+AppVerName="CrossMgr 0.18"
