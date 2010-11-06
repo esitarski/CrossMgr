@@ -25,7 +25,7 @@ import Utils
 import Model
 from setpriority import setpriority
 from Printing			import CrossMgrPrintout, getRaceCategories
-import pyExcelerator as pyXL
+import xlwt
 from ExportGrid			import ExportGrid
 import SimulationLapTimes
 from Version			import AppVerName
@@ -352,7 +352,7 @@ class MainWin( wx.Frame ):
 
 		xlFName = os.path.join( dName, os.path.basename(xlFName) )
 
-		wb = pyXL.Workbook()
+		wb = xlwt.Workbook()
 		for catName in getRaceCategories():
 			sheetCur = wb.add_sheet( re.sub('[:\\/?*\[\]]', ' ', catName) )
 			export = ExportGrid()

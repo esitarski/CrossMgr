@@ -115,7 +115,7 @@ class ExportGrid(object):
 			xPix += colWidth + wSpace
 		
 	def toExcelSheet( self, sheet ):
-        ''' Write the contents of the grid to an xlwt excel sheet. '''
+		''' Write the contents of the grid to an xlwt excel sheet. '''
 		titleStyle = xlwt.XFStyle()
 		titleStyle.font.bold = True
 		titleStyle.font.height += titleStyle.font.height / 2
