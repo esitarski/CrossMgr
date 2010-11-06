@@ -52,71 +52,19 @@ except ImportError:
 	def ShowSplashScreen():
 		pass
 
-class RecentFiles():
-	def __init__( self ):
-		self.fnamePersist = os.path.expanduser( '~/CrossMgrRecentFiles.txt' )
-		self.maxFiles = 10
-		self.idStart = 10000
-		try:
-			self.files = [ f.strip() for f in open(self.fnamePersist, 'rb').read().split('\n') if f != '' ]
-		except IOError:
-			self.files = []
-
-	def set( self, fname ):
-		if not fname:
-			return False
-
-		# If the file is already the last entry, ignore the request.
-		if self.files and self.files[0] == fname:
-			return False
-
-		# Remove the fname if it is already in the list.
-		try:
-			self.files.remove( fname )
-		except ValueError:
-			pass
-
-		# Insert it at the front.
-		self.files.insert( 0, fname )
-		if len(self.files) > self.maxFiles:
-			self.files = self.files[:self.maxFiles]
-
-		# Write out the files for next time.
-		try:
-			open( self.fnamePersist, 'wb' ).write( '\n'.join(self.files) )
-		except IOError:
-			pass
-		return True
-
-	def update( self, parent, menu, cbFunc ):
-		# Remove all the current recent files.
-		while True:
-			item = menu.FindItemByPosition( menu.GetMenuItemCount()-1 )
-			if item.IsSeparator():
-				break
-			menu.DestroyItem( item )
-
-		# Update the new entries
-		for i, f in enumerate(self.files):
-			menu.Append( self.idStart + i, '&%d: %s' % (i, f), f )
-			parent.Bind( wx.EVT_MENU, cbFunc, id=self.idStart + i )
-
-	def setUpdate( self, fname, parent, menu, cbFunc ):
-		if self.set(fname):
-			self.update( parent, menu, cbFunc )
-
-	def getRecentFName( self, id ):
-		try:
-			return self.files[id - self.idStart]
-		except IndexError:
-			return None
-
 class MainWin( wx.Frame ):
 	def __init__( self, parent, id = wx.ID_ANY, title='', size=(200,200) ):
 		wx.Frame.__init__(self, parent, id, title, size=size)
 
 		Utils.setMainWin( self )
 
+		# Add code to configure file history.
+		self.filehistory = wx.FileHistory(8)
+		self.config = wx.Config(appName="CrossMgr",
+								vendorName="SmartCyclingSolutions",
+								style=wx.CONFIG_USE_LOCAL_FILE)
+		self.filehistory.Load(self.config)
+		
 		self.fileName = None
 		self.numSelect = None
 
@@ -128,8 +76,6 @@ class MainWin( wx.Frame ):
 		self.simulateTimer = None
 		self.simulateSeen = set()
 
-		self.recentFiles = RecentFiles()
-
 		# Default print options.
 		self.printData = wx.PrintData()
 		self.printData.SetPaperId(wx.PAPER_LETTER)
@@ -139,23 +85,21 @@ class MainWin( wx.Frame ):
 		self.menuBar = wx.MenuBar(wx.MB_DOCKABLE)
 
 		# Start an id count to ensure that all the ids are unique.
-		idCur = 101
+		idCur = 1000000
 
 		#-----------------------------------------------------------------------
 		self.fileMenu = wx.Menu()
 
-		self.fileMenu.Append( idCur , "&New...", "Create a new race" )
-		self.Bind(wx.EVT_MENU, self.menuNew, id=idCur )
-		idCur += 1
+		self.fileMenu.Append( wx.ID_NEW , "&New...", "Create a new race" )
+		self.Bind(wx.EVT_MENU, self.menuNew, id=wx.ID_NEW )
 
 		self.fileMenu.Append( idCur , "New Nex&t...", "Create a new race starting from the current race" )
 		self.Bind(wx.EVT_MENU, self.menuNewNext, id=idCur )
 		idCur += 1
 
 		self.fileMenu.AppendSeparator()
-		self.fileMenu.Append( idCur , "&Open...", "Open a race" )
-		self.Bind(wx.EVT_MENU, self.menuOpen, id=idCur )
-		idCur += 1
+		self.fileMenu.Append( wx.ID_OPEN , "&Open...", "Open a race" )
+		self.Bind(wx.EVT_MENU, self.menuOpen, id=wx.ID_OPEN )
 
 		self.fileMenu.Append( idCur , "Open N&ext...", "Open the next race starting from the current race" )
 		self.Bind(wx.EVT_MENU, self.menuOpenNext, id=idCur )
@@ -163,17 +107,14 @@ class MainWin( wx.Frame ):
 
 		self.fileMenu.AppendSeparator()
 		
-		self.fileMenu.Append( idCur , "Page &Setup...", "Setup the print page" )
-		self.Bind(wx.EVT_MENU, self.menuPageSetup, id=idCur )
-		idCur += 1
+		self.fileMenu.Append( wx.ID_PAGE_SETUP , "Page &Setup...", "Setup the print page" )
+		self.Bind(wx.EVT_MENU, self.menuPageSetup, id=wx.ID_PAGE_SETUP )
 
-		self.fileMenu.Append( idCur , "P&review Results...", "Preview the results on screen" )
-		self.Bind(wx.EVT_MENU, self.menuPrintPreview, id=idCur )
-		idCur += 1
+		self.fileMenu.Append( wx.ID_PREVIEW , "P&review Results...", "Preview the results on screen" )
+		self.Bind(wx.EVT_MENU, self.menuPrintPreview, id=wx.ID_PREVIEW )
 
-		self.fileMenu.Append( idCur , "&Print Results...", "Print the results to a printer" )
-		self.Bind(wx.EVT_MENU, self.menuPrint, id=idCur )
-		idCur += 1
+		self.fileMenu.Append( wx.ID_PRINT , "&Print Results...", "Print the results to a printer" )
+		self.Bind(wx.EVT_MENU, self.menuPrint, id=wx.ID_PRINT )
 
 		self.fileMenu.AppendSeparator()
 
@@ -182,14 +123,19 @@ class MainWin( wx.Frame ):
 		idCur += 1
 
 		self.fileMenu.AppendSeparator()
-
-		self.fileMenu.Append( idCur , "E&xit", "Exit CrossMan" )
-		self.Bind(wx.EVT_MENU, self.menuExit, id=idCur )
-		idCur += 1
-
+		
+		recent = wx.Menu()
+		self.fileMenu.AppendMenu(wx.ID_ANY, "Recent Fil&es", recent)
+		self.filehistory.UseMenu( recent )
+		self.filehistory.AddFilesToMenu()
+		
 		self.fileMenu.AppendSeparator()
-		self.recentFiles.update( self, self.fileMenu, self.menuOpenRecentFile )
 
+		self.fileMenu.Append( wx.ID_EXIT , "E&xit", "Exit CrossMan" )
+		self.Bind(wx.EVT_MENU, self.menuExit, id=wx.ID_EXIT )
+		
+		self.Bind(wx.EVT_MENU_RANGE, self.menuFileHistory, id=wx.ID_FILE1, id2=wx.ID_FILE9)
+		
 		self.menuBar.Append( self.fileMenu, "&File" )
 
 		#-----------------------------------------------------------------------
@@ -223,9 +169,8 @@ class MainWin( wx.Frame ):
 		#-----------------------------------------------------------------------
 		self.helpMenu = wx.Menu()
 
-		self.helpMenu.Append( idCur , "&About...", "About CrossMgr..." )
-		self.Bind(wx.EVT_MENU, self.menuAbout, id=idCur )
-		idCur += 1
+		self.helpMenu.Append( wx.ID_ABOUT , "&About...", "About CrossMgr..." )
+		self.Bind(wx.EVT_MENU, self.menuAbout, id=wx.ID_ABOUT )
 
 		self.menuBar.Append( self.helpMenu, "&Help" )
 
@@ -431,6 +376,7 @@ class MainWin( wx.Frame ):
 		self.fileName = fileName
 		Model.setRace( Model.Race() )
 		properties.update()
+		self.updateRecentFiles()
 
 		race = Model.getRace()
 		importedCategories = False
@@ -496,6 +442,7 @@ class MainWin( wx.Frame ):
 		self.fileName = fileName
 		Model.newRace()
 		properties.update()
+		self.updateRecentFiles()
 
 		# Restore the previous categories.
 		race = Model.getRace()
@@ -518,6 +465,11 @@ class MainWin( wx.Frame ):
 		self.showPageName( 'Actions' )
 		self.refresh()
 
+	def updateRecentFiles( self ):
+		self.filehistory.AddFileToHistory(self.fileName)
+		self.filehistory.Save(self.config)
+		self.config.Flush()
+
 	def openRace( self, fileName ):
 		if not fileName:
 			return
@@ -528,7 +480,9 @@ class MainWin( wx.Frame ):
 			race = pickle.load( open(fileName, 'rb') )
 			self.fileName = fileName
 			Model.setRace( race )
-			self.recentFiles.setUpdate( fname=fileName, parent=self, menu=self.fileMenu, cbFunc=self.menuOpenRecentFile )
+			
+			self.updateRecentFiles()
+			
 			if race.isFinished():
 				self.showPageName( 'Results' )
 			self.refresh()
@@ -545,9 +499,12 @@ class MainWin( wx.Frame ):
 			self.openRace( dlg.GetPath() )
 		dlg.Destroy()
 
-	def menuOpenRecentFile( self, event ):
-		self.openRace( self.recentFiles.getRecentFName(event.GetId()) )
-
+	def menuFileHistory( self, event ):
+		fileNum = event.GetId() - wx.ID_FILE1
+		fileName = self.filehistory.GetHistoryFile(fileNum)
+		self.filehistory.AddFileToHistory(fileName)  # move up the list
+		self.openRace( fileName )
+		
 	def menuOpenNext( self, event ):
 		race = Model.getRace()
 
@@ -933,7 +890,7 @@ def MainLoop():
 	(options, args) = parser.parse_args()
 
 	app = wx.PySimpleApp()
-	mainWin = MainWin( None, title=AppVerName, size=(1100,800) )
+	mainWin = MainWin( None, title=AppVerName, size=(800,600) )
 	mainWin.Maximize( True )
 	mainWin.Show()
 
