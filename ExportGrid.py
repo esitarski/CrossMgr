@@ -1,6 +1,6 @@
 
-import  wx
-import pyExcelerator as pyXL
+import wx
+import xlwt
 import Utils
 import Model
 from ReadSignOnSheet import Fields
@@ -115,7 +115,8 @@ class ExportGrid(object):
 			xPix += colWidth + wSpace
 		
 	def toExcelSheet( self, sheet ):
-		titleStyle = pyXL.XFStyle()
+        ''' Write the contents of the grid to an xlwt excel sheet. '''
+		titleStyle = xlwt.XFStyle()
 		titleStyle.font.bold = True
 		titleStyle.font.height += titleStyle.font.height / 2
 
@@ -128,16 +129,16 @@ class ExportGrid(object):
 		
 		# Write the colnames and data.
 		for col, c in enumerate(self.colnames):
-			headerStyle = pyXL.XFStyle()
-			headerStyle.borders.bottom = pyXL.Borders.MEDIUM
+			headerStyle = xlwt.XFStyle()
+			headerStyle.borders.bottom = xlwt.Borders.MEDIUM
 			headerStyle.font.bold = True
-			headerStyle.alignment.horz = pyXL.Alignment.HORZ_LEFT if col in self.leftJustifyCols \
-																	else pyXL.Alignment.HORZ_RIGHT
-			headerStyle.alignment.wrap = pyXL.Alignment.WRAP_AT_RIGHT
+			headerStyle.alignment.horz = xlwt.Alignment.HORZ_LEFT if col in self.leftJustifyCols \
+																	else xlwt.Alignment.HORZ_RIGHT
+			headerStyle.alignment.wrap = xlwt.Alignment.WRAP_AT_RIGHT
 			
-			style = pyXL.XFStyle()
-			style.alignment.horz = pyXL.Alignment.HORZ_LEFT if col in self.leftJustifyCols \
-																	else pyXL.Alignment.HORZ_RIGHT
+			style = xlwt.XFStyle()
+			style.alignment.horz = xlwt.Alignment.HORZ_LEFT if col in self.leftJustifyCols \
+																	else xlwt.Alignment.HORZ_RIGHT
 			
 			sheet.write( rowTop, col, c, headerStyle )
 			for row, v in enumerate(self.data[col]):
