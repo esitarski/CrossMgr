@@ -341,14 +341,7 @@ class MainWin( wx.Frame ):
 		race = Model.race
 		if race is None:
 			return
-		if   race.raceNum == 1:
-			race.setActiveCategories( [0, 1, 2] )
-		elif race.raceNum == 2:
-			race.setActiveCategories( [3, 4, 5] )
-		elif race.raceNum == 3:
-			race.setActiveCategories( [6, 7] )
-		else:
-			race.setActiveCategories()
+		race.setActiveCategories()
 
 	def menuNew( self, event ):
 		dlg = PropertiesDialog(self, -1, 'Configure Race', style=wx.DEFAULT_DIALOG_STYLE )

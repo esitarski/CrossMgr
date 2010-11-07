@@ -142,7 +142,15 @@ def setMainWin( mw ):
 	
 def getMainWin():
 	return mainWin
-	
+
+def refresh():
+	if mainWin is not None:
+		mainWin.refresh()
+
+def refreshForecastHistory():
+	if mainWin is not None:
+		mainWin.forecastHistory.refresh()
+
 def writeRace():
 	if mainWin is not None:
 		mainWin.writeRace()

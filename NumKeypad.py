@@ -207,7 +207,7 @@ class NumKeypad( wx.Panel ):
 		rider.setStatus( Model.Rider.DNF )
 		self.numEdit.SetValue( None )
 		Model.resetCache()
-		self.refreshLaps()
+		Utils.refresh()
 	
 	def onPullPress( self, event ):
 		race = Model.getRace()
@@ -223,7 +223,7 @@ class NumKeypad( wx.Panel ):
 		rider.setStatus( Model.Rider.Pulled )
 		self.numEdit.SetValue( None )
 		Model.resetCache()
-		self.refreshLaps()
+		Utils.refresh()
 	
 	def onDNSPress( self, event ):
 		race = Model.getRace()
@@ -239,7 +239,7 @@ class NumKeypad( wx.Panel ):
 		rider.setStatus( Model.Rider.DNS )
 		self.numEdit.SetValue( None )
 		Model.resetCache()
-		self.refreshLaps()
+		Utils.refresh()
 	
 	def resetLaps( self, enable = False ):
 		infoFields = [

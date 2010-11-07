@@ -605,7 +605,7 @@ class Race(object):
 			if tDifference / tAverage > 0.1:	# If there is more than 10% difference, use the second lap.
 				t = tSecond
 			else:
-				t = max(tFirst, tSecond)		# Else, use the maximum of the two (aren't we nice!).
+				t = max(tFirst, tSecond)	# Else, use the maximum of the two (aren't we nice!).
 		else:
 			t = entries[iFirst].t
 		return t
@@ -810,10 +810,10 @@ class Race(object):
 		allCategories.sort()
 		return allCategories
 
-	def setActiveCategories( self, active = [] ):
+	def setActiveCategories( self, active = None ):
 		allCategories = self.getAllCategories()
 		for i, c in enumerate(allCategories):
-			c.active = True if i in active else False
+			c.active = True if active is None or i in active else False
 		self.setChanged()
 
 	def setCategories( self, nameStrTuples ):
