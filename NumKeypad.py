@@ -20,7 +20,7 @@ class NumKeypad( wx.Panel ):
 
 		rowCur = 1
 		
-		self.numEdit = wx.lib.intctrl.IntCtrl( self, 20, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=None, allow_none=True, min=1, max=9999 )
+		self.numEdit = wx.lib.intctrl.IntCtrl( self, 20, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=None, allow_none=True, min=0, max=9999 )
 		self.Bind( wx.EVT_TEXT_ENTER, self.onEnterPress, self.numEdit )
 		self.numEdit.SetFont( font )
 		gbs.Add( self.numEdit, pos=(rowCur,0), span=(1,3), flag=wx.EXPAND )
@@ -179,12 +179,23 @@ class NumKeypad( wx.Panel ):
 		t = self.numEdit.GetValue()
 		if t is not None:
 			self.numEdit.SetValue( int(t/10) if t > 9 else None )
-			
-	def onEnterPress( self, event = None ):
+	
+	def getRiderNum( self ):
 		num = self.numEdit.GetValue()
-		if num is None or num == '0':
-			self.numEdit.SetValue( None )
-		else:
+		if num is not None:
+			mask = Model.race.getCategoryMask() if Model.race else None
+			if mask:	# Add common prefix numbers to the entry.
+				s = str(num)
+				dLen = len(mask) - len(s)
+				if dLen > 0:
+					sAdjust = mask[:dLen] + s
+					sAdjust = sAdjust.replace( '.', '0' )
+					num = int(sAdjust)
+		return num
+	
+	def onEnterPress( self, event = None ):
+		num = self.getRiderNum()
+		if num is not None:
 			mainWin = Utils.getMainWin()
 			if mainWin is not None:
 				mainWin.forecastHistory.logNum(num)
@@ -198,10 +209,10 @@ class NumKeypad( wx.Panel ):
 		if not race:
 			return
 			
-		num = self.numEdit.GetValue()
+		num = self.getRiderNum()
 		if num is None:
 			return
-		if not Utils.MessageOKCancel(self, 'DNF rider %d?' % self.numEdit.GetValue(), 'Confirm Did Not FINISH', iconMask = wx.ICON_QUESTION ):
+		if not Utils.MessageOKCancel(self, 'DNF rider %d?' % num, 'Confirm Did Not FINISH', iconMask = wx.ICON_QUESTION ):
 			return
 		rider = race.getRider( num )
 		rider.setStatus( Model.Rider.DNF )
@@ -214,10 +225,10 @@ class NumKeypad( wx.Panel ):
 		if not race:
 			return
 			
-		num = self.numEdit.GetValue()
+		num = self.getRiderNum()
 		if num is None:
 			return
-		if not Utils.MessageOKCancel(self, 'Pull rider %d?' % self.numEdit.GetValue(), 'Confirm PULL Rider', iconMask = wx.ICON_QUESTION):
+		if not Utils.MessageOKCancel(self, 'Pull rider %d?' % num, 'Confirm PULL Rider', iconMask = wx.ICON_QUESTION):
 			return
 		rider = race.getRider( num )
 		rider.setStatus( Model.Rider.Pulled )
@@ -230,10 +241,10 @@ class NumKeypad( wx.Panel ):
 		if not race:
 			return
 			
-		num = self.numEdit.GetValue()
+		num = self.getRiderNum()
 		if num is None:
 			return
-		if not Utils.MessageOKCancel(self, 'DNS rider %d?' % self.numEdit.GetValue(), 'Confirm Did Not START', iconMask = wx.ICON_QUESTION):
+		if not Utils.MessageOKCancel(self, 'DNS rider %d?' % num, 'Confirm Did Not START', iconMask = wx.ICON_QUESTION):
 			return
 		rider = race.getRider( num )
 		rider.setStatus( Model.Rider.DNS )

@@ -509,24 +509,19 @@ class MainWin( wx.Frame ):
 			if not Utils.MessageOKCancel(self,	'The current race is still running.\nFinish it and continue?',
 												'Current race running', iconMask = wx.ICON_QUESTION ):
 				return
-			race.finishTime = datetime.datetime.now()
+			race.finishRaceNow()
 			self.writeRace()
 
 		path, file = os.path.split( self.fileName )
 		patRE = re.compile( '\-r[0-9]+\-' )
-		pos = patRE.search(file).start()
-		prefix = file[:pos+2] + '-r' + str(race.raceNum+1)
-		fileName = None
-		for f in os.listdir(path):
-			if f.startswith(prefix):
-				fileName = f
-				break
-		if fileName is None:
+		try:
+			pos = patRE.search(file).start()
+			prefix = file[:pos+2] + str(race.raceNum+1)
+			fileName = (f for f in os.listdir(path) if f.startswith(prefix)).next()
+			fileName = os.path.join( path, fileName )
+			self.openRace( fileName )
+		except (AttributeError, IndexError, StopIteration):
 			Utils.MessageOK(self, 'No next race.', 'No next race', iconMask=wx.ICON_ERROR )
-			return
-
-		fileName = os.path.join( path, fileName )
-		self.openRace( fileName )
 
 	def menuExit(self, event):
 		self.onCloseWindow( event )

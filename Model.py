@@ -9,6 +9,7 @@ import math
 import copy
 import operator
 import sys
+from os.path import commonprefix
 
 maxInterpolateTime = 2.0*60.0*60.0	# 2 hours.
 
@@ -51,10 +52,29 @@ class Category(object):
 
 	catStr = property(_getStr, _setStr)
 
+	def getMask( self ):
+		''' Return the common number prefix for all intervals (None if non-existent). '''
+		mask = None
+		for i in self.intervals:
+			for k in i:
+				num = str(k)
+				if len(num) < 3:				# No mask for 1 or 2-digit numbers
+					return None
+				if mask is None:
+					mask = num
+				elif len(mask) != len(num):		# No mask for numbers of different lengths
+					return None
+				else:
+					cp = commonprefix([mask, num])
+					if not cp:
+						return None
+					mask = cp.ljust(len(mask), '.')
+		return mask
+
 	def __init__( self, active, name, catStr = '', startOffset = '00:00', numLaps = None, sequence = 0 ):
 		self.active = False
 		active = str(active).strip()
-		if active and 'TtYy1'.find(str(active)[0]) >= 0:
+		if active and active[0] in 'TtYy1':
 			self.active = True
 		self.name = name
 		self.catStr = catStr
@@ -805,6 +825,34 @@ class Race(object):
 		activeCategories.sort()
 		return activeCategories
 
+	def setCategoryMask( self ):
+		self.categoryMask = ''
+		
+		masks = []
+		for c in self.categories.itervalues():
+			if not c.active:
+				continue
+			maskCur = c.getMask()
+			if maskCur is None:
+				return
+			masks.append( maskCur )
+		
+		if not masks:
+			return
+
+		maskLen = len(masks[0])
+		if any( len(m) != maskLen for m in masks ):
+			return
+
+		cp = commonprefix( masks )
+		mask = cp.ljust( maskLen, '.' )
+		self.categoryMask = mask
+
+	def getCategoryMask( self ):
+		if getattr(self, 'categoryMask', None) is None:
+			self.setCategoryMask()
+		return self.categoryMask
+
 	def getAllCategories( self ):
 		allCategories = [c for c in self.categories.itervalues()]
 		allCategories.sort()
@@ -823,6 +871,8 @@ class Race(object):
 		if self.categories != newCategories:
 			self.categories = newCategories
 			self.setChanged()
+			
+		self.setCategoryMask()
 
 	def exportCategories( self, fp ):
 		for c in self.categories.itervalues():
@@ -1043,7 +1093,7 @@ if __name__ == '__main__':
 	rider = r.getRider( 10 )
 	entries = rider.interpolate( 11 )
 	print [(Utils.SecondsToMMSS(e.t), e.interp) for e in entries]
-	sys.exit( 0 )
+	#sys.exit( 0 )
 	
 	r.addTime( 10,  5 )
 	#r.addTime( 10, 10 )
@@ -1064,11 +1114,14 @@ if __name__ == '__main__':
 	'''
 
 	c = Category(True, 'test', '100-199,205,-50', '00:00', None)
-	r.setCategories( [(True, 'test', '100-199,205,-50', '00:00', None)] )
-	print r.categories
-	print r.getCategories()
-	#c = r.getCategories()[0]
-	print c
-	print c.matches(150), c.matches(110), c.matches(205), c.matches(50)
-
+	print 'mask=', c.getMask()
+	c = Category(True, 'test', '100-199,-150', None)
+	print 'mask=', c.getMask()
+	c = Category(True, 'test', '1400-1499,-1450', None)
+	print 'mask=', c.getMask()
+	
+	r.setCategories( [	(True, 'test1', '1100-1199', '00:00', None),
+						(True, 'test2', '1200-1299', '00:00', None),
+						(True, 'test3', '1300-1399', '00:00', None)] )
+	print r.getCategoryMask()
 
