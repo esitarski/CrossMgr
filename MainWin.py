@@ -259,12 +259,16 @@ class MainWin( wx.Frame ):
 
 	def menuPrint( self, event ):
 		pdd = wx.PrintDialogData(self.printData)
-		pdd.SetToPage(1)
+		pdd.SetAllPages( 1 )
+		pdd.EnablePageNumbers( 0 )
+		pdd.EnableHelp( 0 )
+		
 		printer = wx.Printer(pdd)
 		printout = CrossMgrPrintout()
 
 		if not printer.Print(self, printout, True):
-			Utils.MessageOK(self, "There was a printer problem.\nCheck your printer setup.", "Printing",iconMask=wx.ICON_ERROR)
+			if printer.GetLastError() == wx.PRINTER_ERROR:
+				Utils.MessageOK(self, "There was a printer problem.\nCheck your printer setup.", "Printer Error",iconMask=wx.ICON_ERROR)
 		else:
 			self.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
 		printout.Destroy()
