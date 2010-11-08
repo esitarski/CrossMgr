@@ -267,7 +267,8 @@ class Rider(object):
 
 		if len(iTimes) == 2:
 			# If only one lap is known, rely on the global average.
-			return getRace().getAverageLapTime()
+			#return getRace().getAverageLapTime()
+			return iTimes[-1]
 
 		# Ignore the first lap time as there is often a staggered start.
 		if len(iTimes) > 2:
