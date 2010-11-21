@@ -2,6 +2,7 @@ from distutils.core import setup
 import py2exe
 import os
 import shutil
+import zipfile
 
 setup( windows=
 			[
@@ -45,10 +46,19 @@ cmd = '"' + inno + '" ' + 'CrossMgr.iss'
 print cmd
 os.system( cmd )
 
-import shutil
+# Create versioned executable.
 from Version import AppVerName
 vNum = AppVerName.split()[1]
 vNum = vNum.replace( '.', '_' )
 newExeName = 'CrossMgr_Setup_v' + vNum + '.exe'
 shutil.copy( 'install\\CrossMgr_Setup.exe', 'install\\' + newExeName )
 print 'executable copied to: ' + newExeName
+
+# Create comprssed executable.
+os.chdir( 'install' )
+newExeName = os.path.basename( newExeName )
+newZipName = newExeName.replace( '.exe', '.zip' )
+z = zipfile.ZipFile(newZipName, "w")
+z.write( newExeName )
+z.close()
+print 'executable compressed.'
