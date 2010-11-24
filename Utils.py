@@ -157,3 +157,7 @@ def writeRace():
 	
 def isMainWin():
 	return mainWin is not None
+	
+if __name__ == '__main__':
+	hd = getHomeDir()
+	open( os.path.join(hd, 'Test.txt'), 'w' )

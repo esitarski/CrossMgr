@@ -84,26 +84,23 @@ class MainWin( wx.Frame ):
 		# Configure the main menu.
 		self.menuBar = wx.MenuBar(wx.MB_DOCKABLE)
 
-		# Start an id count to ensure that all the ids are unique.
-		idCur = 1000000
-
 		#-----------------------------------------------------------------------
 		self.fileMenu = wx.Menu()
 
 		self.fileMenu.Append( wx.ID_NEW , "&New...", "Create a new race" )
 		self.Bind(wx.EVT_MENU, self.menuNew, id=wx.ID_NEW )
 
+		idCur = wx.NewId()
 		self.fileMenu.Append( idCur , "New Nex&t...", "Create a new race starting from the current race" )
 		self.Bind(wx.EVT_MENU, self.menuNewNext, id=idCur )
-		idCur += 1
 
 		self.fileMenu.AppendSeparator()
 		self.fileMenu.Append( wx.ID_OPEN , "&Open...", "Open a race" )
 		self.Bind(wx.EVT_MENU, self.menuOpen, id=wx.ID_OPEN )
 
+		idCur = wx.NewId()
 		self.fileMenu.Append( idCur , "Open N&ext...", "Open the next race starting from the current race" )
 		self.Bind(wx.EVT_MENU, self.menuOpenNext, id=idCur )
-		idCur += 1
 
 		self.fileMenu.AppendSeparator()
 		
@@ -118,9 +115,9 @@ class MainWin( wx.Frame ):
 
 		self.fileMenu.AppendSeparator()
 
+		idCur = wx.NewId()
 		self.fileMenu.Append( idCur , "&Export Results to Excel...", "Export as an Excel Spreadsheet" )
 		self.Bind(wx.EVT_MENU, self.menuExportToExcel, id=idCur )
-		idCur += 1
 
 		self.fileMenu.AppendSeparator()
 		
@@ -141,28 +138,28 @@ class MainWin( wx.Frame ):
 		#-----------------------------------------------------------------------
 		self.dataMgmtMenu = wx.Menu()
 
+		idCur = wx.NewId()
 		self.dataMgmtMenu.Append( idCur , "&Link to External Excel Data...", "Link to information in an Excel spreadsheet" )
 		self.Bind(wx.EVT_MENU, self.menuLinkExcel, id=idCur )
-		idCur += 1
 		
 		self.dataMgmtMenu.AppendSeparator()
 
+		idCur = wx.NewId()
 		self.dataMgmtMenu.Append( idCur , "&Import Categories from File...", "Import Categories from File" )
 		self.Bind(wx.EVT_MENU, self.menuImportCategories, id=idCur )
-		idCur += 1
 
+		idCur = wx.NewId()
 		self.dataMgmtMenu.Append( idCur , "&Export Categories to File...", "Export Categories to File" )
 		self.Bind(wx.EVT_MENU, self.menuExportCategories, id=idCur )
-		idCur += 1
 
 		self.menuBar.Append( self.dataMgmtMenu, "&DataMgmt" )
 
 		#-----------------------------------------------------------------------
 		self.demoMenu = wx.Menu()
 
+		idCur = wx.NewId()
 		self.demoMenu.Append( idCur , "&Simulate Race...", "Simulate a race" )
 		self.Bind(wx.EVT_MENU, self.menuSimulate, id=idCur )
-		idCur += 1
 
 		self.menuBar.Append( self.demoMenu, "Dem&o" )
 

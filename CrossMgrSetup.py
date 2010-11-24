@@ -17,8 +17,14 @@ distDir = 'dist'
 
 # Copy additional dlls to distribution folder.
 wxHome = r'C:\Python26\Lib\site-packages\wx-2.8-msw-ansi\wx'
-shutil.copy( os.path.join(wxHome, 'MSVCP71.dll'), distDir )
-shutil.copy( os.path.join(wxHome, 'gdiplus.dll'), distDir )
+try:
+	shutil.copy( os.path.join(wxHome, 'MSVCP71.dll'), distDir )
+except:
+	pass
+try:
+	shutil.copy( os.path.join(wxHome, 'gdiplus.dll'), distDir )
+except:
+	pass
 
 # Add images to the distribution folder.
 
