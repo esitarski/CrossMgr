@@ -15,6 +15,7 @@ from ForecastHistory	import ForecastHistory
 from NumKeypad			import NumKeypad
 from Actions			import Actions
 from Stats				import Stats
+from Gantt				import Gantt
 from History			import History
 from RiderDetail		import RiderDetail
 from Results			import Results
@@ -214,6 +215,9 @@ class MainWin( wx.Frame ):
 
 		self.categories		= Categories(	self.notebook )
 		addPage( self.categories,'Categories' )
+
+		self.gantt			= Gantt(		self.notebook )
+		addPage( self.gantt,     'Chart' )
 
 		self.properties		= Properties(	self.notebook )
 		addPage( self.properties,'Properties' )
