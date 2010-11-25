@@ -89,10 +89,9 @@ class Histogram(wx.PyControl):
 		self.partitionBars( binsBest )
 		
 	def SetData( self, data ):
-		if not data:
-			self.bars = None
-			self.data = None
-		else:
+		self.bars = None
+		self.data = None
+		if data:
 			self.data = [float(x) for x in data]
 			self.dataMax = max(self.data)
 			self.dataMin = min(self.data)

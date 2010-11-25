@@ -78,11 +78,10 @@ class LineGraph(wx.PyControl):
 		
 		* labels are the names of the series.  Optional.
 		"""
-		if not data or not any( s for s in data ):
-			self.data = None
-			self.interpolated = None
-			self.labels = None
-		else:
+		self.data = None
+		self.interpolated = None
+		self.labels = None
+		if data and any( s for s in data ):
 			# Reverse the sequence of the data so we plot the 1st series on top.
 			self.data = [[max(float(x),0.0) for x in s] for s in data]
 			self.data.reverse()		# Ensures that the first series will be drawn last.
