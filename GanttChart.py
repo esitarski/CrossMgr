@@ -1,10 +1,25 @@
 import wx
 import random
 import math
-import bisect
-import copy
 import sys
+import bisect
+import Utils
 
+havePopupWindow = 1
+if wx.Platform == '__WXMAC__':
+	havePopupWindow = 0
+	wx.PopupWindow = wx.PopupTransientWindow = wx.Window
+	
+class BarInfoPopup( wx.PopupTransientWindow ):
+    """Shows Specific Rider and Lap information."""
+    def __init__(self, parent, style, text):
+		wx.PopupTransientWindow.__init__(self, parent, style)
+		self.SetBackgroundColour(wx.WHITE)
+		border = 10
+		st = wx.StaticText(self, -1, text, pos=(border/2,border/2))
+		sz = st.GetBestSize()
+		self.SetSize( (sz.width+border, sz.height+border) )
+		
 class GanttChart(wx.PyControl):
 	def __init__(self, parent, id=wx.ID_ANY, startAtZero = False, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
@@ -51,7 +66,8 @@ class GanttChart(wx.PyControl):
 		self.Bind(wx.EVT_PAINT, self.OnPaint)
 		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
 		self.Bind(wx.EVT_SIZE, self.OnSize)
-		
+		self.Bind(wx.EVT_LEFT_UP, self.OnLeftClick)
+
 	def DoGetBestSize(self):
 		return wx.Size(100, 50)
 
@@ -79,7 +95,7 @@ class GanttChart(wx.PyControl):
 
 	def SetData( self, data, labels = None, nowTime = None ):
 		"""
-		* data is a list of lists.  Each list is a list of lap times.		
+		* data is a list of lists.  Each list is a list of times.		
 		* labels are the names of the series.  Optional.
 		"""
 		self.data = None
@@ -89,7 +105,7 @@ class GanttChart(wx.PyControl):
 			self.data = data
 			self.dataMax = max(max(s) if s else -sys.float_info.max for s in self.data)
 			if labels:
-				self.labels = labels
+				self.labels = [str(lab) for lab in labels]
 				if len(self.labels) < len(self.data):
 					self.labels = self.labels + [None] * (len(self.data) - len(self.labels))
 				elif len(self.labels) > len(self.data):
@@ -106,6 +122,28 @@ class GanttChart(wx.PyControl):
 	def OnSize(self, event):
 		self.Refresh()
 		
+	def OnLeftClick( self, event ):
+		if getattr(self, 'empty', True):
+			return
+		x, y = event.GetPositionTuple()
+		y -= self.barHeight if self.drawNowTime else 0
+		x -= self.labelsWidth
+		iRider = int(y / self.barHeight)
+		if not 0 <= iRider < len(self.data):
+			return
+		iLap = bisect.bisect_left( self.data[iRider], x / self.xFactor )
+		if not 1 <= iLap < len(self.data[iRider]):
+			return
+			
+		bip = BarInfoPopup(self, wx.SIMPLE_BORDER,
+								'Rider: %s  Lap: %d' % (self.labels[iRider] if self.labels else str(iRider), iLap) )
+
+		xPos, yPos = event.GetPositionTuple()
+		width, height = bip.GetClientSize()
+		pos = self.ClientToScreen( (xPos - width, yPos - height) )
+		bip.Position( pos, (0,0) )
+		bip.Popup()
+	
 	def Draw(self, dc):
 		size = self.GetClientSize()
 		width = size.width
@@ -117,10 +155,17 @@ class GanttChart(wx.PyControl):
 		dc.Clear()
 		
 		if not self.data or width < 50 or height < 50:
+			self.empty = True
 			return
+		self.empty = False
 
-		barHeight = int(float(height) / float(len(self.data)))
+		drawNowTime = False
+		if self.nowTime:
+			drawNowTime = True
+			
+		barHeight = int(float(height) / float(len(self.data) + (2 if drawNowTime else 0)))
 		if barHeight < 4:
+			self.empty = True
 			return
 		if barHeight > 50:
 			barHeight = 50
@@ -148,11 +193,12 @@ class GanttChart(wx.PyControl):
 		
 		brushBar = wx.Brush( wx.Color(0,0,0) )
 		
-		xFactor = float(width - labelsWidth) / float(self.dataMax)
-		yLast = 0
+		xFactor = float(width - labelsWidth * 2) / float(self.dataMax)
+		yLast = barHeight if drawNowTime else 0
 		for i, s in enumerate(self.data):
-			yCur = (i+1) * barHeight
+			yCur = yLast + barHeight
 			xLast = labelsWidth
+			xCur = xLast
 			for j, t in enumerate(s):
 				xCur = int(labelsWidth + t * xFactor)
 				brushBar.SetColour( self.colours[j%len(self.colours)] )
@@ -160,16 +206,33 @@ class GanttChart(wx.PyControl):
 				dc.DrawRectangle( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 )
 				xLast = xCur
 			
+			# Draw the last empty bar.
+			xCur = int(labelsWidth + self.dataMax * xFactor)
+			brushBar.SetColour( wx.WHITE )
+			dc.SetBrush( brushBar )
+			dc.DrawRectangle( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 )
+			
 			if drawLabels:
 				labelWidth = dc.GetTextExtent( self.labels[i] )[0]
-				dc.DrawText( self.labels[i], textWidth - labelWidth, yLast)
+				dc.DrawText( self.labels[i], textWidth - labelWidth, yLast )
+				dc.DrawText( self.labels[i], width - labelsWidth + legendSep, yLast )
 			yLast = yCur
 			
-		if self.nowTime:
+		if drawNowTime:
 			x = int(labelsWidth + self.nowTime * xFactor)
 			dc.SetPen( wx.Pen(wx.Color(200,200,200), 4) )
-			dc.DrawLine( x, 0, x, height )
-				
+			dc.DrawLine( x, barHeight - 4, x, yLast + 4 )
+			nowTimeStr = Utils.formatTime( self.nowTime )
+			labelWidth = dc.GetTextExtent( nowTimeStr )[0]
+			dc.DrawText( nowTimeStr, x - labelWidth / 2, 0 )
+			dc.DrawText( nowTimeStr, x - labelWidth / 2, yLast )
+
+		self.xFactor = xFactor
+		self.barHeight = barHeight
+		self.drawNowTime = drawNowTime
+		self.drawLabels = drawLabels
+		self.labelsWidth = labelsWidth
+			
 	def OnEraseBackground(self, event):
 		# This is intentionally empty, because we are using the combination
 		# of wx.BufferedPaintDC + an empty OnEraseBackground event to
