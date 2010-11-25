@@ -157,7 +157,7 @@ class GanttChart(wx.PyControl):
 				xCur = int(labelsWidth + t * xFactor)
 				brushBar.SetColour( self.colours[j%len(self.colours)] )
 				dc.SetBrush( brushBar )
-				dc.DrawRectangle( xLast, yLast, xCur - xLast, yCur - yLast-2 )
+				dc.DrawRectangle( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 )
 				xLast = xCur
 			
 			if drawLabels:
