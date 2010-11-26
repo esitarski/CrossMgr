@@ -72,7 +72,7 @@ class Categories( wx.Panel ):
 		cols += 1 
 
 		self.grid = gridlib.Grid( self )
-		colnames = ['Active', 'Name', 'Numbers', 'Start Offset', 'Race Laps']
+		colnames = ['Active', 'Name', 'Numbers', 'Start Offset (MM:SS)', 'Race Laps']
 		self.activeColumn = colnames.index( 'Active' )
 		self.grid.CreateGrid( 0, len(colnames) )
 		self.grid.SetRowLabelSize(0)

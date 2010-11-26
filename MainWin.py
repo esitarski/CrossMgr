@@ -640,7 +640,7 @@ Continue?''' % fName, 'Simulate a Race', iconMask = wx.ICON_QUESTION ):
 		race.memo = ''
 		race.minutes = self.raceMinutes
 		race.raceNum = 1
-		race.setCategories( [(True, 'Junior', '100-199', '00:00:00', None), (True, 'Senior','200-299', '00:00:00', None)] )
+		race.setCategories( [(True, 'Junior', '100-199', '00:00', None), (True, 'Senior','200-299', '00:15', None)] )
 		self.writeRace()
 		self.showPageName( 'History' )
 		self.refresh()

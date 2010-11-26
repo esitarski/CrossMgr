@@ -52,13 +52,14 @@ class GanttChart(wx.PyControl):
 		self.startAtZero = startAtZero
 		
 		self.colours = [
+			wx.Colour(0,0,0),
 			wx.Colour(255, 0, 0),
 			wx.Colour(0, 255, 0),
 			wx.Colour(0, 0, 255),
 			wx.Colour(255, 255, 0),
 			wx.Colour(255, 0, 255),
 			wx.Colour(0, 255, 255),
-			wx.Colour(0, 0, 0) ]
+			 ]
 			
 		# Bind the events related to our control: first of all, we use a
 		# combination of wx.BufferedPaintDC and an empty handler for
@@ -126,7 +127,7 @@ class GanttChart(wx.PyControl):
 		if getattr(self, 'empty', True):
 			return
 		x, y = event.GetPositionTuple()
-		y -= self.barHeight if self.drawNowTime else 0
+		y -= self.barHeight
 		x -= self.labelsWidth
 		iRider = int(y / self.barHeight)
 		if not 0 <= iRider < len(self.data):
@@ -151,6 +152,7 @@ class GanttChart(wx.PyControl):
 		
 		backColour = self.GetBackgroundColour()
 		backBrush = wx.Brush(backColour, wx.SOLID)
+		backPen = wx.Pen(backColour, 0)
 		dc.SetBackground(backBrush)
 		dc.Clear()
 		
@@ -159,33 +161,56 @@ class GanttChart(wx.PyControl):
 			return
 		self.empty = False
 
-		drawNowTime = False
-		if self.nowTime:
-			drawNowTime = True
-			
-		barHeight = int(float(height) / float(len(self.data) + (2 if drawNowTime else 0)))
+		barHeight = int(float(height) / float(len(self.data) + 2))
 		if barHeight < 4:
 			self.empty = True
 			return
-		if barHeight > 50:
-			barHeight = 50
-		
+		barHeight = min( barHeight, 40 )
+
 		font = wx.FontFromPixelSize( wx.Size(0,barHeight - 1), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		dc.SetFont( font )
 		textWidth, textHeight = dc.GetTextExtent( '0000' )
 		
-		drawLabels = False
-		labelsWidth = 0
 		legendSep = 4			# Separations between legend entries and the Gantt bars.
-		if self.labels:
-			labelsWidth = textWidth + legendSep
-			drawLabels = True
+		labelsWidth = textWidth + legendSep
+		drawLabels = True
 			
 		if labelsWidth > width / 2:
 			labelsWidth = 0
 			drawLabels = False
 
+		xLeft = labelsWidth
+		xRight = width - labelsWidth
+		yBottom = barHeight * (len(self.data) + 1)
+		yTop = barHeight
+
+		fontLegend = wx.FontFromPixelSize( wx.Size(0,barHeight*.75), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		dc.SetFont( fontLegend )
+		textWidth, textHeight = dc.GetTextExtent( '00:00' if self.dataMax < 60*60 else '00:00:00' )
+			
+		# Draw the horizontal labels.
+		# Find some reasonable tickmarks for the x axis.
+		numLabels = (xRight - xLeft) / (textWidth * 1.5)
+		d = self.dataMax / float(numLabels)
+		intervals = [1, 2, 5, 10, 15, 20, 30, 1*60, 2*60, 5*60, 10*60, 15*60, 20*60, 30*60, 1*60*60, 2*60*60, 4*60*60, 8*60*60, 24*60*60]
+		d = intervals[bisect.bisect_left(intervals, d, 0, len(intervals)-1)]
+		dFactor = (xRight - xLeft) / float(self.dataMax)
+		dc.SetPen(wx.Pen('light gray', 1))
+		for t in xrange(0, int(self.dataMax), d):
+			x = xLeft + t * dFactor
+			if t < 60*60:
+				s = '%d:%02d' % ((t / 60), t%60)
+			else:
+				s = '%d:%02d:%02d' % (t/(60*60), (t / 60)%60, t%60)
+			w, h = dc.GetTextExtent(s)
+			dc.DrawText( s, x - w/2, yBottom + 4)
+			dc.DrawText( s, x - w/2, 0 + 4 )
+			dc.DrawLine( x, yBottom+4, x, yTop-4 )
+		
 		# Draw the Gantt chart.
+		dc.SetFont( font )
+		textWidth, textHeight = dc.GetTextExtent( '0000' )
+
 		penBar = wx.Pen( wx.Colour(128,128,128), 1 )
 		penBar.SetCap( wx.CAP_BUTT )
 		penBar.SetJoin( wx.JOIN_MITER )
@@ -194,14 +219,17 @@ class GanttChart(wx.PyControl):
 		brushBar = wx.Brush( wx.Color(0,0,0) )
 		
 		xFactor = float(width - labelsWidth * 2) / float(self.dataMax)
-		yLast = barHeight if drawNowTime else 0
+		yLast = barHeight
 		for i, s in enumerate(self.data):
 			yCur = yLast + barHeight
 			xLast = labelsWidth
 			xCur = xLast
 			for j, t in enumerate(s):
 				xCur = int(labelsWidth + t * xFactor)
-				brushBar.SetColour( self.colours[j%len(self.colours)] )
+				if j == 0:
+					brushBar.SetColour( wx.WHITE )
+				else:
+					brushBar.SetColour( self.colours[j%len(self.colours)] )
 				dc.SetBrush( brushBar )
 				dc.DrawRectangle( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 )
 				xLast = xCur
@@ -212,25 +240,35 @@ class GanttChart(wx.PyControl):
 			dc.SetBrush( brushBar )
 			dc.DrawRectangle( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 )
 			
-			if drawLabels:
-				labelWidth = dc.GetTextExtent( self.labels[i] )[0]
-				dc.DrawText( self.labels[i], textWidth - labelWidth, yLast )
-				dc.DrawText( self.labels[i], width - labelsWidth + legendSep, yLast )
+			labelWidth = dc.GetTextExtent( self.labels[i] )[0]
+			dc.DrawText( self.labels[i], textWidth - labelWidth, yLast )
+			dc.DrawText( self.labels[i], width - labelsWidth + legendSep, yLast )
 			yLast = yCur
 			
-		if drawNowTime:
-			x = int(labelsWidth + self.nowTime * xFactor)
-			dc.SetPen( wx.Pen(wx.Color(200,200,200), 4) )
-			dc.DrawLine( x, barHeight - 4, x, yLast + 4 )
+		if self.nowTime:
 			nowTimeStr = Utils.formatTime( self.nowTime )
-			labelWidth = dc.GetTextExtent( nowTimeStr )[0]
+			labelWidth, labelHeight = dc.GetTextExtent( nowTimeStr )	
+			x = int(labelsWidth + self.nowTime * xFactor)
+			
+			ntColour = '#339966'
+			dc.SetPen( wx.Pen(ntColour, 6) )
+			dc.DrawLine( x, barHeight - 4, x, yLast + 4 )
+			dc.SetPen( wx.Pen(wx.WHITE, 2) )
+			dc.DrawLine( x, barHeight - 4, x, yLast + 4 )
+			
+			dc.SetBrush( wx.Brush(ntColour) )
+			dc.SetPen( wx.Pen(ntColour,1) )
+			rect = wx.Rect( x - labelWidth/2-2, 0, labelWidth+4, labelHeight )
+			dc.DrawRectangleRect( rect )
+			rect.SetY( yLast+2 )
+			dc.DrawRectangleRect( rect )
+
+			dc.SetTextForeground( wx.WHITE )
 			dc.DrawText( nowTimeStr, x - labelWidth / 2, 0 )
-			dc.DrawText( nowTimeStr, x - labelWidth / 2, yLast )
+			dc.DrawText( nowTimeStr, x - labelWidth / 2, yLast + 2 )
 
 		self.xFactor = xFactor
 		self.barHeight = barHeight
-		self.drawNowTime = drawNowTime
-		self.drawLabels = drawLabels
 		self.labelsWidth = labelsWidth
 			
 	def OnEraseBackground(self, event):
