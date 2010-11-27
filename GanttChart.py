@@ -111,8 +111,8 @@ class GanttChart(wx.PyControl):
 		self.Refresh()
 	
 	def OnPaint(self, event):
-		#dc = wx.BufferedPaintDC(self)
-		dc = wx.PaintDC(self)
+		dc = wx.BufferedPaintDC(self)
+		#dc = wx.PaintDC(self)
 		self.Draw(dc)
 
 	def OnSize(self, event):
