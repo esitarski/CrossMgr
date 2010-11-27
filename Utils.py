@@ -99,7 +99,7 @@ def SecondsToStr( secs = 0 ):
 	return '%02d:%02d:%02d' % (secs / (60*60), (secs / 60)%60, secs % 60)
 
 def SecondsToMMSS( secs = 0 ):
-	secs - int(secs+0.5)
+	secs = int(secs+0.5)
 	return '%02d:%02d' % ((secs / 60)%60, secs % 60)
 	
 def getHomeDir():

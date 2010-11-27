@@ -11,31 +11,21 @@ if wx.Platform == '__WXMAC__':
 	wx.PopupWindow = wx.PopupTransientWindow = wx.Window
 	
 class BarInfoPopup( wx.PopupTransientWindow ):
-    """Shows Specific Rider and Lap information."""
-    def __init__(self, parent, style, text):
+	"""Shows Specific Rider and Lap information."""
+	def __init__(self, parent, style, text):
 		wx.PopupTransientWindow.__init__(self, parent, style)
 		self.SetBackgroundColour(wx.WHITE)
 		border = 10
 		st = wx.StaticText(self, -1, text, pos=(border/2,border/2))
 		sz = st.GetBestSize()
 		self.SetSize( (sz.width+border, sz.height+border) )
-		
+
 class GanttChart(wx.PyControl):
-	def __init__(self, parent, id=wx.ID_ANY, startAtZero = False, pos=wx.DefaultPosition,
+	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
 				name="GanttChart"):
 		"""
 		Default class constructor.
-
-		@param parent: Parent window. Must not be None.
-		@param id: StatusBar identifier. A value of -1 indicates a default value.
-		@param pos: StatusBar position. If the position (-1, -1) is specified
-					then a default position is chosen.
-		@param size: StatusBar size. If the default size (-1, -1) is specified
-					then a default size is chosen.
-		@param style: not used
-		@param validator: Window validator.
-		@param name: Window name.
 		"""
 
 		# Ok, let's see why we have used wx.PyControl instead of wx.Control.
@@ -45,11 +35,13 @@ class GanttChart(wx.PyControl):
 		# basically need to override DoGetBestSize and AcceptsFocusFromKeyboard
 		
 		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
-		self.SetBackgroundColour('white')
+		self.SetBackgroundColour(wx.WHITE)
 		self.data = None
 		self.labels = None
 		self.nowTime = None
-		self.startAtZero = startAtZero
+		self.numSelect = None
+		self.dClickCallback = None
+		self.getNowTimeCallback = None
 		
 		self.colours = [
 			wx.Colour(0,0,0),
@@ -68,6 +60,7 @@ class GanttChart(wx.PyControl):
 		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
 		self.Bind(wx.EVT_SIZE, self.OnSize)
 		self.Bind(wx.EVT_LEFT_UP, self.OnLeftClick)
+		self.Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDClick)
 
 	def DoGetBestSize(self):
 		return wx.Size(100, 50)
@@ -111,6 +104,8 @@ class GanttChart(wx.PyControl):
 					self.labels = self.labels + [None] * (len(self.data) - len(self.labels))
 				elif len(self.labels) > len(self.data):
 					self.labels = self.labels[:len(self.data)]
+			else:
+				self.labels = [''] * len(data)
 			self.nowTime = nowTime
 				
 		self.Refresh()
@@ -122,7 +117,13 @@ class GanttChart(wx.PyControl):
 
 	def OnSize(self, event):
 		self.Refresh()
-		
+	
+	def OnLeftDClick( self, event ):
+		if getattr(self, 'empty', True):
+			return
+		if self.dClickCallback and self.numSelect is not None:
+			self.dClickCallback( self.numSelect )
+	
 	def OnLeftClick( self, event ):
 		if getattr(self, 'empty', True):
 			return
@@ -132,12 +133,24 @@ class GanttChart(wx.PyControl):
 		iRider = int(y / self.barHeight)
 		if not 0 <= iRider < len(self.data):
 			return
+
+		self.numSelect = self.labels[iRider]
+		if self.getNowTimeCallback:
+			self.nowTime = self.getNowTimeCallback()
+		self.Refresh()
+		
 		iLap = bisect.bisect_left( self.data[iRider], x / self.xFactor )
 		if not 1 <= iLap < len(self.data[iRider]):
 			return
-			
+
+		tLapStart = self.data[iRider][iLap-1]
+		tLapEnd = self.data[iRider][iLap]
 		bip = BarInfoPopup(self, wx.SIMPLE_BORDER,
-								'Rider: %s  Lap: %d' % (self.labels[iRider] if self.labels else str(iRider), iLap) )
+								'Rider: %s  Lap: %d\nLap Start:  %s Lap End: %s\nLap Time: %s' %
+								(self.labels[iRider] if self.labels else str(iRider), iLap,
+								Utils.formatTime(tLapStart),
+								Utils.formatTime(tLapEnd),
+								Utils.formatTime(tLapEnd - tLapStart)))
 
 		xPos, yPos = event.GetPositionTuple()
 		width, height = bip.GetClientSize()
@@ -220,6 +233,7 @@ class GanttChart(wx.PyControl):
 		
 		xFactor = float(width - labelsWidth * 2) / float(self.dataMax)
 		yLast = barHeight
+		yHighlight = None
 		for i, s in enumerate(self.data):
 			yCur = yLast + barHeight
 			xLast = labelsWidth
@@ -236,6 +250,7 @@ class GanttChart(wx.PyControl):
 			
 			# Draw the last empty bar.
 			xCur = int(labelsWidth + self.dataMax * xFactor)
+			dc.SetPen( penBar )
 			brushBar.SetColour( wx.WHITE )
 			dc.SetBrush( brushBar )
 			dc.DrawRectangle( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 )
@@ -243,9 +258,20 @@ class GanttChart(wx.PyControl):
 			labelWidth = dc.GetTextExtent( self.labels[i] )[0]
 			dc.DrawText( self.labels[i], textWidth - labelWidth, yLast )
 			dc.DrawText( self.labels[i], width - labelsWidth + legendSep, yLast )
+
+			if self.numSelect == self.labels[i]:
+				yHighlight = yCur
+
 			yLast = yCur
+				
+		if yHighlight is not None:
+			dc.SetPen( wx.Pen(wx.BLACK, 2) )
+			dc.SetBrush( wx.TRANSPARENT_BRUSH )
+			dc.DrawLine( 0, yHighlight, width, yHighlight )
+			yHighlight -= barHeight
+			dc.DrawLine( 0, yHighlight, width, yHighlight )
 			
-		if self.nowTime:
+		if self.nowTime and self.nowTime < self.dataMax:
 			nowTimeStr = Utils.formatTime( self.nowTime )
 			labelWidth, labelHeight = dc.GetTextExtent( nowTimeStr )	
 			x = int(labelsWidth + self.nowTime * xFactor)
@@ -291,7 +317,8 @@ if __name__ == '__main__':
 	random.seed( 10 )
 	t = 55*60
 	tVar = t * 0.15
-	GanttChart.SetData( GetData() )
+	data = GetData()
+	GanttChart.SetData( data, [str(i) for i in xrange(100, 100+len(data))] )
 
 	mainWin.Show()
 	app.MainLoop()

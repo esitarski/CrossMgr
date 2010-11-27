@@ -180,8 +180,9 @@ class History( wx.Panel ):
 	
 	def doNumDrilldown( self, event ):
 		self.doNumSelect( event )
-		if self.numSelect is not None and Utils.isMainWin():
-			Utils.getMainWin().showPageName( 'Rider Detail' )
+		mainWin = Utils.getMainWin()
+		if self.numSelect is not None and mainWin:
+			mainWin.showPageName( 'Rider Detail' )
 	
 	def getCellNum( self, row, col ):
 		numSelect = None

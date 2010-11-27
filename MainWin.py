@@ -839,6 +839,7 @@ Continue?''' % fName, 'Simulate a Race', iconMask = wx.ICON_QUESTION ):
 			self.history.setNumSelect( num )
 			self.results.setNumSelect( num )
 			self.riderDetail.setNumSelect( num )
+			self.gantt.setNumSelect( num )
 			self.numSelect = num
 
 	#-------------------------------------------------------------

@@ -4,11 +4,22 @@ import wx
 from FixCategories import FixCategories
 import GanttChart
 
+def UpdateSetNum( num ):
+	if num is None:
+		return
+	mainWin = Utils.getMainWin()
+	mainWin.showPageName( 'Rider Detail' )
+	mainWin.setNumSelect( num )
+
+def GetNowTime():
+	race = Model.getRace()
+	return race.lastRaceTime() if race.isRunning() else None
+
 class Gantt( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
 
-		self.gantt = None
+		self.numSelect = None
 		
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
 		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, 'Category:' )
@@ -19,6 +30,8 @@ class Gantt( wx.Panel ):
 		self.hbs.Add( self.categoryChoice, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		
 		self.ganttChart = GanttChart.GanttChart( self )
+		self.ganttChart.dClickCallback = UpdateSetNum
+		self.ganttChart.getNowTimeCallback = GetNowTime
 
 		bs = wx.BoxSizer(wx.VERTICAL)
 		bs.Add(self.hbs, flag=wx.GROW|wx.HORIZONTAL)
@@ -32,8 +45,11 @@ class Gantt( wx.Panel ):
 		self.refresh()
 	
 	def reset( self ):
-		pass
+		self.ganttChart.numSelect = None
 
+	def setNumSelect( self, num ):
+		self.ganttChart.numSelect = num if num is None else str(num)
+		
 	def refresh( self ):
 		race = Model.getRace()
 		
@@ -72,7 +88,7 @@ class Gantt( wx.Panel ):
 
 		labels = [str(n) for n, times in numTimes]
 		data = [times for n, times in numTimes]
-		self.ganttChart.SetData( data, labels, race.lastRaceTime() if race.isRunning() else None )
+		self.ganttChart.SetData( data, labels, GetNowTime() )
 	
 	def commit( self ):
 		pass
