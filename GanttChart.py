@@ -208,7 +208,7 @@ class GanttChart(wx.PyControl):
 		intervals = [1, 2, 5, 10, 15, 20, 30, 1*60, 2*60, 5*60, 10*60, 15*60, 20*60, 30*60, 1*60*60, 2*60*60, 4*60*60, 8*60*60, 24*60*60]
 		d = intervals[bisect.bisect_left(intervals, d, 0, len(intervals)-1)]
 		dFactor = (xRight - xLeft) / float(self.dataMax)
-		dc.SetPen(wx.Pen('light gray', 1))
+		dc.SetPen(wx.Pen(wx.BLACK, 1))
 		for t in xrange(0, int(self.dataMax), d):
 			x = xLeft + t * dFactor
 			if t < 60*60:
@@ -218,7 +218,7 @@ class GanttChart(wx.PyControl):
 			w, h = dc.GetTextExtent(s)
 			dc.DrawText( s, x - w/2, yBottom + 4)
 			dc.DrawText( s, x - w/2, 0 + 4 )
-			dc.DrawLine( x, yBottom+4, x, yTop-4 )
+			dc.DrawLine( x, yBottom+3, x, yTop-3 )
 		
 		# Draw the Gantt chart.
 		dc.SetFont( font )
