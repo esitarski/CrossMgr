@@ -42,6 +42,7 @@ class GanttChart(wx.PyControl):
 		self.numSelect = None
 		self.dClickCallback = None
 		self.getNowTimeCallback = None
+		self.minimizeLabels = False
 		
 		self.colours = [
 			wx.Colour(0,0,0),
@@ -63,7 +64,7 @@ class GanttChart(wx.PyControl):
 		self.Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDClick)
 
 	def DoGetBestSize(self):
-		return wx.Size(100, 50)
+		return wx.Size(128, 64)
 
 	def SetForegroundColour(self, colour):
 		wx.PyControl.SetForegroundColour(self, colour)
@@ -205,7 +206,7 @@ class GanttChart(wx.PyControl):
 		# Find some reasonable tickmarks for the x axis.
 		numLabels = (xRight - xLeft) / (textWidth * 1.5)
 		d = self.dataMax / float(numLabels)
-		intervals = [1, 2, 5, 10, 15, 20, 30, 1*60, 2*60, 5*60, 10*60, 15*60, 20*60, 30*60, 1*60*60, 2*60*60, 4*60*60, 8*60*60, 24*60*60]
+		intervals = [1, 2, 5, 10, 15, 20, 30, 1*60, 2*60, 5*60, 10*60, 15*60, 20*60, 30*60, 1*60*60, 2*60*60, 4*60*60, 8*60*60, 12*60*60, 24*60*60]
 		d = intervals[bisect.bisect_left(intervals, d, 0, len(intervals)-1)]
 		dFactor = (xRight - xLeft) / float(self.dataMax)
 		dc.SetPen(wx.Pen(wx.BLACK, 1))
@@ -216,8 +217,9 @@ class GanttChart(wx.PyControl):
 			else:
 				s = '%d:%02d:%02d' % (t/(60*60), (t / 60)%60, t%60)
 			w, h = dc.GetTextExtent(s)
-			dc.DrawText( s, x - w/2, yBottom + 4)
 			dc.DrawText( s, x - w/2, 0 + 4 )
+			if not self.minimizeLabels:
+				dc.DrawText( s, x - w/2, yBottom + 4)
 			dc.DrawLine( x, yBottom+3, x, yTop-3 )
 		
 		# Draw the Gantt chart.
@@ -255,16 +257,18 @@ class GanttChart(wx.PyControl):
 			dc.SetBrush( brushBar )
 			dc.DrawRectangle( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 )
 			
+			# Draw the label on both ends.
 			labelWidth = dc.GetTextExtent( self.labels[i] )[0]
 			dc.DrawText( self.labels[i], textWidth - labelWidth, yLast )
-			dc.DrawText( self.labels[i], width - labelsWidth + legendSep, yLast )
+			if not self.minimizeLabels:
+				dc.DrawText( self.labels[i], width - labelsWidth + legendSep, yLast )
 
 			if self.numSelect == self.labels[i]:
 				yHighlight = yCur
 
 			yLast = yCur
 				
-		if yHighlight is not None:
+		if yHighlight is not None and len(self.data) > 1:
 			dc.SetPen( wx.Pen(wx.BLACK, 2) )
 			dc.SetBrush( wx.TRANSPARENT_BRUSH )
 			dc.DrawLine( 0, yHighlight, width, yHighlight )
@@ -286,12 +290,14 @@ class GanttChart(wx.PyControl):
 			dc.SetPen( wx.Pen(ntColour,1) )
 			rect = wx.Rect( x - labelWidth/2-2, 0, labelWidth+4, labelHeight )
 			dc.DrawRectangleRect( rect )
-			rect.SetY( yLast+2 )
-			dc.DrawRectangleRect( rect )
+			if not self.minimizeLabels:
+				rect.SetY( yLast+2 )
+				dc.DrawRectangleRect( rect )
 
 			dc.SetTextForeground( wx.WHITE )
 			dc.DrawText( nowTimeStr, x - labelWidth / 2, 0 )
-			dc.DrawText( nowTimeStr, x - labelWidth / 2, yLast + 2 )
+			if not self.minimizeLabels:
+				dc.DrawText( nowTimeStr, x - labelWidth / 2, yLast + 2 )
 
 		self.xFactor = xFactor
 		self.barHeight = barHeight

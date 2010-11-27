@@ -2,6 +2,8 @@ import wx
 import wx.grid		as gridlib
 import Model
 import Utils
+from GanttChart import GanttChart
+import Gantt
 from Histogram import Histogram
 from LineGraph import LineGraph
 from FixCategories import FixCategories
@@ -21,13 +23,19 @@ class Stats( wx.Panel ):
 
 		bs.Add( self.hbs )
 		
-		bs.Add( wx.StaticText(self, wx.ID_ANY, 'Top Riders:'), border = 5 )
+		bs.Add( wx.StaticText(self, wx.ID_ANY, 'Top Riders:'), border = 4 )
+		
+		self.ganttChart = GanttChart( self )
+		self.ganttChart.dClickCallback = Gantt.UpdateSetNum
+		self.ganttChart.getNowTimeCallback = Gantt.GetNowTime
+		self.ganttChart.minimizeLabels = True
+		bs.Add(self.ganttChart, 2, flag=wx.GROW|wx.ALL, border=0 )
 		
 		self.lineGraph = LineGraph( self )
-		bs.Add(self.lineGraph, 2, flag=wx.GROW|wx.ALL, border=5 )
+		bs.Add(self.lineGraph, 2, flag=wx.GROW|wx.ALL, border=0 )
 		
 		self.histogram = Histogram( self )
-		bs.Add(self.histogram, 2, flag=wx.GROW|wx.ALL, border=5 )
+		bs.Add(self.histogram, 2, flag=wx.GROW|wx.ALL, border=0 )
 		self.SetSizer(bs)
 		
 	def doChooseCategory( self, event ):
@@ -72,17 +80,30 @@ class Stats( wx.Panel ):
 			
 		self.histogram.SetData( histogramData )
 
-		# Get a line graph for the top finishers.
+		# Get a Gantt chart and line graph for the top finishers.
+		gcData = []
+		gcLabels = []
+		catOffset = {}
+		
 		lgData = []
 		lgLabels = []
 		lgInterpolated = []
 		results = results[:min(5, len(results))]
 		for i, r in enumerate(results):
+			gcLabels.append( str(r.num) )
 			lgLabels.append( '%s (%d)' % (str(r.num), i+1) )
+			
 			riderEntries = [e for e in entries if e.num == r.num]
+			
+			gcData.append( [e.t for e in riderEntries] )
+			category = race.getCategory( r.num )
+			if category:
+				gcData[-1][0] = min(catOffset.setdefault( category, category.getStartOffsetSecs() ), gcData[-1][1])
+				
 			lgData.append( [riderEntries[i].t - riderEntries[i-1].t for i in xrange(1, len(riderEntries))] )
 			lgInterpolated.append( [e.interp for e in riderEntries if e.t > 0] )
 		
+		self.ganttChart.SetData( gcData, gcLabels, Gantt.GetNowTime() )
 		self.lineGraph.SetData( lgData, labels = lgLabels, interpolated = lgInterpolated )
 
 	

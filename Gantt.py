@@ -8,12 +8,12 @@ def UpdateSetNum( num ):
 	if num is None:
 		return
 	mainWin = Utils.getMainWin()
-	mainWin.showPageName( 'Rider Detail' )
 	mainWin.setNumSelect( num )
+	mainWin.showPageName( 'Rider Detail' )
 
 def GetNowTime():
 	race = Model.getRace()
-	return race.lastRaceTime() if race.isRunning() else None
+	return race.lastRaceTime() if race and race.isRunning() else None
 
 class Gantt( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):

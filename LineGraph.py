@@ -191,7 +191,7 @@ class LineGraph(wx.PyControl):
 		# Draw the horizontal lines.
 		# Find some reasonable tickmarks.
 		dc.SetPen(wx.Pen('light gray', 1))
-		numLabels = float(yBottom - yTop) / (textHeight * 3)
+		numLabels = max( float(yBottom - yTop) / (textHeight * 3), 1 )
 		d = (dataMaxRange - dataMinRange) / numLabels
 		intervals = [1, 2, 5, 10, 15, 30, 1*60, 2*60, 5*60, 10*60, 15*60, 20*60, 30*60, 1*60*60, 2*60*60, 4*60*60, 8*60*60, 24*60*60]
 		d = intervals[bisect.bisect_left(intervals, d, 0, len(intervals)-1)]

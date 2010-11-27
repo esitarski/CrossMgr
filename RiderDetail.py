@@ -5,6 +5,8 @@ import Model
 import Utils
 import ColGrid
 from LineGraph import LineGraph
+from GanttChart import GanttChart
+import Gantt
 import random
 import bisect
 import sys
@@ -71,7 +73,15 @@ class RiderDetail( wx.Panel ):
 		gbs.Add( self.grid, pos=(row,0), span=(1,2), flag=wx.EXPAND )
 		
 		self.lineGraph = LineGraph( self, wx.ID_ANY, style = wx.NO_BORDER )
-		gbs.Add( self.lineGraph, pos=(row, 2), span=(1, 3), flag=wx.EXPAND )
+		self.ganttChart = GanttChart( self, wx.ID_ANY, style = wx.NO_BORDER )
+		self.ganttChart.getNowTimeCallback = Gantt.GetNowTime
+		self.ganttChart.minimizeLabels = True
+		
+		vbs = wx.BoxSizer( wx.VERTICAL )
+		vbs.Add( self.ganttChart, proportion=0, border = 0, flag = wx.ALL | wx.EXPAND )
+		vbs.Add( self.lineGraph, proportion=1, border = 0, flag = wx.ALL | wx.EXPAND )
+		
+		gbs.Add( vbs, pos=(row, 2), span=(1, 3), flag=wx.EXPAND )
 		
 		gbs.AddGrowableRow( row )
 		gbs.AddGrowableCol( 4 )
@@ -188,7 +198,8 @@ class RiderDetail( wx.Panel ):
 		self.notInLap.SetLabel( notInLapStr )
 
 		# Populate the lap times.
-		raceTime = category.getStartOffsetSecs() if category else 0.0
+		raceTime = min(category.getStartOffsetSecs() if category else 0.0, entries[0].t)
+		ganttData = [raceTime]
 		data = [ [], [], [] ]
 		graphData = []
 		backgroundColour = {}
@@ -198,6 +209,7 @@ class RiderDetail( wx.Panel ):
 			tLap = max( e.t - raceTime, 0.0 )
 			data[2].append( Utils.formatTime(tLap) )
 			graphData.append( tLap )
+			ganttData.append( e.t )
 			raceTime = e.t
 			if e.interp:
 				for i in xrange(0,3):
@@ -208,6 +220,7 @@ class RiderDetail( wx.Panel ):
 		self.grid.Reset()
 		self.grid.FitInside()
 		
+		self.ganttChart.SetData( [ganttData], [num], Gantt.GetNowTime() )
 		self.lineGraph.SetData( [graphData], [[e.interp for e in entries]] )
 	
 	def commitChange( self ):
@@ -243,6 +256,11 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="CrossMgr", size=(600,400))
 	riderDetail = RiderDetail(mainWin)
 	riderDetail.refresh()
-	riderDetail.lineGraph.SetData( [[random.normalvariate(100,15) for x in xrange(12)]] )
+	lineData = [random.normalvariate(100,15) for x in xrange(12)]
+	ganttData = [0]
+	for d in lineData:
+		ganttData.append( ganttData[-1] + d )
+	riderDetail.ganttChart.SetData( [ganttData], [106] )
+	riderDetail.lineGraph.SetData( [lineData] )
 	mainWin.Show()
 	app.MainLoop()

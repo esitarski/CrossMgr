@@ -57,6 +57,12 @@ from Version import AppVerName
 vNum = AppVerName.split()[1]
 vNum = vNum.replace( '.', '_' )
 newExeName = 'CrossMgr_Setup_v' + vNum + '.exe'
+
+try:
+	os.remove( 'install\\' + newExeName )
+except:
+	pass
+	
 shutil.copy( 'install\\CrossMgr_Setup.exe', 'install\\' + newExeName )
 print 'executable copied to: ' + newExeName
 
@@ -64,6 +70,12 @@ print 'executable copied to: ' + newExeName
 os.chdir( 'install' )
 newExeName = os.path.basename( newExeName )
 newZipName = newExeName.replace( '.exe', '.zip' )
+
+try:
+	os.remove( newZipName )
+except:
+	pass
+
 z = zipfile.ZipFile(newZipName, "w")
 z.write( newExeName )
 z.close()
