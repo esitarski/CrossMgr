@@ -770,7 +770,6 @@ Continue?''' % fName, 'Simulate a Race', iconMask = wx.ICON_QUESTION ):
 			"Always use a paper manual backup."
 		info.License = wordwrap(licenseText, 500, wx.ClientDC(self))
 
-		# Then we call wx.AboutBox giving it that info object
 		wx.AboutBox(info)
 
 	#--------------------------------------------------------------------------------------

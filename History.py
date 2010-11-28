@@ -100,30 +100,35 @@ class History( wx.Panel ):
 			return
 			
 		self.doNumSelect( event )
-				
+		
+		allCases = 0
+		interpCase = 1
+		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				('Results', 	wx.NewId(), self.OnPopupResults),
-				('Rider Detail',wx.NewId(), self.OnPopupRiderDetail),
+				('Results', 	wx.NewId(), self.OnPopupResults, allCases),
+				('Rider Detail',wx.NewId(), self.OnPopupRiderDetail, allCases),
 				
-				('Correct...',	wx.NewId(), self.OnPopupCorrect),
-				('Split...',	wx.NewId(), self.OnPopupSplit),
-				('Delete...',	wx.NewId(), self.OnPopupDelete)
+				('Correct...',	wx.NewId(), self.OnPopupCorrect, interpCase),
+				('Split...',	wx.NewId(), self.OnPopupSplit, nonInterpCase),
+				('Delete...',	wx.NewId(), self.OnPopupDelete, nonInterpCase)
 			]
 			self.numEditActions = 2
 			for p in self.popupInfo:
 				self.Bind( wx.EVT_MENU, p[2], id=p[1] )
 
 		isInterp = self.history[self.colPopup][self.rowPopup].interp
+		if isInterp:
+			caseCode = 1
+		else:
+			caseCode = 2
 		
 		race = Model.getRace()
 		menu = wx.Menu()
 		for i, p in enumerate(self.popupInfo):
-			if i >= self.numEditActions and isInterp:		# Disallow editing of interpreted entries
-				continue
-			elif i == self.numEditActions and not isInterp:
+			if i == self.numEditActions:
 				menu.AppendSeparator()
-			elif p[0] == 'Record' and not race.isRunning():
+			if caseCode < p[3]:
 				continue
 			menu.Append( p[1], p[0] )
 		

@@ -2,6 +2,7 @@ import Utils
 import wx
 import wx.grid		as gridlib
 import wx.lib.intctrl
+import wx.lib.masked           as masked
 import ColGrid
 import Model
 
@@ -15,6 +16,13 @@ class CorrectNumberDialog( wx.Dialog ):
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
 		self.numEdit = wx.lib.intctrl.IntCtrl( self, 20, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
 		
+		self.timeCtrl = masked.TimeCtrl( self, -1, name="Race Time:", fmt24hr=True )
+		s = int(entry.t+0.5)
+		seconds = s % 60
+		minutes = (s / 60) % 60
+		hours = s / (60*60)
+		self.timeCtrl.ChangeValue( '%02d:%02d:%02d' % (hours, minutes, seconds) )
+				
 		self.okBtn = wx.Button( self, wx.ID_ANY, '&OK' )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
 
@@ -25,10 +33,14 @@ class CorrectNumberDialog( wx.Dialog ):
 		border = 8
 		bs.Add( wx.StaticText( self, wx.ID_ANY, 'RiderLap: %d   RaceTime: %s' % (self.entry.lap, Utils.SecondsToMMSS(self.entry.t)) ),
 			pos=(0,0), span=(1,2), border = border, flag=wx.GROW|wx.ALL )
-		bs.Add( self.numEdit, pos=(1,0), span=(1,2), border = border, flag=wx.GROW|wx.ALL )
-		bs.Add( self.okBtn, pos=(2, 0), span=(1,1), border = border, flag=wx.ALL )
+		bs.Add( wx.StaticText( self, -1, "Rider:"),  pos=(1,0), span=(1,1), border = border, flag=wx.GROW|wx.LEFT|wx.TOP|wx.ALIGN_RIGHT )
+		bs.Add( self.numEdit, pos=(1,1), span=(1,2), border = border, flag=wx.GROW|wx.RIGHT|wx.TOP )
+		bs.Add( wx.StaticText( self, -1, "Race Time:"),  pos=(2,0), span=(1,1), border = border, flag=wx.GROW|wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT|wx.BOTTOM )
+		bs.Add( self.timeCtrl, pos=(2,1), span=(1,1), border = border, flag=wx.GROW|wx.LEFT|wx.RIGHT|wx.BOTTOM )
+		
+		bs.Add( self.okBtn, pos=(3, 0), span=(1,1), border = border, flag=wx.ALL )
 		self.okBtn.SetDefault()
-		bs.Add( self.cancelBtn, pos=(2, 1), span=(1,1), border = border, flag=wx.ALL )
+		bs.Add( self.cancelBtn, pos=(3, 1), span=(1,1), border = border, flag=wx.ALL )
 		
 		self.SetSizerAndFit(bs)
 		bs.Fit( self )
@@ -38,10 +50,11 @@ class CorrectNumberDialog( wx.Dialog ):
 
 	def onOK( self, event ):
 		num = self.numEdit.GetValue()
-		if self.entry.num != num:
+		t = Utils.StrToSeconds(self.timeCtrl.GetValue())
+		if self.entry.num != num or self.entry.t != t:
 			race = Model.getRace()
 			race.deleteTime( self.entry.num, self.entry.t )
-			race.addTime( num, self.entry.t )
+			race.addTime( num, t )
 			race.resetCache()
 			mainWin = Utils.getMainWin()
 			if mainWin:
