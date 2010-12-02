@@ -153,6 +153,12 @@ class MainWin( wx.Frame ):
 		self.dataMgmtMenu.Append( idCur , "&Export Categories to File...", "Export Categories to File" )
 		self.Bind(wx.EVT_MENU, self.menuExportCategories, id=idCur )
 
+		self.dataMgmtMenu.AppendSeparator()
+
+		idCur = wx.NewId()
+		self.dataMgmtMenu.Append( idCur , "Export History to Excel...", "Export History to Excel File" )
+		self.Bind(wx.EVT_MENU, self.menuExportHistory, id=idCur )
+
 		self.menuBar.Append( self.dataMgmtMenu, "&DataMgmt" )
 
 		#-----------------------------------------------------------------------
@@ -734,6 +740,45 @@ Continue?''' % fName, 'Simulate a Race', iconMask = wx.ICON_QUESTION ):
 				
 		dlg.Destroy()	
 		
+	def menuExportHistory( self, event ):
+		race = Model.getRace()
+		if self.fileName is None or len(self.fileName) < 4 or not race:
+			return
+
+		xlFName = self.fileName[:-4] + '-History.xls'
+		dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(xlFName),
+						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
+		ret = dlg.ShowModal()
+		dName = dlg.GetPath()
+		dlg.Destroy()
+		if ret != wx.ID_OK:
+			return
+
+		xlFName = os.path.join( dName, os.path.basename(xlFName) )
+
+		self.history.setCategoryAll()
+		self.history.refresh()
+		
+		title = 'Race: '+ race.name + '\n' + Utils.formatDate(race.date) + '\nRace History'
+		colnames = self.history.grid.GetColNames()
+		data = self.history.grid.GetData()
+		if data:
+			rowMax = max( len(c) for c in data )
+			colnames = ['Count'] + colnames
+			data = [[str(i) for i in xrange(1, rowMax+1)]] + data
+		export = ExportGrid( title, colnames, data )
+
+		wb = xlwt.Workbook()
+		sheetCur = wb.add_sheet( 'History' )
+		export.toExcelSheet( sheetCur )
+		
+		try:
+			wb.save( xlFName )
+		except IOError:
+			Utils.MessageOK(self,
+						'Cannot write "%s".\n\nCheck if this spreadsheet open.\nIf so, close it, and try again.' % xlFName,
+						'Excel File Error', iconMask=wx.ICON_ERROR )
+	
 	def menuAbout( self, event ):
 		# First we create and fill the info object
 		info = wx.AboutDialogInfo()

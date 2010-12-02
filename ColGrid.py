@@ -68,6 +68,9 @@ class ColTable(Grid.PyGridTableBase):
 	
 	def GetData( self ):
 		return self.data
+
+	def GetColNames( self ):
+		return self.colnames
 	
 	def isEmpty( self ):
 		return True if not self.data else False
@@ -181,6 +184,9 @@ class ColGrid(Grid.Grid):
 	
 	def GetData( self ):
 		return self._table.GetData()
+
+	def GetColNames( self ):
+		return self._table.GetColNames()
 	
 	def Zoom( self, zoomIn = True ):
 		factor = 2 if zoomIn else 0.5

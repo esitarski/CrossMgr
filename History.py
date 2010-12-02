@@ -213,6 +213,9 @@ class History( wx.Panel ):
 			Model.race.historyCategory = self.categoryChoice.GetSelection()
 		self.refresh()
 	
+	def setCategoryAll( self ):
+		self.categoryChoice.SetSelection( 0 )
+	
 	def reset( self ):
 		self.numSelect = None
 
