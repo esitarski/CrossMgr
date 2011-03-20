@@ -230,9 +230,9 @@ class ExportGrid(object):
 			return
 		
 		position	= []
-		number		= []
-		laps		= []
-		finishTime	= []
+		number	= []
+		laps			= []
+		finishTime = []
 		gap			= []
 		notes		= []
 

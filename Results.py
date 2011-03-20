@@ -12,34 +12,40 @@ class Results( wx.Panel ):
 		wx.Panel.__init__(self, parent, id)
 		
 		self.showTimes = False
+		self.showGaps = False
 		self.showPositions = False
 		self.showLapsCompleted = False
 		
 		self.rcInterp = set()
 		self.numSelect = None
 		self.isEmpty = True
-		self.reSplit = re.compile( '[= ]+' )	# seperators for the fields.
+		self.reSplit = re.compile( '[\[\]\+= ]+' )	# seperators for the fields.
 
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
 		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, 'Category:' )
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
 		
-		self.showTimesToggle = wx.ToggleButton( self, 100, 'Show Times' )
+		self.showTimesToggle = wx.ToggleButton( self, wx.ID_ANY, 'Show Times' )
 		self.showTimesToggle.SetValue( self.showTimes )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowTimes, self.showTimesToggle )
 		
-		self.showLapsCompletedToggle = wx.ToggleButton( self, 101, 'Show Laps Completed' )
+		self.showGapsToggle = wx.ToggleButton( self, wx.ID_ANY, 'Show Gaps' )
+		self.showGapsToggle.SetValue( self.showGaps )
+		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowGaps, self.showGapsToggle )
+		
+		self.showLapsCompletedToggle = wx.ToggleButton( self,wx.ID_ANY, 'Show Laps Completed' )
 		self.showLapsCompletedToggle.SetValue( self.showLapsCompleted )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowLapsCompleted, self.showLapsCompletedToggle )
 		
-		self.showPositionsToggle = wx.ToggleButton( self, 102, 'Show Positions' )
+		self.showPositionsToggle = wx.ToggleButton( self, wx.ID_ANY, 'Show Positions' )
 		self.showPositionsToggle.SetValue( self.showPositions )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowPositions, self.showPositionsToggle )
 		
 		self.hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.categoryChoice, flag=wx.ALL, border=4 )
 		self.hbs.Add( self.showTimesToggle, flag=wx.ALL, border=4 )
+		self.hbs.Add( self.showGapsToggle, flag=wx.ALL, border=4 )
 		self.hbs.Add( self.showLapsCompletedToggle, flag=wx.ALL, border=4 )
 		self.hbs.Add( self.showPositionsToggle, flag=wx.ALL, border=4 )
 
@@ -103,24 +109,19 @@ class Results( wx.Panel ):
 			Utils.getMainWin().showPageName( 'Rider Detail' )
 		
 	def onShowTimes( self, event ):
-		if self.showTimes:
-			self.showTimes = False
-		else:
-			self.showTimes = True
+		self.showTimes = False if self.showTimes else True
+		self.refresh()
+		
+	def onShowGaps( self, event ):
+		self.showGaps = False if self.showGaps else True
 		self.refresh()
 		
 	def onShowPositions( self, event ):
-		if self.showPositions:
-			self.showPositions = False
-		else:
-			self.showPositions = True
+		self.showPositions = False if self.showPositions else True
 		self.refresh()
 		
 	def onShowLapsCompleted( self, event ):
-		if self.showLapsCompleted:
-			self.showLapsCompleted = False
-		else:
-			self.showLapsCompleted = True
+		self.showLapsCompleted = False if self.showLapsCompleted else True
 		self.refresh()
 		
 	def showNumSelect( self ):
@@ -219,16 +220,20 @@ class Results( wx.Panel ):
 		data = []
 		formatStr = '$num$otl'
 		if self.showTimes:			formatStr += '=$t'
+		if self.showGaps:			formatStr += '$gap'
 		if self.showLapsCompleted:	formatStr += ' [$lap]'
 		if self.showPositions:		formatStr += ' ($pos)'
 		template = Template( formatStr )
 		
 		if results:
+			leaderLap = results[0][0].lap
+			leaderTime = results[0][0].t
 			pos = 1
 			for col, d in enumerate(results):
 				data.append( [template.safe_substitute( dict(	num=e.num,
 																otl=' OTL' if race[e.num].isPulled() else '',
 																t=Utils.formatTime(e.t),
+																gap='+%s' % Utils.formatTime(e.t - leaderTime) if e.lap == leaderLap else '',
 																lap=e.lap,
 																pos=row+pos) ) for row, e in enumerate(d)] )
 
