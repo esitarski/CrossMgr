@@ -621,6 +621,13 @@ It is a good illustration of CrossMgr's functionality with realtime data.
 
 The simulation takes about 10 minutes.
 
+When you start the simulation, notice that the race clock starts (upper right corner).
+You don't see anything right away because the riders are going around their first lap.
+
+Be patient!
+
+After abount a minute, you will see the numbers coming in as the simulated riders cross the finish line.
+
 The race will be written to:
 "%s".
 
