@@ -22,6 +22,7 @@ from Results			import Results
 from Categories			import Categories
 from Properties			import Properties, PropertiesDialog
 from Recommendations	import Recommendations
+from RaceAnimation		import RaceAnimation
 import Utils
 import Model
 from setpriority import setpriority
@@ -70,7 +71,7 @@ class MainWin( wx.Frame ):
 		self.numSelect = None
 
 		# Setup the objects for the race clock.
-		self.timer = wx.Timer( self, id=1000 )
+		self.timer = wx.Timer( self, id=wx.NewId() )
 		self.secondCount = 0
 		self.Bind( wx.EVT_TIMER, self.updateRaceClock, self.timer )
 
@@ -227,6 +228,9 @@ class MainWin( wx.Frame ):
 
 		self.properties		= Properties(	self.notebook )
 		addPage( self.properties,'Properties' )
+		
+		self.raceAnimation = RaceAnimation( self.notebook )
+		addPage( self.raceAnimation, 'Race Animation' )
 
 		self.splitter.SplitVertically( self.forecastHistory, self.notebook, 200 )
 
@@ -877,6 +881,10 @@ Continue?''' % fName, 'Simulate a Race', iconMask = wx.ICON_QUESTION ):
 		self.callPageRefresh( event.GetSelection() )
 		event.Skip()	# Required to properly repaint the screen.
 
+	def refreshRaceAnimation( self ):
+		if self.pages[self.notebook.GetSelection()] == self.raceAnimation:
+			self.raceAnimation.refresh()
+	
 	def refreshAll( self ):
 		self.refresh()
 		iSelect = self.notebook.GetSelection()

@@ -27,13 +27,6 @@ class GanttChart(wx.PyControl):
 		"""
 		Default class constructor.
 		"""
-
-		# Ok, let's see why we have used wx.PyControl instead of wx.Control.
-		# Basically, wx.PyControl is just like its wxWidgets counterparts
-		# except that it allows some of the more common C++ virtual method
-		# to be overridden in Python derived class. For StatusBar, we
-		# basically need to override DoGetBestSize and AcceptsFocusFromKeyboard
-		
 		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
 		self.SetBackgroundColour(wx.WHITE)
 		self.data = None

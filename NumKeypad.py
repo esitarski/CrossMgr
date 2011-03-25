@@ -155,7 +155,11 @@ class NumKeypad( wx.Panel ):
 		self.raceTime.SetLabel( '  ' + tStr )
 		mainWin = Utils.getMainWin()
 		if mainWin is not None:
-			mainWin.forecastHistory.refreshRule80()
+			try:
+				mainWin.forecastHistory.refreshRule80()
+				mainWin.refreshRaceAnimation()
+			except:
+				pass
 	
 	def doChangeNumLaps( self, event ):
 		self.refreshLaps()

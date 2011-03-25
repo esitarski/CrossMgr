@@ -104,7 +104,7 @@ class StartRaceAtTime( wx.Dialog ):
 			return
 
 		# Setup the countdown clock.
-		self.timer = wx.Timer( self, id=1009 )
+		self.timer = wx.Timer( self, id=wx.NewId() )
 		self.Bind( wx.EVT_TIMER, self.updateCountdownClock, self.timer )
 		self.timer.Start( 1000 )
 		
