@@ -22,8 +22,10 @@ class RaceAnimation( wx.Panel ):
 		
 		self.animation = Animation( self )
 		bs.Add(self.animation, 2, flag=wx.GROW|wx.ALL, border=0 )
+		
+		self.animationSeconds = 90
 
-		self.playButton = wx.Button( self, wx.ID_ANY, 'Replay Race in 60 seconds' )
+		self.playButton = wx.Button( self, wx.ID_ANY, 'Replay Race in %d seconds' % self.animationSeconds )
 		self.Bind( wx.EVT_BUTTON, self.onPlay, self.playButton )
 		bs.Add(self.playButton, 0, flag=wx.GROW|wx.ALL, border=0 )
 
@@ -36,17 +38,15 @@ class RaceAnimation( wx.Panel ):
 	
 	def onPlay( self, event ):
 		self.refresh()
-		self.animation.Animate(90)	# Run the animation in 90 seconds.
+		self.animation.Animate(self.animationSeconds)
 	
 	def commit( self ):
+		race = Model.race
+		if race and race.isRunning():
 			self.animation.StopAnimate()
 	
 	def refresh( self ):
-		if not self.IsShown():
-			self.animation.StopAnimate()
-			return
-		
-		race = Model.getRace()
+		race = Model.race
 		if race is None:
 			self.animation.SetData( None, 0 )
 			self.animation.StopAnimate()
@@ -80,12 +80,11 @@ class RaceAnimation( wx.Panel ):
 				tLast = info['lapTimes'][-1]
 				info['lastTime'] = tLast if not race.isRunning() or tLast >= race.minutes*60  else None
 		
-		self.animation.SetData( animationData, race.lastRaceTime() );
+		self.animation.SetData( animationData, race.lastRaceTime() )
+		
 		if race.isRunning():
 			if not self.animation.IsAnimating():
 				self.animation.StartAnimateRealtime()
-		else:
-			self.animation.StopAnimate()
 	
 if __name__ == '__main__':
 	app = wx.PySimpleApp()

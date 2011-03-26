@@ -5,6 +5,13 @@ import bisect
 import copy
 import sys
 import datetime
+from operator import itemgetter, attrgetter
+
+def setTopN( arr, n, x ):
+	if len(arr) < n:
+		arr.append( x )
+	elif x > min(arr):
+		arr[arr.index(min(arr))] = x
 
 class Animation(wx.PyControl):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
@@ -39,6 +46,7 @@ class Animation(wx.PyControl):
 		self.laneMax = 8
 		
 		self.framesPerSecond = 32
+		self.lapCur = 0
 		
 		self.tLast = datetime.datetime.now()
 		self.speedup = 1.0
@@ -50,6 +58,12 @@ class Animation(wx.PyControl):
 			wx.Colour(255, 0, 255),
 			wx.Colour(0, 255, 255),
 			 ]
+			 
+		self.topThreeColours = [
+			wx.Colour(255,215,0),
+			wx.Colour(230,230,230),
+			wx.Colour(205,133,63)
+			]
 			 
 		self.numberFont	= wx.Font( 10, wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
 		self.timeFont	= wx.Font( 14, wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
@@ -152,13 +166,11 @@ class Animation(wx.PyControl):
 	def OnSize(self, event):
 		self.Refresh()
 		
-	def getRiderPosition( self, rider ):
-		""" Returns the fraction of the lap covered by the rider. """
-		if rider not in self.data:
+	def getRiderPosition( self, num ):
+		""" Returns the fraction of the lap covered by the num. """
+		if num not in self.data:
 			return None
-		if self.data[rider]['lastTime'] is not None and self.t >= self.data[rider]['lastTime']:
-			return None
-		lapTimes = self.data[rider]['lapTimes']
+		lapTimes = self.data[num]['lapTimes']
 		if not lapTimes or self.t <= lapTimes[0]:
 			return None
 		if self.t >= lapTimes[-1]:
@@ -168,10 +180,12 @@ class Animation(wx.PyControl):
 			p = i + float(self.t - lapTimes[i-1]) / float(lapTimes[i] - lapTimes[i-1])
 		return p
 	
-	def getRiderXY( self, num, lane ):
+	def getRiderXYP( self, num, lane ):
 		position = self.getRiderPosition( num )
-		if position is None:
-			return None
+		if position is None or (self.data[num]['lastTime'] is not None and self.t >= self.data[num]['lastTime']):
+			return (None, None, position)
+		positionSave = position
+		self.lapCur = max(self.lapCur, int(position))
 		position -= int(position)
 		
 		r = self.r
@@ -182,30 +196,30 @@ class Animation(wx.PyControl):
 		
 		if riderLength <= r/2:
 			# rider is on starting straight
-			return (2*r + r/2.0 + riderLength, r + r/2.0 + laneLength )
+			return (2*r + r/2.0 + riderLength, r + r/2.0 + laneLength, positionSave )
 			
 		riderLength -= r/2
 		if riderLength <= curveLength:
 			# rider is on 1st curve
 			a = math.pi * riderLength / curveLength
 			rd = r/2 + laneLength
-			return (3*r + rd*math.sin(a), r + rd*math.cos(a))
+			return (3*r + rd*math.sin(a), r + rd*math.cos(a), positionSave)
 
 		riderLength -= curveLength
 		if riderLength <= 2*r:
 			# rider is on back straight
-			return (3*r - riderLength, r/2 - laneLength)
+			return (3*r - riderLength, r/2 - laneLength, positionSave)
 			
 		riderLength -= 2*r
 		if riderLength <= curveLength:
 			# rider is on back curve
 			a = math.pi * (1.0 + riderLength / curveLength)
 			rd = r/2 + laneLength
-			return (r + rd*math.sin(a), r + rd*math.cos(a) )
+			return (r + rd*math.sin(a), r + rd*math.cos(a), positionSave )
 			
 		riderLength -= curveLength
 		# rider is on finishing straight
-		return (r + riderLength, r + r/2 + laneLength)
+		return (r + riderLength, r + r/2 + laneLength, positionSave)
 	
 	def Draw(self, dc):
 		size = self.GetClientSize()
@@ -245,8 +259,57 @@ class Animation(wx.PyControl):
 		dc.SetPen( wx.Pen(wx.Colour(0,0,0), 2, wx.SOLID) )
 		dc.DrawLine( 2*r + r/2, r + r/2 - laneWidth - 1, 2*r + r/2, 2*r + 2)
 		
-		# Draw the race time
+		# Draw the riders
+		dc.SetFont( self.numberFont )
+		dc.SetPen( wx.BLACK_PEN )
+		numSize = (r/2)/self.laneMax
+		self.lapCur = 0
+		topThree = []
+		if self.data:
+			riderXPY = {}
+			for num, d in self.data.iteritems():
+				xyp = self.getRiderXYP( num, num % self.laneMax )
+				riderXPY[num] = xyp
+				setTopN( topThree, 3, (xyp[2], num) )
+			
+			topThree.sort(reverse=True)
+			riderXPY = [(num, xpy[0], xpy[1], xpy[2]) for num, xpy in riderXPY.iteritems()]
+			riderXPY.sort(reverse=True, key=itemgetter(3))
+			for num, x, y, position in riderXPY:
+				if x == None:
+					continue
+				dc.SetBrush( wx.Brush(self.colours[num % len(self.colours)], wx.SOLID) )
+				try:
+					i = (i for i, v in enumerate(topThree) if v[1] == num).next()
+					dc.SetPen( wx.Pen(self.topThreeColours[i], r / 24) )
+				except StopIteration:
+					i = None
+				dc.DrawCircle( x, y, laneWidth * 0.75 )
+				dc.DrawLabel(str(num), wx.Rect(x+numSize, y-numSize, numSize*2, numSize*2) )
+				if i is not None:
+					dc.SetPen( wx.BLACK_PEN )
+
+		# Draw the current lap
 		dc.SetFont( self.timeFont )
+		if self.lapCur:
+			tStr = 'Lap %d' % self.lapCur
+			tWidth, tHeight = dc.GetTextExtent( tStr )
+			dc.DrawText( tStr, 2*r + r/2 - tWidth, r + r/2 - laneWidth - tHeight * 1.5 )
+
+		# Draw the leader board.
+		if topThree:
+			x = r
+			y = r / 2 + laneWidth * 1.5
+			tWidth, tHeight = dc.GetTextExtent( 'Leaders:' )
+			dc.DrawText( 'Leaders:', x, y )
+			y += tHeight
+			dc.DrawLine( x, y, x + tWidth, y )
+			for i, (p, num) in enumerate(topThree):
+				s = '%d: %d' % (i+1, num)
+				dc.DrawText( s, x, y)
+				y += tHeight
+			
+		# Draw the race time
 		secs = int( self.t )
 		if secs < 60*60:
 			tStr = '%d:%02d' % ((secs / 60)%60, secs % 60 )
@@ -255,17 +318,6 @@ class Animation(wx.PyControl):
 		tWidth, tHeight = dc.GetTextExtent( tStr )
 		dc.DrawText( tStr, 4*r - tWidth, 2*r - tHeight )
 		
-		# Draw the riders
-		dc.SetFont( self.numberFont )
-		dc.SetPen( wx.BLACK_PEN )
-		numSize = (r/2)/self.laneMax
-		if self.data:
-			for num, d in self.data.iteritems():
-				xy = self.getRiderXY( num, num % self.laneMax )
-				if xy is not None:
-					dc.SetBrush( wx.Brush(self.colours[num % len(self.colours)], wx.SOLID) )
-					dc.DrawCirclePoint( xy, laneWidth )
-					dc.DrawLabel(str(num), wx.Rect(xy[0]+numSize, xy[1]-numSize, numSize*2, numSize*2) )
 		
 	def OnEraseBackground(self, event):
 		# This is intentionally empty, because we are using the combination
@@ -278,7 +330,7 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="Animation", size=(600,400))
 	Animation = Animation(mainWin)
 	data = {}
-	for num in xrange(100,130):
+	for num in xrange(100,299):
 		mean = random.normalvariate(6.0, 0.3)
 		lapTimes = [0]
 		for lap in xrange( 15 ):
