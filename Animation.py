@@ -265,6 +265,8 @@ class Animation(wx.PyControl):
 		numSize = (r/2)/self.laneMax
 		self.lapCur = 0
 		topThree = []
+		riderRadius = laneWidth * 0.75
+		thickLine = r / 24
 		if self.data:
 			riderXPY = {}
 			for num, d in self.data.iteritems():
@@ -281,10 +283,10 @@ class Animation(wx.PyControl):
 				dc.SetBrush( wx.Brush(self.colours[num % len(self.colours)], wx.SOLID) )
 				try:
 					i = (i for i, v in enumerate(topThree) if v[1] == num).next()
-					dc.SetPen( wx.Pen(self.topThreeColours[i], r / 24) )
+					dc.SetPen( wx.Pen(self.topThreeColours[i], thickLine) )
 				except StopIteration:
 					i = None
-				dc.DrawCircle( x, y, laneWidth * 0.75 )
+				dc.DrawCircle( x, y, riderRadius )
 				dc.DrawLabel(str(num), wx.Rect(x+numSize, y-numSize, numSize*2, numSize*2) )
 				if i is not None:
 					dc.SetPen( wx.BLACK_PEN )
@@ -303,10 +305,16 @@ class Animation(wx.PyControl):
 			tWidth, tHeight = dc.GetTextExtent( 'Leaders:' )
 			dc.DrawText( 'Leaders:', x, y )
 			y += tHeight
-			dc.DrawLine( x, y, x + tWidth, y )
+			thickLine = tHeight / 5
+			riderRadius = tHeight / 3.5
+			dc.SetBrush( wx.Brush(trackColour, wx.SOLID) )
 			for i, (p, num) in enumerate(topThree):
+				dc.SetPen( wx.Pen(backColour, 0) )
+				dc.DrawRectangle( x - thickLine/4, y - thickLine/4, tHeight + thickLine/2, tHeight  + thickLine/2)
+				dc.SetPen( wx.Pen(self.topThreeColours[i], thickLine) )
+				dc.DrawCircle( x + tHeight / 2, y + tHeight / 2, riderRadius )
 				s = '%d: %d' % (i+1, num)
-				dc.DrawText( s, x, y)
+				dc.DrawText( s, x + tHeight * 1.2, y)
 				y += tHeight
 			
 		# Draw the race time
