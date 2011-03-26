@@ -623,14 +623,9 @@ class MainWin( wx.Frame ):
 This will simulate a race using randomly generated data.
 It is a good illustration of CrossMgr's functionality with realtime data.
 
-The simulation takes about 9 minutes.
+The simulation takes about 8 minutes.
 
-When you start the simulation, notice that the race clock starts (upper right corner).
-You don't see anything right away because the riders are going around their first lap.
-
-Be patient!
-
-After abount a minute, you will see the numbers coming in as the simulated riders cross the finish line.
+Unlike a real race, the simulation will show riders crossing the line right from the start.  In a real race, riders would have to finish the first lap before they were recorded.
 
 The race will be written to:
 "%s".
