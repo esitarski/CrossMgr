@@ -328,7 +328,8 @@ class Animation(wx.PyControl):
 				dc.SetBrush( wx.Brush(self.colours[num % len(self.colours)], wx.SOLID) )
 				dc.DrawCircle( x + tHeight / 2, y + tHeight / 2, riderRadius )
 				
-				s = '%d: %d' % (i+1, num)
+				#s = '%d: %d' % (i+1, num)
+				s = '%d' % num
 				dc.DrawText( s, x + tHeight * 1.2, y)
 				y += tHeight
 			
