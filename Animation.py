@@ -180,18 +180,15 @@ class Animation(wx.PyControl):
 			p = i + float(self.t - lapTimes[i-1]) / float(lapTimes[i] - lapTimes[i-1])
 		return p
 	
-	def getRiderXYP( self, num, lane ):
-		position = self.getRiderPosition( num )
-		if position is None or (self.data[num]['lastTime'] is not None and self.t >= self.data[num]['lastTime']):
-			return (None, None, position)
+	def getXYfromPosition( self, lane, position ):
 		positionSave = position
-		self.lapCur = max(self.lapCur, int(position))
 		position -= int(position)
 		
 		r = self.r
-		curveLength = (r/2) * math.pi
+		curveLength = (r/2.0) * math.pi
 		trackLength = 4*r + 2 * curveLength
-		laneLength = (r/2) * (lane / float(self.laneMax))
+		laneWidth = (r/2.0) / self.laneMax
+		laneLength = lane * laneWidth
 		riderLength = trackLength * position
 		
 		if riderLength <= r/2:
@@ -220,6 +217,13 @@ class Animation(wx.PyControl):
 		riderLength -= curveLength
 		# rider is on finishing straight
 		return (r + riderLength, r + r/2 + laneLength, positionSave)
+	
+	def getRiderXYP( self, num, lane ):
+		position = self.getRiderPosition( num )
+		if position is None or (self.data[num]['lastTime'] is not None and self.t >= self.data[num]['lastTime']):
+			return (None, None, position)
+		self.lapCur = max(self.lapCur, int(position))
+		return self.getXYfromPosition( lane, position )
 	
 	def Draw(self, dc):
 		size = self.GetClientSize()
@@ -256,8 +260,16 @@ class Animation(wx.PyControl):
 		dc.DrawRectangle( r, r/2 + laneWidth, 2*r, r - 2*laneWidth + 1 )
 		
 		# Draw the Start/Finish line.
-		dc.SetPen( wx.Pen(wx.Colour(0,0,0), 2, wx.SOLID) )
+		dc.SetPen( wx.Pen(wx.Colour(0,0,0), 3, wx.SOLID) )
 		dc.DrawLine( 2*r + r/2, r + r/2 - laneWidth - 1, 2*r + r/2, 2*r + 2)
+
+		# Draw the quarter lines.
+		dc.SetPen( wx.Pen(wx.Colour(64,64,64), 1, wx.SOLID) )
+		for p in [0.25, 0.50, 0.75]:
+			x1, y1, pt = self.getXYfromPosition(-1, p)
+			x2, y2, pt = self.getXYfromPosition(self.laneMax+0.25, p)
+			dc.DrawLine( x1, y1, x2, y2 )
+			
 		
 		# Draw the riders
 		dc.SetFont( self.numberFont )
@@ -307,12 +319,15 @@ class Animation(wx.PyControl):
 			y += tHeight
 			thickLine = tHeight / 5
 			riderRadius = tHeight / 3.5
-			dc.SetBrush( wx.Brush(trackColour, wx.SOLID) )
 			for i, (p, num) in enumerate(topThree):
 				dc.SetPen( wx.Pen(backColour, 0) )
+				dc.SetBrush( wx.Brush(trackColour, wx.SOLID) )
 				dc.DrawRectangle( x - thickLine/4, y - thickLine/4, tHeight + thickLine/2, tHeight  + thickLine/2)
+				
 				dc.SetPen( wx.Pen(self.topThreeColours[i], thickLine) )
+				dc.SetBrush( wx.Brush(self.colours[num % len(self.colours)], wx.SOLID) )
 				dc.DrawCircle( x + tHeight / 2, y + tHeight / 2, riderRadius )
+				
 				s = '%d: %d' % (i+1, num)
 				dc.DrawText( s, x + tHeight * 1.2, y)
 				y += tHeight
