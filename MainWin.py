@@ -163,24 +163,6 @@ class MainWin( wx.Frame ):
 		self.menuBar.Append( self.dataMgmtMenu, "&DataMgmt" )
 
 		#-----------------------------------------------------------------------
-		self.demoMenu = wx.Menu()
-
-		idCur = wx.NewId()
-		self.demoMenu.Append( idCur , "&Simulate Race...", "Simulate a race" )
-		self.Bind(wx.EVT_MENU, self.menuSimulate, id=idCur )
-
-		self.menuBar.Append( self.demoMenu, "Dem&o" )
-
-		#-----------------------------------------------------------------------
-		self.helpMenu = wx.Menu()
-
-		self.helpMenu.Append( wx.ID_ABOUT , "&About...", "About CrossMgr..." )
-		self.Bind(wx.EVT_MENU, self.menuAbout, id=wx.ID_ABOUT )
-
-		self.menuBar.Append( self.helpMenu, "&Help" )
-
-		#-----------------------------------------------------------------------
-		self.SetMenuBar( self.menuBar )
 
 		# Configure the field of the display.
 
@@ -235,8 +217,43 @@ class MainWin( wx.Frame ):
 		self.splitter.SplitVertically( self.forecastHistory, self.notebook, 200 )
 
 		#------------------------------------------------------------------------------
+		# Create a menu for quick navigation
+		self.pageMenu = wx.Menu()
+		self.idPage = {}
+		for i, p in enumerate(self.pages):
+			name = self.notebook.GetPageText(i)
+			idCur = wx.NewId()
+			self.idPage[idCur] = i
+			self.pageMenu.Append( idCur , name, "Jump to %s page" % name )
+			self.Bind(wx.EVT_MENU, self.menuShowPage, id=idCur )
+			
+		self.menuBar.Append( self.pageMenu, "&JumpTo" )
+
+		#-----------------------------------------------------------------------
+		self.demoMenu = wx.Menu()
+
+		idCur = wx.NewId()
+		self.demoMenu.Append( idCur , "&Simulate Race...", "Simulate a race" )
+		self.Bind(wx.EVT_MENU, self.menuSimulate, id=idCur )
+
+		self.menuBar.Append( self.demoMenu, "Dem&o" )
+
+		#-----------------------------------------------------------------------
+		self.helpMenu = wx.Menu()
+
+		self.helpMenu.Append( wx.ID_ABOUT , "&About...", "About CrossMgr..." )
+		self.Bind(wx.EVT_MENU, self.menuAbout, id=wx.ID_ABOUT )
+
+		self.menuBar.Append( self.helpMenu, "&Help" )
+
+		#------------------------------------------------------------------------------
+		self.SetMenuBar( self.menuBar )
+		#------------------------------------------------------------------------------
 		self.Bind(wx.EVT_CLOSE, self.onCloseWindow)
 
+	def menuShowPage( self, event ):
+		self.showPage( self.idPage[event.GetId()] )
+		
 	def getDirName( self ):
 		return Utils.getDirName()
 
