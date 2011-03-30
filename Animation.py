@@ -269,7 +269,6 @@ class Animation(wx.PyControl):
 			x1, y1, pt = self.getXYfromPosition(-1, p)
 			x2, y2, pt = self.getXYfromPosition(self.laneMax+0.25, p)
 			dc.DrawLine( x1, y1, x2, y2 )
-			
 		
 		# Draw the riders
 		dc.SetFont( self.numberFont )
@@ -287,6 +286,7 @@ class Animation(wx.PyControl):
 				setTopN( topThree, 3, (xyp[2], num) )
 			
 			topThree.sort(reverse=True)
+			topThree = [num for position, num in topThree]
 			riderXPY = [(num, xpy[0], xpy[1], xpy[2]) for num, xpy in riderXPY.iteritems()]
 			riderXPY.sort(reverse=True, key=itemgetter(3))
 			for num, x, y, position in riderXPY:
@@ -294,9 +294,9 @@ class Animation(wx.PyControl):
 					continue
 				dc.SetBrush( wx.Brush(self.colours[num % len(self.colours)], wx.SOLID) )
 				try:
-					i = (i for i, v in enumerate(topThree) if v[1] == num).next()
+					i = topThree.index( num )
 					dc.SetPen( wx.Pen(self.topThreeColours[i], thickLine) )
-				except StopIteration:
+				except ValueError:
 					i = None
 				dc.DrawCircle( x, y, riderRadius )
 				dc.DrawLabel(str(num), wx.Rect(x+numSize, y-numSize, numSize*2, numSize*2) )
@@ -319,7 +319,7 @@ class Animation(wx.PyControl):
 			y += tHeight
 			thickLine = tHeight / 5
 			riderRadius = tHeight / 3.5
-			for i, (p, num) in enumerate(topThree):
+			for i, num in enumerate(topThree):
 				dc.SetPen( wx.Pen(backColour, 0) )
 				dc.SetBrush( wx.Brush(trackColour, wx.SOLID) )
 				dc.DrawRectangle( x - thickLine/4, y - thickLine/4, tHeight + thickLine/2, tHeight  + thickLine/2)
@@ -328,7 +328,6 @@ class Animation(wx.PyControl):
 				dc.SetBrush( wx.Brush(self.colours[num % len(self.colours)], wx.SOLID) )
 				dc.DrawCircle( x + tHeight / 2, y + tHeight / 2, riderRadius )
 				
-				#s = '%d: %d' % (i+1, num)
 				s = '%d' % num
 				dc.DrawText( s, x + tHeight * 1.2, y)
 				y += tHeight
@@ -350,9 +349,6 @@ class Animation(wx.PyControl):
 		pass
 		
 if __name__ == '__main__':
-	app = wx.PySimpleApp()
-	mainWin = wx.Frame(None,title="Animation", size=(600,400))
-	Animation = Animation(mainWin)
 	data = {}
 	for num in xrange(100,299):
 		mean = random.normalvariate(6.0, 0.3)
@@ -360,6 +356,13 @@ if __name__ == '__main__':
 		for lap in xrange( 15 ):
 			lapTimes.append( lapTimes[-1] + random.normalvariate(mean, mean/20)*60.0 )
 		data[num] = { 'lapTimes': lapTimes, 'lastTime': None }
+
+	# import json
+	# open('race.json', 'w').write( json.dumps(data, sort_keys=True, indent=4) )
+
+	app = wx.PySimpleApp()
+	mainWin = wx.Frame(None,title="Animation", size=(600,400))
+	Animation = Animation(mainWin)
 	Animation.SetData( data )
 	Animation.Animate( 1*60, 60*60 )
 	mainWin.Show()
