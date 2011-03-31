@@ -7,12 +7,6 @@ import sys
 import datetime
 from operator import itemgetter, attrgetter
 
-def setTopN( arr, n, x ):
-	if len(arr) < n:
-		arr.append( x )
-	elif x > min(arr):
-		arr[arr.index(min(arr))] = x
-
 class Animation(wx.PyControl):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
@@ -95,6 +89,7 @@ class Animation(wx.PyControl):
 				tMax = max(tMax, info['lapTimes'][-1])
 		self.speedup = float(tMax) / float(tRunning)
 		self.tMax = tMax
+		print tMax
 		self.timer.Start( 1000.0/self.framesPerSecond, False )
 	
 	def StartAnimateRealtime( self ):
@@ -166,19 +161,28 @@ class Animation(wx.PyControl):
 	def OnSize(self, event):
 		self.Refresh()
 		
-	def getRiderPosition( self, num ):
-		""" Returns the fraction of the lap covered by the num. """
+	def getRiderPositionTime( self, num ):
+		""" Returns the fraction of the lap covered by the rider and the time. """
 		if num not in self.data:
-			return None
+			return (None, None)
 		lapTimes = self.data[num]['lapTimes']
-		if not lapTimes or self.t <= lapTimes[0]:
-			return None
-		if self.t >= lapTimes[-1]:
-			p = len(lapTimes) + float(self.t - lapTimes[-1]) / float(lapTimes[-1] - lapTimes[-2])
+		if not lapTimes or self.t < lapTimes[0]:
+			return (None, None)
+
+		tSearch = self.t
+		lastTime = self.data[num]['lastTime']
+		if lastTime is not None and lastTime < self.t:
+			if lastTime == lapTimes[-1]:
+				return (len(lapTimes), lastTime)
+			tSearch = lastTime
+			
+		if tSearch >= lapTimes[-1]:
+			p = len(lapTimes) + float(tSearch - lapTimes[-1]) / float(lapTimes[-1] - lapTimes[-2])
 		else:
-			i = bisect.bisect_left( lapTimes, self.t )
-			p = i + float(self.t - lapTimes[i-1]) / float(lapTimes[i] - lapTimes[i-1])
-		return p
+			i = bisect.bisect_left( lapTimes, tSearch )
+			p = i + float(tSearch - lapTimes[i-1]) / float(lapTimes[i] - lapTimes[i-1])
+			
+		return (p, tSearch)
 	
 	def getXYfromPosition( self, lane, position ):
 		positionSave = position
@@ -193,37 +197,42 @@ class Animation(wx.PyControl):
 		
 		if riderLength <= r/2:
 			# rider is on starting straight
-			return (2*r + r/2.0 + riderLength, r + r/2.0 + laneLength, positionSave )
+			return (2*r + r/2.0 + riderLength, r + r/2.0 + laneLength )
 			
 		riderLength -= r/2
 		if riderLength <= curveLength:
 			# rider is on 1st curve
 			a = math.pi * riderLength / curveLength
 			rd = r/2 + laneLength
-			return (3*r + rd*math.sin(a), r + rd*math.cos(a), positionSave)
+			return (3*r + rd*math.sin(a), r + rd*math.cos(a) )
 
 		riderLength -= curveLength
 		if riderLength <= 2*r:
 			# rider is on back straight
-			return (3*r - riderLength, r/2 - laneLength, positionSave)
+			return (3*r - riderLength, r/2 - laneLength )
 			
 		riderLength -= 2*r
 		if riderLength <= curveLength:
 			# rider is on back curve
 			a = math.pi * (1.0 + riderLength / curveLength)
 			rd = r/2 + laneLength
-			return (r + rd*math.sin(a), r + rd*math.cos(a), positionSave )
+			return (r + rd*math.sin(a), r + rd*math.cos(a) )
 			
 		riderLength -= curveLength
 		# rider is on finishing straight
-		return (r + riderLength, r + r/2 + laneLength, positionSave)
+		return (r + riderLength, r + r/2 + laneLength )
 	
-	def getRiderXYP( self, num, lane ):
-		position = self.getRiderPosition( num )
-		if position is None or (self.data[num]['lastTime'] is not None and self.t >= self.data[num]['lastTime']):
-			return (None, None, position)
-		self.lapCur = max(self.lapCur, int(position))
-		return self.getXYfromPosition( lane, position )
+	def getRiderXYPT( self, num, lane ):
+		positionTime = self.getRiderPositionTime( num )
+		if positionTime[0] is None:
+			return (None, None, None, None)
+		if self.data[num]['lastTime'] is not None and self.t >= self.data[num]['lastTime']:
+			self.lapCur = max(self.lapCur, len(self.data[num]['lapTimes']))
+			return (None, None, positionTime[0], positionTime[1])
+		self.lapCur = max(self.lapCur, int(positionTime[0]))
+		xypt = list(self.getXYfromPosition( lane, positionTime[0] ))
+		xypt.extend( positionTime )
+		return tuple( xypt )
 	
 	def Draw(self, dc):
 		size = self.GetClientSize()
@@ -266,8 +275,8 @@ class Animation(wx.PyControl):
 		# Draw the quarter lines.
 		dc.SetPen( wx.Pen(wx.Colour(64,64,64), 1, wx.SOLID) )
 		for p in [0.25, 0.50, 0.75]:
-			x1, y1, pt = self.getXYfromPosition(-1, p)
-			x2, y2, pt = self.getXYfromPosition(self.laneMax+0.25, p)
+			x1, y1 = self.getXYfromPosition(-1, p)
+			x2, y2 = self.getXYfromPosition(self.laneMax+0.25, p)
 			dc.DrawLine( x1, y1, x2, y2 )
 		
 		# Draw the riders
@@ -279,19 +288,20 @@ class Animation(wx.PyControl):
 		riderRadius = laneWidth * 0.75
 		thickLine = r / 24
 		if self.data:
-			riderXPY = {}
+			riderXYPT = []
 			for num, d in self.data.iteritems():
-				xyp = self.getRiderXYP( num, num % self.laneMax )
-				riderXPY[num] = xyp
-				setTopN( topThree, 3, (xyp[2], num) )
+				xypt = list(self.getRiderXYPT( num, num % self.laneMax ))
+				xypt.insert( 0, num )
+				riderXYPT.append( xypt )
 			
-			topThree.sort(reverse=True)
-			topThree = [num for position, num in topThree]
-			riderXPY = [(num, xpy[0], xpy[1], xpy[2]) for num, xpy in riderXPY.iteritems()]
-			riderXPY.sort(reverse=True, key=itemgetter(3))
-			for num, x, y, position in riderXPY:
-				if x == None:
+			# Sort by greatest distance, then by shortest time.
+			riderXYPT.sort( cmp=lambda x,y: cmp((-x[3], x[4]), (-y[3], y[4]) ) )
+			topThree = [num for num, x, y, position, time in riderXYPT[:min(3,len(riderXYPT))]]
+			success = False
+			for num, x, y, position, time in riderXYPT:
+				if x is None:
 					continue
+				success = True
 				dc.SetBrush( wx.Brush(self.colours[num % len(self.colours)], wx.SOLID) )
 				try:
 					i = topThree.index( num )
@@ -302,10 +312,17 @@ class Animation(wx.PyControl):
 				dc.DrawLabel(str(num), wx.Rect(x+numSize, y-numSize, numSize*2, numSize*2) )
 				if i is not None:
 					dc.SetPen( wx.BLACK_PEN )
+			
+			# Stop the animation if there is nothing to display.		
+			if not success:
+				self.StopAnimate()
 
 		# Draw the current lap
 		dc.SetFont( self.timeFont )
 		if self.lapCur:
+			maxLaps = len(self.data[topThree[0]]['lapTimes'])
+			if self.lapCur > maxLaps:
+				self.lapCur = maxLaps
 			tStr = 'Lap %d' % self.lapCur
 			tWidth, tHeight = dc.GetTextExtent( tStr )
 			dc.DrawText( tStr, 2*r + r/2 - tWidth, r + r/2 - laneWidth - tHeight * 1.5 )
@@ -350,12 +367,12 @@ class Animation(wx.PyControl):
 		
 if __name__ == '__main__':
 	data = {}
-	for num in xrange(100,299):
+	for num in xrange(100,200):
 		mean = random.normalvariate(6.0, 0.3)
 		lapTimes = [0]
-		for lap in xrange( 15 ):
+		for lap in xrange( 5 ):
 			lapTimes.append( lapTimes[-1] + random.normalvariate(mean, mean/20)*60.0 )
-		data[num] = { 'lapTimes': lapTimes, 'lastTime': None }
+		data[num] = { 'lapTimes': lapTimes, 'lastTime': lapTimes[-1] }
 
 	# import json
 	# open('race.json', 'w').write( json.dumps(data, sort_keys=True, indent=4) )
