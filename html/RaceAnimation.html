@@ -1,0 +1,450 @@
+<html>
+<title>Bicycle Race Aimation by Edward Sitarski</title>
+<style type="text/css">
+  body { 
+    font-family: sans-serif;
+  }
+
+</style>
+<script>
+var canvas = null;
+var data = null;	// Rider data
+var r = 100.0;		// The key track size dimension
+var t = 0.0;		// Current race time of the simulation.
+var tLast = 0.0;
+var tMax = 0.0;
+var laneMax = 8;	// Maximum number of lanes on the track.
+var lapCur = 0;		// Current lap of the race.
+var topThree = [];
+var framesPerSecond = 32;
+var speedup = 1.0;
+
+var colours = [
+	'rgb(255, 0, 0)',
+	'rgb(0, 0, 255)',
+	'rgb(255, 255, 0)',
+	'rgb(255, 0, 255)',
+	'rgb(0, 255, 255)'
+];
+			 
+var	topThreeColours = [
+	'rgb(255,215,0)',
+	'rgb(230,230,230)',
+	'rgb(205,133,63)'
+];
+
+Array.prototype.index = function( x )
+{
+	var len = this.length;
+	for ( var i = 0; i < len; i++) if (this[i] == x) return i;
+	return -1;
+}
+
+Array.prototype.back = function()
+{
+	var len = this.length;
+	return this[len-1];
+}
+
+function getRiderPositionTime( num )
+{
+	// Returns the fraction of the lap covered by the num.
+	if( !data[num] )
+		return [null, null];
+	var lapTimes = data[num]['lapTimes'];
+	if( !lapTimes )
+		return null;
+	if( t <= lapTimes[0] )
+		return [null, t];
+		
+	var tSearch = t;
+	var lastTime = data[num]['lastTime'];
+	if( lastTime != null && lastTime < t )
+		tSearch = lastTime;
+		
+	var p;
+	if( tSearch >= lapTimes.back() )
+		p = lapTimes.length + (tSearch - lapTimes.back()) / (lapTimes.back() - lapTimes[lapTimes.length-2]);
+	else
+	{
+		var left = 0, right = lapTimes.length, i;
+		while( right - left > 1 )
+		{
+			i = Math.floor((right + left) / 2);
+			if( tSearch < lapTimes[i] )
+				right = i;
+			else
+				left = i;
+		}
+		i = left;
+		if( lapTimes[i] < tSearch )
+			++i;
+		p = i + (tSearch - lapTimes[i-1]) / (lapTimes[i] - lapTimes[i-1])
+	}
+	return [p, tSearch];
+}
+
+function getXYfromPosition( lane, position )
+{
+	position -= Math.floor(position);
+	
+	var curveLength = (r/2.0) * Math.PI;
+	var trackLength = 4*r + 2 * curveLength;
+	var laneWidth = (r/2.0) / laneMax;
+	var laneLength = lane * laneWidth;
+	var riderLength = trackLength * position;
+	
+	if( riderLength <= r/2 )
+		// rider is on starting straight
+		return [2*r + r/2.0 + riderLength, r + r/2.0 + laneLength];
+		
+	riderLength -= r/2;
+	if( riderLength <= curveLength )
+	{
+		// rider is on 1st curve
+		a = Math.PI * riderLength / curveLength;
+		rd = r/2 + laneLength;
+		return [3*r + rd*Math.sin(a), r + rd*Math.cos(a)];
+	}
+
+	riderLength -= curveLength
+	if( riderLength <= 2*r )
+		// rider is on back straight
+		return [3*r - riderLength, r/2 - laneLength];
+		
+	riderLength -= 2*r;
+	if( riderLength <= curveLength )
+	{
+		// rider is on back curve
+		a = Math.PI * (1.0 + riderLength / curveLength);
+		rd = r/2 + laneLength;
+		return [r + rd*Math.sin(a), r + rd*Math.cos(a)];
+	}	
+	riderLength -= curveLength
+	// rider is on finishing straight
+	return [r + riderLength, r + r/2 + laneLength];
+}
+
+function getRiderXYPT( num, lane )
+{
+	var positionTime = getRiderPositionTime( num );
+	if ( positionTime[0] == null )
+		return [null, null, null];
+	if( data[num]['lastTime'] != null && t >= data[num]['lastTime'] )
+	{
+		lapCur = Math.max( lapCur, data[num]['lapTimes'].length );
+		return [null, null, positionTime[0], positionTime[1]];
+	}
+	lapCur = Math.max(lapCur, Math.floor(positionTime[0]));
+	var xypt = getXYfromPosition( lane, positionTime[0] );
+	xypt.push( positionTime[0] );
+	xypt.push( positionTime[1] );
+	return xypt;
+}
+
+function DrawCircle( ctx, x, y, radius )
+{
+	ctx.beginPath();
+	ctx.arc(x, y, radius, 0.0, Math.PI*2, true);
+	ctx.closePath();
+	ctx.fill();
+	ctx.stroke();
+}
+
+function DrawLine( ctx, x1, y1, x2, y2 )
+{
+	ctx.beginPath();
+	ctx.moveTo( x1, y1 );
+	ctx.lineTo( x2, y2 );
+	ctx.closePath();
+	ctx.stroke();
+}
+
+function Refresh()
+{
+	var dc = canvas.getContext('2d');
+	
+	dc.textBaseline = "top";
+	
+	var width = canvas.width;
+	var height = canvas.height;
+	var backColour = 'white';
+	dc.fillStyle = backColour;
+	dc.fillRect(0, 0, width, height );
+	
+	if( width < 80 || height < 80 )
+		return;
+
+	r = Math.floor(width / 4);
+	if( r * 2 > height )
+		r = Math.floor(height / 2);
+	r -= (r & 1);			// Make sure that r is an even number.
+
+	var tHeight = r / 8;
+    dc.font = tHeight + "px Arial";
+	
+	// Draw the track.
+	trackColour = 'rgb(0,255,0)';
+	dc.fillStyle = trackColour;
+	dc.strokeStyle = trackColour;
+	DrawCircle( dc, r, r, r );
+	DrawCircle( dc, 3*r, r, r );
+	dc.fillRect( r, 0, 2*r, 2*r + 2 );
+	
+	// Draw the negative space.
+	laneWidth = (r/2) / laneMax;
+	dc.fillStyle = backColour;
+	dc.strokeStyle = backColour;
+	DrawCircle( dc, r, r, r/2 - laneWidth );
+	DrawCircle( dc, 3*r, r, r/2 - laneWidth );
+	
+	var pp = [r, r/2 + laneWidth, 2*r, r - 2*laneWidth + 1];
+	dc.fillRect( pp[0], pp[1], pp[2], pp[3] );
+	dc.strokeRect( pp[0], pp[1], pp[2], pp[3] );
+	
+	// Draw the Start/Finish line.
+	dc.strokeStyle = 'black';
+	dc.lineWidth = 3;
+	DrawLine( dc, 2*r + r/2, r + r/2 - laneWidth - 1, 2*r + r/2, 2*r + 2)
+
+	// Draw the quarter lines.
+	dc.lineWidth = 1;
+	dc.strokeStyle = 'rgb(64,64,64)';
+	for( var i = 1; i <= 3; ++i )
+	{
+		var p = 0.25 * i;
+		var p1 = getXYfromPosition(-1, p);
+		var p2 = getXYfromPosition(laneMax+0.25, p);
+		DrawLine( dc, p1[0], p1[1], p2[0], p2[1] );
+	}
+	
+	// Draw the riders
+	// dc.SetFont( self.numberFont )
+	dc.strokeStyle = 'black';
+	dc.fillStyle = 'black';
+	dc.lineWidth = 1;
+	numSize = (r/2)/laneMax;
+	lapCur = 0;
+	topThree = [];
+	riderRadius = laneWidth * 0.75;
+	thickLine = r / 24;
+	if( data )
+	{
+		var riderXYPT = [];
+		for( num in data )
+		{
+			var xypt = getRiderXYPT( num, num % laneMax );
+			if( xypt[2] == null )
+				continue;
+			xypt.splice( 0, 0, num );
+			riderXYPT.push( xypt );
+		}
+		// Sort in reverse order of position so we draw leaders last on top.
+		riderXYPT.sort(function(x, y)
+			{
+				var r = y[3] - x[3];				// Greatest distance.
+				if( r == 0 )
+					r = x[4] - y[4];				// Shortest time.
+				return -r;
+			});
+			
+		var topThree = [];
+		for( var i = riderXYPT.length - 1; i >= 0 && i >= riderXYPT.length - 3; --i )
+			topThree.push( riderXYPT[i][0] );
+			
+		for( var i = 0; i < riderXYPT.length; ++i )
+		{
+			var rxypt = riderXYPT[i];
+			x = rxypt[1];
+			if( x == null )
+				continue;
+			num = rxypt[0], y = rxypt[2];
+			dc.fillStyle = colours[num % colours.length];
+			var j = 0;
+			for( j = 0; j < topThree.length; ++j )
+				if( topThree[j] == num )
+					break;
+			if( j >= topThree.length )
+				j = null;
+			if( j != null )
+			{
+				dc.strokeStyle = topThreeColours[j];
+				dc.lineWidth = thickLine;
+			}
+			DrawCircle( dc, x, y, riderRadius );
+			dc.fillStyle = 'black';
+			dc.fillText(num, x+numSize, y-numSize );
+			if( j != null )
+			{
+				dc.strokeStyle = 'black';
+				dc.lineWidth = 1;
+			}
+		}
+	}
+
+	// Draw the current lap
+	dc.fillStyle = 'black';
+	if( lapCur > 0 )
+	{
+		var tStr = 'Lap ' + lapCur;
+		var tWidth = dc.measureText(tStr).width;
+		dc.fillText( tStr, 2*r + r/2 - tWidth, r + r/2 - laneWidth - tHeight * 1.5 );
+	}
+
+	// Draw the leader board.
+	if( topThree.length > 0 )
+	{
+		var x = r;
+		var y = r / 2 + laneWidth * 1.5;
+		var tWidth = dc.measureText('Leaders:').width;
+		dc.fillText( 'Leaders:', x, y );
+		y += tHeight * 1.2;
+		var thickLine = tHeight / 5;
+		var riderRadius = tHeight / 3.5;
+		for( var i = 0; i < topThree.length; ++i )
+		{
+			var num = topThree[i];
+			dc.lineWidth = 1;
+			dc.strokeStyle = backColour;
+			dc.fillStyle = trackColour;
+			dc.fillRect( x - thickLine/4, y - thickLine/4, tHeight + thickLine/2, tHeight  + thickLine/2 );
+			
+			dc.strokeStyle = topThreeColours[i];
+			dc.lineWidth = thickLine;
+			dc.fillStyle = colours[num % colours.length];
+			DrawCircle( dc, x + tHeight / 2, y + tHeight / 2, riderRadius );
+			
+			dc.fillStyle = 'black';
+			dc.fillText( num, x + tHeight * 1.2, y );
+			y += tHeight * 1.2;
+		}
+	}
+		
+	// Draw the race time
+	dc.fillStyle = 'black';
+	var secs = Math.floor( t );
+	var h = Math.floor( secs / (60*60) );
+	var m = Math.floor(secs / 60) % 60;
+	var s = Math.floor(secs % 60);
+	if( h == 0 )
+		tStr = m + (s < 10 ? ':0' : ':') + s;
+	else
+		tStr = h + (m < 10 ? ':0' : ':') + m + (s < 10 ? ':0' : ':') + s;
+	var tWidth = dc.measureText(tStr).width;
+	dc.fillText( tStr, 4*r - tWidth, 2*r - tHeight );
+}
+		
+function _initAnimation()
+{
+	tLast = (new Date).getTime();
+}
+
+function NextFrame()
+{
+	var tDelta = ((new Date).getTime() - tLast);
+	SetTime( t + (tDelta/1000.0) * speedup );
+	tLast += tDelta;
+	if( t < tMax )
+		setTimeout( NextFrame, 1000.0 / framesPerSecond );
+}
+
+function SetData( aData, tCur )
+{
+	// data is a rider information indexed by number.  Info includes lap times and lastTime times.
+	// lap times should include the start offset.
+	//	Example:
+	//		data = { 101: { lapTimes: [xx, yy, zz], lastTime: None }, 102 { lapTimes: [aa, bb], lastTime: cc} }
+	data = (aData || null);
+	if( tCur != undefined )
+		t = tCur;
+	Refresh();
+}
+
+function Animate( tRunning, aTMax, tCur )
+{
+	StopAnimate();
+	_initAnimation();
+	
+	t = (tCur || 0);
+	if( !data )
+		return;
+	if( aTMax == undefined )
+	{
+		tMax = 0;
+		for( num in data )
+			tMax = Math.max(tMax, data[num]['lapTimes'].back());
+	}
+	else
+		tMax = aTMax;
+		
+	speedup = tMax / tRunning;
+	setTimeout( NextFrame, 1000.0/framesPerSecond );
+}
+		
+function StartAnimateRealtime()
+{
+	_initAnimation();
+	speedup = 1.0;
+	tMax = 999999;
+	setTimeout( NextFrame, 1000.0/framesPerSecond );
+}
+	
+function StopAnimate()
+{
+	t = tMax;
+}
+			
+function IsAnimating()
+{
+	return t < tMax;
+}
+	
+function SetTime( aT )
+{
+	t = aT;
+	Refresh();
+}
+
+function rnd_normal()
+{
+	return (Math.random()*2-1)+(Math.random()*2-1)+(Math.random()*2-1);
+}
+
+function normal_variate( mean, stdev )
+{
+	return rnd_normal()*stdev + mean;
+}
+
+function onLoad()
+{
+	canvas = document.getElementById('idTrack');
+	
+	data = {};
+	for( var num = 100; num < 150; ++num )
+	{
+		var mean = normal_variate(6.0, 0.3);
+		var lapTimes = [0];
+		for( var lap = 0; lap < 8; ++lap )
+			lapTimes.push( lapTimes.back() + normal_variate(mean, mean/20)*60.0 );
+		data[num] = { 'lapTimes': lapTimes, 'lastTime': lapTimes.back() };
+	}
+	
+	SetData( data );
+	Animate( 90 );
+}
+
+</script>
+
+<body onload="onLoad()">
+<p><strong>Bicycle Race Animation</strong></p>
+<p>
+See <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a> for more details<br/>
+by <a href="mailto:edward.sitarski@gmail.com?subject=Race Animation">Edward Sitarski</a><br/>
+</p>
+<canvas id="idTrack" width="500" height="500">
+Your browser does not support HTML5 Canvas.<br/>
+Please upgrade to a more recent browser version.
+</canvas>
+</body>
+
+</html>

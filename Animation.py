@@ -294,9 +294,14 @@ class Animation(wx.PyControl):
 				xypt.insert( 0, num )
 				riderXYPT.append( xypt )
 			
-			# Sort by greatest distance, then by shortest time.
-			riderXYPT.sort( cmp=lambda x,y: cmp((-x[3], x[4]), (-y[3], y[4]) ) )
-			topThree = [num for num, x, y, position, time in riderXYPT[:min(3,len(riderXYPT))]]
+			# Sort by reverse greatest distance, then by shortest time.
+			# Do this so the leaders are drawn last.
+			riderXYPT.sort( cmp=lambda x,y: -cmp((-x[3], x[4]), (-y[3], y[4]) ) )
+			
+			topThree = []
+			for i in xrange(len(riderXYPT) - 1, max(-1,len(riderXYPT)-4), -1):
+				topThree.append( riderXYPT[i][0] )
+				
 			success = False
 			for num, x, y, position, time in riderXYPT:
 				if x is None:
