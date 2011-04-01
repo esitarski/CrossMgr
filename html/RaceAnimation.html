@@ -7,8 +7,12 @@
 
 </style>
 <script>
+
+// Rider data
+var data = null;
+
+// Control information about the animation.
 var canvas = null;
-var data = null;	// Rider data
 var r = 100.0;		// The key track size dimension
 var t = 0.0;		// Current race time of the simulation.
 var tLast = 0.0;
@@ -18,6 +22,11 @@ var lapCur = 0;		// Current lap of the race.
 var topThree = [];
 var framesPerSecond = 32;
 var speedup = 1.0;
+var categorySelect = null;
+var categories = [];	// Array of unique categories in the data.
+var categoryCur = 'All';
+var animationSeconds = 90;
+var suspendAnimation = false;
 
 var colours = [
 	'rgb(255, 0, 0)',
@@ -233,12 +242,16 @@ function Refresh()
 		var riderXYPT = [];
 		for( num in data )
 		{
-			var xypt = getRiderXYPT( num, num % laneMax );
-			if( xypt[2] == null )
-				continue;
-			xypt.splice( 0, 0, num );
-			riderXYPT.push( xypt );
+			if( categoryCur == 'All' || data[num]['category'] == categoryCur )
+			{
+				var xypt = getRiderXYPT( num, num % laneMax );
+				if( xypt[2] == null )
+					continue;
+				xypt.splice( 0, 0, num );
+				riderXYPT.push( xypt );
+			}
 		}
+		
 		// Sort in reverse order of position so we draw leaders last on top.
 		riderXYPT.sort(function(x, y)
 			{
@@ -337,6 +350,7 @@ function Refresh()
 function _initAnimation()
 {
 	tLast = (new Date).getTime();
+	suspendAnimation = false;
 }
 
 function NextFrame()
@@ -344,7 +358,7 @@ function NextFrame()
 	var tDelta = ((new Date).getTime() - tLast);
 	SetTime( t + (tDelta/1000.0) * speedup );
 	tLast += tDelta;
-	if( t < tMax )
+	if( !suspendAnimation && t < tMax )
 		setTimeout( NextFrame, 1000.0 / framesPerSecond );
 }
 
@@ -353,10 +367,33 @@ function SetData( aData, tCur )
 	// data is a rider information indexed by number.  Info includes lap times and lastTime times.
 	// lap times should include the start offset.
 	//	Example:
-	//		data = { 101: { lapTimes: [xx, yy, zz], lastTime: None }, 102 { lapTimes: [aa, bb], lastTime: cc} }
+	//		data = { 101: { lapTimes: [xx, yy, zz], lastTime: None, category: 'All' }, 102 { lapTimes: [aa, bb], lastTime: cc, category: 'Cat'} }
 	data = (aData || null);
 	if( tCur != undefined )
 		t = tCur;
+		
+	// Get all the unique categories from the data.
+	var cats = {};
+	for( num in data )
+	{
+		var cName = data[num]['category'];
+		if( cName != 'All' )
+			cats[cName] = cName;
+	}
+	
+	categories = [];
+	for( c in cats )
+		categories.push( c );
+	categories.sort();
+	
+	// Insert the All category at the beginning.
+	categories.splice( 0, 0, 'All' );
+	
+	categorySelect.selectedIndex = 0;
+	categorySelect.options.length = 0;
+	for( var i = 0; i < categories.length; ++i )
+		categorySelect.options[i] = new Option( categories[i], 0 );
+	
 	Refresh();
 }
 
@@ -376,9 +413,15 @@ function Animate( tRunning, aTMax, tCur )
 	}
 	else
 		tMax = aTMax;
-		
+
 	speedup = tMax / tRunning;
 	setTimeout( NextFrame, 1000.0/framesPerSecond );
+}
+
+function SelectCategory()
+{
+	categoryCur = categories[categorySelect.selectedIndex];
+	Refresh();
 }
 		
 function StartAnimateRealtime()
@@ -393,16 +436,41 @@ function StopAnimate()
 {
 	t = tMax;
 }
+
+function SuspendAnimate()
+{
+	suspendAnimation = true;
+}
 			
 function IsAnimating()
 {
-	return t < tMax;
+	return !suspendAnimation && t < tMax;
 }
 	
 function SetTime( aT )
 {
 	t = aT;
 	Refresh();
+}
+
+function Rewind()
+{
+	t = 0.001;
+	Refresh();
+}
+
+function PlayStop()
+{
+	if( IsAnimating() )
+	{
+		SuspendAnimate();
+		document.getElementById('idPlayStop').value = 'Play';
+	}
+	else
+	{
+		Animate( animationSeconds, tMax, t );
+		document.getElementById('idPlayStop').value = 'Stop';
+	}
 }
 
 function rnd_normal()
@@ -418,19 +486,25 @@ function normal_variate( mean, stdev )
 function onLoad()
 {
 	canvas = document.getElementById('idTrack');
+	categorySelect = document.getElementById('idCategory');
 	
-	data = {};
-	for( var num = 100; num < 150; ++num )
+	if( data == null )
 	{
-		var mean = normal_variate(6.0, 0.3);
-		var lapTimes = [0];
-		for( var lap = 0; lap < 8; ++lap )
-			lapTimes.push( lapTimes.back() + normal_variate(mean, mean/20)*60.0 );
-		data[num] = { 'lapTimes': lapTimes, 'lastTime': lapTimes.back() };
+		var cats = ['Junior', 'Senior', 'Women'];
+		data = {};
+		for( var num = 100; num < 150; ++num )
+		{
+			var mean = normal_variate(6.0, 0.3);
+			var lapTimes = [0];
+			for( var lap = 0; lap < 8; ++lap )
+				lapTimes.push( lapTimes.back() + normal_variate(mean, mean/20)*60.0 );
+			data[num] = { 'lapTimes': lapTimes, 'lastTime': lapTimes.back(), 'category' : cats[num % cats.length] };
+		}
 	}
 	
 	SetData( data );
-	Animate( 90 );
+	Animate( animationSeconds );
+	document.getElementById('idPlayStop').value = 'Stop';
 }
 
 </script>
@@ -441,10 +515,18 @@ function onLoad()
 See <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a> for more details<br/>
 by <a href="mailto:edward.sitarski@gmail.com?subject=Race Animation">Edward Sitarski</a><br/>
 </p>
-<canvas id="idTrack" width="500" height="500">
+<p>
+Category:
+<select id="idCategory" onChange="SelectCategory()"></select>
+</p>
+<canvas id="idTrack" width="500" height="250">
 Your browser does not support HTML5 Canvas.<br/>
 Please upgrade to a more recent browser version.
 </canvas>
+<p>
+<input type="button" id="idRewind" onClick="Rewind()" value="Rewind"></input>
+<input type="button" id="idPlayStop" onClick="PlayStop()" value="Play"></input>
+</p>
 </body>
 
 </html>

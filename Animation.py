@@ -89,7 +89,6 @@ class Animation(wx.PyControl):
 				tMax = max(tMax, info['lapTimes'][-1])
 		self.speedup = float(tMax) / float(tRunning)
 		self.tMax = tMax
-		print tMax
 		self.timer.Start( 1000.0/self.framesPerSecond, False )
 	
 	def StartAnimateRealtime( self ):

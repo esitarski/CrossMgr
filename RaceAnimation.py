@@ -5,6 +5,49 @@ import Utils
 from Animation import Animation
 from FixCategories import FixCategories
 
+def GetAnimationData( catName = 'All' ):
+	race = Model.race
+	results = race.getResultsList( catName )
+	
+	if not results:
+		return None
+
+	finishers = set( r.num for r in results )
+	
+	maxLap = race.getMaxLap()
+	if race.numLaps is not None and race.numLaps < maxLap:
+		maxLap = race.numLaps
+	entries = race.interpolateLap( maxLap )
+	entries = [e for e in entries if e.num in finishers]	# Trim the results to this category.
+	
+	animationData = {}
+	for e in entries:
+		if e.num not in animationData:
+			animationData[e.num] = {'lapTimes': [], 'lastTime': None }
+		animationData[e.num]['lapTimes'].append( e.t )
+
+	# Set the last times.
+	for num, info in animationData.iteritems():
+		rider = race[num]
+		
+		c = race.getCategory( num )
+		try:
+			info['category'] = c.name
+		except:
+			info['category'] = 'All'
+		
+		if rider.status != Model.Rider.Finisher:
+			info['lastTime'] = rider.tStatus
+		else:
+			try:
+				info['lastTime'] = info['lapTimes'][c.getNumLaps()]
+			except:
+				tLast = info['lapTimes'][-1]
+				info['lastTime'] = tLast if not race.isRunning() or tLast >= race.minutes*60  else None
+				
+	return animationData
+		
+
 class RaceAnimation( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
@@ -54,31 +97,8 @@ class RaceAnimation( wx.Panel ):
 			return
 		
 		self.playButton.Enable( not race.isRunning() )
-		
 		catName = FixCategories( self.categoryChoice, getattr(race, 'raceAnimationCategory', 0) )
-
-		results = race.getResultsList( catName )
-		finishers = set( r.num for r in results )
-		
-		# Update the animation data.
-		maxLap = race.getMaxLap()
-		if race.numLaps is not None and race.numLaps < maxLap:
-			maxLap = race.numLaps
-		entries = race.interpolateLap( maxLap )
-		entries = [e for e in entries if e.num in finishers]	# Trim the results to this category.
-		animationData = {}
-		for e in entries:
-			if e.num not in animationData:
-				animationData[e.num] = {'lapTimes': [], 'lastTime': None }
-			animationData[e.num]['lapTimes'].append( e.t )
-
-		for num, info in animationData.iteritems():
-			rider = race[num]
-			if rider.status != Model.Rider.Finisher:
-				info['lastTime'] = rider.tStatus
-			else:
-				tLast = info['lapTimes'][-1]
-				info['lastTime'] = tLast if not race.isRunning() or tLast >= race.minutes*60  else None
+		animationData = GetAnimationData( catName )
 		
 		self.animation.SetData( animationData, race.lastRaceTime() )
 		
