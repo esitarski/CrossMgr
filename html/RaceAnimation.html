@@ -192,6 +192,7 @@ function Refresh()
 
 	var tHeight = r / 8;
 	var fontStr = tHeight + "px Arial";
+	var fontStrHightlight = (tHeight * 1.6) + "px Arial";
     dc.font = fontStr;
 	
 	// Draw the track.
@@ -282,6 +283,8 @@ function Refresh()
 			{
 				dc.strokeStyle = topThreeColours[j];
 				dc.lineWidth = thickLine;
+				if( numsToWatch[num] != undefined )
+					dc.font = fontStrHightlight;
 			}
 			else
 			{
@@ -291,7 +294,7 @@ function Refresh()
 				{
 					dc.strokeStyle = 'white';
 					dc.lineWidth = thickLine * 1.5;
-					dc.font = (tHeight * 1.6) + "px Arial";
+					dc.font = fontStrHightlight;
 				}
 			}
 			DrawCircle( dc, x, y, riderRadius );
