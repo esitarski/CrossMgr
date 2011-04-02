@@ -453,10 +453,32 @@ function SetTime( aT )
 	Refresh();
 }
 
+function SetSpeed( i )
+{
+	animationSeconds = 90;
+	var factor = 0.65;
+	
+	while( i < 0 )
+	{
+		animationSeconds /= factor;
+		++i;
+	}
+	while( i > 0 )
+	{
+		animationSeconds *= factor;
+		--i;
+	}
+		
+	Animate( animationSeconds, tMax, t );
+}
+
 function Rewind()
 {
 	t = 0.001;
 	Refresh();
+	document.getElementById('idPlayStop').value = 'Play';
+	Animate( animationSeconds, tMax, 0.001 );
+	suspendAnimation = true;
 }
 
 function PlayStop()
@@ -526,6 +548,12 @@ Please upgrade to a more recent browser version.
 <p>
 <input type="button" id="idRewind" onClick="Rewind()" value="Rewind"></input>
 <input type="button" id="idPlayStop" onClick="PlayStop()" value="Play"></input>
+&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp Playback Speed:
+<input type="radio" name="groupSpeed" value="0" onClick="SetSpeed(-2)"></input>
+<input type="radio" name="groupSpeed" value="1" onClick="SetSpeed(-1)"></input>
+<input type="radio" name="groupSpeed" value="2" checked onClick="SetSpeed(0)"></input>
+<input type="radio" name="groupSpeed" value="3" onClick="SetSpeed(1)"></input>
+<input type="radio" name="groupSpeed" value="4" onClick="SetSpeed(2)"></input>
 </p>
 </body>
 
