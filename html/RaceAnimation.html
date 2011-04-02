@@ -27,6 +27,7 @@ var categories = [];	// Array of unique categories in the data.
 var categoryCur = 'All';
 var animationSeconds = 90;
 var suspendAnimation = false;
+var numsToWatch = {};	// Set of numbers to watch.
 
 var colours = [
 	'rgb(255, 0, 0)',
@@ -190,7 +191,8 @@ function Refresh()
 	r -= (r & 1);			// Make sure that r is an even number.
 
 	var tHeight = r / 8;
-    dc.font = tHeight + "px Arial";
+	var fontStr = tHeight + "px Arial";
+    dc.font = fontStr;
 	
 	// Draw the track.
 	trackColour = 'rgb(0,255,0)';
@@ -261,9 +263,10 @@ function Refresh()
 				return -r;
 			});
 			
-		var topThree = [];
+		var topThree = {};
+		var j = 0;
 		for( var i = riderXYPT.length - 1; i >= 0 && i >= riderXYPT.length - 3; --i )
-			topThree.push( riderXYPT[i][0] );
+			topThree[riderXYPT[i][0]] = j++;
 			
 		for( var i = 0; i < riderXYPT.length; ++i )
 		{
@@ -273,24 +276,32 @@ function Refresh()
 				continue;
 			num = rxypt[0], y = rxypt[2];
 			dc.fillStyle = colours[num % colours.length];
-			var j = 0;
-			for( j = 0; j < topThree.length; ++j )
-				if( topThree[j] == num )
-					break;
-			if( j >= topThree.length )
-				j = null;
-			if( j != null )
+			// Check for a leader.
+			var j = topThree[num];
+			if( j != undefined )
 			{
 				dc.strokeStyle = topThreeColours[j];
 				dc.lineWidth = thickLine;
 			}
+			else
+			{
+				// Check for a watch number.
+				j = numsToWatch[num];
+				if( j != undefined )
+				{
+					dc.strokeStyle = 'white';
+					dc.lineWidth = thickLine * 1.5;
+					dc.font = (tHeight * 1.6) + "px Arial";
+				}
+			}
 			DrawCircle( dc, x, y, riderRadius );
 			dc.fillStyle = 'black';
 			dc.fillText(num, x+numSize, y-numSize );
-			if( j != null )
+			if( j != undefined )
 			{
 				dc.strokeStyle = 'black';
 				dc.lineWidth = 1;
+				dc.font = fontStr;
 			}
 		}
 	}
@@ -305,7 +316,10 @@ function Refresh()
 	}
 
 	// Draw the leader board.
-	if( topThree.length > 0 )
+	var leaders = [];
+	for( var k in topThree )
+		leaders[topThree[k]] = k;
+	if( leaders.length > 0 )
 	{
 		var x = r;
 		var y = r / 2 + laneWidth * 1.5;
@@ -314,9 +328,9 @@ function Refresh()
 		y += tHeight * 1.2;
 		var thickLine = tHeight / 5;
 		var riderRadius = tHeight / 3.5;
-		for( var i = 0; i < topThree.length; ++i )
+		for( var i = 0; i < leaders.length; ++i )
 		{
-			var num = topThree[i];
+			var num = leaders[i];
 			dc.lineWidth = 1;
 			dc.strokeStyle = backColour;
 			dc.fillStyle = trackColour;
@@ -472,6 +486,25 @@ function SetSpeed( i )
 	Animate( animationSeconds, tMax, t );
 }
 
+function SetNumsToWatch()
+{
+	var numsToWatchText = document.getElementById('idNumsToWatch');
+	var numStr = numsToWatchText.value;
+	numStr = numStr.replace( / /g, ',' );
+	numStr = numStr.replace( /[^\d,]/g, '' );
+	numStr = numStr.replace( /,+/g, ',' );
+	numsToWatchText.value = numStr;
+	
+	var nums = numStr.split(',');
+	numsToWatch = {};
+	for( var i = 0; i < nums.length; ++i )
+	{
+		var num = parseInt( nums[i], 10 );
+		numsToWatch[num] = num;
+	}
+	Refresh();
+}
+
 function Rewind()
 {
 	t = 0.001;
@@ -534,16 +567,18 @@ function onLoad()
 <body onload="onLoad()">
 <p><strong>Bicycle Race Animation</strong></p>
 <p>
-See <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a> for more details<br/>
-by <a href="mailto:edward.sitarski@gmail.com?subject=Race Animation">Edward Sitarski</a><br/>
+Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.<br/>
+Comments?  Click <a href="mailto:edward.sitarski@gmail.com?subject=Race Animation">here</a>.<br/>
 </p>
 <p>
 Category:
 <select id="idCategory" onChange="SelectCategory()"></select>
 </p>
 <canvas id="idTrack" width="500" height="250">
-Your browser does not support HTML5 Canvas.<br/>
+Your browser does not support the HTML5 Canvas.<br/>
 Please upgrade to a more recent browser version.
+If you are using Internet Explorer (IE), you need version 9.0 or higher.
+Current versions of Chrome, FireFox, Opera work fine.
 </canvas>
 <p>
 <input type="button" id="idRewind" onClick="Rewind()" value="Rewind"></input>
@@ -554,6 +589,10 @@ Please upgrade to a more recent browser version.
 <input type="radio" name="groupSpeed" value="2" checked onClick="SetSpeed(0)"></input>
 <input type="radio" name="groupSpeed" value="3" onClick="SetSpeed(1)"></input>
 <input type="radio" name="groupSpeed" value="4" onClick="SetSpeed(2)"></input>
+<br/>
+Highlight Numbers:<input type="text" id="idNumsToWatch" value="" onChange="SetNumsToWatch()"</input>
+<input type="button" value="Apply"></input>
+(for example: 124,131,203)
 </p>
 </body>
 

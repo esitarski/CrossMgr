@@ -283,7 +283,7 @@ class Animation(wx.PyControl):
 		dc.SetPen( wx.BLACK_PEN )
 		numSize = (r/2)/self.laneMax
 		self.lapCur = 0
-		topThree = []
+		topThree = {}
 		riderRadius = laneWidth * 0.75
 		thickLine = r / 24
 		if self.data:
@@ -297,9 +297,11 @@ class Animation(wx.PyControl):
 			# Do this so the leaders are drawn last.
 			riderXYPT.sort( cmp=lambda x,y: -cmp((-x[3], x[4]), (-y[3], y[4]) ) )
 			
-			topThree = []
+			topThree = {}
+			j = 0
 			for i in xrange(len(riderXYPT) - 1, max(-1,len(riderXYPT)-4), -1):
-				topThree.append( riderXYPT[i][0] )
+				topThree[riderXYPT[i][0]] = j
+				j += 1
 				
 			success = False
 			for num, x, y, position, time in riderXYPT:
@@ -308,9 +310,9 @@ class Animation(wx.PyControl):
 				success = True
 				dc.SetBrush( wx.Brush(self.colours[num % len(self.colours)], wx.SOLID) )
 				try:
-					i = topThree.index( num )
+					i = topThree[num]
 					dc.SetPen( wx.Pen(self.topThreeColours[i], thickLine) )
-				except ValueError:
+				except KeyError:
 					i = None
 				dc.DrawCircle( x, y, riderRadius )
 				dc.DrawLabel(str(num), wx.Rect(x+numSize, y-numSize, numSize*2, numSize*2) )
@@ -321,10 +323,18 @@ class Animation(wx.PyControl):
 			if not success:
 				self.StopAnimate()
 
+		# Convert topThree from dict to list.
+		leaders = [0] * len(topThree)
+		for num, position in topThree.iteritems():
+			leaders[position] = num
+			
 		# Draw the current lap
 		dc.SetFont( self.timeFont )
 		if self.lapCur:
-			maxLaps = len(self.data[topThree[0]]['lapTimes'])
+			if leaders:
+				maxLaps = len(self.data[leaders[0]]['lapTimes'])
+			else:
+				maxLaps = 9999
 			if self.lapCur > maxLaps:
 				self.lapCur = maxLaps
 			tStr = 'Lap %d' % self.lapCur
@@ -332,7 +342,7 @@ class Animation(wx.PyControl):
 			dc.DrawText( tStr, 2*r + r/2 - tWidth, r + r/2 - laneWidth - tHeight * 1.5 )
 
 		# Draw the leader board.
-		if topThree:
+		if leaders:
 			x = r
 			y = r / 2 + laneWidth * 1.5
 			tWidth, tHeight = dc.GetTextExtent( 'Leaders:' )
@@ -340,7 +350,7 @@ class Animation(wx.PyControl):
 			y += tHeight
 			thickLine = tHeight / 5
 			riderRadius = tHeight / 3.5
-			for i, num in enumerate(topThree):
+			for i, num in enumerate(leaders):
 				dc.SetPen( wx.Pen(backColour, 0) )
 				dc.SetBrush( wx.Brush(trackColour, wx.SOLID) )
 				dc.DrawRectangle( x - thickLine/4, y - thickLine/4, tHeight + thickLine/2, tHeight  + thickLine/2)
