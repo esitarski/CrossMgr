@@ -8,6 +8,7 @@ import random
 import time
 import copy
 import bisect
+import json
 import cPickle as pickle
 from optparse import OptionParser
 
@@ -22,7 +23,7 @@ from Results			import Results
 from Categories			import Categories
 from Properties			import Properties, PropertiesDialog
 from Recommendations	import Recommendations
-from RaceAnimation		import RaceAnimation
+from RaceAnimation		import RaceAnimation, GetAnimationData
 import Utils
 import Model
 from setpriority import setpriority
@@ -159,6 +160,10 @@ class MainWin( wx.Frame ):
 		idCur = wx.NewId()
 		self.dataMgmtMenu.Append( idCur , "Export History to Excel...", "Export History to Excel File" )
 		self.Bind(wx.EVT_MENU, self.menuExportHistory, id=idCur )
+
+		idCur = wx.NewId()
+		self.dataMgmtMenu.Append( idCur , "Export HTML Race Animation...", "Export Race Data as HTML Animation" )
+		self.Bind(wx.EVT_MENU, self.menuExportHtmlRaceAnimation, id=idCur )
 
 		self.menuBar.Append( self.dataMgmtMenu, "&DataMgmt" )
 
@@ -342,9 +347,31 @@ class MainWin( wx.Frame ):
 			Utils.MessageOK(self,
 						'Cannot write "%s".\n\nCheck if this spreadsheet open.\nIf so, close it, and try again.' % xlFName,
 						'Excel File Error', iconMask=wx.ICON_ERROR )
-
-	#--------------------------------------------------------------------------------------------
-
+							#--------------------------------------------------------------------------------------------
+	def menuExportHtmlRaceAnimation( self, event ):
+		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
+		try:
+			html = open(htmlFile).read()
+		except:
+			Utils.MessageOK('Cannot read HTML template file.',
+							'Html Template Read Error', iconMask=wx.ICON_ERROR )
+			return
+			
+		raceName = 'raceName = %s' % json.dumps('Race: %s' % os.path.basename(self.fileName)[:-4])
+		html = html.replace( 'raceName = null', raceName )
+		
+		data = 'data = %s' % json.dumps(GetAnimationData())
+		html = html.replace( 'data = null', data )
+		
+		fname = self.fileName[:-3] + 'html'
+		try:
+			open( fname, 'w' ).write( html )
+			# Utils.MessageOK('Html Race Animation written to\n\n   %s' % fname, 'Html Write', iconMask=wxICON_INFORMATION)
+		except:
+			Utils.MessageOK('Cannot write HTML template file (%s).' % fname,
+							'Html File Write Error', iconMask=wx.ICON_ERROR )
+	
+#--------------------------------------------------------------------------------------------
 	def onCloseWindow( self, event ):
 		self.writeRace()
 
@@ -911,6 +938,7 @@ Continue?''' % fName, 'Simulate a Race', iconMask = wx.ICON_QUESTION ):
 			self.results.setNumSelect( num )
 			self.riderDetail.setNumSelect( num )
 			self.gantt.setNumSelect( num )
+			self.raceAnimation.setNumSelect( num )
 			self.numSelect = num
 
 	#-------------------------------------------------------------

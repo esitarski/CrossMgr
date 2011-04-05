@@ -35,6 +35,7 @@ class Animation(wx.PyControl):
 		self.SetBackgroundColour('white')
 		self.data = None
 		self.t = 0
+		self.tMax = None
 		self.tDelta = 1
 		self.r = 100	# Radius of the turns of the fictional track.
 		self.laneMax = 8
@@ -44,6 +45,9 @@ class Animation(wx.PyControl):
 		
 		self.tLast = datetime.datetime.now()
 		self.speedup = 1.0
+		
+		self.suspendAnimation = False
+		self.numsToWatch = set()
 		
 		self.colours = [
 			wx.Colour(255, 0, 0),
@@ -61,6 +65,7 @@ class Animation(wx.PyControl):
 			 
 		self.numberFont	= wx.Font( 10, wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
 		self.timeFont	= wx.Font( 14, wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
+		self.highlightFont = self.timeFont
 
 		self.timer = wx.Timer( self, id=wx.NewId())
 		self.Bind( wx.EVT_TIMER, self.NextFrame, self.timer )
@@ -76,8 +81,9 @@ class Animation(wx.PyControl):
 	
 	def _initAnimation( self ):
 		self.tLast = datetime.datetime.now()
+		self.suspendAnimation = False
 	
-	def Animate( self, tRunning, tMax = None, tCur = 0 ):
+	def Animate( self, tRunning, tMax = None, tCur = 0.001 ):
 		self.StopAnimate();
 		self._initAnimation()
 		self.t = tCur
@@ -101,9 +107,16 @@ class Animation(wx.PyControl):
 	def StopAnimate( self ):
 		if self.timer.IsRunning():
 			self.timer.Stop();
-			
+	
+	def SetNumsToWatch( self, numsToWatch ):
+		self.numsToWatch = numsToWatch
+		self.Refresh()
+	
+	def SuspendAnimate( self ):
+		self.suspendAnimation = True;
+	
 	def IsAnimating( self ):
-		return self.timer.IsRunning()
+		return not self.suspendAnimation and self.timer.IsRunning()
 	
 	def SetTime( self, t ):
 		self.t = t
@@ -116,7 +129,7 @@ class Animation(wx.PyControl):
 			self.tLast = tNow
 			secsDelta = tDelta.seconds + tDelta.microseconds / 1000000.0
 			self.SetTime( self.t + secsDelta * self.speedup )
-			if self.t >= self.tMax:
+			if self.suspendAnimation or self.t >= self.tMax:
 				self.StopAnimate()
 
 	def SetForegroundColour(self, colour):
@@ -286,6 +299,7 @@ class Animation(wx.PyControl):
 		topThree = {}
 		riderRadius = laneWidth * 0.75
 		thickLine = r / 24
+		highlightPen = wx.Pen( wx.Colour(255,255,255), thickLine * 1.5 )
 		if self.data:
 			riderXYPT = []
 			for num, d in self.data.iteritems():
@@ -298,31 +312,31 @@ class Animation(wx.PyControl):
 			riderXYPT.sort( cmp=lambda x,y: -cmp((-x[3], x[4]), (-y[3], y[4]) ) )
 			
 			topThree = {}
-			j = 0
-			for i in xrange(len(riderXYPT) - 1, max(-1,len(riderXYPT)-4), -1):
+			for j, i in enumerate(xrange(len(riderXYPT) - 1, max(-1,len(riderXYPT)-4), -1)):
 				topThree[riderXYPT[i][0]] = j
-				j += 1
 				
-			success = False
 			for num, x, y, position, time in riderXYPT:
 				if x is None:
 					continue
-				success = True
 				dc.SetBrush( wx.Brush(self.colours[num % len(self.colours)], wx.SOLID) )
 				try:
 					i = topThree[num]
 					dc.SetPen( wx.Pen(self.topThreeColours[i], thickLine) )
+					if num in self.numsToWatch:
+						dc.SetFont( self.highlightFont )
 				except KeyError:
-					i = None
+					if num in self.numsToWatch:
+						dc.SetFont( self.highlightFont )
+						dc.SetPen( highlightPen )
+						i = 9999
+					else:
+						i = None
 				dc.DrawCircle( x, y, riderRadius )
 				dc.DrawLabel(str(num), wx.Rect(x+numSize, y-numSize, numSize*2, numSize*2) )
 				if i is not None:
 					dc.SetPen( wx.BLACK_PEN )
+					dc.SetFont( self.numberFont )
 			
-			# Stop the animation if there is nothing to display.		
-			if not success:
-				self.StopAnimate()
-
 		# Convert topThree from dict to list.
 		leaders = [0] * len(topThree)
 		for num, position in topThree.iteritems():

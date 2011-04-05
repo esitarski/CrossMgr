@@ -1,5 +1,5 @@
 <html>
-<title>Bicycle Race Aimation by Edward Sitarski</title>
+<title>Cyclo Cross Race Animation by Edward Sitarski</title>
 <style type="text/css">
   body { 
     font-family: sans-serif;
@@ -7,6 +7,8 @@
 
 </style>
 <script>
+
+var raceName = null;
 
 // Rider data
 var data = null;
@@ -546,6 +548,11 @@ function onLoad()
 	canvas = document.getElementById('idTrack');
 	categorySelect = document.getElementById('idCategory');
 	
+	if( raceName )
+	{
+		document.getElementById('idRaceName').innerHTML = '<strong>' + raceName + '</strong>';
+	}
+	
 	if( data == null )
 	{
 		var cats = ['Junior', 'Senior', 'Women'];
@@ -568,16 +575,12 @@ function onLoad()
 </script>
 
 <body onload="onLoad()">
-<p><strong>Bicycle Race Animation</strong></p>
-<p>
-Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.<br/>
-Comments?  Click <a href="mailto:edward.sitarski@gmail.com?subject=Race Animation">here</a>.<br/>
-</p>
+<p id="idRaceName"><strong>Bicycle Race Animation</strong></p>
 <p>
 Category:
 <select id="idCategory" onChange="SelectCategory()"></select>
 </p>
-<canvas id="idTrack" width="500" height="250">
+<canvas id="idTrack" width="600" height="300">
 Your browser does not support the HTML5 Canvas.<br/>
 Please upgrade to a more recent browser version.
 If you are using Internet Explorer (IE), you need version 9.0 or higher.
@@ -596,6 +599,10 @@ Current versions of Chrome, FireFox, Opera work fine.
 Highlight Numbers:<input type="text" id="idNumsToWatch" value="" onChange="SetNumsToWatch()"</input>
 <input type="button" value="Apply"></input>
 (for example: 124,131,203)
+</p>
+<p>
+Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
+Comments?  Click <a href="mailto:edward.sitarski@gmail.com?subject=Race Animation">here</a>.<br/>
 </p>
 </body>
 
