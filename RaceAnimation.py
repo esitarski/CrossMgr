@@ -71,7 +71,7 @@ class NumListValidator(wx.PyValidator):
     def OnChar(self, event):
 		key = event.GetKeyCode()
 		try:
-			if key < wx.WXK_SPACE or key == wx.WXK_DELETE or chr(key) == ',' or key > 255 or chr(key) in string.digits:
+			if key <= wx.WXK_SPACE or key == wx.WXK_DELETE or chr(key) == ',' or key > 255 or chr(key) in string.digits:
 				event.Skip()
 				return
 		except:
@@ -111,7 +111,7 @@ class RaceAnimation( wx.Panel ):
 		hs.Add(self.playStopButton, 0, flag=wx.GROW|wx.ALL, border=2 )
 		hs.Add( wx.Size(20, 1) )
 		self.playbackSpeed = wx.StaticText(self, wx.ID_ANY, 'Playback Speed:')
-		hs.Add(self.playbackSpeed, 0, flag=wx.ALIGN_CENTER, border=2 )
+		hs.Add(self.playbackSpeed, 0, flag=wx.ALIGN_CENTER|wx.ALL, border=2 )
 		
 		self.speed = []
 		for i in xrange(5):
@@ -125,7 +125,7 @@ class RaceAnimation( wx.Panel ):
 
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		self.watchText = wx.StaticText( self, wx.ID_ANY, 'Highlight Numbers:' )
-		hs.Add( self.watchText, 0, flag=wx.ALIGN_CENTER, border = 2 )
+		hs.Add( self.watchText, 0, flag=wx.ALIGN_CENTER|wx.ALL, border = 2 )
 		
 		self.watch = wx.TextCtrl( self, wx.ID_ANY, validator=NumListValidator(), style=wx.PROCESS_ENTER )
 		self.watch.Bind( wx.EVT_TEXT_ENTER, self.onUpdateWatch )
@@ -135,7 +135,7 @@ class RaceAnimation( wx.Panel ):
 		self.updateWatch.Bind( wx.EVT_BUTTON, self.onUpdateWatch )
 		hs.Add( self.updateWatch, 0, flag = wx.GROW|wx.ALL, border = 2 )
 		
-		self.controls = [self.rewindButton, self.playStopButton, self.playbackSpeed, self.watchText, self.watch]
+		self.controls = [self.rewindButton, self.playStopButton, self.playbackSpeed]
 		self.controls.extend( self.speed )
 		
 		bs.Add( hs, 0, flag=wx.GROW|wx.ALL, border = 0 )
@@ -166,6 +166,7 @@ class RaceAnimation( wx.Panel ):
 	
 	def onUpdateWatch( self, event ):
 		value = self.watch.GetValue()
+		value = re.sub( ' ', ',', value )
 		value = re.sub( '[^\d,]', '', value )
 		value = re.sub( ',+', ',', value )
 		try:

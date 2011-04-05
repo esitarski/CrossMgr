@@ -62,11 +62,13 @@ class Animation(wx.PyControl):
 			wx.Colour(230,230,230),
 			wx.Colour(205,133,63)
 			]
+		
+		# Cache the fonts if the size does not change.
+		self.numberFont	= None
+		self.timeFont	= None
+		self.highlightFont = None
+		self.rLast = -1
 			 
-		self.numberFont	= wx.Font( 10, wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
-		self.timeFont	= wx.Font( 14, wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
-		self.highlightFont = self.timeFont
-
 		self.timer = wx.Timer( self, id=wx.NewId())
 		self.Bind( wx.EVT_TIMER, self.NextFrame, self.timer )
 		# Bind the events related to our control: first of all, we use a
@@ -77,7 +79,7 @@ class Animation(wx.PyControl):
 		self.Bind(wx.EVT_SIZE, self.OnSize)
 		
 	def DoGetBestSize(self):
-		return wx.Size(100, 50)
+		return wx.Size(400, 200)
 	
 	def _initAnimation( self ):
 		self.tLast = datetime.datetime.now()
@@ -264,6 +266,15 @@ class Animation(wx.PyControl):
 		self.r -= (self.r & 1)			# Make sure that r is an even number.
 		
 		r = self.r
+		
+		# Get the fonts if needed.
+		if self.rLast != r:
+			tHeight = r / 8.0
+			self.numberFont	= wx.FontFromPixelSize( wx.Size(0,tHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
+			self.timeFont = self.numberFont
+			self.highlightFont = wx.FontFromPixelSize( wx.Size(0,tHeight * 1.6), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
+			self.rLast = r
+			
 		# Draw the track.
 		trackColour = wx.Colour(0,255,0)
 		dc.SetBrush( wx.Brush(trackColour, wx.SOLID) )
