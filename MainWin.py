@@ -343,12 +343,24 @@ class MainWin( wx.Frame ):
 
 		try:
 			wb.save( xlFName )
+			Utils.MessageOK(self, 'Excel file written to:\n\n   %s' % xlFName, 'Excel Write', iconMask=wx.ICON_INFORMATION)
 		except IOError:
 			Utils.MessageOK(self,
-						'Cannot write "%s".\n\nCheck if this spreadsheet open.\nIf so, close it, and try again.' % xlFName,
+						'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % xlFName,
 						'Excel File Error', iconMask=wx.ICON_ERROR )
 							#--------------------------------------------------------------------------------------------
 	def menuExportHtmlRaceAnimation( self, event ):
+		# Get the folder to write the html file.
+		fname = self.fileName[:-4] + '.html'
+		dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(fname),
+						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
+		ret = dlg.ShowModal()
+		dName = dlg.GetPath()
+		dlg.Destroy()
+		if ret != wx.ID_OK:
+			return
+
+		# Read the html template.
 		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
 		try:
 			html = open(htmlFile).read()
@@ -357,18 +369,20 @@ class MainWin( wx.Frame ):
 							'Html Template Read Error', iconMask=wx.ICON_ERROR )
 			return
 			
+		# Replace parts of the file with the race date.
 		raceName = 'raceName = %s' % json.dumps('Race: %s' % os.path.basename(self.fileName)[:-4])
 		html = html.replace( 'raceName = null', raceName )
 		
 		data = 'data = %s' % json.dumps(GetAnimationData())
 		html = html.replace( 'data = null', data )
 		
-		fname = self.fileName[:-3] + 'html'
+		# Write out the results.
+		fname = os.path.join( dName, os.path.basename(fname) )
 		try:
 			open( fname, 'w' ).write( html )
-			# Utils.MessageOK('Html Race Animation written to\n\n   %s' % fname, 'Html Write', iconMask=wxICON_INFORMATION)
+			Utils.MessageOK(self, 'Html Race Animation written to:\n\n   %s' % fname, 'Html Write', iconMask=wx.ICON_INFORMATION)
 		except:
-			Utils.MessageOK('Cannot write HTML template file (%s).' % fname,
+			Utils.MessageOK(self, 'Cannot write HTML template file (%s).' % fname,
 							'Html File Write Error', iconMask=wx.ICON_ERROR )
 	
 #--------------------------------------------------------------------------------------------
@@ -824,9 +838,11 @@ Continue?''' % fName, 'Simulate a Race', iconMask = wx.ICON_QUESTION ):
 		
 		try:
 			wb.save( xlFName )
+			Utils.MessageOK(self, 'Excel file written to:\n\n   %s' % xlFName, 'Excel Write', iconMask=wx.ICON_INFORMATION)
+
 		except IOError:
 			Utils.MessageOK(self,
-						'Cannot write "%s".\n\nCheck if this spreadsheet open.\nIf so, close it, and try again.' % xlFName,
+						'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % xlFName,
 						'Excel File Error', iconMask=wx.ICON_ERROR )
 	
 	def menuAbout( self, event ):

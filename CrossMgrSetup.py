@@ -39,6 +39,7 @@ def copyDir( d ):
 			
 copyDir( 'images' )
 copyDir( 'data' )
+copyDir( 'html' )
 
 # Create the installer
 inno = r'\Program Files\Inno Setup 5\ISCC.exe'

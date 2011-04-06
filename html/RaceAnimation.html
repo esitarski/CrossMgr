@@ -1,12 +1,18 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
-<title>Cyclo Cross Race Animation by Edward Sitarski</title>
+<!--
+	Html Data Template for Race Animation.
+	Copyright 2011, Edward Sitarski
+	For details, see sites.google.com/site/CrossMgrSoftware
+-->
+<title id="idTitle">Cyclo Cross Race Animation by Edward Sitarski</title>
 <style type="text/css">
   body { 
     font-family: sans-serif;
   }
 
 </style>
-<script>
+<script type="text/javascript">
 
 var raceName = null;
 
@@ -15,22 +21,22 @@ var data = null;
 
 // Control information about the animation.
 var canvas = null;
-var r = 100.0;		// The key track size dimension
-var t = 0.0;		// Current race time of the simulation.
-var tLast = 0.0;
-var tMax = 0.0;
-var laneMax = 8;	// Maximum number of lanes on the track.
-var lapCur = 0;		// Current lap of the race.
-var topThree = [];
-var framesPerSecond = 32;
-var speedup = 1.0;
-var categorySelect = null;
-var categories = [];	// Array of unique categories in the data.
-var categoryCur = 'All';
-var animationSeconds = 90;
-var suspendAnimation = false;
-var numsToWatch = {};	// Set of numbers to watch.
+var r = 100.0;				// The key track size dimension
+var t = 0.0;				// Current race time of the simulation.
+var tLast = 0.0;			// Last time of simulation.
+var tMax = 0.0;				// Maximum time in the race.
+var laneMax = 8;			// Maximum number of lanes on the track.
+var lapCur = 0;				// Current lap of the race.
+var framesPerSecond = 32;	// Maximum number of frames per seconds to show.
+var speedup = 1.0;			// Factor that animation is sped up over real time.
+var categorySelect = null;	// select list of categories
+var categories = [];		// Array of unique categories in the data.
+var categoryCur = 'All';	// Current selected category.
+var animationSeconds = 90;	// Default animation seconds.
+var suspendAnimation = false;	// Turn on/off animation without resetting the time.
+var numsToWatch = {};		// Set of numbers to watch.
 
+// Rider colours given out as remander of the number.
 var colours = [
 	'rgb(255, 0, 0)',
 	'rgb(0, 0, 255)',
@@ -38,20 +44,15 @@ var colours = [
 	'rgb(255, 0, 255)',
 	'rgb(0, 255, 255)'
 ];
-			 
+
+// Colours of top three riders.
 var	topThreeColours = [
 	'rgb(255,215,0)',
 	'rgb(230,230,230)',
 	'rgb(205,133,63)'
 ];
 
-Array.prototype.index = function( x )
-{
-	var len = this.length;
-	for ( var i = 0; i < len; i++) if (this[i] == x) return i;
-	return -1;
-}
-
+// Convenience function to get the last element in an array.
 Array.prototype.back = function()
 {
 	var len = this.length;
@@ -98,6 +99,10 @@ function getRiderPositionTime( num )
 
 function getXYfromPosition( lane, position )
 {
+	// Get screen coordinates from rider position in lap.
+	// On the corner, use the ration of the angle, not the distance.
+	// This means that riders at the outer-most part of the curve will speed up
+	// so they do not lose ground to the riders in the inner part of the curve.
 	position -= Math.floor(position);
 	
 	var curveLength = (r/2.0) * Math.PI;
@@ -139,6 +144,7 @@ function getXYfromPosition( lane, position )
 
 function getRiderXYPT( num, lane )
 {
+	// Get the rider x, y, position (distance) and time.
 	var positionTime = getRiderPositionTime( num );
 	if ( positionTime[0] == null )
 		return [null, null, null];
@@ -174,6 +180,7 @@ function DrawLine( ctx, x1, y1, x2, y2 )
 
 function Refresh()
 {
+	// Redraw the canvas at this time.
 	var dc = canvas.getContext('2d');
 	
 	dc.textBaseline = "top";
@@ -239,7 +246,6 @@ function Refresh()
 	dc.lineWidth = 1;
 	numSize = (r/2)/laneMax;
 	lapCur = 0;
-	topThree = [];
 	riderRadius = laneWidth * 0.75;
 	thickLine = r / 24;
 	if( data )
@@ -477,16 +483,11 @@ function SetSpeed( i )
 	animationSeconds = 90;
 	var factor = 0.65;
 	
-	while( i < 0 )
-	{
+	for( ; i < 0; ++i )
 		animationSeconds /= factor;
-		++i;
-	}
-	while( i > 0 )
-	{
+		
+	for( ; i > 0; --i )
 		animationSeconds *= factor;
-		--i;
-	}
 		
 	Animate( animationSeconds, tMax, t );
 }
@@ -533,14 +534,25 @@ function PlayStop()
 	}
 }
 
+// Create random data if none is given.
+// Define some approximations to normal distribution, then the logic to create random data.
 function rnd_normal()
-{
-	return (Math.random()*2-1)+(Math.random()*2-1)+(Math.random()*2-1);
-}
-
+{ return (Math.random()*2-1)+(Math.random()*2-1)+(Math.random()*2-1); }
 function normal_variate( mean, stdev )
+{ return rnd_normal()*stdev + mean; }
+function GenerateRandomData()
 {
-	return rnd_normal()*stdev + mean;
+	var cats = ['Junior', 'Senior', 'Women'];
+	data = {};
+	for( var num = 100; num < 150; ++num )
+	{
+		var mean = normal_variate(6.0, 0.3);
+		var lapTimes = [0];
+		for( var lap = 0; lap < 8; ++lap )
+			lapTimes.push( lapTimes.back() + normal_variate(mean, mean/20)*60.0 );
+		data[num] = { 'lapTimes': lapTimes, 'lastTime': lapTimes.back(), 'category' : cats[num % cats.length] };
+	}
+	return data;
 }
 
 function onLoad()
@@ -550,22 +562,13 @@ function onLoad()
 	
 	if( raceName )
 	{
-		document.getElementById('idRaceName').innerHTML = '<strong>' + raceName + '</strong>';
+		document.getElementById('idRaceName').innerHTML = '<strong>' + raceName + ' Cyclo Cross Race</strong>';
+		var title = document.getElementById('idTitle');
+		title.innerHTML = raceName + ': ' + title.innerHTML;
 	}
 	
 	if( data == null )
-	{
-		var cats = ['Junior', 'Senior', 'Women'];
-		data = {};
-		for( var num = 100; num < 150; ++num )
-		{
-			var mean = normal_variate(6.0, 0.3);
-			var lapTimes = [0];
-			for( var lap = 0; lap < 8; ++lap )
-				lapTimes.push( lapTimes.back() + normal_variate(mean, mean/20)*60.0 );
-			data[num] = { 'lapTimes': lapTimes, 'lastTime': lapTimes.back(), 'category' : cats[num % cats.length] };
-		}
-	}
+		GenerateRandomData();
 	
 	SetData( data );
 	Animate( animationSeconds );
