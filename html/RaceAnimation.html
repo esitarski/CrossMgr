@@ -34,6 +34,8 @@ var categories = [];		// Array of unique categories in the data.
 var categoryCur = 'All';	// Current selected category.
 var animationSeconds = 90;	// Default animation seconds.
 var suspendAnimation = false;	// Turn on/off animation without resetting the time.
+var numsToWatchStr = null;
+var categoryStr = null;
 var numsToWatch = {};		// Set of numbers to watch.
 
 // Rider colours given out as remander of the number.
@@ -555,6 +557,15 @@ function GenerateRandomData()
 	return data;
 }
 
+function getUrlParam( param, url )
+{
+	param = param.replace(/([\[\](){}*?+^$.\\|])/g, "\\$1");
+	var regex = new RegExp("[?&]" + param + "=([^&#]*)");
+	url   = url || decodeURIComponent(window.location.href);
+	var match = regex.exec(url);
+	return match ? match[1] : "";
+}
+
 function onLoad()
 {
 	canvas = document.getElementById('idTrack');
@@ -571,6 +582,33 @@ function onLoad()
 		GenerateRandomData();
 	
 	SetData( data );
+	
+	// Check for parameters.
+	var numbers = getUrlParam( 'highlight' );
+	if( numbers != '' )
+		numsToWatchStr = numbers;
+	if( numsToWatchStr )
+	{
+		var numsToWatch = document.getElementById('idNumsToWatch');
+		numsToWatch.value = numbers;
+		SetNumsToWatch();
+	}
+	
+	var category = getUrlParam( 'category' );
+	if( category != '' )
+		categoryStr = category;
+	if( categoryStr )
+	{
+		for( var i = 0; i < categorySelect.options.length; ++i )
+			if( categorySelect.options[i].text == category )
+			{
+				categorySelect.selectedIndex = i;
+				SelectCategory();
+				break;
+			}
+	}
+	
+	// Start animation.
 	Animate( animationSeconds );
 	document.getElementById('idPlayStop').value = 'Stop';
 }
