@@ -1044,9 +1044,9 @@ class Race(object):
 		mean = 5 * 60
 		var = 30
 		lapsTotal = 5
-		riders = 20
+		riders = 30
 		self.startTime = datetime.datetime.now() - datetime.timedelta(seconds=lapsTotal*mean + 4*60)
-		for num in xrange(1000+1,1000+riders+1):
+		for num in xrange(100,100+riders+1):
 			t = 0
 			mu = random.normalvariate( mean, var )	# Rider's random average lap time.
 			for laps in xrange(lapsTotal):
@@ -1055,9 +1055,9 @@ class Race(object):
 		if Utils.isMainWin():
 			Utils.getMainWin().startRaceClock()
 
-		for i in xrange(1000,100*6,100):
-			name = 'Cat%d' % ((i-1000)//100)
-			self.categories[name] = Category(name, str(i) + '-' + str(i+99))
+		for j, i in enumerate(xrange(100,100+riders+1,10)):
+			name = 'Cat%d' % (j+1)
+			self.categories[name] = Category(name, str(i) + '-' + str(i+9))
 
 		self.setChanged()
 

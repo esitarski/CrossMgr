@@ -209,7 +209,7 @@ class RaceAnimation( wx.Panel ):
 		catName = FixCategories( self.categoryChoice, getattr(race, 'raceAnimationCategory', 0) )
 		animationData = GetAnimationData( catName )
 		
-		self.animation.SetData( animationData, race.lastRaceTime() )
+		self.animation.SetData( animationData, race.lastRaceTime() if race.isRunning() else self.animation.t )
 		
 		if race.isRunning():
 			if not self.animation.IsAnimating():
