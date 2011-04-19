@@ -37,6 +37,7 @@ var suspendAnimation = false;	// Turn on/off animation without resetting the tim
 var numsToWatchStr = null;
 var categoryStr = null;
 var numsToWatch = {};		// Set of numbers to watch.
+var resultsDiv = null;
 
 // Rider colours given out as remander of the number.
 var colours = [
@@ -180,6 +181,19 @@ function DrawLine( ctx, x1, y1, x2, y2 )
 	ctx.stroke();
 }
 
+function FormatTime( t )
+{
+	var secs = Math.floor( t );
+	var h = Math.floor( secs / (60*60) );
+	var m = Math.floor(secs / 60) % 60;
+	var s = Math.floor(secs % 60);
+	if( h == 0 )
+		tStr = m + (s < 10 ? ':0' : ':') + s;
+	else
+		tStr = h + (m < 10 ? ':0' : ':') + m + (s < 10 ? ':0' : ':') + s;
+	return tStr;
+}
+
 function Refresh()
 {
 	// Redraw the canvas at this time.
@@ -278,13 +292,16 @@ function Refresh()
 		var j = 0;
 		for( var i = riderXYPT.length - 1; i >= 0 && i >= riderXYPT.length - 3; --i )
 			topThree[riderXYPT[i][0]] = j++;
-			
+		
+		var riderPosition = {};
 		for( var i = 0; i < riderXYPT.length; ++i )
 		{
 			var rxypt = riderXYPT[i];
+			riderPosition[rxypt[0]] = riderXYPT.length - i;
 			x = rxypt[1];
 			if( x == null )
 				continue;
+				
 			num = rxypt[0], y = rxypt[2];
 			dc.fillStyle = colours[num % colours.length];
 			// Check for a leader.
@@ -359,17 +376,37 @@ function Refresh()
 			y += tHeight * 1.2;
 		}
 	}
+	if( numsToWatch )
+	{
+		var tWidth = dc.measureText('Leaders:').width;
+		var x = r + tWidth * 1.1;
+		var yTop = r / 2 + laneWidth * 1.5 + tHeight * 1.2;
+		var y = yTop;
+		var rp = [];
+		for( n in numsToWatch )
+		{
+			var p = riderPosition[n];
+			if( p != undefined )
+				rp.push( [p, n] );
+		}
+		rp.sort(function(x, y) { return x[0] - y[0]; });
+		
+		dc.fillStyle = 'black';
+		for( var i = 0; i < rp.length; ++i )
+		{
+			dc.fillText( rp[i][1] + '(' + rp[i][0] + ')', x, y );
+			y += tHeight * 1.2;
+			if( y >= r * 1.5 - tHeight * 1.5 )
+			{
+				y = yTop;
+				x += tWidth * 1.2;
+			}
+		}
+	}
 		
 	// Draw the race time
 	dc.fillStyle = 'black';
-	var secs = Math.floor( t );
-	var h = Math.floor( secs / (60*60) );
-	var m = Math.floor(secs / 60) % 60;
-	var s = Math.floor(secs % 60);
-	if( h == 0 )
-		tStr = m + (s < 10 ? ':0' : ':') + s;
-	else
-		tStr = h + (m < 10 ? ':0' : ':') + m + (s < 10 ? ':0' : ':') + s;
+	var tStr = FormatTime( t );
 	var tWidth = dc.measureText(tStr).width;
 	dc.fillText( tStr, 4*r - tWidth, 2*r - tHeight );
 }
@@ -445,9 +482,134 @@ function Animate( tRunning, aTMax, tCur )
 	setTimeout( NextFrame, 1000.0/framesPerSecond );
 }
 
+//------------------------------------------------------------------------------
+
+function createChild( parent, tag )
+{
+	var child = document.createElement(tag);
+	parent.appendChild( child );
+	return child;
+}
+
+function createTextChild( parent, s )
+{
+	var child = document.createTextNode(s);
+	parent.appendChild( child );
+	return child;
+}
+
+//------------------------------------------------------------------------------
+
+function SetCategoryResults()
+{
+	resultsDiv.innerHTML = '';
+	
+	if( !data )
+		return;
+
+	// Show results for this category.
+	categoryCur = categories[categorySelect.selectedIndex];
+
+	var table = document.createElement('TABLE');
+	for( var c = 0; c < categories.length; ++c )
+	{
+		var cat = categories[c];
+		if( cat == 'All' )
+			continue;
+			
+		if( categoryCur != 'All' && categoryCur != cat )
+			continue;
+		
+		var resultsData = [];
+		for( num in data )
+		{
+			var d = data[num];
+			if( d['category'] == cat )
+			{
+				var lapTimes = d['lapTimes'];
+				resultsData.push( [lapTimes.length, lapTimes.back(), num, d['lapTimes'], d['status'], d['lastTime']] );
+			}
+		}
+
+		// Sort by greatest distance and shortest time.
+		resultsData.sort( function( x, y )
+							{
+								if( x[4] != y[4] )
+								{
+									if( x[4] == 'Finisher' ) return -1;
+									if( y[4] == 'Finisher' ) return 1;
+									if( x[4] < y[4] ) return -1;
+									return 1;
+								}
+								if( x[4] == 'Finisher' )
+								{
+									var d = x[0] - y[0];
+									if( d != 0 ) return -d;
+									return x[1] - y[1];
+								}
+								return x[5] - y[5];
+							} );
+
+		// Label this category.
+		var thead = createChild( table, 'THEAD' );
+		var tr = createChild( thead, 'TR' );
+		var td;
+		createTextChild( td = createChild(tr, 'TH'), cat );
+		td.style.fontSize = '120%';
+		
+		// Add the headers.
+		var thead = createChild( table, 'THEAD' );
+		var tr = createChild( thead, 'TR' );
+		createTextChild( td = createChild(tr, 'TH'), '' );
+		td.align = 'right';
+		createTextChild( td = createChild(tr, 'TH'), 'Bib' );
+		createTextChild( td = createChild(tr, 'TH'), 'Time' );
+		td.align = 'right';
+		createTextChild( td = createChild(tr, 'TH'), 'Gap' );
+		td.align = 'right';
+		
+		var leaderLapTimes = resultsData[0][3];
+		for( var i = 1; i < leaderLapTimes.length; ++i )
+		{
+			createTextChild( td = createChild(tr, 'TH'), i );
+			td.align = 'middle';
+		}
+		
+		// Add the rider data.
+		var leaderTime = resultsData[0][3].back();
+		var position = 1;
+		for( var r = 0; r < resultsData.length; ++r, ++position )
+		{
+			var tr = createChild(thead, 'TR');
+			var lapTimes = resultsData[r][3];
+			var p = (resultsData[r][4] == 'Finisher' ? '' + position : '' );
+			createTextChild( td = createChild(tr, 'TD'), p );
+			td.align = 'right';
+			createTextChild( createChild(tr, 'TD'), resultsData[r][2] );
+			createTextChild( createChild(tr, 'TD'), FormatTime(resultsData[r][1]) );
+			
+			var gap = 0;
+			if( lapTimes.length == leaderLapTimes.length )
+				gap = lapTimes.back() - leaderLapTimes.back();
+			gap = (gap > 0 ? FormatTime(gap) : '');
+				
+			createTextChild( td = createChild(tr, 'TD'), gap );
+			td.align = 'right';
+			for( var i = 1; i < lapTimes.length; ++i )
+			{
+				createTextChild( td = createChild(tr, 'TD'), FormatTime(lapTimes[i]) );
+				td.align = 'right';
+			}
+		}
+	}
+	
+	resultsDiv.appendChild( table );
+}
+
 function SelectCategory()
 {
 	categoryCur = categories[categorySelect.selectedIndex];
+	SetCategoryResults();
 	Refresh();
 }
 		
@@ -570,6 +732,7 @@ function onLoad()
 {
 	canvas = document.getElementById('idTrack');
 	categorySelect = document.getElementById('idCategory');
+	resultsDiv = document.getElementById('idResultsDiv');
 	
 	if( raceName )
 	{
@@ -608,6 +771,8 @@ function onLoad()
 			}
 	}
 	
+	SetCategoryResults();
+	
 	// Start animation.
 	Animate( animationSeconds );
 	document.getElementById('idPlayStop').value = 'Stop';
@@ -645,6 +810,7 @@ Highlight Numbers:<input type="text" id="idNumsToWatch" value="" onChange="SetNu
 Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
 Comments?  Click <a href="mailto:edward.sitarski@gmail.com?subject=Race Animation">here</a>.<br/>
 </p>
+<div id="idResultsDiv"></div>
 </body>
 
 </html>

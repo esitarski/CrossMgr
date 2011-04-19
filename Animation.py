@@ -325,10 +325,14 @@ class Animation(wx.PyControl):
 			topThree = {}
 			for j, i in enumerate(xrange(len(riderXYPT) - 1, max(-1,len(riderXYPT)-4), -1)):
 				topThree[riderXYPT[i][0]] = j
-				
-			for num, x, y, position, time in riderXYPT:
+			
+			riderPosition = {}
+			numRiders = len(riderXYPT)
+			for j, (num, x, y, position, time) in enumerate(riderXYPT):
+				riderPosition[num] = numRiders - j
 				if x is None:
 					continue
+					
 				dc.SetBrush( wx.Brush(self.colours[num % len(self.colours)], wx.SOLID) )
 				try:
 					i = topThree[num]
@@ -387,7 +391,29 @@ class Animation(wx.PyControl):
 				s = '%d' % num
 				dc.DrawText( s, x + tHeight * 1.2, y)
 				y += tHeight
+
+		# Draw the positions of the highlighted ridrs
+		if self.numsToWatch:
+			rp = []
+			for n in self.numsToWatch:
+				try:
+					rp.append( (riderPosition[n], n) )
+				except KeyError:
+					pass
+			rp.sort()
 			
+			tWidth, tHeight = dc.GetTextExtent( 'Leaders:' )
+			x = r + tWidth * 1.1
+			yTop = r / 2 + laneWidth * 1.5+ tHeight
+			y = yTop
+			for i, (pos, num) in enumerate(rp):
+				s = '%d (%d)' % (num, pos)
+				dc.DrawText( s, x + tHeight * 1.2, y)
+				y += tHeight
+				if y > r * 1.5 - tHeight * 1.5:
+					y = yTop
+					x += tWidth * 1.2
+				
 		# Draw the race time
 		secs = int( self.t )
 		if secs < 60*60:

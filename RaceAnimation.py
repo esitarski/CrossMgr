@@ -38,6 +38,7 @@ def GetAnimationData( catName = 'All' ):
 		except:
 			info['category'] = 'All'
 		
+		info['status'] = Model.Rider.statusNames[rider.status];
 		if rider.status != Model.Rider.Finisher:
 			info['lastTime'] = rider.tStatus
 		else:
