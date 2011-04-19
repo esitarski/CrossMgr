@@ -402,6 +402,7 @@ class Animation(wx.PyControl):
 					pass
 			rp.sort()
 			
+			colCount = 0
 			tWidth, tHeight = dc.GetTextExtent( 'Leaders:' )
 			x = r + tWidth * 1.1
 			yTop = r / 2 + laneWidth * 1.5+ tHeight
@@ -411,6 +412,9 @@ class Animation(wx.PyControl):
 				dc.DrawText( s, x + tHeight * 1.2, y)
 				y += tHeight
 				if y > r * 1.5 - tHeight * 1.5:
+					colCount += 1
+					if colCount == 2:
+						break
 					y = yTop
 					x += tWidth * 1.2
 				

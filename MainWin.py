@@ -9,6 +9,7 @@ import time
 import copy
 import bisect
 import json
+import webbrowser
 import cPickle as pickle
 from optparse import OptionParser
 
@@ -380,6 +381,7 @@ class MainWin( wx.Frame ):
 		fname = os.path.join( dName, os.path.basename(fname) )
 		try:
 			open( fname, 'w' ).write( html )
+			webbrowser.open( fname, new = 2, autoraise = True )
 			Utils.MessageOK(self, 'Html Race Animation written to:\n\n   %s' % fname, 'Html Write', iconMask=wx.ICON_INFORMATION)
 		except:
 			Utils.MessageOK(self, 'Cannot write HTML template file (%s).' % fname,
