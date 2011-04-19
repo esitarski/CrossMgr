@@ -590,7 +590,7 @@ function SetCategoryResults()
 		var td;
 		createTextChild( td = createChild(tr, 'TH'), cat );
 		td.style.fontSize = '120%';
-		td.colSpan = 4 + leaderLapTimes.length;
+		td.colSpan = 4;
 		td.align = 'left';
 		
 		// Add the headers.
@@ -618,16 +618,24 @@ function SetCategoryResults()
 			var tr = createChild(thead, 'TR');
 			tr.className = ((r & 1) ? 'odd' : 'even');
 			var lapTimes = resultsData[r][3];
-			var p = (resultsData[r][4] == 'Finisher' ? '' + position : '' );
+			var p = (resultsData[r][4] == 'Finisher' ? '' + position : resultsData[r][4] );
 			createTextChild( td = createChild(tr, 'TD'), p );
 			td.align = 'right';
 			createTextChild( createChild(tr, 'TD'), resultsData[r][2] );
 			createTextChild( createChild(tr, 'TD'), FormatTime(resultsData[r][1]) );
 			
-			var gap = 0;
-			if( lapTimes.length == leaderLapTimes.length )
-				gap = lapTimes.back() - leaderLapTimes.back();
-			gap = (gap > 0 ? FormatTime(gap) : '');
+			var gap = '';
+			if( resultsData[r][4] == 'Finisher' )
+			{
+				if( lapTimes.length == leaderLapTimes.length )
+				{
+					var delta = lapTimes.back() - leaderLapTimes.back();
+					if( delta != 0 )
+						gap = FormatTime( delta );
+				}
+				else
+					gap = (lapTimes.length - leaderLapTimes.length) + ' lap';
+			}
 				
 			createTextChild( td = createChild(tr, 'TD'), gap );
 			td.align = 'right';
