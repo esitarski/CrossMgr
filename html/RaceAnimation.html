@@ -5,11 +5,17 @@
 	Copyright 2011, Edward Sitarski
 	For details, see sites.google.com/site/CrossMgrSoftware
 -->
-<title id="idTitle">Cyclo Cross Race Animation by Edward Sitarski</title>
+<title id="idTitle">CrossMgr Race Results by Edward Sitarski</title>
 <style type="text/css">
 body
 { 
 	font-family: sans-serif;
+}
+
+#idRaceName
+{
+	font-size: 125%;
+	font-weight: bold;
 }
 
 table.results
@@ -788,7 +794,7 @@ function onLoad()
 	
 	if( raceName )
 	{
-		document.getElementById('idRaceName').innerHTML = '<strong>' + raceName + ' Cyclo Cross Race</strong>';
+		document.getElementById('idRaceName').innerHTML = raceName;
 		var title = document.getElementById('idTitle');
 		title.innerHTML = raceName + ': ' + title.innerHTML;
 	}
@@ -833,10 +839,9 @@ function onLoad()
 </script>
 
 <body onload="onLoad()">
-<p id="idRaceName"><strong>Bicycle Race Animation</strong></p>
-<p>
-Category:
-<select id="idCategory" onChange="SelectCategory()"></select>
+<p id="idRaceName">Bicycle Race Animation</p>
+<p class="noprint">
+Category: <select id="idCategory" onChange="SelectCategory()"></select>
 </p>
 <canvas id="idTrack" width="600" height="300" class="noprint">
 Your browser does not support the HTML5 Canvas.<br/>
@@ -844,7 +849,7 @@ Please upgrade to a more recent browser version.<br/>
 If you are using Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
 Current versions of Chrome, FireFox and Opera work fine.
 </canvas>
-<p>
+<p class="noprint">
 <input type="button" id="idRewind" onClick="Rewind()" value="Rewind"></input>
 <input type="button" id="idPlayStop" onClick="PlayStop()" value="Play"></input>
 &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp Playback Speed:
@@ -854,13 +859,14 @@ Current versions of Chrome, FireFox and Opera work fine.
 <input type="radio" name="groupSpeed" value="3" onClick="SetSpeed(1)"></input>
 <input type="radio" name="groupSpeed" value="4" onClick="SetSpeed(2)"></input>
 <br/>
-Highlight Numbers:<input type="text" id="idNumsToWatch" value="" onChange="SetNumsToWatch()"</input>
-<input type="button" value="Apply"></input>
+Highlight Numbers:
+<input type="text" id="idNumsToWatch" value="" onChange="SetNumsToWatch()"></input>
+<input type="button" value="Apply"</input>
 (for example: 124,131,203)
 </p>
 <p>
 Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
-Comments?  Click <a href="mailto:edward.sitarski@gmail.com?subject=Race Animation">here</a>.<br/>
+<span class="noprint">Comments?  Click <a href="mailto:edward.sitarski@gmail.com?subject=Race Animation">here</a>.<br/></span>
 </p>
 <div id="idResultsDiv"></div>
 </body>
