@@ -39,6 +39,11 @@ table.results tr.odd td
 	background-color:#EAF2D3;
 }
 
+@media print
+{
+	.noprint { display: none; }
+}
+
 </style>
 <script type="text/javascript">
 
@@ -224,6 +229,9 @@ function FormatTime( t )
 
 function Refresh()
 {
+	if( !canvas )
+		return;
+
 	// Redraw the canvas at this time.
 	var dc = canvas.getContext('2d');
 	
@@ -830,7 +838,7 @@ function onLoad()
 Category:
 <select id="idCategory" onChange="SelectCategory()"></select>
 </p>
-<canvas id="idTrack" width="600" height="300">
+<canvas id="idTrack" width="600" height="300" class="noprint">
 Your browser does not support the HTML5 Canvas.<br/>
 Please upgrade to a more recent browser version.
 If you are using Internet Explorer (IE), you need version 9.0 or higher.
