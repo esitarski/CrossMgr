@@ -193,7 +193,7 @@ class RaceAnimation( wx.Panel ):
 			self.playStopButton.SetLabel( 'Stop' )
 	
 	def onRewind( self, event ):
-		self.animation.Animate( self.animationSeconds )
+		self.animation.Animate( self.animationSeconds, None, self.getStartTime(self.animation.data) )
 		self.animation.SuspendAnimate()
 		self.playStopButton.SetLabel( 'Play' )
 	
@@ -201,6 +201,17 @@ class RaceAnimation( wx.Panel ):
 		race = Model.race
 		if race and race.isRunning():
 			self.animation.StopAnimate()
+	
+	def getStartTime( self, animationData ):
+		if not animationData:
+			return 0
+		t = 999999
+		for num, info in animationData.iteritems():
+			try:
+				t = min( t, info['lapTimes'][0] )
+			except:
+				pass
+		return t
 	
 	def refresh( self ):
 		race = Model.race
