@@ -206,7 +206,7 @@ class RaceAnimation( wx.Panel ):
 		if not animationData:
 			return 0
 		t = 999999
-		for num, info in animationData.iteritems():
+		for info in animationData.itervalues():
 			try:
 				t = min( t, info['lapTimes'][0] )
 			except:
