@@ -110,7 +110,7 @@ function getRiderPositionTime( num )
 	if( !lapTimes )
 		return null;
 	if( t <= lapTimes[0] )
-		return [null, t];
+		return [0, t];
 		
 	var tSearch = t;
 	var lastTime = data[num]['lastTime'];
@@ -626,6 +626,7 @@ function SetCategoryResults()
 		
 		// Add the rider data.
 		var leaderTime = resultsData[0][3].back();
+		var startOffset = resultsData[0][3][0];
 		var position = 1;
 		for( var r = 0; r < resultsData.length; ++r, ++position )
 		{
@@ -635,8 +636,8 @@ function SetCategoryResults()
 			var p = (resultsData[r][4] == 'Finisher' ? '' + position : resultsData[r][4] );
 			createTextChild( td = createChild(tr, 'TD'), p );
 			td.align = 'right';
-			createTextChild( createChild(tr, 'TD'), resultsData[r][2] );
-			createTextChild( createChild(tr, 'TD'), FormatTime(resultsData[r][1]) );
+			createTextChild( createChild(tr, 'TD'), resultsData[r][2] );							// Num
+			createTextChild( createChild(tr, 'TD'), FormatTime(resultsData[r][1] - startOffset) );	// Finish Time
 			
 			var gap = '';
 			if( resultsData[r][4] == 'Finisher' )
@@ -658,7 +659,7 @@ function SetCategoryResults()
 			td.align = 'right';
 			for( var i = 1; i < lapTimes.length; ++i )
 			{
-				createTextChild( td = createChild(tr, 'TD'), FormatTime(lapTimes[i]) );
+				createTextChild( td = createChild(tr, 'TD'), FormatTime(lapTimes[i] - startOffset) );
 				td.align = 'right';
 			}
 		}
@@ -736,12 +737,30 @@ function SetNumsToWatch()
 	Refresh();
 }
 
+function getStartTime()
+{
+	if( !data )
+		return 0.001;
+
+	// Show results for this category.
+	categoryCur = categories[categorySelect.selectedIndex];
+
+	var t = 9999999;
+	for( num in data )
+	{
+		if( categoryCur == 'All' || data[num]['category'] == categoryCur )
+			if( data[num]['lapTimes'][0] < t )
+				t = data[num]['lapTimes'][0];
+	}
+	return t;
+}
+
 function Rewind()
 {
-	t = 0.001;
+	t = getStartTime();
 	Refresh();
 	document.getElementById('idPlayStop').value = 'Play';
-	Animate( animationSeconds, tMax, 0.001 );
+	Animate( animationSeconds, tMax, t );
 	suspendAnimation = true;
 }
 
@@ -771,11 +790,13 @@ function GenerateRandomData()
 	data = {};
 	for( var num = 100; num < 150; ++num )
 	{
+		var iCat = num % cats.length;
+		var cat = cats[iCat];
 		var mean = normal_variate(6.0, 0.3);
-		var lapTimes = [0];
+		var lapTimes = [60 * iCat];
 		for( var lap = 0; lap < 8; ++lap )
 			lapTimes.push( lapTimes.back() + normal_variate(mean, mean/20)*60.0 );
-		data[num] = { 'lapTimes': lapTimes, 'lastTime': lapTimes.back(), 'category' : cats[num % cats.length], 'status' : 'Finisher' };
+		data[num] = { 'lapTimes': lapTimes, 'lastTime': lapTimes.back(), 'category' : cat, 'status' : 'Finisher' };
 	}
 	return data;
 }

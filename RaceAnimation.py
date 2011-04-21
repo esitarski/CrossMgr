@@ -32,11 +32,17 @@ def GetAnimationData( catName = 'All' ):
 	for num, info in animationData.iteritems():
 		rider = race[num]
 		
+		startOffset = 0
 		c = race.getCategory( num )
 		try:
 			info['category'] = c.name
+			startOffset = c.getStartOffsetSecs()
 		except:
 			info['category'] = 'All'
+		
+		# Set the start offset.
+		if len(info['lapTimes']) >= 2:
+			info['lapTimes'][0] = min(startOffset, info['lapTimes'][1])
 		
 		info['status'] = Model.Rider.statusNames[rider.status];
 		if rider.status != Model.Rider.Finisher:
