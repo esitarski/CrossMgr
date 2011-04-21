@@ -163,7 +163,7 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_MENU, self.menuExportHistory, id=idCur )
 
 		idCur = wx.NewId()
-		self.dataMgmtMenu.Append( idCur , "Export HTML Race Animation...", "Export Race Data as HTML Animation" )
+		self.dataMgmtMenu.Append( idCur , "Export HTML Race Results...", "Export Race Results as HTML" )
 		self.Bind(wx.EVT_MENU, self.menuExportHtmlRaceAnimation, id=idCur )
 
 		self.menuBar.Append( self.dataMgmtMenu, "&DataMgmt" )
