@@ -648,7 +648,10 @@ function SetCategoryResults()
 						gap = FormatTime( delta );
 				}
 				else
-					gap = (lapTimes.length - leaderLapTimes.length) + ' lap';
+				{
+					var lapsDown = lapTimes.length - leaderLapTimes.length;
+					gap = lapsDown + ' lap' + (lapsDown == -1 ? '' : 's');
+				}
 			}
 				
 			createTextChild( td = createChild(tr, 'TD'), gap );
