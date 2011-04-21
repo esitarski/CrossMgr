@@ -856,7 +856,7 @@ function onLoad()
 	SetCategoryResults();
 	
 	// Start animation.
-	Animate( animationSeconds );
+	Animate( animationSeconds, undefined, getStartTime() );
 	document.getElementById('idPlayStop').value = 'Stop';
 }
 
@@ -870,7 +870,7 @@ Category: <select id="idCategory" onChange="SelectCategory()"></select>
 <canvas id="idTrack" width="600" height="300" class="noprint">
 Your browser does not support the HTML5 Canvas.<br/>
 Please upgrade to a more recent browser version.<br/>
-If you are using Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
+For Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
 Current versions of Chrome, FireFox and Opera work fine.
 </canvas>
 <p class="noprint">
