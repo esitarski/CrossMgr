@@ -7,13 +7,32 @@ import re
 from Animation import Animation
 from FixCategories import FixCategories
 
-def GetAnimationData( catName = 'All' ):
+def GetAnimationData( catName = 'All', getExternalData = False ):
 	race = Model.race
 	results = race.getResultsList( catName )
 	
 	if not results:
 		return None
 
+	# Get the linked external data.
+	externalFields = []
+	externalInfo = None
+	if getExternalData:
+		try:
+			externalFields = race.excelLink.getFields()
+			externalInfo = race.excelLink.read()
+			try:
+				externalFields.remove( 'Category' )
+			except ValueError:
+				pass
+			try:
+				externalFields.remove( 'Bib#' )
+			except ValueError:
+				pass
+		except:
+			externalFields = []
+			externalInfo = None
+	
 	finishers = set( r.num for r in results )
 	
 	maxLap = race.getMaxLap()
@@ -53,6 +72,13 @@ def GetAnimationData( catName = 'All' ):
 			except:
 				tLast = info['lapTimes'][-1]
 				info['lastTime'] = tLast if not race.isRunning() or tLast >= race.minutes*60  else None
+		
+		# Add the external excel data.
+		for f in externalFields:
+			try:
+				info[f] = externalInfo[num][f]
+			except KeyError:
+				pass
 				
 	return animationData
 		

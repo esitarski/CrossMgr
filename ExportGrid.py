@@ -7,7 +7,7 @@ from ReadSignOnSheet import Fields
 
 #---------------------------------------------------------------------------
 
-class ExportGrid(object):
+class ExportGrid( object ):
 	def __init__( self, title = '', colnames = [], data = [] ):
 		self.title = title
 		self.colnames = colnames
@@ -230,9 +230,9 @@ class ExportGrid(object):
 			return
 		
 		position	= []
-		number	= []
-		laps			= []
-		finishTime = []
+		number		= []
+		laps		= []
+		finishTime	= []
 		gap			= []
 		notes		= []
 

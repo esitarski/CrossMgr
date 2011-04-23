@@ -314,13 +314,13 @@ class Animation(wx.PyControl):
 		if self.data:
 			riderXYPT = []
 			for num, d in self.data.iteritems():
-				xypt = list(self.getRiderXYPT( num, num % self.laneMax ))
+				xypt = list(self.getRiderXYPT(num, num % self.laneMax))
 				xypt.insert( 0, num )
 				riderXYPT.append( xypt )
 			
 			# Sort by reverse greatest distance, then by shortest time.
 			# Do this so the leaders are drawn last.
-			riderXYPT.sort( cmp=lambda x,y: -cmp((-x[3], x[4]), (-y[3], y[4]) ) )
+			riderXYPT.sort( cmp=lambda x,y: -cmp((-x[3] if x[3] is not None else 0.0, x[4]), (-y[3] if y[3] is not None else 0.0, y[4]) ) )
 			
 			topThree = {}
 			for j, i in enumerate(xrange(len(riderXYPT) - 1, max(-1,len(riderXYPT)-4), -1)):

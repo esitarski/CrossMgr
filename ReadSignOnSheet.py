@@ -235,14 +235,17 @@ class GetExcelLink( object ):
 		isForward = evt.GetDirection()
 		if isForward:
 			page = evt.GetPage()
-			if   page == self.fileNamePage:
+			if page == self.fileNamePage:
 				fileName = self.fileNamePage.getFileName()
 				try:
 					open(fileName).close()
 					self.sheetNamePage.setFileName(self.fileNamePage.getFileName())
 				except IOError:
-					Utils.MessageOK( self.wizard, 'Cannot open file "%s".\nPlease check the file name and/or its read permissions.' % fileName,
-										title='File Open Error', iconMask=wx.ICON_ERROR)
+					if fileName == '':
+						message = 'Please specify an Excel file.'
+					else:
+						message = 'Cannot open file "%s".\nPlease check the file name and/or its read permissions.' % fileName
+					Utils.MessageOK( self.wizard, message, title='File Open Error', iconMask=wx.ICON_ERROR)
 					evt.Veto()
 			elif page == self.sheetNamePage:
 				try:
@@ -295,6 +298,9 @@ class ExcelLink( object ):
 		
 	def hasField( self, field ):
 		return self.fieldCol.get( field, -1 ) >= 0
+		
+	def getFields( self ):
+		return [f for f in Fields if self.hasField(f)]
 		
 	def read( self ):
 		# Read the sheet and return the rider data.

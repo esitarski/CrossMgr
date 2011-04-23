@@ -365,6 +365,7 @@ class Race(object):
 
 	def reset( self ):
 		self.name = '<RaceName>'
+		self.organizer = '<Organizer>'
 		self.raceNum = 1
 		self.date = datetime.date.today().strftime('%Y-%m-%d')
 		self.scheduledStart = '10:00'

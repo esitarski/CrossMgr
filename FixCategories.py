@@ -2,6 +2,9 @@ import wx
 import Model
 
 def FixCategories( choice, iSelection = None ):
+	choice.InvalidateBestSize() 
+	choice.SetSize(choice.GetBestSize()) 
+
 	items = choice.GetItems()
 	
 	if iSelection is not None and iSelection < len(items):

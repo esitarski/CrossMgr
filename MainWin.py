@@ -164,7 +164,7 @@ class MainWin( wx.Frame ):
 
 		idCur = wx.NewId()
 		self.dataMgmtMenu.Append( idCur , "Export HTML Race Results...", "Export Race Results as HTML" )
-		self.Bind(wx.EVT_MENU, self.menuExportHtmlRaceAnimation, id=idCur )
+		self.Bind(wx.EVT_MENU, self.menuExportHtmlRaceResults, id=idCur )
 
 		self.menuBar.Append( self.dataMgmtMenu, "&DataMgmt" )
 
@@ -349,12 +349,19 @@ class MainWin( wx.Frame ):
 			Utils.MessageOK(self,
 						'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % xlFName,
 						'Excel File Error', iconMask=wx.ICON_ERROR )
-							#--------------------------------------------------------------------------------------------
-	def menuExportHtmlRaceAnimation( self, event ):
+						
+	#--------------------------------------------------------------------------------------------
+	
+	def menuExportHtmlRaceResults( self, event ):
+		race = Model.getRace()
+		if race is None:
+			Utils.MessageOK(self, 'No race loaded.  Please New/Open a race.', 'Export Html Error', iconMask=wx.ICON_ERROR)
+			return
+		
 		# Get the folder to write the html file.
 		fname = self.fileName[:-4] + '.html'
 		dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(fname),
-						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
+							style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
 		ret = dlg.ShowModal()
 		dName = dlg.GetPath()
 		dlg.Destroy()
@@ -366,15 +373,18 @@ class MainWin( wx.Frame ):
 		try:
 			html = open(htmlFile).read()
 		except:
-			Utils.MessageOK('Cannot read HTML template file.',
+			Utils.MessageOK('Cannot read HTML template file.  Check program installation.',
 							'Html Template Read Error', iconMask=wx.ICON_ERROR )
 			return
 			
-		# Replace parts of the file with the race date.
+		# Replace parts of the file with the race information.
 		raceName = 'raceName = %s' % json.dumps('Race: %s' % os.path.basename(self.fileName)[:-4])
 		html = html.replace( 'raceName = null', raceName )
 		
-		data = 'data = %s' % json.dumps(GetAnimationData())
+		organizer = getattr( race, 'organizer', '' )
+		html = html.replace( 'organizer = null', 'organizer = %s' % json.dumps(organizer) )
+		
+		data = 'data = %s' % json.dumps(GetAnimationData(getExternalData = True))
 		html = html.replace( 'data = null', data )
 		
 		# Write out the results.
@@ -385,9 +395,9 @@ class MainWin( wx.Frame ):
 			Utils.MessageOK(self, 'Html Race Animation written to:\n\n   %s' % fname, 'Html Write', iconMask=wx.ICON_INFORMATION)
 		except:
 			Utils.MessageOK(self, 'Cannot write HTML template file (%s).' % fname,
-							'Html File Write Error', iconMask=wx.ICON_ERROR )
+							'Html Write Error', iconMask=wx.ICON_ERROR )
 	
-#--------------------------------------------------------------------------------------------
+	#--------------------------------------------------------------------------------------------
 	def onCloseWindow( self, event ):
 		self.writeRace()
 

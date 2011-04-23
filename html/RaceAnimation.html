@@ -53,8 +53,9 @@ table.results tr.odd td
 </style>
 <script type="text/javascript">
 
+// Data about the results.
 var raceName = null;
-
+var organizer = null;
 // Rider data
 var data = null;
 
@@ -495,8 +496,9 @@ function SetData( aData, tCur )
 		categories.push( c );
 	categories.sort();
 	
-	// Insert the All category at the beginning.
-	categories.splice( 0, 0, 'All' );
+	// Insert the All category at the beginning if there are multiple categories.
+	if( categories.length > 1 )
+		categories.splice( 0, 0, 'All' );
 	
 	categorySelect.selectedIndex = 0;
 	categorySelect.options.length = 0;
@@ -555,6 +557,8 @@ function SetCategoryResults()
 	// Show results for this category.
 	categoryCur = categories[categorySelect.selectedIndex];
 
+	var infoFields = ['LastName', 'FirstName', 'Team', 'License'];
+	
 	var table = document.createElement('TABLE');
 	table.className = 'results';
 	for( var c = 0; c < categories.length; ++c )
@@ -566,6 +570,7 @@ function SetCategoryResults()
 		if( categoryCur != 'All' && categoryCur != cat )
 			continue;
 		
+		var curFields = {}
 		var resultsData = [];
 		for( num in data )
 		{
@@ -574,6 +579,11 @@ function SetCategoryResults()
 			{
 				var lapTimes = d['lapTimes'];
 				resultsData.push( [lapTimes.length, lapTimes.back(), num, d['lapTimes'], d['status'], d['lastTime']] );
+				
+				// Get the union of all the defined fields.
+				for( var f = 0; f < infoFields.length; ++f )
+					if( d[infoFields[f]] )
+						curFields[infoFields[f]] = true;
 			}
 		}
 
@@ -613,6 +623,13 @@ function SetCategoryResults()
 		createTextChild( td = createChild(tr, 'TH'), '' );
 		td.align = 'right';
 		createTextChild( td = createChild(tr, 'TH'), 'Bib' );
+		
+		for( var f = 0; f < infoFields.length; ++f )
+		{
+			if( curFields[infoFields[f]] )
+				createTextChild( td = createChild(tr, 'TH'), infoFields[f] );
+		}
+				
 		createTextChild( td = createChild(tr, 'TH'), 'Time' );
 		td.align = 'right';
 		createTextChild( td = createChild(tr, 'TH'), 'Gap' );
@@ -632,15 +649,33 @@ function SetCategoryResults()
 		{
 			var tr = createChild(thead, 'TR');
 			tr.className = ((r & 1) ? 'odd' : 'even');
+			
 			var lapTimes = resultsData[r][3];
-			var p = (resultsData[r][4] == 'Finisher' ? '' + position : resultsData[r][4] );
+			var isFinisher = (resultsData[r][4] == 'Finisher');
+			
+			var p = (isFinisher ? '' + position : resultsData[r][4] );
 			createTextChild( td = createChild(tr, 'TD'), p );
 			td.align = 'right';
-			createTextChild( createChild(tr, 'TD'), resultsData[r][2] );							// Num
-			createTextChild( createChild(tr, 'TD'), FormatTime(resultsData[r][1] - startOffset) );	// Finish Time
+			
+			var num = resultsData[r][2];
+			createTextChild( createChild(tr, 'TD'), num );
+			
+			var d = data[num];
+			for( var f = 0; f < infoFields.length; ++f )
+			{
+				if( curFields[infoFields[f]] )
+				{
+					var v = d[infoFields[f]];
+					v = (v || '');
+					createTextChild( td = createChild(tr, 'TD'), v );
+				}
+			}
+			
+			var finishTime = (isFinisher ? FormatTime(Math.max(resultsData[r][1] - startOffset, 0.0)) : '');
+			createTextChild( createChild(tr, 'TD'), finishTime );
 			
 			var gap = '';
-			if( resultsData[r][4] == 'Finisher' )
+			if( isFinisher )
 			{
 				if( lapTimes.length == leaderLapTimes.length )
 				{
@@ -659,7 +694,7 @@ function SetCategoryResults()
 			td.align = 'right';
 			for( var i = 1; i < lapTimes.length; ++i )
 			{
-				createTextChild( td = createChild(tr, 'TD'), FormatTime(lapTimes[i] - startOffset) );
+				createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(lapTimes[i] - startOffset, 0.0)) );
 				td.align = 'right';
 			}
 		}
@@ -752,7 +787,7 @@ function getStartTime()
 			if( data[num]['lapTimes'][0] < t )
 				t = data[num]['lapTimes'][0];
 	}
-	return t;
+	return t + 0.001;
 }
 
 function Rewind()
@@ -822,6 +857,8 @@ function onLoad()
 		var title = document.getElementById('idTitle');
 		title.innerHTML = raceName + ': ' + title.innerHTML;
 	}
+	if( organizer != null )
+		document.getElementById('idOrganizer').innerHTML = (organizer != '' ? 'by ' : '') + organizer;
 	
 	if( data == null )
 		GenerateRandomData();
@@ -863,7 +900,7 @@ function onLoad()
 </script>
 
 <body onload="onLoad()">
-<p id="idRaceName">Bicycle Race Animation</p>
+<p><span id="idRaceName">Cyclo-Cross Race Results</span> <span id="idOrganizer">by CrossMgr</span></p>
 <p class="noprint">
 Category: <select id="idCategory" onChange="SelectCategory()"></select>
 </p>

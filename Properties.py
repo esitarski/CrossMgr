@@ -20,6 +20,10 @@ class Properties( wx.Panel ):
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceName )
 		rows += 1
 		
+		self.organizerLabel = wx.StaticText( self, wx.ID_ANY, 'Organizer:' )
+		self.organizer = wx.TextCtrl( self, wx.ID_ANY, value='' )
+		rows += 1
+		
 		self.dateLabel = wx.StaticText( self, wx.ID_ANY, 'Date:' )
 		self.date = wx.DatePickerCtrl( self, wx.ID_ANY, style = wx.DP_DROPDOWN )
 		self.Bind(wx.EVT_DATE_CHANGED, self.onChanged, self.date)
@@ -57,6 +61,7 @@ class Properties( wx.Panel ):
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
 		fbs.AddMany( [(self.raceNameLabel, 0, labelAlign),		(self.raceName, 1, wx.EXPAND|wx.GROW),
+					  (self.organizerLabel, 0, labelAlign),		(self.organizer,1, wx.EXPAND|wx.GROW),
 					  (self.dateLabel, 0, labelAlign),			(self.date, 	1, wx.EXPAND|wx.GROW),
 					  (self.raceNumLabel, 0, labelAlign),		(self.raceNum,	1, wx.EXPAND|wx.GROW),
 					  (self.scheduledStartLabel, 0, labelAlign),(self.scheduledStart, 1, wx.EXPAND|wx.GROW),
@@ -71,6 +76,7 @@ class Properties( wx.Panel ):
 	def setEditable( self, editable = True ):
 		return
 		self.raceName.SetEditable( editable )
+		self.organizer.SetEditable( editable )
 		# self.date.SetEditable( editable )
 		self.raceNum.SetEditable( editable )
 		self.scheduledStart.SetEditable( editable )
@@ -118,6 +124,7 @@ class Properties( wx.Panel ):
 		if race is None:
 			return
 		self.raceName.SetValue( race.name )
+		self.organizer.SetValue( getattr(race, 'organizer', '') )
 		d = wx.DateTime()
 		d.ParseDate(race.date)
 		self.date.SetValue( d )
@@ -135,6 +142,7 @@ class Properties( wx.Panel ):
 		if race is None:
 			return
 		race.name = self.raceName.GetValue()
+		race.organizer = self.organizer.GetValue()
 		race.date = self.date.GetValue().Format(Properties.dateFormat)
 		race.raceNum = self.raceNum.GetValue()
 		#print str(self.scheduledStart.GetValue())
