@@ -321,6 +321,7 @@ class MainWin( wx.Frame ):
 	#--------------------------------------------------------------------------------------------
 
 	def menuExportToExcel( self, event ):
+		self.commit()
 		if self.fileName is None or len(self.fileName) < 4:
 			return
 
@@ -353,6 +354,7 @@ class MainWin( wx.Frame ):
 	#--------------------------------------------------------------------------------------------
 	
 	def menuExportHtmlRaceResults( self, event ):
+		self.commit()
 		race = Model.getRace()
 		if race is None:
 			Utils.MessageOK(self, 'No race loaded.  Please New/Open a race.', 'Export Html Error', iconMask=wx.ICON_ERROR)
@@ -817,6 +819,7 @@ Continue?''' % fName, 'Simulate a Race', iconMask = wx.ICON_QUESTION ):
 		dlg.Destroy()	
 		
 	def menuExportHistory( self, event ):
+		self.commit()
 		race = Model.getRace()
 		if self.fileName is None or len(self.fileName) < 4 or not race:
 			return

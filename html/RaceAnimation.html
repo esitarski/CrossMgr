@@ -45,6 +45,12 @@ table.results tr.odd td
 	background-color:#EAF2D3;
 }
 
+table.results tr td.highlight
+{
+	font-size: 120%;
+	font-weight: bold;
+}
+
 @media print
 {
 	.noprint { display: none; }
@@ -652,13 +658,15 @@ function SetCategoryResults()
 			
 			var lapTimes = resultsData[r][3];
 			var isFinisher = (resultsData[r][4] == 'Finisher');
+			var num = resultsData[r][2];
 			
 			var p = (isFinisher ? '' + position : resultsData[r][4] );
 			createTextChild( td = createChild(tr, 'TD'), p );
 			td.align = 'right';
+			if( numsToWatch[num] ) td.className = 'highlight';
 			
-			var num = resultsData[r][2];
-			createTextChild( createChild(tr, 'TD'), num );
+			createTextChild( td = createChild(tr, 'TD'), num );
+			if( numsToWatch[num] ) td.className = 'highlight';
 			
 			var d = data[num];
 			for( var f = 0; f < infoFields.length; ++f )
@@ -668,11 +676,13 @@ function SetCategoryResults()
 					var v = d[infoFields[f]];
 					v = (v || '');
 					createTextChild( td = createChild(tr, 'TD'), v );
+					if( numsToWatch[num] ) td.className = 'highlight';
 				}
 			}
 			
 			var finishTime = (isFinisher ? FormatTime(Math.max(resultsData[r][1] - startOffset, 0.0)) : '');
-			createTextChild( createChild(tr, 'TD'), finishTime );
+			createTextChild( td = createChild(tr, 'TD'), finishTime );
+			if( numsToWatch[num] ) td.className = 'highlight';
 			
 			var gap = '';
 			if( isFinisher )
@@ -692,10 +702,12 @@ function SetCategoryResults()
 				
 			createTextChild( td = createChild(tr, 'TD'), gap );
 			td.align = 'right';
+			if( numsToWatch[num] ) td.className = 'highlight';
 			for( var i = 1; i < lapTimes.length; ++i )
 			{
 				createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(lapTimes[i] - startOffset, 0.0)) );
 				td.align = 'right';
+				if( numsToWatch[num] ) td.className = 'highlight';
 			}
 		}
 	}
@@ -770,6 +782,7 @@ function SetNumsToWatch()
 		numsToWatch[num] = num;
 	}
 	Refresh();
+	SetCategoryResults();
 }
 
 function getStartTime()
