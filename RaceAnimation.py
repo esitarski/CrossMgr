@@ -22,10 +22,6 @@ def GetAnimationData( catName = 'All', getExternalData = False ):
 			externalFields = race.excelLink.getFields()
 			externalInfo = race.excelLink.read()
 			try:
-				externalFields.remove( 'Category' )
-			except ValueError:
-				pass
-			try:
 				externalFields.remove( 'Bib#' )
 			except ValueError:
 				pass
@@ -54,10 +50,10 @@ def GetAnimationData( catName = 'All', getExternalData = False ):
 		startOffset = 0
 		c = race.getCategory( num )
 		try:
-			info['category'] = c.name
+			info['raceCat'] = c.name
 			startOffset = c.getStartOffsetSecs()
 		except:
-			info['category'] = 'All'
+			info['raceCat'] = 'All'
 		
 		# Set the start offset.
 		if len(info['lapTimes']) >= 2:

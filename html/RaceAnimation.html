@@ -318,7 +318,7 @@ function Refresh()
 		var riderXYPT = [];
 		for( num in data )
 		{
-			if( categoryCur == 'All' || data[num]['category'] == categoryCur )
+			if( categoryCur == 'All' || data[num]['raceCat'] == categoryCur )
 			{
 				var xypt = getRiderXYPT( num, num % laneMax );
 				if( xypt[2] == null )
@@ -487,12 +487,12 @@ function SetData( aData, tCur )
 	data = (aData || null);
 	if( tCur != undefined )
 		t = tCur;
-		
+	
 	// Get all the unique categories from the data.
 	var cats = {};
 	for( num in data )
 	{
-		var cName = data[num]['category'];
+		var cName = data[num]['raceCat'];
 		if( cName != 'All' )
 			cats[cName] = cName;
 	}
@@ -563,7 +563,7 @@ function SetCategoryResults()
 	// Show results for this category.
 	categoryCur = categories[categorySelect.selectedIndex];
 
-	var infoFields = ['LastName', 'FirstName', 'Team', 'License'];
+	var infoFields = ['License', 'LastName', 'FirstName', 'Category', 'Team' ];
 	
 	var table = document.createElement('TABLE');
 	table.className = 'results';
@@ -581,7 +581,7 @@ function SetCategoryResults()
 		for( num in data )
 		{
 			var d = data[num];
-			if( d['category'] == cat )
+			if( d['raceCat'] == cat )
 			{
 				var lapTimes = d['lapTimes'];
 				resultsData.push( [lapTimes.length, lapTimes.back(), num, d['lapTimes'], d['status'], d['lastTime']] );
@@ -633,7 +633,7 @@ function SetCategoryResults()
 		for( var f = 0; f < infoFields.length; ++f )
 		{
 			if( curFields[infoFields[f]] )
-				createTextChild( td = createChild(tr, 'TH'), infoFields[f] );
+				createTextChild( td = createChild(tr, 'TH'), infoFields[f].replace(/Name$/,' Name') );
 		}
 				
 		createTextChild( td = createChild(tr, 'TH'), 'Time' );
@@ -796,7 +796,7 @@ function getStartTime()
 	var t = 9999999;
 	for( num in data )
 	{
-		if( categoryCur == 'All' || data[num]['category'] == categoryCur )
+		if( categoryCur == 'All' || data[num]['raceCat'] == categoryCur )
 			if( data[num]['lapTimes'][0] < t )
 				t = data[num]['lapTimes'][0];
 	}
@@ -844,7 +844,7 @@ function GenerateRandomData()
 		var lapTimes = [60 * iCat];
 		for( var lap = 0; lap < 8; ++lap )
 			lapTimes.push( lapTimes.back() + normal_variate(mean, mean/20)*60.0 );
-		data[num] = { 'lapTimes': lapTimes, 'lastTime': lapTimes.back(), 'category' : cat, 'status' : 'Finisher' };
+		data[num] = { 'lapTimes': lapTimes, 'lastTime': lapTimes.back(), 'raceCat' : cat, 'status' : 'Finisher' };
 	}
 	return data;
 }
@@ -889,7 +889,7 @@ function onLoad()
 		SetNumsToWatch();
 	}
 	
-	var category = getUrlParam( 'category' );
+	var category = getUrlParam( 'raceCat' );
 	if( category != '' )
 		categoryStr = category;
 	if( categoryStr )

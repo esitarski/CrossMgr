@@ -159,7 +159,9 @@ class Rider(object):
 	Pulled    = 2
 	DNS       = 3
 	DQ 		  = 4
-	statusNames = ['Finisher', 'DNF', 'Pulled', 'DNS', 'DQ']
+	OTL		  = 5
+	NP		  = 6
+	statusNames = ['Finisher', 'DNF', 'PUL', 'DNS', 'DQ', 'OTL', 'NP']
 
 	# Factors for range of acceptable lap times.
 	pMin, pMax = 0.85, 1.20
