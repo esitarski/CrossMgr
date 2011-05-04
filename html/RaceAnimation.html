@@ -28,7 +28,7 @@ table.results td, table.results th
 	font-size:1em;
 	border:1px solid #98bf21;
 	padding:3px 7px 2px 7px;
-	text-align: middle;
+	text-align: center;
 }
 table.results th 
 {
@@ -626,7 +626,7 @@ function SetCategoryResults()
 		// Add the headers.
 		var thead = createChild( table, 'THEAD' );
 		var tr = createChild( thead, 'TR' );
-		createTextChild( td = createChild(tr, 'TH'), '' );
+		createTextChild( td = createChild(tr, 'TH'), 'Pos' );
 		td.align = 'right';
 		createTextChild( td = createChild(tr, 'TH'), 'Bib' );
 		
@@ -643,8 +643,8 @@ function SetCategoryResults()
 		
 		for( var i = 1; i < leaderLapTimes.length; ++i )
 		{
-			createTextChild( td = createChild(tr, 'TH'), i );
-			td.align = 'middle';
+			createTextChild( td = createChild(tr, 'TH'), 'Lap ' + i );
+			td.align = 'center';
 		}
 		
 		// Add the rider data.
