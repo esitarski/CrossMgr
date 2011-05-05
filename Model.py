@@ -13,6 +13,30 @@ from os.path import commonprefix
 
 maxInterpolateTime = 2.0*60.0*60.0	# 2 hours.
 
+#------------------------------------------------------------------------------
+# Define a global current race.
+race = None
+
+def getRace():
+	global race
+	return race
+
+def newRace():
+	global race
+	race = Race()
+	return race
+
+def setRace( r ):
+	global race
+	race = r
+	if race:
+		race.resetCache()
+
+def resetCache():
+	global race
+	if race:
+		race.resetCache()
+		
 #----------------------------------------------------------------------
 class Category(object):
 
@@ -178,9 +202,13 @@ class Rider(object):
 
 	def addTime( self, t ):
 		# All times in race time seconds.
-		i = bisect.bisect_left(self.times, t)
-		if i >= len(self.times) or self.times[i] != t:
-			self.times.insert( i, t )
+		timesLen = len(self.times)
+		if timesLen == 0 or t > self.times[timesLen-1]:
+			self.times.append( t )
+		else:
+			i = bisect.bisect_left(self.times, t, 0, timesLen)
+			if i >= timesLen or self.times[i] != t:
+				self.times.insert( i, t )
 
 	def deleteTime( self, t ):
 		try:
@@ -232,7 +260,7 @@ class Rider(object):
 		iTimes[0] = 0.0
 		iTimes[1:] = self.times
 
-		averageLapTime = getRace().getAverageLapTime()
+		averageLapTime = race.getAverageLapTime() if race else iTimes[-1] / float(len(iTimes) - 1)
 		mustBeRepeatInterval = averageLapTime * 0.5
 
 		# Remove duplicate entries.
@@ -359,7 +387,7 @@ class Race(object):
 	finisherStatusList = [Rider.Finisher, Rider.Pulled]
 	finisherStatusSet = set( finisherStatusList )
 	
-	nonFinisherStatusList = [Rider.DNF, Rider.DNS, Rider.DQ]
+	nonFinisherStatusList = [Rider.DNF, Rider.DNS, Rider.DQ, Rider.NP, Rider.OTL]
 	nonFinisherStatusSet = set( nonFinisherStatusList )
 	
 	def __init__( self ):
@@ -472,6 +500,9 @@ class Race(object):
 		self.resetCache()
 		self.setChanged()
 		return t
+
+	def importTime( self, num, t ):
+		self.getRider(num).addtime( t )
 
 	def deleteTime( self, num, t ):
 		if not num in self.riders:
@@ -1064,30 +1095,6 @@ class Race(object):
 
 		self.setChanged()
 
-#------------------------------------------------------------------------------
-# Define a global current race.
-race = None
-
-def getRace():
-	global race
-	return race
-
-def newRace():
-	global race
-	race = Race()
-	return race
-
-def setRace( r ):
-	global race
-	race = r
-	if race:
-		race.resetCache()
-
-def resetCache():
-	global race
-	if race:
-		race.resetCache()
-		
 if __name__ == '__main__':
 	r = newRace()
 	r.addTime( 10, 1 * 60 )
