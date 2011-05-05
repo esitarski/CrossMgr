@@ -208,8 +208,10 @@ class Results( wx.Panel ):
 			return
 		
 		catName = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
-		colnames, results, dnf, dns, dq = race.getResults( catName )
+		self.hbs.Layout()
 		
+		colnames, results, dnf, dns, dq = race.getResults( catName )
+
 		if not any([colnames, results, dnf, dns, dq]):
 			self.clearGrid()
 			return

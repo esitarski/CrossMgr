@@ -239,6 +239,8 @@ class History( wx.Panel ):
 			return
 
 		catName = FixCategories( self.categoryChoice, getattr(race, 'historyCategory', 0) )
+		self.hbs.Layout()
+
 		maxLaps = race.numLaps
 		doLapsToGo = True
 		if maxLaps is None:
