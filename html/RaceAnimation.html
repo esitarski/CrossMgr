@@ -104,8 +104,7 @@ var	topThreeColours = [
 // Convenience function to get the last element in an array.
 Array.prototype.back = function()
 {
-	var len = this.length;
-	return this[len-1];
+	return this[this.length-1];
 }
 
 function getRiderPositionTime( num )
@@ -331,17 +330,20 @@ function Refresh()
 		// Sort in reverse order of position so we draw leaders last on top.
 		riderXYPT.sort(function(x, y)
 			{
-				var r = y[3] - x[3];				// Greatest distance.
+				var r = (y[3] ? y[3] : 0) - (x[3] ? x[3] : 0);	// Greatest distance.
 				if( r == 0 )
-					r = x[4] - y[4];				// Shortest time.
+					r = (x[4] ? x[4] : 0) - (y[4] ? y[4] : 0);	// Shortest time.
 				return -r;
 			});
 			
+		var leaders = [];
+		for( var i = riderXYPT.length - 1; i >= 0 && leaders.length < 3; --i )
+			leaders.push( riderXYPT[i][0] );
+
 		var topThree = {};
-		var j = 0;
-		for( var i = riderXYPT.length - 1; i >= 0 && i >= riderXYPT.length - 3; --i )
-			topThree[riderXYPT[i][0]] = j++;
-		
+		for( var i = 0; i < leaders.length; ++i )
+			topThree[leaders[i]] = i;
+			
 		var riderPosition = {};
 		for( var i = 0; i < riderXYPT.length; ++i )
 		{
@@ -395,10 +397,7 @@ function Refresh()
 	}
 
 	// Draw the leader board.
-	var leaders = [];
-	for( var k in topThree )
-		leaders[topThree[k]] = k;
-	if( leaders.length > 0 )
+	if( leaders )
 	{
 		var x = r;
 		var y = r / 2 + laneWidth * 1.5;
@@ -584,7 +583,7 @@ function SetCategoryResults()
 			if( d['raceCat'] == cat )
 			{
 				var lapTimes = d['lapTimes'];
-				resultsData.push( [lapTimes.length, lapTimes.back(), num, d['lapTimes'], d['status'], d['lastTime']] );
+				resultsData.push( [lapTimes.length, lapTimes.length ? lapTimes.back() : 99999, num, d['lapTimes'], d['status'], d['lastTime']] );
 				
 				// Get the union of all the defined fields.
 				for( var f = 0; f < infoFields.length; ++f )
