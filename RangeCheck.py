@@ -1,4 +1,6 @@
 import re
+	
+#------------------------------------------------------------------------
 
 class RangeCheck( object ):
 	def __init__( self, s = '' ):
@@ -20,20 +22,52 @@ class RangeCheck( object ):
 					continue
 				
 				lohi = r.split( '-' )
-				if len(lohi) == 1:
+				fields = len( lohi )
+				if fields == 1:
 					self.include.add( int(lohi[0]) )
-				elif len(lohi) == 2:
+				elif fields == 2:
 					if lohi[0] == '':
 						self.exclude.add( int(lohi[1]) )
 					else:
 						lo, hi = [int(n) for n in lohi]
-						self.include.update( xrange(lo, hi+1) )
+						if lo < hi:
+							self.include.update( xrange(lo, hi+1) )
+				elif fields == 3:
+					lo, hi = [int(n) for n in lohi[1:]]
+					if lo < hi:
+						self.exclude.update( xrange(lo, hi+1) )
+				
 			except:
 				pass
 		
 		self.exclude = self.exclude & self.include
 		self.include = self.include.difference( self.exclude )
+	
+	def getNumericPrefix( self ):
+		# If empty, return nothing.
+		if not self.include:
+			return ''
 		
+		# Find the longest prefix for all numbers.
+		nLen = None
+		prefix = None
+		for n in self.include:
+			s = str(n)
+			if prefix is None:					# Initialize the starting prefix.
+				prefix = s
+				nLen = len(s)
+			elif len(s) != nLen:				# If all numbers are not the same length, return empty.
+				return ''
+			elif not s.startswith(prefix):
+				i = 0
+				while i < nLen and prefix[i] == s[i]:
+					i += 1
+				if i == 0:						# If no common prefix, return empty.
+					return ''
+				prefix = prefix[:i]
+					
+		return prefix
+	
 	def __contains__( self, n ):
 		return n in self.include
 	
@@ -43,12 +77,11 @@ class RangeCheck( object ):
 	def __str__( self ):
 		ranges = []
 		if self.include:
-			ranges = []
-			inc = sorted( self.include | self.exclude )
-			inc.append( inc[-1] )
-			nFirst, nLast = -1, -1
-			for n in inc:
-				if nFirst < 0:
+			elements = sorted( self.include | self.exclude )
+			elements.append( elements[-1] )
+			nFirst, nLast = None, None
+			for n in elements:
+				if nFirst is None:
 					nFirst = n
 					nLast = n
 				elif n != nLast + 1:
@@ -59,7 +92,21 @@ class RangeCheck( object ):
 					nFirst = n
 				nLast = n
 			
-		ranges.extend( [str(-e) for e in sorted(self.exclude)] )
+		if self.exclude:
+			elements = sorted( self.exclude )
+			elements.append( elements[-1] )
+			nFirst, nLast = None, None
+			for n in elements:
+				if nFirst is None:
+					nFirst = n
+					nLast = n
+				elif n != nLast + 1:
+					if nLast != nFirst:
+						ranges.append( '-%d-%d' % (nFirst, nLast) )
+					else:
+						ranges.append( '-%d' % nFirst )
+					nFirst = n
+				nLast = n
 		
 		return ','.join( ranges )
 		
@@ -67,8 +114,10 @@ class RangeCheck( object ):
 		return 'RangeCheck("%s")' % self.__str__()
 		
 if __name__ == '__main__':
-	r = RangeCheck( '--100-200-300,,,-,100-200,asdfasdf,81,-161,203,-21' )
+	r = RangeCheck( '--100-200-300,,,-,100-199,-120-130,asdfasdf,-161,-21' )
+	print r.include
 	print r
 	print repr(r)
+	print 'prefix:', r.getNumericPrefix()
 	print [i for i in xrange(300) if i in r]
 	

@@ -126,6 +126,8 @@ htmlFolder = os.path.join(dirName, 'html')
 def getDirName():		return dirName
 def getImageFolder():	return imageFolder
 def getHtmlFolder():	return htmlFolder
+
+
 #------------------------------------------------------------------------
 
 reSpace = re.compile(r'\s')

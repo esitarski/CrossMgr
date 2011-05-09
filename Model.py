@@ -55,24 +55,31 @@ class Category(object):
 		for f in fields:
 			if not f:
 				continue
+			try:
+				bounds = f.split( '-' )
+				if not bounds:
+					continue
 
-			# Negative numbers mean exceptions to remove.
-			if f[0] == '-':
-				self.exclude.add( -int(f,10) )
-				continue
+				# Negative numbers are exceptions to remove.
+				if not bounds[0]:
+					if len(bounds) > 1:
+						self.exclude.add( -int(bounds[1]) )
+					continue
 
-			bounds = f.split( '-' )
-			bounds = [int(b,10) for b in bounds if b is not None and b != '']
-			if len(bounds) == 0:
-				continue
+				bounds = [int(b) for b in bounds if b is not None and b != '']
+				if not bounds:
+					continue
 
-			if len(bounds) > 2:
-				del bounds[2:]
-			elif len(bounds) == 1:
-				bounds.append( bounds[0] )
-			if bounds[0] > bounds[1]:
-				bounds[0], bounds[1] = bounds[1], bounds[0]
-			self.intervals.append( tuple(bounds) )
+				if len(bounds) > 2:			# Ignore numbers that are not in multiple ranges.
+					del bounds[2:]
+				elif len(bounds) == 1:
+					bounds.append( bounds[0] )
+				if bounds[0] > bounds[1]:
+					bounds[0], bounds[1] = bounds[1], bounds[0]
+				self.intervals.append( tuple(bounds) )
+			except:
+				# Ignore any parsing errors.
+				pass
 
 	catStr = property(_getStr, _setStr)
 
