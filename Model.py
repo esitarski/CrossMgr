@@ -387,9 +387,9 @@ class Rider(object):
 			return False
 
 class Race(object):
-	cacheAttr = ['entriesCache', 'leaderInfoCache', 'maxLapCache', 'maxAnyLapCache', 'averageLapTimeCache',
-				 'rule80BeginTimeCache', 'rule80EndTimeCache',
-				 'leaderTimesCache', 'leaderNumsCache', 'categoryTimesNumsCache']
+	cacheAttr = ['entriesCache', 'leaderInfoCache', 'maxLapCache', 'maxAnyLapCache',
+				 'averageLapTimeCache', 'rule80BeginTimeCache', 'rule80EndTimeCache',
+				 'leaderTimesCache', 'leaderNumsCache', 'categoryTimesNumsCache', 'categoryCache']
 
 	finisherStatusList = [Rider.Finisher, Rider.Pulled]
 	finisherStatusSet = set( finisherStatusList )
@@ -913,6 +913,7 @@ class Race(object):
 		if self.categories != newCategories:
 			self.categories = newCategories
 			self.setChanged()
+			self.resetCategoryCache()
 			
 		self.setCategoryMask()
 
@@ -942,10 +943,23 @@ class Race(object):
 		return c.name if c else ''
 
 	def getCategory( self, num ):
-		for c in self.categories.itervalues():
-			if c.active and c.matches(num):
-				return c
+		# Check the cache for this rider.
+		# If not there, find it and add it to the cache.
+		cc = getattr( self, 'categoryCache', None )
+		try:
+			return cc[num]
+		except (NameError, TypeError, KeyError):
+			if not cc:
+				cc = {}
+			for c in self.categories.itervalues():
+				if c.active and c.matches(num):
+					cc[num] = c
+					return c
+		cc[num] = None
 		return None
+	
+	def resetCategoryCache( self ):
+		setattr( self, 'categoryCache', None )
 	
 	def getNextExpectedLeaderTNL( self, t ):
 		leaderTimes, leaderNums = self.getLeaderTimesNums()
