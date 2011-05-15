@@ -70,7 +70,7 @@ class Category(object):
 				if not bounds:
 					continue
 
-				if len(bounds) > 2:			# Ignore numbers that are not in multiple ranges.
+				if len(bounds) > 2:			# Ignore numbers that are not in proper ranges.
 					del bounds[2:]
 				elif len(bounds) == 1:
 					bounds.append( bounds[0] )
@@ -80,6 +80,8 @@ class Category(object):
 			except:
 				# Ignore any parsing errors.
 				pass
+				
+		self.intervals.sort()
 
 	catStr = property(_getStr, _setStr)
 
@@ -132,7 +134,15 @@ class Category(object):
 	numLaps = property(getNumLaps, setNumLaps) 
 
 	def matches( self, num ):
-		return self.active and num not in self.exclude and any( i[0] <= num <= i[1] for i in self.intervals )
+		if not self.active or num in self.exclude:
+			return False
+		i = bisect.bisect_left( self.intervals, (num, num) )
+		if i > 0:
+			i -= 1
+		for j in xrange(i, min(i+1,len(self.intervals)) ):
+			if self.intervals[j][0] <= num <= self.intervals[j][1]:
+				return True
+		return False
 
 	def __cmp__( self, c ):
 		for attr in ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'catStr']:
