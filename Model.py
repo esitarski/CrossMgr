@@ -60,17 +60,17 @@ class Category(object):
 				if not bounds:
 					continue
 
-				# Negative numbers are exceptions to remove.
+				# Negative numbers are exceptions to remove from the ranges.
 				if not bounds[0]:
 					if len(bounds) > 1:
-						self.exclude.add( -int(bounds[1]) )
+						self.exclude.add( int(bounds[1]) )
 					continue
 
 				bounds = [int(b) for b in bounds if b is not None and b != '']
 				if not bounds:
 					continue
 
-				if len(bounds) > 2:			# Ignore numbers that are not in multiple ranges.
+				if len(bounds) > 2:			# Ignore numbers that are not in proper x-y format.
 					del bounds[2:]
 				elif len(bounds) == 1:
 					bounds.append( bounds[0] )
@@ -80,6 +80,9 @@ class Category(object):
 			except:
 				# Ignore any parsing errors.
 				pass
+				
+		self.intervals.sort()
+		print self.intervals
 
 	catStr = property(_getStr, _setStr)
 
@@ -119,6 +122,12 @@ class Category(object):
 		except (ValueError, TypeError):
 			self.sequence = 0
 		
+	def __setstate( self, d ):
+		self.__dict__.update(d)
+		i = getattr( self, 'intervals', None )
+		if i:
+			i.sort()
+		
 	def getNumLaps( self ):
 		return getattr( self, '_numLaps', None )
 		
@@ -132,7 +141,15 @@ class Category(object):
 	numLaps = property(getNumLaps, setNumLaps) 
 
 	def matches( self, num ):
-		return self.active and num not in self.exclude and any( i[0] <= num <= i[1] for i in self.intervals )
+		if not self.active or num in self.exclude:
+			return False
+		i = bisect.bisect_left( self.intervals, (num, num) )
+		if i > 0:
+			i -= 1
+		for j in xrange(i, min(i+2,len(self.intervals)) ):
+			if self.intervals[j][0] <= num <= self.intervals[j][1]:
+				return True
+		return False
 
 	def __cmp__( self, c ):
 		for attr in ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'catStr']:
@@ -1145,7 +1162,8 @@ if __name__ == '__main__':
 	print [e.t for e in entries]
 	'''
 
-	c = Category(True, 'test', '100-199,205,-50', '00:00', None)
+	c = Category(True, 'test', '100-150-199,205,-50', '00:00', None)
+	print c
 	print 'mask=', c.getMask()
 	c = Category(True, 'test', '100-199,-150', None)
 	print 'mask=', c.getMask()
@@ -1153,7 +1171,8 @@ if __name__ == '__main__':
 	print 'mask=', c.getMask()
 	
 	r.setCategories( [	(True, 'test1', '1100-1199', '00:00', None),
-						(True, 'test2', '1200-1299', '00:00', None),
+						(True, 'test2', '1200-1299, 2000,2001,2002', '00:00', None),
 						(True, 'test3', '1300-1399', '00:00', None)] )
 	print r.getCategoryMask()
+	print r.getCategory( 2002 )
 
