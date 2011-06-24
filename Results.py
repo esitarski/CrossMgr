@@ -43,13 +43,11 @@ class Results( wx.Panel ):
 		self.showPositionsToggle.SetValue( self.showPositions )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowPositions, self.showPositionsToggle )
 		
-		#self.zoomInButton = wx.Button( self, wx.ID_ZOOM_IN, style=wx.BU_EXACTFIT )
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'Zoom-In-icon.png'), wx.BITMAP_TYPE_PNG )
-		self.zoomInButton = wx.BitmapButton( self, wx.ID_ZOOM_IN, bitmap, style=wx.BU_EXACTFIT )
+		self.zoomInButton = wx.BitmapButton( self, wx.ID_ZOOM_IN, bitmap, style=wx.BU_EXACTFIT | wx.BU_AUTODRAW )
 		self.Bind( wx.EVT_BUTTON, self.onZoomIn, self.zoomInButton )
-		#self.zoomOutButton = wx.Button( self, wx.ID_ZOOM_OUT, style=wx.BU_EXACTFIT )
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'Zoom-Out-icon.png'), wx.BITMAP_TYPE_PNG )
-		self.zoomOutButton = wx.BitmapButton( self, wx.ID_ZOOM_OUT, bitmap, style=wx.BU_EXACTFIT )
+		self.zoomOutButton = wx.BitmapButton( self, wx.ID_ZOOM_OUT, bitmap, style=wx.BU_EXACTFIT | wx.BU_AUTODRAW )
 		self.Bind( wx.EVT_BUTTON, self.onZoomOut, self.zoomOutButton )
 		
 		self.hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
