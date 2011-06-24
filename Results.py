@@ -3,6 +3,7 @@ import Utils
 import wx
 import wx.grid		as gridlib
 import re
+import os
 from string import Template
 import ColGrid
 from FixCategories import FixCategories, SetCategory
@@ -26,21 +27,30 @@ class Results( wx.Panel ):
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
 		
-		self.showTimesToggle = wx.ToggleButton( self, wx.ID_ANY, 'Show Times' )
+		self.showTimesToggle = wx.ToggleButton( self, wx.ID_ANY, 'Race Times' )
 		self.showTimesToggle.SetValue( self.showTimes )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowTimes, self.showTimesToggle )
 		
-		self.showGapsToggle = wx.ToggleButton( self, wx.ID_ANY, 'Show Gaps' )
+		self.showGapsToggle = wx.ToggleButton( self, wx.ID_ANY, 'Gaps' )
 		self.showGapsToggle.SetValue( self.showGaps )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowGaps, self.showGapsToggle )
 		
-		self.showLapsCompletedToggle = wx.ToggleButton( self,wx.ID_ANY, 'Show Laps Completed' )
+		self.showLapsCompletedToggle = wx.ToggleButton( self,wx.ID_ANY, 'Laps Completed' )
 		self.showLapsCompletedToggle.SetValue( self.showLapsCompleted )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowLapsCompleted, self.showLapsCompletedToggle )
 		
-		self.showPositionsToggle = wx.ToggleButton( self, wx.ID_ANY, 'Show Positions' )
+		self.showPositionsToggle = wx.ToggleButton( self, wx.ID_ANY, 'Positions' )
 		self.showPositionsToggle.SetValue( self.showPositions )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowPositions, self.showPositionsToggle )
+		
+		#self.zoomInButton = wx.Button( self, wx.ID_ZOOM_IN, style=wx.BU_EXACTFIT )
+		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'Zoom-In-icon.png'), wx.BITMAP_TYPE_PNG )
+		self.zoomInButton = wx.BitmapButton( self, wx.ID_ZOOM_IN, bitmap, style=wx.BU_EXACTFIT )
+		self.Bind( wx.EVT_BUTTON, self.onZoomIn, self.zoomInButton )
+		#self.zoomOutButton = wx.Button( self, wx.ID_ZOOM_OUT, style=wx.BU_EXACTFIT )
+		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'Zoom-Out-icon.png'), wx.BITMAP_TYPE_PNG )
+		self.zoomOutButton = wx.BitmapButton( self, wx.ID_ZOOM_OUT, bitmap, style=wx.BU_EXACTFIT )
+		self.Bind( wx.EVT_BUTTON, self.onZoomOut, self.zoomOutButton )
 		
 		self.hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.categoryChoice, flag=wx.ALL, border=4 )
@@ -48,6 +58,9 @@ class Results( wx.Panel ):
 		self.hbs.Add( self.showGapsToggle, flag=wx.ALL, border=4 )
 		self.hbs.Add( self.showLapsCompletedToggle, flag=wx.ALL, border=4 )
 		self.hbs.Add( self.showPositionsToggle, flag=wx.ALL, border=4 )
+		self.hbs.Add( wx.StaticText(self, wx.ID_ANY, ' '), proportion=2 )
+		self.hbs.Add( self.zoomInButton, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.zoomOutButton, flag=wx.TOP | wx.BOTTOM | wx.RIGHT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 
 		self.whiteColour = wx.Colour( 255, 255, 255 )
 		self.blackColour = wx.Colour( 0, 0, 0 )
@@ -76,6 +89,12 @@ class Results( wx.Panel ):
 		
 		self.SetSizer(bs)
 		bs.SetSizeHints(self)
+		
+	def onZoomOut( self, event ):
+		self.grid.Zoom( False )
+			
+	def onZoomIn( self, event ):
+		self.grid.Zoom( True )
 		
 	def doRightClick( self, event ):
 		self.doNumSelect( event )

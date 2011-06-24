@@ -82,7 +82,6 @@ class Category(object):
 				pass
 				
 		self.intervals.sort()
-		print self.intervals
 
 	catStr = property(_getStr, _setStr)
 

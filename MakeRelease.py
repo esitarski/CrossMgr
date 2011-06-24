@@ -59,7 +59,7 @@ targetDir = os.path.join( 'CrossMgr', 'doc' )
 tf.add( 'CrossMgrTutorial.doc', os.path.join(targetDir,'CrossMgrTutorial.doc') )
 	
 targetDir = os.path.join( 'CrossMgr', 'data', '2010 Riverdale' )
-files = ['2010-11-28-Riverdale-r1-.cmn', '2010-11-28-Riverdale-r1-.cmn']
+files = ['2010-11-28-Riverdale-r1-.cmn', '2010-11-28-Riverdale-r2-.cmn']
 for f in files:
 	tf.add( os.path.join('2010 Riverdale', f), os.path.join(targetDir, f) )
 

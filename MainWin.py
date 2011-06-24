@@ -854,7 +854,6 @@ Continue?''' % fName, 'Simulate a Race', iconMask = wx.ICON_QUESTION ):
 		try:
 			wb.save( xlFName )
 			Utils.MessageOK(self, 'Excel file written to:\n\n   %s' % xlFName, 'Excel Write', iconMask=wx.ICON_INFORMATION)
-
 		except IOError:
 			Utils.MessageOK(self,
 						'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % xlFName,
@@ -865,12 +864,12 @@ Continue?''' % fName, 'Simulate a Race', iconMask = wx.ICON_QUESTION ):
 		info = wx.AboutDialogInfo()
 		info.Name = AppVerName
 		info.Version = ''
-		info.Copyright = "(C) 2009-2010"
+		info.Copyright = "(C) 2009-2011"
 		info.Description = wordwrap(
-			"CrossMgr: produce Cyclo-cross race results quickly and easily with no preparation.\n\n"
+			"CrossMgr: produce Cyclo-cross race results quickly and easily with little preparation.\n\n"
 			"A brief list of features:\n"
 			"   * Input riders on the first lap\n"
-			"   * Predicts riders for all other laps based on their lap times\n"
+			"   * Predicts riders for all other laps based on lap times\n"
 			"   * Indicates race leader by category and tracks missing riders\n"
 			"   * Interpolates missing numbers.  Ignores duplicate rider entries.\n"
 			"   * Shows results instantly by category during and after race\n"
@@ -878,8 +877,8 @@ Continue?''' % fName, 'Simulate a Race', iconMask = wx.ICON_QUESTION ):
 			"   * Allows rider lap adjustments\n"
 			"   * UCI 80% Rule Countdown\n"
 			"",
-			350, wx.ClientDC(self))
-		info.WebSite = ("http://en.wikipedia.org/wiki/Hello_world", "Hello World home page")
+			500, wx.ClientDC(self))
+		info.WebSite = ("http://sites.google.com/site/crossmgrsoftware/", "CrossMgr Home Page")
 		info.Developers = [
 					"Edward Sitarski (edward.sitarski@gmail.com)",
 					"Andrew Paradowski (andrew.paradowski@gmail.com)"
@@ -888,12 +887,14 @@ Continue?''' % fName, 'Simulate a Race', iconMask = wx.ICON_QUESTION ):
 		licenseText = "User Beware!\n\n" \
 			"This program is experimental, under development and may have bugs.\n" \
 			"Feedback is sincerely appreciated.\n\n" \
-			"CRITICALLY IMPORTANT MESSAGE:\n" \
+			"Donations are also appreciated - see website for details.\n\n" \
+			"CRITICALLY IMPORTANT MESSAGE!\n" \
 			"This program is not warrented for any use whatsoever.\n" \
 			"It may not produce correct results, it might lose your data.\n" \
 			"The authors of this program assume no reponsibility or liability for data loss or erronious results produced by this program.\n\n" \
-			"Use entirely at your own risk." \
-			"Always use a paper manual backup."
+			"Use entirely at your own risk.\n" \
+			"Do not come back and tell me that this program screwed up your event!\n" \
+			"Computers fail, screw-ups happen.  Always use a paper manual backup."
 		info.License = wordwrap(licenseText, 500, wx.ClientDC(self))
 
 		wx.AboutBox(info)
