@@ -42,12 +42,20 @@ class Results( wx.Panel ):
 		self.showPositionsToggle.SetValue( self.showPositions )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowPositions, self.showPositionsToggle )
 		
+		self.zoomInButton = wx.Button( self, wx.ID_ZOOM_IN, style=wx.BU_EXACTFIT )
+		self.Bind( wx.EVT_BUTTON, self.onZoomIn, self.zoomInButton )
+		self.zoomOutButton = wx.Button( self, wx.ID_ZOOM_OUT, style=wx.BU_EXACTFIT )
+		self.Bind( wx.EVT_BUTTON, self.onZoomOut, self.zoomOutButton )
+		
 		self.hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.categoryChoice, flag=wx.ALL, border=4 )
 		self.hbs.Add( self.showTimesToggle, flag=wx.ALL, border=4 )
 		self.hbs.Add( self.showGapsToggle, flag=wx.ALL, border=4 )
 		self.hbs.Add( self.showLapsCompletedToggle, flag=wx.ALL, border=4 )
 		self.hbs.Add( self.showPositionsToggle, flag=wx.ALL, border=4 )
+		self.hbs.Add( wx.StaticText(self, wx.ID_ANY, ' '), proportion=2 )
+		self.hbs.Add( self.zoomInButton, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.zoomOutButton, flag=wx.TOP | wx.BOTTOM | wx.RIGHT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 
 		self.whiteColour = wx.Colour( 255, 255, 255 )
 		self.blackColour = wx.Colour( 0, 0, 0 )
@@ -76,6 +84,12 @@ class Results( wx.Panel ):
 		
 		self.SetSizer(bs)
 		bs.SetSizeHints(self)
+		
+	def onZoomOut( self, event ):
+		self.grid.Zoom( False )
+			
+	def onZoomIn( self, event ):
+		self.grid.Zoom( True )
 		
 	def doRightClick( self, event ):
 		self.doNumSelect( event )
