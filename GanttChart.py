@@ -163,7 +163,7 @@ class GanttChart(wx.PyControl):
 		dc.SetBackground(backBrush)
 		dc.Clear()
 		
-		if not self.data or width < 50 or height < 50:
+		if not self.data or self.dataMax == 0 or width < 50 or height < 50:
 			self.empty = True
 			return
 		self.empty = False

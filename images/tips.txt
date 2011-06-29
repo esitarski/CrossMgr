@@ -20,13 +20,16 @@ CrossMgr will make adjustments for missed numbers.  It will even insert numbers 
 CrossMgr manages the UCI time bound rule.  See the display on the lower left of the screen.
 Try toggling the display options in Results and History to see additional information.
 Try clicking on numbers in the History screen.
-A CrossMgr race continues to run after a race is started, even if the program is closed and the computer is shut down.  When re-Opened, the race will resume with the correct race clock.  "New" a race and try it sometime.
-Don't bring an expensive computer to a cross race.  Get a cheap (used) one that you won't be upset about if it ends up in a puddle.
-CrossMgr is availalbe on Windows and Linux.
-You can change the Categories at any time - before, during and after a race.
+A CrossMgr race continues to run after a race is started, even if the program is closed and the computer is shut down.  When re-Opened, the race will resume where it left off.  Try it sometime!
+Don't bring an expensive computer to a cross race.  Get a cheap (used) computer that you can watch fall into a puddle.
+CrossMgr is available on Windows and Linux.
+You can change the race Categories at any time - before, during and after a race.
 Consider rescuing and old computer by installing Linux and running CrossMgr.
 Consider running CrossMgr with two people at the same time for backup.
-CrossMgr correctly estimates the number of laps in a race even if the 1st lap is not the same distance as the rest of the race.
-CrossMgr always estimates the total number of laps closest to the race time - even if the 1st lap is longer than the others.
+CrossMgr correctly estimates the number of laps in a race even if the 1st lap is not the same time/distance as the rest of the race.
 Always bring extra computer batteries to a race.
-Consider getting an external keypad for entering numbers.
+Try an external keypad for entering numbers.
+Don't worry if you can't enter every number - CrossMgr will figure out missing numbers automatically.
+Use HTML export to create web-ready results.
+Use Excel export to create an Excel sheet with the results.  Reformat the results in Excel anyway you like, then publish to the web.
+Putting the computer under a big cardboard box is a great way to reduce glare.
