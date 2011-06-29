@@ -366,7 +366,7 @@ class Animation(wx.PyControl):
 				maxLaps = 9999
 			if self.lapCur > maxLaps:
 				self.lapCur = maxLaps
-			tStr = 'Lap %d' % self.lapCur
+			tStr = 'Laps Completed %d' % max(0, self.lapCur-1)
 			tWidth, tHeight = dc.GetTextExtent( tStr )
 			dc.DrawText( tStr, 2*r + r/2 - tWidth, r + r/2 - laneWidth - tHeight * 1.5 )
 
