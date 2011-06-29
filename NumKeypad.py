@@ -162,6 +162,12 @@ class NumKeypad( wx.Panel ):
 				pass
 	
 	def doChangeNumLaps( self, event ):
+		race = Model.race
+		if race and race.isFinished():
+			try:
+				race.numLaps = int(self.numLaps.GetString(self.numLaps.GetSelection()))
+			except ValueError:
+				pass
 		self.refreshLaps()
 	
 	def doChooseAutomaticManual( self, event ):
@@ -340,7 +346,20 @@ class NumKeypad( wx.Panel ):
 		
 		self.automaticManualChoice.Enable( enable )
 		self.automaticManualChoice.SetSelection( getattr(race, 'automaticManual', 0) )
-		self.numLaps.Enable( enable )
+		
+		# Allow the number of laps to be changed after the race is finished.
+		numLapsEnable = True if race is not None and (race.isRunning() or race.isFinished()) else False
+		self.numLaps.Enable( numLapsEnable )
+		if numLapsEnable != enable and race.numLaps is not None:
+			self.resetLaps()
+			self.numLaps.SetItems( [str(x) for x in xrange(max(1,race.numLaps-2), race.numLaps+5)] )
+			for i, v in enumerate(self.numLaps.GetItems()):
+				if int(v) == race.numLaps:
+					self.numLaps.SetSelection( i )
+					break
+			if not enable:
+				return
+			
 		if not enable:
 			self.resetLaps()
 			return

@@ -9,6 +9,7 @@ import time
 import copy
 import bisect
 import json
+import random
 import webbrowser
 import cPickle as pickle
 from optparse import OptionParser
@@ -56,6 +57,15 @@ except ImportError:
 	def ShowSplashScreen():
 		pass
 
+def ShowTipOfTheDay():
+	tipFile = os.path.join(Utils.getImageFolder(), "tips.txt")
+	lines = 0
+	try:
+		provider = wx.CreateFileTipProvider(tipFile, random.randint(0,sum(1 for line in open(tipFile,'r'))))
+		wx.ShowTip(None, provider, True)
+	except:
+		pass
+		
 class MainWin( wx.Frame ):
 	def __init__( self, parent, id = wx.ID_ANY, title='', size=(200,200) ):
 		wx.Frame.__init__(self, parent, id, title, size=size)
@@ -1029,6 +1039,7 @@ def MainLoop():
 
 	if options.verbose:
 		ShowSplashScreen()
+		ShowTipOfTheDay()
 	
 	# Try a specified filename.
 	fileName = options.filename

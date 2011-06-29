@@ -396,7 +396,7 @@ function Refresh()
 	dc.fillStyle = 'black';
 	if( lapCur > 0 )
 	{
-		var tStr = 'Lap ' + lapCur;
+		var tStr = 'Laps Completed ' + (lapCur - 1);
 		var tWidth = dc.measureText(tStr).width;
 		dc.fillText( tStr, 2*r + r/2 - tWidth, r + r/2 - laneWidth - tHeight * 1.5 );
 	}

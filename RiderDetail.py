@@ -190,7 +190,7 @@ class RiderDetail( wx.Panel ):
 			i = min( i, len(appearedInLap) - 1 )	# Handle if rider would have been lapped again on the last lap.
 			appearedInLap[i] = True
 
-		missingCount = sum( 1 for b in appearedInLap if not b )
+		missingCount = sum( 1 for b in appearedInLap if not b ) if rider.status == Model.Rider.Finisher else 0
 		if missingCount:
 			notInLapStr = 'Lapped by Race Leader in %s' % (', '.join( str(i) for i, b in enumerate(appearedInLap) if not b ))
 		else:
@@ -198,7 +198,10 @@ class RiderDetail( wx.Panel ):
 		self.notInLap.SetLabel( notInLapStr )
 
 		# Populate the lap times.
-		raceTime = min(category.getStartOffsetSecs() if category else 0.0, entries[0].t)
+		try:
+			raceTime = min(category.getStartOffsetSecs() if category else 0.0, entries[0].t)
+		except IndexError:
+			raceTime = 0.0
 		ganttData = [raceTime]
 		data = [ [], [], [] ]
 		graphData = []
