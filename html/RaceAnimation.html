@@ -89,6 +89,7 @@ var numsToWatchStr = null;
 var categoryStr = null;
 var numsToWatch = {};		// Set of numbers to watch.
 var resultsDiv = null;
+var showRaceTimes = true;	// if false, show lap times.
 
 // Rider colours given out as remander of the number.
 var colours = [
@@ -702,7 +703,10 @@ function SetCategoryResults()
 			if( numsToWatch[num] ) td.className = 'highlight';
 			for( var i = 1; i < lapTimes.length; ++i )
 			{
-				createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(lapTimes[i] - startOffset, 0.0)) );
+				if( showRaceTimes )
+					createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(lapTimes[i] - startOffset, 0.0)) );
+				else
+					createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(lapTimes[i] - lapTimes[i-1], 0.0)) );
 				if( numsToWatch[num] ) td.className = 'highlight';
 			}
 		}
@@ -854,6 +858,13 @@ function getUrlParam( param, url )
 	return match ? match[1] : "";
 }
 
+function LapTimesRaceTimes()
+{
+	s = document.getElementById('idLapTimesRaceTimes');
+	showRaceTimes = (s.selectedIndex == 0);
+	SetCategoryResults();
+}
+
 function onLoad()
 {
 	canvas = document.getElementById('idTrack');
@@ -938,6 +949,10 @@ Highlight Numbers:
 Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
 <span class="noprint">Comments?  Click <a href="mailto:edward.sitarski@gmail.com?subject=Race Animation">here</a>.<br/></span>
 </p>
+Show: <select id="idLapTimesRaceTimes" onChange="LapTimesRaceTimes()" >
+ <option value="showRaceTimes">Race Time</option>
+ <option value="showLapTimes">Time Per Lap</option>
+</select>
 <div id="idResultsDiv"></div>
 </body>
 
