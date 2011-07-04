@@ -545,7 +545,7 @@ class MainWin( wx.Frame ):
 			except IOError:
 				Utils.MessageOK( self, "Cannot open file:\n%s" % categoriesFile, "File Open Error", iconMask=wx.ICON_ERROR)
 			except (ValueError, IndexError):
-				Utils.MessageOK( self, "Bad file format:\n%s" % categoriesFile, "File Read Error", iconMask=wx.ICON_ERROR)
+				Utils.MessageOK( self, "Bad file format:\n%s\n\n%s - %s" % (categoriesFile, str(ValueError), str(IndexError)), "File Read Error", iconMask=wx.ICON_ERROR)
 
 		if not importedCategories:
 			race.categories = categoriesSave
