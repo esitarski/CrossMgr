@@ -876,7 +876,7 @@ Continue?''' % fName, 'Simulate a Race', iconMask = wx.ICON_QUESTION ):
 		info.Version = ''
 		info.Copyright = "(C) 2009-2011"
 		info.Description = wordwrap(
-			"CrossMgr: produce Cyclo-cross race results quickly and easily with little preparation.\n\n"
+			"Produce Cyclo-cross race results quickly and easily with little preparation.\n\n"
 			"A brief list of features:\n"
 			"   * Input riders on the first lap\n"
 			"   * Predicts riders for all other laps based on lap times\n"
