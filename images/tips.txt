@@ -3,28 +3,31 @@ Try importing rider data from an Excel sign-on sheet.  See the tutorial for deta
 The Race Chart is a great way to settle disputes.
 Try exporting race results to HTML.
 Try exporting race results to Excel.
-You can remove numbers from Category ranges but putting a '-' in front of the number.  For example, "1-99, -45, -56" removes  45 and 56 from the 1-99 range.
+The History page looks just like a manual scoring sheet.
+Try right-clicking in the History page to edit entries.
+Numbers that CrossMgr thinks are missed are highlighed in yellow.
+Always check the Race Recommendations after each race and address any issues.
+You can remove numbers from Category ranges buy putting a '-' in front of the number.  For example, "1-99, -45, -56" removes  45 and 56 from the 1-99 range.
 When you get a chance, watch the Race Animation during a race.
 Race results are always current and available during a race.
 Watch the Race Animation after a race.
-Watch the race animation, and dynamically change categories to expose race strategy.
+Watch the Race Animation.  Try watching different numbers to reveal race strategy.
 During a race, check off expected numbers as they come up on the left side of the screen instead of retyping them in.
 CrossMgr accepts minimum input based on the Category number ranges.  For example, if there is one Category with numbers in the range 200-299, it is unnecessary to enter the leading "2" - entering the last two digits are sufficient.  CrossMgr knows to automatically add the leading "2".
-Consider donating to CrossMgr.  See sites.google.com/site/crossmgrsoftware for details.
+Consider donating to CrossMgr so we can make it better!  See sites.google.com/site/crossmgrsoftware for details.
 Try double-clicking on numbers in the Results and History pages.
 "Splitting" an entry allows you to make two entries where there was previously one.  This can be helpful to make corrections for missed numbers.
-Try right-clicking on numbers in the Results and History pages.
 If there is a separate start area, always run the first lap so that it is longer than the other laps.  CrossMgr will adjust its calculations.
 Try to get as many numbers as you can, but don't worry if you miss a few.  CrossMgr will "fill in the gaps" after it has built up a profile about each rider.
 CrossMgr will make adjustments for missed numbers.  It will even insert numbers missed on the first lap if required.
 CrossMgr manages the UCI time bound rule.  See the display on the lower left of the screen.
 Try toggling the display options in Results and History to see additional information.
 Try clicking on numbers in the History screen.
-A CrossMgr race continues to run after a race is started, even if the program is closed and the computer is shut down.  When re-Opened, the race will resume where it left off.  Try it sometime!
-Don't bring an expensive computer to a cross race.  Get a cheap (used) computer that you can watch fall into a puddle.
+CrossMgr continues a run after a race is started even if the program is closed and the computer is shut down.  When re-opened, the race will resume where just where it left off.  Try it sometime!
+Don't bring an expensive computer to a cross race.  Get a cheap (used) computer that you don't mind if it takes a tumble into a puddle.
 CrossMgr is available on Windows and Linux.
 You can change the race Categories at any time - before, during and after a race.
-Consider rescuing and old computer by installing Linux and running CrossMgr.
+Rescue and old computer by installing Linux and running CrossMgr.
 Consider running CrossMgr with two people at the same time for backup.
 CrossMgr correctly estimates the number of laps in a race even if the 1st lap is not the same time/distance as the rest of the race.
 Always bring extra computer batteries to a race.
@@ -32,4 +35,7 @@ Try an external keypad for entering numbers.
 Don't worry if you can't enter every number - CrossMgr will figure out missing numbers automatically.
 Use HTML export to create web-ready results.
 Use Excel export to create an Excel sheet with the results.  Reformat the results in Excel anyway you like, then publish to the web.
-Putting the computer under a big cardboard box is a great way to reduce glare.
+Putting the computer in a sideways cardboard box is a great way to reduce glare.
+The number of laps can be changed during a race by switching to "Manual" mode.
+If you forget to set the number of laps during a race, you can change it after - no input is lost.
+HTML output can show Race Time (splits) as well as Lap Time.
