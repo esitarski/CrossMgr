@@ -15,7 +15,7 @@ Try double-clicking on numbers in the Results and History pages.
 "Splitting" an entry allows you to make two entries where there was previously one.  This can be helpful to make corrections for missed numbers.
 Try right-clicking on numbers in the Results and History pages.
 If there is a separate start area, always run the first lap so that it is longer than the other laps.  CrossMgr will adjust its calculations.
-Try to get as many numbers as you can, but don't worry if you miss a few.  CrossMgr will "fill in th gaps" after it has built up a profile about each rider.
+Try to get as many numbers as you can, but don't worry if you miss a few.  CrossMgr will "fill in the gaps" after it has built up a profile about each rider.
 CrossMgr will make adjustments for missed numbers.  It will even insert numbers missed on the first lap if required.
 CrossMgr manages the UCI time bound rule.  See the display on the lower left of the screen.
 Try toggling the display options in Results and History to see additional information.
