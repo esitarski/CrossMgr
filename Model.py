@@ -938,8 +938,12 @@ class Race(object):
 			fp.write( '%s|%s\n' % (c.name.replace('|',''), c.catStr) )
 
 	def importCategories( self, fp ):
-		categories = [ (True, line.split('|')[0], line.split('|')[1], '00:00', None, r) \
-							for r, line in enumerate(fp) if line ]
+		categories = []
+		for r, line in enumerate(fp):
+			if not line:
+				continue
+			fields = line.strip().split('|')
+			categories.append( (True, fields[0], fields[1], '00:00', None) )
 		self.setCategories( categories )
 
 	def isRiderInCategory( self, num, catName = None ):
