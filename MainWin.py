@@ -287,7 +287,8 @@ class MainWin( wx.Frame ):
 			self.config.WriteBool( 'showTipAtStartup', showing ^ True )
 	
 	def menuChangeProperties( self, event ):
-		ChangeProperties( self )
+		if Model.race:
+			ChangeProperties( self )
 
 	def menuShowPage( self, event ):
 		self.showPage( self.idPage[event.GetId()] )
