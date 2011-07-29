@@ -287,8 +287,10 @@ class MainWin( wx.Frame ):
 			self.config.WriteBool( 'showTipAtStartup', showing ^ True )
 	
 	def menuChangeProperties( self, event ):
-		if Model.race:
-			ChangeProperties( self )
+		if not Model.race:
+			Utils.MessageOK(self, "You must have a vaid race.", "Change Properties", iconMask=wx.ICON_ERROR)
+			return
+		ChangeProperties( self )
 
 	def menuShowPage( self, event ):
 		self.showPage( self.idPage[event.GetId()] )
@@ -343,7 +345,7 @@ class MainWin( wx.Frame ):
 	def menuLinkExcel( self, event ):
 		race = Model.getRace()
 		if not race:
-			Utils.MessageOK(self, "A race must be loaded first.", "Link ExcelSheet", iconMask=wx.ICON_ERROR)
+			Utils.MessageOK(self, "You must have a vaid race.", "Link ExcelSheet", iconMask=wx.ICON_ERROR)
 			return
 		gel = GetExcelLink( self, getattr(race, 'excelLink', None) )
 		race.excelLink = gel.show()
