@@ -23,7 +23,7 @@ from History			import History
 from RiderDetail		import RiderDetail
 from Results			import Results
 from Categories			import Categories
-from Properties			import Properties, PropertiesDialog
+from Properties			import Properties, PropertiesDialog, ChangeProperties
 from Recommendations	import Recommendations
 from RaceAnimation		import RaceAnimation, GetAnimationData
 import Utils
@@ -44,11 +44,11 @@ try:
 		estyle = AS.AS_TIMEOUT | AS.AS_CENTER_ON_PARENT
 		shadow = wx.WHITE
 		try:
-			frame = AS.AdvancedSplash(Utils.getMainWin(), bitmap=bitmap, timeout=3000,
+			frame = AS.AdvancedSplash(Utils.getMainWin(), bitmap=bitmap, timeout=2000,
 									  extrastyle=estyle, shadowcolour=shadow)
 		except:
 			try:
-				frame = AS.AdvancedSplash(Utils.getMainWin(), bitmap=bitmap, timeout=3000,
+				frame = AS.AdvancedSplash(Utils.getMainWin(), bitmap=bitmap, timeout=2000,
 										  shadowcolour=shadow)
 			except:
 				pass
@@ -57,12 +57,18 @@ except ImportError:
 	def ShowSplashScreen():
 		pass
 
-def ShowTipOfTheDay():
+def ShowTipAtStartup():
+	mainWin = Utils.getMainWin()
+	if mainWin and not mainWin.config.ReadBool('showTipAtStartup', True):
+		return
+		
 	tipFile = os.path.join(Utils.getImageFolder(), "tips.txt")
 	lines = 0
 	try:
 		provider = wx.CreateFileTipProvider(tipFile, random.randint(0,sum(1 for line in open(tipFile,'r'))))
-		wx.ShowTip(None, provider, True)
+		showTipAtStartup = wx.ShowTip(None, provider, True)
+		if mainWin:
+			mainWin.config.WriteBool('showTipAtStartup', showTipAtStartup)
 	except:
 		pass
 		
@@ -117,7 +123,11 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_MENU, self.menuOpenNext, id=idCur )
 
 		self.fileMenu.AppendSeparator()
-		
+		idCur = wx.NewId()
+		self.fileMenu.Append( idCur , "&Change Properties...", "Change the properties of the current race" )
+		self.Bind(wx.EVT_MENU, self.menuChangeProperties, id=idCur )
+		self.fileMenu.AppendSeparator()
+
 		self.fileMenu.Append( wx.ID_PAGE_SETUP , "Page &Setup...", "Setup the print page" )
 		self.Bind(wx.EVT_MENU, self.menuPageSetup, id=wx.ID_PAGE_SETUP )
 
@@ -260,12 +270,24 @@ class MainWin( wx.Frame ):
 		self.helpMenu.Append( wx.ID_ABOUT , "&About...", "About CrossMgr..." )
 		self.Bind(wx.EVT_MENU, self.menuAbout, id=wx.ID_ABOUT )
 
+		idCur = wx.NewId()
+		self.helpMenu.Append( idCur , "&Tips at Startup...", "Enable/Disable Tips at Startup..." )
+		self.Bind(wx.EVT_MENU, self.menuTipAtStartup, id=idCur )
+
 		self.menuBar.Append( self.helpMenu, "&Help" )
 
 		#------------------------------------------------------------------------------
 		self.SetMenuBar( self.menuBar )
 		#------------------------------------------------------------------------------
 		self.Bind(wx.EVT_CLOSE, self.onCloseWindow)
+
+	def menuTipAtStartup( self, event ):
+		showing = self.config.ReadBool('showTipAtStartup', True)
+		if Utils.MessageOKCancel( self, 'Turn Off Tips at Startup?' if showing else 'Show Tips at Startup?', 'Tips at Startup' ):
+			self.config.WriteBool( 'showTipAtStartup', showing ^ True )
+	
+	def menuChangeProperties( self, event ):
+		ChangeProperties( self )
 
 	def menuShowPage( self, event ):
 		self.showPage( self.idPage[event.GetId()] )
@@ -712,7 +734,7 @@ Unlike a real race, the simulation will show riders crossing the line right from
 The race will be written to:
 "%s".
 
-Continue?''' % fName, 'Simulate a Race', iconMask = wx.ICON_QUESTION ):
+Continue?''' % fName, 'Simulate a Race' ):
 			return
 
 		try:
@@ -876,7 +898,7 @@ Continue?''' % fName, 'Simulate a Race', iconMask = wx.ICON_QUESTION ):
 		info.Version = ''
 		info.Copyright = "(C) 2009-2011"
 		info.Description = wordwrap(
-			"Produce Cyclo-cross race results quickly and easily with little preparation.\n\n"
+			"Create Cyclo-cross race results quickly and easily with little preparation.\n\n"
 			"A brief list of features:\n"
 			"   * Input riders on the first lap\n"
 			"   * Predicts riders for all other laps based on lap times\n"
@@ -1025,6 +1047,8 @@ def MainLoop():
 	(options, args) = parser.parse_args()
 
 	app = wx.PySimpleApp()
+	# app.RedirectStdio()
+	
 	mainWin = MainWin( None, title=AppVerName, size=(800,600) )
 	mainWin.Maximize( True )
 	mainWin.Show()
@@ -1039,7 +1063,7 @@ def MainLoop():
 
 	if options.verbose:
 		ShowSplashScreen()
-		ShowTipOfTheDay()
+		ShowTipAtStartup()
 	
 	# Try a specified filename.
 	fileName = options.filename

@@ -60,29 +60,30 @@ class Properties( wx.Panel ):
 		fbs = wx.FlexGridSizer( rows=rows, cols=2, hgap=5, vgap=3 )
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
-		fbs.AddMany( [(self.raceNameLabel, 0, labelAlign),		(self.raceName, 1, wx.EXPAND|wx.GROW),
-					  (self.organizerLabel, 0, labelAlign),		(self.organizer,1, wx.EXPAND|wx.GROW),
-					  (self.dateLabel, 0, labelAlign),			(self.date, 	1, wx.EXPAND|wx.GROW),
-					  (self.raceNumLabel, 0, labelAlign),		(self.raceNum,	1, wx.EXPAND|wx.GROW),
-					  (self.scheduledStartLabel, 0, labelAlign),(self.scheduledStart, 1, wx.EXPAND|wx.GROW),
-					  (self.minutesLabel, 0, labelAlign),		(self.minutes, 1, wx.EXPAND|wx.GROW),
-					  (self.memoLabel, 0, labelAlign),			(self.memo, 1, wx.EXPAND|wx.GROW),
-					  (self.commissaireLabel, 0,labelAlign),	(self.commissaire, 1, wx.EXPAND|wx.GROW),
-					  (self.fileNameLabel, 0, labelAlign),		(self.fileName, 1, wx.EXPAND|wx.GROW),
-					 ] )
+		fieldAlign = wx.EXPAND|wx.GROW
+		labelFieldFormats = [
+			(self.raceNameLabel,	0, labelAlign),		(self.raceName, 		1, fieldAlign),
+			(self.organizerLabel,	0, labelAlign),		(self.organizer,		1, fieldAlign),
+			(self.dateLabel,		0, labelAlign),		(self.date, 			1, fieldAlign),
+			(self.raceNumLabel,		0, labelAlign),		(self.raceNum,			1, fieldAlign),
+			(self.scheduledStartLabel, 0, labelAlign),	(self.scheduledStart,	1, fieldAlign),
+			(self.minutesLabel,		0, labelAlign),		(self.minutes, 			1, fieldAlign),
+			(self.memoLabel,		0, labelAlign),		(self.memo, 			1, fieldAlign),
+			(self.commissaireLabel,	0, labelAlign),		(self.commissaire, 		1, fieldAlign),
+			(self.fileNameLabel,	0, labelAlign),		(self.fileName, 		1, fieldAlign),
+		]
+		fbs.AddMany( labelFieldFormats )
 		fbs.AddGrowableCol( 1 )
 		self.SetSizer(fbs)
+		
+		self.editFields = [labelFieldFormats[i][0] for i in xrange(1, len(labelFieldFormats), 2)]
 	
 	def setEditable( self, editable = True ):
-		return
-		self.raceName.SetEditable( editable )
-		self.organizer.SetEditable( editable )
-		# self.date.SetEditable( editable )
-		self.raceNum.SetEditable( editable )
-		self.scheduledStart.SetEditable( editable )
-		self.minutes.SetEditable( editable )
-		self.memo.SetEditable( editable )
-		self.commissaire.SetEditable( editable )
+		for f in self.editFields:
+			try:
+				f.SetEditable( editable )
+			except:
+				pass
 	
 	def incNext( self ):
 		self.raceNum.SetValue( self.raceNum.GetValue() + 1 )
@@ -133,7 +134,6 @@ class Properties( wx.Panel ):
 		self.minutes.SetValue( race.minutes )
 		self.commissaire.SetValue( race.commissaire )
 		self.memo.SetValue( race.memo )
-		
 		self.updateFileName()
 		
 	def update( self, race = None ):
@@ -145,17 +145,17 @@ class Properties( wx.Panel ):
 		race.organizer = self.organizer.GetValue()
 		race.date = self.date.GetValue().Format(Properties.dateFormat)
 		race.raceNum = self.raceNum.GetValue()
-		#print str(self.scheduledStart.GetValue())
 		race.scheduledStart = self.scheduledStart.GetValue()
 		race.minutes = self.minutes.GetValue()
 		race.commissaire = self.commissaire.GetValue()
 		race.memo = self.memo.GetValue()
-
+		
 class PropertiesDialog( wx.Dialog ):
 	def __init__(
 			self, parent, ID, title, size=wx.DefaultSize, pos=wx.DefaultPosition, 
 			style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER,
-			useMetal=False,
+			showFileFields = True,
+			refreshProperties = False
 			):
 
 		# Instead of calling wx.Dialog.__init__ we precreate the dialog
@@ -171,48 +171,43 @@ class PropertiesDialog( wx.Dialog ):
 		# as far as the wxPython extension is concerned.
 		self.PostCreate(pre)
 
-		# This extra style can be set after the UI object has been created.
-		if 'wxMac' in wx.PlatformInfo and useMetal:
-			self.SetExtraStyle(wx.DIALOG_EX_METAL)
-
 		# Now continue with the normal construction of the dialog
 		# contents
 		sizer = wx.BoxSizer(wx.VERTICAL)
 
-		self.properties = Properties(self)
+		self.properties = Properties( self )
+		if refreshProperties:
+			self.properties.refresh()
 		sizer.Add(self.properties, 0, wx.ALIGN_CENTRE|wx.ALL|wx.GROW, 5)
 
-		gs = wx.FlexGridSizer( rows=2, cols=3, vgap = 5, hgap = 5 )
-		gs.Add( wx.StaticText(self, -1, 'Race File Folder:'), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
-		self.folder = wx.TextCtrl( self, -1, '', size=(400,-1) )
-		self.folder.SetValue( Utils.getDirName() )
-		gs.Add( self.folder, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.GROW)
+		if showFileFields:
+			gs = wx.FlexGridSizer( rows=2, cols=3, vgap = 5, hgap = 5 )
+			gs.Add( wx.StaticText(self, -1, 'Race File Folder:'), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+			self.folder = wx.TextCtrl( self, -1, '', size=(400,-1) )
+			self.folder.SetValue( Utils.getDirName() )
+			gs.Add( self.folder, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.GROW)
 
-		btn = wx.Button( self, 10, label='Browse...' )
-		btn.Bind( wx.EVT_BUTTON, self.onBrowseFolder )
-		gs.Add( btn, 0, wx.ALIGN_CENTER_VERTICAL )
-		
-		gs.Add( wx.StaticText(self, -1, 'Categories Import File (*.brc):'), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
-		self.categoriesFile = wx.TextCtrl( self, -1, '', size=(400,-1) )
-		self.categoriesFile.SetValue( Utils.getDirName() )
-		gs.Add( self.categoriesFile, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.GROW )
+			btn = wx.Button( self, 10, label='Browse...' )
+			btn.Bind( wx.EVT_BUTTON, self.onBrowseFolder )
+			gs.Add( btn, 0, wx.ALIGN_CENTER_VERTICAL )
+			
+			gs.Add( wx.StaticText(self, -1, 'Categories Import File (*.brc):'), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+			self.categoriesFile = wx.TextCtrl( self, -1, '', size=(400,-1) )
+			self.categoriesFile.SetValue( Utils.getDirName() )
+			gs.Add( self.categoriesFile, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.GROW )
 
-		btn = wx.Button( self, 10, label='Browse...' )
-		btn.Bind( wx.EVT_BUTTON, self.onBrowseCategories )
-		gs.Add( btn, 0, wx.ALIGN_CENTER_VERTICAL )
-		
-		gs.AddGrowableCol( 0, 1 )
-		
-		sizer.Add( gs, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
-		
-		line = wx.StaticLine( self, -1, size=(20, -1), style=wx.LI_HORIZONTAL)
-		sizer.Add( line, -1, wx.GROW|wx.ALIGN_CENTER_VERTICAL|wx.RIGHT|wx.TOP, 5)
+			btn = wx.Button( self, 10, label='Browse...' )
+			btn.Bind( wx.EVT_BUTTON, self.onBrowseCategories )
+			gs.Add( btn, 0, wx.ALIGN_CENTER_VERTICAL )
+			
+			gs.AddGrowableCol( 0, 1 )
+			
+			sizer.Add( gs, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
+			
+			line = wx.StaticLine( self, -1, size=(20, -1), style=wx.LI_HORIZONTAL)
+			sizer.Add( line, -1, wx.GROW|wx.ALIGN_CENTER_VERTICAL|wx.RIGHT|wx.TOP, 5)
 		
 		btnsizer = wx.StdDialogButtonSizer()
-        
-		if wx.Platform != "__WXMSW__":
-			btn = wx.ContextHelpButton(self)
-			btnsizer.AddButton(btn)
         
 		btn = wx.Button(self, wx.ID_OK)
 		btn.SetDefault()
@@ -265,12 +260,43 @@ class PropertiesDialog( wx.Dialog ):
 	def GetCategoriesFile( self ):
 		categoriesFile = self.categoriesFile.GetValue()
 		return categoriesFile if categoriesFile.endswith( '.brc' ) else None
+
+def ChangeProperties( parent ):
+	propertiesDialog = PropertiesDialog( parent, -1, "Change Properties", showFileFields = False, refreshProperties = True, size=(600,400) )
+	try:
+		if propertiesDialog.ShowModal() != wx.ID_OK: raise NameError('User Cancel')
+		mainWin = Utils.getMainWin()
+		dir = os.path.dirname( mainWin.fileName )
+		
+		newBaseName = propertiesDialog.properties.getFileName()
+		newFName = os.path.join( dir, newBaseName )
+		
+		if newFName != mainWin.fileName:
+			if Utils.MessageOKCancel(parent, "The filename will be changed to:\n\n%s\n\nContinue?" % newBaseName, "Change Filename?"):
+				if os.path.exists(newFName):
+					if not Utils.MessageOKCancel(parent, "This file already exists:\n\n%s\n\nOverwrite?" % newFName, "Overwrite Existing File?"):
+						raise NameError('User Cancel')
+					
+		propertiesDialog.properties.update()
+		if newFName != mainWin.fileName:
+			mainWin.fileName = newFName
+			mainWin.writeRace()
+			
+	except (NameError, AttributeError, TypeError):
+		pass
+	
+	propertiesDialog.Destroy()
 		
 if __name__ == '__main__':
+	race = Model.newRace()
+	race._populate()
+	
 	app = wx.PySimpleApp()
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	properties = Properties(mainWin)
-	# properties.setEditable( False )
+	properties.setEditable( True )
 	properties.refresh()
 	mainWin.Show()
+	propertiesDialog = PropertiesDialog( mainWin, -1, "Properties Dialog Test", showFileFields=False, refreshProperties=True )
+	propertiesDialog.Show()
 	app.MainLoop()

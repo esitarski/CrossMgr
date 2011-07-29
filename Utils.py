@@ -25,7 +25,7 @@ def MessageOK( parent, message, title = '', iconMask = 0):
 	dlg.Destroy()
 	return True
 	
-def MessageOKCancel( parent, message, title = '', iconMask = 0):
+def MessageOKCancel( parent, message, title = '', iconMask = wx.ICON_QUESTION):
 	dlg = wx.MessageDialog(parent, message, title, wx.OK | wx.CANCEL | iconMask )
 	response = dlg.ShowModal()
 	dlg.Destroy()

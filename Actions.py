@@ -100,7 +100,7 @@ class StartRaceAtTime( wx.Dialog ):
 
 		self.startSeconds = Utils.StrToSeconds( startTime ) * 60
 		if self.startSeconds < GetNowSeconds() and \
-			not Utils.MessageOKCancel( None, 'Race start time is in the past.\nStart race now?', 'Start Race Now', iconMask = wx.ICON_QUESTION ):
+			not Utils.MessageOKCancel( None, 'Race start time is in the past.\nStart race now?', 'Start Race Now' ):
 			return
 
 		# Setup the countdown clock.
@@ -149,7 +149,7 @@ class Actions( wx.Panel ):
 	
 	def onStartRace( self, event ):
 		race = Model.getRace()
-		if race is not None and Utils.MessageOKCancel(self, 'Start Race Now?', 'Start Race', iconMask = wx.ICON_QUESTION):
+		if race is not None and Utils.MessageOKCancel(self, 'Start Race Now?', 'Start Race'):
 			StartRaceNow()
 	
 	def onStartRaceTime( self, event ):
@@ -162,7 +162,7 @@ class Actions( wx.Panel ):
 	
 	def onFinishRace( self, event ):
 		race = Model.getRace()
-		if race is None or not Utils.MessageOKCancel(self, 'Finish Race Now?', 'Finish Race', iconMask = wx.ICON_QUESTION):
+		if race is None or not Utils.MessageOKCancel(self, 'Finish Race Now?', 'Finish Race'):
 			return
 		race.finishRaceNow()
 		if race.numLaps is None:

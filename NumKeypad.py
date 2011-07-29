@@ -222,7 +222,7 @@ class NumKeypad( wx.Panel ):
 		num = self.getRiderNum()
 		if num is None:
 			return
-		if not Utils.MessageOKCancel(self, 'DNF rider %d?' % num, 'Confirm Did Not FINISH', iconMask = wx.ICON_QUESTION ):
+		if not Utils.MessageOKCancel(self, 'DNF rider %d?' % num, 'Confirm Did Not FINISH' ):
 			return
 		rider = race.getRider( num )
 		rider.setStatus( Model.Rider.DNF )
@@ -254,7 +254,7 @@ class NumKeypad( wx.Panel ):
 		num = self.getRiderNum()
 		if num is None:
 			return
-		if not Utils.MessageOKCancel(self, 'DNS rider %d?' % num, 'Confirm Did Not START', iconMask = wx.ICON_QUESTION):
+		if not Utils.MessageOKCancel(self, 'DNS rider %d?' % num, 'Confirm Did Not START'):
 			return
 		rider = race.getRider( num )
 		rider.setStatus( Model.Rider.DNS )

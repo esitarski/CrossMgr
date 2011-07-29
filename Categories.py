@@ -145,7 +145,7 @@ class Categories( wx.Panel ):
 		if r is None or r < 0:
 			return
 		if Utils.MessageOKCancel(self,	'Delete Category "%s"?' % self.grid.GetCellValue(r, 1).strip(),
-										'Delete Category', iconMask = wx.ICON_QUESTION ):
+										'Delete Category' ):
 			self.grid.DeleteRows( r, 1, True )
 		
 	def onUpCategory( self, event ):
