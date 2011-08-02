@@ -54,6 +54,11 @@ table.results tr td.highlight
 	font-weight: bold;
 }
 
+table.results td#idNonNumeric, table.results th#idNonNumeric
+{
+	text-align:left;
+}
+
 @media print
 {
 	.noprint { display: none; }
@@ -272,7 +277,7 @@ function Refresh()
 	var tHeight = r / 8;
 	var fontStr = tHeight + "px Arial";
 	var fontStrHightlight = (tHeight * 1.6) + "px Arial";
-    dc.font = fontStr;
+	dc.font = fontStr;
 	
 	// Draw the track.
 	trackColour = 'rgb(0,255,0)';
@@ -485,7 +490,7 @@ function NextFrame()
 
 function SetData( aData, tCur )
 {
-	// data is a rider information indexed by number.  Info includes lap times and lastTime times.
+	// Data is rider information indexed by number.  Info includes lap times and lastTime times.
 	// lap times should include the start offset.
 	//	Example:
 	//		data = { 101: { lapTimes: [xx, yy, zz], lastTime: None, category: 'All' }, 102 { lapTimes: [aa, bb], lastTime: cc, category: 'Cat'} }
@@ -568,7 +573,7 @@ function SetCategoryResults()
 	// Show results for this category.
 	categoryCur = categories[categorySelect.selectedIndex];
 
-	var infoFields = ['License', 'LastName', 'FirstName', 'Category', 'Team' ];
+	var infoFields = ['License', 'LastName', 'FirstName', 'Category', 'Team'];
 	
 	var table = document.createElement('TABLE');
 	table.className = 'results';
@@ -626,17 +631,22 @@ function SetCategoryResults()
 		createTextChild( td = createChild(tr, 'TH'), cat );
 		td.style.fontSize = '120%';
 		td.colSpan = 4;
+		td.id = 'idNonNumeric';
 		
 		// Add the headers.
 		var thead = createChild( table, 'THEAD' );
 		var tr = createChild( thead, 'TR' );
 		createTextChild( td = createChild(tr, 'TH'), 'Pos' );
 		createTextChild( td = createChild(tr, 'TH'), 'Bib' );
+		td.id = 'idNonNumeric';
 		
 		for( var f = 0; f < infoFields.length; ++f )
 		{
 			if( curFields[infoFields[f]] )
+			{
 				createTextChild( td = createChild(tr, 'TH'), infoFields[f].replace(/Name$/,' Name') );
+				td.id = 'idNonNumeric';
+			}
 		}
 				
 		createTextChild( td = createChild(tr, 'TH'), 'Time' );
@@ -666,6 +676,7 @@ function SetCategoryResults()
 			
 			createTextChild( td = createChild(tr, 'TD'), num );
 			if( numsToWatch[num] ) td.className = 'highlight';
+			td.id = 'idNonNumeric';
 			
 			var d = data[num];
 			for( var f = 0; f < infoFields.length; ++f )
@@ -676,6 +687,7 @@ function SetCategoryResults()
 					v = (v || '');
 					createTextChild( td = createChild(tr, 'TD'), v );
 					if( numsToWatch[num] ) td.className = 'highlight';
+					td.id = 'idNonNumeric'; 
 				}
 			}
 			
@@ -832,9 +844,20 @@ function rnd_normal()
 { return (Math.random()*2-1)+(Math.random()*2-1)+(Math.random()*2-1); }
 function normal_variate( mean, stdev )
 { return rnd_normal()*stdev + mean; }
+function rand_int( iMax )
+{ if( iMax == null ) iMax = 100000000; return Math.floor(Math.random() * iMax); }
+function rand_str()
+{
+	var iMax = rand_int(7) + 1;
+	var s = '';
+	for( var i = 0; i < iMax; ++i )
+		s += rand_int( 10 );
+	return s
+}
 function GenerateRandomData()
 {
 	var cats = ['Junior', 'Senior', 'Women'];
+	var infoFields = ['License', 'LastName', 'FirstName', 'Category', 'Team'];
 	data = {};
 	for( var num = 100; num < 150; ++num )
 	{
@@ -845,6 +868,10 @@ function GenerateRandomData()
 		for( var lap = 0; lap < 8; ++lap )
 			lapTimes.push( lapTimes.back() + normal_variate(mean, mean/20)*60.0 );
 		data[num] = { 'lapTimes': lapTimes, 'lastTime': lapTimes.back(), 'raceCat' : cat, 'status' : 'Finisher' };
+		data[num]['License']	= rand_str() + '';
+		data[num]['LastName']	= ["Smith", "Jones", "Smirnovski", "Lu"][rand_int(4)];
+		data[num]['FirstName']	= ["John", "Peter", "Adam", "Kirk", "Vlad"][rand_int(5)];
+		data[num]['Team']		= ["Red", "Green", "Black"][rand_int(3)];
 	}
 	return data;
 }
