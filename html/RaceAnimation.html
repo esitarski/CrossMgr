@@ -112,6 +112,16 @@ var	topThreeColours = [
 	'rgb(205,133,63)'
 ];
 
+function isCanvasSupported()
+{
+    var canvas = document.createElement('canvas');
+    if (!canvas.getContext) {
+        // not supported
+        return false;
+    }
+	return true;
+}
+
 // Convenience function to get the last element in an array.
 Array.prototype.back = function()
 {
@@ -252,7 +262,7 @@ function FormatTime( t )
 
 function Refresh()
 {
-	if( !canvas )
+	if( !canvas || !isCanvasSupported() )
 		return;
 
 	// Redraw the canvas at this time.
@@ -563,6 +573,24 @@ function createTextChild( parent, s )
 
 //------------------------------------------------------------------------------
 
+function CmpResultsData( x, y )
+{
+	if( x[4] != y[4] )
+	{
+		if( x[4] == 'Finisher' ) return -1;
+		if( y[4] == 'Finisher' ) return 1;
+		if( x[4] < y[4] ) return -1;
+		return 1;
+	}
+	if( x[4] == 'Finisher' )
+	{
+		var d = x[0] - y[0];
+		if( d != 0 ) return -d;
+		return x[1] - y[1];
+	}
+	return x[5] - y[5];
+}
+
 function SetCategoryResults()
 {
 	resultsDiv.innerHTML = '';
@@ -604,23 +632,7 @@ function SetCategoryResults()
 		}
 
 		// Sort by greatest distance and shortest time.
-		resultsData.sort( function( x, y )
-							{
-								if( x[4] != y[4] )
-								{
-									if( x[4] == 'Finisher' ) return -1;
-									if( y[4] == 'Finisher' ) return 1;
-									if( x[4] < y[4] ) return -1;
-									return 1;
-								}
-								if( x[4] == 'Finisher' )
-								{
-									var d = x[0] - y[0];
-									if( d != 0 ) return -d;
-									return x[1] - y[1];
-								}
-								return x[5] - y[5];
-							} );
+		resultsData.sort( CmpResultsData );
 
 		// Label this category.
 		var leaderLapTimes = resultsData[0][3];
@@ -727,11 +739,355 @@ function SetCategoryResults()
 	resultsDiv.appendChild( table );
 }
 
+function byte2Hex(n)
+{
+	var nybHexString = "0123456789ABCDEF";
+	return String(nybHexString.substr((n >> 4) & 0x0F,1)) + nybHexString.substr(n & 0x0F,1);
+}
+
+function RGB2Color(r,g,b)
+{
+	return '#' + byte2Hex(r) + byte2Hex(g) + byte2Hex(b);
+}
+
+function makeColorGradient(frequency1, frequency2, frequency3,
+                             phase1, phase2, phase3,
+                             center, width, len)
+{
+	if (len == undefined)      len = 50;
+	if (center == undefined)   center = 128;
+	if (width == undefined)    width = 127;
+
+	var grad = [];
+	for (var i = 0; i < len; ++i)
+	{
+		var red = Math.sin(frequency1*i + phase1) * width + center;
+		var grn = Math.sin(frequency2*i + phase2) * width + center;
+		var blu = Math.sin(frequency3*i + phase3) * width + center;
+		grad.push( RGB2Color(red,grn,blu) );
+	}
+	return grad;
+}
+
+function lighterColor( k )
+{
+	var s = '#';
+	for( var i = 0; i < 3; ++i )
+	{
+		var c = parseInt(k.substring(1 + i*2, 1 + i*2 + 2), 16);
+		c += (255 - c) * 0.6;
+		c = parseInt( c );
+		s += (c < 16 ? '0' : '') + c.toString(16);
+	}
+	return s;
+}
+
+function drawSegment( c, x, y, w, h, color, colorLighter )
+{
+	c.save();
+	var gr = c.createLinearGradient( x, y, x, y+h );
+	gr.addColorStop(0.0, color);
+	gr.addColorStop(0.33, colorLighter);
+	gr.addColorStop(1.0, color );
+	c.fillStyle = gr;
+	c.fillRect( x, y, w, h );
+	if( color != '#FFFFFF' )
+	{
+		c.strokeStyle = '#000';
+		c.strokeRect( x, y, w, h );
+	}
+	c.restore();
+}
+
+var xFactorCur = 0.0;
+var	barHeightCur = 0.0;
+var	labelsWidthCur = 0.0;
+var segmentsCur = [];
+
+function findPos(obj) {
+	var curleft = curtop = 0;
+	if (obj.offsetParent) {
+		curleft = obj.offsetLeft
+		curtop = obj.offsetTop
+		while (obj = obj.offsetParent) {
+			curleft += obj.offsetLeft
+			curtop += obj.offsetTop
+		}
+	}
+	return [curleft,curtop];
+}
+
+var hoverTimer = null;
+var xEvent = null;
+var yEvent = null;
+
+function RaceChartProcessMouse( event )
+{
+	var canvasRaceChart = document.getElementById('idRaceChart');
+	var pos = findPos( canvasRaceChart );
+	xEvent = event.pageX - canvasRaceChart.offsetLeft;
+	yEvent = event.pageY - canvasRaceChart.offsetTop;
+	if( hoverTimer != null )
+		clearTimeout( hoverTimer );	
+	hoverTimer = setTimeout( "RaceChartUpdateInfo()", 25 );
+}
+
+function RaceChartUpdateInfo()
+{
+	RefreshRaceChart();
+	
+	var canvasRaceChart = document.getElementById('idRaceChart');
+	for( var s = 0; s < segmentsCur.length; ++s )
+	{
+		var seg = segmentsCur[s];
+		if( seg[0] <= xEvent && xEvent < (seg[0] + seg[2]) &&
+			seg[1] <= yEvent && yEvent < (seg[1] + seg[3]) )
+		{
+			//alert( "found segment" );
+			var hover = seg[4];
+			var fontHeight = 14;
+			var height = fontHeight * 1.5;
+				
+			var margin = (height - fontHeight) / 2 - 1;
+				
+			var c = canvasRaceChart.getContext('2d');
+			c.font = fontHeight + 'px Arial';
+
+			c.save();
+			c.lineWidth = 3;
+			c.strokeStyle = '#000';
+			c.strokeRect( seg[0], seg[1], seg[2]-1, seg[3]-1 );
+			
+			c.lineWidth = 1;
+			var x = xEvent, y = yEvent;
+			var textWidth = c.measureText( hover ).width;
+			c.fillStyle = '#FFF';
+			c.beginPath();
+			c.moveTo( x, y );
+			y -= height/2;
+			c.lineTo( x, y );
+			x += textWidth;
+			c.lineTo( x, y );
+			y -= height / 2;
+			c.arc( x, y, height / 2, Math.PI / 2, 3 * Math.PI / 2, true );
+			y -= height / 2;
+			x -= textWidth;
+			c.lineTo( x, y );
+			y += height / 2;
+			c.arc( x, y, height / 2, 3 * Math.PI / 2, Math.PI, true );
+			y += height;
+			c.lineTo( x, y );
+			c.closePath();
+			c.fill();
+			c.stroke();
+			c.fillStyle = '#000';
+			c.fillText( hover, xEvent, yEvent - 3 * height / 2 + margin + 1 );
+			c.restore();
+			
+			c.lineWidth = 2;
+			return;
+		}
+	}
+}
+
+function RefreshRaceChart()
+{
+	var canvasRaceChart = document.getElementById('idRaceChart');
+	if( !data || !canvasRaceChart || !isCanvasSupported() )
+		return;
+
+	var dc = canvasRaceChart.getContext('2d');
+	
+	dc.textBaseline = "top";
+	
+	var width = canvasRaceChart.width;
+	var height = canvasRaceChart.height;
+	var backColour = 'white';
+	dc.fillStyle = backColour;
+	dc.fillRect(0, 0, width, height );
+	
+	if( width < 80 || height < 80 )
+		return;
+
+	// Show results for this category.
+	categoryCur = categories[categorySelect.selectedIndex];
+
+	var dataMax = 0;
+	var resultsData = [];
+	for( num in data )
+	{
+		var d = data[num];
+		if( categoryCur == 'All' || d['raceCat'] == categoryCur )
+		{
+			var lapTimes = d['lapTimes'];
+			if( lapTimes.length > 0 )
+			{
+				resultsData.push( [lapTimes.length, lapTimes.length ? lapTimes.back() : 99999, num, d['lapTimes'], d['status'], d['lastTime']] );
+				if( lapTimes.back() > dataMax )
+					dataMax = lapTimes.back();
+			}
+		}
+	}
+	
+	if( resultsData.length == 0 )
+		return;
+	
+	// Sort by greatest distance and shortest time.
+	resultsData.sort( CmpResultsData );
+	
+	var iNum = 2;
+	var iLapTimes = 3;
+
+	// Check if all the data have the same offset.
+	var startOffset = resultsData[0][iLapTimes][0];
+	for( var i = 1; i < resultsData.length; ++i )
+	{
+		if( resultsData[i][iLapTimes][0] != startOffset )
+		{
+			startOffset = 0.0;
+			break;
+		}
+	}
+	if( startOffset != 0.0 )
+	{
+		for( var i = 0; i < resultsData.length; ++i )
+		{
+			var lapTimes = resultsData[i][iLapTimes];
+			for( var j = 0; j < lapTimes.length; ++j )
+				lapTimes[j] -= startOffset;
+		}
+	}
+	
+	var lapsMax = resultsData.length > 0 ? resultsData[0][iLapTimes].length : 0;
+	var colors = makeColorGradient(2.4,2.4,2.4,0,2,4,128,127,50);
+	var lighterColors = [];
+	for( var i = 0; i < colors.length; ++i )
+		lighterColors.push( lighterColor(colors[i]) );
+
+	var barHeight = parseInt(height / (resultsData.length + 2));
+	if( barHeight < 4 || dataMax == 0 )
+		return;
+	var barHeight = Math.min( barHeight, 18 );
+	var minimizeLabels = false;
+
+	var normalTextHeight = barHeight * 0.80;
+	var textHeight = normalTextHeight;
+	var fontStr = textHeight + "px Arial";
+	dc.font = fontStr;
+	textWidth = dc.measureText('0000').width;
+	
+	var legendSep = 4;			// Separations between legend entries and the Gantt bars.
+	var labelsWidth = textWidth + legendSep;
+	var drawLabels = true;
+		
+	if( labelsWidth > width / 2 )
+	{
+		labelsWidth = 0;
+		drawLabels = false;
+	}
+
+	var xLeft = labelsWidth;
+	var xRight = width - labelsWidth;
+	var yBottom = barHeight * (resultsData.length + 1);
+	var yTop = barHeight;
+	var lineWidth = 0.5;
+
+	var fontLegendStr = (normalTextHeight*.75) + "px Arial";
+	dc.font = fontLegendStr;
+	textHeight = (normalTextHeight * .75);
+	textWidth = dc.measureText( dataMax < 60*60 ? '00:00' : '00:00:00' ).width;
+		
+	// Draw the horizontal labels.
+	// Find some reasonable tickmarks for the x axis.
+	var numLabels = (xRight - xLeft) / (textWidth * 2.0);
+	var idealInterval = dataMax / numLabels;
+	var intervals = [1, 2, 5, 10, 15, 20, 30, 1*60, 2*60, 5*60, 10*60, 15*60, 20*60, 30*60, 1*60*60, 2*60*60, 4*60*60, 8*60*60, 12*60*60, 24*60*60];
+	for( d = 1; d < intervals.length - 1 && intervals[d] < idealInterval; ++d )
+		continue;
+	d = intervals[d];
+	var dFactor = (xRight - xLeft) / dataMax;
+	
+	dc.strokeStyle = 'black';
+	dc.fillStyle = 'black';
+	dc.lineWidth = lineWidth;
+	for( var t = 0; t < dataMax; t += d )
+	{
+		var x = xLeft + t * dFactor;
+		var s = FormatTime(t);
+		var w = dc.measureText(s).width;
+		dc.fillText( s, x - w/2, 0 + 2 );
+		if( !minimizeLabels )
+			dc.fillText( s, x - w/2, yBottom + 4 );
+		DrawLine( dc, x, yBottom+3, x, yTop-3 );
+	}
+	
+	// Draw the Gantt chart.
+	dc.font = fontStr;
+	textHeight = normalTextHeight;
+	textWidth = dc.measureText('0000').width;
+
+	dc.strokeStyle = "#0F0F0F";
+	dc.lineCap = 'butt';
+	dc.lineJoin = 'miter';
+
+	var xFactor = (width - labelsWidth * 2) / dataMax;
+	var yLast = barHeight;
+	var yHighlight = null;
+	segmentsCur = [];
+	for( var i = 0; i < resultsData.length; ++i )
+	{
+		yCur = yLast + barHeight;
+		xLast = labelsWidth;
+		xCur = xLast;
+		var num = resultsData[i][iNum];
+		var lapTimes = resultsData[i][iLapTimes];
+		for( var j = 0; j < lapTimes.length; ++j )
+		{
+			var t = lapTimes[j];
+			xCur = Math.floor(labelsWidth + t * xFactor);
+			if( j == 0 )
+			{
+				dc.fillStyle = '#FFFFFF';
+				dc.fillRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
+				dc.strokeRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
+			}
+			else
+			{
+				var hover = num + ': Lap ' + j + ', ' + FormatTime(t - lapTimes[j-1]);
+				drawSegment( dc, xLast, yLast, xCur - xLast + 1, yCur - yLast + 1, colors[j], lighterColors[j] );
+				segmentsCur.push( [xLast, yLast, xCur - xLast + 1, yCur - yLast + 1, hover] );
+			}
+			xLast = xCur;
+		}
+		
+		// Draw the last empty bar.
+		xCur = parseInt(labelsWidth + dataMax * xFactor);
+		dc.fillStyle = '#FFFFFF';
+		dc.fillRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
+		dc.strokeRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
+		
+		// Draw the label on both ends.
+		dc.fillStyle = '#000000';
+		var lab = resultsData[i][iNum] + '';
+		labelWidth = dc.measureText(lab).width;
+		dc.fillText( lab, textWidth - labelWidth, yLast );
+		if( !minimizeLabels )
+			dc.fillText( lab, width - labelsWidth + legendSep, yLast );
+
+		yLast = yCur;
+	}
+	
+	xFactorCur = xFactor;
+	barHeightCur = barHeight;
+	labelsWidthCur = labelsWidth;
+}
+
 function SelectCategory()
 {
 	categoryCur = categories[categorySelect.selectedIndex];
 	SetCategoryResults();
 	Refresh();
+	RefreshRaceChart();
 }
 		
 function StartAnimateRealtime()
@@ -897,6 +1253,17 @@ function onLoad()
 	canvas = document.getElementById('idTrack');
 	categorySelect = document.getElementById('idCategory');
 	resultsDiv = document.getElementById('idResultsDiv');
+
+	var raceChartCanvas = document.getElementById('idRaceChart');
+	if( isCanvasSupported() )
+	{
+		raceChartCanvas.addEventListener('mousemove', function(event) { RaceChartProcessMouse(event); }, false);
+		raceChartCanvas.addEventListener('mouseout', function(event) {
+				if( hoverTimer != null )
+					clearTimeout( hoverTimer );
+				hoverTimer = null;
+				RefreshRaceChart(); }, false);
+	}
 	
 	if( raceName )
 	{
@@ -938,6 +1305,7 @@ function onLoad()
 	}
 	
 	SetCategoryResults();
+	RefreshRaceChart();
 	
 	// Start animation.
 	Animate( animationSeconds, undefined, getStartTime() );
@@ -981,6 +1349,13 @@ Show: <select id="idLapTimesRaceTimes" onChange="LapTimesRaceTimes()" >
  <option value="showLapTimes">Time Per Lap</option>
 </select>
 <div id="idResultsDiv"></div>
+<p id="idRaceName" class="noprint">Race Chart</p>
+<canvas id="idRaceChart" width="1200" height="800" class="noprint">
+Your browser does not support the HTML5 Canvas.<br/>
+Please upgrade to a more recent browser version.<br/>
+For Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
+Current versions of Chrome, FireFox and Opera work fine.
+</canvas>
 </body>
 
 </html>
