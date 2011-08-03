@@ -964,7 +964,7 @@ function RefreshRaceChart()
 	for( var i = 0; i < colors.length; ++i )
 		lighterColors.push( lighterColor(colors[i]) );
 
-	var barHeight = parseInt(height / (resultsData.length + 2));
+	var barHeight = parseInt(height / (resultsData.length + 3));
 	if( barHeight < 4 || dataMax == 0 )
 		return;
 	var barHeight = Math.min( barHeight, 18 );
@@ -988,8 +988,8 @@ function RefreshRaceChart()
 
 	var xLeft = labelsWidth;
 	var xRight = width - labelsWidth;
-	var yBottom = barHeight * (resultsData.length + 1);
-	var yTop = barHeight;
+	var yBottom = barHeight * (resultsData.length + 2);
+	var yTop = 2 * barHeight;
 	var lineWidth = 0.5;
 
 	var fontLegendStr = (normalTextHeight*.75) + "px Arial";
@@ -1015,7 +1015,7 @@ function RefreshRaceChart()
 		var x = xLeft + t * dFactor;
 		var s = FormatTime(t);
 		var w = dc.measureText(s).width;
-		dc.fillText( s, x - w/2, 0 + 2 );
+		dc.fillText( s, x - w/2, barHeight + 2 );
 		if( !minimizeLabels )
 			dc.fillText( s, x - w/2, yBottom + 4 );
 		DrawLine( dc, x, yBottom+3, x, yTop-3 );
@@ -1031,7 +1031,7 @@ function RefreshRaceChart()
 	dc.lineJoin = 'miter';
 
 	var xFactor = (width - labelsWidth * 2) / dataMax;
-	var yLast = barHeight;
+	var yLast = 2 * barHeight;
 	var yHighlight = null;
 	segmentsCur = [];
 	for( var i = 0; i < resultsData.length; ++i )
