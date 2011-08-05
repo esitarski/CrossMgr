@@ -39,8 +39,8 @@ table.results th
 	text-align:right;
 	padding-top:5px;
 	padding-bottom:4px;
-	background-color:#A7C942;
-	color:#ffffff;
+	background-color:#7FE57F;
+	color:#000000;
 }
 table.results tr.odd td 
 {
@@ -94,7 +94,7 @@ var numsToWatchStr = null;
 var categoryStr = null;
 var numsToWatch = {};		// Set of numbers to watch.
 var resultsDiv = null;
-var showRaceTimes = true;	// if false, show lap times.
+var lapDataOption = 0;	// if 0, show rac times, if 1, show lap times, if 2, show gap times.
 
 // Rider colours given out as remander of the number.
 var colours = [
@@ -249,6 +249,12 @@ function DrawLine( ctx, x1, y1, x2, y2 )
 
 function FormatTime( t )
 {
+	var neg = false;
+	if( t < 0 )
+	{
+		neg = true;
+		t = -t;
+	}
 	var secs = Math.floor( t + 0.5 );
 	var h = Math.floor( secs / (60*60) );
 	var m = Math.floor(secs / 60) % 60;
@@ -257,6 +263,8 @@ function FormatTime( t )
 		tStr = m + (s < 10 ? ':0' : ':') + s;
 	else
 		tStr = h + (m < 10 ? ':0' : ':') + m + (s < 10 ? ':0' : ':') + s;
+	if( neg )
+		tStr = '-' + tStr;
 	return tStr;
 }
 
@@ -290,7 +298,8 @@ function Refresh()
 	dc.font = fontStr;
 	
 	// Draw the track.
-	trackColour = 'rgb(0,255,0)';
+	//trackColour = 'rgb(0,255,0)';
+	trackColour = '#7FE57F';
 	dc.fillStyle = trackColour;
 	dc.strokeStyle = trackColour;
 	DrawCircle( dc, r, r, r );
@@ -727,10 +736,18 @@ function SetCategoryResults()
 			if( numsToWatch[num] ) td.className = 'highlight';
 			for( var i = 1; i < lapTimes.length; ++i )
 			{
-				if( showRaceTimes )
+				switch( lapDataOption )
+				{
+				case 0:
 					createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(lapTimes[i] - startOffset, 0.0)) );
-				else
+					break;
+				case 1:
 					createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(lapTimes[i] - lapTimes[i-1], 0.0)) );
+					break;
+				case 2:
+					createTextChild( td = createChild(tr, 'TD'), FormatTime(lapTimes[i] - resultsData[0][3][i]) );
+					break;
+				}
 				if( numsToWatch[num] ) td.className = 'highlight';
 			}
 		}
@@ -1241,10 +1258,10 @@ function getUrlParam( param, url )
 	return match ? match[1] : "";
 }
 
-function LapTimesRaceTimes()
+function LapTimeOption()
 {
-	s = document.getElementById('idLapTimesRaceTimes');
-	showRaceTimes = (s.selectedIndex == 0);
+	s = document.getElementById('idLapTimeOption');
+	lapDataOption = s.selectedIndex;
 	SetCategoryResults();
 }
 
@@ -1344,10 +1361,11 @@ Highlight Numbers:
 Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
 <span class="noprint">Comments?  Click <a href="mailto:edward.sitarski@gmail.com?subject=Race Animation">here</a>.<br/></span>
 </p>
-Show: <select id="idLapTimesRaceTimes" onChange="LapTimesRaceTimes()" >
- <option value="showRaceTimes">Race Time</option>
+Show: <select id="idLapTimeOption" onChange="LapTimeOption()" >
+ <option value="showRaceTime">Race Time</option>
  <option value="showLapTimes">Time Per Lap</option>
-</select>
+ <option value="showLapGaps">Gap Per Lap</option>
+<</select>
 <div id="idResultsDiv"></div>
 <p id="idRaceName" class="noprint">Race Chart</p>
 <canvas id="idRaceChart" width="1000" height="800" class="noprint">
