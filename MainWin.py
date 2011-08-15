@@ -1050,8 +1050,15 @@ def MainLoop():
 	(options, args) = parser.parse_args()
 
 	app = wx.PySimpleApp()
-	# app.RedirectStdio()
+
+	# Set the log file.
+	dataDir = wx.StandardPaths_Get().GetUserDataDir()
+	if not os.path.exists(dataDir):
+		os.makedirs( dataDir )
+	redirectFileName = os.path.join(dataDir, 'CrossMgr.log')
+	app.RedirectStdio( redirectFileName )
 	
+	# Configure the main window.
 	mainWin = MainWin( None, title=AppVerName, size=(800,600) )
 	mainWin.Maximize( True )
 	mainWin.Show()
@@ -1068,7 +1075,7 @@ def MainLoop():
 		ShowSplashScreen()
 		ShowTipAtStartup()
 	
-	# Try a specified filename.
+	# Try to open a specified filename.
 	fileName = options.filename
 	
 	# If nothing, try a positional argument.
