@@ -240,7 +240,8 @@ class GanttChart(wx.PyControl):
 		penBar.SetJoin( wx.JOIN_MITER )
 		dc.SetPen( penBar )
 		
-		brushBar = wx.Brush( wx.Color(0,0,0) )
+		brushBar = wx.Brush( wx.BLACK )
+		transparentBrush = wx.Brush( wx.WHITE, style = wx.TRANSPARENT )
 		
 		ctx = wx.GraphicsContext_Create(dc)
 		ctx.SetPen( wx.Pen(wx.BLACK, 1) )
@@ -264,17 +265,17 @@ class GanttChart(wx.PyControl):
 					dd = dy * 0.3
 					ic = j % len(self.colours)
 					
-					b1 = ctx.CreateLinearGradientBrush(0, yLast,      0, yLast + dd, self.colours[ic], self.lighterColours[ic])
+					b1 = ctx.CreateLinearGradientBrush(0, yLast,      0, yLast + dd + 1, self.colours[ic], self.lighterColours[ic])
 					ctx.SetBrush(b1)
-					ctx.DrawRectangle(xLast, yLast     , xCur - xLast + 1, dd )
+					ctx.DrawRectangle(xLast, yLast     , xCur - xLast + 1, dd + 1)
 					
 					b2 = ctx.CreateLinearGradientBrush(0, yLast + dd, 0, yLast + dy, self.lighterColours[ic], self.colours[ic])
 					ctx.SetBrush(b2)
 					ctx.DrawRectangle(xLast, yLast + dd, xCur - xLast + 1, dy-dd )
 					
-					ctx.SetBrush( wx.Brush(wx.WHITE, wx.TRANSPARENT) )
-					ctx.SetPen( wx.Pen(wx.BLACK, 1) )
-					ctx.DrawRectangle( xLast, yLast, xCur - xLast + 1, dy )
+					dc.SetBrush( transparentBrush )
+					dc.SetPen( penBar )
+					dc.DrawRectangle( xLast, yLast, xCur - xLast + 1, dy )
 				xLast = xCur
 			
 			# Draw the last empty bar.
