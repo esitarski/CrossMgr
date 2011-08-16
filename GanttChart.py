@@ -263,10 +263,12 @@ class GanttChart(wx.PyControl):
 					dy = yCur - yLast + 1
 					dd = dy * 0.3
 					ic = j % len(self.colours)
+					
 					b1 = ctx.CreateLinearGradientBrush(0, yLast,      0, yLast + dd, self.colours[ic], self.lighterColours[ic])
-					b2 = ctx.CreateLinearGradientBrush(0, yLast + dd, 0, yLast + dy, self.lighterColours[ic], self.colours[ic])
 					ctx.SetBrush(b1)
 					ctx.DrawRectangle(xLast, yLast     , xCur - xLast + 1, dd )
+					
+					b2 = ctx.CreateLinearGradientBrush(0, yLast + dd, 0, yLast + dy, self.lighterColours[ic], self.colours[ic])
 					ctx.SetBrush(b2)
 					ctx.DrawRectangle(xLast, yLast + dd, xCur - xLast + 1, dy-dd )
 					
