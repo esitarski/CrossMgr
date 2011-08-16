@@ -62,6 +62,7 @@ class Animation(wx.PyControl):
 			wx.Colour(230,230,230),
 			wx.Colour(205,133,63)
 			]
+		self.trackColour = wx.Colour( *[int('7FE57F'[i:i+2],16) for i in xrange(0, 6, 2)] )
 		
 		# Cache the fonts if the size does not change.
 		self.numberFont	= None
@@ -276,9 +277,8 @@ class Animation(wx.PyControl):
 			self.rLast = r
 			
 		# Draw the track.
-		trackColour = wx.Colour(0,255,0)
-		dc.SetBrush( wx.Brush(trackColour, wx.SOLID) )
-		dc.SetPen( wx.Pen(trackColour, 0, wx.SOLID) )
+		dc.SetBrush( wx.Brush(self.trackColour, wx.SOLID) )
+		dc.SetPen( wx.Pen(self.trackColour, 0, wx.SOLID) )
 		dc.DrawCircle( r, r, r )
 		dc.DrawCircle( 3*r, r, r )
 		dc.DrawRectangle( r, 0, 2*r, 2*r + 2 )
@@ -381,7 +381,7 @@ class Animation(wx.PyControl):
 			riderRadius = tHeight / 3.5
 			for i, num in enumerate(leaders):
 				dc.SetPen( wx.Pen(backColour, 0) )
-				dc.SetBrush( wx.Brush(trackColour, wx.SOLID) )
+				dc.SetBrush( wx.Brush(self.trackColour, wx.SOLID) )
 				dc.DrawRectangle( x - thickLine/4, y - thickLine/4, tHeight + thickLine/2, tHeight  + thickLine/2)
 				
 				dc.SetPen( wx.Pen(self.topThreeColours[i], thickLine) )

@@ -20,6 +20,29 @@ class BarInfoPopup( wx.PopupTransientWindow ):
 		sz = st.GetBestSize()
 		self.SetSize( (sz.width+border, sz.height+border) )
 
+def makeColourGradient(frequency1, frequency2, frequency3,
+                        phase1, phase2, phase3,
+                        center = None, width = None, len = None ):
+	if len is None:	     len = 50
+	if center is None:   center = 128
+	if width is None:    width = 127
+
+	grad = []
+	for i in xrange(len):
+		red = math.sin(frequency1*i + phase1) * width + center
+		grn = math.sin(frequency2*i + phase2) * width + center
+		blu = math.sin(frequency3*i + phase3) * width + center
+		grad.append( wx.Colour(red,grn,blu) );
+
+	return grad;
+
+def lighterColour( c ):
+	rgb = c.Get( False )
+	rgbNew = []
+	for v in rgb:
+		rgbNew.append( int(v + (255 - v) * 0.6) )
+	return wx.Colour( *rgbNew )
+		
 class GanttChart(wx.PyControl):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
@@ -37,15 +60,8 @@ class GanttChart(wx.PyControl):
 		self.getNowTimeCallback = None
 		self.minimizeLabels = False
 		
-		self.colours = [
-			wx.Colour(0,0,0),
-			wx.Colour(255, 0, 0),
-			wx.Colour(0, 255, 0),
-			wx.Colour(0, 0, 255),
-			wx.Colour(255, 255, 0),
-			wx.Colour(255, 0, 255),
-			wx.Colour(0, 255, 255),
-			 ]
+		self.colours = makeColourGradient(2.4,2.4,2.4,0,2,4,128,127,50)
+		self.lighterColours = [lighterColour(c) for c in self.colours]
 			
 		# Bind the events related to our control: first of all, we use a
 		# combination of wx.BufferedPaintDC and an empty handler for
@@ -105,8 +121,8 @@ class GanttChart(wx.PyControl):
 		self.Refresh()
 	
 	def OnPaint(self, event):
-		dc = wx.BufferedPaintDC(self)
 		#dc = wx.PaintDC(self)
+		dc = wx.BufferedPaintDC(self)
 		self.Draw(dc)
 
 	def OnSize(self, event):
@@ -226,6 +242,9 @@ class GanttChart(wx.PyControl):
 		
 		brushBar = wx.Brush( wx.Color(0,0,0) )
 		
+		ctx = wx.GraphicsContext_Create(dc)
+		ctx.SetPen( wx.Pen(wx.BLACK, 1) )
+		
 		xFactor = float(width - labelsWidth * 2) / float(self.dataMax)
 		yLast = barHeight
 		yHighlight = None
@@ -237,10 +256,23 @@ class GanttChart(wx.PyControl):
 				xCur = int(labelsWidth + t * xFactor)
 				if j == 0:
 					brushBar.SetColour( wx.WHITE )
+					dc.SetBrush( brushBar )
+					dc.DrawRectangle( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 )
 				else:
-					brushBar.SetColour( self.colours[j%len(self.colours)] )
-				dc.SetBrush( brushBar )
-				dc.DrawRectangle( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 )
+					ctx.SetPen( wx.Pen(wx.WHITE, 1, style=wx.TRANSPARENT ) )
+					dy = yCur - yLast + 1
+					dd = dy * 0.3
+					ic = j % len(self.colours)
+					b1 = ctx.CreateLinearGradientBrush(0, yLast,      0, yLast + dd, self.colours[ic], self.lighterColours[ic])
+					b2 = ctx.CreateLinearGradientBrush(0, yLast + dd, 0, yLast + dy, self.lighterColours[ic], self.colours[ic])
+					ctx.SetBrush(b1)
+					ctx.DrawRectangle(xLast, yLast     , xCur - xLast + 1, dd )
+					ctx.SetBrush(b2)
+					ctx.DrawRectangle(xLast, yLast + dd, xCur - xLast + 1, dy-dd )
+					
+					ctx.SetBrush( wx.Brush(wx.WHITE, wx.TRANSPARENT) )
+					ctx.SetPen( wx.Pen(wx.BLACK, 1) )
+					ctx.DrawRectangle( xLast, yLast, xCur - xLast + 1, dy )
 				xLast = xCur
 			
 			# Draw the last empty bar.
