@@ -444,7 +444,7 @@ if __name__ == '__main__':
 		data[num] = { 'lapTimes': lapTimes, 'lastTime': lapTimes[-1] }
 
 	# import json
-	# open('race.json', 'w').write( json.dumps(data, sort_keys=True, indent=4) )
+	# with open('race.json', 'w') as fp: fp.write( json.dumps(data, sort_keys=True, indent=4) )
 
 	app = wx.PySimpleApp()
 	mainWin = wx.Frame(None,title="Animation", size=(600,400))

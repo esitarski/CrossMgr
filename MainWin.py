@@ -65,7 +65,8 @@ def ShowTipAtStartup():
 	tipFile = os.path.join(Utils.getImageFolder(), "tips.txt")
 	lines = 0
 	try:
-		provider = wx.CreateFileTipProvider(tipFile, random.randint(0,sum(1 for line in open(tipFile,'r'))))
+		with open(tipFile,'r') as fp:
+			provider = wx.CreateFileTipProvider(tipFile, random.randint(0,sum(1 for line in fp)))
 		showTipAtStartup = wx.ShowTip(None, provider, True)
 		if mainWin:
 			mainWin.config.WriteBool('showTipAtStartup', showTipAtStartup)
@@ -408,7 +409,8 @@ class MainWin( wx.Frame ):
 		# Read the html template.
 		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
 		try:
-			html = open(htmlFile).read()
+			with open(htmlFile) as fp:
+				html = fp.read()
 		except:
 			Utils.MessageOK('Cannot read HTML template file.  Check program installation.',
 							'Html Template Read Error', iconMask=wx.ICON_ERROR )
@@ -427,7 +429,8 @@ class MainWin( wx.Frame ):
 		# Write out the results.
 		fname = os.path.join( dName, os.path.basename(fname) )
 		try:
-			open( fname, 'w' ).write( html )
+			with open(fname, 'w') as fp:
+				fp.write( html )
 			webbrowser.open( fname, new = 2, autoraise = True )
 			Utils.MessageOK(self, 'Html Race Animation written to:\n\n   %s' % fname, 'Html Write', iconMask=wx.ICON_INFORMATION)
 		except:
@@ -455,7 +458,8 @@ class MainWin( wx.Frame ):
 		race = Model.race
 		if race is not None:
 			cache = race.popCache()
-			pickle.dump( race, open(self.fileName, 'wb'), 2 )
+			with open(self.fileName, 'wb') as fp:
+				pickle.dump( race, fp, 2 )
 			race.pushCache( cache )
 			race.setChanged( False )
 
@@ -482,7 +486,8 @@ class MainWin( wx.Frame ):
 
 		# Try to open the file.
 		try:
-			open( fileName, 'wb' )
+			with open(fileName, 'wb') as fp:
+				pass
 		except IOError:
 			Utils.MessageOK( self, 'Cannot open "%s".' % fileName, 'Cannot Open File', iconMask=wx.ICON_ERROR )
 			return
@@ -497,8 +502,8 @@ class MainWin( wx.Frame ):
 		importedCategories = False
 		if categoriesFile:
 			try:
-				fp = open( categoriesFile, 'r' )
-				race.importCategories( fp )
+				with open(categoriesFile, 'r') as fp:
+					race.importCategories( fp )
 				importedCategories = True
 			except IOError:
 				Utils.MessageOK( self, "Cannot open file:\n%s" % categoriesFile, "File Open Error", iconMask=wx.ICON_ERROR)
@@ -548,7 +553,8 @@ class MainWin( wx.Frame ):
 
 		# Try to open the file.
 		try:
-			open( fileName, 'wb' )
+			with open(fileName, 'wb') as fp:
+				pass
 		except IOError:
 			Utils.MessageOK(self, 'Cannot open "%s".' % fileName, 'Cannot Open File', iconMask=wx.ICON_ERROR )
 			return
@@ -564,8 +570,8 @@ class MainWin( wx.Frame ):
 		importedCategories = False
 		if categoriesFile:
 			try:
-				fp = open( categoriesFile, 'r' )
-				race.importCategories( fp )
+				with open(categoriesFile, 'r') as fp:
+					race.importCategories( fp )
 				importedCategories = True
 			except IOError:
 				Utils.MessageOK( self, "Cannot open file:\n%s" % categoriesFile, "File Open Error", iconMask=wx.ICON_ERROR)
@@ -592,7 +598,8 @@ class MainWin( wx.Frame ):
 		self.writeRace()
 
 		try:
-			race = pickle.load( open(fileName, 'rb') )
+			with open(fileName, 'rb') as fp:
+				race = pickle.load( fp )
 			self.fileName = fileName
 			Model.setRace( race )
 			
@@ -714,9 +721,9 @@ class MainWin( wx.Frame ):
 					
 			self.lapTimes.extend( lastLapFinishers )
 			
-			f = open( fname, 'w' )
-			print >> f, 'raceMinutes =', self.raceMinutes
-			print >> f, 'lapTimes =', self.lapTimes
+			with open(fname, 'w') as f:
+				print >> f, 'raceMinutes =', self.raceMinutes
+				print >> f, 'lapTimes =', self.lapTimes
 		else:
 			self.raceMinutes = SimulationLapTimes.raceMinutes
 			self.lapTimes = copy.copy(SimulationLapTimes.lapTimes)
@@ -741,7 +748,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 			return
 
 		try:
-			open(fName, 'wb')
+			with open(fName, 'wb') as fp:
+				pass
 		except IOError:
 			Utils.MessageOK(self, 'Cannot open file "%s".' % fName, 'File Open Error')
 			return
@@ -821,8 +829,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 		if dlg.ShowModal() == wx.ID_OK:
 			categoriesFile = dlg.GetPath()
 			try:
-				fp = open( categoriesFile, 'r' )
-				race.importCategories( fp )
+				with open(categoriesFile, 'r') as fp:
+					race.importCategories( fp )
 			except IOError:
 				Utils.MessageOK( self, "Cannot open file:\n%s" % categoriesFile, "File Open Error", iconMask=wx.ICON_ERROR)
 			except (ValueError, IndexError):
@@ -846,8 +854,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 		if dlg.ShowModal() == wx.ID_OK:
 			fname = dlg.GetPath()
 			try:
-				fp = open( fname, 'w' )
-				race.exportCategories( fp )
+				with open(fname, 'w') as fp:
+					race.exportCategories( fp )
 			except IOError:
 				Utils.MessageOK( self, "Cannot open file:\n%s" % fname, "File Open Error", iconMask=wx.ICON_ERROR)
 				

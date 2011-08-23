@@ -163,4 +163,5 @@ def isMainWin():
 	
 if __name__ == '__main__':
 	hd = getHomeDir()
-	open( os.path.join(hd, 'Test.txt'), 'w' )
+	with open( os.path.join(hd, 'Test.txt'), 'w' ) as fp:
+		pass

@@ -295,9 +295,6 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,200))
 	Model.setRace( Model.Race() )
 	Model.getRace()._populate()
-	# Model.setRace( pickle.load(open(r'f:\Test Races\2009-09-16-test3-r15-.cmn', 'rb')) )
-	# rider = Model.getRace()[217]
-	# rider.lapAdjust = 3
 	results = Results(mainWin)
 	results.refresh()
 	mainWin.Show()
