@@ -43,3 +43,4 @@ The number of laps can be changed during a race by switching to "Manual" mode.
 If you forget to set the number of laps during a race, you can change it after - no input is lost.
 HTML output can show Race Time (splits) as well as Lap Time.
 CrossMgr is free to use with riders under age 19.
+Use "File|New Next..." to quickly setup a number of races at an event.

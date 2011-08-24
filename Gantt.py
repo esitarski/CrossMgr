@@ -84,7 +84,7 @@ class Gantt( wx.Panel ):
 				t[0] = min(catOffset.setdefault( category, category.getStartOffsetSecs() ), t[1])
 			
 		numTimes = [(k, v) for k, v in riderTimes.iteritems()]
-		numTimes.sort( cmp=lambda x, y: cmp((-len(x[1]), x[1][-1]), (-len(y[1]), y[1][-1])) )
+		numTimes.sort( key = lambda x : (-len(x[1]), x[1][-1]) )
 
 		labels = [str(n) for n, times in numTimes]
 		data = [times for n, times in numTimes]

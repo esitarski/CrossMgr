@@ -38,7 +38,7 @@ def Simulate():
 		for i in xrange(1, numCategories + 1):
 			lapTimes.extend( SimulateCategory(i * 100, numRiders, 1.0 + i * 0.05, raceTime = raceTime, offset = (60.0 * (i-1)) ) )
 			
-		lapTimes.sort( cmp = lambda x, y: cmp( (x[1], -x[2]), (y[1], -y[2]) ) )
+		lapTimes.sort( key = lambda x : (x[1], -x[2]) )
 		
 		raceLaps = raceTime / (5*60.0)
 		
@@ -66,7 +66,7 @@ def Simulate():
 			seen.add( num )
 		
 		# Sort by laps, then time.
-		finish.sort( cmp = lambda x, y: cmp( (-x[2], x[1]), (-y[2], y[1]) ) )
+		finish.sort( key = lambda x : (-x[2], x[1]) )
 		
 		col = 0
 		sheet = wbSol.add_sheet( 'Solution %d' % (p + 1) )

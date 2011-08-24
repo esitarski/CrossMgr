@@ -170,7 +170,7 @@ class ExportGrid( object ):
 		raceLaps = race.getRaceLaps()
 		entries = race.interpolateLap( raceLaps )		
 		entries = [e for e in entries if e.t > 0]
-		entries.sort( cmp = lambda x, y: cmp( (x.num, x.t), (y.num, y.t) ) )
+		entries.sort( key = lambda x : (x.num, x.t) )
 		
 		# Record the rider times and compensate for the category start offsets.
 		riderTimes = {}

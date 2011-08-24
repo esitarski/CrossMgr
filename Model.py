@@ -1047,7 +1047,7 @@ class Race(object):
 				finishers.append( e )
 
 		# Sort by laps completed, time and num.
-		finishers.sort( cmp = lambda x, y: cmp( (-x.lap, x.t, x.num), (-y.lap, y.t, y.num) ) )
+		finishers.sort( key = lambda x: (-x.lap, x.t, x.num) )
 		return finishers
 
 	#----------------------------------------------------------------------------------------
@@ -1084,7 +1084,7 @@ class Race(object):
 		nonFinishers = []
 		for status in Race.nonFinisherStatusList:
 			numTimes = [(r.num, r.tStatus if r.tStatus is not None else -sys.float_info.max) for r in ridersSubset if r.status == status]
-			numTimes.sort( cmp = lambda x, y: cmp((-x[1], x[0]), (-y[1],y[0])) )
+			numTimes.sort( key = lambda x : (-x[1], x[0]) )
 			nonFinishers.append( numTimes if numTimes else None )
 
 		return colnames, results, nonFinishers[0], nonFinishers[1], nonFinishers[2]
