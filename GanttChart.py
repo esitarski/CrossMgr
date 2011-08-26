@@ -22,26 +22,17 @@ class BarInfoPopup( wx.PopupTransientWindow ):
 
 def makeColourGradient(frequency1, frequency2, frequency3,
                         phase1, phase2, phase3,
-                        center = None, width = None, len = None ):
-	if len is None:	     len = 50
-	if center is None:   center = 128
-	if width is None:    width = 127
-
-	grad = []
-	for i in xrange(len):
-		red = math.sin(frequency1*i + phase1) * width + center
-		grn = math.sin(frequency2*i + phase2) * width + center
-		blu = math.sin(frequency3*i + phase3) * width + center
-		grad.append( wx.Colour(red,grn,blu) );
-
-	return grad;
+                        center = 128, width = 127, len = 50 ):
+	fp = [(frequency1,phase1), (frequency2,phase2), (frequency3,phase3)]	
+	grad = [wx.Colour(*[math.sin(f*i + p) * width + center for f, p in fp]) for i in xrange(len)]
+	return grad
+	
+def makePastelColours( len = 50 ):
+	return makeColourGradient(2.4,2.4,2.4,0,2,4,128,127,len)
 
 def lighterColour( c ):
 	rgb = c.Get( False )
-	rgbNew = []
-	for v in rgb:
-		rgbNew.append( int(v + (255 - v) * 0.6) )
-	return wx.Colour( *rgbNew )
+	return wx.Colour( *[int(v + (255 - v) * 0.6) for v in rgb] )
 		
 class GanttChart(wx.PyControl):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,

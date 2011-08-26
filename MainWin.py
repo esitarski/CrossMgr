@@ -17,7 +17,6 @@ from optparse import OptionParser
 from ForecastHistory	import ForecastHistory
 from NumKeypad			import NumKeypad
 from Actions			import Actions
-from Stats				import Stats
 from Gantt				import Gantt
 from History			import History
 from RiderDetail		import RiderDetail
@@ -226,21 +225,18 @@ class MainWin( wx.Frame ):
 		self.recommendations = Recommendations(	self.notebook )
 		addPage( self.recommendations, 'Recommendations' )
 
-		self.stats			= Stats(		self.notebook )
-		addPage( self.stats,     'Stats' )
-
 		self.categories		= Categories(	self.notebook )
 		addPage( self.categories,'Categories' )
 
 		self.gantt			= Gantt(		self.notebook )
 		addPage( self.gantt,     'Chart' )
 
-		self.properties		= Properties(	self.notebook )
-		addPage( self.properties,'Properties' )
-		
 		self.raceAnimation = RaceAnimation( self.notebook )
 		addPage( self.raceAnimation, 'Race Animation' )
 
+		self.properties		= Properties(	self.notebook )
+		addPage( self.properties,'Properties' )
+		
 		self.splitter.SplitVertically( self.forecastHistory, self.notebook, 200 )
 
 		#------------------------------------------------------------------------------
@@ -1060,10 +1056,9 @@ def MainLoop():
 	app = wx.PySimpleApp()
 
 	# Set the log file.
-	dataDir = wx.StandardPaths_Get().GetUserDataDir()
-	if not os.path.exists(dataDir):
-		os.makedirs( dataDir )
+	dataDir = Utils.getHomeDir()
 	redirectFileName = os.path.join(dataDir, 'CrossMgr.log')
+	
 	app.RedirectStdio( redirectFileName )
 	
 	# Configure the main window.

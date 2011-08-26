@@ -107,7 +107,7 @@ def getHomeDir():
 		homedir = shell.SHGetFolderPath(0, shellcon.CSIDL_APPDATA, 0, 0)
 		homedir = os.path.join( homedir, 'CrossMgr' )
 		if not os.path.exists(homedir):
-			os.mkdir( homedir )
+			os.makedirs( homedir )
 	except:
 		homedir = os.path.expanduser('~')
 	return homedir

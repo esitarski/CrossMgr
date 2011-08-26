@@ -5,8 +5,16 @@ import bisect
 import copy
 import sys
 import datetime
+import random
 from operator import itemgetter, attrgetter
+from GanttChart import makePastelColours, makeColourGradient
 
+shapes = [ [(math.cos(a), -math.sin(a)) \
+					for a in (q*(2.0*math.pi/i)+math.pi/2.0+(2.0*math.pi/(i*2.0) if i % 2 == 0 else 0)\
+						for q in xrange(i))] for i in xrange(3,9)]
+def DrawShape( dc, num, x, y, radius ):
+	dc.DrawPolygon( [ wx.Point(p*radius+x, q*radius+y) for p,q in shapes[num % len(shapes)] ] )
+	
 class Animation(wx.PyControl):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
@@ -49,13 +57,38 @@ class Animation(wx.PyControl):
 		self.suspendAnimation = False
 		self.numsToWatch = set()
 		
+		'''
 		self.colours = [
 			wx.Colour(255, 0, 0),
 			wx.Colour(0, 0, 255),
 			wx.Colour(255, 255, 0),
 			wx.Colour(255, 0, 255),
 			wx.Colour(0, 255, 255),
+			wx.Colour(128, 0, 0),
+			wx.Colour(0, 0, 128),
+			wx.Colour(128, 128, 0),
+			wx.Colour(128, 0, 128),
+			wx.Colour(0, 128, 128),
 			 ]
+		self.colours = makeColourGradient(	1.666,	2.666,	3.666,
+											  0,			  0,	  0,
+											128,			127,
+											241)
+		'''
+		
+		trackRGB = [int('7FE57F'[i:i+2],16) for i in xrange(0, 6, 2)]
+		self.trackColour = wx.Colour( *trackRGB )
+		
+		self.colours = []
+		k = [0,32,64,128,128+32,128+64,255]
+		for r in k:
+			for g in k:
+				for b in k:
+					if  sum( abs(c - t) for c, t in zip([r,g,b],trackRGB) ) > 80 and \
+						sum( c for c in [r,g,b] ) > 64:
+						self.colours.append( wx.Colour(r, g, b) )
+		random.seed( 1234 )
+		random.shuffle( self.colours )
 			 
 		self.topThreeColours = [
 			wx.Colour(255,215,0),
@@ -320,7 +353,8 @@ class Animation(wx.PyControl):
 			
 			# Sort by reverse greatest distance, then by shortest time.
 			# Do this so the leaders are drawn last.
-			riderXYPT.sort( key=lambda x : (x[3] if x[3] is not None else 0.0, -x[4]) )
+			riderXYPT.sort( key=lambda x : ( x[3] if x[3] is not None else 0.0,
+											-x[4] if x[4] is not None else 0.0) )
 			
 			topThree = {}
 			for j, i in enumerate(xrange(len(riderXYPT) - 1, max(-1,len(riderXYPT)-4), -1)):
@@ -346,7 +380,7 @@ class Animation(wx.PyControl):
 						i = 9999
 					else:
 						i = None
-				dc.DrawCircle( x, y, riderRadius )
+				DrawShape( dc, num, x, y, riderRadius )
 				dc.DrawLabel(str(num), wx.Rect(x+numSize, y-numSize, numSize*2, numSize*2) )
 				if i is not None:
 					dc.SetPen( wx.BLACK_PEN )
@@ -386,7 +420,7 @@ class Animation(wx.PyControl):
 				
 				dc.SetPen( wx.Pen(self.topThreeColours[i], thickLine) )
 				dc.SetBrush( wx.Brush(self.colours[num % len(self.colours)], wx.SOLID) )
-				dc.DrawCircle( x + tHeight / 2, y + tHeight / 2, riderRadius )
+				DrawShape( dc, num, x + tHeight / 2, y + tHeight / 2, riderRadius )
 				
 				s = '%d' % num
 				dc.DrawText( s, x + tHeight * 1.2, y)
@@ -450,6 +484,6 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="Animation", size=(600,400))
 	Animation = Animation(mainWin)
 	Animation.SetData( data )
-	Animation.Animate( 1*60, 60*60 )
+	Animation.Animate( 2*60, 60*60 )
 	mainWin.Show()
 	app.MainLoop()
