@@ -342,8 +342,8 @@ class Animation(wx.PyControl):
 		self.lapCur = 0
 		topThree = {}
 		riderRadius = laneWidth * 0.75
-		thickLine = r / 24
-		highlightPen = wx.Pen( wx.Colour(255,255,255), thickLine * 1.5 )
+		thickLine = r / 32
+		highlightPen = wx.Pen( wx.Colour(255,255,255), thickLine * 1.0 )
 		if self.data:
 			riderXYPT = []
 			for num, d in self.data.iteritems():
