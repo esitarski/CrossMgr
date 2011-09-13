@@ -277,8 +277,12 @@ class NumKeypad( wx.Panel ):
 				
 		race = Model.getRace()
 		if race is None or not race.isFinished() or race.numLaps is None:
-			self.numLaps.SetItems( [''] )
-			self.numLaps.SetSelection( 0 )
+			if race is not None and self.automaticManualChoice.GetSelection() != 0:
+				self.numLaps.SetItems( [str(x) for x in xrange(1, 16)] )
+				self.numLaps.SetSelection( 4 )
+			else:
+				self.numLaps.SetItems( [''] )
+				self.numLaps.SetSelection( 0 )
 			for f in infoFields:
 				SetLabel( f, '' )
 			SetLabel( self.lapCompleting, '1' )
@@ -326,7 +330,7 @@ class NumKeypad( wx.Panel ):
 			try:
 				laps = int(self.numLaps.GetString(self.numLaps.GetSelection()))
 			except ValueError:
-				laps = 20			
+				laps = max(0, len(leaderTimes)-1)
 			
 		raceFinishTime = leaderTimes[laps]
 		leaderNum = leaderNums[laps]
@@ -340,6 +344,13 @@ class NumKeypad( wx.Panel ):
 				leadersExpectedLapTime, leaderNum,
 				raceFinishTime, isAutomatic)
 	
+	def getMinMaxLapsRange( self ):
+		race = Model.race
+		curLaps = race.numLaps if race.numLaps is not None else 1
+		minLaps = max(1, curLaps-5)
+		maxLaps = minLaps + 10
+		return minLaps, maxLaps
+	
 	def refreshLaps( self ):
 		race = Model.race
 		enable = True if race is not None and race.isRunning() else False
@@ -350,13 +361,15 @@ class NumKeypad( wx.Panel ):
 		# Allow the number of laps to be changed after the race is finished.
 		numLapsEnable = True if race is not None and (race.isRunning() or race.isFinished()) else False
 		self.numLaps.Enable( numLapsEnable )
-		if numLapsEnable != enable and race.numLaps is not None:
+		if numLapsEnable != enable:
 			self.resetLaps()
-			self.numLaps.SetItems( [str(x) for x in xrange(max(1,race.numLaps-2), race.numLaps+5)] )
-			for i, v in enumerate(self.numLaps.GetItems()):
-				if int(v) == race.numLaps:
-					self.numLaps.SetSelection( i )
-					break
+			minLaps, maxLaps = self.getMinMaxLapsRange()
+			self.numLaps.SetItems( [str(x) for x in xrange(minLaps, maxLaps)] )
+			if race.numLaps is not None:
+				for i, v in enumerate(self.numLaps.GetItems()):
+					if int(v) == race.numLaps:
+						self.numLaps.SetSelection( i )
+						break
 			if not enable:
 				return
 			

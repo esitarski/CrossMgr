@@ -655,11 +655,15 @@ class Race(object):
 			lap = self.getMaxAnyLap()
 
 		# Find the first entry for the given lap.
-		iFirst = (i for i, e in enumerate(entries) if e.lap == lap).next()
-
-		# Remove all entries except the next time for each rider after the given lap.
-		seen = {}
-		return entries[:iFirst] + [ seen.setdefault(e.num, e) for e in entries[iFirst:] if e.num not in seen ]
+		try:
+			iFirst = (i for i, e in enumerate(entries) if e.lap == lap).next()
+			# Remove all entries except the next time for each rider after the given lap.
+			seen = {}
+			return entries[:iFirst] + [ seen.setdefault(e.num, e) for e in entries[iFirst:] if e.num not in seen ]
+		except StopIteration:
+			pass
+			
+		return entries
 
 	def getRule80LapTime( self ):
 		entries = self.interpolateLap(2)

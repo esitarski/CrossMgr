@@ -253,7 +253,7 @@ class GanttChart(wx.PyControl):
 				else:
 					ctx.SetPen( wx.Pen(wx.WHITE, 1, style=wx.TRANSPARENT ) )
 					dy = yCur - yLast + 1
-					dd = dy * 0.3
+					dd = int(dy * 0.3)
 					ic = j % len(self.colours)
 					
 					b1 = ctx.CreateLinearGradientBrush(0, yLast,      0, yLast + dd + 1, self.colours[ic], self.lighterColours[ic])
