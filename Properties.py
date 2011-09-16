@@ -263,6 +263,7 @@ class PropertiesDialog( wx.Dialog ):
 
 def ChangeProperties( parent ):
 	propertiesDialog = PropertiesDialog( parent, -1, "Change Properties", showFileFields = False, refreshProperties = True, size=(600,400) )
+	propertiesDialog.properties.setEditable()
 	try:
 		if propertiesDialog.ShowModal() != wx.ID_OK: raise NameError('User Cancel')
 		mainWin = Utils.getMainWin()
