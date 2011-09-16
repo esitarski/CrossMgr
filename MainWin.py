@@ -531,7 +531,7 @@ class MainWin( wx.Frame ):
 		dlg = PropertiesDialog(self, -1, 'Configure Race', style=wx.DEFAULT_DIALOG_STYLE )
 		dlg.properties.refresh()
 		dlg.properties.incNext()
-		dlg.properties.setEditable()
+		dlg.properties.setEditable( True )
 		dlg.folder.SetValue(os.path.dirname(self.fileName))
 		dlg.properties.updateFileName()
 		ret = dlg.ShowModal()
