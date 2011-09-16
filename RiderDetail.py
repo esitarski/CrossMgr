@@ -76,6 +76,7 @@ class RiderDetail( wx.Panel ):
 		self.ganttChart = GanttChart( self, wx.ID_ANY, style = wx.NO_BORDER )
 		self.ganttChart.getNowTimeCallback = Gantt.GetNowTime
 		self.ganttChart.minimizeLabels = True
+		self.ganttChart.rClickCallback = self.onEditGantt
 		
 		vbs = wx.BoxSizer( wx.VERTICAL )
 		vbs.Add( self.ganttChart, proportion=0, border = 0, flag = wx.ALL | wx.EXPAND )
@@ -123,6 +124,69 @@ class RiderDetail( wx.Panel ):
 	
 	def setRider( self, n = None ):
 		Utils.SetValue( self.num, int(n) if n is not None else None )
+		
+	def getGanttChartNumLapTimes( self ):
+		lapCur = getattr(self, 'lapCur', None)
+		if lapCur is None:
+			return None, None, None
+
+		race = Model.race
+		if not race:
+			return None, None, None
+			
+		num = self.num.GetValue()
+		try:
+			num = int(num)
+		except:
+			return None, None, None
+		if num not in race:
+			return None, None, None
+			
+		try:
+			times = self.ganttChart.data[0]
+		except:
+			return None, None, None
+		return num, lapCur, times
+		
+	def onSplitLap( self, event ):
+		num, lap, times = self.getGanttChartNumLapTimes()
+		if num is None:
+			return
+		newTime = (times[lap-1] + times[lap]) / 2.0
+		Model.race.addTime( num, newTime )
+		self.refresh()
+		
+	def onDeleteLapStart( self, event ):
+		num, lap, times = self.getGanttChartNumLapTimes()
+		if num is None:
+			return
+		if self.lapCur != 1:
+			Model.race.deleteTime( num, times[lap-1] )
+			self.refresh()
+			
+	def onDeleteLapEnd( self, event ):
+		num, lap, times = self.getGanttChartNumLapTimes()
+		if num is None:
+			return
+		Model.race.deleteTime( num, times[lap] )
+		self.refresh()
+			
+	def onEditGantt( self, xPos, yPos, num, lap ):
+		if not hasattr(self, "ganttMenuInfo"):
+			self.ganttMenuInfo = [
+				[wx.NewId(),	'Split Lap',				self.onSplitLap],
+				[wx.NewId(),	'Delete Lap Start Time',	self.onDeleteLapStart],
+				[wx.NewId(),	'Delete Lap End Time',		self.onDeleteLapEnd],
+			]
+
+		menu = wx.Menu()		
+		for id, name, callback in self.ganttMenuInfo:
+			item = menu.Append( id, name )
+			self.Bind( wx.EVT_MENU, callback, item )
+			
+		self.lapCur = lap
+		self.PopupMenu( menu )
+		menu.Destroy()
 	
 	def setNumSelect( self, num ):
 		self.setRider( num )

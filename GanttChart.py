@@ -48,6 +48,7 @@ class GanttChart(wx.PyControl):
 		self.nowTime = None
 		self.numSelect = None
 		self.dClickCallback = None
+		self.rClickCallback = None
 		self.getNowTimeCallback = None
 		self.minimizeLabels = False
 		
@@ -62,6 +63,7 @@ class GanttChart(wx.PyControl):
 		self.Bind(wx.EVT_SIZE, self.OnSize)
 		self.Bind(wx.EVT_LEFT_UP, self.OnLeftClick)
 		self.Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDClick)
+		self.Bind(wx.EVT_RIGHT_UP, self.OnRightClick)
 
 	def DoGetBestSize(self):
 		return wx.Size(128, 64)
@@ -125,23 +127,34 @@ class GanttChart(wx.PyControl):
 		if self.dClickCallback and self.numSelect is not None:
 			self.dClickCallback( self.numSelect )
 	
-	def OnLeftClick( self, event ):
-		if getattr(self, 'empty', True):
-			return
+	def getRiderLap( self, event ):
 		x, y = event.GetPositionTuple()
 		y -= self.barHeight
 		x -= self.labelsWidth
 		iRider = int(y / self.barHeight)
 		if not 0 <= iRider < len(self.data):
-			return
+			return None, None
 
+		iLap = bisect.bisect_left( self.data[iRider], x / self.xFactor )
+		if not 1 <= iLap < len(self.data[iRider]):
+			return iRider, None
+			
+		return iRider, iLap
+	
+	def OnLeftClick( self, event ):
+		if getattr(self, 'empty', True):
+			return
+			
+		iRider, iLap = self.getRiderLap( event )
+		if iRider is None:
+			return
+			
 		self.numSelect = self.labels[iRider]
 		if self.getNowTimeCallback:
 			self.nowTime = self.getNowTimeCallback()
 		self.Refresh()
 		
-		iLap = bisect.bisect_left( self.data[iRider], x / self.xFactor )
-		if not 1 <= iLap < len(self.data[iRider]):
+		if iLap is None:
 			return
 
 		tLapStart = self.data[iRider][iLap-1]
@@ -158,6 +171,26 @@ class GanttChart(wx.PyControl):
 		pos = self.ClientToScreen( (xPos - width, yPos - height) )
 		bip.Position( pos, (0,0) )
 		bip.Popup()
+	
+	def OnRightClick( self, event ):
+		if getattr(self, 'empty', True):
+			return
+			
+		iRider, iLap = self.getRiderLap( event )
+		if iRider is None:
+			return
+			
+		self.numSelect = self.labels[iRider]
+		if self.getNowTimeCallback:
+			self.nowTime = self.getNowTimeCallback()
+		self.Refresh()
+		
+		if iLap is None:
+			return
+		rClickCallback = getattr(self, 'rClickCallback', None)
+		if rClickCallback is not None:
+			xPos, yPos = event.GetPositionTuple()
+			rClickCallback( xPos, yPos, self.labels[iRider] if self.labels else iRider, iLap )
 	
 	def Draw(self, dc):
 		size = self.GetClientSize()
