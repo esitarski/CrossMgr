@@ -279,9 +279,9 @@ def ChangeProperties( parent ):
 						raise NameError('User Cancel')
 					
 		propertiesDialog.properties.update()
-		if newFName != mainWin.fileName:
-			mainWin.fileName = newFName
-			mainWin.writeRace()
+		mainWin.fileName = newFName
+		Model.race.resetCache()
+		mainWin.writeRace()
 			
 	except (NameError, AttributeError, TypeError):
 		pass

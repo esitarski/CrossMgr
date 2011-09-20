@@ -4,8 +4,10 @@ import wx
 import wx.grid		as gridlib
 import ColGrid
 import os
+import re
+from string import Template
 from FixCategories import FixCategories
-from EditEntry import CorrectNumber, SplitNumber, DeleteEntry
+from EditEntry import CorrectNumber, SplitNumber, DeleteEntry, SwapEntry
 
 def GetFontFromExisting( font, pointSize = None, family = None, style = None, weight = None, underline = None, face = None, encoding = None ):
 	if pointSize is None: 	pointSize = font.GetPointSize()
@@ -24,6 +26,7 @@ class History( wx.Panel ):
 
 		self.showTimes = False
 		self.showLapTimes = False
+		self.showTimeDown = False
 		self.numSelect = None
 		self.isEmpty = True
 		self.history = None
@@ -49,6 +52,10 @@ class History( wx.Panel ):
 		self.showLapTimesToggle.SetValue( self.showLapTimes )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowLapTimes, self.showLapTimesToggle )
 		
+		self.showTimeDownToggle = wx.ToggleButton( self, wx.ID_ANY, 'Time Down per Lap' )
+		self.showTimeDownToggle.SetValue( self.showTimeDown )
+		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowTimeDown, self.showTimeDownToggle )
+		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'Zoom-In-icon.png'), wx.BITMAP_TYPE_PNG )
 		self.zoomInButton = wx.BitmapButton( self, wx.ID_ZOOM_IN, bitmap, style=wx.BU_EXACTFIT | wx.BU_AUTODRAW )
 		self.Bind( wx.EVT_BUTTON, self.onZoomIn, self.zoomInButton )
@@ -60,6 +67,7 @@ class History( wx.Panel ):
 		self.hbs.Add( self.categoryChoice, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.showTimesToggle, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.showLapTimesToggle, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.showTimeDownToggle, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( wx.StaticText(self, wx.ID_ANY, ' '), proportion=2 )
 		self.hbs.Add( self.zoomInButton, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.zoomOutButton, flag=wx.TOP | wx.BOTTOM | wx.RIGHT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
@@ -80,6 +88,9 @@ class History( wx.Panel ):
 		self.Bind( wx.grid.EVT_GRID_CELL_LEFT_DCLICK, self.doNumDrilldown )
 		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doRightClick )
 		
+		# Grab key presses so we can get CTRL-F for find.
+		self.Bind( wx.EVT_KEY_DOWN, self.onKeyPress )
+		
 		bs = wx.BoxSizer(wx.VERTICAL)
 		bs.Add(self.hbs, flag=wx.GROW|wx.HORIZONTAL)
 		bs.Add(self.grid, 1, wx.GROW|wx.ALL, 5)
@@ -91,6 +102,25 @@ class History( wx.Panel ):
 			
 	def onZoomIn( self, event ):
 		self.grid.Zoom( True )
+		
+	def onKeyPress( self, event ):
+		keycode = event.GetKeyCode()
+		if keycode != 70:	# F key
+			event.Skip()
+			return
+			
+		dlg = wx.TextEntryDialog( self, message='Find Number:', caption='Find Number:', style=wx.TextEntryDialogStyle )
+		if dlg.ShowModal() == wx.ID_OK:
+			num = dlg.GetValue()
+			num = re.sub( '[^0-9]', '', num )
+			if num:
+				if Utils.isMainWin():
+					Utils.getMainWin().setNumSelect( num )
+				else:
+					self.numSelect = num
+					self.refresh()
+		dlg.Destroy()
+		event.Skip()
 		
 	def doRightClick( self, event ):
 		if self.isEmpty:
@@ -114,9 +144,13 @@ class History( wx.Panel ):
 				
 				('Correct...',	wx.NewId(), self.OnPopupCorrect, interpCase),
 				('Split...',	wx.NewId(), self.OnPopupSplit, nonInterpCase),
-				('Delete...',	wx.NewId(), self.OnPopupDelete, nonInterpCase)
+				('Delete...',	wx.NewId(), self.OnPopupDelete, nonInterpCase),
+				
+				('Swap with Before...',	wx.NewId(), self.OnPopupSwapBefore, nonInterpCase),
+				('Swap with After...',	wx.NewId(), self.OnPopupSwapAfter, nonInterpCase),
 			]
 			self.numEditActions = 2
+			self.numSwapActions = 5
 			for p in self.popupInfo:
 				self.Bind( wx.EVT_MENU, p[2], id=p[1] )
 
@@ -129,7 +163,7 @@ class History( wx.Panel ):
 		race = Model.getRace()
 		menu = wx.Menu()
 		for i, p in enumerate(self.popupInfo):
-			if i == self.numEditActions:
+			if i == self.numEditActions or i == self.numSwapActions:
 				menu.AppendSeparator()
 			if caseCode < p[3]:
 				continue
@@ -137,6 +171,20 @@ class History( wx.Panel ):
 		
 		self.PopupMenu( menu )
 		menu.Destroy()
+			
+	def OnPopupSwapBefore( self, event ):
+		if hasattr(self, 'rowPopup'):
+			c, r, h = self.colPopup, self.rowPopup, self.history
+			rPrev = r - 1
+			if rPrev >= 0 and not h[c][rPrev].interp:
+				SwapEntry( self, h[c][r], h[c][rPrev] )
+		
+	def OnPopupSwapAfter( self, event ):
+		if hasattr(self, 'rowPopup'):
+			c, r, h = self.colPopup, self.rowPopup, self.history
+			rNext = r + 1
+			if rNext < len(h[c])-1 and not h[c][rNext].interp:
+				SwapEntry( self, h[c][r], h[c][rNext] )
 			
 	def OnPopupCorrect( self, event ):
 		if hasattr(self, 'rowPopup'):
@@ -163,6 +211,10 @@ class History( wx.Panel ):
 		
 	def onShowLapTimes( self, event ):
 		self.showLapTimes = not self.showLapTimes
+		self.refresh()
+		
+	def onShowTimeDown( self, event ):
+		self.showTimeDown = not self.showTimeDown
 		self.refresh()
 		
 	def updateColours( self ):
@@ -253,6 +305,21 @@ class History( wx.Panel ):
 			doLapsToGo = False
 				
 		entries = race.interpolateLap( maxLaps )
+		
+		# Collect the number and times for all entries so we can compute lap times.
+		numTimes = {}
+		for e in entries:
+			if e.lap == 0:
+				c = race.getCategory( e.num )
+				try:
+					startOffset = c.getStartOffsetSecs()
+				except:
+					startOffset = 0
+				numTimes[(e.num, e.lap)] = startOffset
+			else:
+				numTimes[(e.num, e.lap)] = e.t
+			
+		
 		# Trim out the 0 time starts.
 		try:
 			iFirstNonZero = (i for i, e in enumerate(entries) if e.t > 0).next()
@@ -292,22 +359,22 @@ class History( wx.Panel ):
 			def match( num ) : return True
 			
 		leaderTimes, leaderNums = race.getLeaderTimesNums()
-		if self.showTimes and self.showLapTimes:
-			def formatEntry( e, col ):
-				return '%d=%s=%s' % (e.num, Utils.formatTime(e.t), Utils.formatTime(e.t - leaderTimes[col+1]) )
-		elif self.showTimes:
-			def formatEntry( e, col ):
-				return '%d=%s' % (e.num, Utils.formatTime(e.t) )
-		elif self.showLapTimes:
-			def formatEntry( e, col ):
-				return '%d=%s' % (e.num, Utils.formatTime(e.t - leaderTimes[col+1]) )
-		else:
-			def formatEntry( e, col ) :
-				return '%d' % e.num
+		
+		formatStr = ['$num']
+		if self.showTimes:		formatStr.append('=$raceTime')
+		if self.showLapTimes:	formatStr.append(' [$lapTime]')
+		if self.showTimeDown:	formatStr.append(' ($downTime)')
+		template = Template( ''.join(formatStr) )
 		
 		data = []
 		for col, h in enumerate(self.history):
-			data.append( [ formatEntry(e, col) for e in h if match(e.num) ] )
+			data.append( [ template.safe_substitute(
+				{
+					'num':		e.num,
+					'raceTime':	Utils.formatTime(e.t) if self.showTimes else '',
+					'lapTime':	Utils.formatTime(e.t - numTimes[(e.num,e.lap-1)]) if self.showLapTimes else '',
+					'downTime':	Utils.formatTime(e.t - leaderTimes[col+1])
+				} ) for e in h if match(e.num) ] )
 			self.rcInterp.update( (row, col) for row, e in enumerate(h) if e.interp and match(e.num) )
 
 		self.grid.Set( data = data, colnames = colnames )

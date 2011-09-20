@@ -167,3 +167,15 @@ def DeleteEntry( parent, entry ):
 			mainWin.writeRace()
 	dlg.Destroy()
 	
+def SwapEntry( parent, a, b ):
+	race = Model.race
+	if not race:
+		return
+	race.addTime( a.num, b.t )
+	race.addTime( b.num, a.t )
+	race.deleteTime( a.num, a.t )
+	race.deleteTime( b.num, b.t )
+	mainWin = Utils.getMainWin()
+	if mainWin:
+		mainWin.refresh()
+		mainWin.writeRace()

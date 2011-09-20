@@ -184,6 +184,9 @@ class Entry(object):
 
 	def set( self, e ):
 		self.data = copy.copy(e.data)
+		
+	def __hash__( self ):
+		return hash(e.data)
 
 	@property
 	def t(self):		return self.data[0]

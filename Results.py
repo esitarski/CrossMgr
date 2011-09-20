@@ -237,26 +237,28 @@ class Results( wx.Panel ):
 
 		# Format the results.
 		data = []
-		formatStr = '$num$otl'
-		if self.showTimes:			formatStr += '=$t'
-		if self.showGaps:			formatStr += '$gap'
-		if self.showLapsCompleted:	formatStr += ' [$lap]'
-		if self.showPositions:		formatStr += ' ($pos)'
-		template = Template( formatStr )
+		formatStr = ['$num$otl']
+		if self.showTimes:			formatStr.append('=$t')
+		if self.showGaps:			formatStr.append('$gap')
+		if self.showLapsCompleted:	formatStr.append(' [$lap]')
+		if self.showPositions:		formatStr.append(' ($pos)')
+		template = Template( ''.join(formatStr) )
 		
 		if results:
 			leaderLap = results[0][0].lap
 			leaderTime = results[0][0].t
 			pos = 1
 			for col, d in enumerate(results):
-				data.append( [template.safe_substitute( dict(	num=e.num,
-																otl=' OTL' if race[e.num].isPulled() else '',
-																t=Utils.formatTime(e.t),
-																gap='+%s' % Utils.formatTime(e.t - leaderTime) if e.lap == leaderLap else '',
-																lap=e.lap,
-																pos=row+pos) ) for row, e in enumerate(d)] )
+				data.append( [template.safe_substitute(
+						{
+							'num':	e.num,
+							'otl':	'OTL' if race[e.num].isPulled() else '',
+							't':	Utils.formatTime(e.t) if self.showTimes else '',
+							'gap':	('+%s' % Utils.formatTime(e.t - leaderTime) if e.lap == leaderLap else '') if self.showGaps else '',
+							'lap':	e.lap,
+							'pos':	row+pos
+						} ) for row, e in enumerate(d)] )
 
-				# self.rcInterp.update( (row, col) for row, e in enumerate(d) if e.interp )
 				self.rcInterp.update( (row, col) for row, e in enumerate(d) if race[e.num].hasInterpolatedTime(e.t) )
 				pos += len(d)
 		

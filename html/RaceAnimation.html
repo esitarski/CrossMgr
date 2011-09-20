@@ -94,7 +94,7 @@ var numsToWatchStr = null;
 var categoryStr = null;
 var numsToWatch = {};		// Set of numbers to watch.
 var resultsDiv = null;
-var lapDataOption = 0;	// if 0, show rac times, if 1, show lap times, if 2, show gap times.
+var lapDataOption = 0;	// if 0, show race times, if 1, show lap times, if 2, show gap times.
 
 // Rider colours given out as remander of the number.
 var colours = [
@@ -725,7 +725,7 @@ function SetCategoryResults()
 					if( delta != 0 )
 						gap = FormatTime( delta );
 				}
-				else
+				else if( lapTimes.back() > leaderLapTimes.back() )
 				{
 					var lapsDown = leaderLapTimes.length - lapTimes.length;
 					gap = lapsDown + ' lap' + (lapsDown == 1 ? '' : 's');
@@ -1321,6 +1321,7 @@ function onLoad()
 			}
 	}
 	
+	lapDataOption = document.getElementById('idLapTimeOption').selectedIndex;
 	SetCategoryResults();
 	RefreshRaceChart();
 	
@@ -1362,10 +1363,10 @@ Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr<
 <span class="noprint">Comments?  Click <a href="mailto:edward.sitarski@gmail.com?subject=Race Animation">here</a>.<br/></span>
 </p>
 Show: <select id="idLapTimeOption" onChange="LapTimeOption()" >
- <option value="showRaceTime">Race Time</option>
- <option value="showLapTimes">Time Per Lap</option>
- <option value="showLapGaps">Gap Per Lap</option>
-<</select>
+ <option value="showRaceTime">Race Times</option>
+ <option value="showLapTimes" selected="selected">Lap Times</option>
+ <option value="showLapGaps">Time Gaps</option>
+</select>
 <div id="idResultsDiv"></div>
 <p id="idRaceName" class="noprint">Race Chart</p>
 <canvas id="idRaceChart" width="1000" height="800" class="noprint">
