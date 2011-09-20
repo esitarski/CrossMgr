@@ -183,8 +183,11 @@ class History( wx.Panel ):
 		if hasattr(self, 'rowPopup'):
 			c, r, h = self.colPopup, self.rowPopup, self.history
 			rNext = r + 1
-			if rNext < len(h[c])-1 and not h[c][rNext].interp:
-				SwapEntry( self, h[c][r], h[c][rNext] )
+			try:
+				if not h[c][rNext].interp:
+					SwapEntry( self, h[c][r], h[c][rNext] )
+			except:
+				pass
 			
 	def OnPopupCorrect( self, event ):
 		if hasattr(self, 'rowPopup'):

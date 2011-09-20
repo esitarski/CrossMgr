@@ -168,7 +168,7 @@ class ExportGrid( object ):
 		startOffsetSecs = category.getStartOffsetSecs() if category is not None else 0.0
 		
 		raceLaps = race.getRaceLaps()
-		entries = race.interpolateLap( raceLaps )		
+		entries = race.interpolateLap( raceLaps )
 		entries = [e for e in entries if e.t > 0]
 		entries.sort( key = lambda x : (x.num, x.t) )
 		
@@ -191,7 +191,6 @@ class ExportGrid( object ):
 				self._setRC( row, lapTimesCol + i, Utils.formatTime(t) )
 
 		self.colnames += ['Lap %d' % lap for lap in xrange(1,len(self.data)-lapTimesCol+1)]
-			
 				
 	def setResults( self, catName ):
 		race = Model.getRace()
@@ -235,6 +234,9 @@ class ExportGrid( object ):
 		finishTime	= []
 		gap			= []
 		notes		= []
+		
+		leaderLaps = int(colnames[0])
+		leaderTime = results[0][0].t
 
 		if results:
 			pos = 1
@@ -243,7 +245,10 @@ class ExportGrid( object ):
 				number.extend( e.num for e in c )
 				notes.extend( 'OTL' if race[e.num].isPulled() else ' ' for e in c )
 				position.extend( p for p in xrange(pos, pos+len(c)) )
-				laps.extend( [lapsCompleted] * len(c) )
+				
+				# Don't show riders a lap down unless they really were lapped by their race leader.
+				laps.extend( lapsCompleted if col == 0 or e.t > leaderTime else leaderLaps + lapsCompleted for e in c )
+				
 				finishTime.extend( Utils.formatTime(e.t) for e in c )
 				pos += len(c)
 			if finishTime:
@@ -310,7 +315,6 @@ class ExportGrid( object ):
 			del self.colnames[col]
 			del self.data[col]
 			
-		
 	def toHTML( self, html ):
 		pass
 
