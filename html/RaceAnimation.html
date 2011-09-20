@@ -738,13 +738,13 @@ function SetCategoryResults()
 			{
 				switch( lapDataOption )
 				{
-				case 0:
-					createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(lapTimes[i] - startOffset, 0.0)) );
-					break;
-				case 1:
+				case 0:	// Lap Times.
 					createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(lapTimes[i] - lapTimes[i-1], 0.0)) );
 					break;
-				case 2:
+				case 1:	// Race Times.
+					createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(lapTimes[i] - startOffset, 0.0)) );
+					break;
+				case 2:	// Gap Times.
 					createTextChild( td = createChild(tr, 'TD'), FormatTime(lapTimes[i] - resultsData[0][3][i]) );
 					break;
 				}
@@ -939,7 +939,10 @@ function RefreshRaceChart()
 			var lapTimes = d['lapTimes'];
 			if( lapTimes.length > 0 )
 			{
-				resultsData.push( [lapTimes.length, lapTimes.length ? lapTimes.back() : 99999, num, d['lapTimes'], d['status'], d['lastTime']] );
+				resultsData.push( [	lapTimes.length,
+									lapTimes.length ? lapTimes.back() : 99999,
+									num, d['lapTimes'].slice(0),	// Make sure to make a full copy as we modify these values.
+									d['status'], d['lastTime']] );
 				if( lapTimes.back() > dataMax )
 					dataMax = lapTimes.back();
 			}
@@ -973,6 +976,7 @@ function RefreshRaceChart()
 			for( var j = 0; j < lapTimes.length; ++j )
 				lapTimes[j] -= startOffset;
 		}
+		dataMax -= startOffset;
 	}
 	
 	var lapsMax = resultsData.length > 0 ? resultsData[0][iLapTimes].length : 0;
@@ -1183,9 +1187,12 @@ function getStartTime()
 	{
 		if( categoryCur == 'All' || data[num]['raceCat'] == categoryCur )
 			if( data[num]['lapTimes'][0] < t )
+			{
 				t = data[num]['lapTimes'][0];
+			}
 	}
-	return t + 0.001;
+	t += 0.001;
+	return t;
 }
 
 function Rewind()
@@ -1363,8 +1370,8 @@ Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr<
 <span class="noprint">Comments?  Click <a href="mailto:edward.sitarski@gmail.com?subject=Race Animation">here</a>.<br/></span>
 </p>
 Show: <select id="idLapTimeOption" onChange="LapTimeOption()" >
- <option value="showRaceTime">Race Times</option>
  <option value="showLapTimes" selected="selected">Lap Times</option>
+ <option value="showRaceTime">Race Times</option>
  <option value="showLapGaps">Time Gaps</option>
 </select>
 <div id="idResultsDiv"></div>

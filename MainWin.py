@@ -26,6 +26,7 @@ from Properties			import Properties, PropertiesDialog, ChangeProperties
 from Recommendations	import Recommendations
 from RaceAnimation		import RaceAnimation, GetAnimationData
 import Utils
+from Utils				import logCall
 import Model
 from setpriority import setpriority
 from Printing			import CrossMgrPrintout, getRaceCategories
@@ -140,8 +141,12 @@ class MainWin( wx.Frame ):
 		self.fileMenu.AppendSeparator()
 
 		idCur = wx.NewId()
-		self.fileMenu.Append( idCur , "&Export Results to Excel...", "Export as an Excel Spreadsheet" )
+		self.fileMenu.Append( idCur , "&Export Results as Excel...", "Export results as an Excel Spreadsheet (.xls)" )
 		self.Bind(wx.EVT_MENU, self.menuExportToExcel, id=idCur )
+		
+		idCur = wx.NewId()
+		self.fileMenu.Append( idCur , "Export Results as &HTML...", "Export results as HTML (.html)" )
+		self.Bind(wx.EVT_MENU, self.menuExportHtmlRaceResults, id=idCur )
 
 		self.fileMenu.AppendSeparator()
 		
@@ -161,30 +166,29 @@ class MainWin( wx.Frame ):
 
 		#-----------------------------------------------------------------------
 		self.dataMgmtMenu = wx.Menu()
-
+		
 		idCur = wx.NewId()
 		self.dataMgmtMenu.Append( idCur , "&Link to External Excel Data...", "Link to information in an Excel spreadsheet" )
 		self.Bind(wx.EVT_MENU, self.menuLinkExcel, id=idCur )
 		
 		self.dataMgmtMenu.AppendSeparator()
+		
+		#- - - - - - - - - - - - - - - - - - - -
+		categoryMgmtMenu = wx.Menu()
+		self.dataMgmtMenu.AppendMenu(wx.ID_ANY, "Category Mgmt", categoryMgmtMenu)
 
 		idCur = wx.NewId()
-		self.dataMgmtMenu.Append( idCur , "&Import Categories from File...", "Import Categories from File" )
+		categoryMgmtMenu.Append( idCur , "&Import Categories from File...", "Import Categories from File" )
 		self.Bind(wx.EVT_MENU, self.menuImportCategories, id=idCur )
 
 		idCur = wx.NewId()
-		self.dataMgmtMenu.Append( idCur , "&Export Categories to File...", "Export Categories to File" )
+		categoryMgmtMenu.Append( idCur , "&Export Categories to File...", "Export Categories to File" )
 		self.Bind(wx.EVT_MENU, self.menuExportCategories, id=idCur )
 
-		self.dataMgmtMenu.AppendSeparator()
-
+		#- - - - - - - - - - - - - - - - - - - -
 		idCur = wx.NewId()
 		self.dataMgmtMenu.Append( idCur , "Export History to Excel...", "Export History to Excel File" )
 		self.Bind(wx.EVT_MENU, self.menuExportHistory, id=idCur )
-
-		idCur = wx.NewId()
-		self.dataMgmtMenu.Append( idCur , "Export HTML Race Results...", "Export Race Results as HTML" )
-		self.Bind(wx.EVT_MENU, self.menuExportHtmlRaceResults, id=idCur )
 
 		self.menuBar.Append( self.dataMgmtMenu, "&DataMgmt" )
 
@@ -323,6 +327,7 @@ class MainWin( wx.Frame ):
 		pfrm.SetSize(self.GetSize())
 		pfrm.Show(True)
 
+	@logCall
 	def menuPrint( self, event ):
 		pdd = wx.PrintDialogData(self.printData)
 		pdd.SetAllPages( 1 )
@@ -339,6 +344,7 @@ class MainWin( wx.Frame ):
 			self.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
 		printout.Destroy()
 
+	@logCall
 	def menuLinkExcel( self, event ):
 		race = Model.getRace()
 		if not race:
@@ -352,6 +358,7 @@ class MainWin( wx.Frame ):
 		
 	#--------------------------------------------------------------------------------------------
 
+	@logCall
 	def menuExportToExcel( self, event ):
 		self.commit()
 		if self.fileName is None or len(self.fileName) < 4:
@@ -377,6 +384,7 @@ class MainWin( wx.Frame ):
 
 		try:
 			wb.save( xlFName )
+			webbrowser.open( xlFName, new = 2, autoraise = True )
 			Utils.MessageOK(self, 'Excel file written to:\n\n   %s' % xlFName, 'Excel Write', iconMask=wx.ICON_INFORMATION)
 		except IOError:
 			Utils.MessageOK(self,
@@ -385,6 +393,7 @@ class MainWin( wx.Frame ):
 						
 	#--------------------------------------------------------------------------------------------
 	
+	@logCall
 	def menuExportHtmlRaceResults( self, event ):
 		self.commit()
 		race = Model.getRace()
@@ -434,6 +443,7 @@ class MainWin( wx.Frame ):
 							'Html Write Error', iconMask=wx.ICON_ERROR )
 	
 	#--------------------------------------------------------------------------------------------
+	@logCall
 	def onCloseWindow( self, event ):
 		self.writeRace()
 
@@ -465,6 +475,7 @@ class MainWin( wx.Frame ):
 			return
 		race.setActiveCategories()
 
+	@logCall
 	def menuNew( self, event ):
 		dlg = PropertiesDialog(self, -1, 'Configure Race', style=wx.DEFAULT_DIALOG_STYLE )
 		ret = dlg.ShowModal()
@@ -518,6 +529,7 @@ class MainWin( wx.Frame ):
 		self.showPageName( 'Actions' )
 		self.refresh()
 	
+	@logCall
 	def menuNewNext( self, event ):
 		race = Model.getRace()
 		if race is None:
@@ -605,10 +617,12 @@ class MainWin( wx.Frame ):
 			if race.isFinished():
 				self.showPageName( 'Results' )
 			self.refresh()
+			Utils.writeLog( "call: openRace: '%s'" % fileName )
 
 		except IOError:
 			Utils.MessageOK(self, 'Cannot open file "%s".' % fileName, 'Cannot Open File', iconMask=wx.ICON_ERROR )
 
+	@logCall
 	def menuOpen( self, event ):
 		dlg = wx.FileDialog( self, message="Choose a Race file",
 							defaultFile = '',
@@ -624,6 +638,7 @@ class MainWin( wx.Frame ):
 		self.filehistory.AddFileToHistory(fileName)  # move up the list
 		self.openRace( fileName )
 		
+	@logCall
 	def menuOpenNext( self, event ):
 		race = Model.getRace()
 
@@ -649,6 +664,7 @@ class MainWin( wx.Frame ):
 		except (AttributeError, IndexError, StopIteration):
 			Utils.MessageOK(self, 'No next race.', 'No next race', iconMask=wx.ICON_ERROR )
 
+	@logCall
 	def menuExit(self, event):
 		self.onCloseWindow( event )
 
@@ -727,6 +743,7 @@ class MainWin( wx.Frame ):
 			
 		return self.lapTimes
 		
+	@logCall
 	def menuSimulate( self, event ):
 		fName = os.path.join( Utils.getHomeDir(), 'Simulation.cmn' )
 		if not Utils.MessageOKCancel(self,
@@ -811,6 +828,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 		Utils.writeRace()
 		self.refresh()
 
+	@logCall
 	def menuImportCategories( self, event ):
 		self.commit()
 		race = Model.getRace()
@@ -835,6 +853,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 				
 		dlg.Destroy()
 	
+	@logCall
 	def menuExportCategories( self, event ):
 		self.commit()
 		race = Model.getRace()
@@ -858,12 +877,17 @@ Continue?''' % fName, 'Simulate a Race' ):
 				
 		dlg.Destroy()	
 		
+	@logCall
 	def menuExportHistory( self, event ):
 		self.commit()
 		race = Model.getRace()
 		if self.fileName is None or len(self.fileName) < 4 or not race:
 			return
 
+		self.showPageName( 'History' )
+		self.history.setCategoryAll()
+		self.history.refresh()
+		
 		xlFName = self.fileName[:-4] + '-History.xls'
 		dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(xlFName),
 						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
@@ -875,9 +899,6 @@ Continue?''' % fName, 'Simulate a Race' ):
 
 		xlFName = os.path.join( dName, os.path.basename(xlFName) )
 
-		self.history.setCategoryAll()
-		self.history.refresh()
-		
 		title = 'Race: '+ race.name + '\n' + Utils.formatDate(race.date) + '\nRace History'
 		colnames = self.history.grid.GetColNames()
 		data = self.history.grid.GetData()
@@ -893,12 +914,14 @@ Continue?''' % fName, 'Simulate a Race' ):
 		
 		try:
 			wb.save( xlFName )
+			webbrowser.open( xlFName, new = 2, autoraise = True )
 			Utils.MessageOK(self, 'Excel file written to:\n\n   %s' % xlFName, 'Excel Write', iconMask=wx.ICON_INFORMATION)
 		except IOError:
 			Utils.MessageOK(self,
 						'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % xlFName,
 						'Excel File Error', iconMask=wx.ICON_ERROR )
 	
+	@logCall
 	def menuAbout( self, event ):
 		# First we create and fill the info object
 		info = wx.AboutDialogInfo()
@@ -963,18 +986,16 @@ Continue?''' % fName, 'Simulate a Race' ):
 				break
 
 	def callPageRefresh( self, i ):
-		if 0 <= i < len(self.pages):
-			try:
-				self.pages[i].refresh()
-			except AttributeError:
-				pass
+		try:
+			self.pages[i].refresh()
+		except (AttributeError, IndexError):
+			pass
 
 	def callPageCommit( self, i ):
-		if 0 <= i < len(self.pages):
-			try:
-				self.pages[i].commit()
-			except AttributeError:
-				pass
+		try:
+			self.pages[i].commit()
+		except (AttributeError, IndexError):
+			pass
 
 	def commit( self ):
 		self.callPageCommit( self.notebook.GetSelection() )
@@ -990,6 +1011,10 @@ Continue?''' % fName, 'Simulate a Race' ):
 	def onPageChanging( self, event ):
 		self.callPageCommit( event.GetOldSelection() )
 		self.callPageRefresh( event.GetSelection() )
+		try:
+			Utils.writeLog( 'page: %s\n' % self.pages[event.GetSelection()].__class__.__name__ )
+		except IndexError:
+			pass
 		event.Skip()	# Required to properly repaint the screen.
 
 	def refreshRaceAnimation( self ):
@@ -1045,7 +1070,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 		self.secondCount += 1
 		if self.secondCount % 30 == 0 and race.isChanged():
 			self.writeRace()
-
+			
 def MainLoop():
 	setpriority( priority=4 )	# Set to real-time priority.
 
@@ -1056,11 +1081,22 @@ def MainLoop():
 
 	app = wx.PySimpleApp()
 
-	# Set the log file.
-	dataDir = Utils.getHomeDir()
-	redirectFileName = os.path.join(dataDir, 'CrossMgr.log')
+	# Set up the log file.  Otherwise, show errors on the screen unbuffered.
+	if __name__ == '__main__':
+		Utils.disable_stdout_buffering()
+	else:
+		dataDir = Utils.getHomeDir()
+		redirectFileName = os.path.join(dataDir, 'CrossMgr.log')
+		try:
+			logSize = os.path.getsize( redirectFileName )
+			if logSize > 1000000:
+				os.remove( redirectFileName )
+		except:
+			pass
 	
-	app.RedirectStdio( redirectFileName )
+		app.RedirectStdio( redirectFileName )
+	
+	Utils.writeLog( 'start' )
 	
 	# Configure the main window.
 	mainWin = MainWin( None, title=AppVerName, size=(800,600) )

@@ -67,7 +67,7 @@ class Gantt( wx.Panel ):
 		entries = race.interpolateLap( maxLaps )
 		category = race.categories.get( catName, None )
 		if category is not None:
-			def match( num ) : return category.matches(num)
+			def match( num ) : return category == race.getCategory(num)
 		else:
 			def match( num ) : return True
 		
@@ -94,6 +94,7 @@ class Gantt( wx.Panel ):
 		pass
 	
 if __name__ == '__main__':
+	Utils.disable_stdout_buffering()
 	app = wx.PySimpleApp()
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	Model.setRace( Model.Race() )

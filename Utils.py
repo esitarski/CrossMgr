@@ -138,6 +138,29 @@ def approximateMatch( s1, s2 ):
 	return len(set(s1) & set(s2)) / float(len(s1) + len(s2))
 	
 #------------------------------------------------------------------------
+def writeLog( message ):
+	try:
+		dt = datetime.datetime.now()
+		dt = dt.replace( microsecond = 0 )
+		sys.stdout.write( '%s %s%s' % (dt.isoformat(), message, '\n' if not message or message[-1] != '\n' else '' ) )
+		sys.stdout.flush()
+	except IOError:
+		pass
+
+def disable_stdout_buffering():
+	fileno = sys.stdout.fileno()
+	temp_fd = os.dup(fileno)
+	sys.stdout.close()
+	os.dup2(temp_fd, fileno)
+	os.close(temp_fd)
+	sys.stdout = os.fdopen(fileno, "w", 0)
+		
+def logCall( f ):
+	def new_f( *args, **kwargs ):
+		writeLog( 'call: %s' % f.__name__ )
+		return f( *args, **kwargs)
+	return new_f
+#------------------------------------------------------------------------
 mainWin = None
 def setMainWin( mw ):
 	global mainWin

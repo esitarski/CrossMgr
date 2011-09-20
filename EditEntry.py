@@ -1,4 +1,5 @@
 import Utils
+from Utils				import logCall
 import wx
 import wx.grid		as gridlib
 import wx.lib.intctrl
@@ -142,16 +143,19 @@ class SplitNumberDialog( wx.Dialog ):
 
 #------------------------------------------------------------------------------------------------
 
+@logCall
 def CorrectNumber( parent, entry ):
 	dlg = CorrectNumberDialog( parent, entry )
 	dlg.ShowModal()
 	dlg.Destroy()
 		
+@logCall
 def SplitNumber( parent, entry ):
 	dlg = SplitNumberDialog( parent, entry )
 	dlg.ShowModal()
 	dlg.Destroy()
 		
+@logCall
 def DeleteEntry( parent, entry ):
 	dlg = wx.MessageDialog(parent,
 						   'Num: %d  RiderLap: %d   RaceTime: %s\n\nConfirm Delete (no undo)?' %
@@ -167,6 +171,7 @@ def DeleteEntry( parent, entry ):
 			mainWin.writeRace()
 	dlg.Destroy()
 	
+@logCall
 def SwapEntry( parent, a, b ):
 	race = Model.race
 	if not race:

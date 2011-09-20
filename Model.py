@@ -971,19 +971,32 @@ class Race(object):
 
 	def getCategory( self, num ):
 		# Check the cache for this rider.
-		# If not there, find it and add it to the cache.
-		cc = getattr( self, 'categoryCache', None )
 		try:
-			return cc[num]
-		except (NameError, TypeError, KeyError):
-			if not cc:
-				cc = {}
-			for c in self.categories.itervalues():
-				if c.active and c.matches(num):
-					cc[num] = c
-					return c
-		cc[num] = None
-		return None
+			return getattr( self, 'categoryCache', None )[num]
+		except TypeError:
+			self.categoryCache = {}
+		except KeyError:
+			pass
+		
+		# If not there, find it and add it to the cache.
+		cc = self.categoryCache
+			
+		# Find the category matching this rider.
+		try:
+			c = (c for c in self.categories.itervalues() if c.active and c.matches(num)).next()
+		except StopIteration:
+			cc[num] = None	# No matching category.
+			return
+		
+		# Add this rider to the cache.
+		cc[num] = c
+		
+		# Proactively classify all riders in this category as we will likely need them soon.
+		for r in self.riders.itervalues():
+			if r.num not in cc and c.matches(r.num):
+				cc[r.num] = c
+				
+		return c
 	
 	def resetCategoryCache( self ):
 		setattr( self, 'categoryCache', None )

@@ -33,6 +33,7 @@ class History( wx.Panel ):
 		self.rcInterp = set()
 		self.textColour = {}
 		self.backgroundColour = {}
+		self.category = None
 		
 		self.whiteColour = wx.Colour( 255, 255, 255 )
 		self.blackColour = wx.Colour( 0, 0, 0 )
@@ -175,19 +176,18 @@ class History( wx.Panel ):
 	def OnPopupSwapBefore( self, event ):
 		if hasattr(self, 'rowPopup'):
 			c, r, h = self.colPopup, self.rowPopup, self.history
-			rPrev = r - 1
-			if rPrev >= 0 and not h[c][rPrev].interp:
-				SwapEntry( self, h[c][r], h[c][rPrev] )
+			for rPrev in xrange( r - 1, -1, -1 ):
+				if not h[c][rPrev].interp and (self.category is None or Model.race.getCategory(h[c][rPrev]) == self.category):
+					SwapEntry( self, h[c][r], h[c][rPrev] )
+					break
 		
 	def OnPopupSwapAfter( self, event ):
 		if hasattr(self, 'rowPopup'):
 			c, r, h = self.colPopup, self.rowPopup, self.history
-			rNext = r + 1
-			try:
-				if not h[c][rNext].interp:
+			for rNext in xrange( r + 1, len(h[c]) ):
+				if not h[c][rNext].interp and (self.category is None or Model.race.getCategory(h[c][rNext]) == self.category):
 					SwapEntry( self, h[c][r], h[c][rNext] )
-			except:
-				pass
+					break
 			
 	def OnPopupCorrect( self, event ):
 		if hasattr(self, 'rowPopup'):
@@ -204,6 +204,7 @@ class History( wx.Panel ):
 	def OnPopupResults( self, event ):
 		if Utils.isMainWin():
 			Utils.getMainWin().showPageName( 'Results' )
+			
 	def OnPopupRiderDetail( self, event ):
 		if Utils.isMainWin():
 			Utils.getMainWin().showPageName( 'Rider Detail' )
@@ -272,7 +273,8 @@ class History( wx.Panel ):
 		self.refresh()
 	
 	def setCategoryAll( self ):
-		self.categoryChoice.SetSelection( 0 )
+		FixCategories( self.categoryChoice, 0 )
+		Model.race.historyCategory = 0
 	
 	def reset( self ):
 		self.numSelect = None
@@ -289,8 +291,9 @@ class History( wx.Panel ):
 	def refresh( self ):
 		self.isEmpty = True
 		self.history = None
+		self.category = None
 		self.rcInterp = set()
-		race = Model.getRace()
+		race = Model.race
 		
 		if race is None:
 			self.clearGrid()
@@ -317,12 +320,11 @@ class History( wx.Panel ):
 				try:
 					startOffset = c.getStartOffsetSecs()
 				except:
-					startOffset = 0
-				numTimes[(e.num, e.lap)] = startOffset
+					startOffset = 0.0
+				numTimes[(e.num, 0)] = startOffset
 			else:
 				numTimes[(e.num, e.lap)] = e.t
 			
-		
 		# Trim out the 0 time starts.
 		try:
 			iFirstNonZero = (i for i, e in enumerate(entries) if e.t > 0).next()
@@ -356,10 +358,13 @@ class History( wx.Panel ):
 												Utils.formatTime(raceTime)) )
 		
 		category = race.categories.get( catName, None )
+		self.category = category
 		if category is not None:
-			def match( num ) : return category.matches(num)
+			def match( num ):
+				return race.getCategory(num) == category
 		else:
-			def match( num ) : return True
+			def match( num ):
+				return True
 			
 		leaderTimes, leaderNums = race.getLeaderTimesNums()
 		
@@ -397,7 +402,7 @@ if __name__ == '__main__':
 	#for x in dir(wx):
 	#	if x.startswith('MOD_'):
 	#		print x
-
+	Utils.disable_stdout_buffering()
 	app = wx.PySimpleApp()
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	Model.setRace( Model.Race() )

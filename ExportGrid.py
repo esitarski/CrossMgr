@@ -169,13 +169,26 @@ class ExportGrid( object ):
 		
 		raceLaps = race.getRaceLaps()
 		entries = race.interpolateLap( raceLaps )
+		
+		numTimes = {}
+		for e in entries:
+			if e.lap == 0:
+				c = race.getCategory( e.num )
+				try:
+					startOffset = c.getStartOffsetSecs()
+				except AttributeError:
+					startOffset = 0.0
+				numTimes[(e.num, 0)] = startOffset
+			else:
+				numTimes[(e.num, e.lap)] = e.t
+		
 		entries = [e for e in entries if e.t > 0]
 		entries.sort( key = lambda x : (x.num, x.t) )
 		
-		# Record the rider times and compensate for the category start offsets.
+		# Record the rider times per lap.
 		riderTimes = {}
 		for e in entries:
-			riderTimes.setdefault( e.num, [] ).append( max(e.t - startOffsetSecs, 0.0) )
+			riderTimes.setdefault( e.num, [] ).append( e.t - numTimes[(e.num, e.lap-1)] )
 
 		positionCol = self.colnames.index('Position')
 		bibCol      = self.colnames.index('Bib#')

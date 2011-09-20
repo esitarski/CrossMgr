@@ -293,6 +293,7 @@ class Results( wx.Panel ):
 		
 if __name__ == '__main__':
 	import cPickle as pickle
+	Utils.disable_stdout_buffering()
 	app = wx.PySimpleApp()
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,200))
 	Model.setRace( Model.Race() )
