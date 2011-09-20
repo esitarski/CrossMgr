@@ -105,7 +105,8 @@ class History( wx.Panel ):
 		
 	def onKeyPress( self, event ):
 		keycode = event.GetKeyCode()
-		if keycode != 70:	# F key
+		keymod = event.GetModifiers()
+		if not (keycode == 70 and keymod == wx.MOD_CONTROL):	# CTRL-F key
 			event.Skip()
 			return
 			
@@ -394,6 +395,10 @@ class History( wx.Panel ):
 		pass
 	
 if __name__ == '__main__':
+	#for x in dir(wx):
+	#	if x.startswith('MOD_'):
+	#		print x
+
 	app = wx.PySimpleApp()
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	Model.setRace( Model.Race() )
