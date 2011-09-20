@@ -104,9 +104,9 @@ class History( wx.Panel ):
 		self.grid.Zoom( True )
 		
 	def onKeyPress( self, event ):
-		keycode = event.GetKeyCode()
 		keymod = event.GetModifiers()
-		if not (keycode == 70 and keymod == wx.MOD_CONTROL):	# CTRL-F key
+		keycode = event.GetKeyCode()
+		if not (keymod == wx.MOD_CONTROL and keycode == 70):	# CTRL-F key
 			event.Skip()
 			return
 			
@@ -115,11 +115,10 @@ class History( wx.Panel ):
 			num = dlg.GetValue()
 			num = re.sub( '[^0-9]', '', num )
 			if num:
+				self.numSelect = num
+				self.refresh()
 				if Utils.isMainWin():
 					Utils.getMainWin().setNumSelect( num )
-				else:
-					self.numSelect = num
-					self.refresh()
 		dlg.Destroy()
 		event.Skip()
 		

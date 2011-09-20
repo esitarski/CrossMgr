@@ -1090,7 +1090,8 @@ class Race(object):
 								(category is None or category.matches(r.num))]
 		nonFinishers = []
 		for status in Race.nonFinisherStatusList:
-			numTimes = [(r.num, r.tStatus if r.tStatus is not None else -sys.float_info.max) for r in ridersSubset if r.status == status]
+			numTimes = [(r.num, r.tStatus if r.tStatus is not None else -sys.float_info.max)
+							for r in ridersSubset if r.status == status]
 			numTimes.sort( key = lambda x : (-x[1], x[0]) )
 			nonFinishers.append( numTimes if numTimes else None )
 
