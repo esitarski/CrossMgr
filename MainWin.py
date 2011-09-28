@@ -1061,21 +1061,23 @@ Continue?''' % fName, 'Simulate a Race' ):
 		if not JChip.listener:
 			JChip.StartListening()
 		
-		if not race.tagNums:
+		if not getattr(race, 'tagNums', None):
 			JChipSetup.GetTabNums()
-			
-		for d in JChip.GetData():
-			if d[0] != 'data':
-				continue
-			try:
-				num = race.tagNums[d[1]]
-				dt = datetime.datetime.combine( race.startTime.date(), d[2] )
-				# Ignore times before the start of the race.
-				if race.isRunning() and race.startTime < dt:
-					delta = dt - race.startTime
-					race.addTime( num, delta.seconds + delta.microseconds / 1000000.0 )
-			except (ValueError, KeyError)
-				pass
+		
+		data = JChip.GetData()
+		if race.tagNums:
+			for d in data:
+				if d[0] != 'data':
+					continue
+				try:
+					num = race.tagNums[d[1]]
+					dt = datetime.datetime.combine( race.startTime.date(), d[2] )
+					# Ignore times before the start of the race.
+					if race.isRunning() and race.startTime < dt:
+						delta = dt - race.startTime
+						race.addTime( num, delta.seconds + delta.microseconds / 1000000.0 )
+				except (TypeError, ValueError, KeyError)
+					pass
 				
 	def updateRaceClock( self, event = None ):
 		self.record.refreshRaceTime()
