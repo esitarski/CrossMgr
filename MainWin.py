@@ -258,15 +258,6 @@ class MainWin( wx.Frame ):
 		self.menuBar.Append( self.pageMenu, "&JumpTo" )
 
 		#-----------------------------------------------------------------------
-		self.demoMenu = wx.Menu()
-
-		idCur = wx.NewId()
-		self.demoMenu.Append( idCur , "&Simulate Race...", "Simulate a race" )
-		self.Bind(wx.EVT_MENU, self.menuSimulate, id=idCur )
-
-		self.menuBar.Append( self.demoMenu, "Dem&o" )
-
-		#-----------------------------------------------------------------------
 		self.chipMenu = wx.Menu()
 
 		idCur = wx.NewId()
@@ -274,6 +265,15 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_MENU, self.menuJChip, id=idCur )
 
 		self.menuBar.Append( self.chipMenu, "Chip &Reader" )
+
+		#-----------------------------------------------------------------------
+		self.demoMenu = wx.Menu()
+
+		idCur = wx.NewId()
+		self.demoMenu.Append( idCur , "&Simulate Race...", "Simulate a race" )
+		self.Bind(wx.EVT_MENU, self.menuSimulate, id=idCur )
+
+		self.menuBar.Append( self.demoMenu, "Dem&o" )
 
 		#-----------------------------------------------------------------------
 		self.helpMenu = wx.Menu()
@@ -304,6 +304,9 @@ class MainWin( wx.Frame ):
 		ChangeProperties( self )
 		
 	def menuJChip( self, event ):
+		if Model.race and Model.race.isRunning():
+			Utils.MessageOK(self, 'Cannot Configure/Test J-Chip during race.', 'Cannot Configure/Test J-Chip', iconMask=wx.ICON_ERROR)
+			return
 		dlg = JChipSetup.JChipSetupDialog( self )
 		dlg.ShowModal()
 		dlg.Destroy()
@@ -1076,7 +1079,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 					if race.isRunning() and race.startTime < dt:
 						delta = dt - race.startTime
 						race.addTime( num, delta.seconds + delta.microseconds / 1000000.0 )
-				except (TypeError, ValueError, KeyError)
+				except (TypeError, ValueError, KeyError):
 					pass
 				
 	def updateRaceClock( self, event = None ):
