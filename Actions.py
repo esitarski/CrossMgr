@@ -174,6 +174,7 @@ class Actions( wx.Panel ):
 		mainWin = Utils.getMainWin()
 		if mainWin:
 			mainWin.refresh()
+		JChip.StopListener()
 	
 	def refresh( self ):
 		self.startRaceBtn.Enable( False )
