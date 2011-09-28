@@ -28,6 +28,7 @@ from RaceAnimation		import RaceAnimation, GetAnimationData
 import Utils
 from Utils				import logCall
 import Model
+import JChipSetup
 from setpriority import setpriority
 from Printing			import CrossMgrPrintout, getRaceCategories
 import xlwt
@@ -266,6 +267,15 @@ class MainWin( wx.Frame ):
 		self.menuBar.Append( self.demoMenu, "Dem&o" )
 
 		#-----------------------------------------------------------------------
+		self.chipMenu = wx.Menu()
+
+		idCur = wx.NewId()
+		self.chipMenu.Append( idCur , "&J-Chip...", "Configure and Test J-Chip Reader" )
+		self.Bind(wx.EVT_MENU, self.menuJChip, id=idCur )
+
+		self.menuBar.Append( self.chipMenu, "Chip &Reader" )
+
+		#-----------------------------------------------------------------------
 		self.helpMenu = wx.Menu()
 
 		self.helpMenu.Append( wx.ID_ABOUT , "&About...", "About CrossMgr..." )
@@ -292,6 +302,11 @@ class MainWin( wx.Frame ):
 			Utils.MessageOK(self, "You must have a vaid race.", "Change Properties", iconMask=wx.ICON_ERROR)
 			return
 		ChangeProperties( self )
+		
+	def menuJChip( self, event ):
+		dlg = JChipSetup.JChipSetupDialog( self )
+		dlg.ShowModal()
+		dlg.Destroy()
 
 	def menuShowPage( self, event ):
 		self.showPage( self.idPage[event.GetId()] )
@@ -1039,20 +1054,45 @@ Continue?''' % fName, 'Simulate a Race' ):
 			self.numSelect = num
 
 	#-------------------------------------------------------------
-
+	
+	def processJChipListener( self ):
+		race = Model.race
+		
+		if not JChip.listener:
+			JChip.StartListening()
+		
+		if not race.tagNums:
+			JChipSetup.GetTabNums()
+			
+		for d in JChip.GetData():
+			if d[0] != 'data':
+				continue
+			try:
+				num = race.tagNums[d[1]]
+				dt = datetime.datetime.combine( race.startTime.date(), d[2] )
+				# Ignore times before the start of the race.
+				if race.isRunning() and race.startTime < dt:
+					delta = dt - race.startTime
+					race.addTime( num, delta.seconds + delta.microseconds / 1000000.0 )
+			except (ValueError, KeyError)
+				pass
+				
 	def updateRaceClock( self, event = None ):
 		self.record.refreshRaceTime()
 
-		race = Model.getRace()
+		race = Model.race
 		if race is None:
 			self.SetTitle( AppVerName )
 			self.timer.Stop()
+			JChip.StopListener()
 			return
 
 		if race.isUnstarted():
 			status = 'Unstarted'
 		elif race.isRunning():
 			status = 'Running'
+			if getattr(race, 'enableJChipIntegration', False):
+				self.processJChipListener()
 		else:
 			status = 'Finished'
 

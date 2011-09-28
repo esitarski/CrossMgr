@@ -19,7 +19,7 @@ except ImportError:
 	def PlayConfirmSound():
 		pass
 
-def MessageOK( parent, message, title = '', iconMask = 0):
+def MessageOK( parent, message, title = '', iconMask = wx.ICON_INFORMATION):
 	dlg = wx.MessageDialog(parent, message, title, wx.OK | iconMask)
 	dlg.ShowModal()
 	dlg.Destroy()

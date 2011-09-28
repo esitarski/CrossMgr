@@ -6,6 +6,7 @@ import string
 import re
 from Animation import Animation
 from FixCategories import FixCategories
+from ReadSignOnSheet import IgnoreFields
 
 def GetAnimationData( catName = 'All', getExternalData = False ):
 	race = Model.race
@@ -21,10 +22,11 @@ def GetAnimationData( catName = 'All', getExternalData = False ):
 		try:
 			externalFields = race.excelLink.getFields()
 			externalInfo = race.excelLink.read()
-			try:
-				externalFields.remove( 'Bib#' )
-			except ValueError:
-				pass
+			for ignoreField in IgnoreFields:
+				try:
+					externalFields.remove( ignoreField )
+				except ValueError:
+					pass
 		except:
 			externalFields = []
 			externalInfo = None

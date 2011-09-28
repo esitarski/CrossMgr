@@ -3,7 +3,7 @@ import wx
 import xlwt
 import Utils
 import Model
-from ReadSignOnSheet import Fields
+from ReadSignOnSheet import Fields, IgnoreFields
 
 #---------------------------------------------------------------------------
 
@@ -292,8 +292,8 @@ class ExportGrid( object ):
 		linkedInfo = []
 		try:
 			info = race.excelLink.read()
-			for f in Fields[1:]:
-				if not race.excelLink.hasField(f):
+			for f in Fields:
+				if f in IgnoreFields or not race.excelLink.hasField(f):
 					continue
 				linkedCol.append( f )
 				d = []

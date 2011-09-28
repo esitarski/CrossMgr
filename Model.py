@@ -437,6 +437,8 @@ class Race(object):
 
 		self.isChangedFlag = True
 		
+		self.tagNums = None
+		
 		self.resetCache()
 		
 	def hasRiders( self ):
@@ -472,10 +474,12 @@ class Race(object):
 
 	def startRaceNow( self ):
 		race.startTime = datetime.datetime.now()
+		race.tagNums = None
 		self.setChanged()
 
 	def finishRaceNow( self ):
 		race.finishTime = datetime.datetime.now()
+		race.tagNums = None
 		self.setChanged()
 
 	def set( self, values = None ):
@@ -552,7 +556,7 @@ class Race(object):
 			return min( (r.getBestLapTime(lap), n) for n, r in self.riders.iteritems() )
 		except ValueError:
 			return 0.0
-
+			
 	def getAverageLapTime( self ):
 		if getattr(self, 'averageLapTimeCache', None) is not None:
 			return self.averageLapTimeCache

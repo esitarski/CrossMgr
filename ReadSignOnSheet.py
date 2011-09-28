@@ -9,7 +9,8 @@ import wx.wizard as wiz
 import Utils
 
 #-----------------------------------------------------------------------------------------------------
-Fields = ['Bib#', 'LastName', 'FirstName', 'Team', 'License', 'Category']
+Fields = ['Bib#', 'LastName', 'FirstName', 'Team', 'License', 'Category', 'Tag']
+IgnoreFields = ['Bib#', 'Tag']		# Fields to ignore when adding data to standard reports.
 
 class FileNamePage(wiz.WizardPageSimple):
 	def __init__(self, parent):

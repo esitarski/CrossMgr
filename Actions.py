@@ -3,6 +3,7 @@ import datetime
 
 import Model
 import Utils
+import JChip
 
 import wx.lib.masked as masked
 
