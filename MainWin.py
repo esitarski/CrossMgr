@@ -261,7 +261,7 @@ class MainWin( wx.Frame ):
 		self.chipMenu = wx.Menu()
 
 		idCur = wx.NewId()
-		self.chipMenu.Append( idCur , "&J-Chip...", "Configure and Test J-Chip Reader" )
+		self.chipMenu.Append( idCur , "&JChip...", "Configure and Test JChip Reader" )
 		self.Bind(wx.EVT_MENU, self.menuJChip, id=idCur )
 
 		self.menuBar.Append( self.chipMenu, "Chip &Reader" )
@@ -305,7 +305,7 @@ class MainWin( wx.Frame ):
 		
 	def menuJChip( self, event ):
 		if Model.race and Model.race.isRunning():
-			Utils.MessageOK(self, 'Cannot Configure/Test J-Chip during race.', 'Cannot Configure/Test J-Chip', iconMask=wx.ICON_ERROR)
+			Utils.MessageOK(self, 'Cannot Configure/Test JChip during race.', 'Cannot Configure/Test JChip', iconMask=wx.ICON_ERROR)
 			return
 		dlg = JChipSetup.JChipSetupDialog( self )
 		dlg.ShowModal()
@@ -1107,7 +1107,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			return
 
 		self.SetTitle( '%s %s-r%d - %s - %s %s' %
-					(Utils.formatTime(race.curRaceTime()), race.name, race.raceNum, status, AppVerName, 'J-Chip' if JChip.listener else '' ) )
+					(Utils.formatTime(race.curRaceTime()), race.name, race.raceNum, status, AppVerName, 'JChip' if JChip.listener else '' ) )
 
 		if self.timer is None or not self.timer.IsRunning():
 			self.timer.Start( 1000 )
