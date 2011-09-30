@@ -107,15 +107,6 @@ def getHomeDir():
 	homedir = sp.GetUserDataDir()
 	if not os.path.exists(homedir):
 		os.makedirs( homedir )
-	'''
-	try:
-		homedir = shell.SHGetFolderPath(0, shellcon.CSIDL_APPDATA, 0, 0)
-		homedir = os.path.join( homedir, 'CrossMgr' )
-		if not os.path.exists(homedir):
-			os.makedirs( homedir )
-	except:
-		homedir = os.path.expanduser('~')
-	'''
 	return homedir
 
 #------------------------------------------------------------------------
