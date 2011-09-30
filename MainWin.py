@@ -261,7 +261,7 @@ class MainWin( wx.Frame ):
 		self.chipMenu = wx.Menu()
 
 		idCur = wx.NewId()
-		self.chipMenu.Append( idCur , "&JChip...", "Configure and Test JChip Reader" )
+		self.chipMenu.Append( idCur , "&JChip... (Experimental!)", "Configure and Test JChip Reader" )
 		self.Bind(wx.EVT_MENU, self.menuJChip, id=idCur )
 
 		self.menuBar.Append( self.chipMenu, "Chip &Reader" )
