@@ -29,6 +29,7 @@ import Utils
 from Utils				import logCall
 import Model
 import JChipSetup
+import JChip
 from setpriority import setpriority
 from Printing			import CrossMgrPrintout, getRaceCategories
 import xlwt
@@ -1126,7 +1127,8 @@ def MainLoop():
 	(options, args) = parser.parse_args()
 
 	app = wx.PySimpleApp()
-
+	app.SetAppName("CrossMgr")
+	
 	# Set up the log file.  Otherwise, show errors on the screen unbuffered.
 	if __name__ == '__main__':
 		Utils.disable_stdout_buffering()

@@ -103,6 +103,11 @@ def SecondsToMMSS( secs = 0 ):
 	return '%02d:%02d' % ((secs / 60)%60, secs % 60)
 	
 def getHomeDir():
+	sp = wx.StandardPaths.Get()
+	homedir = sp.GetUserDataDir()
+	if not os.path.exists(homedir):
+		os.makedirs( homedir )
+	'''
 	try:
 		homedir = shell.SHGetFolderPath(0, shellcon.CSIDL_APPDATA, 0, 0)
 		homedir = os.path.join( homedir, 'CrossMgr' )
@@ -110,6 +115,7 @@ def getHomeDir():
 			os.makedirs( homedir )
 	except:
 		homedir = os.path.expanduser('~')
+	'''
 	return homedir
 
 #------------------------------------------------------------------------
