@@ -1063,7 +1063,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 		race = Model.race
 		
 		if not JChip.listener:
-			JChip.StartListening()
+			JChip.StartListener( race.startTime.time() if race else datetime.time() )
 		
 		if not getattr(race, 'tagNums', None):
 			JChipSetup.GetTabNums()

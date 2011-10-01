@@ -4,6 +4,7 @@ import sys
 import time
 import datetime
 import atexit
+import math
 from multiprocessing import Process, Queue
 from Queue import Empty
 
@@ -31,7 +32,7 @@ def socketByLine(s):
 	if buffer:
 		yield buffer
 		
-def Server( q, HOST, PORT ):
+def Server( q, HOST, PORT, startTime ):
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	s.bind((HOST, PORT))
 	
@@ -49,19 +50,21 @@ def Server( q, HOST, PORT ):
 		for line in socketByLine( conn ):
 			if not line:
 				continue
-			if line[0] == 'D':
-				u = line.find( '_' )
-				if u > 0:
+			try:
+				if line[0] == 'D':
+					u = line.find( '_' )
+					if u < 0:
+						continue
 					tag = line[u-6:u]
 					tStr = line[u+1:u+1+11]
-					hh, mm, ss = tStr.split(':')
-					hh = int(hh)
-					mm = int(mm)
-					ss = float(ss)
-					mi = int((ss - int(ss)) * 1000000)
-					ss = int(ss)
+					hh, mm, ssmi = tStr.split(':')
+					hh, mm, ssmi = int(hh), int(mm), float(ssmi)
+					mi, ss = math.modf( ssmi )
+					mi, ss = int(mi * 1000000.0), int(ss)
 					t = datetime.time( hour=hh, minute=mm, second=ss, microsecond=mi )
-					if t == lastTime and tag != lastTag:
+					if t < startTime:
+						continue
+					if t < lastTime and tag != lastTag:
 						# We received two different tags at exactly the same time.
 						# Add a small offset to the time so that we preserve the relative order.
 						dFull = datetime.datetime.combine( datetime.date(2011,9,27), lastTime )
@@ -69,8 +72,10 @@ def Server( q, HOST, PORT ):
 						t = dFull.time()
 					lastTime, lastTag = t, tag
 					q.put( ('data', tag, t) )
-			elif line[0] == 'N':
-				q.put( ('name', line[5:].strip()) )
+				elif line[0] == 'N':
+					q.put( ('name', line[5:].strip()) )
+			except (ValueError, KeyError):
+				pass
 				
 		q.put( ('disconnected',) )
 		
@@ -105,14 +110,15 @@ def StopListener():
 			
 		q = None
 		
-def StartListener( HOST = socket.gethostbyname(socket.gethostname()), PORT = 53135 ):
+def StartListener( startTime = datetime.time(),
+					HOST = socket.gethostbyname(socket.gethostname()), PORT = 53135 ):
 	global q
 	global listener
 	
 	StopListener()
 		
 	q = Queue()
-	listener = Process( target = Server, args=(q, HOST, PORT) )
+	listener = Process( target = Server, args=(q, HOST, PORT, startTime) )
 	listener.start()
 	
 @atexit.register
@@ -130,7 +136,7 @@ if __name__ == '__main__':
 		for m in messages:
 			if m[0] == 'data':
 				count += 1
-				print '%d: %d, %s' % (count, m[1], m[2])
+				print '%d: %s, %s' % (count, m[1], m[2])
 			elif m[0] == 'name':
 				print 'receiver name="%s"' % m[1]
 			elif m[0] == 'connected':
