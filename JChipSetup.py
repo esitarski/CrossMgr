@@ -110,14 +110,12 @@ class JChipSetupDialog( wx.Dialog ):
 		bs.Add( self.enableJChipCheckBox, 0, wx.EXPAND|wx.ALL|wx.ALIGN_LEFT, border )
 		
 		#-------------------------------------------------------------------
-		box = wx.StaticBox( self, -1, 'JChip Configuration:' )
-		bs.Add( box, 0, wx.EXPAND|wx.ALL, border )
-		bsizer = wx.StaticBoxSizer( box, wx.VERTICAL )
-		bs.Add( bsizer, 0, wx.EXPAND|wx.ALL, border )
+		bs.AddSpacer( border )
+		bs.Add( wx.StaticText( self, -1, 'JChip Configuration:' ), 0, wx.EXPAND|wx.ALL, border )
 		
 		#-------------------------------------------------------------------
 		rowColSizer = rcs.RowColSizer()
-		bsizer.Add( rowColSizer )
+		bs.Add( rowColSizer, 0, wx.EXPAND|wx.ALL, border )
 		
 		row = 0
 		rowColSizer.Add( wx.StaticText( self, -1, 'Type:' ), row=row, col=0, border = border,
@@ -140,7 +138,7 @@ class JChipSetupDialog( wx.Dialog ):
 						flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		rowColSizer.Add( self.port, row=row, col=1, border = border, flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_LEFT )
 		
-		bsizer.Add( wx.StaticText( self, -1, 'See "7  Setting of Connections" in JChip "Control Panel Soft Manual" for more details.' ),
+		bs.Add( wx.StaticText( self, -1, 'See "7  Setting of Connections" in JChip "Control Panel Soft Manual" for more details.' ),
 				border = border, flag = wx.GROW|wx.ALL )
 		#-------------------------------------------------------------------
 
