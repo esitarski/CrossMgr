@@ -1108,6 +1108,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 			status = 'Running'
 			if getattr(race, 'enableJChipIntegration', False):
 				self.processJChipListener()
+			elif JChip.listener:
+				JChip.StopListener()
 		else:
 			status = 'Finished'
 
