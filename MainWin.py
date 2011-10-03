@@ -305,9 +305,6 @@ class MainWin( wx.Frame ):
 		ChangeProperties( self )
 		
 	def menuJChip( self, event ):
-		if Model.race and Model.race.isRunning():
-			Utils.MessageOK(self, 'Cannot Configure/Test JChip during race.', 'Cannot Configure/Test JChip', iconMask=wx.ICON_ERROR)
-			return
 		dlg = JChipSetup.JChipSetupDialog( self )
 		dlg.ShowModal()
 		dlg.Destroy()
@@ -629,6 +626,7 @@ class MainWin( wx.Frame ):
 			with open(fileName, 'rb') as fp:
 				race = pickle.load( fp )
 			self.fileName = fileName
+			race.tagNums = None
 			Model.setRace( race )
 			
 			self.updateRecentFiles()
@@ -1062,26 +1060,37 @@ Continue?''' % fName, 'Simulate a Race' ):
 	def processJChipListener( self ):
 		race = Model.race
 		
-		if not JChip.listener:
-			JChip.StartListener( race.startTime.time() if race else datetime.time() )
+		if not race or not getattr(race, 'enableJChipIntegration', False):
+			return
 		
-		if not getattr(race, 'tagNums', None):
-			JChipSetup.GetTabNums()
+		if not JChip.listener:
+			JChip.StartListener( race.startTime.time() )
 		
 		data = JChip.GetData()
-		if race.tagNums:
-			for d in data:
-				if d[0] != 'data':
-					continue
-				try:
-					num = race.tagNums[d[1]]
-					dt = datetime.datetime.combine( race.startTime.date(), d[2] )
-					# Ignore times before the start of the race.
-					if race.isRunning() and race.startTime < dt:
-						delta = dt - race.startTime
-						race.addTime( num, delta.seconds + delta.microseconds / 1000000.0 )
-				except (TypeError, ValueError, KeyError):
-					pass
+		
+		if not getattr(race, 'tagNums', None):
+			JChipSetup.GetTagNums()
+		if not race.tagNums:
+			return
+			
+		success = False
+		for d in data:
+			if d[0] != 'data':
+				continue
+			try:
+				num = race.tagNums[d[1]]
+				dt = datetime.datetime.combine( race.startTime.date(), d[2] )
+				# Ignore times before the start of the race.
+				if race.isRunning() and race.startTime < dt:
+					delta = dt - race.startTime
+					race.addTime( num, delta.seconds + delta.microseconds / 1000000.0 )
+					success = True
+			except (TypeError, ValueError, KeyError):
+				pass
+				
+		if success:
+			self.refresh()
+			self.record.refreshLaps()
 				
 	def updateRaceClock( self, event = None ):
 		self.record.refreshRaceTime()

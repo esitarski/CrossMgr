@@ -7,8 +7,11 @@ import wx.lib.intctrl
 import wx.lib.masked           as masked
 import  wx.lib.mixins.listctrl  as  listmix
 import socket
+import sys
 
 PORT = 53135
+
+JChipTagLength = 6
 
 def CheckExcelLink():
 	race = Model.race
@@ -22,14 +25,14 @@ def CheckExcelLink():
 	if 'Tag' not in externalFields:
 		return (False, '"Tag" column not specified.')
 		
-	return (True,)
+	return (True, 'Excel Link OK')
 
-def GetTagNums():
+def GetTagNums( forceUpdate = False ):
 	race = Model.race
 	if not race:
 		return {}
 		
-	if not race.tagNums:
+	if forceUpdate or not race.tagNums:
 		# Get the linked external data.
 		try:
 			externalInfo = race.excelLink.read()
@@ -40,8 +43,12 @@ def GetTagNums():
 		race.tagNums = {}
 		for num, edata in externalInfo.iteritems():
 			try:
-				race.tagNums[edata['Tag']] = r.num
-			except KeyError:
+				tag = edata['Tag']
+				if len(tag) < JChipTagLength:
+					tag = '0' * JChipTagLength + tag
+				tag = tag[-JChipTagLength:]
+				race.tagNums[tag] = num
+			except (KeyError, ValueError):
 				pass
 				
 	return race.tagNums
@@ -61,7 +68,7 @@ class JChipSetupDialog( wx.Dialog ):
 		self.timer = None
 		self.receivedCount = 0
 		
-		self.enableJChipCheckBox = wx.CheckBox( self, -1, 'Read JChip Tags During Race.' )
+		self.enableJChipCheckBox = wx.CheckBox( self, -1, 'Accept JChip Data During Race' )
 		if Model.race:
 			self.enableJChipCheckBox.SetValue( getattr(Model.race, 'enableJChipIntegration', False) )
 		else:
@@ -73,10 +80,13 @@ class JChipSetupDialog( wx.Dialog ):
 		ipWidth = self.ipaddr.GetSize().GetWidth()
 		
 		self.portLabel = wx.StaticText( self, -1, 'Remote Port:' )
-		self.port = wx.lib.intctrl.IntCtrl( self, -1, min=1, max=65535, value=PORT, limited=True, size=(ipWidth,-1), style = wx.TE_READONLY )
+		self.port = wx.lib.intctrl.IntCtrl( self, -1, min=1, max=65535, value=PORT,
+											limited=True, size=(ipWidth,-1), style = wx.TE_READONLY )
 		
 		self.testJChip = wx.ToggleButton( self, -1, 'Start JChip Test' )
 		self.Bind(wx.EVT_TOGGLEBUTTON, self.testJChipToggle, self.testJChip)
+		if Model.race and Model.race.isRunning():
+			self.testJChip.Enable( False )
 		
 		self.testList = ListCtrlAutoWidth( self, -1, style=wx.LC_REPORT )
 		self.testList.InsertColumn(0, "Messages Received:")
@@ -97,7 +107,6 @@ class JChipSetupDialog( wx.Dialog ):
 			'You must have the Sign-On Excel sheet ready and linked before your race.',
 			'You must configure a "Tag" field in your Sign-On Excel Sheet.',
 			'Run this test before each race.',
-			'Make sure to set the "Read JChip Tags During Race" option.',
 		]
 		intro = 'CrossMgr supports the JChip tag reader.\n' \
 				'For more details, consult the CrossMgr and JChip documentation.\n' \
@@ -165,7 +174,7 @@ class JChipSetupDialog( wx.Dialog ):
 									title = 'Excel Link Problem', iconMask = wx.ICON_WARNING ):
 					self.testJChip.SetValue( False )
 					return
-			tagNums = GetTagNums()
+			tagNums = GetTagNums( True )
 			if correct and not tagNums:
 				if not Utils.MessageOKCancel( self, 'All Tag entries in the Excel sheet are blank.\n\n%s' % explain,
 									title = 'Excel Link Problem', iconMask = wx.ICON_WARNING ):
