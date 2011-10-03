@@ -6,6 +6,7 @@ import wx
 import wx.lib.intctrl
 import wx.lib.masked           as masked
 import  wx.lib.mixins.listctrl  as  listmix
+import  wx.lib.rcsizer  as rcs
 import socket
 import sys
 
@@ -74,21 +75,12 @@ class JChipSetupDialog( wx.Dialog ):
 		else:
 			self.enableJChipCheckBox.Enable( False )
 		
-		self.ipaddrLabel = wx.StaticText( self, -1, 'Remote IP Address:' )
-		self.ipaddr = masked.IpAddrCtrl( self, -1, style = wx.TE_PROCESS_TAB | wx.TE_READONLY )
-		self.ipaddr.SetValue( socket.gethostbyname(socket.gethostname()) )
-		ipWidth = self.ipaddr.GetSize().GetWidth()
-		
-		self.portLabel = wx.StaticText( self, -1, 'Remote Port:' )
-		self.port = wx.lib.intctrl.IntCtrl( self, -1, min=1, max=65535, value=PORT,
-											limited=True, size=(ipWidth,-1), style = wx.TE_READONLY )
-		
 		self.testJChip = wx.ToggleButton( self, -1, 'Start JChip Test' )
 		self.Bind(wx.EVT_TOGGLEBUTTON, self.testJChipToggle, self.testJChip)
 		if Model.race and Model.race.isRunning():
 			self.testJChip.Enable( False )
 		
-		self.testList = ListCtrlAutoWidth( self, -1, style=wx.LC_REPORT )
+		self.testList = ListCtrlAutoWidth( self, -1, style=wx.LC_REPORT, size=(-1,200) )
 		self.testList.InsertColumn(0, "Messages Received:")
 		self.testList.SetColumnWidth(0, wx.LIST_AUTOSIZE)
 		
@@ -98,7 +90,7 @@ class JChipSetupDialog( wx.Dialog ):
 		self.cancelBtn = wx.Button( self, wx.ID_ANY, '&Cancel' )
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
-		bs = wx.GridBagSizer(vgap=5, hgap=5)
+		bs = wx.BoxSizer( wx.VERTICAL )
 		
 		todoList = [
 			'Make sure the JChip receiver is plugged into the network.',
@@ -112,50 +104,55 @@ class JChipSetupDialog( wx.Dialog ):
 				'For more details, consult the CrossMgr and JChip documentation.\n' \
 				'\nChecklist:\n\n%s\n' % '\n'.join( '%d)  %s' % (i + 1, s) for i, s in enumerate(todoList) )
 		
-		border = 6
+		border = 4
+		bs.Add( wx.StaticText(self, -1, intro), 0, wx.EXPAND|wx.ALL, border )
+
+		bs.Add( self.enableJChipCheckBox, 0, wx.EXPAND|wx.ALL|wx.ALIGN_LEFT, border )
+		
+		#-------------------------------------------------------------------
+		box = wx.StaticBox( self, -1, 'JChip Configuration:' )
+		bs.Add( box, 0, wx.EXPAND|wx.ALL, border )
+		bsizer = wx.StaticBoxSizer( box, wx.VERTICAL )
+		bs.Add( bsizer, 0, wx.EXPAND|wx.ALL, border )
+		
+		#-------------------------------------------------------------------
+		rowColSizer = rcs.RowColSizer()
+		bsizer.Add( rowColSizer )
+		
 		row = 0
-		bs.Add( wx.StaticText( self, -1, intro ),
-				pos = (row, 0), span=(1, 2), border = border, flag = wx.GROW|wx.ALL|wx.ALIGN_LEFT )
-
-		row += 1
-		bs.Add( self.enableJChipCheckBox, pos=(row,0), span=(1, 2), border = border, flag=wx.GROW|wx.ALL|wx.ALIGN_LEFT )
-		
-		row += 1
-		bs.Add( wx.StaticText( self, -1, 'JChip Receiver Configuration:' ),
-				pos = (row, 0), span=(1, 2), border = border, flag = wx.GROW|wx.ALL|wx.ALIGN_LEFT )
-				
-		row += 1
-		bs.Add( wx.StaticText( self, -1, 'Type:' ), pos=(row, 0), span=(1, 1), border = border,
+		rowColSizer.Add( wx.StaticText( self, -1, 'Type:' ), row=row, col=0, border = border,
 			flag=wx.TOP|wx.LEFT|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
-		bs.Add( wx.TextCtrl( self, -1, value='TCP Client', size=(ipWidth,-1), style = wx.TE_READONLY),
-			pos=(row, 1), span=(1, 1), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_LEFT )
+		rowColSizer.Add( wx.TextCtrl( self, -1, value='TCP Client', style = wx.TE_READONLY),
+			row=row, col=1, border = border, flag=wx.EXPAND|wx.TOP|wx.RIGHT|wx.ALIGN_LEFT )
 		
 		row += 1
-		bs.Add( self.ipaddrLabel, pos=(row, 0), span=(1, 1), border = border,
-			flag=wx.LEFT|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
-		bs.Add( self.ipaddr, pos=(row, 1), span=(1, 1), border = border, flag=wx.RIGHT|wx.ALIGN_LEFT )
+		self.ipaddr = masked.IpAddrCtrl( self, -1, style = wx.TE_PROCESS_TAB | wx.TE_READONLY )
+		self.ipaddr.SetValue( socket.gethostbyname(socket.gethostname()) )
+		
+		rowColSizer.Add( wx.StaticText( self, -1, 'Remote IP Address:' ),
+						row=row, col=0, flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		rowColSizer.Add( self.ipaddr, row=row, col=1, border = border, flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_LEFT )
 		
 		row += 1
-		bs.Add( self.portLabel, pos=(row, 0), span=(1, 1), border = border,
-			flag=wx.BOTTOM|wx.LEFT|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
-		bs.Add( self.port, pos=(row, 1), span=(1, 1), border = border, flag=wx.RIGHT|wx.ALIGN_LEFT )
+		self.port = wx.lib.intctrl.IntCtrl( self, -1, min=1, max=65535, value=PORT,
+											limited=True, style = wx.TE_READONLY )
+		rowColSizer.Add( wx.StaticText(self, -1, 'Remote Port:'), row=row, col=0,
+						flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		rowColSizer.Add( self.port, row=row, col=1, border = border, flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_LEFT )
 		
-		row += 1
-		bs.Add( wx.StaticText( self, -1, 'See "7  Setting of Connections" in JChip "Control Panel Soft Manual" for more details.' ),
-				pos = (row, 0), span=(1, 2), border = border, flag = wx.GROW|wx.BOTTOM|wx.LEFT|wx.RIGHT|wx.ALIGN_LEFT )
+		bsizer.Add( wx.StaticText( self, -1, 'See "7  Setting of Connections" in JChip "Control Panel Soft Manual" for more details.' ),
+				border = border, flag = wx.GROW|wx.ALL )
+		#-------------------------------------------------------------------
 
-		row += 1
-		bs.Add( self.testJChip, pos=(row,0), span=(1, 2), border = border, flag=wx.GROW|wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTRE )
+		bs.Add( self.testJChip, 0, wx.EXPAND|wx.ALL, border )
+		bs.Add( self.testList, 1, wx.EXPAND|wx.ALL, border )
 		
-		row += 1
-		height = 10
-		bs.Add( self.testList, pos=(row,0), span=(height, 2), border = border, flag=wx.GROW|wx.RIGHT|wx.BOTTOM|wx.LEFT|wx.ALIGN_CENTRE )
-		row += height - 1
-		
-		row += 1
-		bs.Add( self.okBtn, pos=(row, 0), span=(1,1), border = border, flag=wx.ALL )
+		buttonBox = wx.BoxSizer( wx.HORIZONTAL )
+		buttonBox.AddStretchSpacer()
+		buttonBox.Add( self.okBtn, flag = wx.RIGHT, border = border )
 		self.okBtn.SetDefault()
-		bs.Add( self.cancelBtn, pos=(row, 1), span=(1,1), border = border, flag=wx.ALL|wx.ALIGN_RIGHT )
+		buttonBox.Add( self.cancelBtn )
+		bs.Add( buttonBox, 0, wx.EXPAND | wx.ALL, border )
 		
 		self.SetSizerAndFit(bs)
 		bs.Fit( self )
