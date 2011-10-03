@@ -1061,10 +1061,13 @@ Continue?''' % fName, 'Simulate a Race' ):
 		race = Model.race
 		
 		if not race or not getattr(race, 'enableJChipIntegration', False):
+			if JChip.listener:
+				JChip.StopListener()
 			return
 		
 		if not JChip.listener:
 			JChip.StartListener( race.startTime.time() )
+			JChipSetup.GetTagNums( True )
 		
 		data = JChip.GetData()
 		
