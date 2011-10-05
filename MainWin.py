@@ -1122,7 +1122,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			return
 
 		self.SetTitle( '%s %s-r%d - %s - %s %s' %
-					(Utils.formatTime(race.curRaceTime()), race.name, race.raceNum, status, AppVerName, 'JChip' if JChip.listener else '' ) )
+					(Utils.formatTime(race.curRaceTime()), race.name, race.raceNum, status, AppVerName, '<JChip>' if JChip.listener else '' ) )
 
 		if self.timer is None or not self.timer.IsRunning():
 			self.timer.Start( 1000 )
