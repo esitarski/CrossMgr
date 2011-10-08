@@ -42,15 +42,18 @@ def GetTagNums( forceUpdate = False ):
 		
 		# Associate Bib# and Tag from the external data.
 		race.tagNums = {}
+		
+		# Support two tags per rider.
 		for num, edata in externalInfo.iteritems():
-			try:
-				tag = edata['Tag']
-				if len(tag) < JChipTagLength:
-					tag = '0' * JChipTagLength + tag
-				tag = tag[-JChipTagLength:]
-				race.tagNums[tag] = num
-			except (KeyError, ValueError):
-				pass
+			for tagName in ['Tag', 'Tag2']:
+				try:
+					tag = edata[tagName]
+					if len(tag) < JChipTagLength:
+						tag = '0' * JChipTagLength + tag
+					tag = tag[-JChipTagLength:]
+					race.tagNums[tag] = num
+				except (KeyError, ValueError):
+					pass
 				
 	return race.tagNums
 
