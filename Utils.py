@@ -75,8 +75,8 @@ def formatTime( secs ):
 	if secs is None:
 		secs = 0
 	secs = int(secs + 0.5)
-	hours = int(secs / (60*60));
-	minutes = int( (secs / 60) % 60 )
+	hours = int(secs // (60*60));
+	minutes = int( (secs // 60) % 60 )
 	secs = secs % 60
 	if hours > 0:
 		return "%d:%02d:%02d" % (hours, minutes, secs)
@@ -96,15 +96,20 @@ def StrToSeconds( str = '' ):
 	
 def SecondsToStr( secs = 0 ):
 	secs = int(secs+0.5)
-	return '%02d:%02d:%02d' % (secs / (60*60), (secs / 60)%60, secs % 60)
+	return '%02d:%02d:%02d' % (secs // (60*60), (secs // 60)%60, secs % 60)
 
 def SecondsToMMSS( secs = 0 ):
 	secs = int(secs+0.5)
-	return '%02d:%02d' % ((secs / 60)%60, secs % 60)
+	return '%02d:%02d' % ((secs // 60)%60, secs % 60)
 	
 def getHomeDir():
 	sp = wx.StandardPaths.Get()
 	homedir = sp.GetUserDataDir()
+	try:
+		if os.path.basename(homedir) == '.CrossMgr':
+			homedir = os.path.join( os.path.dirname(homedir), 'CrossMgrApp' )
+	except:
+		pass
 	if not os.path.exists(homedir):
 		os.makedirs( homedir )
 	return homedir
