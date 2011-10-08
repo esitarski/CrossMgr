@@ -1156,7 +1156,10 @@ def MainLoop():
 		except:
 			pass
 	
-		app.RedirectStdio( redirectFileName )
+		try:
+			app.RedirectStdio( redirectFileName )
+		except:
+			pass
 	
 	Utils.writeLog( 'start' )
 	
