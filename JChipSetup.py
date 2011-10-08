@@ -10,7 +10,7 @@ import  wx.lib.rcsizer  as rcs
 import socket
 import sys
 
-PORT = 53135
+PORT, HOST = JChip.DEFAULT_PORT, JChip.DEFAULT_HOST
 
 JChipTagLength = 6
 
@@ -128,7 +128,7 @@ class JChipSetupDialog( wx.Dialog ):
 		
 		row += 1
 		self.ipaddr = masked.IpAddrCtrl( self, -1, style = wx.TE_PROCESS_TAB | wx.TE_READONLY )
-		self.ipaddr.SetValue( socket.gethostbyname(socket.gethostname()) )
+		self.ipaddr.SetValue( HOST )
 		
 		rowColSizer.Add( wx.StaticText( self, -1, 'Remote IP Address:' ),
 						row=row, col=0, flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
