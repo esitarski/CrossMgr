@@ -3,6 +3,7 @@ import sys
 import random
 import time
 import datetime
+import JChip
 
 random.seed( 10101010 )
 nums = [random.randint(1,100) for x in xrange(25)]
@@ -43,11 +44,10 @@ for n in nums:
 		numLapTimes.append( (n, lap, lapTime*lap) )
 numLapTimes.sort( key = lambda x: (x[1], x[2]) )
 numLapTimes = [(0,0,0)] + numLapTimes
-print numLapTimes
+# print numLapTimes
 
 #------------------------------------------------------------------------------	
-# HOST, PORT = "localhost", 53135
-HOST, PORT = socket.gethostbyname(socket.gethostname()), 53135
+PORT, HOST = JChip.DEFAULT_PORT, JChip.DEFAULT_HOST
 
 # Create a socket (SOCK_STREAM means a TCP socket)
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

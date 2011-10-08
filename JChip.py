@@ -5,8 +5,31 @@ import time
 import datetime
 import atexit
 import math
+import subprocess
+import re
 from multiprocessing import Process, Queue
 from Queue import Empty
+
+DEFAULT_PORT = 53135
+DEFAULT_HOST = socket.gethostbyname(socket.gethostname())
+if DEFAULT_HOST == '127.0.0.1':
+	reSplit = re.compile('[: \t]+')
+	try:
+		co = subprocess.Popen(['ifconfig'], stdout = subprocess.PIPE)
+		ifconfig = co.stdout.read()
+		for line in ifconfig.split('\n'):
+			line = line.strip()
+			try:
+				if line.startswith('inet addr:'):
+					fields = reSplit.split( line )
+					addr = fields[2]
+					if addr != '127.0.0.1':
+						DEFAULT_HOST = addr
+						break
+			except:
+				pass
+	except:
+		pass
 
 q = None
 listener = None
@@ -111,7 +134,7 @@ def StopListener():
 		q = None
 		
 def StartListener( startTime = datetime.time(),
-					HOST = socket.gethostbyname(socket.gethostname()), PORT = 53135 ):
+					HOST = DEFAULT_HOST, PORT = DEFAULT_PORT ):
 	global q
 	global listener
 	
@@ -130,9 +153,11 @@ if __name__ == '__main__':
 	StartListener()
 	count = 0
 	while 1:
-		print 'polling queue...'
 		time.sleep( 1 )
+		sys.stdout.write( '.' )
 		messages = GetData()
+		if messages:
+			sys.stdout.write( '\n' )
 		for m in messages:
 			if m[0] == 'data':
 				count += 1
@@ -143,4 +168,5 @@ if __name__ == '__main__':
 				print 'connected'
 			elif m[0] == 'disconnected':
 				print 'disconnected'
+		sys.stdout.flush()
 		
