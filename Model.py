@@ -1050,7 +1050,7 @@ class Race(object):
 		if leaderTimes:
 			tCur = self.curRaceTime()
 			i = bisect.bisect_left( leaderTimes, tCur )
-			if 0 < i < len(leaderTimes):
+			if 0 < i < len(leaderTimes) and (self.numLaps is None or i <= self.numLaps):
 				return leaderNums[i], leaderTimes[i] - tCur
 		return None, None
 		

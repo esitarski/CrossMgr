@@ -158,18 +158,24 @@ class NumKeypad( wx.Panel ):
 	def refreshTimeToLeader( self ):
 		race = Model.race
 		timeToLeader = '  '
+		bgColour = (255,255,255)
 		if race is not None:
+			try:
+				leaderLapsToGo = int(self.lapsToGo.GetLabel()) - 1
+			except ValueError:
+				leaderLapsToGo = -1
+				
 			nLeader, tLeader = race.getTimeToLeader()
-			if tLeader is not None:
-				timeToLeader = '%s (%d' % (Utils.formatTime(tLeader), nLeader)
-				try:
-					leaderLapsToGo = int(self.lapsToGo.GetLabel()) - 1
-					if leaderLapsToGo >= 0:
-						timeToLeader += ' to see %d to go)' % leaderLapsToGo
-				except:
-					timeToLeader += ')'
-		else:
-			timeToLeader = '  '
+			if tLeader is not None :
+				if leaderLapsToGo >= 0:
+					timeToLeader = '%s (%d to see %d to go)' % (Utils.formatTime(tLeader), nLeader, leaderLapsToGo)
+				else:
+					timeToLeader = '%s (%d)' % (Utils.formatTime(tLeader), nLeader)
+			
+				if tLeader < 30.0:
+					bgColour = (0,255,0)
+				
+		self.timeToLeader.SetBackgroundColour( bgColour )
 		self.timeToLeader.SetLabel( timeToLeader )
 
 	def refreshRaceTime( self ):
@@ -455,6 +461,7 @@ class NumKeypad( wx.Panel ):
 		self.refreshTimeToLeader()
 		
 	def refresh( self ):
+		wx.CallAfter( self.numEdit.SetFocus )
 		race = Model.getRace()
 		enable = True if race is not None and race.isRunning() else False
 		if self.isEnabled != enable:
@@ -462,11 +469,9 @@ class NumKeypad( wx.Panel ):
 				b.Enable( enable )
 			for b in [self.numEdit, self.delBtn, self.enterBtn, self.dnfBtn, self.pullBtn]:
 				b.Enable( enable )
-			self.SetFocus()
 			self.isEnabled = enable
 		if not enable:
 			self.numEdit.SetValue( None )
-		self.numEdit.SetFocus()
 		self.refreshLaps()
 	
 if __name__ == '__main__':
