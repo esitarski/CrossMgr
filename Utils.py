@@ -53,7 +53,7 @@ def SwapGridRows( grid, r, rTarget ):
 			grid.SetCellValue( r, c, vSave )
 		
 def AdjustGridSize( grid, rowsRequired = None, colsRequired = None ):
-	# print 'AdjustGridSize: rowsRequired=', rowsRequired, ' colsRequired=', colsRequired
+	# print( 'AdjustGridSize: rowsRequired=', rowsRequired, ' colsRequired=', colsRequired )
 
 	if rowsRequired is not None:
 		rowsRequired = int(rowsRequired)
@@ -184,6 +184,9 @@ def refreshForecastHistory():
 def writeRace():
 	if mainWin is not None:
 		mainWin.writeRace()
+	
+def getFileName():
+	return mainWin.fileName if mainWin is not None else None
 	
 def isMainWin():
 	return mainWin is not None

@@ -147,14 +147,33 @@ class RiderDetail( wx.Panel ):
 		except:
 			return None, None, None
 		return num, lapCur, times
-		
-	def onSplitLap( self, event ):
+	
+	def doSplitLap( self, splits ):
 		num, lap, times = self.getGanttChartNumLapTimes()
 		if num is None:
 			return
-		newTime = (times[lap-1] + times[lap]) / 2.0
-		Model.race.addTime( num, newTime )
+		race = Model.race
+		if race is None:
+			return
+		tLeft = times[lap-1]
+		tRight = times[lap]
+		splitTime = (tRight - tLeft) / float(splits)
+		for i in xrange( 1, splits ):
+			newTime = tLeft + splitTime * i
+			race.addTime( num, newTime )
 		self.refresh()
+	
+	def onSplitLap2( self, event ):
+		self.doSplitLap( 2 )
+		
+	def onSplitLap3( self, event ):
+		self.doSplitLap( 3 )
+		
+	def onSplitLap4( self, event ):
+		self.doSplitLap( 4 )
+		
+	def onSplitLap5( self, event ):
+		self.doSplitLap( 5 )
 		
 	def onDeleteLapStart( self, event ):
 		num, lap, times = self.getGanttChartNumLapTimes()
@@ -174,7 +193,10 @@ class RiderDetail( wx.Panel ):
 	def onEditGantt( self, xPos, yPos, num, lap ):
 		if not hasattr(self, "ganttMenuInfo"):
 			self.ganttMenuInfo = [
-				[wx.NewId(),	'Split Lap',				self.onSplitLap],
+				[wx.NewId(),	'Split Lap in 2',			self.onSplitLap2],
+				[wx.NewId(),	'Split Lap in 3',			self.onSplitLap3],
+				[wx.NewId(),	'Split Lap in 4',			self.onSplitLap4],
+				[wx.NewId(),	'Split Lap in 5',			self.onSplitLap5],
 				[wx.NewId(),	'Delete Lap Start Time',	self.onDeleteLapStart],
 				[wx.NewId(),	'Delete Lap End Time',		self.onDeleteLapEnd],
 			]
@@ -324,7 +346,7 @@ if __name__ == '__main__':
 	riderDetail = RiderDetail(mainWin)
 	riderDetail.refresh()
 	lineData = [random.normalvariate(100,15) for x in xrange(12)]
-	ganttData = [0]
+	ganttData = [0, lineData[0] * 3]
 	for d in lineData:
 		ganttData.append( ganttData[-1] + d )
 	riderDetail.ganttChart.SetData( [ganttData], [106] )

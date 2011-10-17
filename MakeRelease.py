@@ -4,10 +4,11 @@
 # Based on the instructions found in:
 # http://wiki.wxpython.org/CreatingStandaloneExecutables
 #
+from __future__ import print_function
 
 import platform
 if platform.system() != 'Linux':
-	print 'This script only runs on Linux'
+	print( 'This script only runs on Linux' )
 	sys.exit()
 
 import os
@@ -38,7 +39,7 @@ for f in os.listdir( releasePath ):
 	fname = os.path.join(releasePath, f)
 	p = subprocess.Popen( ['chrpath', '-r', fname], stdout=subprocess.PIPE )
 	ret = p.communicate()
-	print f, ret
+	print( f, ret )
 
 #-----------------------------------------------------------------------
 # Make the distribution folder.

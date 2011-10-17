@@ -44,7 +44,6 @@ for n in nums:
 		numLapTimes.append( (n, lap, lapTime*lap) )
 numLapTimes.sort( key = lambda x: (x[1], x[2]) )
 numLapTimes = [(0,0,0)] + numLapTimes
-# print numLapTimes
 
 #------------------------------------------------------------------------------	
 PORT, HOST = JChip.DEFAULT_PORT, JChip.DEFAULT_HOST

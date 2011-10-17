@@ -6,6 +6,7 @@ import bisect
 import Utils
 import ColGrid
 import StatusBar
+import OutputStreamer
 from EditEntry import CorrectNumber, SplitNumber, DeleteEntry
 
 class ForecastHistory( wx.Panel ):
@@ -163,12 +164,15 @@ class ForecastHistory( wx.Panel ):
 		race = Model.race
 		if race is None or not race.isRunning():
 			return
-		race.addTime( int(num) )
+		t = race.curRaceTime()
+		num = int(num)
+		race.addTime( num, t )
 		mainWin = Utils.getMainWin()
 		if mainWin:
 			mainWin.record.numEdit.SetValue( None )
 			mainWin.record.refreshLaps()
 			mainWin.refresh()
+		OutputStreamer.writeNumTime( num, t )
 		
 	def doExpectedSelect( self, event ):
 		r = event.GetRow()

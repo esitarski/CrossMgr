@@ -1,3 +1,4 @@
+from __future__ import print_function
 import re
 	
 #------------------------------------------------------------------------
@@ -115,9 +116,9 @@ class RangeCheck( object ):
 		
 if __name__ == '__main__':
 	r = RangeCheck( '--100-200-300,,,-,100-199,-120-130,asdfasdf,-161,-21' )
-	print r.include
-	print r
-	print repr(r)
-	print 'prefix:', r.getNumericPrefix()
-	print [i for i in xrange(300) if i in r]
+	print( r.include )
+	print( r )
+	print( repr(r) )
+	print( 'prefix:', r.getNumericPrefix() )
+	print( [i for i in xrange(300) if i in r] )
 	

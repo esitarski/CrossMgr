@@ -30,6 +30,7 @@ from Utils				import logCall
 import Model
 import JChipSetup
 import JChip
+import OutputStreamer
 from setpriority import setpriority
 from Printing			import CrossMgrPrintout, getRaceCategories
 import xlwt
@@ -129,8 +130,13 @@ class MainWin( wx.Frame ):
 		idCur = wx.NewId()
 		self.fileMenu.Append( idCur , "&Change Properties...", "Change the properties of the current race" )
 		self.Bind(wx.EVT_MENU, self.menuChangeProperties, id=idCur )
-		self.fileMenu.AppendSeparator()
 
+		self.fileMenu.AppendSeparator()
+		idCur = wx.NewId()
+		self.fileMenu.Append( idCur , "&Revert to Original Input...", "Revert to Original Input" )
+		self.Bind(wx.EVT_MENU, self.menuRevertToInput, id=idCur )
+
+		self.fileMenu.AppendSeparator()		
 		self.fileMenu.Append( wx.ID_PAGE_SETUP , "Page &Setup...", "Setup the print page" )
 		self.Bind(wx.EVT_MENU, self.menuPageSetup, id=wx.ID_PAGE_SETUP )
 
@@ -175,7 +181,7 @@ class MainWin( wx.Frame ):
 		
 		self.dataMgmtMenu.AppendSeparator()
 		
-		#- - - - - - - - - - - - - - - - - - - -
+		#-----------------------------------------------------------------------
 		categoryMgmtMenu = wx.Menu()
 		self.dataMgmtMenu.AppendMenu(wx.ID_ANY, "Category Mgmt", categoryMgmtMenu)
 
@@ -187,7 +193,7 @@ class MainWin( wx.Frame ):
 		categoryMgmtMenu.Append( idCur , "&Export Categories to File...", "Export Categories to File" )
 		self.Bind(wx.EVT_MENU, self.menuExportCategories, id=idCur )
 
-		#- - - - - - - - - - - - - - - - - - - -
+		#-----------------------------------------------------------------------
 		idCur = wx.NewId()
 		self.dataMgmtMenu.Append( idCur , "Export History to Excel...", "Export History to Excel File" )
 		self.Bind(wx.EVT_MENU, self.menuExportHistory, id=idCur )
@@ -249,12 +255,14 @@ class MainWin( wx.Frame ):
 		# Create a menu for quick navigation
 		self.pageMenu = wx.Menu()
 		self.idPage = {}
+		jumpToIds = []
 		for i, p in enumerate(self.pages):
 			name = self.notebook.GetPageText(i)
 			idCur = wx.NewId()
 			self.idPage[idCur] = i
 			self.pageMenu.Append( idCur , name, "Jump to %s page" % name )
 			self.Bind(wx.EVT_MENU, self.menuShowPage, id=idCur )
+			jumpToIds.append( idCur )
 			
 		self.menuBar.Append( self.pageMenu, "&JumpTo" )
 
@@ -265,7 +273,7 @@ class MainWin( wx.Frame ):
 		self.chipMenu.Append( idCur , "&JChip... (Experimental!)", "Configure and Test JChip Reader" )
 		self.Bind(wx.EVT_MENU, self.menuJChip, id=idCur )
 
-		self.menuBar.Append( self.chipMenu, "Chip &Reader" )
+		self.menuBar.Append( self.chipMenu, "Chip&Reader" )
 
 		#-----------------------------------------------------------------------
 		self.demoMenu = wx.Menu()
@@ -290,6 +298,12 @@ class MainWin( wx.Frame ):
 
 		#------------------------------------------------------------------------------
 		self.SetMenuBar( self.menuBar )
+
+		#------------------------------------------------------------------------------
+		# Set the accelerator table so we can switch windows with the function keys.
+		aTable = wx.AcceleratorTable([(wx.ACCEL_NORMAL, wx.WXK_F1 + i, jumpToIds[i]) for i in xrange(len(jumpToIds))])
+		self.SetAcceleratorTable(aTable)
+		
 		#------------------------------------------------------------------------------
 		self.Bind(wx.EVT_CLOSE, self.onCloseWindow)
 
@@ -297,10 +311,33 @@ class MainWin( wx.Frame ):
 		showing = self.config.ReadBool('showTipAtStartup', True)
 		if Utils.MessageOKCancel( self, 'Turn Off Tips at Startup?' if showing else 'Show Tips at Startup?', 'Tips at Startup' ):
 			self.config.WriteBool( 'showTipAtStartup', showing ^ True )
-	
+
+	def menuRevertToInput( self, event ):
+		if not Model.race:
+			Utils.MessageOK(self, "You must have a vaid race.", "No Valid Race", iconMask=wx.ICON_ERROR)
+			return
+		race = Model.race
+		if not Utils.MessageOKCancel( self, "This will restore the race from the original input.\nAll your adds/splits/deletes will be lost.\nAre you sure you want to continue?",
+									"Restore from Original Input", iconMask=wx.ICON_WARNING ):
+			return
+		if not Utils.MessageOKCancel( self,
+									"Seriously, all your edits will be lost.\nContinue?",
+									"Restore from Original Input", iconMask=wx.ICON_WARNING ):
+			return
+		numTimes = OutputStreamer.ReadStreamFile()
+		if not numTimes:
+			Utils.MessageOK( self, "No Input file found.\nNo changes made.", "No Input file Found" )
+			return
+		race.resetCache()
+		race.deleteAllRiderTimes()
+		for num, t in numTimes:
+			race.importTime( num, t )
+		race.setChanged()
+		self.writeRace()
+			
 	def menuChangeProperties( self, event ):
 		if not Model.race:
-			Utils.MessageOK(self, "You must have a vaid race.", "Change Properties", iconMask=wx.ICON_ERROR)
+			Utils.MessageOK(self, "You must have a vaid race.", "No Valid Race", iconMask=wx.ICON_ERROR)
 			return
 		ChangeProperties( self )
 		
@@ -791,6 +828,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 
 		# Set up a new file and model for the simulation.
 		self.fileName = fName
+		OutputStreamer.DeleteStreamerFile()
 		self.simulateSeen = set()
 		Model.setRace( None )
 		race = Model.newRace()
@@ -1086,12 +1124,14 @@ Continue?''' % fName, 'Simulate a Race' ):
 				# Ignore times before the start of the race.
 				if race.isRunning() and race.startTime < dt:
 					delta = dt - race.startTime
-					race.addTime( num, delta.seconds + delta.microseconds / 1000000.0 )
+					race.importTime( num, delta.seconds + delta.microseconds / 1000000.0 )
 					success = True
 			except (TypeError, ValueError, KeyError):
 				pass
 				
 		if success:
+			race.resetCache()
+			race.setChanged()
 			self.refresh()
 			self.record.refreshLaps()
 				

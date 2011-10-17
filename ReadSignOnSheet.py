@@ -1,3 +1,4 @@
+from __future__ import print_function
 import xlrd
 import os
 import itertools
@@ -354,7 +355,7 @@ class readexcel(object):
 		xls = readexcel('testdata.xls')
 		for sname in xls.book.sheet_names():
 			for row in xls.iter_dict(sname):
-				print row
+				print( row )
 	"""
 	def __init__(self, filename):
 		""" Wraps an XLRD book """
@@ -443,7 +444,7 @@ class readexcel(object):
 				yield self._parse_row(sheet, i, date_as_tuple)
 
 if __name__ == '__main__':
-	print Utils.approximateMatch("Team", "Last Name")
+	print( Utils.approximateMatch("Team", "Last Name") )
 
 	app = wx.PySimpleApp()
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))

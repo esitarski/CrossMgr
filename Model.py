@@ -1,3 +1,4 @@
+from __future__ import print_function
 import random
 import itertools
 import datetime
@@ -533,6 +534,18 @@ class Race(object):
 
 	def importTime( self, num, t ):
 		self.getRider(num).addtime( t )
+		
+	def deleteRiderTimes( self, num ):
+		try:
+			rider = self.riders[num]
+			rider.times = []
+			rider.lapAdjust = 0
+		except KeyError:
+			pass
+			
+	def deleteAllRiderTimes( self ):
+		for num in self.riders.iterkeys():
+			self.deleteRiderTimes( num )
 
 	def deleteTime( self, num, t ):
 		if not num in self.riders:
@@ -1024,11 +1037,22 @@ class Race(object):
 			return False
 
 		# Check if the leader is expected in the next few riders.
-		pos = bisect.bisect_right( entries, Entry(num=0, lap=0, t=race.curRaceTime(), interp=False) )
+		pos = bisect.bisect_right( entries, Entry(num=0, lap=0, t=self.curRaceTime(), interp=False) )
 		for i in xrange(pos, min(pos+5, len(entries))):
 			if entries[i].num == leader:
 				return True
 		return False
+		
+	def getTimeToLeader( self ):
+		if not self.isRunning():
+			return None, None
+		leaderTimes, leaderNums = self.getLeaderTimesNums()
+		if leaderTimes:
+			tCur = self.curRaceTime()
+			i = bisect.bisect_left( leaderTimes, tCur )
+			if 0 < i < len(leaderTimes):
+				return leaderNums[i], leaderTimes[i] - tCur
+		return None, None
 		
 	def getRiderNums( self ):
 		return self.riders.keys()
@@ -1169,7 +1193,7 @@ if __name__ == '__main__':
 	r.addTime( 10, 10 * 60 )
 	rider = r.getRider( 10 )
 	entries = rider.interpolate( 11 )
-	print [(Utils.SecondsToMMSS(e.t), e.interp) for e in entries]
+	print( [(Utils.SecondsToMMSS(e.t), e.interp) for e in entries] )
 	#sys.exit( 0 )
 	
 	r.addTime( 10,  5 )
@@ -1183,7 +1207,7 @@ if __name__ == '__main__':
 	#r.addTime( 10, 35 )
 	rider = r.getRider( 10 )
 	entries = rider.interpolate( 36 )
-	print [(e.t, e.interp) for e in entries]
+	print( [(e.t, e.interp) for e in entries] )
 	'''
 	rider.lapAdjust = 4
 	entries = rider.interpolate( 36 )
@@ -1191,16 +1215,16 @@ if __name__ == '__main__':
 	'''
 
 	c = Category(True, 'test', '100-150-199,205,-50', '00:00', None)
-	print c
-	print 'mask=', c.getMask()
+	print( c )
+	print( 'mask=', c.getMask() )
 	c = Category(True, 'test', '100-199,-150', None)
-	print 'mask=', c.getMask()
+	print( 'mask=', c.getMask() )
 	c = Category(True, 'test', '1400-1499,-1450', None)
-	print 'mask=', c.getMask()
+	print( 'mask=', c.getMask() )
 	
 	r.setCategories( [	(True, 'test1', '1100-1199', '00:00', None),
 						(True, 'test2', '1200-1299, 2000,2001,2002', '00:00', None),
 						(True, 'test3', '1300-1399', '00:00', None)] )
-	print r.getCategoryMask()
-	print r.getCategory( 2002 )
+	print( r.getCategoryMask() )
+	print( r.getCategory( 2002 ) )
 

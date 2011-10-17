@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 import socket 
 import sys
@@ -119,7 +120,7 @@ def Server( q, HOST, PORT, startTime ):
 				
 		q.put( ('disconnected',) )
 		
-	print 'closing...'
+	print( 'closing...' )
 	s.close()
 
 def GetData():
@@ -178,12 +179,12 @@ if __name__ == '__main__':
 		for m in messages:
 			if m[0] == 'data':
 				count += 1
-				print '%d: %s, %s' % (count, m[1], m[2])
+				print( '%d: %s, %s' % (count, m[1], m[2]) )
 			elif m[0] == 'name':
-				print 'receiver name="%s"' % m[1]
+				print( 'receiver name="%s"' % m[1] )
 			elif m[0] == 'connected':
-				print 'connected'
+				print( 'connected' )
 			elif m[0] == 'disconnected':
-				print 'disconnected'
+				print( 'disconnected' )
 		sys.stdout.flush()
 		

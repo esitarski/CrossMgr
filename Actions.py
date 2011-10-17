@@ -4,6 +4,7 @@ import datetime
 import Model
 import Utils
 import JChip
+import OutputStreamer
 
 import wx.lib.masked as masked
 
@@ -175,6 +176,7 @@ class Actions( wx.Panel ):
 		if mainWin:
 			mainWin.refresh()
 		JChip.StopListener()
+		OutputStreamer.StopStreamer()
 	
 	def refresh( self ):
 		self.startRaceBtn.Enable( False )

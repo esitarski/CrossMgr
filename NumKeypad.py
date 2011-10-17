@@ -138,6 +138,15 @@ class NumKeypad( wx.Panel ):
 		gbs.Add( self.lapsToGo, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
 
+		label = wx.StaticText(self, wx.ID_ANY, "Leader ETA:")
+		label.SetFont( font )
+		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
+		self.timeToLeader = wx.StaticText(self, wx.ID_ANY, "")
+		self.timeToLeader.SetFont( font )
+		self.timeToLeader.SetDoubleBuffered(True)
+		gbs.Add( self.timeToLeader, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
+		rowCur += 1
+
 		self.message = wx.StaticText(self, wx.ID_ANY, "")
 		self.message.SetFont( font )
 		gbs.Add( self.message, pos=(rowCur, colCur), span=(1,2), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_CENTRE )
@@ -145,11 +154,29 @@ class NumKeypad( wx.Panel ):
 
 		self.SetSizer( gbs )
 		self.isEnabled = True
+		
+	def refreshTimeToLeader( self ):
+		race = Model.race
+		timeToLeader = '  '
+		if race is not None:
+			nLeader, tLeader = race.getTimeToLeader()
+			if tLeader is not None:
+				timeToLeader = '%s (%d' % (Utils.formatTime(tLeader), nLeader)
+				try:
+					leaderLapsToGo = int(self.lapsToGo.GetLabel()) - 1
+					if leaderLapsToGo >= 0:
+						timeToLeader += ' to see %d to go)' % leaderLapsToGo
+				except:
+					timeToLeader += ')'
+		else:
+			timeToLeader = '  '
+		self.timeToLeader.SetLabel( timeToLeader )
 
 	def refreshRaceTime( self ):
-		race = Model.getRace()
+		race = Model.race
 		if race is not None:
 			tStr = Utils.formatTime( race.lastRaceTime() )
+			self.refreshTimeToLeader()
 		else:
 			tStr = ''
 		self.raceTime.SetLabel( '  ' + tStr )
@@ -269,6 +296,7 @@ class NumKeypad( wx.Panel ):
 				self.rule80Time,
 				self.lapCompleting,
 				self.lapsToGo,
+				self.timeToLeader,
 				self.message
 				]
 				
@@ -298,6 +326,8 @@ class NumKeypad( wx.Panel ):
 			SetLabel( self.lapCompleting, str(race.numLaps if race.numLaps is not None else 0) )
 			SetLabel( self.lapsToGo, '0' )
 			SetLabel( self.message, '' )
+			
+		self.refreshTimeToLeader()
 	
 	def getLapInfo( self ):
 		# Returns (laps, lapsToGo, lapCompleting,
@@ -337,9 +367,6 @@ class NumKeypad( wx.Panel ):
 		
 		lapsToGo = max(0, laps - lapCompleting)
 
-		#print 'laps=%d lapsToGo=%d lapCompleting=%d isAutomatic=%s' % \
-		#		(laps, lapsToGo, lapCompleting, 'True' if isAutomatic else 'False')
-				
 		return (laps, lapsToGo, lapCompleting,
 				leadersExpectedLapTime, leaderNum,
 				raceFinishTime, isAutomatic)
@@ -424,6 +451,8 @@ class NumKeypad( wx.Panel ):
 			SetLabel( self.lapCompleting, str(lapCompleting) )
 			SetLabel( self.message, 'Collecting Data' )
 			race.numLaps = None
+			
+		self.refreshTimeToLeader()
 		
 	def refresh( self ):
 		race = Model.getRace()
