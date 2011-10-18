@@ -1,4 +1,5 @@
 import wx
+import os
 import wx.lib.intctrl
 import bisect
 import Utils
@@ -72,6 +73,12 @@ class NumKeypad( wx.Panel ):
 		self.raceTime.SetDoubleBuffered(True)
 		gbs.Add( self.raceTime, pos=(0, 3), span=(1,2), flag=wx.ALIGN_CENTRE | wx.ALIGN_CENTRE_VERTICAL )
 		self.refreshRaceTime()
+		
+		#------------------------------------------------------------------------------
+		# Bling
+		# bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgr.gif'), wx.BITMAP_TYPE_GIF )
+		# self.bling = wx.StaticBitmap( self, wx.ID_ANY, bitmap )
+		# gbs.Add( self.bling, pos=(0,2), span=(1,1), flag = wx.ALIGN_CENTRE | wx.ALIGN_CENTRE_VERTICAL )
 		
 		#------------------------------------------------------------------------------
 		# Lap Management.
