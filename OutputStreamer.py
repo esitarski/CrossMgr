@@ -2,10 +2,13 @@
 import sys
 import time
 import atexit
+import os
+import datetime
 from multiprocessing import Process, Queue
 from Queue import Empty
 
 import Utils
+import Model
 
 q = None
 streamer = None
@@ -36,7 +39,6 @@ def StopStreamer():
 
 	# Terminate the server process if it is running.
 	if streamer:
-		time.sleep( 0.2 )
 		streamer.terminate()
 		
 	streamer = None
@@ -77,19 +79,49 @@ def write( message ):
 		q.put( message )
 
 DaySeconds = 24.0 * 60.0 * 60.0
-	
+
+def gt( dt_str ):
+	dt, _, us = dt_str.partition(".")
+	dt= datetime.datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S")
+	us= int(us.rstrip("Z"), 10)
+	return dt + datetime.timedelta(microseconds=us)
+
+def writeRaceStart( t = None ):
+	if t is None:
+		if Model.race and Model.race.startTime:
+			t = Model.race.startTime
+	if t is None:
+		return
+	if not streamer:
+		StartStreamer()
+	if streamer:
+		q.put( 'start,%s\n' % t.isoformat() )
+
+def writeRaceFinish( t = None ):
+	if t is None:
+		if Model.race and Model.race.finishTime:
+			t = Model.race.finishTime
+	if t is None:
+		return
+	if not streamer:
+		StartStreamer()
+	if streamer:
+		q.put( 'end,%s\n' % t.isoformat() )
+
 def writeNumTime( num, t ):
 	if not streamer:
 		StartStreamer()
 
 	# Convert race time to days for Excel.
 	if streamer:
-		q.put( '{:d},{:.15f}\n'.format(num, t / DaySeconds) )
+		q.put( 'time,{:d},{:.15f}\n'.format(num, t / DaySeconds) )
 
 def ReadStreamFile( fname = None ):
 	if not fname:
 		fname = getFileName()
-		
+	
+	startTime = None
+	endTime = None
 	numTimes = []
 	try:
 		with open(fname, 'rb') as f:
@@ -98,14 +130,19 @@ def ReadStreamFile( fname = None ):
 				if not line or line[0] == '#':
 					continue
 				try:
-					num, tStr = line.split(',')
-					# Convert from days to race seconds.
-					numTimes.append( (int(num), float(tStr) * DaySeconds) )
-				except ValueError:
+					fields = line.split(',')
+					if fields[0] == 'time':
+						# Convert from days to race seconds.
+						numTimes.append( (int(fields[1]), float(fields[2]) * DaySeconds) )
+					elif fields[0] == 'start':
+						startTime = gt( fields[1] )
+					elif fields[0] == 'end':
+						endTime = gt( fields[1] )
+				except (ValueError, IndexError):
 					pass
 	except IOError:
 		pass
-	return numTimes
+	return startTime, endTime, numTimes
 	
 @atexit.register
 def CleanupStreamer():

@@ -533,13 +533,21 @@ class Race(object):
 		return t
 
 	def importTime( self, num, t ):
-		self.getRider(num).addtime( t )
+		self.getRider(num).addTime( t )
 		
 	def deleteRiderTimes( self, num ):
 		try:
 			rider = self.riders[num]
 			rider.times = []
 			rider.lapAdjust = 0
+		except KeyError:
+			pass
+			
+	def deleteRider( self, num ):
+		try:
+			del self.riders[num]
+			self.resetCache()
+			self.setChanged()
 		except KeyError:
 			pass
 			

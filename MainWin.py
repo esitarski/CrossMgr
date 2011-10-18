@@ -133,8 +133,8 @@ class MainWin( wx.Frame ):
 
 		self.fileMenu.AppendSeparator()
 		idCur = wx.NewId()
-		self.fileMenu.Append( idCur , "&Revert to Original Input...", "Revert to Original Input" )
-		self.Bind(wx.EVT_MENU, self.menuRevertToInput, id=idCur )
+		self.fileMenu.Append( idCur , "&Restore from Original Input...", "Restore from Original Input" )
+		self.Bind(wx.EVT_MENU, self.menuRestoreFromInput, id=idCur )
 
 		self.fileMenu.AppendSeparator()		
 		self.fileMenu.Append( wx.ID_PAGE_SETUP , "Page &Setup...", "Setup the print page" )
@@ -312,7 +312,7 @@ class MainWin( wx.Frame ):
 		if Utils.MessageOKCancel( self, 'Turn Off Tips at Startup?' if showing else 'Show Tips at Startup?', 'Tips at Startup' ):
 			self.config.WriteBool( 'showTipAtStartup', showing ^ True )
 
-	def menuRevertToInput( self, event ):
+	def menuRestoreFromInput( self, event ):
 		if not Model.race:
 			Utils.MessageOK(self, "You must have a vaid race.", "No Valid Race", iconMask=wx.ICON_ERROR)
 			return
@@ -324,14 +324,17 @@ class MainWin( wx.Frame ):
 									"Seriously, all your edits will be lost.\nContinue?",
 									"Restore from Original Input", iconMask=wx.ICON_WARNING ):
 			return
-		numTimes = OutputStreamer.ReadStreamFile()
+		startTime, endTime, numTimes = OutputStreamer.ReadStreamFile()
 		if not numTimes:
-			Utils.MessageOK( self, "No Input file found.\nNo changes made.", "No Input file Found" )
+			Utils.MessageOK( self, "No times found.\nCheck for *Input.csv file.", "No Times Found" )
 			return
 		race.resetCache()
 		race.deleteAllRiderTimes()
+		race.startTime = startTime
+		race.endTime = endTime
 		for num, t in numTimes:
 			race.importTime( num, t )
+		race.numLaps = race.getMaxLap()
 		race.setChanged()
 		self.writeRace()
 			
@@ -845,6 +848,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 
 		self.nextNum = None
 		race.startRaceNow()
+		OutputStreamer.writeRaceStart()
+		
 		# Backup all the events and race start so we don't have to wait for the first lap.
 		race.startTime -= datetime.timedelta( seconds = (tMin-1) )
 		#self.lapTimes = [(t-tMin, n) for t, n in self.lapTimes]
@@ -879,6 +884,11 @@ Continue?''' % fName, 'Simulate a Race' ):
 		self.simulateTimer.Stop()
 		self.nextNum = None
 		race.finishRaceNow()
+		
+		OutputStreamer.writeRaceFinish()
+		# Give the streamer a chance to write the last message.
+		wx.CallLater( 2000, OutputStreamer.StopStreamer )
+		
 		race.resetCache()
 		Utils.writeRace()
 		self.refresh()

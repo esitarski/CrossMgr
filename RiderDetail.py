@@ -28,6 +28,10 @@ class RiderDetail( wx.Panel ):
 		self.num = intctrl.IntCtrl( self, wx.ID_ANY, min=0, max=9999, allow_none=True, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER )
 		self.Bind( wx.EVT_TEXT_ENTER, self.onNumChange, self.num )
 		gbs.Add( self.num, pos=(row,1), span=(1,1), flag=wx.EXPAND )
+		
+		self.deleteRiderBtn = wx.Button( self, wx.ID_ANY, 'Delete' )
+		self.Bind( wx.EVT_BUTTON, self.onDeleteRider, self.deleteRiderBtn )
+		gbs.Add( self.deleteRiderBtn, pos=(row, 3), span=(1,1), flag=wx.EXPAND )
 		row += 1
 		
 		self.categoryName = wx.StaticText( self, wx.ID_ANY, 'Category: ' )
@@ -90,6 +94,19 @@ class RiderDetail( wx.Panel ):
 		self.setAtRaceTime()
 		self.SetSizer( gbs )
 		self.setRider()
+		
+	def onDeleteRider( self, event ):
+		race = Model.getRace()
+		if race is None:
+			return
+		try:
+			num = int(self.num.GetValue())
+		except:
+			return
+			
+		if num in race:
+			if Utils.MessageOKCancel( self, "This will permenently delete this rider.\nOnly do this in case of a misidentified entry.\nThere is no undo - be careful.", "Delete Rider" ):
+				race.deleteRider( num )
 		
 	def onNumChange( self, event ):
 		self.refresh()

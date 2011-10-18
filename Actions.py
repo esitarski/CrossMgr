@@ -15,6 +15,7 @@ def StartRaceNow():
 		
 	Model.resetCache()
 	race.startRaceNow()
+	OutputStreamer.writeRaceStart()
 	
 	# Refresh the main window and switch to the Record pane.
 	mainWin = Utils.getMainWin()
@@ -176,7 +177,10 @@ class Actions( wx.Panel ):
 		if mainWin:
 			mainWin.refresh()
 		JChip.StopListener()
-		OutputStreamer.StopStreamer()
+		
+		# Give the output streamer a chance to write the last message.
+		OutputStreamer.writeRaceFinish()
+		wx.CallLater( 2000, OutputStreamer.StopStreamer )
 	
 	def refresh( self ):
 		self.startRaceBtn.Enable( False )
