@@ -87,12 +87,6 @@ class NumKeypad( wx.Panel ):
 		self.refreshRaceTime()
 		
 		#------------------------------------------------------------------------------
-		# Bling
-		# bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgr.gif'), wx.BITMAP_TYPE_GIF )
-		# self.bling = wx.StaticBitmap( self, wx.ID_ANY, bitmap )
-		# gbs.Add( self.bling, pos=(0,2), span=(1,1), flag = wx.ALIGN_CENTRE | wx.ALIGN_CENTRE_VERTICAL )
-		
-		#------------------------------------------------------------------------------
 		# Lap Management.
 		fontSize = 14
 		font = wx.Font(fontSize, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
@@ -234,7 +228,7 @@ class NumKeypad( wx.Panel ):
 		if not t:
 			t = 0
 		t = t * 10 + value
-		t %= 1000000
+		t %= 10000000
 		self.numEdit.SetValue( t )
 		self.numEdit.SetInsertionPointEnd()
 		
