@@ -260,7 +260,7 @@ class MainWin( wx.Frame ):
 			name = self.notebook.GetPageText(i)
 			idCur = wx.NewId()
 			self.idPage[idCur] = i
-			self.pageMenu.Append( idCur , name, "Jump to %s page" % name )
+			self.pageMenu.Append( idCur, '%s\tF%d' % (name, i+1), "Jump to %s page" % name )
 			self.Bind(wx.EVT_MENU, self.menuShowPage, id=idCur )
 			jumpToIds.append( idCur )
 			
