@@ -142,6 +142,8 @@ def ReadStreamFile( fname = None ):
 					pass
 	except IOError:
 		pass
+	if startTime is None and numTimes:
+		startTime = datetime.datetime.now() - datetime.timedelta( seconds = numTimes[0][1] )
 	return startTime, endTime, numTimes
 	
 @atexit.register
