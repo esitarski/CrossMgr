@@ -114,7 +114,7 @@ def writeNumTime( num, t ):
 
 	# Convert race time to days for Excel.
 	if streamer:
-		q.put( 'time,{:d},{:.15f}\n'.format(num, t / DaySeconds) )
+		q.put( 'time,{:d},{:.15e}\n'.format(num, t / DaySeconds) )
 
 def ReadStreamFile( fname = None ):
 	if not fname:
