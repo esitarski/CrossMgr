@@ -1,4 +1,5 @@
 import wx
+import wx.lib.agw.gradientbutton as GB
 import os
 import wx.lib.intctrl
 import bisect
@@ -6,10 +7,21 @@ import Utils
 from Utils import SetValue, SetLabel
 import Model
 
+def MakeButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1) ):
+	btn = GB.GradientButton(parent, -1, None, label=label.replace('&',''), style=style|wx.NO_BORDER, size=size)
+	btn.SetTopStartColour( 		wx.Colour(200,200,200) )
+	btn.SetTopEndColour( 		wx.Colour(112,112,112) )
+	btn.SetBottomStartColour( 	wx.Colour(112,112,112) )
+	btn.SetBottomEndColour( 	wx.Colour( 32, 32, 32) )
+	btn.SetBackgroundColour(	wx.Colour(255,255,255) )
+	return btn
+
 class NumKeypad( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
 		gbs = wx.GridBagSizer(4, 4)
+		
+		self.SetBackgroundColour( wx.Colour(255,255,255) )
 		
 		fontSize = 24
 		font = wx.Font(fontSize, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
@@ -26,38 +38,38 @@ class NumKeypad( wx.Panel ):
 		self.numEdit.SetFont( font )
 		gbs.Add( self.numEdit, pos=(rowCur,0), span=(1,3), flag=wx.EXPAND )
 		self.num = []
-		self.num.append( wx.Button(self, id=0, label='&0', style=wx.BU_EXACTFIT) )
-		self.num[-1].Bind( wx.EVT_BUTTON, self.onNumPress )
+		self.num.append( MakeButton(self, id=0, label='&0', style=wx.BU_EXACTFIT) )
+		self.num[-1].Bind( wx.EVT_BUTTON, lambda event, aValue = 0 : self.onNumPress(event, aValue) )
 		gbs.Add( self.num[0], pos=(4+rowCur,0), span=(1,2), flag=wx.EXPAND )
 
 		#numButtonStyle = wx.BU_EXACTFIT
 		numButtonStyle = 0
 		
 		for i in xrange(0, 9):
-			self.num.append( wx.Button(self, id=i+1, label='&' + str(i+1), style=numButtonStyle, size=(wNum,hNum)) )
-			self.num[-1].Bind( wx.EVT_BUTTON, self.onNumPress )
+			self.num.append( MakeButton(self, id=wx.ID_ANY, label='&' + str(i+1), style=numButtonStyle, size=(wNum,hNum)) )
+			self.num[-1].Bind( wx.EVT_BUTTON, lambda event, aValue = i+1 : self.onNumPress(event, aValue) )
 			j = 8-i
 			gbs.Add( self.num[-1], pos=(int(j/3)+1 + rowCur, 2-j%3) )
 		
 		for n in self.num:
 			n.SetFont( font )
 		
-		self.delBtn = wx.Button(self, id=wx.ID_DELETE, label='&Del', style=numButtonStyle, size=(wNum,hNum))
+		self.delBtn = MakeButton(self, id=wx.ID_DELETE, label='&Del', style=numButtonStyle, size=(wNum,hNum))
 		self.delBtn.SetFont( font )
 		self.delBtn.Bind( wx.EVT_BUTTON, self.onDelPress )
 		gbs.Add( self.delBtn, pos=(4+rowCur,2) )
 		
-		self.enterBtn= wx.Button(self, id=0, label='&Enter', style=wx.EXPAND|wx.GROW)
+		self.enterBtn= MakeButton(self, id=0, label='&Enter', style=wx.EXPAND|wx.GROW)
 		self.enterBtn.SetFont( font )
 		gbs.Add( self.enterBtn, pos=(5+rowCur,0), span=(1,3), flag=wx.EXPAND )
 		self.enterBtn.Bind( wx.EVT_BUTTON, self.onEnterPress )
 	
-		self.dnfBtn= wx.Button(self, id=wx.ID_ANY, label='DN&F', style=wx.EXPAND|wx.GROW)
+		self.dnfBtn= MakeButton(self, id=wx.ID_ANY, label='DN&F', style=wx.EXPAND|wx.GROW)
 		self.dnfBtn.SetFont( font )
 		gbs.Add( self.dnfBtn, pos=(7+rowCur,0), span=(1,3), flag=wx.EXPAND )
 		self.dnfBtn.Bind( wx.EVT_BUTTON, self.onDNFPress )
 	
-		self.pullBtn= wx.Button(self, id=wx.ID_ANY, label='&Pull', style=wx.EXPAND|wx.GROW)
+		self.pullBtn= MakeButton(self, id=wx.ID_ANY, label='&Pull', style=wx.EXPAND|wx.GROW)
 		self.pullBtn.SetFont( font )
 		gbs.Add( self.pullBtn, pos=(8+rowCur,0), span=(1,3), flag=wx.EXPAND )
 		self.pullBtn.Bind( wx.EVT_BUTTON, self.onPullPress )
@@ -216,12 +228,13 @@ class NumKeypad( wx.Panel ):
 			race.automaticManual = self.automaticManualChoice.GetSelection()
 		self.refreshLaps()
 		
-	def onNumPress( self, event ):
+	def onNumPress( self, event, value ):
 		self.numEdit.SetInsertionPointEnd()
 		t = self.numEdit.GetValue()
 		if not t:
 			t = 0
-		t = t * 10 + event.GetId();
+		t = t * 10 + value
+		t %= 1000000
 		self.numEdit.SetValue( t )
 		self.numEdit.SetInsertionPointEnd()
 		
