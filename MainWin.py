@@ -249,7 +249,7 @@ class MainWin( wx.Frame ):
 		self.properties		= Properties(	self.notebook )
 		addPage( self.properties,'Properties' )
 		
-		self.splitter.SplitVertically( self.forecastHistory, self.notebook, 200 )
+		self.splitter.SplitVertically( self.forecastHistory, self.notebook, 220 )
 
 		#------------------------------------------------------------------------------
 		# Create a menu for quick navigation

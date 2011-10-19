@@ -217,7 +217,7 @@ class NumKeypad( wx.Panel ):
 		self.refreshLaps()
 	
 	def doChooseAutomaticManual( self, event ):
-		race = Model.getRace()
+		race = Model.race
 		if race is not None:
 			race.automaticManual = self.automaticManualChoice.GetSelection()
 		self.refreshLaps()
@@ -262,7 +262,7 @@ class NumKeypad( wx.Panel ):
 			Utils.PlayConfirmSound()
 	
 	def onDNFPress( self, event ):
-		race = Model.getRace()
+		race = Model.race
 		if not race:
 			return
 			
@@ -278,7 +278,7 @@ class NumKeypad( wx.Panel ):
 		Utils.refresh()
 	
 	def onPullPress( self, event ):
-		race = Model.getRace()
+		race = Model.race
 		if not race:
 			return
 			
@@ -294,7 +294,7 @@ class NumKeypad( wx.Panel ):
 		Utils.refresh()
 	
 	def onDNSPress( self, event ):
-		race = Model.getRace()
+		race = Model.race
 		if not race:
 			return
 			
@@ -323,7 +323,7 @@ class NumKeypad( wx.Panel ):
 		for f in infoFields:
 			f.Enable( enable )
 				
-		race = Model.getRace()
+		race = Model.race
 		if race is None or not race.isFinished() or race.numLaps is None:
 			if race is not None and self.automaticManualChoice.GetSelection() != 0:
 				self.numLaps.SetItems( [str(x) for x in xrange(1, 16)] )
@@ -476,7 +476,7 @@ class NumKeypad( wx.Panel ):
 		
 	def refresh( self ):
 		wx.CallAfter( self.numEdit.SetFocus )
-		race = Model.getRace()
+		race = Model.race
 		enable = True if race is not None and race.isRunning() else False
 		if self.isEnabled != enable:
 			for b in self.num:
