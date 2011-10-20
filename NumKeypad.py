@@ -2,6 +2,7 @@ import wx
 import wx.lib.agw.gradientbutton as GB
 import os
 import wx.lib.intctrl
+from wx.lib.stattext import GenStaticText 
 import bisect
 import Utils
 from Utils import SetValue, SetLabel
@@ -154,7 +155,7 @@ class NumKeypad( wx.Panel ):
 		label = wx.StaticText(self, wx.ID_ANY, "Leader ETA:")
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
-		self.timeToLeader = wx.StaticText(self, wx.ID_ANY, "")
+		self.timeToLeader = GenStaticText(self, wx.ID_ANY, "")
 		self.timeToLeader.SetFont( font )
 		self.timeToLeader.SetDoubleBuffered(True)
 		gbs.Add( self.timeToLeader, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
@@ -171,7 +172,7 @@ class NumKeypad( wx.Panel ):
 	def refreshTimeToLeader( self ):
 		race = Model.race
 		timeToLeader = '  '
-		bgColour = (255,255,255)
+		bgColour = wx.WHITE
 		if race is not None:
 			try:
 				leaderLapsToGo = int(self.lapsToGo.GetLabel()) - 1
@@ -179,14 +180,14 @@ class NumKeypad( wx.Panel ):
 				leaderLapsToGo = -1
 				
 			nLeader, tLeader = race.getTimeToLeader()
-			if tLeader is not None :
+			if tLeader is not None:
 				if leaderLapsToGo >= 0:
 					timeToLeader = '%s (%d to see %d to go)' % (Utils.formatTime(tLeader), nLeader, leaderLapsToGo)
 				else:
 					timeToLeader = '%s (%d)' % (Utils.formatTime(tLeader), nLeader)
 			
 				if tLeader < 30.0:
-					bgColour = (0,255,0)
+					bgColour = wx.GREEN
 				
 		self.timeToLeader.SetBackgroundColour( bgColour )
 		self.timeToLeader.SetLabel( timeToLeader )
