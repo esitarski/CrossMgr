@@ -8,6 +8,8 @@ from string import Template
 import ColGrid
 from FixCategories import FixCategories, SetCategory
 
+reNonDigits = re.compile( '[^0-9]' )
+
 class Results( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
@@ -43,6 +45,12 @@ class Results( wx.Panel ):
 		self.showPositionsToggle.SetValue( self.showPositions )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowPositions, self.showPositionsToggle )
 		
+		self.search = wx.SearchCtrl(self, size=(82,-1), style=wx.TE_PROCESS_ENTER )
+		self.search.ShowCancelButton( True )
+		self.Bind(wx.EVT_SEARCHCTRL_SEARCH_BTN, self.OnSearch, self.search)
+		self.Bind(wx.EVT_SEARCHCTRL_CANCEL_BTN, self.OnCancelSearch, self.search)
+		self.Bind(wx.EVT_TEXT_ENTER, self.OnDoSearch, self.search)
+		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'Zoom-In-icon.png'), wx.BITMAP_TYPE_PNG )
 		self.zoomInButton = wx.BitmapButton( self, wx.ID_ZOOM_IN, bitmap, style=wx.BU_EXACTFIT | wx.BU_AUTODRAW )
 		self.Bind( wx.EVT_BUTTON, self.onZoomIn, self.zoomInButton )
@@ -57,6 +65,7 @@ class Results( wx.Panel ):
 		self.hbs.Add( self.showLapsCompletedToggle, flag=wx.ALL, border=4 )
 		self.hbs.Add( self.showPositionsToggle, flag=wx.ALL, border=4 )
 		self.hbs.Add( wx.StaticText(self, wx.ID_ANY, ' '), proportion=2 )
+		self.hbs.Add( self.search, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.zoomInButton, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.zoomOutButton, flag=wx.TOP | wx.BOTTOM | wx.RIGHT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 
@@ -88,6 +97,25 @@ class Results( wx.Panel ):
 		self.SetSizer(bs)
 		bs.SetSizeHints(self)
 		
+	def OnSearch( self, event ):
+		self.OnDoSearch()
+		
+	def OnCancelSearch( self, event ):
+		self.search.SetValue( '' )
+		
+	def OnDoSearch( self, event = None ):
+		n = self.search.GetValue()
+		if n:
+			n = reNonDigits.sub( '', n )
+			self.search.SetValue( n )
+		if not n:
+			n = None
+		if n:
+			self.numSelect = n
+			self.refresh()
+			if Utils.isMainWin():
+				Utils.getMainWin().setNumSelect( n )
+
 	def onZoomOut( self, event ):
 		self.grid.Zoom( False )
 			
@@ -210,6 +238,8 @@ class Results( wx.Panel ):
 	
 	def setNumSelect( self, num ):
 		self.numSelect = num if num is None else str(num)
+		if self.numSelect:
+			self.search.SetValue( self.numSelect )
 
 	def clearGrid( self ):
 		self.grid.Set( data = [], colnames = [], textColour = {}, backgroundColour = {} )
@@ -218,6 +248,9 @@ class Results( wx.Panel ):
 	def refresh( self ):
 		self.isEmpty = True
 		self.rcInterp = set()	# Set of row/col coordinates of interpolated numbers.
+		
+		self.search.SelectAll()
+		wx.CallAfter( self.search.SetFocus )
 		
 		race = Model.getRace()
 		if not race:

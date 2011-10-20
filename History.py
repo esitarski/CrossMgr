@@ -9,6 +9,8 @@ from string import Template
 from FixCategories import FixCategories
 from EditEntry import CorrectNumber, SplitNumber, DeleteEntry, SwapEntry
 
+reNonDigits = re.compile( '[^0-9]' )
+
 def GetFontFromExisting( font, pointSize = None, family = None, style = None, weight = None, underline = None, face = None, encoding = None ):
 	if pointSize is None: 	pointSize = font.GetPointSize()
 	if family is None: 		family = font.GetFamily()
@@ -57,6 +59,12 @@ class History( wx.Panel ):
 		self.showTimeDownToggle.SetValue( self.showTimeDown )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowTimeDown, self.showTimeDownToggle )
 		
+		self.search = wx.SearchCtrl(self, size=(82,-1), style=wx.TE_PROCESS_ENTER )
+		self.search.ShowCancelButton( True )
+		self.Bind(wx.EVT_SEARCHCTRL_SEARCH_BTN, self.OnSearch, self.search)
+		self.Bind(wx.EVT_SEARCHCTRL_CANCEL_BTN, self.OnCancelSearch, self.search)
+		self.Bind(wx.EVT_TEXT_ENTER, self.OnDoSearch, self.search)
+		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'Zoom-In-icon.png'), wx.BITMAP_TYPE_PNG )
 		self.zoomInButton = wx.BitmapButton( self, wx.ID_ZOOM_IN, bitmap, style=wx.BU_EXACTFIT | wx.BU_AUTODRAW )
 		self.Bind( wx.EVT_BUTTON, self.onZoomIn, self.zoomInButton )
@@ -70,6 +78,7 @@ class History( wx.Panel ):
 		self.hbs.Add( self.showLapTimesToggle, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.showTimeDownToggle, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( wx.StaticText(self, wx.ID_ANY, ' '), proportion=2 )
+		self.hbs.Add( self.search, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.zoomInButton, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.zoomOutButton, flag=wx.TOP | wx.BOTTOM | wx.RIGHT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 
@@ -89,39 +98,36 @@ class History( wx.Panel ):
 		self.Bind( wx.grid.EVT_GRID_CELL_LEFT_DCLICK, self.doNumDrilldown )
 		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doRightClick )
 		
-		# Grab key presses so we can get CTRL-F for find.
-		self.Bind( wx.EVT_KEY_DOWN, self.onKeyPress )
-		
 		bs = wx.BoxSizer(wx.VERTICAL)
 		bs.Add(self.hbs, flag=wx.GROW|wx.HORIZONTAL)
 		bs.Add(self.grid, 1, wx.GROW|wx.ALL, 5)
 		self.SetSizer(bs)
 		bs.SetSizeHints(self)
 
+	def OnSearch( self, event ):
+		self.OnDoSearch()
+		
+	def OnCancelSearch( self, event ):
+		self.search.SetValue( '' )
+		
+	def OnDoSearch( self, event = None ):
+		n = self.search.GetValue()
+		if n:
+			n = reNonDigits.sub( '', n )
+			self.search.SetValue( n )
+		if not n:
+			n = None
+		if n:
+			self.numSelect = n
+			self.refresh()
+			if Utils.isMainWin():
+				Utils.getMainWin().setNumSelect( n )
+
 	def onZoomOut( self, event ):
 		self.grid.Zoom( False )
 			
 	def onZoomIn( self, event ):
 		self.grid.Zoom( True )
-		
-	def onKeyPress( self, event ):
-		keymod = event.GetModifiers()
-		keycode = event.GetKeyCode()
-		if not (keymod == wx.MOD_CONTROL and keycode == 70):	# CTRL-F key
-			event.Skip()
-			return
-			
-		dlg = wx.TextEntryDialog( self, message='Find Number:', caption='Find Number:', style=wx.TextEntryDialogStyle )
-		if dlg.ShowModal() == wx.ID_OK:
-			num = dlg.GetValue()
-			num = re.sub( '[^0-9]', '', num )
-			if num:
-				self.numSelect = num
-				self.refresh()
-				if Utils.isMainWin():
-					Utils.getMainWin().setNumSelect( num )
-		dlg.Destroy()
-		event.Skip()
 		
 	def doRightClick( self, event ):
 		if self.isEmpty:
@@ -281,6 +287,8 @@ class History( wx.Panel ):
 
 	def setNumSelect( self, num ):
 		self.numSelect = num if num is None else str(num)
+		if self.numSelect:
+			self.search.SetValue( self.numSelect )
 	
 	def clearGrid( self ):
 		self.textColour = {}
@@ -294,6 +302,9 @@ class History( wx.Panel ):
 		self.category = None
 		self.rcInterp = set()
 		race = Model.race
+		
+		self.search.SelectAll()
+		wx.CallAfter( self.search.SetFocus )
 		
 		if race is None:
 			self.clearGrid()
