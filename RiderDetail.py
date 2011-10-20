@@ -247,6 +247,7 @@ class RiderDetail( wx.Panel ):
 		self.atRaceTimeName.Enable( editable )
 	
 	def refresh( self ):
+		self.num.SelectAll()
 		wx.CallAfter( self.num.SetFocus )
 
 		self.grid.Set( data = [ [], [], [] ] )
