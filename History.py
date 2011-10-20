@@ -47,15 +47,15 @@ class History( wx.Panel ):
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
 		
-		self.showTimesToggle = wx.ToggleButton( self, wx.ID_ANY, 'Race Times' )
+		self.showTimesToggle = wx.ToggleButton( self, wx.ID_ANY, 'Race Times', style=wx.BU_EXACTFIT )
 		self.showTimesToggle.SetValue( self.showTimes )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowTimes, self.showTimesToggle )
 		
-		self.showLapTimesToggle = wx.ToggleButton( self, wx.ID_ANY, 'Lap Times' )
+		self.showLapTimesToggle = wx.ToggleButton( self, wx.ID_ANY, 'Lap Times', style=wx.BU_EXACTFIT )
 		self.showLapTimesToggle.SetValue( self.showLapTimes )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowLapTimes, self.showLapTimesToggle )
 		
-		self.showTimeDownToggle = wx.ToggleButton( self, wx.ID_ANY, 'Time Down per Lap' )
+		self.showTimeDownToggle = wx.ToggleButton( self, wx.ID_ANY, 'Time Down per Lap', style=wx.BU_EXACTFIT )
 		self.showTimeDownToggle.SetValue( self.showTimeDown )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowTimeDown, self.showTimeDownToggle )
 		

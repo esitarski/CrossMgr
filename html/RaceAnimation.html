@@ -723,7 +723,15 @@ function SetCategoryResults()
 				{
 					var delta = lapTimes.back() - leaderLapTimes.back();
 					if( delta != 0 )
-						gap = FormatTime( delta );
+					{
+						if( r != 0 && lapDataOption == 3 )
+						{
+							delta = (100.0 * delta) / leaderLapTimes.back();
+							gap = '+' + delta.toFixed(2) + '%';
+						}
+						else
+							gap = FormatTime( delta );
+					}
 				}
 				else if( lapTimes.back() > leaderLapTimes.back() )
 				{
@@ -745,7 +753,34 @@ function SetCategoryResults()
 					createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(lapTimes[i] - startOffset, 0.0)) );
 					break;
 				case 2:	// Gap Times.
-					createTextChild( td = createChild(tr, 'TD'), FormatTime(lapTimes[i] - resultsData[0][3][i]) );
+					if( r == 0 )
+						createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(lapTimes[i] - lapTimes[i-1], 0.0)) );
+					else
+					{
+						var v = lapTimes[i] - resultsData[0][3][i];
+						var sign = '+';
+						if( v < 0 )
+						{
+							sign = '-';
+							v = -v;
+						}
+						createTextChild( td = createChild(tr, 'TD'), sign + FormatTime(v) );
+					}
+					break;
+				case 3:	// Time Percent.
+					if( r == 0 )
+						createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(lapTimes[i] - lapTimes[i-1], 0.0)) );
+					else
+					{
+						var v = (100.0 * (lapTimes[i] - resultsData[0][3][i])) / resultsData[0][3][i];
+						var sign = '+';
+						if( v < 0 )
+						{
+							sign = '-';
+							v = -v;
+						}
+						createTextChild( td = createChild(tr, 'TD'), sign + v.toFixed(2) + '%' );
+					}
 					break;
 				}
 				if( numsToWatch[num] ) td.className = 'highlight';
@@ -1265,10 +1300,9 @@ function getUrlParam( param, url )
 	return match ? match[1] : "";
 }
 
-function LapTimeOption()
+function SetLapDataOption( opt )
 {
-	s = document.getElementById('idLapTimeOption');
-	lapDataOption = s.selectedIndex;
+	lapDataOption = opt;
 	SetCategoryResults();
 }
 
@@ -1328,7 +1362,6 @@ function onLoad()
 			}
 	}
 	
-	lapDataOption = document.getElementById('idLapTimeOption').selectedIndex;
 	SetCategoryResults();
 	RefreshRaceChart();
 	
@@ -1369,11 +1402,12 @@ Highlight Numbers:
 Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
 <span class="noprint">Comments?  Click <a href="mailto:edward.sitarski@gmail.com?subject=Race Animation">here</a>.<br/></span>
 </p>
-Show: <select id="idLapTimeOption" onChange="LapTimeOption()" >
- <option value="showLapTimes" selected="selected">Lap Times</option>
- <option value="showRaceTime">Race Times</option>
- <option value="showLapGaps">Time Gaps</option>
-</select>
+<p>
+<input type="radio" name="showOptions" value="showLapTimes" checked onClick="SetLapDataOption(0)"/>Lap Times&nbsp&nbsp
+<input type="radio" name="showOptions" value="showRaceTime" onClick="SetLapDataOption(1)"/>Race Times&nbsp&nbsp
+<input type="radio" name="showOptions" value="showLapGaps" onClick="SetLapDataOption(2)"/>Time Gaps&nbsp&nbsp
+<input type="radio" name="showOptions" value="showGapPercent" onClick="SetLapDataOption(3)"/>Percent Gaps&nbsp&nbsp
+</p>
 <div id="idResultsDiv"></div>
 <p id="idRaceName" class="noprint">Race Chart</p>
 <canvas id="idRaceChart" width="1000" height="800" class="noprint">

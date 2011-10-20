@@ -1,5 +1,6 @@
 import wx
 import datetime
+import os
 
 import Model
 import Utils
@@ -9,9 +10,28 @@ import OutputStreamer
 import wx.lib.masked as masked
 # import wx.lib.agw.gradientbutton as GB
 
-def MakeButton( parent, id = wx.ID_ANY, text = '' ):
-	btn = wx.Button( parent, wx.ID_ANY, text )
-	# btn = GB.GradientButton( parent, wx.ID_ANY, None, text )
+def MakeButton( parent, id = wx.ID_ANY, img = None, text = '' ):
+	# btn = wx.Button( parent, wx.ID_ANY, text )
+	# img = img.ShrinkBy( 2, 2 )
+	lighten = 1.2
+	img = img.AdjustChannels(lighten,lighten,lighten)
+	btn = wx.BitmapButton( parent, wx.ID_ANY, bitmap = img.ConvertToBitmap(), style = wx.NO_BORDER )
+	btn.SetBackgroundColour( wx.Colour(255,255,255) )
+
+	# Derive hover image.
+	lighten = 1.25
+	hover_img = img.AdjustChannels(lighten,lighten,lighten)
+	btn.SetBitmapHover( hover_img.ConvertToBitmap() )
+
+	# Derive disabled image.
+	lighten = 1.4
+	for x in xrange( img.GetWidth() ):
+		for y in xrange( img.GetHeight() ):
+			if img.GetRed(x, y) == 0 and img.GetGreen(x, y) == 0 and img.GetBlue(x, y) == 0:
+				img.SetRGB( x, y, 64, 64, 64 )
+	disabled_img = img.ConvertToGreyscale().AdjustChannels(lighten,lighten,lighten)
+	btn.SetBitmapDisabled( disabled_img.ConvertToBitmap() )
+	
 	return btn
 
 def StartRaceNow():
@@ -131,26 +151,31 @@ class StartRaceAtTime( wx.Dialog ):
 class Actions( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
-		bs = wx.GridBagSizer(vgap=5, hgap=5)
+		bs = wx.GridBagSizer(vgap=0, hgap=0)
+		
+		self.SetBackgroundColour( wx.Colour(255,255,255) )
 		
 		font = wx.Font(24, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
 
-		self.startRaceBtn = MakeButton( self, text = '&Start Race Now' )
+		img = wx.Image( os.path.join(Utils.getImageFolder(), 'StartRace.png'), wx.BITMAP_TYPE_PNG )
+		self.startRaceBtn = MakeButton( self, img = img, text = '&Start Race Now' )
 		self.Bind( wx.EVT_BUTTON, self.onStartRace, self.startRaceBtn )
 		self.startRaceBtn.SetFont( font )
 		
-		self.startRaceTimeBtn = MakeButton( self, text = 'Start Race at &Time' )
+		img = wx.Image( os.path.join(Utils.getImageFolder(), 'StartRaceAtTime.png'), wx.BITMAP_TYPE_PNG )
+		self.startRaceTimeBtn = MakeButton( self, img = img, text = 'Start Race at &Time' )
 		self.Bind( wx.EVT_BUTTON, self.onStartRaceTime, self.startRaceTimeBtn )
 		self.startRaceTimeBtn.SetFont( font )
 		
-		self.finishRaceBtn = MakeButton( self, text = '&Finish Race' )
+		img = wx.Image( os.path.join(Utils.getImageFolder(), 'FinishRace.png'), wx.BITMAP_TYPE_PNG )
+		self.finishRaceBtn = MakeButton( self, img = img, text = '&Finish Race' )
 		self.Bind( wx.EVT_BUTTON, self.onFinishRace, self.finishRaceBtn )
 		self.finishRaceBtn.SetFont( font )
 		
-		border = 8
+		border = 0
 		bs.Add(self.startRaceBtn, pos=(0,0), span=(1,1), border=border, flag=wx.TOP|wx.LEFT)
-		bs.Add(self.startRaceTimeBtn, pos=(1,0), span=(1,1), border=border, flag=wx.TOP|wx.LEFT)
-		bs.Add(self.finishRaceBtn, pos=(2,0), span=(1,1), border=border, flag=wx.TOP|wx.LEFT)
+		bs.Add(self.startRaceTimeBtn, pos=(0,1), span=(1,1), border=border, flag=wx.TOP|wx.LEFT)
+		bs.Add(self.finishRaceBtn, pos=(1,0), span=(1,1), border=border, flag=wx.TOP|wx.LEFT)
 		bs.AddGrowableRow( 3 )
 		self.SetSizer(bs)
 		

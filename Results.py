@@ -29,19 +29,19 @@ class Results( wx.Panel ):
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
 		
-		self.showTimesToggle = wx.ToggleButton( self, wx.ID_ANY, 'Race Times' )
+		self.showTimesToggle = wx.ToggleButton( self, wx.ID_ANY, 'Race Times', style=wx.BU_EXACTFIT )
 		self.showTimesToggle.SetValue( self.showTimes )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowTimes, self.showTimesToggle )
 		
-		self.showGapsToggle = wx.ToggleButton( self, wx.ID_ANY, 'Gaps' )
+		self.showGapsToggle = wx.ToggleButton( self, wx.ID_ANY, 'Gaps', style=wx.BU_EXACTFIT )
 		self.showGapsToggle.SetValue( self.showGaps )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowGaps, self.showGapsToggle )
 		
-		self.showLapsCompletedToggle = wx.ToggleButton( self,wx.ID_ANY, 'Laps Completed' )
+		self.showLapsCompletedToggle = wx.ToggleButton( self,wx.ID_ANY, 'Laps Completed', style=wx.BU_EXACTFIT )
 		self.showLapsCompletedToggle.SetValue( self.showLapsCompleted )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowLapsCompleted, self.showLapsCompletedToggle )
 		
-		self.showPositionsToggle = wx.ToggleButton( self, wx.ID_ANY, 'Positions' )
+		self.showPositionsToggle = wx.ToggleButton( self, wx.ID_ANY, 'Positions', style=wx.BU_EXACTFIT )
 		self.showPositionsToggle.SetValue( self.showPositions )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowPositions, self.showPositionsToggle )
 		

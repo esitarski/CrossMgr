@@ -1214,7 +1214,7 @@ def MainLoop():
 	Utils.writeLog( 'start' )
 	
 	# Configure the main window.
-	mainWin = MainWin( None, title=AppVerName, size=(800,600) )
+	mainWin = MainWin( None, title=AppVerName, size=(840,620) )
 	mainWin.Maximize( True )
 	mainWin.Show()
 
