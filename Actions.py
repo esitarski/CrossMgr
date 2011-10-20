@@ -7,6 +7,12 @@ import JChip
 import OutputStreamer
 
 import wx.lib.masked as masked
+# import wx.lib.agw.gradientbutton as GB
+
+def MakeButton( parent, id = wx.ID_ANY, text = '' ):
+	btn = wx.Button( parent, wx.ID_ANY, text )
+	# btn = GB.GradientButton( parent, wx.ID_ANY, None, text )
+	return btn
 
 def StartRaceNow():
 	race = Model.getRace()
@@ -129,15 +135,15 @@ class Actions( wx.Panel ):
 		
 		font = wx.Font(24, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
 
-		self.startRaceBtn = wx.Button( self, 10, 'Start Race &Now' )
+		self.startRaceBtn = MakeButton( self, text = '&Start Race Now' )
 		self.Bind( wx.EVT_BUTTON, self.onStartRace, self.startRaceBtn )
 		self.startRaceBtn.SetFont( font )
 		
-		self.startRaceTimeBtn = wx.Button( self, 11, 'Start Race at &Time' )
+		self.startRaceTimeBtn = MakeButton( self, text = 'Start Race at &Time' )
 		self.Bind( wx.EVT_BUTTON, self.onStartRaceTime, self.startRaceTimeBtn )
 		self.startRaceTimeBtn.SetFont( font )
 		
-		self.finishRaceBtn = wx.Button( self, 20, '&Finish Race' )
+		self.finishRaceBtn = MakeButton( self, text = '&Finish Race' )
 		self.Bind( wx.EVT_BUTTON, self.onFinishRace, self.finishRaceBtn )
 		self.finishRaceBtn.SetFont( font )
 		
