@@ -111,6 +111,7 @@ class History( wx.Panel ):
 		self.search.SetValue( '' )
 		
 	def OnDoSearch( self, event = None ):
+		wx.CallAfter( self.search.SetFocus )
 		n = self.search.GetValue()
 		if n:
 			n = reNonDigits.sub( '', n )
@@ -119,6 +120,8 @@ class History( wx.Panel ):
 			n = None
 		if n:
 			self.numSelect = n
+			if self.category and not self.category.matches( int(n) ):
+				self.setCategoryAll()
 			self.refresh()
 			if Utils.isMainWin():
 				Utils.getMainWin().setNumSelect( n )
@@ -130,6 +133,8 @@ class History( wx.Panel ):
 		self.grid.Zoom( True )
 		
 	def doRightClick( self, event ):
+		wx.CallAfter( self.search.SetFocus )
+		
 		if self.isEmpty:
 			return
 			
@@ -178,6 +183,7 @@ class History( wx.Panel ):
 		
 		self.PopupMenu( menu )
 		menu.Destroy()
+
 			
 	def OnPopupSwapBefore( self, event ):
 		if hasattr(self, 'rowPopup'):
@@ -280,7 +286,8 @@ class History( wx.Panel ):
 	
 	def setCategoryAll( self ):
 		FixCategories( self.categoryChoice, 0 )
-		Model.race.historyCategory = 0
+		if Model.race:
+			Model.race.historyCategory = 0
 	
 	def reset( self ):
 		self.numSelect = None

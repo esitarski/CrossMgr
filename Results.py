@@ -14,6 +14,8 @@ class Results( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
 		
+		self.category = None
+		
 		self.showTimes = False
 		self.showGaps = False
 		self.showPositions = False
@@ -104,6 +106,7 @@ class Results( wx.Panel ):
 		self.search.SetValue( '' )
 		
 	def OnDoSearch( self, event = None ):
+		wx.CallAfter( self.search.SetFocus )
 		n = self.search.GetValue()
 		if n:
 			n = reNonDigits.sub( '', n )
@@ -112,6 +115,9 @@ class Results( wx.Panel ):
 			n = None
 		if n:
 			self.numSelect = n
+			if self.category and not self.category.matches( int(n) ):
+				self.setCategoryAll()
+
 			self.refresh()
 			if Utils.isMainWin():
 				Utils.getMainWin().setNumSelect( n )
@@ -123,6 +129,8 @@ class Results( wx.Panel ):
 		self.grid.Zoom( True )
 		
 	def doRightClick( self, event ):
+		wx.CallAfter( self.search.SetFocus )
+
 		self.doNumSelect( event )
 		if self.numSelect is None:
 			return
@@ -228,6 +236,11 @@ class Results( wx.Panel ):
 					SetCategory( historyCategoryChoice, catName )
 			mainWin.setNumSelect( numSelect )
 				
+	def setCategoryAll( self ):
+		FixCategories( self.categoryChoice, 0 )
+		if Model.race:
+			Model.race.resultsCategory = 0
+	
 	def doChooseCategory( self, event ):
 		if Model.race:
 			Model.race.resultsCategory = self.categoryChoice.GetSelection()
@@ -246,6 +259,7 @@ class Results( wx.Panel ):
 		self.grid.Reset()
 
 	def refresh( self ):
+		self.category = None
 		self.isEmpty = True
 		self.rcInterp = set()	# Set of row/col coordinates of interpolated numbers.
 		
@@ -259,6 +273,7 @@ class Results( wx.Panel ):
 		
 		catName = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
 		self.hbs.Layout()
+		self.category = race.categories.get( catName, None )
 		
 		colnames, results, dnf, dns, dq = race.getResults( catName )
 
