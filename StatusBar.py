@@ -2,6 +2,10 @@ import wx
 import math
 import Utils
 
+def lighterColour( c ):
+	rgb = c.Get( False )
+	return wx.Colour( *[int(v + (255 - v) * 0.6) for v in rgb] )
+
 class StatusBar(wx.PyControl):
 	def __init__(self, parent, id=wx.ID_ANY, value=0, range=100, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
@@ -52,7 +56,8 @@ class StatusBar(wx.PyControl):
 		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
 		
 	def InitializeColours(self):
-		self._orangeBrush = wx.Brush(wx.Colour(255,140,0), wx.SOLID)
+		self._orange = wx.Colour(255,140,0)
+		self._green = wx.Colour(0, 0xA0, 0)
 			
 	def SetFont(self, font):
 		wx.PyControl.SetFont(self, font)
@@ -203,8 +208,24 @@ class StatusBar(wx.PyControl):
 			dc.SetBrush( wx.WHITE_BRUSH )
 			dc.DrawRectangle(x, y, width, height)
 			
-			dc.SetBrush( wx.GREEN_BRUSH if value > range/4 else self._orangeBrush )
-			dc.DrawRectangle(x, y, int(float(width) * float(value) / float(range)), height)
+			#---------------------------------------------------------------------
+			ctx = wx.GraphicsContext_Create(dc)
+			ctx.SetPen( wx.Pen(wx.WHITE, 1, style=wx.TRANSPARENT ) )
+			
+			colour = self._green if value > range/4 else self._orange
+			
+			w = int(float(width) * float(value) / float(range))
+			dd = int( height * 0.3 )
+			b1 = ctx.CreateLinearGradientBrush(x, y, x, y + dd + 1, colour, lighterColour(colour))
+			ctx.SetBrush(b1)
+			ctx.DrawRectangle(x, y, x + w, dd + 1)
+					
+			b2 = ctx.CreateLinearGradientBrush(x, y + dd, x, height, lighterColour(colour), colour )
+			ctx.SetBrush(b2)
+			ctx.DrawRectangle(x, y + dd, x + w, height-dd )
+			
+			# dc.SetBrush( wx.GREEN_BRUSH if value > range/4 else self._orangeBrush )
+			# dc.DrawRectangle(x, y, int(float(width) * float(value) / float(range)), height)
 			
 			dc.DrawText(Utils.SecondsToMMSS(value), (width - self.textWidth) / 2, 0)
 			
