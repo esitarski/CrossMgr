@@ -57,7 +57,7 @@ class StatusBar(wx.PyControl):
 		
 	def InitializeColours(self):
 		self._orange = wx.Colour(255,140,0)
-		self._green = wx.Colour(0, 0xA0, 0)
+		self._green = wx.Colour(0, 0xC0, 0)
 			
 	def SetFont(self, font):
 		wx.PyControl.SetFont(self, font)
