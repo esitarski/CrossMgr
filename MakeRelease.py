@@ -72,29 +72,29 @@ sys.exit()
 #-----------------------------------------------------------------------
 #-----------------------------------------------------------------------
 
-print 'Create a new debian package area.'
+print( 'Create a new debian package area.')
 shutil.rmtree( packageRoot, ignore_errors = True )
 shutil.rmtree( controlRoot, ignore_errors = True )
 
 import Version
 debName = Version.AppVerName.replace(' ', '_') + '_2.0_i386.deb'
 	
-print 'Create directory for the program and data files.'
+print( 'Create directory for the program and data files.')
 optPath = os.path.join(packageRoot,'opt','CrossMgr')
 os.makedirs( optPath )
 
-print 'Copy executable and libraries.'
+print( 'Copy executable and libraries.' )
 for f in os.listdir( releasePath ):
 	shutil.copy( os.path.join(releasePath, f), optPath )
 
-print 'Copy html directory.'
+print( 'Copy html directory.' )
 shutil.copytree( 'html',	os.path.join(optPath, 'html') )
 
-print 'Copy images directory.'
+print( 'Copy images directory.' )
 shutil.copytree( 'images',	os.path.join(optPath, 'images') )
 
 #-----------------------------------------------------------------------
-print 'Create copyright file.'
+print( 'Create copyright file.' )
 copyrightFile = os.path.join(packageRoot,'usr','share','doc','CrossMgr','copyright')
 os.makedirs( os.path.dirname(copyrightFile) )
 copyrightStr = '''This software is copyright (c) 2010, 2011 Edward Sitarski
@@ -104,7 +104,7 @@ open( copyrightFile, 'w' ).write( copyrightStr )
 
 #-----------------------------------------------------------------------
 #-----------------------------------------------------------------------
-print 'Creating md5sums file.'
+print( 'Creating md5sums file.')
 os.makedirs( controlRoot )
 md5sums = open( os.path.join(controlRoot, 'md5sums'), 'w' )
 for dirpath, dirnames, filenames in os.walk(packageRoot):
@@ -118,7 +118,7 @@ for dirpath, dirnames, filenames in os.walk(packageRoot):
 md5sums.close()
 	
 #-----------------------------------------------------------------------
-print 'Create control file.'
+print( 'Create control file.')
 
 installedSize = sum( os.path.getsize(os.path.join(dirpath,filename))
 		for dirpath, dirnames, filenames in os.walk(packageRoot) for filename in filenames ) + 256
@@ -154,21 +154,21 @@ Description: Low-cost solution for getting results for Cyclo-Cross races.
 open( os.path.join(controlRoot, 'control'), 'w' ).write( controlStr )
 
 #-----------------------------------------------------------------------
-print 'Creating postinst file.'
+print( 'Creating postinst file.')
 postinstStr = '#!/bin/sh\nln -s %s/CrossMgr.pyw /usr/bin/CrossMgr\n' % optPath
 fname = os.path.join(controlRoot, 'postinst')
 open( fname, 'w' ).write( postinstStr )
 os.system( 'chmod 755 %s' % fname )
 
 #-----------------------------------------------------------------------
-print 'Creating prerm file.'
+print( 'Creating prerm file.')
 prermStr = '#!/bin/sh\nrm /usr/bin/CrossMgr\n'
 fname = os.path.join(controlRoot, 'prerm')
 open( fname, 'w' ).write( prermStr )
 os.system( 'chmod 755 %s' % fname )
 
 #-----------------------------------------------------------------------
-print 'Adding control files to the archive'
+print( 'Adding control files to the archive')
 tf = tarfile.open( os.path.join(controlRoot, 'control.tar.gz'), 'w:gz' )
 for f in os.listdir( controlRoot ):
 	tf.add( os.path.join(controlRoot, f), f )
@@ -179,10 +179,10 @@ tf.add( packageRoot, '.' )
 tf.close()
 
 #-----------------------------------------------------------------------
-print 'Create binary file.'
+print( 'Create binary file.')
 open( os.path.join(controlRoot, 'debian-binary'), 'w' ).write( '2.0\n' )
 
-print 'Creating debian archive.'
+print( 'Creating debian archive.')
 files = ['debian-binary', 'control.tar.gz', 'data.tar.gz']
 '''
 tf = tarfile.open( os.path.join(controlRoot, debName), 'w' )
