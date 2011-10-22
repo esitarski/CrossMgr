@@ -18,7 +18,7 @@ class Results( wx.Panel ):
 		
 		self.showTimes = False
 		self.showGaps = False
-		self.showPositions = False
+		self.showPositions = True
 		self.showLapsCompleted = False
 		
 		self.rcInterp = set()

@@ -98,7 +98,7 @@ class NumKeypad( wx.Panel ):
 		self.Bind(wx.EVT_CHOICE, self.doChooseAutomaticManual, self.automaticManualChoice)
 		self.automaticManualChoice.SetSelection( 0 )
 		self.automaticManualChoice.SetFont( font )
-		gbs.Add( self.automaticManualChoice, pos=(rowCur, colCur), span=(1,2), flag=wx.ALIGN_RIGHT )
+		gbs.Add( self.automaticManualChoice, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_RIGHT )
 		rowCur += 1
 		
 		label = wx.StaticText(self, wx.ID_ANY, 'Total Laps:')

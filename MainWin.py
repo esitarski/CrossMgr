@@ -213,42 +213,30 @@ class MainWin( wx.Frame ):
 		self.notebook		= wx.Notebook(	self.splitter, 1000, style=sty )
 		self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onPageChanging )
 		
+		# Add all the pages to the notebook.
 		self.pages = []
 
 		def addPage( page, name ):
 			self.notebook.AddPage( page, name )
 			self.pages.append( page )
-
-		self.actions		= Actions(	self.notebook )
-		addPage( self.actions,   'Actions' )
-
-		self.record		= NumKeypad(	self.notebook )
-		addPage( self.record, 	 'Record' )
-
-		self.results		= Results(		self.notebook )
-		addPage( self.results,   'Results' )
-
-		self.history		= History(		self.notebook )
-		addPage( self.history,   'History' )
-
-		self.riderDetail	= RiderDetail(	self.notebook )
-		addPage( self.riderDetail,'Rider Detail' )
-
-		self.recommendations = Recommendations(	self.notebook )
-		addPage( self.recommendations, 'Recommendations' )
-
-		self.categories		= Categories(	self.notebook )
-		addPage( self.categories,'Categories' )
-
-		self.gantt			= Gantt(		self.notebook )
-		addPage( self.gantt,     'Chart' )
-
-		self.raceAnimation = RaceAnimation( self.notebook )
-		addPage( self.raceAnimation, 'Race Animation' )
-
-		self.properties		= Properties(	self.notebook )
-		addPage( self.properties,'Properties' )
+			
+		self.attrClassName = [
+			[ 'actions',		Actions,			'Actions' ],
+			[ 'record',			NumKeypad,			'Record' ],
+			[ 'results',		Results,			'Results' ],
+			[ 'history',		History,			'History' ],
+			[ 'riderDetail',	RiderDetail,		'RiderDetail' ],
+			[ 'recommendations',Recommendations,	'Recommendations' ],
+			[ 'categories', 	Categories,			'Categories' ],
+			[ 'gantt', 			Gantt,				'Chart' ],
+			[ 'raceAnimation',	RaceAnimation,		'Animation' ],
+			[ 'properties',		Properties,			'Properties' ]
+		]
 		
+		for i, (a, c, n) in enumerate(self.attrClassName):
+			setattr( self, a, c(self.notebook) )
+			addPage( getattr(self, a), '%d. %s' % (i+1, n) )
+
 		self.splitter.SplitVertically( self.forecastHistory, self.notebook, 220 )
 
 		#------------------------------------------------------------------------------
@@ -1045,8 +1033,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 		self.notebook.ChangeSelection( iPage )
 
 	def showPageName( self, name ):
-		for i, p in enumerate(self.pages):
-			if self.notebook.GetPageText(i) == name:
+		for i, (a, c, n) in enumerate(self.attrClassName):
+			if n == name:
 				self.showPage( i )
 				break
 
