@@ -46,11 +46,11 @@ try:
 		estyle = AS.AS_TIMEOUT | AS.AS_CENTER_ON_PARENT
 		shadow = wx.WHITE
 		try:
-			frame = AS.AdvancedSplash(Utils.getMainWin(), bitmap=bitmap, timeout=2000,
+			frame = AS.AdvancedSplash(Utils.getMainWin(), bitmap=bitmap, timeout=2500,
 									  extrastyle=estyle, shadowcolour=shadow)
 		except:
 			try:
-				frame = AS.AdvancedSplash(Utils.getMainWin(), bitmap=bitmap, timeout=2000,
+				frame = AS.AdvancedSplash(Utils.getMainWin(), bitmap=bitmap, timeout=2500,
 										  shadowcolour=shadow)
 			except:
 				pass
