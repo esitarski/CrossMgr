@@ -42,7 +42,6 @@ from ReadSignOnSheet	import GetExcelLink
 try:
 	import wx.lib.agw.advancedsplash as AS
 	def ShowSplashScreen():
-		#bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), '20081124_cyclocross02.jpg'), wx.BITMAP_TYPE_JPEG )
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrSplash.png'), wx.BITMAP_TYPE_PNG )
 		estyle = AS.AS_TIMEOUT | AS.AS_CENTER_ON_PARENT
 		shadow = wx.WHITE
