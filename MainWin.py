@@ -43,14 +43,25 @@ try:
 	import wx.lib.agw.advancedsplash as AS
 	def ShowSplashScreen():
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrSplash.png'), wx.BITMAP_TYPE_PNG )
+		
+		# Write in the version number into the bitmap.
+		w, h = bitmap.GetSize()
+		dc = wx.MemoryDC()
+		dc.SelectObject( bitmap )
+		dc.SetFont( wx.FontFromPixelSize( wx.Size(0,h//10), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
+		dc.DrawText( AppVerName.replace('CrossMgr','Version'), w // 20, int(h * 0.44) )
+		dc.SelectObject( wx.NullBitmap )
+		
+		# Show the splash screen.
 		estyle = AS.AS_TIMEOUT | AS.AS_CENTER_ON_PARENT
 		shadow = wx.WHITE
+		showSeconds = 2.5
 		try:
-			frame = AS.AdvancedSplash(Utils.getMainWin(), bitmap=bitmap, timeout=2500,
+			frame = AS.AdvancedSplash(Utils.getMainWin(), bitmap=bitmap, timeout=int(showSeconds*1000),
 									  extrastyle=estyle, shadowcolour=shadow)
 		except:
 			try:
-				frame = AS.AdvancedSplash(Utils.getMainWin(), bitmap=bitmap, timeout=2500,
+				frame = AS.AdvancedSplash(Utils.getMainWin(), bitmap=bitmap, timeout=int(showSeconds*1000),
 										  shadowcolour=shadow)
 			except:
 				pass

@@ -24,14 +24,11 @@ def MakeButton( parent, id = wx.ID_ANY, img = None, text = '' ):
 	btn.SetBitmapHover( hover_img.ConvertToBitmap() )
 
 	# Derive disabled image.
+	# Lighten the text.
+	img.Replace( 0, 0, 0, 64, 64, 64 )
 	lighten = 1.4
-	for x in xrange( img.GetWidth() ):
-		for y in xrange( img.GetHeight() ):
-			if img.GetRed(x, y) == 0 and img.GetGreen(x, y) == 0 and img.GetBlue(x, y) == 0:
-				img.SetRGB( x, y, 64, 64, 64 )
 	disabled_img = img.ConvertToGreyscale().AdjustChannels(lighten,lighten,lighten)
 	btn.SetBitmapDisabled( disabled_img.ConvertToBitmap() )
-	
 	return btn
 
 def StartRaceNow():
