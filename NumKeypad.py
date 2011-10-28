@@ -22,6 +22,8 @@ class NumKeypad( wx.Panel ):
 		wx.Panel.__init__(self, parent, id)
 		gbs = wx.GridBagSizer(4, 4)
 		
+		self.bell = None
+		
 		self.SetBackgroundColour( wx.Colour(255,255,255) )
 		
 		fontSize = 24
@@ -183,6 +185,15 @@ class NumKeypad( wx.Panel ):
 			if tLeader is not None:
 				if leaderLapsToGo >= 0:
 					timeToLeader = '%s (%d to see %d to go)' % (Utils.formatTime(tLeader), nLeader, leaderLapsToGo)
+					
+					# Play the bell reminder.
+					if leaderLapsToGo == 1 and tLeader < 15.0:
+						if not self.bell:
+							self.bell = wx.Sound( os.path.join(Utils.getImageFolder(), 'bell.wav') )
+							self.bell.Play()
+					else:
+						self.bell = None
+
 				else:
 					timeToLeader = '%s (%d)' % (Utils.formatTime(tLeader), nLeader)
 			
