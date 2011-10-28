@@ -7,6 +7,8 @@ import bisect
 import Utils
 from Utils import SetValue, SetLabel
 import Model
+import sys
+import subprocess
 
 def MakeButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1) ):
 	btn = GB.GradientButton(parent, -1, None, label=label.replace('&',''), style=style|wx.NO_BORDER, size=size)
@@ -189,8 +191,15 @@ class NumKeypad( wx.Panel ):
 					# Play the bell reminder.
 					if leaderLapsToGo == 1 and tLeader < 15.0:
 						if not self.bell:
-							self.bell = wx.Sound( os.path.join(Utils.getImageFolder(), 'bell.wav') )
-							self.bell.Play()
+							if sys.platform.startswith('linux'):
+								try:
+									subprocess.Popen(['aplay', '-q', os.path.join(Utils.getImageFolder(), 'bell.wav')])
+								except:
+									pass
+								self.bell = True
+							else:
+								self.bell = wx.Sound( os.path.join(Utils.getImageFolder(), 'bell.wav') )
+								self.bell.Play()
 					else:
 						self.bell = None
 
