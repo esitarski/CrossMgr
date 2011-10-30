@@ -10,6 +10,7 @@ import copy
 import bisect
 import json
 import random
+import threading
 import webbrowser
 import cPickle as pickle
 from optparse import OptionParser
@@ -28,6 +29,7 @@ from RaceAnimation		import RaceAnimation, GetAnimationData
 import Utils
 from Utils				import logCall
 import Model
+import VersionMgr
 import JChipSetup
 import JChip
 import OutputStreamer
@@ -36,51 +38,94 @@ from Printing			import CrossMgrPrintout, getRaceCategories
 import xlwt
 from ExportGrid			import ExportGrid
 import SimulationLapTimes
-from Version			import AppVerName
+import Version
 from ReadSignOnSheet	import GetExcelLink
 
-try:
-	import wx.lib.agw.advancedsplash as AS
-	def ShowSplashScreen():
-		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrSplash.png'), wx.BITMAP_TYPE_PNG )
-		
-		# Write in the version number into the bitmap.
-		w, h = bitmap.GetSize()
-		dc = wx.MemoryDC()
-		dc.SelectObject( bitmap )
-		dc.SetFont( wx.FontFromPixelSize( wx.Size(0,h//10), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
-		dc.DrawText( AppVerName.replace('CrossMgr','Version'), w // 20, int(h * 0.44) )
-		dc.SelectObject( wx.NullBitmap )
-		
-		# Show the splash screen.
-		estyle = AS.AS_TIMEOUT | AS.AS_CENTER_ON_PARENT
-		shadow = wx.WHITE
-		showSeconds = 2.5
+import wx.lib.agw.advancedsplash as AS
+
+def ShowSplashScreen():
+	bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrSplash.png'), wx.BITMAP_TYPE_PNG )
+	
+	# Write in the version number into the bitmap.
+	w, h = bitmap.GetSize()
+	dc = wx.MemoryDC()
+	dc.SelectObject( bitmap )
+	dc.SetFont( wx.FontFromPixelSize( wx.Size(0,h//10), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
+	dc.DrawText( Version.AppVerName.replace('CrossMgr','Version'), w // 20, int(h * 0.44) )
+	dc.SelectObject( wx.NullBitmap )
+	
+	# Show the splash screen.
+	estyle = AS.AS_TIMEOUT | AS.AS_CENTER_ON_PARENT | AS.AS_SHADOW_BITMAP
+	shadow = wx.Colour( 64, 64, 64 )
+	showSeconds = 2.5
+	try:
+		frame = AS.AdvancedSplash(Utils.getMainWin(), bitmap=bitmap, timeout=int(showSeconds*1000),
+								  extrastyle=estyle, shadowcolour=shadow)
+	except:
 		try:
 			frame = AS.AdvancedSplash(Utils.getMainWin(), bitmap=bitmap, timeout=int(showSeconds*1000),
-									  extrastyle=estyle, shadowcolour=shadow)
+									  shadowcolour=shadow)
 		except:
-			try:
-				frame = AS.AdvancedSplash(Utils.getMainWin(), bitmap=bitmap, timeout=int(showSeconds*1000),
-										  shadowcolour=shadow)
-			except:
-				pass
-								  
-except ImportError:
-	def ShowSplashScreen():
-		pass
+			pass
+			
+class MyTipProvider( wx.PyTipProvider ):
+	def __init__( self, fname, tipNo = None ):
+		self.tips = []
+		try:
+			with open(fname, 'r') as f:
+				for line in f:
+					line = line.strip()
+					if line and line[0] != '#':
+						self.tips.append( line )
+			if tipNo is None:
+				tipNo = random.randint(0, len(self.tips) - 1)
+		except:
+			pass
+		if tipNo is None:
+			tipNo = 0
+		self.tipNo = tipNo
+		wx.PyTipProvider.__init__( self, self.tipNo )
+			
+	def GetCurrentTip( self ):
+		if self.tipNo < 0 or self.tipNo >= len(self.tips):
+			self.tipNo = 0
+		return self.tipNo
+		
+	def GetTip( self ):
+		if not self.tips:
+			return 'No tips available.'
+		tip = self.tips[self.GetCurrentTip()].replace(r'\n','\n').replace(r'\t','    ')
+		self.tipNo += 1
+		return tip
+		
+	def PreprocessTip( self, tip ):
+		return tip
+		
+	def __len__( self ):
+		return len(self.tips)
+		
+	@property
+	def CurrentTip( self ):
+		return self.GetCurrentTip()
+		
+	@property
+	def Tip( self ):
+		return self.GetTip()
 
 def ShowTipAtStartup():
 	mainWin = Utils.getMainWin()
 	if mainWin and not mainWin.config.ReadBool('showTipAtStartup', True):
 		return
-		
+	
+	Version.AppVerName = 'CrossMgr 0.21'
 	tipFile = os.path.join(Utils.getImageFolder(), "tips.txt")
-	lines = 0
 	try:
-		with open(tipFile,'r') as fp:
-			provider = wx.CreateFileTipProvider(tipFile, random.randint(0,sum(1 for line in fp)))
-		showTipAtStartup = wx.ShowTip(None, provider, True)
+		provider = MyTipProvider( tipFile )
+		if VersionMgr.isUpgradeRecommended():
+			provider.tipNo = 0
+		elif provider.tipNo == 0:
+			provider.tipNo = random.randint( 1, len(provider) - 1 )
+		showTipAtStartup = wx.ShowTip( None, provider, True )
 		if mainWin:
 			mainWin.config.WriteBool('showTipAtStartup', showTipAtStartup)
 	except:
@@ -512,6 +557,7 @@ class MainWin( wx.Frame ):
 			del self.simulateTimer
 		except AttributeError:
 			pass
+			
 		sys.exit()
 
 	def writeRace( self ):
@@ -988,7 +1034,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 	def menuAbout( self, event ):
 		# First we create and fill the info object
 		info = wx.AboutDialogInfo()
-		info.Name = AppVerName
+		info.Name = Version.AppVerName
 		info.Version = ''
 		info.Copyright = "(C) 2009-2011"
 		info.Description = wordwrap(
@@ -1148,7 +1194,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 
 		race = Model.race
 		if race is None:
-			self.SetTitle( AppVerName )
+			self.SetTitle( Version.AppVerName )
 			self.timer.Stop()
 			JChip.StopListener()
 			return
@@ -1165,12 +1211,12 @@ Continue?''' % fName, 'Simulate a Race' ):
 			status = 'Finished'
 
 		if not race.isRunning():
-			self.SetTitle( '%s-r%d - %s - %s' % (race.name, race.raceNum, status, AppVerName) )
+			self.SetTitle( '%s-r%d - %s - %s' % (race.name, race.raceNum, status, Version.AppVerName) )
 			self.timer.Stop()
 			return
 
 		self.SetTitle( '%s %s-r%d - %s - %s %s' %
-					(Utils.formatTime(race.curRaceTime()), race.name, race.raceNum, status, AppVerName, '<JChip>' if JChip.listener else '' ) )
+					(Utils.formatTime(race.curRaceTime()), race.name, race.raceNum, status, Version.AppVerName, '<JChip>' if JChip.listener else '' ) )
 
 		if self.timer is None or not self.timer.IsRunning():
 			self.timer.Start( 1000 )
@@ -1181,6 +1227,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			self.writeRace()
 			
 def MainLoop():
+	random.seed()
 	setpriority( priority=4 )	# Set to real-time priority.
 
 	parser = OptionParser( usage = "usage: %prog [options] [RaceFile.cmn]" )
@@ -1212,7 +1259,7 @@ def MainLoop():
 	Utils.writeLog( 'start' )
 	
 	# Configure the main window.
-	mainWin = MainWin( None, title=AppVerName, size=(840,620) )
+	mainWin = MainWin( None, title=Version.AppVerName, size=(840,620) )
 	mainWin.Maximize( True )
 	mainWin.Show()
 
@@ -1227,6 +1274,7 @@ def MainLoop():
 	if options.verbose:
 		ShowSplashScreen()
 		ShowTipAtStartup()
+		threading.Thread( target = VersionMgr.updateVersionCache ).run()
 	
 	# Try to open a specified filename.
 	fileName = options.filename
