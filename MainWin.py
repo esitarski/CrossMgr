@@ -117,7 +117,7 @@ def ShowTipAtStartup():
 	if mainWin and not mainWin.config.ReadBool('showTipAtStartup', True):
 		return
 	
-	Version.AppVerName = 'CrossMgr 0.21'
+	# Version.AppVerName = 'CrossMgr 0.21'
 	tipFile = os.path.join(Utils.getImageFolder(), "tips.txt")
 	try:
 		provider = MyTipProvider( tipFile )
