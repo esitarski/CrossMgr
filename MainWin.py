@@ -101,6 +101,10 @@ class MyTipProvider( wx.PyTipProvider ):
 	def PreprocessTip( self, tip ):
 		return tip
 		
+	def DeleteFirstTip( self ):
+		if self.tips:
+			self.tips.pop(0)
+		
 	def __len__( self ):
 		return len(self.tips)
 		
@@ -123,8 +127,8 @@ def ShowTipAtStartup():
 		provider = MyTipProvider( tipFile )
 		if VersionMgr.isUpgradeRecommended():
 			provider.tipNo = 0
-		elif provider.tipNo == 0:
-			provider.tipNo = random.randint( 1, len(provider) - 1 )
+		else:
+			provider.DeleteFirstTip()
 		showTipAtStartup = wx.ShowTip( None, provider, True )
 		if mainWin:
 			mainWin.config.WriteBool('showTipAtStartup', showTipAtStartup)
