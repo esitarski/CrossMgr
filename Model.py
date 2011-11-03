@@ -10,9 +10,46 @@ import math
 import copy
 import operator
 import sys
+import functools
 from os.path import commonprefix
 
 maxInterpolateTime = 2.0*60.0*60.0	# 2 hours.
+
+#----------------------------------------------------------------------
+class memoize(object):
+	"""Decorator that caches a function's return value each time it is called.
+	If called later with the same arguments, the cached value is returned, and
+	not re-evaluated.
+	"""
+   
+	cache = {}
+	
+	@classmethod
+	def clear( cls ):
+		cls.cache = {}
+   
+	def __init__(self, func):
+		self.func = func
+		
+	def __call__(self, *args):
+		try:
+			return memoize.cache[self.func.__name__][args]
+		except KeyError:
+			value = self.func(*args)
+			memoize.cache.setdefault(self.func.__name__, {})[args] = value
+			return value
+		except TypeError:
+			# uncachable -- for instance, passing a list as an argument.
+			# Better to not cache than to blow up entirely.
+			return self.func(*args)
+			
+	def __repr__(self):
+		"""Return the function's docstring."""
+		return self.func.__doc__
+		
+	def __get__(self, obj, objtype):
+		"""Support instance methods."""
+		return functools.partial(self.__call__, obj)
 
 #------------------------------------------------------------------------------
 # Define a global current race.
@@ -24,20 +61,18 @@ def getRace():
 
 def newRace():
 	global race
+	memoize.clear()
 	race = Race()
 	return race
 
 def setRace( r ):
 	global race
+	memoize.clear()
 	race = r
-	if race:
-		race.resetCache()
 
 def resetCache():
-	global race
-	if race:
-		race.resetCache()
-		
+	memoize.clear()
+
 #----------------------------------------------------------------------
 class Category(object):
 
@@ -407,10 +442,6 @@ class Rider(object):
 			return False
 
 class Race(object):
-	cacheAttr = ['entriesCache', 'leaderInfoCache', 'maxLapCache', 'maxAnyLapCache',
-				 'averageLapTimeCache', 'rule80BeginTimeCache', 'rule80EndTimeCache',
-				 'leaderTimesCache', 'leaderNumsCache', 'categoryTimesNumsCache', 'categoryCache']
-
 	finisherStatusList = [Rider.Finisher, Rider.Pulled]
 	finisherStatusSet = set( finisherStatusList )
 	
@@ -439,9 +470,11 @@ class Race(object):
 		self.isChangedFlag = True
 		
 		self.tagNums = None
+		memoize.clear()
 		
-		self.resetCache()
-		
+	def resetCache( self ):
+		memoize.clear()
+	
 	def hasRiders( self ):
 		return len(self.riders) > 0
 
@@ -451,19 +484,6 @@ class Race(object):
 	def setChanged( self, changed = True ):
 		self.isChangedFlag = changed
 		
-	def resetCache( self ):
-		for a in Race.cacheAttr:
-			setattr( self, a, None )
-
-	def popCache( self ):
-		pop = [ getattr(self, a, None) for a in Race.cacheAttr ]
-		self.resetCache()
-		return pop
-
-	def pushCache( self, c ):
-		for a, v in zip( Race.cacheAttr, c ):
-			setattr( self, a, v )
-
 	def isRunning( self ):
 		return self.startTime is not None and self.finishTime is None
 
@@ -528,7 +548,7 @@ class Race(object):
 		if t is None:
 			t = self.curRaceTime()
 		self.getRider(num).addTime( t )
-		self.resetCache()
+		memoize.clear()
 		self.setChanged()
 		return t
 
@@ -546,7 +566,7 @@ class Race(object):
 	def deleteRider( self, num ):
 		try:
 			del self.riders[num]
-			self.resetCache()
+			memoize.clear()
 			self.setChanged()
 		except KeyError:
 			pass
@@ -554,6 +574,7 @@ class Race(object):
 	def deleteAllRiderTimes( self ):
 		for num in self.riders.iterkeys():
 			self.deleteRiderTimes( num )
+		memoize.clear()
 
 	def deleteTime( self, num, t ):
 		if not num in self.riders:
@@ -563,99 +584,51 @@ class Race(object):
 		# If there are no times for this rider, remove the rider entirely.
 		if len(rider.times) == 0:
 			del self.riders[num]
-		self.resetCache()
+		memoize.clear()
 		self.setChanged()
 
+	@memoize
 	def getLastKnownTime( self ):
 		try:
 			return max( r.getLastKnownTime() for r in self.riders.itervalues() )
 		except ValueError:
 			return 0.0
 
+	@memoize
 	def getBestLapTime( self, lap ):
 		try:
 			return min( (r.getBestLapTime(lap), n) for n, r in self.riders.iteritems() )
 		except ValueError:
 			return 0.0
-			
+	
+	@memoize
 	def getAverageLapTime( self ):
-		if getattr(self, 'averageLapTimeCache', None) is not None:
-			return self.averageLapTimeCache
 		tTotal, count = 0.0, 0
 		for r in self.riders.itervalues():
 			t, c = r.getTimeCount()
 			tTotal += t
 			count += c
 		if count > 0:
-			self.averageLapTimeCache = tTotal / count
+			averageLapTime = tTotal / count
 		else:
-			self.averageLapTimeCache = 8.0 * 60.0	# Default to 8 minutes.
-		return self.averageLapTimeCache
+			averageLapTime = 8.0 * 60.0	# Default to 8 minutes.
+		return averageLapTime
 
+	@memoize
 	def interpolate( self ):
-		# return self.interpolateLapCase()
-		
-		if getattr(self, 'entriesCache', None) is not None:
-			return self.entriesCache
 		# Reduce memory management in the list assignment.
-		self.entriesCache = [None] * Rider.entriesMax * len(self.riders)
+		entries = [None] * Rider.entriesMax * len(self.riders)
 		iCur, iEnd = 0, 0
 		for rider in self.riders.itervalues():
 			interpolate = rider.interpolate()
 			iEnd = iCur + len(interpolate)
-			self.entriesCache[iCur:iEnd] = interpolate
+			entries[iCur:iEnd] = interpolate
 			iCur = iEnd
-		del self.entriesCache[iEnd:]
-		self.entriesCache.sort()
-		return self.entriesCache
+		del entries[iEnd:]
+		entries.sort()
+		return entries
 
-	def interpolateLapCase( self ):
-		if getattr(self, 'entriesCache', None) is not None:
-			return self.entriesCache
-
-		riderInterpolate = {}
-		realTimesMax = 0
-		for rider in self.riders.itervalues():
-			interpolate = rider.interpolate()
-			riderInterpolate[rider] = interpolate
-			if realTimesMax < 5 and interpolate:
-				realTimesMax = max( realTimesMax, (i for i, e in enumerate(interpolate) if e.interp).next() )
-
-		if realTimesMax == 3:
-			timeSum, timeCount = 0.0, 0
-			oneLapRiders = set()
-			for rider, interpolate in riderInterpolate.iteritems():
-				if not interpolate:
-					continue
-				realTimes = (i for i, e in enumerate(interpolate) if e.interp).next()
-				if realTimes == 3:
-					timeSum += interpolate[2].t
-					timeCount += 2
-				elif realTimes == 2:
-					oneLapRiders.add( rider )
-					
-			expected = timeSum / timeCount
-			mMin = expected + expected * Rider.pMin
-			mMax = expected + expected * Rider.pMax
-			
-			for rider in oneLapRiders:
-				interpolate = riderInterpolate[rider]
-				if mMin < interpolate[1].t < mMax:
-					riderLapTime = interpolate[1].t / 2.0
-					interpolate = [ Entry(rider.num, i, i * riderLapTime, not i in [0, 2]) for i in xrange(Rider.entriesMax) ]
-					riderInterpolate[rider] = interpolate
-			
-		# Reduce memory management in the list assignment.
-		self.entriesCache = [None] * Rider.entriesMax * len(self.riders)
-		iCur, iEnd = 0, 0
-		for rider, interpolate in riderInterpolate.iteritems():
-			iEnd = iCur + len(interpolate)
-			self.entriesCache[iCur:iEnd] = interpolate
-			iCur = iEnd
-		del self.entriesCache[iEnd:]
-		self.entriesCache.sort()
-		return self.entriesCache
-
+	@memoize
 	def interpolateCategoryNumLaps( self ):
 		entries = self.interpolate()
 		if not entries:
@@ -672,7 +645,7 @@ class Race(object):
 		
 		# Filter results so that only the allowed number of laps is returned.
 		return [e for e in entries if e.lap <= riderNumLapsMax[e.num]]
-		
+	
 	def interpolateLap( self, lap, useCategoryNumLaps = False ):
 		entries = self.interpolate() if not useCategoryNumLaps else self.interpolateCategoryNumLaps()
 		# Find the first occurance of the given lap.
@@ -727,25 +700,25 @@ class Race(object):
 		return tFirstLap * 0.8
 
 	def getRule80RemainingCountdown( self ):
-		self.getLeaderTimeLap()
-		if self.rule80BeginTimeCache is None:
+		rule80Begin, rule80End = self.getRule80BeginEndTimes()
+		if rule80Begin is None:
 			return None
 		raceTime = self.lastRaceTime()
-		if self.rule80BeginTimeCache <= raceTime <= self.rule80EndTimeCache:
-			tRemaining = self.rule80EndTimeCache - raceTime
+		if rule80Begin <= raceTime <= rule80End:
+			tRemaining = rule80End - raceTime
 			if tRemaining < 0.5:
 				tRemaining = None
 			return tRemaining
 		return None
 
+	@memoize
 	def getMaxLap( self ):
-		if getattr(self, 'maxLapCache', None) is None:
-			entries = self.interpolate()
-			try:
-				self.maxLapCache = max( (e.lap + self[e.num].lapAdjust for e in entries if not e.interp) )
-			except ValueError:
-				self.maxLapCache = 0
-		return self.maxLapCache
+		entries = self.interpolate()
+		try:
+			maxLap = max( (e.lap + self[e.num].lapAdjust for e in entries if not e.interp) )
+		except ValueError:
+			maxLap = 0
+		return maxLap
 
 	def getRaceLaps( self ):
 		raceLap = self.getMaxLap()
@@ -753,33 +726,29 @@ class Race(object):
 			raceLap = self.numLaps
 		return raceLap
 
+	@memoize
 	def getMaxAnyLap( self ):
-		if getattr(self, 'maxAnyLapCache', None) is None:
-			entries = self.interpolate()
-			if not entries:
-				self.maxAnyLapCache = 0
-			else:
-				self.maxAnyLapCache = max( e.lap for e in entries )
-		return self.maxAnyLapCache
+		entries = self.interpolate()
+		if not entries:
+			maxAnyLap = 0
+		else:
+			maxAnyLap = max( e.lap for e in entries )
+		return maxAnyLap
 
+	@memoize
 	def getLeaderTimesNums( self ):
-		if getattr(self, 'leaderTimesCache', None):
-			return self.leaderTimesCache, self.leaderNumsCache
-		
-		self.leaderTimesCache, self.leaderNumsCache = None, None
+		leaderTimes, leaderNums = None, None
 		
 		entries = self.interpolate()
 		if entries:
-			leaderTimesCache = [ 0.0 ]
-			leaderNumsCache = [ None ]
+			leaderTimes = [ 0.0 ]
+			leaderNums = [ None ]
 			for e in entries:
-				if e.lap == len(leaderTimesCache):
-					leaderTimesCache.append( e.t )
-					leaderNumsCache.append( e.num )
+				if e.lap == len(leaderTimes):
+					leaderTimes.append( e.t )
+					leaderNums.append( e.num )
 				
-			self.leaderTimesCache, self.leaderNumsCache = leaderTimesCache, leaderNumsCache
-		
-		return self.leaderTimesCache, self.leaderNumsCache
+		return leaderTimes, leaderNums
 	
 	def getLeaderOfLap( self, lap ):
 		leaderTimes, leaderNums = self.getLeaderTimesNums()
@@ -803,50 +772,51 @@ class Race(object):
 			return None
 	
 	def getLeaderTimeLap( self ):
-		# Also compute the rule80 cutoffs.
-		if getattr(self, 'leaderInfoCache', None) is not None:
-			return self.leaderInfoCache
-
-		# num, t, lap
-		self.leaderInfoCache = (None, None, None)
-		self.rule80BeginTimeCache, self.rule80EndTimeCache = None, None
+		# returns: (num, t, lap)
+		leaderInfo = (None, None, None)
 
 		entries = self.interpolate()
 		if not entries:
-			return self.leaderInfoCache
+			return leaderInfo
 
 		raceTime = self.lastRaceTime()
-		tLeaderLastLap = None
 		
 		leaderTimes, leaderNums = self.getLeaderTimesNums()
 		i = bisect.bisect_right( leaderTimes, raceTime, hi=len(leaderTimes) - 1 )
-		self.leaderInfoCache = (leaderNums[i], leaderTimes[i], i-1)
+		leaderInfo = (leaderNums[i], leaderTimes[i], i-1)
+		return leaderInfo
+
+	def getRule80BeginEndTimes( self ):
+		leaderTimes, leaderNums = self.getLeaderTimesNums()
+		raceTime = self.lastRaceTime()
+		i = bisect.bisect_right( leaderTimes, raceTime, hi=len(leaderTimes) - 1 )
 		
 		tLeaderLastLap = leaderTimes[i-1]
 
-		if tLeaderLastLap is not None and getattr(self, 'leaderInfoCache', None) is not None and self.leaderInfoCache[0] is not None:
-			aveLapTime = self.leaderInfoCache[1] / float(self.leaderInfoCache[2])
-			if raceTime < self.minutes*60 + aveLapTime/2.0:
-				self.rule80BeginTimeCache = tLeaderLastLap
-				self.rule80EndTimeCache = tLeaderLastLap + self.getRule80CountdownTime()
-		return self.leaderInfoCache
-
+		if raceTime < self.minutes*60.0 + self.getAverageLapTime()/2.0:
+			return tLeaderLastLap, tLeaderLastLap + self.getRule80CountdownTime()
+		return None, None
+		
 	def getLeader( self ):
-		return self.getLeaderTimeLap()[0]
+		try:
+			return self.getLeaderTimeLap()[0]
+		except:
+			return None
 
 	def getLeaderLapTime( self ):
-		leader = self.getLeader()
-		if leader is None:
+		try:
+			return self.riders[self.getLeader()].getExpectedLapTime()
+		except:
 			return None
-		return self.riders[leader].getExpectedLapTime()
 
 	def getLeaderTime( self ):
-		return self.getLeaderTimeLap()[1]
+		try:
+			return self.getLeaderTimeLap()[1]
+		except:
+			return None
 
+	@memoize
 	def getCategoryTimesNums( self ):
-		if self.categoryTimesNumsCache:
-			return self.categoryTimesNumsCache
-			
 		ctn = {}
 		
 		activeCategories = [c for c in self.categories.itervalues() if c.active]
@@ -865,8 +835,7 @@ class Race(object):
 			except StopIteration:
 				pass
 		
-		self.categoryTimesNumsCache = ctn
-		return self.categoryTimesNumsCache
+		return ctn
 
 	def getCatPrevLeaders( self, t ):
 		''' Return a dict accessed by number referring to category. '''
@@ -1024,7 +993,7 @@ class Race(object):
 		return c
 	
 	def resetCategoryCache( self ):
-		setattr( self, 'categoryCache', None )
+		self.categoryCache = None
 	
 	def getNextExpectedLeaderTNL( self, t ):
 		leaderTimes, leaderNums = self.getLeaderTimesNums()
@@ -1146,6 +1115,7 @@ class Race(object):
 
 		return colnames, results, nonFinishers[0], nonFinishers[1], nonFinishers[2]
 
+	@memoize
 	def allRidersFinished( self ):
 		# This is dangerous!  Do not end the program early!  Always let the user end the race in case of additional laps.
 		# Simply check that it has been 60 minutes since the race ended.

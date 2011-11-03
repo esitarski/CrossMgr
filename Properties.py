@@ -280,7 +280,7 @@ def ChangeProperties( parent ):
 					
 		propertiesDialog.properties.update()
 		mainWin.fileName = newFName
-		Model.race.resetCache()
+		Model.resetCache()
 		mainWin.writeRace()
 			
 	except (NameError, AttributeError, TypeError):

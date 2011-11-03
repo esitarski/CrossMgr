@@ -1,6 +1,7 @@
 
 import wx
 import urllib2
+import socket
 import re
 import os
 import time
@@ -12,17 +13,23 @@ urlRoot = "http://sites.google.com/site/crossmgrsoftware"
 def getVersionFileName():
 	return os.path.join(Utils.getHomeDir(), 'CurrentVersion.txt')
 	
-def resetVersionCache():
+def resetVersionCache( fname = None ):
+	if not fname:
+		fname = getVersionFileName()
+		
 	try:
-		os.remove( getVersionFileName() )
+		os.remove( fname )
 	except:
 		pass
 
-def isUpgradeRecommended():
+def isUpgradeRecommended( fname = None ):
 	''' Check if an upgrade is recommended to the current version. '''
 	# Check the NextVersion file.
+	if not fname:
+		fname = getVersionFileName()
+		
 	try:
-		with open(getVersionFileName(), 'rb') as f:
+		with open(fname, 'rb') as f:
 			for line in f:
 				verMax = tuple( int(n) for n in line.split('.') )
 
@@ -35,23 +42,30 @@ def isUpgradeRecommended():
 		pass
 	return False
 	
-def updateVersionCache():
+def updateVersionCache( fname = None ):
 	''' Write the next version to the cache. '''
 	# If an upgrade is already required, don't check over the internet again.
-	if isUpgradeRecommended():
+	if not fname:
+		fname = getVersionFileName()
+		
+	if isUpgradeRecommended(fname):
 		return
 	
 	# If we already checked in the last few days, don't check again.
 	try:
-		if time.time() < os.path.getmtime(getVersionFileName()) + (3 * 24 * 60 * 60):
+		if time.time() < os.path.getmtime(fname) + (3 * 24 * 60 * 60):
 			return
 	except:
 		pass
+		
+	timeoutSave = socket.getdefaulttimeout()
+	socket.setdefaulttimeout( 20.0 )
 		
 	try:
 		# Get all the zip files from the downloads page.
 		reZipFile = re.compile( "CrossMgr[^'.]*\.zip" )
 		zips = set()
+
 		p = urllib2.urlopen(urlRoot + '/file-cabinet').read()
 		for line in p.split('\n'):
 			for m in reZipFile.findall(line):
@@ -71,12 +85,14 @@ def updateVersionCache():
 		verMax = max(vers)
 		
 		# Write the max version into the cache file.
-		with open( getVersionFileName(), 'wb' ) as f:
+		with open( fname, 'wb' ) as f:
 			f.write( '.'.join( str(n) for n in verMax ) )
 			f.write( '\n' )
 		
 	except:
 		pass
+		
+	socket.setdefaulttimeout( timeoutSave )
 	
 if __name__ == '__main__':
 	app = wx.PySimpleApp()

@@ -10,7 +10,7 @@ import copy
 import bisect
 import json
 import random
-import threading
+import multiprocessing
 import webbrowser
 import cPickle as pickle
 from optparse import OptionParser
@@ -375,7 +375,6 @@ class MainWin( wx.Frame ):
 		if not numTimes:
 			Utils.MessageOK( self, "No times found.\nCheck for *Input.csv file.", "No Times Found" )
 			return
-		race.resetCache()
 		race.deleteAllRiderTimes()
 		race.startTime = startTime
 		race.endTime = endTime
@@ -567,10 +566,8 @@ class MainWin( wx.Frame ):
 	def writeRace( self ):
 		race = Model.race
 		if race is not None:
-			cache = race.popCache()
 			with open(self.fileName, 'wb') as fp:
 				pickle.dump( race, fp, 2 )
-			race.pushCache( cache )
 			race.setChanged( False )
 
 	def setActiveCategories( self ):
@@ -937,7 +934,6 @@ Continue?''' % fName, 'Simulate a Race' ):
 		# Give the streamer a chance to write the last message.
 		wx.CallLater( 2000, OutputStreamer.StopStreamer )
 		
-		race.resetCache()
 		Utils.writeRace()
 		self.refresh()
 
@@ -1278,7 +1274,8 @@ def MainLoop():
 	if options.verbose:
 		ShowSplashScreen()
 		ShowTipAtStartup()
-		threading.Thread( target = VersionMgr.updateVersionCache ).run()
+		# multiprocessing.Process( target = VersionMgr.updateVersionCache, args = (VersionMgr.getVersionFileName(),)).start()
+		# threading.Thread( target = VersionMgr.updateVersionCache ).run()
 	
 	# Try to open a specified filename.
 	fileName = options.filename

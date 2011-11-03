@@ -9,6 +9,7 @@ from Utils import SetValue, SetLabel
 import Model
 import sys
 import subprocess
+#from aquabutton import AquaButton
 
 def MakeButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1) ):
 	btn = GB.GradientButton(parent, -1, None, label=label.replace('&',''), style=style|wx.NO_BORDER, size=size)
@@ -17,6 +18,11 @@ def MakeButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1) ):
 	btn.SetBottomStartColour( 	wx.Colour(112,112,112) )
 	btn.SetBottomEndColour( 	wx.Colour( 32, 32, 32) )
 	btn.SetBackgroundColour(	wx.Colour(255,255,255) )
+	'''
+	btn = AquaButton( parent, -1, None, label=label.replace('&',''), style=style|wx.NO_BORDER, size=size )
+	btn.SetBackgroundColour( wx.Colour(0, 128, 192) )
+	btn.SetHoverColour( wx.Colour(128, 128, 255) )
+	'''
 	return btn
 
 class NumKeypad( wx.Panel ):
@@ -102,7 +108,7 @@ class NumKeypad( wx.Panel ):
 		self.Bind(wx.EVT_CHOICE, self.doChooseAutomaticManual, self.automaticManualChoice)
 		self.automaticManualChoice.SetSelection( 0 )
 		self.automaticManualChoice.SetFont( font )
-		gbs.Add( self.automaticManualChoice, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_RIGHT )
+		gbs.Add( self.automaticManualChoice, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_LEFT )
 		rowCur += 1
 		
 		label = wx.StaticText(self, wx.ID_ANY, 'Total Laps:')

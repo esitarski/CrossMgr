@@ -184,15 +184,16 @@ class StatusBar(wx.PyControl):
 			lineHeight = 2 * int(radius * 0.25)
 			lineWidth = 2 * int(radius * 0.70)
 			sep = 4
-			dc.SetPen( wx.GREY_PEN )
-			dc.SetBrush( wx.GREY_BRUSH )
-			dc.DrawCircle( xCenter+2, yCenter+2, radius )
-			dc.SetPen( wx.BLACK_PEN )
-			dc.SetBrush( wx.RED_BRUSH )
-			dc.DrawCircle( xCenter, yCenter, radius )
-			dc.SetPen( wx.WHITE_PEN )
-			dc.SetBrush( wx.WHITE_BRUSH )
-			dc.DrawRectangle(xCenter - lineWidth/2, yCenter - lineHeight/2, lineWidth, lineHeight )
+			ctx = wx.GraphicsContext_Create( dc )
+			ctx.SetPen( wx.GREY_PEN )
+			ctx.SetBrush( wx.GREY_BRUSH )
+			ctx.DrawEllipse( xCenter+2 - radius, yCenter+2 - radius, radius * 2, radius * 2 )
+			ctx.SetPen( wx.BLACK_PEN )
+			ctx.SetBrush( wx.RED_BRUSH )
+			ctx.DrawEllipse( xCenter - radius, yCenter - radius, radius * 2, radius * 2 )
+			ctx.SetPen( wx.WHITE_PEN )
+			ctx.SetBrush( wx.WHITE_BRUSH )
+			ctx.DrawRectangle(xCenter - lineWidth/2, yCenter - lineHeight/2, lineWidth, lineHeight )
 		elif value != 0:
 			# Draw the status bar.
 			x, y = 0, 0
