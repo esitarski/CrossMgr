@@ -10,8 +10,10 @@ import Model
 import sys
 import subprocess
 #from aquabutton import AquaButton
+from keybutton import KeyButton
 
 def MakeButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1) ):
+	'''
 	btn = GB.GradientButton(parent, -1, None, label=label.replace('&',''), style=style|wx.NO_BORDER, size=size)
 	btn.SetTopStartColour( 		wx.Colour(200,200,200) )
 	btn.SetTopEndColour( 		wx.Colour(112,112,112) )
@@ -19,10 +21,12 @@ def MakeButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1) ):
 	btn.SetBottomEndColour( 	wx.Colour( 32, 32, 32) )
 	btn.SetBackgroundColour(	wx.Colour(255,255,255) )
 	'''
+	'''
 	btn = AquaButton( parent, -1, None, label=label.replace('&',''), style=style|wx.NO_BORDER, size=size )
 	btn.SetBackgroundColour( wx.Colour(0, 128, 192) )
 	btn.SetHoverColour( wx.Colour(128, 128, 255) )
 	'''
+	btn = KeyButton( parent, -1, None, label=label.replace('&',''), style=style|wx.NO_BORDER, size=size)
 	return btn
 
 class NumKeypad( wx.Panel ):

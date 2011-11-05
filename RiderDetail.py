@@ -210,10 +210,10 @@ class RiderDetail( wx.Panel ):
 	def onEditGantt( self, xPos, yPos, num, lap ):
 		if not hasattr(self, "ganttMenuInfo"):
 			self.ganttMenuInfo = [
-				[wx.NewId(),	'Split Lap in 2',			self.onSplitLap2],
-				[wx.NewId(),	'Split Lap in 3',			self.onSplitLap3],
-				[wx.NewId(),	'Split Lap in 4',			self.onSplitLap4],
-				[wx.NewId(),	'Split Lap in 5',			self.onSplitLap5],
+				[wx.NewId(),	'Split Lap in 2 Pieces',	self.onSplitLap2],
+				[wx.NewId(),	'Split Lap in 3 Pieces',	self.onSplitLap3],
+				[wx.NewId(),	'Split Lap in 4 Pieces',	self.onSplitLap4],
+				[wx.NewId(),	'Split Lap in 5 Pieces',	self.onSplitLap5],
 				[wx.NewId(),	'Delete Lap Start Time',	self.onDeleteLapStart],
 				[wx.NewId(),	'Delete Lap End Time',		self.onDeleteLapEnd],
 			]
