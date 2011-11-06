@@ -169,7 +169,7 @@ class KeyButton(wx.PyControl):
 					setattr(self, newMethod, method)
 		
 
-	def LightColour(self, colour, percent = 10.0):
+	def LightColour(self, colour, percent = 25.0):
 		"""
 		Return light contrast of `colour`. The colour returned is from the scale of
 		`colour` ==> white.
@@ -548,7 +548,6 @@ class KeyButton(wx.PyControl):
 		if hasattr(tlw, 'SetDefaultItem'):
 			tlw.SetDefaultItem(self)
 		
-
 	def Notify(self):
 		""" Actually sends a ``wx.EVT_BUTTON`` event to the listener (if any). """
 		
@@ -572,30 +571,42 @@ class KeyButton(wx.PyControl):
 		path.CloseSubpath()
 		return path
 
-	def paintRegular( self, dc, hover = False, capture = False, click = False ):
+	def OnPaint(self, event):
+		"""
+		Handles the ``wx.EVT_PAINT`` event for L{KeyButton}.
+
+		:param `event`: a `wx.PaintEvent` event to be processed.
+		"""
+
+		dc = wx.BufferedPaintDC(self)
+		
 		gc = wx.GraphicsContext.Create(dc)
-		#dc.SetBackground(wx.Brush(self.GetParent().GetBackgroundColour()))		
-		dc.SetBackground(wx.WHITE_BRUSH)		
+		#dc.SetBackground(wx.Brush(self.GetParent().GetBackgroundColour()))
+		dc.SetBackground(wx.WHITE_BRUSH)
 		dc.Clear()
 		
 		clientRect = self.GetClientRect()
-		capture = wx.Window.GetCapture()
 
-		x, y, width, height = clientRect		
-		outsideRadius = min(width, height) // 9
+		x, y, width, height = clientRect
+		colours = [	self._outsideBottomColour, self._outsideTopColour, self._outsideLineColour,
+					self._insideEdgeColour, self._insideCenterColour, self._insideLineColour]
+		textColour = wx.BLACK
 		outsideRect = wx.Rect(*clientRect)
-		if click:
+					
+		if wx.Window.GetCapture() != self:
+			if self._mouseAction == HOVER:
+				colours = [self.LightColour(c) for c in colours]
+				textColour = self.LightColour(textColour)
+		else:
 			outsideRect.Deflate( 2, 2 )
+			colours = [self.DarkColour(c) for c in colours]
+			textColour = self.DarkColour(textColour)
+
+		outsideRadius = min(outsideRect.GetWidth(), outsideRect.GetHeight()) // 9
 		insideRect = wx.Rect(*clientRect)
 		insideRect.Deflate( outsideRadius, outsideRadius )
 		insideRadius = min(insideRect.GetWidth(), insideRect.GetHeight()) // 9
 		
-		colours = [	self._outsideBottomColour, self._outsideTopColour, self._outsideLineColour,
-					self._insideEdgeColour, self._insideCenterColour, self._insideLineColour]
-		if capture or hover:
-			colours = [self.LightColour(c) for c in colours]
-		else:
-			colours = [self.DarkColour(c) for c in colours]
 		outsideBottom, outsideTop, outsideLine, insideEdge, insideCenter, insideLine = colours
 		
 		# Draw the outside of the button.
@@ -634,22 +645,8 @@ class KeyButton(wx.PyControl):
 		dc.SetFont( self.GetFont() )
 		textWidth, textHeight = dc.GetTextExtent( label )
 		
-		# dc.SetTextForeground( self.GetForegroundColour() )
+		dc.SetTextForeground( textColour )
 		dc.DrawText( label, x + (width - textWidth) // 2, y + (height - textHeight) // 2 )
-		
-	def paintPressed( self, dc ):
-		self.paintRegular( dc )
-		
-	def OnPaint(self, event):
-		"""
-		Handles the ``wx.EVT_PAINT`` event for L{KeyButton}.
-
-		:param `event`: a `wx.PaintEvent` event to be processed.
-		"""
-
-		dc = wx.BufferedPaintDC(self)
-		
-		self.paintRegular( dc, self._mouseAction == HOVER, wx.Window.GetCapture(), self._mouseAction == CLICK )
 		
 		
 if __name__ == '__main__':
