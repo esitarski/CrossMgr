@@ -10,21 +10,9 @@ import Model
 import sys
 from keybutton import KeyButton
 from RaceHUD import RaceHUD
+from EditEntry import DoDNS, DoDNF, DoPull
 
 def MakeButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1) ):
-	'''
-	btn = GB.GradientButton(parent, -1, None, label=label.replace('&',''), style=style|wx.NO_BORDER, size=size)
-	btn.SetTopStartColour( 		wx.Colour(200,200,200) )
-	btn.SetTopEndColour( 		wx.Colour(112,112,112) )
-	btn.SetBottomStartColour( 	wx.Colour(112,112,112) )
-	btn.SetBottomEndColour( 	wx.Colour( 32, 32, 32) )
-	btn.SetBackgroundColour(	wx.Colour(255,255,255) )
-	'''
-	'''
-	btn = AquaButton( parent, -1, None, label=label.replace('&',''), style=style|wx.NO_BORDER, size=size )
-	btn.SetBackgroundColour( wx.Colour(0, 128, 192) )
-	btn.SetHoverColour( wx.Colour(128, 128, 255) )
-	'''
 	btn = KeyButton( parent, -1, None, label=label.replace('&',''), style=style|wx.NO_BORDER, size=size)
 	return btn
 
@@ -238,8 +226,7 @@ class NumKeypad( wx.Panel ):
 		self.timeToLeader.SetLabel( timeToLeader )
 
 	def refreshRaceTime( self ):
-		with Model.lock:
-			race = Model.race
+		with Model.LockRace() as race:
 			if race is not None:
 				tStr = Utils.formatTime( race.lastRaceTime() )
 				self.refreshTimeToLeader()
@@ -250,14 +237,12 @@ class NumKeypad( wx.Panel ):
 		mainWin = Utils.getMainWin()
 		if mainWin is not None:
 			try:
-				mainWin.forecastHistory.refreshRule80()
 				mainWin.refreshRaceAnimation()
 			except:
 				pass
 	
 	def doChangeNumLaps( self, event ):
-		with Model.lock:
-			race = Model.race
+		with Model.LockRace() as race:
 			if race and race.isFinished():
 				try:
 					race.numLaps = int(self.numLaps.GetString(self.numLaps.GetSelection()))
@@ -266,8 +251,7 @@ class NumKeypad( wx.Panel ):
 		self.refreshLaps()
 	
 	def doChooseAutomaticManual( self, event ):
-		with Model.lock:
-			race = Model.race
+		with Model.LockRace() as race:
 			if race is not None:
 				race.automaticManual = self.automaticManualChoice.GetSelection()
 		self.refreshLaps()
@@ -311,52 +295,16 @@ class NumKeypad( wx.Panel ):
 				self.numEdit.SetValue( None )
 	
 	def onDNFPress( self, event ):
-		race = Model.race
-		if not race:
-			return
-			
-		num = self.getRiderNum()
-		if num is None:
-			return
-		if not Utils.MessageOKCancel(self, 'DNF rider %d?' % num, 'Confirm Did Not FINISH' ):
-			return
-		rider = race.getRider( num )
-		rider.setStatus( Model.Rider.DNF )
-		self.numEdit.SetValue( None )
-		Model.resetCache()
-		Utils.refresh()
+		if DoDNF( self, self.getRiderNum() ):
+			self.numEdit.SetValue( None )
 	
 	def onPullPress( self, event ):
-		race = Model.race
-		if not race:
-			return
-			
-		num = self.getRiderNum()
-		if num is None:
-			return
-		if not Utils.MessageOKCancel(self, 'Pull rider %d?' % num, 'Confirm PULL Rider', iconMask = wx.ICON_QUESTION):
-			return
-		rider = race.getRider( num )
-		rider.setStatus( Model.Rider.Pulled )
-		self.numEdit.SetValue( None )
-		Model.resetCache()
-		Utils.refresh()
+		if DoPull( self, self.getRiderNum() ):
+			self.numEdit.SetValue( None )
 	
 	def onDNSPress( self, event ):
-		race = Model.race
-		if not race:
-			return
-			
-		num = self.getRiderNum()
-		if num is None:
-			return
-		if not Utils.MessageOKCancel(self, 'DNS rider %d?' % num, 'Confirm Did Not START'):
-			return
-		rider = race.getRider( num )
-		rider.setStatus( Model.Rider.DNS )
-		self.numEdit.SetValue( None )
-		Model.resetCache()
-		Utils.refresh()
+		if DoDNS(self, self.getRiderNum()):
+			self.numEdit.SetValue( None )
 	
 	def resetLaps( self, enable = False ):
 		# Assumes Model is locked.
@@ -450,8 +398,7 @@ class NumKeypad( wx.Panel ):
 		return minLaps, maxLaps
 	
 	def refreshLaps( self ):
-		with Model.lock:
-			race = Model.race
+		with Model.LockRace() as race:
 			enable = True if race is not None and race.isRunning() else False
 			
 			self.automaticManualChoice.Enable( enable )
@@ -528,8 +475,7 @@ class NumKeypad( wx.Panel ):
 		
 	def refresh( self ):
 		wx.CallAfter( self.numEdit.SetFocus )
-		with Model.lock:
-			race = Model.race
+		with Model.LockRace() as race:
 			enable = True if race is not None and race.isRunning() else False
 			if self.isEnabled != enable:
 				for b in self.num:

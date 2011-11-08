@@ -32,8 +32,7 @@ def MakeButton( parent, id = wx.ID_ANY, img = None, text = '' ):
 	return btn
 
 def StartRaceNow():
-	with Model.lock:
-		race = Model.getRace()
+	with Model.LockRace() as race:
 		if race is None:
 			return
 			
@@ -185,8 +184,7 @@ class Actions( wx.Panel ):
 			StartRaceNow()
 	
 	def onStartRaceTime( self, event ):
-		with Model.lock:
-			race = Model.race
+		with Model.LockRace() as race:
 			if race is None:
 				return
 		dlg = StartRaceAtTime( self )
@@ -194,8 +192,7 @@ class Actions( wx.Panel ):
 		dlg.Destroy()  
 	
 	def onFinishRace( self, event ):
-		with Model.lock:
-			race = Model.race
+		with Model.LockRace() as race:
 			if race is None or not Utils.MessageOKCancel(self, 'Finish Race Now?', 'Finish Race'):
 				return
 			race.finishRaceNow()
@@ -218,8 +215,7 @@ class Actions( wx.Panel ):
 		self.startRaceBtn.Enable( False )
 		self.startRaceTimeBtn.Enable( False )
 		self.finishRaceBtn.Enable( False )
-		with Model.lock:
-			race = Model.getRace()
+		with Model.LockRace() as race:
 			if race is not None:
 				if race.startTime is None:
 					self.startRaceBtn.Enable( True )

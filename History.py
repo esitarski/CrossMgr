@@ -313,11 +313,11 @@ class History( wx.Panel ):
 		self.search.SelectAll()
 		wx.CallAfter( self.search.SetFocus )
 		
-		if race is None:
-			self.clearGrid()
-			return
+		with Model.LockRace() as race:
+			if race is None:
+				self.clearGrid()
+				return
 
-		with Model.lock:
 			catName = FixCategories( self.categoryChoice, getattr(race, 'historyCategory', 0) )
 			self.hbs.Layout()
 

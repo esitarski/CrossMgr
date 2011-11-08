@@ -51,9 +51,7 @@ class Gantt( wx.Panel ):
 		self.ganttChart.numSelect = num if num is None else str(num)
 		
 	def refresh( self ):
-		with Model.lock:
-			race = Model.getRace()
-			
+		with Model.LockRace() as race:
 			if race is None:
 				self.ganttChart.SetData( None )
 				return

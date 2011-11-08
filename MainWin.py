@@ -297,7 +297,7 @@ class MainWin( wx.Frame ):
 			setattr( self, a, c(self.notebook) )
 			addPage( getattr(self, a), '%d. %s' % (i+1, n) )
 
-		self.splitter.SplitVertically( self.forecastHistory, self.notebook, 220 )
+		self.splitter.SplitVertically( self.forecastHistory, self.notebook, 250 )
 
 		#------------------------------------------------------------------------------
 		# Create a menu for quick navigation
@@ -361,11 +361,10 @@ class MainWin( wx.Frame ):
 			self.config.WriteBool( 'showTipAtStartup', showing ^ True )
 
 	def menuRestoreFromInput( self, event ):
-		with Model.lock:
-			if not Model.race:
+		with Model.LockRace() as race:
+			if not race:
 				Utils.MessageOK(self, "You must have a vaid race.", "No Valid Race", iconMask=wx.ICON_ERROR)
 				return
-			race = Model.race
 			if not Utils.MessageOKCancel( self, "This will restore the race from the original input.\nAll your adds/splits/deletes will be lost.\nAre you sure you want to continue?",
 										"Restore from Original Input", iconMask=wx.ICON_WARNING ):
 				return
@@ -450,61 +449,58 @@ class MainWin( wx.Frame ):
 
 	@logCall
 	def menuLinkExcel( self, event ):
-		with Model.lock:
-			race = Model.getRace()
+		with Model.LockRace() as race:
 			if not race:
 				Utils.MessageOK(self, "You must have a vaid race.", "Link ExcelSheet", iconMask=wx.ICON_ERROR)
 				return
 			gel = GetExcelLink( self, getattr(race, 'excelLink', None) )
-			with Model.lock:
-				race.excelLink = gel.show()
-				if not race.excelLink:
-					del race.excelLink
+			race.excelLink = gel.show()
+			if not race.excelLink:
+				del race.excelLink
 		self.writeRace()
 		
 	#--------------------------------------------------------------------------------------------
 
 	@logCall
 	def menuExportToExcel( self, event ):
-		with Model.lock:
-			self.commit()
-			if self.fileName is None or len(self.fileName) < 4:
-				return
+		self.commit()
+		if self.fileName is None or len(self.fileName) < 4:
+			return
 
-			xlFName = self.fileName[:-4] + '.xls'
-			dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(xlFName),
-							style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
-			ret = dlg.ShowModal()
-			dName = dlg.GetPath()
-			dlg.Destroy()
-			if ret != wx.ID_OK:
-				return
+		xlFName = self.fileName[:-4] + '.xls'
+		dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(xlFName),
+						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
+		ret = dlg.ShowModal()
+		dName = dlg.GetPath()
+		dlg.Destroy()
+		if ret != wx.ID_OK:
+			return
 
-			xlFName = os.path.join( dName, os.path.basename(xlFName) )
+		xlFName = os.path.join( dName, os.path.basename(xlFName) )
 
-			wb = xlwt.Workbook()
+		wb = xlwt.Workbook()
+		with Model.LockRace() as race:
 			for catName in getRaceCategories():
 				sheetCur = wb.add_sheet( re.sub('[:\\/?*\[\]]', ' ', catName) )
 				export = ExportGrid()
 				export.setResultsOneListRiderTimes( catName )
 				export.toExcelSheet( sheetCur )
 
-			try:
-				wb.save( xlFName )
-				webbrowser.open( xlFName, new = 2, autoraise = True )
-				Utils.MessageOK(self, 'Excel file written to:\n\n   %s' % xlFName, 'Excel Write', iconMask=wx.ICON_INFORMATION)
-			except IOError:
-				Utils.MessageOK(self,
-							'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % xlFName,
-							'Excel File Error', iconMask=wx.ICON_ERROR )
+		try:
+			wb.save( xlFName )
+			webbrowser.open( xlFName, new = 2, autoraise = True )
+			Utils.MessageOK(self, 'Excel file written to:\n\n   %s' % xlFName, 'Excel Write', iconMask=wx.ICON_INFORMATION)
+		except IOError:
+			Utils.MessageOK(self,
+						'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % xlFName,
+						'Excel File Error', iconMask=wx.ICON_ERROR )
 						
 	#--------------------------------------------------------------------------------------------
 	
 	@logCall
 	def menuExportHtmlRaceResults( self, event ):
-		with Model.lock:
+		with Model.LockRace() as race:
 			self.commit()
-			race = Model.getRace()
 			if race is None:
 				Utils.MessageOK(self, 'No race loaded.  Please New/Open a race.', 'Export Html Error', iconMask=wx.ICON_ERROR)
 				return
@@ -570,16 +566,14 @@ class MainWin( wx.Frame ):
 		sys.exit()
 
 	def writeRace( self ):
-		with Model.lock:
-			race = Model.race
+		with Model.LockRace() as race:
 			if race is not None:
 				with open(self.fileName, 'wb') as fp:
 					pickle.dump( race, fp, 2 )
 				race.setChanged( False )
 
 	def setActiveCategories( self ):
-		with Model.lock:
-			race = Model.race
+		with Model.LockRace() as race:
 			if race is None:
 				return
 			race.setActiveCategories()
@@ -715,7 +709,7 @@ class MainWin( wx.Frame ):
 		self.writeRace()
 
 		try:
-			with Model.lock:
+			with Model.LockRace() as race:
 				with open(fileName, 'rb') as fp:
 					race = pickle.load( fp )
 				self.fileName = fileName
@@ -902,7 +896,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 		# Start the simulation.
 
 		self.nextNum = None
-		with Model.lock:
+		with Model.LockRace() as race:
 			race.startRaceNow()		
 			# Backup all the events and race start so we don't have to wait for the first lap.
 			race.startTime -= datetime.timedelta( seconds = (tMin-1) )
@@ -918,15 +912,13 @@ Continue?''' % fName, 'Simulate a Race' ):
 		if self.nextNum is not None and self.nextNum not in self.simulateSeen:
 			self.forecastHistory.logNum( self.nextNum )
 
-		with Model.lock:
-			race = Model.race
+		with Model.LockRace() as race:
 			if race.curRaceTime() > race.minutes * 60.0:
 				self.simulateSeen.add( self.nextNum )
 
 		try:
 			t, self.nextNum = self.lapTimes.pop()
-			with Model.lock:
-				race = Model.getRace()
+			with Model.LockRace() as race:
 				if t < (self.raceMinutes*60.0 + race.getAverageLapTime()*1.5):
 					self.simulateTimer.Restart( int(max(1,(t - race.curRaceTime()) * 1000)), True )
 					return
@@ -935,7 +927,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			
 		self.simulateTimer.Stop()
 		self.nextNum = None
-		with Model.lock:
+		with Model.LockRace() as race:
 			race.finishRaceNow()
 		
 		OutputStreamer.writeRaceFinish()
@@ -988,7 +980,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 			fname = dlg.GetPath()
 			try:
 				with open(fname, 'w') as fp:
-					race.exportCategories( fp )
+					with Model.LockRace() as race:
+						race.exportCategories( fp )
 			except IOError:
 				Utils.MessageOK( self, "Cannot open file:\n%s" % fname, "File Open Error", iconMask=wx.ICON_ERROR)
 				

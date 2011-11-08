@@ -144,9 +144,8 @@ class Recommendations( wx.Panel ):
 		self.grid.Reset()
 	
 	def refresh( self ):
-		with Model.lock:
+		with Model.LockRace() as race:
 			self.isEmpty = True
-			race = Model.getRace()
 			
 			if race is None or race.numLaps is None:
 				self.clearGrid()
@@ -154,7 +153,7 @@ class Recommendations( wx.Panel ):
 
 			catName = FixCategories( self.categoryChoice, getattr(race, 'recommendationsCategory', 0) )
 					
-			entries = race.interpolateLap( race.numLaps, useCategoryNumLaps = True)
+			entries = race.interpolateLap( race.numLaps, True)
 			if not entries:
 				self.clearGrid()
 				return
