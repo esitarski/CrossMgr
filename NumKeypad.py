@@ -8,7 +8,6 @@ import Utils
 from Utils import SetValue, SetLabel
 import Model
 import sys
-import subprocess
 from keybutton import KeyButton
 from RaceHUD import RaceHUD
 

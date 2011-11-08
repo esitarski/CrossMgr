@@ -4,6 +4,7 @@ import wx
 import os
 import re
 import sys
+import subprocess
 import wx.grid		as gridlib
 try:
 	from win32com.shell import shell, shellcon
