@@ -79,7 +79,7 @@ class ForecastHistory( wx.Panel ):
 		self.expectedName = self.lgExpected.label
 		self.expectedGrid = self.lgExpected.grid
 		self.expectedName.SetLabel( 'Expected:' )
-		self.expectedGrid.SetDefaultCellBackgroundColour( wx.Colour(238,255,255) )
+		self.expectedGrid.SetDefaultCellBackgroundColour( wx.Colour(230,255,255) )
 		self.Bind( wx.grid.EVT_GRID_SELECT_CELL, self.doExpectedSelect, self.expectedGrid )
 		
 		self.splitter.SetMinimumPaneSize( 64 )
