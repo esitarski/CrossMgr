@@ -35,6 +35,7 @@ class NumKeypad( wx.Panel ):
 		gbs = wx.GridBagSizer(4, 4)
 		
 		self.bell = None
+		self.tada = None
 		
 		self.SetBackgroundColour( wx.WHITE )
 		
@@ -209,26 +210,25 @@ class NumKeypad( wx.Panel ):
 				self.raceHUD.SetData( nowTime = tCur, lapTimes = leaderTimes, leader = leaderNum )
 				
 			if tLeader is not None:
+			
+				if tLeader <= 3.0:
+					if not self.tada:
+						self.tada = Utils.PlaySound( 'tada.wav' )
+				else:
+					self.tada = None
+						
 				# update the Time to Leader.
 				leaderLapsToGo -= 1
 				if leaderLapsToGo >= 0:
 					timeToLeader = '%s (%d to see %d to go)' % (Utils.formatTime(tLeader), nLeader, leaderLapsToGo)
 					
 					# Play the bell reminder.
-					if leaderLapsToGo == 1 and tLeader < 15.0:
+					if leaderLapsToGo == 1 and tLeader <= 10.0:
 						if not self.bell:
-							if sys.platform.startswith('linux'):
-								try:
-									subprocess.Popen(['aplay', '-q', os.path.join(Utils.getImageFolder(), 'bell.wav')])
-								except:
-									pass
-								self.bell = True
-							else:
-								self.bell = wx.Sound( os.path.join(Utils.getImageFolder(), 'bell.wav') )
-								self.bell.Play()
+							self.bell = Utils.PlaySound( 'bell.wav' )
 					else:
 						self.bell = None
-
+						
 				else:
 					timeToLeader = '%s (%d)' % (Utils.formatTime(tLeader), nLeader)
 			
@@ -310,7 +310,6 @@ class NumKeypad( wx.Panel ):
 			else:
 				self.refreshLaps()
 				self.numEdit.SetValue( None )
-			Utils.PlayConfirmSound()
 	
 	def onDNFPress( self, event ):
 		race = Model.race
