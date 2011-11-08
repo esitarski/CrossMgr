@@ -271,70 +271,71 @@ class Results( wx.Panel ):
 			self.clearGrid()
 			return
 		
-		catName = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
-		self.hbs.Layout()
-		self.category = race.categories.get( catName, None )
-		
-		colnames, results, dnf, dns, dq = race.getResults( catName )
+		with Model.lock:
+			catName = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
+			self.hbs.Layout()
+			self.category = race.categories.get( catName, None )
+			
+			colnames, results, dnf, dns, dq = race.getResults( catName )
 
-		if not any([colnames, results, dnf, dns, dq]):
-			self.clearGrid()
-			return
+			if not any([colnames, results, dnf, dns, dq]):
+				self.clearGrid()
+				return
 
-		self.isEmpty = False
+			self.isEmpty = False
 
-		# Format the results.
-		data = []
-		formatStr = ['$num$otl']
-		if self.showTimes:			formatStr.append('=$t')
-		if self.showGaps:			formatStr.append('$gap')
-		if self.showLapsCompleted:	formatStr.append(' [$lap]')
-		if self.showPositions:		formatStr.append(' ($pos)')
-		template = Template( ''.join(formatStr) )
-		
-		if results:
-			leaderLap = results[0][0].lap
-			leaderTime = results[0][0].t
-			pos = 1
-			for col, d in enumerate(results):
-				data.append( [template.safe_substitute(
-						{
-							'num':	e.num,
-							'otl':	'OTL' if race[e.num].isPulled() else '',
-							't':	Utils.formatTime(e.t) if self.showTimes else '',
-							'gap':	('+%s' % Utils.formatTime(e.t - leaderTime) if e.lap == leaderLap else '') if self.showGaps else '',
-							'lap':	e.lap,
-							'pos':	row+pos
-						} ) for row, e in enumerate(d)] )
+			# Format the results.
+			data = []
+			formatStr = ['$num$otl']
+			if self.showTimes:			formatStr.append('=$t')
+			if self.showGaps:			formatStr.append('$gap')
+			if self.showLapsCompleted:	formatStr.append(' [$lap]')
+			if self.showPositions:		formatStr.append(' ($pos)')
+			template = Template( ''.join(formatStr) )
+			
+			if results:
+				leaderLap = results[0][0].lap
+				leaderTime = results[0][0].t
+				pos = 1
+				for col, d in enumerate(results):
+					data.append( [template.safe_substitute(
+							{
+								'num':	e.num,
+								'otl':	'OTL' if race[e.num].isPulled() else '',
+								't':	Utils.formatTime(e.t) if self.showTimes else '',
+								'gap':	('+%s' % Utils.formatTime(e.t - leaderTime) if e.lap == leaderLap else '') if self.showGaps else '',
+								'lap':	e.lap,
+								'pos':	row+pos
+							} ) for row, e in enumerate(d)] )
 
-				self.rcInterp.update( (row, col) for row, e in enumerate(d) if race[e.num].hasInterpolatedTime(e.t) )
-				pos += len(d)
-		
-		if dnf:
-			formatStr = '$num'
-			if self.showTimes:			formatStr += '=$t'
-			template = Template( formatStr )
-			colnames.append( 'DNF' )
-			data.append( [template.safe_substitute( dict(num=e[0], t=Utils.formatTime(e[1])) ) for j, e in enumerate(dnf)] )
+					self.rcInterp.update( (row, col) for row, e in enumerate(d) if race[e.num].hasInterpolatedTime(e.t) )
+					pos += len(d)
+			
+			if dnf:
+				formatStr = '$num'
+				if self.showTimes:			formatStr += '=$t'
+				template = Template( formatStr )
+				colnames.append( 'DNF' )
+				data.append( [template.safe_substitute( dict(num=e[0], t=Utils.formatTime(e[1])) ) for j, e in enumerate(dnf)] )
 
-		if dns:
-			colnames.append( 'DNS' )
-			data.append( [str(e[0]) for e in dns] )
+			if dns:
+				colnames.append( 'DNS' )
+				data.append( [str(e[0]) for e in dns] )
 
-		if dq:
-			colnames.append( 'NP' )
-			data.append( [str(e[0]) for e in dq] )
+			if dq:
+				colnames.append( 'NP' )
+				data.append( [str(e[0]) for e in dq] )
 
-		self.grid.Set( data = data, colnames = colnames )
-		self.grid.AutoSizeColumns( True )
-		self.grid.Reset()
+			self.grid.Set( data = data, colnames = colnames )
+			self.grid.AutoSizeColumns( True )
+			self.grid.Reset()
 
-		self.showNumSelect()		
+			self.showNumSelect()		
 
-		self.grid.MakeCellVisible( 0, self.grid.GetNumberCols()-1 )
-						
-		# Fix the grid's scrollbars.
-		self.grid.FitInside()
+			self.grid.MakeCellVisible( 0, self.grid.GetNumberCols()-1 )
+							
+			# Fix the grid's scrollbars.
+			self.grid.FitInside()
 
 	def commit( self ):
 		pass

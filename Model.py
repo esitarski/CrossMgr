@@ -11,9 +11,12 @@ import copy
 import operator
 import sys
 import functools
+import thread
 from os.path import commonprefix
 
 maxInterpolateTime = 2.0*60.0*60.0	# 2 hours.
+
+lock = thread.allocate_lock()
 
 #----------------------------------------------------------------------
 class memoize(object):
@@ -743,11 +746,16 @@ class Race(object):
 		if entries:
 			leaderTimes = [ 0.0 ]
 			leaderNums = [ None ]
-			for e in entries:
-				if e.lap == len(leaderTimes):
+			leaderTimesLen = 1
+			while 1:
+				try:
+					e = (e for e in entries if e.lap == leaderTimesLen).next()
 					leaderTimes.append( e.t )
 					leaderNums.append( e.num )
-				
+					leaderTimesLen += 1
+				except StopIteration:
+					break
+		
 		return leaderTimes, leaderNums
 	
 	def getLeaderOfLap( self, lap ):

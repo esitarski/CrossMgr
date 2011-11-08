@@ -9,6 +9,52 @@ import StatusBar
 import OutputStreamer
 from EditEntry import CorrectNumber, SplitNumber, DeleteEntry
 
+# Define columns for recorded and expected infomation.
+iNumCol = 0
+iLdrCol = 1
+iLapCol = 2
+iTimeCol = 3
+iColMax = 4
+colnames = [None] * iColMax
+colnames[iNumCol] = 'Num'
+colnames[iLdrCol] = 'Ldr'
+colnames[iLapCol] = 'Lap'
+colnames[iTimeCol] = 'Time'
+
+fontSize = 14
+
+def GetLabelGrid( parent ):
+	font = wx.Font( fontSize, wx.DEFAULT, wx.NORMAL, wx.NORMAL )
+	dc = wx.WindowDC( parent )
+	dc.SetFont( font )
+	w, h = dc.GetTextExtent( '999' )
+
+	label = wx.StaticText( parent, wx.ID_ANY, 'Recorded:' )
+	
+	grid = ColGrid.ColGrid( parent, colnames = colnames )
+	grid.SetRowLabelSize( 0 )
+	grid.SetRightAlign( True )
+	grid.AutoSizeColumns( True )
+	grid.DisableDragColSize()
+	grid.DisableDragRowSize()
+	grid.SetDoubleBuffered( True )
+	grid.SetDefaultCellFont( font )
+	grid.SetDefaultRowSize( int(h * 1.15), True )
+	return label, grid
+		
+class LabelGrid( wx.Panel ):
+	def __init__( self, parent, id = wx.ID_ANY, style = 0 ):
+		wx.Panel.__init__(self, parent, id, style=style)
+		
+		bsMain = wx.BoxSizer( wx.VERTICAL )
+		
+		self.label, self.grid = GetLabelGrid( self )
+		bsMain.Add( self.label, 0, flag=wx.ALL, border=4 )		
+		bsMain.Add( self.grid, 1, flag=wx.ALL|wx.EXPAND, border = 4 )
+		
+		self.SetSizer( bsMain )
+		self.Layout()
+		
 class ForecastHistory( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY, style = 0 ):
 		wx.Panel.__init__(self, parent, id, style=style)
@@ -16,78 +62,62 @@ class ForecastHistory( wx.Panel ):
 		self.quickHistory = None
 		self.orangeColour = wx.Colour(255, 165, 0)
 
-		fontSize = 14
-		font = wx.Font(fontSize, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
-		dc = wx.WindowDC( self )
-		dc.SetFont( font )
-		w, h = dc.GetTextExtent( '999' )
-
-		bsMain = wx.BoxSizer(wx.VERTICAL)
+		# Main sizer.
+		bsMain = wx.BoxSizer( wx.VERTICAL )
 		
-		#-----------------------------------------------------------------------------------
-		# Recorded Numbers
-		#
-		bsMain.Add( wx.StaticText( self, wx.ID_ANY, 'Recorded:' ), 0, flag=wx.EXPAND | wx.ALL, border=4 )
+		# Put Recorded and Expected in a splitter window.
+		self.splitter = wx.SplitterWindow( self )
 		
-		self.iNumCol = 0
-		self.iLdrCol = 1
-		self.iLapCol = 2
-		self.iTimeCol = 3
-		self.iColMax = 4
-		colnames = [None] * self.iColMax
-		colnames[self.iNumCol] = 'Num'
-		colnames[self.iLdrCol] = 'Ldr'
-		colnames[self.iLapCol] = 'Lap'
-		colnames[self.iTimeCol] = 'Time'
+		self.lgHistory = LabelGrid( self.splitter, style = wx.BORDER_SUNKEN )
+		self.historyName = self.lgHistory.label
+		self.historyName.SetLabel( 'Recorded:' )
+		self.historyGrid = self.lgHistory.grid
+		self.Bind( wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.doPopup, self.historyGrid )
+		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doPopup, self.historyGrid )		
 		
-		self.historyGrid = ColGrid.ColGrid( self, colnames = colnames )
-		self.historyGrid.SetRowLabelSize( 0 )
-		self.historyGrid.SetRightAlign( True )
-		self.historyGrid.AutoSizeColumns( True )
-		self.historyGrid.DisableDragColSize()
-		self.historyGrid.DisableDragRowSize()
-		self.historyGrid.SetDoubleBuffered( True )
-		self.historyGrid.SetDefaultCellFont( font )
-		#self.historyGrid.SetLabelFont( font )
-		self.historyGrid.SetDefaultRowSize( int(h * 1.15), True)
-		self.Bind( wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.doPopup,self.historyGrid )
-		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doPopup,self.historyGrid )		
-		bsMain.Add( self.historyGrid, 1, flag=wx.EXPAND|wx.GROW|wx.ALL, border = 4 )
-
-		#-----------------------------------------------------------------------------------
-		# Expected numbers
-		#
-		self.expectedName = wx.StaticText( self, wx.ID_ANY, 'Expected:' )
-		bsMain.Add( self.expectedName, 0, flag=wx.EXPAND | wx.ALL, border=4 )
+		self.lgExpected = LabelGrid( self.splitter, style = wx.BORDER_SUNKEN )
+		self.expectedName = self.lgExpected.label
+		self.expectedGrid = self.lgExpected.grid
+		self.expectedName.SetLabel( 'Expected:' )
+		self.expectedGrid.SetDefaultCellBackgroundColour( wx.Colour(238,255,255) )
+		self.Bind( wx.grid.EVT_GRID_SELECT_CELL, self.doExpectedSelect, self.expectedGrid )
 		
-		self.expectedGrid = ColGrid.ColGrid( self, colnames = colnames )
-		self.expectedGrid.SetRowLabelSize( 0 )
-		self.expectedGrid.SetColLabelSize( 0 )
-		self.expectedGrid.SetRightAlign( True )
-		self.expectedGrid.AutoSizeColumns( True )
-		self.expectedGrid.DisableDragColSize()
-		self.expectedGrid.DisableDragRowSize()
-		self.expectedGrid.SetDoubleBuffered( True )
-		self.expectedGrid.SetDefaultCellFont( font )
-		#self.expectedGrid.SetLabelFont( font )
-		self.expectedGrid.SetDefaultRowSize( int(h * 1.25), True)
-		self.Bind( wx.grid.EVT_GRID_SELECT_CELL, self.doExpectedSelect, self.expectedGrid )		
-		bsMain.Add( self.expectedGrid, 1, flag=wx.EXPAND|wx.GROW|wx.ALL, border = 4 )
-		
+		self.splitter.SetMinimumPaneSize( 64 )
+		self.splitter.SetSashGravity( 0.5 )
+		self.splitter.SplitHorizontally( self.lgHistory, self.lgExpected, 100 )
+		self.Bind( wx.EVT_SPLITTER_DCLICK, self.doSwapOrientation, self.splitter )
+		bsMain.Add( self.splitter, 1, flag=wx.EXPAND | wx.ALL, border = 4 )
 		#-----------------------------------------------------------------------------------
 		# 80% rule countdown
 		#
 		self.rule80Gauge = StatusBar.StatusBar(self, wx.ID_ANY, value=0, range=0)
-		self.rule80Gauge.SetFont( font )
-		
-		bsMain.Add( self.rule80Gauge, 0, flag=wx.EXPAND | wx.ALL |  wx.GROW, border = 4 )
+		self.rule80Gauge.SetFont( wx.Font(fontSize, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
+		bsMain.Add( self.rule80Gauge, 0, flag=wx.EXPAND | wx.ALL, border = 4 )
 				
 		self.historyGrid.Reset()
 		self.expectedGrid.Reset()
 		
 		self.SetSizer( bsMain )
 		self.refresh()
+		self.Layout()
+		
+	def setSash( self ):
+		size = self.GetClientSize()
+		if self.splitter.GetSplitMode() == wx.SPLIT_VERTICAL:
+			self.splitter.SetSashPosition( size.width // 2 )
+		else:
+			self.splitter.SetSashPosition( size.height // 2 )
 
+	def swapOrientation( self ):
+		if self.splitter.GetSplitMode() == wx.SPLIT_VERTICAL:
+			self.splitter.SetSplitMode( wx.SPLIT_HORIZONTAL )
+		else:
+			self.splitter.SetSplitMode( wx.SPLIT_VERTICAL )
+		self.setSash()
+		
+	def doSwapOrientation( self, event ):
+		self.swapOrientation()
+			
 	def doPopup( self, event ):
 		self.rowPopup = event.GetRow()
 		race = Model.getRace()
@@ -131,42 +161,44 @@ class ForecastHistory( wx.Panel ):
 		self.rule80Gauge.SetValue( 0 )
 
 	def refreshRule80( self ):
-		race = Model.getRace()
-		if not race or not race.isRunning() or race.getMaxLap() >= race.numLaps:
-			self.resetRule80()
-			return
-		if race.getMaxLap() == race.numLaps - 1:
-			leaderTime, leaderNum, leaderLapTime = race.getNextExpectedLeaderTNL( race.lastRaceTime() )
-			if leaderTime is not None and race.lastRaceTime() + leaderLapTime * 0.05 > leaderTime:
+		with Model.lock:
+			race = Model.getRace()
+			if not race or not race.isRunning() or race.getMaxLap() >= race.numLaps:
 				self.resetRule80()
 				return
-			
-		remaining = race.getRule80RemainingCountdown()
-		if remaining is None:
-			self.rule80Gauge.SetRange( 10 )
-			self.rule80Gauge.SetValue( 0 )
-			return
-		
-		maxSeconds = int(race.getRule80CountdownTime())
-		currentValue = self.rule80Gauge.GetValue()
-		if self.rule80Gauge.GetRange() != maxSeconds:
-			if currentValue > maxSeconds:
+			if race.getMaxLap() == race.numLaps - 1:
+				leaderTime, leaderNum, leaderLapTime = race.getNextExpectedLeaderTNL( race.lastRaceTime() )
+				if leaderTime is not None and race.lastRaceTime() + leaderLapTime * 0.05 > leaderTime:
+					self.resetRule80()
+					return
+				
+			remaining = race.getRule80RemainingCountdown()
+			if remaining is None:
+				self.rule80Gauge.SetRange( 10 )
 				self.rule80Gauge.SetValue( 0 )
-				currentValue = 0
-			self.rule80Gauge.SetRange( maxSeconds )
-		remaining = int(remaining)
-		if currentValue == 0 or currentValue > remaining:
-			self.rule80Gauge.SetValue( remaining )
+				return
+			
+			maxSeconds = int(race.getRule80CountdownTime())
+			currentValue = self.rule80Gauge.GetValue()
+			if self.rule80Gauge.GetRange() != maxSeconds:
+				if currentValue > maxSeconds:
+					self.rule80Gauge.SetValue( 0 )
+					currentValue = 0
+				self.rule80Gauge.SetRange( maxSeconds )
+			remaining = int(remaining)
+			if currentValue == 0 or currentValue > remaining:
+				self.rule80Gauge.SetValue( remaining )
 	
 	def logNum( self, num ):
 		if not num:
 			return
-		race = Model.race
-		if race is None or not race.isRunning():
-			return
-		t = race.curRaceTime()
-		num = int(num)
-		race.addTime( num, t )
+		with Model.lock:
+			race = Model.race
+			if race is None or not race.isRunning():
+				return
+			t = race.curRaceTime()
+			num = int(num)
+			race.addTime( num, t )
 		mainWin = Utils.getMainWin()
 		if mainWin:
 			mainWin.record.numEdit.SetValue( None )
@@ -186,121 +218,118 @@ class ForecastHistory( wx.Panel ):
 		self.expectedGrid.Reset()
 	
 	def refresh( self ):
-		race = Model.race
-		if race is None or not race.isRunning():
-			self.clearGrids()
-			return
-					
-		tRace = race.curRaceTime()
-		
-		entries = race.interpolateLap( race.numLaps if race.numLaps is not None else race.getMaxLap() + 1 )
-		# Filter out zero start times and pulled or dnf riders.
-		entries = [e for e in entries if e.t > 0 and race[e.num].status == Model.Rider.Finisher]
-		
-		#------------------------------------------------------------------
-		# Select the interpolated entries around now.
-		leaderNext = race.getNextLeader( tRace )
-		leaderPrev = race.getPrevLeader( tRace )
-		backSecs = race.getAverageLapTime() / 4.0
-		
-		expectedShowMax = 20
-		
-		tMin = tRace - backSecs
-		tMax = tRace + race.getAverageLapTime()
-		times = [e.t for e in entries]
-		iCur = bisect.bisect_left( times, tRace )
-		iLeft = max(0, iCur - expectedShowMax/2)
-		times = None
-		seen = {}
-		expected = [ seen.setdefault(e.num, e) for e in entries[iLeft:] if e.interp and tMin <= e.t <= tMax and e.num not in seen ]
-		expected = expected[:min(expectedShowMax, len(entries))]
-		
-		catNextLeaders = race.getCatNextLeaders( tRace )
-		catPrevLeaders = race.getCatPrevLeaders( tRace )
-		
-		backgroundColour = {}
-		#------------------------------------------------------------------
-		# Highlight the missing riders.
-		tMissing = tRace - race.getAverageLapTime() / 8.0
-		iNotMissing = 0
-		for r in (i for i, e in enumerate(expected) if e.t < tMissing):
-			for c in xrange(self.iColMax):
-				backgroundColour[(r, c)] = self.orangeColour
-			iNotMissing = r + 1
-		#------------------------------------------------------------------
-		# Highlight the leader in the expected list.
-		iBeforeLeader = None
-		try:
-			r = (i for i, e in enumerate(expected) if e.num == leaderNext).next()
-			backgroundColour[(r, self.iNumCol)] = wx.GREEN
-			iBeforeLeader = r
-		except StopIteration:
-			pass
+		with Model.lock:
+			race = Model.race
+			if race is None or not race.isRunning():
+				self.clearGrids()
+				return
+						
+			tRace = race.curRaceTime()
 			
-		# Highlight the leader by category.
-		for r, e in enumerate(expected):
-			if e.num in catNextLeaders:
-				backgroundColour[(r, self.iLdrCol)] = wx.GREEN
-		
-		data = [None] * self.iColMax
-		data[self.iNumCol] = [str(e.num) for e in expected]
-		data[self.iTimeCol] = [formatTime(e.t) for e in expected]
-		data[self.iLapCol] = [str(e.lap) for e in expected]
-		data[self.iLdrCol] = ['*' if e.num in catNextLeaders else ' ' for e in expected]
-		
-		self.expectedGrid.Set( data = data, backgroundColour = backgroundColour )
-		self.expectedGrid.AutoSizeColumns()
-		self.expectedGrid.AutoSizeRows()
-		
-		if iBeforeLeader:
-			Utils.SetLabel( self.expectedName, 'Expected: %d before Race Leader' % iBeforeLeader )
-		else:
-			Utils.SetLabel( self.expectedName, 'Expected:' )
-		
-		#------------------------------------------------------------------
-		# Update recorded.
-		recordedDisplayMax = 25
-		recorded = [ e for e in entries if not e.interp and e.t <= tRace ]
-		recorded = recorded[-min(recordedDisplayMax, len(entries)):]
-		self.quickHistory = recorded
+			entries = race.interpolateLap( race.numLaps if race.numLaps is not None else race.getMaxLap() + 1 )
+			# Filter out zero start times and pulled or dnf riders.
+			entries = [e for e in entries if e.t > 0 and race[e.num].status == Model.Rider.Finisher]
 			
-		backgroundColour = {}
-		data = [None] * self.iColMax
-		data[self.iNumCol] = [str(e.num) for e in recorded]
-		data[self.iTimeCol] = [formatTime(e.t) for e in recorded]
-		data[self.iLapCol] = [str(e.lap) for e in recorded]
-		data[self.iLdrCol] = ['*' if e.num in catPrevLeaders else ' ' for e in recorded]
+			#------------------------------------------------------------------
+			# Select the interpolated entries around now.
+			leaderNext = race.getNextLeader( tRace )
+			leaderPrev = race.getPrevLeader( tRace )
+			backSecs = race.getAverageLapTime() / 4.0
+			
+			expectedShowMax = 32
+			
+			tMin = tRace - backSecs
+			tMax = tRace + race.getAverageLapTime()
+			times = [e.t for e in entries]
+			iCur = bisect.bisect_left( times, tRace )
+			iLeft = max(0, iCur - expectedShowMax/2)
+			times = None
+			seen = {}
+			expected = [ seen.setdefault(e.num, e) for e in entries[iLeft:] if e.interp and tMin <= e.t <= tMax and e.num not in seen ]
+			expected = expected[:min(expectedShowMax, len(entries))]
+			
+			catNextLeaders = race.getCatNextLeaders( tRace )
+			catPrevLeaders = race.getCatPrevLeaders( tRace )
+			
+			backgroundColour = {}
+			#------------------------------------------------------------------
+			# Highlight the missing riders.
+			tMissing = tRace - race.getAverageLapTime() / 8.0
+			iNotMissing = 0
+			for r in (i for i, e in enumerate(expected) if e.t < tMissing):
+				for c in xrange(iColMax):
+					backgroundColour[(r, c)] = self.orangeColour
+				iNotMissing = r + 1
+			#------------------------------------------------------------------
+			# Highlight the leader in the expected list.
+			iBeforeLeader = None
+			try:
+				r = (i for i, e in enumerate(expected) if e.num == leaderNext).next()
+				backgroundColour[(r, iNumCol)] = wx.GREEN
+				iBeforeLeader = r
+			except StopIteration:
+				pass
+				
+			# Highlight the leader by category.
+			for r, e in enumerate(expected):
+				if e.num in catNextLeaders:
+					backgroundColour[(r, iLdrCol)] = wx.GREEN
+			
+			data = [None] * iColMax
+			data[iNumCol] = [str(e.num) for e in expected]
+			data[iTimeCol] = [formatTime(e.t) for e in expected]
+			data[iLapCol] = [str(e.lap) for e in expected]
+			data[iLdrCol] = ['*' if e.num in catNextLeaders else ' ' for e in expected]
+			
+			self.expectedGrid.Set( data = data, backgroundColour = backgroundColour )
+			self.expectedGrid.AutoSizeColumns()
+			self.expectedGrid.AutoSizeRows()
+			
+			if iBeforeLeader:
+				Utils.SetLabel( self.expectedName, 'Expected: %d before Race Leader' % iBeforeLeader )
+			else:
+				Utils.SetLabel( self.expectedName, 'Expected:' )
+			
+			#------------------------------------------------------------------
+			# Update recorded.
+			recordedDisplayMax = 32
+			recorded = [ e for e in entries if not e.interp and e.t <= tRace ]
+			recorded = recorded[-min(recordedDisplayMax, len(entries)):]
+			self.quickHistory = recorded
+				
+			backgroundColour = {}
+			data = [None] * iColMax
+			data[iNumCol] = [str(e.num) for e in recorded]
+			data[iTimeCol] = [formatTime(e.t) for e in recorded]
+			data[iLapCol] = [str(e.lap) for e in recorded]
+			data[iLdrCol] = ['*' if e.num in catPrevLeaders else ' ' for e in recorded]
 
-		# Highlight the leader in the recorded list.
-		for r, e in enumerate(recorded):
-			if e.num == leaderPrev:
-				backgroundColour[(r, self.iNumCol)] = wx.GREEN
-			if e.num in catPrevLeaders:
-				backgroundColour[(r, self.iLdrCol)] = wx.GREEN
+			# Highlight the leader in the recorded list.
+			for r, e in enumerate(recorded):
+				if e.num == leaderPrev:
+					backgroundColour[(r, iNumCol)] = wx.GREEN
+				if e.num in catPrevLeaders:
+					backgroundColour[(r, iLdrCol)] = wx.GREEN
+				
+			self.historyGrid.Set( data = data, backgroundColour = backgroundColour )
+			self.historyGrid.AutoSizeColumns()
+			self.historyGrid.AutoSizeRows()
 			
-		self.historyGrid.Set( data = data, backgroundColour = backgroundColour )
-		self.historyGrid.AutoSizeColumns()
-		self.historyGrid.AutoSizeRows()
-			
-		# Force the grids to the correct size.
-		self.expectedGrid.FitInside()
-		self.historyGrid.FitInside()
-		
-		self.Layout()
+			# Show the relevant cells in each table.
+			if recorded:
+				self.historyGrid.MakeCellVisible( len(recorded)-1, 0 )
+			if iNotMissing < self.expectedGrid.GetNumberRows():
+				self.expectedGrid.MakeCellVisible( iNotMissing, 0 )
 
-		# Show the relevant cells in each table.
-		if recorded:
-			self.historyGrid.MakeCellVisible( len(recorded)-1, 0 )
-		if iNotMissing < self.expectedGrid.GetNumberRows():
-			self.expectedGrid.MakeCellVisible( iNotMissing, 0 )		
-
-		
 if __name__ == '__main__':
 	app = wx.PySimpleApp()
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
+	
 	fh = ForecastHistory(mainWin)
 	Model.setRace( Model.Race() )
 	Model.getRace()._populate()
 	fh.refresh()
 	mainWin.Show()
+	fh.setSash()
+	fh.swapOrientation()
 	app.MainLoop()

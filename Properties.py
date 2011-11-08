@@ -120,35 +120,37 @@ class Properties( wx.Panel ):
 		return self.fileName.GetLabel()
 	
 	def refresh( self ):
-		self.setEditable( False )
-		race = Model.getRace()
-		if race is None:
-			return
-		self.raceName.SetValue( race.name )
-		self.organizer.SetValue( getattr(race, 'organizer', '') )
-		d = wx.DateTime()
-		d.ParseDate(race.date)
-		self.date.SetValue( d )
-		self.raceNum.SetValue( race.raceNum )
-		self.scheduledStart.SetValue( race.scheduledStart )
-		self.minutes.SetValue( race.minutes )
-		self.commissaire.SetValue( race.commissaire )
-		self.memo.SetValue( race.memo )
-		self.updateFileName()
+		with Model.lock:
+			self.setEditable( False )
+			race = Model.getRace()
+			if race is None:
+				return
+			self.raceName.SetValue( race.name )
+			self.organizer.SetValue( getattr(race, 'organizer', '') )
+			d = wx.DateTime()
+			d.ParseDate(race.date)
+			self.date.SetValue( d )
+			self.raceNum.SetValue( race.raceNum )
+			self.scheduledStart.SetValue( race.scheduledStart )
+			self.minutes.SetValue( race.minutes )
+			self.commissaire.SetValue( race.commissaire )
+			self.memo.SetValue( race.memo )
+			self.updateFileName()
 		
 	def update( self, race = None ):
-		if race is None:
-			race = Model.getRace()
-		if race is None:
-			return
-		race.name = self.raceName.GetValue()
-		race.organizer = self.organizer.GetValue()
-		race.date = self.date.GetValue().Format(Properties.dateFormat)
-		race.raceNum = self.raceNum.GetValue()
-		race.scheduledStart = self.scheduledStart.GetValue()
-		race.minutes = self.minutes.GetValue()
-		race.commissaire = self.commissaire.GetValue()
-		race.memo = self.memo.GetValue()
+		with Model.lock:
+			if race is None:
+				race = Model.getRace()
+			if race is None:
+				return
+			race.name = self.raceName.GetValue()
+			race.organizer = self.organizer.GetValue()
+			race.date = self.date.GetValue().Format(Properties.dateFormat)
+			race.raceNum = self.raceNum.GetValue()
+			race.scheduledStart = self.scheduledStart.GetValue()
+			race.minutes = self.minutes.GetValue()
+			race.commissaire = self.commissaire.GetValue()
+			race.memo = self.memo.GetValue()
 		
 class PropertiesDialog( wx.Dialog ):
 	def __init__(

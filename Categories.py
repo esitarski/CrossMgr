@@ -161,33 +161,34 @@ class Categories( wx.Panel ):
 			self.grid.MoveCursorDown( False )
 		
 	def refresh( self ):
-		self.grid.ClearGrid()
-		race = Model.getRace()
-		if race is None:
-			return
-		
-		categories = race.getAllCategories()
-		
-		if self.grid.GetNumberRows() > 0:
-			self.grid.DeleteRows( 0, self.grid.GetNumberRows() )
-		self.grid.AppendRows( len(categories) )
-
-		for r, cat in enumerate(categories):
-			self._setRow( r, cat.active, cat.name, cat.catStr, cat.startOffset, cat.numLaps )
+		with Model.lock:
+			self.grid.ClearGrid()
+			race = Model.getRace()
+			if race is None:
+				return
 			
-		self.grid.AutoSizeColumns( True )
-		
-		# Force the grid to the correct size.
-		self.grid.FitInside()
+			categories = race.getAllCategories()
+			
+			if self.grid.GetNumberRows() > 0:
+				self.grid.DeleteRows( 0, self.grid.GetNumberRows() )
+			self.grid.AppendRows( len(categories) )
+
+			for r, cat in enumerate(categories):
+				self._setRow( r, cat.active, cat.name, cat.catStr, cat.startOffset, cat.numLaps )
+				
+			self.grid.AutoSizeColumns( True )
+			
+			# Force the grid to the correct size.
+			self.grid.FitInside()
 
 	def commit( self ):
-		self.grid.DisableCellEditControl()	# Make sure the current edit is committed.
-		race = Model.getRace()
-		if race is None:
-			return
-		numStrTuples = [ tuple(self.grid.GetCellValue(r, c) for c in xrange(5)) for r in xrange(self.grid.GetNumberRows()) ]
-		
-		race.setCategories( numStrTuples )
+		with Model.lock:
+			self.grid.DisableCellEditControl()	# Make sure the current edit is committed.
+			race = Model.getRace()
+			if race is None:
+				return
+			numStrTuples = [ tuple(self.grid.GetCellValue(r, c) for c in xrange(5)) for r in xrange(self.grid.GetNumberRows()) ]
+			race.setCategories( numStrTuples )
 	
 if __name__ == '__main__':
 	app = wx.PySimpleApp()

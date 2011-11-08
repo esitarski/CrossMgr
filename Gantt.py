@@ -51,44 +51,45 @@ class Gantt( wx.Panel ):
 		self.ganttChart.numSelect = num if num is None else str(num)
 		
 	def refresh( self ):
-		race = Model.getRace()
-		
-		if race is None:
-			self.ganttChart.SetData( None )
-			return
-
-		catName = FixCategories( self.categoryChoice, getattr(race, 'GanttCategory', 0) )
-		maxLaps = race.numLaps
-		if maxLaps is None:
-			maxLaps = race.getMaxLap()
-			if race.isRunning():
-				maxLaps += 2
-		
-		entries = race.interpolateLap( maxLaps )
-		category = race.categories.get( catName, None )
-		if category is not None:
-			def match( num ) : return category == race.getCategory(num)
-		else:
-			def match( num ) : return True
-		
-		riderTimes = {}
-		for e in entries:
-			if match(e.num):
-				riderTimes.setdefault(e.num, []).append( e.t )
-		
-		# Adjust for the start times offset.
-		catOffset = {}
-		for r, t in riderTimes.iteritems():
-			category = race.getCategory( r )
-			if category:
-				t[0] = min(catOffset.setdefault( category, category.getStartOffsetSecs() ), t[1])
+		with Model.lock:
+			race = Model.getRace()
 			
-		numTimes = [(k, v) for k, v in riderTimes.iteritems()]
-		numTimes.sort( key = lambda x : (-len(x[1]), x[1][-1]) )
+			if race is None:
+				self.ganttChart.SetData( None )
+				return
 
-		labels = [str(n) for n, times in numTimes]
-		data = [times for n, times in numTimes]
-		self.ganttChart.SetData( data, labels, GetNowTime() )
+			catName = FixCategories( self.categoryChoice, getattr(race, 'GanttCategory', 0) )
+			maxLaps = race.numLaps
+			if maxLaps is None:
+				maxLaps = race.getMaxLap()
+				if race.isRunning():
+					maxLaps += 2
+			
+			entries = race.interpolateLap( maxLaps )
+			category = race.categories.get( catName, None )
+			if category is not None:
+				def match( num ) : return category == race.getCategory(num)
+			else:
+				def match( num ) : return True
+			
+			riderTimes = {}
+			for e in entries:
+				if match(e.num):
+					riderTimes.setdefault(e.num, []).append( e.t )
+			
+			# Adjust for the start times offset.
+			catOffset = {}
+			for r, t in riderTimes.iteritems():
+				category = race.getCategory( r )
+				if category:
+					t[0] = min(catOffset.setdefault( category, category.getStartOffsetSecs() ), t[1])
+				
+			numTimes = [(k, v) for k, v in riderTimes.iteritems()]
+			numTimes.sort( key = lambda x : (-len(x[1]), x[1][-1]) )
+
+			labels = [str(n) for n, times in numTimes]
+			data = [times for n, times in numTimes]
+			self.ganttChart.SetData( data, labels, GetNowTime() )
 	
 	def commit( self ):
 		pass

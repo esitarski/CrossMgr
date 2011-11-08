@@ -24,28 +24,13 @@ class RaceHUD(wx.PyControl):
 		self.nowTime = None
 		self.getNowTimeCallback = None
 		
-		self.colour = wx.Colour(0, 200, 0)
+		# self.colour = wx.Colour(0, 200, 0)
+		self.colour = wx.Colour(0, 191, 255)
 		self.lighterColour = lighterColour( self.colour )
 
 		self.checkeredFlag = wx.Bitmap(os.path.join(Utils.getImageFolder(), 'CheckeredFlag.png'), wx.BITMAP_TYPE_PNG)
-		'''
-		square = 4
-		width, height = 6*square, 6*square
-		self.checkeredFlag = wx.EmptyBitmap( width, height )
-		dc = wx.MemoryDC()
-		dc.SelectObject( self.checkeredFlag )
-		dc.SetBrush( wx.WHITE_BRUSH )
-		dc.SetPen( wx.BLACK_PEN )
-		dc.DrawRectangle( 0, 0, width, height )
-		dc.SetPen( wx.TRANSPARENT_PEN )
-		dc.SetBrush( wx.BLACK_BRUSH )
-		for y in xrange(0, width, square):
-			for x in xrange(0 if (y//square) & 1 else square, height, square * 2):
-				dc.DrawRectangle( x, y, square, square )
-		dc.SelectObject( wx.NullBitmap )
-		'''
-		
 		self.broom = wx.Bitmap(os.path.join(Utils.getImageFolder(), 'Broom.png'), wx.BITMAP_TYPE_PNG)
+		self.bell = wx.Bitmap(os.path.join(Utils.getImageFolder(), 'LittleBell.png'), wx.BITMAP_TYPE_PNG)
 		
 		# Bind the events related to our control: first of all, we use a
 		# combination of wx.BufferedPaintDC and an empty handler for
@@ -81,14 +66,11 @@ class RaceHUD(wx.PyControl):
 
 	def SetData( self, lapTimes = None, leader = None, nowTime = None ):
 		self.lapTimes = lapTimes
-		if self.lapTimes and self.lapTimes[0] < 0.0001:
-			self.lapTimes.pop(0)
 		self.leader = leader
 		self.nowTime = nowTime
 		self.Refresh()
 	
 	def OnPaint(self, event):
-		#dc = wx.PaintDC(self)
 		dc = wx.BufferedPaintDC(self)
 		self.Draw(dc)
 
@@ -120,12 +102,12 @@ class RaceHUD(wx.PyControl):
 		dc.SetBackground(backBrush)
 		dc.Clear()
 		
-		if not self.lapTimes or width < 50 or height < 50:
+		if not self.lapTimes or len(self.lapTimes) < 4 or width < 50 or height < 50:
 			self.empty = True
 			return
 		self.empty = False
 
-		legendHeight = max( height / 5, 12 )
+		legendHeight = max( height / 4, 16 )
 		fontLegend = wx.FontFromPixelSize( wx.Size(0,legendHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		dc.SetFont( fontLegend )
 		textWidth, textHeight = dc.GetTextExtent( '1:00:00' )
@@ -156,6 +138,9 @@ class RaceHUD(wx.PyControl):
 		hMiddle = textHeight + tickHeight
 		dc.DrawLine( xLeft, hMiddle, xRight, hMiddle)
 		dc.DrawLine( xLeft, hMiddle - tickHeight, xLeft, hMiddle + tickHeight )
+		n = str(len(self.lapTimes)-1)
+		textWidth, textHeight = dc.GetTextExtent( n )
+		dc.DrawText( n, xLeft - textWidth // 2, hMiddle + tickHeight )
 		lapMax = len(self.lapTimes) - 2
 		for i, t in enumerate(self.lapTimes):
 			x = xLeft + int( t * xMult )
@@ -172,7 +157,7 @@ class RaceHUD(wx.PyControl):
 		textWidth, textHeight = dc.GetTextExtent( tCur )
 		x = xLeft + int( t * xMult )
 		dc.DrawBitmap( self.checkeredFlag, x - self.checkeredFlag.GetWidth() - 1, hMiddle - self.checkeredFlag.GetHeight() // 2, False )
-		dc.DrawText( tCur, x - textWidth, hMiddle - tickHeight - textHeight )
+		dc.DrawText( tCur, x - textWidth - textHeight / 8, hMiddle - tickHeight - textHeight )
 		
 		# Draw broom.
 		t = self.lapTimes[-1]
@@ -180,7 +165,7 @@ class RaceHUD(wx.PyControl):
 		textWidth, textHeight = dc.GetTextExtent( tCur )
 		x = xLeft + int( t * xMult )
 		dc.DrawBitmap( self.broom, x + 3, hMiddle - self.broom.GetHeight() // 2, False )
-		dc.DrawText( tCur, x, hMiddle - tickHeight - textHeight )
+		dc.DrawText( tCur, x + textHeight / 8, hMiddle - tickHeight - textHeight )
 		
 		# Draw the progress bar.
 		transparentBrush = wx.Brush( wx.WHITE, style = wx.TRANSPARENT )
@@ -198,15 +183,17 @@ class RaceHUD(wx.PyControl):
 		ctx.SetBrush(b2)
 		ctx.DrawRectangle(xLeft, yCur + dd, xCur, dy-dd )
 		
-		dc.SetPen( wx.BLACK_PEN )
+		dc.SetPen( wx.Pen(wx.Colour(128,128,128)) )
 		dc.SetBrush( wx.TRANSPARENT_BRUSH )
 		dc.DrawRectangle( xLeft, hMiddle - dy / 2, xCur, dy )
+		dc.SetPen( wx.BLACK_PEN )
 		
-		# Draw the time to the leader's next lap.
+		# Draw the time to the leader's next lap (or the broom if the race is over).
 		dc.SetFont( fontRaceTime )
 		nextLap = bisect.bisect_left( self.lapTimes, self.nowTime )
 		if nextLap < len(self.lapTimes):
 			t = self.lapTimes[nextLap] - self.nowTime
+			tToLeader = t
 			tCur = Utils.formatTime( t )
 			if tCur[0] == '0':
 				tCur = tCur[1:]
@@ -215,6 +202,12 @@ class RaceHUD(wx.PyControl):
 			x = xLeft + int( t * xMult )
 			x = max( x - textWidth - textHeight / 8, xLeft + 2 )
 			dc.DrawText( tCur, x, hMiddle - textHeight / 2 )
+			
+			if	(nextLap == len(self.lapTimes)-2 and tToLeader > 15) or \
+				(nextLap == len(self.lapTimes)-3 and tToLeader < 15):
+				x -= self.bell.GetWidth() + textHeight / 8
+				if x >= xLeft:
+					dc.DrawBitmap( self.bell, x, hMiddle - self.bell.GetHeight() / 2)
 		
 		# Draw the leader.
 		if self.leader is not None:

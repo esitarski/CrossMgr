@@ -32,12 +32,14 @@ def MakeButton( parent, id = wx.ID_ANY, img = None, text = '' ):
 	return btn
 
 def StartRaceNow():
-	race = Model.getRace()
-	if race is None:
-		return
+	with Model.lock:
+		race = Model.getRace()
+		if race is None:
+			return
+			
+		Model.resetCache()
+		race.startRaceNow()
 		
-	Model.resetCache()
-	race.startRaceNow()
 	OutputStreamer.writeRaceStart()
 	
 	# Refresh the main window and switch to the Record pane.
@@ -148,7 +150,7 @@ class StartRaceAtTime( wx.Dialog ):
 class Actions( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
-		bs = wx.GridBagSizer(vgap=0, hgap=0)
+		bs = wx.GridBagSizer(vgap=4, hgap=4)
 		
 		self.SetBackgroundColour( wx.Colour(255,255,255) )
 		
@@ -173,32 +175,34 @@ class Actions( wx.Panel ):
 		bs.Add(self.startRaceBtn, pos=(0,0), span=(1,1), border=border, flag=wx.TOP|wx.LEFT)
 		bs.Add(self.startRaceTimeBtn, pos=(0,1), span=(1,1), border=border, flag=wx.TOP|wx.LEFT)
 		bs.Add(self.finishRaceBtn, pos=(1,0), span=(1,1), border=border, flag=wx.TOP|wx.LEFT)
-		bs.AddGrowableRow( 3 )
+		bs.AddGrowableRow( 1 )
 		self.SetSizer(bs)
 		
 		self.refresh()
 	
 	def onStartRace( self, event ):
-		race = Model.getRace()
-		if race is not None and Utils.MessageOKCancel(self, 'Start Race Now?', 'Start Race'):
+		if Model.race is not None and Utils.MessageOKCancel(self, 'Start Race Now?', 'Start Race'):
 			StartRaceNow()
 	
 	def onStartRaceTime( self, event ):
-		race = Model.getRace()
-		if race is None:
-			return
+		with Model.lock:
+			race = Model.race
+			if race is None:
+				return
 		dlg = StartRaceAtTime( self )
 		dlg.ShowModal()
 		dlg.Destroy()  
 	
 	def onFinishRace( self, event ):
-		race = Model.getRace()
-		if race is None or not Utils.MessageOKCancel(self, 'Finish Race Now?', 'Finish Race'):
-			return
-		race.finishRaceNow()
-		if race.numLaps is None:
-			race.numLaps = race.getMaxLap()
-		Model.resetCache()
+		with Model.lock:
+			race = Model.race
+			if race is None or not Utils.MessageOKCancel(self, 'Finish Race Now?', 'Finish Race'):
+				return
+			race.finishRaceNow()
+			if race.numLaps is None:
+				race.numLaps = race.getMaxLap()
+			Model.resetCache()
+		
 		Utils.writeRace()
 		self.refresh()
 		mainWin = Utils.getMainWin()
@@ -214,17 +218,17 @@ class Actions( wx.Panel ):
 		self.startRaceBtn.Enable( False )
 		self.startRaceTimeBtn.Enable( False )
 		self.finishRaceBtn.Enable( False )
-		race = Model.getRace()
-		if race is None:
-			return
+		with Model.lock:
+			race = Model.getRace()
+			if race is not None:
+				if race.startTime is None:
+					self.startRaceBtn.Enable( True )
+					self.startRaceTimeBtn.Enable( True )
+				elif race.isRunning():
+					self.finishRaceBtn.Enable( True )
 		mainWin = Utils.getMainWin()
 		if mainWin is not None:
 			mainWin.updateRaceClock()
-		if race.startTime is None:
-			self.startRaceBtn.Enable( True )
-			self.startRaceTimeBtn.Enable( True )
-		elif race.isRunning():
-			self.finishRaceBtn.Enable( True )
 		
 if __name__ == '__main__':
 	app = wx.PySimpleApp()

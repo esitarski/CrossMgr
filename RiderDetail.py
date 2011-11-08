@@ -96,17 +96,18 @@ class RiderDetail( wx.Panel ):
 		self.setRider()
 		
 	def onDeleteRider( self, event ):
-		race = Model.getRace()
-		if race is None:
-			return
-		try:
-			num = int(self.num.GetValue())
-		except:
-			return
-			
-		if num in race:
-			if Utils.MessageOKCancel( self, "This will permenently delete this rider.\nOnly do this in case of a misidentified entry.\nThere is no undo - be careful.", "Delete Rider" ):
-				race.deleteRider( num )
+		with Model.lock:
+			race = Model.getRace()
+			if race is None:
+				return
+			try:
+				num = int(self.num.GetValue())
+			except:
+				return
+				
+			if num in race:
+				if Utils.MessageOKCancel( self, "This will permenently delete this rider.\nOnly do this in case of a misidentified entry.\nThere is no undo - be careful.", "Delete Rider" ):
+					race.deleteRider( num )
 		
 	def onNumChange( self, event ):
 		self.refresh()
@@ -125,7 +126,7 @@ class RiderDetail( wx.Panel ):
 		statusOption = self.statusOption.GetSelection()
 		if num in race and statusOption in [Model.Rider.DNF, Model.Rider.Pulled]:
 			rider = race.getRider( num )
-			# Try to fill in a reasonble default value.
+			# Try to fill in a reasonable default value.
 			if not rider.tStatus:
 				tStatus = race.lastRaceTime()
 				# If a DNF, set the time to just after the last recorded lap.
@@ -175,9 +176,10 @@ class RiderDetail( wx.Panel ):
 		tLeft = times[lap-1]
 		tRight = times[lap]
 		splitTime = (tRight - tLeft) / float(splits)
-		for i in xrange( 1, splits ):
-			newTime = tLeft + splitTime * i
-			race.addTime( num, newTime )
+		with Model.lock:
+			for i in xrange( 1, splits ):
+				newTime = tLeft + splitTime * i
+				race.addTime( num, newTime )
 		self.refresh()
 	
 	def onSplitLap2( self, event ):
@@ -197,14 +199,16 @@ class RiderDetail( wx.Panel ):
 		if num is None:
 			return
 		if self.lapCur != 1:
-			Model.race.deleteTime( num, times[lap-1] )
+			with Model.lock:
+				Model.race.deleteTime( num, times[lap-1] )
 			self.refresh()
 			
 	def onDeleteLapEnd( self, event ):
 		num, lap, times = self.getGanttChartNumLapTimes()
 		if num is None:
 			return
-		Model.race.deleteTime( num, times[lap] )
+		with Model.lock:
+			Model.race.deleteTime( num, times[lap] )
 		self.refresh()
 			
 	def onEditGantt( self, xPos, yPos, num, lap ):
@@ -247,115 +251,117 @@ class RiderDetail( wx.Panel ):
 		self.atRaceTimeName.Enable( editable )
 	
 	def refresh( self ):
-		self.num.SelectAll()
-		wx.CallAfter( self.num.SetFocus )
+		with Model.lock:
+			self.num.SelectAll()
+			wx.CallAfter( self.num.SetFocus )
 
-		self.grid.Set( data = [ [], [], [] ] )
-		self.grid.Reset()
-		self.category.SetLabel( '' )
-		self.lapAdjust.SetSelection( self.getLapAdjustIndex() )
-		num = self.num.GetValue()
-		
-		self.statusOption.SetSelection( 0 )
-		self.setAtRaceTime( 0.0, False )
-		
-		self.lineGraph.SetData( None )
-		
-		race = Model.getRace()
-		if race is None or num not in race:
-			return
-		rider = race.getRider( num )
-		catName = race.getCategoryName( num )
-		category = race.categories.get( catName, None )
-		
-		self.category.SetLabel( catName )
-		self.lapAdjust.SetSelection( self.getLapAdjustIndex(rider.lapAdjust) )
-		self.statusOption.SetSelection( rider.status )
-		if rider.status in [Model.Rider.Finisher, Model.Rider.DNS, Model.Rider.DQ]:
-			self.setAtRaceTime()
-		else:
-			if rider.tStatus is None:
-				rider.tStatus = 0.0
-			self.setAtRaceTime( rider.tStatus, True )
-		
-		maxLap = race.getMaxLap()
-		if race.numLaps is not None and race.numLaps < maxLap:
-			maxLap = race.numLaps
-		
-		# Figure out which laps this rider was lapped in.
-		entries = race.interpolateLap( maxLap )
-		entries = [e for e in entries if e.num == num and e.t > 0]
+			self.grid.Set( data = [ [], [], [] ] )
+			self.grid.Reset()
+			self.category.SetLabel( '' )
+			self.lapAdjust.SetSelection( self.getLapAdjustIndex() )
+			num = self.num.GetValue()
+			
+			self.statusOption.SetSelection( 0 )
+			self.setAtRaceTime( 0.0, False )
+			
+			self.lineGraph.SetData( None )
+			
+			race = Model.getRace()
+			if race is None or num not in race:
+				return
+			rider = race.getRider( num )
+			catName = race.getCategoryName( num )
+			category = race.categories.get( catName, None )
+			
+			self.category.SetLabel( catName )
+			self.lapAdjust.SetSelection( self.getLapAdjustIndex(rider.lapAdjust) )
+			self.statusOption.SetSelection( rider.status )
+			if rider.status in [Model.Rider.Finisher, Model.Rider.DNS, Model.Rider.DQ]:
+				self.setAtRaceTime()
+			else:
+				if rider.tStatus is None:
+					rider.tStatus = 0.0
+				self.setAtRaceTime( rider.tStatus, True )
+			
+			maxLap = race.getMaxLap()
+			if race.numLaps is not None and race.numLaps < maxLap:
+				maxLap = race.numLaps
+			
+			# Figure out which laps this rider was lapped in.
+			entries = race.interpolateLap( maxLap )
+			entries = [e for e in entries if e.num == num and e.t > 0]
 
-		leaderTimes, leaderNums = race.getLeaderTimesNums()
-		appearedInLap = [False] * (maxLap + 1)
-		appearedInLap[0] = True
-		for e in entries:
-			i = bisect.bisect_left( leaderTimes, e.t )
-			if e.t < leaderTimes[i]:
-				i -= 1
-			i = min( i, len(appearedInLap) - 1 )	# Handle if rider would have been lapped again on the last lap.
-			appearedInLap[i] = True
+			leaderTimes, leaderNums = race.getLeaderTimesNums()
+			appearedInLap = [False] * (maxLap + 1)
+			appearedInLap[0] = True
+			for e in entries:
+				i = bisect.bisect_left( leaderTimes, e.t )
+				if e.t < leaderTimes[i]:
+					i -= 1
+				i = min( i, len(appearedInLap) - 1 )	# Handle if rider would have been lapped again on the last lap.
+				appearedInLap[i] = True
 
-		missingCount = sum( 1 for b in appearedInLap if not b ) if rider.status == Model.Rider.Finisher else 0
-		if missingCount:
-			notInLapStr = 'Lapped by Race Leader in %s' % (', '.join( str(i) for i, b in enumerate(appearedInLap) if not b ))
-		else:
-			notInLapStr = ''
-		self.notInLap.SetLabel( notInLapStr )
+			missingCount = sum( 1 for b in appearedInLap if not b ) if rider.status == Model.Rider.Finisher else 0
+			if missingCount:
+				notInLapStr = 'Lapped by Race Leader in %s' % (', '.join( str(i) for i, b in enumerate(appearedInLap) if not b ))
+			else:
+				notInLapStr = ''
+			self.notInLap.SetLabel( notInLapStr )
 
-		# Populate the lap times.
-		try:
-			raceTime = min(category.getStartOffsetSecs() if category else 0.0, entries[0].t)
-		except IndexError:
-			raceTime = 0.0
-		ganttData = [raceTime]
-		data = [ [], [], [] ]
-		graphData = []
-		backgroundColour = {}
-		for r, e in enumerate(entries):
-			data[0].append( str(r+1) )
-			data[1].append( Utils.formatTime(e.t) )
-			tLap = max( e.t - raceTime, 0.0 )
-			data[2].append( Utils.formatTime(tLap) )
-			graphData.append( tLap )
-			ganttData.append( e.t )
-			raceTime = e.t
-			if e.interp:
-				for i in xrange(0,3):
-					backgroundColour[(r,i)] = (255,255,0)
+			# Populate the lap times.
+			try:
+				raceTime = min(category.getStartOffsetSecs() if category else 0.0, entries[0].t)
+			except IndexError:
+				raceTime = 0.0
+			ganttData = [raceTime]
+			data = [ [], [], [] ]
+			graphData = []
+			backgroundColour = {}
+			for r, e in enumerate(entries):
+				data[0].append( str(r+1) )
+				data[1].append( Utils.formatTime(e.t) )
+				tLap = max( e.t - raceTime, 0.0 )
+				data[2].append( Utils.formatTime(tLap) )
+				graphData.append( tLap )
+				ganttData.append( e.t )
+				raceTime = e.t
+				if e.interp:
+					for i in xrange(0,3):
+						backgroundColour[(r,i)] = (255,255,0)
 
-		self.grid.Set( data = data, backgroundColour = backgroundColour )
-		self.grid.AutoSizeColumns( True )
-		self.grid.Reset()
-		self.grid.FitInside()
-		
-		self.ganttChart.SetData( [ganttData], [num], Gantt.GetNowTime() )
-		self.lineGraph.SetData( [graphData], [[e.interp for e in entries]] )
+			self.grid.Set( data = data, backgroundColour = backgroundColour )
+			self.grid.AutoSizeColumns( True )
+			self.grid.Reset()
+			self.grid.FitInside()
+			
+			self.ganttChart.SetData( [ganttData], [num], Gantt.GetNowTime() )
+			self.lineGraph.SetData( [graphData], [[e.interp for e in entries]] )
 	
 	def commitChange( self ):
-		num = self.num.GetValue()
-		status = self.statusOption.GetSelection()
-		
-		race = Model.getRace()
-		
-		# Allow new numbers to be added if status is DNS or DQ.
-		if race is None or (num not in race and status not in [Model.Rider.DNS, Model.Rider.DQ]):
-			return
+		with Model.lock:
+			num = self.num.GetValue()
+			status = self.statusOption.GetSelection()
 			
-		rider = race.getRider(num)
-		oldValues = [rider.lapAdjust, rider.status, rider.tStatus]
+			race = Model.getRace()
+			
+			# Allow new numbers to be added if status is DNS or DQ.
+			if race is None or (num not in race and status not in [Model.Rider.DNS, Model.Rider.DQ]):
+				return
+				
+			rider = race.getRider(num)
+			oldValues = [rider.lapAdjust, rider.status, rider.tStatus]
 
-		tStatus = None
-		if status not in [Model.Rider.Finisher, Model.Rider.DNS, Model.Rider.DQ]:
-			tStatus = Utils.StrToSeconds( self.atRaceTime.GetValue() )
-		
-		rider.lapAdjust = int(self.lapAdjust.GetStringSelection())
-		rider.setStatus( status, tStatus )
+			tStatus = None
+			if status not in [Model.Rider.Finisher, Model.Rider.DNS, Model.Rider.DQ]:
+				tStatus = Utils.StrToSeconds( self.atRaceTime.GetValue() )
+			
+			rider.lapAdjust = int(self.lapAdjust.GetStringSelection())
+			rider.setStatus( status, tStatus )
 
-		newValues = [ rider.lapAdjust, rider.status, rider.tStatus ]
-		if oldValues != newValues:
-			Model.resetCache()
-			Utils.writeRace()
+			newValues = [ rider.lapAdjust, rider.status, rider.tStatus ]
+			if oldValues != newValues:
+				Model.resetCache()
+				Utils.writeRace()
 			
 	def commit( self ):
 		self.commitChange()

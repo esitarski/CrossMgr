@@ -144,142 +144,143 @@ class Recommendations( wx.Panel ):
 		self.grid.Reset()
 	
 	def refresh( self ):
-		self.isEmpty = True
-		race = Model.getRace()
-		
-		if race is None or race.numLaps is None:
-			self.clearGrid()
-			return
+		with Model.lock:
+			self.isEmpty = True
+			race = Model.getRace()
+			
+			if race is None or race.numLaps is None:
+				self.clearGrid()
+				return
 
-		catName = FixCategories( self.categoryChoice, getattr(race, 'recommendationsCategory', 0) )
+			catName = FixCategories( self.categoryChoice, getattr(race, 'recommendationsCategory', 0) )
+					
+			entries = race.interpolateLap( race.numLaps, useCategoryNumLaps = True)
+			if not entries:
+				self.clearGrid()
+				return
+
+			# Check for missed entries to the end of the 
+			colnames = [ 'Num', 'Recommendation' ]
 				
-		entries = race.interpolateLap( race.numLaps, useCategoryNumLaps = True)
-		if not entries:
-			self.clearGrid()
-			return
-
-		# Check for missed entries to the end of the 
-		colnames = [ 'Num', 'Recommendation' ]
+			self.isEmpty = False
 			
-		self.isEmpty = False
-		
-		# Trim out all entries not in this category and all non-finishers.
-		category = race.categories.get( catName, None )
-		if category:
-			def match( num ) : return category.matches(num)
-		else:
-			def match( num ) : return True
-		entries = [e for e in entries if match(e.num) ]
-		
-		data = [[],[]]
-
-		# Find the maximum recorded lap for each rider.
-		riderMaxLapNonInterp, riderMaxLapInterp = {}, {}
-		for e in entries:
-			if e.interp:
-				riderMaxLapInterp[e.num] = max( riderMaxLapInterp.get(e.num, 0), e.lap )
+			# Trim out all entries not in this category and all non-finishers.
+			category = race.categories.get( catName, None )
+			if category:
+				def match( num ) : return category.matches(num)
 			else:
-				riderMaxLapNonInterp[e.num] = max( riderMaxLapNonInterp.get(e.num, 0), e.lap )
-		
-		# Find the maximum recorded lap for each category.
-		categoryMaxLapNonInterp, categoryMaxLapInterp = {}, {}
-		for num, maxLap in riderMaxLapNonInterp.iteritems():
-			category = race.getCategory( num )
-			if category:
-				categoryMaxLapNonInterp[category] = max( categoryMaxLapNonInterp.get(category, 0), maxLap )
-		for num, maxLap in riderMaxLapInterp.iteritems():
-			category = race.getCategory( num )
-			if category:
-				categoryMaxLapInterp[category] = max( categoryMaxLapInterp.get(category, 0), maxLap )
-		
-		# Check if all the riders in a particular category did not complete the maximum number of laps.
-		raceLaps = race.getRaceLaps()
-		for category, maxNonInterpLap in categoryMaxLapNonInterp.iteritems():
-			maxCatLaps = category.getNumLaps() if category.getNumLaps() else raceLaps
-			try:
-				if maxNonInterpLap < maxCatLaps and categoryMaxLapInterp[category] > maxNonInterpLap:
-					data[0].append( category.catStr )
-					data[1].append( 'Verify that "%s" did %d max Race Laps.  Update Race Laps in Categories if necessary.' %
-									(category.name, maxNonInterpLap) )
-			except KeyError:
-				pass
-		
-		# Collect all entries for every rider.
-		riderEntries = {}
-		for e in entries:
-			riderEntries.setdefault( e.num, [] ).append( e )
+				def match( num ) : return True
+			entries = [e for e in entries if match(e.num) ]
 			
-		for num in sorted(r for r in race.getRiderNums() if match(r)):
-			rider = race[num]
-			statusName = Model.Rider.statusNames[rider.status]
-			if rider.status == Model.Rider.Finisher:
-				# Check for unreported DNFs.
-				try:
-					riderEntriesCur = riderEntries[num]
-					iLast = (i for i in xrange(len(riderEntriesCur), 0, -1) if not riderEntriesCur[i-1].interp).next()
-					if iLast != len(riderEntriesCur):
-						data[0].append( str(num) )
-						data[1].append( 'Check for DNF after rider lap %d.' % (iLast-1) )
-				except (KeyError, StopIteration):
-					pass
-					
-				# Check for rider missing lap data relateive to category.
-				try:
-					riderEntriesCur = riderEntries[num]
-					leaderTimes = race.getCategoryTimesNums()[race.getCategory(num)][0]
-					
-					appearedInLap = [False] * len(riderEntriesCur)
-					appearedInLap[0] = True
-					for e in riderEntriesCur:
-						i = bisect.bisect_left( leaderTimes, e.t )
-						if e.t < leaderTimes[i]:
-							i -= 1
-						i = min( i, len(appearedInLap) - 1 )	# Handle if rider would have been lapped again on the last lap.
-						appearedInLap[i] = True
+			data = [[],[]]
 
-					missingCount = sum( 1 for b in appearedInLap if not b )
-					if missingCount:
-						data[0].append( str(num) )
-						data[1].append( "Confirm rider was lapped by Category Leader in leader's lap %s" %
-										(', '.join( str(i) for i, b in enumerate(appearedInLap) if not b )) )
-				except (KeyError, IndexError, ValueError):
-					pass
-					
-			elif rider.status == Model.Rider.DNS:
-				# Check for DNS's with recorded times.
-				if rider.times:
-					data[0].append( str(num) )
-					data[1].append( 'Check %s.  Rider has recorded times.' % statusName )
-					
-			elif rider.status in [Model.Rider.DNF, Model.Rider.Pulled]:
-				if rider.tStatus == None:
-					# Missing status times.
-					data[0].append( str(num) )
-					data[1].append( 'Check if %s time is accurate.' % statusName )
+			# Find the maximum recorded lap for each rider.
+			riderMaxLapNonInterp, riderMaxLapInterp = {}, {}
+			for e in entries:
+				if e.interp:
+					riderMaxLapInterp[e.num] = max( riderMaxLapInterp.get(e.num, 0), e.lap )
 				else:
-					# Recorded time exceeds status time.
-					if rider.times and rider.times[-1] > rider.tStatus:
-						data[0].append( str(num) )
-						data[1].append( 'Check if %s time is accurate.  Found recorded time %s after %s time %s.' % (
-											statusName,
-											Utils.SecondsToStr(rider.times[-1]),
-											statusName,
-											Utils.SecondsToStr(rider.tStatus)
-										) )
+					riderMaxLapNonInterp[e.num] = max( riderMaxLapNonInterp.get(e.num, 0), e.lap )
+			
+			# Find the maximum recorded lap for each category.
+			categoryMaxLapNonInterp, categoryMaxLapInterp = {}, {}
+			for num, maxLap in riderMaxLapNonInterp.iteritems():
+				category = race.getCategory( num )
+				if category:
+					categoryMaxLapNonInterp[category] = max( categoryMaxLapNonInterp.get(category, 0), maxLap )
+			for num, maxLap in riderMaxLapInterp.iteritems():
+				category = race.getCategory( num )
+				if category:
+					categoryMaxLapInterp[category] = max( categoryMaxLapInterp.get(category, 0), maxLap )
+			
+			# Check if all the riders in a particular category did not complete the maximum number of laps.
+			raceLaps = race.getRaceLaps()
+			for category, maxNonInterpLap in categoryMaxLapNonInterp.iteritems():
+				maxCatLaps = category.getNumLaps() if category.getNumLaps() else raceLaps
+				try:
+					if maxNonInterpLap < maxCatLaps and categoryMaxLapInterp[category] > maxNonInterpLap:
+						data[0].append( category.catStr )
+						data[1].append( 'Verify that "%s" did %d max Race Laps.  Update Race Laps in Categories if necessary.' %
+										(category.name, maxNonInterpLap) )
+				except KeyError:
+					pass
+			
+			# Collect all entries for every rider.
+			riderEntries = {}
+			for e in entries:
+				riderEntries.setdefault( e.num, [] ).append( e )
+				
+			for num in sorted(r for r in race.getRiderNums() if match(r)):
+				rider = race[num]
+				statusName = Model.Rider.statusNames[rider.status]
+				if rider.status == Model.Rider.Finisher:
+					# Check for unreported DNFs.
+					try:
+						riderEntriesCur = riderEntries[num]
+						iLast = (i for i in xrange(len(riderEntriesCur), 0, -1) if not riderEntriesCur[i-1].interp).next()
+						if iLast != len(riderEntriesCur):
+							data[0].append( str(num) )
+							data[1].append( 'Check for DNF after rider lap %d.' % (iLast-1) )
+					except (KeyError, StopIteration):
+						pass
+						
+					# Check for rider missing lap data relateive to category.
+					try:
+						riderEntriesCur = riderEntries[num]
+						leaderTimes = race.getCategoryTimesNums()[race.getCategory(num)][0]
+						
+						appearedInLap = [False] * len(riderEntriesCur)
+						appearedInLap[0] = True
+						for e in riderEntriesCur:
+							i = bisect.bisect_left( leaderTimes, e.t )
+							if e.t < leaderTimes[i]:
+								i -= 1
+							i = min( i, len(appearedInLap) - 1 )	# Handle if rider would have been lapped again on the last lap.
+							appearedInLap[i] = True
 
-			# Check for bad numbers.							
-			category = race.getCategory( num )
-			if not category:
-				data[0].append( str(num) )
-				data[1].append( 'Rider does not match any active category.  Check if rider is in right race or data entry error.' )
-					
-		self.grid.Set( data = data, colnames = colnames )
-		self.grid.AutoSizeColumns( True )
-		self.grid.Reset()
-		self.updateColours()
-		
-		# Fix the grid's scrollbars.
-		self.grid.FitInside()
+						missingCount = sum( 1 for b in appearedInLap if not b )
+						if missingCount:
+							data[0].append( str(num) )
+							data[1].append( "Confirm rider was lapped by Category Leader in leader's lap %s" %
+											(', '.join( str(i) for i, b in enumerate(appearedInLap) if not b )) )
+					except (KeyError, IndexError, ValueError):
+						pass
+						
+				elif rider.status == Model.Rider.DNS:
+					# Check for DNS's with recorded times.
+					if rider.times:
+						data[0].append( str(num) )
+						data[1].append( 'Check %s.  Rider has recorded times.' % statusName )
+						
+				elif rider.status in [Model.Rider.DNF, Model.Rider.Pulled]:
+					if rider.tStatus == None:
+						# Missing status times.
+						data[0].append( str(num) )
+						data[1].append( 'Check if %s time is accurate.' % statusName )
+					else:
+						# Recorded time exceeds status time.
+						if rider.times and rider.times[-1] > rider.tStatus:
+							data[0].append( str(num) )
+							data[1].append( 'Check if %s time is accurate.  Found recorded time %s after %s time %s.' % (
+												statusName,
+												Utils.SecondsToStr(rider.times[-1]),
+												statusName,
+												Utils.SecondsToStr(rider.tStatus)
+											) )
+
+				# Check for bad numbers.							
+				category = race.getCategory( num )
+				if not category:
+					data[0].append( str(num) )
+					data[1].append( 'Rider does not match any active category.  Check if rider is in right race or data entry error.' )
+						
+			self.grid.Set( data = data, colnames = colnames )
+			self.grid.AutoSizeColumns( True )
+			self.grid.Reset()
+			self.updateColours()
+			
+			# Fix the grid's scrollbars.
+			self.grid.FitInside()
 	
 	def commit( self ):
 		pass

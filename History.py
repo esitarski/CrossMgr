@@ -317,101 +317,102 @@ class History( wx.Panel ):
 			self.clearGrid()
 			return
 
-		catName = FixCategories( self.categoryChoice, getattr(race, 'historyCategory', 0) )
-		self.hbs.Layout()
+		with Model.lock:
+			catName = FixCategories( self.categoryChoice, getattr(race, 'historyCategory', 0) )
+			self.hbs.Layout()
 
-		maxLaps = race.numLaps
-		doLapsToGo = True
-		if maxLaps is None:
-			maxLaps = race.getMaxLap()
-			if race.isRunning():
-				maxLaps += 2
-			doLapsToGo = False
+			maxLaps = race.numLaps
+			doLapsToGo = True
+			if maxLaps is None:
+				maxLaps = race.getMaxLap()
+				if race.isRunning():
+					maxLaps += 2
+				doLapsToGo = False
+					
+			entries = race.interpolateLap( maxLaps )
+			
+			# Collect the number and times for all entries so we can compute lap times.
+			numTimes = {}
+			for e in entries:
+				if e.lap == 0:
+					c = race.getCategory( e.num )
+					try:
+						startOffset = c.getStartOffsetSecs()
+					except:
+						startOffset = 0.0
+					numTimes[(e.num, 0)] = startOffset
+				else:
+					numTimes[(e.num, e.lap)] = e.t
 				
-		entries = race.interpolateLap( maxLaps )
-		
-		# Collect the number and times for all entries so we can compute lap times.
-		numTimes = {}
-		for e in entries:
-			if e.lap == 0:
-				c = race.getCategory( e.num )
-				try:
-					startOffset = c.getStartOffsetSecs()
-				except:
-					startOffset = 0.0
-				numTimes[(e.num, 0)] = startOffset
+			# Trim out the 0 time starts.
+			try:
+				iFirstNonZero = (i for i, e in enumerate(entries) if e.t > 0).next()
+				entries = entries[iFirstNonZero:]
+			except StopIteration:
+				self.clearGrid()
+				return
+
+			self.isEmpty = False
+				
+			# Organize all the entries into a grid as we would like to see them.
+			self.history = [ [] ]
+			numSeen = set()
+			lapCur = 0
+			for e in entries:
+				if e.num in numSeen:
+					numSeen.clear()
+					lapCur += 1
+					self.history.append( [] )
+				self.history[lapCur].append( e )
+				numSeen.add( e.num )
+			
+			colnames = []
+			raceTime = 0
+			for c, h in enumerate(self.history):
+				lapTime = h[0].t - raceTime
+				raceTime = h[0].t
+				colnames.append( '%s\n%s\n%s\n%s' %(str(c+1),
+													str(maxLaps - c - 1) if doLapsToGo else ' ',
+													Utils.formatTime(lapTime),
+													Utils.formatTime(raceTime)) )
+			
+			category = race.categories.get( catName, None )
+			self.category = category
+			if category is not None:
+				def match( num ):
+					return race.getCategory(num) == category
 			else:
-				numTimes[(e.num, e.lap)] = e.t
+				def match( num ):
+					return True
+				
+			leaderTimes, leaderNums = race.getLeaderTimesNums()
 			
-		# Trim out the 0 time starts.
-		try:
-			iFirstNonZero = (i for i, e in enumerate(entries) if e.t > 0).next()
-			entries = entries[iFirstNonZero:]
-		except StopIteration:
-			self.clearGrid()
-			return
+			formatStr = ['$num']
+			if self.showTimes:		formatStr.append('=$raceTime')
+			if self.showLapTimes:	formatStr.append(' [$lapTime]')
+			if self.showTimeDown:	formatStr.append(' ($downTime)')
+			template = Template( ''.join(formatStr) )
+			
+			data = []
+			for col, h in enumerate(self.history):
+				data.append( [ template.safe_substitute(
+					{
+						'num':		e.num,
+						'raceTime':	Utils.formatTime(e.t) if self.showTimes else '',
+						'lapTime':	Utils.formatTime(e.t - numTimes[(e.num,e.lap-1)]) if self.showLapTimes else '',
+						'downTime':	Utils.formatTime(e.t - leaderTimes[col+1])
+					} ) for e in h if match(e.num) ] )
+				self.rcInterp.update( (row, col) for row, e in enumerate(h) if e.interp and match(e.num) )
 
-		self.isEmpty = False
+			self.grid.Set( data = data, colnames = colnames )
+			self.grid.AutoSizeColumns( True )
+			self.grid.Reset()
+			self.updateColours()
+			self.grid.Set( textColour = self.textColour, backgroundColour = self.backgroundColour )
+			self.grid.MakeCellVisible( 0, len(colnames)-1 )
 			
-		# Organize all the entries into a grid as we would like to see them.
-		self.history = [ [] ]
-		numSeen = set()
-		lapCur = 0
-		for e in entries:
-			if e.num in numSeen:
-				numSeen.clear()
-				lapCur += 1
-				self.history.append( [] )
-			self.history[lapCur].append( e )
-			numSeen.add( e.num )
-		
-		colnames = []
-		raceTime = 0
-		for c, h in enumerate(self.history):
-			lapTime = h[0].t - raceTime
-			raceTime = h[0].t
-			colnames.append( '%s\n%s\n%s\n%s' %(str(c+1),
-												str(maxLaps - c - 1) if doLapsToGo else ' ',
-												Utils.formatTime(lapTime),
-												Utils.formatTime(raceTime)) )
-		
-		category = race.categories.get( catName, None )
-		self.category = category
-		if category is not None:
-			def match( num ):
-				return race.getCategory(num) == category
-		else:
-			def match( num ):
-				return True
-			
-		leaderTimes, leaderNums = race.getLeaderTimesNums()
-		
-		formatStr = ['$num']
-		if self.showTimes:		formatStr.append('=$raceTime')
-		if self.showLapTimes:	formatStr.append(' [$lapTime]')
-		if self.showTimeDown:	formatStr.append(' ($downTime)')
-		template = Template( ''.join(formatStr) )
-		
-		data = []
-		for col, h in enumerate(self.history):
-			data.append( [ template.safe_substitute(
-				{
-					'num':		e.num,
-					'raceTime':	Utils.formatTime(e.t) if self.showTimes else '',
-					'lapTime':	Utils.formatTime(e.t - numTimes[(e.num,e.lap-1)]) if self.showLapTimes else '',
-					'downTime':	Utils.formatTime(e.t - leaderTimes[col+1])
-				} ) for e in h if match(e.num) ] )
-			self.rcInterp.update( (row, col) for row, e in enumerate(h) if e.interp and match(e.num) )
-
-		self.grid.Set( data = data, colnames = colnames )
-		self.grid.AutoSizeColumns( True )
-		self.grid.Reset()
-		self.updateColours()
-		self.grid.Set( textColour = self.textColour, backgroundColour = self.backgroundColour )
-		self.grid.MakeCellVisible( 0, len(colnames)-1 )
-		
-		# Fix the grid's scrollbars.
-		self.grid.FitInside()
+			# Fix the grid's scrollbars.
+			self.grid.FitInside()
 	
 	def commit( self ):
 		pass

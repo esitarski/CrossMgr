@@ -9,8 +9,8 @@ from Utils import SetValue, SetLabel
 import Model
 import sys
 import subprocess
-#from aquabutton import AquaButton
 from keybutton import KeyButton
+from RaceHUD import RaceHUD
 
 def MakeButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1) ):
 	'''
@@ -36,7 +36,7 @@ class NumKeypad( wx.Panel ):
 		
 		self.bell = None
 		
-		self.SetBackgroundColour( wx.Colour(255,255,255) )
+		self.SetBackgroundColour( wx.WHITE )
 		
 		fontSize = 24
 		font = wx.Font(fontSize, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
@@ -180,21 +180,37 @@ class NumKeypad( wx.Panel ):
 		gbs.Add( self.message, pos=(rowCur, colCur), span=(1,2), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_CENTRE )
 		rowCur += 1
 
+		self.raceHUD = RaceHUD( self, wx.ID_ANY )
+		gbs.Add( self.raceHUD, pos=(rowCur, 0), span=(2, 7), flag=wx.EXPAND )
+		rowCur += 1
+		
 		self.SetSizer( gbs )
 		self.isEnabled = True
 		
 	def refreshTimeToLeader( self ):
+		# Assumes Model is locked.
 		race = Model.race
 		timeToLeader = '  '
 		bgColour = wx.WHITE
 		if race is not None:
-			try:
-				leaderLapsToGo = int(self.lapsToGo.GetLabel()) - 1
-			except ValueError:
+			numLaps, leaderLapsToGo, lapCompleting, leadersExpectedLapTime, leaderNum, expectedRaceFinish, isAutomatic = self.getLapInfo()
+			if not leaderLapsToGo:
 				leaderLapsToGo = -1
 				
 			nLeader, tLeader = race.getTimeToLeader()
+			
+			# Update the RaceHUD
+			tCur = race.curRaceTime()
+			if not numLaps or numLaps < 2 or not race.isRunning():
+				self.raceHUD.SetData()
+			else:
+				leaderTimes = race.getLeaderTimesNums()[0][1:numLaps+1]
+				leaderTimes.append( race.getLastFinisherTime() )
+				self.raceHUD.SetData( nowTime = tCur, lapTimes = leaderTimes, leader = leaderNum )
+				
 			if tLeader is not None:
+				# update the Time to Leader.
+				leaderLapsToGo -= 1
 				if leaderLapsToGo >= 0:
 					timeToLeader = '%s (%d to see %d to go)' % (Utils.formatTime(tLeader), nLeader, leaderLapsToGo)
 					
@@ -223,13 +239,15 @@ class NumKeypad( wx.Panel ):
 		self.timeToLeader.SetLabel( timeToLeader )
 
 	def refreshRaceTime( self ):
-		race = Model.race
-		if race is not None:
-			tStr = Utils.formatTime( race.lastRaceTime() )
-			self.refreshTimeToLeader()
-		else:
-			tStr = ''
-		self.raceTime.SetLabel( '  ' + tStr )
+		with Model.lock:
+			race = Model.race
+			if race is not None:
+				tStr = Utils.formatTime( race.lastRaceTime() )
+				self.refreshTimeToLeader()
+			else:
+				tStr = ''
+			self.raceTime.SetLabel( '  ' + tStr )
+			
 		mainWin = Utils.getMainWin()
 		if mainWin is not None:
 			try:
@@ -239,18 +257,20 @@ class NumKeypad( wx.Panel ):
 				pass
 	
 	def doChangeNumLaps( self, event ):
-		race = Model.race
-		if race and race.isFinished():
-			try:
-				race.numLaps = int(self.numLaps.GetString(self.numLaps.GetSelection()))
-			except ValueError:
-				pass
+		with Model.lock:
+			race = Model.race
+			if race and race.isFinished():
+				try:
+					race.numLaps = int(self.numLaps.GetString(self.numLaps.GetSelection()))
+				except ValueError:
+					pass
 		self.refreshLaps()
 	
 	def doChooseAutomaticManual( self, event ):
-		race = Model.race
-		if race is not None:
-			race.automaticManual = self.automaticManualChoice.GetSelection()
+		with Model.lock:
+			race = Model.race
+			if race is not None:
+				race.automaticManual = self.automaticManualChoice.GetSelection()
 		self.refreshLaps()
 		
 	def onNumPress( self, event, value ):
@@ -266,7 +286,7 @@ class NumKeypad( wx.Panel ):
 	def onDelPress( self, event ):
 		t = self.numEdit.GetValue()
 		if t is not None:
-			self.numEdit.SetValue( int(t/10) if t > 9 else None )
+			self.numEdit.SetValue( int(t//10) if t > 9 else None )
 	
 	def getRiderNum( self ):
 		num = self.numEdit.GetValue()
@@ -341,6 +361,7 @@ class NumKeypad( wx.Panel ):
 		Utils.refresh()
 	
 	def resetLaps( self, enable = False ):
+		# Assumes Model is locked.
 		infoFields = [
 				self.leadersFinishTime,
 				self.leadersLapTime,
@@ -381,8 +402,9 @@ class NumKeypad( wx.Panel ):
 		self.refreshTimeToLeader()
 	
 	def getLapInfo( self ):
+		# Assumes Model is locked.
 		# Returns (laps, lapsToGo, lapCompleting,
-		#			leadersExpectedLapTime, leader.num,
+		#			leadersExpectedLapTime, leaderNum,
 		#			raceFinishTime, isAutomatic)
 		race = Model.race
 		lapCompleting = 1
@@ -392,7 +414,7 @@ class NumKeypad( wx.Panel ):
 		leaderTimes, leaderNums = race.getLeaderTimesNums()
 		if not leaderTimes:
 			return (None, None, lapCompleting, None, None, None, False)
-			
+		
 		t = race.curRaceTime()
 		lapCompleting = bisect.bisect_right( leaderTimes, t ) - 1
 		if lapCompleting < 2:
@@ -430,98 +452,100 @@ class NumKeypad( wx.Panel ):
 		return minLaps, maxLaps
 	
 	def refreshLaps( self ):
-		race = Model.race
-		enable = True if race is not None and race.isRunning() else False
-		
-		self.automaticManualChoice.Enable( enable )
-		self.automaticManualChoice.SetSelection( getattr(race, 'automaticManual', 0) )
-		
-		# Allow the number of laps to be changed after the race is finished.
-		numLapsEnable = True if race is not None and (race.isRunning() or race.isFinished()) else False
-		self.numLaps.Enable( numLapsEnable )
-		if numLapsEnable != enable:
-			self.resetLaps()
-			minLaps, maxLaps = self.getMinMaxLapsRange()
-			self.numLaps.SetItems( [str(x) for x in xrange(minLaps, maxLaps)] )
-			if race.numLaps is not None:
-				for i, v in enumerate(self.numLaps.GetItems()):
-					if int(v) == race.numLaps:
-						self.numLaps.SetSelection( i )
-						break
+		with Model.lock:
+			race = Model.race
+			enable = True if race is not None and race.isRunning() else False
+			
+			self.automaticManualChoice.Enable( enable )
+			self.automaticManualChoice.SetSelection( getattr(race, 'automaticManual', 0) )
+			
+			# Allow the number of laps to be changed after the race is finished.
+			numLapsEnable = True if race is not None and (race.isRunning() or race.isFinished()) else False
+			self.numLaps.Enable( numLapsEnable )
+			if numLapsEnable != enable:
+				self.resetLaps()
+				minLaps, maxLaps = self.getMinMaxLapsRange()
+				self.numLaps.SetItems( [str(x) for x in xrange(minLaps, maxLaps)] )
+				if race.numLaps is not None:
+					for i, v in enumerate(self.numLaps.GetItems()):
+						if int(v) == race.numLaps:
+							self.numLaps.SetSelection( i )
+							break
+				if not enable:
+					return
+				
 			if not enable:
+				self.resetLaps()
 				return
 			
-		if not enable:
-			self.resetLaps()
-			return
-		
-		laps, lapsToGo, lapCompleting, leadersExpectedLapTime, leaderNum, expectedRaceFinish, isAutomatic = self.getLapInfo()
-		if laps is None:
-			self.resetLaps( True )
-			SetLabel( self.lapCompleting, str(lapCompleting) if lapCompleting is not None else '1' )
-			return
-		
-		if isAutomatic and lapCompleting >= 2:
-			if self.numLaps.GetString(0) != str(lapCompleting):
-				self.numLaps.SetItems( [str(x) for x in xrange(lapCompleting, laps+5)] )
-				self.numLaps.SetSelection( 0 )
-			if int(self.numLaps.GetString(self.numLaps.GetSelection())) != laps:
-				for i, v in enumerate(self.numLaps.GetItems()):
-					if int(v) == laps:
-						self.numLaps.SetSelection( i )
-						break
-		
-		raceMessage = { 0:'Finishers Arriving', 1:'Ring Bell', 2:'Prepare Bell' }
-		
-		# Set the projected finish time and laps.
-		if lapCompleting >= 2 or not isAutomatic:
-			SetLabel( self.leadersFinishTime, 'Leader %s   Last Rider %s' %
-				(Utils.formatTime(expectedRaceFinish), Utils.formatTime(race.getLastFinisherTime())) )
-			SetLabel( self.leadersLapTime, Utils.formatTime(leadersExpectedLapTime) )
-			rule80Time = race.getRule80CountdownTime()
-			SetLabel( self.rule80Time, Utils.formatTime(rule80Time) if rule80Time else '' )
-			SetLabel( self.lapsToGo, str(lapsToGo) )
-			SetLabel( self.lapCompleting, str(lapCompleting) )
+			laps, lapsToGo, lapCompleting, leadersExpectedLapTime, leaderNum, expectedRaceFinish, isAutomatic = self.getLapInfo()
+			if laps is None:
+				self.resetLaps( True )
+				SetLabel( self.lapCompleting, str(lapCompleting) if lapCompleting is not None else '1' )
+				return
 			
-			if   lapsToGo == 2 and race.isLeaderExpected():
-				SetLabel( self.message, '%d: Leader Bell Lap Alert' % leaderNum )
-			elif lapsToGo == 1 and race.isLeaderExpected():
-				SetLabel( self.message, '%d: Leader Finish Alert' % leaderNum )
+			if isAutomatic and lapCompleting >= 2:
+				if self.numLaps.GetString(0) != str(lapCompleting):
+					self.numLaps.SetItems( [str(x) for x in xrange(lapCompleting, laps+5)] )
+					self.numLaps.SetSelection( 0 )
+				if self.numLaps.GetString(self.numLaps.GetSelection()) != str(laps):
+					for i, v in enumerate(self.numLaps.GetItems()):
+						if int(v) == laps:
+							self.numLaps.SetSelection( i )
+							break
+			
+			raceMessage = { 0:'Finishers Arriving', 1:'Ring Bell', 2:'Prepare Bell' }
+			
+			# Set the projected finish time and laps.
+			if lapCompleting >= 2 or not isAutomatic:
+				SetLabel( self.leadersFinishTime, 'Leader %s   Last Rider %s' %
+					(Utils.formatTime(expectedRaceFinish), Utils.formatTime(race.getLastFinisherTime())) )
+				SetLabel( self.leadersLapTime, Utils.formatTime(leadersExpectedLapTime) )
+				rule80Time = race.getRule80CountdownTime()
+				SetLabel( self.rule80Time, Utils.formatTime(rule80Time) if rule80Time else '' )
+				SetLabel( self.lapsToGo, str(lapsToGo) )
+				SetLabel( self.lapCompleting, str(lapCompleting) )
+				
+				if   lapsToGo == 2 and race.isLeaderExpected():
+					SetLabel( self.message, '%d: Leader Bell Lap Alert' % leaderNum )
+				elif lapsToGo == 1 and race.isLeaderExpected():
+					SetLabel( self.message, '%d: Leader Finish Alert' % leaderNum )
+				else:
+					SetLabel( self.message, raceMessage.get(lapsToGo, '') )
+				race.numLaps = laps
+				
+				if race.allRidersFinished():
+					race.finishRaceNow()
 			else:
-				SetLabel( self.message, raceMessage.get(lapsToGo, '') )
-			race.numLaps = laps
-			
-			if race.allRidersFinished():
-				race.finishRaceNow()
-		else:
-			if self.numLaps.GetSelection() != 0:
-				self.numLaps.SetSelection( 0 )
-			SetLabel( self.leadersFinishTime, '' )
-			SetLabel( self.leadersLapTime, '' )
-			SetLabel( self.lapsToGo, '' )
-			SetLabel( self.lapCompleting, str(lapCompleting) )
-			SetLabel( self.message, 'Collecting Data' )
-			race.numLaps = None
+				if self.numLaps.GetSelection() != 0:
+					self.numLaps.SetSelection( 0 )
+				SetLabel( self.leadersFinishTime, '' )
+				SetLabel( self.leadersLapTime, '' )
+				SetLabel( self.lapsToGo, '' )
+				SetLabel( self.lapCompleting, str(lapCompleting) )
+				SetLabel( self.message, 'Collecting Data' )
+				race.numLaps = None
 			
 		self.refreshTimeToLeader()
 		
 	def refresh( self ):
 		wx.CallAfter( self.numEdit.SetFocus )
-		race = Model.race
-		enable = True if race is not None and race.isRunning() else False
-		if self.isEnabled != enable:
-			for b in self.num:
-				b.Enable( enable )
-			for b in [self.numEdit, self.delBtn, self.enterBtn, self.dnfBtn, self.pullBtn]:
-				b.Enable( enable )
-			self.isEnabled = enable
-		if not enable:
-			self.numEdit.SetValue( None )
+		with Model.lock:
+			race = Model.race
+			enable = True if race is not None and race.isRunning() else False
+			if self.isEnabled != enable:
+				for b in self.num:
+					b.Enable( enable )
+				for b in [self.numEdit, self.delBtn, self.enterBtn, self.dnfBtn, self.pullBtn]:
+					b.Enable( enable )
+				self.isEnabled = enable
+			if not enable:
+				self.numEdit.SetValue( None )
 		self.refreshLaps()
 	
 if __name__ == '__main__':
 	app = wx.PySimpleApp()
-	mainWin = wx.Frame(None,title="CrossMan", size=(600,600))
+	mainWin = wx.Frame(None,title="CrossMan", size=(600,700))
 	numKeypad = NumKeypad(mainWin)
 	mainWin.Show()
 	app.MainLoop()

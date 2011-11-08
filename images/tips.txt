@@ -4,6 +4,7 @@ Try importing rider data from an Excel sign-on sheet.\nSee the tutorial for deta
 The Race Chart is a great way to settle disputes.
 Try exporting race results to HTML.
 Try exporting race results to Excel.
+Try double-clicking on the boundary between Recorded and Expected to get a vertical view.
 CrossMgr automatically determines the race leader.
 The History page looks just like a manual scoring sheet.
 Try right-clicking in the History page to edit entries.

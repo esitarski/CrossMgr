@@ -266,6 +266,7 @@ class MainWin( wx.Frame ):
 		# Forecast/History shown in left pane of scrolled window.
 		sty = wx.BORDER_SUNKEN
 		self.splitter = wx.SplitterWindow( self )
+		self.splitter.SetMinimumPaneSize( 128 )
 		self.forecastHistory = ForecastHistory( self.splitter, style=sty )
 
 		# Other data shown in right pane.
@@ -360,28 +361,29 @@ class MainWin( wx.Frame ):
 			self.config.WriteBool( 'showTipAtStartup', showing ^ True )
 
 	def menuRestoreFromInput( self, event ):
-		if not Model.race:
-			Utils.MessageOK(self, "You must have a vaid race.", "No Valid Race", iconMask=wx.ICON_ERROR)
-			return
-		race = Model.race
-		if not Utils.MessageOKCancel( self, "This will restore the race from the original input.\nAll your adds/splits/deletes will be lost.\nAre you sure you want to continue?",
-									"Restore from Original Input", iconMask=wx.ICON_WARNING ):
-			return
-		if not Utils.MessageOKCancel( self,
-									"Seriously, all your edits will be lost.\nContinue?",
-									"Restore from Original Input", iconMask=wx.ICON_WARNING ):
-			return
-		startTime, endTime, numTimes = OutputStreamer.ReadStreamFile()
-		if not numTimes:
-			Utils.MessageOK( self, "No times found.\nCheck for *Input.csv file.", "No Times Found" )
-			return
-		race.deleteAllRiderTimes()
-		race.startTime = startTime
-		race.endTime = endTime
-		for num, t in numTimes:
-			race.importTime( num, t )
-		race.numLaps = race.getMaxLap()
-		race.setChanged()
+		with Model.lock:
+			if not Model.race:
+				Utils.MessageOK(self, "You must have a vaid race.", "No Valid Race", iconMask=wx.ICON_ERROR)
+				return
+			race = Model.race
+			if not Utils.MessageOKCancel( self, "This will restore the race from the original input.\nAll your adds/splits/deletes will be lost.\nAre you sure you want to continue?",
+										"Restore from Original Input", iconMask=wx.ICON_WARNING ):
+				return
+			if not Utils.MessageOKCancel( self,
+										"Seriously, all your edits will be lost.\nContinue?",
+										"Restore from Original Input", iconMask=wx.ICON_WARNING ):
+				return
+			startTime, endTime, numTimes = OutputStreamer.ReadStreamFile()
+			if not numTimes:
+				Utils.MessageOK( self, "No times found.\nCheck for *Input.csv file.", "No Times Found" )
+				return
+			race.deleteAllRiderTimes()
+			race.startTime = startTime
+			race.endTime = endTime
+			for num, t in numTimes:
+				race.importTime( num, t )
+			race.numLaps = race.getMaxLap()
+			race.setChanged()
 		self.writeRace()
 			
 	def menuChangeProperties( self, event ):
@@ -448,101 +450,105 @@ class MainWin( wx.Frame ):
 
 	@logCall
 	def menuLinkExcel( self, event ):
-		race = Model.getRace()
-		if not race:
-			Utils.MessageOK(self, "You must have a vaid race.", "Link ExcelSheet", iconMask=wx.ICON_ERROR)
-			return
-		gel = GetExcelLink( self, getattr(race, 'excelLink', None) )
-		race.excelLink = gel.show()
-		if not race.excelLink:
-			del race.excelLink
+		with Model.lock:
+			race = Model.getRace()
+			if not race:
+				Utils.MessageOK(self, "You must have a vaid race.", "Link ExcelSheet", iconMask=wx.ICON_ERROR)
+				return
+			gel = GetExcelLink( self, getattr(race, 'excelLink', None) )
+			with Model.lock:
+				race.excelLink = gel.show()
+				if not race.excelLink:
+					del race.excelLink
 		self.writeRace()
 		
 	#--------------------------------------------------------------------------------------------
 
 	@logCall
 	def menuExportToExcel( self, event ):
-		self.commit()
-		if self.fileName is None or len(self.fileName) < 4:
-			return
+		with Model.lock:
+			self.commit()
+			if self.fileName is None or len(self.fileName) < 4:
+				return
 
-		xlFName = self.fileName[:-4] + '.xls'
-		dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(xlFName),
-						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
-		ret = dlg.ShowModal()
-		dName = dlg.GetPath()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
+			xlFName = self.fileName[:-4] + '.xls'
+			dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(xlFName),
+							style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
+			ret = dlg.ShowModal()
+			dName = dlg.GetPath()
+			dlg.Destroy()
+			if ret != wx.ID_OK:
+				return
 
-		xlFName = os.path.join( dName, os.path.basename(xlFName) )
+			xlFName = os.path.join( dName, os.path.basename(xlFName) )
 
-		wb = xlwt.Workbook()
-		for catName in getRaceCategories():
-			sheetCur = wb.add_sheet( re.sub('[:\\/?*\[\]]', ' ', catName) )
-			export = ExportGrid()
-			export.setResultsOneListRiderTimes( catName )
-			export.toExcelSheet( sheetCur )
+			wb = xlwt.Workbook()
+			for catName in getRaceCategories():
+				sheetCur = wb.add_sheet( re.sub('[:\\/?*\[\]]', ' ', catName) )
+				export = ExportGrid()
+				export.setResultsOneListRiderTimes( catName )
+				export.toExcelSheet( sheetCur )
 
-		try:
-			wb.save( xlFName )
-			webbrowser.open( xlFName, new = 2, autoraise = True )
-			Utils.MessageOK(self, 'Excel file written to:\n\n   %s' % xlFName, 'Excel Write', iconMask=wx.ICON_INFORMATION)
-		except IOError:
-			Utils.MessageOK(self,
-						'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % xlFName,
-						'Excel File Error', iconMask=wx.ICON_ERROR )
+			try:
+				wb.save( xlFName )
+				webbrowser.open( xlFName, new = 2, autoraise = True )
+				Utils.MessageOK(self, 'Excel file written to:\n\n   %s' % xlFName, 'Excel Write', iconMask=wx.ICON_INFORMATION)
+			except IOError:
+				Utils.MessageOK(self,
+							'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % xlFName,
+							'Excel File Error', iconMask=wx.ICON_ERROR )
 						
 	#--------------------------------------------------------------------------------------------
 	
 	@logCall
 	def menuExportHtmlRaceResults( self, event ):
-		self.commit()
-		race = Model.getRace()
-		if race is None:
-			Utils.MessageOK(self, 'No race loaded.  Please New/Open a race.', 'Export Html Error', iconMask=wx.ICON_ERROR)
-			return
-		
-		# Get the folder to write the html file.
-		fname = self.fileName[:-4] + '.html'
-		dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(fname),
-							style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
-		ret = dlg.ShowModal()
-		dName = dlg.GetPath()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
-
-		# Read the html template.
-		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
-		try:
-			with open(htmlFile) as fp:
-				html = fp.read()
-		except:
-			Utils.MessageOK('Cannot read HTML template file.  Check program installation.',
-							'Html Template Read Error', iconMask=wx.ICON_ERROR )
-			return
+		with Model.lock:
+			self.commit()
+			race = Model.getRace()
+			if race is None:
+				Utils.MessageOK(self, 'No race loaded.  Please New/Open a race.', 'Export Html Error', iconMask=wx.ICON_ERROR)
+				return
 			
-		# Replace parts of the file with the race information.
-		raceName = 'raceName = %s' % json.dumps('Race: %s' % os.path.basename(self.fileName)[:-4])
-		html = html.replace( 'raceName = null', raceName )
-		
-		organizer = getattr( race, 'organizer', '' )
-		html = html.replace( 'organizer = null', 'organizer = %s' % json.dumps(organizer) )
-		
-		data = 'data = %s' % json.dumps(GetAnimationData(getExternalData = True))
-		html = html.replace( 'data = null', data )
-		
-		# Write out the results.
-		fname = os.path.join( dName, os.path.basename(fname) )
-		try:
-			with open(fname, 'w') as fp:
-				fp.write( html )
-			webbrowser.open( fname, new = 2, autoraise = True )
-			Utils.MessageOK(self, 'Html Race Animation written to:\n\n   %s' % fname, 'Html Write', iconMask=wx.ICON_INFORMATION)
-		except:
-			Utils.MessageOK(self, 'Cannot write HTML template file (%s).' % fname,
-							'Html Write Error', iconMask=wx.ICON_ERROR )
+			# Get the folder to write the html file.
+			fname = self.fileName[:-4] + '.html'
+			dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(fname),
+								style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
+			ret = dlg.ShowModal()
+			dName = dlg.GetPath()
+			dlg.Destroy()
+			if ret != wx.ID_OK:
+				return
+
+			# Read the html template.
+			htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
+			try:
+				with open(htmlFile) as fp:
+					html = fp.read()
+			except:
+				Utils.MessageOK('Cannot read HTML template file.  Check program installation.',
+								'Html Template Read Error', iconMask=wx.ICON_ERROR )
+				return
+				
+			# Replace parts of the file with the race information.
+			raceName = 'raceName = %s' % json.dumps('Race: %s' % os.path.basename(self.fileName)[:-4])
+			html = html.replace( 'raceName = null', raceName )
+			
+			organizer = getattr( race, 'organizer', '' )
+			html = html.replace( 'organizer = null', 'organizer = %s' % json.dumps(organizer) )
+			
+			data = 'data = %s' % json.dumps(GetAnimationData(getExternalData = True))
+			html = html.replace( 'data = null', data )
+			
+			# Write out the results.
+			fname = os.path.join( dName, os.path.basename(fname) )
+			try:
+				with open(fname, 'w') as fp:
+					fp.write( html )
+				webbrowser.open( fname, new = 2, autoraise = True )
+				Utils.MessageOK(self, 'Html Race Animation written to:\n\n   %s' % fname, 'Html Write', iconMask=wx.ICON_INFORMATION)
+			except:
+				Utils.MessageOK(self, 'Cannot write HTML template file (%s).' % fname,
+								'Html Write Error', iconMask=wx.ICON_ERROR )
 	
 	#--------------------------------------------------------------------------------------------
 	@logCall
@@ -564,17 +570,19 @@ class MainWin( wx.Frame ):
 		sys.exit()
 
 	def writeRace( self ):
-		race = Model.race
-		if race is not None:
-			with open(self.fileName, 'wb') as fp:
-				pickle.dump( race, fp, 2 )
-			race.setChanged( False )
+		with Model.lock:
+			race = Model.race
+			if race is not None:
+				with open(self.fileName, 'wb') as fp:
+					pickle.dump( race, fp, 2 )
+				race.setChanged( False )
 
 	def setActiveCategories( self ):
-		race = Model.race
-		if race is None:
-			return
-		race.setActiveCategories()
+		with Model.lock:
+			race = Model.race
+			if race is None:
+				return
+			race.setActiveCategories()
 
 	@logCall
 	def menuNew( self, event ):
@@ -704,16 +712,16 @@ class MainWin( wx.Frame ):
 	def openRace( self, fileName ):
 		if not fileName:
 			return
-		Model.resetCache()
 		self.writeRace()
 
 		try:
-			with open(fileName, 'rb') as fp:
-				race = pickle.load( fp )
-			self.fileName = fileName
-			race.tagNums = None
-			Model.setRace( race )
-			
+			with Model.lock:
+				with open(fileName, 'rb') as fp:
+					race = pickle.load( fp )
+				self.fileName = fileName
+				race.tagNums = None
+				Model.setRace( race )
+				
 			self.updateRecentFiles()
 			
 			if race.isFinished():
@@ -878,13 +886,15 @@ Continue?''' % fName, 'Simulate a Race' ):
 		self.fileName = fName
 		OutputStreamer.DeleteStreamerFile()
 		self.simulateSeen = set()
-		Model.setRace( None )
-		race = Model.newRace()
-		race.name = 'Simulate'
-		race.memo = ''
-		race.minutes = self.raceMinutes
-		race.raceNum = 1
-		race.setCategories( [(True, 'Junior', '100-199', '00:00', None), (True, 'Senior','200-299', '00:15', None)] )
+		with Model.lock:
+			Model.setRace( None )
+			race = Model.newRace()
+			race.name = 'Simulate'
+			race.memo = ''
+			race.minutes = self.raceMinutes
+			race.raceNum = 1
+			race.setCategories( [(True, 'Junior', '100-199', '00:00', None), (True, 'Senior','200-299', '00:15', None)] )
+
 		self.writeRace()
 		self.showPageName( 'History' )
 		self.refresh()
@@ -892,48 +902,46 @@ Continue?''' % fName, 'Simulate a Race' ):
 		# Start the simulation.
 
 		self.nextNum = None
-		race.startRaceNow()
-		OutputStreamer.writeRaceStart()
-		
-		# Backup all the events and race start so we don't have to wait for the first lap.
-		race.startTime -= datetime.timedelta( seconds = (tMin-1) )
-		#self.lapTimes = [(t-tMin, n) for t, n in self.lapTimes]
+		with Model.lock:
+			race.startRaceNow()		
+			# Backup all the events and race start so we don't have to wait for the first lap.
+			race.startTime -= datetime.timedelta( seconds = (tMin-1) )
 
+		OutputStreamer.writeRaceStart()
 		self.simulateTimer = wx.CallLater( 1, self.updateSimulation, True )
 		self.updateRaceClock()
 		self.refresh()
 
 	def updateSimulation( self, num ):
-		race = Model.getRace()
-		if race is None:
+		if Model.race is None:
 			return
 		if self.nextNum is not None and self.nextNum not in self.simulateSeen:
-			if 	self.notebook.GetPageText(self.notebook.GetSelection()) == 'Record':
-				self.record.numEdit.SetValue( self.nextNum )
-				self.record.onEnterPress()
-				self.record.refresh()
-			else:
-				self.forecastHistory.logNum( self.nextNum )
-				self.record.refresh()
+			self.forecastHistory.logNum( self.nextNum )
+
+		with Model.lock:
+			race = Model.race
 			if race.curRaceTime() > race.minutes * 60.0:
 				self.simulateSeen.add( self.nextNum )
 
 		try:
 			t, self.nextNum = self.lapTimes.pop()
-			if t < (self.raceMinutes*60.0 + race.getAverageLapTime()*1.5):
-				self.simulateTimer.Restart( int(max(1,(t - race.curRaceTime()) * 1000)), True )
-				return
+			with Model.lock:
+				race = Model.getRace()
+				if t < (self.raceMinutes*60.0 + race.getAverageLapTime()*1.5):
+					self.simulateTimer.Restart( int(max(1,(t - race.curRaceTime()) * 1000)), True )
+					return
 		except IndexError:
 			pass
 			
 		self.simulateTimer.Stop()
 		self.nextNum = None
-		race.finishRaceNow()
+		with Model.lock:
+			race.finishRaceNow()
 		
 		OutputStreamer.writeRaceFinish()
 		# Give the streamer a chance to write the last message.
 		wx.CallLater( 2000, OutputStreamer.StopStreamer )
-		
+			
 		Utils.writeRace()
 		self.refresh()
 
@@ -1150,6 +1158,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 	#-------------------------------------------------------------
 	
 	def processJChipListener( self ):
+		# Assumes Model is locked.
 		race = Model.race
 		
 		if not race or not getattr(race, 'enableJChipIntegration', False):
@@ -1188,35 +1197,37 @@ Continue?''' % fName, 'Simulate a Race' ):
 			race.setChanged()
 			self.refresh()
 			self.record.refreshLaps()
-				
+
 	def updateRaceClock( self, event = None ):
-		self.record.refreshRaceTime()
+		if hasattr(self, 'record'):
+			self.record.refreshRaceTime()
 
-		race = Model.race
-		if race is None:
-			self.SetTitle( Version.AppVerName )
-			self.timer.Stop()
-			JChip.StopListener()
-			return
-
-		if race.isUnstarted():
-			status = 'Unstarted'
-		elif race.isRunning():
-			status = 'Running'
-			if getattr(race, 'enableJChipIntegration', False):
-				self.processJChipListener()
-			elif JChip.listener:
+		with Model.lock:
+			race = Model.race
+			if race is None:
+				self.SetTitle( Version.AppVerName )
+				self.timer.Stop()
 				JChip.StopListener()
-		else:
-			status = 'Finished'
+				return
 
-		if not race.isRunning():
-			self.SetTitle( '%s-r%d - %s - %s' % (race.name, race.raceNum, status, Version.AppVerName) )
-			self.timer.Stop()
-			return
+			if race.isUnstarted():
+				status = 'Unstarted'
+			elif race.isRunning():
+				status = 'Running'
+				if getattr(race, 'enableJChipIntegration', False):
+					self.processJChipListener()
+				elif JChip.listener:
+					JChip.StopListener()
+			else:
+				status = 'Finished'
 
-		self.SetTitle( '%s %s-r%d - %s - %s %s' %
-					(Utils.formatTime(race.curRaceTime()), race.name, race.raceNum, status, Version.AppVerName, '<JChip>' if JChip.listener else '' ) )
+			if not race.isRunning():
+				self.SetTitle( '%s-r%d - %s - %s' % (race.name, race.raceNum, status, Version.AppVerName) )
+				self.timer.Stop()
+				return
+
+			self.SetTitle( '%s %s-r%d - %s - %s %s' %
+						(Utils.formatTime(race.curRaceTime()), race.name, race.raceNum, status, Version.AppVerName, '<JChip>' if JChip.listener else '' ) )
 
 		if self.timer is None or not self.timer.IsRunning():
 			self.timer.Start( 1000 )
@@ -1233,6 +1244,7 @@ def MainLoop():
 	parser = OptionParser( usage = "usage: %prog [options] [RaceFile.cmn]" )
 	parser.add_option("-f", "--file", dest="filename", help="race file", metavar="RaceFile.cmn")
 	parser.add_option("-q", "--quiet", action="store_false", dest="verbose", default=True, help='hide splash screen')
+	parser.add_option("-r", "--regular", action="store_false", dest="fullScreen", default=True, help='regular size (not full screen)')
 	(options, args) = parser.parse_args()
 
 	app = wx.PySimpleApp()
@@ -1259,8 +1271,9 @@ def MainLoop():
 	Utils.writeLog( 'start' )
 	
 	# Configure the main window.
-	mainWin = MainWin( None, title=Version.AppVerName, size=(840,620) )
-	mainWin.Maximize( True )
+	mainWin = MainWin( None, title=Version.AppVerName, size=(900,700) )
+	if options.fullScreen:
+		mainWin.Maximize( True )
 	mainWin.Show()
 
 	# Set the upper left icon.
@@ -1291,6 +1304,8 @@ def MainLoop():
 		except (IndexError, AttributeError, ValueError):
 			pass
 
+	mainWin.forecastHistory.setSash()
+	
 	# Start processing events.
 	app.MainLoop()
 

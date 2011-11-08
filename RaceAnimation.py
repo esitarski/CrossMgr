@@ -238,24 +238,25 @@ class RaceAnimation( wx.Panel ):
 		return t
 	
 	def refresh( self ):
-		race = Model.race
-		enabled = (race is None) or not race.isRunning()
-		for w in self.controls:
-			w.Enable( enabled )
+		with Model.lock:
+			race = Model.race
+			enabled = (race is None) or not race.isRunning()
+			for w in self.controls:
+				w.Enable( enabled )
+				
+			if race is None:
+				self.animation.SetData( None, 0 )
+				self.animation.StopAnimate()
+				return
 			
-		if race is None:
-			self.animation.SetData( None, 0 )
-			self.animation.StopAnimate()
-			return
-		
-		catName = FixCategories( self.categoryChoice, getattr(race, 'raceAnimationCategory', 0) )
-		animationData = GetAnimationData( catName )
-		
-		self.animation.SetData( animationData, race.lastRaceTime() if race.isRunning() else self.animation.t )
-		
-		if race.isRunning():
-			if not self.animation.IsAnimating():
-				self.animation.StartAnimateRealtime()
+			catName = FixCategories( self.categoryChoice, getattr(race, 'raceAnimationCategory', 0) )
+			animationData = GetAnimationData( catName )
+			
+			self.animation.SetData( animationData, race.lastRaceTime() if race.isRunning() else self.animation.t )
+			
+			if race.isRunning():
+				if not self.animation.IsAnimating():
+					self.animation.StartAnimateRealtime()
 	
 if __name__ == '__main__':
 	app = wx.PySimpleApp()
