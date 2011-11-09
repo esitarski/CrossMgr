@@ -130,12 +130,7 @@ class NumKeypad( wx.Panel ):
 		gbs.Add( self.leadersLapTime, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
 
-		label = wx.StaticText(self, wx.ID_ANY, "80% Time Limit:")
-		label.SetFont( font )
-		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
-		self.rule80Time = wx.StaticText(self, wx.ID_ANY, "")
-		self.rule80Time.SetFont( font )
-		gbs.Add( self.rule80Time, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
+
 		rowCur += 1
 
 		label = wx.StaticText(self, wx.ID_ANY, "Completing Lap:")
@@ -311,7 +306,6 @@ class NumKeypad( wx.Panel ):
 		infoFields = [
 				self.leadersFinishTime,
 				self.leadersLapTime,
-				self.rule80Time,
 				self.lapCompleting,
 				self.lapsToGo,
 				self.timeToLeader,
@@ -339,8 +333,6 @@ class NumKeypad( wx.Panel ):
 			SetLabel( self.leadersFinishTime, 'Leader %s   Last Rider %s' %
 							(Utils.formatTime(race.getLeaderTime()), Utils.formatTime(race.getLastFinisherTime())) )
 			SetLabel( self.leadersLapTime, Utils.formatTime(race.getLeaderLapTime()) )
-			rule80Time = race.getRule80CountdownTime()
-			SetLabel( self.rule80Time, Utils.formatTime(rule80Time) if rule80Time else '' )
 			SetLabel( self.lapCompleting, str(race.numLaps if race.numLaps is not None else 0) )
 			SetLabel( self.lapsToGo, '0' )
 			SetLabel( self.message, '' )
@@ -446,8 +438,6 @@ class NumKeypad( wx.Panel ):
 				SetLabel( self.leadersFinishTime, 'Leader %s   Last Rider %s' %
 					(Utils.formatTime(expectedRaceFinish), Utils.formatTime(race.getLastFinisherTime())) )
 				SetLabel( self.leadersLapTime, Utils.formatTime(leadersExpectedLapTime) )
-				rule80Time = race.getRule80CountdownTime()
-				SetLabel( self.rule80Time, Utils.formatTime(rule80Time) if rule80Time else '' )
 				SetLabel( self.lapsToGo, str(lapsToGo) )
 				SetLabel( self.lapCompleting, str(lapCompleting) )
 				
