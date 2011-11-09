@@ -107,7 +107,7 @@ def getHomeDir():
 	homedir = sp.GetUserDataDir()
 	try:
 		if os.path.basename(homedir) == '.CrossMgr':
-			homedir = os.path.join( os.path.dirname(homedir), 'CrossMgrApp' )
+			homedir = os.path.join( os.path.dirname(homedir), '.CrossMgrApp' )
 	except:
 		pass
 	if not os.path.exists(homedir):
