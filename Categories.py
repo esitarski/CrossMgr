@@ -72,7 +72,7 @@ class Categories( wx.Panel ):
 		cols += 1 
 
 		self.grid = gridlib.Grid( self )
-		colnames = ['Active', 'Name', 'Numbers', 'Start Offset (MM:SS)', 'Race Laps', '80% Time Limit']
+		colnames = ['Active', 'Name', 'Numbers', 'Start Offset (MM:SS)', 'Race Laps', '80% Lap Time', 'Suggested Laps']
 		self.activeColumn = colnames.index( 'Active' )
 		self.grid.CreateGrid( 0, len(colnames) )
 		self.grid.SetRowLabelSize(0)
@@ -139,6 +139,10 @@ class Categories( wx.Panel ):
 		self.grid.SetCellAlignment( r, 5, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 		self.grid.SetReadOnly( r, 5, True )
 		
+		self.grid.SetCellValue( r, 6, '' )
+		self.grid.SetCellAlignment( r, 6, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+		self.grid.SetReadOnly( r, 6, True )
+		
 		# Get the 80% time cutoff.
 		if not active or not Model.race:
 			return
@@ -151,6 +155,10 @@ class Categories( wx.Panel ):
 		rule80Time = race.getRule80CountdownTime( category )
 		if rule80Time:
 			self.grid.SetCellValue( r, 5, Utils.formatTime(rule80Time) )
+		
+		laps = race.getCategoryRaceLaps().get(category, 0)
+		if laps:
+			self.grid.SetCellValue( r, 6, str(laps) )
 		
 	def onNewCategory( self, event ):
 		self.grid.AppendRows( 1 )

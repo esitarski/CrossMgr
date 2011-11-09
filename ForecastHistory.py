@@ -12,15 +12,15 @@ from EditEntry import CorrectNumber, SplitNumber, DeleteEntry, DoDNS, DoDNF, DoP
 
 
 # Define columns for recorded and expected infomation.
-iNumCol = 0
-iLdrCol = 1
-iLapCol = 2
+iNumCol  = 0
+iNoteCol = 1
+iLapCol  = 2
 iTimeCol = 3
-iColMax = 4
+iColMax  = 4
 colnames = [None] * iColMax
-colnames[iNumCol] = 'Num'
-colnames[iLdrCol] = 'Note'
-colnames[iLapCol] = 'Lap'
+colnames[iNumCol]  = 'Num'
+colnames[iNoteCol] = 'Note'
+colnames[iLapCol]  = 'Lap'
 colnames[iTimeCol] = 'Time'
 
 fontSize = 14
@@ -131,14 +131,22 @@ class ForecastHistory( wx.Panel ):
 				('Correct...',	wx.NewId(), self.OnPopupHistoryCorrect),
 				('Split...',	wx.NewId(), self.OnPopupHistorySplit),
 				('Delete...',	wx.NewId(), self.OnPopupHistoryDelete),
+				(None,			None,		None),
 				('DNF...',		wx.NewId(), self.OnPopupHistoryDNF),
+				(None,			None,		None),
+				('RiderDetail',wx.NewId(),self.OnPopupHistoryRiderDetail),
+
 			]
 			for p in self.historyPopupInfo:
-				self.Bind( wx.EVT_MENU, p[2], id=p[1] )
+				if p[2]:
+					self.Bind( wx.EVT_MENU, p[2], id=p[1] )
 
 		menu = wx.Menu()
 		for i, p in enumerate(self.historyPopupInfo):
-			menu.Append( p[1], p[0] )
+			if p[2]:
+				menu.Append( p[1], p[0] )
+			else:
+				menu.AppendSeparator()
 		
 		self.PopupMenu( menu )
 		menu.Destroy()
@@ -156,13 +164,21 @@ class ForecastHistory( wx.Panel ):
 			DeleteEntry( self, self.quickHistory[self.rowPopup] )
 			
 	def OnPopupHistoryDNF( self, event ):
-		if hasattr(self, 'rowPopup'):
-			try:
-				num = self.quickHistory[self.rowPopup].num
-				NumKeypad.DoDNF( self, num )
-			except:
-				pass
+		try:
+			num = self.quickHistory[getattr(self, 'rowPopup')].num
+			NumKeypad.DoDNF( self, num )
+		except:
+			pass
 	
+	def OnPopupHistoryRiderDetail( self, event ):
+		try:
+			num = self.quickHistory[getattr(self, 'rowPopup')].num
+			mainWin = Utils.getMainWin()
+			mainWin.setNumSelect( num )
+			mainWin.showPageName( 'RiderDetail' )
+		except:
+			pass
+				
 	#--------------------------------------------------------------------
 	
 	def doExpectedPopup( self, event ):
@@ -177,44 +193,58 @@ class ForecastHistory( wx.Panel ):
 			
 		if not hasattr(self, 'expectedPopupInfo'):
 			self.expectedPopupInfo = [
-				('Enter',	wx.NewId(), self.OnPopupExpectedEnter),
-				('DNF...',	wx.NewId(), self.OnPopupExpectedDNF),
-				('Pull...',	wx.NewId(), self.OnPopupExpectedPull),
+				('Enter',			wx.NewId(), self.OnPopupExpectedEnter),
+				('DNF...',			wx.NewId(), self.OnPopupExpectedDNF),
+				('Pull...',			wx.NewId(), self.OnPopupExpectedPull),
+				(None,				None,		None),
+				('RiderDetail',wx.NewId(),	self.OnPopupExpectedRiderDetail),
 			]
 			for p in self.expectedPopupInfo:
-				self.Bind( wx.EVT_MENU, p[2], id=p[1] )
+				if p[2]:
+					self.Bind( wx.EVT_MENU, p[2], id=p[1] )
 
 		menu = wx.Menu()
 		for i, p in enumerate(self.expectedPopupInfo):
-			menu.Append( p[1], p[0] )
+			if p[2]:
+				menu.Append( p[1], p[0] )
+			else:
+				menu.AppendSeparator()
 		
 		self.PopupMenu( menu )
 		menu.Destroy()
 		
 	def OnPopupExpectedEnter( self, event ):
-		if hasattr(self, 'rowPopup'):
-			try:
-				num = self.quickExpected[self.rowPopup].num
-				self.logNum( num )
-			except:
-				pass
+		try:
+			num = self.quickExpected[getattr(self, 'rowPopup')].num
+			self.logNum( num )
+		except:
+			pass
 		
 	def OnPopupExpectedDNF( self, event ):
-		if hasattr(self, 'rowPopup'):
-			try:
-				num = self.quickExpected[self.rowPopup].num
-				NumKeypad.DoDNF( self, num )
-			except:
-				pass
+		try:
+			num = self.quickExpected[getattr(self, 'rowPopup')].num
+			NumKeypad.DoDNF( self, num )
+		except:
+			pass
 		
 	def OnPopupExpectedPull( self, event ):
-		if hasattr(self, 'rowPopup'):
-			try:
-				num = self.quickExpected[self.rowPopup].num
-				NumKeypad.DoPull( self, num )
-			except:
-				pass
-		
+		try:
+			num = self.quickExpected[getattr(self, 'rowPopup')].num
+			NumKeypad.DoPull( self, num )
+		except:
+			pass
+
+	def OnPopupExpectedRiderDetail( self, event ):
+		try:
+			num = self.quickExpected[getattr(self, 'rowPopup')].num
+			mainWin = Utils.getMainWin()
+			mainWin.setNumSelect( num )
+			mainWin.showPageName( 'RiderDetail' )
+		except:
+			pass
+				
+	#--------------------------------------------------------------------
+	
 	def logNum( self, num ):
 		if not num:
 			return
@@ -249,6 +279,7 @@ class ForecastHistory( wx.Panel ):
 				return
 						
 			tRace = race.curRaceTime()
+			tRaceLength = race.minutes * 60.0
 			
 			entries = race.interpolateLapNonZeroFinishers( race.numLaps if race.numLaps is not None else race.getMaxLap() + 1 )
 			
@@ -297,10 +328,10 @@ class ForecastHistory( wx.Panel ):
 			outsideTimeBound = set()
 			for r, e in enumerate(expected):
 				if e.num in catNextLeaders:
-					backgroundColour[(r, iLdrCol)] = wx.GREEN
-				if race.isOutsideTimeBound(e.num):
-					backgroundColour[(r, iLdrCol)] = self.redColour
-					textColour[(r, iLdrCol)] = wx.WHITE
+					backgroundColour[(r, iNoteCol)] = wx.GREEN
+				if tRace < tRaceLength and race.isOutsideTimeBound(e.num):
+					backgroundColour[(r, iNoteCol)] = self.redColour
+					textColour[(r, iNoteCol)] = wx.WHITE
 					outsideTimeBound.add( e.num )
 			
 			data = [None] * iColMax
@@ -316,7 +347,7 @@ class ForecastHistory( wx.Panel ):
 					return 'miss'
 				else:
 					return ' '
-			data[iLdrCol] = [getNote(e) for e in expected]
+			data[iNoteCol] = [getNote(e) for e in expected]
 			self.quickExpected = expected
 			
 			self.expectedGrid.Set( data = data, backgroundColour = backgroundColour, textColour = textColour )
@@ -341,14 +372,14 @@ class ForecastHistory( wx.Panel ):
 			data[iNumCol] = [str(e.num) for e in recorded]
 			data[iTimeCol] = [formatTime(e.t) for e in recorded]
 			data[iLapCol] = [str(e.lap) for e in recorded]
-			data[iLdrCol] = ['Lead' if e.num in catPrevLeaders else ' ' for e in recorded]
+			data[iNoteCol] = ['Lead' if e.num in catPrevLeaders else ' ' for e in recorded]
 
 			# Highlight the leader in the recorded list.
 			for r, e in enumerate(recorded):
 				if e.num == leaderPrev:
 					backgroundColour[(r, iNumCol)] = wx.GREEN
 				if e.num in catPrevLeaders:
-					backgroundColour[(r, iLdrCol)] = wx.GREEN
+					backgroundColour[(r, iNoteCol)] = wx.GREEN
 				
 			self.historyGrid.Set( data = data, backgroundColour = backgroundColour )
 			self.historyGrid.AutoSizeColumns()

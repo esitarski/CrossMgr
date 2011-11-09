@@ -853,20 +853,35 @@ class Race(object):
 		activeCategories = [c for c in self.categories.itervalues() if c.active]
 		activeCategories.sort()
 		
+		entries = self.interpolate()
+		getCategory = self.getCategory
 		for c in activeCategories:
-			ctn[c] = [[0.0],[None]]
-
-		for e in self.interpolate():
-			try:
-				cat = (c for c in activeCategories if c.matches(e.num)).next()
-				times, nums = ctn[cat]
-				if len(times) == e.lap:
-					times.append( e.t )
-					nums.append( e.num )
-			except StopIteration:
-				pass
+			times = [0.0]
+			nums = [None]
+			lapCur = 1
+			for e in (e for e in entries if e.lap == lapCur and getCategory(e.num) == c):
+				times.append( e.t )
+				nums.append( e.num )
+				lapCur += 1
+				
+			ctn[c] = [times, nums]
 		
 		return ctn
+		
+	@memoize
+	def getCategoryRaceLaps( self ):		
+		crl = {}
+		raceTime = self.minutes * 60.0
+		for c, (catTimes, catNums) in self.getCategoryTimesNums().iteritems():
+			if len(catTimes) < 2:
+				continue
+			lapTime = catTimes[-1] - catTimes[-2]
+			lap = bisect.bisect( catTimes, raceTime, hi=len(catTimes) - 1 )
+			if catTimes[lap] - raceTime > lapTime / 2:
+				lap -= 1
+			crl[c] = lap
+		
+		return crl
 		
 	def isOutsideTimeBound( self, num ):
 		category = self.getCategory( num )

@@ -267,6 +267,8 @@ class MainWin( wx.Frame ):
 		sty = wx.BORDER_SUNKEN
 		self.splitter = wx.SplitterWindow( self )
 		self.splitter.SetMinimumPaneSize( 128 )
+		#self.splitter.SetSashSize( 16 )
+		#self.splitter.SetSashSize( 32 )
 		self.forecastHistory = ForecastHistory( self.splitter, style=sty )
 
 		# Other data shown in right pane.
@@ -298,6 +300,7 @@ class MainWin( wx.Frame ):
 			addPage( getattr(self, a), '%d. %s' % (i+1, n) )
 
 		self.splitter.SplitVertically( self.forecastHistory, self.notebook, 250 )
+		self.splitter.UpdateSize()
 
 		#------------------------------------------------------------------------------
 		# Create a menu for quick navigation
