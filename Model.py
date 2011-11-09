@@ -76,6 +76,15 @@ def setRace( r ):
 def resetCache():
 	memoize.clear()
 
+class LockRace:
+	def __enter__(self):
+		lock.acquire()
+		return race
+		
+	def __exit__( self, type, value, traceback ):
+		lock.release()
+		return False
+	
 #----------------------------------------------------------------------
 class Category(object):
 
@@ -649,6 +658,7 @@ class Race(object):
 		# Filter results so that only the allowed number of laps is returned.
 		return [e for e in entries if e.lap <= riderNumLapsMax[e.num]]
 	
+	@memoize
 	def interpolateLap( self, lap, useCategoryNumLaps = False ):
 		entries = self.interpolate() if not useCategoryNumLaps else self.interpolateCategoryNumLaps()
 		# Find the first occurance of the given lap.
@@ -669,11 +679,23 @@ class Race(object):
 			
 		return entries
 
-	def getRule80LapTime( self ):
-		entries = self.interpolateLap(2)
+	@memoize
+	def interpolateLapNonZeroFinishers( self, lap, useCategoryNumLaps = False ):
+		entries = self.interpolateLap( lap, useCategoryNumLaps )
+		finisher = Rider.Finisher
+		return [e for e in entries if e.t > 0 and self.riders[e.num].status == finisher]
+		
+	@memoize
+	def getRule80LapTime( self, category = None ):
+		entries = self.interpolate()
 		if not entries:
 			return None
 
+		if category:
+			entries = [e for e in entries if e.lap <= 2 and self.getCategory(e.num) == category]
+		else:
+			entries = [e for e in entries if e.lap <= 2]
+			
 		# Find the first entry for the given lap.
 		iFirst = (i for i, e in enumerate(entries) if e.lap == 1).next()
 		try:
@@ -688,7 +710,8 @@ class Race(object):
 			tSecond = entries[iSecond].t - tFirst
 			tDifference = abs(tFirst - tSecond)
 			tAverage = (tFirst + tSecond) / 2.0
-			if tDifference / tAverage > 0.1:	# If there is more than 10% difference, use the second lap.
+			# If there is more than 5% difference, use the second lap (assume a run-up or start offset).
+			if tDifference / tAverage > 0.05:
 				t = tSecond
 			else:
 				t = max(tFirst, tSecond)	# Else, use the maximum of the two (aren't we nice!).
@@ -696,11 +719,11 @@ class Race(object):
 			t = entries[iFirst].t
 		return t
 
-	def getRule80CountdownTime( self ):
-		tFirstLap = self.getRule80LapTime()
-		if tFirstLap is None:
+	def getRule80CountdownTime( self, category = None ):
+		try:
+			return self.getRule80LapTime(category) * 0.8
+		except:
 			return None
-		return tFirstLap * 0.8
 
 	def getRule80RemainingCountdown( self ):
 		rule80Begin, rule80End = self.getRule80BeginEndTimes()
@@ -844,6 +867,35 @@ class Race(object):
 				pass
 		
 		return ctn
+		
+	def isOutsideTimeBound( self, num ):
+		category = self.getCategory( num )
+		
+		rule80Time = self.getRule80CountdownTime(category)
+		if not rule80Time:
+			return False
+			
+		try:
+			leaderTimes = self.getCategoryTimesNums()[category][0]
+		except KeyError:
+			leaderTimes = self.getLeaderTimesNums()[0]
+			
+		if not leaderTimes:
+			return False
+			
+		# Get the time the leader started this lap.
+		t = self.curRaceTime()
+		leaderLap = bisect.bisect_right(leaderTimes, t) - 1
+		leaderTime = leaderTimes[leaderLap]
+
+		# Get the rider time for the same lap.
+		try:
+			riderTime = (e.t for e in self.interpolate() if e.num == num and e.lap == leaderLap).next()
+		except StopIteration:
+			return False
+		
+		# Check if the difference exceeds the rule80 time.
+		return riderTime - leaderTime > rule80Time
 
 	def getCatPrevLeaders( self, t ):
 		''' Return a dict accessed by number referring to category. '''
@@ -1047,8 +1099,11 @@ class Race(object):
 			lap = self.numLaps
 		else:
 			lap = self.getMaxLap()
-		entries = self.interpolateLap( lap, useCategoryNumLaps = True )
-		return entries[-1].t if entries else 0.0
+		entries = self.interpolateLap( lap, True )
+		try:
+			return entries[-1].t
+		except:
+			return 0.0
 		
 	#---------------------------------------------------------------------------------------
 

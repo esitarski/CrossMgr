@@ -7,7 +7,9 @@ import Utils
 import ColGrid
 import StatusBar
 import OutputStreamer
-from EditEntry import CorrectNumber, SplitNumber, DeleteEntry
+import NumKeypad
+from EditEntry import CorrectNumber, SplitNumber, DeleteEntry, DoDNS, DoDNF, DoPull
+
 
 # Define columns for recorded and expected infomation.
 iNumCol = 0
@@ -17,7 +19,7 @@ iTimeCol = 3
 iColMax = 4
 colnames = [None] * iColMax
 colnames[iNumCol] = 'Num'
-colnames[iLdrCol] = 'Ldr'
+colnames[iLdrCol] = 'Note'
 colnames[iLapCol] = 'Lap'
 colnames[iTimeCol] = 'Time'
 
@@ -61,6 +63,7 @@ class ForecastHistory( wx.Panel ):
 		
 		self.quickHistory = None
 		self.orangeColour = wx.Colour(255, 165, 0)
+		self.redColour = wx.Colour(255, 51, 51)
 
 		# Main sizer.
 		bsMain = wx.BoxSizer( wx.VERTICAL )
@@ -72,8 +75,8 @@ class ForecastHistory( wx.Panel ):
 		self.historyName = self.lgHistory.label
 		self.historyName.SetLabel( 'Recorded:' )
 		self.historyGrid = self.lgHistory.grid
-		self.Bind( wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.doPopup, self.historyGrid )
-		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doPopup, self.historyGrid )		
+		self.Bind( wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.doHistoryPopup, self.historyGrid )
+		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doHistoryPopup, self.historyGrid )	
 		
 		self.lgExpected = LabelGrid( self.splitter, style = wx.BORDER_SUNKEN )
 		self.expectedName = self.lgExpected.label
@@ -81,18 +84,13 @@ class ForecastHistory( wx.Panel ):
 		self.expectedName.SetLabel( 'Expected:' )
 		self.expectedGrid.SetDefaultCellBackgroundColour( wx.Colour(230,255,255) )
 		self.Bind( wx.grid.EVT_GRID_SELECT_CELL, self.doExpectedSelect, self.expectedGrid )
+		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doExpectedPopup, self.expectedGrid )	
 		
 		self.splitter.SetMinimumPaneSize( 64 )
 		self.splitter.SetSashGravity( 0.5 )
 		self.splitter.SplitHorizontally( self.lgHistory, self.lgExpected, 100 )
 		self.Bind( wx.EVT_SPLITTER_DCLICK, self.doSwapOrientation, self.splitter )
 		bsMain.Add( self.splitter, 1, flag=wx.EXPAND | wx.ALL, border = 4 )
-		#-----------------------------------------------------------------------------------
-		# 80% rule countdown
-		#
-		self.rule80Gauge = StatusBar.StatusBar(self, wx.ID_ANY, value=0, range=0)
-		self.rule80Gauge.SetFont( wx.Font(fontSize, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
-		bsMain.Add( self.rule80Gauge, 0, flag=wx.EXPAND | wx.ALL, border = 4 )
 				
 		self.historyGrid.Reset()
 		self.expectedGrid.Reset()
@@ -118,82 +116,109 @@ class ForecastHistory( wx.Panel ):
 	def doSwapOrientation( self, event ):
 		self.swapOrientation()
 			
-	def doPopup( self, event ):
+	def doHistoryPopup( self, event ):
 		self.rowPopup = event.GetRow()
-		race = Model.getRace()
-		if self.rowPopup >= len(self.quickHistory) or not race or not race.isRunning():
-			return
+		with Model.LockRace() as race:
+			if self.rowPopup >= len(self.quickHistory) or not race or not race.isRunning():
+				return
 		if self.rowPopup < self.historyGrid.GetNumberRows():
 			value = self.historyGrid.GetCellValue( self.rowPopup, 0 )
 		if not value:
 			return
 			
-		if not hasattr(self, 'popupInfo'):
-			self.popupInfo = [
-				('Correct...',	wx.NewId(), self.OnPopupCorrect),
-				('Split...',	wx.NewId(), self.OnPopupSplit),
-				('Delete...',	wx.NewId(), self.OnPopupDelete),
+		if not hasattr(self, 'historyPopupInfo'):
+			self.historyPopupInfo = [
+				('Correct...',	wx.NewId(), self.OnPopupHistoryCorrect),
+				('Split...',	wx.NewId(), self.OnPopupHistorySplit),
+				('Delete...',	wx.NewId(), self.OnPopupHistoryDelete),
+				('DNF...',		wx.NewId(), self.OnPopupHistoryDNF),
 			]
-			for p in self.popupInfo:
+			for p in self.historyPopupInfo:
 				self.Bind( wx.EVT_MENU, p[2], id=p[1] )
 
 		menu = wx.Menu()
-		for i, p in enumerate(self.popupInfo):
+		for i, p in enumerate(self.historyPopupInfo):
 			menu.Append( p[1], p[0] )
 		
 		self.PopupMenu( menu )
 		menu.Destroy()
 		
-	def OnPopupCorrect( self, event ):
+	def OnPopupHistoryCorrect( self, event ):
 		if hasattr(self, 'rowPopup'):
 			CorrectNumber( self, self.quickHistory[self.rowPopup] )
 		
-	def OnPopupSplit( self, event ):
+	def OnPopupHistorySplit( self, event ):
 		if hasattr(self, 'rowPopup'):
 			SplitNumber( self, self.quickHistory[self.rowPopup] )
 		
-	def OnPopupDelete( self, event ):
+	def OnPopupHistoryDelete( self, event ):
 		if hasattr(self, 'rowPopup'):
 			DeleteEntry( self, self.quickHistory[self.rowPopup] )
-	
-	def resetRule80( self ):
-		self.rule80Gauge.SetRange( 0 )
-		self.rule80Gauge.SetValue( 0 )
-
-	def refreshRule80( self ):
-		with Model.lock:
-			race = Model.getRace()
-			if not race or not race.isRunning() or race.getMaxLap() >= race.numLaps:
-				self.resetRule80()
-				return
-			if race.getMaxLap() == race.numLaps - 1:
-				leaderTime, leaderNum, leaderLapTime = race.getNextExpectedLeaderTNL( race.lastRaceTime() )
-				if leaderTime is not None and race.lastRaceTime() + leaderLapTime * 0.05 > leaderTime:
-					self.resetRule80()
-					return
-				
-			remaining = race.getRule80RemainingCountdown()
-			if remaining is None:
-				self.rule80Gauge.SetRange( 10 )
-				self.rule80Gauge.SetValue( 0 )
-				return
 			
-			maxSeconds = int(race.getRule80CountdownTime())
-			currentValue = self.rule80Gauge.GetValue()
-			if self.rule80Gauge.GetRange() != maxSeconds:
-				if currentValue > maxSeconds:
-					self.rule80Gauge.SetValue( 0 )
-					currentValue = 0
-				self.rule80Gauge.SetRange( maxSeconds )
-			remaining = int(remaining)
-			if currentValue == 0 or currentValue > remaining:
-				self.rule80Gauge.SetValue( remaining )
+	def OnPopupHistoryDNF( self, event ):
+		if hasattr(self, 'rowPopup'):
+			try:
+				num = self.quickHistory[self.rowPopup].num
+				NumKeypad.DoDNF( self, num )
+			except:
+				pass
 	
+	#--------------------------------------------------------------------
+	
+	def doExpectedPopup( self, event ):
+		self.rowPopup = event.GetRow()
+		with Model.LockRace() as race:
+			if self.rowPopup >= len(self.quickExpected) or not race or not race.isRunning():
+				return
+		if self.rowPopup < self.expectedGrid.GetNumberRows():
+			value = self.expectedGrid.GetCellValue( self.rowPopup, 0 )
+		if not value:
+			return
+			
+		if not hasattr(self, 'expectedPopupInfo'):
+			self.expectedPopupInfo = [
+				('Enter',	wx.NewId(), self.OnPopupExpectedEnter),
+				('DNF...',	wx.NewId(), self.OnPopupExpectedDNF),
+				('Pull...',	wx.NewId(), self.OnPopupExpectedPull),
+			]
+			for p in self.expectedPopupInfo:
+				self.Bind( wx.EVT_MENU, p[2], id=p[1] )
+
+		menu = wx.Menu()
+		for i, p in enumerate(self.expectedPopupInfo):
+			menu.Append( p[1], p[0] )
+		
+		self.PopupMenu( menu )
+		menu.Destroy()
+		
+	def OnPopupExpectedEnter( self, event ):
+		if hasattr(self, 'rowPopup'):
+			try:
+				num = self.quickExpected[self.rowPopup].num
+				self.logNum( num )
+			except:
+				pass
+		
+	def OnPopupExpectedDNF( self, event ):
+		if hasattr(self, 'rowPopup'):
+			try:
+				num = self.quickExpected[self.rowPopup].num
+				NumKeypad.DoDNF( self, num )
+			except:
+				pass
+		
+	def OnPopupExpectedPull( self, event ):
+		if hasattr(self, 'rowPopup'):
+			try:
+				num = self.quickExpected[self.rowPopup].num
+				NumKeypad.DoPull( self, num )
+			except:
+				pass
+		
 	def logNum( self, num ):
 		if not num:
 			return
-		with Model.lock:
-			race = Model.race
+		with Model.LockRace() as race:
 			if race is None or not race.isRunning():
 				return
 			t = race.curRaceTime()
@@ -218,17 +243,14 @@ class ForecastHistory( wx.Panel ):
 		self.expectedGrid.Reset()
 	
 	def refresh( self ):
-		with Model.lock:
-			race = Model.race
+		with Model.LockRace() as race:
 			if race is None or not race.isRunning():
 				self.clearGrids()
 				return
 						
 			tRace = race.curRaceTime()
 			
-			entries = race.interpolateLap( race.numLaps if race.numLaps is not None else race.getMaxLap() + 1 )
-			# Filter out zero start times and pulled or dnf riders.
-			entries = [e for e in entries if e.t > 0 and race[e.num].status == Model.Rider.Finisher]
+			entries = race.interpolateLapNonZeroFinishers( race.numLaps if race.numLaps is not None else race.getMaxLap() + 1 )
 			
 			#------------------------------------------------------------------
 			# Select the interpolated entries around now.
@@ -252,6 +274,7 @@ class ForecastHistory( wx.Panel ):
 			catPrevLeaders = race.getCatPrevLeaders( tRace )
 			
 			backgroundColour = {}
+			textColour = {}
 			#------------------------------------------------------------------
 			# Highlight the missing riders.
 			tMissing = tRace - race.getAverageLapTime() / 8.0
@@ -271,17 +294,32 @@ class ForecastHistory( wx.Panel ):
 				pass
 				
 			# Highlight the leader by category.
+			outsideTimeBound = set()
 			for r, e in enumerate(expected):
 				if e.num in catNextLeaders:
 					backgroundColour[(r, iLdrCol)] = wx.GREEN
+				if race.isOutsideTimeBound(e.num):
+					backgroundColour[(r, iLdrCol)] = self.redColour
+					textColour[(r, iLdrCol)] = wx.WHITE
+					outsideTimeBound.add( e.num )
 			
 			data = [None] * iColMax
 			data[iNumCol] = [str(e.num) for e in expected]
 			data[iTimeCol] = [formatTime(e.t) for e in expected]
 			data[iLapCol] = [str(e.lap) for e in expected]
-			data[iLdrCol] = ['*' if e.num in catNextLeaders else ' ' for e in expected]
+			def getNote( e ):
+				if e.num in catNextLeaders:
+					return 'Lead'
+				elif e.num in outsideTimeBound:
+					return 'pull'
+				elif e.t < tMissing:
+					return 'miss'
+				else:
+					return ' '
+			data[iLdrCol] = [getNote(e) for e in expected]
+			self.quickExpected = expected
 			
-			self.expectedGrid.Set( data = data, backgroundColour = backgroundColour )
+			self.expectedGrid.Set( data = data, backgroundColour = backgroundColour, textColour = textColour )
 			self.expectedGrid.AutoSizeColumns()
 			self.expectedGrid.AutoSizeRows()
 			
@@ -298,11 +336,12 @@ class ForecastHistory( wx.Panel ):
 			self.quickHistory = recorded
 				
 			backgroundColour = {}
+			textColour = {}
 			data = [None] * iColMax
 			data[iNumCol] = [str(e.num) for e in recorded]
 			data[iTimeCol] = [formatTime(e.t) for e in recorded]
 			data[iLapCol] = [str(e.lap) for e in recorded]
-			data[iLdrCol] = ['*' if e.num in catPrevLeaders else ' ' for e in recorded]
+			data[iLdrCol] = ['Lead' if e.num in catPrevLeaders else ' ' for e in recorded]
 
 			# Highlight the leader in the recorded list.
 			for r, e in enumerate(recorded):

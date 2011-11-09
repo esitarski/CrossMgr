@@ -53,10 +53,10 @@ class CorrectNumberDialog( wx.Dialog ):
 		num = self.numEdit.GetValue()
 		t = Utils.StrToSeconds(self.timeCtrl.GetValue())
 		if self.entry.num != num or self.entry.t != t:
-			race = Model.getRace()
-			race.deleteTime( self.entry.num, self.entry.t )
-			race.addTime( num, t )
-			race.resetCache()
+			with Model.LockRace() as race:
+				race.deleteTime( self.entry.num, self.entry.t )
+				race.addTime( num, t )
+				race.resetCache()
 			mainWin = Utils.getMainWin()
 			if mainWin:
 				mainWin.refresh()
@@ -113,24 +113,24 @@ class SplitNumberDialog( wx.Dialog ):
 		self.SetFocus()
 
 	def onOK( self, event ):
-		race = Model.getRace()
-		
-		num1 = self.numEdit1.GetValue()
-		num2 = self.numEdit2.GetValue()
-		
-		# Delete the original entry.
-		if self.entry.num != num1 and self.entry.num != num2:
-			race.deleteTime( self.entry.num, self.entry.t )
-		
-		# Add the 1st split entry.
-		if self.entry.num != num1:
-			race.addTime( num1, self.entry.t )
-		
-		# Add the 2nd split entry.
-		if self.entry.num != num2:
-			race.addTime( num2, self.entry.t + 0.001 )	# Add a little extra time to keep the sequence
-		
-		race.resetCache()
+		with Model.LockRace() as race:
+			num1 = self.numEdit1.GetValue()
+			num2 = self.numEdit2.GetValue()
+			
+			# Delete the original entry.
+			if self.entry.num != num1 and self.entry.num != num2:
+				race.deleteTime( self.entry.num, self.entry.t )
+			
+			# Add the 1st split entry.
+			if self.entry.num != num1:
+				race.addTime( num1, self.entry.t )
+			
+			# Add the 2nd split entry.
+			if self.entry.num != num2:
+				race.addTime( num2, self.entry.t + 0.001 )	# Add a little extra time to keep the sequence
+			
+			race.resetCache()
+			
 		mainWin = Utils.getMainWin()
 		if mainWin:
 			mainWin.refresh()
@@ -184,3 +184,27 @@ def SwapEntry( parent, a, b ):
 	if mainWin:
 		mainWin.refresh()
 		mainWin.writeRace()
+
+def DoStatusChange( parent, num, message, title, newStatus ):
+	if num is None or not Utils.MessageOKCancel(parent, message % num, title):
+		return False
+	with Model.GetRace() as race:
+		if not race:
+			return False
+		rider = race.getRider( num )
+		rider.setStatus( newStatus )
+		Model.resetCache()
+	Utils.refresh()
+	return True
+
+@logCall
+def DoDNF( parent, num ):
+	return DoStatusChange( parent, num, 'DNF rider %d?', 'Confirm Did Not FINISH', Model.Rider.DNF )
+
+@logCall
+def DoPull( parent, num ):
+	return DoStatusChange( parent, num, 'Pull rider %d?', 'Confirm PULL Rider', Model.Rider.Pulled )
+
+@logCall
+def DoDNS( parent, num ):
+	return DoStatusChange( parent, num, 'DNS rider %d?', 'Confirm Did Not START', Model.Rider.DNS )

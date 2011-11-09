@@ -72,7 +72,7 @@ class Categories( wx.Panel ):
 		cols += 1 
 
 		self.grid = gridlib.Grid( self )
-		colnames = ['Active', 'Name', 'Numbers', 'Start Offset (MM:SS)', 'Race Laps']
+		colnames = ['Active', 'Name', 'Numbers', 'Start Offset (MM:SS)', 'Race Laps', '80% Time Limit']
 		self.activeColumn = colnames.index( 'Active' )
 		self.grid.CreateGrid( 0, len(colnames) )
 		self.grid.SetRowLabelSize(0)
@@ -135,6 +135,23 @@ class Categories( wx.Panel ):
 		self.grid.SetCellEditor( r, 4, choiceEditor )
 		self.grid.SetCellAlignment( r, 4, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 		
+		self.grid.SetCellValue( r, 5, '' )
+		self.grid.SetCellAlignment( r, 5, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+		self.grid.SetReadOnly( r, 5, True )
+		
+		# Get the 80% time cutoff.
+		if not active or not Model.race:
+			return
+			
+		race = Model.race
+		category = race.categories.get(name, None)
+		if not category:
+			return
+			
+		rule80Time = race.getRule80CountdownTime( category )
+		if rule80Time:
+			self.grid.SetCellValue( r, 5, Utils.formatTime(rule80Time) )
+		
 	def onNewCategory( self, event ):
 		self.grid.AppendRows( 1 )
 		self._setRow( self.grid.GetNumberRows() - 1, True, '<CategoryName>     ', '100-199,504,-128', '00:00', None )
@@ -161,9 +178,8 @@ class Categories( wx.Panel ):
 			self.grid.MoveCursorDown( False )
 		
 	def refresh( self ):
-		with Model.lock:
+		with Model.LockRace() as race:
 			self.grid.ClearGrid()
-			race = Model.getRace()
 			if race is None:
 				return
 			
@@ -182,9 +198,8 @@ class Categories( wx.Panel ):
 			self.grid.FitInside()
 
 	def commit( self ):
-		with Model.lock:
+		with Model.LockRace() as race:
 			self.grid.DisableCellEditControl()	# Make sure the current edit is committed.
-			race = Model.getRace()
 			if race is None:
 				return
 			numStrTuples = [ tuple(self.grid.GetCellValue(r, c) for c in xrange(5)) for r in xrange(self.grid.GetNumberRows()) ]

@@ -228,7 +228,10 @@ class StatusBar(wx.PyControl):
 			# dc.SetBrush( wx.GREEN_BRUSH if value > range/4 else self._orangeBrush )
 			# dc.DrawRectangle(x, y, int(float(width) * float(value) / float(range)), height)
 			
-			dc.DrawText(Utils.SecondsToMMSS(value), (width - self.textWidth) / 2, 0)
+			s = Utils.SecondsToMMSS(value)
+			if s[0] == '0':
+				s = s[1:]
+			dc.DrawText(s, (width - self.textWidth) / 2, 0)
 			
 			dc.SetPen( wx.BLACK_PEN )
 			dc.SetBrush( wx.TRANSPARENT_BRUSH )

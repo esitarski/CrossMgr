@@ -120,9 +120,8 @@ class Properties( wx.Panel ):
 		return self.fileName.GetLabel()
 	
 	def refresh( self ):
-		with Model.lock:
+		with Model.LockRace() as race:
 			self.setEditable( False )
-			race = Model.getRace()
 			if race is None:
 				return
 			self.raceName.SetValue( race.name )

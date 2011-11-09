@@ -4,20 +4,23 @@ import wx
 import os
 import re
 import sys
+import subprocess
 import wx.grid		as gridlib
 try:
 	from win32com.shell import shell, shellcon
 except ImportError:
 	pass
 
-try:
-	import winsound
-	def PlayConfirmSound():
-		# winsound.PlaySound( "*", winsound.SND_ALIAS | winsound.SND_ASYNC | winsound.MB_ICONASTERISK )
-		pass
-except ImportError:
-	def PlayConfirmSound():
-		pass
+def PlaySound( soundFile ):
+	soundFile = os.path.join( getImageFolder(), soundFile )
+	if sys.platform.startswith('linux'):
+		try:
+			subprocess.Popen(['aplay', '-q', soundFile])
+		except:
+			pass
+		return True
+	else:
+		return wx.Sound.PlaySound( soundFile )
 
 def MessageOK( parent, message, title = '', iconMask = wx.ICON_INFORMATION):
 	dlg = wx.MessageDialog(parent, message, title, wx.OK | iconMask)

@@ -238,8 +238,7 @@ class RaceAnimation( wx.Panel ):
 		return t
 	
 	def refresh( self ):
-		with Model.lock:
-			race = Model.race
+		with Model.LockRace() as race:
 			enabled = (race is None) or not race.isRunning()
 			for w in self.controls:
 				w.Enable( enabled )

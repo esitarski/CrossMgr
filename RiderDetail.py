@@ -96,8 +96,7 @@ class RiderDetail( wx.Panel ):
 		self.setRider()
 		
 	def onDeleteRider( self, event ):
-		with Model.lock:
-			race = Model.getRace()
+		with Model.LockRace() as race:
 			if race is None:
 				return
 			try:
@@ -170,13 +169,12 @@ class RiderDetail( wx.Panel ):
 		num, lap, times = self.getGanttChartNumLapTimes()
 		if num is None:
 			return
-		race = Model.race
-		if race is None:
-			return
-		tLeft = times[lap-1]
-		tRight = times[lap]
-		splitTime = (tRight - tLeft) / float(splits)
-		with Model.lock:
+		with Model.LockRace() as race:
+			if race is None:
+				return
+			tLeft = times[lap-1]
+			tRight = times[lap]
+			splitTime = (tRight - tLeft) / float(splits)
 			for i in xrange( 1, splits ):
 				newTime = tLeft + splitTime * i
 				race.addTime( num, newTime )
@@ -199,16 +197,16 @@ class RiderDetail( wx.Panel ):
 		if num is None:
 			return
 		if self.lapCur != 1:
-			with Model.lock:
-				Model.race.deleteTime( num, times[lap-1] )
+			with Model.LockRace() as race:
+				race.deleteTime( num, times[lap-1] )
 			self.refresh()
 			
 	def onDeleteLapEnd( self, event ):
 		num, lap, times = self.getGanttChartNumLapTimes()
 		if num is None:
 			return
-		with Model.lock:
-			Model.race.deleteTime( num, times[lap] )
+		with Model.LockRace() as race:
+			race.deleteTime( num, times[lap] )
 		self.refresh()
 			
 	def onEditGantt( self, xPos, yPos, num, lap ):
@@ -251,7 +249,7 @@ class RiderDetail( wx.Panel ):
 		self.atRaceTimeName.Enable( editable )
 	
 	def refresh( self ):
-		with Model.lock:
+		with Model.LockRace() as race:
 			self.num.SelectAll()
 			wx.CallAfter( self.num.SetFocus )
 
@@ -266,7 +264,6 @@ class RiderDetail( wx.Panel ):
 			
 			self.lineGraph.SetData( None )
 			
-			race = Model.getRace()
 			if race is None or num not in race:
 				return
 			rider = race.getRider( num )
@@ -338,11 +335,9 @@ class RiderDetail( wx.Panel ):
 			self.lineGraph.SetData( [graphData], [[e.interp for e in entries]] )
 	
 	def commitChange( self ):
-		with Model.lock:
+		with Model.LockRace() as race:
 			num = self.num.GetValue()
 			status = self.statusOption.GetSelection()
-			
-			race = Model.getRace()
 			
 			# Allow new numbers to be added if status is DNS or DQ.
 			if race is None or (num not in race and status not in [Model.Rider.DNS, Model.Rider.DQ]):

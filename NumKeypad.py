@@ -8,24 +8,11 @@ import Utils
 from Utils import SetValue, SetLabel
 import Model
 import sys
-import subprocess
 from keybutton import KeyButton
 from RaceHUD import RaceHUD
+from EditEntry import DoDNS, DoDNF, DoPull
 
 def MakeButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1) ):
-	'''
-	btn = GB.GradientButton(parent, -1, None, label=label.replace('&',''), style=style|wx.NO_BORDER, size=size)
-	btn.SetTopStartColour( 		wx.Colour(200,200,200) )
-	btn.SetTopEndColour( 		wx.Colour(112,112,112) )
-	btn.SetBottomStartColour( 	wx.Colour(112,112,112) )
-	btn.SetBottomEndColour( 	wx.Colour( 32, 32, 32) )
-	btn.SetBackgroundColour(	wx.Colour(255,255,255) )
-	'''
-	'''
-	btn = AquaButton( parent, -1, None, label=label.replace('&',''), style=style|wx.NO_BORDER, size=size )
-	btn.SetBackgroundColour( wx.Colour(0, 128, 192) )
-	btn.SetHoverColour( wx.Colour(128, 128, 255) )
-	'''
 	btn = KeyButton( parent, -1, None, label=label.replace('&',''), style=style|wx.NO_BORDER, size=size)
 	return btn
 
@@ -35,6 +22,7 @@ class NumKeypad( wx.Panel ):
 		gbs = wx.GridBagSizer(4, 4)
 		
 		self.bell = None
+		self.tada = None
 		
 		self.SetBackgroundColour( wx.WHITE )
 		
@@ -142,12 +130,7 @@ class NumKeypad( wx.Panel ):
 		gbs.Add( self.leadersLapTime, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
 
-		label = wx.StaticText(self, wx.ID_ANY, "80% Time Limit:")
-		label.SetFont( font )
-		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
-		self.rule80Time = wx.StaticText(self, wx.ID_ANY, "")
-		self.rule80Time.SetFont( font )
-		gbs.Add( self.rule80Time, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
+
 		rowCur += 1
 
 		label = wx.StaticText(self, wx.ID_ANY, "Completing Lap:")
@@ -209,26 +192,25 @@ class NumKeypad( wx.Panel ):
 				self.raceHUD.SetData( nowTime = tCur, lapTimes = leaderTimes, leader = leaderNum )
 				
 			if tLeader is not None:
+			
+				if tLeader <= 3.0:
+					if not self.tada:
+						self.tada = Utils.PlaySound( 'tada.wav' )
+				else:
+					self.tada = None
+						
 				# update the Time to Leader.
 				leaderLapsToGo -= 1
 				if leaderLapsToGo >= 0:
 					timeToLeader = '%s (%d to see %d to go)' % (Utils.formatTime(tLeader), nLeader, leaderLapsToGo)
 					
 					# Play the bell reminder.
-					if leaderLapsToGo == 1 and tLeader < 15.0:
+					if leaderLapsToGo == 1 and tLeader <= 10.0:
 						if not self.bell:
-							if sys.platform.startswith('linux'):
-								try:
-									subprocess.Popen(['aplay', '-q', os.path.join(Utils.getImageFolder(), 'bell.wav')])
-								except:
-									pass
-								self.bell = True
-							else:
-								self.bell = wx.Sound( os.path.join(Utils.getImageFolder(), 'bell.wav') )
-								self.bell.Play()
+							self.bell = Utils.PlaySound( 'bell.wav' )
 					else:
 						self.bell = None
-
+						
 				else:
 					timeToLeader = '%s (%d)' % (Utils.formatTime(tLeader), nLeader)
 			
@@ -239,8 +221,7 @@ class NumKeypad( wx.Panel ):
 		self.timeToLeader.SetLabel( timeToLeader )
 
 	def refreshRaceTime( self ):
-		with Model.lock:
-			race = Model.race
+		with Model.LockRace() as race:
 			if race is not None:
 				tStr = Utils.formatTime( race.lastRaceTime() )
 				self.refreshTimeToLeader()
@@ -251,14 +232,12 @@ class NumKeypad( wx.Panel ):
 		mainWin = Utils.getMainWin()
 		if mainWin is not None:
 			try:
-				mainWin.forecastHistory.refreshRule80()
 				mainWin.refreshRaceAnimation()
 			except:
 				pass
 	
 	def doChangeNumLaps( self, event ):
-		with Model.lock:
-			race = Model.race
+		with Model.LockRace() as race:
 			if race and race.isFinished():
 				try:
 					race.numLaps = int(self.numLaps.GetString(self.numLaps.GetSelection()))
@@ -267,8 +246,7 @@ class NumKeypad( wx.Panel ):
 		self.refreshLaps()
 	
 	def doChooseAutomaticManual( self, event ):
-		with Model.lock:
-			race = Model.race
+		with Model.LockRace() as race:
 			if race is not None:
 				race.automaticManual = self.automaticManualChoice.GetSelection()
 		self.refreshLaps()
@@ -310,62 +288,24 @@ class NumKeypad( wx.Panel ):
 			else:
 				self.refreshLaps()
 				self.numEdit.SetValue( None )
-			Utils.PlayConfirmSound()
 	
 	def onDNFPress( self, event ):
-		race = Model.race
-		if not race:
-			return
-			
-		num = self.getRiderNum()
-		if num is None:
-			return
-		if not Utils.MessageOKCancel(self, 'DNF rider %d?' % num, 'Confirm Did Not FINISH' ):
-			return
-		rider = race.getRider( num )
-		rider.setStatus( Model.Rider.DNF )
-		self.numEdit.SetValue( None )
-		Model.resetCache()
-		Utils.refresh()
+		if DoDNF( self, self.getRiderNum() ):
+			self.numEdit.SetValue( None )
 	
 	def onPullPress( self, event ):
-		race = Model.race
-		if not race:
-			return
-			
-		num = self.getRiderNum()
-		if num is None:
-			return
-		if not Utils.MessageOKCancel(self, 'Pull rider %d?' % num, 'Confirm PULL Rider', iconMask = wx.ICON_QUESTION):
-			return
-		rider = race.getRider( num )
-		rider.setStatus( Model.Rider.Pulled )
-		self.numEdit.SetValue( None )
-		Model.resetCache()
-		Utils.refresh()
+		if DoPull( self, self.getRiderNum() ):
+			self.numEdit.SetValue( None )
 	
 	def onDNSPress( self, event ):
-		race = Model.race
-		if not race:
-			return
-			
-		num = self.getRiderNum()
-		if num is None:
-			return
-		if not Utils.MessageOKCancel(self, 'DNS rider %d?' % num, 'Confirm Did Not START'):
-			return
-		rider = race.getRider( num )
-		rider.setStatus( Model.Rider.DNS )
-		self.numEdit.SetValue( None )
-		Model.resetCache()
-		Utils.refresh()
+		if DoDNS(self, self.getRiderNum()):
+			self.numEdit.SetValue( None )
 	
 	def resetLaps( self, enable = False ):
 		# Assumes Model is locked.
 		infoFields = [
 				self.leadersFinishTime,
 				self.leadersLapTime,
-				self.rule80Time,
 				self.lapCompleting,
 				self.lapsToGo,
 				self.timeToLeader,
@@ -393,8 +333,6 @@ class NumKeypad( wx.Panel ):
 			SetLabel( self.leadersFinishTime, 'Leader %s   Last Rider %s' %
 							(Utils.formatTime(race.getLeaderTime()), Utils.formatTime(race.getLastFinisherTime())) )
 			SetLabel( self.leadersLapTime, Utils.formatTime(race.getLeaderLapTime()) )
-			rule80Time = race.getRule80CountdownTime()
-			SetLabel( self.rule80Time, Utils.formatTime(rule80Time) if rule80Time else '' )
 			SetLabel( self.lapCompleting, str(race.numLaps if race.numLaps is not None else 0) )
 			SetLabel( self.lapsToGo, '0' )
 			SetLabel( self.message, '' )
@@ -452,8 +390,7 @@ class NumKeypad( wx.Panel ):
 		return minLaps, maxLaps
 	
 	def refreshLaps( self ):
-		with Model.lock:
-			race = Model.race
+		with Model.LockRace() as race:
 			enable = True if race is not None and race.isRunning() else False
 			
 			self.automaticManualChoice.Enable( enable )
@@ -501,8 +438,6 @@ class NumKeypad( wx.Panel ):
 				SetLabel( self.leadersFinishTime, 'Leader %s   Last Rider %s' %
 					(Utils.formatTime(expectedRaceFinish), Utils.formatTime(race.getLastFinisherTime())) )
 				SetLabel( self.leadersLapTime, Utils.formatTime(leadersExpectedLapTime) )
-				rule80Time = race.getRule80CountdownTime()
-				SetLabel( self.rule80Time, Utils.formatTime(rule80Time) if rule80Time else '' )
 				SetLabel( self.lapsToGo, str(lapsToGo) )
 				SetLabel( self.lapCompleting, str(lapCompleting) )
 				
@@ -530,8 +465,7 @@ class NumKeypad( wx.Panel ):
 		
 	def refresh( self ):
 		wx.CallAfter( self.numEdit.SetFocus )
-		with Model.lock:
-			race = Model.race
+		with Model.LockRace() as race:
 			enable = True if race is not None and race.isRunning() else False
 			if self.isEnabled != enable:
 				for b in self.num:

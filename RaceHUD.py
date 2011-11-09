@@ -65,7 +65,7 @@ class RaceHUD(wx.PyControl):
 		return True
 
 	def SetData( self, lapTimes = None, leader = None, nowTime = None ):
-		self.lapTimes = lapTimes
+		self.lapTimes = lapTimes if lapTimes and len(lapTimes) >= 2 and lapTimes[-1] >= lapTimes[-2] else None
 		self.leader = leader
 		self.nowTime = nowTime
 		self.Refresh()
