@@ -688,7 +688,7 @@ class Race(object):
 	@memoize
 	def getRule80LapTime( self, category = None ):
 		entries = self.interpolate()
-		if not entries:
+		if not entries or self.getMaxLap(category) < 2:
 			return None
 
 		if category:
@@ -738,10 +738,14 @@ class Race(object):
 		return None
 
 	@memoize
-	def getMaxLap( self ):
+	def getMaxLap( self, category = None ):
 		entries = self.interpolate()
 		try:
-			maxLap = max( (e.lap + self[e.num].lapAdjust for e in entries if not e.interp) )
+			if not category:
+				maxLap = max( (e.lap + self[e.num].lapAdjust for e in entries if not e.interp) )
+			else:
+				maxLap = max( (e.lap + self[e.num].lapAdjust for e in entries
+									if not e.interp and self.getCategory(e.num) == category) )
 		except ValueError:
 			maxLap = 0
 		return maxLap
@@ -818,14 +822,20 @@ class Race(object):
 		return leaderInfo
 
 	def getRule80BeginEndTimes( self ):
+		if self.getMaxLap() < 2:
+			return None
+	
 		leaderTimes, leaderNums = self.getLeaderTimesNums()
 		raceTime = self.lastRaceTime()
 		i = bisect.bisect_right( leaderTimes, raceTime, hi=len(leaderTimes) - 1 )
 		
 		tLeaderLastLap = leaderTimes[i-1]
 
-		if raceTime < self.minutes*60.0 + self.getAverageLapTime()/2.0:
-			return tLeaderLastLap, tLeaderLastLap + self.getRule80CountdownTime()
+		try:
+			if raceTime < self.minutes*60.0 + self.getAverageLapTime()/2.0:
+				return tLeaderLastLap, tLeaderLastLap + self.getRule80CountdownTime()
+		except:
+			pass
 		return None, None
 		
 	def getLeader( self ):
@@ -873,7 +883,7 @@ class Race(object):
 		crl = {}
 		raceTime = self.minutes * 60.0
 		for c, (catTimes, catNums) in self.getCategoryTimesNums().iteritems():
-			if len(catTimes) < 2:
+			if len(catTimes) < 2 or self.getMaxLap(c) < 2:
 				continue
 			lapTime = catTimes[-1] - catTimes[-2]
 			lap = bisect.bisect( catTimes, raceTime, hi=len(catTimes) - 1 )
@@ -1243,6 +1253,9 @@ class Race(object):
 
 if __name__ == '__main__':
 	r = newRace()
+	
+	print( r.getMaxLap() )
+	
 	r.addTime( 10, 1 * 60 )
 	r.addTime( 10, 5 * 60 )
 	r.addTime( 10, 9 * 60 )
