@@ -338,16 +338,16 @@ class ForecastHistory( wx.Panel ):
 			data[iNumCol] = [str(e.num) for e in expected]
 			data[iTimeCol] = [formatTime(e.t) for e in expected]
 			data[iLapCol] = [str(e.lap) for e in expected]
-			def getNote( e ):
+			def getNoteExpected( e ):
 				if e.num in catNextLeaders:
 					return 'Lead'
 				elif e.num in outsideTimeBound:
-					return 'pull'
+					return '80%'
 				elif e.t < tMissing:
 					return 'miss'
 				else:
 					return ' '
-			data[iNoteCol] = [getNote(e) for e in expected]
+			data[iNoteCol] = [getNoteExpected(e) for e in expected]
 			self.quickExpected = expected
 			
 			self.expectedGrid.Set( data = data, backgroundColour = backgroundColour, textColour = textColour )
@@ -368,20 +368,32 @@ class ForecastHistory( wx.Panel ):
 				
 			backgroundColour = {}
 			textColour = {}
-			data = [None] * iColMax
-			data[iNumCol] = [str(e.num) for e in recorded]
-			data[iTimeCol] = [formatTime(e.t) for e in recorded]
-			data[iLapCol] = [str(e.lap) for e in recorded]
-			data[iNoteCol] = ['Lead' if e.num in catPrevLeaders else ' ' for e in recorded]
-
+			outsideTimeBound = set()
 			# Highlight the leader in the recorded list.
 			for r, e in enumerate(recorded):
 				if e.num == leaderPrev:
 					backgroundColour[(r, iNumCol)] = wx.GREEN
 				if e.num in catPrevLeaders:
 					backgroundColour[(r, iNoteCol)] = wx.GREEN
-				
-			self.historyGrid.Set( data = data, backgroundColour = backgroundColour )
+				if tRace < tRaceLength and race.isOutsideTimeBound(e.num):
+					backgroundColour[(r, iNoteCol)] = self.redColour
+					textColour[(r, iNoteCol)] = wx.WHITE
+					outsideTimeBound.add( e.num )
+									
+			data = [None] * iColMax
+			data[iNumCol] = [str(e.num) for e in recorded]
+			data[iTimeCol] = [formatTime(e.t) for e in recorded]
+			data[iLapCol] = [str(e.lap) for e in recorded]
+			def getNoteHistory( e ):
+				if e.num in catNextLeaders:
+					return 'Lead'
+				elif e.num in outsideTimeBound:
+					return '80%'
+				else:
+					return ' '
+			data[iNoteCol] = [getNoteHistory(e) for e in recorded]
+
+			self.historyGrid.Set( data = data, backgroundColour = backgroundColour, textColour = textColour )
 			self.historyGrid.AutoSizeColumns()
 			self.historyGrid.AutoSizeRows()
 			
