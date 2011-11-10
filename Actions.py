@@ -184,17 +184,17 @@ class Actions( wx.Panel ):
 			StartRaceNow()
 	
 	def onStartRaceTime( self, event ):
-		with Model.LockRace() as race:
-			if race is None:
-				return
+		if Model.race is None:
+			return
 		dlg = StartRaceAtTime( self )
 		dlg.ShowModal()
 		dlg.Destroy()  
 	
 	def onFinishRace( self, event ):
+		if Model.race is None or not Utils.MessageOKCancel(self, 'Finish Race Now?', 'Finish Race'):
+			return
+			
 		with Model.LockRace() as race:
-			if race is None or not Utils.MessageOKCancel(self, 'Finish Race Now?', 'Finish Race'):
-				return
 			race.finishRaceNow()
 			if race.numLaps is None:
 				race.numLaps = race.getMaxLap()
