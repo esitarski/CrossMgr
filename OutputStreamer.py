@@ -4,8 +4,8 @@ import time
 import atexit
 import os
 import datetime
-from multiprocessing import Process, Queue
-from Queue import Empty
+import threading
+from Queue import Queue, Empty
 
 import Utils
 import Model
@@ -13,25 +13,33 @@ import Model
 q = None
 streamer = None
 
+terminateMessage = '<<<terminate>>>'
+
 def Server( q, fname ):
-	while 1:
-		# Wait for something to show up on the queue.
-		messages = [q.get()]
-		
-		# Read all messages from the queue.
+	keepGoing = True
+	while keepGoing:
+		# Read all available messages from the queue.
+		messages = []
 		while 1:
 			try:
-				m = q.get_nowait()
+				m = q.get( not messages )
+				if m == terminateMessage:
+					keepGoing = False
+					q.task_done()
+					break
 				messages.append( m )
 			except Empty:
 				break
-		
+				
 		# Write all messages to the stream file.
-		try:
-			with open(fname, 'ab') as f:
-				f.write( ''.join(messages) )
-		except IOError:
-			pass
+		if messages:
+			try:
+				with open(fname, 'ab') as f:
+					f.write( ''.join(messages) )
+				for m in messages:
+					q.task_done()
+			except IOError:
+				pass
 
 def StopStreamer():
 	global q
@@ -39,7 +47,7 @@ def StopStreamer():
 
 	# Terminate the server process if it is running.
 	if streamer:
-		streamer.terminate()
+		q.put( terminateMessage )
 		
 	streamer = None
 
@@ -69,7 +77,8 @@ def StartStreamer( fname = None ):
 	
 	StopStreamer()
 	q = Queue()
-	streamer = Process( target = Server, args=(q, fname) )
+	streamer = threading.Thread( target = Server, args=(q, fname) )
+	streamer.daemon = True
 	streamer.start()
 
 def write( message ):
@@ -88,8 +97,9 @@ def gt( dt_str ):
 
 def writeRaceStart( t = None ):
 	if t is None:
-		if Model.race and Model.race.startTime:
-			t = Model.race.startTime
+		with Model.LockRace() as race:
+			if race and race.startTime:
+				t = race.startTime
 	if t is None:
 		return
 	if not streamer:
@@ -99,14 +109,17 @@ def writeRaceStart( t = None ):
 
 def writeRaceFinish( t = None ):
 	if t is None:
-		if Model.race and Model.race.finishTime:
-			t = Model.race.finishTime
+		with Model.LockRace() as race:
+			if race and race.finishTime:
+				t = race.finishTime
 	if t is None:
 		return
+		
 	if not streamer:
 		StartStreamer()
 	if streamer:
 		q.put( 'end,%s\n' % t.isoformat() )
+		q.put( terminateMessage )
 
 def writeNumTime( num, t ):
 	if not streamer:
@@ -149,7 +162,8 @@ def ReadStreamFile( fname = None ):
 @atexit.register
 def CleanupStreamer():
 	if streamer:
-		streamer.terminate()
+		q.put( terminateMessage )
+		q.join()
 	
 if __name__ == '__main__':
 	StartStreamer()
