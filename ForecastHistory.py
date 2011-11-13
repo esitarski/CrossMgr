@@ -107,10 +107,17 @@ class ForecastHistory( wx.Panel ):
 			self.splitter.SetSashPosition( size.height // 2 )
 
 	def swapOrientation( self ):
+		width = 240
 		if self.splitter.GetSplitMode() == wx.SPLIT_VERTICAL:
 			self.splitter.SetSplitMode( wx.SPLIT_HORIZONTAL )
+			mainWin = Utils.getMainWin()
+			if mainWin:
+				mainWin.splitter.SetSashPosition( width )
 		else:
 			self.splitter.SetSplitMode( wx.SPLIT_VERTICAL )
+			mainWin = Utils.getMainWin()
+			if mainWin:
+				mainWin.splitter.SetSashPosition( width * 2 )
 		self.setSash()
 		
 	def doSwapOrientation( self, event ):

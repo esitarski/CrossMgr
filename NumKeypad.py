@@ -160,7 +160,7 @@ class NumKeypad( wx.Panel ):
 		rowCur += 1
 		
 		self.raceHUD = RaceHUD( self, wx.ID_ANY )
-		gbs.Add( self.raceHUD, pos=(rowCur, 0), span=(2, 8), flag=wx.EXPAND )
+		gbs.Add( self.raceHUD, pos=(rowCur, 0), span=(2, 5), flag=wx.EXPAND )
 		rowCur += 1
 		
 		self.SetSizer( gbs )

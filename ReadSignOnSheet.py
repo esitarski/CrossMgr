@@ -110,7 +110,7 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 				break
 
 		if not self.headers:
-			raise ValueError, 'No headers found in %s::%s.' % (fileName, sheetName)
+			raise ValueError, 'Could not find a Header Row (needs at least 5 column names) %s::%s.' % (fileName, sheetName)
 			
 		# Set a blank final entry.
 		self.headers.append( '' )
