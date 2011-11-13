@@ -19,8 +19,6 @@ def MakeButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1) ):
 class NumKeypad( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
-		gbs = wx.GridBagSizer(4, 4)
-		
 		self.bell = None
 		self.tada = None
 		
@@ -34,6 +32,14 @@ class NumKeypad( wx.Panel ):
 		wNum += 8
 		hNum += 8
 
+		verticalMainSizer = wx.BoxSizer( wx.VERTICAL )
+		horizontalMainSizer = wx.BoxSizer( wx.HORIZONTAL )
+		
+		verticalMainSizer.Add( horizontalMainSizer )
+		
+		#-------------------------------------------------------------------------------
+		# Create the edit field, numeric keybad and buttons.
+		gbs = wx.GridBagSizer(4, 4)
 		rowCur = 0
 		
 		self.numEdit = wx.lib.intctrl.IntCtrl( self, 20, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=None, allow_none=True, min=0, max=9999 )
@@ -45,7 +51,6 @@ class NumKeypad( wx.Panel ):
 		self.num[-1].Bind( wx.EVT_BUTTON, lambda event, aValue = 0 : self.onNumPress(event, aValue) )
 		gbs.Add( self.num[0], pos=(4+rowCur,0), span=(1,2), flag=wx.EXPAND )
 
-		#numButtonStyle = wx.BU_EXACTFIT
 		numButtonStyle = 0
 		
 		for i in xrange(0, 9):
@@ -84,26 +89,30 @@ class NumKeypad( wx.Panel ):
 		gbs.Add( self.pullBtn, pos=(rowCur,2), span=(1,1), flag=wx.EXPAND )
 		self.pullBtn.Bind( wx.EVT_BUTTON, self.onDQPress )
 	
+		horizontalMainSizer.Add( gbs, flag=wx.TOP, border = 4 )
 		#------------------------------------------------------------------------------
 		# Race time.
-		rowCur = 0
-		colCur = 0
-		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
+		labelAlign = wx.ALIGN_CENTRE | wx.ALIGN_CENTRE_VERTICAL
 
 		self.raceTime = wx.StaticText(self, wx.ID_ANY, '00:00')
-		#self.raceTime.SetFont( wx.Font(36, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
 		self.raceTime.SetFont( font )
 		self.raceTime.SetDoubleBuffered(True)
-		gbs.Add( self.raceTime, pos=(0, 4), span=(1,2), flag=wx.ALIGN_CENTRE | wx.ALIGN_CENTRE_VERTICAL )
 		self.refreshRaceTime()
+		
+		verticalSubSizer = wx.BoxSizer( wx.VERTICAL )
+		horizontalMainSizer.Add( verticalSubSizer )
+		verticalSubSizer.Add( self.raceTime, flag=wx.LEFT | wx.EXPAND | wx.ALIGN_CENTRE | wx.ALIGN_CENTRE_VERTICAL, border = 100 )
 		
 		#------------------------------------------------------------------------------
 		# Lap Management.
+		gbs = wx.GridBagSizer(4, 12)
+		
+		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
 		fontSize = 14
 		font = wx.Font(fontSize, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
 
-		rowCur = 1
-		colCur = 4
+		rowCur = 0
+		colCur = 0
 		self.automaticManualChoice = wx.Choice( self, id=wx.ID_ANY, choices = ['Automatic', 'Manual'], size=(132,-1) )
 		self.Bind(wx.EVT_CHOICE, self.doChooseAutomaticManual, self.automaticManualChoice)
 		self.automaticManualChoice.SetSelection( 0 )
@@ -111,7 +120,7 @@ class NumKeypad( wx.Panel ):
 		gbs.Add( self.automaticManualChoice, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_LEFT )
 		rowCur += 1
 		
-		label = wx.StaticText(self, wx.ID_ANY, 'Total Laps:')
+		label = wx.StaticText(self, wx.ID_ANY, 'Total Laps')
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
 		self.numLaps = wx.Choice( self, 21, choices = [''] + [str(x) for x in xrange(2,21)], size=(64,-1) )
@@ -122,15 +131,23 @@ class NumKeypad( wx.Panel ):
 		gbs.Add( self.numLaps, pos=(rowCur, colCur+1), span=(1,1) )
 		rowCur += 1
 		
-		label = wx.StaticText(self, wx.ID_ANY, "Est Finish:")
+		label = wx.StaticText(self, wx.ID_ANY, "Leader Finish")
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
-		self.leadersFinishTime = wx.StaticText(self, wx.ID_ANY, "")
-		self.leadersFinishTime.SetFont( font )
-		gbs.Add( self.leadersFinishTime, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
+		self.leaderFinishTime = wx.StaticText(self, wx.ID_ANY, "")
+		self.leaderFinishTime.SetFont( font )
+		gbs.Add( self.leaderFinishTime, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
 
-		label = wx.StaticText(self, wx.ID_ANY, "Avg Lap Time:")
+		label = wx.StaticText(self, wx.ID_ANY, "Last Rider Finish")
+		label.SetFont( font )
+		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
+		self.lastRiderFinishTime = wx.StaticText(self, wx.ID_ANY, "")
+		self.lastRiderFinishTime.SetFont( font )
+		gbs.Add( self.lastRiderFinishTime, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
+		rowCur += 1
+
+		label = wx.StaticText(self, wx.ID_ANY, "Avg Lap Time")
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
 		self.leadersLapTime = wx.StaticText(self, wx.ID_ANY, "")
@@ -138,7 +155,7 @@ class NumKeypad( wx.Panel ):
 		gbs.Add( self.leadersLapTime, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
 
-		label = wx.StaticText(self, wx.ID_ANY, "Completing Lap:")
+		label = wx.StaticText(self, wx.ID_ANY, "Completing Lap")
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
 		self.lapCompleting = wx.StaticText(self, wx.ID_ANY, "")
@@ -146,7 +163,7 @@ class NumKeypad( wx.Panel ):
 		gbs.Add( self.lapCompleting, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
 
-		label = wx.StaticText(self, wx.ID_ANY, "Show Laps to Go:")
+		label = wx.StaticText(self, wx.ID_ANY, "Show Laps to Go")
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
 		self.lapsToGo = wx.StaticText(self, wx.ID_ANY, "")
@@ -154,16 +171,18 @@ class NumKeypad( wx.Panel ):
 		gbs.Add( self.lapsToGo, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
 
+		rowCur += 1
 		self.message = wx.StaticText( self, wx.ID_ANY, '' )
 		self.message.SetFont( font )
-		gbs.Add( self.message, pos=(rowCur, colCur+1), span=(1, 2), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
+		gbs.Add( self.message, pos=(rowCur, colCur), span=(1, 2), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_CENTRE )
 		rowCur += 1
 		
+		verticalSubSizer.Add( gbs, flag=wx.LEFT|wx.TOP, border = 8 )
+		#----------------------------------------------------------------------------------------------
 		self.raceHUD = RaceHUD( self, wx.ID_ANY )
-		gbs.Add( self.raceHUD, pos=(rowCur, 0), span=(2, 5), flag=wx.EXPAND )
-		rowCur += 1
+		verticalMainSizer.Add( self.raceHUD, flag=wx.EXPAND )
 		
-		self.SetSizer( gbs )
+		self.SetSizer( verticalMainSizer )
 		self.isEnabled = True
 		
 	def refreshRaceHUD( self ):
@@ -306,7 +325,8 @@ class NumKeypad( wx.Panel ):
 	def resetLaps( self, enable = False ):
 		# Assumes Model is locked.
 		infoFields = [
-				self.leadersFinishTime,
+				self.leaderFinishTime,
+				self.lastRiderFinishTime,
 				self.leadersLapTime,
 				self.lapCompleting,
 				self.lapsToGo,
@@ -331,8 +351,8 @@ class NumKeypad( wx.Panel ):
 		else:
 			self.numLaps.SetItems( [ str(race.numLaps) ] )
 			self.numLaps.SetSelection( 0 )
-			SetLabel( self.leadersFinishTime, 'Leader %s   Last Rider %s' %
-							(Utils.formatTime(race.getLeaderTime()), Utils.formatTime(race.getLastFinisherTime())) )
+			SetLabel( self.leaderFinishTime, Utils.formatTime(race.getLeaderTime()) )
+			SetLabel( self.lastRiderFinishTime, Utils.formatTime(race.getLastFinisherTime()) )
 			SetLabel( self.leadersLapTime, Utils.formatTime(race.getLeaderLapTime()) )
 			SetLabel( self.lapCompleting, str(race.numLaps if race.numLaps is not None else 0) )
 			SetLabel( self.lapsToGo, '0' )
@@ -436,8 +456,8 @@ class NumKeypad( wx.Panel ):
 			
 			# Set the projected finish time and laps.
 			if lapCompleting >= 2 or not isAutomatic:
-				SetLabel( self.leadersFinishTime, 'Leader %s   Last Rider %s' %
-					(Utils.formatTime(expectedRaceFinish), Utils.formatTime(race.getLastFinisherTime())) )
+				SetLabel( self.leaderFinishTime, Utils.formatTime(expectedRaceFinish) )
+				SetLabel( self.lastRiderFinishTime, Utils.formatTime(race.getLastFinisherTime()) )
 				SetLabel( self.leadersLapTime, Utils.formatTime(leadersExpectedLapTime) )
 				SetLabel( self.lapsToGo, str(lapsToGo) )
 				SetLabel( self.lapCompleting, str(lapCompleting) )
@@ -455,7 +475,8 @@ class NumKeypad( wx.Panel ):
 			else:
 				if self.numLaps.GetSelection() != 0:
 					self.numLaps.SetSelection( 0 )
-				SetLabel( self.leadersFinishTime, '' )
+				SetLabel( self.leaderFinishTime, '' )
+				SetLabel( self.lastRiderFinishTime, '' )
 				SetLabel( self.leadersLapTime, '' )
 				SetLabel( self.lapsToGo, '' )
 				SetLabel( self.lapCompleting, str(lapCompleting) )
