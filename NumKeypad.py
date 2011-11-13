@@ -10,7 +10,7 @@ import Model
 import sys
 from keybutton import KeyButton
 from RaceHUD import RaceHUD
-from EditEntry import DoDNS, DoDNF, DoPull
+from EditEntry import DoDNS, DoDNF, DoPull, DoDQ
 
 def MakeButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1) ):
 	btn = KeyButton( parent, -1, None, label=label.replace('&',''), style=style|wx.NO_BORDER, size=size)
@@ -26,15 +26,15 @@ class NumKeypad( wx.Panel ):
 		
 		self.SetBackgroundColour( wx.WHITE )
 		
-		fontSize = 24
-		font = wx.Font(fontSize, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
+		fontPixels = 43
+		font = wx.FontFromPixelSize(wx.Size(0,fontPixels), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
 		dc = wx.WindowDC( self )
 		dc.SetFont( font )
 		wNum, hNum = dc.GetTextExtent( '999' )
 		wNum += 8
 		hNum += 8
 
-		rowCur = 1
+		rowCur = 0
 		
 		self.numEdit = wx.lib.intctrl.IntCtrl( self, 20, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=None, allow_none=True, min=0, max=9999 )
 		self.Bind( wx.EVT_TEXT_ENTER, self.onEnterPress, self.numEdit )
@@ -67,15 +67,22 @@ class NumKeypad( wx.Panel ):
 		gbs.Add( self.enterBtn, pos=(5+rowCur,0), span=(1,3), flag=wx.EXPAND )
 		self.enterBtn.Bind( wx.EVT_BUTTON, self.onEnterPress )
 	
+		rowCur += 7
+		font = wx.FontFromPixelSize(wx.Size(0,fontPixels*.75), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
 		self.dnfBtn= MakeButton(self, id=wx.ID_ANY, label='DN&F', style=wx.EXPAND|wx.GROW)
 		self.dnfBtn.SetFont( font )
-		gbs.Add( self.dnfBtn, pos=(7+rowCur,0), span=(1,3), flag=wx.EXPAND )
+		gbs.Add( self.dnfBtn, pos=(rowCur,0), span=(1,1), flag=wx.EXPAND )
 		self.dnfBtn.Bind( wx.EVT_BUTTON, self.onDNFPress )
 	
 		self.pullBtn= MakeButton(self, id=wx.ID_ANY, label='&Pull', style=wx.EXPAND|wx.GROW)
 		self.pullBtn.SetFont( font )
-		gbs.Add( self.pullBtn, pos=(8+rowCur,0), span=(1,3), flag=wx.EXPAND )
+		gbs.Add( self.pullBtn, pos=(rowCur,1), span=(1,1), flag=wx.EXPAND )
 		self.pullBtn.Bind( wx.EVT_BUTTON, self.onPullPress )
+	
+		self.pullBtn= MakeButton(self, id=wx.ID_ANY, label='&DQ', style=wx.EXPAND|wx.GROW)
+		self.pullBtn.SetFont( font )
+		gbs.Add( self.pullBtn, pos=(rowCur,2), span=(1,1), flag=wx.EXPAND )
+		self.pullBtn.Bind( wx.EVT_BUTTON, self.onDQPress )
 	
 		#------------------------------------------------------------------------------
 		# Race time.
@@ -84,9 +91,10 @@ class NumKeypad( wx.Panel ):
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
 
 		self.raceTime = wx.StaticText(self, wx.ID_ANY, '00:00')
-		self.raceTime.SetFont( wx.Font(36, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
+		#self.raceTime.SetFont( wx.Font(36, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
+		self.raceTime.SetFont( font )
 		self.raceTime.SetDoubleBuffered(True)
-		gbs.Add( self.raceTime, pos=(0, 3), span=(1,2), flag=wx.ALIGN_CENTRE | wx.ALIGN_CENTRE_VERTICAL )
+		gbs.Add( self.raceTime, pos=(0, 4), span=(1,2), flag=wx.ALIGN_CENTRE | wx.ALIGN_CENTRE_VERTICAL )
 		self.refreshRaceTime()
 		
 		#------------------------------------------------------------------------------
@@ -130,9 +138,6 @@ class NumKeypad( wx.Panel ):
 		gbs.Add( self.leadersLapTime, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
 
-
-		rowCur += 1
-
 		label = wx.StaticText(self, wx.ID_ANY, "Completing Lap:")
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
@@ -149,28 +154,19 @@ class NumKeypad( wx.Panel ):
 		gbs.Add( self.lapsToGo, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
 
-		label = wx.StaticText(self, wx.ID_ANY, "Leader ETA:")
-		label.SetFont( font )
-		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
-		self.timeToLeader = GenStaticText(self, wx.ID_ANY, "")
-		self.timeToLeader.SetFont( font )
-		self.timeToLeader.SetDoubleBuffered(True)
-		gbs.Add( self.timeToLeader, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
-		rowCur += 1
-
-		self.message = wx.StaticText(self, wx.ID_ANY, "")
+		self.message = wx.StaticText( self, wx.ID_ANY, '' )
 		self.message.SetFont( font )
-		gbs.Add( self.message, pos=(rowCur, colCur), span=(1,2), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_CENTRE )
+		gbs.Add( self.message, pos=(rowCur, colCur+1), span=(1, 2), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
-
+		
 		self.raceHUD = RaceHUD( self, wx.ID_ANY )
-		gbs.Add( self.raceHUD, pos=(rowCur, 0), span=(2, 7), flag=wx.EXPAND )
+		gbs.Add( self.raceHUD, pos=(rowCur, 0), span=(2, 8), flag=wx.EXPAND )
 		rowCur += 1
 		
 		self.SetSizer( gbs )
 		self.isEnabled = True
 		
-	def refreshTimeToLeader( self ):
+	def refreshRaceHUD( self ):
 		# Assumes Model is locked.
 		race = Model.race
 		timeToLeader = '  '
@@ -199,6 +195,7 @@ class NumKeypad( wx.Panel ):
 				else:
 					self.tada = None
 						
+				'''
 				# update the Time to Leader.
 				leaderLapsToGo -= 1
 				if leaderLapsToGo >= 0:
@@ -219,12 +216,13 @@ class NumKeypad( wx.Panel ):
 				
 		self.timeToLeader.SetBackgroundColour( bgColour )
 		self.timeToLeader.SetLabel( timeToLeader )
+		'''
 
 	def refreshRaceTime( self ):
 		with Model.LockRace() as race:
 			if race is not None:
 				tStr = Utils.formatTime( race.lastRaceTime() )
-				self.refreshTimeToLeader()
+				self.refreshRaceHUD()
 			else:
 				tStr = ''
 			self.raceTime.SetLabel( '  ' + tStr )
@@ -297,6 +295,10 @@ class NumKeypad( wx.Panel ):
 		if DoPull( self, self.getRiderNum() ):
 			self.numEdit.SetValue( None )
 	
+	def onDQPress( self, event ):
+		if DoDQ( self, self.getRiderNum() ):
+			self.numEdit.SetValue( None )
+	
 	def onDNSPress( self, event ):
 		if DoDNS(self, self.getRiderNum()):
 			self.numEdit.SetValue( None )
@@ -308,7 +310,6 @@ class NumKeypad( wx.Panel ):
 				self.leadersLapTime,
 				self.lapCompleting,
 				self.lapsToGo,
-				self.timeToLeader,
 				self.message
 				]
 				
@@ -337,7 +338,7 @@ class NumKeypad( wx.Panel ):
 			SetLabel( self.lapsToGo, '0' )
 			SetLabel( self.message, '' )
 			
-		self.refreshTimeToLeader()
+		self.refreshRaceHUD()
 	
 	def getLapInfo( self ):
 		# Assumes Model is locked.
@@ -461,7 +462,7 @@ class NumKeypad( wx.Panel ):
 				SetLabel( self.message, 'Collecting Data' )
 				race.numLaps = None
 			
-		self.refreshTimeToLeader()
+		self.refreshRaceHUD()
 		
 	def refresh( self ):
 		wx.CallAfter( self.numEdit.SetFocus )
@@ -479,7 +480,7 @@ class NumKeypad( wx.Panel ):
 	
 if __name__ == '__main__':
 	app = wx.PySimpleApp()
-	mainWin = wx.Frame(None,title="CrossMan", size=(600,700))
+	mainWin = wx.Frame(None,title="CrossMan", size=(1024,600))
 	numKeypad = NumKeypad(mainWin)
 	mainWin.Show()
 	app.MainLoop()

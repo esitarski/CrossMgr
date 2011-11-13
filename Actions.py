@@ -22,10 +22,13 @@ def MakeButton( parent, id = wx.ID_ANY, img = None, text = '' ):
 	lighten = 1.25
 	hover_img = img.AdjustChannels(lighten,lighten,lighten)
 	btn.SetBitmapHover( hover_img.ConvertToBitmap() )
-
+	
+	# Derive selected image.
+	lighten = 0.95
+	seleced_img = img.AdjustChannels(lighten,lighten,lighten)
+	btn.SetBitmapSelected( seleced_img.ConvertToBitmap() )
+	
 	# Derive disabled image.
-	# Lighten the text.
-	img.Replace( 0, 0, 0, 64, 64, 64 )
 	lighten = 1.4
 	disabled_img = img.ConvertToGreyscale().AdjustChannels(lighten,lighten,lighten)
 	btn.SetBitmapDisabled( disabled_img.ConvertToBitmap() )

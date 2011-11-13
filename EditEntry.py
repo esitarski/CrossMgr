@@ -188,7 +188,7 @@ def SwapEntry( parent, a, b ):
 def DoStatusChange( parent, num, message, title, newStatus ):
 	if num is None or not Utils.MessageOKCancel(parent, message % num, title):
 		return False
-	with Model.GetRace() as race:
+	with Model.LockRace() as race:
 		if not race:
 			return False
 		rider = race.getRider( num )
@@ -208,3 +208,7 @@ def DoPull( parent, num ):
 @logCall
 def DoDNS( parent, num ):
 	return DoStatusChange( parent, num, 'DNS rider %d?', 'Confirm Did Not START', Model.Rider.DNS )
+
+@logCall
+def DoDQ( parent, num ):
+	return DoStatusChange( parent, num, 'DQ rider %d?', 'Confirm Disqualify', Model.Rider.DQ )
