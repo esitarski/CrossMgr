@@ -104,11 +104,29 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 	def setFileNameSheetName( self, fileName, sheetName ):
 		reader = readexcel( fileName )
 		self.headers = None
+		
+		# Try to find the header columns.
+		# Look for the first row with more than 4 columns.
+		maxCols, minCols = 0, 10000
 		for r, row in enumerate(reader.iter_list(sheetName)):
-			if sum( 1 for d in row if toAscii(d) ) > 4:
+			cols = sum( 1 for d in row if toAscii(d) )
+			if cols < minCols:
+				minCols = cols
+			elif cols > maxCols:
+				maxCols = cols
+			if cols > 4:
 				self.headers = [toAscii(h) for h in row]
 				break
 
+		# If we haven't found a header row yet, but all the rows have the same columns,
+		# assume the first row is the header.
+		if not self.headers and minCols == maxCols:
+			for r, row in enumerate(reader.iter_list(sheetName)):
+				cols = sum( 1 for d in row if toAscii(d) )
+				if cols == minCols:
+					self.headers = [toAscii(h) for h in row]
+					break
+				
 		if not self.headers:
 			raise ValueError, 'Could not find a Header Row (needs at least 5 column names) %s::%s.' % (fileName, sheetName)
 			
