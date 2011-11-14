@@ -8,31 +8,7 @@ import JChip
 import OutputStreamer
 
 import wx.lib.masked as masked
-# import wx.lib.agw.gradientbutton as GB
-
-def MakeButton( parent, id = wx.ID_ANY, img = None, text = '' ):
-	# btn = wx.Button( parent, wx.ID_ANY, text )
-	# img = img.ShrinkBy( 2, 2 )
-	lighten = 1.2
-	img = img.AdjustChannels(lighten,lighten,lighten)
-	btn = wx.BitmapButton( parent, wx.ID_ANY, bitmap = img.ConvertToBitmap(), style = wx.NO_BORDER )
-	btn.SetBackgroundColour( wx.Colour(255,255,255) )
-
-	# Derive hover image.
-	lighten = 1.25
-	hover_img = img.AdjustChannels(lighten,lighten,lighten)
-	btn.SetBitmapHover( hover_img.ConvertToBitmap() )
-	
-	# Derive selected image.
-	lighten = 0.95
-	seleced_img = img.AdjustChannels(lighten,lighten,lighten)
-	btn.SetBitmapSelected( seleced_img.ConvertToBitmap() )
-	
-	# Derive disabled image.
-	lighten = 1.4
-	disabled_img = img.ConvertToGreyscale().AdjustChannels(lighten,lighten,lighten)
-	btn.SetBitmapDisabled( disabled_img.ConvertToBitmap() )
-	return btn
+from roundbutton import RoundButton
 
 def StartRaceNow():
 	with Model.LockRace() as race:
@@ -148,39 +124,52 @@ class StartRaceAtTime( wx.Dialog ):
 		if self.timer is not None:
 			self.timer.Stop()
 		self.EndModal( wx.ID_CANCEL )
-		
+
+#-------------------------------------------------------------------------------------------
+StartText = 'Start\nRace'
+FinishText = 'Finish\nRace'
+
 class Actions( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
-		bs = wx.GridBagSizer(vgap=4, hgap=4)
+		bs = wx.BoxSizer( wx.VERTICAL )
 		
 		self.SetBackgroundColour( wx.Colour(255,255,255) )
 		
-		font = wx.Font(24, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
+		fontPixels = 60
+		font = wx.FontFromPixelSize((0,fontPixels), wx.DEFAULT, wx.NORMAL, weight=wx.FONTWEIGHT_BOLD)
 
-		img = wx.Image( os.path.join(Utils.getImageFolder(), 'StartRace.png'), wx.BITMAP_TYPE_PNG )
-		self.startRaceBtn = MakeButton( self, img = img, text = '&Start Race Now' )
-		self.Bind( wx.EVT_BUTTON, self.onStartRace, self.startRaceBtn )
-		self.startRaceBtn.SetFont( font )
+		dc = wx.WindowDC( self )
+		dc.SetFont( font )
+		tw = max( dc.GetTextExtent('START')[0], dc.GetTextExtent('FINISH')[0] )
 		
-		img = wx.Image( os.path.join(Utils.getImageFolder(), 'StartRaceAtTime.png'), wx.BITMAP_TYPE_PNG )
-		self.startRaceTimeBtn = MakeButton( self, img = img, text = 'Start Race at &Time' )
-		self.Bind( wx.EVT_BUTTON, self.onStartRaceTime, self.startRaceTimeBtn )
-		self.startRaceTimeBtn.SetFont( font )
+		buttonSize = int(tw * 1.5)
+		self.button = RoundButton( self, wx.ID_ANY, size=(buttonSize, buttonSize) )
+		self.button.SetFont( font )
+		self.button.SetLabel( 'FINISH' )
+		self.button.SetForegroundColour( wx.Colour(128,128,128) )
+		self.Bind(wx.EVT_BUTTON, self.onPress, self.button )
 		
-		img = wx.Image( os.path.join(Utils.getImageFolder(), 'FinishRace.png'), wx.BITMAP_TYPE_PNG )
-		self.finishRaceBtn = MakeButton( self, img = img, text = '&Finish Race' )
-		self.Bind( wx.EVT_BUTTON, self.onFinishRace, self.finishRaceBtn )
-		self.finishRaceBtn.SetFont( font )
+		self.startRaceTimeCheckBox = wx.CheckBox(self, wx.ID_ANY, 'Start Race at Time')
 		
-		border = 0
-		bs.Add(self.startRaceBtn, pos=(0,0), span=(1,1), border=border, flag=wx.TOP|wx.LEFT)
-		bs.Add(self.startRaceTimeBtn, pos=(0,1), span=(1,1), border=border, flag=wx.TOP|wx.LEFT)
-		bs.Add(self.finishRaceBtn, pos=(1,0), span=(1,1), border=border, flag=wx.TOP|wx.LEFT)
-		bs.AddGrowableRow( 1 )
+		border = 8
+		bs.Add(self.button, border=border, flag=wx.ALL)
+		bs.Add(self.startRaceTimeCheckBox, border=border, flag=wx.ALL)
 		self.SetSizer(bs)
 		
 		self.refresh()
+	
+	def onPress( self, event ):
+		if not Model.race:
+			return
+		with Model.LockRace() as race:
+			running = race.isRunning()
+		if running:
+			self.onFinishRace( event )
+		elif self.startRaceTimeCheckBox.IsChecked():
+			self.onStartRaceTime( event )
+		else:
+			self.onStartRace( event )
 	
 	def onStartRace( self, event ):
 		if Model.race is not None and Utils.MessageOKCancel(self, 'Start Race Now?', 'Start Race'):
@@ -210,28 +199,38 @@ class Actions( wx.Panel ):
 			mainWin.refresh()
 		JChip.StopListener()
 		
-		# Give the output streamer a chance to write the last message.
 		OutputStreamer.writeRaceFinish()
-		wx.CallLater( 2000, OutputStreamer.StopStreamer )
+		OutputStreamer.StopStreamer()
 	
 	def refresh( self ):
-		self.startRaceBtn.Enable( False )
-		self.startRaceTimeBtn.Enable( False )
-		self.finishRaceBtn.Enable( False )
+		self.button.Enable( False )
+		self.startRaceTimeCheckBox.Enable( False )
+		self.button.SetLabel( StartText )
+		self.button.SetForegroundColour( wx.Colour(100,100,100) )
 		with Model.LockRace() as race:
 			if race is not None:
 				if race.startTime is None:
-					self.startRaceBtn.Enable( True )
-					self.startRaceTimeBtn.Enable( True )
+					self.button.Enable( True )
+					self.button.SetLabel( StartText )
+					self.button.SetForegroundColour( wx.Colour(0,128,0) )
+					
+					self.startRaceTimeCheckBox.Enable( True )
+					self.startRaceTimeCheckBox.Show( True )
 				elif race.isRunning():
-					self.finishRaceBtn.Enable( True )
+					self.button.Enable( True )
+					self.button.SetLabel( FinishText )
+					self.button.SetForegroundColour( wx.Colour(128,0,0) )
+					
+					self.startRaceTimeCheckBox.Enable( False )
+					self.startRaceTimeCheckBox.Show( False )
+					
 		mainWin = Utils.getMainWin()
 		if mainWin is not None:
 			mainWin.updateRaceClock()
 		
 if __name__ == '__main__':
 	app = wx.PySimpleApp()
-	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
+	mainWin = wx.Frame(None,title="CrossMan", size=(1024,600))
 	actions = Actions(mainWin)
 	Model.newRace()
 	actions.refresh()

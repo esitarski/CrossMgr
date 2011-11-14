@@ -1,5 +1,5 @@
 # --------------------------------------------------------------------------------- #
-# KEYBUTTON wxPython IMPLEMENTATION
+# ROUNDBUTTON wxPython IMPLEMENTATION
 #
 # Edward Sitarski, @ 07 November 2011
 #
@@ -110,7 +110,7 @@ class RoundButton(wx.PyControl):
 	
 	def __init__(self, parent, id=wx.ID_ANY, bitmap=None, label="", pos=wx.DefaultPosition,
 				 size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
-				 name="keybutton"):
+				 name="roundbutton"):
 		"""
 		Default class constructor.
 
@@ -146,9 +146,9 @@ class RoundButton(wx.PyControl):
 		self._mouseAction = None
 		self._bitmap = bitmap
 		self._hasFocus = False
+		self._buttonRadius = 10
 		
 		self.SetLabel(label)
-		#self.SetFont( wx.FontFromPixelSize( wx.Size(0,32), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL) )
 		self.InheritAttributes()
 		self.SetInitialSize(size)
 
@@ -162,7 +162,16 @@ class RoundButton(wx.PyControl):
 		event.Skip()
 		self.Refresh()
 
-
+		
+	def ContainsEvent( self, event ):
+		rect = self.GetClientRect()
+		x = rect.GetX() + rect.GetWidth() / 2
+		y = rect.GetY() + rect.GetHeight() / 2
+		px, py = event.GetPosition().Get()
+		dx = px - x
+		dy = py - y
+		return dx * dx + dy * dy < self._buttonRadius * self._buttonRadius
+		
 	def OnLeftDown(self, event):
 		"""
 		Handles the ``wx.EVT_LEFT_DOWN`` event for L{RoundButton}.
@@ -170,7 +179,7 @@ class RoundButton(wx.PyControl):
 		:param `event`: a `wx.MouseEvent` event to be processed.
 		"""
 
-		if not self.IsEnabled():
+		if not self.IsEnabled() or not self.ContainsEvent(event):
 			return
 		
 		self._mouseAction = CLICK
@@ -189,13 +198,10 @@ class RoundButton(wx.PyControl):
 		if not self.IsEnabled() or not self.HasCapture():
 			return
 		
-		pos = event.GetPosition()
-		rect = self.GetClientRect()
-
 		if self.HasCapture():
 			self.ReleaseMouse()
 			
-		if rect.Contains(pos):
+		if self.ContainsEvent(event):
 			self._mouseAction = HOVER
 			self.Notify()
 		else:
@@ -393,8 +399,7 @@ class RoundButton(wx.PyControl):
 		am = AM.ArtManager()
 		
 		gc = wx.GraphicsContext.Create(dc)
-		#dc.SetBackground(wx.Brush(self.GetParent().GetBackgroundColour()))
-		dc.SetBackground(wx.WHITE_BRUSH)
+		dc.SetBackground(wx.Brush(self.GetParent().GetBackgroundColour()))
 		dc.Clear()
 		
 		clientRect = self.GetClientRect()
@@ -414,7 +419,6 @@ class RoundButton(wx.PyControl):
 			pressed = True
 
 		r = min(boundaryRect.GetWidth(), boundaryRect.GetHeight()) // 2
-		s = int( r * 0.10 )
 		xCenter = x + width // 2
 		yCenter = y + height // 2
 		
@@ -450,6 +454,7 @@ class RoundButton(wx.PyControl):
 						rSmaller * 2,
 						am.LightColour(colour, 75.0), cRegular ) )
 		drawCircle( xCenter, yCenter, rSmaller )
+		self._buttonRadius = rSmaller
 		
 		# Draw the flare at the top of the button.
 		gc.SetBrush( gc.CreateLinearGradientBrush(
@@ -460,7 +465,7 @@ class RoundButton(wx.PyControl):
 		rHeight = (rSmaller * 0.8) * 0.9
 		gc.DrawEllipse( xCenter - rWidth / 2, yCenter - rSmaller, rWidth, rHeight )
 		
-		# Draw a defining grey ring - this also covers up any gaps between the flare and the edge of the button.
+		# Draw an outline around the body - this also covers up any gaps between the flare and the edge of the button.
 		gc.SetPen( wx.Pen(wx.Colour(50,50,50), r * 0.025) )
 		gc.SetBrush( wx.TRANSPARENT_BRUSH )
 		gc.DrawEllipse( xCenter - rSmaller, yCenter - rSmaller, rSmaller * 2, rSmaller * 2 )
@@ -493,7 +498,7 @@ if __name__ == '__main__':
 	#btn.SetForegroundColour( wx.Colour(0,0,128) )
 	btn.SetForegroundColour( wx.Colour(0,128,0) )
 	#btn.SetForegroundColour( wx.Colour(128,0,0) )
-	btn.SetFont( wx.Font(27, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, face = 'Arial Rounded MT Bold' ) )
+	btn.SetFont( wx.Font(36, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, face = 'Arial Rounded MT Bold' ) )
 	mainWin.Show()
 	app.MainLoop()
 
