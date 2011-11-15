@@ -136,17 +136,10 @@ class Actions( wx.Panel ):
 		
 		self.SetBackgroundColour( wx.Colour(255,255,255) )
 		
-		fontPixels = 60
-		font = wx.FontFromPixelSize((0,fontPixels), wx.DEFAULT, wx.NORMAL, weight=wx.FONTWEIGHT_BOLD)
-
-		dc = wx.WindowDC( self )
-		dc.SetFont( font )
-		tw = max( dc.GetTextExtent('START')[0], dc.GetTextExtent('FINISH')[0] )
-		
-		buttonSize = int(tw * 1.5)
+		buttonSize = 220
 		self.button = RoundButton( self, wx.ID_ANY, size=(buttonSize, buttonSize) )
-		self.button.SetFont( font )
-		self.button.SetLabel( 'FINISH' )
+		self.button.SetLabel( FinishText )
+		self.button.SetFontToFitLabel()
 		self.button.SetForegroundColour( wx.Colour(128,128,128) )
 		self.Bind(wx.EVT_BUTTON, self.onPress, self.button )
 		

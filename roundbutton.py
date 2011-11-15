@@ -14,27 +14,24 @@
 #
 # edward.sitarski@gmail.com
 #
-# Or, obviously, to the wxPython mailing list!!!
-#
-#
 # End Of Comments
 # --------------------------------------------------------------------------------- #
 
 """
-RoundButton is another custom-drawn button class which mimics Windows CE mobile
-gradient buttons.
+RoundButton is another custom-drawn button class which draws buttons that look like round glass.
 
 
 Description
 ===========
 
-RoundButton is another custom-drawn button class which mimics a Mac keyboard.
+RoundButton is another custom-drawn button class which draws buttons that look like round glass.
 
 Supported Platforms
 ===================
 
 RoundButton has been tested on the following platforms:
   * Windows (Windows XP).
+  * Linux (Ubuntu)
 
 
 Window Styles
@@ -60,7 +57,7 @@ License And Version
 
 RoundButton is distributed under the wxPython license.
 
-Latest Revision: Andrea Gavana @ 27 Nov 2009, 17.00 GMT
+Latest Revision: Edward Sitarski @ 27 Nov 2011, 17.00 GMT
 
 Version 0.3
 
@@ -386,6 +383,53 @@ class RoundButton(wx.PyControl):
 		evt.SetButtonObj(self)
 		evt.SetEventObject(self)
 		self.GetEventHandler().ProcessEvent(evt)
+		
+	def SetFontToFitLabel(self, font = None):
+		''' Sets the internal font size so that the label will fit on the button.'''
+		''' font parameter is used to get the font specificiation only - its size does not matter. '''
+		''' If no font parameter is given, the current font is used. '''
+		label = self.GetLabel().strip()
+		if not label:
+			return
+			
+		if not font:
+			font = self.GetFont()
+		
+		# Get a known font size based on the font specification.
+		fontPixels = 48
+		fontCur = wx.FontFromPixelSize((0,fontPixels), font.GetFamily(), font.GetStyle(), font.GetWeight(),
+										font.GetUnderlined(), font.GetFaceName(), font.GetEncoding() )
+		dc = wx.WindowDC( self )
+		dc.SetFont( fontCur )		
+		
+		lines = label.strip().split('\n')
+		tw, th = dc.GetTextExtent( lines[0] )
+		
+		x, y, width, height = self.GetClientRect()
+		
+		# Get the centre of the button and the drawable radius.
+		r = min(width, height) // 2
+		xCenter = x + width // 2
+		yCenter = y + height // 2
+		rDrawable = r * 0.80 * 0.93 * 0.95
+		
+		# For all lines, check the top and bottom corners and get the maximum radius.
+		r2Max = 0
+		yCur = yCenter - th * len(lines) / 2.0
+		for line  in lines:
+			twCur, thCur = dc.GetTextExtent( line )
+			tx, ty = xCenter - twCur / 2, yCur
+			dx, dy = tx - xCenter, ty - yCenter
+			r2Max = max( r2Max, dx*dx + dy*dy )
+			dy += th
+			r2Max = max( r2Max, dx*dx + dy*dy )
+			yCur += th
+			
+		# Adjust the font size based on the ratio that we would have drawn outside the button circle.
+		fontPixels *= rDrawable / math.sqrt( r2Max )
+		fontCur = wx.FontFromPixelSize((0,fontPixels), font.GetFamily(), font.GetStyle(), font.GetWeight(),
+								font.GetUnderlined(), font.GetFaceName(), font.GetEncoding() )
+		self.SetFont( fontCur )
 
 	def OnPaint(self, event):
 		"""
@@ -446,7 +490,10 @@ class RoundButton(wx.PyControl):
 		# Draw the body of the button.
 		rSmaller *= 0.93
 		if pressed:
-			rSmaller *= 0.95
+			shrink = 0.025
+			yCenter -= r * shrink / 2.0
+			
+		dc.SetFont( self.GetFont() )
 		cRegular = colour
 		gc.SetBrush( gc.CreateRadialGradientBrush(
 						xCenter, yCenter + rSmaller * 0.9,
@@ -465,7 +512,8 @@ class RoundButton(wx.PyControl):
 		rHeight = (rSmaller * 0.8) * 0.9
 		gc.DrawEllipse( xCenter - rWidth / 2, yCenter - rSmaller, rWidth, rHeight )
 		
-		# Draw an outline around the body - this also covers up any gaps between the flare and the edge of the button.
+		# Draw an outline around the body.
+		# Also covers up the gap between the flare and the top edge of the button.
 		gc.SetPen( wx.Pen(wx.Colour(50,50,50), r * 0.025) )
 		gc.SetBrush( wx.TRANSPARENT_BRUSH )
 		gc.DrawEllipse( xCenter - rSmaller, yCenter - rSmaller, rSmaller * 2, rSmaller * 2 )
@@ -476,29 +524,80 @@ class RoundButton(wx.PyControl):
 		if not label:
 			return
 		lines = label.split('\n') 
-		dc.SetFont( self.GetFont() )
 		textWidth, textHeight = dc.GetTextExtent( label[0] )
-		textHeightMax = textHeight * len(lines)
-		textWidthMax = max( dc.GetTextExtent(line)[0] for line in lines )
 		
 		yText = yCenter - textHeight * len(lines) / 2.0
 		for line in lines:
-			textWidth, textHeight = dc.GetTextExtent( line )
-			dc.DrawText( line, xCenter - textWidth // 2, yText )
+			dc.DrawText( line, xCenter - dc.GetTextExtent(line)[0] // 2, yText )
 			yText += textHeight
 		
 		
 if __name__ == '__main__':
 	app = wx.PySimpleApp()
-	mainWin = wx.Frame(None,title="roundbutton", size=(400,180))
-	#btn = RoundButton(mainWin, wx.ID_ANY, None, 'Start\nat Time')
-	#btn = RoundButton(mainWin, wx.ID_ANY, None, 'STOP')
-	btn = RoundButton(mainWin, wx.ID_ANY, None, 'GO')
+	mainWin = wx.Frame(None,title="roundbutton", size=(1024,600))
+	mainWin.SetMinSize( wx.Size(1025,600) )
+	mainWin.SetBackgroundColour( wx.WHITE )
+	hs = wx.GridSizer( 2, 4, 4, 4 )
+	hs.SetMinSize( wx.Size(1024, 600) )
+	
+	btns = []
+	
+	fontPixels = 60
+	font = wx.FontFromPixelSize((0,fontPixels), wx.DEFAULT, wx.NORMAL, weight=wx.FONTWEIGHT_BOLD)
+	
+	btnSize = 250
+	
+	btn = RoundButton(mainWin, wx.ID_ANY, None, 'GO', size=(btnSize, btnSize))
 	btn.SetBackgroundColour( wx.WHITE )
-	#btn.SetForegroundColour( wx.Colour(0,0,128) )
 	btn.SetForegroundColour( wx.Colour(0,128,0) )
-	#btn.SetForegroundColour( wx.Colour(128,0,0) )
-	btn.SetFont( wx.Font(36, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, face = 'Arial Rounded MT Bold' ) )
+	btn.SetFontToFitLabel( font )
+	btns.append( btn )
+	
+	btn = RoundButton(mainWin, wx.ID_ANY, None, 'STOP', size=(btnSize, btnSize))
+	btn.SetBackgroundColour( wx.WHITE )
+	btn.SetForegroundColour( wx.Colour(128,0,0) )
+	btn.SetFontToFitLabel( font )
+	btns.append( btn )
+
+	btn = RoundButton(mainWin, wx.ID_ANY, None, 'SLOW', size=(btnSize, btnSize))
+	btn.SetBackgroundColour( wx.WHITE )
+	btn.SetForegroundColour( wx.Colour(128,0,128) )
+	btn.SetFontToFitLabel( font )
+	btns.append( btn )
+
+	btn = RoundButton(mainWin, wx.ID_ANY, None, 'HELP', size=(btnSize, btnSize))
+	btn.SetBackgroundColour( wx.WHITE )
+	btn.SetForegroundColour( wx.Colour(128,0,0) )
+	btn.SetFontToFitLabel( font )
+	btns.append( btn )
+
+	btn = RoundButton(mainWin, wx.ID_ANY, None, 'ENGINE\nSTART', size=(btnSize, btnSize))
+	btn.SetBackgroundColour( wx.WHITE )
+	btn.SetForegroundColour( wx.Colour(0,128,0) )
+	btn.SetFontToFitLabel()
+	btns.append( btn )
+
+	btn = RoundButton(mainWin, wx.ID_ANY, None, 'PURGE\nCORE', size=(btnSize, btnSize))
+	btn.SetBackgroundColour( wx.WHITE )
+	btn.SetForegroundColour( wx.Colour(0,0,128) )
+	btn.SetFontToFitLabel()
+	btns.append( btn )
+
+	btn = RoundButton(mainWin, wx.ID_ANY, None, 'SELF\nDESTRUCT', size=(btnSize, btnSize))
+	btn.SetBackgroundColour( wx.WHITE )
+	btn.SetForegroundColour( wx.Colour(0,128,128) )
+	btn.SetFontToFitLabel()
+	btns.append( btn )
+
+	btn = RoundButton(mainWin, wx.ID_ANY, None, 'SHOOT\nZOMBIE', size=(btnSize, btnSize))
+	btn.SetBackgroundColour( wx.WHITE )
+	btn.SetForegroundColour( wx.Colour(64,64,0) )
+	btn.SetFontToFitLabel()
+	btns.append( btn )
+
+	hs.AddMany( btns )
+	
+	mainWin.SetSizer( hs )
 	mainWin.Show()
 	app.MainLoop()
 
