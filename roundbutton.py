@@ -561,7 +561,7 @@ if __name__ == '__main__':
 
 	btn = RoundButton(mainWin, wx.ID_ANY, None, 'SLOW', size=(btnSize, btnSize))
 	btn.SetBackgroundColour( wx.WHITE )
-	btn.SetForegroundColour( wx.Colour(128,0,128) )
+	btn.SetForegroundColour( wx.Colour(100,100,0) )
 	btn.SetFontToFitLabel( font )
 	btns.append( btn )
 
@@ -577,7 +577,7 @@ if __name__ == '__main__':
 	btn.SetFontToFitLabel()
 	btns.append( btn )
 
-	btn = RoundButton(mainWin, wx.ID_ANY, None, 'PURGE\nCORE', size=(btnSize, btnSize))
+	btn = RoundButton(mainWin, wx.ID_ANY, None, 'ACTIVATE\nSHIELDS', size=(btnSize, btnSize))
 	btn.SetBackgroundColour( wx.WHITE )
 	btn.SetForegroundColour( wx.Colour(0,0,128) )
 	btn.SetFontToFitLabel()
@@ -589,9 +589,9 @@ if __name__ == '__main__':
 	btn.SetFontToFitLabel()
 	btns.append( btn )
 
-	btn = RoundButton(mainWin, wx.ID_ANY, None, 'SHOOT\nZOMBIE', size=(btnSize, btnSize))
+	btn = RoundButton(mainWin, wx.ID_ANY, None, 'LAUNCH', size=(btnSize, btnSize))
 	btn.SetBackgroundColour( wx.WHITE )
-	btn.SetForegroundColour( wx.Colour(64,64,0) )
+	btn.SetForegroundColour( wx.Colour(128,0,128) )
 	btn.SetFontToFitLabel()
 	btns.append( btn )
 
