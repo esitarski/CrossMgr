@@ -319,7 +319,7 @@ class MainWin( wx.Frame ):
 		self.chipMenu = wx.Menu()
 
 		idCur = wx.NewId()
-		self.chipMenu.Append( idCur , "&JChip... (Experimental!)", "Configure and Test JChip Reader" )
+		self.chipMenu.Append( idCur , "&JChip... (Experimental)", "Configure and Test JChip Reader" )
 		self.Bind(wx.EVT_MENU, self.menuJChip, id=idCur )
 
 		self.menuBar.Append( self.chipMenu, "Chip&Reader" )
@@ -480,12 +480,11 @@ class MainWin( wx.Frame ):
 		xlFName = os.path.join( dName, os.path.basename(xlFName) )
 
 		wb = xlwt.Workbook()
-		with Model.LockRace() as race:
-			for catName in getRaceCategories():
-				sheetCur = wb.add_sheet( re.sub('[:\\/?*\[\]]', ' ', catName) )
-				export = ExportGrid()
-				export.setResultsOneListRiderTimes( catName )
-				export.toExcelSheet( sheetCur )
+		for catName in getRaceCategories():
+			sheetCur = wb.add_sheet( re.sub('[:\\/?*\[\]]', ' ', catName) )
+			export = ExportGrid()
+			export.setResultsOneListRiderTimes( catName )
+			export.toExcelSheet( sheetCur )
 
 		try:
 			wb.save( xlFName )
@@ -500,52 +499,50 @@ class MainWin( wx.Frame ):
 	
 	@logCall
 	def menuExportHtmlRaceResults( self, event ):
-		with Model.LockRace() as race:
-			self.commit()
-			if race is None:
-				Utils.MessageOK(self, 'No race loaded.  Please New/Open a race.', 'Export Html Error', iconMask=wx.ICON_ERROR)
-				return
-			
-			# Get the folder to write the html file.
-			fname = self.fileName[:-4] + '.html'
-			dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(fname),
-								style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
-			ret = dlg.ShowModal()
-			dName = dlg.GetPath()
-			dlg.Destroy()
-			if ret != wx.ID_OK:
-				return
+		self.commit()
+		if self.fileName is None or len(self.fileName) < 4:
+			return
+	
+		# Get the folder to write the html file.
+		fname = self.fileName[:-4] + '.html'
+		dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(fname),
+							style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
+		ret = dlg.ShowModal()
+		dName = dlg.GetPath()
+		dlg.Destroy()
+		if ret != wx.ID_OK:
+			return
 
-			# Read the html template.
-			htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
-			try:
-				with open(htmlFile) as fp:
-					html = fp.read()
-			except:
-				Utils.MessageOK('Cannot read HTML template file.  Check program installation.',
-								'Html Template Read Error', iconMask=wx.ICON_ERROR )
-				return
-				
-			# Replace parts of the file with the race information.
-			raceName = 'raceName = %s' % json.dumps('Race: %s' % os.path.basename(self.fileName)[:-4])
-			html = html.replace( 'raceName = null', raceName )
+		# Read the html template.
+		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
+		try:
+			with open(htmlFile) as fp:
+				html = fp.read()
+		except:
+			Utils.MessageOK('Cannot read HTML template file.  Check program installation.',
+							'Html Template Read Error', iconMask=wx.ICON_ERROR )
+			return
 			
+		# Replace parts of the file with the race information.
+		raceName = 'raceName = %s' % json.dumps('Race: %s' % os.path.basename(self.fileName)[:-4])
+		html = html.replace( 'raceName = null', raceName )
+			
+		with Model.LockRace() as race:
 			organizer = getattr( race, 'organizer', '' )
 			html = html.replace( 'organizer = null', 'organizer = %s' % json.dumps(organizer) )
-			
 			data = 'data = %s' % json.dumps(GetAnimationData(getExternalData = True))
 			html = html.replace( 'data = null', data )
 			
-			# Write out the results.
-			fname = os.path.join( dName, os.path.basename(fname) )
-			try:
-				with open(fname, 'w') as fp:
-					fp.write( html )
-				webbrowser.open( fname, new = 2, autoraise = True )
-				Utils.MessageOK(self, 'Html Race Animation written to:\n\n   %s' % fname, 'Html Write', iconMask=wx.ICON_INFORMATION)
-			except:
-				Utils.MessageOK(self, 'Cannot write HTML template file (%s).' % fname,
-								'Html Write Error', iconMask=wx.ICON_ERROR )
+		# Write out the results.
+		fname = os.path.join( dName, os.path.basename(fname) )
+		try:
+			with open(fname, 'w') as fp:
+				fp.write( html )
+			webbrowser.open( fname, new = 2, autoraise = True )
+			Utils.MessageOK(self, 'Html Race Animation written to:\n\n   %s' % fname, 'Html Write', iconMask=wx.ICON_INFORMATION)
+		except:
+			Utils.MessageOK(self, 'Cannot write HTML template file (%s).' % fname,
+							'Html Write Error', iconMask=wx.ICON_ERROR )
 	
 	#--------------------------------------------------------------------------------------------
 	@logCall
@@ -609,11 +606,10 @@ class MainWin( wx.Frame ):
 		properties.update()
 		self.updateRecentFiles()
 
-		race = Model.getRace()
 		importedCategories = False
 		if categoriesFile:
 			try:
-				with open(categoriesFile, 'r') as fp:
+				with open(categoriesFile, 'r') as fp, Model.LockRace() as race:
 					race.importCategories( fp )
 				importedCategories = True
 			except IOError:
@@ -623,11 +619,12 @@ class MainWin( wx.Frame ):
 
 		# Create some defaults so the page is not blank.
 		if not importedCategories:
-			race.setCategories( [(True,
-								'Category %d-%d'	% (max(1, i*100), (i+1)*100-1),
-								'%d-%d'				% (max(1, i*100), (i+1)*100-1),
-								'00:00',
-								None) for i in xrange(8)] )
+			with Model.LockRace() as race:
+				race.setCategories( [(True,
+									'Category %d-%d'	% (max(1, i*100), (i+1)*100-1),
+									'%d-%d'				% (max(1, i*100), (i+1)*100-1),
+									'00:00',
+									None) for i in xrange(8)] )
 
 		self.writeRace()
 		self.showPageName( 'Actions' )
@@ -635,7 +632,7 @@ class MainWin( wx.Frame ):
 	
 	@logCall
 	def menuNewNext( self, event ):
-		race = Model.getRace()
+		race = Model.race
 		if race is None:
 			self.menuNew( event )
 			return
@@ -679,11 +676,10 @@ class MainWin( wx.Frame ):
 		self.updateRecentFiles()
 
 		# Restore the previous categories.
-		race = Model.getRace()
 		importedCategories = False
 		if categoriesFile:
 			try:
-				with open(categoriesFile, 'r') as fp:
+				with open(categoriesFile, 'r') as fp, Model.LockRace() as race:
 					race.importCategories( fp )
 				importedCategories = True
 			except IOError:
@@ -692,7 +688,8 @@ class MainWin( wx.Frame ):
 				Utils.MessageOK( self, "Bad file format:\n%s\n\n%s - %s" % (categoriesFile, str(ValueError), str(IndexError)), "File Read Error", iconMask=wx.ICON_ERROR)
 
 		if not importedCategories:
-			race.categories = categoriesSave
+			with Model.LockRace() as race:
+				race.categories = categoriesSave
 
 		self.setActiveCategories()
 		self.writeRace()
@@ -710,16 +707,16 @@ class MainWin( wx.Frame ):
 		self.writeRace()
 
 		try:
-			with Model.LockRace() as race:
-				with open(fileName, 'rb') as fp:
-					race = pickle.load( fp )
-				self.fileName = fileName
-				race.tagNums = None
-				Model.setRace( race )
+			with open(fileName, 'rb') as fp, Model.LockRace() as race:
+				race = pickle.load( fp )
+				isFinished = race.isFinished()
+			self.fileName = fileName
+			race.tagNums = None
+			Model.setRace( race )
 				
 			self.updateRecentFiles()
 			
-			if race.isFinished():
+			if isFinished:
 				self.showPageName( 'Results' )
 			self.refresh()
 			Utils.writeLog( "call: openRace: '%s'" % fileName )
@@ -745,7 +742,7 @@ class MainWin( wx.Frame ):
 		
 	@logCall
 	def menuOpenNext( self, event ):
-		race = Model.getRace()
+		race = Model.race
 
 		if race is None or not self.fileName:
 			self.menuOpen( event )
@@ -941,8 +938,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 	@logCall
 	def menuImportCategories( self, event ):
 		self.commit()
-		race = Model.getRace()
-		if not race:
+		if not Model.race:
 			Utils.MessageOK( self, "A race must be loaded first.", "Import Categories", iconMask=wx.ICON_ERROR)
 			return
 			
@@ -954,7 +950,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 		if dlg.ShowModal() == wx.ID_OK:
 			categoriesFile = dlg.GetPath()
 			try:
-				with open(categoriesFile, 'r') as fp:
+				with open(categoriesFile, 'r') as fp, Model.LockRace() as race:
 					race.importCategories( fp )
 			except IOError:
 				Utils.MessageOK( self, "Cannot open file:\n%s" % categoriesFile, "File Open Error", iconMask=wx.ICON_ERROR)
@@ -980,9 +976,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 		if dlg.ShowModal() == wx.ID_OK:
 			fname = dlg.GetPath()
 			try:
-				with open(fname, 'w') as fp:
-					with Model.LockRace() as race:
-						race.exportCategories( fp )
+				with open(fname, 'w') as fp, Model.LockRace() as race:
+					race.exportCategories( fp )
 			except IOError:
 				Utils.MessageOK( self, "Cannot open file:\n%s" % fname, "File Open Error", iconMask=wx.ICON_ERROR)
 				
@@ -991,8 +986,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 	@logCall
 	def menuExportHistory( self, event ):
 		self.commit()
-		race = Model.getRace()
-		if self.fileName is None or len(self.fileName) < 4 or not race:
+		if self.fileName is None or len(self.fileName) < 4 or not Model.race:
 			return
 
 		self.showPageName( 'History' )
@@ -1010,13 +1004,14 @@ Continue?''' % fName, 'Simulate a Race' ):
 
 		xlFName = os.path.join( dName, os.path.basename(xlFName) )
 
-		title = 'Race: '+ race.name + '\n' + Utils.formatDate(race.date) + '\nRace History'
 		colnames = self.history.grid.GetColNames()
 		data = self.history.grid.GetData()
 		if data:
 			rowMax = max( len(c) for c in data )
 			colnames = ['Count'] + colnames
 			data = [[str(i) for i in xrange(1, rowMax+1)]] + data
+		with Model.LockRace() as race:
+			title = 'Race: '+ race.name + '\n' + Utils.formatDate(race.date) + '\nRace History'
 		export = ExportGrid( title, colnames, data )
 
 		wb = xlwt.Workbook()
@@ -1091,11 +1086,15 @@ Continue?''' % fName, 'Simulate a Race' ):
 		self.notebook.ChangeSelection( iPage )
 
 	def showPageName( self, name ):
+		name = name.replace(' ', '')
 		for i, (a, c, n) in enumerate(self.attrClassName):
 			if n == name:
 				self.showPage( i )
 				break
 
+	def showRiderDetail( self ):
+		self.showPageName( 'RiderDetail' )
+				
 	def callPageRefresh( self, i ):
 		try:
 			self.pages[i].refresh()

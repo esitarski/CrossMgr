@@ -83,3 +83,5 @@ for i in xrange(1, len(numLapTimes)):
 	sys.stdout.write( 'sending: %s' % message )
 	sock.send( message )
 	
+sock.send( '<<<terminate>>>\n' )
+	

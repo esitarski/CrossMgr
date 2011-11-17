@@ -137,7 +137,7 @@ class Results( wx.Panel ):
 			
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				('Rider Detail',wx.NewId(), self.OnPopupRiderDetail),
+				('RiderDetail',	wx.NewId(), self.OnPopupRiderDetail),
 				('History', 	wx.NewId(), self.OnPopupHistory),
 			]
 			for p in self.popupInfo:
@@ -159,31 +159,31 @@ class Results( wx.Panel ):
 			Utils.getMainWin().showPageName( 'History' )
 	def OnPopupRiderDetail( self, event ):
 		if Utils.isMainWin():
-			Utils.getMainWin().showPageName( 'Rider Detail' )
+			Utils.getMainWin().showRiderDetail()
 		
 	def onShowTimes( self, event ):
-		self.showTimes = False if self.showTimes else True
+		self.showTimes ^= True
 		self.refresh()
 		
 	def onShowGaps( self, event ):
-		self.showGaps = False if self.showGaps else True
+		self.showGaps ^= True
 		self.refresh()
 		
 	def onShowPositions( self, event ):
-		self.showPositions = False if self.showPositions else True
+		self.showPositions ^= True
 		self.refresh()
 		
 	def onShowLapsCompleted( self, event ):
-		self.showLapsCompleted = False if self.showLapsCompleted else True
+		self.showLapsCompleted ^= True
 		self.refresh()
 		
 	def showNumSelect( self ):
-		race = Model.getRace()
+		race = Model.race
 		if race is None:
 			return
 			
 		textColour = {}
-		backgroundColour = {}
+		backgroundColour = dict( ((rc, self.yellowColour) for rc in self.rcInterp) )
 		for c in xrange(self.grid.GetNumberCols()):
 			for r in xrange(self.grid.GetNumberRows()):
 			
@@ -199,8 +199,6 @@ class Results( wx.Panel ):
 					rider = race[int(cellNum)]
 					if rider.lapAdjust != 0:
 						backgroundColour[ (r,c) ] = (0,220,220)
-					elif (r, c) in self.rcInterp:
-						backgroundColour[ (r,c) ] = self.yellowColour
 					
 		self.grid.Set( textColour = textColour, backgroundColour = backgroundColour )
 		self.grid.Reset()
@@ -266,12 +264,11 @@ class Results( wx.Panel ):
 		self.search.SelectAll()
 		wx.CallAfter( self.search.SetFocus )
 		
-		race = Model.getRace()
-		if not race:
-			self.clearGrid()
-			return
+		with Model.LockRace() as race:
+			if not race:
+				self.clearGrid()
+				return
 		
-		with Model.lock:
 			catName = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
 			self.hbs.Layout()
 			self.category = race.categories.get( catName, None )

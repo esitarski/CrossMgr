@@ -1,13 +1,13 @@
 from __future__ import print_function
-import xlrd
+
 import os
 import itertools
-import unicodedata
 import wx
 import copy
 import wx.lib.filebrowsebutton as filebrowse
 import wx.wizard as wiz
 import Utils
+from Excel import GetExcelReader, toAscii
 
 #-----------------------------------------------------------------------------------------------------
 Fields = ['Bib#', 'LastName', 'FirstName', 'Team', 'License', 'Category', 'Tag', 'Tag2']
@@ -23,10 +23,13 @@ class FileNamePage(wiz.WizardPageSimple):
 					flag=wx.ALL, border = border )
 		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Each race must be in a separate sheet.'), flag=wx.ALL, border = border )
 		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'See documentation for examples.'), flag=wx.ALL, border = border )
+		fileMask = [
+			'Excel Worksheets (*.xlsx;*.xlsm;*.xls)|*.xlsx;*.xlsm;*.xls',
+		]
 		self.fbb = filebrowse.FileBrowseButton( self, -1, size=(450, -1),
-												labelText = 'Excel File:',
+												labelText = 'Excel Workbook:',
 												fileMode=wx.OPEN,
-												fileMask='Excel (*.xls)|*.xls' )
+												fileMask='|'.join(fileMask) )
 		vbs.Add( self.fbb, flag=wx.ALL, border = border )
 		
 		self.SetSizer( vbs )
@@ -52,8 +55,8 @@ class SheetNamePage(wiz.WizardPageSimple):
 		self.SetSizer( vbs )
 	
 	def setFileName( self, fileName ):
-		reader = readexcel( fileName )
-		self.choices = reader.book.sheet_names()
+		reader = GetExcelReader( fileName )
+		self.choices = reader.sheet_names()
 		
 		self.ch.Clear()
 		self.ch.AppendItems( self.choices )
@@ -102,7 +105,7 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		self.expectedFieldCol = copy.copy(fieldCol)
 	
 	def setFileNameSheetName( self, fileName, sheetName ):
-		reader = readexcel( fileName )
+		reader = GetExcelReader( fileName )
 		self.headers = None
 		
 		# Try to find the header columns.
@@ -234,6 +237,7 @@ class GetExcelLink( object ):
 				self.headerNamesPage.setExpectedFieldCol( excelLink.fieldCol )
 
 		self.wizard.GetPageAreaSizer().Add( self.fileNamePage )
+		self.wizard.SetPageSize( wx.Size(500,200) )
 		self.wizard.FitToPage( self.fileNamePage )
 	
 	def show( self ):
@@ -282,8 +286,8 @@ class GetExcelLink( object ):
 					try:
 						info = excelLink.read()
 						self.summaryPage.setFileNameSheetNameInfo(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName(), info)
-					except:
-						Utils.MessageOK( self.wizard, 'Problem extracting rider info.\nCheck the Excel format.' % fileName,
+					except ValueError, str:
+						Utils.MessageOK( self.wizard, 'Problem extracting rider info.\nCheck the Excel format.',
 											title='Data Error', iconMask=wx.ICON_ERROR)
 						evt.Veto()
 		
@@ -318,8 +322,8 @@ class ExcelLink( object ):
 		
 	def read( self ):
 		# Read the sheet and return the rider data.
-		reader = readexcel( self.fileName )
-		if self.sheetName not in reader.book.sheet_names():
+		reader = GetExcelReader( self.fileName )
+		if self.sheetName not in reader.sheet_names():
 			raise ValueError, "%s is not a valid sheetname" % self.sheetName
 		
 		info = {}
@@ -342,119 +346,7 @@ class ExcelLink( object ):
 
 #-----------------------------------------------------------------------------------------------------
 
-def toAscii( s ):
-	return unicodedata.normalize('NFKD', s).encode('ascii','ignore') if type(s) == unicode else str(s)
-
-class readexcel(object):
-	""" Simple OS-independent class for extracting data from an Excel File.
-
-	Uses the xlrd module (version 0.5.2 or later), supporting Excel versions:
-	2004, 2002, XP, 2000, 97, 95, 5, 4, 3
-
-	Data is extracted via iterators that return one row at a time -- either
-	as a dict or as a list. The dict generator assumes that the worksheet is
-	in tabular format with the first "data" row containing the variable names
-	and all subsequent rows containing values.
-
-	Extracted data is represented fairly logically. By default dates are
-	returned as strings in "yyyy/mm/dd" format or "yyyy/mm/dd hh:mm:ss", as
-	appropriate. However, when specifying date_as_tuple=True, dates will be
-	returned as a (Year, Month, Day, Hour, Min, Second) tuple, for usage with
-	mxDateTime or DateTime. Numbers are returned as either INT or FLOAT,
-	whichever is needed to support the data. Text, booleans, and error codes
-	are also returned as appropriate representations. Quick Example:
-
-		xls = readexcel('testdata.xls')
-		for sname in xls.book.sheet_names():
-			for row in xls.iter_dict(sname):
-				print( row )
-	"""
-	def __init__(self, filename):
-		""" Wraps an XLRD book """
-		if not os.path.isfile(filename):
-			raise ValueError, "%s is not a valid filename" % filename
-		self.book = xlrd.open_workbook(filename)
-		self.sheet_keys = {}
-		
-	def is_nonempty_row(self, sheet, i):
-		values = sheet.row_values(i)
-		if isinstance(values[0], basestring) and values[0].startswith('#'):
-			return False # ignorable comment row
-		return any( bool(v) for v in values )
-		
-	def _parse_row(self, sheet, row_index, date_as_tuple):
-		""" Sanitize incoming excel data """
-		# Data Type Codes:
-		#  EMPTY 0
-		#  TEXT 1 a Unicode string
-		#  NUMBER 2 float
-		#  DATE 3 float
-		#  BOOLEAN 4 int; 1 means TRUE, 0 means FALSE
-		#  ERROR 5
-		values = []
-		for type, value in itertools.izip(sheet.row_types(row_index), sheet.row_values(row_index)):
-			if type == 2:
-				if value == int(value):
-					value = int(value)
-			elif type == 3:
-				datetuple = xlrd.xldate_as_tuple(value, self.book.datemode)
-				if date_as_tuple:
-					value = datetuple
-				else:
-					# time only - no date component
-					if datetuple[0] == 0 and datetuple[1] == 0 and  datetuple[2] == 0:
-						value = "%02d:%02d:%02d" % datetuple[3:]
-					# date only, no time
-					elif datetuple[3] == 0 and datetuple[4] == 0 and datetuple[5] == 0:
-						value = "%04d/%02d/%02d" % datetuple[:3]
-					else: # full date
-						value = "%04d/%02d/%02d %02d:%02d:%02d" % datetuple
-			elif type == 5:
-				value = xlrd.error_text_from_code[value]
-			values.append(value)
-		return values
-
-	def _get_header( self, sheet ):
-		# parse first row, set dict keys & first_row_index
-		keys = []
-		first_row_index = None
-		for i in range(sheet.nrows):
-			if self.is_nonempty_row(sheet, i):
-				headings = self._parse_row(sheet, i, False)
-				for j, var in enumerate(headings):
-					# replace duplicate or missing headings with "ColHeader_#".
-					if not var or var in keys:
-						var = u'ColHeader_%s' % (j)
-					keys.append(var.strip() if type(var) in [str, unicode] else var)
-				first_row_index = i + 1
-				break
-		return keys, first_row_index
-
-	def get_header( self, sname = None ):
-		sheet = self.book.sheet_by_name(sname) # XLRDError
-		return self._get_header(sheet)[0]
-		
-	def iter_dict(self, sname, date_as_tuple=False):
-		""" Iterator for the worksheet's rows as dicts """
-		# parse first row, set dict keys & first_row_index
-		sheet = self.book.sheet_by_name(sname) # XLRDError
-		keys, first_row_index = self._get_header( sheet )
-		if first_row_index is None:
-			return
-
-		self.sheet_keys[sname] = keys
-		# generate a dict per data row
-		for i in range(first_row_index, sheet.nrows):
-			if self.is_nonempty_row(sheet, i):
-				yield dict( f for f in itertools.izip(keys, self._parse_row(sheet, i, date_as_tuple)) )
 				
-	def iter_list(self, sname, date_as_tuple=False):
-		""" Iterator for the worksheet's rows as lists """
-		sheet = self.book.sheet_by_name(sname) # XLRDError
-		for i in range(sheet.nrows):
-			if self.is_nonempty_row(sheet, i):
-				yield self._parse_row(sheet, i, date_as_tuple)
-
 if __name__ == '__main__':
 	print( Utils.approximateMatch("Team", "Last Name") )
 
@@ -466,9 +358,9 @@ if __name__ == '__main__':
 	app.MainLoop()
 	'''
 	reader = readexcel( 'DataSamples\\Guelph Cross PreReg SignOn-sample.xls' )
-	for s in xrange(len(reader.book.sheet_names())):
+	for s in xrange(len(reader.sheet_names())):
 		print '----------------------------------------------------------------------'
-		sheet_name = reader.book.sheet_names()[s]
+		sheet_name = reader.sheet_names()[s]
 		for r, row in enumerate(reader.iter_list(sheet_name)):
 			print r+1, ','.join( toAscii(v) for v in row )
 	'''

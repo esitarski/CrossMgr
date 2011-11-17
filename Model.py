@@ -234,7 +234,7 @@ class Entry(object):
 		self.data = copy.copy(e.data)
 		
 	def __hash__( self ):
-		return hash(e.data)
+		return hash(self.data)
 
 	@property
 	def t(self):		return self.data[0]

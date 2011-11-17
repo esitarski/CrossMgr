@@ -6,10 +6,10 @@ import  Model
 
 def getRaceCategories():
 	# Get all the categories available to print.
-	race = Model.getRace()
-	if race is None:
-		return []
-	categories = [ c.name for c in race.getCategories() if race.hasCategory(c.name) ]
+	with Model.LockRace() as race:
+		if race is None:
+			return []
+		categories = [ c.name for c in race.getCategories() if race.hasCategory(c.name) ]
 	categories.append( 'All' )
 	return categories
 
@@ -45,23 +45,16 @@ class CrossMgrPrintout(wx.Printout):
 		return (1, numCategories, 1, numCategories)
 
     def OnPrintPage(self, page):
-		race = Model.getRace()
-		if race is None:
-			return
-
-		iCat = page - 1
-			
+		iCat = page - 1			
 		categories = getRaceCategories()		
 		if iCat >= len(categories):
-			return
+			return False
 
 		dc = self.GetDC()
 		export = ExportGrid()
 
 		catName = categories[iCat]
-		#export.setResults( catName )
 		export.setResultsOneList( catName )
 
 		export.drawToFitDC( dc )
-
 		return True

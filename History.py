@@ -152,7 +152,7 @@ class History( wx.Panel ):
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
 				('Results', 	wx.NewId(), self.OnPopupResults, allCases),
-				('Rider Detail',wx.NewId(), self.OnPopupRiderDetail, allCases),
+				('RiderDetail',wx.NewId(), self.OnPopupRiderDetail, allCases),
 				
 				('Correct...',	wx.NewId(), self.OnPopupCorrect, interpCase),
 				('Split...',	wx.NewId(), self.OnPopupSplit, nonInterpCase),
@@ -186,20 +186,32 @@ class History( wx.Panel ):
 
 			
 	def OnPopupSwapBefore( self, event ):
-		if hasattr(self, 'rowPopup'):
-			c, r, h = self.colPopup, self.rowPopup, self.history
+		if not hasattr(self, 'rowPopup'):
+			return
+		c, r, h = self.colPopup, self.rowPopup, self.history
+		success = False
+		with Model.LockRace() as race:
 			for rPrev in xrange( r - 1, -1, -1 ):
-				if not h[c][rPrev].interp and (self.category is None or Model.race.getCategory(h[c][rPrev]) == self.category):
-					SwapEntry( self, h[c][r], h[c][rPrev] )
+				if not h[c][rPrev].interp and (self.category is None or race.getCategory(h[c][rPrev].num) == self.category):
+					SwapEntry( h[c][r], h[c][rPrev] )
+					success = True
 					break
+		if success and Utils.isMainWin():
+			Utils.getMainWin().refresh()
 		
 	def OnPopupSwapAfter( self, event ):
-		if hasattr(self, 'rowPopup'):
-			c, r, h = self.colPopup, self.rowPopup, self.history
+		if not hasattr(self, 'rowPopup'):
+			return
+		c, r, h = self.colPopup, self.rowPopup, self.history
+		success = False
+		with Model.LockRace() as race:
 			for rNext in xrange( r + 1, len(h[c]) ):
-				if not h[c][rNext].interp and (self.category is None or Model.race.getCategory(h[c][rNext]) == self.category):
-					SwapEntry( self, h[c][r], h[c][rNext] )
+				if not h[c][rNext].interp and (self.category is None or race.getCategory(h[c][rNext].num) == self.category):
+					SwapEntry( h[c][r], h[c][rNext] )
+					success = True
 					break
+		if success and Utils.isMainWin():
+			Utils.getMainWin().refresh()
 			
 	def OnPopupCorrect( self, event ):
 		if hasattr(self, 'rowPopup'):
@@ -219,35 +231,36 @@ class History( wx.Panel ):
 			
 	def OnPopupRiderDetail( self, event ):
 		if Utils.isMainWin():
-			Utils.getMainWin().showPageName( 'Rider Detail' )
+			Utils.getMainWin().showPageName( 'RiderDetail' )
 		
 	def onShowTimes( self, event ):
-		self.showTimes = not self.showTimes
+		self.showTimes ^= True
 		self.refresh()
 		
 	def onShowLapTimes( self, event ):
-		self.showLapTimes = not self.showLapTimes
+		self.showLapTimes ^= True
 		self.refresh()
 		
 	def onShowTimeDown( self, event ):
-		self.showTimeDown = not self.showTimeDown
+		self.showTimeDown ^= True
 		self.refresh()
 		
 	def updateColours( self ):
 		self.textColour = {}
-		self.backgroundColour = {}
-		for c in xrange(self.grid.GetNumberCols()):
-			for r in xrange(self.grid.GetNumberRows()):
-				value = self.grid.GetCellValue( r, c )
-				if not value:
-					break	
-				
-				cellNum = value.split('=')[0]
-				if cellNum == self.numSelect:
-					self.textColour[ (r,c) ] = self.whiteColour
-					self.backgroundColour[ (r,c) ] = self.blackColour if (r,c) not in self.rcInterp else self.greyColour
-				elif (r, c) in self.rcInterp:
-					self.backgroundColour[ (r,c) ] = self.yellowColour
+		self.backgroundColour = dict( ((rc, self.yellowColour) for rc in self.rcInterp ) )
+		if not self.history:
+			return
+		try:
+			nSelect = int(self.numSelect)
+		except (TypeError, ValueError):
+			return
+		for c, h in enumerate(self.history):
+			try:
+				r = (r for r, e in enumerate(h) if e.num == nSelect).next()
+				self.textColour[ (r,c) ] = self.whiteColour
+				self.backgroundColour[ (r,c) ] = self.blackColour if (r,c) not in self.rcInterp else self.greyColour
+			except StopIteration:
+				pass
 		
 	def showNumSelect( self ):
 		self.updateColours()
@@ -308,7 +321,6 @@ class History( wx.Panel ):
 		self.history = None
 		self.category = None
 		self.rcInterp = set()
-		race = Model.race
 		
 		self.search.SelectAll()
 		wx.CallAfter( self.search.SetFocus )
@@ -352,8 +364,6 @@ class History( wx.Panel ):
 				self.clearGrid()
 				return
 
-			self.isEmpty = False
-				
 			# Organize all the entries into a grid as we would like to see them.
 			self.history = [ [] ]
 			numSeen = set()
@@ -366,6 +376,21 @@ class History( wx.Panel ):
 				self.history[lapCur].append( e )
 				numSeen.add( e.num )
 			
+			category = race.categories.get( catName, None )
+			self.category = category
+				
+			# Trim out elements not in the desired category.
+			if category:
+				for c in xrange(len(self.history)):
+					self.history[c] = [e for e in self.history[c] if race.getCategory(e.num) == category]
+			
+			if not any( h for h in self.history ):
+				self.clearGrid()
+				return
+			
+			# Show the values.
+			self.isEmpty = False
+				
 			colnames = []
 			raceTime = 0
 			for c, h in enumerate(self.history):
@@ -376,15 +401,6 @@ class History( wx.Panel ):
 													Utils.formatTime(lapTime),
 													Utils.formatTime(raceTime)) )
 			
-			category = race.categories.get( catName, None )
-			self.category = category
-			if category is not None:
-				def match( num ):
-					return race.getCategory(num) == category
-			else:
-				def match( num ):
-					return True
-				
 			leaderTimes, leaderNums = race.getLeaderTimesNums()
 			
 			formatStr = ['$num']
@@ -401,8 +417,8 @@ class History( wx.Panel ):
 						'raceTime':	Utils.formatTime(e.t) if self.showTimes else '',
 						'lapTime':	Utils.formatTime(e.t - numTimes[(e.num,e.lap-1)]) if self.showLapTimes else '',
 						'downTime':	Utils.formatTime(e.t - leaderTimes[col+1])
-					} ) for e in h if match(e.num) ] )
-				self.rcInterp.update( (row, col) for row, e in enumerate(h) if e.interp and match(e.num) )
+					} ) for e in h] )
+				self.rcInterp.update( (row, col) for row, e in enumerate(h) if e.interp )
 
 			self.grid.Set( data = data, colnames = colnames )
 			self.grid.AutoSizeColumns( True )

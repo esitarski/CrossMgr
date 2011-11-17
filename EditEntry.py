@@ -56,7 +56,6 @@ class CorrectNumberDialog( wx.Dialog ):
 			with Model.LockRace() as race:
 				race.deleteTime( self.entry.num, self.entry.t )
 				race.addTime( num, t )
-				race.resetCache()
 			mainWin = Utils.getMainWin()
 			if mainWin:
 				mainWin.refresh()
@@ -129,8 +128,6 @@ class SplitNumberDialog( wx.Dialog ):
 			if self.entry.num != num2:
 				race.addTime( num2, self.entry.t + 0.001 )	# Add a little extra time to keep the sequence
 			
-			race.resetCache()
-			
 		mainWin = Utils.getMainWin()
 		if mainWin:
 			mainWin.refresh()
@@ -163,8 +160,9 @@ def DeleteEntry( parent, entry ):
 							wx.OK | wx.CANCEL | wx.ICON_QUESTION )
 	# dlg.CentreOnParent(wx.BOTH)
 	if dlg.ShowModal() == wx.ID_OK:
-		race = Model.getRace()
-		race.deleteTime( entry.num, entry.t )
+		with Model.LockRace() as race:
+			if race:
+				race.deleteTime( entry.num, entry.t )
 		mainWin = Utils.getMainWin()
 		if mainWin:
 			mainWin.refresh()
@@ -172,7 +170,7 @@ def DeleteEntry( parent, entry ):
 	dlg.Destroy()
 	
 @logCall
-def SwapEntry( parent, a, b ):
+def SwapEntry( a, b ):
 	race = Model.race
 	if not race:
 		return
@@ -180,10 +178,6 @@ def SwapEntry( parent, a, b ):
 	race.addTime( b.num, a.t )
 	race.deleteTime( a.num, a.t )
 	race.deleteTime( b.num, b.t )
-	mainWin = Utils.getMainWin()
-	if mainWin:
-		mainWin.refresh()
-		mainWin.writeRace()
 
 def DoStatusChange( parent, num, message, title, newStatus ):
 	if num is None or not Utils.MessageOKCancel(parent, message % num, title):

@@ -59,7 +59,7 @@ class Recommendations( wx.Panel ):
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
 				('Results', 	wx.NewId(), self.OnPopupResults),
-				('Rider Detail',wx.NewId(), self.OnPopupRiderDetail),
+				('RiderDetail',wx.NewId(), self.OnPopupRiderDetail),
 				
 				('Correct...',	wx.NewId(), self.OnPopupCorrect),
 				('Split...',	wx.NewId(), self.OnPopupSplit),
@@ -107,7 +107,7 @@ class Recommendations( wx.Panel ):
 	def doNumDrilldown( self, event ):
 		self.doNumSelect( event )
 		if self.numSelect is not None and Utils.isMainWin():
-			Utils.getMainWin().showPageName( 'Rider Detail' )
+			Utils.getMainWin().showRiderDetail()
 	
 	def getCellNum( self, row, col ):
 		numSelect = None

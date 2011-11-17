@@ -161,172 +161,172 @@ class ExportGrid( object ):
 	def setResultsOneListRiderTimes( self, catName = 'All' ):
 		''' Add the lap times to the setResultsOneList output. '''
 		self.setResultsOneList( catName )
-		race = Model.getRace()
+		with Model.LockRace() as race:
 		
-		# Get the category start offset.
-		category = race.categories.get( catName, None )
-		startOffsetSecs = category.getStartOffsetSecs() if category is not None else 0.0
-		
-		raceLaps = race.getRaceLaps()
-		entries = race.interpolateLap( raceLaps )
-		
-		numTimes = {}
-		for e in entries:
-			if e.lap == 0:
-				c = race.getCategory( e.num )
+			# Get the category start offset.
+			category = race.categories.get( catName, None )
+			startOffsetSecs = category.getStartOffsetSecs() if category is not None else 0.0
+			
+			raceLaps = race.getRaceLaps()
+			entries = race.interpolateLap( raceLaps )
+			
+			numTimes = {}
+			for e in entries:
+				if e.lap == 0:
+					c = race.getCategory( e.num )
+					try:
+						startOffset = c.getStartOffsetSecs()
+					except AttributeError:
+						startOffset = 0.0
+					numTimes[(e.num, 0)] = startOffset
+				else:
+					numTimes[(e.num, e.lap)] = e.t
+			
+			entries = [e for e in entries if e.t > 0]
+			entries.sort( key = lambda x : (x.num, x.t) )
+			
+			# Record the rider times per lap.
+			riderTimes = {}
+			for e in entries:
+				riderTimes.setdefault( e.num, [] ).append( e.t - numTimes[(e.num, e.lap-1)] )
+
+			positionCol = self.colnames.index('Position')
+			bibCol      = self.colnames.index('Bib#')
+			lapTimesCol = len(self.colnames)
+			for row in xrange(len(self.data[0])):
+				# Only print times for placed riders.
 				try:
-					startOffset = c.getStartOffsetSecs()
-				except AttributeError:
-					startOffset = 0.0
-				numTimes[(e.num, 0)] = startOffset
-			else:
-				numTimes[(e.num, e.lap)] = e.t
-		
-		entries = [e for e in entries if e.t > 0]
-		entries.sort( key = lambda x : (x.num, x.t) )
-		
-		# Record the rider times per lap.
-		riderTimes = {}
-		for e in entries:
-			riderTimes.setdefault( e.num, [] ).append( e.t - numTimes[(e.num, e.lap-1)] )
+					p = int(self.data[positionCol][row])
+				except (IndexError, ValueError):
+					continue
+				num = self.data[bibCol][row]
+				for i, t in enumerate( riderTimes.get(int(num), []) ):
+					self._setRC( row, lapTimesCol + i, Utils.formatTime(t) )
 
-		positionCol = self.colnames.index('Position')
-		bibCol      = self.colnames.index('Bib#')
-		lapTimesCol = len(self.colnames)
-		for row in xrange(len(self.data[0])):
-			# Only print times for placed riders.
-			try:
-				p = int(self.data[positionCol][row])
-			except (IndexError, ValueError):
-				continue
-			num = self.data[bibCol][row]
-			for i, t in enumerate( riderTimes.get(int(num), []) ):
-				self._setRC( row, lapTimesCol + i, Utils.formatTime(t) )
-
-		self.colnames += ['Lap %d' % lap for lap in xrange(1,len(self.data)-lapTimesCol+1)]
+			self.colnames += ['Lap %d' % lap for lap in xrange(1,len(self.data)-lapTimesCol+1)]
 				
 	def setResults( self, catName ):
-		race = Model.getRace()
-		self.title = 'Race: '+ race.name + '\n' + Utils.formatDate(race.date) + '\nCategory: ' + catName
-		self.colnames, results, dnf, dns, dq = race.getResults( catName )
-		
-		# Format the results.
-		self.data = []
-		pos = 1
-		for col, d in enumerate(results):
-			self.data.append( [str(e.num) + ' (' + str(row+pos) + ')' for row, e in enumerate(d)] )
-			pos += len(d)
-		
-		if dnf:
-			self.colnames.append( 'DNF' )
-			self.data.append( [str(e[0]) for e in dnf] )
-		
-		if dns:
-			self.colnames.append( 'DNS' )
-			self.data.append( [str(e[0]) for e in dns] )
-		
-		if dq:
-			self.colnames.append( 'NP' )
-			self.data.append( [str(e[0]) for e in dq] )
+		with Model.LockRace() as race:
+			self.title = 'Race: '+ race.name + '\n' + Utils.formatDate(race.date) + '\nCategory: ' + catName
+			self.colnames, results, dnf, dns, dq = race.getResults( catName )
+			
+			# Format the results.
+			self.data = []
+			pos = 1
+			for col, d in enumerate(results):
+				self.data.append( [str(e.num) + ' (' + str(row+pos) + ')' for row, e in enumerate(d)] )
+				pos += len(d)
+			
+			if dnf:
+				self.colnames.append( 'DNF' )
+				self.data.append( [str(e[0]) for e in dnf] )
+			
+			if dns:
+				self.colnames.append( 'DNS' )
+				self.data.append( [str(e[0]) for e in dns] )
+			
+			if dq:
+				self.colnames.append( 'NP' )
+				self.data.append( [str(e[0]) for e in dq] )
 	
 	def setResultsOneList( self, catName ):
-		race = Model.getRace()
-		self.title = 'Race: '+ race.name + '\n' + Utils.formatDate(race.date) + '\nCategory: ' + catName
-		
-		colnames, results, dnf, dns, dq = race.getResults( catName )
-
-		self.data	= []
-		self.colnames = []
-		
-		if not any([colnames, results, dnf, dns, dq]):
-			return
-		
-		position	= []
-		number		= []
-		laps		= []
-		finishTime	= []
-		gap			= []
-		notes		= []
-		
-		leaderLaps = int(colnames[0])
-		leaderTime = results[0][0].t
-
-		if results:
-			pos = 1
-			for col, c in enumerate(results):
-				lapsCompleted = int(colnames[col])
-				number.extend( e.num for e in c )
-				notes.extend( 'OTL' if race[e.num].isPulled() else ' ' for e in c )
-				position.extend( p for p in xrange(pos, pos+len(c)) )
-				
-				# Don't show riders a lap down unless they really were lapped by their race leader.
-				laps.extend( lapsCompleted if col == 0 or e.t > leaderTime else leaderLaps + lapsCompleted for e in c )
-				
-				finishTime.extend( Utils.formatTime(e.t) for e in c )
-				pos += len(c)
-			if finishTime:
-				leaderTime = Utils.StrToSeconds( finishTime[0] )
-				leaderLaps = int(laps[0])
-				gap.append( ' ' )
-				for row in xrange(1, len(finishTime)):
-					riderLaps = int(laps[row])
-					if riderLaps != leaderLaps:
-						break
-					riderTime = Utils.StrToSeconds( finishTime[row] )
-					gap.append( Utils.SecondsToMMSS(riderTime - leaderTime) )
-	
-		if dnf:
-			number.extend( str(n) for n, t in dnf )
-			position.extend( ['DNF'] * len(dnf) )
-
-		if dns:
-			number.extend( str(n) for n, t in dns )
-			position.extend( ['DNS'] * len(dns) )
-
-		if dq:
-			number.extend( str(n) for n, t in dq )
-			position.extend( ['NP'] * len(dq) )
-
-		# Get linked information.
-		linkedCol = []
-		linkedInfo = []
-		try:
-			info = race.excelLink.read()
-			for f in Fields:
-				if f in IgnoreFields or not race.excelLink.hasField(f):
-					continue
-				linkedCol.append( f )
-				d = []
-				for n in number:
-					try:
-						d.append( info[n][f] )
-					except KeyError:
-						d.append( ' ' )
-				linkedInfo.append( d )
-		except (AttributeError, IOError, ValueError):
-			pass
-		
-		# Reformat the laps to show negative laps as Dn #
-		# laps = [str(lap) if lap > 0 else 'Dn ' + str(-lap) for lap in laps]
-		
-		# Don't change these names without checking setResultsOneListRiderTimes!
-		self.colnames = ['Position', 'Bib#', 'Laps', 'Finish Time', 'Gap', 'Note']
-		self.data = [position, number, laps, finishTime, gap, notes]
-		self.colnames[2:2] = linkedCol
-		self.data[2:2] = linkedInfo
-		self.leftJustifyCols = set( xrange(2, 2+len(linkedCol)) )
-
-		# Remove the gap column if empty.
-		if not gap:
-			col = self.colnames.index('Gap')
-			del self.colnames[col]
-			del self.data[col]
+		with Model.LockRace() as race:
+			self.title = 'Race: '+ race.name + '\n' + Utils.formatDate(race.date) + '\nCategory: ' + catName
 			
-		# Remove the notes column if empty.
-		if not any( n != ' ' for n in notes ):
-			col = self.colnames.index('Note')
-			del self.colnames[col]
-			del self.data[col]
+			colnames, results, dnf, dns, dq = race.getResults( catName )
+
+			self.data	= []
+			self.colnames = []
+			
+			if not any([colnames, results, dnf, dns, dq]):
+				return
+			
+			position	= []
+			number		= []
+			laps		= []
+			finishTime	= []
+			gap			= []
+			notes		= []
+			
+			leaderLaps = int(colnames[0])
+			leaderTime = results[0][0].t
+
+			if results:
+				pos = 1
+				for col, c in enumerate(results):
+					lapsCompleted = int(colnames[col])
+					number.extend( e.num for e in c )
+					notes.extend( 'OTL' if race[e.num].isPulled() else ' ' for e in c )
+					position.extend( p for p in xrange(pos, pos+len(c)) )
+					
+					# Don't show riders a lap down unless they really were lapped by their race leader.
+					laps.extend( lapsCompleted if col == 0 or e.t > leaderTime else leaderLaps + lapsCompleted for e in c )
+					
+					finishTime.extend( Utils.formatTime(e.t) for e in c )
+					pos += len(c)
+				if finishTime:
+					leaderTime = Utils.StrToSeconds( finishTime[0] )
+					leaderLaps = int(laps[0])
+					gap.append( ' ' )
+					for row in xrange(1, len(finishTime)):
+						riderLaps = int(laps[row])
+						if riderLaps != leaderLaps:
+							break
+						riderTime = Utils.StrToSeconds( finishTime[row] )
+						gap.append( Utils.SecondsToMMSS(riderTime - leaderTime) )
+		
+			if dnf:
+				number.extend( str(n) for n, t in dnf )
+				position.extend( ['DNF'] * len(dnf) )
+
+			if dns:
+				number.extend( str(n) for n, t in dns )
+				position.extend( ['DNS'] * len(dns) )
+
+			if dq:
+				number.extend( str(n) for n, t in dq )
+				position.extend( ['NP'] * len(dq) )
+
+			# Get linked information.
+			linkedCol = []
+			linkedInfo = []
+			try:
+				info = race.excelLink.read()
+				for f in Fields:
+					if f in IgnoreFields or not race.excelLink.hasField(f):
+						continue
+					linkedCol.append( f )
+					d = []
+					for n in number:
+						try:
+							d.append( info[n][f] )
+						except KeyError:
+							d.append( ' ' )
+					linkedInfo.append( d )
+			except (AttributeError, IOError, ValueError):
+				pass
+			
+			# Reformat the laps to show negative laps as Dn #
+			# laps = [str(lap) if lap > 0 else 'Dn ' + str(-lap) for lap in laps]
+			
+			# Don't change these names without checking setResultsOneListRiderTimes!
+			self.colnames = ['Position', 'Bib#', 'Laps', 'Finish Time', 'Gap', 'Note']
+			self.data = [position, number, laps, finishTime, gap, notes]
+			self.colnames[2:2] = linkedCol
+			self.data[2:2] = linkedInfo
+			self.leftJustifyCols = set( xrange(2, 2+len(linkedCol)) )
+
+			# Remove the gap column if empty.
+			if not gap:
+				col = self.colnames.index('Gap')
+				del self.colnames[col]
+				del self.data[col]
+				
+			# Remove the notes column if empty.
+			if not any( n != ' ' for n in notes ):
+				col = self.colnames.index('Note')
+				del self.colnames[col]
+				del self.data[col]
 			
 	def toHTML( self, html ):
 		pass

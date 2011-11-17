@@ -9,7 +9,7 @@ def UpdateSetNum( num ):
 		return
 	mainWin = Utils.getMainWin()
 	mainWin.setNumSelect( num )
-	mainWin.showPageName( 'Rider Detail' )
+	mainWin.showRiderDetail()
 
 def GetNowTime():
 	race = Model.getRace()

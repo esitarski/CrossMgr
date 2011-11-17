@@ -71,9 +71,6 @@ def Server( q, HOST, PORT, startTime ):
 		
 		q.put( ('connected',) )
 		
-		# Send the command to start sending data.
-		socketSend( conn, 'S00000\n' )
-			
 		for line in socketByLine( conn ):
 			if not line:
 				continue
@@ -115,6 +112,9 @@ def Server( q, HOST, PORT, startTime ):
 					q.put( ('data', tag, t) )
 				elif line[0] == 'N':
 					q.put( ('name', line[5:].strip()) )
+					# Send the command to start sending data.
+					socketSend( conn, 'S00000\n' )
+			
 			except (ValueError, KeyError):
 				pass
 				
