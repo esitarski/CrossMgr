@@ -450,14 +450,16 @@ class MainWin( wx.Frame ):
 
 	@logCall
 	def menuLinkExcel( self, event ):
+		if not Model.race:
+			Utils.MessageOK(self, "You must have a vaid race.", "Link ExcelSheet", iconMask=wx.ICON_ERROR)
+			return
+		gel = GetExcelLink( self, getattr(Model.race, 'excelLink', None) )
+		link = gel.show()
 		with Model.LockRace() as race:
-			if not race:
-				Utils.MessageOK(self, "You must have a vaid race.", "Link ExcelSheet", iconMask=wx.ICON_ERROR)
-				return
-			gel = GetExcelLink( self, getattr(race, 'excelLink', None) )
-			race.excelLink = gel.show()
-			if not race.excelLink:
+			if not link:
 				del race.excelLink
+			else:
+				race.excelLink = link
 		self.writeRace()
 		
 	#--------------------------------------------------------------------------------------------
