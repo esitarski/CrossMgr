@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import xlrd
+import xml.etree.ElementTree
 from openpyxl.reader.excel import load_workbook
 import os
 import itertools
