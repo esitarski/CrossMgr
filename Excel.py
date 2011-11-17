@@ -87,18 +87,15 @@ class ReadExcelXlsx( ReadExcelBase ):
 		ReadExcelBase.__init__( self, filename )
 		if not os.path.isfile(filename):
 			raise ValueError, "%s is not a valid filename" % filename
-		#self.book = load_workbook( filename = filename, use_iterators = True )
-		self.book = load_workbook( filename = filename )
+		self.book = load_workbook( filename = filename, use_iterators = True )
 		
 	def sheet_names( self ):
 		return self.book.get_sheet_names()
 	
 	def iter_list(self, sname):
 		sheet = self.book.get_sheet_by_name( sname )
-		rowMax = sheet.get_highest_row()
-		colMax = sheet.get_highest_column()
-		for row in xrange(1, rowMax+1):
-			r = [toAscii(sheet.cell(row=row, column=col).value) for col in xrange(1, colMax+1)]
+		for row in sheet.iter_rows():
+			r = [toAscii(cell.internal_value) for cell in row]
 			if any( f for f in r ):
 				yield r
 

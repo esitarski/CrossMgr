@@ -18,13 +18,19 @@
 # --------------------------------------------------------------------------------- #
 
 """
-RoundButton is another custom-drawn button class which draws buttons that look like round glass.
+RoundButton is a custom-drawn button class which draws round buttons that look like they are made of glass.
 
 
 Description
 ===========
 
-RoundButton is another custom-drawn button class which draws buttons that look like round glass.
+RoundButton is a custom-drawn button class which draws round buttons that look like they are made of glass.
+Gradient fills are used extensively, both linear and radially to create the 3d effect.
+As no bitmaps are required, RoundButtons can be used to display any sized text.
+
+Yes, they take up a lot of space, but RoundButtons create a dramatic sense of importance to what happens after they are pressed.
+
+Use with care.  Lives might be at stake.
 
 Supported Platforms
 ===================
@@ -57,9 +63,9 @@ License And Version
 
 RoundButton is distributed under the wxPython license.
 
-Latest Revision: Edward Sitarski @ 27 Nov 2011, 17.00 GMT
+Latest Revision: Edward Sitarski @ 27 Nov 2011, 17.00 EST
 
-Version 0.3
+Version 0.1
 
 """
 
@@ -105,7 +111,7 @@ class RoundButtonEvent(wx.PyCommandEvent):
 class RoundButton(wx.PyControl):
 	""" This is the main class implementation of L{RoundButton}. """
 	
-	def __init__(self, parent, id=wx.ID_ANY, bitmap=None, label="", pos=wx.DefaultPosition,
+	def __init__(self, parent, id=wx.ID_ANY, label="", pos=wx.DefaultPosition,
 				 size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
 				 name="roundbutton"):
 		"""
@@ -113,7 +119,6 @@ class RoundButton(wx.PyControl):
 
 		:param `parent`: the L{RoundButton} parent;
 		:param `id`: window identifier. A value of -1 indicates a default value;
-		:param `bitmap`: the button bitmap (if any);
 		:param `label`: the button text label;
 		:param `pos`: the control position. A value of (-1, -1) indicates a default position,
 		 chosen by either the windowing system or wxPython, depending on platform;
@@ -141,9 +146,8 @@ class RoundButton(wx.PyControl):
 		self.Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDown)
 
 		self._mouseAction = None
-		self._bitmap = bitmap
 		self._hasFocus = False
-		self._buttonRadius = 10
+		self._buttonRadius = 0
 		
 		self.SetLabel(label)
 		self.InheritAttributes()
@@ -160,10 +164,15 @@ class RoundButton(wx.PyControl):
 		self.Refresh()
 
 		
-	def ContainsEvent( self, event ):
-		rect = self.GetClientRect()
-		x = rect.GetX() + rect.GetWidth() / 2
-		y = rect.GetY() + rect.GetHeight() / 2
+	def _containsEvent( self, event ):
+		"""
+		Checks that the event occured in the L{RoundButton} circle.
+
+		:param `event`: a `wx.MouseEvent` event.
+		"""
+		x, y, width, height = self.GetClientRect()
+		x += width // 2
+		y += height // 2
 		px, py = event.GetPosition().Get()
 		dx = px - x
 		dy = py - y
@@ -176,7 +185,7 @@ class RoundButton(wx.PyControl):
 		:param `event`: a `wx.MouseEvent` event to be processed.
 		"""
 
-		if not self.IsEnabled() or not self.ContainsEvent(event):
+		if not self.IsEnabled() or not self._containsEvent(event):
 			return
 		
 		self._mouseAction = CLICK
@@ -198,7 +207,7 @@ class RoundButton(wx.PyControl):
 		if self.HasCapture():
 			self.ReleaseMouse()
 			
-		if self.ContainsEvent(event):
+		if self._containsEvent(event):
 			self._mouseAction = HOVER
 			self.Notify()
 		else:
@@ -358,15 +367,8 @@ class RoundButton(wx.PyControl):
 		dc.SetFont(self.GetFont())
 		retWidth, retHeight = dc.GetTextExtent(label)
 		
-		bmpWidth = bmpHeight = 0
-		constant = 15
-		if self._bitmap:
-			bmpWidth, bmpHeight = self._bitmap.GetWidth()+10, self._bitmap.GetHeight()
-			retWidth += bmpWidth
-			retHeight = max(bmpHeight, retHeight)
-			constant = 15
-
-		return wx.Size(retWidth+constant, retHeight+constant) 
+		width = int(max(retWidth, retHeight) * 1.5)
+		return wx.Size(width, width) 
 
 
 	def SetDefault(self):
@@ -386,7 +388,7 @@ class RoundButton(wx.PyControl):
 		
 	def SetFontToFitLabel(self, font = None):
 		''' Sets the internal font size so that the label will fit on the button.'''
-		''' font parameter is used to get the font specificiation only - its size does not matter. '''
+		''' font parameter is used to get the font specificiation only - the size does not matter. '''
 		''' If no font parameter is given, the current font is used. '''
 		label = self.GetLabel().strip()
 		if not label:
@@ -503,16 +505,18 @@ class RoundButton(wx.PyControl):
 		drawCircle( xCenter, yCenter, rSmaller )
 		self._buttonRadius = rSmaller
 		
-		# Draw the flare at the top of the button.
+		# Draw the flare at the top of the button (a shaded ellipse with a linear gradient).
 		gc.SetBrush( gc.CreateLinearGradientBrush(
 						xCenter - rSmaller, yCenter - rSmaller,
 						xCenter - rSmaller, yCenter,
 						am.LightColour(colour, 40.0), am.LightColour(colour, 30.0)) )
-		rWidth = (rSmaller * 2.0 * 0.7) * 0.9
-		rHeight = (rSmaller * 0.8) * 0.9
+						
+		# Magic constants to get things to look right.
+		rWidth = rSmaller * (2.0 * 0.7 * 0.9)
+		rHeight = rSmaller * (0.8 * 0.9)
 		gc.DrawEllipse( xCenter - rWidth / 2, yCenter - rSmaller, rWidth, rHeight )
 		
-		# Draw an outline around the body.
+		# Draw an outline around the button body.
 		# Also covers up the gap between the flare and the top edge of the button.
 		gc.SetPen( wx.Pen(wx.Colour(50,50,50), r * 0.025) )
 		gc.SetBrush( wx.TRANSPARENT_BRUSH )
@@ -533,71 +537,49 @@ class RoundButton(wx.PyControl):
 		
 		
 if __name__ == '__main__':
+
+	# Self-test.
 	app = wx.PySimpleApp()
 	mainWin = wx.Frame(None,title="roundbutton", size=(1024,600))
-	mainWin.SetMinSize( wx.Size(1025,600) )
 	mainWin.SetBackgroundColour( wx.WHITE )
-	hs = wx.GridSizer( 2, 4, 4, 4 )
-	hs.SetMinSize( wx.Size(1024, 600) )
+	vs = wx.BoxSizer( wx.VERTICAL )
+	hs = wx.BoxSizer( wx.HORIZONTAL )
+	vs.Add( hs )
 	
-	btns = []
+	# Pure colours seem to work best as they approximate the jewel tones of coloured glass.
+	btnDefs = [
+		# Label				# Colour				# Use bold Font?
+		['GO',				wx.Colour(0,128,0),		True ],
+		['STOP',			wx.Colour(128,0,0),		True ],
+		['SLOW',			wx.Colour(100,100,0),	True ],
+		['PANIC',			wx.Colour(128,0,0),		True ],
+		['ENGINE\nSTART',	wx.Colour(0,128, 0),	False ],
+		['Manual\nOverride',wx.Colour(0,0,128),		False ],
+		['Reload',			wx.Colour(0,128,128),	False ],
+		['LAUNCH',			wx.Colour(128,0,128),	False ],
+	]
 	
-	fontPixels = 60
-	font = wx.FontFromPixelSize((0,fontPixels), wx.DEFAULT, wx.NORMAL, weight=wx.FONTWEIGHT_BOLD)
+	btnSize = 150
+
+	# The font size does not matter here - we just it for the properties.
+	boldFont = wx.FFontFromPixelSize((0,32), wx.DEFAULT, flags=wx.FONTFLAG_BOLD)	
 	
-	btnSize = 250
+	for i, (label, colour, boldFlag) in enumerate(btnDefs):
+		btn = RoundButton(mainWin, wx.ID_ANY, label, size=(btnSize, btnSize))
+		btn.SetBackgroundColour( wx.WHITE )
+		btn.SetForegroundColour( colour )
+		
+		# Call SetFontToFitLabel after setting the size of the button.
+		if boldFlag:
+			btn.SetFontToFitLabel( boldFont )
+		else:
+			btn.SetFontToFitLabel()	# Use the button's default font, but change the font size to fit the label.
+		if i and i % 4 == 0:
+			hs = wx.BoxSizer( wx.HORIZONTAL )
+			vs.Add( hs )
+		hs.Add( btn, flag=wx.ALL, border = 4 )
 	
-	btn = RoundButton(mainWin, wx.ID_ANY, None, 'GO', size=(btnSize, btnSize))
-	btn.SetBackgroundColour( wx.WHITE )
-	btn.SetForegroundColour( wx.Colour(0,128,0) )
-	btn.SetFontToFitLabel( font )
-	btns.append( btn )
-	
-	btn = RoundButton(mainWin, wx.ID_ANY, None, 'STOP', size=(btnSize, btnSize))
-	btn.SetBackgroundColour( wx.WHITE )
-	btn.SetForegroundColour( wx.Colour(128,0,0) )
-	btn.SetFontToFitLabel( font )
-	btns.append( btn )
-
-	btn = RoundButton(mainWin, wx.ID_ANY, None, 'SLOW', size=(btnSize, btnSize))
-	btn.SetBackgroundColour( wx.WHITE )
-	btn.SetForegroundColour( wx.Colour(100,100,0) )
-	btn.SetFontToFitLabel( font )
-	btns.append( btn )
-
-	btn = RoundButton(mainWin, wx.ID_ANY, None, 'HELP', size=(btnSize, btnSize))
-	btn.SetBackgroundColour( wx.WHITE )
-	btn.SetForegroundColour( wx.Colour(128,0,0) )
-	btn.SetFontToFitLabel( font )
-	btns.append( btn )
-
-	btn = RoundButton(mainWin, wx.ID_ANY, None, 'ENGINE\nSTART', size=(btnSize, btnSize))
-	btn.SetBackgroundColour( wx.WHITE )
-	btn.SetForegroundColour( wx.Colour(0,128,0) )
-	btn.SetFontToFitLabel()
-	btns.append( btn )
-
-	btn = RoundButton(mainWin, wx.ID_ANY, None, 'ACTIVATE\nSHIELDS', size=(btnSize, btnSize))
-	btn.SetBackgroundColour( wx.WHITE )
-	btn.SetForegroundColour( wx.Colour(0,0,128) )
-	btn.SetFontToFitLabel()
-	btns.append( btn )
-
-	btn = RoundButton(mainWin, wx.ID_ANY, None, 'SELF\nDESTRUCT', size=(btnSize, btnSize))
-	btn.SetBackgroundColour( wx.WHITE )
-	btn.SetForegroundColour( wx.Colour(0,128,128) )
-	btn.SetFontToFitLabel()
-	btns.append( btn )
-
-	btn = RoundButton(mainWin, wx.ID_ANY, None, 'LAUNCH', size=(btnSize, btnSize))
-	btn.SetBackgroundColour( wx.WHITE )
-	btn.SetForegroundColour( wx.Colour(128,0,128) )
-	btn.SetFontToFitLabel()
-	btns.append( btn )
-
-	hs.AddMany( btns )
-	
-	mainWin.SetSizer( hs )
+	mainWin.SetSizer( vs )
 	mainWin.Show()
 	app.MainLoop()
 
