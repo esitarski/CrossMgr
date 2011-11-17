@@ -227,7 +227,7 @@ class GetExcelLink( object ):
 		wiz.WizardPageSimple_Chain( self.sheetNamePage, self.headerNamesPage )
 		wiz.WizardPageSimple_Chain( self.headerNamesPage, self.summaryPage )
 
-		self.excelLink = excelLink		
+		self.excelLink = excelLink
 		if excelLink:
 			if excelLink.fileName:
 				self.fileNamePage.setFileName( excelLink.fileName )
