@@ -23,6 +23,8 @@ class ReadExcelBase( object ):
 	def iter_list( self ):
 		assert( False )
 		
+#----------------------------------------------------------------------------
+
 class ReadExcelXls( ReadExcelBase ):
 	def __init__(self, filename):
 		ReadExcelBase.__init__( self, filename )
@@ -90,14 +92,6 @@ class ReadExcelXlsx( ReadExcelBase ):
 	def sheet_names( self ):
 		return self.book.get_sheet_names()
 	
-	'''
-	def iter_list(self, sname):
-		sheet = self.book.get_sheet_by_name( sname )
-		for row in sheet.iter_rows():
-			r = [toAscii(cell.value) for cell in row]
-			if r:
-				yield r
-	'''
 	def iter_list(self, sname):
 		sheet = self.book.get_sheet_by_name( sname )
 		rowMax = sheet.get_highest_row()
@@ -115,7 +109,7 @@ def GetExcelReader( filename ):
 	elif filename.endswith( '.xlsx' ) or filename.endswith( '.xlsm' ):
 		return ReadExcelXlsx( filename )
 	else:
-		raise ValueError, '%s is not a recognized Excel file' % filename
+		raise ValueError, '%s is not a recognized Excel format' % filename
 		
 #----------------------------------------------------------------------------
 #----------------------------------------------------------------------------

@@ -269,7 +269,7 @@ class GetExcelLink( object ):
 				try:
 					self.headerNamesPage.setFileNameSheetName(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName())
 				except ValueError:
-					Utils.MessageOK( self.wizard, 'Cannot find at last 5 header names in the Excel sheet.\nCheck the format.',
+					Utils.MessageOK( self.wizard, 'Cannot find at least 5 header names in the Excel sheet.\nCheck the format.',
 										title='Excel Format Error', iconMask=wx.ICON_ERROR)
 					evt.Veto()
 			elif page == self.headerNamesPage:
