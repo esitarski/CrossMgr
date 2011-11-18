@@ -93,8 +93,8 @@ class ReadExcelXlsx( ReadExcelBase ):
 		return self.book.get_sheet_names()
 	
 	def iter_list(self, sname):
-		sheet = self.book.get_sheet_by_name( sname )
-		for row in sheet.iter_rows():
+		ws = self.book.get_sheet_by_name( name = sname )
+		for row in ws.iter_rows():
 			r = [toAscii(cell.internal_value) for cell in row]
 			if any( f for f in r ):
 				yield r

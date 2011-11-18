@@ -329,6 +329,7 @@ class ExcelLink( object ):
 		info = {}
 		for r, row in enumerate(reader.iter_list(self.sheetName)):
 			data = {}
+			print( row )
 			for field, col in self.fieldCol.iteritems():
 				if col < 0:					# Skip unmapped columns.
 					continue
@@ -339,7 +340,7 @@ class ExcelLink( object ):
 				except IndexError:
 					pass
 			try:
-				info[int(data[Fields[0]])] = data
+				info[int(float(data[Fields[0]]))] = data
 			except (ValueError, TypeError, KeyError):
 				pass
 		return info
