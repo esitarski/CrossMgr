@@ -10,7 +10,10 @@ import unicodedata
 def toAscii( s ):
 	if s is None or s == '':
 		return ''
-	return unicodedata.normalize('NFKD', s).encode('ascii','ignore') if type(s) == unicode else str(s)
+	ret = unicodedata.normalize('NFKD', s).encode('ascii','ignore') if type(s) == unicode else str(s)
+	if ret.endswith( '.0' ):
+		ret = ret[:-2]
+	return ret
 
 #----------------------------------------------------------------------------
 
