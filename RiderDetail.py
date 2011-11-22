@@ -10,6 +10,7 @@ import Gantt
 import random
 import bisect
 import sys
+import re
 
 class RiderDetail( wx.Panel ):
 	lapAdjustOptions = ['+5','+4','+3','+2','+1','0','-1','-2','-3','-4','-5']
@@ -29,9 +30,21 @@ class RiderDetail( wx.Panel ):
 		self.Bind( wx.EVT_TEXT_ENTER, self.onNumChange, self.num )
 		gbs.Add( self.num, pos=(row,1), span=(1,1), flag=wx.EXPAND )
 		
-		self.deleteRiderBtn = wx.Button( self, wx.ID_ANY, 'Delete' )
-		self.Bind( wx.EVT_BUTTON, self.onDeleteRider, self.deleteRiderBtn )
-		gbs.Add( self.deleteRiderBtn, pos=(row, 3), span=(1,1), flag=wx.EXPAND )
+		self.menu = wx.Menu()
+		self.deleteMenuId = wx.NewId()
+		self.menu.Append( self.deleteMenuId, '&Delete Rider...', 'Delete this rider from the race' )
+		self.Bind( wx.EVT_MENU, self.onDeleteRider, id = self.deleteMenuId )
+		self.changeNumberMenuId = wx.NewId()
+		self.menu.Append( self.changeNumberMenuId, '&Change Number...', "Change this rider's number" )
+		self.Bind( wx.EVT_MENU, self.onChangeNumber, id = self.changeNumberMenuId )
+		self.swapNumberMenuId = wx.NewId()
+		self.menu.Append( self.swapNumberMenuId, '&Swap Number...', "Swap this rider's number with another rider's number" )
+		self.Bind( wx.EVT_MENU, self.onSwapNumber, id = self.swapNumberMenuId )
+		
+		self.editRiderBtn = wx.Button( self, wx.ID_ANY, 'Edit...' )
+		self.Bind( wx.EVT_BUTTON, self.onEditRider, self.editRiderBtn )
+		gbs.Add( self.editRiderBtn, pos=(row, 3), span=(1,1), flag=wx.EXPAND )
+		
 		row += 1
 		
 		self.categoryName = wx.StaticText( self, wx.ID_ANY, 'Category: ' )
@@ -95,18 +108,101 @@ class RiderDetail( wx.Panel ):
 		self.SetSizer( gbs )
 		self.setRider()
 		
+	def onEditRider( self, event ):
+		self.PopupMenu( self.menu )
+	
 	def onDeleteRider( self, event ):
+		if not Model.race:
+			return
+			
+		try:
+			num = int(self.num.GetValue())
+		except:
+			return
+			
 		with Model.LockRace() as race:
-			if race is None:
+			if not num in race:
 				return
-			try:
-				num = int(self.num.GetValue())
-			except:
+			
+		if Utils.MessageOKCancel( self, "This will delete this rider.\nOnly do this in case of a mistaken entry.\nThere is no undo - be careful.", "Delete Rider" ):
+			with Model.LockRace() as race:
+				race.deleteRider( num )
+			self.setRider( None )
+			self.refresh()
+		
+	def onChangeNumber( self, event ):
+		if not Model.race:
+			return
+			
+		try:
+			num = int(self.num.GetValue())
+		except:
+			return
+			
+		with Model.LockRace() as race:
+			if not num in race:
 				return
-				
-			if num in race:
-				if Utils.MessageOKCancel( self, "This will permenently delete this rider.\nOnly do this in case of a misidentified entry.\nThere is no undo - be careful.", "Delete Rider" ):
-					race.deleteRider( num )
+		
+		dlg = wx.TextEntryDialog( self, "Rider's new number:", 'New number', str(self.num.GetValue()) )
+		ret = dlg.ShowModal()
+		newNum = dlg.GetValue()
+		dlg.Destroy()
+		if ret != wx.ID_OK:
+			return
+			
+		try:
+			newNum = int(re.sub( '[^0-9]', '', newNum ))
+		except ValueError:
+			return
+			
+		with Model.LockRace() as race:
+			inRace = (newNum in race)
+		if inRace:
+			Utils.MessageOK( self, "Cannot change rider to %d.\nThere is a rider with this number already." % newNum, 'Cannot Change Rider Number', iconMask = wx.ICON_ERROR )
+			return
+			
+		if Utils.MessageOKCancel( self, "This will change this rider's number to %d.\nThere is no undo - be careful." % newNum, "Change Rider Number" ):
+			with Model.LockRace() as race:
+				race.renumberRider( num, newNum )
+			self.setRider( newNum )
+			self.refresh()
+		
+	def onSwapNumber( self, event ):
+		if not Model.race:
+			return
+			
+		try:
+			num = int(self.num.GetValue())
+		except:
+			return
+			
+		with Model.LockRace() as race:
+			if not num in race:
+				return
+		
+		dlg = wx.TextEntryDialog( self, "Number to swap with:", 'Swap numbers', str(self.num.GetValue()) )
+		ret = dlg.ShowModal()
+		newNum = dlg.GetValue()
+		dlg.Destroy()
+		if ret != wx.ID_OK:
+			return
+			
+		try:
+			newNum = int(re.sub( '[^0-9]', '', newNum))
+		except ValueError:
+			return
+			
+		with Model.LockRace() as race:
+			inRace = (newNum in race)
+		if not inRace:
+			Utils.MessageOK( self, "Cannot swap with rider %d.\nThis rider is not in race." % newNum, 'Cannot Swap Rider Numbers', iconMask = wx.ICON_ERROR )
+			return
+			
+		if Utils.MessageOKCancel( self, "This will swap numbers %d and %d.\nThere is no undo - be careful." % (num, newNum), "Swap Rider Number" ):
+			with Model.LockRace() as race:
+				race.swapRiders( num, newNum )
+			self.setRider( newNum )
+			self.refresh()
 		
 	def onNumChange( self, event ):
 		self.refresh()

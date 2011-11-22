@@ -583,6 +583,37 @@ class Race(object):
 		except KeyError:
 			pass
 			
+	def renumberRider( self, num, newNum ):
+		try:
+			rider = self.riders[num]
+		except KeyError:
+			return False
+		if newNum in self.riders:
+			return False
+			
+		del self.riders[rider.num]
+		rider.num = newNum
+		self.riders[rider.num] = rider
+		memoize.clear()
+		self.setChanged()
+		return True
+			
+	def swapRiders( self, num1, num2 ):
+		try:
+			r1 = self.riders[num1]
+			r2 = self.riders[num2]
+		except KeyError:
+			return False
+		
+		del self.riders[num1]
+		del self.riders[num2]
+		r1.num, r2.num = r2.num, r1.num
+		self.riders[r1.num] = r1
+		self.riders[r2.num] = r2
+		memoize.clear()
+		self.setChanged()
+		return True
+			
 	def deleteAllRiderTimes( self ):
 		for num in self.riders.iterkeys():
 			self.deleteRiderTimes( num )
