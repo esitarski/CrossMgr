@@ -226,7 +226,7 @@ class PropertiesDialog( wx.Dialog ):
 	def onBrowseFolder( self, event ):
 		defaultPath = self.folder.GetValue()
 		if not defaultPath:
-			defaultPath = Utils.getDirName()
+			defaultPath = Utils.getDocumentsDir()
 			
 		dlg = wx.DirDialog( self, "Choose a Folder for the Race",
 							style=wx.DD_DEFAULT_STYLE, defaultPath=defaultPath )
