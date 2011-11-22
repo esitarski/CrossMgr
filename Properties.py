@@ -185,7 +185,7 @@ class PropertiesDialog( wx.Dialog ):
 			gs = wx.FlexGridSizer( rows=2, cols=3, vgap = 5, hgap = 5 )
 			gs.Add( wx.StaticText(self, -1, 'Race File Folder:'), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 			self.folder = wx.TextCtrl( self, -1, '', size=(400,-1) )
-			self.folder.SetValue( Utils.getDirName() )
+			self.folder.SetValue( Utils.getDocumentsDir() )
 			gs.Add( self.folder, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.GROW)
 
 			btn = wx.Button( self, 10, label='Browse...' )
@@ -194,7 +194,7 @@ class PropertiesDialog( wx.Dialog ):
 			
 			gs.Add( wx.StaticText(self, -1, 'Categories Import File (*.brc):'), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 			self.categoriesFile = wx.TextCtrl( self, -1, '', size=(400,-1) )
-			self.categoriesFile.SetValue( Utils.getDirName() )
+			self.categoriesFile.SetValue( Utils.getDocumentsDir() )
 			gs.Add( self.categoriesFile, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.GROW )
 
 			btn = wx.Button( self, 10, label='Browse...' )

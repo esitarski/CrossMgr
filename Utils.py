@@ -117,6 +117,10 @@ def getHomeDir():
 		os.makedirs( homedir )
 	return homedir
 
+def getDocumentsDir():
+	sp = wx.StandardPaths.Get()
+	return sp.GetDocumentsDir()
+	
 #------------------------------------------------------------------------
 try:
 	dirName = os.path.dirname(os.path.abspath(__file__))
