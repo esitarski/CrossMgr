@@ -14,27 +14,26 @@
 #
 # edward.sitarski@gmail.com
 #
-# Or, obviously, to the wxPython mailing list!!!
-#
 #
 # End Of Comments
 # --------------------------------------------------------------------------------- #
 
 """
-KeyButton is another custom-drawn button class which mimics Windows CE mobile
-gradient buttons.
+KeyButton is another custom-drawn button class that looks similar to a key on a Mac.
 
 
 Description
 ===========
 
-KeyButton is another custom-drawn button class which mimics a Mac keyboard.
+KeyButton is another custom-drawn button class that looks similar to a key on a Mac
+No bitmaps are used.  Effects are done with gradient shading.
 
 Supported Platforms
 ===================
 
 KeyButton has been tested on the following platforms:
-  * Windows (Windows XP).
+  * Windows (Windows XP, Vista, Windows 7).
+  * Linux (Ubuntu)
 
 
 Window Styles
@@ -581,8 +580,8 @@ class KeyButton(wx.PyControl):
 		dc = wx.BufferedPaintDC(self)
 		
 		gc = wx.GraphicsContext.Create(dc)
-		#dc.SetBackground(wx.Brush(self.GetParent().GetBackgroundColour()))
-		dc.SetBackground(wx.WHITE_BRUSH)
+		dc.SetBackground(wx.Brush(self.GetParent().GetBackgroundColour()))
+		#dc.SetBackground(wx.WHITE_BRUSH)
 		dc.Clear()
 		
 		clientRect = self.GetClientRect()
@@ -598,7 +597,7 @@ class KeyButton(wx.PyControl):
 				colours = [self.LightColour(c) for c in colours]
 				textColour = self.LightColour(textColour)
 		else:
-			outsideRect.Deflate( 2, 2 )
+			# outsideRect.Deflate( 2, 2 )
 			colours = [self.DarkColour(c) for c in colours]
 			textColour = self.DarkColour(textColour)
 
@@ -646,15 +645,75 @@ class KeyButton(wx.PyControl):
 		textWidth, textHeight = dc.GetTextExtent( label )
 		
 		dc.SetTextForeground( textColour )
-		dc.DrawText( label, x + (width - textWidth) // 2, y + (height - textHeight) // 2 )
+		
+		lines = label.split( '\n' )
+		yText = (height - textHeight * len(lines)) // 2
+		for line in lines:
+			textWidth, textHeight = dc.GetTextExtent( line )
+			dc.DrawText( line, x + (width - textWidth) // 2, yText )
+			yText += textHeight
 		
 		
 if __name__ == '__main__':
+	# Draw a keyboard with keybuttons.
+	# Define the key labels for each row.
+	keyRows = [
+		['Esc'] + ['F%d' % (i+1) for i in xrange(12)],
+		['%s\n%s' % (u,l) for u, l in zip('~!@#$%^&*()_+','`1234567890-=')] + ['Backspace'],
+		['Tab'] + [k for k in 'QWERTYUIOP'] + ['%s\n%s' % (u,l) for u, l in zip('{}|','[]\\')],
+		['Caps Lock'] + [k for k in 'ASDFGHJKL'] + ['%s\n%s' % (u,l) for u, l in zip(':"',';\'')] + ['Enter'],
+		['Shift'] + [k for k in 'ZXCVBNM'] + ['%s\n%s' % (u,l) for u, l in zip('<>?',',./')] + ['Shift'],
+		['Ctrl', 'Alt', ' ', 'Alt', 'Ctrl']
+	]
+	# Specify width exceptions for certain keys.
+	# For repeated exceptions for keys with the same name, use a list.
+	keyWidth = {'Backspace': 2.0,
+				'Tab': 1.5, '|\n\\': 1.5,
+				'Caps Lock': 1.75, 'Enter': 2.25,
+				'Shift': [2.0, 3.0],
+				'Ctrl': 1.75, 'Alt': 1.5, ' ': 8.5 }
+	# Specify space exceptions after certain keys.
+	keySpaceAfter = {'Esc': 1.0/3.0, 'F4': 1.0/3.0, 'F8': 1.0/3.0 }
+	
+	# Specify font size exceptions for certain keys.
+	keyFontHeight = {'Backspace': 0.95, 'Caps Lock': 0.9 }
+	
+	border = 8
+	rowHeight = 48
+	fontSize = rowHeight / 2.6
+	shrink = 0.95
+	
+	backgroundColour = wx.Colour(245,245,245)
 	app = wx.PySimpleApp()
-	mainWin = wx.Frame(None,title="keybutton", size=(800,200))
-	btn = KeyButton(mainWin, wx.ID_ANY, None, '9')
-	btn.SetBackgroundColour( wx.WHITE )
-	btn.SetFont( wx.Font(48, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_ITALIC, wx.FONTWEIGHT_NORMAL ) )
+	mainWin = wx.Frame(None,title="keybutton", size=((rowHeight+0.75) * 15 + border * 2, rowHeight * (len(keyRows)+0.75) + border * 2))
+	mainWin.SetBackgroundColour( backgroundColour )
+	
+	font = wx.FontFromPixelSize( (0, fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD )
+	y = border
+	keyWidthCount = {}
+	for row in keyRows:
+		x = border
+		for key in row:
+			try:
+				mult = keyWidth[key]
+				if isinstance( mult, list ):
+					try:
+						mult = mult[keyWidthCount.setdefault(key, 0)]
+						keyWidthCount[key] += 1
+					except IndexError:
+						mult = 1.0
+			except KeyError:
+				mult = 1.0
+		
+			width = rowHeight * mult
+			btn = KeyButton( mainWin, wx.ID_ANY, None, key, pos=(x, y), size=(width - rowHeight * (1.0-shrink), rowHeight * shrink) )
+			btn.SetBackgroundColour( backgroundColour )
+			if key in keyFontHeight:
+				btn.SetFont( wx.FontFromPixelSize( (0, fontSize*keyFontHeight[key]), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
+			else:
+				btn.SetFont( font )
+			x += width + keySpaceAfter.get(key, 0) * rowHeight
+		y += rowHeight
 	mainWin.Show()
 	app.MainLoop()
 

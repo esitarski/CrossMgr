@@ -214,15 +214,19 @@ class RiderDetail( wx.Panel ):
 		self.refresh()
 	
 	def onStatusChanged( self, event ):
-		race = Model.getRace()
-		if race is None:
-			return
 		num = self.num.GetValue()
+		if not Model.race or num not in Model.race:
+			return
+			
 		statusOption = self.statusOption.GetSelection()
-		if num in race and statusOption in [Model.Rider.DNF, Model.Rider.Pulled]:
-			rider = race.getRider( num )
+		if statusOption in [Model.Rider.DNF, Model.Rider.Pulled]:
+			# Get any existing rider status time.
+			with Model.LockRace() as race:
+				rider = race.getRider( num )
+				tStatusCur = rider.tStatus
+				
 			# Try to fill in a reasonable default value.
-			if not rider.tStatus:
+			if not tStatusCur:
 				tStatus = race.lastRaceTime()
 				# If a DNF, set the time to just after the last recorded lap.
 				# User can always adjust it later.
@@ -232,6 +236,7 @@ class RiderDetail( wx.Panel ):
 					except (IndexError, TypeError):
 						pass
 				self.atRaceTime.SetValue( Utils.SecondsToStr(tStatus) )
+				
 		self.commitChange()
 		self.refresh()
 	
@@ -345,21 +350,21 @@ class RiderDetail( wx.Panel ):
 		self.atRaceTimeName.Enable( editable )
 	
 	def refresh( self ):
-		with Model.LockRace() as race:
-			self.num.SelectAll()
-			wx.CallAfter( self.num.SetFocus )
+		self.num.SelectAll()
+		wx.CallAfter( self.num.SetFocus )
 
-			self.grid.Set( data = [ [], [], [] ] )
-			self.grid.Reset()
-			self.category.SetLabel( '' )
-			self.lapAdjust.SetSelection( self.getLapAdjustIndex() )
-			num = self.num.GetValue()
+		self.grid.Set( data = [ [], [], [] ] )
+		self.grid.Reset()
+		self.category.SetLabel( '' )
+		self.lapAdjust.SetSelection( self.getLapAdjustIndex() )
+		num = self.num.GetValue()
+		
+		self.statusOption.SetSelection( 0 )
+		self.setAtRaceTime( 0.0, False )
+		
+		self.lineGraph.SetData( None )
 			
-			self.statusOption.SetSelection( 0 )
-			self.setAtRaceTime( 0.0, False )
-			
-			self.lineGraph.SetData( None )
-			
+		with Model.LockRace() as race:
 			if race is None or num not in race:
 				return
 			rider = race.getRider( num )
@@ -431,16 +436,16 @@ class RiderDetail( wx.Panel ):
 			self.lineGraph.SetData( [graphData], [[e.interp for e in entries]] )
 	
 	def commitChange( self ):
-		with Model.LockRace() as race:
-			num = self.num.GetValue()
-			status = self.statusOption.GetSelection()
+		num = self.num.GetValue()
+		status = self.statusOption.GetSelection()
 			
+		with Model.LockRace() as race:
 			# Allow new numbers to be added if status is DNS or DQ.
 			if race is None or (num not in race and status not in [Model.Rider.DNS, Model.Rider.DQ]):
 				return
 				
 			rider = race.getRider(num)
-			oldValues = [rider.lapAdjust, rider.status, rider.tStatus]
+			oldValues = (rider.lapAdjust, rider.status, rider.tStatus)
 
 			tStatus = None
 			if status not in [Model.Rider.Finisher, Model.Rider.DNS, Model.Rider.DQ]:
@@ -449,10 +454,12 @@ class RiderDetail( wx.Panel ):
 			rider.lapAdjust = int(self.lapAdjust.GetStringSelection())
 			rider.setStatus( status, tStatus )
 
-			newValues = [ rider.lapAdjust, rider.status, rider.tStatus ]
-			if oldValues != newValues:
-				Model.resetCache()
-				Utils.writeRace()
+			newValues = (rider.lapAdjust, rider.status, rider.tStatus)
+			changed = (oldValues != newValues)
+			
+		if changed:
+			Model.resetCache()
+			Utils.writeRace()
 			
 	def commit( self ):
 		self.commitChange()
