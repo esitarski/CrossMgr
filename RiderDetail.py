@@ -455,11 +455,9 @@ class RiderDetail( wx.Panel ):
 			rider.setStatus( status, tStatus )
 
 			newValues = (rider.lapAdjust, rider.status, rider.tStatus)
-			changed = (oldValues != newValues)
-			
-		if changed:
-			Model.resetCache()
-			Utils.writeRace()
+			if oldValues != newValues:
+				race.resetCache()
+				race.setChanged()
 			
 	def commit( self ):
 		self.commitChange()

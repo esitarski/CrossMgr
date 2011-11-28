@@ -56,10 +56,7 @@ class CorrectNumberDialog( wx.Dialog ):
 			with Model.LockRace() as race:
 				race.deleteTime( self.entry.num, self.entry.t )
 				race.addTime( num, t )
-			mainWin = Utils.getMainWin()
-			if mainWin:
-				mainWin.refresh()
-				mainWin.writeRace()
+			Utils.refresh()
 		self.EndModal( wx.ID_OK )
 		
 	def onCancel( self, event ):
@@ -128,10 +125,7 @@ class SplitNumberDialog( wx.Dialog ):
 			if self.entry.num != num2:
 				race.addTime( num2, self.entry.t + 0.001 )	# Add a little extra time to keep the sequence
 			
-		mainWin = Utils.getMainWin()
-		if mainWin:
-			mainWin.refresh()
-			mainWin.writeRace()
+		Utils.refresh()
 		
 		self.EndModal( wx.ID_OK )
 		
@@ -163,10 +157,7 @@ def DeleteEntry( parent, entry ):
 		with Model.LockRace() as race:
 			if race:
 				race.deleteTime( entry.num, entry.t )
-		mainWin = Utils.getMainWin()
-		if mainWin:
-			mainWin.refresh()
-			mainWin.writeRace()
+		Utils.refresh()
 	dlg.Destroy()
 	
 @logCall

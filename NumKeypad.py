@@ -258,6 +258,7 @@ class NumKeypad( wx.Panel ):
 			if race and race.isFinished():
 				try:
 					race.numLaps = int(self.numLaps.GetString(self.numLaps.GetSelection()))
+					race.setChanged()
 				except ValueError:
 					pass
 		self.refreshLaps()
@@ -468,7 +469,9 @@ class NumKeypad( wx.Panel ):
 					SetLabel( self.message, '%d: Leader Finish Alert' % leaderNum )
 				else:
 					SetLabel( self.message, raceMessage.get(lapsToGo, '') )
-				race.numLaps = laps
+				if race.numLaps != laps:
+					race.numLaps = laps
+					race.setChanged()
 				
 				if race.allRidersFinished():
 					race.finishRaceNow()
@@ -481,7 +484,9 @@ class NumKeypad( wx.Panel ):
 				SetLabel( self.lapsToGo, '' )
 				SetLabel( self.lapCompleting, str(lapCompleting) )
 				SetLabel( self.message, 'Collecting Data' )
-				race.numLaps = None
+				if race.numLaps is not None:
+					race.numLaps = None
+					race.setChanged()
 			
 		self.refreshRaceHUD()
 		
