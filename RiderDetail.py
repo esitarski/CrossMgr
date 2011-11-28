@@ -281,18 +281,6 @@ class RiderDetail( wx.Panel ):
 				race.addTime( num, newTime )
 		self.refresh()
 	
-	def onSplitLap2( self, event ):
-		self.doSplitLap( 2 )
-		
-	def onSplitLap3( self, event ):
-		self.doSplitLap( 3 )
-		
-	def onSplitLap4( self, event ):
-		self.doSplitLap( 4 )
-		
-	def onSplitLap5( self, event ):
-		self.doSplitLap( 5 )
-		
 	def onDeleteLapStart( self, event ):
 		num, lap, times = self.getGanttChartNumLapTimes()
 		if num is None:
@@ -313,10 +301,9 @@ class RiderDetail( wx.Panel ):
 	def onEditGantt( self, xPos, yPos, num, lap ):
 		if not hasattr(self, "ganttMenuInfo"):
 			self.ganttMenuInfo = [
-				[wx.NewId(),	'Split Lap in 2 Pieces',	self.onSplitLap2],
-				[wx.NewId(),	'Split Lap in 3 Pieces',	self.onSplitLap3],
-				[wx.NewId(),	'Split Lap in 4 Pieces',	self.onSplitLap4],
-				[wx.NewId(),	'Split Lap in 5 Pieces',	self.onSplitLap5],
+				[	wx.NewId(),
+					'Split Lap into %d Pieces' % split,
+					lambda evt, s = self, splits = split: s.doSplitLap(splits)] for split in xrange(2,10) ] + [
 				[wx.NewId(),	'Delete Lap Start Time',	self.onDeleteLapStart],
 				[wx.NewId(),	'Delete Lap End Time',		self.onDeleteLapEnd],
 			]

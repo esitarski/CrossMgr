@@ -953,35 +953,25 @@ class Race(object):
 		# Check if the difference exceeds the rule80 time.
 		return riderTime - leaderTime > rule80Time
 
-	def getCatPrevLeaders( self, t ):
+	def getCatPrevNextLeaders( self, t ):
 		''' Return a dict accessed by number referring to category. '''
-		catNextLeaders = {}
+		catPrevLeaders, catNextLeaders = {}, {}
 		for c, (times, nums) in self.getCategoryTimesNums().iteritems():
-			i = bisect.bisect_left( times, t, hi=len(times)-1 )
-			catNextLeaders[nums[i-1]] = c
-		return catNextLeaders
+			i = bisect.bisect_right( times, t ) - 1
+			catPrevLeaders[nums[i]] = c
+			try:
+				catNextLeaders[nums[i+1]] = c
+			except IndexError:
+				pass
+		return catPrevLeaders, catNextLeaders
 		
-	def getCatNextLeaders( self, t ):
-		''' Return a dict accessed by number referring to category. '''
-		catNextLeaders = {}
-		for c, (times, nums) in self.getCategoryTimesNums().iteritems():
-			i = bisect.bisect_left( times, t, hi=len(times)-1 )
-			catNextLeaders[nums[i]] = c
-		return catNextLeaders
-		
-	def getPrevLeader( self, t ):
+	def getPrevNextLeader( self, t ):
 		leaderTimes, leaderNums = self.getLeaderTimesNums()
 		try:
-			return leaderNums[bisect.bisect_left(leaderTimes, t) - 1]
+			i = bisect.bisect_left(leaderTimes, t, hi=len(leaderTimes) - 1)
+			return leaderNums[i-1], leaderNums[i]
 		except (TypeError, IndexError):
-			return None
-		
-	def getNextLeader( self, t ):
-		leaderTimes, leaderNums = self.getLeaderTimesNums()
-		try:
-			return leaderNums[bisect.bisect_left(leaderTimes, t, hi=len(leaderTimes) - 1)]
-		except (TypeError, IndexError):
-			return None
+			return None, None
 		
 	def hasDNFRiders( self ):
 		return any(r.status == Rider.DNF for r in self.riders.itervalues())
@@ -1089,22 +1079,21 @@ class Race(object):
 			pass
 		
 		# If not there, find it and add it to the cache.
-		cc = self.categoryCache
 			
 		# Find the category matching this rider.
 		try:
 			c = (c for c in self.categories.itervalues() if c.active and c.matches(num)).next()
 		except StopIteration:
-			cc[num] = None	# No matching category.
+			self.categoryCache[num] = None	# No matching category.
 			return
 		
 		# Add this rider to the cache.
-		cc[num] = c
+		self.categoryCache[num] = c
 		
-		# Proactively classify all riders in this category as we will likely need them soon.
+		# Proactively classify all riders in this category as we will likely ask for them soon.
 		for r in self.riders.itervalues():
-			if r.num not in cc and c.matches(r.num):
-				cc[r.num] = c
+			if r.num not in self.categoryCache and c.matches(r.num):
+				self.categoryCache[r.num] = c
 				
 		return c
 	
@@ -1187,13 +1176,47 @@ class Race(object):
 		for e in (e for e in reversed(entries) if e.num not in finishNums):
 			finishNums.add( e.num )
 			if 	race[e.num].status in finisherStatusSet and \
-					(category is None or category.matches(e.num)):
+					(category is None or category == self.getCategory(e.num)):
 				finishers.append( e )
 
 		# Sort by laps completed, time and num.
 		finishers.sort( key = lambda x: (-x.lap, x.t, x.num) )
 		return finishers
 
+	def getPrevNextRiderPositions( self, tRace ):
+		if not self.isRunning() or not self.riders:
+			return {}, {}
+		entries = self.interpolate()
+		if not entries:
+			return {}, {}
+			
+		# Split up the entries by category.
+		catEntries = {}
+		getCategory = self.getCategory
+		finisherStatusSet = Race.finisherStatusSet
+		for e in entries:
+			if race[e.num].status in finisherStatusSet:
+				catEntries.setdefault(getCategory(e.num), []).append( e )
+
+		# For each category, find the first instance of each rider after the leader's lap.
+		catTimesNums = self.getCategoryTimesNums()
+		ret = [{},{}]
+		for cat, catEntries in catEntries.iteritems():
+			catTimes, catNums = catTimesNums[cat]
+			iLap = bisect.bisect_right( catTimes, tRace ) - 1
+			for r in xrange(2):
+				iFirst = bisect.bisect_left( catEntries, Entry(catNums[iLap], iLap, catTimes[iLap], False) )
+
+				seen = {}
+				catFinishers = [ seen.setdefault(catEntries[i].num, catEntries[i])
+								for i in xrange(iFirst, len(catEntries)) if catEntries[i].num not in seen ]
+				catFinishers.sort( key = lambda x: (-x.lap, x.t, x.num) )
+				for pos, e in enumerate(catFinishers):
+					ret[r][e.num] = pos + 1
+				iLap += 1
+					
+		return ret
+		
 	#----------------------------------------------------------------------------------------
 	
 	def getResults( self, catName = 'All' ):
@@ -1224,7 +1247,7 @@ class Race(object):
 		nonFinishersStatusSet = Race.nonFinisherStatusSet
 		ridersSubset = [r for r in self.riders.itervalues()
 							if r.status in nonFinishersStatusSet and 
-								(category is None or category.matches(r.num))]
+								(category is None or category == self.getCategory(r.num))]
 		nonFinishers = []
 		for status in Race.nonFinisherStatusList:
 			numTimes = [(r.num, r.tStatus if r.tStatus is not None else -sys.float_info.max)
@@ -1252,7 +1275,7 @@ class Race(object):
 		'''
 		if race.numLaps is None:
 			return False
-		finishers = self.getResultsList( lap=race.numLaps )
+		finishers = self.getResultsList( 'All', lap=race.numLaps )
 		if finishers is None:
 			return False
 		return any(e.lap == race.numLaps for e in finishers) and not any(e.interp for e in finishers)

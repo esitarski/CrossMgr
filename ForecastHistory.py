@@ -56,7 +56,9 @@ class LabelGrid( wx.Panel ):
 		
 		self.SetSizer( bsMain )
 		self.Layout()
-		
+
+numSuffix = { 1: 'st', 2:'nd', 3:'rd' }		
+
 class ForecastHistory( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY, style = 0 ):
 		wx.Panel.__init__(self, parent, id, style=style)
@@ -292,24 +294,21 @@ class ForecastHistory( wx.Panel ):
 			
 			#------------------------------------------------------------------
 			# Select the interpolated entries around now.
-			leaderNext = race.getNextLeader( tRace )
-			leaderPrev = race.getPrevLeader( tRace )
+			leaderPrev, leaderNext = race.getPrevNextLeader( tRace )
 			backSecs = race.getAverageLapTime() / 4.0
 			
 			expectedShowMax = 32
 			
 			tMin = tRace - backSecs
 			tMax = tRace + race.getAverageLapTime()
-			times = [e.t for e in entries]
-			iCur = bisect.bisect_left( times, tRace )
+			iCur = bisect.bisect_left( entries, Model.Entry(0, 0, tRace, True) )
 			iLeft = max(0, iCur - expectedShowMax/2)
-			times = None
 			seen = {}
 			expected = [ seen.setdefault(e.num, e) for e in entries[iLeft:] if e.interp and tMin <= e.t <= tMax and e.num not in seen ]
-			expected = expected[:min(expectedShowMax, len(entries))]
+			expected = expected[:expectedShowMax]
 			
-			catNextLeaders = race.getCatNextLeaders( tRace )
-			catPrevLeaders = race.getCatPrevLeaders( tRace )
+			prevCatLeaders, nextCatLeaders = race.getCatPrevNextLeaders( tRace )			
+			prevRiderPosition, nextRiderPosition = race.getPrevNextRiderPositions( tRace )
 			
 			backgroundColour = {}
 			textColour = {}
@@ -321,22 +320,21 @@ class ForecastHistory( wx.Panel ):
 				for c in xrange(iColMax):
 					backgroundColour[(r, c)] = self.orangeColour
 				iNotMissing = r + 1
-			#------------------------------------------------------------------
-			# Highlight the leader in the expected list.
-			iBeforeLeader = None
-			try:
-				r = (i for i, e in enumerate(expected) if e.num == leaderNext).next()
-				backgroundColour[(r, iNumCol)] = wx.GREEN
-				iBeforeLeader = r
-			except StopIteration:
-				pass
 				
+			#------------------------------------------------------------------
+			# Highlight the leaders in the expected list.
+			iBeforeLeader = None
 			# Highlight the leader by category.
+			catNextTime = {}
 			outsideTimeBound = set()
 			for r, e in enumerate(expected):
-				if e.num in catNextLeaders:
+				if e.num in nextCatLeaders:
 					backgroundColour[(r, iNoteCol)] = wx.GREEN
-				if tRace < tRaceLength and race.isOutsideTimeBound(e.num):
+					catNextTime[nextCatLeaders[e.num]] = e.t
+					if e.num == leaderNext:
+						backgroundColour[(r, iNumCol)] = wx.GREEN
+						iBeforeLeader = r
+				elif tRace < tRaceLength and race.isOutsideTimeBound(e.num):
 					backgroundColour[(r, iNoteCol)] = self.redColour
 					textColour[(r, iNoteCol)] = wx.WHITE
 					outsideTimeBound.add( e.num )
@@ -346,12 +344,18 @@ class ForecastHistory( wx.Panel ):
 			data[iTimeCol] = [formatTime(e.t) for e in expected]
 			data[iLapCol] = [str(e.lap) for e in expected]
 			def getNoteExpected( e ):
-				if e.num in catNextLeaders:
+				try:
+					position = prevRiderPosition.get(e.num, -1) if e.t < catNextTime[race.getCategory(e.num)] else \
+							   nextRiderPosition.get(e.num, -1)
+				except KeyError:
+					position = prevRiderPosition.get(e.num, -1)
+					
+				if position == 1:
 					return 'Lead'
-				elif e.num in outsideTimeBound:
-					return '80%'
 				elif e.t < tMissing:
 					return 'miss'
+				elif position >= 0:
+					return '%d%s' % (position, numSuffix.get(position, 'th'))
 				else:
 					return ' '
 			data[iNoteCol] = [getNoteExpected(e) for e in expected]
@@ -370,7 +374,7 @@ class ForecastHistory( wx.Panel ):
 			# Update recorded.
 			recordedDisplayMax = 32
 			recorded = [ e for e in entries if not e.interp and e.t <= tRace ]
-			recorded = recorded[-min(recordedDisplayMax, len(entries)):]
+			recorded = recorded[-recordedDisplayMax:]
 			self.quickHistory = recorded
 				
 			backgroundColour = {}
@@ -378,11 +382,11 @@ class ForecastHistory( wx.Panel ):
 			outsideTimeBound = set()
 			# Highlight the leader in the recorded list.
 			for r, e in enumerate(recorded):
-				if e.num == leaderPrev:
-					backgroundColour[(r, iNumCol)] = wx.GREEN
-				if e.num in catPrevLeaders:
+				if prevRiderPosition.get(e.num,-1) == 1:
 					backgroundColour[(r, iNoteCol)] = wx.GREEN
-				if tRace < tRaceLength and race.isOutsideTimeBound(e.num):
+					if e.num == leaderPrev:
+						backgroundColour[(r, iNumCol)] = wx.GREEN
+				elif tRace < tRaceLength and race.isOutsideTimeBound(e.num):
 					backgroundColour[(r, iNoteCol)] = self.redColour
 					textColour[(r, iNoteCol)] = wx.WHITE
 					outsideTimeBound.add( e.num )
@@ -392,10 +396,11 @@ class ForecastHistory( wx.Panel ):
 			data[iTimeCol] = [formatTime(e.t) for e in recorded]
 			data[iLapCol] = [str(e.lap) for e in recorded]
 			def getNoteHistory( e ):
-				if e.num in catNextLeaders:
+				position = prevRiderPosition.get(e.num, -1)
+				if position == 1:
 					return 'Lead'
-				elif e.num in outsideTimeBound:
-					return '80%'
+				elif position >= 0:
+					return '%d%s' % (position, numSuffix.get(position, 'th'))
 				else:
 					return ' '
 			data[iNoteCol] = [getNoteHistory(e) for e in recorded]
