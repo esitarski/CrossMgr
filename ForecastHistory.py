@@ -57,8 +57,6 @@ class LabelGrid( wx.Panel ):
 		self.SetSizer( bsMain )
 		self.Layout()
 
-numSuffix = { 1: 'st', 2:'nd', 3:'rd' }		
-
 class ForecastHistory( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY, style = 0 ):
 		wx.Panel.__init__(self, parent, id, style=style)
@@ -355,7 +353,7 @@ class ForecastHistory( wx.Panel ):
 				elif e.t < tMissing:
 					return 'miss'
 				elif position >= 0:
-					return '%d%s' % (position, numSuffix.get(position, 'th'))
+					return Utils.ordinal(position)
 				else:
 					return ' '
 			data[iNoteCol] = [getNoteExpected(e) for e in expected]
@@ -400,7 +398,7 @@ class ForecastHistory( wx.Panel ):
 				if position == 1:
 					return 'Lead'
 				elif position >= 0:
-					return '%d%s' % (position, numSuffix.get(position, 'th'))
+					return Utils.ordinal(position)
 				else:
 					return ' '
 			data[iNoteCol] = [getNoteHistory(e) for e in recorded]
