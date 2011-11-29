@@ -142,8 +142,7 @@ def ordinal(value):
 
 	if (value % 100)//10 != 1:
 		return "%d%s" % (value, ['th','st','nd','rd','th','th','th','th','th','th'][value%10])
-	return"%d%s" % (value, "th")
-
+	return "%d%s" % (value, "th")
 	
 def getHomeDir():
 	sp = wx.StandardPaths.Get()
