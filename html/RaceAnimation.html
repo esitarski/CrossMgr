@@ -580,10 +580,12 @@ function createTextChild( parent, s )
 	return child;
 }
 
-//------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
 function CmpResultsData( x, y )
 {
+	// [numLaps, raceTimeOfLastLap, num, lapTimes, status, lastTime]
+	//    0              1           2      3         4        5
 	if( x[4] != y[4] )
 	{
 		if( x[4] == 'Finisher' ) return -1;
@@ -591,12 +593,11 @@ function CmpResultsData( x, y )
 		if( x[4] < y[4] ) return -1;
 		return 1;
 	}
+	var d = x[0] - y[0];
+	if( d != 0 )
+		return -d;
 	if( x[4] == 'Finisher' )
-	{
-		var d = x[0] - y[0];
-		if( d != 0 ) return -d;
 		return x[1] - y[1];
-	}
 	return x[5] - y[5];
 }
 

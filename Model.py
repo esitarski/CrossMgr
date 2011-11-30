@@ -1272,14 +1272,6 @@ class Race(object):
 			pass
 			
 		return False
-		'''
-		if race.numLaps is None:
-			return False
-		finishers = self.getResultsList( 'All', lap=race.numLaps )
-		if finishers is None:
-			return False
-		return any(e.lap == race.numLaps for e in finishers) and not any(e.interp for e in finishers)
-		'''
 
 	def _populate( self ):
 		self.reset()

@@ -86,6 +86,12 @@ def formatTime( secs ):
 	else:
 		return "%02d:%02d" % (minutes, secs)
 
+def formatTimeCompressed( secs ):
+	f = formatTime( secs )
+	if f[0] == '0':
+		return f[1:]
+	return f
+		
 def formatDate( date ):
 	y, m, d = date.split('-')
 	d = datetime.date( int(y,10), int(m,10), int(d,10) )

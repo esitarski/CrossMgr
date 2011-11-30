@@ -10,11 +10,24 @@ from ReadSignOnSheet import IgnoreFields
 
 def GetAnimationData( catName = 'All', getExternalData = False ):
 	race = Model.race
-	results = race.getResultsList( catName )
-	
-	if not results:
+	if not race:
 		return None
-
+		
+	maxLap = race.getMaxLap()
+	if race.numLaps is not None and race.numLaps < maxLap:
+		maxLap = race.numLaps
+	category = race.getCategory( catName )
+	if category and category.numLaps:
+		maxLap = min( maxLap, category.numLaps )
+	entries = race.interpolateLap( maxLap, True )
+	
+	if not entries:
+		return None
+	
+	# Get all the entries for this category.
+	if category is not None:
+		entries = [e for e in entries if race.getCategory(e.num) == category]	
+	
 	# Get the linked external data.
 	externalFields = []
 	externalInfo = None
@@ -30,22 +43,16 @@ def GetAnimationData( catName = 'All', getExternalData = False ):
 		except:
 			externalFields = []
 			externalInfo = None
-	
-	finishers = set( r.num for r in results )
-	
-	maxLap = race.getMaxLap()
-	if race.numLaps is not None and race.numLaps < maxLap:
-		maxLap = race.numLaps
-	entries = race.interpolateLap( maxLap )
-	entries = [e for e in entries if e.num in finishers]	# Trim the results to this category.
-	
+
+	# Populate the animation data - include all projected laps.
 	animationData = {}
 	for e in entries:
 		if e.num not in animationData:
-			animationData[e.num] = {'lapTimes': [], 'lastTime': None }
+			animationData[e.num] = {'lapTimes': [], 'lastTime': None }	
 		animationData[e.num]['lapTimes'].append( e.t )
 
-	# Set the last times.
+	# Set the last times, rider category and rider status.
+	# Also correct for the laps by category.
 	for num, info in animationData.iteritems():
 		rider = race[num]
 		
@@ -67,9 +74,12 @@ def GetAnimationData( catName = 'All', getExternalData = False ):
 		else:
 			try:
 				info['lastTime'] = info['lapTimes'][c.getNumLaps()]
-			except:
-				tLast = info['lapTimes'][-1]
-				info['lastTime'] = tLast if not race.isRunning() or tLast >= race.minutes*60  else None
+			except (IndexError, TypeError):
+				try:
+					tLast = info['lapTimes'][-1]
+				except IndexError:
+					tLast = race.minutes*60
+				info['lastTime'] = tLast if not race.isRunning() or tLast >= race.minutes*60 else None
 		
 		# Add the external excel data.
 		for f in externalFields:
