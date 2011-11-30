@@ -177,7 +177,7 @@ class ExportGrid( object ):
 			if category:
 				results = dict( (num, info) for num, info in results.iteritems() if race.getCategory(num) == category )
 
-		infoFields = ['License', 'LastName', 'FirstName', 'Category', 'Team']
+		infoFields = ['LastName', 'FirstName', 'Team', 'Category', 'License']
 		infoFieldsPresent = set()
 		
 		# Figure out which additional fields are used.
