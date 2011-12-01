@@ -286,10 +286,10 @@ class MainWin( wx.Frame ):
 			[ 'results',		Results,			'Results' ],
 			[ 'history',		History,			'History' ],
 			[ 'riderDetail',	RiderDetail,		'RiderDetail' ],
-			[ 'recommendations',Recommendations,	'Recommendations' ],
-			[ 'categories', 	Categories,			'Categories' ],
 			[ 'gantt', 			Gantt,				'Chart' ],
 			[ 'raceAnimation',	RaceAnimation,		'Animation' ],
+			[ 'recommendations',Recommendations,	'Recommendations' ],
+			[ 'categories', 	Categories,			'Categories' ],
 			[ 'properties',		Properties,			'Properties' ]
 		]
 		
