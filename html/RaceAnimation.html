@@ -582,22 +582,28 @@ function createTextChild( parent, s )
 
 //-----------------------------------------------------------------------------
 
+var statusSortSeq = { 'Finisher':1, 'PUL':2, 'OTL':6, 'DNF':3, 'DQ':4, 'DNS':5, 'NP':7 };
 function CmpResultsData( x, y )
 {
 	// [numLaps, raceTimeOfLastLap, num, lapTimes, status, lastTime]
 	//    0              1           2      3         4        5
-	if( x[4] != y[4] )
-	{
-		if( x[4] == 'Finisher' ) return -1;
-		if( y[4] == 'Finisher' ) return 1;
-		if( x[4] < y[4] ) return -1;
-		return 1;
-	}
+	
+	// Compare status.
+	var xStatus = statusSortSeq[x[4]], yStatus = statusSortSeq[y[4]];
+	var dStatus = xStatus - yStatus
+	if( dStatus != 0 )
+		return dStatus;
+
+	// Compare laps completed.
 	var d = x[0] - y[0];
 	if( d != 0 )
 		return -d;
+		
+	// Compare race finish times.
 	if( x[4] == 'Finisher' )
 		return x[1] - y[1];
+		
+	// Compare last time.
 	return x[5] - y[5];
 }
 
