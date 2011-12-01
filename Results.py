@@ -197,8 +197,6 @@ class Results( wx.Panel ):
 					backgroundColour[ (r,c) ] = self.blackColour if (r,c) not in self.rcInterp else self.greyColour
 				else:
 					rider = race[int(cellNum)]
-					if rider.lapAdjust != 0:
-						backgroundColour[ (r,c) ] = (0,220,220)
 					
 		self.grid.Set( textColour = textColour, backgroundColour = backgroundColour )
 		self.grid.Reset()

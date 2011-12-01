@@ -90,7 +90,7 @@ class GanttChart(wx.PyControl):
 		"""
 		return True
 
-	def SetData( self, data, labels = None, nowTime = None ):
+	def SetData( self, data, labels = None, nowTime = None, interp = None ):
 		"""
 		* data is a list of lists.  Each list is a list of times.		
 		* labels are the names of the series.  Optional.
@@ -110,7 +110,8 @@ class GanttChart(wx.PyControl):
 			else:
 				self.labels = [''] * len(data)
 			self.nowTime = nowTime
-				
+			
+		self.interp = interp
 		self.Refresh()
 	
 	def OnPaint(self, event):
@@ -270,6 +271,8 @@ class GanttChart(wx.PyControl):
 		ctx = wx.GraphicsContext_Create(dc)
 		ctx.SetPen( wx.Pen(wx.BLACK, 1) )
 		
+		xyInterp = []
+		
 		xFactor = float(width - labelsWidth * 2) / float(self.dataMax)
 		yLast = barHeight
 		yHighlight = None
@@ -300,6 +303,10 @@ class GanttChart(wx.PyControl):
 					dc.SetBrush( transparentBrush )
 					dc.SetPen( penBar )
 					dc.DrawRectangle( xLast, yLast, xCur - xLast + 1, dy )
+					
+					if self.interp and self.interp[i][j]:
+						xyInterp.append( (xCur, yLast) )
+
 				xLast = xCur
 			
 			# Draw the last empty bar.
@@ -326,7 +333,28 @@ class GanttChart(wx.PyControl):
 			dc.DrawLine( 0, yHighlight, width, yHighlight )
 			yHighlight -= barHeight
 			dc.DrawLine( 0, yHighlight, width, yHighlight )
-			
+		
+		# Draw indicators for interpolated values.
+		radius = (dy/2) * 0.9
+		
+		# Define a path for the indicator about the origin.
+		ctx.SetPen( penBar )
+		ctx.SetBrush( ctx.CreateRadialGradientBrush( 0, - radius*0.50, 0, 0, radius + 1, wx.WHITE, wx.Colour(220,220,0) ) )
+		path = ctx.CreatePath()
+		path.MoveToPoint( 0, -radius )
+		path.AddLineToPoint( -radius, 0 )
+		path.AddLineToPoint( 0, radius )
+		path.AddLineToPoint( radius, 0 )
+		path.AddLineToPoint( 0, -radius )
+
+		# Draw the interp indicators.
+		for xSphere, ySphere in xyInterp:
+			ctx.PushState()
+			ctx.Translate( xSphere, ySphere + dy/2.0 - (dy/2.0 - radius) / 4 )
+			ctx.DrawPath( path )
+			ctx.PopState()
+		
+		# Draw the now timeline.
 		if self.nowTime and self.nowTime < self.dataMax:
 			nowTimeStr = Utils.formatTime( self.nowTime )
 			labelWidth, labelHeight = dc.GetTextExtent( nowTimeStr )	
@@ -364,9 +392,11 @@ class GanttChart(wx.PyControl):
 if __name__ == '__main__':
 	def GetData():
 		data = []
+		interp = []
 		for i in xrange(20):
 			data.append( [t + i*10 for t in xrange(0, 60*60, 7*60)] )
-		return data
+			interp.append( [((t + i*10)%100)//10 for t in xrange(0, 60*60, 7*60)] )
+		return data, interp
 
 	app = wx.PySimpleApp()
 	mainWin = wx.Frame(None,title="GanttChart", size=(600,400))
@@ -375,8 +405,8 @@ if __name__ == '__main__':
 	random.seed( 10 )
 	t = 55*60
 	tVar = t * 0.15
-	data = GetData()
-	GanttChart.SetData( data, [str(i) for i in xrange(100, 100+len(data))] )
+	data, interp = GetData()
+	GanttChart.SetData( data, [str(i) for i in xrange(100, 100+len(data))], interp = interp )
 
 	mainWin.Show()
 	app.MainLoop()

@@ -342,6 +342,7 @@ class History( wx.Panel ):
 				doLapsToGo = False
 					
 			entries = race.interpolateLap( maxLaps )
+			entries = [e for e in entries if (race.getCategory(e.num).getNumLaps() or 1000) >= e.lap]
 			
 			# Collect the number and times for all entries so we can compute lap times.
 			numTimes = {}
@@ -358,7 +359,7 @@ class History( wx.Panel ):
 				
 			# Trim out the 0 time starts.
 			try:
-				iFirstNonZero = (i for i, e in enumerate(entries) if e.t > 0).next()
+				iFirstNonZero = (i for i, e in enumerate(entries) if e.t > 0.0).next()
 				entries = entries[iFirstNonZero:]
 			except StopIteration:
 				self.clearGrid()

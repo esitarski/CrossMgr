@@ -13,8 +13,6 @@ import sys
 import re
 
 class RiderDetail( wx.Panel ):
-	lapAdjustOptions = ['+5','+4','+3','+2','+1','0','-1','-2','-3','-4','-5']
-	
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
 		
@@ -68,11 +66,9 @@ class RiderDetail( wx.Panel ):
 		gbs.Add( self.atRaceTime, pos=(row,3), span=(1,1), flag=wx.EXPAND )
 		row += 1
 		
-		self.lapAdjustName	= wx.StaticText( self, wx.ID_ANY, 'Lap Adjust: ' )
-		gbs.Add( self.lapAdjustName, pos=(row,0), span=(1,1), flag=labelAlign )
-		self.lapAdjust = wx.Choice( self, 2, choices=RiderDetail.lapAdjustOptions )
-		gbs.Add( self.lapAdjust, pos=(row,1), span=(1,1), flag=wx.EXPAND )
-		self.Bind(wx.EVT_CHOICE, self.onLapAdjustChanged, self.lapAdjust)
+		self.autoCorrectLaps = wx.CheckBox( self, wx.ID_ANY, 'Autocorrect Lap Data' )
+		gbs.Add( self.autoCorrectLaps, pos = (row, 0), span=(1, 2), flag = wx.ALIGN_CENTRE|wx.EXPAND )
+		self.Bind( wx.EVT_CHECKBOX, self.onAutoCorrectLaps, self.autoCorrectLaps )
 		row += 1
 
 		self.notInLap = wx.StaticText( self, wx.ID_ANY, '              ' )
@@ -209,10 +205,6 @@ class RiderDetail( wx.Panel ):
 		if Utils.isMainWin():
 			Utils.getMainWin().setNumSelect( self.num.GetValue() )
 	
-	def onLapAdjustChanged( self, event ):
-		self.commitChange()
-		self.refresh()
-	
 	def onStatusChanged( self, event ):
 		num = self.num.GetValue()
 		if not Model.race or num not in Model.race:
@@ -238,6 +230,18 @@ class RiderDetail( wx.Panel ):
 				self.atRaceTime.SetValue( Utils.SecondsToStr(tStatus) )
 				
 		self.commitChange()
+		self.refresh()
+		
+	def onAutoCorrectLaps( self, event ):
+		num = self.num.GetValue()
+		if not Model.race or num not in Model.race:
+			self.autoCorrectLaps.SetValue( True )
+			return
+		with Model.LockRace() as race:
+			rider = race[num]
+			rider.autoCorrectLaps = self.autoCorrectLaps.GetValue()
+			race.resetCache()
+			race.setChanged()
 		self.refresh()
 	
 	def setRider( self, n = None ):
@@ -320,16 +324,6 @@ class RiderDetail( wx.Panel ):
 	def setNumSelect( self, num ):
 		self.setRider( num )
 	
-	def getLapAdjustIndex( self, adjust = 0 ):
-		if adjust is None:
-			adjust = '0'
-		else:
-			adjust = '+%d' % adjust if adjust > 0 else str(adjust)
-		for i, o in enumerate(RiderDetail.lapAdjustOptions):
-			if o == adjust:
-				return i
-		return self.getLapAdjustIndex( 0 )
-	
 	def setAtRaceTime( self, secs = 0.0, editable = False ):
 		self.atRaceTime.SetValue( Utils.SecondsToStr(secs) )
 		self.atRaceTime.SetEditable( editable )
@@ -343,7 +337,7 @@ class RiderDetail( wx.Panel ):
 		self.grid.Set( data = [ [], [], [] ] )
 		self.grid.Reset()
 		self.category.SetLabel( '' )
-		self.lapAdjust.SetSelection( self.getLapAdjustIndex() )
+		self.autoCorrectLaps.SetValue( True )
 		num = self.num.GetValue()
 		
 		self.statusOption.SetSelection( 0 )
@@ -359,7 +353,6 @@ class RiderDetail( wx.Panel ):
 			category = race.categories.get( catName, None )
 			
 			self.category.SetLabel( catName )
-			self.lapAdjust.SetSelection( self.getLapAdjustIndex(rider.lapAdjust) )
 			self.statusOption.SetSelection( rider.status )
 			if rider.status in [Model.Rider.Finisher, Model.Rider.DNS, Model.Rider.DQ]:
 				self.setAtRaceTime()
@@ -367,6 +360,8 @@ class RiderDetail( wx.Panel ):
 				if rider.tStatus is None:
 					rider.tStatus = 0.0
 				self.setAtRaceTime( rider.tStatus, True )
+				
+			self.autoCorrectLaps.SetValue( getattr(rider, 'autoCorrectLaps', True) )
 			
 			maxLap = race.getMaxLap()
 			if race.numLaps is not None and race.numLaps < maxLap:
@@ -399,6 +394,7 @@ class RiderDetail( wx.Panel ):
 			except IndexError:
 				raceTime = 0.0
 			ganttData = [raceTime]
+			ganttInterp = [False]
 			data = [ [], [], [] ]
 			graphData = []
 			backgroundColour = {}
@@ -408,7 +404,10 @@ class RiderDetail( wx.Panel ):
 				tLap = max( e.t - raceTime, 0.0 )
 				data[2].append( Utils.formatTime(tLap) )
 				graphData.append( tLap )
+				
 				ganttData.append( e.t )
+				ganttInterp.append( e.interp )
+				
 				raceTime = e.t
 				if e.interp:
 					for i in xrange(0,3):
@@ -419,7 +418,7 @@ class RiderDetail( wx.Panel ):
 			self.grid.Reset()
 			self.grid.FitInside()
 			
-			self.ganttChart.SetData( [ganttData], [num], Gantt.GetNowTime() )
+			self.ganttChart.SetData( [ganttData], [num], Gantt.GetNowTime(), [ganttInterp] )
 			self.lineGraph.SetData( [graphData], [[e.interp for e in entries]] )
 	
 	def commitChange( self ):
@@ -432,16 +431,15 @@ class RiderDetail( wx.Panel ):
 				return
 				
 			rider = race.getRider(num)
-			oldValues = (rider.lapAdjust, rider.status, rider.tStatus)
+			oldValues = (rider.status, rider.tStatus)
 
 			tStatus = None
 			if status not in [Model.Rider.Finisher, Model.Rider.DNS, Model.Rider.DQ]:
 				tStatus = Utils.StrToSeconds( self.atRaceTime.GetValue() )
 			
-			rider.lapAdjust = int(self.lapAdjust.GetStringSelection())
 			rider.setStatus( status, tStatus )
 
-			newValues = (rider.lapAdjust, rider.status, rider.tStatus)
+			newValues = (rider.status, rider.tStatus)
 			if oldValues != newValues:
 				race.resetCache()
 				race.setChanged()
@@ -456,9 +454,11 @@ if __name__ == '__main__':
 	riderDetail.refresh()
 	lineData = [random.normalvariate(100,15) for x in xrange(12)]
 	ganttData = [0, lineData[0] * 3]
-	for d in lineData:
+	ganttInterp = [False, False]
+	for i, d in enumerate(lineData):
 		ganttData.append( ganttData[-1] + d )
-	riderDetail.ganttChart.SetData( [ganttData], [106] )
+		ganttInterp.append( i % 4 == 0 )
+	riderDetail.ganttChart.SetData( [ganttData], [106], interp = [ganttInterp] )
 	riderDetail.lineGraph.SetData( [lineData] )
 	mainWin.Show()
 	app.MainLoop()

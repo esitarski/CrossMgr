@@ -260,6 +260,13 @@ class Rider(object):
 	OTL		  = 5
 	NP		  = 6
 	statusNames = ['Finisher', 'DNF', 'PUL', 'DNS', 'DQ', 'OTL', 'NP']
+	statusSortSeq = { 'Finisher':1,	Finisher:1,
+					  'PUL':2,		Pulled:2,
+					  'OTL':6,		OTL:6,
+					  'DNF':3,		DNF:3,
+					  'DQ':4,		DQ:4,
+					  'DNS':5,		DNS:5,
+					  'NP':7,		NP:7 }
 
 	# Factors for range of acceptable lap times.
 	pMin, pMax = 0.85, 1.20
@@ -270,9 +277,9 @@ class Rider(object):
 	def __init__( self, num ):
 		self.num = num
 		self.times = []
-		self.lapAdjust = 0
 		self.status = Rider.Finisher
 		self.tStatus = None
+		self.autoCorrectLaps = True
 
 	def addTime( self, t ):
 		# All times in race time seconds.
@@ -404,6 +411,15 @@ class Rider(object):
 	def interpolate( self, stopTime = maxInterpolateTime ):
 		if not self.times or self.status in [Rider.DNS, Rider.DQ]:
 			return []
+			
+		# Check if we need to do any interpolation or if the user wants the raw data.
+		if not getattr(self, 'autoCorrectLaps', True):
+			iTimes = [None] * (len(self.times) + 1)
+			# Add a zero start time for the beginning of the race.
+			# This avoids a whole lot of special cases later.
+			iTimes[0] = 0.0
+			iTimes[1:] = self.times
+			return [Entry(t=t, lap=i, num=self.num, interp=False) for i, t in enumerate(iTimes)]
 
 		# Adjust the stop time.
 		st = stopTime
@@ -414,11 +430,11 @@ class Rider(object):
 			st = min(st, dnfPulledTime + 0.01)
 		
 		iTimes = self.getCleanLapTimes()
-		expected = self.getExpectedLapTime( iTimes )
 
 		# Flag that these are not interpolated times.
+		expected = self.getExpectedLapTime( iTimes )
 		iTimes = [(t, False) for t in iTimes]
-
+		
 		# Check for missing lap data and fill it in.
 		for missing in xrange(1, 3):
 			mMin = expected * missing + expected * Rider.pMin
@@ -571,7 +587,6 @@ class Race(object):
 		try:
 			rider = self.riders[num]
 			rider.times = []
-			rider.lapAdjust = 0
 		except KeyError:
 			pass
 			
@@ -773,9 +788,9 @@ class Race(object):
 		entries = self.interpolate()
 		try:
 			if not category:
-				maxLap = max( (e.lap + self[e.num].lapAdjust for e in entries if not e.interp) )
+				maxLap = max( (e.lap for e in entries if not e.interp) )
 			else:
-				maxLap = max( (e.lap + self[e.num].lapAdjust for e in entries
+				maxLap = max( (e.lap for e in entries
 									if not e.interp and self.getCategory(e.num) == category) )
 		except ValueError:
 			maxLap = 0
@@ -1230,10 +1245,10 @@ class Race(object):
 			maxLaps = finishers[0].lap
 			results = []
 			for e in finishers:
-				lapsDown = maxLaps - (e.lap + self[e.num].lapAdjust)
+				lapsDown = maxLaps - e.lap
 				if lapsDown < 0:
 					lapsDown = 0
-				# print 'lapsDown=%d e.lap=%d lapAdjust=%d' % (lapsDown, e.lap, self[e.num].lapAdjust)
+				# print 'lapsDown=%d e.lap=%d' % (lapsDown, e.lap)
 				while lapsDown >= len(results):
 					results.append( [] )
 				results[lapsDown].append( e )
@@ -1324,7 +1339,6 @@ if __name__ == '__main__':
 	entries = rider.interpolate( 36 )
 	print( [(e.t, e.interp) for e in entries] )
 	'''
-	rider.lapAdjust = 4
 	entries = rider.interpolate( 36 )
 	print [e.t for e in entries]
 	'''

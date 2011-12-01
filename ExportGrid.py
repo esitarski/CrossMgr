@@ -8,6 +8,9 @@ from ReadSignOnSheet import Fields, IgnoreFields
 
 #---------------------------------------------------------------------------
 
+# Sort sequence by rider status.
+statusSortSeq = Model.Rider.statusSortSeq
+
 class ExportGrid( object ):
 	def __init__( self, title = '', colnames = [], data = [] ):
 		self.title = title
@@ -197,9 +200,8 @@ class ExportGrid( object ):
 			e += [info.get(f, '') for f in infoFields]
 			finishInfo.append( e )
 		
-		statusSort = { 'Finisher':0, 'PUL':1, 'OTL':5, 'DNF':2, 'DQ':3, 'DNS':4, 'NP':5 }
 		# sort by status, laps, lastTime, 
-		finishInfo.sort( key = lambda x: (statusSort.get(x[1],100), -x[2], x[3], x[0]) )
+		finishInfo.sort( key = lambda x: (statusSortSeq.get(x[1],100), -x[2], x[3], x[0]) )
 		
 		leaderLaps = finishInfo[0][2]
 		leaderTime = finishInfo[0][3]
@@ -239,6 +241,8 @@ class ExportGrid( object ):
 			gap.append( gapEntry )
 			
 			for p, t in enumerate(Utils.formatTimeCompressed(info[5][i] - info[5][i-1]) for i in xrange(1, len(info[5]))):
+				while len(lapTimes[p]) < pos - 1:
+					lapTimes[p].append( ' ' )
 				lapTimes[p].append( t )
 			
 			for i, j in enumerate(xrange(6, 6 + len(infoFields))):

@@ -71,9 +71,11 @@ class Gantt( wx.Panel ):
 				def match( num ) : return True
 			
 			riderTimes = {}
+			riderInterp = {}
 			for e in entries:
 				if match(e.num):
 					riderTimes.setdefault(e.num, []).append( e.t )
+					riderInterp.setdefault(e.num, []).append( e.interp )
 			
 			# Adjust for the start times offset.
 			catOffset = {}
@@ -87,7 +89,8 @@ class Gantt( wx.Panel ):
 
 			labels = [str(n) for n, times in numTimes]
 			data = [times for n, times in numTimes]
-			self.ganttChart.SetData( data, labels, GetNowTime() )
+			interp = [riderInterp[n] for n, times in numTimes]
+			self.ganttChart.SetData( data, labels, GetNowTime(), interp )
 	
 	def commit( self ):
 		pass

@@ -123,6 +123,8 @@ class LineGraph(wx.PyControl):
 		
 		if not self.data or width < 50 or height < 50:
 			return
+			
+		ctx = wx.GraphicsContext_Create(dc)
 
 		textWidth, textHeight = dc.GetTextExtent( '00:00' if self.dataMax < 60*60 else '00:00:00' )
 		
@@ -215,6 +217,17 @@ class LineGraph(wx.PyControl):
 		dc.DrawLine(xLeft, yBottom, xRight, yBottom)
 		dc.DrawLine(xLeft, yBottom, xLeft, yTop)
 	
+		# Define a path for the indicator about the origin.
+		radius = 12
+		ctx.SetPen( wx.Pen( wx.Colour(128,128,128), 1 ) )
+		ctx.SetBrush( ctx.CreateRadialGradientBrush( 0, - radius*0.50, 0, 0, radius + 1, wx.WHITE, wx.Colour(220,220,0) ) )
+		path = ctx.CreatePath()
+		path.MoveToPoint( 0, -radius )
+		path.AddLineToPoint( -radius, 0 )
+		path.AddLineToPoint( 0, radius )
+		path.AddLineToPoint( radius, 0 )
+		path.AddLineToPoint( 0, -radius )
+			
 		# Draw the data lines.
 		for i, s in enumerate(self.data):
 			pen = wx.Pen( colours[i%len(colours)], 6 )
@@ -228,11 +241,14 @@ class LineGraph(wx.PyControl):
 				x += thick
 			dc.DrawLines( points );
 			
-			dc.SetPen( wx.Pen( wx.Colour(0,0,0,1), 1 ) )
-			dc.SetBrush( wx.Brush('yellow') )
+			# Draw indicators for interpolated values.
+			ctx.SetPen( wx.Pen( wx.Colour(128,128,128), 1 ) )
 			for j, p in enumerate(points):
 				if self.interpolated[i][j]:
-					dc.DrawCirclePoint( p, 7 )
+					ctx.PushState()
+					ctx.Translate( *p )
+					ctx.DrawPath( path )
+					ctx.PopState()
 		
 	def OnEraseBackground(self, event):
 		# This is intentionally empty, because we are using the combination
