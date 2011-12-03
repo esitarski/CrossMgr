@@ -521,6 +521,7 @@ function SetData( aData, tCur )
 	var cats = {};
 	for( num in data )
 	{
+		data[num].num = num;
 		var cName = data[num]['raceCat'];
 		if( cName != 'All' )
 			cats[cName] = cName;
@@ -634,7 +635,6 @@ function SetCategoryResults()
 			var d = data[num];
 			if( d['raceCat'] == cat )
 			{
-				d.num = num;
 				resultsData.push( d );
 				// Get the union of all the defined fields.
 				for( var f = 0; f < infoFields.length; ++f )
@@ -691,11 +691,10 @@ function SetCategoryResults()
 			tr.className = ((r & 1) ? 'odd' : 'even');
 			
 			var d = resultsData[r];
-			var num = d.num;
 			var lapTimes = d.lapTimes;
 			var isFinisher = (d.status == 'Finisher');
 			
-			var p = (isFinisher ? '' + position : d.status );
+			var p = (isFinisher ? '' + position : d.status);
 			createTextChild( td = createChild(tr, 'TD'), p );
 			if( numsToWatch[num] ) td.className = 'highlight';
 			
