@@ -53,7 +53,7 @@ class CrossMgrPrintout(wx.Printout):
 		catName = categories[iCat]
 		
 		exportGrid = ExportGrid()
-		exportGrid.setResultsOneList( catName, False )
+		exportGrid.setResultsOneList( catName, True )
 
 		dc = self.GetDC()
 		exportGrid.drawToFitDC( dc )

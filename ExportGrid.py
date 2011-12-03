@@ -94,7 +94,7 @@ class ExportGrid( object ):
 		# Draw the table.
 		font = self._getFontToFit( widthFieldPix, heightFieldPix, lambda font: self._getDataSizeTuple(dc, font) )
 		dc.SetFont( font )
-		wSpace, hSpace, lh = dc.GetMultiLineTextExtent( '    ', font )
+		wSpace, hSpace, textHeight = dc.GetMultiLineTextExtent( '    ', font )
 		
 		yPixTop = yPix
 		for col, c in enumerate(self.colnames):
@@ -109,7 +109,8 @@ class ExportGrid( object ):
 			if col == 0:
 				yLine = yPix - hSpace/8
 				for r in xrange(max(len(cData) for cData in self.data) + 1):
-					dc.DrawLine( borderPix, yLine + r * lh, widthPix - borderPix, yLine + r * lh )
+					dc.DrawLine( borderPix, yLine + r * textHeight, widthPix - borderPix, yLine + r * textHeight )
+					
 			for v in self.data[col]:
 				vStr = str(v)
 				w, h, lh = dc.GetMultiLineTextExtent( vStr, font )
@@ -117,7 +118,7 @@ class ExportGrid( object ):
 					self._drawMultiLineText( dc, vStr, xPix, yPix )					# left justify
 				else:
 					self._drawMultiLineText( dc, vStr, xPix + colWidth - w, yPix )	# right justify
-				yPix += lh
+				yPix += textHeight
 			xPix += colWidth + wSpace
 		
 	def toExcelSheet( self, sheet ):
