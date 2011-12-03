@@ -289,6 +289,7 @@ class ForecastHistory( wx.Panel ):
 			tRaceLength = race.minutes * 60.0
 			
 			entries = race.interpolateLapNonZeroFinishers( race.numLaps if race.numLaps is not None else race.getMaxLap() + 1 )
+			entries = [e for e in entries if e.lap <= race.getCategoryNumLaps(e.num) ]
 			
 			#------------------------------------------------------------------
 			# Select the interpolated entries around now.

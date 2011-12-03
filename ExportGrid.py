@@ -3,7 +3,7 @@ import wx
 import xlwt
 import Utils
 import Model
-import RaceAnimation
+import Results
 from ReadSignOnSheet import Fields, IgnoreFields
 
 #---------------------------------------------------------------------------
@@ -17,6 +17,7 @@ class ExportGrid( object ):
 		self.colnames = colnames
 		self.data = data
 		self.leftJustifyCols = set()
+		self.infoColumns = set()
 	
 	def _getFont( self, pointSize = 28, bold = False ):
 		return wx.Font( pointSize, wx.FONTFAMILY_SWISS, wx.NORMAL,
@@ -162,102 +163,47 @@ class ExportGrid( object ):
 		
 		self.data[col][row] = value
 	
-	def setResultsOneListRiderTimes( self, catName = 'All' ):
+	def setResultsOneListRiderTimes( self, catName = 'All', getExternalData = True ):
 		''' Add the lap times to the setResultsOneList output. '''
-		self.setResultsOneList( catName )
+		self.setResultsOneList( catName, getExternalData )
 		return
 					
-	def setResultsOneList( self, catName ):
+	def setResultsOneList( self, catName, getExternalData = True ):
 		self.data = []
 		self.colnames = []
-			
-		with Model.LockRace() as race:
-			self.title = 'Race: '+ race.name + '\n' + Utils.formatDate(race.date) + '\nCategory: ' + catName
-			results = RaceAnimation.GetAnimationData( catName, True )
-			category = race.categories.get(catName, None)
-			if not results:
-				return
-			if category:
-				results = dict( (num, info) for num, info in results.iteritems() if race.getCategory(num) == category )
 
-		infoFields = ['LastName', 'FirstName', 'Team', 'Category', 'License']
-		infoFieldsPresent = set()
-		
-		# Figure out which additional fields are used.
-		for num, data in results.iteritems():
-			for f in infoFields:
-				if f in data:
-					infoFieldsPresent.add( f )
-		
-		infoFields = [f for f in infoFields if f in infoFieldsPresent]
-		
-		#  num,  status,   laps,   lastTime,    raceCat,    lapTimes,   otherinfo
-		#   0       1        2        3            4           5           6, 7, 8...
-		finishInfo = []
-		for num, info in results.iteritems():
-			e = [num, info['status'], len(info['lapTimes']),
-				 info['lastTime'], info['raceCat'], info['lapTimes']]
-			e += [info.get(f, '') for f in infoFields]
-			finishInfo.append( e )
-		
-		# sort by status, laps, lastTime, 
-		finishInfo.sort( key = lambda x: (statusSortSeq.get(x[1],100), -x[2], x[3], x[0]) )
-		
-		leaderLaps = finishInfo[0][2]
-		leaderTime = finishInfo[0][3]
-		
-		position	= []
-		number		= []
-		finishTime	= []
-		gap			= []
-		infoData	= [[] for i in xrange(len(infoFields))]
-		lapTimes	= [[] for i in xrange(finishInfo[0][2])]
-		
-		self.colnames = ['Pos', 'Bib'] + infoFields + ['Time', 'Gap'] + ['Lap %d' % lap for lap in xrange(1,finishInfo[0][2])]
+		results = Results.GetResults( catName, getExternalData )
 		if not results:
 			return
-		pos = 0
-		for info in finishInfo:
-			#  num,  status,   laps,   lastTime,    raceCat,    lapTimes,   otherinfo
-			#   0       1        2        3            4           5           6, 7, 8...
-			finisher = (info[1] == 'Finisher')
-			
-			pos += 1
-			position.append( pos if finisher else info[1] )
-			
-			number.append( info[0] )
-			finishTime.append( Utils.formatTime(info[3]) if finisher else ' ' )
-			
-			gapEntry = ' '
-			if finisher:
-				if info[2] == leaderLaps:
-					if info[3] != leaderTime:
-						gapEntry = Utils.SecondsToMMSS(info[3] - leaderTime)
-						if gapEntry[0] == '0':
-							gapEntry = gapEntry[1:]
-				elif info[3] > leaderTime:
-					lapsDown = leaderLaps - info[2]
-					gapEntry = '%d %s' % (lapsDown, 'lap' if lapsDown == 1 else 'laps')
-			gap.append( gapEntry )
-			
-			for p, t in enumerate(Utils.formatTimeCompressed(info[5][i] - info[5][i-1]) for i in xrange(1, len(info[5]))):
-				while len(lapTimes[p]) < pos - 1:
-					lapTimes[p].append( ' ' )
-				lapTimes[p].append( t )
-			
-			for i, j in enumerate(xrange(6, 6 + len(infoFields))):
-				try:
-					rf = info[j]
-				except IndexError:
-					rf = ''
-				if rf is None:
-					rf = ' '
-				infoData[i].append( rf )
+		
+		with Model.LockRace() as race:
+			self.title = 'Race: '+ race.name + '\n' + Utils.formatDate(race.date) + '\nCategory: ' + catName
+			category = race.categories.get(catName, None)
 
-		self.data = [position, number] + infoData + [finishTime, gap]
-		for lt in lapTimes:
-			self.data.append( lt )
-		self.leftJustifyCols = set( xrange(2, 2+len(infoFields)) )
+		leader = results[0]
+		infoFields = ['LastName', 'FirstName', 'Team', 'Category', 'License']
+		infoFieldsPresent = set( infoFields ) & set( dir(leader) )
+		infoFields = [f for f in infoFields if f in infoFieldsPresent]
+		
+		self.colnames = ['Pos', 'Bib'] + infoFields + ['Time', 'Gap']
+		if leader.lapTimes:
+			self.colnames += ['Lap %d' % lap for lap in xrange(1, len(leader.lapTimes)+1)]
+			
+		data = [ [] for i in xrange(len(self.colnames)) ]
+		for col, f in enumerate(['pos', 'num'] + infoFields + ['lastTime', 'gap']):
+			for row, r in enumerate(results):
+				data[col].append( getattr(r, f, '') )
+		lapsMax = len(leader.lapTimes)
+		firstLapDataCol = 2 + len(infoFields) + 2
+		for row, r in enumerate(results):
+			for i, t in enumerate(r.lapTimes):
+				data[firstLapDataCol+i].append( Utils.formatTimeCompressed(t) )
+			for i in xrange(len(r.lapTimes), lapsMax):
+				data[firstLapDataCol+i].append( '' )
+		
+		self.data = data
+		self.infoColumns     = set( xrange(2, 2+len(infoFields)) ) if infoFields else set()
+		self.leftJustifyCols = set( xrange(2, 2+len(infoFields)) ) if infoFields else set()
 			
 if __name__ == '__main__':
 	pass

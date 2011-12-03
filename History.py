@@ -342,15 +342,14 @@ class History( wx.Panel ):
 				doLapsToGo = False
 					
 			entries = race.interpolateLap( maxLaps )
-			entries = [e for e in entries if (race.getCategory(e.num).getNumLaps() or 1000) >= e.lap]
+			entries = [e for e in entries if e.lap <= race.getCategoryNumLaps(e.num)]
 			
 			# Collect the number and times for all entries so we can compute lap times.
 			numTimes = {}
 			for e in entries:
 				if e.lap == 0:
-					c = race.getCategory( e.num )
 					try:
-						startOffset = c.getStartOffsetSecs()
+						startOffset = race.getCategory(e.num).getStartOffsetSecs()
 					except:
 						startOffset = 0.0
 					numTimes[(e.num, 0)] = startOffset

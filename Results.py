@@ -4,22 +4,139 @@ import wx
 import wx.grid		as gridlib
 import re
 import os
+import bisect
 from string import Template
 import ColGrid
 from FixCategories import FixCategories, SetCategory
+from ExportGrid import ExportGrid
 
 reNonDigits = re.compile( '[^0-9]' )
 
+from ReadSignOnSheet import IgnoreFields
+statusSortSeq = Model.Rider.statusSortSeq
+
+class RiderResult( object ):
+	def __init__( self, num, status, lastTime, lapTimes, raceTimes ):
+		self.num		= num
+		self.status		= status
+		self.gap		= ''
+		self.pos		= ''
+		self.laps		= len(lapTimes)
+		self.lastTime	= lastTime
+		self.lapTimes	= lapTimes
+		self.raceTimes	= raceTimes
+		
+def GetResults( catName = 'All', getExternalData = False ):
+	with Model.LockRace() as race:
+		if not race:
+			return []
+		
+		# Get the number of race laps for each category.
+		raceNumLaps = (race.numLaps or 1000)
+		categoryWinningTime = {}
+		for c, (times, nums) in race.getCategoryTimesNums().iteritems():
+			if not times:
+				continue
+			# If the category num laps is specified, use that.
+			if c.getNumLaps():
+				categoryWinningTime[c] = times[c.getNumLaps()]
+			else:
+				# Otherwise, set the number of laps by the winner first after the race finish time.
+				try:
+					categoryWinningTime[c] = times[bisect.bisect_left( times, race.minutes * 60.0 )]
+				except IndexError:
+					categoryWinningTime[c] = race.minutes * 60.0
+							
+		if not categoryWinningTime:
+			return []
+			
+		category = race.categories.get( catName, None )
+		startOffset = category.getStartOffsetSecs() if category else 0.0
+			
+		riderResults = []
+		for rider in race.riders.itervalues():
+			riderCategory = race.getCategory( rider.num )
+			if category and riderCategory != category:
+				continue
+			times = [e.t for e in rider.interpolate()]
+			
+			if times:
+				times[0] = min(riderCategory.getStartOffsetSecs(), times[1])
+				laps = bisect.bisect_left( times, categoryWinningTime[riderCategory] )
+				times = times[:laps+1]
+			else:
+				laps = 0
+			lastTime = rider.tStatus
+			if not lastTime:
+				if times:
+					lastTime = times[-1]
+					if category:
+						lastTime = max( lastTime - startOffset, 0.0 )
+				else:
+					lastTime = 0.0
+					
+			riderResults.append( RiderResult(rider.num, rider.status, lastTime,
+									[times[i] - times[i-1] for i in xrange(1, len(times))], times) )
+		
+		if not riderResults:
+			return []
+			
+		riderResults.sort( key = lambda x: (statusSortSeq[x.status], -x.laps, x.lastTime) )
+
+		# Get the linked external data.
+		externalFields = []
+		externalInfo = None
+		if getExternalData:
+			try:
+				externalFields = race.excelLink.getFields()
+				externalInfo = race.excelLink.read()
+				for ignoreField in IgnoreFields:
+					try:
+						externalFields.remove( ignoreField )
+					except ValueError:
+						pass
+			except:
+				externalFields = []
+				externalInfo = None
+		
+		# Add external data.
+		# Add the position (or status, if not a Finisher).
+		# Fill in the gap field (include laps down if appropriate).
+		leader = riderResults[0]
+		for pos, rr in enumerate(riderResults):
+			for f in externalFields:
+				try:
+					setattr( rr, f, externalInfo[rr.num][f] )
+				except KeyError:
+					setattr( rr, f, '' )
+		
+			if rr.status != Model.Rider.Finisher:
+				rr.pos = Model.Rider.statusNames[rr.status]
+				continue
+				
+			rr.pos = str(pos+1)
+			
+			if rr.laps != leader.laps:
+				if rr.lastTime > leader.lastTime:
+					lapsDown = leader.laps - rr.laps
+					rr.gap = '%d %s' % (lapsDown, 'laps' if lapsDown > 1 else 'lap')
+			elif rr != leader:
+				rr.gap = Utils.formatTimeCompressed( rr.lastTime - leader.lastTime )
+		
+		# Format the last time as a string.
+		for rr in riderResults:
+			if rr.lastTime:
+				rr.lastTime = Utils.formatTimeCompressed( rr.lastTime )
+			else:
+				rr.lastTime = ''
+		
+		return riderResults
+		
 class Results( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
 		
 		self.category = None
-		
-		self.showTimes = False
-		self.showGaps = False
-		self.showPositions = True
-		self.showLapsCompleted = False
 		
 		self.rcInterp = set()
 		self.numSelect = None
@@ -30,22 +147,6 @@ class Results( wx.Panel ):
 		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, 'Category:' )
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
-		
-		self.showTimesToggle = wx.ToggleButton( self, wx.ID_ANY, 'Race Times', style=wx.BU_EXACTFIT )
-		self.showTimesToggle.SetValue( self.showTimes )
-		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowTimes, self.showTimesToggle )
-		
-		self.showGapsToggle = wx.ToggleButton( self, wx.ID_ANY, 'Gaps', style=wx.BU_EXACTFIT )
-		self.showGapsToggle.SetValue( self.showGaps )
-		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowGaps, self.showGapsToggle )
-		
-		self.showLapsCompletedToggle = wx.ToggleButton( self,wx.ID_ANY, 'Laps Completed', style=wx.BU_EXACTFIT )
-		self.showLapsCompletedToggle.SetValue( self.showLapsCompleted )
-		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowLapsCompleted, self.showLapsCompletedToggle )
-		
-		self.showPositionsToggle = wx.ToggleButton( self, wx.ID_ANY, 'Positions', style=wx.BU_EXACTFIT )
-		self.showPositionsToggle.SetValue( self.showPositions )
-		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowPositions, self.showPositionsToggle )
 		
 		self.search = wx.SearchCtrl(self, size=(80,-1), style=wx.TE_PROCESS_ENTER )
 		# self.search.ShowCancelButton( True )
@@ -62,10 +163,6 @@ class Results( wx.Panel ):
 		
 		self.hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.categoryChoice, flag=wx.ALL, border=4 )
-		self.hbs.Add( self.showTimesToggle, flag=wx.ALL, border=4 )
-		self.hbs.Add( self.showGapsToggle, flag=wx.ALL, border=4 )
-		self.hbs.Add( self.showLapsCompletedToggle, flag=wx.ALL, border=4 )
-		self.hbs.Add( self.showPositionsToggle, flag=wx.ALL, border=4 )
 		self.hbs.Add( wx.StaticText(self, wx.ID_ANY, ' '), proportion=2 )
 		self.hbs.Add( self.search, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.zoomInButton, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
@@ -161,22 +258,6 @@ class Results( wx.Panel ):
 		if Utils.isMainWin():
 			Utils.getMainWin().showRiderDetail()
 		
-	def onShowTimes( self, event ):
-		self.showTimes ^= True
-		self.refresh()
-		
-	def onShowGaps( self, event ):
-		self.showGaps ^= True
-		self.refresh()
-		
-	def onShowPositions( self, event ):
-		self.showPositions ^= True
-		self.refresh()
-		
-	def onShowLapsCompleted( self, event ):
-		self.showLapsCompleted ^= True
-		self.refresh()
-		
 	def showNumSelect( self ):
 		race = Model.race
 		if race is None:
@@ -184,19 +265,20 @@ class Results( wx.Panel ):
 			
 		textColour = {}
 		backgroundColour = dict( ((rc, self.yellowColour) for rc in self.rcInterp) )
-		for c in xrange(self.grid.GetNumberCols()):
-			for r in xrange(self.grid.GetNumberRows()):
+		for r in xrange(self.grid.GetNumberRows()):
+		
+			value = self.grid.GetCellValue( r, 1 )
+			if not value:
+				break	
 			
-				value = self.grid.GetCellValue( r, c )
-				if not value:
-					break	
-				
-				cellNum = self.reSplit.split(value)[0]
-				if cellNum == self.numSelect:
+			cellNum = value
+			if cellNum == self.numSelect:
+				for c in xrange(self.grid.GetNumberCols()):
 					textColour[ (r,c) ] = self.whiteColour
 					backgroundColour[ (r,c) ] = self.blackColour if (r,c) not in self.rcInterp else self.greyColour
-				else:
-					rider = race[int(cellNum)]
+					
+				self.grid.MakeCellVisible( r, 0 )
+				break
 					
 		self.grid.Set( textColour = textColour, backgroundColour = backgroundColour )
 		self.grid.Reset()
@@ -212,11 +294,12 @@ class Results( wx.Panel ):
 		row, col = event.GetRow(), event.GetCol()
 		if row >= self.grid.GetNumberRows() or col >= self.grid.GetNumberCols():
 			return
-			
+		
+		col = 1
 		value = self.grid.GetCellValue( row, col )
 		numSelect = None
 		if value:
-			numSelect = self.reSplit.split(value)[0]
+			numSelect = value
 		if self.numSelect != numSelect:
 			self.numSelect = numSelect
 			self.showNumSelect()
@@ -262,75 +345,61 @@ class Results( wx.Panel ):
 		self.search.SelectAll()
 		wx.CallAfter( self.search.SetFocus )
 		
+		if not Model.race:
+			self.clearGrid()
+			return
+			
 		with Model.LockRace() as race:
-			if not race:
-				self.clearGrid()
-				return
-		
 			catName = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
 			self.hbs.Layout()
 			self.category = race.categories.get( catName, None )
 			
-			colnames, results, dnf, dns, dq = race.getResults( catName )
-
-			if not any([colnames, results, dnf, dns, dq]):
-				self.clearGrid()
-				return
-
-			self.isEmpty = False
-
-			# Format the results.
-			data = []
-			formatStr = ['$num$otl']
-			if self.showTimes:			formatStr.append('=$t')
-			if self.showGaps:			formatStr.append('$gap')
-			if self.showLapsCompleted:	formatStr.append(' [$lap]')
-			if self.showPositions:		formatStr.append(' ($pos)')
-			template = Template( ''.join(formatStr) )
+		results = GetResults( catName )
+		if not results:
+			return
 			
-			if results:
-				leaderLap = results[0][0].lap
-				leaderTime = results[0][0].t
-				pos = 1
-				for col, d in enumerate(results):
-					data.append( [template.safe_substitute(
-							{
-								'num':	e.num,
-								'otl':	'OTL' if race[e.num].isPulled() else '',
-								't':	Utils.formatTime(e.t) if self.showTimes else '',
-								'gap':	('+%s' % Utils.formatTime(e.t - leaderTime) if e.lap == leaderLap else '') if self.showGaps else '',
-								'lap':	e.lap,
-								'pos':	row+pos
-							} ) for row, e in enumerate(d)] )
-
-					self.rcInterp.update( (row, col) for row, e in enumerate(d) if race[e.num].hasInterpolatedTime(e.t) )
-					pos += len(d)
+		leader = results[0]
+		colnames = ['Pos', 'Bib', 'Time', 'Gap']
+		if leader.lapTimes:
+			colnames += ['Lap %d' % lap for lap in xrange(1, len(leader.lapTimes)+1)]
 			
-			if dnf:
-				formatStr = '$num'
-				if self.showTimes:			formatStr += '=$t'
-				template = Template( formatStr )
-				colnames.append( 'DNF' )
-				data.append( [template.safe_substitute( dict(num=e[0], t=Utils.formatTime(e[1])) ) for j, e in enumerate(dnf)] )
+		data = [ [] for i in xrange(len(colnames)) ]
+		for col, f in enumerate(['pos', 'num', 'lastTime', 'gap']):
+			for row, r in enumerate(results):
+				data[col].append( getattr(r, f, '') )
+		lapsMax = len(leader.lapTimes)
+		for row, r in enumerate(results):
+			for i, t in enumerate(r.lapTimes):
+				data[4+i].append( Utils.formatTimeCompressed(t) )
+			for i in xrange(len(r.lapTimes), lapsMax):
+				data[4+i].append( '' )
+				
+		self.grid.Set( data = data, colnames = colnames )
+		self.grid.AutoSizeColumns( True )
+		self.grid.Reset()
+		self.isEmpty = False
 
-			if dns:
-				colnames.append( 'DNS' )
-				data.append( [str(e[0]) for e in dns] )
-
-			if dq:
-				colnames.append( 'NP' )
-				data.append( [str(e[0]) for e in dq] )
-
-			self.grid.Set( data = data, colnames = colnames )
-			self.grid.AutoSizeColumns( True )
-			self.grid.Reset()
-
-			self.showNumSelect()		
-
-			self.grid.MakeCellVisible( 0, self.grid.GetNumberCols()-1 )
-							
-			# Fix the grid's scrollbars.
-			self.grid.FitInside()
+		# Highlight the interpolated entries.
+		with Model.LockRace() as race:
+			for r in xrange(self.grid.GetNumberRows()):
+				try:
+					rider = race[int(self.grid.GetCellValue(r, 1))]
+					entries = rider.interpolate()
+				except:
+					continue
+				eItr = (e for e in entries)
+				eItr.next()	# Skip the first zero entry.
+				for c in xrange(4, self.grid.GetNumberCols()):
+					if not self.grid.GetCellValue(r, c):
+						break
+					if eItr.next().interp:
+						self.rcInterp.add( (r, c) )
+		
+		self.grid.MakeCellVisible( 0, 0 )
+		self.showNumSelect()
+						
+		# Fix the grid's scrollbars.
+		self.grid.FitInside()
 
 	def commit( self ):
 		pass

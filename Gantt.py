@@ -65,17 +65,22 @@ class Gantt( wx.Panel ):
 			
 			entries = race.interpolateLap( maxLaps )
 			category = race.categories.get( catName, None )
-			if category is not None:
-				def match( num ) : return category == race.getCategory(num)
+			print category
+			if category:
+				# Filter by category and num laps in that category.
+				numLaps = category.getNumLaps()
+				if not numLaps:
+					numLaps = 1000
+				entries = [e for e in entries if race.getCategory(e.num) == category and e.lap <= numLaps]
 			else:
-				def match( num ) : return True
+				# Filter by the number of laps for each individual category.
+				entries = [e for e in entries if e.lap <= race.getCategoryNumLaps(e.num)]
 			
 			riderTimes = {}
 			riderInterp = {}
 			for e in entries:
-				if match(e.num):
-					riderTimes.setdefault(e.num, []).append( e.t )
-					riderInterp.setdefault(e.num, []).append( e.interp )
+				riderTimes.setdefault(e.num, []).append( e.t )
+				riderInterp.setdefault(e.num, []).append( e.interp )
 			
 			# Adjust for the start times offset.
 			catOffset = {}

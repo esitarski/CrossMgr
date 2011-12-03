@@ -7,87 +7,33 @@ import re
 from Animation import Animation
 from FixCategories import FixCategories
 from ReadSignOnSheet import IgnoreFields
+import Results
 
 def GetAnimationData( catName = 'All', getExternalData = False ):
-	race = Model.race
-	if not race:
-		return None
-		
-	maxLap = race.getMaxLap()
-	if race.numLaps is not None and race.numLaps < maxLap:
-		maxLap = race.numLaps
-	category = race.getCategory( catName )
-	if category and category.numLaps:
-		maxLap = min( maxLap, category.numLaps )
-	entries = race.interpolateLap( maxLap, True )
-	
-	if not entries:
+	results = Results.GetResults( catName, getExternalData )
+	if not results:
 		return None
 	
-	# Get all the entries for this category.
-	if category is not None:
-		entries = [e for e in entries if race.getCategory(e.num) == category]	
-	
-	# Get the linked external data.
-	externalFields = []
-	externalInfo = None
-	if getExternalData:
-		try:
-			externalFields = race.excelLink.getFields()
-			externalInfo = race.excelLink.read()
-			for ignoreField in IgnoreFields:
-				try:
-					externalFields.remove( ignoreField )
-				except ValueError:
-					pass
-		except:
-			externalFields = []
-			externalInfo = None
-
-	# Populate the animation data - include all projected laps.
 	animationData = {}
-	for e in entries:
-		if e.num not in animationData:
-			animationData[e.num] = {'lapTimes': [], 'lastTime': None }	
-		animationData[e.num]['lapTimes'].append( e.t )
-
-	# Set the last times, rider category and rider status.
-	# Also correct for the laps by category.
-	for num, info in animationData.iteritems():
-		rider = race[num]
-		
-		startOffset = 0
-		c = race.getCategory( num )
-		try:
-			info['raceCat'] = c.name
-			startOffset = c.getStartOffsetSecs()
-		except:
-			info['raceCat'] = 'All'
-		
-		# Set the start offset.
-		if len(info['lapTimes']) >= 2:
-			info['lapTimes'][0] = min(startOffset, info['lapTimes'][1])
-		
-		info['status'] = Model.Rider.statusNames[rider.status];
-		if rider.status != Model.Rider.Finisher:
-			info['lastTime'] = rider.tStatus
-		else:
-			try:
-				info['lastTime'] = info['lapTimes'][c.getNumLaps()]
-			except (IndexError, TypeError):
+	
+	ignoreFields = set(['pos', 'num', 'gap', 'lapTimes'])
+	for rr in results:
+		info = {}
+		for a in dir(rr):
+			if a[0] == '_' or a in ignoreFields:
+				continue
+			if a == 'lastTime':
 				try:
-					tLast = info['lapTimes'][-1]
-				except IndexError:
-					tLast = race.minutes*60
-				info['lastTime'] = tLast if not race.isRunning() or tLast >= race.minutes*60 else None
-		
-		# Add the external excel data.
-		for f in externalFields:
-			try:
-				info[f] = externalInfo[num][f]
-			except KeyError:
-				pass
+					info[a] = Utils.StrToSeconds(getattr(rr, a))
+				except:
+					info[a] = 0.0
+			elif a == 'raceTimes':
+				info['lapTimes'] = getattr(rr, a)
+			else:
+				info[a] = getattr( rr, a )
 				
+		animationData[rr.num] = info
+		
 	return animationData
 		
 class NumListValidator(wx.PyValidator):
@@ -259,13 +205,14 @@ class RaceAnimation( wx.Panel ):
 				return
 			
 			catName = FixCategories( self.categoryChoice, getattr(race, 'raceAnimationCategory', 0) )
-			animationData = GetAnimationData( catName )
+			raceTime = race.lastRaceTime() if race.isRunning() else self.animation.t
+			raceIsRunning = race.isRunning()
 			
-			self.animation.SetData( animationData, race.lastRaceTime() if race.isRunning() else self.animation.t )
-			
-			if race.isRunning():
-				if not self.animation.IsAnimating():
-					self.animation.StartAnimateRealtime()
+		animationData = GetAnimationData( catName )
+		self.animation.SetData( animationData, raceTime )
+		if raceIsRunning:
+			if not self.animation.IsAnimating():
+				self.animation.StartAnimateRealtime()
 	
 if __name__ == '__main__':
 	app = wx.PySimpleApp()

@@ -532,8 +532,9 @@ class MainWin( wx.Frame ):
 		with Model.LockRace() as race:
 			organizer = getattr( race, 'organizer', '' )
 			html = html.replace( 'organizer = null', 'organizer = %s' % json.dumps(organizer) )
-			data = 'data = %s' % json.dumps(GetAnimationData(getExternalData = True))
-			html = html.replace( 'data = null', data )
+			
+		data = 'data = %s' % json.dumps(GetAnimationData(getExternalData = True))
+		html = html.replace( 'data = null', data )
 			
 		# Write out the results.
 		fname = os.path.join( dName, os.path.basename(fname) )
@@ -721,7 +722,7 @@ class MainWin( wx.Frame ):
 			if isFinished:
 				self.showPageName( 'Results' )
 			self.refresh()
-			Utils.writeLog( "call: openRace: '%s'" % fileName )
+			Utils.writeLog( 'call: openRace: "%s"' % fileName )
 
 		except IOError:
 			Utils.MessageOK(self, 'Cannot open file "%s".' % fileName, 'Cannot Open File', iconMask=wx.ICON_ERROR )

@@ -904,6 +904,7 @@ class Race(object):
 
 	@memoize
 	def getCategoryTimesNums( self ):
+		''' Return times and nums for the leaders of each category. '''
 		ctn = {}
 		
 		activeCategories = [c for c in self.categories.itervalues() if c.active]
@@ -1100,7 +1101,7 @@ class Race(object):
 			c = (c for c in self.categories.itervalues() if c.active and c.matches(num)).next()
 		except StopIteration:
 			self.categoryCache[num] = None	# No matching category.
-			return
+			return None
 		
 		# Add this rider to the cache.
 		self.categoryCache[num] = c
@@ -1111,6 +1112,13 @@ class Race(object):
 				self.categoryCache[r.num] = c
 				
 		return c
+	
+	def getCategoryNumLaps( self, num ):
+		try:
+			category = self.getCategory( num )
+			return category.getNumLaps() or 1000
+		except AttributeError:
+			return 1000
 	
 	def resetCategoryCache( self ):
 		self.categoryCache = None
@@ -1210,8 +1218,17 @@ class Race(object):
 		getCategory = self.getCategory
 		finisherStatusSet = Race.finisherStatusSet
 		for e in entries:
-			if race[e.num].status in finisherStatusSet:
-				catEntries.setdefault(getCategory(e.num), []).append( e )
+			# Is this a finisher?
+			if race[e.num].status not in finisherStatusSet:
+				continue
+			# Does this lap exceed the laps for this category?
+			category = getCategory(e.num)
+			#if category:
+			#	numLaps = category.getNumLaps()
+			#	if numLaps and e.lap > numLaps:
+			#		continue
+			# Otherwise, add the entry to this category.
+			catEntries.setdefault(category, []).append( e )
 
 		# For each category, find the first instance of each rider after the leader's lap.
 		catTimesNums = self.getCategoryTimesNums()

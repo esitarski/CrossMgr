@@ -352,7 +352,7 @@ class RiderDetail( wx.Panel ):
 			catName = race.getCategoryName( num )
 			category = race.categories.get( catName, None )
 			
-			self.category.SetLabel( catName )
+			self.category.SetLabel( catName if catName else 'Unmatched' )
 			self.statusOption.SetSelection( rider.status )
 			if rider.status in [Model.Rider.Finisher, Model.Rider.DNS, Model.Rider.DQ]:
 				self.setAtRaceTime()
