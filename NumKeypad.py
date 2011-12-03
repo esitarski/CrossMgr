@@ -257,8 +257,10 @@ class NumKeypad( wx.Panel ):
 		with Model.LockRace() as race:
 			if race and race.isFinished():
 				try:
-					race.numLaps = int(self.numLaps.GetString(self.numLaps.GetSelection()))
-					race.setChanged()
+					numLaps = int(self.numLaps.GetString(self.numLaps.GetSelection()))
+					if race.numLaps != numLaps:
+						race.numLaps = numLaps
+						race.setChanged()
 				except ValueError:
 					pass
 		self.refreshLaps()

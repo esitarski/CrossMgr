@@ -511,6 +511,8 @@ class Race(object):
 
 	def setChanged( self, changed = True ):
 		self.isChangedFlag = changed
+		if changed:
+			memoize.clear()
 		
 	def isRunning( self ):
 		return self.startTime is not None and self.finishTime is None
@@ -576,7 +578,6 @@ class Race(object):
 		if t is None:
 			t = self.curRaceTime()
 		self.getRider(num).addTime( t )
-		memoize.clear()
 		self.setChanged()
 		return t
 
@@ -593,7 +594,6 @@ class Race(object):
 	def deleteRider( self, num ):
 		try:
 			del self.riders[num]
-			memoize.clear()
 			self.setChanged()
 		except KeyError:
 			pass
@@ -625,14 +625,13 @@ class Race(object):
 		r1.num, r2.num = r2.num, r1.num
 		self.riders[r1.num] = r1
 		self.riders[r2.num] = r2
-		memoize.clear()
 		self.setChanged()
 		return True
 			
 	def deleteAllRiderTimes( self ):
 		for num in self.riders.iterkeys():
 			self.deleteRiderTimes( num )
-		memoize.clear()
+		self.setChanged()
 
 	def deleteTime( self, num, t ):
 		if not num in self.riders:
@@ -642,7 +641,6 @@ class Race(object):
 		# If there are no times for this rider, remove the rider entirely.
 		if len(rider.times) == 0:
 			del self.riders[num]
-		memoize.clear()
 		self.setChanged()
 
 	@memoize
@@ -1051,8 +1049,8 @@ class Race(object):
 
 		if self.categories != newCategories:
 			self.categories = newCategories
-			self.setChanged()
 			self.resetCategoryCache()
+			self.setChanged()
 			
 		self.setCategoryMask()
 

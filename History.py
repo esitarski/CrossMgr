@@ -11,17 +11,6 @@ from EditEntry import CorrectNumber, SplitNumber, DeleteEntry, SwapEntry
 
 reNonDigits = re.compile( '[^0-9]' )
 
-def GetFontFromExisting( font, pointSize = None, family = None, style = None, weight = None, underline = None, face = None, encoding = None ):
-	if pointSize is None: 	pointSize = font.GetPointSize()
-	if family is None: 		family = font.GetFamily()
-	if style is None: 		style = font.GetStyle()
-	if weight is None: 		weight = font.GetWeight()
-	if underline is None: 	underline = font.GetUnderlined()
-	if face is None: 		face = font.GetFaceName()
-	if encoding is None: 	encoding = font.GetEncoding()
-	fNew = wx.Font( pointSize=pointSize, family=family, style=style, weight=weight, underline=underline, face=face, encoding=encoding) 
-	return fNew
-
 class History( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)

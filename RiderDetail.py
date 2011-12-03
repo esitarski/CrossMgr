@@ -240,7 +240,6 @@ class RiderDetail( wx.Panel ):
 		with Model.LockRace() as race:
 			rider = race[num]
 			rider.autoCorrectLaps = self.autoCorrectLaps.GetValue()
-			race.resetCache()
 			race.setChanged()
 		self.refresh()
 	
@@ -441,7 +440,6 @@ class RiderDetail( wx.Panel ):
 
 			newValues = (rider.status, rider.tStatus)
 			if oldValues != newValues:
-				race.resetCache()
 				race.setChanged()
 			
 	def commit( self ):

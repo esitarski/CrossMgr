@@ -179,7 +179,6 @@ def DoStatusChange( parent, num, message, title, newStatus ):
 		rider = race.getRider( num )
 		rider.setStatus( newStatus )
 		race.setChanged()
-		Model.resetCache()
 	Utils.refresh()
 	return True
 

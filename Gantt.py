@@ -84,10 +84,10 @@ class Gantt( wx.Panel ):
 			
 			# Adjust for the start times offset.
 			catOffset = {}
-			for r, t in riderTimes.iteritems():
-				category = race.getCategory( r )
+			for num, tm in riderTimes.iteritems():
+				category = race.getCategory( num )
 				if category:
-					t[0] = min(catOffset.setdefault( category, category.getStartOffsetSecs() ), t[1])
+					tm[0] = min(catOffset.setdefault( category, category.getStartOffsetSecs() ), tm[1])
 				
 			numTimes = [(k, v) for k, v in riderTimes.iteritems()]
 			numTimes.sort( key = lambda x : (-len(x[1]), x[1][-1]) )

@@ -31,32 +31,40 @@ def GetResults( catName = 'All', getExternalData = False ):
 		if not race:
 			return []
 		
+		category = race.categories.get( catName, None )
+		startOffset = category.getStartOffsetSecs() if category else 0.0
+			
 		# Get the number of race laps for each category.
 		raceNumLaps = (race.numLaps or 1000)
 		categoryWinningTime = {}
 		for c, (times, nums) in race.getCategoryTimesNums().iteritems():
-			if not times:
+			if not times or (category and c != category):
 				continue
+				
 			# If the category num laps is specified, use that.
 			if c.getNumLaps():
 				categoryWinningTime[c] = times[c.getNumLaps()]
 			else:
-				# Otherwise, set the number of laps by the winner first after the race finish time.
+				# Otherwise, set the number of laps by the winner's time closest to the race finish time.
 				try:
-					categoryWinningTime[c] = times[bisect.bisect_left( times, race.minutes * 60.0, hi=len(times)-1 )]
+					winningLaps = bisect.bisect_left( times, race.minutes * 60.0, hi=len(times)-1 )
+					if winningLaps > raceNumLaps:
+						winningLaps = raceNumLaps
+					elif winningLaps >= 2:
+						lastLapTime = times[winningLaps] - times[winningLaps-1]
+						if (times[winningLaps] - race.minutes * 60.0) > lastLapTime / 2.0:
+							winningLaps -= 1
+					categoryWinningTime[c] = times[winningLaps]
 				except IndexError:
 					categoryWinningTime[c] = race.minutes * 60.0
-							
+		
 		if not categoryWinningTime:
 			return []
-			
-		category = race.categories.get( catName, None )
-		startOffset = category.getStartOffsetSecs() if category else 0.0
-			
+		
 		riderResults = []
 		for rider in race.riders.itervalues():
 			riderCategory = race.getCategory( rider.num )
-			if category and riderCategory != category:
+			if (category and riderCategory != category) or riderCategory not in categoryWinningTime:
 				continue
 			times = [e.t for e in rider.interpolate()]
 			

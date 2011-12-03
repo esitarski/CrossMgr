@@ -1189,7 +1189,6 @@ Continue?''' % fName, 'Simulate a Race' ):
 				pass
 				
 		if success:
-			race.resetCache()
 			race.setChanged()
 			self.refresh()
 			self.record.refreshLaps()
