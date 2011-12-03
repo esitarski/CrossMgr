@@ -180,6 +180,8 @@ class ExportGrid( object ):
 			self.title = 'Race: '+ race.name + '\n' + Utils.formatDate(race.date) + '\nCategory: ' + catName
 			category = race.categories.get( catName, None )
 
+		startOffset = category.getStartOffsetSecs() if category else 0.0
+		
 		leader = results[0]
 		infoFields = ['LastName', 'FirstName', 'Team', 'Category', 'License']
 		infoFieldsPresent = set( infoFields ) & set( dir(leader) )
@@ -193,14 +195,21 @@ class ExportGrid( object ):
 		data = [ [] for i in xrange(len(self.colnames)) ]
 		for col, f in enumerate(['pos', 'num'] + infoFields + ['lastTime', 'gap']):
 			for row, r in enumerate(results):
-				data[col].append( getattr(r, f, '') )
+				if f == 'lastTime' and startOffset > 0.0 and getattr(r, f, ''):
+					try:
+						lastTime = Utils.StrToSeconds( getattr(r, f, '') ) - startOffset
+						data[col].append( Utils.formatTimeCompressed(lastTime) )
+					except:
+						data[col].append( getattr(r, f, '') )
+				else:
+					data[col].append( getattr(r, f, '') )
+		
 		lapsMax = len(leader.lapTimes)
-		firstLapDataCol = 2 + len(infoFields) + 2
 		for row, r in enumerate(results):
 			for i, t in enumerate(r.lapTimes):
-				data[firstLapDataCol+i].append( Utils.formatTimeCompressed(t) )
+				data[self.iLapTimes+i].append( Utils.formatTimeCompressed(t) )
 			for i in xrange(len(r.lapTimes), lapsMax):
-				data[firstLapDataCol+i].append( '' )
+				data[self.iLapTimes+i].append( '' )
 		
 		self.data = data
 		self.infoColumns     = set( xrange(2, 2+len(infoFields)) ) if infoFields else set()

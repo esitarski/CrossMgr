@@ -70,8 +70,6 @@ def GetResults( catName = 'All', getExternalData = False ):
 			if not lastTime:
 				if times:
 					lastTime = times[-1]
-					if category:
-						lastTime = max( lastTime - startOffset, 0.0 )
 				else:
 					lastTime = 0.0
 					
