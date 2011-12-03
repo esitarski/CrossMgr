@@ -43,7 +43,7 @@ def GetResults( catName = 'All', getExternalData = False ):
 			else:
 				# Otherwise, set the number of laps by the winner first after the race finish time.
 				try:
-					categoryWinningTime[c] = times[bisect.bisect_left( times, race.minutes * 60.0 )]
+					categoryWinningTime[c] = times[bisect.bisect_left( times, race.minutes * 60.0, hi=len(times)-1 )]
 				except IndexError:
 					categoryWinningTime[c] = race.minutes * 60.0
 							
@@ -62,7 +62,7 @@ def GetResults( catName = 'All', getExternalData = False ):
 			
 			if times:
 				times[0] = min(riderCategory.getStartOffsetSecs(), times[1])
-				laps = bisect.bisect_left( times, categoryWinningTime[riderCategory] )
+				laps = bisect.bisect_left( times, categoryWinningTime[riderCategory], hi=len(times)-1 )
 				times = times[:laps+1]
 			else:
 				laps = 0
@@ -345,51 +345,39 @@ class Results( wx.Panel ):
 		self.search.SelectAll()
 		wx.CallAfter( self.search.SetFocus )
 		
-		if not Model.race:
-			self.clearGrid()
-			return
-			
 		with Model.LockRace() as race:
+			if not race:
+				self.clearGrid()
+				return
 			catName = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
 			self.hbs.Layout()
 			self.category = race.categories.get( catName, None )
-			
-		results = GetResults( catName )
-		if not results:
+		
+		exportGrid = ExportGrid()
+		exportGrid.setResultsOneList( catName, False )
+		
+		if not exportGrid.colnames:
+			self.clearGrid()
 			return
-			
-		leader = results[0]
-		colnames = ['Pos', 'Bib', 'Time', 'Gap']
-		if leader.lapTimes:
-			colnames += ['Lap %d' % lap for lap in xrange(1, len(leader.lapTimes)+1)]
-			
-		data = [ [] for i in xrange(len(colnames)) ]
-		for col, f in enumerate(['pos', 'num', 'lastTime', 'gap']):
-			for row, r in enumerate(results):
-				data[col].append( getattr(r, f, '') )
-		lapsMax = len(leader.lapTimes)
-		for row, r in enumerate(results):
-			for i, t in enumerate(r.lapTimes):
-				data[4+i].append( Utils.formatTimeCompressed(t) )
-			for i in xrange(len(r.lapTimes), lapsMax):
-				data[4+i].append( '' )
-				
-		self.grid.Set( data = data, colnames = colnames )
+		
+		self.grid.Set( data = exportGrid.data, colnames = exportGrid.colnames )
 		self.grid.AutoSizeColumns( True )
 		self.grid.Reset()
 		self.isEmpty = False
 
-		# Highlight the interpolated entries.
+		# Highlight interpolated entries.
 		with Model.LockRace() as race:
 			for r in xrange(self.grid.GetNumberRows()):
 				try:
 					rider = race[int(self.grid.GetCellValue(r, 1))]
 					entries = rider.interpolate()
+					if not entries:
+						continue
 				except:
 					continue
 				eItr = (e for e in entries)
-				eItr.next()	# Skip the first zero entry.
-				for c in xrange(4, self.grid.GetNumberCols()):
+				eItr.next()						# Skip the first zero entry.
+				for c in xrange(exportGrid.iLapTimes, self.grid.GetNumberCols()):
 					if not self.grid.GetCellValue(r, c):
 						break
 					if eItr.next().interp:

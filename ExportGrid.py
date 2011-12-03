@@ -18,6 +18,7 @@ class ExportGrid( object ):
 		self.data = data
 		self.leftJustifyCols = set()
 		self.infoColumns = set()
+		self.iLapTimes = 0
 	
 	def _getFont( self, pointSize = 28, bold = False ):
 		return wx.Font( pointSize, wx.FONTFAMILY_SWISS, wx.NORMAL,
@@ -164,11 +165,10 @@ class ExportGrid( object ):
 		self.data[col][row] = value
 	
 	def setResultsOneListRiderTimes( self, catName = 'All', getExternalData = True ):
-		''' Add the lap times to the setResultsOneList output. '''
 		self.setResultsOneList( catName, getExternalData )
-		return
-					
-	def setResultsOneList( self, catName, getExternalData = True ):
+
+	def setResultsOneList( self, catName = 'All', getExternalData = True ):
+		''' Format the results into columns. '''
 		self.data = []
 		self.colnames = []
 
@@ -178,7 +178,7 @@ class ExportGrid( object ):
 		
 		with Model.LockRace() as race:
 			self.title = 'Race: '+ race.name + '\n' + Utils.formatDate(race.date) + '\nCategory: ' + catName
-			category = race.categories.get(catName, None)
+			category = race.categories.get( catName, None )
 
 		leader = results[0]
 		infoFields = ['LastName', 'FirstName', 'Team', 'Category', 'License']
@@ -186,8 +186,9 @@ class ExportGrid( object ):
 		infoFields = [f for f in infoFields if f in infoFieldsPresent]
 		
 		self.colnames = ['Pos', 'Bib'] + infoFields + ['Time', 'Gap']
+		self.iLapTimes = len(self.colnames)
 		if leader.lapTimes:
-			self.colnames += ['Lap %d' % lap for lap in xrange(1, len(leader.lapTimes)+1)]
+			self.colnames.extend( ['Lap %d' % lap for lap in xrange(1, len(leader.lapTimes)+1)] )
 			
 		data = [ [] for i in xrange(len(self.colnames)) ]
 		for col, f in enumerate(['pos', 'num'] + infoFields + ['lastTime', 'gap']):
@@ -204,6 +205,7 @@ class ExportGrid( object ):
 		self.data = data
 		self.infoColumns     = set( xrange(2, 2+len(infoFields)) ) if infoFields else set()
 		self.leftJustifyCols = set( xrange(2, 2+len(infoFields)) ) if infoFields else set()
+		
 			
 if __name__ == '__main__':
 	pass
