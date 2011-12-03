@@ -163,6 +163,7 @@ class MainWin( wx.Frame ):
 		self.printData = wx.PrintData()
 		self.printData.SetPaperId(wx.PAPER_LETTER)
 		self.printData.SetPrintMode(wx.PRINT_MODE_PRINTER)
+		self.printData.SetOrientation(wx.LANDSCAPE)
 
 		# Configure the main menu.
 		self.menuBar = wx.MenuBar(wx.MB_DOCKABLE)
@@ -446,6 +447,7 @@ class MainWin( wx.Frame ):
 				Utils.MessageOK(self, "There was a printer problem.\nCheck your printer setup.", "Printer Error",iconMask=wx.ICON_ERROR)
 		else:
 			self.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
+
 		printout.Destroy()
 
 	@logCall

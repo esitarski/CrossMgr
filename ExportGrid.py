@@ -59,7 +59,7 @@ class ExportGrid( object ):
 		right = max(widthToFit, heightToFit)
 		
 		while right - left > 1:
-			mid = int((left + right) / 2)
+			mid = (left + right) / 2.0
 			font = self._getFont( mid, isBold )
 			widthText, heightText = sizeFunc( font )
 			if widthText <= widthToFit and heightText <= heightToFit:
