@@ -113,11 +113,12 @@ class ExportGrid( object ):
 					
 			for v in self.data[col]:
 				vStr = str(v)
-				w, h, lh = dc.GetMultiLineTextExtent( vStr, font )
-				if col in self.leftJustifyCols:
-					self._drawMultiLineText( dc, vStr, xPix, yPix )					# left justify
-				else:
-					self._drawMultiLineText( dc, vStr, xPix + colWidth - w, yPix )	# right justify
+				if vStr:
+					w, h, lh = dc.GetMultiLineTextExtent( vStr, font )
+					if col in self.leftJustifyCols:
+						self._drawMultiLineText( dc, vStr, xPix, yPix )					# left justify
+					else:
+						self._drawMultiLineText( dc, vStr, xPix + colWidth - w, yPix )	# right justify
 				yPix += textHeight
 			xPix += colWidth + wSpace
 		

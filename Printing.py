@@ -33,7 +33,7 @@ class CrossMgrPrintout(wx.Printout):
         super(CrossMgrPrintout, self).OnPreparePrinting()
 
     def HasPage(self, page):
-		numCategories = len(getRaceCategories())
+		numCategories = len(getRaceCategories()) - 1	# Ignore the 'All' category.
 		if page - 1 < numCategories:
 			return True
 		return False
