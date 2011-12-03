@@ -20,9 +20,9 @@ class ExportGrid( object ):
 		self.infoColumns = set()
 		self.iLapTimes = 0
 	
-	def _getFont( self, pointSize = 28, bold = False ):
-		return wx.Font( pointSize, wx.FONTFAMILY_SWISS, wx.NORMAL,
-						wx.FONTWEIGHT_BOLD if bold else wx.FONTWEIGHT_NORMAL, False, 'Ariel' )
+	def _getFont( self, pixelSize = 28, bold = False ):
+		return wx.FontFromPixelSize( (0,pixelSize), wx.FONTFAMILY_SWISS, wx.NORMAL,
+									 wx.FONTWEIGHT_BOLD if bold else wx.FONTWEIGHT_NORMAL, False, 'Ariel' )
 	
 	def _getColSizeTuple( self, dc, font, col ):
 		wSpace, hSpace, lh = dc.GetMultiLineTextExtent( '    ', font )
@@ -188,6 +188,7 @@ class ExportGrid( object ):
 		infoFields = [f for f in infoFields if f in infoFieldsPresent]
 		
 		self.colnames = ['Pos', 'Bib'] + infoFields + ['Time', 'Gap']
+		self.colnames = [name[:-4] + ' Name' if name.endswith('Name') else name for name in self.colnames]
 		self.iLapTimes = len(self.colnames)
 		if leader.lapTimes:
 			self.colnames.extend( ['Lap %d' % lap for lap in xrange(1, len(leader.lapTimes)+1)] )
@@ -195,12 +196,13 @@ class ExportGrid( object ):
 		data = [ [] for i in xrange(len(self.colnames)) ]
 		for col, f in enumerate(['pos', 'num'] + infoFields + ['lastTime', 'gap']):
 			for row, r in enumerate(results):
-				if f == 'lastTime' and startOffset > 0.0 and getattr(r, f, 0.0) > 0.0:
-					try:
-						lastTime = max( 0.0, getattr(r, f, 0.0) - startOffset )
-						data[col].append( Utils.formatTimeCompressed(lastTime) if lastTime > 0.0 else '' )
-					except:
+				if f == 'lastTime':
+					lastTime = getattr( r, f, 0.0 )
+					if lastTime <= 0.0:
 						data[col].append( '' )
+					else:
+						lastTime = max( 0.0, lastTime - startOffset )
+						data[col].append( Utils.formatTimeCompressed(lastTime) )
 				else:
 					data[col].append( getattr(r, f, '') )
 		

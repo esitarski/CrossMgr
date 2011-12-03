@@ -347,7 +347,9 @@ function Refresh()
 		var riderXYPT = [];
 		for( num in data )
 		{
-			if( categoryCur == 'All' || data[num]['raceCat'] == categoryCur )
+			if( data[num].lapTimes.length == 0 )
+				continue;
+			if( categoryCur == 'All' || data[num].raceCat == categoryCur )
 			{
 				var xypt = getRiderXYPT( num, num % laneMax );
 				if( xypt[2] == null )
@@ -556,7 +558,8 @@ function Animate( tRunning, aTMax, tCur )
 	{
 		tMax = 0;
 		for( num in data )
-			tMax = Math.max(tMax, data[num]['lapTimes'].back());
+			if( data[num].lapTimes.length )
+				tMax = Math.max(tMax, data[num].lapTimes.back());
 	}
 	else
 		tMax = aTMax;
