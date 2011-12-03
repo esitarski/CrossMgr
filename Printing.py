@@ -45,16 +45,16 @@ class CrossMgrPrintout(wx.Printout):
 		return (1, numCategories, 1, numCategories)
 
     def OnPrintPage(self, page):
-		iCat = page - 1			
-		categories = getRaceCategories()		
+		iCat = page - 1
+		categories = getRaceCategories()
 		if iCat >= len(categories):
 			return False
 
-		dc = self.GetDC()
-		export = ExportGrid()
-
 		catName = categories[iCat]
-		export.setResultsOneList( catName )
+		
+		exportGrid = ExportGrid()
+		exportGrid.setResultsOneList( catName, False )
 
-		export.drawToFitDC( dc )
+		dc = self.GetDC()
+		exportGrid.drawToFitDC( dc )
 		return True

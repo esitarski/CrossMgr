@@ -345,7 +345,7 @@ function Refresh()
 	if( data )
 	{
 		var riderXYPT = [];
-		for( num in data )
+		for( var num in data )
 		{
 			if( data[num].lapTimes.length == 0 )
 				continue;
@@ -521,9 +521,9 @@ function SetData( aData, tCur )
 	
 	// Get all the unique categories from the data.
 	var cats = {};
-	for( num in data )
+	for( var num in data )
 	{
-		data[num].num = num;
+		data[num]['num'] = num;
 		var cName = data[num]['raceCat'];
 		if( cName != 'All' )
 			cats[cName] = cName;
@@ -557,7 +557,7 @@ function Animate( tRunning, aTMax, tCur )
 	if( aTMax == undefined )
 	{
 		tMax = 0;
-		for( num in data )
+		for( var num in data )
 			if( data[num].lapTimes.length )
 				tMax = Math.max(tMax, data[num].lapTimes.back());
 	}
@@ -633,10 +633,10 @@ function SetCategoryResults()
 		
 		var curFields = {}
 		var resultsData = [];
-		for( num in data )
+		for( var num in data )
 		{
 			var d = data[num];
-			if( d['raceCat'] == cat )
+			if( d.raceCat == cat )
 			{
 				resultsData.push( d );
 				// Get the union of all the defined fields.
@@ -694,6 +694,7 @@ function SetCategoryResults()
 			tr.className = ((r & 1) ? 'odd' : 'even');
 			
 			var d = resultsData[r];
+			var num = d.num;
 			var lapTimes = d.lapTimes;
 			var isFinisher = (d.status == 'Finisher');
 			
@@ -701,8 +702,8 @@ function SetCategoryResults()
 			createTextChild( td = createChild(tr, 'TD'), p );
 			if( numsToWatch[num] ) td.className = 'highlight';
 			
-			createTextChild( td = createChild(tr, 'TD'), num );
-			if( numsToWatch[num] ) td.className = 'highlight';
+			createTextChild( td = createChild(tr, 'TD'), d.num );
+			if( numsToWatch[d.num] ) td.className = 'highlight';
 			td.id = 'idNonNumeric';
 			
 			for( var f = 0; f < infoFields.length; ++f )
@@ -971,7 +972,7 @@ function RefreshRaceChart()
 
 	var dataMax = 0;
 	var resultsData = [];
-	for( num in data )
+	for( var num in data )
 	{
 		var d = data[num];
 		d.num = num;
@@ -1217,7 +1218,7 @@ function getStartTime()
 	categoryCur = categories[categorySelect.selectedIndex];
 
 	var t = 9999999;
-	for( num in data )
+	for( var num in data )
 	{
 		if( categoryCur == 'All' || data[num]['raceCat'] == categoryCur )
 			if( data[num]['lapTimes'][0] < t )
