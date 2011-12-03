@@ -128,6 +128,13 @@ Array.prototype.back = function()
 	return this[this.length-1];
 }
 
+function getOrdinal( n )
+{
+   var s=["th","st","nd","rd"],
+       v=n%100;
+   return n+(s[(v-20)%10]||s[v]||s[0]);
+}
+
 function getRiderPositionTime( num )
 {
 	// Returns the fraction of the lap covered by the num.
@@ -475,7 +482,7 @@ function Refresh()
 		dc.fillStyle = 'black';
 		for( var i = 0; i < rp.length; ++i )
 		{
-			dc.fillText( rp[i][1] + '(' + rp[i][0] + ')', x, y );
+			dc.fillText( rp[i][1] + ' (' + getOrdinal(rp[i][0]) + ')', x, y );
 			y += tHeight * 1.2;
 			if( y >= r * 1.5 - tHeight * 1.5 )
 			{

@@ -1,4 +1,5 @@
 import Model
+import Utils
 import datetime
 import wx
 import os
@@ -111,7 +112,7 @@ def SecondsToMMSS( secs = 0 ):
 	secs = int(secs+0.5)
 	return '%02d:%02d' % ((secs // 60)%60, secs % 60)
 
-def ordinal(value):
+def ordinal( value ):
 	"""
 	Converts zero or a *postive* integer (or their string 
 	representations) to an ordinal value.

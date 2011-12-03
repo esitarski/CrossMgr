@@ -8,6 +8,7 @@ import datetime
 import random
 from operator import itemgetter, attrgetter
 from GanttChart import makePastelColours, makeColourGradient
+import Utils
 
 shapes = [ [(math.cos(a), -math.sin(a)) \
 					for a in (q*(2.0*math.pi/i)+math.pi/2.0+(2.0*math.pi/(i*2.0) if i % 2 == 0 else 0)\
@@ -128,7 +129,10 @@ class Animation(wx.PyControl):
 		if tMax is None:
 			tMax = 0
 			for num, info in self.data.iteritems():
-				tMax = max(tMax, info['lapTimes'][-1])
+				try:
+					tMax = max(tMax, info['lapTimes'][-1])
+				except IndexError:
+					pass
 		self.speedup = float(tMax) / float(tRunning)
 		self.tMax = tMax
 		self.timer.Start( 1000.0/self.framesPerSecond, False )
@@ -442,7 +446,7 @@ class Animation(wx.PyControl):
 			yTop = r / 2 + laneWidth * 1.5+ tHeight
 			y = yTop
 			for i, (pos, num) in enumerate(rp):
-				s = '%d (%d)' % (num, pos)
+				s = '%d (%s)' % (num, Utils.ordinal(pos))
 				dc.DrawText( s, x + tHeight * 1.2, y)
 				y += tHeight
 				if y > r * 1.5 - tHeight * 1.5:
