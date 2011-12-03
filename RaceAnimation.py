@@ -9,6 +9,8 @@ from FixCategories import FixCategories
 from ReadSignOnSheet import IgnoreFields
 import Results
 
+statusNames = Model.Rider.statusNames
+
 def GetAnimationData( catName = 'All', getExternalData = False ):
 	results = Results.GetResults( catName, getExternalData )
 	if not results:
@@ -16,19 +18,16 @@ def GetAnimationData( catName = 'All', getExternalData = False ):
 	
 	animationData = {}
 	
-	ignoreFields = set(['pos', 'num', 'gap', 'lapTimes'])
+	ignoreFields = set(['pos', 'num', 'gap', 'laps', 'lapTimes'])
 	for rr in results:
 		info = {}
 		for a in dir(rr):
 			if a[0] == '_' or a in ignoreFields:
 				continue
-			if a == 'lastTime':
-				try:
-					info[a] = Utils.StrToSeconds(getattr(rr, a))
-				except:
-					info[a] = 0.0
-			elif a == 'raceTimes':
+			if a == 'raceTimes':
 				info['lapTimes'] = getattr(rr, a)
+			elif a == 'status':
+				info['status'] = statusNames[getattr(rr, a)]
 			else:
 				info[a] = getattr( rr, a )
 				

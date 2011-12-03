@@ -195,12 +195,12 @@ class ExportGrid( object ):
 		data = [ [] for i in xrange(len(self.colnames)) ]
 		for col, f in enumerate(['pos', 'num'] + infoFields + ['lastTime', 'gap']):
 			for row, r in enumerate(results):
-				if f == 'lastTime' and startOffset > 0.0 and getattr(r, f, ''):
+				if f == 'lastTime' and startOffset > 0.0 and getattr(r, f, 0.0) > 0.0:
 					try:
-						lastTime = Utils.StrToSeconds( getattr(r, f, '') ) - startOffset
-						data[col].append( Utils.formatTimeCompressed(lastTime) )
+						lastTime = max( 0.0, getattr(r, f, 0.0) - startOffset )
+						data[col].append( Utils.formatTimeCompressed(lastTime) if lastTime > 0.0 else '' )
 					except:
-						data[col].append( getattr(r, f, '') )
+						data[col].append( '' )
 				else:
 					data[col].append( getattr(r, f, '') )
 		

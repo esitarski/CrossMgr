@@ -585,26 +585,23 @@ function createTextChild( parent, s )
 var statusSortSeq = { 'Finisher':1, 'PUL':2, 'OTL':6, 'DNF':3, 'DQ':4, 'DNS':5, 'NP':7 };
 function CmpResultsData( x, y )
 {
-	// [numLaps, raceTimeOfLastLap, num, lapTimes, status, lastTime]
-	//    0              1           2      3         4        5
-	
 	// Compare status.
-	var xStatus = statusSortSeq[x[4]], yStatus = statusSortSeq[y[4]];
-	var dStatus = xStatus - yStatus
+	var xStatus = statusSortSeq[x.status], yStatus = statusSortSeq[y.status];
+	var dStatus = xStatus - yStatus;
 	if( dStatus != 0 )
 		return dStatus;
 
 	// Compare laps completed.
-	var d = x[0] - y[0];
+	var d = x.lapTimes.length - y.lapTimes.length;
 	if( d != 0 )
 		return -d;
 		
 	// Compare race finish times.
-	if( x[4] == 'Finisher' )
-		return x[1] - y[1];
+	if( x.status == 'Finisher' )
+		return x.lapTimes.back() - y.lapTimes.back();
 		
 	// Compare last time.
-	return x[5] - y[5];
+	return x.lastTime - y.lastTime;
 }
 
 function SetCategoryResults()
@@ -637,12 +634,11 @@ function SetCategoryResults()
 			var d = data[num];
 			if( d['raceCat'] == cat )
 			{
-				var lapTimes = d['lapTimes'];
-				resultsData.push( [lapTimes.length, lapTimes.length ? lapTimes.back() : 99999, num, d['lapTimes'], d['status'], d['lastTime']] );
-				
+				d.num = num;
+				resultsData.push( d );
 				// Get the union of all the defined fields.
 				for( var f = 0; f < infoFields.length; ++f )
-					if( d[infoFields[f]] )
+					if( d[infoFields[f]] != undefined )
 						curFields[infoFields[f]] = true;
 			}
 		}
@@ -651,7 +647,7 @@ function SetCategoryResults()
 		resultsData.sort( CmpResultsData );
 
 		// Label this category.
-		var leaderLapTimes = resultsData[0][3];
+		var leaderLapTimes = resultsData[0].lapTimes;
 		
 		var thead = createChild( table, 'THEAD' );
 		var tr = createChild( thead, 'TR' );
@@ -686,19 +682,20 @@ function SetCategoryResults()
 		}
 		
 		// Add the rider data.
-		var leaderTime = resultsData[0][3].back();
-		var startOffset = resultsData[0][3][0];
+		var leaderTime = resultsData[0].lapTimes.back();
+		var startOffset = resultsData[0].lapTimes[0];
 		var position = 1;
 		for( var r = 0; r < resultsData.length; ++r, ++position )
 		{
 			var tr = createChild(thead, 'TR');
 			tr.className = ((r & 1) ? 'odd' : 'even');
 			
-			var lapTimes = resultsData[r][3];
-			var isFinisher = (resultsData[r][4] == 'Finisher');
-			var num = resultsData[r][2];
+			var d = resultsData[r];
+			var num = d.num;
+			var lapTimes = d.lapTimes;
+			var isFinisher = (d.status == 'Finisher');
 			
-			var p = (isFinisher ? '' + position : resultsData[r][4] );
+			var p = (isFinisher ? '' + position : d.status );
 			createTextChild( td = createChild(tr, 'TD'), p );
 			if( numsToWatch[num] ) td.className = 'highlight';
 			
@@ -706,7 +703,6 @@ function SetCategoryResults()
 			if( numsToWatch[num] ) td.className = 'highlight';
 			td.id = 'idNonNumeric';
 			
-			var d = data[num];
 			for( var f = 0; f < infoFields.length; ++f )
 			{
 				if( curFields[infoFields[f]] )
@@ -719,7 +715,7 @@ function SetCategoryResults()
 				}
 			}
 			
-			var finishTime = (isFinisher ? FormatTime(Math.max(resultsData[r][1] - startOffset, 0.0)) : '');
+			var finishTime = (isFinisher ? FormatTime(Math.max(d.lastTime - startOffset, 0.0)) : '');
 			createTextChild( td = createChild(tr, 'TD'), finishTime );
 			if( numsToWatch[num] ) td.className = 'highlight';
 			
@@ -764,7 +760,7 @@ function SetCategoryResults()
 						createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(lapTimes[i] - lapTimes[i-1], 0.0)) );
 					else
 					{
-						var v = lapTimes[i] - resultsData[0][3][i];
+						var v = lapTimes[i] - leaderLapTimes[i];
 						var sign = '+';
 						if( v < 0 )
 						{
@@ -779,7 +775,7 @@ function SetCategoryResults()
 						createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(lapTimes[i] - lapTimes[i-1], 0.0)) );
 					else
 					{
-						var v = (100.0 * (lapTimes[i] - resultsData[0][3][i])) / resultsData[0][3][i];
+						var v = (100.0 * (lapTimes[i] - leaderLapTimes[i])) / leaderLapTimes[i];
 						var sign = '+';
 						if( v < 0 )
 						{
@@ -976,35 +972,29 @@ function RefreshRaceChart()
 	for( num in data )
 	{
 		var d = data[num];
+		d.num = num;
 		if( categoryCur == 'All' || d['raceCat'] == categoryCur )
 		{
-			var lapTimes = d['lapTimes'];
-			if( lapTimes.length > 0 )
-			{
-				resultsData.push( [	lapTimes.length,
-									lapTimes.length ? lapTimes.back() : 99999,
-									num, d['lapTimes'].slice(0),	// Make sure to make a full copy as we modify these values.
-									d['status'], d['lastTime']] );
-				if( lapTimes.back() > dataMax )
-					dataMax = lapTimes.back();
-			}
+			resultsData.push( d );
+			if( d.status == 'Finisher' && d.lapTimes.back() > dataMax )
+				dataMax = d.lapTimes.back()
 		}
 	}
-	
+
 	if( resultsData.length == 0 )
 		return;
 	
 	// Sort by greatest distance and shortest time.
 	resultsData.sort( CmpResultsData );
-	
+
 	var iNum = 2;
 	var iLapTimes = 3;
 
 	// Check if all the data have the same offset.
-	var startOffset = resultsData[0][iLapTimes][0];
+	var startOffset = resultsData[0].lapTimes[0];
 	for( var i = 1; i < resultsData.length; ++i )
 	{
-		if( resultsData[i][iLapTimes][0] != startOffset )
+		if( resultsData[i].lapTimes[0] != startOffset )
 		{
 			startOffset = 0.0;
 			break;
@@ -1014,14 +1004,14 @@ function RefreshRaceChart()
 	{
 		for( var i = 0; i < resultsData.length; ++i )
 		{
-			var lapTimes = resultsData[i][iLapTimes];
+			var lapTimes = resultsData[i].lapTimes;
 			for( var j = 0; j < lapTimes.length; ++j )
 				lapTimes[j] -= startOffset;
 		}
 		dataMax -= startOffset;
 	}
 	
-	var lapsMax = resultsData.length > 0 ? resultsData[0][iLapTimes].length : 0;
+	var lapsMax = resultsData.length > 0 ? resultsData[0].lapTimes.length : 0;
 	var colors = makeColorGradient(2.4,2.4,2.4,0,2,4,128,127,50);
 	var lighterColors = [];
 	for( var i = 0; i < colors.length; ++i )
@@ -1102,8 +1092,8 @@ function RefreshRaceChart()
 		yCur = yLast + barHeight;
 		xLast = labelsWidth;
 		xCur = xLast;
-		var num = resultsData[i][iNum];
-		var lapTimes = resultsData[i][iLapTimes];
+		var num = resultsData[i].num;
+		var lapTimes = resultsData[i].lapTimes;
 		for( var j = 0; j < lapTimes.length; ++j )
 		{
 			var t = lapTimes[j];
@@ -1131,7 +1121,7 @@ function RefreshRaceChart()
 		
 		// Draw the label on both ends.
 		dc.fillStyle = '#000000';
-		var lab = resultsData[i][iNum] + '';
+		var lab = resultsData[i].num + '';
 		labelWidth = dc.measureText(lab).width;
 		dc.fillText( lab, textWidth - labelWidth, yLast );
 		if( !minimizeLabels )

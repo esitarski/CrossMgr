@@ -16,13 +16,14 @@ from ReadSignOnSheet import IgnoreFields
 statusSortSeq = Model.Rider.statusSortSeq
 
 class RiderResult( object ):
-	def __init__( self, num, status, lastTime, lapTimes, raceTimes ):
+	def __init__( self, num, status, lastTime, raceCat, lapTimes, raceTimes ):
 		self.num		= num
 		self.status		= status
 		self.gap		= ''
 		self.pos		= ''
 		self.laps		= len(lapTimes)
 		self.lastTime	= lastTime
+		self.raceCat	= raceCat
 		self.lapTimes	= lapTimes
 		self.raceTimes	= raceTimes
 		
@@ -80,8 +81,9 @@ def GetResults( catName = 'All', getExternalData = False ):
 					lastTime = times[-1]
 				else:
 					lastTime = 0.0
-					
+			
 			riderResults.append( RiderResult(rider.num, rider.status, lastTime,
+									riderCategory.name,
 									[times[i] - times[i-1] for i in xrange(1, len(times))], times) )
 		
 		if not riderResults:
@@ -128,13 +130,6 @@ def GetResults( catName = 'All', getExternalData = False ):
 					rr.gap = '%d %s' % (lapsDown, 'laps' if lapsDown > 1 else 'lap')
 			elif rr != leader:
 				rr.gap = Utils.formatTimeCompressed( rr.lastTime - leader.lastTime )
-		
-		# Format the last time as a string.
-		for rr in riderResults:
-			if rr.lastTime:
-				rr.lastTime = Utils.formatTimeCompressed( rr.lastTime )
-			else:
-				rr.lastTime = ''
 		
 		return riderResults
 		
