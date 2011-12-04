@@ -1316,8 +1316,7 @@ class Race(object):
 		return lap
 		
 	def getNumBestLaps( self, num ):
-		rider = self.riders.get(num, None)
-		if not rider:
+		if num not in self.riders:
 			return 0
 		category = self.getCategory( num )
 		return self.getCategoryBestLaps( category.name if category else 'All' )
