@@ -1311,7 +1311,7 @@ class Race(object):
 			entries = self.riders[nums[lap]].interpolate()
 			if entries[lap].interp:
 				lapTime = times[lap] - times[lap-1]
-				if times[lap] - raceTime > lapTimes / 2.0:
+				if times[lap] - raceTime > lapTime / 2.0:
 					lap -= 1
 		return lap
 		

@@ -65,7 +65,6 @@ class Gantt( wx.Panel ):
 			
 			entries = race.interpolateLap( maxLaps )
 			category = race.categories.get( catName, None )
-			print category
 			if category:
 				# Filter by category and num laps in that category.
 				numLaps = race.getCategoryBestLaps( category.name )
