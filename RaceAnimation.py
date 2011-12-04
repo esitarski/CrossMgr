@@ -19,19 +19,25 @@ def GetAnimationData( catName = 'All', getExternalData = False ):
 	animationData = {}
 	
 	ignoreFields = set(['pos', 'num', 'gap', 'laps', 'lapTimes'])
-	for rr in results:
-		info = {}
-		for a in dir(rr):
-			if a[0] == '_' or a in ignoreFields:
-				continue
-			if a == 'raceTimes':
-				info['lapTimes'] = getattr(rr, a)
-			elif a == 'status':
-				info['status'] = statusNames[getattr(rr, a)]
-			else:
-				info[a] = getattr( rr, a )
-				
-		animationData[rr.num] = info
+	with Model.LockRace() as race:
+		for rr in results:
+			info = {}
+			for a in dir(rr):
+				if a[0] == '_' or a in ignoreFields:
+					continue
+				if a == 'raceTimes':
+					info['lapTimes'] = getattr(rr, a)
+					category = race.getCategory( rr.num )
+					categoryName = category.name if category else 'All'
+					categoryBestLaps = race.getCategoryBestLaps( categoryName )
+					if len(info['lapTimes']) > categoryBestLaps:
+						info['lapTimes'] = info['lapTimes'][:categoryBestLaps+1]
+				elif a == 'status':
+					info['status'] = statusNames[getattr(rr, a)]
+				else:
+					info[a] = getattr( rr, a )
+					
+			animationData[rr.num] = info
 		
 	return animationData
 		

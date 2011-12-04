@@ -68,13 +68,13 @@ class Gantt( wx.Panel ):
 			print category
 			if category:
 				# Filter by category and num laps in that category.
-				numLaps = category.getNumLaps()
+				numLaps = race.getCategoryBestLaps( category.name )
 				if not numLaps:
 					numLaps = 1000
 				entries = [e for e in entries if race.getCategory(e.num) == category and e.lap <= numLaps]
 			else:
 				# Filter by the number of laps for each individual category.
-				entries = [e for e in entries if e.lap <= race.getCategoryNumLaps(e.num)]
+				entries = [e for e in entries if e.lap <= race.getNumBestLaps(e.num)]
 			
 			riderTimes = {}
 			riderInterp = {}

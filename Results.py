@@ -52,9 +52,12 @@ def GetResults( catName = 'All', getExternalData = False ):
 					if winningLaps > raceNumLaps:
 						winningLaps = raceNumLaps
 					elif winningLaps >= 2:
-						lastLapTime = times[winningLaps] - times[winningLaps-1]
-						if (times[winningLaps] - race.minutes * 60.0) > lastLapTime / 2.0:
-							winningLaps -= 1
+						winner = race[nums[winningLaps]]
+						entries = winner.interpolate()
+						if entries[winningLaps].interp:
+							lastLapTime = times[winningLaps] - times[winningLaps-1]
+							if (times[winningLaps] - race.minutes * 60.0) > lastLapTime / 2.0:
+								winningLaps -= 1
 					categoryWinningTime[c] = times[winningLaps]
 				except IndexError:
 					categoryWinningTime[c] = race.minutes * 60.0

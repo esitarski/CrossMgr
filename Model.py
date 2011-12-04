@@ -930,10 +930,14 @@ class Race(object):
 		for c, (catTimes, catNums) in self.getCategoryTimesNums().iteritems():
 			if len(catTimes) < 2 or self.getMaxLap(c) < 2:
 				continue
-			lapTime = catTimes[-1] - catTimes[-2]
 			lap = bisect.bisect( catTimes, raceTime, hi=len(catTimes) - 1 )
-			if catTimes[lap] - raceTime > lapTime / 2:
-				lap -= 1
+			if lap > 1:
+				catWinner = self.riders[catNums[lap]]
+				entries = catWinner.interpolate()
+				if entries[lap].interp:
+					lapTime = catTimes[lap] - catTimes[lap-1]
+					if catTimes[lap] - raceTime > lapTime / 2:
+						lap -= 1
 			crl[c] = lap
 		
 		return crl
@@ -1287,6 +1291,37 @@ class Race(object):
 
 		return colnames, results, nonFinishers[0], nonFinishers[1], nonFinishers[2]
 
+	@memoize
+	def getCategoryBestLaps( self, catName = 'All' ):
+		category = self.categories.get( catName, None )
+		if category:
+			# Check if the number of laps is specified.  If so, use that.
+			# Otherwise, check if we can figure out the number of laps.
+			lap = (category.getNumLaps() or self.getCategoryRaceLaps().get(category, None))
+			if lap:
+				return lap
+				
+		# Otherwise get the closest leader's lap time.
+		times, nums = self.getLeaderTimesNums()
+		if not times:
+			return None
+		raceTime = self.minutes * 60.0
+		lap = bisect.bisect_left( times, raceTime, len(times) - 1 )
+		if lap > 1:
+			entries = self.riders[nums[lap]].interpolate()
+			if entries[lap].interp:
+				lapTime = times[lap] - times[lap-1]
+				if times[lap] - raceTime > lapTimes / 2.0:
+					lap -= 1
+		return lap
+		
+	def getNumBestLaps( self, num ):
+		rider = self.riders.get(num, None)
+		if not rider:
+			return 0
+		category = self.getCategory( num )
+		return self.getCategoryBestLaps( category.name if category else 'All' )
+	
 	@memoize
 	def allRidersFinished( self ):
 		# This is dangerous!  Do not end the program early!  Always let the user end the race in case of additional laps.
