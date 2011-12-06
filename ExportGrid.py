@@ -1,5 +1,6 @@
 
 import wx
+import os
 import xlwt
 import Utils
 import Model
@@ -82,12 +83,24 @@ class ExportGrid( object ):
 		xPix = borderPix
 		yPix = borderPix
 		
+		# Draw the graphic.
+		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), wx.BITMAP_TYPE_PNG )
+		bmWidth, bmHeight = bitmap.GetWidth(), bitmap.GetHeight()
+		graphicHeight = heightPix * 0.15
+		graphicWidth = float(bmWidth) / float(bmHeight) * graphicHeight
+		graphicBorder = int(graphicWidth * 0.15)
+
+		gc = wx.GraphicsContext.Create(dc)
+		gc.DrawBitmap( bitmap, xPix, yPix, graphicWidth, graphicHeight )
+		
 		# Draw the title.
-		font = self._getFontToFit( widthFieldPix, int(heightFieldPix*0.10), lambda font: dc.GetMultiLineTextExtent(self.title, font)[:-1], True )
+		font = self._getFontToFit( widthFieldPix - graphicWidth - graphicBorder, graphicHeight,
+									lambda font: dc.GetMultiLineTextExtent(self.title, font)[:-1], True )
 		dc.SetFont( font )
-		self._drawMultiLineText( dc, self.title, xPix, yPix )
-		wText, hText, lineHeightText = dc.GetMultiLineTextExtent( self.title, font )
-		yPix += hText + lineHeightText/4
+		self._drawMultiLineText( dc, self.title, xPix + graphicWidth + graphicBorder, yPix )
+		# wText, hText, lineHeightText = dc.GetMultiLineTextExtent( self.title, font )
+		# yPix += hText + lineHeightText/4
+		yPix += graphicHeight + graphicBorder
 		
 		heightFieldPix = heightPix - yPix - borderPix
 		
@@ -179,7 +192,7 @@ class ExportGrid( object ):
 			return
 		
 		with Model.LockRace() as race:
-			self.title = 'Race: '+ race.name + '\n' + Utils.formatDate(race.date) + '\nCategory: ' + catName
+			self.title = '\n'.join( [race.name, Utils.formatDate(race.date), 'Category: ' + catName] )
 			category = race.categories.get( catName, None )
 
 		startOffset = category.getStartOffsetSecs() if category else 0.0
