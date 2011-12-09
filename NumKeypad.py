@@ -458,7 +458,7 @@ class NumKeypad( wx.Panel ):
 			raceMessage = { 0:'Finishers Arriving', 1:'Ring Bell', 2:'Prepare Bell' }
 			
 			# Set the projected finish time and laps.
-			if lapCompleting >= 2 or not isAutomatic:
+			if lapCompleting >= 1 or not isAutomatic:
 				SetLabel( self.leaderFinishTime, Utils.formatTime(expectedRaceFinish) )
 				SetLabel( self.lastRiderFinishTime, Utils.formatTime(race.getLastFinisherTime()) )
 				SetLabel( self.leadersLapTime, Utils.formatTime(leadersExpectedLapTime) )
