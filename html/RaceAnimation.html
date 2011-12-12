@@ -17,8 +17,13 @@ body
 
 #idRaceName
 {
-	font-size: 125%;
+	font-size: 200%;
 	font-weight: bold;
+}
+
+#idImgHeader
+{
+	box-shadow: 4px 4px 4px #888888;
 }
 
 table.results
@@ -75,6 +80,8 @@ var organizer = null;
 // Rider data
 var data = null;
 
+var imageSrc = 'data:image/png;base64,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';
+
 // Control information about the animation.
 var canvas = null;
 var r = 100.0;				// The key track size dimension
@@ -126,13 +133,6 @@ function isCanvasSupported()
 Array.prototype.back = function()
 {
 	return this[this.length-1];
-}
-
-function getOrdinal( n )
-{
-   var s=["th","st","nd","rd"],
-       v=n%100;
-   return n+(s[(v-20)%10]||s[v]||s[0]);
 }
 
 function getRiderPositionTime( num )
@@ -352,11 +352,9 @@ function Refresh()
 	if( data )
 	{
 		var riderXYPT = [];
-		for( var num in data )
+		for( num in data )
 		{
-			if( data[num].lapTimes.length == 0 )
-				continue;
-			if( categoryCur == 'All' || data[num].raceCat == categoryCur )
+			if( categoryCur == 'All' || data[num]['raceCat'] == categoryCur )
 			{
 				var xypt = getRiderXYPT( num, num % laneMax );
 				if( xypt[2] == null )
@@ -482,7 +480,7 @@ function Refresh()
 		dc.fillStyle = 'black';
 		for( var i = 0; i < rp.length; ++i )
 		{
-			dc.fillText( rp[i][1] + ' (' + getOrdinal(rp[i][0]) + ')', x, y );
+			dc.fillText( rp[i][1] + '(' + rp[i][0] + ')', x, y );
 			y += tHeight * 1.2;
 			if( y >= r * 1.5 - tHeight * 1.5 )
 			{
@@ -528,9 +526,8 @@ function SetData( aData, tCur )
 	
 	// Get all the unique categories from the data.
 	var cats = {};
-	for( var num in data )
+	for( num in data )
 	{
-		data[num]['num'] = num;
 		var cName = data[num]['raceCat'];
 		if( cName != 'All' )
 			cats[cName] = cName;
@@ -564,9 +561,8 @@ function Animate( tRunning, aTMax, tCur )
 	if( aTMax == undefined )
 	{
 		tMax = 0;
-		for( var num in data )
-			if( data[num].lapTimes.length )
-				tMax = Math.max(tMax, data[num].lapTimes.back());
+		for( num in data )
+			tMax = Math.max(tMax, data[num]['lapTimes'].back());
 	}
 	else
 		tMax = aTMax;
@@ -596,23 +592,26 @@ function createTextChild( parent, s )
 var statusSortSeq = { 'Finisher':1, 'PUL':2, 'OTL':6, 'DNF':3, 'DQ':4, 'DNS':5, 'NP':7 };
 function CmpResultsData( x, y )
 {
+	// [numLaps, raceTimeOfLastLap, num, lapTimes, status, lastTime]
+	//    0              1           2      3         4        5
+	
 	// Compare status.
-	var xStatus = statusSortSeq[x.status], yStatus = statusSortSeq[y.status];
-	var dStatus = xStatus - yStatus;
+	var xStatus = statusSortSeq[x[4]], yStatus = statusSortSeq[y[4]];
+	var dStatus = xStatus - yStatus
 	if( dStatus != 0 )
 		return dStatus;
 
 	// Compare laps completed.
-	var d = x.lapTimes.length - y.lapTimes.length;
+	var d = x[0] - y[0];
 	if( d != 0 )
 		return -d;
 		
 	// Compare race finish times.
-	if( x.status == 'Finisher' )
-		return x.lapTimes.back() - y.lapTimes.back();
+	if( x[4] == 'Finisher' )
+		return x[1] - y[1];
 		
 	// Compare last time.
-	return x.lastTime - y.lastTime;
+	return x[5] - y[5];
 }
 
 function SetCategoryResults()
@@ -625,7 +624,7 @@ function SetCategoryResults()
 	// Show results for this category.
 	categoryCur = categories[categorySelect.selectedIndex];
 
-	var infoFields = ['LastName', 'FirstName', 'Category', 'Team', 'License'];
+	var infoFields = ['License', 'LastName', 'FirstName', 'Category', 'Team'];
 	
 	var table = document.createElement('TABLE');
 	table.className = 'results';
@@ -640,15 +639,17 @@ function SetCategoryResults()
 		
 		var curFields = {}
 		var resultsData = [];
-		for( var num in data )
+		for( num in data )
 		{
 			var d = data[num];
-			if( d.raceCat == cat )
+			if( d['raceCat'] == cat )
 			{
-				resultsData.push( d );
+				var lapTimes = d['lapTimes'];
+				resultsData.push( [lapTimes.length, lapTimes.length ? lapTimes.back() : 99999, num, d['lapTimes'], d['status'], d['lastTime']] );
+				
 				// Get the union of all the defined fields.
 				for( var f = 0; f < infoFields.length; ++f )
-					if( d[infoFields[f]] != undefined )
+					if( d[infoFields[f]] )
 						curFields[infoFields[f]] = true;
 			}
 		}
@@ -657,7 +658,7 @@ function SetCategoryResults()
 		resultsData.sort( CmpResultsData );
 
 		// Label this category.
-		var leaderLapTimes = resultsData[0].lapTimes;
+		var leaderLapTimes = resultsData[0][3];
 		
 		var thead = createChild( table, 'THEAD' );
 		var tr = createChild( thead, 'TR' );
@@ -692,27 +693,27 @@ function SetCategoryResults()
 		}
 		
 		// Add the rider data.
-		var leaderTime = resultsData[0].lapTimes.back();
-		var startOffset = resultsData[0].lapTimes[0];
+		var leaderTime = resultsData[0][3].back();
+		var startOffset = resultsData[0][3][0];
 		var position = 1;
 		for( var r = 0; r < resultsData.length; ++r, ++position )
 		{
 			var tr = createChild(thead, 'TR');
 			tr.className = ((r & 1) ? 'odd' : 'even');
 			
-			var d = resultsData[r];
-			var num = d.num;
-			var lapTimes = d.lapTimes;
-			var isFinisher = (d.status == 'Finisher');
+			var lapTimes = resultsData[r][3];
+			var isFinisher = (resultsData[r][4] == 'Finisher');
+			var num = resultsData[r][2];
 			
-			var p = (isFinisher ? '' + position : d.status);
+			var p = (isFinisher ? '' + position : resultsData[r][4] );
 			createTextChild( td = createChild(tr, 'TD'), p );
 			if( numsToWatch[num] ) td.className = 'highlight';
 			
-			createTextChild( td = createChild(tr, 'TD'), d.num );
-			if( numsToWatch[d.num] ) td.className = 'highlight';
+			createTextChild( td = createChild(tr, 'TD'), num );
+			if( numsToWatch[num] ) td.className = 'highlight';
 			td.id = 'idNonNumeric';
 			
+			var d = data[num];
 			for( var f = 0; f < infoFields.length; ++f )
 			{
 				if( curFields[infoFields[f]] )
@@ -725,7 +726,7 @@ function SetCategoryResults()
 				}
 			}
 			
-			var finishTime = (isFinisher ? FormatTime(Math.max(d.lastTime - startOffset, 0.0)) : '');
+			var finishTime = (isFinisher ? FormatTime(Math.max(resultsData[r][1] - startOffset, 0.0)) : '');
 			createTextChild( td = createChild(tr, 'TD'), finishTime );
 			if( numsToWatch[num] ) td.className = 'highlight';
 			
@@ -770,7 +771,7 @@ function SetCategoryResults()
 						createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(lapTimes[i] - lapTimes[i-1], 0.0)) );
 					else
 					{
-						var v = lapTimes[i] - leaderLapTimes[i];
+						var v = lapTimes[i] - resultsData[0][3][i];
 						var sign = '+';
 						if( v < 0 )
 						{
@@ -785,7 +786,7 @@ function SetCategoryResults()
 						createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(lapTimes[i] - lapTimes[i-1], 0.0)) );
 					else
 					{
-						var v = (100.0 * (lapTimes[i] - leaderLapTimes[i])) / leaderLapTimes[i];
+						var v = (100.0 * (lapTimes[i] - resultsData[0][3][i])) / resultsData[0][3][i];
 						var sign = '+';
 						if( v < 0 )
 						{
@@ -979,32 +980,38 @@ function RefreshRaceChart()
 
 	var dataMax = 0;
 	var resultsData = [];
-	for( var num in data )
+	for( num in data )
 	{
 		var d = data[num];
-		d.num = num;
 		if( categoryCur == 'All' || d['raceCat'] == categoryCur )
 		{
-			resultsData.push( d );
-			if( d.status == 'Finisher' && d.lapTimes.back() > dataMax )
-				dataMax = d.lapTimes.back()
+			var lapTimes = d['lapTimes'];
+			if( lapTimes.length > 0 )
+			{
+				resultsData.push( [	lapTimes.length,
+									lapTimes.length ? lapTimes.back() : 99999,
+									num, d['lapTimes'].slice(0),	// Make sure to make a full copy as we modify these values.
+									d['status'], d['lastTime']] );
+				if( lapTimes.back() > dataMax )
+					dataMax = lapTimes.back();
+			}
 		}
 	}
-
+	
 	if( resultsData.length == 0 )
 		return;
 	
 	// Sort by greatest distance and shortest time.
 	resultsData.sort( CmpResultsData );
-
+	
 	var iNum = 2;
 	var iLapTimes = 3;
 
 	// Check if all the data have the same offset.
-	var startOffset = resultsData[0].lapTimes[0];
+	var startOffset = resultsData[0][iLapTimes][0];
 	for( var i = 1; i < resultsData.length; ++i )
 	{
-		if( resultsData[i].lapTimes[0] != startOffset )
+		if( resultsData[i][iLapTimes][0] != startOffset )
 		{
 			startOffset = 0.0;
 			break;
@@ -1014,14 +1021,14 @@ function RefreshRaceChart()
 	{
 		for( var i = 0; i < resultsData.length; ++i )
 		{
-			var lapTimes = resultsData[i].lapTimes;
+			var lapTimes = resultsData[i][iLapTimes];
 			for( var j = 0; j < lapTimes.length; ++j )
 				lapTimes[j] -= startOffset;
 		}
 		dataMax -= startOffset;
 	}
 	
-	var lapsMax = resultsData.length > 0 ? resultsData[0].lapTimes.length : 0;
+	var lapsMax = resultsData.length > 0 ? resultsData[0][iLapTimes].length : 0;
 	var colors = makeColorGradient(2.4,2.4,2.4,0,2,4,128,127,50);
 	var lighterColors = [];
 	for( var i = 0; i < colors.length; ++i )
@@ -1102,8 +1109,8 @@ function RefreshRaceChart()
 		yCur = yLast + barHeight;
 		xLast = labelsWidth;
 		xCur = xLast;
-		var num = resultsData[i].num;
-		var lapTimes = resultsData[i].lapTimes;
+		var num = resultsData[i][iNum];
+		var lapTimes = resultsData[i][iLapTimes];
 		for( var j = 0; j < lapTimes.length; ++j )
 		{
 			var t = lapTimes[j];
@@ -1131,7 +1138,7 @@ function RefreshRaceChart()
 		
 		// Draw the label on both ends.
 		dc.fillStyle = '#000000';
-		var lab = resultsData[i].num + '';
+		var lab = resultsData[i][iNum] + '';
 		labelWidth = dc.measureText(lab).width;
 		dc.fillText( lab, textWidth - labelWidth, yLast );
 		if( !minimizeLabels )
@@ -1225,7 +1232,7 @@ function getStartTime()
 	categoryCur = categories[categorySelect.selectedIndex];
 
 	var t = 9999999;
-	for( var num in data )
+	for( num in data )
 	{
 		if( categoryCur == 'All' || data[num]['raceCat'] == categoryCur )
 			if( data[num]['lapTimes'][0] < t )
@@ -1315,6 +1322,8 @@ function SetLapDataOption( opt )
 
 function onLoad()
 {
+	document.getElementById('idImgHeader').src = imageSrc;
+
 	canvas = document.getElementById('idTrack');
 	categorySelect = document.getElementById('idCategory');
 	resultsDiv = document.getElementById('idResultsDiv');
@@ -1380,7 +1389,12 @@ function onLoad()
 </script>
 
 <body onload="onLoad()">
-<p><span id="idRaceName">Cyclo-Cross Race Results</span> <span id="idOrganizer">by CrossMgr</span></p>
+<p>
+<table cellspacing="8"><tr>
+<td><img height="96" width="67" id="idImgHeader" alt="CrossMgr Logo" /></td>
+<td valign="top"><span id="idRaceName">Cyclo-Cross Race Results</span><br/><span id="idOrganizer">by CrossMgr</span></td>
+</tr></table>
+</p>
 <p class="noprint">
 Category: <select id="idCategory" onChange="SelectCategory()"></select>
 </p>
