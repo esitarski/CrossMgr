@@ -92,7 +92,6 @@ var laneMax = 8;			// Maximum number of lanes on the track.
 var lapCur = 0;				// Current lap of the race.
 var framesPerSecond = 32;	// Maximum number of frames per seconds to show.
 var speedup = 1.0;			// Factor that animation is sped up over real time.
-var categorySelect = null;	// select list of categories
 var categories = [];		// Array of unique categories in the data.
 var categoryCur = 'All';	// Current selected category.
 var animationSeconds = 90;	// Default animation seconds.
@@ -133,7 +132,26 @@ function isCanvasSupported()
 Array.prototype.back = function()
 {
 	return this[this.length-1];
-}
+};
+
+// Make a string html safe.
+String.prototype.escapeHTML = function ()
+{                                        
+	var r =                                                               
+		this.replace(/&/g,'&amp;').
+			replace(/>/g,'&gt;').
+			replace(/</g,'&lt;').
+			replace(/"/g,'&quot;');
+	return r;
+};
+
+// Make a string id safe.
+String.prototype.escapeID = function()
+{
+	var r =
+		this.replace(/[&<>"'(){}\[\]!@#$%^* ]/g,'_');
+	return r;
+};
 
 function getRiderPositionTime( num )
 {
@@ -542,11 +560,17 @@ function SetData( aData, tCur )
 	if( categories.length > 1 )
 		categories.splice( 0, 0, 'All' );
 	
-	categorySelect.selectedIndex = 0;
-	categorySelect.options.length = 0;
+	categorySpan = document.getElementById('idCategories')
+	var catHTML = '';
 	for( var i = 0; i < categories.length; ++i )
-		categorySelect.options[i] = new Option( categories[i], 0 );
-	
+	{
+		var cat = categories[i];
+		catHTML += '<input type="radio" name="categoryCur" value="showCat' + cat + '"  id="idCat' + cat.escapeID() + '"onClick="SelectCategory('+i+');"';
+		if( i == 0 )
+			catHTML += ' checked="true"';
+		catHTML += '/>' + cat.escapeHTML() + '&nbsp&nbsp&nbsp';
+	}
+	categorySpan.innerHTML = catHTML;
 	Refresh();
 }
 
@@ -622,8 +646,6 @@ function SetCategoryResults()
 		return;
 
 	// Show results for this category.
-	categoryCur = categories[categorySelect.selectedIndex];
-
 	var infoFields = ['License', 'LastName', 'FirstName', 'Category', 'Team'];
 	
 	var table = document.createElement('TABLE');
@@ -976,8 +998,6 @@ function RefreshRaceChart()
 		return;
 
 	// Show results for this category.
-	categoryCur = categories[categorySelect.selectedIndex];
-
 	var dataMax = 0;
 	var resultsData = [];
 	for( num in data )
@@ -1152,9 +1172,9 @@ function RefreshRaceChart()
 	labelsWidthCur = labelsWidth;
 }
 
-function SelectCategory()
+function SelectCategory( i )
 {
-	categoryCur = categories[categorySelect.selectedIndex];
+	categoryCur = categories[i];
 	SetCategoryResults();
 	Refresh();
 	RefreshRaceChart();
@@ -1229,8 +1249,6 @@ function getStartTime()
 		return 0.001;
 
 	// Show results for this category.
-	categoryCur = categories[categorySelect.selectedIndex];
-
 	var t = 9999999;
 	for( num in data )
 	{
@@ -1325,7 +1343,6 @@ function onLoad()
 	document.getElementById('idImgHeader').src = imageSrc;
 
 	canvas = document.getElementById('idTrack');
-	categorySelect = document.getElementById('idCategory');
 	resultsDiv = document.getElementById('idResultsDiv');
 
 	var raceChartCanvas = document.getElementById('idRaceChart');
@@ -1369,13 +1386,9 @@ function onLoad()
 		categoryStr = category;
 	if( categoryStr )
 	{
-		for( var i = 0; i < categorySelect.options.length; ++i )
-			if( categorySelect.options[i].text == category )
-			{
-				categorySelect.selectedIndex = i;
-				SelectCategory();
-				break;
-			}
+		var ropt = document.getElementById('idCat' + cat.escapeID());
+		if( ropt )
+			ropt.checked = true;
 	}
 	
 	SetCategoryResults();
@@ -1396,7 +1409,7 @@ function onLoad()
 </tr></table>
 </p>
 <p class="noprint">
-Category: <select id="idCategory" onChange="SelectCategory()"></select>
+Category: <span id="idCategories"></span>
 </p>
 <canvas id="idTrack" width="600" height="300" class="noprint">
 Your browser does not support the HTML5 Canvas.<br/>
