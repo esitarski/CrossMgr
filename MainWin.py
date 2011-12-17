@@ -1,5 +1,6 @@
 import wx
 from wx.lib.wordwrap import wordwrap
+import wx.lib.imagebrowser as imagebrowser
 import sys
 import os
 import re
@@ -12,6 +13,7 @@ import json
 import random
 import multiprocessing
 import webbrowser
+import base64
 import cPickle as pickle
 from optparse import OptionParser
 
@@ -197,6 +199,10 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_MENU, self.menuRestoreFromInput, id=idCur )
 
 		self.fileMenu.AppendSeparator()		
+		idCur = wx.NewId()
+		self.fileMenu.Append( idCur , "Set &Graphic...", "Set Graphic for all Output" )
+		self.Bind(wx.EVT_MENU, self.menuSetGraphic, id=idCur )
+
 		self.fileMenu.Append( wx.ID_PAGE_SETUP , "Page &Setup...", "Setup the print page" )
 		self.Bind(wx.EVT_MENU, self.menuPageSetup, id=wx.ID_PAGE_SETUP )
 
@@ -404,6 +410,44 @@ class MainWin( wx.Frame ):
 	def getDirName( self ):
 		return Utils.getDirName()
 
+	def menuSetGraphic( self, event ):
+		imgPath = self.config.Read( 'graphic', os.path.join(Utils.getDocumentsDir(), 'graphic.png') )
+		dlg = imagebrowser.ImageDialog( self, os.path.basename(imgPath) )
+		dlg.ChangeFileTypes([
+			('All Formats (GIF, PNG, JPEG)', '*.gif|*.png|*.jpg'),
+			('GIF (*.gif)', '*.gif'),
+			('PNG (*.png)', '*.png'),
+			('JPEG (*.jpg)', '*.jpg')
+		])
+		if dlg.ShowModal() == wx.ID_OK:
+			imgPath = dlg.GetFile()
+			self.config.Write( 'graphic', imgPath )
+			self.config.Flush()
+		dlg.Destroy()
+	
+	def getGraphicFName( self ):
+		return self.config.Read( 'graphic', '' )
+	
+	def getGraphicBase64( self ):
+		graphicFName = self.getGraphicFName()
+		if not graphicFName:
+			return None
+		iSep = graphicFName.rfind( '.' )
+		if iSep < 0:
+			return None
+		fileType = graphicFName[iSep+1:].lower()
+		if fileType == 'jpg':
+			fileType = 'jpeg'
+		if fileType not in ['png', 'gif', 'jpeg']:
+			return None
+		try:
+			with open(graphicFName, 'rb') as f:
+				b64 = 'data:image/%s;base64,%s' % (fileType, base64.standard_b64encode(f.read()))
+				return b64
+		except IOError:
+			pass
+		return None
+	
 	def menuPageSetup( self, event ):
 		psdd = wx.PageSetupDialogData(self.printData)
 		psdd.CalculatePaperSizeFromId()
@@ -528,15 +572,24 @@ class MainWin( wx.Frame ):
 			return
 			
 		# Replace parts of the file with the race information.
-		raceName = 'raceName = %s' % json.dumps('Race: %s' % os.path.basename(self.fileName)[:-4])
-		html = html.replace( 'raceName = null', raceName )
+		raceName = 'raceName = %s' % json.dumps('%s' % os.path.basename(self.fileName)[:-4])
+		html = html.replace( 'raceName = null', raceName, 1 )
 			
 		with Model.LockRace() as race:
 			organizer = getattr( race, 'organizer', '' )
-			html = html.replace( 'organizer = null', 'organizer = %s' % json.dumps(organizer) )
+			html = html.replace( 'organizer = null', 'organizer = %s' % json.dumps(organizer), 1 )
 			
 		data = 'data = %s' % json.dumps(GetAnimationData(getExternalData = True))
 		html = html.replace( 'data = null', data )
+		
+		graphicBase64 = self.getGraphicBase64()
+		if graphicBase64:
+			try:
+				iStart = html.index( 'var imageSrc =' )
+				iEnd = html.index( "';", iStart )
+				html = ''.join( [html[:iStart], "var imageSrc = '%s';" % graphicBase64, html[iEnd+2:]] )
+			except ValueError:
+				pass
 			
 		# Write out the results.
 		fname = os.path.join( dName, os.path.basename(fname) )

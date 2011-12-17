@@ -21,10 +21,9 @@ body
 	font-weight: bold;
 }
 
-#idImgHeader
-{
-	box-shadow: 4px 4px 4px #888888;
-}
+<--!
+#idImgHeader { box-shadow: 4px 4px 4px #888888; }
+-->
 
 table.results
 {
@@ -560,16 +559,21 @@ function SetData( aData, tCur )
 	if( categories.length > 1 )
 		categories.splice( 0, 0, 'All' );
 	
-	categorySpan = document.getElementById('idCategories')
+	var categorySpan = document.getElementById('idCategories')
 	var catHTML = '';
-	for( var i = 0; i < categories.length; ++i )
+	if( categories.length > 1 )
 	{
-		var cat = categories[i];
-		catHTML += '<input type="radio" name="categoryCur" value="showCat' + cat + '"  id="idCat' + cat.escapeID() + '"onClick="SelectCategory('+i+');"';
-		if( i == 0 )
-			catHTML += ' checked="true"';
-		catHTML += '/>' + cat.escapeHTML() + '&nbsp&nbsp&nbsp';
+		for( var i = 0; i < categories.length; ++i )
+		{
+			var cat = categories[i];
+			catHTML += '<input type="radio" name="categorySelect" onClick="SelectCategory('+i+');"';
+			if( i == 0 )
+				catHTML += ' checked="true"';
+			catHTML += '/>' + cat.escapeHTML() + '&nbsp&nbsp&nbsp';
+		}
 	}
+	else if( categories.length == 1 )
+		catHTML = catEscapeHTML();
 	categorySpan.innerHTML = catHTML;
 	Refresh();
 }
@@ -1404,7 +1408,7 @@ function onLoad()
 <body onload="onLoad()">
 <p>
 <table cellspacing="8"><tr>
-<td><img height="96" width="67" id="idImgHeader" alt="CrossMgr Logo" /></td>
+<td><img id="idImgHeader" alt="CrossMgr Logo" /></td>
 <td valign="top"><span id="idRaceName">Cyclo-Cross Race Results</span><br/><span id="idOrganizer">by CrossMgr</span></td>
 </tr></table>
 </p>
