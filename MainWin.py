@@ -42,6 +42,7 @@ from ExportGrid			import ExportGrid
 import SimulationLapTimes
 import Version
 from ReadSignOnSheet	import GetExcelLink
+from SetGraphic			import SetGraphicDialog
 
 import wx.lib.agw.advancedsplash as AS
 
@@ -198,11 +199,12 @@ class MainWin( wx.Frame ):
 		self.fileMenu.Append( idCur , "&Restore from Original Input...", "Restore from Original Input" )
 		self.Bind(wx.EVT_MENU, self.menuRestoreFromInput, id=idCur )
 
-		self.fileMenu.AppendSeparator()		
+		self.fileMenu.AppendSeparator()
 		idCur = wx.NewId()
 		self.fileMenu.Append( idCur , "Set &Graphic...", "Set Graphic for all Output" )
 		self.Bind(wx.EVT_MENU, self.menuSetGraphic, id=idCur )
 
+		self.fileMenu.AppendSeparator()
 		self.fileMenu.Append( wx.ID_PAGE_SETUP , "Page &Setup...", "Setup the print page" )
 		self.Bind(wx.EVT_MENU, self.menuPageSetup, id=wx.ID_PAGE_SETUP )
 
@@ -412,19 +414,9 @@ class MainWin( wx.Frame ):
 
 	def menuSetGraphic( self, event ):
 		imgPath = self.config.Read( 'graphic', os.path.join(Utils.getDocumentsDir(), 'graphic.png') )
-		set_dir = os.path.dirname(imgPath)
-		print( set_dir )
-		dlg = imagebrowser.ImageDialog( self, set_dir = set_dir )
-		dlg.ChangeFileTypes([
-			('All Formats (GIF, PNG, JPEG)', '*.gif|*.png|*.jpg'),
-			('GIF (*.gif)', '*.gif'),
-			('PNG (*.png)', '*.png'),
-			('JPEG (*.jpg)', '*.jpg')
-		])
-		if os.path.isfile(imgPath):
-			dlg.SetFileName( imgPath )
+		dlg = SetGraphicDialog( self, graphic = imgPath )
 		if dlg.ShowModal() == wx.ID_OK:
-			imgPath = dlg.GetFile()
+			imgPath = dlg.GetValue()
 			self.config.Write( 'graphic', imgPath )
 			self.config.Flush()
 		dlg.Destroy()
