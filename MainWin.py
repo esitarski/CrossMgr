@@ -412,13 +412,17 @@ class MainWin( wx.Frame ):
 
 	def menuSetGraphic( self, event ):
 		imgPath = self.config.Read( 'graphic', os.path.join(Utils.getDocumentsDir(), 'graphic.png') )
-		dlg = imagebrowser.ImageDialog( self, os.path.basename(imgPath) )
+		set_dir = os.path.dirname(imgPath)
+		print( set_dir )
+		dlg = imagebrowser.ImageDialog( self, set_dir = set_dir )
 		dlg.ChangeFileTypes([
 			('All Formats (GIF, PNG, JPEG)', '*.gif|*.png|*.jpg'),
 			('GIF (*.gif)', '*.gif'),
 			('PNG (*.png)', '*.png'),
 			('JPEG (*.jpg)', '*.jpg')
 		])
+		if os.path.isfile(imgPath):
+			dlg.SetFileName( imgPath )
 		if dlg.ShowModal() == wx.ID_OK:
 			imgPath = dlg.GetFile()
 			self.config.Write( 'graphic', imgPath )
