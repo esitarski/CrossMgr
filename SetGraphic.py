@@ -29,11 +29,10 @@ class SetGraphicDialog( wx.Dialog ):
 		self.okBtn = wx.Button( self, wx.ID_OK )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
 
-		bh = wx.StdDialogButtonSizer()
-		
 		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
+		bh = wx.StdDialogButtonSizer()
 		bh.AddButton( self.okBtn )
 		bh.AddButton( self.cancelBtn )
 		bh.Realize()

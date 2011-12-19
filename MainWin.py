@@ -413,7 +413,7 @@ class MainWin( wx.Frame ):
 		return Utils.getDirName()
 
 	def menuSetGraphic( self, event ):
-		imgPath = self.config.Read( 'graphic', os.path.join(Utils.getDocumentsDir(), 'graphic.png') )
+		imgPath = self.getGraphicFName()
 		dlg = SetGraphicDialog( self, graphic = imgPath )
 		if dlg.ShowModal() == wx.ID_OK:
 			imgPath = dlg.GetValue()
@@ -422,16 +422,24 @@ class MainWin( wx.Frame ):
 		dlg.Destroy()
 	
 	def getGraphicFName( self ):
-		return self.config.Read( 'graphic', '' )
+		defaultFName = os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png')
+		graphicFName = self.config.Read( 'graphic', defaultFName )
+		if graphicFName != defaultFName:
+			try:
+				with open(graphicFName, 'rb') as f:
+					return graphicFName
+			except IOError:
+				pass
+		return defaultFName
 	
 	def getGraphicBase64( self ):
 		graphicFName = self.getGraphicFName()
 		if not graphicFName:
 			return None
-		iSep = graphicFName.rfind( '.' )
-		if iSep < 0:
+		fileType = os.path.splitext(graphicFName)[1].lower()
+		if not fileType:
 			return None
-		fileType = graphicFName[iSep+1:].lower()
+		fileType = fileType[1:]
 		if fileType == 'jpg':
 			fileType = 'jpeg'
 		if fileType not in ['png', 'gif', 'jpeg']:

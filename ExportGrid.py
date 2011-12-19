@@ -84,7 +84,18 @@ class ExportGrid( object ):
 		yPix = borderPix
 		
 		# Draw the graphic.
-		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), wx.BITMAP_TYPE_PNG )
+		graphicFName = None;
+		if Utils.getMainWin():
+			graphicFName = Utils.getMainWin().getGraphicFName()
+			extension = os.path.splitext( graphicFName )[1].lower()
+			bitmapType = {
+				'.gif': wx.BITMAP_TYPE_GIF,
+				'.png': wx.BITMAP_TYPE_PNG,
+				'.jpg': wx.BITMAP_TYPE_JPEG,
+				'.jpeg':wx.BITMAP_TYPE_JPEG }.get( extension, wx.BITMAP_TYPE_PNG )
+			bitmap = wx.Bitmap( graphicFName, bitmapType )
+		else:
+			bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), wx.BITMAP_TYPE_PNG )
 		bmWidth, bmHeight = bitmap.GetWidth(), bitmap.GetHeight()
 		graphicHeight = heightPix * 0.15
 		graphicWidth = float(bmWidth) / float(bmHeight) * graphicHeight
