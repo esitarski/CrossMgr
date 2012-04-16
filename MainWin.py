@@ -541,7 +541,7 @@ class MainWin( wx.Frame ):
 		try:
 			wb.save( xlFName )
 			webbrowser.open( xlFName, new = 2, autoraise = True )
-			Utils.MessageOK(self, 'Excel file written to:\n\n   %s' % xlFName, 'Excel Write', iconMask=wx.ICON_INFORMATION)
+			Utils.MessageOK(self, 'Excel file written to:\n\n   %s' % xlFName, 'Excel Write')
 		except IOError:
 			Utils.MessageOK(self,
 						'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % xlFName,
@@ -601,7 +601,7 @@ class MainWin( wx.Frame ):
 			with open(fname, 'w') as fp:
 				fp.write( html )
 			webbrowser.open( fname, new = 2, autoraise = True )
-			Utils.MessageOK(self, 'Html Race Animation written to:\n\n   %s' % fname, 'Html Write', iconMask=wx.ICON_INFORMATION)
+			Utils.MessageOK(self, 'Html Race Animation written to:\n\n   %s' % fname, 'Html Write')
 		except:
 			Utils.MessageOK(self, 'Cannot write HTML template file (%s).' % fname,
 							'Html Write Error', iconMask=wx.ICON_ERROR )
@@ -651,7 +651,7 @@ class MainWin( wx.Frame ):
 			
 		# Check for existing file.
 		if os.path.exists(fileName) and \
-		   not Utils.MessageOKCancel(self, 'File "%s" already exists.  Overwrite?' % fileName, 'File Exists', iconMask = wx.ICON_QUESTION):
+		   not Utils.MessageOKCancel(self, 'File "%s" already exists.  Overwrite?' % fileName, 'File Exists'):
 			return
 
 		# Try to open the file.
@@ -812,7 +812,7 @@ class MainWin( wx.Frame ):
 
 		if race is not None and race.isRunning():
 			if not Utils.MessageOKCancel(self,	'The current race is still running.\nFinish it and continue?',
-												'Current race running', iconMask = wx.ICON_QUESTION ):
+												'Current race running' ):
 				return
 			race.finishRaceNow()
 			self.writeRace()
@@ -929,7 +929,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			with open(fName, 'wb') as fp:
 				pass
 		except IOError:
-			Utils.MessageOK(self, 'Cannot open file "%s".' % fName, 'File Open Error')
+			Utils.MessageOK(self, 'Cannot open file "%s".' % fName, 'File Open Error',iconMask = wx.ICON_ERROR)
 			return
 
 		self.lapTimes = self.genTimes()
@@ -1083,7 +1083,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 		try:
 			wb.save( xlFName )
 			webbrowser.open( xlFName, new = 2, autoraise = True )
-			Utils.MessageOK(self, 'Excel file written to:\n\n   %s' % xlFName, 'Excel Write', iconMask=wx.ICON_INFORMATION)
+			Utils.MessageOK(self, 'Excel file written to:\n\n   %s' % xlFName, 'Excel Write')
 		except IOError:
 			Utils.MessageOK(self,
 						'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % xlFName,

@@ -970,7 +970,13 @@ function RaceChartUpdateInfo()
 			y += height;
 			c.lineTo( x, y );
 			c.closePath();
+			c.save();
+			c.shadowColor = "#5F5F5F";
+			c.shadowBlur = fontHeight * 0.3;
+			c.shadowOffsetX = fontHeight * 0.3;
+			c.shadowOffsetY = fontHeight * 0.3;
 			c.fill();
+			c.restore();
 			c.stroke();
 			c.fillStyle = '#000';
 			c.fillText( hover, xEvent, yEvent - 3 * height / 2 + margin + 1 );
