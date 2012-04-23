@@ -132,7 +132,7 @@ def GetResults( catName = 'All', getExternalData = False ):
 					lapsDown = leader.laps - rr.laps
 					rr.gap = '%d %s' % (lapsDown, 'laps' if lapsDown > 1 else 'lap')
 			elif rr != leader:
-				rr.gap = Utils.formatTimeCompressed( rr.lastTime - leader.lastTime )
+				rr.gap = Utils.formatTimeGap( rr.lastTime - leader.lastTime )
 		
 		return riderResults
 		

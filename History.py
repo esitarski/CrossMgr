@@ -405,7 +405,7 @@ class History( wx.Panel ):
 						'num':		e.num,
 						'raceTime':	Utils.formatTime(e.t) if self.showTimes else '',
 						'lapTime':	Utils.formatTime(e.t - numTimes[(e.num,e.lap-1)]) if self.showLapTimes else '',
-						'downTime':	Utils.formatTime(e.t - leaderTimes[col+1])
+						'downTime':	Utils.formatTimeGap(e.t - leaderTimes[col+1])
 					} ) for e in h] )
 				self.rcInterp.update( (row, col) for row, e in enumerate(h) if e.interp )
 

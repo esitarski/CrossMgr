@@ -77,14 +77,32 @@ def AdjustGridSize( grid, rowsRequired = None, colsRequired = None ):
 def formatTime( secs ):
 	if secs is None:
 		secs = 0
+	if secs < 0:
+		sign = '-'
+		secs = -secs
+	else:
+		sign = ''
 	secs = int(secs + 0.5)
 	hours = int(secs // (60*60));
 	minutes = int( (secs // 60) % 60 )
 	secs = secs % 60
 	if hours > 0:
-		return "%d:%02d:%02d" % (hours, minutes, secs)
+		return "%s%d:%02d:%02d" % (sign, hours, minutes, secs)
 	else:
-		return "%02d:%02d" % (minutes, secs)
+		return "%s%02d:%02d" % (sign, minutes, secs)
+
+def formatTimeGap( secs ):
+	if secs is None:
+		secs = 0
+	if secs < 0:
+		sign = '-'
+		secs = -secs
+	else:
+		sign = ''
+	secs = int(secs + 0.5)
+	minutes = int( secs // 60 )
+	secs = secs % 60
+	return "%s%d'%02d\"" % (sign, minutes, secs)
 
 def formatTimeCompressed( secs ):
 	f = formatTime( secs )
