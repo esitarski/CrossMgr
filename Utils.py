@@ -83,7 +83,7 @@ def formatTime( secs ):
 	else:
 		sign = ''
 	secs = int(secs + 0.5)
-	hours = int(secs // (60*60));
+	hours = int(secs // (60*60))
 	minutes = int( (secs // 60) % 60 )
 	secs = secs % 60
 	if hours > 0:
