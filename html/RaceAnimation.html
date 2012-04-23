@@ -292,6 +292,23 @@ function FormatTime( t )
 	return tStr;
 }
 
+function FormatTimeGap( t )
+{
+	var neg = false;
+	if( t < 0 )
+	{
+		neg = true;
+		t = -t;
+	}
+	var secs = Math.floor( t + 0.5 );
+	var m = Math.floor(secs / 60);
+	var s = Math.floor(secs % 60);
+	tStr = m + "'" + (s < 10 ? '0' : '') + s + '"';
+	if( neg )
+		tStr = '-' + tStr;
+	return tStr;
+}
+
 function Refresh()
 {
 	if( !canvas || !isCanvasSupported() )
@@ -770,7 +787,7 @@ function SetCategoryResults()
 							gap = '+' + delta.toFixed(2) + '%';
 						}
 						else
-							gap = FormatTime( delta );
+							gap = FormatTimeGap( delta );
 					}
 				}
 				else if( lapTimes.back() > leaderLapTimes.back() )
@@ -804,7 +821,7 @@ function SetCategoryResults()
 							sign = '-';
 							v = -v;
 						}
-						createTextChild( td = createChild(tr, 'TD'), sign + FormatTime(v) );
+						createTextChild( td = createChild(tr, 'TD'), sign + FormatTimeGap(v) );
 					}
 					break;
 				case 3:	// Time Percent.
