@@ -14,45 +14,87 @@ import os
 import datetime
 
 def DoJchipImport( fname, startTime ):
-	missingTags = []
+	# If startTime is None, the first time will be taken as the start time.
+	# All first time's for each rider will then be ignored.
+	
+	errors = []
 	missingTagSet = set()
+	raceStart = None
 	
 	with open(fname) as f, Model.LockRace() as race:
 		race.deleteAllRiderTimes()
 		
 		year, month, day = [int(n) for n in race.date.split('-')]
 		raceDate = datetime.date( year=year, month=month, day=day )
-		raceStart = datetime.datetime.combine( raceDate, startTime )
-		race.startTime = raceStart
+		if startTime:
+			raceStart = datetime.datetime.combine( raceDate, startTime )
+		
 		tagNums = GetTagNums( True )
 		
-		tLast = None
+		tFirst, tLast = None, None
+		lineNo = 0
+		riderLapTimes = {}
 		for line in f:
+			lineNo += 1
 			try:
 				fields = line.split()
 				tag = fields[0][1:]
 				tStr = fields[1]
 			except IndexError:
+				errors.append( 'line %d: unrecognized input' % lineNo )
 				continue
 			
-			t = datetime.datetime.combine( raceDate, JChip.parseTime(tStr) )
-			if t < raceStart:
+			try:
+				t = datetime.datetime.combine( raceDate, JChip.parseTime(tStr) )
+			except (IndexError, ValueError):
+				errors.append( 'line %d: invalid time' % lineNo )
 				continue
+				
+			if raceStart and t < raceStart:
+				errors.append( 'line %d: time before race start (%s)' % (lineNo, tStr) )
+				continue
+			
+				
+			if not tFirst:
+				tFirst = t
 			tLast = t
-			lapTime = (t - raceStart).total_seconds()
 			try:
 				num = tagNums[tag]
-				race.importTime( num, lapTime )
+				riderLapTimes.setdefault( num, [] ).append( t )
 			except KeyError:
 				if tag not in missingTagSet:
-					missingTags.append( tag )
+					errors.append( 'line %d: tag %s missing from Excel sheet' % (lineNo, tag) )
 					missingTagSet.add( tag )
 				continue
+
+		#------------------------------------------------------------------------------
+		# Populate the race with the times.
+		if not raceStart:
+			raceStart = tFirst
+			# Remove all the first times from the riders as this was the read when they went over the line.
+			for lapTimes in riderLapTimes.itervalues():
+				lapTimes = lapTimes[1:]
+		race.startTime = raceStart
 		
+		# Put all the rider times into the race.
+		for num, lapTimes in riderLapTimes.iteritems():
+			for t in lapTimes:
+				lapTime = (t - raceStart).total_seconds()
+				race.importTime( num, lapTime )
+			
 		if tLast:
 			race.finishTime = tLast
+			
+		# Figure out the race minutes from the recorded laps.
+		if riderLapTimes:
+			lapNumMax = max( len(ts) for ts in riderLapTimes.itervalues() )
+			if lapNumMax > 0:
+				tElapsed = min( ts[-1] for ts in riderLapTimes.itervalues() if len(ts) == lapNumMax )
+				raceMinutes = int((tElapsed - raceStart).total_seconds() / 60.0) + 1
+				race.minutes = raceMinutes
+		
 		race.setChanged()
-	return missingTags
+	return errors
 
 #------------------------------------------------------------------------------------------------
 class JChipImportDialog( wx.Dialog ):
@@ -67,8 +109,8 @@ class JChipImportDialog( wx.Dialog ):
 			'You must also configure a "Tag" field in your Sign-On Excel Sheet and link it to the race.',
 			'This is required so CrossMgr can link the tags in the JChip file back to rider numbers and info.',
 			'',
-			'The start time of the race is not in the JChip file, so you must also enter it below.',
-			'This is so that CrossMgr can get an accurate time for the first lap.',
+			'If the first chip read is NOT the start of the race, you will need to enter the start time manually.',
+			'Otherwise the import will use the first chip read as the race start.',
 			'',
 			'Warning: Importing from JChip will replace all the data in this race.',
 			'Proceed with caution.',
@@ -78,15 +120,23 @@ class JChipImportDialog( wx.Dialog ):
 		gs = wx.FlexGridSizer( rows=2, cols=3, vgap = 5, hgap = 5 )
 		gs.Add( wx.StaticText(self, -1, 'JChip Data File:'), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 		self.jchipDataFile = wx.TextCtrl( self, -1, '', size=(400,-1) )
-		self.jchipDataFile.SetValue( Utils.getDocumentsDir() )
+		defaultPath = Utils.getFileName()
+		if not defaultPath:
+			defaultPath = Utils.getDocumentsDir()
+		else:
+			defaultPath = os.path.join( os.path.split(defaultPath)[0], '' )
+		self.jchipDataFile.SetValue( defaultPath )
 		gs.Add( self.jchipDataFile, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.GROW)
 
 		btn = wx.Button( self, 10, label='Browse...' )
 		btn.Bind( wx.EVT_BUTTON, self.onBrowseJChipDataFile )
 		gs.Add( btn, 0, wx.ALIGN_CENTER_VERTICAL )
 		
-		gs.Add( wx.StaticText(self, -1, 'Actual Race Start Time (HH:MM:SS):'), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+		self.manualStartTime = wx.CheckBox(self, -1, 'Race Start Time (if NOT first recorded time):' )
+		self.Bind( wx.EVT_CHECKBOX, self.onChangeManualStartTime, self.manualStartTime )
+		gs.Add( self.manualStartTime, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 		self.raceStartTime = masked.TimeCtrl( self, -1, fmt24hr=True, value="10:00:00" )
+		self.raceStartTime.Enable( False )
 		gs.Add( self.raceStartTime, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.GROW)
 		
 		self.okBtn = wx.Button( self, wx.ID_OK, '&OK' )
@@ -118,10 +168,17 @@ class JChipImportDialog( wx.Dialog ):
 		self.CentreOnParent(wx.BOTH)
 		self.SetFocus()
 
+	def onChangeManualStartTime( self, event ):
+		self.raceStartTime.Enable( event.IsChecked() )
+		
 	def onBrowseJChipDataFile( self, event ):
 		defaultPath = self.jchipDataFile.GetValue()
 		if not defaultPath:
-			defaultPath = Utils.getDocumentsDir()
+			defaultPath = Utils.getFileName()
+			if defaultPath:
+				defaultPath = os.path.split(defaultPath)[0]
+			else:
+				defaultPath = Utils.getDocumentsDir()
 			defaultFile = ''
 		else:
 			defaultPath, defaultFile = os.path.split(defaultPath)
@@ -145,15 +202,29 @@ class JChipImportDialog( wx.Dialog ):
 			Utils.MessageOK( self, 'Could not open JChip data file for import:\n\n"%s"' % fname,
 									title = 'Cannot Open File', iconMask = wx.ICON_ERROR)
 			return
-		startStr = self.raceStartTime.GetValue()
-		hh, mm, ss = [int(x) for x in startStr.split(':')]
-		missingTags = DoJchipImport( fname, datetime.time(hh, mm, ss) )
-		if missingTags:
-			tags = []
-			for i in xrange(0, len(missingTags), 8):
-				tags.append( ', '.join(missingTags[i:min(len(missingTags), i+8)]) )
-			tagStr = '\n'.join(tags)
-			Utils.MessageOK( self, 'JChip Import File contains tags not defined in the Excel sheet:\n\n%s' % tagStr, 'JChip Import Warning', iconMask = wx.ICON_WARNING )
+			
+		if self.manualStartTime.IsChecked():
+			startTime = datetime.time(*[int(x) for x in self.raceStartTime.GetValue().split(':')])
+		else:
+			startTime = None
+		errors = DoJchipImport( fname, startTime )
+		
+		if errors:
+			# Copy the tags to the clipboard.
+			clipboard = wx.Clipboard.Get()
+			if not clipboard.IsOpened():
+				clipboard.Open()
+				clipboard.SetData( wx.TextDataObject('\n'.join(errors)) )
+				clipboard.Close()
+			
+			if len(errors) > 10:
+				errors = errors[:10]
+				errors.append( '...' )
+			tagStr = '\n'.join(errors)
+			Utils.MessageOK( self,
+							'JChip Import File contains errors:\n\n%s\n\nAll errors have been copied to the clipboard.' % tagStr,
+							'JChip Import Warning',
+							iconMask = wx.ICON_WARNING )
 		else:
 			Utils.MessageOK( self, 'JChip Import Successful', 'JChip Import Successful' )
 		wx.CallAfter( Utils.refresh )

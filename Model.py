@@ -555,7 +555,7 @@ class Race(object):
 
 	def getRiderNumbers( self ):
 		return self.riders.keys()
-
+		
 	def __contains__( self, num ):
 		return num in self.riders
 

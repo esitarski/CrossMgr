@@ -21,9 +21,10 @@ body
 	font-weight: bold;
 }
 
-<--!
-#idImgHeader { box-shadow: 4px 4px 4px #888888; }
--->
+#idImgHeader
+{
+	box-shadow: 4px 4px 4px #888888;
+}
 
 table.results
 {
@@ -100,6 +101,8 @@ var categoryStr = null;
 var numsToWatch = {};		// Set of numbers to watch.
 var resultsDiv = null;
 var lapDataOption = 0;	// if 0, show race times, if 1, show lap times, if 2, show gap times.
+var loopContinuously = false;// If true, the simulation will repeat from the beginning.
+var fontMult = 1.0;			// font adjust factor.
 
 // Rider colours given out as remander of the number.
 var colours = [
@@ -292,23 +295,6 @@ function FormatTime( t )
 	return tStr;
 }
 
-function FormatTimeGap( t )
-{
-	var neg = false;
-	if( t < 0 )
-	{
-		neg = true;
-		t = -t;
-	}
-	var secs = Math.floor( t + 0.5 );
-	var m = Math.floor(secs / 60);
-	var s = Math.floor(secs % 60);
-	tStr = m + "'" + (s < 10 ? '0' : '') + s + '"';
-	if( neg )
-		tStr = '-' + tStr;
-	return tStr;
-}
-
 function Refresh()
 {
 	if( !canvas || !isCanvasSupported() )
@@ -334,8 +320,8 @@ function Refresh()
 	r -= (r & 1);			// Make sure that r is an even number.
 
 	var tHeight = r / 8;
-	var fontStr = tHeight + "px Arial";
-	var fontStrHightlight = (tHeight * 1.6) + "px Arial";
+	var fontStr = Math.floor(tHeight * fontMult) + "px Arial";
+	var fontStrHightlight = Math.floor(tHeight * 1.6 * fontMult) + "px Arial";
 	dc.font = fontStr;
 	
 	// Draw the track.
@@ -544,8 +530,16 @@ function NextFrame()
 	var tDelta = ((new Date).getTime() - tLast);
 	SetTime( t + (tDelta/1000.0) * speedup );
 	tLast += tDelta;
-	if( !suspendAnimation && t < tMax )
-		setTimeout( NextFrame, 1000.0 / framesPerSecond );
+	if( !suspendAnimation )
+	{
+		if( t < tMax )
+			setTimeout( NextFrame, 1000.0 / framesPerSecond );
+		else if( loopContinuously )
+		{
+			t = 0;
+			setTimeout( NextFrame, 1000.0 / framesPerSecond );
+		}
+	}
 }
 
 function SetData( aData, tCur )
@@ -576,21 +570,21 @@ function SetData( aData, tCur )
 	if( categories.length > 1 )
 		categories.splice( 0, 0, 'All' );
 	
-	var categorySpan = document.getElementById('idCategories')
+	categorySpan = document.getElementById('idCategories')
 	var catHTML = '';
 	if( categories.length > 1 )
 	{
 		for( var i = 0; i < categories.length; ++i )
 		{
 			var cat = categories[i];
-			catHTML += '<input type="radio" name="categorySelect" onClick="SelectCategory('+i+');"';
+			catHTML += '<input type="radio" name="categoryCur" onClick="SelectCategory('+i+');"';
 			if( i == 0 )
 				catHTML += ' checked="true"';
 			catHTML += '/>' + cat.escapeHTML() + '&nbsp&nbsp&nbsp';
 		}
 	}
 	else if( categories.length == 1 )
-		catHTML = catEscapeHTML();
+		catHTML = categories[0].escapeHTML();
 	categorySpan.innerHTML = catHTML;
 	Refresh();
 }
@@ -787,7 +781,7 @@ function SetCategoryResults()
 							gap = '+' + delta.toFixed(2) + '%';
 						}
 						else
-							gap = FormatTimeGap( delta );
+							gap = FormatTime( delta );
 					}
 				}
 				else if( lapTimes.back() > leaderLapTimes.back() )
@@ -821,7 +815,7 @@ function SetCategoryResults()
 							sign = '-';
 							v = -v;
 						}
-						createTextChild( td = createChild(tr, 'TD'), sign + FormatTimeGap(v) );
+						createTextChild( td = createChild(tr, 'TD'), sign + FormatTime(v) );
 					}
 					break;
 				case 3:	// Time Percent.
@@ -987,13 +981,7 @@ function RaceChartUpdateInfo()
 			y += height;
 			c.lineTo( x, y );
 			c.closePath();
-			c.save();
-			c.shadowColor = "#5F5F5F";
-			c.shadowBlur = fontHeight * 0.3;
-			c.shadowOffsetX = fontHeight * 0.3;
-			c.shadowOffsetY = fontHeight * 0.3;
 			c.fill();
-			c.restore();
 			c.stroke();
 			c.fillStyle = '#000';
 			c.fillText( hover, xEvent, yEvent - 3 * height / 2 + margin + 1 );
@@ -1365,6 +1353,44 @@ function SetLapDataOption( opt )
 	SetCategoryResults();
 }
 
+function LoopContinuously()
+{
+	loopContinuously ^= true;
+}
+
+function AdjustSize( increase )
+{
+	if( !canvas )
+		return;
+	if( increase )
+	{
+		if( canvas.width < 4096 )
+		{
+			canvas.width *= 1.2;
+			canvas.height *= 1.2;
+		}
+	}
+	else
+	{
+		if( canvas.width > 100 )
+		{
+			canvas.width /= 1.2;
+			canvas.height /= 1.2;
+		}
+	}
+	Refresh();
+}
+function AdjustFont( increase )
+{
+	if( !canvas )
+		return;
+	if( increase )
+		fontMult *= (fontMult < 3.0 ? 1.2 : 1.0);
+	else
+		fontMult /= (fontMult > 0.2 ? 1.2 : 1.0);
+	Refresh();
+}
+
 function onLoad()
 {
 	document.getElementById('idImgHeader').src = imageSrc;
@@ -1431,7 +1457,7 @@ function onLoad()
 <body onload="onLoad()">
 <p>
 <table cellspacing="8"><tr>
-<td><img id="idImgHeader" alt="CrossMgr Logo" /></td>
+<td><img height="96" width="67" id="idImgHeader" alt="CrossMgr Logo" /></td>
 <td valign="top"><span id="idRaceName">Cyclo-Cross Race Results</span><br/><span id="idOrganizer">by CrossMgr</span></td>
 </tr></table>
 </p>
@@ -1447,12 +1473,19 @@ Current versions of Chrome, FireFox and Opera work fine.
 <p class="noprint">
 <input type="button" id="idRewind" onClick="Rewind()" value="Rewind"></input>
 <input type="button" id="idPlayStop" onClick="PlayStop()" value="Play"></input>
+<input type="checkbox" id="idLoop" onClick="LoopContinuously()">Loop Continuously</input>
 &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp Playback Speed:
 <input type="radio" name="groupSpeed" value="0" onClick="SetSpeed(-2)"></input>
 <input type="radio" name="groupSpeed" value="1" onClick="SetSpeed(-1)"></input>
 <input type="radio" name="groupSpeed" value="2" checked onClick="SetSpeed(0)"></input>
 <input type="radio" name="groupSpeed" value="3" onClick="SetSpeed(1)"></input>
 <input type="radio" name="groupSpeed" value="4" onClick="SetSpeed(2)"></input>
+&nbsp&nbsp&nbsp&nbsp&nbsp&nbspSize:
+<input type="button" id="idIncreaseSize" onClick="AdjustSize(true)" value="+"></input>
+<input type="button" id="idDecreaseSize" onClick="AdjustSize(false)" value="-"></input>
+&nbsp&nbsp&nbsp&nbsp&nbsp&nbspText:
+<input type="button" id="idIncreaseFont" onClick="AdjustFont(true)" value="+"></input>
+<input type="button" id="idDecreaseFont" onClick="AdjustFont(false)" value="-"></input>
 <br/>
 Highlight Numbers:
 <input type="text" id="idNumsToWatch" value="" onChange="SetNumsToWatch()"></input>
