@@ -21,9 +21,9 @@ with open('JChipTest.csv', 'w') as f:
 def formatMessage( n, lap, t ):
 	global count
 	count += 1
-	message = "D%s_%11s%2s_1%1d%03d%04X %05X\n" % (
+	message = "D%s %13s%2s_1%1d%03d%04X %05X\n" % (
 				tag[n],								# Tag code
-				t.strftime('%H:%M:%S.%f')[:-4],	# hh:mm:ss.mm
+				t.strftime('%H:%M:%S.%f')[:-2],	# hh:mm:ss.mm
 				1,									# PC-ID
 				0,									# Elapsed days
 				lap,								# Lap number
@@ -78,10 +78,10 @@ dBase = datetime.datetime.now()
 for i in xrange(1, len(numLapTimes)):
 	n, lap, t = numLapTimes[i]
 	dt = t - numLapTimes[i-1][2]
-	time.sleep( dt )
 	message = formatMessage( n, lap, dBase + datetime.timedelta( seconds = t ) )
 	sys.stdout.write( 'sending: %s' % message )
 	sock.send( message )
+	time.sleep( dt )
 	
 sock.send( '<<<terminate>>>\n' )
 	

@@ -33,6 +33,7 @@ from Utils				import logCall
 import Model
 import VersionMgr
 import JChipSetup
+import JChipImport
 import JChip
 import OutputStreamer
 from setpriority import setpriority
@@ -330,6 +331,9 @@ class MainWin( wx.Frame ):
 		idCur = wx.NewId()
 		self.chipMenu.Append( idCur , "&JChip... (Experimental)", "Configure and Test JChip Reader" )
 		self.Bind(wx.EVT_MENU, self.menuJChip, id=idCur )
+		idCur = wx.NewId()
+		self.chipMenu.Append( idCur , "&Import... (Experimental)", "Import from JChip Generated File" )
+		self.Bind(wx.EVT_MENU, self.menuJChipImport, id=idCur )
 
 		self.menuBar.Append( self.chipMenu, "Chip&Reader" )
 
@@ -406,6 +410,19 @@ class MainWin( wx.Frame ):
 		dlg.ShowModal()
 		dlg.Destroy()
 
+	def menuJChipImport( self, event ):
+		correct, reason = JChipSetup.CheckExcelLink()
+		explain = 	'JChip Import requires that you have a valid Excel sheet with associated tags and Bib numbers.\n\n' \
+					'See documentation for details.'
+		if not correct:
+			Utils.MessageOK( self, 'Problems with Excel sheet.\n\n    Reason: %s\n\n%s' % (reason, explain),
+									title = 'Excel Link Problem', iconMask = wx.ICON_ERROR )
+			return
+			
+		dlg = JChipImport.JChipImportDialog( self )
+		dlg.ShowModal()
+		dlg.Destroy()
+		
 	def menuShowPage( self, event ):
 		self.showPage( self.idPage[event.GetId()] )
 		

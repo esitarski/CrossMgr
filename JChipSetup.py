@@ -29,6 +29,7 @@ def CheckExcelLink():
 	return (True, 'Excel Link OK')
 
 def GetTagNums( forceUpdate = False ):
+	# Assumes the race is already locked.
 	race = Model.race
 	if not race:
 		return {}
@@ -166,7 +167,7 @@ class JChipSetupDialog( wx.Dialog ):
 			correct, reason = CheckExcelLink()
 			explain = 	'CrossMgr will not be able to associate chip Tags with Bib numbers.\n' \
 						'You may proceed with the test, but you need to fix the Excel sheet.\n\n' \
-						'See documentation for more details.'
+						'See documentation for details.'
 			if not correct:
 				if not Utils.MessageOKCancel( self, 'Problems with Excel sheet.\n\n    Reason: %s\n\n%s' % (reason, explain),
 									title = 'Excel Link Problem', iconMask = wx.ICON_WARNING ):
@@ -182,7 +183,7 @@ class JChipSetupDialog( wx.Dialog ):
 			self.testList.DeleteAllItems()
 			JChip.StartListener()
 			
-			self.appendMsg( 'listening for connection...' )
+			self.appendMsg( 'listening for JChip connection...' )
 			
 			self.testJChip.SetLabel( 'Stop JChip Test' )
 			self.testJChip.SetValue( True )
@@ -213,21 +214,21 @@ class JChipSetupDialog( wx.Dialog ):
 				self.receivedCount += 1
 				ts = d[2].isoformat()
 				if len(ts) == 8:
-					ts += '.00'
+					ts += '.0000'
 				else:
-					ts = ts[:-4]
+					ts = ts[:-2]
 				try:
 					num = str(Model.race.tagNums[d[1]])
 				except (AttributeError, ValueError, KeyError):
 					num = 'not found'
-				self.appendMsg( '%d: received: %s at %s, Bib#: %s' % (self.receivedCount, d[1], ts, num) )
-			elif d[0] == 'connected':
-				self.appendMsg( 'connected' )
+				self.appendMsg( '%d: data: %s at %s, Bib#: %s' % (self.receivedCount, d[1], ts, num) )
 			elif d[0] == 'disconnected':
-				self.appendMsg( 'disconnected' )
-				self.appendMsg( 'listening for connection...' )
+				self.appendMsg( d[0] )
+				self.appendMsg( 'listening for JChip connection...' )
 			elif d[0] == 'name':
-				self.appendMsg( 'accepted connection from: %s' % d[1] )
+				self.appendMsg( 'receiver name: %s' % d[1] )
+			else:
+				self.appendMsg( '%s: %s' % (d[0], ' '.join(d[1:])) )
 		if data:
 			self.testList.EnsureVisible( self.testList.GetItemCount()-1 )
 		self.timer.Restart( 1000, 'restarted' )

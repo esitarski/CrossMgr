@@ -374,7 +374,7 @@ class RiderDetail( wx.Panel ):
 			appearedInLap = [False] * (maxLap + 1)
 			appearedInLap[0] = True
 			for e in entries:
-				i = bisect.bisect_left( leaderTimes, e.t )
+				i = bisect.bisect_left( leaderTimes, e.t, 0, len(leaderTimes)-1 )
 				if e.t < leaderTimes[i]:
 					i -= 1
 				i = min( i, len(appearedInLap) - 1 )	# Handle if rider would have been lapped again on the last lap.

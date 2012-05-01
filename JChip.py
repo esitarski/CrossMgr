@@ -55,6 +55,13 @@ def socketByLine(s):
 				break
 	if buffer:
 		yield buffer
+
+def parseTime( tStr ):
+	hh, mm, ssmi = tStr.split(':')
+	hh, mm, ssmi = int(hh), int(mm), float(ssmi)
+	mi, ss = math.modf( ssmi )
+	mi, ss = int(mi * 1000000.0), int(ss)
+	return datetime.time( hour=hh, minute=mm, second=ss, microsecond=mi )
 		
 def Server( q, HOST, PORT, startTime ):
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -69,24 +76,22 @@ def Server( q, HOST, PORT, startTime ):
 		s.listen(1)
 		conn, addr = s.accept()
 		
-		q.put( ('connected',) )
+		q.put( ('connected', 'JChip receiver',) )
+		q.put( ('transmitting', '"Send" command to JChip receiver') )
+		socketSend( conn, 'S00000\n' )
+		
+		q.put( ('waiting', 'for JChip receiver to transmit data',) )
 		
 		for line in socketByLine( conn ):
 			if not line:
 				continue
 			try:
 				if line[0] == 'D':
-					u = line.find( '_' )
-					if u < 0:
-						continue
-						
-					tag = line[u-6:u]
-					tStr = line[u+1:u+1+11]
-					hh, mm, ssmi = tStr.split(':')
-					hh, mm, ssmi = int(hh), int(mm), float(ssmi)
-					mi, ss = math.modf( ssmi )
-					mi, ss = int(mi * 1000000.0), int(ss)
-					t = datetime.time( hour=hh, minute=mm, second=ss, microsecond=mi )
+					fields = line.split()
+					tag = fields[0][1:]	# Strip the 'D' to get the tag.
+					tStr = fields[1]
+					
+					t = parseTime( tStr )
 					if t < startTime:
 						continue
 						
@@ -112,10 +117,11 @@ def Server( q, HOST, PORT, startTime ):
 					q.put( ('data', tag, t) )
 				elif line[0] == 'N':
 					q.put( ('name', line[5:].strip()) )
-					# Send the command to start sending data.
-					socketSend( conn, 'S00000\n' )
+				else:
+					q.put( ('unknown', line ) )
 			
-			except (ValueError, KeyError):
+			except (ValueError, KeyError, IndexError):
+				q.put( ('exception', line ) )
 				pass
 				
 		q.put( ('disconnected',) )
