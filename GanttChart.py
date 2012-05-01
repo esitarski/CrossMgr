@@ -149,7 +149,14 @@ class GanttChart(wx.PyControl):
 		iRider, iLap = self.getRiderLap( event )
 		if iRider is None:
 			return
-			
+		
+		if getattr(self, 'iRiderLast', -1) == iRider and getattr(self, 'iLapLast', -1) == iLap:
+			setattr( self, 'iRiderLast', -1 )
+			setattr( self, 'iLapLast', -1 )
+			return
+		setattr( self, 'iRiderLast', iRider )
+		setattr( self, 'iLapLast', iLap )
+		
 		self.numSelect = self.labels[iRider]
 		if self.getNowTimeCallback:
 			self.nowTime = self.getNowTimeCallback()
@@ -169,7 +176,7 @@ class GanttChart(wx.PyControl):
 
 		xPos, yPos = event.GetPositionTuple()
 		width, height = bip.GetClientSize()
-		pos = self.ClientToScreen( (xPos - width, yPos - height) )
+		pos = self.ClientToScreen( (xPos - width - 2, yPos - height - 2) )
 		bip.Position( pos, (0,0) )
 		bip.Popup()
 	
