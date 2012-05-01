@@ -60,7 +60,20 @@ class JChipImportDialog( wx.Dialog ):
 		wx.Dialog.__init__( self, parent, id, "JChip Import",
 						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
 		
-		
+		todoList = [
+			'Import JChip Data File',
+			'',
+			'You must first "New" a race and fill in the details.',
+			'You must also configure a "Tag" field in your Sign-On Excel Sheet and link it to the race.',
+			'This is required so CrossMgr can link the tags in the JChip file back to rider numbers and info.',
+			'',
+			'The start time of the race is not in the JChip file, so you must also enter it below.',
+			'This is so that CrossMgr can get an accurate time for the first lap.',
+			'',
+			'Warning: Importing from JChip will replace all the data in this race.',
+			'Proceed with caution.',
+		]
+		intro = '\n'.join(todoList)
 		
 		gs = wx.FlexGridSizer( rows=2, cols=3, vgap = 5, hgap = 5 )
 		gs.Add( wx.StaticText(self, -1, 'JChip Data File:'), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
@@ -85,6 +98,7 @@ class JChipImportDialog( wx.Dialog ):
 		bs = wx.BoxSizer( wx.VERTICAL )
 		
 		border = 4
+		bs.Add( wx.StaticText(self, -1, intro), 0, wx.EXPAND|wx.ALL, border )
 		
 		#-------------------------------------------------------------------
 		bs.AddSpacer( border )
