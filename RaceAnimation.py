@@ -28,7 +28,7 @@ def GetAnimationData( catName = 'All', getExternalData = False ):
 				if a == 'raceTimes':
 					info['lapTimes'] = getattr(rr, a)
 					bestLaps = race.getNumBestLaps( rr.num )
-					if len(info['lapTimes']) > bestLaps:
+					if bestLaps is not None and len(info['lapTimes']) > bestLaps:
 						info['lapTimes'] = info['lapTimes'][:bestLaps+1]
 				elif a == 'status':
 					info['status'] = statusNames[getattr(rr, a)]

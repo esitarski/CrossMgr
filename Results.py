@@ -16,7 +16,7 @@ from ReadSignOnSheet import IgnoreFields
 statusSortSeq = Model.Rider.statusSortSeq
 
 class RiderResult( object ):
-	def __init__( self, num, status, lastTime, raceCat, lapTimes, raceTimes ):
+	def __init__( self, num, status, lastTime, raceCat, lapTimes, raceTimes, interp ):
 		self.num		= num
 		self.status		= status
 		self.gap		= ''
@@ -26,6 +26,7 @@ class RiderResult( object ):
 		self.raceCat	= raceCat
 		self.lapTimes	= lapTimes
 		self.raceTimes	= raceTimes
+		self.interp		= interp
 		
 def GetResults( catName = 'All', getExternalData = False ):
 	with Model.LockRace() as race:
@@ -70,12 +71,16 @@ def GetResults( catName = 'All', getExternalData = False ):
 			riderCategory = race.getCategory( rider.num )
 			if (category and riderCategory != category) or riderCategory not in categoryWinningTime:
 				continue
-			times = [e.t for e in rider.interpolate()]
+			
+			riderTimes = rider.interpolate()
+			times = [e.t for e in riderTimes]
+			interp = [e.interp for e in riderTimes]
 			
 			if times:
 				times[0] = min(riderCategory.getStartOffsetSecs(), times[1])
 				laps = bisect.bisect_left( times, categoryWinningTime[riderCategory], hi=len(times)-1 )
 				times = times[:laps+1]
+				interp = interp[:laps+1]
 			else:
 				laps = 0
 			lastTime = rider.tStatus
@@ -87,7 +92,9 @@ def GetResults( catName = 'All', getExternalData = False ):
 			
 			riderResults.append( RiderResult(rider.num, rider.status, lastTime,
 									riderCategory.name,
-									[times[i] - times[i-1] for i in xrange(1, len(times))], times) )
+									[times[i] - times[i-1] for i in xrange(1, len(times))],
+									times,
+									interp) )
 		
 		if not riderResults:
 			return []

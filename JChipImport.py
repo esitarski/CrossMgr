@@ -22,8 +22,6 @@ def DoJchipImport( fname, startTime ):
 	raceStart = None
 	
 	with open(fname) as f, Model.LockRace() as race:
-		race.deleteAllRiderTimes()
-		
 		year, month, day = [int(n) for n in race.date.split('-')]
 		raceDate = datetime.date( year=year, month=month, day=day )
 		if startTime:
@@ -69,6 +67,10 @@ def DoJchipImport( fname, startTime ):
 
 		#------------------------------------------------------------------------------
 		# Populate the race with the times.
+		if not riderLapTimes:
+			errors.insert( 0, 'No matching tags found in Excel link.  Import aborted.' )
+			return errors
+			
 		if not raceStart:
 			raceStart = tFirst
 			# Remove all the first times from the riders as this was the read when they went over the line.
@@ -77,6 +79,7 @@ def DoJchipImport( fname, startTime ):
 		race.startTime = raceStart
 		
 		# Put all the rider times into the race.
+		race.deleteAllRiderTimes()
 		for num, lapTimes in riderLapTimes.iteritems():
 			for t in lapTimes:
 				lapTime = (t - raceStart).total_seconds()
