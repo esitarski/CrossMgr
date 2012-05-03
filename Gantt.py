@@ -55,8 +55,8 @@ class Gantt( wx.Panel ):
 		if not Model.race:
 			self.ganttChart.SetData( None )
 			return
+		
 		catName = FixCategories( self.categoryChoice, getattr(Model.race, 'GanttCategory', 0) )
-			
 		results = Results.GetResults( catName, False )
 		
 		labels	= [str(r.num) for r in results]
