@@ -153,7 +153,8 @@ class Categories( wx.Panel ):
 				categories[r].addNum( num )
 			except ValueError:
 				pass
-				
+
+		Model.race.setCategoryMask()
 		self.refresh()
 		
 	def _setRow( self, r, active, name, strVal, startOffset, numLaps ):
@@ -170,9 +171,8 @@ class Categories( wx.Panel ):
 		self.grid.SetCellAlignment( r, 3, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 		
 		self.grid.SetCellValue( r, 4, str(numLaps) if numLaps else '' )
-		choices = [''] + [str(x) for x in xrange(1,41)]
-		choiceEditor = wx.grid.GridCellChoiceEditor(choices, allowOthers=False)
-		self.grid.SetCellEditor( r, 4, choiceEditor )
+		numberEditor = wx.grid.GridCellNumberEditor()
+		self.grid.SetCellEditor( r, 4, numberEditor )
 		self.grid.SetCellAlignment( r, 4, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 		
 		self.grid.SetCellValue( r, 5, '' )
