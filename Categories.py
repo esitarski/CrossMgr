@@ -1,4 +1,5 @@
 import wx
+import re
 import Model
 import Utils
 import wx.grid			as gridlib
@@ -51,24 +52,29 @@ class Categories( wx.Panel ):
 		flag = wx.LEFT|wx.TOP|wx.BOTTOM
 		
 		cols = 0
-		self.newCategoryButton = wx.Button(self, id=0, label='&New Category', style=wx.BU_EXACTFIT)
+		self.newCategoryButton = wx.Button(self, id=wx.ID_ANY, label='&New Category', style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onNewCategory, self.newCategoryButton )
 		gbs.Add( self.newCategoryButton, pos=(0,cols), span=(1,1), border = border, flag = flag )
 		cols += 1 
 		
-		self.delCategoryButton = wx.Button(self, id=1, label='&Delete Category', style=wx.BU_EXACTFIT)
+		self.delCategoryButton = wx.Button(self, id=wx.ID_ANY, label='&Delete Category', style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onDelCategory, self.delCategoryButton )
 		gbs.Add( self.delCategoryButton, pos=(0,cols), span=(1,1), border = border, flag = flag )
 		cols += 1 
 
-		self.upCategoryButton = wx.Button(self, id=3, label='&Up', style=wx.BU_EXACTFIT)
+		self.upCategoryButton = wx.Button(self, id=wx.ID_ANY, label='&Up', style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onUpCategory, self.upCategoryButton )
 		gbs.Add( self.upCategoryButton, pos=(0,cols), span=(1,1), border = border, flag = flag )
 		cols += 1 
 
-		self.downCategoryButton = wx.Button(self, id=4, label='D&own', style=wx.BU_EXACTFIT)
+		self.downCategoryButton = wx.Button(self, id=wx.ID_ANY, label='D&own', style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onDownCategory, self.downCategoryButton )
 		gbs.Add( self.downCategoryButton, pos=(0,cols), span=(1,1), border = border, flag = (flag & ~wx.LEFT) )
+		cols += 1 
+
+		self.addExceptionsButton = wx.Button(self, id=wx.ID_ANY, label='&Add Bib Exceptions', style=wx.BU_EXACTFIT)
+		self.Bind( wx.EVT_BUTTON, self.onAddExceptions, self.addExceptionsButton )
+		gbs.Add( self.addExceptionsButton, pos=(0,cols), span=(1,1), border = border, flag = (flag & ~wx.LEFT) )
 		cols += 1 
 
 		self.grid = gridlib.Grid( self )
@@ -116,6 +122,40 @@ class Categories( wx.Panel ):
 	def afterCheckBox( self, isChecked ):
 		pass
 		
+	def onAddExceptions( self, event ):
+		r = self.grid.GetGridCursorRow()
+		if r is None or r < 0:
+			Utils.MessageOK( self, 'You must select a Category first', 'Select a Category' )
+			return
+			
+		with Model.LockRace() as race:
+			if not race:
+				return
+			categories = [c for c in race.categories.itervalues()]
+			categories.sort()
+		dlg = wx.TextEntryDialog( self,
+									'%s: Add Bib Num Exceptions (comma separated)\nAdjust other categories as necessary.' % categories[r].name,
+									'Add Bib Exceptions' )
+		good = (dlg.ShowModal() == wx.ID_OK)
+		if good:
+			response = dlg.GetValue()
+		dlg.Destroy()
+		if not good:
+			return
+
+		response = re.sub( '[^0-9,]', '', response.replace(' ', ',') )
+		for f in response.split(','):
+			try:
+				num = int(f)
+				for i in xrange( len(categories) ):
+					if i != r:
+						categories[i].removeNum( num )
+				categories[r].addNum( num )
+			except ValueError:
+				pass
+				
+		self.refresh()
+		
 	def _setRow( self, r, active, name, strVal, startOffset, numLaps ):
 		self.grid.SetCellValue( r, 0, '1' if active else '0' )
 		boolEditor = gridlib.GridCellBoolEditor()
@@ -130,7 +170,7 @@ class Categories( wx.Panel ):
 		self.grid.SetCellAlignment( r, 3, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 		
 		self.grid.SetCellValue( r, 4, str(numLaps) if numLaps else '' )
-		choices = [''] + [str(x) for x in xrange(1,16)]
+		choices = [''] + [str(x) for x in xrange(1,41)]
 		choiceEditor = wx.grid.GridCellChoiceEditor(choices, allowOthers=False)
 		self.grid.SetCellEditor( r, 4, choiceEditor )
 		self.grid.SetCellAlignment( r, 4, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )

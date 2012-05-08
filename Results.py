@@ -148,6 +148,7 @@ class Results( wx.Panel ):
 		wx.Panel.__init__(self, parent, id)
 		
 		self.category = None
+		self.showRiderData = True
 		
 		self.rcInterp = set()
 		self.numSelect = None
@@ -158,6 +159,10 @@ class Results( wx.Panel ):
 		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, 'Category:' )
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
+		
+		self.showRiderDataToggle = wx.ToggleButton( self, wx.ID_ANY, 'Show Rider Data', style=wx.BU_EXACTFIT )
+		self.showRiderDataToggle.SetValue( self.showRiderData )
+		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowRiderData, self.showRiderDataToggle )
 		
 		self.search = wx.SearchCtrl(self, size=(80,-1), style=wx.TE_PROCESS_ENTER )
 		# self.search.ShowCancelButton( True )
@@ -174,6 +179,7 @@ class Results( wx.Panel ):
 		
 		self.hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.categoryChoice, flag=wx.ALL, border=4 )
+		self.hbs.Add( self.showRiderDataToggle, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( wx.StaticText(self, wx.ID_ANY, ' '), proportion=2 )
 		self.hbs.Add( self.search, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.zoomInButton, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
@@ -235,6 +241,10 @@ class Results( wx.Panel ):
 			
 	def onZoomIn( self, event ):
 		self.grid.Zoom( True )
+		
+	def onShowRiderData( self, event ):
+		self.showRiderData ^= True
+		self.refresh()
 		
 	def doRightClick( self, event ):
 		wx.CallAfter( self.search.SetFocus )
@@ -365,13 +375,14 @@ class Results( wx.Panel ):
 			self.category = race.categories.get( catName, None )
 		
 		exportGrid = ExportGrid()
-		exportGrid.setResultsOneList( catName, False )
+		exportGrid.setResultsOneList( catName, self.showRiderData )
 		
 		if not exportGrid.colnames:
 			self.clearGrid()
 			return
 		
 		self.grid.Set( data = exportGrid.data, colnames = exportGrid.colnames )
+		self.grid.SetLeftAlignCols( exportGrid.leftJustifyCols )
 		self.grid.AutoSizeColumns( True )
 		self.grid.Reset()
 		self.isEmpty = False

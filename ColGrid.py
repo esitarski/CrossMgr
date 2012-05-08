@@ -15,6 +15,7 @@ class ColTable(Grid.PyGridTableBase):
 		"""
 		self.attrs = {}	# Set of unique cell attributes.
 		self.rightAlign = False
+		self.leftAlignCols = set()
 		
 		# The base class must be initialized *first*
 		Grid.PyGridTableBase.__init__(self)
@@ -32,6 +33,15 @@ class ColTable(Grid.PyGridTableBase):
 		
 	def SetRightAlign( self, ra = True ):
 		self.rightAlign = ra
+		
+	def SetLeftAlignCols( self, col, la = True ):
+		if la:
+			self.leftAlignCols.add( col )
+		else:
+			try:
+				self.leftAlignCols.remove( col )
+			except KeyError:
+				pass
 	
 	def _adjustDimension( self, grid, current, new, isCol ):
 		if grid is None:
@@ -127,9 +137,15 @@ class ColTable(Grid.PyGridTableBase):
 			if rc in self.backgroundColour:
 				attr.SetBackgroundColour( self.backgroundColour[rc] )
 			self.attrs[key] = attr
+		
+		hCellAlign = None
+		if col in self.leftAlignCols:
+			hCellAlign = wx.ALIGN_LEFT
+		elif self.rightAlign:
+			hCellAlign = wx.ALIGN_RIGHT
+		if hCellAlign is not None:
+			attr.SetAlignment( hAlign = hCellAlign, vAlign = wx.ALIGN_CENTRE )
 			
-		if self.rightAlign:
-			attr.SetAlignment( hAlign = wx.ALIGN_RIGHT, vAlign = wx.ALIGN_CENTRE )
 		# We must increment the ref count so the attr does not get GC'd after it is referenced.
 		attr.IncRef()
 		return attr
@@ -144,10 +160,15 @@ class ColTable(Grid.PyGridTableBase):
 		"""
 		(Grid) -> Reset the grid view.   Call this to redraw the grid.
 		"""
-
 		for col in xrange(self.GetNumberCols()):
 			attr = Grid.GridCellAttr()
-			attr.SetAlignment( hAlign = wx.ALIGN_RIGHT if self.rightAlign else wx.ALIGN_CENTRE, vAlign = wx.ALIGN_CENTRE )
+			if col in self.leftAlignCols:
+				hCellAlign = wx.ALIGN_LEFT
+			elif self.rightAlign:
+				hCellAlign = wx.ALIGN_RIGHT
+			else:
+				hCellAlign = wx.ALIGN_CENTRE
+			attr.SetAlignment( hAlign = hCellAlign, vAlign = wx.ALIGN_CENTRE )
 			self.SetColAttr( col, attr )
 
 		grid.AdjustScrollbars()
@@ -209,7 +230,13 @@ class ColGrid(Grid.Grid):
 	def SetRightAlign( self, ra = True ):
 		self._table.SetRightAlign( ra )
 		self.Reset()
-	
+		
+	def SetLeftAlignCols( self, cols ):
+		self._table.leftAlignCols = set()
+		for c in cols:
+			self._table.leftAlignCols.add( c )
+		self.Reset()
+		
 	def clearGrid( self ):
 		self.Set( data = [], colnames = [], textColour = {}, backgroundColour = {} )
 		self.Reset()

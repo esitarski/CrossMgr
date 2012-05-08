@@ -187,8 +187,11 @@ class Category(object):
 		
 	numLaps = property(getNumLaps, setNumLaps) 
 
-	def matches( self, num ):
-		if not self.active or num in self.exclude:
+	def matches( self, num, ignoreActiveFlag = False ):
+		if not ignoreActiveFlag:
+			if not self.active:
+				return False
+		if num in self.exclude:
 			return False
 		i = bisect.bisect_left( self.intervals, (num, num) )
 		if i > 0:
@@ -204,6 +207,23 @@ class Category(object):
 			if cCmp != 0:
 				return cCmp 
 		return 0
+		
+	def removeNum( self, num ):
+		if not self.matches(num, True):
+			return
+		for j in xrange(len(self.intervals)-1, -1, -1):
+			if self.intervals[j][0] <= num <= self.intervals[j][1]:
+				if self.intervals[j][0] == num:
+					self.intervals.pop( j )
+					return
+		self.exclude.add( num )
+		
+	def addNum( self, num ):
+		self.exclude.discard( num )
+		if self.matches(num, True):
+			return
+		self.intervals.append( (num, num) )
+		self.intervals.sort()
 
 	def __repr__( self ):
 		return 'Category(active=%s, name="%s", catStr="%s", startOffset="%s", numLaps=%s, sequence=%s)' % (

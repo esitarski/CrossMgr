@@ -377,7 +377,7 @@ class MainWin( wx.Frame ):
 	def menuRestoreFromInput( self, event ):
 		with Model.LockRace() as race:
 			if not race:
-				Utils.MessageOK(self, "You must have a vaid race.", "No Valid Race", iconMask=wx.ICON_ERROR)
+				Utils.MessageOK(self, "You must have a valid race.", "No Valid Race", iconMask=wx.ICON_ERROR)
 				return
 			if not Utils.MessageOKCancel( self, "This will restore the race from the original input.\nAll your adds/splits/deletes will be lost.\nAre you sure you want to continue?",
 										"Restore from Original Input", iconMask=wx.ICON_WARNING ):
@@ -401,7 +401,7 @@ class MainWin( wx.Frame ):
 			
 	def menuChangeProperties( self, event ):
 		if not Model.race:
-			Utils.MessageOK(self, "You must have a vaid race.", "No Valid Race", iconMask=wx.ICON_ERROR)
+			Utils.MessageOK(self, "You must have a valid race.", "No Valid Race", iconMask=wx.ICON_ERROR)
 			return
 		ChangeProperties( self )
 		
@@ -518,7 +518,7 @@ class MainWin( wx.Frame ):
 	@logCall
 	def menuLinkExcel( self, event ):
 		if not Model.race:
-			Utils.MessageOK(self, "You must have a vaid race.", "Link ExcelSheet", iconMask=wx.ICON_ERROR)
+			Utils.MessageOK(self, "You must have a valid race.", "Link ExcelSheet", iconMask=wx.ICON_ERROR)
 			return
 		gel = GetExcelLink( self, getattr(Model.race, 'excelLink', None) )
 		link = gel.show()
@@ -797,7 +797,7 @@ class MainWin( wx.Frame ):
 			
 			if isFinished:
 				self.showPageName( 'Results' )
-			self.refresh()
+			self.refreshAll()
 			Utils.writeLog( 'call: openRace: "%s"' % fileName )
 
 		except IOError:
