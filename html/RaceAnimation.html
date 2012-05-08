@@ -100,6 +100,7 @@ var numsToWatchStr = null;
 var categoryStr = null;
 var numsToWatch = {};		// Set of numbers to watch.
 var resultsDiv = null;
+var showLapsFrequency = -1;		// How often to show laps
 var lapDataOption = 0;	// if 0, show race times, if 1, show lap times, if 2, show gap times.
 var loopContinuously = false;// If true, the simulation will repeat from the beginning.
 var fontMult = 1.0;			// font adjust factor.
@@ -580,7 +581,7 @@ function SetData( aData, tCur )
 			catHTML += '<input type="radio" name="categoryCur" onClick="SelectCategory('+i+');"';
 			if( i == 0 )
 				catHTML += ' checked="true"';
-			catHTML += '/>' + cat.escapeHTML() + '&nbsp&nbsp&nbsp';
+			catHTML += '/>' + cat.escapeHTML() + '&nbsp;&nbsp;&nbsp;';
 		}
 	}
 	else if( categories.length == 1 )
@@ -663,6 +664,33 @@ function SetCategoryResults()
 	// Show results for this category.
 	var infoFields = ['License', 'LastName', 'FirstName', 'Category', 'Team'];
 	
+	if( showLapsFrequency < 1 )
+	{
+		// Compute a reasonable number of laps to show.
+		// Get the maximum laps in the data.
+		var maxLaps = 0;
+		for( num in data )
+		{
+			var d = data[num];
+			if( maxLaps < d['lapTimes'].length )
+				maxLaps = d['lapTimes'].length;
+		}
+
+		var showLaps = document.getElementById('idShowLaps');
+		
+		// Choose a frequency that results in a reasonable number of laps displayed.
+		for( var i = 0; i < showLaps.options.length; ++i )
+		{
+			var freqCur = parseInt(showLaps.options[i].value);
+			if( Math.floor(maxLaps / freqCur) <= 12 || i == showLaps.options.length - 1 )
+			{
+				showLaps.selectedIndex = i;
+				showLapsFrequency = freqCur;
+				break;
+			}
+		}
+	}
+	
 	var table = document.createElement('TABLE');
 	table.className = 'results';
 	for( var c = 0; c < categories.length; ++c )
@@ -726,7 +754,8 @@ function SetCategoryResults()
 		
 		for( var i = 1; i < leaderLapTimes.length; ++i )
 		{
-			createTextChild( td = createChild(tr, 'TH'), 'Lap ' + i );
+			if( i % showLapsFrequency == 0 || i == 1 || i == leaderLapTimes.length-1  )
+				createTextChild( td = createChild(tr, 'TH'), 'Lap ' + i );
 		}
 		
 		// Add the rider data.
@@ -795,6 +824,9 @@ function SetCategoryResults()
 			if( numsToWatch[num] ) td.className = 'highlight';
 			for( var i = 1; i < lapTimes.length; ++i )
 			{
+				if( !(i % showLapsFrequency == 0 || i == 1 || i == lapTimes.length-1)  )
+					continue
+
 				switch( lapDataOption )
 				{
 				case 0:	// Lap Times.
@@ -1015,6 +1047,7 @@ function RefreshRaceChart()
 	// Show results for this category.
 	var dataMax = 0;
 	var resultsData = [];
+	var lapsMax = 0;
 	for( num in data )
 	{
 		var d = data[num];
@@ -1029,6 +1062,8 @@ function RefreshRaceChart()
 									d['status'], d['lastTime']] );
 				if( lapTimes.back() > dataMax )
 					dataMax = lapTimes.back();
+				if( lapTimes.length > lapsMax )
+					lapsMax = lapTimes.length;
 			}
 		}
 	}
@@ -1064,7 +1099,7 @@ function RefreshRaceChart()
 	}
 	
 	var lapsMax = resultsData.length > 0 ? resultsData[0][iLapTimes].length : 0;
-	var colors = makeColorGradient(2.4,2.4,2.4,0,2,4,128,127,50);
+	var colors = makeColorGradient(2.4,2.4,2.4,0,2,4,128,127,lapsMax+1);
 	var lighterColors = [];
 	for( var i = 0; i < colors.length; ++i )
 		lighterColors.push( lighterColor(colors[i]) );
@@ -1327,7 +1362,7 @@ function GenerateRandomData()
 		var cat = cats[iCat];
 		var mean = normal_variate(6.0, 0.3);
 		var lapTimes = [60 * iCat];
-		for( var lap = 0; lap < 8; ++lap )
+		for( var lap = 0; lap < 50; ++lap )
 			lapTimes.push( lapTimes.back() + normal_variate(mean, mean/20)*60.0 );
 		data[num] = { 'lapTimes': lapTimes, 'lastTime': lapTimes.back(), 'raceCat' : cat, 'status' : 'Finisher' };
 		data[num]['License']	= rand_str() + '';
@@ -1350,6 +1385,13 @@ function getUrlParam( param, url )
 function SetLapDataOption( opt )
 {
 	lapDataOption = opt;
+	SetCategoryResults();
+}
+
+function SetShowLaps()
+{
+	var showLaps = document.getElementById('idShowLaps');
+	showLapsFrequency = parseInt( showLaps.options[showLaps.selectedIndex].value )
 	SetCategoryResults();
 }
 
@@ -1397,6 +1439,7 @@ function onLoad()
 
 	canvas = document.getElementById('idTrack');
 	resultsDiv = document.getElementById('idResultsDiv');
+	showLaps = document.getElementById('idShowLaps');
 
 	var raceChartCanvas = document.getElementById('idRaceChart');
 	if( isCanvasSupported() )
@@ -1474,16 +1517,16 @@ Current versions of Chrome, FireFox and Opera work fine.
 <input type="button" id="idRewind" onClick="Rewind()" value="Rewind"></input>
 <input type="button" id="idPlayStop" onClick="PlayStop()" value="Play"></input>
 <input type="checkbox" id="idLoop" onClick="LoopContinuously()">Loop Continuously</input>
-&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp Playback Speed:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Playback Speed:
 <input type="radio" name="groupSpeed" value="0" onClick="SetSpeed(-2)"></input>
 <input type="radio" name="groupSpeed" value="1" onClick="SetSpeed(-1)"></input>
 <input type="radio" name="groupSpeed" value="2" checked onClick="SetSpeed(0)"></input>
 <input type="radio" name="groupSpeed" value="3" onClick="SetSpeed(1)"></input>
 <input type="radio" name="groupSpeed" value="4" onClick="SetSpeed(2)"></input>
-&nbsp&nbsp&nbsp&nbsp&nbsp&nbspSize:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Size:
 <input type="button" id="idIncreaseSize" onClick="AdjustSize(true)" value="+"></input>
 <input type="button" id="idDecreaseSize" onClick="AdjustSize(false)" value="-"></input>
-&nbsp&nbsp&nbsp&nbsp&nbsp&nbspText:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Text:
 <input type="button" id="idIncreaseFont" onClick="AdjustFont(true)" value="+"></input>
 <input type="button" id="idDecreaseFont" onClick="AdjustFont(false)" value="-"></input>
 <br/>
@@ -1497,10 +1540,19 @@ Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr<
 <span class="noprint">Comments?  Click <a href="mailto:edward.sitarski@gmail.com?subject=Race Animation">here</a>.<br/></span>
 </p>
 <p>
-<input type="radio" name="showOptions" value="showLapTimes" checked onClick="SetLapDataOption(0)"/>Lap Times&nbsp&nbsp
-<input type="radio" name="showOptions" value="showRaceTime" onClick="SetLapDataOption(1)"/>Race Times&nbsp&nbsp
-<input type="radio" name="showOptions" value="showLapGaps" onClick="SetLapDataOption(2)"/>Time Gaps&nbsp&nbsp
-<input type="radio" name="showOptions" value="showGapPercent" onClick="SetLapDataOption(3)"/>Percent Gaps&nbsp&nbsp
+<input type="radio" name="showOptions" value="showLapTimes" checked onClick="SetLapDataOption(0)"/>Lap Times &nbsp;&nbsp;
+<input type="radio" name="showOptions" value="showRaceTime" onClick="SetLapDataOption(1)"/>Race Times &nbsp;&nbsp;
+<input type="radio" name="showOptions" value="showLapGaps" onClick="SetLapDataOption(2)"/>Time Gaps &nbsp;&nbsp;
+<input type="radio" name="showOptions" value="showGapPercent" onClick="SetLapDataOption(3)"/>Percent Gaps &nbsp;&nbsp;
+<select class="noprint" id="idShowLaps" onChange="SetShowLaps()">
+	<option value="1" selected="selected">Show Every Lap</option>
+	<option value="2">Show Every 2 Laps</option>
+	<option value="3">Show Every 3 Laps</option>
+	<option value="5">Show Every 5 Laps</option>
+	<option value="10">Show Every 10 Laps</option>
+	<option value="15">Show Every 15 Laps</option>
+	<option value="20">Show Every 20 Laps</option>
+</select>
 </p>
 <div id="idResultsDiv"></div>
 <p id="idRaceName" class="noprint">Race Chart</p>
