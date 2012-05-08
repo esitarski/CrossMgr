@@ -57,9 +57,22 @@ class Gantt( wx.Panel ):
 			return
 		
 		catName = FixCategories( self.categoryChoice, getattr(Model.race, 'GanttCategory', 0) )
-		results = GetResults( catName, False )
+		results = GetResults( catName, True )
 		
-		labels	= [str(r.num) for r in results]
+		#labels	= [str(r.num) for r in results]
+		labels = []
+		for r in results:
+			last = getattr(r, 'LastName', None)
+			first = getattr(r, 'FirstName', None)
+			if last and first:
+				labels.append( '%s, %s %d' % (last, first, r.num) )
+			elif first:
+				labels.append( '%s %d' % (first, r.num) )
+			elif last:
+				labels.append( '%s %d' % (last, r.num) )
+			else:
+				labels.append( str(r.num) )
+			
 		data	= [r.raceTimes for r in results]
 		interp	= [r.interp for r in results]
 		self.ganttChart.SetData( data, labels, GetNowTime(), interp )

@@ -33,7 +33,19 @@ def makePastelColours( len = 50 ):
 def lighterColour( c ):
 	rgb = c.Get( False )
 	return wx.Colour( *[int(v + (255 - v) * 0.6) for v in rgb] )
-		
+
+def numFromLabel( s ):
+	lastSpace = s.rfind( ' ' )
+	if lastSpace >= 0:
+		try:
+			return int(s[lastSpace+1:])
+		except ValueError:
+			pass
+	firstSpace = s.find( ' ' )
+	if firstSpace < 0:
+		return int(s)
+	return int(s[:firstSpace])
+	
 class GanttChart(wx.PyControl):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
@@ -52,7 +64,7 @@ class GanttChart(wx.PyControl):
 		self.getNowTimeCallback = None
 		self.minimizeLabels = False
 		
-		self.colours = makeColourGradient(2.4,2.4,2.4,0,2,4,128,127,50)
+		self.colours = makeColourGradient(2.4,2.4,2.4,0,2,4,128,127,500)
 		self.lighterColours = [lighterColour(c) for c in self.colours]
 			
 		# Bind the events related to our control: first of all, we use a
@@ -131,7 +143,7 @@ class GanttChart(wx.PyControl):
 	def getRiderLap( self, event ):
 		x, y = event.GetPositionTuple()
 		y -= self.barHeight
-		x -= self.labelsWidth
+		x -= self.labelsWidthLeft
 		iRider = int(y / self.barHeight)
 		if not 0 <= iRider < len(self.data):
 			return None, None
@@ -157,7 +169,7 @@ class GanttChart(wx.PyControl):
 		setattr( self, 'iRiderLast', iRider )
 		setattr( self, 'iLapLast', iLap )
 		
-		self.numSelect = self.labels[iRider]
+		self.numSelect = numFromLabel( self.labels[iRider] )
 		if self.getNowTimeCallback:
 			self.nowTime = self.getNowTimeCallback()
 		self.Refresh()
@@ -188,7 +200,7 @@ class GanttChart(wx.PyControl):
 		if iRider is None:
 			return
 			
-		self.numSelect = self.labels[iRider]
+		self.numSelect = numFromLabel(self.labels[iRider])
 		if self.getNowTimeCallback:
 			self.nowTime = self.getNowTimeCallback()
 		self.Refresh()
@@ -214,8 +226,9 @@ class GanttChart(wx.PyControl):
 		if not self.data or self.dataMax == 0 or width < 50 or height < 50:
 			self.empty = True
 			return
+			
 		self.empty = False
-
+		
 		barHeight = int(float(height) / float(len(self.data) + 2))
 		if barHeight < 4:
 			self.empty = True
@@ -224,18 +237,24 @@ class GanttChart(wx.PyControl):
 
 		font = wx.FontFromPixelSize( wx.Size(0,barHeight - 1), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		dc.SetFont( font )
-		textWidth, textHeight = dc.GetTextExtent( '0000' )
-		
+		textWidthLeftMax, textHeightMax = dc.GetTextExtent( '0000' )
+		textWidthRightMax = textWidthLeftMax
+		for label in self.labels:
+			textWidthLeftMax = max( textWidthLeftMax, dc.GetTextExtent(label)[0] )
+			textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent( str(numFromLabel(label)) )[0] )
+				
 		legendSep = 4			# Separations between legend entries and the Gantt bars.
-		labelsWidth = textWidth + legendSep
+		labelsWidthLeft = textWidthLeftMax + legendSep
+		labelsWidthRight = textWidthRightMax + legendSep
 		drawLabels = True
 			
-		if labelsWidth > width / 2:
-			labelsWidth = 0
+		if labelsWidthLeft > width / 2:
+			labelsWidthLeft = 0
+			labelsWidthRight = 0
 			drawLabels = False
 
-		xLeft = labelsWidth
-		xRight = width - labelsWidth
+		xLeft = labelsWidthLeft
+		xRight = width - labelsWidthRight
 		yBottom = barHeight * (len(self.data) + 1)
 		yTop = barHeight
 
@@ -280,15 +299,15 @@ class GanttChart(wx.PyControl):
 		
 		xyInterp = []
 		
-		xFactor = float(width - labelsWidth * 2) / float(self.dataMax)
+		xFactor = float(width - labelsWidthLeft - labelsWidthRight) / float(self.dataMax)
 		yLast = barHeight
 		yHighlight = None
 		for i, s in enumerate(self.data):
 			yCur = yLast + barHeight
-			xLast = labelsWidth
+			xLast = labelsWidthLeft
 			xCur = xLast
 			for j, t in enumerate(s):
-				xCur = int(labelsWidth + t * xFactor)
+				xCur = int(labelsWidthLeft + t * xFactor)
 				if j == 0:
 					brushBar.SetColour( wx.WHITE )
 					dc.SetBrush( brushBar )
@@ -317,7 +336,7 @@ class GanttChart(wx.PyControl):
 				xLast = xCur
 			
 			# Draw the last empty bar.
-			xCur = int(labelsWidth + self.dataMax * xFactor)
+			xCur = int(labelsWidthLeft + self.dataMax * xFactor)
 			dc.SetPen( penBar )
 			brushBar.SetColour( wx.WHITE )
 			dc.SetBrush( brushBar )
@@ -325,11 +344,15 @@ class GanttChart(wx.PyControl):
 			
 			# Draw the label on both ends.
 			labelWidth = dc.GetTextExtent( self.labels[i] )[0]
-			dc.DrawText( self.labels[i], textWidth - labelWidth, yLast )
+			dc.DrawText( self.labels[i], textWidthLeftMax - labelWidth, yLast )
 			if not self.minimizeLabels:
-				dc.DrawText( self.labels[i], width - labelsWidth + legendSep, yLast )
+				label = self.labels[i]
+				lastSpace = label.rfind( ' ' )
+				if lastSpace > 0:
+					label = label[lastSpace+1:]
+				dc.DrawText( label, width - labelsWidthRight + legendSep, yLast )
 
-			if self.numSelect == self.labels[i]:
+			if self.numSelect == numFromLabel(self.labels[i]):
 				yHighlight = yCur
 
 			yLast = yCur
@@ -365,7 +388,7 @@ class GanttChart(wx.PyControl):
 		if self.nowTime and self.nowTime < self.dataMax:
 			nowTimeStr = Utils.formatTime( self.nowTime )
 			labelWidth, labelHeight = dc.GetTextExtent( nowTimeStr )	
-			x = int(labelsWidth + self.nowTime * xFactor)
+			x = int(labelsWidthLeft + self.nowTime * xFactor)
 			
 			ntColour = '#339966'
 			dc.SetPen( wx.Pen(ntColour, 6) )
@@ -388,7 +411,7 @@ class GanttChart(wx.PyControl):
 
 		self.xFactor = xFactor
 		self.barHeight = barHeight
-		self.labelsWidth = labelsWidth
+		self.labelsWidthLeft = labelsWidthLeft
 			
 	def OnEraseBackground(self, event):
 		# This is intentionally empty, because we are using the combination

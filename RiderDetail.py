@@ -20,7 +20,7 @@ class RiderDetail( wx.Panel ):
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
 		
-		gbs = wx.GridBagSizer(4, 5)
+		gbs = wx.GridBagSizer(7, 4)
 		row = 0
 		self.numName = wx.StaticText( self, wx.ID_ANY, 'Number: ' )
 		gbs.Add( self.numName, pos=(row,0), span=(1,1), flag=labelAlign )
@@ -43,6 +43,9 @@ class RiderDetail( wx.Panel ):
 		self.Bind( wx.EVT_BUTTON, self.onEditRider, self.editRiderBtn )
 		gbs.Add( self.editRiderBtn, pos=(row, 3), span=(1,1), flag=wx.EXPAND )
 		
+		self.riderName = wx.StaticText( self, wx.ID_ANY, '' )
+		gbs.Add( self.riderName, pos=(row, 4), span=(1,1) )
+		
 		row += 1
 		
 		self.categoryName = wx.StaticText( self, wx.ID_ANY, 'Category: ' )
@@ -50,6 +53,20 @@ class RiderDetail( wx.Panel ):
 		self.category = wx.StaticText( self, wx.ID_ANY, '' )
 		self.category.SetDoubleBuffered( True )
 		gbs.Add( self.category, pos=(row,1), span=(1,1), flag=wx.EXPAND )
+		row += 1
+		
+		self.nameName = wx.StaticText( self, wx.ID_ANY, 'Name: ' )
+		gbs.Add( self.nameName, pos=(row,0), span=(1,1), flag=labelAlign )
+		self.riderName = wx.StaticText( self, wx.ID_ANY, '' )
+		self.riderName.SetDoubleBuffered( True )
+		gbs.Add( self.riderName, pos=(row,1), span=(1,4), flag=wx.EXPAND )
+		row += 1
+		
+		self.teamName = wx.StaticText( self, wx.ID_ANY, 'Team: ' )
+		gbs.Add( self.teamName, pos=(row,0), span=(1,1), flag=labelAlign )
+		self.riderTeam = wx.StaticText( self, wx.ID_ANY, '' )
+		self.riderTeam.SetDoubleBuffered( True )
+		gbs.Add( self.riderTeam, pos=(row,1), span=(1,4), flag=wx.EXPAND )
 		row += 1
 		
 		self.statusName = wx.StaticText( self, wx.ID_ANY, 'Status: ' )
@@ -102,6 +119,7 @@ class RiderDetail( wx.Panel ):
 		
 		self.setAtRaceTime()
 		self.SetSizer( gbs )
+		self.gbs = gbs
 		self.setRider()
 		
 	def onEditRider( self, event ):
@@ -351,6 +369,26 @@ class RiderDetail( wx.Panel ):
 			catName = race.getCategoryName( num )
 			category = race.categories.get( catName, None )
 			
+			try:
+				externalInfo = race.excelLink.read()
+			except:
+				externalInfo = {}
+			
+			try:
+				info = externalInfo[int(num)]
+				name = info.get( 'LastName', '' )
+				firstName = info.get( 'FirstName', '' )
+				if firstName:
+					if name:
+						name = '%s, %s' % (name, firstName)
+					else:
+						name = firstName
+				self.riderName.SetLabel( name )
+				self.riderTeam.SetLabel( info.get('Team', '') )
+			except KeyError:
+				self.riderName.SetLabel( '' )
+				self.riderTeam.SetLabel( '' )
+				
 			self.category.SetLabel( catName if catName else 'Unmatched' )
 			self.statusOption.SetSelection( rider.status )
 			if rider.status in [Model.Rider.Finisher, Model.Rider.DNS, Model.Rider.DQ]:
@@ -419,6 +457,8 @@ class RiderDetail( wx.Panel ):
 			
 			self.ganttChart.SetData( [ganttData], [num], Gantt.GetNowTime(), [ganttInterp] )
 			self.lineGraph.SetData( [graphData], [[e.interp for e in entries]] )
+			
+		self.gbs.Layout()
 	
 	def commitChange( self ):
 		num = self.num.GetValue()

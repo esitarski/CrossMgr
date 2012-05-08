@@ -296,6 +296,9 @@ class GetExcelLink( object ):
 		isForward = evt.GetDirection()
 		
 #-----------------------------------------------------------------------------------------------------
+# Cache the Excel sheet so we don't have to re-read it if it has not changed.
+stateCache = None
+infoCache = None
 
 class ExcelLink( object ):
 	def __init__( self ):
@@ -322,6 +325,16 @@ class ExcelLink( object ):
 		return [f for f in Fields if self.hasField(f)]
 		
 	def read( self ):
+		global stateCache
+		global infoCache
+		if stateCache and infoCache:
+			try:
+				state = (os.path.getmtime(self.fileName), self.fileName, self.sheetName, self.fieldCol)
+				if state == stateCache:
+					return infoCache.copy()
+			except:
+				pass
+	
 		# Read the sheet and return the rider data.
 		reader = GetExcelReader( self.fileName )
 		if self.sheetName not in reader.sheet_names():
@@ -343,11 +356,13 @@ class ExcelLink( object ):
 				info[int(float(data[Fields[0]]))] = data
 			except (ValueError, TypeError, KeyError):
 				pass
-		return info
+				
+		stateCache = (os.path.getmtime(self.fileName), self.fileName, self.sheetName, self.fieldCol)
+		infoCache = info
+		return infoCache.copy()
 
 #-----------------------------------------------------------------------------------------------------
 
-				
 if __name__ == '__main__':
 	print( Utils.approximateMatch("Team", "Last Name") )
 

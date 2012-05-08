@@ -10,6 +10,7 @@ from FixCategories import FixCategories
 from EditEntry import CorrectNumber, SplitNumber, DeleteEntry, SwapEntry
 
 reNonDigits = re.compile( '[^0-9]' )
+reIntPrefix = re.compile( '^[0-9]+' )
 
 class History( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
@@ -18,6 +19,7 @@ class History( wx.Panel ):
 		self.showTimes = False
 		self.showLapTimes = False
 		self.showTimeDown = False
+		self.showRiderName = False
 		self.numSelect = None
 		self.isEmpty = True
 		self.history = None
@@ -48,6 +50,10 @@ class History( wx.Panel ):
 		self.showTimeDownToggle.SetValue( self.showTimeDown )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowTimeDown, self.showTimeDownToggle )
 		
+		self.showRiderNameToggle = wx.ToggleButton( self, wx.ID_ANY, 'Rider Names', style=wx.BU_EXACTFIT )
+		self.showRiderNameToggle.SetValue( self.showRiderName )
+		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowRiderName, self.showRiderNameToggle )
+		
 		self.search = wx.SearchCtrl(self, size=(80,-1), style=wx.TE_PROCESS_ENTER )
 		# self.search.ShowCancelButton( True )
 		self.Bind(wx.EVT_SEARCHCTRL_SEARCH_BTN, self.OnSearch, self.search)
@@ -66,6 +72,7 @@ class History( wx.Panel ):
 		self.hbs.Add( self.showTimesToggle, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.showLapTimesToggle, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.showTimeDownToggle, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.showRiderNameToggle, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( wx.StaticText(self, wx.ID_ANY, ' '), proportion=2 )
 		self.hbs.Add( self.search, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.zoomInButton, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
@@ -234,6 +241,10 @@ class History( wx.Panel ):
 		self.showTimeDown ^= True
 		self.refresh()
 		
+	def onShowRiderName( self, event ):
+		self.showRiderName ^= True
+		self.refresh()
+		
 	def updateColours( self ):
 		self.textColour = {}
 		self.backgroundColour = dict( ((rc, self.yellowColour) for rc in self.rcInterp ) )
@@ -266,8 +277,10 @@ class History( wx.Panel ):
 		numSelect = None
 		if row < self.grid.GetNumberRows() and col < self.grid.GetNumberCols():
 			value = self.grid.GetCellValue( row, col )
-			if value is not None and value != '':
-				numSelect = value.split('=')[0]
+			if value:
+				m = reIntPrefix.match( value )
+				if m:
+					numSelect = m.group(0)
 		return numSelect
 	
 	def doNumSelect( self, event ):
@@ -396,8 +409,13 @@ class History( wx.Panel ):
 			if self.showTimes:		formatStr.append('=$raceTime')
 			if self.showLapTimes:	formatStr.append(' [$lapTime]')
 			if self.showTimeDown:	formatStr.append(' ($downTime)')
+			if self.showRiderName:	formatStr.append(' $riderName')
 			template = Template( ''.join(formatStr) )
 			
+			try:
+				info = race.excelLink.read()
+			except:
+				info = {}
 			data = []
 			for col, h in enumerate(self.history):
 				data.append( [ template.safe_substitute(
@@ -405,7 +423,8 @@ class History( wx.Panel ):
 						'num':		e.num,
 						'raceTime':	Utils.formatTime(e.t) if self.showTimes else '',
 						'lapTime':	Utils.formatTime(e.t - numTimes[(e.num,e.lap-1)]) if self.showLapTimes else '',
-						'downTime':	Utils.formatTimeGap(e.t - leaderTimes[col+1])
+						'downTime':	Utils.formatTimeGap(e.t - leaderTimes[col+1]),
+						'riderName': info.get(e.num, {}).get('LastName', '') if self.showRiderName else '',
 					} ) for e in h] )
 				self.rcInterp.update( (row, col) for row, e in enumerate(h) if e.interp )
 

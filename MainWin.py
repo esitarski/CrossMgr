@@ -487,6 +487,7 @@ class MainWin( wx.Frame ):
 		printout2 = CrossMgrPrintout()
 		self.preview = wx.PrintPreview(printout, printout2, data)
 
+		self.preview.SetZoom( 110 )
 		if not self.preview.Ok():
 			return
 
