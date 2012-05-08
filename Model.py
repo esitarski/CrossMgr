@@ -1377,7 +1377,7 @@ class Race(object):
 
 		for j, i in enumerate(xrange(100,100+riders+1,10)):
 			name = 'Cat%d' % (j+1)
-			self.categories[name] = Category(name, str(i) + '-' + str(i+9))
+			self.categories[name] = Category(True, name, str(i) + '-' + str(i+9))
 
 		self.setChanged()
 

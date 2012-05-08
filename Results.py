@@ -245,11 +245,11 @@ class Results( wx.Panel ):
 		
 		exportGrid = ExportGrid()
 		exportGrid.setResultsOneList( catName, self.showRiderData )
-		
+
 		if not exportGrid.colnames:
 			self.clearGrid()
 			return
-		
+			
 		self.grid.Set( data = exportGrid.data, colnames = exportGrid.colnames )
 		self.grid.SetLeftAlignCols( exportGrid.leftJustifyCols )
 		self.grid.AutoSizeColumns( True )
@@ -264,7 +264,7 @@ class Results( wx.Panel ):
 					entries = rider.interpolate()
 					if not entries:
 						continue
-				except:
+				except (ValueError, IndexError):
 					continue
 				eItr = (e for e in entries)
 				eItr.next()						# Skip the first zero entry.
