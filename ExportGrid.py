@@ -4,7 +4,7 @@ import os
 import xlwt
 import Utils
 import Model
-import Results
+from Results import GetResults
 from ReadSignOnSheet import Fields, IgnoreFields
 
 #---------------------------------------------------------------------------
@@ -198,7 +198,7 @@ class ExportGrid( object ):
 		self.data = []
 		self.colnames = []
 
-		results = Results.GetResults( catName, getExternalData )
+		results = GetResults( catName, getExternalData )
 		if not results:
 			return
 		
