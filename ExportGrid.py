@@ -4,7 +4,7 @@ import os
 import xlwt
 import Utils
 import Model
-from Results import GetResults
+from GetResults import GetResults
 from ReadSignOnSheet import Fields, IgnoreFields
 
 #---------------------------------------------------------------------------
