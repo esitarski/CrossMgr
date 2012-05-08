@@ -4,11 +4,11 @@ import wx
 import wx.grid		as gridlib
 import re
 import os
-import bisect
 from string import Template
 import ColGrid
 from FixCategories import FixCategories, SetCategory
 from GetResults import GetResults
+from ExportGrid import ExportGrid
 
 reNonDigits = re.compile( '[^0-9]' )
 
@@ -243,7 +243,6 @@ class Results( wx.Panel ):
 			self.hbs.Layout()
 			self.category = race.categories.get( catName, None )
 		
-		from ExportGrid import ExportGrid
 		exportGrid = ExportGrid()
 		exportGrid.setResultsOneList( catName, self.showRiderData )
 		
