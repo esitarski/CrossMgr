@@ -7,12 +7,12 @@ import re
 from Animation import Animation
 from FixCategories import FixCategories
 from ReadSignOnSheet import IgnoreFields
-import Results
+from GetResults import GetResults
 
 statusNames = Model.Rider.statusNames
 
 def GetAnimationData( catName = 'All', getExternalData = False ):
-	results = Results.GetResults( catName, getExternalData )
+	results = GetResults( catName, getExternalData )
 	if not results:
 		return None
 	

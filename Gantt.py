@@ -3,7 +3,7 @@ import Utils
 import wx
 from FixCategories import FixCategories
 import GanttChart
-import Results
+from GetResults import GetResults
 
 def UpdateSetNum( num ):
 	if num is None:
@@ -57,7 +57,7 @@ class Gantt( wx.Panel ):
 			return
 		
 		catName = FixCategories( self.categoryChoice, getattr(Model.race, 'GanttCategory', 0) )
-		results = Results.GetResults( catName, False )
+		results = GetResults( catName, False )
 		
 		labels	= [str(r.num) for r in results]
 		data	= [r.raceTimes for r in results]
