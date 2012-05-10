@@ -62,7 +62,7 @@ class Recommendations( wx.Panel ):
 				('RiderDetail',wx.NewId(), self.OnPopupRiderDetail),
 				
 				('Correct...',	wx.NewId(), self.OnPopupCorrect),
-				('Split...',	wx.NewId(), self.OnPopupSplit),
+				('Insert...',	wx.NewId(), self.OnPopupSplit),
 				('Delete...',	wx.NewId(), self.OnPopupDelete)
 			]
 			self.numEditActions = 2

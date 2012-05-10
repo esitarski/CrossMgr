@@ -6,6 +6,7 @@ import wx.lib.intctrl
 import wx.lib.masked           as masked
 import ColGrid
 import Model
+import random
 
 #------------------------------------------------------------------------------------------------
 class CorrectNumberDialog( wx.Dialog ):
@@ -34,10 +35,10 @@ class CorrectNumberDialog( wx.Dialog ):
 		border = 8
 		bs.Add( wx.StaticText( self, wx.ID_ANY, 'RiderLap: %d   RaceTime: %s' % (self.entry.lap, Utils.formatTime(self.entry.t)) ),
 			pos=(0,0), span=(1,2), border = border, flag=wx.GROW|wx.ALL )
-		bs.Add( wx.StaticText( self, -1, "Rider:"),  pos=(1,0), span=(1,1), border = border, flag=wx.GROW|wx.LEFT|wx.TOP|wx.ALIGN_RIGHT )
-		bs.Add( self.numEdit, pos=(1,1), span=(1,2), border = border, flag=wx.GROW|wx.RIGHT|wx.TOP )
-		bs.Add( wx.StaticText( self, -1, "Race Time:"),  pos=(2,0), span=(1,1), border = border, flag=wx.GROW|wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT|wx.BOTTOM )
-		bs.Add( self.timeCtrl, pos=(2,1), span=(1,1), border = border, flag=wx.GROW|wx.LEFT|wx.RIGHT|wx.BOTTOM )
+		bs.Add( wx.StaticText( self, -1, "Rider:"),  pos=(1,0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT )
+		bs.Add( self.numEdit, pos=(1,1), span=(1,2), border = border, flag=wx.GROW|wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
+		bs.Add( wx.StaticText( self, -1, "Race Time:"),  pos=(2,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT|wx.BOTTOM )
+		bs.Add( self.timeCtrl, pos=(2,1), span=(1,1), border = border, flag=wx.GROW|wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.ALIGN_LEFT )
 		
 		bs.Add( self.okBtn, pos=(3, 0), span=(1,1), border = border, flag=wx.ALL )
 		self.okBtn.SetDefault()
@@ -95,10 +96,10 @@ class ShiftNumberDialog( wx.Dialog ):
 		border = 8
 		bs.Add( wx.StaticText( self, wx.ID_ANY, 'RiderLap: %d   RaceTime: %s' % (self.entry.lap, Utils.formatTime(self.entry.t)) ),
 			pos=(0,0), span=(1,2), border = border, flag=wx.GROW|wx.ALL )
-		bs.Add( wx.StaticText( self, -1, "Rider:"),  pos=(1,0), span=(1,1), border = border, flag=wx.GROW|wx.LEFT|wx.TOP|wx.ALIGN_RIGHT )
+		bs.Add( wx.StaticText( self, -1, "Rider:"),  pos=(1,0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT )
 		bs.Add( self.numEdit, pos=(1,1), span=(1,2), border = border, flag=wx.GROW|wx.RIGHT|wx.TOP )
 		bs.Add( self.shiftBox, pos=(2, 0), span=(1, 2), border = border, flag=wx.GROW|wx.LEFT|wx.RIGHT|wx.BOTTOM )
-		bs.Add( wx.StaticText( self, -1, "Shift Time:"),  pos=(3,0), span=(1,1), border = border, flag=wx.GROW|wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT|wx.BOTTOM )
+		bs.Add( wx.StaticText( self, -1, "Shift Time:"),  pos=(3,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT|wx.BOTTOM )
 		bs.Add( self.timeCtrl, pos=(3,1), span=(1,1), border = border, flag=wx.GROW|wx.LEFT|wx.RIGHT )
 		bs.Add( self.newTime, pos=(4,0), span=(1,2), border = border, flag=wx.GROW|wx.LEFT|wx.RIGHT )
 		
@@ -138,16 +139,15 @@ class ShiftNumberDialog( wx.Dialog ):
 		self.newTime.SetLabel( s )
 
 #------------------------------------------------------------------------------------------------
-class SplitNumberDialog( wx.Dialog ):
+class InsertNumberDialog( wx.Dialog ):
 	def __init__( self, parent, entry, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, "Split Number",
+		wx.Dialog.__init__( self, parent, id, "Insert Number",
 						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
 						
 		self.entry = entry
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
 		
-		self.numEdit1 = wx.lib.intctrl.IntCtrl( self, 20, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
-		self.numEdit2 = wx.lib.intctrl.IntCtrl( self, 20, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
+		self.numEdit = wx.lib.intctrl.IntCtrl( self, 20, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
 		
 		self.okBtn = wx.Button( self, wx.ID_ANY, '&OK' )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
@@ -162,17 +162,16 @@ class SplitNumberDialog( wx.Dialog ):
 				pos=(1,0), span=(1,1), border = border, flag=wx.TOP|wx.BOTTOM|wx.LEFT|wx.ALIGN_RIGHT )
 		bs.Add( wx.StaticText( self, wx.ID_ANY, str(self.entry.num) ),
 				pos=(1,1), span=(1,1), border = border, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.ALIGN_BOTTOM )
+		
+		shiftOptions = ['Before Entry', 'After Entry']
+		self.beforeAfterBox = wx.RadioBox( self, wx.ID_ANY, 'Insert', wx.DefaultPosition, wx.DefaultSize, shiftOptions, 2, wx.RA_SPECIFY_COLS )
+		bs.Add( self.beforeAfterBox, pos=(2,0), span=(1,2), border = border, flag=wx.TOP|wx.LEFT|wx.ALIGN_RIGHT )
 				
-		bs.Add( wx.StaticText( self, wx.ID_ANY, 'Split 1:' ),
-				pos=(2,0), span=(1,1), border = border, flag=wx.TOP|wx.LEFT|wx.ALIGN_RIGHT )
-		bs.Add( self.numEdit1,
-				pos=(2,1), span=(1,1), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_BOTTOM )
+		bs.Add( wx.StaticText( self, wx.ID_ANY, 'Number:' ),
+				pos=(3,0), span=(1,1), border = border, flag=wx.TOP|wx.LEFT|wx.ALIGN_RIGHT )
+		bs.Add( self.numEdit,
+				pos=(3,1), span=(1,1), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_BOTTOM )
 				
-		bs.Add( wx.StaticText( self, wx.ID_ANY, 'Split 2:' ),
-				pos=(3,0), span=(1,1), border = border, flag=wx.BOTTOM|wx.LEFT|wx.ALIGN_RIGHT )
-		bs.Add( self.numEdit2,
-				pos=(3,1), span=(1,1), border = border, flag=wx.BOTTOM|wx.RIGHT|wx.ALIGN_BOTTOM )
-
 		bs.Add( self.okBtn, pos=(4, 0), span=(1,1), border = border, flag=wx.ALL )
 		self.okBtn.SetDefault()
 		bs.Add( self.cancelBtn, pos=(4, 1), span=(1,1), border = border, flag=wx.ALL|wx.ALIGN_RIGHT )
@@ -184,21 +183,17 @@ class SplitNumberDialog( wx.Dialog ):
 		self.SetFocus()
 
 	def onOK( self, event ):
+		num = self.numEdit.GetValue()
+		if not num or num == self.entry.num:
+			return
+			
+		tAdjust = 0.0001 + random.random() / 10000.0	# Add some randomness so that all inserted times will be unique.
+		if self.beforeAfterBox.GetSelection() == 0:
+			tAdjust = -tAdjust
+		tInsert = self.entry.t + tAdjust
+		
 		with Model.LockRace() as race:
-			num1 = self.numEdit1.GetValue()
-			num2 = self.numEdit2.GetValue()
-			
-			# Delete the original entry.
-			if self.entry.num != num1 and self.entry.num != num2:
-				race.deleteTime( self.entry.num, self.entry.t )
-			
-			# Add the 1st split entry.
-			if self.entry.num != num1:
-				race.addTime( num1, self.entry.t )
-			
-			# Add the 2nd split entry.
-			if self.entry.num != num2:
-				race.addTime( num2, self.entry.t + 0.001 )	# Add a little extra time to keep the sequence
+			race.addTime( num, tInsert )
 			
 		Utils.refresh()
 		
@@ -222,8 +217,8 @@ def ShiftNumber( parent, entry ):
 	dlg.Destroy()
 		
 @logCall
-def SplitNumber( parent, entry ):
-	dlg = SplitNumberDialog( parent, entry )
+def InsertNumber( parent, entry ):
+	dlg = InsertNumberDialog( parent, entry )
 	dlg.ShowModal()
 	dlg.Destroy()
 		
@@ -231,7 +226,7 @@ def SplitNumber( parent, entry ):
 def DeleteEntry( parent, entry ):
 	dlg = wx.MessageDialog(parent,
 						   'Num: %d  RiderLap: %d   RaceTime: %s\n\nConfirm Delete (no undo)?' %
-								(entry.num, entry.lap, Utils.SecondsToMMSS(entry.t)), 'Delete Entry',
+								(entry.num, entry.lap, Utils.formatTime(entry.t)), 'Delete Entry',
 							wx.OK | wx.CANCEL | wx.ICON_QUESTION )
 	# dlg.CentreOnParent(wx.BOTH)
 	if dlg.ShowModal() == wx.ID_OK:
