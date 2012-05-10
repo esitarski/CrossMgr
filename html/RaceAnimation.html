@@ -996,27 +996,29 @@ function RaceChartUpdateInfo()
 			c.lineWidth = 1;
 			var x = xEvent, y = yEvent;
 			var textWidth = c.measureText( hover ).width;
+			var drawDirection = (x + textWidth > canvasRaceChart.width*0.90 ? -1 : 1);
+			
 			c.fillStyle = '#FFF';
 			c.beginPath();
 			c.moveTo( x, y );
 			y -= height/2;
 			c.lineTo( x, y );
-			x += textWidth;
+			x += drawDirection * textWidth;
 			c.lineTo( x, y );
 			y -= height / 2;
-			c.arc( x, y, height / 2, Math.PI / 2, 3 * Math.PI / 2, true );
+			c.arc( x, y, height / 2, Math.PI / 2, 3 * Math.PI / 2, drawDirection > 0 );
 			y -= height / 2;
-			x -= textWidth;
+			x -= drawDirection * textWidth;
 			c.lineTo( x, y );
 			y += height / 2;
-			c.arc( x, y, height / 2, 3 * Math.PI / 2, Math.PI, true );
+			c.arc( x, y, height / 2, 3 * Math.PI / 2, drawDirection > 0 ? Math.PI : 0.0, drawDirection > 0 );
 			y += height;
 			c.lineTo( x, y );
 			c.closePath();
 			c.fill();
 			c.stroke();
 			c.fillStyle = '#000';
-			c.fillText( hover, xEvent, yEvent - 3 * height / 2 + margin + 1 );
+			c.fillText( hover, xEvent - (drawDirection < 0 ? textWidth : 0), yEvent - 3 * height / 2 + margin + 1 );
 			c.restore();
 			
 			c.lineWidth = 2;
@@ -1193,7 +1195,20 @@ function RefreshRaceChart()
 			}
 			else
 			{
+				var riderData = data[num];
 				var hover = num + ': Lap ' + j + ', ' + FormatTime(t - lapTimes[j-1]);
+				var name = '';
+				if( riderData['LastName'] )
+					name = riderData['LastName'];
+				if( riderData['FirstName'] )
+				{
+					if( name )
+						name = name + ', ' + riderData['FirstName'];
+					else
+						name = riderData['FirstName'];
+				}
+				if( name )
+					hover = name + ' ' + hover;
 				drawSegment( dc, xLast, yLast, xCur - xLast + 1, yCur - yLast + 1, colors[j], lighterColors[j] );
 				segmentsCur.push( [xLast, yLast, xCur - xLast + 1, yCur - yLast + 1, hover] );
 			}
