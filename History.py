@@ -7,7 +7,7 @@ import os
 import re
 from string import Template
 from FixCategories import FixCategories
-from EditEntry import CorrectNumber, SplitNumber, DeleteEntry, SwapEntry
+from EditEntry import CorrectNumber, ShiftNumber, SplitNumber, DeleteEntry, SwapEntry
 
 reNonDigits = re.compile( '[^0-9]' )
 reIntPrefix = re.compile( '^[0-9]+' )
@@ -151,6 +151,7 @@ class History( wx.Panel ):
 				('RiderDetail',wx.NewId(), self.OnPopupRiderDetail, allCases),
 				
 				('Correct...',	wx.NewId(), self.OnPopupCorrect, interpCase),
+				('Shift...',	wx.NewId(), self.OnPopupShift, nonInterpCase),
 				('Split...',	wx.NewId(), self.OnPopupSplit, nonInterpCase),
 				('Delete...',	wx.NewId(), self.OnPopupDelete, nonInterpCase),
 				
@@ -212,6 +213,10 @@ class History( wx.Panel ):
 	def OnPopupCorrect( self, event ):
 		if hasattr(self, 'rowPopup'):
 			CorrectNumber( self, self.history[self.colPopup][self.rowPopup] )
+		
+	def OnPopupShift( self, event ):
+		if hasattr(self, 'rowPopup'):
+			ShiftNumber( self, self.history[self.colPopup][self.rowPopup] )
 		
 	def OnPopupSplit( self, event ):
 		if hasattr(self, 'rowPopup'):

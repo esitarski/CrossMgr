@@ -8,7 +8,7 @@ import ColGrid
 import StatusBar
 import OutputStreamer
 import NumKeypad
-from EditEntry import CorrectNumber, SplitNumber, DeleteEntry, DoDNS, DoDNF, DoPull
+from EditEntry import CorrectNumber, ShiftNumber, SplitNumber, DeleteEntry, DoDNS, DoDNF, DoPull
 
 
 # Define columns for recorded and expected infomation.
@@ -136,6 +136,7 @@ class ForecastHistory( wx.Panel ):
 		if not hasattr(self, 'historyPopupInfo'):
 			self.historyPopupInfo = [
 				('Correct...',	wx.NewId(), self.OnPopupHistoryCorrect),
+				('Shift...',	wx.NewId(), self.OnPopupHistoryShift),
 				('Split...',	wx.NewId(), self.OnPopupHistorySplit),
 				('Delete...',	wx.NewId(), self.OnPopupHistoryDelete),
 				(None,			None,		None),
@@ -161,6 +162,10 @@ class ForecastHistory( wx.Panel ):
 	def OnPopupHistoryCorrect( self, event ):
 		if hasattr(self, 'rowPopup'):
 			CorrectNumber( self, self.quickHistory[self.rowPopup] )
+		
+	def OnPopupHistoryShift( self, event ):
+		if hasattr(self, 'rowPopup'):
+			ShiftNumber( self, self.quickHistory[self.rowPopup] )
 		
 	def OnPopupHistorySplit( self, event ):
 		if hasattr(self, 'rowPopup'):
