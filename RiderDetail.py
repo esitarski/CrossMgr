@@ -38,6 +38,9 @@ class RiderDetail( wx.Panel ):
 		self.swapNumberMenuId = wx.NewId()
 		self.menu.Append( self.swapNumberMenuId, '&Swap Number...', "Swap this rider's number with another rider's number" )
 		self.Bind( wx.EVT_MENU, self.onSwapNumber, id = self.swapNumberMenuId )
+		self.duplicateRiderMenuId = wx.NewId()
+		self.menu.Append( self.duplicateRiderMenuId, '&Duplicate Rider...', "Duplicate these rider's times under another number" )
+		self.Bind( wx.EVT_MENU, self.onDuplicateRider, id = self.duplicateRiderMenuId )
 		
 		self.editRiderBtn = wx.Button( self, wx.ID_ANY, 'Edit...' )
 		self.Bind( wx.EVT_BUTTON, self.onEditRider, self.editRiderBtn )
@@ -89,7 +92,7 @@ class RiderDetail( wx.Panel ):
 		row += 1
 
 		self.notInLap = wx.StaticText( self, wx.ID_ANY, '              ' )
-		gbs.Add( self.notInLap, pos=(row,0), span=(1,4) )		
+		gbs.Add( self.notInLap, pos=(row,0), span=(1,4) )
 		row += 1
 	
 		self.grid = ColGrid.ColGrid( self, colnames = ['Rider Lap', 'Race Time', 'Lap Time'] )
@@ -138,7 +141,8 @@ class RiderDetail( wx.Panel ):
 			if not num in race:
 				return
 			
-		if Utils.MessageOKCancel( self, "This will delete this rider.\nOnly do this in case of a mistaken entry.\nThere is no undo - be careful.", "Delete Rider" ):
+		if Utils.MessageOKCancel( self, "This will delete rider %d and all associated entries.\nOnly do this in case of a mistaken entry.\nThere is no undo - please be careful." % num,
+									"Delete Rider" ):
 			with Model.LockRace() as race:
 				race.deleteRider( num )
 			self.setRider( None )
@@ -218,7 +222,50 @@ class RiderDetail( wx.Panel ):
 			self.setRider( newNum )
 			self.refresh()
 		
-	def onNumChange( self, event ):
+	def onDuplicateRider( self, event ):
+		if not Model.race:
+			return
+			
+		try:
+			num = int(self.num.GetValue())
+		except:
+			return
+			
+		with Model.LockRace() as race:
+			if not num in race:
+				return
+		
+		dlg = wx.TextEntryDialog( self, "All time entries for %d will be duplicated for the new bib number.\n\nNew Bib Number:" % num,
+								'Duplicate Rider Times', str(self.num.GetValue()) )
+		ret = dlg.ShowModal()
+		newNum = dlg.GetValue()
+		dlg.Destroy()
+		if ret != wx.ID_OK:
+			return
+			
+		try:
+			newNum = int(re.sub( '[^0-9]', '', newNum))
+		except ValueError:
+			return
+			
+		with Model.LockRace() as race:
+			inRace = (newNum in race)
+		if inRace:
+			if num != newNum:
+				Utils.MessageOK( self, "New Bib %d already exists.\nIf you really want to duplicate to this number, delete it first." % newNum,
+								'New Bib Number Already Exists', iconMask = wx.ICON_ERROR )
+			else:
+				Utils.MessageOK( self, "Cannot duplicate to the same number (%d)." % newNum,
+								'Cannot Duplicate to Same Number', iconMask = wx.ICON_ERROR )
+			return
+			
+		if Utils.MessageOKCancel( self, "Entries from %d will be duplicated to new Bib %d.\n\nAll entries for %d will be slightly earlier then entries for %d.\nContinue?" % (num, newNum, newNum, num), "Confirm Duplicate Rider Times" ):
+			with Model.LockRace() as race:
+				race.duplicateRiderTimes( num, newNum )
+			self.setRider( newNum )
+			self.onNumChange()
+		
+	def onNumChange( self, event = None ):
 		self.refresh()
 		if Utils.isMainWin():
 			Utils.getMainWin().setNumSelect( self.num.GetValue() )
@@ -361,7 +408,10 @@ class RiderDetail( wx.Panel ):
 		self.setAtRaceTime( 0.0, False )
 		
 		self.lineGraph.SetData( None )
-			
+		self.ganttChart.SetData( [] )
+		self.riderName.SetLabel( '' )
+		self.riderTeam.SetLabel( '' )
+		
 		with Model.LockRace() as race:
 			if race is None or num not in race:
 				return
@@ -386,8 +436,7 @@ class RiderDetail( wx.Panel ):
 				self.riderName.SetLabel( name )
 				self.riderTeam.SetLabel( info.get('Team', '') )
 			except KeyError:
-				self.riderName.SetLabel( '' )
-				self.riderTeam.SetLabel( '' )
+				pass
 				
 			self.category.SetLabel( catName if catName else 'Unmatched' )
 			self.statusOption.SetSelection( rider.status )

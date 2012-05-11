@@ -967,6 +967,33 @@ function RaceChartProcessMouse( event )
 	hoverTimer = setTimeout( "RaceChartUpdateInfo()", 25 );
 }
 
+function getRiderName( num )
+{
+	var name = '';
+	var riderData = data[num];
+	if( riderData )
+	{
+		if( riderData['LastName'] )
+			name = riderData['LastName'];
+		if( riderData['FirstName'] )
+		{
+			if( name )
+				name = name + ', ' + riderData['FirstName'];
+			else
+				name = riderData['FirstName'];
+		}
+	}
+	return name;
+}
+
+function getRiderNameNum( num )
+{
+	var name = getRiderName(num);
+	if( name )
+		return name + ' ' + num;
+	return num + '';
+}
+
 function RaceChartUpdateInfo()
 {
 	RefreshRaceChart();
@@ -980,6 +1007,10 @@ function RaceChartUpdateInfo()
 		{
 			//alert( "found segment" );
 			var hover = seg[4];
+			var num = seg[5];
+			var name = getRiderNameNum( num );
+			hover = name + ': Lap ' + hover;
+
 			var fontHeight = 14;
 			var height = fontHeight * 1.5;
 				
@@ -1116,20 +1147,30 @@ function RefreshRaceChart()
 	var textHeight = normalTextHeight;
 	var fontStr = textHeight + "px Arial";
 	dc.font = fontStr;
-	textWidth = dc.measureText('0000').width;
+	
+	var textWidthLeft = dc.measureText('0000').width;
+	for( var i = 0; i < resultsData.length; ++i )
+	{
+		var num = resultsData[i][iNum];
+		var name = getRiderNameNum(num) + '0';
+		var w = dc.measureText(name).width;
+		if( w > textWidthLeft )
+			textWidthLeft = w;
+	}
 	
 	var legendSep = 4;			// Separations between legend entries and the Gantt bars.
-	var labelsWidth = textWidth + legendSep;
+	var labelsWidthLeft = textWidthLeft + legendSep;
+	var labelsWidthRight = dc.measureText('0000').width + legendSep;
 	var drawLabels = true;
 		
-	if( labelsWidth > width / 2 )
+	if( labelsWidthLeft + labelsWidthRight > width )
 	{
-		labelsWidth = 0;
+		labelsWidthLeft = labelsWidthRight = 0;
 		drawLabels = false;
 	}
 
-	var xLeft = labelsWidth;
-	var xRight = width - labelsWidth;
+	var xLeft = labelsWidthLeft;
+	var xRight = width - labelsWidthRight;
 	var yBottom = barHeight * (resultsData.length + 2);
 	var yTop = 2 * barHeight;
 	var lineWidth = 0.5;
@@ -1172,21 +1213,21 @@ function RefreshRaceChart()
 	dc.lineCap = 'butt';
 	dc.lineJoin = 'miter';
 
-	var xFactor = (width - labelsWidth * 2) / dataMax;
+	var xFactor = (width - labelsWidthLeft - labelsWidthRight) / dataMax;
 	var yLast = 2 * barHeight;
 	var yHighlight = null;
 	segmentsCur = [];
 	for( var i = 0; i < resultsData.length; ++i )
 	{
 		yCur = yLast + barHeight;
-		xLast = labelsWidth;
+		xLast = labelsWidthLeft;
 		xCur = xLast;
 		var num = resultsData[i][iNum];
 		var lapTimes = resultsData[i][iLapTimes];
 		for( var j = 0; j < lapTimes.length; ++j )
 		{
 			var t = lapTimes[j];
-			xCur = Math.floor(labelsWidth + t * xFactor);
+			xCur = Math.floor(labelsWidthLeft + t * xFactor);
 			if( j == 0 )
 			{
 				dc.fillStyle = '#FFFFFF';
@@ -1196,45 +1237,39 @@ function RefreshRaceChart()
 			else
 			{
 				var riderData = data[num];
-				var hover = num + ': Lap ' + j + ', ' + FormatTime(t - lapTimes[j-1]);
-				var name = '';
-				if( riderData['LastName'] )
-					name = riderData['LastName'];
-				if( riderData['FirstName'] )
-				{
-					if( name )
-						name = name + ', ' + riderData['FirstName'];
-					else
-						name = riderData['FirstName'];
-				}
-				if( name )
-					hover = name + ' ' + hover;
+				var hover = j + ', ' + FormatTime(t - lapTimes[j-1]);
 				drawSegment( dc, xLast, yLast, xCur - xLast + 1, yCur - yLast + 1, colors[j], lighterColors[j] );
-				segmentsCur.push( [xLast, yLast, xCur - xLast + 1, yCur - yLast + 1, hover] );
+				segmentsCur.push( [xLast, yLast, xCur - xLast + 1, yCur - yLast + 1, hover, num] );
 			}
 			xLast = xCur;
 		}
 		
 		// Draw the last empty bar.
-		xCur = parseInt(labelsWidth + dataMax * xFactor);
+		xCur = parseInt(labelsWidthLeft + dataMax * xFactor);
 		dc.fillStyle = '#FFFFFF';
 		dc.fillRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
 		dc.strokeRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
 		
 		// Draw the label on both ends.
 		dc.fillStyle = '#000000';
-		var lab = resultsData[i][iNum] + '';
-		labelWidth = dc.measureText(lab).width;
-		dc.fillText( lab, textWidth - labelWidth, yLast );
+		var lab = getRiderName( resultsData[i][iNum] );
+		if( lab )
+			lab += ' ' + resultsData[i][iNum];
+		else
+			lab = resultsData[i][iNum] + '';
+		dc.fillText( lab, labelsWidthLeft - dc.measureText(lab).width - legendSep, yLast );
 		if( !minimizeLabels )
-			dc.fillText( lab, width - labelsWidth + legendSep, yLast );
+		{
+			var lab = resultsData[i][iNum] + '';
+			dc.fillText( lab, width - labelsWidthRight + legendSep, yLast );
+		}
 
 		yLast = yCur;
 	}
 	
 	xFactorCur = xFactor;
 	barHeightCur = barHeight;
-	labelsWidthCur = labelsWidth;
+	labelsWidthCur = labelsWidthLeft;
 }
 
 function SelectCategory( i )
