@@ -147,36 +147,35 @@ class History( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				('Results', 	wx.NewId(), self.OnPopupResults, allCases),
-				('RiderDetail',wx.NewId(), self.OnPopupRiderDetail, allCases),
-				
-				('Correct...',	wx.NewId(), self.OnPopupCorrect, interpCase),
-				('Shift...',	wx.NewId(), self.OnPopupShift, nonInterpCase),
-				('Insert...',	wx.NewId(), self.OnPopupSplit, nonInterpCase),
-				('Delete...',	wx.NewId(), self.OnPopupDelete, nonInterpCase),
-				
-				('Swap with Before...',	wx.NewId(), self.OnPopupSwapBefore, nonInterpCase),
-				('Swap with After...',	wx.NewId(), self.OnPopupSwapAfter, nonInterpCase),
+				(wx.NewId(), 'Results', 	'Switch to Results tab', self.OnPopupResults, allCases),
+				(wx.NewId(), 'RiderDetail',	'Switch to RiderDetail tab', self.OnPopupRiderDetail, allCases),
+				(None, None, None, None),
+				(wx.NewId(), 'Correct...',	'Change number and/or time',	self.OnPopupCorrect, interpCase),
+				(wx.NewId(), 'Shift...',	'Move time earlier/later',	self.OnPopupShift, nonInterpCase),
+				(wx.NewId(), 'Insert...',	'Insert a number before/after existing entry',	self.OnPopupSplit, nonInterpCase),
+				(None, None, None, None),
+				(wx.NewId(), 'Delete...',	'Delete an entry',	self.OnPopupDelete, nonInterpCase),
+				(wx.NewId(), 'Split...',	'Split an entry into two',	self.OnPopupSplit, nonInterpCase),
+				(None, None, None, None),
+				(wx.NewId(), 'Swap with Before...',	'Swap entry with preceding entry', self.OnPopupSwapBefore, nonInterpCase),
+				(wx.NewId(), 'Swap with After...',	'Swap entry with following entry',	self.OnPopupSwapAfter, nonInterpCase),
 			]
-			self.numEditActions = 2
-			self.numSwapActions = 5
 			for p in self.popupInfo:
-				self.Bind( wx.EVT_MENU, p[2], id=p[1] )
+				if p[0]:
+					self.Bind( wx.EVT_MENU, p[3], id=p[0] )
 
 		isInterp = self.history[self.colPopup][self.rowPopup].interp
-		if isInterp:
-			caseCode = 1
-		else:
-			caseCode = 2
+		caseCode = 1 if isInterp else 2
 		
 		race = Model.getRace()
 		menu = wx.Menu()
 		for i, p in enumerate(self.popupInfo):
-			if i == self.numEditActions or i == self.numSwapActions:
+			if not p[0]:
 				menu.AppendSeparator()
-			if caseCode < p[3]:
 				continue
-			menu.Append( p[1], p[0] )
+			if caseCode < p[4]:
+				continue
+			menu.Append( p[0], p[1], p[2] )
 		
 		self.PopupMenu( menu )
 		menu.Destroy()
@@ -217,6 +216,10 @@ class History( wx.Panel ):
 	def OnPopupShift( self, event ):
 		if hasattr(self, 'rowPopup'):
 			ShiftNumber( self, self.history[self.colPopup][self.rowPopup] )
+		
+	def OnPopupSplit( self, event ):
+		if hasattr(self, 'rowPopup'):
+			SplitNumber( self, self.history[self.colPopup][self.rowPopup] )
 		
 	def OnPopupSplit( self, event ):
 		if hasattr(self, 'rowPopup'):

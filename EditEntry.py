@@ -203,6 +203,68 @@ class InsertNumberDialog( wx.Dialog ):
 		self.EndModal( wx.ID_CANCEL )
 
 #------------------------------------------------------------------------------------------------
+class SplitNumberDialog( wx.Dialog ):
+	def __init__( self, parent, entry, id = wx.ID_ANY ):
+		wx.Dialog.__init__( self, parent, id, "Split Number",
+						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+						
+		self.entry = entry
+		bs = wx.GridBagSizer(vgap=5, hgap=5)
+		
+		self.numEdit1 = wx.lib.intctrl.IntCtrl( self, 20, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
+		self.numEdit2 = wx.lib.intctrl.IntCtrl( self, 20, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
+		
+		self.okBtn = wx.Button( self, wx.ID_ANY, '&OK' )
+		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
+
+		self.cancelBtn = wx.Button( self, wx.ID_ANY, '&Cancel' )
+		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
+		
+		border = 8
+		bs.Add( wx.StaticText( self, wx.ID_ANY, 'RiderLap: %d   RaceTime: %s' % (self.entry.lap, Utils.formatTime(self.entry.t)) ),
+			pos=(0,0), span=(1,2), border = border, flag=wx.GROW|wx.ALL )
+		bs.Add( wx.StaticText( self, wx.ID_ANY, 'Num1:' ),
+				pos=(1,0), span=(1,1), border = border, flag=wx.TOP|wx.BOTTOM|wx.LEFT|wx.ALIGN_RIGHT )
+		bs.Add( self.numEdit1,
+				pos=(1,1), span=(1,1), border = border, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.ALIGN_BOTTOM )
+
+		bs.Add( wx.StaticText( self, wx.ID_ANY, 'Num2:' ),
+				pos=(2,0), span=(1,1), border = border, flag=wx.TOP|wx.BOTTOM|wx.LEFT|wx.ALIGN_RIGHT )
+		bs.Add( self.numEdit2,
+				pos=(2,1), span=(1,1), border = border, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.ALIGN_BOTTOM )
+		
+		bs.Add( self.okBtn, pos=(3, 0), span=(1,1), border = border, flag=wx.ALL )
+		self.okBtn.SetDefault()
+		bs.Add( self.cancelBtn, pos=(3, 1), span=(1,1), border = border, flag=wx.ALL|wx.ALIGN_RIGHT )
+		
+		self.SetSizerAndFit(bs)
+		bs.Fit( self )
+		
+		self.CentreOnParent(wx.BOTH)
+		self.SetFocus()
+
+	def onOK( self, event ):
+		num1 = self.numEdit1.GetValue()
+		num2 = self.numEdit1.GetValue()
+		if not num1 or not num2 or num1 == num2:
+			return
+			
+		t1 = self.entry.t
+		t2 = self.entry.t + 0.0001 * random.random()
+		
+		with Model.LockRace() as race:
+			race.deleteTime( entry.num, entry.t )
+			race.addTime( num1, t1 )
+			race.addTime( num2, t2 )
+			
+		Utils.refresh()
+		
+		self.EndModal( wx.ID_OK )
+		
+	def onCancel( self, event ):
+		self.EndModal( wx.ID_CANCEL )
+
+#------------------------------------------------------------------------------------------------
 
 @logCall
 def CorrectNumber( parent, entry ):
@@ -219,6 +281,12 @@ def ShiftNumber( parent, entry ):
 @logCall
 def InsertNumber( parent, entry ):
 	dlg = InsertNumberDialog( parent, entry )
+	dlg.ShowModal()
+	dlg.Destroy()
+		
+@logCall
+def SplitNumber( parent, entry ):
+	dlg = SplitNumberDialog( parent, entry )
 	dlg.ShowModal()
 	dlg.Destroy()
 		
