@@ -648,6 +648,23 @@ class Race(object):
 		self.setChanged()
 		return True
 			
+	def duplicateRiderTimes( self, num1, num2 ):
+		try:
+			r1 = self.riders[num1]
+		except KeyError:
+			return False
+			
+		r2 = self.getRider( num2 )
+		
+		tAdjust = random.random() * 0.00001
+		r2.times = [t - tAdjust for t in r1.times]
+		r2.status = Rider.Finisher
+		r2.tStatus = None
+		r2.autoCorrectLaps = True
+		
+		self.setChanged()
+		return True
+	
 	def deleteAllRiderTimes( self ):
 		for num in self.riders.iterkeys():
 			self.deleteRiderTimes( num )
