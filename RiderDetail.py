@@ -176,7 +176,7 @@ class RiderDetail( wx.Panel ):
 		with Model.LockRace() as race:
 			inRace = (newNum in race)
 		if inRace:
-			Utils.MessageOK( self, "Cannot change rider to %d.\nThere is a rider with this number already." % newNum, 'Cannot Change Rider Number', iconMask = wx.ICON_ERROR )
+			Utils.MessageOK( self, "Cannot Change rider to %d.\nThere is a rider with this number already." % newNum, 'Cannot Change Rider Number', iconMask = wx.ICON_ERROR )
 			return
 			
 		if Utils.MessageOKCancel( self, "Conform Change rider's number to %d.\nThere is no undo - be careful." % newNum, "Change Rider Number" ):
