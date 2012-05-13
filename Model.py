@@ -648,7 +648,7 @@ class Race(object):
 		self.setChanged()
 		return True
 			
-	def duplicateRiderTimes( self, num1, num2 ):
+	def copyRiderTimes( self, num1, num2 ):
 		try:
 			r1 = self.riders[num1]
 		except KeyError:

@@ -30,17 +30,17 @@ class RiderDetail( wx.Panel ):
 		
 		self.menu = wx.Menu()
 		self.deleteMenuId = wx.NewId()
-		self.menu.Append( self.deleteMenuId, '&Delete Rider...', 'Delete this rider from the race' )
+		self.menu.Append( self.deleteMenuId, '&Delete Rider from Race...', 'Delete this rider from the race' )
 		self.Bind( wx.EVT_MENU, self.onDeleteRider, id = self.deleteMenuId )
 		self.changeNumberMenuId = wx.NewId()
-		self.menu.Append( self.changeNumberMenuId, '&Change Number...', "Change this rider's number" )
+		self.menu.Append( self.changeNumberMenuId, "&Change Rider's Number...", "Change this rider's number" )
 		self.Bind( wx.EVT_MENU, self.onChangeNumber, id = self.changeNumberMenuId )
 		self.swapNumberMenuId = wx.NewId()
-		self.menu.Append( self.swapNumberMenuId, '&Swap Number...', "Swap this rider's number with another rider's number" )
+		self.menu.Append( self.swapNumberMenuId, '&Swap Number with Other Rider...', "Swap this rider's number with another rider's number" )
 		self.Bind( wx.EVT_MENU, self.onSwapNumber, id = self.swapNumberMenuId )
-		self.duplicateRiderMenuId = wx.NewId()
-		self.menu.Append( self.duplicateRiderMenuId, '&Duplicate Rider...', "Duplicate these rider's times under another number" )
-		self.Bind( wx.EVT_MENU, self.onDuplicateRider, id = self.duplicateRiderMenuId )
+		self.copyRiderMenuId = wx.NewId()
+		self.menu.Append( self.copyRiderMenuId, 'C&opy Rider Times to New Number...', "Copy these rider's times to another number" )
+		self.Bind( wx.EVT_MENU, self.onCopyRider, id = self.copyRiderMenuId )
 		
 		self.editRiderBtn = wx.Button( self, wx.ID_ANY, 'Edit...' )
 		self.Bind( wx.EVT_BUTTON, self.onEditRider, self.editRiderBtn )
@@ -141,7 +141,7 @@ class RiderDetail( wx.Panel ):
 			if not num in race:
 				return
 			
-		if Utils.MessageOKCancel( self, "This will delete rider %d and all associated entries.\nOnly do this in case of a mistaken entry.\nThere is no undo - please be careful." % num,
+		if Utils.MessageOKCancel( self, "Confirm Delete rider %d and all associated entries.\nOnly do this in case of a mistaken entry.\nThere is no undo - please be careful." % num,
 									"Delete Rider" ):
 			with Model.LockRace() as race:
 				race.deleteRider( num )
@@ -161,7 +161,7 @@ class RiderDetail( wx.Panel ):
 			if not num in race:
 				return
 		
-		dlg = wx.TextEntryDialog( self, "Rider's new number:", 'New number', str(self.num.GetValue()) )
+		dlg = wx.TextEntryDialog( self, "Rider's new number:", 'New Number', str(self.num.GetValue()) )
 		ret = dlg.ShowModal()
 		newNum = dlg.GetValue()
 		dlg.Destroy()
@@ -179,7 +179,7 @@ class RiderDetail( wx.Panel ):
 			Utils.MessageOK( self, "Cannot change rider to %d.\nThere is a rider with this number already." % newNum, 'Cannot Change Rider Number', iconMask = wx.ICON_ERROR )
 			return
 			
-		if Utils.MessageOKCancel( self, "This will change this rider's number to %d.\nThere is no undo - be careful." % newNum, "Change Rider Number" ):
+		if Utils.MessageOKCancel( self, "Conform Change rider's number to %d.\nThere is no undo - be careful." % newNum, "Change Rider Number" ):
 			with Model.LockRace() as race:
 				race.renumberRider( num, newNum )
 			self.setRider( newNum )
@@ -198,7 +198,7 @@ class RiderDetail( wx.Panel ):
 			if not num in race:
 				return
 		
-		dlg = wx.TextEntryDialog( self, "Number to swap with:", 'Swap numbers', str(self.num.GetValue()) )
+		dlg = wx.TextEntryDialog( self, "Number to swap with:", 'Swap Numbers', str(self.num.GetValue()) )
 		ret = dlg.ShowModal()
 		newNum = dlg.GetValue()
 		dlg.Destroy()
@@ -216,13 +216,13 @@ class RiderDetail( wx.Panel ):
 			Utils.MessageOK( self, "Cannot swap with rider %d.\nThis rider is not in race." % newNum, 'Cannot Swap Rider Numbers', iconMask = wx.ICON_ERROR )
 			return
 			
-		if Utils.MessageOKCancel( self, "This will swap numbers %d and %d.\nThere is no undo - be careful." % (num, newNum), "Swap Rider Number" ):
+		if Utils.MessageOKCancel( self, "Confirm Swap numbers %d and %d.\nThere is no undo - be careful." % (num, newNum), "Swap Rider Number" ):
 			with Model.LockRace() as race:
 				race.swapRiders( num, newNum )
 			self.setRider( newNum )
 			self.refresh()
 		
-	def onDuplicateRider( self, event ):
+	def onCopyRider( self, event ):
 		if not Model.race:
 			return
 			
@@ -235,8 +235,8 @@ class RiderDetail( wx.Panel ):
 			if not num in race:
 				return
 		
-		dlg = wx.TextEntryDialog( self, "All time entries for %d will be duplicated for the new bib number.\n\nNew Bib Number:" % num,
-								'Duplicate Rider Times', str(self.num.GetValue()) )
+		dlg = wx.TextEntryDialog( self, "All time entries for %d will be copied to the new bib number.\n\nNew Bib Number:" % num,
+								'Copy Rider Times', str(self.num.GetValue()) )
 		ret = dlg.ShowModal()
 		newNum = dlg.GetValue()
 		dlg.Destroy()
@@ -252,16 +252,16 @@ class RiderDetail( wx.Panel ):
 			inRace = (newNum in race)
 		if inRace:
 			if num != newNum:
-				Utils.MessageOK( self, "New Bib %d already exists.\nIf you really want to duplicate to this number, delete it first." % newNum,
+				Utils.MessageOK( self, "New Bib %d already exists.\nIf you really want to copy times to this number, delete it first." % newNum,
 								'New Bib Number Already Exists', iconMask = wx.ICON_ERROR )
 			else:
-				Utils.MessageOK( self, "Cannot duplicate to the same number (%d)." % newNum,
-								'Cannot Duplicate to Same Number', iconMask = wx.ICON_ERROR )
+				Utils.MessageOK( self, "Cannot copy to the same number (%d)." % newNum,
+								'Cannot Copy to Same Number', iconMask = wx.ICON_ERROR )
 			return
 			
-		if Utils.MessageOKCancel( self, "Entries from %d will be duplicated to new Bib %d.\n\nAll entries for %d will be slightly earlier then entries for %d.\nContinue?" % (num, newNum, newNum, num), "Confirm Duplicate Rider Times" ):
+		if Utils.MessageOKCancel( self, "Entries from %d will be copied to new Bib %d.\n\nAll entries for %d will be slightly earlier then entries for %d.\nContinue?" % (num, newNum, newNum, num), "Confirm Copy Rider Times" ):
 			with Model.LockRace() as race:
-				race.duplicateRiderTimes( num, newNum )
+				race.copyRiderTimes( num, newNum )
 			self.setRider( newNum )
 			self.onNumChange()
 		
