@@ -210,7 +210,7 @@ class GanttChart(wx.PyControl):
 		rClickCallback = getattr(self, 'rClickCallback', None)
 		if rClickCallback is not None:
 			xPos, yPos = event.GetPositionTuple()
-			rClickCallback( xPos, yPos, self.labels[iRider] if self.labels else iRider, iLap )
+			rClickCallback( xPos, yPos, self.numSelect, iRider, iLap )
 	
 	def Draw(self, dc):
 		size = self.GetClientSize()
@@ -352,7 +352,7 @@ class GanttChart(wx.PyControl):
 					label = label[lastSpace+1:]
 				dc.DrawText( label, width - labelsWidthRight + legendSep, yLast )
 
-			if self.numSelect == numFromLabel(self.labels[i]):
+			if str(self.numSelect) == str(numFromLabel(self.labels[i])):
 				yHighlight = yCur
 
 			yLast = yCur

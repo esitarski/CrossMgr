@@ -4,13 +4,16 @@ import wx
 import wx.grid		as gridlib
 import re
 import os
+import itertools
 from string import Template
 import ColGrid
 from FixCategories import FixCategories, SetCategory
 from GetResults import GetResults
 from ExportGrid import ExportGrid
+from EditEntry import CorrectNumber, ShiftNumber, InsertNumber, DeleteEntry, SwapEntry
 
 reNonDigits = re.compile( '[^0-9]' )
+reLapMatch = re.compile( 'Lap ([0-9]+)' )
 
 class Results( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
@@ -23,6 +26,9 @@ class Results( wx.Panel ):
 		self.numSelect = None
 		self.isEmpty = True
 		self.reSplit = re.compile( '[\[\]\+= ]+' )	# seperators for the fields.
+		self.iLap = None
+		self.entry = None
+		self.iRow, self.iCol = None, None
 
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
 		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, 'Category:' )
@@ -122,28 +128,118 @@ class Results( wx.Panel ):
 		if self.numSelect is None:
 			return
 			
+		allCases = 0
+		interpCase = 1
+		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				('RiderDetail',	wx.NewId(), self.OnPopupRiderDetail),
-				('History', 	wx.NewId(), self.OnPopupHistory),
+				(wx.NewId(), 'History', 	'Switch to History tab', self.OnPopupHistory, allCases),
+				(wx.NewId(), 'RiderDetail',	'Switch to RiderDetail tab', self.OnPopupRiderDetail, allCases),
+				(None, None, None, None),
+				(wx.NewId(), 'Correct...',	'Change number or lap time...',	self.OnPopupCorrect, interpCase),
+				(wx.NewId(), 'Shift...',	'Move lap time earlier/later...',	self.OnPopupShift, interpCase),
+				(wx.NewId(), 'Delete...',	'Delete lap time...',	self.OnPopupDelete, nonInterpCase),
+				(None, None, None, None),
+				(wx.NewId(), 'Swap with Rider before',	'Swap with Rider before',	self.OnPopupSwapBefore, nonInterpCase),
+				(wx.NewId(), 'Swap with Rider after',	'Swap with Rider after',	self.OnPopupSwapAfter, nonInterpCase),
 			]
 			for p in self.popupInfo:
-				self.Bind( wx.EVT_MENU, p[2], id=p[1] )
+				if p[0]:
+					self.Bind( wx.EVT_MENU, p[3], id=p[0] )
 		
-		race = Model.getRace()
+		num = int(self.numSelect)
+		with Model.LockRace() as race:
+			if not race or num not in race:
+				return
+			entries = race.getRider(num).interpolate()
+			catName = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
+			
+		riderResults = dict( (r.num, r) for r in GetResults(catName) )
 		
+		try:
+			self.entry = entries[self.iLap]
+			caseCode = 1 if self.entry.interp else 2
+			showSeparators = True
+		except (TypeError, IndexError, KeyError):
+			caseCode = 0
+			showSeparators = False
+	
+		self.numBefore, self.numAfter = None, None
+		with Model.LockRace() as race:
+			for iRow, attr in [(self.iRow - 1, 'numBefore'), (self.iRow + 1, 'numAfter')]:
+				if 0 <= iRow < self.grid.GetNumberRows():
+					try:
+						numAdjacent = int( self.grid.GetCellValue(iRow, 1) )
+						rr1 = riderResults[num]
+						rr2 = riderResults[numAdjacent]
+						if (rr1.status != Model.Rider.Finisher or
+							rr2.status != Model.Rider.Finisher or
+							rr1.laps != rr2.laps ):
+							continue
+						# Check if swapping the last times would result in race times out of order.
+						rt1 = [e.t for e in race.getRider(num).interpolate()]
+						rt2 = [e.t for e in race.getRider(numAdjacent).interpolate()]
+						rt1[rr1.laps], rt2[rr1.laps] = rt2[rr1.laps], rt1[rr1.laps]
+						if 	all( x < y for x, y in itertools.izip(rt1, rt1[1:]) ) and \
+							all( x < y for x, y in itertools.izip(rt2, rt2[1:]) ):
+							setattr( self, attr, numAdjacent )
+					except (IndexError, ValueError, KeyError):
+						pass
+			
 		menu = wx.Menu()
 		for i, p in enumerate(self.popupInfo):
-			if p[0] == 'Record' and not race.isRunning():
+			if not p[0]:
+				if showSeparators:
+					menu.AppendSeparator()
 				continue
-			menu.Append( p[1], p[0] )
+			if caseCode >= p[4]:
+				if (p[1].endswith('before') and not self.numBefore) or (p[1].endswith('after') and not self.numAfter):
+					continue
+				menu.Append( p[0], p[1], p[2] )
 		
 		self.PopupMenu( menu )
 		menu.Destroy()
 		
+	def OnPopupCorrect( self, event ):
+		CorrectNumber( self, self.entry )
+		
+	def OnPopupShift( self, event ):
+		ShiftNumber( self, self.entry )
+
+	def OnPopupDelete( self, event ):
+		DeleteEntry( self, self.entry )
+	
+	def swapEntries( self, num, numAdjacent ):
+		if not num or not numAdjacent:
+			return
+		with Model.LockRace() as race:
+			if (not race or
+				num not in race or
+				numAdjacent not in race ):
+				return
+			e1 = race.getRider(num).interpolate()
+			e2 = race.getRider(numAdjacent).interpolate()
+			catName = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
+			
+		riderResults = dict( (r.num, r) for r in GetResults(catName) )
+		try:
+			laps = riderResults[num].laps
+			with Model.LockRace() as race:
+				SwapEntry( e1[laps], e2[laps] )
+			wx.CallAfter( self.refresh )
+		except KeyError:
+			pass
+	
+	def OnPopupSwapBefore( self, event ):
+		self.swapEntries( int(self.numSelect), self.numBefore )
+		
+	def OnPopupSwapAfter( self, event ):
+		self.swapEntries( int(self.numSelect), self.numAfter )
+	
 	def OnPopupHistory( self, event ):
 		if Utils.isMainWin():
 			Utils.getMainWin().showPageName( 'History' )
+			
 	def OnPopupRiderDetail( self, event ):
 		if Utils.isMainWin():
 			Utils.getMainWin().showRiderDetail()
@@ -179,11 +275,21 @@ class Results( wx.Panel ):
 			Utils.getMainWin().showPageName( 'History' )
 	
 	def doNumSelect( self, event ):
+		self.iLap = None
+		
 		if self.isEmpty:
 			return
 		row, col = event.GetRow(), event.GetCol()
+		self.iRow, self.iCol = row, col
 		if row >= self.grid.GetNumberRows() or col >= self.grid.GetNumberCols():
 			return
+			
+		if self.grid.GetCellValue(row, col):
+			try:
+				colName = self.grid.GetColLabelValue( col )
+				self.iLap = int( reLapMatch.match(colName).group(1) )
+			except:
+				pass
 		
 		col = 1
 		value = self.grid.GetCellValue( row, col )

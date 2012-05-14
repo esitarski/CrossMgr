@@ -71,16 +71,16 @@ class ShiftNumberDialog( wx.Dialog ):
 						
 		self.entry = entry
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
-		self.numEdit = wx.lib.intctrl.IntCtrl( self, 20, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
+		self.numEdit = wx.lib.intctrl.IntCtrl( self, wx.ID_ANY, size=(40, -1), style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
 		
-		self.timeCtrl = masked.TimeCtrl( self, -1, name="Time Shift:", fmt24hr=True )
+		self.timeCtrl = masked.TimeCtrl( self, wx.ID_ANY, name="Time Shift:", fmt24hr=True )
 		seconds = 0
 		minutes = 0
 		hours = 0
 		self.timeCtrl.ChangeValue( '%02d:%02d:%02d' % (hours, minutes, seconds) )
 		self.timeCtrl.Bind( masked.EVT_TIMEUPDATE, self.updateNewTime )
 		
-		self.newTime = wx.StaticText( self, -1, "00:00:00")
+		self.newTime = wx.StaticText( self, wx.ID_ANY, "00:00:00")
 		
 		shiftOptions = ['Earlier', 'Later']
 		self.shiftBox = wx.RadioBox( self, wx.ID_ANY, 'Shift Direction', wx.DefaultPosition, wx.DefaultSize, shiftOptions, 2, wx.RA_SPECIFY_COLS )

@@ -150,15 +150,15 @@ class History( wx.Panel ):
 				(wx.NewId(), 'Results', 	'Switch to Results tab', self.OnPopupResults, allCases),
 				(wx.NewId(), 'RiderDetail',	'Switch to RiderDetail tab', self.OnPopupRiderDetail, allCases),
 				(None, None, None, None),
-				(wx.NewId(), 'Correct...',	'Change number and/or time',	self.OnPopupCorrect, interpCase),
-				(wx.NewId(), 'Shift...',	'Move time earlier/later',	self.OnPopupShift, nonInterpCase),
+				(wx.NewId(), 'Correct...',	'Change number or time',	self.OnPopupCorrect, interpCase),
+				(wx.NewId(), 'Shift...',	'Move time earlier/later',	self.OnPopupShift, interpCase),
 				(wx.NewId(), 'Insert...',	'Insert a number before/after existing entry',	self.OnPopupSplit, nonInterpCase),
 				(None, None, None, None),
 				(wx.NewId(), 'Delete...',	'Delete an entry',	self.OnPopupDelete, nonInterpCase),
 				(wx.NewId(), 'Split...',	'Split an entry into two',	self.OnPopupSplit, nonInterpCase),
 				(None, None, None, None),
-				(wx.NewId(), 'Swap with Before...',	'Swap entry with preceding entry', self.OnPopupSwapBefore, nonInterpCase),
-				(wx.NewId(), 'Swap with After...',	'Swap entry with following entry',	self.OnPopupSwapAfter, nonInterpCase),
+				(wx.NewId(), 'Swap with entry Before...',	'Swap entry with Entry before', self.OnPopupSwapBefore, nonInterpCase),
+				(wx.NewId(), 'Swap with entry After...',	'Swap entry with Entry after',	self.OnPopupSwapAfter, nonInterpCase),
 			]
 			for p in self.popupInfo:
 				if p[0]:
@@ -167,7 +167,6 @@ class History( wx.Panel ):
 		isInterp = self.history[self.colPopup][self.rowPopup].interp
 		caseCode = 1 if isInterp else 2
 		
-		race = Model.getRace()
 		menu = wx.Menu()
 		for i, p in enumerate(self.popupInfo):
 			if not p[0]:

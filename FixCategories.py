@@ -10,7 +10,7 @@ def FixCategories( choice, iSelection = None ):
 	if iSelection is not None and iSelection < len(items):
 		choice.SetSelection( iSelection )
 
-	race = Model.getRace()
+	race = Model.race
 	newItems = ['All']
 	newItems.extend( c.name for c in race.getCategories() )
 	
