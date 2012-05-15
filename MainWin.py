@@ -549,6 +549,7 @@ class MainWin( wx.Frame ):
 			return
 		gel = GetExcelLink( self, getattr(Model.race, 'excelLink', None) )
 		link = gel.show()
+		undo.pushState()
 		with Model.LockRace() as race:
 			if not link:
 				del race.excelLink
