@@ -76,28 +76,59 @@ class Gantt( wx.Panel ):
 			self.popupInfo = [
 				(wx.NewId(), 'Results', 	'Switch to Results tab', self.OnPopupResults, allCases),
 				(wx.NewId(), 'RiderDetail',	'Switch to RiderDetail tab', self.OnPopupRiderDetail, allCases),
-				(None, None, None, None),
+				(None, None, None, None, None),
 				(wx.NewId(), 'Correct...',	'Change number or lap end time...',	self.OnPopupCorrect, interpCase),
 				(wx.NewId(), 'Shift...',	'Move lap end time earlier/later...',	self.OnPopupShift, interpCase),
 				(wx.NewId(), 'Delete...',	'Delete lap end time...',	self.OnPopupDelete, nonInterpCase),
 			]
-			for p in self.popupInfo:
-				if p[0]:
-					self.Bind( wx.EVT_MENU, p[3], id=p[0] )
+			self.splitMenuInfo = [
+					(wx.NewId(),
+					'Add %d Missing Split%s' % (split-1, 's' if split > 2 else ''),
+					lambda evt, s = self, splits = split: s.doSplitLap(splits)) for split in xrange(2,8) ]
+			for id, name, text, callback, cCase in self.popupInfo:
+				if id:
+					self.Bind( wx.EVT_MENU, callback, id=id )
+			for id, name, callback in self.splitMenuInfo:
+				self.Bind( wx.EVT_MENU, callback, id=id )
+				
 		caseCode = 1 if entries[iLap].interp else 2
 		
 		menu = wx.Menu()
-		for i, p in enumerate(self.popupInfo):
-			if not p[0]:
+		for id, name, text, callback, cCase in self.popupInfo:
+			if not id:
 				menu.AppendSeparator()
 				continue
-			if caseCode < p[4]:
+			if caseCode < cCase:
 				continue
-			menu.Append( p[0], p[1], p[2] )
+			menu.Append( id, name, text )
+			
+		if caseCode == 2:
+			submenu = wx.Menu()
+			for id, name, callback in self.splitMenuInfo:
+				submenu.Append( id, name )
+			menu.AppendSeparator()
+			menu.AppendMenu( wx.NewId(), 'Add Missing Split', submenu )
 		
 		self.PopupMenu( menu )
 		menu.Destroy()
 
+	def doSplitLap( self, splits ):
+		with Model.LockRace() as race:
+			try:
+				num = int(self.ganttChart.numSelect)
+				lap = self.iLap
+				times = [e.t for e in race.riders[num].interpolate()]
+				
+				tLeft = times[lap-1]
+				tRight = times[lap]
+				splitTime = (tRight - tLeft) / float(splits)
+				for i in xrange( 1, splits ):
+					newTime = tLeft + splitTime * i
+					race.addTime( num, newTime )
+			except (TypeError, KeyError, ValueError, IndexError):
+				return
+		self.refresh()
+		
 	def OnPopupCorrect( self, event ):
 		CorrectNumber( self, self.entry )
 		

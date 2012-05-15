@@ -160,21 +160,21 @@ class History( wx.Panel ):
 				(wx.NewId(), 'Swap with entry Before...',	'Swap entry with Entry before', self.OnPopupSwapBefore, nonInterpCase),
 				(wx.NewId(), 'Swap with entry After...',	'Swap entry with Entry after',	self.OnPopupSwapAfter, nonInterpCase),
 			]
-			for p in self.popupInfo:
-				if p[0]:
-					self.Bind( wx.EVT_MENU, p[3], id=p[0] )
+			for id, name, text, callback, cCode in self.popupInfo:
+				if id:
+					self.Bind( wx.EVT_MENU, callback, id=id )
 
 		isInterp = self.history[self.colPopup][self.rowPopup].interp
 		caseCode = 1 if isInterp else 2
 		
 		menu = wx.Menu()
-		for i, p in enumerate(self.popupInfo):
-			if not p[0]:
+		for i, (id, name, text, callback, cCode) in enumerate(self.popupInfo):
+			if not id:
 				menu.AppendSeparator()
 				continue
-			if caseCode < p[4]:
+			if caseCode < cCode:
 				continue
-			menu.Append( p[0], p[1], p[2] )
+			menu.Append( id, name, text )
 		
 		self.PopupMenu( menu )
 		menu.Destroy()

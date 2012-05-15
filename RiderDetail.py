@@ -316,18 +316,16 @@ class RiderDetail( wx.Panel ):
 		if lapCur is None:
 			return None, None, None
 
-		race = Model.race
-		if not race:
-			return None, None, None
-			
 		num = self.num.GetValue()
 		try:
 			num = int(num)
 		except:
 			return None, None, None
-		if num not in race:
-			return None, None, None
 			
+		with Model.LockRace() as race:
+			if not race or num not in race:
+				return None, None, None
+
 		try:
 			times = self.ganttChart.data[0]
 		except:
@@ -366,18 +364,22 @@ class RiderDetail( wx.Panel ):
 			race.deleteTime( num, times[lap] )
 		self.refresh()
 			
-	def onEditGantt( self, xPos, yPos, num, lap ):
+	def onEditGantt( self, xPos, yPos, num, iRider, lap ):
 		if not hasattr(self, "ganttMenuInfo"):
 			self.ganttMenuInfo = [
 				[	wx.NewId(),
-					'Split Lap into %d Pieces' % split,
-					lambda evt, s = self, splits = split: s.doSplitLap(splits)] for split in xrange(2,10) ] + [
+					'Add %d Missing Split%s' % (split-1, 's' if split > 2 else ''),
+					lambda evt, s = self, splits = split: s.doSplitLap(splits)] for split in xrange(2,8) ] + [
+				[None, None, None],
 				[wx.NewId(),	'Delete Lap Start Time',	self.onDeleteLapStart],
 				[wx.NewId(),	'Delete Lap End Time',		self.onDeleteLapEnd],
 			]
 
 		menu = wx.Menu()		
 		for id, name, callback in self.ganttMenuInfo:
+			if not id:
+				menu.AppendSeparator()
+				continue
 			item = menu.Append( id, name )
 			self.Bind( wx.EVT_MENU, callback, item )
 			
