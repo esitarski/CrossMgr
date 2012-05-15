@@ -1,6 +1,7 @@
 import Model
 from Utils import updateUndoStatus
 import cPickle as pickle
+import pickletools
 
 class Undo( object ):
 	def __init__( self ):
@@ -14,7 +15,7 @@ class Undo( object ):
 		with Model.LockRace() as race:
 			if not race or race.isRunning():
 				return None
-			return pickle.dumps(race, 2)
+			return pickletools.optimize( pickle.dumps(race, 2) )
 	
 	def pushState( self ):
 		''' Save the state of the model and remove any redo states. '''
