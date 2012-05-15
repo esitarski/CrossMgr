@@ -251,6 +251,10 @@ def refreshForecastHistory():
 	if mainWin is not None:
 		mainWin.forecastHistory.refresh()
 
+def updateUndoStatus():
+	if mainWin is not None:
+		mainWin.updateUndoStatus()
+
 def writeRace():
 	if mainWin is not None:
 		mainWin.writeRace()

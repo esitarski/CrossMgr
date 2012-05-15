@@ -4,8 +4,10 @@ import wx.lib.masked as masked
 import Model
 import Utils
 import ColGrid
+import EditEntry
 from LineGraph import LineGraph
 from GanttChart import GanttChart
+from Undo import undo
 import Gantt
 import random
 import bisect
@@ -141,8 +143,9 @@ class RiderDetail( wx.Panel ):
 			if not num in race:
 				return
 			
-		if Utils.MessageOKCancel( self, "Confirm Delete rider %d and all associated entries.\nOnly do this in case of a mistaken entry.\nThere is no undo - please be careful." % num,
+		if Utils.MessageOKCancel( self, "Confirm Delete rider %d and all associated entries." % num,
 									"Delete Rider" ):
+			undo.pushState()
 			with Model.LockRace() as race:
 				race.deleteRider( num )
 			self.setRider( None )
@@ -179,7 +182,8 @@ class RiderDetail( wx.Panel ):
 			Utils.MessageOK( self, "Cannot Change rider to %d.\nThere is a rider with this number already." % newNum, 'Cannot Change Rider Number', iconMask = wx.ICON_ERROR )
 			return
 			
-		if Utils.MessageOKCancel( self, "Conform Change rider's number to %d.\nThere is no undo - be careful." % newNum, "Change Rider Number" ):
+		if Utils.MessageOKCancel( self, "Conform Change rider's number to %d." % newNum, "Change Rider Number" ):
+			undo.pushState()
 			with Model.LockRace() as race:
 				race.renumberRider( num, newNum )
 			self.setRider( newNum )
@@ -216,7 +220,8 @@ class RiderDetail( wx.Panel ):
 			Utils.MessageOK( self, "Cannot swap with rider %d.\nThis rider is not in race." % newNum, 'Cannot Swap Rider Numbers', iconMask = wx.ICON_ERROR )
 			return
 			
-		if Utils.MessageOKCancel( self, "Confirm Swap numbers %d and %d.\nThere is no undo - be careful." % (num, newNum), "Swap Rider Number" ):
+		if Utils.MessageOKCancel( self, "Confirm Swap numbers %d and %d." % (num, newNum), "Swap Rider Number" ):
+			undo.pushState()
 			with Model.LockRace() as race:
 				race.swapRiders( num, newNum )
 			self.setRider( newNum )
@@ -260,6 +265,7 @@ class RiderDetail( wx.Panel ):
 			return
 			
 		if Utils.MessageOKCancel( self, "Entries from %d will be copied to new Bib %d.\n\nAll entries for %d will be slightly earlier then entries for %d.\nContinue?" % (num, newNum, newNum, num), "Confirm Copy Rider Times" ):
+			undo.pushState()
 			with Model.LockRace() as race:
 				race.copyRiderTimes( num, newNum )
 			self.setRider( newNum )
@@ -336,15 +342,7 @@ class RiderDetail( wx.Panel ):
 		num, lap, times = self.getGanttChartNumLapTimes()
 		if num is None:
 			return
-		with Model.LockRace() as race:
-			if race is None:
-				return
-			tLeft = times[lap-1]
-			tRight = times[lap]
-			splitTime = (tRight - tLeft) / float(splits)
-			for i in xrange( 1, splits ):
-				newTime = tLeft + splitTime * i
-				race.addTime( num, newTime )
+		EditEntry.AddLapSplits( num, lap, times, splits )
 		self.refresh()
 	
 	def onDeleteLapStart( self, event ):
@@ -352,6 +350,7 @@ class RiderDetail( wx.Panel ):
 		if num is None:
 			return
 		if self.lapCur != 1:
+			undo.pushState()
 			with Model.LockRace() as race:
 				race.deleteTime( num, times[lap-1] )
 			self.refresh()
@@ -360,6 +359,7 @@ class RiderDetail( wx.Panel ):
 		num, lap, times = self.getGanttChartNumLapTimes()
 		if num is None:
 			return
+		undo.pushState()
 		with Model.LockRace() as race:
 			race.deleteTime( num, times[lap] )
 		self.refresh()

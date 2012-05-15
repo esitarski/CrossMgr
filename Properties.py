@@ -1,5 +1,6 @@
 import Model
 import Utils
+from Undo import undo
 import wx
 import re
 import os
@@ -137,6 +138,7 @@ class Properties( wx.Panel ):
 			self.updateFileName()
 		
 	def update( self, race = None ):
+		undo.pushState()
 		with Model.lock:
 			if race is None:
 				race = Model.getRace()

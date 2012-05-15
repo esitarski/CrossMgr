@@ -2,6 +2,7 @@ import wx
 import re
 import Model
 import Utils
+from Undo import undo
 import wx.grid			as gridlib
 import wx.lib.masked	as  masked
 
@@ -246,6 +247,7 @@ class Categories( wx.Panel ):
 			self.grid.FitInside()
 
 	def commit( self ):
+		undo.pushState()
 		with Model.LockRace() as race:
 			self.grid.DisableCellEditControl()	# Make sure the current edit is committed.
 			if race is None:

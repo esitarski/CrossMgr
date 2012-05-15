@@ -7,7 +7,7 @@ import os
 import re
 from string import Template
 from FixCategories import FixCategories
-from EditEntry import CorrectNumber, ShiftNumber, InsertNumber, DeleteEntry, SwapEntry
+import EditEntry
 
 reNonDigits = re.compile( '[^0-9]' )
 reIntPrefix = re.compile( '^[0-9]+' )
@@ -188,7 +188,7 @@ class History( wx.Panel ):
 		with Model.LockRace() as race:
 			for rPrev in xrange( r - 1, -1, -1 ):
 				if not h[c][rPrev].interp and (self.category is None or race.getCategory(h[c][rPrev].num) == self.category):
-					SwapEntry( h[c][r], h[c][rPrev] )
+					EditEntry.SwapEntry( h[c][r], h[c][rPrev] )
 					success = True
 					break
 		if success and Utils.isMainWin():
@@ -202,7 +202,7 @@ class History( wx.Panel ):
 		with Model.LockRace() as race:
 			for rNext in xrange( r + 1, len(h[c]) ):
 				if not h[c][rNext].interp and (self.category is None or race.getCategory(h[c][rNext].num) == self.category):
-					SwapEntry( h[c][r], h[c][rNext] )
+					EditEntry.SwapEntry( h[c][r], h[c][rNext] )
 					success = True
 					break
 		if success and Utils.isMainWin():
@@ -210,23 +210,23 @@ class History( wx.Panel ):
 			
 	def OnPopupCorrect( self, event ):
 		if hasattr(self, 'rowPopup'):
-			CorrectNumber( self, self.history[self.colPopup][self.rowPopup] )
+			EditEntry.CorrectNumber( self, self.history[self.colPopup][self.rowPopup] )
 		
 	def OnPopupShift( self, event ):
 		if hasattr(self, 'rowPopup'):
-			ShiftNumber( self, self.history[self.colPopup][self.rowPopup] )
+			EditEntry.ShiftNumber( self, self.history[self.colPopup][self.rowPopup] )
 		
 	def OnPopupSplit( self, event ):
 		if hasattr(self, 'rowPopup'):
-			SplitNumber( self, self.history[self.colPopup][self.rowPopup] )
+			EditEntry.SplitNumber( self, self.history[self.colPopup][self.rowPopup] )
 		
 	def OnPopupSplit( self, event ):
 		if hasattr(self, 'rowPopup'):
-			InsertNumber( self, self.history[self.colPopup][self.rowPopup] )
+			EditEntry.InsertNumber( self, self.history[self.colPopup][self.rowPopup] )
 		
 	def OnPopupDelete( self, event ):
 		if hasattr(self, 'rowPopup'):
-			DeleteEntry( self, self.history[self.colPopup][self.rowPopup] )
+			EditEntry.DeleteEntry( self, self.history[self.colPopup][self.rowPopup] )
 		
 	def OnPopupResults( self, event ):
 		if Utils.isMainWin():

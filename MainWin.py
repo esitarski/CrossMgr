@@ -36,6 +36,7 @@ import JChipSetup
 import JChipImport
 import JChip
 import OutputStreamer
+from Undo import undo
 from setpriority import setpriority
 from Printing			import CrossMgrPrintout, getRaceCategories
 import xlwt
@@ -242,6 +243,25 @@ class MainWin( wx.Frame ):
 		self.menuBar.Append( self.fileMenu, "&File" )
 
 		#-----------------------------------------------------------------------
+		self.editMenu = wx.Menu()
+		self.undoMenuButton = wx.MenuItem( self.editMenu, wx.ID_UNDO , "&Undo\tCtrl+Z", "Undo the last edit" )
+		img = wx.Image(os.path.join(Utils.getImageFolder(), 'Undo-icon.png'))
+		self.undoMenuButton.SetBitmap( img.ConvertToBitmap(8) )
+		self.editMenu.AppendItem( self.undoMenuButton )
+		self.Bind(wx.EVT_MENU, self.menuUndo, id=wx.ID_UNDO )
+		self.undoMenuButton.Enable( False )
+
+		self.redoMenuButton = wx.MenuItem( self.editMenu, wx.ID_REDO , "&Redo\tCtrl+Y", "Redo the last edit" )
+		img = wx.Image(os.path.join(Utils.getImageFolder(), 'Redo-icon.png'))
+		self.redoMenuButton.SetBitmap( img.ConvertToBitmap(8) )
+		self.editMenu.AppendItem( self.redoMenuButton )
+		self.Bind(wx.EVT_MENU, self.menuRedo, id=wx.ID_REDO )
+		self.redoMenuButton.Enable( False )
+		
+		img = None
+		self.editMenuItem = self.menuBar.Append( self.editMenu, "&Edit" )
+
+		#-----------------------------------------------------------------------
 		self.dataMgmtMenu = wx.Menu()
 		
 		idCur = wx.NewId()
@@ -369,6 +389,14 @@ class MainWin( wx.Frame ):
 		#------------------------------------------------------------------------------
 		self.Bind(wx.EVT_CLOSE, self.onCloseWindow)
 
+	def menuUndo( self, event ):
+		undo.doUndo()
+		self.refresh()
+		
+	def menuRedo( self, event ):
+		undo.doRedo()
+		self.refresh()
+		
 	def menuTipAtStartup( self, event ):
 		showing = self.config.ReadBool('showTipAtStartup', True)
 		if Utils.MessageOKCancel( self, 'Turn Off Tips at Startup?' if showing else 'Show Tips at Startup?', 'Tips at Startup' ):
@@ -379,17 +407,15 @@ class MainWin( wx.Frame ):
 			if not race:
 				Utils.MessageOK(self, "You must have a valid race.", "No Valid Race", iconMask=wx.ICON_ERROR)
 				return
-			if not Utils.MessageOKCancel( self, "This will restore the race from the original input.\nAll your adds/splits/deletes will be lost.\nAre you sure you want to continue?",
-										"Restore from Original Input", iconMask=wx.ICON_WARNING ):
-				return
-			if not Utils.MessageOKCancel( self,
-										"Seriously, all your edits will be lost.\nContinue?",
+			if not Utils.MessageOKCancel( self, "This will restore the race from the original input and replace your adds/splits/deletes.\nAre you sure you want to continue?",
 										"Restore from Original Input", iconMask=wx.ICON_WARNING ):
 				return
 			startTime, endTime, numTimes = OutputStreamer.ReadStreamFile()
 			if not numTimes:
 				Utils.MessageOK( self, "No times found.\nCheck for *Input.csv file.", "No Times Found" )
 				return
+		undo.pushState()
+		with Model.LockRace() as race:
 			race.deleteAllRiderTimes()
 			race.startTime = startTime
 			race.endTime = endTime
@@ -792,6 +818,7 @@ class MainWin( wx.Frame ):
 				isFinished = race.isFinished()
 			self.fileName = fileName
 			race.tagNums = None
+			undo.clear()
 			Model.setRace( race )
 				
 			self.updateRecentFiles()
@@ -1198,6 +1225,12 @@ Continue?''' % fName, 'Simulate a Race' ):
 		self.forecastHistory.refresh()
 		self.updateRaceClock()
 
+	def updateUndoStatus( self, event = None ):
+		with Model.LockRace() as race:
+			isRunning = (race and race.isRunning())
+		self.undoMenuButton.Enable( bool(not isRunning and undo.isUndo()) )
+		self.redoMenuButton.Enable( bool(not isRunning and undo.isRedo()) )
+		
 	def onPageChanging( self, event ):
 		self.callPageCommit( event.GetOldSelection() )
 		self.callPageRefresh( event.GetSelection() )

@@ -4,7 +4,7 @@ import wx
 from FixCategories import FixCategories
 import GanttChart
 from GetResults import GetResults
-from EditEntry import CorrectNumber, ShiftNumber, InsertNumber, DeleteEntry, SwapEntry
+import EditEntry
 
 def UpdateSetNum( num ):
 	if num is None:
@@ -118,25 +118,19 @@ class Gantt( wx.Panel ):
 				num = int(self.ganttChart.numSelect)
 				lap = self.iLap
 				times = [e.t for e in race.riders[num].interpolate()]
-				
-				tLeft = times[lap-1]
-				tRight = times[lap]
-				splitTime = (tRight - tLeft) / float(splits)
-				for i in xrange( 1, splits ):
-					newTime = tLeft + splitTime * i
-					race.addTime( num, newTime )
 			except (TypeError, KeyError, ValueError, IndexError):
 				return
+		EditEntry.AddLapSplits( num, lap, times, splits )
 		self.refresh()
 		
 	def OnPopupCorrect( self, event ):
-		CorrectNumber( self, self.entry )
+		EditEntry.CorrectNumber( self, self.entry )
 		
 	def OnPopupShift( self, event ):
-		ShiftNumber( self, self.entry )
+		EditEntry.ShiftNumber( self, self.entry )
 
 	def OnPopupDelete( self, event ):
-		DeleteEntry( self, self.entry )
+		EditEntry.DeleteEntry( self, self.entry )
 
 	def OnPopupResults( self, event ):
 		if Utils.isMainWin():

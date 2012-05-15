@@ -1092,8 +1092,12 @@ class Race(object):
 			self.categories = newCategories
 			self.resetCategoryCache()
 			self.setChanged()
+			changed = True
+		else:
+			changed = False
 			
 		self.setCategoryMask()
+		return changed
 
 	def exportCategories( self, fp ):
 		for c in self.categories.itervalues():

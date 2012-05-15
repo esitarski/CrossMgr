@@ -2,7 +2,8 @@ import Model
 import Utils
 import JChip
 from JChipSetup import GetTagNums
-from Utils				import logCall
+from Utils		import logCall
+from Undo		import undo
 import wx
 import wx.lib.intctrl
 import wx.lib.masked           as masked
@@ -210,6 +211,8 @@ class JChipImportDialog( wx.Dialog ):
 			startTime = datetime.time(*[int(x) for x in self.raceStartTime.GetValue().split(':')])
 		else:
 			startTime = None
+			
+		undo.pushState()
 		errors = DoJchipImport( fname, startTime )
 		
 		if errors:

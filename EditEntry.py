@@ -6,6 +6,7 @@ import wx.lib.intctrl
 import wx.lib.masked           as masked
 import ColGrid
 import Model
+from Undo import undo
 import random
 
 #------------------------------------------------------------------------------------------------
@@ -54,6 +55,7 @@ class CorrectNumberDialog( wx.Dialog ):
 		num = self.numEdit.GetValue()
 		t = Utils.StrToSeconds(self.timeCtrl.GetValue())
 		if self.entry.num != num or self.entry.t != t:
+			undo.pushState()
 			with Model.LockRace() as race:
 				race.deleteTime( self.entry.num, self.entry.t )
 				race.addTime( num, t )
@@ -125,6 +127,7 @@ class ShiftNumberDialog( wx.Dialog ):
 		num = self.numEdit.GetValue()
 		t = self.getNewTime()
 		if self.entry.num != num or self.entry.t != t:
+			undo.pushState()
 			with Model.LockRace() as race:
 				race.deleteTime( self.entry.num, self.entry.t )
 				race.addTime( num, t )
@@ -192,6 +195,7 @@ class InsertNumberDialog( wx.Dialog ):
 			tAdjust = -tAdjust
 		tInsert = self.entry.t + tAdjust
 		
+		undo.pushState()
 		with Model.LockRace() as race:
 			race.addTime( num, tInsert )
 			
@@ -252,6 +256,7 @@ class SplitNumberDialog( wx.Dialog ):
 		t1 = self.entry.t
 		t2 = self.entry.t + 0.0001 * random.random()
 		
+		undo.pushState()
 		with Model.LockRace() as race:
 			race.deleteTime( entry.num, entry.t )
 			race.addTime( num1, t1 )
@@ -293,11 +298,12 @@ def SplitNumber( parent, entry ):
 @logCall
 def DeleteEntry( parent, entry ):
 	dlg = wx.MessageDialog(parent,
-						   'Num: %d  RiderLap: %d   RaceTime: %s\n\nConfirm Delete (no undo)?' %
+						   'Num: %d  RiderLap: %d   RaceTime: %s\n\nConfirm Delete?' %
 								(entry.num, entry.lap, Utils.formatTime(entry.t)), 'Delete Entry',
 							wx.OK | wx.CANCEL | wx.ICON_QUESTION )
 	# dlg.CentreOnParent(wx.BOTH)
 	if dlg.ShowModal() == wx.ID_OK:
+		undo.pushState()
 		with Model.LockRace() as race:
 			if race:
 				race.deleteTime( entry.num, entry.t )
@@ -317,6 +323,7 @@ def SwapEntry( a, b ):
 def DoStatusChange( parent, num, message, title, newStatus ):
 	if num is None or not Utils.MessageOKCancel(parent, message % num, title):
 		return False
+	undo.pushState()
 	with Model.LockRace() as race:
 		if not race:
 			return False
@@ -341,3 +348,19 @@ def DoDNS( parent, num ):
 @logCall
 def DoDQ( parent, num ):
 	return DoStatusChange( parent, num, 'DQ rider %d?', 'Confirm Disqualify', Model.Rider.DQ )
+	
+@logCall
+def AddLapSplits( num, lap, times, splits ):
+	undo.pushState()
+	with Model.LockRace() as race:
+		try:
+			tLeft = times[lap-1]
+			tRight = times[lap]
+			splitTime = (tRight - tLeft) / float(splits)
+			for i in xrange( 1, splits ):
+				newTime = tLeft + splitTime * i
+				race.addTime( num, newTime )
+			return True
+		except (TypeError, KeyError, ValueError, IndexError):
+			return False
+
