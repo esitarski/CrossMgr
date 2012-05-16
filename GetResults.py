@@ -14,7 +14,7 @@ def RidersCanSwap( riderResults, num, numAdjacent ):
 			rr2.status != Model.Rider.Finisher or
 			rr1.laps != rr2.laps ):
 			return False
-		laps == rr1.laps
+		laps = rr1.laps
 		# Check if swapping the last times would result in race times out of order.
 		with Model.LockRace() as race:
 			e1 = race.getRider(num).interpolate()
