@@ -11,6 +11,7 @@ import wx.lib.masked as masked
 from roundbutton import RoundButton
 
 def StartRaceNow():
+	undo.clear()
 	with Model.LockRace() as race:
 		if race is None:
 			return

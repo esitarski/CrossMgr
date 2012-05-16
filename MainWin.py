@@ -1002,6 +1002,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 		# Start the simulation.
 
 		self.nextNum = None
+		undo.clear()
 		with Model.LockRace() as race:
 			race.startRaceNow()		
 			# Backup all the events and race start so we don't have to wait for the first lap.

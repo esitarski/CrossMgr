@@ -14,7 +14,7 @@ import sys
 import os
 import datetime
 
-def DoJchipImport( fname, startTime ):
+def DoJchipImport( fname, startTime = None, isTimeTrial = False ):
 	# If startTime is None, the first time will be taken as the start time.
 	# All first time's for each rider will then be ignored.
 	
@@ -71,20 +71,31 @@ def DoJchipImport( fname, startTime ):
 		if not riderLapTimes:
 			errors.insert( 0, 'No matching tags found in Excel link.  Import aborted.' )
 			return errors
-			
+		
 		if not raceStart:
 			raceStart = tFirst
-			# Remove all the first times from the riders as this was the read when they went over the line.
+			
+		if not isTimeTrial:
+			# Remove all the first times from the riders as we account for this in the race start.
 			for lapTimes in riderLapTimes.itervalues():
-				lapTimes = lapTimes[1:]
+				del lapTimes[0]
+					
 		race.startTime = raceStart
 		
 		# Put all the rider times into the race.
 		race.deleteAllRiderTimes()
-		for num, lapTimes in riderLapTimes.iteritems():
-			for t in lapTimes:
-				lapTime = (t - raceStart).total_seconds()
-				race.importTime( num, lapTime )
+		if isTimeTrial:
+			for num, lapTimes in riderLapTimes.iteritems():
+				tItr = (t for t in lapTimes)
+				tFirst = tItr.next()
+				for t in tItr:
+					lapTime = (t - tFirst).total_seconds()
+					race.importTime( num, lapTime )
+		else:
+			for num, lapTimes in riderLapTimes.iteritems():
+				for t in lapTimes:
+					lapTime = (t - raceStart).total_seconds()
+					race.importTime( num, lapTime )
 			
 		if tLast:
 			race.finishTime = tLast
@@ -113,17 +124,21 @@ class JChipImportDialog( wx.Dialog ):
 			'You must also configure a "Tag" field in your Sign-On Excel Sheet and link it to the race.',
 			'This is required so CrossMgr can link the tags in the JChip file back to rider numbers and info.',
 			'',
+			'Race Data:',
 			'If the first chip read is NOT the start of the race, you will need to enter the start time manually.',
 			'Otherwise the import will use the first chip read as the race start.',
+			'',
+			'TimeTrial Data:',
+			"The first chip read for each rider will be interpreted as the rider's start time.",
 			'',
 			'Warning: Importing from JChip will replace all the data in this race.',
 			'Proceed with caution.',
 		]
 		intro = '\n'.join(todoList)
 		
-		gs = wx.FlexGridSizer( rows=2, cols=3, vgap = 5, hgap = 5 )
-		gs.Add( wx.StaticText(self, -1, 'JChip Data File:'), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
-		self.jchipDataFile = wx.TextCtrl( self, -1, '', size=(400,-1) )
+		gs = wx.FlexGridSizer( rows=3, cols=3, vgap=5, hgap=5 )
+		gs.Add( wx.StaticText(self, wx.ID_ANY, 'JChip Data File:'), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+		self.jchipDataFile = wx.TextCtrl( self, -1, '', size=(450,-1) )
 		defaultPath = Utils.getFileName()
 		if not defaultPath:
 			defaultPath = Utils.getDocumentsDir()
@@ -132,14 +147,20 @@ class JChipImportDialog( wx.Dialog ):
 		self.jchipDataFile.SetValue( defaultPath )
 		gs.Add( self.jchipDataFile, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.GROW)
 
-		btn = wx.Button( self, 10, label='Browse...' )
+		btn = wx.Button( self, wx.ID_ANY, label='Browse...' )
 		btn.Bind( wx.EVT_BUTTON, self.onBrowseJChipDataFile )
 		gs.Add( btn, 0, wx.ALIGN_CENTER_VERTICAL )
 		
-		self.manualStartTime = wx.CheckBox(self, -1, 'Race Start Time (if NOT first recorded time):' )
+		gs.AddSpacer(1)
+		self.dataType = wx.RadioBox( self, wx.ID_ANY, "Data Is:", wx.DefaultPosition, wx.DefaultSize, ['Race Data', 'Time Trial Data'], 2, wx.RA_SPECIFY_COLS )
+		self.dataType.Bind( wx.EVT_RADIOBOX, self.onChangeDataType )
+		gs.Add( self.dataType, 1, wx.ALIGN_LEFT )
+		gs.AddSpacer(1)
+        
+		self.manualStartTime = wx.CheckBox(self, wx.ID_ANY, 'Race Start Time (if NOT first recorded time):' )
 		self.Bind( wx.EVT_CHECKBOX, self.onChangeManualStartTime, self.manualStartTime )
 		gs.Add( self.manualStartTime, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
-		self.raceStartTime = masked.TimeCtrl( self, -1, fmt24hr=True, value="10:00:00" )
+		self.raceStartTime = masked.TimeCtrl( self, wx.ID_ANY, fmt24hr=True, value="10:00:00" )
 		self.raceStartTime.Enable( False )
 		gs.Add( self.raceStartTime, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.GROW)
 		
@@ -172,6 +193,11 @@ class JChipImportDialog( wx.Dialog ):
 		self.CentreOnParent(wx.BOTH)
 		self.SetFocus()
 
+	def onChangeDataType( self, event ):
+		isRaceData = (self.dataType.GetSelection() == 0)
+		self.manualStartTime.Enable( isRaceData )
+		self.raceStartTime.Enable( isRaceData and self.manualStartTime.IsChecked() )
+		
 	def onChangeManualStartTime( self, event ):
 		self.raceStartTime.Enable( event.IsChecked() )
 		
@@ -212,8 +238,10 @@ class JChipImportDialog( wx.Dialog ):
 		else:
 			startTime = None
 			
+		isTimeTrial = (self.dataType.GetSelection() != 0)
+			
 		undo.pushState()
-		errors = DoJchipImport( fname, startTime )
+		errors = DoJchipImport( fname, startTime, isTimeTrial )
 		
 		if errors:
 			# Copy the tags to the clipboard.
