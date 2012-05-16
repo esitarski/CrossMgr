@@ -8,7 +8,7 @@ import itertools
 from string import Template
 import ColGrid
 from FixCategories import FixCategories, SetCategory
-from GetResults import GetResults
+from GetResults import GetResults, RidersCanSwap
 from ExportGrid import ExportGrid
 from EditEntry import CorrectNumber, ShiftNumber, InsertNumber, DeleteEntry, SwapEntry
 
@@ -167,35 +167,22 @@ class Results( wx.Panel ):
 		self.numBefore, self.numAfter = None, None
 		with Model.LockRace() as race:
 			for iRow, attr in [(self.iRow - 1, 'numBefore'), (self.iRow + 1, 'numAfter')]:
-				if 0 <= iRow < self.grid.GetNumberRows():
-					try:
-						numAdjacent = int( self.grid.GetCellValue(iRow, 1) )
-						rr1 = riderResults[num]
-						rr2 = riderResults[numAdjacent]
-						if (rr1.status != Model.Rider.Finisher or
-							rr2.status != Model.Rider.Finisher or
-							rr1.laps != rr2.laps ):
-							continue
-						# Check if swapping the last times would result in race times out of order.
-						rt1 = [e.t for e in race.getRider(num).interpolate()]
-						rt2 = [e.t for e in race.getRider(numAdjacent).interpolate()]
-						rt1[rr1.laps], rt2[rr1.laps] = rt2[rr1.laps], rt1[rr1.laps]
-						if 	all( x < y for x, y in itertools.izip(rt1, rt1[1:]) ) and \
-							all( x < y for x, y in itertools.izip(rt2, rt2[1:]) ):
-							setattr( self, attr, numAdjacent )
-					except (IndexError, ValueError, KeyError):
-						pass
+				if not (0 <= iRow < self.grid.GetNumberRows()):
+					continue
+				numAdjacent = int( self.grid.GetCellValue(iRow, 1) )
+				if RidersCanSwap( riderResults, num, numAdjacent ):
+					setattr( self, attr, numAdjacent )
 			
 		menu = wx.Menu()
-		for i, p in enumerate(self.popupInfo):
-			if not p[0]:
+		for id, name, text, callback, cCase in self.popupInfo:
+			if not id:
 				if showSeparators:
 					menu.AppendSeparator()
 				continue
-			if caseCode >= p[4]:
-				if (p[1].endswith('before') and not self.numBefore) or (p[1].endswith('after') and not self.numAfter):
+			if caseCode >= cCase:
+				if (name.endswith('before') and not self.numBefore) or (name.endswith('after') and not self.numAfter):
 					continue
-				menu.Append( p[0], p[1], p[2] )
+				menu.Append( id, name, text )
 		
 		self.PopupMenu( menu )
 		menu.Destroy()
@@ -224,6 +211,7 @@ class Results( wx.Panel ):
 		riderResults = dict( (r.num, r) for r in GetResults(catName) )
 		try:
 			laps = riderResults[num].laps
+			undo.pushState()
 			with Model.LockRace() as race:
 				SwapEntry( e1[laps], e2[laps] )
 			wx.CallAfter( self.refresh )

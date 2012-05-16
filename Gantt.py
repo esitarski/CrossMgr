@@ -3,7 +3,8 @@ import Utils
 import wx
 from FixCategories import FixCategories
 import GanttChart
-from GetResults import GetResults
+from GetResults import GetResults, RidersCanSwap
+from Undo import undo
 import EditEntry
 
 def UpdateSetNum( num ):
@@ -23,6 +24,8 @@ class Gantt( wx.Panel ):
 
 		self.numSelect = None
 		self.entry = None
+		self.numBefore = None
+		self.numAfter = None
 		
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
 		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, 'Category:' )
@@ -58,16 +61,19 @@ class Gantt( wx.Panel ):
 		with Model.LockRace() as race:
 			if not race or num not in race:
 				return
+			catName = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
 			entries = race.getRider(num).interpolate()
 			try:
 				self.entry = entries[iLap]
 			except (IndexError, KeyError):
 				return
 		self.setNumSelect( num )
+		self.numSelect = num
 		if Utils.isMainWin():
 			wx.CallAfter( Utils.getMainWin().setNumSelect, self.ganttChart.numSelect )
 			
 		self.iLap = iLap
+		self.iRow = iRider
 		
 		allCases = 0
 		interpCase = 1
@@ -77,9 +83,13 @@ class Gantt( wx.Panel ):
 				(wx.NewId(), 'Results', 	'Switch to Results tab', self.OnPopupResults, allCases),
 				(wx.NewId(), 'RiderDetail',	'Switch to RiderDetail tab', self.OnPopupRiderDetail, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), 'Correct...',	'Change number or lap end time...',	self.OnPopupCorrect, interpCase),
-				(wx.NewId(), 'Shift...',	'Move lap end time earlier/later...',	self.OnPopupShift, interpCase),
-				(wx.NewId(), 'Delete...',	'Delete lap end time...',	self.OnPopupDelete, nonInterpCase),
+				(wx.NewId(), 'Correct Lap End Time...',	'Change number or lap end time...',	self.OnPopupCorrect, interpCase),
+				(wx.NewId(), 'Shift Lap End Time...',	'Move lap end time earlier/later...',	self.OnPopupShift, interpCase),
+				(wx.NewId(), 'Delete Lap End Time...',	'Delete lap end time...',	self.OnPopupDelete, nonInterpCase),
+				(None, None, None, None, None),
+				(wx.NewId(), 'Swap with Rider before',	'Swap with Rider before',	self.OnPopupSwapBefore, nonInterpCase),
+				(wx.NewId(), 'Swap with Rider after',	'Swap with Rider after',	self.OnPopupSwapAfter, nonInterpCase),
+
 			]
 			self.splitMenuInfo = [
 					(wx.NewId(),
@@ -93,12 +103,24 @@ class Gantt( wx.Panel ):
 				
 		caseCode = 1 if entries[iLap].interp else 2
 		
+		riderResults = dict( (r.num, r) for r in GetResults(catName) )
+		
+		self.numBefore, self.numAfter = None, None
+		for iRow, attr in [(self.iRow - 1, 'numBefore'), (self.iRow + 1, 'numAfter')]:
+			if not(0 <= iRow < len(self.ganttChart.labels)):
+				continue
+			numAdjacent = GanttChart.numFromLabel(self.ganttChart.labels[iRow])
+			if RidersCanSwap( riderResults, num, numAdjacent ):
+				setattr( self, attr, numAdjacent )
+		
 		menu = wx.Menu()
 		for id, name, text, callback, cCase in self.popupInfo:
 			if not id:
 				menu.AppendSeparator()
 				continue
 			if caseCode < cCase:
+				continue
+			if (name.endswith('before') and not self.numBefore) or (name.endswith('after') and not self.numAfter):
 				continue
 			menu.Append( id, name, text )
 			
@@ -123,6 +145,34 @@ class Gantt( wx.Panel ):
 		EditEntry.AddLapSplits( num, lap, times, splits )
 		self.refresh()
 		
+	def swapEntries( self, num, numAdjacent ):
+		if not num or not numAdjacent:
+			return
+		with Model.LockRace() as race:
+			if (not race or
+				num not in race or
+				numAdjacent not in race ):
+				return
+			e1 = race.getRider(num).interpolate()
+			e2 = race.getRider(numAdjacent).interpolate()
+			catName = FixCategories( self.categoryChoice, getattr(race, 'ganttCategory', 0) )
+			
+		riderResults = dict( (r.num, r) for r in GetResults(catName) )
+		try:
+			laps = riderResults[num].laps
+			undo.pushState()
+			with Model.LockRace() as race:
+				EditEntry.SwapEntry( e1[laps], e2[laps] )
+			wx.CallAfter( self.refresh )
+		except KeyError:
+			pass
+	
+	def OnPopupSwapBefore( self, event ):
+		self.swapEntries( int(self.numSelect), self.numBefore )
+		
+	def OnPopupSwapAfter( self, event ):
+		self.swapEntries( int(self.numSelect), self.numAfter )
+	
 	def OnPopupCorrect( self, event ):
 		EditEntry.CorrectNumber( self, self.entry )
 		

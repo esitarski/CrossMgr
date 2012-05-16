@@ -1,9 +1,35 @@
 import Model
 import bisect
 import Utils
+import itertools
 
 from ReadSignOnSheet import IgnoreFields
 statusSortSeq = Model.Rider.statusSortSeq
+
+def RidersCanSwap( riderResults, num, numAdjacent ):
+	try:
+		rr1 = riderResults[num]
+		rr2 = riderResults[numAdjacent]
+		if (rr1.status != Model.Rider.Finisher or
+			rr2.status != Model.Rider.Finisher or
+			rr1.laps != rr2.laps ):
+			return False
+		laps == rr1.laps
+		# Check if swapping the last times would result in race times out of order.
+		with Model.LockRace() as race:
+			e1 = race.getRider(num).interpolate()
+			e2 = race.getRider(numAdjacent).interpolate()
+		if e1[laps].interp or e2[laps].interp:
+			return False
+		rt1 = [e.t for e in e1]
+		rt2 = [e.t for e in e2]
+		rt1[laps], rt2[laps] = rt2[laps], rt1[laps]
+		if 	all( x < y for x, y in itertools.izip(rt1, rt1[1:]) ) and \
+			all( x < y for x, y in itertools.izip(rt2, rt2[1:]) ):
+			return True
+	except (IndexError, ValueError, KeyError):
+		pass
+	return False
 
 class RiderResult( object ):
 	def __init__( self, num, status, lastTime, raceCat, lapTimes, raceTimes, interp ):

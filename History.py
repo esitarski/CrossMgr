@@ -185,6 +185,7 @@ class History( wx.Panel ):
 			return
 		c, r, h = self.colPopup, self.rowPopup, self.history
 		success = False
+		undo.pushState()
 		with Model.LockRace() as race:
 			for rPrev in xrange( r - 1, -1, -1 ):
 				if not h[c][rPrev].interp and (self.category is None or race.getCategory(h[c][rPrev].num) == self.category):
@@ -199,6 +200,7 @@ class History( wx.Panel ):
 			return
 		c, r, h = self.colPopup, self.rowPopup, self.history
 		success = False
+		undo.pushState()
 		with Model.LockRace() as race:
 			for rNext in xrange( r + 1, len(h[c]) ):
 				if not h[c][rNext].interp and (self.category is None or race.getCategory(h[c][rNext].num) == self.category):
