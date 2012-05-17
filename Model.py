@@ -300,6 +300,7 @@ class Rider(object):
 		self.status = Rider.Finisher
 		self.tStatus = None
 		self.autoCorrectLaps = True
+		self.firstTime = None		# Used for time trial mode.  Also used to flag the first start time.
 
 	def addTime( self, t ):
 		# All times in race time seconds.
@@ -514,6 +515,8 @@ class Race(object):
 		self.startTime = None
 		self.finishTime = None
 		self.numLaps = None
+		self.firstRecordedTime = None	# Used to trigger the race on the first recorded time.
+		self.isTimeTrial = False
 
 		self.isChangedFlag = True
 		
@@ -586,18 +589,38 @@ class Race(object):
 		if self.startTime is None:
 			return 0.0
 		tCur = datetime.datetime.now() - self.startTime
-		return tCur.seconds + tCur.microseconds / 1000000.0
+		return tCur.total_seconds()
 
 	def lastRaceTime( self ):
 		if self.finishTime is not None:
 			t = self.finishTime - self.startTime
-			return t.seconds + t.microseconds / 1000000.0
+			return t.total_seconds()
 		return self.curRaceTime()
 
 	def addTime( self, num, t = None ):
 		if t is None:
 			t = self.curRaceTime()
-		self.getRider(num).addTime( t )
+		
+		if getattr(self, 'isTimeTrial', False):
+			r = self.getRider(num)
+			if r.firstTime is None:
+				r.firstTime = t
+			else:
+				r.addTime( t - r.firstTime )
+		else:
+			if getattr(self, 'resetStartClockOnFirstTag', False):
+				if not getattr(self, 'firstRecordedTime', None):
+					self.firstRecordedTime = self.startTime + datetime.timedelta( seconds = t )
+					self.startTime = self.firstRecordedTime
+					t = 0
+				r = self.getRider(num)
+				if r.firstTime is None:
+					r.firstTime = t
+				else:
+					r.addTime( t )
+			else:
+				self.getRider(num).addTime( t )
+			
 		self.setChanged()
 		return t
 
@@ -608,6 +631,7 @@ class Race(object):
 		try:
 			rider = self.riders[num]
 			rider.times = []
+			rider.firstTime = None
 		except KeyError:
 			pass
 			

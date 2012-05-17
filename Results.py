@@ -135,13 +135,13 @@ class Results( wx.Panel ):
 			self.popupInfo = [
 				(wx.NewId(), 'History', 	'Switch to History tab', self.OnPopupHistory, allCases),
 				(wx.NewId(), 'RiderDetail',	'Switch to RiderDetail tab', self.OnPopupRiderDetail, allCases),
-				(None, None, None, None),
+				(None, None, None, None, None),
 				(wx.NewId(), 'Correct...',	'Change number or lap time...',	self.OnPopupCorrect, interpCase),
 				(wx.NewId(), 'Shift...',	'Move lap time earlier/later...',	self.OnPopupShift, interpCase),
 				(wx.NewId(), 'Delete...',	'Delete lap time...',	self.OnPopupDelete, nonInterpCase),
-				(None, None, None, None),
-				(wx.NewId(), 'Swap with Rider before',	'Swap with Rider before',	self.OnPopupSwapBefore, nonInterpCase),
-				(wx.NewId(), 'Swap with Rider after',	'Swap with Rider after',	self.OnPopupSwapAfter, nonInterpCase),
+				(None, None, None, None, None),
+				(wx.NewId(), 'Swap with Rider before',	'Swap with Rider before',	self.OnPopupSwapBefore, allCases),
+				(wx.NewId(), 'Swap with Rider after',	'Swap with Rider after',	self.OnPopupSwapAfter, allCases),
 			]
 			for p in self.popupInfo:
 				if p[0]:
@@ -159,30 +159,30 @@ class Results( wx.Panel ):
 		try:
 			self.entry = entries[self.iLap]
 			caseCode = 1 if self.entry.interp else 2
-			showSeparators = True
 		except (TypeError, IndexError, KeyError):
 			caseCode = 0
-			showSeparators = False
 	
 		self.numBefore, self.numAfter = None, None
-		with Model.LockRace() as race:
-			for iRow, attr in [(self.iRow - 1, 'numBefore'), (self.iRow + 1, 'numAfter')]:
-				if not (0 <= iRow < self.grid.GetNumberRows()):
-					continue
-				numAdjacent = int( self.grid.GetCellValue(iRow, 1) )
-				if RidersCanSwap( riderResults, num, numAdjacent ):
-					setattr( self, attr, numAdjacent )
+		for iRow, attr in [(self.iRow - 1, 'numBefore'), (self.iRow + 1, 'numAfter')]:
+			if not (0 <= iRow < self.grid.GetNumberRows()):
+				continue
+			numAdjacent = int( self.grid.GetCellValue(iRow, 1) )
+			if RidersCanSwap( riderResults, num, numAdjacent ):
+				setattr( self, attr, numAdjacent )
 			
 		menu = wx.Menu()
+		lastWasSeparator = False
 		for id, name, text, callback, cCase in self.popupInfo:
 			if not id:
-				if showSeparators:
+				if not lastWasSeparator:
 					menu.AppendSeparator()
+				lastWasSeparator = True
 				continue
 			if caseCode >= cCase:
 				if (name.endswith('before') and not self.numBefore) or (name.endswith('after') and not self.numAfter):
 					continue
 				menu.Append( id, name, text )
+				lastWasSeparator = False
 		
 		self.PopupMenu( menu )
 		menu.Destroy()

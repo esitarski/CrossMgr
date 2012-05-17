@@ -43,6 +43,10 @@ class Properties( wx.Panel ):
 		self.minutes = intctrl.IntCtrl( self, wx.ID_ANY, min=1, max=300, allow_none=False, value=40 )
 		rows += 1
 
+		self.timeTrialLabel = wx.StaticText( self, wx.ID_ANY, 'Time Trial:' )
+		self.timeTrial = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
+		rows += 1
+		
 		self.memoLabel = wx.StaticText( self, wx.ID_ANY, 'Memo:' )
 		self.memo = wx.TextCtrl( self, wx.ID_ANY, value='' )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.memo )
@@ -58,7 +62,7 @@ class Properties( wx.Panel ):
 
 		self.updateFileName()
 		
-		fbs = wx.FlexGridSizer( rows=rows, cols=2, hgap=5, vgap=3 )
+		fbs = wx.FlexGridSizer( rows=rows+1, cols=2, hgap=5, vgap=3 )
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
 		fieldAlign = wx.EXPAND|wx.GROW
@@ -71,6 +75,8 @@ class Properties( wx.Panel ):
 			(self.minutesLabel,		0, labelAlign),		(self.minutes, 			1, fieldAlign),
 			(self.memoLabel,		0, labelAlign),		(self.memo, 			1, fieldAlign),
 			(self.commissaireLabel,	0, labelAlign),		(self.commissaire, 		1, fieldAlign),
+			(self.timeTrialLabel,	0, labelAlign),		(self.timeTrial,		1, fieldAlign),
+			(wx.StaticText(self,wx.ID_ANY,''), 0, labelAlign), (wx.StaticText(self,wx.ID_ANY,''), 1, fieldAlign),
 			(self.fileNameLabel,	0, labelAlign),		(self.fileName, 		1, fieldAlign),
 		]
 		fbs.AddMany( labelFieldFormats )
@@ -132,6 +138,7 @@ class Properties( wx.Panel ):
 			self.date.SetValue( d )
 			self.raceNum.SetValue( race.raceNum )
 			self.scheduledStart.SetValue( race.scheduledStart )
+			self.timeTrial.SetValue( getattr(race, 'isTimeTrial', False) )
 			self.minutes.SetValue( race.minutes )
 			self.commissaire.SetValue( race.commissaire )
 			self.memo.SetValue( race.memo )
@@ -149,6 +156,7 @@ class Properties( wx.Panel ):
 			race.date = self.date.GetValue().Format(Properties.dateFormat)
 			race.raceNum = self.raceNum.GetValue()
 			race.scheduledStart = self.scheduledStart.GetValue()
+			race.isTimeTrial = self.timeTrial.IsChecked()
 			race.minutes = self.minutes.GetValue()
 			race.commissaire = self.commissaire.GetValue()
 			race.memo = self.memo.GetValue()

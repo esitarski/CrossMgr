@@ -235,7 +235,8 @@ class JChipSetupDialog( wx.Dialog ):
 		
 	def onOK( self, event ):
 		if Model.race:
-			Model.race.enableJChipIntegration = self.enableJChipCheckBox.GetValue()
+			Model.race.enableJChipIntegration = bool(self.enableJChipCheckBox.GetValue())
+		wx.CallAfter( Utils.refresh )
 		self.EndModal( wx.ID_OK )
 		
 	def onCancel( self, event ):

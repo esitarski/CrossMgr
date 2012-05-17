@@ -144,14 +144,24 @@ class Actions( wx.Panel ):
 		self.button.SetForegroundColour( wx.Colour(128,128,128) )
 		self.Bind(wx.EVT_BUTTON, self.onPress, self.button )
 		
+		self.resetStartClockCheckBox = wx.CheckBox( self, wx.ID_ANY, 'Reset Start Clock on First Tag' )
+		self.Bind( wx.EVT_CHECKBOX, self.onResetStartClock, self.resetStartClockCheckBox )
+		
 		self.startRaceTimeCheckBox = wx.CheckBox(self, wx.ID_ANY, 'Start Race at Time')
 		
 		border = 8
 		bs.Add(self.button, border=border, flag=wx.ALL)
+		bs.Add(self.resetStartClockCheckBox, border=border, flag=wx.ALL)
 		bs.Add(self.startRaceTimeCheckBox, border=border, flag=wx.ALL)
 		self.SetSizer(bs)
 		
 		self.refresh()
+	
+	def onResetStartClock( self, event ):
+		if not Model.race:
+			return
+		with Model.LockRace() as race:
+			setattr( race, 'resetStartClockOnFirstTag', bool(self.resetStartClockCheckBox.IsChecked()) )
 	
 	def onPress( self, event ):
 		if not Model.race:
@@ -199,6 +209,7 @@ class Actions( wx.Panel ):
 	def refresh( self ):
 		self.button.Enable( False )
 		self.startRaceTimeCheckBox.Enable( False )
+		self.resetStartClockCheckBox.Enable( False )
 		self.button.SetLabel( StartText )
 		self.button.SetForegroundColour( wx.Colour(100,100,100) )
 		with Model.LockRace() as race:
@@ -210,6 +221,10 @@ class Actions( wx.Panel ):
 					
 					self.startRaceTimeCheckBox.Enable( True )
 					self.startRaceTimeCheckBox.Show( True )
+					
+					self.resetStartClockCheckBox.Enable( getattr(race, 'enableJChipIntegration', False) )
+					self.resetStartClockCheckBox.Show( getattr(race, 'enableJChipIntegration', False) )
+					
 				elif race.isRunning():
 					self.button.Enable( True )
 					self.button.SetLabel( FinishText )
@@ -217,6 +232,9 @@ class Actions( wx.Panel ):
 					
 					self.startRaceTimeCheckBox.Enable( False )
 					self.startRaceTimeCheckBox.Show( False )
+					
+					self.resetStartClockCheckBox.Enable( False )
+					self.resetStartClockCheckBox.Show( False )
 					
 		mainWin = Utils.getMainWin()
 		if mainWin is not None:

@@ -149,14 +149,14 @@ class History( wx.Panel ):
 			self.popupInfo = [
 				(wx.NewId(), 'Results', 	'Switch to Results tab', self.OnPopupResults, allCases),
 				(wx.NewId(), 'RiderDetail',	'Switch to RiderDetail tab', self.OnPopupRiderDetail, allCases),
-				(None, None, None, None),
+				(None, None, None, None, None),
 				(wx.NewId(), 'Correct...',	'Change number or time',	self.OnPopupCorrect, interpCase),
 				(wx.NewId(), 'Shift...',	'Move time earlier/later',	self.OnPopupShift, interpCase),
 				(wx.NewId(), 'Insert...',	'Insert a number before/after existing entry',	self.OnPopupSplit, nonInterpCase),
-				(None, None, None, None),
+				(None, None, None, None, None),
 				(wx.NewId(), 'Delete...',	'Delete an entry',	self.OnPopupDelete, nonInterpCase),
 				(wx.NewId(), 'Split...',	'Split an entry into two',	self.OnPopupSplit, nonInterpCase),
-				(None, None, None, None),
+				(None, None, None, None, None),
 				(wx.NewId(), 'Swap with entry Before...',	'Swap entry with Entry before', self.OnPopupSwapBefore, nonInterpCase),
 				(wx.NewId(), 'Swap with entry After...',	'Swap entry with Entry after',	self.OnPopupSwapAfter, nonInterpCase),
 			]
@@ -168,13 +168,17 @@ class History( wx.Panel ):
 		caseCode = 1 if isInterp else 2
 		
 		menu = wx.Menu()
+		lastWasSeparator = False
 		for i, (id, name, text, callback, cCode) in enumerate(self.popupInfo):
 			if not id:
-				menu.AppendSeparator()
+				if not lastWasSeparator:
+					menu.AppendSeparator()
+				lastWasSeparator = True
 				continue
 			if caseCode < cCode:
 				continue
 			menu.Append( id, name, text )
+			lastWasSeparator = False
 		
 		self.PopupMenu( menu )
 		menu.Destroy()
