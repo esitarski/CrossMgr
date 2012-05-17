@@ -74,11 +74,7 @@ def Server( q, HOST, PORT, startTime ):
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	s.bind((HOST, PORT))
 	
-	bufferedSecs = 3	# the time interval that we will ignore a read of the same tag.
-	bufferedTags = {}	# all tags read in the last bufferedSecs.
-	
 	tSmall = datetime.timedelta( microseconds = 100 )
-	tBuffered = datetime.timedelta( seconds = bufferedSecs )
 	
 	lastTime = datetime.datetime.now()
 	lastTag = ''
@@ -94,7 +90,7 @@ def Server( q, HOST, PORT, startTime ):
 				continue
 			try:
 				if line[0] == 'D':
-					tag = line[1:1+6]
+					tag = line[2:2+6]	# Skip the initial letter (always the same).
 					iColon = line.find( ':' )
 					if iColon < 0:
 						q.put( ('error', line.strip() ) )
@@ -110,18 +106,6 @@ def Server( q, HOST, PORT, startTime ):
 					if t < startTime:
 						continue
 						
-					# Filter the tag if it has already been read in the last bufferedSecs.
-					# First, purge all the old tags.
-					purgeSecs = t - tBuffered
-					bufferedTags = dict( (bTag, bSecs) for bTag, bSecs in bufferedTags.iteritems()
-															if bSecs > purgeSecs )
-					# Check if we have see this tag in the last 3 seconds.
-					if tag in bufferedTags:
-						continue
-						
-					# Add this tag to the buffer.
-					bufferedTags[tag] = t
-					
 					if t < lastTime and tag != lastTag:
 						# We received two different tags at exactly the same time.
 						# Add a small offset to the time so that we preserve the relative order.
