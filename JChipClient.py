@@ -5,6 +5,8 @@ import time
 import datetime
 import JChip
 
+CR = chr( 0x0d )	# JChip delimiter
+
 random.seed( 10101010 )
 nums = [random.randint(1,100) for x in xrange(25)]
 tag = {}
@@ -17,19 +19,17 @@ with open('JChipTest.csv', 'w') as f:
 	f.write( 'Bib#,Tag,h3,h4,h5\n' )
 	for n in nums:
 		f.write( '%d,%s\n' % (n, tag[n]) )
-		
+
+# Z413A35 10:11:16.4433 10  10000      C7
 def formatMessage( n, lap, t ):
 	global count
-	count += 1
-	message = "D%s %13s%2s_1%1d%03d%04X %05X\n" % (
+	message = "D%s %s 10  %05X      C7%s" % (
 				tag[n],								# Tag code
-				t.strftime('%H:%M:%S.%f')[:-2],	# hh:mm:ss.mm
-				1,									# PC-ID
-				0,									# Elapsed days
-				lap,								# Lap number
-				count,								# Data index number
-				count								# Data index number
+				t.strftime('%H:%M:%S.%f'),			# hh:mm:ss.mm
+				count,								# Data index number in hex.
+				CR
 			)
+	count += 1
 	return message
 
 random.seed()
@@ -62,13 +62,13 @@ while 1:
 		time.sleep( 5 )
 
 print 'Sending indentifier...'
-sock.send("N0000JCHIP-READER\n")
+sock.send("N0000JCHIP-READER%s" % CR)
 
 print 'Waiting for send command...'
 while 1:
 	received = sock.recv(1)
 	if received == 'S':
-		while received != '\n':
+		while received != CR:
 			received = sock.recv(1)
 		break
 
@@ -79,9 +79,9 @@ for i in xrange(1, len(numLapTimes)):
 	n, lap, t = numLapTimes[i]
 	dt = t - numLapTimes[i-1][2]
 	message = formatMessage( n, lap, dBase + datetime.timedelta( seconds = t ) )
-	sys.stdout.write( 'sending: %s' % message )
+	sys.stdout.write( 'sending: %s\n' % message[:-1] )
 	sock.send( message )
 	time.sleep( dt )
 	
-sock.send( '<<<terminate>>>\n' )
+sock.send( '<<<terminate>>>%s' % CR )
 	

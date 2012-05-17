@@ -1275,7 +1275,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			return
 		
 		if not JChip.listener:
-			JChip.StartListener( race.startTime.time() )
+			JChip.StartListener( race.startTime )
 			JChipSetup.GetTagNums( True )
 		
 		data = JChip.GetData()
@@ -1290,12 +1290,11 @@ Continue?''' % fName, 'Simulate a Race' ):
 			if d[0] != 'data':
 				continue
 			try:
-				num = race.tagNums[d[1]]
-				dt = datetime.datetime.combine( race.startTime.date(), d[2] )
+				num, dt = race.tagNums[d[1]], d[2]
 				# Ignore times before the start of the race.
 				if race.isRunning() and race.startTime < dt:
 					delta = dt - race.startTime
-					race.importTime( num, delta.seconds + delta.microseconds / 1000000.0 )
+					race.importTime( num, delta.total_seconds() )
 					success = True
 			except (TypeError, ValueError, KeyError):
 				pass

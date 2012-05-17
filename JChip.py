@@ -11,6 +11,12 @@ import re
 from multiprocessing import Process, Queue
 from Queue import Empty
 
+combine = datetime.datetime.combine
+reTimeChars = re.compile( '^\d\d:\d\d:\d\d\.\d+' )
+
+CR = chr( 0x0d )	# JChip delimiter
+dateToday = datetime.date.today()
+
 DEFAULT_PORT = 53135
 DEFAULT_HOST = socket.gethostbyname(socket.gethostname())
 if DEFAULT_HOST == '127.0.0.1':
@@ -39,11 +45,11 @@ def socketSend( s, message ):
 	sLen = 0
 	while sLen < len(message):
 		sLen += s.send( message[sLen:] )
-
+		
 def socketByLine(s):
 	buffer = s.recv( 4096 )
 	while 1:
-		nl = buffer.find( '\n' )
+		nl = buffer.find( CR )
 		if nl >= 0:
 			yield buffer[:nl+1]
 			buffer = buffer[nl+1:]
@@ -57,12 +63,13 @@ def socketByLine(s):
 		yield buffer
 
 def parseTime( tStr ):
+	global dateToday
 	hh, mm, ssmi = tStr.split(':')
 	hh, mm, ssmi = int(hh), int(mm), float(ssmi)
 	mi, ss = math.modf( ssmi )
 	mi, ss = int(mi * 1000000.0), int(ss)
-	return datetime.time( hour=hh, minute=mm, second=ss, microsecond=mi )
-		
+	return combine( dateToday, datetime.time(hour=hh, minute=mm, second=ss, microsecond=mi) )
+
 def Server( q, HOST, PORT, startTime ):
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	s.bind((HOST, PORT))
@@ -70,26 +77,34 @@ def Server( q, HOST, PORT, startTime ):
 	bufferedSecs = 3	# the time interval that we will ignore a read of the same tag.
 	bufferedTags = {}	# all tags read in the last bufferedSecs.
 	
-	lastTime = datetime.time()
+	tSmall = datetime.timedelta( microseconds = 100 )
+	tBuffered = datetime.timedelta( seconds = bufferedSecs )
+	
+	lastTime = datetime.datetime.now()
 	lastTag = ''
 	while 1:
 		s.listen(1)
 		conn, addr = s.accept()
 		
 		q.put( ('connected', 'JChip receiver',) )
-		q.put( ('transmitting', '"Send" command to JChip receiver') )
-		socketSend( conn, 'S00000\n' )
-		
-		q.put( ('waiting', 'for JChip receiver to transmit data',) )
+		q.put( ('waiting', 'for JChip receiver to respond',) )
 		
 		for line in socketByLine( conn ):
 			if not line:
 				continue
 			try:
 				if line[0] == 'D':
-					fields = line.split()
-					tag = fields[0][1:]	# Strip the 'D' to get the tag.
-					tStr = fields[1]
+					tag = line[1:1+6]
+					iColon = line.find( ':' )
+					if iColon < 0:
+						q.put( ('error', line.strip() ) )
+						continue
+						
+					m = reTimeChars.match( line[iColon-2:] )
+					if not m:
+						q.put( ('error', line.strip() ) )
+						continue
+					tStr = m.group(0)
 					
 					t = parseTime( tStr )
 					if t < startTime:
@@ -97,7 +112,7 @@ def Server( q, HOST, PORT, startTime ):
 						
 					# Filter the tag if it has already been read in the last bufferedSecs.
 					# First, purge all the old tags.
-					purgeSecs = (hh * 60.0 * 60.0) + (mm * 60.0) + ss + mi / 1000000.0 - bufferedSecs
+					purgeSecs = t - tBuffered
 					bufferedTags = dict( (bTag, bSecs) for bTag, bSecs in bufferedTags.iteritems()
 															if bSecs > purgeSecs )
 					# Check if we have see this tag in the last 3 seconds.
@@ -105,18 +120,20 @@ def Server( q, HOST, PORT, startTime ):
 						continue
 						
 					# Add this tag to the buffer.
-					bufferedTags[tag] = purgeSecs + bufferedSecs
+					bufferedTags[tag] = t
 					
 					if t < lastTime and tag != lastTag:
 						# We received two different tags at exactly the same time.
 						# Add a small offset to the time so that we preserve the relative order.
-						dFull = datetime.datetime.combine( datetime.date(2011,9,27), lastTime )
-						dFull += datetime.timedelta( microseconds = 100 )
-						t = dFull.time()
+						t += tSmall
 					lastTime, lastTag = t, tag
 					q.put( ('data', tag, t) )
 				elif line[0] == 'N':
 					q.put( ('name', line[5:].strip()) )
+					
+					cmd = 'S00000'
+					q.put( ('transmitting', '%s command to JChip receiver' % cmd) )
+					socketSend( conn, '%s%s' % (cmd, CR) )
 				else:
 					q.put( ('unknown', line ) )
 			
@@ -157,13 +174,15 @@ def StopListener():
 			
 		q = None
 		
-def StartListener( startTime = datetime.time(),
+def StartListener( startTime = datetime.datetime.now(),
 					HOST = DEFAULT_HOST, PORT = DEFAULT_PORT ):
 	global q
 	global listener
+	global dateToday
+	dateToday = datetime.date.today()
 	
 	StopListener()
-		
+	
 	q = Queue()
 	listener = Process( target = Server, args=(q, HOST, PORT, startTime) )
 	listener.start()
@@ -185,12 +204,14 @@ if __name__ == '__main__':
 		for m in messages:
 			if m[0] == 'data':
 				count += 1
-				print( '%d: %s, %s' % (count, m[1], m[2]) )
+				print( '%d: %s, %s' % (count, m[1], m[2].time()) )
 			elif m[0] == 'name':
 				print( 'receiver name="%s"' % m[1] )
 			elif m[0] == 'connected':
 				print( 'connected' )
 			elif m[0] == 'disconnected':
 				print( 'disconnected' )
+			elif m[0] == 'error':
+				print( 'error: %s' % m[1] )
 		sys.stdout.flush()
 		
