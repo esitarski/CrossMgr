@@ -1302,8 +1302,10 @@ class Race(object):
 		ret = [{},{}]
 		for cat, catEntries in catEntries.iteritems():
 			catTimes, catNums = catTimesNums[cat]
-			iLap = bisect.bisect_right( catTimes, tRace ) - 1
+			iLap = bisect.bisect_right( catTimes, tRace )
 			for r in xrange(2):
+				if iLap >= len(catTimes):
+					break
 				iFirst = bisect.bisect_left( catEntries, Entry(catNums[iLap], iLap, catTimes[iLap], False) )
 
 				seen = {}
