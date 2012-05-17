@@ -8,6 +8,7 @@ import re
 from string import Template
 from FixCategories import FixCategories
 import EditEntry
+from Undo import undo
 
 reNonDigits = re.compile( '[^0-9]' )
 reIntPrefix = re.compile( '^[0-9]+' )

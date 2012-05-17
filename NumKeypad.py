@@ -207,8 +207,7 @@ class NumKeypad( wx.Panel ):
 				self.raceHUD.SetData( nowTime = tCur, lapTimes = leaderTimes, leader = leaderNum )
 				
 			if tLeader is not None:
-			
-				if tLeader <= 3.0:
+				if tLeader <= 3.0 and not getattr(race, 'isTimeTrial', False):
 					if not self.tada:
 						self.tada = Utils.PlaySound( 'tada.wav' )
 				else:
@@ -221,7 +220,7 @@ class NumKeypad( wx.Panel ):
 					timeToLeader = '%s (%d to see %d to go)' % (Utils.formatTime(tLeader), nLeader, leaderLapsToGo)
 					
 					# Play the bell reminder.
-					if leaderLapsToGo == 1 and tLeader <= 10.0:
+					if leaderLapsToGo == 1 and tLeader <= 10.0 and not getattr(race, 'isTimeTrial', False):
 						if not self.bell:
 							self.bell = Utils.PlaySound( 'bell.wav' )
 					else:

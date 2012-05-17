@@ -1332,7 +1332,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 								race.name, race.raceNum,
 								status,
 								Version.AppVerName,
-								'<TimeTrial>' if getattr(race.isTimeTrial) else '') )
+								'<TimeTrial>' if getattr(race, 'isTimeTrial', False) else '') )
 				self.timer.Stop()
 				return
 
@@ -1341,7 +1341,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 							race.name, race.raceNum,
 							status, Version.AppVerName,
 							'<JChip>' if JChip.listener else '',
-							'<TimeTrial>' if getattr(race.isTimeTrial) else '') )
+							'<TimeTrial>' if getattr(race, 'isTimeTrial', False) else '') )
 
 		if self.timer is None or not self.timer.IsRunning():
 			self.timer.Start( 1000 )

@@ -11,6 +11,7 @@ from FixCategories import FixCategories, SetCategory
 from GetResults import GetResults, RidersCanSwap
 from ExportGrid import ExportGrid
 from EditEntry import CorrectNumber, ShiftNumber, InsertNumber, DeleteEntry, SwapEntry
+from Undo import undo
 
 reNonDigits = re.compile( '[^0-9]' )
 reLapMatch = re.compile( 'Lap ([0-9]+)' )

@@ -6,6 +6,7 @@ import Model
 import Utils
 import JChip
 import OutputStreamer
+from Undo import undo
 
 import wx.lib.masked as masked
 from roundbutton import RoundButton
@@ -213,6 +214,7 @@ class Actions( wx.Panel ):
 		self.button.SetLabel( StartText )
 		self.button.SetForegroundColour( wx.Colour(100,100,100) )
 		with Model.LockRace() as race:
+			self.resetStartClockCheckBox.SetValue( bool(getattr(race, 'resetStartClockOnFirstTag', True)) if race else False )
 			if race is not None:
 				if race.startTime is None:
 					self.button.Enable( True )
