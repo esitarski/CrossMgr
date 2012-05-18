@@ -78,9 +78,19 @@ dBase = datetime.datetime.now()
 for i in xrange(1, len(numLapTimes)):
 	n, lap, t = numLapTimes[i]
 	dt = t - numLapTimes[i-1][2]
-	message = formatMessage( n, lap, dBase + datetime.timedelta( seconds = t ) )
+	
+	message = formatMessage( n, lap, dBase + datetime.timedelta( seconds = t - 60*60 ) )
 	sys.stdout.write( 'sending: %s\n' % message[:-1] )
 	sock.send( message )
+	
+	message = 'garbage message' + CR
+	sys.stdout.write( 'sending: %s\n' % message[:-1] )
+	sock.send( message )
+	
+	message = 'DCorruptMessage' + CR
+	sys.stdout.write( 'sending: %s\n' % message[:-1] )
+	sock.send( message )
+	
 	time.sleep( dt )
 	
 sock.send( '<<<terminate>>>%s' % CR )

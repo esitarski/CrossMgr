@@ -212,7 +212,7 @@ class JChipSetupDialog( wx.Dialog ):
 		for d in data:
 			if d[0] == 'data':
 				self.receivedCount += 1
-				ts = d[2].isoformat()
+				ts = d[2].isoformat(' ')
 				if len(ts) == 8:
 					ts += '.0000'
 				else:
@@ -221,14 +221,18 @@ class JChipSetupDialog( wx.Dialog ):
 					num = str(Model.race.tagNums[d[1]])
 				except (AttributeError, ValueError, KeyError):
 					num = 'not found'
-				self.appendMsg( '%d: data: %s at %s, Bib#: %s' % (self.receivedCount, d[1], ts, num) )
+				self.appendMsg( '%d: tag=%s, time=%s, Bib=%s' % (self.receivedCount, d[1], ts, num) )
+			elif d[0] == 'connected':
+				self.appendMsg( '*******************************************' )
+				self.appendMsg( '%s: %s' % (d[0], ', '.join('%s' % str(s) for s in d[1:]) ) )
 			elif d[0] == 'disconnected':
 				self.appendMsg( d[0] )
+				self.appendMsg( '' )
 				self.appendMsg( 'listening for JChip connection...' )
 			elif d[0] == 'name':
 				self.appendMsg( 'receiver name: %s' % d[1] )
 			else:
-				self.appendMsg( '%s: %s' % (d[0], ' '.join(d[1:])) )
+				self.appendMsg( '%s: %s' % (d[0], ', '.join('<<%s>>' % str(s) for s in d[1:]) ) )
 		if data:
 			self.testList.EnsureVisible( self.testList.GetItemCount()-1 )
 		self.timer.Restart( 1000, 'restarted' )

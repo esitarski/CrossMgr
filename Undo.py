@@ -19,13 +19,10 @@ class Undo( object ):
 	
 	def pushState( self ):
 		''' Save the state of the model and remove any redo states. '''
-		
-		# If we have a current undo state, keep it, but remove all following states.
-		if self.iUndo is not None and self.iUndo >= 0:
+		if self.iUndo is not None:
 			del self.undoStack[self.iUndo+1:]
 			self.iUndo = None
-			updateUndoStatus()
-			return True
+			return False
 			
 		self.iUndo = None
 		sNew = self.getState()

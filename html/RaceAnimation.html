@@ -8,7 +8,7 @@
 -->
 <head>
 <meta charset="UTF-8" author="Edward Sitarski" copyright="Edward Sitarski, 2011" generator="CrossMgr" />  
-<title id="idTitle">CrossMgr Race Results by Edward Sitarski</title>
+<title id="idTitle">CrossMgr Race Results by Edward Sitarski</title>	<!-- Don't change this text! -->
 <style type="text/css">
 body
 { 
@@ -104,6 +104,7 @@ var showLapsFrequency = -1;		// How often to show laps
 var lapDataOption = 0;	// if 0, show race times, if 1, show lap times, if 2, show gap times.
 var loopContinuously = false;// If true, the simulation will repeat from the beginning.
 var fontMult = 1.0;			// font adjust factor.
+var showTimeDecimals = false;
 
 // Rider colours given out as remander of the number.
 var colours = [
@@ -283,7 +284,7 @@ function FormatTime( t )
 		neg = true;
 		t = -t;
 	}
-	var secs = Math.floor( t + 0.5 );
+	var secs = Math.floor( t );
 	var h = Math.floor( secs / (60*60) );
 	var m = Math.floor(secs / 60) % 60;
 	var s = Math.floor(secs % 60);
@@ -293,6 +294,11 @@ function FormatTime( t )
 		tStr = h + (m < 10 ? ':0' : ':') + m + (s < 10 ? ':0' : ':') + s;
 	if( neg )
 		tStr = '-' + tStr;
+	if( showTimeDecimals )
+	{
+		var decimals = Math.floor( (t - Math.floor(t)) * 100 );
+		tStr += (decimals < 10 ? '.0' : '.') + decimals;
+	}
 	return tStr;
 }
 
@@ -1483,10 +1489,17 @@ function AdjustFont( increase )
 	Refresh();
 }
 
+function ToggleTimeDecimals()
+{
+	var cb = document.getElementById('idShowTimeDecimals');
+	showTimeDecimals = cb.checked;
+	SetCategoryResults();
+}
+
 function onLoad()
 {
 	document.getElementById('idImgHeader').src = imageSrc;
-
+	
 	canvas = document.getElementById('idTrack');
 	resultsDiv = document.getElementById('idResultsDiv');
 	showLaps = document.getElementById('idShowLaps');
@@ -1502,12 +1515,8 @@ function onLoad()
 				RefreshRaceChart(); }, false);
 	}
 	
-	if( raceName )
-	{
-		document.getElementById('idRaceName').innerHTML = raceName;
-		var title = document.getElementById('idTitle');
-		title.innerHTML = raceName + ': ' + title.innerHTML;
-	}
+	document.getElementById('idRaceName').innerHTML = document.getElementById('idTitle').innerHTML;
+	
 	if( organizer != null )
 		document.getElementById('idOrganizer').innerHTML = (organizer != '' ? 'by ' : '') + organizer;
 	
@@ -1603,6 +1612,7 @@ Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr<
 	<option value="15">Show Every 15 Laps</option>
 	<option value="20">Show Every 20 Laps</option>
 </select>
+<input type="checkbox" id="idShowTimeDecimals" onClick="ToggleTimeDecimals()">Show 100s of Seconds</input>
 </p>
 <div id="idResultsDiv"></div>
 <p id="idRaceName" class="noprint">Race Chart</p>

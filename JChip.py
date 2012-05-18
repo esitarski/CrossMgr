@@ -74,9 +74,8 @@ def Server( q, HOST, PORT, startTime ):
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	s.bind((HOST, PORT))
 	
-	tSmall = datetime.timedelta( microseconds = 100 )
-	
-	lastTime = datetime.datetime.now()
+	readerComputerTimeDiff = None
+	lastTime = None
 	lastTag = ''
 	while 1:
 		s.listen(1)
@@ -103,13 +102,14 @@ def Server( q, HOST, PORT, startTime ):
 					tStr = m.group(0)
 					
 					t = parseTime( tStr )
-					if t < startTime:
-						continue
+					
+					# Adjust for the difference between the reader's time and the computer's time.
+					if lastTime is None:
+						lastTime = datetime.datetime.now()
+						readerComputerTimeDiff = lastTime - t
 						
-					if t < lastTime and tag != lastTag:
-						# We received two different tags at exactly the same time.
-						# Add a small offset to the time so that we preserve the relative order.
-						t += tSmall
+					t += readerComputerTimeDiff
+						
 					lastTime, lastTag = t, tag
 					q.put( ('data', tag, t) )
 				elif line[0] == 'N':
@@ -163,7 +163,7 @@ def StartListener( startTime = datetime.datetime.now(),
 	global q
 	global listener
 	global dateToday
-	dateToday = datetime.date.today()
+	dateToday = startTime.date()
 	
 	StopListener()
 	
@@ -195,7 +195,7 @@ if __name__ == '__main__':
 				print( 'connected' )
 			elif m[0] == 'disconnected':
 				print( 'disconnected' )
-			elif m[0] == 'error':
-				print( 'error: %s' % m[1] )
+			else:
+				print( 'error: %s' % (m[0], ', '.join('"%s"' % str(s) for s in m[1:]) ) )
 		sys.stdout.flush()
 		

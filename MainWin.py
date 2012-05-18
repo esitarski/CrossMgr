@@ -14,6 +14,16 @@ import random
 import multiprocessing
 import webbrowser
 import base64
+import cgi
+import locale
+locale.setlocale(locale.LC_ALL, '')
+try:
+	localDateFormat = locale.nl_langinfo( locale.D_FMT )
+	localTimeFormat = locale.nl_langinfo( locale.T_FMT )
+except:
+	localDateFormat = '%b %d, %Y'
+	localTimeFormat = '%I:%M%p'
+	
 import cPickle as pickle
 from optparse import OptionParser
 
@@ -625,6 +635,17 @@ class MainWin( wx.Frame ):
 		html = html.replace( 'raceName = null', raceName, 1 )
 			
 		with Model.LockRace() as race:
+			year, month, day = [int(v) for v in race.date.split('-')]
+			timeComponents = [int(v) for v in race.scheduledStart.split(':')]
+			if len(timeComponents) < 3:
+				timeComponents.append( 0 )
+			hour, minute, second = timeComponents
+			raceTime = datetime.datetime( year, month, day, hour, minute, second )
+			title = '%s Results for %s at %s' % (
+				race.name,
+				raceTime.strftime(localDateFormat),
+				raceTime.strftime(localTimeFormat) )
+			html = html.replace( 'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
 			organizer = getattr( race, 'organizer', '' )
 			html = html.replace( 'organizer = null', 'organizer = %s' % json.dumps(organizer), 1 )
 			
