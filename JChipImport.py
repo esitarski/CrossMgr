@@ -44,7 +44,7 @@ def DoJchipImport( fname, startTime = None, isTimeTrial = False ):
 				continue
 			
 			try:
-				t = datetime.datetime.combine( raceDate, JChip.parseTime(tStr) )
+				t = JChip.parseTime(tStr)
 			except (IndexError, ValueError):
 				errors.append( 'line %d: invalid time' % lineNo )
 				continue
@@ -152,8 +152,7 @@ class JChipImportDialog( wx.Dialog ):
 		gs.Add( btn, 0, wx.ALIGN_CENTER_VERTICAL )
 		
 		gs.AddSpacer(1)
-		self.dataType = wx.RadioBox( self, wx.ID_ANY, "Data Is:", wx.DefaultPosition, wx.DefaultSize, ['Race Data', 'Time Trial Data'], 2, wx.RA_SPECIFY_COLS )
-		self.dataType.Bind( wx.EVT_RADIOBOX, self.onChangeDataType )
+		self.dataType = wx.StaticText( self, wx.ID_ANY, "Data Is:" )
 		gs.Add( self.dataType, 1, wx.ALIGN_LEFT )
 		gs.AddSpacer(1)
         
@@ -164,6 +163,16 @@ class JChipImportDialog( wx.Dialog ):
 		self.raceStartTime.Enable( False )
 		gs.Add( self.raceStartTime, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.GROW)
 		
+		with Model.LockRace() as race:
+			isTimeTrial = getattr(race, 'isTimeTrial', False) if race else False
+
+		if isTimeTrial:
+			self.manualStartTime.Enable( False )
+			self.raceStartTime.Enable( False )
+			self.dataType.SetLabel( 'Data will be imported for a Time Trial' )
+		else:
+			self.dataType.SetLabel( 'Data will be imported for a Race' )
+			
 		self.okBtn = wx.Button( self, wx.ID_OK, '&OK' )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
 
@@ -193,11 +202,6 @@ class JChipImportDialog( wx.Dialog ):
 		self.CentreOnParent(wx.BOTH)
 		self.SetFocus()
 
-	def onChangeDataType( self, event ):
-		isRaceData = (self.dataType.GetSelection() == 0)
-		self.manualStartTime.Enable( isRaceData )
-		self.raceStartTime.Enable( isRaceData and self.manualStartTime.IsChecked() )
-		
 	def onChangeManualStartTime( self, event ):
 		self.raceStartTime.Enable( event.IsChecked() )
 		
@@ -237,8 +241,9 @@ class JChipImportDialog( wx.Dialog ):
 			startTime = datetime.time(*[int(x) for x in self.raceStartTime.GetValue().split(':')])
 		else:
 			startTime = None
-			
-		isTimeTrial = (self.dataType.GetSelection() != 0)
+		
+		with Model.LockRace() as race:
+			isTimeTrial = getattr(race, 'isTimeTrial', False) if race else False
 			
 		undo.pushState()
 		errors = DoJchipImport( fname, startTime, isTimeTrial )
