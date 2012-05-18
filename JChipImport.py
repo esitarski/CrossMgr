@@ -168,7 +168,9 @@ class JChipImportDialog( wx.Dialog ):
 
 		if isTimeTrial:
 			self.manualStartTime.Enable( False )
+			self.manualStartTime.Show( False )
 			self.raceStartTime.Enable( False )
+			self.raceStartTime.Show( False )
 			self.dataType.SetLabel( 'Data will be imported for a Time Trial' )
 		else:
 			self.dataType.SetLabel( 'Data will be imported for a Race' )
