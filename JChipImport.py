@@ -25,6 +25,7 @@ def DoJchipImport( fname, startTime = None, isTimeTrial = False ):
 	with open(fname) as f, Model.LockRace() as race:
 		year, month, day = [int(n) for n in race.date.split('-')]
 		raceDate = datetime.date( year=year, month=month, day=day )
+		JChip.dateToday = raceDate
 		if startTime:
 			raceStart = datetime.datetime.combine( raceDate, startTime )
 		
