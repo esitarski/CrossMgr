@@ -641,10 +641,7 @@ class MainWin( wx.Frame ):
 				timeComponents.append( 0 )
 			hour, minute, second = timeComponents
 			raceTime = datetime.datetime( year, month, day, hour, minute, second )
-			title = '%s Results for %s at %s' % (
-				race.name,
-				raceTime.strftime(localDateFormat),
-				raceTime.strftime(localTimeFormat) )
+			title = '%s Results for %s Race on %s' % ( race.name, raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
 			html = html.replace( 'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
 			organizer = getattr( race, 'organizer', '' )
 			html = html.replace( 'organizer = null', 'organizer = %s' % json.dumps(organizer), 1 )
