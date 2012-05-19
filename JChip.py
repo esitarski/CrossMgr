@@ -12,7 +12,7 @@ from multiprocessing import Process, Queue
 from Queue import Empty
 
 combine = datetime.datetime.combine
-reTimeChars = re.compile( '^\d\d:\d\d:\d\d\.\d\d' )
+reTimeChars = re.compile( '^\d\d:\d\d:\d\d\.\d+' )
 
 CR = chr( 0x0d )	# JChip delimiter
 dateToday = datetime.date.today()
