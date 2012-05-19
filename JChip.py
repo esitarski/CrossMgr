@@ -12,7 +12,7 @@ from multiprocessing import Process, Queue
 from Queue import Empty
 
 combine = datetime.datetime.combine
-reTimeChars = re.compile( '^\d\d:\d\d:\d\d\.\d+' )
+reTimeChars = re.compile( '^\d\d:\d\d:\d\d\.\d\d' )
 
 CR = chr( 0x0d )	# JChip delimiter
 dateToday = datetime.date.today()
@@ -62,13 +62,31 @@ def socketByLine(s):
 	if buffer:
 		yield buffer
 
+# if we get the same time, make sure we give it a small offset to make it unique, but preserve the order.
+tSmall = datetime.timedelta( seconds = 0.00001 )
+tSameCount = 0
+tLast = None
+
 def parseTime( tStr ):
 	global dateToday
+	global tLast
+	global tSameCount
+	
 	hh, mm, ssmi = tStr.split(':')
+	
 	hh, mm, ssmi = int(hh), int(mm), float(ssmi)
 	mi, ss = math.modf( ssmi )
 	mi, ss = int(mi * 1000000.0), int(ss)
-	return combine( dateToday, datetime.time(hour=hh, minute=mm, second=ss, microsecond=mi) )
+	t = combine( dateToday, datetime.time(hour=hh, minute=mm, second=ss, microsecond=mi) )
+	
+	# Add a small offset to equal times so the order is preserved.
+	if t == tLast:
+		tSameCount += 1
+	else:
+		tSameCount = 0
+		tLast = t
+	
+	return t + tSmall * tSameCount if tSameCount > 0 else t
 
 def Server( q, HOST, PORT, startTime ):
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -76,7 +94,6 @@ def Server( q, HOST, PORT, startTime ):
 	
 	readerComputerTimeDiff = None
 	lastTime = None
-	lastTag = ''
 	while 1:
 		s.listen(1)
 		conn, addr = s.accept()
@@ -110,7 +127,7 @@ def Server( q, HOST, PORT, startTime ):
 						
 					t += readerComputerTimeDiff
 						
-					lastTime, lastTag = t, tag
+					lastTime = t
 					q.put( ('data', tag, t) )
 				elif line[0] == 'N':
 					q.put( ('name', line[5:].strip()) )

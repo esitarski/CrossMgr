@@ -91,7 +91,8 @@ for i in xrange(1, len(numLapTimes)):
 	sys.stdout.write( 'sending: %s\n' % message[:-1] )
 	sock.send( message )
 	
-	time.sleep( dt )
+	if i % 3 != 0:
+		time.sleep( dt )
 	
 sock.send( '<<<terminate>>>%s' % CR )
 	
