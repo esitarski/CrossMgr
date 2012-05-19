@@ -1008,6 +1008,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			Model.setRace( None )
 			race = Model.newRace()
 			race.name = 'Simulate'
+			race.organizer = 'Edward Sitarski'
 			race.memo = ''
 			race.minutes = self.raceMinutes
 			race.raceNum = 1
