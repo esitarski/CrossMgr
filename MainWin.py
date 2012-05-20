@@ -246,7 +246,7 @@ class MainWin( wx.Frame ):
 		
 		self.fileMenu.AppendSeparator()
 
-		self.fileMenu.Append( wx.ID_EXIT , "E&xit", "Exit CrossMan" )
+		self.fileMenu.Append( wx.ID_EXIT, "E&xit", "Exit CrossMan" )
 		self.Bind(wx.EVT_MENU, self.menuExit, id=wx.ID_EXIT )
 		
 		self.Bind(wx.EVT_MENU_RANGE, self.menuFileHistory, id=wx.ID_FILE1, id2=wx.ID_FILE9)
@@ -269,6 +269,11 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_MENU, self.menuRedo, id=wx.ID_REDO )
 		self.redoMenuButton.Enable( False )
 		
+		self.editMenu.AppendSeparator()
+		idCur = wx.NewId()
+		self.editMenu.Append( idCur, '&Uncheck "Autocorrect Lap Data" for All Riders', 'Uncheck "Autocorrect Lap Data" for All Riders' )
+		self.Bind( wx.EVT_MENU, self.menuUncheckLapAutocorrect, id=idCur )
+
 		img = None
 		self.editMenuItem = self.menuBar.Append( self.editMenu, "&Edit" )
 
@@ -413,6 +418,13 @@ class MainWin( wx.Frame ):
 		
 	def menuRedo( self, event ):
 		undo.doRedo()
+		self.refresh()
+		
+	def menuUncheckLapAutocorrect( self, event ):
+		undo.pushState()
+		with Model.LockRace() as race:
+			for num, rider in race.riders.iteritems():
+				rider.autoCorrectLaps = False
 		self.refresh()
 	
 	def menuShow100sOfSecond( self, event ):
