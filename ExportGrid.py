@@ -218,7 +218,8 @@ class ExportGrid( object ):
 		self.iLapTimes = len(self.colnames)
 		if leader.lapTimes:
 			self.colnames.extend( ['Lap %d' % lap for lap in xrange(1, len(leader.lapTimes)+1)] )
-			
+		
+		highPrecision = Utils.timeHighPrecision()
 		data = [ [] for i in xrange(len(self.colnames)) ]
 		for col, f in enumerate(['pos', 'num'] + infoFields + ['lastTime', 'gap']):
 			for row, r in enumerate(results):
@@ -228,14 +229,14 @@ class ExportGrid( object ):
 						data[col].append( '' )
 					else:
 						lastTime = max( 0.0, lastTime - startOffset )
-						data[col].append( Utils.formatTimeCompressed(lastTime) )
+						data[col].append( Utils.formatTimeCompressed(lastTime, highPrecision) )
 				else:
 					data[col].append( getattr(r, f, '') )
 		
 		lapsMax = len(leader.lapTimes)
 		for row, r in enumerate(results):
 			for i, t in enumerate(r.lapTimes):
-				data[self.iLapTimes+i].append( Utils.formatTimeCompressed(t) )
+				data[self.iLapTimes+i].append( Utils.formatTimeCompressed(t, highPrecision) )
 			for i in xrange(len(r.lapTimes), lapsMax):
 				data[self.iLapTimes+i].append( '' )
 		

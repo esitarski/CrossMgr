@@ -132,7 +132,7 @@ def Server( q, HOST, PORT, startTime ):
 				elif line[0] == 'N':
 					q.put( ('name', line[5:].strip()) )
 					
-					cmd = 'S00000'
+					cmd = 'S0000'
 					q.put( ('transmitting', '%s command to JChip receiver' % cmd) )
 					socketSend( conn, '%s%s' % (cmd, CR) )
 				else:

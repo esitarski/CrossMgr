@@ -110,8 +110,8 @@ def formatTimeGap( secs ):
 	secs = secs % 60
 	return "%s%d'%02d\"" % (sign, minutes, secs)
 
-def formatTimeCompressed( secs ):
-	f = formatTime( secs )
+def formatTimeCompressed( secs, highPrecision = False ):
+	f = formatTime( secs, highPrecision )
 	if f[0] == '0':
 		return f[1:]
 	return f
@@ -270,6 +270,9 @@ def getFileName():
 	
 def isMainWin():
 	return mainWin is not None
+	
+def timeHighPrecision():
+	return mainWin.timeHighPrecision if mainWin is not None else False
 	
 if __name__ == '__main__':
 	hd = getHomeDir()

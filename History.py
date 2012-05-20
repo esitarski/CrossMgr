@@ -341,6 +341,12 @@ class History( wx.Panel ):
 		self.search.SelectAll()
 		wx.CallAfter( self.search.SetFocus )
 		
+		if Utils.timeHighPrecision():
+			formatTime = lambda t: Utils.formatTime(t, True)
+		else:
+			formatTime = Utils.formatTime
+		formatTimeGap = Utils.formatTimeGap
+		
 		with Model.LockRace() as race:
 			if race is None:
 				self.clearGrid()
@@ -414,8 +420,8 @@ class History( wx.Panel ):
 				raceTime = h[0].t
 				colnames.append( '%s\n%s\n%s\n%s' %(str(c+1),
 													str(maxLaps - c - 1) if doLapsToGo else ' ',
-													Utils.formatTime(lapTime),
-													Utils.formatTime(raceTime)) )
+													formatTime(lapTime),
+													formatTime(raceTime)) )
 			
 			leaderTimes, leaderNums = race.getLeaderTimesNums()
 			
@@ -435,9 +441,9 @@ class History( wx.Panel ):
 				data.append( [ template.safe_substitute(
 					{
 						'num':		e.num,
-						'raceTime':	Utils.formatTime(e.t) if self.showTimes else '',
-						'lapTime':	Utils.formatTime(e.t - numTimes[(e.num,e.lap-1)]) if self.showLapTimes else '',
-						'downTime':	Utils.formatTimeGap(e.t - leaderTimes[col+1]),
+						'raceTime':	formatTime(e.t) if self.showTimes else '',
+						'lapTime':	formatTime(e.t - numTimes[(e.num,e.lap-1)]) if self.showLapTimes else '',
+						'downTime':	formatTimeGap(e.t - leaderTimes[col+1]),
 						'riderName': info.get(e.num, {}).get('LastName', '') if self.showRiderName else '',
 					} ) for e in h] )
 				self.rcInterp.update( (row, col) for row, e in enumerate(h) if e.interp )

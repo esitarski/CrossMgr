@@ -165,6 +165,7 @@ class MainWin( wx.Frame ):
 		
 		self.fileName = None
 		self.numSelect = None
+		self.timeHighPrecision = False
 
 		# Setup the objects for the race clock.
 		self.timer = wx.Timer( self, id=wx.NewId() )
@@ -271,6 +272,13 @@ class MainWin( wx.Frame ):
 		img = None
 		self.editMenuItem = self.menuBar.Append( self.editMenu, "&Edit" )
 
+		#-----------------------------------------------------------------------
+		self.viewMenu = wx.Menu()
+		idCur = wx.NewId()
+		self.menuItemTimeHighPrecision = self.viewMenu.Append( idCur , "&Show 100s of a second", "Show 100s of a second", wx.ITEM_CHECK )
+		self.Bind( wx.EVT_MENU, self.menuShow100sOfSecond, id=idCur )
+		
+		self.menuBar.Append( self.viewMenu, "&View" )
 		#-----------------------------------------------------------------------
 		self.dataMgmtMenu = wx.Menu()
 		
@@ -406,7 +414,11 @@ class MainWin( wx.Frame ):
 	def menuRedo( self, event ):
 		undo.doRedo()
 		self.refresh()
-		
+	
+	def menuShow100sOfSecond( self, event ):
+		self.timeHighPrecision = self.menuItemTimeHighPrecision.IsChecked()
+		self.refresh()
+	
 	def menuTipAtStartup( self, event ):
 		showing = self.config.ReadBool('showTipAtStartup', True)
 		if Utils.MessageOKCancel( self, 'Turn Off Tips at Startup?' if showing else 'Show Tips at Startup?', 'Tips at Startup' ):
