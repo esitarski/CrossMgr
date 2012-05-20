@@ -308,6 +308,7 @@ class RiderDetail( wx.Panel ):
 		if not Model.race or num not in Model.race:
 			self.autoCorrectLaps.SetValue( True )
 			return
+		undo.pushState()
 		with Model.LockRace() as race:
 			rider = race[num]
 			rider.autoCorrectLaps = self.autoCorrectLaps.GetValue()

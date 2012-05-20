@@ -4,6 +4,7 @@ import wx
 import os
 import re
 import sys
+import math
 import subprocess
 import wx.grid		as gridlib
 try:
@@ -74,7 +75,7 @@ def AdjustGridSize( grid, rowsRequired = None, colsRequired = None ):
 		elif d < 0:
 			grid.AppendCols( -d )
 
-def formatTime( secs ):
+def formatTime( secs, highPrecision = False ):
 	if secs is None:
 		secs = 0
 	if secs < 0:
@@ -82,14 +83,19 @@ def formatTime( secs ):
 		secs = -secs
 	else:
 		sign = ''
-	secs = int(secs + 0.5)
+	f, ss = math.modf(secs)
+	secs = int(ss)
 	hours = int(secs // (60*60))
 	minutes = int( (secs // 60) % 60 )
 	secs = secs % 60
 	if hours > 0:
-		return "%s%d:%02d:%02d" % (sign, hours, minutes, secs)
+		s = "%s%d:%02d:%02d" % (sign, hours, minutes, secs)
 	else:
-		return "%s%02d:%02d" % (sign, minutes, secs)
+		s = "%s%02d:%02d" % (sign, minutes, secs)
+	if highPrecision:
+		d = int( f * 100 )
+		s += '.%02d' % d
+	return s
 
 def formatTimeGap( secs ):
 	if secs is None:
@@ -99,7 +105,7 @@ def formatTimeGap( secs ):
 		secs = -secs
 	else:
 		sign = ''
-	secs = int(secs + 0.5)
+	secs = int(secs)
 	minutes = int( secs // 60 )
 	secs = secs % 60
 	return "%s%d'%02d\"" % (sign, minutes, secs)
@@ -122,11 +128,11 @@ def StrToSeconds( str = '' ):
 	return secs
 	
 def SecondsToStr( secs = 0 ):
-	secs = int(secs+0.5)
+	secs = int(secs)
 	return '%02d:%02d:%02d' % (secs // (60*60), (secs // 60)%60, secs % 60)
 
 def SecondsToMMSS( secs = 0 ):
-	secs = int(secs+0.5)
+	secs = int(secs)
 	return '%02d:%02d' % ((secs // 60)%60, secs % 60)
 
 def ordinal( value ):
