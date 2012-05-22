@@ -43,7 +43,7 @@ class TimeEval( object ):
 
 	def clear( self ):
 		self.parser = None
-		self.tok, self.value, self.line, self.col, self.i = None, None, None, None, None
+		self.tok, self.value, self.line, self.col, self.i = None, None, 0, 0, 0
 		
 	def parse( self, str ):
 		line, col = 0, 0
