@@ -56,7 +56,7 @@ class TimeEval( object ):
 				i += len(m.group(0))
 				continue
 				
-			# Match numbers in time format.
+			# Match time format.
 			m = reTime.match( str, i )
 			if m:
 				x = 0.0

@@ -1309,13 +1309,14 @@ Continue?''' % fName, 'Simulate a Race' ):
 	#-------------------------------------------------------------
 	
 	def processJChipListener( self ):
+		
 		# Assumes Model is locked.
 		race = Model.race
 		
 		if not race or not getattr(race, 'enableJChipIntegration', False):
 			if JChip.listener:
 				JChip.StopListener()
-			return
+			return False
 		
 		if not JChip.listener:
 			JChip.StartListener( race.startTime )
@@ -1326,7 +1327,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 		if not getattr(race, 'tagNums', None):
 			JChipSetup.GetTagNums()
 		if not race.tagNums:
-			return
+			return False
 			
 		success = False
 		for d in data:
@@ -1341,18 +1342,17 @@ Continue?''' % fName, 'Simulate a Race' ):
 					success = True
 			except (TypeError, ValueError, KeyError):
 				pass
-				
+		
 		if success:
 			race.setChanged()
-			self.refresh()
-			self.record.refreshLaps()
+		return success
 
 	def updateRaceClock( self, event = None ):
 		if hasattr(self, 'record'):
 			self.record.refreshRaceTime()
 
-		with Model.lock:
-			race = Model.race
+		doRefresh = False
+		with Model.LockRace() as race:
 			if race is None:
 				self.SetTitle( Version.AppVerName )
 				self.timer.Stop()
@@ -1364,7 +1364,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			elif race.isRunning():
 				status = 'Running'
 				if getattr(race, 'enableJChipIntegration', False):
-					self.processJChipListener()
+					doRefresh = self.processJChipListener()
 				elif JChip.listener:
 					JChip.StopListener()
 			else:
@@ -1393,6 +1393,11 @@ Continue?''' % fName, 'Simulate a Race' ):
 		self.secondCount += 1
 		if self.secondCount % 30 == 0 and race.isChanged():
 			self.writeRace()
+			
+		if doRefresh:
+			wx.CallAfter( self.refresh )
+			wx.CallAfter( self.record.refreshLaps )
+
 			
 def MainLoop():
 	random.seed()

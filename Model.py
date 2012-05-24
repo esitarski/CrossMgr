@@ -9,14 +9,14 @@ import bisect
 import math
 import copy
 import operator
-import sys
+import sys, traceback
 import functools
-import thread
+import threading
 from os.path import commonprefix
 
-maxInterpolateTime = 2.0*60.0*60.0	# 2 hours.
+maxInterpolateTime = 7.0*60.0*60.0	# 7 hours.
 
-lock = thread.allocate_lock()
+lock = threading.RLock()
 
 #----------------------------------------------------------------------
 class memoize(object):
@@ -612,7 +612,7 @@ class Race(object):
 				if not getattr(self, 'firstRecordedTime', None):
 					self.firstRecordedTime = self.startTime + datetime.timedelta( seconds = t )
 					self.startTime = self.firstRecordedTime
-					t = 0
+					t = 0.0
 				r = self.getRider(num)
 				if r.firstTime is None:
 					r.firstTime = t
