@@ -58,6 +58,8 @@ from SetGraphic			import SetGraphicDialog
 
 import wx.lib.agw.advancedsplash as AS
 
+#----------------------------------------------------------------------------------
+		
 def ShowSplashScreen():
 	bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrSplash.png'), wx.BITMAP_TYPE_PNG )
 	
@@ -83,6 +85,8 @@ def ShowSplashScreen():
 		except:
 			pass
 			
+#----------------------------------------------------------------------------------
+		
 class MyTipProvider( wx.PyTipProvider ):
 	def __init__( self, fname, tipNo = None ):
 		self.tips = []
@@ -150,6 +154,34 @@ def ShowTipAtStartup():
 	except:
 		pass
 		
+#----------------------------------------------------------------------------------
+class CustomStatusBar(wx.StatusBar):
+    def __init__(self, parent):
+        wx.StatusBar.__init__(self, parent, -1)
+
+        # This status bar has three fields
+        self.SetFieldsCount(3)
+        # Sets the three fields to be relative widths to each other.
+        self.SetStatusWidths([-2, -1, -2])
+
+        # Field 0 ... just text
+        self.SetStatusText("A Custom StatusBar...", 0)
+
+        # We're going to use a timer to drive a 'clock' in the last
+        # field.
+        self.timer = wx.PyTimer(self.Notify)
+        self.timer.Start(1000)
+        self.Notify()
+
+    # Handles events from the timer we started in __init__().
+    # We're using it to drive a 'clock' in field 2 (the third field).
+    def Notify(self):
+        t = time.localtime(time.time())
+        st = time.strftime("%d-%b-%Y   %I:%M:%S", t)
+        self.SetStatusText(st, 2)
+
+#----------------------------------------------------------------------------------
+		
 class MainWin( wx.Frame ):
 	def __init__( self, parent, id = wx.ID_ANY, title='', size=(200,200) ):
 		wx.Frame.__init__(self, parent, id, title, size=size)
@@ -166,6 +198,9 @@ class MainWin( wx.Frame ):
 		self.fileName = None
 		self.numSelect = None
 		self.timeHighPrecision = False
+		
+		#self.sb = CustomStatusBar( self )
+		#self.SetStatusBar( self.sb )
 
 		# Setup the objects for the race clock.
 		self.timer = wx.Timer( self, id=wx.NewId() )
@@ -372,10 +407,10 @@ class MainWin( wx.Frame ):
 		self.chipMenu = wx.Menu()
 
 		idCur = wx.NewId()
-		self.chipMenu.Append( idCur , "&JChip... (Experimental)", "Configure and Test JChip Reader" )
+		self.chipMenu.Append( idCur , "JChip &Setup...", "Configure and Test JChip Reader" )
 		self.Bind(wx.EVT_MENU, self.menuJChip, id=idCur )
 		idCur = wx.NewId()
-		self.chipMenu.Append( idCur , "&Import... (Experimental)", "Import from JChip Generated File" )
+		self.chipMenu.Append( idCur , "JChip &Import...", "Import from JChip Generated File" )
 		self.Bind(wx.EVT_MENU, self.menuJChipImport, id=idCur )
 
 		self.menuBar.Append( self.chipMenu, "Chip&Reader" )
@@ -767,13 +802,16 @@ class MainWin( wx.Frame ):
 				Utils.MessageOK( self, "Bad file format:\n%s" % categoriesFile, "File Read Error", iconMask=wx.ICON_ERROR)
 
 		# Create some defaults so the page is not blank.
-		if not importedCategories:
-			with Model.LockRace() as race:
+		with Model.LockRace() as race:
+			if not importedCategories:
+				race.categoriesImportFile = ''
 				race.setCategories( [(True,
 									'Category %d-%d'	% (max(1, i*100), (i+1)*100-1),
 									'%d-%d'				% (max(1, i*100), (i+1)*100-1),
 									'00:00',
 									None) for i in xrange(8)] )
+			else:
+				race.categoriesImportFile = categoriesFile
 
 		self.writeRace()
 		self.showPageName( 'Actions' )

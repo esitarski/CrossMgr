@@ -162,7 +162,7 @@ class Actions( wx.Panel ):
 		if not Model.race:
 			return
 		with Model.LockRace() as race:
-			setattr( race, 'resetStartClockOnFirstTag', bool(self.resetStartClockCheckBox.IsChecked()) )
+			race.resetStartClockOnFirstTag = bool(self.resetStartClockCheckBox.IsChecked())
 	
 	def onPress( self, event ):
 		if not Model.race:

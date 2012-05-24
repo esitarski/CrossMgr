@@ -163,11 +163,11 @@ class GanttChart(wx.PyControl):
 			return
 		
 		if getattr(self, 'iRiderLast', -1) == iRider and getattr(self, 'iLapLast', -1) == iLap:
-			setattr( self, 'iRiderLast', -1 )
-			setattr( self, 'iLapLast', -1 )
+			self.iRiderLast = -1
+			self.iLapLast = -1
 			return
-		setattr( self, 'iRiderLast', iRider )
-		setattr( self, 'iLapLast', iLap )
+		self.iRiderLast = iRider
+		self.iLapLast = iLap
 		
 		self.numSelect = numFromLabel( self.labels[iRider] )
 		if self.getNowTimeCallback:

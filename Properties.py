@@ -60,12 +60,27 @@ class Properties( wx.Panel ):
 		self.fileName = wx.StaticText( self, wx.ID_ANY, '' )
 		rows += 1
 
+		self.excelLabel = wx.StaticText( self, wx.ID_ANY, 'Excel Sheet: ' )
+		self.excelName = wx.StaticText( self, wx.ID_ANY, '' )
+		rows += 1
+
+		self.categoriesFileLabel = wx.StaticText( self, wx.ID_ANY, 'Categories Imported From: ' )
+		self.categoriesFile = wx.StaticText( self, wx.ID_ANY, '' )
+		rows += 1
+
+		self.jchipLabel = wx.StaticText( self, wx.ID_ANY, 'JChip Integration: ' )
+		self.jchip = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
+		rows += 1
+
 		self.updateFileName()
 		
 		fbs = wx.FlexGridSizer( rows=rows+1, cols=2, hgap=5, vgap=3 )
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
 		fieldAlign = wx.EXPAND|wx.GROW
+		
+		blank = lambda : wx.StaticText(self,wx.ID_ANY,'')
+		
 		labelFieldFormats = [
 			(self.raceNameLabel,	0, labelAlign),		(self.raceName, 		1, fieldAlign),
 			(self.organizerLabel,	0, labelAlign),		(self.organizer,		1, fieldAlign),
@@ -75,8 +90,18 @@ class Properties( wx.Panel ):
 			(self.minutesLabel,		0, labelAlign),		(self.minutes, 			1, fieldAlign),
 			(self.memoLabel,		0, labelAlign),		(self.memo, 			1, fieldAlign),
 			(self.commissaireLabel,	0, labelAlign),		(self.commissaire, 		1, fieldAlign),
+			
+			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
 			(self.timeTrialLabel,	0, labelAlign),		(self.timeTrial,		1, fieldAlign),
-			(wx.StaticText(self,wx.ID_ANY,''), 0, labelAlign), (wx.StaticText(self,wx.ID_ANY,''), 1, fieldAlign),
+			
+			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
+			(self.jchipLabel,		0, labelAlign),		(self.jchip,			1, fieldAlign),
+			
+			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
+			(self.excelLabel,		0, labelAlign),		(self.excelName, 		1, fieldAlign),
+			(self.categoriesFileLabel, 0, labelAlign),	(self.categoriesFile,	1, fieldAlign),
+			
+			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
 			(self.fileNameLabel,	0, labelAlign),		(self.fileName, 		1, fieldAlign),
 		]
 		fbs.AddMany( labelFieldFormats )
@@ -87,10 +112,12 @@ class Properties( wx.Panel ):
 	
 	def setEditable( self, editable = True ):
 		for f in self.editFields:
+			f.Enable()
 			try:
 				f.SetEditable( editable )
 			except:
-				pass
+				if not editable and not isinstance(f, wx.StaticText):
+					f.Disable()
 	
 	def incNext( self ):
 		self.raceNum.SetValue( self.raceNum.GetValue() + 1 )
@@ -143,6 +170,17 @@ class Properties( wx.Panel ):
 			self.commissaire.SetValue( race.commissaire )
 			self.memo.SetValue( race.memo )
 			self.updateFileName()
+			
+			self.jchip.SetValue( getattr(race, 'enableJChipIntegration', False) )
+			
+			excelLink = getattr(race, 'excelLink', None)
+			if excelLink:
+				self.excelName.SetLabel( '%s|%s' % (
+					os.path.basename(excelLink.fileName) if excelLink.fileName else '',
+					excelLink.sheetName if excelLink.sheetName else '') )
+			else:
+				self.excelName.SetLabel( '' )
+			self.categoriesFile.SetLabel( os.path.basename(getattr(race, 'categoriesImportFile', '')) )
 		
 	def update( self, race = None ):
 		undo.pushState()
@@ -157,6 +195,7 @@ class Properties( wx.Panel ):
 			race.raceNum = self.raceNum.GetValue()
 			race.scheduledStart = self.scheduledStart.GetValue()
 			race.isTimeTrial = self.timeTrial.IsChecked()
+			race.enableJChipIntegration = self.jchip.IsChecked()
 			race.minutes = self.minutes.GetValue()
 			race.commissaire = self.commissaire.GetValue()
 			race.memo = self.memo.GetValue()
