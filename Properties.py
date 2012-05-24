@@ -11,7 +11,7 @@ class Properties( wx.Panel ):
 	badFileCharsRE = re.compile( '[^a-zA-Z0-9_ ]+' )
 	dateFormat = '%Y-%m-%d'
 
-	def __init__( self, parent, id = wx.ID_ANY ):
+	def __init__( self, parent, id = wx.ID_ANY, addEditButton = True ):
 		wx.Panel.__init__(self, parent, id)
 
 		rows = 0
@@ -74,6 +74,8 @@ class Properties( wx.Panel ):
 
 		self.updateFileName()
 		
+		if addEditButton:
+			rows += 1
 		fbs = wx.FlexGridSizer( rows=rows+1, cols=2, hgap=5, vgap=3 )
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
@@ -105,10 +107,25 @@ class Properties( wx.Panel ):
 			(self.fileNameLabel,	0, labelAlign),		(self.fileName, 		1, fieldAlign),
 		]
 		fbs.AddMany( labelFieldFormats )
+		
+		if addEditButton:
+			fbs.Add( blank() )
+			self.editButton = wx.Button(self, wx.ID_ANY, 'Edit...')
+			self.editButton.Bind( wx.EVT_BUTTON, self.editButtonCallback )
+			fbs.Add( self.editButton )
+		
 		fbs.AddGrowableCol( 1 )
 		self.SetSizer(fbs)
 		
 		self.editFields = [labelFieldFormats[i][0] for i in xrange(1, len(labelFieldFormats), 2)]
+	
+	def editButtonCallback( self, event ):
+		with Model.LockRace() as race:
+			pass
+		if not race:
+			Utils.MessageOK( 'You must have a valid race.', 'Valid Race Required', ICON_WARNING )
+		else:
+			ChangeProperties( self )
 	
 	def setEditable( self, editable = True ):
 		for f in self.editFields:
@@ -225,7 +242,7 @@ class PropertiesDialog( wx.Dialog ):
 		# contents
 		sizer = wx.BoxSizer(wx.VERTICAL)
 
-		self.properties = Properties( self )
+		self.properties = Properties( self, addEditButton = False )
 		if refreshProperties:
 			self.properties.refresh()
 		sizer.Add(self.properties, 0, wx.ALIGN_CENTRE|wx.ALL|wx.GROW, 5)
@@ -267,7 +284,7 @@ class PropertiesDialog( wx.Dialog ):
 		btnsizer.AddButton(btn)
 		btnsizer.Realize()
 
-		sizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
+		sizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.ALIGN_RIGHT, 5)
 
 		self.SetSizer(sizer)
 		sizer.Fit(self)
@@ -332,6 +349,7 @@ def ChangeProperties( parent ):
 		mainWin.fileName = newFName
 		Model.resetCache()
 		mainWin.writeRace()
+		Utils.refresh()
 			
 	except (NameError, AttributeError, TypeError):
 		pass
