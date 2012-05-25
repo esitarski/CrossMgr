@@ -461,6 +461,8 @@ class MainWin( wx.Frame ):
 	def menuSetLapAutocorrect( self, event ):
 		undo.pushState()
 		with Model.LockRace() as race:
+			if not race:
+				return
 			for num, rider in race.riders.iteritems():
 				rider.autocorrectLaps = True
 		self.refresh()
@@ -468,6 +470,8 @@ class MainWin( wx.Frame ):
 	def menuClearLapAutocorrect( self, event ):
 		undo.pushState()
 		with Model.LockRace() as race:
+			if not race:
+				return
 			for num, rider in race.riders.iteritems():
 				rider.autocorrectLaps = False
 		self.refresh()
