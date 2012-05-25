@@ -1075,6 +1075,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			race.memo = ''
 			race.minutes = self.raceMinutes
 			race.raceNum = 1
+			race.isTimeTrial = True
 			race.setCategories( [(True, 'Junior', '100-199', '00:00', None), (True, 'Senior','200-299', '00:15', None)] )
 
 		self.writeRace()
@@ -1368,7 +1369,6 @@ Continue?''' % fName, 'Simulate a Race' ):
 		if not race.tagNums:
 			return False
 			
-		success = False
 		for d in data:
 			if d[0] != 'data':
 				continue
@@ -1377,13 +1377,11 @@ Continue?''' % fName, 'Simulate a Race' ):
 				# Ignore times before the start of the race.
 				if race.isRunning() and race.startTime < dt:
 					delta = dt - race.startTime
-					race.importTime( num, delta.total_seconds() )
+					race.addTime( num, delta.total_seconds() )
 					success = True
 			except (TypeError, ValueError, KeyError):
 				pass
 		
-		if success:
-			race.setChanged()
 		return success
 
 	def updateRaceClock( self, event = None ):
