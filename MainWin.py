@@ -612,7 +612,7 @@ class MainWin( wx.Frame ):
 		printout.Destroy()
 
 	@logCall
-	def menuLinkExcel( self, event ):
+	def menuLinkExcel( self, event = None ):
 		if not Model.race:
 			Utils.MessageOK(self, "You must have a valid race.", "Link ExcelSheet", iconMask=wx.ICON_ERROR)
 			return
@@ -625,6 +625,7 @@ class MainWin( wx.Frame ):
 			else:
 				race.excelLink = link
 		self.writeRace()
+		self.refresh()
 		
 	#--------------------------------------------------------------------------------------------
 

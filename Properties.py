@@ -110,14 +110,27 @@ class Properties( wx.Panel ):
 		
 		if addEditButton:
 			fbs.Add( blank() )
-			self.editButton = wx.Button(self, wx.ID_ANY, 'Edit...')
+			hs = wx.BoxSizer( wx.HORIZONTAL )
+			
+			self.editButton = wx.Button(self, wx.ID_ANY, 'Change Properties...')
 			self.editButton.Bind( wx.EVT_BUTTON, self.editButtonCallback )
-			fbs.Add( self.editButton )
+			hs.Add( self.editButton, border = 8, flag = wx.TOP|wx.BOTTOM )
+			
+			self.excelButton = wx.Button(self, wx.ID_ANY, 'Link External Excel Sheet...')
+			self.excelButton.Bind( wx.EVT_BUTTON, self.excelButtonCallback )
+			hs.Add( self.excelButton, border = 8, flag = wx.LEFT|wx.TOP|wx.BOTTOM )
+
+			fbs.Add( hs )
 		
 		fbs.AddGrowableCol( 1 )
 		self.SetSizer(fbs)
 		
 		self.editFields = [labelFieldFormats[i][0] for i in xrange(1, len(labelFieldFormats), 2)]
+	
+	def excelButtonCallback( self, event ):
+		mainWin = Utils.getMainWin()
+		if mainWin:
+			mainWin.menuLinkExcel()
 	
 	def editButtonCallback( self, event ):
 		with Model.LockRace() as race:
