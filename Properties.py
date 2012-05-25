@@ -72,8 +72,8 @@ class Properties( wx.Panel ):
 		self.jchip = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
 		rows += 1
 
-		self.autoCorrectLapsDefaultLabel = wx.StaticText( self, wx.ID_ANY, 'Autocorrect Laps by Default: ' )
-		self.autoCorrectLapsDefault = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
+		self.autocorrectLapsDefaultLabel = wx.StaticText( self, wx.ID_ANY, 'Autocorrect Laps by Default: ' )
+		self.autocorrectLapsDefault = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
 		rows += 1
 
 		self.highPrecisionTimesLabel = wx.StaticText( self, wx.ID_ANY, 'Show Times to 100s of a Second: ' )
@@ -106,7 +106,7 @@ class Properties( wx.Panel ):
 			
 			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
 			(self.jchipLabel,		0, labelAlign),		(self.jchip,			1, fieldAlign),
-			(self.autoCorrectLapsDefaultLabel,0, labelAlign),(self.autoCorrectLapsDefault,1, fieldAlign),
+			(self.autocorrectLapsDefaultLabel,0, labelAlign),(self.autocorrectLapsDefault,1, fieldAlign),
 			(self.highPrecisionTimesLabel,0, labelAlign),(self.highPrecisionTimes,1, fieldAlign),
 			
 			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
@@ -212,7 +212,7 @@ class Properties( wx.Panel ):
 			self.updateFileName()
 			
 			self.jchip.SetValue( getattr(race, 'enableJChipIntegration', False) )
-			self.autoCorrectLapsDefault.SetValue( getattr(race, 'autoCorrectLapsDefault', True) )
+			self.autocorrectLapsDefault.SetValue( getattr(race, 'autocorrectLapsDefault', True) )
 			self.highPrecisionTimes.SetValue( getattr(race, 'highPrecisionTimes', False) )
 			
 			excelLink = getattr(race, 'excelLink', None)
@@ -238,7 +238,7 @@ class Properties( wx.Panel ):
 			race.scheduledStart = self.scheduledStart.GetValue()
 			race.isTimeTrial = self.timeTrial.IsChecked()
 			race.enableJChipIntegration = self.jchip.IsChecked()
-			race.autoCorrectLapsDefault = self.autoCorrectLapsDefault.IsChecked()
+			race.autocorrectLapsDefault = self.autocorrectLapsDefault.IsChecked()
 			race.highPrecisionTimes = self.highPrecisionTimes.IsChecked()
 			race.minutes = self.minutes.GetValue()
 			race.commissaire = self.commissaire.GetValue()

@@ -96,9 +96,9 @@ class RiderDetail( wx.Panel ):
 		gbs.Add( self.atRaceTime, pos=(row,3), span=(1,1), flag=wx.EXPAND )
 		row += 1
 		
-		self.autoCorrectLaps = wx.CheckBox( self, wx.ID_ANY, 'Autocorrect Lap Data' )
-		gbs.Add( self.autoCorrectLaps, pos = (row, 0), span=(1, 2), flag = wx.ALIGN_CENTRE|wx.EXPAND )
-		self.Bind( wx.EVT_CHECKBOX, self.onAutoCorrectLaps, self.autoCorrectLaps )
+		self.autocorrectLaps = wx.CheckBox( self, wx.ID_ANY, 'Autocorrect Lap Data' )
+		gbs.Add( self.autocorrectLaps, pos = (row, 0), span=(1, 2), flag = wx.ALIGN_CENTRE|wx.EXPAND )
+		self.Bind( wx.EVT_CHECKBOX, self.onAutocorrectLaps, self.autocorrectLaps )
 		row += 1
 
 		self.notInLap = wx.StaticText( self, wx.ID_ANY, '              ' )
@@ -311,15 +311,15 @@ class RiderDetail( wx.Panel ):
 		self.commitChange()
 		self.refresh()
 		
-	def onAutoCorrectLaps( self, event ):
+	def onAutocorrectLaps( self, event ):
 		num = self.num.GetValue()
 		if not Model.race or num not in Model.race:
-			self.autoCorrectLaps.SetValue( True )
+			self.autocorrectLaps.SetValue( True )
 			return
 		undo.pushState()
 		with Model.LockRace() as race:
 			rider = race[num]
-			rider.autoCorrectLaps = self.autoCorrectLaps.GetValue()
+			rider.autocorrectLaps = self.autocorrectLaps.GetValue()
 			race.setChanged()
 		self.refresh()
 	
@@ -412,7 +412,7 @@ class RiderDetail( wx.Panel ):
 		self.grid.Set( data = [ [], [], [] ] )
 		self.grid.Reset()
 		self.category.SetLabel( '' )
-		self.autoCorrectLaps.SetValue( True )
+		self.autocorrectLaps.SetValue( True )
 		num = self.num.GetValue()
 		
 		self.statusOption.SetSelection( 0 )
@@ -468,7 +468,7 @@ class RiderDetail( wx.Panel ):
 					rider.tStatus = 0.0
 				self.setAtRaceTime( rider.tStatus, True )
 				
-			self.autoCorrectLaps.SetValue( getattr(rider, 'autoCorrectLaps', True) )
+			self.autocorrectLaps.SetValue( getattr(rider, 'autocorrectLaps', True) )
 			
 			maxLap = race.getMaxLap()
 			if race.numLaps is not None and race.numLaps < maxLap:

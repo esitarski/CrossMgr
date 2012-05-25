@@ -305,8 +305,12 @@ class MainWin( wx.Frame ):
 		
 		self.editMenu.AppendSeparator()
 		idCur = wx.NewId()
-		self.editMenu.Append( idCur, '&Uncheck "Autocorrect Lap Data" for All Riders', 'Uncheck "Autocorrect Lap Data" for All Riders' )
-		self.Bind( wx.EVT_MENU, self.menuUncheckLapAutocorrect, id=idCur )
+		self.editMenu.Append( idCur, '&Set "Autocorrect Lap Data" for All Riders', 'Set "Autocorrect Lap Data" for All Riders' )
+		self.Bind( wx.EVT_MENU, self.menuSetLapAutocorrect, id=idCur )
+		
+		idCur = wx.NewId()
+		self.editMenu.Append( idCur, '&Clear "Autocorrect Lap Data" for All Riders', 'Clear "Autocorrect Lap Data" for All Riders' )
+		self.Bind( wx.EVT_MENU, self.menuClearLapAutocorrect, id=idCur )
 
 		img = None
 		self.editMenuItem = self.menuBar.Append( self.editMenu, "&Edit" )
@@ -454,11 +458,18 @@ class MainWin( wx.Frame ):
 		undo.doRedo()
 		self.refresh()
 		
-	def menuUncheckLapAutocorrect( self, event ):
+	def menuSetLapAutocorrect( self, event ):
 		undo.pushState()
 		with Model.LockRace() as race:
 			for num, rider in race.riders.iteritems():
-				rider.autoCorrectLaps = False
+				rider.autocorrectLaps = True
+		self.refresh()
+	
+	def menuClearLapAutocorrect( self, event ):
+		undo.pushState()
+		with Model.LockRace() as race:
+			for num, rider in race.riders.iteritems():
+				rider.autocorrectLaps = False
 		self.refresh()
 	
 	def menuShowHighPrecisionTimes( self, event ):

@@ -299,7 +299,7 @@ class Rider(object):
 		self.times = []
 		self.status = Rider.Finisher
 		self.tStatus = None
-		self.autoCorrectLaps = True
+		self.autocorrectLaps = True
 		self.firstTime = None		# Used for time trial mode.  Also used to flag the first start time.
 
 	def addTime( self, t ):
@@ -434,7 +434,7 @@ class Rider(object):
 			return []
 			
 		# Check if we need to do any interpolation or if the user wants the raw data.
-		if not getattr(self, 'autoCorrectLaps', True):
+		if not getattr(self, 'autocorrectLaps', True):
 			iTimes = [None] * (len(self.times) + 1)
 			# Add a zero start time for the beginning of the race.
 			# This avoids a whole lot of special cases later.
@@ -517,7 +517,7 @@ class Race(object):
 		self.numLaps = None
 		self.firstRecordedTime = None	# Used to trigger the race on the first recorded time.
 		self.isTimeTrial = False
-		self.autoCorrectLapsDefault = True
+		self.autocorrectLapsDefault = True
 		self.highPrecisionTimes = False
 
 		self.isChangedFlag = True
@@ -576,7 +576,7 @@ class Race(object):
 		except KeyError:
 			rider = Rider( num )
 			self.riders[num] = rider
-			rider.autoCorrectLaps = getattr(self, 'autoCorrectLapsDefault', True)
+			rider.autocorrectLaps = getattr(self, 'autocorrectLapsDefault', True)
 		return rider
 
 	def getRiderNumbers( self ):
@@ -687,7 +687,7 @@ class Race(object):
 		r2.times = [t - tAdjust for t in r1.times]
 		r2.status = Rider.Finisher
 		r2.tStatus = None
-		r2.autoCorrectLaps = True
+		r2.autocorrectLaps = True
 		
 		self.setChanged()
 		return True
