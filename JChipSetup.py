@@ -28,6 +28,11 @@ def CheckExcelLink():
 		
 	return (True, 'Excel Link OK')
 
+def FixTag( tag ):
+	if len(tag) < JChipTagLength:
+		tag = '0' * JChipTagLength + tag
+	return tag[-JChipTagLength:]
+	
 def GetTagNums( forceUpdate = False ):
 	# Assumes the race is already locked.
 	race = Model.race
@@ -49,10 +54,7 @@ def GetTagNums( forceUpdate = False ):
 			for tagName in ['Tag', 'Tag2']:
 				try:
 					tag = edata[tagName]
-					if len(tag) < JChipTagLength:
-						tag = '0' * JChipTagLength + tag
-					tag = tag[-JChipTagLength:]
-					race.tagNums[tag] = num
+					race.tagNums[FixTag(tag)] = num
 				except (KeyError, ValueError):
 					pass
 				

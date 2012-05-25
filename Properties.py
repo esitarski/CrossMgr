@@ -229,6 +229,7 @@ class Properties( wx.Panel ):
 			race.minutes = self.minutes.GetValue()
 			race.commissaire = self.commissaire.GetValue()
 			race.memo = self.memo.GetValue()
+			race.setChanged()
 		
 class PropertiesDialog( wx.Dialog ):
 	def __init__(

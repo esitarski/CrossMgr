@@ -7,6 +7,7 @@ import ColGrid
 import EditEntry
 from LineGraph import LineGraph
 from GanttChart import GanttChart
+from JChipSetup import FixTag
 from Undo import undo
 import Gantt
 import random
@@ -72,6 +73,13 @@ class RiderDetail( wx.Panel ):
 		self.riderTeam = wx.StaticText( self, wx.ID_ANY, '' )
 		self.riderTeam.SetDoubleBuffered( True )
 		gbs.Add( self.riderTeam, pos=(row,1), span=(1,4), flag=wx.EXPAND )
+		row += 1
+		
+		self.tagsName = wx.StaticText( self, wx.ID_ANY, 'Tag(s): ' )
+		gbs.Add( self.tagsName, pos=(row,0), span=(1,1), flag=labelAlign )
+		self.tags = wx.StaticText( self, wx.ID_ANY, '' )
+		self.tags.SetDoubleBuffered( True )
+		gbs.Add( self.tags, pos=(row,1), span=(1,4), flag=wx.EXPAND )
 		row += 1
 		
 		self.statusName = wx.StaticText( self, wx.ID_ANY, 'Status: ' )
@@ -414,6 +422,7 @@ class RiderDetail( wx.Panel ):
 		self.ganttChart.SetData( [] )
 		self.riderName.SetLabel( '' )
 		self.riderTeam.SetLabel( '' )
+		self.tags.SetLabel( '' )
 		
 		with Model.LockRace() as race:
 			if race is None or num not in race:
@@ -422,11 +431,7 @@ class RiderDetail( wx.Panel ):
 			catName = race.getCategoryName( num )
 			category = race.categories.get( catName, None )
 			
-			try:
-				externalInfo = race.excelLink.read()
-			except:
-				externalInfo = {}
-			
+			externalInfo = race.excelLink.read()
 			try:
 				info = externalInfo[int(num)]
 				name = info.get( 'LastName', '' )
@@ -438,6 +443,19 @@ class RiderDetail( wx.Panel ):
 						name = firstName
 				self.riderName.SetLabel( name )
 				self.riderTeam.SetLabel( info.get('Team', '') )
+			except KeyError:
+				pass
+
+			try:
+				info = externalInfo[int(num)]
+				tags = []
+				for tagName in ['Tag', 'Tag2']:
+					try:
+						tags.append( FixTag(info[tagName]) )
+					except (KeyError, ValueError):
+						pass
+				if tags:
+					self.tags.SetLabel( ', '.join(tags) )
 			except KeyError:
 				pass
 				
