@@ -197,7 +197,6 @@ class MainWin( wx.Frame ):
 		
 		self.fileName = None
 		self.numSelect = None
-		self.timeHighPrecision = False
 		
 		#self.sb = CustomStatusBar( self )
 		#self.SetStatusBar( self.sb )
@@ -315,8 +314,8 @@ class MainWin( wx.Frame ):
 		#-----------------------------------------------------------------------
 		self.viewMenu = wx.Menu()
 		idCur = wx.NewId()
-		self.menuItemTimeHighPrecision = self.viewMenu.Append( idCur , "&Show 100s of a second", "Show 100s of a second", wx.ITEM_CHECK )
-		self.Bind( wx.EVT_MENU, self.menuShow100sOfSecond, id=idCur )
+		self.menuItemHighPrecisionTimes = self.viewMenu.Append( idCur , "&Show 100s of a second", "Show 100s of a second", wx.ITEM_CHECK )
+		self.Bind( wx.EVT_MENU, self.menuShowHighPrecisionTimes, id=idCur )
 		
 		self.menuBar.Append( self.viewMenu, "&View" )
 		#-----------------------------------------------------------------------
@@ -462,9 +461,12 @@ class MainWin( wx.Frame ):
 				rider.autoCorrectLaps = False
 		self.refresh()
 	
-	def menuShow100sOfSecond( self, event ):
-		self.timeHighPrecision = self.menuItemTimeHighPrecision.IsChecked()
-		self.refresh()
+	def menuShowHighPrecisionTimes( self, event ):
+		undo.pushState()
+		with Model.LockRace() as race:
+			if race:
+				race.highPrecisionTimes = self.menuItemHighPrecisionTimes.IsChecked()
+		wx.CallAfter( self.refresh )
 	
 	def menuTipAtStartup( self, event ):
 		showing = self.config.ReadBool('showTipAtStartup', True)
@@ -517,6 +519,7 @@ class MainWin( wx.Frame ):
 		dlg = JChipImport.JChipImportDialog( self )
 		dlg.ShowModal()
 		dlg.Destroy()
+		self.refresh()
 		
 	def menuShowPage( self, event ):
 		self.showPage( self.idPage[event.GetId()] )
@@ -1075,7 +1078,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			race.memo = ''
 			race.minutes = self.raceMinutes
 			race.raceNum = 1
-			race.isTimeTrial = True
+			#race.isTimeTrial = True
 			race.setCategories( [(True, 'Junior', '100-199', '00:00', None), (True, 'Senior','200-299', '00:15', None)] )
 
 		self.writeRace()
@@ -1309,6 +1312,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 		self.refreshCurrentPage()
 		self.forecastHistory.refresh()
 		self.updateRaceClock()
+		with Model.LockRace() as race:
+			self.menuItemHighPrecisionTimes.Check( race and getattr(race, 'highPrecisionTimes', False) ) 
 
 	def updateUndoStatus( self, event = None ):
 		with Model.LockRace() as race:
@@ -1368,7 +1373,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 			JChipSetup.GetTagNums()
 		if not race.tagNums:
 			return False
-			
+		
+		success = False
 		for d in data:
 			if d[0] != 'data':
 				continue

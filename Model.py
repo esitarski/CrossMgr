@@ -517,6 +517,8 @@ class Race(object):
 		self.numLaps = None
 		self.firstRecordedTime = None	# Used to trigger the race on the first recorded time.
 		self.isTimeTrial = False
+		self.autoCorrectLapsDefault = True
+		self.highPrecisionTimes = False
 
 		self.isChangedFlag = True
 		
@@ -574,6 +576,7 @@ class Race(object):
 		except KeyError:
 			rider = Rider( num )
 			self.riders[num] = rider
+			rider.autoCorrectLaps = getattr(self, 'autoCorrectLapsDefault', True)
 		return rider
 
 	def getRiderNumbers( self ):

@@ -272,7 +272,10 @@ def isMainWin():
 	return mainWin is not None
 	
 def timeHighPrecision():
-	return mainWin.timeHighPrecision if mainWin is not None else False
+	try:
+		return Model.race.timeHighPrecision
+	except:
+		return False
 	
 if __name__ == '__main__':
 	hd = getHomeDir()
