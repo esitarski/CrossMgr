@@ -271,13 +271,27 @@ def getFileName():
 def isMainWin():
 	return mainWin is not None
 	
-def timeHighPrecision():
+def highPrecisionTimes():
 	try:
-		return Model.race.timeHighPrecision
+		return Model.race.highPrecisionTimes
 	except:
 		return False
+		
+def hasTrailingSeparator( menu ):
+	itemCount = menu.GetMenuItemCount()
+	return itemCount > 0 and menu.FindItemByPosition(itemCount-1).IsSeparator()
+	
+def addMissingSeparator( menu ):
+	if not hasTrailingSeparator(menu):
+		menu.AppendSeparator()
+	
+def deleteTrailingSeparators( menu ):
+	while hasTrailingSeparator(menu):
+		menu.DeleteItem( menu.FindItemByPosition(menu.GetMenuItemCount()-1) )
 	
 if __name__ == '__main__':
+	app = wx.PySimpleApp()
 	hd = getHomeDir()
-	with open( os.path.join(hd, 'Test.txt'), 'w' ) as fp:
-		pass
+	fn = os.path.join(hd, 'Test.txt')
+	with open( fn, 'w' ) as fp:
+		print 'successfully opened: ' + fn

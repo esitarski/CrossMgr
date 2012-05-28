@@ -305,11 +305,11 @@ class MainWin( wx.Frame ):
 		
 		self.editMenu.AppendSeparator()
 		idCur = wx.NewId()
-		self.editMenu.Append( idCur, '&Set "Autocorrect Lap Data" for All Riders', 'Set "Autocorrect Lap Data" for All Riders' )
+		self.editMenu.Append( idCur, '&Enable Autocorrect for All Riders', 'Enable Autocorrect for All Riders' )
 		self.Bind( wx.EVT_MENU, self.menuSetLapAutocorrect, id=idCur )
 		
 		idCur = wx.NewId()
-		self.editMenu.Append( idCur, '&Clear "Autocorrect Lap Data" for All Riders', 'Clear "Autocorrect Lap Data" for All Riders' )
+		self.editMenu.Append( idCur, '&Disable Autocorrect for All Riders', 'Disable Autocorrect for All Riderss' )
 		self.Bind( wx.EVT_MENU, self.menuClearLapAutocorrect, id=idCur )
 
 		img = None
@@ -719,7 +719,7 @@ class MainWin( wx.Frame ):
 				timeComponents.append( 0 )
 			hour, minute, second = timeComponents
 			raceTime = datetime.datetime( year, month, day, hour, minute, second )
-			title = '%s Results for %s Race on %s' % ( race.name, raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
+			title = '%s Results for %s Start on %s' % ( race.name, raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
 			html = html.replace( 'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
 			organizer = getattr( race, 'organizer', '' )
 			html = html.replace( 'organizer = null', 'organizer = %s' % json.dumps(organizer), 1 )
@@ -1307,9 +1307,12 @@ Continue?''' % fName, 'Simulate a Race' ):
 				
 	def callPageRefresh( self, i ):
 		try:
-			self.pages[i].refresh()
-		except (AttributeError, IndexError):
-			pass
+			page = self.pages[i]
+		except IndexError:
+			return
+			
+		if hasattr(page, 'refresh'):
+			page.refresh()
 
 	def callPageCommit( self, i ):
 		try:

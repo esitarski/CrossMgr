@@ -10,6 +10,7 @@ from GanttChart import GanttChart
 from JChipSetup import FixTag
 from Undo import undo
 import Gantt
+from EditEntry import CorrectNumber, ShiftNumber, DeleteEntry
 import random
 import bisect
 import sys
@@ -20,6 +21,8 @@ class RiderDetail( wx.Panel ):
 		wx.Panel.__init__(self, parent, id)
 		
 		self.num = None
+		self.iLap = None
+		self.entry = None
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
 		
@@ -112,6 +115,9 @@ class RiderDetail( wx.Panel ):
 		self.grid.AutoSizeColumns( True )
 		self.grid.DisableDragColSize()
 		self.grid.DisableDragRowSize()
+		self.grid.SetSelectionMode( wx.grid.Grid.wxGridSelectRows )
+		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doRightClick )
+
 		
 		gbs.Add( self.grid, pos=(row,0), span=(1,2), flag=wx.EXPAND )
 		
@@ -135,6 +141,68 @@ class RiderDetail( wx.Panel ):
 		self.gbs = gbs
 		self.setRider()
 		
+	def getLapClicked( self, event ):
+		row = event.GetRow()
+		if row >= self.grid.GetNumberRows():
+			return None
+		return row + 1
+		
+	def doRightClick( self, event ):
+		self.grid.SelectRow( event.GetRow() )
+		
+		allCases = 0
+		interpCase = 1
+		nonInterpCase = 2
+		if not hasattr(self, 'popupInfo'):
+			self.popupInfo = [
+				(wx.NewId(), 'Correct...',	'Change number or lap time...',	self.OnPopupCorrect, interpCase),
+				(wx.NewId(), 'Shift...',	'Move lap time earlier/later...',	self.OnPopupShift, interpCase),
+				(wx.NewId(), 'Delete...',	'Delete lap time...',	self.OnPopupDelete, nonInterpCase),
+			]
+			for p in self.popupInfo:
+				if p[0]:
+					self.Bind( wx.EVT_MENU, p[3], id=p[0] )
+					
+		num = int(self.num.GetValue())
+		if num is None:
+			return
+			
+		self.iLap = self.getLapClicked( event )
+		if self.iLap is None:
+			return
+		
+		with Model.LockRace() as race:
+			if not race or num not in race:
+				return
+			entries = race.getRider(num).interpolate()
+		
+		try:
+			self.entry = entries[self.iLap]
+			caseCode = 1 if self.entry.interp else 2
+		except (TypeError, IndexError, KeyError):
+			caseCode = 0
+		
+		menu = wx.Menu()
+		for id, name, text, callback, cCase in self.popupInfo:
+			if not id:
+				if not Utils.hasTrailingSeparator(menu):
+					menu.AppendSeparator()
+				continue
+			if caseCode >= cCase:
+				menu.Append( id, name, text )
+		
+		self.PopupMenu( menu )
+		menu.Destroy()
+
+	def OnPopupCorrect( self, event ):
+		CorrectNumber( self, self.entry )
+		
+	def OnPopupShift( self, event ):
+		ShiftNumber( self, self.entry )
+
+	def OnPopupDelete( self, event ):
+		DeleteEntry( self, self.entry )
+	
 	def onEditRider( self, event ):
 		self.PopupMenu( self.menu )
 	
@@ -362,7 +430,7 @@ class RiderDetail( wx.Panel ):
 			undo.pushState()
 			with Model.LockRace() as race:
 				race.deleteTime( num, times[lap-1] )
-			self.refresh()
+			wx.CallAfter( self.refresh )
 			
 	def onDeleteLapEnd( self, event ):
 		num, lap, times = self.getGanttChartNumLapTimes()
@@ -371,7 +439,7 @@ class RiderDetail( wx.Panel ):
 		undo.pushState()
 		with Model.LockRace() as race:
 			race.deleteTime( num, times[lap] )
-		self.refresh()
+		wx.CallAfter( self.refresh )
 			
 	def onEditGantt( self, xPos, yPos, num, iRider, lap ):
 		if not hasattr(self, "ganttMenuInfo"):
@@ -475,7 +543,11 @@ class RiderDetail( wx.Panel ):
 				maxLap = race.numLaps
 			
 			# Figure out which laps this rider was lapped in.
-			entries = race.interpolateLap( maxLap )
+			if getattr(rider, 'autocorrectLaps', True):
+				entries = race.interpolateLap( maxLap )
+			else:
+				entries = race.getRider(num).interpolate()
+			
 			entries = [e for e in entries if e.num == num and e.t > 0]
 
 			leaderTimes, leaderNums = race.getLeaderTimesNums()

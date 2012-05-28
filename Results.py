@@ -172,19 +172,16 @@ class Results( wx.Panel ):
 				setattr( self, attr, numAdjacent )
 			
 		menu = wx.Menu()
-		lastWasSeparator = False
 		for id, name, text, callback, cCase in self.popupInfo:
 			if not id:
-				if not lastWasSeparator:
-					menu.AppendSeparator()
-				lastWasSeparator = True
+				Utils.addMissingSeparator( menu )
 				continue
 			if caseCode >= cCase:
 				if (name.endswith('before') and not self.numBefore) or (name.endswith('after') and not self.numAfter):
 					continue
 				menu.Append( id, name, text )
-				lastWasSeparator = False
-		
+				
+		Utils.deleteTrailingSeparators( menu )
 		self.PopupMenu( menu )
 		menu.Destroy()
 		

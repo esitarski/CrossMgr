@@ -169,18 +169,15 @@ class History( wx.Panel ):
 		caseCode = 1 if isInterp else 2
 		
 		menu = wx.Menu()
-		lastWasSeparator = False
 		for i, (id, name, text, callback, cCode) in enumerate(self.popupInfo):
 			if not id:
-				if not lastWasSeparator:
-					menu.AppendSeparator()
-				lastWasSeparator = True
+				Utils.addMissingSeparator( menu )
 				continue
 			if caseCode < cCode:
 				continue
 			menu.Append( id, name, text )
-			lastWasSeparator = False
 		
+		Utils.deleteTrailingSeparators( menu )
 		self.PopupMenu( menu )
 		menu.Destroy()
 
@@ -341,7 +338,7 @@ class History( wx.Panel ):
 		self.search.SelectAll()
 		wx.CallAfter( self.search.SetFocus )
 		
-		if Utils.timeHighPrecision():
+		if Utils.highPrecisionTimes():
 			formatTime = lambda t: Utils.formatTime(t, True)
 		else:
 			formatTime = Utils.formatTime
@@ -416,8 +413,12 @@ class History( wx.Panel ):
 			colnames = []
 			raceTime = 0
 			for c, h in enumerate(self.history):
-				lapTime = h[0].t - raceTime
-				raceTime = h[0].t
+				try:
+					lapTime = h[0].t - raceTime
+					raceTime = h[0].t
+				except IndexError:
+					lapTime = 0
+					
 				colnames.append( '%s\n%s\n%s\n%s' %(str(c+1),
 													str(maxLaps - c - 1) if doLapsToGo else ' ',
 													formatTime(lapTime),

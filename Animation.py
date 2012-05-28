@@ -348,6 +348,7 @@ class Animation(wx.PyControl):
 		riderRadius = laneWidth * 0.75
 		thickLine = r / 32
 		highlightPen = wx.Pen( wx.Colour(255,255,255), thickLine * 1.0 )
+		riderPosition = {}
 		if self.data:
 			riderXYPT = []
 			for num, d in self.data.iteritems():
@@ -364,7 +365,6 @@ class Animation(wx.PyControl):
 			for j, i in enumerate(xrange(len(riderXYPT) - 1, max(-1,len(riderXYPT)-4), -1)):
 				topThree[riderXYPT[i][0]] = j
 			
-			riderPosition = {}
 			numRiders = len(riderXYPT)
 			for j, (num, x, y, position, time) in enumerate(riderXYPT):
 				riderPosition[num] = numRiders - j

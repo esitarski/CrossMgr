@@ -518,7 +518,7 @@ function Refresh()
 			}
 		}
 	}
-		
+	
 	// Draw the race time
 	dc.fillStyle = 'black';
 	var tStr = FormatTime( t );
@@ -608,7 +608,8 @@ function Animate( tRunning, aTMax, tCur )
 	{
 		tMax = 0;
 		for( num in data )
-			tMax = Math.max(tMax, data[num]['lapTimes'].back());
+			if( data[num]['lapTimes'].length > 0 )
+				tMax = Math.max(tMax, data[num]['lapTimes'].back());
 	}
 	else
 		tMax = aTMax;

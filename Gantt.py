@@ -114,27 +114,24 @@ class Gantt( wx.Panel ):
 				setattr( self, attr, numAdjacent )
 		
 		menu = wx.Menu()
-		lastWasSeparator = False
 		for id, name, text, callback, cCase in self.popupInfo:
 			if not id:
-				if not lastWasSeparator:
-					menu.AppendSeparator()
-				lastWasSeparator = True
+				Utils.addMissingSeparator( menu )
 				continue
 			if caseCode < cCase:
 				continue
 			if (name.endswith('before') and not self.numBefore) or (name.endswith('after') and not self.numAfter):
 				continue
 			menu.Append( id, name, text )
-			lastWasSeparator = False
 			
 		if caseCode == 2:
 			submenu = wx.Menu()
 			for id, name, callback in self.splitMenuInfo:
 				submenu.Append( id, name )
-			menu.AppendSeparator()
+			Utils.addMissingSeparator( menu )
 			menu.AppendMenu( wx.NewId(), 'Add Missing Split', submenu )
-		
+			
+		Utils.deleteTrailingSeparators( menu )
 		self.PopupMenu( menu )
 		menu.Destroy()
 

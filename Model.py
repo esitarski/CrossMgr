@@ -702,9 +702,6 @@ class Race(object):
 			return
 		rider = self.riders[num]
 		rider.deleteTime( t )
-		# If there are no times for this rider, remove the rider entirely.
-		if len(rider.times) == 0:
-			del self.riders[num]
 		self.setChanged()
 
 	@memoize

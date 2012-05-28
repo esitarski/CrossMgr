@@ -45,6 +45,8 @@ class RiderResult( object ):
 		self.interp		= interp
 		
 def GetResults( catName = 'All', getExternalData = False ):
+	
+	riderResults = []
 	with Model.LockRace() as race:
 		if not race:
 			return []
@@ -61,7 +63,7 @@ def GetResults( catName = 'All', getExternalData = False ):
 				
 			# If the category num laps is specified, use that.
 			if c.getNumLaps():
-				categoryWinningTime[c] = times[c.getNumLaps()]
+				categoryWinningTime[c] = times[min(len(times)-1, c.getNumLaps())]
 			else:
 				# Otherwise, set the number of laps by the winner's time closest to the race finish time.
 				try:
@@ -82,7 +84,6 @@ def GetResults( catName = 'All', getExternalData = False ):
 		if not categoryWinningTime:
 			return []
 		
-		riderResults = []
 		for rider in race.riders.itervalues():
 			riderCategory = race.getCategory( rider.num )
 			if (category and riderCategory != category) or riderCategory not in categoryWinningTime:
@@ -157,5 +158,6 @@ def GetResults( catName = 'All', getExternalData = False ):
 			elif rr != leader:
 				rr.gap = Utils.formatTimeGap( rr.lastTime - leader.lastTime )
 		
-		return riderResults
+	# Return the final results.
+	return riderResults
 		
