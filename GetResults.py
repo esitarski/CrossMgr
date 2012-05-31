@@ -37,6 +37,7 @@ class RiderResult( object ):
 		self.status		= status
 		self.gap		= ''
 		self.pos		= ''
+		self.speed		= ''
 		self.laps		= len(lapTimes)
 		self.lastTime	= lastTime
 		self.raceCat	= raceCat
@@ -84,6 +85,7 @@ def GetResults( catName = 'All', getExternalData = False ):
 		if not categoryWinningTime:
 			return []
 		
+		isTimeTrial = getattr( race, 'isTimeTrial', False )
 		for rider in race.riders.itervalues():
 			riderCategory = race.getCategory( rider.num )
 			if (category and riderCategory != category) or riderCategory not in categoryWinningTime:
@@ -107,11 +109,16 @@ def GetResults( catName = 'All', getExternalData = False ):
 				else:
 					lastTime = 0.0
 			
-			riderResults.append( RiderResult(rider.num, rider.status, lastTime,
-									riderCategory.name,
-									[times[i] - times[i-1] for i in xrange(1, len(times))],
-									times,
-									interp) )
+			rr = RiderResult(	rider.num, rider.status, lastTime,
+								riderCategory.name,
+								[times[i] - times[i-1] for i in xrange(1, len(times))],
+								times,
+								interp )
+			if isTimeTrial and lastTime and rider.status == Model.Rider.Finisher and getattr(riderCategory, 'distance', None):
+				distance = getattr(riderCategory, 'distance')
+				speed = distance / (lastTime / (60.0*60.0))
+				rr.speed = '%.2f %s' % (speed, ['km/h', 'mph'][getattr(race, 'distanceUnit', 0)] )
+			riderResults.append( rr )
 		
 		if not riderResults:
 			return []
@@ -144,7 +151,7 @@ def GetResults( catName = 'All', getExternalData = False ):
 					setattr( rr, f, externalInfo[rr.num][f] )
 				except KeyError:
 					setattr( rr, f, '' )
-		
+					
 			if rr.status != Model.Rider.Finisher:
 				rr.pos = Model.Rider.statusNames[rr.status]
 				continue

@@ -74,10 +74,16 @@ class Properties( wx.Panel ):
 
 		self.autocorrectLapsDefaultLabel = wx.StaticText( self, wx.ID_ANY, 'Autocorrect Laps by Default: ' )
 		self.autocorrectLapsDefault = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
+		self.autocorrectLapsDefault.SetValue( True )
 		rows += 1
 
 		self.highPrecisionTimesLabel = wx.StaticText( self, wx.ID_ANY, 'Show Times to 100s of a Second: ' )
 		self.highPrecisionTimes = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
+		rows += 1
+
+		self.distanceUnitLabel = wx.StaticText( self, wx.ID_ANY, 'Distance Unit: ' )
+		self.distanceUnit = wx.Choice( self, wx.ID_ANY, choices=['km', 'miles'] )
+		self.distanceUnit.SetSelection( 0 )
 		rows += 1
 
 		self.updateFileName()
@@ -108,6 +114,9 @@ class Properties( wx.Panel ):
 			(self.jchipLabel,		0, labelAlign),		(self.jchip,			1, fieldAlign),
 			(self.autocorrectLapsDefaultLabel,0, labelAlign),(self.autocorrectLapsDefault,1, fieldAlign),
 			(self.highPrecisionTimesLabel,0, labelAlign),(self.highPrecisionTimes,1, fieldAlign),
+			
+			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
+			(self.distanceUnitLabel,0, labelAlign),		(self.distanceUnit,		1, fieldAlign),
 			
 			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
 			(self.excelLabel,		0, labelAlign),		(self.excelName, 		1, fieldAlign),
@@ -214,6 +223,7 @@ class Properties( wx.Panel ):
 			self.jchip.SetValue( getattr(race, 'enableJChipIntegration', False) )
 			self.autocorrectLapsDefault.SetValue( getattr(race, 'autocorrectLapsDefault', True) )
 			self.highPrecisionTimes.SetValue( getattr(race, 'highPrecisionTimes', False) )
+			self.distanceUnit.SetSelection( getattr(race, 'distanceUnit', 0) )
 			
 			excelLink = getattr(race, 'excelLink', None)
 			if excelLink:
@@ -240,6 +250,7 @@ class Properties( wx.Panel ):
 			race.enableJChipIntegration = self.jchip.IsChecked()
 			race.autocorrectLapsDefault = self.autocorrectLapsDefault.IsChecked()
 			race.highPrecisionTimes = self.highPrecisionTimes.IsChecked()
+			race.distanceUnit = self.distanceUnit.GetSelection()
 			race.minutes = self.minutes.GetValue()
 			race.commissaire = self.commissaire.GetValue()
 			race.memo = self.memo.GetValue()

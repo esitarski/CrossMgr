@@ -152,7 +152,7 @@ class Category(object):
 					mask = cp.ljust(len(mask), '.')
 		return mask
 
-	def __init__( self, active, name, catStr = '', startOffset = '00:00', numLaps = None, sequence = 0 ):
+	def __init__( self, active, name, catStr = '', startOffset = '00:00', numLaps = None, sequence = 0, distance = None ):
 		self.active = False
 		active = str(active).strip()
 		if active and active[0] in 'TtYy1':
@@ -168,6 +168,10 @@ class Category(object):
 			self.sequence = int(sequence)
 		except (ValueError, TypeError):
 			self.sequence = 0
+		try:
+			self.distance = float(distance) if distance else None
+		except (ValueError, TypeError):
+			self.distance = None
 		
 	def __setstate( self, d ):
 		self.__dict__.update(d)
@@ -226,13 +230,14 @@ class Category(object):
 		self.intervals.sort()
 
 	def __repr__( self ):
-		return 'Category(active=%s, name="%s", catStr="%s", startOffset="%s", numLaps=%s, sequence=%s)' % (
+		return 'Category(active=%s, name="%s", catStr="%s", startOffset="%s", numLaps=%s, sequence=%s, distance=%s)' % (
 				str(self.active),
 				self.name,
 				self.catStr,
 				self.startOffset,
 				str(self.numLaps),
-				str(self.sequence) )
+				str(self.sequence),
+				str(self.distance) )
 
 	def getStartOffsetSecs( self ):
 		return Utils.StrToSeconds( self.startOffset )
@@ -497,6 +502,9 @@ class Race(object):
 	nonFinisherStatusList = [Rider.DNF, Rider.DNS, Rider.DQ, Rider.NP, Rider.OTL]
 	nonFinisherStatusSet = set( nonFinisherStatusList )
 	
+	UnitKm = 0
+	UnitMiles = 1
+	
 	def __init__( self ):
 		self.reset()
 
@@ -519,6 +527,7 @@ class Race(object):
 		self.isTimeTrial = False
 		self.autocorrectLapsDefault = True
 		self.highPrecisionTimes = False
+		self.distanceUnit = Race.UnitKm
 
 		self.isChangedFlag = True
 		
@@ -1109,8 +1118,8 @@ class Race(object):
 		self.setChanged()
 
 	def setCategories( self, nameStrTuples ):
-		newCategories = dict( (name, Category(active, name, numbers, startOffset, raceLaps, i)) \
-			for i, (active, name, numbers, startOffset, raceLaps) in enumerate(nameStrTuples) if name )
+		newCategories = dict( (name, Category(active, name, numbers, startOffset, raceLaps, i, distance)) \
+			for i, (active, name, numbers, startOffset, raceLaps, distance) in enumerate(nameStrTuples) if name )
 
 		if self.categories != newCategories:
 			self.categories = newCategories

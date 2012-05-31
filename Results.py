@@ -341,6 +341,19 @@ class Results( wx.Panel ):
 		if not exportGrid.colnames:
 			self.clearGrid()
 			return
+		
+		
+		try:
+			speedUnit = None
+			iSpeedCol = (i for i, c in enumerate(exportGrid.colnames) if c == 'Speed').next()
+			for r, d in enumerate(exportGrid.data[iSpeedCol]):
+				if not d:
+					continue
+				if not speedUnit:
+					exportGrid.colnames[iSpeedCol] = speedUnit = d.split()[1]
+				exportGrid.data[iSpeedCol][r] = d.split()[0]
+		except StopIteration:
+			pass
 			
 		self.grid.Set( data = exportGrid.data, colnames = exportGrid.colnames )
 		self.grid.SetLeftAlignCols( exportGrid.leftJustifyCols )

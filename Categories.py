@@ -79,7 +79,17 @@ class Categories( wx.Panel ):
 		cols += 1 
 
 		self.grid = gridlib.Grid( self )
-		colnames = ['Active', 'Name', 'Numbers', 'Start Offset (MM:SS)', 'Race Laps', '80% Lap Time', 'Suggested Laps']
+		colnames = ['Active', 'Name', 'Numbers', 'Start Offset (MM:SS)', 'Race Laps', 'Distance', '80% Lap Time', 'Suggested Laps']
+		self.iCol = {
+			'active' :			0,
+			'name' :			1,
+			'numbers' :			2,
+			'startOffset' :		3,
+			'numLaps' :			4,
+			'distance' :		5,
+			'rule80Time' :		6,
+			'suggestedLaps' :	7,
+		}
 		self.activeColumn = colnames.index( 'Active' )
 		self.grid.CreateGrid( 0, len(colnames) )
 		self.grid.SetRowLabelSize(0)
@@ -158,31 +168,43 @@ class Categories( wx.Panel ):
 		Model.race.setCategoryMask()
 		self.refresh()
 		
-	def _setRow( self, r, active, name, strVal, startOffset, numLaps ):
-		self.grid.SetCellValue( r, 0, '1' if active else '0' )
+	def _setRow( self, r, active, name, strVal, startOffset, numLaps, distance ):
+		c = self.iCol['active']
+		self.grid.SetCellValue( r, c, '1' if active else '0' )
 		boolEditor = gridlib.GridCellBoolEditor()
 		boolEditor.UseStringValues( '1', '0' )
-		self.grid.SetCellEditor( r, 0, boolEditor )
-		self.grid.SetCellRenderer( r, 0, gridlib.GridCellBoolRenderer() )
-		self.grid.SetCellAlignment( r, 0, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
-		self.grid.SetCellValue( r, 1, name )
-		self.grid.SetCellValue( r, 2, strVal )
-		self.grid.SetCellValue( r, 3, startOffset )
-		self.grid.SetCellEditor( r, 3, TimeEditor() )
-		self.grid.SetCellAlignment( r, 3, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+		self.grid.SetCellEditor( r, c, boolEditor )
+		self.grid.SetCellRenderer( r, c, gridlib.GridCellBoolRenderer() )
+		self.grid.SetCellAlignment( r, c, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 		
-		self.grid.SetCellValue( r, 4, str(numLaps) if numLaps else '' )
+		self.grid.SetCellValue( r, self.iCol['name'], name )
+		self.grid.SetCellValue( r, self.iCol['numbers'], strVal )
+		c = self.iCol['startOffset']
+		self.grid.SetCellValue( r, c, startOffset )
+		self.grid.SetCellEditor( r, c, TimeEditor() )
+		self.grid.SetCellAlignment( r, c, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+		
+		c = self.iCol['numLaps']
+		self.grid.SetCellValue( r, c, str(numLaps) if numLaps else '' )
 		numberEditor = wx.grid.GridCellNumberEditor()
-		self.grid.SetCellEditor( r, 4, numberEditor )
-		self.grid.SetCellAlignment( r, 4, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+		self.grid.SetCellEditor( r, c, numberEditor )
+		self.grid.SetCellAlignment( r, c, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 		
-		self.grid.SetCellValue( r, 5, '' )
-		self.grid.SetCellAlignment( r, 5, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
-		self.grid.SetReadOnly( r, 5, True )
+		c = self.iCol['rule80Time']
+		self.grid.SetCellValue( r, c, '' )
+		self.grid.SetCellAlignment( r, c, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+		self.grid.SetReadOnly( r, c, True )
 		
-		self.grid.SetCellValue( r, 6, '' )
-		self.grid.SetCellAlignment( r, 6, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
-		self.grid.SetReadOnly( r, 6, True )
+		c = self.iCol['suggestedLaps']
+		self.grid.SetCellValue( r, c, '' )
+		self.grid.SetCellAlignment( r, c, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+		self.grid.SetReadOnly( r, c, True )
+		
+		c = self.iCol['distance']
+		self.grid.SetCellValue( r, c, '%7.3f' if distance else '' )
+		self.grid.SetCellEditor( r, c, gridlib.GridCellFloatEditor(7, 3) )
+		self.grid.SetCellRenderer( r, c, gridlib.GridCellFloatRenderer(7, 3) )
+		self.grid.SetCellAlignment( r, c, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE )
 		
 		# Get the 80% time cutoff.
 		if not active or not Model.race:
@@ -195,15 +217,15 @@ class Categories( wx.Panel ):
 			
 		rule80Time = race.getRule80CountdownTime( category )
 		if rule80Time:
-			self.grid.SetCellValue( r, 5, Utils.formatTime(rule80Time) )
+			self.grid.SetCellValue( r, self.iCol['rule80Time'], Utils.formatTime(rule80Time) )
 		
 		laps = race.getCategoryRaceLaps().get(category, 0)
 		if laps:
-			self.grid.SetCellValue( r, 6, str(laps) )
+			self.grid.SetCellValue( r, self.iCol['suggestedLaps'], str(laps) )
 		
 	def onNewCategory( self, event ):
 		self.grid.AppendRows( 1 )
-		self._setRow( self.grid.GetNumberRows() - 1, True, '<CategoryName>     ', '100-199,504,-128', '00:00', None )
+		self._setRow( self.grid.GetNumberRows() - 1, True, '<CategoryName>     ', '100-199,504,-128', '00:00', None, None )
 		self.grid.AutoSizeColumns(True)
 		
 	def onDelCategory( self, event ):
@@ -232,6 +254,11 @@ class Categories( wx.Panel ):
 			if race is None:
 				return
 			
+			for c in xrange(self.grid.GetNumberCols()):
+				if self.grid.GetColLabelValue(c).startswith('Distance'):
+					self.grid.SetColLabelValue( c, 'Distance (%s)' % ['km', 'miles'][getattr(race, 'distanceUnit', 0)] )
+					break
+			
 			categories = race.getAllCategories()
 			
 			if self.grid.GetNumberRows() > 0:
@@ -239,7 +266,7 @@ class Categories( wx.Panel ):
 			self.grid.AppendRows( len(categories) )
 
 			for r, cat in enumerate(categories):
-				self._setRow( r, cat.active, cat.name, cat.catStr, cat.startOffset, cat.numLaps )
+				self._setRow( r, cat.active, cat.name, cat.catStr, cat.startOffset, cat.numLaps, getattr(cat, 'distance', None) )
 				
 			self.grid.AutoSizeColumns( True )
 			
@@ -252,7 +279,7 @@ class Categories( wx.Panel ):
 			self.grid.DisableCellEditControl()	# Make sure the current edit is committed.
 			if race is None:
 				return
-			numStrTuples = [ tuple(self.grid.GetCellValue(r, c) for c in xrange(5)) for r in xrange(self.grid.GetNumberRows()) ]
+			numStrTuples = [ tuple(self.grid.GetCellValue(r, c) for c in xrange(6)) for r in xrange(self.grid.GetNumberRows()) ]
 			race.setCategories( numStrTuples )
 	
 if __name__ == '__main__':
@@ -260,11 +287,11 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	Model.setRace( Model.Race() )
 	race = Model.getRace()
-	race.setCategories( [(True, 'test1', '100-199,999', '00:00', 5),
-						 (True, 'test2', '200-299,888', '00:00', '6'),
-						 (True, 'test3', '300-399', '00:00', None),
-						 (True, 'test4', '400-499', '00:00', None),
-						 (True, 'test5', '500-599', '00:00', None),
+	race.setCategories( [(True, 'test1', '100-199,999', '00:00', 5, None),
+						 (True, 'test2', '200-299,888', '00:00', '6', None),
+						 (True, 'test3', '300-399', '00:00', None, None),
+						 (True, 'test4', '400-499', '00:00', None, None),
+						 (True, 'test5', '500-599', '00:00', None, None),
 						 ] )
 	categories = Categories(mainWin)
 	categories.refresh()

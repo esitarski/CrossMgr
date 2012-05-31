@@ -700,6 +700,8 @@ function SetCategoryResults()
 	
 	var table = document.createElement('TABLE');
 	table.className = 'results';
+	var hasSpeed = false;
+	var speedUnit = '';
 	for( var c = 0; c < categories.length; ++c )
 	{
 		var cat = categories[c];
@@ -714,6 +716,12 @@ function SetCategoryResults()
 		for( num in data )
 		{
 			var d = data[num];
+			if( !hasSpeed && d['speed'] )
+			{
+				hasSpeed = true;
+				speedUnit = d['speed'].split(' ')[1];
+				//speedUnit = speedUnit.substring(0, 1).toUpperCase() + speedUnit.substring(1);
+			}
 			if( d['raceCat'] == cat )
 			{
 				var lapTimes = d['lapTimes'];
@@ -758,7 +766,9 @@ function SetCategoryResults()
 				
 		createTextChild( td = createChild(tr, 'TH'), 'Time' );
 		createTextChild( td = createChild(tr, 'TH'), 'Gap' );
-		
+		if( hasSpeed )
+			createTextChild( td = createChild(tr, 'TH'), speedUnit );
+
 		for( var i = 1; i < leaderLapTimes.length; ++i )
 		{
 			if( i % showLapsFrequency == 0 || i == 1 || i == leaderLapTimes.length-1  )
@@ -828,6 +838,15 @@ function SetCategoryResults()
 			}
 				
 			createTextChild( td = createChild(tr, 'TD'), gap );
+			
+			if( hasSpeed )
+			{
+				var speed = d['speed'];
+				if( speed )
+					speed = speed.split(' ')[0]
+				createTextChild( td = createChild(tr, 'TD'), speed );
+			}
+			
 			if( numsToWatch[num] ) td.className = 'highlight';
 			for( var i = 1; i < lapTimes.length; ++i )
 			{

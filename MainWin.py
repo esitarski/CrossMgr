@@ -828,6 +828,7 @@ class MainWin( wx.Frame ):
 									'Category %d-%d'	% (max(1, i*100), (i+1)*100-1),
 									'%d-%d'				% (max(1, i*100), (i+1)*100-1),
 									'00:00',
+									None,
 									None) for i in xrange(8)] )
 			else:
 				race.categoriesImportFile = categoriesFile
@@ -1094,7 +1095,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			race.minutes = self.raceMinutes
 			race.raceNum = 1
 			#race.isTimeTrial = True
-			race.setCategories( [(True, 'Junior', '100-199', '00:00', None), (True, 'Senior','200-299', '00:15', None)] )
+			race.setCategories( [(True, 'Junior', '100-199', '00:00', None, None), (True, 'Senior','200-299', '00:15', None, None)] )
 
 		self.writeRace()
 		self.showPageName( 'History' )
