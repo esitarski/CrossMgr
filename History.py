@@ -282,7 +282,7 @@ class History( wx.Panel ):
 		self.doNumSelect( event )
 		mainWin = Utils.getMainWin()
 		if self.numSelect is not None and mainWin:
-			mainWin.showPageName( 'Rider Detail' )
+			mainWin.showPageName( 'RiderDetail' )
 	
 	def getCellNum( self, row, col ):
 		numSelect = None

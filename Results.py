@@ -258,7 +258,7 @@ class Results( wx.Panel ):
 	def doNumDrilldown( self, event ):
 		self.doNumSelect( event )
 		if self.numSelect is not None and Utils.isMainWin():
-			Utils.getMainWin().showPageName( 'History' )
+			Utils.getMainWin().showPageName( 'RiderDetail' )
 	
 	def doNumSelect( self, event ):
 		self.iLap = None
