@@ -1078,6 +1078,9 @@ Continue?''' % fName, 'Simulate a Race' ):
 			Utils.MessageOK(self, 'Cannot open file "%s".' % fName, 'File Open Error',iconMask = wx.ICON_ERROR)
 			return
 
+		self.showPageName( 'History' )	# Switch to a read-only view.
+		self.refresh()
+		
 		self.lapTimes = self.genTimes()
 		tMin = self.lapTimes[0][0]
 		self.lapTimes.reverse()			# Reverse the times so we can pop them from the stack later.
@@ -1086,6 +1089,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 		self.fileName = fName
 		OutputStreamer.DeleteStreamerFile()
 		self.simulateSeen = set()
+		undo.clear()
 		with Model.lock:
 			Model.setRace( None )
 			race = Model.newRace()
@@ -1098,13 +1102,10 @@ Continue?''' % fName, 'Simulate a Race' ):
 			race.setCategories( [(True, 'Junior', '100-199', '00:00', None, None), (True, 'Senior','200-299', '00:15', None, None)] )
 
 		self.writeRace()
-		self.showPageName( 'History' )
-		self.refresh()
 
 		# Start the simulation.
 
 		self.nextNum = None
-		undo.clear()
 		with Model.LockRace() as race:
 			race.startRaceNow()		
 			# Backup all the events and race start so we don't have to wait for the first lap.
@@ -1332,7 +1333,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 		self.forecastHistory.refresh()
 		self.updateRaceClock()
 		with Model.LockRace() as race:
-			self.menuItemHighPrecisionTimes.Check( race and getattr(race, 'highPrecisionTimes', False) ) 
+			self.menuItemHighPrecisionTimes.Check( bool(race and getattr(race, 'highPrecisionTimes', False)) ) 
 
 	def updateUndoStatus( self, event = None ):
 		with Model.LockRace() as race:
