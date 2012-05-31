@@ -342,7 +342,7 @@ class Results( wx.Panel ):
 			self.clearGrid()
 			return
 		
-		
+		# Fix the speed column.
 		try:
 			speedUnit = None
 			iSpeedCol = (i for i, c in enumerate(exportGrid.colnames) if c == 'Speed').next()
