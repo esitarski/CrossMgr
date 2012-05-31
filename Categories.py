@@ -201,7 +201,7 @@ class Categories( wx.Panel ):
 		self.grid.SetReadOnly( r, c, True )
 		
 		c = self.iCol['distance']
-		self.grid.SetCellValue( r, c, '%7.3f' if distance else '' )
+		self.grid.SetCellValue( r, c, ('%.3f' % distance) if distance else '' )
 		self.grid.SetCellEditor( r, c, gridlib.GridCellFloatEditor(7, 3) )
 		self.grid.SetCellRenderer( r, c, gridlib.GridCellFloatRenderer(7, 3) )
 		self.grid.SetCellAlignment( r, c, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE )

@@ -172,6 +172,8 @@ class Category(object):
 			self.distance = float(distance) if distance else None
 		except (ValueError, TypeError):
 			self.distance = None
+		if self.distance <= 0.0:
+			self.distance = None
 		
 	def __setstate( self, d ):
 		self.__dict__.update(d)
@@ -206,7 +208,7 @@ class Category(object):
 		return False
 
 	def __cmp__( self, c ):
-		for attr in ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'catStr']:
+		for attr in ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'catStr', 'distance']:
 			cCmp = cmp( getattr(self, attr, None), getattr(c, attr, None) )
 			if cCmp != 0:
 				return cCmp 
