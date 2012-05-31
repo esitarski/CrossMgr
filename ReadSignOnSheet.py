@@ -336,9 +336,12 @@ class ExcelLink( object ):
 				pass
 	
 		# Read the sheet and return the rider data.
-		reader = GetExcelReader( self.fileName )
-		if self.sheetName not in reader.sheet_names():
-			raise ValueError, "%s is not a valid sheetname" % self.sheetName
+		try:
+			reader = GetExcelReader( self.fileName )
+			if self.sheetName not in reader.sheet_names():
+				return {}
+		except (IOError, ValueError):
+			return {}
 		
 		info = {}
 		for r, row in enumerate(reader.iter_list(self.sheetName)):
