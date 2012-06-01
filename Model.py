@@ -1144,7 +1144,7 @@ class Race(object):
 			if not line:
 				continue
 			fields = line.strip().split('|')
-			categories.append( (True, fields[0], fields[1], '00:00', None) )
+			categories.append( (True, fields[0], fields[1], '00:00', None, None) )
 		self.setCategories( categories )
 
 	def isRiderInCategory( self, num, catName = None ):
