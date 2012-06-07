@@ -6,7 +6,7 @@ import Utils
 import ColGrid
 import EditEntry
 from LineGraph import LineGraph
-from GanttChart import GanttChart
+from GanttChartPanel import GanttChartPanel
 from JChipSetup import FixTag
 from Undo import undo
 import Gantt
@@ -129,7 +129,7 @@ class RiderDetail( wx.Panel ):
 		panel = wx.Panel( splitter, wx.ID_ANY, style = wx.BORDER_SUNKEN )
 		
 		self.lineGraph = LineGraph( panel, wx.ID_ANY, style = wx.NO_BORDER )
-		self.ganttChart = GanttChart( panel, wx.ID_ANY, style = wx.NO_BORDER )
+		self.ganttChart = GanttChartPanel( panel, wx.ID_ANY, style = wx.NO_BORDER )
 		self.ganttChart.getNowTimeCallback = Gantt.GetNowTime
 		self.ganttChart.minimizeLabels = True
 		self.ganttChart.rClickCallback = self.onEditGantt
@@ -403,7 +403,7 @@ class RiderDetail( wx.Panel ):
 	def setRider( self, n = None ):
 		Utils.SetValue( self.num, int(n) if n is not None else None )
 		
-	def getGanttChartNumLapTimes( self ):
+	def getGanttChartPanelNumLapTimes( self ):
 		lapCur = getattr(self, 'lapCur', None)
 		if lapCur is None:
 			return None, None, None
@@ -425,14 +425,14 @@ class RiderDetail( wx.Panel ):
 		return num, lapCur, times
 	
 	def doSplitLap( self, splits ):
-		num, lap, times = self.getGanttChartNumLapTimes()
+		num, lap, times = self.getGanttChartPanelNumLapTimes()
 		if num is None:
 			return
 		EditEntry.AddLapSplits( num, lap, times, splits )
 		self.refresh()
 	
 	def onDeleteLapStart( self, event ):
-		num, lap, times = self.getGanttChartNumLapTimes()
+		num, lap, times = self.getGanttChartPanelNumLapTimes()
 		if num is None:
 			return
 		if self.lapCur != 1:
@@ -442,7 +442,7 @@ class RiderDetail( wx.Panel ):
 			wx.CallAfter( self.refresh )
 			
 	def onDeleteLapEnd( self, event ):
-		num, lap, times = self.getGanttChartNumLapTimes()
+		num, lap, times = self.getGanttChartPanelNumLapTimes()
 		if num is None:
 			return
 		undo.pushState()

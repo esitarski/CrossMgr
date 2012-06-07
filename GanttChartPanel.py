@@ -90,7 +90,7 @@ class GanttChartPanel(wx.PyPanel):
 		self.Bind(wx.EVT_RIGHT_UP, self.OnRightClick)
 
 	def DoGetBestSize(self):
-		return wx.Size(128, 64)
+		return wx.Size(128, 100)
 
 	def SetForegroundColour(self, colour):
 		wx.PyPanel.SetForegroundColour(self, colour)
