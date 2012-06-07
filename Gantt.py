@@ -2,7 +2,7 @@ import Model
 import Utils
 import wx
 from FixCategories import FixCategories
-import GanttChart
+import GanttChartPanel
 from GetResults import GetResults, RidersCanSwap
 from Undo import undo
 import EditEntry
@@ -35,7 +35,7 @@ class Gantt( wx.Panel ):
 		self.hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.categoryChoice, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		
-		self.ganttChart = GanttChart.GanttChart( self )
+		self.ganttChart = GanttChartPanel.GanttChartPanel( self )
 		self.ganttChart.dClickCallback = UpdateSetNum
 		self.ganttChart.rClickCallback = self.onRightClick
 		self.ganttChart.getNowTimeCallback = GetNowTime
@@ -109,7 +109,7 @@ class Gantt( wx.Panel ):
 		for iRow, attr in [(self.iRow - 1, 'numBefore'), (self.iRow + 1, 'numAfter')]:
 			if not(0 <= iRow < len(self.ganttChart.labels)):
 				continue
-			numAdjacent = GanttChart.numFromLabel(self.ganttChart.labels[iRow])
+			numAdjacent = GanttChartPanel.numFromLabel(self.ganttChart.labels[iRow])
 			if RidersCanSwap( riderResults, num, numAdjacent ):
 				setattr( self, attr, numAdjacent )
 		

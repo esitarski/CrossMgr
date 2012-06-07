@@ -251,6 +251,8 @@ class GanttChartPanel(wx.PyPanel):
 		height = size.height
 		
 		minBarWidth = 48
+		minBarHeight = 18
+		maxBarHeight = 28
 		
 		backColour = self.GetBackgroundColour()
 		backBrush = wx.Brush(backColour, wx.SOLID)
@@ -266,8 +268,25 @@ class GanttChartPanel(wx.PyPanel):
 			
 		self.empty = False
 		
+		barHeight = int(float(height) / float(len(self.data) + 2))
+		barHeight = max( barHeight, minBarHeight )
+		barHeight = min( barHeight, maxBarHeight )
+		font = wx.FontFromPixelSize( wx.Size(0,barHeight - 1), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		dc.SetFont( font )
+		textWidthLeftMax, textHeightMax = dc.GetTextExtent( '0000' )
+		textWidthRightMax = textWidthLeftMax
+		for label in self.labels:
+			textWidthLeftMax = max( textWidthLeftMax, dc.GetTextExtent(label)[0] )
+			textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent( str(numFromLabel(label)) )[0] )
+				
+		if textWidthLeftMax + textWidthRightMax > width:
+			self.horizontalSB.Show( False )
+			self.verticalSB.Show( False )
+			self.empty = True
+			return
+		
 		maxLaps = max( len(d) for d in self.data )
-		if maxLaps and width / maxLaps < minBarWidth:
+		if maxLaps and (width - textWidthLeftMax - textWidthRightMax) / maxLaps < minBarWidth:
 			self.horizontalSB.Show( True )
 		else:
 			self.horizontalSB.Show( False )
@@ -276,8 +295,8 @@ class GanttChartPanel(wx.PyPanel):
 			height -= self.scrollbarWidth
 			
 		barHeight = int(float(height) / float(len(self.data) + 2))
-		barHeight = max( barHeight, 16 )
-		barHeight = min( barHeight, 40 )
+		barHeight = max( barHeight, minBarHeight )
+		barHeight = min( barHeight, maxBarHeight )
 		drawHeight = height - 2 * barHeight
 		if barHeight * len(self.data) > drawHeight:
 			self.verticalSB.Show( True )
@@ -303,14 +322,23 @@ class GanttChartPanel(wx.PyPanel):
 			textWidthLeftMax = max( textWidthLeftMax, dc.GetTextExtent(label)[0] )
 			textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent( str(numFromLabel(label)) )[0] )
 				
+		if textWidthLeftMax + textWidthRightMax > width:
+			self.horizontalSB.Show( False )
+			self.verticalSB.Show( False )
+			self.empty = True
+			return
+
+		
 		legendSep = 4			# Separations between legend entries and the Gantt bars.
 		labelsWidthLeft = textWidthLeftMax + legendSep
 		labelsWidthRight = textWidthRightMax + legendSep
 			
+		'''
 		if labelsWidthLeft > width / 2:
 			labelsWidthLeft = 0
 			labelsWidthRight = 0
 			drawLabels = False
+		'''
 
 		xLeft = labelsWidthLeft
 		xRight = width - labelsWidthRight
@@ -384,6 +412,7 @@ class GanttChartPanel(wx.PyPanel):
 		yLast = barHeight
 		yHighlight = None
 		
+		dy = 0
 		for i, s in enumerate(self.data):
 			if not( iDataShowStart <= i < iDataShowEnd ):
 				continue
