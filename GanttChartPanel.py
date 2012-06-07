@@ -172,7 +172,10 @@ class GanttChartPanel(wx.PyPanel):
 		if not 0 <= iRider < len(self.data):
 			return None, None
 
-		iLap = bisect.bisect_left( self.data[iRider], x / self.xFactor )
+		t = x / self.xFactor
+		if self.horizontalSB.IsShown():
+			t += self.horizontalSB.GetThumbPosition()
+		iLap = bisect.bisect_left( self.data[iRider], t )
 		if not 1 <= iLap < len(self.data[iRider]):
 			return iRider, None
 			
@@ -427,6 +430,8 @@ class GanttChartPanel(wx.PyPanel):
 			
 			# Draw the last empty bar.
 			xCur = int(labelsWidthLeft + self.dataMax * xFactor)
+			if xCur > xRight:
+				xCur = xRight
 			dc.SetPen( penBar )
 			brushBar.SetColour( wx.WHITE )
 			dc.SetBrush( brushBar )
