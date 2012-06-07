@@ -64,6 +64,22 @@ while 1:
 print 'Sending indentifier...'
 sock.send("N0000JCHIP-READER%s" % CR)
 
+print 'Waiting for get time command...'
+while 1:
+	received = sock.recv(1)
+	if received == 'G':
+		while received != CR:
+			received = sock.recv(1)
+		break
+
+dBase = datetime.datetime.now()
+dBase -= datetime.timedelta( seconds = 60*60 )	# Send the time one hour off.
+
+print 'Send gettime data...'
+message = 'GT0%02d%02d%02d%02d60%s' % ( dBase.hour, dBase.minute, dBase.second, int(dBase.microsecond / 10000), CR)
+print message[:-1]
+sock.send( message )
+
 print 'Waiting for send command...'
 while 1:
 	received = sock.recv(1)
@@ -74,12 +90,11 @@ while 1:
 
 print 'Start sending data...'
 
-dBase = datetime.datetime.now()
 for i in xrange(1, len(numLapTimes)):
 	n, lap, t = numLapTimes[i]
 	dt = t - numLapTimes[i-1][2]
 	
-	message = formatMessage( n, lap, dBase + datetime.timedelta( seconds = t - 60*60 ) )
+	message = formatMessage( n, lap, dBase + datetime.timedelta(seconds = t) )
 	sys.stdout.write( 'sending: %s\n' % message[:-1] )
 	sock.send( message )
 	

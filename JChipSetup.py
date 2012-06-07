@@ -60,12 +60,6 @@ def GetTagNums( forceUpdate = False ):
 				
 	return race.tagNums
 
-class ListCtrlAutoWidth(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
-    def __init__(self, parent, ID, pos=wx.DefaultPosition,
-                 size=wx.DefaultSize, style=0):
-        wx.ListCtrl.__init__(self, parent, ID, pos, size, style)
-        listmix.ListCtrlAutoWidthMixin.__init__(self)
-
 #------------------------------------------------------------------------------------------------
 class JChipSetupDialog( wx.Dialog ):
 	def __init__( self, parent, id = wx.ID_ANY ):
@@ -81,14 +75,13 @@ class JChipSetupDialog( wx.Dialog ):
 		else:
 			self.enableJChipCheckBox.Enable( False )
 		
-		self.testJChip = wx.ToggleButton( self, -1, 'Start JChip Test' )
+		self.testJChip = wx.ToggleButton( self, wx.ID_ANY, 'Start JChip Test' )
 		self.Bind(wx.EVT_TOGGLEBUTTON, self.testJChipToggle, self.testJChip)
 		if Model.race and Model.race.isRunning():
 			self.testJChip.Enable( False )
 		
-		self.testList = ListCtrlAutoWidth( self, -1, style=wx.LC_REPORT, size=(-1,200) )
-		self.testList.InsertColumn(0, "Messages Received:")
-		self.testList.SetColumnWidth(0, wx.LIST_AUTOSIZE)
+		self.testList = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_READONLY|wx.TE_MULTILINE, size=(-1,200) )
+		self.testList.Bind( wx.EVT_RIGHT_DOWN, self.skip )
 		
 		self.okBtn = wx.Button( self, wx.ID_ANY, '&OK' )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
@@ -149,6 +142,7 @@ class JChipSetupDialog( wx.Dialog ):
 		#-------------------------------------------------------------------
 
 		bs.Add( self.testJChip, 0, wx.EXPAND|wx.ALL, border )
+		bs.Add( wx.StaticText(self, wx.ID_ANY, 'Messages:'), 0, wx.EXPAND|wx.ALL, border = border )
 		bs.Add( self.testList, 1, wx.EXPAND|wx.ALL, border )
 		
 		buttonBox = wx.BoxSizer( wx.HORIZONTAL )
@@ -164,6 +158,9 @@ class JChipSetupDialog( wx.Dialog ):
 		self.CentreOnParent(wx.BOTH)
 		self.SetFocus()
 
+	def skip(self, evt):
+		return
+		
 	def testJChipToggle( self, event ):
 		if not JChip.listener:
 			correct, reason = CheckExcelLink()
@@ -182,7 +179,7 @@ class JChipSetupDialog( wx.Dialog ):
 					self.testJChip.SetValue( False )
 					return
 			
-			self.testList.DeleteAllItems()
+			self.testList.Clear()
 			JChip.StartListener()
 			
 			self.appendMsg( 'listening for JChip connection...' )
@@ -204,10 +201,10 @@ class JChipSetupDialog( wx.Dialog ):
 			
 			self.testJChip.SetLabel( 'Start JChip Test' )
 			self.testJChip.SetValue( False )
-			self.testList.DeleteAllItems()
+			self.testList.Clear()
 	
 	def appendMsg( self, s ):
-		self.testList.InsertStringItem( self.testList.GetItemCount(), s )
+		self.testList.AppendText( s + '\n' )
 	
 	def onTimerCallback( self, stat ):
 		data = JChip.GetData()
@@ -236,7 +233,7 @@ class JChipSetupDialog( wx.Dialog ):
 			else:
 				self.appendMsg( '%s: %s' % (d[0], ', '.join('<<%s>>' % str(s) for s in d[1:]) ) )
 		if data:
-			self.testList.EnsureVisible( self.testList.GetItemCount()-1 )
+			self.testList.SetInsertionPointEnd()
 		self.timer.Restart( 1000, 'restarted' )
 		
 	def onOK( self, event ):

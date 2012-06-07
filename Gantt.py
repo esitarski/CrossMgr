@@ -216,6 +216,7 @@ class Gantt( wx.Panel ):
 		data	= [r.raceTimes for r in results]
 		interp	= [r.interp for r in results]
 		self.ganttChart.SetData( data, labels, GetNowTime(), interp )
+		wx.CallAfter( self.ganttChart.SetFocus )
 	
 	def commit( self ):
 		pass

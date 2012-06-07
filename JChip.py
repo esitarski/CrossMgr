@@ -8,6 +8,7 @@ import atexit
 import math
 import subprocess
 import re
+import Utils
 from multiprocessing import Process, Queue
 from Queue import Empty
 
@@ -93,7 +94,6 @@ def Server( q, HOST, PORT, startTime ):
 	s.bind((HOST, PORT))
 	
 	readerComputerTimeDiff = None
-	lastTime = None
 	while 1:
 		s.listen(1)
 		conn, addr = s.accept()
@@ -105,7 +105,7 @@ def Server( q, HOST, PORT, startTime ):
 			if not line:
 				continue
 			try:
-				if line[0] == 'D':
+				if line.startswith( 'D' ):
 					tag = line[2:2+6]	# Skip the initial letter (always the same).
 					iColon = line.find( ':' )
 					if iColon < 0:
@@ -119,24 +119,37 @@ def Server( q, HOST, PORT, startTime ):
 					tStr = m.group(0)
 					
 					t = parseTime( tStr )
-					
-					# Adjust for the difference between the reader's time and the computer's time.
-					if lastTime is None:
-						lastTime = datetime.datetime.now()
-						readerComputerTimeDiff = lastTime - t
-						
 					t += readerComputerTimeDiff
 						
-					lastTime = t
 					q.put( ('data', tag, t) )
-				elif line[0] == 'N':
+					
+				elif line.startswith( 'N' ):
 					q.put( ('name', line[5:].strip()) )
 					
+					# Get the reader's current time.
+					cmd = 'GT'
+					q.put( ('transmitting', '%s command to JChip receiver (gettime)' % cmd) )
+					socketSend( conn, '%s%s' % (cmd, CR) )
+				
+				elif line.startswith( 'GT' ):
+					tNow = datetime.datetime.now()
+					
+					iStart = 3
+					hh, mm, ss, hs = [int(line[i:i+2]) for i in xrange(iStart, iStart + 4 * 2, 2)]
+					tJChip = datetime.datetime.combine( tNow.date(), datetime.time(hh, mm, ss, hs * 10000) )
+					readerComputerTimeDiff = tNow - tJChip
+					
+					q.put( ('getTime', '%s=%02d:%02d:%02d.%02d' % (line[2:].strip(), hh,mm,ss,hs)) )
+					q.put( ('timeAdjustment', 
+							'JChip time will be adjusted by %s to match computer' %
+								Utils.formatTime(readerComputerTimeDiff.total_seconds(), True)) )
+					
+					# Send command to start sending data.
 					cmd = 'S0000'
-					q.put( ('transmitting', '%s command to JChip receiver' % cmd) )
+					q.put( ('transmitting', '%s command to JChip receiver (start transmission)' % cmd) )
 					socketSend( conn, '%s%s' % (cmd, CR) )
 				else:
-					q.put( ('unknown', line ) )
+					q.put( ('unknown', line[:-1] ) )
 			
 			except (ValueError, KeyError, IndexError):
 				q.put( ('exception', line ) )
@@ -144,7 +157,6 @@ def Server( q, HOST, PORT, startTime ):
 				
 		q.put( ('disconnected',) )
 		
-	print( 'closing...' )
 	s.close()
 
 def GetData():
@@ -213,6 +225,6 @@ if __name__ == '__main__':
 			elif m[0] == 'disconnected':
 				print( 'disconnected' )
 			else:
-				print( 'error: %s' % (m[0], ', '.join('"%s"' % str(s) for s in m[1:]) ) )
+				print( 'other: %s, %s' % (m[0], ', '.join('"%s"' % str(s) for s in m[1:])) )
 		sys.stdout.flush()
 		

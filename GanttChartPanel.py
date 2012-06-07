@@ -88,7 +88,21 @@ class GanttChartPanel(wx.PyPanel):
 		self.Bind(wx.EVT_LEFT_UP, self.OnLeftClick)
 		self.Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDClick)
 		self.Bind(wx.EVT_RIGHT_UP, self.OnRightClick)
+		
+		self.Bind(wx.EVT_MOUSEWHEEL, self.OnWheel )
 
+	def OnWheel( self, event ):
+		if not self.verticalSB.IsShown():
+			return
+		amt = event.GetWheelRotation()
+		units = -amt / event.GetWheelDelta()
+		sb = self.verticalSB
+		pos = sb.GetThumbPosition() + units
+		pos = min( max( pos, 0 ), sb.GetRange() - sb.GetThumbSize() )
+		if pos != sb.GetThumbPosition():
+			sb.SetThumbPosition( pos )
+			self.OnVerticalScroll( event )
+		
 	def DoGetBestSize(self):
 		return wx.Size(128, 100)
 
