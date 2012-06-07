@@ -184,13 +184,13 @@ class ColTable(Grid.PyGridTableBase):
 # Sample Grid
 
 class ColGrid(Grid.Grid):
-	def __init__(self, parent, data = None, colnames = None, textColour = None, backgroundColour = None ):
+	def __init__(self, parent, data = None, colnames = None, textColour = None, backgroundColour = None, style = 0 ):
 		"""parent, data, colnames, plugins=None
 		Initialize a grid using the data defined in data and colnames
 		"""
 
 		# The base class must be initialized *first*
-		Grid.Grid.__init__(self, parent, -1)
+		Grid.Grid.__init__(self, parent, -1, style = style)
 		self._table = ColTable(data, colnames, textColour, backgroundColour)
 		self.SetTable(self._table)
 		

@@ -20,6 +20,9 @@ class BarInfoPopup( wx.PopupTransientWindow ):
 		st = wx.StaticText(self, -1, text, pos=(border/2,border/2))
 		sz = st.GetBestSize()
 		self.SetSize( (sz.width+border, sz.height+border) )
+		
+def SetScrollbarParameters( sb, thumbSize, range, pageSize  ):
+	sb.SetScrollbar( min(sb.GetThumbPosition(), range - thumbSize), thumbSize, range, pageSize )
 
 def makeColourGradient(frequency1, frequency2, frequency3,
                         phase1, phase2, phase3,
@@ -47,14 +50,14 @@ def numFromLabel( s ):
 		return int(s)
 	return int(s[:firstSpace])
 	
-class GanttChart(wx.PyControl):
+class GanttChartPanel(wx.PyPanel):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
-				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
-				name="GanttChart", showLabels = True ):
+				size=wx.DefaultSize, style=wx.NO_BORDER,
+				name="GanttChartPanel" ):
 		"""
 		Default class constructor.
 		"""
-		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
+		wx.PyPanel.__init__(self, parent, id, pos, size, style, name)
 		self.SetBackgroundColour(wx.WHITE)
 		self.data = None
 		self.labels = None
@@ -64,7 +67,14 @@ class GanttChart(wx.PyControl):
 		self.rClickCallback = None
 		self.getNowTimeCallback = None
 		self.minimizeLabels = False
-		self.showLabels = showLabels
+		
+		self.horizontalSB = wx.ScrollBar( self, wx.ID_ANY, style=wx.SB_HORIZONTAL )
+		self.horizontalSB.Bind( wx.EVT_SCROLL, self.OnHorizontalScroll )
+		self.verticalSB = wx.ScrollBar( self, wx.ID_ANY, style=wx.SB_VERTICAL )
+		self.verticalSB.Bind( wx.EVT_SCROLL, self.OnVerticalScroll )
+		self.scrollbarWidth = 16
+		self.horizontalSB.Show( False )
+		self.verticalSB.Show( False )
 		
 		self.colours = makeColourGradient(2.4,2.4,2.4,0,2,4,128,127,500)
 		self.lighterColours = [lighterColour(c) for c in self.colours]
@@ -83,15 +93,11 @@ class GanttChart(wx.PyControl):
 		return wx.Size(128, 64)
 
 	def SetForegroundColour(self, colour):
-		wx.PyControl.SetForegroundColour(self, colour)
+		wx.PyPanel.SetForegroundColour(self, colour)
 		self.Refresh()
 		
-	def SetShowLabels( self, showLabels = True ):
-		self.showLabels = showLabels
-		self.Refresh()
-
 	def SetBackgroundColour(self, colour):
-		wx.PyControl.SetBackgroundColour(self, colour)
+		wx.PyPanel.SetBackgroundColour(self, colour)
 		self.Refresh()
 		
 	def GetDefaultAttributes(self):
@@ -132,11 +138,20 @@ class GanttChart(wx.PyControl):
 		self.interp = interp
 		self.Refresh()
 	
-	def OnPaint(self, event):
+	def OnPaint(self, event ):
 		#dc = wx.PaintDC(self)
 		dc = wx.BufferedPaintDC(self)
 		self.Draw(dc)
 
+	def OnVerticalScroll( self, event ):
+		dc = wx.ClientDC(self)
+		if not self.IsDoubleBuffered():
+			dc = wx.BufferedDC( dc )
+		self.Draw( dc )
+		
+	def OnHorizontalScroll( self, event ):
+		self.OnVerticalScroll( event )
+		
 	def OnSize(self, event):
 		self.Refresh()
 	
@@ -152,6 +167,8 @@ class GanttChart(wx.PyControl):
 		y -= self.barHeight
 		x -= self.labelsWidthLeft
 		iRider = int(y / self.barHeight)
+		if self.verticalSB.IsShown():
+			iRider += self.verticalSB.GetThumbPosition()
 		if not 0 <= iRider < len(self.data):
 			return None, None
 
@@ -225,10 +242,12 @@ class GanttChart(wx.PyControl):
 			xPos, yPos = event.GetPositionTuple()
 			rClickCallback( xPos, yPos, self.numSelect, iRider, iLap )
 	
-	def Draw(self, dc):
+	def Draw( self, dc ):
 		size = self.GetClientSize()
 		width = size.width
 		height = size.height
+		
+		minBarWidth = 48
 		
 		backColour = self.GetBackgroundColour()
 		backBrush = wx.Brush(backColour, wx.SOLID)
@@ -238,34 +257,52 @@ class GanttChart(wx.PyControl):
 		
 		if not self.data or self.dataMax == 0 or width < 50 or height < 50:
 			self.empty = True
+			self.verticalSB.Show( False )
+			self.horizontalSB.Show( False )
 			return
 			
 		self.empty = False
 		
+		maxLaps = max( len(d) for d in self.data )
+		if maxLaps and width / maxLaps < minBarWidth:
+			self.horizontalSB.Show( True )
+		else:
+			self.horizontalSB.Show( False )
+		
+		if self.horizontalSB.IsShown():
+			height -= self.scrollbarWidth
+			
 		barHeight = int(float(height) / float(len(self.data) + 2))
-		if barHeight < 4:
-			self.empty = True
-			return
+		barHeight = max( barHeight, 16 )
 		barHeight = min( barHeight, 40 )
+		drawHeight = height - 2 * barHeight
+		if barHeight * len(self.data) > drawHeight:
+			self.verticalSB.Show( True )
+			self.verticalSB.SetPosition( (width - self.scrollbarWidth, barHeight) )
+			self.verticalSB.SetSize( (self.scrollbarWidth, drawHeight) )
+			pageSize = int(drawHeight / barHeight)
+			SetScrollbarParameters( self.verticalSB, pageSize-1, len(self.data)-1, pageSize )
+		else:
+			self.verticalSB.Show( False )
+			
+		if self.verticalSB.IsShown():
+			width -= self.scrollbarWidth
+			
+		iDataShowStart = self.verticalSB.GetThumbPosition() if self.verticalSB.IsShown() else 0
+		iDataShowEnd = iDataShowStart + self.verticalSB.GetThumbSize() + 1 if self.verticalSB.IsShown() else len(self.data)
+		tShowStart = self.horizontalSB.GetThumbPosition() if self.horizontalSB.IsShown() else 0
 
 		font = wx.FontFromPixelSize( wx.Size(0,barHeight - 1), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		dc.SetFont( font )
 		textWidthLeftMax, textHeightMax = dc.GetTextExtent( '0000' )
-		if not self.showLabels:
-			textWidthLeftMax /= 2
 		textWidthRightMax = textWidthLeftMax
-		if self.showLabels:
-			for label in self.labels:
-				textWidthLeftMax = max( textWidthLeftMax, dc.GetTextExtent(label)[0] )
-				textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent( str(numFromLabel(label)) )[0] )
+		for label in self.labels:
+			textWidthLeftMax = max( textWidthLeftMax, dc.GetTextExtent(label)[0] )
+			textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent( str(numFromLabel(label)) )[0] )
 				
-		if self.showLabels:
-			legendSep = 4			# Separations between legend entries and the Gantt bars.
-		else:
-			legendSep = 0
+		legendSep = 4			# Separations between legend entries and the Gantt bars.
 		labelsWidthLeft = textWidthLeftMax + legendSep
 		labelsWidthRight = textWidthRightMax + legendSep
-		drawLabels = self.showLabels
 			
 		if labelsWidthLeft > width / 2:
 			labelsWidthLeft = 0
@@ -274,9 +311,18 @@ class GanttChart(wx.PyControl):
 
 		xLeft = labelsWidthLeft
 		xRight = width - labelsWidthRight
-		yBottom = barHeight * (len(self.data) + 1)
+		yBottom = min( barHeight * (len(self.data) + 1), barHeight + drawHeight )
 		yTop = barHeight
 
+		if self.horizontalSB.IsShown():
+			viewWidth = minBarWidth * maxLaps
+			ratio = float(xRight - xLeft) / float(viewWidth)
+			sbMax = int(self.dataMax) + 1
+			pageSize = int(sbMax * ratio)
+			SetScrollbarParameters( self.horizontalSB, pageSize-1, sbMax, pageSize )
+			self.horizontalSB.SetPosition( (labelsWidthLeft, height) )
+			self.horizontalSB.SetSize( (xRight - xLeft, self.scrollbarWidth) )
+		
 		fontLegend = wx.FontFromPixelSize( wx.Size(0,barHeight*.75), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		dc.SetFont( fontLegend )
 		textWidth, textHeight = dc.GetTextExtent( '00:00' if self.dataMax < 60*60 else '00:00:00' )
@@ -284,21 +330,34 @@ class GanttChart(wx.PyControl):
 		# Draw the horizontal labels.
 		# Find some reasonable tickmarks for the x axis.
 		numLabels = (xRight - xLeft) / (textWidth * 1.5)
-		d = self.dataMax / float(numLabels)
+		tView = self.dataMax if not self.horizontalSB.IsShown() else self.horizontalSB.GetThumbSize()
+		d = tView / float(numLabels)
 		intervals = [1, 2, 5, 10, 15, 20, 30, 1*60, 2*60, 5*60, 10*60, 15*60, 20*60, 30*60, 1*60*60, 2*60*60, 4*60*60, 8*60*60, 12*60*60, 24*60*60]
 		d = intervals[bisect.bisect_left(intervals, d, 0, len(intervals)-1)]
-		dFactor = (xRight - xLeft) / float(self.dataMax)
+		if self.horizontalSB.IsShown():
+			tAdjust = self.horizontalSB.GetThumbPosition()
+			viewWidth = minBarWidth * maxLaps
+			dFactor = float(viewWidth) / float(self.dataMax)
+		else:
+			tAdjust = 0
+			dFactor = (xRight - xLeft) / float(self.dataMax)
 		dc.SetPen(wx.Pen(wx.BLACK, 1))
+		
 		for t in xrange(0, int(self.dataMax), d):
-			x = xLeft + t * dFactor
+			x = xLeft + (t-tAdjust) * dFactor
+			if x < xLeft:
+				continue
+			if x > xRight:
+				break
 			if t < 60*60:
 				s = '%d:%02d' % ((t / 60), t%60)
 			else:
 				s = '%d:%02d:%02d' % (t/(60*60), (t / 60)%60, t%60)
 			w, h = dc.GetTextExtent(s)
-			dc.DrawText( s, x - w/2, 0 + 4 )
-			if not self.minimizeLabels:
-				dc.DrawText( s, x - w/2, yBottom + 4)
+			xText = x - w/2
+			#xText = x
+			dc.DrawText( s, xText, 0 + 4 )
+			dc.DrawText( s, xText, yBottom + 4)
 			dc.DrawLine( x, yBottom+3, x, yTop-3 )
 		
 		# Draw the Gantt chart.
@@ -318,15 +377,24 @@ class GanttChart(wx.PyControl):
 		
 		xyInterp = []
 		
-		xFactor = float(width - labelsWidthLeft - labelsWidthRight) / float(self.dataMax)
+		xFactor = dFactor
 		yLast = barHeight
 		yHighlight = None
+		
 		for i, s in enumerate(self.data):
+			if not( iDataShowStart <= i < iDataShowEnd ):
+				continue
 			yCur = yLast + barHeight
 			xLast = labelsWidthLeft
 			xCur = xLast
 			for j, t in enumerate(s):
-				xCur = int(labelsWidthLeft + t * xFactor)
+				if xLast >= xRight:
+					break
+				xCur = xOriginal = int(labelsWidthLeft + (t-tAdjust) * xFactor)
+				if xCur <= xLast:
+					continue
+				if xCur > xRight:
+					xCur = xRight
 				if j == 0:
 					brushBar.SetColour( wx.WHITE )
 					dc.SetBrush( brushBar )
@@ -349,8 +417,11 @@ class GanttChart(wx.PyControl):
 					dc.SetPen( penBar )
 					dc.DrawRectangle( xLast, yLast, xCur - xLast + 1, dy )
 					
-					if self.interp and self.interp[i][j]:
-						xyInterp.append( (xCur, yLast) )
+					try:
+						if self.interp and self.interp[i][j] and xOriginal <= xRight:
+							xyInterp.append( (xOriginal, yLast) )
+					except IndexError:
+						pass
 
 				xLast = xCur
 			
@@ -362,15 +433,14 @@ class GanttChart(wx.PyControl):
 			dc.DrawRectangle( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 )
 			
 			# Draw the label on both ends.
-			if self.showLabels:
-				labelWidth = dc.GetTextExtent( self.labels[i] )[0]
-				dc.DrawText( self.labels[i], textWidthLeftMax - labelWidth, yLast )
-				if not self.minimizeLabels:
-					label = self.labels[i]
-					lastSpace = label.rfind( ' ' )
-					if lastSpace > 0:
-						label = label[lastSpace+1:]
-					dc.DrawText( label, width - labelsWidthRight + legendSep, yLast )
+			labelWidth = dc.GetTextExtent( self.labels[i] )[0]
+			dc.DrawText( self.labels[i], textWidthLeftMax - labelWidth, yLast )
+			if not self.minimizeLabels:
+				label = self.labels[i]
+				lastSpace = label.rfind( ' ' )
+				if lastSpace > 0:
+					label = label[lastSpace+1:]
+				dc.DrawText( label, width - labelsWidthRight + legendSep, yLast )
 
 			if str(self.numSelect) == str(numFromLabel(self.labels[i])):
 				yHighlight = yCur
@@ -408,7 +478,7 @@ class GanttChart(wx.PyControl):
 		if self.nowTime and self.nowTime < self.dataMax:
 			nowTimeStr = Utils.formatTime( self.nowTime )
 			labelWidth, labelHeight = dc.GetTextExtent( nowTimeStr )	
-			x = int(labelsWidthLeft + self.nowTime * xFactor)
+			x = int(labelsWidthLeft + (self.nowTime - tAdjust) * xFactor)
 			
 			ntColour = '#339966'
 			dc.SetPen( wx.Pen(ntColour, 6) )
@@ -432,6 +502,7 @@ class GanttChart(wx.PyControl):
 		self.xFactor = xFactor
 		self.barHeight = barHeight
 		self.labelsWidthLeft = labelsWidthLeft
+
 			
 	def OnEraseBackground(self, event):
 		# This is intentionally empty, because we are using the combination
@@ -443,15 +514,14 @@ if __name__ == '__main__':
 	def GetData():
 		data = []
 		interp = []
-		for i in xrange(20):
-			data.append( [t + i*10 for t in xrange(0, 60*60, 7*60)] )
-			interp.append( [((t + i*10)%100)//10 for t in xrange(0, 60*60, 7*60)] )
+		for i in xrange(40):
+			data.append( [t + i*10 for t in xrange(0, 60*60 * 3, 7*60)] )
+			interp.append( [((t + i*10)%100)//10 for t in xrange(0, 60*60 * 3, 7*60)] )
 		return data, interp
 
 	app = wx.PySimpleApp()
-	mainWin = wx.Frame(None,title="GanttChart", size=(600,400))
-	gantt = GanttChart(mainWin)
-	gantt.SetShowLabels( True )
+	mainWin = wx.Frame(None,title="GanttChartPanel", size=(600,400))
+	gantt = GanttChartPanel(mainWin)
 
 	random.seed( 10 )
 	t = 55*60

@@ -23,8 +23,11 @@ class RiderDetail( wx.Panel ):
 		self.num = None
 		self.iLap = None
 		self.entry = None
+		self.firstTime = True
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
+		
+		hs = wx.BoxSizer( wx.VERTICAL )
 		
 		gbs = wx.GridBagSizer(7, 4)
 		row = 0
@@ -108,7 +111,12 @@ class RiderDetail( wx.Panel ):
 		gbs.Add( self.notInLap, pos=(row,0), span=(1,4) )
 		row += 1
 	
-		self.grid = ColGrid.ColGrid( self, colnames = ['Rider Lap', 'Race Time', 'Lap Time'] )
+		hs.Add( gbs, proportion = 0 )
+		
+		splitter = wx.SplitterWindow( self, wx.ID_ANY )
+		self.splitter = splitter
+		
+		self.grid = ColGrid.ColGrid( splitter, colnames = ['Rider Lap', 'Race Time', 'Lap Time'], style = wx.BORDER_SUNKEN )
 		self.grid.SetRowLabelSize( 0 )
 		self.grid.SetRightAlign( True )
 		#self.grid.SetDoubleBuffered( True )
@@ -118,11 +126,10 @@ class RiderDetail( wx.Panel ):
 		self.grid.SetSelectionMode( wx.grid.Grid.wxGridSelectRows )
 		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doRightClick )
 
+		panel = wx.Panel( splitter, wx.ID_ANY, style = wx.BORDER_SUNKEN )
 		
-		gbs.Add( self.grid, pos=(row,0), span=(1,2), flag=wx.EXPAND )
-		
-		self.lineGraph = LineGraph( self, wx.ID_ANY, style = wx.NO_BORDER )
-		self.ganttChart = GanttChart( self, wx.ID_ANY, style = wx.NO_BORDER )
+		self.lineGraph = LineGraph( panel, wx.ID_ANY, style = wx.NO_BORDER )
+		self.ganttChart = GanttChart( panel, wx.ID_ANY, style = wx.NO_BORDER )
 		self.ganttChart.getNowTimeCallback = Gantt.GetNowTime
 		self.ganttChart.minimizeLabels = True
 		self.ganttChart.rClickCallback = self.onEditGantt
@@ -130,15 +137,17 @@ class RiderDetail( wx.Panel ):
 		vbs = wx.BoxSizer( wx.VERTICAL )
 		vbs.Add( self.ganttChart, proportion=0, border = 0, flag = wx.ALL | wx.EXPAND )
 		vbs.Add( self.lineGraph, proportion=1, border = 0, flag = wx.ALL | wx.EXPAND )
+		panel.SetSizer( vbs )
 		
-		gbs.Add( vbs, pos=(row, 2), span=(1, 3), flag=wx.EXPAND )
+		splitter.SetMinimumPaneSize( 100 )
+		splitter.SplitVertically( self.grid, panel, 300 )
 		
-		gbs.AddGrowableRow( row )
-		gbs.AddGrowableCol( 4 )
+		hs.Add( splitter, proportion = 1, flag = wx.EXPAND|wx.TOP, border = 4 )
+		splitter.SizeWindows()
 		
 		self.setAtRaceTime()
-		self.SetSizer( gbs )
-		self.gbs = gbs
+		self.SetSizer( hs )
+		self.hs = hs
 		self.setRider()
 		
 	def getLapClicked( self, event ):
@@ -595,12 +604,15 @@ class RiderDetail( wx.Panel ):
 			self.grid.Set( data = data, backgroundColour = backgroundColour )
 			self.grid.AutoSizeColumns( True )
 			self.grid.Reset()
-			self.grid.FitInside()
 			
 			self.ganttChart.SetData( [ganttData], [num], Gantt.GetNowTime(), [ganttInterp] )
 			self.lineGraph.SetData( [graphData], [[e.interp for e in entries]] )
-			
-		self.gbs.Layout()
+		
+		self.hs.Layout()
+		if self.firstTime:
+			self.firstTime = False
+			self.splitter.SetSashPosition( 230 )
+		self.grid.FitInside()
 	
 	def commitChange( self ):
 		num = self.num.GetValue()

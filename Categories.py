@@ -14,7 +14,7 @@ class TimeEditor(gridlib.PyGridCellEditor):
 		gridlib.PyGridCellEditor.__init__(self)
 		
 	def Create( self, parent, id, evtHandler ):
-		self._tc = masked.TimeCtrl( parent, id, style=wx.TE_CENTRE, fmt24hr=True, displaySeconds = False, value = '00:00:00' )
+		self._tc = masked.TimeCtrl( parent, id, style=wx.TE_CENTRE, fmt24hr=True, displaySeconds = True, value = '00:00:00' )
 		self.SetControl( self._tc )
 		if evtHandler:
 			self._tc.PushEventHandler( evtHandler )
@@ -79,7 +79,7 @@ class Categories( wx.Panel ):
 		cols += 1 
 
 		self.grid = gridlib.Grid( self )
-		colnames = ['Active', 'Name', 'Numbers', 'Start Offset (MM:SS)', 'Race Laps', 'Distance', '80% Lap Time', 'Suggested Laps']
+		colnames = ['Active', 'Name', 'Numbers', 'Start Offset', 'Race Laps', 'Distance', '80% Lap Time', 'Suggested Laps']
 		self.iCol = {
 			'active' :			0,
 			'name' :			1,
@@ -169,6 +169,9 @@ class Categories( wx.Panel ):
 		self.refresh()
 		
 	def _setRow( self, r, active, name, strVal, startOffset, numLaps, distance ):
+		if len(startOffset) < len('00:00:00'):
+			startOffset = '00:' + startOffset
+	
 		c = self.iCol['active']
 		self.grid.SetCellValue( r, c, '1' if active else '0' )
 		boolEditor = gridlib.GridCellBoolEditor()
@@ -225,7 +228,7 @@ class Categories( wx.Panel ):
 		
 	def onNewCategory( self, event ):
 		self.grid.AppendRows( 1 )
-		self._setRow( self.grid.GetNumberRows() - 1, True, '<CategoryName>     ', '100-199,504,-128', '00:00', None, None )
+		self._setRow( self.grid.GetNumberRows() - 1, True, '<CategoryName>     ', '100-199,504,-128', '00:00:00', None, None )
 		self.grid.AutoSizeColumns(True)
 		
 	def onDelCategory( self, event ):

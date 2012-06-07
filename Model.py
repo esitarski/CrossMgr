@@ -1478,9 +1478,9 @@ if __name__ == '__main__':
 	c = Category(True, 'test', '1400-1499,-1450', None)
 	print( 'mask=', c.getMask() )
 	
-	r.setCategories( [	(True, 'test1', '1100-1199', '00:00', None),
-						(True, 'test2', '1200-1299, 2000,2001,2002', '00:00', None),
-						(True, 'test3', '1300-1399', '00:00', None)] )
+	r.setCategories( [	(True, 'test1', '1100-1199', '00:00', None, None),
+						(True, 'test2', '1200-1299, 2000,2001,2002', '00:00', None, None),
+						(True, 'test3', '1300-1399', '00:00', None, None)] )
 	print( r.getCategoryMask() )
 	print( r.getCategory( 2002 ) )
 

@@ -58,10 +58,10 @@ class StartRaceAtTime( wx.Dialog ):
 			value = '%02d:%02d' % (startSeconds / (60*60), (startSeconds / 60) % 60)
 		
 		self.autoStartTime = masked.TimeCtrl( self, wx.ID_ANY, fmt24hr=True, display_seconds=False, value=value )
-													
+		
 		self.countdown = wx.StaticText( self, wx.ID_ANY, '      ' )
 		self.countdown.SetFont( font )
-													
+		
 		self.okBtn = wx.Button( self, wx.ID_ANY, '&OK' )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
 
@@ -70,7 +70,7 @@ class StartRaceAtTime( wx.Dialog ):
 		
 		border = 8
 		bs.Add( autoStartLabel, pos=(0,0), span=(1,1),
-				border = border, flag=wx.LEFT|wx.TOP|wx.BOTTOM )
+				border = border, flag=wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL )
 		bs.Add( self.autoStartTime, pos=(0,1), span=(1,1),
 				border = border, flag=wx.RIGHT|wx.TOP|wx.BOTTOM|wx.ALIGN_BOTTOM )
 		bs.Add( self.countdown, pos=(1,0), span=(1,2), border = border, flag=wx.ALL )
@@ -107,8 +107,8 @@ class StartRaceAtTime( wx.Dialog ):
 		startTime = self.autoStartTime.GetValue()
 
 		self.startSeconds = Utils.StrToSeconds( startTime ) * 60
-		if self.startSeconds < GetNowSeconds() and \
-			not Utils.MessageOKCancel( None, 'Race start time is in the past.\nStart race now?', 'Start Race Now' ):
+		if self.startSeconds < GetNowSeconds():
+			Utils.MessageOK( None, 'Scheduled Start Time is in the Past.\n\nPlease enter a Scheduled Start Time in the Future.', 'Scheduled Start Time is in the Past' )
 			return
 
 		# Setup the countdown clock.
@@ -145,10 +145,10 @@ class Actions( wx.Panel ):
 		self.button.SetForegroundColour( wx.Colour(128,128,128) )
 		self.Bind(wx.EVT_BUTTON, self.onPress, self.button )
 		
-		self.resetStartClockCheckBox = wx.CheckBox( self, wx.ID_ANY, 'Reset Start Clock on First Tag' )
+		self.resetStartClockCheckBox = wx.CheckBox( self, wx.ID_ANY, 'Reset Start Clock on First Tag Read (all riders will get the same start time)' )
 		self.Bind( wx.EVT_CHECKBOX, self.onResetStartClock, self.resetStartClockCheckBox )
 		
-		self.startRaceTimeCheckBox = wx.CheckBox(self, wx.ID_ANY, 'Start Race at Time')
+		self.startRaceTimeCheckBox = wx.CheckBox(self, wx.ID_ANY, 'Start Race Automatically at Future Time')
 		
 		border = 8
 		bs.Add(self.button, border=border, flag=wx.ALL)
