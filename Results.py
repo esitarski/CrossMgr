@@ -34,6 +34,7 @@ class Results( wx.Panel ):
 		self.entry = None
 		self.iRow, self.iCol = None, None
 		self.iLastLap = 0
+		self.fastestLapRC = None
 
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
 		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, 'Category:' )
@@ -79,6 +80,7 @@ class Results( wx.Panel ):
 		self.blackColour = wx.Colour( 0, 0, 0 )
 		self.yellowColour = wx.Colour( 255, 255, 0 )
 		self.greyColour = wx.Colour( 150, 150, 150 )
+		self.greenColour = wx.Colour( 127, 255, 0 )
 		
 		self.splitter = wx.SplitterWindow( self, wx.ID_ANY )
 		
@@ -282,7 +284,9 @@ class Results( wx.Panel ):
 	
 	def showLastLap( self ):
 		if not self.isEmpty:
-			self.MakeCellVisible( 0, self.iLastLap )
+			self.iLastLap = min( self.lapGrid.GetNumberCols()-1, self.iLastLap )
+			self.labelGrid.MakeCellVisible( 0, 0 )
+			self.lapGrid.MakeCellVisible( 0, self.iLastLap )
 	
 	def OnPopupSwapBefore( self, event ):
 		self.swapEntries( int(self.numSelect), self.numBefore )
@@ -305,6 +309,8 @@ class Results( wx.Panel ):
 			
 		textColourLap = {}
 		backgroundColourLap = dict( ((rc, self.yellowColour) for rc in self.rcInterp) )
+		if self.fastestLapRC is not None:
+			backgroundColourLap[self.fastestLapRC] = self.greenColour
 		
 		textColourLabel = {}
 		backgroundColourLabel = {}
@@ -454,11 +460,15 @@ class Results( wx.Panel ):
 					sortCol = i
 					break
 		
-		if sortCol is not None or self.showRaceTimes:
-			results = GetResults( catName )
-		else:
-			results = None
-			
+		results = GetResults( catName )
+		self.fastestLapRC, fastestLapTime = None, 1000*60*60
+		for r, result in enumerate(results):
+			if result.lapTimes:
+				for c, t in enumerate(result.lapTimes):
+					if c > 0 and t < fastestLapTime:
+						fastestLapTime = t
+						self.fastestLapRC = (r, c)
+		
 		highPrecision = Utils.highPrecisionTimes()
 		try:
 			firstLapCol = (i for i, name in enumerate(colnames) if name.startswith('Lap')).next()
