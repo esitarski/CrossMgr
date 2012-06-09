@@ -10,11 +10,12 @@ import ColGrid
 from FixCategories import FixCategories, SetCategory
 from GetResults import GetResults, RidersCanSwap
 from ExportGrid import ExportGrid
+from GetResults import GetResults
 from EditEntry import CorrectNumber, ShiftNumber, InsertNumber, DeleteEntry, SwapEntry
 from Undo import undo
 
 reNonDigits = re.compile( '[^0-9]' )
-reLapMatch = re.compile( 'Lap ([0-9]+)' )
+reLapMatch = re.compile( '<?Lap>? ([0-9]+)' )
 
 class Results( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
@@ -22,6 +23,8 @@ class Results( wx.Panel ):
 		
 		self.category = None
 		self.showRiderData = True
+		self.showRaceTimes = False
+		self.firstDraw = True
 		
 		self.rcInterp = set()
 		self.numSelect = None
@@ -30,6 +33,7 @@ class Results( wx.Panel ):
 		self.iLap = None
 		self.entry = None
 		self.iRow, self.iCol = None, None
+		self.iLastLap = 0
 
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
 		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, 'Category:' )
@@ -39,6 +43,14 @@ class Results( wx.Panel ):
 		self.showRiderDataToggle = wx.ToggleButton( self, wx.ID_ANY, 'Show Rider Data', style=wx.BU_EXACTFIT )
 		self.showRiderDataToggle.SetValue( self.showRiderData )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowRiderData, self.showRiderDataToggle )
+		
+		self.showLapTimesRadio = wx.RadioButton( self, wx.ID_ANY, 'Lap Times', style=wx.BU_EXACTFIT|wx.RB_GROUP )
+		self.showLapTimesRadio.SetValue( not self.showRaceTimes )
+		self.Bind( wx.EVT_RADIOBUTTON, self.onSelectTimesOption, self.showLapTimesRadio )
+		
+		self.showRaceTimesRadio = wx.RadioButton( self, wx.ID_ANY, 'Race Times', style=wx.BU_EXACTFIT )
+		self.showRaceTimesRadio.SetValue( self.showRaceTimes )
+		self.Bind( wx.EVT_RADIOBUTTON, self.onSelectTimesOption, self.showRaceTimesRadio )
 		
 		self.search = wx.SearchCtrl(self, size=(80,-1), style=wx.TE_PROCESS_ENTER )
 		# self.search.ShowCancelButton( True )
@@ -56,6 +68,8 @@ class Results( wx.Panel ):
 		self.hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.categoryChoice, flag=wx.ALL, border=4 )
 		self.hbs.Add( self.showRiderDataToggle, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.showLapTimesRadio, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.showRaceTimesRadio, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( wx.StaticText(self, wx.ID_ANY, ' '), proportion=2 )
 		self.hbs.Add( self.search, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.zoomInButton, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
@@ -66,29 +80,65 @@ class Results( wx.Panel ):
 		self.yellowColour = wx.Colour( 255, 255, 0 )
 		self.greyColour = wx.Colour( 150, 150, 150 )
 		
-		self.grid = ColGrid.ColGrid( self )
-		self.grid.SetRowLabelSize( 0 )
-		self.grid.SetMargins( 0, 0 )
-		self.grid.SetRightAlign( True )
-		#self.grid.SetDoubleBuffered( True )
-		self.grid.AutoSizeColumns( True )
-		self.grid.DisableDragColSize()
-		self.grid.DisableDragRowSize()
+		self.splitter = wx.SplitterWindow( self, wx.ID_ANY )
+		
+		self.labelGrid = ColGrid.ColGrid( self.splitter, style=wx.BORDER_SUNKEN )
+		self.labelGrid.SetRowLabelSize( 0 )
+		self.labelGrid.SetMargins( 0, 0 )
+		self.labelGrid.SetRightAlign( True )
+		self.labelGrid.SetDoubleBuffered( True )
+		self.labelGrid.AutoSizeColumns( True )
+		self.labelGrid.DisableDragColSize()
+		self.labelGrid.DisableDragRowSize()
+		
+		self.lapGrid = ColGrid.ColGrid( self.splitter, style=wx.BORDER_SUNKEN )
+		self.lapGrid.SetRowLabelSize( 0 )
+		self.lapGrid.SetMargins( 0, 0 )
+		self.lapGrid.SetRightAlign( True )
+		self.lapGrid.SetDoubleBuffered( True )
+		self.lapGrid.AutoSizeColumns( True )
+		self.lapGrid.DisableDragColSize()
+		self.lapGrid.DisableDragRowSize()
+		
+		self.splitter.SetMinimumPaneSize(100)
+		self.splitter.SplitVertically(self.labelGrid, self.lapGrid, 400)
+		
+		# Sync the two vertical scrollbars.
+		self.labelGrid.Bind(wx.EVT_SCROLLWIN, self.onScroll)
+		self.lapGrid.Bind(wx.EVT_SCROLLWIN, self.onScroll)
 		
 		self.Bind( wx.grid.EVT_GRID_SELECT_CELL, self.doNumSelect )
 		self.Bind( wx.grid.EVT_GRID_CELL_LEFT_DCLICK, self.doNumDrilldown )
 		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doRightClick )
+		self.lapGrid.Bind( wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.doLabelClick )
+		self.labelGrid.Bind( wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.doLabelClick )
 		
 		bs = wx.BoxSizer(wx.VERTICAL)
 		#bs.Add(self.hbs)
-		#bs.Add(self.grid, 1, wx.GROW|wx.ALL, 5)
+		#bs.Add(self.lapGrid, 1, wx.GROW|wx.ALL, 5)
 		
 		bs.Add(self.hbs, 0, wx.EXPAND )
-		bs.Add(self.grid, 1, wx.EXPAND|wx.GROW|wx.ALL, 5 )
+		bs.Add(self.splitter, 1, wx.EXPAND|wx.GROW|wx.ALL, 5 )
 		
 		self.SetSizer(bs)
 		bs.SetSizeHints(self)
-		
+	
+	def onScroll(self, evt): 
+		grid = evt.GetEventObject()
+		orientation = evt.GetOrientation()
+		if orientation == wx.SB_VERTICAL:
+			if grid == self.lapGrid:
+				wx.CallAfter( lambda: Utils.AlignVerticalScroll(self.lapGrid, self.labelGrid) ) 
+			else:
+				wx.CallAfter( lambda: Utils.AlignVerticalScroll(self.labelGrid, self.lapGrid) )
+		evt.Skip() 
+	
+	def alignLabelToLapScroll(self): 
+		Utils.AlignVerticalScroll( self.labelGrid, self.lapGrid )
+
+	def alignLapToLabelScroll(self): 
+		Utils.AlignVerticalScroll( self.lapGrid, self.labelGrid )
+	
 	def OnSearch( self, event ):
 		self.OnDoSearch()
 		
@@ -113,14 +163,28 @@ class Results( wx.Panel ):
 				Utils.getMainWin().setNumSelect( n )
 
 	def onZoomOut( self, event ):
-		self.grid.Zoom( False )
+		self.lapGrid.Zoom( False )
 			
 	def onZoomIn( self, event ):
-		self.grid.Zoom( True )
+		self.lapGrid.Zoom( True )
 		
 	def onShowRiderData( self, event ):
 		self.showRiderData ^= True
 		self.refresh()
+		
+	def onSelectTimesOption( self, event ):
+		self.showRaceTimes = self.showRaceTimesRadio.GetValue()
+		self.refresh()
+		
+	def doLabelClick( self, event ):
+		col = event.GetCol()
+		label = self.lapGrid.GetColLabelValue(col)
+		with Model.LockRace() as race:
+			if event.GetEventObject() != self.lapGrid or label.startswith( '<' ) or not label.startswith('Lap'):
+				setattr( race, 'sortLap', None )
+			else:
+				setattr( race, 'sortLap', int(label.split()[1]) )
+		wx.CallAfter( self.refresh )
 		
 	def doRightClick( self, event ):
 		wx.CallAfter( self.search.SetFocus )
@@ -165,9 +229,9 @@ class Results( wx.Panel ):
 	
 		self.numBefore, self.numAfter = None, None
 		for iRow, attr in [(self.iRow - 1, 'numBefore'), (self.iRow + 1, 'numAfter')]:
-			if not (0 <= iRow < self.grid.GetNumberRows()):
+			if not (0 <= iRow < self.lapGrid.GetNumberRows()):
 				continue
-			numAdjacent = int( self.grid.GetCellValue(iRow, 1) )
+			numAdjacent = int( self.labelGrid.GetCellValue(iRow, 1) )
 			if RidersCanSwap( riderResults, num, numAdjacent ):
 				setattr( self, attr, numAdjacent )
 			
@@ -216,6 +280,10 @@ class Results( wx.Panel ):
 		except KeyError:
 			pass
 	
+	def showLastLap( self ):
+		if not self.isEmpty:
+			self.MakeCellVisible( 0, self.iLastLap )
+	
 	def OnPopupSwapBefore( self, event ):
 		self.swapEntries( int(self.numSelect), self.numBefore )
 		
@@ -235,25 +303,41 @@ class Results( wx.Panel ):
 		if race is None:
 			return
 			
-		textColour = {}
-		backgroundColour = dict( ((rc, self.yellowColour) for rc in self.rcInterp) )
-		for r in xrange(self.grid.GetNumberRows()):
+		textColourLap = {}
+		backgroundColourLap = dict( ((rc, self.yellowColour) for rc in self.rcInterp) )
 		
-			value = self.grid.GetCellValue( r, 1 )
+		textColourLabel = {}
+		backgroundColourLabel = {}
+		
+		for r in xrange(self.lapGrid.GetNumberRows()):
+		
+			value = self.labelGrid.GetCellValue( r, 1 )
 			if not value:
 				break	
 			
 			cellNum = value
 			if cellNum == self.numSelect:
-				for c in xrange(self.grid.GetNumberCols()):
-					textColour[ (r,c) ] = self.whiteColour
-					backgroundColour[ (r,c) ] = self.blackColour if (r,c) not in self.rcInterp else self.greyColour
+				for c in xrange(self.lapGrid.GetNumberCols()):
+					textColourLap[ (r,c) ] = self.whiteColour
+					backgroundColourLap[ (r,c) ] = self.blackColour if (r,c) not in self.rcInterp else self.greyColour
 					
-				self.grid.MakeCellVisible( r, 0 )
+				for c in xrange(self.labelGrid.GetNumberCols()):
+					textColourLabel[ (r,c) ] = self.whiteColour
+					backgroundColourLabel[ (r,c) ] = self.blackColour if (r,c) not in self.rcInterp else self.greyColour
 				break
-					
-		self.grid.Set( textColour = textColour, backgroundColour = backgroundColour )
-		self.grid.Reset()
+		
+		try:
+			c = (i for i in xrange(self.lapGrid.GetNumberCols()) if self.lapGrid.GetColLabelValue(i).startswith('<')).next()
+			for r in xrange(self.lapGrid.GetNumberRows()):
+				textColourLap[ (r,c) ] = self.whiteColour
+				backgroundColourLap[ (r,c) ] = self.blackColour if (r,c) not in self.rcInterp else self.greyColour
+		except StopIteration:
+			pass
+
+		self.labelGrid.Set( textColour = textColourLabel, backgroundColour = backgroundColourLabel )
+		self.labelGrid.Reset()
+		self.lapGrid.Set( textColour = textColourLap, backgroundColour = backgroundColourLap )
+		self.lapGrid.Reset()
 			
 	def doNumDrilldown( self, event ):
 		self.doNumSelect( event )
@@ -267,18 +351,18 @@ class Results( wx.Panel ):
 			return
 		row, col = event.GetRow(), event.GetCol()
 		self.iRow, self.iCol = row, col
-		if row >= self.grid.GetNumberRows() or col >= self.grid.GetNumberCols():
+		if row >= self.lapGrid.GetNumberRows() or col >= self.lapGrid.GetNumberCols():
 			return
 			
-		if self.grid.GetCellValue(row, col):
+		if self.lapGrid.GetCellValue(row, col):
 			try:
-				colName = self.grid.GetColLabelValue( col )
+				colName = self.lapGrid.GetColLabelValue( col )
 				self.iLap = int( reLapMatch.match(colName).group(1) )
 			except:
 				pass
 		
 		col = 1
-		value = self.grid.GetCellValue( row, col )
+		value = self.labelGrid.GetCellValue( row, col )
 		numSelect = None
 		if value:
 			numSelect = value
@@ -316,12 +400,13 @@ class Results( wx.Panel ):
 			self.search.SetValue( self.numSelect )
 
 	def clearGrid( self ):
-		self.grid.Set( data = [], colnames = [], textColour = {}, backgroundColour = {} )
-		self.grid.Reset()
+		self.lapGrid.Set( data = [], colnames = [], textColour = {}, backgroundColour = {} )
+		self.lapGrid.Reset()
 
 	def refresh( self ):
 		self.category = None
 		self.isEmpty = True
+		self.iLastLap = 0
 		self.rcInterp = set()	# Set of row/col coordinates of interpolated numbers.
 		
 		self.search.SelectAll()
@@ -334,6 +419,10 @@ class Results( wx.Panel ):
 			catName = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
 			self.hbs.Layout()
 			self.category = race.categories.get( catName, None )
+			sortLap = getattr( race, 'sortLap', None )
+		
+		labelLastX, labelLastY = self.labelGrid.GetViewStart()
+		lapLastX, lapLastY = self.lapGrid.GetViewStart()
 		
 		exportGrid = ExportGrid()
 		exportGrid.setResultsOneList( catName, self.showRiderData )
@@ -355,35 +444,114 @@ class Results( wx.Panel ):
 		except StopIteration:
 			pass
 			
-		self.grid.Set( data = exportGrid.data, colnames = exportGrid.colnames )
-		self.grid.SetLeftAlignCols( exportGrid.leftJustifyCols )
-		self.grid.AutoSizeColumns( True )
-		self.grid.Reset()
+		colnames = exportGrid.colnames
+		data = exportGrid.data
+		
+		sortCol = None
+		if sortLap:
+			for i, name in enumerate(colnames):
+				if name.startswith('Lap') and int(name.split()[1]) == sortLap:
+					sortCol = i
+					break
+		
+		if sortCol is not None or self.showRaceTimes:
+			results = GetResults( catName )
+		else:
+			results = None
+			
+		highPrecision = Utils.highPrecisionTimes()
+		try:
+			firstLapCol = (i for i, name in enumerate(colnames) if name.startswith('Lap')).next()
+		except StopIteration:
+			firstLapCol = len(colnames)
+		
+		# Convert to race times if required.
+		if self.showRaceTimes:
+			for r, result in enumerate(results):
+				for i, t in enumerate(result.raceTimes[1:]):
+					data[i+firstLapCol][r] = Utils.formatTime(t, highPrecision)
+		
+		# Sort by the given lap, if there is one.
+		# Also, add a position for the lap itself.
+		if sortLap is not None:
+			rowMax = len( results )
+			sortPairs = []
+			for r, result in enumerate(results):
+				try:
+					t = result.raceTimes[sortLap]
+				except:
+					t = 1000.0*60.0*60.0 + r
+				sortPairs.append( (t, r) )
+			sortPairs.sort()
+				
+			for c in xrange(len(data)):
+				col = data[c]
+				data[c] = [col[i] if i < len(col) else '' for t, i in sortPairs]
+				
+			for r in xrange(len(data[sortLap])):
+				if data[sortCol][r]:
+					data[sortCol][r] += ' [%d]' % (r+1)
+		
+		# Highlight the sorted column.
+		if sortLap is not None:
+			colnames = []
+			for name in exportGrid.colnames:
+				try:
+					if int(name.split()[1]) == sortLap:
+						name = '<%s>' % name
+				except:
+					pass
+				colnames.append( name )
+		else:
+			colnames = exportGrid.colnames
+		
+		iLabelMax = (i+1 for i, name in enumerate(colnames) if name == 'Gap').next()
+		colnamesLabels = colnames[:iLabelMax]
+		dataLabels = data[:iLabelMax]
+		
+		colnameLaps = colnames[iLabelMax:]
+		dataLaps = data[iLabelMax:]
+		
+		self.labelGrid.Set( data = dataLabels, colnames = colnamesLabels )
+		self.labelGrid.SetLeftAlignCols( exportGrid.leftJustifyCols )
+		self.labelGrid.AutoSizeColumns( True )
+		self.labelGrid.Reset()
+		
+		self.lapGrid.Set( data = dataLaps, colnames = colnameLaps )
+		self.lapGrid.AutoSizeColumns( True )
+		self.lapGrid.Reset()
+		
 		self.isEmpty = False
-
+		
 		# Highlight interpolated entries.
 		with Model.LockRace() as race:
-			for r in xrange(self.grid.GetNumberRows()):
+			for r in xrange(self.lapGrid.GetNumberRows()):
 				try:
-					rider = race[int(self.grid.GetCellValue(r, 1))]
+					rider = race[int(self.labelGrid.GetCellValue(r, 1))]
 					entries = rider.interpolate()
 					if not entries:
 						continue
 				except (ValueError, IndexError):
 					continue
-				eItr = (e for e in entries)
-				eItr.next()						# Skip the first zero entry.
-				for c in xrange(exportGrid.iLapTimes, self.grid.GetNumberCols()):
-					if not self.grid.GetCellValue(r, c):
+				for c in xrange(self.lapGrid.GetNumberCols()):
+					if not self.lapGrid.GetCellValue(r, c):
 						break
-					if eItr.next().interp:
+					if entries[c+1].interp:
 						self.rcInterp.add( (r, c) )
+					elif c > self.iLastLap:
+						self.iLastLap = c
 		
-		self.grid.MakeCellVisible( 0, 0 )
+		self.labelGrid.Scroll( labelLastX, labelLastY )
+		self.lapGrid.Scroll( lapLastX, lapLastY )
 		self.showNumSelect()
-						
-		# Fix the grid's scrollbars.
-		self.grid.FitInside()
+		
+		if self.firstDraw:
+			self.firstDraw = False
+			self.splitter.SetSashPosition( 400 )
+		
+		# Fix the grids' scrollbars.
+		self.labelGrid.FitInside()
+		self.lapGrid.FitInside()
 
 	def commit( self ):
 		pass

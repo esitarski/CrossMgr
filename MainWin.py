@@ -1408,6 +1408,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 			except (TypeError, ValueError, KeyError):
 				pass
 		
+		if success:
+			self.results.showLastLap()
 		return success
 
 	def updateRaceClock( self, event = None ):

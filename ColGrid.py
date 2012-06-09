@@ -122,6 +122,26 @@ class ColTable(Grid.PyGridTableBase):
 	def SetValue(self, row, col, value):
 		# Nothing to do - everthings is read-only.
 		pass
+		
+	def DeleteCols( self, pos = 0, numCols = 1, updateLabels = True, grid = None ):
+		oldCols = max( len(self.colnames) if self.colnames else 0, len(self.data) if self.data else 0 )
+		if self.data:
+			del self.data[pos:pos+numCols]
+		if self.colnames:
+			del self.colnames[pos:pos+numCols]
+		posMax = pos + numCols
+		for a in ['textColour', 'backgroundColour']:
+			if not getattr(self, a, None):
+				continue
+			colD = {}
+			for (r, c), colour in getattr(self, a).iteritems():
+				if c < pos:
+					colD[(r, c)] = colour
+				elif posMax <= c:
+					colD[(r, c-numCols)] = colour
+			setattr( self, a, colD )
+		newCols = max( len(self.colnames) if self.colnames else 0, len(self.data) if self.data else 0 )
+		self._adjustDimension( grid, oldCols, newCols, True )
 
 	def GetAttr(self, row, col, someExtraParameter ):
 		rc = (row, col)
@@ -208,6 +228,10 @@ class ColGrid(Grid.Grid):
 
 	def GetColNames( self ):
 		return self._table.GetColNames()
+		
+	def DeleteCols( self, pos = 0, numCols = 1, updateLabels = True ):
+		self._table.DeleteCols(pos, numCols, updateLabels, self)
+		self.Reset()
 	
 	def Zoom( self, zoomIn = True ):
 		factor = 2 if zoomIn else 0.5

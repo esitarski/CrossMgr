@@ -289,6 +289,16 @@ def deleteTrailingSeparators( menu ):
 	while hasTrailingSeparator(menu):
 		menu.DeleteItem( menu.FindItemByPosition(menu.GetMenuItemCount()-1) )
 	
+def AlignHorizontalScroll( gFrom, gTo ): 
+	xFrom, yFrom = gFrom.GetViewStart()
+	xTo,   yTo   = gTo.GetViewStart()
+	gTo.Scroll( xFrom, yTo )
+	
+def AlignVerticalScroll( gFrom, gTo ): 
+	xFrom, yFrom = gFrom.GetViewStart()
+	xTo,   yTo   = gTo.GetViewStart()
+	gTo.Scroll( xTo, yFrom )
+	
 if __name__ == '__main__':
 	app = wx.PySimpleApp()
 	hd = getHomeDir()
