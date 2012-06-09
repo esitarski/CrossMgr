@@ -916,6 +916,7 @@ class MainWin( wx.Frame ):
 		try:
 			with open(fileName, 'rb') as fp, Model.LockRace() as race:
 				race = pickle.load( fp )
+				race.sortLap = None			# Remove lap sorting to avoid confusion.
 				isFinished = race.isFinished()
 			self.fileName = fileName
 			race.tagNums = None
