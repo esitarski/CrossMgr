@@ -490,7 +490,7 @@ class Results( wx.Panel ):
 				
 			for r in xrange(len(data[sortLap])):
 				if data[sortCol][r]:
-					data[sortCol][r] += ' [%d]' % (r+1)
+					data[sortCol][r] += ' [%d: %s]' % (r+1, data[1][r])
 		
 		# Highlight the sorted column.
 		if sortLap is not None:
