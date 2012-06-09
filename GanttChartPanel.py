@@ -61,6 +61,7 @@ class GanttChartPanel(wx.PyPanel):
 		self.SetBackgroundColour(wx.WHITE)
 		self.data = None
 		self.labels = None
+		self.greyOutSet = None
 		self.nowTime = None
 		self.numSelect = None
 		self.dClickCallback = None
@@ -128,7 +129,7 @@ class GanttChartPanel(wx.PyPanel):
 		"""
 		return True
 
-	def SetData( self, data, labels = None, nowTime = None, interp = None ):
+	def SetData( self, data, labels = None, nowTime = None, interp = None, greyOutSet = set() ):
 		"""
 		* data is a list of lists.  Each list is a list of times.		
 		* labels are the names of the series.  Optional.
@@ -136,6 +137,7 @@ class GanttChartPanel(wx.PyPanel):
 		self.data = None
 		self.labels = None
 		self.nowTime = None
+		self.greyOutSet = greyOutSet
 		if data and any( s for s in data ):
 			self.data = data
 			self.dataMax = max(max(s) if s else -sys.float_info.max for s in self.data)
@@ -270,6 +272,7 @@ class GanttChartPanel(wx.PyPanel):
 		
 		backColour = self.GetBackgroundColour()
 		backBrush = wx.Brush(backColour, wx.SOLID)
+		greyBrush = wx.Brush( wx.Colour(196+32,196+32,196+32), wx.SOLID )
 		backPen = wx.Pen(backColour, 0)
 		dc.SetBackground(backBrush)
 		dc.Clear()
@@ -481,6 +484,11 @@ class GanttChartPanel(wx.PyPanel):
 			dc.DrawRectangle( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 )
 			
 			# Draw the label on both ends.
+			if self.greyOutSet and i in self.greyOutSet:
+				dc.SetPen( wx.TRANSPARENT_PEN )
+				dc.SetBrush( greyBrush )
+				dc.DrawRectangle( 0, yLast, textWidthLeftMax, yCur - yLast + 1 )
+				dc.SetBrush( backBrush )
 			labelWidth = dc.GetTextExtent( self.labels[i] )[0]
 			dc.DrawText( self.labels[i], textWidthLeftMax - labelWidth, yLast )
 			if not self.minimizeLabels:

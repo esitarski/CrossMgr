@@ -4,6 +4,7 @@ import wx
 import wx.grid		as gridlib
 import re
 import os
+import sys
 import itertools
 from string import Template
 import ColGrid
@@ -461,7 +462,7 @@ class Results( wx.Panel ):
 					break
 		
 		results = GetResults( catName )
-		self.fastestLapRC, fastestLapTime = None, 1000*60*60
+		self.fastestLapRC, fastestLapTime = None, sys.float_info.max
 		for r, result in enumerate(results):
 			if result.lapTimes:
 				for c, t in enumerate(result.lapTimes):
