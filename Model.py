@@ -192,11 +192,11 @@ class Category(object):
 	
 	@property
 	def distanceIsByLap( self ):
-		return getattr(self, 'distanceType', 0) == Category.DistanceByLap
+		return getattr(self, 'distanceType', Category.DistanceByLap) == Category.DistanceByLap
 	
 	@property
 	def distanceIsByRace( self ):
-		return getattr( self, 'distanceType', 0) == Category.DistanceByRace
+		return getattr( self, 'distanceType', Category.DistanceByLap) == Category.DistanceByRace
 		
 	def getNumLaps( self ):
 		return getattr( self, '_numLaps', None )
