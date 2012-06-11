@@ -106,9 +106,13 @@ def formatTimeGap( secs ):
 	else:
 		sign = ''
 	secs = int(secs)
-	minutes = int( secs // 60 )
+	hours = int(secs // (60*60))
+	minutes = int( (secs // 60) % 60 )
 	secs = secs % 60
-	return "%s%d'%02d\"" % (sign, minutes, secs)
+	if hours > 0:
+		return "%s%dh'%02d\"" % (sign, hours, minutes, secs)
+	else:
+		return "%s%d'%02d\"" % (sign, minutes, secs)
 
 def formatTimeCompressed( secs, highPrecision = False ):
 	f = formatTime( secs, highPrecision )

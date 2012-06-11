@@ -8,6 +8,7 @@ import Utils
 from Utils import SetValue, SetLabel
 import Model
 import sys
+import datetime
 from keybutton import KeyButton
 from RaceHUD import RaceHUD
 from EditEntry import DoDNS, DoDNF, DoPull, DoDQ
@@ -97,7 +98,6 @@ class NumKeypad( wx.Panel ):
 		self.raceTime = wx.StaticText(self, wx.ID_ANY, '00:00')
 		self.raceTime.SetFont( font )
 		self.raceTime.SetDoubleBuffered(True)
-		self.refreshRaceTime()
 		
 		verticalSubSizer = wx.BoxSizer( wx.VERTICAL )
 		horizontalMainSizer.Add( verticalSubSizer )
@@ -170,6 +170,15 @@ class NumKeypad( wx.Panel ):
 		self.lapsToGo.SetFont( font )
 		gbs.Add( self.lapsToGo, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
+		
+		rowCur += 1
+		label = wx.StaticText(self, wx.ID_ANY, "Clock Time")
+		label.SetFont( font )
+		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
+		self.clockTime = wx.StaticText( self, wx.ID_ANY, '' )
+		self.clockTime.SetFont( font )
+		gbs.Add( self.clockTime, pos=(rowCur, colCur+1), span=(1, 2), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
+		rowCur += 1
 
 		rowCur += 1
 		self.message = wx.StaticText( self, wx.ID_ANY, '' )
@@ -184,6 +193,8 @@ class NumKeypad( wx.Panel ):
 		
 		self.SetSizer( verticalMainSizer )
 		self.isEnabled = True
+		
+		self.refreshRaceTime()
 		
 	def refreshRaceHUD( self ):
 		# Assumes Model is locked.
@@ -237,13 +248,18 @@ class NumKeypad( wx.Panel ):
 		'''
 
 	def refreshRaceTime( self ):
+		tClockStr = ''
 		with Model.LockRace() as race:
 			if race is not None:
 				tStr = Utils.formatTime( race.lastRaceTime() )
 				self.refreshRaceHUD()
+				if race.isRunning():
+					tNow = datetime.datetime.now()
+					tClockStr = '%02d:%02d:%02d' % (tNow.hour, tNow.minute, tNow.second)
 			else:
 				tStr = ''
 			self.raceTime.SetLabel( '  ' + tStr )
+			self.clockTime.SetLabel( tClockStr )
 			
 		mainWin = Utils.getMainWin()
 		if mainWin is not None:

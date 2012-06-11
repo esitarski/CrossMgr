@@ -116,7 +116,9 @@ class RiderDetail( wx.Panel ):
 		splitter = wx.SplitterWindow( self, wx.ID_ANY )
 		self.splitter = splitter
 		
-		self.grid = ColGrid.ColGrid( splitter, colnames = ['Rider Lap', 'Race Time', 'Lap Time'], style = wx.BORDER_SUNKEN )
+		self.grid = ColGrid.ColGrid(	splitter,
+										colnames = ['Lap', 'Lap Time', 'Race Time', 'Lap Speed', 'Race Speed'],
+										style = wx.BORDER_SUNKEN )
 		self.grid.SetRowLabelSize( 0 )
 		self.grid.SetRightAlign( True )
 		#self.grid.SetDoubleBuffered( True )
@@ -486,7 +488,8 @@ class RiderDetail( wx.Panel ):
 		self.num.SelectAll()
 		wx.CallAfter( self.num.SetFocus )
 
-		self.grid.Set( data = [ [], [], [] ] )
+		data = [ [] for c in xrange(self.grid.GetNumberCols()) ]
+		self.grid.Set( data = data )
 		self.grid.Reset()
 		self.category.SetLabel( '' )
 		self.autocorrectLaps.SetValue( True )
@@ -501,14 +504,22 @@ class RiderDetail( wx.Panel ):
 		self.riderTeam.SetLabel( '' )
 		self.tags.SetLabel( '' )
 		
+		highPrecisionTimes = Utils.highPrecisionTimes()
 		with Model.LockRace() as race:
 			if race is None or num not in race:
 				return
 			rider = race.getRider( num )
 			catName = race.getCategoryName( num )
 			category = race.categories.get( catName, None )
+			if category and getattr(category, 'distance', None) and category.distanceIsByLap:
+				distanceByLap = getattr(category, 'distance')
+			else:
+				distanceByLap = None
 			
-			externalInfo = race.excelLink.read()
+			try:
+				externalInfo = race.excelLink.read()
+			except AttributeError:
+				externalInfo = {}
 			try:
 				info = externalInfo[int(num)]
 				name = info.get( 'LastName', '' )
@@ -569,7 +580,10 @@ class RiderDetail( wx.Panel ):
 				i = min( i, len(appearedInLap) - 1 )	# Handle if rider would have been lapped again on the last lap.
 				appearedInLap[i] = True
 
-			missingCount = sum( 1 for b in appearedInLap if not b ) if rider.status == Model.Rider.Finisher else 0
+			try:
+				missingCount = sum( 1 for b in appearedInLap if not b ) if rider.status == Model.Rider.Finisher else 0
+			except:
+				missingCount = 0
 			if missingCount:
 				notInLapStr = 'Lapped by Race Leader in %s' % (', '.join( str(i) for i, b in enumerate(appearedInLap) if not b ))
 			else:
@@ -583,22 +597,33 @@ class RiderDetail( wx.Panel ):
 				raceTime = 0.0
 			ganttData = [raceTime]
 			ganttInterp = [False]
-			data = [ [], [], [] ]
+			data = [ [] for c in xrange(self.grid.GetNumberCols()) ]
 			graphData = []
 			backgroundColour = {}
+			sTotal = 0.0
 			for r, e in enumerate(entries):
-				data[0].append( str(r+1) )
-				data[1].append( Utils.formatTime(e.t) )
 				tLap = max( e.t - raceTime, 0.0 )
-				data[2].append( Utils.formatTime(tLap) )
-				graphData.append( tLap )
 				
+				data[0].append( str(r+1) )
+				data[1].append( Utils.formatTime(tLap, highPrecisionTimes) )
+				data[2].append( Utils.formatTime(e.t, highPrecisionTimes) )
+				
+				graphData.append( tLap )
 				ganttData.append( e.t )
 				ganttInterp.append( e.interp )
 				
+				if distanceByLap:
+					try:
+						s = distanceByLap / (tLap / (60.0*60.0))
+						data[3].append( '%.2f' % s )
+						sTotal += s
+					except ZeroDivisionError:
+						data[3].append( '' )
+					data[4].append( '%.2f' % (sTotal / (r + 1)) )
+				
 				raceTime = e.t
 				if e.interp:
-					for i in xrange(0,3):
+					for i in xrange(self.grid.GetNumberCols()):
 						backgroundColour[(r,i)] = (255,255,0)
 
 			self.grid.Set( data = data, backgroundColour = backgroundColour )

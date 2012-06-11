@@ -828,8 +828,7 @@ class MainWin( wx.Frame ):
 									'Category %d-%d'	% (max(1, i*100), (i+1)*100-1),
 									'%d-%d'				% (max(1, i*100), (i+1)*100-1),
 									'00:00',
-									None,
-									None) for i in xrange(8)] )
+									None, None, None) for i in xrange(8)] )
 			else:
 				race.categoriesImportFile = categoriesFile
 
@@ -1100,7 +1099,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 			race.minutes = self.raceMinutes
 			race.raceNum = 1
 			#race.isTimeTrial = True
-			race.setCategories( [(True, 'Junior', '100-199', '00:00', None, None), (True, 'Senior','200-299', '00:15', None, None)] )
+			race.setCategories( [	(True, 'Junior', '100-199', '00:00', None, None, None),
+									(True, 'Senior', '200-299', '00:15', None, None, None)] )
 
 		self.writeRace()
 
@@ -1283,6 +1283,9 @@ Continue?''' % fName, 'Simulate a Race' ):
 
 	#--------------------------------------------------------------------------------------
 
+	def getCurrentPage( self ):
+		return self.pages[self.notebook.GetSelection()]
+	
 	def showRiderDetail( self, num = None ):
 		self.riderDetail.setRider( num )
 		for i, p in enumerate(self.pages):
@@ -1409,8 +1412,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 			except (TypeError, ValueError, KeyError):
 				pass
 		
-		if success:
-			self.results.showLastLap()
+		if success and self.getCurrentPage() == self.results:
+			wx.CallAfter( self.results.showLastLap )
 		return success
 
 	def updateRaceClock( self, event = None ):

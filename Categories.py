@@ -42,6 +42,46 @@ class TimeEditor(gridlib.PyGridCellEditor):
 	def Clone( self ):
 		return TimeEditor()
 
+class CustomEnumRenderer(gridlib.PyGridCellRenderer):
+	def __init__(self, choices):
+		self.choices = choices.split( ',' )
+		gridlib.PyGridCellRenderer.__init__(self)
+
+	def Draw(self, grid, attr, dc, rect, row, col, isSelected):
+		value = grid.GetCellValue( row, col )
+		try:
+			value = self.choices[int(value)]
+		except (ValueError, IndexError):
+			pass
+			
+		dc.SetClippingRect( rect )
+		dc.SetBackgroundMode(wx.SOLID)
+		dc.SetBrush(wx.WHITE_BRUSH)
+		dc.SetPen(wx.TRANSPARENT_PEN)
+		dc.DrawRectangleRect(rect)
+		
+		dc.SetTextForeground(wx.BLACK)
+		dc.SetPen( wx.BLACK_PEN )
+		dc.SetFont( attr.GetFont() )
+		
+		w, h = dc.GetTextExtent( value )
+		
+		x = int((rect.GetWidth() - w) / 2) if w < rect.GetWidth() else 2
+		y = int((rect.GetHeight() - h) / 2) if h < rect.GetHeight() else 2
+		
+		dc.DrawText(value, rect.x + x, rect.y + y)
+		dc.DestroyClippingRegion()
+
+	def GetBestSize(self, grid, attr, dc, row, col):
+		text = grid.GetCellValue(row, col)
+		dc.SetFont(attr.GetFont())
+		w, h = dc.GetTextExtent(text)
+		return wx.Size(w, h)
+
+
+	def Clone(self):
+		return CustomEnumRenderer()
+		
 #--------------------------------------------------------------------------------
 class Categories( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
@@ -79,7 +119,7 @@ class Categories( wx.Panel ):
 		cols += 1 
 
 		self.grid = gridlib.Grid( self )
-		colnames = ['Active', 'Name', 'Numbers', 'Start Offset', 'Race Laps', 'Distance', '80% Lap Time', 'Suggested Laps']
+		colnames = ['Active', 'Name', 'Numbers', 'Start Offset', 'Race Laps', 'Distance', 'Distance is By', '80% Lap Time', 'Suggested Laps']
 		self.iCol = {
 			'active' :			0,
 			'name' :			1,
@@ -87,8 +127,9 @@ class Categories( wx.Panel ):
 			'startOffset' :		3,
 			'numLaps' :			4,
 			'distance' :		5,
-			'rule80Time' :		6,
-			'suggestedLaps' :	7,
+			'distanceType' :	6,
+			'rule80Time' :		7,
+			'suggestedLaps' :	8,
 		}
 		self.activeColumn = colnames.index( 'Active' )
 		self.grid.CreateGrid( 0, len(colnames) )
@@ -168,7 +209,7 @@ class Categories( wx.Panel ):
 		Model.race.setCategoryMask()
 		self.refresh()
 		
-	def _setRow( self, r, active, name, strVal, startOffset, numLaps, distance ):
+	def _setRow( self, r, active, name, strVal, startOffset, numLaps, distance, distanceType ):
 		if len(startOffset) < len('00:00:00'):
 			startOffset = '00:' + startOffset
 	
@@ -207,6 +248,13 @@ class Categories( wx.Panel ):
 		self.grid.SetCellValue( r, c, ('%.3f' % distance) if distance else '' )
 		self.grid.SetCellEditor( r, c, gridlib.GridCellFloatEditor(7, 3) )
 		self.grid.SetCellRenderer( r, c, gridlib.GridCellFloatRenderer(7, 3) )
+		self.grid.SetCellAlignment( r, c, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE )
+		
+		c = self.iCol['distanceType']
+		choices = 'Lap,Race'
+		self.grid.SetCellValue( r, c, '%d' % (distanceType if distanceType else 0) )
+		self.grid.SetCellEditor( r, c, gridlib.GridCellEnumEditor(choices) )
+		self.grid.SetCellRenderer( r, c, CustomEnumRenderer(choices) )
 		self.grid.SetCellAlignment( r, c, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE )
 		
 		# Get the 80% time cutoff.
@@ -269,7 +317,9 @@ class Categories( wx.Panel ):
 			self.grid.AppendRows( len(categories) )
 
 			for r, cat in enumerate(categories):
-				self._setRow( r, cat.active, cat.name, cat.catStr, cat.startOffset, cat.numLaps, getattr(cat, 'distance', None) )
+				self._setRow( r, cat.active, cat.name, cat.catStr, cat.startOffset, cat.numLaps,
+								getattr(cat, 'distance', None),
+								getattr(cat, 'distanceType', 0) )
 				
 			self.grid.AutoSizeColumns( True )
 			
@@ -282,7 +332,7 @@ class Categories( wx.Panel ):
 			self.grid.DisableCellEditControl()	# Make sure the current edit is committed.
 			if race is None:
 				return
-			numStrTuples = [ tuple(self.grid.GetCellValue(r, c) for c in xrange(6)) for r in xrange(self.grid.GetNumberRows()) ]
+			numStrTuples = [ tuple(self.grid.GetCellValue(r, c) for c in xrange(7)) for r in xrange(self.grid.GetNumberRows()) ]
 			race.setCategories( numStrTuples )
 	
 if __name__ == '__main__':
@@ -290,11 +340,11 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	Model.setRace( Model.Race() )
 	race = Model.getRace()
-	race.setCategories( [(True, 'test1', '100-199,999', '00:00', 5, None),
-						 (True, 'test2', '200-299,888', '00:00', '6', None),
-						 (True, 'test3', '300-399', '00:00', None, None),
-						 (True, 'test4', '400-499', '00:00', None, None),
-						 (True, 'test5', '500-599', '00:00', None, None),
+	race.setCategories( [(True, 'test1', '100-199,999', '00:00', 5, None, None),
+						 (True, 'test2', '200-299,888', '00:00', '6', None, None),
+						 (True, 'test3', '300-399', '00:00', None, None, None),
+						 (True, 'test4', '400-499', '00:00', None, None, None),
+						 (True, 'test5', '500-599', '00:00', None, None, None),
 						 ] )
 	categories = Categories(mainWin)
 	categories.refresh()

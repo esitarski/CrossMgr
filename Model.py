@@ -88,6 +88,9 @@ class LockRace:
 #----------------------------------------------------------------------
 class Category(object):
 
+	DistanceByLap = 0
+	DistanceByRace = 1
+
 	badRangeCharsRE = re.compile( '[^0-9,\-]' )
 
 	def _getStr( self ):
@@ -152,7 +155,7 @@ class Category(object):
 					mask = cp.ljust(len(mask), '.')
 		return mask
 
-	def __init__( self, active, name, catStr = '', startOffset = '00:00', numLaps = None, sequence = 0, distance = None ):
+	def __init__( self, active, name, catStr = '', startOffset = '00:00', numLaps = None, sequence = 0, distance = None, distanceType = None ):
 		self.active = False
 		active = str(active).strip()
 		if active and active[0] in 'TtYy1':
@@ -174,12 +177,26 @@ class Category(object):
 			self.distance = None
 		if self.distance <= 0.0:
 			self.distance = None
+		try:
+			self.distanceType = int(distanceType)
+		except (ValueError, TypeError):
+			self.distanceType = None
+		if self.distanceType not in [Category.DistanceByLap, Category.DistanceByRace]:
+			self.distanceType = Category.DistanceByLap
 		
 	def __setstate( self, d ):
 		self.__dict__.update(d)
 		i = getattr( self, 'intervals', None )
 		if i:
 			i.sort()
+	
+	@property
+	def distanceIsByLap( self ):
+		return getattr(self, 'distanceType', 0) == Category.DistanceByLap
+	
+	@property
+	def distanceIsByRace( self ):
+		return getattr( self, 'distanceType', 0) == Category.DistanceByRace
 		
 	def getNumLaps( self ):
 		return getattr( self, '_numLaps', None )
@@ -208,7 +225,7 @@ class Category(object):
 		return False
 
 	def __cmp__( self, c ):
-		for attr in ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'catStr', 'distance']:
+		for attr in ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'catStr', 'distance', 'distanceType']:
 			cCmp = cmp( getattr(self, attr, None), getattr(c, attr, None) )
 			if cCmp != 0:
 				return cCmp 
@@ -232,19 +249,25 @@ class Category(object):
 		self.intervals.sort()
 
 	def __repr__( self ):
-		return 'Category(active=%s, name="%s", catStr="%s", startOffset="%s", numLaps=%s, sequence=%s, distance=%s)' % (
+		return 'Category(active=%s, name="%s", catStr="%s", startOffset="%s", numLaps=%s, sequence=%s, distance=%s, distanceType=%s)' % (
 				str(self.active),
 				self.name,
 				self.catStr,
 				self.startOffset,
 				str(self.numLaps),
 				str(self.sequence),
-				str(self.distance) )
+				str(self.distance),
+				str(self.distanceType) )
 
 	def getStartOffsetSecs( self ):
 		return Utils.StrToSeconds( self.startOffset )
 
 #------------------------------------------------------------------------------------------------------------------
+
+def CmpEntryTT( e1, e2 ):
+	if e1.lap == 0 or e2.lap == 0:
+		return cmp( (e1.lap, e1.t), (e2.lap, e2.t) )
+	return e1.__cmp__( e2 )
 
 class Entry(object):
 	# Store entries as tuples in sort sequence to improve performance.
@@ -800,7 +823,7 @@ class Race(object):
 		entries = self.interpolateLap( lap, useCategoryNumLaps )
 		finisher = Rider.Finisher
 		return [e for e in entries if e.t > 0 and self.riders[e.num].status == finisher]
-		
+	
 	@memoize
 	def getRule80LapTime( self, category = None ):
 		entries = self.interpolate()
@@ -1120,8 +1143,8 @@ class Race(object):
 		self.setChanged()
 
 	def setCategories( self, nameStrTuples ):
-		newCategories = dict( (name, Category(active, name, numbers, startOffset, raceLaps, i, distance)) \
-			for i, (active, name, numbers, startOffset, raceLaps, distance) in enumerate(nameStrTuples) if name )
+		newCategories = dict( (name, Category(active, name, numbers, startOffset, raceLaps, i, distance, distanceType)) \
+			for i, (active, name, numbers, startOffset, raceLaps, distance, distanceType) in enumerate(nameStrTuples) if name )
 
 		if self.categories != newCategories:
 			self.categories = newCategories
@@ -1478,9 +1501,9 @@ if __name__ == '__main__':
 	c = Category(True, 'test', '1400-1499,-1450', None)
 	print( 'mask=', c.getMask() )
 	
-	r.setCategories( [	(True, 'test1', '1100-1199', '00:00', None, None),
-						(True, 'test2', '1200-1299, 2000,2001,2002', '00:00', None, None),
-						(True, 'test3', '1300-1399', '00:00', None, None)] )
+	r.setCategories( [	(True, 'test1', '1100-1199', '00:00', None, None, None),
+						(True, 'test2', '1200-1299, 2000,2001,2002', '00:00', None, None, None),
+						(True, 'test3', '1300-1399', '00:00', None, None, None)] )
 	print( r.getCategoryMask() )
 	print( r.getCategory( 2002 ) )
 

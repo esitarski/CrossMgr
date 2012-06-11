@@ -202,10 +202,15 @@ class ExportGrid( object ):
 		if not results:
 			return
 		
+		hasSpeeds = False
+		for result in results:
+			if getattr(result, 'lapSpeeds', None) or getattr(result, 'raceSpeeds', None):
+				hasSpeeds = True
+				break
+			
 		with Model.LockRace() as race:
 			self.title = '\n'.join( [race.name, Utils.formatDate(race.date), 'Category: ' + catName] )
 			category = race.categories.get( catName, None )
-			isTimeTrial = getattr( race, 'isTimeTrial', False )
 
 		startOffset = category.getStartOffsetSecs() if category else 0.0
 		
@@ -215,7 +220,7 @@ class ExportGrid( object ):
 		infoFields = [f for f in infoFields if f in infoFieldsPresent]
 		
 		self.colnames = ['Pos', 'Bib'] + infoFields + ['Time', 'Gap']
-		if isTimeTrial:
+		if hasSpeeds:
 			self.colnames += ['Speed']
 		self.colnames = [name[:-4] + ' Name' if name.endswith('Name') else name for name in self.colnames]
 		self.iLapTimes = len(self.colnames)
@@ -225,7 +230,7 @@ class ExportGrid( object ):
 		highPrecision = Utils.highPrecisionTimes()
 		data = [ [] for i in xrange(len(self.colnames)) ]
 		rrFields = ['pos', 'num'] + infoFields + ['lastTime', 'gap']
-		if isTimeTrial:
+		if hasSpeeds:
 			rrFields += ['speed']
 		for col, f in enumerate( rrFields ):
 			for row, r in enumerate(results):

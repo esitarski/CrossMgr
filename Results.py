@@ -19,12 +19,17 @@ reNonDigits = re.compile( '[^0-9]' )
 reLapMatch = re.compile( '<?Lap>? ([0-9]+)' )
 
 class Results( wx.Panel ):
+	DisplayLapTimes = 0
+	DisplayRaceTimes = 1
+	DisplayLapSpeeds = 2
+	DisplayRaceSpeeds = 3
+
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
 		
 		self.category = None
 		self.showRiderData = True
-		self.showRaceTimes = False
+		self.selectDisplay = 0
 		self.firstDraw = True
 		
 		self.rcInterp = set()
@@ -47,12 +52,24 @@ class Results( wx.Panel ):
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowRiderData, self.showRiderDataToggle )
 		
 		self.showLapTimesRadio = wx.RadioButton( self, wx.ID_ANY, 'Lap Times', style=wx.BU_EXACTFIT|wx.RB_GROUP )
-		self.showLapTimesRadio.SetValue( not self.showRaceTimes )
-		self.Bind( wx.EVT_RADIOBUTTON, self.onSelectTimesOption, self.showLapTimesRadio )
+		self.showLapTimesRadio.SetValue( self.selectDisplay == Results.DisplayLapTimes )
+		self.Bind( wx.EVT_RADIOBUTTON, self.onSelectDisplayOption, self.showLapTimesRadio )
 		
 		self.showRaceTimesRadio = wx.RadioButton( self, wx.ID_ANY, 'Race Times', style=wx.BU_EXACTFIT )
-		self.showRaceTimesRadio.SetValue( self.showRaceTimes )
-		self.Bind( wx.EVT_RADIOBUTTON, self.onSelectTimesOption, self.showRaceTimesRadio )
+		self.showRaceTimesRadio.SetValue( self.selectDisplay == Results.DisplayRaceTimes )
+		self.Bind( wx.EVT_RADIOBUTTON, self.onSelectDisplayOption, self.showRaceTimesRadio )
+		
+		self.showLapSpeedsRadio = wx.RadioButton( self, wx.ID_ANY, 'Lap Speeds', style=wx.BU_EXACTFIT )
+		self.showLapSpeedsRadio.SetValue( self.selectDisplay == Results.DisplayLapSpeeds )
+		self.Bind( wx.EVT_RADIOBUTTON, self.onSelectDisplayOption, self.showLapSpeedsRadio )
+		
+		self.showRaceSpeedsRadio = wx.RadioButton( self, wx.ID_ANY, 'Race Speeds', style=wx.BU_EXACTFIT )
+		self.showRaceSpeedsRadio.SetValue( self.selectDisplay == Results.DisplayRaceSpeeds )
+		self.Bind( wx.EVT_RADIOBUTTON, self.onSelectDisplayOption, self.showRaceSpeedsRadio )
+		
+		f = self.showLapTimesRadio.GetFont()
+		self.boldFont = wx.Font( f.GetPointSize()+2, f.GetFamily(), f.GetStyle(),
+								wx.FONTWEIGHT_BOLD, f.GetUnderlined(), f.GetFaceName(), f.GetEncoding() )
 		
 		self.search = wx.SearchCtrl(self, size=(80,-1), style=wx.TE_PROCESS_ENTER )
 		# self.search.ShowCancelButton( True )
@@ -72,6 +89,8 @@ class Results( wx.Panel ):
 		self.hbs.Add( self.showRiderDataToggle, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.showLapTimesRadio, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.showRaceTimesRadio, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.showLapSpeedsRadio, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.showRaceSpeedsRadio, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( wx.StaticText(self, wx.ID_ANY, ' '), proportion=2 )
 		self.hbs.Add( self.search, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.zoomInButton, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
@@ -173,11 +192,14 @@ class Results( wx.Panel ):
 		
 	def onShowRiderData( self, event ):
 		self.showRiderData ^= True
-		self.refresh()
+		wx.CallAfter( self.refresh )
 		
-	def onSelectTimesOption( self, event ):
-		self.showRaceTimes = self.showRaceTimesRadio.GetValue()
-		self.refresh()
+	def onSelectDisplayOption( self, event ):
+		for i, r in enumerate([self.showLapTimesRadio, self.showRaceTimesRadio, self.showLapSpeedsRadio, self.showRaceSpeedsRadio]):
+			if r.GetValue():
+				self.selectDisplay = i
+				break
+		wx.CallAfter( self.refresh )
 		
 	def doLabelClick( self, event ):
 		col = event.GetCol()
@@ -285,7 +307,7 @@ class Results( wx.Panel ):
 	
 	def showLastLap( self ):
 		if not self.isEmpty:
-			self.iLastLap = min( self.lapGrid.GetNumberCols()-1, self.iLastLap )
+			self.iLastLap = max( min(self.lapGrid.GetNumberCols()-1, self.iLastLap), 0 )
 			self.labelGrid.MakeCellVisible( 0, 0 )
 			self.lapGrid.MakeCellVisible( 0, self.iLastLap )
 	
@@ -424,6 +446,7 @@ class Results( wx.Panel ):
 				self.clearGrid()
 				return
 			catName = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
+			self.hbs.RecalcSizes()
 			self.hbs.Layout()
 			self.category = race.categories.get( catName, None )
 			sortLap = getattr( race, 'sortLap', None )
@@ -462,6 +485,30 @@ class Results( wx.Panel ):
 					break
 		
 		results = GetResults( catName )
+		hasSpeeds = False
+		for result in results:
+			if getattr(result, 'lapSpeeds', None) or getattr(result, 'raceSpeeds', None):
+				hasSpeeds = True
+				break
+				
+		if not hasSpeeds:
+			self.showLapSpeedsRadio.Enable( False )
+			self.showRaceSpeedsRadio.Enable( False )
+			if self.selectDisplay > Results.DisplayRaceTimes:
+				self.selectDisplay = Results.DisplayRaceTimes
+				self.showRaceTimesRadio.SetValue( True )
+		else:
+			self.showLapSpeedsRadio.Enable( True )
+			self.showRaceSpeedsRadio.Enable( True )
+			
+		for r in [self.showLapTimesRadio, self.showRaceTimesRadio, self.showLapSpeedsRadio, self.showRaceSpeedsRadio]:
+			if r.GetValue():
+				r.SetFont( self.boldFont )
+			else:
+				r.SetFont( wx.NullFont )
+		self.hbs.RecalcSizes()
+		self.hbs.Layout()
+		
 		self.fastestLapRC, fastestLapTime = None, sys.float_info.max
 		for r, result in enumerate(results):
 			if result.lapTimes:
@@ -476,11 +523,27 @@ class Results( wx.Panel ):
 		except StopIteration:
 			firstLapCol = len(colnames)
 		
-		# Convert to race times if required.
-		if self.showRaceTimes:
+		# Convert to race times, lap speeds or race speeds as required.
+		'''
+			DisplayLapTimes = 0
+			DisplayRaceTimes = 1
+			DisplayLapSpeeds = 2
+			DisplayRaceSpeeds = 3
+		'''
+		if self.selectDisplay == Results.DisplayRaceTimes:
 			for r, result in enumerate(results):
 				for i, t in enumerate(result.raceTimes[1:]):
 					data[i+firstLapCol][r] = Utils.formatTime(t, highPrecision)
+		elif self.selectDisplay == Results.DisplayLapSpeeds:
+			for r, result in enumerate(results):
+				if getattr(result, 'lapSpeeds', None):
+					for i, t in enumerate(result.lapSpeeds[1:]):
+						data[i+firstLapCol][r] = '%.2f' % t
+		elif self.selectDisplay == Results.DisplayRaceSpeeds:
+			for r, result in enumerate(results):
+				if getattr(result, 'raceSpeeds', None):
+					for i, t in enumerate(result.raceSpeeds[1:]):
+						data[i+firstLapCol][r] = '%.2f' % t
 		
 		# Sort by the given lap, if there is one.
 		# Also, add a position for the lap itself.
@@ -489,7 +552,14 @@ class Results( wx.Panel ):
 			sortPairs = []
 			for r, result in enumerate(results):
 				try:
-					t = result.raceTimes[sortLap]
+					if   self.selectDisplay == Results.DisplayLapTimes:
+						t = result.lapTimes[sortLap]
+					elif self.selectDisplay == Results.DisplayRaceTimes:
+						t = result.raceTimes[sortLap]
+					elif self.selectDisplay == Results.DisplayLapSpeeds:
+						t = -result.lapSpeeds[sortLap]
+					elif self.selectDisplay == Results.DisplayRaceSpeeds:
+						t = -result.raceSpeeds[sortLap]
 				except:
 					t = 1000.0*60.0*60.0 + r
 				sortPairs.append( (t, r) )
@@ -509,14 +579,18 @@ class Results( wx.Panel ):
 			for name in exportGrid.colnames:
 				try:
 					if int(name.split()[1]) == sortLap:
-						name = '<%s>' % name
+						name = '<%s>\n%s' % (name,
+											['by Lap Time', 'by Race Time', 'by Lap Speed', 'by Race Speed'][self.selectDisplay])
 				except:
 					pass
 				colnames.append( name )
 		else:
 			colnames = exportGrid.colnames
 		
-		iLabelMax = (i+1 for i, name in enumerate(colnames) if name == 'Gap').next()
+		try:
+			iLabelMax = (i for i, name in enumerate(colnames) if name.startswith('Lap') or name.startswith('<')).next()
+		except StopIteration:
+			iLabelMax = len(colnames)
 		colnamesLabels = colnames[:iLabelMax]
 		dataLabels = data[:iLabelMax]
 		
@@ -547,10 +621,13 @@ class Results( wx.Panel ):
 				for c in xrange(self.lapGrid.GetNumberCols()):
 					if not self.lapGrid.GetCellValue(r, c):
 						break
-					if entries[c+1].interp:
-						self.rcInterp.add( (r, c) )
-					elif c > self.iLastLap:
-						self.iLastLap = c
+					try:
+						if entries[c+1].interp:
+							self.rcInterp.add( (r, c) )
+						elif c > self.iLastLap:
+							self.iLastLap = c
+					except IndexError:
+						pass
 		
 		self.labelGrid.Scroll( labelLastX, labelLastY )
 		self.lapGrid.Scroll( lapLastX, lapLastY )

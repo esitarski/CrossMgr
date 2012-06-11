@@ -99,8 +99,13 @@ class CorrectNumberDialog( wx.Dialog ):
 		if self.entry.num != num or self.entry.t != t:
 			undo.pushState()
 			with Model.LockRace() as race:
-				race.deleteTime( self.entry.num, self.entry.t )
-				race.addTime( num, t )
+				if self.entry.lap != 0:
+					race.deleteTime( self.entry.num, self.entry.t )
+					race.addTime( num, t )
+				else:
+					rider = race.getRider( num )
+					rider.firstTime = t
+					race.setChanged()
 			Utils.refresh()
 		self.EndModal( wx.ID_OK )
 		
@@ -167,8 +172,13 @@ class ShiftNumberDialog( wx.Dialog ):
 		if self.entry.num != num or self.entry.t != t:
 			undo.pushState()
 			with Model.LockRace() as race:
-				race.deleteTime( self.entry.num, self.entry.t )
-				race.addTime( num, t )
+				if self.entry.lap != 0:
+					race.deleteTime( self.entry.num, self.entry.t )
+					race.addTime( num, t )
+				else:
+					rider = race.getRider( num )
+					rider.firstTime = t
+					race.setChanged()
 			Utils.refresh()
 		self.EndModal( wx.ID_OK )
 		
@@ -329,12 +339,18 @@ def InsertNumber( parent, entry ):
 		
 @logCall
 def SplitNumber( parent, entry ):
+	if entry.lap == 0:
+		return
+		
 	dlg = SplitNumberDialog( parent, entry )
 	dlg.ShowModal()
 	dlg.Destroy()
 		
 @logCall
 def DeleteEntry( parent, entry ):
+	if entry.lap == 0:
+		return
+		
 	dlg = wx.MessageDialog(parent,
 						   'Num: %d  RiderLap: %d   RaceTime: %s\n\nConfirm Delete?' %
 								(entry.num, entry.lap, Utils.formatTime(entry.t, True)), 'Delete Entry',

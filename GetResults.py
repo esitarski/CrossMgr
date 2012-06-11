@@ -114,17 +114,40 @@ def GetResults( catName = 'All', getExternalData = False ):
 								[times[i] - times[i-1] for i in xrange(1, len(times))],
 								times,
 								interp )
-			if isTimeTrial and lastTime and rider.status == Model.Rider.Finisher and getattr(riderCategory, 'distance', None):
+			
+			# Compute the speeds for the rider.
+			if getattr(riderCategory, 'distance', None):
 				distance = getattr(riderCategory, 'distance')
-				speed = distance / (lastTime / (60.0*60.0))
-				rr.speed = '%.2f %s' % (speed, ['km/h', 'mph'][getattr(race, 'distanceUnit', 0)] )
+				if riderCategory.distanceIsByLap:
+					riderDistance = distance * len(rr.lapTimes)
+					rr.lapSpeeds = [distance / (t / (60.0*60.0)) for t in rr.lapTimes]
+					# Ensure that the race speeds are always consistent with the lap times.
+					raceSpeeds = []
+					if rr.lapSpeeds:
+						rr.lapSpeeds[0] = 0.0
+						raceSpeeds = [0.0]
+						speedCur = 0.0
+						for i, s in enumerate(rr.lapSpeeds[1:]):
+							speedCur += s
+							raceSpeeds.append( speedCur / (i+1) )
+					rr.raceSpeeds = raceSpeeds
+					addRiderSpeed = True
+				else:	# Distance is by entire race.
+					riderDistance = distance
+					# Only add the rider speed if the rider finished.
+					addRiderSpeed = (lastTime and rider.status == Model.Rider.Finisher)
+						
+				if addRiderSpeed:
+					speed = riderDistance / (lastTime / (60.0*60.0))
+					rr.speed = '%.2f %s' % (speed, ['km/h', 'mph'][getattr(race, 'distanceUnit', 0)] )
+					
 			riderResults.append( rr )
 		
 		if not riderResults:
 			return []
 			
 		riderResults.sort( key = lambda x: (statusSortSeq[x.status], -x.laps, x.lastTime) )
-
+		
 		# Get the linked external data.
 		externalFields = []
 		externalInfo = None

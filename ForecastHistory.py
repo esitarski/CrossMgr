@@ -75,8 +75,8 @@ class ForecastHistory( wx.Panel ):
 		self.historyName = self.lgHistory.label
 		self.historyName.SetLabel( 'Recorded:' )
 		self.historyGrid = self.lgHistory.grid
-		self.Bind( wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.doHistoryPopup, self.historyGrid )
-		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doHistoryPopup, self.historyGrid )	
+		self.Bind( wx.grid.EVT_GRID_CELL_LEFT_DCLICK, self.doNumDrilldown, self.historyGrid )
+		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doHistoryPopup, self.historyGrid )
 		
 		self.lgExpected = LabelGrid( self.splitter, style = wx.BORDER_SUNKEN )
 		self.expectedName = self.lgExpected.label
@@ -122,12 +122,30 @@ class ForecastHistory( wx.Panel ):
 		
 	def doSwapOrientation( self, event ):
 		self.swapOrientation()
-			
+	
+	def doNumDrilldown( self, event ):
+		with Model.LockRace() as race:
+			if not race or not race.isRunning():
+				return
+		grid = event.GetEventObject()
+		row = event.GetRow()
+		value = ''
+		if row < grid.GetNumberRows():
+			value = grid.GetCellValue( row, 0 )
+		if not value:
+			return
+		numSelect = value
+		mainWin = Utils.getMainWin()
+		if mainWin:
+			mainWin.setNumSelect( numSelect )
+			mainWin.showPageName( 'RiderDetail' )
+	
 	def doHistoryPopup( self, event ):
 		self.rowPopup = event.GetRow()
 		with Model.LockRace() as race:
 			if self.rowPopup >= len(self.quickHistory) or not race or not race.isRunning():
 				return
+		value = ''
 		if self.rowPopup < self.historyGrid.GetNumberRows():
 			value = self.historyGrid.GetCellValue( self.rowPopup, 0 )
 		if not value:
@@ -301,6 +319,12 @@ class ForecastHistory( wx.Panel ):
 			entries = race.interpolateLapNonZeroFinishers( race.numLaps if race.numLaps is not None else race.getMaxLap() + 1 )
 			entries = [e for e in entries if e.lap <= race.getCategoryNumLaps(e.num) ]
 			
+			isTimeTrial = getattr(race, 'isTimeTrial', False)
+			if isTimeTrial:
+				for rider in race.riders.itervalues():
+					if rider.status == Model.Rider.Finisher and rider.firstTime:
+						entries.append( Model.Entry(rider.num, 0, rider.firstTime, False) )
+				entries.sort( cmp=Model.CmpEntryTT )
 			#------------------------------------------------------------------
 			# Select the interpolated entries around now.
 			leaderPrev, leaderNext = race.getPrevNextLeader( tRace )
@@ -316,7 +340,7 @@ class ForecastHistory( wx.Panel ):
 			expected = [ seen.setdefault(e.num, e) for e in entries[iLeft:] if e.interp and tMin <= e.t <= tMax and e.num not in seen ]
 			expected = expected[:expectedShowMax]
 			
-			prevCatLeaders, nextCatLeaders = race.getCatPrevNextLeaders( tRace )			
+			prevCatLeaders, nextCatLeaders = race.getCatPrevNextLeaders( tRace )
 			prevRiderPosition, nextRiderPosition = race.getPrevNextRiderPositions( tRace )
 			
 			backgroundColour = {}
@@ -402,9 +426,12 @@ class ForecastHistory( wx.Panel ):
 									
 			data = [None] * iColMax
 			data[iNumCol] = [str(e.num) for e in recorded]
-			data[iTimeCol] = [formatTime(e.t) for e in recorded]
+			data[iTimeCol] = [formatTime(e.t) if e.lap > 0 else '[%s]' % formatTime(e.t) for e in recorded]
 			data[iLapCol] = [str(e.lap) for e in recorded]
 			def getNoteHistory( e ):
+				if e.lap == 0:
+					return 'Start'
+
 				position = prevRiderPosition.get(e.num, -1)
 				if position == 1:
 					return 'Lead'
