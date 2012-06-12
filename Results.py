@@ -553,7 +553,6 @@ class Results( wx.Panel ):
 				getFunc = Utils.StrToSeconds
 			else:
 				getFunc = lambda x: -float(x)
-			rowMax = len( results )
 			sortPairs = []
 			for r, result in enumerate(results):
 				try:
