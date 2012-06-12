@@ -129,16 +129,16 @@ def GetResults( catName = 'All', getExternalData = False ):
 							speedCur += s
 							raceSpeeds.append( speedCur / (i+1) )
 					rr.raceSpeeds = raceSpeeds
-					addRiderSpeed = True
+					if rr.lapSpeeds:
+						speed = sum(rr.lapSpeeds) / len(rr.lapSpeeds)
+						rr.speed = '%.2f %s' % (speed, ['km/h', 'mph'][getattr(race, 'distanceUnit', 0)] )
 				else:	# Distance is by entire race.
 					riderDistance = distance
 					# Only add the rider speed if the rider finished.
-					addRiderSpeed = (lastTime and rider.status == Model.Rider.Finisher)
+					if lastTime and rider.status == Model.Rider.Finisher:
+						speed = riderDistance / (lastTime / (60.0*60.0))
+						rr.speed = '%.2f %s' % (speed, ['km/h', 'mph'][getattr(race, 'distanceUnit', 0)] )
 						
-				if addRiderSpeed:
-					speed = riderDistance / (lastTime / (60.0*60.0))
-					rr.speed = '%.2f %s' % (speed, ['km/h', 'mph'][getattr(race, 'distanceUnit', 0)] )
-					
 			riderResults.append( rr )
 		
 		if not riderResults:
