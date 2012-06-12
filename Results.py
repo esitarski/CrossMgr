@@ -509,13 +509,14 @@ class Results( wx.Panel ):
 		self.hbs.RecalcSizes()
 		self.hbs.Layout()
 		
+		# Find the fastest lap time.
 		self.fastestLapRC, fastestLapTime = None, sys.float_info.max
 		for r, result in enumerate(results):
 			if result.lapTimes:
 				for c, t in enumerate(result.lapTimes):
 					if c > 0 and t < fastestLapTime:
 						fastestLapTime = t
-						self.fastestLapRC = (r, c)
+						self.fastestLapRC = (r, c-1)	# Correct by off-by-one problem.
 		
 		highPrecision = Utils.highPrecisionTimes()
 		try:
