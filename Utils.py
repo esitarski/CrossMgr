@@ -126,9 +126,9 @@ def formatDate( date ):
 	return d.strftime( '%B %d, %Y' )
 		
 def StrToSeconds( str = '' ):
-	secs = 0
+	secs = 0.0
 	for f in str.split(':'):
-		secs = secs * 60 + int(f, 10)
+		secs = secs * 60.0 + float(f)
 	return secs
 	
 def SecondsToStr( secs = 0 ):

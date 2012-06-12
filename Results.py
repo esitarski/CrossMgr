@@ -548,24 +548,21 @@ class Results( wx.Panel ):
 		
 		# Sort by the given lap, if there is one.
 		# Also, add a position for the lap itself.
-		if sortLap is not None:
+		if sortCol is not None:
+			if self.selectDisplay in [Results.DisplayLapTimes, Results.DisplayRaceTimes]:
+				getFunc = Utils.StrToSeconds
+			else:
+				getFunc = lambda x: -float(x)
 			rowMax = len( results )
 			sortPairs = []
 			for r, result in enumerate(results):
 				try:
-					if   self.selectDisplay == Results.DisplayLapTimes:
-						t = result.lapTimes[sortLap]
-					elif self.selectDisplay == Results.DisplayRaceTimes:
-						t = result.raceTimes[sortLap]
-					elif self.selectDisplay == Results.DisplayLapSpeeds:
-						t = -result.lapSpeeds[sortLap]
-					elif self.selectDisplay == Results.DisplayRaceSpeeds:
-						t = -result.raceSpeeds[sortLap]
+					t = getFunc(data[sortCol][r]) + r/1000000.0
 				except:
 					t = 1000.0*60.0*60.0 + r
 				sortPairs.append( (t, r) )
 			sortPairs.sort()
-				
+			
 			for c in xrange(len(data)):
 				col = data[c]
 				data[c] = [col[i] if i < len(col) else '' for t, i in sortPairs]
