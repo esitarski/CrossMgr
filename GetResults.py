@@ -124,10 +124,8 @@ def GetResults( catName = 'All', getExternalData = False ):
 					# Ensure that the race speeds are always consistent with the lap times.
 					raceSpeeds = []
 					if rr.lapSpeeds:
-						rr.lapSpeeds[0] = 0.0
-						raceSpeeds = [0.0]
 						speedCur = 0.0
-						for i, s in enumerate(rr.lapSpeeds[1:]):
+						for i, s in enumerate(rr.lapSpeeds):
 							speedCur += s
 							raceSpeeds.append( speedCur / (i+1) )
 					rr.raceSpeeds = raceSpeeds

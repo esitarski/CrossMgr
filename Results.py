@@ -516,7 +516,7 @@ class Results( wx.Panel ):
 				for c, t in enumerate(result.lapTimes):
 					if c > 0 and t < fastestLapTime:
 						fastestLapTime = t
-						self.fastestLapRC = (r, c-1)	# Correct by off-by-one problem.
+						self.fastestLapRC = (r, c)
 		
 		highPrecision = Utils.highPrecisionTimes()
 		try:
@@ -534,17 +534,17 @@ class Results( wx.Panel ):
 		if self.selectDisplay == Results.DisplayRaceTimes:
 			for r, result in enumerate(results):
 				for i, t in enumerate(result.raceTimes[1:]):
-					data[i+firstLapCol][r] = Utils.formatTime(t, highPrecision)
+					data[i+firstLapCol][r] = Utils.formatTimeCompressed(t, highPrecision)
 		elif self.selectDisplay == Results.DisplayLapSpeeds:
 			for r, result in enumerate(results):
 				if getattr(result, 'lapSpeeds', None):
-					for i, t in enumerate(result.lapSpeeds[1:]):
-						data[i+firstLapCol][r] = '%.2f' % t
+					for i, s in enumerate(result.lapSpeeds):
+						data[i+firstLapCol][r] = '%.2f' % s
 		elif self.selectDisplay == Results.DisplayRaceSpeeds:
 			for r, result in enumerate(results):
 				if getattr(result, 'raceSpeeds', None):
-					for i, t in enumerate(result.raceSpeeds[1:]):
-						data[i+firstLapCol][r] = '%.2f' % t
+					for i, s in enumerate(result.raceSpeeds):
+						data[i+firstLapCol][r] = '%.2f' % s
 		
 		# Sort by the given lap, if there is one.
 		# Also, add a position for the lap itself.
