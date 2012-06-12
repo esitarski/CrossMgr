@@ -131,6 +131,8 @@ class Categories( wx.Panel ):
 			'rule80Time' :		7,
 			'suggestedLaps' :	8,
 		}
+		self.iDataColumns = len(colnames) - 2	# Number of actual data columns that have to be persisted.
+		
 		self.activeColumn = colnames.index( 'Active' )
 		self.grid.CreateGrid( 0, len(colnames) )
 		self.grid.SetRowLabelSize(0)
@@ -209,7 +211,7 @@ class Categories( wx.Panel ):
 		Model.race.setCategoryMask()
 		self.refresh()
 		
-	def _setRow( self, r, active, name, strVal, startOffset, numLaps, distance, distanceType ):
+	def _setRow( self, r, active, name, strVal, startOffset = '00:00:00', numLaps = None, distance = None, distanceType = None ):
 		if len(startOffset) < len('00:00:00'):
 			startOffset = '00:' + startOffset
 	
@@ -276,7 +278,7 @@ class Categories( wx.Panel ):
 		
 	def onNewCategory( self, event ):
 		self.grid.AppendRows( 1 )
-		self._setRow( self.grid.GetNumberRows() - 1, True, '<CategoryName>     ', '100-199,504,-128', '00:00:00', None, None )
+		self._setRow( self.grid.GetNumberRows() - 1, True, '<CategoryName>     ', '100-199,504,-128' )
 		self.grid.AutoSizeColumns(True)
 		
 	def onDelCategory( self, event ):
@@ -319,7 +321,7 @@ class Categories( wx.Panel ):
 			for r, cat in enumerate(categories):
 				self._setRow( r, cat.active, cat.name, cat.catStr, cat.startOffset, cat.numLaps,
 								getattr(cat, 'distance', None),
-								getattr(cat, 'distanceType', 0) )
+								getattr(cat, 'distanceType', Model.Category.DistanceByLap) )
 				
 			self.grid.AutoSizeColumns( True )
 			
@@ -332,7 +334,7 @@ class Categories( wx.Panel ):
 			self.grid.DisableCellEditControl()	# Make sure the current edit is committed.
 			if race is None:
 				return
-			numStrTuples = [ tuple(self.grid.GetCellValue(r, c) for c in xrange(7)) for r in xrange(self.grid.GetNumberRows()) ]
+			numStrTuples = [ tuple(self.grid.GetCellValue(r, c) for c in xrange(self.iDataColumns)) for r in xrange(self.grid.GetNumberRows()) ]
 			race.setCategories( numStrTuples )
 	
 if __name__ == '__main__':
@@ -340,11 +342,11 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	Model.setRace( Model.Race() )
 	race = Model.getRace()
-	race.setCategories( [(True, 'test1', '100-199,999', '00:00', 5, None, None),
-						 (True, 'test2', '200-299,888', '00:00', '6', None, None),
-						 (True, 'test3', '300-399', '00:00', None, None, None),
-						 (True, 'test4', '400-499', '00:00', None, None, None),
-						 (True, 'test5', '500-599', '00:00', None, None, None),
+	race.setCategories( [(True, 'test1', '100-199,999'),
+						 (True, 'test2', '200-299,888', '00:00', '6'),
+						 (True, 'test3', '300-399', '00:00'),
+						 (True, 'test4', '400-499', '00:00'),
+						 (True, 'test5', '500-599', '00:00'),
 						 ] )
 	categories = Categories(mainWin)
 	categories.refresh()

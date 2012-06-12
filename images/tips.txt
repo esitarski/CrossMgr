@@ -47,3 +47,5 @@ HTML output can show Race Time (splits) as well as Lap Time.
 CrossMgr is free to use with riders under age 17.
 Use "File|New Next..." to quickly setup a number of races for an event.
 CrossMgr makes a backup of our your input in a .csv file.\nYou can start over with a race from "File|Restore from Original Input".\nYou can also score manually by opening this file in Excel.
+Click on a Lap column in results to sort on that lap.
+You can choose Lap Times, Race Times, Lap Speeds or Race Speeds in Results.

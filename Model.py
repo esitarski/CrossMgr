@@ -155,32 +155,38 @@ class Category(object):
 					mask = cp.ljust(len(mask), '.')
 		return mask
 
-	def __init__( self, active, name, catStr = '', startOffset = '00:00', numLaps = None, sequence = 0, distance = None, distanceType = None ):
+	def __init__( self, active = True, name = 'category', catStr = '100-199', startOffset = '00:00:00', numLaps = None, sequence = 0, distance = None, distanceType = None ):
 		self.active = False
 		active = str(active).strip()
 		if active and active[0] in 'TtYy1':
 			self.active = True
+			
 		self.name = name
 		self.catStr = catStr
-		self.startOffset = startOffset
+		self.startOffset = startOffset if startOffset else '00:00:00'
+		
 		try:
 			self._numLaps = int(numLaps)
 		except (ValueError, TypeError):
 			self._numLaps = None
+			
 		try:
 			self.sequence = int(sequence)
 		except (ValueError, TypeError):
 			self.sequence = 0
+			
 		try:
 			self.distance = float(distance) if distance else None
 		except (ValueError, TypeError):
 			self.distance = None
-		if self.distance <= 0.0:
+		if self.distance is not None and self.distance <= 0.0:
 			self.distance = None
+			
 		try:
 			self.distanceType = int(distanceType)
 		except (ValueError, TypeError):
 			self.distanceType = None
+			
 		if self.distanceType not in [Category.DistanceByLap, Category.DistanceByRace]:
 			self.distanceType = Category.DistanceByLap
 		
@@ -1143,8 +1149,21 @@ class Race(object):
 		self.setChanged()
 
 	def setCategories( self, nameStrTuples ):
-		newCategories = dict( (name, Category(active, name, numbers, startOffset, raceLaps, i, distance, distanceType)) \
-			for i, (active, name, numbers, startOffset, raceLaps, distance, distanceType) in enumerate(nameStrTuples) if name )
+		# This list must match the initialization fields in class Category.
+		fields = ('active', 'name', 'catStr', 'startOffset', 'numLaps', 'sequence', 'distance', 'distanceType')
+		padding = [None for f in fields]
+		i = 0
+		newCategories = {}
+		for t in nameStrTuples:
+			if len(t) < len(fields):
+				t = list(t) + padding
+			args = dict( (key, t[i]) for i, key in enumerate(fields) )
+			if not args['name']:
+				continue
+			if args['sequence'] is None:
+				args['sequence'] = i
+			newCategories[args['name']] = Category( **args )
+			i += 1
 
 		if self.categories != newCategories:
 			self.categories = newCategories
@@ -1167,7 +1186,7 @@ class Race(object):
 			if not line:
 				continue
 			fields = line.strip().split('|')
-			categories.append( (True, fields[0], fields[1], '00:00', None, None) )
+			categories.append( (True, fields[0], fields[1]) )
 		self.setCategories( categories )
 
 	def isRiderInCategory( self, num, catName = None ):
@@ -1493,17 +1512,17 @@ if __name__ == '__main__':
 	print [e.t for e in entries]
 	'''
 
-	c = Category(True, 'test', '100-150-199,205,-50', '00:00', None)
+	c = Category(True, 'test', '100-150-199,205,-50', '00:00')
 	print( c )
 	print( 'mask=', c.getMask() )
-	c = Category(True, 'test', '100-199,-150', None)
+	c = Category(True, 'test', '100-199,-150')
 	print( 'mask=', c.getMask() )
-	c = Category(True, 'test', '1400-1499,-1450', None)
+	c = Category(True, 'test', '1400-1499,-1450')
 	print( 'mask=', c.getMask() )
 	
-	r.setCategories( [	(True, 'test1', '1100-1199', '00:00', None, None, None),
-						(True, 'test2', '1200-1299, 2000,2001,2002', '00:00', None, None, None),
-						(True, 'test3', '1300-1399', '00:00', None, None, None)] )
+	r.setCategories( [	(True, 'test1', '1100-1199'),
+						(True, 'test2', '1200-1299, 2000,2001,2002'),
+						(True, 'test3', '1300-1399')] )
 	print( r.getCategoryMask() )
 	print( r.getCategory( 2002 ) )
 

@@ -826,9 +826,7 @@ class MainWin( wx.Frame ):
 				race.categoriesImportFile = ''
 				race.setCategories( [(True,
 									'Category %d-%d'	% (max(1, i*100), (i+1)*100-1),
-									'%d-%d'				% (max(1, i*100), (i+1)*100-1),
-									'00:00',
-									None, None, None) for i in xrange(8)] )
+									'%d-%d'				% (max(1, i*100), (i+1)*100-1)) for i in xrange(8)] )
 			else:
 				race.categoriesImportFile = categoriesFile
 

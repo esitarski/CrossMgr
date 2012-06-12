@@ -43,10 +43,6 @@ class Properties( wx.Panel ):
 		self.minutes = intctrl.IntCtrl( self, wx.ID_ANY, min=1, max=300, allow_none=False, value=40 )
 		rows += 1
 
-		self.timeTrialLabel = wx.StaticText( self, wx.ID_ANY, 'Time Trial:' )
-		self.timeTrial = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
-		rows += 1
-		
 		self.memoLabel = wx.StaticText( self, wx.ID_ANY, 'Memo:' )
 		self.memo = wx.TextCtrl( self, wx.ID_ANY, value='' )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.memo )
@@ -56,18 +52,10 @@ class Properties( wx.Panel ):
 		self.commissaire = wx.TextCtrl( self, wx.ID_ANY, value='' )
 		rows += 1
 		
-		self.fileNameLabel = wx.StaticText( self, wx.ID_ANY, 'File Name: ' )
-		self.fileName = wx.StaticText( self, wx.ID_ANY, '' )
+		self.timeTrialLabel = wx.StaticText( self, wx.ID_ANY, 'Time Trial:' )
+		self.timeTrial = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
 		rows += 1
-
-		self.excelLabel = wx.StaticText( self, wx.ID_ANY, 'Excel Sheet: ' )
-		self.excelName = wx.StaticText( self, wx.ID_ANY, '' )
-		rows += 1
-
-		self.categoriesFileLabel = wx.StaticText( self, wx.ID_ANY, 'Categories Imported From: ' )
-		self.categoriesFile = wx.StaticText( self, wx.ID_ANY, '' )
-		rows += 1
-
+		
 		self.jchipLabel = wx.StaticText( self, wx.ID_ANY, 'JChip Integration: ' )
 		self.jchip = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
 		rows += 1
@@ -84,6 +72,18 @@ class Properties( wx.Panel ):
 		self.distanceUnitLabel = wx.StaticText( self, wx.ID_ANY, 'Distance Unit: ' )
 		self.distanceUnit = wx.Choice( self, wx.ID_ANY, choices=['km', 'miles'] )
 		self.distanceUnit.SetSelection( 0 )
+		rows += 1
+
+		self.fileNameLabel = wx.StaticText( self, wx.ID_ANY, 'File Name: ' )
+		self.fileName = wx.StaticText( self, wx.ID_ANY, '' )
+		rows += 1
+
+		self.excelLabel = wx.StaticText( self, wx.ID_ANY, 'Excel Sheet: ' )
+		self.excelName = wx.StaticText( self, wx.ID_ANY, '' )
+		rows += 1
+
+		self.categoriesFileLabel = wx.StaticText( self, wx.ID_ANY, 'Categories Imported From: ' )
+		self.categoriesFile = wx.StaticText( self, wx.ID_ANY, '' )
 		rows += 1
 
 		self.updateFileName()
