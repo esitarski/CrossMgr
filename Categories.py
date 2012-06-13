@@ -335,7 +335,6 @@ class Categories( wx.Panel ):
 			if race is None:
 				return
 			numStrTuples = [ tuple(self.grid.GetCellValue(r, c) for c in xrange(self.iDataColumns)) for r in xrange(self.grid.GetNumberRows()) ]
-			print numStrTuples
 			race.setCategories( numStrTuples )
 	
 if __name__ == '__main__':

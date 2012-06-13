@@ -443,8 +443,8 @@ class History( wx.Panel ):
 					{
 						'num':		e.num,
 						'raceTime':	formatTime(e.t) if self.showTimes else '',
-						'lapTime':	formatTime(e.t - numTimes[(e.num,e.lap-1)]) if self.showLapTimes else '',
-						'downTime':	formatTimeGap(e.t - leaderTimes[col+1]),
+						'lapTime':	formatTime(e.t - numTimes[(e.num,e.lap-1)]) if self.showLapTimes and (e.num,e.lap-1) in numTimes else '',
+						'downTime':	formatTimeGap(e.t - leaderTimes[col+1]) if self.showTimeDown and col+1 < len(leaderTimes) else '',
 						'riderName': info.get(e.num, {}).get('LastName', '') if self.showRiderName else '',
 					} ) for e in h] )
 				self.rcInterp.update( (row, col) for row, e in enumerate(h) if e.interp )

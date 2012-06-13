@@ -12,7 +12,20 @@ try:
 except ImportError:
 	pass
 
+def removeDiacritic(input):
+	'''
+	Accept a unicode string, and return a normal string (bytes in Python 3)
+	without any diacritical marks.
+	'''
+	if type(input) == str:
+		return input
+	else:
+		return unicodedata.normalize('NFKD', input).encode('ASCII', 'ignore')
+	
 def PlaySound( soundFile ):
+	if mainWin and not mainWin.playSounds:
+		return True
+		
 	soundFile = os.path.join( getImageFolder(), soundFile )
 	if sys.platform.startswith('linux'):
 		try:

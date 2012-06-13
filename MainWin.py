@@ -38,6 +38,7 @@ from Categories			import Categories
 from Properties			import Properties, PropertiesDialog, ChangeProperties
 from Recommendations	import Recommendations
 from RaceAnimation		import RaceAnimation, GetAnimationData
+from Search				import SearchDialog
 import Utils
 from Utils				import logCall
 import Model
@@ -302,6 +303,10 @@ class MainWin( wx.Frame ):
 		self.editMenu.AppendItem( self.redoMenuButton )
 		self.Bind(wx.EVT_MENU, self.menuRedo, id=wx.ID_REDO )
 		self.redoMenuButton.Enable( False )
+		self.editMenu.AppendSeparator()
+		
+		self.editMenu.Append( wx.ID_FIND, "&Find...\tCtrl+F", "Find a Rider" )
+		self.Bind(wx.EVT_MENU, self.menuFind, id=wx.ID_FIND )
 		
 		self.editMenu.AppendSeparator()
 		idCur = wx.NewId()
@@ -315,13 +320,6 @@ class MainWin( wx.Frame ):
 		img = None
 		self.editMenuItem = self.menuBar.Append( self.editMenu, "&Edit" )
 
-		#-----------------------------------------------------------------------
-		self.viewMenu = wx.Menu()
-		idCur = wx.NewId()
-		self.menuItemHighPrecisionTimes = self.viewMenu.Append( idCur , "&Show 100s of a second", "Show 100s of a second", wx.ITEM_CHECK )
-		self.Bind( wx.EVT_MENU, self.menuShowHighPrecisionTimes, id=idCur )
-		
-		self.menuBar.Append( self.viewMenu, "&View" )
 		#-----------------------------------------------------------------------
 		self.dataMgmtMenu = wx.Menu()
 		
@@ -428,6 +426,20 @@ class MainWin( wx.Frame ):
 		self.menuBar.Append( self.demoMenu, "Dem&o" )
 
 		#-----------------------------------------------------------------------
+		self.optionsMenu = wx.Menu()
+		idCur = wx.NewId()
+		self.menuItemHighPrecisionTimes = self.optionsMenu.Append( idCur , "&Show 100s of a second", "Show 100s of a second", wx.ITEM_CHECK )
+		self.Bind( wx.EVT_MENU, self.menuShowHighPrecisionTimes, id=idCur )
+		
+		idCur = wx.NewId()
+		self.menuItemPlaySounds = self.optionsMenu.Append( idCur , "&Play Sounds", "Play Sounds", wx.ITEM_CHECK )
+		self.playSounds = self.config.ReadBool('playSounds', True)
+		self.menuItemPlaySounds.Check( self.playSounds )
+		self.Bind( wx.EVT_MENU, self.menuPlaySounds, id=idCur )
+		
+		self.menuBar.Append( self.optionsMenu, "&Options" )
+		
+		#-----------------------------------------------------------------------
 		self.helpMenu = wx.Menu()
 
 		self.helpMenu.Append( wx.ID_ABOUT , "&About...", "About CrossMgr..." )
@@ -450,6 +462,12 @@ class MainWin( wx.Frame ):
 		#------------------------------------------------------------------------------
 		self.Bind(wx.EVT_CLOSE, self.onCloseWindow)
 
+	def menuFind( self, event ):
+		if not getattr(self, 'findDialog', None):
+			self.findDialog = SearchDialog( self, wx.ID_ANY )
+		self.findDialog.refresh()
+		self.findDialog.Show()
+		
 	def menuUndo( self, event ):
 		undo.doUndo()
 		self.refresh()
@@ -482,6 +500,10 @@ class MainWin( wx.Frame ):
 			if race:
 				race.highPrecisionTimes = self.menuItemHighPrecisionTimes.IsChecked()
 		wx.CallAfter( self.refresh )
+	
+	def menuPlaySounds( self, event ):
+		self.playSounds = self.menuItemPlaySounds.IsChecked()
+		self.config.WriteBool( 'playSounds', self.playSounds )
 	
 	def menuTipAtStartup( self, event ):
 		showing = self.config.ReadBool('showTipAtStartup', True)
@@ -750,6 +772,7 @@ class MainWin( wx.Frame ):
 	#--------------------------------------------------------------------------------------------
 	@logCall
 	def onCloseWindow( self, event ):
+		self.showPageName( 'Results' )
 		self.writeRace()
 
 		try:
@@ -781,6 +804,8 @@ class MainWin( wx.Frame ):
 
 	@logCall
 	def menuNew( self, event ):
+		self.showPageName( 'Actions' )
+
 		dlg = PropertiesDialog(self, -1, 'Configure Race', style=wx.DEFAULT_DIALOG_STYLE )
 		ret = dlg.ShowModal()
 		fileName = dlg.GetPath()
@@ -908,6 +933,8 @@ class MainWin( wx.Frame ):
 	def openRace( self, fileName ):
 		if not fileName:
 			return
+		self.showPageName( 'Results' )
+		self.refresh()
 		self.writeRace()
 
 		try:
@@ -922,8 +949,7 @@ class MainWin( wx.Frame ):
 				
 			self.updateRecentFiles()
 			
-			if isFinished:
-				self.showPageName( 'Results' )
+			self.showPageName( 'Results' if isFinished else 'Actions')
 			self.refreshAll()
 			Utils.writeLog( 'call: openRace: "%s"' % fileName )
 
@@ -1076,7 +1102,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			Utils.MessageOK(self, 'Cannot open file "%s".' % fName, 'File Open Error',iconMask = wx.ICON_ERROR)
 			return
 
-		self.showPageName( 'History' )	# Switch to a read-only view.
+		self.showPageName( 'Results' )	# Switch to a read-only view.
 		self.refresh()
 		
 		self.lapTimes = self.genTimes()
