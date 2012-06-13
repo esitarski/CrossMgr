@@ -936,6 +936,8 @@ class MainWin( wx.Frame ):
 		self.showPageName( 'Results' )
 		self.refresh()
 		self.writeRace()
+		if getattr(self, 'findDialog', None):
+			self.findDialog.Show( False )
 
 		try:
 			with open(fileName, 'rb') as fp, Model.LockRace() as race:
