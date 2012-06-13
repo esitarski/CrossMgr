@@ -94,7 +94,11 @@ class Search( wx.Panel ):
 		pass
 	
 	def doLabelClick( self, event ):
-		self.sortCol = event.GetCol()
+		sortCol = event.GetCol()
+		if sortCol == self.sortCol:
+			self.sortCol = 0
+		else:
+			self.sortCol = sortCol
 		wx.CallAfter( self.refresh )
 	
 	def doNumDrilldown( self, event ):

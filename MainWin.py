@@ -656,6 +656,7 @@ class MainWin( wx.Frame ):
 		if not Model.race:
 			Utils.MessageOK(self, "You must have a valid race.", "Link ExcelSheet", iconMask=wx.ICON_ERROR)
 			return
+		self.closeFindDialog()
 		gel = GetExcelLink( self, getattr(Model.race, 'excelLink', None) )
 		link = gel.show()
 		undo.pushState()
@@ -805,6 +806,7 @@ class MainWin( wx.Frame ):
 	@logCall
 	def menuNew( self, event ):
 		self.showPageName( 'Actions' )
+		self.closeFindDialog()
 
 		dlg = PropertiesDialog(self, -1, 'Configure Race', style=wx.DEFAULT_DIALOG_STYLE )
 		ret = dlg.ShowModal()
@@ -866,6 +868,8 @@ class MainWin( wx.Frame ):
 			self.menuNew( event )
 			return
 
+		self.closeFindDialog()
+			
 		# Save the categories to use them in the next race.
 		categoriesSave = race.categories
 		race = None
@@ -929,6 +933,10 @@ class MainWin( wx.Frame ):
 		self.filehistory.AddFileToHistory(self.fileName)
 		self.filehistory.Save(self.config)
 		self.config.Flush()
+		
+	def closeFindDialog( self ):
+		if getattr(self, 'findDialog', None):
+			self.findDialog.Show( False )
 
 	def openRace( self, fileName ):
 		if not fileName:
@@ -936,9 +944,8 @@ class MainWin( wx.Frame ):
 		self.showPageName( 'Results' )
 		self.refresh()
 		self.writeRace()
-		if getattr(self, 'findDialog', None):
-			self.findDialog.Show( False )
-
+		self.closeFindDialog()
+		
 		try:
 			with open(fileName, 'rb') as fp, Model.LockRace() as race:
 				race = pickle.load( fp )
