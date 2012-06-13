@@ -1162,7 +1162,6 @@ class Race(object):
 				continue
 			args['sequence'] = i
 			category = Category( **args )
-			print( category )
 			newCategories[args['name']] = category
 			i += 1
 
