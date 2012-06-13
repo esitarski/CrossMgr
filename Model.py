@@ -202,7 +202,7 @@ class Category(object):
 	
 	@property
 	def distanceIsByRace( self ):
-		return getattr( self, 'distanceType', Category.DistanceByLap) == Category.DistanceByRace
+		return getattr(self, 'distanceType', Category.DistanceByLap) == Category.DistanceByRace
 		
 	def getNumLaps( self ):
 		return getattr( self, '_numLaps', None )
@@ -262,8 +262,8 @@ class Category(object):
 				self.startOffset,
 				str(self.numLaps),
 				str(self.sequence),
-				str(self.distance),
-				str(self.distanceType) )
+				str(getattr(self,'distance',None)),
+				str(getattr(self,'distanceType', Category.DistanceByLap)) )
 
 	def getStartOffsetSecs( self ):
 		return Utils.StrToSeconds( self.startOffset )
@@ -1149,8 +1149,8 @@ class Race(object):
 		self.setChanged()
 
 	def setCategories( self, nameStrTuples ):
-		# This list must match the initialization fields in class Category.
-		fields = ('active', 'name', 'catStr', 'startOffset', 'numLaps', 'sequence', 'distance', 'distanceType')
+		# This list must match the initialization fields in class Category without sequence.
+		fields = ('active', 'name', 'catStr', 'startOffset', 'numLaps', 'distance', 'distanceType')
 		padding = [None for f in fields]
 		i = 0
 		newCategories = {}
@@ -1160,9 +1160,10 @@ class Race(object):
 			args = dict( (key, t[i]) for i, key in enumerate(fields) )
 			if not args['name']:
 				continue
-			if args['sequence'] is None:
-				args['sequence'] = i
-			newCategories[args['name']] = Category( **args )
+			args['sequence'] = i
+			category = Category( **args )
+			print( category )
+			newCategories[args['name']] = category
 			i += 1
 
 		if self.categories != newCategories:

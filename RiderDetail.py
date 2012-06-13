@@ -633,10 +633,11 @@ class RiderDetail( wx.Panel ):
 			self.ganttChart.SetData( [ganttData], [num], Gantt.GetNowTime(), [ganttInterp] )
 			self.lineGraph.SetData( [graphData], [[e.interp for e in entries]] )
 		
-		self.hs.Layout()
 		if self.firstTime:
 			self.firstTime = False
 			self.splitter.SetSashPosition( 230 )
+		self.hs.RecalcSizes()
+		self.hs.Layout()
 		self.grid.FitInside()
 	
 	def commitChange( self ):
