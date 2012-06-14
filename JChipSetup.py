@@ -208,18 +208,20 @@ class JChipSetupDialog( wx.Dialog ):
 	
 	def onTimerCallback( self, stat ):
 		data = JChip.GetData()
+		lastTag = None
 		for d in data:
 			if d[0] == 'data':
 				self.receivedCount += 1
 				ts = d[2].isoformat(' ')
 				if len(ts) == 8:
-					ts += '.0000'
+					ts += '.00'
 				else:
 					ts = ts[:-2]
 				try:
 					num = str(Model.race.tagNums[d[1]])
 				except (AttributeError, ValueError, KeyError):
 					num = 'not found'
+				lastTag = d[1]
 				self.appendMsg( '%d: tag=%s, time=%s, Bib=%s' % (self.receivedCount, d[1], ts, num) )
 			elif d[0] == 'connected':
 				self.appendMsg( '*******************************************' )
@@ -235,6 +237,9 @@ class JChipSetupDialog( wx.Dialog ):
 		if data:
 			self.testList.SetInsertionPointEnd()
 		self.timer.Restart( 1000, 'restarted' )
+		
+		if lastTag and Utils.mainWin and getattr(Utils.mainWin, 'findDialog', None):
+			Utils.mainWin.findDialog.refresh( lastTag )
 		
 	def onOK( self, event ):
 		if Model.race:

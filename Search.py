@@ -132,7 +132,7 @@ class Search( wx.Panel ):
 		self.grid.Set( data = [], colnames = [], textColour = {}, backgroundColour = {} )
 		self.grid.Reset()
 	
-	def refresh( self ):
+	def refresh( self, searchStr = None ):
 		wx.CallAfter( self.search.SetFocus )
 		self.isEmpty = True
 		self.lastRow = -1
@@ -157,6 +157,8 @@ class Search( wx.Panel ):
 			return
 			
 		self.isEmpty = False
+		if searchStr is not None:
+			self.search.SetValue( searchStr )
 		searchText = Utils.removeDiacritic(self.search.GetValue().lower())
 		
 		fields = ReadSignOnSheet.Fields
@@ -238,8 +240,8 @@ class SearchDialog( wx.Dialog ):
 		self.SetSizer(sizer)
 		sizer.Fit(self)
 
-	def refresh( self ):
-		self.search.refresh()
+	def refresh( self, searchStr = None ):
+		self.search.refresh( searchStr )
 		
 if __name__ == '__main__':
 	app = wx.PySimpleApp()
