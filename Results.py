@@ -374,27 +374,25 @@ class Results( wx.Panel ):
 			Utils.getMainWin().showPageName( 'RiderDetail' )
 	
 	def doNumSelect( self, event ):
+		grid = event.GetEventObject()
 		self.iLap = None
 		
 		if self.isEmpty:
 			return
 		row, col = event.GetRow(), event.GetCol()
 		self.iRow, self.iCol = row, col
-		if row >= self.lapGrid.GetNumberRows() or col >= self.lapGrid.GetNumberCols():
+		if row >= self.labelGrid.GetNumberRows():
 			return
 			
-		if self.lapGrid.GetCellValue(row, col):
+		if grid == self.lapGrid and self.lapGrid.GetCellValue(row, col):
 			try:
 				colName = self.lapGrid.GetColLabelValue( col )
 				self.iLap = int( reLapMatch.match(colName).group(1) )
 			except:
 				pass
 		
-		col = 1
-		value = self.labelGrid.GetCellValue( row, col )
-		numSelect = None
-		if value:
-			numSelect = value
+		value = self.labelGrid.GetCellValue( row, 1 )
+		numSelect = value if value else None
 		if self.numSelect != numSelect:
 			self.numSelect = numSelect
 			self.showNumSelect()
