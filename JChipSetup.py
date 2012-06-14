@@ -239,7 +239,8 @@ class JChipSetupDialog( wx.Dialog ):
 		self.timer.Restart( 1000, 'restarted' )
 		
 		if lastTag and Utils.mainWin and getattr(Utils.mainWin, 'findDialog', None):
-			Utils.mainWin.findDialog.refresh( lastTag )
+			if Utils.mainWin.findDialog.IsShown():
+				Utils.mainWin.findDialog.refresh( lastTag )
 		
 	def onOK( self, event ):
 		if Model.race:

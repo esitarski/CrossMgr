@@ -11,7 +11,7 @@ random.seed( 10101010 )
 nums = [random.randint(1,100) for x in xrange(25)]
 tag = {}
 for n in nums:
-	tag[n] = 'J%06X' % n
+	tag[n] = 'J413A%02X' % n
 	
 count = 0
 
