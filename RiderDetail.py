@@ -159,7 +159,7 @@ class RiderDetail( wx.Panel ):
 		return row + 1
 		
 	def doRightClick( self, event ):
-		self.grid.SelectRow( event.GetRow() )
+		self.eventRow = event.GetRow()
 		
 		allCases = 0
 		interpCase = 1
@@ -206,13 +206,39 @@ class RiderDetail( wx.Panel ):
 		menu.Destroy()
 
 	def OnPopupCorrect( self, event ):
+		self.grid.SelectRow( self.eventRow )
 		CorrectNumber( self, self.entry )
 		
 	def OnPopupShift( self, event ):
+		self.grid.SelectRow( self.eventRow )
 		ShiftNumber( self, self.entry )
 
 	def OnPopupDelete( self, event ):
-		DeleteEntry( self, self.entry )
+		rows = Utils.GetSelectedRows( self.grid )
+		if len(rows) > 1:
+			num = int(self.num.GetValue())
+			if num is None or not Model.race or num not in Model.race:
+				return
+			rider = Model.race[num]
+			times = [rider.times[r] for r in rows]
+			timeStr = []
+			timesPerRow = 4
+			for i in xrange(0, len(times), timesPerRow):
+				timeStr.append(
+					',  '.join( 'Lap %d: %s' % (rows[j]+1, Utils.formatTime(times[i], True))
+							for j in xrange(i, min(len(times), i+timesPerRow) ) ) )
+			timeStr = ',\n'.join( timeStr )
+			message = 'Delete entries of Rider %d:\n\n%s\n\nConfirm Delete?' % (num, timeStr)
+			if Utils.MessageOKCancel( self, message, 'Delete Times', wx.ICON_WARNING ):
+				undo.pushState()
+				with Model.LockRace() as race:
+					if race:
+						for t in times:
+							race.deleteTime( num, t )
+				wx.CallAfter( self.refresh )
+		else:
+			self.grid.SelectRow( self.eventRow )
+			DeleteEntry( self, self.entry )
 	
 	def onEditRider( self, event ):
 		self.PopupMenu( self.menu )

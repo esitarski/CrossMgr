@@ -352,7 +352,7 @@ def DeleteEntry( parent, entry ):
 		return
 		
 	dlg = wx.MessageDialog(parent,
-						   'Num: %d  RiderLap: %d   RaceTime: %s\n\nConfirm Delete?' %
+						   'Num: %d  Lap: %d   RaceTime: %s\n\nConfirm Delete?' %
 								(entry.num, entry.lap, Utils.formatTime(entry.t, True)), 'Delete Entry',
 							wx.OK | wx.CANCEL | wx.ICON_QUESTION )
 	# dlg.CentreOnParent(wx.BOTH)
