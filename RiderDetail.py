@@ -225,7 +225,7 @@ class RiderDetail( wx.Panel ):
 			timesPerRow = 4
 			for i in xrange(0, len(times), timesPerRow):
 				timeStr.append(
-					',  '.join( 'Lap %d: %s' % (rows[j]+1, Utils.formatTime(times[i], True))
+					',  '.join( 'Lap %d: %s' % (rows[j]+1, Utils.formatTime(times[i]))
 							for j in xrange(i, min(len(times), i+timesPerRow) ) ) )
 			timeStr = ',\n'.join( timeStr )
 			message = 'Delete entries of Rider %d:\n\n%s\n\nConfirm Delete?' % (num, timeStr)
