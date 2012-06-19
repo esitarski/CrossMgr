@@ -188,7 +188,7 @@ class Categories( wx.Panel ):
 			categories = [c for c in race.categories.itervalues()]
 			categories.sort()
 		dlg = wx.TextEntryDialog( self,
-									'%s: Add Bib Num Exceptions (comma separated)\nAdjust other categories as necessary.' % categories[r].name,
+									'%s: Add Bib Num Exceptions (comma separated)\nThis will adjust the other categories as necessary.' % categories[r].name,
 									'Add Bib Exceptions' )
 		good = (dlg.ShowModal() == wx.ID_OK)
 		if good:
@@ -197,6 +197,7 @@ class Categories( wx.Panel ):
 		if not good:
 			return
 
+		undo.pushState()
 		response = re.sub( '[^0-9,]', '', response.replace(' ', ',') )
 		for f in response.split(','):
 			try:

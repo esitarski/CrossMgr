@@ -26,6 +26,11 @@ body
 	box-shadow: 4px 4px 4px #888888;
 }
 
+.smallfont
+{
+	font-size: 80%;
+}
+
 table.results
 {
 	font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -702,6 +707,7 @@ function SetCategoryResults()
 	table.className = 'results';
 	var hasSpeed = false;
 	var speedUnit = '';
+	var distanceUnit = '';
 	for( var c = 0; c < categories.length; ++c )
 	{
 		var cat = categories[c];
@@ -720,12 +726,14 @@ function SetCategoryResults()
 			{
 				hasSpeed = true;
 				speedUnit = d['speed'].split(' ')[1];
-				//speedUnit = speedUnit.substring(0, 1).toUpperCase() + speedUnit.substring(1);
+				distanceUnit = (speedUnit.substring(0, 1) == 'k' ? 'km' : 'miles');
 			}
 			if( d['raceCat'] == cat )
 			{
 				var lapTimes = d['lapTimes'];
-				resultsData.push( [lapTimes.length, lapTimes.length ? lapTimes.back() : 99999, num, d['lapTimes'], d['status'], d['lastTime']] );
+				resultsData.push( [	lapTimes.length,
+									lapTimes.length ? lapTimes.back() : 99999,
+									num, d['lapTimes'], d['status'], d['lastTime']] );
 				
 				// Get the union of all the defined fields.
 				for( var f = 0; f < infoFields.length; ++f )
@@ -740,12 +748,14 @@ function SetCategoryResults()
 		// Label this category.
 		var leaderLapTimes = resultsData[0][3];
 		
+		var catStr = cat;
 		var thead = createChild( table, 'THEAD' );
 		var tr = createChild( thead, 'TR' );
 		var td;
 		createTextChild( td = createChild(tr, 'TH'), cat );
+		var catTitleTD = td;
 		td.style.fontSize = '120%';
-		td.colSpan = 4;
+		td.colSpan = 5;
 		td.id = 'idNonNumeric';
 		
 		// Add the headers.
@@ -797,6 +807,7 @@ function SetCategoryResults()
 			td.id = 'idNonNumeric';
 			
 			var d = data[num];
+			
 			for( var f = 0; f < infoFields.length; ++f )
 			{
 				if( curFields[infoFields[f]] )
@@ -809,7 +820,18 @@ function SetCategoryResults()
 				}
 			}
 			
-			var finishTime = (isFinisher ? FormatTime(Math.max(resultsData[r][1] - startOffset, 0.0)) : '');
+			var tFinish = (isFinisher ? Math.max(resultsData[r][1] - startOffset, 0.0) : 0.0);
+			
+			// Fix the Category information based on the results of the first rider.
+			if( position == 1 && isFinisher && distanceUnit && d['speed'] )
+			{
+				var speedLeader = parseFloat( d['speed'].split(' ')[0] );
+				var distance = speedLeader * (tFinish / (60.0*60.0));
+				catTitleTD.innerHTML = cat + '<br/><span class="smallfont">' + distance.toFixed(2) + ' ' + distanceUnit + ', ' + d['speed'] + '</span>';
+			}
+			
+
+			var finishTime = (isFinisher ? FormatTime(tFinish) : '');
 			createTextChild( td = createChild(tr, 'TD'), finishTime );
 			if( numsToWatch[num] ) td.className = 'highlight';
 			
@@ -1632,7 +1654,8 @@ Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr<
 	<option value="15">Show Every 15 Laps</option>
 	<option value="20">Show Every 20 Laps</option>
 </select>
-<input type="checkbox" id="idShowTimeDecimals" onClick="ToggleTimeDecimals()">Show 100s of Seconds</input>
+<input class="noprint" type="checkbox" id="idShowTimeDecimals" onClick="ToggleTimeDecimals()">
+	<span class="noprint">Show 100s of Seconds</span></input>
 </p>
 <div id="idResultsDiv"></div>
 <p id="idRaceName" class="noprint">Race Chart</p>

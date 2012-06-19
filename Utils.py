@@ -6,6 +6,7 @@ import re
 import sys
 import math
 import subprocess
+import unicodedata
 import wx.grid		as gridlib
 try:
 	from win32com.shell import shell, shellcon

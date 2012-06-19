@@ -351,7 +351,7 @@ class ExcelLink( object ):
 					continue
 				try:
 					data[field] = toAscii(row[col])
-					if field == 'LastName':
+					if field == 'LastName' or field.startswith('Tag'):
 						data[field] = data[field].upper()
 				except IndexError:
 					pass

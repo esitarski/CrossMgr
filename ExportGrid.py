@@ -6,6 +6,7 @@ import Utils
 import Model
 from GetResults import GetResults
 from ReadSignOnSheet import Fields, IgnoreFields
+from FitSheetWrapper import FitSheetWrapper
 
 #---------------------------------------------------------------------------
 
@@ -101,8 +102,13 @@ class ExportGrid( object ):
 		graphicWidth = float(bmWidth) / float(bmHeight) * graphicHeight
 		graphicBorder = int(graphicWidth * 0.15)
 
-		gc = wx.GraphicsContext.Create(dc)
-		gc.DrawBitmap( bitmap, xPix, yPix, graphicWidth, graphicHeight )
+		# Rescale the graphic to the correct size.
+		# We cannot use a GraphicContext because it does not support a PrintDC.
+		image = bitmap.ConvertToImage()
+		image.Rescale( graphicWidth, graphicHeight, wx.IMAGE_QUALITY_HIGH )
+		bitmap = image.ConvertToBitmap( bitmap.GetDepth() )
+		dc.DrawBitmap( bitmap, xPix, yPix )
+		image, bitmap = None, None
 		
 		# Draw the title.
 		font = self._getFontToFit( widthFieldPix - graphicWidth - graphicBorder, graphicHeight,
@@ -122,6 +128,10 @@ class ExportGrid( object ):
 		
 		yPixTop = yPix
 		for col, c in enumerate(self.colnames):
+			isSpeed = (c == 'Speed')
+			if isSpeed and self.data[col]:
+				c = self.colnames[col] = self.data[col][0].split()[1]
+		
 			colWidth = self._getColSizeTuple( dc, font, col )[0]
 			yPix = yPixTop
 			w, h, lh = dc.GetMultiLineTextExtent( c, font )
@@ -138,6 +148,8 @@ class ExportGrid( object ):
 			for v in self.data[col]:
 				vStr = str(v)
 				if vStr:
+					if isSpeed:
+						vStr = vStr.split()[0]
 					w, h, lh = dc.GetMultiLineTextExtent( vStr, font )
 					if col in self.leftJustifyCols:
 						self._drawMultiLineText( dc, vStr, xPix, yPix )					# left justify
@@ -145,6 +157,9 @@ class ExportGrid( object ):
 						self._drawMultiLineText( dc, vStr, xPix + colWidth - w, yPix )	# right justify
 				yPix += textHeight
 			xPix += colWidth + wSpace
+			
+			if isSpeed:
+				self.colnames[col] = 'Speed'
 		
 	def toExcelSheet( self, sheet ):
 		''' Write the contents of the grid to an xlwt excel sheet. '''
@@ -159,8 +174,14 @@ class ExportGrid( object ):
 			
 		rowTop += 1
 		
+		sheetFit = FitSheetWrapper( sheet )
+		
 		# Write the colnames and data.
 		for col, c in enumerate(self.colnames):
+			isSpeed = (c == 'Speed')
+			if isSpeed and self.data[col]:
+				c = self.colnames[col] = self.data[col][0].split()[1]
+
 			headerStyle = xlwt.XFStyle()
 			headerStyle.borders.bottom = xlwt.Borders.MEDIUM
 			headerStyle.font.bold = True
@@ -172,9 +193,14 @@ class ExportGrid( object ):
 			style.alignment.horz = xlwt.Alignment.HORZ_LEFT if col in self.leftJustifyCols \
 																	else xlwt.Alignment.HORZ_RIGHT
 			
-			sheet.write( rowTop, col, c, headerStyle )
+			sheetFit.write( rowTop, col, c, headerStyle, bold=True )
 			for row, v in enumerate(self.data[col]):
-				sheet.write( rowTop + 1 + row, col, v, style )
+				if isSpeed and v:
+					v = str(v).split()[0]
+				sheetFit.write( rowTop + 1 + row, col, v, style )
+			
+			if isSpeed:
+				self.colnames[col] = 'Speed'
 	
 	def _setRC( self, row, col, value ):
 		if self.data:
@@ -207,9 +233,21 @@ class ExportGrid( object ):
 			if getattr(result, 'lapSpeeds', None) or getattr(result, 'raceSpeeds', None):
 				hasSpeeds = True
 				break
+				
+		speedLeader = None
+		timeLeader = None
+		distanceLeader = None
+		if results and results[0].status == Model.Rider.Finisher and getattr(results[0], 'speed', None):
+			speedLeader = float(results[0].speed.split()[0])
+			timeLeader = results[0].lastTime
+			distanceLeader = speedLeader * (timeLeader / (60.0*60.0))
 			
 		with Model.LockRace() as race:
-			self.title = '\n'.join( [race.name, Utils.formatDate(race.date), 'Category: ' + catName] )
+			if distanceLeader:
+				catStr = '%s (%.2f %s, %s %s)' % (catName, distanceLeader, race.distanceUnitStr, speedLeader, race.speedUnitStr)
+			else:
+				catStr = catName
+			self.title = '\n'.join( [race.name, Utils.formatDate(race.date), 'Category: ' + catStr] )
 			category = race.categories.get( catName, None )
 
 		startOffset = category.getStartOffsetSecs() if category else 0.0

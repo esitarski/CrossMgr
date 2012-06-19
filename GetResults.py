@@ -115,12 +115,20 @@ def GetResults( catName = 'All', getExternalData = False ):
 								times,
 								interp )
 			
+			if isTimeTrial:
+				rr.startTime = getattr( rider, 'startTime', None )
+				if rr.status == Model.Rider.Finisher:
+					try:
+						rr.finishTime = rr.startTime + rr.lastTime
+					except (TypeError, AttributeError):
+						pass
+			
 			# Compute the speeds for the rider.
 			if getattr(riderCategory, 'distance', None):
 				distance = getattr(riderCategory, 'distance')
 				if riderCategory.distanceIsByLap:
 					riderDistance = distance * len(rr.lapTimes)
-					rr.lapSpeeds = [distance / (t / (60.0*60.0)) for t in rr.lapTimes]
+					rr.lapSpeeds = [1000.0 if t <= 0.0 else (distance / (t / (60.0*60.0))) for t in rr.lapTimes]
 					# Ensure that the race speeds are always consistent with the lap times.
 					raceSpeeds = []
 					if rr.lapSpeeds:

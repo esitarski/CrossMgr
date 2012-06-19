@@ -240,12 +240,16 @@ class Category(object):
 	def removeNum( self, num ):
 		if not self.matches(num, True):
 			return
+			
+		# Remove any singleton intervals.
 		for j in xrange(len(self.intervals)-1, -1, -1):
-			if self.intervals[j][0] <= num <= self.intervals[j][1]:
-				if self.intervals[j][0] == num:
-					self.intervals.pop( j )
-					return
-		self.exclude.add( num )
+			interval = self.intervals[j]
+			if num == interval[0] == interval[1]:
+				self.intervals.pop( j )
+				
+		# If we still match, add to the exclude set.
+		if self.matches(num, True):
+			self.exclude.add( num )
 		
 	def addNum( self, num ):
 		self.exclude.discard( num )
@@ -564,7 +568,15 @@ class Race(object):
 		
 		self.tagNums = None
 		memoize.clear()
+	
+	@property
+	def distanceUnitStr( self ):
+		return 'km' if getattr(self, 'distanceUnit', Race.UnitKm) == Race.UnitKm else 'miles'
 		
+	@property
+	def speedUnitStr( self ):
+		return 'km/h' if getattr(self, 'distanceUnit', Race.UnitKm) == Race.UnitKm else 'mph'
+	
 	def resetCache( self ):
 		memoize.clear()
 	
