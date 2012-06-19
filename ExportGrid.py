@@ -106,7 +106,9 @@ class ExportGrid( object ):
 		# We cannot use a GraphicContext because it does not support a PrintDC.
 		image = bitmap.ConvertToImage()
 		image.Rescale( graphicWidth, graphicHeight, wx.IMAGE_QUALITY_HIGH )
-		bitmap = image.ConvertToBitmap( bitmap.GetDepth() )
+		if dc.GetDepth() == 8:
+			image = image.ConvertToGreyscale()
+		bitmap = image.ConvertToBitmap( dc.GetDepth() )
 		dc.DrawBitmap( bitmap, xPix, yPix )
 		image, bitmap = None, None
 		
