@@ -272,7 +272,7 @@ class GanttChartPanel(wx.PyPanel):
 		
 		backColour = self.GetBackgroundColour()
 		backBrush = wx.Brush(backColour, wx.SOLID)
-		greyBrush = wx.Brush( wx.Colour(196+32,196+32,196+32), wx.SOLID )
+		greyBrush = wx.Brush( wx.Colour(196,196,196), wx.SOLID )
 		backPen = wx.Pen(backColour, 0)
 		dc.SetBackground(backBrush)
 		dc.Clear()

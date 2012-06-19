@@ -7,6 +7,7 @@ import os
 import re
 from string import Template
 from FixCategories import FixCategories
+from GetResults import TimeDifference
 import EditEntry
 from Undo import undo
 
@@ -338,11 +339,13 @@ class History( wx.Panel ):
 		self.search.SelectAll()
 		wx.CallAfter( self.search.SetFocus )
 		
-		if Utils.highPrecisionTimes():
+		highPrecision = Utils.highPrecisionTimes()
+		if highPrecision:
 			formatTime = lambda t: Utils.formatTime(t, True)
+			formatTimeDiff = lambda a, b: Utils.formatTimeGap(TimeDifference(a, b, True), True)
 		else:
 			formatTime = Utils.formatTime
-		formatTimeGap = Utils.formatTimeGap
+			formatTimeDiff = lambda a, b: Utils.formatTimeGap(TimeDifference(a, b, False), False)
 		
 		with Model.LockRace() as race:
 			if race is None:
@@ -375,11 +378,9 @@ class History( wx.Panel ):
 				else:
 					numTimes[(e.num, e.lap)] = e.t
 				
-			# Trim out the 0 time starts.
-			try:
-				iFirstNonZero = (i for i, e in enumerate(entries) if e.t > 0.0).next()
-				entries = entries[iFirstNonZero:]
-			except StopIteration:
+			# Trim out the lap 0 starts.
+			entries = [e for e in entries if e.lap > 0]
+			if not entries:
 				self.clearGrid()
 				return
 
@@ -387,11 +388,13 @@ class History( wx.Panel ):
 			self.history = [ [] ]
 			numSeen = set()
 			lapCur = 0
+			leaderTimes = [entries[0].t]
 			for e in entries:
 				if e.num in numSeen:
 					numSeen.clear()
 					lapCur += 1
 					self.history.append( [] )
+					leaderTimes.append( e.t )
 				self.history[lapCur].append( e )
 				numSeen.add( e.num )
 			
@@ -424,8 +427,6 @@ class History( wx.Panel ):
 													formatTime(lapTime),
 													formatTime(raceTime)) )
 			
-			leaderTimes, leaderNums = race.getLeaderTimesNums()
-			
 			formatStr = ['$num']
 			if self.showTimes:		formatStr.append('=$raceTime')
 			if self.showLapTimes:	formatStr.append(' [$lapTime]')
@@ -444,7 +445,7 @@ class History( wx.Panel ):
 						'num':		e.num,
 						'raceTime':	formatTime(e.t) if self.showTimes else '',
 						'lapTime':	formatTime(e.t - numTimes[(e.num,e.lap-1)]) if self.showLapTimes and (e.num,e.lap-1) in numTimes else '',
-						'downTime':	formatTimeGap(e.t - leaderTimes[col+1]) if self.showTimeDown and col+1 < len(leaderTimes) else '',
+						'downTime':	formatTimeDiff(e.t, leaderTimes[col]) if self.showTimeDown and col < len(leaderTimes) else '',
 						'riderName': info.get(e.num, {}).get('LastName', '') if self.showRiderName else '',
 					} ) for e in h] )
 				self.rcInterp.update( (row, col) for row, e in enumerate(h) if e.interp )

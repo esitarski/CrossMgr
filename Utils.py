@@ -120,16 +120,16 @@ def formatTime( secs, highPrecision = False ):
 	hours = int(secs // (60*60))
 	minutes = int( (secs // 60) % 60 )
 	secs = secs % 60
-	if hours > 0:
-		s = "%s%d:%02d:%02d" % (sign, hours, minutes, secs)
-	else:
-		s = "%s%02d:%02d" % (sign, minutes, secs)
 	if highPrecision:
-		d = int( f * 100 )
-		s += '.%02d' % d
-	return s
+		decimal = '.%02d' % int( f * 100 )
+	else:
+		decimal = ''
+	if hours > 0:
+		return "%s%d:%02d:%02d%s" % (sign, hours, minutes, secs, decimal)
+	else:
+		return "%s%02d:%02d%s" % (sign, minutes, secs, decimal)
 
-def formatTimeGap( secs ):
+def formatTimeGap( secs, highPrecision = False ):
 	if secs is None:
 		secs = 0
 	if secs < 0:
@@ -137,14 +137,19 @@ def formatTimeGap( secs ):
 		secs = -secs
 	else:
 		sign = ''
-	secs = int(secs)
+	f, ss = math.modf(secs)
+	secs = int(ss)
 	hours = int(secs // (60*60))
 	minutes = int( (secs // 60) % 60 )
 	secs = secs % 60
-	if hours > 0:
-		return "%s%dh'%02d\"" % (sign, hours, minutes, secs)
+	if highPrecision:
+		decimal = '.%02d' % int( f * 100 )
 	else:
-		return "%s%d'%02d\"" % (sign, minutes, secs)
+		decimal = ''
+	if hours > 0:
+		return "%s%dh'%02d%s\"" % (sign, hours, minutes, secs, decimal)
+	else:
+		return "%s%d'%02d%s\"" % (sign, minutes, secs, decimal)
 
 def formatTimeCompressed( secs, highPrecision = False ):
 	f = formatTime( secs, highPrecision )

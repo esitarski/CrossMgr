@@ -6,6 +6,15 @@ import itertools
 from ReadSignOnSheet import IgnoreFields
 statusSortSeq = Model.Rider.statusSortSeq
 
+def TimeDifference( a, b, highPrecision = False ):
+	if highPrecision:
+		a *= 100.0
+		b *= 100.0
+	t = int(a) - int(b)
+	if highPrecision:
+		t /= 100.0
+	return t
+
 def RidersCanSwap( riderResults, num, numAdjacent ):
 	try:
 		rr1 = riderResults[num]
@@ -85,6 +94,7 @@ def GetResults( catName = 'All', getExternalData = False ):
 		if not categoryWinningTime:
 			return []
 		
+		highPrecision = Utils.highPrecisionTimes()
 		isTimeTrial = getattr( race, 'isTimeTrial', False )
 		for rider in race.riders.itervalues():
 			riderCategory = race.getCategory( rider.num )
@@ -192,7 +202,7 @@ def GetResults( catName = 'All', getExternalData = False ):
 					lapsDown = leader.laps - rr.laps
 					rr.gap = '%d %s' % (lapsDown, 'laps' if lapsDown > 1 else 'lap')
 			elif rr != leader:
-				rr.gap = Utils.formatTimeGap( rr.lastTime - leader.lastTime )
+				rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
 		
 	# Return the final results.
 	return riderResults

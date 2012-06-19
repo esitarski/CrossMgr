@@ -640,7 +640,7 @@ class RiderDetail( wx.Panel ):
 				
 				if distanceByLap:
 					try:
-						s = distanceByLap / (tLap / (60.0*60.0))
+						s = (distanceByLap / (tLap / (60.0*60.0))) if tLap > 0.0 else 1000.0
 						data[3].append( '%.2f' % s )
 						sTotal += s
 					except ZeroDivisionError:

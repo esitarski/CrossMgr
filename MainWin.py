@@ -248,11 +248,6 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_MENU, self.menuRestoreFromInput, id=idCur )
 
 		self.fileMenu.AppendSeparator()
-		idCur = wx.NewId()
-		self.fileMenu.Append( idCur , "Set &Graphic...", "Set Graphic for all Output" )
-		self.Bind(wx.EVT_MENU, self.menuSetGraphic, id=idCur )
-
-		self.fileMenu.AppendSeparator()
 		self.fileMenu.Append( wx.ID_PAGE_SETUP , "Page &Setup...", "Setup the print page" )
 		self.Bind(wx.EVT_MENU, self.menuPageSetup, id=wx.ID_PAGE_SETUP )
 
@@ -437,6 +432,16 @@ class MainWin( wx.Frame ):
 		self.menuItemPlaySounds.Check( self.playSounds )
 		self.Bind( wx.EVT_MENU, self.menuPlaySounds, id=idCur )
 		
+		self.optionsMenu.AppendSeparator()
+		
+		idCur = wx.NewId()
+		self.optionsMenu.Append( idCur , "Set Contact &Email...", "Set Contact Email for HTML Output" )
+		self.Bind(wx.EVT_MENU, self.menuSetContactEmail, id=idCur )
+		
+		idCur = wx.NewId()
+		self.optionsMenu.Append( idCur , "Set &Graphic...", "Set Graphic for Output" )
+		self.Bind(wx.EVT_MENU, self.menuSetGraphic, id=idCur )
+		
 		self.menuBar.Append( self.optionsMenu, "&Options" )
 		
 		#-----------------------------------------------------------------------
@@ -563,6 +568,16 @@ class MainWin( wx.Frame ):
 		
 	def getDirName( self ):
 		return Utils.getDirName()
+		
+	def menuSetContactEmail( self, event ):
+		email = self.config.Read( 'email', 'my_name@my_address' )
+		dlg = wx.TextEntryDialog( self, message='Contact Email:', caption='Contact Email for HTML output', defaultValue=email )
+		result = dlg.ShowModal()
+		if result == wx.ID_OK:
+			value = dlg.GetValue()
+			self.config.Write( 'email', value )
+			self.config.Flush()
+		dlg.Destroy()
 
 	def menuSetGraphic( self, event ):
 		imgPath = self.getGraphicFName()
@@ -747,6 +762,12 @@ class MainWin( wx.Frame ):
 			organizer = getattr( race, 'organizer', '' )
 			html = html.replace( 'organizer = null', 'organizer = %s' % json.dumps(organizer), 1 )
 			
+		timestamp = 'timestamp = %s' % json.dumps( datetime.datetime.now().ctime() )
+		html = html.replace( 'timestamp = null', timestamp )
+		
+		email = 'email = %s' % json.dumps( self.config.Read('email', '') )
+		html = html.replace( 'email = null', email )
+		
 		data = 'data = %s' % json.dumps(GetAnimationData(getExternalData = True))
 		html = html.replace( 'data = null', data )
 		

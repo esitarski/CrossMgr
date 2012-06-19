@@ -88,6 +88,8 @@ table.results tr td.fastest
 // Data about the results.
 var raceName = null;
 var organizer = null;
+var timestamp = null;
+var email = null;
 // Rider data
 var data = null;
 
@@ -111,9 +113,9 @@ var numsToWatchStr = null;
 var categoryStr = null;
 var numsToWatch = {};		// Set of numbers to watch.
 var resultsDiv = null;
-var showLapsFrequency = -1;		// How often to show laps
-var lapDataOption = 0;	// if 0, show race times, if 1, show lap times, if 2, show gap times.
-var loopContinuously = false;// If true, the simulation will repeat from the beginning.
+var showLapsFrequency = -1;	// How often to show laps
+var lapDataOption = 0;		// if 0, show race times, if 1, show lap times, if 2, show gap times.
+var loopContinuously = true;// If true, the simulation will repeat from the beginning.
 var fontMult = 1.0;			// font adjust factor.
 var showTimeDecimals = false;
 
@@ -287,29 +289,66 @@ function DrawLine( ctx, x1, y1, x2, y2 )
 	ctx.stroke();
 }
 
-function FormatTime( t )
+function TimeDifference( a, b )
 {
-	var neg = false;
-	if( t < 0 )
-	{
-		neg = true;
-		t = -t;
-	}
-	var secs = Math.floor( t );
-	var h = Math.floor( secs / (60*60) );
-	var m = Math.floor(secs / 60) % 60;
-	var s = Math.floor(secs % 60);
-	if( h == 0 )
-		tStr = m + (s < 10 ? ':0' : ':') + s;
-	else
-		tStr = h + (m < 10 ? ':0' : ':') + m + (s < 10 ? ':0' : ':') + s;
-	if( neg )
-		tStr = '-' + tStr;
+	// Returns (a - b) with proper precision.
 	if( showTimeDecimals )
 	{
-		var decimals = Math.floor( (t - Math.floor(t)) * 100 );
+		a *= 100.0;
+		b *= 100.0;
+	}
+	var t = (a|0) - (b|0);
+	if( showTimeDecimals )
+		t /= 100.0;
+	return t;
+}
+
+function FormatTime( t )
+{
+	var tStr = '';
+	if( t < 0 )
+	{
+		tStr = '-';
+		t = -t;
+	}
+	var secs = (t | 0);
+	var h = ( (secs / (60*60)) | 0 );
+	var m = ((secs / 60) | 0) % 60;
+	var s = ( (secs % 60) | 0);
+	if( h > 0 )
+		tStr += h + (m < 10 ? ':0' : ':') + m + (s < 10 ? ':0' : ':') + s;
+	else
+		tStr += m + (s < 10 ? ':0' : ':') + s;
+	if( showTimeDecimals )
+	{
+		var decimals = (((t - (t|0)) * 100 )|0);
 		tStr += (decimals < 10 ? '.0' : '.') + decimals;
 	}
+	return tStr;
+}
+
+function FormatTimeGap( t )
+{
+	var tStr = '';
+	if( t < 0 )
+	{
+		tStr = '-';
+		t = -t;
+	}
+	var secs = (t | 0);
+	var h = ( (secs / (60*60)) | 0 );
+	var m = ((secs / 60) | 0) % 60;
+	var s = ( (secs % 60) | 0);
+	if( h > 0 )
+		tStr += h + (m < 10 ? 'h0' : 'h') + m + (s < 10 ? "'0" : "'") + s;
+	else
+		tStr += m + (s < 10 ? "'0" : "'") + s;
+	if( showTimeDecimals )
+	{
+		var decimals = (((t - (t|0)) * 100 )|0);
+		tStr += (decimals < 10 ? '.0' : '.') + decimals;
+	}
+	tStr += '"';
 	return tStr;
 }
 
@@ -750,6 +789,23 @@ function SetCategoryResults()
 
 		// Sort by greatest distance and shortest time.
 		resultsData.sort( CmpResultsData );
+		
+		// Find the fastest lap for this category.
+		var tLapMin = 100000 * 60.0 * 60.0;
+		var lapMinCoords = null;
+		for( var r = 0; r < resultsData.length; ++r )
+		{
+			var lapTimes = resultsData[r][3];
+			for( var i = 1; i < lapTimes.length; ++i )
+			{
+				var t = Math.max(lapTimes[i] - lapTimes[i-1], 0.0);
+				if( t < tLapMin )
+				{
+					tLapMin = t;
+					lapMinCoords = [r, i];
+				}
+			}
+		}
 
 		// Label this category.
 		var leaderLapTimes = resultsData[0][3];
@@ -785,10 +841,13 @@ function SetCategoryResults()
 		if( hasSpeed )
 			createTextChild( td = createChild(tr, 'TH'), speedUnit );
 
-		for( var i = 1; i < leaderLapTimes.length; ++i )
+		if( leaderLapTimes.length > 2 )
 		{
-			if( i % showLapsFrequency == 0 || i == 1 || i == leaderLapTimes.length-1  )
-				createTextChild( td = createChild(tr, 'TH'), 'Lap ' + i );
+			for( var i = 1; i < leaderLapTimes.length; ++i )
+			{
+				if( i % showLapsFrequency == 0 || i == 1 || i == leaderLapTimes.length-1  )
+					createTextChild( td = createChild(tr, 'TH'), 'Lap ' + i );
+			}
 		}
 		
 		// Add the rider data.
@@ -833,7 +892,15 @@ function SetCategoryResults()
 			{
 				var speedLeader = parseFloat( d['speed'].split(' ')[0] );
 				var distance = speedLeader * (tFinish / (60.0*60.0));
-				catTitleTD.innerHTML = cat + '<br/><span class="smallfont">' + distance.toFixed(2) + ' ' + distanceUnit + ', ' + d['speed'] + '</span>';
+				var tFinishStr = FormatTime( tFinish );
+				var dot = tFinishStr.indexOf('.');
+				if( dot > 0 )
+					tFinishStr = tFinishStr.substring(0, dot);
+				catTitleTD.innerHTML = cat +
+						'<br/><span class="smallfont">' +
+							distance.toFixed(2) + ' ' + distanceUnit + ', ' +
+							"winner: " + tFinishStr + ' at ' + d['speed'] +
+						'</span>';
 			}
 			
 
@@ -846,7 +913,7 @@ function SetCategoryResults()
 			{
 				if( lapTimes.length == leaderLapTimes.length )
 				{
-					var delta = lapTimes.back() - leaderLapTimes.back();
+					var delta = TimeDifference(lapTimes.back(), leaderLapTimes.back());
 					if( delta != 0 )
 					{
 						if( r != 0 && lapDataOption == 3 )
@@ -855,7 +922,7 @@ function SetCategoryResults()
 							gap = '+' + delta.toFixed(2) + '%';
 						}
 						else
-							gap = FormatTime( delta );
+							gap = FormatTimeGap( delta );
 					}
 				}
 				else if( lapTimes.back() > leaderLapTimes.back() )
@@ -876,51 +943,52 @@ function SetCategoryResults()
 			}
 			
 			if( numsToWatch[num] ) td.className = 'highlight';
-			for( var i = 1; i < lapTimes.length; ++i )
+			if( leaderLapTimes.length > 2 )
 			{
-				if( !(i % showLapsFrequency == 0 || i == 1 || i == lapTimes.length-1)  )
-					continue
-
-				switch( lapDataOption )
+				for( var i = 1; i < lapTimes.length; ++i )
 				{
-				case 0:	// Lap Times.
-					createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(lapTimes[i] - lapTimes[i-1], 0.0)) );
-					break;
-				case 1:	// Race Times.
-					createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(lapTimes[i] - startOffset, 0.0)) );
-					break;
-				case 2:	// Gap Times.
-					if( r == 0 )
-						createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(lapTimes[i] - lapTimes[i-1], 0.0)) );
-					else
+					if( !(i % showLapsFrequency == 0 || i == 1 || i == lapTimes.length-1)  )
+						continue
+
+					switch( lapDataOption )
 					{
-						var v = lapTimes[i] - resultsData[0][3][i];
-						var sign = '+';
-						if( v < 0 )
-						{
-							sign = '-';
-							v = -v;
-						}
-						createTextChild( td = createChild(tr, 'TD'), sign + FormatTime(v) );
-					}
-					break;
-				case 3:	// Time Percent.
-					if( r == 0 )
+					case 0:	// Lap Times.
 						createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(lapTimes[i] - lapTimes[i-1], 0.0)) );
-					else
-					{
-						var v = (100.0 * (lapTimes[i] - resultsData[0][3][i])) / resultsData[0][3][i];
-						var sign = '+';
-						if( v < 0 )
+						break;
+					case 1:	// Race Times.
+						createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(lapTimes[i] - startOffset, 0.0)) );
+						break;
+					case 2:	// Gap Times.
+						if( r == 0 )
+							createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(lapTimes[i] - lapTimes[i-1], 0.0)) );
+						else
 						{
-							sign = '-';
-							v = -v;
+							var v = TimeDifference(lapTimes[i], resultsData[0][3][i]);
+							createTextChild( td = createChild(tr, 'TD'), FormatTimeGap(v) );
 						}
-						createTextChild( td = createChild(tr, 'TD'), sign + v.toFixed(2) + '%' );
+						break;
+					case 3:	// Time Percent.
+						if( r == 0 )
+							createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(lapTimes[i] - lapTimes[i-1], 0.0)) );
+						else
+						{
+							var v = (100.0 * (lapTimes[i] - resultsData[0][3][i])) / resultsData[0][3][i];
+							var sign = '+';
+							if( v < 0 )
+							{
+								sign = '-';
+								v = -v;
+							}
+							createTextChild( td = createChild(tr, 'TD'), sign + v.toFixed(2) + '%' );
+						}
+						break;
 					}
-					break;
+					
+					var classes = [];
+					if( lapMinCoords && r == lapMinCoords[0] && i == lapMinCoords[1] )	classes.push( 'fastest' );
+					if( numsToWatch[num] )												classes.push( 'highlight' );
+					if( classes )	td.className = classes.join( ' ' );
 				}
-				if( numsToWatch[num] ) td.className = 'highlight';
 			}
 		}
 	}
@@ -1544,6 +1612,22 @@ function ToggleTimeDecimals()
 	SetCategoryResults();
 }
 
+var replaceHtmlEntites = (function() {
+	var translate_re = /&(nbsp|amp|quot|lt|gt);/g;
+	var translate = {
+		"nbsp": " ", 
+		"amp" : "and", 
+		"quot": "\"",
+		"lt"  : "<", 
+		"gt"  : ">"
+	};
+	return function( s ) {
+		return ( s.replace(translate_re, function(match, entity) { 
+			return translate[entity]; 
+		}) );
+	}
+})();
+
 function onLoad()
 {
 	document.getElementById('idImgHeader').src = imageSrc;
@@ -1564,9 +1648,18 @@ function onLoad()
 	}
 	
 	document.getElementById('idRaceName').innerHTML = document.getElementById('idTitle').innerHTML;
+	if( email )
+		document.getElementById('idEmail').href =
+							'mailto:' + email +
+							'?subject=' + replaceHtmlEntites(document.getElementById('idTitle').innerHTML);
 	
-	if( organizer != null )
-		document.getElementById('idOrganizer').innerHTML = (organizer != '' ? 'by ' : '') + organizer;
+	var s = '';
+	if( organizer )
+		s = 'by ' + organizer;
+	if( timestamp )
+		s += ' (created ' + timestamp + ')';
+	if( s )
+		document.getElementById('idOrganizer').innerHTML = s;
 	
 	if( data == null )
 		GenerateRandomData();
@@ -1608,13 +1701,20 @@ function onLoad()
 <p>
 <table cellspacing="8"><tr>
 <td><img height="96" width="67" id="idImgHeader" alt="CrossMgr Logo" /></td>
-<td valign="top"><span id="idRaceName">Cyclo-Cross Race Results</span><br/><span id="idOrganizer">by CrossMgr</span></td>
+<td valign="top"><span id="idRaceName">Cyclo-Cross Race Results</span><br/><span id="idOrganizer">by CrossMgr</span>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<span class="noprint">
+<a id="idEmail" href="mailto:edward.sitarski@gmail.com?subject=CrossMgr Results Output">Email Comments/Suggestions</a>.
+<br/>
+Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
+</span>
+</td>
 </tr></table>
 </p>
-<p class="noprint">
-Category: <span id="idCategories"></span>
+<p>
+<strong>Category: <span id="idCategories"></span></strong>
 </p>
-<canvas id="idTrack" width="600" height="300" class="noprint">
+<canvas id="idTrack" width="520" height="240" class="noprint">
 Your browser does not support the HTML5 Canvas.<br/>
 Please upgrade to a more recent browser version.<br/>
 For Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
@@ -1623,7 +1723,7 @@ Current versions of Chrome, FireFox and Opera work fine.
 <p class="noprint">
 <input type="button" id="idRewind" onClick="Rewind()" value="Rewind"></input>
 <input type="button" id="idPlayStop" onClick="PlayStop()" value="Play"></input>
-<input type="checkbox" id="idLoop" onClick="LoopContinuously()">Loop Continuously</input>
+<input type="checkbox" id="idLoop" onClick="LoopContinuously()" checked>Loop Continuously</input>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Playback Speed:
 <input type="radio" name="groupSpeed" value="0" onClick="SetSpeed(-2)"></input>
 <input type="radio" name="groupSpeed" value="1" onClick="SetSpeed(-1)"></input>
@@ -1642,11 +1742,7 @@ Highlight Numbers:
 <input type="button" value="Apply"</input>
 (for example: 124,131,203)
 </p>
-<p>
-Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
-<span class="noprint">Comments?  Click <a href="mailto:edward.sitarski@gmail.com?subject=Race Animation">here</a>.<br/></span>
-</p>
-<p>
+<p>Show:
 <input type="radio" name="showOptions" value="showLapTimes" checked onClick="SetLapDataOption(0)"/>Lap Times &nbsp;&nbsp;
 <input type="radio" name="showOptions" value="showRaceTime" onClick="SetLapDataOption(1)"/>Race Times &nbsp;&nbsp;
 <input type="radio" name="showOptions" value="showLapGaps" onClick="SetLapDataOption(2)"/>Time Gaps &nbsp;&nbsp;
