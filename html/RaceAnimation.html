@@ -194,7 +194,7 @@ function getRiderPositionTime( num )
 		var left = 0, right = lapTimes.length, i;
 		while( right - left > 1 )
 		{
-			i = Math.floor((right + left) / 2);
+			i = ~~((right + left) / 2);
 			if( tSearch < lapTimes[i] )
 				right = i;
 			else
@@ -214,7 +214,7 @@ function getXYfromPosition( lane, position )
 	// On the corner, use the ration of the angle, not the distance.
 	// This means that riders at the outer-most part of the curve will speed up
 	// so they do not lose ground to the riders in the inner part of the curve.
-	position -= Math.floor(position);
+	position -= ~~(position);
 	
 	var curveLength = (r/2.0) * Math.PI;
 	var trackLength = 4*r + 2 * curveLength;
@@ -264,7 +264,7 @@ function getRiderXYPT( num, lane )
 		lapCur = Math.max( lapCur, data[num]['lapTimes'].length );
 		return [null, null, positionTime[0], positionTime[1]];
 	}
-	lapCur = Math.max(lapCur, Math.floor(positionTime[0]));
+	lapCur = Math.max(lapCur, ~~positionTime[0]);
 	var xypt = getXYfromPosition( lane, positionTime[0] );
 	xypt.push( positionTime[0] );
 	xypt.push( positionTime[1] );
@@ -297,7 +297,7 @@ function TimeDifference( a, b )
 		a *= 100.0;
 		b *= 100.0;
 	}
-	var t = (a|0) - (b|0);
+	var t = ~~a - ~~b;
 	if( showTimeDecimals )
 		t /= 100.0;
 	return t;
@@ -321,7 +321,7 @@ function FormatTime( t )
 		tStr += m + (s < 10 ? ':0' : ':') + s;
 	if( showTimeDecimals )
 	{
-		var decimals = (((t - (t|0)) * 100 )|0);
+		var decimals = ~~((t - ~~t) * 100);
 		tStr += (decimals < 10 ? '.0' : '.') + decimals;
 	}
 	return tStr;
@@ -345,7 +345,7 @@ function FormatTimeGap( t )
 		tStr += m + (s < 10 ? "'0" : "'") + s;
 	if( showTimeDecimals )
 	{
-		var decimals = (((t - (t|0)) * 100 )|0);
+		var decimals = ~~((t - ~~t) * 100);
 		tStr += (decimals < 10 ? '.0' : '.') + decimals;
 	}
 	tStr += '"';
@@ -371,14 +371,14 @@ function Refresh()
 	if( width < 80 || height < 80 )
 		return;
 
-	r = Math.floor(width / 4);
+	r = ~~(width / 4);
 	if( r * 2 > height )
-		r = Math.floor(height / 2);
+		r = ~~(height / 2);
 	r -= (r & 1);			// Make sure that r is an even number.
 
 	var tHeight = r / 8;
-	var fontStr = Math.floor(tHeight * fontMult) + "px Arial";
-	var fontStrHightlight = Math.floor(tHeight * 1.6 * fontMult) + "px Arial";
+	var fontStr = ~~(tHeight * fontMult) + "px Arial";
+	var fontStrHightlight = ~~(tHeight * 1.6 * fontMult) + "px Arial";
 	dc.font = fontStr;
 	
 	// Draw the track.
@@ -610,18 +610,36 @@ function SetData( aData, tCur )
 		t = tCur;
 	
 	// Get all the unique categories from the data.
-	var cats = {};
+	var catStart = {};
 	for( num in data )
 	{
 		var cName = data[num]['raceCat'];
 		if( cName != 'All' )
-			cats[cName] = cName;
+		{
+			var tStart = 0;
+			var lapTimes = data[num]['lapTimes'];
+			if( lapTimes && lapTimes.length > 0 )
+				tStart = lapTimes[0];
+			catStart[cName] = [cName, tStart];
+		}
 	}
 	
+	// Sort the categories by start time, then alphabetically.
+	catSort = [];
+	for( c in catStart )
+		catSort.push( [c, catStart[c][1]] );
+		
+	catSort.sort( function(x, y) {
+			var d = x[1] - y[1];
+			if( d )				return d;
+			if( x[0] < y[0] )	return -1;
+			if( x[0] > y[0] )	return 1;
+			return 0;
+		});
+	
 	categories = [];
-	for( c in cats )
-		categories.push( c );
-	categories.sort();
+	for( var i = 0; i < catSort.length; ++i )
+		categories.push( catSort[i][0] );
 	
 	// Insert the All category at the beginning if there are multiple categories.
 	if( categories.length > 1 )
@@ -711,6 +729,14 @@ function CmpResultsData( x, y )
 	return x[5] - y[5];
 }
 
+function CmpCategoryResultsData( x, y )
+{
+	var c = x[6] - y[6];
+	if( c )
+		return c;
+	return CmpResultsData( x, y );
+}
+
 function SetCategoryResults()
 {
 	resultsDiv.innerHTML = '';
@@ -739,7 +765,7 @@ function SetCategoryResults()
 		for( var i = 0; i < showLaps.options.length; ++i )
 		{
 			var freqCur = parseInt(showLaps.options[i].value);
-			if( Math.floor(maxLaps / freqCur) <= 12 || i == showLaps.options.length - 1 )
+			if( ~~(maxLaps / freqCur) <= 12 || i == showLaps.options.length - 1 )
 			{
 				showLaps.selectedIndex = i;
 				showLapsFrequency = freqCur;
@@ -1198,6 +1224,10 @@ function RefreshRaceChart()
 	
 	if( width < 80 || height < 80 )
 		return;
+		
+	var iCategory = {};
+	for( var i = 0; i < categories.length; ++i )
+		iCategory[categories[i]] = i;
 
 	// Show results for this category.
 	var dataMax = 0;
@@ -1213,8 +1243,12 @@ function RefreshRaceChart()
 			{
 				resultsData.push( [	lapTimes.length,
 									lapTimes.length ? lapTimes.back() : 99999,
-									num, d['lapTimes'].slice(0),	// Make sure to make a full copy as we modify these values.
-									d['status'], d['lastTime']] );
+									num,
+									d['lapTimes'].slice(0),	// Make sure to make a full copy as we modify these values.
+									d['status'],
+									d['lastTime'],
+									iCategory[d['raceCat']]
+								] );
 				if( lapTimes.back() > dataMax )
 					dataMax = lapTimes.back();
 				if( lapTimes.length > lapsMax )
@@ -1227,10 +1261,12 @@ function RefreshRaceChart()
 		return;
 	
 	// Sort by greatest distance and shortest time.
-	resultsData.sort( CmpResultsData );
+	resultsData.sort( CmpCategoryResultsData );
 	
 	var iNum = 2;
 	var iLapTimes = 3;
+	var iStatus = 4;
+	var iCategory = 6;
 
 	// Check if all the data have the same offset.
 	var startOffset = resultsData[0][iLapTimes][0];
@@ -1259,7 +1295,7 @@ function RefreshRaceChart()
 	for( var i = 0; i < colors.length; ++i )
 		lighterColors.push( lighterColor(colors[i]) );
 
-	var barHeight = parseInt(height / (resultsData.length + 3));
+	var barHeight = parseInt(height / (resultsData.length + 3 + (categoryCur == 'All' ? categories.length-1 : 0)));
 	if( barHeight < 4 || dataMax == 0 )
 		return;
 	var barHeight = Math.min( barHeight, 18 );
@@ -1276,6 +1312,9 @@ function RefreshRaceChart()
 		var num = resultsData[i][iNum];
 		var name = getRiderNameNum(num) + '0';
 		var w = dc.measureText(name).width;
+		if( w > textWidthLeft )
+			textWidthLeft = w;
+		var w = dc.measureText(categories[resultsData[i][iCategory]] + '0');
 		if( w > textWidthLeft )
 			textWidthLeft = w;
 	}
@@ -1331,7 +1370,6 @@ function RefreshRaceChart()
 	textHeight = normalTextHeight;
 	textWidth = dc.measureText('0000').width;
 
-	dc.strokeStyle = "#0F0F0F";
 	dc.lineCap = 'butt';
 	dc.lineJoin = 'miter';
 
@@ -1339,17 +1377,41 @@ function RefreshRaceChart()
 	var yLast = 2 * barHeight;
 	var yHighlight = null;
 	segmentsCur = [];
+	var iCategoryLast = -1;
 	for( var i = 0; i < resultsData.length; ++i )
 	{
+		// Leave a space between categories.
+		if( i == 0 || resultsData[i][iCategory] != iCategoryLast )
+		{
+			iCategoryLast = resultsData[i][iCategory];
+			if( i == 0 )
+			{
+				dc.fillStyle = '#000000';
+				dc.fillText( categories[iCategoryLast], legendSep, yLast - barHeight );
+				DrawLine( dc, 0, yLast, width - labelsWidthRight + 1, yLast );
+			}
+			else
+			{
+				var negOffset = -4;
+				dc.fillStyle = '#FFFFFF';
+				dc.fillRect( negOffset, yLast, width - labelsWidthRight + 1 - negOffset, barHeight + 1 );
+				dc.strokeRect( negOffset, yLast, width - labelsWidthRight + 1 - negOffset, barHeight );
+				dc.fillStyle = '#000000';
+				dc.fillText( categories[iCategoryLast], legendSep, yLast );
+				yLast += barHeight;
+			}
+		}
+
 		yCur = yLast + barHeight;
 		xLast = labelsWidthLeft;
 		xCur = xLast;
 		var num = resultsData[i][iNum];
 		var lapTimes = resultsData[i][iLapTimes];
+		dc.strokeStyle = "#0F0F0F";
 		for( var j = 0; j < lapTimes.length; ++j )
 		{
 			var t = lapTimes[j];
-			xCur = Math.floor(labelsWidthLeft + t * xFactor);
+			xCur = ~~(labelsWidthLeft + t * xFactor);
 			if( j == 0 )
 			{
 				dc.fillStyle = '#FFFFFF';
@@ -1379,6 +1441,13 @@ function RefreshRaceChart()
 			lab += ' ' + resultsData[i][iNum];
 		else
 			lab = resultsData[i][iNum] + '';
+		if( resultsData[i][iStatus] != 'Finisher' )
+		{
+			dc.fillStyle = '#CDCDCD';
+			dc.fillRect( 0, yLast, labelsWidthLeft-1, yCur - yLast + 1 );
+			dc.fillRect( width - labelsWidthRight, yLast, labelsWidthRight, yCur - yLast + 1 );
+		}
+		dc.fillStyle = '#000000';
 		dc.fillText( lab, labelsWidthLeft - dc.measureText(lab).width - legendSep, yLast );
 		if( !minimizeLabels )
 		{
@@ -1514,7 +1583,7 @@ function rnd_normal()
 function normal_variate( mean, stdev )
 { return rnd_normal()*stdev + mean; }
 function rand_int( iMax )
-{ if( iMax == null ) iMax = 100000000; return Math.floor(Math.random() * iMax); }
+{ if( iMax == null ) iMax = 100000000; return ~~(Math.random() * iMax); }
 function rand_str()
 {
 	var iMax = rand_int(7) + 1;
@@ -1700,7 +1769,7 @@ function onLoad()
 <body onload="onLoad()">
 <p>
 <table cellspacing="8"><tr>
-<td><img height="96" width="67" id="idImgHeader" alt="CrossMgr Logo" /></td>
+<td><img id="idImgHeader" alt="CrossMgr Logo" /></td>
 <td valign="top"><span id="idRaceName">Cyclo-Cross Race Results</span><br/><span id="idOrganizer">by CrossMgr</span>
 &nbsp;&nbsp;&nbsp;&nbsp;
 <span class="noprint">
