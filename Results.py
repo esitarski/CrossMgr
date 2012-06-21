@@ -91,7 +91,7 @@ class Results( wx.Panel ):
 		self.hbs.Add( self.showRaceTimesRadio, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.showLapSpeedsRadio, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.showRaceSpeedsRadio, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
-		self.hbs.Add( wx.StaticText(self, wx.ID_ANY, ' '), proportion=2 )
+		self.hbs.AddStretchSpacer()
 		self.hbs.Add( self.search, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.zoomInButton, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.zoomOutButton, flag=wx.TOP | wx.BOTTOM | wx.RIGHT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
@@ -446,6 +446,9 @@ class Results( wx.Panel ):
 			catName = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
 			self.hbs.RecalcSizes()
 			self.hbs.Layout()
+			for si in self.hbs.GetChildren():
+				if si.IsWindow():
+					si.GetWindow().Refresh()
 			self.category = race.categories.get( catName, None )
 			sortLap = getattr( race, 'sortLap', None )
 		

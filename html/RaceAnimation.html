@@ -235,7 +235,7 @@ function getXYfromPosition( lane, position )
 		return [3*r + rd*Math.sin(a), r + rd*Math.cos(a)];
 	}
 
-	riderLength -= curveLength
+	riderLength -= curveLength;
 	if( riderLength <= 2*r )
 		// rider is on back straight
 		return [3*r - riderLength, r/2 - laneLength];
@@ -248,7 +248,7 @@ function getXYfromPosition( lane, position )
 		rd = r/2 + laneLength;
 		return [r + rd*Math.sin(a), r + rd*Math.cos(a)];
 	}	
-	riderLength -= curveLength
+	riderLength -= curveLength;
 	// rider is on finishing straight
 	return [r + riderLength, r + r/2 + laneLength];
 }
@@ -311,10 +311,10 @@ function FormatTime( t )
 		tStr = '-';
 		t = -t;
 	}
-	var secs = (t | 0);
-	var h = ( (secs / (60*60)) | 0 );
-	var m = ((secs / 60) | 0) % 60;
-	var s = ( (secs % 60) | 0);
+	var secs = ~~t;
+	var h = ~~(secs / (60*60));
+	var m = ~~((secs / 60) % 60);
+	var s = ~~(secs % 60);
 	if( h > 0 )
 		tStr += h + (m < 10 ? ':0' : ':') + m + (s < 10 ? ':0' : ':') + s;
 	else
@@ -335,10 +335,10 @@ function FormatTimeGap( t )
 		tStr = '-';
 		t = -t;
 	}
-	var secs = (t | 0);
-	var h = ( (secs / (60*60)) | 0 );
-	var m = ((secs / 60) | 0) % 60;
-	var s = ( (secs % 60) | 0);
+	var secs = ~~t;
+	var h = ~~(secs / (60*60));
+	var m = ~~((secs / 60) % 60);
+	var s = ~~(secs % 60);
 	if( h > 0 )
 		tStr += h + (m < 10 ? 'h0' : 'h') + m + (s < 10 ? "'0" : "'") + s;
 	else
@@ -1407,6 +1407,13 @@ function RefreshRaceChart()
 		xCur = xLast;
 		var num = resultsData[i][iNum];
 		var lapTimes = resultsData[i][iLapTimes];
+		
+		if( resultsData[i][iStatus] != 'Finisher' )
+		{
+			dc.fillStyle = '#CDCDCD';
+			dc.fillRect( 0, yLast, width, yCur - yLast + 1 );
+		}
+		
 		dc.strokeStyle = "#0F0F0F";
 		for( var j = 0; j < lapTimes.length; ++j )
 		{
@@ -1414,7 +1421,7 @@ function RefreshRaceChart()
 			xCur = ~~(labelsWidthLeft + t * xFactor);
 			if( j == 0 )
 			{
-				dc.fillStyle = '#FFFFFF';
+				dc.fillStyle = resultsData[i][iStatus] == 'Finisher' ? '#FFFFFF' : '#CDCDCD';
 				dc.fillRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
 				dc.strokeRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
 			}
@@ -1430,8 +1437,8 @@ function RefreshRaceChart()
 		
 		// Draw the last empty bar.
 		xCur = parseInt(labelsWidthLeft + dataMax * xFactor);
-		dc.fillStyle = '#FFFFFF';
-		dc.fillRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
+		dc.fillStyle = resultsData[i][iStatus] == 'Finisher' ? '#FFFFFF' : '#CDCDCD';
+		dc.fillRect( xLast, yLast, width - xLast, yCur - yLast + 1 );
 		dc.strokeRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
 		
 		// Draw the label on both ends.
@@ -1441,12 +1448,6 @@ function RefreshRaceChart()
 			lab += ' ' + resultsData[i][iNum];
 		else
 			lab = resultsData[i][iNum] + '';
-		if( resultsData[i][iStatus] != 'Finisher' )
-		{
-			dc.fillStyle = '#CDCDCD';
-			dc.fillRect( 0, yLast, labelsWidthLeft-1, yCur - yLast + 1 );
-			dc.fillRect( width - labelsWidthRight, yLast, labelsWidthRight, yCur - yLast + 1 );
-		}
 		dc.fillStyle = '#000000';
 		dc.fillText( lab, labelsWidthLeft - dc.measureText(lab).width - legendSep, yLast );
 		if( !minimizeLabels )
