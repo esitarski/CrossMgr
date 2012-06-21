@@ -1153,12 +1153,15 @@ Continue?''' % fName, 'Simulate a Race' ):
 			race.minutes = self.raceMinutes
 			race.raceNum = 1
 			#race.isTimeTrial = True
-			race.setCategories( [	(True, 'Junior', '100-199', '00:00', None, None, None),
-									(True, 'Senior', '200-299', '00:15', None, None, None)] )
+			#'active', 'name', 'catStr', 'startOffset', 'numLaps', 'distance', 'distanceType'
+			race.setCategories( [	(True, 'Junior', '100-199', '00:00', None, 0.5, None),
+									(True, 'Senior', '200-299', '00:15', None, 0.5, None)] )
 
 		self.writeRace()
 
 		# Start the simulation.
+		self.showPageName( 'History' )
+		self.refresh()
 
 		self.nextNum = None
 		with Model.LockRace() as race:
