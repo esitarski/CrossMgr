@@ -352,6 +352,22 @@ function FormatTimeGap( t )
 	return tStr;
 }
 
+function getShortName( num )
+{
+	var d = data[num + ''];
+	var name = '';
+	if( d['LastName'] )
+	{
+		name = d['LastName'];
+		if( d['FirstName'] )
+			name += ', ' + d['FirstName'].substring(0, 1) + '.'
+	}
+	else if( d['FirstName'] )
+		name = d['FirstName'];
+		
+	return name;
+}
+
 function Refresh()
 {
 	if( !canvas || !isCanvasSupported() )
@@ -511,11 +527,12 @@ function Refresh()
 	}
 
 	// Draw the leader board.
+	var leaderWidthMax = 0;
+	var xLeft = ~~(r * 0.8);
 	if( leaders )
 	{
-		var x = r;
+		var x = xLeft;
 		var y = r / 2 + laneWidth * 1.5;
-		var tWidth = dc.measureText('Leaders:').width;
 		dc.fillText( 'Leaders:', x, y );
 		y += tHeight * 1.2;
 		var thickLine = tHeight / 5;
@@ -534,15 +551,18 @@ function Refresh()
 			DrawCircle( dc, x + tHeight / 2, y + tHeight / 2, riderRadius );
 			
 			dc.fillStyle = 'black';
-			dc.fillText( num, x + tHeight * 1.2, y );
+			var leadStr = num + ' ' + getShortName(num);
+			var tWidth = dc.measureText(leadStr).width;
+			if( tWidth > leaderWidthMax )
+				leaderWidthMax = tWidth;
+			dc.fillText( leadStr, x + tHeight * 1.2, y );
 			y += tHeight * 1.2;
 		}
 	}
 	if( numsToWatch )
 	{
 		var colCount = 0;
-		var tWidth = dc.measureText('Leaders:').width;
-		var x = r + tWidth * 1.1;
+		var x = xLeft + tHeight * 1.2 + leaderWidthMax + dc.measureText(' ').width;
 		var yTop = r / 2 + laneWidth * 1.5 + tHeight * 1.2;
 		var y = yTop;
 		var rp = [];
@@ -555,9 +575,10 @@ function Refresh()
 		rp.sort(function(x, y) { return x[0] - y[0]; });
 		
 		dc.fillStyle = 'black';
-		for( var i = 0; i < rp.length; ++i )
+		for( var i = 0; i < rp.length && i < 3; ++i )
 		{
-			dc.fillText( rp[i][1] + '(' + rp[i][0] + ')', x, y );
+			var num = rp[i][1];
+			dc.fillText( '(' + rp[i][0] + ') ' + num + ' ' + getShortName(num), x, y );
 			y += tHeight * 1.2;
 			if( y >= r * 1.5 - tHeight * 1.5 )
 			{
