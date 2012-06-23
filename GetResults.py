@@ -54,6 +54,9 @@ class RiderResult( object ):
 		self.raceTimes	= raceTimes
 		self.interp		= interp
 		
+	def __repr__( self ):
+		return str(self.__dict__)
+		
 def GetResults( catName = 'All', getExternalData = False ):
 	
 	riderResults = []

@@ -211,7 +211,7 @@ class RaceAnimation( wx.Panel ):
 			raceTime = race.lastRaceTime() if race.isRunning() else self.animation.t
 			raceIsRunning = race.isRunning()
 			
-		animationData = GetAnimationData( catName )
+		animationData = GetAnimationData( catName, True )
 		self.animation.SetData( animationData, raceTime )
 		if raceIsRunning:
 			if not self.animation.IsAnimating():

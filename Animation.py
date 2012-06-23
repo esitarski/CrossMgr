@@ -205,6 +205,21 @@ class Animation(wx.PyControl):
 		if tCur is not None:
 			self.t = tCur;
 		self.Refresh()
+		
+	def getShortName( self, num ):
+		try:
+			info = self.data[num]
+		except KeyError:
+			return ''
+			
+		lastName = info.get('LastName','')
+		firstName = info.get('FirstName','')
+		if lastName:
+			if firstName:
+				return '%s, %s.' % (lastName, firstName[:1])
+			else:
+				return lastName
+		return firstName
 	
 	def OnPaint(self, event):
 		dc = wx.BufferedPaintDC(self)
@@ -409,11 +424,14 @@ class Animation(wx.PyControl):
 			dc.DrawText( tStr, 2*r + r/2 - tWidth, r + r/2 - laneWidth - tHeight * 1.5 )
 
 		# Draw the leader board.
+		xLeft = int(r * 0.85)
+		leaderWidth = 0
 		if leaders:
-			x = r
+			x = xLeft
 			y = r / 2 + laneWidth * 1.5
 			tWidth, tHeight = dc.GetTextExtent( 'Leaders:' )
 			dc.DrawText( 'Leaders:', x, y )
+			leaderWidth = dc.GetTextExtent('Leaders:')[0]
 			y += tHeight
 			thickLine = tHeight / 5
 			riderRadius = tHeight / 3.5
@@ -426,7 +444,9 @@ class Animation(wx.PyControl):
 				dc.SetBrush( wx.Brush(self.colours[num % len(self.colours)], wx.SOLID) )
 				DrawShape( dc, num, x + tHeight / 2, y + tHeight / 2, riderRadius )
 				
-				s = '%d' % num
+				s = '%d %s' % (num, self.getShortName(num))
+				tWidth, tHeight = dc.GetTextExtent( s )
+				leaderWidth = max(tWidth, leaderWidth)
 				dc.DrawText( s, x + tHeight * 1.2, y)
 				y += tHeight
 
@@ -442,11 +462,14 @@ class Animation(wx.PyControl):
 			
 			colCount = 0
 			tWidth, tHeight = dc.GetTextExtent( 'Leaders:' )
-			x = r + tWidth * 1.1
+			spaceWidth, spaceHeight = dc.GetTextExtent(' ')
+			x = xLeft + leaderWidth + spaceWidth
 			yTop = r / 2 + laneWidth * 1.5+ tHeight
 			y = yTop
 			for i, (pos, num) in enumerate(rp):
-				s = '%d (%s)' % (num, Utils.ordinal(pos))
+				if i >= 4:
+					break
+				s = '(%s) %d %s' % (Utils.ordinal(pos), num, self.getShortName(num) )
 				dc.DrawText( s, x + tHeight * 1.2, y)
 				y += tHeight
 				if y > r * 1.5 - tHeight * 1.5:
@@ -486,8 +509,8 @@ if __name__ == '__main__':
 
 	app = wx.PySimpleApp()
 	mainWin = wx.Frame(None,title="Animation", size=(600,400))
-	Animation = Animation(mainWin)
-	Animation.SetData( data )
-	Animation.Animate( 2*60, 60*60 )
+	animation = Animation(mainWin)
+	animation.SetData( data )
+	animation.Animate( 2*60, 60*60 )
 	mainWin.Show()
 	app.MainLoop()
