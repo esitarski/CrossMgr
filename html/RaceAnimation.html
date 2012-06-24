@@ -35,11 +35,12 @@ table.results
 {
 	font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
 	border-collapse:collapse;
+	//border:1px solid #98bf21;
 }
 table.results td, table.results th 
 {
 	font-size:1em;
-	border:1px solid #98bf21;
+	border:0px solid #98bf21;
 	padding:3px 7px 2px 7px;
 	text-align: right;
 }
@@ -505,9 +506,11 @@ function Refresh()
 					dc.font = fontStrHightlight;
 				}
 			}
+			if( isNaN(x) || isNaN(y) )
+				continue;
 			DrawCircle( dc, x, y, riderRadius );
 			dc.fillStyle = 'black';
-			dc.fillText(num, x+numSize, y-numSize );
+			dc.fillText(num+'', x+numSize, y-numSize );
 			if( j != undefined )
 			{
 				dc.strokeStyle = 'black';
@@ -631,14 +634,25 @@ function SetData( aData, tCur )
 		t = tCur;
 	
 	// Get all the unique categories from the data.
+	var hasLapSpeeds = false;
+	var hasMultipleLaps = false;
+	var speedUnit = '';
 	var catStart = {};
 	for( num in data )
 	{
-		var cName = data[num]['raceCat'];
+		var info = data[num];
+		if( info['lapTimes'] && info['lapTimes'].length > 2 )
+			hasMultipleLaps = true;
+		if( info['lapSpeeds'] )
+			hasLapSpeeds = true;
+		if( !speedUnit && info['speed'] )
+			speedUnit = info['speed'].split(' ')[1];
+		
+		var cName = info['raceCat'];
 		if( cName != 'All' )
 		{
 			var tStart = 0;
-			var lapTimes = data[num]['lapTimes'];
+			var lapTimes = info['lapTimes'];
 			if( lapTimes && lapTimes.length > 0 )
 				tStart = lapTimes[0];
 			catStart[cName] = [cName, tStart];
@@ -666,7 +680,7 @@ function SetData( aData, tCur )
 	if( categories.length > 1 )
 		categories.splice( 0, 0, 'All' );
 	
-	categorySpan = document.getElementById('idCategories')
+	categorySpan = document.getElementById('idCategories');
 	var catHTML = '';
 	if( categories.length > 1 )
 	{
@@ -682,6 +696,36 @@ function SetData( aData, tCur )
 	else if( categories.length == 1 )
 		catHTML = categories[0].escapeHTML();
 	categorySpan.innerHTML = catHTML;
+	
+	// Adjust the display options based on the data.
+	var options = [
+	{ i:0, name:'Lap Times',	value:'showLapTimes',		requiresMultipleLaps:false, requiresLapSpeeds:false },
+	{ i:1, name:'Race Times',	value:'showRaceTimes',		requiresMultipleLaps:true, requiresLapSpeeds:false },
+	{ i:2, name:'Time Gaps',	value:'showLapGaps',		requiresMultipleLaps:true, requiresLapSpeeds:false },
+	{ i:3, name:'Gap Percents',	value:'showGapPercent',		requiresMultipleLaps:false, requiresLapSpeeds:false },
+	{ i:4, name:'Lap ' + speedUnit,	value:'showLapSpeed',	requiresMultipleLaps:true, requiresLapSpeeds:true },
+	{ i:5, name:'Est. Distance Gap',value:'showDistanceGap',requiresMultipleLaps:true, requiresLapSpeeds:true },
+	];
+	var showOptionsSpan = document.getElementById( 'idShowOptions' );
+	var showHTML = '';
+	var firstOption = true;
+	for( var i = 0; i < options.length; ++i )
+	{
+		var o = options[i];
+		if( o.requiresMultipleLaps && !hasMultipleLaps )
+			continue;
+		if( o.requiresLapSpeeds && !hasLapSpeeds )
+			continue;
+		showHTML += '<input type="radio" name="showOptions" onClick="SetLapDataOption('+o.i+');"';
+		if( firstOption )
+		{
+			showHTML += ' checked="true"';
+			firstOption = false;
+		}
+		showHTML += '/>' + o.name.escapeHTML() + '&nbsp;&nbsp;&nbsp;';
+	}
+	showOptionsSpan.innerHTML = showHTML;
+	
 	Refresh();
 }
 
@@ -797,7 +841,6 @@ function SetCategoryResults()
 	
 	var table = document.createElement('TABLE');
 	table.className = 'results';
-	var hasSpeed = false;
 	var speedUnit = '';
 	var distanceUnit = '';
 	for( var c = 0; c < categories.length; ++c )
@@ -814,9 +857,8 @@ function SetCategoryResults()
 		for( num in data )
 		{
 			var d = data[num];
-			if( !hasSpeed && d['speed'] )
+			if( !speedUnit && d['speed'] )
 			{
-				hasSpeed = true;
 				speedUnit = d['speed'].split(' ')[1];
 				distanceUnit = (speedUnit.substring(0, 1) == 'k' ? 'km' : 'miles');
 			}
@@ -885,7 +927,7 @@ function SetCategoryResults()
 				
 		createTextChild( td = createChild(tr, 'TH'), 'Time' );
 		createTextChild( td = createChild(tr, 'TH'), 'Gap' );
-		if( hasSpeed )
+		if( speedUnit )
 			createTextChild( td = createChild(tr, 'TH'), speedUnit );
 
 		if( leaderLapTimes.length > 2 )
@@ -981,7 +1023,7 @@ function SetCategoryResults()
 				
 			createTextChild( td = createChild(tr, 'TD'), gap );
 			
-			if( hasSpeed )
+			if( speedUnit )
 			{
 				var speed = d['speed'];
 				if( speed )
@@ -992,8 +1034,13 @@ function SetCategoryResults()
 			if( numsToWatch[num] ) td.className = 'highlight';
 			if( leaderLapTimes.length > 2 )
 			{
-				for( var i = 1; i < lapTimes.length; ++i )
+				for( var i = 1; i < leaderLapTimes.length; ++i )
 				{
+					if( i >= lapTimes.length )
+					{
+						createTextChild( td = createChild(tr, 'TD'), ' ' );
+						continue;
+					}
 					if( !(i % showLapsFrequency == 0 || i == 1 || i == lapTimes.length-1)  )
 						continue
 
@@ -1027,6 +1074,37 @@ function SetCategoryResults()
 								v = -v;
 							}
 							createTextChild( td = createChild(tr, 'TD'), sign + v.toFixed(2) + '%' );
+						}
+						break;
+					case 4:	// Lap Speeds.
+						createTextChild( td = createChild(tr, 'TD'), d.lapSpeeds[i-1].toFixed(2) );
+						break;
+					case 5: // Est. Distance
+						if( r == 0 )
+							createTextChild( td = createChild(tr, 'TD'), '-' );
+						else
+						{
+							var dt = lapTimes[i] - resultsData[0][3][i];
+							var s = d.lapSpeeds && d.lapSpeeds.length >= i ? d.lapSpeeds[i-1] : 0.0;
+							var distance = s * (dt / (60.0*60.0));
+							var v = '';
+							if( distanceUnit == 'miles' )
+							{
+								if( Math.abs(distance) > 0.25 )
+									v = distance.toFixed(2) + ' miles';
+								else if( Math.abs(distance) > 0.1 )
+									v = (distance * 1760).toFixed(1) + ' yds';
+								else
+									v = (distance * 5280).toFixed(1) + ' ft';
+							}
+							else if( distanceUnit == 'km' )
+							{
+								if( Math.abs(distance) > 1.0 )
+									v = distance.toFixed(2) + ' km';
+								else
+									v = (distance*1000).toFixed(2) + ' m';
+							}
+							createTextChild( td = createChild(tr, 'TD'), v );
 						}
 						break;
 					}
@@ -1834,10 +1912,12 @@ Highlight Numbers:
 (for example: 124,131,203)
 </p>
 <p>Show:
-<input type="radio" name="showOptions" value="showLapTimes" checked onClick="SetLapDataOption(0)"/>Lap Times &nbsp;&nbsp;
-<input type="radio" name="showOptions" value="showRaceTime" onClick="SetLapDataOption(1)"/>Race Times &nbsp;&nbsp;
-<input type="radio" name="showOptions" value="showLapGaps" onClick="SetLapDataOption(2)"/>Time Gaps &nbsp;&nbsp;
-<input type="radio" name="showOptions" value="showGapPercent" onClick="SetLapDataOption(3)"/>Percent Gaps &nbsp;&nbsp;
+<span id="idShowOptions">
+	<input type="radio" name="showOptions" value="showLapTimes" checked onClick="SetLapDataOption(0)"/>Lap Times &nbsp;&nbsp;
+	<input type="radio" name="showOptions" value="showRaceTime" onClick="SetLapDataOption(1)"/>Race Times &nbsp;&nbsp;
+	<input type="radio" name="showOptions" value="showLapGaps" onClick="SetLapDataOption(2)"/>Time Gaps &nbsp;&nbsp;
+	<input type="radio" name="showOptions" value="showGapPercent" onClick="SetLapDataOption(3)"/>Percent Gaps &nbsp;&nbsp;
+</span>
 <select class="noprint" id="idShowLaps" onChange="SetShowLaps()">
 	<option value="1" selected="selected">Show Every Lap</option>
 	<option value="2">Show Every 2 Laps</option>
