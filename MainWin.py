@@ -56,6 +56,7 @@ import SimulationLapTimes
 import Version
 from ReadSignOnSheet	import GetExcelLink
 from SetGraphic			import SetGraphicDialog
+from GetResults			import GetCategoryDetails
 
 import wx.lib.agw.advancedsplash as AS
 
@@ -771,6 +772,9 @@ class MainWin( wx.Frame ):
 		data = 'data = %s' % json.dumps(GetAnimationData(getExternalData = True))
 		html = html.replace( 'data = null', data )
 		
+		catDetails = 'catDetails = %s' % json.dumps(GetCategoryDetails())
+		html = html.replace( 'catDetails = null', catDetails )
+
 		graphicBase64 = self.getGraphicBase64()
 		if graphicBase64:
 			try:

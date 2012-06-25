@@ -210,3 +210,28 @@ def GetResults( catName = 'All', getExternalData = False ):
 	# Return the final results.
 	return riderResults
 		
+def GetCategoryDetails():
+	results = GetResults()
+	catDetails = {}
+	if not results:
+		return catDetails
+		
+	with Model.LockRace() as race:
+		if not race:
+			return catDetails
+		for rr in results:
+			if not rr.lapTimes:
+				continue
+			cat = race.getCategory( rr.num )
+			info = catDetails.get( cat.name, {} )
+			if info.get('laps', 0) < len(rr.lapTimes) - 1:
+				info['laps'] = len(rr.lapTimes) - 1
+				if cat.distanceType == Model.Category.DistanceByLap:
+					info['lapDistance'] = cat.distance
+					info['raceDistance'] = cat.distance * info['laps']
+				else:
+					info['raceDistance'] = cat.distance
+				info['distanceUnit'] = race.distanceUnitStr
+				catDetails[cat.name] = info
+	
+	return catDetails
