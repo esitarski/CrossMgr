@@ -134,6 +134,7 @@ var lapDataOption = 0;		// if 0, show race times, if 1, show lap times, if 2, sh
 var loopContinuously = true;// If true, the simulation will repeat from the beginning.
 var fontMult = 1.0;			// font adjust factor.
 var showTimeDecimals = false;
+var displayUnits = 'km';
 
 // Rider colours given out as remander of the number.
 var colours = [
@@ -638,6 +639,20 @@ function NextFrame()
 	}
 }
 
+function GetDistanceUnit( aData )
+{
+	for( num in aData )
+	{
+		var info = aData[num];
+		if( info['speed'] )
+		{
+			var speedUnit = info['speed'].split(' ')[1];
+			return (speedUnit.substring(0, 1) == 'k' ? 'km' : 'miles');
+		}
+	}
+	return 'km';
+}
+
 function SetData( aData, tCur )
 {
 	// Data is rider information indexed by number.  Info includes lap times and lastTime times.
@@ -651,7 +666,6 @@ function SetData( aData, tCur )
 	// Get all the unique categories from the data.
 	var hasLapSpeeds = false;
 	var hasMultipleLaps = false;
-	var speedUnit = '';
 	var catStart = {};
 	for( num in data )
 	{
@@ -660,8 +674,6 @@ function SetData( aData, tCur )
 			hasMultipleLaps = true;
 		if( info['lapSpeeds'] )
 			hasLapSpeeds = true;
-		if( !speedUnit && info['speed'] )
-			speedUnit = info['speed'].split(' ')[1];
 		
 		var cName = info['raceCat'];
 		if( cName != 'All' )
@@ -718,7 +730,7 @@ function SetData( aData, tCur )
 	{ i:1, name:'Race Times',	value:'showRaceTimes',		requiresMultipleLaps:true, requiresLapSpeeds:false },
 	{ i:2, name:'Time Gaps',	value:'showLapGaps',		requiresMultipleLaps:true, requiresLapSpeeds:false },
 	{ i:3, name:'Gap Percents',	value:'showGapPercent',		requiresMultipleLaps:false, requiresLapSpeeds:false },
-	{ i:4, name:'Lap ' + speedUnit,	value:'showLapSpeed',	requiresMultipleLaps:true, requiresLapSpeeds:true },
+	{ i:4, name:'Lap Speed',	value:'showLapSpeed',		requiresMultipleLaps:true, requiresLapSpeeds:true },
 	{ i:5, name:'Est. Distance Gap',value:'showDistanceGap',requiresMultipleLaps:true, requiresLapSpeeds:true },
 	];
 	var showOptionsSpan = document.getElementById( 'idShowOptions' );
@@ -950,7 +962,7 @@ function SetCategoryResults()
 		createTextChild( td = createChild(tr, 'TH'), 'Gap' );	++numHeaders;
 		if( speedUnit )
 		{
-			createTextChild( td = createChild(tr, 'TH'), speedUnit );
+			createTextChild( td = createChild(tr, 'TH'), displayUnits == 'km' ? 'km/h' : 'mph' );
 			++numHeaders;
 		}
 
@@ -1016,16 +1028,15 @@ function SetCategoryResults()
 				{
 					var cd = catDetails[cat];
 					if( cd.raceDistance )
-						catStr += cd.raceDistance.toFixed(2) + ' ' + cd.distanceUnit + ', ';
+						catStr += FormatDistance(cd.raceDistance, cd.distanceUnit, true) + ', ';
 					if( cd.lapDistance )
-						catStr += cd.laps + " laps of " + cd.lapDistance.toFixed(2) + ' ' + cd.distanceUnit + ', ';
+						catStr += cd.laps + " laps of " + FormatDistance(cd.lapDistance, cd.distanceUnit, true) + ', ';
 				}
-				catStr += "winner: " + tFinishStr + ' at ' + d['speed'];
+				catStr += "winner: " + tFinishStr + ' at ' + FormatSpeed(parseFloat(d['speed'].split(' ')[0]), cd.distanceUnit, true);
 				catTitleTD.innerHTML = cat +
 						'<br/><span class="smallfont">' + catStr + '</span>';
 			}
 			
-
 			var finishTime = (isFinisher ? FormatTime(tFinish) : '');
 			createTextChild( td = createChild(tr, 'TD'), finishTime );
 			if( numsToWatch[num] ) td.className = 'highlight';
@@ -1055,16 +1066,18 @@ function SetCategoryResults()
 			}
 				
 			createTextChild( td = createChild(tr, 'TD'), gap );
+			if( numsToWatch[num] ) td.className = 'highlight';
 			
 			if( speedUnit )
 			{
 				var speed = d['speed'];
 				if( speed )
-					speed = speed.split(' ')[0]
-				createTextChild( td = createChild(tr, 'TD'), speed );
+					createTextChild( td = createChild(tr, 'TD'), FormatSpeed(parseFloat(speed.split(' ')[0]), distanceUnit, false) );
+				else
+					createTextChild( td = createChild(tr, 'TD'), '' );
+				if( numsToWatch[num] ) td.className = 'highlight';
 			}
 			
-			if( numsToWatch[num] ) td.className = 'highlight';
 			if( leaderLapTimes.length > 2 )
 			{
 				for( var i = 1; i < leaderLapTimes.length; ++i )
@@ -1110,7 +1123,7 @@ function SetCategoryResults()
 						}
 						break;
 					case 4:	// Lap Speeds.
-						createTextChild( td = createChild(tr, 'TD'), d.lapSpeeds[i-1].toFixed(2) );
+						createTextChild( td = createChild(tr, 'TD'), FormatSpeed(d.lapSpeeds[i-1], distanceUnit, false) );
 						break;
 					case 5: // Est. Distance Gap
 						if( r == 0 )
@@ -1123,22 +1136,7 @@ function SetCategoryResults()
 							if( s > 0.0 )
 							{
 								var distance = s * (dt / (60.0*60.0));
-								if( distanceUnit == 'miles' )
-								{
-									if( Math.abs(distance) > 0.25 )
-										v = distance.toFixed(2) + ' miles';
-									else if( Math.abs(distance) > 0.1 )
-										v = (distance * 1760).toFixed(1) + ' yds';
-									else
-										v = (distance * 5280).toFixed(1) + ' ft';
-								}
-								else if( distanceUnit == 'km' )
-								{
-									if( Math.abs(distance) > 1.0 )
-										v = distance.toFixed(2) + ' km';
-									else
-										v = (distance*1000).toFixed(2) + ' m';
-								}
+								v = FormatDistanceGap( distance, distanceUnit );
 							}
 							createTextChild( td = createChild(tr, 'TD'), v );
 						}
@@ -1778,7 +1776,63 @@ function SetLapDataOption( opt )
 function SetShowLaps()
 {
 	var showLaps = document.getElementById('idShowLaps');
-	showLapsFrequency = parseInt( showLaps.options[showLaps.selectedIndex].value )
+	showLapsFrequency = parseInt( showLaps.options[showLaps.selectedIndex].value );
+	SetCategoryResults();
+}
+
+function FormatDistance( distance, inUnit, showUnits )
+{
+	if( inUnit != displayUnits )
+		distance *= (displayUnits == 'km' ? 1.609344 : 0.621371192237334);
+	var s = distance.toFixed(2);
+	if( showUnits )
+		s += ' ' + displayUnits;
+	return s;
+}
+
+function FormatSpeed( speed, inUnit, showUnits )
+{
+	if( inUnit.substring(0,1) != displayUnits.substring(0,1) )
+		speed *= (displayUnits == 'km' ? 1.609344 : 0.621371192237334);
+	var s = speed.toFixed(2);
+	if( showUnits )
+		s += ' ' + (displayUnits == 'km' ? 'km/h' : 'mph');
+	return s;
+}
+
+function FormatDistanceGap( distance, inUnit )
+{
+	if( inUnit != displayUnits )
+		distance *= (displayUnits == 'km' ? 1.609344 : 0.621371192237334);
+	var v = '';
+	if( displayUnits == 'km' )
+	{
+		if( Math.abs(distance) > 1.0 )
+			v = distance.toFixed(2) + ' km';
+		else
+			v = (distance*1000).toFixed(2) + ' m';
+	}
+	else
+	{
+		if( Math.abs(distance) > 0.25 )
+			v = distance.toFixed(2) + ' miles';
+		else if( Math.abs(distance) > 0.1 )
+			v = (distance * 1760).toFixed(1) + ' yds';
+		else
+		{
+			if( Math.abs(distance * 5280) < 3 )
+				v = (distance * 5280 * 12).toFixed(0) + ' in';
+			else
+				v = (distance * 5280).toFixed(1) + ' ft';
+		}
+	}
+	return v;
+}
+
+function SetDisplayUnits()
+{
+	var select = document.getElementById('idDisplayUnits');
+	displayUnits = select.options[select.selectedIndex].value;
 	SetCategoryResults();
 }
 
@@ -1881,6 +1935,9 @@ function onLoad()
 	
 	if( !catDetails )
 		catDetails = {};
+		
+	displayUnits = GetDistanceUnit( data );
+	document.getElementById('idDisplayUnits').selectedIndex = (displayUnits == 'km' ? 0 : 1);
 	SetData( data );
 	
 	// Check for parameters.
@@ -1959,13 +2016,16 @@ Highlight Numbers:
 <input type="button" value="Apply"</input>
 (for example: 124,131,203)
 </p>
-<p>Show:
-<span id="idShowOptions">
-	<input type="radio" name="showOptions" value="showLapTimes" checked onClick="SetLapDataOption(0)"/>Lap Times &nbsp;&nbsp;
-	<input type="radio" name="showOptions" value="showRaceTime" onClick="SetLapDataOption(1)"/>Race Times &nbsp;&nbsp;
-	<input type="radio" name="showOptions" value="showLapGaps" onClick="SetLapDataOption(2)"/>Time Gaps &nbsp;&nbsp;
-	<input type="radio" name="showOptions" value="showGapPercent" onClick="SetLapDataOption(3)"/>Percent Gaps &nbsp;&nbsp;
-</span>
+<p>
+<span id="idShowOptions"></span><br/>
+<span class="noprint">&nbsp;&nbsp;&nbsp;&nbsp;Units: </span><select class="noprint" id="idDisplayUnits" onChange="SetDisplayUnits()">
+	<option value="km" selected="selected">km</option>
+	<option value="miles">miles</option>
+</select>
+&nbsp;&nbsp;&nbsp;
+<input class="noprint" type="checkbox" id="idShowTimeDecimals" onClick="ToggleTimeDecimals()">
+	<span class="noprint">Show 100s of Seconds</span></input>
+&nbsp;&nbsp;&nbsp;
 <select class="noprint" id="idShowLaps" onChange="SetShowLaps()">
 	<option value="1" selected="selected">Show Every Lap</option>
 	<option value="2">Show Every 2 Laps</option>
@@ -1975,8 +2035,6 @@ Highlight Numbers:
 	<option value="15">Show Every 15 Laps</option>
 	<option value="20">Show Every 20 Laps</option>
 </select>
-<input class="noprint" type="checkbox" id="idShowTimeDecimals" onClick="ToggleTimeDecimals()">
-	<span class="noprint">Show 100s of Seconds</span></input>
 </p>
 <div id="idResultsDiv"></div>
 <p id="idRaceName" class="noprint">Race Chart</p>
