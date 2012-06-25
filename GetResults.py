@@ -149,8 +149,7 @@ def GetResults( catName = 'All', getExternalData = False ):
 						for i, t in enumerate(rr.lapTimes):
 							tCur += t
 							raceSpeeds.append( ((i+1) * distance) / (tCur / (60.0*60.0)) )
-						speed = (len(rr.lapSpeeds) * distance) / (tCur / (60.0*60.0))
-						rr.speed = '%.2f %s' % (speed, ['km/h', 'mph'][getattr(race, 'distanceUnit', 0)] )
+						rr.speed = '%.2f %s' % (raceSpeeds[-1], ['km/h', 'mph'][getattr(race, 'distanceUnit', 0)] )
 					rr.raceSpeeds = raceSpeeds
 				else:	# Distance is by entire race.
 					riderDistance = distance
