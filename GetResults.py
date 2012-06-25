@@ -224,13 +224,14 @@ def GetCategoryDetails():
 				continue
 			cat = race.getCategory( rr.num )
 			info = catDetails.get( cat.name, {} )
-			if info.get('laps', 0) < len(rr.lapTimes) - 1:
-				info['laps'] = len(rr.lapTimes) - 1
-				if cat.distanceType == Model.Category.DistanceByLap:
-					info['lapDistance'] = cat.distance
-					info['raceDistance'] = cat.distance * info['laps']
-				else:
-					info['raceDistance'] = cat.distance
+			if info.get('laps', 0) < len(rr.lapTimes):
+				info['laps'] = len(rr.lapTimes)
+				if getattr(cat, 'distance', None):
+					if getattr(cat, 'distanceType', Model.Category.DistanceByLap) == Model.Category.DistanceByLap:
+						info['lapDistance'] = cat.distance
+						info['raceDistance'] = cat.distance * info['laps']
+					else:
+						info['raceDistance'] = cat.distance
 				info['distanceUnit'] = race.distanceUnitStr
 				catDetails[cat.name] = info
 	
