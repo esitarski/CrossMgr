@@ -1018,7 +1018,7 @@ function SetCategoryResults()
 					if( cd.raceDistance )
 						catStr += cd.raceDistance.toFixed(2) + ' ' + cd.distanceUnit + ', ';
 					if( cd.lapDistance )
-						catStr += "lap: " + cd.lapDistance.toFixed(2) + ' ' + cd.distanceUnit + ', ';
+						catStr += cd.laps + " laps of " + cd.lapDistance.toFixed(2) + ' ' + cd.distanceUnit + ', ';
 				}
 				catStr += "winner: " + tFinishStr + ' at ' + d['speed'];
 				catTitleTD.innerHTML = cat +
