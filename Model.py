@@ -155,7 +155,8 @@ class Category(object):
 					mask = cp.ljust(len(mask), '.')
 		return mask
 
-	def __init__( self, active = True, name = 'category', catStr = '100-199', startOffset = '00:00:00', numLaps = None, sequence = 0, distance = None, distanceType = None ):
+	def __init__( self, active = True, name = 'category', catStr = '100-199', startOffset = '00:00:00', numLaps = None, sequence = 0,
+					distance = None, distanceType = None, firstLapDistance = None ):
 		self.active = False
 		active = str(active).strip()
 		if active and active[0] in 'TtYy1':
@@ -189,12 +190,62 @@ class Category(object):
 			
 		if self.distanceType not in [Category.DistanceByLap, Category.DistanceByRace]:
 			self.distanceType = Category.DistanceByLap
+			
+		try:
+			self.firstLapDistance = float(firstLapDistance) if firstLapDistance else None
+		except (ValueError, TypeError):
+			self.firstLapDistance = None
+		if self.firstLapDistance is not None and self.firstLapDistance <= 0.0:
+			self.firstLapDistance = None
 		
 	def __setstate( self, d ):
 		self.__dict__.update(d)
 		i = getattr( self, 'intervals', None )
 		if i:
 			i.sort()
+	
+	def getLapDistance( self, lap ):
+		if getattr(self, 'distanceType', None) != Category.DistanceByLap:
+			return None
+		if lap <= 0:
+			return 0
+
+		if lap == 1:
+			firstLapDistance = getattr(self, 'firstLapDistance', None)
+			if firstLapDistance:
+				return firstLapDistance
+		return getattr(self, 'distance', None)
+	
+	def getDistanceAtLap( self, lap ):
+		if getattr(self, 'distanceType', None) != Category.DistanceByLap:
+			return None
+		if lap <= 0:
+			return 0
+		
+		firstLapDistance = getattr(self, 'firstLapDistance', None)
+		if lap <= 1 and firstLapDistance:
+			return firstLapDistance * lap
+		
+		distance = getattr(self, 'distance', None)
+		if not distance:
+			return None
+			
+		if firstLapDistance:
+			return firstLapDistance + distance * (lap-1)
+		else:
+			return distance * lap
+	
+	@property
+	def firstLapRatio( self ):
+		if getattr(self, 'distanceType', None) != Category.DistanceByLap:
+			return 1.0
+		firstLapDistance = getattr(self, 'firstLapDistance', None)
+		if not firstLapDistance:
+			return 1.0
+		distance = getattr(self, 'distance', None)
+		if not distance:
+			return 1.0
+		return firstLapDistance / distance
 	
 	@property
 	def distanceIsByLap( self ):
@@ -231,7 +282,7 @@ class Category(object):
 		return False
 
 	def __cmp__( self, c ):
-		for attr in ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'catStr', 'distance', 'distanceType']:
+		for attr in ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'catStr', 'distance', 'distanceType', 'firstLapDistance']:
 			cCmp = cmp( getattr(self, attr, None), getattr(c, attr, None) )
 			if cCmp != 0:
 				return cCmp 
@@ -1161,8 +1212,8 @@ class Race(object):
 		self.setChanged()
 
 	def setCategories( self, nameStrTuples ):
-		# This list must match the initialization fields in class Category without sequence.
-		fields = ('active', 'name', 'catStr', 'startOffset', 'numLaps', 'distance', 'distanceType')
+		# This list must match the initialization fields in class Category (excluding sequence).
+		fields = ('active', 'name', 'catStr', 'startOffset', 'numLaps', 'distance', 'distanceType', 'firstLapDistance')
 		padding = [None for f in fields]
 		i = 0
 		newCategories = {}

@@ -626,9 +626,10 @@ class RiderDetail( wx.Panel ):
 			data = [ [] for c in xrange(self.grid.GetNumberCols()) ]
 			graphData = []
 			backgroundColour = {}
-			sTotal = 0.0
+			tSum = 0.0
 			for r, e in enumerate(entries):
 				tLap = max( e.t - raceTime, 0.0 )
+				tSum += tLap
 				
 				data[0].append( str(r+1) )
 				data[1].append( Utils.formatTime(tLap, highPrecisionTimes) )
@@ -639,13 +640,11 @@ class RiderDetail( wx.Panel ):
 				ganttInterp.append( e.interp )
 				
 				if distanceByLap:
-					try:
-						s = (distanceByLap / (tLap / (60.0*60.0))) if tLap > 0.0 else 1000.0
-						data[3].append( '%.2f' % s )
-						sTotal += s
-					except ZeroDivisionError:
-						data[3].append( '' )
-					data[4].append( '%.2f' % (sTotal / (r + 1)) )
+					s = 1000.0 if tLap <= 0.0 else (category.getLapDistance(r+1) / (tLap / (60.0*60.0)))
+					data[3].append( '%.2f' % s )
+					
+					s = 1000.0 if tSum <= 0.0 else (category.getDistanceAtLap(r+1) / (tSum / (60.0*60.0)))
+					data[4].append( '%.2f' % s )
 				
 				raceTime = e.t
 				if e.interp:

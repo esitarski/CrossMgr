@@ -140,22 +140,23 @@ def GetResults( catName = 'All', getExternalData = False ):
 			if getattr(riderCategory, 'distance', None):
 				distance = getattr(riderCategory, 'distance')
 				if riderCategory.distanceIsByLap:
-					riderDistance = distance * len(rr.lapTimes)
-					rr.lapSpeeds = [1000.0 if t <= 0.0 else (distance / (t / (60.0*60.0))) for t in rr.lapTimes]
+					riderDistance = riderCategory.getDistanceAtLap(len(rr.lapTimes))
+					rr.lapSpeeds = [1000.0 if t <= 0.0 else (riderCategory.getLapDistance(i+1) / (t / (60.0*60.0))) for i, t in enumerate(rr.lapTimes)]
 					# Ensure that the race speeds are always consistent with the lap times.
 					raceSpeeds = []
 					if rr.lapSpeeds:
 						tCur = 0.0
 						for i, t in enumerate(rr.lapTimes):
 							tCur += t
-							raceSpeeds.append( ((i+1) * distance) / (tCur / (60.0*60.0)) )
+							raceSpeeds.append( 1000.0 if tCur <= 0.0 else (riderCategory.getDistanceAtLap(i+1) / (tCur / (60.0*60.0))) )
 						rr.speed = '%.2f %s' % (raceSpeeds[-1], ['km/h', 'mph'][getattr(race, 'distanceUnit', 0)] )
 					rr.raceSpeeds = raceSpeeds
 				else:	# Distance is by entire race.
 					riderDistance = distance
 					# Only add the rider speed if the rider finished.
 					if lastTime and rider.status == Model.Rider.Finisher:
-						speed = riderDistance / ((lastTime-startOffset) / (60.0*60.0))
+						tCur = lastTime - startOffset
+						speed = 1000.0 if tCur <= 0.0 else riderDistance / (tCur / (60.0*60.0))
 						rr.speed = '%.2f %s' % (speed, ['km/h', 'mph'][getattr(race, 'distanceUnit', 0)] )
 						
 			riderResults.append( rr )
@@ -227,7 +228,9 @@ def GetCategoryDetails():
 				if getattr(cat, 'distance', None):
 					if getattr(cat, 'distanceType', Model.Category.DistanceByLap) == Model.Category.DistanceByLap:
 						info['lapDistance'] = cat.distance
-						info['raceDistance'] = cat.distance * info['laps']
+						if getattr(cat, 'firstLapDistance', None):
+							info['firstLapDistance'] = cat.firstLapDistance
+						info['raceDistance'] = cat.getDistanceAtLap( info['laps'] )
 					else:
 						info['raceDistance'] = cat.distance
 				info['distanceUnit'] = race.distanceUnitStr

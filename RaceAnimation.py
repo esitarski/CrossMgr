@@ -21,7 +21,7 @@ def GetAnimationData( catName = 'All', getExternalData = False ):
 	ignoreFields = set(['pos', 'num', 'gap', 'laps', 'lapTimes'])
 	with Model.LockRace() as race:
 		for rr in results:
-			info = {}
+			info = {'flr': race.getCategory(rr.num).firstLapRatio }
 			for a in dir(rr):
 				if a[0] == '_' or a in ignoreFields:
 					continue

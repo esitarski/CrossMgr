@@ -192,14 +192,21 @@ function getRiderPositionTime( num )
 	// Returns the fraction of the lap covered by the num.
 	if( !data[num] )
 		return [null, null];
-	var lapTimes = data[num]['lapTimes'];
+	var info = data[num];
+	var lapTimes = info['lapTimes'];
 	if( !lapTimes )
 		return null;
 	if( t <= lapTimes[0] )
-		return [0, t];
+	{
+		var firstLapRatio = info['flr'];
+		p = 1.0 - firstLapRatio + p * firstLapRatio;
+		p -= Math.floor( p );
+		p += 1.0;
+		return [p, t];
+	}
 		
 	var tSearch = t;
-	var lastTime = data[num]['lastTime'];
+	var lastTime = info['lastTime'];
 	if( lastTime != null && lastTime < t )
 		tSearch = lastTime;
 		
@@ -220,7 +227,16 @@ function getRiderPositionTime( num )
 		i = left;
 		if( lapTimes[i] < tSearch )
 			++i;
-		p = i + (tSearch - lapTimes[i-1]) / (lapTimes[i] - lapTimes[i-1])
+		if( i == 1 )
+		{
+			var firstLapRatio = info['flr'];
+			p = (tSearch - lapTimes[i-1]) / (lapTimes[i] - lapTimes[i-1]);
+			p = 1.0 - firstLapRatio + p * firstLapRatio;
+			p -= Math.floor( p );
+			p += 1.0;
+		}
+		else
+			p = i + (tSearch - lapTimes[i-1]) / (lapTimes[i] - lapTimes[i-1]);
 	}
 	return [p, tSearch];
 }
@@ -459,6 +475,8 @@ function Refresh()
 	lapCur = 0;
 	riderRadius = laneWidth * 0.75;
 	thickLine = r / 24;
+	var hasFirstLapRatio = false;
+	firstLapRatio = 1.0;
 	if( data )
 	{
 		var riderXYPT = [];
@@ -466,6 +484,13 @@ function Refresh()
 		{
 			if( categoryCur == 'All' || data[num]['raceCat'] == categoryCur )
 			{
+				if( !hasFirstLapRatio )
+				{
+					hasFirstLapRatio = true;
+					var cd = catDetails[data[num]['raceCat']];
+					if( cd && cd['firstLapDistance'] && cd['lapDistance'] )
+						firstLapRatio = cd['firstLapDistance'] / cd['lapDistance'];
+				}
 				var xypt = getRiderXYPT( num, num % laneMax );
 				if( xypt[2] == null )
 					continue;
@@ -1029,8 +1054,17 @@ function SetCategoryResults()
 					var cd = catDetails[cat];
 					if( cd.raceDistance )
 						catStr += FormatDistance(cd.raceDistance, cd.distanceUnit, true) + ', ';
-					if( cd.lapDistance )
-						catStr += cd.laps + " laps of " + FormatDistance(cd.lapDistance, cd.distanceUnit, true) + ', ';
+					if( cd.lapDistance && cd.laps > 1 )
+					{
+						if( cd.firstLapDistance && cd.firstLapDistance != cd.lapDistance )
+						{
+							catStr += (
+								'1st lap ' + FormatDistance(cd.firstLapDistance, cd.distanceUnit, true) + ', ' +
+								(cd.laps-1) + " laps of " + FormatDistance(cd.lapDistance, cd.distanceUnit, true) + ', ');
+						}
+						else
+							catStr += cd.laps + " laps of " + FormatDistance(cd.lapDistance, cd.distanceUnit, true) + ', ';
+					}
 				}
 				catStr += "winner: " + tFinishStr + ' at ' + FormatSpeed(parseFloat(d['speed'].split(' ')[0]), cd.distanceUnit, true);
 				catTitleTD.innerHTML = cat +

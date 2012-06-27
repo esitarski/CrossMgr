@@ -119,18 +119,12 @@ class Categories( wx.Panel ):
 		cols += 1 
 
 		self.grid = gridlib.Grid( self )
-		colnames = ['Active', 'Name', 'Numbers', 'Start Offset', 'Race Laps', 'Distance', 'Distance is By', '80% Lap Time', 'Suggested Laps']
-		self.iCol = {
-			'active' :			0,
-			'name' :			1,
-			'numbers' :			2,
-			'startOffset' :		3,
-			'numLaps' :			4,
-			'distance' :		5,
-			'distanceType' :	6,
-			'rule80Time' :		7,
-			'suggestedLaps' :	8,
-		}
+		colnames = ['Active', 'Name', 'Numbers', 'Start Offset', 'Race Laps', 'Distance', 'Distance is By', 'First Lap Distance', '80% Lap Time', 'Suggested Laps']
+		self.iCol = dict( (name, i) for i, name in enumerate( [
+			'active', 'name', 'numbers',
+			'startOffset', 'numLaps',
+			'distance', 'distanceType', 'firstLapDistance',
+			'rule80Time', 'suggestedLaps'] ) )
 		self.iDataColumns = len(colnames) - 2	# Number of actual data columns that have to be persisted.
 		
 		self.activeColumn = colnames.index( 'Active' )
@@ -212,7 +206,7 @@ class Categories( wx.Panel ):
 		Model.race.setCategoryMask()
 		self.refresh()
 		
-	def _setRow( self, r, active, name, strVal, startOffset = '00:00:00', numLaps = None, distance = None, distanceType = None ):
+	def _setRow( self, r, active, name, strVal, startOffset = '00:00:00', numLaps = None, distance = None, distanceType = None, firstLapDistance = None ):
 		if len(startOffset) < len('00:00:00'):
 			startOffset = '00:' + startOffset
 	
@@ -258,6 +252,12 @@ class Categories( wx.Panel ):
 		self.grid.SetCellValue( r, c, '%d' % (distanceType if distanceType else 0) )
 		self.grid.SetCellEditor( r, c, gridlib.GridCellEnumEditor(choices) )
 		self.grid.SetCellRenderer( r, c, CustomEnumRenderer(choices) )
+		self.grid.SetCellAlignment( r, c, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE )
+		
+		c = self.iCol['firstLapDistance']
+		self.grid.SetCellValue( r, c, ('%.3f' % firstLapDistance) if firstLapDistance else '' )
+		self.grid.SetCellEditor( r, c, gridlib.GridCellFloatEditor(7, 3) )
+		self.grid.SetCellRenderer( r, c, gridlib.GridCellFloatRenderer(7, 3) )
 		self.grid.SetCellAlignment( r, c, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE )
 		
 		# Get the 80% time cutoff.
@@ -320,9 +320,11 @@ class Categories( wx.Panel ):
 			self.grid.AppendRows( len(categories) )
 
 			for r, cat in enumerate(categories):
-				self._setRow( r, cat.active, cat.name, cat.catStr, cat.startOffset, cat.numLaps,
+				self._setRow(	r, cat.active, cat.name, cat.catStr, cat.startOffset, cat.numLaps,
 								getattr(cat, 'distance', None),
-								getattr(cat, 'distanceType', Model.Category.DistanceByLap) )
+								getattr(cat, 'distanceType', Model.Category.DistanceByLap),
+								getattr(cat, 'firstLapDistance', None),
+							)
 				
 			self.grid.AutoSizeColumns( True )
 			

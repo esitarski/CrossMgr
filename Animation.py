@@ -232,12 +232,13 @@ class Animation(wx.PyControl):
 		""" Returns the fraction of the lap covered by the rider and the time. """
 		if num not in self.data:
 			return (None, None)
-		lapTimes = self.data[num]['lapTimes']
+		info = self.data[num]
+		lapTimes = info['lapTimes']
 		if not lapTimes or self.t < lapTimes[0]:
 			return (None, None)
 
 		tSearch = self.t
-		lastTime = self.data[num]['lastTime']
+		lastTime = info['lastTime']
 		if lastTime is not None and lastTime < self.t:
 			if lastTime == lapTimes[-1]:
 				return (len(lapTimes), lastTime)
@@ -247,12 +248,18 @@ class Animation(wx.PyControl):
 			p = len(lapTimes) + float(tSearch - lapTimes[-1]) / float(lapTimes[-1] - lapTimes[-2])
 		else:
 			i = bisect.bisect_left( lapTimes, tSearch )
-			p = i + float(tSearch - lapTimes[i-1]) / float(lapTimes[i] - lapTimes[i-1])
+			if i == 1:
+				firstLapRatio = info['flr']
+				p = float(tSearch - lapTimes[i-1]) / float(lapTimes[i] - lapTimes[i-1])
+				p = 1.0 - firstLapRatio + p * firstLapRatio
+				p -= math.floor( p )
+				p += 1
+			else:
+				p = i + float(tSearch - lapTimes[i-1]) / float(lapTimes[i] - lapTimes[i-1])
 			
 		return (p, tSearch)
 	
 	def getXYfromPosition( self, lane, position ):
-		positionSave = position
 		position -= int(position)
 		
 		r = self.r
