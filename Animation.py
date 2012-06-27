@@ -130,7 +130,7 @@ class Animation(wx.PyControl):
 			tMax = 0
 			for num, info in self.data.iteritems():
 				try:
-					tMax = max(tMax, info['lapTimes'][-1])
+					tMax = max(tMax, info['raceTimes'][-1])
 				except IndexError:
 					pass
 		self.speedup = float(tMax) / float(tRunning)
@@ -199,7 +199,7 @@ class Animation(wx.PyControl):
 		* data is a rider information indexed by number.  Info includes lap times and lastTime times.
 		* lap times should include the start offset.
 		Example:
-			data = { 101: { lapTimes: [xx, yy, zz], lastTime: None }, 102 { lapTimes: [aa, bb], lastTime: cc} }
+			data = { 101: { raceTimes: [xx, yy, zz], lastTime: None }, 102 { raceTimes: [aa, bb], lastTime: cc} }
 		"""
 		self.data = data if data else None
 		if tCur is not None:
@@ -233,29 +233,28 @@ class Animation(wx.PyControl):
 		if num not in self.data:
 			return (None, None)
 		info = self.data[num]
-		lapTimes = info['lapTimes']
-		if not lapTimes or self.t < lapTimes[0]:
+		raceTimes = info['raceTimes']
+		if not raceTimes or self.t < raceTimes[0]:
 			return (None, None)
 
 		tSearch = self.t
 		lastTime = info['lastTime']
 		if lastTime is not None and lastTime < self.t:
-			if lastTime == lapTimes[-1]:
-				return (len(lapTimes), lastTime)
+			if lastTime == raceTimes[-1]:
+				return (len(raceTimes), lastTime)
 			tSearch = lastTime
 			
-		if tSearch >= lapTimes[-1]:
-			p = len(lapTimes) + float(tSearch - lapTimes[-1]) / float(lapTimes[-1] - lapTimes[-2])
+		if tSearch >= raceTimes[-1]:
+			p = len(raceTimes) + float(tSearch - raceTimes[-1]) / float(raceTimes[-1] - raceTimes[-2])
 		else:
-			i = bisect.bisect_left( lapTimes, tSearch )
+			i = bisect.bisect_left( raceTimes, tSearch )
 			if i == 1:
 				firstLapRatio = info['flr']
-				p = float(tSearch - lapTimes[i-1]) / float(lapTimes[i] - lapTimes[i-1])
+				p = float(tSearch - raceTimes[i-1]) / float(raceTimes[i] - raceTimes[i-1])
 				p = 1.0 - firstLapRatio + p * firstLapRatio
-				p -= math.floor( p )
-				p += 1
+				p -= math.floor(p) - 1.0
 			else:
-				p = i + float(tSearch - lapTimes[i-1]) / float(lapTimes[i] - lapTimes[i-1])
+				p = i + float(tSearch - raceTimes[i-1]) / float(raceTimes[i] - raceTimes[i-1])
 			
 		return (p, tSearch)
 	
@@ -301,7 +300,7 @@ class Animation(wx.PyControl):
 		if positionTime[0] is None:
 			return (None, None, None, None)
 		if self.data[num]['lastTime'] is not None and self.t >= self.data[num]['lastTime']:
-			self.lapCur = max(self.lapCur, len(self.data[num]['lapTimes']))
+			self.lapCur = max(self.lapCur, len(self.data[num]['raceTimes']))
 			return (None, None, positionTime[0], positionTime[1])
 		self.lapCur = max(self.lapCur, int(positionTime[0]))
 		xypt = list(self.getXYfromPosition( lane, positionTime[0] ))
@@ -421,7 +420,7 @@ class Animation(wx.PyControl):
 		dc.SetFont( self.timeFont )
 		if self.lapCur:
 			if leaders:
-				maxLaps = len(self.data[leaders[0]]['lapTimes'])
+				maxLaps = len(self.data[leaders[0]]['raceTimes'])
 			else:
 				maxLaps = 9999
 			if self.lapCur > maxLaps:
@@ -506,10 +505,10 @@ if __name__ == '__main__':
 	data = {}
 	for num in xrange(100,200):
 		mean = random.normalvariate(6.0, 0.3)
-		lapTimes = [0]
+		raceTimes = [0]
 		for lap in xrange( 5 ):
-			lapTimes.append( lapTimes[-1] + random.normalvariate(mean, mean/20)*60.0 )
-		data[num] = { 'lapTimes': lapTimes, 'lastTime': lapTimes[-1] }
+			raceTimes.append( raceTimes[-1] + random.normalvariate(mean, mean/20)*60.0 )
+		data[num] = { 'raceTimes': raceTimes, 'lastTime': raceTimes[-1] }
 
 	# import json
 	# with open('race.json', 'w') as fp: fp.write( json.dumps(data, sort_keys=True, indent=4) )

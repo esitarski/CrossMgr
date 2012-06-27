@@ -26,10 +26,10 @@ def GetAnimationData( catName = 'All', getExternalData = False ):
 				if a[0] == '_' or a in ignoreFields:
 					continue
 				if a == 'raceTimes':
-					info['lapTimes'] = getattr(rr, a)
+					info['raceTimes'] = getattr(rr, a)
 					bestLaps = race.getNumBestLaps( rr.num )
-					if bestLaps is not None and len(info['lapTimes']) > bestLaps:
-						info['lapTimes'] = info['lapTimes'][:bestLaps+1]
+					if bestLaps is not None and len(info['raceTimes']) > bestLaps:
+						info['raceTimes'] = info['raceTimes'][:bestLaps+1]
 				elif a == 'status':
 					info['status'] = statusNames[getattr(rr, a)]
 				else:
@@ -191,7 +191,7 @@ class RaceAnimation( wx.Panel ):
 		t = 999999
 		for info in animationData.itervalues():
 			try:
-				t = min( t, info['lapTimes'][0] )
+				t = min( t, info['raceTimes'][0] )
 			except:
 				pass
 		return t

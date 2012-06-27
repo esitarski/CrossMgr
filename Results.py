@@ -511,11 +511,16 @@ class Results( wx.Panel ):
 		self.hbs.Layout()
 		
 		# Find the fastest lap time.
-		self.fastestLapRC, fastestLapTime = None, sys.float_info.max
+		self.fastestLapRC, fastestLapSpeed, fastestLapTime = None, 0.0, sys.float_info.max
 		for r, result in enumerate(results):
-			if result.lapTimes:
+			if getattr(result, 'lapSpeeds', None):			# Use speeds if available.
+				for c, s in enumerate(result.lapSpeeds):
+					if s > fastestLapSpeed:
+						fastestLapSpeed = s
+						self.fastestLapRC = (r, c)
+			elif result.lapTimes:							# Else, use times.
 				for c, t in enumerate(result.lapTimes):
-					if c > 0 and t < fastestLapTime:
+					if t < fastestLapTime:
 						fastestLapTime = t
 						self.fastestLapRC = (r, c)
 		
