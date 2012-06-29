@@ -4,6 +4,7 @@ import wx
 from FixCategories import FixCategories
 import GanttChartPanel
 from GetResults import GetResults, RidersCanSwap
+from RiderDetail import ShowRiderDetailDialog
 from Undo import undo
 import EditEntry
 
@@ -12,7 +13,7 @@ def UpdateSetNum( num ):
 		return
 	mainWin = Utils.getMainWin()
 	mainWin.setNumSelect( num )
-	mainWin.showRiderDetail()
+	ShowRiderDetailDialog( mainWin, num )
 
 def GetNowTime():
 	race = Model.race
@@ -80,10 +81,10 @@ class Gantt( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(wx.NewId(), 'Results', 	'Switch to Results tab', self.OnPopupResults, allCases),
-				(wx.NewId(), 'RiderDetail',	'Switch to RiderDetail tab', self.OnPopupRiderDetail, allCases),
+				(wx.NewId(), 'Results', 	'Switch to Results tab',	self.OnPopupResults, allCases),
+				(wx.NewId(), 'RiderDetail',	'Show RiderDetail Dialog',	self.OnPopupRiderDetail, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), 'Correct Lap End Time...',	'Change number or lap end time...',	self.OnPopupCorrect, interpCase),
+				(wx.NewId(), 'Correct Lap End Time...',	'Change number or lap end time...',		self.OnPopupCorrect, interpCase),
 				(wx.NewId(), 'Shift Lap End Time...',	'Move lap end time earlier/later...',	self.OnPopupShift, interpCase),
 				(wx.NewId(), 'Delete Lap End Time...',	'Delete lap end time...',	self.OnPopupDelete, nonInterpCase),
 				(None, None, None, None, None),
@@ -188,8 +189,7 @@ class Gantt( wx.Panel ):
 			Utils.getMainWin().showPageName( 'Results' )
 			
 	def OnPopupRiderDetail( self, event ):
-		if Utils.isMainWin():
-			Utils.getMainWin().showPageName( 'RiderDetail' )
+		ShowRiderDetailDialog( self, self.numSelect )
 		
 	def refresh( self ):
 		if not Model.race:

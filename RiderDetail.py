@@ -60,13 +60,6 @@ class RiderDetail( wx.Panel ):
 		
 		row += 1
 		
-		self.categoryName = wx.StaticText( self, wx.ID_ANY, 'Category: ' )
-		gbs.Add( self.categoryName, pos=(row,0), span=(1,1), flag=labelAlign )
-		self.category = wx.Choice( self, wx.ID_ANY )
-		self.Bind( wx.EVT_CHOICE, self.onCategoryChoice, self.category )
-		gbs.Add( self.category, pos=(row,1), span=(1,1), flag=wx.EXPAND )
-		row += 1
-		
 		self.nameName = wx.StaticText( self, wx.ID_ANY, 'Name: ' )
 		gbs.Add( self.nameName, pos=(row,0), span=(1,1), flag=labelAlign )
 		self.riderName = wx.StaticText( self, wx.ID_ANY, '' )
@@ -86,6 +79,13 @@ class RiderDetail( wx.Panel ):
 		self.tags = wx.StaticText( self, wx.ID_ANY, '' )
 		self.tags.SetDoubleBuffered( True )
 		gbs.Add( self.tags, pos=(row,1), span=(1,4), flag=wx.EXPAND )
+		row += 1
+		
+		self.categoryName = wx.StaticText( self, wx.ID_ANY, 'Category: ' )
+		gbs.Add( self.categoryName, pos=(row,0), span=(1,1), flag=labelAlign )
+		self.category = wx.Choice( self, wx.ID_ANY )
+		self.Bind( wx.EVT_CHOICE, self.onCategoryChoice, self.category )
+		gbs.Add( self.category, pos=(row,1), span=(1,1), flag=wx.EXPAND )
 		row += 1
 		
 		self.statusName = wx.StaticText( self, wx.ID_ANY, 'Status: ' )
@@ -692,7 +692,8 @@ class RiderDetail( wx.Panel ):
 	def commitChange( self ):
 		num = self.num.GetValue()
 		status = self.statusOption.GetSelection()
-			
+		
+		undo.pushState();
 		with Model.LockRace() as race:
 			# Allow new numbers to be added if status is DNS or DQ.
 			if race is None or (num not in race and status not in [Model.Rider.DNS, Model.Rider.DQ]):
@@ -713,7 +714,53 @@ class RiderDetail( wx.Panel ):
 			
 	def commit( self ):
 		self.commitChange()
-	
+		
+class RiderDetailDialog( wx.Dialog ):
+	def __init__( self, parent, num = None, id = wx.ID_ANY ):
+		wx.Dialog.__init__( self, parent, id, "RiderDetail",
+						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+						
+		vs = wx.BoxSizer( wx.VERTICAL )
+		
+		self.riderDetail = RiderDetail( self )
+		self.riderDetail.SetMinSize( (700, 500) )
+		
+		vs.Add( self.riderDetail, 1, flag=wx.ALL|wx.EXPAND, border = 4 )
+		
+		self.closeBtn = wx.Button( self, wx.ID_ANY, '&Close (Ctrl-Q)' )
+		self.Bind( wx.EVT_BUTTON, self.onClose, self.closeBtn )
+		self.Bind( wx.EVT_CLOSE, self.onClose )
+
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.AddStretchSpacer()
+		hs.Add( self.closeBtn, flag=wx.ALL|wx.ALIGN_RIGHT, border = 4 )
+		vs.Add( hs, flag=wx.EXPAND )
+		
+		self.SetSizerAndFit(vs)
+		vs.Fit( self )
+		
+		# Add Ctrl-Q to close the dialog.
+		idCur = wx.NewId()
+		self.Bind(wx.EVT_MENU, self.onClose, id=idCur)
+		accel_tbl = wx.AcceleratorTable([(wx.ACCEL_CTRL,  ord('Q'), idCur)])
+		self.SetAcceleratorTable(accel_tbl)
+		
+		self.CentreOnParent(wx.BOTH)
+		self.SetFocus()
+		
+		self.riderDetail.setRider( num )
+		wx.CallAfter( self.riderDetail.refresh )
+
+	def onClose( self, event ):
+		self.riderDetail.commit()
+		self.EndModal( wx.ID_OK )
+
+def ShowRiderDetailDialog( parent, num = None ):
+	dlg = RiderDetailDialog( parent, num )
+	dlg.ShowModal()
+	dlg.Destroy()
+	wx.CallAfter( Utils.refresh )
+		
 if __name__ == '__main__':
 	app = wx.PySimpleApp()
 	mainWin = wx.Frame(None,title="CrossMgr", size=(600,400))

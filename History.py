@@ -9,6 +9,7 @@ from string import Template
 from FixCategories import FixCategories
 from GetResults import TimeDifference
 import EditEntry
+from RiderDetail import ShowRiderDetailDialog
 from Undo import undo
 
 reNonDigits = re.compile( '[^0-9]' )
@@ -150,7 +151,7 @@ class History( wx.Panel ):
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
 				(wx.NewId(), 'Results', 	'Switch to Results tab', self.OnPopupResults, allCases),
-				(wx.NewId(), 'RiderDetail',	'Switch to RiderDetail tab', self.OnPopupRiderDetail, allCases),
+				(wx.NewId(), 'RiderDetail',	'Show RiderDetail tab', self.OnPopupRiderDetail, allCases),
 				(None, None, None, None, None),
 				(wx.NewId(), 'Correct...',	'Change number or time',	self.OnPopupCorrect, interpCase),
 				(wx.NewId(), 'Shift...',	'Move time earlier/later',	self.OnPopupShift, interpCase),
@@ -238,8 +239,7 @@ class History( wx.Panel ):
 			Utils.getMainWin().showPageName( 'Results' )
 			
 	def OnPopupRiderDetail( self, event ):
-		if Utils.isMainWin():
-			Utils.getMainWin().showPageName( 'RiderDetail' )
+		ShowRiderDetailDialog( self, self.numSelect )
 		
 	def onShowTimes( self, event ):
 		self.showTimes ^= True
@@ -283,7 +283,7 @@ class History( wx.Panel ):
 		self.doNumSelect( event )
 		mainWin = Utils.getMainWin()
 		if self.numSelect is not None and mainWin:
-			mainWin.showPageName( 'RiderDetail' )
+			ShowRiderDetailDialog( self, self.numSelect )
 	
 	def getCellNum( self, row, col ):
 		numSelect = None

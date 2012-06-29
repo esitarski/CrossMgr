@@ -12,6 +12,7 @@ from FixCategories import FixCategories, SetCategory
 from GetResults import GetResults, RidersCanSwap
 from ExportGrid import ExportGrid
 from GetResults import GetResults
+from RiderDetail import ShowRiderDetailDialog
 from EditEntry import CorrectNumber, ShiftNumber, InsertNumber, DeleteEntry, SwapEntry
 from Undo import undo
 
@@ -224,7 +225,7 @@ class Results( wx.Panel ):
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
 				(wx.NewId(), 'History', 	'Switch to History tab', self.OnPopupHistory, allCases),
-				(wx.NewId(), 'RiderDetail',	'Switch to RiderDetail tab', self.OnPopupRiderDetail, allCases),
+				(wx.NewId(), 'RiderDetail',	'Show RiderDetail Dialog', self.OnPopupRiderDetail, allCases),
 				(None, None, None, None, None),
 				(wx.NewId(), 'Correct...',	'Change number or lap time...',	self.OnPopupCorrect, interpCase),
 				(wx.NewId(), 'Shift...',	'Move lap time earlier/later...',	self.OnPopupShift, interpCase),
@@ -322,8 +323,7 @@ class Results( wx.Panel ):
 			Utils.getMainWin().showPageName( 'History' )
 			
 	def OnPopupRiderDetail( self, event ):
-		if Utils.isMainWin():
-			Utils.getMainWin().showRiderDetail()
+		ShowRiderDetailDialog( self, self.numSelect )
 		
 	def showNumSelect( self ):
 		race = Model.race
@@ -370,8 +370,9 @@ class Results( wx.Panel ):
 			
 	def doNumDrilldown( self, event ):
 		self.doNumSelect( event )
-		if self.numSelect is not None and Utils.isMainWin():
-			Utils.getMainWin().showPageName( 'RiderDetail' )
+		mainWin = Utils.getMainWin()
+		if self.numSelect is not None and mainWin:
+			ShowRiderDetailDialog( self, self.numSelect )
 	
 	def doNumSelect( self, event ):
 		grid = event.GetEventObject()
