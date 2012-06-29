@@ -171,16 +171,15 @@ class Categories( wx.Panel ):
 		pass
 		
 	def onAddExceptions( self, event ):
+		with Model.LockRace() as race:
+			if not race:
+				return
+				
 		r = self.grid.GetGridCursorRow()
 		if r is None or r < 0:
 			Utils.MessageOK( self, 'You must select a Category first', 'Select a Category' )
 			return
 			
-		with Model.LockRace() as race:
-			if not race:
-				return
-			categories = [c for c in race.categories.itervalues()]
-			categories.sort()
 		dlg = wx.TextEntryDialog( self,
 									'%s: Add Bib Num Exceptions (comma separated)\nThis will adjust the other categories as necessary.' % categories[r].name,
 									'Add Bib Exceptions' )
@@ -193,17 +192,13 @@ class Categories( wx.Panel ):
 
 		undo.pushState()
 		response = re.sub( '[^0-9,]', '', response.replace(' ', ',') )
-		for f in response.split(','):
-			try:
-				num = int(f)
-				for i in xrange( len(categories) ):
-					if i != r:
-						categories[i].removeNum( num )
-				categories[r].addNum( num )
-			except ValueError:
-				pass
+		with Model.LockRace() as race:
+			categories = [c for c in race.categories.itervalues()]
+			categories.sort()
+			category = categories[r]
+			for f in response.split(','):
+				race.addCategoryException( category, r )
 
-		Model.race.setCategoryMask()
 		self.refresh()
 		
 	def _setRow( self, r, active, name, strVal, startOffset = '00:00:00', numLaps = None, distance = None, distanceType = None, firstLapDistance = None ):

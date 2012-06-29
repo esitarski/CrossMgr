@@ -62,8 +62,8 @@ class RiderDetail( wx.Panel ):
 		
 		self.categoryName = wx.StaticText( self, wx.ID_ANY, 'Category: ' )
 		gbs.Add( self.categoryName, pos=(row,0), span=(1,1), flag=labelAlign )
-		self.category = wx.StaticText( self, wx.ID_ANY, '' )
-		self.category.SetDoubleBuffered( True )
+		self.category = wx.Choice( self, wx.ID_ANY )
+		self.Bind( wx.EVT_CHOICE, self.onCategoryChoice, self.category )
 		gbs.Add( self.category, pos=(row,1), span=(1,1), flag=wx.EXPAND )
 		row += 1
 		
@@ -151,7 +151,23 @@ class RiderDetail( wx.Panel ):
 		self.SetSizer( hs )
 		self.hs = hs
 		self.setRider()
-		
+	
+	def onCategoryChoice( self, event ):
+		if self.num.GetValue() is None:
+			return
+		num = int(self.num.GetValue())
+		catName = self.category.GetStringSelection()
+
+		undo.pushState()
+		with Model.LockRace() as race:
+			if not race:
+				return
+			for c in race.getCategories():
+				if c.name == catName:
+					race.addCategoryException( c, num )
+					break
+		wx.CallAfter( self.refresh )
+	
 	def getLapClicked( self, event ):
 		row = event.GetRow()
 		if row >= self.grid.GetNumberRows():
@@ -173,10 +189,10 @@ class RiderDetail( wx.Panel ):
 			for p in self.popupInfo:
 				if p[0]:
 					self.Bind( wx.EVT_MENU, p[3], id=p[0] )
-					
-		num = int(self.num.GetValue())
-		if num is None:
+		
+		if self.num.GetValue() is None:
 			return
+		num = int(self.num.GetValue())
 			
 		self.iLap = self.getLapClicked( event )
 		if self.iLap is None:
@@ -517,7 +533,7 @@ class RiderDetail( wx.Panel ):
 		data = [ [] for c in xrange(self.grid.GetNumberCols()) ]
 		self.grid.Set( data = data )
 		self.grid.Reset()
-		self.category.SetLabel( '' )
+		self.category.Clear()
 		self.autocorrectLaps.SetValue( True )
 		num = self.num.GetValue()
 		
@@ -535,8 +551,17 @@ class RiderDetail( wx.Panel ):
 			if race is None or num not in race:
 				return
 			rider = race.getRider( num )
-			catName = race.getCategoryName( num )
-			category = race.categories.get( catName, None )
+			category = race.getCategory( num )
+			catName = category.name if category else ''
+			categories = race.getCategories()
+			try:
+				iCategory = (i for i, c in enumerate(categories) if c == category).next()
+				self.category.AppendItems( [c.name for c in categories] )
+				self.category.SetSelection( iCategory )
+			except StopIteration:
+				self.category.AppendItems( [c.name for c in categories] + [' '] )
+				self.category.SetSelection( len(categories) )
+				
 			if category and getattr(category, 'distance', None) and category.distanceIsByLap:
 				distanceByLap = getattr(category, 'distance')
 			else:
@@ -573,7 +598,6 @@ class RiderDetail( wx.Panel ):
 			except KeyError:
 				pass
 				
-			self.category.SetLabel( catName if catName else 'Unmatched' )
 			self.statusOption.SetSelection( rider.status )
 			if rider.status in [Model.Rider.Finisher, Model.Rider.DNS, Model.Rider.DQ]:
 				self.setAtRaceTime()

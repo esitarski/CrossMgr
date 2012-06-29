@@ -309,6 +309,35 @@ class Category(object):
 		self.intervals.append( (num, num) )
 		self.intervals.sort()
 
+	def normalize( self ):
+		# Combine any consecutive or overlapping intervals.
+		if len(self.intervals) > 1:
+			newIntervals = [self.intervals[0]]
+			for interval in self.intervals:
+				if interval[0] <= newIntervals[-1][1]:
+					if interval[1] > newIntervals[-1][1]:
+						newIntervals[-1] = (newintervals[-1][0], interval[1])
+				else:
+					newIntervals.append( interval )
+			self.intervals = newIntervals
+		
+		# Check if there are some excludes that don't have to be there.
+		needlessExcludes = []
+		for num in self.exclude:
+			found = False
+			i = bisect.bisect_left( self.intervals, (num, num) )
+			if i > 0:
+				i -= 1
+			for j in xrange(i, min(i+2,len(self.intervals)) ):
+				if self.intervals[j][0] <= num <= self.intervals[j][1]:
+					found = True
+					break
+			if not found:
+				needlessExcludes.append( num )
+				
+		for num in needlessExcludes:
+			self.exclude.discard( num )
+		
 	def __repr__( self ):
 		return 'Category(active=%s, name="%s", catStr="%s", startOffset="%s", numLaps=%s, sequence=%s, distance=%s, distanceType=%s)' % (
 				str(self.active),
@@ -1503,6 +1532,24 @@ class Race(object):
 			return 0
 		category = self.getCategory( num )
 		return self.getCategoryBestLaps( category.name if category else 'All' )
+	
+	def addCategoryException( self, category, num ):
+		try:
+			num = int(num)
+		except ValueError:
+			return
+			
+		for c in self.categories.itervalues():
+			if c != category:
+				c.removeNum( num )
+				c.normalize()
+				
+		category.addNum( num )
+		category.normalize()
+		
+		self.resetCategoryCache()
+		self.setChanged()
+		self.setCategoryMask()
 	
 	@memoize
 	def allRidersFinished( self ):
