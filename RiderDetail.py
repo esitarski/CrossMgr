@@ -548,29 +548,14 @@ class RiderDetail( wx.Panel ):
 		
 		highPrecisionTimes = Utils.highPrecisionTimes()
 		with Model.LockRace() as race:
-			if race is None or num not in race:
+			if race is None or num is None:
 				return
-			rider = race.getRider( num )
-			category = race.getCategory( num )
-			catName = category.name if category else ''
-			categories = race.getCategories()
-			try:
-				iCategory = (i for i, c in enumerate(categories) if c == category).next()
-				self.category.AppendItems( [c.name for c in categories] )
-				self.category.SetSelection( iCategory )
-			except StopIteration:
-				self.category.AppendItems( [c.name for c in categories] + [' '] )
-				self.category.SetSelection( len(categories) )
 				
-			if category and getattr(category, 'distance', None) and category.distanceIsByLap:
-				distanceByLap = getattr(category, 'distance')
-			else:
-				distanceByLap = None
-			
 			try:
 				externalInfo = race.excelLink.read()
 			except AttributeError:
 				externalInfo = {}
+			
 			try:
 				info = externalInfo[int(num)]
 				name = info.get( 'LastName', '' )
@@ -598,6 +583,28 @@ class RiderDetail( wx.Panel ):
 			except KeyError:
 				pass
 				
+			category = race.getCategory( num )
+			catName = category.name if category else ''
+			categories = race.getCategories()
+			try:
+				iCategory = (i for i, c in enumerate(categories) if c == category).next()
+				self.category.AppendItems( [c.name for c in categories] )
+				self.category.SetSelection( iCategory )
+			except StopIteration:
+				self.category.AppendItems( [c.name for c in categories] + [' '] )
+				self.category.SetSelection( len(categories) )
+				
+			#--------------------------------------------------------------------------------------
+			if num not in race:
+				return
+				
+			if category and getattr(category, 'distance', None) and category.distanceIsByLap:
+				distanceByLap = getattr(category, 'distance')
+			else:
+				distanceByLap = None
+			
+			# Trigger adding the rider to the race if it isn't in already.
+			rider = race.getRider( num )
 			self.statusOption.SetSelection( rider.status )
 			if rider.status in [Model.Rider.Finisher, Model.Rider.DNS, Model.Rider.DQ]:
 				self.setAtRaceTime()
