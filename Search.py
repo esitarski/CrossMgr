@@ -102,8 +102,10 @@ class Search( wx.Panel ):
 		wx.CallAfter( self.refresh )
 	
 	def doNumDrilldown( self, event ):
-		self.doNumSelect( event )
 		mainWin = Utils.getMainWin()
+		if mainWin:
+			minWin.riderDetail.commit()
+		self.doNumSelect( event )
 		if self.numSelect is not None and mainWin:
 			mainWin.showPageName( 'RiderDetail' )
 	
