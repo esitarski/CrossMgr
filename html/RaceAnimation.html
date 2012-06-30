@@ -1580,6 +1580,9 @@ function RefreshRaceChart()
 			iCategoryLast = resultsData[i][iCategory];
 			if( i == 0 )
 			{
+				dc.fillStyle = '#FFFFFF';
+				var w = dc.measureText(categories[iCategoryLast] + '0:00').width;
+				dc.fillRect( legendSep, yLast, w + 1, barHeight + 1 );
 				dc.fillStyle = '#000000';
 				dc.fillText( categories[iCategoryLast], legendSep, yLast - barHeight );
 				DrawLine( dc, 0, yLast, width - labelsWidthRight + 1, yLast );

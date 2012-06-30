@@ -49,3 +49,5 @@ Use "File|New Next..." to quickly setup a number of races for an event.
 CrossMgr makes a backup of our your input in a .csv file.\nYou can start over with a race from "File|Restore from Original Input".\nYou can also score manually by opening this file in Excel.
 Click on a Lap column in results to sort on that lap.
 You can choose Lap Times, Race Times, Lap Speeds or Race Speeds in Results.
+Try using Rider Find (Ctrl+F).  Double-clicking brings up the rider in RiderDetail.
+Clicking on a column name in Results will sort on that column.  Want to know the winner of an intermediate lap sprint?  Show "Race Times" in Results, then click on the lap column.
