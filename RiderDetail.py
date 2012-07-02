@@ -747,9 +747,14 @@ class RiderDetailDialog( wx.Dialog ):
 		vs.Fit( self )
 		
 		# Add Ctrl-Q to close the dialog.
-		idCur = wx.NewId()
-		self.Bind(wx.EVT_MENU, self.onClose, id=idCur)
-		accel_tbl = wx.AcceleratorTable([(wx.ACCEL_CTRL,  ord('Q'), idCur)])
+		self.Bind(wx.EVT_MENU, self.onClose, id=wx.ID_CLOSE)
+		self.Bind(wx.EVT_MENU, self.onUndo, id=wx.ID_UNDO)
+		self.Bind(wx.EVT_MENU, self.onRedo, id=wx.ID_REDO)
+		accel_tbl = wx.AcceleratorTable([
+			(wx.ACCEL_CTRL,  ord('Q'), wx.ID_CLOSE),
+			(wx.ACCEL_CTRL,  ord('Z'), wx.ID_UNDO),
+			(wx.ACCEL_CTRL,  ord('Y'), wx.ID_REDO),
+			])
 		self.SetAcceleratorTable(accel_tbl)
 		
 		self.CentreOnParent(wx.BOTH)
@@ -758,14 +763,29 @@ class RiderDetailDialog( wx.Dialog ):
 		self.riderDetail.setRider( num )
 		wx.CallAfter( self.riderDetail.refresh )
 
+	def refresh( self ):
+		self.riderDetail.refresh()
+	
+	def onUndo( self, event ):
+		undo.doUndo()
+		self.refresh()
+		
+	def onRedo( self, event ):
+		undo.doRedo()
+		self.refresh()
+	
 	def onClose( self, event ):
 		self.riderDetail.commit()
 		self.EndModal( wx.ID_OK )
 
 def ShowRiderDetailDialog( parent, num = None ):
 	dlg = RiderDetailDialog( parent, num )
+	if Utils.getMainWin():
+		Utils.getMainWin().riderDetailDialog = dlg
 	dlg.ShowModal()
 	dlg.Destroy()
+	if Utils.getMainWin():
+		Utils.getMainWin().riderDetailDialog = None
 	wx.CallAfter( Utils.refresh )
 		
 if __name__ == '__main__':

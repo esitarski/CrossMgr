@@ -1,5 +1,6 @@
 import Model
 from Utils import updateUndoStatus
+from Utils import logCall
 import cPickle as pickle
 import pickletools
 
@@ -49,7 +50,8 @@ class Undo( object ):
 
 	def isRedo( self ):
 		return self.iUndo is not None and self.iUndo != len(self.undoStack) - 1
-		
+	
+	@logCall
 	def doUndo( self ):
 		if not self.isUndo():
 			return False
@@ -62,6 +64,7 @@ class Undo( object ):
 		self.setState()
 		return True
 
+	@logCall
 	def doRedo( self ):
 		if not self.isRedo():
 			return False

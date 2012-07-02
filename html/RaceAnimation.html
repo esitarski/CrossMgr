@@ -1484,7 +1484,7 @@ function RefreshRaceChart()
 	}
 	
 	var lapsMax = resultsData.length > 0 ? resultsData[0][iraceTimes].length : 0;
-	var colors = makeColorGradient(2.4,2.4,2.4,0,2,4,128,127,lapsMax+1);
+	var colors = makeColorGradient(2.4,2.4,2.4,0,2,4,128,127,500);
 	var lighterColors = [];
 	for( var i = 0; i < colors.length; ++i )
 		lighterColors.push( lighterColor(colors[i]) );
@@ -1626,6 +1626,8 @@ function RefreshRaceChart()
 			{
 				var riderData = data[num];
 				var hover = j + ', ' + FormatTime(t - raceTimes[j-1]);
+				if( !colors[j] )
+					alert( j );
 				drawSegment( dc, xLast, yLast, xCur - xLast + 1, yCur - yLast + 1, colors[j], lighterColors[j] );
 				segmentsCur.push( [xLast, yLast, xCur - xLast + 1, yCur - yLast + 1, hover, num] );
 			}

@@ -382,6 +382,7 @@ class MainWin( wx.Frame ):
 			setattr( self, a, c(self.notebook) )
 			addPage( getattr(self, a), '%d. %s' % (i+1, n) )
 
+		self.riderDetailDialog = None
 		self.splitter.SplitVertically( self.forecastHistory, self.notebook, 250 )
 		self.splitter.UpdateSize()
 
@@ -1396,6 +1397,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 	def refresh( self ):
 		self.refreshCurrentPage()
 		self.forecastHistory.refresh()
+		if self.riderDetailDialog:
+			wx.CallAfter( self.riderDetailDialog.refresh )
 		self.updateRaceClock()
 		with Model.LockRace() as race:
 			self.menuItemHighPrecisionTimes.Check( bool(race and getattr(race, 'highPrecisionTimes', False)) ) 

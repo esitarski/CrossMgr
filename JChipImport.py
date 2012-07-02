@@ -36,6 +36,10 @@ def DoJchipImport( fname, startTime = None, isTimeTrial = False ):
 		riderLapTimes = {}
 		for line in f:
 			lineNo += 1
+			
+			if line.startswith('#'):
+				continue
+			
 			try:
 				fields = line.split()
 				tag = fields[0][1:]

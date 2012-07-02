@@ -509,7 +509,7 @@ class Rider(object):
 			except StopIteration:
 				break
 
-		return iTimes
+		return self.removeEarlyTimes(iTimes)
 
 	def getExpectedLapTime( self, iTimes = None ):
 		if iTimes is None:
@@ -530,7 +530,6 @@ class Rider(object):
 
 		# Compute differences between times.
 		dTimes = [iTimes[i] - iTimes[i-1] for i in xrange(iStart, len(iTimes))]
-
 		dTimes.sort()
 		median = dTimes[int(len(dTimes) / 2)]
 
@@ -549,6 +548,17 @@ class Rider(object):
 		iRight = (i for i in xrange(len(dTimes), 0, -1) if dTimes[i-1] < mMax).next()
 		return sum(dTimes[iLeft:iRight], 0.0) / (iRight - iLeft)
 
+	def removeEarlyTimes( self, times ):
+		try:
+			startOffset = race.getCategory(self.num).getStartOffsetSecs()
+			if startOffset:
+				times = [t for t in times if t == 0.0 or t > startOffset]
+				if len(times) == 1:
+					return []
+		except (ValueError, AttributeError):
+			pass
+		return times
+		
 	def interpolate( self, stopTime = maxInterpolateTime ):
 		if not self.times or self.status in [Rider.DNS, Rider.DQ]:
 			return []
@@ -560,7 +570,8 @@ class Rider(object):
 			# This avoids a whole lot of special cases later.
 			iTimes[0] = 0.0
 			iTimes[1:] = self.times
-			return [Entry(t=t, lap=i, num=self.num, interp=False) for i, t in enumerate(iTimes)]
+			return [Entry(t=t, lap=i, num=self.num, interp=False)
+						for i, t in enumerate(self.removeEarlyTimes(iTimes))]
 
 		# Adjust the stop time.
 		st = stopTime
@@ -571,6 +582,9 @@ class Rider(object):
 			st = min(st, dnfPulledTime + 0.01)
 		
 		iTimes = self.getCleanLapTimes()
+		
+		if not iTimes:
+			return []
 
 		# Flag that these are not interpolated times.
 		expected = self.getExpectedLapTime( iTimes )
