@@ -214,18 +214,23 @@ function getRiderPositionTime( num )
 		p = raceTimes.length + (tSearch - raceTimes.back()) / (raceTimes.back() - raceTimes[raceTimes.length-2]);
 	else
 	{
-		var left = 0, right = raceTimes.length, i;
-		while( right - left > 1 )
+		if( !((i = info['iLast']) && i < raceTimes.length && raceTimes[i-1] < tSearch && tSearch <= raceTimes[i]) )
 		{
-			i = ~~((right + left) / 2);
-			if( tSearch < raceTimes[i] )
-				right = i;
-			else
-				left = i;
+			// Find the race time with binary search.
+			var left = 0, right = raceTimes.length, i;
+			while( right - left > 1 )
+			{
+				i = ~~((right + left) / 2);
+				if( tSearch < raceTimes[i] )
+					right = i;
+				else
+					left = i;
+			}
+			i = left;
+			if( raceTimes[i] < tSearch )
+				++i;
+			info['iLast'] = i;
 		}
-		i = left;
-		if( raceTimes[i] < tSearch )
-			++i;
 		if( i == 1 )
 		{
 			var firstLapRatio = info['flr'];
@@ -1503,14 +1508,11 @@ function RefreshRaceChart()
 	var textWidthLeft = dc.measureText('0000').width;
 	for( var i = 0; i < resultsData.length; ++i )
 	{
-		var num = resultsData[i][iNum];
-		var name = getRiderNameNum(num) + '0';
-		var w = dc.measureText(name).width;
-		if( w > textWidthLeft )
-			textWidthLeft = w;
-		var w = dc.measureText(categories[resultsData[i][iCategory]] + '0');
-		if( w > textWidthLeft )
-			textWidthLeft = w;
+		var rd = resultsData[i];
+		var num = rd[iNum];
+		textWidthLeft = Math.max(	dc.measureText(getRiderNameNum(num) + '0:0').width,
+									dc.measureText(categories[rd[iCategory]] + '0:0').width,
+									textWidthLeft );
 	}
 	
 	var legendSep = 4;			// Separations between legend entries and the Gantt bars.
