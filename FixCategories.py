@@ -5,12 +5,15 @@ def FixCategories( choice, iSelection = None ):
 	choice.InvalidateBestSize() 
 	choice.SetSize(choice.GetBestSize()) 
 
+	race = Model.race
+	if race and getattr(race, 'syncCategories', True):
+		iSelection = getattr( race, 'modelCategory', 0 )
+	
 	items = choice.GetItems()
 	
 	if iSelection is not None and iSelection < len(items):
 		choice.SetSelection( iSelection )
 
-	race = Model.race
 	newItems = ['All']
 	newItems.extend( c.name for c in race.getCategories() )
 	

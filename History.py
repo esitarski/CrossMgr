@@ -308,13 +308,13 @@ class History( wx.Panel ):
 	
 	def doChooseCategory( self, event ):
 		if Model.race is not None:
-			Model.race.historyCategory = self.categoryChoice.GetSelection()
+			Model.race.setCategoryChoice( self.categoryChoice.GetSelection(), 'historyCategory' )
 		self.refresh()
 	
 	def setCategoryAll( self ):
 		FixCategories( self.categoryChoice, 0 )
 		if Model.race:
-			Model.race.historyCategory = 0
+			Model.race.setCategoryChoice( 0, 'historyCategory' )
 	
 	def reset( self ):
 		self.numSelect = None

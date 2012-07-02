@@ -130,7 +130,7 @@ class Recommendations( wx.Panel ):
 	
 	def doChooseCategory( self, event ):
 		if Model.race is not None:
-			Model.race.recommendationsCategory = self.categoryChoice.GetSelection()
+			Model.race.setCategoryChoice( self.categoryChoice.GetSelection(), 'recommendationsCategory' )
 		self.refresh()
 	
 	def reset( self ):

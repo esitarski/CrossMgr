@@ -656,6 +656,8 @@ class Race(object):
 		self.isTimeTrial = False
 		self.autocorrectLapsDefault = True
 		self.highPrecisionTimes = False
+		self.syncCategories = True
+		self.modelCategory = 0
 		self.distanceUnit = Race.UnitKm
 
 		self.isChangedFlag = True
@@ -1580,6 +1582,11 @@ class Race(object):
 			pass
 			
 		return False
+		
+	def setCategoryChoice( self, iSelection, categoryAttribute = None ):
+		self.modelCategory = iSelection
+		if categoryAttribute:
+			setattr( self, categoryAttribute, iSelection )
 
 	def _populate( self ):
 		self.reset()

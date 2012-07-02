@@ -49,7 +49,7 @@ class Gantt( wx.Panel ):
 
 	def doChooseCategory( self, event ):
 		if Model.race is not None:
-			Model.race.GanttCategory = self.categoryChoice.GetSelection()
+			Model.race.setCategoryChoice( self.categoryChoice.GetSelection(), 'ganttCategory' )
 		self.refresh()
 	
 	def reset( self ):
@@ -62,7 +62,7 @@ class Gantt( wx.Panel ):
 		with Model.LockRace() as race:
 			if not race or num not in race:
 				return
-			catName = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
+			catName = FixCategories( self.categoryChoice, getattr(race, 'ganttCategory', 0) )
 			entries = race.getRider(num).interpolate()
 			try:
 				self.entry = entries[iLap]
@@ -196,7 +196,7 @@ class Gantt( wx.Panel ):
 			self.ganttChart.SetData( None )
 			return
 		
-		catName = FixCategories( self.categoryChoice, getattr(Model.race, 'GanttCategory', 0) )
+		catName = FixCategories( self.categoryChoice, getattr(Model.race, 'ganttCategory', 0) )
 		results = GetResults( catName, True )
 		
 		#labels	= [str(r.num) for r in results]

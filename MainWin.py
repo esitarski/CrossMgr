@@ -434,6 +434,10 @@ class MainWin( wx.Frame ):
 		self.menuItemPlaySounds.Check( self.playSounds )
 		self.Bind( wx.EVT_MENU, self.menuPlaySounds, id=idCur )
 		
+		idCur = wx.NewId()
+		self.menuItemSyncCategories = self.optionsMenu.Append( idCur , "Sync &Categories between Tabs", "Sync Categories between Tabs", wx.ITEM_CHECK )
+		self.Bind( wx.EVT_MENU, self.menuSyncCategories, id=idCur )
+		
 		self.optionsMenu.AppendSeparator()
 		
 		idCur = wx.NewId()
@@ -502,11 +506,15 @@ class MainWin( wx.Frame ):
 		self.refresh()
 	
 	def menuShowHighPrecisionTimes( self, event ):
-		undo.pushState()
 		with Model.LockRace() as race:
 			if race:
 				race.highPrecisionTimes = self.menuItemHighPrecisionTimes.IsChecked()
 		wx.CallAfter( self.refresh )
+	
+	def menuSyncCategories( self, event ):
+		with Model.LockRace() as race:
+			if race:
+				race.syncCategories = self.menuItemSyncCategories.IsChecked()
 	
 	def menuPlaySounds( self, event ):
 		self.playSounds = self.menuItemPlaySounds.IsChecked()
@@ -1402,6 +1410,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 		self.updateRaceClock()
 		with Model.LockRace() as race:
 			self.menuItemHighPrecisionTimes.Check( bool(race and getattr(race, 'highPrecisionTimes', False)) ) 
+			self.menuItemSyncCategories.Check( bool(race and getattr(race, 'syncCategories', True)) ) 
 
 	def updateUndoStatus( self, event = None ):
 		with Model.LockRace() as race:
