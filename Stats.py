@@ -39,8 +39,7 @@ class Stats( wx.Panel ):
 		self.SetSizer(bs)
 		
 	def doChooseCategory( self, event ):
-		if Model.race is not None:
-			Model.race.setCategoryChoice( self.categoryChoice.GetSelection(), 'statsCategory' )
+		Utils.setCategoryChoice( self.categoryChoice.GetSelection(), 'statsCategory' )
 		self.refresh()
 	
 	def refresh( self ):

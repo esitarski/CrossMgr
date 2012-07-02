@@ -137,8 +137,7 @@ class RaceAnimation( wx.Panel ):
 		self.onUpdateWatch( None )
 		
 	def doChooseCategory( self, event ):
-		if Model.race is not None:
-			Model.race.setCategoryChoice( self.categoryChoice.GetSelection(), 'raceAnimationCategory' )
+		Utils.setCategoryChoice( self.categoryChoice.GetSelection(), 'raceAnimationCategory' )
 		self.refresh()
 	
 	def onPlaybackSpeed( self, event ):

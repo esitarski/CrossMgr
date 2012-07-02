@@ -48,8 +48,7 @@ class Gantt( wx.Panel ):
 		bs.SetSizeHints(self)
 
 	def doChooseCategory( self, event ):
-		if Model.race is not None:
-			Model.race.setCategoryChoice( self.categoryChoice.GetSelection(), 'ganttCategory' )
+		Utils.setCategoryChoice( self.categoryChoice.GetSelection(), 'ganttCategory' )
 		self.refresh()
 	
 	def reset( self ):

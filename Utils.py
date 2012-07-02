@@ -315,8 +315,15 @@ def isMainWin():
 def highPrecisionTimes():
 	try:
 		return Model.race.highPrecisionTimes
-	except:
+	except AttributeError:
 		return False
+
+def setCategoryChoice( iSelection, categoryAttribute = None ):
+	try:
+		setCategoryChoice = Model.race.setCategoryChoice
+	except AttributeError:
+		return
+	setCategoryChoice( iSelection, categoryAttribute )
 		
 def hasTrailingSeparator( menu ):
 	itemCount = menu.GetMenuItemCount()
