@@ -214,7 +214,8 @@ function getRiderPositionTime( num )
 		p = raceTimes.length + (tSearch - raceTimes.back()) / (raceTimes.back() - raceTimes[raceTimes.length-2]);
 	else
 	{
-		if( !((i = info['iLast']) && i < raceTimes.length && raceTimes[i-1] < tSearch && tSearch <= raceTimes[i]) )
+		i = info.iLast;
+		if( !(raceTimes[i-1] < tSearch && tSearch <= raceTimes[i]) )
 		{
 			// Find the race time with binary search.
 			var left = 0, right = raceTimes.length, i;
@@ -229,15 +230,14 @@ function getRiderPositionTime( num )
 			i = left;
 			if( raceTimes[i] < tSearch )
 				++i;
-			info['iLast'] = i;
+			info.iLast = i;
 		}
 		if( i == 1 )
 		{
 			var firstLapRatio = info['flr'];
 			p = (tSearch - raceTimes[i-1]) / (raceTimes[i] - raceTimes[i-1]);
 			p = 1.0 - firstLapRatio + p * firstLapRatio;
-			p -= Math.floor( p );
-			p += 1.0;
+			p -= Math.floor(p) - 1.0;
 		}
 		else
 			p = i + (tSearch - raceTimes[i-1]) / (raceTimes[i] - raceTimes[i-1]);
@@ -699,6 +699,7 @@ function SetData( aData, tCur )
 	for( num in data )
 	{
 		var info = data[num];
+		info['iLast'] = 1;
 		if( info['raceTimes'] && info['raceTimes'].length > 2 )
 			hasMultipleLaps = true;
 		if( info['lapSpeeds'] )
