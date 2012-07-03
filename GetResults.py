@@ -223,6 +223,9 @@ def GetCategoryDetails():
 				continue
 			cat = race.getCategory( rr.num )
 			info = catDetails.get( cat.name, {} )
+			if not info:
+				info['startOffset'] = cat.getStartOffsetSecs()
+				
 			if info.get('laps', 0) < len(rr.lapTimes):
 				info['laps'] = len(rr.lapTimes)
 				if getattr(cat, 'distance', None):

@@ -4,7 +4,7 @@ import os
 import xlwt
 import Utils
 import Model
-from GetResults import GetResults
+from GetResults import GetResults, GetCategoryDetails
 from ReadSignOnSheet import Fields, IgnoreFields
 from FitSheetWrapper import FitSheetWrapper
 
@@ -229,32 +229,32 @@ class ExportGrid( object ):
 		results = GetResults( catName, getExternalData )
 		if not results:
 			return
+		catDetails = GetCategoryDetails()
+		cd = catDetails.get( catName, None )
 		
-		hasSpeeds = False
-		for result in results:
-			if getattr(result, 'lapSpeeds', None) or getattr(result, 'raceSpeeds', None):
-				hasSpeeds = True
-				break
-				
-		speedLeader = None
-		timeLeader = None
-		distanceLeader = None
-		if results and results[0].status == Model.Rider.Finisher and getattr(results[0], 'speed', None):
-			speedLeader = float(results[0].speed.split()[0])
-			timeLeader = results[0].lastTime
-			distanceLeader = speedLeader * (timeLeader / (60.0*60.0))
-			
+		leader = results[0]
+		hasSpeeds = bool( getattr(leader, 'lapSpeeds', None) or getattr(leader, 'raceSpeeds', None) )
+		
 		with Model.LockRace() as race:
-			if distanceLeader:
-				catStr = '%s (%.2f %s, %s %s)' % (catName, distanceLeader, race.distanceUnitStr, speedLeader, race.speedUnitStr)
-			else:
-				catStr = catName
-			self.title = '\n'.join( [race.name, Utils.formatDate(race.date), 'Category: ' + catStr] )
+			catStr = catName
+			if cd and cd.get('raceDistance', None):
+				catStr += ', %.2f %s, ' % (cd['raceDistance'], cd['distanceUnit'])
+				if cd.get('lapDistance', None) and cd.get('laps', 0) > 1:
+					if cd.get('firstLapDistance', None) and cd['firstLapDistance'] != cd['lapDistance']:
+						catStr += '1st lap %.2f %s, %d more laps of %.2f %s, ' % (
+									cd['firstLapDistance'], cd['distanceUnit'],
+									cd['laps'] - 1,
+									cd['lapDistance'], cd['distanceUnit']
+								)
+					else:
+						catStr += '%d laps of %.2f %s, ' % (cd['laps'], cd['lapDistance'], cd['distanceUnit']);
+				catStr += 'winner: %s at %s' % (Utils.formatTime(leader.lastTime - cd['startOffset']), leader.speed);
+		
+			self.title = '\n'.join( [race.name, Utils.formatDate(race.date), catStr] )
 			category = race.categories.get( catName, None )
 
 		startOffset = category.getStartOffsetSecs() if category else 0.0
 		
-		leader = results[0]
 		infoFields = ['LastName', 'FirstName', 'Team', 'Category', 'License']
 		infoFieldsPresent = set( infoFields ) & set( dir(leader) )
 		infoFields = [f for f in infoFields if f in infoFieldsPresent]

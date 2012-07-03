@@ -714,7 +714,9 @@ class MainWin( wx.Frame ):
 
 		wb = xlwt.Workbook()
 		for catName in getRaceCategories():
-			sheetCur = wb.add_sheet( re.sub('[:\\/?*\[\]]', ' ', catName) )
+			sheetName = re.sub('[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', catName)
+			sheetName = sheetName[:31]
+			sheetCur = wb.add_sheet( sheetName )
 			export = ExportGrid()
 			export.setResultsOneListRiderTimes( catName )
 			export.toExcelSheet( sheetCur )
