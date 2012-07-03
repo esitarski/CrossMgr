@@ -190,9 +190,9 @@ String.prototype.escapeID = function()
 function getRiderPositionTime( num )
 {
 	// Returns the fraction of the lap covered by the num.
-	if( !data[num] )
-		return [null, null];
 	var info = data[num];
+	if( !info )
+		return [null, null];
 	var raceTimes = info['raceTimes'];
 	if( !raceTimes )
 		return null;
@@ -211,26 +211,33 @@ function getRiderPositionTime( num )
 		
 	var p;
 	if( tSearch >= raceTimes.back() )
-		p = raceTimes.length + (tSearch - raceTimes.back()) / (raceTimes.back() - raceTimes[raceTimes.length-2]);
+	{
+		var lastRaceTime = raceTimes.back();
+		p = raceTimes.length + (tSearch - lastRaceTime) / (lastRaceTime - raceTimes[raceTimes.length-2]);
+	}
 	else
 	{
-		i = info.iLast;
+		i = info['iLast'];
 		if( !(raceTimes[i-1] < tSearch && tSearch <= raceTimes[i]) )
 		{
-			// Find the race time with binary search.
-			var left = 0, right = raceTimes.length, i;
-			while( right - left > 1 )
+			++i;
+			if( !(raceTimes[i-1] < tSearch && tSearch <= raceTimes[i]) )
 			{
-				i = ~~((right + left) / 2);
-				if( tSearch < raceTimes[i] )
-					right = i;
-				else
-					left = i;
+				// Find the race time with binary search.
+				var left = 0, right = raceTimes.length, i;
+				while( right - left > 1 )
+				{
+					i = ~~((right + left) / 2);
+					if( tSearch < raceTimes[i] )
+						right = i;
+					else
+						left = i;
+				}
+				i = left;
+				if( raceTimes[i] < tSearch )
+					++i;
 			}
-			i = left;
-			if( raceTimes[i] < tSearch )
-				++i;
-			info.iLast = i;
+			info['iLast'] = i;
 		}
 		if( i == 1 )
 		{
