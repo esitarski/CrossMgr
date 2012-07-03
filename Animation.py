@@ -202,6 +202,8 @@ class Animation(wx.PyControl):
 			data = { 101: { raceTimes: [xx, yy, zz], lastTime: None }, 102 { raceTimes: [aa, bb], lastTime: cc} }
 		"""
 		self.data = data if data else None
+		for num, info in self.data.iteritems():
+			info['iLast'] = 1
 		if tCur is not None:
 			self.t = tCur;
 		self.Refresh()
@@ -247,7 +249,13 @@ class Animation(wx.PyControl):
 		if tSearch >= raceTimes[-1]:
 			p = len(raceTimes) + float(tSearch - raceTimes[-1]) / float(raceTimes[-1] - raceTimes[-2])
 		else:
-			i = bisect.bisect_left( raceTimes, tSearch )
+			i = info['iLast']
+			if not (raceTimes[i-1] < tSearch <= raceTimes[i]):
+				i += 1
+				if not (raceTimes[i-1] < tSearch <= raceTimes[i]):
+					i = bisect.bisect_left( raceTimes, tSearch )
+				info['iLast'] = i
+				
 			if i == 1:
 				firstLapRatio = info['flr']
 				p = float(tSearch - raceTimes[i-1]) / float(raceTimes[i] - raceTimes[i-1])
