@@ -874,7 +874,7 @@ function SetCategoryResults()
 		return;
 
 	// Show results for this category.
-	var infoFields = ['License', 'LastName', 'FirstName', 'Category', 'Team'];
+	var infoFields = ['License', 'LastName', 'FirstName', 'Name', 'Category', 'Team'];
 	
 	if( showLapsFrequency < 1 )
 	{
@@ -941,6 +941,14 @@ function SetCategoryResults()
 					if( d[infoFields[f]] )
 						curFields[infoFields[f]] = true;
 			}
+		}
+		
+		var hasFirstLastName = (curFields['FirstName'] && curFields['LastName']);
+		if( hasFirstLastName )
+		{
+			curFields['FirstName'] = false;
+			curFields['LastName'] = false;
+			curFields['Name'] = true;
 		}
 
 		// Sort by greatest distance and shortest time.
@@ -1059,11 +1067,21 @@ function SetCategoryResults()
 			
 			for( var f = 0; f < infoFields.length; ++f )
 			{
-				if( curFields[infoFields[f]] )
+				var field = infoFields[f];
+				if( curFields[field] )
 				{
-					var v = d[infoFields[f]];
-					v = (v || '');
-					createTextChild( td = createChild(tr, 'TD'), v );
+					var v;
+					if( field == 'Name' )
+					{
+						if( d['LastName'] && d['FirstName'] )
+							v = d['LastName'] + ',&nbsp;' + d['FirstName'];
+						else
+							v = d['LastName'] || d['FirstName'];
+					}
+					else
+						v = d[field];
+					td = createChild(tr, 'TD');
+					td.innerHTML = v;
 					if( numsToWatch[num] ) td.className = 'highlight';
 					td.id = 'idNonNumeric'; 
 				}
@@ -1419,24 +1437,15 @@ function RefreshRaceChart()
 	if( !data || !canvasRaceChart || !isCanvasSupported() )
 		return;
 
-	var dc = canvasRaceChart.getContext('2d');
-	
-	dc.textBaseline = "top";
-	
-	var width = canvasRaceChart.width;
-	var height = canvasRaceChart.height;
-	var backColour = 'white';
-	dc.fillStyle = backColour;
-	dc.fillRect(0, 0, width, height );
-	
-	if( width < 80 || height < 80 )
-		return;
-		
 	var iCategory = {};
 	for( var i = 0; i < categories.length; ++i )
 		iCategory[categories[i]] = i;
 
+	var showStartOffsetButton = document.getElementById('idShowStartOffsets');
+	var showStartOffsets = showStartOffsetButton.checked;
+		
 	// Show results for this category.
+	var categoriesUsed = {};
 	var dataMax = 0;
 	var resultsData = [];
 	var lapsMax = 0;
@@ -1456,6 +1465,7 @@ function RefreshRaceChart()
 									d['lastTime'],
 									iCategory[d['raceCat']]
 								] );
+				categoriesUsed[d['raceCat']] = true;
 				if( raceTimes.back() > dataMax )
 					dataMax = raceTimes.back();
 				if( raceTimes.length > lapsMax )
@@ -1466,21 +1476,43 @@ function RefreshRaceChart()
 	
 	if( resultsData.length == 0 )
 		return;
+		
+	var categoryCount = 0;
+	for( var c in categoriesUsed )
+		++categoryCount;
+
+	// Adjust the height of the race chart to make each row reasonably high.
+	var rowMin = 14, rowMax = rowMin*2, rows = resultsData.length + categoryCount;
+	if( canvasRaceChart.height / rows < rowMin )
+		canvasRaceChart.height = ~~(rowMin * rows);
+	else if( canvasRaceChart.height / rows > rowMax )
+		canvasRaceChart.height = ~~(rowMax * rows);
+	var width = canvasRaceChart.width;
+	var height = canvasRaceChart.height;
+		
+	var dc = canvasRaceChart.getContext('2d');
+	
+	var backColour = 'white';
+	dc.textBaseline = "top";
+	dc.fillStyle = backColour;
+	dc.fillRect(0, 0, width, height );
 	
 	// Sort by greatest distance and shortest time.
 	resultsData.sort( CmpCategoryResultsData );
 	
 	var iNum = 2;
-	var iraceTimes = 3;
+	var iRaceTimes = 3;
 	var iStatus = 4;
 	var iCategory = 6;
 
 	// Check if all the data have the same offset.
-	var startOffset = resultsData[0][iraceTimes][0];
+	showStartOffsetButton.disabled = true;
+	var startOffset = resultsData[0][iRaceTimes][0];
 	for( var i = 1; i < resultsData.length; ++i )
 	{
-		if( resultsData[i][iraceTimes][0] != startOffset )
+		if( resultsData[i][iRaceTimes][0] != startOffset )
 		{
+			showStartOffsetButton.disabled = false;
 			startOffset = 0.0;
 			break;
 		}
@@ -1489,14 +1521,33 @@ function RefreshRaceChart()
 	{
 		for( var i = 0; i < resultsData.length; ++i )
 		{
-			var raceTimes = resultsData[i][iraceTimes];
+			var raceTimes = resultsData[i][iRaceTimes];
 			for( var j = 0; j < raceTimes.length; ++j )
 				raceTimes[j] -= startOffset;
 		}
 		dataMax -= startOffset;
 	}
+	else if( !showStartOffsets )
+	{
+		dataMax = 0;
+		for( var i = 0; i < resultsData.length; ++i )
+		{
+			var num = resultsData[i][iNum];
+			var d = data[num];
+			var cat = catDetails[d['raceCat']];
+			var raceTimes = resultsData[i][iRaceTimes];
+			if( cat.startOffset )
+			{
+				var startOffset = cat.startOffset;
+				for( var j = 0; j < raceTimes.length; ++j )
+					raceTimes[j] -= startOffset;
+			}
+			if( raceTimes.back() > dataMax )
+				dataMax = raceTimes.back();
+		}
+	}
 	
-	var lapsMax = resultsData.length > 0 ? resultsData[0][iraceTimes].length : 0;
+	var lapsMax = resultsData.length > 0 ? resultsData[0][iRaceTimes].length : 0;
 	var colors = makeColorGradient(2.4,2.4,2.4,0,2,4,128,127,500);
 	var lighterColors = [];
 	for( var i = 0; i < colors.length; ++i )
@@ -1576,6 +1627,8 @@ function RefreshRaceChart()
 
 	dc.lineCap = 'butt';
 	dc.lineJoin = 'miter';
+	
+	var categoryStartOffset = 0;
 
 	var xFactor = (width - labelsWidthLeft - labelsWidthRight) / dataMax;
 	var yLast = 2 * barHeight;
@@ -1587,6 +1640,8 @@ function RefreshRaceChart()
 		// Leave a space between categories.
 		if( i == 0 || resultsData[i][iCategory] != iCategoryLast )
 		{
+			if( !showStartOffsets )
+				categoryStartOffset = resultsData[i][iRaceTimes] ? resultsData[i][iRaceTimes][0] : 0;
 			iCategoryLast = resultsData[i][iCategory];
 			if( i == 0 )
 			{
@@ -1613,7 +1668,7 @@ function RefreshRaceChart()
 		xLast = labelsWidthLeft;
 		xCur = xLast;
 		var num = resultsData[i][iNum];
-		var raceTimes = resultsData[i][iraceTimes];
+		var raceTimes = resultsData[i][iRaceTimes];
 		
 		if( resultsData[i][iStatus] != 'Finisher' )
 		{
@@ -1624,7 +1679,7 @@ function RefreshRaceChart()
 		dc.strokeStyle = "#0F0F0F";
 		for( var j = 0; j < raceTimes.length; ++j )
 		{
-			var t = raceTimes[j];
+			var t = raceTimes[j] - categoryStartOffset;
 			xCur = ~~(labelsWidthLeft + t * xFactor);
 			if( j == 0 )
 			{
@@ -1635,7 +1690,7 @@ function RefreshRaceChart()
 			else
 			{
 				var riderData = data[num];
-				var hover = j + ', ' + FormatTime(t - raceTimes[j-1]);
+				var hover = j + ', ' + FormatTime(raceTimes[j] - raceTimes[j-1]);
 				if( !colors[j] )
 					alert( j );
 				drawSegment( dc, xLast, yLast, xCur - xLast + 1, yCur - yLast + 1, colors[j], lighterColors[j] );
@@ -2103,7 +2158,9 @@ Highlight Numbers:
 </select>
 </p>
 <div id="idResultsDiv"></div>
-<p id="idRaceName" class="noprint">Race Chart</p>
+<p class="noprint"><span id="idRaceName">Race Chart</span>&nbsp;&nbsp;&nbsp;&nbsp;
+<input type="checkbox" id="idShowStartOffsets" checked onClick="RefreshRaceChart()">Show Start Offsets</input>
+</p>
 <canvas id="idRaceChart" width="1000" height="800" class="noprint">
 Your browser does not support the HTML5 Canvas.<br/>
 Please upgrade to a more recent browser version.<br/>
