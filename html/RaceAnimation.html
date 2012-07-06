@@ -36,6 +36,11 @@ body
 	font-size: 120%;
 }
 
+.hidden
+{
+	display: none;
+}
+
 table.results
 {
 	font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -1441,6 +1446,7 @@ function RefreshRaceChart()
 	for( var i = 0; i < categories.length; ++i )
 		iCategory[categories[i]] = i;
 
+	var showStartOffsetOption = document.getElementById('idShowStartOffsetOption');
 	var showStartOffsetButton = document.getElementById('idShowStartOffsets');
 	var showStartOffsets = showStartOffsetButton.checked;
 		
@@ -1506,13 +1512,13 @@ function RefreshRaceChart()
 	var iCategory = 6;
 
 	// Check if all the data have the same offset.
-	showStartOffsetButton.disabled = true;
+	showStartOffsetOption.className = 'hidden';
 	var startOffset = resultsData[0][iRaceTimes][0];
 	for( var i = 1; i < resultsData.length; ++i )
 	{
 		if( resultsData[i][iRaceTimes][0] != startOffset )
 		{
-			showStartOffsetButton.disabled = false;
+			showStartOffsetOption.className = 'shown';
 			startOffset = 0.0;
 			break;
 		}
@@ -2159,7 +2165,9 @@ Highlight Numbers:
 </p>
 <div id="idResultsDiv"></div>
 <p class="noprint"><span id="idRaceName">Race Chart</span>&nbsp;&nbsp;&nbsp;&nbsp;
-<input type="checkbox" id="idShowStartOffsets" checked onClick="RefreshRaceChart()">Show Start Offsets</input>
+<span id="idShowStartOffsetOption">
+	<input type="checkbox" id="idShowStartOffsets" checked onClick="RefreshRaceChart()">Show Start Offsets</input>
+</span>
 </p>
 <canvas id="idRaceChart" width="1000" height="800" class="noprint">
 Your browser does not support the HTML5 Canvas.<br/>
