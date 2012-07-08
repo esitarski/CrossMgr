@@ -552,7 +552,13 @@ class NumKeypad( wx.Panel ):
 					continue
 				lap = len(rr.raceTimes)
 				if len > numLaps:
-					lap = bisect.bisect_left(rr.raceTimes, t)
+					tSearch = t
+					if race.isTimeTrial:
+						try:
+							tSearch -= race[rr.num].firstTime
+						except:
+							pass
+					lap = bisect.bisect_left( rr.raceTimes, tSearch )
 				if lap <= numLaps:
 					# Rider is still on course.
 					key = (category, lap, numLaps)
