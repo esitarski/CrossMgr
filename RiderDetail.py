@@ -475,6 +475,16 @@ class RiderDetail( wx.Panel ):
 		EditEntry.AddLapSplits( num, lap, times, splits )
 		self.refresh()
 	
+	def doCustomSplitLap( self ):
+		dlg = wx.NumberEntryDialog( self, message = "", caption = "Add Missing Splits", prompt = "Missing Splits to Add:",
+									value = 1, min = 1, max = 500 )
+		splits = None
+		if dlg.ShowModal() == wx.ID_OK:
+			splits = dlg.GetValue() + 1
+		dlg.Destroy()
+		if splits is not None:
+			self.doSplitLap( splits )
+		
 	def onDeleteLapStart( self, event ):
 		num, lap, times = self.getGanttChartPanelNumLapTimes()
 		if num is None:
@@ -500,6 +510,9 @@ class RiderDetail( wx.Panel ):
 				[	wx.NewId(),
 					'Add %d Missing Split%s' % (split-1, 's' if split > 2 else ''),
 					lambda evt, s = self, splits = split: s.doSplitLap(splits)] for split in xrange(2,8) ] + [
+					[wx.NewId(),
+					'Add Custom Missing Split...',
+					lambda evt, s = self: s.doCustomSplitLap()]] + [
 				[None, None, None],
 				[wx.NewId(),	'Delete Lap Start Time',	self.onDeleteLapStart],
 				[wx.NewId(),	'Delete Lap End Time',		self.onDeleteLapEnd],

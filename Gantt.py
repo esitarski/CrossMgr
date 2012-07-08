@@ -93,8 +93,11 @@ class Gantt( wx.Panel ):
 			]
 			self.splitMenuInfo = [
 					(wx.NewId(),
-					'Add %d Missing Split%s' % (split-1, 's' if split > 2 else ''),
-					lambda evt, s = self, splits = split: s.doSplitLap(splits)) for split in xrange(2,8) ]
+					'%d Split%s' % (split-1, 's' if split > 2 else ''),
+					lambda evt, s = self, splits = split: s.doSplitLap(splits)) for split in xrange(2,8) ] + [
+					(wx.NewId(),
+					'Custom...',
+					lambda evt, s = self: s.doCustomSplitLap())]
 			for id, name, text, callback, cCase in self.popupInfo:
 				if id:
 					self.Bind( wx.EVT_MENU, callback, id=id )
@@ -145,6 +148,16 @@ class Gantt( wx.Panel ):
 				return
 		EditEntry.AddLapSplits( num, lap, times, splits )
 		self.refresh()
+		
+	def doCustomSplitLap( self ):
+		dlg = wx.NumberEntryDialog( self, message = "", caption = "Add Missing Splits", prompt = "Missing Splits to Add:",
+									value = 1, min = 1, max = 500 )
+		splits = None
+		if dlg.ShowModal() == wx.ID_OK:
+			splits = dlg.GetValue() + 1
+		dlg.Destroy()
+		if splits is not None:
+			self.doSplitLap( splits )
 		
 	def swapEntries( self, num, numAdjacent ):
 		if not num or not numAdjacent:

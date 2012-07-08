@@ -6,6 +6,7 @@ from wx.lib.stattext import GenStaticText
 import bisect
 import Utils
 from Utils import SetValue, SetLabel
+from GetResults import GetResults
 import Model
 import sys
 import datetime
@@ -36,7 +37,7 @@ class NumKeypad( wx.Panel ):
 		verticalMainSizer = wx.BoxSizer( wx.VERTICAL )
 		horizontalMainSizer = wx.BoxSizer( wx.HORIZONTAL )
 		
-		verticalMainSizer.Add( horizontalMainSizer )
+		verticalMainSizer.Add( horizontalMainSizer, 1, flag=wx.EXPAND )
 		
 		#-------------------------------------------------------------------------------
 		# Create the edit field, numeric keybad and buttons.
@@ -187,6 +188,26 @@ class NumKeypad( wx.Panel ):
 		rowCur += 1
 		
 		verticalSubSizer.Add( gbs, flag=wx.LEFT|wx.TOP, border = 8 )
+		
+		#------------------------------------------------------------------------------
+		# Rider Lap Count.
+		rcVertical = wx.BoxSizer( wx.VERTICAL )
+		self.lapCountList = wx.ListCtrl( self, wx.ID_ANY, style = wx.LC_REPORT|wx.LC_SINGLE_SEL|wx.LC_HRULES|wx.BORDER_NONE )
+		self.lapCountList.InsertColumn( 0, 'Category', format=wx.LIST_FORMAT_LEFT )
+		self.lapCountList.InsertColumn( 1, '# Riders', format=wx.LIST_FORMAT_RIGHT )
+		self.lapCountList.InsertColumn( 2, 'Lap', format=wx.LIST_FORMAT_RIGHT )
+		for i in xrange(self.lapCountList.GetColumnCount()):
+			self.lapCountList.SetColumnWidth( i, wx.LIST_AUTOSIZE )
+		self.lapCountList.SetColumnWidth( 0, 64 )
+		self.lapCountList.SetColumnWidth( 1, 55 )
+		self.lapCountList.SetColumnWidth( 2, 55 )
+		rcVertical.AddSpacer( 32 )
+		title = wx.StaticText(self, wx.ID_ANY, 'Riders on Course:')
+		title.SetFont( wx.Font(fontSize*0.9, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
+		rcVertical.Add( title, flag=wx.ALL, border = 4 )
+		rcVertical.Add( self.lapCountList, 1, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, border = 4 )
+		horizontalMainSizer.Add( rcVertical, 1, flag=wx.EXPAND )
+		
 		#----------------------------------------------------------------------------------------------
 		self.raceHUD = RaceHUD( self, wx.ID_ANY )
 		verticalMainSizer.Add( self.raceHUD, flag=wx.EXPAND )
@@ -506,7 +527,85 @@ class NumKeypad( wx.Panel ):
 					race.setChanged()
 			
 		self.refreshRaceHUD()
+	
+	def refreshRiderLapCountList( self ):
+		self.lapCountList.DeleteAllItems()
+		with Model.LockRace() as race:
+			if not race or not race.isRunning():
+				return
 		
+		results = GetResults( 'All', False )
+		if not results:
+			return
+		
+		catLapCount = {}
+		catCount = {}
+		with Model.LockRace() as race:
+			t = Model.race.curRaceTime()
+			for rr in results:
+				category = race.getCategory( rr.num )
+				catCount[category] = catCount.get(category, 0) + 1
+				if rr.status != Model.Rider.Finisher:
+					continue
+				numLaps = race.getCategoryBestLaps( category.name if category else 'All' )
+				if not numLaps:
+					continue
+				lap = len(rr.raceTimes)
+				if len > numLaps:
+					lap = bisect.bisect_left(rr.raceTimes, t)
+				if lap <= numLaps:
+					# Rider is still on course.
+					key = (category, lap, numLaps)
+					catLapCount[key] = catLapCount.get(key, 0) + 1
+		
+		if not catLapCount:
+			return
+			
+		catLapList = [(category, lap, categoryLaps, count)
+						for (category, lap, categoryLaps), count in catLapCount.iteritems()]
+		catLapList.sort( key=lambda x: (x[0].getStartOffsetSecs(), x[0].name, x[1]) )
+		
+		def appendListRow( row = tuple(), colour = None, bold = None ):
+			r = self.lapCountList.InsertStringItem( sys.maxint, str(row[0]) if row else '' )
+			for c in xrange(1, len(row)):
+				self.lapCountList.SetStringItem( r, c, str(row[c]) )
+			if colour is not None:
+				item = self.lapCountList.GetItem( r )
+				item.SetTextColour( colour )
+				self.lapCountList.SetItem( item )
+			if bold is not None:
+				item = self.lapCountList.GetItem( r )
+				font = item.GetFont()
+				font.SetWeight( wx.FONTWEIGHT_BOLD )
+				item.SetFont( font )
+				self.lapCountList.SetItem( item )
+			return r
+		
+		appendListRow( ('Total',
+							'%d/%d' % (	sum(count for count in catLapCount.itervalues()),
+										sum(count for count in catCount.itervalues())) ),
+							colour=wx.BLUE, bold=True )
+		appendListRow()
+
+		magicMaxLaps = 158	# Used to prevent strange results in the demo.
+		lastCategory, lastCategoryLaps = None, None
+		countTotal = 0
+		for category, lap, categoryLaps, count in catLapList:
+			if lastCategory is not None and category != lastCategory:
+				appendListRow( ('    Total', '%d/%d' % (countTotal, catCount[lastCategory]),
+									lastCategoryLaps if lastCategoryLaps < magicMaxLaps else ''),
+								bold = True )
+				appendListRow()
+				countTotal = 0
+			appendListRow( (category.name if category != lastCategory else '', count, lap) )
+			lastCategory, lastCategoryLaps = category, categoryLaps
+			countTotal += count
+			
+		if lastCategory is not None:
+			appendListRow( ('    Total', '%d/%d' % (countTotal, catCount[lastCategory]),
+								lastCategoryLaps if lastCategoryLaps < magicMaxLaps else ''),
+							bold = True )
+	
 	def refresh( self ):
 		wx.CallAfter( self.numEdit.SetFocus )
 		with Model.LockRace() as race:
@@ -520,6 +619,7 @@ class NumKeypad( wx.Panel ):
 			if not enable:
 				self.numEdit.SetValue( None )
 		self.refreshLaps()
+		self.refreshRiderLapCountList()
 	
 if __name__ == '__main__':
 	app = wx.PySimpleApp()
