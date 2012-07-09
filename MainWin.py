@@ -713,7 +713,10 @@ class MainWin( wx.Frame ):
 		xlFName = os.path.join( dName, os.path.basename(xlFName) )
 
 		wb = xlwt.Workbook()
-		for catName in getRaceCategories():
+		raceCategories = getRaceCategories()
+		for catName in raceCategories:
+			if catName == 'All' and len(raceCategories) > 1:
+				continue
 			sheetName = re.sub('[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', catName)
 			sheetName = sheetName[:31]
 			sheetCur = wb.add_sheet( sheetName )
@@ -1577,7 +1580,7 @@ def MainLoop():
 	Utils.writeLog( 'start' )
 	
 	# Configure the main window.
-	mainWin = MainWin( None, title=Version.AppVerName, size=(1024,600) )
+	mainWin = MainWin( None, title=Version.AppVerName, size=(1048,600) )
 	if options.fullScreen:
 		mainWin.Maximize( True )
 	mainWin.Show()

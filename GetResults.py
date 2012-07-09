@@ -56,8 +56,9 @@ class RiderResult( object ):
 		
 	def __repr__( self ):
 		return str(self.__dict__)
-		
-def GetResults( catName = 'All', getExternalData = False ):
+
+@Model.memoize
+def GetResultsCore( catName = 'All' ):
 	
 	riderResults = []
 	with Model.LockRace() as race:
@@ -166,33 +167,11 @@ def GetResults( catName = 'All', getExternalData = False ):
 			
 		riderResults.sort( key = lambda x: (statusSortSeq[x.status], -x.laps, x.lastTime) )
 		
-		# Get the linked external data.
-		externalFields = []
-		externalInfo = None
-		if getExternalData:
-			try:
-				externalFields = race.excelLink.getFields()
-				externalInfo = race.excelLink.read()
-				for ignoreField in IgnoreFields:
-					try:
-						externalFields.remove( ignoreField )
-					except ValueError:
-						pass
-			except:
-				externalFields = []
-				externalInfo = None
-		
-		# Add external data.
 		# Add the position (or status, if not a Finisher).
 		# Fill in the gap field (include laps down if appropriate).
 		leader = riderResults[0]
 		for pos, rr in enumerate(riderResults):
-			for f in externalFields:
-				try:
-					setattr( rr, f, externalInfo[rr.num][f] )
-				except KeyError:
-					setattr( rr, f, '' )
-					
+		
 			if rr.status != Model.Rider.Finisher:
 				rr.pos = Model.Rider.statusNames[rr.status]
 				continue
@@ -208,13 +187,41 @@ def GetResults( catName = 'All', getExternalData = False ):
 		
 	# Return the final results.
 	return riderResults
+
+def GetResults( catName = 'All', getExternalData = False ):
+	riderResults = GetResultsCore( catName )
+	if not getExternalData or not riderResults:
+		return riderResults
+	
+	# Add the linked external data.
+	with Model.LockRace() as race:
+		try:
+			externalFields = race.excelLink.getFields()
+			externalInfo = race.excelLink.read()
+			for ignoreField in IgnoreFields:
+				try:
+					externalFields.remove( ignoreField )
+				except ValueError:
+					pass
+		except:
+			return riderResults
+				
+		for rr in riderResults:
+			for f in externalFields:
+				try:
+					setattr( rr, f, externalInfo[rr.num][f] )
+				except KeyError:
+					setattr( rr, f, '' )
 		
+	return riderResults
+	
+@Model.memoize
 def GetCategoryDetails():
-	results = GetResults()
-	catDetails = {}
+	results = GetResultsCore()
 	if not results:
-		return catDetails
+		return {}
 		
+	catDetails = {}
 	with Model.LockRace() as race:
 		if not race:
 			return catDetails
