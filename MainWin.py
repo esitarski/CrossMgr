@@ -448,6 +448,12 @@ class MainWin( wx.Frame ):
 		self.optionsMenu.Append( idCur , "Set &Graphic...", "Set Graphic for Output" )
 		self.Bind(wx.EVT_MENU, self.menuSetGraphic, id=idCur )
 		
+		self.optionsMenu.AppendSeparator()
+
+		idCur = wx.NewId()
+		self.optionsMenu.Append( idCur , "Copy Log File to &Clipboard", "Copy Log File to &Clipboard" )
+		self.Bind(wx.EVT_MENU, self.menuCopyLogFileToClipboard, id=idCur )
+		
 		self.menuBar.Append( self.optionsMenu, "&Options" )
 		
 		#-----------------------------------------------------------------------
@@ -597,6 +603,26 @@ class MainWin( wx.Frame ):
 			self.config.Write( 'graphic', imgPath )
 			self.config.Flush()
 		dlg.Destroy()
+	
+	def menuCopyLogFileToClipboard( self, event ):
+		try:
+			logData = open(redirectFileName).read()
+		except IOError:
+			Utils.MessageOK(self, "Unable to open log file.", "Error", wx.ICON_ERROR )
+			return
+			
+		logData = logData.split( '\n' )
+		logData = logData[-1000:]
+		logData = '\n'.join( logData )
+		
+		dataObj = wx.TextDataObject()
+		dataObj.SetText(logData)
+		if wx.TheClipboard.Open():
+			wx.TheClipboard.SetData( dataObj )
+			wx.TheClipboard.Close()
+			Utils.MessageOK(self, "Log file copied to clipboard.\nYou can now paste it into an email.", "Success" )
+		else:
+			Utils.MessageOK(self, "Unable to open the clipboard.", "Error", wx.ICON_ERROR )
 	
 	def getGraphicFName( self ):
 		defaultFName = os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png')
@@ -1545,8 +1571,14 @@ Continue?''' % fName, 'Simulate a Race' ):
 			wx.CallAfter( self.refresh )
 			wx.CallAfter( self.record.refreshLaps )
 
+# Set log file location.
+dataDir = ''
+redirectFileName = ''
 			
 def MainLoop():
+	global dataDir
+	global redirectFileName
+	
 	random.seed()
 	setpriority( priority=4 )	# Set to real-time priority.
 
@@ -1559,12 +1591,13 @@ def MainLoop():
 	app = wx.PySimpleApp()
 	app.SetAppName("CrossMgr")
 	
+	dataDir = Utils.getHomeDir()
+	redirectFileName = os.path.join(dataDir, 'CrossMgr.log')
+			
 	# Set up the log file.  Otherwise, show errors on the screen unbuffered.
 	if __name__ == '__main__':
 		Utils.disable_stdout_buffering()
 	else:
-		dataDir = Utils.getHomeDir()
-		redirectFileName = os.path.join(dataDir, 'CrossMgr.log')
 		try:
 			logSize = os.path.getsize( redirectFileName )
 			if logSize > 1000000:

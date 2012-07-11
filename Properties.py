@@ -153,7 +153,13 @@ class Properties( wx.Panel ):
 	
 	def editButtonCallback( self, event ):
 		if not Model.race:
-			Utils.MessageOK( self, 'You must have a valid race File|Open...\nOr create one with File|New....', 'Valid Race Required', wx.ICON_WARNING )
+			mainWin = Utils.getMainWin()
+			if mainWin:
+				wx.CallAfter( mainWin.menuNew, event )
+			else:
+				Utils.MessageOK( self,
+					'You must have a valid race File|Open...\nOr create one with File|New....', 'Valid Race Required',
+					wx.ICON_WARNING )
 		else:
 			ChangeProperties( self )
 	
