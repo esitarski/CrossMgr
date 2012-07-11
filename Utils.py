@@ -54,7 +54,14 @@ def GetSelectedRows( grid ):
 		rows.append(gcr) 
 	return rows 
 
-		
+'''
+wx.ICON_EXCLAMATION	Shows an exclamation mark icon.
+wx.ICON_HAND	Shows an error icon.
+wx.ICON_ERROR	Shows an error icon - the same as wxICON_HAND.
+wx.ICON_QUESTION	Shows a question mark icon.
+wx.ICON_INFORMATION	Shows an information (i) icon.
+'''
+
 def MessageOK( parent, message, title = '', iconMask = wx.ICON_INFORMATION):
 	dlg = wx.MessageDialog(parent, message, title, wx.OK | iconMask)
 	dlg.ShowModal()

@@ -152,10 +152,8 @@ class Properties( wx.Panel ):
 			mainWin.menuLinkExcel()
 	
 	def editButtonCallback( self, event ):
-		with Model.LockRace() as race:
-			pass
-		if not race:
-			Utils.MessageOK( 'You must have a valid race.', 'Valid Race Required', ICON_WARNING )
+		if not Model.race:
+			Utils.MessageOK( self, 'You must have a valid race File|Open...\nOr create one with File|New....', 'Valid Race Required', wx.ICON_WARNING )
 		else:
 			ChangeProperties( self )
 	
