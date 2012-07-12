@@ -42,7 +42,7 @@ class Animation(wx.PyControl):
 		
 		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
 		self.SetBackgroundColour('white')
-		self.data = None
+		self.data = {}
 		self.t = 0
 		self.tMax = None
 		self.tDelta = 1

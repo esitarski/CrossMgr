@@ -58,6 +58,7 @@ class Properties( wx.Panel ):
 		
 		self.jchipLabel = wx.StaticText( self, wx.ID_ANY, 'JChip Integration: ' )
 		self.jchip = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
+		self.Bind( wx.EVT_CHECKBOX, self.onJChipIntegration, self.jchip )
 		rows += 1
 
 		self.autocorrectLapsDefaultLabel = wx.StaticText( self, wx.ID_ANY, 'Autocorrect Laps by Default: ' )
@@ -145,6 +146,9 @@ class Properties( wx.Panel ):
 		self.SetSizer(fbs)
 		
 		self.editFields = [labelFieldFormats[i][0] for i in xrange(1, len(labelFieldFormats), 2)]
+	
+	def onJChipIntegration( self, event ):
+		self.autocorrectLapsDefault.SetValue( not self.jchip.GetValue() )
 	
 	def excelButtonCallback( self, event ):
 		mainWin = Utils.getMainWin()

@@ -174,17 +174,28 @@ class NumKeypad( wx.Panel ):
 		rowCur += 1
 		
 		rowCur += 1
+		label = wx.StaticText(self, wx.ID_ANY, "Manual Start")
+		label.SetFont( font )
+		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
+		self.raceStartMessage = label
+		self.raceStartTime = wx.StaticText( self, wx.ID_ANY, '' )
+		self.raceStartTime.SetFont( font )
+		gbs.Add( self.raceStartTime, pos=(rowCur, colCur+1), span=(1, 1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
+		rowCur += 1
+		
+		rowCur += 1
 		label = wx.StaticText(self, wx.ID_ANY, "Clock Time")
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
 		self.clockTime = wx.StaticText( self, wx.ID_ANY, '' )
 		self.clockTime.SetFont( font )
-		gbs.Add( self.clockTime, pos=(rowCur, colCur+1), span=(1, 2), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
+		gbs.Add( self.clockTime, pos=(rowCur, colCur+1), span=(1, 1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
 
 		rowCur += 1
 		self.message = wx.StaticText( self, wx.ID_ANY, '' )
 		self.message.SetFont( font )
+		self.message.SetDoubleBuffered( True )
 		gbs.Add( self.message, pos=(rowCur, colCur), span=(1, 2), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_CENTRE )
 		rowCur += 1
 		
@@ -615,6 +626,23 @@ class NumKeypad( wx.Panel ):
 				self.isEnabled = enable
 			if not enable:
 				self.numEdit.SetValue( None )
+				
+			# Refresh the race start time.
+			rst = ''
+			rstSource = ''
+			if race and race.startTime:
+				st = race.startTime
+				if getattr(race, 'resetStartClockOnFirstTag', False):
+					if getattr(race, 'firstRecordedTime', None):
+						rstSource = 'Waiting...'
+					else:
+						rstSource = 'Chip Start'
+				else:
+					rstSource = 'Manual Start'
+				rst = '%02d:%02d:%02d.%02d' % (st.hour, st.minute, st.second, int(st.microsecond / 10000.0))
+			SetLabel( self.raceStartTime, rst )
+			SetLabel( self.raceStartMessage, rstSource )
+				
 		self.refreshLaps()
 		self.refreshRiderLapCountList()
 	

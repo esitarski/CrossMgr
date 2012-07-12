@@ -155,7 +155,10 @@ def ShowTipAtStartup():
 			mainWin.config.WriteBool('showTipAtStartup', showTipAtStartup)
 	except:
 		pass
-		
+
+def replaceJsonVar( s, varName, value ):
+	return s.replace( '%s = null' % varName, '%s = %s' % (varName, json.dumps(value)), 1 )
+
 #----------------------------------------------------------------------------------
 class CustomStatusBar(wx.StatusBar):
     def __init__(self, parent):
@@ -342,6 +345,13 @@ class MainWin( wx.Frame ):
 		self.dataMgmtMenu.Append( idCur , "Export History to Excel...", "Export History to Excel File" )
 		self.Bind(wx.EVT_MENU, self.menuExportHistory, id=idCur )
 
+		self.dataMgmtMenu.AppendSeparator()
+		
+		idCur = wx.NewId()
+		self.dataMgmtMenu.Append( idCur , "Export Raw Data as &HTML...", "Export raw data as HTML (.html)" )
+		self.Bind(wx.EVT_MENU, self.menuExportHtmlRawData, id=idCur )
+
+		
 		self.menuBar.Append( self.dataMgmtMenu, "&DataMgmt" )
 
 		#-----------------------------------------------------------------------
@@ -760,7 +770,6 @@ class MainWin( wx.Frame ):
 						'Excel File Error', iconMask=wx.ICON_ERROR )
 						
 	#--------------------------------------------------------------------------------------------
-	
 	@logCall
 	def menuExportHtmlRaceResults( self, event ):
 		self.commit()
@@ -788,8 +797,7 @@ class MainWin( wx.Frame ):
 			return
 			
 		# Replace parts of the file with the race information.
-		raceName = 'raceName = %s' % json.dumps('%s' % os.path.basename(self.fileName)[:-4])
-		html = html.replace( 'raceName = null', raceName, 1 )
+		html = replaceJsonVar( html, 'raceName', os.path.basename(self.fileName)[:-4] )
 			
 		with Model.LockRace() as race:
 			year, month, day = [int(v) for v in race.date.split('-')]
@@ -800,20 +808,12 @@ class MainWin( wx.Frame ):
 			raceTime = datetime.datetime( year, month, day, hour, minute, second )
 			title = '%s Results for %s Start on %s' % ( race.name, raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
 			html = html.replace( 'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
-			organizer = getattr( race, 'organizer', '' )
-			html = html.replace( 'organizer = null', 'organizer = %s' % json.dumps(organizer), 1 )
+			html = replaceJsonVar( html, 'organizer', getattr(race, 'organizer', '') )
 			
-		timestamp = 'timestamp = %s' % json.dumps( datetime.datetime.now().ctime() )
-		html = html.replace( 'timestamp = null', timestamp )
-		
-		email = 'email = %s' % json.dumps( self.config.Read('email', '') )
-		html = html.replace( 'email = null', email )
-		
-		data = 'data = %s' % json.dumps(GetAnimationData(getExternalData = True))
-		html = html.replace( 'data = null', data )
-		
-		catDetails = 'catDetails = %s' % json.dumps(GetCategoryDetails())
-		html = html.replace( 'catDetails = null', catDetails )
+		html = replaceJsonVar( html, 'timestamp', datetime.datetime.now().ctime() )
+		html = replaceJsonVar( html, 'email', self.config.Read('email', '') )
+		html = replaceJsonVar( html, 'data', GetAnimationData(getExternalData = True) )
+		html = replaceJsonVar( html, 'catDetails', GetCategoryDetails() )
 
 		graphicBase64 = self.getGraphicBase64()
 		if graphicBase64:
@@ -829,10 +829,117 @@ class MainWin( wx.Frame ):
 		try:
 			with open(fname, 'w') as fp:
 				fp.write( html )
-			webbrowser.open( fname, new = 2, autoraise = True )
+			webbrowser.open( fname, new = 0, autoraise = True )
 			Utils.MessageOK(self, 'Html Race Animation written to:\n\n   %s' % fname, 'Html Write')
 		except:
-			Utils.MessageOK(self, 'Cannot write HTML template file (%s).' % fname,
+			Utils.MessageOK(self, 'Cannot write HTML file (%s).' % fname,
+							'Html Write Error', iconMask=wx.ICON_ERROR )
+	
+	#--------------------------------------------------------------------------------------------
+	@logCall
+	def menuExportHtmlRawData( self, event ):
+		self.commit()
+		if self.fileName is None or len(self.fileName) < 4:
+			return
+		
+		startTime, endTime, numTimes = OutputStreamer.ReadStreamFile()
+		
+		if not numTimes:
+			Utils.MessageOK( self, 'Raw race data file (.csv) is empty/missing.', 'No Raw Race Data', wx.ICON_ERROR )
+			return
+		
+		# Get the folder to write the html file.
+		fname = self.fileName[:-4] + 'RawData.html'
+		dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(fname),
+							style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
+		ret = dlg.ShowModal()
+		dName = dlg.GetPath()
+		dlg.Destroy()
+		if ret != wx.ID_OK:
+			return
+
+		# Read the html template.
+		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RawData.html')
+		try:
+			with open(htmlFile) as fp:
+				html = fp.read()
+		except:
+			Utils.MessageOK('Cannot read HTML template file.  Check program installation.',
+							'Html Template Read Error', iconMask=wx.ICON_ERROR )
+			return
+		
+		# Replace parts of the file with the race information.
+		html = replaceJsonVar( html, 'raceName', os.path.basename(self.fileName)[:-4] )
+		html = replaceJsonVar( html, 'raceStart', (startTime - datetime.datetime.combine(startTime.date(), datetime.time())).total_seconds() )
+		html = replaceJsonVar( html, 'numTimes', numTimes )
+		
+		with Model.LockRace() as race:
+			try:
+				externalFields = race.excelLink.getFields()
+				externalInfo = race.excelLink.read()
+			except:
+				externalFields = []
+				externalInfo = {}
+
+			ignoreFields = set( ['Bib#', 'License'] )
+			for f in ignoreFields:
+				try:
+					externalFields.remove( f )
+				except ValueError:
+					pass
+			
+			# Add the race category to the info.
+			externalFields.insert( 0, 'Race Category' )
+			seen = {}
+			for num in (seen.setdefault(num, num) for num, t in numTimes if num not in seen):
+				category = race.getCategory( num )
+				externalInfo.setdefault(num, {})['Race Category'] = category.name if category else 'Unknown'
+			
+			# Remove extra info.
+			for num in [n for n in externalInfo.iterkeys() if n not in seen]:
+				del externalInfo[num]
+			
+			# Remove extra info.
+			for num, info in externalInfo.iteritems():
+				for f in ignoreFields:
+					try:
+						del info[f]
+					except KeyError:
+						pass
+			
+			html = replaceJsonVar( html, 'externalFields', externalFields )
+			html = replaceJsonVar( html, 'externalInfo', externalInfo )
+			
+			year, month, day = [int(v) for v in race.date.split('-')]
+			timeComponents = [int(v) for v in race.scheduledStart.split(':')]
+			if len(timeComponents) < 3:
+				timeComponents.append( 0 )
+			hour, minute, second = timeComponents
+			raceTime = datetime.datetime( year, month, day, hour, minute, second )
+			title = '%s Raw Data for %s Start on %s' % ( race.name, raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
+			html = html.replace( 'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
+			html = replaceJsonVar( html, 'organizer', getattr(race, 'organizer', '') )
+			
+		html = replaceJsonVar( html, 'timestamp', datetime.datetime.now().ctime() )
+		
+		graphicBase64 = self.getGraphicBase64()
+		if graphicBase64:
+			try:
+				iStart = html.index( 'var imageSrc =' )
+				iEnd = html.index( "';", iStart )
+				html = ''.join( [html[:iStart], "var imageSrc = '%s';" % graphicBase64, html[iEnd+2:]] )
+			except ValueError:
+				pass
+			
+		# Write out the results.
+		fname = os.path.join( dName, os.path.basename(fname) )
+		try:
+			with open(fname, 'w') as fp:
+				fp.write( html )
+			webbrowser.open( fname, new = 0, autoraise = True )
+			Utils.MessageOK(self, 'Html Raw Data written to:\n\n   %s' % fname, 'Html Write')
+		except:
+			Utils.MessageOK(self, 'Cannot write HTML file (%s).' % fname,
 							'Html Write Error', iconMask=wx.ICON_ERROR )
 	
 	#--------------------------------------------------------------------------------------------
@@ -1503,6 +1610,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			return False
 		
 		success = False
+		numTimes = []
 		for d in data:
 			if d[0] != 'data':
 				continue
@@ -1511,12 +1619,15 @@ Continue?''' % fName, 'Simulate a Race' ):
 				# Ignore times before the start of the race.
 				if race.isRunning() and race.startTime < dt:
 					delta = dt - race.startTime
-					race.addTime( num, delta.total_seconds() )
+					t = delta.total_seconds()
+					race.addTime( num, t )
+					numTimes.append( (num, t) )
 					success = True
 			except (TypeError, ValueError, KeyError):
 				pass
 		
 		if success and self.getCurrentPage() == self.results:
+			OutputStreamer.writeNumTimes( numTimes )
 			wx.CallAfter( self.results.showLastLap )
 		return success
 
