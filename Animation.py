@@ -201,7 +201,7 @@ class Animation(wx.PyControl):
 		Example:
 			data = { 101: { raceTimes: [xx, yy, zz], lastTime: None }, 102 { raceTimes: [aa, bb], lastTime: cc} }
 		"""
-		self.data = data if data else None
+		self.data = data if data else {}
 		for num, info in self.data.iteritems():
 			info['iLast'] = 1
 		if tCur is not None:
