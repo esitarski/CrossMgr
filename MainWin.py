@@ -510,6 +510,7 @@ class MainWin( wx.Frame ):
 				return
 			for num, rider in race.riders.iteritems():
 				rider.autocorrectLaps = True
+			race.setChanged()
 		self.refresh()
 	
 	def menuClearLapAutocorrect( self, event ):
@@ -519,6 +520,7 @@ class MainWin( wx.Frame ):
 				return
 			for num, rider in race.riders.iteritems():
 				rider.autocorrectLaps = False
+			race.setChanged()
 		self.refresh()
 	
 	def menuShowHighPrecisionTimes( self, event ):
@@ -717,6 +719,7 @@ class MainWin( wx.Frame ):
 		if not Model.race:
 			Utils.MessageOK(self, "You must have a valid race.", "Link ExcelSheet", iconMask=wx.ICON_ERROR)
 			return
+		self.showPageName( 'Results' )
 		self.closeFindDialog()
 		gel = GetExcelLink( self, getattr(Model.race, 'excelLink', None) )
 		link = gel.show()
@@ -845,7 +848,8 @@ class MainWin( wx.Frame ):
 		startTime, endTime, numTimes = OutputStreamer.ReadStreamFile()
 		
 		if not numTimes:
-			Utils.MessageOK( self, 'Raw race data file (.csv) is empty/missing.', 'No Raw Race Data', wx.ICON_ERROR )
+			Utils.MessageOK( self, 'Raw race data file:\n\n    "%s"\n\nis empty/missing.' % OutputStreamer.getFileName(),
+					'Missing Raw Race Data', wx.ICON_ERROR )
 			return
 		
 		# Get the folder to write the html file.
@@ -1616,19 +1620,21 @@ Continue?''' % fName, 'Simulate a Race' ):
 				continue
 			try:
 				num, dt = race.tagNums[d[1]], d[2]
-				# Ignore times before the start of the race.
-				if race.isRunning() and race.startTime < dt:
-					delta = dt - race.startTime
-					t = delta.total_seconds()
-					race.addTime( num, t )
-					numTimes.append( (num, t) )
-					success = True
 			except (TypeError, ValueError, KeyError):
-				pass
+				continue
+				
+			# Ignore times before the start of the race.
+			if race.isRunning() and race.startTime <= dt:
+				delta = dt - race.startTime
+				t = delta.total_seconds()
+				t = race.addTime( num, t )
+				numTimes.append( (num, t) )
+				success = True
 		
-		if success and self.getCurrentPage() == self.results:
+		if success:
 			OutputStreamer.writeNumTimes( numTimes )
-			wx.CallAfter( self.results.showLastLap )
+			if self.getCurrentPage() == self.results:
+				wx.CallAfter( self.results.showLastLap )
 		return success
 
 	def updateRaceClock( self, event = None ):
@@ -1721,7 +1727,7 @@ def MainLoop():
 		except:
 			pass
 	
-	Utils.writeLog( 'start' )
+	Utils.writeLog( 'start: %s' % Version.AppVerName )
 	
 	# Configure the main window.
 	mainWin = MainWin( None, title=Version.AppVerName, size=(1048,600) )

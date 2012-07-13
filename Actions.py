@@ -171,13 +171,32 @@ class Actions( wx.Panel ):
 			running = race.isRunning()
 		if running:
 			self.onFinishRace( event )
-		elif self.startRaceTimeCheckBox.IsChecked():
+			return
+			
+		race.resetStartClockOnFirstTag = bool(self.resetStartClockCheckBox.IsChecked())
+		if getattr(Model.race, 'enableJChipIntegration', False):
+			try:
+				externalFields = race.excelLink.getFields()
+				externalInfo = race.excelLink.read()
+			except:
+				externalFields = []
+				externalInfo = {}
+			if not externalInfo:
+				Utils.MessageOK(self, 'Cannot Start. Excel Sheet read failure.\nThe Excel file is either unconfigured or unreadable.', 'Excel Sheet Read ', wx.ICON_ERROR )
+				return
+			try:
+				i = (i for i, field in enumerate(externalFields) if field.startswith('Tag')).next()
+			except StopIteration:
+				Utils.MessageOK(self, 'Cannot Start.  Excel Sheet missing Tag or Tag2 column.\nThe Excel file must contain a Tag column to use JChip.', 'Excel Sheet missing Tag or Tag2 column', wx.ICON_ERROR )
+				return
+				
+		if self.startRaceTimeCheckBox.IsChecked():
 			self.onStartRaceTime( event )
 		else:
 			self.onStartRace( event )
 	
 	def onStartRace( self, event ):
-		if Model.race is not None and Utils.MessageOKCancel(self, 'Start Race Now?', 'Start Race'):
+		if Model.race and Utils.MessageOKCancel(self, 'Start Race Now?', 'Start Race'):
 			StartRaceNow()
 	
 	def onStartRaceTime( self, event ):

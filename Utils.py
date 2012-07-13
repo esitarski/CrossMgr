@@ -77,10 +77,14 @@ def MessageOKCancel( parent, message, title = '', iconMask = wx.ICON_QUESTION):
 def SetValue( st, value ):
 	if st.GetValue() != value:
 		st.SetValue( value )
+		return True
+	return False
 
 def SetLabel( st, label ):
 	if st.GetLabel() != label:
 		st.SetLabel( label )
+		return True
+	return False
 
 def MakeGridReadOnly( grid ):
 	attr = gridlib.GridCellAttr()
@@ -353,6 +357,16 @@ def AlignVerticalScroll( gFrom, gTo ):
 	xFrom, yFrom = gFrom.GetViewStart()
 	xTo,   yTo   = gTo.GetViewStart()
 	gTo.Scroll( xTo, yFrom )
+
+def LayoutChildResize( child ):
+	parent = child.GetParent()
+	while parent:
+		parent.Layout()
+		if parent.IsTopLevel():
+			break
+		parent = parent.GetParent()
+			
+
 	
 if __name__ == '__main__':
 	app = wx.PySimpleApp()

@@ -553,7 +553,7 @@ class Rider(object):
 			startOffset = race.getCategory(self.num).getStartOffsetSecs()
 			if startOffset:
 				times = [t for t in times if t == 0.0 or t > startOffset]
-				if len(times) == 1:
+				if len(times) <= 1:
 					return []
 		except (ValueError, AttributeError):
 			pass
@@ -562,7 +562,7 @@ class Rider(object):
 	def interpolate( self, stopTime = maxInterpolateTime ):
 		if not self.times or self.status in [Rider.DNS, Rider.DQ]:
 			return []
-			
+		
 		# Check if we need to do any interpolation or if the user wants the raw data.
 		if not getattr(self, 'autocorrectLaps', True):
 			iTimes = [None] * (len(self.times) + 1)

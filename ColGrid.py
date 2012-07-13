@@ -53,11 +53,11 @@ class ColTable(Grid.PyGridTableBase):
 			delmsg, addmsg = Grid.GRIDTABLE_NOTIFY_ROWS_DELETED, Grid.GRIDTABLE_NOTIFY_ROWS_APPENDED
 			
 		if new < current:
-			msg = Grid.GridTableMessage(self,delmsg,new,current-new)
+			msg = Grid.GridTableMessage( self, delmsg, new, current-new )
 			grid.ProcessTableMessage(msg)
 		elif new > current:
-			msg = Grid.GridTableMessage(self,addmsg,new-current)
-			grid.ProcessTableMessage(msg)		
+			msg = Grid.GridTableMessage( self, addmsg, new-current )
+			grid.ProcessTableMessage(msg)
 	
 	def Set( self, data = None, colnames = None, textColour = None, backgroundColour = None, grid = None ):
 		if colnames is not None:

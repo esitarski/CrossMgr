@@ -137,6 +137,9 @@ def writeNumTimes( numTimes ):
 	if streamer:
 		for num, t in numTimes:
 			q.put( 'time,{:d},{:.15e}\n'.format(num, t / DaySeconds) )
+	else:
+		print 'writeNumTimes failure:', numTimes
+
 
 def ReadStreamFile( fname = None ):
 	if not fname:
@@ -158,6 +161,8 @@ def ReadStreamFile( fname = None ):
 						numTimes.append( (int(fields[1]), float(fields[2]) * DaySeconds) )
 					elif fields[0] == 'start':
 						startTime = gt( fields[1] )
+						endTime = None		# Reset the endTime and numTimes on start.
+						numTimes = []
 					elif fields[0] == 'end':
 						endTime = gt( fields[1] )
 				except (ValueError, IndexError):

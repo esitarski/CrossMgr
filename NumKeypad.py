@@ -384,7 +384,9 @@ class NumKeypad( wx.Panel ):
 				
 		for f in infoFields:
 			f.Enable( enable )
-				
+		
+		changed = False
+
 		race = Model.race
 		if race is None or not race.isFinished() or race.numLaps is None:
 			if race is not None and self.automaticManualChoice.GetSelection() != 0:
@@ -395,18 +397,20 @@ class NumKeypad( wx.Panel ):
 				self.numLaps.SetSelection( 0 )
 			for f in infoFields:
 				SetLabel( f, '' )
-			SetLabel( self.lapCompleting, '1' )
-			SetLabel( self.message, 'Collecting Data' )
+			changed |= SetLabel( self.lapCompleting, '1' )
+			changed |= SetLabel( self.message, 'Collecting Data' )
 		else:
 			self.numLaps.SetItems( [ str(race.numLaps) ] )
 			self.numLaps.SetSelection( 0 )
-			SetLabel( self.leaderFinishTime, Utils.formatTime(race.getLeaderTime()) )
-			SetLabel( self.lastRiderFinishTime, Utils.formatTime(race.getLastFinisherTime()) )
-			SetLabel( self.leadersLapTime, Utils.formatTime(race.getLeaderLapTime()) )
-			SetLabel( self.lapCompleting, str(race.numLaps if race.numLaps is not None else 0) )
-			SetLabel( self.lapsToGo, '0' )
-			SetLabel( self.message, '' )
+			changed |= SetLabel( self.leaderFinishTime, Utils.formatTime(race.getLeaderTime()) )
+			changed |= SetLabel( self.lastRiderFinishTime, Utils.formatTime(race.getLastFinisherTime()) )
+			changed |= SetLabel( self.leadersLapTime, Utils.formatTime(race.getLeaderLapTime()) )
+			changed |= SetLabel( self.lapCompleting, str(race.numLaps if race.numLaps is not None else 0) )
+			changed |= SetLabel( self.lapsToGo, '0' )
+			changed |= SetLabel( self.message, '' )
 			
+		if changed:
+			Utils.LayoutChildResize( self.message )
 		self.refreshRaceHUD()
 	
 	def getLapInfo( self ):
@@ -504,20 +508,22 @@ class NumKeypad( wx.Panel ):
 			
 			raceMessage = { 0:'Finishers Arriving', 1:'Ring Bell', 2:'Prepare Bell' }
 			
+			changed = False
+			
 			# Set the projected finish time and laps.
 			if lapCompleting >= 1 or not isAutomatic:
-				SetLabel( self.leaderFinishTime, Utils.formatTime(expectedRaceFinish) )
-				SetLabel( self.lastRiderFinishTime, Utils.formatTime(race.getLastFinisherTime()) )
-				SetLabel( self.leadersLapTime, Utils.formatTime(leadersExpectedLapTime) )
-				SetLabel( self.lapsToGo, str(lapsToGo) )
-				SetLabel( self.lapCompleting, str(lapCompleting) )
+				changed |= SetLabel( self.leaderFinishTime, Utils.formatTime(expectedRaceFinish) )
+				changed |= SetLabel( self.lastRiderFinishTime, Utils.formatTime(race.getLastFinisherTime()) )
+				changed |= SetLabel( self.leadersLapTime, Utils.formatTime(leadersExpectedLapTime) )
+				changed |= SetLabel( self.lapsToGo, str(lapsToGo) )
+				changed |= SetLabel( self.lapCompleting, str(lapCompleting) )
 				
 				if   lapsToGo == 2 and race.isLeaderExpected():
-					SetLabel( self.message, '%d: Leader Bell Lap Alert' % leaderNum )
+					changed |= SetLabel( self.message, '%d: Leader Bell Lap Alert' % leaderNum )
 				elif lapsToGo == 1 and race.isLeaderExpected():
-					SetLabel( self.message, '%d: Leader Finish Alert' % leaderNum )
+					changed |= SetLabel( self.message, '%d: Leader Finish Alert' % leaderNum )
 				else:
-					SetLabel( self.message, raceMessage.get(lapsToGo, '') )
+					changed |= SetLabel( self.message, raceMessage.get(lapsToGo, '') )
 				if race.numLaps != laps:
 					race.numLaps = laps
 					race.setChanged()
@@ -527,16 +533,17 @@ class NumKeypad( wx.Panel ):
 			else:
 				if self.numLaps.GetSelection() != 0:
 					self.numLaps.SetSelection( 0 )
-				SetLabel( self.leaderFinishTime, '' )
-				SetLabel( self.lastRiderFinishTime, '' )
-				SetLabel( self.leadersLapTime, '' )
-				SetLabel( self.lapsToGo, '' )
-				SetLabel( self.lapCompleting, str(lapCompleting) )
-				SetLabel( self.message, 'Collecting Data' )
+				changed |= SetLabel( self.leaderFinishTime, '' )
+				changed |= SetLabel( self.lastRiderFinishTime, '' )
+				changed |= SetLabel( self.leadersLapTime, '' )
+				changed |= SetLabel( self.lapsToGo, '' )
+				changed |= SetLabel( self.lapCompleting, str(lapCompleting) )
+				changed |= SetLabel( self.message, 'Collecting Data' )
 				if race.numLaps is not None:
 					race.numLaps = None
 					race.setChanged()
-			
+		if changed:
+			Utils.LayoutChildResize( self.message )
 		self.refreshRaceHUD()
 	
 	def refreshRiderLapCountList( self ):
@@ -560,9 +567,8 @@ class NumKeypad( wx.Panel ):
 				if rr.status != Model.Rider.Finisher:
 					continue
 				numLaps = race.getCategoryBestLaps( category.name if category else 'All' )
-				if not numLaps:
-					continue
-				lap = len(rr.raceTimes)
+				numLaps = (numLaps if numLaps else 1)
+				lap = max( 1, len(rr.raceTimes) )
 				if len > numLaps:
 					tSearch = t
 					if race.isTimeTrial:
@@ -570,7 +576,7 @@ class NumKeypad( wx.Panel ):
 							tSearch -= race[rr.num].firstTime
 						except:
 							pass
-					lap = bisect.bisect_left( rr.raceTimes, tSearch )
+					lap = max( 1, bisect.bisect_left(rr.raceTimes, tSearch) )
 				if lap <= numLaps:
 					# Rider is still on course.
 					key = (category, lap, numLaps)
@@ -610,7 +616,7 @@ class NumKeypad( wx.Panel ):
 		for category, lap, categoryLaps, count in catLapList:
 			if category != lastCategory:
 				appendListRow( (category.name, '%d/%d' % (catRaceCount[category], catCount[category]),
-									('(%d laps)' % categoryLaps) if categoryLaps < magicMaxLaps else ''),
+									('(%d lap%s)' % (categoryLaps, 's' if categoryLaps > 1 else '')) if categoryLaps < magicMaxLaps else ''),
 								bold = True )
 			appendListRow( ('', count, 'on lap %d' % lap) )
 			lastCategory = category
@@ -627,22 +633,24 @@ class NumKeypad( wx.Panel ):
 				self.isEnabled = enable
 			if not enable:
 				self.numEdit.SetValue( None )
-				
+			
 			# Refresh the race start time.
-			rst = ''
-			rstSource = ''
+			changed = False
+			rst, rstSource = '', ''
 			if race and race.startTime:
 				st = race.startTime
 				if getattr(race, 'resetStartClockOnFirstTag', False):
 					if getattr(race, 'firstRecordedTime', None):
-						rstSource = 'Waiting...'
-					else:
 						rstSource = 'Chip Start'
+					else:
+						rstSource = 'Waiting...'
 				else:
 					rstSource = 'Manual Start'
 				rst = '%02d:%02d:%02d.%02d' % (st.hour, st.minute, st.second, int(st.microsecond / 10000.0))
-			SetLabel( self.raceStartTime, rst )
-			SetLabel( self.raceStartMessage, rstSource )
+			changed |= SetLabel( self.raceStartMessage, rstSource )
+			changed |= SetLabel( self.raceStartTime, rst )
+			if changed:
+				Utils.LayoutChildResize( self.raceStartTime )
 				
 		self.refreshLaps()
 		self.refreshRiderLapCountList()

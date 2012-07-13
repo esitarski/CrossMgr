@@ -8,10 +8,17 @@ import JChip
 CR = chr( 0x0d )	# JChip delimiter
 
 random.seed( 10101010 )
-nums = [random.randint(1,100) for x in xrange(25)]
-tag = {}
-for n in nums:
-	tag[n] = 'J413A%02X' % n
+seen = set()
+nums = []
+for i in xrange(25):
+	while 1:
+		x = random.randint(1,100)
+		if x not in seen:
+			seen.add( x )
+			nums.append( x )
+			break
+
+tag = dict( (n, 'J413A%02X' % n) for n in nums )
 	
 count = 0
 
@@ -40,10 +47,9 @@ var = mean/varFactor		# Variance between riders.
 lapMax = 6
 for n in nums:
 	lapTime = random.normalvariate( mean, mean/(varFactor * 4.0) )
-	for lap in xrange(1, lapMax+1):
+	for lap in xrange(0, lapMax+1):
 		numLapTimes.append( (n, lap, lapTime*lap) )
 numLapTimes.sort( key = lambda x: (x[1], x[2]) )
-numLapTimes = [(0,0,0)] + numLapTimes
 
 #------------------------------------------------------------------------------	
 PORT, HOST = JChip.DEFAULT_PORT, JChip.DEFAULT_HOST
@@ -94,6 +100,8 @@ for i in xrange(1, len(numLapTimes)):
 	n, lap, t = numLapTimes[i]
 	dt = t - numLapTimes[i-1][2]
 	
+	time.sleep( dt )
+	
 	message = formatMessage( n, lap, dBase + datetime.timedelta(seconds = t) )
 	sys.stdout.write( 'sending: %s\n' % message[:-1] )
 	sock.send( message )
@@ -105,9 +113,6 @@ for i in xrange(1, len(numLapTimes)):
 	message = 'DCorruptMessage' + CR
 	sys.stdout.write( 'sending: %s\n' % message[:-1] )
 	sock.send( message )
-	
-	if i % 3 != 0:
-		time.sleep( dt )
 	
 sock.send( '<<<terminate>>>%s' % CR )
 	
