@@ -1020,23 +1020,26 @@ class Race(object):
 
 	@memoize
 	def getLeaderTimesNums( self ):
-		leaderTimes, leaderNums = None, None
-		
 		entries = self.interpolate()
-		if entries:
-			leaderTimes = [ 0.0 ]
-			leaderNums = [ None ]
-			leaderTimesLen = 1
-			while 1:
-				try:
-					e = (e for e in entries if e.lap == leaderTimesLen).next()
-					leaderTimes.append( e.t )
-					leaderNums.append( e.num )
-					leaderTimesLen += 1
-				except StopIteration:
-					break
+		if not entries:
+			return None, None
+			
+		leaderTimes = [ 0.0 ]
+		leaderNums = [ None ]
+		leaderTimesLen = 1
+		while 1:
+			try:
+				e = (e for e in entries if e.lap == leaderTimesLen).next()
+				leaderTimes.append( e.t )
+				leaderNums.append( e.num )
+				leaderTimesLen += 1
+			except StopIteration:
+				break
 		
-		return leaderTimes, leaderNums
+		if leaderTimesLen == 1:
+			return None, None
+		else:
+			return leaderTimes, leaderNums
 	
 	def getLeaderOfLap( self, lap ):
 		leaderTimes, leaderNums = self.getLeaderTimesNums()

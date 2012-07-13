@@ -442,7 +442,8 @@ class NumKeypad( wx.Panel ):
 				laps = int(self.numLaps.GetString(self.numLaps.GetSelection()))
 			except ValueError:
 				laps = max(0, len(leaderTimes)-1)
-			
+		
+		laps = max( laps, 0 )
 		raceFinishTime = leaderTimes[laps]
 		leaderNum = leaderNums[laps]
 		
