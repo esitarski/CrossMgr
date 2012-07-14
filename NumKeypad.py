@@ -241,7 +241,7 @@ class NumKeypad( wx.Panel ):
 			
 			# Update the RaceHUD
 			tCur = race.curRaceTime()
-			if not numLaps or numLaps < 2 or not race.isRunning():
+			if not numLaps or numLaps < 2 or not race.isRunning() or nLeader is None or tLeader is None:
 				self.raceHUD.SetData()
 			else:
 				leaderTimes = race.getLeaderTimesNums()[0][1:numLaps+1]
@@ -448,8 +448,8 @@ class NumKeypad( wx.Panel ):
 				laps = max(0, len(leaderTimes)-1)
 		
 		laps = max( laps, 0 )
-		raceFinishTime = leaderTimes[laps]
-		leaderNum = leaderNums[laps]
+		raceFinishTime = leaderTimes[laps] if laps < len(leaderTimes) else None
+		leaderNum = leaderNums[laps] if laps < len(leaderNums) else None
 		
 		lapsToGo = max(0, laps - lapCompleting)
 
