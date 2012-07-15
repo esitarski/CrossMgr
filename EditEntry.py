@@ -100,10 +100,12 @@ class CorrectNumberDialog( wx.Dialog ):
 			undo.pushState()
 			with Model.LockRace() as race:
 				if self.entry.lap != 0:
+					race.numTimeInfo.change( self.entry.num, self.entry.t, t )
 					race.deleteTime( self.entry.num, self.entry.t )
 					race.addTime( num, t )
 				else:
 					rider = race.getRider( num )
+					race.numTimeInfo.change( self.entry.num, rider.firstTime, t )
 					rider.firstTime = t
 					race.setChanged()
 			Utils.refresh()
@@ -173,10 +175,12 @@ class ShiftNumberDialog( wx.Dialog ):
 			undo.pushState()
 			with Model.LockRace() as race:
 				if self.entry.lap != 0:
+					race.numTimeInfo.change( self.entry.num, self.entry.t, t )
 					race.deleteTime( self.entry.num, self.entry.t )
 					race.addTime( num, t )
 				else:
 					rider = race.getRider( num )
+					race.numTimeInfo.change( self.entry.num, rider.firstTime, t )
 					rider.firstTime = t
 					race.setChanged()
 			Utils.refresh()
@@ -245,6 +249,7 @@ class InsertNumberDialog( wx.Dialog ):
 		
 		undo.pushState()
 		with Model.LockRace() as race:
+			race.numTimeInfo.add( self.entry.num, tInsert )
 			race.addTime( num, tInsert )
 			
 		Utils.refresh()
@@ -306,6 +311,11 @@ class SplitNumberDialog( wx.Dialog ):
 		
 		undo.pushState()
 		with Model.LockRace() as race:
+		
+			race.numTimeInfo.delete( entry.num, entry.t )
+			race.numTimeInfo.add( num1, t1 )
+			race.numTimeInfo.add( num2, t2 )
+			
 			race.deleteTime( entry.num, entry.t )
 			race.addTime( num1, t1 )
 			race.addTime( num2, t2 )
@@ -360,6 +370,7 @@ def DeleteEntry( parent, entry ):
 		undo.pushState()
 		with Model.LockRace() as race:
 			if race:
+				race.numTimeInfo.delete( entry.num, entry.t )
 				race.deleteTime( entry.num, entry.t )
 		Utils.refresh()
 	dlg.Destroy()
@@ -369,10 +380,13 @@ def SwapEntry( a, b ):
 	race = Model.race
 	if not race:
 		return
-	race.addTime( a.num, b.t )
-	race.addTime( b.num, a.t )
+	race.numTimeInfo.change( a.num, a.t, b.t, Model.NumTimeInfo.Swap )
+	race.numTimeInfo.change( b.num, b.t, a.t, Model.NumTimeInfo.Swap )
+	
 	race.deleteTime( a.num, a.t )
 	race.deleteTime( b.num, b.t )
+	race.addTime( a.num, b.t )
+	race.addTime( b.num, a.t )
 
 def DoStatusChange( parent, num, message, title, newStatus ):
 	if num is None or not Utils.MessageOKCancel(parent, message % num, title):
@@ -413,6 +427,7 @@ def AddLapSplits( num, lap, times, splits ):
 			splitTime = (tRight - tLeft) / float(splits)
 			for i in xrange( 1, splits ):
 				newTime = tLeft + splitTime * i
+				race.numTimeInfo.add( num, newTime, Model.NumTimeInfo.Split )
 				race.addTime( num, newTime )
 			return True
 		except (TypeError, KeyError, ValueError, IndexError):

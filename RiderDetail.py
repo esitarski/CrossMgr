@@ -315,6 +315,7 @@ class RiderDetail( wx.Panel ):
 			undo.pushState()
 			with Model.LockRace() as race:
 				race.renumberRider( num, newNum )
+				race.numTimeInfo.renumberRider( num, newNum )
 			self.setRider( newNum )
 			self.refresh()
 		
@@ -353,6 +354,7 @@ class RiderDetail( wx.Panel ):
 			undo.pushState()
 			with Model.LockRace() as race:
 				race.swapRiders( num, newNum )
+				race.numTimeInfo.swapRiders( num, newNum )
 			self.setRider( newNum )
 			self.refresh()
 		
@@ -397,6 +399,10 @@ class RiderDetail( wx.Panel ):
 			undo.pushState()
 			with Model.LockRace() as race:
 				race.copyRiderTimes( num, newNum )
+				rNew = race.getRider( numNum )
+				numTimeInfo = race.numTimeInfo
+				for t in rNew.times:
+					numTimeInfo.add( newNum, t )
 			self.setRider( newNum )
 			self.onNumChange()
 		
@@ -492,6 +498,7 @@ class RiderDetail( wx.Panel ):
 		if self.lapCur != 1:
 			undo.pushState()
 			with Model.LockRace() as race:
+				race.numTimeInfo.delete( num, times[lap-1] )
 				race.deleteTime( num, times[lap-1] )
 			wx.CallAfter( self.refresh )
 			
@@ -501,6 +508,7 @@ class RiderDetail( wx.Panel ):
 			return
 		undo.pushState()
 		with Model.LockRace() as race:
+			race.numTimeInfo.delete( num, times[lap] )
 			race.deleteTime( num, times[lap] )
 		wx.CallAfter( self.refresh )
 			

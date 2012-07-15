@@ -12,7 +12,10 @@ import operator
 import sys, traceback
 import functools
 import threading
+import getpass
 from os.path import commonprefix
+
+CurrentUser = getpass.getuser()
 
 maxInterpolateTime = 7.0*60.0*60.0	# 7 hours.
 
@@ -624,6 +627,65 @@ class Rider(object):
 		except (ValueError, StopIteration):
 			return False
 
+class NumTimeInfo(object):
+
+	Original	= 0
+	Add			= 1
+	Edit		= 2
+	Delete		= 3
+	Swap		= 4
+	Split		= 5
+	
+	ReasonName = {
+		NumTimeInfo.Original:	'Original',
+		NumTimeInfo.Add:		'Add',
+		NumTimeInfo.Edit:		'Edit',
+		NumTimeInfo.Delete:		'Delete',
+		NumTimeInfo.Swap:		'Swap',
+		NumTimeInfo.Split:		'Split',
+	}
+
+	def __init__( self ):
+		self.info = {}
+		
+	def _setData( self, num, t, reason ):
+		self.info[(num, t)] = (reason, CurrentUser, datetime.datetime.now())
+		
+	def add( self, num, t, reason = None ):
+		self._setData( num, t, reason if reason is not None else NumTimeInfo.Add )
+		
+	def change( self, num, tOld, tNew, reason = None ):
+		if tOld is None:
+			self.add( num, tNew )
+			return
+			
+		try:
+			del self.info[(num, tOld)]
+		except KeyError:
+			pass
+			
+		self._setData( num, tNew, reason if reason is not None else NumTimeInfo.Edit )
+		
+	def delete( self, num, t, reason = None ):
+		self._setData( num, t, reason if reason is not None else NumTimeInfo.Delete )
+		
+	def renumberRider( self, numOld, numNew ):
+		found = [ (num, t, i) for (num, t), info in self.info.iteritems() if num == numOld ]
+		for num, t, i in found:
+			del self.info[(num, t)]
+			self.info[(num, t)] = i
+	
+	def swapRiders( self, numOld, numNew ):
+		self.renumberRider( numOld, sys.maxint )
+		self.renumberRider( numNew, numOld )
+		self.renumberRider( sys.maxint, numNew )
+	
+	def __contains__( self, key ):	# Key is (num, t)
+		return key in self.info
+	
+	def getInfo( self, num, t ):
+		return self.info.get( (num, t), None )
+			
 class Race(object):
 	finisherStatusList = [Rider.Finisher, Rider.Pulled]
 	finisherStatusSet = set( finisherStatusList )
@@ -659,11 +721,25 @@ class Race(object):
 		self.syncCategories = True
 		self.modelCategory = 0
 		self.distanceUnit = Race.UnitKm
-
+		
+		# Animation options.
+		self.reverseDirection = False
+		self.finishTop = False
+		
 		self.isChangedFlag = True
+		
+		self.numTimeInfoField = NumTimeInfo()
 		
 		self.tagNums = None
 		memoize.clear()
+	
+	@property
+	def numTimeInfo( self ):
+		try:
+			return self.numTimeInfoField
+		except AttributeError:
+			self.numTimeInfoField = NumTimeInfo()
+			return self.numTimeInfoField
 	
 	@property
 	def distanceUnitStr( self ):

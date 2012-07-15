@@ -58,6 +58,9 @@ class Animation(wx.PyControl):
 		self.suspendAnimation = False
 		self.numsToWatch = set()
 		
+		self.reverseDirection = False
+		self.finishTop = False
+		
 		'''
 		self.colours = [
 			wx.Colour(255, 0, 0),
@@ -207,7 +210,12 @@ class Animation(wx.PyControl):
 		if tCur is not None:
 			self.t = tCur;
 		self.Refresh()
-		
+	
+	def SetOptions( self, reverseDirection = False, finishTop = False ):
+		self.reverseDirection = reverseDirection
+		self.finishTop = finishTop
+		self.Refresh()
+	
 	def getShortName( self, num ):
 		try:
 			info = self.data[num]
@@ -312,6 +320,10 @@ class Animation(wx.PyControl):
 			return (None, None, positionTime[0], positionTime[1])
 		self.lapCur = max(self.lapCur, int(positionTime[0]))
 		xypt = list(self.getXYfromPosition( lane, positionTime[0] ))
+		if self.reverseDirection:
+			xypt[0] = self.r * 4 - xypt[0]
+		if self.finishTop:
+			xypt[1] = self.r * 2 - xypt[1]
 		xypt.extend( positionTime )
 		return tuple( xypt )
 	
@@ -357,15 +369,22 @@ class Animation(wx.PyControl):
 		dc.DrawCircle( 3*r, r, r/2 - laneWidth )
 		dc.DrawRectangle( r, r/2 + laneWidth, 2*r, r - 2*laneWidth + 1 )
 		
-		# Draw the Start/Finish line.
-		dc.SetPen( wx.Pen(wx.Colour(0,0,0), 3, wx.SOLID) )
-		dc.DrawLine( 2*r + r/2, r + r/2 - laneWidth - 1, 2*r + r/2, 2*r + 2)
-
 		# Draw the quarter lines.
-		dc.SetPen( wx.Pen(wx.Colour(64,64,64), 1, wx.SOLID) )
-		for p in [0.25, 0.50, 0.75]:
+		for p in [0.0, 0.25, 0.50, 0.75]:
 			x1, y1 = self.getXYfromPosition(-1, p)
 			x2, y2 = self.getXYfromPosition(self.laneMax+0.25, p)
+			if self.reverseDirection:
+				x1 = 4*r - x1
+				x2 = 4*r - x2
+			if self.finishTop:
+				y1 = 2*r - y1
+				y2 = 2*r - y2
+			if p == 0.0:
+				# Draw the Start/Finish line.
+				dc.SetPen( wx.Pen(wx.Colour(0,0,0), 3, wx.SOLID) )
+			else:
+				# Else, draw a regular quarter line on the course.
+				dc.SetPen( wx.Pen(wx.Colour(64,64,64), 1, wx.SOLID) )
 			dc.DrawLine( x1, y1, x2, y2 )
 		
 		# Draw the riders

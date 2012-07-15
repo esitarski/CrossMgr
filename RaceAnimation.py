@@ -203,6 +203,7 @@ class RaceAnimation( wx.Panel ):
 				
 			if race is None:
 				self.animation.SetData( None, 0 )
+				self.animation.SetOptions()
 				self.animation.StopAnimate()
 				return
 			
@@ -212,6 +213,7 @@ class RaceAnimation( wx.Panel ):
 			
 		animationData = GetAnimationData( catName, True )
 		self.animation.SetData( animationData, raceTime )
+		self.animation.SetOptions( getattr(race, 'reverseDirection', False), getattr(race, 'finishTop', False) )
 		if raceIsRunning:
 			if not self.animation.IsAnimating():
 				self.animation.StartAnimateRealtime()

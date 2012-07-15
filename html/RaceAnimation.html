@@ -140,6 +140,8 @@ var loopContinuously = true;// If true, the simulation will repeat from the begi
 var fontMult = 1.0;			// font adjust factor.
 var showTimeDecimals = false;
 var displayUnits = 'km';
+var reverseDirection = null;	// Reverse the direction of the riders.
+var finishTop = null;			// Finish on the top rather than the bottom.
 
 // Rider colours given out as remander of the number.
 var colours = [
@@ -315,6 +317,10 @@ function getRiderXYPT( num, lane )
 	}
 	lapCur = Math.max(lapCur, ~~positionTime[0]);
 	var xypt = getXYfromPosition( lane, positionTime[0] );
+	if( reverseDirection )
+		xypt[0] = r * 4 - xypt[0];
+	if( finishTop )
+		xypt[1] = r * 2 - xypt[1];
 	xypt.push( positionTime[0] );
 	xypt.push( positionTime[1] );
 	return xypt;
@@ -466,19 +472,32 @@ function Refresh()
 	dc.fillRect( pp[0], pp[1], pp[2], pp[3] );
 	dc.strokeRect( pp[0], pp[1], pp[2], pp[3] );
 	
-	// Draw the Start/Finish line.
-	dc.strokeStyle = 'black';
-	dc.lineWidth = 3;
-	DrawLine( dc, 2*r + r/2, r + r/2 - laneWidth - 1, 2*r + r/2, 2*r + 2)
-
-	// Draw the quarter lines.
-	dc.lineWidth = 1;
-	dc.strokeStyle = 'rgb(64,64,64)';
-	for( var i = 1; i <= 3; ++i )
+	// Draw the quarter lines and start/finish.
+	for( var i = 0; i <= 3; ++i )
 	{
 		var p = 0.25 * i;
 		var p1 = getXYfromPosition(-1, p);
 		var p2 = getXYfromPosition(laneMax+0.25, p);
+		if( reverseDirection )
+		{
+			p1[0] = 4*r - p1[0];
+			p2[0] = 4*r - p2[0];
+		}
+		if( finishTop )
+		{
+			p1[1] = 2*r - p1[1];
+			p2[1] = 2*r - p2[1];
+		}
+		if( i == 0 )
+		{
+			dc.strokeStyle = 'black';
+			dc.lineWidth = 3;
+		}
+		else
+		{
+			dc.lineWidth = 1;
+			dc.strokeStyle = 'rgb(64,64,64)';
+		}
 		DrawLine( dc, p1[0], p1[1], p2[0], p2[1] );
 	}
 	

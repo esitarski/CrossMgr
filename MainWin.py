@@ -811,12 +811,14 @@ class MainWin( wx.Frame ):
 			raceTime = datetime.datetime( year, month, day, hour, minute, second )
 			title = '%s Results for %s Start on %s' % ( race.name, raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
 			html = html.replace( 'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
-			html = replaceJsonVar( html, 'organizer', getattr(race, 'organizer', '') )
+			html = replaceJsonVar( html, 'organizer',			getattr(race, 'organizer', '') )
+			html = replaceJsonVar( html, 'reverseDirection',	getattr(race, 'reverseDirection', False) )
+			html = replaceJsonVar( html, 'finishTop',			getattr(race, 'finishTop', False) )
 			
-		html = replaceJsonVar( html, 'timestamp', datetime.datetime.now().ctime() )
-		html = replaceJsonVar( html, 'email', self.config.Read('email', '') )
-		html = replaceJsonVar( html, 'data', GetAnimationData(getExternalData = True) )
-		html = replaceJsonVar( html, 'catDetails', GetCategoryDetails() )
+		html = replaceJsonVar( html, 'timestamp',	datetime.datetime.now().ctime() )
+		html = replaceJsonVar( html, 'email',		self.config.Read('email', '') )
+		html = replaceJsonVar( html, 'data',		GetAnimationData(getExternalData = True) )
+		html = replaceJsonVar( html, 'catDetails',	GetCategoryDetails() )
 
 		graphicBase64 = self.getGraphicBase64()
 		if graphicBase64:
