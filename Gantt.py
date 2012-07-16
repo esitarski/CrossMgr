@@ -65,6 +65,8 @@ class Gantt( wx.Panel ):
 			entries = race.getRider(num).interpolate()
 			try:
 				self.entry = entries[iLap]
+				self.entryStart = entries[iLap-1]
+				self.entryEnd = self.entry
 			except (IndexError, KeyError):
 				return
 		self.setNumSelect( num )
@@ -80,8 +82,10 @@ class Gantt( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(wx.NewId(), 'Results', 	'Switch to Results tab',	self.OnPopupResults, allCases),
-				(wx.NewId(), 'RiderDetail',	'Show RiderDetail Dialog',	self.OnPopupRiderDetail, allCases),
+				(wx.NewId(), 'Show Lap Details...', 		'Show Lap Details',		self.OnPopupLapDetail, allCases),
+				(None, None, None, None, None),
+				(wx.NewId(), 'Results', 				'Switch to Results tab',	self.OnPopupResults, allCases),
+				(wx.NewId(), 'RiderDetail',				'Show RiderDetail Dialog',	self.OnPopupRiderDetail, allCases),
 				(None, None, None, None, None),
 				(wx.NewId(), 'Correct Lap End Time...',	'Change number or lap end time...',		self.OnPopupCorrect, interpCase),
 				(wx.NewId(), 'Shift Lap End Time...',	'Move lap end time earlier/later...',	self.OnPopupShift, interpCase),
@@ -196,6 +200,45 @@ class Gantt( wx.Panel ):
 	def OnPopupDelete( self, event ):
 		EditEntry.DeleteEntry( self, self.entry )
 
+	def OnPopupLapDetail( self, event ):
+		with Model.LockRace() as race:
+			if not race:
+				return
+			tLapStart = self.entryStart.t
+			tLapEnd = self.entryEnd.t
+		
+			try:
+				riderInfo = race.excelLink.read()[self.entryEnd.num]
+			except:
+				riderInfo = {}
+				
+			try:
+				riderName = '%s, %s %d' % (riderInfo['LastName'], riderInfo['FirstName'], self.entryEnd.num)
+			except KeyError:
+				try:
+					riderName = '%s %d' % (riderInfo['LastName'], self.entryEnd.num)
+				except KeyError:
+					try:
+						riderName = '%s %d' % (riderInfo['FirstName'], self.entryEnd.num)
+					except KeyError:
+						riderName = str(self.entryEnd.num)
+						
+			infoStart = race.numTimeInfo.getInfoStr( self.entryStart.num, tLapStart )
+			if infoStart:
+				infoStart = '\nLap Start ' + infoStart
+			infoEnd = race.numTimeInfo.getInfoStr( self.entryEnd.num, tLapEnd )
+			if infoEnd:
+				infoEnd = '\nLap End ' + infoEnd
+		
+			info = ('Rider: %s  Lap: %d\nLap Start:  %s Lap End: %s\nLap Time: %s\n%s%s' %
+					(riderName, self.entryEnd.lap,
+					Utils.formatTime(tLapStart),
+					Utils.formatTime(tLapEnd),
+					Utils.formatTime(tLapEnd - tLapStart),
+					infoStart, infoEnd )).strip()
+					
+		Utils.MessageOK( self, info, 'Lap Details' )
+		
 	def OnPopupResults( self, event ):
 		if Utils.isMainWin():
 			Utils.getMainWin().showPageName( 'Results' )
@@ -227,8 +270,9 @@ class Gantt( wx.Panel ):
 			
 		data	= [r.raceTimes for r in results]
 		interp	= [r.interp for r in results]
-		self.ganttChart.SetData( data, labels, GetNowTime(), interp,
-								set(i for i, r in enumerate(results) if r.status != Model.Rider.Finisher) )
+		self.ganttChart.SetData(data, labels, GetNowTime(), interp,
+								set(i for i, r in enumerate(results) if r.status != Model.Rider.Finisher),
+								Model.race.numTimeInfo )
 		wx.CallAfter( self.ganttChart.SetFocus )
 	
 	def commit( self ):

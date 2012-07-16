@@ -635,21 +635,31 @@ class NumTimeInfo(object):
 	Delete		= 3
 	Swap		= 4
 	Split		= 5
+	MaxReason	= 6
 	
 	ReasonName = {
-		NumTimeInfo.Original:	'Original',
-		NumTimeInfo.Add:		'Add',
-		NumTimeInfo.Edit:		'Edit',
-		NumTimeInfo.Delete:		'Delete',
-		NumTimeInfo.Swap:		'Swap',
-		NumTimeInfo.Split:		'Split',
+		Original:	'Original',
+		Add:		'Add',
+		Edit:		'Edit',
+		Delete:		'Delete',
+		Swap:		'Swap',
+		Split:		'Split',
 	}
 
 	def __init__( self ):
 		self.info = {}
 		
 	def _setData( self, num, t, reason ):
-		self.info[(num, t)] = (reason, CurrentUser, datetime.datetime.now())
+		self.info.setdefault(num,{})[t]  = (reason, CurrentUser, datetime.datetime.now())
+		
+	def _delData( self, num, t ):
+		try:
+			j = self.info[num]
+			del j[t]
+			if not j:
+				del self.info[num]
+		except KeyError:
+			pass
 		
 	def add( self, num, t, reason = None ):
 		self._setData( num, t, reason if reason is not None else NumTimeInfo.Add )
@@ -657,35 +667,50 @@ class NumTimeInfo(object):
 	def change( self, num, tOld, tNew, reason = None ):
 		if tOld is None:
 			self.add( num, tNew )
-			return
-			
-		try:
-			del self.info[(num, tOld)]
-		except KeyError:
-			pass
-			
-		self._setData( num, tNew, reason if reason is not None else NumTimeInfo.Edit )
+		elif tNew == tOld:
+			self.add( num, tNew, reason )
+		else:
+			self._delData( num, tOld )
+			self._setData( num, tNew, reason if reason is not None else NumTimeInfo.Edit )
 		
 	def delete( self, num, t, reason = None ):
 		self._setData( num, t, reason if reason is not None else NumTimeInfo.Delete )
 		
 	def renumberRider( self, numOld, numNew ):
-		found = [ (num, t, i) for (num, t), info in self.info.iteritems() if num == numOld ]
-		for num, t, i in found:
-			del self.info[(num, t)]
-			self.info[(num, t)] = i
+		if numOld in self.info:
+			self.info[numNew] = self.info[numOld]
+			del self.info[numOld]
 	
 	def swapRiders( self, numOld, numNew ):
-		self.renumberRider( numOld, sys.maxint )
-		self.renumberRider( numNew, numOld )
-		self.renumberRider( sys.maxint, numNew )
+		if numOld in self.info or numNew in self.info:
+			self.info[numOld], self.info[numNew] = self.info.get(numNew, {}), self.info.get(numOld, {})
+			if not self.info[numOld]:
+				del self.info[numOld]
+			if not self.info[numNew]:
+				del self.info[numNew]
 	
-	def __contains__( self, key ):	# Key is (num, t)
-		return key in self.info
+	def __contains__( self, key ):			# Key is (num, t)
+		try:
+			return key[1] in self.info[key[0]]
+		except KeyError:
+			return False
 	
 	def getInfo( self, num, t ):
-		return self.info.get( (num, t), None )
+		try:
+			return self.info[num][t]
+		except KeyError:
+			return None
 			
+	def getInfoStr( self, num, t ):
+		info = self.getInfo( num, t )
+		if info is None:
+			return ''
+		infoStr = '%s, %s\n    by: %s\n    on: %s\n' % (Utils.formatTime(t, True), NumTimeInfo.ReasonName[info[0]], info[1], info[2].ctime())
+		return infoStr
+			
+	def getNumInfo( self, num ):
+		return self.info.get( num, {} )
+		
 class Race(object):
 	finisherStatusList = [Rider.Finisher, Rider.Pulled]
 	finisherStatusSet = set( finisherStatusList )

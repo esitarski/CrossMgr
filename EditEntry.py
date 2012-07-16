@@ -249,7 +249,7 @@ class InsertNumberDialog( wx.Dialog ):
 		
 		undo.pushState()
 		with Model.LockRace() as race:
-			race.numTimeInfo.add( self.entry.num, tInsert )
+			race.numTimeInfo.add( num, tInsert )
 			race.addTime( num, tInsert )
 			
 		Utils.refresh()

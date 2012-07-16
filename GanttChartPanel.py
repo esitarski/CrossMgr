@@ -6,21 +6,6 @@ import bisect
 import datetime
 import Utils
 
-havePopupWindow = 1
-if wx.Platform == '__WXMAC__':
-	havePopupWindow = 0
-	wx.PopupWindow = wx.PopupTransientWindow = wx.Window
-	
-class BarInfoPopup( wx.PopupTransientWindow ):
-	"""Shows Specific Rider and Lap information."""
-	def __init__(self, parent, style, text):
-		wx.PopupTransientWindow.__init__(self, parent, style)
-		self.SetBackgroundColour(wx.WHITE)
-		border = 10
-		st = wx.StaticText(self, -1, text, pos=(border/2,border/2))
-		sz = st.GetBestSize()
-		self.SetSize( (sz.width+border, sz.height+border) )
-		
 def SetScrollbarParameters( sb, thumbSize, range, pageSize  ):
 	sb.SetScrollbar( min(sb.GetThumbPosition(), range - thumbSize), thumbSize, range, pageSize )
 
@@ -79,13 +64,14 @@ class GanttChartPanel(wx.PyPanel):
 		
 		self.colours = makeColourGradient(2.4,2.4,2.4,0,2,4,128,127,500)
 		self.lighterColours = [lighterColour(c) for c in self.colours]
-			
+		
 		# Bind the events related to our control: first of all, we use a
 		# combination of wx.BufferedPaintDC and an empty handler for
 		# wx.EVT_ERASE_BACKGROUND (see later) to reduce flicker
 		self.Bind(wx.EVT_PAINT, self.OnPaint)
 		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
 		self.Bind(wx.EVT_SIZE, self.OnSize)
+		#self.Bind(wx.EVT_MOTION, self.OnMotion)
 		self.Bind(wx.EVT_LEFT_UP, self.OnLeftClick)
 		self.Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDClick)
 		self.Bind(wx.EVT_RIGHT_UP, self.OnRightClick)
@@ -129,7 +115,7 @@ class GanttChartPanel(wx.PyPanel):
 		"""
 		return True
 
-	def SetData( self, data, labels = None, nowTime = None, interp = None, greyOutSet = set() ):
+	def SetData( self, data, labels = None, nowTime = None, interp = None, greyOutSet = set(), numTimeInfo = None ):
 		"""
 		* data is a list of lists.  Each list is a list of times.		
 		* labels are the names of the series.  Optional.
@@ -138,6 +124,7 @@ class GanttChartPanel(wx.PyPanel):
 		self.labels = None
 		self.nowTime = None
 		self.greyOutSet = greyOutSet
+		self.numTimeInfo = numTimeInfo
 		if data and any( s for s in data ):
 			self.data = data
 			self.dataMax = max(max(s) if s else -sys.float_info.max for s in self.data)
@@ -170,16 +157,32 @@ class GanttChartPanel(wx.PyPanel):
 		
 	def OnSize(self, event):
 		self.Refresh()
+		
+	def OnLeftClick( self, event ):
+		if getattr(self, 'empty', True):
+			return
+			
+		iRider, iLap = self.getRiderLap( event )
+		if iRider is None:
+			return
+		
+		self.numSelect = numFromLabel( self.labels[iRider] )
+		if self.getNowTimeCallback:
+			self.nowTime = self.getNowTimeCallback()
+		self.Refresh()
 	
 	def OnLeftDClick( self, event ):
 		if getattr(self, 'empty', True):
 			return
+		iRider, iLap = self.getRiderLap( event )
+		if iRider is None:
+			return
+		self.numSelect = numFromLabel( self.labels[iRider] )
 		if self.numSelect is not None:
 			if self.dClickCallback:
 				self.dClickCallback( self.numSelect )
 	
-	def getRiderLap( self, event ):
-		x, y = event.GetPositionTuple()
+	def getRiderLapXY( self, x, y ):
 		y -= self.barHeight
 		x -= self.labelsWidthLeft
 		iRider = int(y / self.barHeight)
@@ -196,51 +199,11 @@ class GanttChartPanel(wx.PyPanel):
 			return iRider, None
 			
 		return iRider, iLap
-	
-	def OnLeftClick( self, event ):
-		if getattr(self, 'empty', True):
-			return
-			
-		iRider, iLap = self.getRiderLap( event )
-		if iRider is None:
-			return
 		
-		if getattr(self, 'iRiderLast', -1) == iRider and getattr(self, 'iLapLast', -1) == iLap:
-			self.iRiderLast = -1
-			self.iLapLast = -1
-			if getattr(self, 'lastClickTime', None) != None:
-				dt = datetime.datetime.now() - getattr(self, 'lastClickTime')
-				if dt.total_seconds() < 0.5 and self.dClickCallback:
-					self.dClickCallback( self.numSelect )
-			self.lastClickTime = None
-			return
-		self.iRiderLast = iRider
-		self.iLapLast = iLap
-		self.lastClickTime = datetime.datetime.now()
+	def getRiderLap( self, event ):
+		x, y = event.GetPositionTuple()
+		return self.getRiderLapXY( x, y )
 		
-		self.numSelect = numFromLabel( self.labels[iRider] )
-		if self.getNowTimeCallback:
-			self.nowTime = self.getNowTimeCallback()
-		self.Refresh()
-		
-		if iLap is None:
-			return
-
-		tLapStart = self.data[iRider][iLap-1]
-		tLapEnd = self.data[iRider][iLap]
-		bip = BarInfoPopup(self, wx.SIMPLE_BORDER,
-								'Rider: %s  Lap: %d\nLap Start:  %s Lap End: %s\nLap Time: %s' %
-								(self.labels[iRider] if self.labels else str(iRider), iLap,
-								Utils.formatTime(tLapStart),
-								Utils.formatTime(tLapEnd),
-								Utils.formatTime(tLapEnd - tLapStart)))
-
-		xPos, yPos = event.GetPositionTuple()
-		width, height = bip.GetClientSize()
-		pos = self.ClientToScreen( (xPos - width - 2, yPos - height - 2) )
-		bip.Position( pos, (0,0) )
-		bip.Popup()
-	
 	def OnRightClick( self, event ):
 		if getattr(self, 'empty', True):
 			return
@@ -282,7 +245,7 @@ class GanttChartPanel(wx.PyPanel):
 			self.verticalSB.Show( False )
 			self.horizontalSB.Show( False )
 			return
-			
+		
 		self.empty = False
 		
 		barHeight = int(float(height) / float(len(self.data) + 2))
@@ -424,6 +387,7 @@ class GanttChartPanel(wx.PyPanel):
 		ctx.SetPen( wx.Pen(wx.BLACK, 1) )
 		
 		xyInterp = []
+		xyNumTimeInfo = []
 		
 		xFactor = dFactor
 		yLast = barHeight
@@ -433,6 +397,12 @@ class GanttChartPanel(wx.PyPanel):
 		for i, s in enumerate(self.data):
 			if not( iDataShowStart <= i < iDataShowEnd ):
 				continue
+				
+			try:
+				num = numFromLabel(self.labels[i])
+			except (TypeError, IndexError):
+				num = -1
+				
 			yCur = yLast + barHeight
 			xLast = labelsWidthLeft
 			xCur = xLast
@@ -471,6 +441,8 @@ class GanttChartPanel(wx.PyPanel):
 							xyInterp.append( (xOriginal, yLast) )
 					except IndexError:
 						pass
+					if self.numTimeInfo and self.numTimeInfo.getInfo(num, t) is not None:
+						xyNumTimeInfo.append( (xOriginal, yLast) )
 
 				xLast = xCur
 			
@@ -513,21 +485,44 @@ class GanttChartPanel(wx.PyPanel):
 		# Draw indicators for interpolated values.
 		radius = (dy/2) * 0.9
 		
-		# Define a path for the indicator about the origin.
-		ctx.SetPen( penBar )
-		ctx.SetBrush( ctx.CreateRadialGradientBrush( 0, - radius*0.50, 0, 0, radius + 1, wx.WHITE, wx.Colour(220,220,0) ) )
-		path = ctx.CreatePath()
-		path.MoveToPoint( 0, -radius )
-		path.AddLineToPoint( -radius, 0 )
-		path.AddLineToPoint( 0, radius )
-		path.AddLineToPoint( radius, 0 )
-		path.AddLineToPoint( 0, -radius )
+		# Define a path for the interp indicator about the origin.
+		diamondPath = ctx.CreatePath()
+		diamondPath.MoveToPoint( 0, -radius )
+		diamondPath.AddLineToPoint( -radius, 0 )
+		diamondPath.AddLineToPoint( 0, radius )
+		diamondPath.AddLineToPoint( radius, 0 )
+		diamondPath.AddLineToPoint( 0, -radius )
+		
+		def getStarPath( ctx, numPoints, radius, radiusInner ):
+			path = ctx.CreatePath()
+			angle = (math.pi * 2.0) / numPoints
+			angle2 = angle / 2.0
+			path.MoveToPoint( 0, -radius )
+			for p in xrange(numPoints):
+				a = p * angle + angle2 + math.pi / 2.0
+				path.AddLineToPoint( math.cos(a) * radiusInner, -math.sin(a) * radiusInner )
+				a = (p + 1) * angle + math.pi / 2.0
+				path.AddLineToPoint( math.cos(a) * radius, -math.sin(a) * radius )
+			path.AddLineToPoint( 0, -radius )
+			return path
+		starPath = getStarPath( ctx, 5, radius, radius / 2 )
 
 		# Draw the interp indicators.
+		ctx.SetPen( penBar )
+		ctx.SetBrush( ctx.CreateRadialGradientBrush( 0, - radius*0.50, 0, 0, radius + 1, wx.WHITE, wx.Colour(220,220,0) ) )
 		for xSphere, ySphere in xyInterp:
 			ctx.PushState()
 			ctx.Translate( xSphere, ySphere + dy/2.0 - (dy/2.0 - radius) / 4 )
-			ctx.DrawPath( path )
+			ctx.DrawPath( diamondPath )
+			ctx.PopState()
+		
+		# Draw the edit indictors.
+		ctx.SetPen( penBar )
+		ctx.SetBrush( ctx.CreateRadialGradientBrush( 0, - radius*0.50, 0, 0, radius + 1, wx.WHITE, wx.Colour(220,220,0) ) )
+		for xSphere, ySphere in xyNumTimeInfo:
+			ctx.PushState()
+			ctx.Translate( xSphere, ySphere + dy/2.0 - (dy/2.0 - radius) / 4 )
+			ctx.DrawPath( starPath )
 			ctx.PopState()
 		
 		# Draw the now timeline.

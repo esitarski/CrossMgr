@@ -117,7 +117,7 @@ class RiderDetail( wx.Panel ):
 		self.splitter = splitter
 		
 		self.grid = ColGrid.ColGrid(	splitter,
-										colnames = ['Lap', 'Lap Time', 'Race Time', 'Lap Speed', 'Race Speed'],
+										colnames = ['Lap', 'Lap Time', 'Race Time', 'Lap Speed', 'Race Speed', 'Edit', 'By', 'On'],
 										style = wx.BORDER_SUNKEN )
 		self.grid.SetRowLabelSize( 0 )
 		self.grid.SetRightAlign( True )
@@ -678,14 +678,13 @@ class RiderDetail( wx.Panel ):
 			data = [ [] for c in xrange(self.grid.GetNumberCols()) ]
 			graphData = []
 			backgroundColour = {}
+			numTimeInfo = race.numTimeInfo
 			tSum = 0.0
 			for r, e in enumerate(entries):
 				tLap = max( e.t - raceTime, 0.0 )
 				tSum += tLap
 				
-				data[0].append( str(r+1) )
-				data[1].append( Utils.formatTime(tLap, highPrecisionTimes) )
-				data[2].append( Utils.formatTime(e.t, highPrecisionTimes) )
+				row = [ str(r+1), Utils.formatTime(tLap, highPrecisionTimes), Utils.formatTime(e.t, highPrecisionTimes) ]
 				
 				graphData.append( tLap )
 				ganttData.append( e.t )
@@ -693,21 +692,37 @@ class RiderDetail( wx.Panel ):
 				
 				if distanceByLap:
 					s = 1000.0 if tLap <= 0.0 else (category.getLapDistance(r+1) / (tLap / (60.0*60.0)))
-					data[3].append( '%.2f' % s )
+					row.append( '%.2f' % s )
 					
 					s = 1000.0 if tSum <= 0.0 else (category.getDistanceAtLap(r+1) / (tSum / (60.0*60.0)))
-					data[4].append( '%.2f' % s )
+					row.append( '%.2f' % s )
+				else:
+					row.extend( ['', ''] )
 				
-				raceTime = e.t
+				highlight = False
 				if e.interp:
+					row.extend( ['Auto', 'CrossMgr', '' ] )
+					highlight = True
+				else:
+					info = numTimeInfo.getInfo( e.num, e.t )
+					if info:
+						row.extend( [Model.NumTimeInfo.ReasonName[info[0]], info[1], info[2].ctime()] )
+						highlight = True
+					else:
+						row.extend( ['', '', ''] )
+						
+				for i, d in enumerate(row):
+					data[i].append( d )
+				if highlight:
 					for i in xrange(self.grid.GetNumberCols()):
 						backgroundColour[(r,i)] = (255,255,0)
+				raceTime = e.t
 
 			self.grid.Set( data = data, backgroundColour = backgroundColour )
 			self.grid.AutoSizeColumns( True )
 			self.grid.Reset()
 			
-			self.ganttChart.SetData( [ganttData], [num], Gantt.GetNowTime(), [ganttInterp] )
+			self.ganttChart.SetData( [ganttData], [num], Gantt.GetNowTime(), [ganttInterp], numTimeInfo = numTimeInfo )
 			self.lineGraph.SetData( [graphData], [[e.interp for e in entries]] )
 		
 		if self.firstTime:
