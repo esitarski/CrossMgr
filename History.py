@@ -381,7 +381,7 @@ class History( wx.Panel ):
 			if not entries:
 				self.clearGrid()
 				return
-
+			
 			# Organize all the entries into a grid as we would like to see them.
 			self.history = [ [] ]
 			numSeen = set()
@@ -411,6 +411,8 @@ class History( wx.Panel ):
 			# Show the values.
 			self.isEmpty = False
 				
+			numTimeInfo = race.numTimeInfo
+			
 			colnames = []
 			raceTime = 0
 			for c, h in enumerate(self.history):
@@ -447,6 +449,7 @@ class History( wx.Panel ):
 						'riderName': info.get(e.num, {}).get('LastName', '') if self.showRiderName else '',
 					} ) for e in h] )
 				self.rcInterp.update( (row, col) for row, e in enumerate(h) if e.interp )
+				self.rcInterp.update( (row, col) for row, e in enumerate(h) if numTimeInfo.getInfo(e.num, e.t) is not None )
 
 			self.grid.Set( data = data, colnames = colnames )
 			self.grid.AutoSizeColumns( True )
