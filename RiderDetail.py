@@ -490,7 +490,49 @@ class RiderDetail( wx.Panel ):
 		dlg.Destroy()
 		if splits is not None:
 			self.doSplitLap( splits )
+	
+	def onShowLapDetail( self, event ):
+		num, lap, times = self.getGanttChartPanelNumLapTimes()
+		if num is None:
+			return
+		with Model.LockRace() as race:
+			if not race:
+				return
+			tLapStart = times[lap-1]
+			tLapEnd = times[lap]
 		
+			try:
+				riderInfo = race.excelLink.read()[num]
+			except:
+				riderInfo = {}
+				
+			try:
+				riderName = '%s, %s %d' % (riderInfo['LastName'], riderInfo['FirstName'], num)
+			except KeyError:
+				try:
+					riderName = '%s %d' % (riderInfo['LastName'], num)
+				except KeyError:
+					try:
+						riderName = '%s %d' % (riderInfo['FirstName'], num)
+					except KeyError:
+						riderName = str(self.entryEnd.num)
+						
+			infoStart = race.numTimeInfo.getInfoStr( num, tLapStart )
+			if infoStart:
+				infoStart = '\nLap Start ' + infoStart
+			infoEnd = race.numTimeInfo.getInfoStr( num, tLapEnd )
+			if infoEnd:
+				infoEnd = '\nLap End ' + infoEnd
+		
+			info = ('Rider: %s  Lap: %d\nLap Start:  %s Lap End: %s\nLap Time: %s\n%s%s' %
+					(riderName, lap,
+					Utils.formatTime(tLapStart),
+					Utils.formatTime(tLapEnd),
+					Utils.formatTime(tLapEnd - tLapStart),
+					infoStart, infoEnd )).strip()
+					
+		Utils.MessageOK( self, info, 'Lap Details' )
+
 	def onDeleteLapStart( self, event ):
 		num, lap, times = self.getGanttChartPanelNumLapTimes()
 		if num is None:
@@ -515,12 +557,12 @@ class RiderDetail( wx.Panel ):
 	def onEditGantt( self, xPos, yPos, num, iRider, lap ):
 		if not hasattr(self, "ganttMenuInfo"):
 			self.ganttMenuInfo = [
+				[wx.NewId(),	'Show Lap Detail...',		self.onShowLapDetail],
+				[None, None, None]] + [
 				[	wx.NewId(),
 					'Add %d Missing Split%s' % (split-1, 's' if split > 2 else ''),
 					lambda evt, s = self, splits = split: s.doSplitLap(splits)] for split in xrange(2,8) ] + [
-					[wx.NewId(),
-					'Add Custom Missing Split...',
-					lambda evt, s = self: s.doCustomSplitLap()]] + [
+				[wx.NewId(), 'Add Custom Missing Split...', lambda evt, s = self: s.doCustomSplitLap()]] + [
 				[None, None, None],
 				[wx.NewId(),	'Delete Lap Start Time',	self.onDeleteLapStart],
 				[wx.NewId(),	'Delete Lap End Time',		self.onDeleteLapEnd],
