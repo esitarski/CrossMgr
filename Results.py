@@ -611,6 +611,7 @@ class Results( wx.Panel ):
 		
 		# Highlight interpolated entries.
 		with Model.LockRace() as race:
+			numTimeInfo = race.numTimeInfo
 			for r in xrange(self.lapGrid.GetNumberRows()):
 				try:
 					rider = race[int(self.labelGrid.GetCellValue(r, 1))]
@@ -623,7 +624,7 @@ class Results( wx.Panel ):
 					if not self.lapGrid.GetCellValue(r, c):
 						break
 					try:
-						if entries[c+1].interp:
+						if entries[c+1].interp or numTimeInfo.getInfo(entries[c+1].num, entries[c+1].t) is not None:
 							self.rcInterp.add( (r, c) )
 						elif c > self.iLastLap:
 							self.iLastLap = c

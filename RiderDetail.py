@@ -515,7 +515,7 @@ class RiderDetail( wx.Panel ):
 					try:
 						riderName = '%s %d' % (riderInfo['FirstName'], num)
 					except KeyError:
-						riderName = str(self.entryEnd.num)
+						riderName = str(num)
 						
 			infoStart = race.numTimeInfo.getInfoStr( num, tLapStart )
 			if infoStart:
