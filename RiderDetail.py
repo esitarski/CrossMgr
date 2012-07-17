@@ -491,7 +491,7 @@ class RiderDetail( wx.Panel ):
 		if splits is not None:
 			self.doSplitLap( splits )
 	
-	def onShowLapDetail( self, event ):
+	def OnGanttPopupLapDetail( self, event ):
 		num, lap, times = self.getGanttChartPanelNumLapTimes()
 		if num is None:
 			return
@@ -531,52 +531,66 @@ class RiderDetail( wx.Panel ):
 					Utils.formatTime(tLapEnd - tLapStart),
 					infoStart, infoEnd )).strip()
 					
-		Utils.MessageOK( self, info, 'Lap Details' )
+		Utils.MessageOK( self, info, 'Lap Details', pos=wx.GetMousePosition() )
 
-	def onDeleteLapStart( self, event ):
-		num, lap, times = self.getGanttChartPanelNumLapTimes()
-		if num is None:
-			return
-		if self.lapCur != 1:
-			undo.pushState()
-			with Model.LockRace() as race:
-				race.numTimeInfo.delete( num, times[lap-1] )
-				race.deleteTime( num, times[lap-1] )
-			wx.CallAfter( self.refresh )
-			
-	def onDeleteLapEnd( self, event ):
-		num, lap, times = self.getGanttChartPanelNumLapTimes()
-		if num is None:
-			return
-		undo.pushState()
-		with Model.LockRace() as race:
-			race.numTimeInfo.delete( num, times[lap] )
-			race.deleteTime( num, times[lap] )
-		wx.CallAfter( self.refresh )
-			
 	def onEditGantt( self, xPos, yPos, num, iRider, lap ):
-		if not hasattr(self, "ganttMenuInfo"):
-			self.ganttMenuInfo = [
-				[wx.NewId(),	'Show Lap Detail...',		self.onShowLapDetail],
-				[None, None, None]] + [
-				[	wx.NewId(),
-					'Add %d Missing Split%s' % (split-1, 's' if split > 2 else ''),
-					lambda evt, s = self, splits = split: s.doSplitLap(splits)] for split in xrange(2,8) ] + [
-				[wx.NewId(), 'Add Custom Missing Split...', lambda evt, s = self: s.doCustomSplitLap()]] + [
-				[None, None, None],
-				[wx.NewId(),	'Delete Lap Start Time',	self.onDeleteLapStart],
-				[wx.NewId(),	'Delete Lap End Time',		self.onDeleteLapEnd],
-			]
-
-		menu = wx.Menu()		
-		for id, name, callback in self.ganttMenuInfo:
-			if not id:
-				menu.AppendSeparator()
-				continue
-			item = menu.Append( id, name )
-			self.Bind( wx.EVT_MENU, callback, item )
-			
+		allCases = 0
+		interpCase = 1
+		nonInterpCase = 2
+		
 		self.lapCur = lap
+		num = self.num.GetValue()
+		if num is None:
+			return
+		with Model.LockRace() as race:
+			if not race:
+				return
+			try:
+				entries = race.getRider(num).interpolate()
+				self.entry = entries[lap]
+				caseCode = 1 if entries[lap].interp else 2
+			except IndexError:
+				return
+
+		if not hasattr(self, 'ganttMenuInfo'):
+			self.ganttMenuInfo = [
+				(wx.NewId(), 'Show Lap Details...', 	'Show Lap Details',			self.OnGanttPopupLapDetail, allCases),
+				(None, None, None, None, None),
+				(wx.NewId(), 'Correct Lap End Time...',	'Change lap end time...',				lambda event, s = self: CorrectNumber(s, s.entry), interpCase),
+				(wx.NewId(), 'Shift Lap End Time...',	'Move lap end time earlier/later...',	lambda event, s = self: ShiftNumber(s, s.entry), interpCase),
+				(wx.NewId(), 'Delete Lap End Time...',	'Delete lap end time...',				lambda event, s = self: DeleteEntry(s, s.entry), nonInterpCase),
+				(None, None, None, None, None),
+			]
+			self.splitMenuInfo = [
+					(wx.NewId(),
+					'%d Split%s' % (split-1, 's' if split > 2 else ''),
+					lambda evt, s = self, splits = split: s.doSplitLap(splits)) for split in xrange(2,8) ] + [
+					(wx.NewId(),
+					'Custom...',
+					lambda evt, s = self: s.doCustomSplitLap())]
+			for id, name, text, callback, cCase in self.ganttMenuInfo:
+				if id:
+					self.Bind( wx.EVT_MENU, callback, id=id )
+			for id, name, callback in self.splitMenuInfo:
+				self.Bind( wx.EVT_MENU, callback, id=id )
+		
+		menu = wx.Menu()
+		for id, name, text, callback, cCase in self.ganttMenuInfo:
+			if not id:
+				Utils.addMissingSeparator( menu )
+				continue
+			if caseCode < cCase:
+				continue
+			menu.Append( id, name, text )
+			
+		if caseCode == 2:
+			submenu = wx.Menu()
+			for id, name, callback in self.splitMenuInfo:
+				submenu.Append( id, name )
+			Utils.addMissingSeparator( menu )
+			menu.AppendMenu( wx.NewId(), 'Add Missing Split', submenu )
+			
+		Utils.deleteTrailingSeparators( menu )
 		self.PopupMenu( menu )
 		menu.Destroy()
 	
@@ -726,32 +740,27 @@ class RiderDetail( wx.Panel ):
 				tLap = max( e.t - raceTime, 0.0 )
 				tSum += tLap
 				
-				row = [ str(r+1), Utils.formatTime(tLap, highPrecisionTimes), Utils.formatTime(e.t, highPrecisionTimes) ]
+				row = [''] * self.grid.GetNumberCols()
+				
+				row[0:3] = ( str(r+1), Utils.formatTime(tLap, highPrecisionTimes), Utils.formatTime(e.t, highPrecisionTimes) )
 				
 				graphData.append( tLap )
 				ganttData.append( e.t )
 				ganttInterp.append( e.interp )
 				
 				if distanceByLap:
-					s = 1000.0 if tLap <= 0.0 else (category.getLapDistance(r+1) / (tLap / (60.0*60.0)))
-					row.append( '%.2f' % s )
-					
-					s = 1000.0 if tSum <= 0.0 else (category.getDistanceAtLap(r+1) / (tSum / (60.0*60.0)))
-					row.append( '%.2f' % s )
-				else:
-					row.extend( ['', ''] )
+					row[3:5] = ('%.2f' % (1000.0 if tLap <= 0.0 else (category.getLapDistance(r+1) / (tLap / (60.0*60.0)))),
+								'%.2f' % (1000.0 if tSum <= 0.0 else (category.getDistanceAtLap(r+1) / (tSum / (60.0*60.0)))) )
 				
 				highlight = False
 				if e.interp:
-					row.extend( ['Auto', 'CrossMgr', '' ] )
+					row[5:7] = ('Auto', 'CrossMgr')
 					highlight = True
 				else:
 					info = numTimeInfo.getInfo( e.num, e.t )
 					if info:
-						row.extend( [Model.NumTimeInfo.ReasonName[info[0]], info[1], info[2].ctime()] )
+						row[5:8] = ( Model.NumTimeInfo.ReasonName[info[0]], info[1], info[2].ctime() )
 						highlight = True
-					else:
-						row.extend( ['', '', ''] )
 						
 				for i, d in enumerate(row):
 					data[i].append( d )

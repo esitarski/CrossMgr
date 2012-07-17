@@ -62,8 +62,8 @@ wx.ICON_QUESTION	Shows a question mark icon.
 wx.ICON_INFORMATION	Shows an information (i) icon.
 '''
 
-def MessageOK( parent, message, title = '', iconMask = wx.ICON_INFORMATION):
-	dlg = wx.MessageDialog(parent, message, title, wx.OK | iconMask)
+def MessageOK( parent, message, title = '', iconMask = wx.ICON_INFORMATION, pos = wx.DefaultPosition ):
+	dlg = wx.MessageDialog(parent, message, title, wx.OK | iconMask, pos)
 	dlg.ShowModal()
 	dlg.Destroy()
 	return True

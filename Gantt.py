@@ -82,7 +82,7 @@ class Gantt( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(wx.NewId(), 'Show Lap Details...', 		'Show Lap Details',		self.OnPopupLapDetail, allCases),
+				(wx.NewId(), 'Show Lap Details...', 	'Show Lap Details',			self.OnPopupLapDetail, allCases),
 				(None, None, None, None, None),
 				(wx.NewId(), 'Results', 				'Switch to Results tab',	self.OnPopupResults, allCases),
 				(wx.NewId(), 'RiderDetail',				'Show RiderDetail Dialog',	self.OnPopupRiderDetail, allCases),
