@@ -544,17 +544,17 @@ class MainWin( wx.Frame ):
 			self.config.WriteBool( 'showTipAtStartup', showing ^ True )
 
 	def menuRestoreFromInput( self, event ):
-		with Model.LockRace() as race:
-			if not race:
-				Utils.MessageOK(self, "You must have a valid race.", "No Valid Race", iconMask=wx.ICON_ERROR)
-				return
-			if not Utils.MessageOKCancel( self, "This will restore the race from the original input and replace your adds/splits/deletes.\nAre you sure you want to continue?",
-										"Restore from Original Input", iconMask=wx.ICON_WARNING ):
-				return
-			startTime, endTime, numTimes = OutputStreamer.ReadStreamFile()
-			if not numTimes:
-				Utils.MessageOK( self, "No times found.\nCheck for *Input.csv file.", "No Times Found" )
-				return
+		if not Model.race:
+			Utils.MessageOK(self, "You must have a valid race.", "No Valid Race", iconMask=wx.ICON_ERROR)
+			return
+		if not Utils.MessageOKCancel( self, "This will restore the race from the original input and replace your adds/splits/deletes.\nAre you sure you want to continue?",
+									"Restore from Original Input", iconMask=wx.ICON_WARNING ):
+			return
+				
+		startTime, endTime, numTimes = OutputStreamer.ReadStreamFile()
+		if not numTimes:
+			Utils.MessageOK( self, 'No data found.\n\nCheck "%s" file.' % OutputStreamer.getFileName(), "No Data Found" )
+			return
 		undo.pushState()
 		with Model.LockRace() as race:
 			race.deleteAllRiderTimes()
@@ -564,7 +564,7 @@ class MainWin( wx.Frame ):
 				race.importTime( num, t )
 			race.numLaps = race.getMaxLap()
 			race.setChanged()
-		self.writeRace()
+		wx.CallAfter( self.refresh )
 			
 	def menuChangeProperties( self, event ):
 		if not Model.race:
@@ -589,7 +589,7 @@ class MainWin( wx.Frame ):
 		dlg = JChipImport.JChipImportDialog( self )
 		dlg.ShowModal()
 		dlg.Destroy()
-		self.refresh()
+		wx.CallAfter( self.refresh() )
 		
 	def menuShowPage( self, event ):
 		self.showPage( self.idPage[event.GetId()] )

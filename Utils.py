@@ -158,7 +158,7 @@ def formatTimeGap( secs, highPrecision = False ):
 	else:
 		decimal = ''
 	if hours > 0:
-		return "%s%dh'%02d%s\"" % (sign, hours, minutes, secs, decimal)
+		return "%s%dh%d'%02d%s\"" % (sign, hours, minutes, secs, decimal)
 	else:
 		return "%s%d'%02d%s\"" % (sign, minutes, secs, decimal)
 

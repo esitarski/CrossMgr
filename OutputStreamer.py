@@ -157,8 +157,12 @@ def ReadStreamFile( fname = None ):
 				try:
 					fields = line.split(',')
 					if fields[0] == 'time':
-						# Convert from days to race seconds.
-						numTimes.append( (int(fields[1]), float(fields[2]) * DaySeconds) )
+						timeStr = fields[2]
+						if timeStr.find(':'):
+							t = Utils.StrToSeconds(timeStr)		# Convert from a time format.
+						else:
+							t = float(timeStr) * DaySeconds		# Convert from Excel format, (days to race seconds).
+						numTimes.append( (int(fields[1]), t) )
 					elif fields[0] == 'start':
 						startTime = gt( fields[1] )
 						endTime = None		# Reset the endTime and numTimes on start.

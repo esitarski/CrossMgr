@@ -568,6 +568,8 @@ class Rider(object):
 		
 		# Check if we need to do any interpolation or if the user wants the raw data.
 		if not getattr(self, 'autocorrectLaps', True):
+			if not self.times:
+				return []
 			iTimes = [None] * (len(self.times) + 1)
 			# Add a zero start time for the beginning of the race.
 			# This avoids a whole lot of special cases later.
@@ -618,6 +620,8 @@ class Rider(object):
 				i += 1
 			del iTimes[i:]
 		
+		if len(iTimes) <= 1:
+			return []
 		return [Entry(t=it[0], lap=i, num=self.num, interp=it[1]) for i, it in enumerate(iTimes)]
 		
 	def hasInterpolatedTime( self, tMax ):
