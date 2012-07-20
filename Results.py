@@ -188,20 +188,14 @@ class Results( wx.Panel ):
 	def onZoomOut( self, event ):
 		self.labelGrid.Zoom( False )
 		self.lapGrid.Zoom( False )
-		self.GetSizer().Layout()
-		self.labelGrid.FitInside()
-		self.lapGrid.FitInside()
-		self.splitter.Update()
-		self.Update()
+		self.splitter.UpdateSize()
+		wx.CallAfter( self.refresh )
 			
 	def onZoomIn( self, event ):
 		self.labelGrid.Zoom( True )
 		self.lapGrid.Zoom( True )
-		self.GetSizer().Layout()
-		self.labelGrid.FitInside()
-		self.lapGrid.FitInside()
-		self.splitter.Update()
-		self.Update()
+		self.splitter.UpdateSize()
+		wx.CallAfter( self.refresh )
 		
 	def onShowRiderData( self, event ):
 		self.showRiderData ^= True
