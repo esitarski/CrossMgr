@@ -255,7 +255,7 @@ class ExportGrid( object ):
 
 		startOffset = category.getStartOffsetSecs() if category else 0.0
 		
-		infoFields = ['LastName', 'FirstName', 'Team', 'Category', 'License']
+		infoFields = ['LastName', 'FirstName', 'Team', 'Category', 'License'] if getExternalData else []
 		infoFieldsPresent = set( infoFields ) & set( dir(leader) )
 		infoFields = [f for f in infoFields if f in infoFieldsPresent]
 		
