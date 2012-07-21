@@ -155,13 +155,13 @@ class History( wx.Panel ):
 				(None, None, None, None, None),
 				(wx.NewId(), 'Correct...',	'Change number or time',	self.OnPopupCorrect, interpCase),
 				(wx.NewId(), 'Shift...',	'Move time earlier/later',	self.OnPopupShift, interpCase),
-				(wx.NewId(), 'Insert...',	'Insert a number before/after existing entry',	self.OnPopupSplit, nonInterpCase),
+				(wx.NewId(), 'Insert...',	'Insert a number before/after existing entry',	self.OnPopupInsert, nonInterpCase),
 				(None, None, None, None, None),
 				(wx.NewId(), 'Delete...',	'Delete an entry',	self.OnPopupDelete, nonInterpCase),
-				(wx.NewId(), 'Split...',	'Split an entry into two',	self.OnPopupSplit, nonInterpCase),
+				(wx.NewId(), 'Split...',	'Split an entry into two',self.OnPopupSplit, nonInterpCase),
 				(None, None, None, None, None),
-				(wx.NewId(), 'Swap with entry Before...',	'Swap entry with Entry before', self.OnPopupSwapBefore, nonInterpCase),
-				(wx.NewId(), 'Swap with entry After...',	'Swap entry with Entry after',	self.OnPopupSwapAfter, nonInterpCase),
+				(wx.NewId(), 'Swap with Entry before...',	'Swap with Entry before', self.OnPopupSwapBefore, nonInterpCase),
+				(wx.NewId(), 'Swap with Entry after...',	'Swap with Entry after',	self.OnPopupSwapAfter, nonInterpCase),
 			]
 			for id, name, text, callback, cCode in self.popupInfo:
 				if id:
@@ -226,7 +226,7 @@ class History( wx.Panel ):
 		if hasattr(self, 'rowPopup'):
 			EditEntry.SplitNumber( self, self.history[self.colPopup][self.rowPopup] )
 		
-	def OnPopupSplit( self, event ):
+	def OnPopupInsert( self, event ):
 		if hasattr(self, 'rowPopup'):
 			EditEntry.InsertNumber( self, self.history[self.colPopup][self.rowPopup] )
 		

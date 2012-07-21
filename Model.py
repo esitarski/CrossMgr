@@ -864,7 +864,8 @@ class Race(object):
 			else:
 				r.addTime( t - r.firstTime )
 		else:
-			if getattr(self, 'resetStartClockOnFirstTag', False):
+			if getattr(race, 'enableJChipIntegration', False) and \
+						getattr(self, 'resetStartClockOnFirstTag', False):
 				if not getattr(self, 'firstRecordedTime', None):
 					self.firstRecordedTime = self.startTime + datetime.timedelta( seconds = t )
 					self.startTime = self.firstRecordedTime

@@ -639,7 +639,8 @@ class NumKeypad( wx.Panel ):
 			rst, rstSource = '', ''
 			if race and race.startTime:
 				st = race.startTime
-				if getattr(race, 'resetStartClockOnFirstTag', False):
+				if getattr(race, 'enableJChipIntegration', False) and \
+							getattr(race, 'resetStartClockOnFirstTag', False):
 					if getattr(race, 'firstRecordedTime', None):
 						rstSource = 'Chip Start'
 					else:
