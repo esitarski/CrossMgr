@@ -4,6 +4,7 @@ import bisect
 import Model
 import Utils
 import ColGrid
+from RiderDetail import ShowRiderDetailDialog
 from FixCategories import FixCategories
 
 class Recommendations( wx.Panel ):
@@ -106,8 +107,7 @@ class Recommendations( wx.Panel ):
 	
 	def doNumDrilldown( self, event ):
 		self.doNumSelect( event )
-		if self.numSelect is not None and Utils.isMainWin():
-			Utils.getMainWin().showRiderDetail()
+		ShowRiderDetailDialog( self, self.numSelect )
 	
 	def getCellNum( self, row, col ):
 		numSelect = None

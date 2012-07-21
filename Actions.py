@@ -16,7 +16,9 @@ def StartRaceNow():
 	with Model.LockRace() as race:
 		if race is None:
 			return
-			
+		
+		if not getattr(race, 'enableJChipIntegration', False):
+			race.resetStartClockOnFirstTag = False
 		Model.resetCache()
 		race.startRaceNow()
 		
