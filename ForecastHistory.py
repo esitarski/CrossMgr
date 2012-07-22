@@ -156,7 +156,7 @@ class ForecastHistory( wx.Panel ):
 				('Correct...',	wx.NewId(), self.OnPopupHistoryCorrect),
 				('Split...',	wx.NewId(), self.OnPopupHistorySplit),
 				('Shift...',	wx.NewId(), self.OnPopupHistoryShift),
-				('Insert...',	wx.NewId(), self.OnPopupHistorySplit),
+				('Insert...',	wx.NewId(), self.OnPopupHistoryInsert),
 				('Delete...',	wx.NewId(), self.OnPopupHistoryDelete),
 				(None,			None,		None),
 				('DNF...',		wx.NewId(), self.OnPopupHistoryDNF),
@@ -190,7 +190,7 @@ class ForecastHistory( wx.Panel ):
 		if hasattr(self, 'rowPopup'):
 			ShiftNumber( self, self.quickHistory[self.rowPopup] )
 		
-	def OnPopupHistorySplit( self, event ):
+	def OnPopupHistoryInsert( self, event ):
 		if hasattr(self, 'rowPopup'):
 			InsertNumber( self, self.quickHistory[self.rowPopup] )
 		
