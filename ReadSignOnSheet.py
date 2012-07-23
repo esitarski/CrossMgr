@@ -118,16 +118,20 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 				break
 
 		# If we haven't found a header row yet, assume the first non-empty row is the header.
-		if not self.headers and minCols == maxCols:
+		if not self.headers:
 			for r, row in enumerate(reader.iter_list(sheetName)):
 				cols = sum( 1 for d in row if toAscii(d) )
 				if cols > 0:
 					self.headers = [toAscii(h) for h in row]
 					break
-				
+		
+		# Ignore empty columns.
+		while self.headers and self.headers[-1].isspace() or not self.headers[-1]:
+			self.headers.pop()
+		
 		if not self.headers:
 			raise ValueError, 'Could not find a Header Row %s::%s.' % (fileName, sheetName)
-			
+		
 		# Set a blank final entry.
 		self.headers.append( '' )
 			

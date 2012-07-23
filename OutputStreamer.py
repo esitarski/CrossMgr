@@ -158,7 +158,7 @@ def ReadStreamFile( fname = None ):
 					fields = line.split(',')
 					if fields[0] == 'time':
 						timeStr = fields[2]
-						if timeStr.find(':'):
+						if ':' in timeStr:
 							t = Utils.StrToSeconds(timeStr)		# Convert from a time format.
 						else:
 							t = float(timeStr) * DaySeconds		# Convert from Excel format, (days to race seconds).

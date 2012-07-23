@@ -75,12 +75,12 @@ class Properties( wx.Panel ):
 		self.distanceUnit.SetSelection( 0 )
 		rows += 1
 
-		self.reverseDirectionLabel = wx.StaticText( self, wx.ID_ANY, 'Animation Reverse Direction: ' )
-		self.reverseDirection = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
-		rows += 1
-
 		self.finishTopLabel = wx.StaticText( self, wx.ID_ANY, 'Animation Finish on Top: ' )
 		self.finishTop = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
+		rows += 1
+
+		self.reverseDirectionLabel = wx.StaticText( self, wx.ID_ANY, 'Animation Reverse Direction: ' )
+		self.reverseDirection = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
 		rows += 1
 
 		self.fileNameLabel = wx.StaticText( self, wx.ID_ANY, 'File Name: ' )
@@ -128,8 +128,8 @@ class Properties( wx.Panel ):
 			(self.distanceUnitLabel,0, labelAlign),		(self.distanceUnit,		1, fieldAlign),
 			
 			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
-			(self.reverseDirectionLabel,0, labelAlign),	(self.reverseDirection,	1, fieldAlign),
 			(self.finishTopLabel,0, labelAlign),		(self.finishTop,		1, fieldAlign),
+			(self.reverseDirectionLabel,0, labelAlign),	(self.reverseDirection,	1, fieldAlign),
 			
 			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
 			(self.excelLabel,		0, labelAlign),		(self.excelName, 		1, fieldAlign),
