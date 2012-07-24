@@ -1,0 +1,57 @@
+[TOC]
+
+# Categories
+Allows you to configure properties of each race category.  In CrossMgr, a race category is a pattern of numbers to be ranked together - it does not have to be the same as the category that appears on a rider's license code.
+
+It is easy to change the categories of a race before, during and afterwards.  A rider can be moved between categories before, during and after a race too.
+
+Ideally, each category in the race would have a unique number range, for example 1-99 would be in one category, 100-199 would be in another, etc.
+This is not only easier to configure in CrossMgr, it makes it easy for riders and race officials to know the set of competitors in the same race.
+
+# Controls
+
+## New Category
+Add a new Category to the race.
+
+## Delete Category
+Delete an existing new Category to the race.  Make sure you click on the category you want to delete first.
+
+## Up
+Move a Category up in the table.  The number ranges of this category will be considered before all subsequent categories (see below).
+
+## Down
+Move a Category up in the table.  The number ranges of this category will be considered after all preceding categories (see below).
+
+## Add Bib Exception
+Allows you to automatically add a bib exception to a selected category.  This action also adds the appropriate exceptions to the other categories.  Although you can do this here, it is more convenient to add category exceptions directly from the [RiderDetail](RiderDetail.html) screen.
+
+# Category Screen
+
+The Category screen is a table with the category details:
+
+Property|Description
+:-------|:----------
+Active|If selected, this Category will be considered in the race.  If deselected, this Category will be ignored.  Some CrossMgr users configure an external Category file with all possible categories in it.  The then select only the categories that are in this race.
+Name|Name of the Category
+Numbers|The numbers of riders in this Category.  Numbers can be expressed in a range, like 100-199.  Exclusions exceptions are expressed by preceding the excluded number with a '-' sign.  Inclusion exceptions are added on their own.  See (Number Patterns)[#number-patterns] for more details below.
+Start Offset|When starting multiple categories at the same time, here is where you enter the offset of later starts from the first start.
+Race Laps|When running a race by time, leave this blank - CrossMgr will use the Suggested Laps (see below).<br/> If you know the number of laps, or you don't like CrossMgr's suggestion, enter the laps here.
+Distance|The distance of the lap or the race (depends on the value of the next column).  The distance unit will be what you configured in Properties.
+Distance is By|This field is either "Lap" if the distance you entered is by lap, or "Race" if the distance is for the entire race.  If distance is by "Race", CrossMgr will not compute lap speeds as it does not know the distance per lap.  Generally, you would only use Distance by Race if the race was a point-to-point race, or if the laps were not the same distance.
+First Lap Distance|Fill in this field if the first lap of your race is not the same as the subsequent laps.  This can happen in many situations, for example, when the rider staging area is not at the start/finish line.
+80% Lap Time|This is computed by CrossMgr.  It is the maximum time a rider can fall behind the leader before being a candidate to be pulled in a UCI CycloCross or MTB race.  It is computed as 80% of each category leader's first lap time.  If the first lap distance is not the same as the regular lap distance (see above), the second lap time is used.  Riders outside the 80% time boundary are shown in red in the [Expected](Expected.html#expected) screen.
+Suggested Laps|Computed by CrossMgr.  Important if running a race by time rather than laps.  The "Race Laps" column overrides this field, if you don't like CrossMgr's suggestion.  This field is important if a race category leader does an extra lap (for example, a warmdown lap), and you don't want that lap counted in the results.  Just input the actual laps of the race here.
+
+## Number Patterns
+Number patterns are expressive and flexible.
+For example, consider "100-199, -151, -155, 205, 220-229" which would match to the numbers from 100 to 199, without 151 and 155, and including 205, and 200 to 229.  The idea is that Categories correspond to number ranges, so there aren't many exceptions.
+
+If you have a lot of exceptions, it is quicker and easier set the exception from the [RiderDetail](RiderDetail.html) screen rather than from Categories.   Assigning the category from RiderCategory automatically adds the appropriate acceptions to all number patterns.
+
+To find the category of a rider, CrossMgr starts with the first category and checks for a match in the number pattern.  If that fails, it continues to the second category, etc.  The first Category that matches the rider's number is considered the rider's Category.
+  
+## Question: Why does CrossMgr configure lap distance by Category instead of the entire race?
+
+Well, sometimes different categories have a different lap distance, especially in a time trial.  To provide for this flexibility, CrossMgr requires the lap distance at the Category level, not the race level.
+
+Yes, it's a little extra trouble, but with cut-and-paste (Ctrl-C, Ctrl-V), it isn't so bad.  It is great to have this flexibility when you need it.

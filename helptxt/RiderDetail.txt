@@ -1,0 +1,126 @@
+[TOC]
+
+# RiderDetail
+RiderDetail shows details about an individual rider.
+If is also used to enter the Status of riders that do not have any time entries.
+
+For example, if you want to show that a rider did not start (DNS), you can type in the number, change the Status to DNS, and press Enter.
+
+# Screen
+The top of the screen shows specific rider details.
+
+The bottom is divided into two parts with an adjustable pane between them.  The left side shows the time entries of the rider, and right side shows a Gantt chart showing the riders laps, and a line graph showing the rider's time per lap.
+
+## Rider Details (top of screen)
+
+This section shows a table of the rider information.  Much of this information comes from the external Excel spreadsheet.
+
+Field|Description
+:----|:----------
+Number|Bib number of the rider.  You can also type in the number of the rider you wish to see.
+Name|Name of the rider
+Team|Team of the rider
+Tag(s)|Chip timing tags
+Category|The Category of the rider matched by the number ranges in the Categories screen.  If you change the rider's category here, it will automatically add a number exception to the Category number ranges.
+Status|The status of the rider.  More details below.
+Autocorrect Lap Data|If True, CrossMgr will look for duplicate and missing entries and correct them.  It will also project lap times for the rider for the entire race.  If False, CrossMgr will present all entires exactly as input.
+Recommendations|Any recommendations CrossMgr has about this rider that you might want to consider.
+
+Rider Status has the following values:
+
+Status|Description
+:-----|:----------
+Finisher|This rider is a Finisher and is ranked in the results.  Riders can finish the race and not complete the same number of laps as the leader.
+DNF|This rider is a DNF (Did Not Finish).  DNF riders are not ranked, however, they are shown in the results in order of Race Time (the following field).
+PUL|This rider was pulled by the race officials and shoult not be ranked.  Although Pulled riders are not ranked, they are shown in the results in order of Race Time (the following field).
+DNS|This rider Did Not Start (DNS)
+DQ|This rider was disqualified (DQ)
+OTL|This rider was eliminated due to being Outside the Time Bound (OTL)
+NP|This rider was not placed.  This can be used as a place-holder when the finish status of the rider cannot be determined.
+
+In the results, riders are ranked in order of Status: 
+
+1. Finisher
+1. PUL
+1. OTL
+1. DNF
+1. DQ
+1. DNS
+1. NP
+
+Within each Status, riders are ranked by distance (laps completed), then time.
+
+### Autocorrect Lap Data
+If selected, CrossMgr will try to autocorrect entries.
+Autocorrect looks for two types of errors that can happen in Manual input:
+
+1. Duplicate entries.  This can happen manually if the number caller calls the same number twice.
+1. Missing entries.  This can happen if you miss riders.
+
+With autocorrect on, CrossMgr will also project future lap times for riders.
+Autocorrect is not perfect, and sometimes CrossMgr gets it wrong.
+
+If deselected, CrossMgr will not try to autocorrect entries.  This allows you to see the raw input data so that you can correct it manually.
+However, it also means that CrossMgr will not be able to project future lap times to show in the "Expected:" window.
+
+Chip timing creates different classes of errors that are not similar to manual input.  Specifically, there can by many "spurious reads" from the chip reader if riders stand around the finish line while other riders are finishing.
+
+You may wish to turn off the autocorrect feature when fixing up data from chip timed race (see the Edit menu documentation).
+
+This is useful if you want to make manual corrections.
+
+## Time Entries (bottom left of screen)
+
+Projected, auto-corrected and manually edited times are shown highlighted in yellow.  This indicates that some adjustment has been made to the times that were not present in the originally collected data.
+
+The time entry table has the following columns:
+
+Column|Description
+:-----|:----------
+Lap|Lap number
+Lap Time|Time of the lap
+Race Time|Race time of the entry
+Lap Speed|Speed of the lap (distances must be configured in Categories)
+Race Speed|Race speed up to that entry (distance must be configured in Categories)
+Edit|If this is not an original entered time, this shows what was changed in the field.
+By|The computer user who made the change
+On|The timestamp that the change was made
+
+### Right-Click
+Right-click brings up a number of options about what you clicked on:
+
+Option|Action
+:-----|:-----
+Correct...|Correct the current entry
+Shift...|Shift current entry forward/backward in time
+Delete...|Delete current entry
+
+## Edit... Button
+
+Clicking this button shows a number of additional actions than can be performed:
+
+Action|Description
+:-----|:----------
+Delete Rider from Race...|Delete this rider, and all associated entries, from the race.  Useful if you typed in a wrong number at some point and you want to get rid of it.
+Change Rider's Number...|Change the number of this rider.  Useful is the rider got the wrong number at registration.
+Swap Number with Other Rider...|Swap this rider's number with another rider's number.  Useful if two riders got their numbers switched at registration.
+Copy Rider Times to New Number...|Copies this rider's times to a new number.  Useful if, say, you have a rider who's number fell off, and you have no entries for him/her.  In this case, choose another rider that was racing closely to the missing rider, copy the entries, the make some manual edits to the copy to get the finish order correct.  Problem solved.
+
+Remember, Ctrl-Z is undo!  (Ctrl-Y is redo).
+
+## Gantt Chart and Lap Time Graph (bottom right of screen)
+This shows a Gantt chart for this individual rider's times, as well as a line graph showing the lap times.
+
+The Gantt chart 
+
+Option|Action
+:-----|:-----
+Show Lap Details...|Shows the details of the lap.  This includes the lap start, end, time, and any reasons for changes to the start or end of the lap.
+Correct Lap End Time...|Correct the lap end time
+Shift Lap End Time...|Shift the lap end time forwards or backwards
+Delete Lap End Time...|Delete the lap end time
+Swap with Rider Before|Swap current rider's finish time with preceeding rider's finish time
+Swap with Rider After|Swap current rider's finish time with the following rider's finish time
+Add Missing Split|Adds missing split times to the lap.  This adds the specified number of times at equal intervals in the lap.  This is the easiest way to correct missing reads.  For example, if there is a missing entry, you will see a lap that is 2x longer than what is should be.  To fix this, you would add one missing split.  Another example is that a rider's number gets muddy, and it takes three laps to figure out who it is.  As you missed this rider for 3 laps, you would add three missing splits.
+
+Remember, Ctrl-Z is undo!  (Ctrl-Y is redo).

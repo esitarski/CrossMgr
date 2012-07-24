@@ -490,8 +490,11 @@ function Refresh()
 		}
 		if( i == 0 )
 		{
+			var sfWidth = 8;
+			dc.strokeStyle = '#FFFFFF';
+			dc.fillRect( p1[0] - sfWidth / 2, Math.min(p1[1], p2[1]), sfWidth, r );
 			dc.strokeStyle = 'black';
-			dc.lineWidth = 3;
+			dc.lineWidth = 2;
 		}
 		else
 		{

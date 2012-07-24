@@ -1,0 +1,101 @@
+[TOC]
+
+# Main Screen
+The Main Screen is divided into three major areas:
+
+1. [Recorded](#recorded)
+1. [Expected](#expected)
+1. [Tabbed Screens](#screens)
+
+The Recorded and Expected area are on the left, the Tabbed Screens is the main field.
+
+All the areas can be controlled my dragging the "sash" separating the windows.
+
+If you prefer the Recorded and Expected areas to be side-by-side instead of stacked, double-click on the sash between them.  Double-click to return to the original configuration.
+
+# Recorded
+Shows the numbers just recorded during a race.  The columns in the table are as follows:
+
+Column|Description
+------|-----------
+Num|The rider's number
+Note|Shows the riders position by category.  Leaders are highlighted in green.  The Race Leader is highlighted with a full green bar.  Riders outside of the 80% time rule are shown in red.
+Lap|Shows the lap the rider is currently on.
+Time|Shows the recorded time
+
+## Double-click
+Jumps to the RiderDetail for the number clicked on.
+
+## Right-Click
+Right-click brings up a number of options about what you clicked on:
+
+Option|Action
+:-----|:-----
+Correct...|Correct the current entry
+Shift...|Shift current entry forward/backward in time
+Split...|Split the current entry into two entries
+Insert...|Insert a new time near an existing time
+Delete...|Delete current entry
+DNF...|Mark this rider as DNF
+RiderDetail|Jump to the RiderDetail for this rider.
+
+# Expected
+Shows the riders expected to arrive based on their previously recorded lap times.  The columns in the table are as follows:
+
+Column|Description
+------|-----------
+Num|The expected rider's number
+Note|Shows the riders expected position by category.  Leaders are highlighted in green.  The Race Leader is highlighted with a full green bar.  Riders expected to be outside of the 80% time rule are shown in red and are candiates to be pulled in a UCI level race.
+Lap|Shows the lap the rider is expected to be on.
+Time|Shows the expected time
+
+## Click on a Number
+Enters that number.  This eliminates typing in the Record screen.
+
+## Right-Click
+Right-click brings up a number of options about what you clicked on:
+
+Option|Action
+:-----|:-----
+Enter|Enters the number (same as click)
+DNF...|Mark this rider as DNF
+PUL...|Mark this rider as PUL (pulled from the race)
+RiderDetail|Jump to the RiderDetail for this rider.
+
+# Screens
+
+Each screen can be selected by clicking on the tab at the top of the screen, or pressing the function key corresponding to the number on the tab.
+For example, F3 selects the Results screen.
+
+* [Actions](Actions.html)
+* [Record](Record.html)
+* [Results](Results.html)
+* [History](History.html)
+* [RiderDetail](RiderDetail.html)
+* [Chart](Chart.html)
+* [Animation](Animation.html)
+* [Recommendations](Recommendations.html)
+* [Categories](Categories.html)
+* [Properties](Properties.html)
+
+# Keyboard Accelerators
+
+The following keyboard accelerators work from all screens:
+
+Key|Action
+:--|:-----
+Ctrl-Z|Undo the last edit.  Multiple undos will keep undoing the last changes.
+Ctrl-Y|Redo the last undo.  Multiple redos will keep redoing the last undos.
+Ctrl-F|Opens the Find window.
+Function Key 1..10|Jumps to the screen with the same number as the function key.
+
+#Edit Ctrl Keys
+
+The following Ctrl keys work in all edit fields.  You can also cut-and-paste from external sources to/from CrossMgr.
+
+Key|Action
+:--|:-----
+Ctrl-C|Copy selected text to clipboard
+Ctrl-V|Paste clipboard text into edit field
+Ctrl-X|Cut selected text to clipboard
+Esc|Abort edit and restore previous value

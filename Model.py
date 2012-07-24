@@ -752,8 +752,8 @@ class Race(object):
 		self.distanceUnit = Race.UnitKm
 		
 		# Animation options.
-		self.reverseDirection = False
 		self.finishTop = False
+		self.reverseDirection = False
 		
 		self.isChangedFlag = True
 		

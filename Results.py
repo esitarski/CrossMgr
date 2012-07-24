@@ -34,6 +34,7 @@ class Results( wx.Panel ):
 		self.firstDraw = True
 		
 		self.rcInterp = set()
+		self.rcNumTime = set()
 		self.numSelect = None
 		self.isEmpty = True
 		self.reSplit = re.compile( '[\[\]\+= ]+' )	# seperators for the fields.
@@ -100,6 +101,7 @@ class Results( wx.Panel ):
 		self.whiteColour = wx.Colour( 255, 255, 255 )
 		self.blackColour = wx.Colour( 0, 0, 0 )
 		self.yellowColour = wx.Colour( 255, 255, 0 )
+		self.orangeColour = wx.Colour( 255, 165, 0 )
 		self.greyColour = wx.Colour( 150, 150, 150 )
 		self.greenColour = wx.Colour( 127, 255, 0 )
 		
@@ -338,6 +340,7 @@ class Results( wx.Panel ):
 			
 		textColourLap = {}
 		backgroundColourLap = dict( ((rc, self.yellowColour) for rc in self.rcInterp) )
+		backgroundColourLap.update( dict( ((rc, self.orangeColour) for rc in self.rcNumTime) ) )
 		if self.fastestLapRC is not None:
 			backgroundColourLap[self.fastestLapRC] = self.greenColour
 		
@@ -354,18 +357,18 @@ class Results( wx.Panel ):
 			if cellNum == self.numSelect:
 				for c in xrange(self.lapGrid.GetNumberCols()):
 					textColourLap[ (r,c) ] = self.whiteColour
-					backgroundColourLap[ (r,c) ] = self.blackColour if (r,c) not in self.rcInterp else self.greyColour
+					backgroundColourLap[ (r,c) ] = self.blackColour if (r,c) not in self.rcInterp and (r,c) not in self.rcNumTime else self.greyColour
 					
 				for c in xrange(self.labelGrid.GetNumberCols()):
 					textColourLabel[ (r,c) ] = self.whiteColour
-					backgroundColourLabel[ (r,c) ] = self.blackColour if (r,c) not in self.rcInterp else self.greyColour
+					backgroundColourLabel[ (r,c) ] = self.blackColour if (r,c) not in self.rcInterp and (r,c) not in self.rcNumTime else self.greyColour
 				break
 		
 		try:
 			c = (i for i in xrange(self.lapGrid.GetNumberCols()) if self.lapGrid.GetColLabelValue(i).startswith('<')).next()
 			for r in xrange(self.lapGrid.GetNumberRows()):
 				textColourLap[ (r,c) ] = self.whiteColour
-				backgroundColourLap[ (r,c) ] = self.blackColour if (r,c) not in self.rcInterp else self.greyColour
+				backgroundColourLap[ (r,c) ] = self.blackColour if (r,c) not in self.rcInterp and (r,c) not in self.rcNumTime else self.greyColour
 		except StopIteration:
 			pass
 
@@ -439,6 +442,7 @@ class Results( wx.Panel ):
 		self.isEmpty = True
 		self.iLastLap = 0
 		self.rcInterp = set()	# Set of row/col coordinates of interpolated numbers.
+		self.rcNumTime = set()
 		
 		self.search.SelectAll()
 		wx.CallAfter( self.search.SetFocus )
@@ -630,8 +634,10 @@ class Results( wx.Panel ):
 					if not self.lapGrid.GetCellValue(r, c):
 						break
 					try:
-						if entries[c+1].interp or numTimeInfo.getInfo(entries[c+1].num, entries[c+1].t) is not None:
+						if entries[c+1].interp:
 							self.rcInterp.add( (r, c) )
+						elif numTimeInfo.getInfo(entries[c+1].num, entries[c+1].t) is not None:
+							self.rcNumTime.add( (r, c) )
 						elif c > self.iLastLap:
 							self.iLastLap = c
 					except IndexError:

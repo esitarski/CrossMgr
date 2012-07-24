@@ -1,0 +1,32 @@
+
+[TOC]
+
+# Edit
+
+## Undo (Ctrl-Z)
+Undo the last change.  Undo can be called repeatedly to keep undoing the changes in sequence.
+
+## Redo (Ctrl-Y)
+Redo the last change.  Redo can be called repeatedly to keep redoing the last changes that were undo'ed.
+
+## Find... (Ctrl-F)
+Open a window to allow searching for any data.  This window stays open until closed.
+
+* The Find window shows all data associated in the external Excel file.
+* Double-clicking in this window shows that rider in the RiderDetail screen.
+* Clicking on the column name sorts by that column.  Ths sorted column name will be shown surrounded by <>.
+* When in JChip test mode, the Tag will be automatically looked up if the Find window is up.  This makes it easy to check if a given chip read corresponds to the right rider.
+
+## Enable Autocorrect for all Riders
+Turns on the autocorrect flag for all riders.
+Data for all riders will be corrected, and projected lap times will be computed.
+
+With projected lap times, the "Expected:" section will show the expected riders before they arrive.
+
+## Disable Autocorrect for all Riders
+Turns off the autocorrect flag for all riders.
+Data for all riders will not be corrected, and projected lap times will not be computed.
+
+The "Expected:" section will show nothing as there will be no projected lap times to show.
+
+It is not recommended to do this unless you are running a race by laps only and not by time.

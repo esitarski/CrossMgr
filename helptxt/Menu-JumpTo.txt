@@ -1,0 +1,8 @@
+
+[TOC]
+
+# JumpTo
+
+Jumps to a screen.
+
+It is also possible to jump to a screen using the Function keys.  The function key required to jump to a screen corresponds to the number next to the screen.  For example, F3 jumps to Results.  F7 jumps to Animation, etc.

@@ -27,6 +27,7 @@ class History( wx.Panel ):
 		self.isEmpty = True
 		self.history = None
 		self.rcInterp = set()
+		self.rcNumTime = set()
 		self.textColour = {}
 		self.backgroundColour = {}
 		self.category = None
@@ -34,6 +35,7 @@ class History( wx.Panel ):
 		self.whiteColour = wx.Colour( 255, 255, 255 )
 		self.blackColour = wx.Colour( 0, 0, 0 )
 		self.yellowColour = wx.Colour( 255, 255, 0 )
+		self.orangeColour = wx.Colour( 255, 140, 0 )
 		self.greyColour = wx.Colour( 150, 150, 150 )
 		
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
@@ -259,7 +261,8 @@ class History( wx.Panel ):
 		
 	def updateColours( self ):
 		self.textColour = {}
-		self.backgroundColour = dict( ((rc, self.yellowColour) for rc in self.rcInterp ) )
+		self.backgroundColour = dict( ((rc, self.yellowColour) for rc in self.rcInterp) )
+		self.backgroundColour.update( dict(((rc, self.orangeColour) for rc in self.rcNumTime )) )
 		if not self.history:
 			return
 		try:
@@ -270,7 +273,7 @@ class History( wx.Panel ):
 			try:
 				r = (r for r, e in enumerate(h) if e.num == nSelect).next()
 				self.textColour[ (r,c) ] = self.whiteColour
-				self.backgroundColour[ (r,c) ] = self.blackColour if (r,c) not in self.rcInterp else self.greyColour
+				self.backgroundColour[ (r,c) ] = self.blackColour if (r,c) not in self.rcInterp and (r,c) not in self.rcNumTime else self.greyColour
 			except StopIteration:
 				pass
 		
@@ -333,6 +336,7 @@ class History( wx.Panel ):
 		self.history = None
 		self.category = None
 		self.rcInterp = set()
+		self.rcNumTime = set()
 		
 		self.search.SelectAll()
 		wx.CallAfter( self.search.SetFocus )
@@ -449,7 +453,7 @@ class History( wx.Panel ):
 						'riderName': info.get(e.num, {}).get('LastName', '') if self.showRiderName else '',
 					} ) for e in h] )
 				self.rcInterp.update( (row, col) for row, e in enumerate(h) if e.interp )
-				self.rcInterp.update( (row, col) for row, e in enumerate(h) if numTimeInfo.getInfo(e.num, e.t) is not None )
+				self.rcNumTime.update( (row, col) for row, e in enumerate(h) if numTimeInfo.getInfo(e.num, e.t) is not None )
 
 			self.grid.Set( data = data, colnames = colnames )
 			self.grid.AutoSizeColumns( True )

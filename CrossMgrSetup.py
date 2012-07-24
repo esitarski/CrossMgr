@@ -26,8 +26,11 @@ try:
 except:
 	pass
 
-# Add images to the distribution folder.
-
+# Compile the help files
+from helptxt.compile import CompileHelp
+CompileHelp( 'helptxt' )
+	
+# Add images and reference data to the distribution folder.
 def copyDir( d ):
 	destD = os.path.join(distDir, d)
 	if os.path.exists( destD ):
@@ -40,6 +43,7 @@ def copyDir( d ):
 copyDir( 'images' )
 copyDir( 'data' )
 copyDir( 'html' )
+copyDir( 'htmldoc' )
 
 # Create the installer
 inno = r'\Program Files\Inno Setup 5\ISCC.exe'
@@ -67,7 +71,7 @@ except:
 shutil.copy( 'install\\CrossMgr_Setup.exe', 'install\\' + newExeName )
 print 'executable copied to: ' + newExeName
 
-# Create comprssed executable.
+# Create compressed executable.
 os.chdir( 'install' )
 newExeName = os.path.basename( newExeName )
 newZipName = newExeName.replace( '.exe', '.zip' )

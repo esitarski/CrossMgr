@@ -1,0 +1,27 @@
+
+[TOC]
+
+# DataMgmt
+
+## Link to External Excel Data...
+Link to an external Excel file containing additional rider data.
+
+This option opens up a Wizard to configure the link:
+
+1. Choose the Excel workbook containing your additional data.
+1. Choose the sheet within the Excel sheet.
+1. Choose how the internal CrossMgr fields map to the Excel column names.  The Excel sheet may contain more fields than CrossMgr needs, and the column names do not have to be the same as CrossMgr's names.
+1. After the configuration, CrossMgr will show how many records it read from the Excel workbook.
+
+## Category Mgmt
+### Import Categories from File...
+Read the categories from a previously exported Categories file.
+
+### Export Categories to File...
+Export the currently defined categories to a file.  This is useful is you find yourself configuring the same categories many times and wish to reuse the same category definitions from one race to another.
+
+### Export History to Excel...
+Export the History data to Excel.  This is useful for manual review.
+
+### Export Raw Data as HTML...
+Export the raw data of the race into an HTML file.  This is useful for checking input received from a chip timing system.

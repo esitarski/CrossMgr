@@ -80,9 +80,15 @@ class RaceAnimation( wx.Panel ):
 		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, 'Category:' )
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
+		self.finishTop = wx.CheckBox( self, wx.ID_ANY, "Finish on Top" )
+		self.Bind(wx.EVT_CHECKBOX, self.doFinishTop, self.finishTop)
+		self.reverseDirection = wx.CheckBox( self, wx.ID_ANY, "Reverse Direction" )
+		self.Bind(wx.EVT_CHECKBOX, self.doReverseDirection, self.reverseDirection)
 		
 		self.hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.categoryChoice, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.finishTop, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border = 4 )
+		self.hbs.Add( self.reverseDirection, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border = 4 )
 
 		bs.Add( self.hbs )
 		
@@ -132,6 +138,20 @@ class RaceAnimation( wx.Panel ):
 
 		self.SetSizer(bs)
 
+	def doFinishTop( self, event ):
+		with Model.LockRace() as race:
+			if not race:
+				return
+			race.finishTop = event.IsChecked()
+			wx.CallAfter( Utils.refresh )
+	
+	def doReverseDirection( self, event ):
+		with Model.LockRace() as race:
+			if not race:
+				return
+			race.reverseDirection = event.IsChecked()
+			wx.CallAfter( Utils.refresh )
+		
 	def	setNumSelect( self, num ):
 		self.watch.SetValue( str(num) if num else '' )
 		self.onUpdateWatch( None )
@@ -208,9 +228,13 @@ class RaceAnimation( wx.Panel ):
 				return
 			
 			catName = FixCategories( self.categoryChoice, getattr(race, 'raceAnimationCategory', 0) )
+			self.hbs.Layout()
 			raceTime = race.lastRaceTime() if race.isRunning() else self.animation.t
 			raceIsRunning = race.isRunning()
 			
+		self.finishTop.SetValue( getattr(race, 'finishTop', False) )
+		self.reverseDirection.SetValue( getattr(race, 'reverseDirection', False) )
+		
 		animationData = GetAnimationData( catName, True )
 		self.animation.SetData( animationData, raceTime )
 		self.animation.SetOptions( getattr(race, 'reverseDirection', False), getattr(race, 'finishTop', False) )

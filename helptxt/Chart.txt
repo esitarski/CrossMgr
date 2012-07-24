@@ -1,0 +1,47 @@
+[TOC]
+
+# Chart
+Results shows ranked riders in the race as a Gantt Chart.  Riders are ranked first on distance covered (most laps), then by finish order (shortest time).
+
+The relative lap times are shown as bars on the graph.  This is an important view to understand the entire data of the race and whether it is correct.  You will find that this is the first view you look at when trying to make sense of a race.
+
+Missing and erronious data is easy to see.
+
+# Screen
+The top of the screen contains controls, followed by the race Gantt chart.
+
+The Gantt chart shows the lap times graphically as horizontal bars.
+Rider that have been pulled, DNF or DNS are shown greyed-out at the bottom.
+
+The endpoints of the bars may have indicators:
+
+Indicator|Meaning
+---------|-------
+Diamond|Indicates a CrossMgr auto-corrected time that did not appear in the original input.  CrossMgr automatically generates missed times when it thinks it is reasonable to do so
+Star|Indicates a User Edit of the original input.  Changes made by users are logged and timestamped (see RiderDetail).
+
+# Controls
+## Category
+Selects the Category of the chart.  Category "All" will show results as if all riders were in the same category.  This is useful for comparing against manually generated results for the race as a whole.
+
+# Additional Features
+
+## Double-Click
+Double-click opens a RiderDetail dialog on the current rider.  This allows adjustments to the rider's status, category and entries.
+
+## Right-Click
+Right-click brings up a number of options about what you clicked on:
+
+Option|Action
+:-----|:-----
+Show Lap Details...|Shows the details of the lap.  This includes the lap start, end, time, and any reasons for changes to the start or end of the lap.
+Results|Jumps to Results tab with current rider highlighed
+RiderDetail|Opens RiderDetail dialog for current rider
+Correct Lap End Time...|Correct the lap end time
+Shift Lap End Time...|Shift the lap end time forwards or backwards
+Delete Lap End Time...|Delete the lap end time
+Swap with Rider Before|Swap current rider's finish time with preceeding rider's finish time
+Swap with Rider After|Swap current rider's finish time with the following rider's finish time
+Add Missing Split|Adds missing split times to the lap.  This adds the specified number of times at equal intervals in the lap.  This is the easiest way to correct missing reads.  For example, if there is a missing entry, you will see a lap that is 2x longer than what is should be.  To fix this, you would add one missing split.  Another example is that a rider's number gets muddy, and it takes three laps to figure out who it is.  As you missed this rider for 3 laps, you would add three missing splits.
+
+Remember, Ctrl-Z is undo!  (Ctrl-Y is redo).

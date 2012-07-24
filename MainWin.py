@@ -469,6 +469,11 @@ class MainWin( wx.Frame ):
 		#-----------------------------------------------------------------------
 		self.helpMenu = wx.Menu()
 
+		self.helpMenu.Append( wx.ID_HELP , "&Help...", "Help about CrossMgr..." )
+		self.Bind(wx.EVT_MENU, self.menuHelp, id=wx.ID_HELP )
+		
+		self.helpMenu.AppendSeparator()
+
 		self.helpMenu.Append( wx.ID_ABOUT , "&About...", "About CrossMgr..." )
 		self.Bind(wx.EVT_MENU, self.menuAbout, id=wx.ID_ABOUT )
 
@@ -1453,6 +1458,11 @@ Continue?''' % fName, 'Simulate a Race' ):
 			Utils.MessageOK(self,
 						'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % xlFName,
 						'Excel File Error', iconMask=wx.ICON_ERROR )
+	
+	@logCall
+	def menuHelp( self, event ):
+		fname = os.path.join( Utils.getHelpFolder(), 'Main.html' )
+		webbrowser.open( fname, new = 0, autoraise = True )
 	
 	@logCall
 	def menuAbout( self, event ):

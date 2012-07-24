@@ -381,7 +381,10 @@ class Animation(wx.PyControl):
 				y2 = 2*r - y2
 			if p == 0.0:
 				# Draw the Start/Finish line.
-				dc.SetPen( wx.Pen(wx.Colour(0,0,0), 3, wx.SOLID) )
+				dc.SetBrush( wx.WHITE_BRUSH )
+				sfWidth = 8
+				dc.DrawRectangle( x1 - sfWidth / 2, min(y1, y2), sfWidth, r )
+				dc.SetPen( wx.Pen(wx.Colour(0,0,0), 2, wx.SOLID) )
 			else:
 				# Else, draw a regular quarter line on the course.
 				dc.SetPen( wx.Pen(wx.Colour(64,64,64), 1, wx.SOLID) )

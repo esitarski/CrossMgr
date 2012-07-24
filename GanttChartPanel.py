@@ -54,6 +54,9 @@ class GanttChartPanel(wx.PyPanel):
 		self.getNowTimeCallback = None
 		self.minimizeLabels = False
 		
+		self.yellowColour = wx.Colour(220,220,0)
+		self.orangeColour = wx.Colour(255,165,0)
+		
 		self.horizontalSB = wx.ScrollBar( self, wx.ID_ANY, style=wx.SB_HORIZONTAL )
 		self.horizontalSB.Bind( wx.EVT_SCROLL, self.OnHorizontalScroll )
 		self.verticalSB = wx.ScrollBar( self, wx.ID_ANY, style=wx.SB_VERTICAL )
@@ -509,7 +512,7 @@ class GanttChartPanel(wx.PyPanel):
 
 		# Draw the interp indicators.
 		ctx.SetPen( penBar )
-		ctx.SetBrush( ctx.CreateRadialGradientBrush( 0, - radius*0.50, 0, 0, radius + 1, wx.WHITE, wx.Colour(220,220,0) ) )
+		ctx.SetBrush( ctx.CreateRadialGradientBrush( 0, - radius*0.50, 0, 0, radius + 1, wx.WHITE, self.yellowColour ) )
 		for xSphere, ySphere in xyInterp:
 			ctx.PushState()
 			ctx.Translate( xSphere, ySphere + dy/2.0 - (dy/2.0 - radius) / 4 )
@@ -518,7 +521,7 @@ class GanttChartPanel(wx.PyPanel):
 		
 		# Draw the edit indictors.
 		ctx.SetPen( penBar )
-		ctx.SetBrush( ctx.CreateRadialGradientBrush( 0, - radius*0.50, 0, 0, radius + 1, wx.WHITE, wx.Colour(220,220,0) ) )
+		ctx.SetBrush( ctx.CreateRadialGradientBrush( 0, - radius*0.50, 0, 0, radius + 1, wx.WHITE, self.orangeColour ) )
 		for xSphere, ySphere in xyNumTimeInfo:
 			ctx.PushState()
 			ctx.Translate( xSphere, ySphere + dy/2.0 - (dy/2.0 - radius) / 4 )

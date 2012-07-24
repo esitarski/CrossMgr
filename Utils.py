@@ -252,10 +252,12 @@ if os.path.basename(dirName) == 'library.zip':
 	dirName = os.path.dirname(dirName)
 imageFolder = os.path.join(dirName, 'images')
 htmlFolder = os.path.join(dirName, 'html')
+helpFolder = os.path.join(dirName, 'htmldoc')
 
 def getDirName():		return dirName
 def getImageFolder():	return imageFolder
 def getHtmlFolder():	return htmlFolder
+def getHelpFolder():	return helpFolder
 
 #------------------------------------------------------------------------
 

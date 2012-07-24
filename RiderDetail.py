@@ -25,6 +25,9 @@ class RiderDetail( wx.Panel ):
 		self.entry = None
 		self.firstTime = True
 		
+		self.yellowColour = wx.Colour( 255, 255, 0 )
+		self.orangeColour = wx.Colour( 255, 165, 0 )
+		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
 		
 		hs = wx.BoxSizer( wx.VERTICAL )
@@ -117,7 +120,7 @@ class RiderDetail( wx.Panel ):
 		self.splitter = splitter
 		
 		self.grid = ColGrid.ColGrid(	splitter,
-										colnames = ['Lap', 'Lap Time', 'Race Time', 'Lap Speed', 'Race Speed', 'Edit', 'By', 'On'],
+										colnames = ['Lap', 'Lap Time', 'Race Time', 'Edit', 'By', 'On', 'Lap Speed', 'Race Speed'],
 										style = wx.BORDER_SUNKEN )
 		self.grid.SetRowLabelSize( 0 )
 		self.grid.SetRightAlign( True )
@@ -428,11 +431,12 @@ class RiderDetail( wx.Panel ):
 				tStatus = race.lastRaceTime()
 				# If a DNF, set the time to just after the last recorded lap.
 				# User can always adjust it later.
-				if statusOption == Model.Rider.DNF:
+				if statusOption == Model.Rider.DNF or (not race.isRunning() and statusOption == Model.Rider.Pulled):
 					try:
 						tStatus = rider.times[-1] + 1.0
 					except (IndexError, TypeError):
 						pass
+				tStatus = min( tStatus, 23*60*60 )	# Assume that no race runs longer than 23 hours.
 				self.atRaceTime.SetValue( Utils.SecondsToStr(tStatus) )
 				
 		self.commitChange()
@@ -748,25 +752,25 @@ class RiderDetail( wx.Panel ):
 				ganttData.append( e.t )
 				ganttInterp.append( e.interp )
 				
-				if distanceByLap:
-					row[3:5] = ('%.2f' % (1000.0 if tLap <= 0.0 else (category.getLapDistance(r+1) / (tLap / (60.0*60.0)))),
-								'%.2f' % (1000.0 if tSum <= 0.0 else (category.getDistanceAtLap(r+1) / (tSum / (60.0*60.0)))) )
-				
-				highlight = False
+				highlightColour = None
 				if e.interp:
-					row[5:7] = ('Auto', 'CrossMgr')
-					highlight = True
+					row[3:5] = ('Auto', 'CrossMgr')
+					highlightColour = self.yellowColour
 				else:
 					info = numTimeInfo.getInfo( e.num, e.t )
 					if info:
-						row[5:8] = ( Model.NumTimeInfo.ReasonName[info[0]], info[1], info[2].ctime() )
-						highlight = True
+						row[3:6] = ( Model.NumTimeInfo.ReasonName[info[0]], info[1], info[2].ctime() )
+						highlightColour = self.orangeColour
 						
+				if distanceByLap:
+					row[6:8] = ('%.2f' % (1000.0 if tLap <= 0.0 else (category.getLapDistance(r+1) / (tLap / (60.0*60.0)))),
+								'%.2f' % (1000.0 if tSum <= 0.0 else (category.getDistanceAtLap(r+1) / (tSum / (60.0*60.0)))) )
+				
 				for i, d in enumerate(row):
 					data[i].append( d )
-				if highlight:
+				if highlightColour:
 					for i in xrange(self.grid.GetNumberCols()):
-						backgroundColour[(r,i)] = (255,255,0)
+						backgroundColour[(r,i)] = highlightColour
 				raceTime = e.t
 
 			self.grid.Set( data = data, backgroundColour = backgroundColour )
@@ -778,7 +782,7 @@ class RiderDetail( wx.Panel ):
 		
 		if self.firstTime:
 			self.firstTime = False
-			self.splitter.SetSashPosition( 230 )
+			self.splitter.SetSashPosition( 260 )
 		self.hs.RecalcSizes()
 		self.hs.Layout()
 		self.grid.FitInside()

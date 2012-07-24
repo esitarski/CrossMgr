@@ -1,0 +1,44 @@
+[TOC]
+
+# Properties
+Allows you to configure properties of the race itself.  Specific properties of each Category are defined in the Category screen.
+
+# Property Screen
+
+Property|Description
+:-------|:----------
+Race Name|Name of the race.  Also used in the filename.
+Organizer|Organizer of the race.  Included in the HTML results output.
+Date|Date of the race.  Used in the filename and all output.
+Race #|The number of the race in the day at the event.  Also used in the filename.
+Scheduled Start|Scheduled start of the race.  This is used in the results output.  Of course, the race could actually start at a different time.
+Race Minutes|The number of minutes in the race for timed races (like CycloCross).  For lap counted races, this is not as important.
+Memo|Anything you wish to type in here (weather conditions, your mood, etc.)
+Commissaire|The name of the race official
+Time Trial|Specifies Time Trial mode.  In this mode, the first time recorded for a rider starts the clock for that rider, rather than the start of the race.
+JChip Integration|Specifies that JChip integration is to be used in the race.  When set, CrossMgr will act as a "server" that can receive real-time messages from a JChip receiver.  See [JChip Setup](Menu-ChipReader.html#jchip-setup-dialog) for details.
+Autocorrect Laps by Default|If true, CrossMgr tries to repair common errors in data input (missed laps, repeated entries, etc.).  For manual input it works very well.  Unfortunately, uncontrolled chip reads can be too much for the corrector.  You can turn this on/off at any time in "Edit/Enable Autocorrect for All Riders" and "Edit/Disable Autocorrect for All Riders".  You can also adjust this individually for each rider in RiderDetail.
+Show Times to 100s of Second|You choice to display regular seconds or fractions of seconds in Results and History.  Also configurable from the Options menu.
+Distance Unit|km or miles for the distances specified in Categories
+Animation Reverse Direction|Runs the animation from right-to-left (clockwise) instead of the usual left-to-right (counter-clockwise).  Also changes HTML output to match.
+Animation Finish on Top|Tells the animation to finish on the top rather than on the bottom.  Also changes HTML ouput to match.
+Excel Sheet|Externally Linked Excel Sheet name.
+Categories Imported From|File name of the categories import file.  Of course, the Category properties can be changed afterwards.
+File Name|File name generated for this race.
+
+Notes:
+## Time Trial Mode
+Time Trial mode is a special mode that works much differently from the regular race mode.  In TT mode, the first read for a rider starts his/her clock, and subsequent reads are all taken with respect to the start time.
+
+At this point, TT mode does not accept an externally seeded start list.  It simply starts a clock on the first entry for each rider.  TT mode works with manual input and JChip.  TT results are computed relative to the rider's ride time.
+
+## JChip Integration
+Lots of issues to explain here.  FIXLATER.
+
+# Controls
+
+## Change Properties
+Opens a dialog box which allows you to change the properties.
+
+## Link External Excel Sheet
+Allows you to link to an external Excel sheet right from this page.  See [DataMgmt](Menu-DataMgmt.html).

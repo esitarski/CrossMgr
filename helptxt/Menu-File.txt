@@ -1,0 +1,46 @@
+
+[TOC]
+
+# File
+
+## New...
+Creates a new race.  Opens the Property dialog to configure a new race.
+
+## New Next...
+Creates a new race based on an existing one.  New Next... will keep the same Name, Organizer and Commissaire and will increment the race number.
+This feature allows you to create the next race in the day very quickly.
+
+## Open...
+Open an existing race.
+
+## Open Next...
+Open the next race based on the existing one.  CrossMgr will look for the next race number.
+
+## Change Properties...
+Change the Properties of a race.  Also possible from the Properties screen.
+
+## Restore from Original Imput...
+Restores all entries for a race from the original entered data.  CrossMgr automatically creates a backup .csv file that it write all entries to.  If you make a lot of changes by accident, you can restore from the original data here.
+
+Although not recommended, some advanced users have edited the .csv file manually, the "restored" from it.
+
+## Page Setup...
+Setup the printing page when printing the results directly from CrossMgr.  Most users create HTML output, then print from there.
+
+## Preview Results...
+Shows how the results would look if printed.
+
+## Print Results...
+Prints formated results directly to a printer.
+
+## Export Results to Excel...
+Exports the results in Excel format and opens Excel on the output file.
+
+## Export Results to HTML...
+Exports the results as an HTML file.  Also includes Race Animation and the Chart.
+
+## Recent Files
+Keeps track of the last few files opened so then can be opened again quickly.
+
+## Exit
+Stops CrossMgr.  If a race is running, the clock will continue to run in CrossMgr.  When reopened, the race will resume, even if reopened on another computer.
