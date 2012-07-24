@@ -1,0 +1,8 @@
+
+[TOC]
+
+# Demo
+
+Runs a demo of CrossMgr based on automatically generated data.
+
+Useful for exploring the capabilties of CrossMgr.

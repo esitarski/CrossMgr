@@ -60,7 +60,7 @@ def CompileHelp( dir = '.' ):
 			os.remove( fname )
 		for fname in glob.glob("./*.html"):
 			if not ('prolog' in fname or 'epilog' in fname):
-				shutil.copy( fname, htmldocdir )
+				shutil.move( fname, htmldocdir )
 
 if __name__ == '__main__':
 	CompileHelp()

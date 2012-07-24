@@ -488,7 +488,11 @@ class MainWin( wx.Frame ):
 
 		#------------------------------------------------------------------------------
 		# Set the accelerator table so we can switch windows with the function keys.
-		aTable = wx.AcceleratorTable([(wx.ACCEL_NORMAL, wx.WXK_F1 + i, jumpToIds[i]) for i in xrange(len(jumpToIds))])
+		accTable = [(wx.ACCEL_NORMAL, wx.WXK_F1 + i, jumpToIds[i]) for i in xrange(len(jumpToIds))]
+		self.contextHelp = wx.NewId()
+		self.Bind(wx.EVT_MENU, self.onContextHelp, id=self.contextHelp )
+		accTable.append( (wx.ACCEL_CTRL, ord('H'), self.contextHelp) )
+		aTable = wx.AcceleratorTable( accTable )
 		self.SetAcceleratorTable(aTable)
 		
 		#------------------------------------------------------------------------------
@@ -1462,6 +1466,11 @@ Continue?''' % fName, 'Simulate a Race' ):
 	@logCall
 	def menuHelp( self, event ):
 		fname = os.path.join( Utils.getHelpFolder(), 'Main.html' )
+		webbrowser.open( fname, new = 0, autoraise = True )
+	
+	@logCall
+	def onContextHelp( self, event ):
+		fname = os.path.join( Utils.getHelpFolder(), self.attrClassName[self.notebook.GetSelection()][2] + '.html' )
 		webbrowser.open( fname, new = 0, autoraise = True )
 	
 	@logCall

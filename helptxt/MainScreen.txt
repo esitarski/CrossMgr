@@ -88,6 +88,7 @@ Ctrl-Z|Undo the last edit.  Multiple undos will keep undoing the last changes.
 Ctrl-Y|Redo the last undo.  Multiple redos will keep redoing the last undos.
 Ctrl-F|Opens the Find window.
 Function Key 1..10|Jumps to the screen with the same number as the function key.
+Ctrl-H|Opens Help for the current screen (in a browser).  For full help, use the Help/Help menu.
 
 #Edit Ctrl Keys
 
