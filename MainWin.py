@@ -309,11 +309,11 @@ class MainWin( wx.Frame ):
 		
 		self.editMenu.AppendSeparator()
 		idCur = wx.NewId()
-		self.editMenu.Append( idCur, '&Enable Autocorrect for All Riders', 'Enable Autocorrect for All Riders' )
+		self.editMenu.Append( idCur, '&Set "Autocorrect Lap Data" flag for All Riders', 'Set "Autocorrect Lap Data" flag for All Riders' )
 		self.Bind( wx.EVT_MENU, self.menuSetLapAutocorrect, id=idCur )
 		
 		idCur = wx.NewId()
-		self.editMenu.Append( idCur, '&Disable Autocorrect for All Riders', 'Disable Autocorrect for All Riderss' )
+		self.editMenu.Append( idCur, '&Clear "Autocorrect Lap Data" flag for All Riders', 'Clear "Autocorrect Lap Data" flag for All Riders' )
 		self.Bind( wx.EVT_MENU, self.menuClearLapAutocorrect, id=idCur )
 
 		img = None

@@ -94,6 +94,8 @@ Option|Action
 Correct...|Correct the current entry
 Shift...|Shift current entry forward/backward in time
 Delete...|Delete current entry
+Pull After Lap...|Pull this rider and set the pulled time to be just after this lap.
+DNF After Lap...|DNF this rider and set the pulled time to be just after this lap.
 
 ## Edit... Button
 
@@ -119,6 +121,8 @@ Show Lap Details...|Shows the details of the lap.  This includes the lap start, 
 Correct Lap End Time...|Correct the lap end time
 Shift Lap End Time...|Shift the lap end time forwards or backwards
 Delete Lap End Time...|Delete the lap end time
+Pull After Lap End...|Pull this rider and set the pulled time to be just after this lap.
+DNF After Lap End...|DNF this rider and set the pulled time to be just after this lap.
 Swap with Rider Before|Swap current rider's finish time with preceeding rider's finish time
 Swap with Rider After|Swap current rider's finish time with the following rider's finish time
 Add Missing Split|Adds missing split times to the lap.  This adds the specified number of times at equal intervals in the lap.  This is the easiest way to correct missing reads.  For example, if there is a missing entry, you will see a lap that is 2x longer than what is should be.  To fix this, you would add one missing split.  Another example is that a rider's number gets muddy, and it takes three laps to figure out who it is.  As you missed this rider for 3 laps, you would add three missing splits.

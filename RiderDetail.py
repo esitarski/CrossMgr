@@ -188,6 +188,9 @@ class RiderDetail( wx.Panel ):
 				(wx.NewId(), 'Correct...',	'Change number or lap time...',	self.OnPopupCorrect, interpCase),
 				(wx.NewId(), 'Shift...',	'Move lap time earlier/later...',	self.OnPopupShift, interpCase),
 				(wx.NewId(), 'Delete...',	'Delete lap time...',	self.OnPopupDelete, nonInterpCase),
+				(None, None, None, None, None),
+				(wx.NewId(), 'Pull After Lap...',	'Pull after Lap',	self.OnPopupPull, allCases),
+				(wx.NewId(), 'DNF After Lap...',	'DNF after Lap',	self.OnPopupDNF, allCases),
 			]
 			for p in self.popupInfo:
 				if p[0]:
@@ -224,6 +227,14 @@ class RiderDetail( wx.Panel ):
 		self.PopupMenu( menu )
 		menu.Destroy()
 
+	def OnPopupPull( self, event ):
+		self.grid.SelectRow( self.eventRow )
+		self.OnGanttPopupPull( event )
+		
+	def OnPopupDNF( self, event ):
+		self.grid.SelectRow( self.eventRow )
+		self.OnGanttPopupDNF( event )
+		
 	def OnPopupCorrect( self, event ):
 		self.grid.SelectRow( self.eventRow )
 		CorrectNumber( self, self.entry )
@@ -564,6 +575,8 @@ class RiderDetail( wx.Panel ):
 				(wx.NewId(), 'Shift Lap End Time...',	'Move lap end time earlier/later...',	lambda event, s = self: ShiftNumber(s, s.entry), interpCase),
 				(wx.NewId(), 'Delete Lap End Time...',	'Delete lap end time...',				lambda event, s = self: DeleteEntry(s, s.entry), nonInterpCase),
 				(None, None, None, None, None),
+				(wx.NewId(), 'Pull after Lap End...',	'Pull after lap end...',				self.OnGanttPopupPull, allCases),
+				(wx.NewId(), 'DNF after Lap End...',	'DNF after lap end...',					self.OnGanttPopupDNF, allCases),
 			]
 			self.splitMenuInfo = [
 					(wx.NewId(),
@@ -597,6 +610,36 @@ class RiderDetail( wx.Panel ):
 		Utils.deleteTrailingSeparators( menu )
 		self.PopupMenu( menu )
 		menu.Destroy()
+	
+	def OnGanttPopupPull( self, event ):
+		if not self.entry:
+			return
+		if not Utils.MessageOKCancel( self,
+			'Pull Rider %d at %s after lap %d?' % (self.entry.num, Utils.formatTime(self.entry.t+1, True), self.entry.lap),
+			'Pull Rider' ):
+			return
+		try:
+			undo.pushState()
+			with Model.LockRace() as race:
+				race.getRider(self.entry.num).setStatus( Rider.Pulled, self.entry.t + 1 )
+				race.setChanged()
+		except:
+			pass
+		wx.CallAfter( self.refresh )
+	
+	def OnGanttPopupDNF( self, event ):
+		if not Utils.MessageOKCancel( self,
+			'DNF Rider %d at %s after lap %d?' % (self.entry.num, Utils.formatTime(self.entry.t+1, True), self.entry.lap),
+			'DNF Rider' ):
+			return
+		try:
+			undo.pushState()
+			with Model.LockRace() as race:
+				race.getRider(self.entry.num).setStatus( Rider.DNF, self.entry.t + 1 )
+				race.setChanged()
+		except:
+			pass
+		wx.CallAfter( self.refresh )
 	
 	def setNumSelect( self, num ):
 		self.setRider( num )

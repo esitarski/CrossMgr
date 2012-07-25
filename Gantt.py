@@ -87,9 +87,12 @@ class Gantt( wx.Panel ):
 				(wx.NewId(), 'Results', 				'Switch to Results tab',	self.OnPopupResults, allCases),
 				(wx.NewId(), 'RiderDetail',				'Show RiderDetail Dialog',	self.OnPopupRiderDetail, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), 'Correct Lap End Time...',	'Change number or lap end time...',		self.OnPopupCorrect, interpCase),
-				(wx.NewId(), 'Shift Lap End Time...',	'Move lap end time earlier/later...',	self.OnPopupShift, interpCase),
-				(wx.NewId(), 'Delete Lap End Time...',	'Delete lap end time...',	self.OnPopupDelete, nonInterpCase),
+				(wx.NewId(), 'Correct Lap End Time...',	'Change number or lap end time',		self.OnPopupCorrect, interpCase),
+				(wx.NewId(), 'Shift Lap End Time...',	'Move lap end time earlier/later',	self.OnPopupShift, interpCase),
+				(wx.NewId(), 'Delete Lap End Time...',	'Delete lap end time',	self.OnPopupDelete, nonInterpCase),
+				(None, None, None, None, None),
+				(wx.NewId(), 'Pull after Lap End...',		'Pull after lap end',		self.OnPopupPull, allCases),
+				(wx.NewId(), 'DNF after Lap End...',		'DNF after lap end',		self.OnPopupDNF, allCases),
 				(None, None, None, None, None),
 				(wx.NewId(), 'Swap with Rider before',	'Swap with Rider before',	self.OnPopupSwapBefore, nonInterpCase),
 				(wx.NewId(), 'Swap with Rider after',	'Swap with Rider after',	self.OnPopupSwapAfter, nonInterpCase),
@@ -200,12 +203,58 @@ class Gantt( wx.Panel ):
 	def OnPopupDelete( self, event ):
 		EditEntry.DeleteEntry( self, self.entry )
 
+	def OnPopupPull( self, event ):
+		if not self.entry:
+			return
+		if not Utils.MessageOKCancel( self,
+			'Pull Rider %d at %s after lap %d?' % (self.entry.num, Utils.formatTime(self.entry.t+1, True), self.entry.lap),
+			'Pull Rider' ):
+			return
+		try:
+			undo.pushState()
+			with Model.LockRace() as race:
+				if not race:
+					return
+				race.getRider(self.entry.num).setStatus( Model.Rider.Pulled, self.entry.t + 1 )
+				race.setChanged()
+		except:
+			pass
+		wx.CallAfter( self.refresh )
+		
+	def OnPopupDNF( self, event ):
+		if not self.entry:
+			return
+		if not Utils.MessageOKCancel( self,
+			'DNF Rider %d at %s after lap %d?' % (self.entry.num, Utils.formatTime(self.entry.t+1, True), self.entry.lap),
+			'DNF Rider' ):
+			return
+		try:
+			undo.pushState()
+			with Model.LockRace() as race:
+				if not race:
+					return
+				race.getRider(self.entry.num).setStatus( Model.Rider.DNF, self.entry.t + 1 )
+				race.setChanged()
+		except:
+			pass
+		wx.CallAfter( self.refresh )
+		
 	def OnPopupLapDetail( self, event ):
 		with Model.LockRace() as race:
 			if not race:
 				return
 			tLapStart = self.entryStart.t
 			tLapEnd = self.entryEnd.t
+			
+			iLap = self.entryStart.lap
+			try:
+				leaderNum = GanttChartPanel.numFromLabel( self.ganttChart.labels[0] )
+				leaderEntries = race.getRider(leaderNum).interpolate()
+				leaderEntryStart = leaderEntries[self.entryStart.lap]
+				leaderEntryEnd = leaderEntries[self.entryEnd.lap]
+			except:
+				leaderEntryStart = None
+				leaderEntryEnd = None
 		
 			try:
 				riderInfo = race.excelLink.read()[self.entryEnd.num]
@@ -223,6 +272,17 @@ class Gantt( wx.Panel ):
 					except KeyError:
 						riderName = str(self.entryEnd.num)
 						
+			if leaderEntryStart:
+				tDown = tLapStart - leaderEntryStart.t
+				infoDownStart = '\nLap Start %s down from leader %d' % (Utils.formatTime(tDown, True), leaderEntryStart.num)
+			else:
+				infoDownStart = ''
+			if leaderEntryEnd:
+				tDown = tLapEnd - leaderEntryEnd.t
+				infoDownEnd = '\nLap End %s down from leader %d' % (Utils.formatTime(tDown, True), leaderEntryStart.num)
+			else:
+				infoDownEnd = ''
+				
 			infoStart = race.numTimeInfo.getInfoStr( self.entryStart.num, tLapStart )
 			if infoStart:
 				infoStart = '\nLap Start ' + infoStart
@@ -230,12 +290,12 @@ class Gantt( wx.Panel ):
 			if infoEnd:
 				infoEnd = '\nLap End ' + infoEnd
 		
-			info = ('Rider: %s  Lap: %d\nLap Start:  %s Lap End: %s\nLap Time: %s\n%s%s' %
+			info = ('Rider: %s  Lap: %d\nLap Start:  %s Lap End: %s\nLap Time: %s\n%s%s%s%s' %
 					(riderName, self.entryEnd.lap,
 					Utils.formatTime(tLapStart),
 					Utils.formatTime(tLapEnd),
 					Utils.formatTime(tLapEnd - tLapStart),
-					infoStart, infoEnd )).strip()
+					infoDownStart, infoDownEnd, infoStart, infoEnd )).strip()
 					
 		Utils.MessageOK( self, info, 'Lap Details' )
 		

@@ -17,7 +17,7 @@ Memo|Anything you wish to type in here (weather conditions, your mood, etc.)
 Commissaire|The name of the race official
 Time Trial|Specifies Time Trial mode.  In this mode, the first time recorded for a rider starts the clock for that rider, rather than the start of the race.
 JChip Integration|Specifies that JChip integration is to be used in the race.  When set, CrossMgr will act as a "server" that can receive real-time messages from a JChip receiver.  See [JChip Setup](Menu-ChipReader.html#jchip-setup-dialog) for details.
-Autocorrect Laps by Default|If true, CrossMgr tries to repair common errors in data input (missed laps, repeated entries, etc.).  For manual input it works very well.  Unfortunately, uncontrolled chip reads can be too much for the corrector.  You can turn this on/off at any time in "Edit/Enable Autocorrect for All Riders" and "Edit/Disable Autocorrect for All Riders".  You can also adjust this individually for each rider in RiderDetail.
+Set "Autocorrect Lap Data" option by Default|If true, CrossMgr sets the Autocorrect option by default when a rider is added to the race.  See [RiderDetail](RiderDetail.html) for details about Autocorrect.  If false, the Autocorrect option will not be set when a rider is added to the race.  You can change the Autocorrect option by rider in RiderDetail.  You can also enable/disable Autocorrect for all riders at once with "Edit/Enable Autocorrect for All Riders" and "Edit/Disable Autocorrect for All Riders".
 Show Times to 100s of Second|You choice to display regular seconds or fractions of seconds in Results and History.  Also configurable from the Options menu.
 Distance Unit|km or miles for the distances specified in Categories
 Animation Reverse Direction|Runs the animation from right-to-left (clockwise) instead of the usual left-to-right (counter-clockwise).  Also changes HTML output to match.
@@ -34,6 +34,9 @@ At this point, TT mode does not accept an externally seeded start list.  It simp
 
 ## JChip Integration
 Lots of issues to explain here.  FIXLATER.
+
+## Question: When is a Rider in the Race?
+CrossMgr considers a rider in the race if (a) there is a time entry for the rider or (b) the rider Status (DNS, DQ, etc.) is set.  It does not automatically add all riders described in the Excel sheet.
 
 # Controls
 

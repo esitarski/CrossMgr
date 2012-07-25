@@ -7,7 +7,7 @@
 Toggles the display of times to 100s of a second.  Same as setting the option in [Properties](Properties.html).
 
 ## Play Sounds
-Toggles whether CrossMgr makes sounds.  These include the "ta-da" 3 seconds before the race leader and the bell on the last lap.
+Toggles whether CrossMgr makes sounds.  These include the "ta-da" 3 seconds before the race leader, and the bell on the last lap.
 
 ## Sync Categories between Tabs
 Toggle whether the Category is synchronized between all screens.  If not set, Categories can be changed independently in different screens.  Sometimes this is useful if you are working with two categories at a time in different screens.

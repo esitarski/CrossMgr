@@ -472,7 +472,7 @@ class Rider(object):
 					tStatus = race.lastRaceTime()
 		
 		self.status = status
-		self.tStatus = tStatus			
+		self.tStatus = tStatus
 	
 	def getCleanLapTimes( self ):
 		if not self.times or self.status in [Rider.DNS, Rider.DQ]:

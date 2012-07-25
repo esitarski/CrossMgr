@@ -222,7 +222,7 @@ class Recommendations( wx.Panel ):
 					except (KeyError, StopIteration):
 						pass
 						
-					# Check for rider missing lap data relateive to category.
+					# Check for rider missing lap data relative to category.
 					try:
 						riderEntriesCur = riderEntries[num]
 						leaderTimes = race.getCategoryTimesNums()[race.getCategory(num)][0]
@@ -266,7 +266,7 @@ class Recommendations( wx.Panel ):
 												Utils.SecondsToStr(rider.tStatus)
 											) )
 
-				# Check for bad numbers.							
+				# Check for bad numbers.
 				category = race.getCategory( num )
 				if not category:
 					data[0].append( str(num) )

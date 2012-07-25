@@ -17,13 +17,15 @@ Open a window to allow searching for any data.  This window stays open until clo
 * Clicking on the column name sorts by that column.  Ths sorted column name will be shown surrounded by <>.
 * When in JChip test mode, the Tag will be automatically looked up if the Find window is up.  This makes it easy to check if a given chip read corresponds to the right rider.
 
-## Enable Autocorrect for all Riders
+## Set "Autocorrect Lap Data" flag for All Riders
 Turns on the autocorrect flag for all riders.
 Data for all riders will be corrected, and projected lap times will be computed.
 
 With projected lap times, the "Expected:" section will show the expected riders before they arrive.
 
-## Disable Autocorrect for all Riders
+This option does not change the race (Properties)[Properties.html], in sets
+
+## Clear "Autocorrect Lap Data" flag for All Riders
 Turns off the autocorrect flag for all riders.
 Data for all riders will not be corrected, and projected lap times will not be computed.
 
