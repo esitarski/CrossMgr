@@ -6,7 +6,7 @@
 CrossMgr can accept real-time messages from a [JChip](http://mts.greentag.to/english/index.html) receiver.
 CrossMgr can also import a file that was generated from a JChip system.
 
-JChip (like all chip systems) logs the time and code when it reads a chip, and each chip has a 6 character unique and random code.  The be of use, each meaningless code must to be associated with a rider's name, team, bib, etc.
+JChip (like all chip systems) logs the time and code when it reads a chip, and each chip has a 6 character unique code.  The be of use, the code must to be associated with a rider's name, team, bib, etc.
 CrossMgr allows you to configure which tag goes with which rider through the external Excel sheet.  CrossMgr supports two columns, Tag and optionally Tag2, that contain the chip tag code(s) for that rider.  CrossMgr supports two tags in case you wish to give one two tags - the one intended for a backup bike.
 
 When a rider's chip is read, the chip receiver sends a timestamped message to CrossMgr with the tag.  CrossMgr does a lookup on the tag to find which rider it was, and then uses the time to automatically make an entry - just as would be done manually.
@@ -41,8 +41,8 @@ The JChip Setup Dialog provides the needed parameters to allow you to configure 
 Field|Value|Description
 :----|:----|:----------
 Type|TCP Client|Tells JChip to act like a client to talk to CrossMgr's server
-Remote IP Address|<<as shown in CrossMgr>>|Internet address of the CrossMgr computer.
-Remote Port|53135|Port on the CrossMgr computer to connect to.
+Remote IP Address|Specified in CrossMgr|Internet address of the CrossMgr computer.
+Remote Port|53135|Port on the CrossMgr computer that JChip connects to.
 
 The Remote IP Address will be the one shown in CrossMgr.  Don't worry about the other JChip fields, however, the CrossMgr connection must be checked for "Use".
 You may have to power down/power up JChip after making this change.
@@ -59,12 +59,12 @@ Now, walk across the JChip mat with some chips.  You should see the connection a
 > listening for JChip connection...
 > *******************************************
 > connected: JChip receiver
-> waiting: <<for JChip receiver to respond>>
+> waiting: for JChip receiver to respond
 > receiver name: JCHIP-TEST12
-> transmitting: <<GT command to JChip receiver (gettime)>>
-> getTime: <<013005032=14:00:50.32>>
-> timeAdjustment: <<JChip time will be adjusted by 0:00:00.02 to match computer>>
-> transmitting: <<S0000 command to JChip receiver (start transmission)>>
+> transmitting: GT command to JChip receiver (gettime)
+> getTime: 013005032=14:00:50.32
+> timeAdjustment: JChip time will be adjusted by 0:00:00.02 to match computer
+> transmitting: S0000 command to JChip receiver (start transmission)
 > 1: tag=413A74, time=2012-07-24 14:00:50.3510, Bib=not found
 > 2: tag=413A3B, time=2012-07-24 14:00:50.3510, Bib=not found
 > ...

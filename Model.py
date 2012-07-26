@@ -1698,6 +1698,34 @@ class Race(object):
 		self.modelCategory = iSelection
 		if categoryAttribute:
 			setattr( self, categoryAttribute, iSelection )
+			
+	def getRawData( self ):
+		''' Return all data in the model.  If edited, return the edit details. '''
+		if not self.startTime:
+			return None, None, None
+			
+		nti = self.numTimeInfo
+		def dr( t, num, tOffset = 0 ):
+			info = nti.getInfo(num, t)
+			if info:
+				return (t + tOffset, num, NumTimeInfo.ReasonName[info[0]], info[1], info[2].ctime())
+			else:
+				return (t + tOffset, num)
+		
+		data = []
+		for num, r in self.riders.iteritems():
+			if getattr( r,'firstTime', None):
+				data.append( dr(r.firstTime, num) )
+			if getattr(self, 'isTimeTrial', False):
+				for t in r.times:
+					data.append( dr(t, num, r.firstTime) )
+			else:
+				for t in r.times:
+					data.append( dr(t, num) )
+				
+		data.sort()
+		
+		return self.startTime, self.finishTime, data
 
 	def _populate( self ):
 		self.reset()

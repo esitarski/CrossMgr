@@ -368,7 +368,14 @@ def LayoutChildResize( child ):
 			break
 		parent = parent.GetParent()
 			
-
+def CombineFirstLastName( firstName, lastName ):
+	if lastName:
+		if firstName:
+			return '%s, %s' % (lastName, firstName)
+		else:
+			return lastName
+	else:
+		return firstName
 	
 if __name__ == '__main__':
 	app = wx.PySimpleApp()

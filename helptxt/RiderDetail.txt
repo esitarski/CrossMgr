@@ -35,7 +35,7 @@ DNF|This rider is a DNF (Did Not Finish).  DNF riders are not ranked, however, t
 PUL|This rider was pulled by the race officials and shoult not be ranked.  Although Pulled riders are not ranked, they are shown in the results in order of Race Time (the following field).
 DNS|This rider Did Not Start (DNS)
 DQ|This rider was disqualified (DQ)
-OTL|This rider was eliminated due to being Outside the Time Bound (OTL)
+OTL|This rider was eliminated due to being Outside the Time Limit (OTL)
 NP|This rider was not placed.  This can be used as a place-holder when the finish status of the rider cannot be determined.
 
 In the results, riders are ranked in order of Status: 

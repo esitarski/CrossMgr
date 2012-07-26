@@ -856,9 +856,10 @@ class MainWin( wx.Frame ):
 		if self.fileName is None or len(self.fileName) < 4:
 			return
 		
-		startTime, endTime, numTimes = OutputStreamer.ReadStreamFile()
+		with Model.LockRace() as race:
+			startTime, endTime, rawData = race.getRawData()
 		
-		if not numTimes:
+		if not rawData:
 			Utils.MessageOK( self, 'Raw race data file:\n\n    "%s"\n\nis empty/missing.' % OutputStreamer.getFileName(),
 					'Missing Raw Race Data', wx.ICON_ERROR )
 			return
@@ -886,7 +887,7 @@ class MainWin( wx.Frame ):
 		# Replace parts of the file with the race information.
 		html = replaceJsonVar( html, 'raceName', os.path.basename(self.fileName)[:-4] )
 		html = replaceJsonVar( html, 'raceStart', (startTime - datetime.datetime.combine(startTime.date(), datetime.time())).total_seconds() )
-		html = replaceJsonVar( html, 'numTimes', numTimes )
+		html = replaceJsonVar( html, 'rawData', rawData )
 		
 		with Model.LockRace() as race:
 			try:
@@ -904,17 +905,33 @@ class MainWin( wx.Frame ):
 					pass
 			
 			# Add the race category to the info.
-			externalFields.insert( 0, 'Race Category' )
-			seen = {}
-			for num in (seen.setdefault(num, num) for num, t in numTimes if num not in seen):
-				category = race.getCategory( num )
-				externalInfo.setdefault(num, {})['Race Category'] = category.name if category else 'Unknown'
+			externalFields.insert( 0, 'Race Cat.' )
+			if 'LastName' in externalFields or 'FirstName' in externalFields:
+				externalFields.insert( 1, 'Name' )
+				try:
+					externalFields.remove( 'LastName' )
+				except ValueError:
+					pass
+				try:
+					externalFields.remove( 'FirstName' )
+				except ValueError:
+					pass
 			
-			# Remove extra info.
+			seen = set()
+			for d in rawData:
+				num = d[1]
+				if num not in seen:
+					seen.add( num )
+					category = race.getCategory( num )
+					externalInfo.setdefault(num, {})['Race Cat.'] = category.name if category else 'Unknown'
+					info = externalInfo[num]
+					info['Name'] = Utils.CombineFirstLastName( info.get('FirstName', ''), info.get('LastName', '') )
+			
+			# Remove info that does not correspond to a rider in the race.
 			for num in [n for n in externalInfo.iterkeys() if n not in seen]:
 				del externalInfo[num]
 			
-			# Remove extra info.
+			# Remove extra info fields.
 			for num, info in externalInfo.iteritems():
 				for f in ignoreFields:
 					try:
