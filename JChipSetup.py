@@ -13,6 +13,7 @@ import sys
 PORT, HOST = JChip.DEFAULT_PORT, JChip.DEFAULT_HOST
 
 JChipTagLength = 6
+OrionTagLength = 8
 
 def CheckExcelLink():
 	race = Model.race
@@ -28,10 +29,15 @@ def CheckExcelLink():
 		
 	return (True, 'Excel Link OK')
 
-def FixTag( tag ):
+def FixJChipTag( tag ):
 	if len(tag) < JChipTagLength:
 		tag = '0' * JChipTagLength + tag
 	return tag[-JChipTagLength:]
+	
+def FixOrionTag( tag ):
+	if len(tag) < OrionTagLength:
+		tag = '0' * OrionTagLength + tag
+	return tag[-OrionTagLength:]
 	
 def GetTagNums( forceUpdate = False ):
 	# Assumes the race is already locked.
@@ -46,6 +52,21 @@ def GetTagNums( forceUpdate = False ):
 		except:
 			externalInfo = {}
 		
+		# Check if we have JChip or Orion tags.
+		FixTag = FixOrionTag
+		for num, edata in externalInfo.iteritems():
+			for tagName in ['Tag', 'Tag2']:
+				try:
+					tag = edata[tagName]
+				except (KeyError, ValueError):
+					continue
+				tag = tag.replace( 'O', '0' )
+				try:
+					n = int( tag, 10 )		# Orion tags are all numeric.
+				except ValueError:
+					FixTag = FixJChipTag
+					break
+		
 		# Associate Bib# and Tag from the external data.
 		race.tagNums = {}
 		
@@ -54,6 +75,7 @@ def GetTagNums( forceUpdate = False ):
 			for tagName in ['Tag', 'Tag2']:
 				try:
 					tag = edata[tagName]
+					tag = tag.replace( 'O', '0' )
 					race.tagNums[FixTag(tag)] = num
 				except (KeyError, ValueError):
 					pass
