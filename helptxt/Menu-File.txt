@@ -39,6 +39,17 @@ Exports the results in Excel format and opens Excel on the output file.
 ## Export Results to HTML...
 Exports the results as an HTML file.  Also includes Race Animation and the Chart.
 
+## Publish HTML Results with FTP...
+Publishes HTML formated results over FTP.
+
+Field|Description
+-----|-----------
+Ftp Host Name|Host name of the FTP server
+Path on Host to Store Files|Directory to write the HTML file on the server.
+User|User name to log into the FTP server.
+Password|Password for the FTP server.
+Automatically Upload Results During Race|If checked, CrossMgr will automatically upload results to the FTP server while the race is running.
+
 ## Recent Files
 Keeps track of the last few files opened so then can be opened again quickly.
 
