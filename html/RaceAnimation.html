@@ -109,6 +109,7 @@ var raceName = null;
 var organizer = null;
 var timestamp = null;
 var email = null;
+var raceIsRunning = null;
 // Rider data
 var data = null;
 // Category details
@@ -142,6 +143,9 @@ var showTimeDecimals = false;
 var displayUnits = 'km';
 var reverseDirection = null;	// Reverse the direction of the riders.
 var finishTop = null;			// Finish on the top rather than the bottom.
+var tRace = null;				// Race time if the race is running.
+
+var catUpdateTime = {};			// Time of next update by category.
 
 // Rider colours given out as remander of the number.
 var colours = [
@@ -694,7 +698,7 @@ function NextFrame()
 	{
 		if( t < tMax )
 			setTimeout( NextFrame, 1000.0 / framesPerSecond );
-		else if( loopContinuously )
+		else if( loopContinuously && !raceIsRunning )
 		{
 			t = 0;
 			setTimeout( NextFrame, 1000.0 / framesPerSecond );
@@ -838,7 +842,7 @@ function Animate( tRunning, aTMax, tCur )
 	else
 		tMax = aTMax;
 
-	speedup = tMax / tRunning;
+	speedup = (raceIsRunning ? 1.0 : tMax / tRunning);
 	setTimeout( NextFrame, 1000.0/framesPerSecond );
 }
 
@@ -903,6 +907,24 @@ function SetCategoryResults()
 	// Show results for this category.
 	var infoFields = ['License', 'LastName', 'FirstName', 'Name', 'Category', 'Team'];
 	
+	var raceTimesLength = {};
+	if( raceIsRunning )
+	{
+		for( num in data )
+		{
+			var raceTimes = data[num]['raceTimes'];
+			var i;
+			for( i = 0; i < raceTimes.length && raceTimes[i] < tRace; ++i )
+				continue;
+			raceTimesLength[num] = i;
+		}
+	}
+	else
+	{
+		for( num in data )
+			raceTimesLength[num] = data[num]['raceTimes'].length;
+	}
+	
 	if( showLapsFrequency < 1 )
 	{
 		// Compute a reasonable number of laps to show.
@@ -910,9 +932,8 @@ function SetCategoryResults()
 		var maxLaps = 0;
 		for( num in data )
 		{
-			var d = data[num];
-			if( maxLaps < d['raceTimes'].length )
-				maxLaps = d['raceTimes'].length;
+			if( maxLaps < raceTimesLength[num] )
+				maxLaps = raceTimesLength[num];
 		}
 
 		var showLaps = document.getElementById('idShowLaps');
@@ -946,6 +967,7 @@ function SetCategoryResults()
 		var curFields = {};
 		var resultsData = [];
 		var hasLapSpeeds = false;
+		var showingAllLaps = true;
 		for( num in data )
 		{
 			var d = data[num];
@@ -959,8 +981,10 @@ function SetCategoryResults()
 			if( d['raceCat'] == cat )
 			{
 				var raceTimes = d['raceTimes'];
-				resultsData.push( [	raceTimes.length,
-									raceTimes.length ? raceTimes.back() : 99999,
+				if( raceTimesLength[num] != raceTimes.length )
+					showingAllLaps = false;
+				resultsData.push( [	raceTimesLength[num],
+									raceTimesLength[num] ? raceTimes[raceTimesLength[num]-1] : 99999,
 									num, d['raceTimes'], d['status'], d['lastTime']] );
 				
 				// Get the union of all the defined fields.
@@ -987,7 +1011,8 @@ function SetCategoryResults()
 		var lapMinCoords = null;
 		for( var r = 0; r < resultsData.length; ++r )
 		{
-			var info = data[resultsData[r][2]];
+			var num = resultsData[r][2];
+			var info = data[num];
 			if( info.lapSpeeds )
 			{
 				var lapSpeeds = info.lapSpeeds;
@@ -1004,12 +1029,12 @@ function SetCategoryResults()
 			else
 			{
 				var raceTimes = resultsData[r][3];
-				for( var i = 1; i < raceTimes.length; ++i )
+				for( var i = 1; i < raceTimesLength[num]; ++i )
 				{
-					var t = Math.max(raceTimes[i] - raceTimes[i-1], 0.0);
-					if( t < tLapMin )
+					var tMax = Math.max(raceTimes[i] - raceTimes[i-1], 0.0);
+					if( tMax < tLapMin )
 					{
-						tLapMin = t;
+						tLapMin = tMax;
 						lapMinCoords = [r, i];
 					}
 				}
@@ -1017,6 +1042,7 @@ function SetCategoryResults()
 		}
 
 		// Label this category.
+		var leaderNum = resultsData[0][2];
 		var leaderraceTimes = resultsData[0][3];
 		
 		var catStr = cat;
@@ -1056,31 +1082,52 @@ function SetCategoryResults()
 			++numHeaders;
 		}
 
-		if( leaderraceTimes.length > 2 )
+		// Cache the leader's data.
+		var leaderLaps	= resultsData[0][0];
+		var leaderTime	= resultsData[0][1];
+		var leaderNum	= resultsData[0][2];
+		var startOffset	= resultsData[0][3][0];
+		
+		if( raceIsRunning )
 		{
-			for( var i = 1; i < leaderraceTimes.length; ++i )
+			// Schedule an update 5 seconds after the next lap.
+			var leaderRaceTimes = resultsData[0][3];
+			for( var ii = 0; ii < leaderRaceTimes.length; ++ii )
+				if( leaderRaceTimes[ii] > t )
+					setTimeout( (leaderRaceTimes[ii] - t + 5) * 1000, "window.location.reload()" );
+		}
+		
+		if( leaderLaps > 2 )
+		{
+			for( var i = 1; i < leaderLaps; ++i )
 			{
-				if( i % showLapsFrequency == 0 || i == 1 || i == leaderraceTimes.length-1  )
+				if( i % showLapsFrequency == 0 || i == 1 || i == leaderLaps-1  )
 				{
 					createTextChild( td = createChild(tr, 'TH'), 'Lap ' + i );
 					++numHeaders;
 				}
 			}
 		}
+		if( !showingAllLaps )
+		{
+			createTextChild( td = createChild(tr, 'TH'), '...' );
+			++numHeaders;
+		}
 		tdTitle.colSpan = numHeaders;
 		
 		// Add the rider data.
-		var leaderTime = resultsData[0][3].back();
-		var startOffset = resultsData[0][3][0];
 		var position = 1;
 		for( var r = 0; r < resultsData.length; ++r, ++position )
 		{
 			var tr = createChild(thead, 'TR');
 			tr.className = ((r & 1) ? 'odd' : 'even');
 			
-			var raceTimes = resultsData[r][3];
-			var isFinisher = (resultsData[r][4] == 'Finisher');
-			var num = resultsData[r][2];
+			var riderLaps	= resultsData[r][0];
+			var riderTime	= resultsData[r][1];
+			var num			= resultsData[r][2];
+			var raceTimes	= resultsData[r][3];
+			var isFinisher	= (resultsData[r][4] == 'Finisher');
+			var tFinish = (isFinisher ? Math.max(riderTime - startOffset, 0.0) : 0.0);
 			
 			var p = (isFinisher ? '' + position : resultsData[r][4] );
 			createTextChild( td = createChild(tr, 'TD'), p );
@@ -1114,8 +1161,6 @@ function SetCategoryResults()
 				}
 			}
 			
-			var tFinish = (isFinisher ? Math.max(resultsData[r][1] - startOffset, 0.0) : 0.0);
-			
 			// Fix the Category information based on the results of the first rider.
 			if( position == 1 && isFinisher && distanceUnit && d['speed'] )
 			{
@@ -1141,8 +1186,8 @@ function SetCategoryResults()
 							catStr += cd.laps + " laps of " + FormatDistance(cd.lapDistance, cd.distanceUnit, true) + ', ';
 					}
 				}
-				catStr += "winner: " + tFinishStr + ' at ' + FormatSpeed(parseFloat(d['speed'].split(' ')[0]), cd.distanceUnit, true);
-				catTitleTD.innerHTML = cat +
+				catStr += (raceIsRunning ? "Est. " : "") + "winner: " + tFinishStr + ' at ' + FormatSpeed(parseFloat(d['speed'].split(' ')[0]), cd.distanceUnit, true);
+				catTitleTD.innerHTML = cat + (raceIsRunning ? " (in progress)" : "") +
 						'<br/><span class="smallfont">' + catStr + '</span>';
 			}
 			
@@ -1153,23 +1198,23 @@ function SetCategoryResults()
 			var gap = '';
 			if( isFinisher )
 			{
-				if( raceTimes.length == leaderraceTimes.length )
+				if( leaderLaps == riderLaps )
 				{
-					var delta = TimeDifference(raceTimes.back(), leaderraceTimes.back());
+					var delta = TimeDifference(riderTime, leaderTime);
 					if( delta != 0 )
 					{
 						if( r != 0 && lapDataOption == 3 )
 						{
-							delta = (100.0 * delta) / leaderraceTimes.back();
+							delta = (100.0 * delta) / (leaderTime - startOffset);
 							gap = '+' + delta.toFixed(2) + '%';
 						}
 						else
 							gap = FormatTimeGap( delta );
 					}
 				}
-				else if( raceTimes.back() > leaderraceTimes.back() )
+				else if( riderTime > leaderTime )
 				{
-					var lapsDown = leaderraceTimes.length - raceTimes.length;
+					var lapsDown = leaderLaps - riderLaps;
 					gap = lapsDown + ' lap' + (lapsDown == 1 ? '' : 's');
 				}
 			}
@@ -1187,16 +1232,16 @@ function SetCategoryResults()
 				if( numsToWatch[num] ) td.className = 'highlight';
 			}
 			
-			if( leaderraceTimes.length > 2 )
+			if( leaderLaps > 2 )
 			{
-				for( var i = 1; i < leaderraceTimes.length; ++i )
+				for( var i = 1; i < leaderLaps; ++i )
 				{
-					if( i >= raceTimes.length )
+					if( i >= riderLaps )
 					{
 						createTextChild( td = createChild(tr, 'TD'), ' ' );
 						continue;
 					}
-					if( !(i % showLapsFrequency == 0 || i == 1 || i == raceTimes.length-1)  )
+					if( !(i % showLapsFrequency == 0 || i == 1 || i == raceTimesLength[num]-1)  )
 						continue
 
 					switch( lapDataOption )
@@ -1258,6 +1303,8 @@ function SetCategoryResults()
 					if( classes )	td.className = classes.join( ' ' );
 				}
 			}
+			if( !showingAllLaps )
+				createTextChild( td = createChild(tr, 'TD'), '' );
 		}
 		
 		// Add a blank row between categories.
@@ -1637,10 +1684,10 @@ function RefreshRaceChart()
 	dc.strokeStyle = 'black';
 	dc.fillStyle = 'black';
 	dc.lineWidth = lineWidth;
-	for( var t = 0; t < dataMax; t += d )
+	for( var tCur = 0; tCur < dataMax; tCur += d )
 	{
-		var x = xLeft + t * dFactor;
-		var s = FormatTime(t);
+		var x = xLeft + tCur * dFactor;
+		var s = FormatTime(tCur);
 		var w = dc.measureText(s).width;
 		dc.fillText( s, x - w/2, barHeight + 2 );
 		if( !minimizeLabels )
@@ -1707,8 +1754,10 @@ function RefreshRaceChart()
 		dc.strokeStyle = "#0F0F0F";
 		for( var j = 0; j < raceTimes.length; ++j )
 		{
-			var t = raceTimes[j] - categoryStartOffset;
-			xCur = ~~(labelsWidthLeft + t * xFactor);
+			if( raceIsRunning && raceTimes[j] > tRace )
+				break;
+			var tCur = raceTimes[j] - categoryStartOffset;
+			xCur = ~~(labelsWidthLeft + tCur * xFactor);
 			if( j == 0 )
 			{
 				dc.fillStyle = resultsData[i][iStatus] == 'Finisher' ? '#FFFFFF' : '#CDCDCD';
@@ -1848,6 +1897,8 @@ function getStartTime()
 
 function Rewind()
 {
+	if( raceIsRunning )
+		return;
 	t = getStartTime();
 	Refresh();
 	document.getElementById('idPlayStop').value = 'Play';
@@ -1857,6 +1908,8 @@ function Rewind()
 
 function PlayStop()
 {
+	if( raceIsRunning )
+		return;
 	if( IsAnimating() )
 	{
 		SuspendAnimate();
@@ -2075,7 +2128,26 @@ function onLoad()
 	if( organizer )
 		s = 'by ' + organizer;
 	if( timestamp )
-		s += ' (created ' + timestamp + ')';
+	{
+		s += ' (created ' + timestamp[0] + ')';
+		if( raceIsRunning )
+		{
+			var tServer = (new Date(timestamp[0])) / 1000.0;
+			var tBrowser = (new Date().getTime()) / 1000.0;
+			// Attempt to adjust for time zone differences between server and browser.
+			// Assume that the browser is not more than an hour out of sync with the server.
+			while( tBrowser - tServer < 0 )			tBrowser += 60*60;
+			//while( tBrowser - tServer > 60*60 )		tServer += 60*60;
+			tRace = timestamp[1];
+			// Compensate for the delay between when the server created the data and when the browser got it.
+			t = tRace + (tBrowser - tServer);
+			
+			// Hide the controls as we are in real-time mode.
+			document.getElementById('idAnimateControls').className = 'hidden';
+			
+			speedup = 1.0;
+		}
+	}
 	if( s )
 		document.getElementById('idOrganizer').innerHTML = s;
 	
@@ -2114,7 +2186,7 @@ function onLoad()
 	RefreshRaceChart();
 	
 	// Start animation.
-	Animate( animationSeconds, undefined, getStartTime() );
+	Animate( animationSeconds, undefined, raceIsRunning ? t : getStartTime() );
 	document.getElementById('idPlayStop').value = 'Stop';
 }
 
@@ -2144,6 +2216,7 @@ For Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
 Current versions of Chrome, FireFox and Opera work fine.
 </canvas>
 <p class="noprint">
+<span id="idAnimateControls">
 <input type="button" id="idRewind" onClick="Rewind()" value="Rewind"></input>
 <input type="button" id="idPlayStop" onClick="PlayStop()" value="Play"></input>
 <input type="checkbox" id="idLoop" onClick="LoopContinuously()" checked>Loop Continuously</input>
@@ -2153,7 +2226,9 @@ Current versions of Chrome, FireFox and Opera work fine.
 <input type="radio" name="groupSpeed" value="2" checked onClick="SetSpeed(0)"></input>
 <input type="radio" name="groupSpeed" value="3" onClick="SetSpeed(1)"></input>
 <input type="radio" name="groupSpeed" value="4" onClick="SetSpeed(2)"></input>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Size:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>
+Size:
 <input type="button" id="idIncreaseSize" onClick="AdjustSize(true)" value="+"></input>
 <input type="button" id="idDecreaseSize" onClick="AdjustSize(false)" value="-"></input>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Text:

@@ -75,9 +75,12 @@ When finished testing, press the "Stop JChip Test" button or close the dialog.
 It is recommended that you test the JChip receiver connection before every race.
 
 #### Accept JChip Data During Race
-Sets the "JChip Integration" property(see [Properties](Properties.html)).
+Sets the "JChip Integration" property (see [Properties](Properties.html)).
 
 When the race starts, CrossMgr will start its server, wait for a JChip connection and start recording JChip entries.  Of course, manual input still works as usual in CrossMgr while the JChip integration is running.
 
-## JChip Import
+## Import JChip Formatted File...
 Imports a JChip-formatted input file.
+
+## Import Orion Formatted File...
+Imports an Orion-formatted input file.

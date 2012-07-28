@@ -46,7 +46,10 @@ import VersionMgr
 import JChipSetup
 import JChipImport
 import JChip
+import OrionImport
 import OutputStreamer
+import FtpWriteFile
+import cStringIO as StringIO
 from Undo import undo
 from setpriority import setpriority
 from Printing			import CrossMgrPrintout, getRaceCategories
@@ -273,6 +276,12 @@ class MainWin( wx.Frame ):
 
 		self.fileMenu.AppendSeparator()
 		
+		idCur = wx.NewId()
+		self.fileMenu.Append( idCur , "Publish HTML Results with FTP...", "Publish HTML Results to FTP" )
+		self.Bind(wx.EVT_MENU, self.menuExportHtmlFtp, id=idCur )
+
+		self.fileMenu.AppendSeparator()
+		
 		recent = wx.Menu()
 		self.fileMenu.AppendMenu(wx.ID_ANY, "Recent Fil&es", recent)
 		self.filehistory.UseMenu( recent )
@@ -418,9 +427,15 @@ class MainWin( wx.Frame ):
 		self.chipMenu.Append( idCur , "JChip &Setup...", "Configure and Test JChip Reader" )
 		self.Bind(wx.EVT_MENU, self.menuJChip, id=idCur )
 		idCur = wx.NewId()
-		self.chipMenu.Append( idCur , "JChip &Import...", "Import from JChip Generated File" )
+		self.chipMenu.Append( idCur , "Import JChip Formatted File...", "Import a JChip Formatted File" )
 		self.Bind(wx.EVT_MENU, self.menuJChipImport, id=idCur )
+		
+		self.chipMenu.AppendSeparator()
 
+		idCur = wx.NewId()
+		self.chipMenu.Append( idCur , "Import Orion Formatted File...", "Import an Orion Formatted File" )
+		self.Bind(wx.EVT_MENU, self.menuOrionImport, id=idCur )
+		
 		self.menuBar.Append( self.chipMenu, "Chip&Reader" )
 
 		#-----------------------------------------------------------------------
@@ -598,7 +613,21 @@ class MainWin( wx.Frame ):
 		dlg = JChipImport.JChipImportDialog( self )
 		dlg.ShowModal()
 		dlg.Destroy()
-		wx.CallAfter( self.refresh() )
+		wx.CallAfter( self.refresh )
+		
+	def menuOrionImport( self, event ):
+		correct, reason = JChipSetup.CheckExcelLink()
+		explain = 	'Orion Import requires that you have a valid Excel sheet with associated tags and Bib numbers.\n\n' \
+					'See documentation for details.'
+		if not correct:
+			Utils.MessageOK( self, 'Problems with Excel sheet.\n\n    Reason: %s\n\n%s' % (reason, explain),
+									title = 'Excel Link Problem', iconMask = wx.ICON_ERROR )
+			return
+			
+		dlg = OrionImport.OrionImportDialog( self )
+		dlg.ShowModal()
+		dlg.Destroy()
+		wx.CallAfter( self.refresh )
 		
 	def menuShowPage( self, event ):
 		self.showPage( self.idPage[event.GetId()] )
@@ -782,6 +811,41 @@ class MainWin( wx.Frame ):
 						'Excel File Error', iconMask=wx.ICON_ERROR )
 						
 	#--------------------------------------------------------------------------------------------
+	def addResultsToHtmlStr( self, html ):
+		# Replace parts of the file with the race information.
+		html = replaceJsonVar( html, 'raceName', os.path.basename(self.fileName)[:-4] )
+			
+		with Model.LockRace() as race:
+			year, month, day = [int(v) for v in race.date.split('-')]
+			timeComponents = [int(v) for v in race.scheduledStart.split(':')]
+			if len(timeComponents) < 3:
+				timeComponents.append( 0 )
+			hour, minute, second = timeComponents
+			raceTime = datetime.datetime( year, month, day, hour, minute, second )
+			title = '%s Results for %s Start on %s' % ( race.name, raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
+			html = html.replace( 'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
+			html = replaceJsonVar( html, 'organizer',			getattr(race, 'organizer', '') )
+			html = replaceJsonVar( html, 'reverseDirection',	getattr(race, 'reverseDirection', False) )
+			html = replaceJsonVar( html, 'finishTop',			getattr(race, 'finishTop', False) )
+			html = replaceJsonVar( html, 'raceIsRunning',		race.isRunning() )
+			tLastRaceTime = race.lastRaceTime()
+		
+		tNow = datetime.datetime.now()
+		html = replaceJsonVar( html, 'timestamp', [tNow.ctime(), tLastRaceTime] )
+		html = replaceJsonVar( html, 'email',		self.config.Read('email', '') )
+		html = replaceJsonVar( html, 'data',		GetAnimationData(getExternalData = True) )
+		html = replaceJsonVar( html, 'catDetails',	GetCategoryDetails() )
+
+		graphicBase64 = self.getGraphicBase64()
+		if graphicBase64:
+			try:
+				iStart = html.index( 'var imageSrc =' )
+				iEnd = html.index( "';", iStart )
+				html = ''.join( [html[:iStart], "var imageSrc = '%s';" % graphicBase64, html[iEnd+2:]] )
+			except ValueError:
+				pass
+		return html
+	
 	@logCall
 	def menuExportHtmlRaceResults( self, event ):
 		self.commit()
@@ -808,35 +872,7 @@ class MainWin( wx.Frame ):
 							'Html Template Read Error', iconMask=wx.ICON_ERROR )
 			return
 			
-		# Replace parts of the file with the race information.
-		html = replaceJsonVar( html, 'raceName', os.path.basename(self.fileName)[:-4] )
-			
-		with Model.LockRace() as race:
-			year, month, day = [int(v) for v in race.date.split('-')]
-			timeComponents = [int(v) for v in race.scheduledStart.split(':')]
-			if len(timeComponents) < 3:
-				timeComponents.append( 0 )
-			hour, minute, second = timeComponents
-			raceTime = datetime.datetime( year, month, day, hour, minute, second )
-			title = '%s Results for %s Start on %s' % ( race.name, raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
-			html = html.replace( 'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
-			html = replaceJsonVar( html, 'organizer',			getattr(race, 'organizer', '') )
-			html = replaceJsonVar( html, 'reverseDirection',	getattr(race, 'reverseDirection', False) )
-			html = replaceJsonVar( html, 'finishTop',			getattr(race, 'finishTop', False) )
-			
-		html = replaceJsonVar( html, 'timestamp',	datetime.datetime.now().ctime() )
-		html = replaceJsonVar( html, 'email',		self.config.Read('email', '') )
-		html = replaceJsonVar( html, 'data',		GetAnimationData(getExternalData = True) )
-		html = replaceJsonVar( html, 'catDetails',	GetCategoryDetails() )
-
-		graphicBase64 = self.getGraphicBase64()
-		if graphicBase64:
-			try:
-				iStart = html.index( 'var imageSrc =' )
-				iEnd = html.index( "';", iStart )
-				html = ''.join( [html[:iStart], "var imageSrc = '%s';" % graphicBase64, html[iEnd+2:]] )
-			except ValueError:
-				pass
+		html = self.addResultsToHtmlStr( html )
 			
 		# Write out the results.
 		fname = os.path.join( dName, os.path.basename(fname) )
@@ -849,6 +885,57 @@ class MainWin( wx.Frame ):
 			Utils.MessageOK(self, 'Cannot write HTML file (%s).' % fname,
 							'Html Write Error', iconMask=wx.ICON_ERROR )
 	
+	@logCall
+	def menuExportHtmlFtp( self, event ):
+		self.commit()
+		if self.fileName is None or len(self.fileName) < 4:
+			Utils.MessageOK(self, 'Ftp Upload Failed.  Error:\n\n    No race loaded.', 'Ftp Upload Failed', iconMask=wx.ICON_ERROR )
+			return
+	
+		dlg = FtpWriteFile.FtpPublishDialog( self )
+		ret = dlg.ShowModal()
+		dlg.Destroy()
+		if ret != wx.ID_OK:
+			return
+	
+		# Read the html template.
+		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
+		try:
+			with open(htmlFile) as fp:
+				html = fp.read()
+		except:
+			Utils.MessageOK('Cannot read HTML template file.  Check program installation.',
+							'Html Template Read Error', iconMask=wx.ICON_ERROR )
+			return
+		
+		html = self.addResultsToHtmlStr( html )
+		
+		# Publish the results using ftp.
+		with Model.LockRace() as race:
+			host		= getattr( race, 'ftpHost', '' )
+			user		= getattr( race, 'ftpUser', '' )
+			passwd		= getattr( race, 'ftpPassword', '' )
+			serverPath	= getattr( race, 'ftpPath', '' )
+			fname		= os.path.basename( self.fileName[:-4] + '.html' )
+			file		= StringIO.StringIO( html )
+		
+		if not host:
+			Utils.MessageOK(self, 'Ftp Upload Failed.  Error:\n\n    Missing host name.', 'Ftp Upload Failed', iconMask=wx.ICON_ERROR )
+			return
+		
+		wx.BeginBusyCursor()
+		try:
+			FtpWriteFile.FtpWriteFile(	host		= host,
+										user		= user,
+										serverPath	= serverPath,
+										passwd		= passwd,
+										fname		= fname,
+										file		= file )
+			Utils.MessageOK(self, 'Ftp Upload Succeeded.', 'Ftp Upload Succeeded')
+		except Exception, e:
+			Utils.MessageOK(self, 'Ftp Upload Failed.  Error:\n\n%s' % str(e), 'Ftp Upload Failed', iconMask=wx.ICON_ERROR )
+		wx.EndBusyCursor()
+			
 	#--------------------------------------------------------------------------------------------
 	@logCall
 	def menuExportHtmlRawData( self, event ):

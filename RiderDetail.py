@@ -7,7 +7,7 @@ import ColGrid
 import EditEntry
 from LineGraph import LineGraph
 from GanttChartPanel import GanttChartPanel
-from JChipSetup import FixTag
+from JChipSetup import FixTag, GetTagNums
 from Undo import undo
 import Gantt
 from EditEntry import CorrectNumber, ShiftNumber, DeleteEntry
@@ -669,6 +669,8 @@ class RiderDetail( wx.Panel ):
 		self.riderName.SetLabel( '' )
 		self.riderTeam.SetLabel( '' )
 		self.tags.SetLabel( '' )
+		
+		tagNums = GetTagNums()
 		
 		highPrecisionTimes = Utils.highPrecisionTimes()
 		with Model.LockRace() as race:

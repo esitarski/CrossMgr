@@ -26,6 +26,9 @@ Status|The status of the rider.  More details below.
 Autocorrect Lap Data|If True, CrossMgr will look for duplicate and missing entries and correct them.  It will also project lap times for the rider for the entire race.  If False, CrossMgr will present all entires exactly as input.
 Recommendations|Any recommendations CrossMgr has about this rider that you might want to consider.
 
+Turning off Autocorrect for all riders has major implications for CrossMgr.  Without Autocorrect, CrossMgr cannot reliably count laps, display laps to go, or show the race progress.
+It is recommended that you have Autocorrect on for the race leader.
+
 Rider Status has the following values:
 
 Status|Description

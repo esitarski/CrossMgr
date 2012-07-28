@@ -6,9 +6,9 @@ from Utils		import logCall
 from Undo		import undo
 import wx
 import wx.lib.intctrl
-import wx.lib.masked           as masked
-import  wx.lib.mixins.listctrl  as  listmix
-import  wx.lib.rcsizer  as rcs
+import wx.lib.masked			as masked
+import wx.lib.mixins.listctrl	as  listmix
+import wx.lib.rcsizer			as rcs
 import socket
 import sys
 import os

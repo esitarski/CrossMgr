@@ -1,9 +1,9 @@
 import Utils
 from Utils				import logCall
 import wx
-import wx.grid		as gridlib
+import wx.grid				as gridlib
 import wx.lib.intctrl
-import wx.lib.masked           as masked
+import wx.lib.masked		as masked
 import ColGrid
 import Model
 from Undo import undo
@@ -65,7 +65,7 @@ class CorrectNumberDialog( wx.Dialog ):
 						
 		self.entry = entry
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
-		self.numEdit = wx.lib.intctrl.IntCtrl( self, 20, size=(64,-1), style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
+		self.numEdit = wx.lib.intctrl.IntCtrl( self, wx.ID_ANY, size=(64,-1), style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
 		
 		self.timeMsEdit = TimeMsEdit( self, entry.t )
 				
@@ -202,7 +202,7 @@ class InsertNumberDialog( wx.Dialog ):
 		self.entry = entry
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
 		
-		self.numEdit = wx.lib.intctrl.IntCtrl( self, 20, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
+		self.numEdit = wx.lib.intctrl.IntCtrl( self, wx.ID_ANY, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
 		
 		self.okBtn = wx.Button( self, wx.ID_ANY, '&OK' )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
@@ -268,8 +268,8 @@ class SplitNumberDialog( wx.Dialog ):
 		self.entry = entry
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
 		
-		self.numEdit1 = wx.lib.intctrl.IntCtrl( self, 20, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
-		self.numEdit2 = wx.lib.intctrl.IntCtrl( self, 20, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
+		self.numEdit1 = wx.lib.intctrl.IntCtrl( self, wx.ID_ANY, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
+		self.numEdit2 = wx.lib.intctrl.IntCtrl( self, wx.ID_ANY, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
 		
 		self.okBtn = wx.Button( self, wx.ID_ANY, '&OK' )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
