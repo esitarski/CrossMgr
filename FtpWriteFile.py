@@ -62,7 +62,7 @@ class RealTimeFtpPublish( object ):
 										file		= file )
 			self.tLastUpdate = datetime.datetime.now()
 		except Exception, e:
-			pass
+			Utils.writeLog( 'RealTimeFtpPublish: Error: %s' % str(e) )
 			
 		self.timer = None
 
