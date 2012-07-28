@@ -165,12 +165,8 @@ var	topThreeColours = [
 
 function isCanvasSupported()
 {
-    var canvas = document.createElement('canvas');
-    if (!canvas.getContext) {
-        // not supported
-        return false;
-    }
-	return true;
+	var elem = document.createElement('canvas');
+	return !!(elem.getContext && elem.getContext('2d'));
 }
 
 // Convenience function to get the last element in an array.
@@ -828,6 +824,9 @@ function Animate( tRunning, aTMax, tCur )
 {
 	StopAnimate();
 	_initAnimation();
+	
+	if( !canvas )
+		return;
 	
 	t = (tCur || 0);
 	if( !data )
@@ -1568,7 +1567,7 @@ function RefreshRaceChart()
 		++categoryCount;
 
 	// Adjust the height of the race chart to make each row reasonably high.
-	var rowMin = 14, rowMax = rowMin*2, rows = resultsData.length + categoryCount;
+	var rowMin = 14, rowMax = rowMin*2, rows = resultsData.length + categoryCount + 2;
 	if( canvasRaceChart.height / rows < rowMin )
 		canvasRaceChart.height = ~~(rowMin * rows);
 	else if( canvasRaceChart.height / rows > rowMax )
@@ -1673,7 +1672,7 @@ function RefreshRaceChart()
 
 	var xLeft = labelsWidthLeft;
 	var xRight = width - labelsWidthRight;
-	var yBottom = barHeight * (resultsData.length + 2);
+	var yBottom = barHeight * (resultsData.length + categoryCount + 1);
 	var yTop = 2 * barHeight;
 	var lineWidth = 0.5;
 
@@ -2114,19 +2113,24 @@ function onLoad()
 {
 	document.getElementById('idImgHeader').src = imageSrc;
 	
-	canvas = document.getElementById('idTrack');
 	resultsDiv = document.getElementById('idResultsDiv');
 	showLaps = document.getElementById('idShowLaps');
 
-	var raceChartCanvas = document.getElementById('idRaceChart');
 	if( isCanvasSupported() )
 	{
+		var raceChartCanvas = document.getElementById('idRaceChart');
 		raceChartCanvas.addEventListener('mousemove', function(event) { RaceChartProcessMouse(event); }, false);
 		raceChartCanvas.addEventListener('mouseout', function(event) {
 				if( hoverTimer != null )
 					clearTimeout( hoverTimer );
 				hoverTimer = null;
 				RefreshRaceChart(); }, false);
+		canvas = document.getElementById('idTrack');
+	}
+	else
+	{
+		document.getElementById('idTrackDiv').className = 'hidden';
+		document.getElementById('idRaceChartDiv').className = 'hidden';
 	}
 	
 	document.getElementById('idRaceName').innerHTML = document.getElementById('idTitle').innerHTML;
@@ -2223,6 +2227,7 @@ Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr<
 <p>
 <strong>Category: <span id="idCategories"></span></strong>
 </p>
+<div id="idTrackDiv">
 <canvas id="idTrack" width="520" height="240" class="noprint">
 Your browser does not support the HTML5 Canvas.<br/>
 Please upgrade to a more recent browser version.<br/>
@@ -2254,6 +2259,7 @@ Highlight Numbers:
 <input type="button" value="Apply"</input>
 (for example: 124,131,203)
 </p>
+</div> <!-- idTrackDiv -->
 <p>
 <span id="idShowOptions"></span><br/>
 <span class="noprint">&nbsp;&nbsp;&nbsp;&nbsp;Units: </span><select class="noprint" id="idDisplayUnits" onChange="SetDisplayUnits()">
@@ -2275,6 +2281,7 @@ Highlight Numbers:
 </select>
 </p>
 <div id="idResultsDiv"></div>
+<div id="idRaceChartDiv">
 <p class="noprint"><span id="idRaceName">Race Chart</span>&nbsp;&nbsp;&nbsp;&nbsp;
 <span id="idShowStartOffsetOption">
 	<input type="checkbox" id="idShowStartOffsets" checked onClick="RefreshRaceChart()">Show Start Offsets</input>
@@ -2286,6 +2293,7 @@ Please upgrade to a more recent browser version.<br/>
 For Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
 Current versions of Chrome, FireFox and Opera work fine.
 </canvas>
+</div> <!-- idRaceChartDiv -->
 </body>
 
 </html>
