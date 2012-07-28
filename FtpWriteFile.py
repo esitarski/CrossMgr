@@ -50,19 +50,19 @@ class RealTimeFtpPublish( object ):
 			user		= getattr( race, 'ftpUser', '' )
 			passwd		= getattr( race, 'ftpPassword', '' )
 			serverPath	= getattr( race, 'ftpPath', '' )
-			fname		= os.path.basename( Utils.getFileName[:-4] + '.html' )
+			fname		= os.path.basename( Utils.getFileName()[:-4] + '.html' )
 			file		= StringIO.StringIO( html )
 			
 		try:
-			FtpWriteFile.FtpWriteFile(	host		= host,
-										user		= user,
-										passwd		= passwd,
-										serverPath	= serverPath,
-										fname		= fname,
-										file		= file )
+			FtpWriteFile(	host		= host,
+							user		= user,
+							passwd		= passwd,
+							serverPath	= serverPath,
+							fname		= fname,
+							file		= file )
 			self.tLastUpdate = datetime.datetime.now()
 		except Exception, e:
-			Utils.writeLog( 'RealTimeFtpPublish: Error: %s' % str(e) )
+			Utils.writeLog( 'RealTimeFtpPublish: %s' % str(e) )
 			
 		self.timer = None
 
@@ -94,7 +94,7 @@ class RealTimeFtpPublish( object ):
 
 		# If this publish request is less than waitSec, double waitSec for the next publish waiting interval.
 		# If this publish request exceeds waitSec, reset waitSec to waitSecMin.
-		if (datetime.datetime.now() - tLastUpdate).total_seconds() < waitSec:
+		if (datetime.datetime.now() - self.tLastUpdate).total_seconds() < self.waitSec:
 			self.waitSec = min( RealTimeFtpPublish.waitSecMax, self.waitSec * 2 )
 		else:
 			self.waitSec = self.waitSecMin
