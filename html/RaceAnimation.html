@@ -1088,6 +1088,7 @@ function SetCategoryResults()
 		var leaderNum	= resultsData[0][2];
 		var startOffset	= resultsData[0][3][0];
 		
+		/*
 		if( raceIsRunning )
 		{
 			// Schedule an update 5 seconds after the next lap.
@@ -1099,12 +1100,13 @@ function SetCategoryResults()
 					var tTimeUpdate = leaderRaceTimes[ii] - t + 5;
 					if( tTimeUpdate > 0 )
 					{
-						setTimeout( function(){ window.location.reload(); }, tTimeUpdate * 1000 );
+						setTimeout( function(){ window.location.reload(true); }, tTimeUpdate * 1000 );
 						break;
 					}
 				}
 			}
 		}
+		*/
 		
 		if( leaderLaps > 2 )
 		{
