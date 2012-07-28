@@ -39,6 +39,7 @@ from Properties			import Properties, PropertiesDialog, ChangeProperties
 from Recommendations	import Recommendations
 from RaceAnimation		import RaceAnimation, GetAnimationData
 from Search				import SearchDialog
+from FtpWriteFile		import realTimeFtpPublish
 import Utils
 from Utils				import logCall
 import Model
@@ -1760,6 +1761,9 @@ Continue?''' % fName, 'Simulate a Race' ):
 			OutputStreamer.writeNumTimes( numTimes )
 			if self.getCurrentPage() == self.results:
 				wx.CallAfter( self.results.showLastLap )
+			if getattr(race, 'ftpUploadDuringRace', False):
+				realTimeFtpPublish.publishEntry()
+
 		return success
 
 	def updateRaceClock( self, event = None ):

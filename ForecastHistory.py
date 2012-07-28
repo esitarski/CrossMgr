@@ -9,7 +9,7 @@ import StatusBar
 import OutputStreamer
 import NumKeypad
 from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, DeleteEntry, DoDNS, DoDNF, DoPull
-
+from FtpWriteFile import realTimeFtpPublish
 
 # Define columns for recorded and expected infomation.
 iNumCol  = 0
@@ -295,6 +295,8 @@ class ForecastHistory( wx.Panel ):
 			mainWin.record.refreshLaps()
 			mainWin.refresh()
 		OutputStreamer.writeNumTime( num, t )
+		if getattr(race, 'ftpUploadDuringRace', False):
+			realTimeFtpPublish.publishEntry()
 		
 	def doExpectedSelect( self, event ):
 		r = event.GetRow()

@@ -877,7 +877,7 @@ class Race(object):
 					r.addTime( t )
 			else:
 				self.getRider(num).addTime( t )
-			
+		
 		self.setChanged()
 		return t
 

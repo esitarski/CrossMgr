@@ -61,7 +61,7 @@ class RealTimeFtpPublish( object ):
 										fname		= fname,
 										file		= file )
 			self.tLastUpdate = datetime.datetime.now()
-		except:
+		except Exception, e:
 			pass
 			
 		self.timer = None
@@ -107,8 +107,8 @@ realTimeFtpPublish = RealTimeFtpPublish()
 #------------------------------------------------------------------------------------------------
 class FtpPublishDialog( wx.Dialog ):
 
-	fields = 	['ftpHost',	'ftpPath',	'ftpUser',		'ftpPassword']
-	defaults =	['',		'',			'anonymous',	'anonymous@']
+	fields = 	['ftpHost',	'ftpPath',	'ftpUser',		'ftpPassword',	'ftpUploadDuringRace']
+	defaults =	['',		'',			'anonymous',	'anonymous@',	False]
 
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, "Ftp Publish Html Results",
@@ -120,6 +120,7 @@ class FtpPublishDialog( wx.Dialog ):
 		self.ftpPath = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
 		self.ftpUser = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
 		self.ftpPassword = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER|wx.TE_PASSWORD, value='' )
+		self.ftpUploadDuringRace = wx.CheckBox( self, wx.ID_ANY, "Automatically Upload Results During Race" )
 		
 		self.refresh()
 		
@@ -129,29 +130,37 @@ class FtpPublishDialog( wx.Dialog ):
 		self.cancelBtn = wx.Button( self, wx.ID_ANY, '&Cancel' )
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
+		row = 0
 		border = 8
-		bs.Add( wx.StaticText( self, wx.ID_ANY, "Ftp Host Name:"),  pos=(0,0), span=(1,1), border = border,
+		bs.Add( wx.StaticText( self, wx.ID_ANY, "Ftp Host Name:"),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
-		bs.Add( self.ftpHost, pos=(0,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
+		bs.Add( self.ftpHost, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
-		bs.Add( wx.StaticText( self, wx.ID_ANY, "Path on Host to Store File:"),  pos=(1,0), span=(1,1), border = border,
+		row += 1
+		bs.Add( wx.StaticText( self, wx.ID_ANY, "Path on Host to Store File:"),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
-		bs.Add( self.ftpPath, pos=(1,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
+		bs.Add( self.ftpPath, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
-		bs.Add( wx.StaticText( self, wx.ID_ANY, "User:"),  pos=(2,0), span=(1,1), border = border,
+		row += 1
+		bs.Add( wx.StaticText( self, wx.ID_ANY, "User:"),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
-		bs.Add( self.ftpUser, pos=(2,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
+		bs.Add( self.ftpUser, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
-		bs.Add( wx.StaticText( self, wx.ID_ANY, "Password:"),  pos=(3,0), span=(1,1), border = border,
+		row += 1
+		bs.Add( wx.StaticText( self, wx.ID_ANY, "Password:"),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
-		bs.Add( self.ftpPassword, pos=(3,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
+		bs.Add( self.ftpPassword, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
+		row += 1
+		bs.Add( self.ftpUploadDuringRace, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
+		
+		row += 1
 		hb = wx.BoxSizer( wx.HORIZONTAL )
 		hb.Add( self.okBtn, border = border, flag=wx.ALL )
 		hb.Add( self.cancelBtn, border = border, flag=wx.ALL )
 		self.okBtn.SetDefault()
 		
-		bs.Add( hb, pos=(4, 1), span=(1,1), border = border, flag=wx.ALL|wx.ALIGN_RIGHT )
+		bs.Add( hb, pos=(row, 1), span=(1,1), border = border, flag=wx.ALL|wx.ALIGN_RIGHT )
 		
 		self.SetSizerAndFit(bs)
 		bs.Fit( self )
