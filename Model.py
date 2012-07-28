@@ -1715,14 +1715,16 @@ class Race(object):
 		data = []
 		for num, r in self.riders.iteritems():
 			entryCount = 1
-			if getattr( r,'firstTime', None):
+			if getattr(self, 'isTimeTrial', False):
 				data.append( dr(r.firstTime, num, entryCount) )
 				entryCount += 1
-			if getattr(self, 'isTimeTrial', False):
 				for t in r.times:
 					data.append( dr(t, num, entryCount, r.firstTime) )
 					entryCount += 1
 			else:
+				if f.firstTime:
+					data.append( dr(r.firstTime, num, entryCount) )
+					entryCount += 1
 				for t in r.times:
 					data.append( dr(t, num, entryCount) )
 					entryCount += 1
