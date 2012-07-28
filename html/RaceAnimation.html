@@ -1246,13 +1246,13 @@ function SetCategoryResults()
 			{
 				for( var i = 1; i < leaderLaps; ++i )
 				{
+					if( !(i % showLapsFrequency == 0 || i == 1 || i == raceTimesLength[num]-1)  )
+						continue
 					if( i >= riderLaps )
 					{
 						createTextChild( td = createChild(tr, 'TD'), ' ' );
 						continue;
 					}
-					if( !(i % showLapsFrequency == 0 || i == 1 || i == raceTimesLength[num]-1)  )
-						continue
 
 					switch( lapDataOption )
 					{

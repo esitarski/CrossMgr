@@ -58,6 +58,7 @@ Sequence Number|Number of the entry
 Clock Time|Clock time of the entry
 Race Time|Race time of the entry (= Clock Time - Race Start Time)
 Bib#|Bib number of the rider
+Count|The count of the number of reads for this rider.
 Race Cat.|Race category of the rider, if found
 Name|"LAST, First" name of the rider (if present in the external Excel sheet)
 Team|Team of the rider (if present in the external Excel sheet)

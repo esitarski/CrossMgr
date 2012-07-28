@@ -1705,23 +1705,27 @@ class Race(object):
 			return None, None, None
 			
 		nti = self.numTimeInfo
-		def dr( t, num, tOffset = 0 ):
+		def dr( t, num, count, tOffset = 0 ):
 			info = nti.getInfo(num, t)
 			if info:
-				return (t + tOffset, num, NumTimeInfo.ReasonName[info[0]], info[1], info[2].ctime())
+				return (t + tOffset, num, count, NumTimeInfo.ReasonName[info[0]], info[1], info[2].ctime())
 			else:
-				return (t + tOffset, num)
+				return (t + tOffset, num, count)
 		
 		data = []
 		for num, r in self.riders.iteritems():
+			entryCount = 1
 			if getattr( r,'firstTime', None):
-				data.append( dr(r.firstTime, num) )
+				data.append( dr(r.firstTime, num, entryCount) )
+				entryCount += 1
 			if getattr(self, 'isTimeTrial', False):
 				for t in r.times:
-					data.append( dr(t, num, r.firstTime) )
+					data.append( dr(t, num, entryCount, r.firstTime) )
+					entryCount += 1
 			else:
 				for t in r.times:
-					data.append( dr(t, num) )
+					data.append( dr(t, num, entryCount) )
+					entryCount += 1
 				
 		data.sort()
 		

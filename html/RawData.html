@@ -203,6 +203,7 @@ function SetRaceData()
 	td.id = 'idNonNumeric';
 	createTextChild( td = createChild(tr, 'TH'), 'Bib#' );
 	td.id = 'idNonNumeric';
+	createTextChild( td = createChild(tr, 'TH'), 'Count' );
 	for( var f = 0; f < externalFields.length; ++f )
 	{
 		createTextChild( td = createChild(tr, 'TH'), externalFields[f].replace(/Name$/,' Name') );
@@ -218,7 +219,7 @@ function SetRaceData()
 	// Add the num/times data and link it with the rider data.
 	for( var r = 0; r < rawData.length; ++r )
 	{
-		var t = rawData[r][0], num = rawData[r][1];
+		var t = rawData[r][0], num = rawData[r][1], count = rawData[r][2], dataLen = rawData[r].length;
 		var d = externalInfo[num];
 		
 		var tr = createChild(thead, 'TR');
@@ -228,6 +229,7 @@ function SetRaceData()
 		createTextChild( td = createChild(tr, 'TD'), FormatTime(t + raceStart) );
 		createTextChild( td = createChild(tr, 'TD'), FormatTime(t) );
 		createTextChild( td = createChild(tr, 'TD'), num );
+		createTextChild( td = createChild(tr, 'TD'), count );
 		for( var f = 0; f < externalFields.length; ++f )
 		{
 			var field = externalFields[f];
@@ -236,7 +238,7 @@ function SetRaceData()
 		}
 		for( var i = 2; i < 5; ++i )
 		{
-			createTextChild( td = createChild(tr, 'TD'), i < rawData[r].length ?  rawData[r][i] : '' );
+			createTextChild( td = createChild(tr, 'TD'), i < dataLen ?  rawData[r][i] : '' );
 			td.id = 'idNonNumeric';
 		}
 	}
