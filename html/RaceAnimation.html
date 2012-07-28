@@ -1197,8 +1197,8 @@ function SetCategoryResults()
 							catStr += cd.laps + " laps of " + FormatDistance(cd.lapDistance, cd.distanceUnit, true) + ', ';
 					}
 				}
-				catStr += (raceIsRunning ? "Est. " : "") + "winner: " + tFinishStr + ' at ' + FormatSpeed(parseFloat(d['speed'].split(' ')[0]), cd.distanceUnit, true);
-				catTitleTD.innerHTML = cat + (raceIsRunning ? " (in progress)" : "") +
+				catStr += (raceIsRunning ? "Estimated " : "") + "winner: " + tFinishStr + ' at ' + FormatSpeed(parseFloat(d['speed'].split(' ')[0]), cd.distanceUnit, true);
+				catTitleTD.innerHTML = cat + (raceIsRunning ? " (race in progress)" : "") +
 						'<br/><span class="smallfont">' + catStr + '</span>';
 			}
 			
@@ -2140,9 +2140,10 @@ function onLoad()
 		s = 'by ' + organizer;
 	if( timestamp )
 	{
-		s += ' (created ' + timestamp[0] + ')';
 		if( raceIsRunning )
 		{
+			s += ' (race in progress, last updated ' + timestamp[0] + ')';
+			
 			var tServer = (new Date(timestamp[0])) / 1000.0;
 			var tBrowser = (new Date().getTime()) / 1000.0;
 			// Attempt to adjust for time zone differences between server and browser.
@@ -2158,6 +2159,8 @@ function onLoad()
 			
 			speedup = 1.0;
 		}
+		else
+			s += ' (created ' + timestamp[0] + ')';
 	}
 	if( s )
 		document.getElementById('idOrganizer').innerHTML = s;
