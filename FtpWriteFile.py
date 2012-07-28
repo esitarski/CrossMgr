@@ -50,8 +50,8 @@ class RealTimeFtpPublish( object ):
 			user		= getattr( race, 'ftpUser', '' )
 			passwd		= getattr( race, 'ftpPassword', '' )
 			serverPath	= getattr( race, 'ftpPath', '' )
-			fname		= os.path.basename( Utils.getFileName()[:-4] + '.html' )
-			file		= StringIO.StringIO( html )
+		fname		= os.path.basename( Utils.getFileName()[:-4] + '.html' )
+		file		= StringIO.StringIO( html )
 			
 		try:
 			FtpWriteFile(	host		= host,
