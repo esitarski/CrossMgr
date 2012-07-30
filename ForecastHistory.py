@@ -51,7 +51,7 @@ class LabelGrid( wx.Panel ):
 		bsMain = wx.BoxSizer( wx.VERTICAL )
 		
 		self.label, self.grid = GetLabelGrid( self )
-		bsMain.Add( self.label, 0, flag=wx.ALL, border=4 )		
+		bsMain.Add( self.label, 0, flag=wx.ALL, border=4 )
 		bsMain.Add( self.grid, 1, flag=wx.ALL|wx.EXPAND, border = 4 )
 		
 		self.SetSizer( bsMain )

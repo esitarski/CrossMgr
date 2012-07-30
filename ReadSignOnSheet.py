@@ -300,7 +300,7 @@ class GetExcelLink( object ):
 		isForward = evt.GetDirection()
 		
 #-----------------------------------------------------------------------------------------------------
-# Cache the Excel sheet so we don't have to re-read it if it has not changed.
+# Cache the Excel sheet so we don't have to re-read if it has not changed.
 stateCache = None
 infoCache = None
 
@@ -327,8 +327,22 @@ class ExcelLink( object ):
 		
 	def getFields( self ):
 		return [f for f in Fields if self.hasField(f)]
-		
+	
+	def get( self ):
+		# Check the cache, but don't bother with the modification date of the file for performance.
+		global stateCache
+		global infoCache
+		if stateCache and infoCache:
+			try:
+				state = (self.fileName, self.sheetName, self.fieldCol)
+				if state == stateCache[-3:]:
+					return infoCache
+			except:
+				pass
+		return None
+	
 	def read( self ):
+		# Check the cache.  Return the last info if the file has not been modified, and the name, sheet and fields are the same.
 		global stateCache
 		global infoCache
 		if stateCache and infoCache:

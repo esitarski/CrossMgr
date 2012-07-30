@@ -5,25 +5,28 @@ import  copy
 
 #---------------------------------------------------------------------------
 
-class ColTable(Grid.PyGridTableBase):
+class ColTable( Grid.PyGridTableBase ):
 	"""
 	A custom wx.Grid Table using user supplied data
 	"""
-	def __init__(self, data = None, colnames = None, textColour = None, backgroundColour = None ):
+	def __init__( self ):
 		"""
-		data is a list, indexed by col, of a list of row values
+		data is a list, indexed by col, containing a list of row values
 		"""
-		self.attrs = {}	# Set of unique cell attributes.
+		self.attrs = {}				# Set of unique cell attributes.
 		self.rightAlign = False
 		self.leftAlignCols = set()
 		
 		# The base class must be initialized *first*
 		Grid.PyGridTableBase.__init__(self)
+		
+		# Column-oriented data.
+		# textColour and backgroundColour are store as a dict indexed by (row, col).
+		# Colour is a wx.Colour.
 		self.data = []
 		self.colnames = []
 		self.textColour = {}
 		self.backgroundColour = {}
-		self.Set( data, colnames, textColour, backgroundColour )		
 
 	def __del__( self ):
 		# Make sure we free up our allocated attribues.
@@ -44,9 +47,6 @@ class ColTable(Grid.PyGridTableBase):
 				pass
 	
 	def _adjustDimension( self, grid, current, new, isCol ):
-		if grid is None:
-			return
-		
 		if isCol:
 			delmsg, addmsg = Grid.GRIDTABLE_NOTIFY_COLS_DELETED, Grid.GRIDTABLE_NOTIFY_COLS_APPENDED
 		else:
@@ -54,12 +54,12 @@ class ColTable(Grid.PyGridTableBase):
 			
 		if new < current:
 			msg = Grid.GridTableMessage( self, delmsg, new, current-new )
-			grid.ProcessTableMessage(msg)
+			grid.ProcessTableMessage( msg )
 		elif new > current:
 			msg = Grid.GridTableMessage( self, addmsg, new-current )
-			grid.ProcessTableMessage(msg)
+			grid.ProcessTableMessage( msg )
 	
-	def Set( self, data = None, colnames = None, textColour = None, backgroundColour = None, grid = None ):
+	def Set( self, grid, data = None, colnames = None, textColour = None, backgroundColour = None ):
 		if colnames is not None:
 			self._adjustDimension( grid, len(self.colnames), len(colnames), True )
 			self.colnames = list(colnames)
@@ -120,11 +120,11 @@ class ColTable(Grid.PyGridTableBase):
 		return str(self.GetRawValue(row, col))
 
 	def SetValue(self, row, col, value):
-		# Nothing to do - everthings is read-only.
+		# Nothing to do - everthing is read-only.
 		pass
 		
 	def DeleteCols( self, pos = 0, numCols = 1, updateLabels = True, grid = None ):
-		oldCols = max( len(self.colnames) if self.colnames else 0, len(self.data) if self.data else 0 )
+		oldCols = len(self.colnames) if self.colnames else 0
 		if self.data:
 			del self.data[pos:pos+numCols]
 		if self.colnames:
@@ -140,7 +140,7 @@ class ColTable(Grid.PyGridTableBase):
 				elif posMax <= c:
 					colD[(r, c-numCols)] = colour
 			setattr( self, a, colD )
-		newCols = max( len(self.colnames) if self.colnames else 0, len(self.data) if self.data else 0 )
+		newCols = len(self.colnames) if self.colnames else 0
 		self._adjustDimension( grid, oldCols, newCols, True )
 
 	def GetAttr(self, row, col, someExtraParameter ):
@@ -211,8 +211,9 @@ class ColGrid(Grid.Grid):
 
 		# The base class must be initialized *first*
 		Grid.Grid.__init__(self, parent, -1, style = style)
-		self._table = ColTable(data, colnames, textColour, backgroundColour)
-		self.SetTable(self._table)
+		self._table = ColTable()
+		self.SetTable( self._table )
+		self.Set( data, colnames, textColour, backgroundColour )
 		
 		self.zoomLevel = 1.0
 
@@ -221,7 +222,7 @@ class ColGrid(Grid.Grid):
 		self._table.ResetView(self)
 
 	def Set( self, data = None, colnames = None, textColour = None, backgroundColour = None ):
-		self._table.Set( data, colnames, textColour, backgroundColour, self )
+		self._table.Set( self, data, colnames, textColour, backgroundColour )
 	
 	def GetData( self ):
 		return self._table.GetData()

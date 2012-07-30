@@ -50,6 +50,59 @@ User|User name to log into the FTP server.
 Password|Password for the FTP server.
 Automatically Upload Results During Race|If checked, CrossMgr will automatically upload results to the FTP server while the race is running.
 
+Results are uploaded in a way to balance response time with bandwidth.
+
+Briefy, you will see a publish latency of 4 seconds after each group passes the line, and no updates when there are no events.
+The latency will increase when riders get strung out to a maximum of 32 seconds.
+
+If the gap is under 4 seconds from the last update, the latency is increased to 8 seconds.  If the next gap is under 8 seconds from the last update, the latency is increased to 16 seconds, etc. to a max of 32 seconds.
+
+If the gap from the last update exceeds the last latency, the latency is reset back to 4 seconds.
+
+FTP upload runs in its own background thread - it does not slow down the response time of CrossMgr.
+
+### Details and Example:
+
+The update logic was inspired by the exponential-backoff logic of TCP/IP.
+The idea is to minimize bandwidth and useless publishing while minimizing latency.
+
+The update logic is only triggered when an event is received.  If all riders are on the back side of the course, no updates will occur.
+
+An event starts a timer that fires 4 seconds in the future (the waitSec).  When the timer fires, CrossMgr does an upload.
+
+Events arriving while the timer is running do nothing - those events will just be included when the timer fires next.
+
+The upload then runs when the timer fires, and records the time it ran (tLastUpdate - the time of the last update).
+
+Now, say a new event is received while the timer is not running at time tEvent.  Let tDelta = tEvent - tLastUpdate.
+
+* If tDelta > waitSec then waitSec = max(waitSec * 2, 32)
+* Else waitSec = 4  // tDelta <= waitSec
+
+The timer is started to trigger an upload "waitSec" seconds into the future, and the process repeats.
+
+By the logic above, if the last update latency exceeds the gap from the last upload, the latency is doubled (to a max of 32 seconds).
+If the gap exceeds the latency, the latency is reset back to 4 seconds.
+
+For example, say the lap time is 5 minutes, and the bunch is all together.
+The first rider in the bunch crosses the line on the next lap and triggers a 4 second timer.  While the timer is running, the rest of the group crosses the line.  After 4 seconds, the upload runs and includes the times of all riders.
+
+Now the riders go out on the next lap.  There are no events, so no upload is triggered and no effort or bandwidth is wasted.
+
+Now the riders come around again and we receive the leader's event.  Since the last update was more than 4 seconds ago (tDelta > waitSec), the timer resets to 4 seconds and starts.  The riders cross the line, the timer fires after 4 seconds, and we get another upload with 4 seconds of latency.
+
+This is better than publishing on a fixed schedule like every 30 or 60 seconds.  On a fixed schedule, we waste bandwidth publishing an update even if nothing changes.  Worse, we may have a latency of up to 30 seconds after the leaders cross the line each lap, with average latency of 15 seconds.
+
+Back to our example.  Say a break develops with a gap of 10 seconds.  We will see an update 4 seconds after the break, then 4 seconds after the group.  The timer is reset between the groups because the gap time (10 seconds) exceeds the last latency (4 seconds).
+
+Say the break increases to 30 seconds and a chase group forms 10 seconds after that.  No problem - the logic will now do three publishes, each 4 seconds after the break, group and the bunch respectively.
+
+Say the bunch now splits up with riders all strung out, and the bunch takes 2 minutes to pass the finish line.  We will see an update 4 seconds after the break, then 4 seconds after the chase group, then 4 seconds after the beginning of the bunch, then 8 seconds for the following stragglers, then 16 seconds, then 32 seconds (repeating) as all the stragglers go by.
+
+When the leaders return, the timer will reset back to 4 seconds because the gap between the last bunch rider and the leaders exceeds 32 seconds.
+
+So, this approach synchronizes publishing to groups in the race, and does nothing if there are no changes.  If riders get all strung out and there are no discernal groups anymore, it self-configures to do an update about every 30 seconds, which is the same as a fixed publishing approach.
+
 ## Recent Files
 Keeps track of the last few files opened so then can be opened again quickly.
 
