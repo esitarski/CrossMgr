@@ -52,10 +52,12 @@ def DoOrionImport( fname, startTime = None, isTimeTrial = False ):
 				continue
 			
 			try:
-				t = int(tStr) / 1000.0	# Convert from 1000's of a second.
+				secs = int(tStr) / 1000.0	# Convert from 1000's of a second.
 			except ValueError:
 				errors.append( 'line %d: invalid time' % lineNo )
 				continue
+			else:
+				t = datetime.datetime.combine( raceDate, datetime.time() ) + datetime.timedelta( seconds = secs )
 				
 			if raceStart and t < raceStart:
 				errors.append( 'line %d: time before race start (%s)' % (lineNo, tStr) )
