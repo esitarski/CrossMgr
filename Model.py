@@ -1722,7 +1722,7 @@ class Race(object):
 					data.append( dr(t, num, entryCount, r.firstTime) )
 					entryCount += 1
 			else:
-				if f.firstTime:
+				if r.firstTime:
 					data.append( dr(r.firstTime, num, entryCount) )
 					entryCount += 1
 				for t in r.times:
