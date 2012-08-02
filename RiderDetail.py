@@ -7,7 +7,7 @@ import ColGrid
 import EditEntry
 from LineGraph import LineGraph
 from GanttChartPanel import GanttChartPanel
-from JChipSetup import FixTag, GetTagNums
+from JChipSetup import GetTagNums
 from Undo import undo
 import Gantt
 from EditEntry import CorrectNumber, ShiftNumber, DeleteEntry
@@ -701,7 +701,7 @@ class RiderDetail( wx.Panel ):
 				tags = []
 				for tagName in ['Tag', 'Tag2']:
 					try:
-						tags.append( FixTag(info[tagName]) )
+						tags.append( info[tagName] )
 					except (KeyError, ValueError):
 						pass
 				if tags:

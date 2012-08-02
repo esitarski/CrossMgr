@@ -14,6 +14,7 @@ Fields = ['Bib#', 'LastName', 'FirstName', 'Team', 'License', 'Category', 'Tag',
 IgnoreFields = ['Bib#', 'Tag', 'Tag2']		# Fields to ignore when adding data to standard reports.
 ReportFields = [f for f in Fields if f not in IgnoreFields]
 
+
 class FileNamePage(wiz.WizardPageSimple):
 	def __init__(self, parent):
 		wiz.WizardPageSimple.__init__(self, parent)
@@ -299,6 +300,57 @@ class GetExcelLink( object ):
 	def onPageChanged( self, evt ):
 		isForward = evt.GetDirection()
 		
+#----------------------------------------------------------------------------------
+
+JChipTagLength = 6
+OrionTagLength = 8
+
+def FixJChipTag( tag ):
+	tag = str(tag).replace( 'O', '0' )
+	if len(tag) < JChipTagLength:
+		tag = '0' * JChipTagLength + tag
+	return tag[-JChipTagLength:]
+	
+def FixOrionTag( tag ):
+	tag = str(tag).replace( 'O', '0' )
+	if len(tag) < OrionTagLength:
+		tag = '0' * OrionTagLength + tag
+	return tag[-OrionTagLength:]
+
+FixTag = FixJChipTag
+
+def GetFixTag( externalInfo ):
+	global FixTag
+	
+	# Check if we have JChip or Orion tags.
+	countJChip, countOrion = 0, 0
+	for num, edata in externalInfo.iteritems():
+		for tagName in ['Tag', 'Tag2']:
+			try:
+				tag = edata[tagName]
+			except (KeyError, ValueError):
+				continue
+			tag = tag.replace( 'O', '0' )
+			try:
+				n = int( tag, 10 )		# Orion tags are all numeric.
+				countOrion += 1
+			except ValueError:			# JChip tags are hex, so int() base 10 fails.
+				countJChip += 1
+	
+	# Assign the tag to the greatest number of matches.
+	FixTag = FixJChipTag if countJChip >= countOrion else FixOrionTag
+	return FixTag
+
+def FixTagFormat( externalInfo ):
+	GetFixTag( externalInfo )
+	for num, edata in externalInfo.iteritems():
+		for tagName in ['Tag', 'Tag2']:
+			try:
+				tag = edata[tagName]
+			except (KeyError, ValueError):
+				continue
+			edata[tagName] = FixTag( tag )
+
 #-----------------------------------------------------------------------------------------------------
 # Cache the Excel sheet so we don't have to re-read if it has not changed.
 stateCache = None
@@ -370,14 +422,16 @@ class ExcelLink( object ):
 				try:
 					data[field] = toAscii(row[col])
 					if field == 'LastName' or field.startswith('Tag'):
-						data[field] = data[field].upper()
+						data[field] = str(data[field]).upper()
 				except IndexError:
 					pass
 			try:
 				info[int(float(data[Fields[0]]))] = data
 			except (ValueError, TypeError, KeyError):
 				pass
-				
+		
+		FixTagFormat( info )
+		
 		stateCache = (os.path.getmtime(self.fileName), self.fileName, self.sheetName, self.fieldCol)
 		infoCache = info
 		return infoCache.copy()
