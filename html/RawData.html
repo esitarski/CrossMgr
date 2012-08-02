@@ -233,7 +233,7 @@ function SetRaceData()
 		for( var f = 0; f < externalFields.length; ++f )
 		{
 			var field = externalFields[f];
-			createTextChild( td = createChild(tr, 'TD'), (d && d[field] ? d[field] : '').escapeHTML() );
+			createTextChild( td = createChild(tr, 'TD'), d && d[field] ? d[field] : '' );
 			td.id = 'idNonNumeric';
 		}
 		for( var i = 3; i < 6; ++i )
