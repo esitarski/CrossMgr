@@ -7,6 +7,7 @@ import copy
 import wx.lib.filebrowsebutton as filebrowse
 import wx.wizard as wiz
 import Utils
+import string
 from Excel import GetExcelReader, toAscii
 
 #-----------------------------------------------------------------------------------------------------
@@ -305,23 +306,17 @@ class GetExcelLink( object ):
 JChipTagLength = 6
 OrionTagLength = 8
 
+trantab = string.maketrans( 'lOo', '100' )	# Translate lower-case l's to ones and Os to zeros. 
+def GetCleanTag( tag ):
+	return str(tag).translate(trantab, ' \t\n\r')	# Also, remove any extra spaces.
+
 def FixJChipTag( tag ):
-	tag = str(tag).replace( 'O', '0' )
-	if len(tag) < JChipTagLength:
-		tag = '0' * JChipTagLength + tag
-	return tag[-JChipTagLength:]
+	return GetCleanTag(tag)[-JChipTagLength:].zfill(JChipTagLength)
 	
 def FixOrionTag( tag ):
-	tag = str(tag).replace( 'O', '0' )
-	if len(tag) < OrionTagLength:
-		tag = '0' * OrionTagLength + tag
-	return tag[-OrionTagLength:]
-
-FixTag = FixJChipTag
+	return GetCleanTag(tag)[-OrionTagLength:].zfill(OrionTagLength)
 
 def GetFixTag( externalInfo ):
-	global FixTag
-	
 	# Check if we have JChip or Orion tags.
 	countJChip, countOrion = 0, 0
 	for num, edata in externalInfo.iteritems():
@@ -330,26 +325,24 @@ def GetFixTag( externalInfo ):
 				tag = edata[tagName]
 			except (KeyError, ValueError):
 				continue
-			tag = tag.replace( 'O', '0' )
 			try:
-				n = int( tag, 10 )		# Orion tags are all numeric.
+				n = int( GetCleanTag(tag), 10 )		# Orion tags are all numeric, but some JChip tags might also be all numeric.
 				countOrion += 1
 			except ValueError:			# JChip tags are hex, so int() base 10 fails.
 				countJChip += 1
 	
-	# Assign the tag to the greatest number of matches.
-	FixTag = FixJChipTag if countJChip >= countOrion else FixOrionTag
-	return FixTag
+	# Assign the tag to the greatest number of matches as some JChip tags might be all numeric.
+	return FixJChipTag if countJChip >= countOrion else FixOrionTag
 
 def FixTagFormat( externalInfo ):
-	GetFixTag( externalInfo )
+	fixTagFunc = GetFixTag( externalInfo )
 	for num, edata in externalInfo.iteritems():
 		for tagName in ['Tag', 'Tag2']:
 			try:
 				tag = edata[tagName]
 			except (KeyError, ValueError):
 				continue
-			edata[tagName] = FixTag( tag )
+			edata[tagName] = fixTagFunc( tag )
 
 #-----------------------------------------------------------------------------------------------------
 # Cache the Excel sheet so we don't have to re-read if it has not changed.

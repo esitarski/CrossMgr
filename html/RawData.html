@@ -222,7 +222,7 @@ function SetRaceData()
 		var t = rawData[r][0], num = rawData[r][1], count = rawData[r][2], dataLen = rawData[r].length;
 		var d = externalInfo[num];
 		
-		var tr = createChild(thead, 'TR');
+		tr = createChild(thead, 'TR');
 		tr.className = ((r & 1) ? 'odd' : 'even');
 			
 		createTextChild( td = createChild(tr, 'TD'), (r+1)+'' );

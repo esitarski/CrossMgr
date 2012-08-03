@@ -203,10 +203,12 @@ function getRiderPositionTime( num )
 	var raceTimes = info['raceTimes'];
 	if( !raceTimes )
 		return null;
+	
+	var p;
 	if( t <= raceTimes[0] )
 	{
 		var firstLapRatio = info['flr'];
-		p = 1.0 - firstLapRatio + p * firstLapRatio;
+		p = 1.0 - firstLapRatio;
 		p -= Math.floor(p) - 1.0;
 		return [p, t];
 	}
@@ -216,7 +218,6 @@ function getRiderPositionTime( num )
 	if( lastTime != null && lastTime < t )
 		tSearch = lastTime;
 		
-	var p;
 	if( tSearch >= raceTimes.back() )
 	{
 		var lastRaceTime = raceTimes.back();
@@ -224,14 +225,14 @@ function getRiderPositionTime( num )
 	}
 	else
 	{
-		i = info['iLast'];
+		var i = info['iLast'];
 		if( !(raceTimes[i-1] < tSearch && tSearch <= raceTimes[i]) )
 		{
 			++i;
 			if( !(raceTimes[i-1] < tSearch && tSearch <= raceTimes[i]) )
 			{
 				// Find the race time with binary search.
-				var left = 0, right = raceTimes.length, i;
+				var left = 0, right = raceTimes.length;
 				while( right - left > 1 )
 				{
 					i = ~~((right + left) / 2);
@@ -511,14 +512,14 @@ function Refresh()
 	dc.lineWidth = 1;
 	numSize = (r/2)/laneMax;
 	lapCur = 0;
-	riderRadius = laneWidth * 0.75;
-	thickLine = r / 24;
+	var riderRadius = laneWidth * 0.75;
+	var thickLine = r / 24;
 	var hasFirstLapRatio = false;
 	firstLapRatio = 1.0;
 	if( data )
 	{
 		var riderXYPT = [];
-		for( num in data )
+		for( var num in data )
 		{
 			if( categoryCur == 'All' || data[num]['raceCat'] == categoryCur )
 			{
@@ -559,11 +560,12 @@ function Refresh()
 		{
 			var rxypt = riderXYPT[i];
 			riderPosition[rxypt[0]] = riderXYPT.length - i;
-			x = rxypt[1];
+			var x = rxypt[1];
 			if( x == null )
 				continue;
 				
-			num = rxypt[0], y = rxypt[2];
+			num = rxypt[0];
+			var y = rxypt[2];
 			dc.fillStyle = colours[num % colours.length];
 			// Check for a leader.
 			var j = topThree[num];
@@ -617,8 +619,8 @@ function Refresh()
 		var y = r / 2 + laneWidth * 1.5;
 		dc.fillText( 'Leaders:', x, y );
 		y += tHeight * 1.2;
-		var thickLine = tHeight / 5;
-		var riderRadius = tHeight / 3.5;
+		thickLine = tHeight / 5;
+		riderRadius = tHeight / 3.5;
 		for( var i = 0; i < leaders.length; ++i )
 		{
 			var num = leaders[i];
@@ -704,7 +706,7 @@ function NextFrame()
 
 function GetDistanceUnit( aData )
 {
-	for( num in aData )
+	for( var num in aData )
 	{
 		var info = aData[num];
 		if( info['speed'] )
@@ -730,7 +732,7 @@ function SetData( aData, tCur )
 	var hasLapSpeeds = false;
 	var hasMultipleLaps = false;
 	var catStart = {};
-	for( num in data )
+	for( var num in data )
 	{
 		var info = data[num];
 		info['iLast'] = 1;
@@ -795,7 +797,7 @@ function SetData( aData, tCur )
 	{ i:2, name:'Time Gaps',	value:'showLapGaps',		requiresMultipleLaps:true, requiresLapSpeeds:false },
 	{ i:3, name:'Gap Percents',	value:'showGapPercent',		requiresMultipleLaps:false, requiresLapSpeeds:false },
 	{ i:4, name:'Lap Speed',	value:'showLapSpeed',		requiresMultipleLaps:true, requiresLapSpeeds:true },
-	{ i:5, name:'Est. Distance Gap',value:'showDistanceGap',requiresMultipleLaps:true, requiresLapSpeeds:true },
+	{ i:5, name:'Est. Distance Gap',value:'showDistanceGap',requiresMultipleLaps:true, requiresLapSpeeds:true }
 	];
 	var showOptionsSpan = document.getElementById( 'idShowOptions' );
 	var showHTML = '';
@@ -834,7 +836,7 @@ function Animate( tRunning, aTMax, tCur )
 	if( aTMax == undefined )
 	{
 		tMax = 0;
-		for( num in data )
+		for( var num in data )
 			if( data[num]['raceTimes'].length > 0 )
 				tMax = Math.max(tMax, data[num]['raceTimes'].back());
 	}
@@ -909,7 +911,7 @@ function SetCategoryResults()
 	var raceTimesLength = {};
 	if( raceIsRunning )
 	{
-		for( num in data )
+		for( var num in data )
 		{
 			var raceTimes = data[num]['raceTimes'];
 			var i;
@@ -920,7 +922,7 @@ function SetCategoryResults()
 	}
 	else
 	{
-		for( num in data )
+		for( var num in data )
 			raceTimesLength[num] = data[num]['raceTimes'].length;
 	}
 	
@@ -929,7 +931,7 @@ function SetCategoryResults()
 		// Compute a reasonable number of laps to show.
 		// Get the maximum laps in the data.
 		var maxLaps = 0;
-		for( num in data )
+		for( var num in data )
 		{
 			if( maxLaps < raceTimesLength[num] )
 				maxLaps = raceTimesLength[num];
@@ -940,7 +942,7 @@ function SetCategoryResults()
 		// Choose a frequency that results in a reasonable number of laps displayed.
 		for( var i = 0; i < showLaps.options.length; ++i )
 		{
-			var freqCur = parseInt(showLaps.options[i].value);
+			var freqCur = parseInt(showLaps.options[i].value, 10);
 			if( ~~(maxLaps / freqCur) <= 12 || i == showLaps.options.length - 1 )
 			{
 				showLaps.selectedIndex = i;
@@ -967,7 +969,7 @@ function SetCategoryResults()
 		var resultsData = [];
 		var hasLapSpeeds = false;
 		var showingAllLaps = true;
-		for( num in data )
+		for( var num in data )
 		{
 			var d = data[num];
 			if( !speedUnit && d['speed'] )
@@ -1057,8 +1059,8 @@ function SetCategoryResults()
 		
 		// Add the headers.
 		var numHeaders = 0;
-		var thead = createChild( table, 'THEAD' );
-		var tr = createChild( thead, 'TR' );
+		thead = createChild( table, 'THEAD' );
+		tr = createChild( thead, 'TR' );
 		createTextChild( td = createChild(tr, 'TH'), 'Pos' );	++numHeaders;
 		createTextChild( td = createChild(tr, 'TH'), 'Bib' );	++numHeaders;
 		td.id = 'idNonNumeric';
@@ -1084,7 +1086,7 @@ function SetCategoryResults()
 		// Cache the leader's data.
 		var leaderLaps	= resultsData[0][0];
 		var leaderTime	= resultsData[0][1];
-		var leaderNum	= resultsData[0][2];
+		leaderNum		= resultsData[0][2];
 		var startOffset	= resultsData[0][3][0];
 		
 		/*
@@ -1129,7 +1131,7 @@ function SetCategoryResults()
 		var position = 1;
 		for( var r = 0; r < resultsData.length; ++r, ++position )
 		{
-			var tr = createChild(thead, 'TR');
+			tr = createChild(thead, 'TR');
 			tr.className = ((r & 1) ? 'odd' : 'even');
 			
 			var riderLaps	= resultsData[r][0];
@@ -1178,25 +1180,25 @@ function SetCategoryResults()
 				var dot = tFinishStr.indexOf('.');
 				if( dot > 0 )
 					tFinishStr = tFinishStr.substring(0, dot);
-				var catStr = '';
+				catStr = '';
 				if( catDetails[cat] )
 				{
 					var cd = catDetails[cat];
 					if( cd.raceDistance )
-						catStr += FormatDistance(cd.raceDistance, cd.distanceUnit, true) + ', ';
+						catStr += FormatDistance(cd.raceDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true) + ', ';
 					if( cd.lapDistance && cd.laps > 1 )
 					{
 						if( cd.firstLapDistance && cd.firstLapDistance != cd.lapDistance )
 						{
 							catStr += (
-								'1st lap ' + FormatDistance(cd.firstLapDistance, cd.distanceUnit, true) + ', ' +
-								(cd.laps-1) + " more laps of " + FormatDistance(cd.lapDistance, cd.distanceUnit, true) + ', ');
+								'1st lap ' + FormatDistance(cd.firstLapDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true) + ', ' +
+								(cd.laps-1) + " more laps of " + FormatDistance(cd.lapDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true) + ', ');
 						}
 						else
-							catStr += cd.laps + " laps of " + FormatDistance(cd.lapDistance, cd.distanceUnit, true) + ', ';
+							catStr += cd.laps + " laps of " + FormatDistance(cd.lapDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true) + ', ';
 					}
 				}
-				catStr += (raceIsRunning ? "Estimated " : "") + "winner: " + tFinishStr + ' at ' + FormatSpeed(parseFloat(d['speed'].split(' ')[0]), cd.distanceUnit, true);
+				catStr += (raceIsRunning ? "Estimated " : "") + "winner: " + tFinishStr + ' at ' + FormatSpeed(parseFloat(d['speed'].split(' ')[0]), cd.distanceUnit ? cd.distanceUnit : 'km', true);
 				catTitleTD.innerHTML = cat + (raceIsRunning ? " (race in progress)" : "") +
 						'<br/><span class="smallfont">' + catStr + '</span>';
 			}
@@ -1318,11 +1320,10 @@ function SetCategoryResults()
 		}
 		
 		// Add a blank row between categories.
-		var tr = createChild( thead, 'TR' );
+		tr = createChild( thead, 'TR' );
 		tr.className = 'noborder';
 		for( var k = 0; k < numHeaders; ++k )
 		{
-			var td;
 			createTextChild( td = createChild(tr, 'TD'), '' );
 			td.innerHTML = '&nbsp;'
 		}
@@ -1368,7 +1369,7 @@ function lighterColor( k )
 	{
 		var c = parseInt(k.substring(1 + i*2, 1 + i*2 + 2), 16);
 		c += (255 - c) * 0.6;
-		c = parseInt( c );
+		c = ~~c;
 		s += (c < 16 ? '0' : '') + c.toString(16);
 	}
 	return s;
@@ -1521,9 +1522,9 @@ function RefreshRaceChart()
 	if( !data || !canvasRaceChart || !isCanvasSupported() )
 		return;
 
-	var iCategory = {};
+	var iFromCategory = {};
 	for( var i = 0; i < categories.length; ++i )
-		iCategory[categories[i]] = i;
+		iFromCategory[categories[i]] = i;
 
 	var showStartOffsetOption = document.getElementById('idShowStartOffsetOption');
 	var showStartOffsetButton = document.getElementById('idShowStartOffsets');
@@ -1534,7 +1535,7 @@ function RefreshRaceChart()
 	var dataMax = 0;
 	var resultsData = [];
 	var lapsMax = 0;
-	for( num in data )
+	for( var num in data )
 	{
 		var d = data[num];
 		if( categoryCur == 'All' || d['raceCat'] == categoryCur )
@@ -1548,7 +1549,7 @@ function RefreshRaceChart()
 									d['raceTimes'].slice(0),	// Make sure to make a full copy as we modify these values.
 									d['status'],
 									d['lastTime'],
-									iCategory[d['raceCat']]
+									iFromCategory[d['raceCat']]
 								] );
 				categoriesUsed[d['raceCat']] = true;
 				if( raceTimes.back() > dataMax )
@@ -1623,7 +1624,7 @@ function RefreshRaceChart()
 			var raceTimes = resultsData[i][iRaceTimes];
 			if( cat.startOffset )
 			{
-				var startOffset = cat.startOffset;
+				startOffset = cat.startOffset;
 				for( var j = 0; j < raceTimes.length; ++j )
 					raceTimes[j] -= startOffset;
 			}
@@ -1632,16 +1633,16 @@ function RefreshRaceChart()
 		}
 	}
 	
-	var lapsMax = resultsData.length > 0 ? resultsData[0][iRaceTimes].length : 0;
+	lapsMax = resultsData.length > 0 ? resultsData[0][iRaceTimes].length : 0;
 	var colors = makeColorGradient(2.4,2.4,2.4,0,2,4,128,127,500);
 	var lighterColors = [];
 	for( var i = 0; i < colors.length; ++i )
 		lighterColors.push( lighterColor(colors[i]) );
 
-	var barHeight = parseInt(height / (resultsData.length + 3 + (categoryCur == 'All' ? categories.length-1 : 0)));
+	var barHeight = ~~(height / (resultsData.length + 3 + (categoryCur == 'All' ? categories.length-1 : 0)));
 	if( barHeight < 4 || dataMax == 0 )
 		return;
-	var barHeight = Math.min( barHeight, 18 );
+	barHeight = Math.min( barHeight, 18 );
 	var minimizeLabels = false;
 
 	var normalTextHeight = barHeight * 0.80;
@@ -1787,7 +1788,7 @@ function RefreshRaceChart()
 		}
 		
 		// Draw the last empty bar.
-		xCur = parseInt(labelsWidthLeft + dataMax * xFactor);
+		xCur = ~~(labelsWidthLeft + dataMax * xFactor);
 		dc.fillStyle = resultsData[i][iStatus] == 'Finisher' ? '#FFFFFF' : '#CDCDCD';
 		dc.fillRect( xLast, yLast, width - xLast, yCur - yLast + 1 );
 		dc.strokeRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
@@ -1803,7 +1804,7 @@ function RefreshRaceChart()
 		dc.fillText( lab, labelsWidthLeft - dc.measureText(lab).width - legendSep, yLast );
 		if( !minimizeLabels )
 		{
-			var lab = resultsData[i][iNum] + '';
+			lab = resultsData[i][iNum] + '';
 			dc.fillText( lab, width - labelsWidthRight + legendSep, yLast );
 		}
 
@@ -1893,7 +1894,7 @@ function getStartTime()
 
 	// Show results for this category.
 	var t = 9999999;
-	for( num in data )
+	for( var num in data )
 	{
 		if( categoryCur == 'All' || data[num]['raceCat'] == categoryCur )
 			if( data[num]['raceTimes'][0] < t )
@@ -1988,13 +1989,13 @@ function SetLapDataOption( opt )
 function SetShowLaps()
 {
 	var showLaps = document.getElementById('idShowLaps');
-	showLapsFrequency = parseInt( showLaps.options[showLaps.selectedIndex].value );
+	showLapsFrequency = parseInt( showLaps.options[showLaps.selectedIndex].value, 10 );
 	SetCategoryResults();
 }
 
 function FormatDistance( distance, inUnit, showUnits )
 {
-	if( inUnit != displayUnits )
+	if( (inUnit ? inUnit : 'km') != displayUnits )
 		distance *= (displayUnits == 'km' ? 1.609344 : 0.621371192237334);
 	var s = distance.toFixed(2);
 	if( showUnits )
@@ -2177,10 +2178,10 @@ function onLoad()
 		
 	displayUnits = GetDistanceUnit( data );
 	document.getElementById('idDisplayUnits').selectedIndex = (displayUnits == 'km' ? 0 : 1);
-	SetData( data );
+	SetData( data, undefined );
 	
 	// Check for parameters.
-	var numbers = getUrlParam( 'highlight' );
+	var numbers = getUrlParam( 'highlight', undefined );
 	if( numbers != '' )
 		numsToWatchStr = numbers;
 	if( numsToWatchStr )
@@ -2190,7 +2191,7 @@ function onLoad()
 		SetNumsToWatch();
 	}
 	
-	var category = getUrlParam( 'raceCat' );
+	var category = getUrlParam( 'raceCat', undefined );
 	if( category != '' )
 		categoryStr = category;
 	if( categoryStr )
