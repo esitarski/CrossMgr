@@ -31,7 +31,7 @@ class Properties( wx.Panel ):
 		rows += 1
 		
 		self.raceNumLabel = wx.StaticText( self, wx.ID_ANY, 'Race #:' )
-		self.raceNum = intctrl.IntCtrl( self, wx.ID_ANY, min=1, max=20, allow_none=False, value=1 )
+		self.raceNum = intctrl.IntCtrl( self, wx.ID_ANY, min=1, max=1000, allow_none=False, value=1 )
 		self.Bind(intctrl.EVT_INT, self.onChanged, self.raceNum)
 		rows += 1
 		
@@ -40,7 +40,7 @@ class Properties( wx.Panel ):
 		rows += 1
 
 		self.minutesLabel = wx.StaticText( self, wx.ID_ANY, 'Race Minutes:' )
-		self.minutes = intctrl.IntCtrl( self, wx.ID_ANY, min=1, max=300, allow_none=False, value=40 )
+		self.minutes = intctrl.IntCtrl( self, wx.ID_ANY, min=1, max=60*12, allow_none=False, value=40 )
 		rows += 1
 
 		self.memoLabel = wx.StaticText( self, wx.ID_ANY, 'Memo:' )
