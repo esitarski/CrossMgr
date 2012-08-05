@@ -43,7 +43,7 @@ def GetTagNums( forceUpdate = False ):
 		# Associate Bib# and Tag from the external data.
 		race.tagNums = {}
 		
-		# Support two tags per rider.
+		# Support the two tags per rider.
 		for num, edata in externalInfo.iteritems():
 			for tagName in ['Tag', 'Tag2']:
 				try:
