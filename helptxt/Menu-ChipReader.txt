@@ -82,5 +82,32 @@ When the race starts, CrossMgr will start its server, wait for a JChip connectio
 ## Import JChip Formatted File...
 Imports a JChip-formatted input file.
 
+### JChip Data File
+The JChip formatted data file to import.
+
+### Data Policy
+CrossMgr supports two policies regarding existing race data:
+
+1. Clear All Existing Data Before Import
+1. Merge New Data with Existing
+
+The first option will clear all timing data from the race and import it again fresh from the import file.
+
+The second option will keep all existing data in the race and merge the data from the import with it.  This is useful, for example, if you start a time trial manually, then import data into it at a later time from a chip reader.
+
+### JChip Data Times Are (Behind/Ahead)
+The HH:MM:SS.SSSS time the JChip clock was ahead of or behind the computer's clock when the data was captured by the JChip receiver.  This adjust will be applied to each time to correct it to be consistent with the computer's time.
+
+For example, say you started a time trial manually in one location and want to import data later from the chip reader which has been set up at the time trial finish.  After checking, you see that the JChip receiver was running 4.2 seconds behind your computer's time.
+
+To import the times accurately relative to the earlier manually entered times, you would enter a "Behind 00:00:04.2" seconds adjustment.
+
+### Race Start Time (if NOT first recorded time)
+
+If you are importing into a new race, this option gives you the ability to start the race at the time specified, then import the timing data contained in the file.
+
+Do not use this option if you are merging with existing data, as the race must already been started for existing data to be present.
+
 ## Import Orion Formatted File...
 Imports an Orion-formatted input file.
+See above for options.

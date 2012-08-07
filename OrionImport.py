@@ -14,7 +14,7 @@ import sys
 import os
 import datetime
 
-def DoOrionImport( fname, startTime = None, isTimeTrial = False ):
+def DoOrionImport( fname, startTime = None ):
 	# If startTime is None, the first time will be taken as the start time.
 	# All first time's for each rider will then be ignored.
 	
@@ -33,7 +33,7 @@ def DoOrionImport( fname, startTime = None, isTimeTrial = False ):
 		
 		tFirst, tLast = None, None
 		lineNo = 0
-		riderLapTimes = {}
+		riderRaceTimes = {}
 		for line in f:
 			lineNo += 1
 			
@@ -68,7 +68,7 @@ def DoOrionImport( fname, startTime = None, isTimeTrial = False ):
 			tLast = t
 			try:
 				num = tagNums[tag]
-				riderLapTimes.setdefault( num, [] ).append( t )
+				riderRaceTimes.setdefault( num, [] ).append( t )
 			except KeyError:
 				if tag not in missingTagSet:
 					errors.append( 'line %d: tag %s missing from Excel sheet' % (lineNo, tag) )
@@ -77,43 +77,30 @@ def DoOrionImport( fname, startTime = None, isTimeTrial = False ):
 
 		#------------------------------------------------------------------------------
 		# Populate the race with the times.
-		if not riderLapTimes:
+		if not riderRaceTimes:
 			errors.insert( 0, 'No matching tags found in Excel link.  Import aborted.' )
 			return errors
 		
 		if not raceStart:
 			raceStart = tFirst
 			
-		if not isTimeTrial:
-			# Remove all the first times from the riders as we account for this in the race start.
-			for lapTimes in riderLapTimes.itervalues():
-				del lapTimes[0]
-					
 		race.startTime = raceStart
 		
 		# Put all the rider times into the race.
-		race.deleteAllRiderTimes()
-		if isTimeTrial:
-			for num, lapTimes in riderLapTimes.iteritems():
-				tItr = (t for t in lapTimes)
-				tFirst = tItr.next()
-				for t in tItr:
-					lapTime = (t - tFirst).total_seconds()
-					race.importTime( num, lapTime )
-		else:
-			for num, lapTimes in riderLapTimes.iteritems():
-				for t in lapTimes:
-					lapTime = (t - raceStart).total_seconds()
-					race.importTime( num, lapTime )
-			
+		race.clearRiderTimes()
+		for num, lapTimes in riderRaceTimes.iteritems():
+			for t in lapTimes:
+				raceTime = (t - raceStart).total_seconds()
+				race.addTime( num, raceTime )
+		
 		if tLast:
 			race.finishTime = tLast
 			
 		# Figure out the race minutes from the recorded laps.
-		if riderLapTimes:
-			lapNumMax = max( len(ts) for ts in riderLapTimes.itervalues() )
+		if riderRaceTimes:
+			lapNumMax = max( len(ts) for ts in riderRaceTimes.itervalues() )
 			if lapNumMax > 0:
-				tElapsed = min( ts[-1] for ts in riderLapTimes.itervalues() if len(ts) == lapNumMax )
+				tElapsed = min( ts[-1] for ts in riderRaceTimes.itervalues() if len(ts) == lapNumMax )
 				raceMinutes = int((tElapsed - raceStart).total_seconds() / 60.0) + 1
 				race.minutes = raceMinutes
 		
@@ -253,11 +240,8 @@ class OrionImportDialog( wx.Dialog ):
 		else:
 			startTime = None
 		
-		with Model.LockRace() as race:
-			isTimeTrial = getattr(race, 'isTimeTrial', False) if race else False
-			
 		undo.pushState()
-		errors = DoOrionImport( fname, startTime, isTimeTrial )
+		errors = DoOrionImport( fname, startTime )
 		
 		if errors:
 			# Copy the tags to the clipboard.

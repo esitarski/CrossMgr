@@ -19,6 +19,9 @@ def MakeButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1) ):
 	btn = KeyButton( parent, -1, None, label=label.replace('&',''), style=style|wx.NO_BORDER, size=size)
 	return btn
 
+# backspace, delete, comma, return, digits
+validKeyCodes = set( [8, 127, 44, 13] + [x for x in xrange(48, 48+10)] )
+	
 class NumKeypad( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
@@ -45,8 +48,9 @@ class NumKeypad( wx.Panel ):
 		gbs = wx.GridBagSizer(4, 4)
 		rowCur = 0
 		
-		self.numEdit = wx.lib.intctrl.IntCtrl( self, 20, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=None, allow_none=True, min=0, max=9999 )
+		self.numEdit = wx.TextCtrl( self, 20, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value='' )
 		self.Bind( wx.EVT_TEXT_ENTER, self.onEnterPress, self.numEdit )
+		self.numEdit.Bind( wx.EVT_CHAR, self.handleNumKeypress )
 		self.numEdit.SetFont( font )
 		gbs.Add( self.numEdit, pos=(rowCur,0), span=(1,3), flag=wx.EXPAND )
 		self.num = []
@@ -226,7 +230,7 @@ class NumKeypad( wx.Panel ):
 		self.isEnabled = True
 		
 		self.refreshRaceTime()
-		
+	
 	def refreshRaceHUD( self ):
 		# Assumes Model is locked.
 		race = Model.race
@@ -319,57 +323,70 @@ class NumKeypad( wx.Panel ):
 		
 	def onNumPress( self, event, value ):
 		self.numEdit.SetInsertionPointEnd()
-		t = self.numEdit.GetValue()
-		if not t:
-			t = 0
-		t = t * 10 + value
-		t %= 10000000
-		self.numEdit.SetValue( t )
+		txt = self.numEdit.GetValue()
+		txt += str(value)
+		self.numEdit.SetValue( txt )
 		self.numEdit.SetInsertionPointEnd()
 		
 	def onDelPress( self, event ):
-		t = self.numEdit.GetValue()
-		if t is not None:
-			self.numEdit.SetValue( int(t//10) if t > 9 else None )
+		txt = self.numEdit.GetValue()
+		if txt is not None:
+			self.numEdit.SetValue( txt[:-1] )
 	
-	def getRiderNum( self ):
-		num = self.numEdit.GetValue()
-		if num is not None:
-			mask = Model.race.getCategoryMask() if Model.race else None
+	def getRiderNums( self ):
+		nums = []
+		txt = self.numEdit.GetValue()
+		mask = Model.race.getCategoryMask() if Model.race else None
+		for num in txt.split( ',' ):
+			if not num:
+				continue
 			if mask:	# Add common prefix numbers to the entry.
-				s = str(num)
+				s = num
 				dLen = len(mask) - len(s)
 				if dLen > 0:
 					sAdjust = mask[:dLen] + s
 					sAdjust = sAdjust.replace( '.', '0' )
-					num = int(sAdjust)
-		return num
+					num = sAdjust
+			nums.append( int(num) )
+		return nums
+	
+	def handleNumKeypress(self, event):
+		keycode = event.GetKeyCode()
+		if keycode < 255:
+			if keycode in validKeyCodes:
+				event.Skip()
+		else:
+			event.Skip()
 	
 	def onEnterPress( self, event = None ):
-		num = self.getRiderNum()
-		if num is not None:
+		nums = self.getRiderNums()
+		if nums:
 			mainWin = Utils.getMainWin()
 			if mainWin is not None:
-				mainWin.forecastHistory.logNum(num)
+				mainWin.forecastHistory.logNum(nums)
 			else:
 				self.refreshLaps()
-				self.numEdit.SetValue( None )
+				self.numEdit.SetValue( '' )
+	
+	def doAction( self, action ):
+		success = False
+		for num in getRiderNums():
+			if action(self, num ):
+				success = True
+		if success:
+			self.numEdit.SetValue( '' )
 	
 	def onDNFPress( self, event ):
-		if DoDNF( self, self.getRiderNum() ):
-			self.numEdit.SetValue( None )
+		self.doAction( DoDNF )
 	
 	def onPullPress( self, event ):
-		if DoPull( self, self.getRiderNum() ):
-			self.numEdit.SetValue( None )
+		self.doAction( DoPull )
 	
 	def onDQPress( self, event ):
-		if DoDQ( self, self.getRiderNum() ):
-			self.numEdit.SetValue( None )
+		self.doAction( DoDQ )
 	
 	def onDNSPress( self, event ):
-		if DoDNS(self, self.getRiderNum()):
-			self.numEdit.SetValue( None )
+		self.doAction( DoDNS )
 	
 	def resetLaps( self, enable = False ):
 		# Assumes Model is locked.
@@ -632,7 +649,7 @@ class NumKeypad( wx.Panel ):
 					b.Enable( enable )
 				self.isEnabled = enable
 			if not enable:
-				self.numEdit.SetValue( None )
+				self.numEdit.SetValue( '' )
 			
 			# Refresh the race start time.
 			changed = False

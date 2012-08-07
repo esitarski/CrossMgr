@@ -4,6 +4,7 @@ import JChip
 from JChipSetup import GetTagNums
 from Utils		import logCall
 from Undo		import undo
+from EditEntry	import TimeMsEdit
 import wx
 import wx.lib.intctrl
 import wx.lib.masked			as masked
@@ -14,7 +15,7 @@ import sys
 import os
 import datetime
 
-def DoJchipImport( fname, startTime = None, isTimeTrial = False ):
+def DoJchipImport( fname, startTime = None, clearExistingData = True, timeAdjustment = 0.0 ):
 	# If startTime is None, the first time will be taken as the start time.
 	# All first time's for each rider will then be ignored.
 	
@@ -33,7 +34,7 @@ def DoJchipImport( fname, startTime = None, isTimeTrial = False ):
 		
 		tFirst, tLast = None, None
 		lineNo = 0
-		riderLapTimes = {}
+		riderRaceTimes = {}
 		for line in f:
 			lineNo += 1
 			
@@ -49,7 +50,7 @@ def DoJchipImport( fname, startTime = None, isTimeTrial = False ):
 				continue
 			
 			try:
-				t = JChip.parseTime(tStr)
+				t = JChip.parseTime(tStr) + timeAdjustment
 			except (IndexError, ValueError):
 				errors.append( 'line %d: invalid time' % lineNo )
 				continue
@@ -64,7 +65,7 @@ def DoJchipImport( fname, startTime = None, isTimeTrial = False ):
 			tLast = t
 			try:
 				num = tagNums[tag]
-				riderLapTimes.setdefault( num, [] ).append( t )
+				riderRaceTimes.setdefault( num, [] ).append( t )
 			except KeyError:
 				if tag not in missingTagSet:
 					errors.append( 'line %d: tag %s missing from Excel sheet' % (lineNo, tag) )
@@ -73,47 +74,35 @@ def DoJchipImport( fname, startTime = None, isTimeTrial = False ):
 
 		#------------------------------------------------------------------------------
 		# Populate the race with the times.
-		if not riderLapTimes:
+		if not riderRaceTimes:
 			errors.insert( 0, 'No matching tags found in Excel link.  Import aborted.' )
 			return errors
 		
 		if not raceStart:
 			raceStart = tFirst
 			
-		if not isTimeTrial:
-			# Remove all the first times from the riders as we account for this in the race start.
-			for lapTimes in riderLapTimes.itervalues():
-				del lapTimes[0]
-					
 		race.startTime = raceStart
 		
 		# Put all the rider times into the race.
-		race.deleteAllRiderTimes()
-		if isTimeTrial:
-			for num, lapTimes in riderLapTimes.iteritems():
-				tItr = (t for t in lapTimes)
-				tFirst = tItr.next()
-				for t in tItr:
-					lapTime = (t - tFirst).total_seconds()
-					race.importTime( num, lapTime )
-		else:
-			for num, lapTimes in riderLapTimes.iteritems():
-				for t in lapTimes:
-					lapTime = (t - raceStart).total_seconds()
-					race.importTime( num, lapTime )
+		if clearExistingTimes:
+			race.clearRiderTimes()
+			
+		for num, lapTimes in riderRaceTimes.iteritems():
+			for t in lapTimes:
+				raceTime = (t - raceStart).total_seconds()
+				race.addTime( num, raceTime )
 			
 		if tLast:
 			race.finishTime = tLast
 			
 		# Figure out the race minutes from the recorded laps.
-		if riderLapTimes:
-			lapNumMax = max( len(ts) for ts in riderLapTimes.itervalues() )
+		if riderRaceTimes:
+			lapNumMax = max( len(ts) for ts in riderRaceTimes.itervalues() )
 			if lapNumMax > 0:
-				tElapsed = min( ts[-1] for ts in riderLapTimes.itervalues() if len(ts) == lapNumMax )
+				tElapsed = min( ts[-1] for ts in riderRaceTimes.itervalues() if len(ts) == lapNumMax )
 				raceMinutes = int((tElapsed - raceStart).total_seconds() / 60.0) + 1
 				race.minutes = raceMinutes
 		
-		race.setChanged()
 	return errors
 
 #------------------------------------------------------------------------------------------------
@@ -141,7 +130,7 @@ class JChipImportDialog( wx.Dialog ):
 		]
 		intro = '\n'.join(todoList)
 		
-		gs = wx.FlexGridSizer( rows=3, cols=3, vgap=5, hgap=5 )
+		gs = wx.FlexGridSizer( rows=5, cols=3, vgap=10, hgap=5 )
 		gs.Add( wx.StaticText(self, wx.ID_ANY, 'JChip Data File:'), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 		self.jchipDataFile = wx.TextCtrl( self, -1, '', size=(450,-1) )
 		defaultPath = Utils.getFileName()
@@ -160,13 +149,31 @@ class JChipImportDialog( wx.Dialog ):
 		self.dataType = wx.StaticText( self, wx.ID_ANY, "Data Is:" )
 		gs.Add( self.dataType, 1, wx.ALIGN_LEFT )
 		gs.AddSpacer(1)
+
+		gs.Add( wx.StaticText(self, wx.ID_ANY, 'Data Policy:' ), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+		self.importPolicy = wx.Choice( self, wx.ID_ANY, choices = [
+				'Clear All Existing Data Before Import',
+				'Merge New Data with Existing'
+			] )
+		self.importPolicy.SetSelection( 0 )
+		gs.Add( self.importPolicy, 1, wx.ALIGN_LEFT )
+		gs.AddSpacer(1)
         
+		gs.Add( wx.StaticText(self, wx.ID_ANY, 'Import Data Time Adjustment:' ), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+		self.timeAdjustment = TimeMsEdit( self )
+		self.plusMinus = wx.Choice( self, wx.ID_ANY, choices=['+ Plus', '- Minus'] )
+		self.plusMinus.SetSelection( 0 )
+		self.timeAdjustment.timeSizer.Prepend( self.plusMinus, flag=wx.ALIGN_BOTTOM|wx.BOTTOM, border=4 )
+		gs.Add( self.timeAdjustment.timeSizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT )
+		gs.AddSpacer(1)
+		
 		self.manualStartTime = wx.CheckBox(self, wx.ID_ANY, 'Race Start Time (if NOT first recorded time):' )
 		self.Bind( wx.EVT_CHECKBOX, self.onChangeManualStartTime, self.manualStartTime )
 		gs.Add( self.manualStartTime, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 		self.raceStartTime = masked.TimeCtrl( self, wx.ID_ANY, fmt24hr=True, value="10:00:00" )
 		self.raceStartTime.Enable( False )
 		gs.Add( self.raceStartTime, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.GROW)
+		gs.AddSpacer(1)
 		
 		with Model.LockRace() as race:
 			isTimeTrial = getattr(race, 'isTimeTrial', False) if race else False
@@ -244,16 +251,27 @@ class JChipImportDialog( wx.Dialog ):
 									title = 'Cannot Open File', iconMask = wx.ICON_ERROR)
 			return
 			
-		if self.manualStartTime.IsChecked():
-			startTime = datetime.time(*[int(x) for x in self.raceStartTime.GetValue().split(':')])
-		else:
-			startTime = None
+		clearExistingData = (self.importPolicy.GetSelection() == 0)
+		timeAdjustment = self.timeAdjustment.GetValue()
+		if self.plusMinus.GetSelection() == 1:
+			timeAdjustment *= -1
 		
-		with Model.LockRace() as race:
-			isTimeTrial = getattr(race, 'isTimeTrial', False) if race else False
+		# Get the start time.
+		if not clearExistingData:
+			if not Model.race or not Model.race.startTime:
+				Utils.MessageOK( self, 'Cannot Merge Import into unstarted race.\n\n"Clear All Existing Data" policy is allowed.',
+										title = 'Import Merge Failed', iconMask = wx.ICON_ERROR)
+				return
+			startTime = Model.race.startTime.time()
+		else:
+			if self.manualStartTime.IsChecked():
+				startTime = datetime.time(*[int(x) for x in self.raceStartTime.GetValue().split(':')])
+			else:
+				startTime = None
 			
+		
 		undo.pushState()
-		errors = DoJchipImport( fname, startTime, isTimeTrial )
+		errors = DoJchipImport( fname, startTime, clearExistingData, timeAdjustment )
 		
 		if errors:
 			# Copy the tags to the clipboard.

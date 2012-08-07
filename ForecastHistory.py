@@ -280,21 +280,25 @@ class ForecastHistory( wx.Panel ):
 				
 	#--------------------------------------------------------------------
 	
-	def logNum( self, num ):
-		if not num:
+	def logNum( self, nums ):
+		if nums is None:
 			return
+		if not isinstance(nums, (list, tuple)):
+			nums = [nums]
 		with Model.LockRace() as race:
 			if race is None or not race.isRunning():
 				return
 			t = race.curRaceTime()
-			num = int(num)
-			race.addTime( num, t )
+			for num in nums:
+				if num is None:
+					continue
+				race.addTime( int(num), t )
+				OutputStreamer.writeNumTime( num, t )
 		mainWin = Utils.getMainWin()
 		if mainWin:
-			mainWin.record.numEdit.SetValue( None )
+			mainWin.record.numEdit.SetValue( '' )
 			mainWin.record.refreshLaps()
 			mainWin.refresh()
-		OutputStreamer.writeNumTime( num, t )
 		if getattr(race, 'ftpUploadDuringRace', False):
 			realTimeFtpPublish.publishEntry()
 		

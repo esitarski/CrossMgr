@@ -946,9 +946,10 @@ class Race(object):
 		self.setChanged()
 		return True
 	
-	def deleteAllRiderTimes( self ):
+	def clearRiderTimes( self ):
 		for num in self.riders.iterkeys():
 			self.deleteRiderTimes( num )
+		self.firstRecordedTime = None
 		self.setChanged()
 
 	def deleteTime( self, num, t ):
