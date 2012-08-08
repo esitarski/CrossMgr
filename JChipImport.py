@@ -84,7 +84,7 @@ def DoJchipImport( fname, startTime = None, clearExistingData = True, timeAdjust
 		race.startTime = raceStart
 		
 		# Put all the rider times into the race.
-		if clearExistingTimes:
+		if clearExistingData:
 			race.clearRiderTimes()
 			
 		for num, lapTimes in riderRaceTimes.iteritems():
@@ -280,7 +280,9 @@ class JChipImportDialog( wx.Dialog ):
 			
 		
 		undo.pushState()
-		errors = DoJchipImport( fname, startTime, clearExistingData, timeAdjustment )
+		errors = DoJchipImport(	fname, startTime,
+								clearExistingData,
+								datetime.timedelta(seconds = timeAdjustment) )
 		
 		if errors:
 			# Copy the tags to the clipboard.
