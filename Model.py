@@ -1419,6 +1419,17 @@ class Race(object):
 			return True
 		return any( self.isRiderInCategory(num, catName) for num in self.riders.iterkeys() )
 
+	def hasTime( self, num, t ):
+		try:
+			rider = self.riders[num]
+			if getattr(self, 'isTimeTrial', False):
+				if getattr(rider, 'firstTime', None) is None:
+					return False
+				t -= rider.firstTime
+			return rider.times[bisect.bisect_left(rider.times, t)] == t
+		except (KeyError, IndexError):
+			return False
+	
 	def getCategoryName( self, num ):
 		c = self.getCategory( num )
 		return c.name if c else ''

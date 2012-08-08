@@ -90,7 +90,8 @@ def DoJchipImport( fname, startTime = None, clearExistingData = True, timeAdjust
 		for num, lapTimes in riderRaceTimes.iteritems():
 			for t in lapTimes:
 				raceTime = (t - raceStart).total_seconds()
-				race.addTime( num, raceTime )
+				if not race.hasTime(num, raceTime):
+					race.addTime( num, raceTime )
 			
 		if tLast:
 			race.finishTime = tLast
