@@ -102,6 +102,11 @@ For example, say you started a time trial manually in one location and want to i
 
 To import the times accurately relative to the earlier manually entered times, you would enter a "Behind 00:00:04.2" seconds adjustment.
 
+If you have access to the JChip receiver and its time has not been adjusted, you can set this field automatically.
+To do so, open the "Menu/JChip Setup..." dialog and run a JChip test including connecting to the JChip receiver.  After the connection has been established, close the "JChip Setup..." dialog.  Return to the JChip Import.
+
+You will see the time correction automatically filled in based on the last JChip connection.
+
 ### Race Start Time (if NOT first recorded time)
 
 If you are importing into a new race, this option gives you the ability to start the race at the time specified, then import the timing data contained in the file.

@@ -161,9 +161,18 @@ class JChipImportDialog( wx.Dialog ):
         
 		gs.Add( wx.StaticText(self, wx.ID_ANY, 'Import Data Time Adjustment:' ), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 		self.timeAdjustment = TimeMsEdit( self )
-		self.plusMinus = wx.Choice( self, wx.ID_ANY, choices=['+ Plus', '- Minus'] )
-		self.plusMinus.SetSelection( 0 )
-		self.timeAdjustment.timeSizer.Prepend( self.plusMinus, flag=wx.ALIGN_BOTTOM|wx.BOTTOM, border=4 )
+		self.behindAhead = wx.Choice( self, wx.ID_ANY, choices=['Behind', 'Ahead'] )
+		if JChip.readerComputerTimeDiff:
+			rtAdjust = JChip.readerComputerTimeDiff.total_seconds()
+			if rtAdjust >= 0.0:
+				self.behindAhead.SetSelection( 0 )
+			else:
+				self.behindAhead.SetSelection( 1 )
+				rtAdjust *= -1.0
+			self.timeAdjustment.SetValue( rtAdjust )
+		else:
+			self.behindAhead.SetSelection( 0 )
+		self.timeAdjustment.timeSizer.Prepend( self.behindAhead, flag=wx.ALIGN_BOTTOM|wx.BOTTOM, border=4 )
 		gs.Add( self.timeAdjustment.timeSizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT )
 		gs.AddSpacer(1)
 		
@@ -253,13 +262,13 @@ class JChipImportDialog( wx.Dialog ):
 			
 		clearExistingData = (self.importPolicy.GetSelection() == 0)
 		timeAdjustment = self.timeAdjustment.GetValue()
-		if self.plusMinus.GetSelection() == 1:
+		if self.behindAhead.GetSelection() == 1:
 			timeAdjustment *= -1
 		
 		# Get the start time.
 		if not clearExistingData:
 			if not Model.race or not Model.race.startTime:
-				Utils.MessageOK( self, 'Cannot Merge Import into unstarted race.\n\n"Clear All Existing Data" policy is allowed.',
+				Utils.MessageOK( self, 'Cannot Merge into Unstarted Race.\n\n"Clear All Existing Data" is allowed.',
 										title = 'Import Merge Failed', iconMask = wx.ICON_ERROR)
 				return
 			startTime = Model.race.startTime.time()

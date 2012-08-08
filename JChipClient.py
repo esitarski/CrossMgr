@@ -129,7 +129,7 @@ while 1:
 
 	#------------------------------------------------------------------------------	
 	dBase = datetime.datetime.now()
-	dBase -= datetime.timedelta( seconds = 60*60 )	# Send the time one hour off for testing purposes.
+	dBase -= datetime.timedelta( seconds = 13*60+13.13 )	# Send the time for testing purposes.
 
 	#------------------------------------------------------------------------------	
 	print 'Send gettime data...'

@@ -89,11 +89,14 @@ def parseTime( tStr ):
 	
 	return t + tSmall * tSameCount if tSameCount > 0 else t
 
+readerComputerTimeDiff = None
 def Server( q, HOST, PORT, startTime ):
+	global readerComputerTimeDiff
+	readerComputerTimeDiff = None
+	
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	s.bind((HOST, PORT))
 	
-	readerComputerTimeDiff = None
 	while 1:
 		s.listen(1)
 		conn, addr = s.accept()
@@ -140,9 +143,15 @@ def Server( q, HOST, PORT, startTime ):
 					readerComputerTimeDiff = tNow - tJChip
 					
 					q.put( ('getTime', '%s=%02d:%02d:%02d.%02d' % (line[2:].strip(), hh,mm,ss,hs)) )
+					rtAdjust = readerComputerTimeDiff.total_seconds()
+					if rtAdjust > 0:
+						behindAhead = 'Behind'
+					else:
+						behindAhead = 'Ahead'
+						rtAdjust *= -1
 					q.put( ('timeAdjustment', 
-							'JChip time will be adjusted by %s to match computer' %
-								Utils.formatTime(readerComputerTimeDiff.total_seconds(), True)) )
+							"JChip receiver's clock is: %s %s (relative to computer)" %
+								(behindAhead, Utils.formatTime(rtAdjust, True))) )
 					
 					# Send command to start sending data.
 					cmd = 'S0000'
