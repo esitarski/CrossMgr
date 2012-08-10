@@ -4,6 +4,7 @@ import os
 import xlwt
 import Utils
 import Model
+import math
 from GetResults import GetResults, GetCategoryDetails
 from ReadSignOnSheet import Fields, IgnoreFields
 from FitSheetWrapper import FitSheetWrapper
@@ -218,10 +219,7 @@ class ExportGrid( object ):
 		
 		self.data[col][row] = value
 	
-	def setResultsOneListRiderTimes( self, catName = 'All', getExternalData = True ):
-		self.setResultsOneList( catName, getExternalData )
-
-	def setResultsOneList( self, catName = 'All', getExternalData = True ):
+	def setResultsOneList( self, catName = 'All', getExternalData = True, showLapsFrequency = None ):
 		''' Format the results into columns. '''
 		self.data = []
 		self.colnames = []
@@ -234,6 +232,17 @@ class ExportGrid( object ):
 		
 		leader = results[0]
 		hasSpeeds = bool( getattr(leader, 'lapSpeeds', None) or getattr(leader, 'raceSpeeds', None) )
+		
+		if showLapsFrequency is None:
+			# Compute a reasonable number of laps to show (max around 12).
+			# Get the maximum laps in the data.
+			maxLaps = 0
+			for r in results:
+				try:
+					maxLaps = max(maxLaps, len(r.lapTimes))
+				except:
+					pass
+			showLapsFrequency = max( 1, int(math.ceil(maxLaps / 12)) )
 		
 		with Model.LockRace() as race:
 			catStr = catName
@@ -252,6 +261,7 @@ class ExportGrid( object ):
 		
 			self.title = '\n'.join( [race.name, Utils.formatDate(race.date), catStr] )
 			category = race.categories.get( catName, None )
+			isTimeTrial = getattr( race, 'isTimeTrial', False )
 
 		startOffset = category.getStartOffsetSecs() if category else 0.0
 		
@@ -259,17 +269,19 @@ class ExportGrid( object ):
 		infoFieldsPresent = set( infoFields ) & set( dir(leader) )
 		infoFields = [f for f in infoFields if f in infoFieldsPresent]
 		
-		self.colnames = ['Pos', 'Bib'] + infoFields + ['Time', 'Gap']
+		self.colnames = ['Pos', 'Bib'] + infoFields + (['Start','Finish'] if isTimeTrial else []) + ['Time', 'Gap']
 		if hasSpeeds:
 			self.colnames += ['Speed']
 		self.colnames = [name[:-4] + ' Name' if name.endswith('Name') else name for name in self.colnames]
 		self.iLapTimes = len(self.colnames)
+		lapsMax = len(leader.lapTimes) if leader.lapTimes else 0
 		if leader.lapTimes:
-			self.colnames.extend( ['Lap %d' % lap for lap in xrange(1, len(leader.lapTimes)+1)] )
+			self.colnames.extend( ['Lap %d' % lap for lap in xrange(1, lapsMax+1) \
+					if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax] )
 		
 		highPrecision = Utils.highPrecisionTimes()
 		data = [ [] for i in xrange(len(self.colnames)) ]
-		rrFields = ['pos', 'num'] + infoFields + ['lastTime', 'gap']
+		rrFields = ['pos', 'num'] + infoFields + (['startTime','finishTime'] if isTimeTrial else []) + ['lastTime', 'gap']
 		if hasSpeeds:
 			rrFields += ['speed']
 		for col, f in enumerate( rrFields ):
@@ -279,17 +291,30 @@ class ExportGrid( object ):
 					if lastTime <= 0.0:
 						data[col].append( '' )
 					else:
-						lastTime = max( 0.0, lastTime - startOffset )
+						if not isTimeTrial:
+							lastTime = max( 0.0, lastTime - startOffset )
 						data[col].append( Utils.formatTimeCompressed(lastTime, highPrecision) )
+				elif f in ['startTime', 'finishTime']:
+					sfTime = getattr( r, f, None )
+					if sfTime is not None:
+						data[col].append( Utils.formatTimeCompressed(sfTime, highPrecision) )
+					else:
+						data[col].append( '' )
 				else:
 					data[col].append( getattr(r, f, '') )
 		
-		lapsMax = len(leader.lapTimes)
 		for row, r in enumerate(results):
+			iCol = self.iLapTimes
 			for i, t in enumerate(r.lapTimes):
-				data[self.iLapTimes+i].append( Utils.formatTimeCompressed(t, highPrecision) )
+				lap = i + 1
+				if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax:
+					data[iCol].append( Utils.formatTimeCompressed(t, highPrecision) )
+					iCol += 1
 			for i in xrange(len(r.lapTimes), lapsMax):
-				data[self.iLapTimes+i].append( '' )
+				lap = i + 1
+				if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax:
+					data[iCol].append( '' )
+					iCol += 1
 		
 		self.data = data
 		self.infoColumns     = set( xrange(2, 2+len(infoFields)) ) if infoFields else set()

@@ -13,13 +13,13 @@ When a rider's chip is read, the chip receiver sends a timestamped message to Cr
 
 CrossMgr always uses the chip reader's time.  This ensures accuracy even if CrossMgr gets busy and cannot look at its incoming messages for a few seconds.
 
-CrossMgr works with a single JChip receiver - multiple readers around the course are not supported.
+CrossMgr works with a single JChip receiver - multiple readers at other locations are not supported.
 
-Notes about the JChip reader.
+Notes about the JChip reader:
 
 1. All reads before the start of the race are ignored.
 1. Reads after the start of the race, but before the Start Offset of a category will be registered, but ignored in the results.
-1. A race can be started by the first tag read.  See [Actions][Actions.html].
+1. A race can be started by the first tag read.  See [Actions][Actions.html] for more details.
 
 ## JChip Setup
 Open the JChip Setup Dialog.
@@ -103,9 +103,10 @@ For example, say you started a time trial manually in one location and want to i
 To import the times accurately relative to the earlier manually entered times, you would enter a "Behind 00:00:04.2" seconds adjustment.
 
 If you have access to the JChip receiver and its time has not been adjusted, you can set this field automatically.
-To do so, open the "Menu/JChip Setup..." dialog and run a JChip test including connecting to the JChip receiver.  After the connection has been established, close the "JChip Setup..." dialog.  Return to the JChip Import.
 
-You will see the time correction automatically filled in based on the last JChip connection.
+To do so, open the "Menu/JChip Setup..." dialog and run a JChip test including connecting to the JChip receiver.  After the connection has been established, close the "JChip Setup..." dialog.  Althogh the dialog is closed, the time adjustment has been determined from JChip.
+
+Now, return to the JChip Import.  You will see the time correction automatically filled in based on the last JChip connection.
 
 ### Race Start Time (if NOT first recorded time)
 

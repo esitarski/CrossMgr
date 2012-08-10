@@ -14,15 +14,17 @@ The screen is roughly divided into four parts:
 
 ## Number Entry
 
-This consists of an edit area with a numeric keypad underneath it.
-Of course, you can enter data through the regular keyboard or a keypad.  Pressing the "Enter" key does exactly the same thing as pressing the Enter button.  Using a keyboard/keypad is the fastest and most accurate way to enter data.
+This consists of an edit area.
 
-The numeric keypad display is designed for use with touch screens or tablets.
-Experience has shown that this is a slower and less accurate method.  Additionally, touch screens tend not to work well in cold weather.  Use a keyboard or keypad whenever possible.
+You can enter data through the regular keyboard or an external numeric keypad.  If you have a touchscreen, you can also enter data by pressing the on-screen buttons.
+
+Experience has shown that using a touch-screen is a slower and less accurate method.  Additionally, touch screens tend not to work well in cold weather.  Use a keyboard or external keypad whenever possible.
 
 Enter automatically enters the number and gives it a time.  The most accurate way to enter numbers is to type in the number when you hear the number caller, then press Enter just when the rider crosses the line.
 
-Of course, after the first lap of a race you will likely be able to click on the numbers in the [Expected](MainScreen.html#expected) window rather than having to type it in again.
+You can also enter multiple numbers separated by commas on the same line.  When you press enter, all these numbers be entered with exactly the same time.  This is useful for starting a team in a team time trial all with the same time. 
+
+After the first lap of a race you can click on a number in the [Expected](MainScreen.html#expected) window to enter it, rather than typing it in again.
 
 There are a number of additional buttons:
 

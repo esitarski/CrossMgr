@@ -799,7 +799,7 @@ class MainWin( wx.Frame ):
 			sheetName = sheetName[:31]
 			sheetCur = wb.add_sheet( sheetName )
 			export = ExportGrid()
-			export.setResultsOneListRiderTimes( catName )
+			export.setResultsOneList( catName, showLapsFrequency = 1 )
 			export.toExcelSheet( sheetCur )
 
 		try:
@@ -830,12 +830,14 @@ class MainWin( wx.Frame ):
 			html = replaceJsonVar( html, 'finishTop',			getattr(race, 'finishTop', False) )
 			html = replaceJsonVar( html, 'raceIsRunning',		race.isRunning() )
 			tLastRaceTime = race.lastRaceTime()
+			isTimeTrial = getattr( race, 'isTimeTrial', False )
 		
 		tNow = datetime.datetime.now()
 		html = replaceJsonVar( html, 'timestamp', [tNow.ctime(), tLastRaceTime] )
 		html = replaceJsonVar( html, 'email',		self.config.Read('email', '') )
 		html = replaceJsonVar( html, 'data',		GetAnimationData(getExternalData = True) )
 		html = replaceJsonVar( html, 'catDetails',	GetCategoryDetails() )
+		html = replaceJsonVar( html, 'isTimeTrial',	isTimeTrial )
 
 		graphicBase64 = self.getGraphicBase64()
 		if graphicBase64:

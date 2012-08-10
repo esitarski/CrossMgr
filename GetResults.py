@@ -130,10 +130,11 @@ def GetResultsCore( catName = 'All' ):
 								interp )
 			
 			if isTimeTrial:
-				rr.startTime = getattr( rider, 'startTime', None )
+				rr.startTime = getattr( rider, 'firstTime', None )
 				if rr.status == Model.Rider.Finisher:
 					try:
-						rr.finishTime = rr.startTime + rr.lastTime
+						if rr.lastTime > 0:
+							rr.finishTime = rr.startTime + rr.lastTime
 					except (TypeError, AttributeError):
 						pass
 			
@@ -182,7 +183,7 @@ def GetResultsCore( catName = 'All' ):
 				if rr.lastTime > leader.lastTime:
 					lapsDown = leader.laps - rr.laps
 					rr.gap = '%d %s' % (lapsDown, 'laps' if lapsDown > 1 else 'lap')
-			elif rr != leader:
+			elif rr != leader and not (isTimeTrial and rr.lastTime == leader.lastTime):
 				rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
 		
 	# Return the final results.

@@ -6,3 +6,14 @@
 Jumps to a screen.
 
 It is also possible to jump to a screen using the Function keys.  The function key required to jump to a screen corresponds to the number next to the screen.  For example, F3 jumps to Results.  F7 jumps to Animation, etc.
+
+1. [Actions](Actions.html)
+1. [Record](Record.html)
+1. [Results](Results.html)
+1. [History](History.html)
+1. [RiderDetail](RiderDetail.html)
+1. [Chart](Chart.html)
+1. [Animation](Animation.html)
+1. [Recommendations](Recommendations.html)
+1. [Categories](Categories.html)
+1. [Properties](Properties.html)

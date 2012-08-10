@@ -212,12 +212,18 @@ class Results( wx.Panel ):
 		
 	def doLabelClick( self, event ):
 		col = event.GetCol()
-		label = self.lapGrid.GetColLabelValue(col)
 		with Model.LockRace() as race:
-			if event.GetEventObject() != self.lapGrid or label.startswith( '<' ) or not label.startswith('Lap'):
-				setattr( race, 'sortLap', None )
+			race.sortLap = None
+			race.sortLabel = None
+			if event.GetEventObject() == self.lapGrid:
+				label = self.lapGrid.GetColLabelValue( col )
+				if label.startswith( 'Lap' ):
+					race.sortLap = int(label.split()[1])
 			else:
-				setattr( race, 'sortLap', int(label.split()[1]) )
+				label = self.labelGrid.GetColLabelValue( col )
+				if label[:1] != '<':
+					race.sortLabel = label
+		
 		wx.CallAfter( self.refresh )
 		
 	def doRightClick( self, event ):
@@ -364,13 +370,21 @@ class Results( wx.Panel ):
 					backgroundColourLabel[ (r,c) ] = self.blackColour if (r,c) not in self.rcInterp and (r,c) not in self.rcNumTime else self.greyColour
 				break
 		
-		try:
-			c = (i for i in xrange(self.lapGrid.GetNumberCols()) if self.lapGrid.GetColLabelValue(i).startswith('<')).next()
-			for r in xrange(self.lapGrid.GetNumberRows()):
-				textColourLap[ (r,c) ] = self.whiteColour
-				backgroundColourLap[ (r,c) ] = self.blackColour if (r,c) not in self.rcInterp and (r,c) not in self.rcNumTime else self.greyColour
-		except StopIteration:
-			pass
+		# Highlight the sorted columns.
+		for c in xrange(self.lapGrid.GetNumberCols()):
+			if self.lapGrid.GetColLabelValue(c).startswith('<'):
+				for r in xrange(self.lapGrid.GetNumberRows()):
+					textColourLap[ (r,c) ] = self.whiteColour
+					backgroundColourLap[ (r,c) ] = self.blackColour \
+						if (r,c) not in self.rcInterp and (r,c) not in self.rcNumTime else self.greyColour
+				break
+			
+		for c in xrange(self.labelGrid.GetNumberCols()):
+			if self.labelGrid.GetColLabelValue(c).startswith('<'):
+				for r in xrange(self.labelGrid.GetNumberRows()):
+					textColourLabel[ (r,c) ] = self.whiteColour
+					backgroundColourLabel[ (r,c) ] = self.blackColour
+				break
 
 		self.labelGrid.Set( textColour = textColourLabel, backgroundColour = backgroundColourLabel )
 		self.labelGrid.Reset()
@@ -459,12 +473,13 @@ class Results( wx.Panel ):
 					si.GetWindow().Refresh()
 			self.category = race.categories.get( catName, None )
 			sortLap = getattr( race, 'sortLap', None )
+			sortLabel = getattr( race, 'sortLabel', None )
 		
 		labelLastX, labelLastY = self.labelGrid.GetViewStart()
 		lapLastX, lapLastY = self.lapGrid.GetViewStart()
 		
 		exportGrid = ExportGrid()
-		exportGrid.setResultsOneList( catName, self.showRiderData )
+		exportGrid.setResultsOneList( catName, self.showRiderData, showLapsFrequency = 1 )
 
 		if not exportGrid.colnames:
 			self.clearGrid()
@@ -488,10 +503,20 @@ class Results( wx.Panel ):
 		
 		sortCol = None
 		if sortLap:
+			race.sortLabel = sortLabel = None
 			for i, name in enumerate(colnames):
 				if name.startswith('Lap') and int(name.split()[1]) == sortLap:
 					sortCol = i
 					break
+		elif sortLabel:
+			race.sortLap = sortLap = None
+			for i, name in enumerate(colnames):
+				if name == sortLabel:
+					if name not in ['Bib', 'Pos', 'Gap', 'Time', 'mph', 'km/h']:
+						sortCol = i
+					break
+		if sortCol is None:
+			race.sortLabel = race.sortLap = sortLabel = sortLap = None
 		
 		results = GetResults( catName )
 		hasSpeeds = False
@@ -563,29 +588,42 @@ class Results( wx.Panel ):
 		# Sort by the given lap, if there is one.
 		# Also, add a position for the lap itself.
 		if sortCol is not None:
-			if self.selectDisplay in [Results.DisplayLapTimes, Results.DisplayRaceTimes]:
-				getFunc = Utils.StrToSeconds
+			maxVal = 1000.0*24.0*60.0*60.0
+			if sortLap:
+				if self.selectDisplay in [Results.DisplayLapTimes, Results.DisplayRaceTimes]:
+					getFunc = Utils.StrToSeconds
+				else:
+					getFunc = lambda x: -float(x)
 			else:
-				getFunc = lambda x: -float(x)
+				if colnames[sortCol] in ['Start', 'Finish', 'Time']:
+					getFunc = Utils.StrToSeconds
+				elif colnames[sortCol] in ['mph', 'km']:
+					getFunc = lambda x: -float(x)
+				elif colnames[sortCol] in ['Pos', 'Bib']:
+					getFunc = lambda x: int(x) if x and x.isdigit() else maxVal
+				else:
+					getFunc = lambda x: str(x)
+					maxVal = '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 			sortPairs = []
 			for r, result in enumerate(results):
 				try:
-					t = getFunc(data[sortCol][r]) + r/1000000.0
+					k = (getFunc(data[sortCol][r]), r)
 				except:
-					t = 1000.0*60.0*60.0 + r
-				sortPairs.append( (t, r) )
+					k = (maxVal, r)
+				sortPairs.append( (k, r) )
 			sortPairs.sort()
 			
 			for c in xrange(len(data)):
 				col = data[c]
-				data[c] = [col[i] if i < len(col) else '' for t, i in sortPairs]
-				
-			for r in xrange(len(data[sortLap])):
-				if data[sortCol][r]:
-					data[sortCol][r] += ' [%d: %s]' % (r+1, data[1][r])
+				data[c] = [col[i] if i < len(col) else '' for k, i in sortPairs]
+			
+			if colnames[sortCol] != 'Bib':
+				for r in xrange(len(data[sortCol])):
+					if data[sortCol][r]:
+						data[sortCol][r] += ' [%d: %s]' % (r+1, data[1][r])
 		
 		# Highlight the sorted column.
-		if sortLap is not None:
+		if sortLap:
 			colnames = []
 			for name in exportGrid.colnames:
 				try:
@@ -595,11 +633,17 @@ class Results( wx.Panel ):
 				except:
 					pass
 				colnames.append( name )
+		elif sortLabel:
+			colnames = []
+			for name in exportGrid.colnames:
+				if name == sortLabel:
+					name = '<%s>' % name
+				colnames.append( name )
 		else:
 			colnames = exportGrid.colnames
 		
 		try:
-			iLabelMax = (i for i, name in enumerate(colnames) if name.startswith('Lap') or name.startswith('<')).next()
+			iLabelMax = (i for i, name in enumerate(colnames) if name.startswith('Lap') or name.startswith('<Lap')).next()
 		except StopIteration:
 			iLabelMax = len(colnames)
 		colnamesLabels = colnames[:iLabelMax]

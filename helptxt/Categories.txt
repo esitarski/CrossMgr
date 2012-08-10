@@ -54,4 +54,4 @@ To find the category of a rider, CrossMgr starts with the first category and che
 
 Well, sometimes different categories have a different lap distance, especially in a time trial.  To provide for this flexibility, CrossMgr requires the lap distance at the Category level, not the race level.
 
-Yes, it's a little extra trouble, but with cut-and-paste (Ctrl-C, Ctrl-V), it isn't so bad.  It is great to have this flexibility when you need it.
+Yes, it's a little extra trouble, but with copy-and-paste (Ctrl-C, Ctrl-V), it isn't so bad.  It is great to have this flexibility when you need it.
