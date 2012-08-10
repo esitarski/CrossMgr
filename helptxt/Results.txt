@@ -64,7 +64,7 @@ Remember, Ctrl-Z is undo!
 ## Sort by Field
 Clicking on any Field header column other than 'Bib', 'Pos', 'Gap', 'Time' or speed will sort by that column.  This allows you to sort by name, team, license, etc. as well as Start and Finish if running in time trial mode.
 
-In time trial mode, it is critical to sort by 'Start' and 'Finish'.  This allows you to easily check manual results, especially by 'Finish', as this should match the finish order of a manual timer.
+In time trial mode, it is critical to be able to sort by 'Start' and 'Finish'.  This allows you to easily check manual results, especially by 'Finish', as this should match the finish order of a manual timer.
 
 ## Sort by Lap
 Clicking on the Lap header column will sort the display by that lap, not the finish order.  Lap sort works with the data currently being displayed.  For example, if you are showing Lap Times, the shortest lap time will be sorted to the top.

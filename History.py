@@ -442,6 +442,22 @@ class History( wx.Panel ):
 				info = race.excelLink.read()
 			except:
 				info = {}
+				
+			def getName( num ):
+				try:
+					d = info[num]
+				except KeyError:
+					return ''
+				try:
+					lastName = d['LastName']
+				except KeyError:
+					return d.get('FirstName', '')
+				try:
+					firstName = d['FirstName']
+				except KeyError:
+					return lastName
+				return '{}, {}'.format(lastName, firstName)
+				
 			data = []
 			for col, h in enumerate(self.history):
 				data.append( [ template.safe_substitute(
@@ -450,7 +466,7 @@ class History( wx.Panel ):
 						'raceTime':	formatTime(e.t) if self.showTimes else '',
 						'lapTime':	formatTime(e.t - numTimes[(e.num,e.lap-1)]) if self.showLapTimes and (e.num,e.lap-1) in numTimes else '',
 						'downTime':	formatTimeDiff(e.t, leaderTimes[col]) if self.showTimeDown and col < len(leaderTimes) else '',
-						'riderName': info.get(e.num, {}).get('LastName', '') if self.showRiderName else '',
+						'riderName': getName(e.num) if self.showRiderName else '',
 					} ) for e in h] )
 				self.rcInterp.update( (row, col) for row, e in enumerate(h) if e.interp )
 				self.rcNumTime.update( (row, col) for row, e in enumerate(h) if numTimeInfo.getInfo(e.num, e.t) is not None )

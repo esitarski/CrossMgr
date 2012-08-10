@@ -56,18 +56,22 @@ class Results( wx.Panel ):
 		self.showLapTimesRadio = wx.RadioButton( self, wx.ID_ANY, 'Lap Times', style=wx.BU_EXACTFIT|wx.RB_GROUP )
 		self.showLapTimesRadio.SetValue( self.selectDisplay == Results.DisplayLapTimes )
 		self.Bind( wx.EVT_RADIOBUTTON, self.onSelectDisplayOption, self.showLapTimesRadio )
+		self.showLapTimesRadio.SetToolTip(wx.ToolTip('Useful for finding the fastest lap.'))
 		
 		self.showRaceTimesRadio = wx.RadioButton( self, wx.ID_ANY, 'Race Times', style=wx.BU_EXACTFIT )
 		self.showRaceTimesRadio.SetValue( self.selectDisplay == Results.DisplayRaceTimes )
 		self.Bind( wx.EVT_RADIOBUTTON, self.onSelectDisplayOption, self.showRaceTimesRadio )
+		self.showRaceTimesRadio.SetToolTip(wx.ToolTip('Useful for finding for Prime winners.\nAfter selecting, click on a lap header to sort.'))
 		
 		self.showLapSpeedsRadio = wx.RadioButton( self, wx.ID_ANY, 'Lap Speeds', style=wx.BU_EXACTFIT )
 		self.showLapSpeedsRadio.SetValue( self.selectDisplay == Results.DisplayLapSpeeds )
 		self.Bind( wx.EVT_RADIOBUTTON, self.onSelectDisplayOption, self.showLapSpeedsRadio )
+		self.showLapSpeedsRadio.SetToolTip(wx.ToolTip('Useful for finding the fastest lap.'))
 		
 		self.showRaceSpeedsRadio = wx.RadioButton( self, wx.ID_ANY, 'Race Speeds', style=wx.BU_EXACTFIT )
 		self.showRaceSpeedsRadio.SetValue( self.selectDisplay == Results.DisplayRaceSpeeds )
 		self.Bind( wx.EVT_RADIOBUTTON, self.onSelectDisplayOption, self.showRaceSpeedsRadio )
+		self.showRaceSpeedsRadio.SetToolTip(wx.ToolTip("Useful to predict how long a race will take based on rider's average speed."))
 		
 		f = self.showLapTimesRadio.GetFont()
 		self.boldFont = wx.Font( f.GetPointSize()+2, f.GetFamily(), f.GetStyle(),
@@ -510,11 +514,11 @@ class Results( wx.Panel ):
 					break
 		elif sortLabel:
 			race.sortLap = sortLap = None
-			for i, name in enumerate(colnames):
-				if name == sortLabel:
-					if name not in ['Bib', 'Pos', 'Gap', 'Time', 'mph', 'km/h']:
+			if sortLabel not in ['Bib', 'Pos', 'Gap', 'Time', 'mph', 'km/h']:
+				for i, name in enumerate(colnames):
+					if name == sortLabel:
 						sortCol = i
-					break
+						break
 		if sortCol is None:
 			race.sortLabel = race.sortLap = sortLabel = sortLap = None
 		

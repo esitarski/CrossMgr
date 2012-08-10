@@ -6,6 +6,7 @@ import Model
 import Utils
 import JChip
 import OutputStreamer
+from FtpWriteFile import realTimeFtpPublish
 from Undo import undo
 
 import wx.lib.masked as masked
@@ -227,6 +228,8 @@ class Actions( wx.Panel ):
 		
 		OutputStreamer.writeRaceFinish()
 		OutputStreamer.StopStreamer()
+		if getattr(Model.race, 'ftpUploadDuringRace', False):
+			realTimeFtpPublish.publishEntry( True )
 	
 	def refresh( self ):
 		self.button.Enable( False )

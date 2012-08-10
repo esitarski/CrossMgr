@@ -23,13 +23,13 @@ def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30,
 	ftp.quit()
 
 class RealTimeFtpPublish( object ):
-	waitSecMin = 4
-	waitSecMax = 32
+	latencyTimeMin = 4
+	latencyTimeMax = 32
 
 	def __init__( self ):
 		self.timer = None
-		self.waitSec = RealTimeFtpPublish.waitSecMin
-		self.tLastUpdate = datetime.datetime.now() - datetime.timedelta( seconds = 24*60*60 )
+		self.latencyTime = RealTimeFtpPublish.latencyTimeMin
+		self.lastUpdateTime = datetime.datetime.now() - datetime.timedelta( seconds = 24*60*60 )
 
 	def publish( self ):
 		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
@@ -43,7 +43,7 @@ class RealTimeFtpPublish( object ):
 		html = Utils.mainWin.addResultsToHtmlStr( html )
 
 		with Model.LockRace() as race:
-			if not race or not race.isRunning() or not Utils.getFileName():
+			if not race or not Utils.getFileName():
 				self.timer = None
 				return
 			host		= getattr( race, 'ftpHost', '' )
@@ -60,46 +60,46 @@ class RealTimeFtpPublish( object ):
 							serverPath	= serverPath,
 							fname		= fname,
 							file		= file )
-			self.tLastUpdate = datetime.datetime.now()
+			self.lastUpdateTime = datetime.datetime.now()
 		except Exception, e:
 			Utils.writeLog( 'RealTimeFtpPublish: %s' % str(e) )
 			
 		self.timer = None
 
-	def publishEntry( self ):
+	def publishEntry( self, publishNow = False ):
 		'''
-		This function attempts to publish race results in a timely manner without wasting bandwidth.
+		This function attempts to publish race results with low latency but without wasting bandwidth.
 		It was inspired by TCP/IP and double-exponential backoff.
 		
 		When we get a new entry, we schedule an update in the future to give time for more entries to accumulate.
 		The longer we wait, the more likely that more entries are going to arrive.
-		However, the more latency there will be to publish the new information.
+		However, the out of date the new information will be.
 		
 		The logic below attempts to balance bandwidth and latency.
-		The procedure is based on waitSec, the current seconds to wait before publishing an update, and
-		tLastUpdate, the last time an update was made.
+		The procedure is based on latencyTime, the current time to wait before publishing an update,
+		and lastUpdateTime, the last time an update was made.
 		
-		If the time of the last update is less than the last waitSec, we double waitSec.
-		If the time of the last update exceeds the last waitSec, we reset waitSec to waitSecMin.
+		If the time of the last update is less than the last latencyTime, we double latencyTime.
+		If the time of the last update exceeds the last latencyTime, we reset latencyTime to latencyTimeMin.
 		
 		The behavior we expect to see is that when the first riders cross the line on a lap, an update will be triggered
 		4 seconds in the future.  Any lead riders arriving in those 4 seconds will be included in the update.
 		
 		If the entire pack goes by, we are done.
-		If stragglers arrive within 4 seconds, the wait time doubles to a maximum to 8 to get more stragglers.
-		In this way, the publish takes longer and longer to update the stragglers, giving them more time to arrive.
+		If stragglers arrive within 4 seconds, the latency time doubles to a maximum to 8 to get more stragglers.
+		In this way, the latency increases longer and longer to get the stragglers, giving them more time to arrive.
 		'''
 		if self.timer:
 			return
 
-		# If this publish request is less than waitSec, double waitSec for the next publish waiting interval.
-		# If this publish request exceeds waitSec, reset waitSec to waitSecMin.
-		if (datetime.datetime.now() - self.tLastUpdate).total_seconds() < self.waitSec:
-			self.waitSec = min( RealTimeFtpPublish.waitSecMax, self.waitSec * 2 )
+		# If this publish request is less than latencyTime, double latencyTime for the next publish waiting interval.
+		# If this publish request exceeds latencyTime, reset latencyTime to latencyTimeMin.
+		if (datetime.datetime.now() - self.lastUpdateTime).total_seconds() < self.latencyTime:
+			self.latencyTime = min( self.latencyTimeMax, self.latencyTime * 2 )
 		else:
-			self.waitSec = self.waitSecMin
+			self.latencyTime = self.latencyTimeMin
 		
-		self.timer = threading.Timer( self.waitSec, self.publish )
+		self.timer = threading.Timer( self.latencyTime if not publishNow else 0.1, self.publish )
 		self.timer.start()
 
 realTimeFtpPublish = RealTimeFtpPublish()
