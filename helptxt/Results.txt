@@ -14,7 +14,11 @@ The top of the screen contains controls.
 
 The bottom is divided into two parts with an adjustable pane between them.  The left side shows data about the rider (finish order, Bib, name, team, license, finish time, speed, etc.).  The right side shows individual lap information.
 
+In Time Trial mode, the Start and Finish times (in race time) are also shown.
+
 Projected and auto-corrected entries suggested by CrossMgr are highlighed in yellow.  Manually edited times are shown in orange.  Highlights indicate that some adjustment has been made to the times that was not present in the originally collected data.  For more details about why/who/when, double-click on the entry and look at the entry details in RiderDetail.
+
+Clicking on the column header sorts by that column (see below).
 
 # Controls
 ## Category
@@ -27,7 +31,14 @@ This toggles whether additional rider data are shown in Results.  If unset, ride
 Shows the lap times.  Lap time are computed as the difference between the race times per lap.
 
 ## Race Times
-Shows the race times per lap.
+Shows the race times per lap.  This is useful to find the leaders for a particular lap for primes or points races.
+
+To find the top riders of a lap:
+
+1. Choose the Race Times option
+1. Click on the Lap column header.  This will sort by that lap.
+1. The Lap Winners will be shown in sequence.
+1. Click on the lap column header to return to normal ranking.
 
 ## Lap Speeds
 Shows the speed by lap.  For this feature to work, the Lap Distance must be configured in Categories.
@@ -62,9 +73,9 @@ Swap with Rider After|Swap current rider's finish time with the following rider'
 Remember, Ctrl-Z is undo!
 
 ## Sort by Field
-Clicking on any Field header column other than 'Bib', 'Pos', 'Gap', 'Time' or speed will sort by that column.  This allows you to sort by name, team, license, etc. as well as Start and Finish if running in time trial mode.
+Clicking on any Field header column sort by that column (with the exception of 'Bib', 'Pos', 'Gap', 'Time' and speed).  This allows you to sort by name, team, license, etc. as well as Start and Finish if running in time trial mode.
 
-In time trial mode, it is critical to be able to sort by 'Start' and 'Finish'.  This allows you to easily check manual results, especially by 'Finish', as this should match the finish order of a manual timer.
+In time trial mode, it very useful to sort by 'Start' or 'Finish' to check manual results.  In particular, sorting by 'Finish' should match the finish order recorded by a manual timer.
 
 ## Sort by Lap
 Clicking on the Lap header column will sort the display by that lap, not the finish order.  Lap sort works with the data currently being displayed.  For example, if you are showing Lap Times, the shortest lap time will be sorted to the top.
