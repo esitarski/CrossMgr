@@ -36,7 +36,7 @@ Shows the race times per lap.  This is useful to find the leaders for a particul
 To find the top riders of a lap:
 
 1. Choose the Race Times option
-1. Click on the Lap column header.  This will sort by that lap.
+1. Click on the Lap column header.  This will sort by the Race Times for all riders on that lap.
 1. The Lap Winners will be shown in sequence.
 1. Click on the lap column header to return to normal ranking.
 
@@ -83,7 +83,7 @@ In square brackets, the rank and bib number are also shown in the sorted column.
 
 This feature is very useful in the following cases determine the leader of a certain lap (for example, for a prem).  To do so, change the display to "Race Times", then click on the Lap column.  This will show you the current finish order of that lap.
 
-This feature is also important when you need to restart a race after it was stopped, say, based on a course obstruction or weather delay (lightening).  By sorting the riders for the last lap, you can estimate the gaps between them for the restart.
+This feature is also important when you need to restart a race after it was stopped, say, based on a course obstruction or weather delay (lightening).  By sorting the riders for the last lap, you can estimate the gaps between them for the restart.  To do so, change the display to "Race Times", then click on the Lap column.  
 
 ## Fastest Lap Highlight
 The Fastest Lap is always highlighted in green.  This calculation takes the lap distance (both first and subsequent) into account.
