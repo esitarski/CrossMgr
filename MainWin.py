@@ -1576,13 +1576,11 @@ Continue?''' % fName, 'Simulate a Race' ):
 	
 	@logCall
 	def menuHelp( self, event ):
-		fname = os.path.join( Utils.getHelpFolder(), 'Main.html' )
-		webbrowser.open( fname, new = 0, autoraise = True )
+		Utils.showHelp( 'Main.html' )
 	
 	@logCall
 	def onContextHelp( self, event ):
-		fname = os.path.join( Utils.getHelpFolder(), self.attrClassName[self.notebook.GetSelection()][2] + '.html' )
-		webbrowser.open( fname, new = 0, autoraise = True )
+		Utils.showHelp( self.attrClassName[self.notebook.GetSelection()][2] + '.html' )
 	
 	@logCall
 	def menuAbout( self, event ):
@@ -1590,7 +1588,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 		info = wx.AboutDialogInfo()
 		info.Name = Version.AppVerName
 		info.Version = ''
-		info.Copyright = "(C) 2009-2011"
+		info.Copyright = "(C) 2009-2012"
 		info.Description = wordwrap(
 			"Create Cyclo-cross race results quickly and easily with little preparation.\n\n"
 			"A brief list of features:\n"

@@ -7,6 +7,7 @@ import sys
 import math
 import subprocess
 import unicodedata
+import webbrowser
 import wx.grid		as gridlib
 try:
 	from win32com.shell import shell, shellcon
@@ -259,6 +260,10 @@ def getImageFolder():	return imageFolder
 def getHtmlFolder():	return htmlFolder
 def getHelpFolder():	return helpFolder
 
+def showHelp( url ):
+	url = os.path.join( getHelpFolder(), url )
+	webbrowser.open( url, new = 0, autoraise = True )
+
 #------------------------------------------------------------------------
 
 reSpace = re.compile(r'\s')
@@ -337,7 +342,7 @@ def setCategoryChoice( iSelection, categoryAttribute = None ):
 	except AttributeError:
 		return
 	setCategoryChoice( iSelection, categoryAttribute )
-		
+
 def hasTrailingSeparator( menu ):
 	itemCount = menu.GetMenuItemCount()
 	return itemCount > 0 and menu.FindItemByPosition(itemCount-1).IsSeparator()

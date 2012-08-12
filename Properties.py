@@ -349,7 +349,7 @@ class PropertiesDialog( wx.Dialog ):
 		btnsizer.AddButton(btn)
 		
 		self.helpBtn = wx.Button( self, wx.ID_HELP )
-		self.Bind( wx.EVT_BUTTON, self.onHelp, self.helpBtn )
+		self.Bind( wx.EVT_BUTTON, lambda evt: Utils.showHelp('Properties.html'), self.helpBtn )
 		btnsizer.AddButton(self.helpBtn)
 		
 		btnsizer.Realize()
@@ -359,10 +359,6 @@ class PropertiesDialog( wx.Dialog ):
 		self.SetSizer(sizer)
 		sizer.Fit(self)
 		
-	def onHelp( self, event ):
-		fname = os.path.join( Utils.getHelpFolder(), 'Properties.html' )
-		webbrowser.open( fname, new = 0, autoraise = True )
-	
 	def onBrowseFolder( self, event ):
 		defaultPath = self.folder.GetValue()
 		if not defaultPath:

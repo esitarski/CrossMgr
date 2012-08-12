@@ -7,7 +7,6 @@ import os
 import sys
 import threading
 import datetime
-import webbrowser
 import Utils
 from Utils				import logCall
 import Model
@@ -135,7 +134,8 @@ class FtpPublishDialog( wx.Dialog ):
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
 		self.helpBtn = wx.Button( self, wx.ID_HELP )
-		self.Bind( wx.EVT_BUTTON, self.onHelp, self.helpBtn )
+		self.Bind( wx.EVT_BUTTON, lambda evt: Utils.showHelp('Menu-File.html#publish-html-results-with-ftp'),
+					self.helpBtn )
 		
 		row = 0
 		border = 8
@@ -219,10 +219,6 @@ class FtpPublishDialog( wx.Dialog ):
 	def onCancel( self, event ):
 		self.EndModal( wx.ID_CANCEL )
 		
-	def onHelp( self, event ):
-		fname = os.path.join( Utils.getHelpFolder(), 'Menu-File.html#publish-html-results-with-ftp' )
-		webbrowser.open( fname, new = 0, autoraise = True )
-
 if __name__ == '__main__':
 	app = wx.PySimpleApp()
 	mainWin = wx.Frame(None,title="CrossMgr", size=(600,400))
