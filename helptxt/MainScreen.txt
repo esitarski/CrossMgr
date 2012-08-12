@@ -17,7 +17,7 @@ If you prefer the Recorded and Expected areas to be side-by-side instead of stac
 Shows the numbers just recorded during a race.  The columns in the table are as follows:
 
 Column|Description
-------|-----------
+:-----|:----------
 Num|The rider's number
 Note|Shows the riders position by category.  Leaders are highlighted in green.  The Race Leader is highlighted with a full green bar.  Riders outside of the 80% time rule are shown in red.
 Lap|Shows the lap the rider is currently on.

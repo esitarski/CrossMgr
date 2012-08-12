@@ -40,10 +40,10 @@ Exports the results in Excel format and opens Excel on the output file.
 Exports the results as an HTML file.  Also includes Race Animation and the Chart.
 
 ## Publish HTML Results with FTP...
-Publishes HTML formated results over FTP.
+Publishes HTML formated results over an FTP upload.
 
 Field|Description
------|-----------
+:----|:----------
 Ftp Host Name|Host name of the FTP server
 Path on Host to Store Files|Directory to write the HTML file on the server.
 User|User name to log into the FTP server.
@@ -52,38 +52,38 @@ Automatically Upload Results During Race|If checked, CrossMgr will automatically
 URL Path (optional)|The path to the race results url.  The HTML file name will be added to this path.
 Race Results URL|Shows the full URL (URL Path + HTML file name)
 
-If you fill in the "URL Path", CrossMgr will open a browser on the "Race Results URL" after you press OK.  Use this to test whether the upload worked correctly and that the Race Results URL can access the FTP published file as expected.
-
 If "Automatically Upload Results During Race" is selected, CrossMgr will automatically publish results with FTP while the race is running.
 
-Publishing results during a race does not slow down or lock up CrossMgr - even if it loses the connection with the FTP server or the publish fails.  This is because publishing is run in a background thread.  You will not even notice it is happening.
+If you fill in the "URL Path", CrossMgr will open a browser on the "Race Results URL" after you press OK.  Use this to test whether the upload worked correctly and that the "Race Results URL" can access the FTP published file as expected.
 
-Results are published with FTP in a manner that balances response time with bandwidth.
+Publishing results during a race does not slow down or lock up CrossMgr even if it loses the connection with the FTP server or the publish fails.  This is because publishing is run in a separate background thread.  You will not notice it is happening.
+
+Results are published with FTP in a way that balances response time with bandwidth.
 
 You will see a publish latency of 4 seconds after each group passes the line, and no updates when there are no events.
 The latency will increase when riders get strung out, to a maximum of 32 seconds.
 
 ### Details, Logic and Example:
 
-The update logic was inspired by the exponential-backoff logic of TCP/IP.
-The idea is to minimize bandwidth and useless publishing while minimizing latency.
+The update logic was inspired by [exponential-backoff](http://en.wikipedia.org/wiki/Exponential_backoff), also used in TCP/IP.
+The idea is to minimize bandwidth and while while maximizing response time.
 
 The update logic is only triggered when an event is received (a rider time).  For example, if all riders are on the back side of the course and there is no data input, no updates will occur.
 
 An event starts a timer that fires 4 seconds in the future (the latencyTime).  When the timer fires, CrossMgr does an FTP upload.
 
-Events received while the timer is running do nothing - those events will be included when the timer next fires.
+If another event is received while the timer is running, nothing happens.  That event will just be included when the timer fires in the future.
 
-When the timer fires, the time of the update is recorded.  Let lastUpdateTime = the time of the last update.
+When the upload occurs, the time is recorded.  Let lastUpdateTime = the time of the last update.
 
-Now, say a new event is received while the timer is not running at time eventTime.  Let deltaTime = eventTime - lastUpdateTime.
+Now, say a new event is received, and the timer is not running.  Let deltaTime = eventTime - lastUpdateTime.
 
 * If deltaTime > latencyTime then latencyTime = max(latencyTime * 2, 32)
 * Else latencyTime = 4
 
-The timer is started to fire "latencyTime" seconds into the future, and the process repeats.
+The timer is started and fires "latencyTime" seconds into the future, and the process repeats.
 
-By the logic above, if the last update latency exceeds the gap from the last upload, the latency is doubled (to a max of 32 seconds).
+To paraphrase, if the last update latency exceeds the gap from the last upload, the latency is doubled (to a max of 32 seconds).
 If the gap exceeds the latency, the latency is reset back to 4 seconds.
 
 For example, say the lap time is 5 minutes, and the bunch is all together.

@@ -4,6 +4,11 @@ import os
 import shutil
 import zipfile
 
+# Compile the help files
+from helptxt.compile import CompileHelp
+CompileHelp( 'helptxt' )
+	
+# Set up the py2exe configuration.
 setup( windows=
 			[
 				{
@@ -26,10 +31,6 @@ try:
 except:
 	pass
 
-# Compile the help files
-from helptxt.compile import CompileHelp
-CompileHelp( 'helptxt' )
-	
 # Add images and reference data to the distribution folder.
 def copyDir( d ):
 	destD = os.path.join(distDir, d)

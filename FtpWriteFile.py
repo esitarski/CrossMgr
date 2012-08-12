@@ -7,6 +7,7 @@ import os
 import sys
 import threading
 import datetime
+import webbrowser
 import Utils
 from Utils				import logCall
 import Model
@@ -133,6 +134,9 @@ class FtpPublishDialog( wx.Dialog ):
 		self.cancelBtn = wx.Button( self, wx.ID_ANY, '&Cancel' )
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
+		self.helpBtn = wx.Button( self, wx.ID_ANY, '&Help' )
+		self.Bind( wx.EVT_BUTTON, self.onHelp, self.helpBtn )
+		
 		row = 0
 		border = 8
 		bs.Add( wx.StaticText( self, wx.ID_ANY, "Ftp Host Name:"),  pos=(row,0), span=(1,1), border = border,
@@ -171,6 +175,7 @@ class FtpPublishDialog( wx.Dialog ):
 		hb = wx.BoxSizer( wx.HORIZONTAL )
 		hb.Add( self.okBtn, border = border, flag=wx.ALL )
 		hb.Add( self.cancelBtn, border = border, flag=wx.ALL )
+		hb.Add( self.helpBtn, border = border, flag=wx.ALL )
 		self.okBtn.SetDefault()
 		
 		bs.Add( hb, pos=(row, 1), span=(1,1), border = border, flag=wx.ALL|wx.ALIGN_RIGHT )
@@ -213,6 +218,10 @@ class FtpPublishDialog( wx.Dialog ):
 		
 	def onCancel( self, event ):
 		self.EndModal( wx.ID_CANCEL )
+		
+	def onHelp( self, event ):
+		fname = os.path.join( Utils.getHelpFolder(), 'Menu-File.html#publish-html-results-with-ftp' )
+		webbrowser.open( fname, new = 0, autoraise = True )
 
 if __name__ == '__main__':
 	app = wx.PySimpleApp()
