@@ -9,6 +9,8 @@ import  wx.lib.mixins.listctrl  as  listmix
 import  wx.lib.rcsizer  as rcs
 import socket
 import sys
+import os
+import webbrowser
 
 PORT, HOST = JChip.DEFAULT_PORT, JChip.DEFAULT_HOST
 
@@ -83,6 +85,9 @@ class JChipSetupDialog( wx.Dialog ):
 		self.cancelBtn = wx.Button( self, wx.ID_ANY, '&Cancel' )
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
+		self.helpBtn = wx.Button( self, wx.ID_ANY, '&Help' )
+		self.Bind( wx.EVT_BUTTON, self.onHelp, self.helpBtn )
+		
 		bs = wx.BoxSizer( wx.VERTICAL )
 		
 		todoList = [
@@ -144,6 +149,7 @@ class JChipSetupDialog( wx.Dialog ):
 		buttonBox.Add( self.okBtn, flag = wx.RIGHT, border = border )
 		self.okBtn.SetDefault()
 		buttonBox.Add( self.cancelBtn )
+		buttonBox.Add( self.helpBtn )
 		bs.Add( buttonBox, 0, wx.EXPAND | wx.ALL, border )
 		
 		self.SetSizerAndFit(bs)
@@ -246,6 +252,10 @@ class JChipSetupDialog( wx.Dialog ):
 		if JChip.listener:
 			self.testJChipToggle( event )
 		self.EndModal( wx.ID_CANCEL )
+		
+	def onHelp( self, evt ):
+		fname = os.path.join( Utils.getHelpFolder(), 'Menu-ChipReader.html#jchip-setup' )
+		webbrowser.open( fname, new = 0, autoraise = True )
 		
 if __name__ == '__main__':
 	app = wx.PySimpleApp()
