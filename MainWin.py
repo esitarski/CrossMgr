@@ -920,6 +920,7 @@ class MainWin( wx.Frame ):
 			serverPath	= getattr( race, 'ftpPath', '' )
 			fname		= os.path.basename( self.fileName[:-4] + '.html' )
 			file		= StringIO.StringIO( html )
+			urlFull		= getattr( race, 'urlFull', '' )
 		
 		if not host:
 			Utils.MessageOK(self, 'Ftp Upload Failed.  Error:\n\n    Missing host name.', 'Ftp Upload Failed', iconMask=wx.ICON_ERROR )
@@ -937,6 +938,10 @@ class MainWin( wx.Frame ):
 		except Exception, e:
 			Utils.MessageOK(self, 'Ftp Upload Failed.  Error:\n\n%s' % str(e), 'Ftp Upload Failed', iconMask=wx.ICON_ERROR )
 		wx.EndBusyCursor()
+		
+		# Automatically open the browser on the published file for testing.
+		if urlFull:
+			webbrowser.open( urlFull, new = 0, autoraise = True )
 			
 	#--------------------------------------------------------------------------------------------
 	@logCall

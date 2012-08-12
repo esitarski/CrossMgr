@@ -107,8 +107,8 @@ realTimeFtpPublish = RealTimeFtpPublish()
 #------------------------------------------------------------------------------------------------
 class FtpPublishDialog( wx.Dialog ):
 
-	fields = 	['ftpHost',	'ftpPath',	'ftpUser',		'ftpPassword',	'ftpUploadDuringRace']
-	defaults =	['',		'',			'anonymous',	'anonymous@',	False]
+	fields = 	['ftpHost',	'ftpPath',	'ftpUser',		'ftpPassword',	'ftpUploadDuringRace',	'urlPath']
+	defaults =	['',		'',			'anonymous',	'anonymous@',	False,					'http://']
 
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, "Ftp Publish Html Results",
@@ -121,6 +121,9 @@ class FtpPublishDialog( wx.Dialog ):
 		self.ftpUser = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
 		self.ftpPassword = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER|wx.TE_PASSWORD, value='' )
 		self.ftpUploadDuringRace = wx.CheckBox( self, wx.ID_ANY, "Automatically Upload Results During Race" )
+		self.urlPath = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
+		self.urlPath.Bind( wx.EVT_TEXT, self.urlPathChanged )
+		self.urlFull = wx.StaticText( self, wx.ID_ANY )
 		
 		self.refresh()
 		
@@ -155,6 +158,16 @@ class FtpPublishDialog( wx.Dialog ):
 		bs.Add( self.ftpUploadDuringRace, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
 		row += 1
+		row += 1
+		bs.Add( wx.StaticText( self, wx.ID_ANY, "URL Path (optional):"),  pos=(row,0), span=(1,1), border = border,
+				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		bs.Add( self.urlPath, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
+		row += 1
+		bs.Add( wx.StaticText( self, wx.ID_ANY, "Race Results URL:"),  pos=(row,0), span=(1,1), border = border,
+				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		bs.Add( self.urlFull, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
+		
+		row += 1
 		hb = wx.BoxSizer( wx.HORIZONTAL )
 		hb.Add( self.okBtn, border = border, flag=wx.ALL )
 		hb.Add( self.cancelBtn, border = border, flag=wx.ALL )
@@ -168,6 +181,18 @@ class FtpPublishDialog( wx.Dialog ):
 		self.CentreOnParent(wx.BOTH)
 		self.SetFocus()
 
+	def urlPathChanged( self, event = None ):
+		url = self.urlPath.GetValue()
+		fname = Utils.getFileName()
+		if not url or url == 'http://' or not Model.race or not fname:
+			self.urlFull.SetLabel( '' )
+		else:
+			if not url.endswith( '/' ):
+				url += '/'
+			fname = os.path.basename( fname[:-4] + '.html' )
+			url += fname
+			self.urlFull.SetLabel( url )
+		
 	def refresh( self ):
 		with Model.LockRace() as race:
 			if not race:
@@ -176,14 +201,25 @@ class FtpPublishDialog( wx.Dialog ):
 			else:
 				for f, v in zip(FtpPublishDialog.fields, FtpPublishDialog.defaults):
 					getattr(self, f).SetValue( getattr(race, f, v) )
+		self.urlPathChanged()
 		
 	def onOK( self, event ):
 		with Model.LockRace() as race:
-			if not race:
-				return
-			for f in FtpPublishDialog.fields:
-				setattr( race, f, getattr(self, f).GetValue() )
+			if race:
+				for f in FtpPublishDialog.fields:
+					setattr( race, f, getattr(self, f).GetValue() )
+				race.urlFull = self.urlFull.GetLabel()
 		self.EndModal( wx.ID_OK )
 		
 	def onCancel( self, event ):
 		self.EndModal( wx.ID_CANCEL )
+
+if __name__ == '__main__':
+	app = wx.PySimpleApp()
+	mainWin = wx.Frame(None,title="CrossMgr", size=(600,400))
+	Model.setRace( Model.Race() )
+	Model.getRace()._populate()
+	ftpPublishDialog = FtpPublishDialog(mainWin)
+	ftpPublishDialog.ShowModal()
+	mainWin.Show()
+	app.MainLoop()

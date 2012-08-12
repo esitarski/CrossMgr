@@ -77,7 +77,7 @@ The upload then runs when the timer fires, and records the time it ran.  Let las
 Now, say a new event is received while the timer is not running at time eventTime.  Let deltaTime = eventTime - lastUpdateTime.
 
 * If deltaTime > latencyTime then latencyTime = max(latencyTime * 2, 32)
-* Else latencyTime = 4  # deltaTime <= latencyTime
+* Else latencyTime = 4
 
 The timer is started to trigger an upload "latencyTime" seconds into the future, and the process repeats.
 
