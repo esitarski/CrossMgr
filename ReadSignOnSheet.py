@@ -8,6 +8,7 @@ import wx.lib.filebrowsebutton as filebrowse
 import wx.wizard as wiz
 import Utils
 import string
+import webbrowser
 from Excel import GetExcelReader, toAscii
 
 #-----------------------------------------------------------------------------------------------------
@@ -222,8 +223,14 @@ class GetExcelLink( object ):
 		img_filename = os.path.join( Utils.getImageFolder(), '20100718-Excel_icon.png' )
 		img = wx.Bitmap(img_filename) if img_filename and os.path.exists(img_filename) else wx.NullBitmap
 		
-		self.wizard = wiz.Wizard( parent, -1, 'Define Excel Link', img )
+		#self.wizard = wiz.Wizard( parent, wx.ID_ANY, 'Define Excel Link', img )
+		#self.wizard.SetExtraStyle( wiz.WIZARD_EX_HELPBUTTON )
+		prewizard = wiz.PreWizard()
+		prewizard.SetExtraStyle( wiz.WIZARD_EX_HELPBUTTON )
+		prewizard.Create( parent, wx.ID_ANY, 'Define Excel Link', img )
+		self.wizard = prewizard
 		self.wizard.Bind( wiz.EVT_WIZARD_PAGE_CHANGING, self.onPageChanging )
+		self.wizard.Bind( wiz.EVT_WIZARD_HELP, self.onHelp )
 		
 		self.fileNamePage = FileNamePage( self.wizard )
 		self.sheetNamePage = SheetNamePage( self.wizard )
@@ -256,6 +263,10 @@ class GetExcelLink( object ):
 			self.excelLink.setFieldCol( self.headerNamesPage.getFieldCol() )
 		return self.excelLink
 	
+	def onHelp( self, evt ):
+		fname = os.path.join( Utils.getHelpFolder(), 'Menu-DataMgmt.html#link-to-external-excel-data' )
+		webbrowser.open( fname, new = 0, autoraise = True )
+		
 	def onPageChanging( self, evt ):
 		isForward = evt.GetDirection()
 		if isForward:

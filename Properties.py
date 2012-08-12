@@ -4,6 +4,7 @@ from Undo import undo
 import wx
 import re
 import os
+import webbrowser
 import wx.lib.intctrl as intctrl
 import wx.lib.masked as masked
 
@@ -346,12 +347,21 @@ class PropertiesDialog( wx.Dialog ):
 
 		btn = wx.Button(self, wx.ID_CANCEL)
 		btnsizer.AddButton(btn)
+		
+		self.helpBtn = wx.Button( self, wx.ID_HELP )
+		self.Bind( wx.EVT_BUTTON, self.onHelp, self.helpBtn )
+		btnsizer.AddButton(self.helpBtn)
+		
 		btnsizer.Realize()
 
 		sizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.ALIGN_RIGHT, 5)
 
 		self.SetSizer(sizer)
 		sizer.Fit(self)
+		
+	def onHelp( self, event ):
+		fname = os.path.join( Utils.getHelpFolder(), 'Properties.html' )
+		webbrowser.open( fname, new = 0, autoraise = True )
 	
 	def onBrowseFolder( self, event ):
 		defaultPath = self.folder.GetValue()

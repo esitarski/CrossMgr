@@ -23,7 +23,7 @@ However, if you move the the Excel file, you will have to update the link to tel
 CrossMgr supports the following fields from an external Excel sheet:
 
 Field|Description
------|-----------
+:----|:----------
 Bib#|Required.  Rider's bib number in the race.  Bib numbers should be allocated in logical number ranges if there are multiple categories in the race (for example, 1-99 = one category, 100-199 = another category, etc.)
 LastName|Optional.  Rider's last name.  CrossMgr will automatically capitalize the last name.
 FirstName|Optional.  Rider's first name.
@@ -53,7 +53,7 @@ Edited entries are also shown with edit details, however, any missing entries pr
 Columns in the table are as follows:
 
 Column|Description
-------|-----------
+:-----|:----------
 Sequence Number|Number of the entry
 Clock Time|Clock time of the entry
 Race Time|Race time of the entry (= Clock Time - Race Start Time)

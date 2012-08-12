@@ -128,13 +128,13 @@ class FtpPublishDialog( wx.Dialog ):
 		
 		self.refresh()
 		
-		self.okBtn = wx.Button( self, wx.ID_ANY, '&OK' )
+		self.okBtn = wx.Button( self, wx.ID_OK )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
 
-		self.cancelBtn = wx.Button( self, wx.ID_ANY, '&Cancel' )
+		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
-		self.helpBtn = wx.Button( self, wx.ID_ANY, '&Help' )
+		self.helpBtn = wx.Button( self, wx.ID_HELP )
 		self.Bind( wx.EVT_BUTTON, self.onHelp, self.helpBtn )
 		
 		row = 0

@@ -43,7 +43,7 @@ RiderDetail|Jump to the RiderDetail for this rider.
 Shows the riders expected to arrive based on their previously recorded lap times.  The columns in the table are as follows:
 
 Column|Description
-------|-----------
+:-----|:----------
 Num|The expected rider's number
 Note|Shows the riders expected position by category.  Leaders are highlighted in green.  The Race Leader is highlighted with a full green bar.  Riders expected to be outside of the 80% time rule are shown in red and are candiates to be pulled in a UCI level race.
 Lap|Shows the lap the rider is expected to be on.

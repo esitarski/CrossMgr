@@ -16,7 +16,7 @@ Rider that have been pulled, DNF or DNS are shown greyed-out at the bottom.
 The endpoints of the bars may have indicators:
 
 Indicator|Meaning
----------|-------
+:--------|:------
 Diamond|Indicates a CrossMgr auto-corrected time that did not appear in the original input.  CrossMgr automatically generates missed times when it thinks it is reasonable to do so
 Star|Indicates a User Edit of the original input.  Changes made by users are logged and timestamped (see RiderDetail).
 
