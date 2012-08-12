@@ -16,7 +16,6 @@ Fields = ['Bib#', 'LastName', 'FirstName', 'Team', 'License', 'Category', 'Tag',
 IgnoreFields = ['Bib#', 'Tag', 'Tag2']		# Fields to ignore when adding data to standard reports.
 ReportFields = [f for f in Fields if f not in IgnoreFields]
 
-
 class FileNamePage(wiz.WizardPageSimple):
 	def __init__(self, parent):
 		wiz.WizardPageSimple.__init__(self, parent)
