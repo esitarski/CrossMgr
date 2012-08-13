@@ -23,7 +23,7 @@ Data for all riders will be corrected, and projected lap times will be computed.
 
 With projected lap times, the "Expected:" section will show the expected riders before they arrive.
 
-This option does not change the race (Properties)[Properties.html], in sets
+This option does not change the race [Properties](Properties.html), it sets the Autocorrect option for all riders in the race.
 
 ## Clear "Autocorrect Lap Data" flag for All Riders
 Turns off the autocorrect flag for all riders.
@@ -32,3 +32,5 @@ Data for all riders will not be corrected, and projected lap times will not be c
 The "Expected:" section will show nothing as there will be no projected lap times to show.
 
 It is not recommended to do this unless you are running a race by laps only and not by time.
+
+This option does not change the race [Properties](Properties.html), it clears the Autocorrect option for all riders in the race.
