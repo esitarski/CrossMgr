@@ -4,7 +4,7 @@ import JChip
 from JChipSetup import GetTagNums
 from Utils		import logCall
 from Undo		import undo
-from EditEntry	import TimeMsEdit
+from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 import wx
 import wx.lib.intctrl
 import wx.lib.masked			as masked
@@ -161,7 +161,7 @@ class JChipImportDialog( wx.Dialog ):
 		gs.AddSpacer(1)
         
 		gs.Add( wx.StaticText(self, wx.ID_ANY, 'Import Data Time Adjustment:' ), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
-		self.timeAdjustment = TimeMsEdit( self )
+		self.timeAdjustment = HighPrecisionTimeEdit( self, wx.ID_ANY )
 		self.behindAhead = wx.Choice( self, wx.ID_ANY, choices=['Behind', 'Ahead'] )
 		if JChip.readerComputerTimeDiff:
 			rtAdjust = JChip.readerComputerTimeDiff.total_seconds()
@@ -170,11 +170,13 @@ class JChipImportDialog( wx.Dialog ):
 			else:
 				self.behindAhead.SetSelection( 1 )
 				rtAdjust *= -1.0
-			self.timeAdjustment.SetValue( rtAdjust )
+			self.timeAdjustment.SetSeconds( rtAdjust )
 		else:
 			self.behindAhead.SetSelection( 0 )
-		self.timeAdjustment.timeSizer.Prepend( self.behindAhead, flag=wx.ALIGN_BOTTOM|wx.BOTTOM, border=4 )
-		gs.Add( self.timeAdjustment.timeSizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT )
+		hb = wx.BoxSizer()
+		hb.Add( self.behindAhead, flag=wx.ALIGN_BOTTOM|wx.BOTTOM, border=4 )
+		hb.Add( self.timeAdjustment, flag=wx.ALL, border=4 )
+		gs.Add( hb, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT )
 		gs.AddSpacer(1)
 		
 		self.manualStartTime = wx.CheckBox(self, wx.ID_ANY, 'Race Start Time (if NOT first recorded time):' )
@@ -182,7 +184,7 @@ class JChipImportDialog( wx.Dialog ):
 		gs.Add( self.manualStartTime, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 		self.raceStartTime = masked.TimeCtrl( self, wx.ID_ANY, fmt24hr=True, value="10:00:00" )
 		self.raceStartTime.Enable( False )
-		gs.Add( self.raceStartTime, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.GROW)
+		gs.Add( self.raceStartTime, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT)
 		gs.AddSpacer(1)
 		
 		with Model.LockRace() as race:
@@ -262,7 +264,7 @@ class JChipImportDialog( wx.Dialog ):
 			return
 			
 		clearExistingData = (self.importPolicy.GetSelection() == 0)
-		timeAdjustment = self.timeAdjustment.GetValue()
+		timeAdjustment = self.timeAdjustment.GetSeconds()
 		if self.behindAhead.GetSelection() == 1:
 			timeAdjustment *= -1
 		

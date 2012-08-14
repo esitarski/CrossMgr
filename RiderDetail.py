@@ -11,6 +11,7 @@ from JChipSetup import GetTagNums
 from Undo import undo
 import Gantt
 from EditEntry import CorrectNumber, ShiftNumber, DeleteEntry
+from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 import random
 import bisect
 import sys
@@ -68,6 +69,12 @@ class RiderDetail( wx.Panel ):
 		self.riderName = wx.StaticText( self, wx.ID_ANY, '' )
 		self.riderName.SetDoubleBuffered( True )
 		gbs.Add( self.riderName, pos=(row,1), span=(1,4), flag=wx.EXPAND )
+		
+		self.startTimeName = wx.StaticText( self, wx.ID_ANY, 'Start:' )
+		gbs.Add( self.startTimeName, pos=(row,5), span=(1,1), flag=labelAlign )
+		self.startTime = HighPrecisionTimeEdit( self, wx.ID_ANY, allow_none = True )
+		gbs.Add( self.startTime, pos=(row,6), span=(1,1), flag=wx.EXPAND )
+		
 		row += 1
 		
 		self.teamName = wx.StaticText( self, wx.ID_ANY, 'Team: ' )
@@ -75,6 +82,12 @@ class RiderDetail( wx.Panel ):
 		self.riderTeam = wx.StaticText( self, wx.ID_ANY, '' )
 		self.riderTeam.SetDoubleBuffered( True )
 		gbs.Add( self.riderTeam, pos=(row,1), span=(1,4), flag=wx.EXPAND )
+		
+		self.finishTimeName = wx.StaticText( self, wx.ID_ANY, 'Finish:' )
+		gbs.Add( self.finishTimeName, pos=(row,5), span=(1,1), flag=labelAlign )
+		self.finishTime = HighPrecisionTimeEdit( self, wx.ID_ANY, allow_none = False )
+		gbs.Add( self.finishTime, pos=(row,6), span=(1,1), flag=wx.EXPAND )
+		
 		row += 1
 		
 		self.tagsName = wx.StaticText( self, wx.ID_ANY, 'Tag(s): ' )

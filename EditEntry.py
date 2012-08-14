@@ -6,57 +6,11 @@ import wx.lib.intctrl
 import wx.lib.masked		as masked
 import ColGrid
 import Model
+from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 from Undo import undo
 import random
 import math
 
-class TimeMsEdit( object ):
-	def __init__( self, parent, t = 0, changeCallback = None ):
-		self.timeCtrl = masked.TimeCtrl( parent, -1, name="Race Time:", fmt24hr=True )
-		
-		f = self.timeCtrl.GetFont()
-		dc = wx.WindowDC(parent)
-		dc.SetFont(f)
-		width, height = dc.GetTextExtent( '00:00:0000' )
-		
-		self.timeCtrl.SetSize( wx.Size(width, -1) )
-		self.timeCtrl.SetParameters( useFixedWidthFont=False )
-		
-		width, height = dc.GetTextExtent( '00000' )
-		self.msCtrl = wx.lib.intctrl.IntCtrl( parent, wx.ID_ANY, size=(width, -1),
-				style=wx.TE_LEFT | wx.TE_PROCESS_ENTER | wx.ALIGN_LEFT,
-				limited = True,
-				value=0,
-				allow_none=False, min=0, max=999 )
-				
-		self.timeSizer = wx.BoxSizer( wx.HORIZONTAL )
-		self.timeSizer.Add( self.timeCtrl )
-		self.timeSizer.Add( wx.StaticText(parent, wx.ID_ANY, '.'), flag=wx.ALIGN_BOTTOM|wx.BOTTOM, border=4 )
-		self.timeSizer.Add( self.msCtrl )
-		
-		self.SetValue( t )
-		
-		if changeCallback:
-			self.timeCtrl.Bind( masked.EVT_TIMEUPDATE, lambda event: changeCallback() )
-			self.msCtrl.Bind( wx.lib.intctrl.EVT_INT, lambda event: changeCallback()  )
-
-	def SetValue( self, t ):
-		s = int(t)
-		seconds = s % 60
-		minutes = (s / 60) % 60
-		hours = s / (60*60)
-		self.timeCtrl.ChangeValue( '%02d:%02d:%02d' % (hours, minutes, seconds) )
-		self.msCtrl.SetValue( int(math.modf(t)[0] * 1000.0) )
-	
-	def GetValue( self ):
-		t = Utils.StrToSeconds(self.timeCtrl.GetValue())
-		ms = self.msCtrl.GetValue()
-		if ms:
-			while ms < 99:
-				ms *= 10
-			t += ms / 1000.0
-		return t
-				
 #------------------------------------------------------------------------------------------------
 class CorrectNumberDialog( wx.Dialog ):
 	def __init__( self, parent, entry, id = wx.ID_ANY ):
@@ -67,7 +21,7 @@ class CorrectNumberDialog( wx.Dialog ):
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
 		self.numEdit = wx.lib.intctrl.IntCtrl( self, wx.ID_ANY, size=(64,-1), style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
 		
-		self.timeMsEdit = TimeMsEdit( self, entry.t )
+		self.timeMsEdit = HighPrecisionTimeEdit( self, wx.ID_ANY, seconds = entry.t )
 				
 		self.okBtn = wx.Button( self, wx.ID_ANY, '&OK' )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
@@ -81,7 +35,7 @@ class CorrectNumberDialog( wx.Dialog ):
 		bs.Add( wx.StaticText( self, -1, "Rider:"),  pos=(1,0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.numEdit, pos=(1,1), span=(1,2), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		bs.Add( wx.StaticText( self, -1, "Race Time:"),  pos=(2,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
-		bs.Add( self.timeMsEdit.timeSizer, pos=(2,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.ALIGN_LEFT )
+		bs.Add( self.timeMsEdit, pos=(2,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.ALIGN_LEFT )
 		
 		bs.Add( self.okBtn, pos=(3, 0), span=(1,1), border = border, flag=wx.ALL )
 		self.okBtn.SetDefault()
@@ -95,7 +49,7 @@ class CorrectNumberDialog( wx.Dialog ):
 
 	def onOK( self, event ):
 		num = self.numEdit.GetValue()
-		t = self.timeMsEdit.GetValue()
+		t = self.timeMsEdit.GetSeconds()
 		if self.entry.num != num or self.entry.t != t:
 			undo.pushState()
 			with Model.LockRace() as race:
@@ -127,7 +81,8 @@ class ShiftNumberDialog( wx.Dialog ):
 			value=int(self.entry.num),
 			allow_none=False, min=1, max=9999 )
 		
-		self.timeMsEdit = TimeMsEdit( self, changeCallback=self.updateNewTime )
+		self.timeMsEdit = HighPrecisionTimeEdit( self, wx.ID_ANY )
+		self.timeMsEdit.Bind( wx.EVT_TEXT, self.updateNewTime )
 		self.newTime = wx.StaticText( self, wx.ID_ANY, "00:00:00")
 		
 		shiftOptions = ['Earlier', 'Later']
@@ -150,7 +105,7 @@ class ShiftNumberDialog( wx.Dialog ):
 		bs.Add( self.numEdit, pos=(1,1), span=(1,2), border = border, flag=wx.GROW|wx.RIGHT|wx.TOP )
 		bs.Add( self.shiftBox, pos=(2, 0), span=(1, 2), border = border, flag=wx.GROW|wx.LEFT|wx.RIGHT|wx.BOTTOM )
 		bs.Add( wx.StaticText( self, -1, "Shift Time:"),  pos=(3,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT|wx.BOTTOM )
-		bs.Add( self.timeMsEdit.timeSizer, pos=(3,1), span=(1,1), border = border, flag=wx.GROW|wx.LEFT|wx.RIGHT )
+		bs.Add( self.timeMsEdit, pos=(3,1), span=(1,1), border = border, flag=wx.GROW|wx.LEFT|wx.RIGHT )
 		bs.Add( self.newTime, pos=(4,0), span=(1,2), border = border, flag=wx.GROW|wx.LEFT|wx.RIGHT )
 		
 		bs.Add( self.okBtn, pos=(5, 0), span=(1,1), border = border, flag=wx.ALL )
@@ -165,7 +120,7 @@ class ShiftNumberDialog( wx.Dialog ):
 		self.SetFocus()
 
 	def getNewTime( self ):
-		tAdjust = self.timeMsEdit.GetValue() * (-1 if self.shiftBox.GetSelection() == 0 else 1)
+		tAdjust = self.timeMsEdit.GetSeconds() * (-1 if self.shiftBox.GetSelection() == 0 else 1)
 		return self.entry.t + tAdjust
 
 	def onOK( self, event ):

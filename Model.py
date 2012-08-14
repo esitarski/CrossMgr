@@ -942,6 +942,7 @@ class Race(object):
 		r2.status = Rider.Finisher
 		r2.tStatus = None
 		r2.autocorrectLaps = True
+		r2.firstTime = getattr(r1, 'firstTime', None)
 		
 		self.setChanged()
 		return True
