@@ -37,7 +37,7 @@ class HighPrecisionTimeEdit( masked.TextCtrl ):
 		
 	def SetSeconds( self, secs ):
 		if secs is None and self.allow_none:
-			masked.TextCtrl.SetValue( self, self.defaultValue )
+			masked.TextCtrl.SetValue( self, self.emptyValue )
 		else:
 			f, ss = math.modf(secs)
 			secs = int(ss)

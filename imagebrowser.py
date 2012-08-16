@@ -581,7 +581,7 @@ class ImageDialog(wx.Dialog):
     def OnDirectoryTextSet(self,event):
         event.Skip()
         path = event.GetString()
-        SetFileName( path )
+        self.SetFileName( path )
     
     def OnUpDirectory(self, event):
         sdir = os.path.split(self.set_dir)[0]

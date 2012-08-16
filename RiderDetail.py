@@ -85,7 +85,7 @@ class RiderDetail( wx.Panel ):
 		
 		self.finishTimeName = wx.StaticText( self, wx.ID_ANY, 'Finish:' )
 		gbs.Add( self.finishTimeName, pos=(row,5), span=(1,1), flag=labelAlign )
-		self.finishTime = HighPrecisionTimeEdit( self, wx.ID_ANY, allow_none = False )
+		self.finishTime = HighPrecisionTimeEdit( self, wx.ID_ANY, allow_none = True )
 		gbs.Add( self.finishTime, pos=(row,6), span=(1,1), flag=wx.EXPAND )
 		
 		row += 1
@@ -683,6 +683,9 @@ class RiderDetail( wx.Panel ):
 		self.riderTeam.SetLabel( '' )
 		self.tags.SetLabel( '' )
 		
+		for w in ['startTimeName', 'startTime', 'finishTimeName', 'finishTime']:
+			getattr( self, w ).Show( False )
+		
 		tagNums = GetTagNums()
 		
 		highPrecisionTimes = Utils.highPrecisionTimes()
@@ -753,6 +756,13 @@ class RiderDetail( wx.Panel ):
 				self.setAtRaceTime( rider.tStatus, True )
 				
 			self.autocorrectLaps.SetValue( getattr(rider, 'autocorrectLaps', True) )
+			
+			isTimeTrial = getattr(race, 'isTimeTrial', False)
+			if isTimeTrial:
+				for w in ['startTimeName', 'startTime', 'finishTimeName', 'finishTime']:
+					getattr( self, w ).Show( True )
+				self.startTime.SetSeconds( getattr(rider, 'firstTime', None) )
+				self.finishTime.SetSeconds( None )
 			
 			maxLap = race.getMaxLap()
 			if race.numLaps is not None and race.numLaps < maxLap:

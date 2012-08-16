@@ -833,17 +833,18 @@ class MainWin( wx.Frame ):
 			tLastRaceTime = race.lastRaceTime()
 		
 		tNow = datetime.datetime.now()
-		html = replaceJsonVar( html, 'timestamp', [tNow.ctime(), tLastRaceTime] )
+		html = replaceJsonVar( html, 'timestamp',	[tNow.ctime(), tLastRaceTime] )
 		html = replaceJsonVar( html, 'email',		self.config.Read('email', '') )
 		html = replaceJsonVar( html, 'data',		GetAnimationData(getExternalData = True) )
 		html = replaceJsonVar( html, 'catDetails',	GetCategoryDetails() )
+		html = replaceJsonVar( html, 'version',		Version.AppVerName )
 
 		graphicBase64 = self.getGraphicBase64()
 		if graphicBase64:
 			try:
-				iStart = html.index( 'var imageSrc =' )
-				iEnd = html.index( "';", iStart )
-				html = ''.join( [html[:iStart], "var imageSrc = '%s';" % graphicBase64, html[iEnd+2:]] )
+				iStart = html.index( 'src="' )
+				iEnd = html.index( '"/>', iStart )
+				html = ''.join( [html[:iStart], 'src="%s"' % graphicBase64, html[iEnd+1:]] )
 			except ValueError:
 				pass
 		return html
@@ -1429,7 +1430,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			race.memo = ''
 			race.minutes = self.raceMinutes
 			race.raceNum = 1
-			#race.isTimeTrial = True
+			race.isTimeTrial = True
 			#'active', 'name', 'catStr', 'startOffset', 'numLaps', 'distance', 'distanceType'
 			race.setCategories( [	(True, 'Junior', '100-199', '00:00', None, 0.5, None),
 									(True, 'Senior', '200-299', '00:15', None, 0.5, None)] )
