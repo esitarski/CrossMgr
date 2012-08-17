@@ -130,8 +130,8 @@ var categories = [];		// Array of unique categories in the data.
 var categoryCur = 'All';	// Current selected category.
 var animationSeconds = 90;	// Default animation seconds.
 var suspendAnimation = false;	// Turn on/off animation without resetting the time.
-var numsToWatchStr = null;
-var categoryStr = null;
+var numsToWatchStr = null;	// List of numbers to highlight other than the winners.
+var categoryStr = null;		// Current category.
 var numsToWatch = {};		// Set of numbers to watch.
 var resultsDiv = null;
 var showLapsFrequency = -1;	// How often to show laps
@@ -142,7 +142,7 @@ var showTimeDecimals = false;
 var displayUnits = 'km';
 var reverseDirection = null;	// Reverse the direction of the riders.
 var finishTop = null;			// Finish on the top rather than the bottom.
-var tRace = null;				// Race time if the race is running.
+var tRace = null;				// Race time (if the race is running).
 
 var catUpdateTime = {};			// Time of next update by category.
 
