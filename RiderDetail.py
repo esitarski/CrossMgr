@@ -26,10 +26,14 @@ class AdjustTimeDialog( wx.Dialog ):
 		self.rider = rider
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
 		
-		st = getattr( rider, 'firstTime', None )
-		self.startTime = HighPrecisionTimeEdit( self, wx.ID_ANY, allow_none = True, seconds = st )
-		self.finishTime = HighPrecisionTimeEdit( self, wx.ID_ANY, allow_none = True )
-		self.rideTime = wx.StaticText( self, wx.ID_ANY, '00:00:00.000' )
+		st, ft, laps = self.getStFtLaps()
+			
+		self.startTime = HighPrecisionTimeEdit( self, wx.ID_ANY, allow_none = not bool(st), seconds = st )
+		self.startTime.Bind( wx.EVT_TEXT, self.updateRideTime )
+		self.finishTime = HighPrecisionTimeEdit( self, wx.ID_ANY, allow_none = not bool(ft), seconds = ft )
+		self.finishTime.Bind( wx.EVT_TEXT, self.updateRideTime )
+		self.rideTime = wx.StaticText( self, wx.ID_ANY, '' )
+		self.updateRideTime( None )
 				
 		self.okBtn = wx.Button( self, wx.ID_ANY, '&OK' )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
@@ -63,16 +67,54 @@ class AdjustTimeDialog( wx.Dialog ):
 		
 		self.CentreOnParent(wx.BOTH)
 		self.SetFocus()
-
-	def onOK( self, event ):
+		
+	def getStFtLaps( self ):
+		with Model.LockRace() as race:
+			laps = race.getCategoryNumLaps( self.rider.num )
+		laps = min( laps, len(self.rider.times) )
+		st = getattr( self.rider, 'firstTime', None )
+		if laps:
+			ft = st + self.rider.times[laps]
+		else:
+			ft = None
+		return st, ft, laps
+		
+	def updateRideTime( self, event = None ):
 		st = self.startTime.GetSeconds()
 		ft = self.finishTime.GetSeconds()
+		try:
+			self.rideTime.SetLabel( Utils.formatTime(ft - st, True) )
+		except:
+			self.rideTime.SetLabel( '' )
+
+	def onOK( self, event ):
+		stOld, ftOld, laps = self.getStFtLaps()
+		st, ft = self.startTime.GetSeconds(), self.finishTime.GetSeconds()
+		if st is not None and ft is not None and st >= ft:
+			Utils.MessageOK( self, 'Start Time must be before Finish Time', 'Time Error', wx.ICON_ERROR )
+			return
+		if stOld == st and ftOld == ft:
+			self.EndModel( wx.IDOK )
+			return
+		
+		undo.pushState()
+		self.rider.firstTime = st
+		if st and ft:
+			rt = fr - st
+			if not self.rider.times:
+				self.rider.addTime( rt )
+			else:
+				self.rider.times = [t for t in self.rider.times if t < rt]
+				self.rider.times.append( rt )
+		elif st:
+			self.rider.firstTime = st
+			
+		Model.race.setChanged()
 		Utils.refresh()
 		self.EndModal( wx.ID_OK )
 		
 	def onCancel( self, event ):
 		self.EndModal( wx.ID_CANCEL )
-
 
 class RiderDetail( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
@@ -243,7 +285,7 @@ class RiderDetail( wx.Panel ):
 			return
 		num = int(self.num.GetValue())
 		with Model.LockRace() as race:
-			if num not in race:
+			if not getattr(race, 'isTimeTrial', False) or num not in race:
 				return
 			rider = race.getRider( num )
 		dlg = AdjustTimeDialog( self, rider )

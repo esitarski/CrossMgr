@@ -177,8 +177,11 @@ def formatDate( date ):
 def StrToSeconds( str = '' ):
 	secs = 0.0
 	for f in str.split(':'):
-		f = f.replace( ' ', '' )
-		secs = secs * 60.0 + (float(f) if f else 0.0)
+		try:
+			n = float(f)
+		except ValueError:
+			n = 0.0
+		secs = secs * 60.0 + n
 	return secs
 	
 def SecondsToStr( secs = 0 ):
