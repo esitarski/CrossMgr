@@ -18,6 +18,17 @@ import bisect
 import sys
 import re
 
+def getStFtLaps( rider ):
+	with Model.LockRace() as race:
+		laps = race.getCategoryNumLaps( rider.num )
+	laps = min( laps, len(rider.times)-1 )
+	st = getattr( rider, 'firstTime', None )
+	if laps:
+		ft = st + rider.times[laps]
+	else:
+		ft = None
+	return st, ft, laps
+	
 class AdjustTimeDialog( wx.Dialog ):
 	def __init__( self, parent, rider, id = wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, "Adjust Times",
@@ -26,7 +37,7 @@ class AdjustTimeDialog( wx.Dialog ):
 		self.rider = rider
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
 		
-		st, ft, laps = self.getStFtLaps()
+		st, ft, laps = getStFtLaps( self.rider )
 			
 		self.startTime = HighPrecisionTimeEdit( self, wx.ID_ANY, allow_none = not bool(st), seconds = st )
 		self.startTime.Bind( wx.EVT_TEXT, self.updateRideTime )
@@ -68,17 +79,7 @@ class AdjustTimeDialog( wx.Dialog ):
 		self.CentreOnParent(wx.BOTH)
 		self.SetFocus()
 		
-	def getStFtLaps( self ):
-		with Model.LockRace() as race:
-			laps = race.getCategoryNumLaps( self.rider.num )
-		laps = min( laps, len(self.rider.times) )
-		st = getattr( self.rider, 'firstTime', None )
-		if laps:
-			ft = st + self.rider.times[laps]
-		else:
-			ft = None
-		return st, ft, laps
-		
+
 	def updateRideTime( self, event = None ):
 		st = self.startTime.GetSeconds()
 		ft = self.finishTime.GetSeconds()
@@ -88,7 +89,7 @@ class AdjustTimeDialog( wx.Dialog ):
 			self.rideTime.SetLabel( '' )
 
 	def onOK( self, event ):
-		stOld, ftOld, laps = self.getStFtLaps()
+		stOld, ftOld, laps = getStFtLaps(self.rider)
 		st, ft = self.startTime.GetSeconds(), self.finishTime.GetSeconds()
 		if st is not None and ft is not None and st >= ft:
 			Utils.MessageOK( self, 'Start Time must be before Finish Time', 'Time Error', wx.ICON_ERROR )
@@ -891,10 +892,10 @@ class RiderDetail( wx.Panel ):
 							'rideTimeName', 'rideTime',
 							'adjustTime']:
 					getattr( self, w ).Show( True )
-				st = getattr(rider, 'firstTime', None)
-				self.startTime.SetLabel( Utils.formatTime(st) if st is not None else '')
-				self.finishTime.SetLabel( '' )
-				self.rideTime.SetLabel( '' )
+				st, ft, laps = getStFtLaps( rider )
+				self.startTime.SetLabel( Utils.formatTime(st, True) if st is not None else '')
+				self.finishTime.SetLabel( Utils.formatTime(ft, True) if ft is not None else '')
+				self.rideTime.SetLabel( Utils.formatTime(ft-st, True) if ft is not None and st is not None else '')
 			
 			maxLap = race.getMaxLap()
 			if race.numLaps is not None and race.numLaps < maxLap:

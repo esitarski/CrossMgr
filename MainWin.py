@@ -768,6 +768,7 @@ class MainWin( wx.Frame ):
 				del race.excelLink
 			else:
 				race.excelLink = link
+			race.setChanged()
 		self.writeRace()
 		self.refresh()
 		

@@ -1540,17 +1540,17 @@ function RefreshRaceChart()
 		if( categoryCur == 'All' || d['raceCat'] == categoryCur )
 		{
 			var raceTimes = d['raceTimes'];
+			resultsData.push( [	raceTimes.length,
+								raceTimes.length ? raceTimes.back() : 99999,
+								num,
+								d['raceTimes'].slice(0),	// Make sure to make a full copy as we modify these values.
+								d['status'],
+								d['lastTime'],
+								iFromCategory[d['raceCat']]
+							] );
+			categoriesUsed[d['raceCat']] = true;
 			if( raceTimes.length > 0 )
 			{
-				resultsData.push( [	raceTimes.length,
-									raceTimes.length ? raceTimes.back() : 99999,
-									num,
-									d['raceTimes'].slice(0),	// Make sure to make a full copy as we modify these values.
-									d['status'],
-									d['lastTime'],
-									iFromCategory[d['raceCat']]
-								] );
-				categoriesUsed[d['raceCat']] = true;
 				if( raceTimes.back() > dataMax )
 					dataMax = raceTimes.back();
 				if( raceTimes.length > lapsMax )

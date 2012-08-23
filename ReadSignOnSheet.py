@@ -116,7 +116,7 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		for r, row in enumerate(reader.iter_list(sheetName)):
 			cols = sum( 1 for d in row if toAscii(d) )
 			if cols > 4:
-				self.headers = [toAscii(h) for h in row]
+				self.headers = [toAscii(h).strip() for h in row]
 				break
 
 		# If we haven't found a header row yet, assume the first non-empty row is the header.
@@ -124,12 +124,15 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 			for r, row in enumerate(reader.iter_list(sheetName)):
 				cols = sum( 1 for d in row if toAscii(d) )
 				if cols > 0:
-					self.headers = [toAscii(h) for h in row]
+					self.headers = [toAscii(h).strip() for h in row]
 					break
 		
-		# Ignore empty columns.
-		while self.headers and self.headers[-1].isspace() or not self.headers[-1]:
+		# Ignore empty columns on the end.
+		while self.headers and (self.headers[-1].isspace() or not self.headers[-1]):
 			self.headers.pop()
+			
+		# Rename empty columns so as not to confuse the user.
+		self.headers = [h if h else 'BlankHeaderName%03d' % (c+1) for c, h in enumerate(self.headers)]
 		
 		if not self.headers:
 			raise ValueError, 'Could not find a Header Row %s::%s.' % (fileName, sheetName)
