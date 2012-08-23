@@ -101,7 +101,7 @@ class AdjustTimeDialog( wx.Dialog ):
 		undo.pushState()
 		self.rider.firstTime = st
 		if st and ft:
-			rt = fr - st
+			rt = ft - st
 			if not self.rider.times:
 				self.rider.addTime( rt )
 			else:
