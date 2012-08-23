@@ -25,6 +25,10 @@ Category|The Category of the rider matched by the number ranges in the Categorie
 Status|The status of the rider.  More details below.
 Autocorrect Lap Data|If True, CrossMgr will look for duplicate and missing entries and correct them.  It will also project lap times for the rider for the entire race.  If False, CrossMgr will present all entires exactly as input.
 Recommendations|Any recommendations CrossMgr has about this rider that you might want to consider.
+Start|In Time Trial mode, shows the start time of the rider.
+Finish|In Time Trial mode, shows the finish time of the rider.
+Time|In Time Trial mode, shows the rider time of the rider.
+Adjust...|In Time Trial mode, opens a dialog to adjust the Start Time and End Time of the rider.
 
 Turning off Autocorrect for all riders has major implications for CrossMgr.  Without Autocorrect, CrossMgr cannot reliably count laps, display laps to go, or show the race progress.
 It is recommended that you have Autocorrect on for the race leader.
