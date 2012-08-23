@@ -1431,7 +1431,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			race.memo = ''
 			race.minutes = self.raceMinutes
 			race.raceNum = 1
-			race.isTimeTrial = True
+			#race.isTimeTrial = True
 			#'active', 'name', 'catStr', 'startOffset', 'numLaps', 'distance', 'distanceType'
 			race.setCategories( [	(True, 'Junior', '100-199', '00:00', None, 0.5, None),
 									(True, 'Senior', '200-299', '00:15', None, 0.5, None)] )
