@@ -560,6 +560,7 @@ class Rider(object):
 					return []
 		except (ValueError, AttributeError):
 			pass
+		assert len(times) == 0 or len(times) >= 2
 		return times
 		
 	def interpolate( self, stopTime = maxInterpolateTime ):
