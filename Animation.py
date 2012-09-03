@@ -244,7 +244,7 @@ class Animation(wx.PyControl):
 			return (None, None)
 		info = self.data[num]
 		raceTimes = info['raceTimes']
-		if not raceTimes or self.t < raceTimes[0]:
+		if not raceTimes or self.t < raceTimes[0] or len(raceTimes) < 2:
 			return (None, None)
 
 		tSearch = self.t
@@ -253,7 +253,7 @@ class Animation(wx.PyControl):
 			if lastTime == raceTimes[-1]:
 				return (len(raceTimes), lastTime)
 			tSearch = lastTime
-			
+		
 		if tSearch >= raceTimes[-1]:
 			p = len(raceTimes) + float(tSearch - raceTimes[-1]) / float(raceTimes[-1] - raceTimes[-2])
 		else:
