@@ -28,6 +28,9 @@ def DoOrionImport( fname, startTime = None ):
 		JChip.dateToday = raceDate
 		if startTime:
 			raceStart = datetime.datetime.combine( raceDate, startTime )
+			race.resetStartClockOnFirstTag = False
+		else:
+			race.resetStartClockOnFirstTag = True
 		
 		tagNums = GetTagNums( True )
 		
@@ -81,13 +84,14 @@ def DoOrionImport( fname, startTime = None ):
 			errors.insert( 0, 'No matching tags found in Excel link.  Import aborted.' )
 			return errors
 		
+		race.clearAllRiderTimes()
+		
 		if not raceStart:
 			raceStart = tFirst
 			
 		race.startTime = raceStart
 		
 		# Put all the rider times into the race.
-		race.clearRiderTimes()
 		for num, lapTimes in riderRaceTimes.iteritems():
 			for t in lapTimes:
 				raceTime = (t - raceStart).total_seconds()

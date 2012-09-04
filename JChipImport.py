@@ -29,6 +29,9 @@ def DoJchipImport( fname, startTime = None, clearExistingData = True, timeAdjust
 		JChip.dateToday = raceDate
 		if startTime:
 			raceStart = datetime.datetime.combine( raceDate, startTime )
+			race.resetStartClockOnFirstTag = False
+		else:
+			race.resetStartClockOnFirstTag = True
 		
 		tagNums = GetTagNums( True )
 		
@@ -78,15 +81,15 @@ def DoJchipImport( fname, startTime = None, clearExistingData = True, timeAdjust
 			errors.insert( 0, 'No matching tags found in Excel link.  Import aborted.' )
 			return errors
 		
+		# Put all the rider times into the race.
+		if clearExistingData:
+			race.clearAllRiderTimes()
+			
 		if not raceStart:
 			raceStart = tFirst
 			
 		race.startTime = raceStart
 		
-		# Put all the rider times into the race.
-		if clearExistingData:
-			race.clearRiderTimes()
-			
 		for num, lapTimes in riderRaceTimes.iteritems():
 			for t in lapTimes:
 				raceTime = (t - raceStart).total_seconds()
@@ -94,7 +97,7 @@ def DoJchipImport( fname, startTime = None, clearExistingData = True, timeAdjust
 					race.addTime( num, raceTime )
 			
 		if tLast:
-			race.finishTime = tLast
+			race.finishTime = tLast + datetime.timedelta( seconds = 0.0001 )
 			
 		# Figure out the race minutes from the recorded laps.
 		if riderRaceTimes:

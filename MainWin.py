@@ -582,7 +582,7 @@ class MainWin( wx.Frame ):
 			return
 		undo.pushState()
 		with Model.LockRace() as race:
-			race.clearRiderTimes()
+			race.clearAllRiderTimes()
 			race.startTime = startTime
 			race.endTime = endTime
 			for num, t in numTimes:

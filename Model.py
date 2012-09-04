@@ -893,6 +893,14 @@ class Race(object):
 		except KeyError:
 			pass
 			
+	def clearAllRiderTimes( self ):
+		for num in self.riders.iterkeys():
+			self.deleteRiderTimes( num )
+		self.firstRecordedTime = None
+		self.startTime = None
+		self.finishTime = None
+		self.setChanged()
+
 	def deleteRider( self, num ):
 		try:
 			del self.riders[num]
@@ -948,12 +956,6 @@ class Race(object):
 		self.setChanged()
 		return True
 	
-	def clearRiderTimes( self ):
-		for num in self.riders.iterkeys():
-			self.deleteRiderTimes( num )
-		self.firstRecordedTime = None
-		self.setChanged()
-
 	def deleteTime( self, num, t ):
 		if not num in self.riders:
 			return
