@@ -258,7 +258,7 @@ class NumKeypad( wx.Panel ):
 			nLeader, tLeader = race.getTimeToLeader()
 			
 			# Update the RaceHUD
-			if not numLaps or numLaps < 2 or not race.isRunning():
+			if not numLaps or numLaps < 2 or not race.isRunning() or getattr(race, 'isTimeTrial', False):
 				self.raceHUD.SetData()
 			else:
 				tCur = race.curRaceTime()
@@ -477,7 +477,7 @@ class NumKeypad( wx.Panel ):
 	def updateEstFinishTime( self ):
 		race = Model.race
 		changed = False
-		if not race:
+		if not race or getattr(race, 'isTimeTrial', False):
 			changed |= SetLabel( self.estLeaderTime, '' )
 			changed |= SetLabel( self.estLastRiderTime, '' )
 			return changed
