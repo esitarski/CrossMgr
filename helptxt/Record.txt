@@ -49,8 +49,8 @@ Ave Lap Time|Average lap time of the leader.
 Completing Lap|Lap current being completed
 Show Laps to Go|Number of laps to go to be shown on the Lap Counter
 Start Time|Start time of the race, and whether it was started manually or with the first chip read.
-Est. Leader Finish|Projected clock time of the leader's finish time.  This only works if Autocorrect is enabled for all riders.
-Est. Last Rider Finish|Projected clock time of the last rider to finish.  This only works if Autocorrect is enabled Clock|The current time of day.
+Est. Leader Finish|Projected clock time of the leader's finish time.  This only works if Autocorrect is enabled for all riders.  Disabled in time trial mode.
+Est. Last Rider Finish|Projected clock time of the last rider to finish.  This only works if Autocorrect is enabled Clock|The current time of day.  Disabled in time trial mode.
 
 ## Riders on Course
 
