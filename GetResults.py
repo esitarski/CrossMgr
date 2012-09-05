@@ -217,6 +217,22 @@ def GetResults( catName = 'All', getExternalData = False ):
 					setattr( rr, f, '' )
 		
 	return riderResults
+
+@Model.memoize
+def GetLastFinisherTime():
+	results = GetResultsCore()
+	finisher = Model.Rider.Finisher
+	try:
+		return max( r.lastTime for r in results if r.status == finisher )
+	except:
+		return 0.0
+	
+def GetLeaderFinishTime():
+	results = GetResultsCore()
+	if results and results[0].status == Model.Rider.Finisher:
+		return results[0].lastTime
+	else:
+		return 0.0
 	
 @Model.memoize
 def GetCategoryDetails():

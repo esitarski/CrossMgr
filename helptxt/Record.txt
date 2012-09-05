@@ -43,13 +43,14 @@ Field|Description
 Race Time|The time since the race started.
 Manual/Automatic Laps|For timed races, indicates whether the total laps should be computed automatically, or manually
 Total Laps|For timed races, indicates the number of laps of the fastest category on course.  If the previous field is Manual, you can set the number of lap here yourself.
-Leader Finish|Projected leader finish time.  This only works if Autocorrect is enabled for all riders.
-Last Rider Finish|Projected time of the last rider to finish.  This only works if Autocorrect is enabled for all riders.
+Est. Leader Time|Projected leader race time.  This only works if Autocorrect is enabled for all riders.
+Est. Last Rider Time|Projected time of the last rider to finish.  This only works if Autocorrect is enabled for all riders.
 Ave Lap Time|Average lap time of the leader.
 Completing Lap|Lap current being completed
 Show Laps to Go|Number of laps to go to be shown on the Lap Counter
 Start Time|Start time of the race, and whether it was started manually or with the first chip read.
-Clock Time|The current time of day.
+Est. Leader Finish|Projected clock time of the leader's finish time.  This only works if Autocorrect is enabled for all riders.
+Est. Last Rider Finish|Projected clock time of the last rider to finish.  This only works if Autocorrect is enabled Clock|The current time of day.
 
 ## Riders on Course
 

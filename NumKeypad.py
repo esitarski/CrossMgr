@@ -6,7 +6,7 @@ from wx.lib.stattext import GenStaticText
 import bisect
 import Utils
 from Utils import SetValue, SetLabel
-from GetResults import GetResults
+from GetResults import GetResults, GetLastFinisherTime, GetLeaderFinishTime
 import Model
 import sys
 import datetime
@@ -137,7 +137,7 @@ class NumKeypad( wx.Panel ):
 		gbs.Add( self.numLaps, pos=(rowCur, colCur+1), span=(1,1) )
 		rowCur += 1
 		
-		label = wx.StaticText(self, wx.ID_ANY, "Leader Finish")
+		label = wx.StaticText(self, wx.ID_ANY, "Est. Leader Time")
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
 		self.leaderFinishTime = wx.StaticText(self, wx.ID_ANY, "")
@@ -145,7 +145,7 @@ class NumKeypad( wx.Panel ):
 		gbs.Add( self.leaderFinishTime, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
 
-		label = wx.StaticText(self, wx.ID_ANY, "Last Rider Finish")
+		label = wx.StaticText(self, wx.ID_ANY, "Est. Last Rider Time")
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
 		self.lastRiderFinishTime = wx.StaticText(self, wx.ID_ANY, "")
@@ -185,17 +185,31 @@ class NumKeypad( wx.Panel ):
 		self.raceStartTime = wx.StaticText( self, wx.ID_ANY, '' )
 		self.raceStartTime.SetFont( font )
 		gbs.Add( self.raceStartTime, pos=(rowCur, colCur+1), span=(1, 1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
-		rowCur += 1
 		
 		rowCur += 1
-		label = wx.StaticText(self, wx.ID_ANY, "Clock Time")
+		label = wx.StaticText(self, wx.ID_ANY, "Est. Leader Finish")
+		label.SetFont( font )
+		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
+		self.estLeaderTime = wx.StaticText( self, wx.ID_ANY, '' )
+		self.estLeaderTime.SetFont( font )
+		gbs.Add( self.estLeaderTime, pos=(rowCur, colCur+1), span=(1, 1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
+		rowCur += 1
+		label = wx.StaticText(self, wx.ID_ANY, "Est. Last Rider Finish")
+		label.SetFont( font )
+		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
+		self.estLastRiderTime = wx.StaticText( self, wx.ID_ANY, '' )
+		self.estLastRiderTime.SetFont( font )
+		gbs.Add( self.estLastRiderTime, pos=(rowCur, colCur+1), span=(1, 1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
+		
+		rowCur += 1
+		label = wx.StaticText(self, wx.ID_ANY, "Clock")
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
 		self.clockTime = wx.StaticText( self, wx.ID_ANY, '' )
 		self.clockTime.SetFont( font )
 		gbs.Add( self.clockTime, pos=(rowCur, colCur+1), span=(1, 1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
-
+		
 		rowCur += 1
 		self.message = wx.StaticText( self, wx.ID_ANY, '' )
 		self.message.SetFont( font )
@@ -249,7 +263,7 @@ class NumKeypad( wx.Panel ):
 				self.raceHUD.SetData()
 			else:
 				leaderTimes = race.getLeaderTimesNums()[0][1:numLaps+1]
-				leaderTimes.append( race.getLastFinisherTime() )
+				leaderTimes.append( GetLastFinisherTime() )
 				self.raceHUD.SetData( nowTime = tCur, lapTimes = leaderTimes, leader = leaderNum )
 				
 			if tLeader is not None:
@@ -396,6 +410,7 @@ class NumKeypad( wx.Panel ):
 				self.leadersLapTime,
 				self.lapCompleting,
 				self.lapsToGo,
+				self.estLeaderTime, self.estLastRiderTime,
 				self.message
 				]
 				
@@ -419,12 +434,13 @@ class NumKeypad( wx.Panel ):
 		else:
 			self.numLaps.SetItems( [ str(race.numLaps) ] )
 			self.numLaps.SetSelection( 0 )
-			changed |= SetLabel( self.leaderFinishTime, Utils.formatTime(race.getLeaderTime()) )
-			changed |= SetLabel( self.lastRiderFinishTime, Utils.formatTime(race.getLastFinisherTime()) )
+			changed |= SetLabel( self.leaderFinishTime, Utils.formatTime(GetLeaderFinishTime()) )
+			changed |= SetLabel( self.lastRiderFinishTime, Utils.formatTime(GetLastFinisherTime()) )
 			changed |= SetLabel( self.leadersLapTime, Utils.formatTime(race.getLeaderLapTime()) )
 			changed |= SetLabel( self.lapCompleting, str(race.numLaps if race.numLaps is not None else 0) )
 			changed |= SetLabel( self.lapsToGo, '0' )
 			changed |= SetLabel( self.message, '' )
+			changed |= self.updateEstFinishTime()
 			
 		if changed:
 			Utils.LayoutChildResize( self.message )
@@ -481,6 +497,25 @@ class NumKeypad( wx.Panel ):
 		maxLaps = minLaps + 10
 		return minLaps, maxLaps
 	
+	def updateEstFinishTime( self ):
+		race = Model.race
+		changed = False
+		if not race:
+			changed |= SetLabel( self.estLeaderTime, '' )
+			changed |= SetLabel( self.estLastRiderTime, '' )
+			return changed
+			
+		try:
+			changed |= SetLabel( self.estLeaderTime, 
+				(race.startTime + datetime.timedelta(seconds = GetLeaderFinishTime())).strftime('%H:%M:%S') )
+			changed |= SetLabel( self.estLastRiderTime,
+				(race.startTime + datetime.timedelta(seconds = GetLastFinisherTime())).strftime('%H:%M:%S') )
+		except:
+			changed |= SetLabel( self.estLeaderTime, '' )
+			changed |= SetLabel( self.estLastRiderTime, '' )
+			
+		return changed
+			
 	def refreshLaps( self ):
 		with Model.LockRace() as race:
 			enable = True if race is not None and race.isRunning() else False
@@ -530,10 +565,11 @@ class NumKeypad( wx.Panel ):
 			# Set the projected finish time and laps.
 			if lapCompleting >= 1 or not isAutomatic:
 				changed |= SetLabel( self.leaderFinishTime, Utils.formatTime(expectedRaceFinish) )
-				changed |= SetLabel( self.lastRiderFinishTime, Utils.formatTime(race.getLastFinisherTime()) )
+				changed |= SetLabel( self.lastRiderFinishTime, Utils.formatTime(GetLastFinisherTime()) )
 				changed |= SetLabel( self.leadersLapTime, Utils.formatTime(leadersExpectedLapTime) )
 				changed |= SetLabel( self.lapsToGo, str(lapsToGo) )
 				changed |= SetLabel( self.lapCompleting, str(lapCompleting) )
+				changed |= self.updateEstFinishTime()
 				
 				if   lapsToGo == 2 and race.isLeaderExpected():
 					changed |= SetLabel( self.message, '%d: Leader Bell Lap Alert' % leaderNum )
@@ -555,6 +591,8 @@ class NumKeypad( wx.Panel ):
 				changed |= SetLabel( self.leadersLapTime, '' )
 				changed |= SetLabel( self.lapsToGo, '' )
 				changed |= SetLabel( self.lapCompleting, str(lapCompleting) )
+				changed |= SetLabel( self.estLeaderTime, '' )
+				changed |= SetLabel( self.estLastRiderTime, '' )
 				changed |= SetLabel( self.message, 'Collecting Data' )
 				if race.numLaps is not None:
 					race.numLaps = None

@@ -1515,17 +1515,6 @@ class Race(object):
 	def getRiderNums( self ):
 		return self.riders.keys()
 
-	def getLastFinisherTime( self ):
-		if self.numLaps is not None:
-			lap = self.numLaps
-		else:
-			lap = self.getMaxLap()
-		entries = self.interpolateLap( lap, True )
-		try:
-			return entries[-1].t
-		except:
-			return 0.0
-		
 	#---------------------------------------------------------------------------------------
 
 	def getResultsList( self, catName = 'All', lap = None ):
