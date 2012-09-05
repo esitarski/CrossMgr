@@ -234,7 +234,7 @@ class NumKeypad( wx.Panel ):
 		self.lapCountList.InsertColumn( 2, '',			wx.LIST_FORMAT_LEFT,	90 )
 		rcVertical.Add( self.lapCountList, 1, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, border = 4 )
 		
-		horizontalMainSizer.Add( rcVertical, 1, flag=wx.EXPAND )
+		horizontalMainSizer.Add( rcVertical, 1, flag=wx.EXPAND|wx.LEFT, border = 4 )
 		
 		#----------------------------------------------------------------------------------------------
 		self.raceHUD = RaceHUD( self, wx.ID_ANY )
