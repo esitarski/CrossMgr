@@ -188,7 +188,6 @@ def GetResultsCore( catName = 'All' ):
 			elif rr != leader and not (isTimeTrial and rr.lastTime == leader.lastTime):
 				rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
 		
-	# Return the final results.
 	return riderResults
 
 def GetResults( catName = 'All', getExternalData = False ):

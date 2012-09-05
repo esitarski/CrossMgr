@@ -258,12 +258,12 @@ class NumKeypad( wx.Panel ):
 			nLeader, tLeader = race.getTimeToLeader()
 			
 			# Update the RaceHUD
-			tCur = race.curRaceTime()
-			if not numLaps or numLaps < 2 or not race.isRunning() or nLeader is None or tLeader is None:
+			if not numLaps or numLaps < 2 or not race.isRunning():
 				self.raceHUD.SetData()
 			else:
+				tCur = race.curRaceTime()
 				leaderTimes = race.getLeaderTimesNums()[0][1:numLaps+1]
-				leaderTimes.append( GetLastFinisherTime() )
+				leaderTimes.append( max(tCur, GetLastFinisherTime()) )
 				self.raceHUD.SetData( nowTime = tCur, lapTimes = leaderTimes, leader = leaderNum )
 				
 			if tLeader is not None:
@@ -272,29 +272,6 @@ class NumKeypad( wx.Panel ):
 						self.tada = Utils.PlaySound( 'tada.wav' )
 				else:
 					self.tada = None
-						
-				'''
-				# update the Time to Leader.
-				leaderLapsToGo -= 1
-				if leaderLapsToGo >= 0:
-					timeToLeader = '%s (%d to see %d to go)' % (Utils.formatTime(tLeader), nLeader, leaderLapsToGo)
-					
-					# Play the bell reminder.
-					if leaderLapsToGo == 1 and tLeader <= 10.0 and not getattr(race, 'isTimeTrial', False):
-						if not self.bell:
-							self.bell = Utils.PlaySound( 'bell.wav' )
-					else:
-						self.bell = None
-						
-				else:
-					timeToLeader = '%s (%d)' % (Utils.formatTime(tLeader), nLeader)
-			
-				if tLeader < 30.0:
-					bgColour = wx.GREEN
-				
-		self.timeToLeader.SetBackgroundColour( bgColour )
-		self.timeToLeader.SetLabel( timeToLeader )
-		'''
 
 	def refreshRaceTime( self ):
 		tClockStr = ''
