@@ -219,7 +219,7 @@ def GetResults( catName = 'All', getExternalData = False ):
 
 @Model.memoize
 def GetLastFinisherTime():
-	results = GetResultsCore()
+	results = GetResultsCore( 'All' )
 	finisher = Model.Rider.Finisher
 	try:
 		return max( r.lastTime for r in results if r.status == finisher )
@@ -227,7 +227,7 @@ def GetLastFinisherTime():
 		return 0.0
 	
 def GetLeaderFinishTime():
-	results = GetResultsCore()
+	results = GetResultsCore( 'All' )
 	if results and results[0].status == Model.Rider.Finisher:
 		return results[0].lastTime
 	else:
@@ -235,7 +235,7 @@ def GetLeaderFinishTime():
 	
 @Model.memoize
 def GetCategoryDetails():
-	results = GetResultsCore()
+	results = GetResultsCore( 'All' )
 	if not results:
 		return {}
 		
