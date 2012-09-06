@@ -35,9 +35,11 @@ class memoize(object):
 		cls.cache = {}
    
 	def __init__(self, func):
+		print( 'memoize:', func.__name__ )
 		self.func = func
 		
 	def __call__(self, *args):
+		print( self.func.__name__, args )
 		try:
 			return memoize.cache[self.func.__name__][args]
 		except KeyError:
@@ -45,6 +47,7 @@ class memoize(object):
 			memoize.cache.setdefault(self.func.__name__, {})[args] = value
 			return value
 		except TypeError:
+			print( 'memoize failed' )
 			# uncachable -- for instance, passing a list as an argument.
 			# Better to not cache than to blow up entirely.
 			return self.func(*args)
@@ -563,9 +566,10 @@ class Rider(object):
 		assert len(times) == 0 or len(times) >= 2
 		return times
 		
+	@memoize
 	def interpolate( self, stopTime = maxInterpolateTime ):
 		if not self.times or self.status in [Rider.DNS, Rider.DQ]:
-			return []
+			return tuple()
 		
 		# Check if we need to do any interpolation or if the user wants the raw data.
 		if not getattr(self, 'autocorrectLaps', True):
@@ -576,8 +580,8 @@ class Rider(object):
 			# This avoids a whole lot of special cases later.
 			iTimes[0] = 0.0
 			iTimes[1:] = self.times
-			return [Entry(t=t, lap=i, num=self.num, interp=False)
-						for i, t in enumerate(self.removeEarlyTimes(iTimes))]
+			return tuple(Entry(t=t, lap=i, num=self.num, interp=False)
+						for i, t in enumerate(self.removeEarlyTimes(iTimes)))
 
 		# Adjust the stop time.
 		st = stopTime
@@ -623,7 +627,7 @@ class Rider(object):
 		
 		if len(iTimes) <= 1:
 			return []
-		return [Entry(t=it[0], lap=i, num=self.num, interp=it[1]) for i, it in enumerate(iTimes)]
+		return tuple(Entry(t=it[0], lap=i, num=self.num, interp=it[1]) for i, it in enumerate(iTimes))
 		
 	def hasInterpolatedTime( self, tMax ):
 		interpolate = self.interpolate()

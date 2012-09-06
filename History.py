@@ -365,7 +365,7 @@ class History( wx.Panel ):
 					maxLaps += 2
 				doLapsToGo = False
 					
-			entries = race.interpolateLap( maxLaps )
+			entries = race.interpolateLap( maxLaps, False )
 			entries = [e for e in entries if e.lap <= race.getCategoryNumLaps(e.num)]
 			
 			# Collect the number and times for all entries so we can compute lap times.

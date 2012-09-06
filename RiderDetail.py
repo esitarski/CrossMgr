@@ -903,7 +903,7 @@ class RiderDetail( wx.Panel ):
 			
 			# Figure out which laps this rider was lapped in.
 			if getattr(rider, 'autocorrectLaps', True):
-				entries = race.interpolateLap( maxLap )
+				entries = race.interpolateLap( maxLap, False )
 			else:
 				entries = race.getRider(num).interpolate()
 			

@@ -59,7 +59,7 @@ class Stats( wx.Panel ):
 		if race.numLaps is not None and race.numLaps < maxLap:
 			maxLap = race.numLaps
 		histogramData = []
-		entries = race.interpolateLap( maxLap )
+		entries = race.interpolateLap( maxLap, False )
 		entries = [e for e in entries if e.num in finishers]	# Trim the results to this category.
 		lastRiderLapTime = {}
 		riderDataCount = {}

@@ -335,12 +335,13 @@ class ForecastHistory( wx.Panel ):
 			#------------------------------------------------------------------
 			# Select the interpolated entries around now.
 			leaderPrev, leaderNext = race.getPrevNextLeader( tRace )
-			backSecs = race.getAverageLapTime() / 4.0
+			averageLapTime = race.getAverageLapTime()
+			backSecs = averageLapTime / 4.0
 			
 			expectedShowMax = 32
 			
 			tMin = tRace - backSecs
-			tMax = tRace + race.getAverageLapTime()
+			tMax = tRace + averageLapTime
 			iCur = bisect.bisect_left( entries, Model.Entry(0, 0, tRace, True) )
 			iLeft = max(0, iCur - expectedShowMax/2)
 			seen = {}
@@ -354,7 +355,7 @@ class ForecastHistory( wx.Panel ):
 			textColour = {}
 			#------------------------------------------------------------------
 			# Highlight the missing riders.
-			tMissing = tRace - race.getAverageLapTime() / 8.0
+			tMissing = tRace - averageLapTime / 8.0
 			iNotMissing = 0
 			for r in (i for i, e in enumerate(expected) if e.t < tMissing):
 				for c in xrange(iColMax):
