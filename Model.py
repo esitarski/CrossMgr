@@ -35,11 +35,11 @@ class memoize(object):
 		cls.cache = {}
    
 	def __init__(self, func):
-		print( 'memoize:', func.__name__ )
+		# print( 'memoize:', func.__name__ )
 		self.func = func
 		
 	def __call__(self, *args):
-		print( self.func.__name__, args )
+		# print( self.func.__name__, args )
 		try:
 			return memoize.cache[self.func.__name__][args]
 		except KeyError:
@@ -47,7 +47,6 @@ class memoize(object):
 			memoize.cache.setdefault(self.func.__name__, {})[args] = value
 			return value
 		except TypeError:
-			print( 'memoize failed' )
 			# uncachable -- for instance, passing a list as an argument.
 			# Better to not cache than to blow up entirely.
 			return self.func(*args)
@@ -574,7 +573,7 @@ class Rider(object):
 		# Check if we need to do any interpolation or if the user wants the raw data.
 		if not getattr(self, 'autocorrectLaps', True):
 			if not self.times:
-				return []
+				return tuple()
 			iTimes = [None] * (len(self.times) + 1)
 			# Add a zero start time for the beginning of the race.
 			# This avoids a whole lot of special cases later.
@@ -594,7 +593,7 @@ class Rider(object):
 		iTimes = self.getCleanLapTimes()
 		
 		if not iTimes:
-			return []
+			return tuple()
 
 		# Flag that these are not interpolated times.
 		expected = self.getExpectedLapTime( iTimes )
@@ -626,7 +625,7 @@ class Rider(object):
 			del iTimes[i:]
 		
 		if len(iTimes) <= 1:
-			return []
+			return tuple()
 		return tuple(Entry(t=it[0], lap=i, num=self.num, interp=it[1]) for i, it in enumerate(iTimes))
 		
 	def hasInterpolatedTime( self, tMax ):
