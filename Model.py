@@ -1579,7 +1579,10 @@ class Race(object):
 		catTimesNums = self.getCategoryTimesNums()
 		ret = [{},{}]
 		for cat, catEntries in catEntries.iteritems():
-			catTimes, catNums = catTimesNums[cat]
+			try:
+				catTimes, catNums = catTimesNums[cat]
+			except:
+				continue
 			iLap = bisect.bisect_right( catTimes, tRace )
 			for r in xrange(2):
 				if iLap >= len(catTimes):
