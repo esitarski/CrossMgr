@@ -1520,37 +1520,6 @@ class Race(object):
 
 	#---------------------------------------------------------------------------------------
 
-	def getResultsList( self, catName = 'All', lap = None ):
-		if not self.riders:
-			return []
-			
-		if lap is None or lap > self.getMaxLap():
-			lap = self.getMaxLap()
-		if self.numLaps is not None and self.numLaps < lap:
-			lap = self.numLaps
-			
-		category = self.categories.get( catName, None )
-		if category and category.numLaps:
-			lap = min( lap, category.numLaps )
-
-		entries = self.interpolateLap( lap, True )
-		if not entries:
-			return []
-
-		# Add the latest known time for every finished or pulled rider.
-		finishers = []
-		finishNums = set()
-		finisherStatusSet = Race.finisherStatusSet
-		for e in (e for e in reversed(entries) if e.num not in finishNums):
-			finishNums.add( e.num )
-			if 	race[e.num].status in finisherStatusSet and \
-					(category is None or category == self.getCategory(e.num)):
-				finishers.append( e )
-
-		# Sort by laps completed, time and num.
-		finishers.sort( key = lambda x: (-x.lap, x.t, x.num) )
-		return finishers
-
 	def getPrevNextRiderPositions( self, tRace ):
 		if not self.isRunning() or not self.riders:
 			return {}, {}
@@ -1601,44 +1570,6 @@ class Race(object):
 		
 	#----------------------------------------------------------------------------------------
 	
-	def getResults( self, catName = 'All' ):
-		''' Output: colNames, finishers (includes pulled), dnf, dns, dq '''
-		finishers = self.getResultsList( catName )
-		if not finishers:
-			colnames = []
-			results = []
-		else:
-			# Format the timed results by laps down.
-			maxLaps = finishers[0].lap
-			results = []
-			for e in finishers:
-				lapsDown = maxLaps - e.lap
-				if lapsDown < 0:
-					lapsDown = 0
-				# print 'lapsDown=%d e.lap=%d' % (lapsDown, e.lap)
-				while lapsDown >= len(results):
-					results.append( [] )
-				results[lapsDown].append( e )
-
-			# Get the column labels and trim out the empty columns.
-			colnames = [ str(-k) if k > 0 else str(maxLaps) for k, r in enumerate(results) if len(r) > 0 ]
-			results = [ r for r in results if len(r) > 0 ]
-
-		# Get the DNF, DNS and DQ riders.
-		category = self.categories.get( catName, None )
-		nonFinishersStatusSet = Race.nonFinisherStatusSet
-		ridersSubset = [r for r in self.riders.itervalues()
-							if r.status in nonFinishersStatusSet and 
-								(category is None or category == self.getCategory(r.num))]
-		nonFinishers = []
-		for status in Race.nonFinisherStatusList:
-			numTimes = [(r.num, r.tStatus if r.tStatus is not None else -sys.float_info.max)
-							for r in ridersSubset if r.status == status]
-			numTimes.sort( key = lambda x : (-x[1], x[0]) )
-			nonFinishers.append( numTimes if numTimes else None )
-
-		return colnames, results, nonFinishers[0], nonFinishers[1], nonFinishers[2]
-
 	@memoize
 	def getCategoryBestLaps( self, catName = 'All' ):
 		category = self.categories.get( catName, None )
