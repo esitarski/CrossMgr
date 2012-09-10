@@ -257,7 +257,7 @@ class SplitNumberDialog( wx.Dialog ):
 
 	def onOK( self, event ):
 		num1 = self.numEdit1.GetValue()
-		num2 = self.numEdit1.GetValue()
+		num2 = self.numEdit2.GetValue()
 		if not num1 or not num2 or num1 == num2:
 			return
 			
@@ -267,11 +267,11 @@ class SplitNumberDialog( wx.Dialog ):
 		undo.pushState()
 		with Model.LockRace() as race:
 		
-			race.numTimeInfo.delete( entry.num, entry.t )
+			race.numTimeInfo.delete( self.entry.num, self.entry.t )
 			race.numTimeInfo.add( num1, t1 )
 			race.numTimeInfo.add( num2, t2 )
 			
-			race.deleteTime( entry.num, entry.t )
+			race.deleteTime( self.entry.num, self.entry.t )
 			race.addTime( num1, t1 )
 			race.addTime( num2, t2 )
 			
