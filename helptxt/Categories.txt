@@ -46,7 +46,7 @@ Suggested Laps|Computed by CrossMgr.  Important if running a race by time rather
 Number patterns are expressive and flexible.
 For example, consider "100-199, -151, -155, 205, 220-229" which would match to the numbers from 100 to 199, without 151 and 155, and including 205, and 200 to 229.  The idea is that Categories correspond to number ranges, so there aren't many exceptions.
 
-If you have a lot of exceptions, it is quicker and easier set the exception from the [RiderDetail](RiderDetail.html) screen rather than from Categories.   Assigning the category from RiderCategory automatically adds the appropriate acceptions to all number patterns.
+If you have a lot of exceptions, it is quicker and easier set the exception from the [RiderDetail][] screen rather than from Categories.   Assigning the category from RiderCategory automatically adds the appropriate acceptions to all number patterns.
 
 To find the category of a rider, CrossMgr starts with the first category and checks for a match in the number pattern.  If that fails, it continues to the second category, etc.  The first Category that matches the rider's number is considered the rider's Category.
   

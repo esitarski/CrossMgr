@@ -10,7 +10,7 @@ Press this button to start the race.
 
 When the race is running, press this button stop the race.
 
-Stopping the race turns off the ability to enter values through the [Record](Record.html) screen.  It is always possible to make manually edits at any time.
+Stopping the race turns off the ability to enter values through the [Record][] screen.  It is always possible to make manually edits at any time.
 
 ## Reset Start Clock on First Tag Read
 This option only applies to JChip.  After the race is started with the Start button, this option resets the race clock to zero on the first tag read.

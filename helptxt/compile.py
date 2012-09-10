@@ -3,6 +3,7 @@ import glob
 import os
 import zipfile
 import shutil
+import cStringIO as StringIO
 from contextlib import contextmanager
 
 @contextmanager 
@@ -32,11 +33,20 @@ def CompileHelp( dir = '.' ):
 			epilog = f.read()
 
 		contentDiv = '<div class="content">'
+		
+		with open('Links.md') as f:
+			links = f.read()
 			
 		for fname in glob.glob("./*.txt"):
 			print fname, '...'
 			with open(fname) as f:
-				htmlSave = html = md.convert( f.read() )
+				input = StringIO.StringIO()
+				input.write( links )
+				input.write( f.read() )
+				
+				htmlSave = html = md.convert( input.getvalue() )
+				input.close()
+				
 				html = html.replace( '</div>', '</div>' + '\n' + contentDiv, 1 )
 				if htmlSave == html:
 					html = contentDiv + '\n' + html

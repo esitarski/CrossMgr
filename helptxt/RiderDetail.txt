@@ -67,7 +67,7 @@ Autocorrect looks for two types of errors that can happen in Manual input:
 With autocorrect on, CrossMgr will also project future lap times for riders.
 Autocorrect is not perfect, and sometimes CrossMgr gets it wrong.
 
-If deselected, CrossMgr will not try to autocorrect entries.  This allows you to see the raw input data so that you can correct it manually.
+If this option is deselected, CrossMgr will not try to autocorrect entries.  This allows you to see the raw input data so that you can correct it manually.
 However, it also means that CrossMgr will not be able to project future lap times to show in the "Expected:" window.
 
 Chip timing creates different classes of errors that are not similar to manual input.  Specifically, there can by many "spurious reads" from the chip reader if riders stand around the finish line while other riders are finishing.
@@ -75,6 +75,8 @@ Chip timing creates different classes of errors that are not similar to manual i
 You may wish to turn off the autocorrect feature when fixing up data from chip timed race (see the Edit menu documentation).
 
 This is useful if you want to make manual corrections.
+
+For example, say you had a rider who missed a lap due to a flat, but CrossMgr is auto-correcting and inserting the missed lap.  Turn off autocorrect.
 
 ## Time Entries (bottom left of screen)
 
@@ -111,9 +113,9 @@ Clicking this button shows a number of additional actions than can be performed:
 Action|Description
 :-----|:----------
 Delete Rider from Race...|Delete this rider, and all associated entries, from the race.  Useful if you typed in a wrong number at some point and you want to get rid of it.
-Change Rider's Number...|Change the number of this rider.  Useful is the rider got the wrong number at registration.
+Change Rider's Number...|Change the number of this rider.  Useful is the rider got the wrong number at registration and needs to be consitent, say,  in a series.
 Swap Number with Other Rider...|Swap this rider's number with another rider's number.  Useful if two riders got their numbers switched at registration.
-Copy Rider Times to New Number...|Copies this rider's times to a new number.  Useful if, say, you have a rider who's number fell off, and you have no entries for him/her.  In this case, choose another rider that was racing closely to the missing rider, copy the entries, the make some manual edits to the copy to get the finish order correct.  Problem solved.
+Copy Rider Times to New Number...|Copies this rider's times to a new number.  Useful if, say, you have a rider who's number fell off, and you have no entries for him/her.  In this case, choose another rider that was racing closely to the missing rider, copy the entries, the make some manual edits to the copy to get the finish order correct.
 
 Remember, Ctrl-Z is undo!  (Ctrl-Y is redo).
 

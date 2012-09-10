@@ -10,7 +10,7 @@ Property|Description
 Race Name|Name of the race.  Also used in the filename.
 Organizer|Organizer of the race.  Included in the HTML results output.
 Date|Date of the race.  Used in the filename and all output.
-Race #|The number of the race in the day at the event.  Also used in the filename.
+Race #|The number of the race in the day at the event.  Also used in the filename.  This is automatically incremented when you do "File/New Next..."
 Scheduled Start|Scheduled start of the race.  This is used in the results output.  Of course, the race could actually start at a different time.
 Race Minutes|The number of minutes in the race for timed races (like CycloCross).  For lap counted races, this is not as important.
 Memo|Anything you wish to type in here (weather conditions, your mood, etc.)

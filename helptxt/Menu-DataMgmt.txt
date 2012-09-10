@@ -6,7 +6,7 @@
 ## Link to External Excel Data...
 Link to an external Excel file containing additional rider data.
 
-This option opens up a Wizard to configure a link to an Excel sheet:
+This option opens up a Wizard to configure a link to an Excel sheet.  The Excel sheet must have a header row with the column names.  The Wizard has the following steps:
 
 1. Choose the Excel workbook containing your additional data.
 1. Choose the sheet within the Excel sheet.

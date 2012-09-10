@@ -67,16 +67,16 @@ RiderDetail|Jump to the RiderDetail for this rider.
 Each screen can be selected by clicking on the tab at the top of the screen, or pressing the function key corresponding to the number on the tab.
 For example, F3 selects the Results screen.
 
-* [Actions](Actions.html)
-* [Record](Record.html)
-* [Results](Results.html)
-* [History](History.html)
-* [RiderDetail](RiderDetail.html)
-* [Chart](Chart.html)
-* [Animation](Animation.html)
-* [Recommendations](Recommendations.html)
-* [Categories](Categories.html)
-* [Properties](Properties.html)
+* [Actions][]
+* [Record][]
+* [Results][]
+* [History][]
+* [RiderDetail][]
+* [Chart][]
+* [Animation][]
+* [Recommendations][]
+* [Categories][]
+* [Properties][]
 
 # Keyboard Accelerators
 

@@ -5,4 +5,4 @@
 
 Runs a demo of CrossMgr based on automatically generated data.
 
-Useful for exploring the capabilties of CrossMgr.
+Useful for exploring the capabilties of CrossMgr.  See [CrossMgrTutorial.doc.](https://www.sites.google.com/site/crossmgrsoftware/file-cabinet) for a detailed explanation about how to handle multiple categories, missed entries and disputes in the demo data.
