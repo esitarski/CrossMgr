@@ -43,9 +43,9 @@ From [Actions][], press "Finish" when the race is over.
 
 CrossMgr can handle multiple categories in one race at one time.  It comes with some defaults, but they are not very descriptive.  Configure more descriptive categories in [Categories][].
 
-You configure the lap (or race) distance in Categories.  Units are the same as configured in [Properties][].
+You configure the lap (or race) distance in Categories.  Distance Units are the same as configured in [Properties][].
 
-CrossMgr works best when you have number ranges for each category, but it's OK if you don't.  It's also OK if there are riders who's numbers don't match the category range.
+CrossMgr works best when you have number ranges for each category, but it's OK if you don't.  It's also OK if there are riders who's numbers don't match the category range.  Just make sure that all the numbers are unique in a race!
 
 If a rider is showing in the wrong categegry in the [Results][], double-click on the rider.  This will bring up the [RiderDetail][] dialog.  From this dialog, change the rider to the right category.
 
@@ -62,7 +62,8 @@ After the race is finished, review the results in the [Results][] screen.  If yo
 # Using CrossMgr to the Fullest
 There are many features available in CrossMgr that you can use as you feel more comfortable.  Here are some suggestions for improving your Results:
 
-1. Configure the Graphic and Email in your output.  See [Options][] for details.
+1. Publish results in HTML for the web.  See [File/Export Results to HTML...](File.html#export-results-to-html).
+1. Configure the Graphic and Email in your published output.  See [Options][] for details.
 1. Publish results directly to a website with FTP.  See [File/Publish HTML Results with FTP...](Menu-File.html#publish-html-results-with-ftp) for details.
 1. Publish results live during a race.  See [File/Publish HTML Results with FTP...](Menu-File.html#publish-html-results-with-ftp) for details and look at the "Automatically Upload Results During Race" feature.
-1. 
+1. Use the JChip chip timing system system.  See [ChipReader][].
