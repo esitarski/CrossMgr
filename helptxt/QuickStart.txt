@@ -28,7 +28,7 @@ That's really all you need to do.  At this point you are ready to start a race.
 
 For the next race, do File/New Next... (see [File][] ).  This increments the race number but keeps all the other information to save typing.
 
-## Start a race.
+## Start a Race
 When you are ready to start a race, goto [Actions][] and press Start.  This will bring you to the [Record](Record.html) screen.  Type in the numbers as the riders go by on the first lap.  After the first lap, CrossMgr will predict the riders in the lower left.
 
 When a rider comes around again, you don't have to type in the number again - just click on the number in the lower left (it's still OK if you type it in again).
@@ -62,8 +62,10 @@ After the race is finished, review the results in the [Results][] screen.  If yo
 # Using CrossMgr to the Fullest
 There are many features available in CrossMgr that you can use as you feel more comfortable.  Here are some suggestions for improving your Results:
 
-1. Publish results in HTML for the web.  See [File/Export Results to HTML...](File.html#export-results-to-html).
-1. Configure the Graphic and Email in your published output.  See [Options][] for details.
+1. Publish results in HTML to post on your website.  See [File/Export Results to HTML...](Menu-File.html#export-results-to-html).
+1. Customize the Graphic in your published output.  See [Options][] for details.
+1. Set the Email in the published output so people can email comments and corrections.  See [Options][] for details.
 1. Publish results directly to a website with FTP.  See [File/Publish HTML Results with FTP...](Menu-File.html#publish-html-results-with-ftp) for details.
-1. Publish results live during a race.  See [File/Publish HTML Results with FTP...](Menu-File.html#publish-html-results-with-ftp) for details and look at the "Automatically Upload Results During Race" feature.
+1. Publish results live during a race.  See [File/Publish HTML Results with FTP...](Menu-File.html#publish-html-results-with-ftp) for details.  Look at the "Automatically Upload Results During Race" feature.
 1. Use the JChip chip timing system system.  See [ChipReader][].
+1. Use CrossMgr for Time Trials.  See [Time Trial Mode](Properties.html#time-trial-mode).

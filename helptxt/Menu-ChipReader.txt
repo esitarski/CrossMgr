@@ -19,7 +19,7 @@ Notes about the JChip reader:
 
 1. All reads before the start of the race are ignored.
 1. Reads after the start of the race, but before the Start Offset of a category will be registered, but ignored in the results.
-1. A race can be started by the first tag read.  See [Actions][] for more details.
+1. A race can be started by the first tag read.  See [Actions][] for more details.  When a race is started with the first tag read, the riders are staged behind the start/finish line, CrossMgr is started, then the riders are started.  The first rider over the line will reset the CrossMgr start clock.  This allows you to start a race without being at the computer.
 
 ## JChip Setup
 Open the JChip Setup Dialog.
@@ -56,18 +56,18 @@ Now, turn on the JChip receiver.  In the CrossMgr Messages section, you should s
 
 Now, walk across the JChip mat with some chips.  You should see the connection and tag information showing up in the "Messages" section.  Something like this:
 
-> listening for JChip connection...
-> *******************************************
-> connected: JChip receiver
-> waiting: for JChip receiver to respond
-> receiver name: JCHIP-TEST12
-> transmitting: GT command to JChip receiver (gettime)
-> getTime: 013005032=14:00:50.32
-> timeAdjustment: JChip time will be adjusted by 0:00:00.02 to match computer
-> transmitting: S0000 command to JChip receiver (start transmission)
-> 1: tag=413A74, time=2012-07-24 14:00:50.3510, Bib=not found
-> 2: tag=413A3B, time=2012-07-24 14:00:50.3510, Bib=not found
-> ...
+>    listening for JChip connection...  
+>    *******************************************  
+>    connected: JChip receiver  
+>    waiting: for JChip receiver to respond  
+>    receiver name: JCHIP-TEST12  
+>    transmitting: GT command to JChip receiver (gettime)  
+>    getTime: 013005032=14:00:50.32  
+>    timeAdjustment: JChip time will be adjusted by 0:00:00.02 to match computer  
+>    transmitting: S0000 command to JChip receiver (start transmission)  
+>    1: tag=413A74, time=2012-07-24 14:00:50.3510, Bib=not found  
+>    2: tag=413A3B, time=2012-07-24 14:00:50.3510, Bib=not found  
+>    ...  
 
 You can see some of the nuts-and-bolts of the communication between the two systems.
 When finished testing, press the "Stop JChip Test" button or close the dialog.
@@ -80,7 +80,7 @@ Sets the "JChip Integration" property (see [Properties][]).
 When the race starts, CrossMgr will start its server, wait for a JChip connection and start recording JChip entries.  Of course, manual input still works as usual in CrossMgr while the JChip integration is running.
 
 ## Import JChip Formatted File...
-Imports a JChip-formatted input file.
+Imports a JChip-formatted input file.  This is highly useful if you want to get results for a race recorded with JChip at an earlier time, or if you lose the connection to JChip during a race.
 
 ### JChip Data File
 The JChip formatted data file to import.
@@ -91,11 +91,13 @@ CrossMgr supports two policies regarding existing race data:
 1. Clear All Existing Data Before Import
 1. Merge New Data with Existing
 
-The first option will clear all timing data from the race and import it again fresh from the import file.
+The first option will clear all timing data from the race and import it again fresh from the import file.  This is the option you would normally want to use.
 
 The second option will keep all existing data in the race and merge the data from the import with it.  This is useful, for example, if you start a time trial manually, then import data into it at a later time from a chip reader.
 
 ### JChip Data Times Are (Behind/Ahead)
+This option is only useful if you are merging JChip data with manually-entered data.  If you are importing all data from JChip then you can ignore it.
+
 The HH:MM:SS.SSSS time the JChip clock was ahead of or behind the computer's clock when the data was captured by the JChip receiver.  This adjust will be applied to each time to correct it to be consistent with the computer's time.
 
 For example, say you started a time trial manually in one location and want to import data later from the chip reader which has been set up at the time trial finish.  After checking, you see that the JChip receiver was running 4.2 seconds behind your computer's time.
@@ -110,7 +112,7 @@ Now, return to the JChip Import.  You will see the time correction automatically
 
 ### Race Start Time (if NOT first recorded time)
 
-If you are importing into a new race, this option gives you the ability to start the race at the time specified, then import the timing data contained in the file.
+If you are importing into a new race, this option gives you the ability to start the race at the time specified, then import the timing data contained in the file.  Otherwise, the race will be taken to start with the first recorded chip read.
 
 Do not use this option if you are merging with existing data, as the race must already been started for existing data to be present.
 
