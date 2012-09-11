@@ -551,7 +551,7 @@ class RiderDetail( wx.Panel ):
 			undo.pushState()
 			with Model.LockRace() as race:
 				race.copyRiderTimes( num, newNum )
-				rNew = race.getRider( numNum )
+				rNew = race.getRider( newNum )
 				numTimeInfo = race.numTimeInfo
 				for t in rNew.times:
 					numTimeInfo.add( newNum, t )
