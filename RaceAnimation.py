@@ -14,7 +14,7 @@ statusNames = Model.Rider.statusNames
 def GetAnimationData( catName = 'All', getExternalData = False ):
 	results = GetResults( catName, getExternalData )
 	if not results:
-		return None
+		return {}
 	
 	animationData = {}
 	
