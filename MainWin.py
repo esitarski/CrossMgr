@@ -636,7 +636,7 @@ class MainWin( wx.Frame ):
 	def getDirName( self ):
 		return Utils.getDirName()
 		
-	def menuSetContactEmail( self, event ):
+	def menuSetContactEmail( self, event = None ):
 		email = self.config.Read( 'email', 'my_name@my_address' )
 		dlg = wx.TextEntryDialog( self, message='Contact Email:', caption='Contact Email for HTML output', defaultValue=email )
 		result = dlg.ShowModal()
@@ -813,6 +813,9 @@ class MainWin( wx.Frame ):
 						'Excel File Error', iconMask=wx.ICON_ERROR )
 						
 	#--------------------------------------------------------------------------------------------
+	def getEmail( self ):
+		return self.config.Read('email', '')
+	
 	def addResultsToHtmlStr( self, html ):
 		# Replace parts of the file with the race information.
 		html = replaceJsonVar( html, 'raceName', os.path.basename(self.fileName)[:-4] )
@@ -835,7 +838,7 @@ class MainWin( wx.Frame ):
 		
 		tNow = datetime.datetime.now()
 		html = replaceJsonVar( html, 'timestamp',	[tNow.ctime(), tLastRaceTime] )
-		html = replaceJsonVar( html, 'email',		self.config.Read('email', '') )
+		html = replaceJsonVar( html, 'email',		self.getEmail() )
 		html = replaceJsonVar( html, 'data',		GetAnimationData(getExternalData = True) )
 		html = replaceJsonVar( html, 'catDetails',	GetCategoryDetails() )
 		html = replaceJsonVar( html, 'version',		Version.AppVerName )
@@ -855,6 +858,12 @@ class MainWin( wx.Frame ):
 		self.commit()
 		if self.fileName is None or len(self.fileName) < 4:
 			return
+			
+		if not self.getEmail():
+			if Utils.MessageOKCancel( self,
+				'Your Email contact is not set.\n\nConfigure it now?\n\n(you can always change it later from "Options|Set Contact Email...")',
+				'Set Email Contact', wx.ICON_EXCLAMATION ):
+				self.menuSetContactEmail()
 	
 		# Get the folder to write the html file.
 		fname = self.fileName[:-4] + '.html'

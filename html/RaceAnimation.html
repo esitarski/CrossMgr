@@ -1950,7 +1950,7 @@ function rand_str()
 }
 function GenerateRandomData()
 {
-	var cats = ['Junior', 'Senior', 'Women'];
+	var cats = ['Test Data Junior', 'Test Data Senior', 'Test Data Women'];
 	var infoFields = ['License', 'LastName', 'FirstName', 'Category', 'Team'];
 	data = {};
 	for( var num = 100; num < 150; ++num )
@@ -1959,11 +1959,11 @@ function GenerateRandomData()
 		var cat = cats[iCat];
 		var mean = normal_variate(6.0, 0.3);
 		var raceTimes = [60 * iCat];
-		for( var lap = 0; lap < 50; ++lap )
+		for( var lap = 0; lap < 20; ++lap )
 			raceTimes.push( raceTimes.back() + normal_variate(mean, mean/20)*60.0 );
 		data[num] = { 'raceTimes': raceTimes, 'lastTime': raceTimes.back(), 'raceCat' : cat, 'status' : 'Finisher' };
 		data[num]['License']	= rand_str() + '';
-		data[num]['LastName']	= ["Smith", "Jones", "Smirnovski", "Lu"][rand_int(4)];
+		data[num]['LastName']	= ["SAMPLE", "EXAMPLE", "DEMONSTRATION"][rand_int(3)];
 		data[num]['FirstName']	= ["John", "Peter", "Adam", "Kirk", "Vlad"][rand_int(5)];
 		data[num]['Team']		= ["Red", "Green", "Black"][rand_int(3)];
 	}
