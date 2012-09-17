@@ -76,7 +76,10 @@ def newRace():
 def setRace( r ):
 	global race
 	race = r
-	race.setChanged()
+	if race:
+		race.setChanged()
+	else:
+		memoize.clear()
 
 def resetCache():
 	memoize.clear()
