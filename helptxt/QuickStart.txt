@@ -5,6 +5,8 @@ Welcome to CrossMgr!
 
 CrossMgr is easy to use.  You can start with a simple race with manual entry and numbers, move on to linking rider information from an external Excel sheet, and progress with producing professional web output live during a race.
 
+CrossMgr has the *best* capabilities for analysing and fixing problems after a race (see [Recommendations][], [Chart][] and [RiderDetail][]).
+
 ## Getting Help
 At any point, press [CTRL+H](Main.html) to get help on any screen.
 
@@ -43,13 +45,13 @@ From [Actions][], press "Finish" when the race is over.
 
 CrossMgr can handle multiple categories in one race at one time.  It comes with some defaults, but they are not very descriptive.  Configure more descriptive categories in [Categories][].
 
-You configure the lap (or race) distance in Categories.  Distance Units are the same as configured in [Properties][].
+You configure the lap (or race) distance in [Categories][].  Distance Units are the same as configured in [Properties][].
 
 CrossMgr works best when you have number ranges for each category, but it's OK if you don't.  It's also OK if there are riders who's numbers don't match the category range.  Just make sure that all the numbers are unique in a race!
 
 If a rider is showing in the wrong categegry in the [Results][], double-click on the rider.  This will bring up the [RiderDetail][] dialog.  From this dialog, change the rider to the right category.
 
-You can setup or change Categories before, during and after a race.
+You can setup or change [Categories][] before, during and after a race.
 
 ## Configure Rider Names, Teams, etc.
 CrossMgr reads external information from an Excel Sheet that you maintain externally.  CrossMgr "links" with the external sheet, reading the information based on the Bib numbers.  This is very easy to set up - read about the details in [DataMgmt][].  There is also an example sheet in the CrossMgr installation.
@@ -57,7 +59,15 @@ CrossMgr reads external information from an Excel Sheet that you maintain extern
 You can setup or change the Excel sheet before, during and after a race.  It is commonplace for the organizer to type in rider names at registration while the race is running, then link up the Excel sheet after the race.
 
 ## Publish Results
-After the race is finished, review the results in the [Results][] screen.  If you see issues, double-click on the rider and fix any problems in the [RiderDetail][] screen.
+After the race is finished, review the results in the [Results][] screen.  If you see issues, double-click on the rider and fix problems in the [RiderDetail][] screen.
+
+Review CrossMgr's issues by checking the [Recommendations][] screen.
+
+You also see all problems at once yourself from the [Chart][] screen.  CrossMgr has full undo and redo in case you don't want the change you just made.  CrossMgr also tracks changes and whether they were part of your original data, or whether they were changed.  The user and timestamp of the change is recorded.
+
+Watch an fast-forward [Animation][] of your race and check for problems the same as how they happened in the race.
+
+Post corrected results on your web site with [File/Export Results to HTML...](Menu-File.html#export-results-to-html).
 
 # Using CrossMgr to the Fullest
 There are many features available in CrossMgr that you can use as you feel more comfortable.  Here are some suggestions for improving your Results:
@@ -69,3 +79,5 @@ There are many features available in CrossMgr that you can use as you feel more 
 1. Publish results live during a race.  See [File/Publish HTML Results with FTP...](Menu-File.html#publish-html-results-with-ftp) for details.  Look at the "Automatically Upload Results During Race" feature.
 1. Use the JChip chip timing system system.  See [ChipReader][].
 1. Use CrossMgr for Time Trials.  See [Time Trial Mode](Properties.html#time-trial-mode).
+
+Remember: press [CTRL+H](Main.html) on each screen to find out what it does and how it works.  Review [CrossMgrTutorial.doc.](https://www.sites.google.com/site/crossmgrsoftware/file-cabinet).

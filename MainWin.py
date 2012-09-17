@@ -485,6 +485,9 @@ class MainWin( wx.Frame ):
 		#-----------------------------------------------------------------------
 		self.helpMenu = wx.Menu()
 
+		idCur = wx.NewId()
+		self.helpMenu.Append( idCur , "&QuickStart...", "Get started with CrossMgr Now..." )
+		self.Bind(wx.EVT_MENU, self.menuHelpQuickStart, id=idCur )
 		self.helpMenu.Append( wx.ID_HELP , "&Help...", "Help about CrossMgr..." )
 		self.Bind(wx.EVT_MENU, self.menuHelp, id=wx.ID_HELP )
 		
@@ -1584,6 +1587,10 @@ Continue?''' % fName, 'Simulate a Race' ):
 			Utils.MessageOK(self,
 						'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % xlFName,
 						'Excel File Error', iconMask=wx.ICON_ERROR )
+	
+	@logCall
+	def menuHelpQuickStart( self, event ):
+		Utils.showHelp( 'QuickStart.html' )
 	
 	@logCall
 	def menuHelp( self, event ):
