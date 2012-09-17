@@ -354,10 +354,9 @@ class NumKeypad( wx.Panel ):
 		if nums:
 			mainWin = Utils.getMainWin()
 			if mainWin is not None:
-				mainWin.forecastHistory.logNum(nums)
-			else:
-				self.refreshLaps()
-				self.numEdit.SetValue( '' )
+				mainWin.forecastHistory.logNum( nums )
+		self.refreshLaps()
+		self.numEdit.SetValue( '' )
 	
 	def doAction( self, action ):
 		success = False

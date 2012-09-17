@@ -290,9 +290,10 @@ class ForecastHistory( wx.Panel ):
 				return
 			t = race.curRaceTime()
 			for num in nums:
-				if num is None:
+				try:
+					num = int(num)
+				except:
 					continue
-				num = int(num)
 				race.addTime( num, t )
 				OutputStreamer.writeNumTime( num, t )
 		mainWin = Utils.getMainWin()

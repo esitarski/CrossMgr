@@ -58,7 +58,7 @@ import xlwt
 from ExportGrid			import ExportGrid
 import SimulationLapTimes
 import Version
-from ReadSignOnSheet	import GetExcelLink
+from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache
 from SetGraphic			import SetGraphicDialog
 from GetResults			import GetCategoryDetails
 
@@ -763,6 +763,7 @@ class MainWin( wx.Frame ):
 			return
 		self.showPageName( 'Results' )
 		self.closeFindDialog()
+		ResetExcelLinkCache()
 		gel = GetExcelLink( self, getattr(Model.race, 'excelLink', None) )
 		link = gel.show()
 		undo.pushState()
@@ -773,6 +774,7 @@ class MainWin( wx.Frame ):
 				race.excelLink = link
 			race.setChanged()
 		self.writeRace()
+		ResetExcelLinkCache()
 		self.refresh()
 		
 	#--------------------------------------------------------------------------------------------
@@ -1144,6 +1146,7 @@ class MainWin( wx.Frame ):
 
 		# Create a new race and initialize it with the properties.
 		self.fileName = fileName
+		ResetExcelLinkCache()
 		Model.setRace( Model.Race() )
 		properties.update()
 		self.updateRecentFiles()
@@ -1216,6 +1219,7 @@ class MainWin( wx.Frame ):
 
 		# Create a new race and initialize it with the properties.
 		self.fileName = fileName
+		ResetExcelLinkCache()
 		Model.newRace()
 		properties.update()
 		self.updateRecentFiles()
@@ -1264,8 +1268,12 @@ class MainWin( wx.Frame ):
 				race.sortLap = None			# Remove results lap sorting to avoid confusion.
 				isFinished = race.isFinished()
 			self.fileName = fileName
-			race.tagNums = None
+			
 			undo.clear()
+			ResetExcelLinkCache()
+			Model.resetCache()
+			race.tagNums = None
+			
 			Model.setRace( race )
 				
 			self.updateRecentFiles()

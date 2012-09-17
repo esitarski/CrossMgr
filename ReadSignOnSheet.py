@@ -357,6 +357,12 @@ def FixTagFormat( externalInfo ):
 stateCache = None
 infoCache = None
 
+def ResetExcelLinkCache():
+	global stateCache
+	global infoCache
+	stateCache = None
+	infoCache = None
+
 class ExcelLink( object ):
 	def __init__( self ):
 		self.fileName = None
