@@ -575,7 +575,7 @@ class NumKeypad( wx.Panel ):
 					race.setChanged()
 		if changed:
 			Utils.LayoutChildResize( self.message )
-		self.refreshRaceHUD()
+		wx.CallAfter( self.refreshRaceHUD )
 	
 	def refreshRiderLapCountList( self ):
 		self.lapCountList.DeleteAllItems()
@@ -684,8 +684,8 @@ class NumKeypad( wx.Panel ):
 			if changed:
 				Utils.LayoutChildResize( self.raceStartTime )
 				
-		self.refreshLaps()
-		self.refreshRiderLapCountList()
+		wx.CallAfter( self.refreshLaps )
+		wx.CallAfter( self.refreshRiderLapCountList )
 	
 if __name__ == '__main__':
 	app = wx.PySimpleApp()

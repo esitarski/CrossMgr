@@ -568,7 +568,6 @@ class Rider(object):
 		assert len(times) == 0 or len(times) >= 2
 		return times
 		
-	@memoize
 	def interpolate( self, stopTime = maxInterpolateTime ):
 		if not self.times or self.status in [Rider.DNS, Rider.DQ]:
 			return tuple()

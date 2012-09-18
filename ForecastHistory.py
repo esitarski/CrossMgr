@@ -300,7 +300,7 @@ class ForecastHistory( wx.Panel ):
 		if mainWin:
 			mainWin.record.numEdit.SetValue( '' )
 			mainWin.record.refreshLaps()
-			mainWin.refresh()
+			wx.CallAfter( mainWin.refresh )
 		if getattr(race, 'ftpUploadDuringRace', False):
 			realTimeFtpPublish.publishEntry()
 		
