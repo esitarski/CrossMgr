@@ -65,7 +65,20 @@ def GetResultsCore( catName = 'All' ):
 	riderResults = []
 	with Model.LockRace() as race:
 		if not race:
-			return []
+			return tuple()
+			
+		allRiderTimes = {}
+		for e in race.interpolate():
+			try:
+				allRiderTimes[e.num].append( e )
+			except KeyError:
+				allRiderTimes[e.num] = [e]
+		
+		def getRiderTimes( rider ):
+			try:
+				return allRiderTimes[rider.num]
+			except KeyError:
+				return tuple()
 		
 		category = race.categories.get( catName, None )
 		startOffset = category.getStartOffsetSecs() if category else 0.0
@@ -98,7 +111,7 @@ def GetResultsCore( catName = 'All' ):
 					categoryWinningTime[c] = race.minutes * 60.0
 		
 		if not categoryWinningTime:
-			return []
+			return tuple()
 		
 		highPrecision = Utils.highPrecisionTimes()
 		isTimeTrial = getattr( race, 'isTimeTrial', False )
@@ -107,7 +120,7 @@ def GetResultsCore( catName = 'All' ):
 			if (category and riderCategory != category) or riderCategory not in categoryWinningTime:
 				continue
 			
-			riderTimes = rider.interpolate()
+			riderTimes = getRiderTimes( rider )
 			times = [e.t for e in riderTimes]
 			interp = [e.interp for e in riderTimes]
 			
@@ -166,7 +179,7 @@ def GetResultsCore( catName = 'All' ):
 			riderResults.append( rr )
 		
 		if not riderResults:
-			return []
+			return tuple()
 			
 		riderResults.sort( key = lambda x: (statusSortSeq[x.status], -x.laps, x.lastTime) )
 		
@@ -188,7 +201,7 @@ def GetResultsCore( catName = 'All' ):
 			elif rr != leader and not (isTimeTrial and rr.lastTime == leader.lastTime):
 				rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
 		
-	return riderResults
+	return tuple(riderResults)
 
 def GetResults( catName = 'All', getExternalData = False ):
 	riderResults = GetResultsCore( catName )

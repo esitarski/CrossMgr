@@ -1480,6 +1480,10 @@ class Race(object):
 	
 	def resetCategoryCache( self ):
 		self.categoryCache = None
+		
+	def resetAllCaches( self ):
+		self.resetCategoryCache()
+		self.resetCache();
 	
 	def getNextExpectedLeaderTNL( self, t ):
 		leaderTimes, leaderNums = self.getLeaderTimesNums()

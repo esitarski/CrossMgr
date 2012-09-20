@@ -773,6 +773,7 @@ class MainWin( wx.Frame ):
 			else:
 				race.excelLink = link
 			race.setChanged()
+			race.resetAllCaches()
 		self.writeRace()
 		ResetExcelLinkCache()
 		self.refresh()
@@ -1275,6 +1276,7 @@ class MainWin( wx.Frame ):
 			race.tagNums = None
 			
 			Model.setRace( race )
+			race.resetAllCaches()
 				
 			self.updateRecentFiles()
 			
