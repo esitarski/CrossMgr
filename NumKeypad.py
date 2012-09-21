@@ -599,15 +599,15 @@ class NumKeypad( wx.Panel ):
 					continue
 				numLaps = race.getCategoryBestLaps( category.name if category else 'All' )
 				numLaps = (numLaps if numLaps else 1)
-				lap = max( 1, len(rr.raceTimes) )
-				if len > numLaps:
-					tSearch = t
-					if race.isTimeTrial:
-						try:
-							tSearch -= race[rr.num].firstTime
-						except:
-							pass
-					lap = max( 1, bisect.bisect_left(rr.raceTimes, tSearch) )
+				
+				tSearch = t
+				if race.isTimeTrial:
+					try:
+						tSearch -= race[rr.num].firstTime
+					except:
+						pass
+				lap = max( 1, bisect.bisect_left(rr.raceTimes, tSearch) )
+				
 				if lap <= numLaps:
 					# Rider is still on course.
 					key = (category, lap, numLaps)

@@ -9,6 +9,7 @@ import  wx.lib.mixins.listctrl  as  listmix
 import  wx.lib.rcsizer  as rcs
 import socket
 import sys
+import re
 
 PORT, HOST = JChip.DEFAULT_PORT, JChip.DEFAULT_HOST
 
@@ -55,6 +56,20 @@ def GetTagNums( forceUpdate = False ):
 	return race.tagNums
 
 #------------------------------------------------------------------------------------------------
+reIP = re.compile( '^[0-9.]+$' )
+
+def GetAllIps():
+	addrInfo = socket.getaddrinfo( socket.gethostname(), None )
+	ips = []
+	for a in addrInfo:
+		try:
+			ip = a[4][0]
+		except:
+			continue
+		if reIP.search(ip):
+			ips.append( ip )
+	return ips
+
 class JChipSetupDialog( wx.Dialog ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, "JChip Setup",
@@ -120,8 +135,15 @@ class JChipSetupDialog( wx.Dialog ):
 			row=row, col=1, border = border, flag=wx.EXPAND|wx.TOP|wx.RIGHT|wx.ALIGN_LEFT )
 		
 		row += 1
-		self.ipaddr = masked.IpAddrCtrl( self, -1, style = wx.TE_PROCESS_TAB | wx.TE_READONLY )
-		self.ipaddr.SetValue( HOST )
+		#self.ipaddr = masked.IpAddrCtrl( self, -1, style = wx.TE_PROCESS_TAB | wx.TE_READONLY )
+		#self.ipaddr.SetValue( HOST )
+		ips = GetAllIps()
+		self.ipaddr = wx.Choice( self, wx.ID_ANY, choices = ips )
+		for i, ip in enumerate(ips):
+			if ip == HOST:
+				self.ipaddr.SetSelection( i )
+				break
+		self.ipaddr.Bind( wx.EVT_CHOICE, self.onIpAddrSelect )
 		
 		rowColSizer.Add( wx.StaticText( self, -1, 'Remote IP Address:' ),
 						row=row, col=0, flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
@@ -158,7 +180,28 @@ class JChipSetupDialog( wx.Dialog ):
 
 	def skip(self, evt):
 		return
+	
+	def onIpAddrSelect( self, event ):
+		running = bool( JChip.listener )
+		if running:
+			JChip.StopListener()
+			if self.timer:
+				self.timer.Stop()
+				self.timer = None
+			wx.Sleep( 3 )	# Give everthing a chance to shut down.
+			
+		global HOST
+		HOST = JChip.DEFAULT_HOST = self.ipaddr.GetStringSelection()
 		
+		if running:
+			self.appendMsg( 'restarting JChip listener (%s)...' % HOST )
+			JChip.StartListener()
+			self.appendMsg( 'listening for JChip connection...' )
+			
+			# Start a timer to monitor the receiver.
+			self.receivedCount = 0
+			self.timer = wx.CallLater( 1000, self.onTimerCallback, 'started' )
+	
 	def testJChipToggle( self, event ):
 		if not JChip.listener:
 			correct, reason = CheckExcelLink()
@@ -252,6 +295,8 @@ class JChipSetupDialog( wx.Dialog ):
 		self.EndModal( wx.ID_CANCEL )
 		
 if __name__ == '__main__':
+	print GetAllIps()
+	#sys.exit()
 	app = wx.PySimpleApp()
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	Model.setRace( Model.Race() )
