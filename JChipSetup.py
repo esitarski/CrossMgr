@@ -188,7 +188,7 @@ class JChipSetupDialog( wx.Dialog ):
 			if self.timer:
 				self.timer.Stop()
 				self.timer = None
-			wx.Sleep( 3 )	# Give everthing a chance to shut down.
+			wx.Sleep( 2 )	# Give everthing a chance to shut down.
 			
 		global HOST
 		HOST = JChip.DEFAULT_HOST = self.ipaddr.GetStringSelection()
