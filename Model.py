@@ -1591,10 +1591,9 @@ class Race(object):
 		if not times:
 			return None
 		raceTime = self.minutes * 60.0
-		lap = bisect.bisect_left( times, raceTime, len(times) - 1 )
+		lap = bisect.bisect_left( times, raceTime, hi=len(times) - 1 )
 		if lap > 1:
-			if lap >= len(nums):
-				lap = len(nums) - 1
+			lap = min( len(nums)-1, lap )
 			entries = self.riders[nums[lap]].interpolate()
 			if entries[lap].interp:
 				lapTime = times[lap] - times[lap-1]

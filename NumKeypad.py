@@ -360,7 +360,7 @@ class NumKeypad( wx.Panel ):
 	
 	def doAction( self, action ):
 		success = False
-		for num in getRiderNums():
+		for num in self.getRiderNums():
 			if action(self, num ):
 				success = True
 		if success:
@@ -642,12 +642,11 @@ class NumKeypad( wx.Panel ):
 										sum(count for count in catCount.itervalues())) ),
 							colour=wx.BLUE, bold=True )
 
-		magicMaxLaps = 158	# Used to prevent strange results in the demo.
 		lastCategory = None
 		for category, lap, categoryLaps, count in catLapList:
 			if category != lastCategory:
 				appendListRow( (category.name, '%d/%d' % (catRaceCount[category], catCount[category]),
-									('(%d lap%s)' % (categoryLaps, 's' if categoryLaps > 1 else '')) if categoryLaps < magicMaxLaps else ''),
+									('(%d lap%s)' % (categoryLaps, 's' if categoryLaps > 1 else '')) ),
 								bold = True )
 			appendListRow( ('', count, 'on lap %d' % lap) )
 			lastCategory = category
