@@ -22,6 +22,7 @@ Donating to CrossMgr helps make it better.\nSee sites.google.com/site/crossmgrso
 Try double-clicking on numbers in the Results and History pages.
 "Splitting" an entry allows you to make two entries where there was previously one.\nThis can be helpful to make corrections for missed numbers.
 If there is a separate start area, always run the first lap so that it is longer than the other laps.\nCrossMgr will adjust its calculations.
+See how others are using CrossMgr.\nDo a web search for "powered by crossmgr" and look at results from other races from around the world.
 Try to get as many numbers as you can, but don't worry if you miss a few.\nCrossMgr will "fill in the gaps" after it has built up a profile about each rider.
 CrossMgr will make adjustments for missed numbers.\nIt will even insert numbers missed on the first lap if required.
 CrossMgr manages the UCI 80% rule.\nSee the display on the lower left of the screen.
