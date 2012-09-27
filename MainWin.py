@@ -103,7 +103,7 @@ class MyTipProvider( wx.PyTipProvider ):
 					if line and line[0] != '#':
 						self.tips.append( line )
 			if tipNo is None:
-				tipNo = random.randint(0, len(self.tips) - 1)
+				tipNo = (int(round(time.time() * 1000)) * 13) % (len(self.tips) - 1)
 		except:
 			pass
 		if tipNo is None:
@@ -150,10 +150,12 @@ def ShowTipAtStartup():
 	tipFile = os.path.join(Utils.getImageFolder(), "tips.txt")
 	try:
 		provider = MyTipProvider( tipFile )
+		'''
 		if VersionMgr.isUpgradeRecommended():
 			provider.tipNo = 0
 		else:
 			provider.DeleteFirstTip()
+		'''
 		showTipAtStartup = wx.ShowTip( None, provider, True )
 		if mainWin:
 			mainWin.config.WriteBool('showTipAtStartup', showTipAtStartup)

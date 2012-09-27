@@ -1,4 +1,4 @@
-****************************************\nCrossMgr Upgrade Avalable!\n****************************************\n\nCheck:\n\nsites.google.com/site/crossmgrsoftware
+****************************************\n\nCheck \n\nsites.google.com/site/crossmgrsoftware\n\nfor updates!
 CrossMgr saves your data automatically when you make changes.
 Try importing rider data from an Excel sign-on sheet.\nSee the tutorial for details.
 The Race Chart is a great way to settle disputes.
@@ -18,13 +18,13 @@ Try changing categories in a Race Animation.
 Try watching different numbers to reveal race strategy in a Race Animation.
 During a race, check off expected numbers as they come up on the left side of the screen instead of retyping them in.
 CrossMgr accepts minimum input based on the Category number ranges.\nFor example, if there is one Category with numbers in the range 200-299, it is unnecessary to enter the leading "2" - entering the last two digits are sufficient.\nCrossMgr knows to automatically add the leading "2".
-Consider donating to CrossMgr so we can make it better!\nSee sites.google.com/site/crossmgrsoftware for details.
+Donating to CrossMgr helps make it better.\nSee sites.google.com/site/crossmgrsoftware for details.\nYour support is greatly appreciated.
 Try double-clicking on numbers in the Results and History pages.
 "Splitting" an entry allows you to make two entries where there was previously one.\nThis can be helpful to make corrections for missed numbers.
 If there is a separate start area, always run the first lap so that it is longer than the other laps.\nCrossMgr will adjust its calculations.
 Try to get as many numbers as you can, but don't worry if you miss a few.\nCrossMgr will "fill in the gaps" after it has built up a profile about each rider.
 CrossMgr will make adjustments for missed numbers.\nIt will even insert numbers missed on the first lap if required.
-CrossMgr manages the UCI time bound rule.\nSee the display on the lower left of the screen.
+CrossMgr manages the UCI 80% rule.\nSee the display on the lower left of the screen.
 Try toggling the display options in Results and History to see additional information.
 Try clicking on numbers in the History screen.
 CrossMgr continues a run after a race is started even if the program is closed and the computer is shut down.\nWhen re-opened, the race will resume where just where it left off.\nTry it sometime!
@@ -35,19 +35,32 @@ Rescue an old computer by installing Linux and running CrossMgr.
 Consider running CrossMgr with two people at the same time for backup.
 CrossMgr correctly estimates the number of laps in a race even if the 1st lap is not the same time/distance as the rest of the race.
 Always bring extra computer batteries.
-Try an external keypad for entering numbers.
+Donations to CrossMgr help make it better.\nYour support is greatly appreciated.
+Try an external keypad for entering numbers.  This works much better than a regular keyboard.
 Don't worry if you can't enter every number - CrossMgr will figure out missing numbers automatically.
 Use HTML export to create web-ready results.
 Use Excel export to create an Excel sheet with the results.\nReformat the results in Excel anyway you like, then publish to the web.
 Put the computer in a sideways cardboard box to reduce glare from the sun.
+If you have a suggestion for CrossMgr, send email to edward.sitarski@gmail.com.
 Make sure you have a tent to keep your computer dry.
+Disable the computer's screen saver while running a race.
+Try turning down the brightness of the computer screen to extend battery life.
 The number of laps can be changed during a race by switching to "Manual" mode.
 If you forget to set the number of laps during a race, you can change it after - no input is lost.
 HTML output can show Race Time (splits) as well as Lap Time.
 CrossMgr is free to use with riders under age 17.
+CTRL+h will show help on any screen.
+CTRL+z is Undo, CTRL+y is Redo.
+CrossMgr has been used at 100's of events around the world.
+CrossMgr can publish results in real-time while a race is running.  See Files|Publish HTML results with FTP...
+CrossMgr shows its corrections in Yellow.  It shows your edits in Orange.
+For details about data changes, look at the edit information in RiderDetail.
 Use "File|New Next..." to quickly setup a number of races for an event.
 CrossMgr makes a backup of our your input in a .csv file.\nYou can start over with a race from "File|Restore from Original Input".\nYou can also score manually by opening this file in Excel.
 Click on a Lap column in results to sort on that lap.
+Customize your output by setting the graphic.  See Options|Set Graphic...
+You can start a race while the rider data is being entered on another computer.  You can link to the updated data aftwards.
 You can choose Lap Times, Race Times, Lap Speeds or Race Speeds in Results.
-Try using Rider Find (Ctrl+F).  Double-clicking brings up the rider in RiderDetail.
+You can set the lap distance in Categories.  If the first lap is a different distance, you can set it differently.
+Try using Rider Find (Ctrl+F).\nDouble-clicking on a rider in Find brings up the rider in RiderDetail.\nClicking on the column sorts by that column.\nIn JChip test mode, chip reads will automatically be shown in Find.  This is good for testing.
 Clicking on a column name in Results will sort on that column.  Want to know the winner of an intermediate lap sprint?  Show "Race Times" in Results, then click on the lap column.
