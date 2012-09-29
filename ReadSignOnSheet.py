@@ -5,6 +5,7 @@ import itertools
 import wx
 import copy
 import wx.lib.filebrowsebutton as filebrowse
+import  wx.lib.scrolledpanel as scrolled
 import wx.wizard as wiz
 import Utils
 import string
@@ -82,25 +83,41 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Specify the columns names corresponding to the CrossMgr fields.'),
+		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Specify the spreadsheet column names corresponding to CrossMgr fields.'),
 				flag=wx.ALL, border = border )
 		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Set missing fields to blank.'),
 				flag=wx.ALL, border = border )
+		vbs.AddSpacer( 8 )
 				
 		border = 4
 		# Create a map for the field names we are looking for
 		# and the headers we found in the Excel sheet.
+		sp = scrolled.ScrolledPanel( self, wx.ID_ANY, size=(750, 64), style = wx.TAB_TRAVERSAL )
+		
+		boldFont = None
+		
 		gs = wx.GridSizer( 2, len(Fields) )
 		for c, f in enumerate(Fields):
-			gs.Add( wx.StaticText(self, label=f) )
+			label = wx.StaticText(sp, label=f)
+			if boldFont is None:
+				font = label.GetFont()
+				fontSize = label.GetFont()
+				boldFont = wx.Font( font.GetPointSize(), font.GetFamily(), font.GetStyle(), wx.FONTWEIGHT_BOLD )
+			label.SetFont( boldFont )
+			gs.Add( label )
 		
 		self.headers = []
 		self.choices = []
 		for c, f in enumerate(Fields):
-			self.choices.append( wx.Choice(self, -1, choices = self.headers ) )
+			self.choices.append( wx.Choice(sp, -1, choices = self.headers ) )
 			gs.Add( self.choices[-1] )
 		
-		vbs.Add( gs, flag=wx.ALL, border = border )
+		sp.SetSizer( gs )
+		sp.SetAutoLayout(1)
+		sp.SetupScrolling( scroll_y = False )
+		self.sp = sp
+		self.gs = gs
+		vbs.Add( sp, flag=wx.ALL, border = border )
 		
 		self.SetSizer( vbs )
 	
@@ -160,6 +177,10 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 			self.choices[c].Clear()
 			self.choices[c].AppendItems( self.headers )
 			self.choices[c].SetSelection( iBest )
+
+		self.gs.Layout()
+		self.sp.SetAutoLayout(1)
+		self.sp.SetupScrolling( scroll_y = False )
 
 	def getFieldCol( self ):
 		headerLen = len(self.headers) - 1
