@@ -29,7 +29,6 @@ distPath = 'dist'
 from helptxt.compile import CompileHelp
 CompileHelp( 'helptxt' )
 
-shutil.rmtree( distPath )
 shutil.rmtree( releasePath )
 
 for f in os.listdir( '.' ):
