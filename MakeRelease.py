@@ -18,11 +18,25 @@ import sys
 import datetime
 import hashlib
 import tarfile
+import py_compile
 import subprocess
 from string import Template
 
 releasePath = 'CrossMgrRelease'
 distPath = 'dist'
+
+# Compile the help files
+from helptxt.compile import CompileHelp
+CompileHelp( 'helptxt' )
+
+shutil.rmtree( distPath )
+shutil.rmtree( releasePath )
+
+for f in os.listdir( '.' ):
+	if not (f.endswith( '.py' ) or f.endswith( '.pyw' )):
+		continue
+	print( 'compiling:', f, '...' )
+	py_compile.compile( f )
 
 #-----------------------------------------------------------------------
 from bbfreeze import Freezer
@@ -52,18 +66,14 @@ tf = tarfile.open( os.path.join(distPath, tarName), 'w:gz' )
 for f in os.listdir( releasePath ):
 	tf.add( os.path.join(releasePath, f), os.path.join('CrossMgr',f) )
 
-targetDir = os.path.join( 'CrossMgr', 'images' )
-for f in os.listdir( 'images' ):
-	tf.add( os.path.join('images',f), os.path.join(targetDir, f) )
-	
+for dir in ['images', 'htmldoc', 'html']:
+	targetDir = os.path.join( 'CrossMgr', dir )
+	for f in os.listdir( dir ):
+		tf.add( os.path.join(dir,f), os.path.join(targetDir, f) )
+
 targetDir = os.path.join( 'CrossMgr', 'doc' )
 tf.add( 'CrossMgrTutorial.doc', os.path.join(targetDir,'CrossMgrTutorial.doc') )
 	
-targetDir = os.path.join( 'CrossMgr', 'data', '2010 Riverdale' )
-files = ['2010-11-28-Riverdale-r1-.cmn', '2010-11-28-Riverdale-r2-.cmn']
-for f in files:
-	tf.add( os.path.join('2010 Riverdale', f), os.path.join(targetDir, f) )
-
 tf.close()
 sys.exit()
 
@@ -89,6 +99,9 @@ for f in os.listdir( releasePath ):
 
 print( 'Copy html directory.' )
 shutil.copytree( 'html',	os.path.join(optPath, 'html') )
+
+print( 'Copy htmldoc directory.' )
+shutil.copytree( 'htmldoc',	os.path.join(optPath, 'htmldoc') )
 
 print( 'Copy images directory.' )
 shutil.copytree( 'images',	os.path.join(optPath, 'images') )
