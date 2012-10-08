@@ -255,6 +255,8 @@ except:
 
 if os.path.basename(dirName) == 'library.zip':
 	dirName = os.path.dirname(dirName)
+if 'CrossMgr?' in os.path.basename(dirName):
+	dirName = os.path.dirname(dirName)
 imageFolder = os.path.join(dirName, 'images')
 htmlFolder = os.path.join(dirName, 'html')
 helpFolder = os.path.join(dirName, 'htmldoc')
