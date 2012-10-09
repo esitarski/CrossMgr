@@ -33,6 +33,8 @@ except:
 
 	# Define the missing urandom.
 	os.urandom = urandom
+	# Reload the random module so the new version of os.urandom takes effect.
+	reload( random )
 
 import MainWin
 from multiprocessing import freeze_support
