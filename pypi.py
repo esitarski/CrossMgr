@@ -136,10 +136,11 @@ setup = {
 	'scripts':		['bin/CrossMgr.pyw'],
 	'url':			'http://www.sites.google.com/site/crossmgrsoftware/',
 	'license':		'License.txt',
-	'description':	'CrossMgr: free results software for Cyclo-Cross and other bike races',
+	'description':	'CrossMgr: results software for Cyclo-Cross and other bike races.',
 	'install_requires':	[
 							'xlrd >= 0.8.0',
 							'xlwt >= 0.7.4',
+							'openpyxl >= 1.5.8',
 							'wxPython >= 2.8.12',
 						],
 }
