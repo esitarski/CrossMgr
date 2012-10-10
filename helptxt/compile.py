@@ -15,8 +15,25 @@ def working_directory(directory):
 	finally: 
 		os.chdir(original_directory)
 		
+def fileOlderThan( srcFile, transFile ):
+	try:
+		return os.path.getmtime(srcFile) <= os.path.getmtime(transFile)
+	except:
+		return False
+		
 def CompileHelp( dir = '.' ):
 	with working_directory( dir ):
+		# Check if any of the help files need rebuilding.
+		doNothing = True
+		for fname in glob.glob("./*.txt"):
+			fbase = os.path.splitext(os.path.basename(fname))[0]
+			fhtml = os.path.join( '..', 'htmldoc', fbase + '.html' )
+			if not fileOlderThan(fname, fhtml):
+				doNothing = False
+				break
+		if doNothing:
+			return
+	
 		md = markdown.Markdown(
 				extensions=['toc', 'tables'], 
 				safe_mode=True,
