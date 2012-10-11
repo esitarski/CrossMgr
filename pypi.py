@@ -40,6 +40,10 @@ publishing to the web.
 CrossMgr was created by a Cyclo-cross official, and has extensive features to
 settle disputes.
 
+CrossMgr is also fully integrated with the `JChip <http://www.j-chipusa.com/>`_
+chip timing system.
+It also supports data import from the `Orion <http://www.orion-timing.com/>`_ system.
+
 See `CrossMgr <http://www.sites.google.com/site/crossmgrsoftware/>`__ for full details.
 '''
 
@@ -136,7 +140,7 @@ setup = {
 	'scripts':		['bin/CrossMgr.pyw'],
 	'url':			'http://www.sites.google.com/site/crossmgrsoftware/',
 	'license':		'License.txt',
-	'description':	'CrossMgr: results software for Cyclo-Cross and other bike races.',
+	'description':	'CrossMgr: a software application to get results for Cyclo-Cross and other bike races.',
 	'install_requires':	[
 							'xlrd >= 0.8.0',
 							'xlwt >= 0.7.4',
