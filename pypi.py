@@ -125,8 +125,8 @@ for fname in glob.glob( '*.*' ):
 print 'Adding script to bin dir..'
 binDir = os.path.join( pypiDir, 'bin' )
 os.mkdir( binDir )
-shutil.copy( os.path.join(srcDir,'CrossMgr.pyw'), binDir )
-exeName = os.path.join(binDir,'CrossMgr.pyw')
+exeName = os.path.join(binDir,'CrossMgr')
+shutil.copy( os.path.join(srcDir,'CrossMgr.pyw'), exeName )
 # Make it executable.
 os.chmod( exeName, os.stat(exeName)[0] | stat.S_IXUSR|stat.S_IXGRP|stat.S_IXOTH )
 	
