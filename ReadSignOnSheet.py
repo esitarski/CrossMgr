@@ -83,7 +83,7 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Specify the spreadsheet column names corresponding to CrossMgr fields.'),
+		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Specify the spreadsheet columns corresponding to CrossMgr fields.'),
 				flag=wx.ALL, border = border )
 		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Set missing fields to blank.'),
 				flag=wx.ALL, border = border )
@@ -102,7 +102,7 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 			if boldFont is None:
 				font = label.GetFont()
 				fontSize = label.GetFont()
-				boldFont = wx.Font( font.GetPointSize(), font.GetFamily(), font.GetStyle(), wx.FONTWEIGHT_BOLD )
+				boldFont = wx.Font( font.GetPointSize()+1, font.GetFamily(), font.GetStyle(), wx.FONTWEIGHT_BOLD )
 			label.SetFont( boldFont )
 			gs.Add( label )
 		

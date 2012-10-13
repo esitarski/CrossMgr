@@ -6,15 +6,17 @@
 ## Link to External Excel Data...
 Link to an external Excel file containing additional rider data.
 
-This option opens up a Wizard to configure a link to an Excel sheet.  The Excel sheet must have a header row with the column names.  The Wizard has the following steps:
+This option opens up a Wizard to configure a link to an Excel sheet.  The Excel sheet must have a header row with the column names.  The Wizard takes you through the following steps:
 
 1. Choose the Excel workbook containing your additional data.
-1. Choose the sheet within the Excel sheet.
-1. Choose how the internal CrossMgr fields map to the Excel column names.  The Excel sheet may contain more fields than CrossMgr uses, and the column names in the sheet do not have to be the same as CrossMgr's names.  You just have to tell CrossMgr what Excel columns correspond to its fields.  CrossMgr can usually use the same Excel sheet used as the rider sign-on sheet.
+1. Choose the sheet within the Excel workbook.
+1. Choose how the CrossMgr's fields should correspond to the column names in your Excel sheet.  The CrossMgr fields are on the first row, and the Excel column names are the drop-downs in the second row.  In the drop-downs, select the Excel column corresponding to the CrossMgr field.
+The Excel sheet may contain more fields than CrossMgr uses, and the column names in the sheet do not have to be named the same as CrossMgr's names.  You just have to tell CrossMgr what Excel columns correspond to its fields.  CrossMgr can usually use the same Excel sheet used as the rider sign-on sheet.
 1. After the configuration, CrossMgr will show how many records it was able to read from the Excel workbook.
-1. The additional external information will now be shown throughout CrossMgr.
 
-This option creates a link to the Excel sheet - it does not store the Excel data inside CrossMgr.  If data in the Excel sheet changes at any time (before, during or after the race), CrossMgr will automatically pick up the changes and display them the next time the screen is refreshed (for example, after switching between screens).
+Additional external information will now be shown throughout CrossMgr including in Results, HTML and Excel output.
+
+This option creates a link to the Excel sheet - CrossMgr does not store the Excel data inside CrossMgr.  If data in the Excel sheet changes at any time (before, during or after the race), CrossMgr will automatically pick up the changes and display them the next time the screen is refreshed (for example, after switching between screens).
 
 This allows you to start a race without the full details entered into Excel, or without an Excel sheet entirely.  As the race is underway, you can update the details.
 

@@ -600,7 +600,7 @@ class GeoAnimation(wx.PyControl):
 		else:
 			tStr = '%d:%02d:%02d' % (secs / (60*60), (secs / 60)%60, secs % 60 )
 		tWidth, tHeight = dc.GetTextExtent( tStr )
-		dc.DrawText( tStr, 4*r - tWidth, height - self.infoLines * tHeight )
+		dc.DrawText( tStr, 4*r - tWidth - 8, height - self.infoLines * tHeight )
 		
 		
 	def OnEraseBackground(self, event):
@@ -610,12 +610,6 @@ class GeoAnimation(wx.PyControl):
 		pass
 		
 if __name__ == '__main__':
-
-	geoTrack = GeoTrack()
-	geoTrack.read( 'EdgeField_Cyclocross_Course.gpx' )
-	geoTrack.setDisplayRect( 10, 10, 500, 250 )
-	#print geoTrack.getXYTrack()
-	#sys.exit()
 
 	data = {}
 	for num in xrange(100,200):
@@ -629,7 +623,7 @@ if __name__ == '__main__':
 	# with open('race.json', 'w') as fp: fp.write( json.dumps(data, sort_keys=True, indent=4) )
 
 	app = wx.PySimpleApp()
-	mainWin = wx.Frame(None,title="GeoAnimation", size=(600,400))
+	mainWin = wx.Frame(None,title="GeoAnimation", size=(800,700))
 	animation = GeoAnimation(mainWin)
 	animation.SetData( data )
 	animation.Animate( 2*60, 60*60 )

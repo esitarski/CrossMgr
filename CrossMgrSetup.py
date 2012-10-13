@@ -13,7 +13,7 @@ setup( windows=
 			[
 				{
 					'script': 'CrossMgr.pyw',
-					'icon_resources': [(1, r'images\CrossMgr.ico')]
+					'icon_resources': [(1, r'CrossMgrImages\CrossMgr.ico')]
 				}
 			]
 	 )
@@ -41,10 +41,8 @@ def copyDir( d ):
 		if i[-3:] != '.db':	# Ignore .db files.
 			shutil.copy( os.path.join(d, i), os.path.join(destD,i) )
 			
-copyDir( 'images' )
-copyDir( 'data' )
-copyDir( 'html' )
-copyDir( 'htmldoc' )
+for dir in ['CrossMgrImages', 'data', 'CrossMgrHtml', 'CrossMgrHtmlDoc']: 
+	copyDir( dir )
 
 # Create the installer
 inno = r'\Program Files\Inno Setup 5\ISCC.exe'
