@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import shutil
 import os
 import stat
@@ -80,9 +82,10 @@ writeToFile( license, 'License.txt' )
 #--------------------------------------------------------
 
 manifest = '''include *.txt
-recursive-include CrossMgr/htmldoc *.html
-recursive-include CrossMgr/html *.html
-recursive-include CrossMgr/images *
+include doc *
+include CrossMgrHtmldoc *.html
+include CrossMgrHtml *.html
+include CrossMgrImages *
 '''
 
 writeToFile( manifest, 'MANIFEST.in' )
@@ -91,9 +94,21 @@ writeToFile( manifest, 'MANIFEST.in' )
 
 srcDir = os.path.join( pypiDir, 'CrossMgr' )
 os.mkdir( srcDir )
-for dir in ['images', 'html', 'htmldoc']:
+for dir in ['CrossMgrImages', 'CrossMgrHtml', 'CrossMgrHtmlDoc']:
 	print 'copying', dir, '...'
-	shutil.copytree( dir, os.path.join(srcDir,dir) )
+	shutil.copytree( dir, os.path.join(pypiDir,dir) )
+
+print 'Copying doc files to doc directory.'
+docDir = os.path.join( pypiDir, 'CrossMgrDoc' )
+os.mkdir( docDir )
+for f in ['LinuxInstallReadme.txt', 'CrossMgrTutorial.doc']:
+	shutil.copy( f, os.path.join(docDir, f) )
+	
+print 'Collecting data_files.'
+data_files = []
+for dir in ['CrossMgrImages', 'CrossMgrHtml', 'CrossMgrHtmlDoc', 'CrossMgrDoc']:
+	dataDir = os.path.join(pypiDir, dir)
+	data_files.append( (dir, [os.path.join(dir,f) for f in os.listdir(dataDir)]) )
 
 print 'Copy the src files and add the copyright notice.'
 license = license.replace( '\n', '\n# ' )
@@ -122,6 +137,7 @@ for fname in glob.glob( '*.*' ):
 	with open(os.path.join(srcDir, fname), 'wb' ) as f:
 		f.write( contents )
 
+
 print 'Adding script to bin dir..'
 binDir = os.path.join( pypiDir, 'bin' )
 os.mkdir( binDir )
@@ -137,16 +153,18 @@ setup = {
 	'author':		'Edward Sitarski',
 	'author_email':	'edward.sitarski@gmail.com',
 	'packages':		['CrossMgr'],
-	'scripts':		['bin/CrossMgr.pyw'],
+	'data_files':	data_files,
+	'scripts':		['bin/CrossMgr'],
 	'url':			'http://www.sites.google.com/site/crossmgrsoftware/',
 	'license':		'License.txt',
+	'include_package_data': True,
 	'description':	'CrossMgr: a software application to get results for Cyclo-Cross and other bike races.',
 	'install_requires':	[
-							'xlrd >= 0.8.0',
-							'xlwt >= 0.7.4',
-							'openpyxl >= 1.5.8',
-							'wxPython >= 2.8.12',
-						],
+		'xlrd >= 0.8.0',
+		'xlwt >= 0.7.4',
+		'openpyxl >= 1.5.8',
+		'wxPython >= 2.8.12',
+	],
 }
 
 with open(os.path.join(pypiDir,'setup.py'), 'wb') as f:
@@ -154,7 +172,7 @@ with open(os.path.join(pypiDir,'setup.py'), 'wb') as f:
 	f.write( 'setup(\n' )
 	for key, value in setup.iteritems():
 		f.write( '    %s=%s,\n' % (key, repr(value)) )
-	f.write( "    long_description=open('README.txt').read()\n" )
+	f.write( "    long_description=open('README.txt').read(),\n" )
 	f.write( ')\n' )
 
 print 'Creating install package...'

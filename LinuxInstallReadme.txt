@@ -5,6 +5,9 @@ CrossMgr on Linux: Installation Instructions
 Due to the diversity of Linux environments, CrossMgr is released as a
 Python Package.
 
+If you are installing CrossMgr for the first time, start at Step 1.
+If you are upgrading CrossMgr to a more recent version, goto Step 3.
+
 --------------------------------------------
 Step 1:  Check you Python version.
 
@@ -19,7 +22,7 @@ upgrade to this version.
 Python 3 will not work.
 
 --------------------------------------------
-Step 2:  Install "pip", the Python installer
+Step 2:  Check that you have "pip", the Python installer
 
 CrossMgr uses the "pip", the Python package installer.
 To check if you have "pip", type:
@@ -61,7 +64,43 @@ type:
 
 	CrossMgr &
 	
-Alternatively, make a desktop shortcut.  Consult your distribution for details.
-For a nice desktop icon, see /usr/local/lib/python2.7/dist-packages/CrossMgr/images.
-Use CrossMgr.png and/or CrossMgr.ico depending on your system requirements.
+--------------------------------------------
+Step 6:  Make a desktop shortcut.
 
+This depends on your Linux distribution.
+
+On Ubuntu, see http://askubuntu.com/questions/78730/how-do-i-add-a-custom-launcher.
+
+Briefly, from a terminal, enter:
+
+	gnome-desktop-item-edit ~/Desktop/ --create-new
+	
+If this doesn't work, you may have to install it with:
+
+	sudo apt-get install gnome-panel
+	
+Type in the information to the dialog to launch CrossMgr.
+For the command, enter:
+
+	python /usr/local/bin/CrossMgr
+
+To customize the launch icon, click on the default "spring" icon in the
+upper left of the dialog.
+Browse to "/usr/local/CrossMgrImages/CrossMgr.png".
+
+--------------------------------------------
+Step 7:  Uninstalling CrossMgr.
+	
+If you need to uninstall CrossMgr, type the command:
+
+	sudo pip uninstall CrossMgr
+
+This will clean up any installed files.
+
+--------------------------------------------
+Step 7:  Upgrading CrossMgr.
+	
+If you want to upgrade CrossMgr, just download the latest version and follow
+the installation instructions.
+
+CrossMgr is always backwards-compatible with its data files.

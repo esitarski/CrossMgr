@@ -36,7 +36,11 @@ except:
 	# Reload the random module so the new version of os.urandom takes effect.
 	reload( random )
 
-import MainWin
+try:
+	import MainWin
+except ImportError:
+	from CrossMgr import MainWin
+	
 from multiprocessing import freeze_support
 
 if __name__ == '__main__':
