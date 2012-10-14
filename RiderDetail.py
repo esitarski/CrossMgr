@@ -323,12 +323,12 @@ class RiderDetail( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
+				(wx.NewId(), 'Pull After Lap...',	'Pull after Lap',	self.OnPopupPull, allCases),
+				(wx.NewId(), 'DNF After Lap...',	'DNF after Lap',	self.OnPopupDNF, allCases),
+				(None, None, None, None, None),
 				(wx.NewId(), 'Correct...',	'Change number or lap time...',	self.OnPopupCorrect, interpCase),
 				(wx.NewId(), 'Shift...',	'Move lap time earlier/later...',	self.OnPopupShift, interpCase),
 				(wx.NewId(), 'Delete...',	'Delete lap time...',	self.OnPopupDelete, nonInterpCase),
-				(None, None, None, None, None),
-				(wx.NewId(), 'Pull After Lap...',	'Pull after Lap',	self.OnPopupPull, allCases),
-				(wx.NewId(), 'DNF After Lap...',	'DNF after Lap',	self.OnPopupDNF, allCases),
 			]
 			for p in self.popupInfo:
 				if p[0]:
@@ -707,14 +707,14 @@ class RiderDetail( wx.Panel ):
 
 		if not hasattr(self, 'ganttMenuInfo'):
 			self.ganttMenuInfo = [
-				(wx.NewId(), 'Show Lap Details...', 	'Show Lap Details',			self.OnGanttPopupLapDetail, allCases),
-				(None, None, None, None, None),
 				(wx.NewId(), 'Correct Lap End Time...',	'Change lap end time...',				lambda event, s = self: CorrectNumber(s, s.entry), interpCase),
 				(wx.NewId(), 'Shift Lap End Time...',	'Move lap end time earlier/later...',	lambda event, s = self: ShiftNumber(s, s.entry), interpCase),
 				(wx.NewId(), 'Delete Lap End Time...',	'Delete lap end time...',				lambda event, s = self: DeleteEntry(s, s.entry), nonInterpCase),
 				(None, None, None, None, None),
 				(wx.NewId(), 'Pull after Lap End...',	'Pull after lap end...',				self.OnGanttPopupPull, allCases),
 				(wx.NewId(), 'DNF after Lap End...',	'DNF after lap end...',					self.OnGanttPopupDNF, allCases),
+				(None, None, None, None, None),
+				(wx.NewId(), 'Show Lap Details...', 	'Show Lap Details',			self.OnGanttPopupLapDetail, allCases),
 			]
 			self.splitMenuInfo = [
 					(wx.NewId(),
@@ -743,7 +743,8 @@ class RiderDetail( wx.Panel ):
 			for id, name, callback in self.splitMenuInfo:
 				submenu.Append( id, name )
 			Utils.addMissingSeparator( menu )
-			menu.AppendMenu( wx.NewId(), 'Add Missing Split', submenu )
+			menu.PrependSeparator()
+			menu.PrependMenu( wx.NewId(), 'Add Missing Split', submenu )
 			
 		Utils.deleteTrailingSeparators( menu )
 		self.PopupMenu( menu )

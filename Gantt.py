@@ -82,21 +82,20 @@ class Gantt( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(wx.NewId(), 'Show Lap Details...', 	'Show Lap Details',			self.OnPopupLapDetail, allCases),
-				(None, None, None, None, None),
-				(wx.NewId(), 'Results', 				'Switch to Results tab',	self.OnPopupResults, allCases),
-				(wx.NewId(), 'RiderDetail',				'Show RiderDetail Dialog',	self.OnPopupRiderDetail, allCases),
+				(wx.NewId(), 'Pull after Lap End...',		'Pull after lap end',		self.OnPopupPull, allCases),
+				(wx.NewId(), 'DNF after Lap End...',		'DNF after lap end',		self.OnPopupDNF, allCases),
 				(None, None, None, None, None),
 				(wx.NewId(), 'Correct Lap End Time...',	'Change number or lap end time',		self.OnPopupCorrect, interpCase),
 				(wx.NewId(), 'Shift Lap End Time...',	'Move lap end time earlier/later',	self.OnPopupShift, interpCase),
 				(wx.NewId(), 'Delete Lap End Time...',	'Delete lap end time',	self.OnPopupDelete, nonInterpCase),
 				(None, None, None, None, None),
-				(wx.NewId(), 'Pull after Lap End...',		'Pull after lap end',		self.OnPopupPull, allCases),
-				(wx.NewId(), 'DNF after Lap End...',		'DNF after lap end',		self.OnPopupDNF, allCases),
-				(None, None, None, None, None),
 				(wx.NewId(), 'Swap with Rider before',	'Swap with Rider before',	self.OnPopupSwapBefore, nonInterpCase),
 				(wx.NewId(), 'Swap with Rider after',	'Swap with Rider after',	self.OnPopupSwapAfter, nonInterpCase),
-
+				(None, None, None, None, None),
+				(wx.NewId(), 'Show Lap Details...', 	'Show Lap Details',			self.OnPopupLapDetail, allCases),
+				(None, None, None, None, None),
+				(wx.NewId(), 'RiderDetail',				'Show RiderDetail Dialog',	self.OnPopupRiderDetail, allCases),
+				(wx.NewId(), 'Results', 				'Switch to Results tab',	self.OnPopupResults, allCases),
 			]
 			self.splitMenuInfo = [
 					(wx.NewId(),
@@ -139,7 +138,8 @@ class Gantt( wx.Panel ):
 			for id, name, callback in self.splitMenuInfo:
 				submenu.Append( id, name )
 			Utils.addMissingSeparator( menu )
-			menu.AppendMenu( wx.NewId(), 'Add Missing Split', submenu )
+			menu.PrependSeparator()
+			menu.PrependMenu( wx.NewId(), 'Add Missing Split', submenu )
 			
 		Utils.deleteTrailingSeparators( menu )
 		self.PopupMenu( menu )
