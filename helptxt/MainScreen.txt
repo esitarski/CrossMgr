@@ -24,7 +24,7 @@ Lap|Shows the lap the rider is currently on.
 Time|Shows the recorded time
 
 # Expected
-Shows the numbers is riders projected to arrive.  The columns in the table are as follows:
+Shows the numbers of riders expected to arrive.  The columns in the table are as follows:
 
 Column|Description
 :-----|:----------
