@@ -81,6 +81,9 @@ class ForecastHistory( wx.Panel ):
 		self.lgExpected = LabelGrid( self.splitter, style = wx.BORDER_SUNKEN )
 		self.expectedName = self.lgExpected.label
 		self.expectedGrid = self.lgExpected.grid
+		self.expectedGrid.SetDoubleBuffered( True )
+		colnames[iTimeCol] = 'ETA'
+		self.expectedGrid.Set( colnames = colnames )
 		self.expectedName.SetLabel( 'Expected:' )
 		self.expectedGrid.SetDefaultCellBackgroundColour( wx.Colour(230,255,255) )
 		self.Bind( wx.grid.EVT_GRID_SELECT_CELL, self.doExpectedSelect, self.expectedGrid )
@@ -315,9 +318,19 @@ class ForecastHistory( wx.Panel ):
 		self.expectedGrid.Set( data = [] )
 		self.expectedGrid.Reset()
 	
+	def updatedExpectedTimes( self ):
+		try:
+			if not self.quickExpected:
+				return
+		except:
+			return
+		tRace = Model.race.curRaceTime()
+		self.expectedGrid.SetColumn( iTimeCol, [formatTime(max(0.0, e.t - tRace)) for e in self.quickExpected] )
+	
 	def refresh( self ):
 		with Model.LockRace() as race:
 			if race is None or not race.isRunning():
+				self.quickExpected = None
 				self.clearGrids()
 				return
 						
@@ -383,7 +396,7 @@ class ForecastHistory( wx.Panel ):
 			
 			data = [None] * iColMax
 			data[iNumCol] = [str(e.num) for e in expected]
-			data[iTimeCol] = [formatTime(e.t) for e in expected]
+			data[iTimeCol] = [formatTime(max(0.0, e.t - tRace)) for e in expected]
 			data[iLapCol] = [str(e.lap) for e in expected]
 			def getNoteExpected( e ):
 				try:

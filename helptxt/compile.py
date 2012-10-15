@@ -6,6 +6,8 @@ import shutil
 import cStringIO as StringIO
 from contextlib import contextmanager
 
+HtmlDocFolder = 'CrossMgrHtmlDoc'
+
 @contextmanager 
 def working_directory(directory): 
 	original_directory = os.getcwd() 
@@ -27,7 +29,7 @@ def CompileHelp( dir = '.' ):
 		doNothing = True
 		for fname in glob.glob("./*.txt"):
 			fbase = os.path.splitext(os.path.basename(fname))[0]
-			fhtml = os.path.join( '..', 'htmldoc', fbase + '.html' )
+			fhtml = os.path.join( '..', HtmlDocFolder, fbase + '.html' )
 			if not fileOlderThan(fname, fhtml):
 				doNothing = False
 				break
@@ -82,7 +84,7 @@ def CompileHelp( dir = '.' ):
 		zf.close()
 		
 		# Copy all the files into the htmldoc directory.
-		htmldocdir = os.path.join('..', 'htmldoc')
+		htmldocdir = os.path.join('..', HtmlDocFolder)
 		for fname in glob.glob( os.path.join(htmldocdir, '*.html') ):
 			os.remove( fname )
 		for fname in glob.glob("./*.html"):

@@ -76,6 +76,10 @@ class ColTable( Grid.PyGridTableBase ):
 		if backgroundColour is not None:
 			self.backgroundColour = dict(backgroundColour)
 	
+	def SetColumn( self, grid, iCol, colData ):
+		self.data[iCol] = copy.copy(colData)
+		self.UpdateValues( grid )
+	
 	def GetData( self ):
 		return self.data
 
@@ -223,6 +227,9 @@ class ColGrid(Grid.Grid):
 
 	def Set( self, data = None, colnames = None, textColour = None, backgroundColour = None ):
 		self._table.Set( self, data, colnames, textColour, backgroundColour )
+	
+	def SetColumn( self, iCol, colData ):
+		self._table.SetColumn( self, iCol, colData )
 	
 	def GetData( self ):
 		return self._table.GetData()

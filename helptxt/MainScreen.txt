@@ -23,6 +23,16 @@ Note|Shows the riders position by category.  Leaders are highlighted in green.  
 Lap|Shows the lap the rider is currently on.
 Time|Shows the recorded time
 
+# Expected
+Shows the numbers is riders projected to arrive.  The columns in the table are as follows:
+
+Column|Description
+:-----|:----------
+Num|The rider's number
+Note|Shows the riders position by category.  Leaders are highlighted in green.  The Race Leader is highlighted with a full green bar.  Riders outside of the 80% time rule are shown in red.
+Lap|Shows the lap the rider is currently on.
+ETA|Shows the Estimated Time of Arrival of the rider
+
 ## Double-click
 Jumps to the RiderDetail for the number clicked on.
 
