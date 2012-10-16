@@ -6,7 +6,7 @@ Due to the diversity of Linux environments, CrossMgr is released as a
 Python Package.
 
 If you are installing CrossMgr for the first time, start at Step 1.
-If you are upgrading CrossMgr to a more recent version, goto Step 3.
+If you are upgrading CrossMgr to a more recent version, repeat steps Steps 3-4.
 
 --------------------------------------------
 Step 1:  Check you Python version.
@@ -65,7 +65,7 @@ type:
 	CrossMgr &
 	
 --------------------------------------------
-Step 6:  Make a desktop shortcut.
+Step 6:  Make a desktop launcher.
 
 This depends on your Linux distribution.
 
@@ -82,7 +82,7 @@ If this doesn't work, you may have to install it with:
 Type in the information to the dialog to launch CrossMgr.
 For the command, enter:
 
-	python /usr/local/bin/CrossMgr
+	/usr/local/bin/CrossMgr
 
 To customize the launch icon, click on the default "spring" icon in the
 upper left of the dialog.
@@ -95,7 +95,7 @@ If you need to uninstall CrossMgr, type the command:
 
 	sudo pip uninstall CrossMgr
 
-This will clean up any installed files.
+This will clean up the installed files.
 
 --------------------------------------------
 Step 7:  Upgrading CrossMgr.

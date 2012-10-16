@@ -50,7 +50,7 @@ CrossMgr is also fully integrated with the `JChip <http://www.j-chipusa.com/>`_
 chip timing system.
 It also supports data import from the `Orion <http://www.orion-timing.com/>`_ system.
 
-See `CrossMgr <http://www.sites.google.com/site/crossmgrsoftware/>`__ for full details.
+See `CrossMgr <http://www.sites.google.com/site/crossmgrsoftware/>`_ for full details.
 '''
 
 writeToFile( readme, 'README.txt' )

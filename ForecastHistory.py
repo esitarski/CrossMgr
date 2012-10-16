@@ -62,6 +62,7 @@ class ForecastHistory( wx.Panel ):
 		wx.Panel.__init__(self, parent, id, style=style)
 		
 		self.quickHistory = None
+		self.quickExpected = None
 		self.orangeColour = wx.Colour(255, 165, 0)
 		self.redColour = wx.Colour(255, 51, 51)
 
@@ -319,10 +320,7 @@ class ForecastHistory( wx.Panel ):
 		self.expectedGrid.Reset()
 	
 	def updatedExpectedTimes( self ):
-		try:
-			if not self.quickExpected:
-				return
-		except:
+		if not self.quickExpected:
 			return
 		tRace = Model.race.curRaceTime()
 		self.expectedGrid.SetColumn( iTimeCol, [formatTime(max(0.0, e.t - tRace)) for e in self.quickExpected] )
