@@ -24,7 +24,11 @@ CompileHelp( 'helptxt' )
 #------------------------------------------------------
 # Create a release area for pypi
 print 'Clearing previous contents...'
-subprocess.call( ['rm', '-rf', pypiDir] )
+try:
+	subprocess.call( ['rm', '-rf', pypiDir] )
+except:
+	shutil.rmtree( pypiDir, ignore_errors=True )
+	
 os.mkdir( pypiDir )
 
 #--------------------------------------------------------
