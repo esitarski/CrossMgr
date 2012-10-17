@@ -12,16 +12,13 @@ from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, Del
 from FtpWriteFile import realTimeFtpPublish
 
 # Define columns for recorded and expected infomation.
-iNumCol  = 0
-iNoteCol = 1
-iLapCol  = 2
-iTimeCol = 3
-iColMax  = 4
+iNumCol, iNoteCol, iTimeCol, iLapCol, iGapCol, iColMax = range(6)
 colnames = [None] * iColMax
 colnames[iNumCol]  = 'Num'
 colnames[iNoteCol] = 'Note'
 colnames[iLapCol]  = 'Lap'
 colnames[iTimeCol] = 'Time'
+colnames[iGapCol]  = 'Gap'
 
 fontSize = 14
 
@@ -111,7 +108,7 @@ class ForecastHistory( wx.Panel ):
 			self.splitter.SetSashPosition( size.height // 2 )
 
 	def swapOrientation( self ):
-		width = 240
+		width = 285
 		if self.splitter.GetSplitMode() == wx.SPLIT_VERTICAL:
 			self.splitter.SetSplitMode( wx.SPLIT_HORIZONTAL )
 			mainWin = Utils.getMainWin()
@@ -319,10 +316,11 @@ class ForecastHistory( wx.Panel ):
 		self.expectedGrid.Set( data = [] )
 		self.expectedGrid.Reset()
 	
-	def updatedExpectedTimes( self ):
+	def updatedExpectedTimes( self, tRace = None ):
 		if not self.quickExpected:
 			return
-		tRace = Model.race.curRaceTime()
+		if not tRace:
+			tRace = Model.race.curRaceTime()
 		self.expectedGrid.SetColumn( iTimeCol, [formatTime(max(0.0, e.t - tRace)) for e in self.quickExpected] )
 	
 	def refresh( self ):
@@ -362,6 +360,7 @@ class ForecastHistory( wx.Panel ):
 			
 			prevCatLeaders, nextCatLeaders = race.getCatPrevNextLeaders( tRace )
 			prevRiderPosition, nextRiderPosition = race.getPrevNextRiderPositions( tRace )
+			prevRiderGap, nextRiderGap = race.getPrevNextRiderGaps( tRace )
 			
 			backgroundColour = {}
 			textColour = {}
@@ -388,8 +387,8 @@ class ForecastHistory( wx.Panel ):
 						backgroundColour[(r, iNumCol)] = wx.GREEN
 						iBeforeLeader = r
 				elif tRace < tRaceLength and race.isOutsideTimeBound(e.num):
-					backgroundColour[(r, iNoteCol)] = self.redColour
-					textColour[(r, iNoteCol)] = wx.WHITE
+					backgroundColour[(r, iNumCol)] = backgroundColour[(r, iNoteCol)] = self.redColour
+					textColour[(r, iNumCol)] = textColour[(r, iNoteCol)] = wx.WHITE
 					outsideTimeBound.add( e.num )
 			
 			data = [None] * iColMax
@@ -412,6 +411,14 @@ class ForecastHistory( wx.Panel ):
 				else:
 					return ' '
 			data[iNoteCol] = [getNoteExpected(e) for e in expected]
+			def getGapExpected( e ):
+				try:
+					gap = prevRiderGap.get(e.num, ' ') if e.t < catNextTime[race.getCategory(e.num)] else \
+							   nextRiderGap.get(e.num, ' ')
+				except KeyError:
+					gap = prevRiderGap.get(e.num, ' ')
+				return gap
+			data[iGapCol] = [getGapExpected(e) for e in expected]
 			self.quickExpected = expected
 			
 			self.expectedGrid.Set( data = data, backgroundColour = backgroundColour, textColour = textColour )
@@ -440,8 +447,8 @@ class ForecastHistory( wx.Panel ):
 					if e.num == leaderPrev:
 						backgroundColour[(r, iNumCol)] = wx.GREEN
 				elif tRace < tRaceLength and race.isOutsideTimeBound(e.num):
-					backgroundColour[(r, iNoteCol)] = self.redColour
-					textColour[(r, iNoteCol)] = wx.WHITE
+					backgroundColour[(r, iNumCol)] = backgroundColour[(r, iNoteCol)] = self.redColour
+					textColour[(r, iNumCol)] = textColour[(r, iNoteCol)] = wx.WHITE
 					outsideTimeBound.add( e.num )
 									
 			data = [None] * iColMax
@@ -460,6 +467,11 @@ class ForecastHistory( wx.Panel ):
 				else:
 					return ' '
 			data[iNoteCol] = [getNoteHistory(e) for e in recorded]
+			def getGapHistory( e ):
+				if e.lap == 0:
+					return ' '
+				return prevRiderGap.get(e.num, ' ')
+			data[iGapCol] = [getGapHistory(e) for e in recorded]
 
 			self.historyGrid.Set( data = data, backgroundColour = backgroundColour, textColour = textColour )
 			self.historyGrid.AutoSizeColumns()

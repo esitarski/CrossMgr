@@ -277,13 +277,15 @@ class NumKeypad( wx.Panel ):
 		tClockStr = ''
 		with Model.LockRace() as race:
 			if race is not None:
-				tStr = Utils.formatTime( race.lastRaceTime() )
+				tRace = race.lastRaceTime()
+				tStr = Utils.formatTime( tRace )
 				self.refreshRaceHUD()
 				if race.isRunning():
 					tNow = datetime.datetime.now()
 					tClockStr = '%02d:%02d:%02d' % (tNow.hour, tNow.minute, tNow.second)
 			else:
 				tStr = ''
+				tRace = None
 			self.raceTime.SetLabel( '  ' + tStr )
 			self.clockTime.SetLabel( tClockStr )
 			
@@ -293,7 +295,7 @@ class NumKeypad( wx.Panel ):
 				mainWin.refreshRaceAnimation()
 			except:
 				pass
-			mainWin.forecastHistory.updatedExpectedTimes()
+			mainWin.forecastHistory.updatedExpectedTimes( tRace )
 	
 	def doChangeNumLaps( self, event ):
 		with Model.LockRace() as race:

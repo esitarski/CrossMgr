@@ -1526,14 +1526,13 @@ class Race(object):
 
 	#---------------------------------------------------------------------------------------
 
-	def getPrevNextRiderPositions( self, tRace ):
-		if not self.isRunning() or not self.riders:
-			return {}, {}
+	@memoize
+	def getCatEntries( self ):
 		entries = self.interpolate()
 		if not entries:
-			return {}, {}
-			
-		# Split up the entries by category.
+			return {}
+
+		# Split up all the entries by category.
 		catEntries = {}
 		getCategory = self.getCategory
 		finisherStatusSet = Race.finisherStatusSet
@@ -1549,11 +1548,21 @@ class Race(object):
 			#		continue
 			# Otherwise, add the entry to this category.
 			catEntries.setdefault(category, []).append( e )
+		return catEntries
+	
+	def getPrevNextRiderPositions( self, tRace ):
+		if not self.isRunning() or not self.riders:
+			return {}, {}
+		entries = self.interpolate()
+		if not entries:
+			return {}, {}
+			
+		catEntriesDict = self.getCatEntries()
 
 		# For each category, find the first instance of each rider after the leader's lap.
 		catTimesNums = self.getCategoryTimesNums()
 		ret = [{},{}]
-		for cat, catEntries in catEntries.iteritems():
+		for cat, catEntries in catEntriesDict.iteritems():
 			try:
 				catTimes, catNums = catTimesNums[cat]
 			except:
@@ -1570,6 +1579,47 @@ class Race(object):
 				catFinishers.sort( key = lambda x: (-x.lap, x.t, x.num) )
 				for pos, e in enumerate(catFinishers):
 					ret[r][e.num] = pos + 1
+				iLap += 1
+					
+		return ret
+		
+	def getPrevNextRiderGaps( self, tRace ):
+		if not self.isRunning() or not self.riders:
+			return {}, {}
+		entries = self.interpolate()
+		if not entries:
+			return {}, {}
+			
+		catEntriesDict = self.getCatEntries()
+
+		# For each category, find the first instance of each rider after the leader's lap.
+		catTimesNums = self.getCategoryTimesNums()
+		ret = [{},{}]
+		for cat, catEntries in catEntriesDict.iteritems():
+			try:
+				catTimes, catNums = catTimesNums[cat]
+			except:
+				continue
+			iLap = bisect.bisect_right( catTimes, tRace )
+			for r in xrange(2):
+				if iLap >= len(catTimes):
+					break
+				iFirst = bisect.bisect_left( catEntries, Entry(catNums[iLap], iLap, catTimes[iLap], False) )
+
+				seen = {}
+				catFinishers = [ seen.setdefault(catEntries[i].num, catEntries[i])
+								for i in xrange(iFirst, len(catEntries)) if catEntries[i].num not in seen ]
+				catFinishers.sort( key = lambda x: (-x.lap, x.t, x.num) )
+				leader = catFinishers[0]
+				for e in catFinishers:
+					if leader.lap == e.lap:
+						if leader.num != e.num:
+							ret[r][e.num] = Utils.formatTimeGap( e.t - leader.t )
+						else:
+							ret[r][e.num] = ' '
+					else:
+						lapsDown = e.lap - leader.lap
+						ret[r][e.num] = '%d lap%s' % (lapsDown, 's' if lapsDown < -1 else '')
 				iLap += 1
 					
 		return ret
