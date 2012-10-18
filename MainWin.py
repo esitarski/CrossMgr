@@ -512,6 +512,7 @@ class MainWin( wx.Frame ):
 		self.contextHelp = wx.NewId()
 		self.Bind(wx.EVT_MENU, self.onContextHelp, id=self.contextHelp )
 		accTable.append( (wx.ACCEL_CTRL, ord('H'), self.contextHelp) )
+		accTable.append( (wx.ACCEL_SHIFT, wx.WXK_F1, self.contextHelp) )
 		aTable = wx.AcceleratorTable( accTable )
 		self.SetAcceleratorTable(aTable)
 		
