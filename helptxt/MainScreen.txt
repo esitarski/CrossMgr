@@ -67,7 +67,7 @@ Column|Description
 :-----|:----------
 Num|The expected rider's number
 Note|Shows the riders expected position by category.  Leaders are highlighted in green.  The Race Leader is highlighted with a full green bar.  Riders expected to be outside of the 80% time rule are shown in red and are candiates to be pulled in a UCI level race.
-ETA|Shows the expected time
+ETA|Shows the time until the rider is expected.
 Lap|Shows the lap the rider is expected to be on.
 Gap|Time gap to the leader of this category.
 
