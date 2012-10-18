@@ -49,6 +49,17 @@ Delete...|Delete current entry
 DNF...|Mark this rider as DNF
 RiderDetail|Jump to the RiderDetail for this rider.
 
+# Recorded
+Shows the riders recorded.  The columns in the table are as follows:
+
+Column|Description
+:-----|:----------
+Num|The recorded rider's number
+Note|Shows the riders position by category.  Leaders are highlighted in green.  The Race Leader is highlighted with a full green bar.  Riders expected to be outside of the 80% time rule are shown in red and are candiates to be pulled in a UCI level race.
+Time|Shows the recorded time.
+Lap|Shows the lap the rider is on.
+Gap|Time gap to the leader of this category.
+
 # Expected
 Shows the riders expected to arrive based on their previously recorded lap times.  The columns in the table are as follows:
 
@@ -56,8 +67,9 @@ Column|Description
 :-----|:----------
 Num|The expected rider's number
 Note|Shows the riders expected position by category.  Leaders are highlighted in green.  The Race Leader is highlighted with a full green bar.  Riders expected to be outside of the 80% time rule are shown in red and are candiates to be pulled in a UCI level race.
+ETA|Shows the expected time
 Lap|Shows the lap the rider is expected to be on.
-Time|Shows the expected time
+Gap|Time gap to the leader of this category.
 
 ## Click on a Number
 Enters that number.  This eliminates typing in the Record screen.
