@@ -27,7 +27,10 @@ print 'Clearing previous contents...'
 try:
 	subprocess.call( ['rm', '-rf', pypiDir] )
 except:
-	shutil.rmtree( pypiDir, ignore_errors=True )
+	try:
+		shutil.rmtree( pypiDir, ignore_errors=True )
+	except:
+		pass
 	
 os.mkdir( pypiDir )
 
