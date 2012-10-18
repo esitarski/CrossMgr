@@ -62,9 +62,13 @@ You can search for, download and install these packages here: http://pypi.python
 --------------------------------------------
 Step 5:  Run CrossMgr
 
-type:
+From a shell window, type:
 
 	CrossMgr &
+	
+When CrossMgr comes us, click on "Demo|Simulate Race...", and click OK on the confirmation dialog.
+After the race starts, click on the Chart screen (F6).
+While on this screen, press CTRL-h to check that the help screen comes up.
 	
 --------------------------------------------
 Step 6:  Make an alias.
