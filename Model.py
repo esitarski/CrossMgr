@@ -1530,16 +1530,13 @@ class Race(object):
 		catEntries = {}
 		getCategory = self.getCategory
 		finisherStatusSet = Race.finisherStatusSet
+		localCat = {}
 		for e in self.interpolate():
-			# Is this a finisher?
 			if race[e.num].status in finisherStatusSet:
-				# Does this lap exceed the laps for this category?
-				category = getCategory(e.num)
-				#if category:
-				#	numLaps = category.getNumLaps()
-				#	if numLaps and e.lap > numLaps:
-				#		continue
-				# Otherwise, add the entry to this category.
+				try:
+					category = localCat[e.num]
+				except KeyError:
+					category = localCat[e.num] = getCategory(e.num)
 				try:
 					catEntries[category].append( e )
 				except KeyError:
