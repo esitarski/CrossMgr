@@ -368,7 +368,7 @@ def CmpEntryTT( e1, e2 ):
 	return e1.__cmp__( e2 )
 
 class Entry(object):
-	__slots__ = ('num', 'lap', 't', 'interp')							# Suppress the default dictionary to save space.
+	__slots__ = ('num', 'lap', 't', 'interp')		# Suppress the default dictionary to save space.
 
 	def __init__( self, num, lap, t, interp ):
 		self.num	= num
