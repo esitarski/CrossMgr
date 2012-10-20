@@ -1105,7 +1105,7 @@ class MainWin( wx.Frame ):
 		except AttributeError:
 			pass
 			
-		sys.exit()
+		wx.Exit()
 
 	def writeRace( self ):
 		with Model.LockRace() as race:

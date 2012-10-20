@@ -107,7 +107,7 @@ class Category(object):
 		return ','.join( s )
 
 	def _setStr( self, s ):
-		s = Category.badRangeCharsRE.sub( '', str(s) )
+		s = self.badRangeCharsRE.sub( '', str(s) )
 		self.intervals = []
 		self.exclude = set()
 		fields = s.split(',')
@@ -289,13 +289,17 @@ class Category(object):
 				return True
 		return False
 
+	key_attr = ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'catStr', 'distance', 'distanceType', 'firstLapDistance']
 	def __cmp__( self, c ):
-		for attr in ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'catStr', 'distance', 'distanceType', 'firstLapDistance']:
+		for attr in self.key_attr:
 			cCmp = cmp( getattr(self, attr, None), getattr(c, attr, None) )
 			if cCmp != 0:
 				return cCmp 
 		return 0
-		
+	
+	def key( self ):
+		return tuple( getattr(self, attr, None) for attr in self.key_attr )
+	
 	def removeNum( self, num ):
 		if not self.matches(num, True):
 			return
@@ -368,32 +372,28 @@ def CmpEntryTT( e1, e2 ):
 	return e1.__cmp__( e2 )
 
 class Entry(object):
-	# Store entries as tuples in sort sequence to improve performance.
-
-	__slots__ = ('data')							# Suppress the default dictionary to save space.
+	__slots__ = ('num', 'lap', 't', 'interp')		# Suppress the default dictionary to save space.
 
 	def __init__( self, num, lap, t, interp ):
-		self.data = (t, -lap, num, interp)			# -lap sorts most laps covered to the front.
+		self.num	= num
+		self.lap	= lap
+		self.t		= t
+		self.interp	= interp
 
 	def __cmp__( self, e ):
-		return cmp( self.data, e.data )
+		return cmp( (self.t, -self.lap, self.num, self.interp), (e.t, -e.lap, e.num, e.interp) )
 
+	def key( self ):
+		return (self.t, -self.lap, self.num, self.interp)
+		
 	def set( self, e ):
-		self.data = copy.copy(e.data)
+		self.num	= e.num
+		self.lap	= e.lap
+		self.t		= e.t
+		self.interp	= e.interp
 		
 	def __hash__( self ):
-		return hash(self.data)
-
-	@property
-	def t(self):		return self.data[0]
-	@property
-	def lap(self):		return -self.data[1]
-	@property
-	def lapNeg(self):	return self.data[1]		# Negative number of laps (for sorting)
-	@property
-	def num(self):		return self.data[2]
-	@property
-	def interp(self):	return self.data[3]
+		return (self.num<<16) ^ (self.lap<<8) ^ hash(self.t) ^ ((1<<20) if self.interp else 0)
 
 	def __repr__( self ):
 		return 'Entry( num=%d, lap=%d, interp=%s, t=%s )' % (self.num, self.lap, str(self.interp), str(self.t))
@@ -1006,7 +1006,7 @@ class Race(object):
 			entries[iCur:iEnd] = interpolate
 			iCur = iEnd
 		del entries[iEnd:]
-		entries.sort()
+		entries.sort( key=Entry.key )
 		return entries
 
 	@memoize
@@ -1143,14 +1143,10 @@ class Race(object):
 		leaderTimes = [ 0.0 ]
 		leaderNums = [ None ]
 		leaderTimesLen = 1
-		while 1:
-			try:
-				e = (e for e in entries if e.lap == leaderTimesLen).next()
-				leaderTimes.append( e.t )
-				leaderNums.append( e.num )
-				leaderTimesLen += 1
-			except StopIteration:
-				break
+		for e in (e for e in entries if e.lap == leaderTimesLen):
+			leaderTimes.append( e.t )
+			leaderNums.append( e.num )
+			leaderTimesLen += 1
 		
 		if leaderTimesLen == 1:
 			return None, None
@@ -1234,7 +1230,7 @@ class Race(object):
 		ctn = {}
 		
 		activeCategories = [c for c in self.categories.itervalues() if c.active]
-		activeCategories.sort()
+		activeCategories.sort( key = Category.key )
 		
 		entries = self.interpolate()
 		getCategory = self.getCategory
@@ -1291,8 +1287,10 @@ class Race(object):
 		leaderTime = leaderTimes[leaderLap]
 
 		# Get the rider time for the same lap.
+		entries = self.interpolate()
+		i = bisect.bisect_left( entries, Entry(num = 0, lap = leaderLap, t = leaderTime, interp = False) )
 		try:
-			riderTime = (e.t for e in self.interpolate() if e.num == num and e.lap == leaderLap).next()
+			riderTime = (e.t for e in itertools.islice(entries, i, len(entries)) if e.num == num and e.lap == leaderLap).next()
 		except StopIteration:
 			return False
 		
@@ -1468,7 +1466,7 @@ class Race(object):
 		for r in self.riders.itervalues():
 			if r.num not in self.categoryCache and c.matches(r.num):
 				self.categoryCache[r.num] = c
-				
+		
 		return c
 	
 	def getCategoryNumLaps( self, num ):
@@ -1528,26 +1526,21 @@ class Race(object):
 
 	@memoize
 	def getCatEntries( self ):
-		entries = self.interpolate()
-		if not entries:
-			return {}
-
 		# Split up all the entries by category.
 		catEntries = {}
 		getCategory = self.getCategory
 		finisherStatusSet = Race.finisherStatusSet
-		for e in entries:
-			# Is this a finisher?
-			if race[e.num].status not in finisherStatusSet:
-				continue
-			# Does this lap exceed the laps for this category?
-			category = getCategory(e.num)
-			#if category:
-			#	numLaps = category.getNumLaps()
-			#	if numLaps and e.lap > numLaps:
-			#		continue
-			# Otherwise, add the entry to this category.
-			catEntries.setdefault(category, []).append( e )
+		localCat = {}
+		for e in self.interpolate():
+			if race[e.num].status in finisherStatusSet:
+				try:
+					category = localCat[e.num]
+				except KeyError:
+					category = localCat[e.num] = getCategory(e.num)
+				try:
+					catEntries[category].append( e )
+				except KeyError:
+					catEntries[category] = [e]
 		return catEntries
 	
 	def getPrevNextRiderPositions( self, tRace ):
