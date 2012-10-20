@@ -107,7 +107,7 @@ class Category(object):
 		return ','.join( s )
 
 	def _setStr( self, s ):
-		s = Category.badRangeCharsRE.sub( '', str(s) )
+		s = self.badRangeCharsRE.sub( '', str(s) )
 		self.intervals = []
 		self.exclude = set()
 		fields = s.split(',')
@@ -289,13 +289,17 @@ class Category(object):
 				return True
 		return False
 
+	key_attr = ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'catStr', 'distance', 'distanceType', 'firstLapDistance']
 	def __cmp__( self, c ):
-		for attr in ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'catStr', 'distance', 'distanceType', 'firstLapDistance']:
+		for attr in self.key_attr:
 			cCmp = cmp( getattr(self, attr, None), getattr(c, attr, None) )
 			if cCmp != 0:
 				return cCmp 
 		return 0
-		
+	
+	def key( self ):
+		return tuple( getattr(self, attr, None) for attr in self.key_attr )
+	
 	def removeNum( self, num ):
 		if not self.matches(num, True):
 			return
@@ -1139,14 +1143,10 @@ class Race(object):
 		leaderTimes = [ 0.0 ]
 		leaderNums = [ None ]
 		leaderTimesLen = 1
-		while 1:
-			try:
-				e = (e for e in entries if e.lap == leaderTimesLen).next()
-				leaderTimes.append( e.t )
-				leaderNums.append( e.num )
-				leaderTimesLen += 1
-			except StopIteration:
-				break
+		for e in (e for e in entries if e.lap == leaderTimesLen):
+			leaderTimes.append( e.t )
+			leaderNums.append( e.num )
+			leaderTimesLen += 1
 		
 		if leaderTimesLen == 1:
 			return None, None
@@ -1230,7 +1230,7 @@ class Race(object):
 		ctn = {}
 		
 		activeCategories = [c for c in self.categories.itervalues() if c.active]
-		activeCategories.sort()
+		activeCategories.sort( key = Category.key )
 		
 		entries = self.interpolate()
 		getCategory = self.getCategory
@@ -1287,8 +1287,10 @@ class Race(object):
 		leaderTime = leaderTimes[leaderLap]
 
 		# Get the rider time for the same lap.
+		entries = self.interpolate()
+		i = bisect.bisect_left( entries, Entry(num = 0, lap = leaderLap, t = leaderTime, interp = False) )
 		try:
-			riderTime = (e.t for e in self.interpolate() if e.num == num and e.lap == leaderLap).next()
+			riderTime = (e.t for e in itertools.islice(entries, i, len(entries)) if e.num == num and e.lap == leaderLap).next()
 		except StopIteration:
 			return False
 		
@@ -1464,7 +1466,7 @@ class Race(object):
 		for r in self.riders.itervalues():
 			if r.num not in self.categoryCache and c.matches(r.num):
 				self.categoryCache[r.num] = c
-				
+		
 		return c
 	
 	def getCategoryNumLaps( self, num ):
@@ -1524,26 +1526,24 @@ class Race(object):
 
 	@memoize
 	def getCatEntries( self ):
-		entries = self.interpolate()
-		if not entries:
-			return {}
-
 		# Split up all the entries by category.
 		catEntries = {}
 		getCategory = self.getCategory
 		finisherStatusSet = Race.finisherStatusSet
-		for e in entries:
+		for e in self.interpolate():
 			# Is this a finisher?
-			if race[e.num].status not in finisherStatusSet:
-				continue
-			# Does this lap exceed the laps for this category?
-			category = getCategory(e.num)
-			#if category:
-			#	numLaps = category.getNumLaps()
-			#	if numLaps and e.lap > numLaps:
-			#		continue
-			# Otherwise, add the entry to this category.
-			catEntries.setdefault(category, []).append( e )
+			if race[e.num].status in finisherStatusSet:
+				# Does this lap exceed the laps for this category?
+				category = getCategory(e.num)
+				#if category:
+				#	numLaps = category.getNumLaps()
+				#	if numLaps and e.lap > numLaps:
+				#		continue
+				# Otherwise, add the entry to this category.
+				try:
+					catEntries[category].append( e )
+				except KeyError:
+					catEntries[category] = [e]
 		return catEntries
 	
 	def getPrevNextRiderPositions( self, tRace ):
