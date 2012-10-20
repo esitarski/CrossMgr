@@ -368,32 +368,28 @@ def CmpEntryTT( e1, e2 ):
 	return e1.__cmp__( e2 )
 
 class Entry(object):
-	# Store entries as tuples in sort sequence to improve performance.
-
-	__slots__ = ('data')							# Suppress the default dictionary to save space.
+	__slots__ = ('num', 'lap', 't', 'interp')							# Suppress the default dictionary to save space.
 
 	def __init__( self, num, lap, t, interp ):
-		self.data = (t, -lap, num, interp)			# -lap sorts most laps covered to the front.
+		self.num	= num
+		self.lap	= lap
+		self.t		= t
+		self.interp	= interp
 
 	def __cmp__( self, e ):
-		return cmp( self.data, e.data )
+		return cmp( (self.t, -self.lap, self.num, self.interp), (e.t, -e.lap, e.num, e.interp) )
 
+	def key( self ):
+		return (self.t, -self.lap, self.num, self.interp)
+		
 	def set( self, e ):
-		self.data = copy.copy(e.data)
+		self.num	= e.num
+		self.lap	= e.lap
+		self.t		= e.t
+		self.interp	= e.interp
 		
 	def __hash__( self ):
-		return hash(self.data)
-
-	@property
-	def t(self):		return self.data[0]
-	@property
-	def lap(self):		return -self.data[1]
-	@property
-	def lapNeg(self):	return self.data[1]		# Negative number of laps (for sorting)
-	@property
-	def num(self):		return self.data[2]
-	@property
-	def interp(self):	return self.data[3]
+		return (self.num<<16) ^ (self.lap<<8) ^ hash(self.t) ^ ((1<<20) if self.interp else 0)
 
 	def __repr__( self ):
 		return 'Entry( num=%d, lap=%d, interp=%s, t=%s )' % (self.num, self.lap, str(self.interp), str(self.t))
@@ -1006,7 +1002,7 @@ class Race(object):
 			entries[iCur:iEnd] = interpolate
 			iCur = iEnd
 		del entries[iEnd:]
-		entries.sort()
+		entries.sort( key=Entry.key )
 		return entries
 
 	@memoize
