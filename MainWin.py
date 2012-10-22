@@ -39,6 +39,7 @@ from Recommendations	import Recommendations
 from RaceAnimation		import RaceAnimation, GetAnimationData
 from Search				import SearchDialog
 from FtpWriteFile		import realTimeFtpPublish
+from SetAutoCorrect		import SetAutoCorrectDialog
 import Utils
 from Utils				import logCall
 import Model
@@ -319,13 +320,9 @@ class MainWin( wx.Frame ):
 		
 		self.editMenu.AppendSeparator()
 		idCur = wx.NewId()
-		self.editMenu.Append( idCur, '&Set "Autocorrect Lap Data" flag for All Riders', 'Set "Autocorrect Lap Data" flag for All Riders' )
-		self.Bind( wx.EVT_MENU, self.menuSetLapAutocorrect, id=idCur )
+		self.editMenu.Append( idCur, '&Change "Autocorrect"...', 'Change "Autocorrect"...' )
+		self.Bind( wx.EVT_MENU, self.menuAutocorrect, id=idCur )
 		
-		idCur = wx.NewId()
-		self.editMenu.Append( idCur, '&Clear "Autocorrect Lap Data" flag for All Riders', 'Clear "Autocorrect Lap Data" flag for All Riders' )
-		self.Bind( wx.EVT_MENU, self.menuClearLapAutocorrect, id=idCur )
-
 		img = None
 		self.editMenuItem = self.menuBar.Append( self.editMenu, "&Edit" )
 
@@ -533,25 +530,15 @@ class MainWin( wx.Frame ):
 		undo.doRedo()
 		self.refresh()
 		
-	def menuSetLapAutocorrect( self, event ):
+	def menuAutocorrect( self, event ):
 		undo.pushState()
 		with Model.LockRace() as race:
 			if not race:
 				return
-			for num, rider in race.riders.iteritems():
-				rider.autocorrectLaps = True
-			race.setChanged()
-		self.refresh()
-	
-	def menuClearLapAutocorrect( self, event ):
-		undo.pushState()
-		with Model.LockRace() as race:
-			if not race:
+			categories = race.getCategoriesInUse()
+			if not categories:
 				return
-			for num, rider in race.riders.iteritems():
-				rider.autocorrectLaps = False
-			race.setChanged()
-		self.refresh()
+		SetAutoCorrectDialog( self, categories ).ShowModal()
 	
 	def menuShowHighPrecisionTimes( self, event ):
 		with Model.LockRace() as race:
