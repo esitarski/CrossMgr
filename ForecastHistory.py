@@ -459,7 +459,7 @@ class ForecastHistory( wx.Panel ):
 				if e.lap == 0:
 					return 'Start'
 
-				position = prevRiderPosition.get(e.num, -1)
+				position = nextRiderPosition.get(e.num, -1)
 				if position == 1:
 					return 'Lead'
 				elif position >= 0:
