@@ -20,7 +20,7 @@ class SetAutoCorrectDialog( wx.Dialog ):
 		self.title1.SetFont( font )
 		self.title2 = wx.StaticText( self, wx.ID_ANY, "Select Categories:" )
 		
-		self.categoryList = wx.ListBox( self, wx.ID_ANY, style=wx.LB_MULTIPLE, choices=self.categoryNames )
+		self.categoryList = wx.ListBox( self, wx.ID_ANY, style=wx.LB_MULTIPLE, choices=self.categoryNames, size=(120,200) )
 		
 		self.title3 = wx.StaticText( self, wx.ID_ANY, "For all Riders in the Categories above:" )
 		self.setBtn = wx.Button( self, wx.ID_ANY, 'Set Autocorrect Flag' )
@@ -50,7 +50,8 @@ class SetAutoCorrectDialog( wx.Dialog ):
 	def doSet( self, action ):
 		selections = self.categoryList.GetSelections()
 		if not selections:
-			return
+			Utils.MessageOK( self, "No Categories Selected.\n\nSelect some Catetgories first, or Cancel", "No Categories Selected", wx.ICON_EXCLAMATION )
+			return False
 		
 		if 0 in selections:
 			doAll = True
@@ -65,16 +66,17 @@ class SetAutoCorrectDialog( wx.Dialog ):
 					rider.autocorrectLaps = action
 				race.setChanged()
 		Utils.refresh()
+		return True
 		
 	@logCall
 	def onSetAutocorrect( self, event ):
-		self.doSet( True )
-		self.EndModal( wx.ID_OK )
+		if self.doSet( True ):
+			self.EndModal( wx.ID_OK )
 		
 	@logCall
 	def onClearAutocorrect( self, event ):
-		self.doSet( False )
-		self.EndModal( wx.ID_OK )
+		if self.doSet( False ):
+			self.EndModal( wx.ID_OK )
 		
 	def onCancel( self, event ):
 		self.EndModal( wx.ID_CANCEL )

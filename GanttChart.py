@@ -317,6 +317,7 @@ class GanttChart(wx.PyControl):
 		ctx.SetPen( wx.Pen(wx.BLACK, 1) )
 		
 		xyInterp = []
+		xyDuplicate = []
 		
 		xFactor = float(width - labelsWidthLeft - labelsWidthRight) / float(self.dataMax)
 		yLast = barHeight
@@ -325,6 +326,8 @@ class GanttChart(wx.PyControl):
 			yCur = yLast + barHeight
 			xLast = labelsWidthLeft
 			xCur = xLast
+			tTooShort = (s[-1] / len(s)) / 10.0 if s else 0.0
+			tLast = None
 			for j, t in enumerate(s):
 				xCur = int(labelsWidthLeft + t * xFactor)
 				if j == 0:
@@ -348,11 +351,17 @@ class GanttChart(wx.PyControl):
 					dc.SetBrush( transparentBrush )
 					dc.SetPen( penBar )
 					dc.DrawRectangle( xLast, yLast, xCur - xLast + 1, dy )
-					
-					if self.interp and self.interp[i][j]:
-						xyInterp.append( (xCur, yLast) )
+
+					try:
+						if self.interp[i][j]:
+							xyInterp.append( (xCur, yLast) )
+					except (TypeError, IndexError):
+						pass
+					if t - tLast < tTooShort:
+						xyDuplicate.append( (xCur, yLast) )
 
 				xLast = xCur
+				tLast = t
 			
 			# Draw the last empty bar.
 			xCur = int(labelsWidthLeft + self.dataMax * xFactor)
@@ -387,22 +396,31 @@ class GanttChart(wx.PyControl):
 		# Draw indicators for interpolated values.
 		radius = (dy/2) * 0.9
 		
-		# Define a path for the indicator about the origin.
-		ctx.SetPen( penBar )
-		ctx.SetBrush( ctx.CreateRadialGradientBrush( 0, - radius*0.50, 0, 0, radius + 1, wx.WHITE, wx.Colour(220,220,0) ) )
-		path = ctx.CreatePath()
-		path.MoveToPoint( 0, -radius )
-		path.AddLineToPoint( -radius, 0 )
-		path.AddLineToPoint( 0, radius )
-		path.AddLineToPoint( radius, 0 )
-		path.AddLineToPoint( 0, -radius )
+		if xyInterp:
+			# Define a path for the indicator about the origin.
+			ctx.SetPen( penBar )
+			ctx.SetBrush( ctx.CreateRadialGradientBrush( 0, - radius*0.50, 0, 0, radius + 1, wx.WHITE, wx.Colour(220,220,0) ) )
+			path = ctx.CreatePath()
+			path.MoveToPoint( 0, -radius )
+			path.AddLineToPoint( -radius, 0 )
+			path.AddLineToPoint( 0, radius )
+			path.AddLineToPoint( radius, 0 )
+			path.AddLineToPoint( 0, -radius )
 
-		# Draw the interp indicators.
-		for xSphere, ySphere in xyInterp:
-			ctx.PushState()
-			ctx.Translate( xSphere, ySphere + dy/2.0 - (dy/2.0 - radius) / 4 )
-			ctx.DrawPath( path )
-			ctx.PopState()
+			# Draw the interp indicators.
+			for xCur, yCur in xyInterp:
+				ctx.PushState()
+				ctx.Translate( xCur, yCur + dy/2.0 - (dy/2.0 - radius) / 4 )
+				ctx.DrawPath( path )
+				ctx.PopState()
+
+		if xyDuplicate:
+			# Draw the duplicate indicators.
+			radius *= 1.3
+			ctx.SetPen( wx.Pen(wx.RED, 3) )
+			ctx.SetBrush( wx.TRANSPARENT_BRUSH )
+			for xCur, yCur in xyDuplicate:
+				ctx.DrawEllipse( xCur - radius, yCur + dy/2.0 - radius, radius*2, radius*2 )
 		
 		# Draw the now timeline.
 		if self.nowTime and self.nowTime < self.dataMax:
@@ -445,6 +463,8 @@ if __name__ == '__main__':
 		interp = []
 		for i in xrange(20):
 			data.append( [t + i*10 for t in xrange(0, 60*60, 7*60)] )
+			if i % 5 == 1:
+				data[-1].insert( (i//3) + 1, data[-1][i//3] + 0.05 )
 			interp.append( [((t + i*10)%100)//10 for t in xrange(0, 60*60, 7*60)] )
 		return data, interp
 
