@@ -311,7 +311,6 @@ class GanttChartPanel(wx.PyPanel):
 			self.empty = True
 			return
 
-		
 		legendSep = 4			# Separations between legend entries and the Gantt bars.
 		labelsWidthLeft = textWidthLeftMax + legendSep
 		labelsWidthRight = textWidthRightMax + legendSep
@@ -391,6 +390,7 @@ class GanttChartPanel(wx.PyPanel):
 		
 		xyInterp = []
 		xyNumTimeInfo = []
+		xyDuplicate = []
 		
 		xFactor = dFactor
 		yLast = barHeight
@@ -409,11 +409,12 @@ class GanttChartPanel(wx.PyPanel):
 			yCur = yLast + barHeight
 			xLast = labelsWidthLeft
 			xCur = xLast
+			tTooShort = (s[-1] / len(s)) / 10.0 if s else 0.0
 			for j, t in enumerate(s):
 				if xLast >= xRight:
 					break
 				xCur = xOriginal = int(labelsWidthLeft + (t-tAdjust) * xFactor)
-				if xCur <= xLast:
+				if xCur < labelsWidthLeft:
 					continue
 				if xCur > xRight:
 					xCur = xRight
@@ -439,13 +440,16 @@ class GanttChartPanel(wx.PyPanel):
 					dc.SetPen( penBar )
 					dc.DrawRectangle( xLast, yLast, xCur - xLast + 1, dy )
 					
-					try:
-						if self.interp and self.interp[i][j] and xOriginal <= xRight:
-							xyInterp.append( (xOriginal, yLast) )
-					except IndexError:
-						pass
-					if self.numTimeInfo and self.numTimeInfo.getInfo(num, t) is not None:
-						xyNumTimeInfo.append( (xOriginal, yLast) )
+					if xOriginal <= xRight:
+						try:
+							if self.interp[i][j]:
+								xyInterp.append( (xOriginal, yLast) )
+						except (ValueError, IndexError):
+							pass
+						if self.numTimeInfo and self.numTimeInfo.getInfo(num, t) is not None:
+							xyNumTimeInfo.append( (xOriginal, yLast) )
+						if t - s[j-1] < tTooShort:
+							xyDuplicate.append( (xOriginal, yLast) )
 
 				xLast = xCur
 			
@@ -513,20 +517,27 @@ class GanttChartPanel(wx.PyPanel):
 		# Draw the interp indicators.
 		ctx.SetPen( penBar )
 		ctx.SetBrush( ctx.CreateRadialGradientBrush( 0, - radius*0.50, 0, 0, radius + 1, wx.WHITE, self.yellowColour ) )
-		for xSphere, ySphere in xyInterp:
+		for xCur, yCur in xyInterp:
 			ctx.PushState()
-			ctx.Translate( xSphere, ySphere + dy/2.0 - (dy/2.0 - radius) / 4 )
+			ctx.Translate( xCur, yCur + dy/2.0 - (dy/2.0 - radius) / 4 )
 			ctx.DrawPath( diamondPath )
 			ctx.PopState()
 		
 		# Draw the edit indictors.
 		ctx.SetPen( penBar )
 		ctx.SetBrush( ctx.CreateRadialGradientBrush( 0, - radius*0.50, 0, 0, radius + 1, wx.WHITE, self.orangeColour ) )
-		for xSphere, ySphere in xyNumTimeInfo:
+		for xCur, yCur in xyNumTimeInfo:
 			ctx.PushState()
-			ctx.Translate( xSphere, ySphere + dy/2.0 - (dy/2.0 - radius) / 4 )
+			ctx.Translate( xCur, yCur + dy/2.0 - (dy/2.0 - radius) / 4 )
 			ctx.DrawPath( starPath )
 			ctx.PopState()
+			
+		# Draw the duplicate indicators.
+		radius = int(radius * 1.5)
+		ctx.SetPen( wx.Pen(wx.RED, 3) )
+		ctx.SetBrush( wx.TRANSPARENT_BRUSH )
+		for xCur, yCur in xyDuplicate:
+			ctx.DrawEllipse( xCur - radius, yCur + dy/2.0 - radius, radius*2, radius*2 )
 		
 		# Draw the now timeline.
 		if self.nowTime and self.nowTime < self.dataMax:
@@ -569,7 +580,9 @@ if __name__ == '__main__':
 		data = []
 		interp = []
 		for i in xrange(40):
-			data.append( [t + i*10 for t in xrange(0, 60*60 * 3, 7*60)] )
+			data.append( [t + i*10.0 for t in xrange(0, 60*60 * 3, 7*60)] )
+			if i % 5 == 1:
+				data[-1].insert( (i//3) + 1, data[-1][i//3] + 0.05 )
 			interp.append( [((t + i*10)%100)//10 for t in xrange(0, 60*60 * 3, 7*60)] )
 		return data, interp
 

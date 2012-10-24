@@ -1469,6 +1469,14 @@ class Race(object):
 		
 		return c
 	
+	def getCategoriesInUse( self ):
+		catSet = set()
+		for num in self.riders.iterkeys():
+			category = self.getCategory(num)
+			if category:
+				catSet.add( category )
+		return sorted( catSet, key = Category.key )
+	
 	def getCategoryNumLaps( self, num ):
 		try:
 			category = self.getCategory( num )
