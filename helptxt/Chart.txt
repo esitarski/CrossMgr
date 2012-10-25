@@ -19,7 +19,7 @@ Indicator|Meaning
 :--------|:------
 Diamond|Indicates a CrossMgr auto-corrected time that did not appear in the original input.  CrossMgr automatically generates missed times when it thinks it is reasonable to do so
 Star|Indicates a User Edit of the original input.  Changes made by users are logged and timestamped (see RiderDetail).
-Red Circle|Indicates a duplicate time.  Although rare, times may be entered more than once for the same lap.  For example, a number caller might turn around see the numbers on the backs of riders and call the same number twice.  CrossMgr's Auto-Correct will take care of these, but you will see them if you turn Auto-Correct off.  To fix this situation manually, delete one of the duplicates.  A time is considered a duplicate if it results in a lap that is less than 10% of the rider's lap time.
+Red Circle|Indicates a duplicate time.  Although rare, times may be entered more than once for the same lap.  For example, a number caller might turn around see the numbers on the backs of riders and call the same number twice.  CrossMgr's Auto-Correct will take care of these, but you will see them if you turn Auto-Correct off.  To fix this situation manually, delete one of the duplicates.  A time is considered a duplicate if it results in a lap that is less than 15 seconds.
 
 # Controls
 ## Category
