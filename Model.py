@@ -1614,10 +1614,7 @@ class Race(object):
 				leader = catFinishers[0]
 				for e in catFinishers:
 					if leader.lap == e.lap:
-						if leader.num != e.num:
-							ret[r][e.num] = Utils.formatTimeGap( e.t - leader.t )
-						else:
-							ret[r][e.num] = ' '
+						ret[r][e.num] = Utils.formatTimeGap( e.t - leader.t ) if leader.num != e.num else ' '
 					else:
 						lapsDown = e.lap - leader.lap
 						ret[r][e.num] = '%d lap%s' % (lapsDown, 's' if lapsDown < -1 else '')
