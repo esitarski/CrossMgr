@@ -1491,6 +1491,19 @@ class Race(object):
 		self.resetCategoryCache()
 		self.resetCache();
 	
+	def getRaceIntro( self ):
+		intro = [
+			'Race: %s:%d' % (self.name, self.raceNum),
+			'Start: %s (%s)' % (self.scheduledStart, self.date),
+		]
+		activeCategories = [c for c in self.categories.itervalues() if c.active]
+		activeCategories.sort( key = Category.key )
+		if all( c.numLaps for c in activeCategories ):
+			intro.append( 'Category Laps: %s' % (', '.join( str(c.numLaps) for c in activeCategories )) )
+		else:
+			intro.append( 'Duration: %d min' % self.minutes )
+		return '\n'.join( intro )
+	
 	def getNextExpectedLeaderTNL( self, t ):
 		leaderTimes, leaderNums = self.getLeaderTimesNums()
 		if leaderTimes:
