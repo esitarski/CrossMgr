@@ -42,7 +42,7 @@ def GradeAdjustedDistance( lat1, lon1, ele1, lat2, lon2, ele2 ):
 	return m * d
 
 LatLonEle = collections.namedtuple('LatLonEle', ['lat','lon','ele'] )
-GpsPoint = collections.namedtuple('GpsPoint', ['lat','lon','ele','x','y','d', 'dCum'] )
+GpsPoint = collections.namedtuple('GpsPoint', ['lat','lon','ele','x','y','d','dCum'] )
 
 def triangle( t, a ):
 	a = float(a)
@@ -87,8 +87,10 @@ class GeoTrack( object ):
 		self.distanceTotal = 0.0
 		self.cumDistance = []
 		self.x = 0
+		self.xMax = self.yMax = 0.0
 		self.yBottom = 0
 		self.mult = 1.0
+		self.length = 0.0
 		self.cache = {}
 		
 	def read( self, fname ):
@@ -197,6 +199,8 @@ class GeoAnimation(wx.PyControl):
 		self.r = 100	# Radius of the turns of the fictional track.
 		self.laneMax = 8
 		
+		self.course = 'geo'
+		
 		self.framesPerSecond = 32
 		self.lapCur = 0
 		
@@ -246,8 +250,11 @@ class GeoAnimation(wx.PyControl):
 		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
 		self.Bind(wx.EVT_SIZE, self.OnSize)
 		
-		self.geoTrack = GeoTrack()
-		self.geoTrack.read( 'EdgeField_Cyclocross_Course.gpx' )
+	def SetGeoTrack( self, geoTrack ):
+		self.geoTrack = geoTrack
+		
+	def SetOptions( self, *argc, **kwargs ):
+		pass
 		
 	def DoGetBestSize(self):
 		return wx.Size(400, 200)
@@ -620,6 +627,9 @@ if __name__ == '__main__':
 	app = wx.PySimpleApp()
 	mainWin = wx.Frame(None,title="GeoAnimation", size=(800,700))
 	animation = GeoAnimation(mainWin)
+	geoTrack = GeoTrack()
+	geoTrack.read( 'EdgeField_Cyclocross_Course.gpx' )
+	animation.SetGeoTrack( geoTrack )
 	animation.SetData( data )
 	animation.Animate( 2*60, 60*60 )
 	mainWin.Show()

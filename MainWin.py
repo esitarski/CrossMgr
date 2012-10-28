@@ -50,6 +50,7 @@ import JChip
 import OrionImport
 import OutputStreamer
 import FtpWriteFile
+import GpxImport
 import cStringIO as StringIO
 from Undo import undo
 from setpriority import setpriority
@@ -358,6 +359,10 @@ class MainWin( wx.Frame ):
 		self.dataMgmtMenu.Append( idCur , "Export Raw Data as &HTML...", "Export raw data as HTML (.html)" )
 		self.Bind(wx.EVT_MENU, self.menuExportHtmlRawData, id=idCur )
 
+		self.dataMgmtMenu.AppendSeparator()
+		idCur = wx.NewId()
+		self.dataMgmtMenu.Append( idCur , "&Import Course in GPX format...", "Import Course in GPX format" )
+		self.Bind(wx.EVT_MENU, self.menuImportGpx, id=idCur )
 		
 		self.menuBar.Append( self.dataMgmtMenu, "&DataMgmt" )
 
@@ -950,6 +955,33 @@ class MainWin( wx.Frame ):
 			webbrowser.open( urlFull, new = 0, autoraise = True )
 			
 	#--------------------------------------------------------------------------------------------
+	@logCall
+	def menuImportGpx( self, event ):
+		if self.fileName is None or len(self.fileName) < 4:
+			return
+		with Model.LockRace() as race:
+			if not race:
+				return
+			existingGeoTrack = getattr( race, 'geoTrack', None )
+			
+		gt = GpxImport.GetGeoTrack( self )
+		gpxFName = gt.show()
+		if not gpxFName:
+			if existingGeoTrack is not None:
+				if not Utils.MessageOKCancel( self, 'Do you wish to drop the existing GPX track?',
+												'Drop Existing GPS Track', iconMask = wx.ICON_EXCLAMATION ):
+					return
+					
+		with Model.LockRace() as race:
+			if not gpxFName:
+				race.geoTrackFName = None
+				race.geoTrack = None
+			else:
+				race.geoTrackFName = gpxFName
+				race.geoTrack = gt.geoTrack
+			race.setChanged()
+			self.refresh()
+		
 	@logCall
 	def menuExportHtmlRawData( self, event ):
 		self.commit()

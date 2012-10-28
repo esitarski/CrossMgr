@@ -61,6 +61,8 @@ class Animation(wx.PyControl):
 		self.reverseDirection = False
 		self.finishTop = False
 		
+		self.course = 'track'
+		
 		'''
 		self.colours = [
 			wx.Colour(255, 0, 0),

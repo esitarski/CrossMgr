@@ -154,7 +154,7 @@ var reverseDirection = null;	// Reverse the direction of the riders.
 var finishTop = null;			// Finish on the top rather than the bottom.
 var tRace = null;				// Race time (if the race is running).
 var animationObj = null;		// Animation object to draw the course (set to TrackAnimation or GeoAnimation).
-var gpxCourse = null;			// gpx data for the course [[ lat, lng, ele], ...] ).
+var gpsPoints = null;			// gps points data for the course [[lat,lon,ele,x,y,d,dCum],...].
 
 var catUpdateTime = {};			// Time of next update by category.
 
@@ -712,8 +712,23 @@ function TrackAnimation()
 //----------------------------------------------------------------------------
 function GeoTrack()
 {
-	this.setData = function( gpsPoints )
+	this.setData = function( gpsData )
 	{
+		this.gpsPoints = [];
+		for( var i = 0; i < gpsData.length; ++i )
+		{
+			var g = gpsData[i];
+			var p = {
+				'lat':	g[0],
+				'lon':	g[1],
+				'ele':	g[2],
+				'x':	g[3],
+				'y':	g[4],
+				'd':	g[5],
+				'dCum':	g[6],
+			};
+			this.gpsPoints.push( p );
+		}
 		this.gpsPoints = gpsPoints;
 		
 		this.x = 0;
