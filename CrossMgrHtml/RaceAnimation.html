@@ -153,6 +153,8 @@ var displayUnits = 'km';
 var reverseDirection = null;	// Reverse the direction of the riders.
 var finishTop = null;			// Finish on the top rather than the bottom.
 var tRace = null;				// Race time (if the race is running).
+var animationObj = null;		// Animation object to draw the course (set to TrackAnimation or GeoAnimation).
+var gpxCourse = null;			// gpx data for the course [[ lat, lng, ele], ...] ).
 
 var catUpdateTime = {};			// Time of next update by category.
 
@@ -183,6 +185,19 @@ Array.prototype.back = function()
 {
 	return this[this.length-1];
 };
+
+Array.prototype.binSearch = function(v)
+{
+	var L = this.length, i = -1, m;
+	while( L - i > 1 )
+	{
+		if( this[m = ((L + i)>>1)] < v )
+			i = m;
+		else
+			L = m;
+	}
+	return L;
+}
 
 // Make a string html safe.
 String.prototype.escapeHTML = function ()
@@ -267,73 +282,6 @@ function getRiderPositionTime( num )
 			p = i + (tSearch - raceTimes[i-1]) / (raceTimes[i] - raceTimes[i-1]);
 	}
 	return [p, tSearch];
-}
-
-function getXYfromPosition( lane, position )
-{
-	// Get screen coordinates from rider position in lap.
-	// On the corner, use the ration of the angle, not the distance.
-	// This means that riders at the outer-most part of the curve will speed up
-	// so they do not lose ground to the riders in the inner part of the curve.
-	position -= ~~(position);
-	
-	var curveLength = (r/2.0) * Math.PI;
-	var trackLength = 4*r + 2 * curveLength;
-	var laneWidth = (r/2.0) / laneMax;
-	var laneLength = lane * laneWidth;
-	var riderLength = trackLength * position;
-	
-	if( riderLength <= r/2 )
-		// rider is on starting straight
-		return [2*r + r/2.0 + riderLength, r + r/2.0 + laneLength];
-		
-	riderLength -= r/2;
-	if( riderLength <= curveLength )
-	{
-		// rider is on 1st curve
-		a = Math.PI * riderLength / curveLength;
-		rd = r/2 + laneLength;
-		return [3*r + rd*Math.sin(a), r + rd*Math.cos(a)];
-	}
-
-	riderLength -= curveLength;
-	if( riderLength <= 2*r )
-		// rider is on back straight
-		return [3*r - riderLength, r/2 - laneLength];
-		
-	riderLength -= 2*r;
-	if( riderLength <= curveLength )
-	{
-		// rider is on back curve
-		a = Math.PI * (1.0 + riderLength / curveLength);
-		rd = r/2 + laneLength;
-		return [r + rd*Math.sin(a), r + rd*Math.cos(a)];
-	}	
-	riderLength -= curveLength;
-	// rider is on finishing straight
-	return [r + riderLength, r + r/2 + laneLength];
-}
-
-function getRiderXYPT( num, lane )
-{
-	// Get the rider x, y, position (distance) and time.
-	var positionTime = getRiderPositionTime( num );
-	if ( positionTime[0] == null )
-		return [null, null, null];
-	if( data[num]['lastTime'] != null && t >= data[num]['lastTime'] )
-	{
-		lapCur = Math.max( lapCur, data[num]['raceTimes'].length );
-		return [null, null, positionTime[0], positionTime[1]];
-	}
-	lapCur = Math.max(lapCur, ~~positionTime[0]);
-	var xypt = getXYfromPosition( lane, positionTime[0] );
-	if( reverseDirection )
-		xypt[0] = r * 4 - xypt[0];
-	if( finishTop )
-		xypt[1] = r * 2 - xypt[1];
-	xypt.push( positionTime[0] );
-	xypt.push( positionTime[1] );
-	return xypt;
 }
 
 function DrawCircle( ctx, x, y, radius )
@@ -433,263 +381,740 @@ function getShortName( num )
 	return name;
 }
 
-function Refresh()
+//----------------------------------------------------------------------------
+function TrackAnimation()
 {
-	if( !canvas || !isCanvasSupported() )
-		return;
-
-	// Redraw the canvas at this time.
-	var dc = canvas.getContext('2d');
-	
-	dc.textBaseline = "top";
-	
-	var width = canvas.width;
-	var height = canvas.height;
-	var backColour = 'white';
-	dc.fillStyle = backColour;
-	dc.fillRect(0, 0, width, height );
-	
-	if( width < 80 || height < 80 )
-		return;
-
-	r = ~~(width / 4);
-	if( r * 2 > height )
-		r = ~~(height / 2);
-	r -= (r & 1);			// Make sure that r is an even number.
-
-	var tHeight = r / 8;
-	var fontStr = ~~(tHeight * fontMult) + "px Arial";
-	var fontStrHightlight = ~~(tHeight * 1.6 * fontMult) + "px Arial";
-	dc.font = fontStr;
-	
-	// Draw the track.
-	//trackColour = 'rgb(0,255,0)';
-	trackColour = '#7FE57F';
-	dc.fillStyle = trackColour;
-	dc.strokeStyle = trackColour;
-	DrawCircle( dc, r, r, r );
-	DrawCircle( dc, 3*r, r, r );
-	dc.fillRect( r, 0, 2*r, 2*r + 2 );
-	
-	// Draw the negative space.
-	laneWidth = (r/2) / laneMax;
-	dc.fillStyle = backColour;
-	dc.strokeStyle = backColour;
-	DrawCircle( dc, r, r, r/2 - laneWidth );
-	DrawCircle( dc, 3*r, r, r/2 - laneWidth );
-	
-	var pp = [r, r/2 + laneWidth, 2*r, r - 2*laneWidth + 1];
-	dc.fillRect( pp[0], pp[1], pp[2], pp[3] );
-	dc.strokeRect( pp[0], pp[1], pp[2], pp[3] );
-	
-	// Draw the quarter lines and start/finish.
-	for( var i = 0; i <= 3; ++i )
+	this.getXYfromPosition = function( lane, position )
 	{
-		var p = 0.25 * i;
-		var p1 = getXYfromPosition(-1, p);
-		var p2 = getXYfromPosition(laneMax+0.25, p);
-		if( reverseDirection )
-		{
-			p1[0] = 4*r - p1[0];
-			p2[0] = 4*r - p2[0];
-		}
-		if( finishTop )
-		{
-			p1[1] = 2*r - p1[1];
-			p2[1] = 2*r - p2[1];
-		}
-		if( i == 0 )
-		{
-			var sfWidth = 8;
-			dc.strokeStyle = '#FFFFFF';
-			dc.fillRect( p1[0] - sfWidth / 2, Math.min(p1[1], p2[1]), sfWidth, r );
-			dc.strokeStyle = 'black';
-			dc.lineWidth = 2;
-		}
-		else
-		{
-			dc.lineWidth = 1;
-			dc.strokeStyle = 'rgb(64,64,64)';
-		}
-		DrawLine( dc, p1[0], p1[1], p2[0], p2[1] );
-	}
-	
-	// Draw the riders
-	// dc.SetFont( self.numberFont )
-	dc.strokeStyle = 'black';
-	dc.fillStyle = 'black';
-	dc.lineWidth = 1;
-	numSize = (r/2)/laneMax;
-	lapCur = 0;
-	var riderRadius = laneWidth * 0.75;
-	var thickLine = r / 24;
-	var hasFirstLapRatio = false;
-	firstLapRatio = 1.0;
-	if( data )
-	{
-		var riderXYPT = [];
-		for( var num in data )
-		{
-			if( categoryCur == 'All' || data[num]['raceCat'] == categoryCur )
-			{
-				if( !hasFirstLapRatio )
-				{
-					hasFirstLapRatio = true;
-					var cd = catDetails[data[num]['raceCat']];
-					if( cd && cd['firstLapDistance'] && cd['lapDistance'] )
-						firstLapRatio = cd['firstLapDistance'] / cd['lapDistance'];
-				}
-				var xypt = getRiderXYPT( num, num % laneMax );
-				if( xypt[2] == null )
-					continue;
-				xypt.splice( 0, 0, num );
-				riderXYPT.push( xypt );
-			}
-		}
+		// Get screen coordinates from rider position in lap.
+		// On the corner, use the ration of the angle, not the distance.
+		// This means that riders at the outer-most part of the curve will speed up
+		// so they do not lose ground to the riders in the inner part of the curve.
+		position -= ~~(position);
 		
-		// Sort in reverse order of position so we draw leaders last on top.
-		riderXYPT.sort(function(x, y)
-			{
-				var r = (y[3] ? y[3] : 0) - (x[3] ? x[3] : 0);	// Greatest distance.
-				if( r == 0 )
-					r = (x[4] ? x[4] : 0) - (y[4] ? y[4] : 0);	// Shortest time.
-				return -r;
-			});
+		var curveLength = (r/2.0) * Math.PI;
+		var trackLength = 4*r + 2 * curveLength;
+		var laneWidth = (r/2.0) / laneMax;
+		var laneLength = lane * laneWidth;
+		var riderLength = trackLength * position;
+		
+		if( riderLength <= r/2 )
+			// rider is on starting straight
+			return [2*r + r/2.0 + riderLength, r + r/2.0 + laneLength];
 			
-		var leaders = [];
-		for( var i = riderXYPT.length - 1; i >= 0 && leaders.length < 3; --i )
-			leaders.push( riderXYPT[i][0] );
-
-		var topThree = {};
-		for( var i = 0; i < leaders.length; ++i )
-			topThree[leaders[i]] = i;
-			
-		var riderPosition = {};
-		for( var i = 0; i < riderXYPT.length; ++i )
+		riderLength -= r/2;
+		if( riderLength <= curveLength )
 		{
-			var rxypt = riderXYPT[i];
-			riderPosition[rxypt[0]] = riderXYPT.length - i;
-			var x = rxypt[1];
-			if( x == null )
-				continue;
-				
-			num = rxypt[0];
-			var y = rxypt[2];
-			dc.fillStyle = colours[num % colours.length];
-			// Check for a leader.
-			var j = topThree[num];
-			if( j != undefined )
+			// rider is on 1st curve
+			a = Math.PI * riderLength / curveLength;
+			rd = r/2 + laneLength;
+			return [3*r + rd*Math.sin(a), r + rd*Math.cos(a)];
+		}
+
+		riderLength -= curveLength;
+		if( riderLength <= 2*r )
+			// rider is on back straight
+			return [3*r - riderLength, r/2 - laneLength];
+			
+		riderLength -= 2*r;
+		if( riderLength <= curveLength )
+		{
+			// rider is on back curve
+			a = Math.PI * (1.0 + riderLength / curveLength);
+			rd = r/2 + laneLength;
+			return [r + rd*Math.sin(a), r + rd*Math.cos(a)];
+		}	
+		riderLength -= curveLength;
+		// rider is on finishing straight
+		return [r + riderLength, r + r/2 + laneLength];
+	}
+
+	this.getRiderXYPT = function( num, lane )
+	{
+		// Get the rider x, y, position (distance) and time.
+		var positionTime = getRiderPositionTime( num );
+		if ( positionTime[0] == null )
+			return [null, null, null];
+		if( data[num]['lastTime'] != null && t >= data[num]['lastTime'] )
+		{
+			lapCur = Math.max( lapCur, data[num]['raceTimes'].length );
+			return [null, null, positionTime[0], positionTime[1]];
+		}
+		lapCur = Math.max(lapCur, ~~positionTime[0]);
+		var xypt = this.getXYfromPosition( lane, positionTime[0] );
+		if( reverseDirection )
+			xypt[0] = r * 4 - xypt[0];
+		if( finishTop )
+			xypt[1] = r * 2 - xypt[1];
+		xypt.push( positionTime[0] );
+		xypt.push( positionTime[1] );
+		return xypt;
+	}
+
+	this.Refresh = function()
+	{
+		if( !canvas || !isCanvasSupported() )
+			return;
+
+		// Redraw the canvas at this time.
+		var dc = canvas.getContext('2d');
+		
+		dc.textBaseline = "top";
+		
+		var width = canvas.width;
+		var height = canvas.height;
+		var backColour = 'white';
+		dc.fillStyle = backColour;
+		dc.fillRect(0, 0, width, height );
+		
+		if( width < 80 || height < 80 )
+			return;
+
+		r = ~~(width / 4);
+		if( r * 2 > height )
+			r = ~~(height / 2);
+		r -= (r & 1);			// Make sure that r is an even number.
+
+		var tHeight = r / 8;
+		var fontStr = ~~(tHeight * fontMult) + "px Arial";
+		var fontStrHightlight = ~~(tHeight * 1.6 * fontMult) + "px Arial";
+		dc.font = fontStr;
+		
+		// Draw the track.
+		//trackColour = 'rgb(0,255,0)';
+		trackColour = '#7FE57F';
+		dc.fillStyle = trackColour;
+		dc.strokeStyle = trackColour;
+		DrawCircle( dc, r, r, r );
+		DrawCircle( dc, 3*r, r, r );
+		dc.fillRect( r, 0, 2*r, 2*r + 2 );
+		
+		// Draw the negative space.
+		laneWidth = (r/2) / laneMax;
+		dc.fillStyle = backColour;
+		dc.strokeStyle = backColour;
+		DrawCircle( dc, r, r, r/2 - laneWidth );
+		DrawCircle( dc, 3*r, r, r/2 - laneWidth );
+		
+		var pp = [r, r/2 + laneWidth, 2*r, r - 2*laneWidth + 1];
+		dc.fillRect( pp[0], pp[1], pp[2], pp[3] );
+		dc.strokeRect( pp[0], pp[1], pp[2], pp[3] );
+		
+		// Draw the quarter lines and start/finish.
+		for( var i = 0; i <= 3; ++i )
+		{
+			var p = 0.25 * i;
+			var p1 = this.getXYfromPosition(-1, p);
+			var p2 = this.getXYfromPosition(laneMax+0.25, p);
+			if( reverseDirection )
 			{
-				dc.strokeStyle = topThreeColours[j];
-				dc.lineWidth = thickLine;
-				if( numsToWatch[num] != undefined )
-					dc.font = fontStrHightlight;
+				p1[0] = 4*r - p1[0];
+				p2[0] = 4*r - p2[0];
+			}
+			if( finishTop )
+			{
+				p1[1] = 2*r - p1[1];
+				p2[1] = 2*r - p2[1];
+			}
+			if( i == 0 )
+			{
+				var sfWidth = 8;
+				dc.strokeStyle = '#FFFFFF';
+				dc.fillRect( p1[0] - sfWidth / 2, Math.min(p1[1], p2[1]), sfWidth, r );
+				dc.strokeStyle = 'black';
+				dc.lineWidth = 2;
 			}
 			else
 			{
-				// Check for a watch number.
-				j = numsToWatch[num];
-				if( j != undefined )
+				dc.lineWidth = 1;
+				dc.strokeStyle = 'rgb(64,64,64)';
+			}
+			DrawLine( dc, p1[0], p1[1], p2[0], p2[1] );
+		}
+		
+		// Draw the riders
+		// dc.SetFont( self.numberFont )
+		dc.strokeStyle = 'black';
+		dc.fillStyle = 'black';
+		dc.lineWidth = 1;
+		numSize = (r/2)/laneMax;
+		lapCur = 0;
+		var riderRadius = laneWidth * 0.75;
+		var thickLine = r / 24;
+		var hasFirstLapRatio = false;
+		firstLapRatio = 1.0;
+		if( data )
+		{
+			var riderXYPT = [];
+			for( var num in data )
+			{
+				if( categoryCur == 'All' || data[num]['raceCat'] == categoryCur )
 				{
-					dc.strokeStyle = 'white';
-					dc.lineWidth = thickLine * 1.5;
-					dc.font = fontStrHightlight;
+					if( !hasFirstLapRatio )
+					{
+						hasFirstLapRatio = true;
+						var cd = catDetails[data[num]['raceCat']];
+						if( cd && cd['firstLapDistance'] && cd['lapDistance'] )
+							firstLapRatio = cd['firstLapDistance'] / cd['lapDistance'];
+					}
+					var xypt = this.getRiderXYPT( num, num % laneMax );
+					if( xypt[2] == null )
+						continue;
+					xypt.splice( 0, 0, num );
+					riderXYPT.push( xypt );
 				}
 			}
-			if( isNaN(x) || isNaN(y) )
-				continue;
-			DrawCircle( dc, x, y, riderRadius );
-			dc.fillStyle = 'black';
-			dc.fillText(num+'', x+numSize, y-numSize );
-			if( j != undefined )
+			
+			// Sort in reverse order of position so we draw leaders last on top.
+			riderXYPT.sort(function(x, y)
+				{
+					var r = (y[3] ? y[3] : 0) - (x[3] ? x[3] : 0);	// Greatest distance.
+					if( r == 0 )
+						r = (x[4] ? x[4] : 0) - (y[4] ? y[4] : 0);	// Shortest time.
+					return -r;
+				});
+				
+			var leaders = [];
+			for( var i = riderXYPT.length - 1; i >= 0 && leaders.length < 3; --i )
+				leaders.push( riderXYPT[i][0] );
+
+			var topThree = {};
+			for( var i = 0; i < leaders.length; ++i )
+				topThree[leaders[i]] = i;
+				
+			var riderPosition = {};
+			for( var i = 0; i < riderXYPT.length; ++i )
 			{
-				dc.strokeStyle = 'black';
-				dc.lineWidth = 1;
-				dc.font = fontStr;
+				var rxypt = riderXYPT[i];
+				riderPosition[rxypt[0]] = riderXYPT.length - i;
+				var x = rxypt[1];
+				if( x == null )
+					continue;
+					
+				num = rxypt[0];
+				var y = rxypt[2];
+				dc.fillStyle = colours[num % colours.length];
+				// Check for a leader.
+				var j = topThree[num];
+				if( j != undefined )
+				{
+					dc.strokeStyle = topThreeColours[j];
+					dc.lineWidth = thickLine;
+					if( numsToWatch[num] != undefined )
+						dc.font = fontStrHightlight;
+				}
+				else
+				{
+					// Check for a watch number.
+					j = numsToWatch[num];
+					if( j != undefined )
+					{
+						dc.strokeStyle = 'white';
+						dc.lineWidth = thickLine * 1.5;
+						dc.font = fontStrHightlight;
+					}
+				}
+				if( isNaN(x) || isNaN(y) )
+					continue;
+				DrawCircle( dc, x, y, riderRadius );
+				dc.fillStyle = 'black';
+				dc.fillText(num+'', x+numSize, y-numSize );
+				if( j != undefined )
+				{
+					dc.strokeStyle = 'black';
+					dc.lineWidth = 1;
+					dc.font = fontStr;
+				}
 			}
 		}
-	}
 
-	// Draw the current lap
-	dc.fillStyle = 'black';
-	if( lapCur > 0 )
-	{
-		var tStr = 'Laps Completed ' + (lapCur - 1);
-		var tWidth = dc.measureText(tStr).width;
-		dc.fillText( tStr, 2*r + r/2 - tWidth, r + r/2 - laneWidth - tHeight * 1.5 );
-	}
-
-	// Draw the leader board.
-	var leaderWidthMax = 0;
-	var xLeft = ~~(r * 0.8);
-	if( leaders )
-	{
-		var x = xLeft;
-		var y = r / 2 + laneWidth * 1.5;
-		dc.fillText( 'Leaders:', x, y );
-		y += tHeight * 1.2;
-		thickLine = tHeight / 5;
-		riderRadius = tHeight / 3.5;
-		for( var i = 0; i < leaders.length; ++i )
-		{
-			var num = leaders[i];
-			dc.lineWidth = 1;
-			dc.strokeStyle = backColour;
-			dc.fillStyle = trackColour;
-			dc.fillRect( x - thickLine/4, y - thickLine/4, tHeight + thickLine/2, tHeight  + thickLine/2 );
-			
-			dc.strokeStyle = topThreeColours[i];
-			dc.lineWidth = thickLine;
-			dc.fillStyle = colours[num % colours.length];
-			DrawCircle( dc, x + tHeight / 2, y + tHeight / 2, riderRadius );
-			
-			dc.fillStyle = 'black';
-			var leadStr = num + ' ' + getShortName(num);
-			var tWidth = dc.measureText(leadStr).width;
-			if( tWidth > leaderWidthMax )
-				leaderWidthMax = tWidth;
-			dc.fillText( leadStr, x + tHeight * 1.2, y );
-			y += tHeight * 1.2;
-		}
-	}
-	if( numsToWatch )
-	{
-		var colCount = 0;
-		var x = xLeft + tHeight * 1.2 + leaderWidthMax + dc.measureText(' ').width;
-		var yTop = r / 2 + laneWidth * 1.5 + tHeight * 1.2;
-		var y = yTop;
-		var rp = [];
-		for( n in numsToWatch )
-		{
-			var p = riderPosition[n];
-			if( p != undefined )
-				rp.push( [p, n] );
-		}
-		rp.sort(function(x, y) { return x[0] - y[0]; });
-		
+		// Draw the current lap
 		dc.fillStyle = 'black';
-		for( var i = 0; i < rp.length && i < 3; ++i )
+		if( lapCur > 0 )
 		{
-			var num = rp[i][1];
-			dc.fillText( '(' + rp[i][0] + ') ' + num + ' ' + getShortName(num), x, y );
+			var tStr = 'Laps Completed ' + (lapCur - 1);
+			var tWidth = dc.measureText(tStr).width;
+			dc.fillText( tStr, 2*r + r/2 - tWidth, r + r/2 - laneWidth - tHeight * 1.5 );
+		}
+
+		// Draw the leader board.
+		var leaderWidthMax = 0;
+		var xLeft = ~~(r * 0.8);
+		if( leaders )
+		{
+			var x = xLeft;
+			var y = r / 2 + laneWidth * 1.5;
+			dc.fillText( 'Leaders:', x, y );
 			y += tHeight * 1.2;
-			if( y >= r * 1.5 - tHeight * 1.5 )
+			thickLine = tHeight / 5;
+			riderRadius = tHeight / 3.5;
+			for( var i = 0; i < leaders.length; ++i )
 			{
-				if( ++colCount == 2 )
-					break;
-				y = yTop;
-				x += tWidth * 1.2;
+				var num = leaders[i];
+				dc.lineWidth = 1;
+				dc.strokeStyle = backColour;
+				dc.fillStyle = trackColour;
+				dc.fillRect( x - thickLine/4, y - thickLine/4, tHeight + thickLine/2, tHeight  + thickLine/2 );
+				
+				dc.strokeStyle = topThreeColours[i];
+				dc.lineWidth = thickLine;
+				dc.fillStyle = colours[num % colours.length];
+				DrawCircle( dc, x + tHeight / 2, y + tHeight / 2, riderRadius );
+				
+				dc.fillStyle = 'black';
+				var leadStr = num + ' ' + getShortName(num);
+				var tWidth = dc.measureText(leadStr).width;
+				if( tWidth > leaderWidthMax )
+					leaderWidthMax = tWidth;
+				dc.fillText( leadStr, x + tHeight * 1.2, y );
+				y += tHeight * 1.2;
 			}
 		}
-	}
-	
-	// Draw the race time
-	dc.fillStyle = 'black';
-	var tStr = FormatTime( t );
-	var tWidth = dc.measureText(tStr).width;
-	dc.fillText( tStr, 4*r - tWidth, 2*r - tHeight );
-}
+		if( numsToWatch )
+		{
+			var colCount = 0;
+			var x = xLeft + tHeight * 1.2 + leaderWidthMax + dc.measureText(' ').width;
+			var yTop = r / 2 + laneWidth * 1.5 + tHeight * 1.2;
+			var y = yTop;
+			var rp = [];
+			for( n in numsToWatch )
+			{
+				var p = riderPosition[n];
+				if( p != undefined )
+					rp.push( [p, n] );
+			}
+			rp.sort(function(x, y) { return x[0] - y[0]; });
+			
+			dc.fillStyle = 'black';
+			for( var i = 0; i < rp.length && i < 3; ++i )
+			{
+				var num = rp[i][1];
+				dc.fillText( '(' + rp[i][0] + ') ' + num + ' ' + getShortName(num), x, y );
+				y += tHeight * 1.2;
+				if( y >= r * 1.5 - tHeight * 1.5 )
+				{
+					if( ++colCount == 2 )
+						break;
+					y = yTop;
+					x += tWidth * 1.2;
+				}
+			}
+		}
 		
+		// Draw the race time
+		dc.fillStyle = 'black';
+		var tStr = FormatTime( t );
+		var tWidth = dc.measureText(tStr).width;
+		dc.fillText( tStr, 4*r - tWidth, 2*r - tHeight );
+	}
+}
+
+//----------------------------------------------------------------------------
+function GeoTrack()
+{
+	this.setData = function( gpsPoints )
+	{
+		this.gpsPoints = gpsPoints;
+		
+		this.x = 0;
+		this.yBottom = 0;
+		this.mult = 1.0;
+		this.cache = {};
+		
+		this.xMax = 0.0;
+		this.yMax = 0.0;
+		var dCum = 0.0;
+		this.cumDistance = [];
+		for( var i = 0; i < this.gpsPoints.length; ++i )
+		{
+			var p = this.gpsPoints[i];
+			this.xMax = Math.max( this.xMax, p.x );
+			this.yMax = Math.max( this.yMax, p.y );
+			this.cumDistance.push( dCum );
+			dCum += p.d;
+		}
+		this.distanceTotal = dCum;
+		
+		var lenGpsPoints = this.gpsPoints.length;
+		var length = 0.0
+		for( var i = 0; i < lenGpsPoints; ++i )
+		{
+			var pCur = this.gpsPoints[i], pNext = this.gpsPoints[(i + 1) % lenGpsPoints];
+			length += GreatCircleDistance3D( pCur.lat, pCur.lon, pCur.ele, pNext.lat, pNext.lon, pNext.ele );
+		}
+		this.length = length;
+	}
+			
+	this.getXYTrack = function()
+	{
+		var x = this.x;
+		var yBottom = this.yBottom;
+		var mult = this.mult;
+		var track = [];
+		for( var i = 0; i < this.gpsPoints.length; ++i )
+		{
+			var p = this.gpsPoints[i];
+			track.push( [p.x * mult + x, yBottom - p.y * mult] );
+		}
+		return track;
+	}
+		
+	this.getXY = function( lap, id )
+	{
+		if( id == undefined )
+			id = -1;
+			
+		// Find the segment at this distance in the lap.
+		var lap = lap - (~~lap);									// Get fraction of lap.
+		var lapDistance = lap * this.distanceTotal;				// Get distance traveled in the lap.
+		
+		// Avoid the cost of the binary search by checking if the id request is still on the last segment.
+		var lenGpsPoints = this.gpsPoints.length;
+		var i = -1, pCur, pNext;
+		if( id in this.cache )
+		{
+			i = this.cache[id];
+			if( i < lenGpsPoints )
+			{
+				pCur = this.gpsPoints[i];
+				pNext = this.gpsPoints[(i + 1) % lenGpsPoints];
+				if( !(pCur.d <= lapDistance <= pNext.d) )
+				{
+					i = (i + 1) % lenGpsPoints;
+					pCur = pNext;
+					pNext = this.gpsPoints[(i + 1) % lenGpsPoints];
+					if( !(pCur.d <= lapDistance <= pNext.d) )
+						i = -1;
+				}
+			}
+		}
+			
+		if( i == -1 )
+		{
+			i = this.cumDistance.binSearch(lapDistance)-1;			// Find the closest point LE the lap distance.
+			i = (i + lenGpsPoints) % lenGpsPoints;
+			pCur = this.gpsPoints[i];
+			pNext = this.gpsPoints[(i + 1) % lenGpsPoints];
+		}
+		
+		this.cache[id] = i;
+		
+		if( !pCur.d )
+			return [pCur.x, pCur.y];
+			
+		var segDistance = lapDistance - this.cumDistance[i];
+		var segRatio = segDistance / pCur.d;
+		
+		var x = pCur.x + (pNext.x - pCur.x) * segRatio;
+		var y = pCur.y + (pNext.y - pCur.y) * segRatio;
+		return [x * this.mult + this.x, this.yBottom - y * this.mult];
+	}
+
+	this.setDisplayRect = function( x, y, width, height )
+	{
+		if( width <= 0 || height <= 0 )
+		{
+			this.mult = 1.0;
+			this.x = x;
+			this.yBottom = y + height;
+			return;
+		}
+		var mult = Math.min( width / this.xMax, height / this.yMax );
+		var w = this.xMax * mult, h = this.yMax * mult;
+		var xBorder = (width - w) / 2.0;
+		var yBorder = (height - h) / 2.0;
+		this.mult = mult;
+		this.x = xBorder + x;
+		this.yBottom = y + height;
+	}
+}
+
+function GeoAnimation()
+{
+	this.geoTrack = new GeoTrack();
+	this.getXYfromPosition = function( position, num )
+	{
+		return this.geoTrack.getXY( position, num );
+	}
+
+	this.getRiderXYPT = function( num )
+	{
+		// Get the rider x, y, position (distance) and time.
+		var positionTime = getRiderPositionTime( num );
+		if( positionTime[0] == null )
+			return [null, null, null, null];
+		if( data[num]['lastTime'] != null && t >= data[num]['lastTime'] )
+		{
+			lapCur = Math.max( lapCur, data[num]['raceTimes'].length );
+			return [null, null, positionTime[0], positionTime[1]];
+		}
+		lapCur = Math.max(lapCur, ~~positionTime[0]);
+		var xypt = this.getXYfromPosition( positionTime[0], num );
+		xypt.push( positionTime[0] );
+		xypt.push( positionTime[1] );
+		return xypt;
+	}
+
+	this.Refresh = function()
+	{
+		if( !canvas || !isCanvasSupported() )
+			return;
+
+		// Redraw the canvas at this time.
+		var dc = canvas.getContext('2d');
+		
+		dc.textBaseline = "top";
+		
+		var width = canvas.width;
+		var height = canvas.height;
+		var backColour = 'white';
+		dc.fillStyle = backColour;
+		dc.fillRect(0, 0, width, height );
+		
+		if( width < 80 || height < 80 )
+			return;
+
+		r = ~~(width / 4);
+		if( r * 2 > height )
+			r = ~~(height / 2);
+		r -= (r & 1);			// Make sure that r is an even number.
+
+		var tHeight = r / 8;
+		var fontStr = ~~(tHeight * fontMult) + "px Arial";
+		var fontStrHightlight = ~~(tHeight * 1.6 * fontMult) + "px Arial";
+		dc.font = fontStr;
+		
+		// Draw the track.
+		//trackColour = 'rgb(0,255,0)';
+		trackColour = '#7FE57F';
+		dc.fillStyle = trackColour;
+		dc.strokeStyle = trackColour;
+		DrawCircle( dc, r, r, r );
+		DrawCircle( dc, 3*r, r, r );
+		dc.fillRect( r, 0, 2*r, 2*r + 2 );
+		
+		// Draw the negative space.
+		laneWidth = (r/2) / laneMax;
+		dc.fillStyle = backColour;
+		dc.strokeStyle = backColour;
+		DrawCircle( dc, r, r, r/2 - laneWidth );
+		DrawCircle( dc, 3*r, r, r/2 - laneWidth );
+		
+		var pp = [r, r/2 + laneWidth, 2*r, r - 2*laneWidth + 1];
+		dc.fillRect( pp[0], pp[1], pp[2], pp[3] );
+		dc.strokeRect( pp[0], pp[1], pp[2], pp[3] );
+		
+		// Draw the quarter lines and start/finish.
+		for( var i = 0; i <= 3; ++i )
+		{
+			var p = 0.25 * i;
+			var p1 = this.getXYfromPosition(-1, p);
+			var p2 = this.getXYfromPosition(laneMax+0.25, p);
+			if( reverseDirection )
+			{
+				p1[0] = 4*r - p1[0];
+				p2[0] = 4*r - p2[0];
+			}
+			if( finishTop )
+			{
+				p1[1] = 2*r - p1[1];
+				p2[1] = 2*r - p2[1];
+			}
+			if( i == 0 )
+			{
+				var sfWidth = 8;
+				dc.strokeStyle = '#FFFFFF';
+				dc.fillRect( p1[0] - sfWidth / 2, Math.min(p1[1], p2[1]), sfWidth, r );
+				dc.strokeStyle = 'black';
+				dc.lineWidth = 2;
+			}
+			else
+			{
+				dc.lineWidth = 1;
+				dc.strokeStyle = 'rgb(64,64,64)';
+			}
+			DrawLine( dc, p1[0], p1[1], p2[0], p2[1] );
+		}
+		
+		// Draw the riders
+		// dc.SetFont( self.numberFont )
+		dc.strokeStyle = 'black';
+		dc.fillStyle = 'black';
+		dc.lineWidth = 1;
+		numSize = (r/2)/laneMax;
+		lapCur = 0;
+		var riderRadius = laneWidth * 0.75;
+		var thickLine = r / 24;
+		var hasFirstLapRatio = false;
+		firstLapRatio = 1.0;
+		if( data )
+		{
+			var riderXYPT = [];
+			for( var num in data )
+			{
+				if( categoryCur == 'All' || data[num]['raceCat'] == categoryCur )
+				{
+					if( !hasFirstLapRatio )
+					{
+						hasFirstLapRatio = true;
+						var cd = catDetails[data[num]['raceCat']];
+						if( cd && cd['firstLapDistance'] && cd['lapDistance'] )
+							firstLapRatio = cd['firstLapDistance'] / cd['lapDistance'];
+					}
+					var xypt = this.getRiderXYPT( num, num % laneMax );
+					if( xypt[2] == null )
+						continue;
+					xypt.splice( 0, 0, num );
+					riderXYPT.push( xypt );
+				}
+			}
+			
+			// Sort in reverse order of position so we draw leaders last on top.
+			riderXYPT.sort(function(x, y)
+				{
+					var r = (y[3] ? y[3] : 0) - (x[3] ? x[3] : 0);	// Greatest distance.
+					if( r == 0 )
+						r = (x[4] ? x[4] : 0) - (y[4] ? y[4] : 0);	// Shortest time.
+					return -r;
+				});
+				
+			var leaders = [];
+			for( var i = riderXYPT.length - 1; i >= 0 && leaders.length < 3; --i )
+				leaders.push( riderXYPT[i][0] );
+
+			var topThree = {};
+			for( var i = 0; i < leaders.length; ++i )
+				topThree[leaders[i]] = i;
+				
+			var riderPosition = {};
+			for( var i = 0; i < riderXYPT.length; ++i )
+			{
+				var rxypt = riderXYPT[i];
+				riderPosition[rxypt[0]] = riderXYPT.length - i;
+				var x = rxypt[1];
+				if( x == null )
+					continue;
+					
+				num = rxypt[0];
+				var y = rxypt[2];
+				dc.fillStyle = colours[num % colours.length];
+				// Check for a leader.
+				var j = topThree[num];
+				if( j != undefined )
+				{
+					dc.strokeStyle = topThreeColours[j];
+					dc.lineWidth = thickLine;
+					if( numsToWatch[num] != undefined )
+						dc.font = fontStrHightlight;
+				}
+				else
+				{
+					// Check for a watch number.
+					j = numsToWatch[num];
+					if( j != undefined )
+					{
+						dc.strokeStyle = 'white';
+						dc.lineWidth = thickLine * 1.5;
+						dc.font = fontStrHightlight;
+					}
+				}
+				if( isNaN(x) || isNaN(y) )
+					continue;
+				DrawCircle( dc, x, y, riderRadius );
+				dc.fillStyle = 'black';
+				dc.fillText(num+'', x+numSize, y-numSize );
+				if( j != undefined )
+				{
+					dc.strokeStyle = 'black';
+					dc.lineWidth = 1;
+					dc.font = fontStr;
+				}
+			}
+		}
+
+		// Draw the current lap
+		dc.fillStyle = 'black';
+		if( lapCur > 0 )
+		{
+			var tStr = 'Laps Completed ' + (lapCur - 1);
+			var tWidth = dc.measureText(tStr).width;
+			dc.fillText( tStr, 2*r + r/2 - tWidth, r + r/2 - laneWidth - tHeight * 1.5 );
+		}
+
+		// Draw the leader board.
+		var leaderWidthMax = 0;
+		var xLeft = ~~(r * 0.8);
+		if( leaders )
+		{
+			var x = xLeft;
+			var y = r / 2 + laneWidth * 1.5;
+			dc.fillText( 'Leaders:', x, y );
+			y += tHeight * 1.2;
+			thickLine = tHeight / 5;
+			riderRadius = tHeight / 3.5;
+			for( var i = 0; i < leaders.length; ++i )
+			{
+				var num = leaders[i];
+				dc.lineWidth = 1;
+				dc.strokeStyle = backColour;
+				dc.fillStyle = trackColour;
+				dc.fillRect( x - thickLine/4, y - thickLine/4, tHeight + thickLine/2, tHeight  + thickLine/2 );
+				
+				dc.strokeStyle = topThreeColours[i];
+				dc.lineWidth = thickLine;
+				dc.fillStyle = colours[num % colours.length];
+				DrawCircle( dc, x + tHeight / 2, y + tHeight / 2, riderRadius );
+				
+				dc.fillStyle = 'black';
+				var leadStr = num + ' ' + getShortName(num);
+				var tWidth = dc.measureText(leadStr).width;
+				if( tWidth > leaderWidthMax )
+					leaderWidthMax = tWidth;
+				dc.fillText( leadStr, x + tHeight * 1.2, y );
+				y += tHeight * 1.2;
+			}
+		}
+		if( numsToWatch )
+		{
+			var colCount = 0;
+			var x = xLeft + tHeight * 1.2 + leaderWidthMax + dc.measureText(' ').width;
+			var yTop = r / 2 + laneWidth * 1.5 + tHeight * 1.2;
+			var y = yTop;
+			var rp = [];
+			for( n in numsToWatch )
+			{
+				var p = riderPosition[n];
+				if( p != undefined )
+					rp.push( [p, n] );
+			}
+			rp.sort(function(x, y) { return x[0] - y[0]; });
+			
+			dc.fillStyle = 'black';
+			for( var i = 0; i < rp.length && i < 3; ++i )
+			{
+				var num = rp[i][1];
+				dc.fillText( '(' + rp[i][0] + ') ' + num + ' ' + getShortName(num), x, y );
+				y += tHeight * 1.2;
+				if( y >= r * 1.5 - tHeight * 1.5 )
+				{
+					if( ++colCount == 2 )
+						break;
+					y = yTop;
+					x += tWidth * 1.2;
+				}
+			}
+		}
+		
+		// Draw the race time
+		dc.fillStyle = 'black';
+		var tStr = FormatTime( t );
+		var tWidth = dc.measureText(tStr).width;
+		dc.fillText( tStr, 4*r - tWidth, 2*r - tHeight );
+	}
+}
+
+//----------------------------------------------------------------------------
+
 function _initAnimation()
 {
 	tLast = (new Date).getTime();
@@ -711,6 +1136,17 @@ function NextFrame()
 			setTimeout( NextFrame, 1000.0 / framesPerSecond );
 		}
 	}
+}
+
+function HasDisplayUnit( aData )
+{
+	for( var num in aData )
+	{
+		var info = aData[num];
+		if( info['speed'] )
+			return true;
+	}
+	return false;
 }
 
 function GetDistanceUnit( aData )
@@ -828,7 +1264,7 @@ function SetData( aData, tCur )
 	}
 	showOptionsSpan.innerHTML = showHTML;
 	
-	Refresh();
+	animationObj.Refresh();
 }
 
 function Animate( tRunning, aTMax, tCur )
@@ -1829,7 +2265,7 @@ function SelectCategory( i )
 {
 	categoryCur = categories[i];
 	SetCategoryResults();
-	Refresh();
+	animationObj.Refresh();
 	RefreshRaceChart();
 }
 		
@@ -1859,7 +2295,7 @@ function IsAnimating()
 function SetTime( aT )
 {
 	t = aT;
-	Refresh();
+	animationObj.Refresh();
 }
 
 function SetSpeed( i )
@@ -1892,7 +2328,7 @@ function SetNumsToWatch()
 		var num = parseInt( nums[i], 10 );
 		numsToWatch[num] = num;
 	}
-	Refresh();
+	animationObj.Refresh();
 	SetCategoryResults();
 }
 
@@ -1920,7 +2356,7 @@ function Rewind()
 	if( raceIsRunning )
 		return;
 	t = getStartTime();
-	Refresh();
+	animationObj.Refresh();
 	document.getElementById('idPlayStop').value = 'Play';
 	Animate( animationSeconds, tMax, t );
 	suspendAnimation = true;
@@ -1976,6 +2412,7 @@ function GenerateRandomData()
 		data[num]['LastName']	= ["SAMPLE", "EXAMPLE", "DEMONSTRATION"][rand_int(3)];
 		data[num]['FirstName']	= ["John", "Peter", "Adam", "Kirk", "Vlad"][rand_int(5)];
 		data[num]['Team']		= ["Red", "Green", "Black"][rand_int(3)];
+		data[num]['flr'] = 1.0;
 	}
 	return data;
 }
@@ -2083,7 +2520,7 @@ function AdjustSize( increase )
 			canvas.height /= 1.2;
 		}
 	}
-	Refresh();
+	animationObj.Refresh();
 }
 function AdjustFont( increase )
 {
@@ -2093,7 +2530,7 @@ function AdjustFont( increase )
 		fontMult *= (fontMult < 3.0 ? 1.2 : 1.0);
 	else
 		fontMult /= (fontMult > 0.2 ? 1.2 : 1.0);
-	Refresh();
+	animationObj.Refresh();
 }
 
 function ToggleTimeDecimals()
@@ -2123,6 +2560,8 @@ function onLoad()
 {
 	resultsDiv = document.getElementById('idResultsDiv');
 	showLaps = document.getElementById('idShowLaps');
+	
+	animationObj = new TrackAnimation();
 
 	if( isCanvasSupported() )
 	{
@@ -2182,9 +2621,14 @@ function onLoad()
 	
 	if( !catDetails )
 		catDetails = {};
-		
-	displayUnits = GetDistanceUnit( data );
-	document.getElementById('idDisplayUnits').selectedIndex = (displayUnits == 'km' ? 0 : 1);
+	
+	if( HasDisplayUnit(data) )
+	{
+		displayUnits = GetDistanceUnit( data );
+		document.getElementById('idDisplayUnits').selectedIndex = (displayUnits == 'km' ? 0 : 1);
+	}
+	else
+		document.getElementById('idShowUnits').style.display = 'none';
 	SetData( data, undefined );
 	
 	// Check for parameters.
@@ -2270,11 +2714,14 @@ Highlight Numbers:
 </div> <!-- idTrackDiv -->
 <p>
 <span id="idShowOptions"></span><br/>
-<span class="noprint">&nbsp;&nbsp;&nbsp;&nbsp;Units: </span><select class="noprint" id="idDisplayUnits" onChange="SetDisplayUnits()">
-	<option value="km" selected="selected">km</option>
-	<option value="miles">miles</option>
-</select>
-&nbsp;&nbsp;&nbsp;
+<span class="noprint" id="idShowUnits">
+	&nbsp;&nbsp;&nbsp;&nbsp;Units:
+	<select class="noprint" id="idDisplayUnits" onChange="SetDisplayUnits()">
+		<option value="km" selected="selected">km</option>
+		<option value="miles">miles</option>
+	</select>
+	&nbsp;&nbsp;&nbsp;
+</span>
 <input class="noprint" type="checkbox" id="idShowTimeDecimals" onClick="ToggleTimeDecimals()">
 	<span class="noprint">Show 100s of Seconds</span></input>
 &nbsp;&nbsp;&nbsp;

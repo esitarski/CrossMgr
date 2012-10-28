@@ -124,7 +124,7 @@ class GeoTrack( object ):
 			i = self.cache[id]
 			pCur, pNext = self.gpsPoints[i], self.gpsPoints[(i + 1) % lenGpsPoints]
 			if not (pCur.d <= lapDistance <= pNext.d):
-				i = (i + 1) % len(self.gpsPoints)
+				i = (i + 1) % lenGpsPoints
 				pCur, pNext = pNext, self.gpsPoints[(i + 1) % lenGpsPoints]
 				if not (pCur.d <= lapDistance <= pNext.d):
 					i = None
@@ -133,6 +133,7 @@ class GeoTrack( object ):
 			
 		if i is None:
 			i = bisect.bisect_right( self.cumDistance, lapDistance )-1	# Find the closest point LE the lap distance.
+			i = (i + lenGpsPoints) % lenGpsPoints
 			pCur, pNext = self.gpsPoints[i], self.gpsPoints[(i + 1) % lenGpsPoints]
 		
 		self.cache[id] = i
@@ -187,12 +188,6 @@ class GeoAnimation(wx.PyControl):
 		@param name: Window name.
 		"""
 
-		# Ok, let's see why we have used wx.PyControl instead of wx.Control.
-		# Basically, wx.PyControl is just like its wxWidgets counterparts
-		# except that it allows some of the more common C++ virtual method
-		# to be overridden in Python derived class. For GeoAnimation, we
-		# basically need to override DoGetBestSize and AcceptsFocusFromKeyboard
-		
 		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
 		self.SetBackgroundColour('white')
 		self.data = {}
@@ -407,10 +402,10 @@ class GeoAnimation(wx.PyControl):
 			
 		return (p, tSearch)
 	
-	def getXYfromPosition( self, lane, position, num ):
+	def getXYfromPosition( self, position, num ):
 		return self.geoTrack.getXY( position, num )
 	
-	def getRiderXYPT( self, num, lane ):
+	def getRiderXYPT( self, num ):
 		positionTime = self.getRiderPositionTime( num )
 		if positionTime[0] is None:
 			return (None, None, None, None)
@@ -418,7 +413,7 @@ class GeoAnimation(wx.PyControl):
 			self.lapCur = max(self.lapCur, len(self.data[num]['raceTimes']))
 			return (None, None, positionTime[0], positionTime[1])
 		self.lapCur = max(self.lapCur, int(positionTime[0]))
-		xypt = list(self.getXYfromPosition( lane, positionTime[0], num ))
+		xypt = list(self.getXYfromPosition( positionTime[0], num ))
 		xypt.extend( positionTime )
 		return tuple( xypt )
 	
@@ -457,7 +452,7 @@ class GeoAnimation(wx.PyControl):
 		trackHeight = height - tHeight * self.infoLines - border * 2
 		self.geoTrack.setDisplayRect( border, border, trackWidth, trackHeight )
 		
-		# Draw the track.
+		# Draw the course.
 		dc.SetBrush( wx.TRANSPARENT_BRUSH )
 		
 		drawPoints = self.geoTrack.getXYTrack()
@@ -484,7 +479,7 @@ class GeoAnimation(wx.PyControl):
 		if self.data:
 			riderXYPT = []
 			for num, d in self.data.iteritems():
-				xypt = list(self.getRiderXYPT(num, num % self.laneMax))
+				xypt = list(self.getRiderXYPT(num))
 				xypt.insert( 0, num )
 				riderXYPT.append( xypt )
 			

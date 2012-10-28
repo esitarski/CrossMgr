@@ -1497,8 +1497,8 @@ class Race(object):
 			'Start: %s (%s)' % (self.scheduledStart, self.date),
 		]
 		activeCategories = [c for c in self.categories.itervalues() if c.active]
-		activeCategories.sort( key = Category.key )
 		if all( c.numLaps for c in activeCategories ):
+			activeCategories.sort( key = Category.key )
 			intro.append( 'Category Laps: %s' % (', '.join( str(c.numLaps) for c in activeCategories )) )
 		else:
 			intro.append( 'Duration: %d min' % self.minutes )
