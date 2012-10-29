@@ -11,6 +11,10 @@ import os
 from operator import itemgetter, attrgetter
 from GanttChart import makePastelColours, makeColourGradient
 import Utils
+import xml.etree.cElementTree
+import xml.etree.ElementTree
+import xml.dom
+import xml.dom.minidom
 from xml.dom.minidom import parse
 import collections
 
