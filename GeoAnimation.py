@@ -115,6 +115,9 @@ class GeoTrack( object ):
 		x, yBottom, mult = self.x, self.yBottom, self.mult
 		return [(p.x * mult + x, yBottom - p.y * mult) for p in self.gpsPoints]
 		
+	def asExportJson( self ):
+		return [ [int(getattr(p, a)*10.0) for a in ('x', 'y', 'd')] for p in self.gpsPoints ]
+		
 	def getXY( self, lap, id = None ):
 		# Find the segment at this distance in the lap.
 		lap = math.modf(lap)[0]								# Get fraction of lap.
@@ -140,9 +143,6 @@ class GeoTrack( object ):
 		
 		self.cache[id] = i
 		
-		if not pCur.d:
-			return pCur.x, pCur.y
-			
 		segDistance = lapDistance - self.cumDistance[i]
 		segRatio = segDistance / pCur.d
 		
@@ -409,20 +409,16 @@ class GeoAnimation(wx.PyControl):
 			
 		return (p, tSearch)
 	
-	def getXYfromPosition( self, position, num ):
-		return self.geoTrack.getXY( position, num )
-	
 	def getRiderXYPT( self, num ):
 		positionTime = self.getRiderPositionTime( num )
 		if positionTime[0] is None:
-			return (None, None, None, None)
+			return None, None, None, None
 		if self.data[num]['lastTime'] is not None and self.t >= self.data[num]['lastTime']:
 			self.lapCur = max(self.lapCur, len(self.data[num]['raceTimes']))
 			return (None, None, positionTime[0], positionTime[1])
 		self.lapCur = max(self.lapCur, int(positionTime[0]))
-		xypt = list(self.getXYfromPosition( positionTime[0], num ))
-		xypt.extend( positionTime )
-		return tuple( xypt )
+		xy = self.geoTrack.getXY( positionTime[0], num )
+		return xy[0], xy[1], positionTime[0], positionTime[1]
 	
 	def Draw(self, dc):
 		size = self.GetClientSize()
@@ -470,8 +466,24 @@ class GeoAnimation(wx.PyControl):
 		dc.SetPen( wx.Pen(self.trackColour, laneWidth * 1.25, wx.SOLID) )
 		dc.DrawPolygon( drawPoints )
 		
-		x, y = drawPoints[0][0], drawPoints[0][1]
-		dc.DrawBitmap( self.checkeredFlag, x - self.checkeredFlag.GetWidth()//2, y - self.checkeredFlag.GetHeight() // 2, False )
+		# Draw a centerline to show all the curves in the course.
+		dc.SetPen( wx.Pen(wx.Colour(80,80,80), 1, wx.SOLID) )
+		dc.DrawPolygon( drawPoints )
+		
+		# Draw a finish line.
+		a = math.atan2( drawPoints[1][1] - drawPoints[0][1], drawPoints[1][0] - drawPoints[0][0] )
+		dx, dy = math.cos( a + math.pi/2.0 ), math.sin( a + math.pi/2.0 )
+		finishLineLength = laneWidth * 2
+		x1, x2 = drawPoints[0][0] + finishLineLength / 2.0 * dx, drawPoints[0][0] - finishLineLength / 2.0 * dx
+		y1, y2 = drawPoints[0][1] + finishLineLength / 2.0 * dy, drawPoints[0][1] - finishLineLength / 2.0 * dy
+		dc.SetPen( wx.Pen(wx.WHITE, laneWidth / 1.5, wx.SOLID) )
+		dc.DrawLine( x1, y1, x2, y2 )
+		dc.SetPen( wx.Pen(wx.BLACK, laneWidth / 5, wx.SOLID) )
+		dc.DrawLine( x1, y1, x2, y2 )
+		dc.DrawBitmap( self.checkeredFlag,
+						drawPoints[0][0] + finishLineLength * 1.25 * dx - self.checkeredFlag.Width/2,
+						drawPoints[0][1] + finishLineLength * 1.25 * dy - self.checkeredFlag.Height/2,
+						False )
 
 		# Draw the riders
 		dc.SetFont( self.numberFont )
@@ -541,8 +553,8 @@ class GeoAnimation(wx.PyControl):
 			if self.lapCur > maxLaps:
 				self.lapCur = maxLaps
 			tStr = 'Laps Completed %d' % max(0, self.lapCur-1)
-			tWidth, tHeight = dc.GetTextExtent( tStr + ' 00:00:00' )
-			dc.DrawText( tStr, width - tWidth, yTop )
+			tWidth, tHeight = dc.GetTextExtent( tStr )
+			dc.DrawText( tStr, 4*r - tWidth - 8, height - tHeight*2 )
 
 		# Draw the leader board.
 		xLeft = 8
@@ -602,8 +614,7 @@ class GeoAnimation(wx.PyControl):
 		else:
 			tStr = '%d:%02d:%02d' % (secs / (60*60), (secs / 60)%60, secs % 60 )
 		tWidth, tHeight = dc.GetTextExtent( tStr )
-		dc.DrawText( tStr, 4*r - tWidth - 8, height - self.infoLines * tHeight )
-		
+		dc.DrawText( tStr, 4*r - tWidth - 8, height - tHeight )
 		
 	def OnEraseBackground(self, event):
 		# This is intentionally empty, because we are using the combination

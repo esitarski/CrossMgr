@@ -18,7 +18,7 @@ class FileNamePage(wiz.WizardPageSimple):
 			'GPX Files (*.gpx)|*.gpx',
 		]
 		self.fbb = filebrowse.FileBrowseButton( self, -1, size=(450, -1),
-												labelText = 'GPX Files:',
+												labelText = 'GPX File:',
 												fileMode=wx.OPEN,
 												fileMask='|'.join(fileMask) )
 		vbs.Add( self.fbb, flag=wx.ALL, border = border )

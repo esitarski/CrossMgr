@@ -835,6 +835,9 @@ class MainWin( wx.Frame ):
 			html = replaceJsonVar( html, 'isTimeTrial',			getattr(race, 'isTimeTrial', False) )
 			html = replaceJsonVar( html, 'raceIsRunning',		race.isRunning() )
 			tLastRaceTime = race.lastRaceTime()
+			gpsPoints = getattr(race, 'geoTrack', None)
+			if gpsPoints is not None:
+				gpsPoints = gpsPoints.asExportJson()
 		
 		tNow = datetime.datetime.now()
 		html = replaceJsonVar( html, 'timestamp',	[tNow.ctime(), tLastRaceTime] )
@@ -842,6 +845,8 @@ class MainWin( wx.Frame ):
 		html = replaceJsonVar( html, 'data',		GetAnimationData(getExternalData = True) )
 		html = replaceJsonVar( html, 'catDetails',	GetCategoryDetails() )
 		html = replaceJsonVar( html, 'version',		Version.AppVerName )
+		if gpsPoints:
+			html = replaceJsonVar( html, 'gpsPoints', gpsPoints )
 
 		graphicBase64 = self.getGraphicBase64()
 		if graphicBase64:
@@ -979,6 +984,8 @@ class MainWin( wx.Frame ):
 			else:
 				race.geoTrackFName = gpxFName
 				race.geoTrack = gt.geoTrack
+				#with open('track.json', 'w') as f:
+				#	f.write( json.dumps(race.geoTrack.asExportJson()) )
 			race.setChanged()
 			self.refresh()
 		
