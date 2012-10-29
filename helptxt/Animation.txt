@@ -4,7 +4,9 @@
 Animation shows an animation of riders in the race.  While a race is running, it shows the projected rider's progress in real time.
 After a race has finished, the race can be played back in fast-forward.
 
-The top three riders are shown on a leader board, and you can enter additional riders you wish to highlight and show on the leader board.
+The default display is a oval track, however, you can also import a GPX file of the actual race course.
+
+The top three riders are shown on a leader board (5 in GPX display), and you can enter additional riders you wish to highlight and show on the leader board.
 
 It is considered best practice to play back every race before publishing the results as Animation is an excellent tool for spotting bad data.
 
@@ -20,12 +22,14 @@ Draws the animation with the finish line on the top of the screen rather than on
 Use this option to give a better approximation of the course layout.
 Html output will respect this option.
 This option can also be changed in Properties.
+Does not apply in a GPX display.
 
 ## Reverse Direction
 Changes the direction of the animation.
 Use this option to give a better approximation of the direction of prevailing turns in the race.
 Html output will respect this option.
 This option can also be changed in Properties.
+Does not apply in a GPX display.
 
 ## Rewind
 Rewinds the animation to the beginning.  Not operable while the race is running.

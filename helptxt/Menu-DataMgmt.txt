@@ -72,4 +72,13 @@ Edit|Reason for the data edit
 By|Username who made the edit
 On|Date and time when the edit was made.
 
+## Import Course in GPX Format
 
+Imports a .gpx file of the race course.
+GPX files are standard files that can be generated from GPS receivers (Garmin, etc.).
+
+The course fill be shown in the Animation screen, as well as in the html web output.
+
+To stop using a GPX file and return to the oval track, start the import, then Cancel out of it.  You will be given an option to remove the existing GPS file.
+
+When the GPX file is in use, the animation works a little differently.  The numbers of the top 5 riders are always shown, and the numbers of the Highlight numbers are also shown.
