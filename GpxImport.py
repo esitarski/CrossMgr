@@ -6,6 +6,30 @@ import wx.lib.filebrowsebutton as filebrowse
 from GeoAnimation import GeoTrack
 import Utils
 
+class IntroPage(wiz.WizardPageSimple):
+	def __init__(self, parent):
+		wiz.WizardPageSimple.__init__(self, parent)
+		
+		border = 4
+		vbs = wx.BoxSizer( wx.VERTICAL )
+		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Import a GPX File containing coordinates for the course.\nContinue if you want to load or change the GPX course file.'),
+					flag=wx.ALL, border = border )
+		self.info = wx.TextCtrl(self, wx.ID_ANY, '', style=wx.TE_READONLY|wx.TE_MULTILINE)
+		vbs.Add( self.info, flag=wx.ALL|wx.EXPAND, border = border )
+		
+		self.SetSizer( vbs )
+	
+	def setInfo( self, geoTrack, geoTrackFName ):
+		if geoTrack:
+			s = 'Existing GPX file:\n\nImported from: "%s"\n\nNumber of Coords: %d\n\nLap Length: %.3f km (%.3f miles)' % (
+				geoTrackFName,
+				len(geoTrack.gpsPoints),
+				geoTrack.lengthKm, geoTrack.lengthMiles )
+		else:
+			s = ''
+		self.info.ChangeValue( s )
+		self.GetSizer().Layout()
+	
 class FileNamePage(wiz.WizardPageSimple):
 	def __init__(self, parent):
 		wiz.WizardPageSimple.__init__(self, parent)
@@ -25,8 +49,12 @@ class FileNamePage(wiz.WizardPageSimple):
 		
 		self.SetSizer( vbs )
 	
-	def setFileName( self, fileName ):
-		self.fbb.SetValue( fileName )
+	def setInfo( self, geoTrackFName ):
+		if geoTrackFName:
+			self.fbb.SetValue( geoTrackFName )
+		else:
+			self.fbb.SetValue( '' )
+		self.GetSizer().Layout()
 	
 	def getFileName( self ):
 		return self.fbb.GetValue()
@@ -51,7 +79,7 @@ class SummaryPage(wiz.WizardPageSimple):
 		rows += 1
 
 		self.distanceLabel = wx.StaticText( self, wx.ID_ANY, 'Lap Length:' )
-		self.distance = wx.StaticText( self, wx.ID_ANY, '' )
+		self.distance = wx.TextCtrl(self, wx.ID_ANY, '', style=wx.TE_READONLY)
 		rows += 1
 
 		fbs = wx.FlexGridSizer( rows=rows, cols=2, hgap=5, vgap=2 )
@@ -70,10 +98,10 @@ class SummaryPage(wiz.WizardPageSimple):
 	def setInfo( self, fileName, numCoords, distance ):
 		self.fileName.SetLabel( fileName )
 		self.numCoords.SetLabel( '%d' % numCoords )
-		self.distance.SetLabel( '%.3f km, %.3f miles' % (distance/1000.0, distance*0.621371/1000.0) )
+		self.distance.ChangeValue( '%.3f km, %.3f miles' % (distance, distance*0.621371) )
 		
 class GetGeoTrack( object ):
-	def __init__( self, parent, geoTrackFName = None ):
+	def __init__( self, parent, geoTrack = None, geoTrackFName = None ):
 		img_filename = os.path.join( Utils.getImageFolder(), 'gps.png' )
 		img = wx.Bitmap(img_filename) if img_filename and os.path.exists(img_filename) else wx.NullBitmap
 		
@@ -83,26 +111,29 @@ class GetGeoTrack( object ):
 		self.wizard = prewizard
 		self.wizard.Bind( wiz.EVT_WIZARD_PAGE_CHANGING, self.onPageChanging )
 		self.wizard.Bind( wiz.EVT_WIZARD_HELP,
-			lambda evt: Utils.showHelp('Menu-DataMgmt.html#import-gpx-file') )
+			lambda evt: Utils.showHelp('Menu-DataMgmt.html#import-course-in-gpx-format') )
 		
+		self.introPage = IntroPage( self.wizard )
 		self.fileNamePage = FileNamePage( self.wizard )
 		self.summaryPage = SummaryPage( self.wizard )
 		
+		wiz.WizardPageSimple_Chain( self.introPage, self.fileNamePage )
 		wiz.WizardPageSimple_Chain( self.fileNamePage, self.summaryPage )
 
 		self.geoTrackFName = geoTrackFName
 		if geoTrackFName:
-			self.fileNamePage.setFileName( geoTrackFName )
-		self.geoTrack = None
+			self.introPage.setInfo( geoTrack, geoTrackFName )
+			self.fileNamePage.setInfo( geoTrackFName )
+		self.geoTrack = geoTrack
 
-		self.wizard.GetPageAreaSizer().Add( self.fileNamePage )
+		self.wizard.GetPageAreaSizer().Add( self.introPage )
 		self.wizard.SetPageSize( wx.Size(500,200) )
-		self.wizard.FitToPage( self.fileNamePage )
+		self.wizard.FitToPage( self.introPage )
 	
 	def show( self ):
-		if self.wizard.RunWizard(self.fileNamePage):
-			self.geoTrackFName = self.fileNamePage.getFileName()
-		return self.geoTrackFName
+		if self.wizard.RunWizard(self.introPage):
+			return self.fileNamePage.getFileName()
+		return ''
 	
 	def onPageChanging( self, evt ):
 		isForward = evt.GetDirection()
@@ -126,9 +157,10 @@ class GetGeoTrack( object ):
 					self.geoTrack = GeoTrack()
 					try:
 						self.geoTrack.read( fileName )
-						self.summaryPage.setInfo( fileName, len(self.geoTrack.gpsPoints), self.geoTrack.length )
+						self.summaryPage.setInfo( fileName, len(self.geoTrack.gpsPoints), self.geoTrack.lengthKm )
 					except:
-						Utils.MessageOK( self.wizard, 'File format error (is this a GPX file?)', title='GPX Format Error', iconMask=wx.ICON_ERROR)
+						Utils.MessageOK( self.wizard, 'File format error (is this a GPX file?)',
+										title='GPX Format Error', iconMask=wx.ICON_ERROR)
 						success = False
 						self.geoTrack = None
 						evt.Veto()

@@ -969,7 +969,7 @@ class MainWin( wx.Frame ):
 				return
 			existingGeoTrack = getattr( race, 'geoTrack', None )
 			
-		gt = GpxImport.GetGeoTrack( self )
+		gt = GpxImport.GetGeoTrack( self, existingGeoTrack, getattr(race, 'geoTrackFName', '') )
 		gpxFName = gt.show()
 		if not gpxFName:
 			if existingGeoTrack is not None:

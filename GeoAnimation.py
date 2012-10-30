@@ -11,8 +11,8 @@ import os
 from operator import itemgetter, attrgetter
 from GanttChart import makePastelColours, makeColourGradient
 import Utils
-import xml.etree.cElementTree
 import xml.etree.ElementTree
+import xml.etree.cElementTree
 import xml.dom
 import xml.dom.minidom
 from xml.dom.minidom import parse
@@ -153,6 +153,14 @@ class GeoTrack( object ):
 		x, y = pCur.x + (pNext.x - pCur.x) * segRatio, pCur.y + (pNext.y - pCur.y) * segRatio
 		return x * self.mult + self.x, self.yBottom - y * self.mult
 
+	@property
+	def lengthKm( self ):
+		return self.length / 1000.0
+		
+	@property
+	def lengthMiles( self ):
+		return self.length * 0.621371/1000.0
+		
 	def setDisplayRect( self, x, y, width, height ):
 		if width <= 0 or height <= 0:
 			self.mult = 1.0
