@@ -21,7 +21,7 @@ class IntroPage(wiz.WizardPageSimple):
 	
 	def setInfo( self, geoTrack, geoTrackFName ):
 		if geoTrack:
-			s = 'Existing GPX file:\n\nImported from: "%s"\n\nNumber of Coords: %d\n\nLap Length: %.3f km (%.3f miles)' % (
+			s = 'Existing GPX file:\n\nImported from: "%s"\n\nNumber of Coords: %d\n\nLap Length: %.3f km, %.3f miles' % (
 				geoTrackFName,
 				len(geoTrack.gpsPoints),
 				geoTrack.lengthKm, geoTrack.lengthMiles )
