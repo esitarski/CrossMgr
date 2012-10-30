@@ -964,30 +964,23 @@ class MainWin( wx.Frame ):
 	def menuImportGpx( self, event ):
 		if self.fileName is None or len(self.fileName) < 4:
 			return
+		
 		with Model.LockRace() as race:
 			if not race:
 				return
-			existingGeoTrack = getattr( race, 'geoTrack', None )
+			gt = GpxImport.GetGeoTrack( self, getattr(race, 'geoTrack', None), getattr(race, 'geoTrackFName', '') )
 			
-		gt = GpxImport.GetGeoTrack( self, existingGeoTrack, getattr(race, 'geoTrackFName', '') )
-		gpxFName = gt.show()
-		if not gpxFName:
-			if existingGeoTrack is not None:
-				if not Utils.MessageOKCancel( self, 'Do you wish to drop the existing GPX track?',
-												'Drop Existing GPS Track', iconMask = wx.ICON_EXCLAMATION ):
-					return
-					
+		geoTrack, geoTrackFName = gt.show()
+		
 		with Model.LockRace() as race:
-			if not gpxFName:
-				race.geoTrackFName = None
-				race.geoTrack = None
+			if not geoTrackFName:
+				race.geoTrackFName, race.geoTrack = None, None
 			else:
-				race.geoTrackFName = gpxFName
-				race.geoTrack = gt.geoTrack
+				race.geoTrackFName, race.geoTrack = geoTrackFName, geoTrack
 				#with open('track.json', 'w') as f:
 				#	f.write( json.dumps(race.geoTrack.asExportJson()) )
-			race.setChanged()
-			self.refresh()
+		race.setChanged()
+		self.refresh()
 		
 	@logCall
 	def menuExportHtmlRawData( self, event ):

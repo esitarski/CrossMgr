@@ -47,6 +47,9 @@ class FileNamePage(wiz.WizardPageSimple):
 												fileMask='|'.join(fileMask) )
 		vbs.Add( self.fbb, flag=wx.ALL, border = border )
 		
+		vbs.Add( wx.StaticText(self, wx.ID_ANY, '\n\nTo revert back to the Oval track, set an Empty filename, and press Cancel.'),
+			flag=wx.ALL, border = border )
+		
 		self.SetSizer( vbs )
 	
 	def setInfo( self, geoTrackFName ):
@@ -105,65 +108,87 @@ class GetGeoTrack( object ):
 		img_filename = os.path.join( Utils.getImageFolder(), 'gps.png' )
 		img = wx.Bitmap(img_filename) if img_filename and os.path.exists(img_filename) else wx.NullBitmap
 		
+		self.parent = parent
 		prewizard = wiz.PreWizard()
 		prewizard.SetExtraStyle( wiz.WIZARD_EX_HELPBUTTON )
-		prewizard.Create( parent, wx.ID_ANY, 'Import GPX file', img )
+		prewizard.Create( parent, wx.ID_ANY, 'Import GPX Course File', img )
 		self.wizard = prewizard
 		self.wizard.Bind( wiz.EVT_WIZARD_PAGE_CHANGING, self.onPageChanging )
+		self.wizard.Bind( wiz.EVT_WIZARD_CANCEL, self.onCancel )
 		self.wizard.Bind( wiz.EVT_WIZARD_HELP,
 			lambda evt: Utils.showHelp('Menu-DataMgmt.html#import-course-in-gpx-format') )
 		
-		self.introPage = IntroPage( self.wizard )
-		self.fileNamePage = FileNamePage( self.wizard )
-		self.summaryPage = SummaryPage( self.wizard )
+		self.introPage		= IntroPage( self.wizard )
+		self.fileNamePage	= FileNamePage( self.wizard )
+		self.summaryPage	= SummaryPage( self.wizard )
 		
 		wiz.WizardPageSimple_Chain( self.introPage, self.fileNamePage )
 		wiz.WizardPageSimple_Chain( self.fileNamePage, self.summaryPage )
 
+		self.wizard.SetPageSize( wx.Size(500,200) )
+		self.wizard.GetPageAreaSizer().Add( self.introPage )
+		
 		self.geoTrackFName = geoTrackFName
 		if geoTrackFName:
 			self.introPage.setInfo( geoTrack, geoTrackFName )
 			self.fileNamePage.setInfo( geoTrackFName )
 		self.geoTrack = geoTrack
 
-		self.wizard.GetPageAreaSizer().Add( self.introPage )
-		self.wizard.SetPageSize( wx.Size(500,200) )
-		self.wizard.FitToPage( self.introPage )
-	
 	def show( self ):
 		if self.wizard.RunWizard(self.introPage):
-			return self.fileNamePage.getFileName()
-		return ''
+			self.geoTrackFName = self.fileNamePage.getFileName()
+		return self.geoTrack, self.geoTrackFName
+	
+	def onCancel( self, evt ):
+		page = evt.GetPage()
+		if page == self.introPage:
+			pass
+		elif page == self.fileNamePage:
+			if self.geoTrack and Utils.MessageOKCancel( self.parent,
+					'Unload Existing GPX Course?\n\n(shows the oval track)', 
+					'Unload Existing GPX Course?', wx.ICON_EXCLAMATION):
+				self.geoTrack = None
+				self.geoTrackFName = None
+		elif page == self.summaryPage:
+			pass
 	
 	def onPageChanging( self, evt ):
 		isForward = evt.GetDirection()
+		if not isForward:
+			return
 		success = True
-		if isForward:
-			page = evt.GetPage()
-			if page == self.fileNamePage:
-				fileName = self.fileNamePage.getFileName()
+		page = evt.GetPage()
+		
+		if page == self.introPage:
+			pass
+		elif page == self.fileNamePage:
+			fileName = self.fileNamePage.getFileName()
+			try:
+				open(fileName).close()
+			except IOError:
+				if fileName == '':
+					message = 'Please specify a GPX file.'
+				else:
+					message = 'Cannot open file "%s".\nPlease check the file name and/or its read permissions.' % fileName
+				Utils.MessageOK( self.wizard, message, title='File Open Error', iconMask=wx.ICON_ERROR)
+				success = False
+				evt.Veto()
+				
+			if success:
+				self.geoTrack = GeoTrack()
 				try:
-					open(fileName).close()
-				except IOError:
-					if fileName == '':
-						message = 'Please specify a GPX file.'
-					else:
-						message = 'Cannot open file "%s".\nPlease check the file name and/or its read permissions.' % fileName
-					Utils.MessageOK( self.wizard, message, title='File Open Error', iconMask=wx.ICON_ERROR)
+					self.geoTrack.read( fileName )
+					self.summaryPage.setInfo( fileName, len(self.geoTrack.gpsPoints), self.geoTrack.lengthKm )
+					self.geoTrackFName = fileName
+				except:
+					Utils.MessageOK( self.wizard, 'File format error (is this a GPX file?)',
+									title='GPX Format Error', iconMask=wx.ICON_ERROR)
 					success = False
+					self.geoTrack = None
 					evt.Veto()
 					
-				if success:
-					self.geoTrack = GeoTrack()
-					try:
-						self.geoTrack.read( fileName )
-						self.summaryPage.setInfo( fileName, len(self.geoTrack.gpsPoints), self.geoTrack.lengthKm )
-					except:
-						Utils.MessageOK( self.wizard, 'File format error (is this a GPX file?)',
-										title='GPX Format Error', iconMask=wx.ICON_ERROR)
-						success = False
-						self.geoTrack = None
-						evt.Veto()
+		elif page == self.summaryPage:
+			pass
 		
 	def onPageChanged( self, evt ):
 		isForward = evt.GetDirection()
