@@ -23,7 +23,7 @@ class IntroPage(wiz.WizardPageSimple):
 		if geoTrack:
 			s = 'Existing GPX file:\n\nImported from: "%s"\n\nNumber of Coords: %d\n\nLap Length: %.3f km, %.3f miles' % (
 				geoTrackFName,
-				len(geoTrack.gpsPoints),
+				geoTrack.numPoints,
 				geoTrack.lengthKm, geoTrack.lengthMiles )
 		else:
 			s = ''
@@ -133,22 +133,26 @@ class GetGeoTrack( object ):
 			self.introPage.setInfo( geoTrack, geoTrackFName )
 			self.fileNamePage.setInfo( geoTrackFName )
 		self.geoTrack = geoTrack
+		
+		self.geoTrackOriginal = geoTrack
+		self.geoTrackNameOriginal = geoTrackFName
 
 	def show( self ):
 		if self.wizard.RunWizard(self.introPage):
-			self.geoTrackFName = self.fileNamePage.getFileName()
-		return self.geoTrack, self.geoTrackFName
+			return self.geoTrack, self.geoTrackFName
+		else:
+			return self.geoTrackOriginal, self.geoTrackNameOriginal
 	
 	def onCancel( self, evt ):
 		page = evt.GetPage()
 		if page == self.introPage:
 			pass
 		elif page == self.fileNamePage:
-			if self.geoTrack and Utils.MessageOKCancel( self.parent,
+			if self.geoTrackOriginal and Utils.MessageOKCancel( self.parent,
 					'Unload Existing GPX Course?\n\n(shows the oval track)', 
 					'Unload Existing GPX Course?', wx.ICON_EXCLAMATION):
-				self.geoTrack = None
-				self.geoTrackFName = None
+				self.geoTrack = self.geoTrackOriginal = None
+				self.geoTrackFName = self.geoTrackNameOriginal = None
 		elif page == self.summaryPage:
 			pass
 	
@@ -156,36 +160,45 @@ class GetGeoTrack( object ):
 		isForward = evt.GetDirection()
 		if not isForward:
 			return
-		success = True
 		page = evt.GetPage()
 		
 		if page == self.introPage:
 			pass
 		elif page == self.fileNamePage:
 			fileName = self.fileNamePage.getFileName()
+			
+			# Check for a valid file.
 			try:
 				open(fileName).close()
 			except IOError:
 				if fileName == '':
 					message = 'Please specify a GPX file.'
 				else:
-					message = 'Cannot open file "%s".\nPlease check the file name and/or its read permissions.' % fileName
+					message = 'Cannot open file:\n\n    "%s"\n\nPlease check the file name and/or its read permissions.' % fileName
 				Utils.MessageOK( self.wizard, message, title='File Open Error', iconMask=wx.ICON_ERROR)
-				success = False
 				evt.Veto()
-				
-			if success:
-				self.geoTrack = GeoTrack()
-				try:
-					self.geoTrack.read( fileName )
-					self.summaryPage.setInfo( fileName, len(self.geoTrack.gpsPoints), self.geoTrack.lengthKm )
+				return
+			
+			# Check for valid content.
+			geoTrack = GeoTrack()
+			try:
+				geoTrack.read( fileName )
+				if geoTrack.numPoints >= 2:
 					self.geoTrackFName = fileName
-				except:
-					Utils.MessageOK( self.wizard, 'File format error (is this a GPX file?)',
-									title='GPX Format Error', iconMask=wx.ICON_ERROR)
-					success = False
-					self.geoTrack = None
+					self.geoTrack = geoTrack
+					self.summaryPage.setInfo( fileName, self.geoTrack.numPoints, self.geoTrack.lengthKm )
+				else:
+					Utils.MessageOK( self.wizard,
+						'Import Failed:  GPX file contains fewer than two points.',
+						title='File Format Error',
+						iconMask=wx.ICON_ERROR)
 					evt.Veto()
+					return
+			except:
+				Utils.MessageOK( self.wizard, 'Read error:  Is this a proper GPX file?',
+								title='Read Error', iconMask=wx.ICON_ERROR)
+				evt.Veto()
+				return
 					
 		elif page == self.summaryPage:
 			pass

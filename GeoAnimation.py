@@ -18,6 +18,14 @@ import xml.dom.minidom
 from xml.dom.minidom import parse
 import collections
 
+def LineNormal( x1, y1, x2, y2, normLen ):
+	''' Returns the coords of a normal line passing through x1, y1 of length normLen. '''
+	dx, dy = x2 - x1, y2 - y1
+	scale = (normLen / 2.0) / math.sqrt( dx**2 + dy**2 )
+	dx *= scale
+	dy *= scale
+	return x1 + dy, y1 - dx, x1 - dy, y1 + dx
+
 def GreatCircleDistance( lat1, lon1, lat2, lon2 ):
     """
     Calculate the great circle distance between two points 
@@ -160,6 +168,10 @@ class GeoTrack( object ):
 	@property
 	def lengthMiles( self ):
 		return self.length * 0.621371/1000.0
+		
+	@property
+	def numPoints( self ):
+		return len(self.gpsPoints)
 		
 	def setDisplayRect( self, x, y, width, height ):
 		if width <= 0 or height <= 0:
@@ -483,19 +495,14 @@ class GeoAnimation(wx.PyControl):
 		dc.DrawPolygon( drawPoints )
 		
 		# Draw a finish line.
-		a = math.atan2( drawPoints[1][1] - drawPoints[0][1], drawPoints[1][0] - drawPoints[0][0] )
-		dx, dy = math.cos( a + math.pi/2.0 ), math.sin( a + math.pi/2.0 )
 		finishLineLength = laneWidth * 2
-		x1, x2 = drawPoints[0][0] + finishLineLength / 2.0 * dx, drawPoints[0][0] - finishLineLength / 2.0 * dx
-		y1, y2 = drawPoints[0][1] + finishLineLength / 2.0 * dy, drawPoints[0][1] - finishLineLength / 2.0 * dy
+		x1, y1, x2, y2 = LineNormal( drawPoints[0][0], drawPoints[0][1], drawPoints[1][0], drawPoints[1][1], laneWidth * 2 )
 		dc.SetPen( wx.Pen(wx.WHITE, laneWidth / 1.5, wx.SOLID) )
 		dc.DrawLine( x1, y1, x2, y2 )
 		dc.SetPen( wx.Pen(wx.BLACK, laneWidth / 5, wx.SOLID) )
 		dc.DrawLine( x1, y1, x2, y2 )
-		dc.DrawBitmap( self.checkeredFlag,
-						drawPoints[0][0] + finishLineLength * 1.25 * dx - self.checkeredFlag.Width/2,
-						drawPoints[0][1] + finishLineLength * 1.25 * dy - self.checkeredFlag.Height/2,
-						False )
+		x1, y1, x2, y2 = LineNormal( drawPoints[0][0], drawPoints[0][1], drawPoints[1][0], drawPoints[1][1], laneWidth * 4 )
+		dc.DrawBitmap( self.checkeredFlag, x2 - self.checkeredFlag.Width/2, y2 - self.checkeredFlag.Height/2, False )
 
 		# Draw the riders
 		dc.SetFont( self.numberFont )

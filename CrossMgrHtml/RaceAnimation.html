@@ -225,6 +225,16 @@ String.prototype.escapeID = function()
 	return r;
 };
 
+function LineNormal( x1, y1, x2, y2, normLen )
+{
+	// Returns the coords of a normal line passing through x1, y1 of length normLen.
+	var dx = x2 - x1, dy = y2 - y1;
+	var scale = (normLen / 2.0) / Math.sqrt( dx*dx + dy*dy );
+	dx *= scale;
+	dy *= scale;
+	return [x1 + dy, y1 - dx, x1 - dy, y1 + dx];
+}
+
 function getRiderPositionTime( num )
 {
 	// Returns the fraction of the lap covered by the num.
@@ -893,24 +903,19 @@ function GeoAnimation()
 		dc.stroke();
 		
 		// Draw the finish line.
-		var a = Math.atan2( points[1][1] - points[0][1], points[1][0] - points[0][0] );
-		var dx = Math.cos( a + Math.PI/2.0 );
-		var dy = Math.sin( a + Math.PI/2.0 );
-		var finishLineLength = laneWidth * 2;
-		var x1 = points[0][0] + finishLineLength / 2.0 * dx, x2 = points[0][0] - finishLineLength / 2.0 * dx;
-		var y1 = points[0][1] + finishLineLength / 2.0 * dy, y2 = points[0][1] - finishLineLength / 2.0 * dy;
+		var finishLineLen = laneWidth * 2;
+		var fLine = LineNormal( points[0][0], points[0][1], points[1][0], points[1][1], finishLineLen );
 		dc.beginPath()
-		dc.moveTo( x1, y1 );
-		dc.lineTo( x2, y2 );
+		dc.moveTo( fLine[0], fLine[1] );
+		dc.lineTo( fLine[2], fLine[3] );
 		dc.strokeStyle = "#FFFFFF";
 		dc.lineWidth = laneWidth / 1.5;
 		dc.stroke();
 		dc.strokeStyle = "#000000";
 		dc.lineWidth = laneWidth / 5;
 		dc.stroke();
-		dc.drawImage( checkeredFlag,
-				points[0][0] + finishLineLength * 1.25 * dx - checkeredFlag.width/2,
-				points[0][1] + finishLineLength * 1.25 * dy - checkeredFlag.height/2 );
+		fLine = LineNormal( points[0][0], points[0][1], points[1][0], points[1][1], laneWidth * 4 );
+		dc.drawImage( checkeredFlag, fLine[2] - checkeredFlag.width/2, fLine[3] - checkeredFlag.height/2 );
 		
 		// Draw the riders
 		dc.strokeStyle = 'black';
