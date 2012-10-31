@@ -1491,6 +1491,19 @@ class Race(object):
 		self.resetCategoryCache()
 		self.resetCache();
 	
+	def getRaceIntro( self ):
+		intro = [
+			'Race: %s:%d' % (self.name, self.raceNum),
+			'Start: %s (%s)' % (self.scheduledStart, self.date),
+		]
+		activeCategories = [c for c in self.categories.itervalues() if c.active]
+		if all( c.numLaps for c in activeCategories ):
+			activeCategories.sort( key = Category.key )
+			intro.append( 'Category Laps: %s' % (', '.join( str(c.numLaps) for c in activeCategories )) )
+		else:
+			intro.append( 'Duration: %d min' % self.minutes )
+		return '\n'.join( intro )
+	
 	def getNextExpectedLeaderTNL( self, t ):
 		leaderTimes, leaderNums = self.getLeaderTimesNums()
 		if leaderTimes:
@@ -1562,6 +1575,7 @@ class Race(object):
 		# For each category, find the first instance of each rider after the leader's lap.
 		catTimesNums = self.getCategoryTimesNums()
 		ret = [{},{}]
+		scanMax = len( self.riders ) * 2
 		for cat, catEntries in catEntriesDict.iteritems():
 			try:
 				catTimes, catNums = catTimesNums[cat]
@@ -1575,7 +1589,7 @@ class Race(object):
 
 				seen = {}
 				catFinishers = [ seen.setdefault(catEntries[i].num, catEntries[i])
-								for i in xrange(iFirst, min(len(catEntries),iFirst+400)) if catEntries[i].num not in seen ]
+								for i in xrange(iFirst, min(len(catEntries),iFirst+scanMax)) if catEntries[i].num not in seen ]
 				catFinishers.sort( key = lambda x: (-x.lap, x.t, x.num) )
 				for pos, e in enumerate(catFinishers):
 					ret[r][e.num] = pos + 1
@@ -1594,6 +1608,7 @@ class Race(object):
 		# For each category, find the first instance of each rider after the leader's lap.
 		catTimesNums = self.getCategoryTimesNums()
 		ret = [{},{}]
+		scanMax = len( self.riders ) * 2
 		for cat, catEntries in catEntriesDict.iteritems():
 			try:
 				catTimes, catNums = catTimesNums[cat]
@@ -1607,15 +1622,12 @@ class Race(object):
 
 				seen = {}
 				catFinishers = [ seen.setdefault(catEntries[i].num, catEntries[i])
-								for i in xrange(iFirst, min(len(catEntries),iFirst+400)) if catEntries[i].num not in seen ]
+								for i in xrange(iFirst, min(len(catEntries),iFirst+scanMax)) if catEntries[i].num not in seen ]
 				catFinishers.sort( key = lambda x: (-x.lap, x.t, x.num) )
 				leader = catFinishers[0]
 				for e in catFinishers:
 					if leader.lap == e.lap:
-						if leader.num != e.num:
-							ret[r][e.num] = Utils.formatTimeGap( e.t - leader.t )
-						else:
-							ret[r][e.num] = ' '
+						ret[r][e.num] = Utils.formatTimeGap( e.t - leader.t ) if leader.num != e.num else ' '
 					else:
 						lapsDown = e.lap - leader.lap
 						ret[r][e.num] = '%d lap%s' % (lapsDown, 's' if lapsDown < -1 else '')

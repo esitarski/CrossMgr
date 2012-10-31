@@ -148,13 +148,20 @@ class Actions( wx.Panel ):
 		self.button.SetForegroundColour( wx.Colour(128,128,128) )
 		self.Bind(wx.EVT_BUTTON, self.onPress, self.button )
 		
+		self.raceIntro = wx.StaticText( self, wx.ID_ANY, '' )
+		self.raceIntro.SetFont( wx.Font(24, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
+		
 		self.resetStartClockCheckBox = wx.CheckBox( self, wx.ID_ANY, 'Reset Start Clock on First Tag Read (all riders will get the same start time)' )
 		self.Bind( wx.EVT_CHECKBOX, self.onResetStartClock, self.resetStartClockCheckBox )
 		
 		self.startRaceTimeCheckBox = wx.CheckBox(self, wx.ID_ANY, 'Start Race Automatically at Future Time')
 		
 		border = 8
-		bs.Add(self.button, border=border, flag=wx.ALL)
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add(self.button, border=border, flag=wx.ALL)
+		hs.Add(self.raceIntro, border=border, flag=wx.ALL)
+		
+		bs.Add( hs, border=border, flag=wx.ALL )
 		bs.Add(self.resetStartClockCheckBox, border=border, flag=wx.ALL)
 		bs.Add(self.startRaceTimeCheckBox, border=border, flag=wx.ALL)
 		self.SetSizer(bs)
@@ -237,6 +244,7 @@ class Actions( wx.Panel ):
 		self.resetStartClockCheckBox.Enable( False )
 		self.button.SetLabel( StartText )
 		self.button.SetForegroundColour( wx.Colour(100,100,100) )
+		self.raceIntro.SetLabel( '' )
 		with Model.LockRace() as race:
 			self.resetStartClockCheckBox.SetValue( bool(getattr(race, 'resetStartClockOnFirstTag', True)) if race else False )
 			if race is not None:
@@ -250,7 +258,6 @@ class Actions( wx.Panel ):
 					
 					self.resetStartClockCheckBox.Enable( getattr(race, 'enableJChipIntegration', False) )
 					self.resetStartClockCheckBox.Show( getattr(race, 'enableJChipIntegration', False) )
-					
 				elif race.isRunning():
 					self.button.Enable( True )
 					self.button.SetLabel( FinishText )
@@ -261,6 +268,8 @@ class Actions( wx.Panel ):
 					
 					self.resetStartClockCheckBox.Enable( False )
 					self.resetStartClockCheckBox.Show( False )
+				self.raceIntro.SetLabel( race.getRaceIntro() )
+			self.GetSizer().Layout()
 					
 		mainWin = Utils.getMainWin()
 		if mainWin is not None:

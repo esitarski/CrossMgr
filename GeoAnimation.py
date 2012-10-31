@@ -11,8 +11,20 @@ import os
 from operator import itemgetter, attrgetter
 from GanttChart import makePastelColours, makeColourGradient
 import Utils
+import xml.etree.ElementTree
+import xml.etree.cElementTree
+import xml.dom
+import xml.dom.minidom
 from xml.dom.minidom import parse
 import collections
+
+def LineNormal( x1, y1, x2, y2, normLen ):
+	''' Returns the coords of a normal line passing through x1, y1 of length normLen. '''
+	dx, dy = x2 - x1, y2 - y1
+	scale = (normLen / 2.0) / math.sqrt( dx**2 + dy**2 )
+	dx *= scale
+	dy *= scale
+	return x1 + dy, y1 - dx, x1 - dy, y1 + dx
 
 def GreatCircleDistance( lat1, lon1, lat2, lon2 ):
     """
@@ -42,7 +54,7 @@ def GradeAdjustedDistance( lat1, lon1, ele1, lat2, lon2, ele2 ):
 	return m * d
 
 LatLonEle = collections.namedtuple('LatLonEle', ['lat','lon','ele'] )
-GpsPoint = collections.namedtuple('GpsPoint', ['lat','lon','ele','x','y','d', 'dCum'] )
+GpsPoint = collections.namedtuple('GpsPoint', ['lat','lon','ele','x','y','d','dCum'] )
 
 def triangle( t, a ):
 	a = float(a)
@@ -87,8 +99,10 @@ class GeoTrack( object ):
 		self.distanceTotal = 0.0
 		self.cumDistance = []
 		self.x = 0
+		self.xMax = self.yMax = 0.0
 		self.yBottom = 0
 		self.mult = 1.0
+		self.length = 0.0
 		self.cache = {}
 		
 	def read( self, fname ):
@@ -113,6 +127,9 @@ class GeoTrack( object ):
 		x, yBottom, mult = self.x, self.yBottom, self.mult
 		return [(p.x * mult + x, yBottom - p.y * mult) for p in self.gpsPoints]
 		
+	def asExportJson( self ):
+		return [ [int(getattr(p, a)*10.0) for a in ('x', 'y', 'd')] for p in self.gpsPoints ]
+		
 	def getXY( self, lap, id = None ):
 		# Find the segment at this distance in the lap.
 		lap = math.modf(lap)[0]								# Get fraction of lap.
@@ -124,7 +141,7 @@ class GeoTrack( object ):
 			i = self.cache[id]
 			pCur, pNext = self.gpsPoints[i], self.gpsPoints[(i + 1) % lenGpsPoints]
 			if not (pCur.d <= lapDistance <= pNext.d):
-				i = (i + 1) % len(self.gpsPoints)
+				i = (i + 1) % lenGpsPoints
 				pCur, pNext = pNext, self.gpsPoints[(i + 1) % lenGpsPoints]
 				if not (pCur.d <= lapDistance <= pNext.d):
 					i = None
@@ -133,19 +150,29 @@ class GeoTrack( object ):
 			
 		if i is None:
 			i = bisect.bisect_right( self.cumDistance, lapDistance )-1	# Find the closest point LE the lap distance.
+			i = (i + lenGpsPoints) % lenGpsPoints
 			pCur, pNext = self.gpsPoints[i], self.gpsPoints[(i + 1) % lenGpsPoints]
 		
 		self.cache[id] = i
 		
-		if not pCur.d:
-			return pCur.x, pCur.y
-			
 		segDistance = lapDistance - self.cumDistance[i]
 		segRatio = segDistance / pCur.d
 		
 		x, y = pCur.x + (pNext.x - pCur.x) * segRatio, pCur.y + (pNext.y - pCur.y) * segRatio
 		return x * self.mult + self.x, self.yBottom - y * self.mult
 
+	@property
+	def lengthKm( self ):
+		return self.length / 1000.0
+		
+	@property
+	def lengthMiles( self ):
+		return self.length * 0.621371/1000.0
+		
+	@property
+	def numPoints( self ):
+		return len(self.gpsPoints)
+		
 	def setDisplayRect( self, x, y, width, height ):
 		if width <= 0 or height <= 0:
 			self.mult = 1.0
@@ -187,12 +214,6 @@ class GeoAnimation(wx.PyControl):
 		@param name: Window name.
 		"""
 
-		# Ok, let's see why we have used wx.PyControl instead of wx.Control.
-		# Basically, wx.PyControl is just like its wxWidgets counterparts
-		# except that it allows some of the more common C++ virtual method
-		# to be overridden in Python derived class. For GeoAnimation, we
-		# basically need to override DoGetBestSize and AcceptsFocusFromKeyboard
-		
 		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
 		self.SetBackgroundColour('white')
 		self.data = {}
@@ -201,6 +222,8 @@ class GeoAnimation(wx.PyControl):
 		self.tDelta = 1
 		self.r = 100	# Radius of the turns of the fictional track.
 		self.laneMax = 8
+		
+		self.course = 'geo'
 		
 		self.framesPerSecond = 32
 		self.lapCur = 0
@@ -251,8 +274,11 @@ class GeoAnimation(wx.PyControl):
 		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
 		self.Bind(wx.EVT_SIZE, self.OnSize)
 		
-		self.geoTrack = GeoTrack()
-		self.geoTrack.read( 'EdgeField_Cyclocross_Course.gpx' )
+	def SetGeoTrack( self, geoTrack ):
+		self.geoTrack = geoTrack
+		
+	def SetOptions( self, *argc, **kwargs ):
+		pass
 		
 	def DoGetBestSize(self):
 		return wx.Size(400, 200)
@@ -407,20 +433,16 @@ class GeoAnimation(wx.PyControl):
 			
 		return (p, tSearch)
 	
-	def getXYfromPosition( self, lane, position, num ):
-		return self.geoTrack.getXY( position, num )
-	
-	def getRiderXYPT( self, num, lane ):
+	def getRiderXYPT( self, num ):
 		positionTime = self.getRiderPositionTime( num )
 		if positionTime[0] is None:
-			return (None, None, None, None)
+			return None, None, None, None
 		if self.data[num]['lastTime'] is not None and self.t >= self.data[num]['lastTime']:
 			self.lapCur = max(self.lapCur, len(self.data[num]['raceTimes']))
 			return (None, None, positionTime[0], positionTime[1])
 		self.lapCur = max(self.lapCur, int(positionTime[0]))
-		xypt = list(self.getXYfromPosition( lane, positionTime[0], num ))
-		xypt.extend( positionTime )
-		return tuple( xypt )
+		xy = self.geoTrack.getXY( positionTime[0], num )
+		return xy[0], xy[1], positionTime[0], positionTime[1]
 	
 	def Draw(self, dc):
 		size = self.GetClientSize()
@@ -457,7 +479,7 @@ class GeoAnimation(wx.PyControl):
 		trackHeight = height - tHeight * self.infoLines - border * 2
 		self.geoTrack.setDisplayRect( border, border, trackWidth, trackHeight )
 		
-		# Draw the track.
+		# Draw the course.
 		dc.SetBrush( wx.TRANSPARENT_BRUSH )
 		
 		drawPoints = self.geoTrack.getXYTrack()
@@ -468,8 +490,19 @@ class GeoAnimation(wx.PyControl):
 		dc.SetPen( wx.Pen(self.trackColour, laneWidth * 1.25, wx.SOLID) )
 		dc.DrawPolygon( drawPoints )
 		
-		x, y = drawPoints[0][0], drawPoints[0][1]
-		dc.DrawBitmap( self.checkeredFlag, x - self.checkeredFlag.GetWidth()//2, y - self.checkeredFlag.GetHeight() // 2, False )
+		# Draw a centerline to show all the curves in the course.
+		dc.SetPen( wx.Pen(wx.Colour(80,80,80), 1, wx.SOLID) )
+		dc.DrawPolygon( drawPoints )
+		
+		# Draw a finish line.
+		finishLineLength = laneWidth * 2
+		x1, y1, x2, y2 = LineNormal( drawPoints[0][0], drawPoints[0][1], drawPoints[1][0], drawPoints[1][1], laneWidth * 2 )
+		dc.SetPen( wx.Pen(wx.WHITE, laneWidth / 1.5, wx.SOLID) )
+		dc.DrawLine( x1, y1, x2, y2 )
+		dc.SetPen( wx.Pen(wx.BLACK, laneWidth / 5, wx.SOLID) )
+		dc.DrawLine( x1, y1, x2, y2 )
+		x1, y1, x2, y2 = LineNormal( drawPoints[0][0], drawPoints[0][1], drawPoints[1][0], drawPoints[1][1], laneWidth * 4 )
+		dc.DrawBitmap( self.checkeredFlag, x2 - self.checkeredFlag.Width/2, y2 - self.checkeredFlag.Height/2, False )
 
 		# Draw the riders
 		dc.SetFont( self.numberFont )
@@ -484,7 +517,7 @@ class GeoAnimation(wx.PyControl):
 		if self.data:
 			riderXYPT = []
 			for num, d in self.data.iteritems():
-				xypt = list(self.getRiderXYPT(num, num % self.laneMax))
+				xypt = list(self.getRiderXYPT(num))
 				xypt.insert( 0, num )
 				riderXYPT.append( xypt )
 			
@@ -539,8 +572,8 @@ class GeoAnimation(wx.PyControl):
 			if self.lapCur > maxLaps:
 				self.lapCur = maxLaps
 			tStr = 'Laps Completed %d' % max(0, self.lapCur-1)
-			tWidth, tHeight = dc.GetTextExtent( tStr + ' 00:00:00' )
-			dc.DrawText( tStr, width - tWidth, yTop )
+			tWidth, tHeight = dc.GetTextExtent( tStr )
+			dc.DrawText( tStr, 4*r - tWidth - 8, height - tHeight*2 )
 
 		# Draw the leader board.
 		xLeft = 8
@@ -600,8 +633,7 @@ class GeoAnimation(wx.PyControl):
 		else:
 			tStr = '%d:%02d:%02d' % (secs / (60*60), (secs / 60)%60, secs % 60 )
 		tWidth, tHeight = dc.GetTextExtent( tStr )
-		dc.DrawText( tStr, 4*r - tWidth - 8, height - self.infoLines * tHeight )
-		
+		dc.DrawText( tStr, 4*r - tWidth - 8, height - tHeight )
 		
 	def OnEraseBackground(self, event):
 		# This is intentionally empty, because we are using the combination
@@ -625,6 +657,9 @@ if __name__ == '__main__':
 	app = wx.PySimpleApp()
 	mainWin = wx.Frame(None,title="GeoAnimation", size=(800,700))
 	animation = GeoAnimation(mainWin)
+	geoTrack = GeoTrack()
+	geoTrack.read( 'EdgeField_Cyclocross_Course.gpx' )
+	animation.SetGeoTrack( geoTrack )
 	animation.SetData( data )
 	animation.Animate( 2*60, 60*60 )
 	mainWin.Show()

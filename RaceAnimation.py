@@ -5,6 +5,7 @@ import Utils
 import string
 import re
 from Animation import Animation
+from GeoAnimation import GeoAnimation
 from FixCategories import FixCategories
 from ReadSignOnSheet import IgnoreFields
 from GetResults import GetResults
@@ -91,11 +92,14 @@ class RaceAnimation( wx.Panel ):
 
 		bs.Add( self.hbs )
 		
-		self.animation = Animation( self )
+		self.animationTrack = Animation( self )
+		self.animationGeo = GeoAnimation( self )
+		self.animationGeo.Hide()
+		
+		self.animation = self.animationTrack
 		bs.Add(self.animation, 2, flag=wx.GROW|wx.ALL, border=0 )
 		
-		self.animationSecondsNormal = 90
-		self.animationSeconds = self.animationSecondsNormal
+		self.animationSeconds = self.animationSecondsNormal = 90
 
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		self.rewindButton = wx.Button( self, wx.ID_ANY, 'Rewind' )
@@ -137,6 +141,34 @@ class RaceAnimation( wx.Panel ):
 
 		self.SetSizer(bs)
 
+	def setAnimationType( self, geoTrack = None ):
+		needGeo = (geoTrack is not None)
+		haveGeo = (self.animation.course == 'geo')
+		
+		if needGeo != haveGeo:
+			# Swap the animation object.
+			# Find the existing animation widget
+			bs = self.GetSizer()
+			i = (i for i, c in enumerate(bs.GetChildren()) if c.GetWindow() == self.animation).next()
+
+			self.onRewind()
+			self.animation.StopAnimate()
+			
+			newAnimation = self.animationGeo if needGeo else self.animationTrack
+			bs.Insert(i, newAnimation, 2, flag=wx.GROW|wx.ALL, border=0 )
+			bs.RemovePos( i + 1 )
+			
+			self.animation.Hide()
+			self.animation = newAnimation
+			self.animation.Show( True )
+			
+			self.finishTop.Show( not needGeo )
+			self.reverseDirection.Show( not needGeo )
+			bs.Layout()
+			
+		if geoTrack:
+			self.animation.SetGeoTrack( geoTrack )
+		
 	def doFinishTop( self, event ):
 		with Model.LockRace() as race:
 			if not race:
@@ -193,7 +225,7 @@ class RaceAnimation( wx.Panel ):
 			self.animation.Animate( self.animationSeconds, self.animation.tMax, self.animation.t )
 			self.playStopButton.SetLabel( 'Stop' )
 	
-	def onRewind( self, event ):
+	def onRewind( self, event = None ):
 		self.animation.Animate( self.animationSeconds, None, self.getStartTime(self.animation.data) )
 		self.animation.SuspendAnimate()
 		self.playStopButton.SetLabel( 'Play' )
@@ -221,11 +253,13 @@ class RaceAnimation( wx.Panel ):
 				w.Enable( enabled )
 				
 			if race is None:
+				self.setAnimationType( None )
 				self.animation.SetData( None, 0 )
 				self.animation.SetOptions()
 				self.animation.StopAnimate()
 				return
 			
+			self.setAnimationType( getattr(race, 'geoTrack', None) )
 			catName = FixCategories( self.categoryChoice, getattr(race, 'raceAnimationCategory', 0) )
 			self.hbs.Layout()
 			raceTime = race.lastRaceTime() if race.isRunning() else self.animation.t

@@ -50,6 +50,7 @@ import JChip
 import OrionImport
 import OutputStreamer
 import FtpWriteFile
+import GpxImport
 import cStringIO as StringIO
 from Undo import undo
 from setpriority import setpriority
@@ -358,6 +359,10 @@ class MainWin( wx.Frame ):
 		self.dataMgmtMenu.Append( idCur , "Export Raw Data as &HTML...", "Export raw data as HTML (.html)" )
 		self.Bind(wx.EVT_MENU, self.menuExportHtmlRawData, id=idCur )
 
+		self.dataMgmtMenu.AppendSeparator()
+		idCur = wx.NewId()
+		self.dataMgmtMenu.Append( idCur , "&Import Course in GPX format...", "Import Course in GPX format" )
+		self.Bind(wx.EVT_MENU, self.menuImportGpx, id=idCur )
 		
 		self.menuBar.Append( self.dataMgmtMenu, "&DataMgmt" )
 
@@ -830,6 +835,9 @@ class MainWin( wx.Frame ):
 			html = replaceJsonVar( html, 'isTimeTrial',			getattr(race, 'isTimeTrial', False) )
 			html = replaceJsonVar( html, 'raceIsRunning',		race.isRunning() )
 			tLastRaceTime = race.lastRaceTime()
+			gpsPoints = getattr(race, 'geoTrack', None)
+			if gpsPoints is not None:
+				gpsPoints = gpsPoints.asExportJson()
 		
 		tNow = datetime.datetime.now()
 		html = replaceJsonVar( html, 'timestamp',	[tNow.ctime(), tLastRaceTime] )
@@ -837,6 +845,8 @@ class MainWin( wx.Frame ):
 		html = replaceJsonVar( html, 'data',		GetAnimationData(getExternalData = True) )
 		html = replaceJsonVar( html, 'catDetails',	GetCategoryDetails() )
 		html = replaceJsonVar( html, 'version',		Version.AppVerName )
+		if gpsPoints:
+			html = replaceJsonVar( html, 'gpsPoints', gpsPoints )
 
 		graphicBase64 = self.getGraphicBase64()
 		if graphicBase64:
@@ -950,6 +960,28 @@ class MainWin( wx.Frame ):
 			webbrowser.open( urlFull, new = 0, autoraise = True )
 			
 	#--------------------------------------------------------------------------------------------
+	@logCall
+	def menuImportGpx( self, event ):
+		if self.fileName is None or len(self.fileName) < 4:
+			return
+		
+		with Model.LockRace() as race:
+			if not race:
+				return
+			gt = GpxImport.GetGeoTrack( self, getattr(race, 'geoTrack', None), getattr(race, 'geoTrackFName', '') )
+			
+		geoTrack, geoTrackFName = gt.show()
+		
+		with Model.LockRace() as race:
+			if not geoTrackFName:
+				race.geoTrackFName, race.geoTrack = None, None
+			else:
+				race.geoTrackFName, race.geoTrack = geoTrackFName, geoTrack
+				#with open('track.json', 'w') as f:
+				#	f.write( json.dumps(race.geoTrack.asExportJson()) )
+		race.setChanged()
+		self.refresh()
+		
 	@logCall
 	def menuExportHtmlRawData( self, event ):
 		self.commit()
