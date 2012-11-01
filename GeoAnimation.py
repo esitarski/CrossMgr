@@ -8,6 +8,7 @@ import sys
 import datetime
 import random
 import os
+import re
 from operator import itemgetter, attrgetter
 from GanttChart import makePastelColours, makeColourGradient
 import Utils
@@ -53,15 +54,45 @@ def GradeAdjustedDistance( lat1, lon1, ele1, lat2, lon2, ele2 ):
 	m = 2.0 / (1.0 + exp(-a * 2.5))		# Use a sigmoid curve to approximate the effect of grade on speed.
 	return m * d
 
-LatLonEle = collections.namedtuple('LatLonEle', ['lat','lon','ele'] )
+LatLonEle = collections.namedtuple('LatLonEle', ['lat','lon','ele', 't'] )
 GpsPoint = collections.namedtuple('GpsPoint', ['lat','lon','ele','x','y','d','dCum'] )
 
 def triangle( t, a ):
 	a = float(a)
 	return (2 / a) * (t - a * int(t / a + 0.5)) * (-1 ** int(t / a + 0.5))
 
-def ParseGpxFile( fname ):
-	doc = parse( open(fname) )
+reGpxTime = re.compile( '[^0-9+]' )
+
+def GpxHasTimes( fname ):
+	''' Check that the gpx file contains valid times. '''
+	with open(fname) as f:
+		doc = parse( f )
+	
+	tLast = None
+	for trkpt in doc.getElementsByTagName('trkpt'):
+		try:
+			lat = float( trkpt.getAttribute('lat') )
+			lon = float( trkpt.getAttribute('lon') )
+		except:
+			continue
+		
+		t = None
+		for e in trkpt.getElementsByTagName('time'):
+			try:
+				year, month, day, hour, minute, second = [int(f) for f in reGpxTime.split( e.firstChild.nodeValue ) if f]
+				t = datetime.datetime( year, month, day, hour, minute, second )
+			except:
+				pass
+		if t is None or (tLast is not None and tLast > t):
+			return False
+		tLast = t
+		
+	return True
+	
+def ParseGpxFile( fname, useTimes = False ):
+	with open(fname) as f:
+		doc = parse( f )
+	
 	latMin, lonMin = 1000.0, 1000.0
 	latLonEles = []
 	for trkpt in doc.getElementsByTagName('trkpt'):
@@ -78,13 +109,31 @@ def ParseGpxFile( fname ):
 		for e in trkpt.getElementsByTagName('ele'):
 			ele = float( e.firstChild.nodeValue )
 			
-		latLonEles.append( LatLonEle(lat, lon, ele) )
+		t = None
+		for e in trkpt.getElementsByTagName('time'):
+			try:
+				year, month, day, hour, minute, second = [int(f) for f in reGpxTime.split( e.firstChild.nodeValue ) if f]
+				t = datetime.datetime( year, month, day, hour, minute, second )
+			except ValueError:
+				pass
+		latLonEles.append( LatLonEle(lat, lon, ele, t) )
 		
 	gpsPoints = []
 	dCum = 0.0
 	for i in xrange(len(latLonEles)):
 		p, pNext = latLonEles[i], latLonEles[(i+1) % len(latLonEles)]
-		gad = GradeAdjustedDistance( p.lat, p.lon, p.ele, pNext.lat, pNext.lon, pNext.ele )
+		if useTimes:
+			if pNext.t > p.t:
+				gad = (pNext.t - p.t).total_seconds()
+			else:
+				# Estimate the last time difference based on the speed as the last segment.
+				pPrev = latLonEles[(i+len(latLonEles)-1)%len(latLonEles)]
+				d = GreatCircleDistance( pPrev.lat, pPrev.lon, p.lat, p.lon )
+				t = (p.t - pPrev.t).total_seconds()
+				s = d / t
+				gad = GreatCircleDistance( p.lat, p.lon, pNext.lat, pNext.lon ) / s
+		else:
+			gad = GradeAdjustedDistance( p.lat, p.lon, p.ele, pNext.lat, pNext.lon, pNext.ele )
 		x = GreatCircleDistance( latMin, lonMin, latMin, p.lon )
 		y = GreatCircleDistance( latMin, lonMin, p.lat, lonMin )
 		gpsPoints.append( GpsPoint(p.lat, p.lon, p.ele, x, y, gad, dCum) )
@@ -105,8 +154,8 @@ class GeoTrack( object ):
 		self.length = 0.0
 		self.cache = {}
 		
-	def read( self, fname ):
-		self.gpsPoints = ParseGpxFile( fname )
+	def read( self, fname, useTimes = False ):
+		self.gpsPoints = ParseGpxFile( fname, useTimes )
 		self.xMax = max( p.x for p in self.gpsPoints )
 		self.yMax = max( p.y for p in self.gpsPoints )
 		dCum = 0.0
@@ -642,7 +691,8 @@ class GeoAnimation(wx.PyControl):
 		pass
 		
 if __name__ == '__main__':
-
+	print GpxHasTimes( 'ParkAvenue/ParkAveOneLap.gpx' )
+	
 	data = {}
 	for num in xrange(100,200):
 		mean = random.normalvariate(6.0, 0.3)
