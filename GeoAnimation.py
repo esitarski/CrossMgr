@@ -453,7 +453,7 @@ class GeoAnimation(wx.PyControl):
 		dc.SetBackground(backBrush)
 		dc.Clear()
 		
-		if width < 80 or height < 80:
+		if width < 80 or height < 80 or not self.geoTrack:
 			return
 
 		self.r = int(width / 4)

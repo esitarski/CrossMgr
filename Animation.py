@@ -540,7 +540,7 @@ if __name__ == '__main__':
 		raceTimes = [0]
 		for lap in xrange( 5 ):
 			raceTimes.append( raceTimes[-1] + random.normalvariate(mean, mean/20)*60.0 )
-		data[num] = { 'raceTimes': raceTimes, 'lastTime': raceTimes[-1] }
+		data[num] = { 'raceTimes': raceTimes, 'lastTime': raceTimes[-1], 'flr':1.0 }
 
 	# import json
 	# with open('race.json', 'w') as fp: fp.write( json.dumps(data, sort_keys=True, indent=4) )

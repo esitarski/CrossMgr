@@ -2508,6 +2508,20 @@ function AdjustFont( increase )
 	animationObj.Refresh();
 }
 
+function SetShowTrack()
+{
+	var select = document.getElementById('idShowTrack');
+	var track = select.options[select.selectedIndex].value;
+	if( track == 'gpx' && gpsPoints )
+	{
+		animationObj = new GeoAnimation();
+		animationObj.geoTrack.setData( gpsPoints );
+	}
+	else
+		animationObj = new TrackAnimation();
+	animationObj.Refresh();
+}
+
 function ToggleTimeDecimals()
 {
 	var cb = document.getElementById('idShowTimeDecimals');
@@ -2551,7 +2565,10 @@ function onLoad()
 		animationObj.geoTrack.setData( gpsPoints );
 	}
 	else
+	{
 		animationObj = new TrackAnimation();
+		document.getElementById('idShowTrack').className = 'hidden';
+	}
 
 	if( isCanvasSupported() )
 	{
@@ -2697,6 +2714,10 @@ Highlight Numbers:
 <input type="text" id="idNumsToWatch" value="" onChange="SetNumsToWatch()"></input>
 <input type="button" value="Apply"</input>
 (for example: 124,131,203)
+<select class="noprint" id="idShowTrack" onChange="SetShowTrack()">
+	<option value="gpx" selected="selected">GPX Course</option>
+	<option value="oval">Oval Track</option>
+</select>
 </p>
 </div> <!-- idTrackDiv -->
 <p>

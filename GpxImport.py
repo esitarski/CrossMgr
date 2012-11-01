@@ -148,11 +148,7 @@ class GetGeoTrack( object ):
 		if page == self.introPage:
 			pass
 		elif page == self.fileNamePage:
-			if self.geoTrackOriginal and Utils.MessageOKCancel( self.parent,
-					'Unload Existing GPX Course?\n\n(shows the oval track)', 
-					'Unload Existing GPX Course?', wx.ICON_EXCLAMATION):
-				self.geoTrack = self.geoTrackOriginal = None
-				self.geoTrackFName = self.geoTrackNameOriginal = None
+			pass
 		elif page == self.summaryPage:
 			pass
 	

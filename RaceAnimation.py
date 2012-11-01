@@ -79,7 +79,14 @@ class RaceAnimation( wx.Panel ):
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
 		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, 'Category:' )
 		self.categoryChoice = wx.Choice( self )
-		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
+		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice )
+		self.showGPX = wx.RadioButton( self, wx.ID_ANY, "GPX Track", style=wx.RB_GROUP )
+		self.showGPX.Enable( False )
+		self.Bind(wx.EVT_RADIOBUTTON, self.changeTrack, self.showGPX )
+		self.showOval = wx.RadioButton( self, wx.ID_ANY, "Oval Track" )
+		self.showOval.SetValue( True )
+		self.isShowingOval = True
+		self.Bind(wx.EVT_RADIOBUTTON, self.changeTrack, self.showOval )
 		self.finishTop = wx.CheckBox( self, wx.ID_ANY, "Finish on Top" )
 		self.Bind(wx.EVT_CHECKBOX, self.doFinishTop, self.finishTop)
 		self.reverseDirection = wx.CheckBox( self, wx.ID_ANY, "Reverse Direction" )
@@ -87,6 +94,8 @@ class RaceAnimation( wx.Panel ):
 		
 		self.hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.categoryChoice, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.showGPX, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.showOval, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.finishTop, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border = 4 )
 		self.hbs.Add( self.reverseDirection, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border = 4 )
 
@@ -141,8 +150,16 @@ class RaceAnimation( wx.Panel ):
 
 		self.SetSizer(bs)
 
+	def changeTrack( self, event ):
+		with Model.LockRace() as race:
+			if not race:
+				return
+			geoTrack = getattr( race, 'geoTrack', None ) if race else None
+		self.setAnimationType( geoTrack )
+		self.refresh()
+		
 	def setAnimationType( self, geoTrack = None ):
-		needGeo = (geoTrack is not None)
+		needGeo = (geoTrack is not None and not self.showOval.GetValue())
 		haveGeo = (self.animation.course == 'geo')
 		
 		if needGeo != haveGeo:
@@ -151,8 +168,9 @@ class RaceAnimation( wx.Panel ):
 			bs = self.GetSizer()
 			i = (i for i, c in enumerate(bs.GetChildren()) if c.GetWindow() == self.animation).next()
 
+			if self.playStopButton.GetLabel() == 'Play':
+				self.onPlayStop()
 			self.onRewind()
-			self.animation.StopAnimate()
 			
 			newAnimation = self.animationGeo if needGeo else self.animationTrack
 			bs.Insert(i, newAnimation, 2, flag=wx.GROW|wx.ALL, border=0 )
@@ -160,28 +178,33 @@ class RaceAnimation( wx.Panel ):
 			
 			self.animation.Hide()
 			self.animation = newAnimation
+			self.animationGeo.SetGeoTrack( geoTrack )
 			self.animation.Show( True )
 			
-			self.finishTop.Show( not needGeo )
-			self.reverseDirection.Show( not needGeo )
+			self.finishTop.Enable( not needGeo )
+			self.reverseDirection.Enable( not needGeo )
 			bs.Layout()
+			with Model.LockRace() as race:
+				race.showOval = (not needGeo)
 			
-		if geoTrack:
-			self.animation.SetGeoTrack( geoTrack )
+		self.showGPX.Enable( (geoTrack is not None) )
+		
+		self.showOval.SetValue( not needGeo )
+		self.showGPX.SetValue( needGeo )
 		
 	def doFinishTop( self, event ):
 		with Model.LockRace() as race:
 			if not race:
 				return
 			race.finishTop = event.IsChecked()
-			wx.CallAfter( Utils.refresh )
+			wx.CallAfter( self.refresh )
 	
 	def doReverseDirection( self, event ):
 		with Model.LockRace() as race:
 			if not race:
 				return
 			race.reverseDirection = event.IsChecked()
-			wx.CallAfter( Utils.refresh )
+			wx.CallAfter( self.refresh )
 		
 	def	setNumSelect( self, num ):
 		self.watch.SetValue( str(num) if num else '' )
@@ -217,7 +240,7 @@ class RaceAnimation( wx.Panel ):
 		self.animation.SetNumsToWatch( numsToWatch )
 		self.watch.SetValue( value )
 	
-	def onPlayStop( self, event ):
+	def onPlayStop( self, event = None ):
 		if self.animation.IsAnimating():
 			self.animation.SuspendAnimate()
 			self.playStopButton.SetLabel( 'Play' )
@@ -258,6 +281,9 @@ class RaceAnimation( wx.Panel ):
 				self.animation.SetOptions()
 				self.animation.StopAnimate()
 				return
+			
+			self.showOval.SetValue( getattr(race, 'showOval', True) )
+			self.showGPX.SetValue( not getattr(race, 'showOval', True) )
 			
 			self.setAnimationType( getattr(race, 'geoTrack', None) )
 			catName = FixCategories( self.categoryChoice, getattr(race, 'raceAnimationCategory', 0) )
