@@ -979,7 +979,9 @@ class MainWin( wx.Frame ):
 				race.geoTrackFName, race.geoTrack = geoTrackFName, geoTrack
 				#with open('track.json', 'w') as f:
 				#	f.write( json.dumps(race.geoTrack.asExportJson()) )
-		race.setChanged()
+			race.setChanged()
+			
+		self.showPageName( 'Animation' )
 		self.refresh()
 		
 	@logCall
