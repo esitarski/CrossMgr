@@ -5,6 +5,7 @@ import wx.wizard as wiz
 import wx.lib.filebrowsebutton as filebrowse
 from GeoAnimation import GeoTrack, GpxHasTimes
 import Utils
+import Model
 
 class IntroPage(wiz.WizardPageSimple):
 	def __init__(self, parent):
@@ -17,9 +18,25 @@ class IntroPage(wiz.WizardPageSimple):
 		self.info = wx.TextCtrl(self, wx.ID_ANY, '', style=wx.TE_READONLY|wx.TE_MULTILINE)
 		vbs.Add( self.info, flag=wx.ALL|wx.EXPAND, border = border )
 		
+		self.removeButton = wx.Button( self, wx.ID_ANY, 'Remove GPX Course' )
+		self.Bind( wx.EVT_BUTTON, self.onRemove, self.removeButton )
+		vbs.Add( self.removeButton, flag=wx.ALL|wx.ALIGN_RIGHT, border = border )
+		
 		self.SetSizer( vbs )
 	
+	def onRemove( self, event ):
+		if self.geoTrack:
+			if Utils.MessageOKCancel( self, 'Permanently Remove GPX Course?', 'Remove GPX Course' ):
+				with Model.LockRace() as race:
+					race.geoTrack = None
+					race.geoTrackFName = None
+				self.setInfo( None, None )
+		else:
+			Utils.MessageOK( self, 'No GPX Course', 'No GPX Course' )
+	
 	def setInfo( self, geoTrack, geoTrackFName ):
+		self.geoTrack = geoTrack
+		self.geoTrackFName = geoTrackFName
 		if geoTrack:
 			s = 'Existing GPX file:\n\nImported from: "%s"\n\nNumber of Coords: %d\n\nLap Length: %.3f km, %.3f miles' % (
 				geoTrackFName,
@@ -27,6 +44,7 @@ class IntroPage(wiz.WizardPageSimple):
 				geoTrack.lengthKm, geoTrack.lengthMiles )
 		else:
 			s = ''
+		self.removeButton.Enable( bool(geoTrack) )
 		self.info.ChangeValue( s )
 		self.GetSizer().Layout()
 	
