@@ -89,7 +89,7 @@ Say you have GPX file from a rider for his entire 8 lap race.  But, CrossMgr req
 
 Luckly, there are GPX file editors that allow you to edit a full (for example, [GPX Editor](http://sourceforge.net/projects/gpxeditor/).  If you want to use GPX Editor, download it unzip it into a folder.
 
-Now, GPX has some features that makes it easy to edit down a multi-lap recording to a single lap.
+Now, GPX Editor has some features that makes it easy to edit down a multi-lap recording to a single lap.
 
 Open the GPX file.  On the left side of the screen, expand "Tracks".
 Then click on the date, then on "Track Segment #1" underneath that.
