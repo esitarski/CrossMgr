@@ -68,7 +68,7 @@ class UseTimesPage(wiz.WizardPageSimple):
 		self.noTimes = wx.StaticText(self, wx.ID_ANY, 'This GPX file does not contain times.\n\nRace times will be calculated based on distance and change in elevation.' )
 		vbs.Add( self.noTimes, flag=wx.ALL, border = border )
 		
-		self.useTimes = wx.CheckBox(self, wx.ID_ANY, 'Use times in the GPX file for more accurate animation')
+		self.useTimes = wx.CheckBox(self, wx.ID_ANY, 'Use times in the GPX file for more realistic animation')
 		vbs.Add( self.useTimes, flag=wx.ALL|wx.EXPAND, border = border )
 		
 		self.SetSizer( vbs )
