@@ -130,8 +130,11 @@ def ParseGpxFile( fname, useTimes = False ):
 				pPrev = latLonEles[(i+len(latLonEles)-1)%len(latLonEles)]
 				d = GreatCircleDistance( pPrev.lat, pPrev.lon, p.lat, p.lon )
 				t = (p.t - pPrev.t).total_seconds()
-				s = d / t
-				gad = GreatCircleDistance( p.lat, p.lon, pNext.lat, pNext.lon ) / s
+				if t > 0:
+					s = d / t
+					gad = GreatCircleDistance( p.lat, p.lon, pNext.lat, pNext.lon ) / s
+				else:
+					gad = 0.0
 		else:
 			gad = GradeAdjustedDistance( p.lat, p.lon, p.ele, pNext.lat, pNext.lon, pNext.ele )
 		x = GreatCircleDistance( latMin, lonMin, latMin, p.lon )
