@@ -603,7 +603,8 @@ class GeoAnimation(wx.PyControl):
 						i = None
 				DrawShape( dc, num, x, y, riderRadius )
 				if i is not None:
-					dc.DrawLabel(str(num), wx.Rect(x+numSize, y-numSize, numSize*2, numSize*2) )
+					if not self.numsToWatch or num in self.numsToWatch:
+						dc.DrawLabel(str(num), wx.Rect(x+numSize, y-numSize, numSize*2, numSize*2) )
 				if i is not None:
 					dc.SetPen( wx.BLACK_PEN )
 					dc.SetFont( self.numberFont )
