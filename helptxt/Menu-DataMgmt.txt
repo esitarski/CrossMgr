@@ -82,3 +82,27 @@ The course fill be shown in the Animation screen, as well as in the html web out
 To stop using a GPX file and return to the oval track, start the import, then Cancel out of it.  You will be given an option to remove the existing GPS file.
 
 When the GPX file is in use, the animation works a little differently.  The numbers of the top 5 riders are always shown, and the numbers of the Highlight numbers are also shown.
+
+### Editing GPS Files
+
+Say you have GPX file from a rider for his entire 8 lap race.  But, CrossMgr requires a GPX single lap.  What to do?
+
+Luckly, there are GPX file editors that allow you to edit a full (for example, [GPX Editor](http://sourceforge.net/projects/gpxeditor/).  If you want to use GPX Editor, download it unzip it into a folder.
+
+Now, GPX has some features that makes it easy to edit down a multi-lap recording to a single lap.
+
+Open the GPX file.  On the left side of the screen, expand "Tracks".
+Then click on the date, then on "Track Segment #1" underneath that.
+
+This shows the track, and brings up a, altitude graph at the bottom of the screen.
+
+From the beginning of the altitude graph, hold the left mouse button down and drag to the right.
+This selects a part of the path, also showing it in yellow on the screen.
+Keep dragging until you select just enough points for the 1st lap.
+
+Then, right-click on your selection in the altitude area.  Choose "Selection|Copy to a new track...".
+This make a new track of the single lap called "Track Segment #2".
+
+From the left side of the screen, right-click on "Track Segment #1", and Delete it (Oui = Yes, but in french ;)
+
+Then save the file.  Now you have a GPX file with one lap.
