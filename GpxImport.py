@@ -170,7 +170,7 @@ class GetGeoTrack( object ):
 		self.geoTrack = geoTrack
 		self.geoTrackOriginal = geoTrack
 		self.geoTrackFName = geoTrackFName
-		self.geoTrackNameOriginal = geoTrackFName
+		self.geoTrackFNameOriginal = geoTrackFName
 		
 		self.introPage.setInfo( geoTrack, geoTrackFName )
 		if geoTrackFName:
@@ -180,7 +180,7 @@ class GetGeoTrack( object ):
 		if self.wizard.RunWizard(self.introPage):
 			return self.geoTrack, self.geoTrackFName
 		else:
-			return self.geoTrackOriginal, self.geoTrackNameOriginal
+			return self.geoTrackOriginal, self.geoTrackFNameOriginal
 	
 	def onCancel( self, evt ):
 		page = evt.GetPage()
@@ -192,10 +192,10 @@ class GetGeoTrack( object ):
 			pass
 	
 	def clearData( self ):
-		self.geoTrackOriginal = None
-		self.geoTrackNameOriginal = None
 		self.geoTrack = None
 		self.geoTrackFName = None
+		self.geoTrackOriginal = None
+		self.geoTrackFNameOriginal = None
 		
 	def onPageChanging( self, evt ):
 		isForward = evt.GetDirection()
