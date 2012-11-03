@@ -15,7 +15,7 @@ class IntroPage(wiz.WizardPageSimple):
 		vbs = wx.BoxSizer( wx.VERTICAL )
 		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Import a GPX File containing coordinates for the course.\nContinue if you want to load or change the GPX course file.'),
 					flag=wx.ALL, border = border )
-		self.info = wx.TextCtrl(self, wx.ID_ANY, '', style=wx.TE_READONLY|wx.TE_MULTILINE)
+		self.info = wx.TextCtrl(self, wx.ID_ANY, '\n\n\n\n\n\n', style=wx.TE_READONLY|wx.TE_MULTILINE, size=(-1,180))
 		vbs.Add( self.info, flag=wx.ALL|wx.EXPAND, border = border )
 		
 		self.removeButton = wx.Button( self, wx.ID_ANY, 'Remove GPX Course' )
