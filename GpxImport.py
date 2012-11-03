@@ -7,9 +7,10 @@ from GeoAnimation import GeoTrack, GpxHasTimes
 import Utils
 
 class IntroPage(wiz.WizardPageSimple):
-	def __init__(self, parent):
+	def __init__(self, parent, controller):
 		wiz.WizardPageSimple.__init__(self, parent)
 		
+		self.controller = controller
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
 		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Import a GPX File containing coordinates for the course.\nContinue if you want to load or change the GPX course file.'),
@@ -17,9 +18,22 @@ class IntroPage(wiz.WizardPageSimple):
 		self.info = wx.TextCtrl(self, wx.ID_ANY, '', style=wx.TE_READONLY|wx.TE_MULTILINE)
 		vbs.Add( self.info, flag=wx.ALL|wx.EXPAND, border = border )
 		
+		self.removeButton = wx.Button( self, wx.ID_ANY, 'Remove GPX Course' )
+		self.Bind( wx.EVT_BUTTON, self.onRemove, self.removeButton )
+		vbs.Add( self.removeButton, flag=wx.ALL|wx.ALIGN_RIGHT, border = border )
+		
 		self.SetSizer( vbs )
 	
+	def onRemove( self, event ):
+		if self.geoTrack:
+			if Utils.MessageOKCancel( self, 'Permanently Remove GPX Course?', 'Remove GPX Course' ):
+				self.controller.clearData()
+				self.setInfo( None, None )
+		else:
+			Utils.MessageOK( self, 'No GPX Course', 'No GPX Course' )
+	
 	def setInfo( self, geoTrack, geoTrackFName ):
+		self.geoTrack = geoTrack
 		if geoTrack:
 			s = 'Existing GPX file:\n\nImported from: "%s"\n\nNumber of Coords: %d\n\nLap Length: %.3f km, %.3f miles' % (
 				geoTrackFName,
@@ -27,6 +41,7 @@ class IntroPage(wiz.WizardPageSimple):
 				geoTrack.lengthKm, geoTrack.lengthMiles )
 		else:
 			s = ''
+		self.removeButton.Enable( bool(geoTrack) )
 		self.info.ChangeValue( s )
 		self.GetSizer().Layout()
 	
@@ -140,7 +155,7 @@ class GetGeoTrack( object ):
 		self.wizard.Bind( wiz.EVT_WIZARD_HELP,
 			lambda evt: Utils.showHelp('Menu-DataMgmt.html#import-course-in-gpx-format') )
 		
-		self.introPage		= IntroPage( self.wizard )
+		self.introPage		= IntroPage( self.wizard, self )
 		self.fileNamePage	= FileNamePage( self.wizard )
 		self.useTimesPage	= UseTimesPage( self.wizard )
 		self.summaryPage	= SummaryPage( self.wizard )
@@ -152,20 +167,20 @@ class GetGeoTrack( object ):
 		self.wizard.SetPageSize( wx.Size(500,200) )
 		self.wizard.GetPageAreaSizer().Add( self.introPage )
 		
-		self.geoTrackFName = geoTrackFName
-		if geoTrackFName:
-			self.introPage.setInfo( geoTrack, geoTrackFName )
-			self.fileNamePage.setInfo( geoTrackFName )
 		self.geoTrack = geoTrack
-		
 		self.geoTrackOriginal = geoTrack
-		self.geoTrackNameOriginal = geoTrackFName
+		self.geoTrackFName = geoTrackFName
+		self.geoTrackFNameOriginal = geoTrackFName
+		
+		self.introPage.setInfo( geoTrack, geoTrackFName )
+		if geoTrackFName:
+			self.fileNamePage.setInfo( geoTrackFName )
 
 	def show( self ):
 		if self.wizard.RunWizard(self.introPage):
 			return self.geoTrack, self.geoTrackFName
 		else:
-			return self.geoTrackOriginal, self.geoTrackNameOriginal
+			return self.geoTrackOriginal, self.geoTrackFNameOriginal
 	
 	def onCancel( self, evt ):
 		page = evt.GetPage()
@@ -176,6 +191,12 @@ class GetGeoTrack( object ):
 		elif page == self.summaryPage:
 			pass
 	
+	def clearData( self ):
+		self.geoTrack = None
+		self.geoTrackFName = None
+		self.geoTrackOriginal = None
+		self.geoTrackFNameOriginal = None
+		
 	def onPageChanging( self, evt ):
 		isForward = evt.GetDirection()
 		if not isForward:

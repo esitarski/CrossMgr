@@ -974,9 +974,9 @@ class MainWin( wx.Frame ):
 		
 		with Model.LockRace() as race:
 			if not geoTrackFName:
-				race.geoTrackFName, race.geoTrack = None, None
+				race.geoTrack, race.geoTrackFName = None, None
 			else:
-				race.geoTrackFName, race.geoTrack = geoTrackFName, geoTrack
+				race.geoTrack, race.geoTrackFName = geoTrack, geoTrackFName, 
 				#with open('track.json', 'w') as f:
 				#	f.write( json.dumps(race.geoTrack.asExportJson()) )
 			race.showOval = (race.geoTrack is None)

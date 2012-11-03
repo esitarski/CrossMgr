@@ -225,6 +225,13 @@ String.prototype.escapeID = function()
 	return r;
 };
 
+function isEmptyObject( obj ) {
+    for ( var name in obj ) {
+        return false;
+    }
+    return true;
+}
+
 function LineNormal( x1, y1, x2, y2, normLen )
 {
 	// Returns the coords of a normal line passing through x1, y1 of length normLen.
@@ -813,7 +820,7 @@ function GeoTrack()
 		}
 		var mult = Math.min( width / this.xMax, height / this.yMax );
 		var w = this.xMax * mult, h = this.yMax * mult;
-		var xBorder = (width - w) / 2.0;
+		var xBorder = (width - w) / 4.0;
 		var yBorder = (height - h) / 2.0;
 		this.mult = mult;
 		this.x = xBorder + x;
@@ -993,7 +1000,7 @@ function GeoAnimation()
 					j = numsToWatch[num];
 					if( j != undefined )
 					{
-						dc.strokeStyle = 'white';
+						dc.strokeStyle = '#ffa500';
 						dc.lineWidth = thickLine * 1.5;
 						dc.font = fontStrHightlight;
 					}
@@ -1003,8 +1010,11 @@ function GeoAnimation()
 				DrawCircle( dc, x, y, riderRadius );
 				if( topThree[num] != undefined || numsToWatch[num] != undefined )
 				{
-					dc.fillStyle = 'black';
-					dc.fillText(num+'', x+numSize, y-numSize );
+					if( isEmptyObject(numsToWatch) || numsToWatch[num] != undefined )
+					{
+						dc.fillStyle = 'black';
+						dc.fillText(num+'', x+numSize, y-numSize );
+					}
 				}
 				if( j != undefined )
 				{
@@ -1560,6 +1570,8 @@ function SetCategoryResults()
 			var raceTimes	= resultsData[r][3];
 			var isFinisher	= (resultsData[r][4] == 'Finisher');
 			var tFinish = (isFinisher ? Math.max(riderTime - startOffset, 0.0) : 0.0);
+			
+			tr.onclick = function(n) { return function() {ToggleNumberHighlight(n);}; }(num);
 			
 			var p = (isFinisher ? '' + position : resultsData[r][4] );
 			createTextChild( td = createChild(tr, 'TD'), p );
@@ -2301,10 +2313,29 @@ function SetNumsToWatch()
 	for( var i = 0; i < nums.length; ++i )
 	{
 		var num = parseInt( nums[i], 10 );
-		numsToWatch[num] = num;
+		if( !isNaN(num) )
+			numsToWatch[num] = num;
 	}
 	animationObj.Refresh();
 	SetCategoryResults();
+}
+
+function ToggleNumberHighlight( num )
+{
+	var numsToWatchText = document.getElementById('idNumsToWatch');
+	if( numsToWatch[num] == num )
+	{
+		var s = [];
+		for( var n in numsToWatch )
+		{
+			if( n != num )
+				s.push( n + '' );
+		}
+		numsToWatchText.value = s.join( ', ' );
+	}
+	else
+		numsToWatchText.value += (numsToWatchText.value ? ', ' : '') + num;
+	SetNumsToWatch();
 }
 
 function getStartTime()
@@ -2713,7 +2744,7 @@ Size:
 Highlight Numbers:
 <input type="text" id="idNumsToWatch" value="" onChange="SetNumsToWatch()"></input>
 <input type="button" value="Apply"</input>
-(for example: 124,131,203)
+(e.g. 124,131, or click on a row below)
 <select class="noprint" id="idShowTrack" onChange="SetShowTrack()">
 	<option value="gpx" selected="selected">GPX Course</option>
 	<option value="oval">Oval Track</option>
