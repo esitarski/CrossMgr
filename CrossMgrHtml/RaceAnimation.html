@@ -1082,7 +1082,7 @@ function GeoAnimation()
 			while( dc.measureText(bannerDrawStr).width < width * 2 )
 				bannerDrawStr += '   ' + bannerStr;
 			bannerDrawStr += '   ' + bannerStr;
-			if( (this.xBanner += (26.0 / framesPerSecond)) > bannerWidth )
+			if( (this.xBanner += (36.0 / framesPerSecond)) > bannerWidth )
 				this.xBanner = 0;
 			dc.fillText( bannerDrawStr, -this.xBanner, textVSpace / 2 );
 		}
