@@ -828,9 +828,10 @@ function GeoTrack()
 	}
 }
 
-var infoLines = 5;
+var infoLines = 1;
 function GeoAnimation()
 {
+	this.xBanner = 0;
 	this.geoTrack = new GeoTrack();
 
 	this.getRiderXYPT = function( num )
@@ -874,15 +875,18 @@ function GeoAnimation()
 		r -= (r & 1);			// Make sure that r is an even number.
 
 		var border = 8;
-		var tHeight = r / 9;
+		var tHeight = ~~((r / 8) * fontMult);
 		laneWidth = (r/2) / laneMax;
-		var trackWidth = width - border * 2;
-		var trackHeight = height - tHeight * infoLines - border * 2;
-		this.geoTrack.setDisplayRect( border, border, trackWidth, trackHeight );
-		
-		var fontStr = ~~(tHeight * fontMult) + "px Arial";
-		var fontStrHightlight = ~~(tHeight * 1.6 * fontMult) + "px Arial";
+
+		var fontStr = (tHeight*.8) + "px Arial";
+		var textVSpace = tHeight*0.2;
+		var fontStrHightlight = ~~(tHeight * 1.1) + "px Arial";
 		dc.font = fontStr;
+		
+		var trackWidth = width - border * 2 - laneWidth*2;
+		var topMargin = border + tHeight * infoLines + textVSpace + laneWidth;
+		var trackHeight = height - topMargin;
+		this.geoTrack.setDisplayRect( border, topMargin, trackWidth, trackHeight - laneWidth );
 		
 		// Draw the course.
 		dc.beginPath();
@@ -930,7 +934,7 @@ function GeoAnimation()
 		dc.lineWidth = 1;
 		numSize = (r/2)/laneMax;
 		lapCur = 0;
-		var riderRadius = laneWidth * 0.75;
+		var riderRadius = laneWidth * 0.5;
 		var thickLine = r / 32;
 		var hasFirstLapRatio = false;
 		firstLapRatio = 1.0;
@@ -1024,49 +1028,30 @@ function GeoAnimation()
 				}
 			}
 		}
-
+		
+		dc.fillStyle = '#222';
+		
 		// Draw the current lap
-		var yTop = height - infoLines * tHeight;
-		dc.fillStyle = 'black';
+		var tStr = '';
 		if( lapCur > 0 )
-		{
-			var tStr = 'Laps Completed ' + (lapCur - 1);
-			var tWidth = dc.measureText(tStr).width;
-			dc.fillText( tStr, width - tWidth, height - tHeight * 2 );
-		}
+			tStr = 'Laps Completed ' + (lapCur - 1) + '    ';
+
+		// Draw the race time
+		tStr += FormatTime( t );
+		var tWidth = dc.measureText(tStr).width;
+		dc.fillText( tStr, width - tWidth, tHeight+textVSpace*1.5 );
 
 		// Draw the leader board.
-		var leaderWidthMax = 0;
-		var xLeft = 8;
-		if( leaders )
+		var bannerItems = [];
+		if( leaders && isEmptyObject(numsToWatch) )
 		{
-			var x = xLeft;
-			var y = yTop;
-			//dc.fillText( 'Leaders:', x, y );
-			thickLine = tHeight / 5;
-			riderRadius = tHeight / 3.5;
 			for( var i = 0; i < leaders.length; ++i )
 			{
 				var num = leaders[i];
-				dc.lineWidth = 1;
-				dc.strokeStyle = backColour;
-				dc.fillStyle = trackColour;
-				dc.fillRect( x - thickLine/4, y - thickLine/4, tHeight + thickLine/2, tHeight  + thickLine/2 );
-				
-				dc.strokeStyle = topThreeColours[i];
-				dc.lineWidth = thickLine;
-				dc.fillStyle = colours[num % colours.length];
-				DrawCircle( dc, x + tHeight / 2, y + tHeight / 2, riderRadius );
-				
-				dc.fillStyle = 'black';
-				var leadStr = num + ' ' + getShortName(num);
-				var tWidth = dc.measureText(leadStr).width;
-				leaderWidthMax = Math.max( leaderWidthMax, tWidth );
-				dc.fillText( leadStr, x + tHeight * 1.2, y );
-				y += tHeight;
+				bannerItems.push( '[' + (i+1) + '] ' + num + ' ' + getShortName(num) );
 			}
 		}
-		if( numsToWatch )
+		if( !isEmptyObject(numsToWatch) )
 		{
 			var rp = [];
 			for( var n in numsToWatch )
@@ -1077,24 +1062,30 @@ function GeoAnimation()
 			}
 			rp.sort(function(x, y) { return x[0] - y[0]; });
 			
-			var colCount = 0;
-			var x = xLeft + leaderWidthMax + riderRadius*4;
-			var y = yTop;
-			
 			dc.fillStyle = 'black';
-			for( var i = 0; i < rp.length && i < 5; ++i )
+			for( var i = 0; i < rp.length; ++i )
 			{
 				var num = rp[i][1];
-				dc.fillText( '(' + rp[i][0] + ') ' + num + ' ' + getShortName(num), x, y );
-				y += tHeight;
+				bannerItems.push( '[' + rp[i][0] + '] ' + num + ' ' + getShortName(num) );
 			}
 		}
+		var bannerStr = bannerItems.join( '   ' );
 		
-		// Draw the race time
-		dc.fillStyle = 'black';
-		var tStr = FormatTime( t );
-		var tWidth = dc.measureText(tStr).width;
-		dc.fillText( tStr, width - tWidth, height - tHeight );
+		drawSegment( dc, 0, 0, width, tHeight*1.2, '#0000CC', '#0000EE' );
+		
+		dc.fillStyle = '#EEE';
+		dc.font = 'Bold ' + fontStr;
+		if( bannerStr )
+		{
+			var bannerWidth = dc.measureText(bannerStr).width;
+			var bannerDrawStr = bannerStr;
+			while( dc.measureText(bannerDrawStr).width < width * 2 )
+				bannerDrawStr += '   ' + bannerStr;
+			bannerDrawStr += '   ' + bannerStr;
+			if( (this.xBanner += (26.0 / framesPerSecond)) > bannerWidth )
+				this.xBanner = 0;
+			dc.fillText( bannerDrawStr, -this.xBanner, textVSpace / 2 );
+		}
 	}
 }
 

@@ -89,7 +89,7 @@ Say you have GPX file from a rider for his entire 8 lap race.  But, CrossMgr req
 
 Fortunately, there are GPX file editors that allow you to edit a full (for example, [GPX Editor](http://sourceforge.net/projects/gpxeditor/).  If you want to use GPX Editor, download it unzip it into a folder.
 
-GPX Editor has some features that makes it easy to edit down a multi-lap recording to a single lap.
+GPX Editor has some features that make it easy to edit a multi-lap recording to a single lap.
 
 Open the GPX file.  On the left side of the screen, expand "Tracks".
 Then click on the Date entry, then on "Track Segment #1" underneath that.
@@ -100,6 +100,7 @@ From the beginning of the altitude graph, hold the left mouse button down and dr
 This selects a part of the path, also showing it in yellow on the screen.
 
 Keep dragging until you select just enough points for the 1st lap.
+The first point and lat point do not need to overlap perfectly - CrossMgr will automatically join them to make a circuit.
 Depending on whether you have a run up, it might make sense to click-and-drag a middle section of the track.
 
 Then, right-click on your selection in the altitude area.  Choose "Selection|Copy to a new track...".

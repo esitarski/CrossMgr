@@ -50,7 +50,7 @@ The number of laps can be changed during a race by switching to "Manual" mode.
 If you forget to set the number of laps during a race, you can change it after - no input is lost.
 HTML output can show Race Time (splits) as well as Lap Time.
 CrossMgr is free to use with riders under age 17.
-CTRL+h will show help on any screen.
+SHIFT+F1 or CTRL+h will show help on any screen.
 CTRL+z is Undo, CTRL+y is Redo.
 CrossMgr has been used at 100's of events around the world.
 CrossMgr can publish results in real-time while a race is running.  See Files|Publish HTML results with FTP...
