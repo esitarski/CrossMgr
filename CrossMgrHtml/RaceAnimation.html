@@ -131,6 +131,7 @@ var canvas = null;
 var r = 100.0;				// The key track size dimension
 var t = 0.0;				// Current race time of the simulation.
 var tLast = 0.0;			// Last time of simulation.
+var tDelta = 0.0;			// Difference in time from last frame.
 var tMax = 0.0;				// Maximum time in the race.
 var laneMax = 8;			// Maximum number of lanes on the track.
 var lapCur = 0;				// Current lap of the race.
@@ -831,9 +832,79 @@ function GeoTrack()
 var infoLines = 1;
 function GeoAnimation()
 {
-	this.xBanner = 0;
+	this.xBanner = 300;
 	this.geoTrack = new GeoTrack();
+	
+	this.tBannerLast = -1;
+	
+	this.drawBanner = function( dc, width, height, tHeight, bannerItems )
+	{
+		drawSegment( dc, 0, 0, width, tHeight*1.2, '#0000CC', '#0000EE' );
+		if( bannerItems.length == 0 )
+			return
+		
+		var y = tHeight * 0.1;
+		tHeight *= 0.85;
+		var x = this.xBanner;
+		var tWidth;
+		var positionFont = (tHeight*.7) + "px Arial";
+		var numberFont = 'italic bold ' + tHeight + "px Arial";
+		var nameFont = 'bold ' + tHeight + "px Arial";
+		while( x < width )
+		{
+			for( var i = 0; i < bannerItems.length && x < width; ++i )
+			{
+				var position = bannerItems[i][1];
+				var num = bannerItems[i][0];
+				var name = getShortName( num );
+				
+				if( position == 1 )
+				{
+					x += tHeight / 2;
+					tWidth = checkeredFlag.width;
+					if( x + tWidth > 0 && x < width )
+						dc.drawImage( checkeredFlag, x, y );
+					x += tWidth + tHeight / 2;
+				}
+				
+				dc.font = positionFont;
+				tWidth = dc.measureText(position).width;
+				if( x + tWidth > 0 && x < width )
+				{
+					dc.fillStyle = '#FFFFFF';
+					dc.fillText(position, x, y );
+				}
+				x += tWidth + tHeight / 4;
 
+				dc.font = numberFont;
+				tWidth = dc.measureText(num).width;
+				if( x + tWidth > 0 && x < width)
+				{
+					dc.fillStyle = '#FFFF00';
+					dc.fillText(num, x, y );
+				}
+				x += tWidth + tHeight / 3;
+				
+				dc.font = nameFont;
+				tWidth = dc.measureText(name).width;
+				if( x + tWidth > 0 && x < width )
+				{
+					dc.fillStyle = '#FFFFFF';
+					dc.fillText(name, x, y );
+				}
+				x += tWidth + tHeight;
+			}
+			if( x < 0 )
+				this.xBanner = x;
+		}
+		
+		var tBanner = (new Date().getTime()) / 1000.0;
+		if( this.tBannerLast < 0 )
+			this.tBannerLast = tBanner;
+		this.xBanner -= 64.0 * (tBanner - this.tBannerLast);
+		this.tBannerLast = tBanner;
+	}
+	
 	this.getRiderXYPT = function( num )
 	{
 		// Get the rider x, y, position (distance) and time.
@@ -1039,17 +1110,14 @@ function GeoAnimation()
 		// Draw the race time
 		tStr += FormatTime( t );
 		var tWidth = dc.measureText(tStr).width;
-		dc.fillText( tStr, width - tWidth, tHeight+textVSpace*1.5 );
+		dc.fillText( tStr, width - tWidth, tHeight+textVSpace*1.6 );
 
 		// Draw the leader board.
 		var bannerItems = [];
 		if( leaders && isEmptyObject(numsToWatch) )
 		{
 			for( var i = 0; i < leaders.length; ++i )
-			{
-				var num = leaders[i];
-				bannerItems.push( '[' + (i+1) + '] ' + num + ' ' + getShortName(num) );
-			}
+				bannerItems.push( [leaders[i], i+1] );
 		}
 		if( !isEmptyObject(numsToWatch) )
 		{
@@ -1062,30 +1130,10 @@ function GeoAnimation()
 			}
 			rp.sort(function(x, y) { return x[0] - y[0]; });
 			
-			dc.fillStyle = 'black';
 			for( var i = 0; i < rp.length; ++i )
-			{
-				var num = rp[i][1];
-				bannerItems.push( '[' + rp[i][0] + '] ' + num + ' ' + getShortName(num) );
-			}
+				bannerItems.push( [rp[i][1], rp[i][0]] );
 		}
-		var bannerStr = bannerItems.join( '   ' );
-		
-		drawSegment( dc, 0, 0, width, tHeight*1.2, '#0000CC', '#0000EE' );
-		
-		dc.fillStyle = '#EEE';
-		dc.font = 'Bold ' + fontStr;
-		if( bannerStr )
-		{
-			var bannerWidth = dc.measureText(bannerStr).width;
-			var bannerDrawStr = bannerStr;
-			while( dc.measureText(bannerDrawStr).width < width * 2 )
-				bannerDrawStr += '   ' + bannerStr;
-			bannerDrawStr += '   ' + bannerStr;
-			if( (this.xBanner += (36.0 / framesPerSecond)) > bannerWidth )
-				this.xBanner = 0;
-			dc.fillText( bannerDrawStr, -this.xBanner, textVSpace / 2 );
-		}
+		this.drawBanner( dc, width, height, tHeight, bannerItems );
 	}
 }
 
@@ -1099,7 +1147,7 @@ function _initAnimation()
 
 function NextFrame()
 {
-	var tDelta = ((new Date).getTime() - tLast);
+	tDelta = ((new Date).getTime() - tLast);
 	SetTime( t + (tDelta/1000.0) * speedup );
 	tLast += tDelta;
 	if( !suspendAnimation )

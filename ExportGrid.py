@@ -8,6 +8,7 @@ import math
 from GetResults import GetResults, GetCategoryDetails
 from ReadSignOnSheet import Fields, IgnoreFields
 from FitSheetWrapper import FitSheetWrapper
+import qrcode
 
 #---------------------------------------------------------------------------
 
@@ -113,8 +114,38 @@ class ExportGrid( object ):
 		dc.DrawBitmap( bitmap, xPix, yPix )
 		image, bitmap = None, None
 		
+		# Get the race URL (if defined).
+		with Model.LockRace() as race:
+			url = getattr( race, 'urlFull', None )
+			
+		qrWidth = 0
+		if url:
+			qrWidth = graphicHeight
+			qr = qrcode.QRCode()
+			qr.add_data( url )
+			qr.make()
+			border = 0
+			img = wx.EmptyImage( qr.modules_count + border * 2, qr.modules_count + border * 2 )
+			bm = img.ConvertToMonoBitmap( 0, 0, 0 )
+			dcQR = wx.MemoryDC()
+			dcQR.SelectObject( bm )
+			dcQR.SetBrush( wx.WHITE_BRUSH )
+			dcQR.Clear()
+			dcQR.SetPen( wx.BLACK_PEN )
+			for row in xrange(qr.modules_count):
+				for col, v in enumerate(qr.modules[row]):
+					if v:
+						dcQR.DrawPoint( border + col, border + row )
+			img = bm.ConvertToImage()
+			img.Rescale( qrWidth, qrWidth, wx.IMAGE_QUALITY_NORMAL )
+			if dc.GetDepth() == 8:
+				img = img.ConvertToGreyscale()
+			bm = img.ConvertToBitmap( dc.GetDepth() )
+			dc.DrawBitmap( bm, widthPix - borderPix - qrWidth, borderPix )
+			qrWidth += graphicBorder
+		
 		# Draw the title.
-		font = self._getFontToFit( widthFieldPix - graphicWidth - graphicBorder, graphicHeight,
+		font = self._getFontToFit( widthFieldPix - graphicWidth - graphicBorder - qrWidth, graphicHeight,
 									lambda font: dc.GetMultiLineTextExtent(self.title, font)[:-1], True )
 		dc.SetFont( font )
 		self._drawMultiLineText( dc, self.title, xPix + graphicWidth + graphicBorder, yPix )
