@@ -1213,7 +1213,8 @@ class MainWin( wx.Frame ):
 		# Save the categories to use them in the next race.
 		categoriesSave = race.categories
 		race = None
-
+		
+		# Configure the next race.
 		dlg = PropertiesDialog(self, -1, 'Configure Race', style=wx.DEFAULT_DIALOG_STYLE )
 		dlg.properties.refresh()
 		dlg.properties.incNext()
@@ -1245,8 +1246,15 @@ class MainWin( wx.Frame ):
 		# Create a new race and initialize it with the properties.
 		self.fileName = fileName
 		ResetExcelLinkCache()
+		
+		# Save the current Ftp settings.
+		ftpPublish = FtpWriteFile.FtpPublishDialog( self )
+
 		Model.newRace()
-		properties.update()
+		properties.update()			# Apply the new properties
+		ftpPublish.setRaceAttr()	# Apply the ftp properties
+		ftpPublish.Destroy()
+		
 		self.updateRecentFiles()
 
 		# Restore the previous categories.

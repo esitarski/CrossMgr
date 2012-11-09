@@ -207,13 +207,17 @@ class FtpPublishDialog( wx.Dialog ):
 				for f, v in zip(FtpPublishDialog.fields, FtpPublishDialog.defaults):
 					getattr(self, f).SetValue( getattr(race, f, v) )
 		self.urlPathChanged()
-		
-	def onOK( self, event ):
+	
+	def setRaceAttr( self ):
+		self.urlPathChanged()
 		with Model.LockRace() as race:
 			if race:
 				for f in FtpPublishDialog.fields:
 					setattr( race, f, getattr(self, f).GetValue() )
 				race.urlFull = self.urlFull.GetLabel()
+	
+	def onOK( self, event ):
+		self.setRaceAttr()
 		self.EndModal( wx.ID_OK )
 		
 	def onCancel( self, event ):
