@@ -1114,11 +1114,8 @@ function GeoAnimation()
 
 		// Draw the leader board.
 		var bannerItems = [];
-		if( leaders && isEmptyObject(numsToWatch) )
-		{
-			for( var i = 0; i < leaders.length; ++i )
-				bannerItems.push( [leaders[i], i+1] );
-		}
+		for( var i = 0; i < leaders.length; ++i )
+			bannerItems.push( [leaders[i], i+1] );
 		if( !isEmptyObject(numsToWatch) )
 		{
 			var rp = [];

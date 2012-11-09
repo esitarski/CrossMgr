@@ -9,6 +9,7 @@ from GetResults import GetResults, GetCategoryDetails
 from ReadSignOnSheet import Fields, IgnoreFields
 from FitSheetWrapper import FitSheetWrapper
 import qrcode
+import urllib
 
 #---------------------------------------------------------------------------
 
@@ -117,12 +118,14 @@ class ExportGrid( object ):
 		# Get the race URL (if defined).
 		with Model.LockRace() as race:
 			url = getattr( race, 'urlFull', None )
+		if url and url.startswith( 'http://' ):
+			url = urllib.quote( url[7:] )
 			
 		qrWidth = 0
 		if url:
 			qrWidth = graphicHeight
 			qr = qrcode.QRCode()
-			qr.add_data( url )
+			qr.add_data( 'http://' + url )
 			qr.make()
 			border = 0
 			img = wx.EmptyImage( qr.modules_count + border * 2, qr.modules_count + border * 2 )
@@ -161,6 +164,7 @@ class ExportGrid( object ):
 		wSpace, hSpace, textHeight = dc.GetMultiLineTextExtent( '    ', font )
 		
 		yPixTop = yPix
+		yPixMax = yPix
 		for col, c in enumerate(self.colnames):
 			isSpeed = (c == 'Speed')
 			if isSpeed and self.data[col]:
@@ -190,10 +194,16 @@ class ExportGrid( object ):
 					else:
 						self._drawMultiLineText( dc, vStr, xPix + colWidth - w, yPix )	# right justify
 				yPix += textHeight
+			yPixMax = max(yPixMax, yPix)
 			xPix += colWidth + wSpace
 			
 			if isSpeed:
 				self.colnames[col] = 'Speed'
+				
+		if url:
+			yPix = yPixMax + textHeight
+			w, h, lh = dc.GetMultiLineTextExtent( url, font )
+			self._drawMultiLineText( dc, url, widthPix - borderPix - w, yPix )
 		
 	def toExcelSheet( self, sheet ):
 		''' Write the contents of the grid to an xlwt excel sheet. '''
