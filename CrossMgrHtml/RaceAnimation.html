@@ -955,7 +955,7 @@ function GeoAnimation()
 		dc.font = fontStr;
 		
 		var trackWidth = width - border * 2 - laneWidth*2;
-		var topMargin = border + tHeight * infoLines + textVSpace + laneWidth;
+		var topMargin = 2*border + tHeight * infoLines + textVSpace;
 		var trackHeight = height - topMargin;
 		this.geoTrack.setDisplayRect( border, topMargin, trackWidth, trackHeight - laneWidth );
 		

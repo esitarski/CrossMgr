@@ -810,6 +810,7 @@ class Race(object):
 	def startRaceNow( self ):
 		race.startTime = datetime.datetime.now()
 		race.tagNums = None
+		race.missingTags = set()
 		self.setChanged()
 
 	def finishRaceNow( self ):

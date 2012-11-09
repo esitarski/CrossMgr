@@ -247,7 +247,7 @@ def DrawShape( dc, num, x, y, radius ):
 	
 class GeoAnimation(wx.PyControl):
 	topFewCount = 5
-	infoLines = topFewCount + 1
+	infoLines = 1
 
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
@@ -274,6 +274,9 @@ class GeoAnimation(wx.PyControl):
 		self.tDelta = 1
 		self.r = 100	# Radius of the turns of the fictional track.
 		self.laneMax = 8
+		
+		self.xBanner = 300
+		self.tBannerLast = None
 		
 		self.course = 'geo'
 		
@@ -365,14 +368,15 @@ class GeoAnimation(wx.PyControl):
 	
 	def StopAnimate( self ):
 		if self.timer.IsRunning():
-			self.timer.Stop();
+			self.timer.Stop()
+		self.tBannerLast = None
 	
 	def SetNumsToWatch( self, numsToWatch ):
 		self.numsToWatch = numsToWatch
 		self.Refresh()
 	
 	def SuspendAnimate( self ):
-		self.suspendGeoAnimation = True;
+		self.suspendGeoAnimation = True
 	
 	def IsAnimating( self ):
 		return not self.suspendGeoAnimation and self.timer.IsRunning()
@@ -425,6 +429,7 @@ class GeoAnimation(wx.PyControl):
 			info['iLast'] = 1
 		if tCur is not None:
 			self.t = tCur;
+		self.tBannerLast = None
 		self.Refresh()
 	
 	def getShortName( self, num ):
@@ -496,6 +501,60 @@ class GeoAnimation(wx.PyControl):
 		xy = self.geoTrack.getXY( positionTime[0], num )
 		return xy[0], xy[1], positionTime[0], positionTime[1]
 	
+	def drawBanner( self, dc, width, height, tHeight, bannerItems ):
+		blue = wx.Colour(0, 0, 200)
+		dc.SetPen( wx.Pen(blue) )
+		dc.SetBrush( wx.Brush(blue, wx.SOLID) )
+		dc.DrawRectangle( 0, 0, width, tHeight*1.1 )
+		if not bannerItems:
+			return
+		
+		y = tHeight * 0.1
+		tHeight *= 0.85
+		x = self.xBanner
+		while x < width:
+			for bi in bannerItems:
+				if x >= width:
+					break
+					
+				position, num, name = str(bi[1]), str(bi[0]), self.getShortName(bi[0])
+				
+				if position == '1':
+					x += tHeight / 2
+					tWidth = self.checkeredFlag.Width
+					if x + tWidth > 0 and x < width:
+						dc.DrawBitmap( self.checkeredFlag, x, y, False )
+					x += tWidth + tHeight / 2
+				
+				dc.SetFont( self.positionFont )
+				tWidth = dc.GetTextExtent( position )[0]
+				if x + tWidth > 0 and x < width:
+					dc.SetTextForeground( wx.WHITE )
+					dc.DrawText( position, x, y )
+				x += tWidth + tHeight / 4
+
+				dc.SetFont( self.bibFont )
+				tWidth = dc.GetTextExtent(num)[0]
+				if x + tWidth > 0 and x < width:
+					dc.SetTextForeground( 'YELLOW' )
+					dc.DrawText(num, x, y )
+				x += tWidth + tHeight / 3
+				
+				dc.SetFont( self.nameFont )
+				tWidth = dc.GetTextExtent(name)[0]
+				if x + tWidth > 0 and x < width:
+					dc.SetTextForeground( wx.WHITE )
+					dc.DrawText(name, x, y )
+				x += tWidth + tHeight
+			if x < 0:
+				self.xBanner = x
+		
+		tBanner = datetime.datetime.now()
+		if self.tBannerLast is None:
+			self.tBannerLast = tBanner
+		self.xBanner -= 64.0 * (tBanner - self.tBannerLast).total_seconds()
+		self.tBannerLast = tBanner
+	
 	def Draw(self, dc):
 		size = self.GetClientSize()
 		width = size.width
@@ -521,15 +580,22 @@ class GeoAnimation(wx.PyControl):
 			self.numberFont	= wx.FontFromPixelSize( wx.Size(0,tHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
 			self.timeFont = self.numberFont
 			self.highlightFont = wx.FontFromPixelSize( wx.Size(0,tHeight * 1.6), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
+			
+			self.positionFont = wx.FontFromPixelSize( wx.Size(0,tHeight*0.85*0.7), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
+			self.bibFont = wx.FontFromPixelSize( wx.Size(0,tHeight*0.85), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_ITALIC, wx.FONTWEIGHT_BOLD )
+			self.nameFont = wx.FontFromPixelSize( wx.Size(0,tHeight*0.85), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD )
+			
 			self.rLast = r
 			
 		tHeight = int(r / 8.0)
+		textVSpace = tHeight*0.2
 		laneWidth = (r/2) / self.laneMax
 		
 		border = laneWidth * 1.5 / 2
 		trackWidth = width - border * 2
-		trackHeight = height - tHeight * self.infoLines - border * 2
-		self.geoTrack.setDisplayRect( border, border, trackWidth, trackHeight )
+		topMargin = border + tHeight + textVSpace
+		trackHeight = height - topMargin - border
+		self.geoTrack.setDisplayRect( border, topMargin, trackWidth, trackHeight )
 		
 		# Draw the course.
 		dc.SetBrush( wx.TRANSPARENT_BRUSH )
@@ -562,9 +628,9 @@ class GeoAnimation(wx.PyControl):
 		numSize = (r/2)/self.laneMax
 		self.lapCur = 0
 		topFew = {}
-		riderRadius = laneWidth * 0.75
+		riderRadius = laneWidth * 0.5
 		thickLine = r / 32
-		highlightPen = wx.Pen( wx.Colour(255,255,255), thickLine * 1.0 )
+		highlightPen = wx.Pen( wx.WHITE, thickLine * 1.0 )
 		riderPosition = {}
 		if self.data:
 			riderXYPT = []
@@ -616,6 +682,7 @@ class GeoAnimation(wx.PyControl):
 		
 		yTop = height - self.infoLines * tHeight
 		# Draw the current lap
+		tStr = ''
 		dc.SetFont( self.timeFont )
 		if self.lapCur:
 			if leaders:
@@ -624,69 +691,33 @@ class GeoAnimation(wx.PyControl):
 				maxLaps = 9999
 			if self.lapCur > maxLaps:
 				self.lapCur = maxLaps
-			tStr = 'Laps Completed %d' % max(0, self.lapCur-1)
-			tWidth, tHeight = dc.GetTextExtent( tStr )
-			dc.DrawText( tStr, 4*r - tWidth - 8, height - tHeight*2 )
+			tStr = 'Laps Completed %d   ' % max(0, self.lapCur-1)
 
+		# Draw the race time
+		secs = int( self.t )
+		if secs < 60*60:
+			tStr += '%d:%02d ' % ((secs / 60)%60, secs % 60 )
+		else:
+			tStr += '%d:%02d:%02d ' % (secs / (60*60), (secs / 60)%60, secs % 60 )
+		tWidth = dc.GetTextExtent( tStr )[0]
+		dc.DrawText( tStr, width - tWidth, tHeight+textVSpace*1.6 )
+			
 		# Draw the leader board.
-		xLeft = 8
-		leaderWidth = 0
-		if leaders:
-			x = xLeft
-			y = yTop
-			thickLine = tHeight / 5
-			riderRadius = tHeight / 3.5
-			for i, num in enumerate(leaders):
-				dc.SetPen( wx.Pen(backColour, 0) )
-				dc.SetBrush( wx.Brush(self.trackColour, wx.SOLID) )
-				dc.DrawRectangle( x - thickLine/4, y - thickLine/4, tHeight + thickLine/2, tHeight  + thickLine/2)
-				
-				dc.SetPen( wx.Pen(self.topFewColours[i], thickLine) )
-				dc.SetBrush( wx.Brush(self.colours[num % len(self.colours)], wx.SOLID) )
-				DrawShape( dc, num, x + tHeight / 2, y + tHeight / 2, riderRadius )
-				
-				s = '%d %s' % (num, self.getShortName(num))
-				tWidth, tHeight = dc.GetTextExtent( s )
-				leaderWidth = max(tWidth, leaderWidth)
-				dc.DrawText( s, x + tHeight * 1.2, y)
-				y += tHeight
-
-		# Draw the positions of the highlighted riders
+		bannerItems = []
+		for i, leader in enumerate(leaders):
+			bannerItems.append( (leaders[i], i+1) )
 		if self.numsToWatch:
 			rp = []
 			for n in self.numsToWatch:
 				try:
-					rp.append( (riderPosition[n], n) )
+					p = riderPosition[n]
+					rp.append( (p, n) )
 				except KeyError:
 					pass
 			rp.sort()
-			
-			colCount = 0
-			tWidth, tHeight = dc.GetTextExtent( 'Leaders:' )
-			spaceWidth, spaceHeight = dc.GetTextExtent(' ')
-			x = xLeft + leaderWidth + spaceWidth
-			y = yTop
-			for i, (pos, num) in enumerate(rp):
-				if i >= self.infoLines * 2:
-					break
-				s = '(%s) %d %s' % (Utils.ordinal(pos), num, self.getShortName(num) )
-				dc.DrawText( s, x + tHeight * 1.2, y)
-				y += tHeight
-				if y > r * 1.5 - tHeight * 1.5:
-					colCount += 1
-					if colCount == 2:
-						break
-					y = yTop
-					x += tWidth * 1.2
-				
-		# Draw the race time
-		secs = int( self.t )
-		if secs < 60*60:
-			tStr = '%d:%02d' % ((secs / 60)%60, secs % 60 )
-		else:
-			tStr = '%d:%02d:%02d' % (secs / (60*60), (secs / 60)%60, secs % 60 )
-		tWidth, tHeight = dc.GetTextExtent( tStr )
-		dc.DrawText( tStr, 4*r - tWidth - 8, height - tHeight )
+			for w in rp:
+				bannerItems.append( (w[1], w[0]) )
+		self.drawBanner( dc, width, height, tHeight, bannerItems )
 		
 	def OnEraseBackground(self, event):
 		# This is intentionally empty, because we are using the combination

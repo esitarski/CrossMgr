@@ -171,7 +171,7 @@ class Recommendations( wx.Panel ):
 			entries = [e for e in entries if match(e.num) ]
 			
 			data = [[],[]]
-
+			
 			# Find the maximum recorded lap for each rider.
 			riderMaxLapNonInterp, riderMaxLapInterp = {}, {}
 			for e in entries:
@@ -272,6 +272,13 @@ class Recommendations( wx.Panel ):
 					data[0].append( str(num) )
 					data[1].append( 'Rider does not match any active category.  Check if rider is in right race or data entry error.' )
 						
+			# Show missing tag reads.
+			missingTags = [str(m) for m in getattr(race, 'missingTags', set())]
+			missingTags.sort()
+			for m in missingTags:
+				data[0].append( m )
+				data[1].append( 'Chip tag missing from Excel sheet' )
+
 			self.grid.Set( data = data, colnames = colnames )
 			self.grid.AutoSizeColumns( True )
 			self.grid.Reset()

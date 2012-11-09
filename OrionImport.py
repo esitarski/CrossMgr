@@ -19,7 +19,6 @@ def DoOrionImport( fname, startTime = None ):
 	# All first time's for each rider will then be ignored.
 	
 	errors = []
-	missingTagSet = set()
 	raceStart = None
 	
 	with open(fname) as f, Model.LockRace() as race:
@@ -33,6 +32,7 @@ def DoOrionImport( fname, startTime = None ):
 			race.resetStartClockOnFirstTag = True
 		
 		tagNums = GetTagNums( True )
+		race.missingTags = set()
 		
 		tFirst, tLast = None, None
 		lineNo = 0
@@ -73,9 +73,9 @@ def DoOrionImport( fname, startTime = None ):
 				num = tagNums[tag]
 				riderRaceTimes.setdefault( num, [] ).append( t )
 			except KeyError:
-				if tag not in missingTagSet:
+				if tag not in race.missingTags:
 					errors.append( 'line %d: tag %s missing from Excel sheet' % (lineNo, tag) )
-					missingTagSet.add( tag )
+					race.missingTags.add( tag )
 				continue
 
 		#------------------------------------------------------------------------------

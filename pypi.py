@@ -169,7 +169,6 @@ setup = {
 	'install_requires':	[
 		'xlrd >= 0.8.0',
 		'xlwt >= 0.7.4',
-		'qrcode >= 2.4.0',
 		'openpyxl >= 1.5.8',
 		#'wxPython >= 2.8.0',
 	],

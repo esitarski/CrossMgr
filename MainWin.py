@@ -1811,6 +1811,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			try:
 				num, dt = race.tagNums[d[1]], d[2]
 			except (TypeError, ValueError, KeyError):
+				race.missingTags.add( d[1] )
 				continue
 				
 			# Ignore times before the start of the race.
