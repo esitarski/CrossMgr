@@ -756,6 +756,7 @@ class Race(object):
 		self.syncCategories = True
 		self.modelCategory = 0
 		self.distanceUnit = Race.UnitKm
+		self.missingTags = set()
 		
 		# Animation options.
 		self.finishTop = False
@@ -808,14 +809,14 @@ class Race(object):
 		return self.startTime is not None and self.finishTime is not None
 
 	def startRaceNow( self ):
-		race.startTime = datetime.datetime.now()
-		race.tagNums = None
-		race.missingTags = set()
+		self.startTime = datetime.datetime.now()
+		self.tagNums = None
+		self.missingTags = set()
 		self.setChanged()
 
 	def finishRaceNow( self ):
-		race.finishTime = datetime.datetime.now()
-		race.tagNums = None
+		self.finishTime = datetime.datetime.now()
+		self.tagNums = None
 		self.setChanged()
 
 	def set( self, values = None ):

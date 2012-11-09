@@ -277,7 +277,7 @@ class Recommendations( wx.Panel ):
 			missingTags.sort()
 			for m in missingTags:
 				data[0].append( m )
-				data[1].append( 'Chip tag missing from Excel sheet' )
+				data[1].append( 'Check chip tag missing from Excel sheet' )
 
 			self.grid.Set( data = data, colnames = colnames )
 			self.grid.AutoSizeColumns( True )
