@@ -311,21 +311,19 @@ class Gantt( wx.Panel ):
 	def updateStats( self, results ):
 		s = ''
 		if results:
-			total = 0
-			projected = 0
-			edited = 0
-			numTimeInfo = Model.race.numTimeInfo
+			total, projected, edited = 0, 0, 0
+			getInfo = Model.race.numTimeInfo.getInfo if getattr(Model.race, 'numTimeInfo', None) else lambda num, t: False
 			for r in results:
-				total += r.laps
-				projected += sum( 1 for i in r.interp if i )
-				edited += sum( 1 for t in r.lapTimes if numTimeInfo.getInfo(r.num, t) is not None )
+				total		+= r.laps
+				projected	+= sum( 1 for i in r.interp if i )
+				edited		+= sum( 1 for t in r.lapTimes if getInfo(r.num, t) is not None )
 			if total:
 				toPercent = 100.0 / float(total)
 				s = '  Total Entries: %d    Projected: %d (%.2f%%)    Edited: %d (%.2f%%)    Projected or Edited: %d (%.2f%%)' % (
 						total,
-						projected,			projected * toPercent,
-						edited,				edited * toPercent,
-						edited+projected,	(edited+projected) * toPercent )
+						projected,			projected			* toPercent,
+						edited,				edited				* toPercent,
+						edited+projected,	(edited+projected)	* toPercent )
 			
 		self.statsLabel.SetLabel( s )
 		self.hbs.Layout()
