@@ -4,8 +4,9 @@ import bisect
 import Model
 import Utils
 import ColGrid
-from RiderDetail import ShowRiderDetailDialog
+from GetResults import GetResultsCore
 from FixCategories import FixCategories
+from RiderDetail import ShowRiderDetailDialog
 
 class Recommendations( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
@@ -110,12 +111,15 @@ class Recommendations( wx.Panel ):
 		ShowRiderDetailDialog( self, self.numSelect )
 	
 	def getCellNum( self, row, col ):
-		numSelect = None
-		if row < self.grid.GetNumberRows() and col < self.grid.GetNumberCols():
-			value = self.grid.GetCellValue( row, 0 )
-			if value is not None and value != '':
-				numSelect = value.split('=')[0]
-		return numSelect
+		if row >= self.grid.GetNumberRows():
+			return None
+		value = self.grid.GetCellValue( row, 0 )
+		try:
+			numSelect = value.split('=')[0]
+			if 0 <= int(numSelect) <= 50000:
+				return numSelect
+		except (AttributeError, ValueError):
+			return None
 	
 	def doNumSelect( self, event ):
 		if self.isEmpty:
@@ -272,6 +276,18 @@ class Recommendations( wx.Panel ):
 					data[0].append( str(num) )
 					data[1].append( 'Rider does not match any active category.  Check if rider is in right race or data entry error.' )
 						
+			# Show numbers with projected time.
+			if race.isFinished():
+				projectedNums = []
+				for r in GetResultsCore( catName if catName else 'All' ):
+					pSum = sum( 1 for i in r.interp if i )
+					if pSum > 0:
+						projectedNums.append( (r.num, pSum) )
+				projectedNums.sort()
+				for m in projectedNums:
+					data[0].append( m[0] )
+					data[1].append( 'Check rider has projected times (%d).' % m[1] )
+				
 			# Show missing tag reads.
 			missingTags = [str(m) for m in getattr(race, 'missingTags', set())]
 			missingTags.sort()
@@ -297,11 +313,11 @@ if __name__ == '__main__':
 	race = Model.getRace()
 	race._populate()
 	race.numLaps = 10
-	race[1001].status = Model.Rider.DNS
-	race[1002].status = Model.Rider.DNF
-	race[1002].tStatus = race[1002].interpolate()[2].t
-	race[1003].status = Model.Rider.DNF
-	race[1004].status = Model.Rider.Pulled
+	race[101].status = Model.Rider.DNS
+	race[102].status = Model.Rider.DNF
+	race[102].tStatus = race[102].interpolate()[2].t
+	race[103].status = Model.Rider.DNF
+	race[104].status = Model.Rider.Pulled
 	recommendations = Recommendations(mainWin)
 	recommendations.refresh()
 	mainWin.Show()

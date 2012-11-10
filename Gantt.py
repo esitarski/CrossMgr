@@ -4,13 +4,13 @@ import wx
 from FixCategories import FixCategories
 import GanttChartPanel
 from GetResults import GetResults, RidersCanSwap
-from RiderDetail import ShowRiderDetailDialog
 from Undo import undo
 import EditEntry
 
 def UpdateSetNum( num ):
 	if num is None:
 		return
+	from RiderDetail import ShowRiderDetailDialog
 	mainWin = Utils.getMainWin()
 	mainWin.setNumSelect( num )
 	ShowRiderDetailDialog( mainWin, num )
