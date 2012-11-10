@@ -32,9 +32,11 @@ class Gantt( wx.Panel ):
 		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, 'Category:' )
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
+		self.statsLabel = wx.StaticText( self, wx.ID_ANY, '' )
 		
 		self.hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.categoryChoice, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.statsLabel, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL | wx.GROW, border=4 )
 		
 		self.ganttChart = GanttChartPanel.GanttChartPanel( self )
 		self.ganttChart.dClickCallback = UpdateSetNum
@@ -306,9 +308,32 @@ class Gantt( wx.Panel ):
 	def OnPopupRiderDetail( self, event ):
 		ShowRiderDetailDialog( self, self.numSelect )
 		
+	def updateStats( self, results ):
+		s = ''
+		if results:
+			total = 0
+			projected = 0
+			edited = 0
+			numTimeInfo = Model.race.numTimeInfo
+			for r in results:
+				total += r.laps
+				projected += sum( 1 for i in r.interp if i )
+				edited += sum( 1 for t in r.lapTimes if numTimeInfo.getInfo(r.num, t) is not None )
+			if total:
+				toPercent = 100.0 / float(total)
+				s = '  Total Entries: %d    Projected: %d (%.2f%%)    Edited: %d (%.2f%%)    Projected or Edited: %d (%.2f%%)' % (
+						total,
+						projected,			projected * toPercent,
+						edited,				edited * toPercent,
+						edited+projected,	(edited+projected) * toPercent )
+			
+		self.statsLabel.SetLabel( s )
+		self.hbs.Layout()
+		
 	def refresh( self ):
 		if not Model.race:
 			self.ganttChart.SetData( None )
+			self.updateStatus( None )
 			return
 		
 		catName = FixCategories( self.categoryChoice, getattr(Model.race, 'ganttCategory', 0) )
@@ -333,6 +358,7 @@ class Gantt( wx.Panel ):
 		self.ganttChart.SetData(data, labels, GetNowTime(), interp,
 								set(i for i, r in enumerate(results) if r.status != Model.Rider.Finisher),
 								Model.race.numTimeInfo )
+		self.updateStats( results )
 		wx.CallAfter( self.ganttChart.SetFocus )
 	
 	def commit( self ):
