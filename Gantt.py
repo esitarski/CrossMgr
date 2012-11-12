@@ -313,10 +313,16 @@ class Gantt( wx.Panel ):
 		if results:
 			total, projected, edited = 0, 0, 0
 			getInfo = Model.race.numTimeInfo.getInfo if getattr(Model.race, 'numTimeInfo', None) else lambda num, t: False
+			if Model.race.isRunning():
+				tCur = Model.race.curRaceTime()
+			else:
+				tCur = 10.0*24.0*60.0*60.0
 			for r in results:
-				total		+= r.laps
-				projected	+= sum( 1 for i in r.interp if i )
-				edited		+= sum( 1 for t in r.lapTimes if getInfo(r.num, t) is not None )
+				if not r.raceTimes:
+					continue
+				total		+= sum( 1 for t in r.raceTimes				if t < tCur ) - 1
+				edited		+= sum( 1 for t in r.raceTimes				if t < tCur and getInfo(r.num, t) is not None )
+				projected	+= sum( 1 for i, n in enumerate(r.interp)	if n and r.raceTimes[i] < tCur )
 			if total:
 				toPercent = 100.0 / float(total)
 				s = '  Total Entries: %d    Projected: %d (%.2f%%)    Edited: %d (%.2f%%)    Projected or Edited: %d (%.2f%%)' % (
