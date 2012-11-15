@@ -833,6 +833,7 @@ class MainWin( wx.Frame ):
 			html = replaceJsonVar( html, 'reverseDirection',	getattr(race, 'reverseDirection', False) )
 			html = replaceJsonVar( html, 'finishTop',			getattr(race, 'finishTop', False) )
 			html = replaceJsonVar( html, 'isTimeTrial',			getattr(race, 'isTimeTrial', False) )
+			html = replaceJsonVar( html, 'rfid',				getattr(race, 'enableJChipIntegration', False))
 			html = replaceJsonVar( html, 'raceIsRunning',		race.isRunning() )
 			tLastRaceTime = race.lastRaceTime()
 			gpsPoints = getattr(race, 'geoTrack', None)

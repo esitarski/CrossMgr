@@ -109,7 +109,14 @@ def Server( q, HOST, PORT, startTime ):
 				continue
 			try:
 				if line.startswith( 'D' ):
-					tag = line[2:2+6]	# Skip the initial letter (always the same).
+					# The tag and time are always separated by at least one space.
+					iSpace = line.find( ' ' )
+					if iSpace < 0:
+						q.put( ('error', line.strip() ) )
+						continue
+					tag = line[2:iSpace]	# Skip the D and first initial letter (always the same).
+					
+					# Find the first colon of the time and parse the time working backwards.
 					iColon = line.find( ':' )
 					if iColon < 0:
 						q.put( ('error', line.strip() ) )
