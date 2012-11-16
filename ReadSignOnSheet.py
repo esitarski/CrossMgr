@@ -333,7 +333,7 @@ class GetExcelLink( object ):
 #----------------------------------------------------------------------------------
 
 JChipTagLength = 6
-OrionTagLength = 8
+OrionTagLength = 16
 
 trantab = string.maketrans( 'lOo', '100' )	# Translate lower-case l's to ones and Os to zeros. 
 def GetCleanTag( tag ):
