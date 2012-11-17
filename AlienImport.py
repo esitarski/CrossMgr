@@ -1,34 +1,37 @@
 import wx
 import Model
-import JChip
 from ChipImport import ChipImportDialog
+import string
 
+sepTrans = string.maketrans( '/-:', '   ' )
 def parseTagTime( line, lineNo, errors ):
 	try:
 		fields = line.split()
-		tag = fields[0][1:]
-		tStr = fields[1]
+		tag = fields[1]
+		tStr = fields[2]
 	except IndexError:
 		errors.append( 'line %d: unrecognized input' % lineNo )
 		return None, None
 	
 	try:
-		t = JChip.parseTime(tStr) + timeAdjustment
+		tStr = tStr.translate( sepTrans )
+		year, month, day, hour, minute, second = [float(f) for f in tStr.split()]
+		t = hour*60.0*60.0 + minute*60.0 + second + timeAdjustment
 	except (IndexError, ValueError):
 		errors.append( 'line %d: invalid time' % lineNo )
 		return None, None
 		
 	return tag, t
-	
-def JChipImportDialog( parent, id = wx.ID_ANY ):
-	return ChipImportDialog( 'JChip', parseTagTime, parent, id )
 
+def AlienImportDialog( parent, id = wx.ID_ANY ):
+	return ChipImportDialog( 'Alien', parseTagTime, parent, id )
+		
 if __name__ == '__main__':
 	app = wx.PySimpleApp()
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	Model.setRace( Model.Race() )
 	mainWin.Show()
-	dlg = JChipImportDialog( mainWin )
+	dlg = AlienImportDialog( mainWin )
 	dlg.ShowModal()
 	dlg.Destroy()
 

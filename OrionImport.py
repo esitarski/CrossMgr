@@ -14,6 +14,32 @@ import sys
 import os
 import datetime
 
+class parseTagTime( object ):
+	def __init__( self, raceDate ):
+		self.raceDate = raceDate
+
+	def __call__( self, line, lineNo, errors ):
+		try:
+			fields = line.split(';' if ';' in line else ',')
+			msg = fields[0]
+			if msg != '$P':
+				None, None
+			tag = fields[2]
+			tStr = fields[5]
+		except IndexError:
+			errors.append( 'line %d: unrecognized input' % lineNo )
+			return None, None
+		
+		try:
+			secs = int(tStr) / 1000.0	# Convert from 1000's of a second.
+		except ValueError:
+			errors.append( 'line %d: invalid time' % lineNo )
+			return None, None
+		else:
+			t = datetime.datetime.combine( self.raceDate, datetime.time() ) + datetime.timedelta( seconds = secs )
+			
+		return tag, t
+
 def DoOrionImport( fname, startTime = None ):
 	# If startTime is None, the first time will be taken as the start time.
 	# All first time's for each rider will then be ignored.
