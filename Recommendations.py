@@ -150,18 +150,18 @@ class Recommendations( wx.Panel ):
 		with Model.LockRace() as race:
 			self.isEmpty = True
 			
-			if race is None or race.numLaps is None:
+			if race is None:
 				self.clearGrid()
 				return
 
 			catName = FixCategories( self.categoryChoice, getattr(race, 'recommendationsCategory', 0) )
 					
-			entries = race.interpolateLap( race.numLaps, True)
+			entries = race.interpolate()
 			if not entries:
 				self.clearGrid()
 				return
 
-			# Check for missed entries to the end of the 
+			# Check for missed entries to the end of the race.
 			colnames = [ 'Num', 'Recommendation' ]
 				
 			self.isEmpty = False

@@ -429,23 +429,23 @@ class MainWin( wx.Frame ):
 		self.chipMenu = wx.Menu()
 
 		idCur = wx.NewId()
-		self.chipMenu.Append( idCur , "JChip &Setup...", "Configure and Test JChip Reader" )
+		self.chipMenu.Append( idCur, "JChip &Setup...", "Configure and Test JChip Reader" )
 		self.Bind(wx.EVT_MENU, self.menuJChip, id=idCur )
+		
+		chipImportMenu = wx.Menu()
+		self.chipMenu.AppendMenu(wx.ID_ANY, "&Import", chipImportMenu)
+		
 		idCur = wx.NewId()
-		self.chipMenu.Append( idCur , "Import JChip Formatted File...", "Import a JChip Formatted File" )
+		chipImportMenu.Append( idCur , "JChip File...", "JChip Formatted File" )
 		self.Bind(wx.EVT_MENU, self.menuJChipImport, id=idCur )
 		
-		self.chipMenu.AppendSeparator()
-
 		idCur = wx.NewId()
-		self.chipMenu.Append( idCur , "Import Orion Formatted File...", "Import an Orion Formatted File" )
-		self.Bind(wx.EVT_MENU, self.menuOrionImport, id=idCur )
-		
-		self.chipMenu.AppendSeparator()
-
-		idCur = wx.NewId()
-		self.chipMenu.Append( idCur , "Import Alien Formatted File...", "Import an Alien Formatted File" )
+		chipImportMenu.Append( idCur , "Alien File...", "Alien Formatted File" )
 		self.Bind(wx.EVT_MENU, self.menuAlienImport, id=idCur )
+		
+		idCur = wx.NewId()
+		chipImportMenu.Append( idCur , "Orion File...", "Orion Formatted File" )
+		self.Bind(wx.EVT_MENU, self.menuOrionImport, id=idCur )
 		
 		self.menuBar.Append( self.chipMenu, "Chip&Reader" )
 
@@ -1152,6 +1152,7 @@ class MainWin( wx.Frame ):
 		wx.Exit()
 
 	def writeRace( self ):
+		self.commit()
 		with Model.LockRace() as race:
 			if race is not None:
 				with open(self.fileName, 'wb') as fp:
@@ -1191,8 +1192,13 @@ class MainWin( wx.Frame ):
 			Utils.MessageOK( self, 'Cannot open "%s".' % fileName, 'Cannot Open File', iconMask=wx.ICON_ERROR )
 			return
 
+		with Model.LockRace() as race:
+			if race:
+				race.resetAllCaches()
+			
 		# Create a new race and initialize it with the properties.
 		self.fileName = fileName
+		Model.resetCache()
 		ResetExcelLinkCache()
 		Model.setRace( Model.Race() )
 		properties.update()
@@ -1231,7 +1237,10 @@ class MainWin( wx.Frame ):
 			return
 
 		self.closeFindDialog()
-			
+		ResetExcelLinkCache()
+		self.resetAllCaches()
+		self.writeRace()
+		
 		# Save the categories to use them in the next race.
 		categoriesSave = race.categories
 		race = None
@@ -1267,6 +1276,7 @@ class MainWin( wx.Frame ):
 
 		# Create a new race and initialize it with the properties.
 		self.fileName = fileName
+		Model.resetCache()
 		ResetExcelLinkCache()
 		
 		# Save the current Ftp settings.
@@ -1322,16 +1332,16 @@ class MainWin( wx.Frame ):
 				race = pickle.load( fp )
 				race.sortLap = None			# Remove results lap sorting to avoid confusion.
 				isFinished = race.isFinished()
+				race.tagNums = None
+				race.resetAllCaches()
+				Model.setRace( race )
+			
 			self.fileName = fileName
 			
 			undo.clear()
 			ResetExcelLinkCache()
 			Model.resetCache()
-			race.tagNums = None
 			
-			Model.setRace( race )
-			race.resetAllCaches()
-				
 			self.updateRecentFiles()
 			
 			self.showPageName( 'Results' if isFinished else 'Actions')

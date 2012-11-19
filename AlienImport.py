@@ -1,5 +1,6 @@
 import wx
 import Model
+import JChip
 from ChipImport import ChipImportDialog
 import string
 
@@ -16,7 +17,9 @@ def parseTagTime( line, lineNo, errors ):
 	try:
 		tStr = tStr.translate( sepTrans )
 		year, month, day, hour, minute, second = [float(f) for f in tStr.split()]
-		t = hour*60.0*60.0 + minute*60.0 + second + timeAdjustment
+		fract, second = math.fmod( second )
+		microsecond = fract * 1000000.0
+		t = combine( JChip.dateToday, datetime.time(minute=int(minute), second=int(second), microsecond=int(microsecond)) )
 	except (IndexError, ValueError):
 		errors.append( 'line %d: invalid time' % lineNo )
 		return None, None

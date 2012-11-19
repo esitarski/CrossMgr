@@ -74,7 +74,6 @@ def parseTime( tStr ):
 	global tSameCount
 	
 	hh, mm, ssmi = tStr.split(':')
-	
 	hh, mm, ssmi = int(hh), int(mm), float(ssmi)
 	mi, ss = math.modf( ssmi )
 	mi, ss = int(mi * 1000000.0), int(ss)

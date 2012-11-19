@@ -454,6 +454,8 @@ class Results( wx.Panel ):
 	def clearGrid( self ):
 		self.lapGrid.Set( data = [], colnames = [], textColour = {}, backgroundColour = {} )
 		self.lapGrid.Reset()
+		self.labelGrid.Set( data = [], colnames = [], textColour = {}, backgroundColour = {} )
+		self.labelGrid.Reset()
 
 	def refresh( self ):
 		self.category = None
