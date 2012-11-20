@@ -1135,6 +1135,9 @@ class MainWin( wx.Frame ):
 	@logCall
 	def onCloseWindow( self, event ):
 		self.showPageName( 'Results' )
+		with Model.LockRace() as race:
+			if race is not None:
+				race.resetAllCaches()
 		self.writeRace()
 
 		try:
@@ -1169,7 +1172,7 @@ class MainWin( wx.Frame ):
 	def menuNew( self, event ):
 		self.showPageName( 'Actions' )
 		self.closeFindDialog()
-
+			
 		dlg = PropertiesDialog(self, -1, 'Configure Race', style=wx.DEFAULT_DIALOG_STYLE )
 		ret = dlg.ShowModal()
 		fileName = dlg.GetPath()
@@ -1195,7 +1198,9 @@ class MainWin( wx.Frame ):
 		with Model.LockRace() as race:
 			if race:
 				race.resetAllCaches()
-			
+		
+		self.writeRace()
+		
 		# Create a new race and initialize it with the properties.
 		self.fileName = fileName
 		Model.resetCache()
@@ -1237,8 +1242,9 @@ class MainWin( wx.Frame ):
 			return
 
 		self.closeFindDialog()
-		ResetExcelLinkCache()
+		self.showPageName( 'Actions' )
 		self.resetAllCaches()
+		ResetExcelLinkCache()
 		self.writeRace()
 		
 		# Save the categories to use them in the next race.
@@ -1324,6 +1330,8 @@ class MainWin( wx.Frame ):
 			return
 		self.showPageName( 'Results' )
 		self.refresh()
+		Model.resetCache()
+		ResetExcelLinkCache()
 		self.writeRace()
 		self.closeFindDialog()
 		
