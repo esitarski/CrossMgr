@@ -429,6 +429,9 @@ class Rider(object):
 		self.autocorrectLaps = True
 		self.firstTime = None		# Used for time trial mode.  Also used to flag the first start time.
 
+	def setAutoCorrect( self, on = True ):
+		self.autocorrectLaps = on
+		
 	def addTime( self, t ):
 		# All times in race time seconds.
 		timesLen = len(self.times)

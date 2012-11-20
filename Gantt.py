@@ -91,6 +91,8 @@ class Gantt( wx.Panel ):
 				(wx.NewId(), 'Shift Lap End Time...',	'Move lap end time earlier/later',	self.OnPopupShift, interpCase),
 				(wx.NewId(), 'Delete Lap End Time...',	'Delete lap end time',	self.OnPopupDelete, nonInterpCase),
 				(None, None, None, None, None),
+				(wx.NewId(), 'Turn off Autocorrect...',		'Turn off Autocorrect',		self.OnPopupAutocorrect, allCases),
+				(None, None, None, None, None),
 				(wx.NewId(), 'Swap with Rider before',	'Swap with Rider before',	self.OnPopupSwapBefore, nonInterpCase),
 				(wx.NewId(), 'Swap with Rider after',	'Swap with Rider after',	self.OnPopupSwapAfter, nonInterpCase),
 				(None, None, None, None, None),
@@ -236,6 +238,24 @@ class Gantt( wx.Panel ):
 				if not race:
 					return
 				race.getRider(self.entry.num).setStatus( Model.Rider.DNF, self.entry.t + 1 )
+				race.setChanged()
+		except:
+			pass
+		wx.CallAfter( self.refresh )
+		
+	def OnPopupAutocorrect( self, event ):
+		if not self.entry:
+			return
+		if not Utils.MessageOKCancel( self,
+			'Turn off Autocorrect for Rider %d?' % self.entry.num,
+			'Turn off Autocorrect' ):
+			return
+		try:
+			undo.pushState()
+			with Model.LockRace() as race:
+				if not race:
+					return
+				race.getRider(self.entry.num).setAutoCorrect( False )
 				race.setChanged()
 		except:
 			pass

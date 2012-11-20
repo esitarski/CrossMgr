@@ -158,7 +158,7 @@ while 1:
 		time.sleep( dt )
 		
 		message = formatMessage( n, lap, dBase + datetime.timedelta(seconds = t) )
-		sys.stdout.write( 'sending: %s\n' % message[:-1] )
+		sys.stdout.write( 'sending: %d: %s\n' % (iMessage, message[:-1]) )
 		try:
 			sock.send( message )
 			iMessage += 1

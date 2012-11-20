@@ -9,6 +9,7 @@ import math
 import subprocess
 import re
 import Utils
+import select
 from multiprocessing import Process, Queue
 from Queue import Empty
 
@@ -74,6 +75,7 @@ def parseTime( tStr ):
 	global tSameCount
 	
 	hh, mm, ssmi = tStr.split(':')
+	
 	hh, mm, ssmi = int(hh), int(mm), float(ssmi)
 	mi, ss = math.modf( ssmi )
 	mi, ss = int(mi * 1000000.0), int(ss)
@@ -88,91 +90,174 @@ def parseTime( tStr ):
 	
 	return t + tSmall * tSameCount if tSameCount > 0 else t
 
+def safeRemove( lst, x ):
+	while 1:
+		try:
+			lst.remove( x )
+		except ValueError:
+			return
+
+def safeAppend( lst, x ):
+	if x not in lst:
+		lst.append( x )
+		
 readerComputerTimeDiff = None
 def Server( q, HOST, PORT, startTime ):
 	global readerComputerTimeDiff
 	readerComputerTimeDiff = None
 	
-	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	s.bind((HOST, PORT))
+	#-----------------------------------------------------
+	# We support one connection to JChip.
+	#
+	connCur = None
+	#
+	# Read and write buffers.
+	#
+	readStr, writeStr = '', ''
 	
-	while 1:
-		s.listen(1)
-		conn, addr = s.accept()
-		
-		q.put( ('connected', 'JChip receiver',) )
-		q.put( ('waiting', 'for JChip receiver to respond',) )
-		
-		for line in socketByLine( conn ):
-			if not line:
+	server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	server.setblocking( 0 )
+	server.bind((HOST, PORT))
+	server.listen( 5 )
+	
+	# List of ports for select.
+	inputs = [server]
+	outputs = []
+	
+	while inputs:
+		# q.put( ('waiting', 'for communication' ) )
+		readable, writable, exceptional = select.select( inputs, outputs, inputs )
+
+		# q.put( ('waiting', 'len(readable)=%d, len(writable)=%d, len(exceptional)=%d' % (len(readable), len(writable), len(exceptional) ) ) )
+		#----------------------------------------------------------------------------------
+		# Handle inputs.
+		#
+		for s in readable:
+			if s is server:
+				# This is the listener.  Accept the connection from JChip.
+				if connCur:	# If we have an existing connection, close it and use the new one.
+					safeRemove( outputs, connCur )
+					safeRemove( inputs, connCur )
+					connCur.close()
+					connCur = None
+					
+				# Accept the new connection.
+				connCur, addr = s.accept()
+				connCur.setblocking( 0 )
+				inputs.append( connCur )
+				readStr, writeStr = '', ''
+				q.put( ('connection', 'established %s' % str(addr) ) )
 				continue
-			try:
-				if line.startswith( 'D' ):
-					# The tag and time are always separated by at least one space.
-					iSpace = line.find( ' ' )
-					if iSpace < 0:
-						q.put( ('error', line.strip() ) )
-						continue
-					tag = line[2:iSpace]	# Skip the D and first initial letter (always the same).
-					
-					# Find the first colon of the time and parse the time working backwards.
-					iColon = line.find( ':' )
-					if iColon < 0:
-						q.put( ('error', line.strip() ) )
-						continue
-						
-					m = reTimeChars.match( line[iColon-2:] )
-					if not m:
-						q.put( ('error', line.strip() ) )
-						continue
-					tStr = m.group(0)
-					
-					t = parseTime( tStr )
-					t += readerComputerTimeDiff
-						
-					q.put( ('data', tag, t) )
-					
-				elif line.startswith( 'N' ):
-					q.put( ('name', line[5:].strip()) )
-					
-					# Get the reader's current time.
-					cmd = 'GT'
-					q.put( ('transmitting', '%s command to JChip receiver (gettime)' % cmd) )
-					socketSend( conn, '%s%s' % (cmd, CR) )
-				
-				elif line.startswith( 'GT' ):
-					tNow = datetime.datetime.now()
-					
-					iStart = 3
-					hh, mm, ss, hs = [int(line[i:i+2]) for i in xrange(iStart, iStart + 4 * 2, 2)]
-					tJChip = datetime.datetime.combine( tNow.date(), datetime.time(hh, mm, ss, hs * 10000) )
-					readerComputerTimeDiff = tNow - tJChip
-					
-					q.put( ('getTime', '%s=%02d:%02d:%02d.%02d' % (line[2:].strip(), hh,mm,ss,hs)) )
-					rtAdjust = readerComputerTimeDiff.total_seconds()
-					if rtAdjust > 0:
-						behindAhead = 'Behind'
-					else:
-						behindAhead = 'Ahead'
-						rtAdjust *= -1
-					q.put( ('timeAdjustment', 
-							"JChip receiver's clock is: %s %s (relative to computer)" %
-								(behindAhead, Utils.formatTime(rtAdjust, True))) )
-					
-					# Send command to start sending data.
-					cmd = 'S0000'
-					q.put( ('transmitting', '%s command to JChip receiver (start transmission)' % cmd) )
-					socketSend( conn, '%s%s' % (cmd, CR) )
-				else:
-					q.put( ('unknown', line[:-1] ) )
 			
-			except (ValueError, KeyError, IndexError):
-				q.put( ('exception', line ) )
-				pass
+			# This socket is a data socket.  Get the data.
+			data = s.recv( 4096 )
+			
+			if not data:
+				# No data - close socket and wait for a new connection.
+				safeRemove( outputs, s )
+				safeRemove( inputs, s )
+				if s == connCur:
+					connCur = None
+				s.close()
+				q.put( ('connection', 'disconnected') )
+				continue
+			
+			# Accumulate the data.
+			readStr += data
+			if not readStr.endswith( CR ):
+				continue	# Missing delimiter - need to get more data.
 				
-		q.put( ('disconnected',) )
-		
-	s.close()
+			# The message is delimited.  Process the messages.
+			lines = readStr.split( CR )
+			readStr = ''
+			for line in lines:
+				line = line.strip()
+				if not line:
+					continue
+				try:
+					if line.startswith( 'D' ):
+						# The tag and time are always separated by at least one space.
+						iSpace = line.find( ' ' )
+						if iSpace < 0:
+							q.put( ('error', line.strip() ) )
+							continue
+						tag = line[2:iSpace]	# Skip the D and first initial letter (always the same).
+						
+						# Find the first colon of the time and parse the time working backwards.
+						iColon = line.find( ':' )
+						if iColon < 0:
+							q.put( ('error', line.strip() ) )
+							continue
+							
+						m = reTimeChars.match( line[iColon-2:] )
+						if not m:
+							q.put( ('error', line.strip() ) )
+							continue
+						tStr = m.group(0)
+						
+						t = parseTime( tStr )
+						t += readerComputerTimeDiff
+							
+						q.put( ('data', tag, t) )
+						
+					elif line.startswith( 'N' ):
+						q.put( ('name', line[5:].strip()) )
+						
+						# Get the reader's current time.
+						cmd = 'GT'
+						q.put( ('transmitting', '%s command to JChip receiver (gettime)' % cmd) )
+						writeStr += '%s%s' % (cmd, CR)
+						safeAppend( outputs, s )
+					
+					elif line.startswith( 'GT' ):
+						tNow = datetime.datetime.now()
+						
+						iStart = 3
+						hh, mm, ss, hs = [int(line[i:i+2]) for i in xrange(iStart, iStart + 4 * 2, 2)]
+						tJChip = datetime.datetime.combine( tNow.date(), datetime.time(hh, mm, ss, hs * 10000) )
+						readerComputerTimeDiff = tNow - tJChip
+						
+						q.put( ('getTime', '%s=%02d:%02d:%02d.%02d' % (line[2:].strip(), hh,mm,ss,hs)) )
+						rtAdjust = readerComputerTimeDiff.total_seconds()
+						if rtAdjust > 0:
+							behindAhead = 'Behind'
+						else:
+							behindAhead = 'Ahead'
+							rtAdjust *= -1
+						q.put( ('timeAdjustment', 
+								"JChip receiver's clock is: %s %s (relative to computer)" %
+									(behindAhead, Utils.formatTime(rtAdjust, True))) )
+						
+						# Send command to start sending data.
+						cmd = 'S0000'
+						q.put( ('transmitting', '%s command to JChip receiver (start transmission)' % cmd) )
+						writeStr += '%s%s' % (cmd, CR)
+						safeAppend( outputs, s )
+					else:
+						q.put( ('unknown', line ) )
+						
+				except (ValueError, KeyError, IndexError):
+					q.put( ('exception', line ) )
+					pass
+				
+		#----------------------------------------------------------------------------------
+		# Handle outputs.
+		#
+		for s in writable:
+			# Write out the waiting data.  If we sent it all, remove it from the outputs list.
+			writeStr = writeStr[s.send(writeStr):]
+			if not writeStr:
+				outputs.remove( s )
+			
+		#----------------------------------------------------------------------------------
+		# Handle exceptional.
+		#
+		for s in exceptional:
+			# Close the socket.  Remove it from the inputs and outputs list.
+			safeRemove( inputs, s )
+			safeRemove( outputs, s )
+			s.close()
+			readStr, writeStr = '', ''
 
 def GetData():
 	data = []

@@ -314,7 +314,6 @@ function DrawLine( ctx, x1, y1, x2, y2 )
 	ctx.beginPath();
 	ctx.moveTo( x1, y1 );
 	ctx.lineTo( x2, y2 );
-	ctx.closePath();
 	ctx.stroke();
 }
 
@@ -632,7 +631,8 @@ function TrackAnimation()
 				}
 				if( isNaN(x) || isNaN(y) )
 					continue;
-				DrawCircle( dc, x, y, riderRadius );
+				//DrawCircle( dc, x, y, riderRadius );
+				dc.beginPath(); dc.arc(x, y, riderRadius, 0.0, Math.PI*2, true); dc.closePath(); dc.fill(); dc.stroke();
 				dc.fillStyle = 'black';
 				dc.fillText(num+'', x+numSize, y-numSize );
 				if( j != undefined )
@@ -1083,7 +1083,9 @@ function GeoAnimation()
 				}
 				if( isNaN(x) || isNaN(y) )
 					continue;
-				DrawCircle( dc, x, y, riderRadius );
+				//DrawCircle( dc, x, y, riderRadius );
+				dc.beginPath(); dc.arc(x, y, riderRadius, 0.0, Math.PI*2, true); dc.closePath(); dc.fill(); dc.stroke();
+
 				if( topThree[num] != undefined || numsToWatch[num] != undefined )
 				{
 					if( isEmptyObject(numsToWatch) || numsToWatch[num] != undefined )
