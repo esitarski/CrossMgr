@@ -158,6 +158,7 @@ def Server( q, HOST, PORT, startTime ):
 				safeRemove( inputs, s )
 				if s == connCur:
 					connCur = None
+					readStr, writeStr = '', ''
 				s.close()
 				q.put( ('connection', 'disconnected') )
 				continue
