@@ -84,14 +84,16 @@ class Gantt( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(wx.NewId(), 'Pull after Lap End...',		'Pull after lap end',		self.OnPopupPull, allCases),
-				(wx.NewId(), 'DNF after Lap End...',		'DNF after lap end',		self.OnPopupDNF, allCases),
+				(wx.NewId(), 'Pull after Lap End...',	'Pull after lap end',		self.OnPopupPull, allCases),
+				(wx.NewId(), 'DNF after Lap End...',	'DNF after lap end',		self.OnPopupDNF, allCases),
+				(None, None, None, None, None),
+				(wx.NewId(), 'Note...',					'Add/Edit Lap Note',		self.OnPopupLapNote, allCases),
 				(None, None, None, None, None),
 				(wx.NewId(), 'Correct Lap End Time...',	'Change number or lap end time',		self.OnPopupCorrect, interpCase),
 				(wx.NewId(), 'Shift Lap End Time...',	'Move lap end time earlier/later',	self.OnPopupShift, interpCase),
 				(wx.NewId(), 'Delete Lap End Time...',	'Delete lap end time',	self.OnPopupDelete, nonInterpCase),
 				(None, None, None, None, None),
-				(wx.NewId(), 'Turn off Autocorrect...',		'Turn off Autocorrect',		self.OnPopupAutocorrect, allCases),
+				(wx.NewId(), 'Turn off Autocorrect...',	'Turn off Autocorrect',		self.OnPopupAutocorrect, allCases),
 				(None, None, None, None, None),
 				(wx.NewId(), 'Swap with Rider before',	'Swap with Rider before',	self.OnPopupSwapBefore, nonInterpCase),
 				(wx.NewId(), 'Swap with Rider after',	'Swap with Rider after',	self.OnPopupSwapAfter, nonInterpCase),
@@ -260,7 +262,32 @@ class Gantt( wx.Panel ):
 		except:
 			pass
 		wx.CallAfter( self.refresh )
-		
+	
+	def OnPopupLapNote( self, event ):
+		if not self.entry or not Model.race:
+			return
+		if not hasattr(Model.race, 'lapNote'):
+			Model.race.lapNote = {}
+		dlg = wx.TextEntryDialog( self, "Note for Rider %d on Lap %d:" % (self.entry.num, self.entry.lap), "Lap Note",
+					Model.race.lapNote.get( (self.entry.num, self.entry.lap), '' ) )
+		ret = dlg.ShowModal()
+		value = dlg.GetValue().strip()
+		dlg.Destroy()
+		if ret != wx.ID_OK:
+			return
+		undo.pushState()
+		with Model.LockRace() as race:
+			if value:
+				race.lapNote[(self.entry.num, self.entry.lap)] = value
+				race.setChanged()
+			else:
+				try:
+					del race.lapNote[(self.entry.num, self.entry.lap)]
+					race.setChanged()
+				except KeyError:
+					pass
+		wx.CallAfter( self.refresh )
+	
 	def OnPopupLapDetail( self, event ):
 		with Model.LockRace() as race:
 			if not race:
@@ -381,7 +408,8 @@ class Gantt( wx.Panel ):
 		interp	= [r.interp for r in results]
 		self.ganttChart.SetData(data, labels, GetNowTime(), interp,
 								set(i for i, r in enumerate(results) if r.status != Model.Rider.Finisher),
-								Model.race.numTimeInfo )
+								Model.race.numTimeInfo,
+								getattr( Model.race, 'lapNote', None) )
 		self.updateStats( results )
 		wx.CallAfter( self.ganttChart.SetFocus )
 	

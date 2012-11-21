@@ -154,6 +154,10 @@ class RiderDetail( wx.Panel ):
 		self.copyRiderMenuId = wx.NewId()
 		self.menu.Append( self.copyRiderMenuId, 'C&opy Rider Times to New Number...', "Copy these rider's times to another number" )
 		self.Bind( wx.EVT_MENU, self.onCopyRider, id = self.copyRiderMenuId )
+		self.menu.AppendSeparator()
+		self.addMissingLastLapId = wx.NewId()
+		self.menu.Append( self.addMissingLastLapId, '&Add Missing Last Lap Time', "Add Missing Last Lap Time" )
+		self.Bind( wx.EVT_MENU, self.addMissingLastLap, id = self.addMissingLastLapId )
 		
 		self.editRiderBtn = wx.Button( self, wx.ID_ANY, 'Edit...' )
 		self.Bind( wx.EVT_BUTTON, self.onEditRider, self.editRiderBtn )
@@ -557,7 +561,38 @@ class RiderDetail( wx.Panel ):
 					numTimeInfo.add( newNum, t )
 			self.setRider( newNum )
 			self.onNumChange()
-		
+	
+	def addMissingLastLap( self, event ):
+		if not Model.race:
+			return
+		try:
+			num = int(self.num.GetValue())
+		except:
+			return
+			
+		with Model.LockRace() as race:
+			try:
+				rider = race.riders[num]
+			except KeyError:
+				return
+			if rider.status != rider.Finisher:
+				return
+			times = [t for r in rider.times]
+			if len(times) < 2:
+				return
+			category = race.getCategory( num )
+			if category:
+				times[0] = category.getStartOffsetSecs()
+			tNewLast = times[-1] + times[-1] - times[-2]
+				
+		undo.pushState()
+		with Model.LockRace() as race:
+			race.numTimeInfo.add( num, tNewLast )
+			race.addTime( num, tNewLast )
+			race.setChanged()
+			
+		wx.CallAfter( self.refresh )
+	
 	def onNumChange( self, event = None ):
 		self.refresh()
 		if Utils.isMainWin():
@@ -589,7 +624,7 @@ class RiderDetail( wx.Panel ):
 				self.atRaceTime.SetValue( Utils.SecondsToStr(tStatus) )
 				
 		self.commitChange()
-		self.refresh()
+		wx.CallAfter( self.refresh() )
 		
 	def onAutocorrectLaps( self, event ):
 		num = self.num.GetValue()
@@ -711,6 +746,8 @@ class RiderDetail( wx.Panel ):
 				(wx.NewId(), 'Shift Lap End Time...',	'Move lap end time earlier/later...',	lambda event, s = self: ShiftNumber(s, s.entry), interpCase),
 				(wx.NewId(), 'Delete Lap End Time...',	'Delete lap end time...',				lambda event, s = self: DeleteEntry(s, s.entry), nonInterpCase),
 				(None, None, None, None, None),
+				(wx.NewId(), 'Note...',					'Add/Edit Lap Note',					self.OnGanttPopupLapNote, allCases),
+				(None, None, None, None, None),
 				(wx.NewId(), 'Pull after Lap End...',	'Pull after lap end...',				self.OnGanttPopupPull, allCases),
 				(wx.NewId(), 'DNF after Lap End...',	'DNF after lap end...',					self.OnGanttPopupDNF, allCases),
 				(None, None, None, None, None),
@@ -779,7 +816,32 @@ class RiderDetail( wx.Panel ):
 		except:
 			pass
 		wx.CallAfter( self.refresh )
-	
+		
+	def OnGanttPopupLapNote( self, event ):
+		if not self.entry or not Model.race:
+			return
+		if not hasattr(Model.race, 'lapNote'):
+			Model.race.lapNote = {}
+		dlg = wx.TextEntryDialog( self, "Note for Rider %d on Lap %d:" % (self.entry.num, self.entry.lap), "Lap Note",
+					Model.race.lapNote.get( (self.entry.num, self.entry.lap), '' ) )
+		ret = dlg.ShowModal()
+		value = dlg.GetValue().strip()
+		dlg.Destroy()
+		if ret != wx.ID_OK:
+			return
+		undo.pushState()
+		with Model.LockRace() as race:
+			if value:
+				race.lapNote[(self.entry.num, self.entry.lap)] = value
+				race.setChanged()
+			else:
+				try:
+					del race.lapNote[(self.entry.num, self.entry.lap)]
+					race.setChanged()
+				except KeyError:
+					pass
+		wx.CallAfter( self.refresh )
+
 	def setNumSelect( self, num ):
 		self.setRider( num )
 	

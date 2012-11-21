@@ -118,7 +118,7 @@ class GanttChartPanel(wx.PyPanel):
 		"""
 		return True
 
-	def SetData( self, data, labels = None, nowTime = None, interp = None, greyOutSet = set(), numTimeInfo = None ):
+	def SetData( self, data, labels = None, nowTime = None, interp = None, greyOutSet = set(), numTimeInfo = None, lapNote = None ):
 		"""
 		* data is a list of lists.  Each list is a list of times.		
 		* labels are the names of the series.  Optional.
@@ -128,6 +128,7 @@ class GanttChartPanel(wx.PyPanel):
 		self.nowTime = None
 		self.greyOutSet = greyOutSet
 		self.numTimeInfo = numTimeInfo
+		self.lapNote = lapNote
 		if data and any( s for s in data ):
 			self.data = data
 			self.dataMax = max(max(s) if s else -sys.float_info.max for s in self.data)
@@ -299,6 +300,7 @@ class GanttChartPanel(wx.PyPanel):
 
 		font = wx.FontFromPixelSize( wx.Size(0,barHeight - 1), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		dc.SetFont( font )
+
 		textWidthLeftMax, textHeightMax = dc.GetTextExtent( '0000' )
 		textWidthRightMax = textWidthLeftMax
 		for label in self.labels:
@@ -337,6 +339,8 @@ class GanttChartPanel(wx.PyPanel):
 			self.horizontalSB.SetSize( (xRight - xLeft, self.scrollbarWidth) )
 		
 		fontLegend = wx.FontFromPixelSize( wx.Size(0,barHeight*.75), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		fontNote = wx.FontFromPixelSize( wx.Size(0,barHeight*.8), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+
 		dc.SetFont( fontLegend )
 		textWidth, textHeight = dc.GetTextExtent( '00:00' if self.dataMax < 60*60 else '00:00:00' )
 			
@@ -439,6 +443,30 @@ class GanttChartPanel(wx.PyPanel):
 					dc.SetBrush( transparentBrush )
 					dc.SetPen( penBar )
 					dc.DrawRectangle( xLast, yLast, xCur - xLast + 1, dy )
+					
+					if self.lapNote:
+						note = self.lapNote.get( (num, j), None )
+						if note:
+							dc.SetFont( fontNote )
+							noteWidth, noteHeight = dc.GetTextExtent( note )
+							curBarWidth = xCur - xLast - dc.GetTextExtent( '   ' )[0]
+							if curBarWidth <= 0:
+								curBarWidth = xCur - xLast
+								note = '...'
+								noteWidth, noteHeight = dc.GetTextExtent( note )
+							elif noteWidth > curBarWidth:
+								lenLeft, lenRight = 1, len(note)
+								while lenRight - lenLeft > 1:
+									lenMid = (lenRight + lenLeft) // 2
+									noteWidth, noteHeight = dc.GetTextExtent( note[:lenMid].strip() + '...' )
+									if noteWidth < curBarWidth:
+										lenLeft = lenMid
+									else:
+										lenRight = lenMid
+								note = note[:lenLeft].strip() + '...'
+								noteWidth, noteHeight = dc.GetTextExtent( note )
+							dc.DrawText( note, xLast + (xCur - xLast - noteWidth) / 2, yLast + (dy - noteHeight) / 2 )
+							dc.SetFont( font )
 					
 					if xOriginal <= xRight:
 						try:
