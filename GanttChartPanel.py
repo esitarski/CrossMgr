@@ -449,23 +449,25 @@ class GanttChartPanel(wx.PyPanel):
 						if note:
 							dc.SetFont( fontNote )
 							noteWidth, noteHeight = dc.GetTextExtent( note )
-							curBarWidth = xCur - xLast - dc.GetTextExtent( '   ' )[0]
-							if curBarWidth <= 0:
-								curBarWidth = xCur - xLast
+							noteBorderWidth = int(dc.GetTextExtent( '   ' )[0] / 2)
+							noteBarWidth = xCur - xLast - noteBorderWidth * 2
+							if noteBarWidth <= 0:
+								noteBarWidth = xCur - xLast
+								noteBorderWidth = 0
 								note = '...'
 								noteWidth, noteHeight = dc.GetTextExtent( note )
-							elif noteWidth > curBarWidth:
+							elif noteWidth > noteBarWidth:
 								lenLeft, lenRight = 1, len(note)
 								while lenRight - lenLeft > 1:
 									lenMid = (lenRight + lenLeft) // 2
 									noteWidth, noteHeight = dc.GetTextExtent( note[:lenMid].strip() + '...' )
-									if noteWidth < curBarWidth:
+									if noteWidth < noteBarWidth:
 										lenLeft = lenMid
 									else:
 										lenRight = lenMid
 								note = note[:lenLeft].strip() + '...'
 								noteWidth, noteHeight = dc.GetTextExtent( note )
-							dc.DrawText( note, xLast + (xCur - xLast - noteWidth) / 2, yLast + (dy - noteHeight) / 2 )
+							dc.DrawText( note, xLast + noteBorderWidth, yLast + (dy - noteHeight) / 2 )
 							dc.SetFont( font )
 					
 					if xOriginal <= xRight:
