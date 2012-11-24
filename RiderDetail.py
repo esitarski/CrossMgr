@@ -154,10 +154,6 @@ class RiderDetail( wx.Panel ):
 		self.copyRiderMenuId = wx.NewId()
 		self.menu.Append( self.copyRiderMenuId, 'C&opy Rider Times to New Number...', "Copy these rider's times to another number" )
 		self.Bind( wx.EVT_MENU, self.onCopyRider, id = self.copyRiderMenuId )
-		self.menu.AppendSeparator()
-		self.addMissingLastLapId = wx.NewId()
-		self.menu.Append( self.addMissingLastLapId, '&Add Missing Last Lap Time', "Add Missing Last Lap Time" )
-		self.Bind( wx.EVT_MENU, self.addMissingLastLap, id = self.addMissingLastLapId )
 		
 		self.editRiderBtn = wx.Button( self, wx.ID_ANY, 'Edit...' )
 		self.Bind( wx.EVT_BUTTON, self.onEditRider, self.editRiderBtn )
@@ -330,9 +326,12 @@ class RiderDetail( wx.Panel ):
 				(wx.NewId(), 'Pull After Lap...',	'Pull after Lap',	self.OnPopupPull, allCases),
 				(wx.NewId(), 'DNF After Lap...',	'DNF after Lap',	self.OnPopupDNF, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), 'Correct...',	'Change number or lap time...',	self.OnPopupCorrect, interpCase),
-				(wx.NewId(), 'Shift...',	'Move lap time earlier/later...',	self.OnPopupShift, interpCase),
-				(wx.NewId(), 'Delete...',	'Delete lap time...',	self.OnPopupDelete, nonInterpCase),
+				(wx.NewId(), 'Correct...',			'Change number or lap time...',	self.OnPopupCorrect, interpCase),
+				(wx.NewId(), 'Shift...',			'Move lap time earlier/later...',	self.OnPopupShift, interpCase),
+				(wx.NewId(), 'Delete...',			'Delete lap time...',	self.OnPopupDelete, nonInterpCase),
+				(None, None, None, None, None),
+				(wx.NewId(), 'Add Missing Last Lap','Add Missing Last Lap',	self.OnPopupAddMissingLastLap, allCases),
+
 			]
 			for p in self.popupInfo:
 				if p[0]:
@@ -388,8 +387,11 @@ class RiderDetail( wx.Panel ):
 	def OnPopupDelete( self, event ):
 		rows = Utils.GetSelectedRows( self.grid )
 		if len(rows) > 1:
-			num = int(self.num.GetValue())
-			if num is None or not Model.race or num not in Model.race:
+			try:
+				num = int(self.num.GetValue())
+			except:
+				return
+			if not Model.race or num not in Model.race:
 				return
 			rider = Model.race[num]
 			times = [rider.times[r] for r in rows]
@@ -411,6 +413,43 @@ class RiderDetail( wx.Panel ):
 		else:
 			self.grid.SelectRow( self.eventRow )
 			DeleteEntry( self, self.entry )
+	
+	def OnPopupAddMissingLastLap( self, event ):
+		try:
+			num = int(self.num.GetValue())
+		except:
+			return
+			
+		if not Model.race or num not in Model.race:
+				return
+			
+		with Model.LockRace() as race:
+			rider = race.riders[num]
+			
+		times = [t for t in rider.times]
+		if len(times) < 2:
+			return
+			
+		if rider.status != rider.Finisher:
+			Utils.MessageOK( self, 'Cannot add Last Lap unless Rider is Finisher', 'Cannot add Last Lap' )
+			return
+				
+		undo.pushState()
+		if rider.autocorrectLaps:
+			if Utils.MessageOKCancel( self, 'Turn off Autocorrect first?', 'Turn off Autocorrect' ):
+				rider.autocorrectLaps = False
+				
+		category = race.getCategory( num )
+		if category:
+			times[0] = category.getStartOffsetSecs()
+		tNewLast = times[-1] + times[-1] - times[-2]
+				
+		with Model.LockRace() as race:
+			race.numTimeInfo.add( num, tNewLast )
+			race.addTime( num, tNewLast )
+			race.setChanged()
+			
+		wx.CallAfter( self.refresh )
 	
 	def onEditRider( self, event ):
 		self.PopupMenu( self.menu )
@@ -561,37 +600,6 @@ class RiderDetail( wx.Panel ):
 					numTimeInfo.add( newNum, t )
 			self.setRider( newNum )
 			self.onNumChange()
-	
-	def addMissingLastLap( self, event ):
-		if not Model.race:
-			return
-		try:
-			num = int(self.num.GetValue())
-		except:
-			return
-			
-		with Model.LockRace() as race:
-			try:
-				rider = race.riders[num]
-			except KeyError:
-				return
-			if rider.status != rider.Finisher:
-				return
-			times = [t for r in rider.times]
-			if len(times) < 2:
-				return
-			category = race.getCategory( num )
-			if category:
-				times[0] = category.getStartOffsetSecs()
-			tNewLast = times[-1] + times[-1] - times[-2]
-				
-		undo.pushState()
-		with Model.LockRace() as race:
-			race.numTimeInfo.add( num, tNewLast )
-			race.addTime( num, tNewLast )
-			race.setChanged()
-			
-		wx.CallAfter( self.refresh )
 	
 	def onNumChange( self, event = None ):
 		self.refresh()

@@ -82,6 +82,8 @@ class Alien( object ):
 		if not os.path.isdir( dataDir ):
 			os.makedirs( dataDir )
 		self.fname = os.path.join( dataDir, tNow.strftime('Alien-%Y-%m-%d-%H-%M-%S.txt') )
+		with open(self.fname, 'w') as pf:
+			pf.write( 'Tag ID, Discover Time, Antenna, Count\n' )
 	
 		self.keepGoing = True
 		self.cmdHost, self.cmdPort = None, None
@@ -284,6 +286,14 @@ class Alien( object ):
 							self.messageQ.put( ('Alien', 'Missing DiscoveryTime', data) )
 							continue
 							
+						readCount = None
+						for f in t.getElementsByTagName( 'ReadCount' ):
+							readCount = f.firstChild.nodeValue.strip()
+							break
+						if not readCount:
+							self.messageQ.put( ('Alien', 'Missing ReadCount', data) )
+							continue
+							
 						tagID = tagID.replace( ' ', '' )
 						year, month, day, hour, minute, second = reDateSplit.split(discoveryTime)
 						microsecond, second = math.modf( float(second) )
@@ -293,7 +303,11 @@ class Alien( object ):
 						self.tagCount += 1
 						m = '%016d %s' % (int(tagID), discoveryTime.strftime('%Y/%m/%d_%H:%M:%S.%f'))
 						if pf:
-							pf.write( '%d %s\n' % (self.tagCount, m) )
+							# 									Thu Dec 04 10:14:49 PST
+							pf.write( '%s %s %s %s,%s,%s\n' % (
+										tagID[0:4], tagID[4-8], tagID[8-12], tagID[12:],
+										discoveryTime.strftime('%a %b %d %H:%M:%S.%f %Z %Y'),
+										readCount) )
 						self.messageQ.put( ('Alien', 'Received %d:' % self.tagCount, m) )
 					
 					# Close the log file.
