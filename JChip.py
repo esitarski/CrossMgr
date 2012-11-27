@@ -112,7 +112,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 	#
 	connCur = None
 	#
-	# Read and write buffers.
+	# Read and write buffers for JChip reader.
 	#
 	readStr, writeStr = '', ''
 	
@@ -127,7 +127,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 	
 	while inputs:
 		# q.put( ('waiting', 'for communication' ) )
-		readable, writable, exceptional = select.select( inputs, outputs, inputs, 1 )
+		readable, writable, exceptional = select.select( inputs, outputs, inputs, 2 )
 		
 		try:
 			# Check if we have been told to shutdown.
