@@ -41,6 +41,7 @@ if DEFAULT_HOST == '127.0.0.1':
 		pass
 
 q = None
+shutdownQ = None
 listener = None
 
 def socketSend( s, message ):
@@ -102,7 +103,7 @@ def safeAppend( lst, x ):
 		lst.append( x )
 		
 readerComputerTimeDiff = None
-def Server( q, HOST, PORT, startTime ):
+def Server( q, shutdownQ, HOST, PORT, startTime ):
 	global readerComputerTimeDiff
 	readerComputerTimeDiff = None
 	
@@ -115,7 +116,7 @@ def Server( q, HOST, PORT, startTime ):
 	#
 	readStr, writeStr = '', ''
 	
-	server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	server = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 	server.setblocking( 0 )
 	server.bind((HOST, PORT))
 	server.listen( 5 )
@@ -126,7 +127,14 @@ def Server( q, HOST, PORT, startTime ):
 	
 	while inputs:
 		# q.put( ('waiting', 'for communication' ) )
-		readable, writable, exceptional = select.select( inputs, outputs, inputs )
+		readable, writable, exceptional = select.select( inputs, outputs, inputs, 1 )
+		
+		try:
+			# Check if we have been told to shutdown.
+			shutdownQ.get_nowait()
+			break
+		except Empty:
+			pass
 
 		# q.put( ('waiting', 'len(readable)=%d, len(writable)=%d, len(exceptional)=%d' % (len(readable), len(writable), len(exceptional) ) ) )
 		#----------------------------------------------------------------------------------
@@ -259,6 +267,8 @@ def Server( q, HOST, PORT, startTime ):
 			safeRemove( outputs, s )
 			s.close()
 			readStr, writeStr = '', ''
+			
+	server.close()
 
 def GetData():
 	data = []
@@ -272,25 +282,29 @@ def GetData():
 def StopListener():
 	global q
 	global listener
+	global shutdownQ
+	global keepGoing
 
 	# Terminate the server process if it is running.
 	if listener:
-		listener.terminate()
+		shutdownQ.put( 'shutdown' )
+		listener.join()
 	listener = None
 	
-	# Purge the queue.
+	# Purge the queues.
 	if q:
 		while 1:
 			try:
 				q.get_nowait()
 			except Empty:
 				break
-			
 		q = None
+	shutdownQ = None
 		
 def StartListener( startTime = datetime.datetime.now(),
 					HOST = DEFAULT_HOST, PORT = DEFAULT_PORT ):
 	global q
+	global shutdownQ
 	global listener
 	global dateToday
 	dateToday = startTime.date()
@@ -298,13 +312,16 @@ def StartListener( startTime = datetime.datetime.now(),
 	StopListener()
 	
 	q = Queue()
-	listener = Process( target = Server, args=(q, HOST, PORT, startTime) )
+	shutdownQ = Queue()
+	listener = Process( target = Server, args=(q, shutdownQ, HOST, PORT, startTime) )
 	listener.start()
 	
 @atexit.register
 def Cleanuplistener():
+	global shutdownQ
 	if listener:
-		listener.terminate()
+		shutdownQ.put( 'shutdown' )
+		listener.join()
 	
 if __name__ == '__main__':
 	StartListener()
