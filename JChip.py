@@ -10,7 +10,8 @@ import subprocess
 import re
 import Utils
 import select
-from multiprocessing import Process, Queue
+from threading import Thread as Process
+from Queue import Queue
 from Queue import Empty
 
 combine = datetime.datetime.combine
@@ -283,22 +284,21 @@ def StopListener():
 	global q
 	global listener
 	global shutdownQ
-	global keepGoing
 
 	# Terminate the server process if it is running.
 	if listener:
 		shutdownQ.put( 'shutdown' )
 		listener.join()
-	listener = None
+		listener = None
 	
 	# Purge the queues.
-	if q:
-		while 1:
-			try:
-				q.get_nowait()
-			except Empty:
-				break
-		q = None
+	while q:
+		try:
+			q.get_nowait()
+		except Empty:
+			q = None
+			break
+			
 	shutdownQ = None
 		
 def StartListener( startTime = datetime.datetime.now(),
@@ -319,9 +319,11 @@ def StartListener( startTime = datetime.datetime.now(),
 @atexit.register
 def Cleanuplistener():
 	global shutdownQ
+	global listener
 	if listener:
 		shutdownQ.put( 'shutdown' )
 		listener.join()
+		listener = None
 	
 if __name__ == '__main__':
 	StartListener()

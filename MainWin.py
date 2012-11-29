@@ -1243,7 +1243,7 @@ class MainWin( wx.Frame ):
 
 		self.closeFindDialog()
 		self.showPageName( 'Actions' )
-		self.resetAllCaches()
+		race.resetAllCaches()
 		ResetExcelLinkCache()
 		self.writeRace()
 		
