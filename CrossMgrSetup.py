@@ -8,6 +8,15 @@ import zipfile
 from helptxt.compile import CompileHelp
 CompileHelp( 'helptxt' )
 	
+distDir = 'dist'
+
+# Cleanup existing dll, pyd and exe files.  The old ones may not be needed, so it is best to clean these up.
+for f in os.listdir(distDir):
+	if f.endswith('.dll') or f.endswith('.pyd') or f.endswith('.exe'):
+		fname = os.path.join(distDir, f)
+		print 'deleting:', fname
+		os.remove( fname )
+
 # Set up the py2exe configuration.
 setup( windows=
 			[
@@ -17,15 +26,6 @@ setup( windows=
 				}
 			]
 	 )
-
-distDir = 'dist'
-
-# Cleanup existing dll, pyd and exe files.  The old ones may not be needed, so it is best to clean these up.
-for f in os.listdir(distDir):
-	if f.endswith('.dll') or f.endswith('.pyd') or f.endswith('.exe'):
-		fname = os.path.join(distDir, f)
-		print 'deleting:', fname
-		os.remove( fname )
 
 # Copy additional dlls to distribution folder.
 wxHome = r'C:\Python27\Lib\site-packages\wx-2.8-msw-ansi\wx'
