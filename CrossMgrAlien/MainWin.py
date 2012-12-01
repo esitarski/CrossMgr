@@ -6,12 +6,13 @@ import time
 from roundbutton import RoundButton
 import Utils
 from Queue import Empty
-from multiprocessing import Process, Queue
+from threading import Thread as Process
+from Queue import Queue
 from Alien import AlienServer
 from Alien2JChip import CrossMgrServer
 
 import wx
-import  wx.lib.masked             as masked
+import wx.lib.masked             as masked
 import sys
 import os
 import re
@@ -183,12 +184,8 @@ class MainWin( wx.Frame ):
 		self.crossMgrProcess.start()
 	
 	def shutdown( self ):
-		if self.alienProcess:
-			self.alienProcess.terminate()
-			self.alienProcess = None
-		if self.crossMgrProcess:
-			self.crossMgrProcess.terminate()
-			self.crossMgrProcess = None
+		self.alienProcess = None
+		self.crossMgrProcess = None
 		self.messageQ = None
 		self.dataQ = None
 		self.shutdownQ = None

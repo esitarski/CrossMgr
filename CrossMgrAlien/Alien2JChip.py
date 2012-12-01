@@ -4,7 +4,6 @@ import time
 import threading
 import datetime
 from Queue import Empty
-from multiprocessing import Process, Queue
 from Utils import readDelimitedData, timeoutSecs
 
 #------------------------------------------------------------------------------	

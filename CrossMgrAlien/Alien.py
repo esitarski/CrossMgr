@@ -12,7 +12,6 @@ import xml.dom
 import xml.dom.minidom
 from xml.dom.minidom import parseString
 from Queue import Empty
-from multiprocessing import Process, Queue
 from Utils import readDelimitedData, timeoutSecs
 import cStringIO as StringIO
 
