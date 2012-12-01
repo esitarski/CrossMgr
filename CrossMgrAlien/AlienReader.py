@@ -325,6 +325,7 @@ cmds = {
 }
 
 # Validate that all the commands are coded correctly.
+cmdsNormalized = {}
 for cmd, cmdInfo in cmds.iteritems():
 	assert isinstance(cmd, basestring)
 	try:
@@ -357,6 +358,11 @@ for cmd, cmdInfo in cmds.iteritems():
 		inType, outType = cmdInfo.get(In, None), cmdInfo.get(Out, None)
 	cmdInfo[In] = inType
 	cmdInfo[Out] = outType
+	
+	# Normalize the cmd name to upper case.
+	cmdsNormalized[cmd.upper()] = cmdInfo
+	
+cmds = cmdsNormalized
 		
 def sendCmd( cmdSocket, cmd, cmdStr, outType ):
 	if not cmdSocket:
@@ -443,6 +449,10 @@ class CmdSocket( object ):
 		self.ar.CloseCmdSocket()
 		
 class AlienReader( object ):
+	CmdDelim = '\r\n'
+	ResponseDelim = '\r\n\0'
+	SupressPrefix = '\1'
+	
 	nonCmdAttributes = set( ('testMode', 'CmdHost', 'CmdPort', 'cmdSocket', 'keepGoing') )
 	def __init__( self ):
 		self.testMode = True
@@ -496,7 +506,7 @@ class AlienReader( object ):
 		
 	def __getattr__( self, name ):
 		try:
-			cmdInfo = cmds[name]
+			cmdInfo = cmds[name.upper()]
 		except KeyError:
 			raise ValueError( '"%s" is not a recognized command' % name )
 		
@@ -522,9 +532,9 @@ class AlienReader( object ):
 			return super( AlienReader, self ).__setattr__(name, value)
 			
 		try:
-			cmdInfo = cmds[name]
+			cmdInfo = cmds[name.upper()]
 		except KeyError:
-			raise ValueError( '%s is not a valid command' % name )
+			raise ValueError( '%s is not a recognized command' % name )
 		
 		inType, outType = cmdInfo[In], cmdInfo[Out]
 		if not inType:
@@ -545,18 +555,30 @@ class AlienReader( object ):
 			print name, '=', ret
 		return ret
 	
+	def getResponse( self, conn ):
+		# Read delimited data from the reader
+		response = ''
+		while not response.endswith( self.ReaderDelim ):
+			more = conn.recv( 4096 )
+			if not more:
+				break
+			response += more
+		return response
+	
 	def sendCmd( self, name, cmdStr ):
 		if self.testMode:
 			if cmdStr.startswith( 'set ' ):
 				return cmdStr[4:]
 			elif cmdStr.startswith( 'Clear' ):
 				return '%s has been cleared!' % cmdStr.split()[1]
-			cmdInfo = cmds[name]
+			cmdInfo = cmds[name.upper()]
 			outType = cmdInfo.get(InOut, None) or cmdInfo.get(Out, None)
 			return outType.toStr( outType.repValue() )
 		else:
 			# Send the command to the Alien reader and get the response.
-			pass
+			self.cmdSocket.sendall( '%s%s%s' % (self.SupressPrefix, cmdStr, self.CmdDelim) )
+			response = self.getResponse( self.cmdSocket )
+			return response
 	
 	def Clear( self, listName ):
 		if listName not in ['IOList', 'TagList']:
@@ -565,7 +587,26 @@ class AlienReader( object ):
 		if self.testMode:
 			print 'Clear:', ret
 		return ret == '%s has been cleared!' % (listName if listName != 'IOList' else 'IO List')
-		
+
+	def execCmd( self, cmdStr ):
+		cmdStr = cmdStr.strip()
+		if cmdStr.startswith('?'):
+			return self.__getattr__( cmdStr[1:].strip() )
+		if cmdStr.lower().startswith('get '):
+			return self.__getattr__( cmdStr[4:].strip() )
+		if cmdStr.lower().startswith('clear '):
+			clr, listName = cmdStr.split()
+			return self.Clear( listName )
+		if cmdStr.lower().startswith( 'set ' ):
+			name, value = [s.strip() for s in cmdStr[4:].split( '=', 1 )]
+			try:
+				cmdInfo = cmds[name.upper()]
+			except KeyError:
+				raise ValueError( '%s is not a recognized command' % name )
+			value = cmdInfo[In].fromStr( value )
+			return self.__setattr__( name, value )
+		return self.__getattr__( name )
+	
 if __name__ == '__main__':
 	ar = AlienReader()
 	with CmdSocket( ar, 'alien', 'password', testMode = True ):
