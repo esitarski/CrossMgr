@@ -37,15 +37,15 @@ You will need to run the install with "sudo".
 Step 3:  Download the CrossMgr Python package.
 
 From https://www.sites.google.com/site/crossmgrsoftware/file-cabinet, download
-the CrossMgr python package to a directory called "CrossMgrInstall".
-The file name has the form "CrossMgr-N.NN.tar.gz".
+the file "PIP-Install-CrossMgr-N.NN.tar.gz" python package to a directory called "CrossMgrInstall"
+(the N.NN is the version).
 
 --------------------------------------------
 Step 4:  Run the pip install
 
 "cd" to your "CrossMgrInstall" directory.  Type:
 
-	sudo pip install CrossMgr-N.NN.tar.gz
+	sudo pip install PIP-Install-CrossMgr-N.NN.tar.gz
 	
 Where, of course, N.NN corresponds to the CrossMgr version.
 
@@ -54,7 +54,7 @@ These are xlrd, xlwt, openpyxl and wxpython.
 
 If this process fails, you may need to install these modules from your Linux distro.
 
-Check your distro for python-xlrd, python xlwt, python-openpyxl
+Check your distro for python-xlrd, python-xlwt, python-qrcode, python-openpyxl
 and python-wxgtk.
 
 --------------------------------------------

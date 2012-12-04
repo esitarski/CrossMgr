@@ -9,6 +9,7 @@ import subprocess
 from Version import AppVerName
 
 pypiDir = 'pypi'
+version = AppVerName.split(' ')[1]
 
 def writeToFile( s, fname ):
 	print 'creating', fname, '...'
@@ -156,7 +157,7 @@ os.chmod( exeName, os.stat(exeName)[0] | stat.S_IXUSR|stat.S_IXGRP|stat.S_IXOTH 
 print 'Creating setup.py...'
 setup = {
 	'name':			'CrossMgr',
-	'version':		AppVerName.split(' ')[1],
+	'version':		version,
 	'author':		'Edward Sitarski',
 	'author_email':	'edward.sitarski@gmail.com',
 	'packages':		['CrossMgr'],
@@ -170,7 +171,8 @@ setup = {
 		'xlrd >= 0.8.0',
 		'xlwt >= 0.7.4',
 		'openpyxl >= 1.5.8',
-		#'wxPython >= 2.8.0',
+		'qrcode >= 2.4.2',
+		'wxPython >= 2.8.0',
 	],
 }
 
@@ -185,5 +187,8 @@ with open(os.path.join(pypiDir,'setup.py'), 'wb') as f:
 print 'Creating install package...'
 os.chdir( pypiDir )
 subprocess.call( ['python', 'setup.py', 'sdist'] )
+
+os.chdir( 'dist' )
+shutil.move( 'CrossMgr-%s.zip' % version, 'PIP-Install-CrossMgr-%s.zip' % version )
 	
 print 'Done.'
