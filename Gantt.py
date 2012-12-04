@@ -384,7 +384,7 @@ class Gantt( wx.Panel ):
 	def refresh( self ):
 		if not Model.race:
 			self.ganttChart.SetData( None )
-			self.updateStatus( None )
+			self.updateStats( None )
 			return
 		
 		catName = FixCategories( self.categoryChoice, getattr(Model.race, 'ganttCategory', 0) )

@@ -41,6 +41,7 @@ DNF After Lap End...|DNF this rider and set the pulled time to be just after thi
 Correct Lap End Time...|Correct the lap end time
 Shift Lap End Time...|Shift the lap end time forwards or backwards
 Delete Lap End Time...|Delete the lap end time
+Turn off Autocorrect...|Turn off Autocorrect for this rider
 Swap with Rider before|Swap current rider's finish time with preceeding rider's finish time
 Swap with Rider after|Swap current rider's finish time with the following rider's finish time
 Show Lap Details...|Shows the details of the lap.  This includes the lap start, end, time, time down, and any reasons for changes to the start or end of the lap.
