@@ -80,6 +80,33 @@ class ColTable( Grid.PyGridTableBase ):
 		self.data[iCol] = copy.copy(colData)
 		self.UpdateValues( grid )
 	
+	def SortByColumn( self, iCol, descending = False ):
+		if not self.data:
+			return
+			
+		colLen = len(self.data[0])
+		if not all(len(colData) == colLen for colData in self.data):
+			raise ValueError( 'Cannot sort with different column lengths' )
+		
+		allNumeric = True
+		for e in self.data[iCol]:
+			try:
+				i = float(e)
+			except:
+				allNumeric = False
+				break
+		
+		if allNumeric:
+			elementIndex = [(float(e), i) for i, e in enumerate(self.data[iCol])]
+		else:
+			elementIndex = [(e, i) for i, e in enumerate(self.data[iCol])]
+		elementIndex.sort()
+		
+		for c in xrange(len(self.data)):
+			self.data[c] = [self.data[c][i] for e, i in elementIndex]
+			if descending:
+				self.data[c].reverse()
+	
 	def GetData( self ):
 		return self.data
 
@@ -268,7 +295,11 @@ class ColGrid(Grid.Grid):
 		for c in cols:
 			self._table.leftAlignCols.add( c )
 		self.Reset()
-		
+	
+	def SortByColumn( self, iCol, descending = False ):
+		self._table.SortByColumn( iCol, descending )
+		self.Refresh()
+	
 	def clearGrid( self ):
 		self.Set( data = [], colnames = [], textColour = {}, backgroundColour = {} )
 		self.Reset()

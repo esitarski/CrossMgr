@@ -15,6 +15,8 @@ class Recommendations( wx.Panel ):
 		self.numSelect = None
 		self.textColour = {}
 		self.backgroundColour = {}
+		self.sortCol = 1
+		self.sortDescending = False
 		
 		self.whiteColour = wx.Colour( 255, 255, 255 )
 		self.blackColour = wx.Colour( 0, 0, 0 )
@@ -38,6 +40,7 @@ class Recommendations( wx.Panel ):
 		self.Bind( wx.grid.EVT_GRID_SELECT_CELL, self.doNumSelect )
 		self.Bind( wx.grid.EVT_GRID_CELL_LEFT_DCLICK, self.doNumDrilldown )
 		#self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doRightClick )
+		self.Bind( wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.doColSort )
 		
 		bs = wx.BoxSizer(wx.VERTICAL)
 		bs.Add(self.hbs, flag=wx.GROW|wx.HORIZONTAL)
@@ -121,6 +124,17 @@ class Recommendations( wx.Panel ):
 		except (AttributeError, ValueError):
 			return None
 	
+	def doColSort( self, event ):
+		iCol = event.GetCol()
+		if iCol < 0:
+			return
+		if iCol == self.sortCol:
+			self.sortDescending ^= True
+		else:
+			self.sortCol = iCol
+			self.sortDescending = False
+		self.grid.SortByColumn( self.sortCol, self.sortDescending )
+	
 	def doNumSelect( self, event ):
 		if self.isEmpty:
 			return
@@ -162,7 +176,7 @@ class Recommendations( wx.Panel ):
 				return
 
 			# Check for missed entries to the end of the race.
-			colnames = [ 'Num', 'Recommendation' ]
+			colnames = [ 'Num', 'Issue', 'Recommendation' ]
 				
 			self.isEmpty = False
 			
@@ -174,7 +188,7 @@ class Recommendations( wx.Panel ):
 				def match( num ) : return True
 			entries = [e for e in entries if match(e.num) ]
 			
-			data = [[],[]]
+			data = [[],[], []]
 			
 			# Find the maximum recorded lap for each rider.
 			riderMaxLapNonInterp, riderMaxLapInterp = {}, {}
@@ -202,7 +216,8 @@ class Recommendations( wx.Panel ):
 				try:
 					if maxNonInterpLap < maxCatLaps and categoryMaxLapInterp[category] > maxNonInterpLap:
 						data[0].append( category.catStr )
-						data[1].append( 'Verify that "%s" did %d max Race Laps.  Update Race Laps in Categories if necessary.' %
+						data[1].append( 'Laps' )
+						data[2].append( 'Verify that "%s" did %d max Race Laps.  Update Race Laps in Categories if necessary.' %
 										(category.name, maxNonInterpLap) )
 				except KeyError:
 					pass
@@ -222,7 +237,8 @@ class Recommendations( wx.Panel ):
 						iLast = (i for i in xrange(len(riderEntriesCur), 0, -1) if not riderEntriesCur[i-1].interp).next()
 						if iLast != len(riderEntriesCur):
 							data[0].append( str(num) )
-							data[1].append( 'Check for DNF after rider lap %d.' % (iLast-1) )
+							data[1].append( 'DNF' )
+							data[2].append( 'Check for DNF after rider lap %d.' % (iLast-1) )
 					except (KeyError, StopIteration):
 						pass
 						
@@ -243,7 +259,8 @@ class Recommendations( wx.Panel ):
 						missingCount = sum( 1 for b in appearedInLap if not b )
 						if missingCount:
 							data[0].append( str(num) )
-							data[1].append( "Confirm rider was lapped by Category Leader in leader's lap %s" %
+							data[1].append( 'Lapped' )
+							data[2].append( "Confirm rider was lapped by Category Leader in leader's lap %s" %
 											(', '.join( str(i) for i, b in enumerate(appearedInLap) if not b )) )
 					except (KeyError, IndexError, ValueError):
 						pass
@@ -252,18 +269,21 @@ class Recommendations( wx.Panel ):
 					# Check for DNS's with recorded times.
 					if rider.times:
 						data[0].append( str(num) )
-						data[1].append( 'Check %s.  Rider has recorded times.' % statusName )
+						data[1].append( 'DNS' )
+						data[2].append( 'Check %s status.  Rider has recorded times.' % statusName )
 						
 				elif rider.status in [Model.Rider.DNF, Model.Rider.Pulled]:
 					if rider.tStatus == None:
 						# Missing status times.
 						data[0].append( str(num) )
-						data[1].append( 'Check if %s time is accurate.' % statusName )
+						data[1].append( 'Time' )
+						data[2].append( 'Check if %s time is accurate.' % statusName )
 					else:
 						# Recorded time exceeds status time.
 						if rider.times and rider.times[-1] > rider.tStatus:
 							data[0].append( str(num) )
-							data[1].append( 'Check if %s time is accurate.  Found recorded time %s after %s time %s.' % (
+							data[1].append( 'Time' )
+							data[2].append( 'Check if %s time is accurate.  Found recorded time %s after %s time %s.' % (
 												statusName,
 												Utils.SecondsToStr(rider.times[-1]),
 												statusName,
@@ -274,7 +294,8 @@ class Recommendations( wx.Panel ):
 				category = race.getCategory( num )
 				if not category:
 					data[0].append( str(num) )
-					data[1].append( 'Rider does not match any active category.  Check if rider is in right race or data entry error.' )
+					data[1].append( 'Category' )
+					data[2].append( 'Rider does not match any active category.  Check if rider is in right race or data entry error.' )
 						
 			# Show numbers with projected time.
 			if race.isFinished():
@@ -286,14 +307,16 @@ class Recommendations( wx.Panel ):
 				projectedNums.sort()
 				for m in projectedNums:
 					data[0].append( m[0] )
-					data[1].append( 'Check rider has projected times (%d).' % m[1] )
+					data[1].append( 'Projected' )
+					data[2].append( 'Check rider has projected times (%d).' % m[1] )
 				
 			# Show missing tag reads.
 			missingTags = [str(m) for m in getattr(race, 'missingTags', set())]
 			missingTags.sort()
 			for m in missingTags:
 				data[0].append( m )
-				data[1].append( 'Check chip tag missing from Excel sheet' )
+				data[1].append( 'Tag' )
+				data[2].append( 'Check chip tag missing from Excel sheet' )
 
 			self.grid.Set( data = data, colnames = colnames )
 			self.grid.AutoSizeColumns( True )
@@ -301,6 +324,7 @@ class Recommendations( wx.Panel ):
 			self.updateColours()
 			
 			# Fix the grid's scrollbars.
+			self.grid.SortByColumn( self.sortCol, self.sortDescending )
 			self.grid.FitInside()
 	
 	def commit( self ):
