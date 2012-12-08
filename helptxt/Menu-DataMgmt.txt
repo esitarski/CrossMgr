@@ -54,6 +54,8 @@ DNS Selected|Adds all the selected riders into CrossMgr, and sets the status to 
 
 Clicking on a column name will sort the potential DNS riders by that column.
 
+Remember Ctrl-Z (Undo) and Ctrl-Y (Redo) if you need it.
+
 ## Category Mgmt
 ### Import Categories from File...
 Read the categories from a previously exported Categories file.

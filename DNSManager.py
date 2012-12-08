@@ -250,6 +250,7 @@ class DNSManagerDialog( wx.Dialog ):
 		Utils.showHelp( 'Menu-DataMgmt.html#add-dns-from-external-excel-data' )
 		
 	def onClose( self, event ):
+		wx.CallAfter( Utils.refresh )
 		self.dnsManager.commit()
 		self.EndModal( wx.ID_OK )
 
