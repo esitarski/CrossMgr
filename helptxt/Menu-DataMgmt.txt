@@ -52,6 +52,8 @@ Select All|Select all the potential DNS riders.  You can also manually select by
 Deselect All|Deselect all the potential DNS riders.  You can also manually deselect by clicking on the rows.  You can multi-deselect with Shift-Click and Ctrl-Click.
 DNS Selected|Adds all the selected riders into CrossMgr, and sets the status to DNS (Did Not Start)
 
+Clicking on a column name will sort the potential DNS riders by that column.
+
 ## Category Mgmt
 ### Import Categories from File...
 Read the categories from a previously exported Categories file.
