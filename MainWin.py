@@ -40,6 +40,7 @@ from RaceAnimation		import RaceAnimation, GetAnimationData
 from Search				import SearchDialog
 from FtpWriteFile		import realTimeFtpPublish
 from SetAutoCorrect		import SetAutoCorrectDialog
+from DNSManager			import DNSManagerDialog
 import Utils
 from Utils				import logCall
 import Model
@@ -338,6 +339,13 @@ class MainWin( wx.Frame ):
 		self.dataMgmtMenu.AppendSeparator()
 		
 		#-----------------------------------------------------------------------
+		idCur = wx.NewId()
+		self.dataMgmtMenu.Append( idCur, '&Add DNS from External Excel Data...', 'Add DNS...' )
+		self.Bind( wx.EVT_MENU, self.menuDNS, id=idCur )
+		
+		self.dataMgmtMenu.AppendSeparator()
+		
+		#-----------------------------------------------------------------------
 		categoryMgmtMenu = wx.Menu()
 		self.dataMgmtMenu.AppendMenu(wx.ID_ANY, "Category Mgmt", categoryMgmtMenu)
 
@@ -528,6 +536,11 @@ class MainWin( wx.Frame ):
 		#------------------------------------------------------------------------------
 		self.Bind(wx.EVT_CLOSE, self.onCloseWindow)
 
+	def menuDNS( self, event ):
+		dns = DNSManagerDialog( self )
+		dns.ShowModal()
+		dns.Destroy()
+		
 	def menuFind( self, event ):
 		if not getattr(self, 'findDialog', None):
 			self.findDialog = SearchDialog( self, wx.ID_ANY )
