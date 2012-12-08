@@ -35,7 +35,7 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 		self.deSelectAll = wx.Button( self, wx.ID_ANY, 'Deselect All', style=wx.BU_EXACTFIT )
 		self.Bind( wx.EVT_BUTTON, self.onDeselectAll, self.deSelectAll )
 		
-		self.setDNS = wx.Button( self, wx.ID_ANY, 'DNS All Selected', style=wx.BU_EXACTFIT )
+		self.setDNS = wx.Button( self, wx.ID_ANY, 'DNS Selected', style=wx.BU_EXACTFIT )
 		self.Bind( wx.EVT_BUTTON, self.onSetDNS, self.setDNS )
 		
 		self.il = wx.ImageList(16, 16)
@@ -193,7 +193,7 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 
 class DNSManagerDialog( wx.Dialog ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, "DNSManager",
+		wx.Dialog.__init__( self, parent, id, "DNS Manager",
 						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
 						
 		vs = wx.BoxSizer( wx.VERTICAL )
@@ -203,12 +203,16 @@ class DNSManagerDialog( wx.Dialog ):
 		
 		vs.Add( self.dnsManager, 1, flag=wx.ALL|wx.EXPAND, border = 4 )
 		
+		self.helpBtn = wx.Button( self, wx.ID_ANY, '&Help' )
+		self.Bind( wx.EVT_BUTTON, self.onHelp, self.helpBtn )
+		
 		self.closeBtn = wx.Button( self, wx.ID_ANY, '&Close (Ctrl-Q)' )
 		self.Bind( wx.EVT_BUTTON, self.onClose, self.closeBtn )
 		self.Bind( wx.EVT_CLOSE, self.onClose )
 
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.AddStretchSpacer()
+		hs.Add( self.helpBtn, flag=wx.ALL|wx.ALIGN_RIGHT, border = 4 )
 		hs.Add( self.closeBtn, flag=wx.ALL|wx.ALIGN_RIGHT, border = 4 )
 		vs.Add( hs, flag=wx.EXPAND )
 		
@@ -242,6 +246,9 @@ class DNSManagerDialog( wx.Dialog ):
 		undo.doRedo()
 		self.refresh()
 	
+	def onHelp( self, event ):
+		Utils.showHelp( 'Menu-DataMgmt.html#add-dns-from-external-excel-data' )
+		
 	def onClose( self, event ):
 		self.dnsManager.commit()
 		self.EndModal( wx.ID_OK )
