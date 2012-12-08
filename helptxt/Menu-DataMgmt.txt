@@ -32,6 +32,7 @@ FirstName|Optional.  Rider's first name.
 Team|Optional.  Rider's team.
 License|Optional.  Rider' license.  This can be the UCI code, a national code, or a regional code.  CrossMgr uses this for display only.
 Category|Optional.  Rider's category.  This does not have to be the same as the race category.
+Gender|Optional.  Rider's gender.  Male entries must start with an "M" or "m" character.  Female entries must start with any one of the charcters "F", "f", "W" or "w".  Gender can also be left blank.  Gender is used in [Export Results in USAC Excel Format](#export-results-in-usac-excel-format).
 Tag|Optional for manual input, required for chip input.  Rider's chip tag.
 Tag2|Optional.  Rider's alternate chip tag for second bike.
 
@@ -80,15 +81,31 @@ Race Time|Race time of the entry (= Clock Time - Race Start Time)
 Bib#|Bib number of the rider
 Count|The count of the number of reads for this rider.
 Race Cat.|Race category of the rider, if found
-Name|"LAST, First" name of the rider (if present in the external Excel sheet)
-Team|Team of the rider (if present in the external Excel sheet)
-Category|Category of the rider (if present in the external Excel sheet)
-License|License of the rider (if present in the external Excel sheet)
-Tag|Chip tag associated with the entry (if chip timing and if present in the external Excel sheet)
-Tag2|2nd chip tag associated with the entry (if chip timing and if present in the external Excel sheet)
+Name|"LAST, First" name of the rider (if present in the [External Excel](#link-to-external-excel-data) sheet)
+Team|Team of the rider (if present in the [External Excel](#link-to-external-excel-data) sheet)
+Category|Category of the rider (if present in the [External Excel](#link-to-external-excel-data) sheet)
+License|License of the rider (if present in the [External Excel](#link-to-external-excel-data) sheet)
+Tag|Chip tag associated with the entry (if chip timing, and if present in the [External Excel](#link-to-external-excel-data) sheet)
+Tag2|2nd chip tag associated with the entry (if chip timing and if present in the [External Excel](#link-to-external-excel-data) sheet)
 Edit|Reason for the data edit
 By|Username who made the edit
-On|Date and time when the edit was made.
+On|Date and Time when the edit was made.
+
+## Export Results in USAC Excel Format...
+Export the results for all race categories in a format acceptable to USA Cycling.
+
+Columns in the exported spreadsheet are as follows:
+
+Column|Description
+:-----|:----------
+rider place|Corresponds to the "Pos" field in CrossMgr [Results][].
+race gender|The gender of the rider.  Read from the "Gender" column in the [External Excel](#link-to-external-excel-data) sheet.  If Gender is not defined, this field will appear blank.
+race discipline|Always "Cyclo-cross".
+race category|The name of the Category of this rider as specified in [Categories][].
+rider last name|Corresponds to the rider's "LastName" as configured in the [External Excel](#link-to-external-excel-data) sheet.
+rider first name|Corresponds to the rider's "FirstName" as configured in the [External Excel](#link-to-external-excel-data) sheet.
+rider team|Corresponds to the rider's "Team" as configured in the [External Excel](#link-to-external-excel-data) sheet.
+time|Corresponds to the "Time" field in CrossMgr [Results][].
 
 ## Import Course in GPX Format
 

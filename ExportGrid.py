@@ -212,11 +212,11 @@ class ExportGrid( object ):
 		titleStyle.font.height += titleStyle.font.height / 2
 
 		rowTop = 0
-		for line in self.title.split('\n'):
-			sheet.write(rowTop, 0, line, titleStyle)
+		if self.title:
+			for line in self.title.split('\n'):
+				sheet.write(rowTop, 0, line, titleStyle)
+				rowTop += 1
 			rowTop += 1
-			
-		rowTop += 1
 		
 		sheetFit = FitSheetWrapper( sheet )
 		

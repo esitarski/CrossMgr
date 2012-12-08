@@ -41,6 +41,7 @@ from Search				import SearchDialog
 from FtpWriteFile		import realTimeFtpPublish
 from SetAutoCorrect		import SetAutoCorrectDialog
 from DNSManager			import DNSManagerDialog
+from USACExport			import USACExport
 import Utils
 from Utils				import logCall
 import Model
@@ -362,11 +363,13 @@ class MainWin( wx.Frame ):
 		self.dataMgmtMenu.Append( idCur , "Export History to Excel...", "Export History to Excel File" )
 		self.Bind(wx.EVT_MENU, self.menuExportHistory, id=idCur )
 
-		self.dataMgmtMenu.AppendSeparator()
-		
 		idCur = wx.NewId()
 		self.dataMgmtMenu.Append( idCur , "Export Raw Data as &HTML...", "Export raw data as HTML (.html)" )
 		self.Bind(wx.EVT_MENU, self.menuExportHtmlRawData, id=idCur )
+
+		idCur = wx.NewId()
+		self.dataMgmtMenu.Append( idCur , "Export Resuls in &USAC Excel Format...", "Export Resuls in USAC Excel Format" )
+		self.Bind(wx.EVT_MENU, self.menuExportUSAC, id=idCur )
 
 		self.dataMgmtMenu.AppendSeparator()
 		idCur = wx.NewId()
@@ -1673,6 +1676,38 @@ Continue?''' % fName, 'Simulate a Race' ):
 		wb = xlwt.Workbook()
 		sheetCur = wb.add_sheet( 'History' )
 		export.toExcelSheet( sheetCur )
+		
+		try:
+			wb.save( xlFName )
+			webbrowser.open( xlFName, new = 2, autoraise = True )
+			Utils.MessageOK(self, 'Excel file written to:\n\n   %s' % xlFName, 'Excel Write')
+		except IOError:
+			Utils.MessageOK(self,
+						'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % xlFName,
+						'Excel File Error', iconMask=wx.ICON_ERROR )
+	
+	@logCall
+	def menuExportUSAC( self, event ):
+		self.commit()
+		if self.fileName is None or len(self.fileName) < 4 or not Model.race:
+			return
+
+		self.showPageName( 'Results' )
+		
+		xlFName = self.fileName[:-4] + '-USAC.xls'
+		dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(xlFName),
+						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
+		ret = dlg.ShowModal()
+		dName = dlg.GetPath()
+		dlg.Destroy()
+		if ret != wx.ID_OK:
+			return
+
+		xlFName = os.path.join( dName, os.path.basename(xlFName) )
+
+		wb = xlwt.Workbook()
+		sheetCur = wb.add_sheet( 'Combined Results' )
+		USACExport( sheetCur )
 		
 		try:
 			wb.save( xlFName )

@@ -52,6 +52,24 @@ Searches for the entered number and highlights it in the Results page.  This is 
 ## Zoom In/Zoom Out
 If you find the text to hard to read (perhaps you are in direct sunlight), or you want to see more information on the screen, you can change the text size by pressing the Zoom In or Zoom Out buttons.
 
+# Results Data
+
+Data about the race is shown.  Data from the [External Excel](#link-to-external-excel-data) sheet is also shown.
+
+Column|Description
+:-----|:----------
+Pos|The position of the rider in the race.  When Category is "All", shows the rider's place with respect to all participants.  When the Category is set, this shows results with respect to that Category onnly.
+Bib|The bib number of the rider
+Last Name|Shown if defined in the [External Excel](#link-to-external-excel-data) sheet.
+First Name|Shown if defined in the [External Excel](#link-to-external-excel-data) sheet.
+Team|Shown if defined in the [External Excel](#link-to-external-excel-data) sheet.
+License|Shown if defined in the [External Excel](#link-to-external-excel-data) sheet.
+Start Time|In Race Time.  Only shown if in Time Trial mode.
+Finish Time|In Race Time.  Only shown if in Time Trial mode.
+Time|Rider's time.
+Gap|Time difference between this rider's finish time and the leader's finish time, with respect to the Category.
+Speed (km/h or mph)|The rider's speed.  Only shown is the Distance has been specified in [Categories][].
+
 # Additional Features
 
 ## Double-Click
