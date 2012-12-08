@@ -39,7 +39,7 @@ To save space, CrossMgr may combine the first and last names into one field as "
 
 ## Add DNS from External Excel Data...
 
-Add DNS (Did Not Start) riders quickly and automatically.  This dialog allows you to select all or some riders who are defined in the Excel sheet, but have no race data or status in CrossMgr.
+Add DNS (Did Not Start) riders quickly and automatically.  This dialog allows you to select all or some riders who are defined in the Excel sheet, but have no data entered during the race.
 
 These riders are likely DNS riders.  Of course, the possibility exists that some of the rides actually started but DNFed (Did Not Finish), were PUL (Pulled) or DQ (Disqualified).  Be mindful of the riders you set as DNF.  Of course, you can always change the status later.
 
