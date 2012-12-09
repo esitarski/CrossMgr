@@ -150,13 +150,12 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 				if self.category and race.getCategory(num) != self.category:
 					continue
 				rider = race.riders.get( num, None )
-				if rider:
-					if rider.status == rider.Finisher:
-						if rider.times:
-							continue
-					else:
-						continue
-				potentialDNS[num] = info
+				if not rider:
+					potentialDNS[num] = info
+				else:
+					# Also add riders marked as Finishers that have no times.
+					if rider.status == rider.Finisher and not rider.times:
+						potentialDNS[num] = info
 			
 		if not potentialDNS:
 			return

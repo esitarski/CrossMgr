@@ -39,10 +39,11 @@ def USACExport( sheet ):
 		except:
 			externalFields = []
 			externalInfo = {}
+		raceDiscipline = getattr( race, 'discipline', 'Cyclo-cross' )
 	
 	headerColMap = dict( (HeaderToUSAC[colName], c) for c, colName in enumerate(exportGrid.colnames) if colName in HeaderToUSAC )
 	exportHeaders = set( headerColMap.keys() )
-	exportHeaders.add( 'race discipline' )		# Always Cyclo-cross
+	exportHeaders.add( 'race discipline' )		# Taken from the race properties.
 	exportHeaders.add( 'race gender' )			# Taken from the spreadsheet.
 	exportHeaders.add( 'race category' )		# Taken from the category.
 
@@ -59,6 +60,8 @@ def USACExport( sheet ):
 		if not exportGrid.colnames:
 			continue
 			
+		raceGender = getattr( cat, 'gender', 'Open' )
+		
 		dataRows = len(exportGrid.data[0])
 		
 		col = 0
@@ -80,15 +83,10 @@ def USACExport( sheet ):
 			style.alignment.horz = xlwt.Alignment.HORZ_LEFT if header not in rightJustify else xlwt.Alignment.HORZ_RIGHT
 			
 			for i in xrange(dataRows):
-				if   header == 'race discipline':
-					v = 'Cyclo-cross'
+				if header == 'race discipline':
+					v = raceDiscipline
 				elif header == 'race gender':
-					num = int( exportGrid.data[1][i] )	# Get the number from the Bib# column.
-					v = externalInfo.get(num, {}).get('Gender', '')
-					if v.lower().startswith('m'):
-						v = 'Men'
-					elif v.lower().startswith('w') or v.lower().startswith('f'):
-						v = 'Women'
+					v = raceGender
 				elif header == 'race category':
 					v = cat.name
 				else:
@@ -99,6 +97,9 @@ def USACExport( sheet ):
 							v = v[:v.rindex('.')]
 						except ValueError:
 							pass
+					elif header == 'rider place':
+						if v in {'NP', 'OTL', 'PUL'}:	# Normalize all non-recognized statuses to DNP.
+							v = 'DNP'
 				sheetFit.write( row, col, v, style )
 				row += 1
 			col += 1

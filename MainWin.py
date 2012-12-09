@@ -368,7 +368,7 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_MENU, self.menuExportHtmlRawData, id=idCur )
 
 		idCur = wx.NewId()
-		self.dataMgmtMenu.Append( idCur , "Export Resuls in &USAC Excel Format...", "Export Resuls in USAC Excel Format" )
+		self.dataMgmtMenu.Append( idCur , "Export Results in &USAC Excel Format...", "Export Results in USAC Excel Format" )
 		self.Bind(wx.EVT_MENU, self.menuExportUSAC, id=idCur )
 
 		self.dataMgmtMenu.AppendSeparator()
@@ -1240,9 +1240,8 @@ class MainWin( wx.Frame ):
 		with Model.LockRace() as race:
 			if not importedCategories:
 				race.categoriesImportFile = ''
-				race.setCategories( [(True,
-									'Category %d-%d'	% (max(1, i*100), (i+1)*100-1),
-									'%d-%d'				% (max(1, i*100), (i+1)*100-1)) for i in xrange(8)] )
+				race.setCategories( [{'name':'Category %d-%d'	% (max(1, i*100), (i+1)*100-1),
+									  'catStr':'%d-%d'			% (max(1, i*100), (i+1)*100-1)} for i in xrange(8)] )
 			else:
 				race.categoriesImportFile = categoriesFile
 
@@ -1542,9 +1541,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 			race.minutes = self.raceMinutes
 			race.raceNum = 1
 			#race.isTimeTrial = True
-			#'active', 'name', 'catStr', 'startOffset', 'numLaps', 'distance', 'distanceType'
-			race.setCategories( [	(True, 'Junior', '100-199', '00:00', None, 0.5, None),
-									(True, 'Senior', '200-299', '00:15', None, 0.5, None)] )
+			race.setCategories( [	{'name':'Junior', 'catStr':'100-199', 'startOffset':'00:00', 'distance':0.5, 'gender':'Men'},
+									{'name':'Senior', 'catStr':'200-299', 'startOffset':'00:15', 'distance':0.5, 'gender':'Women'}] )
 
 		self.writeRace()
 

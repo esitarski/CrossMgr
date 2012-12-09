@@ -162,8 +162,10 @@ class Category(object):
 					mask = cp.ljust(len(mask), '.')
 		return mask
 
-	def __init__( self, active = True, name = 'category', catStr = '100-199', startOffset = '00:00:00', numLaps = None, sequence = 0,
-					distance = None, distanceType = None, firstLapDistance = None ):
+	def __init__( self, active = True, name = 'Category 100-199', catStr = '100-199', startOffset = '00:00:00',
+						numLaps = None, sequence = 0,
+						distance = None, distanceType = None, firstLapDistance = None,
+						gender = 'Open' ):
 		self.active = False
 		active = str(active).strip()
 		if active and active[0] in 'TtYy1':
@@ -204,6 +206,11 @@ class Category(object):
 			self.firstLapDistance = None
 		if self.firstLapDistance is not None and self.firstLapDistance <= 0.0:
 			self.firstLapDistance = None
+			
+		if gender in {'Men', 'Women', 'Open'}:
+			self.gender = gender
+		else:
+			self.gender = 'Open'
 		
 	def __setstate( self, d ):
 		self.__dict__.update(d)
@@ -288,7 +295,7 @@ class Category(object):
 				return True
 		return False
 
-	key_attr = ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'catStr', 'distance', 'distanceType', 'firstLapDistance']
+	key_attr = ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'catStr', 'distance', 'distanceType', 'firstLapDistance', 'gender']
 	def __cmp__( self, c ):
 		for attr in self.key_attr:
 			cCmp = cmp( getattr(self, attr, None), getattr(c, attr, None) )
@@ -350,7 +357,7 @@ class Category(object):
 			self.exclude.discard( num )
 		
 	def __repr__( self ):
-		return 'Category(active=%s, name="%s", catStr="%s", startOffset="%s", numLaps=%s, sequence=%s, distance=%s, distanceType=%s)' % (
+		return 'Category(active=%s, name="%s", catStr="%s", startOffset="%s", numLaps=%s, sequence=%s, distance=%s, distanceType=%s, gender="%s")' % (
 				str(self.active),
 				self.name,
 				self.catStr,
@@ -358,7 +365,9 @@ class Category(object):
 				str(self.numLaps),
 				str(self.sequence),
 				str(getattr(self,'distance',None)),
-				str(getattr(self,'distanceType', Category.DistanceByLap)) )
+				str(getattr(self,'distanceType', Category.DistanceByLap)),
+				getattr(self,'gender',''),
+			)
 
 	def getStartOffsetSecs( self ):
 		return Utils.StrToSeconds( self.startOffset )
@@ -745,6 +754,7 @@ class Race(object):
 		self.minutes = 60
 		self.commissaire = '<Commissaire>'
 		self.memo = '<RaceMemo>'
+		self.discipline = 'Cyclo-cross'
 
 		self.categories = {}
 		self.riders = {}
@@ -1379,14 +1389,12 @@ class Race(object):
 
 	def setCategories( self, nameStrTuples ):
 		# This list must match the initialization fields in class Category (excluding sequence).
-		fields = ('active', 'name', 'catStr', 'startOffset', 'numLaps', 'distance', 'distanceType', 'firstLapDistance')
+		fields = ('active', 'name', 'catStr', 'startOffset', 'numLaps', 'distance', 'distanceType', 'firstLapDistance', 'gender')
 		padding = [None for f in fields]
 		i = 0
 		newCategories = {}
 		for t in nameStrTuples:
-			if len(t) < len(fields):
-				t = list(t) + padding
-			args = dict( (key, t[i]) for i, key in enumerate(fields) )
+			args = dict( t )
 			if not args['name']:
 				continue
 			args['sequence'] = i
@@ -1407,7 +1415,7 @@ class Race(object):
 
 	def exportCategories( self, fp ):
 		for c in self.categories.itervalues():
-			fp.write( '%s|%s\n' % (c.name.replace('|',''), c.catStr) )
+			fp.write( '%s|%s|\n' % (c.name.replace('|',''), c.catStr, getattr(c,'gender','Open')) )
 
 	def importCategories( self, fp ):
 		categories = []
@@ -1415,7 +1423,9 @@ class Race(object):
 			if not line:
 				continue
 			fields = line.strip().split('|')
-			categories.append( (True, fields[0], fields[1]) )
+			if len(fields) < 3:
+				fields.append( 'Open' )
+			categories.append( {'name':fields[0], 'catStr':fields[1], 'gender':fields[2]} )
 		self.setCategories( categories )
 
 	def isRiderInCategory( self, num, catName = None ):
@@ -1808,9 +1818,9 @@ if __name__ == '__main__':
 	c = Category(True, 'test', '1400-1499,-1450')
 	print( 'mask=', c.getMask() )
 	
-	r.setCategories( [	(True, 'test1', '1100-1199'),
-						(True, 'test2', '1200-1299, 2000,2001,2002'),
-						(True, 'test3', '1300-1399')] )
+	r.setCategories( [	{'name':'test1', 'catStr':'1100-1199'},
+						{'name':'test2', 'catStr':'1200-1299, 2000,2001,2002'},
+						{'name':'test3', 'catStr':'1300-1399'}] )
 	print( r.getCategoryMask() )
 	print( r.getCategory( 2002 ) )
 
