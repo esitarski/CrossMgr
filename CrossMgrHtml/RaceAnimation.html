@@ -2642,7 +2642,9 @@ function onLoad()
 	
 	if( !rfid )
 		document.getElementById('idRFID').className = 'hidden';
-
+	else
+		document.getElementById('idRFID').innerHTML = 'RFID Precision.'
+		
 	if( isCanvasSupported() )
 	{
 		var raceChartCanvas = document.getElementById('idRaceChart');
@@ -2749,7 +2751,7 @@ function onLoad()
 <a id="idEmail" href="mailto:helpful.organizer@great_race_organization.com?subject=CrossMgr Results Output">Email Comments/Suggestions</a>.
 <br/>
 Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
-<span id="idRFID">RFID Precision.</span>
+<span id="idRFID"></span>
 </span>
 </tr></table>
 </p>
