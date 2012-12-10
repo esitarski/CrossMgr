@@ -632,7 +632,7 @@ class RiderDetail( wx.Panel ):
 				self.atRaceTime.SetValue( Utils.SecondsToStr(tStatus) )
 				
 		self.commitChange()
-		wx.CallAfter( self.refresh() )
+		wx.CallAfter( self.refresh )
 		
 	def onAutocorrectLaps( self, event ):
 		num = self.num.GetValue()
