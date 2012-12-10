@@ -99,8 +99,8 @@ Columns in the exported spreadsheet are as follows:
 Column|Description
 :-----|:----------
 rider place|Corresponds to the "Pos" field in CrossMgr [Results][].
-race gender|The gender of the rider.  Read from the "Gender" column in the [External Excel](#link-to-external-excel-data) sheet.  If Gender is not defined, this field will appear blank.
-race discipline|Always "Cyclo-cross".
+race gender|The gender of the this Category as specified in [Categories][]
+race discipline|As specified in the race [Properties][].  This must match the USAC standard discipline name.
 race category|The name of the Category of this rider as specified in [Categories][].
 rider last name|Corresponds to the rider's "LastName" as configured in the [External Excel](#link-to-external-excel-data) sheet.
 rider first name|Corresponds to the rider's "FirstName" as configured in the [External Excel](#link-to-external-excel-data) sheet.

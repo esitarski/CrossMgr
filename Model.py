@@ -1388,14 +1388,11 @@ class Race(object):
 		self.setChanged()
 
 	def setCategories( self, nameStrTuples ):
-		# This list must match the initialization fields in class Category (excluding sequence).
-		fields = ('active', 'name', 'catStr', 'startOffset', 'numLaps', 'distance', 'distanceType', 'firstLapDistance', 'gender')
-		padding = [None for f in fields]
 		i = 0
 		newCategories = {}
 		for t in nameStrTuples:
 			args = dict( t )
-			if not args['name']:
+			if not 'name' in args or not args['name']:
 				continue
 			args['sequence'] = i
 			category = Category( **args )
