@@ -1420,9 +1420,12 @@ class Race(object):
 	def importCategories( self, fp ):
 		categories = []
 		for r, line in enumerate(fp):
-			if not line:
+			line = line.strip()
+			if not line or line.startswith('#'):
 				continue
 			fields = line.strip().split('|')
+			if len(fields) < 2:
+				continue
 			if len(fields) < 3:
 				fields.append( 'Open' )
 			categories.append( {'name':fields[0], 'catStr':fields[1], 'gender':fields[2]} )
