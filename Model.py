@@ -1414,8 +1414,8 @@ class Race(object):
 		return changed
 
 	def exportCategories( self, fp ):
-		for c in self.categories.itervalues():
-			fp.write( '%s|%s|\n' % (c.name.replace('|',''), c.catStr, getattr(c,'gender','Open')) )
+		for c in sorted( self.categories.itervalues() ):
+			fp.write( '%s|%s|%s\n' % (c.name.replace('|',''), c.catStr, getattr(c,'gender','Open')) )
 
 	def importCategories( self, fp ):
 		categories = []
