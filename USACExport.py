@@ -60,9 +60,13 @@ def USACExport( sheet ):
 		if not exportGrid.colnames:
 			continue
 			
-		raceGender = getattr( cat, 'gender', 'Open' )
-		
 		dataRows = len(exportGrid.data[0])
+		
+		fixedValues = {
+			'race discipline':		raceDiscipline,
+			'race gender':			getattr( cat, 'gender', 'Open' ),
+			'race category':		cat.name,
+		}
 		
 		col = 0
 		for header, cmHeader in USACCrossMgr:
@@ -83,13 +87,8 @@ def USACExport( sheet ):
 			style.alignment.horz = xlwt.Alignment.HORZ_LEFT if header not in rightJustify else xlwt.Alignment.HORZ_RIGHT
 			
 			for i in xrange(dataRows):
-				if header == 'race discipline':
-					v = raceDiscipline
-				elif header == 'race gender':
-					v = raceGender
-				elif header == 'race category':
-					v = cat.name
-				else:
+				v = fixedValues.get( header, None )
+				if v is None:
 					v = exportGrid.data[headerColMap[header]][i]
 					if header == 'time':
 						v = v.strip()
@@ -98,7 +97,7 @@ def USACExport( sheet ):
 						except ValueError:
 							pass
 					elif header == 'rider place':
-						if v in {'NP', 'OTL', 'PUL'}:	# Normalize all non-recognized statuses to DNP.
+						if v in {'NP', 'OTL', 'PUL'}:	# Normalize all CrossMgr statuses to USAC DNP.
 							v = 'DNP'
 				sheetFit.write( row, col, v, style )
 				row += 1
