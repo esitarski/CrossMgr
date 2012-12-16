@@ -586,7 +586,7 @@ class NumKeypad( wx.Panel ):
 			if not race or not race.isRunning():
 				return
 		
-		results = GetResults( 'All', False )
+		results = GetResults( None, False )
 		if not results:
 			return
 		
@@ -600,7 +600,7 @@ class NumKeypad( wx.Panel ):
 				catCount[category] += 1
 				if rr.status != Model.Rider.Finisher:
 					continue
-				numLaps = race.getCategoryBestLaps( category.name if category else 'All' )
+				numLaps = race.getCategoryBestLaps( category )
 				numLaps = (numLaps if numLaps else 1)
 				
 				tSearch = t
@@ -622,7 +622,7 @@ class NumKeypad( wx.Panel ):
 			
 		catLapList = [(category, lap, categoryLaps, count)
 						for (category, lap, categoryLaps), count in catLapCount.iteritems()]
-		catLapList.sort( key=lambda x: (x[0].getStartOffsetSecs(), x[0].name, -x[1]) )
+		catLapList.sort( key=lambda x: (x[0].getStartOffsetSecs(), x[0].fullname, -x[1]) )
 		
 		def appendListRow( row = tuple(), colour = None, bold = None ):
 			r = self.lapCountList.InsertStringItem( sys.maxint, str(row[0]) if row else '' )
@@ -648,7 +648,7 @@ class NumKeypad( wx.Panel ):
 		lastCategory = None
 		for category, lap, categoryLaps, count in catLapList:
 			if category != lastCategory:
-				appendListRow( (category.name, '%d/%d' % (catRaceCount[category], catCount[category]),
+				appendListRow( (category.fullname, '%d/%d' % (catRaceCount[category], catCount[category]),
 									('(%d lap%s)' % (categoryLaps, 's' if categoryLaps > 1 else '')) ),
 								bold = True )
 			appendListRow( ('', count, 'on lap %d' % lap) )
