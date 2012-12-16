@@ -1266,7 +1266,7 @@ class Race(object):
 		return ctn
 		
 	@memoize
-	def getCategoryRaceLaps( self ):		
+	def getCategoryRaceLaps( self ):
 		crl = {}
 		raceTime = self.minutes * 60.0
 		for c, (catTimes, catNums) in self.getCategoryTimesNums().iteritems():
@@ -1349,7 +1349,7 @@ class Race(object):
 
 	def getCategories( self ):
 		activeCategories = [c for c in self.categories.itervalues() if c.active]
-		activeCategories.sort()
+		activeCategories.sort( key = Category.key )
 		return activeCategories
 
 	def setCategoryMask( self ):
@@ -1382,7 +1382,7 @@ class Race(object):
 
 	def getAllCategories( self ):
 		allCategories = [c for c in self.categories.itervalues()]
-		allCategories.sort()
+		allCategories.sort( key = Category.key )
 		return allCategories
 
 	def setActiveCategories( self, active = None ):
@@ -1415,7 +1415,7 @@ class Race(object):
 		return changed
 
 	def exportCategories( self, fp ):
-		for c in sorted( self.categories.itervalues() ):
+		for c in sorted( self.categories.itervalues(), key = Category.key ):
 			fp.write( '%s|%s|%s\n' % (c.name.replace('|',''), c.catStr, getattr(c,'gender','Open')) )
 
 	def importCategories( self, fp ):
