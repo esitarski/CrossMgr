@@ -26,7 +26,7 @@ rightJustify = set( ['rider place', 'time'] )
 def USACExport( sheet ):
 	''' Combine results for all categories into one big spreadsheet. '''
 	exportGrid = ExportGrid()
-	exportGrid.setResultsOneList( 'All', True )
+	exportGrid.setResultsOneList( None, True )
 	
 	if not exportGrid.colnames:
 		self.clearGrid()
@@ -56,7 +56,7 @@ def USACExport( sheet ):
 	rowTop = 0
 	for cat in Model.race.getCategories():
 		exportGrid = ExportGrid()
-		exportGrid.setResultsOneList( cat.name, True )
+		exportGrid.setResultsOneList( cat, True )
 		if not exportGrid.colnames:
 			continue
 			
