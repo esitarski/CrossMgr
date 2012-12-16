@@ -131,13 +131,12 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 		with Model.LockRace() as race:
 			if not race:
 				return
-			catName = FixCategories( self.categoryChoice, getattr(race, 'DNSManagerCategory', 0) )
+			self.category = FixCategories( self.categoryChoice, getattr(race, 'DNSManagerCategory', 0) )
 			self.hbs.RecalcSizes()
 			self.hbs.Layout()
 			for si in self.hbs.GetChildren():
 				if si.IsWindow():
 					si.GetWindow().Refresh()
-			self.category = race.categories.get( catName, None )
 			
 			try:
 				externalFields = race.excelLink.getFields()

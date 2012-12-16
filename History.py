@@ -354,7 +354,7 @@ class History( wx.Panel ):
 				self.clearGrid()
 				return
 
-			catName = FixCategories( self.categoryChoice, getattr(race, 'historyCategory', 0) )
+			category = FixCategories( self.categoryChoice, getattr(race, 'historyCategory', 0) )
 			self.hbs.Layout()
 
 			maxLaps = race.numLaps
@@ -400,7 +400,6 @@ class History( wx.Panel ):
 				self.history[lapCur].append( e )
 				numSeen.add( e.num )
 			
-			category = race.categories.get( catName, None )
 			self.category = category
 				
 			# Trim out elements not in the desired category.

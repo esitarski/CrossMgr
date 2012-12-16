@@ -250,6 +250,10 @@ class Category(object):
 			return distance * lap
 	
 	@property
+	def fullname( self ):
+		return '%s (%s)' % (self.name, getattr(self, 'gender', 'Open'))
+	
+	@property
 	def firstLapRatio( self ):
 		if getattr(self, 'distanceType', None) != Category.DistanceByLap:
 			return 1.0
@@ -1396,7 +1400,7 @@ class Race(object):
 				continue
 			args['sequence'] = i
 			category = Category( **args )
-			newCategories[args['name']] = category
+			newCategories[category.fullname] = category
 			i += 1
 
 		if self.categories != newCategories:
@@ -1428,17 +1432,16 @@ class Race(object):
 			categories.append( {'name':fields[0], 'catStr':fields[1], 'gender':fields[2]} )
 		self.setCategories( categories )
 
-	def isRiderInCategory( self, num, catName = None ):
-		if not catName or catName == 'All':
+	def isRiderInCategory( self, num, category = None ):
+		if category is None:
 			return True
-		category = self.categories.get( catName, None )
-		return category.matches(num) if category is not None else False
+		return category.matches(num)
 
-	def hasCategory( self, catName = None ):
+	def hasCategory( self, category ):
 		# Check if there is at least one rider in this category.
-		if not catName or catName == 'All':
+		if category is None:
 			return True
-		return any( self.isRiderInCategory(num, catName) for num in self.riders.iterkeys() )
+		return any( self.isRiderInCategory(num, category) for num in self.riders.iterkeys() )
 
 	def hasTime( self, num, t ):
 		try:
@@ -1652,8 +1655,7 @@ class Race(object):
 	#----------------------------------------------------------------------------------------
 	
 	@memoize
-	def getCategoryBestLaps( self, catName = 'All' ):
-		category = self.categories.get( catName, None )
+	def getCategoryBestLaps( self, category = None ):
 		if category:
 			# Check if the number of laps is specified.  If so, use that.
 			# Otherwise, check if we can figure out the number of laps.
@@ -1680,7 +1682,7 @@ class Race(object):
 		if num not in self.riders:
 			return 0
 		category = self.getCategory( num )
-		return self.getCategoryBestLaps( category.name if category else 'All' )
+		return self.getCategoryBestLaps( category )
 	
 	def addCategoryException( self, category, num ):
 		try:

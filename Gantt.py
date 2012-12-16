@@ -63,7 +63,7 @@ class Gantt( wx.Panel ):
 		with Model.LockRace() as race:
 			if not race or num not in race:
 				return
-			catName = FixCategories( self.categoryChoice, getattr(race, 'ganttCategory', 0) )
+			category = FixCategories( self.categoryChoice, getattr(race, 'ganttCategory', 0) )
 			entries = race.getRider(num).interpolate()
 			try:
 				self.entry = entries[iLap]
@@ -118,7 +118,7 @@ class Gantt( wx.Panel ):
 				
 		caseCode = 1 if entries[iLap].interp else 2
 		
-		riderResults = dict( (r.num, r) for r in GetResults(catName) )
+		riderResults = dict( (r.num, r) for r in GetResults(category) )
 		
 		self.numBefore, self.numAfter = None, None
 		for iRow, attr in [(self.iRow - 1, 'numBefore'), (self.iRow + 1, 'numAfter')]:
@@ -182,9 +182,9 @@ class Gantt( wx.Panel ):
 				return
 			e1 = race.getRider(num).interpolate()
 			e2 = race.getRider(numAdjacent).interpolate()
-			catName = FixCategories( self.categoryChoice, getattr(race, 'ganttCategory', 0) )
+			category = FixCategories( self.categoryChoice, getattr(race, 'ganttCategory', 0) )
 			
-		riderResults = dict( (r.num, r) for r in GetResults(catName) )
+		riderResults = dict( (r.num, r) for r in GetResults(category) )
 		try:
 			laps = riderResults[num].laps
 			undo.pushState()
@@ -387,8 +387,8 @@ class Gantt( wx.Panel ):
 			self.updateStats( None )
 			return
 		
-		catName = FixCategories( self.categoryChoice, getattr(Model.race, 'ganttCategory', 0) )
-		results = GetResults( catName, True )
+		category = FixCategories( self.categoryChoice, getattr(Model.race, 'ganttCategory', 0) )
+		results = GetResults( category, True )
 		
 		#labels	= [str(r.num) for r in results]
 		labels = []

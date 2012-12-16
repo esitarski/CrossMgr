@@ -260,16 +260,16 @@ class ExportGrid( object ):
 		
 		self.data[col][row] = value
 	
-	def setResultsOneList( self, catName = 'All', getExternalData = True, showLapsFrequency = None ):
+	def setResultsOneList( self, category = None, getExternalData = True, showLapsFrequency = None ):
 		''' Format the results into columns. '''
 		self.data = []
 		self.colnames = []
 
-		results = GetResults( catName, getExternalData )
+		results = GetResults( category, getExternalData )
 		if not results:
 			return
 		catDetails = GetCategoryDetails()
-		cd = catDetails.get( catName, None )
+		cd = catDetails[category.fullname] if category else None
 		
 		leader = results[0]
 		hasSpeeds = bool( getattr(leader, 'lapSpeeds', None) or getattr(leader, 'raceSpeeds', None) )
@@ -286,7 +286,7 @@ class ExportGrid( object ):
 			showLapsFrequency = max( 1, int(math.ceil(maxLaps / 12)) )
 		
 		with Model.LockRace() as race:
-			catStr = catName
+			catStr = 'All' if not category else category.fullname
 			if cd and cd.get('raceDistance', None):
 				catStr += ', %.2f %s, ' % (cd['raceDistance'], cd['distanceUnit'])
 				if cd.get('lapDistance', None) and cd.get('laps', 0) > 1:
@@ -301,7 +301,6 @@ class ExportGrid( object ):
 				catStr += 'winner: %s at %s' % (Utils.formatTime(leader.lastTime - cd['startOffset']), leader.speed);
 		
 			self.title = '\n'.join( [race.name, Utils.formatDate(race.date), catStr] )
-			category = race.categories.get( catName, None )
 			isTimeTrial = getattr( race, 'isTimeTrial', False )
 
 		startOffset = category.getStartOffsetSecs() if category else 0.0

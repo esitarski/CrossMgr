@@ -304,7 +304,7 @@ class RiderDetail( wx.Panel ):
 			if not race:
 				return
 			for c in race.getCategories():
-				if c.name == catName:
+				if c.fullname == catName:
 					race.addCategoryException( c, num )
 					break
 		wx.CallAfter( self.refresh )
@@ -925,14 +925,14 @@ class RiderDetail( wx.Panel ):
 				pass
 				
 			category = race.getCategory( num )
-			catName = category.name if category else ''
+			catName = category.fullname if category else ''
 			categories = race.getCategories()
 			try:
 				iCategory = (i for i, c in enumerate(categories) if c == category).next()
-				self.category.AppendItems( [c.name for c in categories] )
+				self.category.AppendItems( [c.fullname for c in categories] )
 				self.category.SetSelection( iCategory )
 			except StopIteration:
-				self.category.AppendItems( [c.name for c in categories] + [' '] )
+				self.category.AppendItems( [c.fullname for c in categories] + [' '] )
 				self.category.SetSelection( len(categories) )
 				
 			#--------------------------------------------------------------------------------------

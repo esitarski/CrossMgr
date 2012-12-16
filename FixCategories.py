@@ -14,11 +14,12 @@ def FixCategories( choice, iSelection = None ):
 	if iSelection is not None and iSelection < len(items):
 		choice.SetSelection( iSelection )
 
-	newItems = ['All']
-	newItems.extend( c.name for c in race.getCategories() )
+	nameCat = [('All', None)]
+	nameCat.extend( [(c.fullname, c) for c in race.getCategories()] )
 	
+	newItems = [ fullname for fullname, cat in nameCat ]
 	if items == newItems:
-		return choice.GetStringSelection()
+		return nameCat[choice.GetSelection()][1]
 	
 	catCur = None
 	cItems = choice.GetItems()
@@ -31,19 +32,23 @@ def FixCategories( choice, iSelection = None ):
 	
 	iNew = 0
 	if catCur is not None:
-		i = choice.FindString(catCur)
-		if i != wx.NOT_FOUND:
-			iNew = i
+		for i, (fullname, cat) in enumerate(nameCat):
+			if catCur == fullname:
+				iNew = i
+				break
 		
 	choice.SetSelection( iNew )
-	return choice.GetStringSelection()
+	return nameCat[choice.GetSelection()][1]
 	
-def SetCategory( choice, catName ):
-	if FixCategories(choice) != catName:
-		for i, item in enumerate(choice.GetItems()):
-			if item == catName:
-				choice.SetSelection( i )
-				break
+def SetCategory( choice, cat ):
+	if FixCategories(choice) != cat:
+		if cat is None:
+			choice.SetSelection( 0 )
+		else:
+			for i, item in enumerate(choice.GetItems()):
+				if item == cat.fullname:
+					choice.SetSelection( i )
+					break
 	
 if __name__ == '__main__':
 	app = wx.PySimpleApp()

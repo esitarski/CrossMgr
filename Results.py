@@ -261,9 +261,9 @@ class Results( wx.Panel ):
 			if not race or num not in race:
 				return
 			entries = race.getRider(num).interpolate()
-			catName = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
+			category = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
 			
-		riderResults = dict( (r.num, r) for r in GetResults(catName) )
+		riderResults = dict( (r.num, r) for r in GetResults(category) )
 		
 		try:
 			self.entry = entries[self.iLap]
@@ -312,9 +312,9 @@ class Results( wx.Panel ):
 				return
 			e1 = race.getRider(num).interpolate()
 			e2 = race.getRider(numAdjacent).interpolate()
-			catName = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
+			category = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
 			
-		riderResults = dict( (r.num, r) for r in GetResults(catName) )
+		riderResults = dict( (r.num, r) for r in GetResults(category) )
 		try:
 			laps = riderResults[num].laps
 			undo.pushState()
@@ -427,12 +427,12 @@ class Results( wx.Panel ):
 		mainWin = Utils.getMainWin()
 		if mainWin:
 			historyCategoryChoice = mainWin.history.categoryChoice
-			historyCatName = FixCategories( historyCategoryChoice )
-			if historyCatName and historyCatName != 'All':
-				catName = FixCategories( self.categoryChoice )
-				if historyCatName != catName:
+			historyCat = FixCategories( historyCategoryChoice )
+			if historyCat is not None:
+				cat = FixCategories( self.categoryChoice )
+				if historyCat != cat:
 					Utils.setCategoryChoice( self.categoryChoice.GetSelection(), 'resultsCategory' )
-					SetCategory( historyCategoryChoice, catName )
+					SetCategory( historyCategoryChoice, cat )
 			mainWin.setNumSelect( numSelect )
 				
 	def setCategoryAll( self ):
@@ -471,13 +471,13 @@ class Results( wx.Panel ):
 			if not race:
 				self.clearGrid()
 				return
-			catName = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
+			category = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
 			self.hbs.RecalcSizes()
 			self.hbs.Layout()
 			for si in self.hbs.GetChildren():
 				if si.IsWindow():
 					si.GetWindow().Refresh()
-			self.category = race.categories.get( catName, None )
+			self.category = category
 			sortLap = getattr( race, 'sortLap', None )
 			sortLabel = getattr( race, 'sortLabel', None )
 		
@@ -485,7 +485,7 @@ class Results( wx.Panel ):
 		lapLastX, lapLastY = self.lapGrid.GetViewStart()
 		
 		exportGrid = ExportGrid()
-		exportGrid.setResultsOneList( catName, self.showRiderData, showLapsFrequency = 1 )
+		exportGrid.setResultsOneList( category, self.showRiderData, showLapsFrequency = 1 )
 
 		if not exportGrid.colnames:
 			self.clearGrid()
@@ -524,7 +524,7 @@ class Results( wx.Panel ):
 		if sortCol is None:
 			race.sortLabel = race.sortLap = sortLabel = sortLap = None
 		
-		results = GetResults( catName )
+		results = GetResults( category )
 		hasSpeeds = False
 		for result in results:
 			if getattr(result, 'lapSpeeds', None) or getattr(result, 'raceSpeeds', None):

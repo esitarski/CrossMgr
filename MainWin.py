@@ -830,14 +830,14 @@ class MainWin( wx.Frame ):
 
 		wb = xlwt.Workbook()
 		raceCategories = getRaceCategories()
-		for catName in raceCategories:
+		for catName, category in raceCategories:
 			if catName == 'All' and len(raceCategories) > 1:
 				continue
 			sheetName = re.sub('[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', catName)
 			sheetName = sheetName[:31]
 			sheetCur = wb.add_sheet( sheetName )
 			export = ExportGrid()
-			export.setResultsOneList( catName, showLapsFrequency = 1 )
+			export.setResultsOneList( category, showLapsFrequency = 1 )
 			export.toExcelSheet( sheetCur )
 
 		try:

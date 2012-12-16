@@ -168,7 +168,7 @@ class Recommendations( wx.Panel ):
 				self.clearGrid()
 				return
 
-			catName = FixCategories( self.categoryChoice, getattr(race, 'recommendationsCategory', 0) )
+			category = FixCategories( self.categoryChoice, getattr(race, 'recommendationsCategory', 0) )
 					
 			entries = race.interpolate()
 			if not entries:
@@ -181,7 +181,6 @@ class Recommendations( wx.Panel ):
 			self.isEmpty = False
 			
 			# Trim out all entries not in this category and all non-finishers.
-			category = race.categories.get( catName, None )
 			if category:
 				def match( num ) : return category.matches(num)
 			else:
@@ -201,13 +200,13 @@ class Recommendations( wx.Panel ):
 			# Find the maximum recorded lap for each category.
 			categoryMaxLapNonInterp, categoryMaxLapInterp = {}, {}
 			for num, maxLap in riderMaxLapNonInterp.iteritems():
-				category = race.getCategory( num )
-				if category:
-					categoryMaxLapNonInterp[category] = max( categoryMaxLapNonInterp.get(category, 0), maxLap )
+				riderCat = race.getCategory( num )
+				if riderCat:
+					categoryMaxLapNonInterp[riderCat] = max( categoryMaxLapNonInterp.get(riderCat, 0), maxLap )
 			for num, maxLap in riderMaxLapInterp.iteritems():
-				category = race.getCategory( num )
-				if category:
-					categoryMaxLapInterp[category] = max( categoryMaxLapInterp.get(category, 0), maxLap )
+				riderCat = race.getCategory( num )
+				if riderCat:
+					categoryMaxLapInterp[riderCat] = max( categoryMaxLapInterp.get(riderCat, 0), maxLap )
 			
 			# Check if all the riders in a particular category did not complete the maximum number of laps.
 			raceLaps = race.getRaceLaps()
@@ -218,7 +217,7 @@ class Recommendations( wx.Panel ):
 						data[0].append( category.catStr )
 						data[1].append( 'Laps' )
 						data[2].append( 'Verify that "%s" did %d max Race Laps.  Update Race Laps in Categories if necessary.' %
-										(category.name, maxNonInterpLap) )
+										(category.fullname, maxNonInterpLap) )
 				except KeyError:
 					pass
 			
@@ -300,7 +299,7 @@ class Recommendations( wx.Panel ):
 			# Show numbers with projected time.
 			if race.isFinished():
 				projectedNums = []
-				for r in GetResultsCore( catName if catName else 'All' ):
+				for r in GetResultsCore( category ):
 					pSum = sum( 1 for i in r.interp if i )
 					if pSum > 0:
 						projectedNums.append( (r.num, pSum) )
