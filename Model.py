@@ -1400,6 +1400,13 @@ class Race(object):
 				continue
 			args['sequence'] = i
 			category = Category( **args )
+			# Ensure we don't have any duplicate category fullnames.
+			if category.fullname in newCategories:
+				originalName = category.name
+				for count in xrange(1, 999):
+					category.name = '%s Copy(%d)' % (originalName, count)
+					if not category.fullname in newCategories:
+						break
 			newCategories[category.fullname] = category
 			i += 1
 

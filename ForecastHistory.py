@@ -12,13 +12,14 @@ from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, Del
 from FtpWriteFile import realTimeFtpPublish
 
 # Define columns for recorded and expected infomation.
-iNumCol, iNoteCol, iTimeCol, iLapCol, iGapCol, iColMax = range(6)
+iNumCol, iNoteCol, iTimeCol, iLapCol, iGapCol, iNameCol, iColMax = range(7)
 colnames = [None] * iColMax
 colnames[iNumCol]  = 'Num'
 colnames[iNoteCol] = 'Note'
 colnames[iLapCol]  = 'Lap'
 colnames[iTimeCol] = 'Time'
 colnames[iGapCol]  = 'Gap'
+colnames[iNameCol] = 'Name'
 
 fontSize = 14
 
@@ -329,6 +330,11 @@ class ForecastHistory( wx.Panel ):
 				self.quickExpected = None
 				self.clearGrids()
 				return
+				
+			try:
+				externalInfo = race.excelLink.read()
+			except:
+				externalInfo = {}
 						
 			tRace = race.curRaceTime()
 			tRaceLength = race.minutes * 60.0
@@ -419,6 +425,14 @@ class ForecastHistory( wx.Panel ):
 					gap = prevRiderGap.get(e.num, ' ')
 				return gap
 			data[iGapCol] = [getGapExpected(e) for e in expected]
+			def getName( e ):
+				info = externalInfo.get(e.num, {})
+				last, first = info.get('LastName',''), info.get('FirstName','')
+				if last and first:
+					return '%s, %s' % (last, first[:1].upper())
+				return last or first
+			data[iNameCol] = [getName(e) for e in expected]
+			
 			self.quickExpected = expected
 			
 			self.expectedGrid.Set( data = data, backgroundColour = backgroundColour, textColour = textColour )
@@ -472,6 +486,7 @@ class ForecastHistory( wx.Panel ):
 					return ' '
 				return prevRiderGap.get(e.num, ' ')
 			data[iGapCol] = [getGapHistory(e) for e in recorded]
+			data[iNameCol] = [getName(e) for e in expected]
 
 			self.historyGrid.Set( data = data, backgroundColour = backgroundColour, textColour = textColour )
 			self.historyGrid.AutoSizeColumns()
