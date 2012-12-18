@@ -32,7 +32,6 @@ FirstName|Optional.  Rider's first name.
 Team|Optional.  Rider's team.
 License|Optional.  Rider' license.  This can be the UCI code, a national code, or a regional code.  CrossMgr uses this for display only.
 Category|Optional.  Rider's category.  This does not have to be the same as the race category.
-Gender|Optional.  Rider's gender.  Male entries must start with an "M" or "m" character.  Female entries must start with any one of the charcters "F", "f", "W" or "w".  Gender can also be left blank.  Gender is used in [Export Results in USAC Excel Format](#export-results-in-usac-excel-format).
 Tag|Optional for manual input, required for chip input.  Rider's chip tag.
 Tag2|Optional.  Rider's alternate chip tag for second bike.
 

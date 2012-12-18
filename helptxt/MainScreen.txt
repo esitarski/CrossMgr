@@ -22,6 +22,7 @@ Num|The rider's number
 Note|Shows the riders position by category.  Leaders are highlighted in green.  The Race Leader is highlighted with a full green bar.  Riders outside of the 80% time rule are shown in red.
 Lap|Shows the lap the rider is currently on.
 Time|Shows the recorded time
+Name|Shows the rider's name.  Requires configuring the [External Excel](Menu-DataMgmt.html#link-to-external-excel-data).
 
 # Expected
 Shows the numbers of riders expected to arrive.  The columns in the table are as follows:
@@ -32,6 +33,7 @@ Num|The rider's number
 Note|Shows the riders position by category.  Leaders are highlighted in green.  The Race Leader is highlighted with a full green bar.  Riders outside of the 80% time rule are shown in red.
 Lap|Shows the lap the rider is currently on.
 ETA|Shows the Estimated Time of Arrival of the rider
+Name|Shows the rider's name.  Requires configuring the [External Excel](Menu-DataMgmt.html#link-to-external-excel-data).
 
 ## Double-click
 Jumps to the RiderDetail for the number clicked on.
