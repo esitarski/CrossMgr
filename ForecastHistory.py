@@ -428,10 +428,11 @@ class ForecastHistory( wx.Panel ):
 			data[iGapCol] = [getGapExpected(e) for e in expected]
 			def getName( e ):
 				info = externalInfo.get(e.num, {})
-				last, first = info.get('LastName',''), info.get('FirstName','')
+				last = info.get('LastName','')
+				first = info.get('FirstName','')
 				if last and first:
-					return '%s, %s' % (last, first[:1].upper())
-				return last or first
+					return '%s, %s' % (last, first)
+				return last or first or ' '
 			data[iNameCol] = [getName(e) for e in expected]
 			
 			self.quickExpected = expected
