@@ -383,7 +383,7 @@ class MainWin( wx.Frame ):
 		# Configure the field of the display.
 
 		# Forecast/History shown in left pane of scrolled window.
-		forecastHistoryWidth = 325
+		forecastHistoryWidth = 335
 		sty = wx.BORDER_SUNKEN
 		self.splitter = wx.SplitterWindow( self )
 		self.splitter.SetMinimumPaneSize( forecastHistoryWidth )

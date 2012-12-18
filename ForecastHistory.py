@@ -32,6 +32,7 @@ def GetLabelGrid( parent ):
 	label = wx.StaticText( parent, wx.ID_ANY, 'Recorded:' )
 	
 	grid = ColGrid.ColGrid( parent, colnames = colnames )
+	grid.SetLeftAlignCols( [iNameCol] )
 	grid.SetRowLabelSize( 0 )
 	grid.SetRightAlign( True )
 	grid.AutoSizeColumns( True )
@@ -332,7 +333,7 @@ class ForecastHistory( wx.Panel ):
 				return
 				
 			try:
-				externalInfo = race.excelLink.read()
+				externalInfo = race.excelLink.read( True )
 			except:
 				externalInfo = {}
 						
