@@ -33,7 +33,7 @@ Team|Optional.  Rider's team.
 License|Optional.  Rider' license.  This can be the UCI code, a national code, or a regional code.  CrossMgr uses this for display only.
 Category|Optional.  Rider's category.  This does not have to be the same as the race category.
 Tag|Optional for manual input, required for chip input.  Rider's chip tag.
-Tag2|Optional.  Rider's alternate chip tag for second bike.
+Tag2|Optional.  Rider's additioal chip tag for a second bike.
 
 To save space, CrossMgr may combine the first and last names into one field as "LASTNAME, Firstname".  In the scoreboard, it uses a further shorthand of "LASTNAME, F" where "F" is the first letter of the first name.
 
@@ -54,7 +54,7 @@ DNS Selected|Adds all the selected riders into CrossMgr, and sets the status to 
 
 Clicking on a column name will sort the potential DNS riders by that column.
 
-Remember Ctrl-Z (Undo) and Ctrl-Y (Redo) if you need it.
+Remember Ctrl-Z (Undo) and Ctrl-Y (Redo) if you need to.
 
 ## Category Mgmt
 ### Import Categories from File...

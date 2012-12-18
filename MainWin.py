@@ -62,11 +62,12 @@ import xlwt
 from ExportGrid			import ExportGrid
 import SimulationLapTimes
 import Version
-from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache
+from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, ExcelLink
 from SetGraphic			import SetGraphicDialog
 from GetResults			import GetCategoryDetails
 
 import wx.lib.agw.advancedsplash as AS
+import openpyxl
 
 #----------------------------------------------------------------------------------
 		
@@ -383,7 +384,7 @@ class MainWin( wx.Frame ):
 		# Configure the field of the display.
 
 		# Forecast/History shown in left pane of scrolled window.
-		forecastHistoryWidth = 335
+		forecastHistoryWidth = 265
 		sty = wx.BORDER_SUNKEN
 		self.splitter = wx.SplitterWindow( self )
 		self.splitter.SetMinimumPaneSize( forecastHistoryWidth )
@@ -418,7 +419,7 @@ class MainWin( wx.Frame ):
 			addPage( getattr(self, a), '%d. %s' % (i+1, n) )
 
 		self.riderDetailDialog = None
-		self.splitter.SplitVertically( self.forecastHistory, self.notebook, forecastHistoryWidth )
+		self.splitter.SplitVertically( self.forecastHistory, self.notebook, forecastHistoryWidth + 80)
 		self.splitter.UpdateSize()
 
 		#------------------------------------------------------------------------------
@@ -1545,6 +1546,38 @@ Continue?''' % fName, 'Simulate a Race' ):
 									{'name':'Senior', 'catStr':'200-299', 'startOffset':'00:15', 'distance':0.5, 'gender':'Women'}] )
 
 		self.writeRace()
+		
+		# Create an Excel data file of rider data.
+		fnameInfo = os.path.join( Utils.getImageFolder(), 'NamesTeams.csv' )
+		riderInfo = []
+		try:
+			with open(fnameInfo) as fp:
+				header = None
+				for line in fp:
+					line = line.decode('iso-8859-1')
+					if not header:
+						header = line.split(',')
+						continue
+					riderInfo.append( line.split(',') )
+		except IOError:
+			pass
+			
+		if riderInfo:
+			wb = openpyxl.workbook.Workbook()
+			ws = wb.create_sheet()
+			ws.title = 'RiderData'
+			for c, h in enumerate(['Bib#', 'LastName', 'FirstName', 'Team']):
+				ws.cell(row = 0, column = c).value = h
+			for r, row in enumerate(riderInfo):
+				ws.cell( row = r + 1, column = 0 ).value = r + 100
+				for c, v in enumerate(row):
+					ws.cell( row = r + 1, column = c + 1 ).value = v
+			fnameRiderInfo = os.path.join(Utils.getHomeDir(), 'SimulationRiderData.xlsx')
+			wb.save( fnameRiderInfo )
+			race.excelLink = ExcelLink()
+			race.excelLink.setFileName( fnameRiderInfo )
+			race.excelLink.setSheetName( ws.title )
+			race.excelLink.setFieldCol( {'Bib#':0, 'LastName':1, 'FirstName':2, 'Team':3} )
 
 		# Start the simulation.
 		self.showPageName( 'History' )

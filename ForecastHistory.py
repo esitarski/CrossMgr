@@ -355,7 +355,7 @@ class ForecastHistory( wx.Panel ):
 			averageLapTime = race.getAverageLapTime()
 			backSecs = averageLapTime / 4.0
 			
-			expectedShowMax = 32
+			expectedShowMax = 64
 			
 			tMin = tRace - backSecs
 			tMax = tRace + averageLapTime
@@ -447,7 +447,7 @@ class ForecastHistory( wx.Panel ):
 			
 			#------------------------------------------------------------------
 			# Update recorded.
-			recordedDisplayMax = 32
+			recordedDisplayMax = 64
 			recorded = [ e for e in entries if not e.interp and e.t <= tRace ]
 			recorded = recorded[-recordedDisplayMax:]
 			self.quickHistory = recorded
@@ -487,7 +487,7 @@ class ForecastHistory( wx.Panel ):
 					return ' '
 				return prevRiderGap.get(e.num, ' ')
 			data[iGapCol] = [getGapHistory(e) for e in recorded]
-			data[iNameCol] = [getName(e) for e in expected]
+			data[iNameCol] = [getName(e) for e in recorded]
 
 			self.historyGrid.Set( data = data, backgroundColour = backgroundColour, textColour = textColour )
 			self.historyGrid.AutoSizeColumns()
