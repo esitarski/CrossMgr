@@ -91,7 +91,7 @@ class ForecastHistory( wx.Panel ):
 		
 		self.splitter.SetMinimumPaneSize( 64 )
 		self.splitter.SetSashGravity( 0.5 )
-		self.splitter.SplitHorizontally( self.lgHistory, self.lgExpected, 100 )
+		self.splitter.SplitHorizontally( self.lgExpected, self.lgHistory, 100 )
 		self.Bind( wx.EVT_SPLITTER_DCLICK, self.doSwapOrientation, self.splitter )
 		bsMain.Add( self.splitter, 1, flag=wx.EXPAND | wx.ALL, border = 4 )
 				
