@@ -1,7 +1,6 @@
 import wx
 import wx.lib.agw.gradientbutton as GB
 import os
-import copy
 import wx.lib.intctrl
 from wx.lib.stattext import GenStaticText 
 import bisect
@@ -276,7 +275,7 @@ class NumKeypad( wx.Panel ):
 			if rr.status != Model.Rider.Finisher or not rr.raceTimes:
 				continue
 			category = race.getCategory( rr.num )
-			if category in categories_seen:
+			if category in categories_seen:			# If we have not seen this category, this is not the leader.
 				# Make sure we update the red lantern time.
 				newRaceTimes = categoryRaceTimes[category]
 				if rr.raceTimes[-1] > newRaceTimes[-1]:
@@ -284,10 +283,9 @@ class NumKeypad( wx.Panel ):
 				continue
 			categories_seen.add( category )
 			leader.append( '%s %d' % (category.fullname if category else '<Missing>', rr.num) )
-			newRaceTimes = copy.copy( rr.raceTimes )
-			newRaceTimes.append( newRaceTimes[-1] )
-			raceTimes.append( newRaceTimes )
-			categoryRaceTimes[category] = newRaceTimes
+			# Add a copy of the race times.  Append the leader's last time as the current red lantern.
+			raceTimes.append( rr.raceTimes + [rr.raceTimes[-1]] )
+			categoryRaceTimes[category] = raceTimes[-1]
 			
 			try:
 				tLeader = rr.raceTimes[bisect.bisect_left( rr.raceTimes, tCur )] - tCur
