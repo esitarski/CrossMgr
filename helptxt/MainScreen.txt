@@ -3,26 +3,15 @@
 # Main Screen
 The Main Screen is divided into three major areas:
 
-1. [Recorded](#recorded)
 1. [Expected](#expected)
+1. [Recorded](#recorded)
 1. [Tabbed Screens](#screens)
 
-The Recorded and Expected area are on the left, the Tabbed Screens is the main field.
+The Expected and Recorded lists are on the left, the Tabbed Screens is the main field.
 
 All the areas can be controlled my dragging the "sash" separating the windows.
 
-If you prefer the Recorded and Expected areas to be side-by-side instead of stacked, double-click on the sash between them.  Double-click to return to the original configuration.
-
-# Recorded
-Shows the numbers just recorded during a race.  The columns in the table are as follows:
-
-Column|Description
-:-----|:----------
-Num|The rider's number
-Note|Shows the riders position by category.  Leaders are highlighted in green.  The Race Leader is highlighted with a full green bar.  Riders outside of the 80% time rule are shown in red.
-Lap|Shows the lap the rider is currently on.
-Time|Shows the recorded time
-Name|Shows the rider's name.  Requires configuring the [External Excel](Menu-DataMgmt.html#link-to-external-excel-data).
+If you prefer the Expected and Recorded lists to be side-by-side instead of stacked, double-click on the sash between them.  Double-click to return to the original configuration.
 
 # Expected
 Shows the numbers of riders expected to arrive.  The columns in the table are as follows:
@@ -33,7 +22,30 @@ Num|The rider's number
 Note|Shows the riders position by category.  Leaders are highlighted in green.  The Race Leader is highlighted with a full green bar.  Riders outside of the 80% time rule are shown in red.
 Lap|Shows the lap the rider is currently on.
 ETA|Shows the Estimated Time of Arrival of the rider
-Name|Shows the rider's name.  Requires configuring the [External Excel](Menu-DataMgmt.html#link-to-external-excel-data).
+Name|Shows the rider's name.  Requires configuring the [External Excel](Menu-DataMgmt.html#link-to-external-excel-data) sheet.
+
+## Click on the Row
+Enters that number.  This eliminates typing in the number in Record screen.
+
+## Right-Click on the Row
+
+Option|Action
+:-----|:-----
+Enter...|Correct the current entry
+DNF...|Mark this rider as DNF
+Pull...|Pull this rider from the race (like DNF)
+RiderDetail|Jump to the RiderDetail for this rider.
+
+# Recorded
+Shows the numbers just recorded during a race.  The columns in the table are as follows:
+
+Column|Description
+:-----|:----------
+Num|The rider's number
+Note|Shows the riders position by category.  Leaders are highlighted in green.  The Race Leader is highlighted with a full green bar.  Riders outside of the 80% time rule are shown in red.
+Lap|Shows the lap the rider is currently on.
+Time|Shows the recorded time
+Name|Shows the rider's name.  Requires configuring the [External Excel](Menu-DataMgmt.html#link-to-external-excel-data) sheet.
 
 ## Double-click
 Jumps to the RiderDetail for the number clicked on.
@@ -49,41 +61,6 @@ Split...|Split the current entry into two entries
 Insert...|Insert a new time near an existing time
 Delete...|Delete current entry
 DNF...|Mark this rider as DNF
-RiderDetail|Jump to the RiderDetail for this rider.
-
-# Recorded
-Shows the riders recorded.  The columns in the table are as follows:
-
-Column|Description
-:-----|:----------
-Num|The recorded rider's number
-Note|Shows the riders position by category.  Leaders are highlighted in green.  The Race Leader is highlighted with a full green bar.  Riders expected to be outside of the 80% time rule are shown in red and are candiates to be pulled in a UCI level race.
-Time|Shows the recorded time.
-Lap|Shows the lap the rider is on.
-Gap|Time gap to the leader of this category.
-
-# Expected
-Shows the riders expected to arrive based on their previously recorded lap times.  The columns in the table are as follows:
-
-Column|Description
-:-----|:----------
-Num|The expected rider's number
-Note|Shows the riders expected position by category.  Leaders are highlighted in green.  The Race Leader is highlighted with a full green bar.  Riders expected to be outside of the 80% time rule are shown in red and are candiates to be pulled in a UCI level race.
-ETA|Shows the time until the rider is expected.
-Lap|Shows the lap the rider is expected to be on.
-Gap|Time gap to the leader of this category.
-
-## Click on a Number
-Enters that number.  This eliminates typing in the Record screen.
-
-## Right-Click
-Right-click brings up a number of options about what you clicked on:
-
-Option|Action
-:-----|:-----
-Enter|Enters the number (same as click)
-DNF...|Mark this rider as DNF
-PUL...|Mark this rider as PUL (pulled from the race)
 RiderDetail|Jump to the RiderDetail for this rider.
 
 # Screens
