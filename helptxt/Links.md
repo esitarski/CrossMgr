@@ -9,6 +9,7 @@
 [Options]:			Menu-Options.html
 [Help]:				Menu-Help.html
 
+[Main]:				Main.html
 [Main Screen]:		MainScreen.html
 [Actions]:			Actions.html
 [Record]:			Record.html

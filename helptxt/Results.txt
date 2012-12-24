@@ -54,7 +54,7 @@ If you find the text to hard to read (perhaps you are in direct sunlight), or yo
 
 # Results Data
 
-Data about the race is shown.  Data from the [[External Excel][]. sheet is also shown.
+Data about the race is shown.  Data from the [External Excel][]. sheet is also shown.
 
 Column|Description
 :-----|:----------
