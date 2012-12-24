@@ -22,16 +22,6 @@ class Properties( wx.Panel ):
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceName )
 		rows += 1
 		
-		self.raceDisciplineLabel = wx.StaticText( self, wx.ID_ANY, 'Discipline:' )
-		self.raceDiscipline = wx.TextCtrl( self, wx.ID_ANY, value='' )
-		self.raceDiscipline.SetValue( 'Cyclo-cross' )
-		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceDiscipline )
-		rows += 1
-		
-		self.organizerLabel = wx.StaticText( self, wx.ID_ANY, 'Organizer:' )
-		self.organizer = wx.TextCtrl( self, wx.ID_ANY, value='' )
-		rows += 1
-		
 		self.dateLabel = wx.StaticText( self, wx.ID_ANY, 'Date:' )
 		self.date = wx.DatePickerCtrl( self, wx.ID_ANY, style = wx.DP_DROPDOWN )
 		self.Bind(wx.EVT_DATE_CHANGED, self.onChanged, self.date)
@@ -50,19 +40,38 @@ class Properties( wx.Panel ):
 		self.minutes = intctrl.IntCtrl( self, wx.ID_ANY, min=1, max=60*12, allow_none=False, value=40 )
 		rows += 1
 
-		self.memoLabel = wx.StaticText( self, wx.ID_ANY, 'Memo:' )
-		self.memo = wx.TextCtrl( self, wx.ID_ANY, value='' )
-		self.Bind( wx.EVT_TEXT, self.onChanged, self.memo )
+		self.raceDisciplineLabel = wx.StaticText( self, wx.ID_ANY, 'Discipline:' )
+		self.raceDiscipline = wx.TextCtrl( self, wx.ID_ANY, value='' )
+		self.raceDiscipline.SetValue( 'Cyclo-cross' )
+		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceDiscipline )
+		rows += 1
+		
+		self.organizerLabel = wx.StaticText( self, wx.ID_ANY, 'Organizer:' )
+		self.organizer = wx.TextCtrl( self, wx.ID_ANY, value='' )
 		rows += 1
 		
 		self.commissaireLabel = wx.StaticText( self, wx.ID_ANY, 'Commissaire:' )
 		self.commissaire = wx.TextCtrl( self, wx.ID_ANY, value='' )
 		rows += 1
 		
+		self.memoLabel = wx.StaticText( self, wx.ID_ANY, 'Memo:' )
+		self.memo = wx.TextCtrl( self, wx.ID_ANY, value='' )
+		self.Bind( wx.EVT_TEXT, self.onChanged, self.memo )
+		rows += 1
+		
 		self.timeTrialLabel = wx.StaticText( self, wx.ID_ANY, 'Time Trial:' )
 		self.timeTrial = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
 		rows += 1
 		
+		self.distanceUnitLabel = wx.StaticText( self, wx.ID_ANY, 'Distance Unit: ' )
+		self.distanceUnit = wx.Choice( self, wx.ID_ANY, choices=['km', 'miles'] )
+		self.distanceUnit.SetSelection( 0 )
+		rows += 1
+
+		self.highPrecisionTimesLabel = wx.StaticText( self, wx.ID_ANY, 'Show Times to 100s of a Second: ' )
+		self.highPrecisionTimes = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
+		rows += 1
+
 		self.jchipLabel = wx.StaticText( self, wx.ID_ANY, 'JChip Integration: ' )
 		self.jchip = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
 		self.Bind( wx.EVT_CHECKBOX, self.onJChipIntegration, self.jchip )
@@ -71,15 +80,6 @@ class Properties( wx.Panel ):
 		self.autocorrectLapsDefaultLabel = wx.StaticText( self, wx.ID_ANY, 'Set "Autocorrect Lap Data" option by Default: ' )
 		self.autocorrectLapsDefault = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
 		self.autocorrectLapsDefault.SetValue( True )
-		rows += 1
-
-		self.highPrecisionTimesLabel = wx.StaticText( self, wx.ID_ANY, 'Show Times to 100s of a Second: ' )
-		self.highPrecisionTimes = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
-		rows += 1
-
-		self.distanceUnitLabel = wx.StaticText( self, wx.ID_ANY, 'Distance Unit: ' )
-		self.distanceUnit = wx.Choice( self, wx.ID_ANY, choices=['km', 'miles'] )
-		self.distanceUnit.SetSelection( 0 )
 		rows += 1
 
 		self.finishTopLabel = wx.StaticText( self, wx.ID_ANY, 'Animation Finish on Top: ' )
