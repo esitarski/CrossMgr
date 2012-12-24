@@ -201,6 +201,11 @@ class Recommendations( wx.Panel ):
 			entries = [e for e in entries if match(e.num) ]
 			
 			data = [[],[], [], []]
+			def append( num = '', name = '', issue = '', recommendation = '' ):
+				data[0].append( str(num) )
+				data[1].append( str(name) )
+				data[2].append( str(issue) )
+				data[3].append( str(recommendation) )
 			
 			# Find the maximum recorded lap for each rider.
 			riderMaxLapNonInterp, riderMaxLapInterp = {}, {}
@@ -227,11 +232,11 @@ class Recommendations( wx.Panel ):
 				maxCatLaps = (category.getNumLaps() or raceLaps)
 				try:
 					if maxNonInterpLap < maxCatLaps and categoryMaxLapInterp[category] > maxNonInterpLap:
-						data[0].append( category.catStr )
-						data[1].append( category.fullname )
-						data[2].append( 'Laps' )
-						data[3].append( 'Verify that "%s" did %d max Race Laps.  Update Race Laps in Categories if necessary.' %
-										(category.fullname, maxNonInterpLap) )
+						append( category.catStr, category.fullname,
+								'Laps',
+								'Verify that "%s" did %d max Race Laps.  Update Race Laps in Categories if necessary.' %
+										(category.fullname, maxNonInterpLap)
+								)
 				except KeyError:
 					pass
 			
@@ -249,10 +254,8 @@ class Recommendations( wx.Panel ):
 						riderEntriesCur = riderEntries[num]
 						iLast = (i for i in xrange(len(riderEntriesCur), 0, -1) if not riderEntriesCur[i-1].interp).next()
 						if iLast != len(riderEntriesCur):
-							data[0].append( str(num) )
-							data[1].append( getName(num) )
-							data[2].append( 'DNF' )
-							data[3].append( 'Check for DNF after rider lap %d.' % (iLast-1) )
+							append( num, getName(num),
+									'DNF', 'Check for DNF after rider lap %d.' % (iLast-1) )
 					except (KeyError, StopIteration):
 						pass
 						
@@ -272,49 +275,42 @@ class Recommendations( wx.Panel ):
 
 						missingCount = sum( 1 for b in appearedInLap if not b )
 						if missingCount:
-							data[0].append( str(num) )
-							data[1].append( getName(num) )
-							data[2].append( 'Lapped' )
-							data[3].append( "Confirm rider was lapped by Category Leader in leader's lap %s" %
-											(', '.join( str(i) for i, b in enumerate(appearedInLap) if not b )) )
+							append( num, getName(num),
+									'Lapped', "Confirm rider was lapped by Category Leader in leader's lap %s" %
+										(', '.join( str(i) for i, b in enumerate(appearedInLap) if not b ))
+									)
 					except (KeyError, IndexError, ValueError):
 						pass
 						
 				elif rider.status == Model.Rider.DNS:
 					# Check for DNS's with recorded times.
 					if rider.times:
-						data[0].append( str(num) )
-						data[1].append( getName(num) )
-						data[2].append( 'DNS' )
-						data[3].append( 'Check %s status.  Rider has recorded times.' % statusName )
+						append( num, getName(num),
+								'DNS', 'Check %s status.  Rider has recorded times.' % statusName
+								)
 						
 				elif rider.status in [Model.Rider.DNF, Model.Rider.Pulled]:
 					if rider.tStatus == None:
 						# Missing status times.
-						data[0].append( str(num) )
-						data[1].append( getName(num) )
-						data[2].append( 'Time' )
-						data[3].append( 'Check if %s time is accurate.' % statusName )
+						append( num, getName(num),
+								'Time', 'Check if %s time is accurate.' % statusName )
 					else:
 						# Recorded time exceeds status time.
 						if rider.times and rider.times[-1] > rider.tStatus:
-							data[0].append( str(num) )
-							data[1].append( getName(num) )
-							data[2].append( 'Time' )
-							data[3].append( 'Check if %s time is accurate.  Found recorded time %s after %s time %s.' % (
+							append( num, getName(num),
+									'Time' , 'Check if %s time is accurate.  Found recorded time %s after %s time %s.' % (
 												statusName,
 												Utils.SecondsToStr(rider.times[-1]),
 												statusName,
 												Utils.SecondsToStr(rider.tStatus)
-											) )
+											)
+									)
 
 				# Check for bad numbers.
 				category = race.getCategory( num )
 				if not category:
-					data[0].append( str(num) )
-					data[1].append( getName(num) )
-					data[2].append( 'Category' )
-					data[3].append( 'Rider does not match any active category.  Check if rider is in right race or data entry error.' )
+					append( num, getName(num),
+							'Category', 'Rider does not match any active category.  Check if rider is in right race or data entry error.' )
 						
 			# Show numbers with projected time.
 			if race.isFinished():
@@ -324,20 +320,18 @@ class Recommendations( wx.Panel ):
 					if pSum > 0:
 						projectedNums.append( (r.num, pSum) )
 				projectedNums.sort()
-				for m in projectedNums:
-					data[0].append( m[0] )
-					data[1].append( getName(num) )
-					data[2].append( 'Projected' )
-					data[3].append( 'Check rider has projected times (%d).' % m[1] )
+				for num, count in projectedNums:
+					append( num, getName(num),
+							'Projected', 'Check rider has projected times (%d).' % count
+							)
 				
 			# Show missing tag reads.
 			missingTags = [str(m) for m in getattr(race, 'missingTags', set())]
 			missingTags.sort()
 			for m in missingTags:
-				data[0].append( m )
-				data[1].append( '' )
-				data[1].append( 'Tag' )
-				data[2].append( 'Check chip tag missing from Excel sheet' )
+				append( m, '',
+						'Tag', 'Check chip tag missing from Excel sheet'
+						)
 
 			self.grid.Set( data = data, colnames = colnames )
 			self.grid.AutoSizeColumns( True )
