@@ -7,7 +7,7 @@ CrossMgr can accept real-time messages from a [JChip](http://mts.greentag.to/eng
 CrossMgr can also import a file that was generated from a JChip system.
 
 JChip (like all chip systems) logs the time and code when it reads a chip, and each chip has a 6 character unique code.  In order to make sense, the code must to be associated with a rider's name, team, bib, etc.
-CrossMgr allows you to configure which tag goes with which rider through the external Excel sheet.  CrossMgr supports two columns, Tag and optionally Tag2, that contain the chip tag code(s) for that rider.  CrossMgr supports two tags in case you wish to give one two tags - the one intended for a backup bike.
+CrossMgr allows you to configure which tag goes with which rider through the [External Excel][] sheet.  CrossMgr supports two columns, Tag and optionally Tag2, that contain the chip tag code(s) for that rider.  CrossMgr supports two tags in case you wish to give one two tags - the one intended for a backup bike.
 
 When a rider's chip is read, the chip receiver sends a timestamped message to CrossMgr with the tag.  CrossMgr does a lookup on the tag to find which rider it was, and then uses the time to automatically make an entry - just as would be done manually.
 
@@ -115,6 +115,10 @@ Now, return to the JChip Import.  You will see the time correction automatically
 If you are importing into a new race, this option gives you the ability to start the race at the time specified, then import the timing data contained in the file.  Otherwise, the race will be taken to start with the first recorded chip read.
 
 Do not use this option if you are merging with existing data, as the race must already been started for existing data to be present.
+
+## Import Alien Formatted File...
+Imports an Alien-formatted input file.
+See above for options.
 
 ## Import Orion Formatted File...
 Imports an Orion-formatted input file.

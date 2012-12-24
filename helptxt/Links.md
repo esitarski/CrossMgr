@@ -20,3 +20,5 @@
 [Recommendations]:	Recommendations.html
 [Categories]:		Categories.html
 [Properties]:		Properties.html
+
+[External Excel]:	Menu-DataMgmt.html#link-to-external-excel-data

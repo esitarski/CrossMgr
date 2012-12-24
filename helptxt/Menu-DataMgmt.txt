@@ -80,14 +80,14 @@ Race Time|Race time of the entry (= Clock Time - Race Start Time)
 Bib#|Bib number of the rider
 Count|The count of the number of reads for this rider.
 Race Cat.|Race category of the rider, if found
-Name|"LAST, First" name of the rider (if present in the [External Excel](#link-to-external-excel-data) sheet)
-Team|Team of the rider (if present in the [External Excel](#link-to-external-excel-data) sheet)
-Category|Category of the rider (if present in the [External Excel](#link-to-external-excel-data) sheet)
-License|License of the rider (if present in the [External Excel](#link-to-external-excel-data) sheet)
-Tag|Chip tag associated with the entry (if chip timing, and if present in the [External Excel](#link-to-external-excel-data) sheet)
-Tag2|2nd chip tag associated with the entry (if chip timing and if present in the [External Excel](#link-to-external-excel-data) sheet)
+Name|"LAST, First" name of the rider (if present in the [External Excel][] sheet)
+Team|Team of the rider (if present in the [External Excel][] sheet)
+Category|Category of the rider (if present in the [External Excel][] sheet)
+License|License of the rider (if present in the [External Excel][] sheet)
+Tag|Chip tag associated with the entry (if chip timing, and if present in the [External Excel][] sheet)
+Tag2|2nd chip tag associated with the entry (if chip timing and if present in the [External Excel][] sheet)
 Edit|Reason for the data edit
-By|Username who made the edit
+By|Username who made the edit (login name on the computer)
 On|Date and Time when the edit was made.
 
 ## Export Results in USAC Excel Format...
@@ -101,10 +101,14 @@ rider place|Corresponds to the "Pos" field in CrossMgr [Results][].
 race gender|The gender of the this Category as specified in [Categories][]
 race discipline|As specified in the race [Properties][].  This must match the USAC standard discipline name.
 race category|The name of the Category of this rider as specified in [Categories][].
-rider last name|Corresponds to the rider's "LastName" as configured in the [External Excel](#link-to-external-excel-data) sheet.
-rider first name|Corresponds to the rider's "FirstName" as configured in the [External Excel](#link-to-external-excel-data) sheet.
-rider team|Corresponds to the rider's "Team" as configured in the [External Excel](#link-to-external-excel-data) sheet.
+rider last name|Corresponds to the rider's "LastName" as configured in the [External Excel][] sheet.
+rider first name|Corresponds to the rider's "FirstName" as configured in the [External Excel][] sheet.
+rider team|Corresponds to the rider's "Team" as configured in the [External Excel][] sheet.
 time|Corresponds to the "Time" field in CrossMgr [Results][].
+
+In the "rider place" column, USAC only recognizes a place (number) and the statuses "DNF", "DNS" and "DNP" (Did Not Place).
+
+CrossMgr's additional statuses "PUL" (Pulled), "DQ" (Disqualified), "OTL" (Outside Time Limit) and "NP" (Not Placed) are output as "DNP" (Did Not Place) in the USAC export.
 
 ## Import Course in GPX Format
 

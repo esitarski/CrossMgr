@@ -67,4 +67,4 @@ Split...|Split this entry into two entries
 Swap with Entry Before|Swap this entry with preceeding entry time
 Swap with Entry After|Swap this entry with following entry time
 
-Remember, Ctrl-Z is undo!
+Remember, Ctrl-Z is undo, Ctrl-Y is redo!

@@ -42,4 +42,4 @@ CrossMgr considers a rider in the race if (a) there is a time entry for the ride
 Opens a dialog box which allows you to change the properties.
 
 ## Link External Excel Sheet
-Allows you to link to an external Excel sheet right from this page.  See [DataMgmt](Menu-DataMgmt.html).
+Allows you to link to an [External Excel][] sheet right from this page.  See [DataMgmt][].
