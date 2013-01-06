@@ -13,6 +13,7 @@ from Undo import undo
 import Gantt
 from EditEntry import CorrectNumber, ShiftNumber, DeleteEntry
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
+from GetResults import GetResults
 import random
 import bisect
 import sys
@@ -947,8 +948,16 @@ class RiderDetail( wx.Panel ):
 			# Trigger adding the rider to the race if it isn't in already.
 			rider = race.getRider( num )
 			self.statusOption.SetSelection( rider.status )
-			if rider.status in [Model.Rider.Finisher, Model.Rider.DNS, Model.Rider.DQ]:
-				self.setAtRaceTime()
+			if rider.status == Model.Rider.Finisher:
+				results = GetResults( None )
+				self.setAtRaceTime( 0.0, False )
+				for rr in results:
+					if rr.num == num:
+						self.setAtRaceTime( rr.lastTime, False )
+						break
+			elif rider.status == Model.Rider.DNS:
+				rider.tStatus = 0.0
+				self.setAtRaceTime( 0.0, False )
 			else:
 				if rider.tStatus is None:
 					rider.tStatus = 0.0

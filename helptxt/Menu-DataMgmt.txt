@@ -147,3 +147,14 @@ This make a new track of the single lap called "Track Segment #2".
 From the left side of the screen, right-click on "Track Segment #1", and Delete it (Oui is french for yes ;).
 
 Then save the file.  Now you have a GPX file with one lap.
+
+## But, I only have a .fit File from a Garmin!
+
+No problem.  You just need to convert it to a GPX file with [GPSBabel](http://www.gpsbabel.org).
+
+1. Download [GPSBabel](http://www.gpsbabel.org).
+1. Plug in the Garmin GPS device.  Navigate to the device (it looks like a UPS flash drive).  Go to the Activities folder.  There you should find the .fit files.
+1. Launch GPSBabel, open the .fit file of the course, then write it out as a .gpx file.
+1. Check the .gpx file you just made with [GPX Editor](http://sourceforge.net/projects/gpxeditor/).  See instructions above if it needs to be fixed in some way.
+
+Now, you can import your new .gpx file into CrossMgr for display.
