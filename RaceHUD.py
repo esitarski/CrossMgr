@@ -201,7 +201,7 @@ class RaceHUD(wx.PyControl):
 			ctx.SetBrush( wx.Brush(wx.Colour(0,255,0)) )
 			ctx.DrawEllipse( x - iRadius / 2, yTop + hMiddle - tickHeight - iRadius/4, iRadius, iRadius )
 			
-			# Draw indicator for the finish time.
+			# Draw indicator for the last rider on course.
 			x = xLeft + int( raceTimes[-1] * xMult )
 			ctx.SetBrush( wx.Brush(wx.Colour(255,0,0)) )
 			ctx.DrawEllipse( x - iRadius / 2, yTop + hMiddle - tickHeight - iRadius/4, iRadius, iRadius )
