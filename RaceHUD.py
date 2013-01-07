@@ -194,6 +194,18 @@ class RaceHUD(wx.PyControl):
 			ctx.SetPen( wx.Pen(wx.Colour(128,128,128)) )
 			ctx.SetBrush( wx.TRANSPARENT_BRUSH )
 			ctx.DrawRectangle( xStart, yTop + hMiddle - dy / 2, xCur, dy )
+			
+			# Draw indicator for the finish time.
+			iRadius = dy / 3
+			x = xLeft + int( raceTimes[-2] * xMult )
+			ctx.SetBrush( wx.Brush(wx.Colour(0,255,0)) )
+			ctx.DrawEllipse( x - iRadius / 2, yTop + hMiddle - tickHeight - iRadius/4, iRadius, iRadius )
+			
+			# Draw indicator for the finish time.
+			x = xLeft + int( raceTimes[-1] * xMult )
+			ctx.SetBrush( wx.Brush(wx.Colour(255,0,0)) )
+			ctx.DrawEllipse( x - iRadius / 2, yTop + hMiddle - tickHeight - iRadius/4, iRadius, iRadius )
+			
 			ctx.SetPen( wx.BLACK_PEN )
 			
 			# Draw the time to the leader's next lap (or the broom if the race is over).
