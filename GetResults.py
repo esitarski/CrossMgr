@@ -185,7 +185,12 @@ def GetResultsCore( category ):
 		# Add the position (or status, if not a Finisher).
 		# Fill in the gap field (include laps down if appropriate).
 		leader = riderResults[0]
+		leaderLaps = len( leader.raceTimes )
 		for pos, rr in enumerate(riderResults):
+		
+			if len(rr.raceTimes) > leaderLaps:
+				rr.raceTimes = rr.raceTimes[:leaderLaps]
+				rr.lapTimes = rr.lapTimes[:leaderLaps]
 		
 			if rr.status != Model.Rider.Finisher:
 				rr.pos = Model.Rider.statusNames[rr.status]

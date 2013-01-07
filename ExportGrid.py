@@ -321,6 +321,7 @@ class ExportGrid( object ):
 		
 		highPrecision = Utils.highPrecisionTimes()
 		data = [ [] for i in xrange(len(self.colnames)) ]
+		colsMax = len(self.colnames)
 		rrFields = ['pos', 'num'] + infoFields + (['startTime','finishTime'] if isTimeTrial else []) + ['lastTime', 'gap']
 		if hasSpeeds:
 			rrFields += ['speed']
@@ -350,6 +351,9 @@ class ExportGrid( object ):
 				if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax:
 					data[iCol].append( Utils.formatTimeCompressed(t, highPrecision) )
 					iCol += 1
+					if iCol >= colsMax:
+						break
+			# Pad out the rest of the columns.
 			for i in xrange(len(r.lapTimes), lapsMax):
 				lap = i + 1
 				if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax:
