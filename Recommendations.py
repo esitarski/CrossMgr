@@ -188,10 +188,34 @@ class Recommendations( wx.Panel ):
 					return '%s, %s' % (last, first)
 				return last or first or ' '
 				
-			# Check for missed entries to the end of the race.
 			colnames = [ 'Num', 'Name', 'Issue', 'Recommendation' ]
+			data = [[],[], [], []]
+			def append( num = '', name = '', issue = '', recommendation = '' ):
+				data[0].append( str(num) )
+				data[1].append( str(name) )
+				data[2].append( str(issue) )
+				data[3].append( str(recommendation) )
+			
+			# Check for missed entries to the end of the race.
 				
 			self.isEmpty = False
+			
+			# Get riders who did extra laps.
+			for catCur in race.getCategories():
+				if category and catCur != category:
+					continue
+				results = GetResultsCore( catCur )
+				if not results:
+					continue
+				for rr in results:
+					rider = race.riders[rr.num]
+					if rider.status != rider.Finisher:
+						break
+					numRecordedTimes = len(rider.times)
+					if numRecordedTimes > rr.laps:
+						extra = numRecordedTimes - rr.laps
+						append( rider.num, getName(rider.num), 'Laps', "Rider has %d recorded lap%s not shown in results (all riders finish on leader's last lap)"
+																					% (extra, 's' if extra > 1 else '') )
 			
 			# Trim out all entries not in this category and all non-finishers.
 			if category:
@@ -199,13 +223,6 @@ class Recommendations( wx.Panel ):
 			else:
 				def match( num ) : return True
 			entries = [e for e in entries if match(e.num) ]
-			
-			data = [[],[], [], []]
-			def append( num = '', name = '', issue = '', recommendation = '' ):
-				data[0].append( str(num) )
-				data[1].append( str(name) )
-				data[2].append( str(issue) )
-				data[3].append( str(recommendation) )
 			
 			# Find the maximum recorded lap for each rider.
 			riderMaxLapNonInterp, riderMaxLapInterp = {}, {}
