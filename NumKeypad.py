@@ -26,7 +26,7 @@ class NumKeypad( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
 		self.bell = None
-		self.tada = None
+		self.tada = {}
 		
 		self.SetBackgroundColour( wx.WHITE )
 		
@@ -41,27 +41,32 @@ class NumKeypad( wx.Panel ):
 		verticalMainSizer = wx.BoxSizer( wx.VERTICAL )
 		horizontalMainSizer = wx.BoxSizer( wx.HORIZONTAL )
 		
-		verticalMainSizer.Add( horizontalMainSizer, 1, flag=wx.EXPAND )
+		splitter = wx.SplitterWindow( self, wx.ID_ANY, style = wx.SP_3DSASH )
+		
+		panel = wx.Panel( splitter, wx.ID_ANY, style=wx.BORDER_SUNKEN )
+		panel.SetSizer( horizontalMainSizer )
+		
+		outsideBorder = 4
 		
 		#-------------------------------------------------------------------------------
 		# Create the edit field, numeric keybad and buttons.
 		gbs = wx.GridBagSizer(4, 4)
 		rowCur = 0
 		
-		self.numEdit = wx.TextCtrl( self, 20, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value='' )
+		self.numEdit = wx.TextCtrl( panel, 20, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value='' )
 		self.Bind( wx.EVT_TEXT_ENTER, self.onEnterPress, self.numEdit )
 		self.numEdit.Bind( wx.EVT_CHAR, self.handleNumKeypress )
 		self.numEdit.SetFont( font )
-		gbs.Add( self.numEdit, pos=(rowCur,0), span=(1,3), flag=wx.EXPAND )
+		gbs.Add( self.numEdit, pos=(rowCur,0), span=(1,3), flag=wx.EXPAND|wx.LEFT|wx.TOP, border = outsideBorder )
 		self.num = []
-		self.num.append( MakeButton(self, id=0, label='&0', style=wx.BU_EXACTFIT) )
+		self.num.append( MakeButton( panel, id=0, label='&0', style=wx.BU_EXACTFIT) )
 		self.num[-1].Bind( wx.EVT_BUTTON, lambda event, aValue = 0 : self.onNumPress(event, aValue) )
 		gbs.Add( self.num[0], pos=(4+rowCur,0), span=(1,2), flag=wx.EXPAND )
 
 		numButtonStyle = 0
 		
 		for i in xrange(0, 9):
-			self.num.append( MakeButton(self, id=wx.ID_ANY, label='&' + str(i+1), style=numButtonStyle, size=(wNum,hNum)) )
+			self.num.append( MakeButton( panel, id=wx.ID_ANY, label='&' + str(i+1), style=numButtonStyle, size=(wNum,hNum)) )
 			self.num[-1].Bind( wx.EVT_BUTTON, lambda event, aValue = i+1 : self.onNumPress(event, aValue) )
 			j = 8-i
 			gbs.Add( self.num[-1], pos=(int(j/3)+1 + rowCur, 2-j%3) )
@@ -69,39 +74,39 @@ class NumKeypad( wx.Panel ):
 		for n in self.num:
 			n.SetFont( font )
 		
-		self.delBtn = MakeButton(self, id=wx.ID_DELETE, label='&Del', style=numButtonStyle, size=(wNum,hNum))
+		self.delBtn = MakeButton( panel, id=wx.ID_DELETE, label='&Del', style=numButtonStyle, size=(wNum,hNum))
 		self.delBtn.SetFont( font )
 		self.delBtn.Bind( wx.EVT_BUTTON, self.onDelPress )
 		gbs.Add( self.delBtn, pos=(4+rowCur,2) )
 		
-		self.enterBtn= MakeButton(self, id=0, label='&Enter', style=wx.EXPAND|wx.GROW)
+		self.enterBtn= MakeButton( panel, id=0, label='&Enter', style=wx.EXPAND|wx.GROW)
 		self.enterBtn.SetFont( font )
 		gbs.Add( self.enterBtn, pos=(5+rowCur,0), span=(1,3), flag=wx.EXPAND )
 		self.enterBtn.Bind( wx.EVT_BUTTON, self.onEnterPress )
 	
 		rowCur += 7
 		font = wx.FontFromPixelSize(wx.Size(0,fontPixels*.75), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
-		self.dnfBtn= MakeButton(self, id=wx.ID_ANY, label='DN&F', style=wx.EXPAND|wx.GROW)
+		self.dnfBtn= MakeButton( panel, id=wx.ID_ANY, label='DN&F', style=wx.EXPAND|wx.GROW)
 		self.dnfBtn.SetFont( font )
 		gbs.Add( self.dnfBtn, pos=(rowCur,0), span=(1,1), flag=wx.EXPAND )
 		self.dnfBtn.Bind( wx.EVT_BUTTON, self.onDNFPress )
 	
-		self.pullBtn= MakeButton(self, id=wx.ID_ANY, label='&Pull', style=wx.EXPAND|wx.GROW)
+		self.pullBtn= MakeButton( panel, id=wx.ID_ANY, label='&Pull', style=wx.EXPAND|wx.GROW)
 		self.pullBtn.SetFont( font )
 		gbs.Add( self.pullBtn, pos=(rowCur,1), span=(1,1), flag=wx.EXPAND )
 		self.pullBtn.Bind( wx.EVT_BUTTON, self.onPullPress )
 	
-		self.pullBtn= MakeButton(self, id=wx.ID_ANY, label='&DQ', style=wx.EXPAND|wx.GROW)
+		self.pullBtn= MakeButton( panel, id=wx.ID_ANY, label='&DQ', style=wx.EXPAND|wx.GROW)
 		self.pullBtn.SetFont( font )
 		gbs.Add( self.pullBtn, pos=(rowCur,2), span=(1,1), flag=wx.EXPAND )
 		self.pullBtn.Bind( wx.EVT_BUTTON, self.onDQPress )
 	
-		horizontalMainSizer.Add( gbs, flag=wx.TOP, border = 4 )
+		horizontalMainSizer.Add( gbs, flag=wx.TOP|wx.LEFT, border = 4 )
 		#------------------------------------------------------------------------------
 		# Race time.
 		labelAlign = wx.ALIGN_CENTRE | wx.ALIGN_CENTRE_VERTICAL
 
-		self.raceTime = wx.StaticText(self, wx.ID_ANY, '00:00')
+		self.raceTime = wx.StaticText( panel, wx.ID_ANY, '00:00')
 		self.raceTime.SetFont( font )
 		self.raceTime.SetDoubleBuffered(True)
 		
@@ -119,17 +124,17 @@ class NumKeypad( wx.Panel ):
 
 		rowCur = 0
 		colCur = 0
-		self.automaticManualChoice = wx.Choice( self, id=wx.ID_ANY, choices = ['Automatic', 'Manual'], size=(132,-1) )
+		self.automaticManualChoice = wx.Choice( panel, id=wx.ID_ANY, choices = ['Automatic', 'Manual'], size=(132,-1) )
 		self.Bind(wx.EVT_CHOICE, self.doChooseAutomaticManual, self.automaticManualChoice)
 		self.automaticManualChoice.SetSelection( 0 )
 		self.automaticManualChoice.SetFont( font )
 		gbs.Add( self.automaticManualChoice, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_LEFT )
 		rowCur += 1
 		
-		label = wx.StaticText(self, wx.ID_ANY, 'Total Laps')
+		label = wx.StaticText( panel, wx.ID_ANY, 'Total Laps')
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
-		self.numLaps = wx.Choice( self, 21, choices = [''] + [str(x) for x in xrange(2,21)], size=(64,-1) )
+		self.numLaps = wx.Choice( panel, 21, choices = [''] + [str(x) for x in xrange(2,21)], size=(64,-1) )
 		self.numLaps.SetSelection( 0 )
 		self.numLaps.SetFont( font )
 		self.numLaps.SetDoubleBuffered( True )
@@ -137,81 +142,81 @@ class NumKeypad( wx.Panel ):
 		gbs.Add( self.numLaps, pos=(rowCur, colCur+1), span=(1,1) )
 		rowCur += 1
 		
-		label = wx.StaticText(self, wx.ID_ANY, "Est. Leader Time")
+		label = wx.StaticText( panel, wx.ID_ANY, "Est. Leader Time")
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
-		self.leaderFinishTime = wx.StaticText(self, wx.ID_ANY, "")
+		self.leaderFinishTime = wx.StaticText( panel, wx.ID_ANY, "")
 		self.leaderFinishTime.SetFont( font )
 		gbs.Add( self.leaderFinishTime, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
 
-		label = wx.StaticText(self, wx.ID_ANY, "Est. Last Rider Time")
+		label = wx.StaticText( panel, wx.ID_ANY, "Est. Last Rider Time")
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
-		self.lastRiderFinishTime = wx.StaticText(self, wx.ID_ANY, "")
+		self.lastRiderFinishTime = wx.StaticText( panel, wx.ID_ANY, "")
 		self.lastRiderFinishTime.SetFont( font )
 		gbs.Add( self.lastRiderFinishTime, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
 
-		label = wx.StaticText(self, wx.ID_ANY, "Avg Lap Time")
+		label = wx.StaticText( panel, wx.ID_ANY, "Avg Lap Time")
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
-		self.leadersLapTime = wx.StaticText(self, wx.ID_ANY, "")
+		self.leadersLapTime = wx.StaticText( panel, wx.ID_ANY, "")
 		self.leadersLapTime.SetFont( font )
 		gbs.Add( self.leadersLapTime, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
 
-		label = wx.StaticText(self, wx.ID_ANY, "Completing Lap")
+		label = wx.StaticText( panel, wx.ID_ANY, "Completing Lap")
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
-		self.lapCompleting = wx.StaticText(self, wx.ID_ANY, "")
+		self.lapCompleting = wx.StaticText( panel, wx.ID_ANY, "")
 		self.lapCompleting.SetFont( font )
 		gbs.Add( self.lapCompleting, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
 
-		label = wx.StaticText(self, wx.ID_ANY, "Show Laps to Go")
+		label = wx.StaticText( panel, wx.ID_ANY, "Show Laps to Go")
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
-		self.lapsToGo = wx.StaticText(self, wx.ID_ANY, "")
+		self.lapsToGo = wx.StaticText( panel, wx.ID_ANY, "")
 		self.lapsToGo.SetFont( font )
 		gbs.Add( self.lapsToGo, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
 		
 		rowCur += 1
-		label = wx.StaticText(self, wx.ID_ANY, "Manual Start")
+		label = wx.StaticText( panel, wx.ID_ANY, "Manual Start")
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
 		self.raceStartMessage = label
-		self.raceStartTime = wx.StaticText( self, wx.ID_ANY, '' )
+		self.raceStartTime = wx.StaticText( panel, wx.ID_ANY, '' )
 		self.raceStartTime.SetFont( font )
 		gbs.Add( self.raceStartTime, pos=(rowCur, colCur+1), span=(1, 1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		
 		rowCur += 1
-		label = wx.StaticText(self, wx.ID_ANY, "Est. Leader Finish")
+		label = wx.StaticText( panel, wx.ID_ANY, "Est. Leader Finish")
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
-		self.estLeaderTime = wx.StaticText( self, wx.ID_ANY, '' )
+		self.estLeaderTime = wx.StaticText( panel, wx.ID_ANY, '' )
 		self.estLeaderTime.SetFont( font )
 		gbs.Add( self.estLeaderTime, pos=(rowCur, colCur+1), span=(1, 1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
-		label = wx.StaticText(self, wx.ID_ANY, "Est. Last Rider Finish")
+		label = wx.StaticText( panel, wx.ID_ANY, "Est. Last Rider Finish")
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
-		self.estLastRiderTime = wx.StaticText( self, wx.ID_ANY, '' )
+		self.estLastRiderTime = wx.StaticText( panel, wx.ID_ANY, '' )
 		self.estLastRiderTime.SetFont( font )
 		gbs.Add( self.estLastRiderTime, pos=(rowCur, colCur+1), span=(1, 1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		
 		rowCur += 1
-		label = wx.StaticText(self, wx.ID_ANY, "Clock")
+		label = wx.StaticText( panel, wx.ID_ANY, "Clock")
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
-		self.clockTime = wx.StaticText( self, wx.ID_ANY, '' )
+		self.clockTime = wx.StaticText( panel, wx.ID_ANY, '' )
 		self.clockTime.SetFont( font )
 		gbs.Add( self.clockTime, pos=(rowCur, colCur+1), span=(1, 1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
 		
 		rowCur += 1
-		self.message = wx.StaticText( self, wx.ID_ANY, '' )
+		self.message = wx.StaticText( panel, wx.ID_ANY, '' )
 		self.message.SetFont( font )
 		self.message.SetDoubleBuffered( True )
 		gbs.Add( self.message, pos=(rowCur, colCur), span=(1, 2), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_CENTRE )
@@ -223,11 +228,11 @@ class NumKeypad( wx.Panel ):
 		# Rider Lap Count.
 		rcVertical = wx.BoxSizer( wx.VERTICAL )
 		rcVertical.AddSpacer( 32 )
-		title = wx.StaticText(self, wx.ID_ANY, 'Riders on Course:')
+		title = wx.StaticText( panel, wx.ID_ANY, 'Riders on Course:')
 		title.SetFont( wx.Font(fontSize, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
 		rcVertical.Add( title, flag=wx.ALL, border = 4 )
 		
-		self.lapCountList = wx.ListCtrl( self, wx.ID_ANY, style = wx.LC_REPORT|wx.LC_SINGLE_SEL|wx.LC_HRULES|wx.BORDER_NONE )
+		self.lapCountList = wx.ListCtrl( panel, wx.ID_ANY, style = wx.LC_REPORT|wx.LC_SINGLE_SEL|wx.LC_HRULES|wx.BORDER_NONE )
 		self.lapCountList.SetFont( wx.Font(int(fontSize*0.9), wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
 		self.lapCountList.InsertColumn( 0, 'Category',	wx.LIST_FORMAT_LEFT,	80 )
 		self.lapCountList.InsertColumn( 1, 'Count',		wx.LIST_FORMAT_RIGHT,	70 )
@@ -237,42 +242,64 @@ class NumKeypad( wx.Panel ):
 		horizontalMainSizer.Add( rcVertical, 1, flag=wx.EXPAND|wx.LEFT, border = 4 )
 		
 		#----------------------------------------------------------------------------------------------
-		self.raceHUD = RaceHUD( self, wx.ID_ANY )
-		verticalMainSizer.Add( self.raceHUD, flag=wx.EXPAND )
+		self.raceHUD = RaceHUD( splitter, wx.ID_ANY, style=wx.BORDER_SUNKEN )
+		
+		splitter.SetMinimumPaneSize( 20 )
+		splitter.SplitHorizontally( panel, self.raceHUD, -100 )
+		verticalMainSizer.Add( splitter, 1, flag=wx.EXPAND )
 		
 		self.SetSizer( verticalMainSizer )
 		self.isEnabled = True
+		
+		self.splitter = splitter
+		self.notDrawnYet = True
 		
 		self.refreshRaceTime()
 	
 	def refreshRaceHUD( self ):
 		# Assumes Model is locked.
 		race = Model.race
-		timeToLeader = '  '
-		bgColour = wx.WHITE
-		if race is not None:
-			numLaps, leaderLapsToGo, lapCompleting, leadersExpectedLapTime, leaderNum, expectedRaceFinish, isAutomatic = self.getLapInfo()
-			if not leaderLapsToGo:
-				leaderLapsToGo = -1
-				
-			nLeader, tLeader = race.getTimeToLeader()
+		if not race:
+			return
 			
-			# Update the RaceHUD
-			if not numLaps or numLaps < 2 or not race.isRunning() or getattr(race, 'isTimeTrial', False):
-				self.raceHUD.SetData()
-			else:
-				tCur = race.curRaceTime()
-				leaderTimes = race.getLeaderTimesNums()[0][1:numLaps+1]
-				leaderTimes.append( max(tCur, GetLastFinisherTime()) )
-				self.raceHUD.SetData( nowTime = tCur, lapTimes = leaderTimes, leader = leaderNum )
-				
-			if tLeader is not None:
-				if tLeader <= 3.0 and not getattr(race, 'isTimeTrial', False):
-					if not self.tada:
-						self.tada = Utils.PlaySound( 'tada.wav' )
-				else:
-					self.tada = None
+		results = GetResults( None, False )
+		if not results:
+			return
 
+		tCur = race.curRaceTime()
+		raceTimes = []
+		leader = []
+		categoryRaceTimes = {}
+		categories_seen = set()
+		for rr in results:
+			if rr.status != Model.Rider.Finisher or not rr.raceTimes:
+				continue
+			category = race.getCategory( rr.num )
+			if category in categories_seen:			# If we have not seen this category, this is not the leader.
+				# Make sure we update the red lantern time.
+				newRaceTimes = categoryRaceTimes[category]
+				if rr.raceTimes[-1] > newRaceTimes[-1]:
+					newRaceTimes[-1] = rr.raceTimes[-1]
+				continue
+			categories_seen.add( category )
+			leader.append( '%s %d' % (category.fullname if category else '<Missing>', rr.num) )
+			# Add a copy of the race times.  Append the leader's last time as the current red lantern.
+			raceTimes.append( rr.raceTimes + [rr.raceTimes[-1]] )
+			categoryRaceTimes[category] = raceTimes[-1]
+			
+			try:
+				tLeader = rr.raceTimes[bisect.bisect_left( rr.raceTimes, tCur )] - tCur
+			except IndexError:
+				continue
+				
+			if 0.0 <= tLeader <= 3.0 and not getattr(race, 'isTimeTrial', False):
+				if category not in self.tada:
+					self.tada[category] = Utils.PlaySound( 'reminder.wav' )
+			elif category in self.tada:
+				del self.tada[category]
+		
+		self.raceHUD.SetData( nowTime = tCur, raceTimes = raceTimes, leader = leader )
+		
 	def refreshRaceTime( self ):
 		tClockStr = ''
 		with Model.LockRace() as race:
@@ -586,7 +613,7 @@ class NumKeypad( wx.Panel ):
 			if not race or not race.isRunning():
 				return
 		
-		results = GetResults( 'All', False )
+		results = GetResults( None, False )
 		if not results:
 			return
 		
@@ -600,7 +627,7 @@ class NumKeypad( wx.Panel ):
 				catCount[category] += 1
 				if rr.status != Model.Rider.Finisher:
 					continue
-				numLaps = race.getCategoryBestLaps( category.name if category else 'All' )
+				numLaps = race.getCategoryBestLaps( category )
 				numLaps = (numLaps if numLaps else 1)
 				
 				tSearch = t
@@ -622,7 +649,7 @@ class NumKeypad( wx.Panel ):
 			
 		catLapList = [(category, lap, categoryLaps, count)
 						for (category, lap, categoryLaps), count in catLapCount.iteritems()]
-		catLapList.sort( key=lambda x: (x[0].getStartOffsetSecs(), x[0].name, -x[1]) )
+		catLapList.sort( key=lambda x: (x[0].getStartOffsetSecs(), x[0].fullname, -x[1]) )
 		
 		def appendListRow( row = tuple(), colour = None, bold = None ):
 			r = self.lapCountList.InsertStringItem( sys.maxint, str(row[0]) if row else '' )
@@ -648,13 +675,17 @@ class NumKeypad( wx.Panel ):
 		lastCategory = None
 		for category, lap, categoryLaps, count in catLapList:
 			if category != lastCategory:
-				appendListRow( (category.name, '%d/%d' % (catRaceCount[category], catCount[category]),
+				appendListRow( (category.fullname, '%d/%d' % (catRaceCount[category], catCount[category]),
 									('(%d lap%s)' % (categoryLaps, 's' if categoryLaps > 1 else '')) ),
 								bold = True )
 			appendListRow( ('', count, 'on lap %d' % lap) )
 			lastCategory = category
 			
 	def refresh( self ):
+		if self.notDrawnYet:
+			self.notDrawnYet = False
+			self.splitter.SetSashPosition( 440 )
+	
 		wx.CallAfter( self.numEdit.SetFocus )
 		with Model.LockRace() as race:
 			enable = True if race is not None and race.isRunning() else False

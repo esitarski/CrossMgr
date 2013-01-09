@@ -212,11 +212,11 @@ class ExportGrid( object ):
 		titleStyle.font.height += titleStyle.font.height / 2
 
 		rowTop = 0
-		for line in self.title.split('\n'):
-			sheet.write(rowTop, 0, line, titleStyle)
+		if self.title:
+			for line in self.title.split('\n'):
+				sheet.write(rowTop, 0, line, titleStyle)
+				rowTop += 1
 			rowTop += 1
-			
-		rowTop += 1
 		
 		sheetFit = FitSheetWrapper( sheet )
 		
@@ -260,16 +260,16 @@ class ExportGrid( object ):
 		
 		self.data[col][row] = value
 	
-	def setResultsOneList( self, catName = 'All', getExternalData = True, showLapsFrequency = None ):
+	def setResultsOneList( self, category = None, getExternalData = True, showLapsFrequency = None ):
 		''' Format the results into columns. '''
 		self.data = []
 		self.colnames = []
 
-		results = GetResults( catName, getExternalData )
+		results = GetResults( category, getExternalData )
 		if not results:
 			return
 		catDetails = GetCategoryDetails()
-		cd = catDetails.get( catName, None )
+		cd = catDetails[category.fullname] if category else None
 		
 		leader = results[0]
 		hasSpeeds = bool( getattr(leader, 'lapSpeeds', None) or getattr(leader, 'raceSpeeds', None) )
@@ -286,7 +286,7 @@ class ExportGrid( object ):
 			showLapsFrequency = max( 1, int(math.ceil(maxLaps / 12)) )
 		
 		with Model.LockRace() as race:
-			catStr = catName
+			catStr = 'All' if not category else category.fullname
 			if cd and cd.get('raceDistance', None):
 				catStr += ', %.2f %s, ' % (cd['raceDistance'], cd['distanceUnit'])
 				if cd.get('lapDistance', None) and cd.get('laps', 0) > 1:
@@ -301,7 +301,6 @@ class ExportGrid( object ):
 				catStr += 'winner: %s at %s' % (Utils.formatTime(leader.lastTime - cd['startOffset']), leader.speed);
 		
 			self.title = '\n'.join( [race.name, Utils.formatDate(race.date), catStr] )
-			category = race.categories.get( catName, None )
 			isTimeTrial = getattr( race, 'isTimeTrial', False )
 
 		startOffset = category.getStartOffsetSecs() if category else 0.0
@@ -322,6 +321,7 @@ class ExportGrid( object ):
 		
 		highPrecision = Utils.highPrecisionTimes()
 		data = [ [] for i in xrange(len(self.colnames)) ]
+		colsMax = len(self.colnames)
 		rrFields = ['pos', 'num'] + infoFields + (['startTime','finishTime'] if isTimeTrial else []) + ['lastTime', 'gap']
 		if hasSpeeds:
 			rrFields += ['speed']
@@ -351,6 +351,9 @@ class ExportGrid( object ):
 				if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax:
 					data[iCol].append( Utils.formatTimeCompressed(t, highPrecision) )
 					iCol += 1
+					if iCol >= colsMax:
+						break
+			# Pad out the rest of the columns.
 			for i in xrange(len(r.lapTimes), lapsMax):
 				lap = i + 1
 				if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax:

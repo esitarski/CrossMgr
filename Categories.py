@@ -119,15 +119,25 @@ class Categories( wx.Panel ):
 		cols += 1 
 
 		self.grid = gridlib.Grid( self )
-		colnames = ['Active', 'Name', 'Numbers', 'Start Offset', 'Race Laps', 'Distance', 'Distance is By', 'First Lap Distance', '80% Lap Time', 'Suggested Laps']
-		self.iCol = dict( (name, i) for i, name in enumerate( [
-			'active', 'name', 'numbers',
-			'startOffset', 'numLaps',
-			'distance', 'distanceType', 'firstLapDistance',
-			'rule80Time', 'suggestedLaps'] ) )
-		self.iDataColumns = len(colnames) - 2	# Number of actual data columns that have to be persisted.
+		self.colNameFields = [
+			('Active',				'active'),
+			('Name',				'name'),
+			('Gender',				'gender'),
+			('Numbers',				'catStr'),
+			('Start Offset',		'startOffset'),
+			('Race Laps',			'numLaps'),
+			('Distance',			'distance'),
+			('Distance is By',		'distanceType'),
+			('First Lap Distance',	'firstLapDistance'),
+			('80% Lap Time',		'rule80Time'),
+			('Suggested Laps',		'suggestedLaps'),
+		]
+		self.computedFieldss = {'rule80Time', 'suggestedLaps'}
+		colnames = [colName for colName, fieldName in self.colNameFields]
+		self.iCol = dict( (fieldName, i) for i, (colName, fieldName) in enumerate(self.colNameFields) )
 		
-		self.activeColumn = colnames.index( 'Active' )
+		self.activeColumn = self.iCol['active']
+		self.genderColumn = self.iCol['gender']
 		self.grid.CreateGrid( 0, len(colnames) )
 		self.grid.SetRowLabelSize(0)
 		self.grid.SetMargins(0,0)
@@ -154,7 +164,8 @@ class Categories( wx.Panel ):
 		self.afterCheckBox( self.cb.GetValue() )
 		
 	def onCellSelected( self, event ):
-		if event.GetCol() == self.activeColumn:
+		col = event.GetCol()
+		if col == self.activeColumn or col == self.genderColumn:
 			wx.CallAfter( self.grid.EnableCellEditControl )
 		event.Skip()
 
@@ -201,7 +212,8 @@ class Categories( wx.Panel ):
 
 		self.refresh()
 		
-	def _setRow( self, r, active, name, strVal, startOffset = '00:00:00', numLaps = None, distance = None, distanceType = None, firstLapDistance = None ):
+	def _setRow( self, r, active, name, catStr, startOffset = '00:00:00',
+					numLaps = None, distance = None, distanceType = None, firstLapDistance = None, gender = None ):
 		if len(startOffset) < len('00:00:00'):
 			startOffset = '00:' + startOffset
 	
@@ -214,7 +226,16 @@ class Categories( wx.Panel ):
 		self.grid.SetCellAlignment( r, c, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 		
 		self.grid.SetCellValue( r, self.iCol['name'], name )
-		self.grid.SetCellValue( r, self.iCol['numbers'], strVal )
+		
+		if not gender in {'Men', 'Women', 'Open'}:
+			gender = 'Open'
+		c = self.iCol['gender']
+		self.grid.SetCellValue( r, c, gender )
+		self.grid.SetCellEditor( r, c, gridlib.GridCellChoiceEditor(['Open','Men','Women'], False) )
+		self.grid.SetCellAlignment( r, c, wx.ALIGN_LEFT, wx.ALIGN_CENTRE )
+		
+		self.grid.SetCellValue( r, self.iCol['catStr'], catStr )
+		
 		c = self.iCol['startOffset']
 		self.grid.SetCellValue( r, c, startOffset )
 		self.grid.SetCellEditor( r, c, TimeEditor() )
@@ -274,7 +295,7 @@ class Categories( wx.Panel ):
 		
 	def onNewCategory( self, event ):
 		self.grid.AppendRows( 1 )
-		self._setRow( self.grid.GetNumberRows() - 1, True, '<CategoryName>     ', '100-199,504,-128' )
+		self._setRow( r=self.grid.GetNumberRows() - 1, active=True, name='<CategoryName>     ', catStr='100-199,504,-128' )
 		self.grid.AutoSizeColumns(True)
 		
 	def onDelCategory( self, event ):
@@ -315,10 +336,16 @@ class Categories( wx.Panel ):
 			self.grid.AppendRows( len(categories) )
 
 			for r, cat in enumerate(categories):
-				self._setRow(	r, cat.active, cat.name, cat.catStr, cat.startOffset, cat.numLaps,
-								getattr(cat, 'distance', None),
-								getattr(cat, 'distanceType', Model.Category.DistanceByLap),
-								getattr(cat, 'firstLapDistance', None),
+				self._setRow(	r=r,
+								active				= cat.active,
+								name				= cat.name,
+								gender				= getattr(cat, 'gender', None),
+								catStr				= cat.catStr,
+								startOffset			= cat.startOffset,
+								numLaps				= cat.numLaps,
+								distance			= getattr(cat, 'distance', None),
+								distanceType		= getattr(cat, 'distanceType', Model.Category.DistanceByLap),
+								firstLapDistance	= getattr(cat, 'firstLapDistance', None),
 							)
 				
 			self.grid.AutoSizeColumns( True )
@@ -332,7 +359,11 @@ class Categories( wx.Panel ):
 			self.grid.DisableCellEditControl()	# Make sure the current edit is committed.
 			if race is None:
 				return
-			numStrTuples = [ tuple(self.grid.GetCellValue(r, c) for c in xrange(self.iDataColumns)) for r in xrange(self.grid.GetNumberRows()) ]
+			numStrTuples = []
+			for r in xrange(self.grid.GetNumberRows()):
+				values = dict( (name, self.grid.GetCellValue(r, c)) for name, c in self.iCol.iteritems()
+																			if name not in self.computedFieldss )
+				numStrTuples.append( values )
 			race.setCategories( numStrTuples )
 	
 if __name__ == '__main__':
@@ -340,12 +371,13 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	Model.setRace( Model.Race() )
 	race = Model.getRace()
-	race.setCategories( [(True, 'test1', '100-199,999'),
-						 (True, 'test2', '200-299,888', '00:00', '6'),
-						 (True, 'test3', '300-399', '00:00'),
-						 (True, 'test4', '400-499', '00:00'),
-						 (True, 'test5', '500-599', '00:00'),
-						 ] )
+	race.setCategories( [
+							{'name':'test1', 'catStr':'100-199,999','gender':'Men'},
+							{'name':'test2', 'catStr':'200-299,888', 'startOffset':'00:10', 'distance':'6'},
+							{'name':'test3', 'catStr':'300-399', 'startOffset':'00:20','gender':'Women'},
+							{'name':'test4', 'catStr':'400-499', 'startOffset':'00:30','gender':'Open'},
+							{'name':'test5', 'catStr':'500-599', 'startOffset':'01:00','gender':'Men'},
+						] )
 	categories = Categories(mainWin)
 	categories.refresh()
 	mainWin.Show()

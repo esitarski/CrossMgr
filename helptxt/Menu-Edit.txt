@@ -12,7 +12,7 @@ Redo the last change.  Redo can be called repeatedly to keep redoing the last ch
 ## Find... (Ctrl-F)
 Open a window to allow searching for any data.  This window stays open until closed.
 
-* The Find window shows all data associated in the external Excel file.
+* The Find window shows all data associated in the [External Excel][] sheet.
 * Double-clicking in this window shows that rider in the RiderDetail screen.
 * Clicking on the column name sorts by that column.  Ths sorted column name will be shown surrounded by <>.
 * When in JChip test mode, the Tag will be automatically looked up if the Find window is up.  This makes it easy to check if a given chip read corresponds to the right rider.

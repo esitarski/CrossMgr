@@ -22,10 +22,6 @@ class Properties( wx.Panel ):
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceName )
 		rows += 1
 		
-		self.organizerLabel = wx.StaticText( self, wx.ID_ANY, 'Organizer:' )
-		self.organizer = wx.TextCtrl( self, wx.ID_ANY, value='' )
-		rows += 1
-		
 		self.dateLabel = wx.StaticText( self, wx.ID_ANY, 'Date:' )
 		self.date = wx.DatePickerCtrl( self, wx.ID_ANY, style = wx.DP_DROPDOWN )
 		self.Bind(wx.EVT_DATE_CHANGED, self.onChanged, self.date)
@@ -44,19 +40,38 @@ class Properties( wx.Panel ):
 		self.minutes = intctrl.IntCtrl( self, wx.ID_ANY, min=1, max=60*12, allow_none=False, value=40 )
 		rows += 1
 
-		self.memoLabel = wx.StaticText( self, wx.ID_ANY, 'Memo:' )
-		self.memo = wx.TextCtrl( self, wx.ID_ANY, value='' )
-		self.Bind( wx.EVT_TEXT, self.onChanged, self.memo )
+		self.raceDisciplineLabel = wx.StaticText( self, wx.ID_ANY, 'Discipline:' )
+		self.raceDiscipline = wx.TextCtrl( self, wx.ID_ANY, value='' )
+		self.raceDiscipline.SetValue( 'Cyclo-cross' )
+		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceDiscipline )
+		rows += 1
+		
+		self.organizerLabel = wx.StaticText( self, wx.ID_ANY, 'Organizer:' )
+		self.organizer = wx.TextCtrl( self, wx.ID_ANY, value='' )
 		rows += 1
 		
 		self.commissaireLabel = wx.StaticText( self, wx.ID_ANY, 'Commissaire:' )
 		self.commissaire = wx.TextCtrl( self, wx.ID_ANY, value='' )
 		rows += 1
 		
+		self.memoLabel = wx.StaticText( self, wx.ID_ANY, 'Memo:' )
+		self.memo = wx.TextCtrl( self, wx.ID_ANY, value='' )
+		self.Bind( wx.EVT_TEXT, self.onChanged, self.memo )
+		rows += 1
+		
 		self.timeTrialLabel = wx.StaticText( self, wx.ID_ANY, 'Time Trial:' )
 		self.timeTrial = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
 		rows += 1
 		
+		self.distanceUnitLabel = wx.StaticText( self, wx.ID_ANY, 'Distance Unit: ' )
+		self.distanceUnit = wx.Choice( self, wx.ID_ANY, choices=['km', 'miles'] )
+		self.distanceUnit.SetSelection( 0 )
+		rows += 1
+
+		self.highPrecisionTimesLabel = wx.StaticText( self, wx.ID_ANY, 'Show Times to 100s of a Second: ' )
+		self.highPrecisionTimes = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
+		rows += 1
+
 		self.jchipLabel = wx.StaticText( self, wx.ID_ANY, 'JChip Integration: ' )
 		self.jchip = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
 		self.Bind( wx.EVT_CHECKBOX, self.onJChipIntegration, self.jchip )
@@ -65,15 +80,6 @@ class Properties( wx.Panel ):
 		self.autocorrectLapsDefaultLabel = wx.StaticText( self, wx.ID_ANY, 'Set "Autocorrect Lap Data" option by Default: ' )
 		self.autocorrectLapsDefault = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
 		self.autocorrectLapsDefault.SetValue( True )
-		rows += 1
-
-		self.highPrecisionTimesLabel = wx.StaticText( self, wx.ID_ANY, 'Show Times to 100s of a Second: ' )
-		self.highPrecisionTimes = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
-		rows += 1
-
-		self.distanceUnitLabel = wx.StaticText( self, wx.ID_ANY, 'Distance Unit: ' )
-		self.distanceUnit = wx.Choice( self, wx.ID_ANY, choices=['km', 'miles'] )
-		self.distanceUnit.SetSelection( 0 )
 		rows += 1
 
 		self.finishTopLabel = wx.StaticText( self, wx.ID_ANY, 'Animation Finish on Top: ' )
@@ -100,7 +106,7 @@ class Properties( wx.Panel ):
 		
 		if addEditButton:
 			rows += 1
-		fbs = wx.FlexGridSizer( rows=rows+1, cols=2, hgap=5, vgap=3 )
+		fbs = wx.FlexGridSizer( rows=rows+1, cols=2, hgap=2, vgap=1 )
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
 		fieldAlign = wx.EXPAND|wx.GROW
@@ -109,24 +115,25 @@ class Properties( wx.Panel ):
 		
 		labelFieldFormats = [
 			(self.raceNameLabel,	0, labelAlign),		(self.raceName, 		1, fieldAlign),
-			(self.organizerLabel,	0, labelAlign),		(self.organizer,		1, fieldAlign),
 			(self.dateLabel,		0, labelAlign),		(self.date, 			1, fieldAlign),
 			(self.raceNumLabel,		0, labelAlign),		(self.raceNum,			1, fieldAlign),
 			(self.scheduledStartLabel, 0, labelAlign),	(self.scheduledStart,	1, fieldAlign),
 			(self.minutesLabel,		0, labelAlign),		(self.minutes, 			1, fieldAlign),
-			(self.memoLabel,		0, labelAlign),		(self.memo, 			1, fieldAlign),
+			(self.raceDisciplineLabel,	0, labelAlign),	(self.raceDiscipline, 	1, fieldAlign),
+			(self.organizerLabel,	0, labelAlign),		(self.organizer,		1, fieldAlign),
 			(self.commissaireLabel,	0, labelAlign),		(self.commissaire, 		1, fieldAlign),
+			(self.memoLabel,		0, labelAlign),		(self.memo, 			1, fieldAlign),
 			
 			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
 			(self.timeTrialLabel,	0, labelAlign),		(self.timeTrial,		1, fieldAlign),
 			
 			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
-			(self.jchipLabel,		0, labelAlign),		(self.jchip,			1, fieldAlign),
-			(self.autocorrectLapsDefaultLabel,0, labelAlign),(self.autocorrectLapsDefault,1, fieldAlign),
+			(self.distanceUnitLabel,0, labelAlign),		(self.distanceUnit,		1, fieldAlign),
 			(self.highPrecisionTimesLabel,0, labelAlign),(self.highPrecisionTimes,1, fieldAlign),
 			
 			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
-			(self.distanceUnitLabel,0, labelAlign),		(self.distanceUnit,		1, fieldAlign),
+			(self.jchipLabel,		0, labelAlign),		(self.jchip,			1, fieldAlign),
+			(self.autocorrectLapsDefaultLabel,0, labelAlign),(self.autocorrectLapsDefault,1, fieldAlign),
 			
 			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
 			(self.finishTopLabel,0, labelAlign),		(self.finishTop,		1, fieldAlign),
@@ -229,6 +236,7 @@ class Properties( wx.Panel ):
 			if race is None:
 				return
 			self.raceName.SetValue( race.name )
+			self.raceDiscipline.SetValue( getattr(race, 'discipline', 'Cyclo-cross') )
 			self.organizer.SetValue( getattr(race, 'organizer', '') )
 			d = wx.DateTime()
 			d.ParseDate(race.date)
@@ -266,6 +274,7 @@ class Properties( wx.Panel ):
 			if race is None:
 				return
 			race.name = self.raceName.GetValue()
+			race.discipline = self.raceDiscipline.GetValue()
 			race.organizer = self.organizer.GetValue()
 			race.date = self.date.GetValue().Format(Properties.dateFormat)
 			race.raceNum = self.raceNum.GetValue()

@@ -58,11 +58,11 @@ This display shows the total riders on course, a breakdown of the riders by cate
 
 ## Race Lap Chart
 
-Shown after the 2nd lap, this display shows graphically:
+Shown after the 2nd lap, this display shows graphically, by Category:
 
 * the total number of laps in the race, and the laps to go
-* the race leader's number
-* a progress bar as showing where the leader is in the race
-* a timer counting down to when the leader is next expected
-* the finish time of the race (finish line flag)
-* the expected time of the last rider on course
+* the Category leader's number
+* a Progress bar as showing where the leader is in the race
+* a Timer counting down to when the leader is next expected
+* the projected Finish Time of the race (finish line flag)
+* the projected Expected Time of the last rider on course (broom)

@@ -12,13 +12,14 @@ from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, Del
 from FtpWriteFile import realTimeFtpPublish
 
 # Define columns for recorded and expected infomation.
-iNumCol, iNoteCol, iTimeCol, iLapCol, iGapCol, iColMax = range(6)
+iNumCol, iNoteCol, iTimeCol, iLapCol, iGapCol, iNameCol, iColMax = range(7)
 colnames = [None] * iColMax
 colnames[iNumCol]  = 'Num'
 colnames[iNoteCol] = 'Note'
 colnames[iLapCol]  = 'Lap'
 colnames[iTimeCol] = 'Time'
 colnames[iGapCol]  = 'Gap'
+colnames[iNameCol] = 'Name'
 
 fontSize = 14
 
@@ -31,6 +32,7 @@ def GetLabelGrid( parent ):
 	label = wx.StaticText( parent, wx.ID_ANY, 'Recorded:' )
 	
 	grid = ColGrid.ColGrid( parent, colnames = colnames )
+	grid.SetLeftAlignCols( [iNameCol] )
 	grid.SetRowLabelSize( 0 )
 	grid.SetRightAlign( True )
 	grid.AutoSizeColumns( True )
@@ -89,7 +91,7 @@ class ForecastHistory( wx.Panel ):
 		
 		self.splitter.SetMinimumPaneSize( 64 )
 		self.splitter.SetSashGravity( 0.5 )
-		self.splitter.SplitHorizontally( self.lgHistory, self.lgExpected, 100 )
+		self.splitter.SplitHorizontally( self.lgExpected, self.lgHistory, 100 )
 		self.Bind( wx.EVT_SPLITTER_DCLICK, self.doSwapOrientation, self.splitter )
 		bsMain.Add( self.splitter, 1, flag=wx.EXPAND | wx.ALL, border = 4 )
 				
@@ -329,6 +331,11 @@ class ForecastHistory( wx.Panel ):
 				self.quickExpected = None
 				self.clearGrids()
 				return
+				
+			try:
+				externalInfo = race.excelLink.read( True )
+			except:
+				externalInfo = {}
 						
 			tRace = race.curRaceTime()
 			tRaceLength = race.minutes * 60.0
@@ -348,7 +355,7 @@ class ForecastHistory( wx.Panel ):
 			averageLapTime = race.getAverageLapTime()
 			backSecs = averageLapTime / 4.0
 			
-			expectedShowMax = 32
+			expectedShowMax = 64
 			
 			tMin = tRace - backSecs
 			tMax = tRace + averageLapTime
@@ -419,6 +426,15 @@ class ForecastHistory( wx.Panel ):
 					gap = prevRiderGap.get(e.num, ' ')
 				return gap
 			data[iGapCol] = [getGapExpected(e) for e in expected]
+			def getName( e ):
+				info = externalInfo.get(e.num, {})
+				last = info.get('LastName','')
+				first = info.get('FirstName','')
+				if last and first:
+					return '%s, %s' % (last, first)
+				return last or first or ' '
+			data[iNameCol] = [getName(e) for e in expected]
+			
 			self.quickExpected = expected
 			
 			self.expectedGrid.Set( data = data, backgroundColour = backgroundColour, textColour = textColour )
@@ -432,7 +448,7 @@ class ForecastHistory( wx.Panel ):
 			
 			#------------------------------------------------------------------
 			# Update recorded.
-			recordedDisplayMax = 32
+			recordedDisplayMax = 64
 			recorded = [ e for e in entries if not e.interp and e.t <= tRace ]
 			recorded = recorded[-recordedDisplayMax:]
 			self.quickHistory = recorded
@@ -472,6 +488,7 @@ class ForecastHistory( wx.Panel ):
 					return ' '
 				return prevRiderGap.get(e.num, ' ')
 			data[iGapCol] = [getGapHistory(e) for e in recorded]
+			data[iNameCol] = [getName(e) for e in recorded]
 
 			self.historyGrid.Set( data = data, backgroundColour = backgroundColour, textColour = textColour )
 			self.historyGrid.AutoSizeColumns()

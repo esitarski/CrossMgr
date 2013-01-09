@@ -3,7 +3,7 @@
 # Quick Start
 Welcome to CrossMgr!
 
-CrossMgr is easy to use.  You can start with a simple race with manual entry and numbers, move on to linking rider information from an external Excel sheet, and progress with producing professional web output live during a race.
+CrossMgr is easy to use.  You can start with a simple race with manual entry and numbers, move on to linking rider information from an [External Excel][] sheet, and progress with producing professional web output live during a race.
 
 CrossMgr has the *best* capabilities for analysing and fixing problems after a race (see [Recommendations][], [Chart][] and [RiderDetail][]).
 

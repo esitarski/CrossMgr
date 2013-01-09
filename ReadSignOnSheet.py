@@ -421,15 +421,19 @@ class ExcelLink( object ):
 				pass
 		return None
 	
-	def read( self ):
+	def read( self, alwaysReturnCache = False ):
 		# Check the cache.  Return the last info if the file has not been modified, and the name, sheet and fields are the same.
 		global stateCache
 		global infoCache
+		
+		if alwaysReturnCache and infoCache is not None:
+			return infoCache
+
 		if stateCache and infoCache:
 			try:
 				state = (os.path.getmtime(self.fileName), self.fileName, self.sheetName, self.fieldCol)
 				if state == stateCache:
-					return infoCache.copy()
+					return infoCache
 			except:
 				pass
 	
@@ -437,8 +441,10 @@ class ExcelLink( object ):
 		try:
 			reader = GetExcelReader( self.fileName )
 			if self.sheetName not in reader.sheet_names():
+				infoCache = {}
 				return {}
 		except (IOError, ValueError):
+			infoCache = {}
 			return {}
 		
 		info = {}
@@ -462,7 +468,7 @@ class ExcelLink( object ):
 		
 		stateCache = (os.path.getmtime(self.fileName), self.fileName, self.sheetName, self.fieldCol)
 		infoCache = info
-		return infoCache.copy()
+		return infoCache
 
 #-----------------------------------------------------------------------------------------------------
 

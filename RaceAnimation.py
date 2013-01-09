@@ -12,8 +12,8 @@ from GetResults import GetResults
 
 statusNames = Model.Rider.statusNames
 
-def GetAnimationData( catName = 'All', getExternalData = False ):
-	results = GetResults( catName, getExternalData )
+def GetAnimationData( category = None, getExternalData = False ):
+	results = GetResults( category, getExternalData )
 	if not results:
 		return {}
 	
@@ -286,7 +286,7 @@ class RaceAnimation( wx.Panel ):
 			self.showGPX.SetValue( not getattr(race, 'showOval', True) )
 			
 			self.setAnimationType( getattr(race, 'geoTrack', None) )
-			catName = FixCategories( self.categoryChoice, getattr(race, 'raceAnimationCategory', 0) )
+			category = FixCategories( self.categoryChoice, getattr(race, 'raceAnimationCategory', 0) )
 			self.hbs.Layout()
 			raceTime = race.lastRaceTime() if race.isRunning() else self.animation.t
 			raceIsRunning = race.isRunning()
@@ -294,7 +294,7 @@ class RaceAnimation( wx.Panel ):
 		self.finishTop.SetValue( getattr(race, 'finishTop', False) )
 		self.reverseDirection.SetValue( getattr(race, 'reverseDirection', False) )
 		
-		animationData = GetAnimationData( catName, True )
+		animationData = GetAnimationData( category, True )
 		self.animation.SetData( animationData, raceTime )
 		self.animation.SetOptions( getattr(race, 'reverseDirection', False), getattr(race, 'finishTop', False) )
 		if raceIsRunning:

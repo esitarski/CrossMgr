@@ -109,7 +109,7 @@ for dir in ['CrossMgrImages', 'CrossMgrHtml', 'CrossMgrHtmlDoc']:
 print 'Copying doc files to doc directory.'
 docDir = os.path.join( pypiDir, 'CrossMgrDoc' )
 os.mkdir( docDir )
-for f in ['LinuxInstallReadme.txt', 'CrossMgrTutorial.doc']:
+for f in ['MacInstallReadme.txt', 'LinuxInstallReadme.txt', 'CrossMgrTutorial.doc']:
 	shutil.copy( f, os.path.join(docDir, f) )
 	
 print 'Collecting data_files.'

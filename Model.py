@@ -162,8 +162,10 @@ class Category(object):
 					mask = cp.ljust(len(mask), '.')
 		return mask
 
-	def __init__( self, active = True, name = 'category', catStr = '100-199', startOffset = '00:00:00', numLaps = None, sequence = 0,
-					distance = None, distanceType = None, firstLapDistance = None ):
+	def __init__( self, active = True, name = 'Category 100-199', catStr = '100-199', startOffset = '00:00:00',
+						numLaps = None, sequence = 0,
+						distance = None, distanceType = None, firstLapDistance = None,
+						gender = 'Open' ):
 		self.active = False
 		active = str(active).strip()
 		if active and active[0] in 'TtYy1':
@@ -204,6 +206,11 @@ class Category(object):
 			self.firstLapDistance = None
 		if self.firstLapDistance is not None and self.firstLapDistance <= 0.0:
 			self.firstLapDistance = None
+			
+		if gender in {'Men', 'Women', 'Open'}:
+			self.gender = gender
+		else:
+			self.gender = 'Open'
 		
 	def __setstate( self, d ):
 		self.__dict__.update(d)
@@ -241,6 +248,10 @@ class Category(object):
 			return firstLapDistance + distance * (lap-1)
 		else:
 			return distance * lap
+	
+	@property
+	def fullname( self ):
+		return '%s (%s)' % (self.name, getattr(self, 'gender', 'Open'))
 	
 	@property
 	def firstLapRatio( self ):
@@ -288,7 +299,7 @@ class Category(object):
 				return True
 		return False
 
-	key_attr = ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'catStr', 'distance', 'distanceType', 'firstLapDistance']
+	key_attr = ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'catStr', 'distance', 'distanceType', 'firstLapDistance', 'gender']
 	def __cmp__( self, c ):
 		for attr in self.key_attr:
 			cCmp = cmp( getattr(self, attr, None), getattr(c, attr, None) )
@@ -350,7 +361,7 @@ class Category(object):
 			self.exclude.discard( num )
 		
 	def __repr__( self ):
-		return 'Category(active=%s, name="%s", catStr="%s", startOffset="%s", numLaps=%s, sequence=%s, distance=%s, distanceType=%s)' % (
+		return 'Category(active=%s, name="%s", catStr="%s", startOffset="%s", numLaps=%s, sequence=%s, distance=%s, distanceType=%s, gender="%s")' % (
 				str(self.active),
 				self.name,
 				self.catStr,
@@ -358,7 +369,9 @@ class Category(object):
 				str(self.numLaps),
 				str(self.sequence),
 				str(getattr(self,'distance',None)),
-				str(getattr(self,'distanceType', Category.DistanceByLap)) )
+				str(getattr(self,'distanceType', Category.DistanceByLap)),
+				getattr(self,'gender',''),
+			)
 
 	def getStartOffsetSecs( self ):
 		return Utils.StrToSeconds( self.startOffset )
@@ -745,6 +758,7 @@ class Race(object):
 		self.minutes = 60
 		self.commissaire = '<Commissaire>'
 		self.memo = '<RaceMemo>'
+		self.discipline = 'Cyclo-cross'
 
 		self.categories = {}
 		self.riders = {}
@@ -1252,7 +1266,7 @@ class Race(object):
 		return ctn
 		
 	@memoize
-	def getCategoryRaceLaps( self ):		
+	def getCategoryRaceLaps( self ):
 		crl = {}
 		raceTime = self.minutes * 60.0
 		for c, (catTimes, catNums) in self.getCategoryTimesNums().iteritems():
@@ -1335,7 +1349,7 @@ class Race(object):
 
 	def getCategories( self ):
 		activeCategories = [c for c in self.categories.itervalues() if c.active]
-		activeCategories.sort()
+		activeCategories.sort( key = Category.key )
 		return activeCategories
 
 	def setCategoryMask( self ):
@@ -1368,7 +1382,7 @@ class Race(object):
 
 	def getAllCategories( self ):
 		allCategories = [c for c in self.categories.itervalues()]
-		allCategories.sort()
+		allCategories.sort( key = Category.key )
 		return allCategories
 
 	def setActiveCategories( self, active = None ):
@@ -1378,20 +1392,22 @@ class Race(object):
 		self.setChanged()
 
 	def setCategories( self, nameStrTuples ):
-		# This list must match the initialization fields in class Category (excluding sequence).
-		fields = ('active', 'name', 'catStr', 'startOffset', 'numLaps', 'distance', 'distanceType', 'firstLapDistance')
-		padding = [None for f in fields]
 		i = 0
 		newCategories = {}
 		for t in nameStrTuples:
-			if len(t) < len(fields):
-				t = list(t) + padding
-			args = dict( (key, t[i]) for i, key in enumerate(fields) )
-			if not args['name']:
+			args = dict( t )
+			if not 'name' in args or not args['name']:
 				continue
 			args['sequence'] = i
 			category = Category( **args )
-			newCategories[args['name']] = category
+			# Ensure we don't have any duplicate category fullnames.
+			if category.fullname in newCategories:
+				originalName = category.name
+				for count in xrange(1, 999):
+					category.name = '%s Copy(%d)' % (originalName, count)
+					if not category.fullname in newCategories:
+						break
+			newCategories[category.fullname] = category
 			i += 1
 
 		if self.categories != newCategories:
@@ -1406,29 +1422,33 @@ class Race(object):
 		return changed
 
 	def exportCategories( self, fp ):
-		for c in self.categories.itervalues():
-			fp.write( '%s|%s\n' % (c.name.replace('|',''), c.catStr) )
+		for c in sorted( self.categories.itervalues(), key = Category.key ):
+			fp.write( '%s|%s|%s\n' % (c.name.replace('|',''), c.catStr, getattr(c,'gender','Open')) )
 
 	def importCategories( self, fp ):
 		categories = []
 		for r, line in enumerate(fp):
-			if not line:
+			line = line.strip()
+			if not line or line.startswith('#'):
 				continue
 			fields = line.strip().split('|')
-			categories.append( (True, fields[0], fields[1]) )
+			if len(fields) < 2:
+				continue
+			if len(fields) < 3:
+				fields.append( 'Open' )
+			categories.append( {'name':fields[0], 'catStr':fields[1], 'gender':fields[2]} )
 		self.setCategories( categories )
 
-	def isRiderInCategory( self, num, catName = None ):
-		if not catName or catName == 'All':
+	def isRiderInCategory( self, num, category = None ):
+		if category is None:
 			return True
-		category = self.categories.get( catName, None )
-		return category.matches(num) if category is not None else False
+		return category.matches(num)
 
-	def hasCategory( self, catName = None ):
+	def hasCategory( self, category ):
 		# Check if there is at least one rider in this category.
-		if not catName or catName == 'All':
+		if category is None:
 			return True
-		return any( self.isRiderInCategory(num, catName) for num in self.riders.iterkeys() )
+		return any( self.isRiderInCategory(num, category) for num in self.riders.iterkeys() )
 
 	def hasTime( self, num, t ):
 		try:
@@ -1642,8 +1662,7 @@ class Race(object):
 	#----------------------------------------------------------------------------------------
 	
 	@memoize
-	def getCategoryBestLaps( self, catName = 'All' ):
-		category = self.categories.get( catName, None )
+	def getCategoryBestLaps( self, category = None ):
 		if category:
 			# Check if the number of laps is specified.  If so, use that.
 			# Otherwise, check if we can figure out the number of laps.
@@ -1670,7 +1689,7 @@ class Race(object):
 		if num not in self.riders:
 			return 0
 		category = self.getCategory( num )
-		return self.getCategoryBestLaps( category.name if category else 'All' )
+		return self.getCategoryBestLaps( category )
 	
 	def addCategoryException( self, category, num ):
 		try:
@@ -1808,9 +1827,9 @@ if __name__ == '__main__':
 	c = Category(True, 'test', '1400-1499,-1450')
 	print( 'mask=', c.getMask() )
 	
-	r.setCategories( [	(True, 'test1', '1100-1199'),
-						(True, 'test2', '1200-1299, 2000,2001,2002'),
-						(True, 'test3', '1300-1399')] )
+	r.setCategories( [	{'name':'test1', 'catStr':'1100-1199'},
+						{'name':'test2', 'catStr':'1200-1299, 2000,2001,2002'},
+						{'name':'test3', 'catStr':'1300-1399'}] )
 	print( r.getCategoryMask() )
 	print( r.getCategory( 2002 ) )
 

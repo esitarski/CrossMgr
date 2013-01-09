@@ -60,7 +60,7 @@ class RiderResult( object ):
 DefaultSpeed = 0.00001
 		
 @Model.memoize
-def GetResultsCore( catName = 'All' ):
+def GetResultsCore( category ):
 	
 	riderResults = []
 	with Model.LockRace() as race:
@@ -80,7 +80,6 @@ def GetResultsCore( catName = 'All' ):
 			except KeyError:
 				return tuple()
 		
-		category = race.categories.get( catName, None )
 		startOffset = category.getStartOffsetSecs() if category else 0.0
 			
 		# Get the number of race laps for each category.
@@ -139,7 +138,7 @@ def GetResultsCore( catName = 'All' ):
 					lastTime = 0.0
 			
 			rr = RiderResult(	rider.num, rider.status, lastTime,
-								riderCategory.name,
+								riderCategory.fullname,
 								[times[i] - times[i-1] for i in xrange(1, len(times))],
 								times,
 								interp )
@@ -186,7 +185,15 @@ def GetResultsCore( catName = 'All' ):
 		# Add the position (or status, if not a Finisher).
 		# Fill in the gap field (include laps down if appropriate).
 		leader = riderResults[0]
+		leaderRaceTimes = len( leader.raceTimes )
+		leaderLapTimes = len( leader.lapTimes )
 		for pos, rr in enumerate(riderResults):
+		
+			if len(rr.raceTimes) > leaderRaceTimes:
+				rr.raceTimes = rr.raceTimes[:leaderRaceTimes]
+			if len(rr.lapTimes) > leaderLapTimes:
+				rr.lapTimes = rr.lapTimes[:leaderLapTimes]
+				rr.laps = leader.laps
 		
 			if rr.status != Model.Rider.Finisher:
 				rr.pos = Model.Rider.statusNames[rr.status]
@@ -203,8 +210,8 @@ def GetResultsCore( catName = 'All' ):
 		
 	return tuple(riderResults)
 
-def GetResults( catName = 'All', getExternalData = False ):
-	riderResults = GetResultsCore( catName )
+def GetResults( category, getExternalData = False ):
+	riderResults = GetResultsCore( category )
 	if not getExternalData or not riderResults:
 		return riderResults
 	
@@ -232,7 +239,7 @@ def GetResults( catName = 'All', getExternalData = False ):
 
 @Model.memoize
 def GetLastFinisherTime():
-	results = GetResultsCore( 'All' )
+	results = GetResultsCore( None )
 	finisher = Model.Rider.Finisher
 	try:
 		return max( r.lastTime for r in results if r.status == finisher )
@@ -240,7 +247,7 @@ def GetLastFinisherTime():
 		return 0.0
 	
 def GetLeaderFinishTime():
-	results = GetResultsCore( 'All' )
+	results = GetResultsCore( None )
 	if results and results[0].status == Model.Rider.Finisher:
 		return results[0].lastTime
 	else:
@@ -248,7 +255,7 @@ def GetLeaderFinishTime():
 	
 @Model.memoize
 def GetCategoryDetails():
-	results = GetResultsCore( 'All' )
+	results = GetResultsCore( None )
 	if not results:
 		return {}
 		
@@ -260,9 +267,10 @@ def GetCategoryDetails():
 			if not rr.lapTimes:
 				continue
 			cat = race.getCategory( rr.num )
-			info = catDetails.get( cat.name, {} )
+			info = catDetails.get( cat.fullname, {} )
 			if not info:
 				info['startOffset'] = cat.getStartOffsetSecs()
+				info['gender'] = getattr( cat, 'gender', 'Open' )
 				
 			if info.get('laps', 0) < len(rr.lapTimes):
 				info['laps'] = len(rr.lapTimes)
@@ -275,6 +283,6 @@ def GetCategoryDetails():
 					else:
 						info['raceDistance'] = cat.distance
 				info['distanceUnit'] = race.distanceUnitStr
-				catDetails[cat.name] = info
+				catDetails[cat.fullname] = info
 	
 	return catDetails

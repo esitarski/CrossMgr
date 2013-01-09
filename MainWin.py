@@ -40,6 +40,8 @@ from RaceAnimation		import RaceAnimation, GetAnimationData
 from Search				import SearchDialog
 from FtpWriteFile		import realTimeFtpPublish
 from SetAutoCorrect		import SetAutoCorrectDialog
+from DNSManager			import DNSManagerDialog
+from USACExport			import USACExport
 import Utils
 from Utils				import logCall
 import Model
@@ -60,11 +62,12 @@ import xlwt
 from ExportGrid			import ExportGrid
 import SimulationLapTimes
 import Version
-from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache
+from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, ExcelLink
 from SetGraphic			import SetGraphicDialog
 from GetResults			import GetCategoryDetails
 
 import wx.lib.agw.advancedsplash as AS
+import openpyxl
 
 #----------------------------------------------------------------------------------
 		
@@ -338,6 +341,13 @@ class MainWin( wx.Frame ):
 		self.dataMgmtMenu.AppendSeparator()
 		
 		#-----------------------------------------------------------------------
+		idCur = wx.NewId()
+		self.dataMgmtMenu.Append( idCur, '&Add DNS from External Excel Data...', 'Add DNS...' )
+		self.Bind( wx.EVT_MENU, self.menuDNS, id=idCur )
+		
+		self.dataMgmtMenu.AppendSeparator()
+		
+		#-----------------------------------------------------------------------
 		categoryMgmtMenu = wx.Menu()
 		self.dataMgmtMenu.AppendMenu(wx.ID_ANY, "Category Mgmt", categoryMgmtMenu)
 
@@ -354,11 +364,13 @@ class MainWin( wx.Frame ):
 		self.dataMgmtMenu.Append( idCur , "Export History to Excel...", "Export History to Excel File" )
 		self.Bind(wx.EVT_MENU, self.menuExportHistory, id=idCur )
 
-		self.dataMgmtMenu.AppendSeparator()
-		
 		idCur = wx.NewId()
 		self.dataMgmtMenu.Append( idCur , "Export Raw Data as &HTML...", "Export raw data as HTML (.html)" )
 		self.Bind(wx.EVT_MENU, self.menuExportHtmlRawData, id=idCur )
+
+		idCur = wx.NewId()
+		self.dataMgmtMenu.Append( idCur , "Export Results in &USAC Excel Format...", "Export Results in USAC Excel Format" )
+		self.Bind(wx.EVT_MENU, self.menuExportUSAC, id=idCur )
 
 		self.dataMgmtMenu.AppendSeparator()
 		idCur = wx.NewId()
@@ -372,7 +384,7 @@ class MainWin( wx.Frame ):
 		# Configure the field of the display.
 
 		# Forecast/History shown in left pane of scrolled window.
-		forecastHistoryWidth = 285
+		forecastHistoryWidth = 265
 		sty = wx.BORDER_SUNKEN
 		self.splitter = wx.SplitterWindow( self )
 		self.splitter.SetMinimumPaneSize( forecastHistoryWidth )
@@ -407,7 +419,7 @@ class MainWin( wx.Frame ):
 			addPage( getattr(self, a), '%d. %s' % (i+1, n) )
 
 		self.riderDetailDialog = None
-		self.splitter.SplitVertically( self.forecastHistory, self.notebook, forecastHistoryWidth )
+		self.splitter.SplitVertically( self.forecastHistory, self.notebook, forecastHistoryWidth + 80)
 		self.splitter.UpdateSize()
 
 		#------------------------------------------------------------------------------
@@ -528,6 +540,11 @@ class MainWin( wx.Frame ):
 		#------------------------------------------------------------------------------
 		self.Bind(wx.EVT_CLOSE, self.onCloseWindow)
 
+	def menuDNS( self, event ):
+		dns = DNSManagerDialog( self )
+		dns.ShowModal()
+		dns.Destroy()
+		
 	def menuFind( self, event ):
 		if not getattr(self, 'findDialog', None):
 			self.findDialog = SearchDialog( self, wx.ID_ANY )
@@ -814,14 +831,14 @@ class MainWin( wx.Frame ):
 
 		wb = xlwt.Workbook()
 		raceCategories = getRaceCategories()
-		for catName in raceCategories:
+		for catName, category in raceCategories:
 			if catName == 'All' and len(raceCategories) > 1:
 				continue
 			sheetName = re.sub('[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', catName)
 			sheetName = sheetName[:31]
 			sheetCur = wb.add_sheet( sheetName )
 			export = ExportGrid()
-			export.setResultsOneList( catName, showLapsFrequency = 1 )
+			export.setResultsOneList( category, showLapsFrequency = 1 )
 			export.toExcelSheet( sheetCur )
 
 		try:
@@ -1224,9 +1241,8 @@ class MainWin( wx.Frame ):
 		with Model.LockRace() as race:
 			if not importedCategories:
 				race.categoriesImportFile = ''
-				race.setCategories( [(True,
-									'Category %d-%d'	% (max(1, i*100), (i+1)*100-1),
-									'%d-%d'				% (max(1, i*100), (i+1)*100-1)) for i in xrange(8)] )
+				race.setCategories( [{'name':'Category %d-%d'	% (max(1, i*100), (i+1)*100-1),
+									  'catStr':'%d-%d'			% (max(1, i*100), (i+1)*100-1)} for i in xrange(8)] )
 			else:
 				race.categoriesImportFile = categoriesFile
 
@@ -1526,11 +1542,42 @@ Continue?''' % fName, 'Simulate a Race' ):
 			race.minutes = self.raceMinutes
 			race.raceNum = 1
 			#race.isTimeTrial = True
-			#'active', 'name', 'catStr', 'startOffset', 'numLaps', 'distance', 'distanceType'
-			race.setCategories( [	(True, 'Junior', '100-199', '00:00', None, 0.5, None),
-									(True, 'Senior', '200-299', '00:15', None, 0.5, None)] )
+			race.setCategories( [	{'name':'Junior', 'catStr':'100-199', 'startOffset':'00:00', 'distance':0.5, 'gender':'Men'},
+									{'name':'Senior', 'catStr':'200-299', 'startOffset':'00:15', 'distance':0.5, 'gender':'Women'}] )
 
 		self.writeRace()
+		
+		# Create an Excel data file of rider data.
+		fnameInfo = os.path.join( Utils.getImageFolder(), 'NamesTeams.csv' )
+		riderInfo = []
+		try:
+			with open(fnameInfo) as fp:
+				header = None
+				for line in fp:
+					line = line.decode('iso-8859-1')
+					if not header:
+						header = line.split(',')
+						continue
+					riderInfo.append( line.split(',') )
+		except IOError:
+			pass
+			
+		if riderInfo:
+			wb = openpyxl.workbook.Workbook()
+			ws = wb.create_sheet()
+			ws.title = 'RiderData'
+			for c, h in enumerate(['Bib#', 'LastName', 'FirstName', 'Team']):
+				ws.cell(row = 0, column = c).value = h
+			for r, row in enumerate(riderInfo):
+				ws.cell( row = r + 1, column = 0 ).value = r + 100
+				for c, v in enumerate(row):
+					ws.cell( row = r + 1, column = c + 1 ).value = v
+			fnameRiderInfo = os.path.join(Utils.getHomeDir(), 'SimulationRiderData.xlsx')
+			wb.save( fnameRiderInfo )
+			race.excelLink = ExcelLink()
+			race.excelLink.setFileName( fnameRiderInfo )
+			race.excelLink.setSheetName( ws.title )
+			race.excelLink.setFieldCol( {'Bib#':0, 'LastName':1, 'FirstName':2, 'Team':3} )
 
 		# Start the simulation.
 		self.showPageName( 'History' )
@@ -1660,6 +1707,38 @@ Continue?''' % fName, 'Simulate a Race' ):
 		wb = xlwt.Workbook()
 		sheetCur = wb.add_sheet( 'History' )
 		export.toExcelSheet( sheetCur )
+		
+		try:
+			wb.save( xlFName )
+			webbrowser.open( xlFName, new = 2, autoraise = True )
+			Utils.MessageOK(self, 'Excel file written to:\n\n   %s' % xlFName, 'Excel Write')
+		except IOError:
+			Utils.MessageOK(self,
+						'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % xlFName,
+						'Excel File Error', iconMask=wx.ICON_ERROR )
+	
+	@logCall
+	def menuExportUSAC( self, event ):
+		self.commit()
+		if self.fileName is None or len(self.fileName) < 4 or not Model.race:
+			return
+
+		self.showPageName( 'Results' )
+		
+		xlFName = self.fileName[:-4] + '-USAC.xls'
+		dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(xlFName),
+						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
+		ret = dlg.ShowModal()
+		dName = dlg.GetPath()
+		dlg.Destroy()
+		if ret != wx.ID_OK:
+			return
+
+		xlFName = os.path.join( dName, os.path.basename(xlFName) )
+
+		wb = xlwt.Workbook()
+		sheetCur = wb.add_sheet( 'Combined Results' )
+		USACExport( sheetCur )
 		
 		try:
 			wb.save( xlFName )

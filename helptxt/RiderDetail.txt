@@ -13,7 +13,7 @@ The bottom is divided into two parts with an adjustable pane between them.  The 
 
 ## Rider Details (top of screen)
 
-This section shows a table of the rider information.  Much of this information comes from the external Excel spreadsheet.
+This section shows a table of the rider information.  Much of this information comes from the [External Excel][] sheet.
 
 Field|Description
 :----|:----------

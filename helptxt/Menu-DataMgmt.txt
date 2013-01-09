@@ -33,10 +33,28 @@ Team|Optional.  Rider's team.
 License|Optional.  Rider' license.  This can be the UCI code, a national code, or a regional code.  CrossMgr uses this for display only.
 Category|Optional.  Rider's category.  This does not have to be the same as the race category.
 Tag|Optional for manual input, required for chip input.  Rider's chip tag.
-Tag2|Optional.  Rider's alternate chip tag for second bike.
+Tag2|Optional.  Rider's additioal chip tag for a second bike.
 
 To save space, CrossMgr may combine the first and last names into one field as "LASTNAME, Firstname".  In the scoreboard, it uses a further shorthand of "LASTNAME, F" where "F" is the first letter of the first name.
 
+## Add DNS from External Excel Data...
+
+Add DNS (Did Not Start) riders quickly and automatically.  This dialog allows you to select all or some riders who are defined in the Excel sheet, but have no data entered during the race.
+
+These riders are likely DNS riders.  Of course, the possibility exists that some of the rides actually started but DNFed (Did Not Finish), were PUL (Pulled) or DQ (Disqualified).  Be mindful of the riders you set as DNF.  Of course, you can always change the status later.
+
+There are a number of buttons on the DNS Manager screen:
+
+Action|Description
+:-----|:----------
+Category|Select the category.  Default is all categories in the race.
+Select All|Select all the potential DNS riders.  You can also manually select by clicking on the rows.  You can multi-select with Shift-Click and Ctrl-Click.
+Deselect All|Deselect all the potential DNS riders.  You can also manually deselect by clicking on the rows.  You can multi-deselect with Shift-Click and Ctrl-Click.
+DNS Selected|Adds all the selected riders into CrossMgr, and sets the status to DNS (Did Not Start)
+
+Clicking on a column name will sort the potential DNS riders by that column.
+
+Remember Ctrl-Z (Undo) and Ctrl-Y (Redo) if you need to.
 
 ## Category Mgmt
 ### Import Categories from File...
@@ -62,15 +80,35 @@ Race Time|Race time of the entry (= Clock Time - Race Start Time)
 Bib#|Bib number of the rider
 Count|The count of the number of reads for this rider.
 Race Cat.|Race category of the rider, if found
-Name|"LAST, First" name of the rider (if present in the external Excel sheet)
-Team|Team of the rider (if present in the external Excel sheet)
-Category|Category of the rider (if present in the external Excel sheet)
-License|License of the rider (if present in the external Excel sheet)
-Tag|Chip tag associated with the entry (if chip timing and if present in the external Excel sheet)
-Tag2|2nd chip tag associated with the entry (if chip timing and if present in the external Excel sheet)
+Name|"LAST, First" name of the rider (if present in the [External Excel][] sheet)
+Team|Team of the rider (if present in the [External Excel][] sheet)
+Category|Category of the rider (if present in the [External Excel][] sheet)
+License|License of the rider (if present in the [External Excel][] sheet)
+Tag|Chip tag associated with the entry (if chip timing, and if present in the [External Excel][] sheet)
+Tag2|2nd chip tag associated with the entry (if chip timing and if present in the [External Excel][] sheet)
 Edit|Reason for the data edit
-By|Username who made the edit
-On|Date and time when the edit was made.
+By|Username who made the edit (login name on the computer)
+On|Date and Time when the edit was made.
+
+## Export Results in USAC Excel Format...
+Export the results for all race categories in a format acceptable to USA Cycling.
+
+Columns in the exported spreadsheet are as follows:
+
+Column|Description
+:-----|:----------
+rider place|Corresponds to the "Pos" field in CrossMgr [Results][].
+race gender|The gender of the this Category as specified in [Categories][]
+race discipline|As specified in the race [Properties][].  This must match the USAC standard discipline name.
+race category|The name of the Category of this rider as specified in [Categories][].
+rider last name|Corresponds to the rider's "LastName" as configured in the [External Excel][] sheet.
+rider first name|Corresponds to the rider's "FirstName" as configured in the [External Excel][] sheet.
+rider team|Corresponds to the rider's "Team" as configured in the [External Excel][] sheet.
+time|Corresponds to the "Time" field in CrossMgr [Results][].
+
+In the "rider place" column, USAC only recognizes a place (number) and the statuses "DNF", "DNS" and "DNP" (Did Not Place).
+
+CrossMgr's additional statuses "PUL" (Pulled), "DQ" (Disqualified), "OTL" (Outside Time Limit) and "NP" (Not Placed) are output as "DNP" (Did Not Place) in the USAC export.
 
 ## Import Course in GPX Format
 
@@ -109,3 +147,14 @@ This make a new track of the single lap called "Track Segment #2".
 From the left side of the screen, right-click on "Track Segment #1", and Delete it (Oui is french for yes ;).
 
 Then save the file.  Now you have a GPX file with one lap.
+
+## But, I only have a .fit File from a Garmin!
+
+No problem.  You just need to convert it to a GPX file with [GPSBabel](http://www.gpsbabel.org).
+
+1. Download [GPSBabel](http://www.gpsbabel.org).
+1. Plug in the Garmin GPS device.  Navigate to the device (it looks like a USB flash drive).  Go to the Activities folder.  There you should find the .fit files.
+1. Launch GPSBabel, open the .fit file of the course, then write it out as a .gpx file.
+1. Check the .gpx file you just made with [GPX Editor](http://sourceforge.net/projects/gpxeditor/).  See instructions above if it needs to be fixed in some way.
+
+Now, you can import your new .gpx file into CrossMgr for display.

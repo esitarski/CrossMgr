@@ -13,6 +13,7 @@ from Undo import undo
 import Gantt
 from EditEntry import CorrectNumber, ShiftNumber, DeleteEntry
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
+from GetResults import GetResults
 import random
 import bisect
 import sys
@@ -304,7 +305,7 @@ class RiderDetail( wx.Panel ):
 			if not race:
 				return
 			for c in race.getCategories():
-				if c.name == catName:
+				if c.fullname == catName:
 					race.addCategoryException( c, num )
 					break
 		wx.CallAfter( self.refresh )
@@ -632,7 +633,7 @@ class RiderDetail( wx.Panel ):
 				self.atRaceTime.SetValue( Utils.SecondsToStr(tStatus) )
 				
 		self.commitChange()
-		wx.CallAfter( self.refresh() )
+		wx.CallAfter( self.refresh )
 		
 	def onAutocorrectLaps( self, event ):
 		num = self.num.GetValue()
@@ -925,14 +926,14 @@ class RiderDetail( wx.Panel ):
 				pass
 				
 			category = race.getCategory( num )
-			catName = category.name if category else ''
+			catName = category.fullname if category else ''
 			categories = race.getCategories()
 			try:
 				iCategory = (i for i, c in enumerate(categories) if c == category).next()
-				self.category.AppendItems( [c.name for c in categories] )
+				self.category.AppendItems( [c.fullname for c in categories] )
 				self.category.SetSelection( iCategory )
 			except StopIteration:
-				self.category.AppendItems( [c.name for c in categories] + [' '] )
+				self.category.AppendItems( [c.fullname for c in categories] + [' '] )
 				self.category.SetSelection( len(categories) )
 				
 			#--------------------------------------------------------------------------------------
@@ -947,8 +948,16 @@ class RiderDetail( wx.Panel ):
 			# Trigger adding the rider to the race if it isn't in already.
 			rider = race.getRider( num )
 			self.statusOption.SetSelection( rider.status )
-			if rider.status in [Model.Rider.Finisher, Model.Rider.DNS, Model.Rider.DQ]:
-				self.setAtRaceTime()
+			if rider.status == Model.Rider.Finisher:
+				results = GetResults( None )
+				self.setAtRaceTime( 0.0, False )
+				for rr in results:
+					if rr.num == num:
+						self.setAtRaceTime( rr.lastTime, False )
+						break
+			elif rider.status == Model.Rider.DNS:
+				rider.tStatus = 0.0
+				self.setAtRaceTime( 0.0, False )
 			else:
 				if rider.tStatus is None:
 					rider.tStatus = 0.0
