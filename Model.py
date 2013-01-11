@@ -177,6 +177,8 @@ class Category(object):
 		
 		try:
 			self._numLaps = int(numLaps)
+			if self._numLaps < 1:
+				self._numLaps = None
 		except (ValueError, TypeError):
 			self._numLaps = None
 			
@@ -780,6 +782,8 @@ class Race(object):
 		
 		self.isChangedFlag = True
 		
+		self.allCategoriesHaveRaceLapsDefined = False
+		
 		self.numTimeInfoField = NumTimeInfo()
 		
 		self.tagNums = None
@@ -1166,6 +1170,11 @@ class Race(object):
 			leaderNums.append( e.num )
 			leaderTimesLen += 1
 		
+		if leaderTimesLen > 1 and getattr(self, 'allCategoriesHaveRaceLapsDefined', False):
+			maxRaceLaps = max( category.getNumLaps() for category in self.categories.itervalues() if category.active )
+			leaderTimes = leaderTimes[:maxRaceLaps + 1]
+			leaderNums = leaderNums[:maxRaceLaps + 1]
+		
 		if leaderTimesLen == 1:
 			return None, None
 		else:
@@ -1414,6 +1423,16 @@ class Race(object):
 			self.categories = newCategories
 			self.resetCategoryCache()
 			self.setChanged()
+			
+			if self.categories:
+				self.allCategoriesHaveRaceLapsDefined = True
+				for category in self.categories.itervalues():
+					if category.active and not category.getNumLaps():
+						self.allCategoriesHaveRaceLapsDefined = False
+						break
+			else:
+				self.allCategoriesHaveRaceLapsDefined = False
+				
 			changed = True
 		else:
 			changed = False

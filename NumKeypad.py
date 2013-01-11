@@ -524,16 +524,23 @@ class NumKeypad( wx.Panel ):
 			
 	def refreshLaps( self ):
 		with Model.LockRace() as race:
-			enable = True if race is not None and race.isRunning() else False
+			enable = (race and race.isRunning())
 			
-			self.automaticManualChoice.Enable( enable )
-			self.automaticManualChoice.SetSelection( getattr(race, 'automaticManual', 0) )
+			allCategoriesHaveRaceLapsDefined = race and getattr(race, 'allCategoriesHaveRaceLapsDefined', False)
+
+			if allCategoriesHaveRaceLapsDefined:
+				self.automaticManualChoice.Enable( False )
+				self.automaticManualChoice.SetSelection( 0 )	# Default to Automatic and do not allow edit.
+				self.numLaps.Enable( False )
+			else:
+				self.automaticManualChoice.Enable( enable )
+				self.automaticManualChoice.SetSelection( getattr(race, 'automaticManual', 0) )
 			
 			# Allow the number of laps to be changed after the race is finished.
-			numLapsEnable = True if race is not None and (race.isRunning() or race.isFinished()) else False
+			numLapsEnable = (not allCategoriesHaveRaceLapsDefined and race and (race.isRunning() or race.isFinished()))
 			self.numLaps.Enable( numLapsEnable )
 			if numLapsEnable != enable:
-				self.resetLaps()
+				self.resetLaps( enable )
 				minLaps, maxLaps = self.getMinMaxLapsRange()
 				self.numLaps.SetItems( [str(x) for x in xrange(minLaps, maxLaps)] )
 				if race.numLaps is not None:
@@ -688,7 +695,7 @@ class NumKeypad( wx.Panel ):
 	
 		wx.CallAfter( self.numEdit.SetFocus )
 		with Model.LockRace() as race:
-			enable = True if race is not None and race.isRunning() else False
+			enable = (race and race.isRunning())
 			if self.isEnabled != enable:
 				for b in self.num:
 					b.Enable( enable )

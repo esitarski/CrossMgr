@@ -156,23 +156,6 @@ class RaceHUD(wx.PyControl):
 					textWidth, textHeight = dc.GetTextExtent( n )
 					dc.DrawText( n, x - textWidth // 2, yTop + hMiddle + tickHeight )
 		
-			# Draw checkered flag
-			dc.SetFont( fontLegend )
-			t = raceTimes[-2]
-			tCur = Utils.formatTime( t )
-			textWidth, textHeight = dc.GetTextExtent( tCur )
-			x = xLeft + int( t * xMult )
-			dc.DrawBitmap( self.checkeredFlag, x - self.checkeredFlag.GetWidth() - 1, yTop + hMiddle - self.checkeredFlag.GetHeight() // 2, False )
-			dc.DrawText( tCur, x - textWidth - textHeight / 8, yTop + hMiddle - tickHeight - textHeight )
-			
-			# Draw broom.
-			t = raceTimes[-1]
-			tCur = Utils.formatTime( t )
-			textWidth, textHeight = dc.GetTextExtent( tCur )
-			x = xLeft + int( t * xMult )
-			dc.DrawBitmap( self.broom, x + 3, yTop + hMiddle - self.broom.GetHeight() // 2, False )
-			dc.DrawText( tCur, x + textHeight / 8, yTop + hMiddle - tickHeight - textHeight )
-			
 			# Draw the progress bar.
 			transparentBrush = wx.Brush( wx.WHITE, style = wx.TRANSPARENT )
 			ctx = wx.GraphicsContext_Create(dc)
@@ -194,6 +177,23 @@ class RaceHUD(wx.PyControl):
 			ctx.SetPen( wx.Pen(wx.Colour(128,128,128)) )
 			ctx.SetBrush( wx.TRANSPARENT_BRUSH )
 			ctx.DrawRectangle( xStart, yTop + hMiddle - dy / 2, xCur, dy )
+			
+			# Draw checkered flag
+			dc.SetFont( fontLegend )
+			t = raceTimes[-2]
+			tCur = Utils.formatTime( t )
+			textWidth, textHeight = dc.GetTextExtent( tCur )
+			x = xLeft + int( t * xMult )
+			dc.DrawBitmap( self.checkeredFlag, x - self.checkeredFlag.GetWidth() - 1, yTop + hMiddle - self.checkeredFlag.GetHeight() // 2, False )
+			dc.DrawText( tCur, x - textWidth - textHeight / 8, yTop + hMiddle - tickHeight - textHeight )
+			
+			# Draw broom.
+			t = raceTimes[-1]
+			tCur = Utils.formatTime( t )
+			textWidth, textHeight = dc.GetTextExtent( tCur )
+			x = xLeft + int( t * xMult )
+			dc.DrawBitmap( self.broom, x + 3, yTop + hMiddle - self.broom.GetHeight() // 2, False )
+			dc.DrawText( tCur, x + textHeight / 8, yTop + hMiddle - tickHeight - textHeight )
 			
 			# Draw indicator for the finish time.
 			iRadius = dy / 3
