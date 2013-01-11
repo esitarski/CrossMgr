@@ -23,3 +23,4 @@
 [Properties]:		Properties.html
 
 [External Excel]:	Menu-DataMgmt.html#link-to-external-excel-data
+[USAC Export]:		Menu-DataMgmt.html#export-Results-in-usac-excel-format

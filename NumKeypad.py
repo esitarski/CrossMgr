@@ -26,7 +26,7 @@ class NumKeypad( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
 		self.bell = None
-		self.tada = {}
+		self.lapReminder = {}
 		
 		self.SetBackgroundColour( wx.WHITE )
 		
@@ -293,10 +293,10 @@ class NumKeypad( wx.Panel ):
 				continue
 				
 			if 0.0 <= tLeader <= 3.0 and not getattr(race, 'isTimeTrial', False):
-				if category not in self.tada:
-					self.tada[category] = Utils.PlaySound( 'reminder.wav' )
-			elif category in self.tada:
-				del self.tada[category]
+				if category not in self.lapReminder:
+					self.lapReminder[category] = Utils.PlaySound( 'reminder.wav' )
+			elif category in self.lapReminder:
+				del self.lapReminder[category]
 		
 		self.raceHUD.SetData( nowTime = tCur, raceTimes = raceTimes, leader = leader )
 		
