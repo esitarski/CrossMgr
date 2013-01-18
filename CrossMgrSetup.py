@@ -7,6 +7,10 @@ import zipfile
 # Compile the help files
 from helptxt.compile import CompileHelp
 CompileHelp( 'helptxt' )
+
+# Index the help files.
+from HelpIndex import BuildHelpIndex
+BuildHelpIndex()
 	
 distDir = 'dist'
 
@@ -48,7 +52,7 @@ def copyDir( d ):
 		if i[-3:] != '.db':	# Ignore .db files.
 			shutil.copy( os.path.join(d, i), os.path.join(destD,i) )
 			
-for dir in ['CrossMgrImages', 'data', 'CrossMgrHtml', 'CrossMgrHtmlDoc']: 
+for dir in ['CrossMgrImages', 'data', 'CrossMgrHtml', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex']: 
 	copyDir( dir )
 
 # Create the installer

@@ -11,8 +11,6 @@ class HelpSearch( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY, style = 0, size=(-1-1) ):
 		wx.Panel.__init__(self, parent, id, style=style, size=size )
 
-		self.helpFolder = os.path.join( Utils.getHelpFolder(), 'HelpIndex' )
-		
 		self.search = wx.SearchCtrl( self, wx.ID_ANY, style=wx.TE_PROCESS_ENTER, value='help', size=(200,-1) )
 		self.Bind( wx.EVT_TEXT_ENTER, self.doSearch, self.search )
 		self.Bind( wx.EVT_TEXT, self.doSearch, self.search )
@@ -38,8 +36,8 @@ class HelpSearch( wx.Panel ):
 		text = self.search.GetValue()
 		
 		f = StringIO.StringIO()
+		ix = open_dir( Utils.getHelpIndexFolder(), readonly=True )
 		f.write( '<html>\n' )
-		ix = open_dir( self.helpFolder )
 		with ix.searcher() as searcher:
 			query = QueryParser('content', ix.schema).parse(unicode(text))
 			results = searcher.search(query, limit=20)
@@ -65,6 +63,8 @@ class HelpSearch( wx.Panel ):
 					</tr>\n''' % (hit['path'], section, hit.highlights('content') ) )
 			f.write( '</table>\n' )
 		f.write( '</html>\n' )
+		ix.close()
+		
 		htmlTxt = f.getvalue()
 		f.close()
 		self.html.SetPage( htmlTxt )

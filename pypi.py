@@ -102,7 +102,7 @@ writeToFile( manifest, 'MANIFEST.in' )
 
 srcDir = os.path.join( pypiDir, 'CrossMgr' )
 os.mkdir( srcDir )
-for dir in ['CrossMgrImages', 'CrossMgrHtml', 'CrossMgrHtmlDoc']:
+for dir in ['CrossMgrImages', 'CrossMgrHtml', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex']:
 	print 'copying', dir, '...'
 	shutil.copytree( dir, os.path.join(pypiDir,dir) )
 
@@ -114,7 +114,7 @@ for f in ['MacInstallReadme.txt', 'LinuxInstallReadme.txt', 'CrossMgrTutorial.do
 	
 print 'Collecting data_files.'
 data_files = []
-for dir in ['CrossMgrImages', 'CrossMgrHtml', 'CrossMgrHtmlDoc', 'CrossMgrDoc']:
+for dir in ['CrossMgrImages', 'CrossMgrHtml', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex', 'CrossMgrDoc']:
 	dataDir = os.path.join(pypiDir, dir)
 	data_files.append( (dir, [os.path.join(dir,f) for f in os.listdir(dataDir)]) )
 
@@ -170,6 +170,7 @@ setup = {
 	'install_requires':	[
 		'xlrd >= 0.8.0',
 		'xlwt >= 0.7.4',
+		'whoosh >= 2.4.1',
 		'openpyxl >= 1.5.8',
 		'qrcode >= 2.4.2',
 		'wxPython >= 2.8.0',

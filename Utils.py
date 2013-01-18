@@ -266,11 +266,13 @@ elif os.path.isdir( '/usr/local/CrossMgrImages' ):
 imageFolder = os.path.join(dirName, 'CrossMgrImages')
 htmlFolder = os.path.join(dirName, 'CrossMgrHtml')
 helpFolder = os.path.join(dirName, 'CrossMgrHtmlDoc')
+helpIndexFolder = os.path.join(dirName, 'CrossMgrHelpIndex')
 
 def getDirName():		return dirName
 def getImageFolder():	return imageFolder
 def getHtmlFolder():	return htmlFolder
 def getHelpFolder():	return helpFolder
+def getHelpIndexFolder(): return helpIndexFolder
 
 def showHelp( url ):
 	url = os.path.join( getHelpFolder(), url )
