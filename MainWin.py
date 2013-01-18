@@ -42,6 +42,7 @@ from FtpWriteFile		import realTimeFtpPublish
 from SetAutoCorrect		import SetAutoCorrectDialog
 from DNSManager			import DNSManagerDialog
 from USACExport			import USACExport
+from HelpSearch			import HelpSearchDialog
 import Utils
 from Utils				import logCall
 import Model
@@ -510,7 +511,11 @@ class MainWin( wx.Frame ):
 		idCur = wx.NewId()
 		self.helpMenu.Append( idCur , "&QuickStart...", "Get started with CrossMgr Now..." )
 		self.Bind(wx.EVT_MENU, self.menuHelpQuickStart, id=idCur )
-		self.helpMenu.Append( wx.ID_HELP , "&Help...", "Help about CrossMgr..." )
+		idCur = wx.NewId()
+		self.helpMenu.Append( idCur, "Help &Search...", "Search Help..." )
+		self.Bind(wx.EVT_MENU, self.menuHelpSearch, id=idCur )
+		self.helpSearch = HelpSearchDialog( self, wx.ID_ANY, title='Help Search' )
+		self.helpMenu.Append( wx.ID_HELP, "&Help...", "Help about CrossMgr..." )
 		self.Bind(wx.EVT_MENU, self.menuHelp, id=wx.ID_HELP )
 		
 		self.helpMenu.AppendSeparator()
@@ -1752,6 +1757,10 @@ Continue?''' % fName, 'Simulate a Race' ):
 	@logCall
 	def menuHelpQuickStart( self, event ):
 		Utils.showHelp( 'QuickStart.html' )
+	
+	@logCall
+	def menuHelpSearch( self, event ):
+		self.helpSearch.Show()
 	
 	@logCall
 	def menuHelp( self, event ):

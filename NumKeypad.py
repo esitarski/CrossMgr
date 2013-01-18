@@ -53,13 +53,13 @@ class NumKeypad( wx.Panel ):
 		gbs = wx.GridBagSizer(4, 4)
 		rowCur = 0
 		
-		self.numEdit = wx.TextCtrl( panel, 20, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value='' )
+		self.numEdit = wx.TextCtrl( panel, wx.ID_ANY, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value='' )
 		self.Bind( wx.EVT_TEXT_ENTER, self.onEnterPress, self.numEdit )
 		self.numEdit.Bind( wx.EVT_CHAR, self.handleNumKeypress )
 		self.numEdit.SetFont( font )
 		gbs.Add( self.numEdit, pos=(rowCur,0), span=(1,3), flag=wx.EXPAND|wx.LEFT|wx.TOP, border = outsideBorder )
 		self.num = []
-		self.num.append( MakeButton( panel, id=0, label='&0', style=wx.BU_EXACTFIT) )
+		self.num.append( MakeButton( panel, wx.ID_ANY, label='&0', style=wx.BU_EXACTFIT) )
 		self.num[-1].Bind( wx.EVT_BUTTON, lambda event, aValue = 0 : self.onNumPress(event, aValue) )
 		gbs.Add( self.num[0], pos=(4+rowCur,0), span=(1,2), flag=wx.EXPAND )
 
