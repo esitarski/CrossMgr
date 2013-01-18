@@ -189,6 +189,9 @@ os.chdir( pypiDir )
 subprocess.call( ['python', 'setup.py', 'sdist'] )
 
 os.chdir( 'dist' )
-shutil.move( 'CrossMgr-%s.zip' % version, 'PIP-Install-CrossMgr-%s.zip' % version )
+try:
+	shutil.move( 'CrossMgr-%s.zip' % version, 'PIP-Install-CrossMgr-%s.zip' % version )
+except:
+	shutil.move( 'CrossMgr-%s.tar.gz' % version, 'PIP-Install-CrossMgr-%s.tar.gz' % version )
 	
 print 'Done.'
