@@ -53,7 +53,7 @@ class HelpSearch( wx.Panel ):
 				if not file.startswith('Menu'):
 					section = '%s: %s' % (file, hit['section'])
 				else:
-					section = hit['section']
+					section = 'Menu: %s' % hit['section']
 				f.write( '''<tr>
 						<td valign="top">
 							<font size=+1><a href="%s">%s</a></font><br></br>
