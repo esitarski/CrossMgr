@@ -274,9 +274,16 @@ def getHtmlFolder():	return htmlFolder
 def getHelpFolder():	return helpFolder
 def getHelpIndexFolder(): return helpIndexFolder
 
-def showHelp( url ):
-	url = os.path.join( getHelpFolder(), url )
-	webbrowser.open( url, new = 0, autoraise = True )
+firefoxUnix = '/usr/bin/firefox'
+
+if os.path.exists( firefoxUnix ):
+	def showHelp( url ):
+		url = os.path.join( getHelpFolder(), url )
+		os.system( '%s "file://%s" &' % (firefoxUnix, url) )
+else:
+	def showHelp( url ):
+		url = os.path.join( getHelpFolder(), url )
+		webbrowser.open( url, new = 0, autoraise = True )
 
 #------------------------------------------------------------------------
 
