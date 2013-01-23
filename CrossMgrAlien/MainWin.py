@@ -25,7 +25,7 @@ CrossMgrPort = 53135
 NotifyPort = CrossMgrPort + 1
 
 class MessageManager( object ):
-	MessagesMax = 400
+	MessagesMax = 400	# Maximum number of messages before we start throwing some away.
 
 	def __init__( self, messageList ):
 		self.messageList = messageList

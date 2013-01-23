@@ -274,12 +274,15 @@ def getHtmlFolder():	return htmlFolder
 def getHelpFolder():	return helpFolder
 def getHelpIndexFolder(): return helpIndexFolder
 
-firefoxUnix = '/usr/bin/firefox'
+# Use Firefox to display the help if we can find it.
+for firefoxProg in ['/usr/bin/firefox', '']:
+	if os.path.exists(firefoxProg) and os.access(firefoxProg, os.X_OK):
+		break
 
-if os.path.exists( firefoxUnix ):
+if firefoxProg:
 	def showHelp( url ):
 		url = os.path.join( getHelpFolder(), url )
-		os.system( '%s "file://%s" &' % (firefoxUnix, url) )
+		os.system( '"%s" "file://%s" &' % (firefoxProg, url) )
 else:
 	def showHelp( url ):
 		url = os.path.join( getHelpFolder(), url )

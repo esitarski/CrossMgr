@@ -30,7 +30,7 @@ def CompileHelp( dir = '.' ):
 		for fname in glob.glob("./*.txt"):
 			fbase = os.path.splitext(os.path.basename(fname))[0]
 			fhtml = os.path.join( '..', HtmlDocFolder, fbase + '.html' )
-			if not fileOlderThan(fname, fhtml):
+			if not fileOlderThan(fhtml, fname):
 				doNothing = False
 				break
 		if doNothing:
