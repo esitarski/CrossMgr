@@ -17,36 +17,49 @@ import cStringIO as StringIO
 
 HOME_DIR = os.path.expanduser("~")
 
+#-------------------------------------------------------------------------
+# Alien Reader Initialization Commands
+#
 cmdStr = '''
 alien							# login
 password						# default password
 
+set Function = Reader			# ensure we are not in programming mode
+
 set Time = {time}				# set the time of the reader to match the computer
-set TagListMillis = ON			# turn on millisecond time recording
+set TagListMillis = ON			# record tags times to milliseconds
 set PersistTime = 2				# hold on to a tag for 2 seconds before considering it new again
 set HeartbeatTime = 15			# send the heartbeat every 15 seconds rather than the default 30
-	
-AutoModeReset					# reset the state machine
-set AutoAction = Acquire		# set reader to Acquire, not program chips
-set AutoStopTimer = 0			# ???
+
+set TagStreamMode = OFF			# turn off tag streaming - we want a tag list
+set TagType = 16				# tell reader to default looking for Gen 2 tags
+
+set AcquireMode = Inventory		# resolve multiple tag reads rather than just reading the closest/strongest one
+# make the reader do some more work to resolve tags in a group
+set AcqC1Cycles = 8				# for Gen 1 tags
+set AcqG2Cycles = 8				# for Gen 2 tags
+
+# Auto Mode configuration.
+AutoModeReset					# reset the auto response state machine
+set AutoAction = Acquire		# set reader to Acquire data, not report on pins
+set AutoStopTimer = 0			# no waiting after work completed
 set AutoTruePause = 0 			# no waiting on trigger true
 set AutoFalsePause = 0			# no waiting on trigger false
-set AutoStartTrigger = 0,0		# trigger on tag reads, not pins
-	
+set AutoStartTrigger = 0,0		# not triggered with pins
+
+# Notify configuration.
 set NotifyAddress = {notifyHost}:{notifyPort}	# address to send tag reads
-set NotifyKeepAliveTime = 30	# time to keep the connection open after a tag read.
-set NotifyHeader = On			# include notify header on tag read messages
-set NotifyQueueLimit = 1000		# ???
-set NotifyInclude = Tags		# notify includes tags
-set NotifyRetryPause = 10		# wait 10 seconds between notify attempts if failure.
-set NotifyRetryCount = -1		# no limit to retry attempts if failure
-set NotifyFormat = XML			# send message as XML
+set NotifyKeepAliveTime = 30	# time to keep the connection open after a tag read in case there is another read soon after
+set NotifyHeader = ON			# include notify header on tag read messages
+set NotifyQueueLimit = 1000		# failed notification messages to queue for later delivery (max=1000)
+set NotifyInclude = Tags		# notify includes tags (the whole point)
+set NotifyRetryPause = 10		# wait 10 seconds between failed notify attempts
+set NotifyRetryCount = -1		# no limit on retry attempts (if failure)
+set NotifyFormat = XML			# send message in XML format
 set NotifyTrigger = Add			# notify when tags are added to the list.
 
-set Function = Reader			# yes, we are a reader!
-
 set NotifyMode = ON				# start notify mode.
-set AutoMode = ON				# start the state machine
+set AutoMode = ON				# start auto mode.
 '''
 
 extraCmds = '''
@@ -57,8 +70,11 @@ Info automode
 Info notify
 '''
 
-# Transform the cmd string into an array of commands.
-initCmds = [f.split('#')[0].strip() for f in cmdStr.split('\n') if f.strip()]
+# Transform the cmd string into an array of Alien reader commands.
+initCmds = [f.strip() for f in cmdStr.split('\n')]
+initCmds = [f.split('#')[0].strip() for f in cmdStr.split('\n') if f and not f.startswith('#')]
+
+print '\n'.join(initCmds)
 del cmdStr
 
 reDateSplit = re.compile( '[/ :]' )		# Characters to split date/time fields.
