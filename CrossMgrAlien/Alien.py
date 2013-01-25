@@ -163,7 +163,7 @@ class Alien( object ):
 			
 			cmd = c.format( **cmdContext )											# Perform field substitutions.
 			self.messageQ.put( ('Alien', cmd) )										# Write to the message queue.
-			cmdSocket.sendall( '%s%s%s' % (self.CmdPrefix if i < 2 else '', cmd, self.CmdDelim) )	# Send to Alien.
+			cmdSocket.sendall( '%s%s%s' % ('' if i < 2 else self.CmdPrefix, cmd, self.CmdDelim) )	# Send to Alien.
 			response = self.getResponse( cmdSocket )								# Get the response.
 			self.messageQ.put( ('Alien', '>>> %s' % self.stripReaderDelim(response) ) )
 			
