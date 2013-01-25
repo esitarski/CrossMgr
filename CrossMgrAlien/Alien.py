@@ -47,15 +47,17 @@ RFModulation = STD			# Standard operating mode
 # Auto Mode configuration.
 AutoModeReset				# reset auto response state machine
 AutoAction = Acquire		# reader to Acquire data, not report on pins
+AutoStartTrigger = 0,0		# not triggered with pins states
 AutoStopTimer = 0			# no waiting after work completed
 AutoTruePause = 0 			# no waiting on trigger true
 AutoFalsePause = 0			# no waiting on trigger false
-AutoStartTrigger = 0,0		# not triggered with pins
+AutoWorkOutput = 0			# don't change any pin status
+AutoMode = ON				# start auto mode.
 
 # Notify configuration.
 NotifyMode = OFF			# turn off notify mode.
 NotifyTrigger = Add			# trigger notify when tags are added to the list.
-NotifyInclude = Tags		# notify includes tags and not pin status, etc.
+NotifyInclude = Tags		# notify for tags and not pin status, etc.
 NotifyFormat = XML			# send message in XML format
 NotifyHeader = ON			# include notify header on tag read messages
 NotifyAddress = {notifyHost}:{notifyPort}	# address to send notify messages
@@ -64,8 +66,6 @@ NotifyQueueLimit = 1000		# failed notification messages to queue for later deliv
 NotifyRetryPause = 10		# wait 10 seconds between failed notify attempts (time to reconnect the network)
 NotifyRetryCount = -1		# no limit on retry attempts (if failure)
 NotifyMode = ON				# start notify mode.
-
-AutoMode = ON				# start auto mode.
 
 Save						# Save everything to flash memory in case of power failure.
 '''
