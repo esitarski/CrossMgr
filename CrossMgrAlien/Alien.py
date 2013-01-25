@@ -21,45 +21,53 @@ HOME_DIR = os.path.expanduser("~")
 # Alien Reader Initialization Commands
 #
 cmdStr = '''
-alien							# login
-password						# default password
+alien						# login
+password					# default password
 
-set Function = Reader			# ensure we are not in programming mode
+Function = Reader			# ensure we are not in programming mode
 
-set Time = {time}				# set the time of the reader to match the computer
-set TagListMillis = ON			# record tags times to milliseconds
-set PersistTime = 2				# hold on to a tag for 2 seconds before considering it new again
-set HeartbeatTime = 15			# send the heartbeat every 15 seconds rather than the default 30
+Clear TagList				# clear any old tags
 
-set TagStreamMode = OFF			# turn off tag streaming - we want a tag list
-set TagType = 16				# tell reader to default looking for Gen 2 tags
+Time = {time}				# the time of the reader to match the computer
+TagListMillis = ON			# record tags times to milliseconds
+PersistTime = 2				# hold on to a tag for 2 seconds before considering it new again
+HeartbeatTime = 15			# send the heartbeat every 15 seconds rather than the default 30
 
-set AcquireMode = Inventory		# resolve multiple tag reads rather than just reading the closest/strongest one
-# make the reader do some more work to resolve tags in a group
-set AcqC1Cycles = 8				# for Gen 1 tags
-set AcqG2Cycles = 8				# for Gen 2 tags
+TagStreamMode = OFF			# turn off tag streaming - we want a tag list
+TagType = 16				# tell reader to default looking for Gen 2 tags
+
+AcquireMode = Inventory		# resolve multiple tag reads rather than just reading the closest/strongest tag
+# make the reader do some more work to try to resolve tags in a group
+AcqC1Cycles = 5				# for Gen 1 tags
+AcqG2Cycles = 5				# for Gen 2 tags
+
+AntennaSeq = 0 1			# Cycle transmitting/receiving between antennas 0 and 1
+RFModulation = STD			# Standard operating mode
 
 # Auto Mode configuration.
-AutoModeReset					# reset the auto response state machine
-set AutoAction = Acquire		# set reader to Acquire data, not report on pins
-set AutoStopTimer = 0			# no waiting after work completed
-set AutoTruePause = 0 			# no waiting on trigger true
-set AutoFalsePause = 0			# no waiting on trigger false
-set AutoStartTrigger = 0,0		# not triggered with pins
+AutoModeReset				# rethe auto response state machine
+AutoAction = Acquire		# reader to Acquire data, not report on pins
+AutoStopTimer = 0			# no waiting after work completed
+AutoTruePause = 0 			# no waiting on trigger true
+AutoFalsePause = 0			# no waiting on trigger false
+AutoStartTrigger = 0,0		# not triggered with pins
 
 # Notify configuration.
-set NotifyAddress = {notifyHost}:{notifyPort}	# address to send tag reads
-set NotifyKeepAliveTime = 30	# time to keep the connection open after a tag read in case there is another read soon after
-set NotifyHeader = ON			# include notify header on tag read messages
-set NotifyQueueLimit = 1000		# failed notification messages to queue for later delivery (max=1000)
-set NotifyInclude = Tags		# notify includes tags (the whole point)
-set NotifyRetryPause = 10		# wait 10 seconds between failed notify attempts
-set NotifyRetryCount = -1		# no limit on retry attempts (if failure)
-set NotifyFormat = XML			# send message in XML format
-set NotifyTrigger = Add			# notify when tags are added to the list.
+NotifyMode = OFF			# turn off notify mode.
+NotifyTrigger = Add			# trigger notify when tags are added to the list.
+NotifyInclude = Tags		# notify includes tags and not pin status, etc.
+NotifyFormat = XML			# send message in XML format
+NotifyHeader = ON			# include notify header on tag read messages
+NotifyAddress = {notifyHost}:{notifyPort}	# address to send notify messages
+NotifyKeepAliveTime = 30	# time to keep the connection open after a tag read (in case there is another read soon after)
+NotifyQueueLimit = 1000		# failed notification messages to queue for later delivery (max=1000)
+NotifyRetryPause = 10		# wait 10 seconds between failed notify attempts (time to reconnect the network)
+NotifyRetryCount = -1		# no limit on retry attempts (if failure)
+NotifyMode = ON				# start notify mode.
 
-set NotifyMode = ON				# start notify mode.
-set AutoMode = ON				# start auto mode.
+AutoMode = ON				# start auto mode.
+
+Save						# Save everything to flash memory in case of power failure.
 '''
 
 extraCmds = '''
@@ -70,7 +78,7 @@ Info automode
 Info notify
 '''
 
-# Transform the cmd string into an array of Alien reader commands.
+# Transform the cmd string into an array of Alien reader commands (strip out comments and blank lines).
 initCmds = [f.strip() for f in cmdStr.split('\n')]
 initCmds = [f.split('#')[0].strip() for f in cmdStr.split('\n') if f and not f.startswith('#')]
 
