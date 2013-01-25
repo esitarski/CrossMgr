@@ -45,7 +45,7 @@ AntennaSeq = 0 1			# Cycle transmitting/receiving between antennas 0 and 1
 RFModulation = STD			# Standard operating mode
 
 # Auto Mode configuration.
-AutoModeReset				# rethe auto response state machine
+AutoModeReset				# reset auto response state machine
 AutoAction = Acquire		# reader to Acquire data, not report on pins
 AutoStopTimer = 0			# no waiting after work completed
 AutoTruePause = 0 			# no waiting on trigger true
@@ -156,16 +156,16 @@ class Alien( object ):
 				'notifyPort':	self.notifyPort,
 		}
 		
-		for c in initCmds:
+		for i, c in enumerate(initCmds):
 			# Set time value if required.
 			if '{time}' in c:
 				cmdContext['time'] = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
 			
 			cmd = c.format( **cmdContext )											# Perform field substitutions.
 			self.messageQ.put( ('Alien', cmd) )										# Write to the message queue.
-			cmdSocket.sendall( '%s%s%s' % (self.CmdPrefix, cmd, self.CmdDelim) )	# Send to Alien.
+			cmdSocket.sendall( '%s%s%s' % (self.CmdPrefix if i < 2 else '', cmd, self.CmdDelim) )	# Send to Alien.
 			response = self.getResponse( cmdSocket )								# Get the response.
-			self.messageQ.put( ('Alien', '>>>> %s' % self.stripReaderDelim(response) ) )
+			self.messageQ.put( ('Alien', '>>> %s' % self.stripReaderDelim(response) ) )
 			
 		cmdSocket.close()
 			
