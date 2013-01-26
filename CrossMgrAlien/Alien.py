@@ -31,15 +31,15 @@ Clear TagList				# clear any old tags
 Time = {time}				# the time of the reader to match the computer
 TagListMillis = ON			# record tags times to milliseconds
 PersistTime = 2				# hold on to a tag for 2 seconds before considering it new again
-HeartbeatTime = 15			# send the heartbeat every 15 seconds rather than the default 30
+#HeartbeatTime = 15			# send the heartbeat every 15 seconds rather than the default 30
 
 TagStreamMode = OFF			# turn off tag streaming - we want a tag list
 TagType = 16				# tell reader to default looking for Gen 2 tags
 
 AcquireMode = Inventory		# resolve multiple tag reads rather than just reading the closest/strongest tag
 # make the reader do some more work to try to resolve tags in a group
-AcqC1Cycles = 5				# for Gen 1 tags
-AcqG2Cycles = 5				# for Gen 2 tags
+#AcqC1Cycles = 5				# for Gen 1 tags
+#AcqG2Cycles = 5				# for Gen 2 tags
 
 AntennaSeq = 0 1			# Cycle transmitting/receiving between antennas 0 and 1
 RFModulation = STD			# Standard operating mode
