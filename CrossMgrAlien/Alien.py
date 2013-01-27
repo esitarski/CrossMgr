@@ -346,12 +346,12 @@ class Alien( object ):
 						self.dataQ.put( (tagID, discoveryTime) )
 						self.tagCount += 1
 						
-						# Format as CrossMgr message.  Convert hex tag to decimal string.
+						# Format as CrossMgr-like message.  Convert hex tag to decimal string.
 						m = '%d %s' % (int(tagID, 16), discoveryTime.strftime('%Y/%m/%d_%H:%M:%S.%f'))
 						if pf:
 							# 									Thu Dec 04 10:14:49 PST
-							pf.write( '%s %s %s %s,%s,%s\n' % (
-										tagID[0:4], tagID[4-8], tagID[8-12], tagID[12:],
+							pf.write( '%s,%s,%s\n' % (
+										tagID,					# Keep tag in hex as read.
 										discoveryTime.strftime('%a %b %d %H:%M:%S.%f %Z %Y'),
 										readCount) )
 						self.messageQ.put( ('Alien', 'Received %d:' % self.tagCount, m) )
