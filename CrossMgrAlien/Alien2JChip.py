@@ -16,8 +16,8 @@ CR = chr( 0x0d )
 count = 0
 def formatMessage( tag, t ):
 	global count
-	message = "DA%s %s 10  %05X      C7%s" % (
-				tag,								# Tag code
+	message = "DA%d %s 10  %05X      C7%s" % (
+				int(tagID, 16),						# Tag code in decimal, no leading zeros.
 				t.strftime('%H:%M:%S.%f'),			# hh:mm:ss.ff
 				count,								# Data index number in hex.
 				CR

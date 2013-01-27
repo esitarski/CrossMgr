@@ -346,8 +346,8 @@ class Alien( object ):
 						self.dataQ.put( (tagID, discoveryTime) )
 						self.tagCount += 1
 						
-						# Format as CrossMgr message.
-						m = '%016d %s' % (int(tagID), discoveryTime.strftime('%Y/%m/%d_%H:%M:%S.%f'))
+						# Format as CrossMgr message.  Convert hex tag to decimal string.
+						m = '%d %s' % (int(tagID, 16), discoveryTime.strftime('%Y/%m/%d_%H:%M:%S.%f'))
 						if pf:
 							# 									Thu Dec 04 10:14:49 PST
 							pf.write( '%s %s %s %s,%s,%s\n' % (
