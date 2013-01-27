@@ -9,6 +9,7 @@ import math
 import subprocess
 import re
 import Utils
+stripLeadingZeros = Utils.stripLeadingZeros
 import select
 from threading import Thread as Process
 from Queue import Queue
@@ -208,7 +209,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 						t = parseTime( tStr )
 						t += readerComputerTimeDiff
 							
-						q.put( ('data', tag, t) )
+						q.put( ('data', stripLeadingZeros(tag), t) )
 						
 					elif line.startswith( 'N' ):
 						q.put( ('name', line[5:].strip()) )
