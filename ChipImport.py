@@ -2,7 +2,7 @@ import Model
 import Utils
 import JChip
 from JChipSetup import GetTagNums
-from Utils		import logCall
+from Utils		import logCall, stripLeadingZeros
 from Undo		import undo
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 import wx
@@ -46,17 +46,18 @@ def DoChipImport(	fname, parseTagTime, startTime = None,
 		for line in f:
 			lineNo += 1
 			
-			if line.startswith('#'):
+			line = line.strip()
+			if not line or line.startswith('#'):
 				continue
 			
 			tag, t = parseTagTime( line, errors, lineNo )
 			if tag is None:
 				continue
-				
 			if raceStart and t < raceStart:
 				errors.append( 'line %d: time before race start (%s)' % (lineNo, tStr) )
 				continue
 			
+			tag = stripLeadingZeros( tag )
 			t += timeAdjustment
 			
 			if not tFirst:

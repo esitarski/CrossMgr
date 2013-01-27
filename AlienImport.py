@@ -1,15 +1,47 @@
 import wx
+import math
 import Model
 import JChip
 from ChipImport import ChipImportDialog
-import calendar
+import datetime
+combine = datetime.datetime.combine
 import string
 
 sepTrans = string.maketrans( '/-:', '   ' )
+def timeFromStr( tStr ):
+	try:
+		tStr = tStr.translate( sepTrans )
+		year, month, day, hour, minute, second = tStr.split()
+		fract, second = math.modf( float(second) )
+		microsecond = fract * 1000000.0
+		t = combine( JChip.dateToday, datetime.time(hour=int(hour), minute=int(minute), second=int(second), microsecond=int(microsecond)) )
+		return t
+	except (IndexError, ValueError):
+		return None
+
 def parseTagTime( line, lineNo, errors ):
+	if 'Tag:' in line:
+		tag, tStr = None, None
+		for f in line.split(','):
+			key, data = [kv.strip() for kv in f.split(':', 1)]
+			if key == 'Tag':
+				tag = data
+			elif key == 'Disc':
+				tStr = data
+			if tag and tStr:
+				break
+			
+		if not tag or not tStr:
+			errors.append( 'line %d: unrecognized input' % lineNo )
+			return None, None
+			
+		tag = tag.replace( ' ', '' )
+		t = timeFromStr( tStr )
+		return tag, t
+
 	try:
 		tag, tStr, antenna, readCount = line.split(',')
-	except IndexError:
+	except (IndexError, ValueError):
 		errors.append( 'line %d: unrecognized input' % lineNo )
 		return None, None
 	
@@ -23,9 +55,9 @@ def parseTagTime( line, lineNo, errors ):
 		weekDay, shortMonth, day, hour, minute, second, tzone, year = tStr.split()
 		
 		# We only want the time.
-		fract, second = math.fmod( second )
+		fract, second = math.modf( float(second) )
 		microsecond = fract * 1000000.0
-		t = combine( JChip.dateToday, datetime.time(minute=int(minute), second=int(second), microsecond=int(microsecond)) )
+		t = combine( JChip.dateToday, datetime.time(hour=int(hour), minute=int(minute), second=int(second), microsecond=int(microsecond)) )
 	except (IndexError, ValueError):
 		errors.append( 'line %d: invalid time' % lineNo )
 		return None, None

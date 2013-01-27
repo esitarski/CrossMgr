@@ -90,7 +90,7 @@ reDateSplit = re.compile( '[/ :]' )		# Characters to split date/time fields.
 class Alien( object ):
 	CmdPrefix = chr(1)			# Causes Alien reader to suppress prompt on response.
 	CmdDelim = '\r\n'			# Delimiter of Alien commands (sent to reader).
-	ReaderDelim = '\r\n\0'		# Delimter of Alien reader responses (recieved from reader).
+	ReaderDelim = '\r\n\0'		# Delimiter of Alien reader responses (received from reader).
 
 	def __init__( self, dataQ, messageQ, shutdownQ, notifyHost, notifyPort, heartbeatPort ):
 		self.notifyHost = notifyHost
@@ -200,9 +200,8 @@ class Alien( object ):
 			#---------------------------------------------------------------------------
 			# Strip terminating null (if present).
 			#
-			if data:
-				while data and data[-1] == '\0':
-					data = data[:-1]
+			while data.endswith( chr(0) ):
+				data = data[:-1]
 			
 			#---------------------------------------------------------------------------
 			# Parse heartbeat message XML.
@@ -269,7 +268,7 @@ class Alien( object ):
 						readerSocket, addr = dataSocket.accept()
 					except socket.timeout:
 						continue	# Go back to the top of the loop.  This checks the keepGoing flag.
-					readerSocket.settimeout( 1 )
+					readerSocket.settimeout( 1 )	# Set timeout to 1 second so we can check whether to keep going.
 			
 				# Get the reader message.
 				response = ''

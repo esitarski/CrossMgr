@@ -632,7 +632,7 @@ class Rider(object):
 		tBegin = iTimes[-1][0]
 		if tBegin < st and len(iTimes) < Rider.entriesMax:
 			tBegin += expected
-			iMax = max( 1, int(math.ceil(st - tBegin) / expected) )
+			iMax = max( 1, int(math.ceil(st - tBegin) / expected) if expected > 0 else 1 )
 			iMax = min( iMax, Rider.entriesMax - len(iTimes) )
 			iTimes.extend( [(tBegin + expected * i, True) for i in xrange(iMax)] )
 

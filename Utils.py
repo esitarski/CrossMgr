@@ -13,6 +13,10 @@ try:
 	from win32com.shell import shell, shellcon
 except ImportError:
 	pass
+	
+reLeadingZeros = re.compile( '^0+' )
+def stripLeadingZeros( s ):
+	return reLeadingZeros.sub( '', s )
 
 def removeDiacritic(input):
 	'''

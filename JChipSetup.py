@@ -1,7 +1,7 @@
 import Model
 import Utils
 import JChip
-from Utils				import logCall
+from Utils				import logCall, stripLeadingZeros
 import wx
 import wx.lib.intctrl
 import wx.lib.masked           as masked
@@ -49,7 +49,7 @@ def GetTagNums( forceUpdate = False ):
 			for tagName in ['Tag', 'Tag2']:
 				try:
 					tag = edata[tagName]
-					race.tagNums[tag] = num
+					race.tagNums[stripLeadingZeros(tag)] = num
 				except (KeyError, ValueError):
 					pass
 	
