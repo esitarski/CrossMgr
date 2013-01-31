@@ -8,6 +8,7 @@ import JChip
 import OutputStreamer
 from FtpWriteFile import realTimeFtpPublish
 from Undo import undo
+from PhotoFinish import SetCameraState
 
 import wx.lib.masked as masked
 from roundbutton import RoundButton
@@ -30,6 +31,8 @@ def StartRaceNow():
 	if mainWin is not None:
 		mainWin.showPageName( 'Record' )
 		mainWin.refresh()
+		
+	SetCameraState( getattr(Model.race, 'enableUSBCamera', False) )
 
 def GetNowSeconds():
 	t = datetime.datetime.now()
@@ -237,6 +240,8 @@ class Actions( wx.Panel ):
 		OutputStreamer.StopStreamer()
 		if getattr(Model.race, 'ftpUploadDuringRace', False):
 			realTimeFtpPublish.publishEntry( True )
+		
+		SetCameraState( False )
 	
 	def refresh( self ):
 		self.button.Enable( False )

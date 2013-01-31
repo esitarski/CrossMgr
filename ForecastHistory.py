@@ -8,6 +8,7 @@ import ColGrid
 import StatusBar
 import OutputStreamer
 import NumKeypad
+from PhotoFinish import TakePhoto
 from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, DeleteEntry, DoDNS, DoDNF, DoPull
 from FtpWriteFile import realTimeFtpPublish
 
@@ -288,6 +289,7 @@ class ForecastHistory( wx.Panel ):
 			return
 		if not isinstance(nums, (list, tuple)):
 			nums = [nums]
+		tStr = ''
 		with Model.LockRace() as race:
 			if race is None or not race.isRunning():
 				return
@@ -306,6 +308,14 @@ class ForecastHistory( wx.Panel ):
 			wx.CallAfter( mainWin.refresh )
 		if getattr(race, 'ftpUploadDuringRace', False):
 			realTimeFtpPublish.publishEntry()
+		if getattr(race, 'enableUSBCamera', False):
+			for num in nums:
+				try:
+					num = int(num)
+				except:
+					continue
+				TakePhoto( Utils.getFileName(), num, t )
+				break
 		
 	def doExpectedSelect( self, event ):
 		r = event.GetRow()

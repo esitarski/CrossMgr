@@ -72,6 +72,10 @@ class Properties( wx.Panel ):
 		self.highPrecisionTimes = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
 		rows += 1
 
+		self.enableUSBCameraLabel = wx.StaticText( self, wx.ID_ANY, 'Enable USB Camera Photo Finish: ' )
+		self.enableUSBCamera = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
+		rows += 1
+
 		self.jchipLabel = wx.StaticText( self, wx.ID_ANY, 'JChip Integration: ' )
 		self.jchip = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
 		self.Bind( wx.EVT_CHECKBOX, self.onJChipIntegration, self.jchip )
@@ -131,6 +135,8 @@ class Properties( wx.Panel ):
 			(self.distanceUnitLabel,0, labelAlign),		(self.distanceUnit,		1, fieldAlign),
 			(self.highPrecisionTimesLabel,0, labelAlign),(self.highPrecisionTimes,1, fieldAlign),
 			
+			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
+			(self.enableUSBCameraLabel,		0, labelAlign),		(self.enableUSBCamera,			1, fieldAlign),
 			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
 			(self.jchipLabel,		0, labelAlign),		(self.jchip,			1, fieldAlign),
 			(self.autocorrectLapsDefaultLabel,0, labelAlign),(self.autocorrectLapsDefault,1, fieldAlign),
@@ -254,6 +260,8 @@ class Properties( wx.Panel ):
 			self.highPrecisionTimes.SetValue( getattr(race, 'highPrecisionTimes', False) )
 			self.distanceUnit.SetSelection( getattr(race, 'distanceUnit', 0) )
 			
+			self.enableUSBCamera.SetValue( getattr(race, 'enableUSBCamera', False) )
+			
 			self.reverseDirection.SetValue( getattr(race, 'reverseDirection', False) )
 			self.finishTop.SetValue( getattr(race, 'finishTop', False) )
 			
@@ -285,6 +293,7 @@ class Properties( wx.Panel ):
 			race.highPrecisionTimes = self.highPrecisionTimes.IsChecked()
 			race.distanceUnit = self.distanceUnit.GetSelection()
 			race.reverseDirection = self.reverseDirection.IsChecked()
+			race.enableUSBCamera = self.enableUSBCamera.IsChecked()
 			race.finishTop = self.finishTop.IsChecked()
 			race.minutes = self.minutes.GetValue()
 			race.commissaire = self.commissaire.GetValue()

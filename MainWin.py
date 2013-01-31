@@ -66,6 +66,7 @@ import Version
 from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, ExcelLink
 from SetGraphic			import SetGraphicDialog
 from GetResults			import GetCategoryDetails
+from PhotoFinish		import TakePhoto
 
 import wx.lib.agw.advancedsplash as AS
 import openpyxl
@@ -1547,6 +1548,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			race.minutes = self.raceMinutes
 			race.raceNum = 1
 			#race.isTimeTrial = True
+			race.enableUSBCamera = True
 			race.setCategories( [	{'name':'Junior', 'catStr':'100-199', 'startOffset':'00:00', 'distance':0.5, 'gender':'Men'},
 									{'name':'Senior', 'catStr':'200-299', 'startOffset':'00:15', 'distance':0.5, 'gender':'Women'}] )
 
@@ -1931,6 +1933,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 		if not race.tagNums:
 			return False
 		
+		validNum = None
+		validTime = None
 		success = False
 		numTimes = []
 		for d in data:
@@ -1947,6 +1951,9 @@ Continue?''' % fName, 'Simulate a Race' ):
 				delta = dt - race.startTime
 				t = delta.total_seconds()
 				t = race.addTime( num, t )
+				if validTime is None:
+					validTime = t
+					validNum = num
 				numTimes.append( (num, t) )
 				success = True
 		
@@ -1956,6 +1963,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 				wx.CallAfter( self.results.showLastLap )
 			if getattr(race, 'ftpUploadDuringRace', False):
 				realTimeFtpPublish.publishEntry()
+			if getattr(race, 'enableUSBCamera', False):
+				TakePhoto( Utils.getFileName(), validNum, validTime )
 
 		return success
 

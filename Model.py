@@ -776,6 +776,8 @@ class Race(object):
 		self.distanceUnit = Race.UnitKm
 		self.missingTags = set()
 		
+		self.enableUSBCamera = False
+		
 		# Animation options.
 		self.finishTop = False
 		self.reverseDirection = False
