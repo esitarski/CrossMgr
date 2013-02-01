@@ -45,8 +45,6 @@ Each photo has a timestamp in the picture itself.
 
 For performance reasons, CrossMgr opens a connection to the USB Webcam at the start of the race and closes it at the end.  Do Not Disconnect the USB Camera during the race!  This may cause CrossMgr to hang (of course, you can always close it and restart it).
 
-
-
 ## Question: When is a Rider in the Race?
 CrossMgr considers a rider in the race if (a) there is a time entry for the rider or (b) the rider Status (DNS, DQ, etc.) is set.  It does not automatically add all riders described in the Excel sheet.
 

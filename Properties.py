@@ -273,6 +273,8 @@ class Properties( wx.Panel ):
 			else:
 				self.excelName.SetLabel( '' )
 			self.categoriesFile.SetLabel( os.path.basename(getattr(race, 'categoriesImportFile', '')) )
+			
+		self.GetSizer().Layout()
 		
 	def update( self, race = None ):
 		undo.pushState()
