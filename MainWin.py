@@ -1548,7 +1548,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			race.minutes = self.raceMinutes
 			race.raceNum = 1
 			#race.isTimeTrial = True
-			race.enableUSBCamera = True
+			#race.enableUSBCamera = True
 			race.setCategories( [	{'name':'Junior', 'catStr':'100-199', 'startOffset':'00:00', 'distance':0.5, 'gender':'Men'},
 									{'name':'Senior', 'catStr':'200-299', 'startOffset':'00:15', 'distance':0.5, 'gender':'Women'}] )
 
