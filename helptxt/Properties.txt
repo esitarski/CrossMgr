@@ -35,6 +35,8 @@ Time Trial mode is a special mode that works much differently from the regular r
 At this point, TT mode does not accept an externally seeded start list.  It simply starts a clock on the first entry for each rider.  TT mode works with manual input and JChip.  TT results are computed relative to the rider's ride time.
 
 ## Enable USB Camera Photo Finish
+Windows Only.
+
 This option tells CrossMgr to take a picture with a USB webcam every time a number is entered during the race.
 In addition to making nice pictures of the event for publishing later, this feature is useful in resolving disputes.
 
