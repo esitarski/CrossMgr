@@ -81,9 +81,9 @@ Info notify
 # Transform the cmd string into an array of Alien reader commands (strip out comments and blank lines).
 initCmds = [f.strip() for f in cmdStr.split('\n')]
 initCmds = [f.split('#')[0].strip() for f in cmdStr.split('\n') if f and not f.startswith('#')]
-
-print '\n'.join(initCmds)
 del cmdStr
+
+# print '\n'.join(initCmds)
 
 reDateSplit = re.compile( '[/ :]' )		# Characters to split date/time fields.
 
@@ -152,7 +152,11 @@ class Alien( object ):
 	def sendCommands( self ):
 		''' Send initialization commands to the Alien reader. '''
 		cmdSocket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
-		cmdSocket.connect( (self.cmdHost, self.cmdPort) )
+		try:
+			cmdSocket.connect( (self.cmdHost, self.cmdPort) )
+		except:
+			self.messageQ.put( ('Alien', 'Connection failed to %s:%d.  Check connections and press Reset' % (self.cmdHost, self.cmdPort) ) )
+			return False
 		
 		cmdContext = {
 				'notifyHost':	self.notifyHost,
@@ -171,6 +175,7 @@ class Alien( object ):
 			self.messageQ.put( ('Alien', '>>> %s' % self.stripReaderDelim(response) ) )
 			
 		cmdSocket.close()
+		return True
 			
 	def runServer( self ):
 		self.messageQ.put( ('BackupFile', self.fname) )
@@ -250,7 +255,8 @@ class Alien( object ):
 			# Send initialization commands to the reader.
 			#
 			self.messageQ.put( ('Alien', 'Sending Alien reader initialization commands...') )
-			self.sendCommands()
+			if not self.sendCommands():
+				return
 			
 			self.tagCount = 0
 			self.messageQ.put( ('Alien', 'Listening for Alien reader data on (%s:%s)...' % (str(self.notifyHost), str(self.notifyPort))) )
@@ -378,7 +384,6 @@ class Alien( object ):
 
 def AlienServer( dataQ, messageQ, shutdownQ, notifyHost, notifyPort, heartbeatPort,
 				listenForHeartbeat = False, cmdHost = '', cmdPort = 0 ):
-	print dataQ, messageQ, shutdownQ, notifyHost, notifyPort, heartbeatPort, listenForHeartbeat, cmdHost, cmdPort
 	alien = Alien(dataQ, messageQ, shutdownQ, notifyHost, notifyPort, heartbeatPort,
 					listenForHeartbeat, cmdHost, cmdPort)
 	alien.runServer()

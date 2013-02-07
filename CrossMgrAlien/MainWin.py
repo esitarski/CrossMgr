@@ -123,7 +123,7 @@ class MainWin( wx.Frame ):
 		gbs.Add( self.listenForHeartbeat, pos=(iRow, 1), span=(1,1) )
 		
 		iRow += 1
-		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'Heartbeat Port:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT )
+		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'Heartbeat Port:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		self.heartbeatPort = wx.StaticText( self, wx.ID_ANY, '3988' )
 		gbs.Add( self.heartbeatPort, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
 		
