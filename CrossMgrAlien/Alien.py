@@ -116,7 +116,6 @@ class Alien( object ):
 			pf.write( 'Tag ID, Discover Time, Antenna, Count\n' )
 	
 		self.keepGoing = True
-		self.cmdHost, self.cmdPort = None, None
 		
 		self.alienInfo = None
 		self.tagCount = 0
@@ -244,7 +243,7 @@ class Alien( object ):
 				self.cmdHost = info['IPAddress']
 				self.cmdPort = int(info['CommandPort'])
 				
-			self.messageQ.put( ('Alien', 'Alien reader.  Cmd Addr=%s:%d' % (self.cmdHost, self.cmdPort)) )
+			self.messageQ.put( ('Alien', 'Alien reader.  CmdAddr=%s:%d' % (self.cmdHost, self.cmdPort)) )
 			self.messageQ.put( ('cmdHost', '%s:%d' % (self.cmdHost, self.cmdPort)) )
 
 			#---------------------------------------------------------------------------
@@ -379,6 +378,7 @@ class Alien( object ):
 
 def AlienServer( dataQ, messageQ, shutdownQ, notifyHost, notifyPort, heartbeatPort,
 				listenForHeartbeat = False, cmdHost = '', cmdPort = 0 ):
+	print dataQ, messageQ, shutdownQ, notifyHost, notifyPort, heartbeatPort, listenForHeartbeat, cmdHost, cmdPort
 	alien = Alien(dataQ, messageQ, shutdownQ, notifyHost, notifyPort, heartbeatPort,
 					listenForHeartbeat, cmdHost, cmdPort)
 	alien.runServer()

@@ -282,7 +282,9 @@ class MainWin( wx.Frame ):
 			elif d[0] == 'Alien2JChip':
 				self.crossMgrMessages.write( message )
 			elif d[0] == 'CmdAddr':
-				self.cmdHost.SetLabel( d[1] )
+				cmdHost, cmdPort = d[1].split(':')
+				self.cmdHost.SetValue( cmdHost )
+				self.cmdPort.SetValue( int(cmdPort) )
 			elif d[0] == 'BackupFile':
 				self.backupFile.SetLabel( os.path.basename(d[1]) )
 
