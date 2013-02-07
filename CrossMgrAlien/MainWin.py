@@ -13,6 +13,7 @@ from Alien2JChip import CrossMgrServer
 
 import wx
 import wx.lib.masked             as masked
+import wx.lib.intctrl			as intctrl
 import sys
 import os
 import re
@@ -104,27 +105,42 @@ class MainWin( wx.Frame ):
 		gbs = wx.GridBagSizer( 4, 4 )
 		fgs.Add( gbs, flag=wx.EXPAND|wx.ALL, border = 4 )
 		
-		gbs.Add( setFont(bigFont,wx.StaticText(self, wx.ID_ANY, 'Alien Configuration:')), pos=(0,0), span=(1,2), flag=wx.ALIGN_LEFT )
-		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'Notify Address:'), pos=(1,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		iRow = 0
+		gbs.Add( setFont(bigFont,wx.StaticText(self, wx.ID_ANY, 'Alien Configuration:')), pos=(iRow,0), span=(1,2), flag=wx.ALIGN_LEFT )
+		iRow += 1
+		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'Notify Address:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		
 		hb = wx.BoxSizer( wx.HORIZONTAL )
 		ips = Utils.GetAllIps()
 		self.notifyHost = wx.Choice( self, wx.ID_ANY, choices = ips )
 		hb.Add( self.notifyHost )
 		hb.Add( wx.StaticText(self, wx.ID_ANY, ' : %d' % NotifyPort ), flag=wx.ALIGN_CENTER_VERTICAL )
-		gbs.Add( hb, pos=(1,1), span=(1,1) )
+		gbs.Add( hb, pos=(iRow ,1), span=(1,1) )
 		
-		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'Heartbeat Port:'), pos=(2,0), span=(1,1), flag=wx.ALIGN_RIGHT )
+		iRow += 1
+		self.listenForHeartbeat = wx.CheckBox( self, wx.ID_ANY, 'Listen for Alien Heartbeat', style=wx.ALIGN_LEFT )
+		self.listenForHeartbeat.SetValue( True )
+		gbs.Add( self.listenForHeartbeat, pos=(iRow, 1), span=(1,1) )
+		
+		iRow += 1
+		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'Heartbeat Port:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT )
 		self.heartbeatPort = wx.StaticText( self, wx.ID_ANY, '3988' )
-		gbs.Add( self.heartbeatPort, pos=(2,1), span=(1,1), flag=wx.ALIGN_LEFT )
+		gbs.Add( self.heartbeatPort, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
 		
-		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'Cmd Address:'), pos=(3,0), span=(1,1), flag=wx.ALIGN_RIGHT )
-		self.cmdAddr = wx.StaticText( self, wx.ID_ANY, '' )
-		gbs.Add( self.cmdAddr, pos=(3,1), span=(1,1), flag=wx.ALIGN_LEFT )
+		iRow += 1
+		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'Cmd Address:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT )
+		hb = wx.BoxSizer( wx.HORIZONTAL )
+		self.cmdHost = masked.IpAddrCtrl( self, wx.ID_ANY, style = wx.TE_PROCESS_TAB )
+		hb.Add( self.cmdHost )
+		hb.Add( wx.StaticText(self, wx.ID_ANY, ' : '), flag=wx.ALIGN_CENTER_VERTICAL )
+		self.cmdPort = intctrl.IntCtrl( self, size=( 50, -1 ), min=0, max=999999 )
+		hb.Add( self.cmdPort, flag=wx.ALIGN_CENTER_VERTICAL )
+		gbs.Add( hb, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
 		
-		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'Backup File:'), pos=(4,0), span=(1,1), flag=wx.ALIGN_RIGHT )
+		iRow += 1
+		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'Backup File:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT )
 		self.backupFile = wx.StaticText( self, wx.ID_ANY, '' )
-		gbs.Add( self.backupFile, pos=(4,1), span=(1,1), flag=wx.ALIGN_LEFT )
+		gbs.Add( self.backupFile, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
 		
 		#------------------------------------------------------------------------------------------------
 		# CrossMgr configuration.
@@ -173,7 +189,9 @@ class MainWin( wx.Frame ):
 		self.shutdownQ = Queue()	# Queue to tell the Alien monitor to shut down.
 		
 		self.alienProcess = Process( name='AlienProcess', target=AlienServer,
-			args=(self.dataQ, self.messageQ, self.shutdownQ, self.getNotifyHost(), NotifyPort, HeartbeatPort) )
+			args=(self.dataQ, self.messageQ, self.shutdownQ,
+					self.getNotifyHost(), NotifyPort, HeartbeatPort,
+					self.listenForHeartbeat.GetValue(), self.cmdHost.GetAddress(), self.cmdPort.GetValue() ) )
 		self.alienProcess.daemon = True
 		
 		self.crossMgrProcess = Process( name='CrossMgrProcess', target=CrossMgrServer,
@@ -229,12 +247,18 @@ class MainWin( wx.Frame ):
 	
 	def writeOptions( self ):
 		self.config.Write( 'CrossMgrHost', self.getCrossMgrHost() )
+		self.config.Write( 'ListenForAlienHeartbeat', str(self.listenForHeartbeat.GetValue()) )
+		self.config.Write( 'AlienCmdAddr', self.cmdHost.GetAddress() )
+		self.config.Write( 'AlienCmdPort', str(self.cmdPort.GetValue()) )
 		s = self.notifyHost.GetSelection()
 		if s != wx.NOT_FOUND:
 			self.config.Write( 'NotifyHost', self.notifyHost.GetString(s) )
 	
 	def readOptions( self ):
 		self.crossMgrHost.SetValue( self.config.Read('CrossMgrHost', Utils.DEFAULT_HOST) )
+		self.listenForHeartbeat.SetValue( self.config.Read('ListenForAlienHeartbeat', 'True').upper() == 'T' )
+		self.cmdHost.SetValue( self.config.Read('AlienCmdAddr', '0.0.0.0') )
+		self.cmdPort.SetValue( int(self.config.Read('AlienCmdPort', '0')) )
 		notifyHost = self.config.Read('NotifyHost', Utils.DEFAULT_HOST)
 		for i, s in enumerate(self.notifyHost.GetItems()):
 			if s == notifyHost:
@@ -258,7 +282,7 @@ class MainWin( wx.Frame ):
 			elif d[0] == 'Alien2JChip':
 				self.crossMgrMessages.write( message )
 			elif d[0] == 'CmdAddr':
-				self.cmdAddr.SetLabel( d[1] )
+				self.cmdHost.SetLabel( d[1] )
 			elif d[0] == 'BackupFile':
 				self.backupFile.SetLabel( os.path.basename(d[1]) )
 

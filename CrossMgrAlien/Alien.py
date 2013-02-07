@@ -92,10 +92,14 @@ class Alien( object ):
 	CmdDelim = '\r\n'			# Delimiter of Alien commands (sent to reader).
 	ReaderDelim = '\r\n\0'		# Delimiter of Alien reader responses (received from reader).
 
-	def __init__( self, dataQ, messageQ, shutdownQ, notifyHost, notifyPort, heartbeatPort ):
+	def __init__( self, dataQ, messageQ, shutdownQ, notifyHost, notifyPort, heartbeatPort,
+				listenForHeartbeat = False, cmdHost = '', cmdPort = 0 ):
 		self.notifyHost = notifyHost
 		self.notifyPort = notifyPort
 		self.heartbeatPort = heartbeatPort
+		self.listenForHeartbeat = listenForHeartbeat
+		self.cmdHost = cmdHost
+		self.cmdPort = cmdPort
 		self.dataQ = dataQ			# Queue to write tag reads.
 		self.messageQ = messageQ	# Queue to write operational messages.
 		self.shutdownQ = shutdownQ	# Queue to listen for shutdown.
@@ -173,73 +177,75 @@ class Alien( object ):
 		self.messageQ.put( ('BackupFile', self.fname) )
 
 		while self.checkKeepGoing():
-			#---------------------------------------------------------------------------
-			# Wait for the heartbeat (contains the connection info).
-			#
-			self.messageQ.put( ('Alien', 'Waiting for Alien heartbeat...') )
-			heartbeatSocket = socket.socket( socket.AF_INET, socket.SOCK_DGRAM )
-			heartbeatSocket.settimeout( 1 )
-			heartbeatSocket.bind( (self.notifyHost, self.heartbeatPort) )
-			#heartbeatSocket.setsockopt( socket.SOL_SOCKET, socket.SO_REUSEADDR, 1 )
+			if self.listenForHeartbeat:
+				#---------------------------------------------------------------------------
+				# Wait for the heartbeat (contains the connection info).
+				#
+				self.messageQ.put( ('Alien', 'Waiting for Alien heartbeat...') )
+				heartbeatSocket = socket.socket( socket.AF_INET, socket.SOCK_DGRAM )
+				heartbeatSocket.settimeout( 1 )
+				heartbeatSocket.bind( (self.notifyHost, self.heartbeatPort) )
+				#heartbeatSocket.setsockopt( socket.SOL_SOCKET, socket.SO_REUSEADDR, 1 )
 
-			#---------------------------------------------------------------------------
-			# Get heartbeat message.
-			#
-			while self.checkKeepGoing():
-				try:
-					data, addr = heartbeatSocket.recvfrom( 2048 )
-					break
-				except socket.timeout:
-					time.sleep( 1 )
-					
-			heartbeatSocket.close()
-			
-			if not self.keepGoing:
-				break
-			
-			#---------------------------------------------------------------------------
-			# Strip terminating null (if present).
-			#
-			while data.endswith( chr(0) ):
-				data = data[:-1]
-			
-			#---------------------------------------------------------------------------
-			# Parse heartbeat message XML.
-			#
-			try:
-				doc = parseString( data.strip() )
-			except xml.parsers.expat.ExpatError, e:
-				self.messageQ.put( ('Alien', 'Heartbeat Syntax error:', e) )
-				self.messageQ.put( ('Alien', data) )
-				continue
-			except:
-				self.messageQ.put( ('Alien', 'Heartbeat Syntax error') )
-				self.messageQ.put( ('Alien', data) )
-				continue
-			
-			#---------------------------------------------------------------------------
-			# Extract heartbeat info.
-			#
-			info = {}
-			for h in doc.getElementsByTagName( 'Alien-RFID-Reader-Heartbeat' ):
-				for c in h.childNodes:
-					if c.nodeType == c.ELEMENT_NODE:
-						info[c.tagName] = c.firstChild.nodeValue.strip()
-				break
+				#---------------------------------------------------------------------------
+				# Get heartbeat message.
+				#
+				while self.checkKeepGoing():
+					try:
+						data, addr = heartbeatSocket.recvfrom( 2048 )
+						break
+					except socket.timeout:
+						time.sleep( 1 )
+						
+				heartbeatSocket.close()
 				
-			self.messageQ.put( ('Alien', 'Successfully Received Heartbeat Info:') )
-			self.messageQ.put( ('Alien', '**********************************************') )
-			self.messageQ.put( ('Alien', data) )
-			self.messageQ.put( ('Alien', '**********************************************') )
-			
-			#---------------------------------------------------------------------------
-			# Save info especially connection details.
-			#
-			self.alienInfo = info
-			self.cmdHost = info['IPAddress']
-			self.cmdPort = int(info['CommandPort'])
-			self.messageQ.put( ('Alien', 'Alien reader found.  Cmd Addr=%s:%d' % (self.cmdHost, self.cmdPort)) )
-			self.messageQ.put( ('CmdAddr', '%s:%d' % (self.cmdHost, self.cmdPort)) )
+				if not self.keepGoing:
+					break
+				
+				#---------------------------------------------------------------------------
+				# Strip terminating null (if present).
+				#
+				while data.endswith( chr(0) ):
+					data = data[:-1]
+				
+				#---------------------------------------------------------------------------
+				# Parse heartbeat message XML.
+				#
+				try:
+					doc = parseString( data.strip() )
+				except xml.parsers.expat.ExpatError, e:
+					self.messageQ.put( ('Alien', 'Heartbeat Syntax error:', e) )
+					self.messageQ.put( ('Alien', data) )
+					continue
+				except:
+					self.messageQ.put( ('Alien', 'Heartbeat Syntax error') )
+					self.messageQ.put( ('Alien', data) )
+					continue
+				
+				#---------------------------------------------------------------------------
+				# Extract heartbeat info.
+				#
+				info = {}
+				for h in doc.getElementsByTagName( 'Alien-RFID-Reader-Heartbeat' ):
+					for c in h.childNodes:
+						if c.nodeType == c.ELEMENT_NODE:
+							info[c.tagName] = c.firstChild.nodeValue.strip()
+					break
+					
+				self.messageQ.put( ('Alien', 'Successfully Received Heartbeat Info:') )
+				self.messageQ.put( ('Alien', '**********************************************') )
+				self.messageQ.put( ('Alien', data) )
+				self.messageQ.put( ('Alien', '**********************************************') )
+				
+				#---------------------------------------------------------------------------
+				# Save info especially connection details.
+				#
+				self.alienInfo = info
+				self.cmdHost = info['IPAddress']
+				self.cmdPort = int(info['CommandPort'])
+				
+			self.messageQ.put( ('Alien', 'Alien reader.  Cmd Addr=%s:%d' % (self.cmdHost, self.cmdPort)) )
+			self.messageQ.put( ('cmdHost', '%s:%d' % (self.cmdHost, self.cmdPort)) )
 
 			#---------------------------------------------------------------------------
 			# Send initialization commands to the reader.
@@ -371,6 +377,8 @@ class Alien( object ):
 			except Empty:
 				break
 
-def AlienServer( dataQ, messageQ, shutdownQ, notifyHost, notifyPort, heartbeatPort ):
-	alien = Alien(dataQ, messageQ, shutdownQ, notifyHost, notifyPort, heartbeatPort)
+def AlienServer( dataQ, messageQ, shutdownQ, notifyHost, notifyPort, heartbeatPort,
+				listenForHeartbeat = False, cmdHost = '', cmdPort = 0 ):
+	alien = Alien(dataQ, messageQ, shutdownQ, notifyHost, notifyPort, heartbeatPort,
+					listenForHeartbeat, cmdHost, cmdPort)
 	alien.runServer()
