@@ -11,7 +11,6 @@ except:
 	Device = None
 
 def PilImageToWxImage( myPilImage, copyAlpha=True ) :
-
 	hasAlpha = myPilImage.mode[ -1 ] == 'A'
 	if copyAlpha and hasAlpha :  # Make sure there is an alpha layer copy.
 

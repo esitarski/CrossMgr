@@ -8,12 +8,20 @@ import atexit
 import math
 import subprocess
 import re
+import wx
+import wx.lib.newevent
 import Utils
 stripLeadingZeros = Utils.stripLeadingZeros
 import select
 from threading import Thread as Process
 from Queue import Queue
 from Queue import Empty
+
+ChipReaderEvent, EVT_CHIP_READER = wx.lib.newevent.NewEvent()
+
+def sendReaderEvent( tagTimes ):
+	if tagTimes and Utils.mainWin:
+		wx.PostEvent( Utils.mainWin, ChipReaderEvent(tagTimes = tagTimes) )
 
 combine = datetime.datetime.combine
 reTimeChars = re.compile( '^\d\d:\d\d:\d\d\.\d+' )
@@ -179,6 +187,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				continue	# Missing delimiter - need to get more data.
 				
 			# The message is delimited.  Process the messages.
+			tagTimes = []
 			lines = readStr.split( CR )
 			readStr = ''
 			for line in lines:
@@ -208,8 +217,10 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 						
 						t = parseTime( tStr )
 						t += readerComputerTimeDiff
-							
-						q.put( ('data', stripLeadingZeros(tag), t) )
+						
+						tag = stripLeadingZeros(tag)
+						q.put( ('data', tag, t) )
+						tagTimes.append( (tag, t) )
 						
 					elif line.startswith( 'N' ):
 						q.put( ('name', line[5:].strip()) )
@@ -250,7 +261,8 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				except (ValueError, KeyError, IndexError):
 					q.put( ('exception', line ) )
 					pass
-				
+			
+			sendReaderEvent( tagTimes )
 		#----------------------------------------------------------------------------------
 		# Handle outputs.
 		#

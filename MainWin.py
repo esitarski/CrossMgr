@@ -50,6 +50,7 @@ import VersionMgr
 import JChipSetup
 import JChipImport
 import JChip
+from JChip import ChipReaderEvent, EVT_CHIP_READER 
 import OrionImport
 import AlienImport
 import OutputStreamer
@@ -545,7 +546,36 @@ class MainWin( wx.Frame ):
 		
 		#------------------------------------------------------------------------------
 		self.Bind(wx.EVT_CLOSE, self.onCloseWindow)
+		self.Bind(EVT_CHIP_READER, self.handleChipReaderEvent)
+		self.lastPhotoTime = datetime.datetime.now()
 
+	def handleChipReaderEvent( self, event ):
+		race = Model.race
+		if not race or not race.isRunning() or not getattr(race, 'enableUSBCamera', False):
+			return
+		if not getattr(race, 'tagNums', None):
+			JChipSetup.GetTagNums()
+		if not race.tagNums:
+			return
+		
+		# Take one photo for all the riders in the group.
+		for tag, dt in event.tagTimes:
+			if race.startTime > dt:
+				continue
+			try:
+				num = race.tagNums[tag]
+			except (TypeError, ValueError, KeyError):
+				continue
+			delta = dt - race.startTime
+			t = delta.total_seconds()
+			
+			# Ensure that we don't take more than 10 photos per second.
+			photoTime = datetime.datetime.now()
+			if (photoTime - self.lastPhotoTime).total_seconds() > 0.1:
+				TakePhoto( Utils.getFileName(), num, t )
+				self.lastPhotoTime = photoTime
+				break
+	
 	def menuDNS( self, event ):
 		dns = DNSManagerDialog( self )
 		dns.ShowModal()
@@ -1933,8 +1963,6 @@ Continue?''' % fName, 'Simulate a Race' ):
 		if not race.tagNums:
 			return False
 		
-		validNum = None
-		validTime = None
 		success = False
 		numTimes = []
 		for d in data:
@@ -1951,9 +1979,6 @@ Continue?''' % fName, 'Simulate a Race' ):
 				delta = dt - race.startTime
 				t = delta.total_seconds()
 				t = race.addTime( num, t )
-				if validTime is None:
-					validTime = t
-					validNum = num
 				numTimes.append( (num, t) )
 				success = True
 		
@@ -1963,8 +1988,6 @@ Continue?''' % fName, 'Simulate a Race' ):
 				wx.CallAfter( self.results.showLastLap )
 			if getattr(race, 'ftpUploadDuringRace', False):
 				realTimeFtpPublish.publishEntry()
-			if getattr(race, 'enableUSBCamera', False):
-				TakePhoto( Utils.getFileName(), validNum, validTime )
 
 		return success
 
