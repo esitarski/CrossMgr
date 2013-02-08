@@ -289,11 +289,24 @@ class ForecastHistory( wx.Panel ):
 			return
 		if not isinstance(nums, (list, tuple)):
 			nums = [nums]
-		tStr = ''
+			
 		with Model.LockRace() as race:
 			if race is None or not race.isRunning():
 				return
+				
 			t = race.curRaceTime()
+			
+			# Take the picture first to reduce latency as much as possible.
+			if getattr(race, 'enableUSBCamera', False):
+				for num in nums:
+					try:
+						num = int(num)
+					except:
+						continue
+					TakePhoto( Utils.getFileName(), num, t )
+					break
+			
+			# Add the times to the model.
 			for num in nums:
 				try:
 					num = int(num)
@@ -301,6 +314,7 @@ class ForecastHistory( wx.Panel ):
 					continue
 				race.addTime( num, t )
 				OutputStreamer.writeNumTime( num, t )
+				
 		mainWin = Utils.getMainWin()
 		if mainWin:
 			mainWin.record.numEdit.SetValue( '' )
@@ -308,14 +322,6 @@ class ForecastHistory( wx.Panel ):
 			wx.CallAfter( mainWin.refresh )
 		if getattr(race, 'ftpUploadDuringRace', False):
 			realTimeFtpPublish.publishEntry()
-		if getattr(race, 'enableUSBCamera', False):
-			for num in nums:
-				try:
-					num = int(num)
-				except:
-					continue
-				TakePhoto( Utils.getFileName(), num, t )
-				break
 		
 	def doExpectedSelect( self, event ):
 		r = event.GetRow()
