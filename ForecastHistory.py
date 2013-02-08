@@ -296,7 +296,16 @@ class ForecastHistory( wx.Panel ):
 				
 			t = race.curRaceTime()
 			
-			# Take the picture first to reduce latency as much as possible.
+			# Add the times to the model.  Do this first!
+			for num in nums:
+				try:
+					num = int(num)
+				except:
+					continue
+				race.addTime( num, t )
+				OutputStreamer.writeNumTime( num, t )
+				
+			# Take the picture before any updates to reduce latency as much as possible.
 			if getattr(race, 'enableUSBCamera', False):
 				for num in nums:
 					try:
@@ -306,15 +315,6 @@ class ForecastHistory( wx.Panel ):
 					TakePhoto( Utils.getFileName(), num, t )
 					break
 			
-			# Add the times to the model.
-			for num in nums:
-				try:
-					num = int(num)
-				except:
-					continue
-				race.addTime( num, t )
-				OutputStreamer.writeNumTime( num, t )
-				
 		mainWin = Utils.getMainWin()
 		if mainWin:
 			mainWin.record.numEdit.SetValue( '' )
