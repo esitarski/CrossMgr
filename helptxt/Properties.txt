@@ -39,7 +39,8 @@ TT penalties and/or adjustments can be made afterwards.  You can add a note to d
 ## Enable USB Camera Photo Finish
 Windows Only.
 
-This option tells CrossMgr to take a picture with a USB webcam every time a number is entered during the race.
+This option tells CrossMgr to take a picture with a USB webcam every time it gets a number during the race.
+It works with a chip reader, as well as manual input.
 In addition to making nice pictures of the event for publishing later, this feature is useful in resolving disputes.
 
 CrossMgr automatically looks for a USB webcam plugged into a USB port.  If it does not find one there, and you have a built-in webcam, it might find the built-in one (not what you want!).  Make sure the USB camera is plugged in and working before starting the race.
@@ -49,22 +50,24 @@ The USB camera feature can be turned on and off during the race at any time.  Yo
 Photos are saved in a folder created in the same location as the race.  The Photo folder has the same name as the race with with "_Photos" added to the end.  The photo files have the following format: "bib-XXXX-time-HH-MM-SS-DD.jpg" where XXXX is the bib number, HH, MM, SS and DD are hours, minutes, seconds, and decimal seconds, respectively.
 A footer is written on each photo including the rider's Bib number, the Race Time and the Current Date/Time.
 
-Invest is a good USB camera.  Some good ones are available for about $100.  Make sure the camera can focus on far-away objects (some webcams are only intended for faces in front of a computer).  Use a tripod or other stable support.  Use the camera's included software to frame the shot. 
+Although the pictures taken are far smaller than recording the entire video on disk, they can still take a lot of space.  Make sure you have lots of disk space available to accomodate the potential 500 (or more!) pictures that might be taken.
 
-For performance reasons, CrossMgr opens a connection to the USB webcam at the start of the race and closes it at the end.  Do Not Disconnect the USB Camera during the race!  This may cause CrossMgr to freeze.  Of course, you can always close CrossMgr and restart it if this happens.
+Get a good USB camera.  Some good ones are available for about $100.  Make sure the camera can focus on far-away objects (some webcams are only intended for faces in front of a computer).  Use a tripod or other stable support.  Use the camera's included software to frame the shot. 
 
-There are many considerations when setting up the camera to get good shots.  The first issue to consider is timing.  There are always small delays in the communication and response of the camera.  If the camera is aimed at the finish line with a very narrow field of view, the riders may be out of the frame before the camera records the picture.
+For performance reasons, CrossMgr opens a connection to the USB webcam at the start of the race and closes it at the end.  Do Not Disconnect the USB Camera during the race!  This may cause CrossMgr to lock up.  Of course, you can always close CrossMgr and restart it if this happens.
 
-When using Chip timing, CrossMgr triggers the camera as fast as possible after receiving the tag read message from the reader - even before updating the user interface.  With manual timing, CrossMgr triggers the camera as soon as it logs the entry.  However, this process is not instananeous.
+There are many considerations when setting up the camera to get good shots.  The first issue to consider is "latency".  There are always small delays in the communication and response of the camera.  If the camera is aimed at the finish line with a very narrow field of view, the riders may be out of the frame before the camera gets the signal to take the picture.
 
-To mitigate timing issues, it is recommended to configure the camera with a wider field of view and position it facing the riders (or looking backwards if you need to see the numbers).  With this angle, it will be less likely that the riders will go out of frame before the picture is captured.
-Some USB cameras have an auto-focus feature that is fast enough to follow a moving subject.  However, some cameras cannot refocus fast enough and the riders will always appear blurry (turn it off in this case).  Check what works best for your camera.
+When using Chip timing, CrossMgr triggers the camera as fast as possible after receiving the tag read message from the reader - even before updating the screen.  With manual timing, CrossMgr triggers the camera as soon as it logs the entry and before it updates the screen.  However, neither of these processes are instananeous.
 
-The second issue is lighting and the position of the sun.  Aiming the camera into the sun will "blind" it, and the riders will appear as dark blotches on a white background.  Some experimentation will be required, and don't be surprised if you have to change the camera position throughout the day to compensate for the changing lighting conditions.  Periodically review what the camera is seeing.
+To mitigate timing issues, it is recommended to configure the camera with a wider field of view and position it more facing the riders (or looking backwards if you need to see the numbers).  With this angle, it will be less likely that the riders will go out of frame before the camera is triggered.
+Some USB cameras have an auto-focus feature that is fast enough to follow a moving subject.  However, some cameras cannot refocus fast enough and the riders will always appear blurry (turn it off in this case).  Check what works best.
 
-Chip timing creates other considerations.  When the chip reader "sees" a group of riders (say, 20), it sends all its information in one message to CrossMgr.  Instead of triggering the camera for all riders in the message, CrossMgr takes one picture, and uses the bib of the first rider in the group.  Riders in the same group will be captured in the same picture.  This is the best it can do as the camera cannot be triggered fast enough to capture all riders in the group.
+The second issue is lighting.  Aiming the camera into the sun will "blind" it, and the riders will appear as dark blotches on a white background.  Some experimentation will be required, and don't be surprised if you have to change the camera position throughout the day to compensate for changing lighting conditions.  Periodically review what the camera is seeing.
 
-As a safety, CrossMgr will not trigger more than 10 pictures per second.
+Chip timing creates other considerations.  When the chip reader "sees" a group of riders (say, 20), it may send all its information in one message to CrossMgr.  Instead of triggering the camera for all riders in the message, CrossMgr takes one picture, and uses the bib of the first rider in the group.  In this way, riders in the same group will be captured with one picture.  At 30 frames per second (the frame rate of a typical video camera), the camera cannot respond fast enough to capture all riders in a large group anyway.
+
+To prevent locking up, CrossMgr will never take more than 10 pictures per second.
 
 ## Question: When is a Rider in the Race?
 CrossMgr considers a rider in the race if (a) there is a time entry for the rider or (b) the rider Status (DNS, DQ, etc.) is set.  It does not automatically add all riders described in the Excel sheet.

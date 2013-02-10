@@ -16,6 +16,8 @@ import urllib
 # Sort sequence by rider status.
 statusSortSeq = Model.Rider.statusSortSeq
 
+brandText = 'Powered by CrossMgr (sites.google.com/site/crossmgrsoftware)'
+
 class ExportGrid( object ):
 	def __init__( self, title = '', colnames = [], data = [] ):
 		self.title = title
@@ -204,6 +206,12 @@ class ExportGrid( object ):
 			yPix = yPixMax + textHeight
 			w, h, lh = dc.GetMultiLineTextExtent( url, font )
 			self._drawMultiLineText( dc, url, widthPix - borderPix - w, yPix )
+			
+		# Put CrossMgr branding at the bottom of the page.
+		font = self._getFont( borderPix // 5, False )
+		dc.SetFont( font )
+		w, h, lh = dc.GetMultiLineTextExtent( brandText, font )
+		self._drawMultiLineText( dc, brandText, borderPix, heightPix - borderPix + h )
 		
 	def toExcelSheet( self, sheet ):
 		''' Write the contents of the grid to an xlwt excel sheet. '''
@@ -221,6 +229,7 @@ class ExportGrid( object ):
 		sheetFit = FitSheetWrapper( sheet )
 		
 		# Write the colnames and data.
+		rowMax = 0
 		for col, c in enumerate(self.colnames):
 			isSpeed = (c == 'Speed')
 			if isSpeed and self.data[col]:
@@ -241,10 +250,18 @@ class ExportGrid( object ):
 			for row, v in enumerate(self.data[col]):
 				if isSpeed and v:
 					v = str(v).split()[0]
-				sheetFit.write( rowTop + 1 + row, col, v, style )
+				rowCur = rowTop + 1 + row
+				if rowCur > rowMax:
+					rowMax = rowCur
+				sheetFit.write( rowCur, col, v, style )
 			
 			if isSpeed:
 				self.colnames[col] = 'Speed'
+				
+		# Add branding at the bottom of the sheet.
+		style = xlwt.XFStyle()
+		style.alignment.horz = xlwt.Alignment.HORZ_LEFT
+		sheet.write( rowMax + 2, 0, brandText, style )
 	
 	def _setRC( self, row, col, value ):
 		if self.data:
