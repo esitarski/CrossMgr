@@ -25,6 +25,16 @@ Red Circle|Indicates a duplicate time.  Although rare, times may be entered more
 ## Category
 Selects the Category of the chart.  Category "All" will show results as if all riders were in the same category.  This is useful for comparing against manually generated results for the race as a whole.
 
+Additionally, there are some statistics shown:
+
+Value|Description
+:----|:----------
+Total Entries|The total number of data entries in the race
+Projected|The number of projected entries (yellow diamonds)
+Edited|The number of edited entries (orange stars)
+Projected or Edited|The sum of projected and edited entries
+Photos|The number of photos triggered in the race when the [USB Webcam][] was enabled.  CrossMgr cannot determine whether the photo was recorded or not, it can only count the number of photo triggers sent.
+
 # Additional Features
 
 ## Double-Click

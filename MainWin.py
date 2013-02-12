@@ -573,6 +573,7 @@ class MainWin( wx.Frame ):
 			photoTime = datetime.datetime.now()
 			if (photoTime - self.lastPhotoTime).total_seconds() > 0.1:
 				TakePhoto( Utils.getFileName(), num, t )
+				race.photoCount = getattr(race,'photoCount',0) + 1
 				self.lastPhotoTime = photoTime
 				break
 	

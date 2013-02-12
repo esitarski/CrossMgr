@@ -25,6 +25,49 @@ HeartbeatPort = 3988
 CrossMgrPort = 53135
 NotifyPort = CrossMgrPort + 1
 
+clipboard_xpm = [
+"16 15 23 1",
+"+ c #769CDA",
+": c #DCE6F6",
+"X c #3365B7",
+"* c #FFFFFF",
+"o c #9AB6E4",
+"< c #EAF0FA",
+"# c #B1C7EB",
+". c #6992D7",
+"3 c #F7F9FD",
+", c #F0F5FC",
+"$ c #A8C0E8",
+"  c None",
+"- c #FDFEFF",
+"& c #C4D5F0",
+"1 c #E2EAF8",
+"O c #89A9DF",
+"= c #D2DFF4",
+"4 c #FAFCFE",
+"2 c #F5F8FD",
+"; c #DFE8F7",
+"% c #B8CCEC",
+"> c #E5EDF9",
+"@ c #648FD6",
+" .....XX        ",
+" .oO+@X#X       ",
+" .$oO+X##X      ",
+" .%$o........   ",
+" .&%$.*=&#o.-.  ",
+" .=&%.*;=&#.--. ",
+" .:=&.*>;=&.... ",
+" .>:=.*,>;=&#o. ",
+" .<1:.*2,>:=&#. ",
+" .2<1.*32,>:=&. ",
+" .32<.*432,>:=. ",
+" .32<.*-432,>:. ",
+" .....**-432,>. ",
+"     .***-432,. ",
+"     .......... "
+]
+
+
 class MessageManager( object ):
 	MessagesMax = 400	# Maximum number of messages before we start throwing some away.
 
@@ -81,8 +124,12 @@ class MainWin( wx.Frame ):
 		bs.Add( self.reset, border = 8, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
 		bs.Add( setFont(italicFont,wx.StaticText(self, wx.ID_ANY, 'CrossMgrAlien')), border = 8, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
 		bs.AddStretchSpacer()
+		bitmap = wx.BitmapFromXPMData( clipboard_xpm )
+		self.copyToClipboard = wx.BitmapButton( self, wx.ID_ANY, bitmap )
+		self.copyToClipboard.Bind( wx.EVT_BUTTON, self.doCopyToClipboard )
+		bs.Add( self.copyToClipboard, border = 32, flag = wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
 		self.tStart = datetime.datetime.now()
-		bs.Add( setFont(bigFont,wx.StaticText(self, wx.ID_ANY, 'Last Reset: %s' % self.tStart.strftime('%H:%M:%S'))), border = 32, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
+		bs.Add( setFont(bigFont,wx.StaticText(self, wx.ID_ANY, 'Last Reset: %s' % self.tStart.strftime('%H:%M:%S'))), border = 10, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
 		self.runningTime = setFont(bigFont,wx.StaticText(self, wx.ID_ANY, '00:00:00' ))
 		bs.Add( self.runningTime, border = 20, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
 		bs.Add( setFont(bigFont,wx.StaticText(self, wx.ID_ANY, ' / ')), flag=wx.ALIGN_CENTER_VERTICAL )
@@ -118,17 +165,12 @@ class MainWin( wx.Frame ):
 		gbs.Add( hb, pos=(iRow ,1), span=(1,1) )
 		
 		iRow += 1
-		self.listenForHeartbeat = wx.CheckBox( self, wx.ID_ANY, 'Listen for Alien Heartbeat', style=wx.ALIGN_LEFT )
+		self.listenForHeartbeat = wx.CheckBox( self, wx.ID_ANY, 'Listen for Alien Heartbeat on port: %d' % HeartbeatPort, style=wx.ALIGN_LEFT )
 		self.listenForHeartbeat.SetValue( True )
-		gbs.Add( self.listenForHeartbeat, pos=(iRow, 1), span=(1,1) )
+		gbs.Add( self.listenForHeartbeat, pos=(iRow, 0), span=(1,2) )
 		
 		iRow += 1
-		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'Heartbeat Port:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
-		self.heartbeatPort = wx.StaticText( self, wx.ID_ANY, '3988' )
-		gbs.Add( self.heartbeatPort, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
-		
-		iRow += 1
-		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'Cmd Address:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT )
+		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'Alien Cmd Address:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		hb = wx.BoxSizer( wx.HORIZONTAL )
 		self.cmdHost = masked.IpAddrCtrl( self, wx.ID_ANY, style = wx.TE_PROCESS_TAB )
 		hb.Add( self.cmdHost )
@@ -237,6 +279,46 @@ class MainWin( wx.Frame ):
 	
 	def onCloseWindow( self, event ):
 		wx.Exit()
+		
+	def doCopyToClipboard( self, event ):
+		cc = [
+			'Configuration: CrossMgrAlien',
+			'    NotifyHost:    %s' % self.getNotifyHost(),
+			'    NotifyPort:    %d' % NotifyPort,
+			'    RunningTime:   %s' % self.runningTime.GetLabel(),
+			'    Time:          %s' % self.time.GetLabel(),
+			'',
+			'Configuration: Alien:',
+			'    ListenForAlienHeartbeat: %s' % str(self.listenForHeartbeat.GetValue()),
+			'    HeartbeatPort: %d' % HeartbeatPort,
+			'    AlienCmdHost:  %s' % self.cmdHost.GetAddress(),
+			'    AlienCmdPort:  %s' % str(self.cmdPort.GetValue()),
+			'',
+			'Configuration: CrossMgr',
+			'    CrossMgrHost:  %s' % self.getCrossMgrHost(),
+			'    CrossMgrPort:  %d' %  CrossMgrPort,
+		]
+		cc.append( '\nLog: Alien' )
+		log = self.alienMessagesText.GetValue()
+		cc.extend( ['    ' + line for line in log.split('\n')] )
+		
+		cc.append( '\nLog: CrossMgr' )
+		log = self.crossMgrMessagesText.GetValue()
+		cc.extend( ['    ' + line for line in log.split('\n')] )
+		
+		if wx.TheClipboard.Open():
+			do = wx.TextDataObject()
+			do.SetText( '\n'.join(cc) )
+			wx.TheClipboard.SetData(do)
+			wx.TheClipboard.Close()
+			dlg = wx.MessageDialog(self, 'Configuration and logs copied to the Clipboard.',
+									'Copy to Clipboard Succeeded',
+									wx.OK | wx.ICON_INFORMATION )
+			ret = dlg.ShowModal()
+			dlg.Destroy()
+		else:
+			# oops... something went wrong!
+			wx.MessageBox("Unable to open the clipboard", "Error")
 
 	def getNotifyHost( self ):
 		s = self.notifyHost.GetSelection()
@@ -281,7 +363,7 @@ class MainWin( wx.Frame ):
 				self.alienMessages.write( message )
 			elif d[0] == 'Alien2JChip':
 				self.crossMgrMessages.write( message )
-			elif d[0] == 'CmdAddr':
+			elif d[0] == 'CmdHost':
 				cmdHost, cmdPort = d[1].split(':')
 				self.cmdHost.SetValue( cmdHost )
 				self.cmdPort.SetValue( int(cmdPort) )

@@ -777,6 +777,7 @@ class Race(object):
 		self.missingTags = set()
 		
 		self.enableUSBCamera = False
+		self.photoCount = 0
 		
 		# Animation options.
 		self.finishTop = False

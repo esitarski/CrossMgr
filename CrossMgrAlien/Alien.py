@@ -152,10 +152,40 @@ class Alien( object ):
 	def sendCommands( self ):
 		''' Send initialization commands to the Alien reader. '''
 		cmdSocket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
-		try:
-			cmdSocket.connect( (self.cmdHost, self.cmdPort) )
-		except:
-			self.messageQ.put( ('Alien', 'Connection failed to %s:%d.  Check connections and press Reset' % (self.cmdHost, self.cmdPort) ) )
+		#cmdSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+		#cmdSocket.settimeout( 1 )
+		
+		success = False
+		for i in xrange(15):
+			if not self.checkKeepGoing():
+				cmdSocket.close()
+				return False
+				
+			try:
+				cmdSocket.connect( (self.cmdHost, int(self.cmdPort)) )
+			except socket.timeout:
+				continue
+			except Exception as inst:
+				try:
+					errorNo, errorStr = int.args
+					if errorNo == 10061:	#  A connect request was made on an already connected socket
+						cmdSocket.close()
+						cmdSocket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+						cmdSocket.settimeout( 1 )
+						continue
+				except:
+					pass
+				print type(inst)     # the exception instance
+				print inst.args      # arguments stored in .args
+				print inst           # __str__ allows args to printed directly
+				self.messageQ.put( ('Alien', 'Connection failed to %s:%d.\n%s.\nCheck configuration and press Reset' % (self.cmdHost, self.cmdPort, inst) ) )
+				cmdSocket.close()
+				return False
+				
+			success = True
+			
+		if not success:
+			self.messageQ.put( ('Alien', 'Connection failed to %s:%d.\nCheck configuration and press Reset' % (self.cmdHost, self.cmdPort) ) )
 			return False
 		
 		cmdContext = {
@@ -249,7 +279,7 @@ class Alien( object ):
 				self.cmdPort = int(info['CommandPort'])
 				
 			self.messageQ.put( ('Alien', 'Alien reader.  CmdAddr=%s:%d' % (self.cmdHost, self.cmdPort)) )
-			self.messageQ.put( ('cmdHost', '%s:%d' % (self.cmdHost, self.cmdPort)) )
+			self.messageQ.put( ('CmdHost', '%s:%d' % (self.cmdHost, self.cmdPort)) )
 
 			#---------------------------------------------------------------------------
 			# Send initialization commands to the reader.

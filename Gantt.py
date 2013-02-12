@@ -372,11 +372,12 @@ class Gantt( wx.Panel ):
 				projected	+= sum( 1 for i, n in enumerate(r.interp)	if n and r.raceTimes[i] < tCur )
 			if total:
 				toPercent = 100.0 / float(total)
-				s = '  Total Entries: %d    Projected: %d (%.2f%%)    Edited: %d (%.2f%%)    Projected or Edited: %d (%.2f%%)' % (
+				s = '  Total Entries: %d    Projected: %d (%.2f%%)    Edited: %d (%.2f%%)    Projected or Edited: %d (%.2f%%)    Photos: %d' % (
 						total,
 						projected,			projected			* toPercent,
 						edited,				edited				* toPercent,
-						edited+projected,	(edited+projected)	* toPercent )
+						edited+projected,	(edited+projected)	* toPercent,
+						getattr(Model.race, 'photoCount', 0) )
 			
 		self.statsLabel.SetLabel( s )
 		self.hbs.Layout()
