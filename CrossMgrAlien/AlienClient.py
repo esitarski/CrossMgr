@@ -75,7 +75,7 @@ def Heartbeat():
 		
 intro = '''*****************************************************
 *
-* Alien Technology : RFID Reader
+* Alien Technology : RFID Reader Test (AlienClient.py)
 *
 *****************************************************
 
@@ -91,7 +91,7 @@ def MonitorCmds():
 		s.listen( 5 )
 		conn, addr = s.accept()
 		
-		#conn.sendall( intro )
+		conn.sendall( intro )
 		
 		for cmd in readDelimitedData( conn, '\r\n' ):
 			if cmd.startswith( '\1' ):

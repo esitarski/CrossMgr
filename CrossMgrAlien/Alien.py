@@ -192,6 +192,10 @@ class Alien( object ):
 			return False
 		'''
 		
+		# Read the header from the reader.
+		response = self.getResponse( cmdSocket )								# Get the response.
+		self.messageQ.put( ('Alien', self.stripReaderDelim(response) ) )
+		
 		cmdContext = {
 				'notifyHost':	self.notifyHost,
 				'notifyPort':	self.notifyPort,
@@ -288,7 +292,7 @@ class Alien( object ):
 			#---------------------------------------------------------------------------
 			# Send initialization commands to the reader.
 			#
-			self.messageQ.put( ('Alien', 'Sending Alien reader initialization commands...') )
+			self.messageQ.put( ('Alien', 'Waiting for Alien Reader response...') )
 			if not self.sendCommands():
 				return
 			

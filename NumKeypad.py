@@ -15,141 +15,6 @@ from keybutton import KeyButton
 from RaceHUD import RaceHUD
 from EditEntry import DoDNS, DoDNF, DoPull, DoDQ
 
-camera_xpm = [
-"16 14 117 2",
-"  	c None",
-". 	c #282828",
-"+ 	c #B4B4B4",
-"@ 	c #E5E5E5",
-"# 	c #E8E8E8",
-"$ 	c #E4E4E4",
-"% 	c #989898",
-"& 	c #4D4D4D",
-"* 	c #393939",
-"= 	c #B7B7B7",
-"- 	c #C4C4C4",
-"; 	c #C9C9C9",
-"> 	c #AAAAAA",
-", 	c #9D9D9D",
-"' 	c #9B9B9B",
-") 	c #8E8E8E",
-"! 	c #909090",
-"~ 	c #A1A1A1",
-"{ 	c #8B8B8B",
-"] 	c #4F4F4F",
-"^ 	c #A8A8A8",
-"/ 	c #C2C2C2",
-"( 	c #B9B9B9",
-"_ 	c #BCBCBC",
-": 	c #BEBEBE",
-"< 	c #CCCCCC",
-"[ 	c #C1C1C1",
-"} 	c #ACACAC",
-"| 	c #8D8D8D",
-"1 	c #2B2B2B",
-"2 	c #000000",
-"3 	c #767676",
-"4 	c #D5D5CD",
-"5 	c #9C9B8D",
-"6 	c #808071",
-"7 	c #87867D",
-"8 	c #B1B1B1",
-"9 	c #949494",
-"0 	c #5E5E5E",
-"a 	c #7C7C7C",
-"b 	c #828282",
-"c 	c #7B7B7B",
-"d 	c #D6D6CB",
-"e 	c #64634F",
-"f 	c #4A4A36",
-"g 	c #393829",
-"h 	c #8A8A89",
-"i 	c #7A7A7A",
-"j 	c #2E2E2E",
-"k 	c #696969",
-"l 	c #C3C3C3",
-"m 	c #979797",
-"n 	c #121212",
-"o 	c #D5D5C9",
-"p 	c #666550",
-"q 	c #302F20",
-"r 	c #7D7D7C",
-"s 	c #A4A4A4",
-"t 	c #ADADAD",
-"u 	c #808080",
-"v 	c #575757",
-"w 	c #757575",
-"x 	c #D5D5CA",
-"y 	c #666651",
-"z 	c #4B4B36",
-"A 	c #303020",
-"B 	c #787877",
-"C 	c #A0A0A0",
-"D 	c #A7A7A7",
-"E 	c #6B6B6B",
-"F 	c #ABABAB",
-"G 	c #3D3D3D",
-"H 	c #767675",
-"I 	c #B2B2B2",
-"J 	c #B3B3B3",
-"K 	c #8C8C8C",
-"L 	c #515151",
-"M 	c #525252",
-"N 	c #939393",
-"O 	c #D3D3C7",
-"P 	c #64634E",
-"Q 	c #494935",
-"R 	c #747473",
-"S 	c #A5A5A5",
-"T 	c #AEAEAE",
-"U 	c #888888",
-"V 	c #838383",
-"W 	c #212121",
-"X 	c #D1D1C4",
-"Y 	c #5E5D49",
-"Z 	c #464632",
-"` 	c #302F1F",
-" .	c #6C6C6B",
-"..	c #A3A3A3",
-"+.	c #B0B0B0",
-"@.	c #9A9A9A",
-"#.	c #6C6C6C",
-"$.	c #555555",
-"%.	c #555552",
-"&.	c #3F3F3B",
-"*.	c #383834",
-"=.	c #3D3D39",
-"-.	c #717171",
-";.	c #969696",
-">.	c #A2A2A2",
-",.	c #878787",
-"'.	c #7F7F7F",
-").	c #252525",
-"!.	c #292929",
-"~.	c #333333",
-"{.	c #3B3B3B",
-"].	c #3F3F3F",
-"^.	c #3E3E3E",
-"/.	c #3C3C3C",
-"(.	c #363636",
-"_.	c #303030",
-":.	c #1B1B1B",
-"          . . . . .             ",
-"    . . . + @ # $ % & *         ",
-"  . = - ; > , ' % ) ! ~ { ]     ",
-". ^ ; / ( _ : < [ } | 1 2 3     ",
-". 4 5 6 7 } 8 9 0 a b ~ 9 c 2   ",
-". d e f g h > i j k l , | m n   ",
-". o p f q r s } t ( 9 u u v w   ",
-". x y z A B C > D : E F 0 G %   ",
-". o y f A H D I J J K ] L M N   ",
-". O P Q A R J - [ S T U V C W   ",
-". X Y Z `  ...+.t @.! U #.$.2   ",
-"  %.&.*.=.-.;.>.C ! ,.'.E E 2   ",
-"    . ).!.~.{.].^./.* (._.:.    ",
-"                                "
-]
-
 def MakeButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1) ):
 	btn = KeyButton( parent, -1, None, label=label.replace('&',''), style=style|wx.NO_BORDER, size=size)
 	return btn
@@ -342,20 +207,21 @@ class NumKeypad( wx.Panel ):
 		gbs.Add( self.estLastRiderTime, pos=(rowCur, colCur+1), span=(1, 1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		
 		rowCur += 1
-		hbClockCamera = wx.BoxSizer( wx.HORIZONTAL )
+		self.hbClockPhoto = wx.BoxSizer( wx.HORIZONTAL )
 		
-		self.cameraCount = wx.StaticText( panel, wx.ID_ANY, "")
-		self.cameraCount.SetFont( font, flag=wx.ALIGN_CENTR_VERTICAL )
+		self.photoCount = wx.StaticText( panel, wx.ID_ANY, "000004" )
+		self.photoCount.SetFont( font )
+		self.hbClockPhoto.Add( self.photoCount, flag=wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT|wx.ALIGN_RIGHT, border = 6 )
 		
-		bitmap = wx.BitmapFromXPMData( camera_xpm )
-		self.cameraIcon = wx.StaticBitmap( self, wx.ID_ANY, bitmap )
-		hbClockCamera.Add( self.cameraIcon, flag=wx.ALIGN_CENTR_VERTICAL )
+		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'camera.png'), wx.BITMAP_TYPE_PNG )
+		self.photoIcon = wx.StaticBitmap( panel, wx.ID_ANY, bitmap )
+		self.hbClockPhoto.Add( self.photoIcon, flag=wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT, border = 18 )
 		
 		label = wx.StaticText( panel, wx.ID_ANY, "Clock")
 		label.SetFont( font )
-		hbClockCamera.Add( label, flag=wx.ALIGN_CENTR_VERTICAL )
+		self.hbClockPhoto.Add( label, flag=wx.ALIGN_CENTRE_VERTICAL )
 		
-		gbs.Add( hbClockCamera, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
+		gbs.Add( self.hbClockPhoto, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
 		self.clockTime = wx.StaticText( panel, wx.ID_ANY, '' )
 		self.clockTime.SetFont( font )
 		gbs.Add( self.clockTime, pos=(rowCur, colCur+1), span=(1, 1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
@@ -453,15 +319,26 @@ class NumKeypad( wx.Panel ):
 				tRace = race.lastRaceTime()
 				tStr = Utils.formatTime( tRace )
 				self.refreshRaceHUD()
+				if getattr(race, 'enableUSBCamera', False):
+					self.photoIcon.Show( True )
+					self.photoCount.SetLabel( str(getattr(race, 'photoCount', '')) )
+				else:
+					self.photoIcon.Show( False )
+					self.photoCount.SetLabel( '' )
+					
 				if race.isRunning():
 					tNow = datetime.datetime.now()
 					tClockStr = '%02d:%02d:%02d' % (tNow.hour, tNow.minute, tNow.second)
 			else:
 				tStr = ''
 				tRace = None
+				self.photoIcon.Show( False )
+				self.photoCount.SetLabel( '' )
 			self.raceTime.SetLabel( '  ' + tStr )
 			self.clockTime.SetLabel( tClockStr )
-			
+		
+		self.hbClockPhoto.Layout()
+		
 		mainWin = Utils.mainWin
 		if mainWin is not None:
 			try:
