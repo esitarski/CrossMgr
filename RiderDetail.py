@@ -234,6 +234,10 @@ class RiderDetail( wx.Panel ):
 		self.autocorrectLaps = wx.CheckBox( self, wx.ID_ANY, 'Autocorrect Lap Data' )
 		gbs.Add( self.autocorrectLaps, pos = (row, 0), span=(1, 2), flag = wx.ALIGN_CENTRE|wx.EXPAND )
 		self.Bind( wx.EVT_CHECKBOX, self.onAutocorrectLaps, self.autocorrectLaps )
+		
+		self.showPhotos = wx.Button( self, wx.ID_ANY, 'Show Photos...' )
+		gbs.Add( self.showPhotos, pos = (row, 3), span=(1, 1), flag = wx.ALIGN_CENTRE|wx.EXPAND )
+		self.Bind( wx.EVT_BUTTON, self.onShowPhotos, self.showPhotos )
 		row += 1
 
 		self.notInLap = wx.StaticText( self, wx.ID_ANY, '              ' )
@@ -280,6 +284,13 @@ class RiderDetail( wx.Panel ):
 		self.SetSizer( hs )
 		self.hs = hs
 		self.setRider()
+	
+	@logCall
+	def onShowPhotos( self, event ):
+		mainWin = Utils.mainWin
+		if not mainWin:
+			return
+		mainWin.photoDialog.Show( True )
 	
 	@logCall
 	def onAdjustTime( self, event ):

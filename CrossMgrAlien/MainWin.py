@@ -287,6 +287,7 @@ class MainWin( wx.Frame ):
 			'    NotifyPort:    %d' % NotifyPort,
 			'    RunningTime:   %s' % self.runningTime.GetLabel(),
 			'    Time:          %s' % self.time.GetLabel(),
+			'    BackupFile:    %s' % self.backupFile.GetLabel(),
 			'',
 			'Configuration: Alien:',
 			'    ListenForAlienHeartbeat: %s' % str(self.listenForHeartbeat.GetValue()),

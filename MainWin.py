@@ -68,6 +68,7 @@ from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, ExcelLink
 from SetGraphic			import SetGraphicDialog
 from GetResults			import GetCategoryDetails
 from PhotoFinish		import TakePhoto
+from PhotoViewer		import PhotoViewerDialog
 
 import wx.lib.agw.advancedsplash as AS
 import openpyxl
@@ -548,6 +549,8 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_CLOSE, self.onCloseWindow)
 		self.Bind(EVT_CHIP_READER, self.handleChipReaderEvent)
 		self.lastPhotoTime = datetime.datetime.now()
+		
+		self.photoDialog = PhotoViewerDialog( self, wx.ID_ANY, "PhotoViewer", size=(600,400) )
 
 	def handleChipReaderEvent( self, event ):
 		race = Model.race
@@ -1904,6 +1907,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 		with Model.LockRace() as race:
 			self.menuItemHighPrecisionTimes.Check( bool(race and getattr(race, 'highPrecisionTimes', False)) ) 
 			self.menuItemSyncCategories.Check( bool(race and getattr(race, 'syncCategories', True)) ) 
+		if self.photoDialog.IsShown():
+			wx.CallAfter( self.photoDialog.refresh )
 
 	def updateUndoStatus( self, event = None ):
 		with Model.LockRace() as race:
@@ -1939,6 +1944,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 			self.riderDetail.setNumSelect( num )
 			self.gantt.setNumSelect( num )
 			self.raceAnimation.setNumSelect( num )
+			if self.photoDialog.IsShown():
+				self.photoDialog.setNumSelect( num )
 			self.numSelect = num
 
 	#-------------------------------------------------------------
