@@ -170,6 +170,7 @@ class PhotoViewer( wx.Panel ):
 		hbs.Add( self.closeButton, 0, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border = 4 )
 		
 		self.splitter = wx.SplitterWindow( self, wx.ID_ANY )
+		#self.splitter.Bind( wx.EVT_SPLITTER_SASH_POS_CHANGED, self.OnSplitterChange )
 		self.thumbs = TC.ThumbnailCtrl( self.splitter, wx.ID_ANY )
 		self.thumbs.EnableToolTips( True )
 		self.thumbs.SetThumbOutline( TC.THUMB_OUTLINE_FULL )
@@ -193,7 +194,10 @@ class PhotoViewer( wx.Panel ):
 	def OnResize( self, event ):
 		self.drawMainPhoto()
 		event.Skip()
-		
+	
+	def OnSplitterChange( self, event ):
+		self.drawMainPhoto()
+	
 	def OnSelChanged(self, event = None):
 		self.thumbSelected = self.thumbs.GetSelection()
 		try:
@@ -268,14 +272,17 @@ class PhotoViewer( wx.Panel ):
 		Utils.MessageOK( 'Print Succeded.', 'Print Succeded' )
 		
 	def drawMainPhoto( self ):
+		self.mainPhoto.Refresh()
 		if not self.thumbFileName:
 			self.mainPhoto.SetBitmap( wx.NullBitmap )
+			self.mainPhoto.Refresh()
 			return
 			
 		try:
 			bitmap = wx.Bitmap( self.thumbFileName, wx.BITMAP_TYPE_JPEG )
 		except:
 			self.mainPhoto.SetBitmap( wx.NullBitmap )
+			self.mainPhoto.Refresh()
 			return
 			
 		depth = bitmap.GetDepth()
@@ -290,6 +297,7 @@ class PhotoViewer( wx.Panel ):
 		image = image.Resize( (wPhoto, hPhoto), (0,0), 255, 255, 255 )
 		
 		self.mainPhoto.SetBitmap( image.ConvertToBitmap(depth) )
+		self.mainPhoto.Refresh()
 		
 	def OnPhotoViewer( self, event ):
 		self.OnDoPhotoViewer()
@@ -330,12 +338,6 @@ class PhotoViewer( wx.Panel ):
 			except AttributeError:
 				externalInfo = {}
 				
-		info = externalInfo.get(self.num, {})
-		name = getRiderName( info )
-		if info.get('Team', ''):
-			name = '%s    (%s)' % (name, info.get('Team', ''))
-		self.title.SetLabel( '%d    %s' % (self.num, name) )
-		
 		if Utils.mainWin and Utils.mainWin.fileName:
 			dir = getPhotoDirName( Utils.mainWin.fileName )
 		else:
@@ -349,6 +351,13 @@ class PhotoViewer( wx.Panel ):
 			self.OnSelChanged()
 		except:
 			self.clear()
+		
+		info = externalInfo.get(self.num, {})
+		name = getRiderName( info )
+		if info.get('Team', ''):
+			name = '%s  (%s)' % (name, info.get('Team', '').strip())
+		name = '%s  %d Photos' % (name, self.thumbs.GetItemCount())
+		self.title.SetLabel( '%d  %s' % (self.num, name) )
 	
 class PhotoViewerDialog( wx.Dialog ):
 	def __init__(
