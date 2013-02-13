@@ -102,6 +102,7 @@ class Gantt( wx.Panel ):
 				(None, None, None, None, None),
 				(wx.NewId(), 'RiderDetail',				'Show RiderDetail Dialog',	self.OnPopupRiderDetail, allCases),
 				(wx.NewId(), 'Results', 				'Switch to Results tab',	self.OnPopupResults, allCases),
+				(wx.NewId(), 'Photos', 					'Show Photos',				self.OnPopupPhotos, allCases),
 			]
 			self.splitMenuInfo = [
 					(wx.NewId(),
@@ -354,6 +355,13 @@ class Gantt( wx.Panel ):
 			
 	def OnPopupRiderDetail( self, event ):
 		ShowRiderDetailDialog( self, self.numSelect )
+		
+	def OnPopupPhotos( self, event ):
+		mainWin = Utils.mainWin
+		if not mainWin:
+			return
+		mainWin.photoDialog.Show( True )
+		mainWin.photoDialog.setNumSelect( self.numSelect )
 		
 	def updateStats( self, results ):
 		s = ''
