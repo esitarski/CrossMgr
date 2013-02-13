@@ -291,6 +291,7 @@ class RiderDetail( wx.Panel ):
 		if not mainWin:
 			return
 		mainWin.photoDialog.Show( True )
+		mainWin.photoDialog.setNumSelect( self.num.GetValue() )
 	
 	@logCall
 	def onAdjustTime( self, event ):

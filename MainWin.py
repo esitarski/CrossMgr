@@ -1908,7 +1908,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			self.menuItemHighPrecisionTimes.Check( bool(race and getattr(race, 'highPrecisionTimes', False)) ) 
 			self.menuItemSyncCategories.Check( bool(race and getattr(race, 'syncCategories', True)) ) 
 		if self.photoDialog.IsShown():
-			wx.CallAfter( self.photoDialog.refresh )
+			self.photoDialog.refresh()
 
 	def updateUndoStatus( self, event = None ):
 		with Model.LockRace() as race:

@@ -1,6 +1,7 @@
 import Model
 import Utils
 import ReadSignOnSheet
+from PhotoFinish import getPhotoDirName
 import wx
 import wx.lib.agw.thumbnailctrl as TC
 import os
@@ -137,7 +138,6 @@ class PhotoViewer( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY, style = 0, size=(-1,-1) ):
 		wx.Panel.__init__(self, parent, id, style=style, size=size )
 
-		self.isEmpty = True
 		self.num = 0
 		self.thumbSelected = -1
 		self.thumbFileName = ''
@@ -146,7 +146,8 @@ class PhotoViewer( wx.Panel ):
 		
 		hbs = wx.BoxSizer( wx.HORIZONTAL )
 		
-		self.title = wx.StaticText( self, wx.ID_ANY, '', size=(600,-1) )
+		self.title = wx.StaticText( self, wx.ID_ANY, '' )
+		self.title.SetFont( wx.FontFromPixelSize( wx.Size(0,24), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		
 		bitmap = wx.BitmapFromXPMData( reload_xpm )
 		self.reloadButton = wx.BitmapButton( self, wx.ID_ANY, bitmap )
@@ -285,7 +286,8 @@ class PhotoViewer( wx.Panel ):
 		wImage, hImage = image.GetSize()
 		
 		ratio = min( float(wPhoto) / float(wImage), float(hPhoto) / float(hImage) )
-		image.Rescale( int(wImage * ratio), int(hImage * ratio), wx.IMAGE_QUALITY_HIGH ).Resize( (wPhoto, hPhoto), (0,0), 255, 255, 255 )
+		image = image.Rescale( int(wImage * ratio), int(hImage * ratio), wx.IMAGE_QUALITY_HIGH )
+		image = image.Resize( (wPhoto, hPhoto), (0,0), 255, 255, 255 )
 		
 		self.mainPhoto.SetBitmap( image.ConvertToBitmap(depth) )
 		
@@ -306,32 +308,36 @@ class PhotoViewer( wx.Panel ):
 		self.title.SetLabel( '' )
 		self.thumbs._scrolled.filePrefix = '##############'
 		self.thumbs.ShowDir( '.' )
-		self.isEmpty = True
 		
 	def refresh( self, num = None ):
 		if num:
 			self.num = num
-		self.isEmpty = True
 		
 		with Model.LockRace() as race:
 			if race is None or not self.num:
 				self.clear()
 				return
-
+				
+			# Be smart about refreshing the screen as it is expensive to re-read all the thumbnails.
+			# If we are not given 
+			if not num and self.num and race.isRunning():
+				tLast, rLast = race.getLastKnownTimeRider()
+				if rLast and rLast.num != self.num:
+					return
+				
 			try:
 				externalInfo = race.excelLink.read()
 			except AttributeError:
 				externalInfo = {}
 				
-		self.isEmpty = False
 		info = externalInfo.get(self.num, {})
 		name = getRiderName( info )
 		if info.get('Team', ''):
 			name = '%s    (%s)' % (name, info.get('Team', ''))
-		self.title.SetLabel( 'Bib %d:    %s' % (self.num, name) )
+		self.title.SetLabel( '%d    %s' % (self.num, name) )
 		
 		if Utils.mainWin and Utils.mainWin.fileName:
-			dir = os.path.splitext(Utils.mainWin.fileName)[0] + '_Photos'
+			dir = getPhotoDirName( Utils.mainWin.fileName )
 		else:
 			dir = r'C:\Users\Edward Sitarski\Documents\2013-02-07-test-r1-_Photos'
 		
@@ -376,7 +382,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.photoViewer.refresh( num )
 		
 	def setNumSelect( self, num ):
-		self.photoView.setNumSelect( num )
+		self.photoViewer.setNumSelect( num )
 		
 if __name__ == '__main__':
 	race = Model.newRace()

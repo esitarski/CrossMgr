@@ -36,6 +36,15 @@ def PilImageToWxImage( myPilImage, copyAlpha=True ) :
 camera = None
 font = None
 
+def getPhotoDirName( raceFileName ):
+	fileName, fileExtension = os.path.splitext( raceFileName )
+	# Get the directory to write the photo in.
+	dirName = os.path.dirname( raceFileName )
+	if not dirName:
+		dirName = '.'
+	dirName = os.path.join( dirName, fileName + '_Photos' )
+	return dirName
+
 if Device:
 	def TakePhoto( raceFileName, bib, raceSeconds ):
 		global camera, font
@@ -46,13 +55,8 @@ if Device:
 		decimals = int(math.modf(raceSeconds)[0] * 100)
 		tStr = '%02d-%02d-%02d-%02d' % (hours, minutes, seconds, decimals)
 	
-		fileName, fileExtension = os.path.splitext( raceFileName )
-		
 		# Get the directory to write the photo in.
-		dirName = os.path.dirname( raceFileName )
-		if not dirName:
-			dirName = '.'
-		dirName = os.path.join( dirName, fileName + '_Photos' )
+		dirName = getPhotoDirName( raceFileName )
 		if not os.path.isdir( dirName ):
 			try:
 				os.mkdir( dirName )

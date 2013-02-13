@@ -994,11 +994,17 @@ class Race(object):
 		self.setChanged()
 
 	@memoize
-	def getLastKnownTime( self ):
-		try:
-			return max( r.getLastKnownTime() for r in self.riders.itervalues() )
-		except ValueError:
-			return 0.0
+	def getLastKnownTimeRider( self ):
+		tBest, rBest = -1, None
+		for r in self.riders.itervalues():
+			try:
+				t = r.getLastKnownTime()
+				if t > tBest:
+					tBest, rBest = t, r
+			except ValueError:
+				pass
+				
+		return tBest, rBest
 
 	@memoize
 	def getBestLapTime( self, lap ):
