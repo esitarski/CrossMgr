@@ -320,7 +320,7 @@ class PhotoViewer( wx.Panel ):
 				
 			# Be smart about refreshing the screen as it is expensive to re-read all the thumbnails.
 			# If we are not given 
-			if not num and self.num and race.isRunning():
+			if not num and race.isRunning():
 				tLast, rLast = race.getLastKnownTimeRider()
 				if rLast and rLast.num != self.num:
 					return
