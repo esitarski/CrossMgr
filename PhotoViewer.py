@@ -371,7 +371,8 @@ class PhotoViewerDialog( wx.Dialog ):
 		name = getRiderName( info )
 		if info.get('Team', ''):
 			name = '%s  (%s)' % (name, info.get('Team', '').strip())
-		name = '%s  %d Photos' % (name, self.thumbs.GetItemCount())
+		numPhotos = self.thumbs.GetItemCount()
+		name = '%s  %d Photo%s' % (name, numPhotos, 's' if numPhotos != 1 else '')
 		self.title.SetLabel( '%d  %s' % (self.num, name) )
 	
 if __name__ == '__main__':

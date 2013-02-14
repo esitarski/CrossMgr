@@ -36,34 +36,41 @@ class HelpSearch( wx.Panel ):
 		text = self.search.GetValue()
 		
 		f = StringIO.StringIO()
-		ix = open_dir( Utils.getHelpIndexFolder(), readonly=True )
+		try:
+			ix = open_dir( Utils.getHelpIndexFolder(), readonly=True )
+		except IOError:
+			ix = None
+			
 		f.write( '<html>\n' )
-		with ix.searcher() as searcher:
-			query = QueryParser('content', ix.schema).parse(unicode(text))
-			results = searcher.search(query, limit=20)
-			
-			# Allow larger fragments
-			results.formatter.maxchars = 300
-			# Show more context before and after
-			results.formatter.surround = 50
-			
-			f.write( '<table>\n' )
-			for i, hit in enumerate(results):
-				file = os.path.splitext(hit['path'].split('#')[0])[0]
-				if not file.startswith('Menu'):
-					section = '%s: %s' % (file, hit['section'])
-				else:
-					section = 'Menu: %s' % hit['section']
-				f.write( '''<tr>
-						<td valign="top">
-							<font size=+1><a href="%s">%s</a></font><br></br>
-							%s
-							<font size=+1><br></br></font>
-						</td>
-					</tr>\n''' % (hit['path'], section, hit.highlights('content') ) )
-			f.write( '</table>\n' )
+		
+		if ix is not None:
+			with ix.searcher() as searcher:
+				query = QueryParser('content', ix.schema).parse(unicode(text))
+				results = searcher.search(query, limit=20)
+				
+				# Allow larger fragments
+				results.formatter.maxchars = 300
+				# Show more context before and after
+				results.formatter.surround = 50
+				
+				f.write( '<table>\n' )
+				for i, hit in enumerate(results):
+					file = os.path.splitext(hit['path'].split('#')[0])[0]
+					if not file.startswith('Menu'):
+						section = '%s: %s' % (file, hit['section'])
+					else:
+						section = 'Menu: %s' % hit['section']
+					f.write( '''<tr>
+							<td valign="top">
+								<font size=+1><a href="%s">%s</a></font><br></br>
+								%s
+								<font size=+1><br></br></font>
+							</td>
+						</tr>\n''' % (hit['path'], section, hit.highlights('content') ) )
+				f.write( '</table>\n' )
+			ix.close()
+		
 		f.write( '</html>\n' )
-		ix.close()
 		
 		htmlTxt = f.getvalue()
 		f.close()

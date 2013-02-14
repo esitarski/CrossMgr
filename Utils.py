@@ -257,7 +257,7 @@ try:
 except:
 	dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
 
-if os.path.basename(dirName) == 'library.zip':
+if os.path.basename(dirName) in ['library.zip', 'MainWin.exe', 'CrossMgr.exe']:
 	dirName = os.path.dirname(dirName)
 if 'CrossMgr?' in os.path.basename(dirName):
 	dirName = os.path.dirname(dirName)

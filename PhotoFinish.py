@@ -3,12 +3,22 @@ import wx
 import sys
 import math
 import datetime
+import Utils
 from Version import AppVerName
+
+sys.path.append( Utils.dirName )	# Required for PIL to find the font files.
+
+#import Image	# Required for VideoCapture (PIL library)
+#import VideoCapture
+#from VideoCapture import Device
 
 try:
 	from VideoCapture import Device
 except:
 	Device = None
+
+def HasPhotoFinish():
+	return Device is not Null
 
 def PilImageToWxImage( myPilImage, copyAlpha=True ) :
 	hasAlpha = myPilImage.mode[ -1 ] == 'A'
@@ -88,12 +98,11 @@ if Device:
 		global camera, font
 		camera = None
 		font = None
-		
 		if state:
 			try:
 				camera = Device()
 			except:
-				pass
+				camera = None
 else:
 	def TakePhoto( raceFileName, bib, raceSeconds ):
 		pass

@@ -22,13 +22,12 @@ for f in os.listdir(distDir):
 		os.remove( fname )
 
 # Set up the py2exe configuration.
-setup( windows=
-			[
-				{
-					'script': 'CrossMgr.pyw',
-					'icon_resources': [(1, r'CrossMgrImages\CrossMgr.ico')]
-				}
-			]
+setup(	windows = [
+			{
+				'script': 'CrossMgr.pyw',
+				'icon_resources': [(1, r'CrossMgrImages\CrossMgr.ico')],
+			}
+		],
 	 )
 
 # Copy additional dlls to distribution folder.
@@ -42,6 +41,10 @@ try:
 except:
 	pass
 
+pyLib = r'C:\python27\Lib'
+for f in ['helvB08.pil', 'helvetica-10.pil', 'helvB08.png', 'helvetica-10.png']:
+	shutil.copy( os.path.join(pyLib, f), distDir )
+	
 # Add images and reference data to the distribution folder.
 def copyDir( d ):
 	destD = os.path.join(distDir, d)
