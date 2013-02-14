@@ -214,8 +214,9 @@ class NumKeypad( wx.Panel ):
 		self.hbClockPhoto.Add( self.photoCount, flag=wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT|wx.ALIGN_RIGHT, border = 6 )
 		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'camera.png'), wx.BITMAP_TYPE_PNG )
-		self.photoIcon = wx.StaticBitmap( panel, wx.ID_ANY, bitmap )
-		self.hbClockPhoto.Add( self.photoIcon, flag=wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT, border = 18 )
+		self.photoButton = wx.BitmapButton( panel, wx.ID_ANY, bitmap )
+		self.photoButton.Bind( wx.EVT_BUTTON, self.onPhotoButton )
+		self.hbClockPhoto.Add( self.photoButton, flag=wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT, border = 18 )
 		
 		label = wx.StaticText( panel, wx.ID_ANY, "Clock")
 		label.SetFont( font )
@@ -320,10 +321,10 @@ class NumKeypad( wx.Panel ):
 				tStr = Utils.formatTime( tRace )
 				self.refreshRaceHUD()
 				if getattr(race, 'enableUSBCamera', False):
-					self.photoIcon.Show( True )
+					self.photoButton.Show( True )
 					self.photoCount.SetLabel( str(getattr(race, 'photoCount', '')) )
 				else:
-					self.photoIcon.Show( False )
+					self.photoButton.Show( False )
 					self.photoCount.SetLabel( '' )
 					
 				if race.isRunning():
@@ -332,7 +333,7 @@ class NumKeypad( wx.Panel ):
 			else:
 				tStr = ''
 				tRace = None
-				self.photoIcon.Show( False )
+				self.photoButton.Show( False )
 				self.photoCount.SetLabel( '' )
 			self.raceTime.SetLabel( '  ' + tStr )
 			self.clockTime.SetLabel( tClockStr )
@@ -346,6 +347,16 @@ class NumKeypad( wx.Panel ):
 			except:
 				pass
 			mainWin.forecastHistory.updatedExpectedTimes( tRace )
+	
+	def onPhotoButton( self, event ):
+		with Model.LockRace() as race:
+			if not race or not getattr(race, 'enableUSBCamera', False) or not Utils.mainWin:
+				return
+			tLast, rLast = race.getLastKnownTimeRider()
+			if not rLast:
+				return
+		Utils.mainWin.photoDialog.Show( True )
+		Utils.mainWin.photoDialog.refresh( rLast.num )
 	
 	def doChangeNumLaps( self, event ):
 		with Model.LockRace() as race:
