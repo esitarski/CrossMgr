@@ -134,9 +134,23 @@ def ListDirectory(self, directory, fileExtList):
 	return fileList
 
 
-class PhotoViewer( wx.Panel ):
-	def __init__( self, parent, id = wx.ID_ANY, style = 0, size=(-1,-1) ):
-		wx.Panel.__init__(self, parent, id, style=style, size=size )
+class PhotoViewerDialog( wx.Dialog ):
+	def __init__(
+			self, parent, ID, title='Photo Viewer', size=wx.DefaultSize, pos=wx.DefaultPosition, 
+			style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER ):
+
+		# Instead of calling wx.Dialog.__init__ we precreate the dialog
+		# so we can set an extra style that must be set before
+		# creation, and then we create the GUI object using the Create
+		# method.
+		pre = wx.PreDialog()
+		#pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
+		pre.Create(parent, ID, title, pos, size, style)
+
+		# This next step is the most important, it turns this Python
+		# object into the real wrapper of the dialog (instead of pre)
+		# as far as the wxPython extension is concerned.
+		self.PostCreate(pre)
 
 		self.num = 0
 		self.thumbSelected = -1
@@ -170,17 +184,16 @@ class PhotoViewer( wx.Panel ):
 		hbs.Add( self.closeButton, 0, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border = 4 )
 		
 		self.splitter = wx.SplitterWindow( self, wx.ID_ANY )
-		#self.splitter.Bind( wx.EVT_SPLITTER_SASH_POS_CHANGED, self.OnSplitterChange )
+		self.splitter.Bind( wx.EVT_SPLITTER_SASH_POS_CHANGED, self.OnSplitterChange )
 		self.thumbs = TC.ThumbnailCtrl( self.splitter, wx.ID_ANY )
 		self.thumbs.EnableToolTips( True )
 		self.thumbs.SetThumbOutline( TC.THUMB_OUTLINE_FULL )
 		self.thumbs._scrolled.filePrefix = '#######################'
 		self.thumbs._scrolled.ListDirectory = types.MethodType(ListDirectory, self.thumbs._scrolled)
-		self.mainPhoto = wx.StaticBitmap( self.splitter, wx.ID_ANY, style = wx.BORDER_SUNKEN, size=(600,500) )
+		self.mainPhoto = wx.StaticBitmap( self.splitter, wx.ID_ANY, style = wx.BORDER_SUNKEN )
 		
-		self.splitter.SplitVertically( self.thumbs, self.mainPhoto, 180 )
 		self.splitter.SetMinimumPaneSize( 140 )
-		self.splitter.UpdateSize()
+		self.splitter.SplitVertically( self.thumbs, self.mainPhoto, 140 )
 		
 		self.vbs.Add( hbs, proportion=0, flag=wx.EXPAND )
 		self.vbs.Add( self.splitter, proportion=1, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.EXPAND, border = 4 )
@@ -190,12 +203,15 @@ class PhotoViewer( wx.Panel ):
 		
 		self.SetSizer(self.vbs)
 		self.vbs.SetSizeHints(self)
+		self.SetSize( (800,550) )
+		self.vbs.Layout()
 
 	def OnResize( self, event ):
 		self.drawMainPhoto()
 		event.Skip()
 	
 	def OnSplitterChange( self, event ):
+		self.vbs.Layout()
 		self.drawMainPhoto()
 	
 	def OnSelChanged(self, event = None):
@@ -359,40 +375,6 @@ class PhotoViewer( wx.Panel ):
 		name = '%s  %d Photos' % (name, self.thumbs.GetItemCount())
 		self.title.SetLabel( '%d  %s' % (self.num, name) )
 	
-class PhotoViewerDialog( wx.Dialog ):
-	def __init__(
-			self, parent, ID, title='Photo Viewer', size=wx.DefaultSize, pos=wx.DefaultPosition, 
-			style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER ):
-
-		# Instead of calling wx.Dialog.__init__ we precreate the dialog
-		# so we can set an extra style that must be set before
-		# creation, and then we create the GUI object using the Create
-		# method.
-		pre = wx.PreDialog()
-		#pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-		pre.Create(parent, ID, title, pos, size, style)
-
-		# This next step is the most important, it turns this Python
-		# object into the real wrapper of the dialog (instead of pre)
-		# as far as the wxPython extension is concerned.
-		self.PostCreate(pre)
-
-		# Now continue with the normal construction of the dialog
-		# contents
-		sizer = wx.BoxSizer(wx.VERTICAL)
-
-		self.photoViewer = PhotoViewer( self, wx.ID_ANY, size=(600,400) )
-		sizer.Add(self.photoViewer, 1, wx.ALIGN_CENTRE|wx.ALL|wx.EXPAND, 5)
-		
-		self.SetSizer(sizer)
-		sizer.Fit(self)
-
-	def refresh( self, num = None ):
-		self.photoViewer.refresh( num )
-		
-	def setNumSelect( self, num ):
-		self.photoViewer.setNumSelect( num )
-		
 if __name__ == '__main__':
 	race = Model.newRace()
 	race._populate()
@@ -401,7 +383,7 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	mainWin.Show()
 	photoDialog = PhotoViewerDialog( mainWin, wx.ID_ANY, "PhotoViewer", size=(600,400) )
-	photoDialog.photoViewer.setNumSelect( 17 )
+	photoDialog.setNumSelect( 17 )
 	photoDialog.refresh()
 	photoDialog.Show()
 	app.MainLoop()
