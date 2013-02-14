@@ -225,8 +225,7 @@ class PhotoViewerDialog( wx.Dialog ):
 			event.Skip()
 		
 	def OnClose( self, event ):
-		if self.GetParent():
-			self.GetParent().Show( False )
+		self.Show( False )
 			
 	def OnReload( self, event ):
 		self.refresh()
