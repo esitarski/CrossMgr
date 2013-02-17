@@ -21,8 +21,10 @@ HOME_DIR = os.path.expanduser("~")
 # Alien Reader Initialization Commands
 #
 cmdStr = '''
-alien						# login
+alien						# default username
 password					# default password
+
+Get ReaderName				# Do not change.  Use this to check if the login succeeded.  
 
 Function = Reader			# ensure we are not in programming mode
 
@@ -67,7 +69,9 @@ NotifyRetryPause = 10		# wait 10 seconds between failed notify attempts (time to
 NotifyRetryCount = -1		# no limit on retry attempts (if failure)
 NotifyMode = ON				# start notify mode.
 
-Save						# Save everything to flash memory in case of power failure.
+Save						# save everything to flash memory in case of power failure.
+
+Quit						# Close the interface.
 '''
 
 extraCmds = '''
@@ -79,11 +83,11 @@ Info notify
 '''
 
 # Transform the cmd string into an array of Alien reader commands (strip out comments and blank lines).
-initCmds = [f.strip() for f in cmdStr.split('\n')]
 initCmds = [f.split('#')[0].strip() for f in cmdStr.split('\n') if f and not f.startswith('#')]
+initCmds = [c for c in initCmds if c]	# Remove empty commands.
 del cmdStr
 
-# print '\n'.join(initCmds)
+#print '\n'.join(initCmds)
 
 reDateSplit = re.compile( '[/ :]' )		# Characters to split date/time fields.
 
@@ -151,9 +155,17 @@ class Alien( object ):
 	
 	def sendCommands( self ):
 		''' Send initialization commands to the Alien reader. '''
+		self.messageQ.put( ('Alien', 'Sending initialization commands to the Alien reader...') )
 		cmdSocket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
-		cmdSocket.connect( (self.cmdHost, int(self.cmdPort)) )
-		
+		try:
+			cmdSocket.connect( (self.cmdHost, int(self.cmdPort)) )
+		except Exception as inst:
+			self.messageQ.put( ('Alien', 'Reader Connection Failed: CmdAddr=%s:%d' % (self.cmdHost, self.cmdPort) ) )
+			self.messageQ.put( ('Alien', '%s' % inst ) )
+			self.messageQ.put( ('Alien', 'Check that the Reader is turned on and connected, and press Reset.') )
+			cmdSocket.close()
+			return False
+			
 		'''
 		cmdSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 		cmdSocket.settimeout( 1 )
@@ -170,7 +182,7 @@ class Alien( object ):
 				continue
 			except Exception as inst:
 				try:
-					errorNo, errorStr = int.args
+					errorNo, errorStr = inst.args
 					if errorNo == 10061:	#  A connect request was made on an already connected socket
 						cmdSocket.close()
 						cmdSocket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
@@ -201,19 +213,30 @@ class Alien( object ):
 				'notifyPort':	self.notifyPort,
 		}
 		
+		success = True
 		for i, c in enumerate(initCmds):
-			# Set time value if required.
 			if '{time}' in c:
 				cmdContext['time'] = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
 			
 			cmd = c.format( **cmdContext )											# Perform field substitutions.
-			self.messageQ.put( ('Alien', cmd) )										# Write to the message queue.
-			cmdSocket.sendall( '%s%s%s' % ('' if i < 2 else self.CmdPrefix, cmd, self.CmdDelim) )	# Send to Alien.
+			self.messageQ.put( ('Alien', 'Sending Command: "%s"' % cmd) )			# Write to the message queue.
+			# Send cmd.  Prefix with 0x01 if not username or password.
+			cmdSocket.sendall( '%s%s%s' % ('' if i < 2 else self.CmdPrefix, cmd, self.CmdDelim) )
 			response = self.getResponse( cmdSocket )								# Get the response.
-			self.messageQ.put( ('Alien', '>>> %s' % self.stripReaderDelim(response) ) )
+			self.messageQ.put( ('Alien', 'Reader Response: "%s"' % self.stripReaderDelim(response) ) )
+			
+			# Check if we could successfully get the ReaderName from the #2 command.  If so, the login was successful.
+			# If the login fails, the reader just returns nothing.
+			if i == 2 and not response.lower().startswith('ReaderName'.lower()):
+				self.messageQ.put( ('Alien', 'Error: "%s" command fails.' % initCmds[2]) )
+				self.messageQ.put( ('Alien', 'Most likely cause:  Reader Login Failed.') )
+				self.messageQ.put( ('Alien', 'Check that the reader accepts Username=%s and Password=%d' % (initCmds[0], initCmds[1]) ) )
+				self.messageQ.put( ('Alien', 'Aborting.') )
+				success = False
+				break
 			
 		cmdSocket.close()
-		return True
+		return success
 			
 	def runServer( self ):
 		self.messageQ.put( ('BackupFile', self.fname) )
@@ -292,7 +315,6 @@ class Alien( object ):
 			#---------------------------------------------------------------------------
 			# Send initialization commands to the reader.
 			#
-			self.messageQ.put( ('Alien', 'Waiting for Alien Reader response...') )
 			if not self.sendCommands():
 				return
 			
@@ -312,7 +334,7 @@ class Alien( object ):
 			
 				# Wait for a connection from the reader if we do not already have one.
 				if not readerSocket:
-					self.messageQ.put( ('Alien', 'Waiting for reader connection...') )
+					self.messageQ.put( ('Alien', 'Waiting for reader to send tag info...') )
 					try:
 						readerSocket, addr = dataSocket.accept()
 					except socket.timeout:

@@ -353,10 +353,10 @@ class NumKeypad( wx.Panel ):
 			if not race or not getattr(race, 'enableUSBCamera', False) or not Utils.mainWin:
 				return
 			tLast, rLast = race.getLastKnownTimeRider()
-			if not rLast:
-				return
+		if not rLast:
+			return
 		Utils.mainWin.photoDialog.Show( True )
-		Utils.mainWin.photoDialog.refresh( rLast.num )
+		Utils.mainWin.setNumSelect( rLast.num )
 	
 	def doChangeNumLaps( self, event ):
 		with Model.LockRace() as race:

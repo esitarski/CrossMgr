@@ -86,6 +86,7 @@ def MonitorCmds():
 	s = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 	s.bind( (DEFAULT_HOST, CmdPort) )
 	s.setsockopt( socket.SOL_SOCKET, socket.SO_REUSEADDR, 1 )
+	cmdCount = 0
 	while 1:
 		# Wait for a connection.
 		s.listen( 5 )
@@ -94,16 +95,24 @@ def MonitorCmds():
 		conn.sendall( intro )
 		
 		for cmd in readDelimitedData( conn, '\r\n' ):
+			if not cmd:
+				continue
+				
 			if cmd.startswith( '\1' ):
 				cmd = cmd[1:]
 			print 'cmd:', cmd
-			if cmd.startswith( 'set' ):
+			if cmd.lower().startswith( 'set' ):
 				eq = cmd.find( '=' )
 				response = '%s = %s' % (cmd[3:eq].strip(), cmd[eq+1:].strip())
+			elif cmd.lower().startswith('get'):
+				response = '%s = TestResponse cmdCount=%d' % (cmd.split()[1], cmdCount)
+			elif cmd.endswith('?'):
+				response = '%s = TestResponse cmdCount=%d' % (cmd[:-1], cmdCount)
 			else:
 				response = cmd
 			conn.sendall( '%s\r\n\0' % response )
 		haveCommands = True
+		cmdCount += 1
 
 #----------------------------------------------------------------------------------
 
