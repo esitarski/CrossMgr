@@ -93,7 +93,7 @@ reDateSplit = re.compile( '[/ :]' )		# Characters to split date/time fields.
 
 class Alien( object ):
 	CmdPrefix = chr(1)			# Causes Alien reader to suppress prompt on response.
-	CmdDelim = '\r\n'			# Delimiter of Alien commands (sent to reader).
+	CmdDelim = '\n'				# Delimiter of Alien commands (sent to reader).
 	ReaderDelim = '\r\n\0'		# Delimiter of Alien reader responses (received from reader).
 
 	def __init__( self, dataQ, messageQ, shutdownQ, notifyHost, notifyPort, heartbeatPort,
@@ -149,7 +149,7 @@ class Alien( object ):
 		return response
 	
 	def stripReaderDelim( self, response ):
-		return response[:-len(self.ReaderDelim)] if response.endswith(self.ReaderDelim) else response
+		return (response[:-len(self.ReaderDelim)] if response.endswith(self.ReaderDelim) else response).strip()
 	
 	#-------------------------------------------------------------------------
 	

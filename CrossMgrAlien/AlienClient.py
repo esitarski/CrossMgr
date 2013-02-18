@@ -94,12 +94,15 @@ def MonitorCmds():
 		
 		conn.sendall( intro )
 		
-		for cmd in readDelimitedData( conn, '\r\n' ):
+		for cmd in readDelimitedData( conn, '\n' ):
 			if not cmd:
 				continue
 				
 			if cmd.startswith( '\1' ):
 				cmd = cmd[1:]
+				
+			cmd = cmd.strip()
+			
 			print 'cmd:', cmd
 			if cmd.lower().startswith( 'set' ):
 				eq = cmd.find( '=' )
