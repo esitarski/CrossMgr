@@ -166,6 +166,7 @@ class MainWin( wx.Frame ):
 			cb = wx.CheckBox( self, wx.ID_ANY, '')
 			if i < 2:
 				cb.SetValue( True )
+			cb.Bind( wx.EVT_CHECKBOX, lambda x: self.getAntennaStr() )
 			gs.Add( cb, flag=wx.ALIGN_CENTER )
 			self.antennas.append( cb )
 		
@@ -352,6 +353,10 @@ class MainWin( wx.Frame ):
 		for i in xrange(4):
 			if self.antennas[i].GetValue():
 				s.append( '%d' % i )
+		if not s:
+			# Ensure that at least one antenna is selected.
+			self.antennas[0].SetValue( True )
+			s.append( '0' )
 		return ' '.join( s )
 		
 	def setAntennaStr( self, s ):
@@ -460,3 +465,4 @@ def shutdown():
 	
 if __name__ == '__main__':
 	MainLoop()
+	

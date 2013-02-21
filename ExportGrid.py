@@ -40,6 +40,8 @@ def ImageToPil( image ):
 	return pil
 
 class ExportGrid( object ):
+	PDFLineFactor = 1.10
+
 	def __init__( self, title = '', colnames = [], data = [] ):
 		self.title = title
 		self.colnames = colnames
@@ -47,13 +49,13 @@ class ExportGrid( object ):
 		self.leftJustifyCols = set()
 		self.infoColumns = set()
 		self.iLapTimes = 0
+		
+		self.fontName = 'Helvetica'
+		self.fontSize = 16
 	
 	def _getFont( self, pixelSize = 28, bold = False ):
 		return wx.FontFromPixelSize( (0,pixelSize), wx.FONTFAMILY_SWISS, wx.NORMAL,
 									 wx.FONTWEIGHT_BOLD if bold else wx.FONTWEIGHT_NORMAL, False, 'Ariel' )
-	
-	def _setFontPDF( self, canvas, pointSize = 24, bold = False ):
-		canvas.setFont( 'Helvetica' + ('-Bold' if bold else ''), pointSize )
 	
 	def _getColSizeTuple( self, dc, font, col ):
 		wSpace, hSpace, lh = dc.GetMultiLineTextExtent( '    ', font )
@@ -100,31 +102,6 @@ class ExportGrid( object ):
 		
 		return self._getFont( left, isBold )
 	
-	def _getMultiLineTextExtentPDF( self, canvas, text, fontName, fontSize ):
-		width = 0
-		height = 0
-		for line in text.split('\n'):
-			width = max( width, canvas.stringWidth(text, fontName, fontSize) )
-			height += fontSize
-		return width, height
-	
-	def _setFontToFitPDF( self, canvas, text, widthToFit, heightToFit, isBold = False ):
-		left = 1
-		right = max(widthToFit, heightToFit)
-		
-		fontName = 'Helvectica' + '-Bold' if isBold else ''
-		while right - left > 1:
-			mid = (left + right) / 2.0
-			fontSize = mid
-			self._setFontPDF( mid, isBold )
-			widthText, heightText = self._getMultiLineTextExtentPDF(canvas, text, fontName, fontSize)
-			if widthText <= widthToFit and heightText <= heightToFit:
-				left = mid
-			else:
-				right = mid - 1
-		
-		self._setFontPDF( left, isBold )
-			
 	def getHeaderBitmap( self ):
 		''' Get the header bitmap if specified, or use a default. '''
 		if Utils.getMainWin():
@@ -140,9 +117,8 @@ class ExportGrid( object ):
 			bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), wx.BITMAP_TYPE_PNG )
 		return bitmap
 	
-	def getQRCodeImage( self, url, graphicHeight ):
+	def getQRCodeBitmap( self, url ):
 		''' Get a QRCode image for the results url. '''
-		qrWidth = graphicHeight
 		qr = qrcode.QRCode()
 		qr.add_data( 'http://' + url )
 		qr.make()
@@ -159,9 +135,7 @@ class ExportGrid( object ):
 				if v:
 					canvasQR.DrawPoint( border + col, border + row )
 		canvasQR.SelectObject( wx.NullBitmap )
-		img = bm.ConvertToImage()
-		img.Rescale( qrWidth, qrWidth, wx.IMAGE_QUALITY_NORMAL )
-		return img
+		return bm
 	
 	def drawToFitDC( self, dc ):
 		# Get the dimentions of what we are printing on.
@@ -201,7 +175,10 @@ class ExportGrid( object ):
 			
 		qrWidth = 0
 		if url:
-			img = getQRCodeImage( url, graphicHeight )
+			qrWidth = graphicHeight
+			bm = self.getQRCodeBitmap( url )
+			img = bm.ConvertToImage()
+			img.Rescale( qrWidth, qrWidth, wx.IMAGE_QUALITY_NORMAL )
 			img = img.ConvertToGreyscale()
 			bm = img.ConvertToBitmap( dc.GetDepth() )
 			dc.DrawBitmap( bm, widthPix - borderPix - qrWidth, borderPix )
@@ -271,37 +248,77 @@ class ExportGrid( object ):
 		w, h, lh = dc.GetMultiLineTextExtent( brandText, font )
 		self._drawMultiLineText( dc, brandText, borderPix, heightPix - borderPix + h )
 	
-	def drawToFitPDF( self, canvas, pageSize = letter, blackAndWhite = True ):
+	'''
+	def _setFontPDF( self, canvas, pointSize = 24, bold = False ):
+		self.fontName = 'Helvetica' + ('-Bold' if bold else '')
+		self.fontSize = pointSize
+		canvas.setFont( self.fontName, self.fontSize )
+	
+	def _drawMultiLineTextPDF( self, canvas, text, x, y ):
+		if not text:
+			return
+		lineHeightText = self.fontSize * PDFLineFactor
+		for line in text.split( '\n' ):
+			canvas.drawString( x, y, line )
+			y -= lineHeightText
+
+	def _getMultiLineTextExtentPDF( self, canvas, text, fontName = None, fontSize = None ):
+		if fontName is None:
+			fontName = self.fontName
+		if fontSize is None:
+			fontsize = self.fontSize
+		width = 0
+		height = 0
+		for line in text.split('\n'):
+			width = max( width, canvas.stringWidth(text, fontName, fontSize) )
+			height += fontSize * self.PDFLineFactor
+		return width, height
+	
+	def _setFontToFitPDF( self, canvas, text, widthToFit, heightToFit, isBold = False ):
+		left = 1
+		right = max(widthToFit, heightToFit)
+		
+		fontName = 'Helvectica' + '-Bold' if isBold else ''
+		while right - left > 1:
+			mid = (left + right) / 2.0
+			fontSize = mid
+			self._setFontPDF( fontSize, isBold )
+			widthText, heightText = self._getMultiLineTextExtentPDF(canvas, text, fontName, fontSize)
+			if widthText <= widthToFit and heightText <= heightToFit:
+				left = mid
+			else:
+				right = mid - 1
+		
+		self._setFontPDF( left, isBold )
+			
+	def drawToFitPDF( self, canvas, pageSize = letter, landscape = True, blackAndWhite = True ):
 		# Get the dimensions of what we are printing on.
-		widthPix, heightPix = pageSize
-		# Transform to landscape.
-		canvas.translate( 0, widthPix )
-		canvas.rotate( 90 )
-		widthPix, heightPix = heightPix, widthPix
+		widthPnt, heightPnt = pageSize
+		if landscape:
+			canvas.translate( 0, widthPnt )
+			canvas.rotate( 90 )
+			widthPnt, heightPnt = heightPnt, widthPnt
 	
 		# Get a reasonable border.
-		borderPix = max(widthPix, heightPix) / 20
+		borderPnt = max(widthPnt, heightPnt) / 20
 		
-		widthFieldPix = widthPix - borderPix * 2
-		heightFieldPix = heightPix - borderPix * 2
+		widthFieldPnt = widthPnt - borderPnt * 2
+		heightFieldPnt = heightPnt - borderPnt * 2
 		
-		xPix = borderPix
-		yPix = heightPix - borderPix
+		xPnt = borderPnt
+		yPnt = heightPnt - borderPnt
 		
 		# Draw the graphic.
 		bitmap = self.getHeaderBitmap()
 		bmWidth, bmHeight = bitmap.GetWidth(), bitmap.GetHeight()
-		graphicHeight = heightPix * 0.15
+		graphicHeight = heightPnt * 0.15
 		graphicWidth = float(bmWidth) / float(bmHeight) * graphicHeight
 		graphicBorder = int(graphicWidth * 0.15)
-
-		# Rescale the graphic to the correct size.
 		image = bitmap.ConvertToImage()
-		image.Rescale( graphicWidth, graphicHeight, wx.IMAGE_QUALITY_HIGH )
 		if blackAndWhite:
 			image = image.ConvertToGreyscale()
 		pil = ImageToPil( image )
-		canvas.DrawImage( pil, xPix, yPix - graphicHeight )
+		canvas.drawImage( pil, xPnt, yPnt - graphicHeight, graphicWidth, graphicHeight )
 		image, bitmap, pil = None, None, None
 		
 		# Get the race URL (if defined).
@@ -312,45 +329,45 @@ class ExportGrid( object ):
 			
 		qrWidth = 0
 		if url:
-			img = self.getQRCodeImage(url, graphicHeight)
+			bm = self.getQRCodeBitmap( url )
+			img = bm.ConvertToImage()
 			img = img.ConvertToGreyscale()
 			pil = ImageToPil( img )
 			qrWidth = graphicHeight
-			canvas.DrawBitmap( bm, widthPix - borderPix - graphicHeight, yPix - qrWidth )
+			canvas.drawImage( pil, widthPnt - borderPnt - graphicHeight, yPnt - qrWidth, qrWidth, qrWidth )
 			qrWidth += graphicBorder
-			img, pil = None, None
+			img, bm, pil = None, None, None
 		
 		# Draw the title.
-		self._setFontToFitPDF( canvas, self.title, widthFieldPix - graphicWidth - graphicBorder - qrWidth, graphicHeight, True )
-		self._drawMultiLineTextPDF( canvas, self.title, xPix + graphicWidth + graphicBorder, yPix )
-		yPix -= graphicHeight + graphicBorder
+		self._setFontToFitPDF( canvas, self.title, widthFieldPnt - graphicWidth - graphicBorder - qrWidth, graphicHeight, True )
+		self._drawMultiLineTextPDF( canvas, self.title, xPnt + graphicWidth + graphicBorder, yPnt )
+		yPnt -= graphicHeight + graphicBorder
 		
-		heightFieldPix = heightPix - yPix - borderPix
+		heightFieldPnt = heightPnt - yPnt - borderPnt
 		
 		# Draw the table.
-		font = self._getFontToFit( widthFieldPix, heightFieldPix, lambda font: self._getDataSizeTuple(canvas, font) )
-		canvas.SetFont( font )
-		wSpace, hSpace, textHeight = canvas.GetMultiLineTextExtent( '    ', font )
+		self._setFontToFit( widthFieldPnt, heightFieldPnt, lambda font: self._getDataSizeTuple(canvas, font) )
+		wSpace = canvas.stringWidth( '    ' )
 		
-		yPixTop = yPix
-		yPixMax = yPix
+		yPntTop = yPnt
+		yPntMin = yPnt
 		for col, c in enumerate(self.colnames):
 			isSpeed = (c == 'Speed')
 			if isSpeed and self.data[col]:
 				c = self.colnames[col] = self.data[col][0].split()[1]
 		
 			colWidth = self._getColSizeTuple( canvas, font, col )[0]
-			yPix = yPixTop
+			yPnt = yPntTop
 			w, h, lh = canvas.GetMultiLineTextExtent( c, font )
 			if col in self.leftJustifyCols:
-				self._drawMultiLineText( canvas, str(c), xPix, yPix )					# left justify
+				self._drawMultiLineText( canvas, str(c), xPnt, yPnt )					# left justify
 			else:
-				self._drawMultiLineText( canvas, str(c), xPix + colWidth - w, yPix )	# right justify
-			yPix += h + hSpace/4
+				self._drawMultiLineText( canvas, str(c), xPnt + colWidth - w, yPnt )	# right justify
+			yPnt += h + hSpace/4
 			if col == 0:
-				yLine = yPix - hSpace/8
+				yLine = yPnt - hSpace/8
 				for r in xrange(max(len(cData) for cData in self.data) + 1):
-					canvas.DrawLine( borderPix, yLine + r * textHeight, widthPix - borderPix, yLine + r * textHeight )
+					canvas.DrawLine( borderPnt, yLine + r * textHeight, widthPnt - borderPnt, yLine + r * textHeight )
 					
 			for v in self.data[col]:
 				vStr = str(v)
@@ -359,25 +376,26 @@ class ExportGrid( object ):
 						vStr = vStr.split()[0]
 					w, h, lh = canvas.GetMultiLineTextExtent( vStr, font )
 					if col in self.leftJustifyCols:
-						self._drawMultiLineText( canvas, vStr, xPix, yPix )					# left justify
+						self._drawMultiLineText( canvas, vStr, xPnt, yPnt )					# left justify
 					else:
-						self._drawMultiLineText( canvas, vStr, xPix + colWidth - w, yPix )	# right justify
-				yPix += textHeight
-			yPixMax = max(yPixMax, yPix)
-			xPix += colWidth + wSpace
+						self._drawMultiLineText( canvas, vStr, xPnt + colWidth - w, yPnt )	# right justify
+				yPnt += textHeight
+			yPntMin = max(yPntMin, yPnt)
+			xPnt += colWidth + wSpace
 			
 			if isSpeed:
 				self.colnames[col] = 'Speed'
 				
 		if url:
-			yPix = yPixMax + textHeight
-			w, h, lh = canvas.GetMultiLineTextExtent( url, font )
-			self._drawMultiLineText( canvas, url, widthPix - borderPix - w, yPix )
+			yPnt = yPntMin + textHeight
+			w = canvas.stringWidth( url )
+			self.drawString( canvas, url, widthPnt - borderPnt - w, yPnt )
 			
 		# Put CrossMgr branding at the bottom of the page.
-		fontSize = borderPix // 5
+		fontSize = borderPnt // 5
 		self._setFontPDF( canvas, fontSize, False )
-		self.drawString( canvas, brandText, borderPix, borderPix - fontSize )
+		self.drawString( canvas, brandText, borderPnt, borderPnt - fontSize )
+	'''
 		
 	def toExcelSheet( self, sheet ):
 		''' Write the contents of the grid to an xlwt excel sheet. '''
