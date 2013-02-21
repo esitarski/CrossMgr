@@ -8,48 +8,6 @@ import os
 import re
 import types
 
-copy_to_clipboard_xpm = [
-"16 15 23 1",
-"+ c #769CDA",
-": c #DCE6F6",
-"X c #3365B7",
-"* c #FFFFFF",
-"o c #9AB6E4",
-"< c #EAF0FA",
-"# c #B1C7EB",
-". c #6992D7",
-"3 c #F7F9FD",
-", c #F0F5FC",
-"$ c #A8C0E8",
-"  c None",
-"- c #FDFEFF",
-"& c #C4D5F0",
-"1 c #E2EAF8",
-"O c #89A9DF",
-"= c #D2DFF4",
-"4 c #FAFCFE",
-"2 c #F5F8FD",
-"; c #DFE8F7",
-"% c #B8CCEC",
-"> c #E5EDF9",
-"@ c #648FD6",
-" .....XX        ",
-" .oO+@X#X       ",
-" .$oO+X##X      ",
-" .%$o........   ",
-" .&%$.*=&#o.-.  ",
-" .=&%.*;=&#.--. ",
-" .:=&.*>;=&.... ",
-" .>:=.*,>;=&#o. ",
-" .<1:.*2,>:=&#. ",
-" .2<1.*32,>:=&. ",
-" .32<.*432,>:=. ",
-" .32<.*-432,>:. ",
-" .....**-432,>. ",
-"     .***-432,. ",
-"     .......... "
-]
-
 def getRiderName( info ):
 	lastName = info.get('LastName','')
 	firstName = info.get('FirstName','')
@@ -111,7 +69,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.refreshButton.SetToolTip(wx.ToolTip('Refresh Photos'))
 		self.Bind(wx.EVT_BUTTON, self.OnRefresh, self.refreshButton )
 		
-		bitmap = wx.BitmapFromXPMData( copy_to_clipboard_xpm )
+		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'ClipboardPlus.png'), wx.BITMAP_TYPE_PNG )
 		self.copyToClipboardButton = wx.BitmapButton( self, wx.ID_ANY, bitmap )
 		self.copyToClipboardButton.SetToolTip(wx.ToolTip('Copy Photo to Clipboard...'))
 		self.Bind(wx.EVT_BUTTON, self.OnCopyToClipboard, self.copyToClipboardButton )
