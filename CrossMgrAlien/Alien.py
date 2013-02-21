@@ -17,6 +17,8 @@ import cStringIO as StringIO
 
 HOME_DIR = os.path.expanduser("~")
 
+RepeatSeconds = 5	# Number of seconds that a tag is considered a repeat read.
+
 #-------------------------------------------------------------------------
 # Alien Reader Initialization Commands
 #
@@ -202,6 +204,10 @@ class Alien( object ):
 			
 	def runServer( self ):
 		self.messageQ.put( ('BackupFile', self.fname) )
+		
+		lastReadTime = {} 
+		# Create an old default time.
+		tOld = datetime.datetime.now() - datetime.timedelta( days = 100 )
 
 		while self.checkKeepGoing():
 			if self.listenForHeartbeat:
@@ -382,11 +388,22 @@ class Alien( object ):
 						microsecond, second = math.modf( float(second) )
 						microsecond *= 1000000
 						discoveryTime = datetime.datetime( int(year), int(month), int(day), int(hour), int(minute), int(second), int(microsecond) )
+						
 						self.dataQ.put( (tagID, discoveryTime) )
 						self.tagCount += 1
 						
 						# Format as CrossMgr-like message.  Convert hex tag to decimal string.
 						m = '%d %s' % (int(tagID, 16), discoveryTime.strftime('%Y/%m/%d_%H:%M:%S.%f'))
+						
+						# Check if this read happend too soon after another read.
+						LRT = lastReadTime.get( tagID, tOld )
+						lastReadTime[tagID] = discoveryTime
+						if (discoveryTime - LRT).total_seconds() < RepeatSeconds:
+							self.messageQ.put( ('Alien', 'Received %d.  Repeat (skipped):' % self.tagCount, m) )
+							continue
+						
+						lastReadTime[tagID] = discoveryTime
+						
 						if pf:
 							# 									Thu Dec 04 10:14:49 PST
 							pf.write( '%s,%s,%s\n' % (
