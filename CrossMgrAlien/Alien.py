@@ -80,14 +80,6 @@ Save							# save everything to flash memory in case of power failure.
 Quit							# Close the interface.
 '''
 
-extraCmds = '''
-Info network
-Info time
-Info taglist
-Info automode
-Info notify
-'''
-
 # Transform the cmd string into an array of Alien reader commands (strip out comments and blank lines).
 initCmds = [f.split('#')[0].strip() for f in cmdStr.split('\n') if f and not f.startswith('#')]
 initCmds = [c for c in initCmds if c]	# Remove empty commands.
@@ -171,44 +163,6 @@ class Alien( object ):
 			self.messageQ.put( ('Alien', 'Check that the Reader is turned on and connected, and press Reset.') )
 			cmdSocket.close()
 			return False
-			
-		'''
-		cmdSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-		cmdSocket.settimeout( 1 )
-		
-		success = False
-		for i in xrange(15):
-			if not self.checkKeepGoing():
-				cmdSocket.close()
-				return False
-				
-			try:
-				cmdSocket.connect( (self.cmdHost, int(self.cmdPort)) )
-			except socket.timeout:
-				continue
-			except Exception as inst:
-				try:
-					errorNo, errorStr = inst.args
-					if errorNo == 10061:	#  A connect request was made on an already connected socket
-						cmdSocket.close()
-						cmdSocket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
-						cmdSocket.settimeout( 1 )
-						continue
-				except:
-					pass
-				# print type(inst)     # the exception instance
-				# print inst.args      # arguments stored in .args
-				# print inst           # __str__ allows args to printed directly
-				self.messageQ.put( ('Alien', 'Connection failed to %s:%d.\n%s.\nCheck configuration and press Reset' % (self.cmdHost, self.cmdPort, inst) ) )
-				cmdSocket.close()
-				return False
-				
-			success = True
-			
-		if not success:
-			self.messageQ.put( ('Alien', 'Connection failed to %s:%d.\nCheck configuration and press Reset' % (self.cmdHost, self.cmdPort) ) )
-			return False
-		'''
 		
 		# Read the header from the reader.
 		response = self.getResponse( cmdSocket )								# Get the response.
@@ -356,6 +310,12 @@ class Alien( object ):
 						if self.checkKeepGoing():
 							continue
 						break
+					except Exception as inst:
+						self.messageQ.put( ('Alien', 'Reader Data Connection Failed:' ) )
+						self.messageQ.put( ('Alien', '%s' % inst ) )
+						readerSocket.close()
+						return False
+						
 					if not more:
 						self.messageQ.put( ('Alien', 'Reader disconnected itself.') )
 						readerSocket.close()
@@ -440,6 +400,7 @@ class Alien( object ):
 			if readerSocket:
 				readerSocket.close()
 			dataSocket.close()
+			return True
 		
 	def purgeDataQ( self ):
 		while 1:

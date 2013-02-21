@@ -155,6 +155,24 @@ class MainWin( wx.Frame ):
 		iRow = 0
 		gbs.Add( setFont(bigFont,wx.StaticText(self, wx.ID_ANY, 'Alien Configuration:')), pos=(iRow,0), span=(1,2), flag=wx.ALIGN_LEFT )
 		iRow += 1
+		
+		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'Antennas:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_BOTTOM )
+		
+		gs = wx.GridSizer( 1, 4, 2, 2 )
+		self.antennas = []
+		for i in xrange(4):
+			gs.Add( wx.StaticText(self, wx.ID_ANY, '%d' % i), flag=wx.ALIGN_CENTER )
+		for i in xrange(4):
+			cb = wx.CheckBox( self, wx.ID_ANY, '')
+			if i < 2:
+				cb.SetValue( True )
+			gs.Add( cb, flag=wx.ALIGN_CENTER )
+			self.antennas.append( cb )
+		
+		gbs.Add( gs, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
+		
+		iRow += 1
+		
 		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'Notify Address:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		
 		hb = wx.BoxSizer( wx.HORIZONTAL )
@@ -327,12 +345,25 @@ class MainWin( wx.Frame ):
 	
 	def getCrossMgrHost( self ):
 		return self.crossMgrHost.GetAddress()
+		
+	def getAntennaStr( self ):
+		s = []
+		for i in xrange(4):
+			if self.antennas[i].GetValue():
+				s.append( '%d' % i )
+		return ' '.join( s )
+		
+	def setAntennaStr( self, s ):
+		antennas = set( int(a) for a in s.split() )
+		for i in xrange(4):
+			self.antennas[i].SetValue( i in antennas )
 	
 	def writeOptions( self ):
 		self.config.Write( 'CrossMgrHost', self.getCrossMgrHost() )
 		self.config.Write( 'ListenForAlienHeartbeat', str(self.listenForHeartbeat.GetValue()) )
 		self.config.Write( 'AlienCmdAddr', self.cmdHost.GetAddress() )
 		self.config.Write( 'AlienCmdPort', str(self.cmdPort.GetValue()) )
+		self.config.Write( 'Antennas', self.getAntennaStr() )
 		s = self.notifyHost.GetSelection()
 		if s != wx.NOT_FOUND:
 			self.config.Write( 'NotifyHost', self.notifyHost.GetString(s) )
@@ -342,6 +373,7 @@ class MainWin( wx.Frame ):
 		self.listenForHeartbeat.SetValue( self.config.Read('ListenForAlienHeartbeat', 'True').upper() == 'T' )
 		self.cmdHost.SetValue( self.config.Read('AlienCmdAddr', '0.0.0.0') )
 		self.cmdPort.SetValue( int(self.config.Read('AlienCmdPort', '0')) )
+		self.setAntennaStr( self.config.Read('Antennas', '0 1') )
 		notifyHost = self.config.Read('NotifyHost', Utils.DEFAULT_HOST)
 		for i, s in enumerate(self.notifyHost.GetItems()):
 			if s == notifyHost:
