@@ -43,7 +43,7 @@ set TagType = 16				# tell reader to default looking for Gen 2 tags
 
 set AcquireMode = Inventory		# resolve multiple tag reads rather than just reading the closest/strongest tag
 
-set AntennaSequence = 0 1		# Cycle transmitting/receiving between antennas 0 and 1 (assume 2 antennas)
+set AntennaSequence = {antennas}	# Cycle transmitting/receiving between antennas 0 and 1 (assume 2 antennas)
 set RFModulation = STD			# Standard operating mode
 
 # Auto Mode configuration.
@@ -94,12 +94,13 @@ class Alien( object ):
 	CmdDelim = '\n'				# Delimiter of Alien commands (sent to reader).
 	ReaderDelim = '\0'			# Delimiter of Alien reader responses (received from reader).
 
-	def __init__( self, dataQ, messageQ, shutdownQ, notifyHost, notifyPort, heartbeatPort,
+	def __init__( self, dataQ, messageQ, shutdownQ, notifyHost, notifyPort, heartbeatPort, antennas,
 				listenForHeartbeat = False, cmdHost = '', cmdPort = 0 ):
 		self.notifyHost = notifyHost
 		self.notifyPort = notifyPort
 		self.heartbeatPort = heartbeatPort
 		self.listenForHeartbeat = listenForHeartbeat
+		self.antennas = antennas
 		self.cmdHost = cmdHost
 		self.cmdPort = cmdPort
 		self.dataQ = dataQ			# Queue to write tag reads.
@@ -171,6 +172,7 @@ class Alien( object ):
 		cmdContext = {
 				'notifyHost':	self.notifyHost,
 				'notifyPort':	self.notifyPort,
+				'antennas':		self.antennas,
 		}
 		
 		success = True
@@ -409,8 +411,8 @@ class Alien( object ):
 			except Empty:
 				break
 
-def AlienServer( dataQ, messageQ, shutdownQ, notifyHost, notifyPort, heartbeatPort,
+def AlienServer( dataQ, messageQ, shutdownQ, notifyHost, notifyPort, heartbeatPort, antennas,
 				listenForHeartbeat = False, cmdHost = '', cmdPort = 0 ):
-	alien = Alien(dataQ, messageQ, shutdownQ, notifyHost, notifyPort, heartbeatPort,
+	alien = Alien(dataQ, messageQ, shutdownQ, notifyHost, notifyPort, heartbeatPort, antennas,
 					listenForHeartbeat, cmdHost, cmdPort)
 	alien.runServer()

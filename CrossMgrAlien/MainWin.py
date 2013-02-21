@@ -183,7 +183,7 @@ class MainWin( wx.Frame ):
 		gbs.Add( hb, pos=(iRow ,1), span=(1,1) )
 		
 		iRow += 1
-		self.listenForHeartbeat = wx.CheckBox( self, wx.ID_ANY, 'Listen for Alien Heartbeat on port: %d' % HeartbeatPort, style=wx.ALIGN_LEFT )
+		self.listenForHeartbeat = wx.CheckBox( self, wx.ID_ANY, 'Listen for Alien Heartbeat on Port: %d' % HeartbeatPort, style=wx.ALIGN_LEFT )
 		self.listenForHeartbeat.SetValue( True )
 		gbs.Add( self.listenForHeartbeat, pos=(iRow, 0), span=(1,2) )
 		
@@ -250,7 +250,7 @@ class MainWin( wx.Frame ):
 		
 		self.alienProcess = Process( name='AlienProcess', target=AlienServer,
 			args=(self.dataQ, self.messageQ, self.shutdownQ,
-					self.getNotifyHost(), NotifyPort, HeartbeatPort,
+					self.getNotifyHost(), NotifyPort, HeartbeatPort, self.getAntennaStr(),
 					self.listenForHeartbeat.GetValue(), self.cmdHost.GetAddress(), self.cmdPort.GetValue() ) )
 		self.alienProcess.daemon = True
 		
@@ -308,7 +308,8 @@ class MainWin( wx.Frame ):
 			'    BackupFile:    %s' % self.backupFile.GetLabel(),
 			'',
 			'Configuration: Alien:',
-			'    ListenForAlienHeartbeat: %s' % str(self.listenForHeartbeat.GetValue()),
+			'    ListenForAlienHeartbeat: %s' % ('True' if self.listenForHeartbeat.GetValue() else 'False'),
+			'    Antennas:      %s' % self.getAntennaStr(),
 			'    HeartbeatPort: %d' % HeartbeatPort,
 			'    AlienCmdHost:  %s' % self.cmdHost.GetAddress(),
 			'    AlienCmdPort:  %s' % str(self.cmdPort.GetValue()),
@@ -360,7 +361,7 @@ class MainWin( wx.Frame ):
 	
 	def writeOptions( self ):
 		self.config.Write( 'CrossMgrHost', self.getCrossMgrHost() )
-		self.config.Write( 'ListenForAlienHeartbeat', str(self.listenForHeartbeat.GetValue()) )
+		self.config.Write( 'ListenForAlienHeartbeat', 'True' if self.listenForHeartbeat.GetValue() else 'False' )
 		self.config.Write( 'AlienCmdAddr', self.cmdHost.GetAddress() )
 		self.config.Write( 'AlienCmdPort', str(self.cmdPort.GetValue()) )
 		self.config.Write( 'Antennas', self.getAntennaStr() )
@@ -370,7 +371,7 @@ class MainWin( wx.Frame ):
 	
 	def readOptions( self ):
 		self.crossMgrHost.SetValue( self.config.Read('CrossMgrHost', Utils.DEFAULT_HOST) )
-		self.listenForHeartbeat.SetValue( self.config.Read('ListenForAlienHeartbeat', 'True').upper() == 'T' )
+		self.listenForHeartbeat.SetValue( self.config.Read('ListenForAlienHeartbeat', 'True').upper()[:1] == 'T' )
 		self.cmdHost.SetValue( self.config.Read('AlienCmdAddr', '0.0.0.0') )
 		self.cmdPort.SetValue( int(self.config.Read('AlienCmdPort', '0')) )
 		self.setAntennaStr( self.config.Read('Antennas', '0 1') )
