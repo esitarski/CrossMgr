@@ -17,7 +17,7 @@ import cStringIO as StringIO
 
 HOME_DIR = os.path.expanduser("~")
 
-RepeatSeconds = 5	# Number of seconds that a tag is considered a repeat read.
+RepeatSeconds = 2	# Number of seconds that a tag is considered a repeat read.
 
 #-------------------------------------------------------------------------
 # Alien Reader Initialization Commands
@@ -399,7 +399,9 @@ class Alien( object ):
 						LRT = lastReadTime.get( tagID, tOld )
 						lastReadTime[tagID] = discoveryTime
 						if (discoveryTime - LRT).total_seconds() < RepeatSeconds:
-							self.messageQ.put( ('Alien', 'Received %d.  Repeat (skipped):' % self.tagCount, m) )
+							self.messageQ.put( (
+								'Alien',
+								'Received %d.  Read less than %d secs ago (skipped):' % (self.tagCount, RepeatSeconds), m) )
 							continue
 						
 						lastReadTime[tagID] = discoveryTime
