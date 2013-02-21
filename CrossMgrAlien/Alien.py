@@ -41,26 +41,12 @@ set TagListMillis = ON			# record tags times to milliseconds
 set PersistTime = -1				# hold on to a tag for 2 seconds before considering it new again
 
 set TagStreamMode = OFF			# turn off tag streaming - we want a tag list
-set TagType = 16				# tell reader to default looking for Gen 2 tags
+#set TagType = 16				# tell reader to default looking for Gen 2 tags
 
 set AcquireMode = Inventory		# resolve multiple tag reads rather than just reading the closest/strongest tag
 
 set AntennaSequence = {antennas}	# Cycle transmitting/receiving between antennas 0 and 1 (assume 2 antennas)
 set RFModulation = STD			# Standard operating mode
-
-# Auto Mode configuration.
-AutoModeReset					# reset auto response state machine
-set AutoAction = Acquire		# reader to Acquire data, not report on input/output pins
-set AutoWaitOutput = -1			# don't change any pin states while waiting
-set AutoStartTrigger = 0,0		# not triggered with pin states - start now.
-set AutoStartPause = 0			# no pause after trigger
-set AutoWorkOutput = -1			# don't change any pin states when we start work.
-set AutoStopTimer = 0			# no waiting after work completed
-set AutoStopPause = 0			# no waiting 
-set AutoTrueOutput = -1			# don't change pin states on true
-set AutoTruePause = 0			# no waiting on trigger true
-set AutoFalseOutput = -1		# don't change pin states on false
-set AutoFalsePause = 0			# no waiting on trigger false
 
 # Notify configuration.
 set NotifyTrigger = Add			# trigger notify when tags are added to the list.
@@ -72,9 +58,21 @@ set NotifyKeepAliveTime = 30	# time to keep the connection open after a tag read
 set NotifyQueueLimit = 1000		# failed notification messages to queue for later delivery (max=1000)
 set NotifyRetryPause = 10		# wait 10 seconds between failed notify attempts (time to reconnect the network)
 set NotifyRetryCount = -1		# no limit on retry attempts (if failure)
-
-# Turn on Notify and Auto Mode.
 set NotifyMode = ON				# start notify mode.
+
+# Auto Mode configuration.
+AutoModeReset					# reset auto response state machine
+set AutoWaitOutput = 0			# don't change any pin states while waiting
+set AutoStartTrigger = 0,0		# not triggered with pin states - start now.
+set AutoStartPause = 0			# no waiting after trigger.
+set AutoAction = Acquire		# reader to Acquire data, not report on input/output pins
+set AutoWorkOutput = 0			# don't change any pin states when we start work.
+set AutoStopTimer = 0			# no waiting after work completed
+set AutoTrueOutput = 0			# don't change pin states on true
+set AutoTruePause = 0			# no waiting on trigger true
+set AutoStopPause = 0			# no waiting 
+set AutoFalseOutput = 0			# don't change pin states on false
+set AutoFalsePause = 0			# no waiting on trigger false
 set AutoMode = ON				# start auto mode.
 
 Save							# save everything to flash memory in case of power failure.

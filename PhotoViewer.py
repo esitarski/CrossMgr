@@ -50,65 +50,6 @@ copy_to_clipboard_xpm = [
 "     .......... "
 ]
 
-reload_xpm = [
-"16 16 39 1",
-" 	c None",
-".	c #000000",
-"+	c #F7EFD0",
-"@	c #F7EFD1",
-"#	c #EED680",
-"$	c #C38909",
-"%	c #F6ECC9",
-"&	c #D1940C",
-"*	c #B98208",
-"=	c #A59458",
-"-	c #D1BC70",
-";	c #E9D17B",
-">	c #B07C08",
-",	c #916608",
-"'	c #F3E3A8",
-")	c #AE7B0A",
-"!	c #F4E4AD",
-"~	c #F5E9BC",
-"{	c #D8E6D2",
-"]	c #B9C9B1",
-"^	c #6F9059",
-"/	c #C6B26A",
-"(	c #D7E5D0",
-"_	c #AECCA1",
-":	c #557C3B",
-"<	c #D3E3CB",
-"[	c #D0E1C9",
-"}	c #DBE7D6",
-"|	c #B9C3B5",
-"1	c #BDCEB6",
-"2	c #A9C79C",
-"3	c #65894C",
-"4	c #748C64",
-"5	c #668154",
-"6	c #669447",
-"7	c #58833C",
-"8	c #E1EBDC",
-"9	c #5E8A41",
-"0	c #E0EADB",
-"    .           ",
-"   .+.          ",
-"  .@#$.         ",
-" .%##&*.        ",
-".%=-;>,,.       ",
-"...'#)...       ",
-"  .!#).  .....  ",
-"  .~#).  .{]^.  ",
-"  .#/).  .(_:.  ",
-"  .....  .<_:.  ",
-"       ...[_:...",
-"       .}|12345.",
-"        .}__67. ",
-"         .8_9.  ",
-"          .0.   ",
-"           .    "
-]
-
 def getRiderName( info ):
 	lastName = info.get('LastName','')
 	firstName = info.get('FirstName','')
@@ -135,6 +76,8 @@ def ListDirectory(self, directory, fileExtList):
 
 
 class PhotoViewerDialog( wx.Dialog ):
+	ShowAllPhotos = -1
+
 	def __init__(
 			self, parent, ID, title='Photo Viewer', size=wx.DefaultSize, pos=wx.DefaultPosition, 
 			style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER ):
@@ -163,12 +106,14 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.title = wx.StaticText( self, wx.ID_ANY, '' )
 		self.title.SetFont( wx.FontFromPixelSize( wx.Size(0,24), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		
-		bitmap = wx.BitmapFromXPMData( reload_xpm )
-		self.reloadButton = wx.BitmapButton( self, wx.ID_ANY, bitmap )
-		self.Bind(wx.EVT_BUTTON, self.OnReload, self.reloadButton )
+		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'Refresh.png'), wx.BITMAP_TYPE_PNG )
+		self.refreshButton = wx.BitmapButton( self, wx.ID_ANY, bitmap )
+		self.refreshButton.SetToolTip(wx.ToolTip('Refresh Photos'))
+		self.Bind(wx.EVT_BUTTON, self.OnRefresh, self.refreshButton )
 		
 		bitmap = wx.BitmapFromXPMData( copy_to_clipboard_xpm )
 		self.copyToClipboardButton = wx.BitmapButton( self, wx.ID_ANY, bitmap )
+		self.copyToClipboardButton.SetToolTip(wx.ToolTip('Copy Photo to Clipboard...'))
 		self.Bind(wx.EVT_BUTTON, self.OnCopyToClipboard, self.copyToClipboardButton )
 		
 		#self.printButton = wx.Button( self, wx.ID_ANY, 'Print...' )
@@ -178,7 +123,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.Bind(wx.EVT_BUTTON, self.OnClose, self.closeButton )
 		
 		hbs.Add( self.title, 1, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.EXPAND, border = 4 )
-		hbs.Add( self.reloadButton, 0, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border = 4 )
+		hbs.Add( self.refreshButton, 0, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border = 4 )
 		hbs.Add( self.copyToClipboardButton, 0, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border = 4 )
 		#hbs.Add( self.printButton, 0, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border = 4 )
 		hbs.Add( self.closeButton, 0, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border = 4 )
@@ -227,8 +172,8 @@ class PhotoViewerDialog( wx.Dialog ):
 	def OnClose( self, event ):
 		self.Show( False )
 			
-	def OnReload( self, event ):
-		self.refresh()
+	def OnRefresh( self, event ):
+		self.refresh( self.num )
 		
 	def OnCopyToClipboard( self, event ):
 		try:
@@ -287,12 +232,33 @@ class PhotoViewerDialog( wx.Dialog ):
 		Utils.MessageOK( 'Print Succeded.', 'Print Succeded' )
 		
 	def drawMainPhoto( self ):
+		self.title.SetLabel( '' )
 		self.mainPhoto.Refresh()
 		if not self.thumbFileName:
 			self.mainPhoto.SetBitmap( wx.NullBitmap )
 			self.mainPhoto.Refresh()
 			return
+		
+		# Update the title based on the picture shown.
+		try:
+			num = int(os.path.basename(self.thumbFileName).split('-')[1])
+		except:
+			num = None
 			
+		if num:
+			try:
+				externalInfo = Model.race.excelLink.read()
+			except:
+				externalInfo = {}
+			info = externalInfo.get(num, {})
+			name = getRiderName( info )
+			if info.get('Team', ''):
+				name = '%s  (%s)' % (name, info.get('Team', '').strip())
+			if self.num != self.ShowAllPhotos:
+				numPhotos = self.thumbs.GetItemCount()
+				name = '%s  %d Photo%s' % (name, numPhotos, 's' if numPhotos != 1 else '')
+			self.title.SetLabel( '%d  %s' % (num, name) )
+		
 		try:
 			bitmap = wx.Bitmap( self.thumbFileName, wx.BITMAP_TYPE_JPEG )
 		except:
@@ -341,24 +307,21 @@ class PhotoViewerDialog( wx.Dialog ):
 				self.clear()
 				return
 				
-			# Be smart about refreshing the screen as it is expensive to re-read all the thumbnails.
-			# If we are not given 
+			# Automatically refresh the screen only if the rider showing has last been updated.
 			if not num and race.isRunning():
 				tLast, rLast = race.getLastKnownTimeRider()
 				if rLast and rLast.num != self.num:
 					return
-				
-			try:
-				externalInfo = race.excelLink.read()
-			except AttributeError:
-				externalInfo = {}
 				
 		if Utils.mainWin and Utils.mainWin.fileName:
 			dir = getPhotoDirName( Utils.mainWin.fileName )
 		else:
 			dir = r'C:\Users\Edward Sitarski\Documents\2013-02-07-test-r1-_Photos'
 		
-		self.thumbs._scrolled.filePrefix = 'bib-%04d' % self.num
+		if self.num == self.ShowAllPhotos:
+			self.thumbs._scrolled.filePrefix = ''
+		else:
+			self.thumbs._scrolled.filePrefix = 'bib-%04d' % self.num
 		self.thumbs.ShowDir( dir )
 		
 		try:
@@ -366,14 +329,6 @@ class PhotoViewerDialog( wx.Dialog ):
 			self.OnSelChanged()
 		except:
 			self.clear()
-		
-		info = externalInfo.get(self.num, {})
-		name = getRiderName( info )
-		if info.get('Team', ''):
-			name = '%s  (%s)' % (name, info.get('Team', '').strip())
-		numPhotos = self.thumbs.GetItemCount()
-		name = '%s  %d Photo%s' % (name, numPhotos, 's' if numPhotos != 1 else '')
-		self.title.SetLabel( '%d  %s' % (self.num, name) )
 	
 if __name__ == '__main__':
 	race = Model.newRace()
@@ -383,7 +338,6 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	mainWin.Show()
 	photoDialog = PhotoViewerDialog( mainWin, wx.ID_ANY, "PhotoViewer", size=(600,400) )
-	photoDialog.setNumSelect( 17 )
-	photoDialog.refresh()
+	photoDialog.refresh( photoDialog.ShowAllPhotos )
 	photoDialog.Show()
 	app.MainLoop()

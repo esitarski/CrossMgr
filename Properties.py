@@ -78,7 +78,7 @@ class Properties( wx.Panel ):
 
 		self.jchipLabel = wx.StaticText( self, wx.ID_ANY, 'JChip Integration: ' )
 		self.jchip = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
-		self.Bind( wx.EVT_CHECKBOX, self.onJChipIntegration, self.jchip )
+		#self.Bind( wx.EVT_CHECKBOX, self.onJChipIntegration, self.jchip )
 		rows += 1
 
 		self.autocorrectLapsDefaultLabel = wx.StaticText( self, wx.ID_ANY, 'Set "Autocorrect Lap Data" option by Default: ' )

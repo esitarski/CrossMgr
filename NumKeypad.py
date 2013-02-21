@@ -215,6 +215,7 @@ class NumKeypad( wx.Panel ):
 		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'camera.png'), wx.BITMAP_TYPE_PNG )
 		self.photoButton = wx.BitmapButton( panel, wx.ID_ANY, bitmap )
+		self.photoButton.SetToolTip(wx.ToolTip('Show Last Photo...'))
 		self.photoButton.Bind( wx.EVT_BUTTON, self.onPhotoButton )
 		self.hbClockPhoto.Add( self.photoButton, flag=wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT, border = 18 )
 		
@@ -349,14 +350,8 @@ class NumKeypad( wx.Panel ):
 			mainWin.forecastHistory.updatedExpectedTimes( tRace )
 	
 	def onPhotoButton( self, event ):
-		with Model.LockRace() as race:
-			if not race or not getattr(race, 'enableUSBCamera', False) or not Utils.mainWin:
-				return
-			tLast, rLast = race.getLastKnownTimeRider()
-		if not rLast:
-			return
 		Utils.mainWin.photoDialog.Show( True )
-		Utils.mainWin.setNumSelect( rLast.num )
+		Utils.mainWin.photoDialog.refresh( photoDialog.ShowAllRiders )
 	
 	def doChangeNumLaps( self, event ):
 		with Model.LockRace() as race:
