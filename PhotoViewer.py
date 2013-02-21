@@ -72,8 +72,8 @@ def ListDirectory(self, directory, fileExtList):
 	fileList = [f for f in fileList if os.path.splitext(f)[1] in fileExtList]                          
 	fileList = [f for f in fileList
 		if os.path.basename(f).startswith(self.filePrefix) and os.path.splitext(f)[1] in ['.jpeg', '.jpg'] ]
-	return fileList
-
+	fileList.sort( key = lambda f: os.path.basename(f).split('-')[3] )	# Sort by time rather than bib.
+	return fileList[-200:]	# Limit to the last 200 photos so as not to crash the system.
 
 class PhotoViewerDialog( wx.Dialog ):
 	ShowAllPhotos = -1
@@ -185,7 +185,7 @@ class PhotoViewerDialog( wx.Dialog ):
 			wx.TheClipboard.SetData( d ) 
 			wx.TheClipboard.Flush() 
 			wx.TheClipboard.Close() 
-			Utils.MessageOK( self, 'Photo copied to Clipboard.\nYou can now paste it into another program.', 'Copy Succeeded' )
+			Utils.MessageOK( self, 'Photo copied to Clipboard.\nYou can now Paste it into another program.', 'Copy Succeeded' )
 		else: 
 			Utils.MessageOK( self, 'Unable to copy photo to Clipboard.', 'Copy Failed', iconMask = wx.ICON_ERROR )
 		
