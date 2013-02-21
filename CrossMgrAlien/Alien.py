@@ -21,57 +21,63 @@ HOME_DIR = os.path.expanduser("~")
 # Alien Reader Initialization Commands
 #
 cmdStr = '''
-alien						# default username
-password					# default password
+alien							# default username
+password						# default password
 
-Get ReaderName				# Do not change.  Use this to check if the login succeeded.  
+get ReaderName					# Do not change.  Use this to check if the login succeeded.  
 
-Function = Reader			# ensure we are not in programming mode
+# Turn off Auto and Notify Mode.
+set AutoMode = OFF				# turn off auto mode.
+set NotifyMode = OFF			# turn off notify mode.
 
-Clear TagList				# clear any old tags
+clear TagList					# clear any old tags
 
-Time = {time}				# the time of the reader to match the computer
-TagListMillis = ON			# record tags times to milliseconds
-PersistTime = 2				# hold on to a tag for 2 seconds before considering it new again
-#HeartbeatTime = 15			# send the heartbeat every 15 seconds rather than the default 30
+set Function = Reader			# ensure we are not in programming mode
 
-TagStreamMode = OFF			# turn off tag streaming - we want a tag list
-TagType = 16				# tell reader to default looking for Gen 2 tags
+set Time = {time}				# the time of the reader to match the computer
+set TagListMillis = ON			# record tags times to milliseconds
+set PersistTime = -1				# hold on to a tag for 2 seconds before considering it new again
 
-AcquireMode = Inventory		# resolve multiple tag reads rather than just reading the closest/strongest tag
-# make the reader do some more work to try to resolve tags in a group
-#AcqC1Cycles = 5				# for Gen 1 tags
-#AcqG2Cycles = 5				# for Gen 2 tags
+set TagStreamMode = OFF			# turn off tag streaming - we want a tag list
+set TagType = 16				# tell reader to default looking for Gen 2 tags
 
-AntennaSeq = 0 1			# Cycle transmitting/receiving between antennas 0 and 1
-RFModulation = STD			# Standard operating mode
+set AcquireMode = Inventory		# resolve multiple tag reads rather than just reading the closest/strongest tag
+
+set AntennaSequence = 0 1		# Cycle transmitting/receiving between antennas 0 and 1 (assume 2 antennas)
+set RFModulation = STD			# Standard operating mode
 
 # Auto Mode configuration.
-AutoModeReset				# reset auto response state machine
-AutoAction = Acquire		# reader to Acquire data, not report on pins
-AutoStartTrigger = 0,0		# not triggered with pins states
-AutoStopTimer = 0			# no waiting after work completed
-AutoTruePause = 0 			# no waiting on trigger true
-AutoFalsePause = 0			# no waiting on trigger false
-AutoWorkOutput = 0			# don't change any pin status
-AutoMode = ON				# start auto mode.
+AutoModeReset					# reset auto response state machine
+set AutoAction = Acquire		# reader to Acquire data, not report on input/output pins
+set AutoWaitOutput = -1			# don't change any pin states while waiting
+set AutoStartTrigger = 0,0		# not triggered with pin states - start now.
+set AutoStartPause = 0			# no pause after trigger
+set AutoWorkOutput = -1			# don't change any pin states when we start work.
+set AutoStopTimer = 0			# no waiting after work completed
+set AutoStopPause = 0			# no waiting 
+set AutoTrueOutput = -1			# don't change pin states on true
+set AutoTruePause = 0			# no waiting on trigger true
+set AutoFalseOutput = -1		# don't change pin states on false
+set AutoFalsePause = 0			# no waiting on trigger false
 
 # Notify configuration.
-NotifyMode = OFF			# turn off notify mode.
-NotifyTrigger = Add			# trigger notify when tags are added to the list.
-NotifyInclude = Tags		# notify for tags and not pin status, etc.
-NotifyFormat = XML			# send message in XML format
-NotifyHeader = ON			# include notify header on tag read messages
-NotifyAddress = {notifyHost}:{notifyPort}	# address to send notify messages
-NotifyKeepAliveTime = 30	# time to keep the connection open after a tag read (in case there is another read soon after)
-NotifyQueueLimit = 1000		# failed notification messages to queue for later delivery (max=1000)
-NotifyRetryPause = 10		# wait 10 seconds between failed notify attempts (time to reconnect the network)
-NotifyRetryCount = -1		# no limit on retry attempts (if failure)
-NotifyMode = ON				# start notify mode.
+set NotifyTrigger = Add			# trigger notify when tags are added to the list.
+set NotifyInclude = Tags		# notify for tags and not pin status, etc.
+set NotifyFormat = XML			# send message in XML format
+set NotifyHeader = ON			# include notify header on tag read messages
+set NotifyAddress = {notifyHost}:{notifyPort}	# address to send notify messages
+set NotifyKeepAliveTime = 30	# time to keep the connection open after a tag read (in case there is another read soon after)
+set NotifyQueueLimit = 1000		# failed notification messages to queue for later delivery (max=1000)
+set NotifyRetryPause = 10		# wait 10 seconds between failed notify attempts (time to reconnect the network)
+set NotifyRetryCount = -1		# no limit on retry attempts (if failure)
 
-Save						# save everything to flash memory in case of power failure.
+# Turn on Notify and Auto Mode.
+set NotifyMode = ON				# start notify mode.
+set AutoMode = ON				# start auto mode.
 
-Quit						# Close the interface.
+Save							# save everything to flash memory in case of power failure.
+
+Quit							# Close the interface.
 '''
 
 extraCmds = '''
@@ -94,7 +100,7 @@ reDateSplit = re.compile( '[/ :]' )		# Characters to split date/time fields.
 class Alien( object ):
 	CmdPrefix = chr(1)			# Causes Alien reader to suppress prompt on response.
 	CmdDelim = '\n'				# Delimiter of Alien commands (sent to reader).
-	ReaderDelim = '\r\n\0'		# Delimiter of Alien reader responses (received from reader).
+	ReaderDelim = '\0'			# Delimiter of Alien reader responses (received from reader).
 
 	def __init__( self, dataQ, messageQ, shutdownQ, notifyHost, notifyPort, heartbeatPort,
 				listenForHeartbeat = False, cmdHost = '', cmdPort = 0 ):

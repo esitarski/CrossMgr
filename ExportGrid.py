@@ -10,6 +10,7 @@ from ReadSignOnSheet import Fields, IgnoreFields
 from FitSheetWrapper import FitSheetWrapper
 import qrcode
 import urllib
+from reportlab.lib.pagesizes import letter, A4
 
 #---------------------------------------------------------------------------
 
@@ -17,6 +18,26 @@ import urllib
 statusSortSeq = Model.Rider.statusSortSeq
 
 brandText = 'Powered by CrossMgr (sites.google.com/site/crossmgrsoftware)'
+
+def ImageToPil( image ):
+	"""Convert wx.Image to PIL Image."""
+	w, h = image.GetSize()
+	data = image.GetData()
+
+	redImage = Image.new("L", (w, h))
+	redImage.fromstring(data[0::3])
+	greenImage = Image.new("L", (w, h))
+	greenImage.fromstring(data[1::3])
+	blueImage = Image.new("L", (w, h))
+	blueImage.fromstring(data[2::3])
+
+	if image.HasAlpha():
+		alphaImage = Image.new("L", (w, h))
+		alphaImage.fromstring(image.GetAlphaData())
+		pil = Image.merge('RGBA', (redImage, greenImage, blueImage, alphaImage))
+	else:
+		pil = Image.merge('RGB', (redImage, greenImage, blueImage))
+	return pil
 
 class ExportGrid( object ):
 	def __init__( self, title = '', colnames = [], data = [] ):
@@ -30,6 +51,9 @@ class ExportGrid( object ):
 	def _getFont( self, pixelSize = 28, bold = False ):
 		return wx.FontFromPixelSize( (0,pixelSize), wx.FONTFAMILY_SWISS, wx.NORMAL,
 									 wx.FONTWEIGHT_BOLD if bold else wx.FONTWEIGHT_NORMAL, False, 'Ariel' )
+	
+	def _setFontPDF( self, canvas, pointSize = 24, bold = False ):
+		canvas.setFont( 'Helvetica' + (' Bold' if bold else ''), pointSize )
 	
 	def _getColSizeTuple( self, dc, font, col ):
 		wSpace, hSpace, lh = dc.GetMultiLineTextExtent( '    ', font )
@@ -76,6 +100,59 @@ class ExportGrid( object ):
 		
 		return self._getFont( left, isBold )
 			
+	def _setFontToFitPDF( self, canvas, widthToFit, heightToFit, sizeFunc, isBold = False ):
+		left = 1
+		right = max(widthToFit, heightToFit)
+		
+		while right - left > 1:
+			mid = (left + right) / 2.0
+			font = self._setFontPDF( mid, isBold )
+			widthText, heightText = sizeFunc( font )
+			if widthText <= widthToFit and heightText <= heightToFit:
+				left = mid
+			else:
+				right = mid - 1
+		
+		return self._getFont( left, isBold )
+			
+	def getHeaderBitmap( self ):
+		''' Get the header bitmap if specified, or use a default. '''
+		if Utils.getMainWin():
+			graphicFName = Utils.getMainWin().getGraphicFName()
+			extension = os.path.splitext( graphicFName )[1].lower()
+			bitmapType = {
+				'.gif': wx.BITMAP_TYPE_GIF,
+				'.png': wx.BITMAP_TYPE_PNG,
+				'.jpg': wx.BITMAP_TYPE_JPEG,
+				'.jpeg':wx.BITMAP_TYPE_JPEG }.get( extension, wx.BITMAP_TYPE_PNG )
+			bitmap = wx.Bitmap( graphicFName, bitmapType )
+		else:
+			bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), wx.BITMAP_TYPE_PNG )
+		return bitmap
+	
+	def getQRCodeImage( self, url, graphicHeight ):
+		''' Get a QRCode image for the results url. '''
+		qrWidth = graphicHeight
+		qr = qrcode.QRCode()
+		qr.add_data( 'http://' + url )
+		qr.make()
+		border = 0
+		img = wx.EmptyImage( qr.modules_count + border * 2, qr.modules_count + border * 2 )
+		bm = img.ConvertToMonoBitmap( 0, 0, 0 )
+		canvasQR = wx.Memorycanvas()
+		canvasQR.SelectObject( bm )
+		canvasQR.SetBrush( wx.WHITE_BRUSH )
+		canvasQR.Clear()
+		canvasQR.SetPen( wx.BLACK_PEN )
+		for row in xrange(qr.modules_count):
+			for col, v in enumerate(qr.modules[row]):
+				if v:
+					canvasQR.DrawPoint( border + col, border + row )
+		canvasQR.SelectObject( wx.NullBitmap )
+		img = bm.ConvertToImage()
+		img.Rescale( qrWidth, qrWidth, wx.IMAGE_QUALITY_NORMAL )
+		return img
+	
 	def drawToFitDC( self, dc ):
 		# Get the dimentions of what we are printing on.
 		(widthPix, heightPix) = dc.GetSizeTuple()
@@ -90,18 +167,7 @@ class ExportGrid( object ):
 		yPix = borderPix
 		
 		# Draw the graphic.
-		graphicFName = None;
-		if Utils.getMainWin():
-			graphicFName = Utils.getMainWin().getGraphicFName()
-			extension = os.path.splitext( graphicFName )[1].lower()
-			bitmapType = {
-				'.gif': wx.BITMAP_TYPE_GIF,
-				'.png': wx.BITMAP_TYPE_PNG,
-				'.jpg': wx.BITMAP_TYPE_JPEG,
-				'.jpeg':wx.BITMAP_TYPE_JPEG }.get( extension, wx.BITMAP_TYPE_PNG )
-			bitmap = wx.Bitmap( graphicFName, bitmapType )
-		else:
-			bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), wx.BITMAP_TYPE_PNG )
+		bitmap = self.getHeaderBitmap()
 		bmWidth, bmHeight = bitmap.GetWidth(), bitmap.GetHeight()
 		graphicHeight = heightPix * 0.15
 		graphicWidth = float(bmWidth) / float(bmHeight) * graphicHeight
@@ -125,26 +191,8 @@ class ExportGrid( object ):
 			
 		qrWidth = 0
 		if url:
-			qrWidth = graphicHeight
-			qr = qrcode.QRCode()
-			qr.add_data( 'http://' + url )
-			qr.make()
-			border = 0
-			img = wx.EmptyImage( qr.modules_count + border * 2, qr.modules_count + border * 2 )
-			bm = img.ConvertToMonoBitmap( 0, 0, 0 )
-			dcQR = wx.MemoryDC()
-			dcQR.SelectObject( bm )
-			dcQR.SetBrush( wx.WHITE_BRUSH )
-			dcQR.Clear()
-			dcQR.SetPen( wx.BLACK_PEN )
-			for row in xrange(qr.modules_count):
-				for col, v in enumerate(qr.modules[row]):
-					if v:
-						dcQR.DrawPoint( border + col, border + row )
-			img = bm.ConvertToImage()
-			img.Rescale( qrWidth, qrWidth, wx.IMAGE_QUALITY_NORMAL )
-			if dc.GetDepth() == 8:
-				img = img.ConvertToGreyscale()
+			img = getQRCodeImage( url, graphicHeight ):
+			img = img.ConvertToGreyscale()
 			bm = img.ConvertToBitmap( dc.GetDepth() )
 			dc.DrawBitmap( bm, widthPix - borderPix - qrWidth, borderPix )
 			qrWidth += graphicBorder
@@ -212,6 +260,119 @@ class ExportGrid( object ):
 		dc.SetFont( font )
 		w, h, lh = dc.GetMultiLineTextExtent( brandText, font )
 		self._drawMultiLineText( dc, brandText, borderPix, heightPix - borderPix + h )
+	
+	def drawToFitPDF( self, canvas, pageSize = letter, blackAndWhite = True ):
+		# Get the dimensions of what we are printing on.
+		widthPix, heightPix = pageSize
+		# Transform to landscape.
+		canvas.translate( 0, widthPix )
+		canvas.rotate( 90 )
+		widthPix, heightPix = heightPix, widthPix
+	
+		# Get a reasonable border.
+		borderPix = max(widthPix, heightPix) / 20
+		
+		widthFieldPix = widthPix - borderPix * 2
+		heightFieldPix = heightPix - borderPix * 2
+		
+		xPix = borderPix
+		yPix = heightPix - borderPix
+		
+		# Draw the graphic.
+		bitmap = self.getHeaderBitmap()
+		bmWidth, bmHeight = bitmap.GetWidth(), bitmap.GetHeight()
+		graphicHeight = heightPix * 0.15
+		graphicWidth = float(bmWidth) / float(bmHeight) * graphicHeight
+		graphicBorder = int(graphicWidth * 0.15)
+
+		# Rescale the graphic to the correct size.
+		image = bitmap.ConvertToImage()
+		image.Rescale( graphicWidth, graphicHeight, wx.IMAGE_QUALITY_HIGH )
+		if blackAndWhite:
+			image = image.ConvertToGreyscale()
+		pil = ImageToPil( image )
+		canvas.DrawImage( pil, xPix, yPix - graphicHeight )
+		image, bitmap, pil = None, None, None
+		
+		# Get the race URL (if defined).
+		with Model.LockRace() as race:
+			url = getattr( race, 'urlFull', None )
+		if url and url.startswith( 'http://' ):
+			url = urllib.quote( url[7:] )
+			
+		qrWidth = 0
+		if url:
+			img = self.getQRCodeImage(url, graphicHeight)
+			img = img.ConvertToGreyscale()
+			pil = ImageToPil( img )
+			qrWidth = graphicHeight
+			canvas.DrawBitmap( bm, widthPix - borderPix - graphicHeight, yPix - qrWidth )
+			qrWidth += graphicBorder
+			img, pil = None, None
+		
+		# Draw the title.
+		font = self._getFontToFit( widthFieldPix - graphicWidth - graphicBorder - qrWidth, graphicHeight,
+									lambda font: canvas.GetMultiLineTextExtent(self.title, font)[:-1], True )
+		canvas.SetFont( font )
+		self._drawMultiLineText( canvas, self.title, xPix + graphicWidth + graphicBorder, yPix )
+		# wText, hText, lineHeightText = canvas.GetMultiLineTextExtent( self.title, font )
+		# yPix += hText + lineHeightText/4
+		yPix += graphicHeight + graphicBorder
+		
+		heightFieldPix = heightPix - yPix - borderPix
+		
+		# Draw the table.
+		font = self._getFontToFit( widthFieldPix, heightFieldPix, lambda font: self._getDataSizeTuple(canvas, font) )
+		canvas.SetFont( font )
+		wSpace, hSpace, textHeight = canvas.GetMultiLineTextExtent( '    ', font )
+		
+		yPixTop = yPix
+		yPixMax = yPix
+		for col, c in enumerate(self.colnames):
+			isSpeed = (c == 'Speed')
+			if isSpeed and self.data[col]:
+				c = self.colnames[col] = self.data[col][0].split()[1]
+		
+			colWidth = self._getColSizeTuple( canvas, font, col )[0]
+			yPix = yPixTop
+			w, h, lh = canvas.GetMultiLineTextExtent( c, font )
+			if col in self.leftJustifyCols:
+				self._drawMultiLineText( canvas, str(c), xPix, yPix )					# left justify
+			else:
+				self._drawMultiLineText( canvas, str(c), xPix + colWidth - w, yPix )	# right justify
+			yPix += h + hSpace/4
+			if col == 0:
+				yLine = yPix - hSpace/8
+				for r in xrange(max(len(cData) for cData in self.data) + 1):
+					canvas.DrawLine( borderPix, yLine + r * textHeight, widthPix - borderPix, yLine + r * textHeight )
+					
+			for v in self.data[col]:
+				vStr = str(v)
+				if vStr:
+					if isSpeed:
+						vStr = vStr.split()[0]
+					w, h, lh = canvas.GetMultiLineTextExtent( vStr, font )
+					if col in self.leftJustifyCols:
+						self._drawMultiLineText( canvas, vStr, xPix, yPix )					# left justify
+					else:
+						self._drawMultiLineText( canvas, vStr, xPix + colWidth - w, yPix )	# right justify
+				yPix += textHeight
+			yPixMax = max(yPixMax, yPix)
+			xPix += colWidth + wSpace
+			
+			if isSpeed:
+				self.colnames[col] = 'Speed'
+				
+		if url:
+			yPix = yPixMax + textHeight
+			w, h, lh = canvas.GetMultiLineTextExtent( url, font )
+			self._drawMultiLineText( canvas, url, widthPix - borderPix - w, yPix )
+			
+		# Put CrossMgr branding at the bottom of the page.
+		font = self._getFont( borderPix // 5, False )
+		canvas.SetFont( font )
+		w, h, lh = canvas.GetMultiLineTextExtent( brandText, font )
+		self._drawMultiLineText( canvas, brandText, borderPix, heightPix - borderPix + h )
 		
 	def toExcelSheet( self, sheet ):
 		''' Write the contents of the grid to an xlwt excel sheet. '''
