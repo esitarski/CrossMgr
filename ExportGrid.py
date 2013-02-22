@@ -10,7 +10,7 @@ from ReadSignOnSheet import Fields, IgnoreFields
 from FitSheetWrapper import FitSheetWrapper
 import qrcode
 import urllib
-from reportlab.lib.pagesizes import letter, A4
+# from reportlab.lib.pagesizes import letter, A4
 
 #---------------------------------------------------------------------------
 
