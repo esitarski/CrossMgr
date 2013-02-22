@@ -2,11 +2,14 @@ import Model
 import Utils
 import ReadSignOnSheet
 from PhotoFinish import getPhotoDirName
+from LaunchFileBrowser import LaunchFileBrowser
 import wx
 import wx.lib.agw.thumbnailctrl as TC
 import os
 import re
 import types
+
+TestDir = r'C:\Users\Edward Sitarski\Documents\2013-02-07-test-r1-_Photos'
 
 def getRiderName( info ):
 	lastName = info.get('LastName','')
@@ -74,6 +77,11 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.copyToClipboardButton.SetToolTip(wx.ToolTip('Copy Photo to Clipboard...'))
 		self.Bind(wx.EVT_BUTTON, self.OnCopyToClipboard, self.copyToClipboardButton )
 		
+		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'FileBrowser.png'), wx.BITMAP_TYPE_PNG )
+		self.launchFileBrowserButton = wx.BitmapButton( self, wx.ID_ANY, bitmap )
+		self.launchFileBrowserButton.SetToolTip(wx.ToolTip('Show Files...'))
+		self.Bind(wx.EVT_BUTTON, self.OnLauchFileBrowser, self.launchFileBrowserButton )
+		
 		#self.printButton = wx.Button( self, wx.ID_ANY, 'Print...' )
 		#self.Bind(wx.EVT_BUTTON, self.OnPrint, self.printButton )
 		
@@ -83,6 +91,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		hbs.Add( self.title, 1, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.EXPAND, border = 4 )
 		hbs.Add( self.refreshButton, 0, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border = 4 )
 		hbs.Add( self.copyToClipboardButton, 0, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border = 4 )
+		hbs.Add( self.launchFileBrowserButton, 0, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border = 4 )
 		#hbs.Add( self.printButton, 0, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border = 4 )
 		hbs.Add( self.closeButton, 0, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border = 4 )
 		
@@ -146,7 +155,14 @@ class PhotoViewerDialog( wx.Dialog ):
 			Utils.MessageOK( self, 'Photo copied to Clipboard.\nYou can now Paste it into another program.', 'Copy Succeeded' )
 		else: 
 			Utils.MessageOK( self, 'Unable to copy photo to Clipboard.', 'Copy Failed', iconMask = wx.ICON_ERROR )
-		
+	
+	def OnLauchFileBrowser( self, event ):
+		if Utils.mainWin and Utils.mainWin.fileName:
+			dir = getPhotoDirName( Utils.mainWin.fileName )
+		else:
+			dir = TestDir
+		LaunchFileBrowser( dir )
+	
 	def OnPrint( self, event ):
 		try:
 			bitmap = wx.Bitmap( self.thumbFileName, wx.BITMAP_TYPE_JPEG )
@@ -274,7 +290,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		if Utils.mainWin and Utils.mainWin.fileName:
 			dir = getPhotoDirName( Utils.mainWin.fileName )
 		else:
-			dir = r'C:\Users\Edward Sitarski\Documents\2013-02-07-test-r1-_Photos'
+			dir = TestDir
 		
 		if self.num == self.ShowAllPhotos:
 			self.thumbs._scrolled.filePrefix = ''

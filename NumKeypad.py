@@ -351,7 +351,7 @@ class NumKeypad( wx.Panel ):
 	
 	def onPhotoButton( self, event ):
 		Utils.mainWin.photoDialog.Show( True )
-		Utils.mainWin.photoDialog.refresh( photoDialog.ShowAllRiders )
+		Utils.mainWin.photoDialog.refresh( photoDialog.ShowAllPhotos )
 	
 	def doChangeNumLaps( self, event ):
 		with Model.LockRace() as race:
