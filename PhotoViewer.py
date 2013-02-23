@@ -36,6 +36,81 @@ def ListDirectory(self, directory, fileExtList):
 	fileList.sort( key = lambda f: os.path.basename(f).split('-')[3] )	# Sort by time rather than bib.
 	return fileList[-200:]	# Limit to the last 200 photos so as not to crash the system.
 
+def getRiderNameFromFName( fname ):
+	# Get the rider name based on the picture fname
+	name = ''
+	try:
+		num = int(os.path.basename(fname).split('-')[1])
+	except:
+		num = None
+		
+	if num:
+		try:
+			externalInfo = Model.race.excelLink.read()
+		except:
+			externalInfo = {}
+		info = externalInfo.get(num, {})
+		name = getRiderName( info )
+		if info.get('Team', ''):
+			name = '%s  (%s)' % (name, info.get('Team', '').strip())
+		
+	return name
+
+	
+class PhotoPrintout(wx.Printout):
+    def __init__(self, title, fname):
+		wx.Printout.__init__(self)
+		self.title = title
+		self.fname = fname
+
+    def OnBeginDocument(self, start, end):
+        return super(PhotoPrintout, self).OnBeginDocument(start, end)
+
+    def OnEndDocument(self):
+        super(PhotoPrintout, self).OnEndDocument()
+
+    def OnBeginPrinting(self):
+        super(PhotoPrintout, self).OnBeginPrinting()
+
+    def OnEndPrinting(self):
+        super(PhotoPrintout, self).OnEndPrinting()
+
+    def OnPreparePrinting(self):
+        super(PhotoPrintout, self).OnPreparePrinting()
+
+    def HasPage(self, page):
+		return page == 1
+
+    def GetPageInfo(self):
+		return (1,1,1,1)
+
+    def OnPrintPage(self, page):
+		dc = self.GetDC()
+		try:
+			bitmap = wx.Bitmap( self.fname, wx.BITMAP_TYPE_JPEG )
+		except:
+			return False
+			
+		image = bitmap.ConvertToImage()
+		
+		wDC, hDC = dc.GetSize()
+		border = min(wDC, hDC) // 20
+		wPhoto, hPhoto = wDC - border * 2, hDC - (3 * border) // 2
+		wImage, hImage = image.GetSize()
+		
+		ratio = min( float(wPhoto) / float(wImage), float(hPhoto) / float(hImage) )
+		image.Rescale( int(wImage * ratio), int(hImage * ratio), wx.IMAGE_QUALITY_HIGH )
+		if dc.GetDepth() == 8:
+			image = image.ConvertToGreyscale()
+		bitmap = image.ConvertToBitmap()
+		
+		fontHeight = int(border/2 - border/10)
+		font = wx.FontFromPixelSize( wx.Size(0,fontHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
+		dc.DrawText( self.title, border, border )
+		dc.DrawBitmap( bitmap, border, (3 * border) // 2 )
+
+		return True
+
 class PhotoViewerDialog( wx.Dialog ):
 	ShowAllPhotos = -1
 
@@ -62,38 +137,36 @@ class PhotoViewerDialog( wx.Dialog ):
 		
 		self.vbs = wx.BoxSizer(wx.VERTICAL)
 		
-		hbs = wx.BoxSizer( wx.HORIZONTAL )
-		
 		self.title = wx.StaticText( self, wx.ID_ANY, '' )
 		self.title.SetFont( wx.FontFromPixelSize( wx.Size(0,24), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		
+		self.toolbar = wx.ToolBar( self, wx.ID_ANY )
+		self.toolbar.Bind( wx.EVT_TOOL, self.OnToolBar )
+		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'Refresh.png'), wx.BITMAP_TYPE_PNG )
-		self.refreshButton = wx.BitmapButton( self, wx.ID_ANY, bitmap )
-		self.refreshButton.SetToolTip(wx.ToolTip('Refresh Photos'))
-		self.Bind(wx.EVT_BUTTON, self.OnRefresh, self.refreshButton )
+		self.refreshID = wx.NewId()
+		self.toolbar.AddSimpleTool( self.refreshID, bitmap, 'Refresh Photos' )
 		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'ClipboardPlus.png'), wx.BITMAP_TYPE_PNG )
-		self.copyToClipboardButton = wx.BitmapButton( self, wx.ID_ANY, bitmap )
-		self.copyToClipboardButton.SetToolTip(wx.ToolTip('Copy Photo to Clipboard...'))
-		self.Bind(wx.EVT_BUTTON, self.OnCopyToClipboard, self.copyToClipboardButton )
+		self.copyToClipboardID = wx.NewId()
+		self.toolbar.AddSimpleTool( self.copyToClipboardID, bitmap, 'Copy Photo to Clipboard...' )
 		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'FileBrowser.png'), wx.BITMAP_TYPE_PNG )
-		self.launchFileBrowserButton = wx.BitmapButton( self, wx.ID_ANY, bitmap )
-		self.launchFileBrowserButton.SetToolTip(wx.ToolTip('Show Files...'))
-		self.Bind(wx.EVT_BUTTON, self.OnLauchFileBrowser, self.launchFileBrowserButton )
+		self.showFilesID = wx.NewId()
+		self.toolbar.AddSimpleTool( self.showFilesID, bitmap, 'Show Files...' )
 		
-		#self.printButton = wx.Button( self, wx.ID_ANY, 'Print...' )
-		#self.Bind(wx.EVT_BUTTON, self.OnPrint, self.printButton )
+		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'FTP.png'), wx.BITMAP_TYPE_PNG )
+		self.ftpID = wx.NewId()
+		self.toolbar.AddSimpleTool( self.ftpID, bitmap, 'Upload Photo with FTP...' )
 		
-		self.closeButton = wx.Button( self, wx.ID_CANCEL, 'Close' )
-		self.Bind(wx.EVT_BUTTON, self.OnClose, self.closeButton )
+		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'Printer.png'), wx.BITMAP_TYPE_PNG )
+		self.printID = wx.NewId()
+		self.toolbar.AddSimpleTool( self.printID, bitmap, 'Print Photo...' )
 		
-		hbs.Add( self.title, 1, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.EXPAND, border = 4 )
-		hbs.Add( self.refreshButton, 0, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border = 4 )
-		hbs.Add( self.copyToClipboardButton, 0, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border = 4 )
-		hbs.Add( self.launchFileBrowserButton, 0, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border = 4 )
-		#hbs.Add( self.printButton, 0, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border = 4 )
-		hbs.Add( self.closeButton, 0, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border = 4 )
+		#self.closeButton = wx.Button( self, wx.ID_CANCEL, 'Close' )
+		#self.Bind(wx.EVT_BUTTON, self.OnClose, self.closeButton )
+		
+		self.toolbar.Realize()
 		
 		self.splitter = wx.SplitterWindow( self, wx.ID_ANY )
 		self.splitter.Bind( wx.EVT_SPLITTER_SASH_POS_CHANGED, self.OnSplitterChange )
@@ -107,7 +180,8 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.splitter.SetMinimumPaneSize( 140 )
 		self.splitter.SplitVertically( self.thumbs, self.mainPhoto, 140 )
 		
-		self.vbs.Add( hbs, proportion=0, flag=wx.EXPAND )
+		self.vbs.Add( self.title, proportion=0, flag=wx.EXPAND|wx.ALL, border = 2 )
+		self.vbs.Add( self.toolbar, proportion=0, flag=wx.EXPAND|wx.ALL, border = 2 )
 		self.vbs.Add( self.splitter, proportion=1, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.EXPAND, border = 4 )
 		
 		self.Bind( wx.EVT_SIZE, self.OnResize )
@@ -115,7 +189,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		
 		self.SetSizer(self.vbs)
 		self.vbs.SetSizeHints(self)
-		self.SetSize( (800,550) )
+		self.SetSize( (800,560) )
 		self.vbs.Layout()
 
 	def OnResize( self, event ):
@@ -152,9 +226,9 @@ class PhotoViewerDialog( wx.Dialog ):
 			wx.TheClipboard.SetData( d ) 
 			wx.TheClipboard.Flush() 
 			wx.TheClipboard.Close() 
-			Utils.MessageOK( self, 'Photo copied to Clipboard.\nYou can now Paste it into another program.', 'Copy Succeeded' )
+			Utils.MessageOK( self, 'Photo Copied to Clipboard.\nYou can now Paste it into another program.', 'Copy Succeeded' )
 		else: 
-			Utils.MessageOK( self, 'Unable to copy photo to Clipboard.', 'Copy Failed', iconMask = wx.ICON_ERROR )
+			Utils.MessageOK( self, 'Unable to Copy Photo to Clipboard.', 'Copy Failed', iconMask = wx.ICON_ERROR )
 	
 	def OnLauchFileBrowser( self, event ):
 		if Utils.mainWin and Utils.mainWin.fileName:
@@ -163,48 +237,49 @@ class PhotoViewerDialog( wx.Dialog ):
 			dir = TestDir
 		LaunchFileBrowser( dir )
 	
+	def OnFTPUpload( self, event ):
+		Utils.MessageOK( self, 'Not Implemented Yet', 'Not Implemented Yet' )
+	
 	def OnPrint( self, event ):
 		try:
 			bitmap = wx.Bitmap( self.thumbFileName, wx.BITMAP_TYPE_JPEG )
 		except:
-			Utils.MessageOK( 'No Photo Available.', 'Print Failed', iconMask = wx.ICON_ERROR )
+			Utils.MessageOK( self, 'No Photo Available.', 'Print Failed', iconMask = wx.ICON_ERROR )
 			return
 		
-		data = wx.PrintDialogData()
-		data.EnableSelection(False)
-		data.EnablePrintToFile(True)
-		data.EnablePageNumbers(False)
-		data.SetMinPage(1)
-		data.SetMaxPage(1)
-		data.SetAllPages(True)
-		#data.SetOrientation(wx.LANDSCAPE)
-		dlg = wx.PrintDialog( self, data )
+		if Utils.mainWin:
+			pdd = wx.PrintDialogData(Utils.mainWin.printData)
+		else:
+			printData = wx.PrintData()
+			printData.SetPaperId(wx.PAPER_LETTER)
+			printData.SetPrintMode(wx.PRINT_MODE_PRINTER)
+			printData.SetOrientation(wx.LANDSCAPE)
+			pdd = wx.PrintDialogData(printData)
+			
+		pdd.SetAllPages( 1 )
+		pdd.EnablePageNumbers( 0 )
+		pdd.EnableHelp( 0 )
 		
-		if dlg.ShowModal() == wx.ID_OK:
-			dc = dlg.GetPrintDC()
-			
-			image = bitmap.ConvertToImage()
-			
-			wDC, hDC = dc.GetSize()
-			border = min(wDC, hDC) // 20
-			wPhoto, hPhoto = wDC - border * 2, hDC - (3 * border) // 2
-			wImage, hImage = image.GetSize()
-			
-			ratio = min( float(wPhoto) / float(wImage), float(hPhoto) / float(hImage) )
-			image.Rescale( int(wImage * ratio), int(hImage * ratio), wx.IMAGE_QUALITY_HIGH )
-			if dc.GetDepth() == 8:
-				image = image.ConvertToGreyscale()
-			
-			fontHeight = int(border/2 - border/10)
-			font = wx.FontFromPixelSize( wx.Size(0,fontHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
-			dc.DrawText( self.title.GetLabel(), border, border )
-			bitmap = image.ConvertToBitmap( dc.GetDepth() )
-			dc.DrawBitmap( bitmap, border, (3 * border) // 2 )
-			dc.EndDoc()
-		
-		dlg.Destroy()
-		Utils.MessageOK( 'Print Succeded.', 'Print Succeded' )
-		
+		printer = wx.Printer(pdd)
+		printout = PhotoPrintout( getRiderNameFromFName(self.thumbFileName), self.thumbFileName )
+
+		if not printer.Print(self, printout, True):
+			if printer.GetLastError() == wx.PRINTER_ERROR:
+				Utils.MessageOK(self, "There was a printer problem.\nCheck your printer setup.", "Printer Error",iconMask=wx.ICON_ERROR)
+		else:
+			self.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
+
+		printout.Destroy()
+	
+	def OnToolBar( self, event ):
+		{
+			self.refreshID:			self.OnRefresh,
+			self.copyToClipboardID:	self.OnCopyToClipboard,
+			self.showFilesID:		self.OnLauchFileBrowser,
+			self.ftpID:				self.OnFTPUpload,
+			self.printID:			self.OnPrint,
+		}[event.GetId()]( event )
+	
 	def drawMainPhoto( self ):
 		self.title.SetLabel( '' )
 		self.mainPhoto.Refresh()
@@ -220,15 +295,7 @@ class PhotoViewerDialog( wx.Dialog ):
 			num = None
 			
 		if num:
-			try:
-				externalInfo = Model.race.excelLink.read()
-			except:
-				externalInfo = {}
-			info = externalInfo.get(num, {})
-			name = getRiderName( info )
-			if info.get('Team', ''):
-				name = '%s  (%s)' % (name, info.get('Team', '').strip())
-				
+			name = getRiderNameFromFName( self.thumbFileName )
 			numPhotos = self.thumbs.GetItemCount()
 			name = ('%s  (%d rider photos)' if self.num != self.ShowAllPhotos else '%s  (last %d race photos)') % (name, numPhotos)
 			self.title.SetLabel( '%d  %s' % (num, name) )

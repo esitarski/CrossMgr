@@ -17,11 +17,47 @@ def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30,
 	ftp.login( user, passwd )
 	if serverPath:
 		ftp.cwd( serverPath )
+	fileOpened = False
 	if file is None:
 		file = open(fname, 'rb')
+		fileOpened = True
 	ftp.storbinary( 'STOR %s' % os.path.basename(fname), file )
 	ftp.quit()
+	if fileOpened:
+		file.close()
 
+def FtpWriteRacePhoto( fname ):
+	msg = ''
+	with Model.LockRace() as race:
+		if not race or not Utils.getFileName():
+			return True, msg
+		host		= getattr( race, 'ftpHost', '' )
+		user		= getattr( race, 'ftpUser', '' )
+		passwd		= getattr( race, 'ftpPassword', '' )
+		serverPath	= getattr( race, 'ftpPath', '' )
+
+	try:
+		file = open( fname, 'rb' )
+	except Exception, e:
+		msg = 'FtpWriteRacePhoto: %s' % str(e)
+		Utils.writeLog( msg )
+		return False, msg
+		
+	try:
+		FtpWriteFile(	host		= host,
+						user		= user,
+						passwd		= passwd,
+						serverPath	= serverPath,
+						fname		= fname,
+						file		= file )
+	except Exception, e:
+		msg = 'FtpWriteRacePhoto: %s' % str(e)
+		Utils.writeLog( msg )
+		return False, msg
+	
+	file.close()
+	return True, msg
+	
 class RealTimeFtpPublish( object ):
 	latencyTimeMin = 4
 	latencyTimeMax = 32
