@@ -56,5 +56,6 @@ class CrossMgrPrintout(wx.Printout):
 		exportGrid.setResultsOneList( category, True )
 
 		dc = self.GetDC()
+		
 		exportGrid.drawToFitDC( dc )
 		return True

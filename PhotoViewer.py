@@ -3,11 +3,13 @@ import Utils
 import ReadSignOnSheet
 from PhotoFinish import getPhotoDirName
 from LaunchFileBrowser import LaunchFileBrowser
+from FtpWriteFile import FtpWriteRacePhoto
 import wx
 import wx.lib.agw.thumbnailctrl as TC
 import os
 import re
 import types
+import threading
 
 TestDir = r'C:\Users\Edward Sitarski\Documents\2013-02-07-test-r1-_Photos'
 
@@ -238,7 +240,14 @@ class PhotoViewerDialog( wx.Dialog ):
 		LaunchFileBrowser( dir )
 	
 	def OnFTPUpload( self, event ):
-		Utils.MessageOK( self, 'Not Implemented Yet', 'Not Implemented Yet' )
+		if not Model.race or not getattr(Model.race, 'ftpHost', None) or getattr(Model.race, 'ftpPhotoPath', None) is None:
+			Utils.MessageOK( self, 'FTP Upload Photo Path Not Configured.', 'FTP Publish Failed', iconMask = wx.ICON_ERROR )
+			return
+			
+		# Run the upload in the background so we don't hang the UI.
+		thread = threading.Thread( target = FtpWriteRacePhoto, args = (self.thumbFileName,) )
+		thread.daemon = True
+		thread.run()
 	
 	def OnPrint( self, event ):
 		try:

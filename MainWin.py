@@ -812,6 +812,7 @@ class MainWin( wx.Frame ):
 
 	@logCall
 	def menuPrint( self, event ):
+		self.printData.SetFilename( self.fileName if self.fileName else '' )
 		pdd = wx.PrintDialogData(self.printData)
 		pdd.SetAllPages( 1 )
 		pdd.EnablePageNumbers( 0 )

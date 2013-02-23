@@ -34,7 +34,7 @@ def FtpWriteRacePhoto( fname ):
 		host		= getattr( race, 'ftpHost', '' )
 		user		= getattr( race, 'ftpUser', '' )
 		passwd		= getattr( race, 'ftpPassword', '' )
-		serverPath	= getattr( race, 'ftpPath', '' )
+		serverPath	= getattr( race, 'ftpPhotoPath', '' )
 
 	try:
 		file = open( fname, 'rb' )
@@ -48,7 +48,7 @@ def FtpWriteRacePhoto( fname ):
 						user		= user,
 						passwd		= passwd,
 						serverPath	= serverPath,
-						fname		= fname,
+						fname		= os.path.basename(fname),
 						file		= file )
 	except Exception, e:
 		msg = 'FtpWriteRacePhoto: %s' % str(e)
@@ -143,17 +143,18 @@ realTimeFtpPublish = RealTimeFtpPublish()
 #------------------------------------------------------------------------------------------------
 class FtpPublishDialog( wx.Dialog ):
 
-	fields = 	['ftpHost',	'ftpPath',	'ftpUser',		'ftpPassword',	'ftpUploadDuringRace',	'urlPath']
-	defaults =	['',		'',			'anonymous',	'anonymous@',	False,					'http://']
+	fields = 	['ftpHost',	'ftpPath',	'ftpPhotoPath',	'ftpUser',		'ftpPassword',	'ftpUploadDuringRace',	'urlPath']
+	defaults =	['',		'',			'',				'anonymous',	'anonymous@',	False,					'http://']
 
 	def __init__( self, parent, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, "Ftp Publish Html Results",
+		wx.Dialog.__init__( self, parent, id, "Ftp Publish Results",
 						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
 						
 		bs = wx.GridBagSizer(vgap=0, hgap=4)
 		
 		self.ftpHost = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
 		self.ftpPath = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
+		self.ftpPhotoPath = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
 		self.ftpUser = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
 		self.ftpPassword = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER|wx.TE_PASSWORD, value='' )
 		self.ftpUploadDuringRace = wx.CheckBox( self, wx.ID_ANY, "Automatically Upload Results During Race" )
@@ -180,9 +181,14 @@ class FtpPublishDialog( wx.Dialog ):
 		bs.Add( self.ftpHost, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
 		row += 1
-		bs.Add( wx.StaticText( self, wx.ID_ANY, "Path on Host to Store File:"),  pos=(row,0), span=(1,1), border = border,
+		bs.Add( wx.StaticText( self, wx.ID_ANY, "Path on Host to Write HTML:"),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.ftpPath, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
+		
+		row += 1
+		bs.Add( wx.StaticText( self, wx.ID_ANY, "Path on Host to Write Photos:"),  pos=(row,0), span=(1,1), border = border,
+				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		bs.Add( self.ftpPhotoPath, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
 		row += 1
 		bs.Add( wx.StaticText( self, wx.ID_ANY, "User:"),  pos=(row,0), span=(1,1), border = border,
