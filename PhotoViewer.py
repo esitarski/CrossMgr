@@ -230,7 +230,7 @@ class PhotoViewerDialog( wx.Dialog ):
 				name = '%s  (%s)' % (name, info.get('Team', '').strip())
 				
 			numPhotos = self.thumbs.GetItemCount()
-			name = ('%s  (%d rider photos)' if self.num != self.ShowAllPhotos else '%s  (last %d race rhotos)') % (name, numPhotos)
+			name = ('%s  (%d rider photos)' if self.num != self.ShowAllPhotos else '%s  (last %d race photos)') % (name, numPhotos)
 			self.title.SetLabel( '%d  %s' % (num, name) )
 		
 		try:
