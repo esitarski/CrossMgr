@@ -126,6 +126,7 @@ class MainWin( wx.Frame ):
 		bs.AddStretchSpacer()
 		bitmap = wx.BitmapFromXPMData( clipboard_xpm )
 		self.copyToClipboard = wx.BitmapButton( self, wx.ID_ANY, bitmap )
+		self.copyToClipboard.SetToolTip(wx.ToolTip('Copy Configuration and Logs to Clipboard...'))
 		self.copyToClipboard.Bind( wx.EVT_BUTTON, self.doCopyToClipboard )
 		bs.Add( self.copyToClipboard, border = 32, flag = wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
 		self.tStart = datetime.datetime.now()
