@@ -27,7 +27,7 @@ def PilImageToWxImage( myPilImage, copyAlpha=True ) :
 		myWxImage = wx.EmptyImage( *myPilImage.size )
 		myPilImageCopyRGBA = myPilImage.copy()
 		myPilImageCopyRGB = myPilImageCopyRGBA.convert( 'RGB' )    # RGBA --> RGB
-		myPilImageRgbData =myPilImageCopyRGB.tostring()
+		myPilImageRgbData = myPilImageCopyRGB.tostring()
 		myWxImage.SetData( myPilImageRgbData )
 		myWxImage.SetAlphaData( myPilImageCopyRGBA.tostring()[3::4] )  # Create layer and insert alpha values.
 
@@ -45,6 +45,9 @@ def PilImageToWxImage( myPilImage, copyAlpha=True ) :
 	
 camera = None
 font = None
+photoCache = set()		# Cache of all photo file names.
+
+fileFormat = 'bib-%04d-time-%02d-%02d-%02d-%02d.jpg'
 
 def getPhotoDirName( raceFileName ):
 	fileName, fileExtension = os.path.splitext( raceFileName )
@@ -55,16 +58,23 @@ def getPhotoDirName( raceFileName ):
 	dirName = os.path.join( dirName, fileName + '_Photos' )
 	return dirName
 
+def ResetPhotoInfoCache( raceFileName ):
+	global photoCache
+	photoCache = set()
+	dir = getPhotoDirName( raceFileName )
+	if not os.path.isdir(dir):
+		return
+	photoCache = set( file for file in os.listdir(dir) if file.startswith('bib') and file.endswith('.jpg') )
+	
+def hasPhoto( bib, raceSeconds ):
+	iSeconds = int(raceSeconds)
+	tStr = fileFormat % (bib, int(iSeconds / (60*60)), int(iSeconds / 60) % 60, iSeconds % 60, int(math.modf(raceSeconds)[0] * 100))
+	return tStr in photoCache
+	
 if Device:
 	def TakePhoto( raceFileName, bib, raceSeconds ):
 		global camera, font
-		iSeconds = int(raceSeconds)
-		hours = int(iSeconds / (60*60))
-		minutes = int(iSeconds / 60) % 60
-		seconds = iSeconds % 60
-		decimals = int(math.modf(raceSeconds)[0] * 100)
-		tStr = '%02d-%02d-%02d-%02d' % (hours, minutes, seconds, decimals)
-	
+		
 		# Get the directory to write the photo in.
 		dirName = getPhotoDirName( raceFileName )
 		if not os.path.isdir( dirName ):
@@ -73,8 +83,15 @@ if Device:
 			except:
 				return
 		
+		iSeconds = int(raceSeconds)
+		hours = int(iSeconds / (60*60))
+		minutes = int(iSeconds / 60) % 60
+		seconds = iSeconds % 60
+		decimals = int(math.modf(raceSeconds)[0] * 100)
+	
 		# Get the filename for the photo.
-		fileName = os.path.join( dirName, 'bib-%04d-time-%s.jpg' % (bib, tStr) )
+		fname = fileFormat % (bib, hours, minutes, seconds, decimals)
+		fileName = os.path.join( dirName, fname )
 		
 		# Write the photo.
 		if camera is None:
@@ -92,7 +109,7 @@ if Device:
 			dc.SetFont( font )
 			dc.DrawText( txt, fontHeight * 0.5, h - fontHeight*1.25 )
 			wx.ImageFromBitmap(bitmap).SaveFile( fileName, wx.BITMAP_TYPE_JPEG )
-			#camera.saveSnapshot( fileName, timestamp=1, boldfont=1 )
+			photoCache.Add( fname )		# Add the photo to the cache.
 		
 	def SetCameraState( state = False ):
 		global camera, font

@@ -1,7 +1,7 @@
 import Model
 import Utils
 import ReadSignOnSheet
-from PhotoFinish import getPhotoDirName
+from PhotoFinish import getPhotoDirName, ResetPhotoInfoCache
 from LaunchFileBrowser import LaunchFileBrowser
 from FtpWriteFile import FtpWriteRacePhoto
 import wx
@@ -57,7 +57,6 @@ def getRiderNameFromFName( fname ):
 			name = '%s  (%s)' % (name, info.get('Team', '').strip())
 		
 	return name
-
 	
 class PhotoPrintout(wx.Printout):
     def __init__(self, title, fname):
@@ -372,8 +371,15 @@ class PhotoViewerDialog( wx.Dialog ):
 			self.thumbs._scrolled.filePrefix = ''
 		else:
 			self.thumbs._scrolled.filePrefix = 'bib-%04d' % self.num
-		self.thumbs.ShowDir( dir )
+			
+		ResetPhotoInfoCache( Utils.mainWin.fileName )
 		
+		if os.path.isdir(dir):
+			self.thumbs.ShowDir( dir )
+		else:
+			self.clear()
+			return
+			
 		try:
 			self.thumbs.SetSelection( self.thumbs.GetItemCount() - 1 )
 			self.OnSelChanged()

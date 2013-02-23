@@ -67,7 +67,7 @@ import Version
 from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, ExcelLink
 from SetGraphic			import SetGraphicDialog
 from GetResults			import GetCategoryDetails
-from PhotoFinish		import TakePhoto
+from PhotoFinish		import TakePhoto, ResetPhotoInfoCache
 from PhotoViewer		import PhotoViewerDialog
 
 import wx.lib.agw.advancedsplash as AS
@@ -1389,6 +1389,7 @@ class MainWin( wx.Frame ):
 		self.refresh()
 		Model.resetCache()
 		ResetExcelLinkCache()
+		ResetPhotoInfoCache( fileName )
 		self.writeRace()
 		self.closeFindDialog()
 		
