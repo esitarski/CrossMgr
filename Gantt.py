@@ -41,6 +41,7 @@ class Gantt( wx.Panel ):
 		self.ganttChart = GanttChartPanel.GanttChartPanel( self )
 		self.ganttChart.dClickCallback = UpdateSetNum
 		self.ganttChart.rClickCallback = self.onRightClick
+		self.ganttChart.lClickCallback = self.onLeftClick
 		self.ganttChart.getNowTimeCallback = GetNowTime
 
 		bs = wx.BoxSizer(wx.VERTICAL)
@@ -59,6 +60,12 @@ class Gantt( wx.Panel ):
 	def setNumSelect( self, num ):
 		self.ganttChart.numSelect = num if num is None else str(num)
 	
+	def onLeftClick( self, xPos, yPos, num, iRider, iLap, t ):
+		if not Utils.mainWin:
+			return
+		Utils.mainWin.photoDialog.Show( True )
+		Utils.mainWin.photoDialog.refresh( num, t )
+		
 	def onRightClick( self, xPos, yPos, num, iRider, iLap ):
 		with Model.LockRace() as race:
 			if not race or num not in race:

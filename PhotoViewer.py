@@ -1,7 +1,7 @@
 import Model
 import Utils
 import ReadSignOnSheet
-from PhotoFinish import getPhotoDirName, ResetPhotoInfoCache
+from PhotoFinish import getPhotoDirName, ResetPhotoInfoCache, GetPhotoFName
 from LaunchFileBrowser import LaunchFileBrowser
 from FtpWriteFile import FtpWriteRacePhoto
 import wx
@@ -347,7 +347,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.thumbs._scrolled.filePrefix = '##############'
 		self.thumbs.ShowDir( '.' )
 		
-	def refresh( self, num = None ):
+	def refresh( self, num = None, t = None ):
 		if num:
 			self.num = num
 		
@@ -379,12 +379,23 @@ class PhotoViewerDialog( wx.Dialog ):
 		else:
 			self.clear()
 			return
-			
-		try:
-			self.thumbs.SetSelection( self.thumbs.GetItemCount() - 1 )
-			self.OnSelChanged()
-		except:
+		
+		itemCount = self.thumbs.GetItemCount()
+		if not itemCount:
 			self.clear()
+			return
+		
+		if self.num is not None and t is not None:
+			# Select the photo specified by the time.
+			fnameMatch = GetPhotoFName( num, t )
+			for i in xrange(itemCount):
+				if fnameMatch == self.thumbs.GetItem(i).GetFileName():
+					break
+			self.thumbs.SetSelection( i )
+		else:
+			self.thumbs.SetSelection( self.thumbs.GetItemCount() - 1 )
+			
+		self.OnSelChanged()
 	
 if __name__ == '__main__':
 	race = Model.newRace()

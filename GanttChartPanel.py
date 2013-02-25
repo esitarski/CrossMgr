@@ -5,6 +5,7 @@ import sys
 import bisect
 import datetime
 import Utils
+from PhotoFinish import hasPhoto
 
 def SetScrollbarParameters( sb, thumbSize, range, pageSize  ):
 	sb.SetScrollbar( min(sb.GetThumbPosition(), range - thumbSize), thumbSize, range, pageSize )
@@ -50,9 +51,15 @@ class GanttChartPanel(wx.PyPanel):
 		self.nowTime = None
 		self.numSelect = None
 		self.dClickCallback = None
+		self.lClickCallback = None
 		self.rClickCallback = None
 		self.getNowTimeCallback = None
 		self.minimizeLabels = False
+		self.xMove = -1
+		self.yMove = -1
+		self.moveIRider = None
+		self.moveLap = None
+		self.moveTimer = wx.Timer( self, wx.NewId() )
 		
 		self.yellowColour = wx.Colour(220,220,0)
 		self.orangeColour = wx.Colour(255,165,0)
@@ -74,12 +81,13 @@ class GanttChartPanel(wx.PyPanel):
 		self.Bind(wx.EVT_PAINT, self.OnPaint)
 		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
 		self.Bind(wx.EVT_SIZE, self.OnSize)
-		#self.Bind(wx.EVT_MOTION, self.OnMotion)
+		self.Bind(wx.EVT_MOTION, self.OnMove)
 		self.Bind(wx.EVT_LEFT_UP, self.OnLeftClick)
 		self.Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDClick)
 		self.Bind(wx.EVT_RIGHT_UP, self.OnRightClick)
-		
 		self.Bind(wx.EVT_MOUSEWHEEL, self.OnWheel )
+		
+		self.Bind(wx.EVT_TIMER, self.OnMoveTimer, self.moveTimer)
 
 	def OnWheel( self, event ):
 		if not self.verticalSB.IsShown():
@@ -174,6 +182,10 @@ class GanttChartPanel(wx.PyPanel):
 		if self.getNowTimeCallback:
 			self.nowTime = self.getNowTimeCallback()
 		self.Refresh()
+		lClickCallback = getattr(self, 'lClickCallback', None)
+		if lClickCallback is not None:
+			xPos, yPos = event.GetPositionTuple()
+			lClickCallback( xPos, yPos, self.numSelect, iRider, iLap, self.data[iRider][iLap] )
 	
 	def OnLeftDClick( self, event ):
 		if getattr(self, 'empty', True):
@@ -185,6 +197,17 @@ class GanttChartPanel(wx.PyPanel):
 		if self.numSelect is not None:
 			if self.dClickCallback:
 				self.dClickCallback( self.numSelect )
+	
+	def OnMove( self, event ):
+		self.xMove, self.yMove = event.GetPosition()
+		redrawRequired = (self.moveIRider is not None)
+		self.moveIRider, self.moveLap = None, None
+		self.Refresh()
+		self.moveTimer.Start( 100, True )
+	
+	def OnMoveTimer( self, event ):
+		self.moveIRider, self.moveLap = self.getRiderLapXY( self.xMove, self.yMove )
+		self.Refresh()
 	
 	def getRiderLapXY( self, x, y ):
 		y -= self.barHeight
@@ -469,6 +492,17 @@ class GanttChartPanel(wx.PyPanel):
 								noteWidth, noteHeight = dc.GetTextExtent( note )
 							dc.DrawText( note, xLast + noteBorderWidth, yLast + (dy - noteHeight) / 2 )
 							dc.SetFont( font )
+					
+					if j == self.moveLap and self.moveIRider == i:
+						if hasPhoto(num, t):
+							# Draw a little camera icon.
+							cameraHeight = int(dy * 0.75)
+							cameraWidth = int(cameraHeight * 1.5)
+							dc.SetBrush( wx.BLACK_BRUSH )
+							dc.DrawRoundedRectangle( xCur - 2 - cameraWidth, yLast + (dy - cameraHeight) / 2, cameraWidth, cameraHeight, cameraHeight/5 )
+							dc.SetPen( wx.WHITE_PEN )
+							dc.SetBrush( transparentBrush )
+							dc.DrawCircle( xCur - 2 - cameraWidth / 2, yLast + dy / 2, cameraHeight * (0.6 / 2) ) 
 					
 					if xOriginal <= xRight:
 						try:

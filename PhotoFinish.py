@@ -47,8 +47,6 @@ camera = None
 font = None
 photoCache = set()		# Cache of all photo file names.
 
-fileFormat = 'bib-%04d-time-%02d-%02d-%02d-%02d.jpg'
-
 def getPhotoDirName( raceFileName ):
 	fileName, fileExtension = os.path.splitext( raceFileName )
 	# Get the directory to write the photo in.
@@ -67,9 +65,17 @@ def ResetPhotoInfoCache( raceFileName ):
 	photoCache = set( file for file in os.listdir(dir) if file.startswith('bib') and file.endswith('.jpg') )
 	
 def hasPhoto( bib, raceSeconds ):
+	return GetPhotoFName(bib, raceSeconds) in photoCache
+
+fileFormat = 'bib-%04d-time-%02d-%02d-%02d-%02d.jpg'
+def GetPhotoFName( bib, raceSeconds ):
 	iSeconds = int(raceSeconds)
-	tStr = fileFormat % (bib, int(iSeconds / (60*60)), int(iSeconds / 60) % 60, iSeconds % 60, int(math.modf(raceSeconds)[0] * 100))
-	return tStr in photoCache
+	hours = int(iSeconds / (60*60))
+	minutes = int(iSeconds / 60) % 60
+	seconds = iSeconds % 60
+	decimals = int(math.modf(raceSeconds)[0] * 100)
+	fname = fileFormat % (bib, hours, minutes, seconds, decimals)
+	return fname
 	
 if Device:
 	def TakePhoto( raceFileName, bib, raceSeconds ):
@@ -83,14 +89,7 @@ if Device:
 			except:
 				return
 		
-		iSeconds = int(raceSeconds)
-		hours = int(iSeconds / (60*60))
-		minutes = int(iSeconds / 60) % 60
-		seconds = iSeconds % 60
-		decimals = int(math.modf(raceSeconds)[0] * 100)
-	
-		# Get the filename for the photo.
-		fname = fileFormat % (bib, hours, minutes, seconds, decimals)
+		fname = GetPhotoFName( bib, raceSeconds )
 		fileName = os.path.join( dirName, fname )
 		
 		# Write the photo.
@@ -104,12 +103,19 @@ if Device:
 			fontHeight = h//25
 			if not font:
 				font = wx.FontFromPixelSize( wx.Size(0,fontHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
+				
+			iSeconds = int(raceSeconds)
+			hours = int(iSeconds / (60*60))
+			minutes = int(iSeconds / 60) % 60
+			seconds = iSeconds % 60
+			decimals = int(math.modf(raceSeconds)[0] * 100)
 			txt = 'Bib: %d  RaceTime: %02d:%02d:%02d.%02d  %s  %s' % (
 				bib, hours, minutes, seconds, decimals, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), AppVerName)
+				
 			dc.SetFont( font )
 			dc.DrawText( txt, fontHeight * 0.5, h - fontHeight*1.25 )
 			wx.ImageFromBitmap(bitmap).SaveFile( fileName, wx.BITMAP_TYPE_JPEG )
-			photoCache.Add( fname )		# Add the photo to the cache.
+			photoCache.add( fname )		# Add the photo to the cache.
 		
 	def SetCameraState( state = False ):
 		global camera, font

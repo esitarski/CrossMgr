@@ -1265,6 +1265,7 @@ class MainWin( wx.Frame ):
 		ResetExcelLinkCache()
 		Model.setRace( Model.Race() )
 		properties.update()
+		ResetPhotoInfoCache( self.fileName )
 		self.updateRecentFiles()
 
 		importedCategories = False
@@ -1341,6 +1342,7 @@ class MainWin( wx.Frame ):
 		self.fileName = fileName
 		Model.resetCache()
 		ResetExcelLinkCache()
+		ResetPhotoInfoCache( self.fileName )
 		
 		# Save the current Ftp settings.
 		ftpPublish = FtpWriteFile.FtpPublishDialog( self )
@@ -1389,7 +1391,6 @@ class MainWin( wx.Frame ):
 		self.refresh()
 		Model.resetCache()
 		ResetExcelLinkCache()
-		ResetPhotoInfoCache( fileName )
 		self.writeRace()
 		self.closeFindDialog()
 		
@@ -1406,6 +1407,7 @@ class MainWin( wx.Frame ):
 			
 			undo.clear()
 			ResetExcelLinkCache()
+			ResetPhotoInfoCache( self.fileName )
 			Model.resetCache()
 			
 			self.updateRecentFiles()
