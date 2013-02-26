@@ -350,6 +350,8 @@ class NumKeypad( wx.Panel ):
 			mainWin.forecastHistory.updatedExpectedTimes( tRace )
 	
 	def onPhotoButton( self, event ):
+		if not Utils.mainWin:
+			return
 		Utils.mainWin.photoDialog.Show( True )
 		Utils.mainWin.photoDialog.refresh( Utils.mainWin.photoDialog.ShowAllPhotos )
 	

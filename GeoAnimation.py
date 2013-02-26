@@ -151,8 +151,9 @@ def ParseGpxFile( fname, useTimes = False ):
 			gad = GradeAdjustedDistance( p.lat, p.lon, p.ele, pNext.lat, pNext.lon, pNext.ele )
 		x = GreatCircleDistance( latMin, lonMin, latMin, p.lon )
 		y = GreatCircleDistance( latMin, lonMin, p.lat, lonMin )
-		gpsPoints.append( GpsPoint(p.lat, p.lon, p.ele, x, y, gad, dCum) )
-		dCum += gad
+		if gad > 0.0:
+			gpsPoints.append( GpsPoint(p.lat, p.lon, p.ele, x, y, gad, dCum) )
+			dCum += gad
 	
 	doc.unlink()
 	return gpsPoints
@@ -220,7 +221,7 @@ class GeoTrack( object ):
 		self.cache[id] = i
 		
 		segDistance = lapDistance - self.cumDistance[i]
-		segRatio = segDistance / pCur.d
+		segRatio = 0.0 if pCur.d <= 0.0 else segDistance / pCur.d
 		
 		x, y = pCur.x + (pNext.x - pCur.x) * segRatio, pCur.y + (pNext.y - pCur.y) * segRatio
 		return x * self.mult + self.x, self.yBottom - y * self.mult

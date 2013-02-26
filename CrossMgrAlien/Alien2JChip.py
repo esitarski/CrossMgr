@@ -14,7 +14,7 @@ CR = chr( 0x0d )
 # Function to format number, lap and time in JChip format
 # Z413A35 10:11:16.4433 10  10000      C7
 count = 0
-def formatMessage( tag, t ):
+def formatMessage( tagID, t ):
 	global count
 	message = "DA%d %s 10  %05X      C7%s" % (
 				int(tagID, 16),						# Tag code in decimal, no leading zeros.
