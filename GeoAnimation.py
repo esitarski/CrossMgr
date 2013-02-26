@@ -95,7 +95,17 @@ def ParseGpxFile( fname, useTimes = False ):
 	
 	latMin, lonMin = 1000.0, 1000.0
 	latLonEles = []
+	
+	# Check if this file is formated with 'trkpt' or 'rtept' tags.
+	ptTag = None
 	for trkpt in doc.getElementsByTagName('trkpt'):
+		ptTag = 'trkpt'		# Standard gpx.
+		break
+	if ptTag is None:
+		ptTag = 'rtept'		# Old-style gpx.
+	
+	hasTimes = True
+	for trkpt in doc.getElementsByTagName(ptTag):
 		try:
 			lat = float( trkpt.getAttribute('lat') )
 			lon = float( trkpt.getAttribute('lon') )
@@ -117,12 +127,14 @@ def ParseGpxFile( fname, useTimes = False ):
 			except ValueError:
 				pass
 		latLonEles.append( LatLonEle(lat, lon, ele, t) )
+		if t is None:
+			hasTimes = False
 		
 	gpsPoints = []
 	dCum = 0.0
 	for i in xrange(len(latLonEles)):
 		p, pNext = latLonEles[i], latLonEles[(i+1) % len(latLonEles)]
-		if useTimes:
+		if hasTimes and useTimes:
 			if pNext.t > p.t:
 				gad = (pNext.t - p.t).total_seconds()
 			else:

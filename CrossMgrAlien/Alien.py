@@ -41,11 +41,11 @@ set TagListMillis = ON			# record tags times to milliseconds
 set PersistTime = -1				# hold on to a tag for 2 seconds before considering it new again
 
 set TagStreamMode = OFF			# turn off tag streaming - we want a tag list
-#set TagType = 16				# tell reader to default looking for Gen 2 tags
+set TagType = 16				# tell reader to default looking for Gen 2 tags
 
 set AcquireMode = Inventory		# resolve multiple tag reads rather than just reading the closest/strongest tag
 
-set AntennaSequence = {antennas}	# Cycle transmitting/receiving between antennas 0 and 1 (assume 2 antennas)
+set AntennaSequence = {antennas}	# Set which antennas to use based on user indication.
 set RFModulation = STD			# Standard operating mode
 
 # Notify configuration.
