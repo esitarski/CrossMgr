@@ -205,17 +205,20 @@ class GeoTrack( object ):
 		try:
 			i = self.cache[id]
 			pCur, pNext = self.gpsPoints[i], self.gpsPoints[(i + 1) % lenGpsPoints]
-			if not (pCur.d <= lapDistance <= pNext.d):
+			if not (pCur.dCum <= lapDistance <= pNext.dCum):
 				i = (i + 1) % lenGpsPoints
 				pCur, pNext = pNext, self.gpsPoints[(i + 1) % lenGpsPoints]
-				if not (pCur.d <= lapDistance <= pNext.d):
+				if not (pCur.dCum <= lapDistance <= pNext.dCum):
 					i = None
 		except (IndexError, KeyError):
 			i = None
 			
 		if i is None:
-			i = bisect.bisect_right( self.cumDistance, lapDistance )-1	# Find the closest point LE the lap distance.
-			i = (i + lenGpsPoints) % lenGpsPoints
+			# Find the closest point LT the lap distance.
+			i = bisect.bisect_right( self.cumDistance, lapDistance )
+			i %= lenGpsPoints
+			if self.cumDistance[i] > lapDistance:
+				i -= 1
 			pCur, pNext = self.gpsPoints[i], self.gpsPoints[(i + 1) % lenGpsPoints]
 		
 		self.cache[id] = i
