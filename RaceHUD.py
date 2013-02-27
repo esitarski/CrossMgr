@@ -132,6 +132,9 @@ class RaceHUD(wx.PyControl):
 		labelsWidth = textWidth
 		xLeft = labelsWidth
 		xRight = width - max( self.broom.GetWidth(), broomTimeWidth )
+		if xRight - xLeft < 16:
+			self.empty = True
+			return
 
 		xMult = (xRight - xLeft) / float(max(rt[-1] if rt else 0 for rt in self.raceTimes))
 

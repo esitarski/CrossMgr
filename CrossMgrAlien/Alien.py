@@ -44,6 +44,8 @@ set TagStreamMode = OFF			# turn off tag streaming - we want a tag list
 set TagType = 16				# tell reader to default looking for Gen 2 tags
 
 set AcquireMode = Inventory		# resolve multiple tag reads rather than just reading the closest/strongest tag
+set AcqG2Q = 5					# tell the reader to expect a larger group of tags in each read cycle (2^5 = 32)
+set AcqG2Cycles = 8				# set the outer loop to make the reader work harder to get reads
 
 set AntennaSequence = {antennas}	# Set which antennas to use based on user indication.
 set RFModulation = STD			# Standard operating mode

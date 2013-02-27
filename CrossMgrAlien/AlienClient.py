@@ -207,6 +207,7 @@ def SendData():
 			sys.stdout.write( 'sending: %s\n' % message[:-3] )
 			try:
 				sock.send( message )
+				sock.send( message )
 				iMessage += 1
 			except:
 				print 'Send failed.  Attempting to reconnect...'
