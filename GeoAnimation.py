@@ -204,13 +204,11 @@ class GeoTrack( object ):
 		lenGpsPoints = len(self.gpsPoints)
 		try:
 			i = self.cache[id]
-			pCur, pNext = self.gpsPoints[i], self.gpsPoints[(i + 1) % lenGpsPoints]
-			pNextDCum = pNext.dCum if i+1 != lenGpsPoints else self.distanceTotal
-			if not (pCur.dCum <= lapDistance <= pNextDCum):
+			pCur = self.gpsPoints[i]
+			if not (pCur.dCum <= lapDistance <= pCur.dCum + pCur.d):
 				i = (i + 1) % lenGpsPoints
-				pCur, pNext = pNext, self.gpsPoints[(i + 1) % lenGpsPoints]
-				pNextDCum = pNext.dCum if i+1 != lenGpsPoints else self.distanceTotal
-				if not (pCur.dCum <= lapDistance <= pNextDCum):
+				pCur = self.gpsPoints[i]
+				if not (pCur.dCum <= lapDistance <= pCur.dCum + pCur.d):
 					i = None
 		except (IndexError, KeyError):
 			i = None
@@ -221,9 +219,9 @@ class GeoTrack( object ):
 			i %= lenGpsPoints
 			if self.cumDistance[i] > lapDistance:
 				i -= 1
-			pCur, pNext = self.gpsPoints[i], self.gpsPoints[(i + 1) % lenGpsPoints]
 		
 		self.cache[id] = i
+		pCur, pNext = self.gpsPoints[i], self.gpsPoints[(i + 1) % lenGpsPoints]
 		
 		segDistance = lapDistance - self.cumDistance[i]
 		segRatio = 0.0 if pCur.d <= 0.0 else segDistance / pCur.d
