@@ -118,7 +118,7 @@ class Alien( object ):
 			os.makedirs( dataDir )
 		self.fname = os.path.join( dataDir, tNow.strftime('Alien-%Y-%m-%d-%H-%M-%S.txt') )
 		with open(self.fname, 'w') as pf:
-			pf.write( 'Tag ID, Discover Time, Antenna, Count\n' )
+			pf.write( 'Tag ID, Discover Time, Count\n' )
 	
 		self.keepGoing = True
 		

@@ -14,7 +14,6 @@ OutputBaseFilename=CrossMgrAlien_Setup
 ChangesAssociations=yes
 
 [Registry]
-; Automatically configure CrossMgrAlien to launch .tp5 files.
 Root: HKCR; Subkey: "CrossMgrAlien\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\CrossMgrAlien.exe,0"
 Root: HKCR; Subkey: "CrossMgrAlien\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\CrossMgrAlien.exe"" ""%1"""
 
