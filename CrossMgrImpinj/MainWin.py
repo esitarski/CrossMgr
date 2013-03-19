@@ -1,0 +1,419 @@
+import sys
+import threading
+import socket
+import atexit
+import time
+from roundbutton import RoundButton
+import Utils
+from Queue import Empty
+from threading import Thread as Process
+from Queue import Queue
+from Impinj import ImpinjServer
+from Impinj2JChip import CrossMgrServer
+
+import wx
+import wx.lib.masked             as masked
+import wx.lib.intctrl			as intctrl
+import sys
+import os
+import re
+import datetime
+
+from Version import AppVerName
+
+CrossMgrPort = 53135
+ImpinjHostNamePrefix = 'speedwayr-'
+#ImpinjInboundPort = 5084
+ImpinjInboundPort = 50840
+
+clipboard_xpm = [
+"16 15 23 1",
+"+ c #769CDA",
+": c #DCE6F6",
+"X c #3365B7",
+"* c #FFFFFF",
+"o c #9AB6E4",
+"< c #EAF0FA",
+"# c #B1C7EB",
+". c #6992D7",
+"3 c #F7F9FD",
+", c #F0F5FC",
+"$ c #A8C0E8",
+"  c None",
+"- c #FDFEFF",
+"& c #C4D5F0",
+"1 c #E2EAF8",
+"O c #89A9DF",
+"= c #D2DFF4",
+"4 c #FAFCFE",
+"2 c #F5F8FD",
+"; c #DFE8F7",
+"% c #B8CCEC",
+"> c #E5EDF9",
+"@ c #648FD6",
+" .....XX        ",
+" .oO+@X#X       ",
+" .$oO+X##X      ",
+" .%$o........   ",
+" .&%$.*=&#o.-.  ",
+" .=&%.*;=&#.--. ",
+" .:=&.*>;=&.... ",
+" .>:=.*,>;=&#o. ",
+" .<1:.*2,>:=&#. ",
+" .2<1.*32,>:=&. ",
+" .32<.*432,>:=. ",
+" .32<.*-432,>:. ",
+" .....**-432,>. ",
+"     .***-432,. ",
+"     .......... "
+]
+
+
+class MessageManager( object ):
+	MessagesMax = 400	# Maximum number of messages before we start throwing some away.
+
+	def __init__( self, messageList ):
+		self.messageList = messageList
+		self.messageList.Bind( wx.EVT_RIGHT_DOWN, self.skip )
+		self.messageList.SetDoubleBuffered( True )
+		self.clear()
+		
+	def skip(self, evt):
+		return
+		
+	def write( self, message ):
+		if len(self.messages) >= self.MessagesMax:
+			self.messages = self.messages[int(self.MessagesMax):]
+			s = '\n'.join( self.messages )
+			self.messageList.ChangeValue( s + '\n' )
+		self.messages.append( message )
+		self.messageList.AppendText( message + '\n' )
+		
+	def clear( self ):
+		self.messages = []
+		self.messageList.ChangeValue( '' )
+		self.messageList.SetInsertionPointEnd()
+
+def setFont( font, w ):
+	w.SetFont( font )
+	return w
+	
+class MainWin( wx.Frame ):
+	def __init__( self, parent, id = wx.ID_ANY, title='', size=(200,200) ):
+		wx.Frame.__init__(self, parent, id, title, size=size)
+
+		self.config = wx.Config(appName="CrossMgrImpinj",
+						vendorName="SmartCyclingSolutions",
+						style=wx.CONFIG_USE_LOCAL_FILE)
+						
+		self.SetBackgroundColour( wx.Colour(232,232,232) )
+		
+		font = self.GetFont()
+		bigFont = wx.Font( font.GetPointSize() * 1.5, font.GetFamily(), font.GetStyle(), wx.FONTWEIGHT_BOLD )
+		italicFont = wx.Font( bigFont.GetPointSize()*2.2, bigFont.GetFamily(), wx.FONTSTYLE_ITALIC, bigFont.GetWeight() )
+		
+		self.vbs = wx.BoxSizer( wx.VERTICAL )
+		
+		bs = wx.BoxSizer( wx.HORIZONTAL )
+		
+		self.reset = RoundButton(self, wx.ID_ANY, 'Reset', size=(80, 80))
+		self.reset.SetBackgroundColour( wx.WHITE )
+		self.reset.SetForegroundColour( wx.Colour(0,128,128) )
+		self.reset.SetFontToFitLabel()	# Use the button's default font, but change the font size to fit the label.
+		self.reset.Bind( wx.EVT_BUTTON, self.doReset )
+		self.reset.Refresh()
+		bs.Add( self.reset, border = 8, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
+		bs.Add( setFont(italicFont,wx.StaticText(self, wx.ID_ANY, 'CrossMgrImpinj')), border = 8, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
+		bs.AddStretchSpacer()
+		bitmap = wx.BitmapFromXPMData( clipboard_xpm )
+		self.copyToClipboard = wx.BitmapButton( self, wx.ID_ANY, bitmap )
+		self.copyToClipboard.SetToolTip(wx.ToolTip('Copy Configuration and Logs to Clipboard...'))
+		self.copyToClipboard.Bind( wx.EVT_BUTTON, self.doCopyToClipboard )
+		bs.Add( self.copyToClipboard, border = 32, flag = wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
+		self.tStart = datetime.datetime.now()
+		bs.Add( setFont(bigFont,wx.StaticText(self, wx.ID_ANY, 'Last Reset: %s' % self.tStart.strftime('%H:%M:%S'))), border = 10, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
+		self.runningTime = setFont(bigFont,wx.StaticText(self, wx.ID_ANY, '00:00:00' ))
+		bs.Add( self.runningTime, border = 20, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
+		bs.Add( setFont(bigFont,wx.StaticText(self, wx.ID_ANY, ' / ')), flag=wx.ALIGN_CENTER_VERTICAL )
+		self.time = setFont(bigFont, wx.StaticText(self, wx.ID_ANY, '00:00:00' ))
+		bs.Add( self.time, flag=wx.ALIGN_CENTER_VERTICAL )
+		
+		self.vbs.Add( bs, flag=wx.ALL|wx.EXPAND, border = 4 )
+		
+		fgs = wx.FlexGridSizer( rows = 2, cols = 2, vgap = 4, hgap = 4 )
+		fgs.AddGrowableRow( 1 )
+		fgs.AddGrowableCol( 0 )
+		fgs.AddGrowableCol( 1 )
+		fgs.SetFlexibleDirection( wx.BOTH )
+		
+		self.vbs.Add( fgs, flag=wx.EXPAND, proportion=5 )
+		
+		#------------------------------------------------------------------------------------------------
+		# Impinj configuration.
+		#
+		gbs = wx.GridBagSizer( 4, 4 )
+		fgs.Add( gbs, flag=wx.EXPAND|wx.ALL, border = 4 )
+		
+		iRow = 0
+		gbs.Add( setFont(bigFont,wx.StaticText(self, wx.ID_ANY, 'Impinj Configuration:')), pos=(iRow,0), span=(1,2), flag=wx.ALIGN_LEFT )
+		
+		iRow += 1
+		self.useHostName = wx.RadioButton( self, wx.ID_ANY, 'Host Name:', style=wx.wx.RB_GROUP )
+		gbs.Add( self.useHostName, pos=(iRow,0), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
+		hb = wx.BoxSizer( wx.HORIZONTAL )
+		hb.Add( wx.StaticText(self, wx.ID_ANY, ImpinjHostNamePrefix), flag=wx.ALIGN_CENTER_VERTICAL )
+		self.impinjHostName = masked.TextCtrl( self, wx.ID_ANY,
+							mask         = 'NN-NN-NN',
+							defaultValue = '00-00-00',
+							useFixedWidthFont = True,
+							size=(80, -1),
+						)
+		hb.Add( self.impinjHostName )
+		gbs.Add( hb, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
+		
+		iRow += 1
+		self.useStaticAddress = wx.RadioButton( self, wx.ID_ANY, 'Static IP:' )
+		gbs.Add( self.useStaticAddress, pos=(iRow,0), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
+		self.impinjHost = masked.IpAddrCtrl( self, wx.ID_ANY, style = wx.TE_PROCESS_TAB )
+		gbs.Add( self.impinjHost, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
+		
+		self.useHostName.SetValue( True )
+		self.useStaticAddress.SetValue( False )
+		
+		iRow += 1
+		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'Backup File:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT )
+		self.backupFile = wx.StaticText( self, wx.ID_ANY, '' )
+		gbs.Add( self.backupFile, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
+		
+		#------------------------------------------------------------------------------------------------
+		# CrossMgr configuration.
+		#
+		gbs = wx.GridBagSizer( 4, 4 )
+		fgs.Add( gbs, flag=wx.EXPAND|wx.ALL, border = 4 )
+		
+		gbs.Add( setFont(bigFont,wx.StaticText(self, wx.ID_ANY, 'CrossMgr Configuration:')), pos=(0,0), span=(1,2), flag=wx.ALIGN_LEFT )
+		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'CrossMgr Address:'), pos=(1,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		
+		hb = wx.BoxSizer( wx.HORIZONTAL )
+		self.crossMgrHost = masked.IpAddrCtrl( self, wx.ID_ANY, style = wx.TE_PROCESS_TAB )
+		hb.Add( self.crossMgrHost, flag=wx.ALIGN_LEFT )
+		hb.Add( wx.StaticText( self, wx.ID_ANY, ' : 53135' ), flag=wx.ALIGN_CENTER_VERTICAL )
+		gbs.Add( hb, pos=(1,1), span=(1,1), flag=wx.ALIGN_LEFT )
+		
+		#------------------------------------------------------------------------------------------------
+		# Add messages
+		#
+		self.impinjMessagesText = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_READONLY|wx.TE_MULTILINE|wx.HSCROLL, size=(-1,400) )
+		fgs.Add( self.impinjMessagesText, flag=wx.EXPAND, proportion=2 )
+		self.impinjMessages = MessageManager( self.impinjMessagesText )
+		
+		self.crossMgrMessagesText = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_READONLY|wx.TE_MULTILINE|wx.HSCROLL, size=(-1,400) )
+		fgs.Add( self.crossMgrMessagesText, flag=wx.EXPAND, proportion=2 )
+		self.crossMgrMessages = MessageManager( self.crossMgrMessagesText )
+		self.fgs = fgs
+		
+		#------------------------------------------------------------------------------------------------
+		# Create a timer to update the messages.
+		#
+		self.timer = wx.Timer()
+		self.timer.Bind( wx.EVT_TIMER, self.updateMessages )
+		self.timer.Start( 1000, False )
+		
+		self.Bind(wx.EVT_CLOSE, self.onCloseWindow)
+
+		self.readOptions()
+		
+		self.SetSizer( self.vbs )
+		self.start()
+	
+	def start( self ):
+		self.dataQ = Queue()
+		self.messageQ = Queue()
+		self.shutdownQ = Queue()	# Queue to tell the Impinj monitor to shut down.
+		
+		if self.useHostName.GetValue():
+			self.impinjProcess = Process( name='ImpinjProcess', target=ImpinjServer,
+				args=(self.dataQ, self.messageQ, self.shutdownQ,
+						ImpinjHostNamePrefix + self.impinjHostName.GetValue(), ImpinjInboundPort ) )
+		else:
+			self.impinjProcess = Process( name='ImpinjProcess', target=ImpinjServer,
+				args=(self.dataQ, self.messageQ, self.shutdownQ,
+						self.impinjHost.GetAddress(), ImpinjInboundPort ) )
+		self.impinjProcess.daemon = True
+		
+		self.crossMgrProcess = Process( name='CrossMgrProcess', target=CrossMgrServer,
+			args=(self.dataQ, self.messageQ, self.shutdownQ, self.getCrossMgrHost(), CrossMgrPort) )
+		self.crossMgrProcess.daemon = True
+		
+		self.impinjProcess.start()
+		self.crossMgrProcess.start()
+	
+	def shutdown( self ):
+		self.impinjProcess = None
+		self.crossMgrProcess = None
+		self.messageQ = None
+		self.dataQ = None
+		self.shutdownQ = None
+	
+	def doReset( self, event ):
+		dlg = wx.MessageDialog(self, 'Reset CrossMgrImpinj Adapter?',
+								'Confirm Reset',
+								wx.OK | wx.CANCEL | wx.ICON_WARNING )
+		ret = dlg.ShowModal()
+		dlg.Destroy()
+		if ret != wx.ID_OK:
+			return
+		self.writeOptions()
+		
+		# Shutdown the CrossMgr process by sending it a shutdown command.
+		self.shutdownQ.put( 'shutdown' )
+		self.shutdownQ.put( 'shutdown' )
+		self.shutdownQ.put( 'shutdown' )
+		self.dataQ.put( 'shutdown' )
+		
+		self.crossMgrProcess.join()
+		self.impinjProcess.join()
+		
+		self.crossMgrProcess = None
+		self.impinjProcess = None
+		
+		self.impinjMessages.clear()
+		self.crossMgrMessages.clear()
+		self.shutdown()
+		wx.CallAfter( self.start )
+	
+	def onCloseWindow( self, event ):
+		wx.Exit()
+		
+	def doCopyToClipboard( self, event ):
+		cc = [
+			'Configuration: CrossMgrImpinj',
+			'    RunningTime:   %s' % self.runningTime.GetLabel(),
+			'    Time:          %s' % self.time.GetLabel(),
+			'    BackupFile:    %s' % self.backupFile.GetLabel(),
+			'',
+			'Configuration: Impinj:',
+			'    Use Host Name: %s' % 'True' if self.useHostName.GetValue() else 'False',
+			'    HostName:      %s' % (ImpinjHostNamePrefix + self.impinjHostName.GetValue()),
+			'    ImpinjHost:    %s' % self.impinjHost.GetAddress(),
+			'    ImpinjPort:    %s' % str(ImpinjInboundPort),
+			'',
+			'Configuration: CrossMgr',
+			'    CrossMgrHost:  %s' % self.getCrossMgrHost(),
+			'    CrossMgrPort:  %d' %  CrossMgrPort,
+		]
+		cc.append( '\nLog: Impinj' )
+		log = self.impinjMessagesText.GetValue()
+		cc.extend( ['    ' + line for line in log.split('\n')] )
+		
+		cc.append( '\nLog: CrossMgr' )
+		log = self.crossMgrMessagesText.GetValue()
+		cc.extend( ['    ' + line for line in log.split('\n')] )
+		
+		if wx.TheClipboard.Open():
+			do = wx.TextDataObject()
+			do.SetText( '\n'.join(cc) )
+			wx.TheClipboard.SetData(do)
+			wx.TheClipboard.Close()
+			dlg = wx.MessageDialog(self, 'Configuration and logs copied to the Clipboard.',
+									'Copy to Clipboard Succeeded',
+									wx.OK | wx.ICON_INFORMATION )
+			ret = dlg.ShowModal()
+			dlg.Destroy()
+		else:
+			# oops... something went wrong!
+			wx.MessageBox("Unable to open the clipboard", "Error")
+
+	def getCrossMgrHost( self ):
+		return self.crossMgrHost.GetAddress()
+		
+	def writeOptions( self ):
+		self.config.Write( 'CrossMgrHost', self.getCrossMgrHost() )
+		self.config.Write( 'UseHostName', 'True' if self.useHostName.GetValue() else 'False' )
+		self.config.Write( 'ImpinjHostName', ImpinjHostNamePrefix + self.impinjHostName.GetValue() )
+		self.config.Write( 'ImpinjAddr', self.impinjHost.GetAddress() )
+		self.config.Write( 'ImpinjPort', str(ImpinjInboundPort) )
+	
+	def readOptions( self ):
+		self.crossMgrHost.SetValue( self.config.Read('CrossMgrHost', Utils.DEFAULT_HOST) )
+		useHostName = (self.config.Read('UseHostName', 'True').upper()[:1] == 'T')
+		self.useHostName.SetValue( useHostName )
+		self.useStaticAddress.SetValue( not useHostName )
+		self.impinjHostName.SetValue( self.config.Read('ImpinjHostName', ImpinjHostNamePrefix + '00-00-00')[len(ImpinjHostNamePrefix):] )
+		self.impinjHost.SetValue( self.config.Read('ImpinjAddr', '0.0.0.0') )
+	
+	def updateMessages( self, event ):
+		tNow = datetime.datetime.now()
+		running = int((tNow - self.tStart).total_seconds())
+		self.runningTime.SetLabel( '%02d:%02d:%02d' % (running // (60*60), (running // 60) % 60, running % 60) )
+		self.time.SetLabel( tNow.strftime('%H:%M:%S') )
+		while 1:
+			try:
+				d = self.messageQ.get( False )
+			except Empty:
+				break
+			message = ' '.join( str(x) for x in d[1:] )
+			if   d[0] == 'Impinj':
+				self.impinjMessages.write( message )
+			elif d[0] == 'Impinj2JChip':
+				self.crossMgrMessages.write( message )
+			elif d[0] == 'BackupFile':
+				self.backupFile.SetLabel( os.path.basename(d[1]) )
+
+def disable_stdout_buffering():
+	fileno = sys.stdout.fileno()
+	temp_fd = os.dup(fileno)
+	sys.stdout.close()
+	os.dup2(temp_fd, fileno)
+	os.close(temp_fd)
+	sys.stdout = os.fdopen(fileno, "w", 0)
+		
+mainWin = None
+def MainLoop():
+	global mainWin
+	
+	app = wx.PySimpleApp()
+	app.SetAppName("CrossMgrImpinj")
+
+	mainWin = MainWin( None, title=AppVerName, size=(800,600) )
+	
+	dataDir = Utils.getHomeDir()
+	redirectFileName = os.path.join(dataDir, 'CrossMgrImpinj.log')
+			
+	# Set up the log file.  Otherwise, show errors on the screen.
+	if __name__ == '__main__':
+		disable_stdout_buffering()
+	else:
+		try:
+			logSize = os.path.getsize( redirectFileName )
+			if logSize > 1000000:
+				os.remove( redirectFileName )
+		except:
+			pass
+	
+		try:
+			app.RedirectStdio( redirectFileName )
+		except:
+			pass
+	
+	mainWin.Show()
+
+	# Set the upper left icon.
+	try:
+		icon = wx.Icon( os.path.join(getImageFolder(), 'CrossMgrImpinj.ico'), wx.BITMAP_TYPE_ICO )
+		mainWin.SetIcon( icon )
+	except:
+		pass
+
+	# Start processing events.
+	mainWin.Refresh()
+	app.MainLoop()
+
+@atexit.register
+def shutdown():
+	if mainWin:
+		mainWin.shutdown()
+	
+if __name__ == '__main__':
+	MainLoop()
+	
