@@ -22,9 +22,10 @@ import datetime
 from Version import AppVerName
 
 CrossMgrPort = 53135
-ImpinjHostNamePrefix = 'speedwayr-'
-#ImpinjInboundPort = 5084
-ImpinjInboundPort = 50840
+ImpinjHostNamePrefix = 'SpeedwayR-'
+ImpinjHostNameSuffix = '.local'
+ImpinjInboundPort = 5084
+#ImpinjInboundPort = 50840
 
 clipboard_xpm = [
 "16 15 23 1",
@@ -169,6 +170,7 @@ class MainWin( wx.Frame ):
 							size=(80, -1),
 						)
 		hb.Add( self.impinjHostName )
+		hb.Add( wx.StaticText(self, wx.ID_ANY, ImpinjHostNameSuffix), flag=wx.ALIGN_CENTER_VERTICAL )
 		gbs.Add( hb, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
 		
 		iRow += 1
@@ -234,7 +236,7 @@ class MainWin( wx.Frame ):
 		if self.useHostName.GetValue():
 			self.impinjProcess = Process( name='ImpinjProcess', target=ImpinjServer,
 				args=(self.dataQ, self.messageQ, self.shutdownQ,
-						ImpinjHostNamePrefix + self.impinjHostName.GetValue(), ImpinjInboundPort ) )
+						ImpinjHostNamePrefix + self.impinjHostName.GetValue() + ImpinjHostNameSuffix, ImpinjInboundPort ) )
 		else:
 			self.impinjProcess = Process( name='ImpinjProcess', target=ImpinjServer,
 				args=(self.dataQ, self.messageQ, self.shutdownQ,
@@ -294,7 +296,7 @@ class MainWin( wx.Frame ):
 			'',
 			'Configuration: Impinj:',
 			'    Use Host Name: %s' % 'True' if self.useHostName.GetValue() else 'False',
-			'    HostName:      %s' % (ImpinjHostNamePrefix + self.impinjHostName.GetValue()),
+			'    HostName:      %s' % (ImpinjHostNamePrefix + self.impinjHostName.GetValue()) + ImpinjHostNameSuffix,
 			'    ImpinjHost:    %s' % self.impinjHost.GetAddress(),
 			'    ImpinjPort:    %s' % str(ImpinjInboundPort),
 			'',
@@ -330,7 +332,7 @@ class MainWin( wx.Frame ):
 	def writeOptions( self ):
 		self.config.Write( 'CrossMgrHost', self.getCrossMgrHost() )
 		self.config.Write( 'UseHostName', 'True' if self.useHostName.GetValue() else 'False' )
-		self.config.Write( 'ImpinjHostName', ImpinjHostNamePrefix + self.impinjHostName.GetValue() )
+		self.config.Write( 'ImpinjHostName', ImpinjHostNamePrefix + self.impinjHostName.GetValue() + ImpinjHostNameSuffix )
 		self.config.Write( 'ImpinjAddr', self.impinjHost.GetAddress() )
 		self.config.Write( 'ImpinjPort', str(ImpinjInboundPort) )
 	
@@ -339,7 +341,7 @@ class MainWin( wx.Frame ):
 		useHostName = (self.config.Read('UseHostName', 'True').upper()[:1] == 'T')
 		self.useHostName.SetValue( useHostName )
 		self.useStaticAddress.SetValue( not useHostName )
-		self.impinjHostName.SetValue( self.config.Read('ImpinjHostName', ImpinjHostNamePrefix + '00-00-00')[len(ImpinjHostNamePrefix):] )
+		self.impinjHostName.SetValue( self.config.Read('ImpinjHostName', ImpinjHostNamePrefix + '00-00-00' + ImpinjHostNameSuffix)[len(ImpinjHostNamePrefix):-len(ImpinjHostNameSuffix)] )
 		self.impinjHost.SetValue( self.config.Read('ImpinjAddr', '0.0.0.0') )
 	
 	def updateMessages( self, event ):
@@ -375,7 +377,7 @@ def MainLoop():
 	app = wx.PySimpleApp()
 	app.SetAppName("CrossMgrImpinj")
 
-	mainWin = MainWin( None, title=AppVerName, size=(800,600) )
+	mainWin = MainWin( None, title=AppVerName, size=(800,1000) )
 	
 	dataDir = Utils.getHomeDir()
 	redirectFileName = os.path.join(dataDir, 'CrossMgrImpinj.log')

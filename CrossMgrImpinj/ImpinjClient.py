@@ -67,7 +67,7 @@ for n in nums:
 numLapTimes.sort( key = lambda x: (x[1], x[2]) )	# Sort by lap, then race time.
 
 def StartClient():
-	print 'StartClient: Waiting for commands.'
+	print 'StartClient: Setting up connection...'
 	
 	sock = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 	sock.setsockopt( socket.SOL_SOCKET, socket.SO_REUSEADDR, 1 )
@@ -80,6 +80,17 @@ def StartClient():
 		print e
 		raise
 	
+	print 'StatClient: Sending  event notification - everything is OK.'
+	ms = long((datetime.datetime.now() - datetime.datetime( 1970, 1, 1, 0, 0, 0 )).total_seconds() * 1000000)
+	READER_EVENT_NOTIFICATION_Message( MessageID = 0, Parameters = [
+			ReaderEventNotificationData_Parameter(
+				UTCTimestampe( ms ),
+				ConnectionAttempt_Parameter( ConnectionAttemptStatusType_Success ),
+			)
+		]
+	).send( clientSocket )
+	
+	print 'StartClient: Waiting for commands.'
 	while 1:
 		message = UnpackMessageFromSocket( clientSocket )
 		

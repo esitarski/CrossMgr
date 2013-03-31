@@ -63,40 +63,76 @@ class Impinj( object ):
 	#-------------------------------------------------------------------------
 	
 	def sendCommand( self, message ):
+		self.messageQ.put( ('Impinj', '-----------------------------------------------------') )
 		self.messageQ.put( ('Impinj', 'Sending Message:\n%s\n' % message) )
 		message.send( self.readerSocket )
+			
+		success = True
 		response = WaitForMessage( self.messageID, GetResponseClass(message), self.readerSocket )
+		'''
+		try:
+			response = WaitForMessage( self.messageID, GetResponseClass(message), self.readerSocket )
+			success = True
+		except Exception as error:
+			response = str(error)
+			success = False
+		'''
+			
 		self.messageQ.put( ('Impinj', 'Received Response:\n%s\n' % response) )
 		self.messageID += 1
-		return response
+		return success, response
 		
 	def sendCommands( self ):
-		self.messageQ.put( ('Impinj', 'Sending initialization commands to the Impinj reader...') )
-
+		self.messageQ.put( ('Impinj', 'Connected to: (%s:%d)' % (self.impinjHost, self.impinjPort) ) )
+		
+		self.messageQ.put( ('Impinj', 'Waiting for READER_EVENT_NOTIFICATION...') )
+		response = UnpackMessageFromSocket( self.readerSocket )
+		self.messageQ.put( ('Impinj', '\nReceived Response:\n%s\n' % response) )
+		
+		'''
 		# Query the supported version.
-		response = self.sendCommand( GET_SUPPORTED_VERSION_Message(MessageID = self.messageID) )
+		success, response = self.sendCommand( GET_SUPPORTED_VERSION_Message(MessageID = self.messageID) )
+		if not success:
+			return False
+		'''
 		
-		# Set the protocol version.
-		response = self.sendCommand( SET_PROTOCOL_VERSION_Message(MessageID = self.messageID, ProtocolVersion = 2) )
+		# Reset to factory defaults.
+		success, response = self.sendCommand( SET_READER_CONFIG_Message(
+									MessageID = self.messageID,
+									ResetToFactoryDefaults = True ) )
+		if not success:
+			return False
 		
+		'''
 		# Get the reader capabilities for the record.
-		response = self.sendCommand( GET_READER_CAPABILITIES_Message(
+		success, response = self.sendCommand( GET_READER_CAPABILITIES_Message(
 									MessageID = self.messageID,
 									RequestedData = GetReaderCapabilitiesRequestedData_General_Device_Capabilities) )
+		if not success:
+			return False
+		'''
 		
 		# Disable all rospecs in the reader.
-		response = self.sendCommand( DISABLE_ROSPEC_Message(MessageID = self.messageID, ROSpecID = 0) )
+		success, response = self.sendCommand( DISABLE_ROSPEC_Message(MessageID = self.messageID, ROSpecID = 0) )
+		if not success:
+			return False
 		
 		# Delete our old rospec.
-		response = self.sendCommand( DELETE_ROSPEC_Message(MessageID = self.messageID, ROSpecID = self.rospecID) )
+		success, response = self.sendCommand( DELETE_ROSPEC_Message(MessageID = self.messageID, ROSpecID = self.rospecID) )
+		if not success:
+			return False
 		
 		# Configure our new rospec.
-		response = self.sendCommand( GetBasicAddRospecMessage(MessageID = self.messageID, ROSpecID = self.rospecID) )
+		success, response = self.sendCommand( GetBasicAddRospecMessage(MessageID = self.messageID, ROSpecID = self.rospecID) )
+		if not success:
+			return False
 		
 		# Enable our new rospec.
-		response = self.sendCommand( ENABLE_ROSPEC_Message(MessageID = self.messageID, ROSpecID = self.rospecID) )
+		success, response = self.sendCommand( ENABLE_ROSPEC_Message(MessageID = self.messageID, ROSpecID = self.rospecID) )
+		if not success:
+			return False
 		
-		success = (response.Type == ENABLE_ROSPEC_RESPONSE_Message.Type)
+		success = (success and response.Type == ENABLE_ROSPEC_RESPONSE_Message.Type)
 		if success:
 			for p in response.Parameters:
 				if p.Type == LLRPStatus_Parameter.Type:
@@ -112,17 +148,21 @@ class Impinj( object ):
 		tOld = datetime.datetime.now() - datetime.timedelta( days = 100 )
 		
 		self.readerSocket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
-		self.readerSocket.settimeout( 2 )
+		self.readerSocket.settimeout( 5 )
 		try:
 			self.readerSocket.connect( (self.impinjHost, self.impinjPort) )
 		except Exception as inst:
-			self.messageQ.put( ('Impinj', 'Reader Connection Failed: Addr=%s:%d' % (self.impinjHost, self.impinjPort) ) )
+			self.messageQ.put( ('Impinj', 'Reader Connection Failed: (%s:%d)' % (self.impinjHost, self.impinjPort) ) )
 			self.messageQ.put( ('Impinj', '%s' % inst ) )
 			self.messageQ.put( ('Impinj', 'Check that the Reader is turned on and connected, and press Reset.') )
 			self.readerSocket.close()
 			return False
 
-		self.sendCommands()
+		if not self.sendCommands():
+			self.messageQ.put( ('Impinj', 'Reader Connection Failed: (%s:%d)' % (self.impinjHost, self.impinjPort) ) )
+			self.messageQ.put( ('Impinj', 'Check the Reader and press Reset.') )
+			self.readerSocket.close()
+			return False
 		
 		# Adust the times for what comes from the reader.
 		# This will adust for any timezone or time difference from the reader

@@ -290,7 +290,8 @@ class _MessagePackUnpack( object ):
 		m._validate()
 		
 		beginPos = len(s)
-		s.append( bitstring.pack('uintbe:16, uintbe:32, uintbe:32', m.Type, 0, m._MessageID) )
+		# Code Version 1 to the message type (1<<10)
+		s.append( bitstring.pack('uintbe:16, uintbe:32, uintbe:32', (1<<10) | m.Type, 0, m._MessageID) )
 		
 		for name, format in self.SpecifiedFields:
 			_WriteField( s, format, m, name )
@@ -320,6 +321,8 @@ class _ParameterPackUnpack( object ):
 	def unpack( self, s ):
 		p = _parameterClassFromType[self.Type]()
 		
+		print 'unpacking parameter:', p.Name
+
 		beginPos = s.pos
 		Type = s.peek( 'uintbe:8' )
 		if Type & (1<<7):
@@ -330,11 +333,12 @@ class _ParameterPackUnpack( object ):
 		else:
 			Type = s.read('uintbe:16')
 			Type &= ((1<<10)-1)
+			print self.Name, self.Type, self.Encoding, p.Encoding
 			assert p.Encoding == self.TLV
 			p._Length = s.read('uintbe:16')
 		
 		assert Type == self.Type
-
+		
 		for name, format in self.SpecifiedFields:
 			_ReadField( s, format, p, name )
 			
@@ -342,12 +346,14 @@ class _ParameterPackUnpack( object ):
 			while ((s.pos - beginPos) >> 3) < p._Length:
 				p.Parameters.append( UnpackParameter(s) )
 
+		print 'unpack:', p
 		return p
 		
 	def pack( self, s, p ):
 		p._validate()
 
 		beginPos = len(s)
+		print 'Packing:', p.Name, beginPos >> 3
 		if p.Encoding == self.TLV:
 			s.append( bitstring.pack('uintbe:16, uintbe:16', p.Type, 0) )
 		else:
@@ -389,18 +395,18 @@ def _fixSpecifiedFields( SpecifiedFields ):
 		sf.append( (name, format) )
 	return sf
 	
-def _DefTV( Type, Name, SpecifiedFields, Length = None ):
+def _DefTV( Type, Name, SpecifiedFields ):
 	''' Define a TV parameter (no explicit length field). '''
-	if Length is None:
-		Length = 8		# Adjust for the leading Type byte.
-		for name, format in SpecifiedFields:
-			if isinstance(format, (int, long)):
-				Length += format
-			else:
-				assert 'array' not in format
-				Length += int(format.split(':')[1])
-		assert Length & 7 == 0
-		Length >>= 3	# Divide by 8 to get bytes from bits.
+	Length = 8		# Adjust for the leading Type byte.
+	for name, format in SpecifiedFields:
+		if isinstance(format, (int, long)):
+			Length += format
+		else:
+			assert 'array' not in format
+			Length += int(format.split(':')[1])
+	assert Length & 7 == 0
+	Length >>= 3	# Divide by 8 to get bytes from bits.
+	print 'Name:', Name, 'Length:', Length
 	return Type, _ParameterPackUnpack( Type, Name, _ParameterPackUnpack.TV, _fixSpecifiedFields(SpecifiedFields), Length )
 	
 def _DefTLV( Type, Name, SpecifiedFields = [] ):
@@ -422,9 +428,12 @@ _parameters = [
 	] ),
 	_DefTLV( 363,	'MaximumReceiveSensitivity',	[('MaximumSensitivityValue',16)] ),
 	_DefTLV( 139,	'ReceiveSensitivityTableEntry',	[('Index', 16),('ReceiveSensitivityValue',16)] ),
-	_DefTLV( 149,	'PerAntennaReceiveSensitivityRange',	[('AntennaID',16),('ReceiveSensitivityIndexMin',16),('ReceiveSensitivityIndexMax',16)] ),
-	_DefTLV( 140,	'PerAntennaAirProtocol',	[('AntennaID',16),('ProtocolIDs','array16')] ),
-	_DefTLV( 141,	'GPIOCapbiltities',	[('NumGPIs',16),('NumGPOs',16)] ),
+	_DefTLV( 149,	'PerAntennaReceiveSensitivityRange',	[
+		('AntennaID',16),
+		('ReceiveSensitivityIndexMin',16),
+		('ReceiveSensitivityIndexMax',16)] ),
+	_DefTLV( 140,	'PerAntennaAirProtocol',	[('AntennaID',16),('ProtocolIDs','array:8')] ),
+	_DefTLV( 141,	'GPIOCapabiltities',	[('NumGPIs',16),('NumGPOs',16)] ),
 	_DefTLV( 142,	'LLRPCapabilities', [
 		('CanDoRFSurvey',1),('CanDoReportBufferFillWarning',1),('SupportsClientRequestOpSpec',1),
 		('CanDoTagInventoryStateAwareSingulation',1),('SupportsEventAndReportHolding',1),_skip(3),
@@ -443,7 +452,7 @@ _parameters = [
 	_DefTLV( 147,	'FrequencyHopTable',	[('HopTableID',8),_skip(8),('Frequencies','array:32')] ),
 	_DefTLV( 148,	'FixedFrequencyTable',	[('Frequencies','array:16')] ),
 	_DefTLV( 365,	'RFSurveyFrequencyCapabilities',	[('MinimumFrequency',32),('MaximumFrequency',32)] ),
-	_DefTLV( 177,	'ROSpec',	[('Priority',8),('CurrentState',8)] ),
+	_DefTLV( 177,	'ROSpec',	[('ROSpecID',32),('Priority',8),('CurrentState',8)] ),
 	_DefTLV( 178,	'ROBoundarySpec'),
 	_DefTLV( 179,	'ROSpecStartTrigger',	[('ROSpecStartTriggerType',8)] ),
 	_DefTLV( 180,	'PeriodicTriggerValue',	[('Offset',32),('Period',32)] ),
@@ -452,7 +461,7 @@ _parameters = [
 	_DefTLV( 183,	'AISpec',	[('AntennaIDs','array:16')] ),
 	_DefTLV( 184,	'AISpecStopTrigger',	[('AISpecStopTriggerType',8),('DurationTriggerValue',32)] ),
 	_DefTLV( 185,	'TagObservationTrigger',	[('TriggerType',8),_skip(8),('NumberOfTags',16),('NumberOfAttempts',16),('T',16),('Timeout',32)] ),
-	_DefTLV( 186,	'InventorySpec', [('InventoryParameterSpecID',16),('ProtocolID',32)]),
+	_DefTLV( 186,	'InventoryParameterSpec', [('InventoryParameterSpecID',16),('ProtocolID',8)]),
 	_DefTLV( 187,	'RFSurveySpec', [('AntennaID',16),('StartFrequency',32),('EndFrequency',32)]),
 	_DefTLV( 188,	'RFSurveySpecStop', [('StopTriggerType',8),('Duration',32),('N',32)]),
 	_DefTLV( 355,	'LoopSpec', [('LoopCount',32)]),
@@ -484,7 +493,7 @@ _parameters = [
 	_DefTV(  13,	'EPC_96', [('EPC','bytes:96')] ),
 	_DefTV(   9,	'ROSpecID', [('ROSpecID',32)] ),
 	_DefTV(  14,	'SpecIndex', [('SpecIndex',16)] ),
-	_DefTV(  10,	'InventoryParameterSpec', [('InventoryParameterSpecID',16)] ),
+	_DefTV(  10,	'InventoryParameterSpecID', [('InventoryParameterSpecID',16)] ),
 	_DefTV(   1,	'AntennaID', [('AntennaID',16)] ),
 	_DefTV(   6,	'PeakRSSI', [('PeakRSSI',8)] ),
 	_DefTV(   7,	'ChannelIndex', [('ChannelIndex',16)] ),
@@ -725,35 +734,39 @@ def GetBasicAddRospecMessage( MessageID, ROSpecID = 123, inventoryParameterSpecI
 	# Create a basic Reader Operation Spec message
 	#
 	rospecMessage = ADD_ROSPEC_Message( MessageID = MessageID, Parameters = [
-		ROSpec_Parameter( CurrentState = ROSpecState_Disabled ),	# Initialize to disabled.
-		ROSpecID_Parameter( ROSpecID ),								# id is from parameter.
-		ROBoundarySpec_Parameter(		# Configure boundary spec (start and stop triggers for the reader).
-			Parameters = [
-				ROSpecStartTrigger_Parameter(ROSpecStartTriggerType = ROSpecStartTriggerType_Immediate),
-				ROSpecStopTrigger_Parameter(ROSpecStopTriggerType = ROSpecStopTriggerType_Null),	# No stop trigger.
-			]
-		),
-		AISpec_Parameter(				# Antenna Inventory Spec (specifies which antennas and protocol to use)
-			AntennaIDs = [0],			# Use all antennas.
-			Parameters = [
-				InventorySpec_Parameter(
-					InventoryParameterSpecID = inventoryParameterSpecID,
-					ProtocolID = AirProtocols_EPCGlobalClass1Gen2,
-				),
-			]
-		),
-		ROReportSpec_Parameter(			# Report spec (specified how often and what to send from the reader)
-			ROReportTrigger = ROReportTriggerType_Upon_N_Tags_Or_End_Of_ROSpec,
-			N = 1,						# N = 1 --> update on each tag.
-			Parameters = [
-				TagReportContentSelector_Parameter(
-					EnableAntennaID = True,
-					EnableFirstSeenTimestamp = True,
-					EnableTagSeenCount = True,
-				),
-			]
-		),
-	])
+		# Initialize to disabled.
+		ROSpec_Parameter( ROSpecID = ROSpecID, CurrentState = ROSpecState_Disabled, Parameters = [
+			ROBoundarySpec_Parameter(		# Configure boundary spec (start and stop triggers for the reader).
+				Parameters = [
+					# Start immediately.
+					ROSpecStartTrigger_Parameter(ROSpecStartTriggerType = ROSpecStartTriggerType_Immediate),
+					# No stop trigger.
+					ROSpecStopTrigger_Parameter(ROSpecStopTriggerType = ROSpecStopTriggerType_Null),
+				]
+			),
+			AISpec_Parameter(				# Antenna Inventory Spec (specifies which antennas and protocol to use)
+				AntennaIDs = [0],			# Use all antennas.
+				Parameters = [
+					AISpecStopTrigger_Parameter( AISpecStopTriggerType = AISpecStopTriggerType_Null ),
+					InventoryParameterSpec_Parameter(
+						InventoryParameterSpecID = inventoryParameterSpecID,
+						ProtocolID = AirProtocols_EPCGlobalClass1Gen2,
+					),
+				]
+			),
+			ROReportSpec_Parameter(			# Report spec (specified how often and what to send from the reader)
+				ROReportTrigger = ROReportTriggerType_Upon_N_Tags_Or_End_Of_ROSpec,
+				N = 1,						# N = 1 --> update on each tag.
+				Parameters = [
+					TagReportContentSelector_Parameter(
+						EnableAntennaID = True,
+						EnableFirstSeenTimestamp = True,
+						EnableTagSeenCount = True,
+					),
+				]
+			),
+		])	# ROSpec_Parameter
+	])	# ADD_ROSPEC_Message
 	return rospecMessage
 
 def GetEnableRospecMesssage( MessageID, ROSpecID = 123 ):
