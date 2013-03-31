@@ -643,10 +643,11 @@ _ParameterPackUnpackLookup = {}
 _parameterClassFromName = {}
 _parameterClassFromType = {}
 for Type, d in _parameters:
+	parameterClassName = d.Name + '_Parameter'
 	assert Type not in _ParameterPackUnpackLookup, 'Type duplicate.  Parameter: Name = "%s", Type = %d' % (d.Name, Type)
-	assert d.Name + '_Parameter' not in _parameterClassFromName, 'Name duplicate.  Parameter: Name = "%s", Type = %d' % (d.Name, Type)
+	assert parameterClassName not in _parameterClassFromName, 'Name duplicate.  Parameter: Name = "%s", Type = %d' % (d.Name, Type)
 	_ParameterPackUnpackLookup[Type] = d
-	_parameterClassFromType[Type] = _parameterClassFromName[d.Name + '_Parameter'] = _MakeClass( 'Parameter', d.Name, Type, d )
+	_parameterClassFromType[Type] = _parameterClassFromName[parameterClassName] = _MakeClass( 'Parameter', d.Name, Type, d )
 	
 globals().update( _parameterClassFromName )	# Add Parameter classes to global namespace.
 del _parameterClassFromName
@@ -660,10 +661,11 @@ _MessagePackUnpackLookup = {}
 _messageClassFromName = {}
 _messageClassFromType = {}
 for Type, d in _messages:
+	messageClassName = d.Name + '_Message'
 	assert Type not in _MessagePackUnpackLookup, 'Type duplicate.  Message: Name = "%s", Type = %d' % (d.Name, Type)
-	assert d.Name + '_Message' not in _messageClassFromName, 'Name duplicate.  Message: Name = "%s", Type = %d' % (d.Name, Type)
+	assert messageClassName not in _messageClassFromName, 'Name duplicate.  Message: Name = "%s", Type = %d' % (d.Name, Type)
 	_MessagePackUnpackLookup[Type] = d
-	_messageClassFromType[Type] = _messageClassFromName[d.Name + '_Message'] = _MakeClass( 'Message', d.Name, Type, d )
+	_messageClassFromType[Type] = _messageClassFromName[messageClassName] = _MakeClass( 'Message', d.Name, Type, d )
 	
 globals().update( _messageClassFromName )	# Add Message classes to global namespace.
 	
