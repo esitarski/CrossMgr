@@ -321,8 +321,6 @@ class _ParameterPackUnpack( object ):
 	def unpack( self, s ):
 		p = _parameterClassFromType[self.Type]()
 		
-		print 'unpacking parameter:', p.Name
-
 		beginPos = s.pos
 		Type = s.peek( 'uintbe:8' )
 		if Type & (1<<7):
@@ -333,7 +331,7 @@ class _ParameterPackUnpack( object ):
 		else:
 			Type = s.read('uintbe:16')
 			Type &= ((1<<10)-1)
-			print self.Name, self.Type, self.Encoding, p.Encoding
+			# print self.Name, self.Type, self.Encoding, p.Encoding
 			assert p.Encoding == self.TLV
 			p._Length = s.read('uintbe:16')
 		
@@ -346,14 +344,13 @@ class _ParameterPackUnpack( object ):
 			while ((s.pos - beginPos) >> 3) < p._Length:
 				p.Parameters.append( UnpackParameter(s) )
 
-		print 'unpack:', p
 		return p
 		
 	def pack( self, s, p ):
 		p._validate()
 
 		beginPos = len(s)
-		print 'Packing:', p.Name, beginPos >> 3
+		# print 'Packing:', p.Name, beginPos >> 3
 		if p.Encoding == self.TLV:
 			s.append( bitstring.pack('uintbe:16, uintbe:16', p.Type, 0) )
 		else:
@@ -406,7 +403,6 @@ def _DefTV( Type, Name, SpecifiedFields ):
 			Length += int(format.split(':')[1])
 	assert Length & 7 == 0
 	Length >>= 3	# Divide by 8 to get bytes from bits.
-	print 'Name:', Name, 'Length:', Length
 	return Type, _ParameterPackUnpack( Type, Name, _ParameterPackUnpack.TV, _fixSpecifiedFields(SpecifiedFields), Length )
 	
 def _DefTLV( Type, Name, SpecifiedFields = [] ):
@@ -524,7 +520,7 @@ _parameters = [
 	_DefTLV( 255,	'AntennaEvent', [('EventType',8),('AntennaID',16)] ),
 	_DefTLV( 256,	'ConnectionAttempt', [('Status',16)] ),
 	_DefTLV( 257,	'ConnectionCloseEvent' ),
-	_DefTLV( 356,	'AISpecEvent', [('ROSpecID',32),('LoopCount',32)] ),
+	_DefTLV( 356,	'SpecLoopEvent', [('ROSpecID',32),('LoopCount',32)] ),
 	_DefTLV( 287,	'LLRPStatus', [('StatusCode',16),('ErrorDescription','string')] ),
 	_DefTLV( 288,	'FieldError', [('FieldNum',16),('ErrorCode',16)] ),
 	_DefTLV( 289,	'ParameterError', [('ParameterType',16),('ErrorCode',16)] ),
@@ -648,6 +644,7 @@ _parameterClassFromName = {}
 _parameterClassFromType = {}
 for Type, d in _parameters:
 	assert Type not in _ParameterPackUnpackLookup, 'Type duplicate.  Parameter: Name = "%s", Type = %d' % (d.Name, Type)
+	assert d.Name + '_Parameter' not in _parameterClassFromName, 'Name duplicate.  Parameter: Name = "%s", Type = %d' % (d.Name, Type)
 	_ParameterPackUnpackLookup[Type] = d
 	_parameterClassFromType[Type] = _parameterClassFromName[d.Name + '_Parameter'] = _MakeClass( 'Parameter', d.Name, Type, d )
 	
@@ -664,6 +661,7 @@ _messageClassFromName = {}
 _messageClassFromType = {}
 for Type, d in _messages:
 	assert Type not in _MessagePackUnpackLookup, 'Type duplicate.  Message: Name = "%s", Type = %d' % (d.Name, Type)
+	assert d.Name + '_Message' not in _messageClassFromName, 'Name duplicate.  Message: Name = "%s", Type = %d' % (d.Name, Type)
 	_MessagePackUnpackLookup[Type] = d
 	_messageClassFromType[Type] = _messageClassFromName[d.Name + '_Message'] = _MakeClass( 'Message', d.Name, Type, d )
 	

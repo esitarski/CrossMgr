@@ -174,7 +174,7 @@ class MainWin( wx.Frame ):
 		gbs.Add( hb, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
 		
 		iRow += 1
-		self.useStaticAddress = wx.RadioButton( self, wx.ID_ANY, 'Static IP:' )
+		self.useStaticAddress = wx.RadioButton( self, wx.ID_ANY, 'IP:' )
 		gbs.Add( self.useStaticAddress, pos=(iRow,0), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
 		self.impinjHost = masked.IpAddrCtrl( self, wx.ID_ANY, style = wx.TE_PROCESS_TAB )
 		gbs.Add( self.impinjHost, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
