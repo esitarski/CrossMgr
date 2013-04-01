@@ -192,11 +192,14 @@ class Impinj( object ):
 			
 			for tag in response.getTagData():
 				tagID = tag['EPC']
+				
+				# Convert the bitstring to a hext value, which is the number in decimal (go figure).
+				tagID = int(''.join( [ "%02X" % ord(x) for x in tagID ] ))
+				
 				discoveryTime = tag['Timestamp']		# In microseconds since Jan 1, 1970
 				readCount = tag['TagSeenCount']
-
+				
 				# Decode tagID and discoveryTime.
-				tagID = tagID.replace( ' ', '' )
 				discoveryTime = datetime.datetime.utcfromtimestamp( discoveryTime / 1000000.0 )
 				
 				if timeAdjust is None:
@@ -209,7 +212,6 @@ class Impinj( object ):
 				self.tagCount += 1
 						
 				# Convert tag and discovery Time
-				tagStr = str(int(tagID, 16))
 				discoveryTimeStr = discoveryTime.strftime('%Y/%m/%d_%H:%M:%S.%f')
 				
 				# Check if this read happend too soon after another read.
@@ -218,7 +220,7 @@ class Impinj( object ):
 				if (discoveryTime - LRT).total_seconds() < RepeatSeconds:
 					self.messageQ.put( (
 						'Impinj',
-						'Received %d.  tag=%s Skipped (<%d secs ago).  time=%s' % (self.tagCount, tagStr, RepeatSeconds, discoveryTimeStr)) )
+						'Received %d.  tag=%d Skipped (<%d secs ago).  time=%s' % (self.tagCount, tagID, RepeatSeconds, discoveryTimeStr)) )
 					continue
 				
 				# Put this read on the queue for transmission to CrossMgr.
@@ -227,11 +229,11 @@ class Impinj( object ):
 				# Write the entry to the log.
 				if pf:
 					# 									Thu Dec 04 10:14:49 PST
-					pf.write( '%s,%s,%s\n' % (
-								tagID,					# Keep tag in hex format as read.
+					pf.write( '%d,%s,%s\n' % (
+								tagID,
 								discoveryTime.strftime('%a %b %d %H:%M:%S.%f %Z %Y'),
 								readCount) )
-				self.messageQ.put( ('Impinj', 'Received %d. tag=%s, time=%s' % (self.tagCount, tagStr, discoveryTimeStr)) )
+				self.messageQ.put( ('Impinj', 'Received %d. tag=%d, time=%s' % (self.tagCount, tagID, discoveryTimeStr)) )
 			
 			# Close the log file.
 			if pf:

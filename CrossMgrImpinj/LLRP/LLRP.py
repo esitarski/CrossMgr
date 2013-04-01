@@ -56,9 +56,9 @@ def _ReadField( s, format, obj, attr ):
 		setattr( obj, attr, arr )
 	elif format == 'bitarray':
 		length = s.read( 'uintbe:16' )
-		eformat = 'bytes:%d' % length
-		bi = s.read( eformat )
-		setattr( obj, attr, bi )
+		eformat = 'bits:%d' % length
+		bstr = s.read( eformat )
+		setattr( obj, attr, bstr.tobytes() )
 	elif format.startswith('skip'):
 		skip = int(format.split(':',1)[1])
 		s.read( 'int:%d' % skip )
@@ -342,7 +342,7 @@ class _ParameterPackUnpack( object ):
 		else:
 			Type = s.read('uintbe:16')
 			Type &= ((1<<10)-1)
-			# print self.Name, self.Type, self.Encoding, p.Encoding
+			#print self.Name, self.Type, self.Encoding, p.Encoding
 			assert p.Encoding == self.TLV
 			p._Length = s.read('uintbe:16')
 		
