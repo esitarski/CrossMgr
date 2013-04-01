@@ -219,6 +219,16 @@ def _validate( self ):
 		else:
 			assert False, 'Unknown LLRP field format: "%s"' % format
 			
+		# Check that the number and type of parameters match the constraints.
+		i, iMax = 0, len(self.Parameters)
+		for t, nMin, nMax in self._PConstraints:
+			iStart = i
+			while i < iMax and isinstance(self.Parameters[i], t):
+				i += 1
+			assert i - iStart >= nMin, 'Missing Parameter (%d-%d): %s' % (nMin, nMax, t.Name if not isinstance(t, tuple) else ' or '.join( v.Name for v in t ))
+			assert i - iStart <= nMax, 'Too many Parameters (%d-%d) of: %s' % (nMin, nMax, t.Name if not isinstance(t, tuple) else ' or '.join( v.Name for v in t ))
+			
+		# Recursively validate all parameters.
 		for p in self.Parameters:
 			p._validate()
 
@@ -250,6 +260,7 @@ def _MakeClass( messageOrParameter, Name, Type, PackUnpack ):
 		'_getValues':		_getValues,
 		'add':				_addParameter,
 		'_validate':		_validate,
+		'_PConstraints':	[],
 		'pack':				lambda self, s: self.PackUnpack.pack(s, self),
 	}
 	if messageOrParameter == 'Parameter':
@@ -459,10 +470,10 @@ _parameters = [
 	_DefTLV( 185,	'TagObservationTrigger',	[('TriggerType',8),_skip(8),('NumberOfTags',16),('NumberOfAttempts',16),('T',16),('Timeout',32)] ),
 	_DefTLV( 186,	'InventoryParameterSpec', [('InventoryParameterSpecID',16),('ProtocolID',8)]),
 	_DefTLV( 187,	'RFSurveySpec', [('AntennaID',16),('StartFrequency',32),('EndFrequency',32)]),
-	_DefTLV( 188,	'RFSurveySpecStop', [('StopTriggerType',8),('Duration',32),('N',32)]),
+	_DefTLV( 188,	'RFSurveySpecStopTrigger', [('StopTriggerType',8),('Duration',32),('N',32)]),
 	_DefTLV( 355,	'LoopSpec', [('LoopCount',32)]),
 	_DefTLV( 207,	'AccessSpec',	[('AccessSpecID',32),('AntennaID',16),('ProtocolID',8),('CurrentState',1),_skip(7),('ROSpecID',32)] ),
-	_DefTLV( 208,	'AccessStopSpec',	[('AccessStopTrigger',8),('OperationCountValue',16)] ),
+	_DefTLV( 208,	'AccessSpecStopTrigger',	[('AccessStopTrigger',8),('OperationCountValue',16)] ),
 	_DefTLV( 209,	'AccessCommand' ),
 	_DefTLV( 210,	'ClientRequestOpSpec', [('OpSpecID',16)] ),
 	_DefTLV( 211,	'ClientRequestResponse', [('AccessSpecID',32)] ),
@@ -524,7 +535,7 @@ _parameters = [
 	_DefTLV( 287,	'LLRPStatus', [('StatusCode',16),('ErrorDescription','string')] ),
 	_DefTLV( 288,	'FieldError', [('FieldNum',16),('ErrorCode',16)] ),
 	_DefTLV( 289,	'ParameterError', [('ParameterType',16),('ErrorCode',16)] ),
-	_DefTLV(1023,	'Customer', [('VendorID',32),('Subtype',32)] ),
+	_DefTLV(1023,	'Custom', [('VendorID',32),('Subtype',32)] ),
 	_DefTLV( 327,	'C1G2LLRPCapabilities', [
 		('CanSupportBlockErase',1),('CanSupportBlockWrite',1),('CanSupportBlockPermalock',1),
 		('CanSupportTagRecommissioning',1),('CanSupportUMIMethod2',1),('CanSupportXPC',1),_skip(2),
@@ -670,7 +681,115 @@ for Type, d in _messages:
 globals().update( _messageClassFromName )	# Add Message classes to global namespace.
 	
 #-----------------------------------------------------------------------------
+# Define the allowable Parameter Types and the Min-Max.
+#
 
+n = 1000000
+ADD_ROSPEC_Message._PConstraints = [(ROSpec_Parameter, 1, 1)]
+ADD_ACCESSSPEC_Message._PConstraints = [(AccessSpec_Parameter, 1, 1)]
+CLIENT_REQUEST_OP_Message._PConstraints = [(TagReportData_Parameter, 1, 1)]
+CLIENT_REQUEST_OP_RESPONSE_Message._PConstraints = [(ClientRequestResponse_Parameter, 1, 1)]
+RO_ACCESS_REPORT_Message._PConstraints = [
+	(TagReportData_Parameter, 0, n),
+	(RFSurveyReportData_Parameter, 0, n)
+]
+READER_EVENT_NOTIFICATION_Message._PConstraints = [(ReaderEventNotificationData_Parameter, 1, 1)]
+SET_READER_CONFIG_Message._PConstraints = [
+	(ReaderEventNotificationSpec_Parameter, 0, 1),
+	(AntennaProperties_Parameter, 			0, n),
+	(AntennaConfiguration_Parameter,		0, n),
+	(ROReportSpec_Parameter,				0, 1),
+	(AccessReportSpec_Parameter,			0, 1),
+	(KeepaliveSpec_Parameter,				0, 1),
+	(GPOWriteData_Parameter,				0, n),
+	(GPIPortCurrentState_Parameter,			0, n),
+	(EventsAndReports_Parameter,			0, 1),
+]
+#-----------------------------------------------------------------------------
+
+RegulatoryCapabilities_Parameter._PConstraints = [
+	(UHFBandCapabilities_Parameter,			0, n),
+	(Custom_Parameter,						0, n)
+]
+UHFBandCapabilities_Parameter._PConstraints = [
+	(TransmitPowerLevelTableEntry_Parameter,1, n),
+	(FrequencyInformation_Parameter,		1, 1),
+	#(UHFRFModeTable_Parameter,				1, n),
+	(RFSurveyFrequencyCapabilities_Parameter,0,1)
+]
+FrequencyInformation_Parameter._PConstraints = [
+	(FrequencyHopTable_Parameter,			0, n),
+	(FixedFrequencyTable_Parameter,			0, 1),
+]
+ROSpec_Parameter._PConstraints = [
+	(ROBoundarySpec_Parameter,				1, 1),
+	((AISpec_Parameter,RFSurveySpec_Parameter,LoopSpec_Parameter),	1, n),
+	(ROReportSpec_Parameter,				0, 1)
+]
+ROBoundarySpec_Parameter._PConstraints = [
+	(ROSpecStartTrigger_Parameter,			1, 1),
+	(ROSpecStopTrigger_Parameter,			1, 1)
+	
+]
+ROSpecStartTrigger_Parameter._PConstraints = [
+	(PeriodicTriggerValue_Parameter,		0, 1),
+	(GPITriggerValue_Parameter,				0, 1)
+]
+PeriodicTriggerValue_Parameter._PConstraints = [
+	(UTCTimestamp_Parameter,				0, 1)
+]
+ROSpecStopTrigger_Parameter._PConstraints = [
+	(GPITriggerValue_Parameter,				0, 1)
+]
+AISpec_Parameter._PConstraints = [
+	(AISpecStopTrigger_Parameter,			1, 1),
+	(InventoryParameterSpec_Parameter,		1, n),
+	(Custom_Parameter,						0, n)
+]
+AISpecStopTrigger_Parameter._PConstraints = [
+	(GPITriggerValue_Parameter,				0, 1),
+	(TagObservationTrigger_Parameter,		0, 1),
+]
+InventoryParameterSpec_Parameter._PConstraints = [
+	(AntennaConfiguration_Parameter,		0, n),
+	(Custom_Parameter,						0, n)
+]
+RFSurveySpec_Parameter._PConstraints = [
+	(RFSurveySpecStopTrigger_Parameter,		1, 1),
+	(Custom_Parameter,						0, n)
+]
+AccessSpec_Parameter._PConstraints = [
+	(AccessSpecStopTrigger_Parameter,		1, 1),
+	(AccessCommand_Parameter,				1, 1),
+	(AccessReportSpec_Parameter,			0, 1),
+	(Custom_Parameter,						0, n)
+]
+AccessCommand_Parameter._PConstraints = [
+	(Custom_Parameter,						1, n)
+]
+AntennaConfiguration_Parameter._PConstraints = [
+	(RFReceiver_Parameter,					0, 1),
+	(RFTransmitter_Parameter,				0, 1),
+	(C1G2InventoryCommand_Parameter, 		0, n),
+	(Custom_Parameter,						0, n)
+]
+ROReportSpec_Parameter._PConstraints = [
+	(TagReportContentSelector_Parameter,	1, 1),
+	(Custom_Parameter, 						0, n)
+]
+RFSurveyReportData_Parameter._PConstraints = [
+	(ROSpecID_Parameter,					0, 1),
+	(SpecIndex_Parameter,					0, 1),
+	(FrequencyRSSILevelEntry_Parameter, 	1, n),
+	(Custom_Parameter,						0, n),
+]
+FrequencyRSSILevelEntry_Parameter._PConstraints = [
+	((UTCTimestamp_Parameter, Uptime_Parameter),	1, 1)
+]
+ReaderEventNotificationSpec_Parameter._PConstraints = [
+	(EventNotificationState_Parameter,		1, n)
+]
+#------------------------------------------------------------------
 def UnpackMessageFromSocket( sock ):
 	# Read the header bytes to get the messageID and length.
 	headerBytes = (16+32) >> 3
