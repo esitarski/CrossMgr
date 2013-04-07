@@ -38,7 +38,7 @@ from enums import *
 #		pass
 #
 
-def _ReadField( s, format, obj, attr ):
+def _ReadField( s, format, obj, attr, bytesRemaining = None ):
 	''' Read a field from the bitstring in the given format.  Assign it to the obj attr. '''
 	if format.startswith('uintbe') or format == 'bool':
 		setattr( obj, attr, s.read(format) )
@@ -62,6 +62,11 @@ def _ReadField( s, format, obj, attr ):
 	elif format.startswith('skip'):
 		skip = int(format.split(':',1)[1])
 		s.read( 'int:%d' % skip )
+	elif format == 'payload':
+		b = s.read( 'bytes:%d' % bytesRemaining )				# Read as bytes.
+		setattr( obj, attr, bitstring.BitStream(bytes=b) )		# Set attr to a bitstream.
+	else:
+		assert False
 	
 def _WriteField( s, format, obj, attr ):
 	''' Write a field to the bitstring in the given format.  Read it from the obj attr. '''
@@ -86,6 +91,8 @@ def _WriteField( s, format, obj, attr ):
 			skip = int(format.split(':',1)[1])
 			assert skip > 0
 			s.append( bitstring.pack('int:%d=0'%skip) )
+		elif format == 'payload':
+			s.append( getattr(obj, attr) )		# assume the   is a bitstream
 		else:
 			assert False
 	except bitstring.CreationError, e:
@@ -104,6 +111,8 @@ def _InitField( format, obj, attr ):
 		setattr( obj, attr, [] )
 	elif format == 'bitarray':
 		setattr( obj, attr, bytes() )
+	elif format == 'payload':
+		setattr( obj, attr, bitstring.BitStream() )
 	else:
 		assert format.startswith('skip'), 'Unknown format: "%s"' % format
 
@@ -189,10 +198,13 @@ def _addParameter( self, p ):
 	self.Parameters.append( p )
 	return p
 
+def _getPTypeName( pType ):
+	return pType.Name if not isinstance(pType, tuple) else ' or '.join( v.Name for v in pType )
+	
 def _validate( self ):
 	''' _validate the values of an LLRP object. '''
 	for name, format in self.SpecifiedFields:
-		if format.startswith('skip'):
+		if format.startswith('skip'):	# Pass over skip fields first as there is no attribute field associated.
 			continue
 			
 		assert hasattr(self, name), 'Missing LLRP attribute: %s' % name
@@ -208,7 +220,7 @@ def _validate( self ):
 			assert isinstance( arr, list ), 'LLRP field "%s" must be "list" type not "%s"' % (
 					name, getattr(self, name).__class__.__name__)
 			for i, e in enumerate(arr):
-				assert isinstance( e, (int, long) ), 'LLRP field "%s" must contain all "ints" (not "%s" at position %d)' % (
+				assert isinstance( e, (int, long) ), 'LLRP field "%s" must contain all "ints" or "longs" (not "%s" at position %d)' % (
 						name, e.__class__.__name__, i)
 		elif format == 'string':
 			assert isinstance( getattr(self, name), basestring ), 'LLRP field "%s" must be "string" type not "%s"' % (
@@ -216,17 +228,21 @@ def _validate( self ):
 		elif format == 'bitarray':
 			assert isinstance( getattr(self, name), bytes ), 'LLRP field "%s" must be "bytes" type not "%s"' % (
 					name, getattr(self, name).__class__.__name__)
+		elif format == 'payload':
+			assert isinstance( getattr(self, namt), bitstream.BitStream ), 'LLRP Payload field "%s" must be "bitstream.BitStream" type not "%s"' % (
+					name, getattr(self, name).__class__.__name__)
 		else:
 			assert False, 'Unknown LLRP field format: "%s"' % format
 			
 		# Check that the number and type of parameters match the constraints.
-		i, iMax = 0, len(self.Parameters)
-		for t, nMin, nMax in self._PConstraints:
-			iStart = i
-			while i < iMax and isinstance(self.Parameters[i], t):
-				i += 1
-			assert i - iStart >= nMin, 'Missing Parameter (%d-%d): %s' % (nMin, nMax, t.Name if not isinstance(t, tuple) else ' or '.join( v.Name for v in t ))
-			assert i - iStart <= nMax, 'Too many Parameters (%d-%d) of: %s' % (nMin, nMax, t.Name if not isinstance(t, tuple) else ' or '.join( v.Name for v in t ))
+		if self._PConstraints is not None:
+			i, iMax = 0, len(self.Parameters)
+			for pType, nMin, nMax in self._PConstraints:
+				iStart = i
+				while i < iMax and isinstance(self.Parameters[i], pType):
+					i += 1
+				assert i - iStart >= nMin, 'Missing Parameter (%d-%d) of type: %s' % (nMin, nMax, _getPTypeName(pType))
+				assert i - iStart <= nMax, 'Too many Parameters (%d-%d) of type: %s' % (nMin, nMax, _getPTypeName(pType))
 			
 		# Recursively validate all parameters.
 		for p in self.Parameters:
@@ -248,29 +264,49 @@ def _MakeClass( messageOrParameter, Name, Type, PackUnpack ):
 		extraFields.append( '_MessageID' )
 		
 	classAttrs = {
-		'Name':				Name,
-		'Type':				Type,
-		'PackUnpack':		PackUnpack,
-		'SpecifiedFields':	PackUnpack.SpecifiedFields,
-		'__slots__':		[ name for name, format in PackUnpack.SpecifiedFields if not format.startswith('skip') ] + extraFields,
-		'FieldCount':		sum( 1 for name, format in PackUnpack.SpecifiedFields if not format.startswith('skip') ),
-		'__init__':			_initSpecifiedFields,
-		'_getRepr':			_getRepr,
-		'__repr__':			_getRepr,
-		'_getValues':		_getValues,
-		'add':				_addParameter,
-		'_validate':		_validate,
-		'_PConstraints':	[],
+		'Name':				Name,					# Name of this message/paramter.
+		'Type':				Type,					# LLRP Type integer
+		'PackUnpack':		PackUnpack,				# Instance to pack/unpack it into a bitstream.
+		'SpecifiedFields':	PackUnpack.SpecifiedFields,	# Fields specified for this object.
+		'__slots__':		[ name for name, format in PackUnpack.SpecifiedFields if not format.startswith('skip') ] + extraFields,	# Available fields in this object.
+		'FieldCount':		sum( 1 for name, format in PackUnpack.SpecifiedFields if not format.startswith('skip') ),				# Field count for convenience.
+		'DataFields':		[ name for name, format in PackUnpack.SpecifiedFields if not format.startswith('skip') ],				# List of data fields.
+		'__init__':			_initSpecifiedFields,	# Initialize the object and defailt field values.
+		'_getRepr':			_getRepr,				# Routine to format the message/parameter.
+		'__repr__':			_getRepr,				# Default formatting call.
+		'_getValues':		_getValues,				# Gets all values of specified fields.
+		'add':				_addParameter,			# Convenience function to add a parameter.
+		'_validate':		_validate,				# Validate all data fields and parameters.
+		'_PConstraints':	None,					# Used to validate number and type of Parameters
 		'pack':				lambda self, s: self.PackUnpack.pack(s, self),
 	}
 	if messageOrParameter == 'Parameter':
-		classAttrs['Encoding'] = PackUnpack.Encoding
+		classAttrs['Encoding'] = PackUnpack.Encoding							# Add encoding if a Parameter.
 	else:
-		classAttrs['MessageID'] = property( _getMessageID, _setMessageID )
-		classAttrs['send'] = _sendToSocket
-	MPClass = type( Name + '_' + messageOrParameter, (object,), classAttrs )
+		classAttrs['MessageID'] = property( _getMessageID, _setMessageID )		# Add MessageID if a Message.
+		classAttrs['send'] = _sendToSocket										# Also add "send" method.
+	MPClass = type( Name + '_' + messageOrParameter, (object,), classAttrs )	# Dynamically create the class.
 	return MPClass
 
+def _skip( bits ):
+	''' Create a skip code for bits. '''
+	skipStr = 'skip:%d' % bits
+	return (skipStr, skipStr)
+	
+def _fixSpecifiedFields( SpecifiedFields ):
+	''' Fix up the field types by bit length. '''
+	sf = []
+	for name, format in SpecifiedFields:
+		if isinstance(format, (int, long)):
+			if format == 1:
+				format = 'bool'
+			elif format < 8:
+				format = 'bits:%d' % format
+			else:
+				format = 'uintbe:%d' % format
+		sf.append( (name, format) )
+	return sf
+	
 #---------------------------------------------------------------------------------------------------------
 
 class _MessagePackUnpack( object ):
@@ -290,8 +326,10 @@ class _MessagePackUnpack( object ):
 		m._Length = s.read('uintbe:32')
 		m._MessageID = s.read('uintbe:32')
 		
+		lengthRemaining = m._Length
+		
 		for name, format in self.SpecifiedFields:
-			_ReadField( s, format, m, name )
+			_ReadField( s, format, m, name, m._Length - ((s.pos - beginPos) >> 3) )
 		while ((s.pos - beginPos) >> 3) < m._Length:
 			m.Parameters.append( UnpackParameter(s) )
 			
@@ -384,25 +422,6 @@ class _ParameterPackUnpack( object ):
 			p._Length = self.Length
 		return s
 
-def _skip( bits ):
-	''' Create a skip code for bits. '''
-	skipStr = 'skip:%d' % bits
-	return (skipStr, skipStr)
-	
-def _fixSpecifiedFields( SpecifiedFields ):
-	''' Fix up the field types by bit length. '''
-	sf = []
-	for name, format in SpecifiedFields:
-		if isinstance(format, (int, long)):
-			if format == 1:
-				format = 'bool'
-			elif format < 8:
-				format = 'bits:%d' % format
-			else:
-				format = 'uintbe:%d' % format
-		sf.append( (name, format) )
-	return sf
-	
 def _DefTV( Type, Name, SpecifiedFields ):
 	''' Define a TV parameter (no explicit length field). '''
 	Length = 8		# Adjust for the leading Type byte.
@@ -421,7 +440,7 @@ def _DefTLV( Type, Name, SpecifiedFields = [] ):
 	return Type, _ParameterPackUnpack( Type, Name, _ParameterPackUnpack.TLV, _fixSpecifiedFields(SpecifiedFields) )
 
 #-----------------------------------------------------------------------------
-# Define Parameters with binary layouts.
+# Define Parameters and their binary layouts.
 #
 _parameters = [
 	_DefTLV( 128,	'UTCTimestamp',		[('Microseconds',64)] ),
@@ -535,7 +554,7 @@ _parameters = [
 	_DefTLV( 287,	'LLRPStatus', [('StatusCode',16),('ErrorDescription','string')] ),
 	_DefTLV( 288,	'FieldError', [('FieldNum',16),('ErrorCode',16)] ),
 	_DefTLV( 289,	'ParameterError', [('ParameterType',16),('ErrorCode',16)] ),
-	_DefTLV(1023,	'Custom', [('VendorID',32),('Subtype',32)] ),
+	_DefTLV(1023,	'Custom', [('VendorID',32),('Subtype',32),('Data','payload')] ),
 	_DefTLV( 327,	'C1G2LLRPCapabilities', [
 		('CanSupportBlockErase',1),('CanSupportBlockWrite',1),('CanSupportBlockPermalock',1),
 		('CanSupportTagRecommissioning',1),('CanSupportUMIMethod2',1),('CanSupportXPC',1),_skip(2),
@@ -586,7 +605,6 @@ _parameters = [
 	_DefTLV( 361,	'C1G2BlockPermalockOpSpecResult', [('Result',8),('OpSpecID',16)] ),
 	_DefTLV( 362,	'C1G2BlockPermalockOpStatusOpSpecResult', [('Result',8),('OpSpecID',16),('PermalockStatus','array:16')] ),
 ]
-
 #--------------------------------------------------------------------------------------------
 
 def _DefMessage( Type, Name, SpecifiedFields = [] ):
@@ -797,7 +815,7 @@ def UnpackMessageFromSocket( sock ):
 	while len(message) < headerBytes:
 		message += sock.recv( headerBytes - len(message) )
 		
-	# Convert to e BitStream so to parse the message Type and Length.
+	# Convert to a BitStream to get the message Type and Length.
 	s = bitstring.ConstBitStream( bytes=message )
 	Type = s.read('uintbe:16')
 	Type &= ((1<<10)-1)
@@ -914,7 +932,7 @@ def _getTagData( self ):
 			
 	return tagData
 
-# Add a 'getTagData' method to the RO_ACCESS_REPORT message.
+# Add a 'getTagData' convenience method to the RO_ACCESS_REPORT message.
 RO_ACCESS_REPORT_Message.getTagData = types.MethodType( _getTagData, None, RO_ACCESS_REPORT_Message )
 			
 if __name__ == '__main__':
