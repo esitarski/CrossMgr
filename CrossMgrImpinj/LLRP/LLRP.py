@@ -118,8 +118,11 @@ def _InitField( format, obj, attr ):
 
 #----------------------------------------------------------------------------------
 
+_CurMessageID = 0
 def _initSpecifiedFields( self, *args, **kwargs ):
 	''' Initialize all data fields based on each format. '''
+	global _CurMessageID
+	
 	for name, format in self.SpecifiedFields:
 		_InitField( format, self, name )
 		
@@ -146,10 +149,10 @@ def _initSpecifiedFields( self, *args, **kwargs ):
 		else:
 			setattr( self, key, value )
 	
-	try:
-		assert self._MessageID is not None, 'Missing MessageID Parameter'
-	except AttributeError:
-		pass
+	# Set a default globally unique MessageID if None.
+	if getattr(self, '_MessageID', 'NA') is None:
+		_CurMessageID += 1
+		self._MessageID = _CurMessageID
 	
 def _getValues( self ):
 	''' Get all specified values of an LLRP object. '''
@@ -256,7 +259,13 @@ def _setMessageID( self, MessageID ):
 
 def _sendToSocket( self, socket ):
 	socket.sendall( self.pack(bitstring.BitStream()).tobytes() )
-	
+
+def _getLLRPStatusSuccess( self ):
+	for p in self.Parameters:
+		if isinstance( p, LLRPStatus_Parameter ):
+			return p.StatusCode == 0
+	assert False, 'Message "%s" has no LLRPStatus parameter.' % self.__class__.__name__
+
 def _MakeClass( messageOrParameter, Name, Type, PackUnpack ):
 	''' Make an LLRP class (Message or Parameter). '''
 	extraFields = ['Parameters', '_Length']
@@ -285,6 +294,9 @@ def _MakeClass( messageOrParameter, Name, Type, PackUnpack ):
 	else:
 		classAttrs['MessageID'] = property( _getMessageID, _setMessageID )		# Add MessageID if a Message.
 		classAttrs['send'] = _sendToSocket										# Also add "send" method.
+		if Name.endswith( 'RESPONSE' ):
+			classAttrs['__bool__'] = _getLLRPStatusSuccess
+
 	MPClass = type( Name + '_' + messageOrParameter, (object,), classAttrs )	# Dynamically create the class.
 	return MPClass
 
@@ -934,7 +946,7 @@ def _getTagData( self ):
 
 # Add a 'getTagData' convenience method to the RO_ACCESS_REPORT message.
 RO_ACCESS_REPORT_Message.getTagData = types.MethodType( _getTagData, None, RO_ACCESS_REPORT_Message )
-			
+
 if __name__ == '__main__':
 	rospecMessage = GetBasicAddRospecMessage( 1 )
 	rospecEnableMessage = GetEnableRospecMesssage( 2 )

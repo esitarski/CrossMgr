@@ -241,7 +241,7 @@ class Impinj( object ):
 			
 		if self.readerSocket:
 			try:
-				response = self.sendCommend( CLOSE_CONNECTION_Message(MessageID=self.messageID) )
+				response = self.sendCommand( CLOSE_CONNECTION_Message(MessageID=self.messageID) )
 			except socket.timeout:
 				pass
 			self.readerSocket.close()
