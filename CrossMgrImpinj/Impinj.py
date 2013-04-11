@@ -15,7 +15,7 @@ from xml.dom.minidom import parseString
 from Queue import Empty
 from Utils import readDelimitedData, timeoutSecs
 import cStringIO as StringIO
-from LLRP.LLRP import *
+from pyllrp.pyllrp import *
 
 HOME_DIR = os.path.expanduser("~")
 
@@ -28,9 +28,9 @@ class Impinj( object ):
 		self.dataQ = dataQ			# Queue to write tag reads.
 		self.messageQ = messageQ	# Queue to write operational messages.
 		self.shutdownQ = shutdownQ	# Queue to listen for shutdown.
-		self.messageID = random.randint(0, 10000)
 		self.rospecID = 123
 		self.readerSocket = None
+		self.timeCorrection = None	# Correction between the reader's time and the computer's time.
 		self.start()
 		
 	def start( self ):
@@ -68,7 +68,7 @@ class Impinj( object ):
 		message.send( self.readerSocket )
 			
 		success = True
-		response = WaitForMessage( self.messageID, GetResponseClass(message), self.readerSocket )
+		response = WaitForMessage( message.MessageID, GetResponseClass(message), self.readerSocket )
 		'''
 		try:
 			response = WaitForMessage( self.messageID, GetResponseClass(message), self.readerSocket )
@@ -79,7 +79,6 @@ class Impinj( object ):
 		'''
 			
 		self.messageQ.put( ('Impinj', 'Received Response:\n%s\n' % response) )
-		self.messageID += 1
 		return success, response
 		
 	def sendCommands( self ):
@@ -89,6 +88,12 @@ class Impinj( object ):
 		response = UnpackMessageFromSocket( self.readerSocket )
 		self.messageQ.put( ('Impinj', '\nReceived Response:\n%s\n' % response) )
 		
+		# Compute a correction between the reader's time and the computer's time.
+		readerTime = response.getFirstParameterByClass(UTCTimestamp_Parameter).Microseconds
+		readerTime = datetime.datetime.utcfromtimestamp( readerTime / 1000000.0 )
+		self.timeCorrection = datetime.datetime.now() - readerTime
+		
+		self.messageQ.put( ('Impinj', '\nReader time is %f seconds different from computer time\n' % self.timeCorrection.total_seconds()) )
 		'''
 		# Query the supported version.
 		success, response = self.sendCommand( GET_SUPPORTED_VERSION_Message(MessageID = self.messageID) )
@@ -113,31 +118,26 @@ class Impinj( object ):
 		'''
 		
 		# Disable all rospecs in the reader.
-		success, response = self.sendCommand( DISABLE_ROSPEC_Message(MessageID = self.messageID, ROSpecID = 0) )
+		success, response = self.sendCommand( DISABLE_ROSPEC_Message(ROSpecID = 0) )
 		if not success:
 			return False
 		
 		# Delete our old rospec.
-		success, response = self.sendCommand( DELETE_ROSPEC_Message(MessageID = self.messageID, ROSpecID = self.rospecID) )
+		success, response = self.sendCommand( DELETE_ROSPEC_Message(ROSpecID = self.rospecID) )
 		if not success:
 			return False
 		
 		# Configure our new rospec.
-		success, response = self.sendCommand( GetBasicAddRospecMessage(MessageID = self.messageID, ROSpecID = self.rospecID) )
+		success, response = self.sendCommand( GetBasicAddRospecMessage(ROSpecID = self.rospecID) )
 		if not success:
 			return False
 		
 		# Enable our new rospec.
-		success, response = self.sendCommand( ENABLE_ROSPEC_Message(MessageID = self.messageID, ROSpecID = self.rospecID) )
+		success, response = self.sendCommand( ENABLE_ROSPEC_Message(ROSpecID = self.rospecID) )
 		if not success:
 			return False
 		
-		success = (success and response.Type == ENABLE_ROSPEC_RESPONSE_Message.Type)
-		if success:
-			for p in response.Parameters:
-				if p.Type == LLRPStatus_Parameter.Type:
-					success = (p.StatusCode == StatusCode_M_Success)
-					break
+		success = (success and isinstance(response, ENABLE_ROSPEC_RESPONSE_Message) and response.success())
 		return success
 			
 	def runServer( self ):
@@ -164,10 +164,6 @@ class Impinj( object ):
 			self.readerSocket.close()
 			return False
 		
-		# Adust the times for what comes from the reader.
-		# This will adust for any timezone or time difference from the reader
-		timeAdjust = None
-		
 		tUpdateLast = datetime.datetime.now()
 		self.tagCount = 0
 		while self.checkKeepGoing():
@@ -191,23 +187,13 @@ class Impinj( object ):
 				pf = None
 			
 			for tag in response.getTagData():
-				tagID = tag['EPC']
-				
-				# Convert the bitstring to a hext value, which is the number in decimal (go figure).
-				tagID = int(''.join( [ "%02X" % ord(x) for x in tagID ] ))
+				tagID = HexFormatToInt( tag['EPC'] )
 				
 				discoveryTime = tag['Timestamp']		# In microseconds since Jan 1, 1970
 				readCount = tag['TagSeenCount']
 				
-				# Decode tagID and discoveryTime.
-				discoveryTime = datetime.datetime.utcfromtimestamp( discoveryTime / 1000000.0 )
-				
-				if timeAdjust is None:
-					# Use a time adjust that corrects to now.
-					# This is not perfectly accurate, but we are just trying to sync chip reads with manual edits, so this is close enough.
-					timeAdjust = datetime.datetime.now() - discoveryTime
-					
-				discoveryTime += timeAdjust
+				# Convert discoveryTime to Python format and correct for reader time difference.
+				discoveryTime = datetime.datetime.utcfromtimestamp( discoveryTime / 1000000.0 ) + self.timeCorrection
 				
 				self.tagCount += 1
 						

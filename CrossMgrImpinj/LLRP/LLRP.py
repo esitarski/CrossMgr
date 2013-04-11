@@ -237,19 +237,19 @@ def _validate( self ):
 		else:
 			assert False, 'Unknown LLRP field format: "%s"' % format
 			
-		# Check that the number and type of parameters match the constraints.
-		if self._PConstraints is not None:
-			i, iMax = 0, len(self.Parameters)
-			for pType, nMin, nMax in self._PConstraints:
-				iStart = i
-				while i < iMax and isinstance(self.Parameters[i], pType):
-					i += 1
-				assert i - iStart >= nMin, 'Missing Parameter (%d-%d) of type: %s' % (nMin, nMax, _getPTypeName(pType))
-				assert i - iStart <= nMax, 'Too many Parameters (%d-%d) of type: %s' % (nMin, nMax, _getPTypeName(pType))
-			
-		# Recursively validate all parameters.
-		for p in self.Parameters:
-			p._validate()
+	# Check that the number and type of parameters match the constraints.
+	if self._PConstraints is not None:
+		i, iMax = 0, len(self.Parameters)
+		for pType, nMin, nMax in self._PConstraints:
+			iStart = i
+			while i < iMax and isinstance(self.Parameters[i], pType):
+				i += 1
+			assert i - iStart >= nMin, 'Missing Parameter (%d-%d) of type: %s' % (nMin, nMax, _getPTypeName(pType))
+			assert i - iStart <= nMax, 'Too many Parameters (%d-%d) of type: %s' % (nMin, nMax, _getPTypeName(pType))
+		
+	# Recursively validate all parameters.
+	for p in self.Parameters:
+		p._validate()
 
 def _getMessageID( self ):
 	return self._MessageID
@@ -295,7 +295,7 @@ def _MakeClass( messageOrParameter, Name, Type, PackUnpack ):
 		classAttrs['MessageID'] = property( _getMessageID, _setMessageID )		# Add MessageID if a Message.
 		classAttrs['send'] = _sendToSocket										# Also add "send" method.
 		if Name.endswith( 'RESPONSE' ):
-			classAttrs['__bool__'] = _getLLRPStatusSuccess
+			classAttrs['success'] = _getLLRPStatusSuccess
 
 	MPClass = type( Name + '_' + messageOrParameter, (object,), classAttrs )	# Dynamically create the class.
 	return MPClass
