@@ -69,14 +69,6 @@ class Impinj( object ):
 			
 		success = True
 		response = WaitForMessage( message.MessageID, GetResponseClass(message), self.readerSocket )
-		'''
-		try:
-			response = WaitForMessage( self.messageID, GetResponseClass(message), self.readerSocket )
-			success = True
-		except Exception as error:
-			response = str(error)
-			success = False
-		'''
 			
 		self.messageQ.put( ('Impinj', 'Received Response:\n%s\n' % response) )
 		return success, response
@@ -94,26 +86,11 @@ class Impinj( object ):
 		self.timeCorrection = datetime.datetime.now() - readerTime
 		
 		self.messageQ.put( ('Impinj', '\nReader time is %f seconds different from computer time\n' % self.timeCorrection.total_seconds()) )
-		'''
-		# Query the supported version.
-		success, response = self.sendCommand( GET_SUPPORTED_VERSION_Message(MessageID = self.messageID) )
-		if not success:
-			return False
-		'''
 		
 		# Reset to factory defaults.
 		success, response = self.sendCommand( SET_READER_CONFIG_Message(ResetToFactoryDefault = True) )
 		if not success:
 			return False
-		
-		'''
-		# Get the reader capabilities for the record.
-		success, response = self.sendCommand( GET_READER_CAPABILITIES_Message(
-									MessageID = self.messageID,
-									RequestedData = GetReaderCapabilitiesRequestedData_General_Device_Capabilities) )
-		if not success:
-			return False
-		'''
 		
 		# Disable all rospecs in the reader.
 		success, response = self.sendCommand( DISABLE_ROSPEC_Message(ROSpecID = 0) )
@@ -225,7 +202,7 @@ class Impinj( object ):
 			
 		if self.readerSocket:
 			try:
-				response = self.sendCommand( CLOSE_CONNECTION_Message(MessageID=self.messageID) )
+				response = self.sendCommand( CLOSE_CONNECTION_Message() )
 			except socket.timeout:
 				pass
 			self.readerSocket.close()

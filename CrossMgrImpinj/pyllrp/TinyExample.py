@@ -15,7 +15,7 @@ import datetime
 import socket
 
 # Change to the hostname or IP address of the reader.
-host = '192.168.10.101'
+host = '192.168.10.102'
 
 timeCorrection = None
 def AccessReportHandler( accessReport ):
