@@ -102,9 +102,7 @@ class Impinj( object ):
 		'''
 		
 		# Reset to factory defaults.
-		success, response = self.sendCommand( SET_READER_CONFIG_Message(
-									MessageID = self.messageID,
-									ResetToFactoryDefaults = True ) )
+		success, response = self.sendCommand( SET_READER_CONFIG_Message(ResetToFactoryDefault = True) )
 		if not success:
 			return False
 		
