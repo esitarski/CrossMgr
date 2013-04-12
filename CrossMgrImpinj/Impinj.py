@@ -6,12 +6,6 @@ import socket
 import threading
 import datetime
 import random
-import xml
-import xml.etree.ElementTree
-import xml.etree.cElementTree
-import xml.dom
-import xml.dom.minidom
-from xml.dom.minidom import parseString
 from Queue import Empty
 from Utils import readDelimitedData, timeoutSecs
 import cStringIO as StringIO

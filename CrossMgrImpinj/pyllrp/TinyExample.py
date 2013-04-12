@@ -21,12 +21,9 @@ timeCorrection = None
 def AccessReportHandler( accessReport ):
 	for tag in accessReport.getTagData():
 		tagID = HexFormatToInt( tag['EPC'] )
-		
 		discoveryTime = tag['Timestamp']		# In microseconds since Jan 1, 1970
-		readCount = tag['TagSeenCount']
-		
-		# Decode tagID and discoveryTime.
 		discoveryTime = datetime.datetime.utcfromtimestamp( discoveryTime / 1000000.0 ) + timeCorrection
+		readCount = tag['TagSeenCount']
 		
 		print tagID, discoveryTime
 

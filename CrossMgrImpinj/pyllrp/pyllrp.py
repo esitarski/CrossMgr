@@ -250,47 +250,51 @@ def _addParameter( self, p ):
 def _getPTypeName( pType ):
 	return pType.Name if not isinstance(pType, tuple) else ' or '.join( v.Name for v in pType )
 	
-def _validate( self ):
+def _validate( self, path = None ):
 	''' _validate the values of an LLRP object. '''
+	if not path:
+		path = []
+	path.append( self.__class__.__name__ )
+	
 	for f in self.FieldDefs:
 		ftype = f.Type
 		if ftype.startswith('skip'):	# Pass over "skip" fields first as there is no field.
 			continue
 		name = f.Name
 			
-		assert hasattr(self, name), 'Missing LLRP attribute: %s' % name
+		assert hasattr(self, name), '%s: Missing attribute: %s' % ('.'.join(path), name)
 		
 		if f.Enum:
-			assert f.Enum.getName(getattr(self, name)), 'LLRP field "%s" must have value in enumeration: %s' % (name, f.Enum)
+			assert f.Enum.getName(getattr(self, name)), '%s: field "%s" must have value in enumeration: %s' % ('.'.join(path), name, f.Enum)
 		
 		if ftype.startswith('uintbe') or ftype.startswith('intbe') or ftype.startswith('bits'):
-			assert isinstance( getattr(self, name), (int, long) ), 'LLRP field "%s" must be "int" type, not "%s"' % (
-					name, getattr(self, name).__class__.__name__)
+			assert isinstance( getattr(self, name), (int, long) ), '%s: field "%s" must be "int" type, not "%s"' % (
+					'.'.join(path), name, getattr(self, name).__class__.__name__)
 		elif ftype == 'bool':
-			assert isinstance( getattr(self, name), bool ), 'LLRP field "%s" must be "bool" type, not "%s"' % (
-					name, getattr(self, name).__class__.__name__)
+			assert isinstance( getattr(self, name), bool ), '%s: field "%s" must be "bool" type, not "%s"' % (
+					'.'.join(path), name, getattr(self, name).__class__.__name__)
 		elif ftype.startswith('array'):
 			arr = getattr(self, name)
-			assert isinstance( arr, list ), 'LLRP field "%s" must be "list" type, not "%s"' % (
-					name, getattr(self, name).__class__.__name__)
+			assert isinstance( arr, list ), '%s: field "%s" must be "list" type, not "%s"' % (
+					'.'.join(path), name, getattr(self, name).__class__.__name__)
 			for i, e in enumerate(arr):
-				assert isinstance( e, (int, long) ), 'LLRP field "%s" must contain all "ints" or "longs" (not "%s" at position %d)' % (
-						name, e.__class__.__name__, i)
+				assert isinstance( e, (int, long) ), '%s: field "%s" must contain all "ints" or "longs" (not "%s" at position %d)' % (
+						'.'.join(path), name, e.__class__.__name__, i)
 		elif ftype == 'string':
-			assert isinstance( getattr(self, name), basestring ), 'LLRP field "%s" must be "string" type, not "%s"' % (
-					name, getattr(self, name).__class__.__name__)
+			assert isinstance( getattr(self, name), basestring ), '%s: field "%s" must be "string" type, not "%s"' % (
+					'.'.join(path), name, getattr(self, name).__class__.__name__)
 		elif ftype == 'bitarray':
-			assert isinstance( getattr(self, name), bytes ), 'LLRP field "%s" must be "bytes" type, not "%s"' % (
-					name, getattr(self, name).__class__.__name__)
+			assert isinstance( getattr(self, name), bytes ), '%s: field "%s" must be "bytes" type, not "%s"' % (
+					'.'.join(path), name, getattr(self, name).__class__.__name__)
 		elif ftype == 'bytesToEnd':
-			assert isinstance( getattr(self, namt), bitstream.BitStream ), 'LLRP bytesToEnd field "%s" must be "bitstream.BitStream" type, not "%s"' % (
-					name, getattr(self, name).__class__.__name__)
+			assert isinstance( getattr(self, namt), bitstream.BitStream ), '%s: bytesToEnd field "%s" must be "bitstream.BitStream" type, not "%s"' % (
+					'.'.join(path), name, getattr(self, name).__class__.__name__)
 		else:
-			assert False, 'Unknown LLRP field ftype: "%s"' % ftype
+			assert False, '%s: Unknown field ftype: "%s"' % ('.'.join(path), ftype)
 			
 	# Check that the number and type of parameters match the constraints.
 	if self.ParameterDefs is None:
-		assert not self.Parameters, 'No Parameters are allowed.'
+		assert not self.Parameters, '%s: No Parameters are allowed.' % '.'.join(path)
 	else:
 		i, iMax = 0, len(self.Parameters)
 		for p in self.ParameterDefs:
@@ -299,12 +303,14 @@ def _validate( self ):
 			iStart = i
 			while i < iMax and self.Parameters[i].__class__.__name__ == pName:
 				i += 1
-			assert i - iStart >= rMin, 'Missing Parameter (%d-%d) of type: %s' % (rMin, rMax, pName)
-			assert i - iStart <= rMax, 'Too many Parameters (%d-%d) of type: %s' % (rMin, rMax, pName)
+			assert i - iStart >= rMin, '%s: Missing Parameter (%d-%d) of type: %s' % ('.'.join(path), rMin, rMax, pName)
+			assert i - iStart <= rMax, '%s: Too many Parameters (%d-%d) of type: %s' % ('.'.join(path), rMin, rMax, pName)
 		
 	# Recursively validate all parameters.
 	for p in self.Parameters:
-		p._validate()
+		p._validate( path )
+	
+	path.pop()
 
 def _getMessageID( self ):
 	return self._MessageID
