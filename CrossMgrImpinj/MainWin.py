@@ -267,6 +267,14 @@ class MainWin( wx.Frame ):
 			return
 		self.writeOptions()
 		
+		self.gracefulShutdown()
+		
+		self.impinjMessages.clear()
+		self.crossMgrMessages.clear()
+		self.shutdown()
+		wx.CallAfter( self.start )
+	
+	def gracefulShutdown( self ):
 		# Shutdown the CrossMgr process by sending it a shutdown command.
 		self.shutdownQ.put( 'shutdown' )
 		self.shutdownQ.put( 'shutdown' )
@@ -278,13 +286,9 @@ class MainWin( wx.Frame ):
 		
 		self.crossMgrProcess = None
 		self.impinjProcess = None
-		
-		self.impinjMessages.clear()
-		self.crossMgrMessages.clear()
-		self.shutdown()
-		wx.CallAfter( self.start )
 	
 	def onCloseWindow( self, event ):
+		self.gracefulShutdown()
 		wx.Exit()
 		
 	def doCopyToClipboard( self, event ):
