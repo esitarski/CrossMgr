@@ -362,7 +362,7 @@ def _MakeClass( messageOrParameter, Name, Type, PackUnpack ):
 		'_getRepr':			_getRepr,				# Routine to format the message/parameter.
 		'__repr__':			_getRepr,				# Default formatting call.
 		'_getValues':		_getValues,				# Gets all values of specified fields.
-		'getAllParametersByClass':	_getAllParametersByClass,			# Iterator to get parameters matching a certain type (or list of types).
+		'getAllParametersByClass':	_getAllParametersByClass,	# Iterator to get parameters matching a certain type (or list of types).
 		'getFirstParameterByClass': _getFirstParameterByClass,	# Returns first matching parameter.
 		'add':				_addParameter,			# Convenience function to add a parameter.
 		'_validate':		_validate,				# Validate all data fields and parameters.

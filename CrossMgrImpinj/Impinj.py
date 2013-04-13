@@ -159,7 +159,6 @@ class Impinj( object ):
 				tagID = HexFormatToInt( tag['EPC'] )
 				
 				discoveryTime = tag['Timestamp']		# In microseconds since Jan 1, 1970
-				
 				# Convert discoveryTime to Python format and correct for reader time difference.
 				discoveryTime = datetime.datetime.utcfromtimestamp( discoveryTime / 1000000.0 ) + self.timeCorrection
 				

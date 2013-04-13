@@ -53,7 +53,7 @@ pyllrp
 A pure Python implementation of LLRP (Low Level Reader Protocol)
 used by RFID readers including Impinj, Alien and ThingMagic.
 
-See TinyExample.py for usage.
+See TinyExample.py and wxExample.py for usage examples.
 '''
 
 writeToFile( readme, 'README.txt' )
@@ -88,7 +88,6 @@ writeToFile( license, 'License.txt' )
 #--------------------------------------------------------
 
 manifest = '''include *.txt
-include *.xml
 '''
 
 writeToFile( manifest, 'MANIFEST.in' )
