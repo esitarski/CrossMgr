@@ -35,7 +35,7 @@ class Impinj( object ):
 			os.makedirs( dataDir )
 		self.fname = os.path.join( dataDir, tNow.strftime('Impinj-%Y-%m-%d-%H-%M-%S.txt') )
 		with open(self.fname, 'w') as pf:
-			pf.write( 'Tag ID, Discover Time, Count\n' )
+			pf.write( 'Tag ID, Discover Time\n' )
 	
 		self.keepGoing = True
 		self.tagCount = 0
@@ -159,7 +159,6 @@ class Impinj( object ):
 				tagID = HexFormatToInt( tag['EPC'] )
 				
 				discoveryTime = tag['Timestamp']		# In microseconds since Jan 1, 1970
-				readCount = tag['TagSeenCount']
 				
 				# Convert discoveryTime to Python format and correct for reader time difference.
 				discoveryTime = datetime.datetime.utcfromtimestamp( discoveryTime / 1000000.0 ) + self.timeCorrection
@@ -184,10 +183,9 @@ class Impinj( object ):
 				# Write the entry to the log.
 				if pf:
 					# 									Thu Dec 04 10:14:49 PST
-					pf.write( '%d,%s,%s\n' % (
+					pf.write( '%d,%s\n' % (
 								tagID,
-								discoveryTime.strftime('%a %b %d %H:%M:%S.%f %Z %Y'),
-								readCount) )
+								discoveryTime.strftime('%a %b %d %H:%M:%S.%f %Z %Y')) )
 				self.messageQ.put( ('Impinj', 'Received %d. tag=%d, time=%s' % (self.tagCount, tagID, discoveryTimeStr)) )
 			
 			# Close the log file.

@@ -665,7 +665,6 @@ def GetBasicAddRospecMessage( MessageID = None, ROSpecID = 123, inventoryParamet
 					TagReportContentSelector_Parameter(
 						EnableAntennaID = True,
 						EnableFirstSeenTimestamp = True,
-						EnableTagSeenCount = True,
 					),
 				]
 			),

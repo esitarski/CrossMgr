@@ -142,7 +142,8 @@ class MainWin( wx.Frame ):
 	def start( self ):
 		self.dataQ = Queue()	# Queue to put messages from the reaader.
 		
-		rospecID = 123	# Arbitrary rospecID.
+		rospecID = 123					# Arbitrary rospecID.
+		inventoryParameterSpecID = 1234	# Arbitrary inventory parameter spec id.
 
 		# Create a reader connection.
 		self.conn = LLRPConnection()
@@ -165,17 +166,49 @@ class MainWin( wx.Frame ):
 		readerTime = datetime.datetime.utcfromtimestamp( readerTime / 1000000.0 )
 		self.timeCorrection = datetime.datetime.now() - readerTime
 
-		self.readerMessages.write( 'Disable all the rospecs...' )
+		self.readerMessages.write( 'Disabling all rospecs...' )
 		response = self.conn.transact( DISABLE_ROSPEC_Message(ROSpecID = 0) )
-		if not response.success():
-			self.readerMessages.write( 'DISABLE_ROSPEC failed.  response:\n%s' % response )
-			return
 
-		# Delete our old rospec if it exists.  This command might fail, so we don't check the return.
+		self.readerMessages.write( 'Delete our old rospec (if it exists).' )
 		response = self.conn.transact( DELETE_ROSPEC_Message(ROSpecID = rospecID) )
 
-		self.readerMessages.write( 'Create a new rospec that reports every read as soon as it happens.' )
-		response = self.conn.transact( GetBasicAddRospecMessage(ROSpecID = rospecID) )
+		self.readerMessages.write( 'Create an rospec that reports every read as soon as it happens.' )
+		response = self.conn.transact(
+			ADD_ROSPEC_Message( Parameters = [
+				ROSpec_Parameter(
+					ROSpecID = rospecID,
+					CurrentState = ROSpecState.Disabled,
+					Parameters = [
+						ROBoundarySpec_Parameter(		# Configure boundary spec (start and stop triggers for the reader).
+							Parameters = [
+								ROSpecStartTrigger_Parameter(ROSpecStartTriggerType = ROSpecStartTriggerType.Immediate),
+								ROSpecStopTrigger_Parameter(ROSpecStopTriggerType = ROSpecStopTriggerType.Null),
+							]
+						), # end ROBoundarySpec
+						AISpec_Parameter(				# Antenna Inventory Spec (specifies which antennas and protocol to use)
+							AntennaIDs = [0],			# Use all antennas.
+							Parameters = [
+								AISpecStopTrigger_Parameter( AISpecStopTriggerType = AISpecStopTriggerType.Null ),
+								InventoryParameterSpec_Parameter(
+									InventoryParameterSpecID = inventoryParameterSpecID,
+									ProtocolID = AirProtocols.EPCGlobalClass1Gen2,
+								),
+							]
+						), # end AISpec
+						ROReportSpec_Parameter(			# Report spec (specified how often and what to send from the reader)
+							ROReportTrigger = ROReportTriggerType.Upon_N_Tags_Or_End_Of_ROSpec,
+							N = 1,						# N = 1 --> update on each read.
+							Parameters = [
+								TagReportContentSelector_Parameter(
+									EnableAntennaID = True,
+									EnableFirstSeenTimestamp = True,
+								),
+							]
+						), # end ROReportSpec
+					]
+				), # end ROSpec_Parameter
+			])	# end ADD_ROSPEC_Message
+		)
 		if not response.success():
 			self.readerMessages.write( 'ADD_ROSPEC failed.  response:\n%s' % response)
 			return
@@ -250,8 +283,7 @@ class MainWin( wx.Frame ):
 			tagID = HexFormatToInt( tag['EPC'] )
 			discoveryTime = tag['Timestamp']		# In microseconds since Jan 1, 1970
 			discoveryTime = datetime.datetime.utcfromtimestamp( discoveryTime / 1000000.0 ) + self.timeCorrection
-			readCount = tag['TagSeenCount']
-			self.dataQ.put( ('Reader', (tagID, discoveryTime, readCount)) )
+			self.dataQ.put( ('Reader', (tagID, discoveryTime.strftime('%Y-%m-%d %H:%M:%S.%f'))) )
 	
 mainWin = None
 def MainLoop():
@@ -265,7 +297,7 @@ def MainLoop():
 @atexit.register
 def shutdown():
 	if mainWin:
-		mainWin.gracefullShutdown()
+		mainWin.gracefulShutdown()
 	
 if __name__ == '__main__':
 	MainLoop()
