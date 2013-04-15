@@ -171,13 +171,18 @@ class MainWin( wx.Frame ):
 						)
 		hb.Add( self.impinjHostName )
 		hb.Add( wx.StaticText(self, wx.ID_ANY, ImpinjHostNameSuffix), flag=wx.ALIGN_CENTER_VERTICAL )
+		hb.Add( wx.StaticText(self, wx.ID_ANY, ' : ' + str(ImpinjInboundPort)), flag=wx.ALIGN_CENTER_VERTICAL )
 		gbs.Add( hb, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
 		
 		iRow += 1
 		self.useStaticAddress = wx.RadioButton( self, wx.ID_ANY, 'IP:' )
 		gbs.Add( self.useStaticAddress, pos=(iRow,0), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
+		hb = wx.BoxSizer( wx.HORIZONTAL )
 		self.impinjHost = masked.IpAddrCtrl( self, wx.ID_ANY, style = wx.TE_PROCESS_TAB )
-		gbs.Add( self.impinjHost, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
+		hb.Add( self.impinjHost )
+		hb.Add( wx.StaticText(self, wx.ID_ANY, ' : ' + str(ImpinjInboundPort)), flag=wx.ALIGN_CENTER_VERTICAL )
+
+		gbs.Add( hb, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
 		
 		self.useHostName.SetValue( True )
 		self.useStaticAddress.SetValue( False )

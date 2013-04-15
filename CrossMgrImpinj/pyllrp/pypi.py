@@ -52,8 +52,21 @@ pyllrp
 
 A pure Python implementation of LLRP (Low Level Reader Protocol)
 used by RFID readers including Impinj, Alien and ThingMagic.
+See the LLRP spec for details on the messages.
 
-See TinyExample.py and wxExample.py for usage examples.
+Allows quick-and-easy scripting in fully portable pure Python to create LLRP applications.
+
+All Messagea and Parameters are full Python classes.
+Full validation of all LLRP Messages and Parameters including data type, date values and parameter checking.
+Full support for enumerated values.
+
+See TinyExample.py and wxExample.py for how to use.
+
+A reader connection manager is also included that can connect to a reader, transact commands, then start/stop a thread to listen for tag reads.  A message handler can be configured to respond to any reader message.  See wxExample.py for a simple method to show reader messages in a wxPython application with a Queue (requires wxPython install).
+
+At this time, the module does not support XML.  As the Python representation of reader messages is so consise and has full type and semantic checking, it seems redundant to support another syntax like XML.  It is easier to modify Python code than to modify XML.
+
+This could change in the future with more support.
 '''
 
 writeToFile( readme, 'README.txt' )
