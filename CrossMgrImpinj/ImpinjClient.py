@@ -5,7 +5,7 @@ import random
 import datetime
 import calendar
 from MainWin import ImpinjInboundPort
-from LLRP.LLRP import *
+from pyllrp.pyllrp import *
 
 #------------------------------------------------------------------------------	
 # Create some random rider numbers.
@@ -24,6 +24,15 @@ for i in xrange(25):
 # Create a Impinj-style numeric tag for each number.
 tag = dict( (n, '000000000000%04d' % n) for n in nums )
 	
+def toHexFormat( tag ):
+	s = str(tag)
+	if len(s) & 1:		# Pad to an even number of chars.
+		s = '0' + s
+	b = []
+	for i in xrange(0, len(s), 2):				# Conver pairs of decimals to hex.
+		b.append( chr(int(s[i:i+2], 16)) )
+	return bytes( ''.join(b) )
+
 #------------------------------------------------------------------------------	
 # Write out as a .csv file.  To create an external data file suitable for linking
 # with CrossMgr, open this file in Excel, then save it in .xls (or .xlsx) format.
@@ -44,7 +53,7 @@ def formatMessage( n, lap, t ):
 	print 'timestamp:', ts
 	message = RO_ACCESS_REPORT_Message( MessageID = MessageID, Parameters = [
 			TagReportData_Parameter( Parameters = [
-					EPCData_Parameter( EPC='%x' % n ),
+					EPCData_Parameter( EPC=toHexFormat(n) ),
 					FirstSeenTimestampUTC_Parameter( int(ts * 1000000.0) ),
 					TagSeenCount_Parameter( TagCount = count ),
 				],
@@ -82,75 +91,34 @@ def StartClient():
 	
 	print 'StatClient: Sending  event notification - everything is OK.'
 	ms = long((datetime.datetime.now() - datetime.datetime( 1970, 1, 1, 0, 0, 0 )).total_seconds() * 1000000)
-	READER_EVENT_NOTIFICATION_Message( MessageID = 0, Parameters = [
-			ReaderEventNotificationData_Parameter(
-				UTCTimestampe( ms ),
-				ConnectionAttempt_Parameter( ConnectionAttemptStatusType_Success ),
-			)
+	READER_EVENT_NOTIFICATION_Message( Parameters = [
+			ReaderEventNotificationData_Parameter( Parameters = [
+				UTCTimestamp_Parameter( ms ),
+				ConnectionAttemptEvent_Parameter(Status = ConnectionAttemptStatusType.Success),
+			] )
 		]
 	).send( clientSocket )
 	
 	print 'StartClient: Waiting for commands.'
+	llrpSuccess = LLRPStatus_Parameter( StatusCode = StatusCode.M_Success, ErrorDescription = 'Success')
 	while 1:
 		message = UnpackMessageFromSocket( clientSocket )
 		
 		print 'Received:'
 		print message
 		
-		if   isinstance( message, GET_SUPPORTED_VERSION_Message ):
-			response = GET_SUPPORTED_VERSION_RESPONSE_Message( MessageID = message.MessageID, CurrentVersion = 1, SupportedVersion = 2, Parameters = [
-						LLRPStatus_Parameter( StatusCode = StatusCode_M_Success, ErrorDescription = 'Success'),
-					],
-				)
-				
-		elif isinstance( message, SET_PROTOCOL_VERSION_Message ):
-			response = SET_PROTOCOL_VERSION_RESPONSE_Message( MessageID = message.MessageID, Parameters = [
-						LLRPStatus_Parameter( StatusCode = StatusCode_M_Success, ErrorDescription = 'Success'),
-					],
-				)
-				
-		elif isinstance( message, GET_READER_CAPABILITIES_Message ):
-			response = GET_READER_CAPABILITIES_RESPONSE_Message( MessageID = message.MessageID, Parameters = [
-						LLRPStatus_Parameter( StatusCode = StatusCode_M_Success, ErrorDescription = 'Success'),
-						GeneralDeviceCapabilities_Parameter(	DeviceManufacturerName = 0xededed, 
-																MaxNumberOfAntennaSupported = 4,
-																CanSetAntennaProperties = True,
-																HasUTCClockCapability = True,
-																ReaderFirmwareVersion = 'ExtraFirm',
-																ModelName = 0xdedede)
-					],
-				)
-				
+		if isinstance( message, SET_READER_CONFIG_Message ):
+			response = SET_READER_CONFIG_RESPONSE_Message( MessageID = message.MessageID, Parameters = [llrpSuccess] )
 		elif isinstance( message, CLOSE_CONNECTION_Message ):
-			response = CLOSE_CONNECTION_RESPONSE_Message( MessageID = message.MessageID, Parameters = [
-						LLRPStatus_Parameter( StatusCode = StatusCode_M_Success, ErrorDescription = 'Success'),
-					],
-				)
-				
+			response = CLOSE_CONNECTION_RESPONSE_Message( MessageID = message.MessageID, Parameters = [llrpSuccess] )
 		elif isinstance( message, DISABLE_ROSPEC_Message ):
-			response = DISABLE_ROSPEC_RESPONSE_Message( MessageID = message.MessageID, Parameters = [
-						LLRPStatus_Parameter( StatusCode = StatusCode_M_Success, ErrorDescription = 'Success'),
-					],
-				)
-				
+			response = DISABLE_ROSPEC_RESPONSE_Message( MessageID = message.MessageID, Parameters = [llrpSuccess] )
 		elif isinstance( message, DELETE_ROSPEC_Message ):
-			response = DELETE_ROSPEC_RESPONSE_Message( MessageID = message.MessageID, Parameters = [
-						LLRPStatus_Parameter( StatusCode = StatusCode_M_Success, ErrorDescription = 'Success'),
-					],
-				)
-				
+			response = DELETE_ROSPEC_RESPONSE_Message( MessageID = message.MessageID, Parameters = [llrpSuccess] )
 		elif isinstance( message, ADD_ROSPEC_Message ):
-			response = ADD_ROSPEC_RESPONSE_Message( MessageID = message.MessageID, Parameters = [
-						LLRPStatus_Parameter( StatusCode = StatusCode_M_Success, ErrorDescription = 'Success'),
-					],
-				)
-				
+			response = ADD_ROSPEC_RESPONSE_Message( MessageID = message.MessageID, Parameters = [llrpSuccess] )
 		elif isinstance( message, ENABLE_ROSPEC_Message ):
-			response = ENABLE_ROSPEC_RESPONSE_Message( MessageID = message.MessageID, Parameters = [
-						LLRPStatus_Parameter( StatusCode = StatusCode_M_Success, ErrorDescription = 'Success'),
-					],
-				)
-				
+			response = ENABLE_ROSPEC_RESPONSE_Message( MessageID = message.MessageID, Parameters = [llrpSuccess] )
 		else:
 			assert False, 'Unknown message.'
 		

@@ -285,6 +285,7 @@ class MainWin( wx.Frame ):
 		self.shutdownQ.put( 'shutdown' )
 		self.shutdownQ.put( 'shutdown' )
 		self.dataQ.put( 'shutdown' )
+		self.dataQ.put( 'shutdown' )
 		
 		self.crossMgrProcess.join()
 		self.impinjProcess.join()

@@ -98,7 +98,7 @@ class _FieldDef( object ):
 					s.append( bitstring.Bits(uintbe=e, length=length) )
 			elif ftype == 'bitarray':
 				st = getattr(obj, attr, '')
-				s.append( bitstring.Bits(uintbe=len(st), length=16) )
+				s.append( bitstring.Bits(uintbe=len(st)*8, length=16) )
 				s.append( bitstring.Bits(bytes=bytes(st)) )
 			elif ftype.startswith('skip'):
 				skip = int(ftype.split(':',1)[1])

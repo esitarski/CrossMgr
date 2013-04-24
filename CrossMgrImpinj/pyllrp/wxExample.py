@@ -15,11 +15,17 @@ from Queue import Queue, Empty
 # A Queue is used to collect asynchronous messages from the reader.
 # Every second, the UI checks the queue and redraws the screen.
 #
-# Another way to do this is with a custom event.  In this way
-# you can synchronize the UI exactly when the event occurs.  I decided
-# not to do this as repainting the UI might limit response time, and
-# checking every second is not much of a processing burden.
-# Your needs may vary.
+# There are at least two other methods in wxPython.
+#
+# The first is to use wx.CallAfter.  This puts a function call on
+# the wxPython queue in a thread-safe way that will get called when
+# control passes back to the wxPython event loop.
+#
+# See http://wiki.wxpython.org/CallAfter
+#
+# Another way to do this is with a custom event.  You send the custom
+# event to a window from the reader monitoring thread, then you Bind an
+# event handler to it.
 #
 # See http://wiki.wxpython.org/CustomEventClasses
 # and http://www.blog.pythonlibrary.org/2010/05/22/wxpython-and-threads/
