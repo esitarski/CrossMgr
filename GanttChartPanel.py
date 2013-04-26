@@ -128,7 +128,7 @@ class GanttChartPanel(wx.PyPanel):
 
 	def SetData( self, data, labels = None, nowTime = None, interp = None, greyOutSet = set(), numTimeInfo = None, lapNote = None ):
 		"""
-		* data is a list of lists.  Each list is a list of times.		
+		* data is a list of lists.  Each list is a list of times.
 		* labels are the names of the series.  Optional.
 		"""
 		self.data = None

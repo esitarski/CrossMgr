@@ -929,7 +929,7 @@ class RiderDetail( wx.Panel ):
 				tags = []
 				for tagName in ['Tag', 'Tag2']:
 					try:
-						tags.append( info[tagName] )
+						tags.append( info[tagName].lstrip('0') )
 					except (KeyError, ValueError):
 						pass
 				if tags:

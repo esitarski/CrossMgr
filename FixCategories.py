@@ -15,7 +15,8 @@ def FixCategories( choice, iSelection = None ):
 		choice.SetSelection( iSelection )
 
 	nameCat = [('All', None)]
-	nameCat.extend( [(c.fullname, c) for c in race.getCategories()] )
+	if race:
+		nameCat.extend( [(c.fullname, c) for c in race.getCategories()] )
 	
 	newItems = [ fullname for fullname, cat in nameCat ]
 	if items == newItems:

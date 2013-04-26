@@ -1288,9 +1288,10 @@ class MainWin( wx.Frame ):
 			else:
 				race.categoriesImportFile = categoriesFile
 
+		self.setNumSelect( None )
 		self.writeRace()
 		self.showPageName( 'Actions' )
-		self.refresh()
+		self.refreshAll()
 	
 	@logCall
 	def menuNewNext( self, event ):
@@ -1371,9 +1372,10 @@ class MainWin( wx.Frame ):
 				race.categories = categoriesSave
 
 		self.setActiveCategories()
+		self.setNumSelect( None )
 		self.writeRace()
 		self.showPageName( 'Actions' )
-		self.refresh()
+		self.refreshAll()
 
 	def updateRecentFiles( self ):
 		self.filehistory.AddFileToHistory(self.fileName)
@@ -1412,6 +1414,7 @@ class MainWin( wx.Frame ):
 			
 			self.updateRecentFiles()
 			
+			self.setNumSelect( None )
 			self.showPageName( 'Results' if isFinished else 'Actions')
 			self.refreshAll()
 			Utils.writeLog( 'call: openRace: "%s"' % fileName )
@@ -1941,8 +1944,12 @@ Continue?''' % fName, 'Simulate a Race' ):
 				self.callPageRefresh( i )
 
 	def setNumSelect( self, num ):
-		num = int(num) if num is not None else None
-		if num != self.numSelect:
+		try:
+			num = int(num)
+		except (TypeError, ValueError):
+			num = None
+			
+		if num is None or num != self.numSelect:
 			self.history.setNumSelect( num )
 			self.results.setNumSelect( num )
 			self.riderDetail.setNumSelect( num )
