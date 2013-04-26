@@ -278,12 +278,12 @@ class MainWin( wx.Frame ):
 		self.fileMenu.AppendSeparator()
 
 		idCur = wx.NewId()
-		self.fileMenu.Append( idCur , "&Export Results as Excel...", "Export results as an Excel Spreadsheet (.xls)" )
-		self.Bind(wx.EVT_MENU, self.menuExportToExcel, id=idCur )
+		self.fileMenu.Append( idCur , "&Publish Results as Excel...", "Publish Results as an Excel Spreadsheet (.xls)" )
+		self.Bind(wx.EVT_MENU, self.menuPublishAsExcel, id=idCur )
 		
 		idCur = wx.NewId()
-		self.fileMenu.Append( idCur , "Export Results as &HTML...", "Export results as HTML (.html)" )
-		self.Bind(wx.EVT_MENU, self.menuExportHtmlRaceResults, id=idCur )
+		self.fileMenu.Append( idCur , "Publish Results as &HTML...", "Publish Results as HTML (.html)" )
+		self.Bind(wx.EVT_MENU, self.menuPublishHtmlRaceResults, id=idCur )
 
 		self.fileMenu.AppendSeparator()
 		
@@ -854,7 +854,7 @@ class MainWin( wx.Frame ):
 	#--------------------------------------------------------------------------------------------
 
 	@logCall
-	def menuExportToExcel( self, event ):
+	def menuPublishAsExcel( self, event ):
 		self.commit()
 		if self.fileName is None or len(self.fileName) < 4:
 			return
@@ -939,7 +939,7 @@ class MainWin( wx.Frame ):
 		return html
 	
 	@logCall
-	def menuExportHtmlRaceResults( self, event ):
+	def menuPublishHtmlRaceResults( self, event ):
 		self.commit()
 		if self.fileName is None or len(self.fileName) < 4:
 			return

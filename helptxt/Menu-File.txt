@@ -7,14 +7,15 @@
 Creates a new race.  Opens the Property dialog to configure a new race.
 
 ## New Next...
-Creates a new race based on an existing one.  New Next... will keep the same Name, Organizer and Commissaire and will increment the race number.
+Creates a new race based on an existing one.  New Next... will keep the same Name, Organizer, Commissaire and other properties and increment the race number.
+After the new race is created, you just need to check the start time, duration and categories.
 This feature allows you to create the next race in the day very quickly.
 
 ## Open...
 Open an existing race.
 
 ## Open Next...
-Open the next race based on the existing one.  CrossMgr will look for the next race number.
+Open the next race based on the existing one.  CrossMgr will look for a race with the next race number in the same folder.
 
 ## Change Properties...
 Change the Properties of a race.  Also possible from the Properties screen.
@@ -33,11 +34,11 @@ Shows how the results would look if printed.
 ## Print Results...
 Prints formated results directly to a printer.
 
-## Export Results to Excel...
-Exports the results in Excel format and opens Excel on the output file.
+## Publish Results as Excel...
+Publish the results in Excel format and opens Excel on the output file.
 
-## Export Results to HTML...
-Exports the results as an HTML file.  Also includes Race Animation and the Chart.
+## Publish Results to HTML...
+Publish the results as an HTML file and opens a browser on the output file.  Includes the Race Animation and the Chart.
 
 ## Publish HTML Results with FTP...
 Publishes HTML formated results over an FTP upload.
