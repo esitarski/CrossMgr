@@ -210,6 +210,9 @@ class GanttChartPanel(wx.PyPanel):
 		self.Refresh()
 	
 	def getRiderLapXY( self, x, y ):
+		if not self.data:
+			return None, None
+			
 		y -= self.barHeight
 		x -= self.labelsWidthLeft
 		iRider = int(y / self.barHeight)
