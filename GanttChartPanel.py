@@ -173,6 +173,8 @@ class GanttChartPanel(wx.PyPanel):
 	def OnLeftClick( self, event ):
 		if getattr(self, 'empty', True):
 			return
+		if not self.data:
+			return
 			
 		iRider, iLap = self.getRiderLap( event )
 		if iRider is None:

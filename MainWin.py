@@ -842,7 +842,10 @@ class MainWin( wx.Frame ):
 		undo.pushState()
 		with Model.LockRace() as race:
 			if not link:
-				del race.excelLink
+				try:
+					del race.excelLink
+				except AttributeError:
+					pass
 			else:
 				race.excelLink = link
 			race.setChanged()
