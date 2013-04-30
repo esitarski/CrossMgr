@@ -13,7 +13,7 @@ When the race is running, press this button stop the race.
 Stopping the race turns off the ability to enter values through the [Record][] screen.  It is always possible to make manually edits at any time.
 
 ## Reset Start Clock on First Tag Read
-This option only applies to JChip.  After the race is started with the Start button, this option resets the race clock to zero on the first tag read.
+This option only applies when using a Chip Reader.  After the race is started with the Start button, this option resets the race clock to zero on the first tag read.
 It will also ignore the first tag read for all riders.
 
 This idea behind this feature is that the riders are stages behind the start line.

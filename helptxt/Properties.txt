@@ -18,6 +18,7 @@ Commissaire|The name of the race official.
 Memo|Anything you wish to type in here (weather conditions, your mood, etc.)
 Distance Unit|km or miles for the distances specified in Categories
 Show Times to 100s of Second|You choice to display regular seconds or fractions of seconds in Results and History.  Also configurable from the Options menu.
+All Categories Finish After Fastest Rider's Last Lap|Applies to multi-category races only.  Tells CrossMgr that all riders were stopped after the fastest rider in the race finished.  This means you stopped riders lapped by the fastest Category leader, but not lapped by their own Category leader.  This option is ignored for all Categories with "Race Laps" specified (see [Categories][]).
 Time Trial|Specifies Time Trial mode.  In this mode, the first time recorded for a rider starts the clock for that rider, rather than the start of the race.  See [Notes](#time-trial-mode).
 Enable USB Camera Photo Finish|Takes a photo from a connected USB camera on every number entry.  See [Notes](#enable-usb-camera-photo-finish) below for details.
 JChip Integration|Specifies that JChip integration is to be used in the race.  When set, CrossMgr will act as a "server" that can receive real-time messages from a JChip receiver.  See [JChip Setup](Menu-ChipReader.html#jchip-setup-dialog) for details.

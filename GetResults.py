@@ -66,7 +66,9 @@ def GetResultsCore( category ):
 	with Model.LockRace() as race:
 		if not race:
 			return tuple()
-			
+		
+		allCategoriesFinishAfterFastestRidersLastLap = getattr( race, 'allCategoriesFinishAfterFastestRidersLastLap', False )
+		
 		allRiderTimes = {}
 		for e in race.interpolate():
 			try:
@@ -81,9 +83,47 @@ def GetResultsCore( category ):
 				return tuple()
 		
 		startOffset = category.getStartOffsetSecs() if category else 0.0
-			
+		
+		# Get the race seconds.
+		if race.numLaps:
+			# If the number of laps is manually specified, find the category that results in the shortest race time with
+			# the manually specified number of laps.
+			raceSeconds = None
+			for c, (times, nums) in race.getCategoryTimesNums().iteritems():
+				if not times:
+					continue
+				try:
+					if raceSeconds is None or times[race.numLaps] < raceSeconds:
+						raceSeconds = times[race.numLaps] - 0.01
+				except IndexError:
+					pass
+			if raceSeconds is None:
+				raceSeconds = race.minutes * 60.0
+		else:
+			# Use the specified race time.
+			raceSeconds = race.minutes * 60.0
+		
+		# Enforce All Categories Finish After Fastest Rider's Last Lap
+		fastestRidersLastLapTime = None
+		if allCategoriesFinishAfterFastestRidersLastLap:
+			winningLapsMax = 0
+			for c, (times, nums) in race.getCategoryTimesNums().iteritems():
+				if not times:
+					continue
+				try:
+					winningLaps = bisect.bisect_left( times, raceSeconds, hi=len(times)-1 )
+					if winningLaps >= 2:
+						lastLapTime = times[winningLaps] - times[winningLaps-1]
+						if (times[winningLaps] - raceSeconds) > lastLapTime / 2.0:
+							winningLaps -= 1
+					if winningLaps >= winningLapsMax:
+						winningLapsMax = winningLaps
+						if fastestRidersLastLapTime is None or times[winningLaps] < fastestRidersLastLapTime:
+							fastestRidersLastLapTime = times[winningLaps]
+				except IndexError:
+					pass
+		
 		# Get the number of race laps for each category.
-		raceNumLaps = (race.numLaps or 1000)
 		categoryWinningTime = {}
 		for c, (times, nums) in race.getCategoryTimesNums().iteritems():
 			if not times or (category and c != category):
@@ -95,19 +135,17 @@ def GetResultsCore( category ):
 			else:
 				# Otherwise, set the number of laps by the winner's time closest to the race finish time.
 				try:
-					winningLaps = bisect.bisect_left( times, race.minutes * 60.0, hi=len(times)-1 )
-					if winningLaps > raceNumLaps:
-						winningLaps = raceNumLaps
-					elif winningLaps >= 2:
+					winningLaps = bisect.bisect_left( times, raceSeconds, hi=len(times)-1 )
+					if winningLaps >= 2:
 						winner = race[nums[winningLaps]]
 						entries = winner.interpolate()
 						if entries[winningLaps].interp:
 							lastLapTime = times[winningLaps] - times[winningLaps-1]
-							if (times[winningLaps] - race.minutes * 60.0) > lastLapTime / 2.0:
+							if (times[winningLaps] - raceSeconds) > lastLapTime / 2.0:
 								winningLaps -= 1
 					categoryWinningTime[c] = times[winningLaps]
 				except IndexError:
-					categoryWinningTime[c] = race.minutes * 60.0
+					categoryWinningTime[c] = raceSeconds
 		
 		if not categoryWinningTime:
 			return tuple()
@@ -126,6 +164,9 @@ def GetResultsCore( category ):
 			if times:
 				times[0] = min(riderCategory.getStartOffsetSecs(), times[1])
 				laps = bisect.bisect_left( times, categoryWinningTime[riderCategory], hi=len(times)-1 )
+				if fastestRidersLastLapTime is not None:
+					while laps >= 1 and interp[laps] and times[laps] > fastestRidersLastLapTime:
+						laps -= 1
 				times = times[:laps+1]
 				interp = interp[:laps+1]
 			else:

@@ -3,19 +3,21 @@
 
 # ChipReader
 
-CrossMgr can accept real-time messages from a [JChip](http://mts.greentag.to/english/index.html) receiver.
-CrossMgr can also import a file that was generated from a JChip system.
+CrossMgr can accept real-time messages from a [JChip](http://mts.greentag.to/english/index.html) receiver as well as an Impinj Reader and an Alien Reader with the CrossMgrImpinj or CrossMgrAlien bridge programs.
+CrossMgr can also import a file that was generated from a JChip system, or the CrossMgrImpinj or CrossMgrAlien bridge programs.
 
-JChip (like all chip systems) logs the time and code when it reads a chip, and each chip has a 6 character unique code.  In order to make sense, the code must to be associated with a rider's name, team, bib, etc.
+All chip systems log the time and code when it reads a chip, and each chip has a unique code.  This code may be the same as the rider's Bib number, or it might be something different.  The code must to be associated with a rider's name, team, bib, etc.
 CrossMgr allows you to configure which tag goes with which rider through the [External Excel][] sheet.  CrossMgr supports two columns, Tag and optionally Tag2, that contain the chip tag code(s) for that rider.  CrossMgr supports two tags in case you wish to give one two tags - the one intended for a backup bike.
+
+To reduce "spurious" reads, CrossMgr will only register the Tags defined in the [External Excel][] sheet during a race.  This eliminates interference from reads from riders in other races.
 
 When a rider's chip is read, the chip receiver sends a timestamped message to CrossMgr with the tag.  CrossMgr does a lookup on the tag to find which rider it was, and then uses the time to automatically make an entry - just as would be done manually.
 
 CrossMgr always uses the chip reader's time.  This ensures accuracy even if CrossMgr gets busy and cannot look at its incoming messages for a few seconds.
 
-CrossMgr works with a single JChip receiver - multiple readers at other locations are not supported.
+CrossMgr works with a single chip receiver - multiple readers are not supported.
 
-Notes about the JChip reader:
+Notes about the Chip reader:
 
 1. All reads before the start of the race are ignored.
 1. Reads after the start of the race, but before the Start Offset of a category will be registered, but ignored in the results.
@@ -27,7 +29,7 @@ Open the JChip Setup Dialog.
 ### JChip Setup Dialog
 Used to configure and test the JChip receiver.  Make sure you have your [JChip Documentation](http://mts.greentag.to/ControlPanelSoftManual.pdf) ready if you are configuring JChip for the first time.
 
-CrossMgr communicates with JChip through a TCP/IP interface (that is, an internet connection).  This can be done with cable or wireless.  Check what hardware you need to accomplish this.
+CrossMgr communicates with the Chip reader through a TCP/IP interface (that is, an internet connection).  This can be done with cable or wireless.  Check what hardware you need to accomplish this.
 
 CrossMgr is the "server", and JChip is the "client".  The communication works as follows:
 

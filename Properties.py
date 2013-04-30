@@ -59,6 +59,10 @@ class Properties( wx.Panel ):
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.memo )
 		rows += 1
 		
+		self.allCategoriesFinishAfterFastestRidersLastLapLabel = wx.StaticText( self, wx.ID_ANY, "All Categories Finish After Fastest Rider's Last Lap:" )
+		self.allCategoriesFinishAfterFastestRidersLastLap = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
+		rows += 1
+		
 		self.timeTrialLabel = wx.StaticText( self, wx.ID_ANY, 'Time Trial:' )
 		self.timeTrial = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
 		rows += 1
@@ -128,6 +132,8 @@ class Properties( wx.Panel ):
 			(self.commissaireLabel,	0, labelAlign),		(self.commissaire, 		1, fieldAlign),
 			(self.memoLabel,		0, labelAlign),		(self.memo, 			1, fieldAlign),
 			
+			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
+			(self.allCategoriesFinishAfterFastestRidersLastLapLabel,	0, labelAlign),		(self.allCategoriesFinishAfterFastestRidersLastLap,		1, fieldAlign),
 			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
 			(self.timeTrialLabel,	0, labelAlign),		(self.timeTrial,		1, fieldAlign),
 			
@@ -249,6 +255,7 @@ class Properties( wx.Panel ):
 			self.date.SetValue( d )
 			self.raceNum.SetValue( race.raceNum )
 			self.scheduledStart.SetValue( race.scheduledStart )
+			self.allCategoriesFinishAfterFastestRidersLastLap.SetValue( getattr(race, 'allCategoriesFinishAfterFastestRidersLastLap', False) )
 			self.timeTrial.SetValue( getattr(race, 'isTimeTrial', False) )
 			self.minutes.SetValue( race.minutes )
 			self.commissaire.SetValue( race.commissaire )
@@ -289,6 +296,7 @@ class Properties( wx.Panel ):
 			race.date = self.date.GetValue().Format(Properties.dateFormat)
 			race.raceNum = self.raceNum.GetValue()
 			race.scheduledStart = self.scheduledStart.GetValue()
+			race.allCategoriesFinishAfterFastestRidersLastLap = self.allCategoriesFinishAfterFastestRidersLastLap.IsChecked()
 			race.isTimeTrial = self.timeTrial.IsChecked()
 			race.enableJChipIntegration = self.jchip.IsChecked()
 			race.autocorrectLapsDefault = self.autocorrectLapsDefault.IsChecked()
@@ -451,7 +459,7 @@ if __name__ == '__main__':
 	race._populate()
 	
 	app = wx.PySimpleApp()
-	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
+	mainWin = wx.Frame(None,title="CrossMan", size=(600,600))
 	properties = Properties(mainWin)
 	properties.setEditable( True )
 	properties.refresh()
