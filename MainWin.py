@@ -1923,7 +1923,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 
 	def updateUndoStatus( self, event = None ):
 		with Model.LockRace() as race:
-			isRunning = (race and race.isRunning())
+			isRunning = bool(race and race.isRunning())
 		self.undoMenuButton.Enable( bool(not isRunning and undo.isUndo()) )
 		self.redoMenuButton.Enable( bool(not isRunning and undo.isRedo()) )
 		
