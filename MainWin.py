@@ -1876,6 +1876,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 		self.callPageCommit( self.notebook.GetSelection() )
 		self.callPageRefresh( iPage )
 		self.notebook.ChangeSelection( iPage )
+		self.pages[self.notebook.GetSelection()].Layout()
 
 	def showPageName( self, name ):
 		name = name.replace(' ', '')
