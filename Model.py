@@ -768,7 +768,10 @@ class Race(object):
 		self.finishTime = None
 		self.numLaps = None
 		self.firstRecordedTime = None	# Used to trigger the race on the first recorded time.
+		
+		self.allCategoriesFinishAfterFastestRidersLastLap = True
 		self.isTimeTrial = False
+		
 		self.autocorrectLapsDefault = True
 		self.highPrecisionTimes = False
 		self.syncCategories = True

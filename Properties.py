@@ -61,6 +61,7 @@ class Properties( wx.Panel ):
 		
 		self.allCategoriesFinishAfterFastestRidersLastLapLabel = wx.StaticText( self, wx.ID_ANY, "All Categories Finish After Fastest Rider's Last Lap:" )
 		self.allCategoriesFinishAfterFastestRidersLastLap = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
+		self.allCategoriesFinishAfterFastestRidersLastLap.SetValue( True )
 		rows += 1
 		
 		self.timeTrialLabel = wx.StaticText( self, wx.ID_ANY, 'Time Trial:' )
