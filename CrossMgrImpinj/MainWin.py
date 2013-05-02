@@ -10,6 +10,7 @@ from threading import Thread as Process
 from Queue import Queue
 from Impinj import ImpinjServer
 from Impinj2JChip import CrossMgrServer
+from AutoDetect import AutoDetect
 
 import wx
 import wx.lib.masked             as masked
@@ -156,7 +157,12 @@ class MainWin( wx.Frame ):
 		fgs.Add( gbs, flag=wx.EXPAND|wx.ALL, border = 4 )
 		
 		iRow = 0
-		gbs.Add( setFont(bigFont,wx.StaticText(self, wx.ID_ANY, 'Impinj Configuration:')), pos=(iRow,0), span=(1,2), flag=wx.ALIGN_LEFT )
+		hb = wx.BoxSizer( wx.HORIZONTAL )
+		hb.Add( setFont(bigFont,wx.StaticText(self, wx.ID_ANY, 'Impinj Configuration:')), flag=wx.ALIGN_CENTER_VERTICAL )
+		self.autoDetectButton = wx.Button(self, wx.ID_ANY, 'Auto Detect')
+		self.autoDetectButton.Bind( wx.EVT_BUTTON, self.doAutoDetect )
+		hb.Add( self.autoDetectButton, flag=wx.LEFT, border = 6 )
+		gbs.Add( hb, pos=(iRow,0), span=(1,2), flag=wx.ALIGN_LEFT )
 		
 		iRow += 1
 		self.useHostName = wx.RadioButton( self, wx.ID_ANY, 'Host Name:', style=wx.wx.RB_GROUP )
@@ -198,7 +204,7 @@ class MainWin( wx.Frame ):
 		gbs = wx.GridBagSizer( 4, 4 )
 		fgs.Add( gbs, flag=wx.EXPAND|wx.ALL, border = 4 )
 		
-		gbs.Add( setFont(bigFont,wx.StaticText(self, wx.ID_ANY, 'CrossMgr Configuration:')), pos=(0,0), span=(1,2), flag=wx.ALIGN_LEFT )
+		gbs.Add( setFont(bigFont,wx.StaticText(self, wx.ID_ANY, 'CrossMgr Configuration:')), pos=(0,0), span=(1,2), flag=wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL )
 		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'CrossMgr Address:'), pos=(1,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		
 		hb = wx.BoxSizer( wx.HORIZONTAL )
@@ -262,14 +268,16 @@ class MainWin( wx.Frame ):
 		self.dataQ = None
 		self.shutdownQ = None
 	
-	def doReset( self, event ):
-		dlg = wx.MessageDialog(self, 'Reset CrossMgrImpinj Adapter?',
-								'Confirm Reset',
-								wx.OK | wx.CANCEL | wx.ICON_WARNING )
-		ret = dlg.ShowModal()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
+	def doReset( self, event, confirm = True ):
+		if confirm:
+			dlg = wx.MessageDialog(self, 'Reset CrossMgrImpinj Adapter?',
+									'Confirm Reset',
+									wx.OK | wx.CANCEL | wx.ICON_WARNING )
+			ret = dlg.ShowModal()
+			dlg.Destroy()
+			if ret != wx.ID_OK:
+				return
+				
 		self.writeOptions()
 		
 		self.gracefulShutdown()
@@ -278,6 +286,24 @@ class MainWin( wx.Frame ):
 		self.crossMgrMessages.clear()
 		self.shutdown()
 		wx.CallAfter( self.start )
+		
+	def doAutoDetect( self, event ):
+		wx.BeginBusyCursor()
+		impinjHost, crossMgrHost = AutoDetect( ImpinjInboundPort )
+		wx.EndBusyCursor()
+		if impinjHost and crossMgrHost:
+			self.useStaticAddress.SetValue( True )
+			self.useHostName.SetValue( False )
+			
+			self.impinjHost.SetValue( impinjHost )
+			self.crossMgrHost.SetValue( crossMgrHost )
+			self.doReset( event, False )
+		else:
+			dlg = wx.MessageDialog(self, 'Auto Detect Failed.\nCheck that reader has power and it is connected to the router.',
+									'Auto Detect Failed',
+									wx.OK | wx.ICON_INFORMATION )
+			ret = dlg.ShowModal()
+			dlg.Destroy()
 	
 	def gracefulShutdown( self ):
 		# Shutdown the CrossMgr process by sending it a shutdown command.

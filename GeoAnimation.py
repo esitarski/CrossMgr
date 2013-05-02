@@ -748,7 +748,7 @@ if __name__ == '__main__':
 	for num in xrange(100,200):
 		mean = random.normalvariate(6.0, 0.3)
 		raceTimes = [0]
-		for lap in xrange( 5 ):
+		for lap in xrange( 4 ):
 			raceTimes.append( raceTimes[-1] + random.normalvariate(mean, mean/20)*60.0 )
 		data[num] = { 'raceTimes': raceTimes, 'lastTime': raceTimes[-1], 'flr': 1.0 }
 
