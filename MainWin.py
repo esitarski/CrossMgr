@@ -917,6 +917,9 @@ class MainWin( wx.Frame ):
 			html = replaceJsonVar( html, 'isTimeTrial',			getattr(race, 'isTimeTrial', False) )
 			html = replaceJsonVar( html, 'rfid',				getattr(race, 'enableJChipIntegration', False))
 			html = replaceJsonVar( html, 'raceIsRunning',		race.isRunning() )
+			if race.startTime:
+				raceStartTime = (race.startTime - race.startTime.replace( hour=0, minute=0, second=0 )).total_seconds()
+				html = replaceJsonVar( html, 'raceStartTime',	raceStartTime )
 			tLastRaceTime = race.lastRaceTime()
 			gpsPoints = getattr(race, 'geoTrack', None)
 			if gpsPoints is not None:

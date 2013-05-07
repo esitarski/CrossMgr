@@ -154,6 +154,7 @@ var displayUnits = 'km';
 var reverseDirection = null;	// Reverse the direction of the riders.
 var finishTop = null;			// Finish on the top rather than the bottom.
 var tRace = null;				// Race time (if the race is running).
+var raceStartTime = null;		// In seconds from midnight.
 var animationObj = null;		// Animation object to draw the course (set to TrackAnimation or GeoAnimation).
 var catUpdateTime = {};			// Time of next update by category.
 var rfid = null;				// True if data was collected by RFID.
@@ -1668,6 +1669,8 @@ function SetCategoryResults()
 						else
 							catStr += cd.laps + " laps of " + FormatDistance(cd.lapDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true) + ', ';
 					}
+					if( raceStartTime )
+						catStr += 'start: ' + FormatTime(raceStartTime + cd.startOffset) + ', ';
 				}
 				catStr += (raceIsRunning ? "Estimated " : "") + "winner: " + tFinishStr + ' at ' + FormatSpeed(parseFloat(d['speed'].split(' ')[0]), cd.distanceUnit ? cd.distanceUnit : 'km', true);
 				catTitleTD.innerHTML = cat + (raceIsRunning ? " (race in progress)" : "") +
