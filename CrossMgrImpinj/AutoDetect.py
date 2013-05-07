@@ -8,8 +8,11 @@ def findImpinjHost( impinjPort ):
 	for i in xrange(12):
 		j = -j if j > 0 else -j + 1
 		
-		ipTest = [v for v in ip]
+		ipTest = list( ip )
 		ipTest[-1] += j
+		if ipTest[-1] < 0:
+			continue
+			
 		impinjHost = '.'.join( str(v) for v in ipTest )
 		
 		readerSocket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
@@ -18,6 +21,7 @@ def findImpinjHost( impinjPort ):
 			readerSocket.connect( (impinjHost, impinjPort) )
 		except:
 			continue
+		
 		try:
 			response = UnpackMessageFromSocket( readerSocket )
 		except:
@@ -27,7 +31,8 @@ def findImpinjHost( impinjPort ):
 		readerSocket.close()
 		if response.success():
 			return impinjHost
-		return None
+			
+	return None
 
 def AutoDetect( impinjPort ):
 	return findImpinjHost( impinjPort ), Utils.GetDefaultHost()

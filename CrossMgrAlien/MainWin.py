@@ -10,6 +10,7 @@ from threading import Thread as Process
 from Queue import Queue
 from Alien import AlienServer
 from Alien2JChip import CrossMgrServer
+from AutoDetect import AutoDetect, DefaultAlienCmdPort
 
 import wx
 import wx.lib.masked             as masked
@@ -154,7 +155,12 @@ class MainWin( wx.Frame ):
 		fgs.Add( gbs, flag=wx.EXPAND|wx.ALL, border = 4 )
 		
 		iRow = 0
-		gbs.Add( setFont(bigFont,wx.StaticText(self, wx.ID_ANY, 'Alien Configuration:')), pos=(iRow,0), span=(1,2), flag=wx.ALIGN_LEFT )
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( setFont(bigFont,wx.StaticText(self, wx.ID_ANY, 'Alien Configuration:')), flag=wx.ALIGN_CENTER_VERTICAL )
+		self.autoDetectButton = wx.Button( self, wx.ID_ANY, 'Auto Detect' )
+		self.autoDetectButton.Bind( wx.EVT_BUTTON, self.doAutoDetect )
+		hs.Add( self.autoDetectButton, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border = 6 )
+		gbs.Add( hs, pos=(iRow,0), span=(1,2), flag=wx.ALIGN_LEFT )
 		iRow += 1
 		
 		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'Antennas:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_BOTTOM )
@@ -269,33 +275,68 @@ class MainWin( wx.Frame ):
 		self.messageQ = None
 		self.dataQ = None
 		self.shutdownQ = None
-	
-	def doReset( self, event ):
-		dlg = wx.MessageDialog(self, 'Reset CrossMgrAlien Adapter?',
-								'Confirm Reset',
-								wx.OK | wx.CANCEL | wx.ICON_WARNING )
-		ret = dlg.ShowModal()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
-		self.writeOptions()
 		
+	def gracefulShutdown( self ):
 		# Shutdown the CrossMgr process by sending it a shutdown command.
-		self.shutdownQ.put( 'shutdown' )
-		self.shutdownQ.put( 'shutdown' )
-		self.shutdownQ.put( 'shutdown' )
-		self.dataQ.put( 'shutdown' )
+		if self.shutdownQ:
+			self.shutdownQ.put( 'shutdown' )
+			self.shutdownQ.put( 'shutdown' )
+			self.shutdownQ.put( 'shutdown' )
 		
-		self.crossMgrProcess.join()
-		self.alienProcess.join()
+		if self.dataQ:
+			self.dataQ.put( 'shutdown' )
+		
+		if self.crossMgrProcess:
+			self.crossMgrProcess.join()
+		if self.alienProcess:
+			self.alienProcess.join()
 		
 		self.crossMgrProcess = None
 		self.alienProcess = None
+	
+	def doReset( self, event, confirm = True ):
+		if confirm:
+			dlg = wx.MessageDialog(self, 'Reset CrossMgrAlien Adapter?',
+									'Confirm Reset',
+									wx.OK | wx.CANCEL | wx.ICON_WARNING )
+			ret = dlg.ShowModal()
+			dlg.Destroy()
+			if ret != wx.ID_OK:
+				return
+				
+		self.writeOptions()
+		
+		self.gracefulShutdown()
 		
 		self.alienMessages.clear()
 		self.crossMgrMessages.clear()
+		
 		self.shutdown()
 		wx.CallAfter( self.start )
+	
+	def doAutoDetect( self, event ):
+		wx.BeginBusyCursor()
+		self.gracefulShutdown()
+		self.shutdown()
+		alienHost, crossmgrHost = AutoDetect()
+		wx.EndBusyCursor()
+		
+		if alienHost and crossmgrHost:
+			self.setNotifyHost( crossmgrHost ) # Assumes CrossMgr is on the same computer as CrossMgrAlien.
+			
+			self.cmdHost.SetValue( alienHost )
+			self.cmdPort.SetValue( str(DefaultAlienCmdPort) )
+			self.crossMgrHost.SetValue( crossmgrHost )
+			
+			self.listenForHeartbeat.SetValue( False )
+		else:
+			dlg = wx.MessageDialog(self, 'Auto Detect Failed.\nCheck that reader has power and it is connected to the router.',
+									'Auto Detect Failed',
+									wx.OK | wx.ICON_INFORMATION )
+			dlg.ShowModal()
+			dlg.Destroy()
+			
+		self.doReset( event, False )
 	
 	def onCloseWindow( self, event ):
 		wx.Exit()
@@ -346,6 +387,13 @@ class MainWin( wx.Frame ):
 		s = self.notifyHost.GetSelection()
 		return self.notifyHost.GetString(s) if s != wx.NOT_FOUND else None
 	
+	def setNotifyHost( self, notifyHost ):
+		for i, s in enumerate(self.notifyHost.GetItems()):
+			if s == notifyHost:
+				self.notifyHost.SetSelection( i )
+				return
+		self.notifyHost.SetSelection( 0 )
+	
 	def getCrossMgrHost( self ):
 		return self.crossMgrHost.GetAddress()
 		
@@ -382,17 +430,17 @@ class MainWin( wx.Frame ):
 		self.cmdPort.SetValue( int(self.config.Read('AlienCmdPort', '0')) )
 		self.setAntennaStr( self.config.Read('Antennas', '0 1') )
 		notifyHost = self.config.Read('NotifyHost', Utils.DEFAULT_HOST)
-		for i, s in enumerate(self.notifyHost.GetItems()):
-			if s == notifyHost:
-				self.notifyHost.SetSelection( i )
-				return
-		self.notifyHost.SetSelection( 0 )
+		self.setNotifyHost( notifyHost )
 	
 	def updateMessages( self, event ):
 		tNow = datetime.datetime.now()
 		running = int((tNow - self.tStart).total_seconds())
 		self.runningTime.SetLabel( '%02d:%02d:%02d' % (running // (60*60), (running // 60) % 60, running % 60) )
 		self.time.SetLabel( tNow.strftime('%H:%M:%S') )
+		
+		if not self.messageQ:
+			return
+			
 		while 1:
 			try:
 				d = self.messageQ.get( False )

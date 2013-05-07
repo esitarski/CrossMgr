@@ -289,32 +289,40 @@ class MainWin( wx.Frame ):
 		
 	def doAutoDetect( self, event ):
 		wx.BeginBusyCursor()
+		self.gracefulShutdown()
+		self.shutdown()
 		impinjHost, crossMgrHost = AutoDetect( ImpinjInboundPort )
 		wx.EndBusyCursor()
+		
 		if impinjHost and crossMgrHost:
 			self.useStaticAddress.SetValue( True )
 			self.useHostName.SetValue( False )
 			
 			self.impinjHost.SetValue( impinjHost )
 			self.crossMgrHost.SetValue( crossMgrHost )
-			self.doReset( event, False )
 		else:
 			dlg = wx.MessageDialog(self, 'Auto Detect Failed.\nCheck that reader has power and it is connected to the router.',
 									'Auto Detect Failed',
 									wx.OK | wx.ICON_INFORMATION )
-			ret = dlg.ShowModal()
+			dlg.ShowModal()
 			dlg.Destroy()
+			
+		self.doReset( event, False )
 	
 	def gracefulShutdown( self ):
 		# Shutdown the CrossMgr process by sending it a shutdown command.
-		self.shutdownQ.put( 'shutdown' )
-		self.shutdownQ.put( 'shutdown' )
-		self.shutdownQ.put( 'shutdown' )
-		self.dataQ.put( 'shutdown' )
-		self.dataQ.put( 'shutdown' )
+		if self.shutdownQ:
+			self.shutdownQ.put( 'shutdown' )
+			self.shutdownQ.put( 'shutdown' )
+			self.shutdownQ.put( 'shutdown' )
+		if self.dataQ:
+			self.dataQ.put( 'shutdown' )
+			self.dataQ.put( 'shutdown' )
 		
-		self.crossMgrProcess.join()
-		self.impinjProcess.join()
+		if self.crossMgrProcess:
+			self.crossMgrProcess.join()
+		if self.impinjProcess:
+			self.impinjProcess.join()
 		
 		self.crossMgrProcess = None
 		self.impinjProcess = None
@@ -385,6 +393,9 @@ class MainWin( wx.Frame ):
 		running = int((tNow - self.tStart).total_seconds())
 		self.runningTime.SetLabel( '%02d:%02d:%02d' % (running // (60*60), (running // 60) % 60, running % 60) )
 		self.time.SetLabel( tNow.strftime('%H:%M:%S') )
+		
+		if not self.messageQ:
+			return
 		while 1:
 			try:
 				d = self.messageQ.get( False )
