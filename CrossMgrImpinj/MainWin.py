@@ -301,7 +301,7 @@ class MainWin( wx.Frame ):
 			self.impinjHost.SetValue( impinjHost )
 			self.crossMgrHost.SetValue( crossMgrHost )
 		else:
-			dlg = wx.MessageDialog(self, 'Auto Detect Failed.\nCheck that reader has power and it is connected to the router.',
+			dlg = wx.MessageDialog(self, 'Auto Detect Failed.\nCheck that reader has power and is connected to the router.',
 									'Auto Detect Failed',
 									wx.OK | wx.ICON_INFORMATION )
 			dlg.ShowModal()

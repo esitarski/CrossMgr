@@ -5,12 +5,12 @@ def findImpinjHost( impinjPort ):
 	''' Search ip addresses adjacent to the computer in an attempt to find the reader. '''
 	ip = [int(i) for i in Utils.GetDefaultHost().split('.')]
 	j = 0
-	for i in xrange(12):
+	for i in xrange(14):
 		j = -j if j > 0 else -j + 1
 		
 		ipTest = list( ip )
 		ipTest[-1] += j
-		if ipTest[-1] < 0:
+		if not (0 <= ipTest[-1] < 256):
 			continue
 			
 		impinjHost = '.'.join( str(v) for v in ipTest )
