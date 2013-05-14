@@ -54,6 +54,7 @@ import JChip
 from JChip import ChipReaderEvent, EVT_CHIP_READER 
 import OrionImport
 import AlienImport
+import ImpinjImport
 import OutputStreamer
 import FtpWriteFile
 import GpxImport
@@ -465,6 +466,10 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_MENU, self.menuAlienImport, id=idCur )
 		
 		idCur = wx.NewId()
+		chipImportMenu.Append( idCur , "Impinj File...", "Impinj Formatted File" )
+		self.Bind(wx.EVT_MENU, self.menuImpinjImport, id=idCur )
+		
+		idCur = wx.NewId()
 		chipImportMenu.Append( idCur , "Orion File...", "Orion Formatted File" )
 		self.Bind(wx.EVT_MENU, self.menuOrionImport, id=idCur )
 		
@@ -692,6 +697,20 @@ class MainWin( wx.Frame ):
 			return
 			
 		dlg = AlienImport.AlienImportDialog( self )
+		dlg.ShowModal()
+		dlg.Destroy()
+		wx.CallAfter( self.refresh )
+		
+	def menuImpinjImport( self, event ):
+		correct, reason = JChipSetup.CheckExcelLink()
+		explain = 	'Impinj Import requires that you have a valid Excel sheet with associated tags and Bib numbers.\n\n' \
+					'See documentation for details.'
+		if not correct:
+			Utils.MessageOK( self, 'Problems with Excel sheet.\n\n    Reason: %s\n\n%s' % (reason, explain),
+									title = 'Excel Link Problem', iconMask = wx.ICON_ERROR )
+			return
+			
+		dlg = ImpinjImport.ImpinjImportDialog( self )
 		dlg.ShowModal()
 		dlg.Destroy()
 		wx.CallAfter( self.refresh )
