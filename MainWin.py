@@ -12,6 +12,7 @@ import bisect
 import json
 import multiprocessing
 import webbrowser
+import zipfile
 import base64
 import cgi
 import locale
@@ -380,6 +381,10 @@ class MainWin( wx.Frame ):
 		idCur = wx.NewId()
 		self.dataMgmtMenu.Append( idCur , "&Import Course in GPX format...", "Import Course in GPX format" )
 		self.Bind(wx.EVT_MENU, self.menuImportGpx, id=idCur )
+		
+		idCur = wx.NewId()
+		self.dataMgmtMenu.Append( idCur , "&Export Course as KMZ Virtual Tour...", "Export Course as KMZ Virtual Tour (Requires Google Earth)" )
+		self.Bind(wx.EVT_MENU, self.menuExportCourseAsKml, id=idCur )
 		
 		self.menuBar.Append( self.dataMgmtMenu, "&DataMgmt" )
 
@@ -1070,6 +1075,38 @@ class MainWin( wx.Frame ):
 			
 		self.showPageName( 'Animation' )
 		self.refresh()
+		
+	@logCall
+	def menuExportCourseAsKml( self, event ):
+		with Model.LockRace() as race:
+			if not race:
+				return
+				
+			if not getattr(race, 'geoTrack', None):
+				Utils.MessageOK( self, 'No GPX Course Loaded.\nNothing to export.', 'No GPX Course Loaded' )
+				return
+				
+			geoTrack = race.geoTrack
+			
+			# Get the folder to write the html file.
+			fname = self.fileName[:-4] + 'Course.kmz'
+			dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(fname),
+								style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
+			ret = dlg.ShowModal()
+			dName = dlg.GetPath()
+			dlg.Destroy()
+			if ret != wx.ID_OK:
+				return
+			
+			fname = os.path.join( dName, os.path.basename(fname) )
+			courseFName = os.path.splitext(os.path.basename(fname))[0] + '.kml'
+			
+			zf = zipfile.ZipFile( fname, 'w', zipfile.ZIP_DEFLATED )
+			zf.writestr( courseFName, geoTrack.asKmlTour(race.name) )
+			zf.close()
+			
+		webbrowser.open( fname, new = 0, autoraise = True )
+		Utils.MessageOK(self, 'Course Virtual Tour written to KMZ file:\n\n   %s\n\nGoogle Earth Launched.' % fname, 'KMZ Write')
 		
 	@logCall
 	def menuExportHtmlRawData( self, event ):

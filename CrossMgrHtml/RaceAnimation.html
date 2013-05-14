@@ -26,20 +26,11 @@ body
 	box-shadow: 4px 4px 4px #888888;
 }
 
-.smallfont
-{
-	font-size: 80%;
-}
+.smallfont	{ font-size: 75%; }
+.bigfont	{ font-size: 120%; }
+.biggerFont	{ font-size: 130%; }
 
-.bigfont
-{
-	font-size: 120%;
-}
-
-.hidden
-{
-	display: none;
-}
+.hidden { display: none; }
 
 table.results
 {
@@ -1439,6 +1430,7 @@ function SetCategoryResults()
 		var resultsData = [];
 		var hasLapSpeeds = false;
 		var showingAllLaps = true;
+		var starters = 0, finishers = 0, finishersPercent = 0.0;
 		for( var num in data )
 		{
 			var d = data[num];
@@ -1462,8 +1454,15 @@ function SetCategoryResults()
 				for( var f = 0; f < infoFields.length; ++f )
 					if( d[infoFields[f]] )
 						curFields[infoFields[f]] = true;
+						
+				if( d['status'] != 'DNS' )
+					starters += 1;
+				if( d['status'] == 'Finisher' )
+					finishers += 1;
 			}
 		}
+		if( starters > 0 )
+			finishersPercent = (100.0 * finishers) / starters;
 		
 		var hasFirstLastName = (curFields['FirstName'] && curFields['LastName']);
 		if( hasFirstLastName )
@@ -1657,23 +1656,33 @@ function SetCategoryResults()
 				{
 					var cd = catDetails[cat];
 					if( cd.raceDistance )
-						catStr += FormatDistance(cd.raceDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true) + ', ';
+						catStr += 'Distance: ' + FormatDistance(cd.raceDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true);
 					if( cd.lapDistance && cd.laps > 1 )
 					{
+						if( catStr )
+							catStr += ', ';
 						if( cd.firstLapDistance && cd.firstLapDistance != cd.lapDistance )
 						{
 							catStr += (
 								'1st lap ' + FormatDistance(cd.firstLapDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true) + ', ' +
-								(cd.laps-1) + " more laps of " + FormatDistance(cd.lapDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true) + ', ');
+								(cd.laps-1) + " more laps of " + FormatDistance(cd.lapDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true));
 						}
 						else
-							catStr += cd.laps + " laps of " + FormatDistance(cd.lapDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true) + ', ';
+							catStr += cd.laps + " laps of " + FormatDistance(cd.lapDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true);
 					}
 					if( raceStartTime )
-						catStr += 'start: ' + FormatTime(raceStartTime + cd.startOffset) + ', ';
+					{
+						if( catStr )
+							catStr += ', ';
+						catStr += 'Start: ' + FormatTime(raceStartTime + cd.startOffset);
+					}
 				}
-				catStr += (raceIsRunning ? "Estimated " : "") + "winner: " + tFinishStr + ' at ' + FormatSpeed(parseFloat(d['speed'].split(' ')[0]), cd.distanceUnit ? cd.distanceUnit : 'km', true);
-				catTitleTD.innerHTML = cat + (raceIsRunning ? " (race in progress)" : "") +
+				catStr +=  '<br/>';
+				catStr += (raceIsRunning ? "Estimated " : "") +
+					"Winner: " + tFinishStr + ' at ' +
+					FormatSpeed(parseFloat(d['speed'].split(' ')[0]), cd.distanceUnit ? cd.distanceUnit : 'km', true) + ', ' +
+					starters + ' starters, ' + finishers + ' finishers (' + finishersPercent.toFixed(1) + '%)';
+				catTitleTD.innerHTML = '<span class="biggerFont">' + cat + (raceIsRunning ? " (race in progress)" : "") + '</span>' +
 						'<br/><span class="smallfont">' + catStr + '</span>';
 			}
 			
@@ -2830,7 +2839,7 @@ Highlight Numbers:
 </span>
 </p>
 <canvas id="idRaceChart" width="1000" height="800" class="noprint">
-<a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a> Race Results requires support the HTML5 Canvas.<br/>
+<a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a> Race Results requires support for the HTML5 Canvas.<br/>
 Please upgrade to a more recent browser version.<br/>
 For Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
 Current versions of Chrome, FireFox and Opera work fine.

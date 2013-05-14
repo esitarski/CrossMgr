@@ -9,6 +9,9 @@ import datetime
 import random
 import os
 import re
+import cgi
+import getpass
+import socket
 from operator import itemgetter, attrgetter
 from GanttChart import makePastelColours, makeColourGradient
 import Utils
@@ -18,6 +21,7 @@ import xml.dom
 import xml.dom.minidom
 from xml.dom.minidom import parse
 import collections
+import zipfile
 
 def LineNormal( x1, y1, x2, y2, normLen ):
 	''' Returns the coords of a normal line passing through x1, y1 of length normLen. '''
@@ -60,7 +64,30 @@ GpsPoint = collections.namedtuple('GpsPoint', ['lat','lon','ele','x','y','d','dC
 def triangle( t, a ):
 	a = float(a)
 	return (2 / a) * (t - a * int(t / a + 0.5)) * (-1 ** int(t / a + 0.5))
+	
+def CompassBearing(lat1, lon1, lat2, lon2):
+	"""
+	Calculates the bearing between two points.
+	"""
 
+	lat1 = math.radians(lat1)
+	lat2 = math.radians(lat2)
+
+	diffLong = math.radians(lon2 - lon1)
+
+	x = math.sin(diffLong) * math.cos(lat2)
+	y = math.cos(lat1) * math.sin(lat2) - (math.sin(lat1) * math.cos(lat2) * math.cos(diffLong))
+
+	initial_bearing = math.atan2(x, y)
+
+	# Now we have the initial bearing but math.atan2 return values
+	# from -180 to + 180 which is not what we want for a compass bearing
+	# The solution is to normalize the initial bearing as shown below
+	initial_bearing = math.degrees(initial_bearing)
+	compass_bearing = (initial_bearing + 360) % 360
+
+	return compass_bearing
+	
 reGpxTime = re.compile( '[^0-9+]' )
 
 def GpxHasTimes( fname ):
@@ -158,6 +185,11 @@ def ParseGpxFile( fname, useTimes = False ):
 	doc.unlink()
 	return gpsPoints
 
+def createAppendChild( doc, parent, name ):
+	child = doc.createElement( name )
+	parent.appendChild( child )
+	return child
+	
 class GeoTrack( object ):
 	def __init__( self ):
 		self.gpsPoints = []
@@ -194,6 +226,108 @@ class GeoTrack( object ):
 		
 	def asExportJson( self ):
 		return [ [int(getattr(p, a)*10.0) for a in ('x', 'y', 'd')] for p in self.gpsPoints ]
+		
+	def asKmlTour( self, raceName = None, speedKMH = None, dateTime = None ):
+		race = raceName if raceName is not None else 'Race'
+		speed = (speedKMH if speedKMH is not None else 35.0) * (1000.0 / (60.0*60.0))
+		if dateTime is None:
+			dt = datetime.datetime.now().replace( hour = 11, minute = 0, second = 0 )
+			dateTimeStr = dt.strftime( '%Y-%m-%dT%H:%M:%S%z' )
+		else:
+			dateTimeStr = dateTime.strftime( '%Y-%m-%dT%H:%M:%S%z' )
+
+		doc = xml.dom.minidom.Document()
+		kml = createAppendChild( doc, doc, 'kml' )
+		kml.attributes['xmlns'] ="http://www.opengis.net/kml/2.2"
+		kml.attributes['xmlns:gx'] = "http://www.google.com/kml/ext/2.2"
+		
+		kml.appendChild( doc.createComment( '\n'.join( [
+			'',
+			'DO NOT EDIT!',
+			'',
+			'This file was created automatically by CrossMgr.',
+			'',
+			'Is shows a fly-through of an actual bicycle race course.',
+			'For more information, see http://sites.google.com/site/crossmgrsoftware',
+			'',
+			'Created:  %s' % datetime.datetime.now().strftime( '%Y/%m/%d %H:%M:%S' ),
+			'User:     %s' % cgi.escape(getpass.getuser()),
+			'Computer: %s' % cgi.escape(socket.gethostname()),
+			'', ] )
+		) )
+		
+		Document = createAppendChild( doc, kml, 'Document' )
+		
+		name = createAppendChild( doc, Document, 'name' )
+		name.appendChild( doc.createTextNode(raceName) )
+		
+		# Define some styles.
+		'''
+		Style = createAppendChild( doc, Document, 'Style' )
+		Style.attributes['id'] = 'thickBlueLine'
+		LineStyle = createAppendChild( doc, Style, 'LineStyle' )
+		#createAppendChild( doc, LineStyle, 'width' ).appendChild( doc.createTextNode('5') )
+		createAppendChild( doc, LineStyle, 'color' ).appendChild( doc.createTextNode('#000000ffff') )
+		PolyStyle = createAppendChild( doc, Style, 'PolyStyle' )
+		createAppendChild( doc, PolyStyle, 'color' ).appendChild( doc.createTextNode('#000000ffff') )
+		'''
+		
+		# Define an flying tour around the course.
+		Tour = createAppendChild( doc, Document, 'gx:Tour' )
+		createAppendChild( doc, Tour, 'name' ).appendChild( doc.createTextNode('%s: Virtual Tour' % race) )
+		
+		Playlist = createAppendChild( doc, Tour, 'gx:Playlist' )
+
+		for i, p in enumerate(self.gpsPoints):
+			pNext = self.gpsPoints[ (i + 1) % len(self.gpsPoints) ]
+			
+			FlyTo = createAppendChild( doc, Playlist, 'gx:FlyTo' )
+			duration = createAppendChild( doc, FlyTo, 'gx:duration' )
+			
+			if i == 0:
+				duration.appendChild( doc.createTextNode('3.0') )
+				createAppendChild( doc, FlyTo, 'gx:flyToMode' ).appendChild( doc.createTextNode('bounce') )
+			else:
+				distance = GreatCircleDistance( p.lat, p.lon, pNext.lat, pNext.lon )
+				duration.appendChild( doc.createTextNode(str(distance / speed)) )
+				createAppendChild( doc, FlyTo, 'gx:flyToMode' ).appendChild( doc.createTextNode('smooth') )
+				
+			Camera = createAppendChild( doc, FlyTo, 'Camera' )
+			heading = CompassBearing( p.lat, p.lon, pNext.lat, pNext.lon )
+			
+			createAppendChild( doc, Camera, 'latitude' ).appendChild( doc.createTextNode(str(p.lat)) )
+			createAppendChild( doc, Camera, 'longitude' ).appendChild( doc.createTextNode(str(p.lon)) )
+			createAppendChild( doc, Camera, 'altitude' ).appendChild( doc.createTextNode(str(2.0)) )
+			createAppendChild( doc, Camera, 'altitudeMode' ).appendChild( doc.createTextNode('relativeToGround') )
+			createAppendChild( doc, Camera, 'heading' ).appendChild( doc.createTextNode(str(heading)) )
+			createAppendChild( doc, Camera, 'tilt' ).appendChild( doc.createTextNode(str(80.0)) )
+			
+		# Define a marker for the finish line.
+		Placemark = createAppendChild( doc, Document, 'Placemark' )
+		createAppendChild( doc, Placemark, 'name' ).appendChild( doc.createTextNode('%s: Finish Line' % race) )
+		Point = createAppendChild( doc, Placemark, 'Point' )
+		coordinates = createAppendChild( doc, Point, 'coordinates' )
+		coordinates.appendChild( doc.createTextNode('%f,%f' % (self.gpsPoints[0].lon, self.gpsPoints[0].lat)) )
+		
+		# Define a closed path for the course.
+		Placemark = createAppendChild( doc, Document, 'Placemark' )
+		createAppendChild( doc, Placemark, 'name' ).appendChild( doc.createTextNode('%s: Course' % race) )
+		# createAppendChild( doc, Placemark, 'styleUrl' ).appendChild( doc.createTextNode('#thickBlueLine') )
+		LineString = createAppendChild( doc, Placemark, 'LineString' )
+		createAppendChild( doc, LineString, 'tessellate' ).appendChild( doc.createTextNode('1') )
+		createAppendChild( doc, LineString, 'altitudeMode' ).appendChild( doc.createTextNode('relativeToGround') )
+		coordinates = createAppendChild( doc, LineString, 'coordinates' )
+		coords = []
+		for i in xrange(len(self.gpsPoints)+1):
+			p = self.gpsPoints[i % len(self.gpsPoints)]
+			coords.append( '%f,%f,%f' % (p.lon, p.lat, 1.0) )
+		coordinates.appendChild( doc.createTextNode('\n'.join(coords)) )
+		
+		ret = doc.toprettyxml( indent = '  ' )
+		text_re = re.compile('>\n\s+([^<>\s].*?)\n\s+</', re.DOTALL)    
+		ret = text_re.sub('>\g<1></', ret)
+		doc.unlink()
+		return ret
 		
 	def getXY( self, lap, id = None ):
 		# Find the segment at this distance in the lap.
@@ -760,6 +894,18 @@ if __name__ == '__main__':
 	animation = GeoAnimation(mainWin)
 	geoTrack = GeoTrack()
 	geoTrack.read( 'EdgeField_Cyclocross_Course.gpx' )
+	#geoTrack.read( 'St._John__039_s_Cyclocross_course_v2.gpx' )
+	#geoTrack.read( 'Races/Midweek/Midweek_Learn_to_Race_and_Elite_Series_course.gpx' )
+	
+	zf = zipfile.ZipFile( 'track.kmz', 'w', zipfile.ZIP_DEFLATED )
+	zf.writestr( 'track.kml', geoTrack.asKmlTour('Race Track') )
+	zf.close()
+	
+	with open('track.kml', 'w') as f:
+		f.write( geoTrack.asKmlTour('Race Track') )
+		
+	sys.exit()
+		
 	animation.SetGeoTrack( geoTrack )
 	animation.SetData( data )
 	animation.Animate( 2*60, 60*60 )

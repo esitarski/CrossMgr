@@ -284,6 +284,7 @@ class RaceAnimation( wx.Panel ):
 			
 			self.showOval.SetValue( getattr(race, 'showOval', True) )
 			self.showGPX.SetValue( not getattr(race, 'showOval', True) )
+			self.animationGeo.SetGeoTrack( getattr(race, 'geoTrack', None ) )
 			
 			self.setAnimationType( getattr(race, 'geoTrack', None) )
 			category = FixCategories( self.categoryChoice, getattr(race, 'raceAnimationCategory', 0) )
