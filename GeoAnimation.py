@@ -227,6 +227,13 @@ class GeoTrack( object ):
 	def asExportJson( self ):
 		return [ [int(getattr(p, a)*10.0) for a in ('x', 'y', 'd')] for p in self.gpsPoints ]
 		
+	def asCoordinates( self ):
+		coordinates = []
+		for p in self.gpsPoints:
+			coordinates.append( p.lon )
+			coordinates.append( p.lat )
+		return coordinates
+		
 	def asKmlTour( self, raceName = None, speedKMH = None, dateTime = None ):
 		race = raceName if raceName is not None else 'Race'
 		speed = (speedKMH if speedKMH is not None else 35.0) * (1000.0 / (60.0*60.0))

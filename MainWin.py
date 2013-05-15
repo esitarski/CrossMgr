@@ -945,8 +945,10 @@ class MainWin( wx.Frame ):
 				raceStartTime = (race.startTime - race.startTime.replace( hour=0, minute=0, second=0 )).total_seconds()
 				html = replaceJsonVar( html, 'raceStartTime',	raceStartTime )
 			tLastRaceTime = race.lastRaceTime()
+			courseCoordinates = None
 			gpsPoints = getattr(race, 'geoTrack', None)
 			if gpsPoints is not None:
+				courseCoordinates = gpsPoints.asCoordinates()
 				gpsPoints = gpsPoints.asExportJson()
 		
 		tNow = datetime.datetime.now()
@@ -957,11 +959,23 @@ class MainWin( wx.Frame ):
 		html = replaceJsonVar( html, 'version',		Version.AppVerName )
 		if gpsPoints:
 			html = replaceJsonVar( html, 'gpsPoints', gpsPoints )
+		if courseCoordinates:
+			html = replaceJsonVar( html, 'courseCoordinates', courseCoordinates )
+			# Fix the google maps template.
+			templateFile = os.path.join(Utils.getHtmlFolder(), 'VirtualTourTemplate.html')
+			try:
+				with open(templateFile) as fp:
+					template = fp.read()
+				# Sanitize the template so it can be a json string.
+				template = template.replace( '<', '{{' ).replace( '>', '}}' )
+				html = replaceJsonVar( html, 'template', template )
+			except:
+				pass
 
 		graphicBase64 = self.getGraphicBase64()
 		if graphicBase64:
 			try:
-				iStart = html.index( 'src="' )
+				iStart = html.index( 'src="data:image/png' )
 				iEnd = html.index( '"/>', iStart )
 				html = ''.join( [html[:iStart], 'src="%s"' % graphicBase64, html[iEnd+1:]] )
 			except ValueError:

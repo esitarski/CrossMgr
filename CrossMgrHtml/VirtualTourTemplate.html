@@ -1,0 +1,123 @@
+<html>
+<head>
+<title>CrossMgr Virtual Tour</title>
+<style type="text/css">
+	body { font-family: sans-serif; }
+</style>
+<script src="https://www.google.com/jsapi"> </script> 
+<script type="text/javascript">
+function walkKmlDom(rootObject, visitCallback, options) {
+  options = options || {};
+  
+  if (!('features' in options)) {
+    options.features = true;
+  }
+  
+  if (!('geometries' in options)) {
+    options.geometries = false;
+  }
+  
+  var recurse_ = function(object, currentContext) {
+    var contextArgument = {
+      current: currentContext,
+      child: currentContext
+    };
+    
+    // walk object
+    var retValue = visitCallback.call(object, contextArgument);
+    if (!retValue && typeof retValue !== 'undefined') {
+      return;
+    }
+    
+    var objectContainer = null; // GESchemaObjectContainer
+    
+    // check if object is a parent
+    if ('getFeatures' in object) { // GEFeatureContainer
+      if (options.features) {
+        objectContainer = object.getFeatures();
+      }
+    } else if ('getGeometry' in object) { // KmlFeature - descend into geoms.
+      if (options.geometries && object.getGeometry()) {
+        recurse_(object.getGeometry(), contextArgument.child);
+      }
+    } else if ('getGeometries' in object) { // GEGeometryContainer
+      if (options.geometries) {
+        objectContainer = object.getGeometries();
+      }
+    } else if ('getInnerBoundaries' in object) { // GELinearRingContainer
+      if (options.geometries) {
+        objectContainer = object.getInnerBoundaries();
+      }
+    }
+    
+    // iterate through children if object is a parent and recurse so they
+    // can be walked
+    if (objectContainer && objectContainer.hasChildNodes()) {
+      var childNodes = objectContainer.getChildNodes();
+      var numChildNodes = childNodes.getLength();
+      
+      for (var i = 0; i < numChildNodes; i++) {
+        var child = childNodes.item(i);
+        
+        recurse_(child, contextArgument.child);
+      }
+    }
+  };
+  
+  recurse_(rootObject, options.rootContext);
+};
+	  
+var kml = '';
+var raceName = '';
+var organizer = '';
+var ge;
+var tour;
+google.load("earth", "1");
+function init() { google.earth.createInstance('map3d', initCB, failureCB); }
+function initCB(instance) {
+	if( raceName )
+		document.getElementById('idRaceName').innerHTML = raceName;
+	if( organizer )
+		document.getElementById('idOrganizer').innerHTML = 'by ' + organizer;
+
+	ge = instance;
+	ge.getWindow().setVisibility(true);
+	ge.getNavigationControl().setVisibility(ge.VISIBILITY_SHOW);
+
+	var kmlObj = ge.parseKml( kml.replace(/\{\{/g, '<').replace( /\}\}/g, '>') );
+	ge.getFeatures().appendChild( kmlObj );
+
+	walkKmlDom(kmlObj, function() {
+		  if (this.getType() == 'KmlTour') {
+			 tour = this;
+			 return false;
+	   }
+	});
+	enterTour();
+	playTour();
+ }
+
+function failureCB(errorCode) {}
+
+function enterTour() {
+	if (!tour) {
+		alert('No tour found!');
+		return;
+	}
+	ge.getTourPlayer().setTour(tour);
+ }
+function playTour() { ge.getTourPlayer().play(); }
+function pauseTour() { ge.getTourPlayer().pause(); }
+function resetTour() { ge.getTourPlayer().reset(); }
+google.setOnLoadCallback(init);
+</script>
+</head>
+   <body>
+	  <h1 id="idRaceName">Accessing Map Data. Please be patient...</h1>
+	  <span id="idOrganizer">by CrossMgr</span>
+	  <p/>
+      <div id="map3d" style="height: 500px; width: 800px;"></div>
+	  <p/>
+	  Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
+   </body>
+</html>
