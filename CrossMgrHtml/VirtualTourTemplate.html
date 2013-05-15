@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>CrossMgr Virtual Tour</title>
+<title>CrossMgr Virtual Ride</title>
 <style type="text/css">
 	body { font-family: sans-serif; }
 </style>
@@ -18,50 +18,49 @@ function walkKmlDom(rootObject, visitCallback, options) {
   }
   
   var recurse_ = function(object, currentContext) {
-    var contextArgument = {
-      current: currentContext,
-      child: currentContext
-    };
-    
-    // walk object
-    var retValue = visitCallback.call(object, contextArgument);
-    if (!retValue && typeof retValue !== 'undefined') {
-      return;
-    }
-    
-    var objectContainer = null; // GESchemaObjectContainer
-    
-    // check if object is a parent
-    if ('getFeatures' in object) { // GEFeatureContainer
-      if (options.features) {
-        objectContainer = object.getFeatures();
-      }
-    } else if ('getGeometry' in object) { // KmlFeature - descend into geoms.
-      if (options.geometries && object.getGeometry()) {
-        recurse_(object.getGeometry(), contextArgument.child);
-      }
-    } else if ('getGeometries' in object) { // GEGeometryContainer
-      if (options.geometries) {
-        objectContainer = object.getGeometries();
-      }
-    } else if ('getInnerBoundaries' in object) { // GELinearRingContainer
-      if (options.geometries) {
-        objectContainer = object.getInnerBoundaries();
-      }
-    }
-    
-    // iterate through children if object is a parent and recurse so they
-    // can be walked
-    if (objectContainer && objectContainer.hasChildNodes()) {
-      var childNodes = objectContainer.getChildNodes();
-      var numChildNodes = childNodes.getLength();
-      
-      for (var i = 0; i < numChildNodes; i++) {
-        var child = childNodes.item(i);
-        
-        recurse_(child, contextArgument.child);
-      }
-    }
+	var contextArgument = {
+	  current: currentContext,
+	  child: currentContext
+	};
+
+	// walk object
+	var retValue = visitCallback.call(object, contextArgument);
+	if (!retValue && typeof retValue !== 'undefined') {
+	  return;
+	}
+
+	var objectContainer = null; // GESchemaObjectContainer
+
+	// check if object is a parent
+	if ('getFeatures' in object) { // GEFeatureContainer
+	  if (options.features) {
+		objectContainer = object.getFeatures();
+	  }
+	} else if ('getGeometry' in object) { // KmlFeature - descend into geoms.
+	  if (options.geometries && object.getGeometry()) {
+		recurse_(object.getGeometry(), contextArgument.child);
+	  }
+	} else if ('getGeometries' in object) { // GEGeometryContainer
+	  if (options.geometries) {
+		objectContainer = object.getGeometries();
+	  }
+	} else if ('getInnerBoundaries' in object) { // GELinearRingContainer
+	  if (options.geometries) {
+		objectContainer = object.getInnerBoundaries();
+	  }
+	}
+
+	// iterate through children if object is a parent and recurse so they
+	// can be walked
+	if (objectContainer && objectContainer.hasChildNodes()) {
+	  var childNodes = objectContainer.getChildNodes();
+	  var numChildNodes = childNodes.getLength();
+	  
+	  for (var i = 0; i < numChildNodes; i++) {
+		var child = childNodes.item(i);
+		recurse_(child, contextArgument.child);
+	  }
+	}
   };
   
   recurse_(rootObject, options.rootContext);
