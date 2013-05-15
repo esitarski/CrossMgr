@@ -85,6 +85,7 @@ function initCB(instance) {
 
 	var kmlObj = ge.parseKml( kml.replace(/\{\{/g, '<').replace( /\}\}/g, '>') );
 	ge.getFeatures().appendChild( kmlObj );
+	ge.getLayerRoot().enableLayerById(ge.LAYER_BUILDINGS_LOW_RESOLUTION, true);
 
 	walkKmlDom(kmlObj, function() {
 		  if (this.getType() == 'KmlTour') {
