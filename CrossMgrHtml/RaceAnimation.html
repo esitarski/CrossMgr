@@ -371,7 +371,7 @@ function OpenVirtualTourWindow()
 		text = text.substring( 0, p );
 	template = template.replace( "raceName = '';", "raceName='" + text.escapeHTML() + "';" );
 	
-	var w = window.open( '', 'Virtual Tour', '', true );
+	var w = window.open( '', '', '', true );
 	w.document.write( template.replace(/{{/g, '<').replace(/}}/g, '>') );
 	w.document.close();
 }
