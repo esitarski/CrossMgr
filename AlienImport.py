@@ -52,7 +52,7 @@ def parseTagTime( line, lineNo, errors ):
 	
 	try:
 		tStr = tStr.translate( sepTrans )
-		weekDay, shortMonth, day, hour, minute, second, tzone, year = tStr.split()
+		weekDay, shortMonth, day, hour, minute, second = tStr.split()[:6]
 		
 		# We only want the time.
 		fract, second = math.modf( float(second) )

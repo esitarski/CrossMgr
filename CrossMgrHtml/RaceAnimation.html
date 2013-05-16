@@ -302,12 +302,13 @@ function OpenVirtualTourWindow()
 		   '{{name}}Virtual Tour{{/name}}',
 		   '{{gx:Playlist}}',
 	] );
-	for( var i = 0; i < courseCoordinates.length; i += 2 )
+	var courseCoordinatesLength = courseCoordinates.length;
+	for( var i = 0; i < courseCoordinatesLength + 2; i += 2 )
 	{
-		var lon = courseCoordinates[i];
-		var lat = courseCoordinates[i+1];
-		var lonNext = courseCoordinates[(i+2) % courseCoordinates.length];
-		var latNext = courseCoordinates[(i+3) % courseCoordinates.length];
+		var lon = courseCoordinates[i % courseCoordinatesLength];
+		var lat = courseCoordinates[(i+1) % courseCoordinatesLength];
+		var lonNext = courseCoordinates[(i+2) % courseCoordinatesLength];
+		var latNext = courseCoordinates[(i+3) % courseCoordinatesLength];
 		write( [
 		    '{{gx:FlyTo}}',
               '{{gx:duration}}' + (i == 0 ? 3 : GreatCircleDistance(lat, lon, latNext, lonNext) / speed) + '{{/gx:duration}}',
