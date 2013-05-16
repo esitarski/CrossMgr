@@ -190,9 +190,13 @@ class Categories( wx.Panel ):
 		if r is None or r < 0:
 			Utils.MessageOK( self, 'You must select a Category first', 'Select a Category' )
 			return
+		
+		with Model.LockRace() as race:
+			categories = race.getAllCategories()
+			category = categories[r]
 			
 		dlg = wx.TextEntryDialog( self,
-									'%s: Add Bib Num Exceptions (comma separated)\nThis will adjust the other categories as necessary.' % categories[r].name,
+									'%s: Add Bib Num Exceptions (comma separated).\nThis will adjust the other categories as necessary.' % category.name,
 									'Add Bib Exceptions' )
 		good = (dlg.ShowModal() == wx.ID_OK)
 		if good:
@@ -204,9 +208,6 @@ class Categories( wx.Panel ):
 		undo.pushState()
 		response = re.sub( '[^0-9,]', '', response.replace(' ', ',') )
 		with Model.LockRace() as race:
-			categories = [c for c in race.categories.itervalues()]
-			categories.sort()
-			category = categories[r]
 			for f in response.split(','):
 				race.addCategoryException( category, r )
 

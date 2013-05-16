@@ -84,6 +84,8 @@ function initCB(instance) {
 	ge.getNavigationControl().setVisibility(ge.VISIBILITY_SHOW);
 
 	var kmlObj = ge.parseKml( kml.replace(/\{\{/g, '<').replace( /\}\}/g, '>') );
+	kml = 'empty';
+	
 	ge.getFeatures().appendChild( kmlObj );
 	ge.getLayerRoot().enableLayerById(ge.LAYER_BUILDINGS_LOW_RESOLUTION, true);
 

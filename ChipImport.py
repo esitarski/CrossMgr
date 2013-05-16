@@ -54,7 +54,7 @@ def DoChipImport(	fname, parseTagTime, startTime = None,
 			if tag is None:
 				continue
 			if raceStart and t < raceStart:
-				errors.append( 'line %d: time before race start (%s)' % (lineNo, tStr) )
+				errors.append( 'line %d: time before race start (%s)' % (lineNo, t.strftime('%H:%M:%S.%f')) )
 				continue
 			
 			tag = stripLeadingZeros( tag )

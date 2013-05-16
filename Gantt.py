@@ -361,6 +361,7 @@ class Gantt( wx.Panel ):
 			Utils.getMainWin().showPageName( 'Results' )
 			
 	def OnPopupRiderDetail( self, event ):
+		from RiderDetail import ShowRiderDetailDialog
 		ShowRiderDetailDialog( self, self.numSelect )
 		
 	def OnPopupPhotos( self, event ):
@@ -384,7 +385,7 @@ class Gantt( wx.Panel ):
 					continue
 				total		+= sum( 1 for t in r.raceTimes				if t < tCur ) - 1
 				edited		+= sum( 1 for t in r.raceTimes				if t < tCur and getInfo(r.num, t) is not None )
-				projected	+= sum( 1 for i, n in enumerate(r.interp)	if n and r.raceTimes[i] < tCur )
+				projected	+= sum( 1 for i, n in enumerate(r.interp)	if n and i < len(r.raceTimes) and r.raceTimes[i] < tCur )
 			if total:
 				toPercent = 100.0 / float(total)
 				s = '  Total Entries: %d    Projected: %d (%.2f%%)    Edited: %d (%.2f%%)    Projected or Edited: %d (%.2f%%)    Photos: %d' % (

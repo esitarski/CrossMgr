@@ -61,6 +61,10 @@ class GanttChartPanel(wx.PyPanel):
 		self.moveLap = None
 		self.moveTimer = wx.Timer( self, wx.NewId() )
 		
+		self.barHeight = 8
+		self.labelsWidthLeft = 8000
+		self.xFactor = 1
+		
 		self.yellowColour = wx.Colour(220,220,0)
 		self.orangeColour = wx.Colour(255,165,0)
 		
@@ -177,7 +181,7 @@ class GanttChartPanel(wx.PyPanel):
 			return
 			
 		iRider, iLap = self.getRiderLap( event )
-		if iRider is None:
+		if iRider is None or iLap is None:
 			return
 		
 		self.numSelect = numFromLabel( self.labels[iRider] )
