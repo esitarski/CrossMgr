@@ -227,6 +227,19 @@ class GeoTrack( object ):
 	def asExportJson( self ):
 		return [ [int(getattr(p, a)*10.0) for a in ('x', 'y', 'd')] for p in self.gpsPoints ]
 		
+	def reverse( self ):
+		''' Reverse the points in the track.  Make sure the distance to the next point and cumDistance is correct. '''
+		self.cumDistance = []
+		gpsPointsReversed = []
+		dCum = 0.0
+		for i in xrange(len(self.gpsPoints)-1, -1, -1):
+			p = self.gpsPoints[i]
+			pPrev = self.gpsPoints[i-1 if i > 0 else len(self.gpsPoints)-1]
+			gpsPointsReversed.append( GpsPoint(p.lat, p.lon, p.ele, p.x, p.y, pPrev.d, dCum) )
+			self.cumDistance.append( dCum )
+			dCum += pPrev.d
+		self.gpsPoints = gpsPointsReversed
+		
 	def asCoordinates( self ):
 		coordinates = []
 		for p in self.gpsPoints:

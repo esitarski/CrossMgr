@@ -526,7 +526,6 @@ class Animation(wx.PyControl):
 		tWidth, tHeight = dc.GetTextExtent( tStr )
 		dc.DrawText( tStr, 4*r - tWidth, 2*r - tHeight )
 		
-		
 	def OnEraseBackground(self, event):
 		# This is intentionally empty, because we are using the combination
 		# of wx.BufferedPaintDC + an empty OnEraseBackground event to

@@ -89,8 +89,8 @@ class RaceAnimation( wx.Panel ):
 		self.Bind(wx.EVT_RADIOBUTTON, self.changeTrack, self.showOval )
 		self.finishTop = wx.CheckBox( self, wx.ID_ANY, "Finish on Top" )
 		self.Bind(wx.EVT_CHECKBOX, self.doFinishTop, self.finishTop)
-		self.reverseDirection = wx.CheckBox( self, wx.ID_ANY, "Reverse Direction" )
-		self.Bind(wx.EVT_CHECKBOX, self.doReverseDirection, self.reverseDirection)
+		self.reverseDirection = wx.Button( self, wx.ID_ANY, "Reverse Direction" )
+		self.Bind(wx.EVT_BUTTON, self.doReverseDirection, self.reverseDirection)
 		
 		self.hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.categoryChoice, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
@@ -182,7 +182,7 @@ class RaceAnimation( wx.Panel ):
 			self.animation.Show( True )
 			
 			self.finishTop.Enable( not needGeo )
-			self.reverseDirection.Enable( not needGeo )
+			self.reverseDirection.Enable( True )
 			bs.Layout()
 			with Model.LockRace() as race:
 				race.showOval = (not needGeo)
@@ -203,8 +203,15 @@ class RaceAnimation( wx.Panel ):
 		with Model.LockRace() as race:
 			if not race:
 				return
-			race.reverseDirection = event.IsChecked()
-			wx.CallAfter( self.refresh )
+			if self.showGPX.IsEnabled() and self.showGPX.GetValue():
+				if getattr(race, 'geoTrack', None):
+					race.geoTrack.reverse()
+					self.animationGeo.SetGeoTrack( race.geoTrack )
+			else:
+				race.reverseDirection = (False if getattr(race, 'reverseDirection', True) else True)
+			race.setChanged()
+			
+		wx.CallAfter( self.refresh )
 		
 	def	setNumSelect( self, num ):
 		self.watch.SetValue( str(num) if num else '' )
@@ -293,7 +300,6 @@ class RaceAnimation( wx.Panel ):
 			raceIsRunning = race.isRunning()
 			
 		self.finishTop.SetValue( getattr(race, 'finishTop', False) )
-		self.reverseDirection.SetValue( getattr(race, 'reverseDirection', False) )
 		
 		animationData = GetAnimationData( category, True )
 		self.animation.SetData( animationData, raceTime )

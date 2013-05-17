@@ -476,7 +476,7 @@ class ExportGrid( object ):
 		hasSpeeds = bool( getattr(leader, 'lapSpeeds', None) or getattr(leader, 'raceSpeeds', None) )
 		
 		if showLapsFrequency is None:
-			# Compute a reasonable number of laps to show (max around 12).
+			# Compute a reasonable number of laps to show (max around 10).
 			# Get the maximum laps in the data.
 			maxLaps = 0
 			for r in results:
@@ -484,7 +484,7 @@ class ExportGrid( object ):
 					maxLaps = max(maxLaps, len(r.lapTimes))
 				except:
 					pass
-			showLapsFrequency = max( 1, int(math.ceil(maxLaps / 12)) )
+			showLapsFrequency = max( 1, int(math.ceil(maxLaps / 10.0)) )
 		
 		with Model.LockRace() as race:
 			catStr = 'All' if not category else category.fullname
