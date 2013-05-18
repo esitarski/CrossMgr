@@ -60,18 +60,24 @@ class ReadExcelXls( ReadExcelBase ):
 				if value == int(value):
 					value = int(value)
 			elif type == 3:
-				datetuple = xlrd.xldate_as_tuple(value, self.book.datemode)
-				if date_as_tuple:
-					value = datetuple
-				else:
-					# time only - no date component
-					if datetuple[0] == 0 and datetuple[1] == 0 and  datetuple[2] == 0:
-						value = "%02d:%02d:%02d" % datetuple[3:]
-					# date only, no time
-					elif datetuple[3] == 0 and datetuple[4] == 0 and datetuple[5] == 0:
-						value = "%04d/%02d/%02d" % datetuple[:3]
-					else: # full date
-						value = "%04d/%02d/%02d %02d:%02d:%02d" % datetuple
+				try:
+					datetuple = xlrd.xldate_as_tuple(value, self.book.datemode)
+					validDate = True
+				except:
+					value = 'UnreadableDate'
+					validDate = False
+				if validDate:
+					if date_as_tuple:
+						value = datetuple
+					else:
+						# time only - no date component
+						if datetuple[0] == 0 and datetuple[1] == 0 and  datetuple[2] == 0:
+							value = "%02d:%02d:%02d" % datetuple[3:]
+						# date only, no time
+						elif datetuple[3] == 0 and datetuple[4] == 0 and datetuple[5] == 0:
+							value = "%04d/%02d/%02d" % datetuple[:3]
+						else: # full date
+							value = "%04d/%02d/%02d %02d:%02d:%02d" % datetuple
 			elif type == 5:
 				value = xlrd.error_text_from_code[value]
 			values.append(value)

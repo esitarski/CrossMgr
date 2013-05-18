@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import os
+import sys
 import itertools
 import wx
 import copy
@@ -10,6 +11,7 @@ import wx.wizard as wiz
 import Utils
 import string
 import webbrowser
+import traceback
 from Excel import GetExcelReader, toAscii
 
 #-----------------------------------------------------------------------------------------------------
@@ -322,7 +324,7 @@ class GetExcelLink( object ):
 					try:
 						info = excelLink.read()
 						self.summaryPage.setFileNameSheetNameInfo(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName(), info)
-					except ValueError, str:
+					except ValueError as e:
 						Utils.MessageOK( self.wizard, 'Problem extracting rider info.\nCheck the Excel format.',
 											title='Data Error', iconMask=wx.ICON_ERROR)
 						evt.Veto()
