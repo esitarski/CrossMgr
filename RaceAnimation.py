@@ -197,7 +197,9 @@ class RaceAnimation( wx.Panel ):
 			if not race:
 				return
 			race.finishTop = event.IsChecked()
-			wx.CallAfter( self.refresh )
+			race.reverseDirection = (False if getattr(race, 'reverseDirection', True) else True)
+			race.setChanged()
+		wx.CallAfter( self.refresh )
 	
 	def doReverseDirection( self, event ):
 		with Model.LockRace() as race:
