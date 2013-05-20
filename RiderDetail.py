@@ -22,11 +22,11 @@ import re
 def getStFtLaps( rider ):
 	with Model.LockRace() as race:
 		laps = race.getCategoryNumLaps( rider.num )
-	laps = min( laps, len(rider.times)-1 )
+	laps = max( 0, min(laps, len(rider.times)-1) )
 	st = getattr( rider, 'firstTime', None )
-	if laps > 0:
+	try
 		ft = st + rider.times[laps]
-	else:
+	except (TypeError, AttributeError, IndexError):
 		ft = None
 	return st, ft, laps
 	

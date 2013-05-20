@@ -470,7 +470,10 @@ class ExportGrid( object ):
 		if not results:
 			return
 		catDetails = GetCategoryDetails()
-		cd = catDetails[category.fullname] if category else None
+		try:
+			cd = catDetails[category.fullname]
+		except:
+			cd = None
 		
 		leader = results[0]
 		hasSpeeds = bool( getattr(leader, 'lapSpeeds', None) or getattr(leader, 'raceSpeeds', None) )
