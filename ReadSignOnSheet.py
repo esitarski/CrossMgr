@@ -6,7 +6,7 @@ import itertools
 import wx
 import copy
 import wx.lib.filebrowsebutton as filebrowse
-import  wx.lib.scrolledpanel as scrolled
+import wx.lib.scrolledpanel as scrolled
 import wx.wizard as wiz
 import Utils
 import string
