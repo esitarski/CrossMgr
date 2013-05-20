@@ -24,7 +24,7 @@ def getStFtLaps( rider ):
 		laps = race.getCategoryNumLaps( rider.num )
 	laps = max( 0, min(laps, len(rider.times)-1) )
 	st = getattr( rider, 'firstTime', None )
-	try
+	try:
 		ft = st + rider.times[laps]
 	except (TypeError, AttributeError, IndexError):
 		ft = None
