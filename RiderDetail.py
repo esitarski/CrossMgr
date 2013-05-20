@@ -24,7 +24,7 @@ def getStFtLaps( rider ):
 		laps = race.getCategoryNumLaps( rider.num )
 	laps = min( laps, len(rider.times)-1 )
 	st = getattr( rider, 'firstTime', None )
-	if laps:
+	if laps > 0:
 		ft = st + rider.times[laps]
 	else:
 		ft = None
