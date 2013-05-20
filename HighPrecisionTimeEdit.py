@@ -21,15 +21,14 @@ class HighPrecisionTimeEdit( masked.TextCtrl ):
 									fields = [
 										masked.Field(formatcodes='FSr'),
 										masked.Field(formatcodes='FSr'),
-										masked.Field(formatcodes='FSr'),
-										masked.Field(formatcodes='FS'),
+										masked.Field(formatcodes='FSr')
 										],
 								)
 		if seconds is not None:
 			self.SetSeconds( seconds )
 									
 	def GetSeconds( self ):
-		v = masked.TextCtrl.GetValue(self)
+		v = self.GetValue()
 		if self.allow_none and v == self.emptyValue:
 			return None
 		else:

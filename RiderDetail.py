@@ -95,8 +95,10 @@ class AdjustTimeDialog( wx.Dialog ):
 		if st is not None and ft is not None and st >= ft:
 			Utils.MessageOK( self, 'Start Time must be before Finish Time', 'Time Error', wx.ICON_ERROR )
 			return
+			
 		if stOld == st and ftOld == ft:
-			self.EndModel( wx.IDOK )
+			Utils.refresh()
+			self.EndModal( wx.IDOK )
 			return
 		
 		undo.pushState()

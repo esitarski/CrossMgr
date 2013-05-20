@@ -53,12 +53,12 @@ class CorrectNumberDialog( wx.Dialog ):
 		if self.entry.num != num or self.entry.t != t:
 			undo.pushState()
 			with Model.LockRace() as race:
+				rider = race.getRider( num )
 				if self.entry.lap != 0:
 					race.numTimeInfo.change( self.entry.num, self.entry.t, t )
 					race.deleteTime( self.entry.num, self.entry.t )
-					race.addTime( num, t )
+					race.addTime( num, t + (rider.firstTime if getattr(race, 'isTimeTrial', False) and getattr(rider, 'firstTime', None) is not None else 0.0) )
 				else:
-					rider = race.getRider( num )
 					race.numTimeInfo.change( self.entry.num, rider.firstTime, t )
 					rider.firstTime = t
 					race.setChanged()
@@ -129,12 +129,12 @@ class ShiftNumberDialog( wx.Dialog ):
 		if self.entry.num != num or self.entry.t != t:
 			undo.pushState()
 			with Model.LockRace() as race:
+				rider = race.getRider( num )
 				if self.entry.lap != 0:
 					race.numTimeInfo.change( self.entry.num, self.entry.t, t )
 					race.deleteTime( self.entry.num, self.entry.t )
-					race.addTime( num, t )
+					race.addTime( num, t + (rider.firstTime if getattr(race, 'isTimeTrial', False) and getattr(rider, 'firstTime', None) is not None else 0.0) )
 				else:
-					rider = race.getRider( num )
 					race.numTimeInfo.change( self.entry.num, rider.firstTime, t )
 					rider.firstTime = t
 					race.setChanged()
@@ -204,8 +204,9 @@ class InsertNumberDialog( wx.Dialog ):
 		
 		undo.pushState()
 		with Model.LockRace() as race:
+			rider = race.getRider( num )
 			race.numTimeInfo.add( num, tInsert )
-			race.addTime( num, tInsert )
+			race.addTime( num, tInsert + (rider.firstTime if getattr(race, 'isTimeTrial', False) and getattr(rider, 'firstTime', None) is not None else 0.0) )
 			
 		Utils.refresh()
 		
@@ -266,14 +267,15 @@ class SplitNumberDialog( wx.Dialog ):
 		
 		undo.pushState()
 		with Model.LockRace() as race:
-		
+			rider = race.getRider( num )
+
 			race.numTimeInfo.delete( self.entry.num, self.entry.t )
 			race.numTimeInfo.add( num1, t1 )
 			race.numTimeInfo.add( num2, t2 )
 			
 			race.deleteTime( self.entry.num, self.entry.t )
-			race.addTime( num1, t1 )
-			race.addTime( num2, t2 )
+			race.addTime( num1, t1 + (rider.firstTime if getattr(race, 'isTimeTrial', False) and getattr(rider, 'firstTime', None) is not None else 0.0) )
+			race.addTime( num2, t2 + (rider.firstTime if getattr(race, 'isTimeTrial', False) and getattr(rider, 'firstTime', None) is not None else 0.0) )
 			
 		Utils.refresh()
 		
@@ -335,13 +337,17 @@ def SwapEntry( a, b ):
 	race = Model.race
 	if not race:
 		return
+		
+	riderA = race.getRider( a.num )
+	riderB = race.getRider( b.num )
+	
 	race.numTimeInfo.change( a.num, a.t, b.t, Model.NumTimeInfo.Swap )
 	race.numTimeInfo.change( b.num, b.t, a.t, Model.NumTimeInfo.Swap )
 	
 	race.deleteTime( a.num, a.t )
 	race.deleteTime( b.num, b.t )
-	race.addTime( a.num, b.t )
-	race.addTime( b.num, a.t )
+	race.addTime( a.num, b.t + (rider.firstTime if getattr(race, 'isTimeTrial', False) and riderA.firstTime is not None else 0.0) )
+	race.addTime( b.num, a.t + (rider.firstTime if getattr(race, 'isTimeTrial', False) and riderB.firstTime is not None else 0.0) )
 
 def DoStatusChange( parent, num, message, title, newStatus ):
 	if num is None or not Utils.MessageOKCancel(parent, message % num, title):
