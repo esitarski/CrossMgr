@@ -15,6 +15,7 @@ from roundbutton import RoundButton
 
 def StartRaceNow():
 	undo.clear()
+	undo.pushState()
 	with Model.LockRace() as race:
 		if race is None:
 			return
@@ -33,6 +34,9 @@ def StartRaceNow():
 		mainWin.refresh()
 		
 	SetCameraState( getattr(Model.race, 'enableUSBCamera', False) )
+	
+	# For safety, get rid of undo after 8 seconds.
+	wx.CallLater( 8000, undo.clear )
 
 def GetNowSeconds():
 	t = datetime.datetime.now()

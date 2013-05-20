@@ -33,7 +33,11 @@ Notes:
 ## Time Trial Mode
 Time Trial mode is a special mode that works differently from the regular race mode.  In TT mode, the first read for a rider starts his/her clock, and subsequent reads are all taken with respect to the rider's start time.
 
-At this point, TT mode does not accept an externally seeded start list.  It simply starts a clock on the first entry for each rider.  TT mode works with manual input and JChip.  TT results are computed relative to the rider's ride time.
+TT start times can also be imported into CrossMgr from an Excel spreadsheet (see [Menu-DataMgmt.html][] for details).  This spreadsheet simply requires a header row with at least two columns: the Bib number, and the Start Time.
+
+Otherwise, the first input for a rider is taken as his/her start time.
+
+TT mode works with manual input and JChip.  TT results are computed relative to the rider's ride time.
 
 TT penalties and/or adjustments can be made afterwards.  You can add a note to describe what you did.  See the "Note..." feature in [Chart Right-Click][].
 
