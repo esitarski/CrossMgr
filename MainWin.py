@@ -71,6 +71,7 @@ from SetGraphic			import SetGraphicDialog
 from GetResults			import GetCategoryDetails
 from PhotoFinish		import TakePhoto, ResetPhotoInfoCache
 from PhotoViewer		import PhotoViewerDialog
+from ReadTTStartTimesSheet import ImportTTStartTimes
 
 import wx.lib.agw.advancedsplash as AS
 import openpyxl
@@ -378,6 +379,11 @@ class MainWin( wx.Frame ):
 		self.dataMgmtMenu.Append( idCur , "Export Results in &USAC Excel Format...", "Export Results in USAC Excel Format" )
 		self.Bind(wx.EVT_MENU, self.menuExportUSAC, id=idCur )
 
+		self.dataMgmtMenu.AppendSeparator()
+		idCur = wx.NewId()
+		self.dataMgmtMenu.Append( idCur , "&Import Time Trial Start Times...", "Import Time Trial Start Times" )
+		self.Bind(wx.EVT_MENU, self.menuImportTTStartTimes, id=idCur )
+		
 		self.dataMgmtMenu.AppendSeparator()
 		idCur = wx.NewId()
 		self.dataMgmtMenu.Append( idCur , "&Import Course in GPX format...", "Import Course in GPX format" )
@@ -1084,6 +1090,20 @@ class MainWin( wx.Frame ):
 			webbrowser.open( urlFull, new = 0, autoraise = True )
 			
 	#--------------------------------------------------------------------------------------------
+	@logCall
+	def menuImportTTStartTimes( self, event ):
+		if self.fileName is None or len(self.fileName) < 4:
+			return
+		
+		with Model.LockRace() as race:
+			if not race:
+				return
+			if not race.isTimeTrial:
+				Utils.MessageOK( self, 'You must set TimeTrial mode first.', 'Race must be TimeTrial' )
+				return
+			
+		ImportTTStartTimes( self )
+	
 	@logCall
 	def menuImportGpx( self, event ):
 		if self.fileName is None or len(self.fileName) < 4:

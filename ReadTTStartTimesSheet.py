@@ -396,6 +396,9 @@ def ImportTTStartTimes( parent ):
 		return
 		
 	excelLink = GetExcelTTStartTimeLink( parent ).show()
+	if not excelLink:
+		return
+		
 	info = excelLink.read()
 	startTimes = {}
 	errors = []
@@ -435,7 +438,6 @@ def ImportTTStartTimes( parent ):
 		Utils.MessageOK( parent, errors, 'Start Time Errors' )
 		
 	Utils.MessageOK( parent, 'Set %d Start Times' % len(startTimes), 'Start Times Success' )
-	
 	Utils.refresh()
 
 #-----------------------------------------------------------------------------------------------------
