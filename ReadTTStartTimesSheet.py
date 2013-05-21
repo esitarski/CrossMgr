@@ -428,12 +428,25 @@ def ImportTTStartTimes( parent ):
 			
 		startTimes[num] = hh * 60.0*60.0 + mm * 60.0 + ss
 			
-	# Make changes to the model.
 	if startTimes:
 		undo.pushState()
-	for num, t in startTimes.iteritems():
-		rider = race.getRider( num )
-		rider.firstTime = t
+		for num, t in startTimes.iteritems():
+			rider = race.getRider( num )
+			
+			# Compute the time change difference.
+			try:
+				dTime = getattr(rider, 'firstTime', t) - t
+			except TypeError:
+				dTime = 0.0
+				
+			rider.firstTime = t
+			
+			# Adjust the lap times to account for the new start time.
+			for k in xrange(len(rider.times)):
+				if k != 0:
+					rider.times[k] += dTime
+		
+		race.setChanged()
 		
 	if errors:
 		errorStr = '\n'.join( errors[:20] )
