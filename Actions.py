@@ -41,7 +41,7 @@ def StartRaceNow():
 		
 	SetCameraState( getattr(Model.race, 'enableUSBCamera', False) )
 	
-	# For safety, clear this undo after 8 seconds.
+	# For safety, clear the undo stack after 8 seconds.
 	undoResetTimer = wx.CallLater( 8000, undo.clear )
 
 def GetNowSeconds():
