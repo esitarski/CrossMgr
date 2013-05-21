@@ -14,6 +14,7 @@ import string
 import webbrowser
 import traceback
 import Model
+from Undo import undo
 from Excel import GetExcelReader, toAscii
 
 #-----------------------------------------------------------------------------------------------------
@@ -427,6 +428,9 @@ def ImportTTStartTimes( parent ):
 			
 		startTimes[num] = hh * 60.0*60.0 + mm * 60.0 + ss
 			
+	# Make changes to the model.
+	if startTimes:
+		undo.pushState()
 	for num, t in startTimes.iteritems():
 		rider = race.getRider( num )
 		rider.firstTime = t
