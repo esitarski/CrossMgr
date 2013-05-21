@@ -16,6 +16,8 @@ from roundbutton import RoundButton
 undoResetTimer = None
 def StartRaceNow():
 	global undoResetTimer
+	if undoResetTimer and undoResetTimer.IsRunning():
+		undoResetTimer.Stop()
 	undoResetTimer = None
 	
 	undo.clear()
