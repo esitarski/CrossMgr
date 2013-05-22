@@ -67,6 +67,7 @@ def GetResultsCore( category ):
 		if not race:
 			return tuple()
 		
+		isTimeTrial = getattr( race, 'isTimeTrial', False )
 		allCategoriesFinishAfterFastestRidersLastLap = getattr( race, 'allCategoriesFinishAfterFastestRidersLastLap', False )
 		
 		allRiderTimes = {}
@@ -151,7 +152,6 @@ def GetResultsCore( category ):
 			return tuple()
 		
 		highPrecision = Utils.highPrecisionTimes()
-		isTimeTrial = getattr( race, 'isTimeTrial', False )
 		for rider in race.riders.itervalues():
 			riderCategory = race.getCategory( rider.num )
 			if (category and riderCategory != category) or riderCategory not in categoryWinningTime:
@@ -192,6 +192,11 @@ def GetResultsCore( category ):
 							rr.finishTime = rr.startTime + rr.lastTime
 					except (TypeError, AttributeError):
 						pass
+						
+				try:
+					rr.lastTime += getattr(rider, 'ttAdjustment', 0.0)
+				except (TypeError, AttributeError):
+					pass
 			
 			# Compute the speeds for the rider.
 			if getattr(riderCategory, 'distance', None):
@@ -221,7 +226,7 @@ def GetResultsCore( category ):
 		if not riderResults:
 			return tuple()
 			
-		riderResults.sort( key = lambda x: (statusSortSeq[x.status], -x.laps, x.lastTime) )
+		riderResults.sort( key = lambda x: (statusSortSeq[x.status], -x.laps, x.lastTime, getattr(x, 'startTime', 0.0) or 0.0) )
 		
 		# Add the position (or status, if not a Finisher).
 		# Fill in the gap field (include laps down if appropriate).

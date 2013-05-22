@@ -183,11 +183,9 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		self.sp.SetupScrolling( scroll_y = False )
 
 	def getFieldCol( self ):
-		headerLen = len(self.headers) - 1
 		fieldCol = {}
 		for c, f in enumerate(Fields):
-			s = self.choices[c].GetSelection()
-			fieldCol[f] = s if s < headerLen else -1
+			fieldCol[f] = self.choices[c].GetSelection()
 		return fieldCol
 			
 class SummaryPage(wiz.WizardPageSimple):
@@ -452,10 +450,10 @@ def ImportTTStartTimes( parent ):
 		errorStr = '\n'.join( errors[:20] )
 		if len(errors) > 20:
 			errorStr += '\n...'
-		Utils.MessageOK( parent, errors, 'Start Time Errors' )
+		Utils.MessageOK( parent, errorStr, 'Start Time Errors' )
 		
-	Utils.MessageOK( parent, 'Set %d Start Times' % len(startTimes), 'Start Times Success' )
 	Utils.refresh()
+	Utils.MessageOK( parent, 'Set %d Start Times' % len(startTimes), 'Start Times Success' )
 
 #-----------------------------------------------------------------------------------------------------
 

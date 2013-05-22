@@ -4,6 +4,7 @@ import xlrd
 import xml.etree.ElementTree
 from openpyxl.reader.excel import load_workbook
 import os
+import math
 import itertools
 import unicodedata
 
@@ -60,24 +61,39 @@ class ReadExcelXls( ReadExcelBase ):
 				if value == int(value):
 					value = int(value)
 			elif type == 3:
-				try:
-					datetuple = xlrd.xldate_as_tuple(value, self.book.datemode)
-					validDate = True
-				except:
-					value = 'UnreadableDate'
-					validDate = False
-				if validDate:
-					if date_as_tuple:
-						value = datetuple
+				if isinstance(value, float) and value < 1.0:
+					t = value * (24.0*60.0*60.0)
+					if int(t + 0.000001) == int(t+1.0):
+						secs = int(t + 0.000001)
+						fract = 0.0
 					else:
-						# time only - no date component
-						if datetuple[0] == 0 and datetuple[1] == 0 and  datetuple[2] == 0:
-							value = "%02d:%02d:%02d" % datetuple[3:]
-						# date only, no time
-						elif datetuple[3] == 0 and datetuple[4] == 0 and datetuple[5] == 0:
-							value = "%04d/%02d/%02d" % datetuple[:3]
-						else: # full date
-							value = "%04d/%02d/%02d %02d:%02d:%02d" % datetuple
+						fract, secs = math.modf( t )
+						if fract < 0.000000001:
+							fract = 0.0
+						secs = int(secs)
+					if fract:
+						value = '%02d:%02d:%02d.%s' % ( secs // (60*60), (secs // 60) % 60, secs % 60, ('%.20f'%fract)[2:])
+					else:
+						value = '%02d:%02d:%02d' % (secs // (60*60), (secs // 60) % 60, secs % 60)
+				else:
+					try:
+						datetuple = xlrd.xldate_as_tuple(value, self.book.datemode)
+						validDate = True
+					except:
+						value = 'UnreadableDate'
+						validDate = False
+					if validDate:
+						if date_as_tuple:
+							value = datetuple
+						else:
+							# time only - no date component
+							if datetuple[0] == 0 and datetuple[1] == 0 and  datetuple[2] == 0:
+								value = "%02d:%02d:%02d" % datetuple[3:]
+							# date only, no time
+							elif datetuple[3] == 0 and datetuple[4] == 0 and datetuple[5] == 0:
+								value = "%04d/%02d/%02d" % datetuple[:3]
+							else: # full date
+								value = "%04d/%02d/%02d %02d:%02d:%02d" % datetuple
 			elif type == 5:
 				value = xlrd.error_text_from_code[value]
 			values.append(value)
@@ -118,6 +134,5 @@ def GetExcelReader( filename ):
 	else:
 		raise ValueError, '%s is not a recognized Excel format' % filename
 		
-#----------------------------------------------------------------------------
 #----------------------------------------------------------------------------
 
