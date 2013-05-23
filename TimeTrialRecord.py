@@ -30,7 +30,7 @@ class HighPrecisionTimeEditor(gridlib.PyGridCellEditor):
 		gridlib.PyGridCellEditor.__init__(self)
 		
 	def Create( self, parent, id, evtHandler ):
-		self._tc = HighPrecisionTimeEdit(parent, id, allow_none = False)
+		self._tc = HighPrecisionTimeEdit(parent, id, allow_none = False, style = wx.TE_PROCESS_ENTER)
 		self.SetControl( self._tc )
 		if evtHandler:
 			self._tc.PushEventHandler( evtHandler )
@@ -48,7 +48,7 @@ class HighPrecisionTimeEditor(gridlib.PyGridCellEditor):
 		val = self._tc.GetValue()
 		if val != self.startValue:
 			change = True
-			grid.GetTable().SetValue( row, col, int(val) )
+			grid.GetTable().SetValue( row, col, val )
 		self.startValue = '00:00:00.000'
 		self._tc.SetValue( self.startValue )
 		
@@ -65,7 +65,7 @@ class BibEditor(gridlib.PyGridCellEditor):
 		gridlib.PyGridCellEditor.__init__(self)
 		
 	def Create( self, parent, id, evtHandler ):
-		self._tc = masked.NumCtrl( parent, id, style = wx.TE_PROCESS_ENTER  )
+		self._tc = masked.NumCtrl( parent, id, style = wx.TE_PROCESS_ENTER )
 		self._tc.SetAllowNone( True )
 		self.SetControl( self._tc )
 		if evtHandler:
@@ -103,10 +103,24 @@ class TimeTrialRecord( wx.Panel ):
 
 		self.headerNames = ['Time', 'Bib']
 		
-		self.maxRows = 10
+		self.maxRows = 12
 		
-		self.font = wx.FontFromPixelSize( wx.Size(0,16), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
+		self.font = wx.FontFromPixelSize( wx.Size(0,24), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
+		self.bigFont = wx.FontFromPixelSize( wx.Size(0,32), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
 		self.vbs = wx.BoxSizer(wx.VERTICAL)
+		
+		self.recordTimeButton = wx.Button( self, wx.ID_ANY, 'Record Time' )
+		self.recordTimeButton.Bind( wx.EVT_BUTTON, self.doRecordTime )
+		self.recordTimeButton.SetFont( self.bigFont )
+		
+		self.commitButton = wx.Button( self, wx.ID_ANY, 'Commit Entries' )
+		self.commitButton.Bind( wx.EVT_BUTTON, self.doCommit )
+		self.commitButton.SetFont( self.bigFont )
+		
+		hbs = wx.BoxSizer( wx.HORIZONTAL )
+		hbs.Add( self.recordTimeButton, 0 )
+		hbs.AddStretchSpacer()
+		hbs.Add( self.commitButton, 0 )
 		
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.SetFont( self.font )
@@ -120,27 +134,23 @@ class TimeTrialRecord( wx.Panel ):
 			attr = gridlib.GridCellAttr()
 			attr.SetFont( self.font )
 			if col == 0:
-				attr.SetEditor( HighPrecisionTimeEditor() )
+				attr.SetReadOnly( True )
 			elif col == 1:
 				attr.SetRenderer( gridlib.GridCellNumberRenderer() )
 				attr.SetEditor( BibEditor() )
 			self.grid.SetColAttr( col, attr )
 		
+		self.vbs.Add( hbs, 0, flag=wx.ALL|wx.EXPAND, border = 4 )
 		self.vbs.Add( self.grid, 1, flag=wx.ALL|wx.EXPAND, border = 4 )
 		
-		hbs = wx.BoxSizer( wx.HORIZONTAL )
+		self.Bind(wx.EVT_MENU, self.doRecordTime, id=self.recordTimeButton.GetId())
+		self.Bind(wx.EVT_MENU, self.doCommit, id=self.commitButton.GetId())
+		accel_tbl = wx.AcceleratorTable([
+			(wx.ACCEL_NORMAL,  ord('R'), self.recordTimeButton.GetId() ),
+			(wx.ACCEL_NORMAL,  ord('C'), self.commitButton.GetId() )
+		])
+		self.SetAcceleratorTable(accel_tbl)
 		
-		self.recordTimeButton = wx.Button( self, wx.ID_ANY, 'Record Time' )
-		self.recordTimeButton.Bind( wx.EVT_BUTTON, self.doRecordTime )
-		self.recordTimeButton.SetFont( self.font )
-		self.commitButton = wx.Button( self, wx.ID_ANY, 'Commit' )
-		self.commitButton.Bind( wx.EVT_BUTTON, self.doCommit )
-		self.commitButton.SetFont( self.font )
-		
-		hbs.Add( self.recordTimeButton, flag=wx.ALL, border = 4 )
-		hbs.Add( self.commitButton, flag=wx.ALL, border = 4 )
-		
-		self.vbs.Add( hbs, 0, flag=wx.ALL, border = 4 )
 		
 		self.SetSizer(self.vbs)
 	
@@ -199,10 +209,12 @@ class TimeTrialRecord( wx.Panel ):
 		for row in xrange(self.grid.GetNumberRows()):
 			for column in xrange(self.grid.GetNumberCols()):
 				self.grid.SetCellValue(row, column, '' )
-			
+		
+		'''
 		for row, t in enumerate(timesNoBibs):
 			self.grid.SetCellValue( row, 0, t )
 		self.grid.SetGridCursor( 0, 1 )
+		'''
 			
 		if timesBibs:
 			with Model.LockRace() as race:
