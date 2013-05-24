@@ -14,7 +14,33 @@ The screen is roughly divided into four parts:
 
 ## Number Entry
 
-This consists of an edit area.
+This is the section of the screen where data is entered manually.  Number and times entered with chip timing come into CrossMgr directly.
+
+CrossMgr offers two "modes" to manually enter data: "Keypad" and "Time Trial"
+The different modes are switched by a pressing button at the top left of the screen which either shows a Keypad or a Stopwatch, depending on the mode you will switch to.
+
+In Keypad mode, the number is timestamped when you press Enter.
+
+In Time Trial mode, you can get accurate times first, then add the bib numbers afterwards.
+
+Each approach has pros and cons, and you can switch modes at any time.  Generally speaking you will use the modes for:
+
+Race Format|Input Mode
+:----------|:---------
+Cyclo Cross|Keypad
+MTB|Keypad
+Road|Keypad
+Time Trial|Time Trial
+Downhill|Time Trial
+
+### Keypad Number Entry Mode
+
+When you enter a number in this mode, the number is "timestamped" when you press "Enter".  This is the standard input mode for Road, Cyclo Cross and MTB races when you have number caller, and riders arrive in quick succession for laps.
+
+When you hear the number caller, you type in the number and press Enter.
+After the first lap of a race, CrossMgr will predict the arrival of each rider in the [Expected](MainScreen.html#expected) window.  To enter the number again, you can just click on it rather than typing it in.
+
+Entering a number also triggers the [USB Webcam][].
 
 You can enter data through the regular keyboard or an external numeric keypad.  If you have a touchscreen, you can also enter data by pressing the on-screen buttons.
 
@@ -22,9 +48,7 @@ Experience has shown that using a touch-screen is a slower and less accurate met
 
 Enter automatically enters the number and gives it a time.  The most accurate way to enter numbers is to type in the number when you hear the number caller, then press Enter just when the rider crosses the line.
 
-You can also enter multiple numbers separated by commas on the same line.  When you press enter, all these numbers be entered with exactly the same time.  This is useful for starting a team in a team time trial all with the same time. 
-
-After the first lap of a race you can click on a number in the [Expected](MainScreen.html#expected) window to enter it, rather than typing it in again.
+You can also enter multiple numbers separated by commas on the same line.  When you press enter, all these numbers be entered with exactly the same time.  This is useful for starting a team in a team time trial all with exactly the same start time. 
 
 There are a number of additional buttons:
 
@@ -34,9 +58,35 @@ DNF|Enter the rider as a DNF, and uses the current time as the DNF time.
 Pull|Enters the rider as PUL, and uses the current time as the PUL time.
 DQ|Enters the rider as DQ, and uses the current time as the DQ time.
 
+### Time Trial Entry Mode
+
+This is the standard input mode for time trial finishes.  It follows a similar process to a manual stopwatch, except you use the computer.
+
+In time trial mode, you get times as the riders pass by pressing the "New Time" button (similar to using a recording stopwatch).  This also triggers the [USB Webcam][] to take a picture.
+
+You then enter the numbers next to the times (you many not be able to see the number on the back of the rider until he/she has passed).
+
+When you have entered all the corresponding bib numbers for the times, press the "Commit" button.  This sends your input to CrossMgr and clears the display for the next arrivals.
+
+CrossMgr gives you 12 entries before a Commit is required.  In practice, you should never see more than 3-4 riders crossing the finish without a gap, so 12 entries is a large number to work with.  If you see large groups of riders finishing together, they are drafting, which is illegal, and the results are invalid.
+
+If you are using the [USB Webcam][], you can retrieve the photo for the entry with the "Camera" button.  This can be helpful as the rider's number may be more readable in the picture.
+
+Rather than taking your hands off the keyboard to use the mouse, use keyboard shortcuts:
+
+Shortcut Key|Description
+:-------|:----------
+t|Adds a New Time.  Equivalent to pressing the "New Time" button.
+c|Commit the current entries.  Equivalent to pressing the "Commit" button.
+p|Retrieves the photo for that row entry (if you are using the [USB Webcam][]).  Equivalent to pressing the "Photo" button when in that row.
+
+This allows you to do data entery quickly and accurately - without taking your hands off the keyboard.
+
+Warning: The Time Trial input mode works well when there are start gaps between the riders.  If you have a timed mass single-start event, you may need Keypad mode, or alternatively, consider a [ChipReader][].
+
 ## Race Information
 
-CrossMgr shows many fields about the race, especially while it is running:
+CrossMgr shows a lot of information about the race, especially while it is running:
 
 Field|Description
 :----|:----------

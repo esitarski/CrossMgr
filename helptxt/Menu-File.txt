@@ -34,6 +34,13 @@ Shows how the results would look if printed.
 ## Print Results...
 Prints formated results directly to a printer.
 
+There are two options available in the "Page Range" section:
+
+Option|Result
+:-----|:-----
+All|Print results for all [Categories][]
+Selection|Print results for the current category only (for example, the category selected at the top of the [Results][] screen)
+
 ## Publish Results as Excel...
 Publish the results in Excel format and opens Excel on the output file.
 

@@ -14,8 +14,16 @@ def getRaceCategories():
 	return categories
 
 class CrossMgrPrintout(wx.Printout):
-    def __init__(self):
-        wx.Printout.__init__(self)
+    def __init__(self, printSelection = False):
+		wx.Printout.__init__(self)
+		self.category = None
+		if Model.race and printSelection:
+			iSelection = getattr( Model.race, 'modelCategory', 0 )
+			if iSelection != 0:
+				try:
+					self.category = race.getCategories()[iSelection-1]
+				except:
+					self.category = None
 
     def OnBeginDocument(self, start, end):
         return super(CrossMgrPrintout, self).OnBeginDocument(start, end)
@@ -33,24 +41,30 @@ class CrossMgrPrintout(wx.Printout):
         super(CrossMgrPrintout, self).OnPreparePrinting()
 
     def HasPage(self, page):
+		if self.category:
+			return page == 1
 		numCategories = len(getRaceCategories()) - 1	# Ignore the 'All' category.
 		if page - 1 < numCategories:
 			return True
 		return False
 
     def GetPageInfo(self):
+		if self.category:
+			return (1,1,1,1)
 		numCategories = len(getRaceCategories())
 		if numCategories == 0:
 			return (1,1,1,1)
 		return (1, numCategories, 1, numCategories)
 
     def OnPrintPage(self, page):
-		iCat = page - 1
-		categories = getRaceCategories()
-		if iCat >= len(categories):
-			return False
-
-		category = categories[iCat][1]
+		if self.category:
+			category = self.category
+		else:
+			iCat = page - 1
+			categories = getRaceCategories()
+			if iCat >= len(categories):
+				return False
+			category = categories[iCat][1]
 		
 		exportGrid = ExportGrid()
 		exportGrid.setResultsOneList( category, True )

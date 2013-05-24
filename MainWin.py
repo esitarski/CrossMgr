@@ -843,12 +843,14 @@ class MainWin( wx.Frame ):
 	def menuPrint( self, event ):
 		self.printData.SetFilename( self.fileName if self.fileName else '' )
 		pdd = wx.PrintDialogData(self.printData)
-		pdd.SetAllPages( 1 )
-		pdd.EnablePageNumbers( 0 )
-		pdd.EnableHelp( 0 )
+		pdd.SetAllPages( True )
+		pdd.EnableSelection( True )
+		pdd.EnablePageNumbers( False )
+		pdd.EnableHelp( False )
+		pdd.EnablePrintToFile( False )
 		
 		printer = wx.Printer(pdd)
-		printout = CrossMgrPrintout()
+		printout = CrossMgrPrintout( pdd.GetSelection() )
 
 		if not printer.Print(self, printout, True):
 			if printer.GetLastError() == wx.PRINTER_ERROR:
