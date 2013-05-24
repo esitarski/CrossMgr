@@ -591,8 +591,7 @@ class MainWin( wx.Frame ):
 			# Ensure that we don't take more than 10 photos per second.
 			photoTime = datetime.datetime.now()
 			if (photoTime - self.lastPhotoTime).total_seconds() > 0.1:
-				TakePhoto( Utils.getFileName(), num, t )
-				race.photoCount = getattr(race,'photoCount',0) + 1
+				race.photoCount = getattr(race,'photoCount',0) + TakePhoto( Utils.getFileName(), num, t )
 				self.lastPhotoTime = photoTime
 				break
 	

@@ -1,3 +1,4 @@
+import os
 import wx
 import wx.grid			as gridlib
 from wx.lib import masked
@@ -6,6 +7,7 @@ import Model
 import Utils
 from ReorderableGrid import ReorderableGrid
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
+from PhotoFinish import TakePhoto, AddBibToPhoto
 
 def formatTime( secs ):
 	if secs is None:
@@ -24,9 +26,10 @@ def formatTime( secs ):
 	return " %s%02d:%02d:%02d%s " % (sign, hours, minutes, secs, decimal)
 
 class HighPrecisionTimeEditor(gridlib.PyGridCellEditor):
+	Empty = '00:00:00.000'
 	def __init__(self):
 		self._tc = None
-		self.startValue = '00:00:00.000'
+		self.startValue = self.Empty
 		gridlib.PyGridCellEditor.__init__(self)
 		
 	def Create( self, parent, id, evtHandler ):
@@ -47,9 +50,11 @@ class HighPrecisionTimeEditor(gridlib.PyGridCellEditor):
 		changed = False
 		val = self._tc.GetValue()
 		if val != self.startValue:
+			if val == self.Empty:
+				val = ''
 			change = True
 			grid.GetTable().SetValue( row, col, val )
-		self.startValue = '00:00:00.000'
+		self.startValue = self.Empty
 		self._tc.SetValue( self.startValue )
 		
 	def Reset( self ):
@@ -82,10 +87,7 @@ class BibEditor(gridlib.PyGridCellEditor):
 	def EndEdit( self, row, col, grid ):
 		changed = False
 		val = self._tc.GetValue()
-		if not val:
-			val = ''
-		else:
-			val = str(val)
+		val = str(val) if val else ''
 		if val != str(self.startValue):
 			change = True
 			grid.GetTable().SetValue( row, col, val )
@@ -98,29 +100,31 @@ class BibEditor(gridlib.PyGridCellEditor):
 		return BibEditor()
 		
 class TimeTrialRecord( wx.Panel ):
-	def __init__( self, parent, id = wx.ID_ANY ):
+	def __init__( self, parent, controller, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
+		self.controller = controller
 
 		self.headerNames = ['Time', 'Bib']
 		
 		self.maxRows = 12
 		
-		self.font = wx.FontFromPixelSize( wx.Size(0,24), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
-		self.bigFont = wx.FontFromPixelSize( wx.Size(0,32), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
+		fontSize = 18
+		self.font = wx.FontFromPixelSize( wx.Size(0,fontSize), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
+		self.bigFont = wx.FontFromPixelSize( wx.Size(0,int(fontSize*1.3)), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
 		self.vbs = wx.BoxSizer(wx.VERTICAL)
 		
-		self.recordTimeButton = wx.Button( self, wx.ID_ANY, 'Record Time' )
+		self.recordTimeButton = wx.Button( self, wx.ID_ANY, 'New Time' )
 		self.recordTimeButton.Bind( wx.EVT_BUTTON, self.doRecordTime )
 		self.recordTimeButton.SetFont( self.bigFont )
 		
-		self.commitButton = wx.Button( self, wx.ID_ANY, 'Commit Entries' )
-		self.commitButton.Bind( wx.EVT_BUTTON, self.doCommit )
-		self.commitButton.SetFont( self.bigFont )
+		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'camera.png'), wx.BITMAP_TYPE_PNG )
+		self.photoButton = wx.BitmapButton( self, wx.ID_ANY, bitmap )
+		self.photoButton.Bind( wx.EVT_BUTTON, self.doPhoto )
 		
 		hbs = wx.BoxSizer( wx.HORIZONTAL )
 		hbs.Add( self.recordTimeButton, 0 )
 		hbs.AddStretchSpacer()
-		hbs.Add( self.commitButton, 0 )
+		hbs.Add( self.photoButton, 0 )
 		
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.SetFont( self.font )
@@ -134,46 +138,66 @@ class TimeTrialRecord( wx.Panel ):
 			attr = gridlib.GridCellAttr()
 			attr.SetFont( self.font )
 			if col == 0:
-				attr.SetReadOnly( True )
+				attr.SetEditor( HighPrecisionTimeEditor() )
 			elif col == 1:
 				attr.SetRenderer( gridlib.GridCellNumberRenderer() )
 				attr.SetEditor( BibEditor() )
 			self.grid.SetColAttr( col, attr )
 		
+		self.commitButton = wx.Button( self, wx.ID_ANY, 'Commit' )
+		self.commitButton.Bind( wx.EVT_BUTTON, self.doCommit )
+		self.commitButton.SetFont( self.bigFont )
+		
 		self.vbs.Add( hbs, 0, flag=wx.ALL|wx.EXPAND, border = 4 )
 		self.vbs.Add( self.grid, 1, flag=wx.ALL|wx.EXPAND, border = 4 )
+		self.vbs.Add( self.commitButton, flag=wx.ALL|wx.ALIGN_RIGHT, border = 4 )
 		
 		self.Bind(wx.EVT_MENU, self.doRecordTime, id=self.recordTimeButton.GetId())
 		self.Bind(wx.EVT_MENU, self.doCommit, id=self.commitButton.GetId())
+		self.Bind(wx.EVT_MENU, self.doPhoto, id=self.photoButton.GetId())
 		accel_tbl = wx.AcceleratorTable([
-			(wx.ACCEL_NORMAL,  ord('R'), self.recordTimeButton.GetId() ),
-			(wx.ACCEL_NORMAL,  ord('C'), self.commitButton.GetId() )
+			(wx.ACCEL_NORMAL,  ord('T'), self.recordTimeButton.GetId() ),
+			(wx.ACCEL_NORMAL,  ord('C'), self.commitButton.GetId() ),
+			(wx.ACCEL_NORMAL,  ord('P'), self.photoButton.GetId() ),
 		])
 		self.SetAcceleratorTable(accel_tbl)
 		
 		
 		self.SetSizer(self.vbs)
+		
+	def doPhoto( self, event ):
+		if not Utils.mainWin or not getattr(Model.race, 'enableUSBCamera', False):
+			return
+			
+		row = self.grid.GetGridCursorRow()
+		tStr = self.grid.GetCellValue( row, 0 )
+		if not tStr:
+			return
+			
+		Utils.mainWin.photoDialog.Show( True )
+		Utils.mainWin.photoDialog.refresh( 0, Utils.StrToSeconds(tStr) )
 	
 	def doRecordTime( self, event ):
 		t = Model.race.curRaceTime()
 		
-		if not Model.race:
-			return
-			
 		# Trigger the camera.
-		pass
+		with Model.LockRace() as race:
+			if not race:
+				return
+			if getattr(race, 'enableUSBCamera', False):
+				race.photoCount = getattr(race,'photoCount',0) + TakePhoto( Utils.getFileName(), 0, Utils.StrToSeconds(formatTime(t)) )
 	
 		# Find the last row without a time.
-		self.grid.SaveEditControlValue()
+		self.grid.SetGridCursor( 0, 0, )
 		
-		emptyRow = 0
+		emptyRow = self.grid.GetNumberRows() + 1
 		success = False
 		for i in xrange(2):
-			for row in xrange(self.grid.GetNumberRows()-1, -1, -1):
-				if self.grid.GetCellValue(row, 0):
-					emptyRow = row + 1
+			for row in xrange(self.grid.GetNumberRows()):
+				if not self.grid.GetCellValue(row, 0):
+					emptyRow = row
 					break
-			if emptyRow > self.grid.GetNumberRows():
+			if emptyRow >= self.grid.GetNumberRows():
 				self.doCommit( event )
 			else:
 				success = True
@@ -184,7 +208,6 @@ class TimeTrialRecord( wx.Panel ):
 			return
 			
 		self.grid.SetCellValue( emptyRow, 0, formatTime(t) )
-		self.grid.SetCellValue( emptyRow, 1, '' )
 		
 		# Set the edit cursor at the first empty bib position.
 		for row in xrange(self.grid.GetNumberRows()):
@@ -194,33 +217,44 @@ class TimeTrialRecord( wx.Panel ):
 				break
 		
 	def doCommit( self, event ):
+		self.grid.SetGridCursor( 0, 0, )
+	
+		# Find the last row without a time.
 		timesBibs = []
 		timesNoBibs = []
 		for row in xrange(self.grid.GetNumberRows()):
-			t = self.grid.GetCellValue(row, 0).strip()
+			tStr = self.grid.GetCellValue(row, 0).strip()
 			bib = self.grid.GetCellValue(row, 1).strip()
-			if not t:
+			if not tStr:
 				continue
 			if bib:
-				timesBibs.append( (t, bib) )
+				timesBibs.append( (tStr, bib) )
 			else:
-				timesNoBibs.append( t )
+				timesNoBibs.append( tStr )
 				
 		for row in xrange(self.grid.GetNumberRows()):
 			for column in xrange(self.grid.GetNumberCols()):
 				self.grid.SetCellValue(row, column, '' )
 		
 		'''
-		for row, t in enumerate(timesNoBibs):
-			self.grid.SetCellValue( row, 0, t )
-		self.grid.SetGridCursor( 0, 1 )
+		for row, tStr in enumerate(timesNoBibs):
+			self.grid.SetCellValue( row, 0, tStr )
 		'''
 			
-		if timesBibs:
+		self.grid.SetGridCursor( 0, 1 )
+			
+		if timesBibs and Model.race:
 			with Model.LockRace() as race:
-				for t, bib in timesBibs:
-					race.addTime( bib, Utils.StrToSeconds(t) )
+				isCamera = getattr(race, 'enableUSBCamera', False)
+				for tStr, bib in timesBibs:
+					raceSeconds = Utils.StrToSeconds(tStr)
+					race.addTime( bib, raceSeconds )
+					if isCamera:
+						AddBibToPhoto( bib, raceSeconds )
+						
 			Utils.refresh()
+			
+		self.grid.SetGridCursor( 0, 1 )
 	
 	def refresh( self ):
 		self.grid.AutoSizeRows( False )
@@ -245,7 +279,7 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,600))
 	Model.setRace( Model.Race() )
 	Model.getRace()._populate()
-	timeTrialRecord = TimeTrialRecord(mainWin)
+	timeTrialRecord = TimeTrialRecord(mainWin, None)
 	timeTrialRecord.refresh()
 	mainWin.Show()
 	app.MainLoop()

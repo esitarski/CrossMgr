@@ -99,6 +99,10 @@ class Properties( wx.Panel ):
 		self.reverseDirection = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
 		rows += 1
 
+		self.notesLabel = wx.StaticText( self, wx.ID_ANY, 'Notes (will appear on Html output): ' )
+		self.notes = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB )
+		rows += 1
+
 		self.fileNameLabel = wx.StaticText( self, wx.ID_ANY, 'File Name: ' )
 		self.fileName = wx.StaticText( self, wx.ID_ANY, '' )
 		rows += 1
@@ -115,12 +119,12 @@ class Properties( wx.Panel ):
 		
 		if addEditButton:
 			rows += 1
-		fbs = wx.FlexGridSizer( rows=rows+1, cols=2, hgap=2, vgap=1 )
+		fbs = wx.GridBagSizer( hgap=2, vgap=1 )
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
 		fieldAlign = wx.EXPAND|wx.GROW
 		
-		blank = lambda : wx.StaticText(self,wx.ID_ANY,'')
+		blank = lambda : None
 		
 		labelFieldFormats = [
 			(self.raceNameLabel,	0, labelAlign),		(self.raceName, 		1, fieldAlign),
@@ -152,6 +156,8 @@ class Properties( wx.Panel ):
 			(self.finishTopLabel,0, labelAlign),		(self.finishTop,		1, fieldAlign),
 			(self.reverseDirectionLabel,0, labelAlign),	(self.reverseDirection,	1, fieldAlign),
 			
+			(self.notesLabel,		0, 0),				(self.notes,			1, 0),
+			
 			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
 			(self.excelLabel,		0, labelAlign),		(self.excelName, 		1, fieldAlign),
 			(self.categoriesFileLabel, 0, labelAlign),	(self.categoriesFile,	1, fieldAlign),
@@ -159,26 +165,42 @@ class Properties( wx.Panel ):
 			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
 			(self.fileNameLabel,	0, labelAlign),		(self.fileName, 		1, fieldAlign),
 		]
-		fbs.AddMany( labelFieldFormats )
+		row = 0
+		for i, (item, column, flag) in enumerate(labelFieldFormats):
+			if not item:
+				continue
+			if column == 1:
+				flag |= wx.EXPAND
+			if item == self.notes:
+				row += 1
+				fbs.Add( item, pos=(row, 0), span=(1,2), flag=flag )
+				row += 1
+			else:
+				fbs.Add( item, pos=(row, column), span=(1,1), flag=flag )
+				if column == 1:
+					row += 1
+				
+		#fbs.AddMany( labelFieldFormats )
 		
 		if addEditButton:
-			fbs.Add( blank() )
 			hs = wx.BoxSizer( wx.HORIZONTAL )
 			
 			self.editButton = wx.Button(self, wx.ID_ANY, 'Change Properties...')
 			self.editButton.Bind( wx.EVT_BUTTON, self.editButtonCallback )
 			hs.Add( self.editButton, border = 8, flag = wx.TOP|wx.BOTTOM )
+			row += 1
 			
 			self.excelButton = wx.Button(self, wx.ID_ANY, 'Link External Excel Sheet...')
 			self.excelButton.Bind( wx.EVT_BUTTON, self.excelButtonCallback )
 			hs.Add( self.excelButton, border = 8, flag = wx.LEFT|wx.TOP|wx.BOTTOM )
 
-			fbs.Add( hs )
+			fbs.Add( hs, pos=(row, 1), span=(1,1) )
 		
 		fbs.AddGrowableCol( 1 )
 		self.SetSizer(fbs)
 		
 		self.editFields = [labelFieldFormats[i][0] for i in xrange(1, len(labelFieldFormats), 2)]
+		self.editFields = [e for e in self.editFields if e]
 	
 	def onJChipIntegration( self, event ):
 		self.autocorrectLapsDefault.SetValue( not self.jchip.GetValue() )
@@ -273,6 +295,8 @@ class Properties( wx.Panel ):
 			self.reverseDirection.SetValue( getattr(race, 'reverseDirection', False) )
 			self.finishTop.SetValue( getattr(race, 'finishTop', False) )
 			
+			self.notes.SetValue( getattr(race, 'notes', '') )
+			
 			excelLink = getattr(race, 'excelLink', None)
 			if excelLink:
 				self.excelName.SetLabel( '%s|%s' % (
@@ -309,6 +333,7 @@ class Properties( wx.Panel ):
 			race.minutes = self.minutes.GetValue()
 			race.commissaire = self.commissaire.GetValue()
 			race.memo = self.memo.GetValue()
+			race.notes = self.notes.GetValue()
 			race.setChanged()
 		
 class PropertiesDialog( wx.Dialog ):

@@ -194,7 +194,7 @@ def GetResultsCore( category ):
 						pass
 						
 				try:
-					rr.lastTime += getattr(rider, 'ttAdjustment', 0.0)
+					rr.lastTime += getattr(rider, 'ttPenalty', 0.0)
 				except (TypeError, AttributeError):
 					pass
 			

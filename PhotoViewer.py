@@ -352,12 +352,12 @@ class PhotoViewerDialog( wx.Dialog ):
 			self.num = num
 		
 		with Model.LockRace() as race:
-			if race is None or not self.num:
+			if race is None:
 				self.clear()
 				return
 				
 			# Automatically refresh the screen only if the rider showing has last been updated.
-			if not num and race.isRunning():
+			if num is None and t is None and race.isRunning():
 				tLast, rLast = race.getLastKnownTimeRider()
 				if rLast and rLast.num != self.num:
 					return

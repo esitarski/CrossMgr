@@ -312,8 +312,7 @@ class ForecastHistory( wx.Panel ):
 						num = int(num)
 					except:
 						continue
-					TakePhoto( Utils.getFileName(), num, t )
-					race.photoCount = getattr(race,'photoCount',0) + 1
+					race.photoCount = getattr(race,'photoCount',0) + TakePhoto( Utils.getFileName(), num, t )
 					break
 			
 		mainWin = Utils.getMainWin()
