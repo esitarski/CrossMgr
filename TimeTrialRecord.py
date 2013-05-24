@@ -8,6 +8,7 @@ import Utils
 from ReorderableGrid import ReorderableGrid
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 from PhotoFinish import TakePhoto, AddBibToPhoto
+import OutputStreamer
 
 def formatTime( secs ):
 	if secs is None:
@@ -255,17 +256,11 @@ class TimeTrialRecord( wx.Panel ):
 					race.addTime( bib, raceSeconds )
 					if isCamera:
 						AddBibToPhoto( bib, raceSeconds )
+					OutputStreamer.writeNumTime( bib, t )
 						
-			Utils.refresh()
+			wx.CallAfter( Utils.refresh )
 			
 		self.grid.SetGridCursor( 0, 1 )
-		
-		nums = [num for tStr, num in timesBibs]
-		if nums:
-			mainWin = Utils.getMainWin()
-			if mainWin is not None:
-				mainWin.forecastHistory.logNum( nums )
-		self.controller.refreshLaps()
 	
 	def refresh( self ):
 		self.grid.AutoSizeRows( False )
