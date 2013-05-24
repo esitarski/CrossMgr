@@ -193,7 +193,6 @@ class NumKeypad( wx.Panel ):
 		self.timeTrialRecord = TimeTrialRecord( panel, self )
 		self.timeTrialRecord.Show( False )
 		self.horizontalMainSizer = horizontalMainSizer
-		wx.CallAfter( self.swapKeypadTimeTrialRecord )
 		
 		#------------------------------------------------------------------------------
 		# Race time.
@@ -206,7 +205,7 @@ class NumKeypad( wx.Panel ):
 		self.keypadBitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'keypad.png'), wx.BITMAP_TYPE_PNG )
 		self.ttRecordBitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'stopwatch.png'), wx.BITMAP_TYPE_PNG )
 		
-		self.keypadTimeTrialToggleButton = wx.BitmapButton( panel, wx.ID_ANY, self.keypadBitmap )
+		self.keypadTimeTrialToggleButton = wx.BitmapButton( panel, wx.ID_ANY, self.ttRecordBitmap )
 		self.keypadTimeTrialToggleButton.Bind( wx.EVT_BUTTON, self.swapKeypadTimeTrialRecord )
 		
 		verticalSubSizer = wx.BoxSizer( wx.VERTICAL )
@@ -800,8 +799,8 @@ class NumKeypad( wx.Panel ):
 				self.keypad.Enable( enable )
 				self.timeTrialRecord.Enable( enable )
 				self.isEnabled = enable
-			if not enable:
-				self.numEdit.SetValue( '' )
+			if not enable and self.keypad.IsShown():
+				self.keypad.numEdit.SetValue( '' )
 			
 			# Refresh the race start time.
 			changed = False

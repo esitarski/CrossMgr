@@ -228,6 +228,10 @@ class TimeTrialRecord( wx.Panel ):
 			if not tStr:
 				continue
 			if bib:
+				try:
+					bib = int(bib)
+				except:
+					continue
 				timesBibs.append( (tStr, bib) )
 			else:
 				timesNoBibs.append( tStr )
@@ -255,6 +259,13 @@ class TimeTrialRecord( wx.Panel ):
 			Utils.refresh()
 			
 		self.grid.SetGridCursor( 0, 1 )
+		
+		nums = [num for tStr, num in timesBibs]
+		if nums:
+			mainWin = Utils.getMainWin()
+			if mainWin is not None:
+				mainWin.forecastHistory.logNum( nums )
+		self.controller.refreshLaps()
 	
 	def refresh( self ):
 		self.grid.AutoSizeRows( False )
