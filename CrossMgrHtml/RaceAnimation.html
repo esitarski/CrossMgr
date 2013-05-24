@@ -436,9 +436,9 @@ function getRiderPositionTime( num )
 	}
 		
 	var tSearch = t;
-	var lastTime = info['lastTime'];
-	if( lastTime != null && lastTime < t )
-		tSearch = lastTime;
+	var finishTime = info['finishTime'];
+	if( finishTime != null && finishTime < t )
+		tSearch = finishTime;
 		
 	if( tSearch >= raceTimes.back() )
 	{
@@ -622,7 +622,7 @@ function TrackAnimation()
 		var positionTime = getRiderPositionTime( num );
 		if ( positionTime[0] == null )
 			return [null, null, null];
-		if( data[num]['lastTime'] != null && t >= data[num]['lastTime'] )
+		if( data[num]['finishTime'] != null && t >= data[num]['finishTime'] )
 		{
 			lapCur = Math.max( lapCur, data[num]['raceTimes'].length );
 			return [null, null, positionTime[0], positionTime[1]];
@@ -1084,7 +1084,7 @@ function GeoAnimation()
 		var positionTime = getRiderPositionTime( num );
 		if( positionTime[0] == null )
 			return [null, null, null, null];
-		if( data[num]['lastTime'] != null && t >= data[num]['lastTime'] )
+		if( data[num]['finishTime'] != null && t >= data[num]['finishTime'] )
 		{
 			lapCur = Math.max( lapCur, data[num]['raceTimes'].length );
 			return [null, null, positionTime[0], positionTime[1]];
@@ -1391,6 +1391,11 @@ function SetData( aData, tCur )
 				tStart = raceTimes[0];
 			catStart[cName] = [cName, tStart];
 		}
+		// Adjust the finish time in case it has been modified from the last time with time penalties.
+		if( info['status'] == 'Finisher' && info['raceTimes'].length > 1 )
+			info['finishTime'] = info['raceTimes'].back()
+		else
+			info['finishTime'] = info['lastTime']
 	}
 	
 	// Sort the categories by start time, then alphabetically.
@@ -2209,7 +2214,7 @@ function RefreshRaceChart()
 								num,
 								d['raceTimes'].slice(0),	// Make sure to make a full copy as we modify these values.
 								d['status'],
-								d['lastTime'],
+								d['finishTime'],
 								iFromCategory[d['raceCat']]
 							] );
 			categoriesUsed[d['raceCat']] = true;

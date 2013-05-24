@@ -597,6 +597,10 @@ class GeoAnimation(wx.PyControl):
 		self.data = data if data else {}
 		for num, info in self.data.iteritems():
 			info['iLast'] = 1
+			if info['status'] == 'Finisher' and info['raceTimes']:
+				info['finishTime'] = info['raceTimes'][-1]
+			else:
+				info['finishTime'] = info['lastTime']
 		if tCur is not None:
 			self.t = tCur;
 		self.tBannerLast = None
@@ -634,11 +638,11 @@ class GeoAnimation(wx.PyControl):
 			return (None, None)
 
 		tSearch = self.t
-		lastTime = info['lastTime']
-		if lastTime is not None and lastTime < self.t:
-			if lastTime == raceTimes[-1]:
-				return (len(raceTimes), lastTime)
-			tSearch = lastTime
+		finishTime = info['finishTime']
+		if finishTime is not None and finishTime < self.t:
+			if finishTime == raceTimes[-1]:
+				return (len(raceTimes), finishTime)
+			tSearch = finishTime
 		
 		if tSearch >= raceTimes[-1]:
 			p = len(raceTimes) + float(tSearch - raceTimes[-1]) / float(raceTimes[-1] - raceTimes[-2])
@@ -664,7 +668,7 @@ class GeoAnimation(wx.PyControl):
 		positionTime = self.getRiderPositionTime( num )
 		if positionTime[0] is None:
 			return None, None, None, None
-		if self.data[num]['lastTime'] is not None and self.t >= self.data[num]['lastTime']:
+		if self.data[num]['finishTime'] is not None and self.t >= self.data[num]['finishTime']:
 			self.lapCur = max(self.lapCur, len(self.data[num]['raceTimes']))
 			return (None, None, positionTime[0], positionTime[1])
 		self.lapCur = max(self.lapCur, int(positionTime[0]))
