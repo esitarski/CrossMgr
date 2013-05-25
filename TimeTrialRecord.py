@@ -158,11 +158,8 @@ class TimeTrialRecord( wx.Panel ):
 		self.Bind(wx.EVT_MENU, self.doPhoto, id=self.photoButton.GetId())
 		accel_tbl = wx.AcceleratorTable([
 			(wx.ACCEL_NORMAL,  ord('T'), self.recordTimeButton.GetId() ),
-			#(wx.ACCEL_NORMAL,  ord('+'), self.recordTimeButton.GetId() ),
 			(wx.ACCEL_NORMAL,  ord('C'), self.commitButton.GetId() ),
-			#(wx.ACCEL_NORMAL,  ord('-'), self.commitButton.GetId() ),
 			(wx.ACCEL_NORMAL,  ord('P'), self.photoButton.GetId() ),
-			#(wx.ACCEL_NORMAL,  ord('*'), self.photoButton.GetId() ),
 		])
 		self.SetAcceleratorTable(accel_tbl)
 		

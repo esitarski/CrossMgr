@@ -1512,6 +1512,7 @@ class MainWin( wx.Frame ):
 			self.updateRecentFiles()
 			
 			self.setNumSelect( None )
+			self.record.setTimeTrialInput( getattr(race, 'isTimeTrial', False) )
 			self.showPageName( 'Results' if isFinished else 'Actions')
 			self.refreshAll()
 			Utils.writeLog( 'call: openRace: "%s"' % fileName )

@@ -335,6 +335,9 @@ class Properties( wx.Panel ):
 			race.memo = self.memo.GetValue()
 			race.notes = self.notes.GetValue()
 			race.setChanged()
+			
+		if Utils.getMainWin():
+			Utils.getMainWin().record.setTimeTrialInput( race.isTimeTrial )
 		
 class PropertiesDialog( wx.Dialog ):
 	def __init__(

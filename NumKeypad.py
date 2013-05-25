@@ -188,7 +188,7 @@ class NumKeypad( wx.Panel ):
 		#-------------------------------------------------------------------------------
 		# Create the edit field, numeric keybad and buttons.
 		self.keypad = Keypad( panel, self )
-		horizontalMainSizer.Add( self.keypad, flag=wx.TOP|wx.LEFT, border = 4 )
+		horizontalMainSizer.Add( self.keypad, 0, flag=wx.TOP|wx.LEFT, border = 4 )
 		
 		self.timeTrialRecord = TimeTrialRecord( panel, self )
 		self.timeTrialRecord.Show( False )
@@ -213,7 +213,7 @@ class NumKeypad( wx.Panel ):
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.keypadTimeTrialToggleButton, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border = 8 )
-		hs.Add( self.raceTime, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=100-40 - 8 )
+		hs.Add( self.raceTime, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=100-40-8 )
 		verticalSubSizer.Add( hs, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTRE_VERTICAL | wx.ALL, border = 2 )
 		
 		#------------------------------------------------------------------------------
@@ -372,10 +372,17 @@ class NumKeypad( wx.Panel ):
 		
 		self.refreshRaceTime()
 	
+	def isKeypadInputMode( self ):
+		return self.keypadTimeTrialToggleButton.GetBitmapLabel() == self.ttRecordBitmap
+		
+	def isTimeTrialInputMode( self ):
+		return not self.isKeypadInputMode()
+	
 	def swapKeypadTimeTrialRecord( self, event = None ):
-		if self.keypad.IsShown():
+		if self.isKeypadInputMode():
 			self.keypad.Show( False )
 			self.timeTrialRecord.Show( True )
+			self.timeTrialRecord.photoButton.Show( getattr(Model.race, 'enableUSBCamera', False) )
 			self.timeTrialRecord.refresh()
 			self.horizontalMainSizer.Replace( self.keypad, self.timeTrialRecord )
 			self.keypadTimeTrialToggleButton.SetBitmapLabel( self.keypadBitmap )
@@ -394,11 +401,14 @@ class NumKeypad( wx.Panel ):
 		
 	def setKeypadInput( self, b = True ):
 		if b:
-			if not self.keypad.IsShown():
+			if not self.isKeypadInputMode():
 				self.swapKeypadTimeTrialRecord()
 		else:
-			if not self.timeTrialRecord.IsShown():
+			if not self.isTimeTrialInputMode():
 				self.swapKeypadTimeTrialRecord()
+	
+	def setTimeTrialInput( self, b = True ):
+		self.setKeypadInput( not b )
 	
 	def refreshRaceHUD( self ):
 		# Assumes Model is locked.
@@ -788,9 +798,9 @@ class NumKeypad( wx.Panel ):
 			self.notDrawnYet = False
 			self.splitter.SetSashPosition( 440 )
 	
-		if self.keypad.IsShown():
+		if self.isKeypadInputMode():
 			wx.CallAfter( self.keypad.numEdit.SetFocus )
-		if self.timeTrialRecord.IsShown():
+		if self.isTimeTrialInputMode():
 			wx.CallAfter( self.timeTrialRecord.refresh )
 			
 		with Model.LockRace() as race:
@@ -799,8 +809,11 @@ class NumKeypad( wx.Panel ):
 				self.keypad.Enable( enable )
 				self.timeTrialRecord.Enable( enable )
 				self.isEnabled = enable
-			if not enable and self.keypad.IsShown():
+			if not enable and self.isKeypadInputMode():
 				self.keypad.numEdit.SetValue( '' )
+			
+			if self.isTimeTrialInputMode():
+				self.timeTrialRecord.photoButton.Show( getattr(race, 'enableUSBCamera', False) )
 			
 			# Refresh the race start time.
 			changed = False

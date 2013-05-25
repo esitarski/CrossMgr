@@ -62,15 +62,15 @@ DQ|Enters the rider as DQ, and uses the current time as the DQ time.
 
 This is the standard input mode for time trial finishes.  It follows a similar process to a manual stopwatch, except you use the computer.
 
-In time trial mode, you get times as the riders pass by pressing the "New Time" button (similar to using a recording stopwatch).  This also triggers the [USB Webcam][] to take a picture.
+In time trial mode, you get times as the riders pass by pressing the "New Time" button (similar to using a recording stopwatch).  This also triggers the [USB Webcam][] to take a picture, if enabled.
 
 You then enter the numbers next to the times (you many not be able to see the number on the back of the rider until he/she has passed).
 
 When you have entered all the corresponding bib numbers for the times, press the "Commit" button.  This sends your input to CrossMgr and clears the display for the next arrivals.
 
-CrossMgr gives you 12 entries before a Commit is required.  In practice, you should never see more than 3-4 riders crossing the finish without a gap, so 12 entries is a large number to work with.  If you see large groups of riders finishing together, they are drafting, which is illegal, and the results are invalid.
+CrossMgr gives you 12 entries before a Commit is required.  In practice, you should never see more than 3-4 riders crossing the finish without a gap, so 12 entries is a large number to work with.  If you see large groups of riders finishing together, they are drafting, which is not permitted.
 
-If you are using the [USB Webcam][], you can retrieve the photo for the entry with the "Camera" button.  This can be helpful as the rider's number may be more readable in the picture.
+If you are using the [USB Webcam][], you can retrieve the photo for the entry with the "Camera" button.  This can be helpful as the rider's number may be more readable in the picture.  This option is only enabled if the USB Webcam is enabled.
 
 Rather than taking your hands off the keyboard to use the mouse, use keyboard shortcuts:
 

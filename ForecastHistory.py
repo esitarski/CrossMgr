@@ -317,7 +317,7 @@ class ForecastHistory( wx.Panel ):
 			
 		mainWin = Utils.getMainWin()
 		if mainWin:
-			mainWin.record.numEdit.SetValue( '' )
+			mainWin.record.keypad.numEdit.SetValue( '' )
 			mainWin.record.refreshLaps()
 			wx.CallAfter( mainWin.refresh )
 		if getattr(race, 'ftpUploadDuringRace', False):
