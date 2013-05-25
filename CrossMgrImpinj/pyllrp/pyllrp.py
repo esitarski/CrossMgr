@@ -633,10 +633,13 @@ def WaitForMessage( MessageID, ResponseClass, sock ):
 def HexFormatToInt( value ):
 	return int(''.join( [ "%02X" % ord(x) for x in value ] ))
 
-def GetBasicAddRospecMessage( MessageID = None, ROSpecID = 123, inventoryParameterSpecID = 1234 ):
+def GetBasicAddRospecMessage( MessageID = None, ROSpecID = 123, inventoryParameterSpecID = 1234, antennas = None ):
 	#-----------------------------------------------------------------------------
 	# Create a basic Reader Operation Spec message
 	#
+	if not antennas:	# Defualt to all antennas if unspecified.
+		antennas = [0]
+	
 	rospecMessage = ADD_ROSPEC_Message( MessageID = MessageID, Parameters = [
 		# Initialize to disabled.
 		ROSpec_Parameter( ROSpecID = ROSpecID, CurrentState = ROSpecState.Disabled, Parameters = [
@@ -649,7 +652,7 @@ def GetBasicAddRospecMessage( MessageID = None, ROSpecID = 123, inventoryParamet
 				]
 			),
 			AISpec_Parameter(				# Antenna Inventory Spec (specifies which antennas and protocol to use)
-				AntennaIDs = [0],			# Use all antennas.
+				AntennaIDs = antennas,		# Use specified antennas.
 				Parameters = [
 					AISpecStopTrigger_Parameter( AISpecStopTriggerType = AISpecStopTriggerType.Null ),
 					InventoryParameterSpec_Parameter(

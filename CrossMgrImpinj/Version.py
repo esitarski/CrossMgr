@@ -1,1 +1,1 @@
-AppVerName="CrossMgrImpinj 0.2"
+AppVerName="CrossMgrImpinj 0.3"

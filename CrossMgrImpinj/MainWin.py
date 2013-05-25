@@ -165,6 +165,24 @@ class MainWin( wx.Frame ):
 		gbs.Add( hb, pos=(iRow,0), span=(1,2), flag=wx.ALIGN_LEFT )
 		
 		iRow += 1
+		
+		gs = wx.GridSizer( 1, 4, 2, 2 )
+		self.antennas = []
+		for i in xrange(4):
+			gs.Add( wx.StaticText(self, wx.ID_ANY, '%d' % (i+1)), flag=wx.ALIGN_CENTER )
+		for i in xrange(4):
+			cb = wx.CheckBox( self, wx.ID_ANY, '')
+			if i < 2:
+				cb.SetValue( True )
+			cb.Bind( wx.EVT_CHECKBOX, lambda x: self.getAntennaStr() )
+			gs.Add( cb, flag=wx.ALIGN_CENTER )
+			self.antennas.append( cb )
+		
+		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'ANT Ports:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_BOTTOM )
+		gbs.Add( gs, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
+		
+		iRow += 1
+		
 		self.useHostName = wx.RadioButton( self, wx.ID_ANY, 'Host Name:', style=wx.wx.RB_GROUP )
 		gbs.Add( self.useHostName, pos=(iRow,0), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
 		hb = wx.BoxSizer( wx.HORIZONTAL )
@@ -247,11 +265,12 @@ class MainWin( wx.Frame ):
 		if self.useHostName.GetValue():
 			self.impinjProcess = Process( name='ImpinjProcess', target=ImpinjServer,
 				args=(self.dataQ, self.messageQ, self.shutdownQ,
-						ImpinjHostNamePrefix + self.impinjHostName.GetValue() + ImpinjHostNameSuffix, ImpinjInboundPort ) )
+						ImpinjHostNamePrefix + self.impinjHostName.GetValue() + ImpinjHostNameSuffix, ImpinjInboundPort,
+						self.getAntennaStr() ) )
 		else:
 			self.impinjProcess = Process( name='ImpinjProcess', target=ImpinjServer,
 				args=(self.dataQ, self.messageQ, self.shutdownQ,
-						self.impinjHost.GetAddress(), ImpinjInboundPort ) )
+						self.impinjHost.GetAddress(), ImpinjInboundPort, self.getAntennaStr() ) )
 		self.impinjProcess.daemon = True
 		
 		self.crossMgrProcess = Process( name='CrossMgrProcess', target=CrossMgrServer,
@@ -373,12 +392,29 @@ class MainWin( wx.Frame ):
 	def getCrossMgrHost( self ):
 		return self.crossMgrHost.GetAddress()
 		
+	def getAntennaStr( self ):
+		s = []
+		for i in xrange(4):
+			if self.antennas[i].GetValue():
+				s.append( '%d' % (i + 1) )
+		if not s:
+			# Ensure that at least one antenna is selected.
+			self.antennas[0].SetValue( True )
+			s.append( '1' )
+		return ' '.join( s )
+		
+	def setAntennaStr( self, s ):
+		antennas = set( int(a) for a in s.split() )
+		for i in xrange(4):
+			self.antennas[i].SetValue( (i+1) in antennas )
+	
 	def writeOptions( self ):
 		self.config.Write( 'CrossMgrHost', self.getCrossMgrHost() )
 		self.config.Write( 'UseHostName', 'True' if self.useHostName.GetValue() else 'False' )
 		self.config.Write( 'ImpinjHostName', ImpinjHostNamePrefix + self.impinjHostName.GetValue() + ImpinjHostNameSuffix )
 		self.config.Write( 'ImpinjAddr', self.impinjHost.GetAddress() )
 		self.config.Write( 'ImpinjPort', str(ImpinjInboundPort) )
+		self.config.Write( 'Antennas', self.getAntennaStr() )
 	
 	def readOptions( self ):
 		self.crossMgrHost.SetValue( self.config.Read('CrossMgrHost', Utils.DEFAULT_HOST) )
@@ -387,6 +423,7 @@ class MainWin( wx.Frame ):
 		self.useStaticAddress.SetValue( not useHostName )
 		self.impinjHostName.SetValue( self.config.Read('ImpinjHostName', ImpinjHostNamePrefix + '00-00-00' + ImpinjHostNameSuffix)[len(ImpinjHostNamePrefix):-len(ImpinjHostNameSuffix)] )
 		self.impinjHost.SetValue( self.config.Read('ImpinjAddr', '0.0.0.0') )
+		self.setAntennaStr( self.config.Read('Antennas', '1 2') )
 	
 	def updateMessages( self, event ):
 		tNow = datetime.datetime.now()

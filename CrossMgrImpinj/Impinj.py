@@ -16,9 +16,13 @@ HOME_DIR = os.path.expanduser("~")
 RepeatSeconds = 2	# Number of seconds that a tag is considered a repeat read.
 
 class Impinj( object ):
-	def __init__( self, dataQ, messageQ, shutdownQ, impinjHost, impinjPort ):
+	def __init__( self, dataQ, messageQ, shutdownQ, impinjHost, impinjPort, antennaStr ):
 		self.impinjHost = impinjHost
 		self.impinjPort = impinjPort
+		if not antennaStr:
+			self.antennas = [0]
+		else:
+			self.antennas = [int(a) for a in antennaStr.split()]
 		self.dataQ = dataQ			# Queue to write tag reads.
 		self.messageQ = messageQ	# Queue to write operational messages.
 		self.shutdownQ = shutdownQ	# Queue to listen for shutdown.
@@ -97,7 +101,7 @@ class Impinj( object ):
 			return False
 		
 		# Configure our new rospec.
-		success, response = self.sendCommand( GetBasicAddRospecMessage(ROSpecID = self.rospecID) )
+		success, response = self.sendCommand( GetBasicAddRospecMessage(ROSpecID = self.rospecID, antennas = self.antennas) )
 		if not success:
 			return False
 		
@@ -207,6 +211,6 @@ class Impinj( object ):
 			except Empty:
 				break
 
-def ImpinjServer( dataQ, messageQ, shutdownQ, impinjHost, impinjPort ):
-	impinj = Impinj(dataQ, messageQ, shutdownQ, impinjHost, impinjPort)
+def ImpinjServer( dataQ, messageQ, shutdownQ, impinjHost, impinjPort, antennaStr ):
+	impinj = Impinj(dataQ, messageQ, shutdownQ, impinjHost, impinjPort, antennaStr)
 	impinj.runServer()
