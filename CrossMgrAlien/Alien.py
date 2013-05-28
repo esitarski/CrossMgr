@@ -383,7 +383,7 @@ class Alien( object ):
 							continue
 							
 						# Decode tagID and discoveryTime.
-						tagID = tagID.replace( ' ', '' )
+						tagID = tagID.replace(' ', '').lstrip( '0' )
 						year, month, day, hour, minute, second = reDateSplit.split(discoveryTime)
 						microsecond, second = math.modf( float(second) )
 						microsecond *= 1000000
@@ -391,8 +391,6 @@ class Alien( object ):
 						
 						self.tagCount += 1
 						
-						# Convert tag and 
-						tagStr = str(int(tagID, 16))
 						discoveryTimeStr = discoveryTime.strftime('%Y/%m/%d_%H:%M:%S.%f')
 						
 						# Check if this read happend too soon after another read.
@@ -401,7 +399,7 @@ class Alien( object ):
 						if (discoveryTime - LRT).total_seconds() < RepeatSeconds:
 							self.messageQ.put( (
 								'Alien',
-								'Received %d.  tag=%s Skipped (<%d secs ago).  time=%s' % (self.tagCount, tagStr, RepeatSeconds, discoveryTimeStr)) )
+								'Received %d.  tag=%s Skipped (<%d secs ago).  time=%s' % (self.tagCount, tagID, RepeatSeconds, discoveryTimeStr)) )
 							continue
 						
 						# Put this read on the queue for transmission to CrossMgr.
@@ -411,10 +409,10 @@ class Alien( object ):
 						if pf:
 							# 									Thu Dec 04 10:14:49 PST
 							pf.write( '%s,%s,%s\n' % (
-										tagID,					# Keep tag in hex format as read.
+										tagID,					# Keep tag in same format as read.
 										discoveryTime.strftime('%a %b %d %H:%M:%S.%f %Z %Y'),
 										readCount) )
-						self.messageQ.put( ('Alien', 'Received %d. tag=%s, time=%s' % (self.tagCount, tagStr, discoveryTimeStr)) )
+						self.messageQ.put( ('Alien', 'Received %d. tag=%s, time=%s' % (self.tagCount, tagID, discoveryTimeStr)) )
 					
 					# Close the log file.
 					if pf:

@@ -423,7 +423,7 @@ class MainWin( wx.Frame ):
 		self.useStaticAddress.SetValue( not useHostName )
 		self.impinjHostName.SetValue( self.config.Read('ImpinjHostName', ImpinjHostNamePrefix + '00-00-00' + ImpinjHostNameSuffix)[len(ImpinjHostNamePrefix):-len(ImpinjHostNameSuffix)] )
 		self.impinjHost.SetValue( self.config.Read('ImpinjAddr', '0.0.0.0') )
-		self.setAntennaStr( self.config.Read('Antennas', '1 2') )
+		self.setAntennaStr( self.config.Read('Antennas', '1 2 3 4') )
 	
 	def updateMessages( self, event ):
 		tNow = datetime.datetime.now()
