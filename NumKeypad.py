@@ -387,7 +387,7 @@ class NumKeypad( wx.Panel ):
 			self.horizontalMainSizer.Replace( self.keypad, self.timeTrialRecord )
 			self.keypadTimeTrialToggleButton.SetBitmapLabel( self.keypadBitmap )
 			wx.CallAfter( self.timeTrialRecord.Refresh )
-			wx.CallAfter( self.timeTrialRecord.SetFocus )
+			wx.CallAfter( self.timeTrialRecord.grid.SetFocus )
 		else:
 			self.keypad.Show( True )
 			self.timeTrialRecord.Show( False )

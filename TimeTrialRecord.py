@@ -26,6 +26,13 @@ def formatTime( secs ):
 	decimal = '.%03d' % int( f * 1000 )
 	return " %s%02d:%02d:%02d%s " % (sign, hours, minutes, secs, decimal)
 
+def StrToSeconds( tStr ):
+	secs = Utils.StrToSeconds( tStr )
+	# Make sure we don't lose the last decimal accuracy.
+	if int(secs*1000.0) + 1 == int((secs + 0.0001)*1000.0):
+		secs += 0.0001
+	return secs
+	
 class HighPrecisionTimeEditor(gridlib.PyGridCellEditor):
 	Empty = '00:00:00.000'
 	def __init__(self):
@@ -176,7 +183,7 @@ class TimeTrialRecord( wx.Panel ):
 			return
 			
 		Utils.mainWin.photoDialog.Show( True )
-		Utils.mainWin.photoDialog.refresh( 0, Utils.StrToSeconds(tStr) )
+		Utils.mainWin.photoDialog.refresh( 0, StrToSeconds(tStr) )
 	
 	def doRecordTime( self, event ):
 		t = Model.race.curRaceTime()
@@ -186,7 +193,7 @@ class TimeTrialRecord( wx.Panel ):
 			if not race:
 				return
 			if getattr(race, 'enableUSBCamera', False):
-				race.photoCount = getattr(race,'photoCount',0) + TakePhoto( Utils.getFileName(), 0, Utils.StrToSeconds(formatTime(t)) )
+				race.photoCount = getattr(race,'photoCount',0) + TakePhoto( Utils.getFileName(), 0, StrToSeconds(formatTime(t)) )
 	
 		# Find the last row without a time.
 		self.grid.SetGridCursor( 0, 0, )
@@ -252,11 +259,11 @@ class TimeTrialRecord( wx.Panel ):
 			with Model.LockRace() as race:
 				isCamera = getattr(race, 'enableUSBCamera', False)
 				for tStr, bib in timesBibs:
-					raceSeconds = Utils.StrToSeconds(tStr)
+					raceSeconds = StrToSeconds(tStr)
 					race.addTime( bib, raceSeconds )
 					if isCamera:
 						AddBibToPhoto( bib, raceSeconds )
-					OutputStreamer.writeNumTime( bib, t )
+					OutputStreamer.writeNumTime( bib, raceSeconds )
 						
 			wx.CallAfter( Utils.refresh )
 			
