@@ -45,16 +45,20 @@ a:hover {
 a:visited {
     color: purple;
 }
-ul, ol {
-    padding: 0;
-    margin: 0;
+ul {
+    padding: 0px;
+    margin-left: 24px;
+}
+ol {
+    padding: 0px;
+    margin-left: 48px;
 }
 li {
     line-height: 24px;
 }
-li ul, li ul {
-    margin-left: 24px;
-}
+//li ul, li ul {
+//    margin-left: 48px;
+//}
 p, ul, ol {
     font-size: 16px;
     line-height: 24px;
