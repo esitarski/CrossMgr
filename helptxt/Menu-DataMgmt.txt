@@ -150,6 +150,8 @@ To stop using a GPX file and return to the oval track, start the import, then Ca
 
 When the GPX file is in use, the animation works a little differently.  The numbers of the top 5 riders are always shown, and the numbers of the Highlight numbers are also shown.
 
+If you select the "Set Category Distances to GPX Lap Length" in the last screen of the wizard (the default), the Category distances will automatically be filled in with the GPX course length.
+
 ### Editing GPS Files
 
 Say you have GPX file from a rider for his entire 8 lap race.  But, CrossMgr requires a GPX for a single lap.  What to do?

@@ -5,6 +5,8 @@ import wx.wizard as wiz
 import wx.lib.filebrowsebutton as filebrowse
 from GeoAnimation import GeoTrack, GpxHasTimes
 import Utils
+import Model
+import traceback
 
 class IntroPage(wiz.WizardPageSimple):
 	def __init__(self, parent, controller):
@@ -103,6 +105,9 @@ class SummaryPage(wiz.WizardPageSimple):
 	def __init__(self, parent):
 		wiz.WizardPageSimple.__init__(self, parent)
 		
+		self.distanceKm = None
+		self.distanceMiles = None
+		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
 		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Summary:'), flag=wx.ALL, border = border )
@@ -122,12 +127,19 @@ class SummaryPage(wiz.WizardPageSimple):
 		self.distance = wx.TextCtrl(self, wx.ID_ANY, '', style=wx.TE_READONLY)
 		rows += 1
 
+		self.setCategoryDistanceLabel = wx.StaticText( self, wx.ID_ANY, '' )
+		self.setCategoryDistanceCheckbox = wx.CheckBox( self, wx.ID_ANY, 'Set Category Distances to GPX Lap Length' )
+		self.setCategoryDistanceCheckbox.SetValue( True )
+		rows += 1
+
 		fbs = wx.FlexGridSizer( rows=rows, cols=2, hgap=5, vgap=2 )
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
 		fbs.AddMany( [(self.fileLabel, 0, labelAlign),			(self.fileName, 	1, wx.EXPAND|wx.GROW),
 					  (self.numCoordsLabel, 0, labelAlign),		(self.numCoords, 	1, wx.EXPAND|wx.GROW),
 					  (self.distanceLabel, 0, labelAlign),		(self.distance,		1, wx.EXPAND|wx.GROW),
+					  (wx.StaticText(self,wx.ID_ANY,''), 0, labelAlign),			(wx.StaticText(self,wx.ID_ANY,''), 1, wx.EXPAND|wx.GROW),
+					  (self.setCategoryDistanceLabel, 0, labelAlign), (self.setCategoryDistanceCheckbox, 1, wx.EXPAND|wx.GROW),
 					 ] )
 		fbs.AddGrowableCol( 1 )
 		
@@ -135,10 +147,24 @@ class SummaryPage(wiz.WizardPageSimple):
 		
 		self.SetSizer(vbs)
 	
+	def doFixCategoryDistances( self, event ):
+		if not self.setCategoryDistanceCheckbox.GetValue():
+			return
+			
+		with Model.LockRace() as race:
+			if not race:
+				return
+			distance = self.distanceKm if race.distanceUnit == race.UnitKm else self.distanceMiles
+			for c in race.categories.itervalues():
+				c.distance = distance
+			race.setChanged()
+	
 	def setInfo( self, fileName, numCoords, distance ):
 		self.fileName.SetLabel( fileName )
 		self.numCoords.SetLabel( '%d' % numCoords )
-		self.distance.ChangeValue( '%.3f km, %.3f miles' % (distance, distance*0.621371) )
+		self.distanceKm = distance
+		self.distanceMiles = distance*0.621371
+		self.distance.ChangeValue( '%.3f km, %.3f miles' % (self.distanceKm, self.distanceMiles) )
 		
 class GetGeoTrack( object ):
 	def __init__( self, parent, geoTrack = None, geoTrackFName = None ):
@@ -150,15 +176,17 @@ class GetGeoTrack( object ):
 		prewizard.SetExtraStyle( wiz.WIZARD_EX_HELPBUTTON )
 		prewizard.Create( parent, wx.ID_ANY, 'Import GPX Course File', img )
 		self.wizard = prewizard
-		self.wizard.Bind( wiz.EVT_WIZARD_PAGE_CHANGING, self.onPageChanging )
-		self.wizard.Bind( wiz.EVT_WIZARD_CANCEL, self.onCancel )
-		self.wizard.Bind( wiz.EVT_WIZARD_HELP,
-			lambda evt: Utils.showHelp('Menu-DataMgmt.html#import-course-in-gpx-format') )
 		
 		self.introPage		= IntroPage( self.wizard, self )
 		self.fileNamePage	= FileNamePage( self.wizard )
 		self.useTimesPage	= UseTimesPage( self.wizard )
 		self.summaryPage	= SummaryPage( self.wizard )
+		
+		self.wizard.Bind( wiz.EVT_WIZARD_PAGE_CHANGING, self.onPageChanging )
+		self.wizard.Bind( wiz.EVT_WIZARD_CANCEL, self.onCancel )
+		self.wizard.Bind( wiz.EVT_WIZARD_HELP,
+			lambda evt: Utils.showHelp('Menu-DataMgmt.html#import-course-in-gpx-format') )
+		self.wizard.Bind( wiz.EVT_WIZARD_FINISHED, self.summaryPage.doFixCategoryDistances )
 		
 		wiz.WizardPageSimple_Chain( self.introPage, self.fileNamePage )
 		wiz.WizardPageSimple_Chain( self.fileNamePage, self.useTimesPage )
@@ -224,27 +252,32 @@ class GetGeoTrack( object ):
 			geoTrack = GeoTrack()
 			try:
 				geoTrack.read( fileName )
-				if geoTrack.numPoints >= 2:
-					self.geoTrackFName = fileName
-					self.geoTrack = geoTrack
-					self.summaryPage.setInfo( self.geoTrackFName, self.geoTrack.numPoints, self.geoTrack.lengthKm )
-					self.useTimesPage.setInfo( self.geoTrackFName )
-				else:
-					Utils.MessageOK( self.wizard,
-						'Import Failed:  GPX file contains fewer than two points.',
-						title='File Format Error',
-						iconMask=wx.ICON_ERROR)
-					evt.Veto()
-					return
 			except:
-				Utils.MessageOK( self.wizard, 'Read error:  Is this a proper GPX file?',
+				Utils.MessageOK( self.wizard, 'Read error:  Is this GPX file properly formatted?',
 								title='Read Error', iconMask=wx.ICON_ERROR)
 				evt.Veto()
 				return
+			
+			# Check for too few points.
+			if geoTrack.numPoints < 2:
+				Utils.MessageOK( self.wizard,
+					'Import Failed:  GPX file contains fewer than two points.',
+					title='File Format Error',
+					iconMask=wx.ICON_ERROR)
+				evt.Veto()
+				return
+				
+			self.geoTrackFName = fileName
+			self.geoTrack = geoTrack
+			self.summaryPage.setInfo( self.geoTrackFName, self.geoTrack.numPoints, self.geoTrack.lengthKm )
+			self.useTimesPage.setInfo( self.geoTrackFName )
+			
 		elif page == self.useTimesPage:
 			if self.useTimesPage.getUseTimes():
 				self.geoTrack.read( self.geoTrackFName, True )
 		elif page == self.summaryPage:
+			pass
+		elif page == self.fixCategoryDistance:
 			pass
 		
 	def onPageChanged( self, evt ):

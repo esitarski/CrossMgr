@@ -10,6 +10,7 @@ import xml.etree.ElementTree
 import xml.etree.cElementTree
 import xml.dom
 import xml.dom.minidom
+import unicodedata
 from xml.dom.minidom import parseString
 from Queue import Empty
 from Utils import readDelimitedData, timeoutSecs
@@ -90,6 +91,16 @@ del cmdStr
 #print '\n'.join(initCmds)
 
 reDateSplit = re.compile( '[/ :]' )		# Characters to split date/time fields.
+
+def removeDiacritic( input ):
+	'''
+	Accept a unicode string, and return a normal string (bytes in Python 3)
+	without any diacritical marks.
+	'''
+	if type(input) == str:
+		return input
+	else:
+		return unicodedata.normalize('NFKD', input).encode('ASCII', 'ignore')
 
 class Alien( object ):
 	CmdPrefix = chr(1)			# Causes Alien reader to suppress prompt on response.
@@ -360,7 +371,7 @@ class Alien( object ):
 					for t in doc.getElementsByTagName( 'Alien-RFID-Tag' ):
 						tagID = None
 						for f in t.getElementsByTagName( 'TagID' ):
-							tagID = f.firstChild.nodeValue.strip()
+							tagID = removeDiacritic(f.firstChild.nodeValue.strip())
 							break
 						if not tagID:
 							self.messageQ.put( ('Alien', 'Missing TagID', data) )

@@ -1010,6 +1010,49 @@ function GeoAnimation()
 	
 	this.tBannerLast = -1;
 	
+	this.drawCompass = function( dc, width, height, tHeight )
+	{
+		dc.save();
+		
+		var size = width / 20;
+		var x = width - size * 1.4;
+		var y = height - size * 1.4;
+		var factor = 7.0;
+		var pseg1 = [[0,0], [size/factor,size/factor], [0,size]];		
+		var pseg2 = [[0,0], [-size/factor,size/factor], [0,size]];
+		var labels = ['S', 'E', 'N', 'W'];
+		
+		dc.fillStyle = '#000000';
+		dc.strokeStyle = '#000000';
+		dc.lineWidth = 1;
+		var fontSize = size/4;
+		dc.font = fontSize + 'px serif';
+		dc.textAlign = 'center';
+		for( var i = 0; i < 4; ++i )
+		{
+			dc.fillText( labels[i], x + pseg1[2][0]*1.2, y + pseg1[2][1]*1.2 - fontSize/2 );
+		
+			dc.beginPath();
+			dc.moveTo( x, y );
+			for( var p = 0; p < pseg1.length; ++p )
+			{
+				dc.lineTo( x + pseg1[p][0], y + pseg1[p][1] );
+				pseg1[p] = [pseg1[p][1], -pseg1[p][0]];	// Rotate 90.
+			}
+			dc.stroke()
+			dc.beginPath();
+			dc.moveTo( x, y );
+			for( var p = 0; p < pseg2.length; ++p )
+			{
+				dc.lineTo( x + pseg2[p][0], y + pseg2[p][1] );
+				pseg2[p] = [pseg2[p][1], -pseg2[p][0]];	// Rotate 90.
+			}
+			dc.fill()
+		}
+		
+		dc.restore();
+	}
+	
 	this.drawBanner = function( dc, width, height, tHeight, bannerItems )
 	{
 		drawSegment( dc, 0, 0, width, tHeight*1.2, '#0000CC', '#0000EE' );
@@ -1156,6 +1199,8 @@ function GeoAnimation()
 		dc.strokeStyle = '#505050';
 		dc.lineWidth = 1;
 		dc.stroke();
+		
+		this.drawCompass( dc, width, height, tHeight )
 		
 		// Draw the finish line.
 		var finishLineLen = laneWidth * 2;
