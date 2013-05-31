@@ -224,6 +224,12 @@ class GeoTrack( object ):
 		x, yBottom, mult = self.x, self.yBottom, self.mult
 		return [(p.x * mult + x, yBottom - p.y * mult) for p in self.gpsPoints]
 		
+	def isClockwise( self ):
+		if not self.gpsPoints:
+			return False
+		p = self.gpsPoints
+		return sum( (p[j].x - p[j-1].x) * (p[j].y * p[j-1].y) for j in xrange(len(self.gpsPoints)) ) > 0.0
+		
 	def asExportJson( self ):
 		return [ [int(getattr(p, a)*10.0) for a in ('x', 'y', 'd')] for p in self.gpsPoints ]
 		
@@ -908,7 +914,7 @@ if __name__ == '__main__':
 		raceTimes = [0]
 		for lap in xrange( 4 ):
 			raceTimes.append( raceTimes[-1] + random.normalvariate(mean, mean/20)*60.0 )
-		data[num] = { 'raceTimes': raceTimes, 'lastTime': raceTimes[-1], 'flr': 1.0 }
+		data[num] = { 'raceTimes': raceTimes, 'lastTime': raceTimes[-1], 'flr': 1.0, 'status':'Finisher' }
 
 	# import json
 	# with open('race.json', 'w') as fp: fp.write( json.dumps(data, sort_keys=True, indent=4) )
@@ -917,9 +923,11 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="GeoAnimation", size=(800,700))
 	animation = GeoAnimation(mainWin)
 	geoTrack = GeoTrack()
-	geoTrack.read( 'EdgeField_Cyclocross_Course.gpx' )
-	#geoTrack.read( 'St._John__039_s_Cyclocross_course_v2.gpx' )
+	#geoTrack.read( 'EdgeField_Cyclocross_Course.gpx' )
+	geoTrack.read( 'St._John__039_s_Cyclocross_course_v2.gpx' )
 	#geoTrack.read( 'Races/Midweek/Midweek_Learn_to_Race_and_Elite_Series_course.gpx' )
+	#geoTrack.reverse()
+	print 'Clockwise:', geoTrack.isClockwise()
 	
 	zf = zipfile.ZipFile( 'track.kmz', 'w', zipfile.ZIP_DEFLATED )
 	zf.writestr( 'track.kml', geoTrack.asKmlTour('Race Track') )
@@ -928,7 +936,7 @@ if __name__ == '__main__':
 	with open('track.kml', 'w') as f:
 		f.write( geoTrack.asKmlTour('Race Track') )
 		
-	sys.exit()
+	#sys.exit()
 		
 	animation.SetGeoTrack( geoTrack )
 	animation.SetData( data )

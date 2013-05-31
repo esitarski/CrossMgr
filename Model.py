@@ -400,6 +400,9 @@ class Entry(object):
 	def key( self ):
 		return (self.t, -self.lap, self.num, self.interp)
 		
+	def keyTT( self ):
+		return (0 if self.lap == 0 else 1, self.t, -self.lap, self.num, self.interp)
+		
 	def set( self, e ):
 		self.num	= e.num
 		self.lap	= e.lap

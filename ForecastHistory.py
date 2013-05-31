@@ -63,9 +63,12 @@ class ForecastHistory( wx.Panel ):
 		
 		self.quickHistory = None
 		self.quickExpected = None
+		self.entryCur = None
 		self.orangeColour = wx.Colour(255, 165, 0)
 		self.redColour = wx.Colour(255, 51, 51)
 
+		self.callLaterRefresh = None
+		
 		# Main sizer.
 		bsMain = wx.BoxSizer( wx.VERTICAL )
 		
@@ -145,16 +148,17 @@ class ForecastHistory( wx.Panel ):
 			mainWin.showPageName( 'RiderDetail' )
 	
 	def doHistoryPopup( self, event ):
-		self.rowPopup = event.GetRow()
+		r = event.GetRow()
 		with Model.LockRace() as race:
-			if self.rowPopup >= len(self.quickHistory) or not race or not race.isRunning():
+			if r >= len(self.quickHistory) or not race or not race.isRunning():
 				return
 		value = ''
-		if self.rowPopup < self.historyGrid.GetNumberRows():
-			value = self.historyGrid.GetCellValue( self.rowPopup, 0 )
+		if r < self.historyGrid.GetNumberRows():
+			value = self.historyGrid.GetCellValue( r, 0 )
 		if not value:
 			return
-			
+		
+		self.entryCur = self.quickHistory[r]
 		if not hasattr(self, 'historyPopupInfo'):
 			self.historyPopupInfo = [
 				('Correct...',	wx.NewId(), self.OnPopupHistoryCorrect),
@@ -183,35 +187,35 @@ class ForecastHistory( wx.Panel ):
 		menu.Destroy()
 		
 	def OnPopupHistoryCorrect( self, event ):
-		if hasattr(self, 'rowPopup'):
-			CorrectNumber( self, self.quickHistory[self.rowPopup] )
+		if self.entryCur:
+			CorrectNumber( self, self.entryCur )
 		
 	def OnPopupHistorySplit( self, event ):
-		if hasattr(self, 'rowPopup'):
-			SplitNumber( self, self.quickHistory[self.rowPopup] )
+		if self.entryCur:
+			SplitNumber( self, self.entryCur )
 		
 	def OnPopupHistoryShift( self, event ):
-		if hasattr(self, 'rowPopup'):
-			ShiftNumber( self, self.quickHistory[self.rowPopup] )
+		if self.entryCur:
+			ShiftNumber( self, self.entryCur )
 		
 	def OnPopupHistoryInsert( self, event ):
-		if hasattr(self, 'rowPopup'):
-			InsertNumber( self, self.quickHistory[self.rowPopup] )
+		if self.entryCur:
+			InsertNumber( self, self.entryCur )
 		
 	def OnPopupHistoryDelete( self, event ):
-		if hasattr(self, 'rowPopup'):
-			DeleteEntry( self, self.quickHistory[self.rowPopup] )
+		if self.entryCur:
+			DeleteEntry( self, self.entryCur )
 			
 	def OnPopupHistoryDNF( self, event ):
 		try:
-			num = self.quickHistory[getattr(self, 'rowPopup')].num
+			num = self.entryCur.num
 			NumKeypad.DoDNF( self, num )
 		except:
 			pass
 	
 	def OnPopupHistoryRiderDetail( self, event ):
 		try:
-			num = self.quickHistory[getattr(self, 'rowPopup')].num
+			num = self.entryCur.num
 			mainWin = Utils.getMainWin()
 			mainWin.setNumSelect( num )
 			mainWin.showPageName( 'RiderDetail' )
@@ -220,16 +224,28 @@ class ForecastHistory( wx.Panel ):
 				
 	#--------------------------------------------------------------------
 	
-	def doExpectedPopup( self, event ):
-		self.rowPopup = event.GetRow()
-		with Model.LockRace() as race:
-			if self.rowPopup >= len(self.quickExpected) or not race or not race.isRunning():
+	def doExpectedSelect( self, event ):
+		r = event.GetRow()
+		try:
+			if self.quickExpected[r].lap == 0:
 				return
-		if self.rowPopup < self.expectedGrid.GetNumberRows():
-			value = self.expectedGrid.GetCellValue( self.rowPopup, 0 )
+		except:
+			pass
+		if r < self.expectedGrid.GetNumberRows():
+			self.logNum( self.expectedGrid.GetCellValue(r, 0) )
+		
+	def doExpectedPopup( self, event ):
+		r = event.GetRow()
+		with Model.LockRace() as race:
+			if r >= len(self.quickExpected) or not race or not race.isRunning():
+				return
+		value = ''
+		if r < self.expectedGrid.GetNumberRows():
+			value = self.expectedGrid.GetCellValue( r, 0 )
 		if not value:
 			return
 			
+		self.entryCur = self.quickHistory[r]
 		if not hasattr(self, 'expectedPopupInfo'):
 			self.expectedPopupInfo = [
 				('Enter',			wx.NewId(), self.OnPopupExpectedEnter),
@@ -254,28 +270,28 @@ class ForecastHistory( wx.Panel ):
 		
 	def OnPopupExpectedEnter( self, event ):
 		try:
-			num = self.quickExpected[getattr(self, 'rowPopup')].num
+			num = self.entryCur.num
 			self.logNum( num )
 		except:
 			pass
 		
 	def OnPopupExpectedDNF( self, event ):
 		try:
-			num = self.quickExpected[getattr(self, 'rowPopup')].num
+			num = self.entryCur.num
 			NumKeypad.DoDNF( self, num )
 		except:
 			pass
 		
 	def OnPopupExpectedPull( self, event ):
 		try:
-			num = self.quickExpected[getattr(self, 'rowPopup')].num
+			num = self.entryCur.num
 			NumKeypad.DoPull( self, num )
 		except:
 			pass
 
 	def OnPopupExpectedRiderDetail( self, event ):
 		try:
-			num = self.quickExpected[getattr(self, 'rowPopup')].num
+			num = self.entryCur.num
 			mainWin = Utils.getMainWin()
 			mainWin.setNumSelect( num )
 			mainWin.showPageName( 'RiderDetail' )
@@ -323,11 +339,6 @@ class ForecastHistory( wx.Panel ):
 		if getattr(race, 'ftpUploadDuringRace', False):
 			realTimeFtpPublish.publishEntry()
 		
-	def doExpectedSelect( self, event ):
-		r = event.GetRow()
-		if r < self.expectedGrid.GetNumberRows():
-			self.logNum( self.expectedGrid.GetCellValue(r, 0) )
-		
 	def clearGrids( self ):
 		self.historyGrid.Set( data = [] )
 		self.historyGrid.Reset()
@@ -339,7 +350,8 @@ class ForecastHistory( wx.Panel ):
 			return
 		if not tRace:
 			tRace = Model.race.curRaceTime()
-		self.expectedGrid.SetColumn( iTimeCol, [formatTime(max(0.0, e.t - tRace)) for e in self.quickExpected] )
+		self.expectedGrid.SetColumn( iTimeCol, [formatTime(max(0.0, e.t - tRace)) if e.lap > 0 else ('[%s]' % formatTime(max(0.0, e.t - tRace)))\
+										for e in self.quickExpected] )
 	
 	def refresh( self ):
 		with Model.LockRace() as race:
@@ -361,10 +373,24 @@ class ForecastHistory( wx.Panel ):
 			
 			isTimeTrial = getattr(race, 'isTimeTrial', False)
 			if isTimeTrial:
-				for rider in race.riders.itervalues():
-					if rider.status == Model.Rider.Finisher and rider.firstTime:
-						entries.append( Model.Entry(rider.num, 0, rider.firstTime, False) )
-				entries.sort( cmp=Model.CmpEntryTT )
+				# Update the start times in as recorded.
+				startTimes = [(rider.firstTime, rider.num) for rider in race.riders.itervalues() \
+								if rider.status == Model.Rider.Finisher and rider.firstTime]
+				startTimes.sort()
+				
+				# Find the next start time so we can update the display.
+				iClosestStartTime = bisect.bisect_left( startTimes, (tRace, 0) )
+				if iClosestStartTime < len(startTimes):
+					tClosestStartTime = startTimes[iClosestStartTime][0]
+					milliSeconds = max( 0, int((tClosestStartTime - tRace)*1000.0 + 10.0) )
+					if self.callLaterRefresh is None:
+						self.callLaterRefresh = wx.CallLater( milliSeconds, self.refresh )
+					self.callLaterRefresh.Restart( milliSeconds )	
+				
+				startTimeEntries = [Model.Entry(st[1], 0, st[0], False) for st in startTimes]
+				startTimeEntries.extend( entries )
+				entries = startTimeEntries
+				
 			#------------------------------------------------------------------
 			# Select the interpolated entries around now.
 			leaderPrev, leaderNext = race.getPrevNextLeader( tRace )
@@ -379,6 +405,15 @@ class ForecastHistory( wx.Panel ):
 			iLeft = max(0, iCur - expectedShowMax/2)
 			seen = {}
 			expected = [ seen.setdefault(e.num, e) for e in entries[iLeft:] if e.interp and tMin <= e.t <= tMax and e.num not in seen ]
+			if isTimeTrial:
+				# Update the expected start times.
+				expectedStarters = [(rider.firstTime, rider.num) for rider in race.riders.itervalues() \
+								if rider.status == Model.Rider.Finisher and rider.firstTime and rider.firstTime >= tRace]
+				expectedStarters.sort()
+				expectedStarterEntries = [Model.Entry(st[1], 0, st[0], False) for st in expectedStarters]
+				expectedStarterEntries.extend( expected )
+				expected = expectedStarterEntries
+				
 			expected = expected[:expectedShowMax]
 			
 			prevCatLeaders, nextCatLeaders = race.getCatPrevNextLeaders( tRace )
@@ -416,9 +451,12 @@ class ForecastHistory( wx.Panel ):
 			
 			data = [None] * iColMax
 			data[iNumCol] = [str(e.num) for e in expected]
-			data[iTimeCol] = [formatTime(max(0.0, e.t - tRace)) for e in expected]
+			data[iTimeCol] = [formatTime(max(0.0, e.t - tRace)) if e.lap > 0 else ('[%s]' % formatTime(max(0.0, e.t - tRace)))\
+										for e in expected]
 			data[iLapCol] = [str(e.lap) for e in expected]
 			def getNoteExpected( e ):
+				if e.lap == 0:
+					return 'Start'
 				try:
 					position = prevRiderPosition.get(e.num, -1) if e.t < catNextTime[race.getCategory(e.num)] else \
 							   nextRiderPosition.get(e.num, -1)
