@@ -166,7 +166,7 @@ class ChipImportDialog( wx.Dialog ):
 		self.timeAdjustment = HighPrecisionTimeEdit( self, wx.ID_ANY )
 		self.behindAhead = wx.Choice( self, wx.ID_ANY, choices=['Behind', 'Ahead'] )
 		if JChip.readerComputerTimeDiff:
-			rtAdjust = Alien.readerComputerTimeDiff.total_seconds()
+			rtAdjust = JChip.readerComputerTimeDiff.total_seconds()
 			if rtAdjust >= 0.0:
 				self.behindAhead.SetSelection( 0 )
 			else:

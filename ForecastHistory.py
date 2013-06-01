@@ -564,8 +564,8 @@ if __name__ == '__main__':
 	fh = ForecastHistory(mainWin)
 	Model.setRace( Model.Race() )
 	Model.getRace()._populate()
-	for rider in Model.getRace().riders.itervalues():
-		rider.firstTime = 0.0
+	for i, rider in enumerate(Model.getRace().riders.itervalues()):
+		rider.firstTime = i * 30.0
 	Model.getRace().isTimeTrial = True
 	fh.refresh()
 	mainWin.Show()
