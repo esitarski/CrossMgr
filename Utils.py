@@ -409,7 +409,11 @@ def CombineFirstLastName( firstName, lastName ):
 			return lastName
 	else:
 		return firstName
-	
+
+invalidFNameChars = set( c for c in '<>:"/\\|?*' )
+def ValidFilename( fname ):
+	return ''.join( c for c in fname if c not in invalidFNameChars and ord(c) > 31 )
+		
 if __name__ == '__main__':
 	app = wx.PySimpleApp()
 	hd = getHomeDir()
