@@ -61,7 +61,7 @@ class ForecastHistory( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY, style = 0 ):
 		wx.Panel.__init__(self, parent, id, style=style)
 		
-		self.quickHistory = None
+		self.quickRecorded = None
 		self.quickExpected = None
 		self.entryCur = None
 		self.orangeColour = wx.Colour(255, 165, 0)
@@ -150,7 +150,7 @@ class ForecastHistory( wx.Panel ):
 	def doHistoryPopup( self, event ):
 		r = event.GetRow()
 		with Model.LockRace() as race:
-			if r >= len(self.quickHistory) or not race or not race.isRunning():
+			if r >= len(self.quickRecorded) or not race or not race.isRunning():
 				return
 		value = ''
 		if r < self.historyGrid.GetNumberRows():
@@ -158,7 +158,7 @@ class ForecastHistory( wx.Panel ):
 		if not value:
 			return
 		
-		self.entryCur = self.quickHistory[r]
+		self.entryCur = self.quickRecorded[r]
 		if not hasattr(self, 'historyPopupInfo'):
 			self.historyPopupInfo = [
 				('Correct...',	wx.NewId(), self.OnPopupHistoryCorrect),
@@ -245,7 +245,7 @@ class ForecastHistory( wx.Panel ):
 		if not value:
 			return
 			
-		self.entryCur = self.quickHistory[r]
+		self.entryCur = self.quickRecorded[r]
 		if not hasattr(self, 'expectedPopupInfo'):
 			self.expectedPopupInfo = [
 				('Enter',			wx.NewId(), self.OnPopupExpectedEnter),
@@ -373,7 +373,7 @@ class ForecastHistory( wx.Panel ):
 			
 			isTimeTrial = getattr(race, 'isTimeTrial', False)
 			if isTimeTrial:
-				# Update the start times in as recorded.
+				# Update the start times in as recorded times.
 				startTimes = [(rider.firstTime, rider.num) for rider in race.riders.itervalues() \
 								if rider.status == Model.Rider.Finisher and rider.firstTime]
 				startTimes.sort()
@@ -385,12 +385,15 @@ class ForecastHistory( wx.Panel ):
 					milliSeconds = max( 0, int((tClosestStartTime - tRace)*1000.0 + 10.0) )
 					if self.callLaterRefresh is None:
 						self.callLaterRefresh = wx.CallLater( milliSeconds, self.refresh )
-					self.callLaterRefresh.Restart( milliSeconds )	
+					self.callLaterRefresh.Restart( milliSeconds )
 				
 				startTimeEntries = [Model.Entry(st[1], 0, st[0], False) for st in startTimes]
-				startTimeEntries.extend( entries )
-				entries = startTimeEntries
 				
+				# Add the rider firstTime to correct the times back to race times.
+				correctedEntries = [Model.Entry(e.num, e.lap, race.riders[e.num].firstTime + e.t, e.interp) for e in entries]
+				startTimeEntries.extend( correctedEntries )
+				entries = startTimeEntries
+			
 			#------------------------------------------------------------------
 			# Select the interpolated entries around now.
 			leaderPrev, leaderNext = race.getPrevNextLeader( tRace )
@@ -505,7 +508,7 @@ class ForecastHistory( wx.Panel ):
 			recordedDisplayMax = 64
 			recorded = [ e for e in entries if not e.interp and e.t <= tRace ]
 			recorded = recorded[-recordedDisplayMax:]
-			self.quickHistory = recorded
+			self.quickRecorded = recorded
 				
 			backgroundColour = {}
 			textColour = {}
@@ -561,6 +564,9 @@ if __name__ == '__main__':
 	fh = ForecastHistory(mainWin)
 	Model.setRace( Model.Race() )
 	Model.getRace()._populate()
+	for rider in Model.getRace().riders.itervalues():
+		rider.firstTime = 0.0
+	Model.getRace().isTimeTrial = True
 	fh.refresh()
 	mainWin.Show()
 	fh.setSash()
