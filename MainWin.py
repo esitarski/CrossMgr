@@ -949,6 +949,7 @@ class MainWin( wx.Frame ):
 			payload['isTimeTrial']		= getattr(race, 'isTimeTrial', False)
 			payload['rfid']				= getattr(race, 'enableJChipIntegration', False)
 			payload['raceIsRunning']	= race.isRunning()
+			payload['raceNotes']		= cgi.escape(getattr(race, 'notes', '')).replace('\n','{{br/}}')
 			if race.startTime:
 				raceStartTime = (race.startTime - race.startTime.replace( hour=0, minute=0, second=0 )).total_seconds()
 				payload['raceStartTime']= raceStartTime
@@ -974,7 +975,7 @@ class MainWin( wx.Frame ):
 			try:
 				with open(templateFile) as fp:
 					template = fp.read()
-				# Sanitize the template so it can be a safe json string.
+				# Sanitize the template into a safe json string.
 				template = template.replace( '<', '{{' ).replace( '>', '}}' )
 				payload['virtualRideTemplate'] = template
 			except:

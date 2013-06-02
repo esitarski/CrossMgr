@@ -112,11 +112,10 @@ var organizer = null;
 var timestamp = null;
 var email = null;
 var raceIsRunning = null;
-// Rider data
 var data = null;
-// Category details
 var catDetails = null;
 var version = null;
+var raceNotes = null;
 
 // Control information about the animation.
 var canvas = null;
@@ -2917,6 +2916,11 @@ function onLoad()
 	else
 		document.getElementById('idRFID').innerHTML = 'Chip Timing.'
 	
+	if( !raceNotes )
+		document.getElementById('idRaceNotes').className = 'hidden';
+	else
+		document.getElementById('idRaceNotes').innerHTML = raceNotes.replace(/{{/g, '<').replace(/}}/g, '>');
+	
 	if( !courseCoordinates )
 		document.getElementById('idVirtualTour').className = 'hidden';
 		
@@ -3028,7 +3032,7 @@ function onLoad()
 Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
 <span id="idRFID"></span>&nbsp;&nbsp;&nbsp;<button id="idVirtualTour" onclick="OpenVirtualTourWindow()">Virtual Ride</button>
 </span>
-</tr></table>
+</tr></table><span id="idRaceNotes"></span>
 </p>
 <p>
 
