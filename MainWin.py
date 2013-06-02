@@ -930,8 +930,8 @@ class MainWin( wx.Frame ):
 		return self.config.Read('email', '')
 	
 	def addResultsToHtmlStr( self, html ):
-		# Replace parts of the file with the race information.
-		html = replaceJsonVar( html, 'raceName', os.path.basename(self.fileName)[:-4] )
+		payload = {}
+		payload['raceName'] = os.path.basename(self.fileName)[:-4]
 			
 		with Model.LockRace() as race:
 			year, month, day = [int(v) for v in race.date.split('-')]
@@ -942,15 +942,16 @@ class MainWin( wx.Frame ):
 			raceTime = datetime.datetime( year, month, day, hour, minute, second )
 			title = '%s Results for %s Start on %s' % ( race.name, raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
 			html = html.replace( 'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
-			html = replaceJsonVar( html, 'organizer',			getattr(race, 'organizer', '') )
-			html = replaceJsonVar( html, 'reverseDirection',	getattr(race, 'reverseDirection', False) )
-			html = replaceJsonVar( html, 'finishTop',			getattr(race, 'finishTop', False) )
-			html = replaceJsonVar( html, 'isTimeTrial',			getattr(race, 'isTimeTrial', False) )
-			html = replaceJsonVar( html, 'rfid',				getattr(race, 'enableJChipIntegration', False))
-			html = replaceJsonVar( html, 'raceIsRunning',		race.isRunning() )
+			
+			payload['organizer']		= getattr(race, 'organizer', '')
+			payload['reverseDirection']	= getattr(race, 'reverseDirection', False)
+			payload['finishTop']		= getattr(race, 'finishTop', False)
+			payload['isTimeTrial']		= getattr(race, 'isTimeTrial', False)
+			payload['rfid']				= getattr(race, 'enableJChipIntegration', False)
+			payload['raceIsRunning']	= race.isRunning()
 			if race.startTime:
 				raceStartTime = (race.startTime - race.startTime.replace( hour=0, minute=0, second=0 )).total_seconds()
-				html = replaceJsonVar( html, 'raceStartTime',	raceStartTime )
+				payload['raceStartTime']= raceStartTime
 			tLastRaceTime = race.lastRaceTime()
 			courseCoordinates = None
 			gpsPoints = getattr(race, 'geoTrack', None)
@@ -959,15 +960,15 @@ class MainWin( wx.Frame ):
 				gpsPoints = gpsPoints.asExportJson()
 		
 		tNow = datetime.datetime.now()
-		html = replaceJsonVar( html, 'timestamp',	[tNow.ctime(), tLastRaceTime] )
-		html = replaceJsonVar( html, 'email',		self.getEmail() )
-		html = replaceJsonVar( html, 'data',		GetAnimationData(getExternalData = True) )
-		html = replaceJsonVar( html, 'catDetails',	GetCategoryDetails() )
-		html = replaceJsonVar( html, 'version',		Version.AppVerName )
+		payload['timestamp']			= [tNow.ctime(), tLastRaceTime]
+		payload['email']				= self.getEmail()
+		payload['data']					= GetAnimationData(getExternalData = True)
+		payload['catDetails']			= GetCategoryDetails()
+		payload['version']				= Version.AppVerName
 		if gpsPoints:
-			html = replaceJsonVar( html, 'gpsPoints', gpsPoints )
+			payload['gpsPoints']		= gpsPoints
 		if courseCoordinates:
-			html = replaceJsonVar( html, 'courseCoordinates', courseCoordinates )
+			payload['courseCoordinates'] = courseCoordinates
 			# Fix the google maps template.
 			templateFile = os.path.join(Utils.getHtmlFolder(), 'VirtualTourTemplate.html')
 			try:
@@ -975,10 +976,11 @@ class MainWin( wx.Frame ):
 					template = fp.read()
 				# Sanitize the template so it can be a json string.
 				template = template.replace( '<', '{{' ).replace( '>', '}}' )
-				html = replaceJsonVar( html, 'template', template )
+				payload['virtualRideTemplate'] = template
 			except:
 				pass
 
+		html = replaceJsonVar( html, 'payload', payload )
 		graphicBase64 = self.getGraphicBase64()
 		if graphicBase64:
 			try:

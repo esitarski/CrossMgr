@@ -224,14 +224,14 @@ class GeoTrack( object ):
 		x, yBottom, mult = self.x, self.yBottom, self.mult
 		return [(p.x * mult + x, yBottom - p.y * mult) for p in self.gpsPoints]
 		
+	def asExportJson( self ):
+		return [ [int(getattr(p, a)*10.0) for a in ('x', 'y', 'd')] for p in self.gpsPoints ]
+		
 	def isClockwise( self ):
 		if not self.gpsPoints:
 			return False
 		p = self.gpsPoints
 		return sum( (p[j].x - p[j-1].x) * (p[j].y * p[j-1].y) for j in xrange(len(self.gpsPoints)) ) > 0.0
-		
-	def asExportJson( self ):
-		return [ [int(getattr(p, a)*10.0) for a in ('x', 'y', 'd')] for p in self.gpsPoints ]
 		
 	def reverse( self ):
 		''' Reverse the points in the track.  Make sure the distance to the next point and cumDistance is correct. '''
@@ -245,7 +245,11 @@ class GeoTrack( object ):
 			self.cumDistance.append( dCum )
 			dCum += pPrev.d
 		self.gpsPoints = gpsPointsReversed
-		
+	
+	def setClockwise( self, clockwise = True ):
+		if self.isClockwise() != clockwise:
+			self.reverse()
+	
 	def asCoordinates( self ):
 		coordinates = []
 		for p in self.gpsPoints:

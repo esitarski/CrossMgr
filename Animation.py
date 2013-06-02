@@ -60,6 +60,7 @@ class Animation(wx.PyControl):
 		
 		self.reverseDirection = False
 		self.finishTop = False
+		self.clockwise = False
 		
 		self.course = 'track'
 		
@@ -221,13 +222,31 @@ class Animation(wx.PyControl):
 		self.reverseDirection = reverseDirection
 		self.finishTop = finishTop
 		self.Refresh()
+		
+	def isClockwise( self ):
+		return self.clockwise
+		
+	def setClockwise( self, clockwise = True ):
+		if self.clockwise != clockwise:
+			self.clockwise = clockwise
+			if clockwise:
+				self.reverseDirection = not self.finishTop
+			else:
+				self.reverseDirection = self.finishTop
+			self.Refresh()
+			
+	def setFinishTop( self, finishTop = True ):
+		if self.finishTop != finishTop:
+			self.finishTop = finishTop
+			self.reverseDirection = not self.reverseDirection
+			self.Refresh()
 	
 	def getShortName( self, num ):
 		try:
 			info = self.data[num]
 		except KeyError:
 			return ''
-			
+		
 		lastName = info.get('LastName','')
 		firstName = info.get('FirstName','')
 		if lastName:
