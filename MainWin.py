@@ -974,7 +974,7 @@ class MainWin( wx.Frame ):
 			try:
 				with open(templateFile) as fp:
 					template = fp.read()
-				# Sanitize the template so it can be a json string.
+				# Sanitize the template so it can be a safe json string.
 				template = template.replace( '<', '{{' ).replace( '>', '}}' )
 				payload['virtualRideTemplate'] = template
 			except:

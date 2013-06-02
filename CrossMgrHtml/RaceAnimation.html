@@ -1008,6 +1008,7 @@ function GeoAnimation()
 {
 	this.xBanner = 300;
 	this.geoTrack = new GeoTrack();
+	this.compassLocation = null;
 	
 	this.tBannerLast = -1;
 	
@@ -1016,8 +1017,10 @@ function GeoAnimation()
 		dc.save();
 		
 		var size = width / 20;
-		var x = width - size * 1.4;
-		var y = height - size * 1.4;
+		
+		var x = this.compassLocation[1] == 'E' ? width - size * 1.4 : size * 1.4;
+		var y = this.compassLocation[0] == 'N' ? size * 1.4 + tHeight * 3 : height - size * 1.4;
+		
 		var factor = 7.0;
 		var pseg1 = [[0,0], [size/factor,size/factor], [0,size]];		
 		var pseg2 = [[0,0], [-size/factor,size/factor], [0,size]];
@@ -1184,7 +1187,7 @@ function GeoAnimation()
 		for( var i = 1; i < pointsLength; ++i )
 			dc.lineTo( points[i][0], points[i][1] );
 		dc.closePath();
-
+		
 		// Draw the outline.
 		dc.lineJoin = "round";
 		dc.strokeStyle = "#808080";
@@ -1201,6 +1204,30 @@ function GeoAnimation()
 		dc.lineWidth = 1;
 		dc.stroke();
 		
+		if( !this.compassLocation )
+		{
+			var locations = ['SE', 'NE', 'SW', 'SE'];
+			var compassSize = (width / 20) * 1.4 * 2;
+			var inCountBest = pointsLength + 1;
+			for( var k = 0; k < locations.length; ++k ) {
+				var loc = locations[k];
+				var xCompass = (loc[1] == 'W' ? 0 : width - compassSize);
+				var yCompass = (loc[0] == 'N' ? tHeight * 2 : height - compassSize);
+				var inCount = 0;
+				for( var i = 0; i < pointsLength; ++i ) {
+					if( xCompass <= points[i][0] && points[i][0] < xCompass + compassSize &&
+						yCompass <= points[i][1] && points[i][1] < yCompass + compassSize ) {
+						++inCount;
+					}
+				}
+				if( inCount < inCountBest ) {
+					inCountBest = inCount;
+					this.compassLocation = loc;
+					if( inCount == 0 )
+						break;
+				}
+			}
+		}
 		this.drawCompass( dc, width, height, tHeight )
 		
 		// Draw the finish line.
@@ -2860,7 +2887,7 @@ var replaceHtmlEntites = (function() {
 
 function onLoad()
 {
-	if( payload ) { for( v in payload ) window[v] = payload[v]; }
+	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
 
 	resultsDiv = document.getElementById('idResultsDiv');
 	showLaps = document.getElementById('idShowLaps');
