@@ -1212,7 +1212,7 @@ function GeoAnimation()
 			for( var k = 0; k < locations.length; ++k ) {
 				var loc = locations[k];
 				var xCompass = (loc[1] == 'W' ? 0 : width - compassSize);
-				var yCompass = (loc[0] == 'N' ? tHeight * 2 : height - compassSize);
+				var yCompass = (loc[0] == 'N' ? tHeight * 3 : height - compassSize);
 				var inCount = 0;
 				for( var i = 0; i < pointsLength; ++i ) {
 					if( xCompass <= points[i][0] && points[i][0] < xCompass + compassSize &&
