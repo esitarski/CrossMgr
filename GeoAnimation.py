@@ -231,7 +231,7 @@ class GeoTrack( object ):
 		if not self.gpsPoints:
 			return False
 		p = self.gpsPoints
-		return sum( (p[j].x - p[j-1].x) * (p[j].y * p[j-1].y) for j in xrange(len(self.gpsPoints)) ) > 0.0
+		return sum( (p[j].x - p[j-1].x) * (p[j].y + p[j-1].y) for j in xrange(len(self.gpsPoints)) ) > 0.0
 		
 	def reverse( self ):
 		''' Reverse the points in the track.  Make sure the distance to the next point and cumDistance is correct. '''

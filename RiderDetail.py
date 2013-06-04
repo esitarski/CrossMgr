@@ -13,7 +13,7 @@ from Undo import undo
 import Gantt
 from EditEntry import CorrectNumber, ShiftNumber, DeleteEntry
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
-from GetResults import GetResults
+from GetResults import GetResults, GetCategoryDetails
 import random
 import bisect
 import sys
@@ -1022,9 +1022,12 @@ class RiderDetail( wx.Panel ):
 							'adjustTime']:
 					getattr( self, w ).Show( True )
 			
-			maxLap = race.getMaxLap()
-			if race.numLaps is not None and race.numLaps < maxLap:
-				maxLap = race.numLaps
+			categoryDetails = GetCategoryDetails()
+			try:
+				catInfo = categoryDetails[category.fullname]
+				maxLap = catInfo['laps']
+			except:
+				maxLap = race.getMaxLap()
 			
 			# Figure out which laps this rider was lapped in.
 			if getattr(rider, 'autocorrectLaps', True):

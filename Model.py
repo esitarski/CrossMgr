@@ -1046,6 +1046,12 @@ class Race(object):
 		entries.sort( key=Entry.key )
 		return entries
 
+	def getLastRecordedTime( self ):
+		try:
+			return max( e.t for e in self.interpolate() if not e.interp )
+		except:
+			return None
+		
 	@memoize
 	def interpolateCategoryNumLaps( self ):
 		entries = self.interpolate()
@@ -1441,8 +1447,13 @@ class Race(object):
 			
 			if self.categories:
 				self.allCategoriesHaveRaceLapsDefined = True
+				self.categoryLapsMax = 0
 				for category in self.categories.itervalues():
-					if category.active and not category.getNumLaps():
+					if not category.active:
+						continue
+					if category.getNumLaps():
+						self.categoryLapsMax = max( self.categoryLapsMax, category.getNumLaps() )
+					else:
 						self.allCategoriesHaveRaceLapsDefined = False
 						break
 			else:
@@ -1451,6 +1462,9 @@ class Race(object):
 			changed = True
 		else:
 			changed = False
+			
+		if self.allCategoriesHaveRaceLapsDefined:
+			self.numLaps = self.categoryLapsMax
 			
 		self.setCategoryMask()
 		return changed

@@ -529,7 +529,7 @@ class NumKeypad( wx.Panel ):
 			f.Enable( enable )
 		
 		changed = False
-
+		
 		race = Model.race
 		if race is None or not race.isFinished() or race.numLaps is None:
 			if race is not None and self.automaticManualChoice.GetSelection() != 0:
@@ -555,6 +555,7 @@ class NumKeypad( wx.Panel ):
 			
 		if changed:
 			Utils.LayoutChildResize( self.message )
+			
 		self.refreshRaceHUD()
 	
 	def getLapInfo( self ):
@@ -636,6 +637,7 @@ class NumKeypad( wx.Panel ):
 			if allCategoriesHaveRaceLapsDefined:
 				self.automaticManualChoice.Enable( False )
 				self.automaticManualChoice.SetSelection( 0 )	# Default to Automatic and do not allow edit.
+				self.numLaps.SetItems( [str(getattr(race, 'categoryLapsMax', 0))] )
 				self.numLaps.Enable( False )
 			else:
 				self.automaticManualChoice.Enable( enable )
@@ -655,7 +657,7 @@ class NumKeypad( wx.Panel ):
 							break
 				if not enable:
 					return
-				
+					
 			if not enable:
 				self.resetLaps()
 				return
