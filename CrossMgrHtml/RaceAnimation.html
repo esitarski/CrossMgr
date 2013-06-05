@@ -1952,9 +1952,9 @@ function SetCategoryResults()
 			{
 				if( leaderLaps == riderLaps )
 				{
-					var delta = TimeDifference(riderTime, leaderTime);
 					if( riderTime != leaderTime )
 					{
+						var delta = TimeDifference(riderTime, leaderTime);
 						if( r != 0 && lapDataOption == 3 )
 						{
 							delta = (100.0 * delta) / (leaderTime - startOffset);
