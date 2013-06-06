@@ -19,7 +19,7 @@ import xml.etree.ElementTree
 import xml.etree.cElementTree
 import xml.dom
 import xml.dom.minidom
-from xml.dom.minidom import parse
+from GpxParse import GpxParse
 import collections
 import zipfile
 
@@ -92,67 +92,31 @@ reGpxTime = re.compile( '[^0-9+]' )
 
 def GpxHasTimes( fname ):
 	''' Check that the gpx file contains valid times. '''
-	with open(fname) as f:
-		doc = parse( f )
-	
+	points = GpxParse( fname )
 	tLast = None
-	for trkpt in doc.getElementsByTagName('trkpt'):
+	for p in points:
 		try:
-			lat = float( trkpt.getAttribute('lat') )
-			lon = float( trkpt.getAttribute('lon') )
-		except:
-			continue
-		
-		t = None
-		for e in trkpt.getElementsByTagName('time'):
-			try:
-				year, month, day, hour, minute, second = [int(f) for f in reGpxTime.split( e.firstChild.nodeValue ) if f]
-				t = datetime.datetime( year, month, day, hour, minute, second )
-			except:
-				pass
-		if t is None or (tLast is not None and tLast > t):
+			t = p['time']
+		except KeyError:
+			return False
+		if tLast is not None and tLast > t:
 			return False
 		tLast = t
-		
 	return True
 	
 def ParseGpxFile( fname, useTimes = False ):
-	with open(fname) as f:
-		doc = parse( f )
+	points = GpxParse( fname )
 	
 	latMin, lonMin = 1000.0, 1000.0
 	latLonEles = []
 	
-	# Check if this file is formated with 'trkpt' or 'rtept' tags.
-	ptTag = None
-	for trkpt in doc.getElementsByTagName('trkpt'):
-		ptTag = 'trkpt'		# Standard gpx.
-		break
-	if ptTag is None:
-		ptTag = 'rtept'		# Old-style gpx.
-	
 	hasTimes = True
-	for trkpt in doc.getElementsByTagName(ptTag):
-		try:
-			lat = float( trkpt.getAttribute('lat') )
-			lon = float( trkpt.getAttribute('lon') )
-		except:
-			continue
+	for p in points:
+		lat, lon, ele, t = p['lat'], p['lon'], p.get('ele',0.0), p.get('time', None)
 		
 		latMin = min( latMin, lat )
 		lonMin = min( lonMin, lon )
 
-		ele = 0.0
-		for e in trkpt.getElementsByTagName('ele'):
-			ele = float( e.firstChild.nodeValue )
-			
-		t = None
-		for e in trkpt.getElementsByTagName('time'):
-			try:
-				year, month, day, hour, minute, second = [int(f) for f in reGpxTime.split( e.firstChild.nodeValue ) if f]
-				t = datetime.datetime( year, month, day, hour, minute, second )
-			except ValueError:
-				pass
 		latLonEles.append( LatLonEle(lat, lon, ele, t) )
 		if t is None:
 			hasTimes = False
@@ -182,7 +146,6 @@ def ParseGpxFile( fname, useTimes = False ):
 			gpsPoints.append( GpsPoint(p.lat, p.lon, p.ele, x, y, gad, dCum) )
 			dCum += gad
 	
-	doc.unlink()
 	return gpsPoints
 
 def createAppendChild( doc, parent, name ):
