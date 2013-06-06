@@ -1124,7 +1124,7 @@ class MainWin( wx.Frame ):
 			if not geoTrackFName:
 				race.geoTrack, race.geoTrackFName = None, None
 			else:
-				race.geoTrack, race.geoTrackFName = geoTrack, geoTrackFName, 
+				race.geoTrack, race.geoTrackFName = geoTrack, geoTrackFName
 				#with open('track.json', 'w') as f:
 				#	f.write( json.dumps(race.geoTrack.asExportJson()) )
 			race.showOval = (race.geoTrack is None)
@@ -1330,7 +1330,14 @@ class MainWin( wx.Frame ):
 	def menuNew( self, event ):
 		self.showPageName( 'Actions' )
 		self.closeFindDialog()
-			
+		
+		race = Model.race
+		if race:
+			geoTrack, geoTrackFName = getattr(race, 'geoTrack', None), getattr(race, 'geoTrackFName', None)
+			excelLink = getattr(race, 'excelLink', None)
+		else:
+			geoTrack, geoTrackFName, excelLink = None, None, None
+		
 		dlg = PropertiesDialog(self, -1, 'Configure Race', style=wx.DEFAULT_DIALOG_STYLE )
 		ret = dlg.ShowModal()
 		fileName = dlg.GetPath()
@@ -1369,9 +1376,10 @@ class MainWin( wx.Frame ):
 		self.updateRecentFiles()
 
 		importedCategories = False
+		race = Model.race
 		if categoriesFile:
 			try:
-				with open(categoriesFile, 'r') as fp, Model.LockRace() as race:
+				with open(categoriesFile, 'r') as fp:
 					race.importCategories( fp )
 				importedCategories = True
 			except IOError:
@@ -1380,13 +1388,22 @@ class MainWin( wx.Frame ):
 				Utils.MessageOK( self, "Bad file format:\n%s" % categoriesFile, "File Read Error", iconMask=wx.ICON_ERROR)
 
 		# Create some defaults so the page is not blank.
-		with Model.LockRace() as race:
-			if not importedCategories:
-				race.categoriesImportFile = ''
-				race.setCategories( [{'name':'Category %d-%d'	% (max(1, i*100), (i+1)*100-1),
-									  'catStr':'%d-%d'			% (max(1, i*100), (i+1)*100-1)} for i in xrange(8)] )
-			else:
-				race.categoriesImportFile = categoriesFile
+		if not importedCategories:
+			race.categoriesImportFile = ''
+			race.setCategories( [{'name':'Category %d-%d'	% (max(1, i*100), (i+1)*100-1),
+								  'catStr':'%d-%d'			% (max(1, i*100), (i+1)*100-1)} for i in xrange(8)] )
+		else:
+			race.categoriesImportFile = categoriesFile
+			
+		if geoTrack:
+			race.geoTrack, race.geoTrackFName = geoTrack, geoTrackFName
+			distance = geoTrack.length if race.distanceUnit == race.UnitKm else geoTrack.length * 0.621371
+			if distance > 0.0:
+				for c in race.categories.itervalues():
+					c.distance = distance
+			race.showOval = False
+		if excelLink:
+			race.excelLink = excelLink
 
 		self.setNumSelect( None )
 		self.writeRace()
@@ -1406,8 +1423,10 @@ class MainWin( wx.Frame ):
 		ResetExcelLinkCache()
 		self.writeRace()
 		
-		# Save the categories to use them in the next race.
+		# Save categories, gpx track and Excel link and use them in the next race.
 		categoriesSave = race.categories
+		geoTrack, geoTrackFName = getattr(race, 'geoTrack', None), getattr(race, 'geoTrackFName', None)
+		excelLink = getattr(race, 'excelLink', None)
 		race = None
 		
 		# Configure the next race.
@@ -1456,10 +1475,11 @@ class MainWin( wx.Frame ):
 		self.updateRecentFiles()
 
 		# Restore the previous categories.
+		race = Model.race
 		importedCategories = False
 		if categoriesFile:
 			try:
-				with open(categoriesFile, 'r') as fp, Model.LockRace() as race:
+				with open(categoriesFile, 'r') as fp:
 					race.importCategories( fp )
 				importedCategories = True
 			except IOError:
@@ -1468,9 +1488,18 @@ class MainWin( wx.Frame ):
 				Utils.MessageOK( self, "Bad file format:\n%s\n\n%s - %s" % (categoriesFile, str(ValueError), str(IndexError)), "File Read Error", iconMask=wx.ICON_ERROR)
 
 		if not importedCategories:
-			with Model.LockRace() as race:
-				race.categories = categoriesSave
+			race.categories = categoriesSave
 
+		if geoTrack:
+			race.geoTrack, race.geoTrackFName = geoTrack, geoTrackFName
+			distance = geoTrack.length if race.distanceUnit == race.UnitKm else geoTrack.length * 0.621371
+			if distance > 0.0:
+				for c in race.categories.itervalues():
+					c.distance = distance
+			race.showOval = False
+		if excelLink:
+			race.excelLink = excelLink
+		
 		self.setActiveCategories()
 		self.setNumSelect( None )
 		self.writeRace()
