@@ -276,10 +276,15 @@ class GanttChartPanel(wx.PyPanel):
 		dc.SetBackground(backBrush)
 		dc.Clear()
 		
-		if not self.data or self.dataMax == 0 or width < 50 or height < 24:
+		tooSmall = (width < 50 or height < 24)
+		
+		if not self.data or self.dataMax == 0 or tooSmall:
 			self.empty = True
 			self.verticalSB.Show( False )
 			self.horizontalSB.Show( False )
+			if tooSmall:
+				dc.SetPen( wx.BLACK_DASHED_PEN )
+				dc.DrawLine( 0, height//2, width, height//2 )
 			return
 		
 		self.empty = False

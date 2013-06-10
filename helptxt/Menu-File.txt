@@ -33,13 +33,9 @@ Shows how the results would look if printed.
 
 ## Print Results...
 Prints formated results directly to a printer.
+Select the Categories you want to print in the dialog, the select the Printer and Print Options.
 
-There are two options available in the "Page Range" section:
-
-Option|Result
-:-----|:-----
-All|Print results for all [Categories][]
-Selection|Print results for the current category only (for example, the category selected at the top of the [Results][] screen)
+You can print results for a Category if there are riders of that Category in the race.
 
 ## Publish Results as Excel...
 Publish the results in Excel format and opens Excel on the output file.

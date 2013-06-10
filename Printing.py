@@ -16,7 +16,7 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		
-		title = wx.StaticText( self, wx.ID_ANY, 'Click and Ctrl-Click to Select Categories to Print:' )
+		title = wx.StaticText( self, wx.ID_ANY, 'Click to select Categories.  Use Ctrl-Click to select Multiple Categories.' )
 		
 		self.selectAllButton = wx.Button( self, wx.ID_ANY, 'Select All' )
 		self.selectAllButton.Bind( wx.EVT_BUTTON, self.onSelectAll )
@@ -62,7 +62,7 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		self.cancelButton.Bind( wx.EVT_BUTTON, self.onCancel )
 		
 		vs.Add( title, flag = wx.ALL, border = 4 )
-		vs.Add( self.selectAllButton, flag = wx.ALL|wx.ALIGN_RIGHT, border = 4 )
+		vs.Add( self.selectAllButton, flag = wx.ALL, border = 4 )
 		vs.Add( self.list, 1, flag = wx.ALL|wx.EXPAND, border = 4 )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )

@@ -101,8 +101,16 @@ class RaceHUD(wx.PyControl):
 		dc.SetBackground(backBrush)
 		dc.Clear()
 		
-		if not self.raceTimes or not self.raceTimes[0] or len(self.raceTimes[0]) < 4 or width < 50 or height < 30:
+		tooSmall = (width < 50 or height < 24)
+		
+		def drawTooSmall():
+			dc.SetPen( wx.BLACK_DASHED_PEN )
+			dc.DrawLine( 0, height//2, width, height//2 )
+		
+		if not self.raceTimes or not self.raceTimes[0] or len(self.raceTimes[0]) < 4 or tooSmall:
 			self.empty = True
+			if tooSmall:
+				drawTooSmall()
 			return
 		self.empty = False
 		
@@ -117,6 +125,7 @@ class RaceHUD(wx.PyControl):
 		tickHeight = (hudHeight - textHeight * 2) / 2
 		if tickHeight < 2:
 			self.empty = True
+			drawTooSmall()
 			return
 		
 		raceTimeHeight = tickHeight * 2 * 0.6
@@ -134,6 +143,7 @@ class RaceHUD(wx.PyControl):
 		xRight = width - max( self.broom.GetWidth(), broomTimeWidth )
 		if xRight - xLeft < 16:
 			self.empty = True
+			drawTooSmall()
 			return
 
 		xMult = (xRight - xLeft) / float(max(rt[-1] if rt else 0 for rt in self.raceTimes))

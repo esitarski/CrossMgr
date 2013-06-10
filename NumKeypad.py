@@ -414,10 +414,12 @@ class NumKeypad( wx.Panel ):
 		# Assumes Model is locked.
 		race = Model.race
 		if not race:
+			self.raceHUD.SetData()
 			return
 			
 		results = GetResults( None, False )
 		if not results:
+			self.raceHUD.SetData()
 			return
 
 		tCur = race.curRaceTime()
