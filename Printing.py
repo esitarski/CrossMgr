@@ -47,7 +47,8 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 			
 		self.list.SetColumnWidth(0, wx.LIST_AUTOSIZE)
 		self.list.SetColumnWidth(1, wx.LIST_AUTOSIZE)
-		#self.list.SetColumnWidth( 0, 64 )
+		self.list.SetColumnWidth(2, wx.LIST_AUTOSIZE)
+		self.list.SetColumnWidth( 1, 64 )
 
 		self.okButton = wx.Button( self, wx.ID_ANY, 'OK' )
 		self.okButton.Bind( wx.EVT_BUTTON, self.onOK )
