@@ -219,21 +219,43 @@ class SummaryPage(wiz.WizardPageSimple):
 		self.statusName = wx.StaticText( self, wx.ID_ANY, '' )
 		rows += 1
 
-		fbs = wx.FlexGridSizer( rows=rows, cols=2, hgap=5, vgap=2 )
+		self.errorLabel = wx.StaticText( self, wx.ID_ANY, 'Errors:' )
+		self.errorName = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_MULTILINE|wx.TE_READONLY, size=(-1,128) )
+		rows += 1
+
+		fbs = wx.GridBagSizer( hgap=2, vgap=1 )
 		
-		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
-		fbs.AddMany( [(self.fileLabel, 0, labelAlign),		(self.fileName, 	1, wx.EXPAND|wx.GROW),
-					  (self.sheetLabel, 0, labelAlign),		(self.sheetName, 	1, wx.EXPAND|wx.GROW),
-					  (self.riderLabel, 0, labelAlign),		(self.riderNumber,	1, wx.EXPAND|wx.GROW),
-					  (self.statusLabel, 0, labelAlign),	(self.statusName,	1, wx.EXPAND|wx.GROW),
-					 ] )
-		fbs.AddGrowableCol( 1 )
+		labelAlign = wx.ALIGN_RIGHT
+		fieldAlign = wx.EXPAND|wx.GROW
+		blank = lambda : None
+		
+		labelFieldFormats = [
+					  (self.fileLabel, 0, labelAlign),		(self.fileName, 	1, fieldAlign),
+					  (self.sheetLabel, 0, labelAlign),		(self.sheetName, 	1, fieldAlign),
+					  (self.riderLabel, 0, labelAlign),		(self.riderNumber,	1, fieldAlign),
+					  (self.statusLabel, 0, labelAlign),	(self.statusName,	1, fieldAlign),
+					  (self.errorLabel, 0, labelAlign),		(self.errorName,	1, fieldAlign),
+					 ]
+		
+		row = 0
+		for i, (item, column, flag) in enumerate(labelFieldFormats):
+			if not item:
+				continue
+			if column == 1:
+				flag |= wx.EXPAND
+			if item == self.errorName:
+				fbs.Add( item, pos=(row, 1), span=(1,1), flag=flag )
+				row += 1
+			else:
+				fbs.Add( item, pos=(row, column), span=(1,1), flag=flag )
+				if column == 1:
+					row += 1
 		
 		vbs.Add( fbs )
 		
 		self.SetSizer(vbs)
 	
-	def setFileNameSheetNameInfo( self, fileName, sheetName, info ):
+	def setFileNameSheetNameInfo( self, fileName, sheetName, info, errors ):
 		self.fileName.SetLabel( fileName )
 		self.sheetName.SetLabel( sheetName )
 		try:
@@ -241,7 +263,17 @@ class SummaryPage(wiz.WizardPageSimple):
 		except TypeError:
 			infoLen = 0
 		self.riderNumber.SetLabel( str(infoLen) )
-		self.statusName.SetLabel( 'Success!' if infoLen else 'Failure' )
+		errStr = []
+		if errors:
+			for num, err in errors:
+				errStr.append( err )
+		else:
+			errStr = ['None']
+		errStr = '\n'.join( errStr )
+		self.statusName.SetLabel( 'Success!' if infoLen and not errors else 'Failure' )
+		self.errorName.SetValue( errStr )
+		
+		self.Layout()
 	
 class GetExcelLink( object ):
 	def __init__( self, parent, excelLink = None ):
@@ -323,7 +355,8 @@ class GetExcelLink( object ):
 					excelLink.setFieldCol( fieldCol )
 					try:
 						info = excelLink.read()
-						self.summaryPage.setFileNameSheetNameInfo(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName(), info)
+						errors = excelLink.getErrors()
+						self.summaryPage.setFileNameSheetNameInfo(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName(), info, errors)
 					except ValueError as e:
 						Utils.MessageOK( self.wizard, 'Problem extracting rider info.\nCheck the Excel format.',
 											title='Data Error', iconMask=wx.ICON_ERROR)
@@ -379,12 +412,15 @@ def FixTagFormat( externalInfo ):
 # Cache the Excel sheet so we don't have to re-read if it has not changed.
 stateCache = None
 infoCache = None
+errorCache = None
 
 def ResetExcelLinkCache():
 	global stateCache
 	global infoCache
+	global errorCache
 	stateCache = None
 	infoCache = None
+	errorCache = None
 
 class ExcelLink( object ):
 	def __init__( self ):
@@ -423,10 +459,16 @@ class ExcelLink( object ):
 				pass
 		return None
 	
+	def getErrors( self ):
+		global errorCache
+		self.read()
+		return errorCache		
+	
 	def read( self, alwaysReturnCache = False ):
 		# Check the cache.  Return the last info if the file has not been modified, and the name, sheet and fields are the same.
 		global stateCache
 		global infoCache
+		global errorCache
 		
 		if alwaysReturnCache and infoCache is not None:
 			return infoCache
@@ -444,12 +486,16 @@ class ExcelLink( object ):
 			reader = GetExcelReader( self.fileName )
 			if self.sheetName not in reader.sheet_names():
 				infoCache = {}
+				errorCache = []
 				return {}
 		except (IOError, ValueError):
 			infoCache = {}
+			errorCache = []
 			return {}
 		
 		info = {}
+		numRow = {}
+		errors = []
 		for r, row in enumerate(reader.iter_list(self.sheetName)):
 			data = {}
 			for field, col in self.fieldCol.iteritems():
@@ -462,14 +508,20 @@ class ExcelLink( object ):
 				except IndexError:
 					pass
 			try:
-				info[int(float(data[Fields[0]]))] = data
-			except (ValueError, TypeError, KeyError):
+				num = int(float(data[Fields[0]]))
+				if num in numRow:
+					errors.append( (num, 'Duplicate Bib Number %d in row %d (same as Bib in row %d)' % (num, r+1, numRow[num])) )
+				else:
+					numRow[num] = r + 1
+				info[num] = data
+			except (ValueError, TypeError, KeyError) as e:
 				pass
 		
 		FixTagFormat( info )
 		
 		stateCache = (os.path.getmtime(self.fileName), self.fileName, self.sheetName, self.fieldCol)
 		infoCache = info
+		errorCache = errors
 		return infoCache
 
 #-----------------------------------------------------------------------------------------------------

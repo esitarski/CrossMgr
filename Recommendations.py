@@ -175,10 +175,13 @@ class Recommendations( wx.Panel ):
 				self.clearGrid()
 				return
 
+			excelErrors = []
 			try:
 				externalInfo = race.excelLink.read( True )
+				excelErrors = race.excelLink.getErrors()
 			except:
 				externalInfo = {}
+				excelErrors = []
 				
 			def getName( num ):
 				info = externalInfo.get(num, {})
@@ -196,9 +199,11 @@ class Recommendations( wx.Panel ):
 				data[2].append( str(issue) )
 				data[3].append( str(recommendation) )
 			
-			# Check for missed entries to the end of the race.
-				
 			self.isEmpty = False
+
+			# Check for Excel errors (very bad!).
+			for num, errorStr in excelErrors:
+				append( num, getName(num), 'Excel', 'Fix ' + errorStr )
 			
 			# Get riders who did extra laps.
 			for catCur in race.getCategories():
