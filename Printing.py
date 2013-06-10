@@ -11,7 +11,7 @@ import Utils
 
 class ChoosePrintCategoriesDialog( wx.Dialog ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, "Choose Print Categories",
+		wx.Dialog.__init__( self, parent, id, "Print Categories",
 						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
@@ -27,7 +27,7 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		self.sm_dn = self.il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'SmallDownArrow.png'), wx.BITMAP_TYPE_PNG ))
 		
 		self.list = AutoWidthListCtrl( self, wx.ID_ANY, style = wx.LC_REPORT 
-														 | wx.BORDER_NONE
+														 | wx.BORDER_SUNKEN
 														 | wx.LC_HRULES
 														 )
 		self.list.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
@@ -35,12 +35,15 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		self.list.InsertColumn(0, "Name")
 		self.list.InsertColumn(1, "Gender")
 		self.list.InsertColumn(2, "Count", wx.LIST_FORMAT_RIGHT)
+		self.list.InsertColumn(3, '' )
 		race = Model.race
 		if race:
 			catCount = defaultdict( int )
 			for r in race.riders.itervalues():
 				catCount[race.getCategory(r.num)] += 1
 			for c in race.getCategories():
+				if catCount[c] == 0:
+					continue
 				index = self.list.InsertStringItem(sys.maxint, c.name, self.sm_rt)
 				self.list.SetStringItem( index, 1, getattr(c, 'gender', 'Open') )
 				self.list.SetStringItem( index, 2, str(catCount[c]) )
@@ -48,15 +51,25 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		self.list.SetColumnWidth(0, wx.LIST_AUTOSIZE)
 		self.list.SetColumnWidth(1, wx.LIST_AUTOSIZE)
 		self.list.SetColumnWidth(2, wx.LIST_AUTOSIZE)
+		self.list.SetColumnWidth(3, wx.LIST_AUTOSIZE)
 		self.list.SetColumnWidth( 1, 64 )
+		self.list.SetColumnWidth( 2, 42 )
 
-		self.okButton = wx.Button( self, wx.ID_ANY, 'OK' )
+		self.okButton = wx.Button( self, wx.ID_OK )
 		self.okButton.Bind( wx.EVT_BUTTON, self.onOK )
 		
+		self.cancelButton = wx.Button( self, wx.ID_CANCEL )
+		self.cancelButton.Bind( wx.EVT_BUTTON, self.onCancel )
+		
 		vs.Add( title, flag = wx.ALL, border = 4 )
-		vs.Add( self.selectAllButton, flag = wx.ALL, border = 4 )
+		vs.Add( self.selectAllButton, flag = wx.ALL|wx.ALIGN_RIGHT, border = 4 )
 		vs.Add( self.list, 1, flag = wx.ALL|wx.EXPAND, border = 4 )
-		vs.Add( self.okButton, flag = wx.ALL, border = 4 )
+		
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( self.okButton )
+		hs.Add( self.cancelButton, flag = wx.LEFT, border = 16 )
+		
+		vs.Add( hs, flag = wx.ALL|wx.ALIGN_CENTER, border = 4 )
 		self.SetSizer( vs )
 		
 		self.onSelectAll()
@@ -75,6 +88,10 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 				self.categories.append( c )
 		self.EndModal( wx.ID_OK )
 
+	def onCancel( self, event ):
+		self.categories = []
+		self.EndModal( wx.ID_CANCEL )
+		
 def getRaceCategories():
 	# Get all the categories available to print.
 	with Model.LockRace() as race:
@@ -136,6 +153,7 @@ if __name__ == '__main__':
 	Model.setRace( Model.Race() )
 	Model.getRace()._populate()
 	cpcd = ChoosePrintCategoriesDialog(mainWin)
+	cpcd.SetSize( (450, 300) )
 	mainWin.Show()
 	cpcd.ShowModal()
 	for c in cpcd.categories:

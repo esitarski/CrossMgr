@@ -843,14 +843,17 @@ class MainWin( wx.Frame ):
 	def menuPrint( self, event ):
 		if not Model.race:
 			return
-			
+		
 		cpcd = ChoosePrintCategoriesDialog( self )
-		cpcd.SetPosition(self.GetPosition())
-		cpcd.SetSize( (-1, 300) )
-		cpcd.ShowModal()
+		x, y = self.GetPosition().Get()
+		x += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_X, self)
+		y += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_Y, self)
+		cpcd.SetPosition( (x, y) )
+		cpcd.SetSize( (450, 300) )
+		result = cpcd.ShowModal()
 		categories = cpcd.categories
 		cpcd.Destroy()
-		if not categories:
+		if not categories or result != wx.ID_OK:
 			return
 	
 		self.printData.SetFilename( self.fileName if self.fileName else '' )
