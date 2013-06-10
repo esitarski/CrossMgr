@@ -61,7 +61,7 @@ import GpxImport
 import cStringIO as StringIO
 from Undo import undo
 from setpriority import setpriority
-from Printing			import CrossMgrPrintout, getRaceCategories
+from Printing			import CrossMgrPrintout, getRaceCategories, ChoosePrintCategoriesDialog
 import xlwt
 from ExportGrid			import ExportGrid
 import SimulationLapTimes
@@ -841,16 +841,28 @@ class MainWin( wx.Frame ):
 
 	@logCall
 	def menuPrint( self, event ):
+		if not Model.race:
+			return
+			
+		cpcd = ChoosePrintCategoriesDialog( self )
+		cpcd.SetPosition(self.GetPosition())
+		cpcd.SetSize( (-1, 300) )
+		cpcd.ShowModal()
+		categories = cpcd.categories
+		cpcd.Destroy()
+		if not categories:
+			return
+	
 		self.printData.SetFilename( self.fileName if self.fileName else '' )
 		pdd = wx.PrintDialogData(self.printData)
 		pdd.SetAllPages( True )
-		pdd.EnableSelection( True )
+		pdd.EnableSelection( False )
 		pdd.EnablePageNumbers( False )
 		pdd.EnableHelp( False )
 		pdd.EnablePrintToFile( False )
 		
 		printer = wx.Printer(pdd)
-		printout = CrossMgrPrintout( pdd.GetSelection() )
+		printout = CrossMgrPrintout( categories )
 
 		if not printer.Print(self, printout, True):
 			if printer.GetLastError() == wx.PRINTER_ERROR:
