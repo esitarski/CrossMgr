@@ -969,11 +969,12 @@ class MainWin( wx.Frame ):
 				raceStartTime = (race.startTime - race.startTime.replace( hour=0, minute=0, second=0 )).total_seconds()
 				payload['raceStartTime']= raceStartTime
 			tLastRaceTime = race.lastRaceTime()
-			courseCoordinates = None
-			gpsPoints = getattr(race, 'geoTrack', None)
-			if gpsPoints is not None:
-				courseCoordinates = gpsPoints.asCoordinates()
-				gpsPoints = gpsPoints.asExportJson()
+			courseCoordinates, gpsPoints, totalElevationGain = None, None, None
+			geoTrack = getattr(race, 'geoTrack', None)
+			if geoTrack is not None:
+				courseCoordinates = geoTrack.asCoordinates()
+				gpsPoints = geoTrack.asExportJson()
+				totalElevationGain = getattr( geoTrack, 'totalElevationGain', None )
 		
 		tNow = datetime.datetime.now()
 		payload['timestamp']			= [tNow.ctime(), tLastRaceTime]
@@ -995,6 +996,8 @@ class MainWin( wx.Frame ):
 				payload['virtualRideTemplate'] = template
 			except:
 				pass
+		if totalElevationGain:
+			payload['gpsTotalElevationGain'] = totalElevationGain
 
 		html = replaceJsonVar( html, 'payload', payload )
 		graphicBase64 = self.getGraphicBase64()

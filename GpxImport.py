@@ -1,5 +1,6 @@
 
 import os
+import sys
 import wx
 import wx.wizard as wiz
 import wx.lib.filebrowsebutton as filebrowse
@@ -252,8 +253,8 @@ class GetGeoTrack( object ):
 			geoTrack = GeoTrack()
 			try:
 				geoTrack.read( fileName )
-			except:
-				Utils.MessageOK( self.wizard, 'Read error:  Is this GPX file properly formatted?',
+			except :
+				Utils.MessageOK( self.wizard, 'Read error:  Is this GPX file properly formatted? (%s)' % sys.exc_info()[0],
 								title='Read Error', iconMask=wx.ICON_ERROR)
 				evt.Veto()
 				return

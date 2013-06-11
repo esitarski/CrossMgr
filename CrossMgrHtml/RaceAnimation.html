@@ -150,6 +150,7 @@ var animationObj = null;		// Animation object to draw the course (set to TrackAn
 var catUpdateTime = {};			// Time of next update by category.
 var rfid = null;				// True if data was collected by RFID.
 var gpsPoints = null;			// gps points data for the course [[x,y,d],...].
+var gpsTotalElevationGain = null;	// total elevation gain on the course.
 var courseCoordinates = null;	// course coordinates as an array of lon, lat pairs.
 var virtualRideTemplate = null;	// template to generate virtual ride page
 
@@ -2989,6 +2990,13 @@ function onLoad()
 		document.getElementById('idShowUnits').style.display = 'none';
 	SetData( data, undefined );
 	
+	if( gpsTotalElevationGain )
+	{
+		var units = (displayUnits == 'km' ? 'm' : ' ft');
+		var totalElevationGain = (displayUnits == 'km' ? 1.0 : 3.28084) * gpsTotalElevationGain;
+		document.getElementById('idTotalElevationGain').innerHTML = '<' + 'br/' + '>' + totalElevationGain.toFixed(0) + units + ' Total Elevation Gain per Lap';
+	}
+	
 	// Check for parameters.
 	var numbers = getUrlParam( 'highlight', undefined );
 	if( numbers != '' )
@@ -3068,11 +3076,11 @@ Size:
 Highlight Numbers:
 <input type="text" id="idNumsToWatch" value="" onChange="SetNumsToWatch()"></input>
 <input type="button" value="Apply"</input>
-(e.g. 124,131, or click on a row below)
+(e.g. 124,131, or click on a row below) 
 <select class="noprint" id="idShowTrack" onChange="SetShowTrack()">
 	<option value="gpx" selected="selected">GPX Course</option>
 	<option value="oval">Oval Track</option>
-</select>
+</select> <span id="idTotalElevationGain"></span>
 </p>
 </div> <!-- idTrackDiv -->
 <p>

@@ -163,6 +163,7 @@ class GeoTrack( object ):
 		self.yBottom = 0
 		self.mult = 1.0
 		self.length = 0.0
+		self.totalElevationGain = 0.0
 		self.cache = {}
 		
 	def read( self, fname, useTimes = False ):
@@ -178,10 +179,14 @@ class GeoTrack( object ):
 		
 		lenGpsPoints = len(self.gpsPoints)
 		length = 0.0
+		totalElevationGain = 0.0
 		for i in xrange(lenGpsPoints):
 			pCur, pNext = self.gpsPoints[i], self.gpsPoints[(i + 1) % lenGpsPoints]
 			length += GreatCircleDistance3D( pCur.lat, pCur.lon, pCur.ele, pNext.lat, pNext.lon, pNext.ele )
+			if pNext.ele > pCur.ele:
+				totalElevationGain += pNext.ele - pCur.ele
 		self.length = length
+		self.totalElevationGain = totalElevationGain
 			
 	def getXYTrack( self ):
 		x, yBottom, mult = self.x, self.yBottom, self.mult
