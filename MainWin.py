@@ -974,7 +974,7 @@ class MainWin( wx.Frame ):
 			if geoTrack is not None:
 				courseCoordinates = geoTrack.asCoordinates()
 				gpsPoints = geoTrack.asExportJson()
-				totalElevationGain = getattr( geoTrack, 'totalElevationGain', None )
+				totalElevationGain = geoTrack.totalElevationGainM
 		
 		tNow = datetime.datetime.now()
 		payload['timestamp']			= [tNow.ctime(), tLastRaceTime]
