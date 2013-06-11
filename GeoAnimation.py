@@ -194,6 +194,16 @@ class GeoTrack( object ):
 	def asExportJson( self ):
 		return [ [int(getattr(p, a)*10.0) for a in ('x', 'y', 'd')] for p in self.gpsPoints ]
 		
+	def getAltigraph( self ):
+		if not self.gpsPoints or all( p.ele == 0.0 for p in self.gpsPoints ):
+			return []
+		altigraph = [(0.0, self.gpsPoints[0].ele)]
+		p = self.gpsPoints
+		for i in xrange(1, len(p)):
+			altigraph.append( (altigraph[-1][0] + GreatCircleDistance(p[i-1].lat, p[i-1].lon, p[i].lat, p[i].lon), p[i].ele) )
+		altigraph.append( (altigraph[-1][0] + GreatCircleDistance(p[-1].lat, p[-1].lon, p[0].lat, p[0].lon), p[0].ele) )
+		return altigraph
+		
 	def isClockwise( self ):
 		if not self.gpsPoints:
 			return False

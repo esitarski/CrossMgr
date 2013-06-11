@@ -151,6 +151,7 @@ var catUpdateTime = {};			// Time of next update by category.
 var rfid = null;				// True if data was collected by RFID.
 var gpsPoints = null;			// gps points data for the course [[x,y,d],...].
 var gpsTotalElevationGain = null;	// total elevation gain on the course.
+var gpsAltigraph = null;		// Altigraph of the course.
 var courseCoordinates = null;	// course coordinates as an array of lon, lat pairs.
 var virtualRideTemplate = null;	// template to generate virtual ride page
 
@@ -1003,12 +1004,166 @@ function GeoTrack()
 	}
 }
 
+function colorBetween( r1, g1, b1, r2, g2, b2, x )
+{
+	var r = (r1 + (r2 - r1) * x).toFixed(0);
+	var g = (g1 + (g2 - g1) * x).toFixed(0);
+	var b = (b1 + (b2 - b1) * x).toFixed(0);
+	return 'rgb(' + r + ',' + g + ',' + b + ')';
+}
+
+function Altigraph()
+{
+	this.altigraph = [];
+	this.yMax = -1000000.0;
+	this.yMin = 1000000.0
+	this.xMax = 0.0;
+	
+	this.setData = function( altigraph )
+	{
+		if( !altigraph || altigraph.length == 0 )
+			altigraph = [];
+			
+		this.altigraph = altigraph;
+		this.yMax = -1000000.0;
+		this.yMin = 1000000.0
+		this.xMax = 0.0;
+		for( var i = 0; i < altigraph.length; ++i )
+		{
+			if( altigraph[i][1] > this.yMax )
+				this.yMax = altigraph[i][1];
+			if( altigraph[i][1] < this.yMin )
+				this.yMin = altigraph[i][1];
+		}
+		if( altigraph.length > 0 )
+			this.xMax = altigraph[altigraph.length-1][0];
+	}
+	
+	this.empty = function() { return this.altigraph.length == 0; }
+	
+	this.draw = function( dc, x, y, width, height )
+	{
+		if( this.altigraph.length == 0 || this.xMax == 0 || !gpsTotalElevationGain )
+			return;
+			
+		dc.save();
+		
+		var fontSize = height/4;
+		dc.font = fontSize + 'px Arial';
+		
+		var minLabel = '0';
+		var maxLabel = ((this.yMax - this.yMin) * (displayUnits == 'km' ? 1.0 : 3.28084)).toFixed(0) + (displayUnits == 'km' ? ' m' : ' ft');
+		var labelWidth = Math.max( dc.measureText(minLabel).width, dc.measureText(maxLabel).width );
+		
+		var altigraph = this.altigraph;
+		var teg = 0.0;
+		for( var i = 1; i < this.altigraph.length; ++i )
+			teg += Math.max(0.0, altigraph[i][1] - altigraph[i-1][1]);
+		var tegLabel = '';
+		var tegWidth = 0;
+		var tegText = ['Tot.', 'Ele.', 'Gain'];
+		if( gpsTotalElevationGain )
+		{
+			tegLabel = (gpsTotalElevationGain * (displayUnits == 'km' ? 1.0 : 3.28084)).toFixed(0) + (displayUnits == 'km' ? ' m' : ' ft');
+			tegWidth = dc.measureText(tegLabel).width;
+			for( var i = 0; i < tegText.length; ++i )
+				tegWidth = Math.max( tegWidth, dc.measureText(tegText[i]).width );
+		}
+		
+		var border = 4;
+		if( labelWidth + border*2 + tegWidth > width )
+		{
+			dc.restore();
+			return;
+		}
+		
+		var xMult = (width - labelWidth - border*2 - tegWidth) / this.xMax;
+		var yMult = height / (this.yMax - this.yMin);
+		
+		var points = [];
+		for( var i = 0; i < this.altigraph.length; ++i )
+			points.push( [(x + labelWidth + border + altigraph[i][0] * xMult), (y + height - (altigraph[i][1] - this.yMin) * yMult)] );
+		
+		for( var i = 1; i < this.altigraph.length; ++i )
+		{
+			var grade = (altigraph[i][1] - altigraph[i-1][1]) / (altigraph[i][0] - altigraph[i-1][0]);
+			if( grade > 0 )
+				dc.fillStyle = colorBetween( 255,255,255, 255,0,0, Math.min(1.0,  grade / 0.12) );
+			else
+				dc.fillStyle = colorBetween( 255,255,255,   0,0,0, Math.min(1.0, -grade / 0.12) );
+			dc.beginPath();
+			dc.moveTo( points[i-1][0], points[i-1][1] );
+			dc.lineTo( points[i  ][0], points[i  ][1] );
+			dc.lineTo( points[i  ][0], y + height );
+			dc.lineTo( points[i-1][0], y + height );
+			dc.closePath();
+			dc.fill();
+		}
+		
+		dc.strokeStyle = '#000000';
+		dc.lineWidth = 2;
+		dc.beginPath();
+		dc.moveTo( points[0][0], points[0][1] );
+		for( var i = 1; i < this.altigraph.length; ++i )
+			dc.lineTo( points[i][0], points[i][1] );
+		dc.stroke();
+		
+		// Add a baseline.
+		dc.lineWidth = 1;
+		dc.beginPath();
+		dc.moveTo( x + labelWidth + border, y + height );
+		dc.lineTo( x + width - border - tegWidth, y + height );
+		dc.stroke();
+		
+		// Add a left boundary line.
+		dc.lineWidth = 1;
+		dc.beginPath();
+		dc.moveTo( x + labelWidth + border, y );
+		dc.lineTo( x + labelWidth + border, y + height );
+		dc.stroke();
+		
+		// Add a right boundary line.
+		dc.beginPath();
+		dc.moveTo( x + width - tegWidth - border, y );
+		dc.lineTo( x + width - tegWidth - border, y + height );
+		dc.stroke();
+		
+		// Add the min and max elevation.
+		dc.fillStyle = '#000000';
+		dc.textAlign = 'right';
+		dc.textBaseline = 'top';
+		dc.fillText( maxLabel, x + labelWidth, y );
+		dc.textBaseline = 'bottom';
+		dc.fillText( minLabel, x + labelWidth, y + height );
+		
+		// Add the total elevation gain.
+		if( gpsTotalElevationGain )
+		{
+			dc.textBaseline = 'top';
+			dc.textAlign = 'left';
+			var xCur = x + width - tegWidth;
+			var yCur = y + (height - fontSize * 1.05 * 4) / 2;
+			for( var i = 0; i < tegText.length; ++i )
+			{
+				dc.fillText( tegText[i], xCur, yCur );
+				yCur += fontSize * 1.05;
+			}
+			dc.fillText( tegLabel, xCur, yCur );
+		}
+		
+		dc.restore();
+	}
+}
+
 var infoLines = 1;
 function GeoAnimation()
 {
 	this.xBanner = 300;
 	this.geoTrack = new GeoTrack();
+	this.altigraph = new Altigraph();
 	this.compassLocation = null;
+	this.widthLast = -1;
+	this.heightLast = -1;
 	
 	this.tBannerLast = -1;
 	
@@ -1146,20 +1301,42 @@ function GeoAnimation()
 		if( !canvas || !isCanvasSupported() )
 			return;
 
-		// Redraw the canvas at this time.
 		var dc = canvas.getContext('2d');
 		
 		dc.textBaseline = "top";
 		
 		var width = canvas.width;
 		var height = canvas.height;
+		var sizeChanged = false;
+		if( width != this.widthLast || height != this.heightLast )
+		{
+			this.widthLast = width;
+			this.heightLast = height;
+			sizeChanged = true;
+		}
 		var backColour = 'white';
 		dc.fillStyle = backColour;
-		dc.fillRect(0, 0, width, height );
 		
 		if( width < 80 || height < 80 )
+		{
+			dc.fillRect(0, 0, width, height );
 			return;
+		}
 
+		// Draw the altigraph.
+		if( gpsTotalElevationGain && !this.altigraph.empty() )
+		{
+			var altigraphHeight = height / 8;
+			if( sizeChanged )
+			{
+				dc.fillRect(0, 0, width, height );
+				this.altigraph.draw( dc, 0, height - altigraphHeight, width, altigraphHeight );
+			}
+			height -= altigraphHeight;
+		}
+		
+		dc.fillRect(0, 0, width, height );
+		
 		r = ~~(width / 4);
 		if( r * 2 > height )
 			r = ~~(height / 2);
@@ -1178,7 +1355,7 @@ function GeoAnimation()
 		var topMargin = 2*border + tHeight * infoLines + textVSpace;
 		var trackHeight = height - topMargin;
 		this.geoTrack.setDisplayRect( border, topMargin, trackWidth, trackHeight - laneWidth );
-		
+
 		// Draw the course.
 		dc.beginPath();
 		var points = this.geoTrack.getXYTrack();
@@ -2520,8 +2697,6 @@ function RefreshRaceChart()
 			{
 				var riderData = data[num];
 				var hover = j + ', ' + FormatTime(raceTimes[j] - raceTimes[j-1]);
-				if( !colors[j] )
-					alert( j );
 				drawSegment( dc, xLast, yLast, xCur - xLast + 1, yCur - yLast + 1, colors[j], lighterColors[j] );
 				segmentsCur.push( [xLast, yLast, xCur - xLast + 1, yCur - yLast + 1, hover, num] );
 			}
@@ -2809,6 +2984,7 @@ function SetDisplayUnits()
 	displayUnits = select.options[select.selectedIndex].value;
 	SetCategoryResults();
 	SetTotalElevationGain();
+	animationObj.widthLast = -1;
 }
 
 function LoopContinuously()
@@ -2857,6 +3033,7 @@ function SetShowTrack()
 	{
 		animationObj = new GeoAnimation();
 		animationObj.geoTrack.setData( gpsPoints );
+		animationObj.altigraph.setData( gpsAltigraph );
 	}
 	else
 		animationObj = new TrackAnimation();
@@ -2887,6 +3064,7 @@ var replaceHtmlEntites = (function() {
 })();
 
 function SetTotalElevationGain() {
+/*
 	if( gpsTotalElevationGain )
 	{
 		var units = (displayUnits == 'km' ? 'm' : ' ft');
@@ -2895,6 +3073,7 @@ function SetTotalElevationGain() {
 	}
 	else
 		document.getElementById('idTotalElevationGain').innerHTML = '';
+*/
 }
 
 function onLoad()
@@ -2917,6 +3096,7 @@ function onLoad()
 	{
 		animationObj = new GeoAnimation();
 		animationObj.geoTrack.setData( gpsPoints );
+		animationObj.altigraph.setData( gpsAltigraph );
 	}
 	else
 	{

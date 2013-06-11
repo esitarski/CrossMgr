@@ -969,11 +969,12 @@ class MainWin( wx.Frame ):
 				raceStartTime = (race.startTime - race.startTime.replace( hour=0, minute=0, second=0 )).total_seconds()
 				payload['raceStartTime']= raceStartTime
 			tLastRaceTime = race.lastRaceTime()
-			courseCoordinates, gpsPoints, totalElevationGain = None, None, None
+			courseCoordinates, gpsPoints, gpsAltigraph, totalElevationGain = None, None, None, None
 			geoTrack = getattr(race, 'geoTrack', None)
 			if geoTrack is not None:
 				courseCoordinates = geoTrack.asCoordinates()
 				gpsPoints = geoTrack.asExportJson()
+				gpsAltigraph = geoTrack.getAltigraph()
 				totalElevationGain = geoTrack.totalElevationGainM
 		
 		tNow = datetime.datetime.now()
@@ -998,6 +999,8 @@ class MainWin( wx.Frame ):
 				pass
 		if totalElevationGain:
 			payload['gpsTotalElevationGain'] = totalElevationGain
+		if gpsAltigraph:
+			payload['gpsAltigraph'] = gpsAltigraph
 
 		html = replaceJsonVar( html, 'payload', payload )
 		graphicBase64 = self.getGraphicBase64()
