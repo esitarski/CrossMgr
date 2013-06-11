@@ -1061,7 +1061,7 @@ function Altigraph()
 			teg += Math.max(0.0, altigraph[i][1] - altigraph[i-1][1]);
 		var tegLabel = '';
 		var tegWidth = 0;
-		var tegText = ['Tot.', 'Ele.', 'Gain'];
+		var tegText = ['Total', 'Elevation', 'Gain'];
 		if( gpsTotalElevationGain )
 		{
 			tegLabel = (gpsTotalElevationGain * (displayUnits == 'km' ? 1.0 : 3.28084)).toFixed(0) + (displayUnits == 'km' ? ' m' : ' ft');
@@ -1175,6 +1175,8 @@ function GeoAnimation()
 		
 		var x = this.compassLocation[1] == 'E' ? width - size * 1.4 : size * 1.4;
 		var y = this.compassLocation[0] == 'N' ? size * 1.4 + tHeight * 3 : height - size * 1.4;
+		if( this.compassLocation[0] == 'S' && gpsTotalElevationGain )
+			y -= height / 20;
 		
 		var factor = 7.0;
 		var pseg1 = [[0,0], [size/factor,size/factor], [0,size]];		
