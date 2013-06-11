@@ -183,8 +183,7 @@ class GeoTrack( object ):
 		for i in xrange(lenGpsPoints):
 			pCur, pNext = self.gpsPoints[i], self.gpsPoints[(i + 1) % lenGpsPoints]
 			length += GreatCircleDistance3D( pCur.lat, pCur.lon, pCur.ele, pNext.lat, pNext.lon, pNext.ele )
-			if pNext.ele > pCur.ele:
-				totalElevationGain += pNext.ele - pCur.ele
+			totalElevationGain += max(0.0, pNext.ele - pCur.ele)
 		self.length = length
 		self.totalElevationGain = totalElevationGain
 			
@@ -371,7 +370,11 @@ class GeoTrack( object ):
 		
 	@property
 	def totalElevationGainM( self ):
-		return getattr(self, 'totalElevationGain', 0.0)
+		try:
+			return self.totalElevationGain
+		except AttributeError:
+			self.totalElevationGain = sum( max(0.0, self.gpsPoints[i].ele - self.gpsPoints[i-1].ele) for i in xrange(len(self.gpsPoints)) )
+			return self.totalElevationGain
 		
 	@property
 	def totalElevationGainFt( self ):

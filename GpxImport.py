@@ -263,7 +263,7 @@ class GetGeoTrack( object ):
 			try:
 				geoTrack.read( fileName )
 			except :
-				Utils.MessageOK( self.wizard, 'Read error:  Is this GPX file properly formatted? (%s)' % sys.exc_info()[0],
+				Utils.MessageOK( self.wizard, 'Read error:  Is this GPX file properly formatted?\n(%s)' % sys.exc_info()[0],
 								title='Read Error', iconMask=wx.ICON_ERROR)
 				evt.Veto()
 				return
