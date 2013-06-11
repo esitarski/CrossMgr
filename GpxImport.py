@@ -279,7 +279,7 @@ class GetGeoTrack( object ):
 				
 			self.geoTrackFName = fileName
 			self.geoTrack = geoTrack
-			self.summaryPage.setInfo( self.geoTrackFName, self.geoTrack.numPoints, self.geoTrack.lengthKm, self.geoTrack.totalElevationGain )
+			self.summaryPage.setInfo( self.geoTrackFName, self.geoTrack.numPoints, self.geoTrack.lengthKm, self.geoTrack.totalElevationGainM )
 			self.useTimesPage.setInfo( self.geoTrackFName )
 			
 		elif page == self.useTimesPage:
