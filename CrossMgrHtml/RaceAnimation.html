@@ -2808,6 +2808,7 @@ function SetDisplayUnits()
 	var select = document.getElementById('idDisplayUnits');
 	displayUnits = select.options[select.selectedIndex].value;
 	SetCategoryResults();
+	SetTotalElevationGain();
 }
 
 function LoopContinuously()
@@ -2884,6 +2885,17 @@ var replaceHtmlEntites = (function() {
 		}) );
 	}
 })();
+
+function SetTotalElevationGain() {
+	if( gpsTotalElevationGain )
+	{
+		var units = (displayUnits == 'km' ? 'm' : ' ft');
+		var totalElevationGain = (displayUnits == 'km' ? 1.0 : 3.28084) * gpsTotalElevationGain;
+		document.getElementById('idTotalElevationGain').innerHTML = '<' + 'br/>' + totalElevationGain.toFixed(0) + units + ' Total Elevation Gain per Lap';
+	}
+	else
+		document.getElementById('idTotalElevationGain').innerHTML = '';
+}
 
 function onLoad()
 {
@@ -2990,12 +3002,7 @@ function onLoad()
 		document.getElementById('idShowUnits').style.display = 'none';
 	SetData( data, undefined );
 	
-	if( gpsTotalElevationGain )
-	{
-		var units = (displayUnits == 'km' ? 'm' : ' ft');
-		var totalElevationGain = (displayUnits == 'km' ? 1.0 : 3.28084) * gpsTotalElevationGain;
-		document.getElementById('idTotalElevationGain').innerHTML = '<' + 'br/' + '>' + totalElevationGain.toFixed(0) + units + ' Total Elevation Gain per Lap';
-	}
+	SetTotalElevationGain();
 	
 	// Check for parameters.
 	var numbers = getUrlParam( 'highlight', undefined );
@@ -3080,7 +3087,7 @@ Highlight Numbers:
 <select class="noprint" id="idShowTrack" onChange="SetShowTrack()">
 	<option value="gpx" selected="selected">GPX Course</option>
 	<option value="oval">Oval Track</option>
-</select> <span id="idTotalElevationGain"></span>
+</select>
 </p>
 </div> <!-- idTrackDiv -->
 <p>
@@ -3105,6 +3112,7 @@ Highlight Numbers:
 	<option value="15">Show Every 15 Laps</option>
 	<option value="20">Show Every 20 Laps</option>
 </select>
+<span id="idTotalElevationGain"> </span>
 </p>
 <div id="idResultsDiv"></div>
 <div id="idRaceChartDiv">

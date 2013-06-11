@@ -38,10 +38,11 @@ class IntroPage(wiz.WizardPageSimple):
 	def setInfo( self, geoTrack, geoTrackFName ):
 		self.geoTrack = geoTrack
 		if geoTrack:
-			s = 'Existing GPX file:\n\nImported from: "%s"\n\nNumber of Coords: %d\n\nLap Length: %.3f km, %.3f miles' % (
+			s = 'Existing GPX file:\n\nImported from: "%s"\n\nNumber of Coords: %d\n\nLap Length: %.3f km, %.3f miles\n\nTotal Elevation Gain: %.0f m, %.0f ft' % (
 				geoTrackFName,
 				geoTrack.numPoints,
-				geoTrack.lengthKm, geoTrack.lengthMiles )
+				geoTrack.lengthKm, geoTrack.lengthMiles,
+				geoTrack.totalElevationGainM, geoTrack.totalElevationGainFt)
 		else:
 			s = ''
 		self.removeButton.Enable( bool(geoTrack) )
@@ -128,6 +129,10 @@ class SummaryPage(wiz.WizardPageSimple):
 		self.distance = wx.TextCtrl(self, wx.ID_ANY, '', style=wx.TE_READONLY)
 		rows += 1
 
+		self.totalElevationGainLabel = wx.StaticText( self, wx.ID_ANY, 'Total Elevation Gain:' )
+		self.totalElevationGain = wx.TextCtrl(self, wx.ID_ANY, '', style=wx.TE_READONLY)
+		rows += 1
+
 		self.setCategoryDistanceLabel = wx.StaticText( self, wx.ID_ANY, '' )
 		self.setCategoryDistanceCheckbox = wx.CheckBox( self, wx.ID_ANY, 'Set Category Distances to GPX Lap Length' )
 		self.setCategoryDistanceCheckbox.SetValue( True )
@@ -139,6 +144,7 @@ class SummaryPage(wiz.WizardPageSimple):
 		fbs.AddMany( [(self.fileLabel, 0, labelAlign),			(self.fileName, 	1, wx.EXPAND|wx.GROW),
 					  (self.numCoordsLabel, 0, labelAlign),		(self.numCoords, 	1, wx.EXPAND|wx.GROW),
 					  (self.distanceLabel, 0, labelAlign),		(self.distance,		1, wx.EXPAND|wx.GROW),
+					  (self.totalElevationGainLabel, 0, labelAlign),(self.totalElevationGain,		1, wx.EXPAND|wx.GROW),
 					  (wx.StaticText(self,wx.ID_ANY,''), 0, labelAlign),			(wx.StaticText(self,wx.ID_ANY,''), 1, wx.EXPAND|wx.GROW),
 					  (self.setCategoryDistanceLabel, 0, labelAlign), (self.setCategoryDistanceCheckbox, 1, wx.EXPAND|wx.GROW),
 					 ] )
@@ -160,12 +166,15 @@ class SummaryPage(wiz.WizardPageSimple):
 				c.distance = distance
 			race.setChanged()
 	
-	def setInfo( self, fileName, numCoords, distance ):
+	def setInfo( self, fileName, numCoords, distance, totalElevationGain ):
 		self.fileName.SetLabel( fileName )
 		self.numCoords.SetLabel( '%d' % numCoords )
 		self.distanceKm = distance
 		self.distanceMiles = distance*0.621371
 		self.distance.ChangeValue( '%.3f km, %.3f miles' % (self.distanceKm, self.distanceMiles) )
+		self.totalElevationGainM = totalElevationGain
+		self.totalElevationGainFt = totalElevationGain*3.28084
+		self.totalElevationGain.ChangeValue( '%.0f m, %.0f ft' % (self.totalElevationGainM, self.totalElevationGainFt) )
 		
 class GetGeoTrack( object ):
 	def __init__( self, parent, geoTrack = None, geoTrackFName = None ):
@@ -270,7 +279,7 @@ class GetGeoTrack( object ):
 				
 			self.geoTrackFName = fileName
 			self.geoTrack = geoTrack
-			self.summaryPage.setInfo( self.geoTrackFName, self.geoTrack.numPoints, self.geoTrack.lengthKm )
+			self.summaryPage.setInfo( self.geoTrackFName, self.geoTrack.numPoints, self.geoTrack.lengthKm, self.geoTrack.totalElevationGain )
 			self.useTimesPage.setInfo( self.geoTrackFName )
 			
 		elif page == self.useTimesPage:

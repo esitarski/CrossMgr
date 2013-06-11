@@ -370,6 +370,14 @@ class GeoTrack( object ):
 		return self.length * 0.621371/1000.0
 		
 	@property
+	def totalElevationGainM( self ):
+		return getattr(self, 'totalElevationGain', 0.0)
+		
+	@property
+	def totalElevationGainFt( self ):
+		return self.totalElevationGainM * 3.28084
+		
+	@property
 	def numPoints( self ):
 		return len(self.gpsPoints)
 		
