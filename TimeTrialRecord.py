@@ -262,7 +262,7 @@ class TimeTrialRecord( wx.Panel ):
 					raceSeconds = StrToSeconds(tStr)
 					race.addTime( bib, raceSeconds )
 					if isCamera:
-						AddBibToPhoto( bib, raceSeconds )
+						AddBibToPhoto( Utils.getFileName(), bib, raceSeconds )
 					OutputStreamer.writeNumTime( bib, raceSeconds )
 						
 			wx.CallAfter( Utils.refresh )

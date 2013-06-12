@@ -69,7 +69,7 @@ import Version
 from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, ExcelLink
 from SetGraphic			import SetGraphicDialog
 from GetResults			import GetCategoryDetails
-from PhotoFinish		import TakePhoto, ResetPhotoInfoCache
+from PhotoFinish		import TakePhoto, ResetPhotoInfoCache, DeletePhotos
 from PhotoViewer		import PhotoViewerDialog
 from ReadTTStartTimesSheet import ImportTTStartTimes
 
@@ -1740,11 +1740,12 @@ Continue?''' % fName, 'Simulate a Race' ):
 			race.minutes = self.raceMinutes
 			race.raceNum = 1
 			#race.isTimeTrial = True
-			#race.enableUSBCamera = True
+			race.enableUSBCamera = True
 			race.setCategories( [	{'name':'Junior', 'catStr':'100-199', 'startOffset':'00:00', 'distance':0.5, 'gender':'Men'},
 									{'name':'Senior', 'catStr':'200-299', 'startOffset':'00:15', 'distance':0.5, 'gender':'Women'}] )
 
 		self.writeRace()
+		DeletePhotos( self.fileName )
 		
 		# Create an Excel data file of rider data.
 		fnameInfo = os.path.join( Utils.getImageFolder(), 'NamesTeams.csv' )

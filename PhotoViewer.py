@@ -371,8 +371,9 @@ class PhotoViewerDialog( wx.Dialog ):
 			self.thumbs._scrolled.filePrefix = ''
 		else:
 			self.thumbs._scrolled.filePrefix = 'bib-%04d' % self.num
-			
-		ResetPhotoInfoCache( Utils.mainWin.fileName )
+		
+		if Utils.mainWin:
+			ResetPhotoInfoCache( Utils.mainWin.fileName )
 		
 		if os.path.isdir(dir):
 			self.thumbs.ShowDir( dir )

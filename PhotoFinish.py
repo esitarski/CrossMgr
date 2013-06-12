@@ -2,10 +2,11 @@ import os
 import wx
 import sys
 import math
+import shutil
 import datetime
 import Utils
 from Version import AppVerName
-
+	  
 sys.path.append( Utils.dirName )	# Required for PIL to find the font files.
 
 def formatTime( secs ):
@@ -74,7 +75,14 @@ def getPhotoDirName( raceFileName ):
 		dirName = '.'
 	dirName = os.path.join( dirName, fileName + '_Photos' )
 	return dirName
-
+	
+def DeletePhotos( raceFileName ):
+	dirName = getPhotoDirName( raceFileName )
+	try:
+		shutil.rmtree( dirName, True )
+	except:
+		pass
+				
 def ResetPhotoInfoCache( raceFileName ):
 	global photoCache
 	photoCache = set()
@@ -91,7 +99,7 @@ def GetPhotoFName( bib, raceSeconds ):
 	return fileFormat % (bib if bib else 0, fileFormatTime(raceSeconds) )
 
 if Device:
-	def AddBibToPhoto( bib, raceSeconds ):
+	def AddBibToPhoto( raceFileName, bib, raceSeconds ):
 		dirName = getPhotoDirName( raceFileName )
 		
 		fnameOld = GetPhotoFName( None, raceSeconds )
@@ -113,7 +121,7 @@ if Device:
 			try:
 				os.mkdir( dirName )
 			except:
-				return 1
+				return 0
 		
 		fname = GetPhotoFName( bib, raceSeconds )
 		fileName = os.path.join( dirName, fname )
@@ -157,10 +165,10 @@ if Device:
 				camera = None
 else:
 	def TakePhoto( raceFileName, bib, raceSeconds ):
-		pass
+		return 0
 	def SetCameraState( state ):
 		pass
-	def AddBibToPhoto( bib, raceSeconds ):
+	def AddBibToPhoto( raceFileName, bib, raceSeconds ):
 		pass
 
 if __name__ == '__main__':
