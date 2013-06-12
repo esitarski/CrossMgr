@@ -1037,6 +1037,12 @@ function Altigraph()
 		}
 		if( altigraph.length > 0 )
 			this.xMax = altigraph[altigraph.length-1][0];
+			
+		if( this.yMin == this.yMax )
+		{
+			this.altigraph = []
+			gpsAltigraph = null;
+		}
 	}
 	
 	this.empty = function() { return this.altigraph.length == 0; }
