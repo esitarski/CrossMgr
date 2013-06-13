@@ -14,6 +14,30 @@ try:
 except ImportError:
 	pass
 	
+try:
+	import win32api,win32process,win32con
+except:
+	pass
+
+try:
+	sys.getwindowsversion()
+except:
+	isWindows = False
+else:
+	isWindows = True
+
+def HighPriority():
+	""" Set the priority of the process to the highest level."""
+	if isWindows:
+		# Based on:
+		#   "Recipe 496767: Set Process Priority In Windows" on ActiveState
+		#   http://code.activestate.com/recipes/496767/
+		pid = win32api.GetCurrentProcessId()
+		handle = win32api.OpenProcess(win32con.PROCESS_ALL_ACCESS, True, pid)
+		win32process.SetPriorityClass(handle, win32process.REALTIME_PRIORITY_CLASS)
+	else:
+		os.nice( -os.nice(0) )
+		
 reLeadingZeros = re.compile( '^0+' )
 def stripLeadingZeros( s ):
 	return reLeadingZeros.sub( '', s )

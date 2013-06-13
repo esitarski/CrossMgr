@@ -5,6 +5,7 @@ import math
 import shutil
 import datetime
 import Utils
+import Model
 from Version import AppVerName
 	  
 sys.path.append( Utils.dirName )	# Required for PIL to find the font files.
@@ -98,6 +99,25 @@ fileFormat = 'bib-%04d-time-%s.jpg'
 def GetPhotoFName( bib, raceSeconds ):
 	return fileFormat % (bib if bib else 0, fileFormatTime(raceSeconds) )
 
+latencies = []
+sumLatencies = 0.0
+iLatency = 0
+iLatencyMax = 10
+
+def updateLatency( latency ):
+	global sumLatencies, iLatency
+	# Update the response statistics.
+	if len(latencies) < iLatencyMax:
+		latencies.append( latency )
+	else:
+		sumLatencies -= latencies[iLatency]
+		latencies[iLatency] = latency
+	sumLatencies += latency
+	iLatency = (iLatency + 1) % iLatencyMax
+	
+def getAverageLatency():
+	return sumLatencies / float(len(latencies))
+			
 if Device:
 	def AddBibToPhoto( raceFileName, bib, raceSeconds ):
 		dirName = getPhotoDirName( raceFileName )
@@ -115,6 +135,16 @@ if Device:
 	def TakePhoto( raceFileName, bib, raceSeconds ):
 		global camera, font
 		
+		# Open the camera if it is not open yet.
+		if camera is None:
+			SetCameraState( True )
+			if not camera:
+				return 0
+		
+		# Take the picture as quickly as possible.
+		cameraImage = camera.getImage()
+		latency = Model.race.curRaceTime() - raceSeconds
+			
 		# Get the directory to write the photo in.
 		dirName = getPhotoDirName( raceFileName )
 		if not os.path.isdir( dirName ):
@@ -126,33 +156,30 @@ if Device:
 		fname = GetPhotoFName( bib, raceSeconds )
 		fileName = os.path.join( dirName, fname )
 		
-		# Write the photo.
-		if camera is None:
-			SetCameraState( True )
+		bitmap = wx.BitmapFromImage( PilImageToWxImage(cameraImage) )
+		
+		w, h = bitmap.GetSize()
+		dc = wx.MemoryDC( bitmap )
+		dc.SetTextForeground( wx.WHITE )
+		fontHeight = h//25
+		if not font:
+			font = wx.FontFromPixelSize( wx.Size(0,fontHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
 			
-		if camera:
-			bitmap = wx.BitmapFromImage( PilImageToWxImage(camera.getImage()) )
-			w, h = bitmap.GetSize()
-			dc = wx.MemoryDC( bitmap )
-			dc.SetTextForeground( wx.WHITE )
-			fontHeight = h//25
-			if not font:
-				font = wx.FontFromPixelSize( wx.Size(0,fontHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
-				
-			if bib:
-				txt = 'Bib: %d  RaceTime: %s  %s  %s' % (
-					bib, formatTime(raceSeconds), datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), AppVerName)
-			else:
-				txt = 'RaceTime: %s  %s  %s' % (
-					formatTime(raceSeconds), datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), AppVerName)
-				
-			dc.SetFont( font )
-			dc.DrawText( txt, fontHeight * 0.5, h - fontHeight*1.25 )
-			wx.ImageFromBitmap(bitmap).SaveFile( fileName, wx.BITMAP_TYPE_JPEG )
-			photoCache.add( fname )		# Add the photo to the cache.
-			return 1
+		if bib:
+			txt = 'Bib: %d  RaceTime: %s  %s  %s' % (
+				bib, formatTime(raceSeconds), datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), AppVerName)
+		else:
+			txt = 'RaceTime: %s  %s  %s' % (
+				formatTime(raceSeconds), datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), AppVerName)
 			
-		return 0
+		dc.SetFont( font )
+		dc.DrawText( txt, fontHeight * 0.5, h - fontHeight*1.25 )
+		wx.ImageFromBitmap(bitmap).SaveFile( fileName, wx.BITMAP_TYPE_JPEG )
+		photoCache.add( fname )		# Add the photo to the cache.
+		
+		updateLatency( latency )
+		print 'Average Photo Latency:', getAverageLatency()
+		return 1
 		
 	def SetCameraState( state = False ):
 		global camera, font
