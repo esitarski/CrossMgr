@@ -143,7 +143,7 @@ if Device:
 		
 		# Take the picture as quickly as possible.
 		cameraImage = camera.getImage()
-		latency = Model.race.curRaceTime() - raceSeconds
+		updateLatency( Model.race.curRaceTime() - raceSeconds )
 			
 		# Get the directory to write the photo in.
 		dirName = getPhotoDirName( raceFileName )
@@ -176,9 +176,6 @@ if Device:
 		dc.DrawText( txt, fontHeight * 0.5, h - fontHeight*1.25 )
 		wx.ImageFromBitmap(bitmap).SaveFile( fileName, wx.BITMAP_TYPE_JPEG )
 		photoCache.add( fname )		# Add the photo to the cache.
-		
-		updateLatency( latency )
-		print 'Average Photo Latency:', getAverageLatency()
 		return 1
 		
 	def SetCameraState( state = False ):

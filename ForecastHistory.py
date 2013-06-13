@@ -312,7 +312,20 @@ class ForecastHistory( wx.Panel ):
 				
 			t = race.curRaceTime()
 			
-			# Add the times to the model.  Do this first!
+			# Take the picture first to reduce latency to capturing the riders as they cross the line.
+			if getattr(race, 'enableUSBCamera', False):
+				for num in nums:
+					try:
+						num = int(num)
+					except:
+						continue
+					try:
+						race.photoCount = getattr(race,'photoCount',0) + TakePhoto( Utils.getFileName(), num, t )
+					except:
+						pass
+					break
+			
+			# Add the times to the model and write to the log.
 			for num in nums:
 				try:
 					num = int(num)
@@ -321,16 +334,6 @@ class ForecastHistory( wx.Panel ):
 				race.addTime( num, t )
 				OutputStreamer.writeNumTime( num, t )
 				
-			# Take the picture before any updates to reduce latency as much as possible.
-			if getattr(race, 'enableUSBCamera', False):
-				for num in nums:
-					try:
-						num = int(num)
-					except:
-						continue
-					race.photoCount = getattr(race,'photoCount',0) + TakePhoto( Utils.getFileName(), num, t )
-					break
-			
 		mainWin = Utils.getMainWin()
 		if mainWin:
 			mainWin.record.keypad.numEdit.SetValue( '' )
