@@ -35,7 +35,7 @@ def ListDirectory(self, directory, fileExtList):
 	fileList = [f for f in fileList if os.path.splitext(f)[1] in fileExtList]                          
 	fileList = [f for f in fileList
 		if os.path.basename(f).startswith(self.filePrefix) and os.path.splitext(f)[1] in ['.jpeg', '.jpg'] ]
-	fileList.sort( key = lambda f: os.path.basename(f).split('-')[3] )	# Sort by time rather than bib.
+	fileList.sort( key = lambda f: os.path.splitext(os.path.basename(f))[0].split('-')[3:] )	# Sort by race time rather than bib.
 	return fileList[-200:]	# Limit to the last 200 photos so as not to crash the system.
 
 def getRiderNameFromFName( fname ):

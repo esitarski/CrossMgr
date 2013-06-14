@@ -6,6 +6,7 @@ import shutil
 import datetime
 import Utils
 import Model
+import bisect
 from Version import AppVerName
 	  
 sys.path.append( Utils.dirName )	# Required for PIL to find the font files.
@@ -143,7 +144,8 @@ if Device:
 		
 		# Take the picture as quickly as possible.
 		cameraImage = camera.getImage()
-		updateLatency( Model.race.curRaceTime() - raceSeconds )
+		if Model.race:
+			updateLatency( Model.race.curRaceTime() - raceSeconds )
 			
 		# Get the directory to write the photo in.
 		dirName = getPhotoDirName( raceFileName )
@@ -195,11 +197,72 @@ else:
 	def AddBibToPhoto( raceFileName, bib, raceSeconds ):
 		pass
 
+class PhotoBuffer( object ):
+	def __init__( self, photoMax = 200 ):
+		self.photoMax = photoMax
+		self.reset()
+	
+	def reset( self ):
+		self.photos = [(0.0, None)] * self.photoMax
+		self.photoCur =  self.photoMax - 1;
+		
+	def append( self, t, photo ):
+		self.photos[self.photoCur] = (t, photo)
+		self.photoCur = (self.photoCur + 1) % self.photoMax
+	
+	def __getitem__( self, i ):
+		# Return the time of the photo at i, offset for the circular buffer size.
+		# The index self.photoCur is zero in the circular buffer.
+		return self.photos[ (i + self.photoCur) % self.photoMax ][0]
+		
+	def getT( self, i ):
+		return self.photos[ (i + self.photoCur) % self.photoMax ][0]
+		
+	def getPhoto( self, i ):
+		return self.photos[ (i + self.photoCur) % self.photoMax ][1]
+		
+	def __len__( self ):
+		return self.photoMax
+	
+	def find( self, t ):
+		iLE = bisect.bisect_left( self, t, 0, self.photoMax )	# Search the circular buffer as if it was a linear buffer.
+		if iLE >= self.photoMax:
+			iBest = self.photoMax - 1
+		else:
+			iBest = iLE if t - self.getT(iLE) < self.getT(iLE+1) - t else iLE + 1
+		photoRet = []
+		if iBest > 0 and self.getPhoto(iBest-1) is not None:
+			photoRet.append( self.getPhoto(iBest-1) )
+		if self.getPhoto(iBest) is not None:
+			photoRet.append( self.getPhoto(iBest) )
+		if iBest < self.photoMax-1:
+			photoRet.append( self.getPhoto(iBest+1) )
+		return photoRet
+		
+	def takePhoto( self, t ):
+		self.photos[self.photoCur] = (t, camera.getImage())
+		self.photoCur = (self.photoCur + 1) % self.photoMax
+		
 if __name__ == '__main__':
-	app = wx.App()
+	app = wx.PySimpleApp()
+	app.SetAppName("CrossMgr")
+	Utils.disable_stdout_buffering()
+	
 	SetCameraState( True )
 	import datetime
 	for i in xrange(5):
 		d = datetime.datetime.now()
 		TakePhoto( 'test.cmn', 100, 129.676 + i )
 		print 'Video Frame Capture Time', (datetime.datetime.now() - d).total_seconds()
+	import time
+	pb = PhotoBuffer()
+	tStart = datetime.datetime.now()
+	for i in xrange(20000):
+		t = (datetime.datetime.now() - tStart).total_seconds()
+		pb.takePhoto( t )
+		pb.find( t + 0.02 )
+		tWait = (t + (1.0 / 50.0)) - (datetime.datetime.now() - tStart).total_seconds()
+		time.sleep( max(tWait, 0) )
+	
+		
+	

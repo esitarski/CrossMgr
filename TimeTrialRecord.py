@@ -139,6 +139,7 @@ class TimeTrialRecord( wx.Panel ):
 		self.grid.EnableReorderRows( False )
 		self.grid.SetRowLabelSize( 0 )
 		self.grid.CreateGrid( self.maxRows, len(self.headerNames) )
+		self.grid.Bind( gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.doClickLabel )
 		for col, name in enumerate(self.headerNames):
 			self.grid.SetColLabelValue( col, name )
 		self.grid.SetLabelFont( self.font )
@@ -170,7 +171,6 @@ class TimeTrialRecord( wx.Panel ):
 		])
 		self.SetAcceleratorTable(accel_tbl)
 		
-		
 		self.SetSizer(self.vbs)
 		
 	def doPhoto( self, event ):
@@ -184,6 +184,10 @@ class TimeTrialRecord( wx.Panel ):
 			
 		Utils.mainWin.photoDialog.Show( True )
 		Utils.mainWin.photoDialog.refresh( 0, StrToSeconds(tStr) )
+	
+	def doClickLabel( self, event ):
+		if event.GetCol() == 0:
+			self.doRecordTime( event )
 	
 	def doRecordTime( self, event ):
 		t = Model.race.curRaceTime()
