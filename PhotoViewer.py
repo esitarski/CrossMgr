@@ -24,6 +24,10 @@ def getRiderName( info ):
 	return firstName
 
 def getFileKey( f ):
+	'''
+	Extracts the key from a picture filename.
+	Expects filename of the form:  "Bib-XXXX-time-HH-MM-SS-DDD.jpeg"
+	'''
 	return os.path.splitext(os.path.basename(f))[0].split('-')[3:]
 	
 def CmpThumb(first, second):
@@ -32,10 +36,7 @@ def CmpThumb(first, second):
 
 	:param `first`: an instance of L{Thumb};
 	:param `second`: another instance of L{Thumb}.
-	
-	Expects filename of the form:  "Bib-XXXX-time-HH-MM-SS-DDD.jpeg"
 	"""
-	
 	return cmp( getFileKey(first.GetFileName()), getFileKey(second.GetFileName()) )
 
 # Monkey Patch thumbnail sort by time.
