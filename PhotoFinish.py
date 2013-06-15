@@ -7,6 +7,7 @@ import datetime
 import Utils
 import Model
 import bisect
+import threading
 from Version import AppVerName
 	  
 sys.path.append( Utils.dirName )	# Required for PIL to find the font files.

@@ -23,6 +23,24 @@ def getRiderName( info ):
 			return lastName
 	return firstName
 
+def getFileKey( f ):
+	return os.path.splitext(os.path.basename(f))[0].split('-')[3:]
+	
+def CmpThumb(first, second):
+	"""
+	Compares two thumbnails by race time, not bib number.
+
+	:param `first`: an instance of L{Thumb};
+	:param `second`: another instance of L{Thumb}.
+	
+	Expects filename of the form:  "Bib-XXXX-time-HH-MM-SS-DDD.jpeg"
+	"""
+	
+	return cmp( getFileKey(first.GetFileName()), getFileKey(second.GetFileName()) )
+
+# Monkey Patch thumbnail sort by time.
+TC.CmpThumb = CmpThumb
+	
 def ListDirectory(self, directory, fileExtList):
 	"""
 	Returns list of file info objects for files of particular extensions.
@@ -35,7 +53,7 @@ def ListDirectory(self, directory, fileExtList):
 	fileList = [f for f in fileList if os.path.splitext(f)[1] in fileExtList]                          
 	fileList = [f for f in fileList
 		if os.path.basename(f).startswith(self.filePrefix) and os.path.splitext(f)[1] in ['.jpeg', '.jpg'] ]
-	fileList.sort( key = lambda f: os.path.splitext(os.path.basename(f))[0].split('-')[3:] )	# Sort by race time rather than bib.
+	fileList.sort( key = getFileKey )
 	return fileList[-200:]	# Limit to the last 200 photos so as not to crash the system.
 
 def getRiderNameFromFName( fname ):
