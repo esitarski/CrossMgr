@@ -12,6 +12,33 @@ now = datetime.datetime.now
 fileFormat = 'bib-%04d-time-%s-%d.jpg'
 def GetFilename( bib, t, dirName, i ):
 	return os.path.join( dirName, fileFormat % (bib if bib else 0, fileFormatTime(t), (i+1) ) )
+
+class FrameSaver( threading.Thread ):
+	def __init__( self ):
+		threading.Thread.__init__( self )
+		self.daemon = True
+		self.reset()
+		
+	def reset( self ):
+		self.queue = Queue()
+		
+	def run( self ):
+		self.reset()
+		while 1:
+			message = self.queue.get()
+			if   message[0] == 'Save':
+				cmd, fileName, bib, t, frame = message
+				SavePhoto( fileName, bib, t, frame )
+			elif message[0] == 'Terminate':
+				self.reset()
+				break
+			
+	def stop( self ):
+		self.queue.put( ['Terminate'] )
+		return self
+			
+	def save( self, fileName, bib, t, frame ):
+		self.queue.put( ['Save', fileName, bib, t, frame] )
 	
 class VideoBuffer( threading.Thread ):
 	def __init__( self, camera, refTime = None, fps = 50, bufferSeconds = 1.5 ):
@@ -23,16 +50,17 @@ class VideoBuffer( threading.Thread ):
 		self.frameMax = int(fps * bufferSeconds)
 		self.frameDelay = 1.0 / fps
 		self.frameDelayMicroseconds = int(self.frameDelay * 1000000.0)
+		self.frameSaver = FrameSaver()
 		self.reset()
 	
 	def reset( self ):
+		if self.frameSaver.is_alive():
+			self.frameSaver.stop().join()
+			self.frameSaver = FrameSaver()
 		self.frames = [(0.0, None)] * self.frameMax
 		self.frameCur =  self.frameMax - 1;
+		self.frameSaver.start()
 		self.queue = Queue()
-		
-	def saveFrames( self, bib, t, dirName, frames ):
-		for i, frame in enumerate(frames):
-			SavePhoto( GetFilename(bib, t, dirName, i), bib, t, frame )
 		
 	def run( self ):
 		self.reset()
@@ -46,8 +74,8 @@ class VideoBuffer( threading.Thread ):
 			else:
 				if   message[0] == 'Save':
 					cmd, bib, t, dirName = message
-					frames = self.find( t )
-					threading.Thread( target=self.saveFrames, args=(bib, t, dirName, frames) ).start()
+					for i, frame in enumerate( self.find(t) ):
+						self.frameSaver.save( GetFilename(bib, t, dirName, i), bib, t, frame )
 					
 				elif message[0] == 'Terminate':
 					self.reset()
@@ -118,3 +146,4 @@ if __name__ == '__main__':
 		time.sleep( random.random() )
 		vb.takePicture( 0, (now() - tRef).total_seconds(), dirName )
 	vb.stop().join()
+	vb = None
