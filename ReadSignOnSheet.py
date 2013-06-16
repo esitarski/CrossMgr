@@ -534,7 +534,9 @@ class ExcelLink( object ):
 			rowBib[row] = num
 			
 			if num in numRow:
-				errors.append( (num, 'Duplicate Bib# %d in row %d (same as Bib# in row %d)' % (num, row, numRow[num])) )
+				errors.append( (num,
+								'Duplicate Bib# {num} in row {row} (same as Bib# in row {dupRow})'.format(
+									num=num, row=row, dupRow=numRow[num])) )
 			else:
 				numRow[num] = row
 				
