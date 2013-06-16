@@ -127,31 +127,22 @@ class VideoBuffer( threading.Thread ):
 videoBuffer = None
 def TakePhoto( raceFileName, bib, raceSeconds ):
 	global videoBuffer
-	print 'VideoBuffer: TakePhoto', videoBuffer
 	
 	if not videoBuffer:
 		if not Model.race.isRunning():
-			print 'race is not running'
 			return 0
-		print 'race is running'
 	
 		camera = PhotoFinish.SetCameraState( True )
-		print 'camera:', camera
 		if not camera:
-			print 'camera fails'
 			return 0
 			
-		print 'found camera'
-		
 		dirName = PhotoFinish.getPhotoDirName( raceFileName )
 		if not os.path.isdir( dirName ):
 			try:
 				os.makedirs( dirName )
 			except:
-				print 'makedirs fails'
 				return 0
 				
-		print 'have dirname'
 		videoBuffer = VideoBuffer( camera, Model.race.startTime, dirName )
 		videoBuffer.start()
 
