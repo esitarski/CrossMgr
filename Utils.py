@@ -8,6 +8,8 @@ import math
 import subprocess
 import unicodedata
 import webbrowser
+import PhotoFinish
+import VideoBuffer
 import wx.grid		as gridlib
 try:
 	from win32com.shell import shell, shellcon
@@ -37,10 +39,9 @@ def HighPriority():
 		win32process.SetPriorityClass(handle, win32process.REALTIME_PRIORITY_CLASS)
 	else:
 		os.nice( -os.nice(0) )
-		
-reLeadingZeros = re.compile( '^0+' )
+
 def stripLeadingZeros( s ):
-	return reLeadingZeros.sub( '', s )
+	return s.lstrip('0')
 
 def removeDiacritic(input):
 	'''
@@ -280,6 +281,8 @@ try:
 	dirName = os.path.dirname(os.path.abspath(__file__))
 except:
 	dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
+	
+sys.path.append( dirName )	# Required for PIL to find the font files.
 
 if os.path.basename(dirName) in ['library.zip', 'MainWin.exe', 'CrossMgr.exe']:
 	dirName = os.path.dirname(dirName)
@@ -437,7 +440,16 @@ def CombineFirstLastName( firstName, lastName ):
 invalidFNameChars = set( c for c in '<>:"/\\|?*' )
 def ValidFilename( fname ):
 	return ''.join( c for c in fname if c not in invalidFNameChars and ord(c) > 31 )
-		
+
+def TakePhoto( bib, raceSeconds ):
+	race = Model.race
+	if race and getattr(race, 'enableUSBCamera', False):
+		if getattr(race, 'enableJChipIntegration', False):
+			return VideoBuffer.TakePhoto( mainWin.fileName, bib, raceSeconds )
+		else:
+			return PhotoVinish.TakePhoto( mainWin.fileName, bib, raceSeconds )
+	return 0
+
 if __name__ == '__main__':
 	app = wx.PySimpleApp()
 	hd = getHomeDir()

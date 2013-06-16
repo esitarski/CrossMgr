@@ -8,7 +8,6 @@ import ColGrid
 import StatusBar
 import OutputStreamer
 import NumKeypad
-from PhotoFinish import TakePhoto
 from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, DeleteEntry, DoDNS, DoDNF, DoPull
 from FtpWriteFile import realTimeFtpPublish
 
@@ -320,10 +319,9 @@ class ForecastHistory( wx.Panel ):
 					except:
 						continue
 					try:
-						race.photoCount = getattr(race,'photoCount',0) + TakePhoto( Utils.getFileName(), num, t )
+						race.photoCount = getattr(race,'photoCount',0) + Utils.TakePhoto( num, t )
 					except:
 						pass
-					break
 			
 			# Add the times to the model and write to the log.
 			for num in nums:

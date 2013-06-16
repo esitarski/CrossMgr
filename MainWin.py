@@ -69,7 +69,7 @@ import Version
 from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, ExcelLink
 from SetGraphic			import SetGraphicDialog
 from GetResults			import GetCategoryDetails
-from PhotoFinish		import TakePhoto, ResetPhotoInfoCache, DeletePhotos
+from PhotoFinish		import ResetPhotoInfoCache, DeletePhotos
 from PhotoViewer		import PhotoViewerDialog
 from ReadTTStartTimesSheet import ImportTTStartTimes
 
@@ -577,7 +577,6 @@ class MainWin( wx.Frame ):
 		if not race.tagNums:
 			return
 		
-		# Take one photo for all the riders in the group.
 		for tag, dt in event.tagTimes:
 			if race.startTime > dt:
 				continue
@@ -588,12 +587,7 @@ class MainWin( wx.Frame ):
 			delta = dt - race.startTime
 			t = delta.total_seconds()
 			
-			# Ensure that we don't take more than 10 photos per second.
-			photoTime = datetime.datetime.now()
-			if (photoTime - self.lastPhotoTime).total_seconds() > 0.1:
-				race.photoCount = getattr(race,'photoCount',0) + TakePhoto( Utils.getFileName(), num, t )
-				self.lastPhotoTime = photoTime
-				break
+			race.photoCount = getattr(race,'photoCount',0) + Utils.TakePhoto( num, t )
 	
 	def menuDNS( self, event ):
 		dns = DNSManagerDialog( self )
@@ -1741,6 +1735,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			race.raceNum = 1
 			#race.isTimeTrial = True
 			race.enableUSBCamera = True
+			race.enableJChipIntegration = True
 			race.setCategories( [	{'name':'Junior', 'catStr':'100-199', 'startOffset':'00:00', 'distance':0.5, 'gender':'Men'},
 									{'name':'Senior', 'catStr':'200-299', 'startOffset':'00:15', 'distance':0.5, 'gender':'Women'}] )
 

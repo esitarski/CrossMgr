@@ -9,8 +9,6 @@ import Model
 import threading
 from Version import AppVerName
 	  
-sys.path.append( Utils.dirName )	# Required for PIL to find the font files.
-
 def formatTime( secs ):
 	if secs is None:
 		secs = 0
@@ -30,10 +28,6 @@ def formatTime( secs ):
 def fileFormatTime( secs ):
 	return formatTime(secs).replace(':', '-').replace('.', '-')
 	
-#import Image	# Required for VideoCapture (PIL library)
-#import VideoCapture
-#from VideoCapture import Device
-
 try:
 	from VideoCapture import Device
 except:
@@ -42,27 +36,13 @@ except:
 def HasPhotoFinish():
 	return Device is not Null
 
-def PilImageToWxImage( myPilImage, copyAlpha=True ) :
-	hasAlpha = myPilImage.mode[ -1 ] == 'A'
-	if copyAlpha and hasAlpha :  # Make sure there is an alpha layer copy.
+def PilImageToWxImage( pil, copyAlpha=True ):
+	image = wx.EmptyImage( *pil.size )
+	image.SetData( pil.convert('RGB').tostring() )
+	if copyAlpha and pil.mode[-1] == 'A':
+		image.SetAlphaData( pil.convert("RGBA").tostring()[3::4] )
+	return image
 
-		myWxImage = wx.EmptyImage( *myPilImage.size )
-		myPilImageCopyRGBA = myPilImage.copy()
-		myPilImageCopyRGB = myPilImageCopyRGBA.convert( 'RGB' )    # RGBA --> RGB
-		myPilImageRgbData = myPilImageCopyRGB.tostring()
-		myWxImage.SetData( myPilImageRgbData )
-		myWxImage.SetAlphaData( myPilImageCopyRGBA.tostring()[3::4] )  # Create layer and insert alpha values.
-
-	else :    # The resulting image will not have alpha.
-
-		myWxImage = wx.EmptyImage( *myPilImage.size )
-		myPilImageCopy = myPilImage.copy()
-		myPilImageCopyRGB = myPilImageCopy.convert( 'RGB' )    # Discard any alpha from the PIL image.
-		myPilImageRgbData =myPilImageCopyRGB.tostring()
-		myWxImage.SetData( myPilImageRgbData )
-
-	return myWxImage
-	
 #--------------------------------------------------------------------------------------
 	
 camera = None
@@ -139,7 +119,23 @@ def SavePhoto( fileName, bib, raceSeconds, cameraImage ):
 		
 	dc.SetFont( font )
 	dc.DrawText( txt, fontHeight * 0.5, h - fontHeight*1.25 )
-	wx.ImageFromBitmap(bitmap).SaveFile( fileName, wx.BITMAP_TYPE_JPEG )
+	image = wx.ImageFromBitmap( bitmap )
+	
+	# Try to save the file.  If that fails, try to create the directory for the file and try again.
+	try:
+		image.SaveFile( fileName, wx.BITMAP_TYPE_JPEG )
+		return 1
+	except:
+		pass
+		
+	try:
+		os.makedirs( os.path.dirname(fileName) )
+	except:
+		return 0
+	
+	image.SaveFile( fileName, wx.BITMAP_TYPE_JPEG )
+	return 1
+
 			
 if Device:
 	def AddBibToPhoto( raceFileName, bib, raceSeconds ):
@@ -171,19 +167,13 @@ if Device:
 			
 		# Get the directory to write the photo in.
 		dirName = getPhotoDirName( raceFileName )
-		if not os.path.isdir( dirName ):
-			try:
-				os.mkdir( dirName )
-			except:
-				return 0
-		
 		fname = GetPhotoFName( bib, raceSeconds )
 		fileName = os.path.join( dirName, fname )
 		
-		SavePhoto( fileName, bib, raceSeconds, cameraImage )
-		
-		photoCache.add( fname )		# Add the photo to the cache.
-		return 1
+		ret = SavePhoto( fileName, bib, raceSeconds, cameraImage )
+		if ret:
+			photoCache.add( fname )		# Add the photo to the cache.
+		return ret
 		
 	def SetCameraState( state = False ):
 		global camera, font

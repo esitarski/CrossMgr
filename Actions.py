@@ -9,6 +9,7 @@ import OutputStreamer
 from FtpWriteFile import realTimeFtpPublish
 from Undo import undo
 from PhotoFinish import SetCameraState
+import VideoBuffer
 
 import wx.lib.masked as masked
 from roundbutton import RoundButton
@@ -251,6 +252,7 @@ class Actions( wx.Panel ):
 		if getattr(Model.race, 'ftpUploadDuringRace', False):
 			realTimeFtpPublish.publishEntry( True )
 		
+		VideoBuffer.Shutdown()
 		SetCameraState( False )
 	
 	def refresh( self ):

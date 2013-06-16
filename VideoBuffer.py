@@ -1,17 +1,16 @@
 import wx
 import time
 import Utils
+import PhotoFinish
 import datetime
 import threading
-import bisect
 from Queue import Queue, Empty
-from PhotoFinish import SetCameraState, SavePhoto, fileFormatTime
 
 now = datetime.datetime.now
 
 fileFormat = 'bib-%04d-time-%s-%d.jpg'
 def GetFilename( bib, t, dirName, i ):
-	return os.path.join( dirName, fileFormat % (bib if bib else 0, fileFormatTime(t), (i+1) ) )
+	return os.path.join( dirName, fileFormat % (bib if bib else 0, PhotoFinish.fileFormatTime(t), (i+1) ) )
 
 class FrameSaver( threading.Thread ):
 	def __init__( self ):
@@ -28,24 +27,25 @@ class FrameSaver( threading.Thread ):
 			message = self.queue.get()
 			if   message[0] == 'Save':
 				cmd, fileName, bib, t, frame = message
-				SavePhoto( fileName, bib, t, frame )
+				PhotoFinish.SavePhoto( fileName, bib, t, frame )
 			elif message[0] == 'Terminate':
 				self.reset()
 				break
 			
 	def stop( self ):
 		self.queue.put( ['Terminate'] )
-		return self
+		self.join()
 			
 	def save( self, fileName, bib, t, frame ):
 		self.queue.put( ['Save', fileName, bib, t, frame] )
 	
 class VideoBuffer( threading.Thread ):
-	def __init__( self, camera, refTime = None, fps = 50, bufferSeconds = 1.5 ):
+	def __init__( self, camera, refTime = None, dirName = '.', fps = 50, bufferSeconds = 1.5 ):
 		threading.Thread.__init__( self )
 		self.daemon = True
 		self.camera = camera
 		self.refTime = refTime if refTime is not None else now()
+		self.dirName = dirName
 		self.fps = fps
 		self.frameMax = int(fps * bufferSeconds)
 		self.frameDelay = 1.0 / fps
@@ -55,7 +55,7 @@ class VideoBuffer( threading.Thread ):
 	
 	def reset( self ):
 		if self.frameSaver.is_alive():
-			self.frameSaver.stop().join()
+			self.frameSaver.stop()
 			self.frameSaver = FrameSaver()
 		self.frames = [(0.0, None)] * self.frameMax
 		self.frameCur =  self.frameMax - 1;
@@ -73,9 +73,9 @@ class VideoBuffer( threading.Thread ):
 				pass
 			else:
 				if   message[0] == 'Save':
-					cmd, bib, t, dirName = message
+					cmd, bib, t = message
 					for i, frame in enumerate( self.find(t) ):
-						self.frameSaver.save( GetFilename(bib, t, dirName, i), bib, t, frame )
+						self.frameSaver.save( GetFilename(bib, t, self.dirName, i), bib, t, frame )
 					
 				elif message[0] == 'Terminate':
 					self.reset()
@@ -83,19 +83,15 @@ class VideoBuffer( threading.Thread ):
 				
 			# Sleep until we need to grab the next frame.
 			microSeconds = (now() - tLaunch).microseconds
-			frameWait = ((int(microSeconds / self.frameDelayMicroseconds)+1) * self.frameDelayMicroseconds) - microSeconds
+			frameWait = ((microSeconds // self.frameDelayMicroseconds + 1) * self.frameDelayMicroseconds) - microSeconds
 			time.sleep( frameWait / 1000000.0 )
 	
 	def stop( self ):
 		self.queue.put( ['Terminate'] )
-		return self
+		self.join()
 		
-	def takePicture( self, bib, t, dirName ):
-		self.queue.put( ['Save', bib, t, dirName] )
-	
-	def append( self, t, frame ):
-		self.frames[self.frameCur] = (t, frame)
-		self.frameCur = (self.frameCur + 1) % self.frameMax
+	def takePicture( self, bib, t ):
+		self.queue.put( ['Save', bib, t] )
 	
 	def getT( self, i ):
 		return self.frames[ (i + self.frameCur) % self.frameMax ][0]
@@ -124,7 +120,37 @@ class VideoBuffer( threading.Thread ):
 			self.frameCur = (self.frameCur + 1) % self.frameMax
 		except:
 			pass
-		
+
+videoBuffer = None
+def TakePhoto( raceFileName, bib, raceSeconds ):
+	global videoBuffer
+	
+	if not videoBuffer:
+		if not Model.race.isRunning():
+			return 0
+	
+		camera = SetCameraState( True )
+		if not camera:
+			return 0
+			
+		dirName = getPhotoDirName( raceFileName )
+		if not os.path.isdir( dirName ):
+			try:
+				os.makedirs( dirName )
+			except:
+				return 0
+				
+		videoBuffer = VideoBuffer( camera, Model.race.tStart, dirName )
+
+	videoBuffer.takePicture( bib, raceSeconds )
+	return 1
+	
+def Shutdown():
+	global videoBuffer
+	if videoBuffer:
+		videoBuffer.stop()
+		videoBuffer = None
+			
 if __name__ == '__main__':
 	import os
 	import random
@@ -140,10 +166,11 @@ if __name__ == '__main__':
 	os.mkdir( dirName )
 	
 	tRef = now()
-	vb = VideoBuffer( SetCameraState(True), tRef )
+	camera = PhotoFinish.SetCameraState( True )
+	vb = VideoBuffer( camera, tRef, dirName )
 	vb.start()
 	for i in xrange(60):
 		time.sleep( random.random() )
-		vb.takePicture( 0, (now() - tRef).total_seconds(), dirName )
-	vb.stop().join()
+		vb.takePicture( i, (now() - tRef).total_seconds() )
+	vb.stop()
 	vb = None
