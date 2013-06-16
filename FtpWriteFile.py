@@ -136,6 +136,8 @@ class RealTimeFtpPublish( object ):
 			self.latencyTime = self.latencyTimeMin
 		
 		self.timer = threading.Timer( self.latencyTime if not publishNow else 0.1, self.publish )
+		self.timer.daemon = True
+		self.timer.name = 'FTP Publish Timer'
 		self.timer.start()
 
 realTimeFtpPublish = RealTimeFtpPublish()

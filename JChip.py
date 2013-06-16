@@ -327,16 +327,18 @@ def StartListener( startTime = datetime.datetime.now(),
 	q = Queue()
 	shutdownQ = Queue()
 	listener = Process( target = Server, args=(q, shutdownQ, HOST, PORT, startTime) )
+	listener.name = 'JChip Listener'
+	listener.daemon = True
 	listener.start()
 	
 @atexit.register
 def Cleanuplistener():
 	global shutdownQ
 	global listener
-	if listener:
+	if listener and listener.is_alive():
 		shutdownQ.put( 'shutdown' )
 		listener.join()
-		listener = None
+	listener = None
 	
 if __name__ == '__main__':
 	StartListener()

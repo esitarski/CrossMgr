@@ -11,6 +11,7 @@ import copy
 import bisect
 import json
 import multiprocessing
+import threading
 import webbrowser
 import zipfile
 import base64
@@ -69,13 +70,26 @@ import Version
 from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, ExcelLink
 from SetGraphic			import SetGraphicDialog
 from GetResults			import GetCategoryDetails
-from PhotoFinish		import ResetPhotoInfoCache, DeletePhotos
+from PhotoFinish		import ResetPhotoInfoCache, DeletePhotos, SetCameraState
 from PhotoViewer		import PhotoViewerDialog
 from ReadTTStartTimesSheet import ImportTTStartTimes
+import VideoBuffer
 
 import wx.lib.agw.advancedsplash as AS
 import openpyxl
 
+'''
+# Monkey patch threading so we can see where each thread gets started.
+import types
+import traceback
+threading_start = threading.Thread.start
+def loggingThreadStart( self, *args, **kwargs ):
+	threading_start( self, *args, **kwargs )
+	print self
+	traceback.print_stack()
+	print '----------------------------------'
+threading.Thread.start = types.MethodType(loggingThreadStart, None, threading.Thread)
+'''
 #----------------------------------------------------------------------------------
 		
 def ShowSplashScreen():
@@ -1324,7 +1338,11 @@ class MainWin( wx.Frame ):
 			del self.simulateTimer
 		except AttributeError:
 			pass
-			
+		
+		OutputStreamer.StopStreamer()
+		VideoBuffer.Shutdown()
+		JChip.Cleanuplistener()
+		
 		wx.Exit()
 
 	def writeRace( self ):
@@ -1814,6 +1832,9 @@ Continue?''' % fName, 'Simulate a Race' ):
 		self.nextNum = None
 		with Model.LockRace() as race:
 			race.finishRaceNow()
+		VideoBuffer.Shutdown()
+		SetCameraState( False )
+		JChip.Cleanuplistener()
 		
 		OutputStreamer.writeRaceFinish()
 		# Give the streamer a chance to write the last message.

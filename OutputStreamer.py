@@ -79,6 +79,7 @@ def StartStreamer( fname = None ):
 	q = Queue()
 	streamer = threading.Thread( target = Server, args=(q, fname) )
 	streamer.daemon = True
+	streamer.name = 'OutputStreamer'
 	streamer.start()
 
 def write( message ):

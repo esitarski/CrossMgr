@@ -6,7 +6,6 @@ import shutil
 import datetime
 import Utils
 import Model
-import threading
 from Version import AppVerName
 	  
 def formatTime( secs ):
@@ -72,7 +71,11 @@ def ResetPhotoInfoCache( raceFileName ):
 	photoCache = set( file for file in os.listdir(dir) if file.startswith('bib') and file.endswith('.jpg') )
 	
 def hasPhoto( bib, raceSeconds ):
-	return GetPhotoFName(bib, raceSeconds) in photoCache
+	fname = GetPhotoFName(bib, raceSeconds)
+	if fname in photoCache:
+		return True
+	fnameBase = os.path.splitext( fname )[0]
+	return any( ('%s-%d.jpg' % (fnameBase, i)) in photoCache for i in xrange(1, 4) )
 
 fileFormat = 'bib-%04d-time-%s.jpg'
 def GetPhotoFName( bib, raceSeconds ):
@@ -98,7 +101,7 @@ def getAverageLatency():
 	return sumLatencies / float(len(latencies))
 			
 def SavePhoto( fileName, bib, raceSeconds, cameraImage ):
-	global font
+	global font, photoCache
 	bitmap = wx.BitmapFromImage( PilImageToWxImage(cameraImage) )
 	
 	w, h = bitmap.GetSize()
@@ -123,6 +126,7 @@ def SavePhoto( fileName, bib, raceSeconds, cameraImage ):
 	# Try to save the file.  If that fails, try to create the directory for the file and try again.
 	try:
 		image.SaveFile( fileName, wx.BITMAP_TYPE_JPEG )
+		photoCache.add( os.path.basename(fileName) )
 		return 1
 	except:
 		pass
@@ -133,6 +137,7 @@ def SavePhoto( fileName, bib, raceSeconds, cameraImage ):
 		return 0
 	
 	image.SaveFile( fileName, wx.BITMAP_TYPE_JPEG )
+	photoCache.add( os.path.basename(fileName) )
 	return 1
 
 			
@@ -171,8 +176,6 @@ if Device:
 		fileName = os.path.join( dirName, fname )
 		
 		ret = SavePhoto( fileName, bib, raceSeconds, cameraImage )
-		if ret:
-			photoCache.add( fname )		# Add the photo to the cache.
 		return ret
 		
 	def SetCameraState( state = False ):

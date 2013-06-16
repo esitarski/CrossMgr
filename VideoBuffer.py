@@ -19,6 +19,7 @@ class FrameSaver( threading.Thread ):
 	def __init__( self ):
 		threading.Thread.__init__( self )
 		self.daemon = True
+		self.name = 'FrameSaver'
 		self.reset()
 		
 	def reset( self ):
@@ -31,7 +32,9 @@ class FrameSaver( threading.Thread ):
 			if   message[0] == 'Save':
 				cmd, fileName, bib, t, frame = message
 				PhotoFinish.SavePhoto( fileName, bib, t, frame )
+				self.queue.task_done()
 			elif message[0] == 'Terminate':
+				self.queue.task_done()
 				self.reset()
 				break
 			
@@ -46,6 +49,7 @@ class VideoBuffer( threading.Thread ):
 	def __init__( self, camera, refTime = None, dirName = '.', fps = 50, bufferSeconds = 1.5 ):
 		threading.Thread.__init__( self )
 		self.daemon = True
+		self.name = 'VideoBuffer'
 		self.camera = camera
 		self.refTime = refTime if refTime is not None else now()
 		self.dirName = dirName
@@ -60,6 +64,7 @@ class VideoBuffer( threading.Thread ):
 		if self.frameSaver.is_alive():
 			self.frameSaver.stop()
 			self.frameSaver = FrameSaver()
+			self.frameSaver.daemon = True
 		self.frames = [(0.0, None)] * self.frameMax
 		self.frameCur =  self.frameMax - 1;
 		self.frameSaver.start()
@@ -79,8 +84,10 @@ class VideoBuffer( threading.Thread ):
 					cmd, bib, t = message
 					for i, frame in enumerate( self.find(t) ):
 						self.frameSaver.save( GetFilename(bib, t, self.dirName, i), bib, t, frame )
+					self.queue.task_done()
 					
 				elif message[0] == 'Terminate':
+					self.queue.task_done()
 					self.reset()
 					break
 				
@@ -92,6 +99,8 @@ class VideoBuffer( threading.Thread ):
 	def stop( self ):
 		self.queue.put( ['Terminate'] )
 		self.join()
+		if self.frameSaver.is_alive():
+			self.frameSaver.stop()
 		
 	def takePicture( self, bib, t ):
 		self.queue.put( ['Save', bib, t] )
@@ -172,6 +181,7 @@ if __name__ == '__main__':
 	tRef = now()
 	camera = PhotoFinish.SetCameraState( True )
 	vb = VideoBuffer( camera, tRef, dirName )
+	vb.daemon = True
 	vb.start()
 	for i in xrange(60):
 		time.sleep( random.random() )

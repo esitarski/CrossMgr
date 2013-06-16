@@ -369,7 +369,7 @@ class Gantt( wx.Panel ):
 		if not mainWin:
 			return
 		mainWin.photoDialog.Show( True )
-		mainWin.photoDialog.setNumSelect( self.numSelect )
+		mainWin.photoDialog.refresh( self.numSelect, self.entryEnd.t if self.entryEnd else None )
 		
 	def updateStats( self, results ):
 		s = ''

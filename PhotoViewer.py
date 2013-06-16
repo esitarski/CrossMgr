@@ -265,7 +265,8 @@ class PhotoViewerDialog( wx.Dialog ):
 		# Run the upload in the background so we don't hang the UI.
 		thread = threading.Thread( target = FtpWriteRacePhoto, args = (self.thumbFileName,) )
 		thread.daemon = True
-		thread.run()
+		thread.name = 'FtpUpload'
+		thread.start()
 	
 	def OnPrint( self, event ):
 		try:
@@ -407,9 +408,11 @@ class PhotoViewerDialog( wx.Dialog ):
 		
 		if self.num is not None and t is not None:
 			# Select the photo specified by the time.
-			fnameMatch = GetPhotoFName( num, t )
+			fnameMatch = os.path.splitext(GetPhotoFName(num, t))[0]
+			print fnameMatch
 			for i in xrange(itemCount):
-				if fnameMatch == self.thumbs.GetItem(i).GetFileName():
+				print self.thumbs.GetItem(i).GetFileName()
+				if self.thumbs.GetItem(i).GetFileName().startswith(fnameMatch):
 					break
 			self.thumbs.SetSelection( i )
 		else:
