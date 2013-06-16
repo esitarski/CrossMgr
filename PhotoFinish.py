@@ -36,11 +36,9 @@ except:
 def HasPhotoFinish():
 	return Device is not Null
 
-def PilImageToWxImage( pil, copyAlpha=True ):
+def PilImageToWxImage( pil ):
 	image = wx.EmptyImage( *pil.size )
 	image.SetData( pil.convert('RGB').tostring() )
-	if copyAlpha and pil.mode[-1] == 'A':
-		image.SetAlphaData( pil.convert("RGBA").tostring()[3::4] )
 	return image
 
 #--------------------------------------------------------------------------------------
@@ -119,6 +117,7 @@ def SavePhoto( fileName, bib, raceSeconds, cameraImage ):
 		
 	dc.SetFont( font )
 	dc.DrawText( txt, fontHeight * 0.5, h - fontHeight*1.25 )
+	dc.SelectObject( wx.NullBitmap )
 	image = wx.ImageFromBitmap( bitmap )
 	
 	# Try to save the file.  If that fails, try to create the directory for the file and try again.
@@ -154,6 +153,7 @@ if Device:
 	def TakePhoto( raceFileName, bib, raceSeconds ):
 		global camera, font
 		
+		print 'PhotoFinish: TakePhotoCalled'
 		# Open the camera if it is not open yet.
 		if camera is None:
 			SetCameraState( True )

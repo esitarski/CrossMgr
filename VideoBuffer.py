@@ -1,9 +1,12 @@
 import wx
+import os
 import time
 import Utils
+import Model
 import PhotoFinish
 import datetime
 import threading
+import traceback
 from Queue import Queue, Empty
 
 now = datetime.datetime.now
@@ -124,23 +127,33 @@ class VideoBuffer( threading.Thread ):
 videoBuffer = None
 def TakePhoto( raceFileName, bib, raceSeconds ):
 	global videoBuffer
+	print 'VideoBuffer: TakePhoto', videoBuffer
 	
 	if not videoBuffer:
 		if not Model.race.isRunning():
+			print 'race is not running'
 			return 0
+		print 'race is running'
 	
-		camera = SetCameraState( True )
+		camera = PhotoFinish.SetCameraState( True )
+		print 'camera:', camera
 		if not camera:
+			print 'camera fails'
 			return 0
 			
-		dirName = getPhotoDirName( raceFileName )
+		print 'found camera'
+		
+		dirName = PhotoFinish.getPhotoDirName( raceFileName )
 		if not os.path.isdir( dirName ):
 			try:
 				os.makedirs( dirName )
 			except:
+				print 'makedirs fails'
 				return 0
 				
-		videoBuffer = VideoBuffer( camera, Model.race.tStart, dirName )
+		print 'have dirname'
+		videoBuffer = VideoBuffer( camera, Model.race.startTime, dirName )
+		videoBuffer.start()
 
 	videoBuffer.takePicture( bib, raceSeconds )
 	return 1

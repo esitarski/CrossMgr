@@ -447,7 +447,7 @@ def TakePhoto( bib, raceSeconds ):
 		if getattr(race, 'enableJChipIntegration', False):
 			return VideoBuffer.TakePhoto( mainWin.fileName, bib, raceSeconds )
 		else:
-			return PhotoVinish.TakePhoto( mainWin.fileName, bib, raceSeconds )
+			return PhotoFinish.TakePhoto( mainWin.fileName, bib, raceSeconds )
 	return 0
 
 if __name__ == '__main__':
