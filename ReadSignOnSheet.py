@@ -542,13 +542,13 @@ class ExcelLink( object ):
 				
 			for tField, tRow in tagFields:
 				if tField not in data:
-					errors.append( (num, 'Missing %s in row %d' % (tField, row)) )
+					errors.append( (num, 'Missing {field} in row {row} for Bib# {num}'.format( field=tField, row=row, num=num)) )
 					continue
 					
 				tag = data[tField].lstrip('0')
 				
 				if not tag:
-					errors.append( (num, 'Empty %s in row %d' % (tField, row)) )
+					errors.append( (num, 'Empty {field} in row {row} for Bib# {num}'.format(field=tField, row=row, num=num)) )
 					continue
 				
 				if tag in tRow:
