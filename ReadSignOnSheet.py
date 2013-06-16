@@ -270,7 +270,7 @@ class SummaryPage(wiz.WizardPageSimple):
 		else:
 			errStr = ['None']
 		errStr = '\n'.join( errStr )
-		self.statusName.SetLabel( 'Success!' if infoLen and not errors else 'Failure' )
+		self.statusName.SetLabel( 'Success!' if infoLen and not errors else '{num} Error(s)'.format( num=len(errors) ) )
 		self.errorName.SetValue( errStr )
 		
 		self.Layout()
@@ -494,8 +494,7 @@ class ExcelLink( object ):
 			return {}
 		
 		info = {}
-		numRow = {}
-		errors = []
+		rowInfo = []
 		for r, row in enumerate(reader.iter_list(self.sheetName)):
 			data = {}
 			for field, col in self.fieldCol.iteritems():
@@ -507,17 +506,56 @@ class ExcelLink( object ):
 						data[field] = str(data[field]).upper()
 				except IndexError:
 					pass
+			
 			try:
 				num = int(float(data[Fields[0]]))
-				if num in numRow:
-					errors.append( (num, 'Duplicate Bib Number %d in row %d (same as Bib in row %d)' % (num, r+1, numRow[num])) )
-				else:
-					numRow[num] = r + 1
-				info[num] = data
 			except (ValueError, TypeError, KeyError) as e:
 				pass
-		
+			else:
+				data[Fields[0]] = num
+				info[num] = data
+				rowInfo.append( (r+1, num, data) )	# Add one to the row to make error reporting consistent.
+			
+		# Fix all the tag formats
 		FixTagFormat( info )
+		
+		# Check for duplicate numbers, duplicate tags and missing tags.
+		numRow, tagRow, tag2Row = {}, {}, {}
+		
+		tagFields = []
+		if self.fieldCol['Tag'] >= 0:
+			tagFields.append( ('Tag', tagRow) )
+		if self.fieldCol['Tag2'] >= 0:
+			tagFields.append( ('Tag2', tag2Row) )
+			
+		errors = []
+		rowBib = {}
+		for row, num, data in rowInfo:
+			rowBib[row] = num
+			
+			if num in numRow:
+				errors.append( (num, 'Duplicate Bib# %d in row %d (same as Bib# in row %d)' % (num, row, numRow[num])) )
+			else:
+				numRow[num] = row
+				
+			for tField, tRow in tagFields:
+				if tField not in data:
+					errors.append( (num, 'Missing %s in row %d' % (tField, row)) )
+					continue
+					
+				tag = data[tField].lstrip('0')
+				
+				if not tag:
+					errors.append( (num, 'Empty %s in row %d' % (tField, row)) )
+					continue
+				
+				if tag in tRow:
+					errors.append( (num,
+									'Duplicate {field} {tag} for Bib# {num} in row {row} (same as {field} for Bib# {dupNum} in row {dupRow})'.format(
+										field=tField, tag=tag, num=num, row=row, dupNum = rowBib[tRow[tag]], dupRow=tRow[tag] ) ) )
+					continue
+					
+				tRow[tag] = row
 		
 		stateCache = (os.path.getmtime(self.fileName), self.fileName, self.sheetName, self.fieldCol)
 		infoCache = info

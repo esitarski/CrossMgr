@@ -102,8 +102,7 @@ class ReadExcelXls( ReadExcelBase ):
 	def iter_list(self, sname, date_as_tuple=False):
 		sheet = self.book.sheet_by_name(sname) # XLRDError
 		for i in range(sheet.nrows):
-			if self.is_nonempty_row(sheet, i):
-				yield self._parse_row(sheet, i, date_as_tuple)
+			yield self._parse_row(sheet, i, date_as_tuple)
 
 #----------------------------------------------------------------------------
 
@@ -121,8 +120,7 @@ class ReadExcelXlsx( ReadExcelBase ):
 		ws = self.book.get_sheet_by_name( name = sname )
 		for row in ws.iter_rows():
 			r = [toAscii(cell.internal_value) for cell in row]
-			if any( f for f in r ):
-				yield r
+			yield r
 
 #----------------------------------------------------------------------------
 

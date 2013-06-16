@@ -1352,6 +1352,8 @@ class MainWin( wx.Frame ):
 			excelLink = getattr(race, 'excelLink', None)
 		else:
 			geoTrack, geoTrackFName, excelLink = None, None, None
+			
+		geoTrack, geoTrackFName = None, None		# Do not retain the GPX file after a full new.
 		
 		dlg = PropertiesDialog(self, -1, 'Configure Race', style=wx.DEFAULT_DIALOG_STYLE )
 		ret = dlg.ShowModal()
