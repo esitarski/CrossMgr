@@ -352,7 +352,8 @@ class Recommendations( wx.Panel ):
 					append( m, '',
 							'Tag', 'Check chip tag missing from Excel sheet'
 							)
-
+				# end if entries
+				
 			self.grid.Set( data = data, colnames = colnames )
 			self.grid.AutoSizeColumns( True )
 			self.grid.Reset()
