@@ -68,6 +68,7 @@ class VideoBuffer( threading.Thread ):
 		self.frames = [(0.0, None)] * self.frameMax
 		self.frameCur =  self.frameMax - 1;
 		self.frameSaver.start()
+		self.frameCount = 0
 		self.queue = Queue()
 		
 	def run( self ):
@@ -82,8 +83,10 @@ class VideoBuffer( threading.Thread ):
 			else:
 				if   message[0] == 'Save':
 					cmd, bib, t = message
-					for i, frame in enumerate( self.find(t) ):
+					frames = self.find(t)
+					for i, frame in enumerate( frames ):
 						self.frameSaver.save( GetFilename(bib, t, self.dirName, i), bib, t, frame )
+					self.frameCount += len(frames)
 					self.queue.task_done()
 					
 				elif message[0] == 'Terminate':
@@ -102,7 +105,7 @@ class VideoBuffer( threading.Thread ):
 		if self.frameSaver.is_alive():
 			self.frameSaver.stop()
 		
-	def takePicture( self, bib, t ):
+	def takePhoto( self, bib, t ):
 		self.queue.put( ['Save', bib, t] )
 	
 	def getT( self, i ):
@@ -137,9 +140,11 @@ videoBuffer = None
 def TakePhoto( raceFileName, bib, raceSeconds ):
 	global videoBuffer
 	
+	race = Model.race
+	if not race or not race.isRunning():
+		return 0
+	
 	if not videoBuffer:
-		if not Model.race.isRunning():
-			return 0
 	
 		camera = PhotoFinish.SetCameraState( True )
 		if not camera:
@@ -155,8 +160,8 @@ def TakePhoto( raceFileName, bib, raceSeconds ):
 		videoBuffer = VideoBuffer( camera, Model.race.startTime, dirName )
 		videoBuffer.start()
 
-	videoBuffer.takePicture( bib, raceSeconds )
-	return 1
+	videoBuffer.takePhoto( bib, raceSeconds )
+	return videoBuffer.frameCount - getattr(race,'photoCount',0) + 3
 	
 def Shutdown():
 	global videoBuffer
@@ -185,6 +190,6 @@ if __name__ == '__main__':
 	vb.start()
 	for i in xrange(60):
 		time.sleep( random.random() )
-		vb.takePicture( i, (now() - tRef).total_seconds() )
+		vb.takePhoto( i, (now() - tRef).total_seconds() )
 	vb.stop()
 	vb = None

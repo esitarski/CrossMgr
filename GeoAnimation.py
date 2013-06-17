@@ -448,6 +448,7 @@ class GeoAnimation(wx.PyControl):
 		self.tBannerLast = None
 		
 		self.course = 'geo'
+		self.units = 'km'
 		
 		self.framesPerSecond = 32
 		self.lapCur = 0
@@ -600,6 +601,16 @@ class GeoAnimation(wx.PyControl):
 				info['finishTime'] = info['raceTimes'][-1]
 			else:
 				info['finishTime'] = info['lastTime']
+				
+		# Get the units.
+		for num, info in self.data.iteritems():
+			if info['status'] == 'Finisher':
+				try:
+					self.units = 'miles' if 'mph' in info['speed'] else 'km'
+				except 'KeyError':
+					self.units = 'km'
+				break
+				
 		if tCur is not None:
 			self.t = tCur;
 		self.tBannerLast = None
@@ -874,6 +885,24 @@ class GeoAnimation(wx.PyControl):
 			tStr += '%d:%02d:%02d ' % (secs / (60*60), (secs / 60)%60, secs % 60 )
 		tWidth = dc.GetTextExtent( tStr )[0]
 		dc.DrawText( tStr, width - tWidth, tHeight+textVSpace*1.6 )
+		
+		# Draw the distance info.
+		if self.lapCur and leaders:
+			flr = self.data[leaders[0]]['flr']
+			leaderRaceTimes = self.data[leaders[0]]['raceTimes']
+			maxLaps = len(leaderRaceTimes) - 1
+			distanceRace = (self.geoTrack.lengthKm if self.units == 'km' else self.geoTrack.lengthMiles) * (flr + maxLaps-1)
+			tFirst = leaderRaceTimes[0]
+			tLast = leaderRaceTimes[-1]
+			if tFirst < tLast:
+				tCur = max( tFirst, min(tLast, self.t) )
+				distanceCur = distanceRace * float(tCur - tFirst) / float(tLast - tFirst)
+				tStr = '%.2f of %.2f %s ' % (distanceCur, distanceRace, self.units)
+				yCur = tHeight*2+textVSpace*1.6
+				dc.DrawText( tStr, width - dc.GetTextExtent( tStr )[0], yCur )
+				tStr = '%.2f %s to go ' % (distanceRace - distanceCur, self.units)
+				yCur += tHeight
+				dc.DrawText( tStr, width - dc.GetTextExtent( tStr )[0], yCur )
 			
 		# Draw the leader board.
 		bannerItems = []
