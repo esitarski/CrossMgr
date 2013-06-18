@@ -452,6 +452,7 @@ class GeoAnimation(wx.PyControl):
 		
 		self.framesPerSecond = 32
 		self.lapCur = 0
+		self.iLapDistance = 0
 		
 		self.tLast = datetime.datetime.now()
 		self.speedup = 1.0
@@ -888,15 +889,42 @@ class GeoAnimation(wx.PyControl):
 		
 		# Draw the distance info.
 		if self.lapCur and leaders:
-			flr = self.data[leaders[0]]['flr']
 			leaderRaceTimes = self.data[leaders[0]]['raceTimes']
-			maxLaps = len(leaderRaceTimes) - 1
-			distanceRace = (self.geoTrack.lengthKm if self.units == 'km' else self.geoTrack.lengthMiles) * (flr + maxLaps-1)
-			tFirst = leaderRaceTimes[0]
-			tLast = leaderRaceTimes[-1]
-			if tFirst < tLast:
+			if leaderRaceTimes and leaderRaceTimes[0] < leaderRaceTimes[-1]:
+				tFirst = leaderRaceTimes[0]
+				tLast = leaderRaceTimes[-1]
 				tCur = max( tFirst, min(tLast, self.t) )
-				distanceCur = distanceRace * float(tCur - tFirst) / float(tLast - tFirst)
+				maxLaps = len(leaderRaceTimes) - 1
+				flr = self.data[leaders[0]]['flr']
+				distanceLap = self.geoTrack.lengthKm if self.units == 'km' else self.geoTrack.lengthMiles
+				distanceRace = distanceLap * (flr + maxLaps-1)
+				
+				if 0 <= self.iLapDistance < maxLaps and \
+						leaderRaceTimes[self.iLapDistance] <= tCur < leaderRaceTimes[self.iLapDistance+1]:
+					lapRatio = (tCur - leaderRaceTimes[self.iLapDistance]) / \
+								(leaderRaceTimes[self.iLapDistance + 1] - leaderRaceTimes[self.iLapDistance])
+					if self.iLapDistance == 0:
+						distanceCur = lapRatio * (distanceLap * flr)
+					else:
+						distanceCur = distanceLap * (flr + self.iLapDistance - 1 + lapRatio)
+				elif tCur < tFirst:
+					distanceCur = 0.0
+					self.iLapDistance = 0
+				elif tCur > tLast:
+					distanceCur = distanceRace
+					self.iLapDistance = maxLaps
+				else:
+					self.iLapDistance = max( 0, min(maxLaps, self.iLapDistance) )
+					for self.iLapDistance in xrange(self.iLapDistance+1 if leaderRaceTimes[self.iLapDistance] < tCur else 0, maxLaps):
+						if leaderRaceTimes[self.iLapDistance] <= tCur < leaderRaceTimes[self.iLapDistance+1]:
+							break
+					lapRatio = (tCur - leaderRaceTimes[self.iLapDistance]) / \
+								(leaderRaceTimes[self.iLapDistance + 1] - leaderRaceTimes[self.iLapDistance])
+					if self.iLapDistance == 0:
+						distanceCur = lapRatio * (distanceLap * flr)
+					else:
+						distanceCur = distanceLap * (flr + self.iLapDistance - 1 + lapRatio)
+					
 				tStr = '%.2f of %.2f %s ' % (distanceCur, distanceRace, self.units)
 				yCur = tHeight*2+textVSpace*1.6
 				dc.DrawText( tStr, width - dc.GetTextExtent( tStr )[0], yCur )
