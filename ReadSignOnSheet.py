@@ -482,16 +482,13 @@ class ExcelLink( object ):
 				pass
 	
 		# Read the sheet and return the rider data.
-		print( 'Reading sheet' )
 		try:
 			reader = GetExcelReader( self.fileName )
 			if self.sheetName not in reader.sheet_names():
-				print( 'Sheet name not found' )
 				infoCache = {}
 				errorCache = []
 				return {}
 		except (IOError, ValueError):
-			print( 'IOError, ValueError' )
 			infoCache = {}
 			errorCache = []
 			return {}
@@ -508,7 +505,6 @@ class ExcelLink( object ):
 					if field == 'LastName' or field.startswith('Tag'):
 						data[field] = str(data[field]).upper()
 				except IndexError:
-					print( 'Index Error' )
 					pass
 			
 			try:
