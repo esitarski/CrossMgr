@@ -46,7 +46,7 @@ class FrameSaver( threading.Thread ):
 		self.queue.put( ['Save', fileName, bib, t, frame] )
 	
 class VideoBuffer( threading.Thread ):
-	def __init__( self, camera, refTime = None, dirName = '.', fps = 50, bufferSeconds = 1.5 ):
+	def __init__( self, camera, refTime = None, dirName = '.', fps = 40, bufferSeconds = 2.0 ):
 		threading.Thread.__init__( self )
 		self.daemon = True
 		self.name = 'VideoBuffer'
@@ -74,13 +74,16 @@ class VideoBuffer( threading.Thread ):
 	def run( self ):
 		self.reset()
 		tLaunch = now()
-		while 1:
+		keepGoing = True
+		while keepGoing:
 			self.grabFrame()
-			try:
-				message = self.queue.get( False )
-			except Empty:
-				pass
-			else:
+			
+			while 1:
+				try:
+					message = self.queue.get( False )
+				except Empty:
+					break
+					
 				if   message[0] == 'Save':
 					cmd, bib, t = message
 					frames = self.find(t)
@@ -92,13 +95,14 @@ class VideoBuffer( threading.Thread ):
 				elif message[0] == 'Terminate':
 					self.queue.task_done()
 					self.reset()
+					keepGoing = False
 					break
 				
 			# Sleep until we need to grab the next frame.
 			microSeconds = (now() - tLaunch).microseconds
 			frameWait = ((microSeconds // self.frameDelayMicroseconds + 1) * self.frameDelayMicroseconds) - microSeconds
-			time.sleep( frameWait / 1000000.0 )
-	
+			time.sleep( frameWait / 1000000.0 )	
+			
 	def stop( self ):
 		self.queue.put( ['Terminate'] )
 		self.join()
@@ -121,17 +125,16 @@ class VideoBuffer( threading.Thread ):
 		frames = self.frames
 		frameCur = self.frameCur
 		frameMax = self.frameMax
-		
-		try:
-			iBest = (i for i in xrange(frameMax-1, -1, -1) if frames[ (i + frameCur) % frameMax ][0] < t).next()
-		except StopIteration:
-			return []
-		else:
-			return [self.getFrame(i) for i in xrange(max(0, iBest-1), min(frameMax, iBest + 2)) if self.getFrame(i)]
+		for iBest in xrange(frameMax-1, -1, -1):
+			if frames[ (iBest + frameCur) % frameMax ][0] < t:
+				return [self.getFrame(i) for i in xrange(max(0, iBest-1), min(frameMax, iBest + 2)) if self.getFrame(i)]
+		return []
 		
 	def grabFrame( self ):
 		try:
-			self.frames[self.frameCur] = ((now() - self.refTime).total_seconds(), self.camera.getImage())
+			tNow = now()
+			image = self.camera.getImage()
+			self.frames[self.frameCur] = ((tNow - self.refTime).total_seconds(), image)
 			self.frameCur = (self.frameCur + 1) % self.frameMax
 		except:
 			pass
@@ -173,6 +176,16 @@ if __name__ == '__main__':
 	import os
 	import random
 	import shutil
+	
+	'''
+	import dis
+	dis.dis( VideoBuffer.run )
+	print '------------'
+	dis.dis( VideoBuffer.grabFrame )
+	print '------------'
+	dis.dis( VideoBuffer.find )
+	sys.exit()
+	'''
 	
 	app = wx.PySimpleApp()
 	app.SetAppName("CrossMgr")

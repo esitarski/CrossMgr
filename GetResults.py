@@ -2,6 +2,7 @@ import Model
 import bisect
 import Utils
 import itertools
+import traceback
 
 from ReadSignOnSheet import IgnoreFields
 statusSortSeq = Model.Rider.statusSortSeq
@@ -273,6 +274,7 @@ def GetResults( category, getExternalData = False ):
 				except ValueError:
 					pass
 		except:
+			traceback.print_exc()
 			return riderResults
 				
 		for rr in riderResults:

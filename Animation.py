@@ -15,6 +15,29 @@ shapes = [ [(math.cos(a), -math.sin(a)) \
 						for q in xrange(i))] for i in xrange(3,9)]
 def DrawShape( dc, num, x, y, radius ):
 	dc.DrawPolygon( [ wx.Point(p*radius+x, q*radius+y) for p,q in shapes[num % len(shapes)] ] )
+
+def GetLapRatio( leaderRaceTimes, tCur, iLapHint ):
+	maxLaps = len(leaderRaceTimes)
+	if maxLaps <= 1:
+		return 0, 0.0
+	maxLaps -= 1
+		
+	if 0 <= iLapHint < maxLaps and \
+			leaderRaceTimes[iLapHint] <= tCur < leaderRaceTimes[iLapHint+1]:
+		lapRatio = (tCur - leaderRaceTimes[iLapHint]) / (leaderRaceTimes[iLapHint + 1] - leaderRaceTimes[iLapHint])
+	elif tCur <= leaderRaceTimes[0]:
+		iLapHint = 0
+		lapRatio = 0.0
+	elif tCur >= leaderRaceTimes[-1]:
+		iLapHint = maxLaps
+		lapRatio = 0.0
+	else:
+		iLapHint = max( 0, min(maxLaps, iLapHint) )
+		for iLapHint in xrange(iLapHint+1 if leaderRaceTimes[iLapHint] < tCur else 0, maxLaps):
+			if leaderRaceTimes[iLapHint] <= tCur:
+				break
+		lapRatio = (tCur - leaderRaceTimes[iLapHint]) / (leaderRaceTimes[iLapHint + 1] - leaderRaceTimes[iLapHint])
+	return iLapHint, lapRatio
 	
 class Animation(wx.PyControl):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
@@ -51,6 +74,7 @@ class Animation(wx.PyControl):
 		
 		self.framesPerSecond = 32
 		self.lapCur = 0
+		self.iLapDistance = 0
 		
 		self.tLast = datetime.datetime.now()
 		self.speedup = 1.0
@@ -214,6 +238,16 @@ class Animation(wx.PyControl):
 				info['finishTime'] = info['raceTimes'][-1]
 			else:
 				info['finishTime'] = info['lastTime']
+				
+		# Get the units.
+		for num, info in self.data.iteritems():
+			if info['status'] == 'Finisher':
+				try:
+					self.units = 'miles' if 'mph' in info['speed'] else 'km'
+				except 'KeyError':
+					self.units = 'km'
+				break
+				
 		if tCur is not None:
 			self.t = tCur;
 		self.Refresh()
@@ -475,14 +509,17 @@ class Animation(wx.PyControl):
 		dc.SetFont( self.timeFont )
 		if self.lapCur:
 			if leaders:
-				maxLaps = len(self.data[leaders[0]]['raceTimes'])
+				leaderRaceTimes = self.data[leaders[0]]['raceTimes']
+				maxLaps = len(leaderRaceTimes)
+				self.iLapDistance, lapRatio = GetLapRatio( leaderRaceTimes, self.t, self.iLapDistance )
+				tStr = 'Lap: %.2f of %d (%.2f to go)' % (self.iLapDistance + lapRatio, maxLaps - 1,
+															maxLaps - 1 - self.iLapDistance + lapRatio)
 			else:
-				maxLaps = 9999
-			if self.lapCur > maxLaps:
-				self.lapCur = maxLaps
-			tStr = 'Laps Completed %d' % max(0, self.lapCur-1)
+				tStr = 'Lap:'
 			tWidth, tHeight = dc.GetTextExtent( tStr )
+			yCur = r + r/2 - laneWidth - tHeight * 1.5 - tHeight
 			dc.DrawText( tStr, 2*r + r/2 - tWidth, r + r/2 - laneWidth - tHeight * 1.5 )
+			yCur += tHeight
 
 		# Draw the leader board.
 		xLeft = int(r * 0.85)
