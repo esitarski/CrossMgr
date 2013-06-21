@@ -514,11 +514,11 @@ class Animation(wx.PyControl):
 			tDistance = ''
 			if leaders:
 				leaderRaceTimes = self.data[leaders[0]]['raceTimes']
-				maxLaps = len(leaderRaceTimes)
+				maxLaps = len(leaderRaceTimes) - 1
 				self.iLapDistance, lapRatio = GetLapRatio( leaderRaceTimes, self.t, self.iLapDistance )
 				lapRatio = int(lapRatio * 10.0) / 10.0		# Always round down, not to nearest decimal.
-				tLap = '%05.1f Laps of %d,%05.1f Laps to go' % (self.iLapDistance + lapRatio, maxLaps - 1,
-															maxLaps - 1 - self.iLapDistance - lapRatio)
+				tLap = '%05.1f Laps of %d,%05.1f Laps to go' % (self.iLapDistance + lapRatio, maxLaps,
+															maxLaps - self.iLapDistance - lapRatio)
 				cat = self.categoryDetails.get( self.data[leaders[0]].get('raceCat', None) )
 				if cat:
 					if cat.get('lapDistance', None) is not None:
@@ -536,8 +536,8 @@ class Animation(wx.PyControl):
 					elif cat.get('raceDistance', None) is not None and leaderRaceTime[0] != leaderRaceTime[-1]:
 						distanceRace = cat['raceDistance']
 						distanceCur = (self.t - leaderRaceTimes[0]) / (leaderRaceTimes[-1] - leaderRaceTimes[0]) * distanceRace
-						distanceCur = max( 0.0, min(distanceCur, raceDistance) )
-						if distanceCur != raceDistance:
+						distanceCur = max( 0.0, min(distanceCur, distanceRace) )
+						if distanceCur != distanceRace:
 							distanceCur = int( distanceCur * 10.0 ) / 10.0
 						tDistance = '%05.1f %s of %.1f,%05.2f %s to go' % (
 							distanceCur, self.units, distanceRace,
