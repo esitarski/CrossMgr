@@ -409,11 +409,6 @@ class GeoTrack( object ):
 		self.x = xBorder + x
 		self.yBottom = y + height
 		
-	def countPointsInRect( self, x, y, width, height ):
-		xMax = x + width
-		yMax = y + height
-		return sum( 1 for p in self.gpsPoints if x <= p.x < xMax and y <= p.y < yMax )
-		
 shapes = [ [(math.cos(a), -math.sin(a)) \
 					for a in (q*(2.0*math.pi/i)+math.pi/2.0+(2.0*math.pi/(i*2.0) if i % 2 == 0 else 0)\
 						for q in xrange(i))] for i in xrange(3,9)]
@@ -453,6 +448,8 @@ class GeoAnimation(wx.PyControl):
 		
 		self.geoTrack = None
 		self.compassLocation = ''
+		self.widthLast = -1
+		self.heightLast = -1
 		
 		self.xBanner = 300
 		self.tBannerLast = None
@@ -513,20 +510,6 @@ class GeoAnimation(wx.PyControl):
 	def SetGeoTrack( self, geoTrack ):
 		if self.geoTrack != geoTrack:		
 			self.geoTrack = geoTrack
-			locations = ['SE', 'SW', 'NW', 'NE', ];
-			width, height = self.geoTrack.xMax, self.geoTrack.yMax
-			compassWidth, compassHeight = width * 0.25, height * 0.25
-			inCountBest = len(self.geoTrack.gpsPoints) + 1
-			self.compassLocation = 'SE'
-			for loc in locations:
-				xCompass = 0 if 'W' in loc else width - compassWidth
-				yCompass = 0 if 'S' in loc else height - compassHeight
-				inCount = self.geoTrack.countPointsInRect( xCompass, yCompass, compassWidth, compassHeight )
-				if inCount < inCountBest:
-					inCountBest = inCount
-					self.compassLocation = loc
-					if inCount == 0:
-						break
 		
 	def SetOptions( self, *argc, **kwargs ):
 		pass
@@ -812,6 +795,24 @@ class GeoAnimation(wx.PyControl):
 		dc.SetBrush( wx.TRANSPARENT_BRUSH )
 		
 		drawPoints = self.geoTrack.getXYTrack()
+		if width != self.widthLast or height != self.heightLast:
+			self.widthLast, self.heightLast = width, height
+			locations = ['NE', 'SE', 'NW', 'SW', ]
+			compassWidth, compassHeight = width * 0.25, height * 0.25
+			inCountBest = len(drawPoints) + 1
+			self.compassLocation = locations[0]
+			for loc in locations:
+				xCompass = 0 if 'W' in loc else width - compassWidth
+				yCompass = 0 if 'S' in loc else height - compassHeight
+				inCount = sum( 1 for x, y in drawPoints
+								if	xCompass <= x < xCompass + compassWidth and
+									yCompass <= y < yCompass + compassHeight )
+				if inCount < inCountBest:
+					inCountBest = inCount
+					self.compassLocation = loc
+					if inCount == 0:
+						break
+
 		
 		dc.SetPen( wx.Pen(wx.Colour(128,128,128), laneWidth * 1.25 + 2, wx.SOLID) )
 		dc.DrawPolygon( drawPoints )
@@ -934,7 +935,7 @@ class GeoAnimation(wx.PyControl):
 								'%06.1f %s to go ' % (distanceRace - distanceCur, self.units)] )
 								
 				widthMax = max( dc.GetTextExtent(t)[0] for t in text )
-				if 'S' in self.compassLocation:
+				if 'N' in self.compassLocation:
 					yCur = height - tHeight * (len(text) + 1)
 				if 'E' in self.compassLocation:
 					xCur = width - widthMax
