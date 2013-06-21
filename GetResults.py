@@ -2,7 +2,6 @@ import Model
 import bisect
 import Utils
 import itertools
-import traceback
 
 from ReadSignOnSheet import IgnoreFields
 statusSortSeq = Model.Rider.statusSortSeq
@@ -274,7 +273,6 @@ def GetResults( category, getExternalData = False ):
 				except ValueError:
 					pass
 		except:
-			traceback.print_exc()
 			return riderResults
 				
 		for rr in riderResults:
@@ -320,8 +318,9 @@ def GetCategoryDetails():
 			if not info:
 				info['startOffset'] = cat.getStartOffsetSecs()
 				info['gender'] = getattr( cat, 'gender', 'Open' )
+				info['laps'] = 0
 				
-			if info.get('laps', 0) < len(rr.lapTimes):
+			if info['laps'] < len(rr.lapTimes):
 				info['laps'] = len(rr.lapTimes)
 				if getattr(cat, 'distance', None):
 					if getattr(cat, 'distanceType', Model.Category.DistanceByLap) == Model.Category.DistanceByLap:

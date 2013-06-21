@@ -14,6 +14,7 @@ import getpass
 import socket
 from operator import itemgetter, attrgetter
 from GanttChart import makePastelColours, makeColourGradient
+from Animation import GetLapRatio
 import Utils
 import xml.etree.ElementTree
 import xml.etree.cElementTree
@@ -190,7 +191,7 @@ class GeoTrack( object ):
 	def getXYTrack( self ):
 		x, yBottom, mult = self.x, self.yBottom, self.mult
 		return [(p.x * mult + x, yBottom - p.y * mult) for p in self.gpsPoints]
-		
+
 	def asExportJson( self ):
 		return [ [int(getattr(p, a)*10.0) for a in ('x', 'y', 'd')] for p in self.gpsPoints ]
 		
@@ -408,6 +409,11 @@ class GeoTrack( object ):
 		self.x = xBorder + x
 		self.yBottom = y + height
 		
+	def countPointsInRect( self, x, y, width, height ):
+		xMax = x + width
+		yMax = y + height
+		return sum( 1 for p in self.gpsPoints if x <= p.x < xMax and y <= p.y < yMax )
+		
 shapes = [ [(math.cos(a), -math.sin(a)) \
 					for a in (q*(2.0*math.pi/i)+math.pi/2.0+(2.0*math.pi/(i*2.0) if i % 2 == 0 else 0)\
 						for q in xrange(i))] for i in xrange(3,9)]
@@ -438,11 +444,15 @@ class GeoAnimation(wx.PyControl):
 		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
 		self.SetBackgroundColour('white')
 		self.data = {}
+		self.categoryDetails = {}
 		self.t = 0
 		self.tMax = None
 		self.tDelta = 1
 		self.r = 100	# Radius of the turns of the fictional track.
 		self.laneMax = 8
+		
+		self.geoTrack = None
+		self.compassLocation = ''
 		
 		self.xBanner = 300
 		self.tBannerLast = None
@@ -501,7 +511,22 @@ class GeoAnimation(wx.PyControl):
 		self.Bind(wx.EVT_SIZE, self.OnSize)
 		
 	def SetGeoTrack( self, geoTrack ):
-		self.geoTrack = geoTrack
+		if self.geoTrack != geoTrack:		
+			self.geoTrack = geoTrack
+			locations = ['SE', 'SW', 'NW', 'NE', ];
+			width, height = self.geoTrack.xMax, self.geoTrack.yMax
+			compassWidth, compassHeight = width * 0.25, height * 0.25
+			inCountBest = len(self.geoTrack.gpsPoints) + 1
+			self.compassLocation = 'SE'
+			for loc in locations:
+				xCompass = 0 if 'W' in loc else width - compassWidth
+				yCompass = 0 if 'S' in loc else height - compassHeight
+				inCount = self.geoTrack.countPointsInRect( xCompass, yCompass, compassWidth, compassHeight )
+				if inCount < inCountBest:
+					inCountBest = inCount
+					self.compassLocation = loc
+					if inCount == 0:
+						break
 		
 	def SetOptions( self, *argc, **kwargs ):
 		pass
@@ -588,7 +613,7 @@ class GeoAnimation(wx.PyControl):
 		"""
 		return True
 
-	def SetData( self, data, tCur = None ):
+	def SetData( self, data, tCur = None, categoryDetails = None ):
 		"""
 		* data is a rider information indexed by number.  Info includes lap times and lastTime times.
 		* lap times should include the start offset.
@@ -596,6 +621,7 @@ class GeoAnimation(wx.PyControl):
 			data = { 101: { raceTimes: [xx, yy, zz], lastTime: None }, 102 { raceTimes: [aa, bb], lastTime: cc} }
 		"""
 		self.data = data if data else {}
+		self.categoryDetails = categoryDetails if categoryDetails else {}
 		for num, info in self.data.iteritems():
 			info['iLast'] = 1
 			if info['status'] == 'Finisher' and info['raceTimes']:
@@ -608,7 +634,7 @@ class GeoAnimation(wx.PyControl):
 			if info['status'] == 'Finisher':
 				try:
 					self.units = 'miles' if 'mph' in info['speed'] else 'km'
-				except 'KeyError':
+				except KeyError:
 					self.units = 'km'
 				break
 				
@@ -866,71 +892,62 @@ class GeoAnimation(wx.PyControl):
 			leaders[position] = num
 		
 		yTop = height - self.infoLines * tHeight
-		# Draw the current lap
-		tStr = ''
-		dc.SetFont( self.timeFont )
-		if self.lapCur:
-			if leaders:
-				maxLaps = len(self.data[leaders[0]]['raceTimes'])
-			else:
-				maxLaps = 9999
-			if self.lapCur > maxLaps:
-				self.lapCur = maxLaps
-			tStr = 'Laps Completed %d   ' % max(0, self.lapCur-1)
-
+		
+		tWidth, tHeight = dc.GetTextExtent( '999' )
+		yCur = tHeight+textVSpace*1.6
+		
 		# Draw the race time
 		secs = int( self.t )
 		if secs < 60*60:
-			tStr += '%d:%02d ' % ((secs / 60)%60, secs % 60 )
+			tStr = '%d:%02d ' % ((secs / 60)%60, secs % 60 )
 		else:
-			tStr += '%d:%02d:%02d ' % (secs / (60*60), (secs / 60)%60, secs % 60 )
+			tStr = '%d:%02d:%02d ' % (secs / (60*60), (secs / 60)%60, secs % 60 )
 		tWidth = dc.GetTextExtent( tStr )[0]
-		dc.DrawText( tStr, width - tWidth, tHeight+textVSpace*1.6 )
+		dc.DrawText( tStr, width - tWidth, yCur )
+		yCur += tHeight
 		
-		# Draw the distance info.
+		# Draw the current lap
+		dc.SetFont( self.timeFont )
 		if self.lapCur and leaders:
 			leaderRaceTimes = self.data[leaders[0]]['raceTimes']
 			if leaderRaceTimes and leaderRaceTimes[0] < leaderRaceTimes[-1]:
-				tFirst = leaderRaceTimes[0]
-				tLast = leaderRaceTimes[-1]
-				tCur = max( tFirst, min(tLast, self.t) )
 				maxLaps = len(leaderRaceTimes) - 1
+				self.iLapDistance, lapRatio = GetLapRatio( leaderRaceTimes, self.t, self.iLapDistance )
+				lapRatio = int(lapRatio * 10.0) / 10.0		# Always round down, not to nearest decimal.
+				text = ['%06.1f Laps of %d ' % (self.iLapDistance + lapRatio, maxLaps),
+						'%06.1f Laps to go ' % (maxLaps - self.iLapDistance - lapRatio)]
+
+				# Draw the distance info.
 				flr = self.data[leaders[0]]['flr']
 				distanceLap = self.geoTrack.lengthKm if self.units == 'km' else self.geoTrack.lengthMiles
 				distanceRace = distanceLap * (flr + maxLaps-1)
-				
-				if 0 <= self.iLapDistance < maxLaps and \
-						leaderRaceTimes[self.iLapDistance] <= tCur < leaderRaceTimes[self.iLapDistance+1]:
-					lapRatio = (tCur - leaderRaceTimes[self.iLapDistance]) / \
-								(leaderRaceTimes[self.iLapDistance + 1] - leaderRaceTimes[self.iLapDistance])
-					if self.iLapDistance == 0:
-						distanceCur = lapRatio * (distanceLap * flr)
-					else:
-						distanceCur = distanceLap * (flr + self.iLapDistance - 1 + lapRatio)
-				elif tCur < tFirst:
-					distanceCur = 0.0
-					self.iLapDistance = 0
-				elif tCur > tLast:
-					distanceCur = distanceRace
-					self.iLapDistance = maxLaps
+				self.iLapDistance, lapRatio = GetLapRatio( leaderRaceTimes, self.t, self.iLapDistance )
+				if self.iLapDistance == 0:
+					distanceCur = lapRatio * (distanceLap * flr)
 				else:
-					self.iLapDistance = max( 0, min(maxLaps, self.iLapDistance) )
-					for self.iLapDistance in xrange(self.iLapDistance+1 if leaderRaceTimes[self.iLapDistance] < tCur else 0, maxLaps):
-						if leaderRaceTimes[self.iLapDistance] <= tCur < leaderRaceTimes[self.iLapDistance+1]:
-							break
-					lapRatio = (tCur - leaderRaceTimes[self.iLapDistance]) / \
-								(leaderRaceTimes[self.iLapDistance + 1] - leaderRaceTimes[self.iLapDistance])
-					if self.iLapDistance == 0:
-						distanceCur = lapRatio * (distanceLap * flr)
-					else:
-						distanceCur = distanceLap * (flr + self.iLapDistance - 1 + lapRatio)
+					distanceCur = distanceLap * (flr + self.iLapDistance - 1 + lapRatio)
+				if distanceCur != distanceRace:
+					distanceCur = int(distanceCur * 10.0) / 10.0
 					
-				tStr = '%.2f of %.2f %s ' % (distanceCur, distanceRace, self.units)
-				yCur = tHeight*2+textVSpace*1.6
-				dc.DrawText( tStr, width - dc.GetTextExtent( tStr )[0], yCur )
-				tStr = '%.2f %s to go ' % (distanceRace - distanceCur, self.units)
-				yCur += tHeight
-				dc.DrawText( tStr, width - dc.GetTextExtent( tStr )[0], yCur )
+				text.extend( [	'',
+								'%06.1f %s of %.1f ' % (distanceCur, self.units, distanceRace),
+								'%06.1f %s to go ' % (distanceRace - distanceCur, self.units)] )
+								
+				widthMax = max( dc.GetTextExtent(t)[0] for t in text )
+				if 'S' in self.compassLocation:
+					yCur = height - tHeight * (len(text) + 1)
+				if 'E' in self.compassLocation:
+					xCur = width - widthMax
+				else:
+					xCur = tHeight * 0.5
+				for row, t in enumerate(text):
+					yCur += tHeight
+					if not t:
+						continue
+					tShow = t.lstrip('0')
+					if tShow.startswith('.'):
+						tShow = '0' + tShow
+					dc.DrawText( tShow, xCur + dc.GetTextExtent('0' * (len(t) - len(tShow)))[0], yCur )
 			
 		# Draw the leader board.
 		bannerItems = []
@@ -964,7 +981,7 @@ if __name__ == '__main__':
 		raceTimes = [0]
 		for lap in xrange( 4 ):
 			raceTimes.append( raceTimes[-1] + random.normalvariate(mean, mean/20)*60.0 )
-		data[num] = { 'raceTimes': raceTimes, 'lastTime': raceTimes[-1], 'flr': 1.0, 'status':'Finisher' }
+		data[num] = { 'raceTimes': raceTimes, 'lastTime': raceTimes[-1], 'flr': 1.0, 'status':'Finisher', 'speed':'32.7 km/h' }
 
 	# import json
 	# with open('race.json', 'w') as fp: fp.write( json.dumps(data, sort_keys=True, indent=4) )
@@ -973,9 +990,9 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="GeoAnimation", size=(800,700))
 	animation = GeoAnimation(mainWin)
 	geoTrack = GeoTrack()
-	#geoTrack.read( 'EdgeField_Cyclocross_Course.gpx' )
+	geoTrack.read( 'EdgeField_Cyclocross_Course.gpx' )
 	#geoTrack.read( 'St._John__039_s_Cyclocross_course_v2.gpx' )
-	geoTrack.read( 'Camp Arrowhead mtb GPS course.gpx' )
+	#geoTrack.read( 'Camp Arrowhead mtb GPS course.gpx' )
 	#geoTrack.read( 'Races/Midweek/Midweek_Learn_to_Race_and_Elite_Series_course.gpx' )
 	#geoTrack.reverse()
 	print 'Clockwise:', geoTrack.isClockwise()

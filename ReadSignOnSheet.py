@@ -520,13 +520,13 @@ class ExcelLink( object ):
 		FixTagFormat( info )
 		
 		# Check for duplicate numbers, duplicate tags and missing tags.
-		numRow, tagRow, tag2Row = {}, {}, {}
+		numRow = {}
 		
 		tagFields = []
 		if self.fieldCol.get('Tag', -1) >= 0:
-			tagFields.append( ('Tag', tagRow) )
+			tagFields.append( ('Tag', {}) )
 		if self.fieldCol.get('Tag2', -1) >= 0:
-			tagFields.append( ('Tag2', tag2Row) )
+			tagFields.append( ('Tag2', {}) )
 			
 		errors = []
 		rowBib = {}

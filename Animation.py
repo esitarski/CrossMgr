@@ -29,8 +29,8 @@ def GetLapRatio( leaderRaceTimes, tCur, iLapHint ):
 		iLapHint = 0
 		lapRatio = 0.0
 	elif tCur >= leaderRaceTimes[-1]:
-		iLapHint = maxLaps
-		lapRatio = 0.0
+		iLapHint = maxLaps - 1
+		lapRatio = 1.0
 	else:
 		iLapHint = max( 0, min(maxLaps, iLapHint) )
 		for iLapHint in xrange(iLapHint+1 if leaderRaceTimes[iLapHint] < tCur else 0, maxLaps):
@@ -66,6 +66,7 @@ class Animation(wx.PyControl):
 		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
 		self.SetBackgroundColour('white')
 		self.data = {}
+		self.categoryDetails = {}
 		self.t = 0
 		self.tMax = None
 		self.tDelta = 1
@@ -224,7 +225,7 @@ class Animation(wx.PyControl):
 		"""
 		return True
 
-	def SetData( self, data, tCur = None ):
+	def SetData( self, data, tCur = None, categoryDetails = None ):
 		"""
 		* data is a rider information indexed by number.  Info includes lap times and lastTime times.
 		* lap times should include the start offset.
@@ -232,6 +233,7 @@ class Animation(wx.PyControl):
 			data = { 101: { raceTimes: [xx, yy, zz], lastTime: None }, 102 { raceTimes: [aa, bb], lastTime: cc} }
 		"""
 		self.data = data if data else {}
+		self.categoryDetails = categoryDetails if categoryDetails else {}
 		for num, info in self.data.iteritems():
 			info['iLast'] = 1
 			if info['status'] == 'Finisher' and info['raceTimes']:
@@ -244,7 +246,7 @@ class Animation(wx.PyControl):
 			if info['status'] == 'Finisher':
 				try:
 					self.units = 'miles' if 'mph' in info['speed'] else 'km'
-				except 'KeyError':
+				except KeyError:
 					self.units = 'km'
 				break
 				
@@ -408,7 +410,7 @@ class Animation(wx.PyControl):
 		# Get the fonts if needed.
 		if self.rLast != r:
 			tHeight = r / 8.0
-			self.numberFont	= wx.FontFromPixelSize( wx.Size(0,tHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
+			self.numberFont = wx.FontFromPixelSize( wx.Size(0,tHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
 			self.timeFont = self.numberFont
 			self.highlightFont = wx.FontFromPixelSize( wx.Size(0,tHeight * 1.6), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
 			self.rLast = r
@@ -508,18 +510,59 @@ class Animation(wx.PyControl):
 		# Draw the current lap
 		dc.SetFont( self.timeFont )
 		if self.lapCur:
+			tLap = ''
+			tDistance = ''
 			if leaders:
 				leaderRaceTimes = self.data[leaders[0]]['raceTimes']
 				maxLaps = len(leaderRaceTimes)
 				self.iLapDistance, lapRatio = GetLapRatio( leaderRaceTimes, self.t, self.iLapDistance )
-				tStr = 'Lap: %.2f of %d (%.2f to go)' % (self.iLapDistance + lapRatio, maxLaps - 1,
-															maxLaps - 1 - self.iLapDistance + lapRatio)
-			else:
-				tStr = 'Lap:'
-			tWidth, tHeight = dc.GetTextExtent( tStr )
-			yCur = r + r/2 - laneWidth - tHeight * 1.5 - tHeight
-			dc.DrawText( tStr, 2*r + r/2 - tWidth, r + r/2 - laneWidth - tHeight * 1.5 )
-			yCur += tHeight
+				lapRatio = int(lapRatio * 10.0) / 10.0		# Always round down, not to nearest decimal.
+				tLap = '%05.1f Laps of %d,%05.1f Laps to go' % (self.iLapDistance + lapRatio, maxLaps - 1,
+															maxLaps - 1 - self.iLapDistance - lapRatio)
+				cat = self.categoryDetails.get( self.data[leaders[0]].get('raceCat', None) )
+				if cat:
+					if cat.get('lapDistance', None) is not None:
+						flr = self.data[leaders[0]].get('flr', 1.0)
+						distanceLap = cat['lapDistance']
+						distanceRace = distanceLap * (flr + maxLaps-1)
+						if self.iLapDistance == 0:
+							distanceCur = lapRatio * (distanceLap * flr)
+						else:
+							distanceCur = distanceLap * (flr + self.iLapDistance - 1 + lapRatio)
+						distanceCur = int(distanceCur * 10.0) / 10.0
+						tDistance = '%05.1f %s of %.1f,%05.1f %s to go' % (
+							distanceCur, self.units, distanceRace,
+							distanceRace - distanceCur, self.units)
+					elif cat.get('raceDistance', None) is not None and leaderRaceTime[0] != leaderRaceTime[-1]:
+						distanceRace = cat['raceDistance']
+						distanceCur = (self.t - leaderRaceTimes[0]) / (leaderRaceTimes[-1] - leaderRaceTimes[0]) * distanceRace
+						distanceCur = max( 0.0, min(distanceCur, raceDistance) )
+						if distanceCur != raceDistance:
+							distanceCur = int( distanceCur * 10.0 ) / 10.0
+						tDistance = '%05.1f %s of %.1f,%05.2f %s to go' % (
+							distanceCur, self.units, distanceRace,
+							distanceRace - distanceCur, self.units)
+			
+			tWidth, tHeight = dc.GetTextExtent( '999' )
+			xRight  = 3*r + r/7
+			table = []
+			if tLap:
+				table.append( tLap.split(',') )
+			if tDistance:
+				table.append( tDistance.split(',') )
+			table = zip(*table)	# Transpose the table.  Nice!
+			for col in xrange(len(table[0])-1, -1, -1):
+				tWidth = max( dc.GetTextExtent(table[row][col])[0] for row in xrange(len(table)) )
+				xRight -= tWidth
+				yCur = r + r/2 - laneWidth - tHeight * 1.25 - tHeight
+				for row in xrange(len(table)):
+					t = table[row][col]
+					tShow = t.lstrip('0')
+					if tShow.startswith('.'):
+						tShow = '0' + tShow
+					dc.DrawText( tShow, xRight + dc.GetTextExtent('0' * (len(t) - len(tShow)))[0], yCur )
+					yCur += tHeight
+				xRight -= tHeight / 2.5
 
 		# Draw the leader board.
 		xLeft = int(r * 0.85)
@@ -599,7 +642,7 @@ if __name__ == '__main__':
 		raceTimes = [0]
 		for lap in xrange( 5 ):
 			raceTimes.append( raceTimes[-1] + random.normalvariate(mean, mean/20)*60.0 )
-		data[num] = { 'raceTimes': raceTimes, 'lastTime': raceTimes[-1], 'flr':1.0 }
+		data[num] = { 'raceTimes': raceTimes, 'lastTime': raceTimes[-1], 'status':'Finisher', 'speed':'32.7 km/h' , 'flr':1.0 }
 
 	# import json
 	# with open('race.json', 'w') as fp: fp.write( json.dumps(data, sort_keys=True, indent=4) )
