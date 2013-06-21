@@ -868,8 +868,8 @@ function TrackAnimation()
 				this.iLapDistance = glr[0];
 				var lapRatio = glr[1];
 				lapRatio = parseInt(lapRatio * 10.0) / 10.0		// Always round down, not to nearest decimal.
-				table[0][0] = FixedFormat(this.iLapDistance + lapRatio, 5, 1) + ' Laps of ' + maxLaps;
-				table[1][0] = FixedFormat(maxLaps - this.iLapDistance - lapRatio, 5, 1) + ' Laps to go';
+				table[0].push( FixedFormat(this.iLapDistance + lapRatio, 5, 1) + ' Laps of ' + maxLaps );
+				table[1].push( FixedFormat(maxLaps - this.iLapDistance - lapRatio, 5, 1) + ' Laps to go' );
 				
 				var leaderCategory = data[leaders[0]]['raceCat'];
 				var cat = (leaderCategory && catDetails ? catDetails[leaderCategory] : null);
@@ -906,7 +906,7 @@ function TrackAnimation()
 					tWidth = Math.max( tWidth, dc.measureText(table[row][col]).width );
 				}
 				xRight -= tWidth;
-				var yCur = r + r/2 - laneWidth - fontHeight * 1.25 - fontHeight;
+				var yCur = r + r/2 - laneWidth - fontHeight * 1.2 - fontHeight;
 				for( var row = 0; row < table.length; ++row ) {
 					var value = table[row][col];
 					var tShow = value.replace(/^0+/, '');
