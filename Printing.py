@@ -54,6 +54,13 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		self.list.SetColumnWidth(3, wx.LIST_AUTOSIZE)
 		self.list.SetColumnWidth( 1, 64 )
 		self.list.SetColumnWidth( 2, 42 )
+		
+		self.includeLapTimesInPrintoutCheckBox = wx.CheckBox( self, wx.ID_ANY, 'Include Lap Times in Printout' )
+		race = Model.race
+		if race:
+			self.includeLapTimesInPrintoutCheckBox.SetValue( getattr(race, 'includeLapTimesInPrintout', True) )
+		else:
+			self.includeLapTimesInPrintoutCheckBox.SetValue( True )
 
 		self.okButton = wx.Button( self, wx.ID_OK )
 		self.okButton.Bind( wx.EVT_BUTTON, self.onOK )
@@ -64,6 +71,8 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		vs.Add( title, flag = wx.ALL, border = 4 )
 		vs.Add( self.selectAllButton, flag = wx.ALL, border = 4 )
 		vs.Add( self.list, 1, flag = wx.ALL|wx.EXPAND, border = 4 )
+		
+		vs.Add( self.includeLapTimesInPrintoutCheckBox, flag = wx.EXPAND|wx.ALL, border = 4 )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.okButton )
@@ -86,6 +95,7 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		for row, c in enumerate(race.getCategories()):
 			if self.list.GetItemState(row, wx.LIST_STATE_SELECTED) == wx.LIST_STATE_SELECTED:
 				self.categories.append( c )
+		race.includeLapTimesInPrintout = self.includeLapTimesInPrintoutCheckBox.GetValue()
 		self.EndModal( wx.ID_OK )
 
 	def onCancel( self, event ):
@@ -139,7 +149,8 @@ class CrossMgrPrintout(wx.Printout):
 		category = self.categories[page-1]
 		
 		exportGrid = ExportGrid()
-		exportGrid.setResultsOneList( category, True )
+		showLapTimes = (not Model.race) or getattr( Model.race, 'includeLapTimesInPrintout', True )
+		exportGrid.setResultsOneList( category, True, showLapTimes = showLapTimes )
 
 		dc = self.GetDC()
 		

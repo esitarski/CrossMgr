@@ -831,9 +831,21 @@ class MainWin( wx.Frame ):
 		dlg.Destroy()
 
 	def menuPrintPreview( self, event ):
+		cpcd = ChoosePrintCategoriesDialog( self )
+		x, y = self.GetPosition().Get()
+		x += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_X, self)
+		y += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_Y, self)
+		cpcd.SetPosition( (x, y) )
+		cpcd.SetSize( (450, 300) )
+		result = cpcd.ShowModal()
+		categories = cpcd.categories
+		cpcd.Destroy()
+		if not categories or result != wx.ID_OK:
+			return
+	
 		data = wx.PrintDialogData(self.printData)
-		printout = CrossMgrPrintout()
-		printout2 = CrossMgrPrintout()
+		printout = CrossMgrPrintout( categories )
+		printout2 = CrossMgrPrintout( categories )
 		self.preview = wx.PrintPreview(printout, printout2, data)
 
 		self.preview.SetZoom( 110 )

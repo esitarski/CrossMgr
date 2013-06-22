@@ -461,7 +461,8 @@ class ExportGrid( object ):
 		
 		self.data[col][row] = value
 	
-	def setResultsOneList( self, category = None, getExternalData = True, showLapsFrequency = None ):
+	def setResultsOneList( self, category = None, getExternalData = True,
+							showLapsFrequency = None, showLapTimes = True ):
 		''' Format the results into columns. '''
 		self.data = []
 		self.colnames = []
@@ -478,7 +479,7 @@ class ExportGrid( object ):
 		leader = results[0]
 		hasSpeeds = bool( getattr(leader, 'lapSpeeds', None) or getattr(leader, 'raceSpeeds', None) )
 		
-		if showLapsFrequency is None:
+		if showLapTimes and showLapsFrequency is None:
 			# Compute a reasonable number of laps to show (max around 10).
 			# Get the maximum laps in the data.
 			maxLaps = 0
@@ -519,7 +520,7 @@ class ExportGrid( object ):
 		self.colnames = [name[:-4] + ' Name' if name.endswith('Name') else name for name in self.colnames]
 		self.iLapTimes = len(self.colnames)
 		lapsMax = len(leader.lapTimes) if leader.lapTimes else 0
-		if leader.lapTimes:
+		if leader.lapTimes and showLapTimes:
 			self.colnames.extend( ['Lap %d' % lap for lap in xrange(1, lapsMax+1) \
 					if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax] )
 		
@@ -548,21 +549,22 @@ class ExportGrid( object ):
 				else:
 					data[col].append( getattr(r, f, '') )
 		
-		for row, r in enumerate(results):
-			iCol = self.iLapTimes
-			for i, t in enumerate(r.lapTimes):
-				lap = i + 1
-				if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax:
-					data[iCol].append( Utils.formatTimeCompressed(t, highPrecision) )
-					iCol += 1
-					if iCol >= colsMax:
-						break
-			# Pad out the rest of the columns.
-			for i in xrange(len(r.lapTimes), lapsMax):
-				lap = i + 1
-				if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax:
-					data[iCol].append( '' )
-					iCol += 1
+		if showLapTimes:
+			for row, r in enumerate(results):
+				iCol = self.iLapTimes
+				for i, t in enumerate(r.lapTimes):
+					lap = i + 1
+					if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax:
+						data[iCol].append( Utils.formatTimeCompressed(t, highPrecision) )
+						iCol += 1
+						if iCol >= colsMax:
+							break
+				# Pad out the rest of the columns.
+				for i in xrange(len(r.lapTimes), lapsMax):
+					lap = i + 1
+					if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax:
+						data[iCol].append( '' )
+						iCol += 1
 		
 		self.data = data
 		self.infoColumns     = set( xrange(2, 2+len(infoFields)) ) if infoFields else set()
