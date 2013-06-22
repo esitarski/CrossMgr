@@ -17,10 +17,9 @@ def DrawShape( dc, num, x, y, radius ):
 	dc.DrawPolygon( [ wx.Point(p*radius+x, q*radius+y) for p,q in shapes[num % len(shapes)] ] )
 
 def GetLapRatio( leaderRaceTimes, tCur, iLapHint ):
-	maxLaps = len(leaderRaceTimes)
-	if maxLaps <= 1:
+	maxLaps = len(leaderRaceTimes) - 1
+	if maxLaps < 1:
 		return 0, 0.0
-	maxLaps -= 1
 		
 	if 0 <= iLapHint < maxLaps and \
 			leaderRaceTimes[iLapHint] <= tCur < leaderRaceTimes[iLapHint+1]:
@@ -521,6 +520,8 @@ class Animation(wx.PyControl):
 															maxLaps - self.iLapDistance - lapRatio)
 				cat = self.categoryDetails.get( self.data[leaders[0]].get('raceCat', None) )
 				if cat:
+					distanceCur, distanceRace = None, None
+					
 					if cat.get('lapDistance', None) is not None:
 						flr = self.data[leaders[0]].get('flr', 1.0)
 						distanceLap = cat['lapDistance']
@@ -529,14 +530,12 @@ class Animation(wx.PyControl):
 							distanceCur = lapRatio * (distanceLap * flr)
 						else:
 							distanceCur = distanceLap * (flr + self.iLapDistance - 1 + lapRatio)
-						distanceCur = int(distanceCur * 10.0) / 10.0
-						tDistance = '%05.1f %s of %.1f,%05.1f %s to go' % (
-							distanceCur, self.units, distanceRace,
-							distanceRace - distanceCur, self.units)
 					elif cat.get('raceDistance', None) is not None and leaderRaceTime[0] != leaderRaceTime[-1]:
 						distanceRace = cat['raceDistance']
 						distanceCur = (self.t - leaderRaceTimes[0]) / (leaderRaceTimes[-1] - leaderRaceTimes[0]) * distanceRace
 						distanceCur = max( 0.0, min(distanceCur, distanceRace) )
+						
+					if distanceCur is not None:
 						if distanceCur != distanceRace:
 							distanceCur = int( distanceCur * 10.0 ) / 10.0
 						tDistance = '%05.1f %s of %.1f,%05.2f %s to go' % (

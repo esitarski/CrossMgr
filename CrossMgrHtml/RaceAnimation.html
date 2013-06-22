@@ -274,10 +274,9 @@ function CompassBearing( lat1, lon1, lat2, lon2 )
 
 function GetLapRatio( leaderRaceTimes, tCur, iLapHint )
 {
-	var maxLaps = leaderRaceTimes.length;
-	if( maxLaps <= 1 )
+	var maxLaps = leaderRaceTimes.length - 1;
+	if( maxLaps < 1 )
 		return [0, 0.0];
-	maxLaps -= 1;
 		
 	if( 0 <= iLapHint && iLapHint < maxLaps &&
 			leaderRaceTimes[iLapHint] <= tCur && tCur < leaderRaceTimes[iLapHint+1] ) {
@@ -867,32 +866,35 @@ function TrackAnimation()
 				var glr = GetLapRatio( leaderRaceTimes, t, this.iLapDistance );
 				this.iLapDistance = glr[0];
 				var lapRatio = glr[1];
-				lapRatio = parseInt(lapRatio * 10.0) / 10.0		// Always round down, not to nearest decimal.
+				lapRatio = Math.floor(lapRatio * 10.0) / 10.0		// Always round down, not to nearest decimal.
 				table[0].push( FixedFormat(this.iLapDistance + lapRatio, 5, 1) + ' Laps of ' + maxLaps );
 				table[1].push( FixedFormat(maxLaps - this.iLapDistance - lapRatio, 5, 1) + ' Laps to go' );
 				
 				var leaderCategory = data[leaders[0]]['raceCat'];
 				var cat = (leaderCategory && catDetails ? catDetails[leaderCategory] : null);
 				if( cat ) {
+					var distanceCur = null, distanceRace = null;
 					if( cat['lapDistance'] ) {
 						var flr = data[leaders[0]]['flr']; if( !flr ) flr = 1.0;
 						var distanceLap = cat['lapDistance'];
-						var distanceRace = distanceLap * (flr + maxLaps - 1);
-						var distanceCur = 0.0;
+						if( cat['distanceUnit'] != displayUnits )
+							distanceLap *= (displayUnits == 'km' ? 1.60934 : 0.621371);
+						distanceRace = distanceLap * (flr + maxLaps - 1);
 						if( this.iLapDistance == 0 )
 							distanceCur = lapRatio * (distanceLap * flr);
 						else
 							distanceCur = distanceLap * (flr + this.iLapDistance - 1 + lapRatio);
-						distanceCur = parseInt(distanceCur * 10.0) / 10.0;
-						table[0].push( FixedFormat(distanceCur, 5, 1) + ' ' + displayUnits + ' of ' + distanceRace.toFixed(1) );
-						table[1].push( FixedFormat(distanceRace - distanceCur, 5, 1) + ' ' + displayUnits + ' to go' );
 					}
 					else if( cat['raceDistance'] && leaderRaceTime[0] != leaderRaceTime.back() ) {
-						var distanceRace = cat['raceDistance'];
+						distanceRace = cat['raceDistance'];
+						if( cat['distanceUnit'] != displayUnits )
+							distanceRace *= (displayUnits == 'km' ? 1.60934 : 0.621371);
 						var distanceCur = (t - leaderRaceTimes[0]) / (leaderRaceTimes.back() - leaderRaceTimes[0]) * distanceRace;
 						distanceCur = Math.max( 0.0, Math.min(distanceCur, distanceRace) );
+					}
+					if( distanceCur != null ) {
 						if( distanceCur != distanceRace )
-							distanceCur = parseInt( distanceCur * 10.0 ) / 10.0;
+							distanceCur = Math.floor( distanceCur * 10.0 ) / 10.0;
 						table[0].push( FixedFormat(distanceCur, 5, 1) + ' ' + displayUnits + ' of ' + distanceRace.toFixed(1) );
 						table[1].push( FixedFormat(distanceRace - distanceCur, 5, 1) + ' ' + displayUnits + ' to go' );
 					}
@@ -1267,6 +1269,7 @@ function GeoAnimation()
 	this.compassLocation = null;
 	this.widthLast = -1;
 	this.heightLast = -1;
+	this.iLapDistance = 0;
 	
 	this.tBannerLast = -1;
 	
@@ -1632,15 +1635,84 @@ function GeoAnimation()
 		
 		dc.fillStyle = '#222';
 		
-		// Draw the current lap
-		var tStr = '';
-		if( lapCur > 0 )
-			tStr = 'Laps Completed ' + (lapCur - 1) + '    ';
-
 		// Draw the race time
-		tStr += FormatTime( t );
-		var tWidth = dc.measureText(tStr).width;
-		dc.fillText( tStr, width - tWidth, tHeight+textVSpace*1.6 );
+		yCur = tHeight+textVSpace*1.6;
+		tStr = FormatTime( t );
+		dc.fillText( tStr, width - dc.measureText(tStr).width, yCur );
+		yCur += tHeight;
+		
+		// Draw the current lap and distance
+		if( leaders.length > 0 ) {
+			var leaderRaceTimes = data[leaders[0]]['raceTimes'];
+			if( leaderRaceTimes && leaderRaceTimes[0] < leaderRaceTimes.back() ) {
+				var table = [];
+				
+				var leaderRaceTimes = data[leaders[0]]['raceTimes'];
+				var maxLaps = leaderRaceTimes.length - 1;
+				var glr = GetLapRatio( leaderRaceTimes, t, this.iLapDistance );
+				this.iLapDistance = glr[0];
+				var lapRatio = glr[1];
+				lapRatio = Math.floor(lapRatio * 10.0) / 10.0		// Always round down, not to nearest decimal.
+				table.push( FixedFormat(this.iLapDistance + lapRatio, 5, 1) + ' Laps of ' + maxLaps );
+				table.push( FixedFormat(maxLaps - this.iLapDistance - lapRatio, 5, 1) + ' Laps to go' );
+				
+				var leaderCategory = data[leaders[0]]['raceCat'];
+				var cat = (leaderCategory && catDetails ? catDetails[leaderCategory] : null);
+				if( cat ) {
+					var distanceCur = null, distanceRace = null;
+					
+					if( cat['lapDistance'] ) {
+						var flr = data[leaders[0]]['flr']; if( !flr ) flr = 1.0;
+						var distanceLap = cat['lapDistance'];
+						if( cat['distanceUnit'] != displayUnits )
+							distanceLap *= (displayUnits == 'km' ? 1.60934 : 0.621371);
+						distanceRace = distanceLap * (flr + maxLaps - 1);
+						if( this.iLapDistance == 0 )
+							distanceCur = lapRatio * (distanceLap * flr);
+						else
+							distanceCur = distanceLap * (flr + this.iLapDistance - 1 + lapRatio);
+					}
+					else if( cat['raceDistance'] && leaderRaceTime[0] != leaderRaceTime.back() ) {
+						distanceRace = cat['raceDistance'];
+						if( cat['distanceUnit'] != displayUnits )
+							distanceRace *= (displayUnits == 'km' ? 1.60934 : 0.621371);
+						distanceCur = (t - leaderRaceTimes[0]) / (leaderRaceTimes.back() - leaderRaceTimes[0]) * distanceRace;
+						distanceCur = Math.max( 0.0, Math.min(distanceCur, distanceRace) );
+					}
+					if( distanceCur != null ) {
+						if( distanceCur != distanceRace )
+							distanceCur = Math.floor( distanceCur * 10.0 ) / 10.0;
+						table.push( '' );
+						table.push( FixedFormat(distanceCur, 5, 1) + ' ' + displayUnits + ' of ' + distanceRace.toFixed(1) );
+						table.push( FixedFormat(distanceRace - distanceCur, 5, 1) + ' ' + displayUnits + ' to go' );
+					}
+				}
+				
+				var widthMax = 0;
+				for( var w = 0; w < table.length; ++w )
+					widthMax = Math.max( widthMax, dc.measureText(table[w]).width );
+				
+				var yCur, xCur;
+				if( this.compassLocation == 'S' )
+					yCur = height - tHeight * (table.length + 1);
+				else
+					yCur = tHeight+textVSpace*1.6 + tHeight * 2;
+				if( this.compassLocation[1] == 'E' )
+					xCur = width - widthMax;
+				else
+					xCur = 0;
+				for( var w = 0; w < table.length; ++w ) {
+					yCur += tHeight;
+					if( !table[w] )
+						continue;
+					var value = table[w];
+					var tShow = value.replace( /^0+/, '' );
+					if( tShow[0] == '.' )
+						tShow = '0' + tShow;
+					dc.fillText( tShow, xCur + dc.measureText(Array(value.length - tShow.length + 1).join('0')).width, yCur );
+				}
+			}
+		}
 
 		// Draw the leader board.
 		var bannerItems = [];

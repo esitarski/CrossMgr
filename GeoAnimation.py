@@ -917,22 +917,30 @@ class GeoAnimation(wx.PyControl):
 				lapRatio = int(lapRatio * 10.0) / 10.0		# Always round down, not to nearest decimal.
 				text = ['%06.1f Laps of %d ' % (self.iLapDistance + lapRatio, maxLaps),
 						'%06.1f Laps to go ' % (maxLaps - self.iLapDistance - lapRatio)]
-
-				# Draw the distance info.
-				flr = self.data[leaders[0]]['flr']
-				distanceLap = self.geoTrack.lengthKm if self.units == 'km' else self.geoTrack.lengthMiles
-				distanceRace = distanceLap * (flr + maxLaps-1)
-				self.iLapDistance, lapRatio = GetLapRatio( leaderRaceTimes, self.t, self.iLapDistance )
-				if self.iLapDistance == 0:
-					distanceCur = lapRatio * (distanceLap * flr)
-				else:
-					distanceCur = distanceLap * (flr + self.iLapDistance - 1 + lapRatio)
-				if distanceCur != distanceRace:
-					distanceCur = int(distanceCur * 10.0) / 10.0
+						
+				cat = self.categoryDetails.get( self.data[leaders[0]].get('raceCat', None) )
+				if cat:
+					distanceCur, distanceRace = None, None
 					
-				text.extend( [	'',
-								'%06.1f %s of %.1f ' % (distanceCur, self.units, distanceRace),
-								'%06.1f %s to go ' % (distanceRace - distanceCur, self.units)] )
+					if cat.get('lapDistance', None) is not None:
+						text.append( '' )
+						flr = self.data[leaders[0]].get('flr', 1.0)
+						distanceLap = cat['lapDistance']
+						distanceRace = distanceLap * (flr + maxLaps-1)
+						if self.iLapDistance == 0:
+							distanceCur = lapRatio * (distanceLap * flr)
+						else:
+							distanceCur = distanceLap * (flr + self.iLapDistance - 1 + lapRatio)
+					elif cat.get('raceDistance', None) is not None and leaderRaceTime[0] != leaderRaceTime[-1]:
+						distanceRace = cat['raceDistance']
+						distanceCur = (self.t - leaderRaceTimes[0]) / (leaderRaceTimes[-1] - leaderRaceTimes[0]) * distanceRace
+						distanceCur = max( 0.0, min(distanceCur, distanceRace) )
+						
+					if distanceCur is not None:
+						if distanceCur != distanceRace:
+							distanceCur = int( distanceCur * 10.0 ) / 10.0
+						text.extend( [	'%05.1f %s of %.1f' % (distanceCur, self.units, distanceRace),
+										'%05.1f %s to go' % (distanceRace - distanceCur, self.units)] )
 								
 				widthMax = max( dc.GetTextExtent(t)[0] for t in text )
 				if 'N' in self.compassLocation:
