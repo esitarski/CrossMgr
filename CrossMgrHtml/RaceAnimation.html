@@ -1266,7 +1266,7 @@ function GeoAnimation()
 	this.xBanner = 300;
 	this.geoTrack = new GeoTrack();
 	this.altigraph = new Altigraph();
-	this.compassLocation = null;
+	this.compassLocation = 'SE';
 	this.widthLast = -1;
 	this.heightLast = -1;
 	this.iLapDistance = 0;
@@ -1459,7 +1459,9 @@ function GeoAnimation()
 		var fontStrHightlight = ~~(tHeight * 1.1) + "px Arial";
 		dc.font = fontStr;
 		
-		var trackWidth = width - border * 2 - laneWidth*2;
+		compassSize = (width / 20) * 1.4 * 2;
+		
+		var trackWidth = width - border * 2 - laneWidth*2 - compassSize;
 		var topMargin = 2*border + tHeight * infoLines + textVSpace;
 		var trackHeight = height - topMargin;
 		this.geoTrack.setDisplayRect( border, topMargin, trackWidth, trackHeight - laneWidth );
@@ -1489,30 +1491,6 @@ function GeoAnimation()
 		dc.lineWidth = 1;
 		dc.stroke();
 		
-		if( !this.compassLocation )
-		{
-			var locations = ['SE', 'NE', 'SW', 'SE'];
-			var compassSize = (width / 20) * 1.4 * 2;
-			var inCountBest = pointsLength + 1;
-			for( var k = 0; k < locations.length; ++k ) {
-				var loc = locations[k];
-				var xCompass = (loc[1] == 'W' ? 0 : width - compassSize);
-				var yCompass = (loc[0] == 'N' ? tHeight * 3 : height - compassSize);
-				var inCount = 0;
-				for( var i = 0; i < pointsLength; ++i ) {
-					if( xCompass <= points[i][0] && points[i][0] < xCompass + compassSize &&
-						yCompass <= points[i][1] && points[i][1] < yCompass + compassSize ) {
-						++inCount;
-					}
-				}
-				if( inCount < inCountBest ) {
-					inCountBest = inCount;
-					this.compassLocation = loc;
-					if( inCount == 0 )
-						break;
-				}
-			}
-		}
 		this.drawCompass( dc, width, height, tHeight )
 		
 		// Draw the finish line.
@@ -1693,7 +1671,7 @@ function GeoAnimation()
 					widthMax = Math.max( widthMax, dc.measureText(table[w]).width );
 				
 				var yCur, xCur;
-				if( this.compassLocation == 'S' )
+				if( this.compassLocation[0] == 'N' )
 					yCur = height - tHeight * (table.length + 1);
 				else
 					yCur = tHeight+textVSpace*1.6 + tHeight * 2;
