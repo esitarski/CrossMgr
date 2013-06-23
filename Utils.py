@@ -282,8 +282,6 @@ try:
 except:
 	dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
 	
-sys.path.append( dirName )	# Required for PIL to find the font files.
-
 if os.path.basename(dirName) in ['library.zip', 'MainWin.exe', 'CrossMgr.exe']:
 	dirName = os.path.dirname(dirName)
 if 'CrossMgr?' in os.path.basename(dirName):
@@ -298,6 +296,8 @@ imageFolder = os.path.join(dirName, 'CrossMgrImages')
 htmlFolder = os.path.join(dirName, 'CrossMgrHtml')
 helpFolder = os.path.join(dirName, 'CrossMgrHtmlDoc')
 helpIndexFolder = os.path.join(dirName, 'CrossMgrHelpIndex')
+
+sys.path.append( imageFolder )	# Add Image folder to search path so PIL can find the font files.
 
 def getDirName():		return dirName
 def getImageFolder():	return imageFolder
