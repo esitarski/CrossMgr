@@ -14,6 +14,12 @@ BuildHelpIndex()
 	
 distDir = 'dist'
 
+# Copy the font files required for PIL (Python Image Library) into the images directory.
+# We then add these to the search path later.
+pyLib = r'C:\python27\Lib'
+for f in ['helvB08.pil', 'helvetica-10.pil', 'helvB08.png', 'helvetica-10.png']:
+	shutil.copy( os.path.join(pyLib, f), 'CrossMgrImages' )
+	
 # Cleanup existing dll, pyd and exe files.  The old ones may not be needed, so it is best to clean these up.
 for f in os.listdir(distDir):
 	if f.endswith('.dll') or f.endswith('.pyd') or f.endswith('.exe'):
@@ -28,6 +34,11 @@ setup(	windows = [
 				'icon_resources': [(1, r'CrossMgrImages\CrossMgr.ico')],
 			}
 		],
+		options = {
+			'py2exe':{
+					'includes': ['VideoCapture',],
+			},
+		},
 	 )
 
 # Copy additional dlls to distribution folder.
@@ -41,10 +52,6 @@ try:
 except:
 	pass
 
-pyLib = r'C:\python27\Lib'
-for f in ['helvB08.pil', 'helvetica-10.pil', 'helvB08.png', 'helvetica-10.png']:
-	shutil.copy( os.path.join(pyLib, f), distDir )
-	
 # Add images and reference data to the distribution folder.
 def copyDir( d ):
 	destD = os.path.join(distDir, d)
@@ -52,7 +59,7 @@ def copyDir( d ):
 		shutil.rmtree( destD )
 	os.mkdir( destD )
 	for i in os.listdir( d ):
-		if i[-3:] != '.db':	# Ignore .db files.
+		if not i.endswith( '.db' ):	# Ignore .db files.
 			shutil.copy( os.path.join(d, i), os.path.join(destD,i) )
 			
 for dir in ['CrossMgrImages', 'data', 'CrossMgrHtml', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex']: 
@@ -60,7 +67,7 @@ for dir in ['CrossMgrImages', 'data', 'CrossMgrHtml', 'CrossMgrHtmlDoc', 'CrossM
 
 # Create the installer
 inno = r'\Program Files\Inno Setup 5\ISCC.exe'
-# Find the drive it is installed on.
+# Find the drive inno is installed on.
 for drive in ['C', 'D']:
 	innoTest = drive + ':' + inno
 	if os.path.exists( innoTest ):

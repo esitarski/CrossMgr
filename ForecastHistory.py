@@ -8,6 +8,7 @@ import ColGrid
 import StatusBar
 import OutputStreamer
 import NumKeypad
+import VideoBuffer
 from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, DeleteEntry, DoDNS, DoDNF, DoPull
 from FtpWriteFile import realTimeFtpPublish
 
@@ -319,7 +320,7 @@ class ForecastHistory( wx.Panel ):
 					except:
 						continue
 					try:
-						race.photoCount = getattr(race,'photoCount',0) + Utils.TakePhoto( num, t )
+						race.photoCount = getattr(race,'photoCount',0) + VideoBuffer.ModelTakePhoto( num, t )
 					except:
 						pass
 			

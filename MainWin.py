@@ -601,7 +601,7 @@ class MainWin( wx.Frame ):
 			delta = dt - race.startTime
 			t = delta.total_seconds()
 			
-			race.photoCount = getattr(race,'photoCount',0) + Utils.TakePhoto( num, t )
+			race.photoCount = getattr(race,'photoCount',0) + VideoBuffer.ModelTakePhoto( num, t )
 	
 	def menuDNS( self, event ):
 		dns = DNSManagerDialog( self )

@@ -171,7 +171,16 @@ def Shutdown():
 	if videoBuffer:
 		videoBuffer.stop()
 		videoBuffer = None
-			
+		
+def ModelTakePhoto( bib, raceSeconds ):
+	race = Model.race
+	if race and getattr(race, 'enableUSBCamera', False):
+		if getattr(race, 'enableJChipIntegration', False):
+			return TakePhoto( Utils.mainWin.fileName, bib, raceSeconds )
+		else:
+			return PhotoFinish.TakePhoto( Utils.mainWin.fileName, bib, raceSeconds )
+	return 0
+
 if __name__ == '__main__':
 	import os
 	import random

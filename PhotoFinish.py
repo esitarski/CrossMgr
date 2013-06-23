@@ -7,7 +7,11 @@ import datetime
 import Utils
 import Model
 from Version import AppVerName
-	  
+try:
+	from VideoCapture import Device
+except:
+	Device = None
+
 def formatTime( secs ):
 	if secs is None:
 		secs = 0
@@ -27,11 +31,6 @@ def formatTime( secs ):
 def fileFormatTime( secs ):
 	return formatTime(secs).replace(':', '-').replace('.', '-')
 	
-try:
-	from VideoCapture import Device
-except:
-	Device = None
-
 def HasPhotoFinish():
 	return Device is not Null
 
@@ -96,10 +95,10 @@ def updateLatency( latency ):
 		latencies[iLatency] = latency
 	sumLatencies += latency
 	iLatency = (iLatency + 1) % iLatencyMax
-	
+
 def getAverageLatency():
 	return sumLatencies / float(len(latencies))
-			
+
 def SavePhoto( fileName, bib, raceSeconds, cameraImage ):
 	global font, photoCache
 	bitmap = wx.BitmapFromImage( PilImageToWxImage(cameraImage) )
@@ -123,24 +122,22 @@ def SavePhoto( fileName, bib, raceSeconds, cameraImage ):
 	dc.SelectObject( wx.NullBitmap )
 	image = wx.ImageFromBitmap( bitmap )
 	
-	# Try to save the file.  If that fails, try to create the directory for the file and try again.
+	# Check if the folder exists before trying to write to it.
+	# Otherwise the SaveFile will raise an error dialog, which we don't want.
+	if not os.path.isdir( os.path.dirname(fileName) ):
+		try:
+			os.mkdir( os.path.dirname(fileName) )
+		except Exception as e:
+			return 0
+	
+	# Try to save the file.
 	try:
 		image.SaveFile( fileName, wx.BITMAP_TYPE_JPEG )
 		photoCache.add( os.path.basename(fileName) )
 		return 1
-	except:
-		pass
-		
-	try:
-		os.makedirs( os.path.dirname(fileName) )
-	except:
+	except Exception as e:
 		return 0
-	
-	image.SaveFile( fileName, wx.BITMAP_TYPE_JPEG )
-	photoCache.add( os.path.basename(fileName) )
-	return 1
 
-			
 if Device:
 	def AddBibToPhoto( raceFileName, bib, raceSeconds ):
 		dirName = getPhotoDirName( raceFileName )
@@ -158,10 +155,10 @@ if Device:
 	def TakePhoto( raceFileName, bib, raceSeconds ):
 		global camera, font
 		
-		print 'PhotoFinish: TakePhotoCalled'
 		# Open the camera if it is not open yet.
 		if camera is None:
 			SetCameraState( True )
+			Utils.writeLog( 'TakePhoto: SetCameraState fails' )
 			if not camera:
 				return 0
 		
@@ -183,7 +180,7 @@ if Device:
 		camera = None
 		font = None
 		if state:
-			camera = Device()
+			Utils.FixPILSearchPath()
 			try:
 				camera = Device()
 			except:
@@ -191,11 +188,14 @@ if Device:
 		return camera
 else:
 	def TakePhoto( raceFileName, bib, raceSeconds ):
+		Utils.writeLog( 'TakePhoto: Missing Device' )
 		return 0
 	def SetCameraState( state ):
+		Utils.writeLog( 'SetCameraState: Missing Device' )
 		return None
 	def AddBibToPhoto( raceFileName, bib, raceSeconds ):
-		pass
+		Utils.writeLog(  'AddBibToPhoto: Missing Device' )
+		return None
 
 if __name__ == '__main__':
 	app = wx.PySimpleApp()

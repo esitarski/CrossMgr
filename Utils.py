@@ -8,8 +8,6 @@ import math
 import subprocess
 import unicodedata
 import webbrowser
-import PhotoFinish
-import VideoBuffer
 import wx.grid		as gridlib
 try:
 	from win32com.shell import shell, shellcon
@@ -297,13 +295,15 @@ htmlFolder = os.path.join(dirName, 'CrossMgrHtml')
 helpFolder = os.path.join(dirName, 'CrossMgrHtmlDoc')
 helpIndexFolder = os.path.join(dirName, 'CrossMgrHelpIndex')
 
-sys.path.append( imageFolder )	# Add Image folder to search path so PIL can find the font files.
-
 def getDirName():		return dirName
 def getImageFolder():	return imageFolder
 def getHtmlFolder():	return htmlFolder
 def getHelpFolder():	return helpFolder
 def getHelpIndexFolder(): return helpIndexFolder
+
+def FixPILSearchPath():
+	if imageFolder not in sys.path:
+		sys.path.append( imageFolder )
 
 # Use Firefox to display the help if we can find it.
 for firefoxProg in ['/usr/bin/firefox', '']:
@@ -440,15 +440,6 @@ def CombineFirstLastName( firstName, lastName ):
 invalidFNameChars = set( c for c in '<>:"/\\|?*' )
 def ValidFilename( fname ):
 	return ''.join( c for c in fname if c not in invalidFNameChars and ord(c) > 31 )
-
-def TakePhoto( bib, raceSeconds ):
-	race = Model.race
-	if race and getattr(race, 'enableUSBCamera', False):
-		if getattr(race, 'enableJChipIntegration', False):
-			return VideoBuffer.TakePhoto( mainWin.fileName, bib, raceSeconds )
-		else:
-			return PhotoFinish.TakePhoto( mainWin.fileName, bib, raceSeconds )
-	return 0
 
 if __name__ == '__main__':
 	app = wx.PySimpleApp()
