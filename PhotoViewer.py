@@ -200,9 +200,19 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.splitter.SetMinimumPaneSize( 140 )
 		self.splitter.SplitVertically( self.thumbs, self.mainPhoto, 140 )
 		
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		self.advancePhotoLabel = wx.StaticText( self, wx.ID_ANY, 'Advance Photo Milliseconds:' )
+		self.advancePhoto = wx.Slider( self, wx.ID_ANY, minValue = -1000, maxValue = 0, value = -300,
+			style = wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS )
+		self.advancePhoto.SetTickFreq( 100, 1 )
+		hs.Add( self.advancePhotoLabel, proportion=0, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border = 2 )
+		hs.Add( self.advancePhoto, proportion=1, flag=wx.EXPAND|wx.ALL, border = 2 )
+		self.advancePhoto.Bind(wx.EVT_SCROLL_CHANGED, self.OnAdvancePhoto)
+		
 		self.vbs.Add( self.title, proportion=0, flag=wx.EXPAND|wx.ALL, border = 2 )
 		self.vbs.Add( self.toolbar, proportion=0, flag=wx.EXPAND|wx.ALL, border = 2 )
 		self.vbs.Add( self.splitter, proportion=1, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.EXPAND, border = 4 )
+		self.vbs.Add( hs, proportion = 0, flag=wx.EXPAND )
 		
 		self.Bind( wx.EVT_SIZE, self.OnResize )
 		self.thumbs.Bind(TC.EVT_THUMBNAILS_SEL_CHANGED, self.OnSelChanged)
@@ -212,6 +222,10 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.SetSize( (800,560) )
 		self.vbs.Layout()
 
+	def OnAdvancePhoto( self, event ):
+		if Model.race:
+			Model.race.advancePhotoMilliseconds = event.EventObject.GetValue()
+		
 	def OnResize( self, event ):
 		self.drawMainPhoto()
 		event.Skip()
@@ -372,6 +386,18 @@ class PhotoViewerDialog( wx.Dialog ):
 			self.num = num
 		
 		with Model.LockRace() as race:
+			isShown = self.advancePhotoLabel.IsShown()
+			if race and getattr(race, 'enableUSBCamera', False) and getattr(race, 'enableJChipIntegration', False):
+				self.advancePhoto.SetValue( getattr(race, 'advancePhotoMilliseconds', -300) )
+				doShow = True
+			else:
+				doShow = False
+				
+			if isShown != doShow:
+				self.advancePhotoLabel.Show( doShow )
+				self.advancePhoto.Show( doShow )
+				self.Layout()
+
 			if race is None:
 				self.clear()
 				return
@@ -381,7 +407,7 @@ class PhotoViewerDialog( wx.Dialog ):
 				tLast, rLast = race.getLastKnownTimeRider()
 				if rLast and rLast.num != self.num:
 					return
-				
+					
 		if Utils.mainWin and Utils.mainWin.fileName:
 			dir = getPhotoDirName( Utils.mainWin.fileName )
 		else:

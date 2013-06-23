@@ -28,31 +28,34 @@ def CheckExcelLink():
 	return (True, 'Excel Link OK')
 
 def GetTagNums( forceUpdate = False ):
-	
-	# Assumes the race is already locked.
 	race = Model.race
 	if not race:
 		return {}
-	
-	if forceUpdate or not race.tagNums:
-		# Get the linked external data.
-		try:
-			externalInfo = race.excelLink.read()
-		except:
-			externalInfo = {}
 		
-		# Associate Bib# and Tag from the external data.
+	# Get the linked external data.
+	try:
+		excelLink = race.excelLink
+	except:
 		race.tagNums = {}
-		
-		# Support the two tags per rider.
-		for num, edata in externalInfo.iteritems():
-			for tagName in ['Tag', 'Tag2']:
-				try:
-					tag = edata[tagName]
-					race.tagNums[stripLeadingZeros(tag)] = num
-				except (KeyError, ValueError):
-					pass
-	
+	else:
+		try:
+			externalInfo = excelLink.read()
+		except:
+			race.tagNums = {}
+		else:
+			if excelLink.readFromFile or not getattr(race, 'tagNums', None) or forceUpdate:
+				race.tagNums = {}
+				for tagName in ['Tag', 'Tag2']:
+					if excelLink.hasField( tagName ):
+						tn = {}
+						for num, edata in externalInfo.iteritems():
+							try:
+								tag = edata[tagName].lstrip('0')
+							except (KeyError, ValueError):
+								continue
+							if tag:
+								tn[tag] = num
+						race.tagNums.update( tn )
 	return race.tagNums
 
 #------------------------------------------------------------------------------------------------

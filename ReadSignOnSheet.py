@@ -196,6 +196,8 @@ class SummaryPage(wiz.WizardPageSimple):
 	def __init__(self, parent):
 		wiz.WizardPageSimple.__init__(self, parent)
 		
+		self.errors = []
+		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
 		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Summary:'), flag=wx.ALL, border = border )
@@ -222,6 +224,10 @@ class SummaryPage(wiz.WizardPageSimple):
 		self.errorLabel = wx.StaticText( self, wx.ID_ANY, 'Errors:' )
 		self.errorName = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_MULTILINE|wx.TE_READONLY, size=(-1,128) )
 		rows += 1
+		
+		self.copyErrorsToClipboard = wx.Button( self, wx.ID_ANY, 'Copy Errors to Clipboard' )
+		self.copyErrorsToClipboard.Bind( wx.EVT_BUTTON, self.doCopyErrorsToClipboard )
+		rows += 1
 
 		fbs = wx.GridBagSizer( hgap=2, vgap=1 )
 		
@@ -235,6 +241,7 @@ class SummaryPage(wiz.WizardPageSimple):
 					  (self.riderLabel, 0, labelAlign),		(self.riderNumber,	1, fieldAlign),
 					  (self.statusLabel, 0, labelAlign),	(self.statusName,	1, fieldAlign),
 					  (self.errorLabel, 0, labelAlign),		(self.errorName,	1, fieldAlign),
+					  (blank(), 0, labelAlign),				(self.copyErrorsToClipboard,	1, fieldAlign),
 					 ]
 		
 		row = 0
@@ -254,24 +261,33 @@ class SummaryPage(wiz.WizardPageSimple):
 		vbs.Add( fbs )
 		
 		self.SetSizer(vbs)
-	
+		
+	def doCopyErrorsToClipboard( self, event ):
+		if not self.errors:
+			return
+			
+		clipboard = wx.Clipboard.Get()
+		if not clipboard.IsOpened():
+			clipboard.Open()
+			clipboard.SetData( wx.TextDataObject('\n'.join( err for num, err in self.errors )) )
+			clipboard.Close()
+			Utils.MessageOK( self, 'Excel Errors Copied to Clipboard.', 'Excel Errors Copied to Clipboard' )
+
 	def setFileNameSheetNameInfo( self, fileName, sheetName, info, errors ):
 		self.fileName.SetLabel( fileName )
 		self.sheetName.SetLabel( sheetName )
+		self.errors = errors
+		
 		try:
 			infoLen = len(info)
 		except TypeError:
 			infoLen = 0
 		self.riderNumber.SetLabel( str(infoLen) )
-		errStr = []
-		if errors:
-			for num, err in errors:
-				errStr.append( err )
-		else:
-			errStr = ['None']
-		errStr = '\n'.join( errStr )
+		errStr = '\n'.join( [err for num, err in errors] if errors else ['None'] )
 		self.statusName.SetLabel( 'Success!' if infoLen and not errors else '{num} Error(s)'.format( num=len(errors) ) )
 		self.errorName.SetValue( errStr )
+		
+		self.copyErrorsToClipboard.Enable( bool(self.errors) )
 		
 		self.Layout()
 	
@@ -426,6 +442,7 @@ class ExcelLink( object ):
 	def __init__( self ):
 		self.fileName = None
 		self.sheetName = None
+		self.readFromFile = True
 		self.fieldCol = dict( (f, c) for c, f in enumerate(Fields) )
 	
 	def __cmp__( self, e ):
@@ -462,7 +479,15 @@ class ExcelLink( object ):
 	def getErrors( self ):
 		global errorCache
 		self.read()
-		return errorCache		
+		return errorCache
+		
+	def isSynced( self ):
+		global stateCache
+		try:
+			state = (os.path.getmtime(self.fileName), self.fileName, self.sheetName, self.fieldCol)
+			return state == stateCache
+		except:
+			return False
 	
 	def read( self, alwaysReturnCache = False ):
 		# Check the cache.  Return the last info if the file has not been modified, and the name, sheet and fields are the same.
@@ -470,6 +495,7 @@ class ExcelLink( object ):
 		global infoCache
 		global errorCache
 		
+		self.readFromFile = False
 		if alwaysReturnCache and infoCache is not None:
 			return infoCache
 
@@ -482,6 +508,7 @@ class ExcelLink( object ):
 				pass
 	
 		# Read the sheet and return the rider data.
+		self.readFromFile = True
 		try:
 			reader = GetExcelReader( self.fileName )
 			if self.sheetName not in reader.sheet_names():
@@ -547,7 +574,7 @@ class ExcelLink( object ):
 					
 				tag = data[tField].lstrip('0')
 				
-				if not tag:
+				if not tag and tField == 'Tag':		# Don't check for missing Tag2s as they are optional.
 					errors.append( (num, 'Empty {field} in row {row} for Bib# {num}'.format(field=tField, row=row, num=num)) )
 					continue
 				

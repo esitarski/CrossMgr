@@ -86,7 +86,11 @@ class VideoBuffer( threading.Thread ):
 					
 				if   message[0] == 'Save':
 					cmd, bib, t = message
-					frames = self.find(t)
+					try:
+						tFind = t + getattr(Model.race, 'advancePhotoMilliseconds', -300) / 1000.0
+					except:
+						tFind = t
+					frames = self.find( tFind )
 					for i, frame in enumerate( frames ):
 						self.frameSaver.save( GetFilename(bib, t, self.dirName, i), bib, t, frame )
 					self.frameCount += len(frames)
