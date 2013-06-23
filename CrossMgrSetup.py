@@ -14,7 +14,7 @@ BuildHelpIndex()
 	
 distDir = 'dist'
 
-# Copy the font files required for PIL (Python Image Library) into the images directory.
+# Copy the "pil" and "png" files required for PIL (Python Image Library) into the images directory.
 # We then add these to the search path later.
 pyLib = r'C:\python27\Lib'
 for f in ['helvB08.pil', 'helvetica-10.pil', 'helvB08.png', 'helvetica-10.png']:
