@@ -9,6 +9,7 @@ import random
 import time
 import datetime
 import subprocess
+from openpyxl.workbook import Workbook
 import re
 
 #------------------------------------------------------------------------------	
@@ -56,11 +57,24 @@ for i in xrange(25):
 #------------------------------------------------------------------------------	
 # Create a JChip-style hex tag for each number.
 tag = dict( (n, 'J413A%02X' % n) for n in nums )
-	
+
 #------------------------------------------------------------------------------	
-# Write out as a .csv file.  To create an external data file suitable for linking
-# with CrossMgr, open this file in Excel, then save it in .xls (or .xlsx) format.
-# Then link to this sheet in CrossMgr through "DataMgmt|Link to External Excel File...".
+# Write out as a .xlsx file with the number tag data.
+#
+wb = Workbook()
+ws = wb.get_active_sheet()
+ws.title = "JChipTest"
+for col, label in enumerate('Bib#,Tag'.split(',')):
+	ws.cell( row = 0, column = col ).value = label
+for row, n in enumerate(nums):
+	ws.cell( row = row + 1, column = 0 ).value = n
+	ws.cell( row = row + 1, column = 1 ).value = tag[n]
+wb.save('JChipTest.xlsx')
+wb = None
+
+#------------------------------------------------------------------------------	
+# Also write out as a .csv file.
+#
 with open('JChipTest.csv', 'w') as f:
 	f.write( 'Bib#,Tag,dummy3,dummy4,dummy5\n' )
 	for n in nums:

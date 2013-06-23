@@ -127,7 +127,14 @@ class VideoBuffer( threading.Thread ):
 		frameMax = self.frameMax
 		for iBest in xrange(frameMax-1, -1, -1):
 			if frames[ (iBest + frameCur) % frameMax ][0] < t:
-				return [self.getFrame(i) for i in xrange(max(0, iBest-1), min(frameMax, iBest + 2)) if self.getFrame(i)]
+				fRange = list( xrange(max(0, iBest-1), min(frameMax, iBest + 2)) )
+				timeError = [abs(t - self.getT(i)) for i in fRange]
+				iClosest = fRange[timeError.index( min(timeError) )]
+				Utils.writeLog( 'VideoBuffer.find: %s:  error: %s  [%s]' % (
+					Utils.formatTime(t, True), Utils.formatTime(min(timeError), True),
+					', '.join( Utils.formatTime(self.getT(i), True) if i != iClosest
+								else ('*' + Utils.formatTime(self.getT(i), True)) for i in fRange ) ) )
+				return [self.getFrame(i) for i in fRange if self.getFrame(i)]
 		return []
 		
 	def grabFrame( self ):
