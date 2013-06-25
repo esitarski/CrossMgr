@@ -1,16 +1,19 @@
 import Model
 import Utils
 import JChip
-from Utils				import logCall, stripLeadingZeros
+from JChip import ChipReaderEvent, EVT_CHIP_READER 
+from Utils import logCall, stripLeadingZeros
 import wx
 import wx.lib.intctrl
 import wx.lib.masked           as masked
-import  wx.lib.mixins.listctrl  as  listmix
-import  wx.lib.rcsizer  as rcs
+import wx.lib.mixins.listctrl  as  listmix
+import wx.lib.rcsizer  as rcs
 import socket
 import sys
 import re
+import datetime
 import PhotoSyncViewer
+import VideoBuffer
 
 PORT, HOST = JChip.DEFAULT_PORT, JChip.DEFAULT_HOST
 
@@ -81,6 +84,7 @@ class JChipSetupDialog( wx.Dialog ):
 		
 		self.timer = None
 		self.receivedCount = 0
+		self.refTime = None
 		
 		self.enableJChipCheckBox = wx.CheckBox( self, -1, 'Accept JChip Data During Race' )
 		if Model.race:
@@ -104,6 +108,8 @@ class JChipSetupDialog( wx.Dialog ):
 		
 		self.helpBtn = wx.Button( self, wx.ID_ANY, '&Help' )
 		self.Bind( wx.EVT_BUTTON, lambda evt: Utils.showHelp('Menu-ChipReader.html#jchip-setup'), self.helpBtn )
+		
+		self.Bind(EVT_CHIP_READER, self.handleChipReaderEvent)
 		
 		bs = wx.BoxSizer( wx.VERTICAL )
 		
@@ -206,6 +212,21 @@ class JChipSetupDialog( wx.Dialog ):
 			self.receivedCount = 0
 			self.timer = wx.CallLater( 1000, self.onTimerCallback, 'started' )
 	
+	def handleChipReaderEvent( self, event ):
+		if not PhotoSyncViewer.PhotoSyncViewerIsShown() or not event.tagTimes:
+			return
+			
+		tagNums = {}
+		race = Model.race
+		if race:
+			if not getattr(race, 'enableUSBCamera', False):
+				return
+			tagNums = GetTagNums()
+		
+		tag, dt = event.tagTimes[-1]
+		num = tagNums.get(tag, None)
+		PhotoSyncViewer.photoSyncViewer.refresh( VideoBuffer.videoBuffer, (dt - self.refTime).total_seconds(), num )
+
 	def testJChipToggle( self, event ):
 		if not JChip.listener:
 			correct, reason = CheckExcelLink()
@@ -224,6 +245,7 @@ class JChipSetupDialog( wx.Dialog ):
 					self.testJChip.SetValue( False )
 					return
 			
+			JChip.readerEventWindow = self
 			self.testList.Clear()
 			JChip.StartListener()
 			
@@ -237,7 +259,9 @@ class JChipSetupDialog( wx.Dialog ):
 			self.timer = wx.CallLater( 1000, self.onTimerCallback, 'started' )
 			
 			if Model.race and getattr(Model.race, 'enableUSBCamera', False):
-				PhotoSyncViewer.PhotoSyncViewerShow()
+				self.refTime = datetime.datetime.now()
+				PhotoSyncViewer.StartPhotoSyncViewer( Utils.mainWin or self )
+				VideoBuffer.StartVideoBuffer( self.refTime, Utils.getFileName() or 'test.crm' )
 		else:
 			# Stop the listener.
 			JChip.StopListener()
@@ -251,7 +275,10 @@ class JChipSetupDialog( wx.Dialog ):
 			self.testJChip.SetValue( False )
 			self.testList.Clear()
 			
-			PhotoSyncViewer.PhotoSyncViewerHide()
+			# Shutdown the photo sync viewer and the video buffer if they were started.
+			VideoBuffer.Shutdown()
+			PhotoSyncViewer.Shutdown()
+			JChip.readerEventWindow = None
 	
 	def appendMsg( self, s ):
 		self.testList.AppendText( s + '\n' )
@@ -311,6 +338,7 @@ if __name__ == '__main__':
 	Model.setRace( Model.Race() )
 	Model.race._populate()
 	Model.race.finishRaceNow()
+	Model.race.enableUSBCamera = True
 	mainWin.Show()
 	dlg = JChipSetupDialog( mainWin )
 	dlg.ShowModal()

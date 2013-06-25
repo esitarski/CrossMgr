@@ -19,9 +19,10 @@ from Queue import Empty
 
 ChipReaderEvent, EVT_CHIP_READER = wx.lib.newevent.NewEvent()
 
+readerEventWindow = None
 def sendReaderEvent( tagTimes ):
-	if tagTimes and Utils.mainWin:
-		wx.PostEvent( Utils.mainWin, ChipReaderEvent(tagTimes = tagTimes) )
+	if tagTimes and readerEventWindow:
+		wx.PostEvent( readerEventWindow, ChipReaderEvent(tagTimes = tagTimes) )
 
 combine = datetime.datetime.combine
 reTimeChars = re.compile( '^\d\d:\d\d:\d\d\.\d+' )
@@ -115,7 +116,11 @@ def safeAppend( lst, x ):
 readerComputerTimeDiff = None
 def Server( q, shutdownQ, HOST, PORT, startTime ):
 	global readerComputerTimeDiff
+	global readerEventWindow
 	readerComputerTimeDiff = None
+	
+	if not readerEventWindow:
+		readerEventWindow = Utils.mainWin
 	
 	#-----------------------------------------------------
 	# We support one connection to JChip.

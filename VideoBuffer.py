@@ -46,7 +46,7 @@ class FrameSaver( threading.Thread ):
 		self.queue.put( ['Save', fileName, bib, t, frame] )
 	
 class VideoBuffer( threading.Thread ):
-	def __init__( self, camera, refTime = None, dirName = '.', fps = 40, bufferSeconds = 2.0 ):
+	def __init__( self, camera, refTime = None, dirName = '.', fps = 25, bufferSeconds = 2.0 ):
 		threading.Thread.__init__( self )
 		self.daemon = True
 		self.name = 'VideoBuffer'
@@ -164,7 +164,9 @@ class VideoBuffer( threading.Thread ):
 			pass
 
 videoBuffer = None
-def StartVideoBuffer( refTime ):
+def StartVideoBuffer( refTime, raceFileName):
+	global videoBuffer
+	
 	if not videoBuffer:
 		camera = PhotoFinish.SetCameraState( True )
 		if not camera:
@@ -189,7 +191,7 @@ def TakePhoto( raceFileName, bib, raceSeconds ):
 		return 0
 	
 	if not videoBuffer:
-		if not StartVideoBuffer(Model.race.startTime):
+		if not StartVideoBuffer(Model.race.startTime, raceFileName):
 			return 0
 		
 	videoBuffer.takePhoto( bib, raceSeconds )

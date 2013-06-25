@@ -208,6 +208,4 @@ if __name__ == '__main__':
 		d = datetime.datetime.now()
 		TakePhoto( 'test.cmn', 100, 129.676 + i )
 		print 'Video Frame Capture Time', (datetime.datetime.now() - d).total_seconds()
-	
-		
-	
+

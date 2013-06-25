@@ -38,7 +38,7 @@ def RescaleImage( image, width, height ):
 	ar = float(bHeight) / float(bWidth)
 	if width * ar > height:
 		width = height / ar
-	image.Rescale( int(width), int(height), wx.IMAGE_QUALITY_HIGH )
+	image.Rescale( int(width), int(height), wx.IMAGE_QUALITY_NORMAL )
 	return image
 	
 def RescaleBitmap( dc, bitmap, width, height ):
@@ -79,7 +79,7 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 		self.title.SetFont( wx.FontFromPixelSize( wx.Size(0,24), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		
 		self.scrolledWindow = wx.ScrolledWindow( self, wx.ID_ANY )
-		self.numPhotos = 40
+		self.numPhotos = 25
 		self.photoWidth, self.photoHeight = int(2 * 320 / 2), int(2 * 240 / 2)
 		self.hgap = 4
 		gs = wx.FlexGridSizer( rows = 2, cols = self.numPhotos, hgap = self.hgap, vgap = 4 )
@@ -120,8 +120,13 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 		self.clear()
 
 	def OnBitmapButton( self, event, i ):
-		milliseconds = self.photoLabels[i].GetLabel()
+		label = self.photoLabels[i].GetLabel()
+		fields = label.split()
+		if len(fields) < 1:
+			return
+		milliseconds = fields[0]
 		if milliseconds and Model.race:
+			milliseconds = self.photoLabels[i].GetLabel()
 			Model.race.advancePhotoMilliseconds = int( milliseconds )
 			Utils.MessageOK( self, 'Advance Photo Milliseconds Set to %s' % milliseconds, 'Advance Milliseconds Set' )
 		
@@ -129,22 +134,22 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 		self.Show( False )
 		
 	def ScrollToPicture( self, iPicture ):
-		pos = 0
+		xScroll = 0
 		for i, b in enumerate(self.photoBitmaps):
 			if i == iPicture:
 				break
-			pos += b.GetSize().GetWidth() + self.hgap
-		self.scrolledWindow.Scroll( pos / self.scrolledWindow.GetScrollPixelsPerUnit()[0], -1 )
+			xScroll += b.GetSize().GetWidth() + self.hgap
+		self.scrolledWindow.Scroll( xScroll / self.scrolledWindow.GetScrollPixelsPerUnit()[0], -1 )
 			
 	def OnRefresh( self, event ):
 		self.refresh( self.num )
 		
 	def clear( self ):
+		self.timeFrames = []
 		for w in self.photoBitmaps:
 			w.SetBitmapLabel( self.bitmap )
 		for w in self.photoLabels:
 			w.SetLabel( '' )
-		self.timeFrames = []
 		
 	def refresh( self, videoBuffer, t, num = None ):
 		if not videoBuffer:
@@ -172,7 +177,7 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 				self.photoLabels[i].SetLabel( '' )
 				self.photoBitmaps[i].SetBitmapLabel( wx.NullBitmap )
 			else:
-				self.photoLabels[i].SetLabel( str(deltaMS[i]) )
+				self.photoLabels[i].SetLabel( str(deltaMS[i]) + ' ms')
 				image = PhotoFinish.PilImageToWxImage( frame )
 				image = RescaleImage( image, self.photoWidth, self.photoHeight )
 				bitmap = image.ConvertToBitmap( dc.GetDepth() )
@@ -187,17 +192,27 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 		self.timeFrames = timeFrames
 				
 photoSyncViewer = None
-def PhotoSyncViewerShow():
+def PhotoSyncViewerShow( parent ):
 	global photoSyncViewer
 	if not photoSyncViewer:
-		photoSyncViewer = PhotoSyncViewer( wx.GetTopLevelParent(), wx.ID_ANY, "Photo Sync Viewer" )
+		photoSyncViewer = PhotoSyncViewerDialog( parent, wx.ID_ANY, "Photo Sync Viewer" )
 	photoSyncViewer.Show( True )
+	
+def PhotoSyncViewerIsShown():
+	global photoSyncViewer
+	return photoSyncViewer and photoSyncViewer.IsShown()
 	
 def PhotoSyncViewerHide():
 	if not photoSyncViewer:
 		return
 	photoSyncViewer.Show( False )
 	photoSyncViewer.clear()
+
+def StartPhotoSyncViewer( parent ):
+	PhotoSyncViewerShow( parent )
+	
+def Shutdown():
+	PhotoSyncViewerHide()
 
 if __name__ == '__main__':
 	import time
