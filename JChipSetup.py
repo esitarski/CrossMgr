@@ -10,6 +10,7 @@ import  wx.lib.rcsizer  as rcs
 import socket
 import sys
 import re
+import PhotoSyncViewer
 
 PORT, HOST = JChip.DEFAULT_PORT, JChip.DEFAULT_HOST
 
@@ -234,6 +235,9 @@ class JChipSetupDialog( wx.Dialog ):
 			# Start a timer to monitor the receiver.
 			self.receivedCount = 0
 			self.timer = wx.CallLater( 1000, self.onTimerCallback, 'started' )
+			
+			if Model.race and getattr(Model.race, 'enableUSBCamera', False):
+				PhotoSyncViewer.PhotoSyncViewerShow()
 		else:
 			# Stop the listener.
 			JChip.StopListener()
@@ -246,6 +250,8 @@ class JChipSetupDialog( wx.Dialog ):
 			self.testJChip.SetLabel( 'Start JChip Test' )
 			self.testJChip.SetValue( False )
 			self.testList.Clear()
+			
+			PhotoSyncViewer.PhotoSyncViewerHide()
 	
 	def appendMsg( self, s ):
 		self.testList.AppendText( s + '\n' )

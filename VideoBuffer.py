@@ -121,6 +121,9 @@ class VideoBuffer( threading.Thread ):
 		
 	def getFrame( self, i ):
 		return self.frames[ (i + self.frameCur) % self.frameMax ][1]
+	
+	def getTimeFrame( self, i ):
+		return self.frames[ (i + self.frameCur) % self.frameMax ]
 		
 	def __len__( self ):
 		return self.frameMax
@@ -141,6 +144,16 @@ class VideoBuffer( threading.Thread ):
 				return [self.getFrame(i) for i in fRange if self.getFrame(i)]
 		return []
 		
+	def findBeforeAfter( self, t, before, after ):
+		frames = self.frames
+		frameCur = self.frameCur
+		frameMax = self.frameMax
+		for iBest in xrange(frameMax-1, -1, -1):
+			if frames[ (iBest + frameCur) % frameMax ][0] < t:
+				fRange = list( xrange(max(0, iBest-before), min(frameMax, iBest + after)) )
+				return [self.getTimeFrame(i) for i in fRange if self.getFrame(i)]
+		return []
+		
 	def grabFrame( self ):
 		try:
 			tNow = now()
@@ -151,6 +164,23 @@ class VideoBuffer( threading.Thread ):
 			pass
 
 videoBuffer = None
+def StartVideoBuffer( refTime ):
+	if not videoBuffer:
+		camera = PhotoFinish.SetCameraState( True )
+		if not camera:
+			return False
+			
+		dirName = PhotoFinish.getPhotoDirName( raceFileName )
+		if not os.path.isdir( dirName ):
+			try:
+				os.makedirs( dirName )
+			except:
+				return False
+				
+		videoBuffer = VideoBuffer( camera, refTime, dirName )
+		videoBuffer.start()
+	return True
+
 def TakePhoto( raceFileName, bib, raceSeconds ):
 	global videoBuffer
 	
@@ -159,21 +189,9 @@ def TakePhoto( raceFileName, bib, raceSeconds ):
 		return 0
 	
 	if not videoBuffer:
-	
-		camera = PhotoFinish.SetCameraState( True )
-		if not camera:
+		if not StartVideoBuffer(Model.race.startTime):
 			return 0
-			
-		dirName = PhotoFinish.getPhotoDirName( raceFileName )
-		if not os.path.isdir( dirName ):
-			try:
-				os.makedirs( dirName )
-			except:
-				return 0
-				
-		videoBuffer = VideoBuffer( camera, Model.race.startTime, dirName )
-		videoBuffer.start()
-
+		
 	videoBuffer.takePhoto( bib, raceSeconds )
 	return videoBuffer.frameCount - getattr(race,'photoCount',0) + 3
 	
