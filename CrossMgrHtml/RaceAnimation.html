@@ -3300,25 +3300,20 @@ function onLoad()
 		s = 'by ' + organizer;
 	if( timestamp )
 	{
-		var tServer, tBrowser, tRace;
+		var tServer = (new Date(timestamp[0]).getTime()) / 1000.0;
+		var tBrowser = (new Date().getTime()) / 1000.0;
+		while( tBrowser - tServer < 0 )
+			tBrowser += 60*60;
+		
+		var tRace = timestamp[1] + (tBrowser - tServer);
+		if( tRace > 25*60*60 )
+			raceIsRunning = false;		// If the race has been running for 25 hours, finish it.
+			
 		if( raceIsRunning )
 		{
-			tServer = (new Date(timestamp[0]).getTime()) / 1000.0;
-			tBrowser = (new Date().getTime()) / 1000.0;
 			// Attempt to adjust for time zone differences between server and browser.
 			// Assume that the browser is not more than an hour out of sync with the server.
-			while( tBrowser - tServer < 0 )
-				tBrowser += 60*60;
-			tRace = timestamp[1];
-			// Compensate for the delay between when the server created the data and when the browser got it.
-			var tRunning = tRace + (tBrowser - tServer);
-			// If the race has been running for too long, the user forgot to press Finish.
-			// Treat the race as if it is finished.
-			raceIsRunning = ( tRunning < 25*60*60 );
-		}
-		if( raceIsRunning )
-		{
-			t = tRace + (tBrowser - tServer);
+			t = tRace;
 			
 			// Hide the controls as we are in real-time mode.
 			document.getElementById('idAnimateControls').className = 'hidden';
