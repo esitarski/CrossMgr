@@ -1539,7 +1539,7 @@ class MainWin( wx.Frame ):
 
 		if geoTrack:
 			race.geoTrack, race.geoTrackFName = geoTrack, geoTrackFName
-			distance = geoTrack.length if race.distanceUnit == race.UnitKm else geoTrack.length * 0.621371
+			distance = geoTrack.lengthKm if race.distanceUnit == race.UnitKm else geoTrack.lengthMiles
 			if distance > 0.0:
 				for c in race.categories.itervalues():
 					c.distance = distance
