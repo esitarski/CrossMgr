@@ -568,13 +568,13 @@ class ExcelLink( object ):
 				numRow[num] = row
 				
 			for tField, tRow in tagFields:
-				if tField not in data:
+				if tField not in data and tField == 'Tag':		# Don't check for missing Tag2s as they are optional.:
 					errors.append( (num, 'Missing {field} in row {row} for Bib# {num}'.format( field=tField, row=row, num=num)) )
 					continue
 					
 				tag = data[tField].lstrip('0')
 				
-				if not tag and tField == 'Tag':		# Don't check for missing Tag2s as they are optional.
+				if not tag and tField == 'Tag':					# Don't check for missing Tag2s as they are optional.
 					errors.append( (num, 'Empty {field} in row {row} for Bib# {num}'.format(field=tField, row=row, num=num)) )
 					continue
 				
