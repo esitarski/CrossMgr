@@ -1876,6 +1876,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 				Utils.MessageOK( self, "Cannot open file:\n%s" % categoriesFile, "File Open Error", iconMask=wx.ICON_ERROR)
 			except (ValueError, IndexError):
 				Utils.MessageOK( self, "Bad file format:\n%s" % categoriesFile, "File Read Error", iconMask=wx.ICON_ERROR)
+			else:
+				self.refresh()
 				
 		dlg.Destroy()
 	
