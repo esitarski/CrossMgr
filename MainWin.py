@@ -964,7 +964,15 @@ class MainWin( wx.Frame ):
 	def getEmail( self ):
 		return self.config.Read('email', '')
 	
+	reLeadingWhitespace = re.compile( r'^[ \t]+', re.MULTILINE )
+	reComments = re.compile( r'// .*$', re.MULTILINE )
+	reBlankLines = re.compile( r'\n+' )
 	def addResultsToHtmlStr( self, html ):
+		# Remove leading whitespace, comments and consecutive blank lines to save space.
+		html = self.reLeadingWhitespace.sub( '', html )
+		html = self.reComments.sub( '', html )
+		html = self.reBlankLines.sub( '\n', html )
+	
 		payload = {}
 		payload['raceName'] = os.path.basename(self.fileName)[:-4]
 			

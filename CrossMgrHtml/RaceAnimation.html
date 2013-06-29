@@ -10,19 +10,14 @@
 <meta charset="UTF-8" author="Edward Sitarski" copyright="Edward Sitarski, 2011-2012" generator="CrossMgr" />  
 <title id="idTitle">CrossMgr Race Results by Edward Sitarski</title>	<!-- Don't change this text! -->
 <style type="text/css">
-body
-{ 
-	font-family: sans-serif;
-}
+body { font-family: sans-serif; }
 
-#idRaceName
-{
+#idRaceName {
 	font-size: 200%;
 	font-weight: bold;
 }
 
-#idImgHeader
-{
+#idImgHeader {
 	box-shadow: 4px 4px 4px #888888;
 }
 
@@ -32,19 +27,16 @@ body
 
 .hidden { display: none; }
 
-table.results
-{
+table.results {
 	font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
 	border-collapse:collapse;
 }
-table.results td, table.results th 
-{
+table.results td, table.results th {
 	font-size:1em;
 	padding:3px 7px 2px 7px;
 	text-align: right;
 }
-table.results th 
-{
+table.results th {
 	font-size:1.1em;
 	text-align:right;
 	padding-top:5px;
@@ -52,45 +44,37 @@ table.results th
 	background-color:#7FE57F;
 	color:#000000;
 }
-table.results tr.odd
-{
+table.results tr.odd {
 	color:#000000;
 	background-color:#EAF2D3;
 }
-table.results tr:hover
-{
+table.results tr:hover {
 	color:#000000;
 	background-color:#FFFFCC;
 }
-table.results tr.odd:hover
-{
+table.results tr.odd:hover {
 	color:#000000;
 	background-color:#FFFFCC;
 }
 
-table.results tr td.highlight
-{
+table.results tr td.highlight {
 	font-size: 120%;
 	font-weight: bold;
 }
 
-table.results td
-{
+table.results td {
 	border-top:1px solid #98bf21;
 }
 
-table.results td.noborder
-{
+table.results td.noborder {
 	border-top:0px solid #98bf21;
 }
 
-table.results td#idNonNumeric, table.results th#idNonNumeric
-{
+table.results td#idNonNumeric, table.results th#idNonNumeric {
 	text-align:left;
 }
 
-table.results tr td.fastest
-{
+table.results tr td.fastest {
 	color:#000000;
 	background-color:#80FF80;
 }
@@ -217,11 +201,8 @@ String.prototype.escapeHTML = function ()
 };
 
 // Make a string id safe.
-String.prototype.escapeID = function()
-{
-	var r =
-		this.replace(/[&<>"'(){}\[\]!@#$%^* ]/g,'_');
-	return r;
+String.prototype.escapeID = function() {
+	return this.replace(/[&<>"'(){}\[\]!@#$%^* ]/g,'_');
 };
 
 function isEmptyObject( obj ) {
@@ -307,9 +288,6 @@ function OpenVirtualTourWindow()
 	
 	if( !courseCoordinates || !virtualRideTemplate )
 		return;
-	
-	//if( !raceIsRunning )
-	//	Rewind();
 	
 	// Get the fastest finisher's speed in km/h.
 	if( data )
@@ -919,10 +897,6 @@ function TrackAnimation()
 				}
 				xRight -= fontHeight / 2.5;
 			}
-			
-			//var tStr = 'Laps Completed ' + (lapCur - 1);
-			//var tWidth = dc.measureText(tStr).width;
-			//dc.fillText( tStr, 2*r + r/2 - tWidth, r + r/2 - laneWidth - tHeight * 1.5 );
 		}
 
 		// Draw the leader board.
