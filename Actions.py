@@ -8,7 +8,6 @@ import JChip
 import OutputStreamer
 from FtpWriteFile import realTimeFtpPublish
 from Undo import undo
-from PhotoFinish import SetCameraState
 import VideoBuffer
 
 import wx.lib.masked as masked
@@ -33,14 +32,13 @@ def StartRaceNow():
 		race.startRaceNow()
 		
 	OutputStreamer.writeRaceStart()
+	VideoBuffer.ModelStartCamera()
 	
 	# Refresh the main window and switch to the Record pane.
 	mainWin = Utils.getMainWin()
 	if mainWin is not None:
 		mainWin.showPageName( 'Record' )
 		mainWin.refresh()
-		
-	SetCameraState( getattr(Model.race, 'enableUSBCamera', False) )
 	
 	# For safety, clear the undo stack after 8 seconds.
 	undoResetTimer = wx.CallLater( 8000, undo.clear )
@@ -249,11 +247,10 @@ class Actions( wx.Panel ):
 		
 		OutputStreamer.writeRaceFinish()
 		OutputStreamer.StopStreamer()
+		VideoBuffer.Shutdown()
+		
 		if getattr(Model.race, 'ftpUploadDuringRace', False):
 			realTimeFtpPublish.publishEntry( True )
-		
-		VideoBuffer.Shutdown()
-		SetCameraState( False )
 	
 	def refresh( self ):
 		self.button.Enable( False )

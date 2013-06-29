@@ -165,7 +165,7 @@ class Category(object):
 	def __init__( self, active = True, name = 'Category 100-199', catStr = '100-199', startOffset = '00:00:00',
 						numLaps = None, sequence = 0,
 						distance = None, distanceType = None, firstLapDistance = None,
-						gender = 'Open' ):
+						gender = 'Open', lappedRidersMustContinue = False ):
 		self.active = False
 		active = str(active).strip()
 		if active and active[0] in 'TtYy1':
@@ -213,7 +213,12 @@ class Category(object):
 			self.gender = gender
 		else:
 			self.gender = 'Open'
-		
+			
+		self.lappedRidersMustContinue = False
+		lappedRidersMustContinue = str(lappedRidersMustContinue).strip()
+		if lappedRidersMustContinue and lappedRidersMustContinue[0] in 'TtYy1':
+			self.lappedRidersMustContinue = True
+
 	def __setstate( self, d ):
 		self.__dict__.update(d)
 		i = getattr( self, 'intervals', None )
@@ -301,7 +306,9 @@ class Category(object):
 				return True
 		return False
 
-	key_attr = ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'catStr', 'distance', 'distanceType', 'firstLapDistance', 'gender']
+	key_attr = ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'catStr',
+				'distance', 'distanceType', 'firstLapDistance',
+				'gender', 'lappedRidersMustContinue']
 	def __cmp__( self, c ):
 		for attr in self.key_attr:
 			cCmp = cmp( getattr(self, attr, None), getattr(c, attr, None) )
@@ -363,7 +370,7 @@ class Category(object):
 			self.exclude.discard( num )
 		
 	def __repr__( self ):
-		return 'Category(active=%s, name="%s", catStr="%s", startOffset="%s", numLaps=%s, sequence=%s, distance=%s, distanceType=%s, gender="%s")' % (
+		return 'Category(active=%s, name="%s", catStr="%s", startOffset="%s", numLaps=%s, sequence=%s, distance=%s, distanceType=%s, gender="%s", lappedRidersMustContinue="%s")' % (
 				str(self.active),
 				self.name,
 				self.catStr,
@@ -373,6 +380,7 @@ class Category(object):
 				str(getattr(self,'distance',None)),
 				str(getattr(self,'distanceType', Category.DistanceByLap)),
 				getattr(self,'gender',''),
+				str(getattr(self,'lappedRidersMustContinue',False)),
 			)
 
 	def getStartOffsetSecs( self ):
@@ -783,6 +791,7 @@ class Race(object):
 		self.missingTags = set()
 		
 		self.enableUSBCamera = False
+		self.enableJChipIntegration = False
 		self.photoCount = 0
 		
 		# Animation options.
@@ -806,6 +815,12 @@ class Race(object):
 			self.numTimeInfoField = NumTimeInfo()
 			return self.numTimeInfoField
 	
+	@property
+	def enableVideoBuffer( self ):
+		# VideoBuffer: FIXLATER
+		#return getattr(self, 'enableUSBCamera', False) and getattr(self, 'enableJChipIntegration', False)
+		return False
+		
 	@property
 	def distanceUnitStr( self ):
 		return 'km' if getattr(self, 'distanceUnit', Race.UnitKm) == Race.UnitKm else 'miles'

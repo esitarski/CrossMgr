@@ -258,7 +258,7 @@ class JChipSetupDialog( wx.Dialog ):
 			self.receivedCount = 0
 			self.timer = wx.CallLater( 1000, self.onTimerCallback, 'started' )
 			
-			if Model.race and getattr(Model.race, 'enableUSBCamera', False):
+			if Model.race and Model.race.enableVideoBuffer:
 				self.refTime = datetime.datetime.now()
 				PhotoSyncViewer.StartPhotoSyncViewer( Utils.mainWin or self )
 				VideoBuffer.StartVideoBuffer( self.refTime, Utils.getFileName() or 'test.crm' )

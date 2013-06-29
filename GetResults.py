@@ -125,14 +125,15 @@ def GetResultsCore( category ):
 					pass
 		
 		# Get the number of race laps for each category.
-		categoryWinningTime = {}
+		categoryWinningTime, categoryWinningLaps = {}, {}
 		for c, (times, nums) in race.getCategoryTimesNums().iteritems():
 			if not times or (category and c != category):
 				continue
 				
 			# If the category num laps is specified, use that.
 			if c.getNumLaps():
-				categoryWinningTime[c] = times[min(len(times)-1, c.getNumLaps())]
+				categoryWinningLaps[c] = c.getNumLaps()
+				categoryWinningTime[c] = times[min(len(times)-1, categoryWinningLaps[c])]
 			else:
 				# Otherwise, set the number of laps by the winner's time closest to the race finish time.
 				try:
@@ -145,8 +146,10 @@ def GetResultsCore( category ):
 							if (times[winningLaps] - raceSeconds) > lastLapTime / 2.0:
 								winningLaps -= 1
 					categoryWinningTime[c] = times[winningLaps]
+					categoryWinningLaps[c] = winningLaps
 				except IndexError:
 					categoryWinningTime[c] = raceSeconds
+					categoryWinningLaps[c] = None
 		
 		if not categoryWinningTime:
 			return tuple()
@@ -163,7 +166,10 @@ def GetResultsCore( category ):
 			
 			if times:
 				times[0] = min(riderCategory.getStartOffsetSecs(), times[1])
-				laps = bisect.bisect_left( times, categoryWinningTime[riderCategory], hi=len(times)-1 )
+				if categoryWinningLaps.get(riderCategory, None) and getattr(riderCategory, 'lappedRidersMustContinue', False):
+					laps = min( categoryWinningLaps[riderCategory], len(times)-1 )
+				else:
+					laps = bisect.bisect_left( times, categoryWinningTime[riderCategory], hi=len(times)-1 )
 				# This is no longer necessary as we have a smarter ability to check for excess laps.
 				#if fastestRidersLastLapTime is not None:
 				#	while laps >= 1 and interp[laps] and times[laps] > fastestRidersLastLapTime:

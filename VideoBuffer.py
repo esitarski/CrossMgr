@@ -137,7 +137,7 @@ class VideoBuffer( threading.Thread ):
 				fRange = list( xrange(max(0, iBest-1), min(frameMax, iBest + 2)) )
 				timeError = [abs(t - self.getT(i)) for i in fRange]
 				iClosest = fRange[timeError.index( min(timeError) )]
-				Utils.writeLog( 'VideoBuffer.find: %s:  error: %s  [%s]' % (
+				Utils.writeLog( 'VideoBuffer.find: %s:  delta: %s  [%s]' % (
 					Utils.formatTime(t, True), Utils.formatTime(min(timeError), True),
 					', '.join( Utils.formatTime(self.getT(i), True) if i != iClosest
 								else ('*' + Utils.formatTime(self.getT(i), True)) for i in fRange ) ) )
@@ -202,16 +202,37 @@ def Shutdown():
 	if videoBuffer:
 		videoBuffer.stop()
 		videoBuffer = None
+	PhotoFinish.SetCameraState( False )
 		
 def ModelTakePhoto( bib, raceSeconds ):
 	race = Model.race
 	if race and getattr(race, 'enableUSBCamera', False):
-		if getattr(race, 'enableJChipIntegration', False):
+		''' VideoBuffer: FIXLATER '''
+		if False and getattr(race, 'enableJChipIntegration', False):
 			return TakePhoto( Utils.mainWin.fileName, bib, raceSeconds )
 		else:
 			return PhotoFinish.TakePhoto( Utils.mainWin.fileName, bib, raceSeconds )
 	return 0
 
+def ModelStartCamera( refTime = None, raceFileName = None ):
+	race = Model.race
+	
+	if refTime is None:
+		refTime = race.startTime
+	if raceFileName is None:
+		raceFileName = Utils.getFileName()
+	
+	assert refTime is not None and raceFileName is not None
+	
+	if race and getattr(race, 'enableUSBCamera', False):
+		''' VideoBuffer: FIXLATER '''
+		if False and getattr(race, 'enableJChipIntegration', False):
+			StartVideoBuffer( refTime, raceFilename )
+		else:
+			PhotoFinish.SetCameraState( True )
+		return True
+	return False
+	
 if __name__ == '__main__':
 	import os
 	import random

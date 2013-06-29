@@ -17,19 +17,21 @@ def getRiderName( info ):
 			return lastName
 	return firstName
 	
-def getTitle( num ):
+def getTitle( num, t ):
 	if not num:
 		return ''
 		
 	try:
 		externalInfo = Model.race.excelLink.read()
 	except:
-		return str(num)
-		
-	info = externalInfo.get(num, {})
-	name = getRiderName( info )
-	if info.get('Team', ''):
-		name = '%d: %s  (%s)' % (num, name, info.get('Team', '').strip())
+		name = str(num)
+	else:
+		info = externalInfo.get(num, {})
+		name = getRiderName( info )
+		if info.get('Team', ''):
+			name = '%d: %s  (%s)' % (num, name, info.get('Team', '').strip())
+			
+	name = '%s - %s' % (name, Utils.formatTime(t, True))
 	return name
 
 def RescaleImage( image, width, height ):
@@ -79,25 +81,31 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 		self.title.SetFont( wx.FontFromPixelSize( wx.Size(0,24), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		
 		self.scrolledWindow = wx.ScrolledWindow( self, wx.ID_ANY )
+		self.numPhotoSeries = 5
 		self.numPhotos = 25
-		self.photoWidth, self.photoHeight = int(2 * 320 / 2), int(2 * 240 / 2)
+		self.iSeries = 0
+		self.photoWidth, self.photoHeight = int(2 * 320 / 3), int(2 * 240 / 3)
 		self.hgap = 4
-		gs = wx.FlexGridSizer( rows = 2, cols = self.numPhotos, hgap = self.hgap, vgap = 4 )
+		gs = wx.FlexGridSizer( rows = 2 * self.numPhotoSeries, cols = self.numPhotos, hgap = self.hgap, vgap = 4 )
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrSplash.png'), wx.BITMAP_TYPE_PNG )
 		self.bitmap = RescaleBitmap( wx.WindowDC(self), bitmap, self.photoWidth, self.photoHeight )
 		
-		self.photoBitmaps = [wx.BitmapButton(
+		self.photoBitmaps = [[wx.BitmapButton(
 									self.scrolledWindow, wx.ID_ANY,
 									bitmap=self.bitmap, size=(self.photoWidth+4,self.photoHeight+4),
 									style=wx.BU_AUTODRAW)
-								for i in xrange(self.numPhotos)]
-		self.photoLabels = [wx.StaticText(self.scrolledWindow, wx.ID_ANY, style=wx.ALIGN_CENTRE) for i in xrange(self.numPhotos)]
-		for i, p in enumerate(self.photoLabels):
-			p.SetLabel( str(i) )
-		for i, w in enumerate(self.photoBitmaps):
-			w.Bind( wx.EVT_BUTTON, lambda event, i = i: self.OnBitmapButton(event, i) )
-		gs.AddMany( (w,0,) for w in self.photoBitmaps )
-		gs.AddMany( (w,1,wx.ALIGN_CENTER_HORIZONTAL) for w in self.photoLabels )
+								for i in xrange(self.numPhotos)] for s in xrange(self.numPhotoSeries)]
+		self.photoLabels = [[wx.StaticText(self.scrolledWindow, wx.ID_ANY, style=wx.ALIGN_CENTRE) for i in xrange(self.numPhotos)]
+								for s in xrange(self.numPhotoSeries)]
+		self.titles = [''] * self.numPhotoSeries
+		for s in xrange(self.numPhotoSeries):
+			for i, p in enumerate(self.photoLabels[s]):
+				p.SetLabel( str(i) )
+			for i, w in enumerate(self.photoBitmaps[s]):
+				w.Bind( wx.EVT_BUTTON, lambda event, s = s, i = i: self.OnBitmapButton(event, s, i) )
+				w.Bind( wx.EVT_MOTION, lambda event, s = s, i = i: self.OnMouseMove(event, s, i) )
+			gs.AddMany( (w,0,) for w in self.photoBitmaps[s] )
+			gs.AddMany( (w,1,wx.ALIGN_CENTER_HORIZONTAL) for w in self.photoLabels[s] )
 		
 		self.scrolledWindow.SetSizer( gs )
 		self.scrolledWindow.Fit()
@@ -106,7 +114,7 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 		self.scrolledWindow.SetScrollRate( 20, 20 )
 		self.scrolledWindow.SetScrollbars( 1, 1, width, height )
 		
-		wx.CallAfter( self.ScrollToPicture, len(self.photoBitmaps) - 1 )
+		wx.CallAfter( self.ScrollToPicture, self.numPhotos - 11 )
 		
 		self.vbs.Add( self.title, 0 )
 		self.vbs.Add( self.scrolledWindow, 1, wx.EXPAND )
@@ -114,19 +122,22 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 		self.SetSizer( self.vbs )
 		
 		displayWidth, displayHeight = wx.GetDisplaySize()
-		self.SetSize( (int(displayWidth * 0.75),height + 80) )
+		self.SetSize( (int(displayWidth * 0.75), min(height + 80, int(wx.GetDisplaySize()[1] * 0.9))) )
 		self.vbs.Layout()
 		
 		self.clear()
 
-	def OnBitmapButton( self, event, i ):
-		label = self.photoLabels[i].GetLabel()
+	def OnMouseMove( self, event, s, i ):
+		self.title.SetLabel( self.titles[s] )
+		
+	def OnBitmapButton( self, event, s, i ):
+		label = self.photoLabels[s][i].GetLabel()
 		fields = label.split()
 		if len(fields) < 1:
 			return
 		milliseconds = fields[0]
 		if milliseconds and Model.race:
-			milliseconds = self.photoLabels[i].GetLabel()
+			milliseconds = self.photoLabels[s][i].GetLabel()
 			Model.race.advancePhotoMilliseconds = int( milliseconds )
 			Utils.MessageOK( self, 'Advance Photo Milliseconds Set to %s' % milliseconds, 'Advance Milliseconds Set' )
 		
@@ -135,7 +146,7 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 		
 	def ScrollToPicture( self, iPicture ):
 		xScroll = 0
-		for i, b in enumerate(self.photoBitmaps):
+		for i, b in enumerate(self.photoBitmaps[self.iSeries]):
 			if i == iPicture:
 				break
 			xScroll += b.GetSize().GetWidth() + self.hgap
@@ -146,16 +157,19 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 		
 	def clear( self ):
 		self.timeFrames = []
-		for w in self.photoBitmaps:
-			w.SetBitmapLabel( self.bitmap )
-		for w in self.photoLabels:
-			w.SetLabel( '' )
+		self.titles = [''] * self.numPhotoSeries
+		for s in xrange(self.numPhotoSeries):
+			for w in self.photoBitmaps[s]:
+				w.SetBitmapLabel( self.bitmap )
+			for w in self.photoLabels[s]:
+				w.SetLabel( '' )
 		
 	def refresh( self, videoBuffer, t, num = None ):
 		if not videoBuffer:
-			for i in xrange(len(self.photoLabels)):
-				self.photoBitmaps[i].SetBitmapLabel( wx.NullBitmap )
-				self.photoLabels[i].SetLabel( '' )
+			for s in xrange(self.len(self.photoLabels)):
+				for i in xrange(len(self.photoLabels[s])):
+					self.photoBitmaps[s][i].SetBitmapLabel( self.bitmap )
+					self.photoLabels[s][i].SetLabel( '' )
 			return
 	
 		timeFrames = videoBuffer.findBeforeAfter( t, self.numPhotos - 10, 10 )
@@ -165,7 +179,10 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 			d = self.numPhotos - len(timeFrames)
 			timeFrames = ([(None, None)] * d) + timeFrames
 			deltaMS = ([None] * d) + deltaMS
-			
+		
+		photoLabels = self.photoLabels[self.iSeries]
+		photoBitmaps = self.photoBitmaps[self.iSeries]
+		
 		deltaMin = sys.float_info.max
 		iMin = 0
 		dc = wx.WindowDC( self )
@@ -174,22 +191,21 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 				deltaMin = abs(deltaMS[i])
 				iMin = i
 			if deltaMS[i] is None:
-				self.photoLabels[i].SetLabel( '' )
-				self.photoBitmaps[i].SetBitmapLabel( wx.NullBitmap )
+				photoLabels[i].SetLabel( '' )
+				photoBitmaps[i].SetBitmapLabel( wx.NullBitmap )
 			else:
-				self.photoLabels[i].SetLabel( str(deltaMS[i]) + ' ms')
+				photoLabels[i].SetLabel( str(deltaMS[i]) + ' ms')
 				image = PhotoFinish.PilImageToWxImage( frame )
 				image = RescaleImage( image, self.photoWidth, self.photoHeight )
 				bitmap = image.ConvertToBitmap( dc.GetDepth() )
-				self.photoBitmaps[i].SetBitmapLabel( bitmap )
+				photoBitmaps[i].SetBitmapLabel( bitmap )
 
-		self.title.SetLabel( getTitle(num) )
+		self.titles[self.iSeries] = getTitle( num, t )
+		self.title.SetLabel( self.titles[self.iSeries] )
 		
-		picturesShown = self.GetSize().GetWidth() / (self.photoWidth + self.hgap)
-		self.ScrollToPicture( max(0, iMin - picturesShown // 2) )
 		self.Refresh()
 		
-		self.timeFrames = timeFrames
+		self.iSeries = (self.iSeries + 1) % self.numPhotoSeries
 				
 photoSyncViewer = None
 def PhotoSyncViewerShow( parent ):
@@ -238,11 +254,13 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	mainWin.Show()
 	photoSyncDialog = PhotoSyncViewerDialog( mainWin, wx.ID_ANY, "PhotoSyncViewer", size=(600,400) )
-	def doRefresh():
+	def doRefresh( bib ):
 		t = (datetime.datetime.now() - tRef).total_seconds()
-		wx.CallLater( 300, photoSyncDialog.refresh, vb, t, 100 )
+		wx.CallLater( 300, photoSyncDialog.refresh, vb, t, bib )
 		
 	photoSyncDialog.Show()
+	bib = 100
 	for d in xrange(0, 1000*60, 1000):
-		wx.CallLater( d, doRefresh )
+		wx.CallLater( d, doRefresh, bib )
+		bib += 1
 	app.MainLoop()

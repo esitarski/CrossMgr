@@ -1845,7 +1845,6 @@ Continue?''' % fName, 'Simulate a Race' ):
 		with Model.LockRace() as race:
 			race.finishRaceNow()
 		VideoBuffer.Shutdown()
-		SetCameraState( False )
 		JChip.Cleanuplistener()
 		
 		OutputStreamer.writeRaceFinish()

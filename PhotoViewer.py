@@ -119,7 +119,7 @@ class PhotoPrintout(wx.Printout):
 		wImage, hImage = image.GetSize()
 		
 		ratio = min( float(wPhoto) / float(wImage), float(hPhoto) / float(hImage) )
-		image.Rescale( int(wImage * ratio), int(hImage * ratio), wx.IMAGE_QUALITY_HIGH )
+		image.Rescale( int(wImage * ratio), int(hImage * ratio) )
 		if dc.GetDepth() == 8:
 			image = image.ConvertToGreyscale()
 		bitmap = image.ConvertToBitmap()
@@ -387,7 +387,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		
 		with Model.LockRace() as race:
 			isShown = self.advancePhotoLabel.IsShown()
-			if race and getattr(race, 'enableUSBCamera', False) and getattr(race, 'enableJChipIntegration', False):
+			if race and race.enableVideoBuffer:
 				self.advancePhoto.SetValue( getattr(race, 'advancePhotoMilliseconds', -300) )
 				doShow = True
 			else:

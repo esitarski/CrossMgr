@@ -126,6 +126,7 @@ class Categories( wx.Panel ):
 			('Numbers',				'catStr'),
 			('Start Offset',		'startOffset'),
 			('Race Laps',			'numLaps'),
+			('Lapped Riders Continue',	'lappedRidersMustContinue'),
 			('Distance',			'distance'),
 			('Distance is By',		'distanceType'),
 			('First Lap Distance',	'firstLapDistance'),
@@ -214,7 +215,10 @@ class Categories( wx.Panel ):
 		self.refresh()
 		
 	def _setRow( self, r, active, name, catStr, startOffset = '00:00:00',
-					numLaps = None, distance = None, distanceType = None, firstLapDistance = None, gender = None ):
+					numLaps = None,
+					lappedRidersMustContinue = False,
+					distance = None, distanceType = None,
+					firstLapDistance = None, gender = None ):
 		if len(startOffset) < len('00:00:00'):
 			startOffset = '00:' + startOffset
 	
@@ -246,6 +250,14 @@ class Categories( wx.Panel ):
 		self.grid.SetCellValue( r, c, str(numLaps) if numLaps else '' )
 		numberEditor = wx.grid.GridCellNumberEditor()
 		self.grid.SetCellEditor( r, c, numberEditor )
+		self.grid.SetCellAlignment( r, c, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+		
+		c = self.iCol['lappedRidersMustContinue']
+		self.grid.SetCellValue( r, c, '1' if lappedRidersMustContinue else '0' )
+		boolEditor = gridlib.GridCellBoolEditor()
+		boolEditor.UseStringValues( '1', '0' )
+		self.grid.SetCellEditor( r, c, boolEditor )
+		self.grid.SetCellRenderer( r, c, gridlib.GridCellBoolRenderer() )
 		self.grid.SetCellAlignment( r, c, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 		
 		c = self.iCol['rule80Time']
@@ -344,6 +356,7 @@ class Categories( wx.Panel ):
 								catStr				= cat.catStr,
 								startOffset			= cat.startOffset,
 								numLaps				= cat.numLaps,
+								lappedRidersMustContinue = getattr(cat, 'lappedRidersMustContinue', False),
 								distance			= getattr(cat, 'distance', None),
 								distanceType		= getattr(cat, 'distanceType', Model.Category.DistanceByLap),
 								firstLapDistance	= getattr(cat, 'firstLapDistance', None),
