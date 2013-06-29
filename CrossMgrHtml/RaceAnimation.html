@@ -155,7 +155,7 @@ var colours = [
 ];
 
 // Colours of top three riders.
-var	topThreeColours = [
+var topThreeColours = [
 	'rgb(255,215,0)',
 	'rgb(230,230,230)',
 	'rgb(205,133,63)',
@@ -163,15 +163,13 @@ var	topThreeColours = [
 	'rgb(128,128,128)'
 ];
 
-function isCanvasSupported()
-{
+function isCanvasSupported() {
 	var elem = document.createElement('canvas');
 	return !!(elem.getContext && elem.getContext('2d'));
 }
 
 // Convenience function to get the last element in an array.
-Array.prototype.back = function()
-{
+Array.prototype.back = function() {
 	return this[this.length-1];
 };
 
