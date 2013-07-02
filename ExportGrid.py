@@ -49,6 +49,7 @@ class ExportGrid( object ):
 		self.leftJustifyCols = set()
 		self.infoColumns = set()
 		self.iLapTimes = 0
+		self.rowDrawCount = 1000000
 		
 		self.fontName = 'Helvetica'
 		self.fontSize = 16
@@ -61,14 +62,16 @@ class ExportGrid( object ):
 		wSpace, hSpace, lh = dc.GetMultiLineTextExtent( '    ', font )
 		extents = [ dc.GetMultiLineTextExtent(self.colnames[col], font) ]
 		extents.extend( dc.GetMultiLineTextExtent(str(v), font) for v in self.data[col] )
-		return max( e[0] for e in extents ), sum( e[1] for e in extents ) + hSpace/4
+		width = max( e[0] for e in extents )
+		height = sum( e[1] for e in extents[:self.rowDrawCount] )
+		return width, height + hSpace/4
 	
 	def _getDataSizeTuple( self, dc, font ):
 		wSpace, hSpace, lh = dc.GetMultiLineTextExtent( '    ', font )
 		
 		wMax, hMax = 0, 0
 		
-		# Sum the width of each column.
+		# Sum the width of each column, and record the max of each column.
 		for col, c in enumerate(self.colnames):
 			w, h = self._getColSizeTuple( dc, font, col )
 			wMax += w + wSpace
@@ -137,7 +140,11 @@ class ExportGrid( object ):
 		canvasQR.SelectObject( wx.NullBitmap )
 		return bm
 	
-	def drawToFitDC( self, dc ):
+	def drawToFitDC( self, dc,
+						rowDrawStart = 0, rowDrawCount = 1000000,
+						pageNumber = None, pageNumberTotal = None ):
+		self.rowDrawCount = rowDrawCount
+			
 		# Get the dimentions of what we are printing on.
 		(widthPix, heightPix) = dc.GetSizeTuple()
 		
@@ -196,16 +203,22 @@ class ExportGrid( object ):
 		heightFieldPix = heightPix - yPix - borderPix
 		
 		# Draw the table.
+		# Remember: _getDataSizeTuple understands self.rowDrawCount and will compute the height using the count.
 		font = self._getFontToFit( widthFieldPix, heightFieldPix, lambda font: self._getDataSizeTuple(dc, font) )
 		dc.SetFont( font )
 		wSpace, hSpace, textHeight = dc.GetMultiLineTextExtent( '    ', font )
 		
-		yPixTop = yPix
-		yPixMax = yPix
+		# Get the row slice for each column.
+		dataDraw = [col[rowDrawStart:rowDrawStart+rowDrawCount] for col in self.data]
+		
+		yPixTop = yPixMax = yPix
 		for col, c in enumerate(self.colnames):
 			isSpeed = (c == 'Speed')
-			if isSpeed and self.data[col]:
-				c = self.colnames[col] = self.data[col][0].split()[1]
+			if isSpeed and dataDraw[col]:
+				try:
+					c = self.colnames[col] = self.data[col][0].split()[1]
+				except IndexError:
+					c = self.colnames[col] = ''
 		
 			colWidth = self._getColSizeTuple( dc, font, col )[0]
 			yPix = yPixTop
@@ -217,10 +230,10 @@ class ExportGrid( object ):
 			yPix += h + hSpace/4
 			if col == 0:
 				yLine = yPix - hSpace/8
-				for r in xrange(max(len(cData) for cData in self.data) + 1):
+				for r in xrange(max(len(cData) for cData in dataDraw) + 1):
 					dc.DrawLine( borderPix, yLine + r * textHeight, widthPix - borderPix, yLine + r * textHeight )
 					
-			for v in self.data[col]:
+			for v in dataDraw[col]:
 				vStr = str(v)
 				if vStr:
 					if isSpeed:
@@ -243,10 +256,19 @@ class ExportGrid( object ):
 			self._drawMultiLineText( dc, url, widthPix - borderPix - w, yPix )
 			
 		# Put CrossMgr branding at the bottom of the page.
-		font = self._getFont( borderPix // 5, False )
+		font = self._getFont( borderPix // 4, False )
 		dc.SetFont( font )
 		w, h, lh = dc.GetMultiLineTextExtent( brandText, font )
 		self._drawMultiLineText( dc, brandText, borderPix, heightPix - borderPix + h )
+		
+		# Put the page number info at the bottom of the page.
+		if pageNumber is not None:
+			if pageNumberTotal is not None:
+				s = 'Page %d of %d' % (pageNumber, pageNumberTotal)
+			else:
+				s = 'Page %d' % (pageNumber)
+			w, h, lh = dc.GetMultiLineTextExtent( s, font )
+			self._drawMultiLineText( dc, s, widthPix - w - borderPix, heightPix - borderPix + h )
 	
 	'''
 	def _setFontPDF( self, canvas, pointSize = 24, bold = False ):

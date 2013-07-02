@@ -830,13 +830,14 @@ class MainWin( wx.Frame ):
 		self.printData = wx.PrintData( dlg.GetPageSetupData().GetPrintData() )
 		dlg.Destroy()
 
+	PrintCategoriesDialogSize = (450, 400)
 	def menuPrintPreview( self, event ):
 		cpcd = ChoosePrintCategoriesDialog( self )
 		x, y = self.GetPosition().Get()
 		x += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_X, self)
 		y += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_Y, self)
 		cpcd.SetPosition( (x, y) )
-		cpcd.SetSize( (450, 300) )
+		cpcd.SetSize( self.PrintCategoriesDialogSize )
 		result = cpcd.ShowModal()
 		categories = cpcd.categories
 		cpcd.Destroy()
@@ -869,7 +870,7 @@ class MainWin( wx.Frame ):
 		x += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_X, self)
 		y += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_Y, self)
 		cpcd.SetPosition( (x, y) )
-		cpcd.SetSize( (450, 300) )
+		cpcd.SetSize( self.PrintCategoriesDialogSize )
 		result = cpcd.ShowModal()
 		categories = cpcd.categories
 		cpcd.Destroy()
@@ -913,6 +914,8 @@ class MainWin( wx.Frame ):
 				except AttributeError:
 					pass
 			else:
+				#if os.path.dirname(link.fileName) == os.path.dirname(self.fileName):
+				#	link.fileName = os.path.join( '.', os.path.basename(link.fileName) )
 				race.excelLink = link
 			race.setChanged()
 			race.resetAllCaches()

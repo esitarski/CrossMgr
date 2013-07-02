@@ -1,9 +1,11 @@
 import  wx
 import os
 import sys
+import math
 from  ExportGrid import ExportGrid
 from DNSManager import AutoWidthListCtrl
 from collections import defaultdict
+from GetResults import GetResults
 import Model
 import Utils
 
@@ -53,7 +55,7 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		self.list.SetColumnWidth(2, wx.LIST_AUTOSIZE)
 		self.list.SetColumnWidth(3, wx.LIST_AUTOSIZE)
 		self.list.SetColumnWidth( 1, 64 )
-		self.list.SetColumnWidth( 2, 42 )
+		self.list.SetColumnWidth( 2, 52 )
 		
 		self.includeLapTimesInPrintoutCheckBox = wx.CheckBox( self, wx.ID_ANY, 'Include Lap Times in Printout' )
 		race = Model.race
@@ -61,6 +63,16 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 			self.includeLapTimesInPrintoutCheckBox.SetValue( getattr(race, 'includeLapTimesInPrintout', True) )
 		else:
 			self.includeLapTimesInPrintoutCheckBox.SetValue( True )
+			
+		self.printFormatRadioBox = wx.RadioBox(
+				self, wx.ID_ANY, 'Format', wx.DefaultPosition, wx.DefaultSize,
+				['Fit Entire Category on One Page', 'Small Text (max 60 riders per page)', 'Big Text (max 30 riders per page)'],
+				1, wx.RA_SPECIFY_COLS )
+		if race:
+			self.printFormatRadioBox.SetSelection( getattr(race, 'printFormat', 0) )
+		else:
+			self.printFormatRadioBox.SetSelection( 0 )
+		self.printFormatRadioBox.Bind( wx.EVT_RADIOBOX, self.onPrintFormat )
 
 		self.okButton = wx.Button( self, wx.ID_OK )
 		self.okButton.Bind( wx.EVT_BUTTON, self.onOK )
@@ -73,6 +85,7 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		vs.Add( self.list, 1, flag = wx.ALL|wx.EXPAND, border = 4 )
 		
 		vs.Add( self.includeLapTimesInPrintoutCheckBox, flag = wx.EXPAND|wx.ALL, border = 4 )
+		vs.Add( self.printFormatRadioBox, flag = wx.EXPAND|wx.ALL, border = 4 )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.okButton )
@@ -84,6 +97,11 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		self.onSelectAll()
 		self.categories = []
 
+	def onPrintFormat( self, event ):
+		race = Model.race
+		if race:
+			race.printFormat = event.GetInt()
+		
 	def onSelectAll(self, evt = None):
 		for row in xrange(self.list.GetItemCount()):
 			self.list.SetItemState(row, wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
@@ -111,13 +129,14 @@ def getRaceCategories():
 	categories.append( ('All', None) )
 	return categories
 
-class CrossMgrPrintout(wx.Printout):
+class CrossMgrPrintout( wx.Printout ):
     def __init__(self, categories = None):
 		wx.Printout.__init__(self)
 		if not categories:
 			self.categories = Model.race.getCategories()
 		else:
 			self.categories = categories
+		self.pageInfo = {}
 
     def OnBeginDocument(self, start, end):
         return super(CrossMgrPrintout, self).OnBeginDocument(start, end)
@@ -135,26 +154,40 @@ class CrossMgrPrintout(wx.Printout):
         super(CrossMgrPrintout, self).OnPreparePrinting()
 
     def HasPage(self, page):
-		if page - 1 < len(self.categories):
-			return True
-		return False
+		return page in self.pageInfo
 
     def GetPageInfo(self):
+		self.pageInfo = {}
 		numCategories = len(self.categories)
 		if numCategories == 0:
 			return (1,1,1,1)
-		return (1, numCategories, 1, numCategories)
+			
+		iPrintFormat = getattr( Model.race, 'printFormat', 0 ) if Model.race else 0
+		if   iPrintFormat == 0:	# Fit Entire Category to One Page
+			rowDrawCount = 1000000
+		elif iPrintFormat == 1:	# Small Text (max 60 riders per page)
+			rowDrawCount = 60
+		else:					# Big Text (max 30 riders per page)
+			rowDrawCount = 30
+		
+		# Compute a map by category and range for each page.
+		page = 0
+		for c in self.categories:
+			categoryLength = len(GetResults(c))
+			pageNumberTotal = int( math.ceil( float(categoryLength) / float(rowDrawCount) ) + 0.1 )
+			pageNumber = 0
+			for i in xrange(0, categoryLength, rowDrawCount):
+				page += 1
+				pageNumber += 1
+				self.pageInfo[page] = [c, i, min(categoryLength, rowDrawCount), pageNumber, pageNumberTotal, categoryLength]
+		
+		return (1, page, 1, page)
 
     def OnPrintPage(self, page):
-		category = self.categories[page-1]
-		
 		exportGrid = ExportGrid()
 		showLapTimes = (not Model.race) or getattr( Model.race, 'includeLapTimesInPrintout', True )
-		exportGrid.setResultsOneList( category, True, showLapTimes = showLapTimes )
-
-		dc = self.GetDC()
-		
-		exportGrid.drawToFitDC( dc )
+		exportGrid.setResultsOneList( self.pageInfo[page][0], True, showLapTimes = showLapTimes )
+		exportGrid.drawToFitDC( *([self.GetDC()] + self.pageInfo[page][1:-1]) )
 		return True
 
 if __name__ == '__main__':
