@@ -160,6 +160,7 @@ class Impinj( object ):
 			self.readerSocket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 			self.readerSocket.settimeout( ConnectionTimeoutSeconds )
 			
+			self.messageQ.put( ('Impinj', 'state', False) )
 			self.messageQ.put( ('Impinj', '') )
 			self.messageQ.put( ('Impinj', 'Trying to Connect to Reader: (%s:%d)...' % (self.impinjHost, self.impinjPort) ) )
 			
@@ -172,9 +173,12 @@ class Impinj( object ):
 				self.reconnectDelay()
 				continue
 
+			self.messageQ.put( ('Impinj', 'state', True) )
+			
 			if not self.sendCommands():
 				self.messageQ.put( ('Impinj', 'Reader Initialization Failed.') )
 				self.messageQ.put( ('Impinj', 'Disconnecting Reader.' ) )
+				self.messageQ.put( ('Impinj', 'state', False) )
 				self.readerSocket.close()
 				self.messageQ.put( ('Impinj', 'Attempting Reconnect in %d seconds...' % ReconnectDelaySeconds) )
 				self.reconnectDelay()

@@ -51,6 +51,7 @@ class Impinj2JChip( object ):
 			
 	def runServer( self ):
 		while self.checkKeepGoing():
+			self.messageQ.put( ('Impinj2JChip', 'state', False) )
 			self.messageQ.put( ('Impinj2JChip', 'Trying to connect to CrossMgr...') )
 			sock = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 
@@ -74,7 +75,8 @@ class Impinj2JChip( object ):
 			# Set the timout with CrossMgr to 2 seconds.  If CrossMgr fails to respond within this time, re-establish the connection.
 			sock.settimeout( 2.0 )
 				
-			#------------------------------------------------------------------------------	
+			#------------------------------------------------------------------------------
+			self.messageQ.put( ('Impinj2JChip', 'state', True) )
 			self.messageQ.put( ('Impinj2JChip', '******************************' ) )
 			self.messageQ.put( ('Impinj2JChip', 'CrossMgr Connection succeeded!' ) )
 			self.messageQ.put( ('Impinj2JChip', 'Sending identifier...') )
