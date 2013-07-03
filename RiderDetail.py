@@ -673,6 +673,7 @@ class RiderDetail( wx.Panel ):
 				
 		self.commitChange()
 		wx.CallAfter( self.refresh )
+		wx.CallAfter( Utils.refresh )
 		
 	def onAutocorrectLaps( self, event ):
 		num = self.num.GetValue()

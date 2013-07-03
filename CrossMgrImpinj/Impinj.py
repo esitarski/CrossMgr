@@ -11,14 +11,17 @@ from Utils import readDelimitedData, timeoutSecs
 import cStringIO as StringIO
 from pyllrp.pyllrp import *
 
+getTimeNow = datetime.datetime.now
+
 HOME_DIR = os.path.expanduser("~")
 
-RepeatSeconds = 2	# Number of seconds that a tag is considered a repeat read.
+RepeatSeconds				= 2		# Interval in which a tag is considered a repeat read.
+ReconnectDelaySeconds		= 2		# Interval to wait before reattempting a connection
+KeepAliveSeconds			= 2		# Interval to request a KeepAlive message
+ConnectionTimeoutSeconds	= 1		# Interval for connection timeout
+ReaderUpdateMessageSeconds	= 5		# Interval to print we are waiting for input.
 
 class Impinj( object ):
-	ReconnectDelaySeconds = 2
-	KeepAliveSeconds = 2
-	ReaderTimeoutSeconds = 5	# Must be longer than KeepAliveSeconds.
 
 	def __init__( self, dataQ, messageQ, shutdownQ, impinjHost, impinjPort, antennaStr ):
 		self.impinjHost = impinjHost
@@ -37,7 +40,7 @@ class Impinj( object ):
 		
 	def start( self ):
 		# Create a log file name.
-		tNow = datetime.datetime.now()
+		tNow = getTimeNow()
 		dataDir = os.path.join( HOME_DIR, 'ImpinjData' )
 		if not os.path.isdir( dataDir ):
 			os.makedirs( dataDir )
@@ -64,15 +67,9 @@ class Impinj( object ):
 			
 			
 	def reconnectDelay( self ):
-		t = 0.0
-		while 1:
-			tDelay = max( 1.0, self.ReconnectDelaySeconds - t )
-			if tDelay <= 0.0:
-				break
-			time.sleep( tDelay )
-			t += tDelay
-			if not self.checkKeepGoing():
-				break
+		if self.checkKeepGoing():
+			time.sleep( ReconnectDelaySeconds )
+		
 	#-------------------------------------------------------------------------
 	
 	def sendCommand( self, message ):
@@ -82,13 +79,13 @@ class Impinj( object ):
 			message.send( self.readerSocket )
 		except Exception as e:
 			self.messageQ.put( ('Impinj', 'Send command fails: %s' % e) )
-			return false
+			return False
 			
 		try:
 			response = WaitForMessage( message.MessageID, GetResponseClass(message), self.readerSocket )
 		except Exception as e:
 			self.messageQ.put( ('Impinj', 'Get response fails: %s' % e) )
-			return false
+			return False
 			
 		self.messageQ.put( ('Impinj', 'Received Response:\n%s\n' % response) )
 		return True, response
@@ -103,7 +100,7 @@ class Impinj( object ):
 		# Compute a correction between the reader's time and the computer's time.
 		readerTime = response.getFirstParameterByClass(UTCTimestamp_Parameter).Microseconds
 		readerTime = datetime.datetime.utcfromtimestamp( readerTime / 1000000.0 )
-		self.timeCorrection = datetime.datetime.now() - readerTime
+		self.timeCorrection = getTimeNow() - readerTime
 		
 		self.messageQ.put( ('Impinj', '\nReader time is %f seconds different from computer time\n' % self.timeCorrection.total_seconds()) )
 		
@@ -130,7 +127,7 @@ class Impinj( object ):
 		# Configure a KeepAlive message.
 		succes, response = self.sendCommand( KEEP_ALIVE_MESSAGE( Parameters = [
 				KeepAliveParameterSpec_Parameter(	KeepaliveTriggerType = KeepaliveTriggerType.Periodic,
-													PeriodicTriggerValue = int(self.KeepAliveSeconds*1000)
+													PeriodicTriggerValue = int(KeepAliveSeconds*1000)
 				),
 			] )
 		)
@@ -146,59 +143,67 @@ class Impinj( object ):
 	def runServer( self ):
 		self.messageQ.put( ('BackupFile', self.fname) )
 		
+		self.messageQ.put( ('Impinj', '*****************************************' ) )
+		self.messageQ.put( ('Impinj', 'Reader Server Started: (%s:%d)' % (self.impinjHost, self.impinjPort) ) )
+			
+		# Create an old default time for last tag read.
+		tOld = getTimeNow() - datetime.timedelta( days = 100 )
+		
 		while self.checkKeepGoing():
-			lastReadTime = {} 
-			# Create an old default time.
-			tOld = datetime.datetime.now() - datetime.timedelta( days = 100 )
+			lastReadTime = {}			# Lookup for last tag read times.
 			
 			# Create a socket to connect to the reader.
 			self.readerSocket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
-			self.readerSocket.settimeout( self.ReaderTimeoutSeconds )
+			self.readerSocket.settimeout( ConnectionTimeoutSeconds )
 			
-			self.messageQ.put( ('Impinj', 'Trying to connect to the Reader: (%s:%d)' % (self.impinjHost, self.impinjPort) ) )
+			self.messageQ.put( ('Impinj', '') )
+			self.messageQ.put( ('Impinj', 'Trying to Connect to Reader: (%s:%d)...' % (self.impinjHost, self.impinjPort) ) )
 			
 			try:
 				self.readerSocket.connect( (self.impinjHost, self.impinjPort) )
-			except Exception as inst:
-				self.messageQ.put( ('Impinj', 'Reader Connection Failed: (%s:%d)' % (self.impinjHost, self.impinjPort) ) )
-				self.messageQ.put( ('Impinj', '%s' % inst ) )
+			except Exception as e:
+				self.messageQ.put( ('Impinj', 'Reader Connection Failed: %s' % e ) )
 				self.readerSocket.close()
-				self.messageQ.put( ('Impinj', 'Attempting Reconnect in %d seconds...' % self.ReconnectDelaySeconds) )
+				self.messageQ.put( ('Impinj', 'Attempting Reconnect in %d seconds...' % ReconnectDelaySeconds) )
 				self.reconnectDelay()
 				continue
 
 			if not self.sendCommands():
-				self.messageQ.put( ('Impinj', 'Send Commands Failed: (%s:%d)' % (self.impinjHost, self.impinjPort) ) )
+				self.messageQ.put( ('Impinj', 'Reader Initialization Failed.') )
 				self.messageQ.put( ('Impinj', 'Disconnecting Reader.' ) )
 				self.readerSocket.close()
-				self.messageQ.put( ('Impinj', 'Attempting Reconnect in %d seconds...' % self.ReconnectDelaySeconds) )
+				self.messageQ.put( ('Impinj', 'Attempting Reconnect in %d seconds...' % ReconnectDelaySeconds) )
 				self.reconnectDelay()
 				continue
 			
-			tUpdateLast = datetime.datetime.now()
-			tKeepAliveLast = datetime.datetime.now()
+			tUpdateLast = tKeepAliveLast = getTimeNow()
 			self.tagCount = 0
 			while self.checkKeepGoing():
 				
 				try:
 					response = UnpackMessageFromSocket( self.readerSocket )
 				except socket.timeout:
-					self.messageQ.put( ('Impinj', 'Reader Connection Timed Out: (%s:%d)' % (self.impinjHost, self.impinjPort) ) )
-					self.readerSocket.close()
-					self.messageQ.put( ('Impinj', 'Attempting Reconnect in %d seconds...' % self.ReconnectDelaySeconds) )
-					self.reconnectDelay()
-					break
+					t = getTimeNow()
+					
+					if (t - tKeepAliveLast).total_seconds() > KeepAliveSeconds * 2:
+						self.messageQ.put( ('Impinj', 'Reader Connection Lost (missing KeepAlive).') )
+						self.readerSocket.close()
+						self.messageQ.put( ('Impinj', 'Attempting Reconnect...') )
+						break
+					
+					if (t - tUpdateLast).total_seconds() >= ReaderUpdateMessageSeconds:
+						self.messageQ.put( ('Impinj', 'Listening for Impinj reader data...') )
+						tUpdateLast = t
+					continue
 				
 				if isinstance(response, KEEP_ALIVE_Message):
 					# Respond to the KEEP_ALIVE message with KEEP_ALIVE_ACK.
 					KEEP_ALIVE_ACK_Message().send( self.readerSocket )
-					t = datetime.datetime.now()
-					if (t - tUpdateLast).total_seconds() >= 10:
-						self.messageQ.put( ('Impinj', 'Listening for Impinj reader data on (%s:%s)...' % (str(self.impinjHost), str(self.impinjPort))) )
-						tUpdateLast = t
+					tKeepAliveLast = getTimeNow()
 					continue
 				
 				if not isinstance(response, RO_ACCESS_REPORT_Message):
+					self.messageQ.put( ('Impinj', 'Skipping: %s' % response.__class__.__name__) )
 					continue
 				
 				# Open the log file.
@@ -208,14 +213,30 @@ class Impinj( object ):
 					pf = None
 				
 				for tag in response.getTagData():
-					tagID = HexFormatToInt( tag['EPC'] )
+					self.tagCount += 1
 					
-					discoveryTime = tag['Timestamp']		# In microseconds since Jan 1, 1970
+					try:
+						tagID = tag['EPC']
+					except Exception as e:
+						self.messageQ.put( ('Impinj', 'Received %d.  Skipping: missing tagID.' % self.tagCount) )
+						continue
+						
+					if not isinstance( tagID, (int, long) ):
+						try:
+							tagID = HexFormatToInt( tagID )
+						except Exception as e:
+							self.messageQ.put( ('Impinj', 'Received %d.  Skipping: HexFormatToInt fails.  Error=%s' % (self.tagCount, e)) )
+							continue
+					
+					try:
+						discoveryTime = tag['Timestamp']		# In microseconds since Jan 1, 1970
+					except Exception as e:
+						self.messageQ.put( ('Impinj', 'Received %d.  Skipping: Missing Timestamp' % self.tagCount) )
+						continue
+						
 					# Convert discoveryTime to Python format and correct for reader time difference.
 					discoveryTime = datetime.datetime.utcfromtimestamp( discoveryTime / 1000000.0 ) + self.timeCorrection
 					
-					self.tagCount += 1
-							
 					# Convert tag and discovery Time
 					discoveryTimeStr = discoveryTime.strftime('%Y/%m/%d_%H:%M:%S.%f')
 					

@@ -78,12 +78,8 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 		wx.CallAfter( self.list.SetFocus )
 		
 	def onSetDNS( self, evt ):
-		if not self.list.GetItemCount():
+		if not self.list.GetItemCount() or not Model.race:
 			return
-			
-		with Model.LockRace() as race:
-			if not race:
-				return
 		
 		# Get all selected items.
 		nums = [self.list.GetItemData(row) for row in xrange(self.list.GetItemCount())
@@ -107,7 +103,9 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 				rider = race.getRider( n )
 				rider.status = rider.DNS
 			race.setChanged()
-		self.refresh()
+		
+		wx.CallAfter( self.refresh )
+		wx.CallAfter( Utils.refresh )
 		wx.CallAfter( self.list.SetFocus )
 		
 	def doChooseCategory( self, event ):

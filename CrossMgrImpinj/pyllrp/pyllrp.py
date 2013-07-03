@@ -631,7 +631,7 @@ def WaitForMessage( MessageID, ResponseClass, sock ):
 #-----------------------------------------------------------------------------
 
 def HexFormatToInt( value ):
-	return int(''.join( [ "%02X" % ord(x) for x in value ] ))
+	return long(''.join( [ "%02X" % ord(x) for x in value ] ))
 
 def GetBasicAddRospecMessage( MessageID = None, ROSpecID = 123, inventoryParameterSpecID = 1234, antennas = None ):
 	#-----------------------------------------------------------------------------

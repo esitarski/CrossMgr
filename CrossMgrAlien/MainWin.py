@@ -304,6 +304,7 @@ class MainWin( wx.Frame ):
 			if ret != wx.ID_OK:
 				return
 				
+		self.reset.Enable( False )		# Prevent multiple clicks while shutting down.
 		self.writeOptions()
 		
 		self.gracefulShutdown()
@@ -312,6 +313,8 @@ class MainWin( wx.Frame ):
 		self.crossMgrMessages.clear()
 		
 		self.shutdown()
+		self.reset.Enable( True )
+		
 		wx.CallAfter( self.start )
 	
 	def doAutoDetect( self, event ):
@@ -369,12 +372,20 @@ class MainWin( wx.Frame ):
 		log = self.crossMgrMessagesText.GetValue()
 		cc.extend( ['    ' + line for line in log.split('\n')] )
 		
+		cc.append( '\nLog: Application\n' )
+		try:
+			with open(redirectFileName, 'r') as fp:
+				for line in fp:
+					cc.append( line )
+		except:
+			pass
+		
 		if wx.TheClipboard.Open():
 			do = wx.TextDataObject()
 			do.SetText( '\n'.join(cc) )
 			wx.TheClipboard.SetData(do)
 			wx.TheClipboard.Close()
-			dlg = wx.MessageDialog(self, 'Configuration and logs copied to the Clipboard.',
+			dlg = wx.MessageDialog(self, 'Configuration and Logs copied to the Clipboard.',
 									'Copy to Clipboard Succeeded',
 									wx.OK | wx.ICON_INFORMATION )
 			ret = dlg.ShowModal()
@@ -467,8 +478,9 @@ def disable_stdout_buffering():
 	sys.stdout = os.fdopen(fileno, "w", 0)
 		
 mainWin = None
+redirectFileName = None
 def MainLoop():
-	global mainWin
+	global mainWin, redirectFileName
 	
 	app = wx.PySimpleApp()
 	app.SetAppName("CrossMgrAlien")
@@ -491,6 +503,13 @@ def MainLoop():
 	
 		try:
 			app.RedirectStdio( redirectFileName )
+		except:
+			pass
+		
+		try:
+			with open(redirectFileName, 'a') as pf:
+				pf.write( '********************************************\n' )
+				pf.write( '%s: %s Started.\n' % (datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'), AppVerName) )
 		except:
 			pass
 	
