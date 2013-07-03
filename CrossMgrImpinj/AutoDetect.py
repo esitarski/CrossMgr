@@ -1,5 +1,6 @@
 import socket
 import Utils
+from pyllrp.pyllrp import *
 
 def findImpinjHost( impinjPort ):
 	''' Search ip addresses adjacent to the computer in an attempt to find the reader. '''
@@ -19,17 +20,23 @@ def findImpinjHost( impinjPort ):
 		readerSocket.settimeout( 0.5 )
 		try:
 			readerSocket.connect( (impinjHost, impinjPort) )
-		except:
+		except Exception as e:
 			continue
 		
 		try:
 			response = UnpackMessageFromSocket( readerSocket )
-		except:
+		except Exception as e:
 			readerSocket.close()
 			continue
 			
 		readerSocket.close()
-		if response.success():
+		
+		# Check that the return from the reader is valid.
+		try:
+			readerTime = response.getFirstParameterByClass(UTCTimestamp_Parameter).Microseconds
+		except Exception as e:
+			continue
+		else:
 			return impinjHost
 			
 	return None

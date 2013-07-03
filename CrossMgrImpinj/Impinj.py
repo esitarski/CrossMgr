@@ -17,7 +17,7 @@ HOME_DIR = os.path.expanduser("~")
 
 RepeatSeconds				= 2		# Interval in which a tag is considered a repeat read.
 ReconnectDelaySeconds		= 2		# Interval to wait before reattempting a connection
-KeepAliveSeconds			= 2		# Interval to request a KeepAlive message
+KeepaliveSeconds			= 2		# Interval to request a Keepalive message
 ConnectionTimeoutSeconds	= 1		# Interval for connection timeout
 ReaderUpdateMessageSeconds	= 5		# Interval to print we are waiting for input.
 
@@ -109,6 +109,15 @@ class Impinj( object ):
 		if not success:
 			return False
 		
+		# Configure a period Keepalive message.
+		success, response = self.sendCommand( SET_READER_CONFIG_Message(Parameters = [
+				KeepaliveSpec_Parameter(	KeepaliveTriggerType = KeepaliveTriggerType.Periodic,
+											PeriodicTriggerValue = int(KeepaliveSeconds*1000)
+				),
+		] ) )
+		if not success:
+			return False
+		
 		# Disable all rospecs in the reader.
 		success, response = self.sendCommand( DISABLE_ROSPEC_Message(ROSpecID = 0) )
 		if not success:
@@ -124,14 +133,6 @@ class Impinj( object ):
 		if not success:
 			return False
 			
-		# Configure a KeepAlive message.
-		succes, response = self.sendCommand( KEEP_ALIVE_MESSAGE( Parameters = [
-				KeepAliveParameterSpec_Parameter(	KeepaliveTriggerType = KeepaliveTriggerType.Periodic,
-													PeriodicTriggerValue = int(KeepAliveSeconds*1000)
-				),
-			] )
-		)
-		
 		# Enable our new rospec.
 		success, response = self.sendCommand( ENABLE_ROSPEC_Message(ROSpecID = self.rospecID) )
 		if not success:
@@ -150,6 +151,9 @@ class Impinj( object ):
 		tOld = getTimeNow() - datetime.timedelta( days = 100 )
 		
 		while self.checkKeepGoing():
+			#------------------------------------------------------------
+			# Connect Mode.
+			#
 			lastReadTime = {}			# Lookup for last tag read times.
 			
 			# Create a socket to connect to the reader.
@@ -176,17 +180,19 @@ class Impinj( object ):
 				self.reconnectDelay()
 				continue
 			
-			tUpdateLast = tKeepAliveLast = getTimeNow()
+			tUpdateLast = tKeepaliveLast = getTimeNow()
 			self.tagCount = 0
 			while self.checkKeepGoing():
-				
+				#------------------------------------------------------------
+				# Read Mode.
+				#
 				try:
 					response = UnpackMessageFromSocket( self.readerSocket )
 				except socket.timeout:
 					t = getTimeNow()
 					
-					if (t - tKeepAliveLast).total_seconds() > KeepAliveSeconds * 2:
-						self.messageQ.put( ('Impinj', 'Reader Connection Lost (missing KeepAlive).') )
+					if (t - tKeepaliveLast).total_seconds() > KeepaliveSeconds * 2:
+						self.messageQ.put( ('Impinj', 'Reader Connection Lost (missing Keepalive).') )
 						self.readerSocket.close()
 						self.messageQ.put( ('Impinj', 'Attempting Reconnect...') )
 						break
@@ -196,10 +202,17 @@ class Impinj( object ):
 						tUpdateLast = t
 					continue
 				
-				if isinstance(response, KEEP_ALIVE_Message):
+				if isinstance(response, KEEPALIVE_Message):
 					# Respond to the KEEP_ALIVE message with KEEP_ALIVE_ACK.
-					KEEP_ALIVE_ACK_Message().send( self.readerSocket )
-					tKeepAliveLast = getTimeNow()
+					try:
+						KEEPALIVE_ACK_Message().send( self.readerSocket )
+					except socket.timeout:
+						self.messageQ.put( ('Impinj', 'Reader Connection Lost (Keepalive Ack timeout).') )
+						self.readerSocket.close()
+						self.messageQ.put( ('Impinj', 'Attempting Reconnect...') )
+						break
+						
+					tKeepaliveLast = getTimeNow()
 					continue
 				
 				if not isinstance(response, RO_ACCESS_REPORT_Message):
