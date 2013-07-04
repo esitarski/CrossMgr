@@ -175,7 +175,13 @@ class Impinj( object ):
 
 			self.messageQ.put( ('Impinj', 'state', True) )
 			
-			if not self.sendCommands():
+			try:
+				success = self.sendCommands()
+			except Exception as e:
+				self.messageQ.put( ('Impinj', 'Send Command Error=%s' % e) )
+				success = False
+				
+			if not success:
 				self.messageQ.put( ('Impinj', 'Reader Initialization Failed.') )
 				self.messageQ.put( ('Impinj', 'Disconnecting Reader.' ) )
 				self.messageQ.put( ('Impinj', 'state', False) )
@@ -211,7 +217,7 @@ class Impinj( object ):
 					try:
 						KEEPALIVE_ACK_Message().send( self.readerSocket )
 					except socket.timeout:
-						self.messageQ.put( ('Impinj', 'Reader Connection Lost (Keepalive Ack timeout).') )
+						self.messageQ.put( ('Impinj', 'Reader Connection Lost (Keepalive_Ack timeout).') )
 						self.readerSocket.close()
 						self.messageQ.put( ('Impinj', 'Attempting Reconnect...') )
 						break

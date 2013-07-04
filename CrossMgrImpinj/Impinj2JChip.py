@@ -63,8 +63,8 @@ class Impinj2JChip( object ):
 					sock.connect((self.crossMgrHost, self.crossMgrPort))
 					break
 				except socket.error:
-					self.messageQ.put( ('Impinj2JChip', 'CrossMgr Connection Failed.  Trying again in 5 seconds...') )
-					for t in xrange(5):
+					self.messageQ.put( ('Impinj2JChip', 'CrossMgr Connection Failed.  Trying again in 2 seconds...') )
+					for t in xrange(2):
 						time.sleep( 1 )
 						if not self.checkKeepGoing():
 							break

@@ -1,8 +1,35 @@
 import wx
 import random
-import math
 import bisect
 
+import sys
+import math
+def ShimazakiMethod( data, minN = 2, maxN = None ):
+	# From shimazaki@brain.riken.jp
+	dataMin = float(min(data))
+	T = float(max(data)) - dataMin
+	dataCount = float(len(data))
+	
+	# Default return: all data points in one bin.
+	best = ([len(data)], 1, sys.float_info.max, T)
+
+	for N in xrange(minN, min(len(data), maxN or len(data))):
+		width = T / N
+		bins = [0] * N
+		for x in data:
+			try:
+				bins[int((x-dataMin) / width)] += 1
+			except IndexError:
+				bins[-1] += 1
+		
+		kBar = dataCount / N
+		v = math.fsum((k - kBar)**2 for k in bins) / N
+		cost = (2.0 * kBar - v) / (width ** 2)
+		if cost < best[2]:
+			best = (bins, cost, N, width)
+
+	return best
+			
 class Histogram(wx.PyControl):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
@@ -31,7 +58,7 @@ class Histogram(wx.PyControl):
 		self.SetBackgroundColour('white')
 
 		self.data = None
-		self.bars = None
+		self.bins = None
 		
 		# Bind the events related to our control: first of all, we use a
 		# combination of wx.BufferedPaintDC and an empty handler for
@@ -65,47 +92,15 @@ class Histogram(wx.PyControl):
 		"""
 		return True
 
-	def partitionBars( self, bins ):
-		self.bins = int(math.ceil(bins))
-		self.bars = [ 0 for i in xrange(self.bins+1) ]
-		t = self.bins / (self.dataMax - self.dataMin)
-		for x in self.data:
-			self.bars[int((x-self.dataMin) * t)] += 1
-		
-	def shimazakiMethod( self ):
-		costBest = None
-		binsBest = None
-		bins = int(math.ceil(math.log(len(self.data), 2) + 1))	# Use Sturge's formula to get a start.
-		#for N in xrange(int(bins/2), int(bins*3)):
-		for N in xrange(6, 25):
-			delta = (self.dataMax - self.dataMin) / N
-			self.partitionBars( N )
-			k = len(self.data) / float(N)
-			v = sum( (x - k)**2 for x in self.bars ) / N
-			cost = (2 * k - v) / (delta ** 2)
-			if costBest is None or cost < costBest:
-				costBest = cost
-				binsBest = N
-		self.partitionBars( binsBest )
-		
 	def SetData( self, data ):
-		self.bars = None
+		self.bins = None
 		self.data = None
 		if data:
 			self.data = [float(x) for x in data]
 			self.dataMax = max(self.data)
 			self.dataMin = min(self.data)
-			self.average = sum(self.data) / len(self.data)
-			self.stdev = (sum( (x-self.average)**2 for x in self.data ) / len(self.data) ) ** 0.5
-			# Get number of histogram bins.
-			# Scott's choice.
-			# self.bins = (self.dataMax - self.dataMin) / (3.5 * self.stdev / (len(self.data) ** (1.0/3.0)))
-			# self.bins = len(self.data) ** 0.5				# Excel formula
-			# self.bins = math.log(len(self.data), 2) + 1	# Sturge's formula
-			# self.bins = int(math.ceil(self.bins))
-			# self.partitionBars( self.bins )
-			self.shimazakiMethod()
-			self.barMax = max(self.bars)
+			self.bins = ShimazakiMethod( self.data )[0]
+			self.barMax = max(self.bins)
 		self.Refresh()
 		
 	def OnPaint(self, event):
@@ -126,7 +121,7 @@ class Histogram(wx.PyControl):
 		dc.SetBackground(backBrush)
 		dc.Clear()
 		
-		if not self.bars or width < 50 or height < 50:
+		if not self.bins or width < 50 or height < 50:
 			return
 
 		textWidth, textHeight = dc.GetTextExtent( '00:00' if self.dataMax < 60*60 else '00:00:00' )
@@ -177,7 +172,7 @@ class Histogram(wx.PyControl):
 		
 		# set up the bars
 		# thick lines with flat ends
-		thick = int((xRight - xLeft) / len(self.bars))
+		thick = int((xRight - xLeft) / len(self.bins))
 		if thick == 0:
 			return
 		pen = wx.Pen('blue', thick)
@@ -186,8 +181,8 @@ class Histogram(wx.PyControl):
 		dc.SetPen(pen)
 		
 		x = xLeft + thick/2
-		bFactor = float(yBottom - yTop) / (self.barMax * 1.05)
-		for b in self.bars:
+		bFactor = float(yBottom - yTop) / float(self.barMax)
+		for b in self.bins:
 			y2 = yBottom - b * bFactor
 			dc.DrawLine(x, yBottom, x, y2)
 			x += thick
@@ -203,19 +198,27 @@ class Histogram(wx.PyControl):
 		pass
 		
 if __name__ == '__main__':
-	def GetData():
-		# Data from Old Faithful
-		d = '''4.37 3.87 4.00 4.03 3.50 4.08 2.25 4.70 1.73 4.93 1.73 4.62 
-		 3.43 4.25 1.68 3.92 3.68 3.10 4.03 1.77 4.08 1.75 3.20 1.85 
-		 4.62 1.97 4.50 3.92 4.35 2.33 3.83 1.88 4.60 1.80 4.73 1.77 
-		 4.57 1.85 3.52 4.00 3.70 3.72 4.25 3.58 3.80 3.77 3.75 2.50 
-		 4.50 4.10 3.70 3.80 3.43 4.00 2.27 4.40 4.05 4.25 3.33 2.00 
-		 4.33 2.93 4.58 1.90 3.58 3.73 3.73 1.82 4.63 3.50 4.00 3.67 
-		 1.67 4.60 1.67 4.00 1.80 4.42 1.90 4.63 2.93 3.50 1.97 4.28 
-		 1.83 4.13 1.83 4.65 4.20 3.93 4.33 1.83 4.53 2.03 4.18 4.43 
-		 4.07 4.13 3.95 4.10 2.27 4.58 1.90 4.50 1.95 4.83 4.12'''
-		return [float(x) for x in d.split()]
+	# Data from Old Faithful
+	data = [float(x) for x in 
+'''4.37 3.87 4.00 4.03 3.50 4.08 2.25 4.70 1.73 4.93 1.73 4.62
+3.43 4.25 1.68 3.92 3.68 3.10 4.03 1.77 4.08 1.75 3.20 1.85
+4.62 1.97 4.50 3.92 4.35 2.33 3.83 1.88 4.60 1.80 4.73 1.77
+4.57 1.85 3.52 4.00 3.70 3.72 4.25 3.58 3.80 3.77 3.75 2.50
+4.50 4.10 3.70 3.80 3.43 4.00 2.27 4.40 4.05 4.25 3.33 2.00
+4.33 2.93 4.58 1.90 3.58 3.73 3.73 1.82 4.63 3.50 4.00 3.67
+1.67 4.60 1.67 4.00 1.80 4.42 1.90 4.63 2.93 3.50 1.97 4.28
+1.83 4.13 1.83 4.65 4.20 3.93 4.33 1.83 4.53 2.03 4.18 4.43
+4.07 4.13 3.95 4.10 2.72 4.58 1.90 4.50 1.95 4.83 4.12'''.split()]
 
+	bins, cost, N, width = ShimazakiMethod( data )
+	print bins, cost, N, width
+	
+	xMin = min(data)
+	hMax = max(bins)
+	hFactor = 1 if hMax < 40 else 40.0 / hMax
+	for i, h in enumerate(bins):
+		print '%9.3f %9.3f: %6d: %s' % (xMin + i * width, xMin + (i+1) * width, h, '*' * int(h * hFactor))
+	
 	app = wx.PySimpleApp()
 	mainWin = wx.Frame(None,title="Histogram", size=(600,400))
 	histogram = Histogram(mainWin)
@@ -223,8 +226,8 @@ if __name__ == '__main__':
 	random.seed( 10 )
 	t = 55*60
 	tVar = t * 0.15
-	#histogram.SetData( [random.normalvariate(t, tVar) for x in xrange(9)] )
-	histogram.SetData( GetData() )
+	#histogram.SetData( [random.normalvariate(t, tVar) for x in xrange(90)] )
+	histogram.SetData( data )
 
 	mainWin.Show()
 	app.MainLoop()
