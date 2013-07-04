@@ -11,6 +11,13 @@ from xml.dom.minidom import parseString
 
 CmdPort = 53161
 
+testTags = '''500123
+300833B2DDD9014000000000
+E20068060000000000000000
+300833B2DDD9014000000000
+300833B2DDD9014000000000
+17651120'''.split()
+
 alienOptions = {
 	'readerName':	'Alien Client Test',
 	'readerType':	'Python Emulator',
@@ -52,6 +59,13 @@ for i in xrange(25):
 #------------------------------------------------------------------------------	
 # Create a Alien-style numeric tag for each number.
 tag = dict( (n, '000000000000%04d' % n) for n in nums )
+
+# Add our special tags.
+for i, n in enumerate(tag):
+	try:
+		tag[n] = testTags[i]
+	except IndexError:
+		break
 	
 #------------------------------------------------------------------------------	
 # Write out as a .csv file.  To create an external data file suitable for linking

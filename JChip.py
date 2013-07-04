@@ -173,7 +173,11 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				continue
 			
 			# This socket is a data socket.  Get the data.
-			data = s.recv( 4096 )
+			try:
+				data = s.recv( 4096 )
+			except Exception as e:
+				q.put( ('connection', 'error: %s' % e ) )
+				data = None
 			
 			if not data:
 				# No data - close socket and wait for a new connection.

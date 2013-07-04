@@ -221,6 +221,7 @@ class Alien( object ):
 		tOld = datetime.datetime.now() - datetime.timedelta( days = 100 )
 
 		while self.checkKeepGoing():
+			self.messageQ.put( ('Alien', 'state', False) )
 			if self.listenForHeartbeat:
 				#---------------------------------------------------------------------------
 				# Wait for the heartbeat (contains the connection info).
@@ -294,8 +295,16 @@ class Alien( object ):
 			#---------------------------------------------------------------------------
 			# Send initialization commands to the reader.
 			#
-			if not self.sendCommands():
+			try:
+				success = self.sendCommands()
+			except Exception as e:
+				self.messageQ.put( ('Alien', 'Send Commands fails.  Error: %s' % e) )
+				success = False
+			
+			if not success:
 				return
+			
+			self.messageQ.put( ('Alien', 'state', True) )
 			
 			self.tagCount = 0
 			self.messageQ.put( ('Alien', 'Listening for Alien reader data on (%s:%s)...' % (str(self.notifyHost), str(self.notifyPort))) )
@@ -352,12 +361,8 @@ class Alien( object ):
 						
 					try:
 						doc = parseString( data )
-					except xml.parsers.expat.ExpatError, e:
+					except Exception as e:
 						self.messageQ.put( ('Alien', 'Message Syntax error:', e) )
-						self.messageQ.put( ('Alien', data) )
-						continue
-					except:
-						self.messageQ.put( ('Alien', 'Message Syntax error') )
 						self.messageQ.put( ('Alien', data) )
 						continue
 						

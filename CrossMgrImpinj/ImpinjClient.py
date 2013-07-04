@@ -132,17 +132,24 @@ def StartClient():
 	
 	iMessage = 1
 	dBase = datetime.datetime.now()
-	#------------------------------------------------------------------------------	
+	#------------------------------------------------------------------------------
 	time.sleep( 1 )
 	print 'Start sending data...'
 
 	while iMessage < len(numLapTimes):
-		#------------------------------------------------------------------------------	
+		#------------------------------------------------------------------------------
 		while iMessage < len(numLapTimes):
 			n, lap, t = numLapTimes[iMessage]
 			dt = t - numLapTimes[iMessage-1][2]
 			
-			time.sleep( dt )
+			# Wait for the next event.  Make sure we send a KEEP_ALIVE every 2 seconds.
+			for i in xrange(1000):
+				if i >= dt:
+					break
+				time.sleep( min(2, dt - i) )
+				KEEPALIVE_Message().send( clientSocket )
+				response = UnpackMessageFromSocket( clientSocket )
+				assert isinstance( response, KEEPALIVE_ACK_Message )
 			
 			message = formatMessage( n, lap, dBase + datetime.timedelta(seconds = t) )
 			sys.stdout.write( 'sending: %s\n' % message )

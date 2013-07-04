@@ -108,6 +108,9 @@ class MainWin( wx.Frame ):
 						
 		self.SetBackgroundColour( wx.Colour(232,232,232) )
 		
+		self.LightGreen = wx.Colour(153,255,153)
+		self.LightRed = wx.Colour(255,153,153)
+		
 		font = self.GetFont()
 		bigFont = wx.Font( font.GetPointSize() * 1.5, font.GetFamily(), font.GetStyle(), wx.FONTWEIGHT_BOLD )
 		italicFont = wx.Font( bigFont.GetPointSize()*2.2, bigFont.GetFamily(), wx.FONTSTYLE_ITALIC, bigFont.GetWeight() )
@@ -459,9 +462,15 @@ class MainWin( wx.Frame ):
 				break
 			message = ' '.join( str(x) for x in d[1:] )
 			if   d[0] == 'Alien':
-				self.alienMessages.write( message )
+				if 'state' in d:
+					self.alienMessages.messageList.SetBackgroundColour( self.LightGreen if d[2] else self.LightRed )
+				else:
+					self.alienMessages.write( message )
 			elif d[0] == 'Alien2JChip':
-				self.crossMgrMessages.write( message )
+				if 'state' in d:
+					self.crossMgrMessages.messageList.SetBackgroundColour( self.LightGreen if d[2] else self.LightRed )
+				else:
+					self.crossMgrMessages.write( message )
 			elif d[0] == 'CmdHost':
 				cmdHost, cmdPort = d[1].split(':')
 				self.cmdHost.SetValue( cmdHost )

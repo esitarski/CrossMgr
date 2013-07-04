@@ -51,10 +51,11 @@ class Alien2JChip( object ):
 			
 	def runServer( self ):
 		while self.checkKeepGoing():
+			self.messageQ.put( ('Alien2JChip', 'state', False) )
 			self.messageQ.put( ('Alien2JChip', 'Trying to connect to CrossMgr...') )
 			sock = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 
-			#------------------------------------------------------------------------------	
+			#------------------------------------------------------------------------------
 			# Connect to the CrossMgr server.
 			self.tagCount = 0
 			while self.checkKeepGoing():
@@ -62,8 +63,8 @@ class Alien2JChip( object ):
 					sock.connect((self.crossMgrHost, self.crossMgrPort))
 					break
 				except socket.error:
-					self.messageQ.put( ('Alien2JChip', 'CrossMgr Connection Failed.  Trying again in 5 seconds...') )
-					for t in xrange(5):
+					self.messageQ.put( ('Alien2JChip', 'CrossMgr Connection Failed.  Trying again in 2 seconds...') )
+					for t in xrange(2):
 						time.sleep( 1 )
 						if not self.checkKeepGoing():
 							break
@@ -71,22 +72,33 @@ class Alien2JChip( object ):
 			if not self.keepGoing:
 				break
 				
-			#------------------------------------------------------------------------------	
+			#------------------------------------------------------------------------------
+			self.messageQ.put( ('Alien2JChip', 'state', True) )
 			self.messageQ.put( ('Alien2JChip', 'CrossMgr Connection succeeded!' ) )
 			self.messageQ.put( ('Alien2JChip', 'Sending identifier...') )
 			sock.send("N0000ALIEN-DRIVER%s" % CR)
 
-			#------------------------------------------------------------------------------	
+			#------------------------------------------------------------------------------
 			self.messageQ.put( ('Alien2JChip', 'Waiting for "get time" command from CrossMgr...') )
+			success = True
 			while self.keepGoing:
-				received = sock.recv(1)
+				try:
+					received = sock.recv(1)
+				except Exception as e:
+					self.messageQ.put( ('Alien2JChip', 'CrossMgr Communication Error: %s' % e) )
+					success = False
+					break
 				if received == 'G':
 					while received[-1] != CR:
 						received += sock.recv(1)
 					self.messageQ.put( ('Alien2JChip', 'Received cmd: "%s" from CrossMgr' % received[:-1]) )
 					break
 
-			#------------------------------------------------------------------------------	
+			#------------------------------------------------------------------------------
+			if not success:
+				sock.close()
+				continue
+			
 			if not self.keepGoing:
 				break
 				
@@ -95,9 +107,17 @@ class Alien2JChip( object ):
 			dBase = datetime.datetime.now()
 			message = 'GT0%02d%02d%02d%03d%s' % (dBase.hour, dBase.minute, dBase.second, int((dBase.microsecond / 1000000.0) * 1000.0), CR)
 			self.messageQ.put( ('Alien2JChip', message[:-1]) )
-			sock.send( message )
+			try:
+				sock.send( message )
+			except Exception as e:
+				self.messageQ.put( ('Alien2JChip', 'CrossMgr Communication Error: %s' % e) )
+				success = False
 
 			#------------------------------------------------------------------------------	
+			if not success:
+				sock.close()
+				continue
+			
 			if not self.keepGoing:
 				break
 
@@ -126,9 +146,9 @@ class Alien2JChip( object ):
 					sock.send( message )
 					self.tagCount += 1
 					self.messageQ.put( ('Alien2JChip', 'Forwarded %d: %s' % (self.tagCount, message[:-1])) )
-				except:
+				except Exception as e:
 					self.alien.dataQ.put( d )
-					self.messageQ.put( ('Alien2JChip', 'Lost CrossMgr Connection.  Attempting to reconnect...') )
+					self.messageQ.put( ('Alien2JChip', 'Lost CrossMgr Connection (%s).  Attempting to reconnect...' % e) )
 					break
 		
 			sock.close()
