@@ -277,12 +277,16 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		#
 		for s in writable:
 			# Write out the waiting data.  If we sent it all, remove it from the outputs list.
-			writeStr = writeStr[s.send(writeStr):]
+			try:
+				writeStr = writeStr[s.send(writeStr):]
+			except Exception as e:
+				q.put( ('exception', 'send error: %s' % e) )
+				writeStr = ''
 			if not writeStr:
 				outputs.remove( s )
 			
 		#----------------------------------------------------------------------------------
-		# Handle exceptional.
+		# Handle exceptional list.
 		#
 		for s in exceptional:
 			# Close the socket.  Remove it from the inputs and outputs list.

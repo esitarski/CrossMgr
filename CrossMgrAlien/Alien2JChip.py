@@ -147,7 +147,7 @@ class Alien2JChip( object ):
 					self.tagCount += 1
 					self.messageQ.put( ('Alien2JChip', 'Forwarded %d: %s' % (self.tagCount, message[:-1])) )
 				except Exception as e:
-					self.alien.dataQ.put( d )
+					self.dataQ.put( d )	# Put the data back on the queue for resend.
 					self.messageQ.put( ('Alien2JChip', 'Lost CrossMgr Connection (%s).  Attempting to reconnect...' % e) )
 					break
 		
