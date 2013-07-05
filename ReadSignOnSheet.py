@@ -15,7 +15,7 @@ import traceback
 from Excel import GetExcelReader, toAscii
 
 #-----------------------------------------------------------------------------------------------------
-Fields = ['Bib#', 'LastName', 'FirstName', 'Team', 'License', 'Category', 'Tag', 'Tag2']
+Fields = ['Bib#', 'LastName', 'FirstName', 'Team', 'Category', 'Age', 'License', 'Tag', 'Tag2']
 IgnoreFields = ['Bib#', 'Tag', 'Tag2']		# Fields to ignore when adding data to standard reports.
 ReportFields = [f for f in Fields if f not in IgnoreFields]
 

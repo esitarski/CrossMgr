@@ -67,7 +67,7 @@ import xlwt
 from ExportGrid			import ExportGrid
 import SimulationLapTimes
 import Version
-from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, ExcelLink
+from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, ExcelLink, ReportFields
 from SetGraphic			import SetGraphicDialog
 from GetResults			import GetCategoryDetails
 from PhotoFinish		import ResetPhotoInfoCache, DeletePhotos, SetCameraState
@@ -978,6 +978,8 @@ class MainWin( wx.Frame ):
 	
 		payload = {}
 		payload['raceName'] = os.path.basename(self.fileName)[:-4]
+		iTeam = ReportFields.index('Team')
+		payload['infoFields'] = ReportFields[:iTeam] + ['Name'] + ReportFields[iTeam:]
 			
 		with Model.LockRace() as race:
 			year, month, day = [int(v) for v in race.date.split('-')]

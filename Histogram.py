@@ -1,9 +1,9 @@
 import wx
 import random
 import bisect
-
 import sys
 import math
+
 def ShimazakiMethod( data, minN = 2, maxN = None ):
 	# From shimazaki@brain.riken.jp
 	dataMin = float(min(data))
@@ -11,7 +11,7 @@ def ShimazakiMethod( data, minN = 2, maxN = None ):
 	dataCount = float(len(data))
 	
 	# Default return: all data points in one bin.
-	best = ([len(data)], 1, sys.float_info.max, T)
+	best = ([len(data)], sys.float_info.max, 1, T)
 
 	for N in xrange(minN, min(len(data), maxN or len(data))):
 		width = T / N
@@ -25,7 +25,7 @@ def ShimazakiMethod( data, minN = 2, maxN = None ):
 		kBar = dataCount / N
 		v = math.fsum((k - kBar)**2 for k in bins) / N
 		cost = (2.0 * kBar - v) / (width ** 2)
-		if cost < best[2]:
+		if cost < best[1]:
 			best = (bins, cost, N, width)
 
 	return best
@@ -210,14 +210,16 @@ if __name__ == '__main__':
 1.83 4.13 1.83 4.65 4.20 3.93 4.33 1.83 4.53 2.03 4.18 4.43
 4.07 4.13 3.95 4.10 2.72 4.58 1.90 4.50 1.95 4.83 4.12'''.split()]
 
-	bins, cost, N, width = ShimazakiMethod( data )
-	print bins, cost, N, width
+	optimal = ShimazakiMethod( data )
+	sys.stdout.write( '{}\n'.format(optimal) )
+	
+	bins, cost, N, width = optimal
 	
 	xMin = min(data)
 	hMax = max(bins)
 	hFactor = 1 if hMax < 40 else 40.0 / hMax
 	for i, h in enumerate(bins):
-		print '%9.3f %9.3f: %6d: %s' % (xMin + i * width, xMin + (i+1) * width, h, '*' * int(h * hFactor))
+		sys.stdout.write( '{:9.3f} {:9.3f}: {:6d}: {}\n'.format(xMin + i * width, xMin + (i+1) * width, h, '*' * int(h * hFactor)) )
 	
 	app = wx.PySimpleApp()
 	mainWin = wx.Frame(None,title="Histogram", size=(600,400))

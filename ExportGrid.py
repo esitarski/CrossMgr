@@ -6,7 +6,7 @@ import Utils
 import Model
 import math
 from GetResults import GetResults, GetCategoryDetails
-from ReadSignOnSheet import Fields, IgnoreFields
+from ReadSignOnSheet import ReportFields
 from FitSheetWrapper import FitSheetWrapper
 import qrcode
 import urllib
@@ -532,7 +532,7 @@ class ExportGrid( object ):
 
 		startOffset = category.getStartOffsetSecs() if category else 0.0
 		
-		infoFields = ['LastName', 'FirstName', 'Team', 'Category', 'License'] if getExternalData else []
+		infoFields = ReportFields if getExternalData else []
 		infoFieldsPresent = set( infoFields ) & set( dir(leader) )
 		infoFields = [f for f in infoFields if f in infoFieldsPresent]
 		
@@ -591,6 +591,10 @@ class ExportGrid( object ):
 		self.data = data
 		self.infoColumns     = set( xrange(2, 2+len(infoFields)) ) if infoFields else set()
 		self.leftJustifyCols = set( xrange(2, 2+len(infoFields)) ) if infoFields else set()
+		try:
+			self.leftJustifyCols.remove( self.colnames.index('Age') )
+		except ValueError:
+			pass
 		
 			
 if __name__ == '__main__':
