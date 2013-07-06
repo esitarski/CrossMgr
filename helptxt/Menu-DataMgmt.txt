@@ -30,8 +30,9 @@ Bib#|Required.  Rider's bib number in the race.  Bib numbers should be allocated
 LastName|Optional.  Rider's last name.  CrossMgr will automatically capitalize the last name.
 FirstName|Optional.  Rider's first name.
 Team|Optional.  Rider's team.
-License|Optional.  Rider' license.  This can be the UCI code, a national code, or a regional code.  CrossMgr uses this for display only.
 Category|Optional.  Rider's category.  This does not have to be the same as the race category.
+Age|Optional.  Rider's age.
+License|Optional.  Rider' license.  This can be the UCI code, a national code, or a regional code.  CrossMgr uses this for display only.
 Tag|Optional for manual input, required for chip input.  Rider's chip tag.
 Tag2|Optional.  Rider's additioal chip tag for a second bike.
 

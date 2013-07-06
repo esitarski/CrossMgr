@@ -99,7 +99,7 @@ class Properties( wx.Panel ):
 		self.reverseDirection = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
 		rows += 1
 
-		self.notesLabel = wx.StaticText( self, wx.ID_ANY, 'Notes (will appear on Html output): ' )
+		self.notesLabel = wx.StaticText( self, wx.ID_ANY, 'Notes to appear on Html output:\n(Notes using Html tags must start with <html> and end with </html>)' )
 		self.notes = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB )
 		rows += 1
 

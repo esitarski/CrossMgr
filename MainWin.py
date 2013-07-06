@@ -970,6 +970,7 @@ class MainWin( wx.Frame ):
 	reLeadingWhitespace = re.compile( r'^[ \t]+', re.MULTILINE )
 	reComments = re.compile( r'// .*$', re.MULTILINE )
 	reBlankLines = re.compile( r'\n+' )
+	reRemoveTags = re.compile( r'\<html\>|\</html\>|\<body\>|\</body\>|\<head\>|\</head\>', re.I )
 	def addResultsToHtmlStr( self, html ):
 		# Remove leading whitespace, comments and consecutive blank lines to save space.
 		html = self.reLeadingWhitespace.sub( '', html )
@@ -997,7 +998,13 @@ class MainWin( wx.Frame ):
 			payload['isTimeTrial']		= getattr(race, 'isTimeTrial', False)
 			payload['rfid']				= getattr(race, 'enableJChipIntegration', False)
 			payload['raceIsRunning']	= race.isRunning()
-			payload['raceNotes']		= cgi.escape(getattr(race, 'notes', '')).replace('\n','{{br/}}')
+			notes = getattr(race, 'notes', '')
+			if notes.lstrip()[:6].lower().startswith( '<html>' ):
+				notes = self.reRemoveTags.sub( '', notes )
+				notes = notes.replace('<', '{{').replace( '>', '}}' )
+				payload['raceNotes']	= notes
+			else:
+				payload['raceNotes']	= cgi.escape(notes).replace('\n','{{br/}}')
 			if race.startTime:
 				raceStartTime = (race.startTime - race.startTime.replace( hour=0, minute=0, second=0 )).total_seconds()
 				payload['raceStartTime']= raceStartTime
