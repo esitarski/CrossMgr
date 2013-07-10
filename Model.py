@@ -759,6 +759,8 @@ class Race(object):
 	UnitKm = 0
 	UnitMiles = 1
 	
+	advancePhotoMillisecondsDefault = -100
+	
 	def __init__( self ):
 		self.reset()
 
@@ -817,9 +819,7 @@ class Race(object):
 	
 	@property
 	def enableVideoBuffer( self ):
-		# VideoBuffer: FIXLATER
-		#return getattr(self, 'enableUSBCamera', False) and getattr(self, 'enableJChipIntegration', False)
-		return False
+		return getattr(self, 'enableUSBCamera', False) and getattr(self, 'enableJChipIntegration', False)
 		
 	@property
 	def distanceUnitStr( self ):

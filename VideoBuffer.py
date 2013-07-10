@@ -46,7 +46,7 @@ class FrameSaver( threading.Thread ):
 		self.queue.put( ['Save', fileName, bib, t, frame] )
 	
 class VideoBuffer( threading.Thread ):
-	def __init__( self, camera, refTime = None, dirName = '.', fps = 25, bufferSeconds = 2.0 ):
+	def __init__( self, camera, refTime = None, dirName = '.', fps = 25, bufferSeconds = 3.0 ):
 		threading.Thread.__init__( self )
 		self.daemon = True
 		self.name = 'VideoBuffer'
@@ -56,7 +56,6 @@ class VideoBuffer( threading.Thread ):
 		self.fps = fps
 		self.frameMax = int(fps * bufferSeconds)
 		self.frameDelay = 1.0 / fps
-		self.frameDelayMicroseconds = int(self.frameDelay * 1000000.0)
 		self.frameSaver = FrameSaver()
 		self.reset()
 	
@@ -76,17 +75,27 @@ class VideoBuffer( threading.Thread ):
 		tLaunch = now()
 		keepGoing = True
 		while keepGoing:
-			self.grabFrame()
+			try:
+				tGrab = now()
+				tRace = (tGrab - self.refTime).total_seconds()
+				self.frames[self.frameCur] = (tRace, self.camera.getImage())
+				self.frameCur = (self.frameCur + 1) % self.frameMax
+			except:
+				break
 			
 			while 1:
 				try:
 					message = self.queue.get( False )
 				except Empty:
 					break
-					
+				
 				if   message[0] == 'Save':
 					cmd, bib, t = message
-					tFind = t + getattr(Model.race, 'advancePhotoMilliseconds', -300) / 1000.0
+					tFind = t + getattr(Model.race, 'advancePhotoMilliseconds', Model.Race.advancePhotoMillisecondsDefault) / 1000.0
+					if tFind > tRace:
+						threading.Timer( tFind - tRace, self.takePhoto, args=[bib, t] ).start()
+						continue
+						
 					frames = self.find( tFind )
 					for i, frame in enumerate( frames ):
 						self.frameSaver.save( GetFilename(bib, t, self.dirName, i), bib, t, frame )
@@ -100,9 +109,10 @@ class VideoBuffer( threading.Thread ):
 					break
 				
 			# Sleep until we need to grab the next frame.
-			microSeconds = (now() - tLaunch).microseconds
-			frameWait = ((microSeconds // self.frameDelayMicroseconds + 1) * self.frameDelayMicroseconds) - microSeconds
-			time.sleep( frameWait / 1000000.0 )	
+			frameWait = self.frameDelay - (now() - tGrab).total_seconds()
+			if frameWait < 0.0:
+				frameWait = self.frameDelay		# Give some more time if we are falling behind.
+			time.sleep( frameWait )	
 			
 	def stop( self ):
 		self.queue.put( ['Terminate'] )
@@ -134,10 +144,10 @@ class VideoBuffer( threading.Thread ):
 				fRange = list( xrange(max(0, iBest-1), min(frameMax, iBest + 2)) )
 				timeError = [abs(t - self.getT(i)) for i in fRange]
 				iClosest = fRange[timeError.index( min(timeError) )]
-				Utils.writeLog( 'VideoBuffer.find: %s:  delta: %s  [%s]' % (
-					Utils.formatTime(t, True), Utils.formatTime(min(timeError), True),
-					', '.join( Utils.formatTime(self.getT(i), True) if i != iClosest
-								else ('*' + Utils.formatTime(self.getT(i), True)) for i in fRange ) ) )
+				#Utils.writeLog( 'VideoBuffer.find: %s:  delta: %s  [%s]' % (
+				#	Utils.formatTime(t, True), Utils.formatTime(min(timeError), True),
+				#	', '.join( Utils.formatTime(self.getT(i), True) if i != iClosest
+				#				else ('*' + Utils.formatTime(self.getT(i), True)) for i in fRange ) ) )
 				return [self.getFrame(i) for i in fRange if self.getFrame(i)]
 		return []
 		
@@ -150,15 +160,6 @@ class VideoBuffer( threading.Thread ):
 				fRange = list( xrange(max(0, iBest-before), min(frameMax, iBest + after)) )
 				return [self.getTimeFrame(i) for i in fRange if self.getFrame(i)]
 		return []
-		
-	def grabFrame( self ):
-		try:
-			tNow = now()
-			image = self.camera.getImage()
-			self.frames[self.frameCur] = ((tNow - self.refTime).total_seconds(), image)
-			self.frameCur = (self.frameCur + 1) % self.frameMax
-		except:
-			pass
 
 videoBuffer = None
 def StartVideoBuffer( refTime, raceFileName):
@@ -203,11 +204,10 @@ def Shutdown():
 		
 def ModelTakePhoto( bib, raceSeconds ):
 	race = Model.race
-	if race and getattr(race, 'enableUSBCamera', False):
-		''' VideoBuffer: FIXLATER '''
-		if False and getattr(race, 'enableJChipIntegration', False):
+	if race:
+		if race.enableVideoBuffer:
 			return TakePhoto( Utils.mainWin.fileName, bib, raceSeconds )
-		else:
+		elif getattr(race, 'enableUSBCamera', False):
 			return PhotoFinish.TakePhoto( Utils.mainWin.fileName, bib, raceSeconds )
 	return 0
 

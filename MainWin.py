@@ -1053,6 +1053,64 @@ class MainWin( wx.Frame ):
 				pass
 		return html
 	
+	def addCourseToHtmlStr( self, html ):
+		# Remove leading whitespace, comments and consecutive blank lines to save space.
+		html = self.reLeadingWhitespace.sub( '', html )
+		html = self.reComments.sub( '', html )
+		html = self.reBlankLines.sub( '\n', html )
+	
+		payload = {}
+		payload['raceName'] = os.path.basename(self.fileName)[:-4]
+			
+		with Model.LockRace() as race:
+			year, month, day = [int(v) for v in race.date.split('-')]
+			timeComponents = [int(v) for v in race.scheduledStart.split(':')]
+			if len(timeComponents) < 3:
+				timeComponents.append( 0 )
+			hour, minute, second = timeComponents
+			raceTime = datetime.datetime( year, month, day, hour, minute, second )
+			title = '%s Course for %s' % ( race.name, raceTime.strftime(localDateFormat) )
+			html = html.replace( 'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
+			
+			payload['organizer']		= getattr(race, 'organizer', '')
+			notes = getattr(race, 'notes', '')
+			if notes.lstrip()[:6].lower().startswith( '<html>' ):
+				notes = self.reRemoveTags.sub( '', notes )
+				notes = notes.replace('<', '{{').replace( '>', '}}' )
+				payload['raceNotes']	= notes
+			else:
+				payload['raceNotes']	= cgi.escape(notes).replace('\n','{{br/}}')
+			courseCoordinates, gpsPoints, gpsAltigraph, totalElevationGain = None, None, None, None
+			geoTrack = getattr(race, 'geoTrack', None)
+			if geoTrack is not None:
+				courseCoordinates = geoTrack.asCoordinates()
+				gpsPoints = geoTrack.asExportJson()
+				gpsAltigraph = geoTrack.getAltigraph()
+				totalElevationGain = geoTrack.totalElevationGainM
+		
+		tNow = datetime.datetime.now()
+		payload['email']				= self.getEmail()
+		payload['version']				= Version.AppVerName
+		if gpsPoints:
+			payload['gpsPoints']		= gpsPoints
+		if courseCoordinates:
+			payload['courseCoordinates'] = courseCoordinates
+		if totalElevationGain:
+			payload['gpsTotalElevationGain'] = totalElevationGain
+		if gpsAltigraph:
+			payload['gpsAltigraph'] = gpsAltigraph
+
+		html = replaceJsonVar( html, 'payload', payload )
+		graphicBase64 = self.getGraphicBase64()
+		if graphicBase64:
+			try:
+				iStart = html.index( 'src="data:image/png' )
+				iEnd = html.index( '"/>', iStart )
+				html = ''.join( [html[:iStart], 'src="%s"' % graphicBase64, html[iEnd+1:]] )
+			except ValueError:
+				pass
+		return html
+	
 	@logCall
 	def menuPublishHtmlRaceResults( self, event ):
 		self.commit()

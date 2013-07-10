@@ -81,10 +81,10 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 		self.title.SetFont( wx.FontFromPixelSize( wx.Size(0,24), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		
 		self.scrolledWindow = wx.ScrolledWindow( self, wx.ID_ANY )
-		self.numPhotoSeries = 5
-		self.numPhotos = 25
+		self.numPhotoSeries = 4
+		self.numPhotos = 18
 		self.iSeries = 0
-		self.photoWidth, self.photoHeight = int(2 * 320 / 3), int(2 * 240 / 3)
+		self.photoWidth, self.photoHeight = int(2 * 320 / 4), int(2 * 240 / 4)
 		self.hgap = 4
 		gs = wx.FlexGridSizer( rows = 2 * self.numPhotoSeries, cols = self.numPhotos, hgap = self.hgap, vgap = 4 )
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrSplash.png'), wx.BITMAP_TYPE_PNG )
@@ -114,7 +114,7 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 		self.scrolledWindow.SetScrollRate( 20, 20 )
 		self.scrolledWindow.SetScrollbars( 1, 1, width, height )
 		
-		wx.CallAfter( self.ScrollToPicture, self.numPhotos - 11 )
+		wx.CallAfter( self.ScrollToPicture, self.numPhotos // 2 )
 		
 		self.vbs.Add( self.title, 0 )
 		self.vbs.Add( self.scrolledWindow, 1, wx.EXPAND )
@@ -172,7 +172,7 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 					self.photoLabels[s][i].SetLabel( '' )
 			return
 	
-		timeFrames = videoBuffer.findBeforeAfter( t, self.numPhotos - 10, 10 )
+		timeFrames = videoBuffer.findBeforeAfter( t, self.numPhotos // 2, self.numPhotos // 2 )
 		deltaMS = [int((tFrame - t) * 1000.0) for tFrame, frame in timeFrames]
 		
 		if len(timeFrames) < self.numPhotos:

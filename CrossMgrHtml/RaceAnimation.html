@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
 <!--
-	Html Data Template for Race Animation.
+	Html Template for Race Animation.
 	Generated from CrossMgr software.
 	Copyright 2011-2013, Edward Sitarski
 	For details, see sites.google.com/site/CrossMgrSoftware
 -->
 <head>
-<meta charset="UTF-8" author="Edward Sitarski" copyright="Edward Sitarski, 2011-2012" generator="CrossMgr" />  
+<meta charset="UTF-8" author="Edward Sitarski" copyright="Edward Sitarski, 2011-2013" generator="CrossMgr" />  
 <title id="idTitle">CrossMgr Race Results by Edward Sitarski</title>	<!-- Don't change this text! -->
 <style type="text/css">
 body { font-family: sans-serif; }
@@ -330,13 +330,13 @@ function OpenVirtualTourWindow()
 		'{{?xml version="1.0" ?}}',
 		'{{kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2"}}',
 		'{{Document}}',
-		  '{{name}}Virtual Tour{{/name}}',
+		  '{{name}}Google Earth Tour - Powered by CrossMgr{{/name}}',
 	] );
 	
 	// The Virtual Tour
 	write( [
 		  '{{gx:Tour'+'>',
-		   '{{name}}Virtual Tour{{/name}}',
+		   '{{name}}Google Earth Tour - Powered by CrossMgr{{/name}}',
 		   '{{gx:Playlist}}',
 	] );
 	var courseCoordinatesLength = courseCoordinates.length;

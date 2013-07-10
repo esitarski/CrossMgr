@@ -201,8 +201,8 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.splitter.SplitVertically( self.thumbs, self.mainPhoto, 140 )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		self.advancePhotoLabel = wx.StaticText( self, wx.ID_ANY, 'Advance Photo Milliseconds:' )
-		self.advancePhoto = wx.Slider( self, wx.ID_ANY, minValue = -1000, maxValue = 0, value = -300,
+		self.advancePhotoLabel = wx.StaticText( self, wx.ID_ANY, 'Photo Milliseconds Advance/Delay:' )
+		self.advancePhoto = wx.Slider( self, wx.ID_ANY, minValue = -1000, maxValue = 1000, value = 0,
 			style = wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS )
 		self.advancePhoto.SetTickFreq( 100, 1 )
 		hs.Add( self.advancePhotoLabel, proportion=0, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border = 2 )
@@ -388,7 +388,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		with Model.LockRace() as race:
 			isShown = self.advancePhotoLabel.IsShown()
 			if race and race.enableVideoBuffer:
-				self.advancePhoto.SetValue( getattr(race, 'advancePhotoMilliseconds', -300) )
+				self.advancePhoto.SetValue( getattr(race, 'advancePhotoMilliseconds', Model.Race.advancePhotoMillisecondsDefault) )
 				doShow = True
 			else:
 				doShow = False
