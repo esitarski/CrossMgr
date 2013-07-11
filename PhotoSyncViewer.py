@@ -77,8 +77,12 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 
 		self.vbs = wx.BoxSizer(wx.VERTICAL)
 		
-		self.title = wx.StaticText( self, wx.ID_ANY, '' )
+		self.title = wx.StaticText( self, wx.ID_ANY, '', style=wx.ALIGN_LEFT )
 		self.title.SetFont( wx.FontFromPixelSize( wx.Size(0,24), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
+		
+		self.captureButton = wx.ToggleButton( self, wx.ID_ANY, 'Capture' )
+		self.captureButton.Bind( wx.EVT_TOGGLEBUTTON, self.OnCapture )
+		self.captureCount = 0
 		
 		self.scrolledWindow = wx.ScrolledWindow( self, wx.ID_ANY )
 		self.numPhotoSeries = 4
@@ -116,7 +120,10 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 		
 		wx.CallAfter( self.ScrollToPicture, self.numPhotos // 2 )
 		
-		self.vbs.Add( self.title, 0 )
+		hb = wx.BoxSizer( wx.HORIZONTAL )
+		hb.Add( self.title, 1, flag=wx.ALL, border = 2 )
+		hb.Add( self.captureButton, 0, flag=wx.ALL|wx.ALIGN_RIGHT, border = 2 )
+		self.vbs.Add( hb, 0, wx.EXPAND )
 		self.vbs.Add( self.scrolledWindow, 1, wx.EXPAND )
 		
 		self.SetSizer( self.vbs )
@@ -127,6 +134,16 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 		
 		self.clear()
 
+	def OnCapture( self, event ):
+		if self.captureButton.GetValue():
+			self.reset()
+			
+	def reset( self ):
+		self.captureCount = 0
+		self.iSeries = 0
+		self.captureButton.SetValue( True )
+		self.clear()
+		
 	def OnMouseMove( self, event, s, i ):
 		self.title.SetLabel( self.titles[s] )
 		
@@ -137,9 +154,8 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 			return
 		milliseconds = fields[0]
 		if milliseconds and Model.race:
-			milliseconds = self.photoLabels[s][i].GetLabel()
 			Model.race.advancePhotoMilliseconds = int( milliseconds )
-			Utils.MessageOK( self, 'Advance Photo Milliseconds Set to %s' % milliseconds, 'Advance Milliseconds Set' )
+			Utils.MessageOK( self, 'Advance/Delay Photo Milliseconds set to %s' % milliseconds, 'Advance/Delay Milliseconds' )
 		
 	def OnClose( self, event ):
 		self.Show( False )
@@ -152,9 +168,6 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 			xScroll += b.GetSize().GetWidth() + self.hgap
 		self.scrolledWindow.Scroll( xScroll / self.scrolledWindow.GetScrollPixelsPerUnit()[0], -1 )
 			
-	def OnRefresh( self, event ):
-		self.refresh( self.num )
-		
 	def clear( self ):
 		self.timeFrames = []
 		self.titles = [''] * self.numPhotoSeries
@@ -170,6 +183,9 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 				for i in xrange(len(self.photoLabels[s])):
 					self.photoBitmaps[s][i].SetBitmapLabel( self.bitmap )
 					self.photoLabels[s][i].SetLabel( '' )
+			return
+	
+		if not self.captureButton.GetValue():
 			return
 	
 		timeFrames = videoBuffer.findBeforeAfter( t, self.numPhotos // 2, self.numPhotos // 2 )
@@ -206,12 +222,17 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 		self.Refresh()
 		
 		self.iSeries = (self.iSeries + 1) % self.numPhotoSeries
+		
+		self.captureCount += 1
+		if self.captureCount >= self.numPhotoSeries:
+			self.captureButton.SetValue( False )
 				
 photoSyncViewer = None
 def PhotoSyncViewerShow( parent ):
 	global photoSyncViewer
 	if not photoSyncViewer:
 		photoSyncViewer = PhotoSyncViewerDialog( parent, wx.ID_ANY, "Photo Sync Viewer" )
+	photoSyncViewer.reset()
 	photoSyncViewer.Show( True )
 	
 def PhotoSyncViewerIsShown():
@@ -259,6 +280,7 @@ if __name__ == '__main__':
 		wx.CallLater( 300, photoSyncDialog.refresh, vb, t, bib )
 		
 	photoSyncDialog.Show()
+	photoSyncDialog.reset()
 	bib = 100
 	for d in xrange(0, 1000*60, 1000):
 		wx.CallLater( d, doRefresh, bib )
