@@ -133,7 +133,7 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		# Try to find the header columns.
 		# Look for the first row with more than 4 columns.
 		for r, row in enumerate(reader.iter_list(sheetName)):
-			cols = sum( 1 for d in row if toAscii(d) )
+			cols = sum( 1 for d in row if toAscii(d).strip() )
 			if cols > 4:
 				self.headers = [toAscii(h).strip() for h in row]
 				break
@@ -141,7 +141,7 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		# If we haven't found a header row yet, assume the first non-empty row is the header.
 		if not self.headers:
 			for r, row in enumerate(reader.iter_list(sheetName)):
-				cols = sum( 1 for d in row if toAscii(d) )
+				cols = sum( 1 for d in row if toAscii(d).strip() )
 				if cols > 0:
 					self.headers = [toAscii(h).strip() for h in row]
 					break
@@ -528,7 +528,7 @@ class ExcelLink( object ):
 				if col < 0:					# Skip unmapped columns.
 					continue
 				try:
-					data[field] = toAscii(row[col])
+					data[field] = toAscii(row[col]).strip()
 					if field == 'LastName' or field.startswith('Tag'):
 						data[field] = str(data[field]).upper()
 				except IndexError:
@@ -573,18 +573,16 @@ class ExcelLink( object ):
 					continue
 					
 				tag = data[tField].lstrip('0')
-				
-				if not tag and tField == 'Tag':					# Don't check for missing Tag2s as they are optional.
-					errors.append( (num, 'Empty {field} in row {row} for Bib# {num}'.format(field=tField, row=row, num=num)) )
-					continue
-				
-				if tag in tRow:
-					errors.append( (num,
-									'Duplicate {field} {tag} for Bib# {num} in row {row} (same as {field} for Bib# {dupNum} in row {dupRow})'.format(
-										field=tField, tag=tag, num=num, row=row, dupNum = rowBib[tRow[tag]], dupRow=tRow[tag] ) ) )
-					continue
-					
-				tRow[tag] = row
+				if tag:
+					if tag in tRow:
+						errors.append( (num,
+										'Duplicate {field} {tag} for Bib# {num} in row {row} (same as {field} for Bib# {dupNum} in row {dupRow})'.format(
+											field=tField, tag=tag, num=num, row=row, dupNum = rowBib[tRow[tag]], dupRow=tRow[tag] ) ) )
+					else:
+						tRow[tag] = row
+				else:
+					if tField == 'Tag':					# Don't check for empty Tag2s as they are optional.
+						errors.append( (num, 'Empty {field} in row {row} for Bib# {num}'.format(field=tField, row=row, num=num)) )
 		
 		stateCache = (os.path.getmtime(self.fileName), self.fileName, self.sheetName, self.fieldCol)
 		infoCache = info

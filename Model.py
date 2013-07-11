@@ -342,12 +342,12 @@ class Category(object):
 
 	def normalize( self ):
 		# Combine any consecutive or overlapping intervals.
-		if len(self.intervals) > 1:
+		if self.intervals:
 			newIntervals = [self.intervals[0]]
-			for interval in self.intervals:
-				if interval[0] <= newIntervals[-1][1]:
+			for interval in self.intervals[1:]:
+				if interval[0] <= newIntervals[-1][1] + 1:
 					if interval[1] > newIntervals[-1][1]:
-						newIntervals[-1] = (newintervals[-1][0], interval[1])
+						newIntervals[-1] = (newIntervals[-1][0], interval[1])
 				else:
 					newIntervals.append( interval )
 			self.intervals = newIntervals

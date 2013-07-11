@@ -12,6 +12,11 @@ from Utils				import logCall
 import Model
 import cStringIO as StringIO
 
+import inspect
+def lineno():
+    """Returns the current line number in our program."""
+    return inspect.currentframe().f_back.f_lineno
+
 def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30, serverPath = '.', fname = '', file = None ):
 	ftp = ftplib.FTP( host, timeout = timeout )
 	ftp.login( user, passwd )
@@ -38,8 +43,8 @@ def FtpWriteRacePhoto( fname ):
 
 	try:
 		file = open( fname, 'rb' )
-	except Exception, e:
-		msg = 'FtpWriteRacePhoto: %s' % str(e)
+	except Exception as e:
+		msg = 'FtpWriteRacePhoto (%s): %s' % (lineno(), str(e))
 		Utils.writeLog( msg )
 		return False, msg
 		
@@ -51,7 +56,7 @@ def FtpWriteRacePhoto( fname ):
 						fname		= os.path.basename(fname),
 						file		= file )
 	except Exception, e:
-		msg = 'FtpWriteRacePhoto: %s' % str(e)
+		msg = 'FtpWriteRacePhoto (%d): %s' % (lineno(), str(e))
 		Utils.writeLog( msg )
 		return False, msg
 	
@@ -97,7 +102,7 @@ class RealTimeFtpPublish( object ):
 							fname		= fname,
 							file		= file )
 			self.lastUpdateTime = datetime.datetime.now()
-		except Exception, e:
+		except Exception as e:
 			Utils.writeLog( 'RealTimeFtpPublish: %s' % str(e) )
 			
 		self.timer = None

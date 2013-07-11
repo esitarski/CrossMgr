@@ -184,7 +184,7 @@ class Categories( wx.Panel ):
 		
 	def onAddExceptions( self, event ):
 		with Model.LockRace() as race:
-			if not race:
+			if not race or not race.getAllCategories():
 				return
 				
 		r = self.grid.GetGridCursorRow()
@@ -197,7 +197,11 @@ class Categories( wx.Panel ):
 			category = categories[r]
 			
 		dlg = wx.TextEntryDialog( self,
-									'%s: Add Bib Num Exceptions (comma separated).\nThis will adjust the other categories as necessary.' % category.name,
+									'\n'.join([
+										'%s: Add Bib Exceptions (comma separated).',
+										'',
+										'This will add the given list of Bibs to this category,',
+										'and remove them from other categories.']) % category.name,
 									'Add Bib Exceptions' )
 		good = (dlg.ShowModal() == wx.ID_OK)
 		if good:
@@ -209,8 +213,8 @@ class Categories( wx.Panel ):
 		undo.pushState()
 		response = re.sub( '[^0-9,]', '', response.replace(' ', ',') )
 		with Model.LockRace() as race:
-			for f in response.split(','):
-				race.addCategoryException( category, r )
+			for numException in response.split(','):
+				race.addCategoryException( category, numException )
 
 		self.refresh()
 		
