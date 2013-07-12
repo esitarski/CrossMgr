@@ -203,3 +203,13 @@ To see the virtual tour:
 1. After Google Earth comes up, double-click on name of your Race - look for it in the left column.
 1. Then, double-click on "<Race Name>: Virtual Tour" (the first entry).
 1. Watch the virtual tour of your race in real-time.
+
+## Export Course Preview in HTML
+
+This creates a course preview web page which includes a Google Map with the course drawn on it as well as an Aligraph (altitude map).
+In addition, the page has two buttons:
+
+Button|Action
+:-----|:-----
+Get Directions|Opens a Google Maps page with the Destination filled in to the Course.
+Google Earth Ride|Opens a page showing a 3d course animation - requires the Google Earth plugin.  The animation looks like a helmet camera.
