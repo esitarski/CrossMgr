@@ -133,15 +133,15 @@ class Category(object):
 		for f in s.split(','):
 			if not f:
 				continue
-				
+			
 			try:
 				if f.startswith('-'):				# Check for exclusion.
-					bounds = [int(b) for b in f[1:].split('-') if b]
+					f = f[1:]
 					isExclusion = True
 				else:
-					bounds = [int(b) for b in f.split('-') if b]
 					isExclusion = False
 					
+				bounds = [int(b) for b in f.split('-') if b]
 				if not bounds:
 					continue
 
