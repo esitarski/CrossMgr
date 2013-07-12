@@ -404,8 +404,12 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_MENU, self.menuImportGpx, id=idCur )
 		
 		idCur = wx.NewId()
-		self.dataMgmtMenu.Append( idCur , "&Export Course as KMZ Virtual Tour...", "Export Course as KMZ Virtual Tour (Requires Google Earth)" )
+		self.dataMgmtMenu.Append( idCur , "&Export Course as KMZ Virtual Tour...", "Export Course as KMZ Virtual Tour (Requires Google Earth to View)" )
 		self.Bind(wx.EVT_MENU, self.menuExportCourseAsKml, id=idCur )
+		
+		idCur = wx.NewId()
+		self.dataMgmtMenu.Append( idCur , "Export Course &Preview in HTML...", "Export Course Preview in HTML" )
+		self.Bind(wx.EVT_MENU, self.menuExportCoursePreviewAsHtml, id=idCur )
 		
 		self.menuBar.Append( self.dataMgmtMenu, "&DataMgmt" )
 
@@ -1033,6 +1037,9 @@ class MainWin( wx.Frame ):
 				with open(templateFile) as fp:
 					template = fp.read()
 				# Sanitize the template into a safe json string.
+				template = self.reLeadingWhitespace.sub( '', template )
+				template = self.reComments.sub( '', template )
+				template = self.reBlankLines.sub( '\n', template )
 				template = template.replace( '<', '{{' ).replace( '>', '}}' )
 				payload['virtualRideTemplate'] = template
 			except:
@@ -1072,7 +1079,11 @@ class MainWin( wx.Frame ):
 			title = '%s Course for %s' % ( race.name, raceTime.strftime(localDateFormat) )
 			html = html.replace( 'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
 			
+			payload['raceName']			= cgi.escape(race.name)
 			payload['organizer']		= getattr(race, 'organizer', '')
+			payload['rfid']				= getattr(race, 'enableJChipIntegration', False)
+			payload['displayUnits']		= race.distanceUnitStr
+
 			notes = getattr(race, 'notes', '')
 			if notes.lstrip()[:6].lower().startswith( '<html>' ):
 				notes = self.reRemoveTags.sub( '', notes )
@@ -1080,25 +1091,39 @@ class MainWin( wx.Frame ):
 				payload['raceNotes']	= notes
 			else:
 				payload['raceNotes']	= cgi.escape(notes).replace('\n','{{br/}}')
-			courseCoordinates, gpsPoints, gpsAltigraph, totalElevationGain = None, None, None, None
+			courseCoordinates, gpsAltigraph, totalElevationGain, lengthKm = None, None, None, None
 			geoTrack = getattr(race, 'geoTrack', None)
 			if geoTrack is not None:
 				courseCoordinates = geoTrack.asCoordinates()
-				gpsPoints = geoTrack.asExportJson()
 				gpsAltigraph = geoTrack.getAltigraph()
 				totalElevationGain = geoTrack.totalElevationGainM
+				lengthKm = geoTrack.lengthKm
 		
 		tNow = datetime.datetime.now()
 		payload['email']				= self.getEmail()
 		payload['version']				= Version.AppVerName
-		if gpsPoints:
-			payload['gpsPoints']		= gpsPoints
 		if courseCoordinates:
 			payload['courseCoordinates'] = courseCoordinates
+			# Fix the google maps template.
+			templateFile = os.path.join(Utils.getHtmlFolder(), 'VirtualTourTemplate.html')
+			try:
+				with open(templateFile) as fp:
+					template = fp.read()
+				# Sanitize the template into a safe json string.
+				template = self.reLeadingWhitespace.sub( '', template )
+				template = self.reComments.sub( '', template )
+				template = self.reBlankLines.sub( '\n', template )
+				template = template.replace( '<', '{{' ).replace( '>', '}}' )
+				payload['virtualRideTemplate'] = template
+			except:
+				pass
+
 		if totalElevationGain:
 			payload['gpsTotalElevationGain'] = totalElevationGain
 		if gpsAltigraph:
 			payload['gpsAltigraph'] = gpsAltigraph
+		if lengthKm:
+			payload['lengthKm'] = lengthKm
 
 		html = replaceJsonVar( html, 'payload', payload )
 		graphicBase64 = self.getGraphicBase64()
@@ -1283,7 +1308,54 @@ class MainWin( wx.Frame ):
 			
 		webbrowser.open( fname, new = 0, autoraise = True )
 		Utils.MessageOK(self, 'Course Virtual Tour written to KMZ file:\n\n   %s\n\nGoogle Earth Launched.' % fname, 'KMZ Write')
-		
+	
+	@logCall
+	def menuExportCoursePreviewAsHtml( self, event ):
+		with Model.LockRace() as race:
+			if not race:
+				return
+				
+			if not getattr(race, 'geoTrack', None):
+				Utils.MessageOK( self, 'No GPX Course Loaded.\nNothing to export.', 'No GPX Course Loaded' )
+				return
+				
+			geoTrack = race.geoTrack
+			
+			# Get the folder to write the html file.
+			fname = self.fileName[:-4] + 'CoursePreview.html'
+			dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(fname),
+								style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
+			ret = dlg.ShowModal()
+			dName = dlg.GetPath()
+			dlg.Destroy()
+			if ret != wx.ID_OK:
+				return
+			
+			fname = os.path.join( dName, os.path.basename(fname) )
+			
+			# Read the html template.
+			htmlFile = os.path.join(Utils.getHtmlFolder(), 'CourseViewer.html')
+			try:
+				with open(htmlFile) as fp:
+					html = fp.read()
+			except:
+				Utils.MessageOK('Cannot read HTML template file.  Check program installation.',
+								'Html Template Read Error', iconMask=wx.ICON_ERROR )
+				return
+				
+			
+		# Write out the results.
+		html = self.addCourseToHtmlStr( html )
+		fname = os.path.join( dName, os.path.basename(fname) )
+		try:
+			with open(fname, 'w') as fp:
+				fp.write( html )
+			webbrowser.open( fname, new = 0, autoraise = True )
+			Utils.MessageOK(self, 'Course Preview written to:\n\n   %s' % fname, 'Html Write')
+		except:
+			Utils.MessageOK(self, 'Cannot write HTML file (%s).' % fname,
+							'Html Write Error', iconMask=wx.ICON_ERROR )
+	
 	@logCall
 	def menuExportHtmlRawData( self, event ):
 		self.commit()

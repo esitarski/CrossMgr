@@ -34,7 +34,7 @@ Property|Description
 Active|If selected, this Category will be considered in the race.  If deselected, this Category will be ignored.  Some CrossMgr users configure an external Category file with all possible categories in it.  The then select only the categories that are in this race.
 Name|Name of the Category
 Gender|Gender of the Category.  Choices are "Men", "Women" or "Open".
-Numbers|The numbers of riders in this Category.  Numbers can be expressed in a range, like 100-199.  Exclusions exceptions are expressed by preceding the excluded number with a '-' sign.  Inclusion exceptions are added on their own.  See [Number Patterns](#number-patterns) for more details below.
+Numbers|The numbers of riders in this Category.  Numbers can be expressed individually like 103,105 or a range, like 100-199.  Exclusions exceptions are expressed by preceding the excluded number with a '-' sign.  Exceptions can be express individually, like -201,-205 or in a range -201-205.  See [Number Patterns](#number-patterns) for more details below.
 Start Offset|When starting multiple categories at the same time, here is where you enter the offset of later starts from the first start.
 Race Laps|When running a race by time, leave this blank - CrossMgr will use the Suggested Laps (see below).  If you know the number of laps, or you don't like CrossMgr's suggestion, enter the laps here.
 Lapped Riders Continue|If selected, riders who are lapped by their category leader will have all their laps shown in the Results, not just the laps completed before they were lapped.
@@ -46,9 +46,15 @@ Suggested Laps|Computed by CrossMgr.  Important if running a race by time rather
 
 ## Number Patterns
 Number patterns are expressive and flexible.
-For example, consider "100-199, -151, -155, 205, 220-229".  This matches the numbers from 100 to 199, without 151 and 155, and including 205, and 200 to 229.  The idea is that Categories should mostly correspond to number ranges, so there aren't many exceptions.
 
-If you have a lot of exceptions, it is quicker and easier set the exception from the [RiderDetail][] screen rather than from Categories.   Assigning the category from RiderCategory automatically takes care of changing the number patterns.
+For example, consider "100-199, -151, -155, 205, 220-229, -170-179".
+
+This complex example matches the numbers from 100 to 199, excluding 151 and 155, including 205, 200 to 229 and excluding the range 170-179. 
+
+Minimize number insanity!  Assign a number range to each Category ahead of time.  Hand out numbers to riders consistent with the Category range - not just "off-the-top".
+Category number make it easy for riders, officials and you to instantly know a rider's Category just by his/her number range.  The greatly improves race management as it is now easy to ensure riders are in the right race, and the right start, and for riders to know all their competitors in a mixed-category race.
+
+If you have a lot of exceptions, it can be easier set the exception from the [RiderDetail][] screen rather than from Categories.   Assigning the category from [RiderDetail][] automatically takes care of the number patterns.
 
 To find the category of a rider, CrossMgr starts with the first category and checks for a match in the number pattern.  If that fails, it continues to the second category, etc.  The first Category that matches the rider's number is considered the rider's Category.
   

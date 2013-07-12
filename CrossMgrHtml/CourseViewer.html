@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html>
+<!--
+	Html Template for Course Viewer.
+	Generated from CrossMgr software.
+	Copyright 2011-2013, Edward Sitarski
+	For details, see sites.google.com/site/CrossMgrSoftware
+-->
+<head>
+<meta charset="UTF-8" author="Edward Sitarski" copyright="Edward Sitarski, 2011-2013" generator="CrossMgr" />  
+<title id="idTitle">CrossMgr Race Results by Edward Sitarski</title>	<!-- Don't change this text! -->
+<style type="text/css">
+body { font-family: sans-serif; }
+
+#idRaceName {
+	font-size: 200%;
+	font-weight: bold;
+}
+
+#idImgHeader {
+	box-shadow: 4px 4px 4px #888888;
+}
+
+.smallfont	{ font-size: 75%; }
+.bigfont	{ font-size: 120%; }
+.biggerFont	{ font-size: 130%; }
+
+.hidden { display: none; }
+
+@media print
+{
+	.noprint { display: none; }
+}
+
+</style>
+</head>
+
+<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+<script>
+
+// Results and race data.
+var payload = null;
+var raceName = null;
+var raceNotes = null;
+var organizer = null;
+var version = null;
+
+// Control information about the course display.
+var map = null;
+var rfid = null;
+var raceName = null;
+var displayUnits = null;
+var courseObj = null;
+var gpsTotalElevationGain = null;	// total elevation gain on the course.
+var gpsAltigraph = null;		// Altigraph of the course.
+var courseCoordinates = null;	// course coordinates as an array of lon, lat pairs.
+var lengthKm = null;
+var virtualRideTemplate = null;	// template to generate virtual ride page
+var checkeredFlag = new Image();
+checkeredFlag.src =
+"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAgCAYAAAD5VeO1AAAEsklEQVRIibWVX0jTaxjHH//029lcVqvM0taNGUHNinGOnkGohJWtQ4KaFEVySlSSUixzTFwZxYnROv2ByisLgwqCIRRhF4EcKsjgeBrDgUqYDhvLJtoyt33OTZPCKLX83L0Xz+f78uV5eUVmiM/na/b7/TUznfsuL1++PM4nbt682V5VVbXkp4jLy8uP6/V6Hj58yPPnz1mwYAEGg2Hs6NGjuT8kttvtxuXLl4dFhNWrV3PhwgXi4uIQEaxW65jP58uflbijo2Phhw8f/m1tbSUpKYlnz54BcP/+fUpLSwmFQkQikbDX6z1ps9lipy222Wyxbre7LdpzU1MTPT09AHg8HrZs2YLb7QagsbGRnJyc/rq6Ov205Lt3725ftWoVT5484erVq4gIS5cuxel0YjQaERF0Oh3Xr1+frGnjxo3B3t5ewzfFTU1NtfPmzUNEKCgowGKxEBMTQ3x8PE6nk4aGBmJjYzGZTLx//57z58+jUqm4ceMGoVAo8ObNm+Kvint7ew0TExOBy5cvk5GRgc/nA+DWrVs4HI5oS7S0tEzWAnDt2jX8fj8Aw8PDrVPEJ06cSHv9+nUPwOjoKBUVFQwMDADgdDoxmUy8evWKjx8/snXrVtavX4/L5eLx48eo1WrS09Pp6OhwtbW1ab4QX7x4UTGZTENr166lq6uL/fv3IyLo9Xru3r2LTqdDRFixYgV2ux0RQUTIysqisrISESE1NTVcU1Pz+5RbHzt27EF04NSpU+zduxcRISUlBY/HQ1VVFSLCkSNHCIVCNDY2snjxYrq6uohEIpw9ezZ8+PDhyilir9d7IBQKcfr0afbs2UMkEgHAbrfz6NGjyV6vXLnCyMjI5PnMmTOMjo4SiUTwer1TxQ0NDcXv3r0bA+ju7ubgwYMEAgEA6urqyMvLY2hoiP7+flauXElmZiZ9fX2cO3cOEWHDhg08ffq0ZYq4trbWoNfrJ4xGIy9evMBgMCAiGAwGmpubiYmJQUTIyMigoqJisueysjJ27tyJiJCZmemvrq7+ZYr8D7O5Mz4+HkVRuHfv3uRATk4Ob9++Zd++fcTFxXHnzh2CwSBlZWVs2rSJkZERJiYmsFqtfovFsm6KWETEYDBo8rdt++fSpUtBgHA4jM1mY3Bw8Iuew+FwdH+pr69nfHycUCg05vF4fv2q+HN27dp1cnBwcGB8fJzs7GwKCwsZHh6mvb0dRVEwm834fD4KCgoQETZv3ozL5TrwXXGU34zG/Jrqam+018LCQnJzcyd7djgcmEwmRISioqKOaYuj6HS6VLPZ3JeSkkJ3dzeBQIDi4mIOHToEQDAYpL6+/j+bzRY/Y7mIyPbt25U/S0tvj42NDQN0dnZisVgIh8MEg0GX2+3WzUr8OTt27Kjt7OwcSEtLQ0QoKSkZd7vdX9+M2bBmzZrsvLw8v6IolJeXW3+aOEpycvISU1bWg/nz56f/dPknYrUajUWjUpnnKkC0anWhWlGOFxUVTf8zngmLtNp1apXKISIL5yZg0aLEBLXasTAh4duf8Y+QoFbXqBWlZM4CEjWafK1GYxWR2b3a7wYkJqapVaq/tVpt0pwELFu2TJOgVv8lIskiIv8DQ4HqhmfkzxMAAAAASUVORK5CYII=";
+
+function isCanvasSupported() {
+	var elem = document.createElement('canvas');
+	return !!(elem.getContext && elem.getContext('2d'));
+}
+
+// Convenience function to get the last element in an array.
+Array.prototype.back = function() {
+	return this[this.length-1];
+};
+
+Array.prototype.binSearch = function( v )
+{
+	var L = this.length, i = -1, m;
+	while( L - i > 1 )
+	{
+		if( this[m = ((L + i)>>1)] < v )
+			i = m;
+		else
+			L = m;
+	}
+	return L;
+}
+
+// Make a string html safe.
+String.prototype.escapeHTML = function ()
+{                                        
+	var r =                                                               
+		this.replace(/&/g,'&amp;').
+			replace(/>/g,'&gt;').
+			replace(/</g,'&lt;').
+			replace(/"/g,'&quot;').
+			replace(/'/g,'&rsquo;');
+	return r;
+};
+
+// Make a string id safe.
+String.prototype.escapeID = function() {
+	return this.replace(/[&<>"'(){}\[\]!@#$%^* ]/g,'_');
+};
+
+function isEmptyObject( obj ) {
+    for ( var name in obj ) {
+        return false;
+    }
+    return true;
+}
+
+var degreesToRadians = Math.PI / 180.0;
+var radiansToDegrees = 180.0 / Math.PI;
+
+function GreatCircleDistance( lat1, lon1, lat2, lon2 )
+{
+	// Calculate the great circle distance between two points 
+	// on the earth (specified in decimal degrees) in meters.
+
+	// convert decimal degrees to radians 
+	lon1 *= degreesToRadians;
+	lat1 *= degreesToRadians;
+	lon2 *= degreesToRadians;
+	lat2 *= degreesToRadians;
+	
+	// haversine formula 
+	var dlon = lon2 - lon1;
+	var dlat = lat2 - lat1;
+	var a = Math.pow(Math.sin(dlat/2),2) + Math.cos(lat1) * Math.cos(lat2) * Math.pow(Math.sin(dlon/2),2);
+	var c = 2.0 * Math.asin(Math.sqrt(Math.max(a, 0.0)));
+	var m = 6371000.0 * c;
+	return m;
+}
+
+function CompassBearing( lat1, lon1, lat2, lon2 )
+{
+	// Calculates the bearing between two points.
+	lat1 *= degreesToRadians;
+	lat2 *= degreesToRadians;
+
+	var diffLong = (lon2 - lon1) * degreesToRadians;
+
+	var x = Math.sin(diffLong) * Math.cos(lat2);
+	var y = Math.cos(lat1) * Math.sin(lat2) - (Math.sin(lat1) * Math.cos(lat2) * Math.cos(diffLong));
+
+	var bearing = Math.atan2(x, y) * radiansToDegrees;
+
+	while( bearing < 0.0 )
+		bearing += 360.0;
+	return bearing;
+}
+
+function OpenVirtualTourWindow()
+{
+	var speed = 40.0;
+	
+	if( !courseCoordinates || !virtualRideTemplate )
+		return;
+	
+	// Get the fastest finisher's speed in km/h.
+	speed *= (1000.0 / (60.0*60.0));	// m/s.
+	
+	var kml = [];
+	function write( lines )
+	{
+		for( var i = 0; i < lines.length; ++i )
+			kml.push( lines[i] );
+	}
+	
+	// Prolog.
+	write( [
+		'{{?xml version="1.0" ?}}',
+		'{{kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2"}}',
+		'{{Document}}',
+		  '{{name}}Google Earth Ride - Powered by CrossMgr{{/name}}',
+	] );
+	
+	// The Virtual Tour
+	write( [
+		  '{{gx:Tour'+'>',
+		   '{{name}}Google Earth Ride - Powered by CrossMgr{{/name}}',
+		   '{{gx:Playlist}}',
+	] );
+	var courseCoordinatesLength = courseCoordinates.length;
+	for( var i = 0; i < courseCoordinatesLength + 2; i += 2 )
+	{
+		var lon = courseCoordinates[i % courseCoordinatesLength];
+		var lat = courseCoordinates[(i+1) % courseCoordinatesLength];
+		var lonNext = courseCoordinates[(i+2) % courseCoordinatesLength];
+		var latNext = courseCoordinates[(i+3) % courseCoordinatesLength];
+		write( [
+		    '{{gx:FlyTo}}',
+              '{{gx:duration}}' + (i == 0 ? 3 : GreatCircleDistance(lat, lon, latNext, lonNext) / speed) + '{{/gx:duration}}',
+              '{{gx:flyToMode}}' + (i == 0 ? 'bounce' : 'smooth') + '{{/gx:flyToMode}}',
+              '{{Camera}}',
+                '{{latitude}}' + lat + '{{/latitude}}',
+                '{{longitude}}' + lon + '{{/longitude}}',
+                '{{altitude}}'+ 2 +'{{/altitude}}',
+                '{{altitudeMode}}relativeToGround{{/altitudeMode}}',
+                '{{heading}}' + CompassBearing(lat, lon, latNext, lonNext) + '{{/heading}}',
+                '{{tilt}}'+ 80 +'{{/tilt}}',
+              '{{/Camera}}',
+            '{{/gx:FlyTo}}',
+		] );
+	}
+	write( [
+		  '{{/gx:Playlist}}',
+		'{{/gx:Tour}}',
+	] );
+	
+	// The Finish.
+	write( [
+	   '{{Placemark}}',
+        '{{name}}Finish{{/name}}',
+        '{{Point}}',
+          '{{coordinates}}' + courseCoordinates[0] + ',' + courseCoordinates[1] + '{{/coordinates}}',
+        '{{/Point}}',
+       '{{/Placemark}}'
+	] );
+
+	// The Course.
+	write( [
+       '{{Placemark}}',
+         '{{name}}Course{{/name}}',
+         '{{LineString}}',
+           '{{tessellate}}1{{/tessellate}}',
+           '{{altitudeMode}}relativeToGround{{/altitudeMode}}',
+		   '{{coordinates}}',
+	] );
+	for( var i = 0; i < courseCoordinates.length; i += 2 )
+		kml.push( courseCoordinates[i] + ',' + courseCoordinates[i+1] + ',' + 1.0 );
+	kml.push( courseCoordinates[0] + ',' + courseCoordinates[1] + ',' + 1.0 );
+	
+	// Eplilog.
+	write( [
+	       '{{/coordinates}}',
+        '{{/LineString}}',
+      '{{/Placemark}}',
+	'{{/Document}}',
+    '{{/kml}}'
+	] );
+	
+	//alert( kml.join(' ') );
+	var template = virtualRideTemplate.replace( "kml = '';", "kml='" + kml.join(' ') + "';" );
+	if( organizer )
+		template = template.replace( "organizer = '';", "organizer='" + organizer.escapeHTML() + "';" );
+	var element = document.getElementById('idTitle');
+	var text = element.innerText || element.textContent;
+	var p = text.search('Results for');
+	if( p >= 0 )
+		text = text.substring( 0, p );
+	template = template.replace( "raceName = '';", "raceName='" + text.escapeHTML() + "';" );
+	
+	var w = window.open( '', '', '', true );
+	w.document.write( template.replace(/{{/g, '<').replace(/}}/g, '>') );
+	w.document.close();
+}
+
+function LineNormal( x1, y1, x2, y2, normLen )
+{
+	// Returns the coords of a normal line passing through x1, y1 of length normLen.
+	var dx = x2 - x1, dy = y2 - y1;
+	var scale = (normLen / 2.0) / Math.sqrt( dx*dx + dy*dy );
+	dx *= scale;
+	dy *= scale;
+	return [x1 + dy, y1 - dx, x1 - dy, y1 + dx];
+}
+
+//----------------------------------------------------------------------------
+
+function colorBetween( r1, g1, b1, r2, g2, b2, x )
+{
+	var r = (r1 + (r2 - r1) * x).toFixed(0);
+	var g = (g1 + (g2 - g1) * x).toFixed(0);
+	var b = (b1 + (b2 - b1) * x).toFixed(0);
+	return 'rgb(' + r + ',' + g + ',' + b + ')';
+}
+
+function Altigraph()
+{
+	this.altigraph = [];
+	this.yMax = -1000000.0;
+	this.yMin = 1000000.0
+	this.xMax = 0.0;
+	
+	this.setData = function( altigraph )
+	{
+		if( !altigraph || altigraph.length == 0 )
+			altigraph = [];
+			
+		this.altigraph = altigraph;
+		this.yMax = -1000000.0;
+		this.yMin = 1000000.0
+		this.xMax = 0.0;
+		for( var i = 0; i < altigraph.length; ++i )
+		{
+			if( altigraph[i][1] > this.yMax )
+				this.yMax = altigraph[i][1];
+			if( altigraph[i][1] < this.yMin )
+				this.yMin = altigraph[i][1];
+		}
+		if( altigraph.length > 0 )
+			this.xMax = altigraph[altigraph.length-1][0];
+			
+		if( this.yMin == this.yMax )
+		{
+			this.altigraph = []
+			gpsAltigraph = null;
+			gpsTotalElevationGain = null;
+		}
+	}
+	
+	this.empty = function() { return this.altigraph.length == 0; }
+	
+	this.draw = function( dc, x, y, width, height )
+	{
+		if( this.altigraph.length == 0 || this.xMax == 0 || !gpsTotalElevationGain )
+			return;
+			
+		dc.save();
+		
+		var fontSize = height/4;
+		dc.font = fontSize + 'px Arial';
+		
+		var minLabel = '0';
+		var maxLabel = ((this.yMax - this.yMin) * (displayUnits == 'km' ? 1.0 : 3.28084)).toFixed(0) + (displayUnits == 'km' ? ' m' : ' ft');
+		var labelWidth = Math.max( dc.measureText(minLabel).width, dc.measureText(maxLabel).width );
+		
+		var altigraph = this.altigraph;
+		var teg = 0.0;
+		for( var i = 1; i < this.altigraph.length; ++i )
+			teg += Math.max(0.0, altigraph[i][1] - altigraph[i-1][1]);
+		var tegLabel = '';
+		var tegWidth = 0;
+		var tegText = ['Total', 'Elevation', 'Gain'];
+		if( gpsTotalElevationGain )
+		{
+			tegLabel = (gpsTotalElevationGain * (displayUnits == 'km' ? 1.0 : 3.28084)).toFixed(0) + (displayUnits == 'km' ? ' m' : ' ft');
+			tegWidth = dc.measureText(tegLabel).width;
+			for( var i = 0; i < tegText.length; ++i )
+				tegWidth = Math.max( tegWidth, dc.measureText(tegText[i]).width );
+		}
+		
+		var border = 4;
+		if( labelWidth + border*2 + tegWidth > width )
+		{
+			dc.restore();
+			return;
+		}
+		
+		var xMult = (width - labelWidth - border*2 - tegWidth) / this.xMax;
+		var yMult = height / (this.yMax - this.yMin);
+		
+		var points = [];
+		for( var i = 0; i < this.altigraph.length; ++i )
+			points.push( [(x + labelWidth + border + altigraph[i][0] * xMult), (y + height - (altigraph[i][1] - this.yMin) * yMult)] );
+		
+		for( var i = 1; i < this.altigraph.length; ++i )
+		{
+			var grade = (altigraph[i][1] - altigraph[i-1][1]) / (altigraph[i][0] - altigraph[i-1][0]);
+			if( grade > 0 )
+				dc.fillStyle = colorBetween( 255,255,255, 255,0,0, Math.min(1.0,  grade / 0.12) );
+			else
+				dc.fillStyle = colorBetween( 255,255,255,   0,0,0, Math.min(1.0, -grade / 0.12) );
+			dc.beginPath();
+			dc.moveTo( points[i-1][0], points[i-1][1] );
+			dc.lineTo( points[i  ][0], points[i  ][1] );
+			dc.lineTo( points[i  ][0], y + height );
+			dc.lineTo( points[i-1][0], y + height );
+			dc.closePath();
+			dc.fill();
+		}
+		
+		dc.strokeStyle = '#000000';
+		dc.lineWidth = 2;
+		dc.beginPath();
+		dc.moveTo( points[0][0], points[0][1] );
+		for( var i = 1; i < this.altigraph.length; ++i )
+			dc.lineTo( points[i][0], points[i][1] );
+		dc.stroke();
+		
+		// Add a baseline.
+		dc.lineWidth = 1;
+		dc.beginPath();
+		dc.moveTo( x + labelWidth + border, y + height );
+		dc.lineTo( x + width - border - tegWidth, y + height );
+		dc.stroke();
+		
+		// Add a left boundary line.
+		dc.lineWidth = 1;
+		dc.beginPath();
+		dc.moveTo( x + labelWidth + border, y );
+		dc.lineTo( x + labelWidth + border, y + height );
+		dc.stroke();
+		
+		// Add a right boundary line.
+		dc.beginPath();
+		dc.moveTo( x + width - tegWidth - border, y );
+		dc.lineTo( x + width - tegWidth - border, y + height );
+		dc.stroke();
+		
+		// Add the min and max elevation.
+		dc.fillStyle = '#000000';
+		dc.textAlign = 'right';
+		dc.textBaseline = 'top';
+		dc.fillText( maxLabel, x + labelWidth, y );
+		dc.textBaseline = 'bottom';
+		dc.fillText( minLabel, x + labelWidth, y + height );
+		
+		// Add the total elevation gain.
+		if( gpsTotalElevationGain )
+		{
+			dc.textBaseline = 'top';
+			dc.textAlign = 'left';
+			var xCur = x + width - tegWidth;
+			var yCur = y + (height - fontSize * 1.05 * 4) / 2;
+			for( var i = 0; i < tegText.length; ++i )
+			{
+				dc.fillText( tegText[i], xCur, yCur );
+				yCur += fontSize * 1.05;
+			}
+			dc.fillText( tegLabel, xCur, yCur );
+		}
+		
+		dc.restore();
+	}
+}
+
+function DrawAltigraph()
+{
+	var canvas = document.getElementById('idAltigraph');
+	var dc = canvas.getContext('2d');
+	var altigraph = new Altigraph();
+	altigraph.setData( gpsAltigraph );
+	altigraph.draw( dc, 0, 0, canvas.width, canvas.height );
+}
+
+function DrawMap()
+{
+	var mapOptions = {
+		mapTypeId: google.maps.MapTypeId.HYBRID
+	};
+	var mapCanvas = new google.maps.Map(document.getElementById('idMap'), mapOptions);
+	var latLngBounds = new google.maps.LatLngBounds();
+	var points = [];
+	for( var i = 0; i < courseCoordinates.length; i += 2 )
+	{
+		var latLng = new google.maps.LatLng(courseCoordinates[i+1], courseCoordinates[i]);
+		latLngBounds.extend( latLng );
+		points.push( latLng );
+	}
+	points.push( points[0] );
+	
+	var course = new google.maps.Polyline( {
+		path: points,
+		strokeColor: "#FFFF00",
+		strokeOpacity: 1.0,
+		strokeWeight: 4
+	});
+	course.setMap( mapCanvas );
+	
+	var finish = new google.maps.Marker({
+		position: points[0],
+		title: 'Finish Line'
+	});
+	finish.setMap( mapCanvas );
+	
+	mapCanvas.fitBounds( latLngBounds );
+}
+
+function OpenDrivingInstructions()
+{
+	var url = 'http://maps.google.com?daddr=' + courseCoordinates[1].toFixed(4) + ' ' + courseCoordinates[0].toFixed(4) + ' (' + raceName + ')';
+	window.open( url, null, null, true );
+}
+
+//----------------------------------------------------------------------------
+
+function getUrlParam( param, url )
+{
+	param = param.replace(/([\[\](){}*?+^$.\\|])/g, "\\$1");
+	var regex = new RegExp("[?&]" + param + "=([^&#]*)");
+	url   = url || decodeURIComponent(window.location.href);
+	var match = regex.exec(url);
+	return match ? match[1] : "";
+}
+
+function FormatDistance( distance, inUnit, showUnits )
+{
+	if( (inUnit ? inUnit : 'km') != displayUnits )
+		distance *= (displayUnits == 'km' ? 1.609344 : 0.621371192237334);
+	var s = distance.toFixed(2);
+	if( showUnits )
+		s += ' ' + displayUnits;
+	return s;
+}
+
+var replaceHtmlEntites = (function() {
+	var translate_re = /&(nbsp|amp|quot|lt|gt);/g;
+	var translate = {
+		"nbsp": " ", 
+		"amp" : "and", 
+		"quot": "\"",
+		"lt"  : "<", 
+		"gt"  : ">"
+	};
+	return function( s ) {
+		return ( s.replace(translate_re, function(match, entity) { 
+			return translate[entity]; 
+		}) );
+	}
+})();
+
+function onLoad()
+{
+	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
+
+	if( !rfid )
+		document.getElementById('idRFID').className = 'hidden';
+	else
+		document.getElementById('idRFID').innerHTML = 'Chip Timing.'
+	
+	if( !raceNotes )
+		document.getElementById('idRaceNotes').className = 'hidden';
+	else
+		document.getElementById('idRaceNotes').innerHTML = raceNotes.replace(/{{/g, '<').replace(/}}/g, '>');
+	
+	if( !isCanvasSupported() )
+		document.getElementById('idInfoDiv').className = 'hidden';
+	
+	document.getElementById('idRaceName').innerHTML = document.getElementById('idTitle').innerHTML;
+	if( email )
+		document.getElementById('idEmail').href =
+							'mailto:' + email +
+							'?subject=' + replaceHtmlEntites(document.getElementById('idTitle').innerHTML);
+	
+	var s = '';
+	if( organizer )
+		s = 'by ' + organizer;
+	if( s )
+		document.getElementById('idOrganizer').innerHTML = s;
+		
+	document.getElementById('idCourseLength').innerHTML = displayUnits == 'km'
+		? lengthKm.toFixed(2) + ' km'
+		: (lengthKm * 0.621371192).toFixed(2) + ' miles';
+	
+	DrawMap();
+	DrawAltigraph();
+}
+google.maps.event.addDomListener(window, 'load', onLoad);
+</script>
+
+<body>
+<p>
+<table cellspacing="8"><tr>
+<td><img id="idImgHeader" alt="CrossMgr Logo" src="data:image/png;base64,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"/></td>
+<td valign="top"><span id="idRaceName">Cyclo-Cross Course</span><br/><span id="idOrganizer">by CrossMgr</span>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<span class="noprint">
+<a id="idEmail" href="mailto:helpful.organizer@great_race_organization.com?subject=CrossMgr Course Viewer">Email Comments/Suggestions</a>.
+<br/>
+Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
+<span id="idRFID"></span>
+</span>
+</tr></table><span id="idRaceNotes"></span>
+</p>
+<button id="idDrivingInstructions" class="noprint" onclick="OpenDrivingInstructions()" style="font-size: 120%;">Get Driving Directions</button>
+<button id="idVirtualTour" class="noprint" onclick="OpenVirtualTourWindow()" style="font-size: 120%;">Google Earth Ride</button><p/>
+Course Length:<span id="idCourseLength"></span>
+<div id="idMap" style="height: 400px; width: 700px;"></div>
+<p></p>
+<div id="idInfo">
+<canvas id="idAltigraph" width="700" height="100">
+<a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a> Course viewer requires support the HTML5 Canvas.<br/>
+Please upgrade to a more recent browser version.<br/>
+For Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
+Current versions of Chrome, FireFox and Opera work fine.
+</canvas>
+</div> <!-- idInfoDiv -->
+</body>
+
+</html>

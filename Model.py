@@ -93,6 +93,27 @@ class LockRace:
 		return False
 	
 #----------------------------------------------------------------------
+def SetToIntervals( s ):
+	if not s:
+		return []
+	seq = sorted( s )
+	intervals = [(seq[0], seq[0])]
+	for num in itertools.islice(seq, 1, len(seq)):
+		if num <= intervals[-1][1]:
+			pass
+		elif num == intervals[-1][1] + 1:
+			intervals[-1] = (intervals[-1][0], num)
+		else:
+			intervals.append( (num, num) )
+	return intervals
+	
+def IntervalsToSet( intervals ):
+	ret = set()
+	for i in intervals:
+		ret.update( xrange(i[0], i[1]+1) )
+	return ret
+
+#----------------------------------------------------------------------
 class Category(object):
 
 	DistanceByLap = 0
@@ -102,40 +123,45 @@ class Category(object):
 
 	def _getStr( self ):
 		s = [str(i[0]) if i[0] == i[1] else '%d-%d' % i for i in self.intervals]
-		s.extend( str(-e) for e in sorted(list(self.exclude)) )
+		s.extend( ['-{}'.format(i[0]) if i[0] == i[1] else '-{}-{}'.format(*i) for i in SetToIntervals(self.exclude)] )
 		return ','.join( s )
-
+		
 	def _setStr( self, s ):
 		s = self.badRangeCharsRE.sub( '', str(s) )
 		self.intervals = []
 		self.exclude = set()
-		fields = s.split(',')
-		for f in fields:
+		for f in s.split(','):
 			if not f:
 				continue
+				
 			try:
-				bounds = f.split( '-' )
+				if f.startswith('-'):				# Check for exclusion.
+					bounds = [int(b) for b in f[1:].split('-') if b]
+					isExclusion = True
+				else:
+					bounds = [int(b) for b in f.split('-') if b]
+					isExclusion = False
+					
 				if not bounds:
 					continue
 
-				# Negative numbers are exceptions to remove from the ranges.
-				if not bounds[0]:
-					if len(bounds) > 1:
-						self.exclude.add( int(bounds[1]) )
-					continue
-
-				bounds = [int(b) for b in bounds if b is not None and b != '']
-				if not bounds:
-					continue
-
-				if len(bounds) > 2:			# Ignore numbers that are not in proper x-y format.
+				if len(bounds) > 2:					# Fix numbers not in proper x-y range format.
 					del bounds[2:]
 				elif len(bounds) == 1:
 					bounds.append( bounds[0] )
-				if bounds[0] > bounds[1]:
+					
+				bounds[0] = min(bounds[0], 99999)	# Keep the numbers in a reasonable range to avoid crashing.
+				bounds[1] = min(bounds[1], 99999)
+				
+				if bounds[0] > bounds[1]:			# Swap the range if out of order.
 					bounds[0], bounds[1] = bounds[1], bounds[0]
-				self.intervals.append( tuple(bounds) )
-			except:
+					
+				if isExclusion:
+					self.exclude.update( xrange(bounds[0], bounds[1]+1) )
+				else:
+					self.intervals.append( tuple(bounds) )
+					
+			except Exception as e:
 				# Ignore any parsing errors.
 				pass
 				
@@ -1852,6 +1878,10 @@ class Race(object):
 		self.setChanged()
 
 if __name__ == '__main__':
+	c = Category(True, 'test', '100-150-199,205,-50-60,-80-90,-110,-111,-112,-113', '00:00')
+	print( c )
+	sys.exit()
+	
 	r = newRace()
 	
 	print( r.getMaxLap() )
@@ -1882,7 +1912,7 @@ if __name__ == '__main__':
 	print [e.t for e in entries]
 	'''
 
-	c = Category(True, 'test', '100-150-199,205,-50', '00:00')
+	c = Category(True, 'test', '100-150-199,205,-50-60', '00:00')
 	print( c )
 	print( 'mask=', c.getMask() )
 	c = Category(True, 'test', '100-199,-150')
