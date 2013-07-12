@@ -1844,8 +1844,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 			race.minutes = self.raceMinutes
 			race.raceNum = 1
 			#race.isTimeTrial = True
-			#race.enableUSBCamera = True
-			#race.enableJChipIntegration = True
+			race.enableUSBCamera = True
+			race.enableJChipIntegration = True
 			race.setCategories( [	{'name':'Junior', 'catStr':'100-199', 'startOffset':'00:00', 'distance':0.5, 'gender':'Men'},
 									{'name':'Senior', 'catStr':'200-299', 'startOffset':'00:15', 'distance':0.5, 'gender':'Women'}] )
 
@@ -2080,9 +2080,9 @@ Continue?''' % fName, 'Simulate a Race' ):
 		info = wx.AboutDialogInfo()
 		info.Name = Version.AppVerName
 		info.Version = ''
-		info.Copyright = "(C) 2009-2012"
+		info.Copyright = "(C) 2009-{}".format( datetime.datetime.now().year )
 		info.Description = wordwrap(
-			"Create Cyclo-cross race results quickly and easily with little preparation.\n\n"
+			"Create Cycling race results quickly and easily with little preparation.\n\n"
 			"A brief list of features:\n"
 			"   * Input riders on the first lap\n"
 			"   * Predicts riders for all other laps based on lap times\n"

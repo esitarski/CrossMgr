@@ -34,7 +34,7 @@ def BuildHelpIndex():
 	def addDocument( fname, section, lastTitle, textCur ):
 		if lastTitle and textCur:
 			section = '|'.join( section ) if section else lastTitle.get_text()
-			print 'Indexing: %s: %s' % (os.path.basename(fname), section)
+			# print 'Indexing: %s: %s' % (os.path.basename(fname), section)
 			content = newLines.sub( '\n', '\n'.join(textCur) )
 			writer.add_document(	path = os.path.basename(fname) + '#' + lastTitle['id'],
 									title = lastTitle.get_text(),

@@ -1,8 +1,24 @@
 from distutils.core import setup
 import py2exe
 import os
+import sys
 import shutil
 import zipfile
+
+# Update the minor version number.
+#AppVerName="CrossMgr 1.87"
+with open('Version.py', 'r') as f:
+	v = f.read().strip()
+	i = v.rfind( ' ' )
+	s = v[i+1:-1]
+	vNums = s.split('.')
+	if len(vNums) == 2:
+		vNums.append( '0' )
+	else:
+		vNums[-1] = str(int(vNums[-1]) + 1)
+	s = 'AppVerName="CrossMgr %s"\n' % ('.'.join(vNums))
+with open('Version.py', 'w') as f:
+	f.write( s )
 
 # Compile the help files
 from helptxt.compile import CompileHelp
@@ -24,7 +40,6 @@ for f in ['helvB08.pil', 'helvetica-10.pil', 'helvB08.png', 'helvetica-10.png']:
 for f in os.listdir(distDir):
 	if f.endswith('.dll') or f.endswith('.pyd') or f.endswith('.exe'):
 		fname = os.path.join(distDir, f)
-		print 'deleting:', fname
 		os.remove( fname )
 
 # Set up the py2exe configuration.
