@@ -317,12 +317,13 @@ function Altigraph()
 			
 		dc.save();
 		
+		var verticalDisplayUnits = (displayUnits == 'km' ? ' m' : ' ft');
 		var fontSize = height/4;
 		var fontSizeLegend = height / 10;
 		dc.font = fontSize + 'px Arial';
 		
 		var minLabel = '0';
-		var maxLabel = ((this.yMax - this.yMin) * (displayUnits == 'km' ? 1.0 : 3.28084)).toFixed(0) + (displayUnits == 'km' ? ' m' : ' ft');
+		var maxLabel = ((this.yMax - this.yMin) * (displayUnits == 'km' ? 1.0 : 3.28084)).toFixed(0) + ' ' + verticalDisplayUnits;
 		var labelWidth = Math.max( dc.measureText(minLabel).width, dc.measureText(maxLabel).width );
 		
 		var altigraph = this.altigraph;
@@ -369,14 +370,35 @@ function Altigraph()
 				precision = 1;
 		for( var i = 1; i * d < courseLength; ++i )
 		{
-			var x = i * d;
-			var text = x.toFixed( precision );
+			var xCur = i * d;
+			var text = xCur.toFixed(precision);
 			var textWidth = dc.measureText(text).width;
-			var xPos = (x / courseLength) * (xRight - xLeft) + xLeft - textWidth / 2;
-			dc.fillText( text, xPos, height );
+			var xPos = (xCur / courseLength) * (xRight - xLeft) + xLeft - textWidth / 2;
+			if( xPos + textWidth / 2 < xRight )
+				dc.fillText( text, xPos, height );
 		}
 		dc.fillText( displayUnits, xLeft - dc.measureText(displayUnits).width, height );
 		height -= fontSizeLegend;
+		
+		// Draw the vertical labels.
+		// Find some reasonable tickmarks for the y axis.
+		var numLabels = Math.floor(height / (fontSizeLegend * 1.5));
+		var yDelta = (this.yMax - this.yMin) * (displayUnits == 'km' ? 1.0 : 3.28084);
+		var d = yDelta / numLabels;
+		var intervals = [1, 2, 5, 10, 15, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000];
+		var k = intervals.binSearch( d );
+		if( k >= intervals.length )
+			k = intervals.length - 1;
+		d = intervals[k];
+		for( var i = 0; i * d < yDelta; ++i )
+		{
+			var yCur = i * d;
+			var text = yCur.toFixed(0) + ' ';
+			var textWidth = dc.measureText(text).width;
+			var yPos = (1.0 - yCur / yDelta) * height - fontSizeLegend / 2;
+			dc.fillText( text, xLeft - textWidth, yPos );
+		}
+		//dc.fillText( displayUnits, xLeft - dc.measureText(displayUnits).width, height );
 		
 		dc.font = fontSize + 'px Arial';
 		var xMult = (width - labelWidth - border*2 - tegWidth) / this.xMax;
@@ -446,12 +468,12 @@ function Altigraph()
 			dc.textAlign = 'left';
 			var xCur = x + width - tegWidth;
 			var yCur = y + (height - fontSize * 1.05 * 4) / 2;
+			dc.fillText( tegLabel, xCur, yCur );
 			for( var i = 0; i < tegText.length; ++i )
 			{
-				dc.fillText( tegText[i], xCur, yCur );
 				yCur += fontSize * 1.05;
+				dc.fillText( tegText[i], xCur, yCur );
 			}
-			dc.fillText( tegLabel, xCur, yCur );
 		}
 		
 		dc.restore();
