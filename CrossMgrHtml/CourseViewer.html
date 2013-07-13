@@ -318,6 +318,7 @@ function Altigraph()
 		dc.save();
 		
 		var fontSize = height/4;
+		var fontSizeLegend = height / 10;
 		dc.font = fontSize + 'px Arial';
 		
 		var minLabel = '0';
@@ -346,6 +347,38 @@ function Altigraph()
 			return;
 		}
 		
+		// Draw the horizontal labels.
+		dc.font = fontSizeLegend + 'px Arial';
+		var textWidth = dc.measureText('00.00').width;
+			
+		// Find some reasonable tickmarks for the x axis.
+		var xLeft = labelWidth + border, xRight = width - border - tegWidth;
+		var numLabels = Math.floor((xRight - xLeft) / (textWidth * 1.5));
+		var courseLength = this.xMax/1000.0 * (displayUnits == 'km' ? 1.0 : 0.621371);
+		var d = courseLength / numLabels;
+		var intervals = [0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 15.0, 20.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0];
+		var k = intervals.binSearch( d );
+		if( k >= intervals.length )
+			k = intervals.length - 1;
+		d = intervals[k];
+		var precision = 0;
+		if( d < 1 )
+			if( d == 0.25 )
+				precision = 2;
+			else
+				precision = 1;
+		for( var i = 1; i * d < courseLength; ++i )
+		{
+			var x = i * d;
+			var text = x.toFixed( precision );
+			var textWidth = dc.measureText(text).width;
+			var xPos = (x / courseLength) * (xRight - xLeft) + xLeft - textWidth / 2;
+			dc.fillText( text, xPos, height );
+		}
+		dc.fillText( displayUnits, xLeft - dc.measureText(displayUnits).width, height );
+		height -= fontSizeLegend;
+		
+		dc.font = fontSize + 'px Arial';
 		var xMult = (width - labelWidth - border*2 - tegWidth) / this.xMax;
 		var yMult = height / (this.yMax - this.yMin);
 		
@@ -408,6 +441,7 @@ function Altigraph()
 		// Add the total elevation gain.
 		if( gpsTotalElevationGain )
 		{
+			height += fontSizeLegend;
 			dc.textBaseline = 'top';
 			dc.textAlign = 'left';
 			var xCur = x + width - tegWidth;
