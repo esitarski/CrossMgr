@@ -187,7 +187,51 @@ class GeoTrack( object ):
 			totalElevationGain += max(0.0, pNext.ele - pCur.ele)
 		self.length = length
 		self.totalElevationGain = totalElevationGain
+		
+	def readElevation( self, fname ):
+		header = None
+		distance = []
+		elevation = []
+		with open(fname, 'r') as fp:
+			for line in fp:
+				fields = line.strip().split(',')
+				if not header:
+					header = fields
+					for i, h in enumerate(header):
+						h = h.lower()
+						if h.startswith('distance')
+							iDistance = i
+						elif h.startswith('elevation'):
+							iElevation = i
+				else:
+					distance.append( float(fields[iDistance]) )
+					elevation.append( float(fields[iElevation]) )
+		if len(elevation) < 2:
+			return
 			
+		lenGpsPoints = len(self.gpsPoints)
+		length = 0.0
+		for i in xrange(lenGpsPoints-1):
+			pCur, pNext = self.gpsPoints[i], self.gpsPoints[(i + 1) % lenGpsPoints]
+			length += GreatCircleDistance( pCur.lat, pCur.lon, pNext.lat, pNext.lon )
+			
+		distanceMult = length / elevation[-1][0]
+		
+		# Update the known GPS points with the proportional elevation.
+		length = 0.0
+		iSearch = 0
+		for i in xrange(lenGpsPoints):
+			pCur, pNext = self.gpsPoints[i], self.gpsPoints[(i + 1) % lenGpsPoints]
+			
+			d = min( length * distanceMult, distance[-1] )
+			for iSearch in xrange(iSearch, len(elevation) - 2):
+				if distance[iSearch] <= d < distance[iSearch+1]:
+					break
+			ele = elevation[iSearch] + (elevation[iSearch+1] - elevation[iSearch]) * \
+						(d - distance[iSearch]) / (distance[iSearch+1] - distance[iSearch])
+			self.gpsPoints[i] = pCur.replace( ele = ele )
+			length += GreatCircleDistance( pCur.lat, pCur.lon, pNext.lat, pNext.lon )
+	
 	def getXYTrack( self ):
 		x, yBottom, mult = self.x, self.yBottom, self.mult
 		return [(p.x * mult + x, yBottom - p.y * mult) for p in self.gpsPoints]
