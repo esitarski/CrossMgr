@@ -322,13 +322,16 @@ function Altigraph()
 
 		var verticalDisplayUnits = (displayUnits == 'km' ? ' m' : ' ft');
 		var fontSize = (height*0.95)/4.0;
-		var fontSizeLegend = height / 10;
-		dc.font = fontSize + 'px Arial';
+		var fontSizeLegend = (height*0.95) / 10;
 		
+		dc.font = fontSizeLegend + 'px Arial';
 		var minLabel = '0';
-		var maxLabel = ((this.yMax - this.yMin) * (displayUnits == 'km' ? 1.0 : 3.28084)).toFixed(0) + ' ' + verticalDisplayUnits;
+		var maxLabel = ((this.yMax - this.yMin) * (displayUnits == 'km' ? 1.0 : 3.28084)).toFixed(0) + '  ' + verticalDisplayUnits;
 		var labelWidth = Math.max( dc.measureText(minLabel).width, dc.measureText(maxLabel).width );
+		maxLabel = verticalDisplayUnits;
+		minLabel = '';
 		
+		dc.font = fontSize + 'px Arial';
 		var altigraph = this.altigraph;
 		var teg = 0.0;
 		for( var i = 1; i < this.altigraph.length; ++i )
@@ -380,8 +383,9 @@ function Altigraph()
 			if( xPos + textWidth / 2 < xRight )
 				dc.fillText( text, xPos, height );
 		}
-		dc.fillText( displayUnits, xLeft - dc.measureText(displayUnits).width, height );
-		height -= fontSizeLegend;
+		dc.fillText( displayUnits, xLeft - dc.measureText(displayUnits).width * 0.75, height );
+		var horizontalLabelHeight = fontSizeLegend * 1.2;
+		height -= horizontalLabelHeight;
 		
 		// Draw the vertical labels.
 		// Find some reasonable tickmarks for the y axis.
@@ -393,15 +397,22 @@ function Altigraph()
 		if( k >= intervals.length )
 			k = intervals.length - 1;
 		d = intervals[k];
-		for( var i = 0; i * d < yDelta; ++i )
+		dc.textBaseline = 'middle';
+		dc.strokeStyle = '#c0c0c0';
+		dc.lineWidth = 1;
+		var yPos = height;
+		var yInc = (d / yDelta) * height;
+		for( var i = 1; i * d < yDelta; ++i )
 		{
-			var yCur = i * d;
-			var text = yCur.toFixed(0) + ' ';
+			yPos -= yInc;
+			var text = (d * i).toFixed(0) + ' ';
 			var textWidth = dc.measureText(text).width;
-			var yPos = (1.0 - yCur / yDelta) * height - fontSizeLegend / 2;
 			dc.fillText( text, xLeft - textWidth, yPos );
+			dc.beginPath();
+			dc.moveTo( xLeft, yPos );
+			dc.lineTo( xRight, yPos );
+			dc.stroke();
 		}
-		//dc.fillText( displayUnits, xLeft - dc.measureText(displayUnits).width, height );
 		
 		dc.font = fontSize + 'px Arial';
 		var xMult = (width - labelWidth - border*2 - tegWidth) / this.xMax;
@@ -456,17 +467,17 @@ function Altigraph()
 		dc.stroke();
 		
 		// Add the min and max elevation.
+		dc.font = fontSizeLegend + 'px Arial';
 		dc.fillStyle = '#000000';
-		dc.textAlign = 'right';
-		dc.textBaseline = 'top';
-		dc.fillText( maxLabel, x + labelWidth, y );
-		dc.textBaseline = 'bottom';
-		dc.fillText( minLabel, x + labelWidth, y + height );
+		dc.textAlign = 'left';
+		dc.textBaseline = 'middle';
+		dc.fillText( maxLabel, x, y + height / 2 );
 		
 		// Add the total elevation gain.
 		if( gpsTotalElevationGain )
 		{
-			height += fontSizeLegend;
+			dc.font = fontSize + 'px Arial';
+			height += horizontalLabelHeight;
 			dc.textBaseline = 'top';
 			dc.textAlign = 'left';
 			var xCur = x + width - tegWidth;
