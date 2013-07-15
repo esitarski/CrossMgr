@@ -163,9 +163,11 @@ class Category(object):
 					
 			except Exception as e:
 				# Ignore any parsing errors.
+				print( e )
 				pass
 				
 		self.intervals.sort()
+		self.resetMatchSet()
 
 	catStr = property(_getStr, _setStr)
 
@@ -322,15 +324,18 @@ class Category(object):
 		if not ignoreActiveFlag:
 			if not self.active:
 				return False
-		if num in self.exclude:
-			return False
-		i = bisect.bisect_left( self.intervals, (num, num) )
-		if i > 0:
-			i -= 1
-		for j in xrange(i, min(i+2,len(self.intervals)) ):
-			if self.intervals[j][0] <= num <= self.intervals[j][1]:
-				return True
-		return False
+		try:
+			return num in self.matchSet
+		except AttributeError:
+			self.resetMatchSet()
+			return num in self.matchSet
+		
+	def resetMatchSet( self ):
+		matchSet = set()
+		for i in self.intervals:
+			matchSet.update( xrange(i[0], i[1] + 1) )
+		matchSet.difference_update( self.exclude )
+		self.matchSet = matchSet
 
 	key_attr = ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'catStr',
 				'distance', 'distanceType', 'firstLapDistance',
@@ -348,16 +353,20 @@ class Category(object):
 	def removeNum( self, num ):
 		if not self.matches(num, True):
 			return
-			
+		
 		# Remove any singleton intervals.
 		for j in xrange(len(self.intervals)-1, -1, -1):
 			interval = self.intervals[j]
 			if num == interval[0] == interval[1]:
 				self.intervals.pop( j )
 				
+		self.resetMatchSet()
+
 		# If we still match, add to the exclude set.
 		if self.matches(num, True):
 			self.exclude.add( num )
+		
+		self.resetMatchSet()
 		
 	def addNum( self, num ):
 		self.exclude.discard( num )
@@ -365,6 +374,7 @@ class Category(object):
 			return
 		self.intervals.append( (num, num) )
 		self.intervals.sort()
+		self.resetMatchSet()
 
 	def normalize( self ):
 		# Combine any consecutive or overlapping intervals.
@@ -392,8 +402,8 @@ class Category(object):
 			if not found:
 				needlessExcludes.append( num )
 				
-		for num in needlessExcludes:
-			self.exclude.discard( num )
+		self.exclude.difference_update( needlessExcludes )
+		self.resetMatchSet()
 		
 	def __repr__( self ):
 		return 'Category(active=%s, name="%s", catStr="%s", startOffset="%s", numLaps=%s, sequence=%s, distance=%s, distanceType=%s, gender="%s", lappedRidersMustContinue="%s")' % (
@@ -1576,9 +1586,9 @@ class Race(object):
 		self.categoryCache[num] = c
 		
 		# Proactively classify all riders in this category as we will likely ask for them soon.
-		for r in self.riders.itervalues():
-			if r.num not in self.categoryCache and c.matches(r.num):
-				self.categoryCache[r.num] = c
+		#for r in self.riders.itervalues():
+		#	if r.num not in self.categoryCache and c.matches(r.num):
+		#		self.categoryCache[r.num] = c
 		
 		return c
 	
@@ -1878,8 +1888,10 @@ class Race(object):
 		self.setChanged()
 
 if __name__ == '__main__':
-	c = Category(True, 'test', '100-150-199,205,-50-60,-80-90,-110,-111,-112,-113', '00:00')
+	c = Category(True, 'test', '100-150,132,134,192,537,538,539,-199,205,-50-60,-80-90,-110,-111,-112,-113', '00:00')
 	print( c )
+	print( c.intervals )
+	print( sorted(c.exclude) )
 	sys.exit()
 	
 	r = newRace()
