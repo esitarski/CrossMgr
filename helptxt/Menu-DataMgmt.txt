@@ -151,7 +151,7 @@ When the GPX file is in use, the animation works a little differently.  The numb
 
 The GPX format contains Latitude/Longitude coordinates, as well as elevations and times.  CrossMgr uses all of this information to make a more realistic animation of the race.
 
-GPX files downloaded from [MapMyRide](http://www.mapmyride.com/) do not contain elevation data.  However, the elevation data can be downloaded on the same MapMyRide page to a file called "elevation.csv".  If you wish to use the "elevation.csv" data from [MapMyRide](http://www.mapmyride.com/), save the "elevation.csv" file in the same folder as the GPX file.  CrossMgr will detect it, and pick up the elevation information when it reads the GPX file.
+GPX files downloaded from [MapMyRide](http://www.mapmyride.com/) do not contain elevation data.  However, the elevation data can be downloaded separately on the same MapMyRide page to a file called "elevation.csv".  If you wish to use the "elevation.csv" data from [MapMyRide](http://www.mapmyride.com/), save the "elevation.csv" file in the same folder as the GPX file.  CrossMgr will detect it, and pick up the elevation information when it reads the GPX file.
 
 If you select the "Set Category Distances to GPX Lap Length" in the last screen of the wizard (the default), the Category distances will automatically be filled in with the GPX course length.
 
