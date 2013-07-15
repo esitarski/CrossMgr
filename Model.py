@@ -167,7 +167,6 @@ class Category(object):
 				pass
 				
 		self.intervals.sort()
-		self.resetMatchSet()
 
 	catStr = property(_getStr, _setStr)
 
@@ -324,18 +323,22 @@ class Category(object):
 		if not ignoreActiveFlag:
 			if not self.active:
 				return False
-		try:
-			return num in self.matchSet
-		except AttributeError:
-			self.resetMatchSet()
-			return num in self.matchSet
 		
-	def resetMatchSet( self ):
+		if num in self.exclude:
+			return False
+		
+		i = bisect.bisect_left( self.intervals, (num, num) )
+		for k in xrange(max(0, i-1), min(i+2, len(self.intervals))):
+			if self.intervals[k][0] <= num <= self.intervals[k][1]:
+				return True
+		return False
+		
+	def getMatchSet( self ):
 		matchSet = set()
 		for i in self.intervals:
 			matchSet.update( xrange(i[0], i[1] + 1) )
 		matchSet.difference_update( self.exclude )
-		self.matchSet = matchSet
+		return matchSet
 
 	key_attr = ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'catStr',
 				'distance', 'distanceType', 'firstLapDistance',
@@ -360,13 +363,9 @@ class Category(object):
 			if num == interval[0] == interval[1]:
 				self.intervals.pop( j )
 				
-		self.resetMatchSet()
-
 		# If we still match, add to the exclude set.
 		if self.matches(num, True):
 			self.exclude.add( num )
-		
-		self.resetMatchSet()
 		
 	def addNum( self, num ):
 		self.exclude.discard( num )
@@ -374,7 +373,6 @@ class Category(object):
 			return
 		self.intervals.append( (num, num) )
 		self.intervals.sort()
-		self.resetMatchSet()
 
 	def normalize( self ):
 		# Combine any consecutive or overlapping intervals.
@@ -403,7 +401,6 @@ class Category(object):
 				needlessExcludes.append( num )
 				
 		self.exclude.difference_update( needlessExcludes )
-		self.resetMatchSet()
 		
 	def __repr__( self ):
 		return 'Category(active=%s, name="%s", catStr="%s", startOffset="%s", numLaps=%s, sequence=%s, distance=%s, distanceType=%s, gender="%s", lappedRidersMustContinue="%s")' % (
@@ -1496,6 +1493,10 @@ class Race(object):
 			self.resetCategoryCache()
 			self.setChanged()
 			
+			# Reclassify all the riders if something changed.
+			for num in self.riders.iterkeys():
+				self.getCategory( num )
+
 			if self.categories:
 				self.allCategoriesHaveRaceLapsDefined = True
 				self.categoryLapsMax = 0
@@ -1518,6 +1519,7 @@ class Race(object):
 			self.numLaps = self.categoryLapsMax
 			
 		self.setCategoryMask()
+		
 		return changed
 
 	def exportCategories( self, fp ):
@@ -1541,7 +1543,7 @@ class Race(object):
 	def isRiderInCategory( self, num, category = None ):
 		if category is None:
 			return True
-		return category.matches(num)
+		return category == self.getCategory(num)
 
 	def hasCategory( self, category ):
 		# Check if there is at least one rider in this category.
@@ -1567,30 +1569,20 @@ class Race(object):
 	def getCategory( self, num ):
 		# Check the cache for this rider.
 		try:
-			return getattr( self, 'categoryCache', None )[num]
-		except TypeError:
-			self.categoryCache = {}
-		except KeyError:
+			return self.categoryCache.get(num, None)
+		except (TypeError, AttributeError):
 			pass
-		
-		# If not there, find it and add it to the cache.
 			
-		# Find the category matching this rider.
-		try:
-			c = (c for c in self.categories.itervalues() if c.active and c.matches(num)).next()
-		except StopIteration:
-			self.categoryCache[num] = None	# No matching category.
-			return None
-		
-		# Add this rider to the cache.
-		self.categoryCache[num] = c
-		
-		# Proactively classify all riders in this category as we will likely ask for them soon.
-		#for r in self.riders.itervalues():
-		#	if r.num not in self.categoryCache and c.matches(r.num):
-		#		self.categoryCache[r.num] = c
-		
-		return c
+		# Reset the cache for all categories by sequence number.
+		self.categoryCache = {}
+		categories = [c for c in self.categories.itervalues() if c.active]
+		categories.sort( key = lambda c: c.sequence )
+		for c in categories:
+			for n in c.getMatchSet():
+				if n not in self.categoryCache:
+					self.categoryCache[n] = c
+					
+		return self.categoryCache.get(num, None)
 	
 	def getCategoriesInUse( self ):
 		catSet = set()
@@ -1889,6 +1881,13 @@ class Race(object):
 
 if __name__ == '__main__':
 	c = Category(True, 'test', '100-150,132,134,192,537,538,539,-199,205,-50-60,-80-90,-110,-111,-112,-113', '00:00')
+	print( c.getMatchSet() )
+	print( 105 in c.getMatchSet() )
+	assert( c.matches(105) )
+	assert( c.matches(100) )
+	assert( not c.matches(99) )
+	assert( c.matches(134) )
+	assert( not c.matches(50) )
 	print( c )
 	print( c.intervals )
 	print( sorted(c.exclude) )
