@@ -317,8 +317,11 @@ function Altigraph()
 			
 		dc.save();
 		
+		y += 2;		// Leave room to draw the line.
+		height -= 2;
+
 		var verticalDisplayUnits = (displayUnits == 'km' ? ' m' : ' ft');
-		var fontSize = height/4;
+		var fontSize = (height*0.95)/4.0;
 		var fontSizeLegend = height / 10;
 		dc.font = fontSize + 'px Arial';
 		

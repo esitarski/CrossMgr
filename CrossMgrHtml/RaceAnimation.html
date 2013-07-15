@@ -1125,8 +1125,10 @@ function Altigraph()
 			return;
 			
 		dc.save();
-		
-		var fontSize = height/4;
+		y += 2;		// Leave room to draw the line.
+		height -= 2;
+
+		var fontSize = (height*0.95)/4.0;
 		dc.font = fontSize + 'px Arial';
 		
 		var minLabel = '0';

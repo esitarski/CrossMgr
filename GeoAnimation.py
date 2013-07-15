@@ -167,17 +167,7 @@ class GeoTrack( object ):
 		self.totalElevationGain = 0.0
 		self.cache = {}
 		
-	def read( self, fname, useTimes = False ):
-		self.gpsPoints = ParseGpxFile( fname, useTimes )
-		self.xMax = max( p.x for p in self.gpsPoints )
-		self.yMax = max( p.y for p in self.gpsPoints )
-		dCum = 0.0
-		self.cumDistance = []
-		for p in self.gpsPoints:
-			self.cumDistance.append( dCum )
-			dCum += p.d
-		self.distanceTotal = dCum
-		
+	def computeSummary( self ):
 		lenGpsPoints = len(self.gpsPoints)
 		length = 0.0
 		totalElevationGain = 0.0
@@ -188,21 +178,34 @@ class GeoTrack( object ):
 		self.length = length
 		self.totalElevationGain = totalElevationGain
 		
+	def read( self, fname, useTimes = False ):
+		self.gpsPoints = ParseGpxFile( fname, useTimes )
+		self.xMax = max( p.x for p in self.gpsPoints )
+		self.yMax = max( p.y for p in self.gpsPoints )
+		dCum = 0.0
+		self.cumDistance = []
+		for p in self.gpsPoints:
+			self.cumDistance.append( dCum )
+			dCum += p.d
+		self.distanceTotal = dCum
+		self.computeSummary()
+		
 	def readElevation( self, fname ):
 		header = None
-		distance = []
-		elevation = []
+		distance, elevation = [], []
+		iDistance, iElevation =  None, None
 		with open(fname, 'r') as fp:
 			for line in fp:
-				fields = line.strip().split(',')
+				fields = [f.strip() for f in line.split(',')]
 				if not header:
 					header = fields
 					for i, h in enumerate(header):
 						h = h.lower()
-						if h.startswith('distance')
+						if h.startswith('distance'):
 							iDistance = i
 						elif h.startswith('elevation'):
 							iElevation = i
+					assert iDistance is not None and iElevation is not None, 'Invalid header in file.'
 				else:
 					distance.append( float(fields[iDistance]) )
 					elevation.append( float(fields[iElevation]) )
@@ -215,7 +218,7 @@ class GeoTrack( object ):
 			pCur, pNext = self.gpsPoints[i], self.gpsPoints[(i + 1) % lenGpsPoints]
 			length += GreatCircleDistance( pCur.lat, pCur.lon, pNext.lat, pNext.lon )
 			
-		distanceMult = length / elevation[-1][0]
+		distanceMult = distance[-1] / length
 		
 		# Update the known GPS points with the proportional elevation.
 		length = 0.0
@@ -229,8 +232,10 @@ class GeoTrack( object ):
 					break
 			ele = elevation[iSearch] + (elevation[iSearch+1] - elevation[iSearch]) * \
 						(d - distance[iSearch]) / (distance[iSearch+1] - distance[iSearch])
-			self.gpsPoints[i] = pCur.replace( ele = ele )
+			self.gpsPoints[i] = pCur._replace( ele = ele )
 			length += GreatCircleDistance( pCur.lat, pCur.lon, pNext.lat, pNext.lon )
+			
+		self.computeSummary()
 	
 	def getXYTrack( self ):
 		x, yBottom, mult = self.x, self.yBottom, self.mult

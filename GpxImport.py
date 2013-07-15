@@ -63,20 +63,35 @@ class FileNamePage(wiz.WizardPageSimple):
 		self.fbb = filebrowse.FileBrowseButton( self, -1, size=(450, -1),
 												labelText = 'GPX File:',
 												fileMode=wx.OPEN,
-												fileMask='|'.join(fileMask) )
+												fileMask='|'.join(fileMask),
+												changeCallback = self.setElevationStatus )
+		self.elevationCheckBox = wx.CheckBox( self, -1, 'Read "elevation.csv" File (in same folder as GPX file)' )
 		vbs.Add( self.fbb, flag=wx.ALL, border = border )
+		vbs.Add( self.elevationCheckBox, flag=wx.ALL, border = border )
+		self.setElevationStatus()
 		
 		self.SetSizer( vbs )
+	
+	def setElevationStatus( self, evt = None ):
+		fileNameElevation = os.path.join( os.path.dirname(self.fbb.GetValue()), 'elevation.csv' )
+		exists = os.path.isfile(fileNameElevation)
+		self.elevationCheckBox.Enable( exists )
+		self.elevationCheckBox.SetValue( exists )
 	
 	def setInfo( self, geoTrackFName ):
 		if geoTrackFName:
 			self.fbb.SetValue( geoTrackFName )
+			self.setElevationStatus()
 		else:
 			self.fbb.SetValue( '' )
+			self.elevationCheckBox.SetValue( False )
 		self.GetSizer().Layout()
 	
 	def getFileName( self ):
 		return self.fbb.GetValue()
+		
+	def getUseElevation( self ):
+		return self.elevationCheckBox.GetValue()
 
 class UseTimesPage(wiz.WizardPageSimple):
 	def __init__(self, parent):
@@ -84,7 +99,7 @@ class UseTimesPage(wiz.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		self.noTimes = wx.StaticText(self, wx.ID_ANY, 'This GPX file does not contain times.\n\nRace times will be calculated based on distance and change in elevation.' )
+		self.noTimes = wx.StaticText(self, wx.ID_ANY, 'This GPX file does not contain times.\n\nRace times will be calculated based on distance and elevation.' )
 		vbs.Add( self.noTimes, flag=wx.ALL, border = border )
 		
 		self.useTimes = wx.CheckBox(self, wx.ID_ANY, 'Use times in the GPX file for more realistic animation')
@@ -276,6 +291,20 @@ class GetGeoTrack( object ):
 					iconMask=wx.ICON_ERROR)
 				evt.Veto()
 				return
+			
+			if self.fileNamePage.getUseElevation():
+				fileNameElevation = os.path.join( os.path.dirname(fileName), 'elevation.csv' )
+				try:
+					open(fileNameElevation).close()
+				except IOError:
+					message = 'Cannot Open Elevation File:\n\n    "%s"\n\nPlease check the file name and/or its read permissions.' % fileNameElevation
+					Utils.MessageOK( self.wizard, message, title='File Open Error', iconMask=wx.ICON_ERROR)
+				else:
+					#try:
+					geoTrack.readElevation( fileNameElevation )
+					#except Exception as e:
+					#	message = 'Elevation File Error: %s\n\n    "%s"' % (e, fileNameElevation)
+					#	Utils.MessageOK( self.wizard, message, title='File Read Error', iconMask=wx.ICON_ERROR)
 				
 			self.geoTrackFName = fileName
 			self.geoTrack = geoTrack
