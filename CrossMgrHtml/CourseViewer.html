@@ -148,6 +148,30 @@ function CompassBearing( lat1, lon1, lat2, lon2 )
 	return bearing;
 }
 
+function DestinationPoint( lat, lon, bearing, dist )
+ {
+	// Returns the destination point having travelled the given distance along the great circle
+	// starting in the direction of the bearing.
+	dist /= 6371000.0;  // convert dist to angular distance in radians
+	bearing = bearing * degreesToRadians;		// convert degrees to radians
+	var lat1 = lat * degreesToRadians, lon1 = lon * degreesToRadians;
+	var lat2 = Math.asin( Math.sin(lat1)*Math.cos(dist) + Math.cos(lat1)*Math.sin(dist)*Math.cos(bearing) );
+	var lon2 = lon1 + Math.atan2(Math.sin(bearing)*Math.sin(dist)*Math.cos(lat1), Math.cos(dist)-Math.sin(lat1)*Math.sin(lat2));
+
+	// normalise to -180...+180
+	lon2 += 3.0 * Math.PI;
+	lon2 -= 2.0 * Math.PI * Math.floor( lon2 / (2.0 * Math.PI) );
+	lon2 -= Math.PI;
+
+	return [lat2 * radiansToDegrees, lon2 * radiansToDegrees];
+}
+
+ // Returns destination in the direction of the given point.
+function DestinationPointToPoint( lat1, lon2, lat2, lon2, dist )
+{
+	return DestinationPoint( lat1, lon1, CompassBearing(lat1, lon2, lat2, lon2), dist );
+}
+
 function OpenVirtualTourWindow()
 {
 	var speed = 40.0;
@@ -511,22 +535,60 @@ function DrawMap()
 	var mapCanvas = new google.maps.Map(document.getElementById('idMap'), mapOptions);
 	var latLngBounds = new google.maps.LatLngBounds();
 	var points = [];
+	var length = 0.0;
 	for( var i = 0; i < courseCoordinates.length; i += 2 )
 	{
 		var latLng = new google.maps.LatLng(courseCoordinates[i+1], courseCoordinates[i]);
 		latLngBounds.extend( latLng );
 		points.push( latLng );
+		if( i > 0 )
+			length += GreatCircleDistance(courseCoordinates[i-2+1], courseCoordinates[i-2], courseCoordinates[i+1], courseCoordinates[i]);
 	}
 	points.push( points[0] );
 	
+	// Draw arrows to show direction.
+	var arrowLength = length * 0.0125;
+	var arrowCount = 7;
+	for( var k = 0; k < arrowCount; ++k )
+	{
+		var iFrom = Math.floor(k * courseCoordinates.length / (2 * arrowCount)) * 2;
+		var iTo = (iFrom + 2) % courseCoordinates.length;
+		while( courseCoordinates[iFrom] == courseCoordinates[iTo] )
+			iTo = (iTo + 2) % courseCoordinates;
+		
+		var lat1 = courseCoordinates[iFrom+1], lon1 = courseCoordinates[iFrom];
+		var lat2 = courseCoordinates[iTo+1],   lon2 = courseCoordinates[iTo];
+		
+		var bearing = CompassBearing( lat2, lon2, lat1, lon1 );
+		var pHead = DestinationPoint( lat2, lon2, bearing - 180.0, arrowLength / 2 );
+		var pTail = DestinationPoint( lat2, lon2, bearing, arrowLength / 2 );
+		var arrowPoints = [new google.maps.LatLng(pHead[0], pHead[1])];
+		var p = DestinationPoint( pTail[0], pTail[1], bearing + 90.0, arrowLength / 3.15 );
+		arrowPoints.push( new google.maps.LatLng(p[0], p[1]) );
+		var p = DestinationPoint( pTail[0], pTail[1], bearing - 90.0, arrowLength / 3.15 );
+		arrowPoints.push( new google.maps.LatLng(p[0], p[1]) );
+		
+		var arrow = new google.maps.Polygon( {
+			paths: arrowPoints,
+			strokeColor: "#ff8c00",
+			strokeOpacity: 1.0,
+			strokeWeight: 1,
+			fillColor: "#ff8c00",
+			fillOpacity: 1.0,
+		});
+		arrow.setMap( mapCanvas );
+	}
+	
+	// Draw the course.
 	var course = new google.maps.Polyline( {
 		path: points,
 		strokeColor: "#FFFF00",
 		strokeOpacity: 1.0,
-		strokeWeight: 4
+		strokeWeight: 3
 	});
 	course.setMap( mapCanvas );
 	
+	// Draw the finish line.
 	var finish = new google.maps.Marker({
 		position: points[0],
 		title: 'Finish Line'
@@ -635,10 +697,10 @@ Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr<
 <button id="idDrivingInstructions" class="noprint" onclick="OpenDrivingInstructions()" style="font-size: 120%;">Get Directions</button>
 <button id="idVirtualTour" class="noprint" onclick="OpenVirtualTourWindow()" style="font-size: 120%;">Google Earth Ride</button><p/>
 Course Length: <span id="idCourseLength"></span>
-<div id="idMap" style="height: 400px; width: 700px;"></div>
+<div id="idMap" style="height: 550px; width: 800px;"></div>
 <p></p>
 <div id="idInfo">
-<canvas id="idAltigraph" width="700" height="100">
+<canvas id="idAltigraph" width="800" height="125">
 <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a> Course viewer requires support the HTML5 Canvas.<br/>
 Please upgrade to a more recent browser version.<br/>
 For Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
