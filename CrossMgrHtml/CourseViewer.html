@@ -100,6 +100,187 @@ String.prototype.escapeID = function() {
 	return this.replace(/[&<>"'(){}\[\]!@#$%^* ]/g,'_');
 };
 
+//--------------------------------------------------------------------------
+
+/**
+ * Creates a new Map Label
+ * @constructor
+ * @extends google.maps.OverlayView
+ * @param {Object.<string, *>=} opt_options Optional properties to set.
+ */
+function MapLabel(opt_options) {
+  this.set('fontFamily', 'sans-serif');
+  this.set('fontSize', 12);
+  this.set('fontColor', '#000000');
+  this.set('strokeWeight', 2);
+  this.set('strokeColor', '#ffffff');
+  this.set('align', 'center');
+
+  this.set('zIndex', 1e3);
+
+  this.setValues(opt_options);
+}
+MapLabel.prototype = new google.maps.OverlayView;
+
+window['MapLabel'] = MapLabel;
+
+
+/** @inheritDoc */
+MapLabel.prototype.changed = function(prop) {
+  switch (prop) {
+    case 'fontFamily':
+    case 'fontSize':
+    case 'fontColor':
+    case 'strokeWeight':
+    case 'strokeColor':
+    case 'align':
+    case 'text':
+      return this.drawCanvas_();
+    case 'maxZoom':
+    case 'minZoom':
+    case 'position':
+      return this.draw();
+  }
+};
+
+/**
+ * Draws the label to the canvas 2d context.
+ * @private
+ */
+MapLabel.prototype.drawCanvas_ = function() {
+  var canvas = this.canvas_;
+  if (!canvas) return;
+
+  var style = canvas.style;
+  style.zIndex = /** @type number */(this.get('zIndex'));
+
+  var ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = this.get('strokeColor');
+  ctx.fillStyle = this.get('fontColor');
+  ctx.font = this.get('fontSize') + 'px ' + this.get('fontFamily');
+
+  var strokeWeight = Number(this.get('strokeWeight'));
+
+  var text = this.get('text');
+  if (text) {
+    if (strokeWeight) {
+      ctx.lineWidth = strokeWeight;
+      ctx.strokeText(text, strokeWeight, strokeWeight);
+    }
+
+    ctx.fillText(text, strokeWeight, strokeWeight);
+
+    var textMeasure = ctx.measureText(text);
+    var textWidth = textMeasure.width + strokeWeight;
+    style.marginLeft = this.getMarginLeft_(textWidth) + 'px';
+    // Bring actual text top in line with desired latitude.
+    // Cheaper than calculating height of text.
+    style.marginTop = '-0.4em';
+  }
+};
+
+/**
+ * @inheritDoc
+ */
+MapLabel.prototype.onAdd = function() {
+  var canvas = this.canvas_ = document.createElement('canvas');
+  var style = canvas.style;
+  style.position = 'absolute';
+
+  var ctx = canvas.getContext('2d');
+  ctx.lineJoin = 'round';
+  ctx.textBaseline = 'top';
+
+  this.drawCanvas_();
+
+  var panes = this.getPanes();
+  if (panes) {
+    panes.mapPane.appendChild(canvas);
+  }
+};
+MapLabel.prototype['onAdd'] = MapLabel.prototype.onAdd;
+
+/**
+ * Gets the appropriate margin-left for the canvas.
+ * @private
+ * @param {number} textWidth  the width of the text, in pixels.
+ * @return {number} the margin-left, in pixels.
+ */
+MapLabel.prototype.getMarginLeft_ = function(textWidth) {
+  switch (this.get('align')) {
+    case 'left':
+      return 0;
+    case 'right':
+      return -textWidth;
+  }
+  return textWidth / -2;
+};
+
+/**
+ * @inheritDoc
+ */
+MapLabel.prototype.draw = function() {
+  var projection = this.getProjection();
+
+  if (!projection) {
+    // The map projection is not ready yet so do nothing
+    return;
+  }
+
+  var latLng = /** @type {google.maps.LatLng} */ (this.get('position'));
+  if (!latLng) {
+    return;
+  }
+  var pos = projection.fromLatLngToDivPixel(latLng);
+
+  var style = this.canvas_.style;
+
+  style['top'] = pos.y + 'px';
+  style['left'] = pos.x + 'px';
+
+  style['visibility'] = this.getVisible_();
+};
+MapLabel.prototype['draw'] = MapLabel.prototype.draw;
+
+/**
+ * Get the visibility of the label.
+ * @private
+ * @return {string} blank string if visible, 'hidden' if invisible.
+ */
+MapLabel.prototype.getVisible_ = function() {
+  var minZoom = /** @type number */(this.get('minZoom'));
+  var maxZoom = /** @type number */(this.get('maxZoom'));
+
+  if (minZoom === undefined && maxZoom === undefined) {
+    return '';
+  }
+
+  var map = this.getMap();
+  if (!map) {
+    return '';
+  }
+
+  var mapZoom = map.getZoom();
+  if (mapZoom < minZoom || mapZoom > maxZoom) {
+    return 'hidden';
+  }
+  return '';
+};
+
+/**
+ * @inheritDoc
+ */
+MapLabel.prototype.onRemove = function() {
+  var canvas = this.canvas_;
+  if (canvas && canvas.parentNode) {
+    canvas.parentNode.removeChild(canvas);
+  }
+};
+MapLabel.prototype['onRemove'] = MapLabel.prototype.onRemove;
+
+//--------------------------------------------------------------------------
+
 function isEmptyObject( obj ) {
     for ( var name in obj ) {
         return false;
@@ -167,7 +348,7 @@ function DestinationPoint( lat, lon, bearing, dist )
 }
 
  // Returns destination in the direction of the given point.
-function DestinationPointToPoint( lat1, lon2, lat2, lon2, dist )
+function DestinationPointToPoint( lat1, lon1, lat2, lon2, dist )
 {
 	return DestinationPoint( lat1, lon1, CompassBearing(lat1, lon2, lat2, lon2), dist );
 }
@@ -304,6 +485,8 @@ function Altigraph()
 	this.yMax = -1000000.0;
 	this.yMin = 1000000.0
 	this.xMax = 0.0;
+	this.xTick = null;
+	this.yTick = null;
 	
 	this.setData = function( altigraph )
 	{
@@ -391,7 +574,7 @@ function Altigraph()
 		var k = intervals.binSearch( d );
 		if( k >= intervals.length )
 			k = intervals.length - 1;
-		d = intervals[k];
+		this.xTick = d = intervals[k];
 		var precision = 0;
 		if( d < 1 )
 			if( d == 0.25 )
@@ -420,7 +603,7 @@ function Altigraph()
 		var k = intervals.binSearch( d );
 		if( k >= intervals.length )
 			k = intervals.length - 1;
-		d = intervals[k];
+		this.yTick = d = intervals[k];
 		dc.textBaseline = 'middle';
 		dc.strokeStyle = '#c0c0c0';
 		dc.lineWidth = 1;
@@ -518,11 +701,12 @@ function Altigraph()
 	}
 }
 
+var altigraph = null;
 function DrawAltigraph()
 {
 	var canvas = document.getElementById('idAltigraph');
 	var dc = canvas.getContext('2d');
-	var altigraph = new Altigraph();
+	altigraph = new Altigraph();
 	altigraph.setData( gpsAltigraph );
 	altigraph.draw( dc, 0, 0, canvas.width, canvas.height );
 }
@@ -547,7 +731,7 @@ function DrawMap()
 	points.push( points[0] );
 	
 	// Draw arrows to show direction.
-	var arrowLength = length * 0.0125;
+	var arrowLength = length * 0.012;
 	var arrowCount = 7;
 	for( var k = 0; k < arrowCount; ++k )
 	{
@@ -574,7 +758,7 @@ function DrawMap()
 			strokeOpacity: 1.0,
 			strokeWeight: 1,
 			fillColor: "#ff8c00",
-			fillOpacity: 1.0,
+			fillOpacity: 0.6,
 		});
 		arrow.setMap( mapCanvas );
 	}
@@ -582,11 +766,37 @@ function DrawMap()
 	// Draw the course.
 	var course = new google.maps.Polyline( {
 		path: points,
-		strokeColor: "#FFFF00",
-		strokeOpacity: 1.0,
-		strokeWeight: 3
+		strokeColor: "#FF0000",
+		strokeOpacity: 0.6,
+		strokeWeight: 6
 	});
 	course.setMap( mapCanvas );
+	
+	// Draw labels showing the distance on the map - same as on the altigraph.
+	var xTick = altigraph.xTick;
+	var precision = (xTick >= 1 ? 0 : xTick == 0.25 ? 2 : 1);
+	var tickMult = displayUnits == 'km' ? 1000.0 : 1609.344;
+	var nextMarkerDistance = xTick;
+	var length = 0.0;
+	for( var i = 2; i < courseCoordinates.length; i += 2 )
+	{
+		length += GreatCircleDistance(	courseCoordinates[i-2+1], courseCoordinates[i-2],
+										courseCoordinates[i+1], courseCoordinates[i]);
+		while( length >= nextMarkerDistance * tickMult )
+		{
+			var p = DestinationPointToPoint( courseCoordinates[i+1], courseCoordinates[i],
+											 courseCoordinates[i-2+1], courseCoordinates[i-2],
+											 length - nextMarkerDistance * tickMult );
+			var mapLabel = new MapLabel({
+				text: nextMarkerDistance.toFixed(precision),
+				position: new google.maps.LatLng(p[0], p[1]),
+				map: mapCanvas,
+				fontSize: 17,
+				align: 'middle',
+			});
+			nextMarkerDistance += xTick;
+		}
+	}
 	
 	// Draw the finish line.
 	var finish = new google.maps.Marker({
@@ -674,8 +884,8 @@ function onLoad()
 		? lengthKm.toFixed(2) + ' km'
 		: (lengthKm * 0.621371192).toFixed(2) + ' miles';
 	
-	DrawMap();
 	DrawAltigraph();
+	DrawMap();
 }
 google.maps.event.addDomListener(window, 'load', onLoad);
 </script>
