@@ -43,6 +43,7 @@ def PilImageToWxImage( pil ):
 	
 camera = None
 font = None
+brandingBitmap = None
 photoCache = set()		# Cache of all photo file names.
 
 def getPhotoDirName( raceFileName ):
@@ -100,25 +101,67 @@ def getAverageLatency():
 	return sumLatencies / float(len(latencies))
 
 def SavePhoto( fileName, bib, raceSeconds, cameraImage ):
-	global font, photoCache
+	global font, brandingBitmap, photoCache
 	bitmap = wx.BitmapFromImage( PilImageToWxImage(cameraImage) )
 	
 	w, h = bitmap.GetSize()
 	dc = wx.MemoryDC( bitmap )
-	dc.SetTextForeground( wx.WHITE )
-	fontHeight = h//25
+	fontHeight = h//32
 	if not font:
-		font = wx.FontFromPixelSize( wx.Size(0,fontHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
+		font = wx.FontFromPixelSize( wx.Size(0,fontHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD )
 		
+		brandingHeight = fontHeight * 2.3
+		brandingBitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), wx.BITMAP_TYPE_PNG )
+		scaleMult = float(brandingHeight) / float(brandingBitmap.GetHeight())
+		
+		brandingImage = brandingBitmap.ConvertToImage()
+		brandingImage.Rescale( int(brandingImage.GetWidth() * scaleMult), int(brandingImage.GetHeight() * scaleMult), wx.IMAGE_QUALITY_HIGH )
+		brandingBitmap = brandingImage.ConvertToBitmap( dc.GetDepth() )
+	
+	txt = []
 	if bib:
-		txt = 'Bib: %d  RaceTime: %s  %s  %s' % (
-			bib, formatTime(raceSeconds), datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), AppVerName)
+		try:
+			riderInfo = Model.race.excelLink.read()[int(bib)]
+		except:
+			riderInfo = {}
+		riderName = ', '.join( [n for n in [riderInfo.get('LastName',''), riderInfo.get('FirstName','')] if n] )
+		if riderName:
+			team = riderInfo.get('Team', '')
+			if team:
+				txt.append( '  %s    (%s)' % (riderName, team) )
+			else:
+				txt.append( '  %s' % riderName )
+
+		txt.append( '  Bib: %d    RaceTime: %s    %s' % (
+			bib, formatTime(raceSeconds), datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')) )
 	else:
-		txt = 'RaceTime: %s  %s  %s' % (
-			formatTime(raceSeconds), datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), AppVerName)
-		
+		txt.append( '  RaceTime: %s    %s' % (
+			formatTime(raceSeconds), datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')) )
+	
+	bitmapHeight = brandingBitmap.GetHeight()
+	xText, yText = brandingBitmap.GetWidth(), int(fontHeight*0.14)
+	
 	dc.SetFont( font )
-	dc.DrawText( txt, fontHeight * 0.5, h - fontHeight*1.25 )
+	dc.SetPen( wx.BLACK_PEN )
+	dc.SetBrush( wx.WHITE_BRUSH )
+	dc.DrawRectangle( 0, 0, w, bitmapHeight+1 )
+	dc.GradientFillLinear( wx.Rect(int(w/2), 0, int(w/2), bitmapHeight), wx.WHITE, wx.Colour(200,200,200), wx.EAST )
+	
+	dc.DrawBitmap( brandingBitmap, 0, 0 )
+	
+	lineHeight = int(fontHeight*1.07)
+	dc.SetTextForeground( wx.BLACK )
+	for t in txt:
+		dc.DrawText( t, xText, yText )
+		yText += lineHeight
+		
+	dc.DrawText( AppVerName, w - dc.GetTextExtent(AppVerName)[0] - fontHeight*.25, yText - lineHeight )
+	
+	dc.DrawLine( xText, 0, xText, bitmapHeight )
+	
+	dc.SetBrush( wx.Brush(wx.WHITE, wx.TRANSPARENT) )
+	dc.DrawRectangle( 0, 0, w, bitmapHeight+1 )
+	
 	dc.SelectObject( wx.NullBitmap )
 	image = wx.ImageFromBitmap( bitmap )
 	
