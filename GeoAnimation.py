@@ -12,6 +12,7 @@ import re
 import cgi
 import getpass
 import socket
+from Version import AppVerName
 from operator import itemgetter, attrgetter
 from GanttChart import makePastelColours, makeColourGradient
 from Animation import GetLapRatio
@@ -154,6 +155,48 @@ def createAppendChild( doc, parent, name ):
 	parent.appendChild( child )
 	return child
 	
+def createAppendTextChild( doc, parent, text ):
+	child = doc.createTextNode( text )
+	parent.appendChild( child )
+	return child
+
+def CreateGPX( courseName, gpsPoints ):
+	''' Create a GPX file from the gpsPoints list. '''
+
+	doc = xml.dom.minidom.Document()
+	gpx = createAppendChild( doc, doc, 'gpx' )
+	gpx.attributes['creator'] = AppVerName + ' http://sites.google.com/site/crossmgrsoftware/'
+	gpx.attributes['xmlns'] ="http://www.topografix.com/GPX/1/0"
+	gpx.attributes['xmlns:xsi'] = "http://www.w3.org/2001/XMLSchema-instance"
+	gpx.attributes['xsi:schemaLocation'] = "http://www.topografix.com/GPX/1/0 http://www.topografix.com/GPX/1/0/gpx.xsd"
+	
+	gpx.appendChild( doc.createComment( '\n'.join( [
+		'',
+		'DO NOT EDIT!',
+		'',
+		'This file was created automatically by {}.'.format(AppVerName),
+		'',
+		'For more information, see http://sites.google.com/site/crossmgrsoftware',
+		'',
+		'Created:  %s' % datetime.datetime.now().strftime( '%Y/%m/%d %H:%M:%S' ),
+		'User:     %s' % cgi.escape(getpass.getuser()),
+		'Computer: %s' % cgi.escape(socket.gethostname()),
+		'', ] )
+	) )
+	
+	trk = createAppendChild( doc, gpx, 'trk' )
+	name = createAppendChild( doc, trk, 'name' )
+	createAppendTextChild( doc, name, courseName )
+	trkseg = createAppendChild( doc, trk, 'trkseg' )
+	for p in gpsPoints:
+		trkpnt = createAppendChild( doc, trkseg, 'trkpnt' )
+		trkpnt.attributes['lat'] = str(p.lat)
+		trkpnt.attributes['lon'] = str(p.lon)
+		if p.ele:
+			ele = createAppendChild( doc, trkpnt, 'ele' )
+			createAppendTextChild( doc, ele, str(p.ele) )
+	return doc
+	
 class GeoTrack( object ):
 	def __init__( self ):
 		self.gpsPoints = []
@@ -189,6 +232,9 @@ class GeoTrack( object ):
 			dCum += p.d
 		self.distanceTotal = dCum
 		self.computeSummary()
+		
+	def getGPX( self, courseName ):
+		return CreateGPX( courseName, self.gpsPoints )
 		
 	def readElevation( self, fname ):
 		header = None

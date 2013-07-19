@@ -403,6 +403,11 @@ class MainWin( wx.Frame ):
 		self.dataMgmtMenu.Append( idCur , "&Import Course in GPX format...", "Import Course in GPX format" )
 		self.Bind(wx.EVT_MENU, self.menuImportGpx, id=idCur )
 		
+		self.dataMgmtMenu.AppendSeparator()
+		idCur = wx.NewId()
+		self.dataMgmtMenu.Append( idCur , "Export Course in GPX format...", "Export Course in GPX format" )
+		self.Bind(wx.EVT_MENU, self.menuExportGpx, id=idCur )
+		
 		idCur = wx.NewId()
 		self.dataMgmtMenu.Append( idCur , "&Export Course as KMZ Virtual Tour...", "Export Course as KMZ Virtual Tour (Requires Google Earth to View)" )
 		self.Bind(wx.EVT_MENU, self.menuExportCourseAsKml, id=idCur )
@@ -1269,13 +1274,48 @@ class MainWin( wx.Frame ):
 				race.geoTrack, race.geoTrackFName = None, None
 			else:
 				race.geoTrack, race.geoTrackFName = geoTrack, geoTrackFName
-				#with open('track.json', 'w') as f:
-				#	f.write( json.dumps(race.geoTrack.asExportJson()) )
 			race.showOval = (race.geoTrack is None)
 			race.setChanged()
 			
 		self.showPageName( 'Animation' )
 		self.refresh()
+		
+	@logCall
+	def menuExportGpx( self, event ):
+		if self.fileName is None or len(self.fileName) < 4:
+			return
+		
+		with Model.LockRace() as race:
+			if not race:
+				return
+				
+			if not getattr(race, 'geoTrack', None):
+				Utils.MessageOK( self, 'No GPX Course Loaded.\nNothing to export.', 'No GPX Course Loaded' )
+				return
+				
+			geoTrack = race.geoTrack
+			
+		# Get the folder to write the html file.
+		fname = self.fileName[:-4] + 'Course.gpx'
+		dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(fname),
+							style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
+		ret = dlg.ShowModal()
+		dName = dlg.GetPath()
+		dlg.Destroy()
+		if ret != wx.ID_OK:
+			return
+		
+		fname = os.path.join( dName, os.path.basename(fname) )
+		
+		doc = geoTrack.getGPX( os.path.splitext(os.path.basename(fname))[0] )
+		xml = doc.toprettyxml( indent = '', encoding = 'utf-8' )
+		doc.unlink()
+		try:
+			with open(fname, 'wb') as f:
+				f.write( xml )
+			Utils.MessageOK(self, 'Course written to GPX file:\n\n   %s.' % fname, 'GPX Export')
+		except Exception as e:
+			Utils.MessageOK(self, 'Write to GPX file Failed with error: %s\n\n   %s.' % (e, fname), 'GPX Export')
 		
 	@logCall
 	def menuExportCourseAsKml( self, event ):
