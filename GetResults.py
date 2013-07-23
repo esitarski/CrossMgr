@@ -1,5 +1,7 @@
 import Model
-import bisect
+from bisect import bisect_left
+from math import floor
+import sys
 import Utils
 import itertools
 
@@ -71,7 +73,17 @@ def GetResultsCore( category ):
 		allCategoriesFinishAfterFastestRidersLastLap = getattr( race, 'allCategoriesFinishAfterFastestRidersLastLap', False )
 		
 		allRiderTimes = {}
-		for e in race.interpolate():
+		entries = race.interpolate()
+		if not entries:
+			return tuple()
+			
+		# Group finish times are defined as times which are separated from the previous time by at least 1 second.
+		groupFinishTimes = [floor(entries[0].t)]
+		groupFinishTimes.extend( [floor(entries[i].t) for i in xrange(1, len(entries)) if entries[i].t - entries[i-1].t >= 1.0] )
+		groupFinishTimes.append( sys.float_info.max )
+		groupFinishTimes.append( sys.float_info.max )
+		
+		for e in entries:
 			try:
 				allRiderTimes[e.num].append( e )
 			except KeyError:
@@ -112,7 +124,7 @@ def GetResultsCore( category ):
 				if not times:
 					continue
 				try:
-					winningLaps = bisect.bisect_left( times, raceSeconds, hi=len(times)-1 )
+					winningLaps = bisect_left( times, raceSeconds, hi=len(times)-1 )
 					if winningLaps >= 2:
 						lastLapTime = times[winningLaps] - times[winningLaps-1]
 						if (times[winningLaps] - raceSeconds) > lastLapTime / 2.0:
@@ -137,7 +149,7 @@ def GetResultsCore( category ):
 			else:
 				# Otherwise, set the number of laps by the winner's time closest to the race finish time.
 				try:
-					winningLaps = bisect.bisect_left( times, raceSeconds, hi=len(times)-1 )
+					winningLaps = bisect_left( times, raceSeconds, hi=len(times)-1 )
 					if winningLaps >= 2:
 						winner = race[nums[winningLaps]]
 						entries = winner.interpolate()
@@ -169,7 +181,7 @@ def GetResultsCore( category ):
 				if categoryWinningLaps.get(riderCategory, None) and getattr(riderCategory, 'lappedRidersMustContinue', False):
 					laps = min( categoryWinningLaps[riderCategory], len(times)-1 )
 				else:
-					laps = bisect.bisect_left( times, categoryWinningTime[riderCategory], hi=len(times)-1 )
+					laps = bisect_left( times, categoryWinningTime[riderCategory], hi=len(times)-1 )
 				# This is no longer necessary as we have a smarter ability to check for excess laps.
 				#if fastestRidersLastLapTime is not None:
 				#	while laps >= 1 and interp[laps] and times[laps] > fastestRidersLastLapTime:
@@ -260,7 +272,40 @@ def GetResultsCore( category ):
 					rr.gap = '%d %s' % (lapsDown, 'laps' if lapsDown > 1 else 'lap')
 			elif rr != leader and not (isTimeTrial and rr.lastTime == leader.lastTime):
 				rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
-		
+				
+		# Add the stage race times and gaps.
+		iTime = 0
+		lastFullLapsTime = None
+		for pos, rr in enumerate(riderResults):
+			if rr.status == Model.Rider.Finisher:
+				if rr.laps == leader.laps:
+					if not (groupFinishTimes[iTime] <= rr.lastTime < groupFinishTimes[iTime+1]):
+						iTime += 1
+						if not (groupFinishTimes[iTime] <= rr.lastTime < groupFinishTimes[iTime+1]):
+							iTime = bisect_left( groupFinishTimes, rr.lastTime, 0, len(groupFinishTimes) - 1 )
+							if groupFinishTimes[iTime] > rr.lastTime:
+								iTime -= 1
+					rr.stageRaceTime = groupFinishTimes[iTime]
+					rr.stageRaceGap = Utils.formatTimeGap( rr.stageRaceTime - leader.stageRaceTime, False )
+					lastFullLapsTime = rr.stageRaceTime + 60.0
+				else:
+					# Compute a projected finish time.  Try to skip the first lap in the calculation.
+					lapStart = 1 if len(rr.raceTimes) > 2 else 0
+					raceTime = rr.raceTimes[rr.laps] - rr.raceTimes[lapStart]
+					aveLapTime = raceTime / float(rr.laps - lapStart)
+					lapsDown = leader.laps - rr.laps
+					rr.stageRaceTime = max( lastFullLapsTime, floor(rr.raceTimes[-1] + lapsDown * aveLapTime) )
+					rr.stageRaceGap = Utils.formatTimeGap( rr.stageRaceTime - leader.stageRaceTime, False ) if rr != leader else ''
+			else:
+				rr.stageRaceTime = floor(rr.lastTime)
+				rr.stageRaceGap = rr.gap
+				
+		'''
+		for rr in riderResults:
+			rr.lastTime = rr.stageRaceTime
+			rr.gap = rr.stageRaceGap
+		'''
+	
 	return tuple(riderResults)
 
 def GetResults( category, getExternalData = False ):
