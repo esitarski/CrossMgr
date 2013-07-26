@@ -6,7 +6,8 @@ import shutil
 import zipfile
 
 # Update the minor version number.
-#AppVerName="CrossMgr 1.87"
+#AppVerName="CrossMgr 1.87.x"
+'''
 with open('Version.py', 'r') as f:
 	v = f.read().strip()
 	i = v.rfind( ' ' )
@@ -19,6 +20,7 @@ with open('Version.py', 'r') as f:
 	s = 'AppVerName="CrossMgr %s"\n' % ('.'.join(vNums))
 with open('Version.py', 'w') as f:
 	f.write( s )
+'''
 
 # Compile the help files
 from helptxt.compile import CompileHelp
