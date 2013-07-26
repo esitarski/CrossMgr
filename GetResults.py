@@ -82,6 +82,9 @@ def GetResultsCore( category ):
 		groupFinishTimes.extend( [floor(entries[i].t) for i in xrange(1, len(entries)) if entries[i].t - entries[i-1].t >= 1.0] )
 		groupFinishTimes.append( sys.float_info.max )
 		groupFinishTimes.append( sys.float_info.max )
+		groupFinishTimes.append( sys.float_info.max )
+		groupFinishTimes.append( sys.float_info.max )
+		groupFinishTimes.append( sys.float_info.max )
 		
 		for e in entries:
 			try:
