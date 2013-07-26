@@ -227,7 +227,7 @@ def ModelStartCamera( refTime = None, raceFileName = None ):
 	
 	if race and getattr(race, 'enableUSBCamera', False):
 		if getattr(race, 'enableJChipIntegration', False):
-			StartVideoBuffer( refTime, raceFilename )
+			StartVideoBuffer( refTime, raceFileName )
 		else:
 			PhotoFinish.SetCameraState( True )
 		return True

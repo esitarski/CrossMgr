@@ -273,33 +273,32 @@ def GetResultsCore( category ):
 			elif rr != leader and not (isTimeTrial and rr.lastTime == leader.lastTime):
 				rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
 				
-		# Add the stage race times and gaps.
+		# Add stage race times and gaps.
 		iTime = 0
 		lastFullLapsTime = None
 		for pos, rr in enumerate(riderResults):
-			if rr.status == Model.Rider.Finisher:
-				if rr.laps == leader.laps:
-					if not (groupFinishTimes[iTime] <= rr.lastTime < groupFinishTimes[iTime+1]):
-						iTime += 1
-						if not (groupFinishTimes[iTime] <= rr.lastTime < groupFinishTimes[iTime+1]):
-							iTime = bisect_left( groupFinishTimes, rr.lastTime, 0, len(groupFinishTimes) - 1 )
-							if groupFinishTimes[iTime] > rr.lastTime:
-								iTime -= 1
-					rr.stageRaceTime = groupFinishTimes[iTime]
-					rr.stageRaceGap = Utils.formatTimeGap( rr.stageRaceTime - leader.stageRaceTime, False )
-					lastFullLapsTime = rr.stageRaceTime + 60.0
-				else:
-					# Compute a projected finish time.  Try to skip the first lap in the calculation.
-					lapStart = 1 if len(rr.raceTimes) > 2 else 0
-					raceTime = rr.raceTimes[rr.laps] - rr.raceTimes[lapStart]
-					aveLapTime = raceTime / float(rr.laps - lapStart)
-					lapsDown = leader.laps - rr.laps
-					rr.stageRaceTime = max( lastFullLapsTime, floor(rr.raceTimes[-1] + lapsDown * aveLapTime) )
-					rr.stageRaceGap = Utils.formatTimeGap( rr.stageRaceTime - leader.stageRaceTime, False ) if rr != leader else ''
-			else:
+			if rr.status != Model.Rider.Finisher or not rr.raceTimes:
 				rr.stageRaceTime = floor(rr.lastTime)
 				rr.stageRaceGap = rr.gap
-				
+			elif rr.laps == leader.laps:
+				if not (groupFinishTimes[iTime] <= rr.lastTime < groupFinishTimes[iTime+1]):
+					iTime += 1
+					if not (groupFinishTimes[iTime] <= rr.lastTime < groupFinishTimes[iTime+1]):
+						iTime = bisect_left( groupFinishTimes, rr.lastTime, 0, len(groupFinishTimes) - 1 )
+						if groupFinishTimes[iTime] > rr.lastTime:
+							iTime -= 1
+				rr.stageRaceTime = groupFinishTimes[iTime]
+				rr.stageRaceGap = Utils.formatTimeGap( rr.stageRaceTime - leader.stageRaceTime, False )
+				lastFullLapsTime = rr.stageRaceTime + 60.0
+			else:
+				# Compute a projected finish time.  Try to skip the first lap in the calculation.
+				lapStart = 1 if len(rr.raceTimes) > 2 else 0
+				raceTime = rr.raceTimes[rr.laps] - rr.raceTimes[lapStart]
+				aveLapTime = raceTime / float(rr.laps - lapStart)
+				lapsDown = leader.laps - rr.laps
+				rr.stageRaceTime = max( lastFullLapsTime, floor(rr.raceTimes[-1] + lapsDown * aveLapTime) )
+				rr.stageRaceGap = Utils.formatTimeGap( rr.stageRaceTime - leader.stageRaceTime, False ) if rr != leader else ''
+		
 		'''
 		for rr in riderResults:
 			rr.lastTime = rr.stageRaceTime
