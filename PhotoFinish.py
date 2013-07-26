@@ -6,6 +6,9 @@ import shutil
 import datetime
 import Utils
 import Model
+from Utils import logException
+import traceback
+
 from Version import AppVerName
 try:
 	from VideoCapture import Device
@@ -59,8 +62,8 @@ def DeletePhotos( raceFileName ):
 	dirName = getPhotoDirName( raceFileName )
 	try:
 		shutil.rmtree( dirName, True )
-	except:
-		pass
+	except Exception as e:
+		logException( e, sys.exc_info() )
 				
 def ResetPhotoInfoCache( raceFileName ):
 	global photoCache
@@ -171,6 +174,7 @@ def SavePhoto( fileName, bib, raceSeconds, cameraImage ):
 		try:
 			os.mkdir( os.path.dirname(fileName) )
 		except Exception as e:
+			logException( e, sys.exc_info() )
 			return 0
 	
 	# Try to save the file.
@@ -179,6 +183,7 @@ def SavePhoto( fileName, bib, raceSeconds, cameraImage ):
 		photoCache.add( os.path.basename(fileName) )
 		return 1
 	except Exception as e:
+		logException( e, sys.exc_info() )
 		return 0
 
 if Device:
@@ -192,8 +197,8 @@ if Device:
 		fileNameNew = os.path.join( dirName, fnameNew )
 		try:
 			os.rename( fileNameOld, fileNameNew )
-		except:
-			pass
+		except Exception as e:
+			logException( e, sys.exc_info() )
 			
 	def TakePhoto( raceFileName, bib, raceSeconds ):
 		global camera, font
@@ -226,7 +231,8 @@ if Device:
 			Utils.FixPILSearchPath()
 			try:
 				camera = Device()
-			except:
+			except Exceptione as e:
+				logException( e, sys.exc_info() )
 				camera = None
 		return camera
 else:

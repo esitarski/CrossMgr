@@ -6,6 +6,7 @@ import Model
 import PhotoFinish
 import datetime
 import threading
+from Utils import logException
 import traceback
 from Queue import Queue, Empty
 
@@ -80,7 +81,8 @@ class VideoBuffer( threading.Thread ):
 				tRace = (tGrab - self.refTime).total_seconds()
 				self.frames[self.frameCur] = (tRace, self.camera.getImage())
 				self.frameCur = (self.frameCur + 1) % self.frameMax
-			except:
+			except Exception as e:
+				logException( e, sys.exc_info() )
 				break
 			
 			while 1:
@@ -174,7 +176,8 @@ def StartVideoBuffer( refTime, raceFileName):
 		if not os.path.isdir( dirName ):
 			try:
 				os.makedirs( dirName )
-			except:
+			except Exception as e:
+				logException( e, sys.exc_info() )
 				return False
 				
 		videoBuffer = VideoBuffer( camera, refTime, dirName )

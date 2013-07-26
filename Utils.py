@@ -8,6 +8,7 @@ import math
 import subprocess
 import unicodedata
 import webbrowser
+import traceback
 import wx.grid		as gridlib
 try:
 	from win32com.shell import shell, shellcon
@@ -354,6 +355,16 @@ def logCall( f ):
 		writeLog( 'call: %s' % f.__name__ )
 		return f( *args, **kwargs)
 	return new_f
+	
+def logException( e, exc_info ):
+	eType, eValue, eTraceback = exc_info
+	ex = traceback.format_exception( eType, eValue, eTraceback )
+	writeLog( '**** Begin Exception ****' )
+	for d in ex:
+		for line in d.split( '\n' ):
+			writeLog( line )
+	writeLog( '**** End Exception ****' )
+	
 #------------------------------------------------------------------------
 mainWin = None
 def setMainWin( mw ):
@@ -443,6 +454,15 @@ def ValidFilename( fname ):
 
 if __name__ == '__main__':
 	app = wx.PySimpleApp()
+	
+	disable_stdout_buffering()
+	try:
+		a = 5 / 0
+	except Exception as e:
+		logException( e, sys.exc_info() )
+		
+	wx.Exit()
+	
 	hd = getHomeDir()
 	fn = os.path.join(hd, 'Test.txt')
 	with open( fn, 'w' ) as fp:
