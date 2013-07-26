@@ -9,6 +9,8 @@ import StatusBar
 import OutputStreamer
 import NumKeypad
 import VideoBuffer
+import sys
+from Utils import logException
 from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, DeleteEntry, DoDNS, DoDNF, DoPull
 from FtpWriteFile import realTimeFtpPublish
 
@@ -321,8 +323,8 @@ class ForecastHistory( wx.Panel ):
 						continue
 					try:
 						race.photoCount = getattr(race,'photoCount',0) + VideoBuffer.ModelTakePhoto( num, t )
-					except:
-						pass
+					except Exception as e:
+						logException( e, sys.exc_info() )
 			
 			# Add the times to the model and write to the log.
 			for num in nums:

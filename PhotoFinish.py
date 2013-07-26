@@ -7,7 +7,6 @@ import datetime
 import Utils
 import Model
 from Utils import logException
-import traceback
 
 from Version import AppVerName
 try:

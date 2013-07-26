@@ -6,8 +6,7 @@ import Model
 import PhotoFinish
 import datetime
 import threading
-from Utils import logException
-import traceback
+from Utils import logCall, logException
 from Queue import Queue, Empty
 
 now = datetime.datetime.now
@@ -198,6 +197,7 @@ def TakePhoto( raceFileName, bib, raceSeconds ):
 	videoBuffer.takePhoto( bib, raceSeconds )
 	return videoBuffer.frameCount - getattr(race,'photoCount',0) + 3
 	
+@logCall
 def Shutdown():
 	global videoBuffer
 	if videoBuffer:
@@ -214,6 +214,7 @@ def ModelTakePhoto( bib, raceSeconds ):
 			return PhotoFinish.TakePhoto( Utils.mainWin.fileName, bib, raceSeconds )
 	return 0
 
+@logCall
 def ModelStartCamera( refTime = None, raceFileName = None ):
 	race = Model.race
 	
@@ -225,8 +226,7 @@ def ModelStartCamera( refTime = None, raceFileName = None ):
 	assert refTime is not None and raceFileName is not None
 	
 	if race and getattr(race, 'enableUSBCamera', False):
-		''' VideoBuffer: FIXLATER '''
-		if False and getattr(race, 'enableJChipIntegration', False):
+		if getattr(race, 'enableJChipIntegration', False):
 			StartVideoBuffer( refTime, raceFilename )
 		else:
 			PhotoFinish.SetCameraState( True )

@@ -46,7 +46,7 @@ from DNSManager			import DNSManagerDialog
 from USACExport			import USACExport
 from HelpSearch			import HelpSearchDialog
 import Utils
-from Utils				import logCall
+from Utils				import logCall, logException
 import Model
 import VersionMgr
 import JChipSetup
@@ -74,14 +74,13 @@ from PhotoFinish		import ResetPhotoInfoCache, DeletePhotos, SetCameraState
 from PhotoViewer		import PhotoViewerDialog
 from ReadTTStartTimesSheet import ImportTTStartTimes
 import VideoBuffer
-
 import wx.lib.agw.advancedsplash as AS
 import openpyxl
 
 '''
 # Monkey patch threading so we can see where each thread gets started.
-import types
 import traceback
+import types
 threading_start = threading.Thread.start
 def loggingThreadStart( self, *args, **kwargs ):
 	threading_start( self, *args, **kwargs )
@@ -610,7 +609,10 @@ class MainWin( wx.Frame ):
 			delta = dt - race.startTime
 			t = delta.total_seconds()
 			
-			race.photoCount = getattr(race,'photoCount',0) + VideoBuffer.ModelTakePhoto( num, t )
+			try:
+				race.photoCount = getattr(race,'photoCount',0) + VideoBuffer.ModelTakePhoto( num, t )
+			except Exceptions as e:
+				logException( e, sys.exc_info() )
 	
 	def menuDNS( self, event ):
 		dns = DNSManagerDialog( self )
