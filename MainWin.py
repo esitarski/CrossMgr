@@ -2445,6 +2445,9 @@ def MainLoop():
 	global dataDir
 	global redirectFileName
 	
+	app = wx.PySimpleApp()
+	app.SetAppName("CrossMgr")
+	
 	random.seed()
 	setpriority( priority=4 )	# Set to real-time priority.
 
@@ -2454,9 +2457,6 @@ def MainLoop():
 	parser.add_option("-r", "--regular", action="store_false", dest="fullScreen", default=True, help='regular size (not full screen)')
 	(options, args) = parser.parse_args()
 
-	app = wx.PySimpleApp()
-	app.SetAppName("CrossMgr")
-	
 	dataDir = Utils.getHomeDir()
 	redirectFileName = os.path.join(dataDir, 'CrossMgr.log')
 			

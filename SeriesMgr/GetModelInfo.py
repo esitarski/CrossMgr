@@ -7,15 +7,19 @@ from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache
 from GetResults			import GetResults, GetCategoryDetails
 
 class RaceResult( object ):
-	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, raceOrganizer, bib, rank ):
+	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, raceOrganizer, raceFName, bib, rank ):
 		self.firstName = firstName
 		self.lastName = lastName
 		self.license = license
 		self.team = team
+		
 		self.categoryName = categoryName
+		
 		self.raceName = raceName
 		self.raceDate = raceDate
 		self.raceOrganizer = raceOrganizer
+		self.raceFName = raceFName
+		
 		self.bib = bib
 		self.rank = rank
 		
@@ -52,9 +56,11 @@ def ExtractRaceResults( fileName ):
 			for fTo, fFrom in [('firstName', 'FirstName'), ('lastName', 'LastName'), ('license', 'License'), ('team', 'Team')]:
 				info[fTo] = getattr(rr, fFrom, '')
 			info['categoryName'] = category.fullname
-			info['raceName'] = race.name
-			info['raceDate'] = race.date
-			info['raceOrganizer'] = race.organizer
+			
+			for fTo, fFrom in [('raceName', 'name'), ('raceDate', 'date'), ('raceOrganizer', 'organizer')]:
+				info[fTo] = getattr(race, fFrom, '')
+			info['raceFName'] = fileName
+			
 			info['bib'] = int(rr.num)
 			info['rank'] = int(rr.pos)
 			raceResults.append( RaceResult(**info) )
@@ -62,11 +68,11 @@ def ExtractRaceResults( fileName ):
 	Model.race = None
 	return True, '', raceResults
 	
-def GetCategoryResults( categoryName, raceResults, pointsForRank ):
-	mostPointsFirst = (pointsForRank[1] > pointsForRank[2])
-
+def GetCategoryResults( categoryName, raceResults, pointsForRank, tieBreakerMostPlacesMax = 5 ):
 	# Get all results for this category.
 	raceResults = [rr for rr in raceResults if rr.categoryName == categoryName]
+	if not raceResults:
+		return [], []
 	
 	# Get all races for this category.
 	races = set( (rr.raceDate, rr.raceName) for rr in raceResults )
@@ -76,34 +82,29 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank ):
 	# Get the individual results for each rider, and the total points.
 	riderResults = defaultdict( lambda : [(0,0)] * len(races) )
 	riderPoints = defaultdict( int )
+	riderPlaceCount = defaultdict( lambda : defaultdict(int) )
 	for rr in raceResults:
 		rider = (rr.lastName, rr.firstName, rr.license)
 		points = pointsForRank[rr.rank]
 		riderResults[rider][raceSequence[(rr.raceDate, rr.raceName)]] = (points, rr.rank)
 		riderPoints[rider] += points
+		riderPlaceCount[rider][rr.rank] += 1
 
-	# If not most points first, remove any riders that did not participate in all races.
-	if not mostPointsFirst:
-		toDelete = set()
-		for rr in raceResults:
-			if (0, 0) in riderResults:
-				toDelete.add( tt )
-		for rr in toDelete:
-			del raceResults[rr]
-		
-	# Sort by rider points - greatest number of points first.  Break ties with most recent results.
+	# Sort by rider points - greatest number of points first.  Break ties with place count, then
+	# most recent result.
 	riderOrder = [rider for rider, results in riderResults.iteritems()]
-	riderOrder.sort( key = lambda r: [riderPoints[r]] + riderResults[r][::-1], reverse = mostPointsFirst )
+	riderOrder.sort( key = lambda r:	[riderPoints[r]] +
+										[riderPlaceCount[r][k] for k in xrange(1, tieBreakerMostPlacesMax+1)] +
+										[-rank for points, rank in reversed(riderResults[r])], reverse = True )
 	
 	# List of:
-	# lastName, firstName, license, points, [list of (points, position) for each race]
+	# lastName, firstName, license, points, [list of (points, position) for each race in series]
 	categoryResult = [list(rider) + [riderPoints[rider]] + [riderResults[rider]] for rider in riderOrder]
 	return categoryResult, races
-	
-	
+
 if __name__ == '__main__':
 	files = [
-		r'D:\Projects\CrossMgr\RacoonRally\2013-06-30-2013 Raccoon Rally Mountain Bike Race-r1-.cmn',
+		r'C:\Projects\CrossMgr\RacoonRally\2013-06-30-2013 Raccoon Rally Mountain Bike Race-r1-.cmn',
 	]
 	raceResults = []
 	for f in files:
@@ -114,16 +115,18 @@ if __name__ == '__main__':
 	
 	categories = set( rr.categoryName for rr in raceResults )
 	categories = sorted( categories )
-	for c in categories:
-		print c
 		
 	pointsForRank = defaultdict( int )
-	for i in xrange(25):
-		pointsForRank[i] = 26 - i
+	for i in xrange(250):
+		pointsForRank[i+1] = 250 - i
 		
 	for c in categories:
 		categoryResult, races = GetCategoryResults( c, raceResults, pointsForRank )
+		print '--------------------------------------------------------'
+		print c
+		print
 		for rr in categoryResult:
 			print rr[0], rr[1], rr[2], rr[3], rr[4]
+		print races
 	#print raceResults
 	
