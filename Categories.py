@@ -6,6 +6,82 @@ from Undo import undo
 import wx.grid			as gridlib
 import wx.lib.masked	as  masked
 
+from GetResults import GetCategoryDetails
+from ExportGrid import ExportGrid
+
+#--------------------------------------------------------------------------------
+
+class CategoriesPrintout( wx.Printout ):
+    def __init__(self, categories = None):
+		wx.Printout.__init__(self)
+
+    def OnBeginDocument(self, start, end):
+        return super(CategoriesPrintout, self).OnBeginDocument(start, end)
+
+    def OnEndDocument(self):
+        super(CategoriesPrintout, self).OnEndDocument()
+
+    def OnBeginPrinting(self):
+        super(CategoriesPrintout, self).OnBeginPrinting()
+
+    def OnEndPrinting(self):
+        super(CategoriesPrintout, self).OnEndPrinting()
+
+    def OnPreparePrinting(self):
+        super(CategoriesPrintout, self).OnPreparePrinting()
+
+    def HasPage(self, page):
+		return page == 1
+
+    def GetPageInfo(self):
+		return (1,1,1,1)
+
+    def OnPrintPage(self, page):
+		race = Model.race
+		if not race:
+			return
+			
+		catDetails = GetCategoryDetails()
+		
+		title = '\n'.join( ['Categories', race.name, race.scheduledStart + ' Start on ' + Utils.formatDate(race.date)] )
+		colnames = ['Start Time', 'Category', 'Gender', 'Numbers', 'Laps', 'Distance']
+		
+		raceStart = Utils.StrToSeconds( race.scheduledStart + ':00' )
+		catData = []
+		for c in race.getCategories():
+			catInfo = catDetails.get( c.fullname, {} )
+			laps = c.numLaps
+			if laps:
+				raceDistance = '%.2f' % c.getDistanceAtLap( laps )
+			else:
+				laps = catInfo.get( 'laps', '' )
+				if laps:
+					raceDistance = '%.2f' % c.getDistanceAtLap( laps )
+				else:
+					raceDistance = ''
+					laps = ''
+				
+			catData.append( [
+				Utils.SecondsToStr( raceStart + c.getStartOffsetSecs() ),
+				c.name,
+				catInfo.get('gender', 'Open'),
+				c.catStr,
+				str(laps),
+				' '.join([raceDistance, race.distanceUnitStr]) if raceDistance else ''
+			])
+			
+		catData.sort( key = lambda d: (Utils.StrToSeconds(d[0]), d[1]) )
+		
+		data = [[None] * len(catData) for i in xrange(len(colnames))]
+		for row in xrange(len(catData)):
+			for col in xrange(len(colnames)):
+				data[col][row] = catData[row][col]
+				
+		exportGrid = ExportGrid( title = title, colnames = colnames, data = data )
+		exportGrid.leftJustifyCols = set([1, 2, 3])
+		exportGrid.drawToFitDC( self.GetDC() )
+		return True
+
 #--------------------------------------------------------------------------------
 class TimeEditor(gridlib.PyGridCellEditor):
 	def __init__(self):
@@ -162,7 +238,33 @@ class Categories( wx.Panel ):
 		self.SetSizer(vs)
 
 	def onPrint( self, event ):
-		pass
+		mainWin = Utils.getMainWin()
+		if not mainWin:
+			return
+		race = Model.race
+		if not Model.race:
+			return
+			
+		colnames = ['Name', 'Gender', 'Numbers', 'Start Offset', 'Laps', 'Distance']
+		data = [[]] * len(colnames)
+		
+		pdd = wx.PrintDialogData(mainWin.printData)
+		pdd.SetAllPages( True )
+		pdd.EnableSelection( False )
+		pdd.EnablePageNumbers( False )
+		pdd.EnableHelp( False )
+		pdd.EnablePrintToFile( False )
+		
+		printer = wx.Printer(pdd)
+		printout = CategoriesPrintout()
+
+		if not printer.Print(self, printout, True):
+			if printer.GetLastError() == wx.PRINTER_ERROR:
+				Utils.MessageOK(self, "There was a printer problem.\nCheck your printer setup.", "Printer Error",iconMask=wx.ICON_ERROR)
+		else:
+			mainWin.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
+
+		printout.Destroy()
 		
 	def onGridLeftClick( self, event ):
 		if event.GetCol() == self.activeColumn:
