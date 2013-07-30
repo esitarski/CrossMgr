@@ -1950,7 +1950,7 @@ function SetCategoryResults()
 			raceTimesLength[num] = data[num]['raceTimes'].length;
 	}
 	
-	if( showLapsFrequency < 1 )
+	if( showLapsFrequency < 0 )
 	{
 		// Compute a reasonable number of laps to show.
 		// Get the maximum laps in the data.
@@ -1967,7 +1967,7 @@ function SetCategoryResults()
 		for( var i = 0; i < showLaps.options.length; ++i )
 		{
 			var freqCur = parseInt(showLaps.options[i].value, 10);
-			if( ~~(maxLaps / freqCur) <= 12 || i == showLaps.options.length - 1 )
+			if( freqCur != 0 && (~~(maxLaps / freqCur) <= 12 || i == showLaps.options.length - 1) )
 			{
 				showLaps.selectedIndex = i;
 				showLapsFrequency = freqCur;
@@ -2141,11 +2141,11 @@ function SetCategoryResults()
 		}
 		*/
 		
-		if( leaderLaps > 2 )
+		if( leaderLaps > 2 && showLapsFrequency != 0 )
 		{
 			for( var i = 1; i < leaderLaps; ++i )
 			{
-				if( i % showLapsFrequency == 0 || i == 1 || i == leaderLaps-1  )
+				if( (i % showLapsFrequency == 0 || i == 1 || i == leaderLaps-1)  )
 				{
 					createTextChild( td = createChild(tr, 'TH'), 'Lap ' + i );
 					++numHeaders;
@@ -2291,7 +2291,7 @@ function SetCategoryResults()
 				if( numsToWatch[num] ) td.className = 'highlight';
 			}
 			
-			if( leaderLaps > 2 )
+			if( leaderLaps > 2 && showLapsFrequency != 0 )
 			{
 				for( var i = 1; i < leaderLaps; ++i )
 				{
@@ -3414,6 +3414,7 @@ Highlight Numbers:
 	<span class="noprint">Show 100s of Seconds</span></input>
 &nbsp;&nbsp;&nbsp;
 <select class="noprint" id="idShowLaps" onChange="SetShowLaps()">
+	<option value="0">Hide Lap Info</option>
 	<option value="1" selected="selected">Show Every Lap</option>
 	<option value="2">Show Every 2 Laps</option>
 	<option value="3">Show Every 3 Laps</option>
@@ -3421,6 +3422,9 @@ Highlight Numbers:
 	<option value="10">Show Every 10 Laps</option>
 	<option value="15">Show Every 15 Laps</option>
 	<option value="20">Show Every 20 Laps</option>
+	<option value="25">Show Every 25 Laps</option>
+	<option value="50">Show Every 50 Laps</option>
+	<option value="100">Show Every 100 Laps</option>
 </select>
 <span id="idTotalElevationGain"> </span>
 </p>
