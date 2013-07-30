@@ -87,37 +87,43 @@ class Categories( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
 		
-		gbs = wx.GridBagSizer(4, 4)
+		vs = wx.BoxSizer( wx.VERTICAL )
 		
-		border = 6
-		flag = wx.LEFT|wx.TOP|wx.BOTTOM
+		border = 4
+		flag = wx.ALL
 		
-		cols = 0
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		
 		self.newCategoryButton = wx.Button(self, id=wx.ID_ANY, label='&New Category', style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onNewCategory, self.newCategoryButton )
-		gbs.Add( self.newCategoryButton, pos=(0,cols), span=(1,1), border = border, flag = flag )
-		cols += 1 
+		hs.Add( self.newCategoryButton, 0, border = border, flag = flag )
 		
 		self.delCategoryButton = wx.Button(self, id=wx.ID_ANY, label='&Delete Category', style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onDelCategory, self.delCategoryButton )
-		gbs.Add( self.delCategoryButton, pos=(0,cols), span=(1,1), border = border, flag = flag )
-		cols += 1 
+		hs.Add( self.delCategoryButton, 0, border = border, flag = flag )
 
+		hs.AddSpacer( 10 )
+		
 		self.upCategoryButton = wx.Button(self, id=wx.ID_ANY, label='&Up', style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onUpCategory, self.upCategoryButton )
-		gbs.Add( self.upCategoryButton, pos=(0,cols), span=(1,1), border = border, flag = flag )
-		cols += 1 
+		hs.Add( self.upCategoryButton, 0, border = border, flag = flag )
 
 		self.downCategoryButton = wx.Button(self, id=wx.ID_ANY, label='D&own', style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onDownCategory, self.downCategoryButton )
-		gbs.Add( self.downCategoryButton, pos=(0,cols), span=(1,1), border = border, flag = (flag & ~wx.LEFT) )
-		cols += 1 
+		hs.Add( self.downCategoryButton, 0, border = border, flag = (flag & ~wx.LEFT) )
 
+		hs.AddSpacer( 10 )
+		
 		self.addExceptionsButton = wx.Button(self, id=wx.ID_ANY, label='&Add Bib Exceptions', style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onAddExceptions, self.addExceptionsButton )
-		gbs.Add( self.addExceptionsButton, pos=(0,cols), span=(1,1), border = border, flag = (flag & ~wx.LEFT) )
-		cols += 1 
+		hs.Add( self.addExceptionsButton, 0, border = border, flag = (flag & ~wx.LEFT) )
 
+		hs.AddStretchSpacer()
+		
+		self.printButton = wx.Button( self, id=wx.ID_ANY, label='Print...', style=wx.BU_EXACTFIT )
+		self.Bind( wx.EVT_BUTTON, self.onPrint, self.printButton )
+		hs.Add( self.printButton, 0, border = border, flag = (flag & ~wx.LEFT) )
+		
 		self.grid = gridlib.Grid( self )
 		self.colNameFields = [
 			('Active',				'active'),
@@ -149,12 +155,15 @@ class Categories( wx.Panel ):
 		#self.Bind( gridlib.EVT_GRID_CELL_LEFT_CLICK, self.onGridLeftClick )
 		self.Bind( gridlib.EVT_GRID_SELECT_CELL, self.onCellSelected )
 		self.Bind( gridlib.EVT_GRID_EDITOR_CREATED, self.onEditorCreated )
-		gbs.Add( self.grid, pos=(1,0), span=(1,cols), flag=wx.GROW|wx.ALL|wx.EXPAND )
 		
-		gbs.AddGrowableRow( 1 )
-		gbs.AddGrowableCol( cols - 1 )
-		self.SetSizer(gbs)
+		vs.Add( hs, 0, flag=wx.EXPAND|wx.ALL, border = 4 )
+		vs.Add( self.grid, 1, flag=wx.GROW|wx.ALL|wx.EXPAND )
+		
+		self.SetSizer(vs)
 
+	def onPrint( self, event ):
+		pass
+		
 	def onGridLeftClick( self, event ):
 		if event.GetCol() == self.activeColumn:
 			wx.CallLater( 200, self.toggleCheckBox )
