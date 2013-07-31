@@ -43,12 +43,20 @@ class CategoriesPrintout( wx.Printout ):
 			
 		catDetails = GetCategoryDetails()
 		
+		try:
+			externalInfo = race.excelLink.read()
+		except:
+			externalInfo = {}
+		
 		title = '\n'.join( ['Categories', race.name, race.scheduledStart + ' Start on ' + Utils.formatDate(race.date)] )
-		colnames = ['Start Time', 'Category', 'Gender', 'Numbers', 'Laps', 'Distance']
+		colnames = ['Start Time', 'Category', 'Gender', 'Numbers', 'Laps', 'Distance', 'Starters']
 		
 		raceStart = Utils.StrToSeconds( race.scheduledStart + ':00' )
 		catData = []
 		for c in race.getCategories():
+			starters = sum( 1 for num in externalInfo.iterkeys() if c == race.getCategory(num) )
+			if not starters:
+				starters = ''
 			catInfo = catDetails.get( c.fullname, {} )
 			laps = c.numLaps
 			if laps:
@@ -67,7 +75,8 @@ class CategoriesPrintout( wx.Printout ):
 				catInfo.get('gender', 'Open'),
 				c.catStr,
 				str(laps),
-				' '.join([raceDistance, race.distanceUnitStr]) if raceDistance else ''
+				' '.join([raceDistance, race.distanceUnitStr]) if raceDistance else '',
+				str(starters)
 			])
 			
 		catData.sort( key = lambda d: (Utils.StrToSeconds(d[0]), d[1]) )

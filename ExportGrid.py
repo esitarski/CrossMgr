@@ -250,14 +250,16 @@ class ExportGrid( object ):
 			if isSpeed:
 				self.colnames[col] = 'Speed'
 				
+		# Switch to smaller font.
+		font = self._getFont( borderPix // 4, False )
+		dc.SetFont( font )
+		
 		if url:
 			yPix = yPixMax + textHeight
 			w, h, lh = dc.GetMultiLineTextExtent( url, font )
 			self._drawMultiLineText( dc, url, widthPix - borderPix - w, yPix )
 			
 		# Put CrossMgr branding at the bottom of the page.
-		font = self._getFont( borderPix // 4, False )
-		dc.SetFont( font )
 		w, h, lh = dc.GetMultiLineTextExtent( brandText, font )
 		self._drawMultiLineText( dc, brandText, borderPix, heightPix - borderPix + h )
 		
