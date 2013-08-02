@@ -411,9 +411,16 @@ function OpenVirtualTourWindow()
 		var latNext = courseCoordinates[(i+3) % courseCoordinatesLength];
 		var compassBearing = (gpsIsPointToPoint && i == courseCoordinatesLength - 2 ?
 					lastCompassBearing : CompassBearing(lat, lon, latNext, lonNext));
+		var duration = null;
+		if( i == 0 )
+			duration = 3;
+		else if( gpsIsPointToPoint && i == courseCoordinatesLength - 2 )
+			duration = 1;
+		else
+			duration = GreatCircleDistance(lat, lon, latNext, lonNext) / speed;
 		write( [
 		    '{{gx:FlyTo}}',
-              '{{gx:duration}}' + (i == 0 ? 3 : GreatCircleDistance(lat, lon, latNext, lonNext) / speed) + '{{/gx:duration}}',
+              '{{gx:duration}}' + duration + '{{/gx:duration}}',
               '{{gx:flyToMode}}' + (i == 0 ? 'bounce' : 'smooth') + '{{/gx:flyToMode}}',
               '{{Camera}}',
                 '{{latitude}}' + lat + '{{/latitude}}',
