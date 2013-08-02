@@ -402,7 +402,7 @@ function OpenVirtualTourWindow()
 		   '{{gx:Playlist}}',
 	] );
 	var courseCoordinatesLength = courseCoordinates.length;
-	for( var i = 0; i < courseCoordinatesLength + 2; i += 2 )
+	for( var i = 0; i < courseCoordinatesLength; i += 2 )
 	{
 		var lon = courseCoordinates[i % courseCoordinatesLength];
 		var lat = courseCoordinates[(i+1) % courseCoordinatesLength];
@@ -449,7 +449,8 @@ function OpenVirtualTourWindow()
 	] );
 	for( var i = 0; i < courseCoordinates.length; i += 2 )
 		kml.push( courseCoordinates[i] + ',' + courseCoordinates[i+1] + ',' + 1.0 );
-	kml.push( courseCoordinates[0] + ',' + courseCoordinates[1] + ',' + 1.0 );
+	if( !gpsIsPointToPoint )
+		kml.push( courseCoordinates[0] + ',' + courseCoordinates[1] + ',' + 1.0 );
 	
 	// Eplilog.
 	write( [
