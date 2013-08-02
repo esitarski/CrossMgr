@@ -1027,7 +1027,7 @@ class MainWin( wx.Frame ):
 				gpsPoints = geoTrack.asExportJson()
 				gpsAltigraph = geoTrack.getAltigraph()
 				totalElevationGain = geoTrack.totalElevationGainM
-				isPointToPoint = getattr( geoTrack, isPointToPoint, False )
+				isPointToPoint = getattr( geoTrack, 'isPointToPoint', False )
 		
 		tNow = datetime.datetime.now()
 		payload['timestamp']			= [tNow.ctime(), tLastRaceTime]

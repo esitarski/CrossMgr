@@ -6,6 +6,7 @@ import wx.wizard as wiz
 import wx.lib.filebrowsebutton as filebrowse
 from GeoAnimation import GeoTrack, GpxHasTimes
 import Utils
+from Utils import logException
 import Model
 import traceback
 
@@ -38,11 +39,14 @@ class IntroPage(wiz.WizardPageSimple):
 	def setInfo( self, geoTrack, geoTrackFName ):
 		self.geoTrack = geoTrack
 		if geoTrack:
-			s = 'Existing GPX file:\n\nImported from: "%s"\n\nNumber of Coords: %d\n\nLap Length: %.3f km, %.3f miles\n\nTotal Elevation Gain: %.0f m, %.0f ft' % (
-				geoTrackFName,
-				geoTrack.numPoints,
-				geoTrack.lengthKm, geoTrack.lengthMiles,
-				geoTrack.totalElevationGainM, geoTrack.totalElevationGainFt)
+			s = '\n\n'.join( [
+					'Existing GPX file:',
+					'Imported from: "%s"' % geoTrackFName,
+					'Number of Coords: %d' % geoTrack.numPoints,
+					'Lap Length: %.3f km, %.3f miles' % (geoTrack.lengthKm, geoTrack.lengthMiles),
+					'Total Elevation Gain: %.0f m, %.0f ft' % (geoTrack.totalElevationGainM, geoTrack.totalElevationGainFt),
+					'Course Type: %s' % ('Point to Point' if getattr(geoTrack, 'isPointToPoint', False) else 'Loop')
+				] )
 		else:
 			s = ''
 		self.removeButton.Enable( bool(geoTrack) )
@@ -155,6 +159,10 @@ class SummaryPage(wiz.WizardPageSimple):
 		self.totalElevationGain = wx.TextCtrl(self, wx.ID_ANY, '', style=wx.TE_READONLY)
 		rows += 1
 
+		self.courseTypeLabel = wx.StaticText( self, wx.ID_ANY, 'Course is:' )
+		self.courseType = wx.TextCtrl(self, wx.ID_ANY, '', style=wx.TE_READONLY)
+		rows += 1
+
 		self.setCategoryDistanceLabel = wx.StaticText( self, wx.ID_ANY, '' )
 		self.setCategoryDistanceCheckbox = wx.CheckBox( self, wx.ID_ANY, 'Set Category Distances to GPX Lap Length' )
 		self.setCategoryDistanceCheckbox.SetValue( True )
@@ -167,6 +175,7 @@ class SummaryPage(wiz.WizardPageSimple):
 					  (self.numCoordsLabel, 0, labelAlign),		(self.numCoords, 	1, wx.EXPAND|wx.GROW),
 					  (self.distanceLabel, 0, labelAlign),		(self.distance,		1, wx.EXPAND|wx.GROW),
 					  (self.totalElevationGainLabel, 0, labelAlign),(self.totalElevationGain,		1, wx.EXPAND|wx.GROW),
+					  (self.courseTypeLabel, 0, labelAlign),(self.courseType,		1, wx.EXPAND|wx.GROW),
 					  (wx.StaticText(self,wx.ID_ANY,''), 0, labelAlign),			(wx.StaticText(self,wx.ID_ANY,''), 1, wx.EXPAND|wx.GROW),
 					  (self.setCategoryDistanceLabel, 0, labelAlign), (self.setCategoryDistanceCheckbox, 1, wx.EXPAND|wx.GROW),
 					 ] )
@@ -188,7 +197,7 @@ class SummaryPage(wiz.WizardPageSimple):
 				c.distance = distance
 			race.setChanged()
 	
-	def setInfo( self, fileName, numCoords, distance, totalElevationGain ):
+	def setInfo( self, fileName, numCoords, distance, totalElevationGain, isPointToPoint ):
 		self.fileName.SetLabel( fileName )
 		self.numCoords.SetLabel( '%d' % numCoords )
 		self.distanceKm = distance
@@ -197,6 +206,7 @@ class SummaryPage(wiz.WizardPageSimple):
 		self.totalElevationGainM = totalElevationGain
 		self.totalElevationGainFt = totalElevationGain*3.28084
 		self.totalElevationGain.ChangeValue( '%.0f m, %.0f ft' % (self.totalElevationGainM, self.totalElevationGainFt) )
+		self.courseType.ChangeValue( 'Point to Point' if isPointToPoint else 'Loop' )
 		
 class GetGeoTrack( object ):
 	def __init__( self, parent, geoTrack = None, geoTrackFName = None ):
@@ -283,9 +293,10 @@ class GetGeoTrack( object ):
 			# Check for valid content.
 			geoTrack = GeoTrack()
 			try:
-				geoTrack.read( fileName, self.fileNamePage.isPointToPoint() )
-			except :
-				Utils.MessageOK( self.wizard, 'Read error:  Is this GPX file properly formatted?\n(%s)' % sys.exc_info()[0],
+				geoTrack.read( fileName, isPointToPoint = self.fileNamePage.getIsPointToPoint() )
+			except Exception as e:
+				logException( e, sys.exc_info() )
+				Utils.MessageOK( self.wizard, 'Read error:  Is this GPX file properly formatted?\n(%s)' % e,
 								title='Read Error', iconMask=wx.ICON_ERROR)
 				evt.Veto()
 				return
@@ -303,19 +314,23 @@ class GetGeoTrack( object ):
 				fileNameElevation = os.path.join( os.path.dirname(fileName), 'elevation.csv' )
 				try:
 					open(fileNameElevation).close()
-				except IOError:
-					message = 'Cannot Open Elevation File:\n\n    "%s"\n\nPlease check the file name and/or its read permissions.' % fileNameElevation
+				except IOError as e:
+					logException( e, sys.exc_info() )
+					message = 'Cannot Open Elevation File: %s\n\n    "%s"\n\nPlease check the file name and/or its read permissions.' % (e, fileNameElevation)
 					Utils.MessageOK( self.wizard, message, title='File Open Error', iconMask=wx.ICON_ERROR)
 				else:
-					#try:
-					geoTrack.readElevation( fileNameElevation )
-					#except Exception as e:
-					#	message = 'Elevation File Error: %s\n\n    "%s"' % (e, fileNameElevation)
-					#	Utils.MessageOK( self.wizard, message, title='File Read Error', iconMask=wx.ICON_ERROR)
+					try:
+						geoTrack.readElevation( fileNameElevation )
+					except Exception as e:
+						logException( e, sys.exc_info() )
+						message = 'Elevation File Error: %s\n\n    "%s"' % (e, fileNameElevation)
+						Utils.MessageOK( self.wizard, message, title='File Read Error', iconMask=wx.ICON_ERROR )
 				
 			self.geoTrackFName = fileName
 			self.geoTrack = geoTrack
-			self.summaryPage.setInfo( self.geoTrackFName, self.geoTrack.numPoints, self.geoTrack.lengthKm, self.geoTrack.totalElevationGainM )
+			self.summaryPage.setInfo(	self.geoTrackFName, self.geoTrack.numPoints,
+										self.geoTrack.lengthKm, self.geoTrack.totalElevationGainM,
+										getattr( self.geoTrack, 'isPointToPoint', False) )
 			self.useTimesPage.setInfo( self.geoTrackFName )
 			
 		elif page == self.useTimesPage:

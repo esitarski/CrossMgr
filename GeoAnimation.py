@@ -125,13 +125,13 @@ def ParseGpxFile( fname, useTimes = False, isPointToPoint = False ):
 		
 	gpsPoints = []
 	dCum = 0.0
-	for i in xrange(len(latLonEles)):
+	for i in xrange(len(latLonEles) - (1 if isPointToPoint else 0)):
 		p, pNext = latLonEles[i], latLonEles[(i+1) % len(latLonEles)]
 		if hasTimes and useTimes:
 			if pNext.t > p.t:
 				gad = (pNext.t - p.t).total_seconds()
 			else:
-				# Estimate the last time difference based on the speed as the last segment.
+				# Estimate the last time difference based on the speed of the last segment.
 				pPrev = latLonEles[(i+len(latLonEles)-1)%len(latLonEles)]
 				d = GreatCircleDistance( pPrev.lat, pPrev.lon, p.lat, p.lon )
 				t = (p.t - pPrev.t).total_seconds()
@@ -144,7 +144,7 @@ def ParseGpxFile( fname, useTimes = False, isPointToPoint = False ):
 			gad = GradeAdjustedDistance( p.lat, p.lon, p.ele, pNext.lat, pNext.lon, pNext.ele )
 		x = GreatCircleDistance( latMin, lonMin, latMin, p.lon )
 		y = GreatCircleDistance( latMin, lonMin, p.lat, lonMin )
-		if not isPointToPoint and gad > 0.0:
+		if gad > 0.0:
 			gpsPoints.append( GpsPoint(p.lat, p.lon, p.ele, x, y, gad, dCum) )
 			dCum += gad
 	
@@ -215,7 +215,8 @@ class GeoTrack( object ):
 		lenGpsPoints = len(self.gpsPoints)
 		length = 0.0
 		totalElevationGain = 0.0
-		for i in xrange(lenGpsPoints - (1 if getattr(self, 'isPointToPoint', False) else 0)):
+		self.isPointToPoint = getattr( self, 'isPointToPoint', False )
+		for i in xrange(lenGpsPoints - (1 if self.isPointToPoint else 0)):
 			pCur, pNext = self.gpsPoints[i], self.gpsPoints[(i + 1) % lenGpsPoints]
 			length += GreatCircleDistance3D( pCur.lat, pCur.lon, pCur.ele, pNext.lat, pNext.lon, pNext.ele )
 			totalElevationGain += max(0.0, pNext.ele - pCur.ele)
@@ -224,7 +225,7 @@ class GeoTrack( object ):
 		
 	def read( self, fname, useTimes = False, isPointToPoint = False ):
 		self.isPointToPoint = isPointToPoint
-		self.gpsPoints = ParseGpxFile( fname, useTimes, isPointToPoint )
+		self.gpsPoints = ParseGpxFile( fname, useTimes = useTimes, isPointToPoint = isPointToPoint )
 		self.xMax = max( p.x for p in self.gpsPoints )
 		self.yMax = max( p.y for p in self.gpsPoints )
 		dCum = 0.0
@@ -858,6 +859,8 @@ class GeoAnimation(wx.PyControl):
 		if width < 80 or height < 80 or not self.geoTrack:
 			return
 
+		isPointToPoint = getattr(self.geoTrack, 'isPointToPoint', False)
+		
 		self.r = int(width / 4)
 		if self.r * 2 > height:
 			self.r = int(height / 2)
@@ -909,41 +912,40 @@ class GeoAnimation(wx.PyControl):
 					self.compassLocation = loc
 					if inCount == 0:
 						break
-
 		
 		dc.SetPen( wx.Pen(wx.Colour(128,128,128), laneWidth * 1.25 + 2, wx.SOLID) )
-		if getattr(self, 'isPointToPoint', False):
+		if isPointToPoint:
 			dc.DrawLines( drawPoints )
 		else:
 			dc.DrawPolygon( drawPoints )
 		
 		dc.SetPen( wx.Pen(self.trackColour, laneWidth * 1.25, wx.SOLID) )
-		if getattr(self, 'isPointToPoint', False):
+		if isPointToPoint:
 			dc.DrawLines( drawPoints )
 		else:
 			dc.DrawPolygon( drawPoints )
 		
 		# Draw a centerline to show all the curves in the course.
 		dc.SetPen( wx.Pen(wx.Colour(80,80,80), 1, wx.SOLID) )
-		if getattr(self, 'isPointToPoint', False):
+		if isPointToPoint:
 			dc.DrawLines( drawPoints )
 		else:
 			dc.DrawPolygon( drawPoints )
 		
 		# Draw a finish line.
 		finishLineLength = laneWidth * 2
-		if getattr(self, 'isPointToPoint', False):
-			x1, y1, x2, y2 = LineNormal( drawPoints[0][0], drawPoints[0][1], drawPoints[1][0], drawPoints[1][1], laneWidth * 2 )
-		else:
+		if isPointToPoint:
 			x1, y1, x2, y2 = LineNormal( drawPoints[-1][0], drawPoints[-1][1], drawPoints[-2][0], drawPoints[-2][1], laneWidth * 2 )
+		else:
+			x1, y1, x2, y2 = LineNormal( drawPoints[0][0], drawPoints[0][1], drawPoints[1][0], drawPoints[1][1], laneWidth * 2 )
 		dc.SetPen( wx.Pen(wx.WHITE, laneWidth / 1.5, wx.SOLID) )
 		dc.DrawLine( x1, y1, x2, y2 )
 		dc.SetPen( wx.Pen(wx.BLACK, laneWidth / 5, wx.SOLID) )
 		dc.DrawLine( x1, y1, x2, y2 )
-		if getattr(self, 'isPointToPoint', False):
-			x1, y1, x2, y2 = LineNormal( drawPoints[0][0], drawPoints[0][1], drawPoints[1][0], drawPoints[1][1], laneWidth * 4 )
-		else:
+		if isPointToPoint:
 			x1, y1, x2, y2 = LineNormal( drawPoints[-1][0], drawPoints[-1][1], drawPoints[-2][0], drawPoints[-2][1], laneWidth * 4 )
+		else:
+			x1, y1, x2, y2 = LineNormal( drawPoints[0][0], drawPoints[0][1], drawPoints[1][0], drawPoints[1][1], laneWidth * 4 )
 		dc.DrawBitmap( self.checkeredFlag, x2 - self.checkeredFlag.Width/2, y2 - self.checkeredFlag.Height/2, False )
 
 		# Draw the riders

@@ -63,11 +63,11 @@ class Points(wx.Panel):
 		bsizer.Add( wx.StaticText(self, wx.ID_ANY, 'If Riders are Tied on Points:'), 0, flag=wx.ALL, border = 2 )
 		self.numPlacesTieBreaker = wx.RadioBox(self, wx.ID_ANY, majorDimension = 1, choices = [
 			'Do not consider Place Finishes.',
-			'Use number of 1st Place Finishes',
-			'Use number of 1st and 2nd Place Finishes',
-			'Use number of 1st, 2nd and 3rd Place Finishes',
-			'Use number of 1st, 2nd, 3rd and 4th Place Finishes',
-			'Use number of 1st, 2nd, 3rd, 4th and 5th Place Finishes',
+			'Use Most 1st Place Finishes',
+			'Use Most 1st and 2nd Place Finishes',
+			'Use Most 1st, 2nd and 3rd Place Finishes',
+			'Use Most 1st, 2nd, 3rd and 4th Place Finishes',
+			'Use Most 1st, 2nd, 3rd, 4th and 5th Place Finishes',
 		])
 		bsizer.Add( self.numPlacesTieBreaker, 0, flag=wx.ALL, border = 2 )
 		bsizer.Add( wx.StaticText(self, wx.ID_ANY, 'If there is still a Tie, use most Recent Results'), 0, flag=wx.ALL, border = 2 )
