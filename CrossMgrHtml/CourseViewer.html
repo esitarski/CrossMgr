@@ -402,12 +402,15 @@ function OpenVirtualTourWindow()
 		   '{{gx:Playlist}}',
 	] );
 	var courseCoordinatesLength = courseCoordinates.length;
+	var lastCompassBearing = null;
 	for( var i = 0; i < courseCoordinatesLength; i += 2 )
 	{
 		var lon = courseCoordinates[i % courseCoordinatesLength];
 		var lat = courseCoordinates[(i+1) % courseCoordinatesLength];
 		var lonNext = courseCoordinates[(i+2) % courseCoordinatesLength];
 		var latNext = courseCoordinates[(i+3) % courseCoordinatesLength];
+		var compassBearing = (gpsIsPointToPoint && i == courseCoordinatesLength - 2 ?
+					lastCompassBearing : CompassBearing(lat, lon, latNext, lonNext));
 		write( [
 		    '{{gx:FlyTo}}',
               '{{gx:duration}}' + (i == 0 ? 3 : GreatCircleDistance(lat, lon, latNext, lonNext) / speed) + '{{/gx:duration}}',
@@ -417,11 +420,12 @@ function OpenVirtualTourWindow()
                 '{{longitude}}' + lon + '{{/longitude}}',
                 '{{altitude}}'+ 2 +'{{/altitude}}',
                 '{{altitudeMode}}relativeToGround{{/altitudeMode}}',
-                '{{heading}}' + CompassBearing(lat, lon, latNext, lonNext) + '{{/heading}}',
+                '{{heading}}' + compassBearing + '{{/heading}}',
                 '{{tilt}}'+ 80 +'{{/tilt}}',
               '{{/Camera}}',
             '{{/gx:FlyTo}}',
 		] );
+		lastCompassBearing = compassBearing;
 	}
 	write( [
 		  '{{/gx:Playlist}}',
