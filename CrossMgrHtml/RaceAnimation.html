@@ -1046,6 +1046,9 @@ function GeoTrack()
 			i %= lenGpsPoints;
 		}
 		
+		if( gpsIsPointToPoint )
+			i = Math.min( i, lenGpsPoints - 2 )
+		
 		this.cache[id] = i;
 		
 		var pCur = this.gpsPoints[i], pNext = this.gpsPoints[(i+1)%lenGpsPoints];
