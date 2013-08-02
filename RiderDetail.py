@@ -115,7 +115,7 @@ class AdjustTimeDialog( wx.Dialog ):
 		undo.pushState()
 		self.rider.firstTime = st
 		self.rider.ttPenalty = self.penaltyTime.GetSeconds()
-		self.rider.ttNotes = self.notes.GetValue()
+		self.rider.ttNote = self.note.GetValue()
 		if st and ft:
 			rt = ft - st
 			if not self.rider.times:

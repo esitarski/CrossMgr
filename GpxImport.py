@@ -65,8 +65,12 @@ class FileNamePage(wiz.WizardPageSimple):
 												fileMode=wx.OPEN,
 												fileMask='|'.join(fileMask),
 												changeCallback = self.setElevationStatus )
-		self.elevationCheckBox = wx.CheckBox( self, -1, 'Read "elevation.csv" File (in same folder as GPX file)' )
+												
+		self.courseTypeRadioBox = wx.RadioBox( self, wx.ID_ANY, choices=['Course is a Loop', 'Course is Point-to-Point'] )
+		
+		self.elevationCheckBox = wx.CheckBox( self, wx.ID_ANY, 'Read "elevation.csv" File (in same folder as GPX file)' )
 		vbs.Add( self.fbb, flag=wx.ALL, border = border )
+		vbs.Add( self.courseTypeRadioBox, flag=wx.ALL, border = border )
 		vbs.Add( self.elevationCheckBox, flag=wx.ALL, border = border )
 		self.setElevationStatus()
 		
@@ -92,6 +96,9 @@ class FileNamePage(wiz.WizardPageSimple):
 		
 	def getUseElevation( self ):
 		return self.elevationCheckBox.GetValue()
+		
+	def getIsPointToPoint( self ):
+		return self.courseTypeRadioBox.GetSelection() == 1
 
 class UseTimesPage(wiz.WizardPageSimple):
 	def __init__(self, parent):
@@ -276,7 +283,7 @@ class GetGeoTrack( object ):
 			# Check for valid content.
 			geoTrack = GeoTrack()
 			try:
-				geoTrack.read( fileName )
+				geoTrack.read( fileName, self.fileNamePage.isPointToPoint() )
 			except :
 				Utils.MessageOK( self.wizard, 'Read error:  Is this GPX file properly formatted?\n(%s)' % sys.exc_info()[0],
 								title='Read Error', iconMask=wx.ICON_ERROR)

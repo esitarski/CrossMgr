@@ -106,7 +106,7 @@ def GpxHasTimes( fname ):
 		tLast = t
 	return True
 	
-def ParseGpxFile( fname, useTimes = False ):
+def ParseGpxFile( fname, useTimes = False, isPointToPoint = False ):
 	points = GpxParse( fname )
 	
 	latMin, lonMin = 1000.0, 1000.0
@@ -144,7 +144,7 @@ def ParseGpxFile( fname, useTimes = False ):
 			gad = GradeAdjustedDistance( p.lat, p.lon, p.ele, pNext.lat, pNext.lon, pNext.ele )
 		x = GreatCircleDistance( latMin, lonMin, latMin, p.lon )
 		y = GreatCircleDistance( latMin, lonMin, p.lat, lonMin )
-		if gad > 0.0:
+		if not isPointToPoint and gad > 0.0:
 			gpsPoints.append( GpsPoint(p.lat, p.lon, p.ele, x, y, gad, dCum) )
 			dCum += gad
 	
@@ -208,21 +208,23 @@ class GeoTrack( object ):
 		self.mult = 1.0
 		self.length = 0.0
 		self.totalElevationGain = 0.0
+		self.isPointToPoint = False
 		self.cache = {}
 		
 	def computeSummary( self ):
 		lenGpsPoints = len(self.gpsPoints)
 		length = 0.0
 		totalElevationGain = 0.0
-		for i in xrange(lenGpsPoints):
+		for i in xrange(lenGpsPoints - (1 if getattr(self, 'isPointToPoint', False) else 0)):
 			pCur, pNext = self.gpsPoints[i], self.gpsPoints[(i + 1) % lenGpsPoints]
 			length += GreatCircleDistance3D( pCur.lat, pCur.lon, pCur.ele, pNext.lat, pNext.lon, pNext.ele )
 			totalElevationGain += max(0.0, pNext.ele - pCur.ele)
 		self.length = length
 		self.totalElevationGain = totalElevationGain
 		
-	def read( self, fname, useTimes = False ):
-		self.gpsPoints = ParseGpxFile( fname, useTimes )
+	def read( self, fname, useTimes = False, isPointToPoint = False ):
+		self.isPointToPoint = isPointToPoint
+		self.gpsPoints = ParseGpxFile( fname, useTimes, isPointToPoint )
 		self.xMax = max( p.x for p in self.gpsPoints )
 		self.yMax = max( p.y for p in self.gpsPoints )
 		dCum = 0.0
@@ -910,14 +912,23 @@ class GeoAnimation(wx.PyControl):
 
 		
 		dc.SetPen( wx.Pen(wx.Colour(128,128,128), laneWidth * 1.25 + 2, wx.SOLID) )
-		dc.DrawPolygon( drawPoints )
+		if getattr(self, 'isPointToPoint', False):
+			dc.DrawLines( drawPoints )
+		else:
+			dc.DrawPolygon( drawPoints )
 		
 		dc.SetPen( wx.Pen(self.trackColour, laneWidth * 1.25, wx.SOLID) )
-		dc.DrawPolygon( drawPoints )
+		if getattr(self, 'isPointToPoint', False):
+			dc.DrawLines( drawPoints )
+		else:
+			dc.DrawPolygon( drawPoints )
 		
 		# Draw a centerline to show all the curves in the course.
 		dc.SetPen( wx.Pen(wx.Colour(80,80,80), 1, wx.SOLID) )
-		dc.DrawPolygon( drawPoints )
+		if getattr(self, 'isPointToPoint', False):
+			dc.DrawLines( drawPoints )
+		else:
+			dc.DrawPolygon( drawPoints )
 		
 		# Draw a finish line.
 		finishLineLength = laneWidth * 2

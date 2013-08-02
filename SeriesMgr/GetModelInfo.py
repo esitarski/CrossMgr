@@ -1,7 +1,9 @@
 
 import Model
+import SeriesModel
 import Utils
 import cPickle as pickle
+import datetime
 from collections import defaultdict
 from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache
 from GetResults			import GetResults, GetCategoryDetails
@@ -30,6 +32,14 @@ class RaceResult( object ):
 	def keyMatch( self ):
 		fields = ['categoryName', 'lastName', 'firstName', 'license']
 		return tuple( getattr(self, a) for a in fields )
+		
+	@property
+	def full_name( self ):
+		if self.lastName and self.firstName:
+			return ', '.join( self.lastName.upper(), self.firstName )
+		if self.lastName:
+			return self.lastName.upper()
+		return self.firstName
 
 def ExtractRaceResults( fileName ):
 	try:
@@ -57,18 +67,27 @@ def ExtractRaceResults( fileName ):
 				info[fTo] = getattr(rr, fFrom, '')
 			info['categoryName'] = category.fullname
 			
-			for fTo, fFrom in [('raceName', 'name'), ('raceDate', 'date'), ('raceOrganizer', 'organizer')]:
+			for fTo, fFrom in [('raceName', 'name'), ('raceOrganizer', 'organizer')]:
 				info[fTo] = getattr(race, fFrom, '')
 			info['raceFName'] = fileName
+			if race.startTime:
+				info['raceDate'] = race.startTime
+			else:
+				try:
+					d = race.date.replace('-', ' ').replace('/', ' ')
+					fields = [int(v) for v in d.split()] + [int(v) for v in race.scheduledStart.split(':')]
+					info['raceDate'] = datetime.datetime( *fields )
+				except:
+					info['raceDate'] = datetime.datetime.now()
 			
 			info['bib'] = int(rr.num)
 			info['rank'] = int(rr.pos)
 			raceResults.append( RaceResult(**info) )
 		
 	Model.race = None
-	return True, '', raceResults
+	return True, 'success', raceResults
 	
-def GetCategoryResults( categoryName, raceResults, pointsForRank, tieBreakerMostPlacesMax = 5 ):
+def GetCategoryResults( categoryName, raceResults, pointsForRank, numPlacesTieBreaker = 5 ):
 	# Get all results for this category.
 	raceResults = [rr for rr in raceResults if rr.categoryName == categoryName]
 	if not raceResults:
@@ -85,7 +104,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, tieBreakerMost
 	riderPlaceCount = defaultdict( lambda : defaultdict(int) )
 	for rr in raceResults:
 		rider = (rr.lastName, rr.firstName, rr.license)
-		points = pointsForRank[rr.rank]
+		points = pointsForRank[rr.raceFName][rr.rank]
 		riderResults[rider][raceSequence[(rr.raceDate, rr.raceName)]] = (points, rr.rank)
 		riderPoints[rider] += points
 		riderPlaceCount[rider][rr.rank] += 1
@@ -94,7 +113,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, tieBreakerMost
 	# most recent result.
 	riderOrder = [rider for rider, results in riderResults.iteritems()]
 	riderOrder.sort( key = lambda r:	[riderPoints[r]] +
-										[riderPlaceCount[r][k] for k in xrange(1, tieBreakerMostPlacesMax+1)] +
+										[riderPlaceCount[r][k] for k in xrange(1, numPlacesTieBreaker+1)] +
 										[-rank for points, rank in reversed(riderResults[r])], reverse = True )
 	
 	# List of:
@@ -119,6 +138,8 @@ if __name__ == '__main__':
 	pointsForRank = defaultdict( int )
 	for i in xrange(250):
 		pointsForRank[i+1] = 250 - i
+		
+	pointsForRank = { files[0]: pointsForRank }
 		
 	for c in categories:
 		categoryResult, races = GetCategoryResults( c, raceResults, pointsForRank )
