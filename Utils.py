@@ -5,6 +5,7 @@ import os
 import re
 import sys
 import math
+import string
 import subprocess
 import unicodedata
 import webbrowser
@@ -42,6 +43,22 @@ def HighPriority():
 def stripLeadingZeros( s ):
 	return s.lstrip('0')
 
+validFilenameChars = set( c for c in ("-_.() %s%s" % (string.ascii_letters, string.digits)) )
+def RemoveDisallowedFilenameChars( filename ):
+	cleanedFilename = unicodedata.normalize('NFKD', unicode(filename)).encode('ASCII', 'ignore')
+	cleanedFilename = cleanedFilename.replace( '/', '_' )
+	return ''.join(c for c in cleanedFilename if c in validFilenameChars)
+
+def ordinal( value ):
+	try:
+		value = int(value)
+	except ValueError:
+		return value
+
+	if (value % 100)//10 != 1:
+		return "%d%s" % (value, ['th','st','nd','rd','th','th','th','th','th','th'][value%10])
+	return "%d%s" % (value, "th")
+	
 def removeDiacritic(input):
 	'''
 	Accept a unicode string, and return a normal string (bytes in Python 3)

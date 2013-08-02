@@ -932,12 +932,18 @@ class GeoAnimation(wx.PyControl):
 		
 		# Draw a finish line.
 		finishLineLength = laneWidth * 2
-		x1, y1, x2, y2 = LineNormal( drawPoints[0][0], drawPoints[0][1], drawPoints[1][0], drawPoints[1][1], laneWidth * 2 )
+		if getattr(self, 'isPointToPoint', False):
+			x1, y1, x2, y2 = LineNormal( drawPoints[0][0], drawPoints[0][1], drawPoints[1][0], drawPoints[1][1], laneWidth * 2 )
+		else:
+			x1, y1, x2, y2 = LineNormal( drawPoints[-1][0], drawPoints[-1][1], drawPoints[-2][0], drawPoints[-2][1], laneWidth * 2 )
 		dc.SetPen( wx.Pen(wx.WHITE, laneWidth / 1.5, wx.SOLID) )
 		dc.DrawLine( x1, y1, x2, y2 )
 		dc.SetPen( wx.Pen(wx.BLACK, laneWidth / 5, wx.SOLID) )
 		dc.DrawLine( x1, y1, x2, y2 )
-		x1, y1, x2, y2 = LineNormal( drawPoints[0][0], drawPoints[0][1], drawPoints[1][0], drawPoints[1][1], laneWidth * 4 )
+		if getattr(self, 'isPointToPoint', False):
+			x1, y1, x2, y2 = LineNormal( drawPoints[0][0], drawPoints[0][1], drawPoints[1][0], drawPoints[1][1], laneWidth * 4 )
+		else:
+			x1, y1, x2, y2 = LineNormal( drawPoints[-1][0], drawPoints[-1][1], drawPoints[-2][0], drawPoints[-2][1], laneWidth * 4 )
 		dc.DrawBitmap( self.checkeredFlag, x2 - self.checkeredFlag.Width/2, y2 - self.checkeredFlag.Height/2, False )
 
 		# Draw the riders
