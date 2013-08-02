@@ -1101,13 +1101,14 @@ class MainWin( wx.Frame ):
 				payload['raceNotes']	= notes
 			else:
 				payload['raceNotes']	= cgi.escape(notes).replace('\n','{{br/}}')
-			courseCoordinates, gpsAltigraph, totalElevationGain, lengthKm = None, None, None, None
+			courseCoordinates, gpsAltigraph, totalElevationGain, lengthKm, isPointToPoint = None, None, None, None, None
 			geoTrack = getattr(race, 'geoTrack', None)
 			if geoTrack is not None:
 				courseCoordinates = geoTrack.asCoordinates()
 				gpsAltigraph = geoTrack.getAltigraph()
 				totalElevationGain = geoTrack.totalElevationGainM
 				lengthKm = geoTrack.lengthKm
+				isPointToPoint = getattr( geoTrack, 'isPointToPoint', False )
 		
 		tNow = datetime.datetime.now()
 		payload['email']				= self.getEmail()
@@ -1134,7 +1135,9 @@ class MainWin( wx.Frame ):
 			payload['gpsAltigraph'] = gpsAltigraph
 		if lengthKm:
 			payload['lengthKm'] = lengthKm
-
+		if isPointToPoint:
+			payload['gpsIsPointToPoint'] = isPointToPoint
+			
 		html = replaceJsonVar( html, 'payload', payload )
 		graphicBase64 = self.getGraphicBase64()
 		if graphicBase64:

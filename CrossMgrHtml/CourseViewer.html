@@ -73,6 +73,7 @@ var displayUnits = null;
 var courseObj = null;
 var gpsTotalElevationGain = null;	// total elevation gain on the course.
 var gpsAltigraph = null;		// Altigraph of the course.
+var gpsIsPointToPoint = null;	// Flag whether course is point-to-point or a loop.
 var courseCoordinates = null;	// course coordinates as an array of lon, lat pairs.
 var lengthKm = null;
 var virtualRideTemplate = null;	// template to generate virtual ride page
@@ -495,6 +496,14 @@ function colorBetween( r1, g1, b1, r2, g2, b2, x )
 	return 'rgb(' + r + ',' + g + ',' + b + ')';
 }
 
+function getBestInterval( d, intervals )
+{
+	var k = intervals.binSearch( d );
+	if( k >= intervals.length )
+		k = intervals.length - 1;
+	return intervals[k];
+}
+
 function Altigraph()
 {
 	this.altigraph = [];
@@ -584,11 +593,7 @@ function Altigraph()
 		var numLabels = Math.floor((xRight - xLeft) / (textWidth * 1.5));
 		var courseLength = this.xMax/1000.0 * (displayUnits == 'km' ? 1.0 : 0.621371);
 		var d = courseLength / numLabels;
-		var intervals = [0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 15.0, 20.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0];
-		var k = intervals.binSearch( d );
-		if( k >= intervals.length )
-			k = intervals.length - 1;
-		this.xTick = d = intervals[k];
+		this.xTick = d = getBestInterval(d, [0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 15.0, 20.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0] );
 		var precision = 0;
 		if( d < 1 )
 			if( d == 0.25 )
@@ -624,11 +629,7 @@ function Altigraph()
 		var numLabels = Math.floor(height / (fontSizeLegend * 1.5));
 		var yDelta = (this.yMax - this.yMin) * (displayUnits == 'km' ? 1.0 : 3.28084);
 		var d = yDelta / numLabels;
-		var intervals = [1, 2, 5, 10, 15, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000];
-		var k = intervals.binSearch( d );
-		if( k >= intervals.length )
-			k = intervals.length - 1;
-		this.yTick = d = intervals[k];
+		this.yTick = d = getBestInterval(d, [1, 2, 5, 10, 15, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000]);
 		dc.textBaseline = 'middle';
 		dc.strokeStyle = '#c0c0c0';
 		dc.lineWidth = 1;
@@ -795,7 +796,8 @@ function DrawMap()
 		if( i > 0 )
 			length += GreatCircleDistance(courseCoordinates[i-2+1], courseCoordinates[i-2], courseCoordinates[i+1], courseCoordinates[i]);
 	}
-	points.push( points[0] );
+	if( !gpsIsPointToPoint )
+		points.push( points[0] );
 	
 	// Draw arrows to show direction.
 	var arrowLength = length * 0.012;
@@ -847,15 +849,21 @@ function DrawMap()
 	
 	// Draw the course.
 	var course = new google.maps.Polyline( {
-		path: points,
-		strokeColor: "#FF0000",
-		strokeOpacity: 0.6,
-		strokeWeight: 6,
-		map: mapCanvas
-	});
+			path: points,
+			strokeColor: "#FF0000",
+			strokeOpacity: 0.6,
+			strokeWeight: 6,
+			map: mapCanvas
+		});
 	
 	// Draw labels showing the distance on the map - same as on the altigraph.
-	var xTick = altigraph.xTick;
+	var xTick = (altigraph && altigraph.xTick ? altigraph.xTick : null);
+	if( !xTick )
+	{
+		var courseLength = lengthKm * (displayUnits == 'km' ? 1.0 : 0.621371);
+		var d = courseLength / 10.0;
+		xTick = getBestInterval(d, [0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 15.0, 20.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0] );
+	}
 	var precision = (xTick >= 1 ? 0 : xTick == 0.25 ? 2 : 1);
 	var tickMult = displayUnits == 'km' ? 1000.0 : 1609.344;
 	var nextMarkerDistance = xTick;
@@ -882,7 +890,7 @@ function DrawMap()
 	
 	// Draw the finish line.
 	var finish = new google.maps.Marker({
-		position: points[0],
+		position: gpsIsPointToPoint ? points[points.length-1] : points[0],
 		title: 'Finish Line',
 		icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAgCAYAAAD5VeO1AAAEsklEQVRIibWVX0jTaxjHH//029lcVqvM0taNGUHNinGOnkGohJWtQ4KaFEVySlSSUixzTFwZxYnROv2ByisLgwqCIRRhF4EcKsjgeBrDgUqYDhvLJtoyt33OTZPCKLX83L0Xz+f78uV5eUVmiM/na/b7/TUznfsuL1++PM4nbt682V5VVbXkp4jLy8uP6/V6Hj58yPPnz1mwYAEGg2Hs6NGjuT8kttvtxuXLl4dFhNWrV3PhwgXi4uIQEaxW65jP58uflbijo2Phhw8f/m1tbSUpKYlnz54BcP/+fUpLSwmFQkQikbDX6z1ps9lipy222Wyxbre7LdpzU1MTPT09AHg8HrZs2YLb7QagsbGRnJyc/rq6Ov205Lt3725ftWoVT5484erVq4gIS5cuxel0YjQaERF0Oh3Xr1+frGnjxo3B3t5ewzfFTU1NtfPmzUNEKCgowGKxEBMTQ3x8PE6nk4aGBmJjYzGZTLx//57z58+jUqm4ceMGoVAo8ObNm+Kvint7ew0TExOBy5cvk5GRgc/nA+DWrVs4HI5oS7S0tEzWAnDt2jX8fj8Aw8PDrVPEJ06cSHv9+nUPwOjoKBUVFQwMDADgdDoxmUy8evWKjx8/snXrVtavX4/L5eLx48eo1WrS09Pp6OhwtbW1ab4QX7x4UTGZTENr166lq6uL/fv3IyLo9Xru3r2LTqdDRFixYgV2ux0RQUTIysqisrISESE1NTVcU1Pz+5RbHzt27EF04NSpU+zduxcRISUlBY/HQ1VVFSLCkSNHCIVCNDY2snjxYrq6uohEIpw9ezZ8+PDhyilir9d7IBQKcfr0afbs2UMkEgHAbrfz6NGjyV6vXLnCyMjI5PnMmTOMjo4SiUTwer1TxQ0NDcXv3r0bA+ju7ubgwYMEAgEA6urqyMvLY2hoiP7+flauXElmZiZ9fX2cO3cOEWHDhg08ffq0ZYq4trbWoNfrJ4xGIy9evMBgMCAiGAwGmpubiYmJQUTIyMigoqJisueysjJ27tyJiJCZmemvrq7+ZYr8D7O5Mz4+HkVRuHfv3uRATk4Ob9++Zd++fcTFxXHnzh2CwSBlZWVs2rSJkZERJiYmsFqtfovFsm6KWETEYDBo8rdt++fSpUtBgHA4jM1mY3Bw8Iuew+FwdH+pr69nfHycUCg05vF4fv2q+HN27dp1cnBwcGB8fJzs7GwKCwsZHh6mvb0dRVEwm834fD4KCgoQETZv3ozL5TrwXXGU34zG/Jrqam+018LCQnJzcyd7djgcmEwmRISioqKOaYuj6HS6VLPZ3JeSkkJ3dzeBQIDi4mIOHToEQDAYpL6+/j+bzRY/Y7mIyPbt25U/S0tvj42NDQN0dnZisVgIh8MEg0GX2+3WzUr8OTt27Kjt7OwcSEtLQ0QoKSkZd7vdX9+M2bBmzZrsvLw8v6IolJeXW3+aOEpycvISU1bWg/nz56f/dPknYrUajUWjUpnnKkC0anWhWlGOFxUVTf8zngmLtNp1apXKISIL5yZg0aLEBLXasTAh4duf8Y+QoFbXqBWlZM4CEjWafK1GYxWR2b3a7wYkJqapVaq/tVpt0pwELFu2TJOgVv8lIskiIv8DQ4HqhmfkzxMAAAAASUVORK5CYII=",
 		animation: google.maps.Animation.BOUNCE,
