@@ -3,6 +3,7 @@ import sys
 import time
 import atexit
 import os
+import math
 import datetime
 import threading
 from Queue import Queue, Empty
@@ -14,6 +15,22 @@ q = None
 streamer = None
 
 terminateMessage = '<<<terminate>>>'
+
+def formatTimeHHMMSS( secs ):
+	if secs is None:
+		secs = 0
+	if secs < 0:
+		sign = '-'
+		secs = -secs
+	else:
+		sign = ''
+	f, ss = math.modf(secs)
+	secs = int(ss)
+	hours = int(secs // (60*60))
+	minutes = int( (secs // 60) % 60 )
+	secs = secs % 60
+	decimal = int( f * 100.0 )
+	return "%s%02d:%02d:%02d.%02d" % (sign, hours, minutes, secs, decimal)
 
 def Server( q, fname ):
 	keepGoing = True
@@ -126,21 +143,20 @@ def writeNumTime( num, t ):
 	if not streamer:
 		StartStreamer()
 
-	# Convert race time to days for Excel.
+	# Convert race time to days for Excel.  Also include quoted HH:MM:SS.ddd time format for convenience.
 	if streamer:
-		q.put( 'time,{:d},{:.15e}\n'.format(num, t / DaySeconds) )
+		q.put( 'time,{:d},{:.15e},"{}"\n'.format(num, t / DaySeconds, formatTimeHHMMSS(t)) )
 		
 def writeNumTimes( numTimes ):
 	if not streamer:
 		StartStreamer()
 
-	# Convert race time to days for Excel.
+	# Convert race time to days for Excel.  Also include quoted HH:MM:SS.ddd time format for convenience.
 	if streamer:
 		for num, t in numTimes:
-			q.put( 'time,{:d},{:.15e}\n'.format(num, t / DaySeconds) )
+			q.put( 'time,{:d},{:.15e},"{}"\n'.format(num, t / DaySeconds, formatTimeHHMMSS(t)) )
 	else:
-		print 'writeNumTimes failure:', numTimes
-
+		Utils.writeLog( 'writeNumTimes failure: numTimes=%d' % numTimes )
 
 def ReadStreamFile( fname = None ):
 	if not fname:
