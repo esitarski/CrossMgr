@@ -56,7 +56,10 @@ for i in xrange(25):
 
 #------------------------------------------------------------------------------	
 # Create a JChip-style hex tag for each number.
-tag = dict( (n, 'J413A%02X' % n) for n in nums )
+tag = dict( (n, '413A%02X' % n) for n in nums )
+tag[random.choice(list(tag.keys()))] = 'E2001018860B01290700D0D8'
+tag[random.choice(list(tag.keys()))] = 'E2001018860B01530700D138'
+tag[random.choice(list(tag.keys()))] = 'E2001018860B01370700D0F8'
 
 #------------------------------------------------------------------------------	
 # Write out as a .xlsx file with the number tag data.
@@ -86,7 +89,7 @@ with open('JChipTest.csv', 'w') as f:
 count = 0
 def formatMessage( n, lap, t ):
 	global count
-	message = "D%s %s 10  %05X      C7%s" % (
+	message = "DJ%s %s 10  %05X      C7%s" % (
 				tag[n],								# Tag code
 				t.strftime('%H:%M:%S.%f'),			# hh:mm:ss.ff
 				count,								# Data index number in hex.

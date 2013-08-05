@@ -391,7 +391,7 @@ def GetCleanTag( tag ):
 	return str(tag).translate(trantab, ' \t\n\r')	# Also, remove any extra spaces.
 
 def FixJChipTag( tag ):
-	return GetCleanTag(tag)[-JChipTagLength:].zfill(JChipTagLength)
+	return GetCleanTag(tag).zfill(JChipTagLength)
 	
 def FixOrionTag( tag ):
 	return GetCleanTag(tag)[-OrionTagLength:].zfill(OrionTagLength)
