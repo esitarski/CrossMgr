@@ -230,7 +230,7 @@ if Device:
 			Utils.FixPILSearchPath()
 			try:
 				camera = Device()
-			except Exceptione as e:
+			except Exception as e:
 				logException( e, sys.exc_info() )
 				camera = None
 		return camera
