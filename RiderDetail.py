@@ -109,7 +109,7 @@ class AdjustTimeDialog( wx.Dialog ):
 			
 		if stOld == st and ftOld == ft:
 			Utils.refresh()
-			self.EndModal( wx.IDOK )
+			self.EndModal( wx.ID_OK )
 			return
 		
 		undo.pushState()

@@ -386,7 +386,6 @@ class NumKeypad( wx.Panel ):
 		if self.isKeypadInputMode():
 			self.keypad.Show( False )
 			self.timeTrialRecord.Show( True )
-			self.timeTrialRecord.photoButton.Show( False and getattr(Model.race, 'enableUSBCamera', False) )
 			self.timeTrialRecord.refresh()
 			self.horizontalMainSizer.Replace( self.keypad, self.timeTrialRecord )
 			self.keypadTimeTrialToggleButton.SetBitmapLabel( self.keypadBitmap )
@@ -821,9 +820,6 @@ class NumKeypad( wx.Panel ):
 				self.isEnabled = enable
 			if not enable and self.isKeypadInputMode():
 				self.keypad.numEdit.SetValue( '' )
-			
-			if self.isTimeTrialInputMode():
-				self.timeTrialRecord.photoButton.Show( getattr(race, 'enableUSBCamera', False) )
 			
 			# Refresh the race start time.
 			changed = False

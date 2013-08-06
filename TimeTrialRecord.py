@@ -126,14 +126,8 @@ class TimeTrialRecord( wx.Panel ):
 		self.recordTimeButton.SetFont( self.bigFont )
 		self.recordTimeButton.SetToolTip(wx.ToolTip('Press to record a Time.  Enter the Bib, then press Commit'))
 		
-		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'camera.png'), wx.BITMAP_TYPE_PNG )
-		self.photoButton = wx.BitmapButton( self, wx.ID_ANY, bitmap )
-		self.photoButton.Bind( wx.EVT_BUTTON, self.doPhoto )
-		
 		hbs = wx.BoxSizer( wx.HORIZONTAL )
 		hbs.Add( self.recordTimeButton, 0 )
-		hbs.AddStretchSpacer()
-		hbs.Add( self.photoButton, 0 )
 		
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.SetFont( self.font )
@@ -165,28 +159,14 @@ class TimeTrialRecord( wx.Panel ):
 		
 		self.Bind(wx.EVT_MENU, self.doRecordTime, id=self.recordTimeButton.GetId())
 		self.Bind(wx.EVT_MENU, self.doCommit, id=self.commitButton.GetId())
-		self.Bind(wx.EVT_MENU, self.doPhoto, id=self.photoButton.GetId())
 		accel_tbl = wx.AcceleratorTable([
 			(wx.ACCEL_NORMAL,  ord('T'), self.recordTimeButton.GetId() ),
 			(wx.ACCEL_NORMAL,  ord('C'), self.commitButton.GetId() ),
-			(wx.ACCEL_NORMAL,  ord('P'), self.photoButton.GetId() ),
 		])
 		self.SetAcceleratorTable(accel_tbl)
 		
 		self.SetSizer(self.vbs)
 		
-	def doPhoto( self, event ):
-		if not Utils.mainWin or not getattr(Model.race, 'enableUSBCamera', False):
-			return
-			
-		row = self.grid.GetGridCursorRow()
-		tStr = self.grid.GetCellValue( row, 0 )
-		if not tStr:
-			return
-			
-		Utils.mainWin.photoDialog.Show( True )
-		Utils.mainWin.photoDialog.refresh( 0, StrToSeconds(tStr) )
-	
 	def doClickLabel( self, event ):
 		if event.GetCol() == 0:
 			self.doRecordTime( event )
