@@ -124,6 +124,7 @@ class TimeTrialRecord( wx.Panel ):
 		self.recordTimeButton = wx.Button( self, wx.ID_ANY, 'New Time' )
 		self.recordTimeButton.Bind( wx.EVT_BUTTON, self.doRecordTime )
 		self.recordTimeButton.SetFont( self.bigFont )
+		self.recordTimeButton.SetToolTip(wx.ToolTip('Press to record a Time.  Enter the Bib, then press Commit'))
 		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'camera.png'), wx.BITMAP_TYPE_PNG )
 		self.photoButton = wx.BitmapButton( self, wx.ID_ANY, bitmap )
@@ -153,9 +154,10 @@ class TimeTrialRecord( wx.Panel ):
 				attr.SetEditor( BibEditor() )
 			self.grid.SetColAttr( col, attr )
 		
-		self.commitButton = wx.Button( self, wx.ID_ANY, 'Commit' )
+		self.commitButton = wx.Button( self, wx.ID_ANY, 'Save' )
 		self.commitButton.Bind( wx.EVT_BUTTON, self.doCommit )
 		self.commitButton.SetFont( self.bigFont )
+		self.commitButton.SetToolTip(wx.ToolTip('Press to Save Entries'))
 		
 		self.vbs.Add( hbs, 0, flag=wx.ALL|wx.EXPAND, border = 4 )
 		self.vbs.Add( self.grid, 1, flag=wx.ALL|wx.EXPAND, border = 4 )

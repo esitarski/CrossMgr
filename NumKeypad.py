@@ -167,6 +167,9 @@ class Keypad( wx.Panel ):
 		'''
 		
 class NumKeypad( wx.Panel ):
+	SwitchToTimeTrialEntryMessage = 'Switch to Time Trial Entry'
+	SwitchToNumberEntryMessage = 'Switch to Regular Number Entry'
+
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
 		self.bell = None
@@ -207,6 +210,7 @@ class NumKeypad( wx.Panel ):
 		
 		self.keypadTimeTrialToggleButton = wx.BitmapButton( panel, wx.ID_ANY, self.ttRecordBitmap )
 		self.keypadTimeTrialToggleButton.Bind( wx.EVT_BUTTON, self.swapKeypadTimeTrialRecord )
+		self.keypadTimeTrialToggleButton.SetToolTip(wx.ToolTip(self.SwitchToTimeTrialEntryMessage))
 		
 		verticalSubSizer = wx.BoxSizer( wx.VERTICAL )
 		horizontalMainSizer.Add( verticalSubSizer )
@@ -382,10 +386,11 @@ class NumKeypad( wx.Panel ):
 		if self.isKeypadInputMode():
 			self.keypad.Show( False )
 			self.timeTrialRecord.Show( True )
-			self.timeTrialRecord.photoButton.Show( getattr(Model.race, 'enableUSBCamera', False) )
+			self.timeTrialRecord.photoButton.Show( False and getattr(Model.race, 'enableUSBCamera', False) )
 			self.timeTrialRecord.refresh()
 			self.horizontalMainSizer.Replace( self.keypad, self.timeTrialRecord )
 			self.keypadTimeTrialToggleButton.SetBitmapLabel( self.keypadBitmap )
+			self.keypadTimeTrialToggleButton.SetToolTip(wx.ToolTip(self.SwitchToNumberEntryMessage))
 			wx.CallAfter( self.timeTrialRecord.Refresh )
 			wx.CallAfter( self.timeTrialRecord.grid.SetFocus )
 		else:
@@ -393,6 +398,7 @@ class NumKeypad( wx.Panel ):
 			self.timeTrialRecord.Show( False )
 			self.horizontalMainSizer.Replace( self.timeTrialRecord, self.keypad )
 			self.keypadTimeTrialToggleButton.SetBitmapLabel( self.ttRecordBitmap )
+			self.keypadTimeTrialToggleButton.SetToolTip(wx.ToolTip(self.SwitchToTimeTrialEntryMessage))
 			wx.CallAfter( self.keypad.Refresh )
 			wx.CallAfter( self.keypad.numEdit.SetFocus )
 		self.horizontalMainSizer.Layout()
@@ -846,7 +852,9 @@ if __name__ == '__main__':
 	app = wx.PySimpleApp()
 	mainWin = wx.Frame(None,title="CrossMan", size=(1000,800))
 	Model.setRace( Model.Race() )
-	Model.getRace()._populate()
+	model = Model.getRace()
+	model._populate()
+	model.enableUSBCamera = True
 	numKeypad = NumKeypad(mainWin)
 	numKeypad.refresh()
 	mainWin.Show()
