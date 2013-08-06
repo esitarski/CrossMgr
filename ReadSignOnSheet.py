@@ -394,7 +394,7 @@ def FixJChipTag( tag ):
 	return GetCleanTag(tag).zfill(JChipTagLength)
 	
 def FixOrionTag( tag ):
-	return GetCleanTag(tag)[-OrionTagLength:].zfill(OrionTagLength)
+	return GetCleanTag(tag).zfill(OrionTagLength)
 
 def GetFixTag( externalInfo ):
 	# Check if we have JChip or Orion tags.

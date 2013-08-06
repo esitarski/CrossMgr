@@ -66,9 +66,9 @@ In time trial mode, you get times as the riders pass by pressing the "New Time" 
 
 You then enter the numbers next to the times (you many not be able to see the number on the back of the rider until he/she has passed).
 
-When you have entered all the corresponding bib numbers for the times, press the "Commit" button.  This sends your input to CrossMgr and clears the display for the next arrivals.
+When you have entered all the corresponding bib numbers for the times, press the "Save" button.  This saves the input and clears the display for the next arrivals.
 
-CrossMgr gives you 12 entries before a Commit is required.  In practice, you should never see more than 3-4 riders crossing the finish without a gap, so 12 entries is a large number to work with.  If you see large groups of riders finishing together, they are drafting, which is not permitted.
+CrossMgr gives you 12 entries before a Save is required.  In practice, you should never see more than 3-4 riders crossing the finish without a gap, so 12 entries is a large number to work with.  If you see large groups of riders finishing together, they are drafting, which is not permitted.
 
 If you are using the [USB Webcam][], you can retrieve the photo for the entry with the "Camera" button.  This can be helpful as the rider's number may be more readable in the picture.  This option is only enabled if the USB Webcam is enabled.
 
@@ -77,7 +77,7 @@ Rather than taking your hands off the keyboard to use the mouse, use keyboard sh
 Shortcut Key|Description
 :-------|:----------
 t|Adds a New Time.  Equivalent to pressing the "New Time" button.
-c|Commit the current entries.  Equivalent to pressing the "Commit" button.
+c|Commit the current entries.  Equivalent to pressing the "Save" button.
 p|Retrieves the photo for that row entry (if you are using the [USB Webcam][]).  Equivalent to pressing the "Photo" button when in that row.
 
 This allows you to do data entery quickly and accurately - without taking your hands off the keyboard.
