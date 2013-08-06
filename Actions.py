@@ -58,7 +58,8 @@ class StartRaceAtTime( wx.Dialog ):
 		
 		self.startSeconds = None
 		self.timer = None
-
+		self.futureRaceTimes = None
+		
 		race = Model.getRace()
 		autoStartLabel = wx.StaticText( self, wx.ID_ANY, 'Automatically Start Race at:' )
 		
@@ -116,16 +117,28 @@ class StartRaceAtTime( wx.Dialog ):
 		
 		# Start the race.
 		StartRaceNow()
+		
+		# Patch the race time to exactly match the given start time.
+		self.startTime = self.futureRaceTime
+		
 		self.EndModal( wx.ID_OK )
 	
 	def onOK( self, event ):
 		startTime = self.autoStartTime.GetValue()
 
-		self.startSeconds = Utils.StrToSeconds( startTime ) * 60
+		self.startSeconds = Utils.StrToSeconds( startTime ) * 60.0
 		if self.startSeconds < GetNowSeconds():
 			Utils.MessageOK( None, 'Scheduled Start Time is in the Past.\n\nPlease enter a Scheduled Start Time in the Future.', 'Scheduled Start Time is in the Past' )
 			return
-
+			
+		dateToday = datetime.date.today()
+		self.futureRaceTime = datetime.datetime(
+					year=dateToday.year, month=dateToday.month, day=dateToday.day,
+					hour = 0, minute = 0, second = 0
+				) + datetime.timedelta( seconds = self.startSeconds )
+		
+		print self.futureRaceTime
+		
 		# Setup the countdown clock.
 		self.timer = wx.Timer( self, id=wx.NewId() )
 		self.Bind( wx.EVT_TIMER, self.updateCountdownClock, self.timer )
