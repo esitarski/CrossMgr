@@ -140,7 +140,7 @@ class StartRaceAtTime( wx.Dialog ):
 		# Setup the countdown clock.
 		self.timer = wx.Timer( self, id=wx.NewId() )
 		self.Bind( wx.EVT_TIMER, self.updateCountdownClock, self.timer )
-		self.timer.Start( 500 )
+		self.timer.Start( 200 )
 		
 		# Disable buttons and switch to countdown state.
 		self.okBtn.Enable( False )
