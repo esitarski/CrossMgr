@@ -29,7 +29,7 @@ class FileNamePage(wiz.WizardPageSimple):
 		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Specify the Excel File containing TT Start Times in HH:MM:SS format.'),
 					flag=wx.ALL, border = border )
 		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Each race must be in a separate sheet.'), flag=wx.ALL, border = border )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'This is the Stopwatch Time ousually beginning at 00:01:00 with 30 to 60 second gaps - not the clock time.'), flag=wx.ALL, border = border )
+		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'This is the Stopwatch Time usually beginning at 00:01:00, with 30 to 60 second gaps - not the clock time.'), flag=wx.ALL, border = border )
 		fileMask = [
 			'Excel Worksheets (*.xlsx;*.xlsm;*.xls)|*.xlsx;*.xlsm;*.xls',
 		]
