@@ -356,7 +356,7 @@ class Categories( wx.Panel ):
 		
 		self.grid.SetCellValue( r, self.iCol['name'], name )
 		
-		if not gender in {'Men', 'Women', 'Open'}:
+		if gender not in {'Men', 'Women', 'Open'}:
 			gender = 'Open'
 		c = self.iCol['gender']
 		self.grid.SetCellValue( r, c, gender )
