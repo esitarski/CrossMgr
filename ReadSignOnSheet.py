@@ -9,6 +9,7 @@ import wx.lib.filebrowsebutton as filebrowse
 import wx.lib.scrolledpanel as scrolled
 import wx.wizard as wiz
 import Utils
+import Model
 import string
 import webbrowser
 import traceback
@@ -587,6 +588,13 @@ class ExcelLink( object ):
 		stateCache = (os.path.getmtime(self.fileName), self.fileName, self.sheetName, self.fieldCol)
 		infoCache = info
 		errorCache = errors
+		
+		# Clear the tagNums cache
+		try:
+			Model.race.tagNums = None
+		except AttributeError:
+			pass
+			
 		return infoCache
 
 #-----------------------------------------------------------------------------------------------------

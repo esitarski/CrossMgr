@@ -2380,7 +2380,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 				race.missingTags.add( d[1] )
 				continue
 				
-			# Ignore times before the start of the race.
+			# Only process times after the start of the race.
 			if race.isRunning() and race.startTime <= dt:
 				delta = dt - race.startTime
 				t = delta.total_seconds()
