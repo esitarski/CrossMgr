@@ -843,6 +843,10 @@ class MainWin( wx.Frame ):
 
 	PrintCategoriesDialogSize = (450, 400)
 	def menuPrintPreview( self, event ):
+		if not Model.race:
+			return
+		self.commit()
+	
 		cpcd = ChoosePrintCategoriesDialog( self )
 		x, y = self.GetPosition().Get()
 		x += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_X, self)
@@ -875,7 +879,8 @@ class MainWin( wx.Frame ):
 	def menuPrint( self, event ):
 		if not Model.race:
 			return
-		
+		self.commit()
+
 		cpcd = ChoosePrintCategoriesDialog( self )
 		x, y = self.GetPosition().Get()
 		x += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_X, self)
