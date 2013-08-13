@@ -523,6 +523,15 @@ class Rider(object):
 			return self.times[-1]
 		except IndexError:
 			return 0
+			
+	def getFirstKnownTime( self ):
+		t = getattr( self, 'firstTime', None )
+		if t is None:
+			try:
+				t = self.times[1]
+			except IndexError:
+				pass
+		return t
 
 	def isDNF( self ):			return self.status == Rider.DNF
 	def isDNS( self ):			return self.status == Rider.DNS

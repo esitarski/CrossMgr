@@ -200,6 +200,7 @@ class Recommendations( wx.Panel ):
 			for num, errorStr in excelErrors:
 				append( num, getName(num), 'Excel', 'Fix ' + errorStr )
 			
+			firstRiderInCategory = []
 			entries = race.interpolate()
 			if entries:
 
@@ -207,6 +208,21 @@ class Recommendations( wx.Panel ):
 				for catCur in race.getCategories():
 					if category and catCur != category:
 						continue
+						
+					# Get the first recorded rider of the category.
+					firstRiderTime = None
+					for e in entries:
+						if race.getCategory(e.num) != catCur:
+							continue
+						rider = race[e.num]
+						t = rider.getFirstKnownTime()
+						if t is None:
+							continue
+						if firstRiderTime is None or t < firstRiderTime[0]:
+							firstRiderTime = (t, rider, catCur)
+					if firstRiderTime:
+						firstRiderInCategory.append( firstRiderTime )
+						
 					results = GetResultsCore( catCur )
 					if not results:
 						continue
@@ -352,6 +368,14 @@ class Recommendations( wx.Panel ):
 					append( m, '',
 							'Tag', 'Check chip tag missing from Excel sheet'
 							)
+							
+				# Add information about the rider categories.
+				firstRiderInCategory.sort( key = lambda f: (f[0], f[2].name) )
+				for t, rider, catCur in firstRiderInCategory:
+					append( rider.num, getName(rider.num),
+							'Start',
+							'First Rider Recorded at {time} for {catName}'.format( catName=catCur.name, time=Utils.formatTime(t, True) ) )
+				
 				# end if entries
 				
 			self.grid.Set( data = data, colnames = colnames )
