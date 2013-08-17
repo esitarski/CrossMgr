@@ -130,7 +130,7 @@ def getRaceCategories():
 	return categories
 
 class CrossMgrPrintout( wx.Printout ):
-    def __init__(self, categories = None):
+	def __init__(self, categories = None):
 		wx.Printout.__init__(self)
 		if not categories:
 			self.categories = Model.race.getCategories()
@@ -138,25 +138,25 @@ class CrossMgrPrintout( wx.Printout ):
 			self.categories = categories
 		self.pageInfo = {}
 
-    def OnBeginDocument(self, start, end):
-        return super(CrossMgrPrintout, self).OnBeginDocument(start, end)
+	def OnBeginDocument(self, start, end):
+		return super(CrossMgrPrintout, self).OnBeginDocument(start, end)
 
-    def OnEndDocument(self):
-        super(CrossMgrPrintout, self).OnEndDocument()
+	def OnEndDocument(self):
+		super(CrossMgrPrintout, self).OnEndDocument()
 
-    def OnBeginPrinting(self):
-        super(CrossMgrPrintout, self).OnBeginPrinting()
+	def OnBeginPrinting(self):
+		super(CrossMgrPrintout, self).OnBeginPrinting()
 
-    def OnEndPrinting(self):
-        super(CrossMgrPrintout, self).OnEndPrinting()
+	def OnEndPrinting(self):
+		super(CrossMgrPrintout, self).OnEndPrinting()
 
-    def OnPreparePrinting(self):
-        super(CrossMgrPrintout, self).OnPreparePrinting()
+	def OnPreparePrinting(self):
+		super(CrossMgrPrintout, self).OnPreparePrinting()
 
-    def HasPage(self, page):
+	def HasPage(self, page):
 		return page in self.pageInfo
 
-    def GetPageInfo(self):
+	def GetPageInfo(self):
 		self.pageInfo = {}
 		numCategories = len(self.categories)
 		if numCategories == 0:
@@ -183,13 +183,62 @@ class CrossMgrPrintout( wx.Printout ):
 		
 		return (1, page, 1, page)
 
-    def OnPrintPage(self, page):
+	def prepareGrid( self, page ):
 		exportGrid = ExportGrid()
 		showLapTimes = (not Model.race) or getattr( Model.race, 'includeLapTimesInPrintout', True )
 		exportGrid.setResultsOneList( self.pageInfo[page][0], True, showLapTimes = showLapTimes )
+		return exportGrid
+		
+	def OnPrintPage(self, page):
+		exportGrid = self.prepareGrid( page )
 		exportGrid.drawToFitDC( *([self.GetDC()] + self.pageInfo[page][1:-1]) )
 		return True
 
+class CrossMgrPrintoutPNG( CrossMgrPrintout ):
+	def __init__(self, dir, fileBase, categories = None):
+		CrossMgrPrintout.__init__(self, categories)
+		self.dir = dir
+		self.fileBase = fileBase
+		self.lastFName = None
+
+	def OnPrintPage( self, page ):
+		exportGrid = self.prepareGrid( page )
+		
+		pxPerInch = 148
+		bitmap = wx.EmptyBitmap( pxPerInch*11, int(pxPerInch*8.5) )
+		dc = wx.MemoryDC()
+		dc.SelectObject( bitmap )
+		
+		dc.SetBrush( wx.WHITE_BRUSH )
+		dc.Clear()
+		dc.SetBrush( wx.BLACK_BRUSH )
+		exportGrid.drawToFitDC( *([dc] + self.pageInfo[page][1:-1]) )
+		dc.SelectObject( wx.NullBitmap )
+		image = bitmap.ConvertToImage()
+		
+		category = self.pageInfo[page][0]
+		pageNumber = self.pageInfo[page][3]
+		pageTotal = self.pageInfo[page][4]
+		
+		if pageTotal != 1:
+			fname = '{categoryName}-{pageNumber}-{fileBase}.png'.format(
+								fileBase = self.fileBase, categoryName = category.name,
+								pageNumber = pageNumber )
+		else:
+			fname = '{categoryName}-{fileBase}.png'.format(
+								fileBase = self.fileBase, categoryName = category.name )
+								
+		fname = Utils.RemoveDisallowedFilenameChars( fname )
+		
+		if not os.path.isdir( self.dir ):
+			os.mkdir( self.dir )
+		fname = os.path.join( self.dir, fname )
+		
+		self.lastFName = fname
+			
+		image.SaveFile( fname, wx.BITMAP_TYPE_PNG )
+		return True
+		
 if __name__ == '__main__':
 	Utils.disable_stdout_buffering()
 	app = wx.PySimpleApp()

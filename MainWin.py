@@ -62,7 +62,7 @@ import GpxImport
 import cStringIO as StringIO
 from Undo import undo
 from setpriority import setpriority
-from Printing			import CrossMgrPrintout, getRaceCategories, ChoosePrintCategoriesDialog
+from Printing			import CrossMgrPrintout, CrossMgrPrintoutPNG, getRaceCategories, ChoosePrintCategoriesDialog
 import xlwt
 from ExportGrid			import ExportGrid
 import SimulationLapTimes
@@ -300,6 +300,10 @@ class MainWin( wx.Frame ):
 		idCur = wx.NewId()
 		self.fileMenu.Append( idCur , "Publish Results as &HTML...", "Publish Results as HTML (.html)" )
 		self.Bind(wx.EVT_MENU, self.menuPublishHtmlRaceResults, id=idCur )
+
+		idCur = wx.NewId()
+		self.fileMenu.Append( idCur, "&Publish Results as PNG (for Facebook)...", "Publish Results as PNG files for posting on Facebook" )
+		self.Bind(wx.EVT_MENU, self.menuPrintPNG, id=idCur )
 
 		self.fileMenu.AppendSeparator()
 		
@@ -911,6 +915,53 @@ class MainWin( wx.Frame ):
 			self.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
 
 		printout.Destroy()
+
+	@logCall
+	def menuPrintPNG( self, event ):
+		if not Model.race:
+			return
+		self.commit()
+
+		cpcd = ChoosePrintCategoriesDialog( self )
+		x, y = self.GetPosition().Get()
+		x += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_X, self)
+		y += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_Y, self)
+		cpcd.SetPosition( (x, y) )
+		cpcd.SetSize( self.PrintCategoriesDialogSize )
+		result = cpcd.ShowModal()
+		categories = cpcd.categories
+		cpcd.Destroy()
+		if not categories or result != wx.ID_OK:
+			return
+	
+		dir, fnameBase = os.path.split( self.fileName )
+		dir = os.path.join( dir, 'ResultsPNG' )
+		fnameBase = os.path.splitext( fnameBase )[0]
+		printout = CrossMgrPrintoutPNG( dir, fnameBase, categories )
+		pages = printout.GetPageInfo()[-1]
+		
+		fname = None
+		success = True
+		wx.BeginBusyCursor()
+		for page in xrange(1, pages+1):
+			try:
+				printout.OnPrintPage( page )
+				if fname is None:
+					fname = printout.lastFName
+			except Exception as e:
+				Utils.MessageOK(self,
+							'Error creating PNG files:\n\n    %s.' % e,
+							'PNG File Error', iconMask=wx.ICON_ERROR )
+				success = False
+				break
+
+		printout.Destroy()
+		wx.EndBusyCursor()
+		
+		if success:
+			if fname:
+				webbrowser.open( fname, new = 2, autoraise = True )
+			Utils.MessageOK( self, 'Results written as PNG files to:\n\n    %s' % dir, 'PNG Publish' )
 
 	@logCall
 	def menuLinkExcel( self, event = None ):

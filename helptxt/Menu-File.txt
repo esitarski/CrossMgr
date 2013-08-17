@@ -43,6 +43,9 @@ Publish the results in Excel format and opens Excel on the output file.
 ## Publish Results to HTML...
 Publish the results as an HTML file and opens a browser on the output file.  Includes the Race Animation and the Chart.
 
+## Publish Results as PNG (for Facebook)...
+Publish the results as PNG formatted files suitable for posting to Facebook or Tumblr, which do not allow PDF or HTML content.
+
 ## Publish HTML Results with FTP...
 Publishes HTML formated results over an FTP upload.
 
