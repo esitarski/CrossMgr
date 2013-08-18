@@ -122,9 +122,9 @@ class TimeTrialRecord( wx.Panel ):
 		self.vbs = wx.BoxSizer(wx.VERTICAL)
 		
 		self.recordTimeButton = wx.Button( self, wx.ID_ANY, 'New Time' )
-		self.recordTimeButton.Bind( wx.EVT_BUTTON, self.doRecordTime )
+		self.recordTimeButton.Bind( wx.EVT_LEFT_DOWN, self.doRecordTime )
 		self.recordTimeButton.SetFont( self.bigFont )
-		self.recordTimeButton.SetToolTip(wx.ToolTip('Tap to record Times.  Then enter the Bib numbers and press Save.'))
+		self.recordTimeButton.SetToolTip(wx.ToolTip('Tap to Record Times.  Then enter the Bib numbers and press Save.'))
 		
 		hbs = wx.BoxSizer( wx.HORIZONTAL )
 		hbs.Add( self.recordTimeButton, 0 )
