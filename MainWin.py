@@ -302,7 +302,7 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_MENU, self.menuPublishHtmlRaceResults, id=idCur )
 
 		idCur = wx.NewId()
-		self.fileMenu.Append( idCur, "&Publish Results as PNG (for Facebook)...", "Publish Results as PNG files for posting on Facebook" )
+		self.fileMenu.Append( idCur, "Publish Results as P&NG (for Facebook)...", "Publish Results as PNG files for posting on Facebook" )
 		self.Bind(wx.EVT_MENU, self.menuPrintPNG, id=idCur )
 
 		self.fileMenu.AppendSeparator()
@@ -937,7 +937,7 @@ class MainWin( wx.Frame ):
 		dir, fnameBase = os.path.split( self.fileName )
 		dir = os.path.join( dir, 'ResultsPNG' )
 		fnameBase = os.path.splitext( fnameBase )[0]
-		printout = CrossMgrPrintoutPNG( dir, fnameBase, categories )
+		printout = CrossMgrPrintoutPNG( dir, fnameBase, self.printData.GetOrientation(), categories )
 		pages = printout.GetPageInfo()[-1]
 		
 		fname = None

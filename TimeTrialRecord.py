@@ -124,7 +124,7 @@ class TimeTrialRecord( wx.Panel ):
 		self.recordTimeButton = wx.Button( self, wx.ID_ANY, 'New Time' )
 		self.recordTimeButton.Bind( wx.EVT_BUTTON, self.doRecordTime )
 		self.recordTimeButton.SetFont( self.bigFont )
-		self.recordTimeButton.SetToolTip(wx.ToolTip('Press to record a Time.  Enter the Bib, then press Commit'))
+		self.recordTimeButton.SetToolTip(wx.ToolTip('Tap to record Times.  Then enter the Bib numbers and press Save.'))
 		
 		hbs = wx.BoxSizer( wx.HORIZONTAL )
 		hbs.Add( self.recordTimeButton, 0 )
@@ -151,7 +151,7 @@ class TimeTrialRecord( wx.Panel ):
 		self.commitButton = wx.Button( self, wx.ID_ANY, 'Save' )
 		self.commitButton.Bind( wx.EVT_BUTTON, self.doCommit )
 		self.commitButton.SetFont( self.bigFont )
-		self.commitButton.SetToolTip(wx.ToolTip('Press to Save Entries'))
+		self.commitButton.SetToolTip(wx.ToolTip('Press to Save Time Entries'))
 		
 		self.vbs.Add( hbs, 0, flag=wx.ALL|wx.EXPAND, border = 4 )
 		self.vbs.Add( self.grid, 1, flag=wx.ALL|wx.EXPAND, border = 4 )

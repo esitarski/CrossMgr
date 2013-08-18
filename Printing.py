@@ -195,17 +195,21 @@ class CrossMgrPrintout( wx.Printout ):
 		return True
 
 class CrossMgrPrintoutPNG( CrossMgrPrintout ):
-	def __init__(self, dir, fileBase, categories = None):
+	def __init__( self, dir, fileBase, orientation, categories = None ):
 		CrossMgrPrintout.__init__(self, categories)
 		self.dir = dir
 		self.fileBase = fileBase
+		self.orientation = orientation
 		self.lastFName = None
 
 	def OnPrintPage( self, page ):
 		exportGrid = self.prepareGrid( page )
 		
 		pxPerInch = 148
-		bitmap = wx.EmptyBitmap( pxPerInch*11, int(pxPerInch*8.5) )
+		if self.orientation == wx.LANDSCAPE:
+			bitmap = wx.EmptyBitmap( pxPerInch*11, int(pxPerInch*8.5) )
+		else:
+			bitmap = wx.EmptyBitmap( int(pxPerInch*8.5), pxPerInch*11 )
 		dc = wx.MemoryDC()
 		dc.SelectObject( bitmap )
 		
@@ -221,12 +225,12 @@ class CrossMgrPrintoutPNG( CrossMgrPrintout ):
 		pageTotal = self.pageInfo[page][4]
 		
 		if pageTotal != 1:
-			fname = '{categoryName}-{pageNumber}-{fileBase}.png'.format(
-								fileBase = self.fileBase, categoryName = category.name,
+			fname = '{categoryName} ({pageNumber}) {fileBase}.png'.format(
+								fileBase = self.fileBase, categoryName = category.fullname,
 								pageNumber = pageNumber )
 		else:
-			fname = '{categoryName}-{fileBase}.png'.format(
-								fileBase = self.fileBase, categoryName = category.name )
+			fname = '{categoryName} {fileBase}.png'.format(
+								fileBase = self.fileBase, categoryName = category.fullname )
 								
 		fname = Utils.RemoveDisallowedFilenameChars( fname )
 		
