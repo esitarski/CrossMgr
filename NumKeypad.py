@@ -70,7 +70,7 @@ class Keypad( wx.Panel ):
 		self.enterBtn= MakeButton( self, id=0, label='&Enter', style=wx.EXPAND|wx.GROW)
 		self.enterBtn.SetFont( font )
 		gbs.Add( self.enterBtn, pos=(5+rowCur,0), span=(1,3), flag=wx.EXPAND )
-		self.enterBtn.Bind( wx.EVT_BUTTON, self.onEnterPress )
+		self.enterBtn.Bind( wx.EVT_LEFT_DOWN, self.onEnterPress )
 	
 		rowCur += 7
 		font = wx.FontFromPixelSize(wx.Size(0,fontPixels*.75), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
