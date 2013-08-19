@@ -121,7 +121,7 @@ class TimeTrialRecord( wx.Panel ):
 		self.bigFont = wx.FontFromPixelSize( wx.Size(0,int(fontSize*1.3)), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
 		self.vbs = wx.BoxSizer(wx.VERTICAL)
 		
-		self.recordTimeButton = wx.Button( self, wx.ID_ANY, 'New Time' )
+		self.recordTimeButton = wx.Button( self, wx.ID_ANY, 'Tap for Time' )
 		self.recordTimeButton.Bind( wx.EVT_LEFT_DOWN, self.doRecordTime )
 		self.recordTimeButton.SetFont( self.bigFont )
 		self.recordTimeButton.SetToolTip(wx.ToolTip('Tap to Record Times.  Then enter the Bib numbers and press Save.'))
