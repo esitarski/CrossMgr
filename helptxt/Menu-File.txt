@@ -47,6 +47,8 @@ Publish the results as an HTML file and opens a browser on the output file.  Inc
 Publish the results as PNG formatted files suitable for posting to Facebook or Tumblr, which do not allow PDF or HTML content.
 The PNG files are written into a folder called ResultsPNG in the same folder as the CrossMgr race file.
 
+Although quick and dirty, this is not recommended way to publish to Facebook.  See [Facebook][] for better suggestions.
+
 ## Publish HTML Results with FTP...
 Publishes HTML formated results over an FTP upload.
 

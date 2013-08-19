@@ -120,6 +120,12 @@ def MessageOKCancel( parent, message, title = '', iconMask = wx.ICON_QUESTION):
 	dlg.Destroy()
 	return True if response == wx.ID_OK else False
 	
+def MessageYesNo( parent, message, title = '', iconMask = wx.ICON_QUESTION):
+	dlg = wx.MessageDialog(parent, message, title, wx.YES | wx.NO | iconMask )
+	response = dlg.ShowModal()
+	dlg.Destroy()
+	return True if response == wx.ID_YES else False
+	
 def SetValue( st, value ):
 	if st.GetValue() != value:
 		st.SetValue( value )

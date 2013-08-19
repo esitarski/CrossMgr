@@ -921,6 +921,10 @@ class MainWin( wx.Frame ):
 		if not Model.race:
 			return
 		self.commit()
+		
+		if Utils.MessageYesNo( self, 'This is not the recommended way to publish results to Facebook\n\nWould you like to see the recommended options?', 'Publish to Facebook' ):
+			Utils.showHelp( 'Facebook.html' )
+			return
 
 		cpcd = ChoosePrintCategoriesDialog( self )
 		x, y = self.GetPosition().Get()
