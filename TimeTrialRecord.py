@@ -151,7 +151,7 @@ class TimeTrialRecord( wx.Panel ):
 		self.commitButton = wx.Button( self, wx.ID_ANY, 'Save' )
 		self.commitButton.Bind( wx.EVT_BUTTON, self.doCommit )
 		self.commitButton.SetFont( self.bigFont )
-		self.commitButton.SetToolTip(wx.ToolTip('Press to Save Time Entries'))
+		self.commitButton.SetToolTip(wx.ToolTip('Press to Save Entries'))
 		
 		self.vbs.Add( hbs, 0, flag=wx.ALL|wx.EXPAND, border = 4 )
 		self.vbs.Add( self.grid, 1, flag=wx.ALL|wx.EXPAND, border = 4 )
