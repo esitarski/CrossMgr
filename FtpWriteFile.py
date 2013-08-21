@@ -55,7 +55,7 @@ def FtpWriteRacePhoto( fname ):
 						serverPath	= serverPath,
 						fname		= os.path.basename(fname),
 						file		= file )
-	except Exception, e:
+	except Exception as e:
 		msg = 'FtpWriteRacePhoto (%d): %s' % (lineno(), str(e))
 		Utils.writeLog( msg )
 		return False, msg
@@ -73,20 +73,23 @@ class RealTimeFtpPublish( object ):
 		self.lastUpdateTime = datetime.datetime.now() - datetime.timedelta( seconds = 24*60*60 )
 
 	def publish( self ):
+		Utils.writeLog( 'RealTimeFtpPublish: called.' )
+		self.timer = None	# Cancel the one-shot timer.
+		
 		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
 		try:
 			with open(htmlFile) as fp:
 				html = fp.read()
-		except:
-			self.timer = None
+		except Exception as e:
+			Utils.writeLog( 'RealTimeFtpPublish Error(1): %s' % str(e) )
 			return
 		
 		html = Utils.mainWin.addResultsToHtmlStr( html )
 
 		with Model.LockRace() as race:
 			if not race or not Utils.getFileName():
-				self.timer = None
 				return
+				
 			host		= getattr( race, 'ftpHost', '' )
 			user		= getattr( race, 'ftpUser', '' )
 			passwd		= getattr( race, 'ftpPassword', '' )
@@ -104,9 +107,7 @@ class RealTimeFtpPublish( object ):
 							file		= file )
 			self.lastUpdateTime = datetime.datetime.now()
 		except Exception as e:
-			Utils.writeLog( 'RealTimeFtpPublish: %s' % str(e) )
-			
-		self.timer = None
+			Utils.writeLog( 'RealTimeFtpPublish Error(2): %s' % str(e) )
 
 	def publishEntry( self, publishNow = False ):
 		'''
@@ -147,7 +148,7 @@ class RealTimeFtpPublish( object ):
 		self.timer.start()
 
 realTimeFtpPublish = RealTimeFtpPublish()
-		
+
 #------------------------------------------------------------------------------------------------
 class FtpPublishDialog( wx.Dialog ):
 
