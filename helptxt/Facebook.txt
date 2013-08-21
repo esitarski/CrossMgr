@@ -17,9 +17,11 @@ All methods are easy and each has advantages and disadvantages.  By investing a 
 
 Recommended.
 
-From CrossMgr, do a "File/Publish Results as HTML...".  This will generate an html file with the results and write it in the same folder as the race file with a ".html".  Now, login to pastehtml with your Facebook login.
-On your computer, open the results .html file with Notepad.  Do a "Edit|Select All", then "Edit|Copy" or Ctrl-c.
-On the pasthtml page, select the entire contents of the "Paste your HTML code or plain text" section.  Press Ctrl-v to replace this with the CrossMgr html contents.  Then click on "Publish Page".  Keep clicking through the preview even if you don't see anything.  Use the address returned from pasthtml as a link on your Facebook page.
+From CrossMgr, do a "File/Publish Results as HTML...".  This will generate an html file with the results and write it in the same folder as the race file with a ".html".  It will also open the results page in your browser.
+On your computer, start Notepad, then open the results .html file.  Do a "Edit|Select All", then "Edit|Copy" (or Ctrl-a and Ctrl-c).
+
+Login to [pastehtml](www.pasthtml.com) with your Facebook login.
+On the pasthtml page, select the entire contents of the "Paste your HTML code or plain text" section.  Press Ctrl-v to replace this with the CrossMgr Results html contents.  Then click on "Publish Page".  Keep clicking through the preview even if you don't see anything.  Use the address returned from pasthtml as a link on your Facebook page.
 
 **Advantages:** shows complete CrossMgr output, dynamic results categories and lap data, animation, "Google Earth Ride" button, searchable on the page with Ctrl-f, and indexed by Google and other search engines.
 
@@ -46,11 +48,11 @@ Download and install [TinyPDF](www.tinypdf.com).  Print CrossMgr results, and se
 
 **Disadvantages:**  Have to download TinyPDF.  No results animation, no dynamic results categories or lap info, no "Google Earth Ride" button.  A bit of trouble to save and post the pdf file to Scribd and include the link in Facebook.
 
-## Generate graphics files (png) from CrossMgr, and drag-and-drop those files directly to Facebook (not recommended)
+## Generate graphics files (png) from CrossMgr, and drag-and-drop those files directly to Facebook
 
 Not recommended.
 
-From CrossMgr, do a "File/Publish Results as PNG (for Facebook".  This will write all the results to a 'ResultsPNG" folder in the same folder as the CrossMgr race file.
+From CrossMgr, do a "File/Publish Results as PNG (for Facebook).  This will write all the results to a 'ResultsPNG" folder in the same folder as the CrossMgr race file.
 
 Log into Facebook.  Select "Add Photos/video".  On your computer, go to the "ResultsPNG" folder.  Drag-and-drop all the png files into your Facebook post.
 

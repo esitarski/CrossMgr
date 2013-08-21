@@ -52,7 +52,9 @@ settle disputes.
 
 CrossMgr is also fully integrated with the `JChip <http://www.j-chipusa.com/>`_
 chip timing system.
-It also supports data import from the `Orion <http://www.orion-timing.com/>`_ system.
+CrossMgr also support the `Alien <http://www.alientechnology.com>`_ and
+`Impinj <http://www.impinj.com`_ passive chip readers.
+It can  data from the `Orion <http://www.orion-timing.com/>`_ system.
 
 See `CrossMgr <http://www.sites.google.com/site/crossmgrsoftware/>`_ for full details.
 '''
