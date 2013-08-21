@@ -18,6 +18,9 @@ def lineno():
     return inspect.currentframe().f_back.f_lineno
 
 def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30, serverPath = '.', fname = '', file = None ):
+	#print host, user, passwd, timeout, serverPath, fname
+	#return
+
 	ftp = ftplib.FTP( host, timeout = timeout )
 	ftp.login( user, passwd )
 	if serverPath:
@@ -73,8 +76,9 @@ class RealTimeFtpPublish( object ):
 		self.lastUpdateTime = datetime.datetime.now() - datetime.timedelta( seconds = 24*60*60 )
 
 	def publish( self ):
-		Utils.writeLog( 'RealTimeFtpPublish: called.' )
 		self.timer = None	# Cancel the one-shot timer.
+		
+		Utils.writeLog( 'RealTimeFtpPublish: called.' )
 		
 		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
 		try:
@@ -132,7 +136,7 @@ class RealTimeFtpPublish( object ):
 		If stragglers arrive within 4 seconds, the latency time doubles to a maximum to 8 to get more stragglers.
 		In this way, the latency increases longer and longer to get the stragglers, giving them more time to arrive.
 		'''
-		if self.timer:
+		if self.timer is not None:
 			return
 
 		# If this publish request is less than latencyTime, double latencyTime for the next publish waiting interval.
