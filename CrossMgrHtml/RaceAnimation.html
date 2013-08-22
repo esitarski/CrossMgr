@@ -282,6 +282,27 @@ function GetLapRatio( leaderRaceTimes, tCur, iLapHint )
 	return [iLapHint, lapRatio];
 }
 
+var reloadTriggered = false;
+function TriggerReload( leaderRaceTimes, tCur, iLapHint )
+{
+	// If the race is running, trigger a reload of the page 5 seconds after the leader passes.
+	if( !raceIsRunning || reloadTriggered )
+		return;
+		
+	var maxLaps = leaderRaceTimes.length - 1;
+	if( maxLaps < 1 )
+		return;
+		
+	if( 0 <= iLapHint && iLapHint < maxLaps &&
+			leaderRaceTimes[iLapHint] <= tCur && tCur < leaderRaceTimes[iLapHint+1] ) {
+		if( tCur - leaderRaceTimes[iLapHint] < 1.0 ) {
+			reloadTriggered = true;
+			setTimeout( function(){window.location.reload(true);}, 5000 );
+			//document.getElementById( 'idReloadStatus' ).innerHTML = 'Relead Triggered';
+		}
+	}
+}
+
 function OpenVirtualTourWindow()
 {
 	var speed = null;
@@ -855,6 +876,7 @@ function TrackAnimation()
 				var maxLaps = leaderRaceTimes.length - 1;
 				var glr = GetLapRatio( leaderRaceTimes, t, this.iLapDistance );
 				this.iLapDistance = glr[0];
+				TriggerReload( leaderRaceTimes, t, this.iLapDistance );
 				var lapRatio = glr[1];
 				lapRatio = Math.floor(lapRatio * 10.0) / 10.0		// Always round down, not to nearest decimal.
 				table[0].push( FixedFormat(this.iLapDistance + lapRatio, 5, 1) + ' Laps of ' + maxLaps );
@@ -1628,6 +1650,7 @@ function GeoAnimation()
 				var maxLaps = leaderRaceTimes.length - 1;
 				var glr = GetLapRatio( leaderRaceTimes, t, this.iLapDistance );
 				this.iLapDistance = glr[0];
+				TriggerReload( leaderRaceTimes, t, this.iLapDistance );
 				var lapRatio = glr[1];
 				lapRatio = Math.floor(lapRatio * 10.0) / 10.0		// Always round down, not to nearest decimal.
 				table.push( FixedFormat(this.iLapDistance + lapRatio, 5, 1) + ' Laps of ' + maxLaps );
@@ -2144,26 +2167,6 @@ function SetCategoryResults()
 		var leaderTime	= resultsData[0][1];
 		leaderNum		= resultsData[0][2];
 		var startOffset	= resultsData[0][3][0];
-		
-		/*
-		if( raceIsRunning )
-		{
-			// Schedule an update 5 seconds after the next lap.
-			var leaderRaceTimes = resultsData[0][3];
-			for( var ii = 0; ii < leaderRaceTimes.length; ++ii )
-			{
-				if( leaderRaceTimes[ii] > t )
-				{
-					var tTimeUpdate = leaderRaceTimes[ii] - t + 5;
-					if( tTimeUpdate > 0 )
-					{
-						setTimeout( function(){ window.location.reload(true); }, tTimeUpdate * 1000 );
-						break;
-					}
-				}
-			}
-		}
-		*/
 		
 		if( leaderLaps > 2 && showLapsFrequency != 0 )
 		{
@@ -3381,7 +3384,7 @@ function onLoad()
 Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
 <span id="idRFID"></span>&nbsp;&nbsp;&nbsp;<button id="idVirtualTour" onclick="OpenVirtualTourWindow()">Google Earth Ride</button>
 </span>
-</tr></table><span id="idRaceNotes"></span>
+</tr></table><span id="idReloadStatus"></span><span id="idRaceNotes"></span>
 </p>
 <p>
 

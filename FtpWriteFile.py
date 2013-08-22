@@ -18,8 +18,9 @@ def lineno():
     return inspect.currentframe().f_back.f_lineno
 
 def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30, serverPath = '.', fname = '', file = None ):
-	#print host, user, passwd, timeout, serverPath, fname
-	#return
+	with open('test.html', 'wb') as fOut:
+		fOut.write( file.read() )
+	return
 
 	ftp = ftplib.FTP( host, timeout = timeout )
 	ftp.login( user, passwd )
@@ -67,7 +68,7 @@ def FtpWriteRacePhoto( fname ):
 	return True, msg
 	
 class RealTimeFtpPublish( object ):
-	latencyTimeMin = 4
+	latencyTimeMin = 3
 	latencyTimeMax = 32
 
 	def __init__( self ):
@@ -89,7 +90,7 @@ class RealTimeFtpPublish( object ):
 			return
 		
 		html = Utils.mainWin.addResultsToHtmlStr( html )
-
+		
 		with Model.LockRace() as race:
 			if not race or not Utils.getFileName():
 				return
