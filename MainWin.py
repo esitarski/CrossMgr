@@ -1257,7 +1257,7 @@ class MainWin( wx.Frame ):
 	@logCall
 	def menuExportHtmlFtp( self, event ):
 		self.commit()
-		if self.fileName is None or len(self.fileName) < 4:
+		if not self.fileName or len(self.fileName) < 4:
 			Utils.MessageOK(self, 'Ftp Upload Failed.  Error:\n\n    No race loaded.', 'Ftp Upload Failed', iconMask=wx.ICON_ERROR )
 			return
 	
@@ -1267,8 +1267,8 @@ class MainWin( wx.Frame ):
 		if ret != wx.ID_OK:
 			return
 	
-		with Model.LockRace() as race:
-			host		= getattr( race, 'ftpHost', '' )
+		race =  Model.race
+		host = getattr( race, 'ftpHost', '' )
 			
 		if not host:
 			Utils.MessageOK(self, 'Error:\n\n    Missing host name.', 'Ftp Upload Failed', iconMask=wx.ICON_ERROR )
