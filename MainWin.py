@@ -1222,7 +1222,7 @@ class MainWin( wx.Frame ):
 				self.menuSetContactEmail()
 	
 		# Get the folder to write the html file.
-		fname = self.fileName[:-4] + '.html'
+		fname = os.path.splitext(self.fileName)[0] + '.html'
 		dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(fname),
 							style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
 		ret = dlg.ShowModal()

@@ -18,9 +18,9 @@ def lineno():
     return inspect.currentframe().f_back.f_lineno
 
 def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30, serverPath = '.', fname = '', file = None ):
-	with open('test.html', 'wb') as fOut:
-		fOut.write( file.read() )
-	return
+	#with open('test.html', 'wb') as fOut:
+	#	fOut.write( file.read() )
+	#return
 
 	ftp = ftplib.FTP( host, timeout = timeout )
 	ftp.login( user, passwd )
@@ -100,7 +100,7 @@ class RealTimeFtpPublish( object ):
 			passwd		= getattr( race, 'ftpPassword', '' )
 			serverPath	= getattr( race, 'ftpPath', '' )
 			
-		fname		= os.path.basename( Utils.getFileName()[:-4] + '.html' )
+		fname		= os.path.basename( os.path.splitext(Utils.getFileName())[0] + '.html' )
 		file		= StringIO.StringIO( html )
 			
 		try:
