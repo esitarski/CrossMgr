@@ -42,6 +42,9 @@ def StartRaceNow():
 	
 	# For safety, clear the undo stack after 8 seconds.
 	undoResetTimer = wx.CallLater( 8000, undo.clear )
+	
+	if getattr(race, 'ftpUploadDuringRace', False):
+		realTimeFtpPublish.publishEntry( True )
 
 def GetNowSeconds():
 	t = datetime.datetime.now()
