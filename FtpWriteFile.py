@@ -24,7 +24,7 @@ def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30,
 
 	ftp = ftplib.FTP( host, timeout = timeout )
 	ftp.login( user, passwd )
-	if serverPath:
+	if serverPath and serverPath != '.':
 		ftp.cwd( serverPath )
 	fileOpened = False
 	if file is None:
@@ -67,6 +67,45 @@ def FtpWriteRacePhoto( fname ):
 	file.close()
 	return True, msg
 	
+def FtpWriteRaceHTML():
+	Utils.writeLog( 'FtpWriteRaceHTML: called.' )
+	
+	htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
+	try:
+		with open(htmlFile) as fp:
+			html = fp.read()
+	except Exception as e:
+		Utils.writeLog( 'FtpWriteRaceHTML Error(1): %s' % str(e) )
+		return e
+	
+	html = Utils.mainWin.addResultsToHtmlStr( html )
+	
+	with Model.LockRace() as race:
+		if not race or not Utils.getFileName():
+			return
+			
+		host		= getattr( race, 'ftpHost', '' )
+		user		= getattr( race, 'ftpUser', '' )
+		passwd		= getattr( race, 'ftpPassword', '' )
+		serverPath	= getattr( race, 'ftpPath', '' )
+		
+	fname		= os.path.basename( os.path.splitext(Utils.getFileName())[0] + '.html' )
+	
+	file		= StringIO.StringIO( html )
+	try:
+		FtpWriteFile(	host		= host,
+						user		= user,
+						passwd		= passwd,
+						serverPath	= serverPath,
+						fname		= fname,
+						file		= file )
+	except Exception as e:
+		Utils.writeLog( 'FtpWriteRaceHTML Error(2): %s' % str(e) )
+		return e
+		
+	return None
+
+	
 class RealTimeFtpPublish( object ):
 	latencyTimeMin = 3
 	latencyTimeMax = 32
@@ -78,41 +117,8 @@ class RealTimeFtpPublish( object ):
 
 	def publish( self ):
 		self.timer = None	# Cancel the one-shot timer.
-		
-		Utils.writeLog( 'RealTimeFtpPublish: called.' )
-		
-		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
-		try:
-			with open(htmlFile) as fp:
-				html = fp.read()
-		except Exception as e:
-			Utils.writeLog( 'RealTimeFtpPublish Error(1): %s' % str(e) )
-			return
-		
-		html = Utils.mainWin.addResultsToHtmlStr( html )
-		
-		with Model.LockRace() as race:
-			if not race or not Utils.getFileName():
-				return
-				
-			host		= getattr( race, 'ftpHost', '' )
-			user		= getattr( race, 'ftpUser', '' )
-			passwd		= getattr( race, 'ftpPassword', '' )
-			serverPath	= getattr( race, 'ftpPath', '' )
-			
-		fname		= os.path.basename( os.path.splitext(Utils.getFileName())[0] + '.html' )
-		file		= StringIO.StringIO( html )
-			
-		try:
-			FtpWriteFile(	host		= host,
-							user		= user,
-							passwd		= passwd,
-							serverPath	= serverPath,
-							fname		= fname,
-							file		= file )
-			self.lastUpdateTime = datetime.datetime.now()
-		except Exception as e:
-			Utils.writeLog( 'RealTimeFtpPublish Error(2): %s' % str(e) )
+		DoFtpHTMLPublish()
+		self.lastUpdateTime = datetime.datetime.now()
 
 	def publishEntry( self, publishNow = False ):
 		'''
@@ -280,6 +286,18 @@ class FtpPublishDialog( wx.Dialog ):
 		self.EndModal( wx.ID_CANCEL )
 		
 if __name__ == '__main__':
+	'''
+	file = StringIO.StringIO( 'This is a test' )
+	FtpWriteFile(	host = 'ftp://127.0.0.1:55555',
+					user = 'crossmgr',
+					passwd = 'crossmgr',
+					timeout = 30,
+					serverPath = '',
+					fname = 'test.html',
+					file = None )
+	sys.exit()
+	'''
+
 	app = wx.PySimpleApp()
 	mainWin = wx.Frame(None,title="CrossMgr", size=(600,400))
 	Model.setRace( Model.Race() )

@@ -40,6 +40,7 @@ from Properties			import Properties, PropertiesDialog, ChangeProperties
 from Recommendations	import Recommendations
 from RaceAnimation		import RaceAnimation, GetAnimationData
 from Search				import SearchDialog
+import FtpWriteFile
 from FtpWriteFile		import realTimeFtpPublish
 from SetAutoCorrect		import SetAutoCorrectDialog
 from DNSManager			import DNSManagerDialog
@@ -57,7 +58,6 @@ import OrionImport
 import AlienImport
 import ImpinjImport
 import OutputStreamer
-import FtpWriteFile
 import GpxImport
 import cStringIO as StringIO
 from Undo import undo
@@ -1267,48 +1267,23 @@ class MainWin( wx.Frame ):
 		if ret != wx.ID_OK:
 			return
 	
-		# Read the html template.
-		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
-		try:
-			with open(htmlFile) as fp:
-				html = fp.read()
-		except:
-			Utils.MessageOK('Cannot read HTML template file.  Check program installation.',
-							'Html Template Read Error', iconMask=wx.ICON_ERROR )
-			return
-		
-		html = self.addResultsToHtmlStr( html )
-		
-		# Publish the results using ftp.
 		with Model.LockRace() as race:
 			host		= getattr( race, 'ftpHost', '' )
-			user		= getattr( race, 'ftpUser', '' )
-			passwd		= getattr( race, 'ftpPassword', '' )
-			serverPath	= getattr( race, 'ftpPath', '' )
-			fname		= os.path.basename( self.fileName[:-4] + '.html' )
-			file		= StringIO.StringIO( html )
-			urlFull		= getattr( race, 'urlFull', '' )
-		
+			
 		if not host:
-			Utils.MessageOK(self, 'Ftp Upload Failed.  Error:\n\n    Missing host name.', 'Ftp Upload Failed', iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, 'Error:\n\n    Missing host name.', 'Ftp Upload Failed', iconMask=wx.ICON_ERROR )
 			return
 		
 		wx.BeginBusyCursor()
-		try:
-			FtpWriteFile.FtpWriteFile(	host		= host,
-										user		= user,
-										serverPath	= serverPath,
-										passwd		= passwd,
-										fname		= fname,
-										file		= file )
-			Utils.MessageOK(self, 'Ftp Upload Succeeded.', 'Ftp Upload Succeeded')
-		except Exception, e:
-			Utils.MessageOK(self, 'Ftp Upload Failed.  Error:\n\n%s' % str(e), 'Ftp Upload Failed', iconMask=wx.ICON_ERROR )
+		e = FtpWriteFile.FtpWriteRaceHTML()
 		wx.EndBusyCursor()
+
+		if e:
+			Utils.MessageOK(self, 'Ftp Upload Failed.  Error:\n\n%s' % str(e), 'Ftp Upload Failed', iconMask=wx.ICON_ERROR )
 		
 		# Automatically open the browser on the published file for testing.
-		if urlFull:
-			webbrowser.open( urlFull, new = 0, autoraise = True )
+		if race.urlFull:
+			webbrowser.open( race.urlFull, new = 0, autoraise = True )
 			
 	#--------------------------------------------------------------------------------------------
 	@logCall
