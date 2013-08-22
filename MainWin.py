@@ -1282,7 +1282,7 @@ class MainWin( wx.Frame ):
 			Utils.MessageOK(self, 'Ftp Upload Failed.  Error:\n\n%s' % str(e), 'Ftp Upload Failed', iconMask=wx.ICON_ERROR )
 		
 		# Automatically open the browser on the published file for testing.
-		if race.urlFull:
+		if race.urlFull and race.urlFull != 'http://':
 			webbrowser.open( race.urlFull, new = 0, autoraise = True )
 			
 	#--------------------------------------------------------------------------------------------
