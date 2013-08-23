@@ -18,10 +18,6 @@ def lineno():
     return inspect.currentframe().f_back.f_lineno
 
 def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30, serverPath = '.', fname = '', file = None ):
-	#with open('test.html', 'wb') as fOut:
-	#	fOut.write( file.read() )
-	#return
-
 	ftp = ftplib.FTP( host, timeout = timeout )
 	ftp.login( user, passwd )
 	if serverPath and serverPath != '.':
