@@ -117,7 +117,7 @@ class RealTimeFtpPublish( object ):
 
 	def publish( self ):
 		self.timer = None	# Cancel the one-shot timer.
-		DoFtpHTMLPublish()
+		FtpWriteRaceHTML()
 		self.lastUpdateTime = datetime.datetime.now()
 
 	def publishEntry( self, publishNow = False ):
