@@ -1985,10 +1985,7 @@ function SetCategoryResults()
 		for( var num in data )
 		{
 			var raceTimes = data[num]['raceTimes'];
-			var i;
-			for( i = 0; i < raceTimes.length && raceTimes[i] < tRace; ++i )
-				continue;
-			raceTimesLength[num] = i;
+			raceTimesLength[num] = raceTimes.binSearch( t );
 		}
 	}
 	else

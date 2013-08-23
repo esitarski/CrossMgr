@@ -1831,6 +1831,9 @@ class MainWin( wx.Frame ):
 
 		except IOError:
 			Utils.MessageOK(self, 'Cannot open file "%s".' % fileName, 'Cannot Open File', iconMask=wx.ICON_ERROR )
+		
+		#for a in ['ftpHost', 'ftpUser', 'ftpPassword', 'ftpPath']:
+		#	print '{}={}'.format( a, getattr( Model.race, a, '' ) )
 
 	@logCall
 	def menuOpen( self, event ):
