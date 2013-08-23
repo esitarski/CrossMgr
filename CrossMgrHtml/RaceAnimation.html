@@ -285,7 +285,7 @@ function GetLapRatio( leaderRaceTimes, tCur, iLapHint )
 var reloadTriggered = false;
 function TriggerReload( leaderRaceTimes, tCur, iLapHint )
 {
-	// If the race is running, trigger a reload of the page 5 seconds after the leader passes.
+	// If the race is running, trigger a reload of the page a few seconds after the leader passes.
 	if( !raceIsRunning || reloadTriggered )
 		return;
 		
