@@ -22,6 +22,10 @@ def writeToFile( s, fname ):
 from helptxt.compile import CompileHelp
 CompileHelp( 'helptxt' )
 
+# Index the help files.
+from HelpIndex import BuildHelpIndex
+BuildHelpIndex()
+
 #------------------------------------------------------
 # Create a release area for pypi
 print 'Clearing previous contents...'
