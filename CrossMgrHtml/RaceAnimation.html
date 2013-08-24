@@ -297,8 +297,8 @@ function TriggerReload( leaderRaceTimes, tCur, iLapHint )
 			leaderRaceTimes[iLapHint] <= tCur && tCur < leaderRaceTimes[iLapHint+1] ) {
 		if( tCur - leaderRaceTimes[iLapHint] < 1.0 ) {
 			reloadTriggered = true;
-			setTimeout( function(){window.location.reload(true);}, 5000 );
-			//document.getElementById( 'idReloadStatus' ).innerHTML = 'Relead Triggered';
+			setTimeout( function(){window.location.reload(true);}, Math.round(5000 + Math.random() * 3000) );
+			//document.getElementById( 'idReloadStatus' ).innerHTML = 'Reload Triggered';
 		}
 	}
 }
