@@ -2836,7 +2836,7 @@ function RefreshRaceChart()
 		dc.strokeStyle = "#0F0F0F";
 		for( var j = 0; j < raceTimes.length; ++j )
 		{
-			if( raceIsRunning && raceTimes[j] > tRace )
+			if( raceIsRunning && raceTimes[j] > t )
 				break;
 			var tCur = raceTimes[j] - categoryStartOffset;
 			xCur = ~~(labelsWidthLeft + tCur * xFactor);
