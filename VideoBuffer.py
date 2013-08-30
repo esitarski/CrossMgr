@@ -97,7 +97,7 @@ class VideoBuffer( threading.Thread ):
 						threading.Timer( tFind - tRace, self.takePhoto, args=[bib, t] ).start()
 						continue
 						
-					frames = self.findBeforeAfter( tFind )
+					frames = self.findBeforeAfter( tFind, 1, 0 )
 					for i, frame in enumerate( frames ):
 						self.frameSaver.save( GetFilename(bib, t, self.dirName, i), bib, t, frame )
 					self.frameCount += len(frames)
