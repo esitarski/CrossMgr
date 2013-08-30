@@ -97,7 +97,7 @@ class VideoBuffer( threading.Thread ):
 						threading.Timer( tFind - tRace, self.takePhoto, args=[bib, t] ).start()
 						continue
 						
-					frames = self.find( tFind )
+					frames = self.findBeforeAfter( tFind )
 					for i, frame in enumerate( frames ):
 						self.frameSaver.save( GetFilename(bib, t, self.dirName, i), bib, t, frame )
 					self.frameCount += len(frames)
@@ -135,24 +135,11 @@ class VideoBuffer( threading.Thread ):
 		
 	def __len__( self ):
 		return self.frameMax
-	
-	def find( self, t ):
-		frames = self.frames
-		frameCur = self.frameCur
-		frameMax = self.frameMax
-		for iBest in xrange(frameMax-1, -1, -1):
-			if frames[ (iBest + frameCur) % frameMax ][0] < t:
-				fRange = list( xrange(max(0, iBest-1), min(frameMax, iBest + 2)) )
-				timeError = [abs(t - self.getT(i)) for i in fRange]
-				iClosest = fRange[timeError.index( min(timeError) )]
-				#Utils.writeLog( 'VideoBuffer.find: %s:  delta: %s  [%s]' % (
-				#	Utils.formatTime(t, True), Utils.formatTime(min(timeError), True),
-				#	', '.join( Utils.formatTime(self.getT(i), True) if i != iClosest
-				#				else ('*' + Utils.formatTime(self.getT(i), True)) for i in fRange ) ) )
-				return [self.getFrame(i) for i in fRange if self.getFrame(i)]
-		return []
 		
-	def findBeforeAfter( self, t, before, after ):
+	def find( self, t, before = 2, after = 1 ):
+		return self.findBeforeAfter( t, before, after )
+	
+	def findBeforeAfter( self, t, before = 2, after = 1 ):
 		frames = self.frames
 		frameCur = self.frameCur
 		frameMax = self.frameMax
