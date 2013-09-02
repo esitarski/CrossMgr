@@ -366,7 +366,7 @@ class Recommendations( wx.Panel ):
 				missingTags.sort()
 				for m in missingTags:
 					append( m, '',
-							'Tag', 'Check chip tag missing from Excel sheet'
+							'Tag', 'Imported chip Tag missing from Excel sheet.  Check if a stray read.  If not, add Tag to Excel sheet and run Chip Import again'
 							)
 							
 				# Add information about the rider categories.

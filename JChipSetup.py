@@ -54,7 +54,7 @@ def GetTagNums( forceUpdate = False ):
 						tn = {}
 						for num, edata in externalInfo.iteritems():
 							try:
-								tag = edata[tagName].lstrip('0')
+								tag = edata[tagName].lstrip('0').upper()
 							except (KeyError, ValueError):
 								continue
 							if tag:

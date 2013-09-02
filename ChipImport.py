@@ -57,7 +57,7 @@ def DoChipImport(	fname, parseTagTime, startTime = None,
 				errors.append( 'line %d: time before race start (%s)' % (lineNo, t.strftime('%H:%M:%S.%f')) )
 				continue
 			
-			tag = stripLeadingZeros( tag )
+			tag = tag.lstrip('0').upper()
 			t += timeAdjustment
 			
 			if not tFirst:

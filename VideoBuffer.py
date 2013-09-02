@@ -21,10 +21,10 @@ class FrameSaver( threading.Thread ):
 		self.daemon = True
 		self.name = 'FrameSaver'
 		self.reset()
-		
+	
 	def reset( self ):
 		self.queue = Queue()
-		
+	
 	def run( self ):
 		self.reset()
 		while 1:
@@ -37,11 +37,11 @@ class FrameSaver( threading.Thread ):
 				self.queue.task_done()
 				self.reset()
 				break
-			
+	
 	def stop( self ):
 		self.queue.put( ['Terminate'] )
 		self.join()
-			
+	
 	def save( self, fileName, bib, t, frame ):
 		self.queue.put( ['Save', fileName, bib, t, frame] )
 	
@@ -56,20 +56,22 @@ class VideoBuffer( threading.Thread ):
 		self.fps = fps
 		self.frameMax = int(fps * bufferSeconds)
 		self.frameDelay = 1.0 / fps
-		self.frameSaver = FrameSaver()
+		self.frameSaver = None
 		self.reset()
 	
 	def reset( self ):
-		if self.frameSaver.is_alive():
+		if self.frameSaver and self.frameSaver.is_alive():
 			self.frameSaver.stop()
-			self.frameSaver = FrameSaver()
-			self.frameSaver.daemon = True
+			
 		self.frames = [(0.0, None)] * self.frameMax
-		self.frameCur =  self.frameMax - 1;
-		self.frameSaver.start()
+		self.frameCur =  self.frameMax - 1
 		self.frameCount = 0
-		self.queue = Queue()
 		
+		self.frameSaver = FrameSaver()
+		self.frameSaver.start()
+		
+		self.queue = Queue()
+	
 	def run( self ):
 		self.reset()
 		tLaunch = now()
@@ -99,7 +101,7 @@ class VideoBuffer( threading.Thread ):
 						
 					frames = self.findBeforeAfter( tFind, 1, 0 )
 					for i, frame in enumerate( frames ):
-						self.frameSaver.save( GetFilename(bib, t, self.dirName, i), bib, t, frame )
+						self.frameSaver.save( GetFilename(bib, t, self.dirName, i), bib, t, frame[1] )
 					self.frameCount += len(frames)
 					self.queue.task_done()
 					
@@ -114,13 +116,14 @@ class VideoBuffer( threading.Thread ):
 			if frameWait < 0.0:
 				frameWait = self.frameDelay		# Give some more time if we are falling behind.
 			time.sleep( frameWait )	
-			
+	
 	def stop( self ):
 		self.queue.put( ['Terminate'] )
 		self.join()
 		if self.frameSaver.is_alive():
 			self.frameSaver.stop()
-		
+		self.frameSaver = None
+	
 	def takePhoto( self, bib, t ):
 		self.queue.put( ['Save', bib, t] )
 	
@@ -145,8 +148,7 @@ class VideoBuffer( threading.Thread ):
 		frameMax = self.frameMax
 		for iBest in xrange(frameMax-1, -1, -1):
 			if frames[ (iBest + frameCur) % frameMax ][0] < t:
-				fRange = list( xrange(max(0, iBest-before), min(frameMax, iBest + after)) )
-				return [self.getTimeFrame(i) for i in fRange if self.getFrame(i)]
+				return [self.getTimeFrame(i) for i in xrange(max(0, iBest-before+1), min(frameMax, iBest+after+1)) if self.getFrame(i)]
 		return []
 
 videoBuffer = None

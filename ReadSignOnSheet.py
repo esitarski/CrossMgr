@@ -570,20 +570,20 @@ class ExcelLink( object ):
 				
 			for tField, tRow in tagFields:
 				if tField not in data and tField == 'Tag':		# Don't check for missing Tag2s as they are optional.:
-					errors.append( (num, 'Missing {field} in row {row} for Bib# {num}'.format( field=tField, row=row, num=num)) )
+					errors.append( (num, 'Missing "{field}" in row {row} for Bib# {num}'.format( field=tField, row=row, num=num)) )
 					continue
 					
-				tag = data[tField].lstrip('0')
+				tag = data[tField].lstrip('0').upper()
 				if tag:
 					if tag in tRow:
 						errors.append( (num,
-										'Duplicate {field} {tag} for Bib# {num} in row {row} (same as {field} for Bib# {dupNum} in row {dupRow})'.format(
+										'Duplicate "{field}" {tag} for Bib# {num} in row {row} (same as "{field}" for Bib# {dupNum} in row {dupRow})'.format(
 											field=tField, tag=tag, num=num, row=row, dupNum = rowBib[tRow[tag]], dupRow=tRow[tag] ) ) )
 					else:
 						tRow[tag] = row
 				else:
 					if tField == 'Tag':					# Don't check for empty Tag2s as they are optional.
-						errors.append( (num, 'Empty {field} in row {row} for Bib# {num}'.format(field=tField, row=row, num=num)) )
+						errors.append( (num, 'Empty "{field}" in row {row} for Bib# {num}'.format(field=tField, row=row, num=num)) )
 		
 		stateCache = (os.path.getmtime(self.fileName), self.fileName, self.sheetName, self.fieldCol)
 		infoCache = info
