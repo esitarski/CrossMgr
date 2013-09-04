@@ -17,7 +17,7 @@ count = 0
 def formatMessage( tagID, t ):
 	global count
 	message = "DA%s %s 10  %05X      C7%s" % (
-				tagID.lstrip('0'),					# Tag code as read, no leading zeros.
+				tagID.lstrip('0').upper(),			# Tag code as read, no leading zeros, upper case.
 				t.strftime('%H:%M:%S.%f'),			# hh:mm:ss.ff
 				count,								# Data index number in hex.
 				CR

@@ -61,6 +61,8 @@ tag[random.choice(list(tag.keys()))] = 'E2001018860B01290700D0D8'
 tag[random.choice(list(tag.keys()))] = 'E2001018860B01530700D138'
 tag[random.choice(list(tag.keys()))] = 'E2001018860B01370700D0F8'
 
+
+
 #------------------------------------------------------------------------------	
 # Write out as a .xlsx file with the number tag data.
 #
