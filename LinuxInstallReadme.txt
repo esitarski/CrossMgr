@@ -6,7 +6,7 @@ Due to the diversity of Linux environments, CrossMgr is released as a
 Python Package.
 
 If you are installing CrossMgr for the first time, start at Step 1.
-If you are upgrading CrossMgr to a more recent version, repeat steps Steps 3-4.
+If you are upgrading CrossMgr to a more recent version, repeat steps Steps 4-5.
 
 --------------------------------------------
 Step 1:  Check you Python version.
@@ -37,7 +37,7 @@ You will need to run the install with "sudo".
 Step 3:  Install wxPython
 
 Unfortunately, wxPython must be manually installed on Linux.
-Fortunately, this is not a big deal.  Open a terminal.  Type (or cut-and-paste):
+Fortunately, this is not a big deal.  Open a terminal.  Enter (or cut-and-paste):
 
     sudo apt-get install python-wxgtk2.8 python-wxtools wx2.8-i18n
 
@@ -51,14 +51,14 @@ the file "PIP-Install-CrossMgr-N.NN.tar.gz" python package to a directory called
 --------------------------------------------
 Step 5:  Run the pip install
 
-"cd" to your "CrossMgrInstall" directory.  Type:
+"cd" to your "CrossMgrInstall" directory.  Enter:
 
 	sudo pip install PIP-Install-CrossMgr-N.NN.tar.gz
 	
 Where, of course, N.NN corresponds to the CrossMgr version.
 
 Pip will automatically pull additional python packages from pypi.
-These are xlrd, xlwt, openpyxl and wxpython.
+These are xlrd, xlwt, whoosh, openpyxl and wxpython.
 
 If this process fails, you may need to install these modules from your Linux distro.
 
