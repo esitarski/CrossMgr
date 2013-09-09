@@ -34,14 +34,22 @@ If you don't have "pip", get it from http://www.pip-installer.org/en/latest/inst
 You will need to run the install with "sudo".
 
 --------------------------------------------
-Step 3:  Download the CrossMgr Python package.
+Step 3:  Install wxPython
+
+Unfortunately, wxPython must be manually installed on Linux.
+Fortunately, this is not a big deal.  Open a terminal.  Type (or cut-and-paste):
+
+    sudo apt-get install python-wxgtk2.8 python-wxtools wx2.8-i18n
+
+--------------------------------------------
+Step 4:  Download the CrossMgr Python package.
 
 From https://www.sites.google.com/site/crossmgrsoftware/file-cabinet, download
 the file "PIP-Install-CrossMgr-N.NN.tar.gz" python package to a directory called "CrossMgrInstall"
 (the N.NN is the version).
 
 --------------------------------------------
-Step 4:  Run the pip install
+Step 5:  Run the pip install
 
 "cd" to your "CrossMgrInstall" directory.  Type:
 
@@ -58,14 +66,14 @@ Check your distro for python-xlrd, python-xlwt, python-qrcode, python-openpyxl
 and python-wxgtk.
 
 --------------------------------------------
-Step 5:  Run CrossMgr
+Step 6:  Run CrossMgr
 
 type:
 
 	CrossMgr &
 	
 --------------------------------------------
-Step 6:  Make a desktop launcher.
+Step 7:  Make a desktop launcher.
 
 This depends on your Linux distribution.
 
@@ -89,7 +97,7 @@ upper left of the dialog.
 Browse to "/usr/local/CrossMgrImages/CrossMgr.png".
 
 --------------------------------------------
-Step 7:  Uninstalling CrossMgr.
+Step 8:  Uninstalling CrossMgr.
 	
 If you need to uninstall CrossMgr, type the command:
 
@@ -98,7 +106,7 @@ If you need to uninstall CrossMgr, type the command:
 This will clean up the installed files.
 
 --------------------------------------------
-Step 7:  Upgrading CrossMgr.
+Step 9:  Upgrading CrossMgr.
 	
 If you want to upgrade CrossMgr, just download the latest version and follow
 the installation instructions.
