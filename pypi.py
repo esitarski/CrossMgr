@@ -179,7 +179,7 @@ setup = {
 		'whoosh >= 2.4.1',
 		'openpyxl >= 1.5.8',
 		'qrcode >= 2.4.2',
-		'wxPython >= 2.8.0',
+		# 'wxPython >= 2.8.0',
 	],
 }
 
