@@ -100,7 +100,7 @@ Right-click brings up a number of options about what you clicked on:
 
 Option|Action
 :-----|:-----
-Correct...|Correct the current entry
+Correct...|Correct the current entry.  Time may be endered in Race Time or 24 hr Clock Time.
 Shift...|Shift current entry forward/backward in time
 Delete...|Delete current entry
 Pull After Lap...|Pull this rider and set the pulled time to be just after this lap.

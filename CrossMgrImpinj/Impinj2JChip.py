@@ -27,6 +27,11 @@ def formatMessage( tagID, t ):
 
 class Impinj2JChip( object ):
 	def __init__( self, dataQ, messageQ, shutdownQ, crossMgrHost, crossMgrPort ):
+		''' Queues:
+				dataQ:		tag/timestamp data to be written out to CrossMgr.
+				messageQ:	queue to write status messages.
+				shutdownQ:	queue to receive shutdown message to stop gracefully.
+		'''
 		self.dataQ = dataQ
 		self.messageQ = messageQ
 		self.shutdownQ = shutdownQ
@@ -91,11 +96,15 @@ class Impinj2JChip( object ):
 			self.messageQ.put( ('Impinj2JChip', 'Waiting for "get time" command from CrossMgr...') )
 			reconnect = False
 			while self.keepGoing:
+			
+				# Expect a 'G' command from CrossMgr (GetTime).
 				try:
 					received = sock.recv(1)
 				except socket.timeout:
 					reconnect = True
 					break
+				
+				# Ugly way to get the cmd.
 				if received == 'G':
 					while received[-1] != CR:
 						try:
@@ -115,7 +124,8 @@ class Impinj2JChip( object ):
 			#------------------------------------------------------------------------------	
 			if not self.keepGoing:
 				break
-				
+			
+			# Send 'GT' (GetTime response to CrossMgr).
 			self.messageQ.put( ('Impinj2JChip', 'Send gettime data...') )
 			# format is GT0HHMMSShh<CR> where hh is 100's of a second.  The '0' (zero) after GT is the number of days running and is ignored by CrossMgr.
 			dBase = datetime.datetime.now()
@@ -132,6 +142,7 @@ class Impinj2JChip( object ):
 			if not self.keepGoing:
 				break
 
+			# Expect a "Send" command from CrossMgr.
 			self.messageQ.put( ('Impinj2JChip', 'Waiting for send command from CrossMgr...') )
 			while self.keepGoing:
 				try:
@@ -139,6 +150,8 @@ class Impinj2JChip( object ):
 				except socket.timeout:
 					reconnect = True
 					break
+					
+				# Ugly way to get the cmd.
 				if received == 'S':
 					while received[-1] != CR:
 						try:
@@ -155,7 +168,10 @@ class Impinj2JChip( object ):
 				sock.close()
 				continue
 
-			#------------------------------------------------------------------------------	
+			#------------------------------------------------------------------------------
+			# Enter "Send" mode - keep sending data until we get a shutdown.
+			# If the connection fails, return to the outer loop to re-establish a connection.
+			#
 			self.messageQ.put( ('Impinj2JChip', 'Start sending data to CrossMgr...') )
 			self.messageQ.put( ('Impinj2JChip', 'Waiting for Impinj reader data...') )
 			while self.checkKeepGoing():
@@ -166,6 +182,7 @@ class Impinj2JChip( object ):
 					self.keepGoing = False
 					break
 				
+				# Expect message if the form [tag, time].
 				message = formatMessage( d[0], d[1] )
 				try:
 					sock.send( message )

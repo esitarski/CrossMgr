@@ -10,6 +10,7 @@ from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 from Undo import undo
 import random
 import math
+import datetime
 
 #------------------------------------------------------------------------------------------------
 class CorrectNumberDialog( wx.Dialog ):
@@ -34,7 +35,14 @@ class CorrectNumberDialog( wx.Dialog ):
 			pos=(0,0), span=(1,2), border = border, flag=wx.GROW|wx.ALL )
 		bs.Add( wx.StaticText( self, -1, "Rider:"),  pos=(1,0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.numEdit, pos=(1,1), span=(1,2), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
-		bs.Add( wx.StaticText( self, -1, "Race Time:"),  pos=(2,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
+		choices = ["Race Time:"]
+		if Model.race and Model.race.startTime:
+			choices.append( "24 hr Clock Time:" )
+		self.timeChoice = wx.Choice( self, -1, choices = choices )
+		self.timeChoiceLastSelection = 0
+		self.timeChoice.SetSelection( self.timeChoiceLastSelection )
+		self.timeChoice.Bind( wx.EVT_CHOICE, self.doTimeChoice, self.timeChoice )
+		bs.Add( self.timeChoice,  pos=(2,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.timeMsEdit, pos=(2,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.ALIGN_LEFT )
 		
 		bs.Add( self.okBtn, pos=(3, 0), span=(1,1), border = border, flag=wx.ALL )
@@ -47,9 +55,40 @@ class CorrectNumberDialog( wx.Dialog ):
 		self.CentreOnParent(wx.BOTH)
 		self.SetFocus()
 
+	def doTimeChoice( self, event ):
+		iSelection = event.GetSelection()
+		if iSelection == self.timeChoiceLastSelection:
+			return
+		if not (Model.race and Model.race.startTime):
+			return
+			
+		dtStart = Model.race.startTime
+		t = self.timeMsEdit.GetSeconds()
+		if iSelection == 0:
+			# Clock time to race time.
+			dtInput = datetime.datetime(dtStart.year, dtStart.month, dtStart.day) + datetime.timedelta(seconds = t)
+			t = (dtInput - dtStart).total_seconds()
+		else:
+			# Race time to clock time.
+			dtInput = dtStart + datetime.timedelta( seconds = t )
+			t = (dtInput - datetime.datetime(dtStart.year, dtStart.month, dtStart.day)).total_seconds()
+		
+		self.timeMsEdit.SetSeconds( t )
+		self.timeChoiceLastSelection = iSelection
+		
 	def onOK( self, event ):
 		num = self.numEdit.GetValue()
 		t = self.timeMsEdit.GetSeconds()
+		
+		if self.timeChoice.GetSelection() == 1 and Model.race and Model.race.startTime:
+			dtStart = Model.race.startTime
+			dtInput = datetime.datetime(dtStart.year, dtStart.month, dtStart.day) + datetime.timedelta(seconds = t)
+			if dtInput < dtStart:
+				Utils.MessageOK( self, 'Cannot Enter Clock Time Before Race Start.\n\n(reminder: clock time is in 24-hour format)',
+										'Time Entry Error', iconMask = wx.ICON_ERROR )
+				return
+			t = (dtInput - dtStart).total_seconds()
+			
 		if self.entry.num != num or self.entry.t != t:
 			undo.pushState()
 			with Model.LockRace() as race:
@@ -393,4 +432,3 @@ def AddLapSplits( num, lap, times, splits ):
 			return True
 		except (TypeError, KeyError, ValueError, IndexError):
 			return False
-
