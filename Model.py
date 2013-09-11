@@ -958,17 +958,29 @@ class Race(object):
 			else:
 				r.addTime( t - r.firstTime )
 		else:
-			if getattr(race, 'enableJChipIntegration', False) and \
-						getattr(self, 'resetStartClockOnFirstTag', False):
-				if not getattr(self, 'firstRecordedTime', None):
-					self.firstRecordedTime = self.startTime + datetime.timedelta( seconds = t )
-					self.startTime = self.firstRecordedTime
-					t = 0.0
-				r = self.getRider(num)
-				if r.firstTime is None:
-					r.firstTime = t
+			if getattr(race, 'enableJChipIntegration', False):
+				if getattr(self, 'resetStartClockOnFirstTag', False):
+					if not getattr(self, 'firstRecordedTime', None):
+						self.firstRecordedTime = self.startTime + datetime.timedelta( seconds = t )
+						self.startTime = self.firstRecordedTime
+						t = 0.0
+					r = self.getRider(num)
+					if r.firstTime is None:
+						r.firstTime = t
+					else:
+						r.addTime( t )
+						
+				elif getattr(self, 'skipFirstTagRead', False):
+					if not getattr(self, 'firstRecordedTime', None):
+						self.firstRecordedTime = self.startTime + datetime.timedelta( seconds = t )
+					r = self.getRider(num)
+					if r.firstTime is None:
+						r.firstTime = t
+					else:
+						r.addTime( t )
+						
 				else:
-					r.addTime( t )
+					self.getRider(num).addTime( t )
 			else:
 				self.getRider(num).addTime( t )
 		

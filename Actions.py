@@ -161,6 +161,9 @@ StartText = 'Start\nRace'
 FinishText = 'Finish\nRace'
 
 class Actions( wx.Panel ):
+	iResetStartClockOnFirstTag = 1
+	iSkipFirstTagRead = 2
+
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
 		bs = wx.BoxSizer( wx.VERTICAL )
@@ -177,8 +180,12 @@ class Actions( wx.Panel ):
 		self.raceIntro = wx.StaticText( self, wx.ID_ANY, '' )
 		self.raceIntro.SetFont( wx.Font(24, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
 		
-		self.resetStartClockCheckBox = wx.CheckBox( self, wx.ID_ANY, 'Reset Start Clock on First Tag Read (all riders will get the same start time)' )
-		self.Bind( wx.EVT_CHECKBOX, self.onResetStartClock, self.resetStartClockCheckBox )
+		choices = [	'Record Tags Normally',
+					'Reset Start Clock on First Tag Read (all riders will get the same start time of the first read)',
+					'Skip First Tag Read for All Riders (required when there is a start run-up that passes through the finish on the first lap)']
+		self.chipTimingOptions = wx.RadioBox( self, wx.ID_ANY, "Chip Timing Options", majorDimension = 1, choices = choices, style = wx.RA_SPECIFY_COLS )
+																		  
+		self.Bind( wx.EVT_RADIOBOX, self.onChipTimingOptions, self.chipTimingOptions )
 		
 		self.startRaceTimeCheckBox = wx.CheckBox(self, wx.ID_ANY, 'Start Race Automatically at Future Time')
 		
@@ -188,17 +195,25 @@ class Actions( wx.Panel ):
 		hs.Add(self.raceIntro, border=border, flag=wx.ALL)
 		
 		bs.Add( hs, border=border, flag=wx.ALL )
-		bs.Add(self.resetStartClockCheckBox, border=border, flag=wx.ALL)
 		bs.Add(self.startRaceTimeCheckBox, border=border, flag=wx.ALL)
+		bs.Add(self.chipTimingOptions, border=border, flag=wx.ALL)
 		self.SetSizer(bs)
 		
 		self.refresh()
-	
-	def onResetStartClock( self, event ):
+		
+	def updateChipTimingOptions( self ):
 		if not Model.race:
 			return
-		with Model.LockRace() as race:
-			race.resetStartClockOnFirstTag = bool(self.resetStartClockCheckBox.IsChecked())
+			
+		iSelection = self.chipTimingOptions.GetSelection()
+		race = Model.race
+		race.resetStartClockOnFirstTag	= bool(iSelection == self.iResetStartClockOnFirstTag)
+		race.skipFirstTagRead			= bool(iSelection == self.iSkipFirstTagRead)
+	
+	def onChipTimingOptions( self, event ):
+		if not Model.race:
+			return
+		self.updateChipTimingOptions()
 	
 	def onPress( self, event ):
 		if not Model.race:
@@ -209,7 +224,7 @@ class Actions( wx.Panel ):
 			self.onFinishRace( event )
 			return
 			
-		race.resetStartClockOnFirstTag = bool(self.resetStartClockCheckBox.IsChecked())
+		self.updateChipTimingOptions()
 		if getattr(Model.race, 'enableJChipIntegration', False):
 			try:
 				externalFields = race.excelLink.getFields()
@@ -269,13 +284,19 @@ class Actions( wx.Panel ):
 	def refresh( self ):
 		self.button.Enable( False )
 		self.startRaceTimeCheckBox.Enable( False )
-		self.resetStartClockCheckBox.Enable( False )
 		self.button.SetLabel( StartText )
 		self.button.SetForegroundColour( wx.Colour(100,100,100) )
 		self.raceIntro.SetLabel( '' )
+		self.chipTimingOptions.SetSelection( 0 )
+		self.chipTimingOptions.Enable( False )
+		
 		with Model.LockRace() as race:
-			self.resetStartClockCheckBox.SetValue( bool(getattr(race, 'resetStartClockOnFirstTag', True)) if race else False )
-			if race is not None:
+			if race:
+				if getattr(race, 'resetStartClockOnFirstTag', True):
+					self.chipTimingOptions.SetSelection( self.iResetStartClockOnFirstTag )
+				elif getattr(race, 'skipFirstTagRead', False):
+					self.chipTimingOptions.SetSelection( self.iSkipFirstTagRead )
+					
 				if race.startTime is None:
 					self.button.Enable( True )
 					self.button.SetLabel( StartText )
@@ -284,8 +305,8 @@ class Actions( wx.Panel ):
 					self.startRaceTimeCheckBox.Enable( True )
 					self.startRaceTimeCheckBox.Show( True )
 					
-					self.resetStartClockCheckBox.Enable( getattr(race, 'enableJChipIntegration', False) )
-					self.resetStartClockCheckBox.Show( getattr(race, 'enableJChipIntegration', False) )
+					self.chipTimingOptions.Enable( getattr(race, 'enableJChipIntegration', False) )
+					self.chipTimingOptions.Show( getattr(race, 'enableJChipIntegration', False) )
 				elif race.isRunning():
 					self.button.Enable( True )
 					self.button.SetLabel( FinishText )
@@ -294,8 +315,8 @@ class Actions( wx.Panel ):
 					self.startRaceTimeCheckBox.Enable( False )
 					self.startRaceTimeCheckBox.Show( False )
 					
-					self.resetStartClockCheckBox.Enable( False )
-					self.resetStartClockCheckBox.Show( False )
+					self.chipTimingOptions.Enable( False )
+					self.chipTimingOptions.Show( False )
 				self.raceIntro.SetLabel( race.getRaceIntro() )
 			self.GetSizer().Layout()
 					
@@ -308,6 +329,8 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="CrossMan", size=(1024,600))
 	actions = Actions(mainWin)
 	Model.newRace()
+	Model.race.enableJChipIntegration = True
 	actions.refresh()
 	mainWin.Show()
 	app.MainLoop()
+	
