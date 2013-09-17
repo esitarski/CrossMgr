@@ -226,6 +226,22 @@ class Recommendations( wx.Panel ):
 					results = GetResultsCore( catCur )
 					if not results:
 						continue
+						
+					# Check for times recorded before the Category startOffset.
+					for rr in results:
+						rider = race.riders[rr.num]
+						earlyTimeCount = rider.countEarlyTimes()
+						if earlyTimeCount > 0:
+							startOffsetStr = Utils.formatTime( race.getCategory(rider.num).getStartOffsetSecs() )
+							append( rider.num, getName(rider.num),
+									'EarlyTimes', 'Rider has {} {} recorded before "{}" Start Offset {} ({}).  Early times are not shown in the results.'.format(
+										earlyTimeCount, 'times' if earlyTimeCount > 1 else 'time',
+										race.getCategory(rider.num).fullname,
+										startOffsetStr, 'HH:MM:SS'[-len(startOffsetStr):]
+									)
+								)
+					
+					# Check for extra recorded laps.
 					for rr in results:
 						rider = race.riders[rr.num]
 						if rider.status != rider.Finisher:
@@ -233,8 +249,10 @@ class Recommendations( wx.Panel ):
 						numRecordedTimes = len(rider.times)
 						if numRecordedTimes > rr.laps:
 							extra = numRecordedTimes - rr.laps
-							append( rider.num, getName(rider.num), 'Laps', "Rider has %d recorded lap%s not shown in results (all riders finish on leader's last lap)"
-																						% (extra, 's' if extra > 1 else '') )
+							append( rider.num, getName(rider.num), 'Laps',
+									"Rider has {} extra {} not shown in results (all riders finish on leader's last lap)".format(
+										extra, 'laps' if extra > 1 else 'lap')
+								)
 				
 				# Trim out all entries not in this category and all non-finishers.
 				if category:
@@ -334,7 +352,7 @@ class Recommendations( wx.Panel ):
 							# Recorded time exceeds status time.
 							if rider.times and rider.times[-1] > rider.tStatus:
 								append( num, getName(num),
-										'Time' , 'Check if %s time is accurate.  Found recorded time %s after %s time %s.' % (
+										'Time' , 'Check if {} time is accurate.  Found recorded time {} after {} time {}.'.format(
 													statusName,
 													Utils.SecondsToStr(rider.times[-1]),
 													statusName,
@@ -358,7 +376,7 @@ class Recommendations( wx.Panel ):
 					projectedNums.sort()
 					for num, count in projectedNums:
 						append( num, getName(num),
-								'Projected', 'Check rider has projected times (%d).' % count
+								'Projected', 'Check rider has projected times ({}).'.format( count )
 								)
 					
 				# Show missing tag reads.
@@ -402,6 +420,8 @@ if __name__ == '__main__':
 	race[102].tStatus = race[102].interpolate()[2].t
 	race[103].status = Model.Rider.DNF
 	race[104].status = Model.Rider.Pulled
+	for i, category in enumerate(race.getCategories()):
+		category.startOffset = '00:{:02d}:00'.format(i * 5)
 	recommendations = Recommendations(mainWin)
 	recommendations.refresh()
 	mainWin.Show()

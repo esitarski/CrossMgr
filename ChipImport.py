@@ -50,7 +50,7 @@ def DoChipImport(	fname, parseTagTime, startTime = None,
 			if not line or line.startswith('#'):
 				continue
 			
-			tag, t = parseTagTime( line, errors, lineNo )
+			tag, t = parseTagTime( line, lineNo, errors )
 			if tag is None:
 				continue
 			if raceStart and t < raceStart:

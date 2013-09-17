@@ -48,6 +48,7 @@ def parseTagTime( line, lineNo, errors ):
 	if tag.startswith( 'Tag' ):
 		return None, None		# Skip header row.
 		
+	tStrSave = tStr
 	tag = tag.replace( ' ', '' )
 	
 	try:
@@ -59,7 +60,7 @@ def parseTagTime( line, lineNo, errors ):
 		microsecond = fract * 1000000.0
 		t = combine( JChip.dateToday, datetime.time(hour=int(hour), minute=int(minute), second=int(second), microsecond=int(microsecond)) )
 	except (IndexError, ValueError):
-		errors.append( 'line %d: invalid time' % lineNo )
+		errors.append( 'line %d: invalid time: "%s"' % (lineNo, tStrSave) )
 		return None, None
 		
 	return tag, t

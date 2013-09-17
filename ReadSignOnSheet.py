@@ -16,8 +16,8 @@ import traceback
 from Excel import GetExcelReader, toAscii
 
 #-----------------------------------------------------------------------------------------------------
-Fields = ['Bib#', 'LastName', 'FirstName', 'Team', 'Category', 'Age', 'License', 'Tag', 'Tag2']
-IgnoreFields = ['Bib#', 'Tag', 'Tag2']		# Fields to ignore when adding data to standard reports.
+Fields = ['Bib#', 'LastName', 'FirstName', 'Team', 'Category', 'Age', 'Gender', 'License', 'Tag', 'Tag2']
+IgnoreFields = ['Bib#', 'Tag', 'Tag2', 'Gender']		# Fields to ignore when adding data to standard reports.
 ReportFields = [f for f in Fields if f not in IgnoreFields]
 
 class FileNamePage(wiz.WizardPageSimple):
@@ -440,6 +440,10 @@ def ResetExcelLinkCache():
 	errorCache = None
 
 class ExcelLink( object ):
+	OpenCode = 0
+	MenCode = 1
+	WomenCode = 2
+
 	def __init__( self ):
 		self.fileName = None
 		self.sheetName = None
@@ -532,6 +536,15 @@ class ExcelLink( object ):
 					data[field] = toAscii(row[col]).strip()
 					if field == 'LastName' or field.startswith('Tag'):
 						data[field] = str(data[field]).upper()
+					elif field == 'Gender':
+						# Normalize and encode the gender information.
+						genderFirstChar = str(data[field]).strip().upper()[:1]
+						if genderFirstChar in 'MH':		# Men, Male, Hommes
+							data[field] = 1
+						elif genderFirstChar in 'WLF':	# Women, Ladies, Female, Femmes
+							data[field] = 2
+						else:
+							data[field] = 0				# Otherwise Open
 				except IndexError:
 					pass
 			

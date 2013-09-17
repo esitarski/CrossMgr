@@ -45,22 +45,22 @@ readme = '''
 CrossMgr
 ========
 
-Free timing and results software for Cyclo-Cross races (donations recommended for
-paid events).
+Free timing and results software for to get results for Cyclo-Cross, MTB, Time Trials, Criteriums and Road races
+(donations recommended for paid events).
 
 CrossMgr quickly produces professional looking results including rider lap times.
 It reads rider data from Excel, and formats result in Excel format or Html for
 publishing to the web.
-CrossMgr was created by a Cyclo-cross official, and has extensive features to
+CrossMgr was created by a cycling official, and has extensive features to
 settle disputes.
 
 CrossMgr is also fully integrated with the `JChip <http://www.j-chipusa.com/>`_
 chip timing system.
 CrossMgr also support the `Alien <http://www.alientechnology.com>`_ and
 `Impinj <http://www.impinj.com`_ passive chip readers.
-It can  data from the `Orion <http://www.orion-timing.com/>`_ system.
+It can read data from the `Orion <http://www.orion-timing.com/>`_ system.
 
-See `CrossMgr <http://www.sites.google.com/site/crossmgrsoftware/>`_ for full details.
+See `CrossMgr <http://www.sites.google.com/site/crossmgrsoftware/>`_ for details.
 '''
 
 writeToFile( readme, 'README.txt' )
@@ -172,7 +172,7 @@ setup = {
 	'url':			'http://www.sites.google.com/site/crossmgrsoftware/',
 	'license':		'License.txt',
 	'include_package_data': True,
-	'description':	'CrossMgr: a software application to get results for Cyclo-Cross and other bike races.',
+	'description':	'CrossMgr: a software application to get results for Cyclo-Cross, MTB, Time Trials, Criteriums and Road cycling races.',
 	'install_requires':	[
 		'xlrd >= 0.8.0',
 		'xlwt >= 0.7.4',

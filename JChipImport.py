@@ -15,7 +15,7 @@ def parseTagTime( line, lineNo, errors ):
 	try:
 		t = JChip.parseTime(tStr)
 	except (IndexError, ValueError):
-		errors.append( 'line %d: invalid time' % lineNo )
+		errors.append( 'line %d: invalid time: "%s"' % (lineNo, tStr) )
 		return None, None
 		
 	return tag, t

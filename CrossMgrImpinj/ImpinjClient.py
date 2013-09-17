@@ -29,7 +29,7 @@ def toHexFormat( tag ):
 	if len(s) & 1:		# Pad to an even number of chars.
 		s = '0' + s
 	b = []
-	for i in xrange(0, len(s), 2):				# Conver pairs of decimals to hex.
+	for i in xrange(0, len(s), 2):				# Convert pairs of decimals to hex.
 		b.append( chr(int(s[i:i+2], 16)) )
 	return bytes( ''.join(b) )
 

@@ -244,11 +244,13 @@ class Impinj( object ):
 						self.messageQ.put( ('Impinj', 'Received %d.  Skipping: missing tagID.' % self.tagCount) )
 						continue
 						
-					if not isinstance( tagID, (int, long) ):
+					if isinstance( tagID, (int, long) ):
+						tagID = str(tagID)
+					else:
 						try:
-							tagID = HexFormatToInt( tagID )
+							tagID = HexFormatToStr( tagID )
 						except Exception as e:
-							self.messageQ.put( ('Impinj', 'Received %d.  Skipping: HexFormatToInt fails.  Error=%s' % (self.tagCount, e)) )
+							self.messageQ.put( ('Impinj', 'Received {}.  Skipping: HexFormatToStr fails.  Error={}'.format(self.tagCount, e)) )
 							continue
 					
 					try:
@@ -269,7 +271,7 @@ class Impinj( object ):
 					if (discoveryTime - LRT).total_seconds() < RepeatSeconds:
 						self.messageQ.put( (
 							'Impinj',
-							'Received %d.  tag=%d Skipped (<%d secs ago).  time=%s' % (self.tagCount, tagID, RepeatSeconds, discoveryTimeStr)) )
+							'Received {}.  tag={} Skipped (<{} secs ago).  time={}'.format(self.tagCount, tagID, RepeatSeconds, discoveryTimeStr)) )
 						continue
 					
 					# Put this read on the queue for transmission to CrossMgr.
@@ -278,10 +280,10 @@ class Impinj( object ):
 					# Write the entry to the log.
 					if pf:
 						# 									Thu Dec 04 10:14:49 PST
-						pf.write( '%d,%s\n' % (
+						pf.write( '{},{}\n'.format(
 									tagID,
 									discoveryTime.strftime('%a %b %d %H:%M:%S.%f %Z %Y')) )
-					self.messageQ.put( ('Impinj', 'Received %d. tag=%d, time=%s' % (self.tagCount, tagID, discoveryTimeStr)) )
+					self.messageQ.put( ('Impinj', 'Received {}. tag={}, time={}'.format(self.tagCount, tagID, discoveryTimeStr)) )
 				
 				# Close the log file.
 				if pf:

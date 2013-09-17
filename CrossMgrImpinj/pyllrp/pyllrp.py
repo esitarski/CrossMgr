@@ -630,6 +630,9 @@ def WaitForMessage( MessageID, ResponseClass, sock ):
 			
 #-----------------------------------------------------------------------------
 
+def HexFormatToStr( value ):
+	return ''.join( [ "%02X" % ord(x) for x in value ] ).lstrip('0')
+
 def HexFormatToInt( value ):
 	return long(''.join( [ "%02X" % ord(x) for x in value ] ))
 

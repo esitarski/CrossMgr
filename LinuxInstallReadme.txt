@@ -15,7 +15,7 @@ Check that you have version Python 2.7.x.
 To check what version you have, open a shell window and type:
 
 	 python -V
-	 
+
 Most Linux distributions come with Python 2.7.x.  If not, you will have to
 upgrade to this version.  
 
@@ -28,7 +28,7 @@ CrossMgr uses the "pip", the Python package installer.
 To check if you have "pip", type:
 
 	pip -h
-	
+
 into a shell window.
 If you don't have "pip", get it from http://www.pip-installer.org/en/latest/installing.html.
 You will need to run the install with "sudo".
@@ -54,11 +54,11 @@ Step 5:  Run the pip install
 "cd" to your "CrossMgrInstall" directory.  Enter:
 
 	sudo pip install PIP-Install-CrossMgr-N.NN.tar.gz
-	
+
 Where, of course, N.NN corresponds to the CrossMgr version.
 
 Pip will automatically pull additional python packages from pypi.
-These are xlrd, xlwt, whoosh, openpyxl and wxpython.
+These are xlrd, xlwt, whoosh, openpyxl, qrcode and wxpython.
 
 If this process fails, you may need to install these modules from your Linux distro.
 
