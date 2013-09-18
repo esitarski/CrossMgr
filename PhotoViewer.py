@@ -78,33 +78,33 @@ def getRiderNameFromFName( fname ):
 	return name
 	
 class PhotoPrintout(wx.Printout):
-    def __init__(self, title, fname):
+	def __init__(self, title, fname):
 		wx.Printout.__init__(self)
 		self.title = title
 		self.fname = fname
 
-    def OnBeginDocument(self, start, end):
-        return super(PhotoPrintout, self).OnBeginDocument(start, end)
+	def OnBeginDocument(self, start, end):
+		return super(PhotoPrintout, self).OnBeginDocument(start, end)
 
-    def OnEndDocument(self):
-        super(PhotoPrintout, self).OnEndDocument()
+	def OnEndDocument(self):
+		super(PhotoPrintout, self).OnEndDocument()
 
-    def OnBeginPrinting(self):
-        super(PhotoPrintout, self).OnBeginPrinting()
+	def OnBeginPrinting(self):
+		super(PhotoPrintout, self).OnBeginPrinting()
 
-    def OnEndPrinting(self):
-        super(PhotoPrintout, self).OnEndPrinting()
+	def OnEndPrinting(self):
+		super(PhotoPrintout, self).OnEndPrinting()
 
-    def OnPreparePrinting(self):
-        super(PhotoPrintout, self).OnPreparePrinting()
+	def OnPreparePrinting(self):
+		super(PhotoPrintout, self).OnPreparePrinting()
 
-    def HasPage(self, page):
+	def HasPage(self, page):
 		return page == 1
 
-    def GetPageInfo(self):
+	def GetPageInfo(self):
 		return (1,1,1,1)
 
-    def OnPrintPage(self, page):
+	def OnPrintPage(self, page):
 		dc = self.GetDC()
 		try:
 			bitmap = wx.Bitmap( self.fname, wx.BITMAP_TYPE_JPEG )

@@ -12,31 +12,31 @@ from ExportGrid import ExportGrid
 #--------------------------------------------------------------------------------
 
 class CategoriesPrintout( wx.Printout ):
-    def __init__(self, categories = None):
+	def __init__(self, categories = None):
 		wx.Printout.__init__(self)
 
-    def OnBeginDocument(self, start, end):
-        return super(CategoriesPrintout, self).OnBeginDocument(start, end)
+	def OnBeginDocument(self, start, end):
+		return super(CategoriesPrintout, self).OnBeginDocument(start, end)
 
-    def OnEndDocument(self):
-        super(CategoriesPrintout, self).OnEndDocument()
+	def OnEndDocument(self):
+		super(CategoriesPrintout, self).OnEndDocument()
 
-    def OnBeginPrinting(self):
-        super(CategoriesPrintout, self).OnBeginPrinting()
+	def OnBeginPrinting(self):
+		super(CategoriesPrintout, self).OnBeginPrinting()
 
-    def OnEndPrinting(self):
-        super(CategoriesPrintout, self).OnEndPrinting()
+	def OnEndPrinting(self):
+		super(CategoriesPrintout, self).OnEndPrinting()
 
-    def OnPreparePrinting(self):
-        super(CategoriesPrintout, self).OnPreparePrinting()
+	def OnPreparePrinting(self):
+		super(CategoriesPrintout, self).OnPreparePrinting()
 
-    def HasPage(self, page):
+	def HasPage(self, page):
 		return page == 1
 
-    def GetPageInfo(self):
+	def GetPageInfo(self):
 		return (1,1,1,1)
 
-    def OnPrintPage(self, page):
+	def OnPrintPage(self, page):
 		race = Model.race
 		if not race:
 			return
