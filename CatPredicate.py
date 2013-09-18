@@ -1,5 +1,6 @@
 import re
 import ReadSignOnSheet
+import itertools
 
 def SetToIntervals( s ):
 	if not s:
@@ -91,14 +92,15 @@ class CategoryPredicate( object ):
 					self.genderMatch = 0
 			elif s.startswith( 'Category=' ):
 				f = s.split('=', 1)[1].strip()
-				f = f[1:-1]
+				f = f[1:-1]		# Remove braces.
 				cats = f.split('|')
 				self.categoryMatch = [c.strip() for c in cats]
 				if not self.categoryMatch:
 					self.categoryMatch = None
 			elif s.startswith( 'Age=' ):
 				self.ageRange = []
-				for r in s.split( '..' ):
+				f = s.split('=')[1].strip()
+				for r in f.split( '..' ):
 					r = self.nonDigits.sub( '', r )
 					try:
 						self.ageRange.append( int(r) )

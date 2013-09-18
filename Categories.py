@@ -237,7 +237,7 @@ class Categories( wx.Panel ):
 			self.grid.SetColLabelValue( col, name )
 		self.cb = None
 
-		#self.Bind( gridlib.EVT_GRID_CELL_LEFT_CLICK, self.onGridLeftClick )
+		self.Bind( gridlib.EVT_GRID_CELL_LEFT_CLICK, self.onGridLeftClick )
 		self.Bind( gridlib.EVT_GRID_SELECT_CELL, self.onCellSelected )
 		self.Bind( gridlib.EVT_GRID_EDITOR_CREATED, self.onEditorCreated )
 		
@@ -277,7 +277,7 @@ class Categories( wx.Panel ):
 		
 	def onGridLeftClick( self, event ):
 		if event.GetCol() == self.activeColumn:
-			wx.CallLater( 200, self.toggleCheckBox )
+			wx.CallLater( 100, self.toggleCheckBox )
 		event.Skip()
 		
 	def toggleCheckBox( self ):
