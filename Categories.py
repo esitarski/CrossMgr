@@ -188,11 +188,11 @@ class Categories( wx.Panel ):
 
 		hs.AddSpacer( 10 )
 		
-		self.upCategoryButton = wx.Button(self, id=wx.ID_ANY, label='&Up', style=wx.BU_EXACTFIT)
+		self.upCategoryButton = wx.Button(self, id=wx.ID_ANY, label='Move &Up', style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onUpCategory, self.upCategoryButton )
 		hs.Add( self.upCategoryButton, 0, border = border, flag = flag )
 
-		self.downCategoryButton = wx.Button(self, id=wx.ID_ANY, label='D&own', style=wx.BU_EXACTFIT)
+		self.downCategoryButton = wx.Button(self, id=wx.ID_ANY, label='Move D&own', style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onDownCategory, self.downCategoryButton )
 		hs.Add( self.downCategoryButton, 0, border = border, flag = (flag & ~wx.LEFT) )
 
@@ -243,7 +243,7 @@ class Categories( wx.Panel ):
 		for col, (colName, fieldName) in enumerate(self.colNameFields):
 			attr = gridlib.GridCellAttr()
 			
-			if fieldName == 'active':
+			if fieldName in ['active', 'lappedRidersMustContinue']:
 				boolEditor = gridlib.GridCellBoolEditor()
 				boolEditor.UseStringValues( '1', '0' )
 				attr.SetEditor( boolEditor )
@@ -262,14 +262,6 @@ class Categories( wx.Panel ):
 			elif fieldName == 'numLaps':
 				attr.SetEditor( wx.grid.GridCellNumberEditor() )
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
-				
-			elif fieldName == 'lappedRidersMustContinue':
-				boolEditor = gridlib.GridCellBoolEditor()
-				boolEditor.UseStringValues( '1', '0' )
-				attr.SetEditor( boolEditor )
-				attr.SetRenderer( gridlib.GridCellBoolRenderer() )
-				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
-				self.boolCols.add( col )
 				
 			elif fieldName in ['rule80Time', 'suggestedLaps']:
 				attr.SetReadOnly( True )
@@ -384,17 +376,15 @@ class Categories( wx.Panel ):
 		if len(startOffset) < len('00:00:00'):
 			startOffset = '00:' + startOffset
 	
-		self.grid.SetCellValue( r, self.iCol['active'], '1' if active else '0' )		
+		self.grid.SetCellValue( r, self.iCol['active'], '1' if active else '0' )
 		self.grid.SetCellValue( r, self.iCol['name'], name )
-		if gender not in {'Men', 'Women', 'Open'}:
-			gender = 'Open'
-		self.grid.SetCellValue( r, self.iCol['gender'], gender )
-		self.grid.SetCellValue( r, self.iCol['catStr'], catStr )		
+		self.grid.SetCellValue( r, self.iCol['gender'], gender if gender in ['Men', 'Women'] else 'Open' )
+		self.grid.SetCellValue( r, self.iCol['catStr'], catStr )
 		self.grid.SetCellValue( r, self.iCol['startOffset'], startOffset )
 		self.grid.SetCellValue( r, self.iCol['numLaps'], str(numLaps) if numLaps else '' )
-		self.grid.SetCellValue( r, self.iCol['lappedRidersMustContinue'], '1' if lappedRidersMustContinue else '0' )		
-		self.grid.SetCellValue( r, self.iCol['rule80Time'], '' )		
-		self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '' )		
+		self.grid.SetCellValue( r, self.iCol['lappedRidersMustContinue'], '1' if lappedRidersMustContinue else '0' )
+		self.grid.SetCellValue( r, self.iCol['rule80Time'], '' )
+		self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '' )
 		self.grid.SetCellValue( r, self.iCol['distance'], ('%.3f' % distance) if distance else '' )
 		self.grid.SetCellValue( r, self.iCol['distanceType'], '%d' % (distanceType if distanceType else 0) )
 		self.grid.SetCellValue( r, self.iCol['firstLapDistance'], ('%.3f' % firstLapDistance) if firstLapDistance else '' )
