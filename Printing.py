@@ -6,7 +6,6 @@ from  ExportGrid import ExportGrid
 from DNSManager import AutoWidthListCtrl
 from collections import defaultdict
 from GetResults import GetResults
-import Model
 import Utils
 
 #----------------------------------------------------------------------
@@ -247,8 +246,6 @@ if __name__ == '__main__':
 	Utils.disable_stdout_buffering()
 	app = wx.PySimpleApp()
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,200))
-	Model.setRace( Model.Race() )
-	Model.getRace()._populate()
 	cpcd = ChoosePrintCategoriesDialog(mainWin)
 	cpcd.SetSize( (450, 300) )
 	mainWin.Show()

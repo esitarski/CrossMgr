@@ -163,7 +163,6 @@ class CustomEnumRenderer(gridlib.PyGridCellRenderer):
 		w, h = dc.GetTextExtent(text)
 		return wx.Size(w, h)
 
-
 	def Clone(self):
 		return CustomEnumRenderer()
 		
@@ -217,12 +216,12 @@ class Categories( wx.Panel ):
 			('Numbers',				'catStr'),
 			('Start Offset',		'startOffset'),
 			('Race Laps',			'numLaps'),
-			('Lapped Riders Continue',	'lappedRidersMustContinue'),
+			('Lapped Riders\nContinue',	'lappedRidersMustContinue'),
 			('Distance',			'distance'),
-			('Distance is By',		'distanceType'),
-			('First Lap Distance',	'firstLapDistance'),
-			('80% Lap Time',		'rule80Time'),
-			('Suggested Laps',		'suggestedLaps'),
+			('Distance\nBy',		'distanceType'),
+			('First Lap\nDistance',	'firstLapDistance'),
+			('80%\nLap Time',		'rule80Time'),
+			('Suggested\nLaps',		'suggestedLaps'),
 		]
 		self.computedFieldss = {'rule80Time', 'suggestedLaps'}
 		colnames = [colName for colName, fieldName in self.colNameFields]
@@ -236,10 +235,62 @@ class Categories( wx.Panel ):
 		for col, name in enumerate(colnames):
 			self.grid.SetColLabelValue( col, name )
 		self.cb = None
-
+		
+		self.boolCols = set()
+		self.choiceCols = set()
+		
+		# Set column attributes for the table.
+		for col, (colName, fieldName) in enumerate(self.colNameFields):
+			attr = gridlib.GridCellAttr()
+			
+			if fieldName == 'active':
+				boolEditor = gridlib.GridCellBoolEditor()
+				boolEditor.UseStringValues( '1', '0' )
+				attr.SetEditor( boolEditor )
+				attr.SetRenderer( gridlib.GridCellBoolRenderer() )
+				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+				self.boolCols.add( col )
+				
+			elif fieldName == 'gender':
+				attr.SetEditor( gridlib.GridCellChoiceEditor(['Open','Men','Women'], False) )
+				self.choiceCols.add( col )
+				
+			elif fieldName == 'startOffset':
+				attr.SetEditor( TimeEditor() )
+				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+				
+			elif fieldName == 'numLaps':
+				attr.SetEditor( wx.grid.GridCellNumberEditor() )
+				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+				
+			elif fieldName == 'lappedRidersMustContinue':
+				boolEditor = gridlib.GridCellBoolEditor()
+				boolEditor.UseStringValues( '1', '0' )
+				attr.SetEditor( boolEditor )
+				attr.SetRenderer( gridlib.GridCellBoolRenderer() )
+				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+				self.boolCols.add( col )
+				
+			elif fieldName in ['rule80Time', 'suggestedLaps']:
+				attr.SetReadOnly( True )
+				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+				
+			elif fieldName in ['distance', 'firstLapDistance'] :
+				attr.SetEditor( gridlib.GridCellFloatEditor(7, 3) )
+				attr.SetRenderer( gridlib.GridCellFloatRenderer(7, 3) )
+				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+				
+			elif fieldName == 'distanceType':
+				choices = 'Lap,Race'
+				attr.SetEditor( gridlib.GridCellEnumEditor(choices) )
+				attr.SetRenderer( CustomEnumRenderer(choices) )
+				attr.SetAlignment( wx.ALIGN_RIGHT, wx.ALIGN_CENTRE )
+				self.choiceCols.add( col )
+				
+			self.grid.SetColAttr( col, attr )
+		
 		self.Bind( gridlib.EVT_GRID_CELL_LEFT_CLICK, self.onGridLeftClick )
 		self.Bind( gridlib.EVT_GRID_SELECT_CELL, self.onCellSelected )
-		self.Bind( gridlib.EVT_GRID_EDITOR_CREATED, self.onEditorCreated )
 		
 		vs.Add( hs, 0, flag=wx.EXPAND|wx.ALL, border = 4 )
 		vs.Add( self.grid, 1, flag=wx.GROW|wx.ALL|wx.EXPAND )
@@ -248,10 +299,8 @@ class Categories( wx.Panel ):
 
 	def onPrint( self, event ):
 		mainWin = Utils.getMainWin()
-		if not mainWin:
-			return
 		race = Model.race
-		if not Model.race:
+		if not mainWin or not race:
 			return
 			
 		colnames = ['Name', 'Gender', 'Numbers', 'Start Offset', 'Laps', 'Distance']
@@ -274,34 +323,22 @@ class Categories( wx.Panel ):
 			mainWin.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
 
 		printout.Destroy()
-		
+	
+	#------------------------------------------
+	
 	def onGridLeftClick( self, event ):
-		if event.GetCol() == self.activeColumn:
-			wx.CallLater( 100, self.toggleCheckBox )
+		if event.GetCol() in self.boolCols:
+			r, c = event.GetRow(), event.GetCol()
+			self.grid.SetCellValue( r, c, '1' if self.grid.GetCellValue(r, c) != '1' else '0' )
 		event.Skip()
 		
-	def toggleCheckBox( self ):
-		self.cb.SetValue( not self.cb.GetValue() )
-		self.afterCheckBox( self.cb.GetValue() )
-		
 	def onCellSelected( self, event ):
-		col = event.GetCol()
-		if col == self.activeColumn or col == self.genderColumn:
+		if event.GetCol() in self.choiceCols or event.GetCol() in self.boolCols:
 			wx.CallAfter( self.grid.EnableCellEditControl )
 		event.Skip()
 
-	def onEditorCreated( self, event ):
-		if event.GetCol() == self.activeColumn:
-			self.cb = event.GetControl()
-			self.cb.Bind( wx.EVT_CHECKBOX, self.onCheckBox )
-		event.Skip()
+	#------------------------------------------
 
-	def onCheckBox( self, event ):
-		self.afterCheckBox( event.IsChecked() )
-
-	def afterCheckBox( self, isChecked ):
-		pass
-		
 	def onAddExceptions( self, event ):
 		with Model.LockRace() as race:
 			if not race or not race.getAllCategories():
@@ -343,75 +380,24 @@ class Categories( wx.Panel ):
 					lappedRidersMustContinue = False,
 					distance = None, distanceType = None,
 					firstLapDistance = None, gender = None ):
+					
 		if len(startOffset) < len('00:00:00'):
 			startOffset = '00:' + startOffset
 	
-		c = self.iCol['active']
-		self.grid.SetCellValue( r, c, '1' if active else '0' )
-		boolEditor = gridlib.GridCellBoolEditor()
-		boolEditor.UseStringValues( '1', '0' )
-		self.grid.SetCellEditor( r, c, boolEditor )
-		self.grid.SetCellRenderer( r, c, gridlib.GridCellBoolRenderer() )
-		self.grid.SetCellAlignment( r, c, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
-		
+		self.grid.SetCellValue( r, self.iCol['active'], '1' if active else '0' )		
 		self.grid.SetCellValue( r, self.iCol['name'], name )
-		
 		if gender not in {'Men', 'Women', 'Open'}:
 			gender = 'Open'
-		c = self.iCol['gender']
-		self.grid.SetCellValue( r, c, gender )
-		self.grid.SetCellEditor( r, c, gridlib.GridCellChoiceEditor(['Open','Men','Women'], False) )
-		self.grid.SetCellAlignment( r, c, wx.ALIGN_LEFT, wx.ALIGN_CENTRE )
-		
-		self.grid.SetCellValue( r, self.iCol['catStr'], catStr )
-		
-		c = self.iCol['startOffset']
-		self.grid.SetCellValue( r, c, startOffset )
-		self.grid.SetCellEditor( r, c, TimeEditor() )
-		self.grid.SetCellAlignment( r, c, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
-		
-		c = self.iCol['numLaps']
-		self.grid.SetCellValue( r, c, str(numLaps) if numLaps else '' )
-		numberEditor = wx.grid.GridCellNumberEditor()
-		self.grid.SetCellEditor( r, c, numberEditor )
-		self.grid.SetCellAlignment( r, c, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
-		
-		c = self.iCol['lappedRidersMustContinue']
-		self.grid.SetCellValue( r, c, '1' if lappedRidersMustContinue else '0' )
-		boolEditor = gridlib.GridCellBoolEditor()
-		boolEditor.UseStringValues( '1', '0' )
-		self.grid.SetCellEditor( r, c, boolEditor )
-		self.grid.SetCellRenderer( r, c, gridlib.GridCellBoolRenderer() )
-		self.grid.SetCellAlignment( r, c, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
-		
-		c = self.iCol['rule80Time']
-		self.grid.SetCellValue( r, c, '' )
-		self.grid.SetCellAlignment( r, c, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
-		self.grid.SetReadOnly( r, c, True )
-		
-		c = self.iCol['suggestedLaps']
-		self.grid.SetCellValue( r, c, '' )
-		self.grid.SetCellAlignment( r, c, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
-		self.grid.SetReadOnly( r, c, True )
-		
-		c = self.iCol['distance']
-		self.grid.SetCellValue( r, c, ('%.3f' % distance) if distance else '' )
-		self.grid.SetCellEditor( r, c, gridlib.GridCellFloatEditor(7, 3) )
-		self.grid.SetCellRenderer( r, c, gridlib.GridCellFloatRenderer(7, 3) )
-		self.grid.SetCellAlignment( r, c, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE )
-		
-		c = self.iCol['distanceType']
-		choices = 'Lap,Race'
-		self.grid.SetCellValue( r, c, '%d' % (distanceType if distanceType else 0) )
-		self.grid.SetCellEditor( r, c, gridlib.GridCellEnumEditor(choices) )
-		self.grid.SetCellRenderer( r, c, CustomEnumRenderer(choices) )
-		self.grid.SetCellAlignment( r, c, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE )
-		
-		c = self.iCol['firstLapDistance']
-		self.grid.SetCellValue( r, c, ('%.3f' % firstLapDistance) if firstLapDistance else '' )
-		self.grid.SetCellEditor( r, c, gridlib.GridCellFloatEditor(7, 3) )
-		self.grid.SetCellRenderer( r, c, gridlib.GridCellFloatRenderer(7, 3) )
-		self.grid.SetCellAlignment( r, c, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE )
+		self.grid.SetCellValue( r, self.iCol['gender'], gender )
+		self.grid.SetCellValue( r, self.iCol['catStr'], catStr )		
+		self.grid.SetCellValue( r, self.iCol['startOffset'], startOffset )
+		self.grid.SetCellValue( r, self.iCol['numLaps'], str(numLaps) if numLaps else '' )
+		self.grid.SetCellValue( r, self.iCol['lappedRidersMustContinue'], '1' if lappedRidersMustContinue else '0' )		
+		self.grid.SetCellValue( r, self.iCol['rule80Time'], '' )		
+		self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '' )		
+		self.grid.SetCellValue( r, self.iCol['distance'], ('%.3f' % distance) if distance else '' )
+		self.grid.SetCellValue( r, self.iCol['distanceType'], '%d' % (distanceType if distanceType else 0) )
+		self.grid.SetCellValue( r, self.iCol['firstLapDistance'], ('%.3f' % firstLapDistance) if firstLapDistance else '' )
 		
 		# Get the 80% time cutoff.
 		if not active or not Model.race:
@@ -444,16 +430,22 @@ class Categories( wx.Panel ):
 			self.grid.DeleteRows( r, 1, True )
 		
 	def onUpCategory( self, event ):
+		self.grid.DisableCellEditControl()
 		r = self.grid.GetGridCursorRow()
 		Utils.SwapGridRows( self.grid, r, r-1 )
 		if r-1 >= 0:
 			self.grid.MoveCursorUp( False )
+		self.grid.ClearSelection()
+		self.grid.SelectRow( max(r-1, 0), True )
 		
 	def onDownCategory( self, event ):
+		self.grid.DisableCellEditControl()
 		r = self.grid.GetGridCursorRow()
 		Utils.SwapGridRows( self.grid, r, r+1 )
 		if r+1 < self.grid.GetNumberRows():
 			self.grid.MoveCursorDown( False )
+		self.grid.ClearSelection()
+		self.grid.SelectRow( min(r+1, self.grid.GetNumberRows()-1), True )
 		
 	def refresh( self ):
 		with Model.LockRace() as race:
@@ -463,7 +455,7 @@ class Categories( wx.Panel ):
 			
 			for c in xrange(self.grid.GetNumberCols()):
 				if self.grid.GetColLabelValue(c).startswith('Distance'):
-					self.grid.SetColLabelValue( c, 'Distance (%s)' % ['km', 'miles'][getattr(race, 'distanceUnit', 0)] )
+					self.grid.SetColLabelValue( c, 'Distance\n(%s)' % ['km', 'miles'][getattr(race, 'distanceUnit', 0)] )
 					break
 			
 			categories = race.getAllCategories()
@@ -490,6 +482,7 @@ class Categories( wx.Panel ):
 			
 			# Force the grid to the correct size.
 			self.grid.FitInside()
+			self.GetSizer().Layout()
 
 	def commit( self ):
 		undo.pushState()

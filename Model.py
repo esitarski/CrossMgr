@@ -14,7 +14,6 @@ import functools
 import threading
 import getpass
 from os.path import commonprefix
-from CatPredicate import SetToIntervals, IntervalsToSet
 
 CurrentUser = getpass.getuser()
 
@@ -94,6 +93,27 @@ class LockRace:
 		return False
 	
 #----------------------------------------------------------------------
+def SetToIntervals( s ):
+	if not s:
+		return []
+	seq = sorted( s )
+	intervals = [(seq[0], seq[0])]
+	for num in itertools.islice(seq, 1, len(seq)):
+		if num <= intervals[-1][1]:
+			pass
+		elif num == intervals[-1][1] + 1:
+			intervals[-1] = (intervals[-1][0], num)
+		else:
+			intervals.append( (num, num) )
+	return intervals
+	
+def IntervalsToSet( intervals ):
+	ret = set()
+	for i in intervals:
+		ret.update( xrange(i[0], i[1]+1) )
+	return ret
+
+
 #----------------------------------------------------------------------
 class Category(object):
 

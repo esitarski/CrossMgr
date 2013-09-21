@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+#----------------------------------------------------------------------------------------------------------------------
+# This software is protected under the terms of the Berne Convention for the Protection of Literary and Artistic Works.
+#----------------------------------------------------------------------------------------------------------------------
 
 import os
 try:

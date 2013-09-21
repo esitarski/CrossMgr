@@ -1,6 +1,12 @@
 import re
-import ReadSignOnSheet
+import wx
+import  wx.lib.intctrl
+import os
 import itertools
+from DNSManager import AutoWidthListCtrl
+import ReadSignOnSheet
+import Model
+import Utils
 
 def SetToIntervals( s ):
 	if not s:
@@ -35,26 +41,31 @@ class CategoryPredicate( object ):
 		
 	def match( self, info ):
 		isMatch = True
-		if isMatch and info.get('Bib#', -1) in self.exclude:
+		
+		bib, gender, category, age = [
+				info.get('Bib#', -1),
+				info.get('Gender', ReadSignOnSheet.ExcelLink.OpenCode),
+				info.get('Category','').lower(),
+				info.get('Age',-1)]
+				
+		if isMatch and bib in self.exclude:
 			isMatch = False
 		if isMatch and self.intervals is not None:
-			num = info.get('Bib#', -1)
 			isMatch = False
 			for i in self.intervals:
-				if i[0] <= num <= i[1]:
+				if i[0] <= bib <= i[1]:
 					isMatch = True
 					break
 		if isMatch and self.genderMatch is not None:
-			isMatch = (info.get('Gender',ReadSignOnSheet.ExcelLink.OpenCode) == self.genderMatch)
+			isMatch = (gender == self.genderMatch)
 		if isMatch and self.categoryMatch is not None:
-			catMatch = info.get('Category','').lower()
 			isMatch = False
 			for c in self.categoryMatch:
-				if catMatch == c.lower():
+				if category == c.lower():
 					isMatch = True
 					break
 		if isMatch and self.ageRange is not None:
-			isMatch = (self.ageRange[0] <= info.get('Age', -1) <= self.ageRange[1])
+			isMatch = (self.ageRange[0] <= age <= self.ageRange[1])
 		return isMatch
 		
 	badRangeCharsRE = re.compile( '[^0-9,\-]' )
@@ -81,6 +92,7 @@ class CategoryPredicate( object ):
 		
 		for s in sIn.split(';'):
 			s = s.strip()
+			
 			if s.startswith( 'Gender=' ):
 				f = s.split('=', 1)[1].strip()
 				genderFirstChar = f[1:]
@@ -90,6 +102,7 @@ class CategoryPredicate( object ):
 					self.genderMatch = 2
 				else:
 					self.genderMatch = 0
+					
 			elif s.startswith( 'Category=' ):
 				f = s.split('=', 1)[1].strip()
 				f = f[1:-1]		# Remove braces.
@@ -97,6 +110,7 @@ class CategoryPredicate( object ):
 				self.categoryMatch = [c.strip() for c in cats]
 				if not self.categoryMatch:
 					self.categoryMatch = None
+					
 			elif s.startswith( 'Age=' ):
 				self.ageRange = []
 				f = s.split('=')[1].strip()
@@ -111,7 +125,10 @@ class CategoryPredicate( object ):
 					if len(self.ageRange) != 2:
 						self.ageRange = None
 					else:
-						self.ageRange = self.ageRange[:2]
+						self.ageRange = [self.ageRange[0], self.ageRange[-1]]
+						if self.ageRange[0] > self.ageRange[1]:
+							self.ageRange[0], self.ageRange[1] = self.ageRange[1], self.ageRange[0]
+			
 			else:
 				s = self.badRangeCharsRE.sub( '', str(s) )
 				self.intervals = []
@@ -158,3 +175,105 @@ class CategoryPredicate( object ):
 		
 	def set( self, numberRange = None, genderMatch = None, categoryMatch = None, ageRange = None ):
 		pass
+		
+class CategoryPredicateDialog( wx.Dialog ):
+	def __init__( self, parent, catPredicate, id = wx.ID_ANY ):
+		wx.Dialog.__init__( self, parent, id, "Category Predicate",
+						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+		
+		self.catPredicate = catPredicate
+		
+		border = 2
+		bs = wx.GridBagSizer(vgap=3, hgap=3)
+		
+		row = 0
+		numbersLabel = wx.StaticText( self, wx.ID_ANY, 'Numbers:' )
+		
+		bs.Add( numbersLabel, pos=(row,0), span=(1,1),
+			border = border, flag=wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+		
+		self.numbers = wx.TextCtrl( self, wx.ID_ANY )
+		bs.Add( self.numbers, pos=(row,1), span=(1,1),
+			border = border, flag=wx.RIGHT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL|wx.EXPAND )
+		row += 1
+			
+		genderLabel = wx.StaticText( self, wx.ID_ANY, 'Gender:' )
+		bs.Add( genderLabel, pos=(row,0), span=(1,1),
+			border = border, flag=wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+			
+		self.gender = wx.Choice( self, wx.ID_ANY, choices=['Open', 'Men', 'Women'] )
+		bs.Add( self.gender, pos=(row,1), span=(1,1),
+			border = border, flag=wx.RIGHT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL|wx.EXPAND )
+		self.gender.SetSelection( 0 )
+		row += 1
+		
+		ageLabel = wx.StaticText( self, wx.ID_ANY, 'Age:' )
+		bs.Add( ageLabel, pos=(row,0), span=(1,1),
+			border = border, flag=wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+			
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		self.ageRange = [None, None]
+		self.ageRange[0] = wx.lib.intctrl.IntCtrl( self, wx.ID_ANY, min = 0, max = 110, allow_none = True, limited = True,
+			size=(32,-1) )
+		self.ageRange[1] = wx.lib.intctrl.IntCtrl( self, wx.ID_ANY, min = 0, max = 110, allow_none = True, limited = True,
+			size=(32,-1) )
+		hs.Add( self.ageRange[0] )
+		hs.Add( wx.StaticText(self, wx.ID_ANY, ' to '), flag=wx.ALIGN_CENTER_VERTICAL )
+		hs.Add( self.ageRange[1] )
+		bs.Add( hs, pos = (row,1), span=(1,1),
+			border = border, flag=wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT )
+		row += 1
+		
+		categoryLabel = wx.StaticText( self, wx.ID_ANY, 'Categories:' )
+		bs.Add( categoryLabel, pos=(row,0), span=(1,1),
+			border = 8, flag=wx.LEFT|wx.TOP|wx.ALIGN_TOP|wx.ALIGN_RIGHT )
+			
+		self.il = wx.ImageList(16, 16)
+		self.sm_rt = self.il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'SmallRightArrow.png'), wx.BITMAP_TYPE_PNG))
+		self.sm_up = self.il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'SmallUpArrow.png'), wx.BITMAP_TYPE_PNG))
+		self.sm_dn = self.il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'SmallDownArrow.png'), wx.BITMAP_TYPE_PNG ))
+		
+		self.categoryList = AutoWidthListCtrl( self, wx.ID_ANY, size=(-1,180), style = wx.LC_REPORT 
+														 | wx.BORDER_SUNKEN
+														 | wx.LC_HRULES
+														 )
+		self.categoryList.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
+		
+		self.categoryList.InsertColumn(0, "Category")
+		bs.Add( self.categoryList, pos=(row,1), span=(1,1),
+			border = border, flag=wx.RIGHT|wx.TOP|wx.BOTTOM|wx.EXPAND )
+		row += 1
+		
+		self.okBtn = wx.Button( self, wx.ID_ANY, '&OK' )
+		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
+
+		self.cancelBtn = wx.Button( self, wx.ID_ANY, '&Cancel' )
+		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
+		row += 1
+		
+		border = 8
+		bs.Add( self.okBtn, pos=(row, 0), span=(1,1), border = border, flag=wx.ALL )
+		self.okBtn.SetDefault()
+		bs.Add( self.cancelBtn, pos=(row, 1), span=(1,1), border = border, flag=wx.ALL )
+		
+		bs.AddGrowableCol( 1 )
+		bs.AddGrowableRow( row - 2 )
+		self.SetSizerAndFit(bs)
+		bs.Fit( self )
+		
+	def onOK( self, event ):
+		self.EndModal( wx.ID_OK )
+		
+	def onCancel( self, event ):
+		self.EndModal( wx.ID_CANCEL )
+
+if __name__ == '__main__':
+	app = wx.PySimpleApp()
+	mainWin = wx.Frame(None,title="CrossMan", size=(1024,600))
+	Model.newRace()
+	Model.race.enableJChipIntegration = True
+	catPredicate = CategoryPredicate()
+	catPredicateDialog = CategoryPredicateDialog(mainWin, catPredicate )
+	catPredicateDialog.ShowModal()
+	app.MainLoop()
+	
