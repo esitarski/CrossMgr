@@ -74,6 +74,7 @@ from PhotoFinish		import ResetPhotoInfoCache, DeletePhotos, SetCameraState
 from PhotoViewer		import PhotoViewerDialog
 from ReadTTStartTimesSheet import ImportTTStartTimes
 import VideoBuffer
+import ChangeRaceStartTime
 import wx.lib.agw.advancedsplash as AS
 import openpyxl
 
@@ -421,7 +422,7 @@ class MainWin( wx.Frame ):
 		
 		self.menuBar.Append( self.dataMgmtMenu, "&DataMgmt" )
 
-		#-----------------------------------------------------------------------
+		#----------------------------------------------------------------------------------------------
 
 		# Configure the field of the display.
 
@@ -572,6 +573,16 @@ class MainWin( wx.Frame ):
 		self.helpMenu.Append( idCur , "&Tips at Startup...", "Enable/Disable Tips at Startup..." )
 		self.Bind(wx.EVT_MENU, self.menuTipAtStartup, id=idCur )
 
+		#----------------------------------------------------------------------------------------------
+		self.toolsMenu = wx.Menu()
+		
+		idCur = wx.NewId()
+		self.toolsMenu.Append( idCur , "&Change Race Start Time...", "Change the Start Time of the Race" )
+		self.Bind(wx.EVT_MENU, self.menuChangeRaceStartTime, id=idCur )
+		
+		self.menuBar.Append( self.toolsMenu, "&Tools" )
+		
+		#------------------------------------------------------------------------------
 		self.menuBar.Append( self.helpMenu, "&Help" )
 
 		#------------------------------------------------------------------------------
@@ -657,6 +668,17 @@ class MainWin( wx.Frame ):
 		with Model.LockRace() as race:
 			if race:
 				race.syncCategories = self.menuItemSyncCategories.IsChecked()
+				
+	def menuChangeRaceStartTime( self, event ):
+		with Model.LockRace() as race:
+			if not race:
+				return
+			if getattr(race, 'isTimeTrial'):
+				Utils.MessageOK( self, 'Cannot change Start Time of a Time Trial', 'Cannot Change Start Time' )
+				return
+			dlg = ChangeRaceStartTime.ChangeRaceStartTimeDialog( self )
+			dlg.ShowModal()
+			dlg.Destroy
 	
 	def menuPlaySounds( self, event ):
 		self.playSounds = self.menuItemPlaySounds.IsChecked()

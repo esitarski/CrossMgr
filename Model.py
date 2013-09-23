@@ -767,7 +767,13 @@ class NumTimeInfo(object):
 		else:
 			self._delData( num, tOld )
 			self._setData( num, tNew, reason if reason is not None else NumTimeInfo.Edit )
-		
+	
+	def adjustAllTimes( self, dTime ):
+		newInfo = {}
+		for num, numInfo in self.info.iteritems():
+			newInfo[num] = dict( (t+dTime, v) for t, v in numInfo.iteritems() )
+		self.info = newInfo
+	
 	def delete( self, num, t, reason = None ):
 		self._setData( num, t, reason if reason is not None else NumTimeInfo.Delete )
 		
