@@ -7,6 +7,7 @@ from DNSManager import AutoWidthListCtrl
 from collections import defaultdict
 from GetResults import GetResults
 import Utils
+import Model
 
 #----------------------------------------------------------------------
 
