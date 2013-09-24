@@ -1,6 +1,7 @@
 import arial10
 import datetime
 import Utils
+import math
 
 class FitSheetWrapper(object):
 	"""Try to fit columns to max size of any entry.
@@ -38,6 +39,7 @@ class FitSheetWrapper(object):
 				self.sheet.row(r).height = height
 		else:
 			width = arial10.fitWidth(label, isBold)
+		width = min( int(math.ceil(width)), 65535 )
 		if width > self.widths.get(c, 0):
 			self.widths[c] = width
 			self.sheet.col(c).width = width
