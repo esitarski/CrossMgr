@@ -151,11 +151,11 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		while self.headers and (self.headers[-1].isspace() or not self.headers[-1]):
 			self.headers.pop()
 			
-		# Rename empty columns so as not to confuse the user.
-		self.headers = [h if h else 'BlankHeaderName%03d' % (c+1) for c, h in enumerate(self.headers)]
-		
 		if not self.headers:
 			raise ValueError, 'Could not find a Header Row %s::%s.' % (fileName, sheetName)
+		
+		# Rename empty columns so as not to confuse the user.
+		self.headers = [h if h else 'BlankHeaderName%03d' % (c+1) for c, h in enumerate(self.headers)]
 		
 		# Set a blank final entry.
 		self.headers.append( '' )
