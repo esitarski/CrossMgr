@@ -4,7 +4,7 @@ import xlwt
 import Model
 import Utils
 import datetime
-from GetResults import GetResults
+from GetResults import GetResults, GetCategoryDetails
 from FitSheetWrapper import FitSheetWrapper
 
 USACFields = (
@@ -41,14 +41,24 @@ def USACExport( sheet ):
 	rightAlignStyle = xlwt.XFStyle()
 	rightAlignStyle.alignment.horz = xlwt.Alignment.HORZ_RIGHT
 	
+	catDetails = GetCategoryDetails()
+	hasDistance = None
+	
 	maxLaps = 0
 	for cat in race.getCategories():
 		results = GetResults( cat, True )
+		if not results:
+			continue
+		cd = catDetails[cat.fullname]
+		if cd.get('raceDistance', None):
+			hasDistance = True
 		for rr in results:
 			maxLaps = max( maxLaps, rr.laps )
 	if maxLaps == 1 or maxLaps > 99:
 		maxLaps == 0
-		
+	
+	lapTimeStartCol = (2 if hasDistance else 0) + lenUSACFields
+	
 	def toInt( n ):
 		try:
 			return int(n)
@@ -68,12 +78,19 @@ def USACExport( sheet ):
 		if raceGender == 'Open':
 			raceGender = 'All'
 		
+		cd = catDetails[cat.fullname]
+		raceDistance = cd.get('raceDistance', '')
+		raceDistanceType = cd.get('distanceUnit', '')
+		
 		for rr in results:
 			if row == 0:
 				for col, field in enumerate(USACFields):
 					sheetFit.write( row, col, field, titleStyle, bold=True )
+				if hasDistance:
+					sheetFit.write( row, lenUSACFields  , 'Race Distance', titleStyle, bold=True )
+					sheetFit.write( row, lenUSACFields+1, 'Race Distance Type', titleStyle, bold=True )
 				for i in xrange(maxLaps):
-					sheetFit.write( row, lenUSACFields + i, 'Rider Lap {}'.format(i + 1), titleStyle, bold=True )
+					sheetFit.write( row, lapTimeStartCol + i, 'Rider Lap {}'.format(i + 1), titleStyle, bold=True )
 				row += 1
 			
 			for col, field in enumerate(USACFields):
@@ -91,7 +108,11 @@ def USACExport( sheet ):
 					'Rider Time':		lambda : sheetFit.write( row, col, Utils.formatTime(rr.lastTime) if rr.lastTime else '', rightAlignStyle ),
 				}[field]()
 			
+			if hasDistance:
+				sheetFit.write( row, lenUSACFields  , raceDistance, rightAlignStyle ),
+				sheetFit.write( row, lenUSACFields+1, raceDistanceType, rightAlignStyle ),
+
 			if maxLaps:
 				for i, lapTime in enumerate(rr.lapTimes):
-					sheetFit.write( row, lenUSACFields + i, Utils.formatTime(lapTime), rightAlignStyle )
+					sheetFit.write( row, lapTimeStartCol + i, Utils.formatTime(lapTime), rightAlignStyle )
 			row += 1
