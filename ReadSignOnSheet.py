@@ -540,11 +540,11 @@ class ExcelLink( object ):
 						# Normalize and encode the gender information.
 						genderFirstChar = str(data[field]).strip().upper()[:1]
 						if genderFirstChar in 'MH':		# Men, Male, Hommes
-							data[field] = 1
+							data[field] = 'M'
 						elif genderFirstChar in 'WLF':	# Women, Ladies, Female, Femmes
-							data[field] = 2
+							data[field] = 'F'
 						else:
-							data[field] = 0				# Otherwise Open
+							data[field] = 'O'			# Otherwise Open
 				except IndexError:
 					pass
 			
