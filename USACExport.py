@@ -12,6 +12,7 @@ USACFields = (
 	'Race Gender',
 	'Race Discipline',
 	'Race Category',
+	'Rider Bib #',
 	'Rider Last Name',
 	'Rider First Name',
 	'Rider Team',
@@ -40,10 +41,6 @@ def USACExport( sheet ):
 	rightAlignStyle = xlwt.XFStyle()
 	rightAlignStyle.alignment.horz = xlwt.Alignment.HORZ_RIGHT
 	
-	dateStyle = xlwt.XFStyle()
-	dateStyle.num_format_str = "M/DD/YYYY"
-	dateStyle.alignment.horz = xlwt.Alignment.HORZ_RIGHT
-	
 	maxLaps = 0
 	for cat in race.getCategories():
 		results = GetResults( cat, True )
@@ -59,7 +56,7 @@ def USACExport( sheet ):
 			return n
 			
 	year, month, day = race.date.split( '-' )
-	raceDate = datetime.date( year = int(year), month = int(month), day = int(day) )
+	raceDate = datetime.date( year = int(year), month = int(month), day = int(day) ).strftime( '%m/%d/%Y' )
 	
 	row = 0
 	for cat in race.getCategories():
@@ -81,10 +78,11 @@ def USACExport( sheet ):
 			
 			for col, field in enumerate(USACFields):
 				{
-					'Race Date':		lambda : sheet.write( row, col, raceDate, dateStyle ),
+					'Race Date':		lambda : sheet.write( row, col, raceDate, rightAlignStyle ),
 					'Race Gender':		lambda : sheetFit.write( row, col, raceGender, leftAlignStyle ),
 					'Race Discipline':	lambda : sheetFit.write( row, col, raceDiscipline, leftAlignStyle ),
 					'Race Category':	lambda : sheetFit.write( row, col, cat.name, leftAlignStyle ),
+					'Rider Bib #':		lambda : sheetFit.write( row, col, rr.num, rightAlignStyle ),
 					'Rider Last Name':	lambda : sheetFit.write( row, col, getattr(rr, 'LastName', ''), leftAlignStyle ),
 					'Rider First Name':	lambda : sheetFit.write( row, col, getattr(rr, 'FirstName', ''), leftAlignStyle ),
 					'Rider Team':		lambda : sheetFit.write( row, col, getattr(rr, 'Team', ''), leftAlignStyle ),
