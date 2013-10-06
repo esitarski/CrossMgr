@@ -184,7 +184,7 @@ class ShiftNumberDialog( wx.Dialog ):
 		self.EndModal( wx.ID_CANCEL )
 		
 	def updateNewTime( self, event = None ):
-		s = 'Was: %s  Now: %s' % (Utils.formatTime(self.entry.t,True),Utils.formatTime(self.getNewTime(),True) )
+		s = _('Was: {}  Now: {}').format(Utils.formatTime(self.entry.t,True), Utils.formatTime(self.getNewTime(),True) )
 		self.newTime.SetLabel( s )
 
 #------------------------------------------------------------------------------------------------
