@@ -1,12 +1,12 @@
 import re
 import wx
-import  wx.lib.intctrl
+import wx.lib.intctrl
 import os
 import itertools
+import Utils
 from DNSManager import AutoWidthListCtrl
 import ReadSignOnSheet
 import Model
-import Utils
 
 def SetToIntervals( s ):
 	if not s:
@@ -72,7 +72,7 @@ class CategoryPredicate( object ):
 	nonDigits = re.compile( '[^0-9]' )
 
 	def _getStr( self ):
-		s = [str(i[0]) if i[0] == i[1] else '%d-%d' % i for i in self.intervals]
+		s = ['{}'.format(i[0]) if i[0] == i[1] else '%d-%d' % i for i in self.intervals]
 		s.extend( ['-{}'.format(i[0]) if i[0] == i[1] else '-{}-{}'.format(*i) for i in SetToIntervals(self.exclude)] )
 		s = ','.join( s )
 		
@@ -130,7 +130,7 @@ class CategoryPredicate( object ):
 							self.ageRange[0], self.ageRange[1] = self.ageRange[1], self.ageRange[0]
 			
 			else:
-				s = self.badRangeCharsRE.sub( '', str(s) )
+				s = self.badRangeCharsRE.sub( '', '{}'.format(s) )
 				self.intervals = []
 				self.exclude = set()
 				for f in s.split(','):
@@ -244,10 +244,10 @@ class CategoryPredicateDialog( wx.Dialog ):
 			border = border, flag=wx.RIGHT|wx.TOP|wx.BOTTOM|wx.EXPAND )
 		row += 1
 		
-		self.okBtn = wx.Button( self, wx.ID_ANY, '&OK' )
+		self.okBtn = wx.Button( self, wx.ID_OK )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
 
-		self.cancelBtn = wx.Button( self, wx.ID_ANY, '&Cancel' )
+		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		row += 1
 		

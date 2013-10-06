@@ -67,7 +67,35 @@ Of course, this is insanity for riders and officials.
 If you have a lot of exceptions, it can be easier set the exception from the [RiderDetail][] screen rather than from Categories.   Assigning the category from [RiderDetail][] automatically takes care of the number patterns.
 
 To find the category of a rider, CrossMgr starts with the first active category and checks for a match in the number pattern.  If that fails, it continues to the second active category, etc.  The first active Category that matches the rider's number is considered the rider's Category for the race.
-  
+ 
+## Scoring a Race Multiple Ways
+
+Say you have categories like U17 Men, U19 Men, Junior Men, etc. and you want to score the race by fastest Men?
+Or, you have ability-based categories, but you want to score the race by Age?
+
+This is possible.
+
+CrossMgr categories are specified by number ranges.  It is possible to have overlapping number ranges.  To control the Categories you want, use the "Active" flag.
+For example, say the regular categories are:
+
+Category|Number Range
+:-------|:-----------
+U17 Men|100-199
+U19 Men|200-299
+Junior Men|300-399
+
+You can make a new category as follows:
+
+Category|Number Range
+:-------|:-----------
+All Men|100-399
+
+Now, if you make this category Active, and make the regular categories inactive, the race will be rescored by the combined category (just flip to Results to see it).
+
+If two Categories have overlapping number ranges, the number will be assigned to the first one that matches in the list (top-down).
+
+This can be used for a "Catch-All" Category.  For example, you can make a category with the number range 1-999 and put as the last Category.  Any numbers not matching Categories above will be matched by the "Catch-All".  This can be a useful check if you have numbers in the race that are not part of any category.
+ 
 ## Question: Why does CrossMgr configure lap distance by Category instead of the entire race?
 
 Well, sometimes different categories have a different lap distance, especially in a time trial.  To provide for this flexibility, CrossMgr requires the lap distance at the Category level, not the race level.

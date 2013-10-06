@@ -164,7 +164,7 @@ class Histogram(wx.PyControl):
 		dFactor = (yBottom - yTop) / float(self.barMax)
 		dc.SetPen(wx.Pen('light gray', 1))
 		for i in xrange(0, self.barMax+1, d):
-			s = str(i)
+			s = '{}'.format(i)
 			y = yBottom - int(i * dFactor)
 			w, h = dc.GetTextExtent(s)
 			dc.DrawText( s, xLeft - w - 2, y-textHeight/2 - 1)

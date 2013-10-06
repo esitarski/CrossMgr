@@ -1,4 +1,5 @@
 import wx
+import Utils
 import Model
 from ChipImport import ChipImportDialog
 import string
@@ -12,13 +13,13 @@ def parseTagTime( line, lineNo, errors ):
 		tag = fields[2]
 		tStr = fields[5]
 	except IndexError:
-		errors.append( 'line %d: unrecognized input' % lineNo )
+		errors.append( _('line {}: unrecognized input').format(lineNo) )
 		return None, None
 	
 	try:
 		secs = int(tStr) / 1000.0	# Convert from 1000's of a second.
 	except ValueError:
-		errors.append( 'line %d: invalid time' % lineNo )
+		errors.append( _('line {}: invalid time').format(lineNo) )
 		return None, None
 	else:
 		t = datetime.datetime.combine( JChip.dateToday, datetime.time() ) + datetime.timedelta( seconds = secs )

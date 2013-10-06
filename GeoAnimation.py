@@ -174,13 +174,13 @@ def CreateGPX( courseName, gpsPoints ):
 		'',
 		'DO NOT EDIT!',
 		'',
-		'This file was created automatically by {}.'.format(AppVerName),
+		u'This file was created automatically by {}.'.format(AppVerName),
 		'',
 		'For more information, see http://sites.google.com/site/crossmgrsoftware',
 		'',
-		'Created:  %s' % datetime.datetime.now().strftime( '%Y/%m/%d %H:%M:%S' ),
-		'User:     %s' % cgi.escape(getpass.getuser()),
-		'Computer: %s' % cgi.escape(socket.gethostname()),
+		'Created:  {}'.format(datetime.datetime.now().strftime( '%Y/%m/%d %H:%M:%S' )),
+		'User:     {}'.format(cgi.escape(getpass.getuser())),
+		'Computer: {}'.format(cgi.escape(socket.gethostname())),
 		'', ] )
 	) )
 	
@@ -190,11 +190,11 @@ def CreateGPX( courseName, gpsPoints ):
 	trkseg = createAppendChild( doc, trk, 'trkseg' )
 	for p in gpsPoints:
 		trkpnt = createAppendChild( doc, trkseg, 'trkpnt' )
-		trkpnt.attributes['lat'] = str(p.lat)
-		trkpnt.attributes['lon'] = str(p.lon)
+		trkpnt.attributes['lat'] = '{}'.format(p.lat)
+		trkpnt.attributes['lon'] = '{}'.format(p.lon)
 		if p.ele:
 			ele = createAppendChild( doc, trkpnt, 'ele' )
-			createAppendTextChild( doc, ele, str(p.ele) )
+			createAppendTextChild( doc, ele, '{}'.format(p.ele) )
 	return doc
 	
 class GeoTrack( object ):
@@ -356,9 +356,9 @@ class GeoTrack( object ):
 			'Is shows a fly-through of an actual bicycle race course.',
 			'For more information, see http://sites.google.com/site/crossmgrsoftware',
 			'',
-			'Created:  %s' % datetime.datetime.now().strftime( '%Y/%m/%d %H:%M:%S' ),
-			'User:     %s' % cgi.escape(getpass.getuser()),
-			'Computer: %s' % cgi.escape(socket.gethostname()),
+			'Created:  {}'.format(datetime.datetime.now().strftime( '%Y/%m/%d %H:%M:%S' )),
+			'User:     {}'.format(cgi.escape(getpass.getuser())),
+			'Computer: {}'.format(cgi.escape(socket.gethostname())),
 			'', ] )
 		) )
 		
@@ -395,18 +395,18 @@ class GeoTrack( object ):
 				createAppendChild( doc, FlyTo, 'gx:flyToMode' ).appendChild( doc.createTextNode('bounce') )
 			else:
 				distance = GreatCircleDistance( p.lat, p.lon, pNext.lat, pNext.lon )
-				duration.appendChild( doc.createTextNode(str(distance / speed)) )
+				duration.appendChild( doc.createTextNode('{}'.format(distance / speed)) )
 				createAppendChild( doc, FlyTo, 'gx:flyToMode' ).appendChild( doc.createTextNode('smooth') )
 				
 			Camera = createAppendChild( doc, FlyTo, 'Camera' )
 			heading = CompassBearing( p.lat, p.lon, pNext.lat, pNext.lon )
 			
-			createAppendChild( doc, Camera, 'latitude' ).appendChild( doc.createTextNode(str(p.lat)) )
-			createAppendChild( doc, Camera, 'longitude' ).appendChild( doc.createTextNode(str(p.lon)) )
-			createAppendChild( doc, Camera, 'altitude' ).appendChild( doc.createTextNode(str(2.0)) )
+			createAppendChild( doc, Camera, 'latitude' ).appendChild( doc.createTextNode('{}'.format(p.lat)) )
+			createAppendChild( doc, Camera, 'longitude' ).appendChild( doc.createTextNode('{}'.format(p.lon)) )
+			createAppendChild( doc, Camera, 'altitude' ).appendChild( doc.createTextNode('{}'.format(2.0)) )
 			createAppendChild( doc, Camera, 'altitudeMode' ).appendChild( doc.createTextNode('relativeToGround') )
-			createAppendChild( doc, Camera, 'heading' ).appendChild( doc.createTextNode(str(heading)) )
-			createAppendChild( doc, Camera, 'tilt' ).appendChild( doc.createTextNode(str(80.0)) )
+			createAppendChild( doc, Camera, 'heading' ).appendChild( doc.createTextNode('{}'.format(heading)) )
+			createAppendChild( doc, Camera, 'tilt' ).appendChild( doc.createTextNode('{}'.format(80.0)) )
 			
 		# Define a marker for the finish line.
 		Placemark = createAppendChild( doc, Document, 'Placemark' )
@@ -809,7 +809,7 @@ class GeoAnimation(wx.PyControl):
 				if x >= width:
 					break
 					
-				position, num, name = str(bi[1]), str(bi[0]), self.getShortName(bi[0])
+				position, num, name = '{}'.format(bi[1]), '{}'.format(bi[0]), self.getShortName(bi[0])
 				
 				if position == '1':
 					x += tHeight / 2
@@ -996,7 +996,7 @@ class GeoAnimation(wx.PyControl):
 				DrawShape( dc, num, x, y, riderRadius )
 				if i is not None:
 					if not self.numsToWatch or num in self.numsToWatch:
-						dc.DrawLabel(str(num), wx.Rect(x+numSize, y-numSize, numSize*2, numSize*2) )
+						dc.DrawLabel('{}'.format(num), wx.Rect(x+numSize, y-numSize, numSize*2, numSize*2) )
 				if i is not None:
 					dc.SetPen( wx.BLACK_PEN )
 					dc.SetFont( self.numberFont )
@@ -1029,8 +1029,8 @@ class GeoAnimation(wx.PyControl):
 				maxLaps = len(leaderRaceTimes) - 1
 				self.iLapDistance, lapRatio = GetLapRatio( leaderRaceTimes, self.t, self.iLapDistance )
 				lapRatio = int(lapRatio * 10.0) / 10.0		# Always round down, not to nearest decimal.
-				text = ['%06.1f Laps of %d ' % (self.iLapDistance + lapRatio, maxLaps),
-						'%06.1f Laps to go ' % (maxLaps - self.iLapDistance - lapRatio)]
+				text = ['{:06.1f} Laps of {} '.format(self.iLapDistance + lapRatio, maxLaps),
+						'{:06.1f} Laps to go '.format(maxLaps - self.iLapDistance - lapRatio)]
 						
 				cat = self.categoryDetails.get( self.data[leaders[0]].get('raceCat', None) )
 				if cat:
@@ -1053,8 +1053,8 @@ class GeoAnimation(wx.PyControl):
 					if distanceCur is not None:
 						if distanceCur != distanceRace:
 							distanceCur = int( distanceCur * 10.0 ) / 10.0
-						text.extend( [	'%05.1f %s of %.1f' % (distanceCur, self.units, distanceRace),
-										'%05.1f %s to go' % (distanceRace - distanceCur, self.units)] )
+						text.extend( [	'{:05.1f} {} of {:.1f}'.format(distanceCur, self.units, distanceRace),
+										'{:05.1f} {} to go'.format(distanceRace - distanceCur, self.units)] )
 								
 				widthMax = max( dc.GetTextExtent(t)[0] for t in text )
 				if 'N' in self.compassLocation:

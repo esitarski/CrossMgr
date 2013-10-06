@@ -145,7 +145,7 @@ class GanttChartPanel(wx.PyPanel):
 			self.data = data
 			self.dataMax = max(max(s) if s else -sys.float_info.max for s in self.data)
 			if labels:
-				self.labels = [str(lab) for lab in labels]
+				self.labels = [unicode(lab) for lab in labels]
 				if len(self.labels) < len(self.data):
 					self.labels = self.labels + [None] * (len(self.data) - len(self.labels))
 				elif len(self.labels) > len(self.data):
@@ -298,7 +298,7 @@ class GanttChartPanel(wx.PyPanel):
 		textWidthRightMax = textWidthLeftMax
 		for label in self.labels:
 			textWidthLeftMax = max( textWidthLeftMax, dc.GetTextExtent(label)[0] )
-			textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent( str(numFromLabel(label)) )[0] )
+			textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent( '{}'.format(numFromLabel(label)) )[0] )
 				
 		if textWidthLeftMax + textWidthRightMax > width:
 			self.horizontalSB.Show( False )
@@ -342,7 +342,7 @@ class GanttChartPanel(wx.PyPanel):
 		textWidthRightMax = textWidthLeftMax
 		for label in self.labels:
 			textWidthLeftMax = max( textWidthLeftMax, dc.GetTextExtent(label)[0] )
-			textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent( str(numFromLabel(label)) )[0] )
+			textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent( '{}'.format(numFromLabel(label)) )[0] )
 				
 		if textWidthLeftMax + textWidthRightMax > width:
 			self.horizontalSB.Show( False )
@@ -555,7 +555,7 @@ class GanttChartPanel(wx.PyPanel):
 					label = label[lastSpace+1:]
 				dc.DrawText( label, width - labelsWidthRight + legendSep, yLast )
 
-			if str(self.numSelect) == str(numFromLabel(self.labels[i])):
+			if u'{}'.format(self.numSelect) == u'{}'.format(numFromLabel(self.labels[i])):
 				yHighlight = yCur
 
 			yLast = yCur
@@ -672,7 +672,7 @@ if __name__ == '__main__':
 	t = 55*60
 	tVar = t * 0.15
 	data, interp = GetData()
-	gantt.SetData( data, [str(i) for i in xrange(100, 100+len(data))], interp = interp )
+	gantt.SetData( data, ['{}'.format(i) for i in xrange(100, 100+len(data))], interp = interp )
 
 	mainWin.Show()
 	app.MainLoop()

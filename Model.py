@@ -123,12 +123,12 @@ class Category(object):
 	badRangeCharsRE = re.compile( '[^0-9,\-]' )
 
 	def _getStr( self ):
-		s = [str(i[0]) if i[0] == i[1] else '%d-%d' % i for i in self.intervals]
+		s = ['{}'.format(i[0]) if i[0] == i[1] else '{}-{}'.format(*i) for i in self.intervals]
 		s.extend( ['-{}'.format(i[0]) if i[0] == i[1] else '-{}-{}'.format(*i) for i in SetToIntervals(self.exclude)] )
 		return ','.join( s )
 		
 	def _setStr( self, s ):
-		s = self.badRangeCharsRE.sub( '', str(s) )
+		s = self.badRangeCharsRE.sub( '', u'{}'.format(s) )
 		self.intervals = []
 		self.exclude = set()
 		for f in s.split(','):
@@ -176,7 +176,7 @@ class Category(object):
 		mask = None
 		for i in self.intervals:
 			for k in i:
-				num = str(k)
+				num = '{}'.format(k)
 				if len(num) < 3:				# No mask for 1 or 2-digit numbers
 					return None
 				if mask is None:
@@ -195,7 +195,7 @@ class Category(object):
 						distance = None, distanceType = None, firstLapDistance = None,
 						gender = 'Open', lappedRidersMustContinue = False ):
 		self.active = False
-		active = str(active).strip()
+		active = '{}'.format(active).strip()
 		if active and active[0] in 'TtYy1':
 			self.active = True
 			
@@ -243,7 +243,7 @@ class Category(object):
 			self.gender = 'Open'
 			
 		self.lappedRidersMustContinue = False
-		lappedRidersMustContinue = str(lappedRidersMustContinue).strip()
+		lappedRidersMustContinue = '{}'.format(lappedRidersMustContinue).strip()
 		if lappedRidersMustContinue and lappedRidersMustContinue[0] in 'TtYy1':
 			self.lappedRidersMustContinue = True
 
@@ -404,17 +404,17 @@ class Category(object):
 		self.exclude.difference_update( needlessExcludes )
 		
 	def __repr__( self ):
-		return 'Category(active=%s, name="%s", catStr="%s", startOffset="%s", numLaps=%s, sequence=%s, distance=%s, distanceType=%s, gender="%s", lappedRidersMustContinue="%s")' % (
-				str(self.active),
+		return u'Category(active={}, name="{}", catStr="{}", startOffset="{}", numLaps={}, sequence={}, distance={}, distanceType={}, gender="{}", lappedRidersMustContinue="{}")'.format(
+				self.active,
 				self.name,
 				self.catStr,
 				self.startOffset,
-				str(self.numLaps),
-				str(self.sequence),
-				str(getattr(self,'distance',None)),
-				str(getattr(self,'distanceType', Category.DistanceByLap)),
+				self.numLaps,
+				self.sequence,
+				getattr(self,'distance',None),
+				getattr(self,'distanceType', Category.DistanceByLap),
 				getattr(self,'gender',''),
-				str(getattr(self,'lappedRidersMustContinue',False)),
+				getattr(self,'lappedRidersMustContinue',False),
 			)
 
 	def getStartOffsetSecs( self ):
@@ -455,7 +455,7 @@ class Entry(object):
 		return (self.num<<16) ^ (self.lap<<8) ^ hash(self.t) ^ ((1<<20) if self.interp else 0)
 
 	def __repr__( self ):
-		return 'Entry( num=%d, lap=%d, interp=%s, t=%s )' % (self.num, self.lap, str(self.interp), str(self.t))
+		return u'Entry( num={}, lap={}, interp={}, t={} )'.format(self.num, self.lap, self.interp, self.t)
 
 class Rider(object):
 	# Rider Status.
@@ -806,7 +806,7 @@ class NumTimeInfo(object):
 		info = self.getInfo( num, t )
 		if info is None:
 			return ''
-		infoStr = '%s, %s\n    by: %s\n    on: %s\n' % (Utils.formatTime(t, True), NumTimeInfo.ReasonName[info[0]], info[1], info[2].ctime())
+		infoStr = u'{}, {}\n    by: {}\n    on: {}\n'.format(Utils.formatTime(t, True), NumTimeInfo.ReasonName[info[0]], info[1], info[2].ctime())
 		return infoStr
 			
 	def getNumInfo( self, num ):
@@ -1650,15 +1650,15 @@ class Race(object):
 	
 	def getRaceIntro( self ):
 		intro = [
-			'Race: %s:%d' % (self.name, self.raceNum),
-			'Start: %s (%s)' % (self.scheduledStart, self.date),
+			_('Race: {}:{}').format(self.name, self.raceNum),
+			_('Start: {} ({})').format(self.scheduledStart, self.date),
 		]
 		activeCategories = [c for c in self.categories.itervalues() if c.active]
 		if all( c.numLaps for c in activeCategories ):
 			activeCategories.sort( key = Category.key )
-			intro.append( 'Category Laps: %s' % (', '.join( str(c.numLaps) for c in activeCategories )) )
+			intro.append( _('Category Laps: {}').format(', '.join( '{}'.format(c.numLaps) for c in activeCategories )) )
 		else:
-			intro.append( 'Duration: %d min' % self.minutes )
+			intro.append( _('Duration: {} min').format(self.minutes) )
 		return '\n'.join( intro )
 	
 	def getNextExpectedLeaderTNL( self, t ):
@@ -1917,7 +1917,7 @@ class Race(object):
 
 		for j, i in enumerate(xrange(100,100+riders+1,10)):
 			name = 'Cat%d' % (j+1)
-			self.categories[name] = Category(True, name, str(i) + '-' + str(i+9) )
+			self.categories[name] = Category(True, name, '{}-{}'.format(i, i+9) )
 
 		self.setChanged()
 

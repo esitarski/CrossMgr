@@ -4,6 +4,7 @@ import sys
 import math
 import shutil
 import datetime
+
 import Utils
 import Model
 from Utils import logException
@@ -134,10 +135,10 @@ def SavePhoto( fileName, bib, raceSeconds, cameraImage ):
 			else:
 				txt.append( '  %s' % riderName )
 
-		txt.append( '  Bib: %d    RaceTime: %s    %s' % (
+		txt.append( _('  Bib: {}    RaceTime: {}    {}').format(
 			bib, formatTime(raceSeconds), datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')) )
 	else:
-		txt.append( '  RaceTime: %s    %s' % (
+		txt.append( _('  RaceTime: {}    {}').format(
 			formatTime(raceSeconds), datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')) )
 	
 	bitmapHeight = brandingBitmap.GetHeight()

@@ -135,7 +135,7 @@ class ColTable( Grid.PyGridTableBase ):
 			return ''
 
 	def GetRowLabelValue(self, row):
-		return str(row+1)
+		return unicode(row+1)
 
 	def IsEmptyCell( self, row, col ):
 		try:
@@ -148,7 +148,7 @@ class ColTable( Grid.PyGridTableBase ):
 		return '' if self.IsEmptyCell(row, col) else self.data[col][row]
 
 	def GetValue(self, row, col):
-		return str(self.GetRawValue(row, col))
+		return unicode(self.GetRawValue(row, col))
 
 	def SetValue(self, row, col, value):
 		# Nothing to do - everthing is read-only.

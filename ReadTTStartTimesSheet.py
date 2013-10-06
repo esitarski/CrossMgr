@@ -16,6 +16,7 @@ import traceback
 import Model
 from Undo import undo
 from Excel import GetExcelReader, toAscii
+from gettext import gettext as _
 
 #-----------------------------------------------------------------------------------------------------
 Fields = ['Bib#', 'StartTime']
@@ -26,10 +27,10 @@ class FileNamePage(wiz.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Specify the Excel File containing TT Start Times in HH:MM:SS format.'),
+		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Specify the Excel File containing TT Start Times in HH:MM:SS format.')),
 					flag=wx.ALL, border = border )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Each race must be in a separate sheet.'), flag=wx.ALL, border = border )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'This is the Stopwatch Time usually beginning at 00:01:00, with 30 to 60 second gaps - not the clock time.'), flag=wx.ALL, border = border )
+		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Each race must be in a separate sheet.')), flag=wx.ALL, border = border )
+		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('This is the Stopwatch Time usually beginning at 00:01:00, with 30 to 60 second gaps - not the clock time.')), flag=wx.ALL, border = border )
 		fileMask = [
 			'Excel Worksheets (*.xlsx;*.xlsm;*.xls)|*.xlsx;*.xlsm;*.xls',
 		]
@@ -55,7 +56,7 @@ class SheetNamePage(wiz.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Specify the sheet containing the start times for this race:'),
+		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Specify the sheet containing the start times for this race:')),
 				flag=wx.ALL, border = border )
 		self.ch = wx.Choice( self, -1, choices = self.choices )
 		vbs.Add( self.ch, flag=wx.ALL, border = border )
@@ -86,9 +87,9 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Specify the spreadsheet columns corresponding to the Start Time fields.'),
+		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Specify the spreadsheet columns corresponding to the Start Time fields.')),
 				flag=wx.ALL, border = border )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Both Bib and Start Time must be specified.'),
+		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Both Bib and Start Time must be specified.')),
 				flag=wx.ALL, border = border )
 		vbs.AddSpacer( 8 )
 				
@@ -134,17 +135,17 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		# Try to find the header columns.
 		# Look for the first row with more than 4 columns.
 		for r, row in enumerate(reader.iter_list(sheetName)):
-			cols = sum( 1 for d in row if toAscii(d) )
+			cols = sum( 1 for d in row if d )
 			if cols > 4:
-				self.headers = [toAscii(h).strip() for h in row]
+				self.headers = [h.strip() for h in row]
 				break
 
 		# If we haven't found a header row yet, assume the first non-empty row is the header.
 		if not self.headers:
 			for r, row in enumerate(reader.iter_list(sheetName)):
-				cols = sum( 1 for d in row if toAscii(d) )
+				cols = sum( 1 for d in row if d )
 				if cols > 0:
-					self.headers = [toAscii(h).strip() for h in row]
+					self.headers = [h.strip() for h in row]
 					break
 		
 		# Ignore empty columns on the end.
@@ -194,24 +195,24 @@ class SummaryPage(wiz.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Summary:'), flag=wx.ALL, border = border )
+		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Summary:')), flag=wx.ALL, border = border )
 		vbs.Add( wx.StaticText(self, wx.ID_ANY, ' '), flag=wx.ALL, border = border )
 
 		rows = 0
 		
-		self.fileLabel = wx.StaticText( self, wx.ID_ANY, 'Excel File:' )
+		self.fileLabel = wx.StaticText( self, wx.ID_ANY, _('Excel File:') )
 		self.fileName = wx.StaticText( self, wx.ID_ANY, '' )
 		rows += 1
 
-		self.sheetLabel = wx.StaticText( self, wx.ID_ANY, 'Sheet Name:' )
+		self.sheetLabel = wx.StaticText( self, wx.ID_ANY, _('Sheet Name:') )
 		self.sheetName = wx.StaticText( self, wx.ID_ANY, '' )
 		rows += 1
 
-		self.riderLabel = wx.StaticText( self, wx.ID_ANY, 'Rider Start Times:' )
+		self.riderLabel = wx.StaticText( self, wx.ID_ANY, _('Rider Start Times:') )
 		self.riderNumber = wx.StaticText( self, wx.ID_ANY, '' )
 		rows += 1
 
-		self.statusLabel = wx.StaticText( self, wx.ID_ANY, 'Status:' )
+		self.statusLabel = wx.StaticText( self, wx.ID_ANY, _('Status:') )
 		self.statusName = wx.StaticText( self, wx.ID_ANY, '' )
 		rows += 1
 
@@ -236,8 +237,8 @@ class SummaryPage(wiz.WizardPageSimple):
 			infoLen = len(info)
 		except TypeError:
 			infoLen = 0
-		self.riderNumber.SetLabel( str(infoLen) )
-		self.statusName.SetLabel( 'Success!' if infoLen else 'Failure' )
+		self.riderNumber.SetLabel( '{}'.format(infoLen) )
+		self.statusName.SetLabel( _('Success!') if infoLen else _('Failure') )
 	
 class GetExcelTTStartTimeLink( object ):
 	def __init__( self, parent, excelLink = None ):
@@ -246,7 +247,7 @@ class GetExcelTTStartTimeLink( object ):
 		
 		prewizard = wiz.PreWizard()
 		prewizard.SetExtraStyle( wiz.WIZARD_EX_HELPBUTTON )
-		prewizard.Create( parent, wx.ID_ANY, 'Import TT Start Times', img )
+		prewizard.Create( parent, wx.ID_ANY, _('Import TT Start Times'), img )
 		self.wizard = prewizard
 		self.wizard.Bind( wiz.EVT_WIZARD_PAGE_CHANGING, self.onPageChanging )
 		self.wizard.Bind( wiz.EVT_WIZARD_HELP,
@@ -294,17 +295,17 @@ class GetExcelTTStartTimeLink( object ):
 					self.sheetNamePage.setFileName(self.fileNamePage.getFileName())
 				except IOError:
 					if fileName == '':
-						message = 'Please specify an Excel file.'
+						message = _('Please specify an Excel file.')
 					else:
-						message = 'Cannot open file "%s".\nPlease check the file name and/or its read permissions.' % fileName
-					Utils.MessageOK( self.wizard, message, title='File Open Error', iconMask=wx.ICON_ERROR)
+						message = _('Cannot open file "{}".\nPlease check the file name and/or its read permissions.').format(fileName)
+					Utils.MessageOK( self.wizard, message, title=_('File Open Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 			elif page == self.sheetNamePage:
 				try:
 					self.headerNamesPage.setFileNameSheetName(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName())
 				except ValueError:
-					Utils.MessageOK( self.wizard, 'Cannot find at least 5 header names in the Excel sheet.\nCheck the format.',
-										title='Excel Format Error', iconMask=wx.ICON_ERROR)
+					Utils.MessageOK( self.wizard, _('Cannot find at least 5 header names in the Excel sheet.\nCheck the format.'),
+										title=_('Excel Format Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 			elif page == self.headerNamesPage:
 				excelLink = ExcelLink()
@@ -312,8 +313,8 @@ class GetExcelTTStartTimeLink( object ):
 				excelLink.setSheetName( self.sheetNamePage.getSheetName() )
 				fieldCol = self.headerNamesPage.getFieldCol()
 				if fieldCol[Fields[0]] < 0:
-					Utils.MessageOK( self.wizard, 'You must specify a "%s" column.' % Fields[0],
-										title='Excel Format Error', iconMask=wx.ICON_ERROR)
+					Utils.MessageOK( self.wizard, _('You must specify a "{}" column.').format(Fields[0]),
+										title=_('Excel Format Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 				else:
 					excelLink.setFieldCol( fieldCol )
@@ -321,8 +322,8 @@ class GetExcelTTStartTimeLink( object ):
 						info = excelLink.read()
 						self.summaryPage.setFileNameSheetNameInfo(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName(), info)
 					except ValueError as e:
-						Utils.MessageOK( self.wizard, 'Problem extracting rider info.\nCheck the Excel format.',
-											title='Data Error', iconMask=wx.ICON_ERROR)
+						Utils.MessageOK( self.wizard, _('Problem extracting rider info.\nCheck the Excel format.'),
+											title=_('Data Error'), iconMask=wx.ICON_ERROR)
 						evt.Veto()
 		
 	def onPageChanged( self, evt ):
@@ -379,7 +380,7 @@ class ExcelLink( object ):
 				if col < 0:					# Skip unmapped columns.
 					continue
 				try:
-					data[field] = toAscii(row[col])
+					data[field] = row[col]
 				except IndexError:
 					pass
 			try:
@@ -405,7 +406,7 @@ def ImportTTStartTimes( parent ):
 		try:
 			startTime = data['StartTime']
 		except KeyError:
-			errors.append( 'Bib %d: missing start time' % num )
+			errors.append( _('Bib {}: missing start time').format(num) )
 			continue
 			
 		# Try to make sense of the StartTime.
@@ -421,7 +422,7 @@ def ImportTTStartTimes( parent ):
 					hh = 0.0
 					mm, ss = [float(f.strip()) for f in fields[:2]]
 				except:
-					errors.append( 'Bib %d: cannot read time format: %s' % (num, startTime) )
+					errors.append( _('Bib {}: cannot read time format: {}').format(num, startTime) )
 					continue
 			
 		startTimes[num] = hh * 60.0*60.0 + mm * 60.0 + ss
@@ -450,10 +451,10 @@ def ImportTTStartTimes( parent ):
 		errorStr = '\n'.join( errors[:20] )
 		if len(errors) > 20:
 			errorStr += '\n...'
-		Utils.MessageOK( parent, errorStr, 'Start Time Errors' )
+		Utils.MessageOK( parent, errorStr, _('Start Time Errors') )
 		
 	Utils.refresh()
-	Utils.MessageOK( parent, 'Set %d Start Times' % len(startTimes), 'Start Times Success' )
+	Utils.MessageOK( parent, _('Set {} Start Times').format(len(startTimes)), _('Start Times Success') )
 
 #-----------------------------------------------------------------------------------------------------
 
@@ -466,11 +467,3 @@ if __name__ == '__main__':
 	mainWin.Show()
 	ImportTTStartTimes( mainWin )
 	app.MainLoop()
-	'''
-	reader = readexcel( 'DataSamples\\Guelph Cross PreReg SignOn-sample.xls' )
-	for s in xrange(len(reader.sheet_names())):
-		print '----------------------------------------------------------------------'
-		sheet_name = reader.sheet_names()[s]
-		for r, row in enumerate(reader.iter_list(sheet_name)):
-			print r+1, ','.join( toAscii(v) for v in row )
-	'''

@@ -1,12 +1,13 @@
-import  wx
+import wx
 import os
 import sys
 import math
+import Utils
+Utils.initTranslation()
 from  ExportGrid import ExportGrid
 from DNSManager import AutoWidthListCtrl
 from collections import defaultdict
 from GetResults import GetResults
-import Utils
 import Model
 
 #----------------------------------------------------------------------
@@ -18,7 +19,7 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		
-		title = wx.StaticText( self, wx.ID_ANY, 'Click to select Categories.  Use Ctrl-Click to select Multiple Categories.' )
+		title = wx.StaticText( self, wx.ID_ANY, _('Click to select Categories.  Use Ctrl-Click to select Multiple Categories.') )
 		
 		self.selectAllButton = wx.Button( self, wx.ID_ANY, 'Select All' )
 		self.selectAllButton.Bind( wx.EVT_BUTTON, self.onSelectAll )
@@ -34,9 +35,9 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 														 )
 		self.list.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
 		
-		self.list.InsertColumn(0, "Name")
-		self.list.InsertColumn(1, "Gender")
-		self.list.InsertColumn(2, "Count", wx.LIST_FORMAT_RIGHT)
+		self.list.InsertColumn(0, _("Name"))
+		self.list.InsertColumn(1, _("Gender"))
+		self.list.InsertColumn(2, _("Count"), wx.LIST_FORMAT_RIGHT)
 		self.list.InsertColumn(3, '' )
 		race = Model.race
 		if race:
@@ -48,7 +49,7 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 					continue
 				index = self.list.InsertStringItem(sys.maxint, c.name, self.sm_rt)
 				self.list.SetStringItem( index, 1, getattr(c, 'gender', 'Open') )
-				self.list.SetStringItem( index, 2, str(catCount[c]) )
+				self.list.SetStringItem( index, 2, '{}'.format(catCount[c]) )
 			
 		self.list.SetColumnWidth(0, wx.LIST_AUTOSIZE)
 		self.list.SetColumnWidth(1, wx.LIST_AUTOSIZE)
@@ -57,7 +58,7 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		self.list.SetColumnWidth( 1, 64 )
 		self.list.SetColumnWidth( 2, 52 )
 		
-		self.includeLapTimesInPrintoutCheckBox = wx.CheckBox( self, wx.ID_ANY, 'Include Lap Times in Printout' )
+		self.includeLapTimesInPrintoutCheckBox = wx.CheckBox( self, wx.ID_ANY, _('Include Lap Times in Printout') )
 		race = Model.race
 		if race:
 			self.includeLapTimesInPrintoutCheckBox.SetValue( getattr(race, 'includeLapTimesInPrintout', True) )
@@ -66,7 +67,7 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 			
 		self.printFormatRadioBox = wx.RadioBox(
 				self, wx.ID_ANY, 'Format', wx.DefaultPosition, wx.DefaultSize,
-				['Fit Entire Category on One Page', 'Small Text (max 60 riders per page)', 'Big Text (max 30 riders per page)'],
+				[_('Fit Entire Category on One Page'), _('Small Text (max 60 riders per page)'), _('Big Text (max 30 riders per page)')],
 				1, wx.RA_SPECIFY_COLS )
 		if race:
 			self.printFormatRadioBox.SetSelection( getattr(race, 'printFormat', 0) )
@@ -225,11 +226,11 @@ class CrossMgrPrintoutPNG( CrossMgrPrintout ):
 		pageTotal = self.pageInfo[page][4]
 		
 		if pageTotal != 1:
-			fname = '{categoryName} ({pageNumber}) {fileBase}.png'.format(
+			fname = u'{categoryName} ({pageNumber}) {fileBase}.png'.format(
 								fileBase = self.fileBase, categoryName = category.fullname,
 								pageNumber = pageNumber )
 		else:
-			fname = '{categoryName} {fileBase}.png'.format(
+			fname = u'{categoryName} {fileBase}.png'.format(
 								fileBase = self.fileBase, categoryName = category.fullname )
 								
 		fname = Utils.RemoveDisallowedFilenameChars( fname )

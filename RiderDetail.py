@@ -18,6 +18,7 @@ import random
 import bisect
 import sys
 import re
+from gettext import gettext as _
 
 def getStFtLaps( rider ):
 	with Model.LockRace() as race:
@@ -32,7 +33,7 @@ def getStFtLaps( rider ):
 	
 class AdjustTimeDialog( wx.Dialog ):
 	def __init__( self, parent, rider, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, "Adjust Times",
+		wx.Dialog.__init__( self, parent, id, _("Adjust Times"),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
 						
 		self.rider = rider
@@ -50,27 +51,27 @@ class AdjustTimeDialog( wx.Dialog ):
 		self.note = wx.TextCtrl( self, wx.ID_ANY, size=(400, -1), value = getattr(self.rider, 'ttNote', '') )
 		self.updateRideTime( None )
 				
-		self.okBtn = wx.Button( self, wx.ID_ANY, '&OK' )
+		self.okBtn = wx.Button( self, wx.ID_OK )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
 
-		self.cancelBtn = wx.Button( self, wx.ID_ANY, '&Cancel' )
+		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
 		border = 8
 		row = 0
-		bs.Add( wx.StaticText( self, wx.ID_ANY, 'Rider %d' % rider.num ),
+		bs.Add( wx.StaticText( self, wx.ID_ANY, _('Rider {}').format(rider.num) ),
 			pos=(row,0), span=(1,2), border = border, flag=wx.GROW|wx.ALL )
 			
 		row += 1
-		bs.Add( wx.StaticText( self, -1, "Start:"),  pos=(row,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
+		bs.Add( wx.StaticText( self, -1, _("Start:")),  pos=(row,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.startTime, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.ALIGN_LEFT )
 		
 		row += 1
-		bs.Add( wx.StaticText( self, -1, "Finish:"),  pos=(row,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
+		bs.Add( wx.StaticText( self, -1, _("Finish:")),  pos=(row,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.finishTime, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.ALIGN_LEFT )
 		
 		row += 1
-		bs.Add( wx.StaticText( self, -1, "Ride Time:"),  pos=(row,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
+		bs.Add( wx.StaticText( self, -1, _("Ride Time:")),  pos=(row,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.rideTime, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.ALIGN_LEFT )
 		
 		row += 1
@@ -104,7 +105,7 @@ class AdjustTimeDialog( wx.Dialog ):
 		stOld, ftOld, laps = getStFtLaps(self.rider)
 		st, ft = self.startTime.GetSeconds(), self.finishTime.GetSeconds()
 		if st is not None and ft is not None and st >= ft:
-			Utils.MessageOK( self, 'Start Time must be before Finish Time', 'Time Error', wx.ICON_ERROR )
+			Utils.MessageOK( self, _('Start Time must be before Finish Time'), _('Time Error'), wx.ICON_ERROR )
 			return
 			
 		if stOld == st and ftOld == ft:
@@ -153,7 +154,7 @@ class RiderDetail( wx.Panel ):
 		
 		gbs = wx.GridBagSizer(7, 4)
 		row = 0
-		self.numName = wx.StaticText( self, wx.ID_ANY, 'Number: ' )
+		self.numName = wx.StaticText( self, wx.ID_ANY, _('Number: ') )
 		gbs.Add( self.numName, pos=(row,0), span=(1,1), flag=labelAlign )
 		self.num = intctrl.IntCtrl( self, wx.ID_ANY, min=0, max=9999, allow_none=True, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER )
 		self.Bind( wx.EVT_TEXT_ENTER, self.onNumChange, self.num )
@@ -161,19 +162,19 @@ class RiderDetail( wx.Panel ):
 		
 		self.menu = wx.Menu()
 		self.deleteMenuId = wx.NewId()
-		self.menu.Append( self.deleteMenuId, '&Delete Rider from Race...', 'Delete this rider from the race' )
+		self.menu.Append( self.deleteMenuId, _('&Delete Rider from Race...'), _('Delete this rider from the race') )
 		self.Bind( wx.EVT_MENU, self.onDeleteRider, id = self.deleteMenuId )
 		self.changeNumberMenuId = wx.NewId()
-		self.menu.Append( self.changeNumberMenuId, "&Change Rider's Number...", "Change this rider's number" )
+		self.menu.Append( self.changeNumberMenuId, _("&Change Rider's Number..."), _("Change this rider's number") )
 		self.Bind( wx.EVT_MENU, self.onChangeNumber, id = self.changeNumberMenuId )
 		self.swapNumberMenuId = wx.NewId()
-		self.menu.Append( self.swapNumberMenuId, '&Swap Number with Other Rider...', "Swap this rider's number with another rider's number" )
+		self.menu.Append( self.swapNumberMenuId, _('&Swap Number with Other Rider...'), _("Swap this rider's number with another rider's number") )
 		self.Bind( wx.EVT_MENU, self.onSwapNumber, id = self.swapNumberMenuId )
 		self.copyRiderMenuId = wx.NewId()
-		self.menu.Append( self.copyRiderMenuId, 'C&opy Rider Times to New Number...', "Copy these rider's times to another number" )
+		self.menu.Append( self.copyRiderMenuId, _('C&opy Rider Times to New Number...'), _("Copy these rider's times to another number") )
 		self.Bind( wx.EVT_MENU, self.onCopyRider, id = self.copyRiderMenuId )
 		
-		self.editRiderBtn = wx.Button( self, wx.ID_ANY, 'Edit...' )
+		self.editRiderBtn = wx.Button( self, wx.ID_ANY, _('Edit...') )
 		self.Bind( wx.EVT_BUTTON, self.onEditRider, self.editRiderBtn )
 		gbs.Add( self.editRiderBtn, pos=(row, 3), span=(1,1), flag=wx.EXPAND )
 		
@@ -182,26 +183,26 @@ class RiderDetail( wx.Panel ):
 		
 		row += 1
 		
-		self.nameName = wx.StaticText( self, wx.ID_ANY, 'Name: ' )
+		self.nameName = wx.StaticText( self, wx.ID_ANY, _('Name: ') )
 		gbs.Add( self.nameName, pos=(row,0), span=(1,1), flag=labelAlign )
 		self.riderName = wx.StaticText( self, wx.ID_ANY, '' )
 		self.riderName.SetDoubleBuffered( True )
 		gbs.Add( self.riderName, pos=(row,1), span=(1,4), flag=wx.EXPAND )
 		
-		self.startTimeName = wx.StaticText( self, wx.ID_ANY, 'Start:' )
+		self.startTimeName = wx.StaticText( self, wx.ID_ANY, _('Start:') )
 		gbs.Add( self.startTimeName, pos=(row,5), span=(1,1), flag=labelAlign )
 		self.startTime = wx.StaticText( self, wx.ID_ANY, '00:00:00' )
 		gbs.Add( self.startTime, pos=(row,6), span=(1,1), flag=wx.EXPAND )
 		
 		row += 1
 		
-		self.teamName = wx.StaticText( self, wx.ID_ANY, 'Team: ' )
+		self.teamName = wx.StaticText( self, wx.ID_ANY, _('Team: ') )
 		gbs.Add( self.teamName, pos=(row,0), span=(1,1), flag=labelAlign )
 		self.riderTeam = wx.StaticText( self, wx.ID_ANY, '' )
 		self.riderTeam.SetDoubleBuffered( True )
 		gbs.Add( self.riderTeam, pos=(row,1), span=(1,4), flag=wx.EXPAND )
 		
-		self.finishTimeName = wx.StaticText( self, wx.ID_ANY, 'Finish:' )
+		self.finishTimeName = wx.StaticText( self, wx.ID_ANY, _('Finish:') )
 		gbs.Add( self.finishTimeName, pos=(row,5), span=(1,1), flag=labelAlign )
 		
 		self.finishTime = wx.StaticText( self, wx.ID_ANY, '00:00:00' )
@@ -209,13 +210,13 @@ class RiderDetail( wx.Panel ):
 		
 		row += 1
 		
-		self.tagsName = wx.StaticText( self, wx.ID_ANY, 'Tag(s): ' )
+		self.tagsName = wx.StaticText( self, wx.ID_ANY, _('Tag(s): ') )
 		gbs.Add( self.tagsName, pos=(row,0), span=(1,1), flag=labelAlign )
 		self.tags = wx.StaticText( self, wx.ID_ANY, '' )
 		self.tags.SetDoubleBuffered( True )
 		gbs.Add( self.tags, pos=(row,1), span=(1,4), flag=wx.EXPAND )
 
-		self.rideTimeName = wx.StaticText( self, wx.ID_ANY, 'Ride Time:' )
+		self.rideTimeName = wx.StaticText( self, wx.ID_ANY, _('Ride Time:') )
 		gbs.Add( self.rideTimeName, pos=(row,5), span=(1,1), flag=labelAlign )
 		
 		self.rideTime = wx.StaticText( self, wx.ID_ANY, '00:00:00' )
@@ -223,46 +224,46 @@ class RiderDetail( wx.Panel ):
 		
 		row += 1
 		
-		self.categoryName = wx.StaticText( self, wx.ID_ANY, 'Category: ' )
+		self.categoryName = wx.StaticText( self, wx.ID_ANY, _('Category: ') )
 		gbs.Add( self.categoryName, pos=(row,0), span=(1,1), flag=labelAlign )
 		self.category = wx.Choice( self, wx.ID_ANY )
 		self.Bind( wx.EVT_CHOICE, self.onCategoryChoice, self.category )
 		gbs.Add( self.category, pos=(row,1), span=(1,1), flag=wx.EXPAND )
 		
-		self.penaltyTimeName = wx.StaticText( self, wx.ID_ANY, 'Penalty Time:' )
+		self.penaltyTimeName = wx.StaticText( self, wx.ID_ANY, _('Penalty Time:') )
 		gbs.Add( self.penaltyTimeName, pos=(row,5), span=(1,1), flag=labelAlign )
 		self.penaltyTime = wx.StaticText( self, wx.ID_ANY, '00:00:00' )
 		gbs.Add( self.penaltyTime, pos=(row,6), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL )
 		
 		row += 1
 		
-		self.statusName = wx.StaticText( self, wx.ID_ANY, 'Status: ' )
+		self.statusName = wx.StaticText( self, wx.ID_ANY, _('Status: ') )
 		gbs.Add( self.statusName, pos=(row,0), span=(1,1), flag=labelAlign )
 		self.statusOption = wx.Choice( self, wx.ID_ANY, choices=Model.Rider.statusNames )
 		gbs.Add( self.statusOption, pos=(row,1), span=(1,1), flag=wx.EXPAND )
 		self.Bind(wx.EVT_CHOICE, self.onStatusChanged, self.statusOption)
 		
-		self.atRaceTimeName = wx.StaticText( self, wx.ID_ANY, 'at race time: ' )
+		self.atRaceTimeName = wx.StaticText( self, wx.ID_ANY, _('at race time: ') )
 		gbs.Add( self.atRaceTimeName, pos=(row,2), span=(1,1), flag=labelAlign )
 		self.atRaceTime = masked.TimeCtrl( self, wx.ID_ANY, fmt24hr=True, value=Utils.SecondsToStr(0) )
 		self.atRaceTime.SetEditable( False )
 		self.atRaceTime.Enable( False )
 		gbs.Add( self.atRaceTime, pos=(row,3), span=(1,1), flag=wx.EXPAND )
 		
-		self.noteName = wx.StaticText( self, wx.ID_ANY, 'Note:' )
+		self.noteName = wx.StaticText( self, wx.ID_ANY, _('Note:') )
 		gbs.Add( self.noteName, pos=(row,5), span=(1,1), flag=labelAlign )
 		self.note = wx.StaticText( self, wx.ID_ANY, '' )
 		gbs.Add( self.note, pos=(row,6), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL )
 		row += 1
 		
-		self.autocorrectLaps = wx.CheckBox( self, wx.ID_ANY, 'Autocorrect Lap Data' )
+		self.autocorrectLaps = wx.CheckBox( self, wx.ID_ANY, _('Autocorrect Lap Data') )
 		gbs.Add( self.autocorrectLaps, pos = (row, 0), span=(1, 2), flag = wx.ALIGN_CENTRE|wx.EXPAND )
 		self.Bind( wx.EVT_CHECKBOX, self.onAutocorrectLaps, self.autocorrectLaps )
 		
-		self.showPhotos = wx.Button( self, wx.ID_ANY, 'Show Photos...' )
+		self.showPhotos = wx.Button( self, wx.ID_ANY, _('Show Photos...') )
 		gbs.Add( self.showPhotos, pos = (row, 3), span=(1, 1), flag = wx.ALIGN_CENTRE|wx.EXPAND )
 		self.Bind( wx.EVT_BUTTON, self.onShowPhotos, self.showPhotos )
-		self.adjustTime = wx.Button( self, wx.ID_ANY, 'Adjust...' )
+		self.adjustTime = wx.Button( self, wx.ID_ANY, _('Adjust...') )
 		self.Bind( wx.EVT_BUTTON, self.onAdjustTime, self.adjustTime )
 		gbs.Add( self.adjustTime, pos=(row,5), span=(1,2), flag=wx.EXPAND )
 		row += 1
@@ -277,7 +278,7 @@ class RiderDetail( wx.Panel ):
 		self.splitter = splitter
 		
 		self.grid = ColGrid.ColGrid(	splitter,
-										colnames = ['Lap', 'Lap Time', 'Race Time', 'Edit', 'By', 'On', 'Lap Speed', 'Race Speed'],
+										colnames = [_('Lap'), _('Lap Time'), _('Race Time'), _('Edit'), _('By'), _('On'), _('Lap Speed'), _('Race Speed')],
 										style = wx.BORDER_SUNKEN )
 		self.grid.SetRowLabelSize( 0 )
 		self.grid.SetRightAlign( True )
@@ -363,14 +364,14 @@ class RiderDetail( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(wx.NewId(), 'Pull After Lap...',	'Pull after Lap',	self.OnPopupPull, allCases),
-				(wx.NewId(), 'DNF After Lap...',	'DNF after Lap',	self.OnPopupDNF, allCases),
+				(wx.NewId(), _('Pull After Lap...'),	_('Pull after Lap'),	self.OnPopupPull, allCases),
+				(wx.NewId(), _('DNF After Lap...'),		_('DNF after Lap'),	self.OnPopupDNF, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), 'Correct...',			'Change number or lap time...',	self.OnPopupCorrect, interpCase),
-				(wx.NewId(), 'Shift...',			'Move lap time earlier/later...',	self.OnPopupShift, interpCase),
-				(wx.NewId(), 'Delete...',			'Delete lap time...',	self.OnPopupDelete, nonInterpCase),
+				(wx.NewId(), _('Correct...'),			_('Change number or lap time...'),	self.OnPopupCorrect, interpCase),
+				(wx.NewId(), _('Shift...'),				_('Move lap time earlier/later...'),	self.OnPopupShift, interpCase),
+				(wx.NewId(), _('Delete...'),			_('Delete lap time...'),	self.OnPopupDelete, nonInterpCase),
 				(None, None, None, None, None),
-				(wx.NewId(), 'Add Missing Last Lap','Add Missing Last Lap',	self.OnPopupAddMissingLastLap, allCases),
+				(wx.NewId(), _('Add Missing Last Lap'),	_('Add Missing Last Lap'),	self.OnPopupAddMissingLastLap, allCases),
 
 			]
 			for p in self.popupInfo:
@@ -439,11 +440,11 @@ class RiderDetail( wx.Panel ):
 			timesPerRow = 4
 			for i in xrange(0, len(times), timesPerRow):
 				timeStr.append(
-					',  '.join( 'Lap %d: %s' % (rows[j]+1, Utils.formatTime(times[i]))
+					',  '.join( _('Lap {}: {}').format(rows[j]+1, Utils.formatTime(times[i]))
 							for j in xrange(i, min(len(times), i+timesPerRow) ) ) )
 			timeStr = ',\n'.join( timeStr )
-			message = 'Delete entries of Rider %d:\n\n%s\n\nConfirm Delete?' % (num, timeStr)
-			if Utils.MessageOKCancel( self, message, 'Delete Times', wx.ICON_WARNING ):
+			message = _('Delete entries of Rider {}:\n\n{}\n\nConfirm Delete?').format(num, timeStr)
+			if Utils.MessageOKCancel( self, message, _('Delete Times'), wx.ICON_WARNING ):
 				undo.pushState()
 				with Model.LockRace() as race:
 					if race:
@@ -471,12 +472,12 @@ class RiderDetail( wx.Panel ):
 			return
 			
 		if rider.status != rider.Finisher:
-			Utils.MessageOK( self, 'Cannot add Last Lap unless Rider is Finisher', 'Cannot add Last Lap' )
+			Utils.MessageOK( self, _('Cannot add Last Lap unless Rider is Finisher'), _('Cannot add Last Lap') )
 			return
 				
 		undo.pushState()
 		if rider.autocorrectLaps:
-			if Utils.MessageOKCancel( self, 'Turn off Autocorrect first?', 'Turn off Autocorrect' ):
+			if Utils.MessageOKCancel( self, _('Turn off Autocorrect first?'), _('Turn off Autocorrect') ):
 				rider.autocorrectLaps = False
 				
 		category = race.getCategory( num )
@@ -507,8 +508,8 @@ class RiderDetail( wx.Panel ):
 			if not num in race:
 				return
 			
-		if Utils.MessageOKCancel( self, "Confirm Delete rider %d and all associated entries." % num,
-									"Delete Rider" ):
+		if Utils.MessageOKCancel( self, _("Confirm Delete rider {} and all associated entries.").format(num),
+									_("Delete Rider") ):
 			undo.pushState()
 			with Model.LockRace() as race:
 				race.deleteRider( num )
@@ -528,7 +529,7 @@ class RiderDetail( wx.Panel ):
 			if not num in race:
 				return
 		
-		dlg = wx.TextEntryDialog( self, "Rider's new number:", 'New Number', str(self.num.GetValue()) )
+		dlg = wx.TextEntryDialog( self, _("Rider's new number:"), _('New Number'), '{}'.format(self.num.GetValue()) )
 		ret = dlg.ShowModal()
 		newNum = dlg.GetValue()
 		dlg.Destroy()
@@ -543,10 +544,11 @@ class RiderDetail( wx.Panel ):
 		with Model.LockRace() as race:
 			inRace = (newNum in race)
 		if inRace:
-			Utils.MessageOK( self, "Cannot Change rider to %d.\nThere is a rider with this number already." % newNum, 'Cannot Change Rider Number', iconMask = wx.ICON_ERROR )
+			Utils.MessageOK( self, _("Cannot Change rider to {}.\nThere is a rider with this number already.").format(newNum),
+									_('Cannot Change Rider Number'), iconMask = wx.ICON_ERROR )
 			return
 			
-		if Utils.MessageOKCancel( self, "Conform Change rider's number to %d." % newNum, "Change Rider Number" ):
+		if Utils.MessageOKCancel( self, _("Conform Change rider's number to {}.").format(newNum), _("Change Rider Number") ):
 			undo.pushState()
 			with Model.LockRace() as race:
 				race.renumberRider( num, newNum )
@@ -567,7 +569,7 @@ class RiderDetail( wx.Panel ):
 			if not num in race:
 				return
 		
-		dlg = wx.TextEntryDialog( self, "Number to swap with:", 'Swap Numbers', str(self.num.GetValue()) )
+		dlg = wx.TextEntryDialog( self, _("Number to swap with:"), _('Swap Numbers'), '{}'.format(self.num.GetValue()) )
 		ret = dlg.ShowModal()
 		newNum = dlg.GetValue()
 		dlg.Destroy()
@@ -582,10 +584,11 @@ class RiderDetail( wx.Panel ):
 		with Model.LockRace() as race:
 			inRace = (newNum in race)
 		if not inRace:
-			Utils.MessageOK( self, "Cannot swap with rider %d.\nThis rider is not in race." % newNum, 'Cannot Swap Rider Numbers', iconMask = wx.ICON_ERROR )
+			Utils.MessageOK( self, _("Cannot swap with rider {}.\nThis rider is not in race.").format(newNum),
+									_('Cannot Swap Rider Numbers'), iconMask = wx.ICON_ERROR )
 			return
 			
-		if Utils.MessageOKCancel( self, "Confirm Swap numbers %d and %d." % (num, newNum), "Swap Rider Number" ):
+		if Utils.MessageOKCancel( self, _("Confirm Swap numbers {} and {}.").format(num, newNum), _("Swap Rider Number") ):
 			undo.pushState()
 			with Model.LockRace() as race:
 				race.swapRiders( num, newNum )
@@ -606,8 +609,8 @@ class RiderDetail( wx.Panel ):
 			if not num in race:
 				return
 		
-		dlg = wx.TextEntryDialog( self, "All time entries for %d will be copied to the new bib number.\n\nNew Bib Number:" % num,
-								'Copy Rider Times', str(self.num.GetValue()) )
+		dlg = wx.TextEntryDialog( self, _("All time entries for {} will be copied to the new bib number.\n\nNew Bib Number:").format(num),
+								_('Copy Rider Times'), '{}'.format(self.num.GetValue()) )
 		ret = dlg.ShowModal()
 		newNum = dlg.GetValue()
 		dlg.Destroy()
@@ -623,14 +626,18 @@ class RiderDetail( wx.Panel ):
 			inRace = (newNum in race)
 		if inRace:
 			if num != newNum:
-				Utils.MessageOK( self, "New Bib %d already exists.\nIf you really want to copy times to this number, delete it first." % newNum,
-								'New Bib Number Already Exists', iconMask = wx.ICON_ERROR )
+				Utils.MessageOK( self, _("New Bib {} already exists.\nIf you really want to copy times to this number, delete it first.").format(newNum),
+								_('New Bib Number Already Exists'), iconMask = wx.ICON_ERROR )
 			else:
-				Utils.MessageOK( self, "Cannot copy to the same number (%d)." % newNum,
-								'Cannot Copy to Same Number', iconMask = wx.ICON_ERROR )
+				Utils.MessageOK( self, _("Cannot copy to the same number ({}).").format(newNum),
+								
+								_('Cannot Copy to Same Number'), iconMask = wx.ICON_ERROR )
 			return
 			
-		if Utils.MessageOKCancel( self, "Entries from %d will be copied to new Bib %d.\n\nAll entries for %d will be slightly earlier then entries for %d.\nContinue?" % (num, newNum, newNum, num), "Confirm Copy Rider Times" ):
+		if Utils.MessageOKCancel( self,
+				_("Entries from {} will be copied to new Bib {}.\n\nAll entries for {} will be slightly earlier then entries for {}.\nContinue?").format(
+					num, newNum, newNum, num),
+				_("Confirm Copy Rider Times") ):
 			undo.pushState()
 			with Model.LockRace() as race:
 				race.copyRiderTimes( num, newNum )
@@ -719,7 +726,7 @@ class RiderDetail( wx.Panel ):
 		self.refresh()
 	
 	def doCustomSplitLap( self ):
-		dlg = wx.NumberEntryDialog( self, message = "", caption = "Add Missing Splits", prompt = "Missing Splits to Add:",
+		dlg = wx.NumberEntryDialog( self, message = "", caption = _("Add Missing Splits"), prompt = _("Missing Splits to Add:"),
 									value = 1, min = 1, max = 500 )
 		splits = None
 		if dlg.ShowModal() == wx.ID_OK:
@@ -744,31 +751,31 @@ class RiderDetail( wx.Panel ):
 				riderInfo = {}
 				
 			try:
-				riderName = '%s, %s %d' % (riderInfo['LastName'], riderInfo['FirstName'], num)
+				riderName = u'{}, {} {}'.format(riderInfo['LastName'], riderInfo['FirstName'], num)
 			except KeyError:
 				try:
-					riderName = '%s %d' % (riderInfo['LastName'], num)
+					riderName = u'{} {}'.format(riderInfo['LastName'], num)
 				except KeyError:
 					try:
-						riderName = '%s %d' % (riderInfo['FirstName'], num)
+						riderName = u'{} {}'.format(riderInfo['FirstName'], num)
 					except KeyError:
-						riderName = str(num)
+						riderName = u'{}'.format(num)
 						
 			infoStart = race.numTimeInfo.getInfoStr( num, tLapStart )
 			if infoStart:
-				infoStart = '\nLap Start ' + infoStart
+				infoStart = _('\nLap Start ') + infoStart
 			infoEnd = race.numTimeInfo.getInfoStr( num, tLapEnd )
 			if infoEnd:
-				infoEnd = '\nLap End ' + infoEnd
+				infoEnd = _('\nLap End ') + infoEnd
 		
-			info = ('Rider: %s  Lap: %d\nLap Start:  %s Lap End: %s\nLap Time: %s\n%s%s' %
-					(riderName, lap,
+			info = (_('Rider: {}  Lap: {}\nLap Start:  {} Lap End: {}\nLap Time: {}\n{}{}').format(
+					riderName, lap,
 					Utils.formatTime(tLapStart),
 					Utils.formatTime(tLapEnd),
 					Utils.formatTime(tLapEnd - tLapStart),
 					infoStart, infoEnd )).strip()
 					
-		Utils.MessageOK( self, info, 'Lap Details', pos=wx.GetMousePosition() )
+		Utils.MessageOK( self, info, _('Lap Details'), pos=wx.GetMousePosition() )
 
 	def onEditGantt( self, xPos, yPos, num, iRider, lap ):
 		allCases = 0
@@ -791,23 +798,23 @@ class RiderDetail( wx.Panel ):
 
 		if not hasattr(self, 'ganttMenuInfo'):
 			self.ganttMenuInfo = [
-				(wx.NewId(), 'Correct Lap End Time...',	'Change lap end time...',				lambda event, s = self: CorrectNumber(s, s.entry), interpCase),
-				(wx.NewId(), 'Shift Lap End Time...',	'Move lap end time earlier/later...',	lambda event, s = self: ShiftNumber(s, s.entry), interpCase),
-				(wx.NewId(), 'Delete Lap End Time...',	'Delete lap end time...',				lambda event, s = self: DeleteEntry(s, s.entry), nonInterpCase),
+				(wx.NewId(), _('Correct Lap End Time...'),	_('Change lap end time...'),			lambda event, s = self: CorrectNumber(s, s.entry), interpCase),
+				(wx.NewId(), _('Shift Lap End Time...'),	_('Move lap end time earlier/later...'),lambda event, s = self: ShiftNumber(s, s.entry), interpCase),
+				(wx.NewId(), _('Delete Lap End Time...'),	_('Delete lap end time...'),			lambda event, s = self: DeleteEntry(s, s.entry), nonInterpCase),
 				(None, None, None, None, None),
-				(wx.NewId(), 'Note...',					'Add/Edit Lap Note',					self.OnGanttPopupLapNote, allCases),
+				(wx.NewId(), _('Note...'),					_('Add/Edit Lap Note'),					self.OnGanttPopupLapNote, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), 'Pull after Lap End...',	'Pull after lap end...',				self.OnGanttPopupPull, allCases),
-				(wx.NewId(), 'DNF after Lap End...',	'DNF after lap end...',					self.OnGanttPopupDNF, allCases),
+				(wx.NewId(), _('Pull after Lap End...'),	_('Pull after lap end...'),				self.OnGanttPopupPull, allCases),
+				(wx.NewId(), _('DNF after Lap End...'),		_('DNF after lap end...'),				self.OnGanttPopupDNF, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), 'Show Lap Details...', 	'Show Lap Details',			self.OnGanttPopupLapDetail, allCases),
+				(wx.NewId(), _('Show Lap Details...'), 		_('Show Lap Details'),					self.OnGanttPopupLapDetail, allCases),
 			]
 			self.splitMenuInfo = [
 					(wx.NewId(),
 					'%d Split%s' % (split-1, 's' if split > 2 else ''),
 					lambda evt, s = self, splits = split: s.doSplitLap(splits)) for split in xrange(2,8) ] + [
 					(wx.NewId(),
-					'Custom...',
+					_('Custom...'),
 					lambda evt, s = self: s.doCustomSplitLap())]
 			for id, name, text, callback, cCase in self.ganttMenuInfo:
 				if id:
@@ -830,7 +837,7 @@ class RiderDetail( wx.Panel ):
 				submenu.Append( id, name )
 			Utils.addMissingSeparator( menu )
 			menu.PrependSeparator()
-			menu.PrependMenu( wx.NewId(), 'Add Missing Split', submenu )
+			menu.PrependMenu( wx.NewId(), _('Add Missing Split'), submenu )
 			
 		Utils.deleteTrailingSeparators( menu )
 		self.PopupMenu( menu )
@@ -840,8 +847,8 @@ class RiderDetail( wx.Panel ):
 		if not self.entry:
 			return
 		if not Utils.MessageOKCancel( self,
-			'Pull Rider %d at %s after lap %d?' % (self.entry.num, Utils.formatTime(self.entry.t+1, True), self.entry.lap),
-			'Pull Rider' ):
+			_('Pull Rider {} at {} after lap {}?').format(self.entry.num, Utils.formatTime(self.entry.t+1, True), self.entry.lap),
+			_('Pull Rider') ):
 			return
 		try:
 			undo.pushState()
@@ -854,8 +861,8 @@ class RiderDetail( wx.Panel ):
 	
 	def OnGanttPopupDNF( self, event ):
 		if not Utils.MessageOKCancel( self,
-			'DNF Rider %d at %s after lap %d?' % (self.entry.num, Utils.formatTime(self.entry.t+1, True), self.entry.lap),
-			'DNF Rider' ):
+			_('DNF Rider {} at {} after lap {}?').format(self.entry.num, Utils.formatTime(self.entry.t+1, True), self.entry.lap),
+			_('DNF Rider') ):
 			return
 		try:
 			undo.pushState()
@@ -871,7 +878,7 @@ class RiderDetail( wx.Panel ):
 			return
 		if not hasattr(Model.race, 'lapNote'):
 			Model.race.lapNote = {}
-		dlg = wx.TextEntryDialog( self, "Note for Rider %d on Lap %d:" % (self.entry.num, self.entry.lap), "Lap Note",
+		dlg = wx.TextEntryDialog( self, _("Note for Rider {} on Lap {}:").format(self.entry.num, self.entry.lap), _("Lap Note"),
 					Model.race.lapNote.get( (self.entry.num, self.entry.lap), '' ) )
 		ret = dlg.ShowModal()
 		value = dlg.GetValue().strip()
@@ -1053,7 +1060,7 @@ class RiderDetail( wx.Panel ):
 			except:
 				missingCount = 0
 			if missingCount:
-				notInLapStr = 'Lapped by Race Leader in %s' % (', '.join( str(i) for i, b in enumerate(appearedInLap) if not b ))
+				notInLapStr = _('Lapped by Race Leader in {}').format(', '.join( '{}'.format(i) for i, b in enumerate(appearedInLap) if not b ))
 			else:
 				notInLapStr = ''
 			self.notInLap.SetLabel( notInLapStr )
@@ -1076,7 +1083,7 @@ class RiderDetail( wx.Panel ):
 				
 				row = [''] * self.grid.GetNumberCols()
 				
-				row[0:3] = ( str(r+1), Utils.formatTime(tLap, highPrecisionTimes), Utils.formatTime(e.t, highPrecisionTimes) )
+				row[0:3] = ( '{}'.format(r+1), Utils.formatTime(tLap, highPrecisionTimes), Utils.formatTime(e.t, highPrecisionTimes) )
 				
 				graphData.append( tLap )
 				ganttData.append( e.t )
@@ -1084,7 +1091,7 @@ class RiderDetail( wx.Panel ):
 				
 				highlightColour = None
 				if e.interp:
-					row[3:5] = ('Auto', 'CrossMgr')
+					row[3:5] = (_('Auto'), 'CrossMgr')
 					highlightColour = self.yellowColour
 				else:
 					info = numTimeInfo.getInfo( e.num, e.t )
@@ -1145,7 +1152,7 @@ class RiderDetail( wx.Panel ):
 		
 class RiderDetailDialog( wx.Dialog ):
 	def __init__( self, parent, num = None, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, "RiderDetail",
+		wx.Dialog.__init__( self, parent, id, _("RiderDetail"),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
 						
 		vs = wx.BoxSizer( wx.VERTICAL )
@@ -1155,7 +1162,7 @@ class RiderDetailDialog( wx.Dialog ):
 		
 		vs.Add( self.riderDetail, 1, flag=wx.ALL|wx.EXPAND, border = 4 )
 		
-		self.closeBtn = wx.Button( self, wx.ID_ANY, '&Close (Ctrl-Q)' )
+		self.closeBtn = wx.Button( self, wx.ID_ANY, _('&Close (Ctrl-Q)') )
 		self.Bind( wx.EVT_BUTTON, self.onClose, self.closeBtn )
 		self.Bind( wx.EVT_CLOSE, self.onClose )
 

@@ -110,7 +110,7 @@ class GanttChart(wx.PyControl):
 
 	def SetData( self, data, labels = None, nowTime = None, interp = None ):
 		"""
-		* data is a list of lists.  Each list is a list of times.		
+		* data is a list of lists.  Each list is a list of times.
 		* labels are the names of the series.  Optional.
 		"""
 		self.data = None
@@ -120,7 +120,7 @@ class GanttChart(wx.PyControl):
 			self.data = data
 			self.dataMax = max(max(s) if s else -sys.float_info.max for s in self.data)
 			if labels:
-				self.labels = [str(lab) for lab in labels]
+				self.labels = [u'{}'.format(lab) for lab in labels]
 				if len(self.labels) < len(self.data):
 					self.labels = self.labels + [None] * (len(self.data) - len(self.labels))
 				elif len(self.labels) > len(self.data):
@@ -193,8 +193,8 @@ class GanttChart(wx.PyControl):
 		tLapStart = self.data[iRider][iLap-1]
 		tLapEnd = self.data[iRider][iLap]
 		bip = BarInfoPopup(self, wx.SIMPLE_BORDER,
-								'Rider: %s  Lap: %d\nLap Start:  %s Lap End: %s\nLap Time: %s' %
-								(self.labels[iRider] if self.labels else str(iRider), iLap,
+								_('Rider: {}  Lap: {}\nLap Start:  {} Lap End: {}\nLap Time: {}').format(
+								self.labels[iRider] if self.labels else '{}'.format(iRider), iLap,
 								Utils.formatTime(tLapStart),
 								Utils.formatTime(tLapEnd),
 								Utils.formatTime(tLapEnd - tLapStart)))
@@ -257,7 +257,7 @@ class GanttChart(wx.PyControl):
 		if self.showLabels:
 			for label in self.labels:
 				textWidthLeftMax = max( textWidthLeftMax, dc.GetTextExtent(label)[0] )
-				textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent( str(numFromLabel(label)) )[0] )
+				textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent( '{}'.format(numFromLabel(label)) )[0] )
 				
 		if self.showLabels:
 			legendSep = 4			# Separations between legend entries and the Gantt bars.
@@ -381,7 +381,7 @@ class GanttChart(wx.PyControl):
 						label = label[lastSpace+1:]
 					dc.DrawText( label, width - labelsWidthRight + legendSep, yLast )
 
-			if str(self.numSelect) == str(numFromLabel(self.labels[i])):
+			if u'{}'.format(self.numSelect) == u'{}'.format(numFromLabel(self.labels[i])):
 				yHighlight = yCur
 
 			yLast = yCur
@@ -477,7 +477,7 @@ if __name__ == '__main__':
 	t = 55*60
 	tVar = t * 0.15
 	data, interp = GetData()
-	gantt.SetData( data, [str(i) for i in xrange(100, 100+len(data))], interp = interp )
+	gantt.SetData( data, [u'{}'.format(i) for i in xrange(100, 100+len(data))], interp = interp )
 
 	mainWin.Show()
 	app.MainLoop()

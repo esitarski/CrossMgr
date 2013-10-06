@@ -17,7 +17,7 @@ import urllib
 # Sort sequence by rider status.
 statusSortSeq = Model.Rider.statusSortSeq
 
-brandText = 'Powered by CrossMgr (sites.google.com/site/crossmgrsoftware)'
+brandText = _('Powered by CrossMgr (sites.google.com/site/crossmgrsoftware)')
 
 def ImageToPil( image ):
 	"""Convert wx.Image to PIL Image."""
@@ -61,7 +61,7 @@ class ExportGrid( object ):
 	def _getColSizeTuple( self, dc, font, col ):
 		wSpace, hSpace, lh = dc.GetMultiLineTextExtent( '    ', font )
 		extents = [ dc.GetMultiLineTextExtent(self.colnames[col], font) ]
-		extents.extend( dc.GetMultiLineTextExtent(str(v), font) for v in self.data[col] )
+		extents.extend( dc.GetMultiLineTextExtent(u'{}'.format(v), font) for v in self.data[col] )
 		width = max( e[0] for e in extents )
 		height = sum( e[1] for e in extents[:self.rowDrawCount] )
 		return width, height + hSpace/4
@@ -213,7 +213,7 @@ class ExportGrid( object ):
 		
 		yPixTop = yPixMax = yPix
 		for col, c in enumerate(self.colnames):
-			isSpeed = (c == 'Speed')
+			isSpeed = (c == _('Speed'))
 			if isSpeed and dataDraw[col]:
 				try:
 					c = self.colnames[col] = self.data[col][0].split()[1]
@@ -224,9 +224,9 @@ class ExportGrid( object ):
 			yPix = yPixTop
 			w, h, lh = dc.GetMultiLineTextExtent( c, font )
 			if col in self.leftJustifyCols:
-				self._drawMultiLineText( dc, str(c), xPix, yPix )					# left justify
+				self._drawMultiLineText( dc, u'{}'.format(c), xPix, yPix )					# left justify
 			else:
-				self._drawMultiLineText( dc, str(c), xPix + colWidth - w, yPix )	# right justify
+				self._drawMultiLineText( dc, u'{}'.format(c), xPix + colWidth - w, yPix )	# right justify
 			yPix += h + hSpace/4
 			if col == 0:
 				yLine = yPix - hSpace/8
@@ -234,7 +234,7 @@ class ExportGrid( object ):
 					dc.DrawLine( borderPix, yLine + r * textHeight, widthPix - borderPix, yLine + r * textHeight )
 					
 			for v in dataDraw[col]:
-				vStr = str(v)
+				vStr = u'{}'.format(v)
 				if vStr:
 					if isSpeed:
 						vStr = vStr.split()[0]
@@ -248,7 +248,7 @@ class ExportGrid( object ):
 			xPix += colWidth + wSpace
 			
 			if isSpeed:
-				self.colnames[col] = 'Speed'
+				self.colnames[col] = _('Speed')
 				
 		# Switch to smaller font.
 		font = self._getFont( borderPix // 4, False )
@@ -266,9 +266,9 @@ class ExportGrid( object ):
 		# Put the page number info at the bottom of the page.
 		if pageNumber is not None:
 			if pageNumberTotal is not None:
-				s = 'Page %d of %d' % (pageNumber, pageNumberTotal)
+				s = _('Page {} of {}').format(pageNumber, pageNumberTotal)
 			else:
-				s = 'Page %d' % (pageNumber)
+				s = _('Page {}').format(pageNumber)
 			w, h, lh = dc.GetMultiLineTextExtent( s, font )
 			self._drawMultiLineText( dc, s, widthPix - w - borderPix, heightPix - borderPix + h )
 	
@@ -384,9 +384,9 @@ class ExportGrid( object ):
 			yPnt = yPntTop
 			w, h, lh = canvas.GetMultiLineTextExtent( c, font )
 			if col in self.leftJustifyCols:
-				self._drawMultiLineText( canvas, str(c), xPnt, yPnt )					# left justify
+				self._drawMultiLineText( canvas, u'{}'.format(c), xPnt, yPnt )					# left justify
 			else:
-				self._drawMultiLineText( canvas, str(c), xPnt + colWidth - w, yPnt )	# right justify
+				self._drawMultiLineText( canvas, u'{}'.format(c), xPnt + colWidth - w, yPnt )	# right justify
 			yPnt += h + hSpace/4
 			if col == 0:
 				yLine = yPnt - hSpace/8
@@ -394,7 +394,7 @@ class ExportGrid( object ):
 					canvas.DrawLine( borderPnt, yLine + r * textHeight, widthPnt - borderPnt, yLine + r * textHeight )
 					
 			for v in self.data[col]:
-				vStr = str(v)
+				vStr = '{}'.format(v)
 				if vStr:
 					if isSpeed:
 						vStr = vStr.split()[0]
@@ -439,7 +439,7 @@ class ExportGrid( object ):
 		# Write the colnames and data.
 		rowMax = 0
 		for col, c in enumerate(self.colnames):
-			isSpeed = (c == 'Speed')
+			isSpeed = (c == _('Speed'))
 			if isSpeed and self.data[col]:
 				c = self.colnames[col] = self.data[col][0].split()[1]
 
@@ -457,14 +457,14 @@ class ExportGrid( object ):
 			sheetFit.write( rowTop, col, c, headerStyle, bold=True )
 			for row, v in enumerate(self.data[col]):
 				if isSpeed and v:
-					v = str(v).split()[0]
+					v = '{}'.format(v).split()[0]
 				rowCur = rowTop + 1 + row
 				if rowCur > rowMax:
 					rowMax = rowCur
 				sheetFit.write( rowCur, col, v, style )
 			
 			if isSpeed:
-				self.colnames[col] = 'Speed'
+				self.colnames[col] = _('Speed')
 				
 		# Add branding at the bottom of the sheet.
 		style = xlwt.XFStyle()
@@ -517,17 +517,17 @@ class ExportGrid( object ):
 		with Model.LockRace() as race:
 			catStr = 'All' if not category else category.fullname
 			if cd and cd.get('raceDistance', None):
-				catStr += ', %.2f %s, ' % (cd['raceDistance'], cd['distanceUnit'])
+				catStr += _(', {:.2f} {}, ').format(cd['raceDistance'], cd['distanceUnit'])
 				if cd.get('lapDistance', None) and cd.get('laps', 0) > 1:
 					if cd.get('firstLapDistance', None) and cd['firstLapDistance'] != cd['lapDistance']:
-						catStr += '1st lap %.2f %s, %d more laps of %.2f %s, ' % (
+						catStr += _('1st lap {:.2f} {}, {} more laps of {:.2f} {}, ').format(
 									cd['firstLapDistance'], cd['distanceUnit'],
 									cd['laps'] - 1,
 									cd['lapDistance'], cd['distanceUnit']
 								)
 					else:
-						catStr += '%d laps of %.2f %s, ' % (cd['laps'], cd['lapDistance'], cd['distanceUnit']);
-				catStr += 'winner: %s at %s' % (Utils.formatTime(leader.lastTime - cd['startOffset']), leader.speed);
+						catStr += _('{} laps of {:.2f} {}, ').format(cd['laps'], cd['lapDistance'], cd['distanceUnit']);
+				catStr += _('winner: {} at {}').format(Utils.formatTime(leader.lastTime - cd['startOffset']), leader.speed);
 		
 			self.title = '\n'.join( [race.name, Utils.formatDate(race.date), catStr] )
 			isTimeTrial = getattr( race, 'isTimeTrial', False )
@@ -538,14 +538,14 @@ class ExportGrid( object ):
 		infoFieldsPresent = set( infoFields ) & set( dir(leader) )
 		infoFields = [f for f in infoFields if f in infoFieldsPresent]
 		
-		self.colnames = ['Pos', 'Bib'] + infoFields + (['Start','Finish'] if isTimeTrial else []) + ['Time', 'Gap']
+		self.colnames = [_('Pos'), _('Bib')] + infoFields + ([_('Start'),_('Finish')] if isTimeTrial else []) + [_('Time'), _('Gap')]
 		if hasSpeeds:
-			self.colnames += ['Speed']
-		self.colnames = [name[:-4] + ' Name' if name.endswith('Name') else name for name in self.colnames]
+			self.colnames += [_('Speed')]
+		self.colnames = [name[:-4] + _(' Name') if name.endswith(_('Name')) else name for name in self.colnames]
 		self.iLapTimes = len(self.colnames)
 		lapsMax = len(leader.lapTimes) if leader.lapTimes else 0
 		if leader.lapTimes and showLapTimes:
-			self.colnames.extend( ['Lap %d' % lap for lap in xrange(1, lapsMax+1) \
+			self.colnames.extend( [_('Lap {}').format(lap) for lap in xrange(1, lapsMax+1) \
 					if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax] )
 		
 		highPrecision = Utils.highPrecisionTimes()

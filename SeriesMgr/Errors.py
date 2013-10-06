@@ -46,7 +46,7 @@ class Errors(wx.Panel):
 		Utils.AdjustGridSize( self.grid, len(model.errors) )
 		for row, (r, e) in enumerate(model.errors):
 			self.grid.SetCellValue( row, self.RaceCol, r.fname )
-			self.grid.SetCellValue( row, self.ErrorCol, str(e) )
+			self.grid.SetCellValue( row, self.ErrorCol, '{}'.format(e) )
 		wx.CallAfter( self.gridAutoSize )
 	
 	def commit( self ):

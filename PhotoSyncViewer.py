@@ -1,6 +1,7 @@
 import wx
 import Model
 import Utils
+Utils.initTranslation()
 import PhotoFinish
 import VideoBuffer
 import os
@@ -155,7 +156,7 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 		milliseconds = fields[0]
 		if milliseconds and Model.race:
 			Model.race.advancePhotoMilliseconds = int( milliseconds )
-			Utils.MessageOK( self, 'Advance/Delay Photo Milliseconds set to %s' % milliseconds, 'Advance/Delay Milliseconds' )
+			Utils.MessageOK( self, _('Advance/Delay Photo Milliseconds set to {}').format(milliseconds), 'Advance/Delay Milliseconds' )
 		
 	def OnClose( self, event ):
 		self.Show( False )

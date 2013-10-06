@@ -267,7 +267,7 @@ def GetResultsCore( category ):
 				rr.pos = Model.Rider.statusNames[rr.status]
 				continue
 				
-			rr.pos = str(pos+1)
+			rr.pos = '{}'.format(pos+1)
 			
 			if rr.laps != leader.laps:
 				if rr.lastTime > leader.lastTime:

@@ -43,7 +43,7 @@ def findAlienHost( alienPort = DefaultAlienCmdPort ):
 		if not (0 <= ipTest[-1] < 256):
 			continue
 			
-		alienHost = '.'.join( str(v) for v in ipTest )
+		alienHost = '.'.join( '{}'.format(v) for v in ipTest )
 		
 		cmdSocket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 		cmdSocket.settimeout( 0.5 )

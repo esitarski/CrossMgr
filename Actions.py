@@ -52,7 +52,7 @@ def GetNowSeconds():
 		
 class StartRaceAtTime( wx.Dialog ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, "Start Race at Time:",
+		wx.Dialog.__init__( self, parent, id, _("Start Race at Time:"),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
 						
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
@@ -64,7 +64,7 @@ class StartRaceAtTime( wx.Dialog ):
 		self.futureRaceTimes = None
 		
 		race = Model.getRace()
-		autoStartLabel = wx.StaticText( self, wx.ID_ANY, 'Automatically Start Race at:' )
+		autoStartLabel = wx.StaticText( self, wx.ID_ANY, _('Automatically Start Race at:') )
 		
 		# Make sure we don't suggest a start time in the past.
 		value = race.scheduledStart
@@ -74,17 +74,17 @@ class StartRaceAtTime( wx.Dialog ):
 			startOffset = 3 * 60
 			startSeconds = nowSeconds - nowSeconds % startOffset
 			startSeconds = nowSeconds + startOffset
-			value = '%02d:%02d' % (startSeconds / (60*60), (startSeconds / 60) % 60)
+			value = u'%02d:%02d' % (startSeconds / (60*60), (startSeconds / 60) % 60)
 		
 		self.autoStartTime = masked.TimeCtrl( self, wx.ID_ANY, fmt24hr=True, display_seconds=False, value=value )
 		
 		self.countdown = wx.StaticText( self, wx.ID_ANY, '      ' )
 		self.countdown.SetFont( font )
 		
-		self.okBtn = wx.Button( self, wx.ID_ANY, '&OK' )
+		self.okBtn = wx.Button( self, wx.ID_OK )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
 
-		self.cancelBtn = wx.Button( self, wx.ID_ANY, '&Cancel' )
+		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
 		border = 8
@@ -131,7 +131,7 @@ class StartRaceAtTime( wx.Dialog ):
 
 		self.startSeconds = Utils.StrToSeconds( startTime ) * 60.0
 		if self.startSeconds < GetNowSeconds():
-			Utils.MessageOK( None, 'Scheduled Start Time is in the Past.\n\nPlease enter a Scheduled Start Time in the Future.', 'Scheduled Start Time is in the Past' )
+			Utils.MessageOK( None, _('Scheduled Start Time is in the Past.\n\nPlease enter a Scheduled Start Time in the Future.'), _('Scheduled Start Time is in the Past') )
 			return
 			
 		dateToday = datetime.date.today()
@@ -180,14 +180,14 @@ class Actions( wx.Panel ):
 		self.raceIntro = wx.StaticText( self, wx.ID_ANY, '' )
 		self.raceIntro.SetFont( wx.Font(24, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
 		
-		choices = [	'Record Tags Normally',
-					'Reset Start Clock on First Tag Read (all riders will get the same start time of the first read)',
-					'Skip First Tag Read for All Riders (required when there is a start run-up that passes through the finish on the first lap)']
+		choices = [	_('Record Tags Normally'),
+					_('Reset Start Clock on First Tag Read (all riders will get the same start time of the first read)'),
+					_('Skip First Tag Read for All Riders (required when there is a start run-up that passes through the finish on the first lap)')]
 		self.chipTimingOptions = wx.RadioBox( self, wx.ID_ANY, "Chip Timing Options", majorDimension = 1, choices = choices, style = wx.RA_SPECIFY_COLS )
 																		  
 		self.Bind( wx.EVT_RADIOBOX, self.onChipTimingOptions, self.chipTimingOptions )
 		
-		self.startRaceTimeCheckBox = wx.CheckBox(self, wx.ID_ANY, 'Start Race Automatically at Future Time')
+		self.startRaceTimeCheckBox = wx.CheckBox(self, wx.ID_ANY, _('Start Race Automatically at Future Time'))
 		
 		border = 8
 		hs = wx.BoxSizer( wx.HORIZONTAL )
@@ -233,12 +233,12 @@ class Actions( wx.Panel ):
 				externalFields = []
 				externalInfo = {}
 			if not externalInfo:
-				Utils.MessageOK(self, 'Cannot Start. Excel Sheet read failure.\nThe Excel file is either unconfigured or unreadable.', 'Excel Sheet Read ', wx.ICON_ERROR )
+				Utils.MessageOK(self, _('Cannot Start. Excel Sheet read failure.\nThe Excel file is either unconfigured or unreadable.'), _('Excel Sheet Read '), wx.ICON_ERROR )
 				return
 			try:
 				i = (i for i, field in enumerate(externalFields) if field.startswith('Tag')).next()
 			except StopIteration:
-				Utils.MessageOK(self, 'Cannot Start.  Excel Sheet missing Tag or Tag2 column.\nThe Excel file must contain a Tag column to use JChip.', 'Excel Sheet missing Tag or Tag2 column', wx.ICON_ERROR )
+				Utils.MessageOK(self, _('Cannot Start.  Excel Sheet missing Tag or Tag2 column.\nThe Excel file must contain a Tag column to use JChip.'), _('Excel Sheet missing Tag or Tag2 column'), wx.ICON_ERROR )
 				return
 				
 		if self.startRaceTimeCheckBox.IsChecked():
@@ -247,7 +247,7 @@ class Actions( wx.Panel ):
 			self.onStartRace( event )
 	
 	def onStartRace( self, event ):
-		if Model.race and Utils.MessageOKCancel(self, 'Start Race Now?', 'Start Race'):
+		if Model.race and Utils.MessageOKCancel(self, _('Start Race Now?'), _('Start Race')):
 			StartRaceNow()
 	
 	def onStartRaceTime( self, event ):
@@ -258,7 +258,7 @@ class Actions( wx.Panel ):
 		dlg.Destroy()  
 	
 	def onFinishRace( self, event ):
-		if Model.race is None or not Utils.MessageOKCancel(self, 'Finish Race Now?', 'Finish Race'):
+		if Model.race is None or not Utils.MessageOKCancel(self, _('Finish Race Now?'), _('Finish Race')):
 			return
 			
 		with Model.LockRace() as race:

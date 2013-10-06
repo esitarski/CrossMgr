@@ -198,7 +198,7 @@ class MainWin( wx.Frame ):
 						)
 		hb.Add( self.impinjHostName )
 		hb.Add( wx.StaticText(self, wx.ID_ANY, ImpinjHostNameSuffix), flag=wx.ALIGN_CENTER_VERTICAL )
-		hb.Add( wx.StaticText(self, wx.ID_ANY, ' : ' + str(ImpinjInboundPort)), flag=wx.ALIGN_CENTER_VERTICAL )
+		hb.Add( wx.StaticText(self, wx.ID_ANY, ' : ' + '{}'.format(ImpinjInboundPort)), flag=wx.ALIGN_CENTER_VERTICAL )
 		gbs.Add( hb, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
 		
 		iRow += 1
@@ -207,7 +207,7 @@ class MainWin( wx.Frame ):
 		hb = wx.BoxSizer( wx.HORIZONTAL )
 		self.impinjHost = masked.IpAddrCtrl( self, wx.ID_ANY, style = wx.TE_PROCESS_TAB )
 		hb.Add( self.impinjHost )
-		hb.Add( wx.StaticText(self, wx.ID_ANY, ' : ' + str(ImpinjInboundPort)), flag=wx.ALIGN_CENTER_VERTICAL )
+		hb.Add( wx.StaticText(self, wx.ID_ANY, ' : ' + '{}'.format(ImpinjInboundPort)), flag=wx.ALIGN_CENTER_VERTICAL )
 
 		gbs.Add( hb, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
 		
@@ -360,19 +360,19 @@ class MainWin( wx.Frame ):
 	def doCopyToClipboard( self, event ):
 		cc = [
 			'Configuration: CrossMgrImpinj',
-			'    RunningTime:   %s' % self.runningTime.GetLabel(),
-			'    Time:          %s' % self.time.GetLabel(),
-			'    BackupFile:    %s' % self.backupFile.GetLabel(),
+			'    RunningTime:   {}'.format(self.runningTime.GetLabel()),
+			'    Time:          {}'.format(self.time.GetLabel()),
+			'    BackupFile:    {}'.format(self.backupFile.GetLabel()),
 			'',
 			'Configuration: Impinj:',
-			'    Use Host Name: %s' % 'True' if self.useHostName.GetValue() else 'False',
-			'    HostName:      %s' % (ImpinjHostNamePrefix + self.impinjHostName.GetValue()) + ImpinjHostNameSuffix,
-			'    ImpinjHost:    %s' % self.impinjHost.GetAddress(),
-			'    ImpinjPort:    %s' % str(ImpinjInboundPort),
+			'    Use Host Name: {}'.format('True' if self.useHostName.GetValue() else 'False'),
+			'    HostName:      {}'.format((ImpinjHostNamePrefix + self.impinjHostName.GetValue()) + ImpinjHostNameSuffix),
+			'    ImpinjHost:    {}'.format(self.impinjHost.GetAddress()),
+			'    ImpinjPort:    {}'.format(ImpinjInboundPort),
 			'',
 			'Configuration: CrossMgr',
-			'    CrossMgrHost:  %s' % self.getCrossMgrHost(),
-			'    CrossMgrPort:  %d' %  CrossMgrPort,
+			'    CrossMgrHost:  {}'.format(self.getCrossMgrHost()),
+			'    CrossMgrPort:  {}'.format(CrossMgrPort),
 		]
 		cc.append( '\nLog: Impinj' )
 		log = self.impinjMessagesText.GetValue()

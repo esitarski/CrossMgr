@@ -5,6 +5,7 @@ import sys
 import bisect
 import Utils
 import os
+from gettext import gettext as _
 
 def lighterColour( c ):
 	rgb = c.Get( False )
@@ -18,7 +19,7 @@ def rescaleBitmap( b, s ):
 class RaceHUD(wx.PyControl):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
-				name="RaceHUD"):
+				name=_("RaceHUD")):
 		"""
 		Default class constructor.
 		"""
@@ -132,7 +133,7 @@ class RaceHUD(wx.PyControl):
 		fontRaceTime = wx.FontFromPixelSize( wx.Size(0,raceTimeHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		dc.SetFont( fontRaceTime )
 		textWidth, textHeight = dc.GetTextExtent( '0' )
-		textWidth = max( dc.GetTextExtent(str(ldr))[0] for ldr in self.leader )
+		textWidth = max( dc.GetTextExtent('{}'.format(ldr))[0] for ldr in self.leader )
 		textWidth = max( textWidth, int(self.checkeredFlag.GetWidth() * 1.2) )
 		textWidth += dc.GetTextExtent('  ')[0]
 		
@@ -165,7 +166,7 @@ class RaceHUD(wx.PyControl):
 				x = xLeft + int( t * xMult )
 				dc.DrawLine( x, yTop + hMiddle - tickHeight, x, yTop + hMiddle + tickHeight )
 				if t != raceTimes[-1]:
-					n = str(lapMax - i)
+					n = '{}'.format(lapMax - i)
 					textWidth, textHeight = dc.GetTextExtent( n )
 					dc.DrawText( n, x - textWidth // 2, yTop + hMiddle + tickHeight )
 		
@@ -244,7 +245,7 @@ class RaceHUD(wx.PyControl):
 			
 			# Draw the leader.
 			if leader is not None:
-				leaderText = str(leader)
+				leaderText = '{}'.format(leader)
 				dc.SetFont( fontLegend if legendHeight > raceTimeHeight else fontRaceTime )
 				textWidth, textHeight = dc.GetTextExtent( leaderText )
 				dc.DrawText( leaderText, xLeft - textWidth - textHeight / 8, yTop + hMiddle - textHeight / 2 )
@@ -267,7 +268,7 @@ if __name__ == '__main__':
 		]
 
 	app = wx.PySimpleApp()
-	mainWin = wx.Frame(None,title="RaceHUD", size=(800,200))
+	mainWin = wx.Frame(None,title=_("RaceHUD"), size=(800,200))
 	RaceHUD = RaceHUD(mainWin)
 	
 	random.seed( 10 )

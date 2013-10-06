@@ -1,11 +1,11 @@
-import Model
-import Utils
 import wx
 import wx.grid		as gridlib
-import ColGrid
 import os
 import re
 from string import Template
+import Model
+import Utils
+import ColGrid
 from FixCategories import FixCategories
 from GetResults import TimeDifference
 import EditEntry
@@ -39,23 +39,23 @@ class History( wx.Panel ):
 		self.greyColour = wx.Colour( 150, 150, 150 )
 		
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
-		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, 'Category:' )
+		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, _('Category:') )
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
 		
-		self.showTimesToggle = wx.ToggleButton( self, wx.ID_ANY, 'Race Times', style=wx.BU_EXACTFIT )
+		self.showTimesToggle = wx.ToggleButton( self, wx.ID_ANY, _('Race Times'), style=wx.BU_EXACTFIT )
 		self.showTimesToggle.SetValue( self.showTimes )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowTimes, self.showTimesToggle )
 		
-		self.showLapTimesToggle = wx.ToggleButton( self, wx.ID_ANY, 'Lap Times', style=wx.BU_EXACTFIT )
+		self.showLapTimesToggle = wx.ToggleButton( self, wx.ID_ANY, _('Lap Times'), style=wx.BU_EXACTFIT )
 		self.showLapTimesToggle.SetValue( self.showLapTimes )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowLapTimes, self.showLapTimesToggle )
 		
-		self.showTimeDownToggle = wx.ToggleButton( self, wx.ID_ANY, 'Time Down per Lap', style=wx.BU_EXACTFIT )
+		self.showTimeDownToggle = wx.ToggleButton( self, wx.ID_ANY, _('Time Down per Lap'), style=wx.BU_EXACTFIT )
 		self.showTimeDownToggle.SetValue( self.showTimeDown )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowTimeDown, self.showTimeDownToggle )
 		
-		self.showRiderNameToggle = wx.ToggleButton( self, wx.ID_ANY, 'Rider Names', style=wx.BU_EXACTFIT )
+		self.showRiderNameToggle = wx.ToggleButton( self, wx.ID_ANY, _('Rider Names'), style=wx.BU_EXACTFIT )
 		self.showRiderNameToggle.SetValue( self.showRiderName )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowRiderName, self.showRiderNameToggle )
 		
@@ -152,18 +152,18 @@ class History( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(wx.NewId(), 'Results', 	'Switch to Results tab', self.OnPopupResults, allCases),
-				(wx.NewId(), 'RiderDetail',	'Show RiderDetail tab', self.OnPopupRiderDetail, allCases),
+				(wx.NewId(), _('Results'), 		_('Switch to Results tab'), self.OnPopupResults, allCases),
+				(wx.NewId(), _('RiderDetail'),	_('Show RiderDetail tab'), self.OnPopupRiderDetail, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), 'Correct...',	'Change number or time',	self.OnPopupCorrect, interpCase),
-				(wx.NewId(), 'Shift...',	'Move time earlier/later',	self.OnPopupShift, interpCase),
-				(wx.NewId(), 'Insert...',	'Insert a number before/after existing entry',	self.OnPopupInsert, nonInterpCase),
+				(wx.NewId(), _('Correct...'),	_('Change number or time'),	self.OnPopupCorrect, interpCase),
+				(wx.NewId(), _('Shift...'),		_('Move time earlier/later'),	self.OnPopupShift, interpCase),
+				(wx.NewId(), _('Insert...'),	_('Insert a number before/after existing entry'),	self.OnPopupInsert, nonInterpCase),
 				(None, None, None, None, None),
-				(wx.NewId(), 'Delete...',	'Delete an entry',	self.OnPopupDelete, nonInterpCase),
-				(wx.NewId(), 'Split...',	'Split an entry into two',self.OnPopupSplit, nonInterpCase),
+				(wx.NewId(), _('Delete...'),	_('Delete an entry'),	self.OnPopupDelete, nonInterpCase),
+				(wx.NewId(), _('Split...'),		_('Split an entry into two'),self.OnPopupSplit, nonInterpCase),
 				(None, None, None, None, None),
-				(wx.NewId(), 'Swap with Entry before...',	'Swap with Entry before', self.OnPopupSwapBefore, nonInterpCase),
-				(wx.NewId(), 'Swap with Entry after...',	'Swap with Entry after',	self.OnPopupSwapAfter, nonInterpCase),
+				(wx.NewId(), _('Swap with Entry before...'),	_('Swap with Entry before'), self.OnPopupSwapBefore, nonInterpCase),
+				(wx.NewId(), _('Swap with Entry after...'),		_('Swap with Entry after'),	self.OnPopupSwapAfter, nonInterpCase),
 			]
 			for id, name, text, callback, cCode in self.popupInfo:
 				if id:
@@ -238,7 +238,7 @@ class History( wx.Panel ):
 		
 	def OnPopupResults( self, event ):
 		if Utils.isMainWin():
-			Utils.getMainWin().showPageName( 'Results' )
+			Utils.getMainWin().showPageName( _('Results') )
 			
 	def OnPopupRiderDetail( self, event ):
 		ShowRiderDetailDialog( self, self.numSelect )
@@ -321,7 +321,7 @@ class History( wx.Panel ):
 		self.numSelect = None
 
 	def setNumSelect( self, num ):
-		self.numSelect = num if num is None else str(num)
+		self.numSelect = num if num is None else '{}'.format(num)
 		if self.numSelect:
 			self.search.SetValue( self.numSelect )
 	
@@ -430,17 +430,19 @@ class History( wx.Panel ):
 				except IndexError:
 					lapTime = 0
 					
-				colnames.append( '%s\n%s\n%s\n%s' %(str(c+1),
-													str(maxLaps - c - 1) if doLapsToGo else ' ',
-													formatTime(lapTime),
-													formatTime(raceTime)) )
+				colnames.append( '{}\n{}\n{}\n{}'.format(
+									c+1,
+									(maxLaps - c - 1) if doLapsToGo else ' ',
+									formatTime(lapTime),
+									formatTime(raceTime))
+								)
 			
 			formatStr = ['$num']
 			if self.showTimes:		formatStr.append('=$raceTime')
 			if self.showLapTimes:	formatStr.append(' [$lapTime]')
 			if self.showTimeDown:	formatStr.append(' ($downTime)')
 			if self.showRiderName:	formatStr.append(' $riderName')
-			template = Template( ''.join(formatStr) )
+			template = Template( u''.join(formatStr) )
 			
 			try:
 				info = race.excelLink.read()
@@ -460,7 +462,7 @@ class History( wx.Panel ):
 					firstName = d['FirstName']
 				except KeyError:
 					return lastName
-				return '{}, {}'.format(lastName, firstName)
+				return u'{}, {}'.format(lastName, firstName)
 				
 			data = []
 			for col, h in enumerate(self.history):

@@ -1,12 +1,13 @@
-import Utils
-from Utils					import logCall
 import wx
 import wx.lib.masked		as masked
+import datetime
+
+import Utils
+from Utils					import logCall
 import ColGrid
 import Model
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 from Undo import undo
-import datetime
 
 class ChangeRaceStartTimeDialog( wx.Dialog ):
 	def __init__( self, parent, id = wx.ID_ANY ):
@@ -17,7 +18,7 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 		if not race:
 			return
 		if not race.startTime:
-			Utils.MessageOK( self, 'Cannot change Start Time of Unstarted Race', 'Unstarted Race' )
+			Utils.MessageOK( self, _('Cannot change Start Time of Unstarted Race'), _('Unstarted Race') )
 			return
 			
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
@@ -25,14 +26,14 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 		seconds = (race.startTime - race.startTime.replace(hour=0, minute=0, second=0)).total_seconds()
 		self.timeMsEdit = HighPrecisionTimeEdit( self, wx.ID_ANY, seconds = seconds )
 				
-		self.okBtn = wx.Button( self, wx.ID_ANY, '&OK' )
+		self.okBtn = wx.Button( self, wx.ID_OK )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
 
-		self.cancelBtn = wx.Button( self, wx.ID_ANY, '&Cancel' )
+		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
 		border = 8
-		self.timeLabel = wx.StaticText( self, -1, 'New Race Start Time (24hr clock):' )
+		self.timeLabel = wx.StaticText( self, -1, _('New Race Start Time (24hr clock):') )
 		bs.Add( self.timeLabel,  pos=(0,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.TOP|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.timeMsEdit, pos=(0,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.TOP|wx.ALIGN_LEFT )
 		
@@ -59,7 +60,7 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 			return
 		
 		if dTime > 0.0 and not Utils.MessageOkCancel( self,
-				'Are you Sure you want to change the Race Start to Later?\n(you can always undo).', 'Are you sure?' ):
+				_('Are you Sure you want to change the Race Start to Later?\n(you can always undo).'), _('Are you sure?') ):
 			return
 		
 		undo.pushState()

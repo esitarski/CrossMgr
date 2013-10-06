@@ -117,7 +117,7 @@ class IntRange( Int ):
 		if not isinstance(v, int):
 			raise ValueError( 'value must be int type' )
 		if not (self.iMin <= v <= self.iMax):
-			raise ValueError( '%d must be in range [%d, %d] inclusive' % (v, self.iMin, self.iMax) )
+			raise ValueError( '{} must be in range [{}, {}] inclusive'.format(v, self.iMin, self.iMax) )
 		return True
 	def repValue( self ):
 		return self.iMin
@@ -131,7 +131,7 @@ class IntChoice( Type ):
 	def validate( self, v ):
 		i = int(reponse)
 		if i not in self.choices:
-			raise ValueError( '%d must be one of %s' % (i, ','.join( str(k) for k in self.choices) ) )
+			raise ValueError( '{} must be one of {}'.format(i, ','.join( '{}'.format(k) for k in self.choices) ) )
 		return True
 	def fromStr( self, v ):
 		return int(v)
@@ -143,7 +143,7 @@ class StringChoice( Type ):
 		self.choices = choices
 	def validate( self, v ):
 		if v not in self.choices:
-			raise ValueError( '"%s" must be one of %s' % (v, ','.join( '"%s"' % k for k in self.choices) ) )
+			raise ValueError( '"{}" must be one of {}'.format(v, ','.join( '"{}"'.format(k) for k in self.choices) ) )
 		return True
 	def fromStr( self, v ):
 		return v

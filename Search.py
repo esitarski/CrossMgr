@@ -1,11 +1,12 @@
+import wx
+import wx.grid		as gridlib
+import os
+import re
+
 import Model
 import Utils
 import ReadSignOnSheet
-import wx
-import wx.grid		as gridlib
 import ColGrid
-import os
-import re
 
 class Search( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY, style = 0, size=(-1-1) ):
@@ -22,7 +23,7 @@ class Search( wx.Panel ):
 		
 		hbs = wx.BoxSizer( wx.HORIZONTAL )
 		
-		self.searchLabel = wx.StaticText( self, wx.ID_ANY, 'Search:' )
+		self.searchLabel = wx.StaticText( self, wx.ID_ANY, _('Search:') )
 		self.search = wx.SearchCtrl(self, style=wx.TE_PROCESS_ENTER )
 		self.search.ShowCancelButton( True )
 		self.Bind(wx.EVT_SEARCHCTRL_SEARCH_BTN, self.OnSearch, self.search)
@@ -30,7 +31,7 @@ class Search( wx.Panel ):
 		self.Bind(wx.EVT_TEXT_ENTER, self.OnDoSearch, self.search)
 		self.Bind(wx.EVT_TEXT, self.OnDoSearch, self.search)
 		
-		self.closeButton = wx.Button( self, wx.ID_CANCEL, 'Close' )
+		self.closeButton = wx.Button( self, wx.ID_CANCEL, _('Close') )
 		self.Bind(wx.EVT_BUTTON, self.OnClose, self.closeButton )
 		
 		hbs.Add( self.searchLabel, 0, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border = 4 )
@@ -107,7 +108,7 @@ class Search( wx.Panel ):
 			mainWin.riderDetail.commit()
 		self.doNumSelect( event )
 		if self.numSelect is not None and mainWin:
-			mainWin.showPageName( 'RiderDetail' )
+			mainWin.showPageName( _('RiderDetail') )
 	
 	def getCellNum( self, row, col ):
 		numSelect = None
@@ -166,14 +167,14 @@ class Search( wx.Panel ):
 		fields = ReadSignOnSheet.Fields
 		info = externalInfo.itervalues().next()
 		colnames = [f for f in fields if f in info]
-		colnames.append( 'In Race' )
+		colnames.append( _('In Race') )
 		data = [ [] for c in colnames ]
 		for num, info in externalInfo.iteritems():
 			if searchText:
 				matched = False
 				for f in colnames:
 					try:
-						if Utils.removeDiacritic(str(info[f]).lower()).find(searchText) >= 0:
+						if Utils.removeDiacritic(unicode(info[f]).lower()).find(searchText) >= 0:
 							matched = True
 							break
 					except KeyError:
@@ -183,16 +184,16 @@ class Search( wx.Panel ):
 				
 			for c, f in enumerate(colnames):
 				try:
-					data[c].append( str(info[f]) )
+					data[c].append( unicode(info[f]) )
 				except KeyError:
-					if f == 'In Race' and num in inRace:
-						data[c].append( 'yes' )
+					if f == _('In Race') and num in inRace:
+						data[c].append( _('yes') )
 					else:
 						data[c].append( '' )
 					
 		sortPairs = []
 		isBib = colnames[self.sortCol].startswith('Bib')
-		isInRace = (colnames[self.sortCol] == 'In Race')
+		isInRace = (colnames[self.sortCol] == _('In Race'))
 		for r, d in enumerate(data[self.sortCol]):
 			if isBib:
 				sortPairs.append( (int(d), int(data[0][r]), r) )
@@ -216,7 +217,7 @@ class Search( wx.Panel ):
 	
 class SearchDialog( wx.Dialog ):
 	def __init__(
-			self, parent, ID, title='Find Rider', size=wx.DefaultSize, pos=wx.DefaultPosition, 
+			self, parent, ID, title=_('Find Rider'), size=wx.DefaultSize, pos=wx.DefaultPosition, 
 			style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER ):
 
 		# Instead of calling wx.Dialog.__init__ we precreate the dialog

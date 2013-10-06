@@ -44,7 +44,7 @@ def FtpWriteRacePhoto( fname ):
 	try:
 		file = open( fname, 'rb' )
 	except Exception as e:
-		msg = 'FtpWriteRacePhoto (%s): %s' % (lineno(), str(e))
+		msg = 'FtpWriteRacePhoto ({}): {}'.format(lineno(), e)
 		Utils.writeLog( msg )
 		return False, msg
 		
@@ -56,7 +56,7 @@ def FtpWriteRacePhoto( fname ):
 						fname		= os.path.basename(fname),
 						file		= file )
 	except Exception as e:
-		msg = 'FtpWriteRacePhoto (%d): %s' % (lineno(), str(e))
+		msg = 'FtpWriteRacePhoto ({}): {}'.format(lineno(), e)
 		Utils.writeLog( msg )
 		return False, msg
 	
@@ -71,7 +71,7 @@ def FtpWriteRaceHTML():
 		with open(htmlFile) as fp:
 			html = fp.read()
 	except Exception as e:
-		Utils.writeLog( 'FtpWriteRaceHTML Error(1): %s' % str(e) )
+		Utils.writeLog( 'FtpWriteRaceHTML Error(1): {}'.format(e) )
 		return e
 	
 	html = Utils.mainWin.addResultsToHtmlStr( html )
@@ -96,7 +96,7 @@ def FtpWriteRaceHTML():
 						fname		= fname,
 						file		= file )
 	except Exception as e:
-		Utils.writeLog( 'FtpWriteRaceHTML Error(2): %s' % str(e) )
+		Utils.writeLog( 'FtpWriteRaceHTML Error(2): {}'.format(e) )
 		return e
 		
 	return None
@@ -173,7 +173,7 @@ class FtpPublishDialog( wx.Dialog ):
 		self.ftpPhotoPath = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
 		self.ftpUser = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
 		self.ftpPassword = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER|wx.TE_PASSWORD, value='' )
-		self.ftpUploadDuringRace = wx.CheckBox( self, wx.ID_ANY, "Automatically Upload Results During Race" )
+		self.ftpUploadDuringRace = wx.CheckBox( self, wx.ID_ANY, _("Automatically Upload Results During Race") )
 		self.urlPath = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
 		self.urlPath.Bind( wx.EVT_TEXT, self.urlPathChanged )
 		self.urlFull = wx.StaticText( self, wx.ID_ANY )
@@ -192,27 +192,27 @@ class FtpPublishDialog( wx.Dialog ):
 		
 		row = 0
 		border = 8
-		bs.Add( wx.StaticText( self, wx.ID_ANY, "Ftp Host Name:"),  pos=(row,0), span=(1,1), border = border,
+		bs.Add( wx.StaticText( self, wx.ID_ANY, _("Ftp Host Name:")),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.ftpHost, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
 		row += 1
-		bs.Add( wx.StaticText( self, wx.ID_ANY, "Path on Host to Write HTML:"),  pos=(row,0), span=(1,1), border = border,
+		bs.Add( wx.StaticText( self, wx.ID_ANY, _("Path on Host to Write HTML:")),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.ftpPath, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
 		row += 1
-		bs.Add( wx.StaticText( self, wx.ID_ANY, "Path on Host to Write Photos:"),  pos=(row,0), span=(1,1), border = border,
+		bs.Add( wx.StaticText( self, wx.ID_ANY, _("Path on Host to Write Photos:")),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.ftpPhotoPath, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
 		row += 1
-		bs.Add( wx.StaticText( self, wx.ID_ANY, "User:"),  pos=(row,0), span=(1,1), border = border,
+		bs.Add( wx.StaticText( self, wx.ID_ANY, _("User:")),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.ftpUser, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
 		row += 1
-		bs.Add( wx.StaticText( self, wx.ID_ANY, "Password:"),  pos=(row,0), span=(1,1), border = border,
+		bs.Add( wx.StaticText( self, wx.ID_ANY, _("Password:")),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.ftpPassword, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
@@ -221,11 +221,11 @@ class FtpPublishDialog( wx.Dialog ):
 		
 		row += 1
 		row += 1
-		bs.Add( wx.StaticText( self, wx.ID_ANY, "URL Path (optional):"),  pos=(row,0), span=(1,1), border = border,
+		bs.Add( wx.StaticText( self, wx.ID_ANY, _("URL Path (optional):")),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.urlPath, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		row += 1
-		bs.Add( wx.StaticText( self, wx.ID_ANY, "Race Results URL:"),  pos=(row,0), span=(1,1), border = border,
+		bs.Add( wx.StaticText( self, wx.ID_ANY, _("Race Results URL:")),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.urlFull, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		

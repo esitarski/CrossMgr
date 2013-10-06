@@ -119,7 +119,7 @@ class ReadExcelXlsx( ReadExcelBase ):
 	def iter_list(self, sname):
 		ws = self.book.get_sheet_by_name( name = sname )
 		for row in ws.iter_rows():
-			r = [toAscii(cell.internal_value) for cell in row]
+			r = [cell.internal_value for cell in row]
 			yield r
 
 #----------------------------------------------------------------------------

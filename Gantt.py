@@ -1,6 +1,6 @@
+import wx
 import Model
 import Utils
-import wx
 from FixCategories import FixCategories
 import GanttChartPanel
 from GetResults import GetResults, RidersCanSwap
@@ -29,7 +29,7 @@ class Gantt( wx.Panel ):
 		self.numAfter = None
 		
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
-		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, 'Category:' )
+		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, _('Category:') )
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
 		self.statsLabel = wx.StaticText( self, wx.ID_ANY, '' )
@@ -58,7 +58,7 @@ class Gantt( wx.Panel ):
 		self.ganttChart.numSelect = None
 
 	def setNumSelect( self, num ):
-		self.ganttChart.numSelect = num if num is None else str(num)
+		self.ganttChart.numSelect = num if num is None else '{}'.format(num)
 	
 	def onLeftClick( self, xPos, yPos, num, iRider, iLap, t ):
 		if not Utils.mainWin:
@@ -91,29 +91,29 @@ class Gantt( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(wx.NewId(), 'Pull after Lap End...',	'Pull after lap end',		self.OnPopupPull, allCases),
-				(wx.NewId(), 'DNF after Lap End...',	'DNF after lap end',		self.OnPopupDNF, allCases),
+				(wx.NewId(), _('Pull after Lap End...'),	_('Pull after lap end'),		self.OnPopupPull, allCases),
+				(wx.NewId(), _('DNF after Lap End...'),		_('DNF after lap end'),			self.OnPopupDNF, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), 'Note...',					'Add/Edit Lap Note',		self.OnPopupLapNote, allCases),
+				(wx.NewId(), _('Note...'),					_('Add/Edit Lap Note'),			self.OnPopupLapNote, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), 'Correct Lap End Time...',	'Change number or lap end time',		self.OnPopupCorrect, interpCase),
-				(wx.NewId(), 'Shift Lap End Time...',	'Move lap end time earlier/later',	self.OnPopupShift, interpCase),
-				(wx.NewId(), 'Delete Lap End Time...',	'Delete lap end time',	self.OnPopupDelete, nonInterpCase),
+				(wx.NewId(), _('Correct Lap End Time...'),	_('Change number or lap end time'),		self.OnPopupCorrect, interpCase),
+				(wx.NewId(), _('Shift Lap End Time...'),	_('Move lap end time earlier/later'),	self.OnPopupShift, interpCase),
+				(wx.NewId(), _('Delete Lap End Time...'),	_('Delete lap end time'),		self.OnPopupDelete, nonInterpCase),
 				(None, None, None, None, None),
-				(wx.NewId(), 'Turn off Autocorrect...',	'Turn off Autocorrect',		self.OnPopupAutocorrect, allCases),
+				(wx.NewId(), _('Turn off Autocorrect...'),	_('Turn off Autocorrect'),		self.OnPopupAutocorrect, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), 'Swap with Rider before',	'Swap with Rider before',	self.OnPopupSwapBefore, nonInterpCase),
-				(wx.NewId(), 'Swap with Rider after',	'Swap with Rider after',	self.OnPopupSwapAfter, nonInterpCase),
+				(wx.NewId(), _('Swap with Rider before'),	_('Swap with Rider before'),	self.OnPopupSwapBefore, nonInterpCase),
+				(wx.NewId(), _('Swap with Rider after'),	_('Swap with Rider after'),		self.OnPopupSwapAfter, nonInterpCase),
 				(None, None, None, None, None),
-				(wx.NewId(), 'Show Lap Details...', 	'Show Lap Details',			self.OnPopupLapDetail, allCases),
+				(wx.NewId(), _('Show Lap Details...'), 		_('Show Lap Details'),			self.OnPopupLapDetail, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), 'Photos...', 				'Show Photos',				self.OnPopupPhotos, allCases),
-				(wx.NewId(), 'RiderDetail',				'Show RiderDetail Dialog',	self.OnPopupRiderDetail, allCases),
-				(wx.NewId(), 'Results', 				'Switch to Results tab',	self.OnPopupResults, allCases),
+				(wx.NewId(), _('Photos...'), 				_('Show Photos'),				self.OnPopupPhotos, allCases),
+				(wx.NewId(), _('RiderDetail'),				_('Show RiderDetail Dialog'),	self.OnPopupRiderDetail, allCases),
+				(wx.NewId(), _('Results'), 					_('Switch to Results tab'),		self.OnPopupResults, allCases),
 			]
 			self.splitMenuInfo = [
 					(wx.NewId(),
-					'%d Split%s' % (split-1, 's' if split > 2 else ''),
+					_('{} Split(s)').format(split-1),
 					lambda evt, s = self, splits = split: s.doSplitLap(splits)) for split in xrange(2,8) ] + [
 					(wx.NewId(),
 					'Custom...',
@@ -171,7 +171,7 @@ class Gantt( wx.Panel ):
 		self.refresh()
 		
 	def doCustomSplitLap( self ):
-		dlg = wx.NumberEntryDialog( self, message = "", caption = "Add Missing Splits", prompt = "Missing Splits to Add:",
+		dlg = wx.NumberEntryDialog( self, message = "", caption = _("Add Missing Splits"), prompt = _("Missing Splits to Add:"),
 									value = 1, min = 1, max = 500 )
 		splits = None
 		if dlg.ShowModal() == wx.ID_OK:
@@ -221,8 +221,8 @@ class Gantt( wx.Panel ):
 		if not self.entry:
 			return
 		if not Utils.MessageOKCancel( self,
-			'Pull Rider %d at %s after lap %d?' % (self.entry.num, Utils.formatTime(self.entry.t+1, True), self.entry.lap),
-			'Pull Rider' ):
+			_('Pull Rider {} at {} after lap {}?').format(self.entry.num, Utils.formatTime(self.entry.t+1, True), self.entry.lap),
+			_('Pull Rider') ):
 			return
 		try:
 			undo.pushState()
@@ -239,8 +239,8 @@ class Gantt( wx.Panel ):
 		if not self.entry:
 			return
 		if not Utils.MessageOKCancel( self,
-			'DNF Rider %d at %s after lap %d?' % (self.entry.num, Utils.formatTime(self.entry.t+1, True), self.entry.lap),
-			'DNF Rider' ):
+			_('DNF Rider {} at {} after lap {}?').format(self.entry.num, Utils.formatTime(self.entry.t+1, True), self.entry.lap),
+			_('DNF Rider') ):
 			return
 		try:
 			undo.pushState()
@@ -257,8 +257,8 @@ class Gantt( wx.Panel ):
 		if not self.entry:
 			return
 		if not Utils.MessageOKCancel( self,
-			'Turn off Autocorrect for Rider %d?' % self.entry.num,
-			'Turn off Autocorrect' ):
+			_('Turn off Autocorrect for Rider {}?').format(self.entry.num),
+			_('Turn off Autocorrect') ):
 			return
 		try:
 			undo.pushState()
@@ -276,7 +276,7 @@ class Gantt( wx.Panel ):
 			return
 		if not hasattr(Model.race, 'lapNote'):
 			Model.race.lapNote = {}
-		dlg = wx.TextEntryDialog( self, "Note for Rider %d on Lap %d:" % (self.entry.num, self.entry.lap), "Lap Note",
+		dlg = wx.TextEntryDialog( self, _("Note for Rider {} on Lap {}:").format(self.entry.num, self.entry.lap), _("Lap Note"),
 					Model.race.lapNote.get( (self.entry.num, self.entry.lap), '' ) )
 		ret = dlg.ShowModal()
 		value = dlg.GetValue().strip()
@@ -319,46 +319,46 @@ class Gantt( wx.Panel ):
 				riderInfo = {}
 				
 			try:
-				riderName = '%s, %s %d' % (riderInfo['LastName'], riderInfo['FirstName'], self.entryEnd.num)
+				riderName = u'{}, {} {}'.format(riderInfo['LastName'], riderInfo['FirstName'], self.entryEnd.num)
 			except KeyError:
 				try:
-					riderName = '%s %d' % (riderInfo['LastName'], self.entryEnd.num)
+					riderName = u'{} {}'.format(riderInfo['LastName'], self.entryEnd.num)
 				except KeyError:
 					try:
-						riderName = '%s %d' % (riderInfo['FirstName'], self.entryEnd.num)
+						riderName = u'{} {}'.format(riderInfo['FirstName'], self.entryEnd.num)
 					except KeyError:
-						riderName = str(self.entryEnd.num)
+						riderName = u'{}'.format(self.entryEnd.num)
 						
 			if leaderEntryStart:
 				tDown = tLapStart - leaderEntryStart.t
-				infoDownStart = '\nLap Start %s down from leader %d' % (Utils.formatTime(tDown, True), leaderEntryStart.num)
+				infoDownStart = _('\nLap Start {} down from leader {}').format(Utils.formatTime(tDown, True), leaderEntryStart.num)
 			else:
 				infoDownStart = ''
 			if leaderEntryEnd:
 				tDown = tLapEnd - leaderEntryEnd.t
-				infoDownEnd = '\nLap End %s down from leader %d' % (Utils.formatTime(tDown, True), leaderEntryStart.num)
+				infoDownEnd = _('\nLap End {} down from leader {}').format(Utils.formatTime(tDown, True), leaderEntryStart.num)
 			else:
 				infoDownEnd = ''
 				
 			infoStart = race.numTimeInfo.getInfoStr( self.entryStart.num, tLapStart )
 			if infoStart:
-				infoStart = '\nLap Start ' + infoStart
+				infoStart = _('\nLap Start ') + infoStart
 			infoEnd = race.numTimeInfo.getInfoStr( self.entryEnd.num, tLapEnd )
 			if infoEnd:
-				infoEnd = '\nLap End ' + infoEnd
+				infoEnd = _('\nLap End ') + infoEnd
 		
-			info = ('Rider: %s  Lap: %d\nLap Start:  %s Lap End: %s\nLap Time: %s\n%s%s%s%s' %
-					(riderName, self.entryEnd.lap,
+			info = (_('Rider: {}  Lap: {}\nLap Start:  {} Lap End: {}\nLap Time: {}\n{}{}{}{}').format(
+					riderName, self.entryEnd.lap,
 					Utils.formatTime(tLapStart),
 					Utils.formatTime(tLapEnd),
 					Utils.formatTime(tLapEnd - tLapStart),
 					infoDownStart, infoDownEnd, infoStart, infoEnd )).strip()
 					
-		Utils.MessageOK( self, info, 'Lap Details' )
+		Utils.MessageOK( self, info, _('Lap Details') )
 		
 	def OnPopupResults( self, event ):
 		if Utils.isMainWin():
-			Utils.getMainWin().showPageName( 'Results' )
+			Utils.getMainWin().showPageName( _('Results') )
 			
 	def OnPopupRiderDetail( self, event ):
 		from RiderDetail import ShowRiderDetailDialog
@@ -388,7 +388,7 @@ class Gantt( wx.Panel ):
 				projected	+= sum( 1 for i, n in enumerate(r.interp)	if n and i < len(r.raceTimes) and r.raceTimes[i] < tCur )
 			if total:
 				toPercent = 100.0 / float(total)
-				s = '  Total Entries: %d    Projected: %d (%.2f%%)    Edited: %d (%.2f%%)    Projected or Edited: %d (%.2f%%)    Photos: %d' % (
+				s = _('  Total Entries: {}    Projected: {} ({:.2f}%)    Edited: {} ({:.2f}%)    Projected or Edited: {} ({:.2f}%)    Photos: %d').format(
 						total,
 						projected,			projected			* toPercent,
 						edited,				edited				* toPercent,
@@ -407,19 +407,19 @@ class Gantt( wx.Panel ):
 		category = FixCategories( self.categoryChoice, getattr(Model.race, 'ganttCategory', 0) )
 		results = GetResults( category, True )
 		
-		#labels	= [str(r.num) for r in results]
+		#labels	= ['{}'.format(r.num) for r in results]
 		labels = []
 		for r in results:
 			last = getattr(r, 'LastName', None)
 			first = getattr(r, 'FirstName', None)
 			if last and first:
-				labels.append( '%s, %s %d' % (last, first, r.num) )
+				labels.append( u'{}, {} {}'.format(last, first, r.num) )
 			elif first:
-				labels.append( '%s %d' % (first, r.num) )
+				labels.append( u'{} {}'.format(first, r.num) )
 			elif last:
-				labels.append( '%s %d' % (last, r.num) )
+				labels.append( u'{} {}'.format(last, r.num) )
 			else:
-				labels.append( str(r.num) )
+				labels.append( u'{}'.format(r.num) )
 			
 		data	= [r.raceTimes for r in results]
 		interp	= [r.interp for r in results]

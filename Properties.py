@@ -17,101 +17,101 @@ class Properties( wx.Panel ):
 
 		rows = 0
 		
-		self.raceNameLabel = wx.StaticText( self, wx.ID_ANY, 'Race Name:' )
+		self.raceNameLabel = wx.StaticText( self, wx.ID_ANY, _('Race Name:') )
 		self.raceName = wx.TextCtrl( self, wx.ID_ANY, value='' )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceName )
 		rows += 1
 		
-		self.dateLabel = wx.StaticText( self, wx.ID_ANY, 'Date:' )
+		self.dateLabel = wx.StaticText( self, wx.ID_ANY, _('Date:') )
 		self.date = wx.DatePickerCtrl( self, wx.ID_ANY, style = wx.DP_DROPDOWN )
 		self.Bind(wx.EVT_DATE_CHANGED, self.onChanged, self.date)
 		rows += 1
 		
-		self.raceNumLabel = wx.StaticText( self, wx.ID_ANY, 'Race #:' )
+		self.raceNumLabel = wx.StaticText( self, wx.ID_ANY, _('Race #:') )
 		self.raceNum = intctrl.IntCtrl( self, wx.ID_ANY, min=1, max=1000, allow_none=False, value=1 )
 		self.Bind(intctrl.EVT_INT, self.onChanged, self.raceNum)
 		rows += 1
 		
-		self.scheduledStartLabel = wx.StaticText( self, wx.ID_ANY, 'Scheduled Start:' )
+		self.scheduledStartLabel = wx.StaticText( self, wx.ID_ANY, _('Scheduled Start:') )
 		self.scheduledStart = masked.TimeCtrl( self, wx.ID_ANY, fmt24hr=True, display_seconds=False, value='10:00:00' )
 		rows += 1
 
-		self.minutesLabel = wx.StaticText( self, wx.ID_ANY, 'Race Minutes:' )
+		self.minutesLabel = wx.StaticText( self, wx.ID_ANY, _('Race Minutes:') )
 		self.minutes = intctrl.IntCtrl( self, wx.ID_ANY, min=1, max=60*12, allow_none=False, value=40 )
 		rows += 1
 
-		self.raceDisciplineLabel = wx.StaticText( self, wx.ID_ANY, 'Discipline:' )
+		self.raceDisciplineLabel = wx.StaticText( self, wx.ID_ANY, _('Discipline:') )
 		self.raceDiscipline = wx.TextCtrl( self, wx.ID_ANY, value='' )
 		self.raceDiscipline.SetValue( 'Cyclo-cross' )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceDiscipline )
 		rows += 1
 		
-		self.organizerLabel = wx.StaticText( self, wx.ID_ANY, 'Organizer:' )
+		self.organizerLabel = wx.StaticText( self, wx.ID_ANY, _('Organizer:') )
 		self.organizer = wx.TextCtrl( self, wx.ID_ANY, value='' )
 		rows += 1
 		
-		self.commissaireLabel = wx.StaticText( self, wx.ID_ANY, 'Commissaire:' )
+		self.commissaireLabel = wx.StaticText( self, wx.ID_ANY, _('Commissaire:') )
 		self.commissaire = wx.TextCtrl( self, wx.ID_ANY, value='' )
 		rows += 1
 		
-		self.memoLabel = wx.StaticText( self, wx.ID_ANY, 'Memo:' )
+		self.memoLabel = wx.StaticText( self, wx.ID_ANY, _('Memo:') )
 		self.memo = wx.TextCtrl( self, wx.ID_ANY, value='' )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.memo )
 		rows += 1
 		
-		self.allCategoriesFinishAfterFastestRidersLastLapLabel = wx.StaticText( self, wx.ID_ANY, "All Categories Finish After Fastest Rider's Last Lap:" )
+		self.allCategoriesFinishAfterFastestRidersLastLapLabel = wx.StaticText( self, wx.ID_ANY, _("All Categories Finish After Fastest Rider's Last Lap:") )
 		self.allCategoriesFinishAfterFastestRidersLastLap = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
 		self.allCategoriesFinishAfterFastestRidersLastLap.SetValue( True )
 		rows += 1
 		
-		self.timeTrialLabel = wx.StaticText( self, wx.ID_ANY, 'Time Trial:' )
+		self.timeTrialLabel = wx.StaticText( self, wx.ID_ANY, _('Time Trial:') )
 		self.timeTrial = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
 		rows += 1
 		
-		self.distanceUnitLabel = wx.StaticText( self, wx.ID_ANY, 'Distance Unit: ' )
+		self.distanceUnitLabel = wx.StaticText( self, wx.ID_ANY, _('Distance Unit: ') )
 		self.distanceUnit = wx.Choice( self, wx.ID_ANY, choices=['km', 'miles'] )
 		self.distanceUnit.SetSelection( 0 )
 		rows += 1
 
-		self.highPrecisionTimesLabel = wx.StaticText( self, wx.ID_ANY, 'Show Times to 100s of a Second: ' )
+		self.highPrecisionTimesLabel = wx.StaticText( self, wx.ID_ANY, _('Show Times to 100s of a Second: ') )
 		self.highPrecisionTimes = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
 		rows += 1
 
-		self.enableUSBCameraLabel = wx.StaticText( self, wx.ID_ANY, 'Enable USB Camera Photo Finish: ' )
+		self.enableUSBCameraLabel = wx.StaticText( self, wx.ID_ANY, _('Enable USB Camera Photo Finish: ') )
 		self.enableUSBCamera = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
 		rows += 1
 
-		self.jchipLabel = wx.StaticText( self, wx.ID_ANY, 'JChip Integration: ' )
+		self.jchipLabel = wx.StaticText( self, wx.ID_ANY, _('JChip Integration: ') )
 		self.jchip = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
 		#self.Bind( wx.EVT_CHECKBOX, self.onJChipIntegration, self.jchip )
 		rows += 1
 
-		self.autocorrectLapsDefaultLabel = wx.StaticText( self, wx.ID_ANY, 'Set "Autocorrect Lap Data" option by Default: ' )
+		self.autocorrectLapsDefaultLabel = wx.StaticText( self, wx.ID_ANY, _('Set "Autocorrect Lap Data" option by Default: ') )
 		self.autocorrectLapsDefault = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
 		self.autocorrectLapsDefault.SetValue( True )
 		rows += 1
 
-		self.finishTopLabel = wx.StaticText( self, wx.ID_ANY, 'Animation Finish on Top: ' )
+		self.finishTopLabel = wx.StaticText( self, wx.ID_ANY, _('Animation Finish on Top: ') )
 		self.finishTop = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
 		rows += 1
 
-		self.reverseDirectionLabel = wx.StaticText( self, wx.ID_ANY, 'Animation Reverse Direction: ' )
+		self.reverseDirectionLabel = wx.StaticText( self, wx.ID_ANY, _('Animation Reverse Direction: ') )
 		self.reverseDirection = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
 		rows += 1
 
-		self.notesLabel = wx.StaticText( self, wx.ID_ANY, 'Notes to appear on Html output:\n(Notes using Html tags must start with <html> and end with </html>)' )
+		self.notesLabel = wx.StaticText( self, wx.ID_ANY, _('Notes to appear on Html output:\n(Notes using Html tags must start with <html> and end with </html>)') )
 		self.notes = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB )
 		rows += 1
 
-		self.fileNameLabel = wx.StaticText( self, wx.ID_ANY, 'File Name: ' )
+		self.fileNameLabel = wx.StaticText( self, wx.ID_ANY, _('File Name: ') )
 		self.fileName = wx.StaticText( self, wx.ID_ANY, '' )
 		rows += 1
 
-		self.excelLabel = wx.StaticText( self, wx.ID_ANY, 'Excel Sheet: ' )
+		self.excelLabel = wx.StaticText( self, wx.ID_ANY, _('Excel Sheet: ') )
 		self.excelName = wx.StaticText( self, wx.ID_ANY, '' )
 		rows += 1
 
-		self.categoriesFileLabel = wx.StaticText( self, wx.ID_ANY, 'Categories Imported From: ' )
+		self.categoriesFileLabel = wx.StaticText( self, wx.ID_ANY, _('Categories Imported From: ') )
 		self.categoriesFile = wx.StaticText( self, wx.ID_ANY, '' )
 		rows += 1
 
@@ -185,12 +185,12 @@ class Properties( wx.Panel ):
 		if addEditButton:
 			hs = wx.BoxSizer( wx.HORIZONTAL )
 			
-			self.editButton = wx.Button(self, wx.ID_ANY, 'Change Properties...')
+			self.editButton = wx.Button(self, wx.ID_ANY, _('Change Properties...'))
 			self.editButton.Bind( wx.EVT_BUTTON, self.editButtonCallback )
 			hs.Add( self.editButton, border = 8, flag = wx.TOP|wx.BOTTOM )
 			row += 1
 			
-			self.excelButton = wx.Button(self, wx.ID_ANY, 'Link External Excel Sheet...')
+			self.excelButton = wx.Button(self, wx.ID_ANY, _('Link External Excel Sheet...'))
 			self.excelButton.Bind( wx.EVT_BUTTON, self.excelButtonCallback )
 			hs.Add( self.excelButton, border = 8, flag = wx.LEFT|wx.TOP|wx.BOTTOM )
 
@@ -217,7 +217,7 @@ class Properties( wx.Panel ):
 				wx.CallAfter( mainWin.menuNew, event )
 			else:
 				Utils.MessageOK( self,
-					'You must have a valid race File|Open...\nOr create one with File|New....', 'Valid Race Required',
+					_('You must have a valid race File|Open...\nOr create one with File|New....'), _('Valid Race Required'),
 					wx.ICON_WARNING )
 		else:
 			ChangeProperties( self )
@@ -241,7 +241,7 @@ class Properties( wx.Panel ):
 			self.scheduledStart.SetValue( '13:00' )
 			self.minutes.SetValue( 60 )
 		else:
-			sStr = str(self.scheduledStart.GetValue())
+			sStr = '{}'.format(self.scheduledStart.GetValue())
 			fields = sStr.split(':')
 			if len(fields) == 2:
 				mins = int(fields[0],10) * 60 + int(fields[1],10)
@@ -371,21 +371,21 @@ class PropertiesDialog( wx.Dialog ):
 
 		if showFileFields:
 			gs = wx.FlexGridSizer( rows=2, cols=3, vgap = 5, hgap = 5 )
-			gs.Add( wx.StaticText(self, -1, 'Race File Folder:'), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+			gs.Add( wx.StaticText(self, -1, _('Race File Folder:')), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 			self.folder = wx.TextCtrl( self, -1, '', size=(400,-1) )
 			self.folder.SetValue( Utils.getDocumentsDir() )
 			gs.Add( self.folder, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.GROW)
 
-			btn = wx.Button( self, 10, label='Browse...' )
+			btn = wx.Button( self, 10, label=_('Browse...') )
 			btn.Bind( wx.EVT_BUTTON, self.onBrowseFolder )
 			gs.Add( btn, 0, wx.ALIGN_CENTER_VERTICAL )
 			
-			gs.Add( wx.StaticText(self, -1, 'Categories Import File (*.brc):'), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+			gs.Add( wx.StaticText(self, -1, _('Categories Import File (*.brc):')), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 			self.categoriesFile = wx.TextCtrl( self, -1, '', size=(400,-1) )
 			self.categoriesFile.SetValue( Utils.getDocumentsDir() )
 			gs.Add( self.categoriesFile, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.GROW )
 
-			btn = wx.Button( self, 10, label='Browse...' )
+			btn = wx.Button( self, 10, label=_('Browse...') )
 			btn.Bind( wx.EVT_BUTTON, self.onBrowseCategories )
 			gs.Add( btn, 0, wx.ALIGN_CENTER_VERTICAL )
 			
@@ -421,7 +421,7 @@ class PropertiesDialog( wx.Dialog ):
 		if not defaultPath:
 			defaultPath = Utils.getDocumentsDir()
 			
-		dlg = wx.DirDialog( self, "Choose a Folder for the Race",
+		dlg = wx.DirDialog( self, _("Choose a Folder for the Race"),
 							style=wx.DD_DEFAULT_STYLE, defaultPath=defaultPath )
 		if dlg.ShowModal() == wx.ID_OK:
 			self.folder.SetValue( dlg.GetPath() )
@@ -438,10 +438,10 @@ class PropertiesDialog( wx.Dialog ):
 			if not dirName:
 				dirName = self.folder.GetValue()
 		
-		dlg = wx.FileDialog( self, message="Choose Race Categories File",
+		dlg = wx.FileDialog( self, message=_("Choose Race Categories File"),
 							defaultDir=dirName, 
 							defaultFile=fileName,
-							wildcard="Bicycle Race Categories (*.brc)|*.brc",
+							wildcard=_("Bicycle Race Categories (*.brc)|*.brc"),
 							style=wx.OPEN )
 		if dlg.ShowModal() == wx.ID_OK:
 			self.categoriesFile.SetValue( dlg.GetPath() )
@@ -456,7 +456,7 @@ class PropertiesDialog( wx.Dialog ):
 		return categoriesFile if categoriesFile.endswith( '.brc' ) else None
 
 def ChangeProperties( parent ):
-	propertiesDialog = PropertiesDialog( parent, -1, "Change Properties", showFileFields = False, refreshProperties = True, size=(600,400) )
+	propertiesDialog = PropertiesDialog( parent, -1, _("Change Properties"), showFileFields = False, refreshProperties = True, size=(600,400) )
 	propertiesDialog.properties.setEditable( True )
 	try:
 		if propertiesDialog.ShowModal() != wx.ID_OK: raise NameError('User Cancel')
@@ -467,9 +467,9 @@ def ChangeProperties( parent ):
 		newFName = os.path.join( dir, newBaseName )
 		
 		if newFName != mainWin.fileName:
-			if Utils.MessageOKCancel(parent, "The filename will be changed to:\n\n%s\n\nContinue?" % newBaseName, "Change Filename?"):
+			if Utils.MessageOKCancel(parent, _("The filename will be changed to:\n\n{}\n\nContinue?").format(newBaseName), _("Change Filename?")):
 				if os.path.exists(newFName):
-					if not Utils.MessageOKCancel(parent, "This file already exists:\n\n%s\n\nOverwrite?" % newFName, "Overwrite Existing File?"):
+					if not Utils.MessageOKCancel(parent, _("This file already exists:\n\n{}\n\nOverwrite?").format(newFName), _("Overwrite Existing File?")):
 						raise NameError('User Cancel')
 					
 		propertiesDialog.properties.update()
@@ -484,6 +484,7 @@ def ChangeProperties( parent ):
 	propertiesDialog.Destroy()
 		
 if __name__ == '__main__':
+	Utils.initTranslation()
 	race = Model.newRace()
 	race._populate()
 	

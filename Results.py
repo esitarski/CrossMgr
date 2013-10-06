@@ -6,6 +6,7 @@ import re
 import os
 import sys
 import itertools
+from gettext import gettext as _
 from string import Template
 import ColGrid
 from FixCategories import FixCategories, SetCategory
@@ -45,33 +46,33 @@ class Results( wx.Panel ):
 		self.fastestLapRC = None
 
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
-		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, 'Category:' )
+		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, _('Category:') )
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
 		
-		self.showRiderDataToggle = wx.ToggleButton( self, wx.ID_ANY, 'Show Rider Data', style=wx.BU_EXACTFIT )
+		self.showRiderDataToggle = wx.ToggleButton( self, wx.ID_ANY, _('Show Rider Data'), style=wx.BU_EXACTFIT )
 		self.showRiderDataToggle.SetValue( self.showRiderData )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowRiderData, self.showRiderDataToggle )
 		
-		self.showLapTimesRadio = wx.RadioButton( self, wx.ID_ANY, 'Lap Times', style=wx.BU_EXACTFIT|wx.RB_GROUP )
+		self.showLapTimesRadio = wx.RadioButton( self, wx.ID_ANY, _('Lap Times'), style=wx.BU_EXACTFIT|wx.RB_GROUP )
 		self.showLapTimesRadio.SetValue( self.selectDisplay == Results.DisplayLapTimes )
 		self.Bind( wx.EVT_RADIOBUTTON, self.onSelectDisplayOption, self.showLapTimesRadio )
-		self.showLapTimesRadio.SetToolTip(wx.ToolTip('Useful for finding the fastest lap.'))
+		self.showLapTimesRadio.SetToolTip(wx.ToolTip(_('Useful for finding the fastest lap.')))
 		
-		self.showRaceTimesRadio = wx.RadioButton( self, wx.ID_ANY, 'Race Times', style=wx.BU_EXACTFIT )
+		self.showRaceTimesRadio = wx.RadioButton( self, wx.ID_ANY, _('Race Times'), style=wx.BU_EXACTFIT )
 		self.showRaceTimesRadio.SetValue( self.selectDisplay == Results.DisplayRaceTimes )
 		self.Bind( wx.EVT_RADIOBUTTON, self.onSelectDisplayOption, self.showRaceTimesRadio )
-		self.showRaceTimesRadio.SetToolTip(wx.ToolTip('Useful for finding for Prime winners.\nAfter selecting, click on a lap header to sort.'))
+		self.showRaceTimesRadio.SetToolTip(wx.ToolTip(_('Useful for finding for Prime winners.\nAfter selecting, click on a lap header to sort.')))
 		
-		self.showLapSpeedsRadio = wx.RadioButton( self, wx.ID_ANY, 'Lap Speeds', style=wx.BU_EXACTFIT )
+		self.showLapSpeedsRadio = wx.RadioButton( self, wx.ID_ANY, _('Lap Speeds'), style=wx.BU_EXACTFIT )
 		self.showLapSpeedsRadio.SetValue( self.selectDisplay == Results.DisplayLapSpeeds )
 		self.Bind( wx.EVT_RADIOBUTTON, self.onSelectDisplayOption, self.showLapSpeedsRadio )
-		self.showLapSpeedsRadio.SetToolTip(wx.ToolTip('Useful for finding the fastest lap.'))
+		self.showLapSpeedsRadio.SetToolTip(wx.ToolTip(_('Useful for finding the fastest lap.')))
 		
-		self.showRaceSpeedsRadio = wx.RadioButton( self, wx.ID_ANY, 'Race Speeds', style=wx.BU_EXACTFIT )
+		self.showRaceSpeedsRadio = wx.RadioButton( self, wx.ID_ANY, _('Race Speeds'), style=wx.BU_EXACTFIT )
 		self.showRaceSpeedsRadio.SetValue( self.selectDisplay == Results.DisplayRaceSpeeds )
 		self.Bind( wx.EVT_RADIOBUTTON, self.onSelectDisplayOption, self.showRaceSpeedsRadio )
-		self.showRaceSpeedsRadio.SetToolTip(wx.ToolTip("Useful to predict how long a race will take based on rider's average speed."))
+		self.showRaceSpeedsRadio.SetToolTip(wx.ToolTip(_("Useful to predict how long a race will take based on rider's average speed.")))
 		
 		f = self.showLapTimesRadio.GetFont()
 		self.boldFont = wx.Font( f.GetPointSize()+2, f.GetFamily(), f.GetStyle(),
@@ -242,15 +243,15 @@ class Results( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(wx.NewId(), 'History', 	'Switch to History tab', self.OnPopupHistory, allCases),
-				(wx.NewId(), 'RiderDetail',	'Show RiderDetail Dialog', self.OnPopupRiderDetail, allCases),
+				(wx.NewId(), _('History'), 	_('Switch to History tab'), self.OnPopupHistory, allCases),
+				(wx.NewId(), _('RiderDetail'),	_('Show RiderDetail Dialog'), self.OnPopupRiderDetail, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), 'Correct...',	'Change number or lap time...',	self.OnPopupCorrect, interpCase),
-				(wx.NewId(), 'Shift...',	'Move lap time earlier/later...',	self.OnPopupShift, interpCase),
-				(wx.NewId(), 'Delete...',	'Delete lap time...',	self.OnPopupDelete, nonInterpCase),
+				(wx.NewId(), _('Correct...'),	_('Change number or lap time...'),	self.OnPopupCorrect, interpCase),
+				(wx.NewId(), _('Shift...'),	_('Move lap time earlier/later...'),	self.OnPopupShift, interpCase),
+				(wx.NewId(), _('Delete...'),	_('Delete lap time...'),	self.OnPopupDelete, nonInterpCase),
 				(None, None, None, None, None),
-				(wx.NewId(), 'Swap with Rider before',	'Swap with Rider before',	self.OnPopupSwapBefore, allCases),
-				(wx.NewId(), 'Swap with Rider after',	'Swap with Rider after',	self.OnPopupSwapAfter, allCases),
+				(wx.NewId(), _('Swap with Rider before'),	_('Swap with Rider before'),	self.OnPopupSwapBefore, allCases),
+				(wx.NewId(), _('Swap with Rider after'),	_('Swap with Rider after'),	self.OnPopupSwapAfter, allCases),
 			]
 			for p in self.popupInfo:
 				if p[0]:
@@ -338,7 +339,7 @@ class Results( wx.Panel ):
 	
 	def OnPopupHistory( self, event ):
 		if Utils.isMainWin():
-			Utils.getMainWin().showPageName( 'History' )
+			Utils.getMainWin().showPageName( _('History') )
 			
 	def OnPopupRiderDetail( self, event ):
 		ShowRiderDetailDialog( self, self.numSelect )
@@ -447,7 +448,7 @@ class Results( wx.Panel ):
 		self.numSelect = None
 	
 	def setNumSelect( self, num ):
-		self.numSelect = num if num is None else str(num)
+		self.numSelect = num if num is None else '{}'.format(num)
 		if self.numSelect:
 			self.search.SetValue( self.numSelect )
 
@@ -494,7 +495,7 @@ class Results( wx.Panel ):
 		# Fix the speed column.
 		try:
 			speedUnit = None
-			iSpeedCol = (i for i, c in enumerate(exportGrid.colnames) if c == 'Speed').next()
+			iSpeedCol = (i for i, c in enumerate(exportGrid.colnames) if c == _('Speed')).next()
 			for r, d in enumerate(exportGrid.data[iSpeedCol]):
 				if not d:
 					continue
@@ -516,7 +517,7 @@ class Results( wx.Panel ):
 					break
 		elif sortLabel:
 			race.sortLap = sortLap = None
-			if sortLabel not in ['Bib', 'Pos', 'Gap', 'Time', 'mph', 'km/h']:
+			if sortLabel not in [_('Bib'), _('Pos'), _('Gap'), _('Time'), _('mph'), _('km/h')]:
 				for i, name in enumerate(colnames):
 					if name == sortLabel:
 						sortCol = i
@@ -601,14 +602,14 @@ class Results( wx.Panel ):
 				else:
 					getFunc = lambda x: -float(x)
 			else:
-				if colnames[sortCol] in ['Start', 'Finish', 'Time']:
+				if colnames[sortCol] in [_('Start'), _('Finish'), _('Time')]:
 					getFunc = Utils.StrToSeconds
-				elif colnames[sortCol] in ['mph', 'km']:
+				elif colnames[sortCol] in [_('mph'), _('km')]:
 					getFunc = lambda x: -float(x)
-				elif colnames[sortCol] in ['Pos', 'Bib']:
+				elif colnames[sortCol] in [_('Pos'), _('Bib')]:
 					getFunc = lambda x: int(x) if x and x.isdigit() else maxVal
 				else:
-					getFunc = lambda x: str(x)
+					getFunc = lambda x: u'{}'.format(x)
 					maxVal = '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 			sortPairs = []
 			for r, result in enumerate(results):
@@ -626,7 +627,7 @@ class Results( wx.Panel ):
 			if colnames[sortCol] != 'Bib':
 				for r in xrange(len(data[sortCol])):
 					if data[sortCol][r]:
-						data[sortCol][r] += ' [%d: %s]' % (r+1, data[1][r])
+						data[sortCol][r] += u' [{}: {}]'.format(r+1, data[1][r])
 		
 		# Highlight the sorted column.
 		if sortLap:
@@ -635,7 +636,7 @@ class Results( wx.Panel ):
 				try:
 					if int(name.split()[1]) == sortLap:
 						name = '<%s>\n%s' % (name,
-											['by Lap Time', 'by Race Time', 'by Lap Speed', 'by Race Speed'][self.selectDisplay])
+											[_('by Lap Time'), _('by Race Time'), _('by Lap Speed'), _('by Race Speed')][self.selectDisplay])
 				except:
 					pass
 				colnames.append( name )
@@ -649,7 +650,7 @@ class Results( wx.Panel ):
 			colnames = exportGrid.colnames
 		
 		try:
-			iLabelMax = (i for i, name in enumerate(colnames) if name.startswith('Lap') or name.startswith('<Lap')).next()
+			iLabelMax = (i for i, name in enumerate(colnames) if name.startswith(_('Lap')) or name.startswith('<' + _('Lap'))).next()
 		except StopIteration:
 			iLabelMax = len(colnames)
 		colnamesLabels = colnames[:iLabelMax]

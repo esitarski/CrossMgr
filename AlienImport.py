@@ -1,5 +1,6 @@
 import wx
 import math
+import Utils
 import Model
 import JChip
 from ChipImport import ChipImportDialog
@@ -32,7 +33,7 @@ def parseTagTime( line, lineNo, errors ):
 				break
 			
 		if not tag or not tStr:
-			errors.append( 'line %d: unrecognized input' % lineNo )
+			errors.append( _('line {}: unrecognized input').format(lineNo) )
 			return None, None
 			
 		tag = tag.replace( ' ', '' )
@@ -42,7 +43,7 @@ def parseTagTime( line, lineNo, errors ):
 	try:
 		tag, tStr, antenna, readCount = line.split(',')
 	except (IndexError, ValueError):
-		errors.append( 'line %d: unrecognized input' % lineNo )
+		errors.append( _('line {}: unrecognized input').format(lineNo) )
 		return None, None
 	
 	if tag.startswith( 'Tag' ):
@@ -60,7 +61,7 @@ def parseTagTime( line, lineNo, errors ):
 		microsecond = fract * 1000000.0
 		t = combine( JChip.dateToday, datetime.time(hour=int(hour), minute=int(minute), second=int(second), microsecond=int(microsecond)) )
 	except (IndexError, ValueError):
-		errors.append( 'line %d: invalid time: "%s"' % (lineNo, tStrSave) )
+		errors.append( _('line {}: invalid time: "{}"').format(lineNo, tStrSave) )
 		return None, None
 		
 	return tag, t

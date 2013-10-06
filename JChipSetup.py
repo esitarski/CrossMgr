@@ -100,10 +100,10 @@ class JChipSetupDialog( wx.Dialog ):
 		self.testList = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_READONLY|wx.TE_MULTILINE, size=(-1,200) )
 		self.testList.Bind( wx.EVT_RIGHT_DOWN, self.skip )
 		
-		self.okBtn = wx.Button( self, wx.ID_ANY, '&OK' )
+		self.okBtn = wx.Button( self, wx.ID_OK )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
 
-		self.cancelBtn = wx.Button( self, wx.ID_ANY, '&Cancel' )
+		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
 		self.helpBtn = wx.Button( self, wx.ID_ANY, '&Help' )
@@ -295,22 +295,22 @@ class JChipSetupDialog( wx.Dialog ):
 				else:
 					ts = ts[:-2]
 				try:
-					num = str(Model.race.tagNums[d[1]])
+					num = '{}'.format(Model.race.tagNums[d[1]])
 				except (AttributeError, ValueError, KeyError):
 					num = 'not found'
 				lastTag = d[1]
-				self.appendMsg( '%d: tag=%s, time=%s, Bib=%s' % (self.receivedCount, d[1], ts, num) )
+				self.appendMsg( '{}: tag={}, time={}, Bib={}'.format(self.receivedCount, d[1], ts, num) )
 			elif d[0] == 'connected':
 				self.appendMsg( '*******************************************' )
-				self.appendMsg( '%s: %s' % (d[0], ', '.join('%s' % str(s) for s in d[1:]) ) )
+				self.appendMsg( '{}: {}'.format(d[0], ', '.join('{}'.format(s) for s in d[1:]) ) )
 			elif d[0] == 'disconnected':
 				self.appendMsg( d[0] )
 				self.appendMsg( '' )
-				self.appendMsg( 'listening for JChip connection...' )
+				self.appendMsg( _('listening for JChip connection...') )
 			elif d[0] == 'name':
-				self.appendMsg( 'receiver name: %s' % d[1] )
+				self.appendMsg( _('receiver name: {}').format(d[1]) )
 			else:
-				self.appendMsg( '%s: %s' % (d[0], ', '.join('<<%s>>' % str(s) for s in d[1:]) ) )
+				self.appendMsg( '{}: {}'.format(d[0], ', '.join('<<{}>>'.format(s) for s in d[1:]) ) )
 		if data:
 			self.testList.SetInsertionPointEnd()
 		self.timer.Restart( 1000, 'restarted' )

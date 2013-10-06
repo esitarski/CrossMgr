@@ -48,8 +48,8 @@ class CategoriesPrintout( wx.Printout ):
 		except:
 			externalInfo = {}
 		
-		title = '\n'.join( ['Categories', race.name, race.scheduledStart + ' Start on ' + Utils.formatDate(race.date)] )
-		colnames = ['Start Time', 'Category', 'Gender', 'Numbers', 'Laps', 'Distance', 'Starters']
+		title = '\n'.join( [_('Categories'), race.name, race.scheduledStart + _(' Start on ') + Utils.formatDate(race.date)] )
+		colnames = [_('Start Time'), _('Category'), _('Gender'), _('Numbers'), _('Laps'), _('Distance'), _('Starters')]
 		
 		raceStart = Utils.StrToSeconds( race.scheduledStart + ':00' )
 		catData = []
@@ -74,9 +74,9 @@ class CategoriesPrintout( wx.Printout ):
 				c.name,
 				catInfo.get('gender', 'Open'),
 				c.catStr,
-				str(laps),
+				'{}'.format(laps),
 				' '.join([raceDistance, race.distanceUnitStr]) if raceDistance else '',
-				str(starters)
+				'{}'.format(starters)
 			])
 			
 		catData.sort( key = lambda d: (Utils.StrToSeconds(d[0]), d[1]) )
@@ -210,18 +210,18 @@ class Categories( wx.Panel ):
 		
 		self.grid = gridlib.Grid( self )
 		self.colNameFields = [
-			('Active',				'active'),
-			('Name',				'name'),
-			('Gender',				'gender'),
-			('Numbers',				'catStr'),
-			('Start Offset',		'startOffset'),
-			('Race Laps',			'numLaps'),
-			('Lapped Riders\nContinue',	'lappedRidersMustContinue'),
-			('Distance',			'distance'),
-			('Distance\nBy',		'distanceType'),
-			('First Lap\nDistance',	'firstLapDistance'),
-			('80%\nLap Time',		'rule80Time'),
-			('Suggested\nLaps',		'suggestedLaps'),
+			(_('Active'),				'active'),
+			(_('Name'),					'name'),
+			(_('Gender'),				'gender'),
+			(_('Numbers'),				'catStr'),
+			(_('Start Offset'),			'startOffset'),
+			(_('Race Laps'),			'numLaps'),
+			(_('Lapped Riders\nContinue'),	'lappedRidersMustContinue'),
+			(_('Distance'),				'distance'),
+			(_('Distance\nBy'),			'distanceType'),
+			(_('First Lap\nDistance'),	'firstLapDistance'),
+			(_('80%\nLap Time'),		'rule80Time'),
+			(_('Suggested\nLaps'),		'suggestedLaps'),
 		]
 		self.computedFieldss = {'rule80Time', 'suggestedLaps'}
 		colnames = [colName for colName, fieldName in self.colNameFields]
@@ -252,7 +252,7 @@ class Categories( wx.Panel ):
 				self.boolCols.add( col )
 				
 			elif fieldName == 'gender':
-				attr.SetEditor( gridlib.GridCellChoiceEditor(['Open','Men','Women'], False) )
+				attr.SetEditor( gridlib.GridCellChoiceEditor([_('Open'),_('Men'),_('Women')], False) )
 				self.choiceCols.add( col )
 				
 			elif fieldName == 'startOffset':
@@ -295,7 +295,7 @@ class Categories( wx.Panel ):
 		if not mainWin or not race:
 			return
 			
-		colnames = ['Name', 'Gender', 'Numbers', 'Start Offset', 'Laps', 'Distance']
+		colnames = [_('Name'), _('Gender'), _('Numbers'), _('Start Offset'), _('Laps'), _('Distance')]
 		data = [[]] * len(colnames)
 		
 		pdd = wx.PrintDialogData(mainWin.printData)
@@ -310,7 +310,7 @@ class Categories( wx.Panel ):
 
 		if not printer.Print(self, printout, True):
 			if printer.GetLastError() == wx.PRINTER_ERROR:
-				Utils.MessageOK(self, "There was a printer problem.\nCheck your printer setup.", "Printer Error",iconMask=wx.ICON_ERROR)
+				Utils.MessageOK(self, _("There was a printer problem.\nCheck your printer setup."), _("Printer Error"), iconMask=wx.ICON_ERROR)
 		else:
 			mainWin.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
 
@@ -338,7 +338,7 @@ class Categories( wx.Panel ):
 				
 		r = self.grid.GetGridCursorRow()
 		if r is None or r < 0:
-			Utils.MessageOK( self, 'You must select a Category first', 'Select a Category' )
+			Utils.MessageOK( self, _('You must select a Category first'), _('Select a Category') )
 			return
 		
 		with Model.LockRace() as race:
@@ -346,12 +346,10 @@ class Categories( wx.Panel ):
 			category = categories[r]
 			
 		dlg = wx.TextEntryDialog( self,
-									'\n'.join([
-										'%s: Add Bib Exceptions (comma separated).',
-										'',
-										'This will add the given list of Bibs to this category,',
-										'and remove them from other categories.']) % category.name,
-									'Add Bib Exceptions' )
+									_('''{}: Add Bib Exceptions (comma separated).
+This will add the given list of Bibs to this category,
+and remove them from other categories.''').format(category.name),
+									_('Add Bib Exceptions') )
 		good = (dlg.ShowModal() == wx.ID_OK)
 		if good:
 			response = dlg.GetValue()
@@ -381,7 +379,7 @@ class Categories( wx.Panel ):
 		self.grid.SetCellValue( r, self.iCol['gender'], gender if gender in ['Men', 'Women'] else 'Open' )
 		self.grid.SetCellValue( r, self.iCol['catStr'], catStr )
 		self.grid.SetCellValue( r, self.iCol['startOffset'], startOffset )
-		self.grid.SetCellValue( r, self.iCol['numLaps'], str(numLaps) if numLaps else '' )
+		self.grid.SetCellValue( r, self.iCol['numLaps'], '{}'.format(numLaps) if numLaps else '' )
 		self.grid.SetCellValue( r, self.iCol['lappedRidersMustContinue'], '1' if lappedRidersMustContinue else '0' )
 		self.grid.SetCellValue( r, self.iCol['rule80Time'], '' )
 		self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '' )
@@ -404,7 +402,7 @@ class Categories( wx.Panel ):
 		
 		laps = race.getCategoryRaceLaps().get(category, 0)
 		if laps:
-			self.grid.SetCellValue( r, self.iCol['suggestedLaps'], str(laps) )
+			self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '{}'.format(laps) )
 		
 	def onNewCategory( self, event ):
 		self.grid.AppendRows( 1 )
@@ -415,8 +413,8 @@ class Categories( wx.Panel ):
 		r = self.grid.GetGridCursorRow()
 		if r is None or r < 0:
 			return
-		if Utils.MessageOKCancel(self,	'Delete Category "%s"?' % self.grid.GetCellValue(r, 1).strip(),
-										'Delete Category' ):
+		if Utils.MessageOKCancel(self,	_('Delete Category "{}"?').format(self.grid.GetCellValue(r, 1).strip()),
+										_('Delete Category') ):
 			self.grid.DeleteRows( r, 1, True )
 		
 	def onUpCategory( self, event ):
@@ -445,7 +443,7 @@ class Categories( wx.Panel ):
 			
 			for c in xrange(self.grid.GetNumberCols()):
 				if self.grid.GetColLabelValue(c).startswith('Distance'):
-					self.grid.SetColLabelValue( c, 'Distance\n(%s)' % ['km', 'miles'][getattr(race, 'distanceUnit', 0)] )
+					self.grid.SetColLabelValue( c, _('Distance\n({})').format(['km', 'miles'][getattr(race, 'distanceUnit', 0)]) )
 					break
 			
 			categories = race.getAllCategories()

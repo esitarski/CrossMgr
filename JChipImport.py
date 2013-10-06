@@ -9,13 +9,13 @@ def parseTagTime( line, lineNo, errors ):
 		tag = fields[0][1:]
 		tStr = fields[1]
 	except IndexError:
-		errors.append( 'line %d: unrecognized input' % lineNo )
+		errors.append( 'line {}: unrecognized input'.format(lineNo) )
 		return None, None
 	
 	try:
 		t = JChip.parseTime(tStr)
 	except (IndexError, ValueError):
-		errors.append( 'line %d: invalid time: "%s"' % (lineNo, tStr) )
+		errors.append( 'line {}: invalid time: "{}"'.format(lineNo, tStr) )
 		return None, None
 		
 	return tag, t

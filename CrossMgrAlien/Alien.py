@@ -307,7 +307,7 @@ class Alien( object ):
 			self.messageQ.put( ('Alien', 'state', True) )
 			
 			self.tagCount = 0
-			self.messageQ.put( ('Alien', 'Listening for Alien reader data on (%s:%s)...' % (str(self.notifyHost), str(self.notifyPort))) )
+			self.messageQ.put( ('Alien', 'Listening for Alien reader data on ({}:{})...'.format(self.notifyHost, self.notifyPort)) )
 			dataSocket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 			dataSocket.setsockopt( socket.SOL_SOCKET, socket.SO_REUSEADDR, 1 )
 			dataSocket.bind( (self.notifyHost, self.notifyPort) )

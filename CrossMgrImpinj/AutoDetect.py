@@ -14,7 +14,7 @@ def findImpinjHost( impinjPort ):
 		if not (0 <= ipTest[-1] < 256):
 			continue
 			
-		impinjHost = '.'.join( str(v) for v in ipTest )
+		impinjHost = '.'.join( '{}'.format(v) for v in ipTest )
 		
 		readerSocket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 		readerSocket.settimeout( 0.5 )

@@ -7,8 +7,8 @@ import sys
 import datetime
 import random
 from operator import itemgetter, attrgetter
-from GanttChart import makePastelColours, makeColourGradient
 import Utils
+from GanttChart import makePastelColours, makeColourGradient
 
 shapes = [ [(math.cos(a), -math.sin(a)) \
 					for a in (q*(2.0*math.pi/i)+math.pi/2.0+(2.0*math.pi/(i*2.0) if i % 2 == 0 else 0)\
@@ -496,7 +496,7 @@ class Animation(wx.PyControl):
 					else:
 						i = None
 				DrawShape( dc, num, x, y, riderRadius )
-				dc.DrawLabel(str(num), wx.Rect(x+numSize, y-numSize, numSize*2, numSize*2) )
+				dc.DrawLabel('{}'.format(num), wx.Rect(x+numSize, y-numSize, numSize*2, numSize*2) )
 				if i is not None:
 					dc.SetPen( wx.BLACK_PEN )
 					dc.SetFont( self.numberFont )
@@ -516,8 +516,9 @@ class Animation(wx.PyControl):
 				maxLaps = len(leaderRaceTimes) - 1
 				self.iLapDistance, lapRatio = GetLapRatio( leaderRaceTimes, self.t, self.iLapDistance )
 				lapRatio = int(lapRatio * 10.0) / 10.0		# Always round down, not to nearest decimal.
-				tLap = '%05.1f Laps of %d,%05.1f Laps to go' % (self.iLapDistance + lapRatio, maxLaps,
-															maxLaps - self.iLapDistance - lapRatio)
+				tLap = _('{:05.1f} Laps of {},{:05.1f} Laps to go').format(	self.iLapDistance + lapRatio,
+																			maxLaps,
+																			maxLaps - self.iLapDistance - lapRatio )
 				cat = self.categoryDetails.get( self.data[leaders[0]].get('raceCat', None) )
 				if cat:
 					distanceCur, distanceRace = None, None
@@ -538,9 +539,12 @@ class Animation(wx.PyControl):
 					if distanceCur is not None:
 						if distanceCur != distanceRace:
 							distanceCur = int( distanceCur * 10.0 ) / 10.0
-						tDistance = '%05.1f %s of %.1f,%05.2f %s to go' % (
-							distanceCur, self.units, distanceRace,
-							distanceRace - distanceCur, self.units)
+						tDistance = _('{:05.1f} {} of {:.1f},{:05.2f} {} to go').format(
+											distanceCur,
+											self.units,
+											distanceRace,
+											distanceRace - distanceCur,
+											self.units )
 			
 			tWidth, tHeight = dc.GetTextExtent( '999' )
 			xRight  = 3*r + r/7
@@ -601,7 +605,7 @@ class Animation(wx.PyControl):
 			rp.sort()
 			
 			colCount = 0
-			tWidth, tHeight = dc.GetTextExtent( 'Leaders:' )
+			tWidth, tHeight = dc.GetTextExtent( _('Leaders:') )
 			spaceWidth, spaceHeight = dc.GetTextExtent(' ')
 			x = xLeft + leaderWidth + spaceWidth
 			yTop = r / 2 + laneWidth * 1.5+ tHeight

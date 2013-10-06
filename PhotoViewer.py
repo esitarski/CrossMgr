@@ -165,23 +165,23 @@ class PhotoViewerDialog( wx.Dialog ):
 		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'Refresh.png'), wx.BITMAP_TYPE_PNG )
 		self.refreshID = wx.NewId()
-		self.toolbar.AddSimpleTool( self.refreshID, bitmap, 'Refresh Photos' )
+		self.toolbar.AddSimpleTool( self.refreshID, bitmap, _('Refresh Photos') )
 		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'ClipboardPlus.png'), wx.BITMAP_TYPE_PNG )
 		self.copyToClipboardID = wx.NewId()
-		self.toolbar.AddSimpleTool( self.copyToClipboardID, bitmap, 'Copy Photo to Clipboard...' )
+		self.toolbar.AddSimpleTool( self.copyToClipboardID, bitmap, _('Copy Photo to Clipboard...') )
 		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'FileBrowser.png'), wx.BITMAP_TYPE_PNG )
 		self.showFilesID = wx.NewId()
-		self.toolbar.AddSimpleTool( self.showFilesID, bitmap, 'Show Files...' )
+		self.toolbar.AddSimpleTool( self.showFilesID, bitmap, _('Show Files...') )
 		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'FTP.png'), wx.BITMAP_TYPE_PNG )
 		self.ftpID = wx.NewId()
-		self.toolbar.AddSimpleTool( self.ftpID, bitmap, 'Upload Photo with FTP...' )
+		self.toolbar.AddSimpleTool( self.ftpID, bitmap, _('Upload Photo with FTP...') )
 		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'Printer.png'), wx.BITMAP_TYPE_PNG )
 		self.printID = wx.NewId()
-		self.toolbar.AddSimpleTool( self.printID, bitmap, 'Print Photo...' )
+		self.toolbar.AddSimpleTool( self.printID, bitmap, _('Print Photo...') )
 		
 		#self.closeButton = wx.Button( self, wx.ID_CANCEL, 'Close' )
 		#self.Bind(wx.EVT_BUTTON, self.OnClose, self.closeButton )
@@ -201,7 +201,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.splitter.SplitVertically( self.thumbs, self.mainPhoto, 140 )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		self.advancePhotoLabel = wx.StaticText( self, wx.ID_ANY, 'Photo Milliseconds Advance/Delay:' )
+		self.advancePhotoLabel = wx.StaticText( self, wx.ID_ANY, _('Photo Milliseconds Advance/Delay:') )
 		self.advancePhoto = wx.Slider( self, wx.ID_ANY, minValue = -1000, maxValue = 1000, value = 0,
 			style = wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS )
 		self.advancePhoto.SetTickFreq( 100, 1 )
@@ -260,9 +260,9 @@ class PhotoViewerDialog( wx.Dialog ):
 			wx.TheClipboard.SetData( d ) 
 			wx.TheClipboard.Flush() 
 			wx.TheClipboard.Close() 
-			Utils.MessageOK( self, 'Photo Copied to Clipboard.\nYou can now Paste it into another program.', 'Copy Succeeded' )
+			Utils.MessageOK( self, _('Photo Copied to Clipboard.\nYou can now Paste it into another program.'), _('Copy Succeeded') )
 		else: 
-			Utils.MessageOK( self, 'Unable to Copy Photo to Clipboard.', 'Copy Failed', iconMask = wx.ICON_ERROR )
+			Utils.MessageOK( self, _('Unable to Copy Photo to Clipboard.'), _('Copy Failed'), iconMask = wx.ICON_ERROR )
 	
 	def OnLauchFileBrowser( self, event ):
 		if Utils.mainWin and Utils.mainWin.fileName:
@@ -273,7 +273,7 @@ class PhotoViewerDialog( wx.Dialog ):
 	
 	def OnFTPUpload( self, event ):
 		if not Model.race or not getattr(Model.race, 'ftpHost', None) or getattr(Model.race, 'ftpPhotoPath', None) is None:
-			Utils.MessageOK( self, 'FTP Upload Photo Path Not Configured.', 'FTP Publish Failed', iconMask = wx.ICON_ERROR )
+			Utils.MessageOK( self, _('FTP Upload Photo Path Not Configured.'), _('FTP Publish Failed'), iconMask = wx.ICON_ERROR )
 			return
 			
 		# Run the upload in the background so we don't hang the UI.
@@ -286,7 +286,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		try:
 			bitmap = wx.Bitmap( self.thumbFileName, wx.BITMAP_TYPE_JPEG )
 		except:
-			Utils.MessageOK( self, 'No Photo Available.', 'Print Failed', iconMask = wx.ICON_ERROR )
+			Utils.MessageOK( self, _('No Photo Available.'), _('Print Failed'), iconMask = wx.ICON_ERROR )
 			return
 		
 		if Utils.mainWin:
@@ -307,7 +307,7 @@ class PhotoViewerDialog( wx.Dialog ):
 
 		if not printer.Print(self, printout, True):
 			if printer.GetLastError() == wx.PRINTER_ERROR:
-				Utils.MessageOK(self, "There was a printer problem.\nCheck your printer setup.", "Printer Error",iconMask=wx.ICON_ERROR)
+				Utils.MessageOK(self, _("There was a printer problem.\nCheck your printer setup."), _("Printer Error"), iconMask=wx.ICON_ERROR)
 		else:
 			self.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
 
@@ -339,7 +339,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		if num:
 			name = getRiderNameFromFName( self.thumbFileName )
 			numPhotos = self.thumbs.GetItemCount()
-			name = ('%s  (%d rider photos)' if self.num != self.ShowAllPhotos else '%s  (last %d race photos)') % (name, numPhotos)
+			name = (_('{}  ({} rider photos)') if self.num != self.ShowAllPhotos else _('{}  (last {} race photos)')).format(name, numPhotos)
 			self.title.SetLabel( '%d  %s' % (num, name) )
 		
 		try:
@@ -447,6 +447,8 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.OnSelChanged()
 	
 if __name__ == '__main__':
+	Utils.initTranslation()
+	
 	race = Model.newRace()
 	race._populate()
 

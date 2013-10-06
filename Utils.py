@@ -28,6 +28,19 @@ except:
 else:
 	isWindows = True
 
+import locale
+locale.setlocale(locale.LC_ALL, '')
+
+import gettext
+initTranslationCalled = False
+def initTranslation():
+	global initTranslationCalled
+	if not initTranslationCalled:
+		gettext.install('CrossMgr', './locale', unicode=True)
+		initTranslationCalled = True
+		
+initTranslation()
+	
 def HighPriority():
 	""" Set the priority of the process to the highest level."""
 	if isWindows:
@@ -42,6 +55,14 @@ def HighPriority():
 
 def stripLeadingZeros( s ):
 	return s.lstrip('0')
+	
+def toAscii( s ):
+	if s is None or s == '':
+		return ''
+	ret = unicodedata.normalize('NFKD', s).encode('ascii','ignore') if type(s) == unicode else str(s)
+	if ret.endswith( '.0' ):
+		ret = ret[:-2]
+	return ret
 
 validFilenameChars = set( c for c in ("-_.() %s%s" % (string.ascii_letters, string.digits)) )
 def RemoveDisallowedFilenameChars( filename ):
@@ -49,16 +70,6 @@ def RemoveDisallowedFilenameChars( filename ):
 	cleanedFilename = cleanedFilename.replace( '/', '_' )
 	return ''.join(c for c in cleanedFilename if c in validFilenameChars)
 
-def ordinal( value ):
-	try:
-		value = int(value)
-	except ValueError:
-		return value
-
-	if (value % 100)//10 != 1:
-		return "%d%s" % (value, ['th','st','nd','rd','th','th','th','th','th','th'][value%10])
-	return "%d%s" % (value, "th")
-	
 def removeDiacritic(input):
 	'''
 	Accept a unicode string, and return a normal string (bytes in Python 3)
@@ -281,7 +292,7 @@ def ordinal( value ):
 	if (value % 100)//10 != 1:
 		return "%d%s" % (value, ['th','st','nd','rd','th','th','th','th','th','th'][value%10])
 	return "%d%s" % (value, "th")
-	
+
 def getHomeDir():
 	sp = wx.StandardPaths.Get()
 	homedir = sp.GetUserDataDir()
@@ -360,7 +371,7 @@ def writeLog( message ):
 	try:
 		dt = datetime.datetime.now()
 		dt = dt.replace( microsecond = 0 )
-		sys.stdout.write( '%s %s%s' % (dt.isoformat(), message, '\n' if not message or message[-1] != '\n' else '' ) )
+		sys.stdout.write( '{} {}{}'.format(dt.isoformat(), message, '\n' if not message or message[-1] != '\n' else '' ) )
 		sys.stdout.flush()
 	except IOError:
 		pass
@@ -375,7 +386,7 @@ def disable_stdout_buffering():
 		
 def logCall( f ):
 	def new_f( *args, **kwargs ):
-		writeLog( 'call: %s' % f.__name__ )
+		writeLog( 'call: {}'.format(f.__name__) )
 		return f( *args, **kwargs)
 	return new_f
 	
@@ -476,6 +487,7 @@ def ValidFilename( fname ):
 	return ''.join( c for c in fname if c not in invalidFNameChars and ord(c) > 31 )
 
 if __name__ == '__main__':
+	initTranslation()
 	app = wx.PySimpleApp()
 	
 	disable_stdout_buffering()

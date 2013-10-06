@@ -169,7 +169,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				connCur.setblocking( 0 )
 				inputs.append( connCur )
 				readStr, writeStr = '', ''
-				q.put( ('connection', 'established %s' % str(addr) ) )
+				q.put( ('connection', 'established {}'.format(addr) ) )
 				continue
 			
 			# This socket is a data socket.  Get the data.
@@ -373,6 +373,6 @@ if __name__ == '__main__':
 			elif m[0] == 'disconnected':
 				print( 'disconnected' )
 			else:
-				print( 'other: %s, %s' % (m[0], ', '.join('"%s"' % str(s) for s in m[1:])) )
+				print( 'other: %s, %s' % (m[0], ', '.join('"%s"' % '{}'.format(s) for s in m[1:])) )
 		sys.stdout.flush()
 		

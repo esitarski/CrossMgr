@@ -55,7 +55,7 @@ def USACExport( sheet ):
 		for rr in results:
 			maxLaps = max( maxLaps, rr.laps )
 	if maxLaps == 1 or maxLaps > 99:
-		maxLaps == 0
+		maxLaps = 0
 	
 	lapTimeStartCol = (2 if hasDistance else 0) + lenUSACFields
 	
@@ -109,8 +109,8 @@ def USACExport( sheet ):
 				}[field]()
 			
 			if hasDistance:
-				sheetFit.write( row, lenUSACFields  , raceDistance, rightAlignStyle ),
-				sheetFit.write( row, lenUSACFields+1, raceDistanceType, rightAlignStyle ),
+				sheetFit.write( row, lenUSACFields  , raceDistance, rightAlignStyle )
+				sheetFit.write( row, lenUSACFields+1, raceDistanceType, rightAlignStyle )
 
 			if maxLaps:
 				for i, lapTime in enumerate(rr.lapTimes):

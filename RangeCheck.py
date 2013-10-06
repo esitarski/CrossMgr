@@ -53,7 +53,7 @@ class RangeCheck( object ):
 		nLen = None
 		prefix = None
 		for n in self.include:
-			s = str(n)
+			s = '{}'.format(n)
 			if prefix is None:					# Initialize the starting prefix.
 				prefix = s
 				nLen = len(s)

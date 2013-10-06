@@ -178,14 +178,14 @@ class LineGraph(wx.PyControl):
 		# Draw the lap labels and vertical lines.
 		dc.SetPen(wx.Pen('light gray', 1))
 		# Find some reasonable tickmarks.
-		numLabels = float(xRight - xLeft) / (dc.GetTextExtent(str(self.seriesMax))[0] * 1.5)
+		numLabels = float(xRight - xLeft) / (dc.GetTextExtent('{}'.format(self.seriesMax))[0] * 1.5)
 		d = self.seriesMax / numLabels
 		intervals = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500]
 		d = intervals[bisect.bisect_left(intervals, d, 0, len(intervals)-1)]
 		for i in xrange(d-1, self.seriesMax, d):
 			x = xLeft + i * thick
 			dc.DrawLine( x, yBottom+2, x, yTop );
-			s = str(i+1)
+			s = '{}'.format(i+1)
 			w, h = dc.GetTextExtent(s)
 			dc.DrawText( s, x - w/2, yBottom + 4)
 			dc.DrawText( s, x - w/2, 0 + 4)

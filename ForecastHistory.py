@@ -1,28 +1,29 @@
-import Model
-from Utils import formatTime, SetLabel
 import wx
 import datetime
 import bisect
+import sys
+import Model
+import Utils
+from Utils import formatTime, SetLabel
+from Utils import logException
 import Utils
 import ColGrid
 import StatusBar
 import OutputStreamer
 import NumKeypad
 import VideoBuffer
-import sys
-from Utils import logException
 from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, DeleteEntry, DoDNS, DoDNF, DoPull
 from FtpWriteFile import realTimeFtpPublish
 
 # Define columns for recorded and expected infomation.
 iNumCol, iNoteCol, iTimeCol, iLapCol, iGapCol, iNameCol, iColMax = range(7)
 colnames = [None] * iColMax
-colnames[iNumCol]  = 'Num'
-colnames[iNoteCol] = 'Note'
-colnames[iLapCol]  = 'Lap'
-colnames[iTimeCol] = 'Time'
-colnames[iGapCol]  = 'Gap'
-colnames[iNameCol] = 'Name'
+colnames[iNumCol]  = _('Num')
+colnames[iNoteCol] = _('Note')
+colnames[iLapCol]  = _('Lap')
+colnames[iTimeCol] = _('Time')
+colnames[iGapCol]  = _('Gap')
+colnames[iNameCol] = _('Name')
 
 fontSize = 14
 
@@ -32,7 +33,7 @@ def GetLabelGrid( parent ):
 	dc.SetFont( font )
 	w, h = dc.GetTextExtent( '999' )
 
-	label = wx.StaticText( parent, wx.ID_ANY, 'Recorded:' )
+	label = wx.StaticText( parent, wx.ID_ANY, _('Recorded:') )
 	
 	grid = ColGrid.ColGrid( parent, colnames = colnames )
 	grid.SetLeftAlignCols( [iNameCol] )
@@ -79,7 +80,7 @@ class ForecastHistory( wx.Panel ):
 		
 		self.lgHistory = LabelGrid( self.splitter, style = wx.BORDER_SUNKEN )
 		self.historyName = self.lgHistory.label
-		self.historyName.SetLabel( 'Recorded:' )
+		self.historyName.SetLabel( _('Recorded:') )
 		self.historyGrid = self.lgHistory.grid
 		self.Bind( wx.grid.EVT_GRID_CELL_LEFT_DCLICK, self.doNumDrilldown, self.historyGrid )
 		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doHistoryPopup, self.historyGrid )
@@ -88,9 +89,9 @@ class ForecastHistory( wx.Panel ):
 		self.expectedName = self.lgExpected.label
 		self.expectedGrid = self.lgExpected.grid
 		self.expectedGrid.SetDoubleBuffered( True )
-		colnames[iTimeCol] = 'ETA'
+		colnames[iTimeCol] = _('ETA')
 		self.expectedGrid.Set( colnames = colnames )
-		self.expectedName.SetLabel( 'Expected:' )
+		self.expectedName.SetLabel( _('Expected:') )
 		self.expectedGrid.SetDefaultCellBackgroundColour( wx.Colour(230,255,255) )
 		self.Bind( wx.grid.EVT_GRID_SELECT_CELL, self.doExpectedSelect, self.expectedGrid )
 		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doExpectedPopup, self.expectedGrid )	
@@ -147,7 +148,7 @@ class ForecastHistory( wx.Panel ):
 		mainWin = Utils.getMainWin()
 		if mainWin:
 			mainWin.setNumSelect( numSelect )
-			mainWin.showPageName( 'RiderDetail' )
+			mainWin.showPageName( _('RiderDetail') )
 	
 	def doHistoryPopup( self, event ):
 		r = event.GetRow()
@@ -163,16 +164,15 @@ class ForecastHistory( wx.Panel ):
 		self.entryCur = self.quickRecorded[r]
 		if not hasattr(self, 'historyPopupInfo'):
 			self.historyPopupInfo = [
-				('Correct...',	wx.NewId(), self.OnPopupHistoryCorrect),
-				('Split...',	wx.NewId(), self.OnPopupHistorySplit),
-				('Shift...',	wx.NewId(), self.OnPopupHistoryShift),
-				('Insert...',	wx.NewId(), self.OnPopupHistoryInsert),
-				('Delete...',	wx.NewId(), self.OnPopupHistoryDelete),
-				(None,			None,		None),
-				('DNF...',		wx.NewId(), self.OnPopupHistoryDNF),
-				(None,			None,		None),
-				('RiderDetail',wx.NewId(),self.OnPopupHistoryRiderDetail),
-
+				(_('Correct...'),	wx.NewId(), self.OnPopupHistoryCorrect),
+				(_('Split...'),		wx.NewId(), self.OnPopupHistorySplit),
+				(_('Shift...'),		wx.NewId(), self.OnPopupHistoryShift),
+				(_('Insert...'),	wx.NewId(), self.OnPopupHistoryInsert),
+				(_('Delete...'),	wx.NewId(), self.OnPopupHistoryDelete),
+				(None,				None,		None),
+				(_('DNF...'),		wx.NewId(), self.OnPopupHistoryDNF),
+				(None,				None,		None),
+				(_('RiderDetail'),	wx.NewId(),self.OnPopupHistoryRiderDetail),
 			]
 			for p in self.historyPopupInfo:
 				if p[2]:
@@ -220,7 +220,7 @@ class ForecastHistory( wx.Panel ):
 			num = self.entryCur.num
 			mainWin = Utils.getMainWin()
 			mainWin.setNumSelect( num )
-			mainWin.showPageName( 'RiderDetail' )
+			mainWin.showPageName( _('RiderDetail') )
 		except:
 			pass
 				
@@ -250,11 +250,11 @@ class ForecastHistory( wx.Panel ):
 		self.entryCur = self.quickRecorded[r]
 		if not hasattr(self, 'expectedPopupInfo'):
 			self.expectedPopupInfo = [
-				('Enter',			wx.NewId(), self.OnPopupExpectedEnter),
-				('DNF...',			wx.NewId(), self.OnPopupExpectedDNF),
-				('Pull...',			wx.NewId(), self.OnPopupExpectedPull),
+				(_('Enter'),		wx.NewId(), self.OnPopupExpectedEnter),
+				(_('DNF...'),		wx.NewId(), self.OnPopupExpectedDNF),
+				(_('Pull...'),		wx.NewId(), self.OnPopupExpectedPull),
 				(None,				None,		None),
-				('RiderDetail',wx.NewId(),	self.OnPopupExpectedRiderDetail),
+				(_('RiderDetail'),	wx.NewId(),	self.OnPopupExpectedRiderDetail),
 			]
 			for p in self.expectedPopupInfo:
 				if p[2]:
@@ -296,7 +296,7 @@ class ForecastHistory( wx.Panel ):
 			num = self.entryCur.num
 			mainWin = Utils.getMainWin()
 			mainWin.setNumSelect( num )
-			mainWin.showPageName( 'RiderDetail' )
+			mainWin.showPageName( _('RiderDetail') )
 		except:
 			pass
 				
@@ -354,7 +354,7 @@ class ForecastHistory( wx.Panel ):
 			return
 		if not tRace:
 			tRace = Model.race.curRaceTime()
-		self.expectedGrid.SetColumn( iTimeCol, [formatTime(max(0.0, e.t - tRace)) if e.lap > 0 else ('[%s]' % formatTime(max(0.0, e.t - tRace + 0.99999999)))\
+		self.expectedGrid.SetColumn( iTimeCol, [formatTime(max(0.0, e.t - tRace)) if e.lap > 0 else ('[{}]'.format(formatTime(max(0.0, e.t - tRace + 0.99999999))))\
 										for e in self.quickExpected] )
 	
 	def refresh( self ):
@@ -457,13 +457,13 @@ class ForecastHistory( wx.Panel ):
 					outsideTimeBound.add( e.num )
 			
 			data = [None] * iColMax
-			data[iNumCol] = [str(e.num) for e in expected]
+			data[iNumCol] = ['{}'.format(e.num) for e in expected]
 			data[iTimeCol] = [formatTime(max(0.0, e.t - tRace)) if e.lap > 0 else ('[%s]' % formatTime(max(0.0, e.t - tRace + 0.99999999)))\
 										for e in expected]
-			data[iLapCol] = [str(e.lap) for e in expected]
+			data[iLapCol] = ['{}'.format(e.lap) for e in expected]
 			def getNoteExpected( e ):
 				if e.lap == 0:
-					return 'Start'
+					return _('Start')
 				try:
 					position = prevRiderPosition.get(e.num, -1) if e.t < catNextTime[race.getCategory(e.num)] else \
 							   nextRiderPosition.get(e.num, -1)
@@ -471,9 +471,9 @@ class ForecastHistory( wx.Panel ):
 					position = prevRiderPosition.get(e.num, -1)
 					
 				if position == 1:
-					return 'Lead'
+					return _('Lead')
 				elif e.t < tMissing:
-					return 'miss'
+					return _('miss')
 				elif position >= 0:
 					return Utils.ordinal(position)
 				else:
@@ -492,7 +492,7 @@ class ForecastHistory( wx.Panel ):
 				last = info.get('LastName','')
 				first = info.get('FirstName','')
 				if last and first:
-					return '%s, %s' % (last, first)
+					return u'{}, {}'.format(last, first)
 				return last or first or ' '
 			data[iNameCol] = [getName(e) for e in expected]
 			
@@ -503,9 +503,9 @@ class ForecastHistory( wx.Panel ):
 			self.expectedGrid.AutoSizeRows()
 			
 			if iBeforeLeader:
-				Utils.SetLabel( self.expectedName, 'Expected: %d before Race Leader' % iBeforeLeader )
+				Utils.SetLabel( self.expectedName, _('Expected: {} before Race Leader').format(iBeforeLeader) )
 			else:
-				Utils.SetLabel( self.expectedName, 'Expected:' )
+				Utils.SetLabel( self.expectedName, _('Expected:') )
 			
 			#------------------------------------------------------------------
 			# Update recorded.
@@ -529,9 +529,9 @@ class ForecastHistory( wx.Panel ):
 					outsideTimeBound.add( e.num )
 									
 			data = [None] * iColMax
-			data[iNumCol] = [str(e.num) for e in recorded]
-			data[iTimeCol] = [formatTime(e.t) if e.lap > 0 else '[%s]' % formatTime(e.t) for e in recorded]
-			data[iLapCol] = [str(e.lap) for e in recorded]
+			data[iNumCol] = ['{}'.format(e.num) for e in recorded]
+			data[iTimeCol] = [formatTime(e.t) if e.lap > 0 else '[{}]'.format(formatTime(e.t)) for e in recorded]
+			data[iLapCol] = ['{}'.format(e.lap) for e in recorded]
 			def getNoteHistory( e ):
 				if e.lap == 0:
 					return 'Start'

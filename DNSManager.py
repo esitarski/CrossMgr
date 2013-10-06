@@ -1,15 +1,16 @@
-import Model
-import Utils
 import wx
 import wx.grid		as gridlib
+import wx.lib.mixins.listctrl as listmix
 import re
 import os
 import sys
 import itertools
 from string import Template
+
+import Model
+import Utils
 import ColGrid
 from FixCategories import FixCategories, SetCategory
-import  wx.lib.mixins.listctrl  as  listmix
 from Undo import undo
 
 class AutoWidthListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
@@ -25,17 +26,17 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 		self.category = None
 
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
-		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, 'Category:' )
+		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, _('Category:') )
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
 		
-		self.selectAll = wx.Button( self, wx.ID_ANY, 'Select All', style=wx.BU_EXACTFIT )
+		self.selectAll = wx.Button( self, wx.ID_ANY, _('Select All'), style=wx.BU_EXACTFIT )
 		self.Bind( wx.EVT_BUTTON, self.onSelectAll, self.selectAll )
 		
 		self.deSelectAll = wx.Button( self, wx.ID_ANY, 'Deselect All', style=wx.BU_EXACTFIT )
 		self.Bind( wx.EVT_BUTTON, self.onDeselectAll, self.deSelectAll )
 		
-		self.setDNS = wx.Button( self, wx.ID_ANY, 'DNS Selected', style=wx.BU_EXACTFIT )
+		self.setDNS = wx.Button( self, wx.ID_ANY, _('DNS Selected'), style=wx.BU_EXACTFIT )
 		self.Bind( wx.EVT_BUTTON, self.onSetDNS, self.setDNS )
 		
 		self.il = wx.ImageList(16, 16)
@@ -61,7 +62,7 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 		bs = wx.BoxSizer(wx.VERTICAL)
 		
 		bs.Add(self.hbs, 0, wx.EXPAND )
-		bs.Add(wx.StaticText(self, wx.ID_ANY, '  Potential DNS Entrants (use Shift-Click and Ctrl-Click to multi-select)'), 0, wx.ALL, 4 )
+		bs.Add(wx.StaticText(self, wx.ID_ANY, _('  Potential DNS Entrants (use Shift-Click and Ctrl-Click to multi-select)')), 0, wx.ALL, 4 )
 		bs.Add(self.list, 1, wx.EXPAND|wx.GROW|wx.ALL, 5 )
 		
 		self.SetSizer(bs)
@@ -86,15 +87,15 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 						if self.list.GetItem(row).m_state & wx.LIST_STATE_SELECTED]
 		
 		if not nums:
-			Utils.MessageOK( self, 'No entrants selected to DNS', 'No entrants selected to DNS' )
+			Utils.MessageOK( self, _('No entrants selected to DNS'), _('No entrants selected to DNS') )
 			return
 		
 		lines = []
 		for i in xrange( 0, len(nums), 10 ):
-			lines.append( ', '.join( str(n) for n in itertools.islice( nums, i, min(i+10, len(nums)) ) ) )
-		message = 'DNS the following entrants?\n\n%s' % ',\n'.join( lines )
+			lines.append( ', '.join( '{}'.format(n) for n in itertools.islice( nums, i, min(i+10, len(nums)) ) ) )
+		message = _('DNS the following entrants?\n\n{}').format(',\n'.join(lines))
 			
-		if not Utils.MessageOKCancel( self, message, 'DNS Entrants' ):
+		if not Utils.MessageOKCancel( self, message, _('DNS Entrants') ):
 			return
 		
 		undo.pushState()
@@ -109,7 +110,7 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 		wx.CallAfter( self.list.SetFocus )
 		
 	def doChooseCategory( self, event ):
-		Utils.setCategoryChoice( self.categoryChoice.GetSelection(), 'DNSManager' )
+		Utils.setCategoryChoice( self.categoryChoice.GetSelection(), _('DNSManager') )
 		self.refresh()
 
 	def clearGrid( self ):
@@ -167,7 +168,7 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 		
 		# Populate the list.
 		for row, d in enumerate(data):
-			index = self.list.InsertImageStringItem(sys.maxint, str(d[0]), self.sm_rt)
+			index = self.list.InsertImageStringItem(sys.maxint, '{}'.format(d[0]), self.sm_rt)
 			for i, v in enumerate(itertools.islice(d, 1, len(d))):
 				self.list.SetStringItem( index, i+1, v )
 			self.list.SetItemData( row, d[0] )		# This key links to the sort fields used by ColumnSorterMixin
@@ -199,10 +200,10 @@ class DNSManagerDialog( wx.Dialog ):
 		
 		vs.Add( self.dnsManager, 1, flag=wx.ALL|wx.EXPAND, border = 4 )
 		
-		self.helpBtn = wx.Button( self, wx.ID_ANY, '&Help' )
+		self.helpBtn = wx.Button( self, wx.ID_ANY, _('&Help') )
 		self.Bind( wx.EVT_BUTTON, self.onHelp, self.helpBtn )
 		
-		self.closeBtn = wx.Button( self, wx.ID_ANY, '&Close (Ctrl-Q)' )
+		self.closeBtn = wx.Button( self, wx.ID_ANY, _('&Close (Ctrl-Q)') )
 		self.Bind( wx.EVT_BUTTON, self.onClose, self.closeBtn )
 		self.Bind( wx.EVT_CLOSE, self.onClose )
 

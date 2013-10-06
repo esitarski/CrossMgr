@@ -14,10 +14,11 @@ import string
 import webbrowser
 import traceback
 from Excel import GetExcelReader, toAscii
+from gettext import gettext as _
 
 #-----------------------------------------------------------------------------------------------------
-Fields = ['Bib#', 'LastName', 'FirstName', 'Team', 'Category', 'Age', 'Gender', 'License', 'Tag', 'Tag2']
-IgnoreFields = ['Bib#', 'Tag', 'Tag2', 'Gender']		# Fields to ignore when adding data to standard reports.
+Fields = [_('Bib#'), _('LastName'), _('FirstName'), _('Team'), _('Category'), _('Age'), _('Gender'), _('License'), _('Tag'), _('Tag2')]
+IgnoreFields = [_('Bib#'), _('Tag'), _('Tag2'), _('Gender')]		# Fields to ignore when adding data to standard reports.
 ReportFields = [f for f in Fields if f not in IgnoreFields]
 
 class FileNamePage(wiz.WizardPageSimple):
@@ -26,15 +27,15 @@ class FileNamePage(wiz.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Specify the Excel Sign-on File containing the additional rider information.'),
+		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Specify the Excel Sign-on File containing the additional rider information.')),
 					flag=wx.ALL, border = border )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Each race must be in a separate sheet.'), flag=wx.ALL, border = border )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'See documentation for examples.'), flag=wx.ALL, border = border )
+		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Each race must be in a separate sheet.')), flag=wx.ALL, border = border )
+		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('See documentation for examples.')), flag=wx.ALL, border = border )
 		fileMask = [
 			'Excel Worksheets (*.xlsx;*.xlsm;*.xls)|*.xlsx;*.xlsm;*.xls',
 		]
 		self.fbb = filebrowse.FileBrowseButton( self, -1, size=(450, -1),
-												labelText = 'Excel Workbook:',
+												labelText = _('Excel Workbook:'),
 												fileMode=wx.OPEN,
 												fileMask='|'.join(fileMask) )
 		vbs.Add( self.fbb, flag=wx.ALL, border = border )
@@ -55,7 +56,7 @@ class SheetNamePage(wiz.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Specify the sheet containing the information for this race:'),
+		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Specify the sheet containing the information for this race:')),
 				flag=wx.ALL, border = border )
 		self.ch = wx.Choice( self, -1, choices = self.choices )
 		vbs.Add( self.ch, flag=wx.ALL, border = border )
@@ -86,9 +87,9 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Specify the spreadsheet columns corresponding to CrossMgr fields.'),
+		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Specify the spreadsheet columns corresponding to CrossMgr fields.')),
 				flag=wx.ALL, border = border )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Set missing fields to blank.'),
+		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Set missing fields to blank.')),
 				flag=wx.ALL, border = border )
 		vbs.AddSpacer( 8 )
 				
@@ -134,17 +135,17 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		# Try to find the header columns.
 		# Look for the first row with more than 4 columns.
 		for r, row in enumerate(reader.iter_list(sheetName)):
-			cols = sum( 1 for d in row if toAscii(d).strip() )
+			cols = sum( 1 for d in row if d.strip() )
 			if cols > 4:
-				self.headers = [toAscii(h).strip() for h in row]
+				self.headers = [h.strip() for h in row]
 				break
 
 		# If we haven't found a header row yet, assume the first non-empty row is the header.
 		if not self.headers:
 			for r, row in enumerate(reader.iter_list(sheetName)):
-				cols = sum( 1 for d in row if toAscii(d).strip() )
+				cols = sum( 1 for d in row if d.strip() )
 				if cols > 0:
-					self.headers = [toAscii(h).strip() for h in row]
+					self.headers = [h.strip() for h in row]
 					break
 		
 		# Ignore empty columns on the end.
@@ -152,10 +153,10 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 			self.headers.pop()
 			
 		if not self.headers:
-			raise ValueError, 'Could not find a Header Row %s::%s.' % (fileName, sheetName)
+			raise ValueError, _('Could not find a Header Row {}::{}.').format(fileName, sheetName)
 		
 		# Rename empty columns so as not to confuse the user.
-		self.headers = [h if h else 'BlankHeaderName%03d' % (c+1) for c, h in enumerate(self.headers)]
+		self.headers = [h if h else _('BlankHeaderName%03d') % (c+1) for c, h in enumerate(self.headers)]
 		
 		# Set a blank final entry.
 		self.headers.append( '' )
@@ -201,32 +202,32 @@ class SummaryPage(wiz.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, 'Summary:'), flag=wx.ALL, border = border )
+		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Summary:')), flag=wx.ALL, border = border )
 		vbs.Add( wx.StaticText(self, wx.ID_ANY, ' '), flag=wx.ALL, border = border )
 
 		rows = 0
 		
-		self.fileLabel = wx.StaticText( self, wx.ID_ANY, 'Excel File:' )
+		self.fileLabel = wx.StaticText( self, wx.ID_ANY, _('Excel File:') )
 		self.fileName = wx.StaticText( self, wx.ID_ANY, '' )
 		rows += 1
 
-		self.sheetLabel = wx.StaticText( self, wx.ID_ANY, 'Sheet Name:' )
+		self.sheetLabel = wx.StaticText( self, wx.ID_ANY, _('Sheet Name:') )
 		self.sheetName = wx.StaticText( self, wx.ID_ANY, '' )
 		rows += 1
 
-		self.riderLabel = wx.StaticText( self, wx.ID_ANY, 'Rider Data Entries:' )
+		self.riderLabel = wx.StaticText( self, wx.ID_ANY, _('Rider Data Entries:') )
 		self.riderNumber = wx.StaticText( self, wx.ID_ANY, '' )
 		rows += 1
 
-		self.statusLabel = wx.StaticText( self, wx.ID_ANY, 'Status:' )
+		self.statusLabel = wx.StaticText( self, wx.ID_ANY, _('Status:') )
 		self.statusName = wx.StaticText( self, wx.ID_ANY, '' )
 		rows += 1
 
-		self.errorLabel = wx.StaticText( self, wx.ID_ANY, 'Errors:' )
+		self.errorLabel = wx.StaticText( self, wx.ID_ANY, _('Errors:') )
 		self.errorName = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_MULTILINE|wx.TE_READONLY, size=(-1,128) )
 		rows += 1
 		
-		self.copyErrorsToClipboard = wx.Button( self, wx.ID_ANY, 'Copy Errors to Clipboard' )
+		self.copyErrorsToClipboard = wx.Button( self, wx.ID_ANY, _('Copy Errors to Clipboard') )
 		self.copyErrorsToClipboard.Bind( wx.EVT_BUTTON, self.doCopyErrorsToClipboard )
 		rows += 1
 
@@ -272,7 +273,7 @@ class SummaryPage(wiz.WizardPageSimple):
 			clipboard.Open()
 			clipboard.SetData( wx.TextDataObject('\n'.join( err for num, err in self.errors )) )
 			clipboard.Close()
-			Utils.MessageOK( self, 'Excel Errors Copied to Clipboard.', 'Excel Errors Copied to Clipboard' )
+			Utils.MessageOK( self, _('Excel Errors Copied to Clipboard.'), _('Excel Errors Copied to Clipboard') )
 
 	def setFileNameSheetNameInfo( self, fileName, sheetName, info, errors ):
 		self.fileName.SetLabel( fileName )
@@ -283,9 +284,9 @@ class SummaryPage(wiz.WizardPageSimple):
 			infoLen = len(info)
 		except TypeError:
 			infoLen = 0
-		self.riderNumber.SetLabel( str(infoLen) )
+		self.riderNumber.SetLabel( '{}'.format(infoLen) )
 		errStr = '\n'.join( [err for num, err in errors] if errors else ['None'] )
-		self.statusName.SetLabel( 'Success!' if infoLen and not errors else '{num} Error(s)'.format( num=len(errors) ) )
+		self.statusName.SetLabel( _('Success!') if infoLen and not errors else _('{num} Error(s)').format( num=len(errors) ) )
 		self.errorName.SetValue( errStr )
 		
 		self.copyErrorsToClipboard.Enable( bool(self.errors) )
@@ -299,7 +300,7 @@ class GetExcelLink( object ):
 		
 		prewizard = wiz.PreWizard()
 		prewizard.SetExtraStyle( wiz.WIZARD_EX_HELPBUTTON )
-		prewizard.Create( parent, wx.ID_ANY, 'Define Excel Link', img )
+		prewizard.Create( parent, wx.ID_ANY, _('Define Excel Link'), img )
 		self.wizard = prewizard
 		self.wizard.Bind( wiz.EVT_WIZARD_PAGE_CHANGING, self.onPageChanging )
 		self.wizard.Bind( wiz.EVT_WIZARD_HELP,
@@ -347,17 +348,17 @@ class GetExcelLink( object ):
 					self.sheetNamePage.setFileName(self.fileNamePage.getFileName())
 				except IOError:
 					if fileName == '':
-						message = 'Please specify an Excel file.'
+						message = _('Please specify an Excel file.')
 					else:
-						message = 'Cannot open file "%s".\nPlease check the file name and/or its read permissions.' % fileName
-					Utils.MessageOK( self.wizard, message, title='File Open Error', iconMask=wx.ICON_ERROR)
+						message = _('Cannot open file "{}".\nPlease check the file name and/or its read permissions.').format(fileName)
+					Utils.MessageOK( self.wizard, message, title=_('File Open Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 			elif page == self.sheetNamePage:
 				try:
 					self.headerNamesPage.setFileNameSheetName(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName())
 				except ValueError:
-					Utils.MessageOK( self.wizard, 'Cannot find at least 5 header names in the Excel sheet.\nCheck the format.',
-										title='Excel Format Error', iconMask=wx.ICON_ERROR)
+					Utils.MessageOK( self.wizard, _('Cannot find at least 5 header names in the Excel sheet.\nCheck the format.'),
+										title=_('Excel Format Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 			elif page == self.headerNamesPage:
 				excelLink = ExcelLink()
@@ -365,8 +366,8 @@ class GetExcelLink( object ):
 				excelLink.setSheetName( self.sheetNamePage.getSheetName() )
 				fieldCol = self.headerNamesPage.getFieldCol()
 				if fieldCol[Fields[0]] < 0:
-					Utils.MessageOK( self.wizard, 'You must specify a "%s" column.' % Fields[0],
-										title='Excel Format Error', iconMask=wx.ICON_ERROR)
+					Utils.MessageOK( self.wizard, _('You must specify a "{}" column.').format(Fields[0]),
+										title=_('Excel Format Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 				else:
 					excelLink.setFieldCol( fieldCol )
@@ -375,8 +376,9 @@ class GetExcelLink( object ):
 						errors = excelLink.getErrors()
 						self.summaryPage.setFileNameSheetNameInfo(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName(), info, errors)
 					except ValueError as e:
-						Utils.MessageOK( self.wizard, 'Problem extracting rider info.\nCheck the Excel format.',
-											title='Data Error', iconMask=wx.ICON_ERROR)
+						print( traceback.format_exc() )
+						Utils.MessageOK( self.wizard, _('Problem extracting rider info.\nCheck the Excel format.\n\n"{}"').format(e),
+											title=_('Data Error'), iconMask=wx.ICON_ERROR)
 						evt.Veto()
 		
 	def onPageChanged( self, evt ):
@@ -533,12 +535,19 @@ class ExcelLink( object ):
 				if col < 0:					# Skip unmapped columns.
 					continue
 				try:
-					data[field] = toAscii(row[col]).strip()
+					try:
+						data[field] = row[col].strip()
+					except AttributeError:
+						data[field] = row[col]
+						
 					if field == 'LastName' or field.startswith('Tag'):
-						data[field] = str(data[field]).upper()
+						try:
+							data[field] = data[field].upper()
+						except:
+							pass
 					elif field == 'Gender':
 						# Normalize and encode the gender information.
-						genderFirstChar = str(data[field]).strip().upper()[:1]
+						genderFirstChar = u'{}'.format(data[field]).strip().upper()[:1]
 						if genderFirstChar in 'MH':		# Men, Male, Hommes
 							data[field] = 'M'
 						elif genderFirstChar in 'WLF':	# Women, Ladies, Female, Femmes
@@ -576,27 +585,27 @@ class ExcelLink( object ):
 			
 			if num in numRow:
 				errors.append( (num,
-								'Duplicate Bib# {num} in row {row} (same as Bib# in row {dupRow})'.format(
+								_('Duplicate Bib# {num} in row {row} (same as Bib# in row {dupRow})').format(
 									num=num, row=row, dupRow=numRow[num])) )
 			else:
 				numRow[num] = row
 				
 			for tField, tRow in tagFields:
 				if tField not in data and tField == 'Tag':		# Don't check for missing Tag2s as they are optional.:
-					errors.append( (num, 'Missing "{field}" in row {row} for Bib# {num}'.format( field=tField, row=row, num=num)) )
+					errors.append( (num, _('Missing "{field}" in row {row} for Bib# {num}').format( field=tField, row=row, num=num)) )
 					continue
 					
 				tag = data[tField].lstrip('0').upper()
 				if tag:
 					if tag in tRow:
 						errors.append( (num,
-										'Duplicate "{field}" {tag} for Bib# {num} in row {row} (same as "{field}" for Bib# {dupNum} in row {dupRow})'.format(
+										_('Duplicate "{field}" {tag} for Bib# {num} in row {row} (same as "{field}" for Bib# {dupNum} in row {dupRow})').format(
 											field=tField, tag=tag, num=num, row=row, dupNum = rowBib[tRow[tag]], dupRow=tRow[tag] ) ) )
 					else:
 						tRow[tag] = row
 				else:
 					if tField == 'Tag':					# Don't check for empty Tag2s as they are optional.
-						errors.append( (num, 'Empty "{field}" in row {row} for Bib# {num}'.format(field=tField, row=row, num=num)) )
+						errors.append( (num, _('Empty "{field}" in row {row} for Bib# {num}').format(field=tField, row=row, num=num)) )
 		
 		stateCache = (os.path.getmtime(self.fileName), self.fileName, self.sheetName, self.fieldCol)
 		infoCache = info
@@ -621,11 +630,3 @@ if __name__ == '__main__':
 	mainWin.Show()
 	excelLink.show()
 	app.MainLoop()
-	'''
-	reader = readexcel( 'DataSamples\\Guelph Cross PreReg SignOn-sample.xls' )
-	for s in xrange(len(reader.sheet_names())):
-		print '----------------------------------------------------------------------'
-		sheet_name = reader.sheet_names()[s]
-		for r, row in enumerate(reader.iter_list(sheet_name)):
-			print r+1, ','.join( toAscii(v) for v in row )
-	'''
