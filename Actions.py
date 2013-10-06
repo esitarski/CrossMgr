@@ -37,7 +37,7 @@ def StartRaceNow():
 	# Refresh the main window and switch to the Record pane.
 	mainWin = Utils.getMainWin()
 	if mainWin is not None:
-		mainWin.showPageName( 'Record' )
+		mainWin.showPageName( _('Record') )
 		mainWin.refresh()
 	
 	# For safety, clear the undo stack after 8 seconds.

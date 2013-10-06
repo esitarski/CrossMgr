@@ -1129,7 +1129,7 @@ class MainWin( wx.Frame ):
 			# Fix the google maps template.
 			templateFile = os.path.join(Utils.getHtmlFolder(), 'VirtualTourTemplate.html')
 			try:
-				with codecs.open(templateFile, encoding='utf-8', mode='r') as fp:
+				with codecs.open(templateFile, 'r', 'utf-8') as fp:
 					template = fp.read()
 				# Sanitize the template into a safe json string.
 				template = self.reLeadingWhitespace.sub( '', template )
@@ -1205,7 +1205,7 @@ class MainWin( wx.Frame ):
 			# Fix the google maps template.
 			templateFile = os.path.join(Utils.getHtmlFolder(), 'VirtualTourTemplate.html')
 			try:
-				with codecs.open(templateFile, encoding='utf-8', mode='r') as fp:
+				with codecs.open(templateFile, 'r', 'utf-8') as fp:
 					template = fp.read()
 				# Sanitize the template into a safe json string.
 				template = self.reLeadingWhitespace.sub( '', template )
@@ -1261,7 +1261,7 @@ class MainWin( wx.Frame ):
 		# Read the html template.
 		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
 		try:
-			with codecs.open(htmlFile, encoding='utf-8', mode='r') as fp:
+			with codecs.open(htmlFile, 'r', 'utf-8') as fp:
 				html = fp.read()
 		except:
 			Utils.MessageOK(_('Cannot read HTML template file.  Check program installation.'),
@@ -1273,7 +1273,7 @@ class MainWin( wx.Frame ):
 		# Write out the results.
 		fname = os.path.join( dName, os.path.basename(fname) )
 		try:
-			with codecs.open(fname, encoding='utf-8', mode='w') as fp:
+			with codecs.open(fname, 'w', 'utf-8') as fp:
 				fp.write( html )
 			webbrowser.open( fname, new = 0, autoraise = True )
 			Utils.MessageOK(self, _('Html Race Animation written to:\n\n   {}').format(fname), _('Html Write'))
@@ -1446,7 +1446,7 @@ class MainWin( wx.Frame ):
 			# Read the html template.
 			htmlFile = os.path.join(Utils.getHtmlFolder(), 'CourseViewer.html')
 			try:
-				with codecs.open(htmlFile, encoding='utf-8', mode='r') as fp:
+				with codecs.open(htmlFile, 'r', 'utf-8') as fp:
 					html = fp.read()
 			except:
 				Utils.MessageOK(_('Cannot read HTML template file.  Check program installation.'),
@@ -1493,7 +1493,7 @@ class MainWin( wx.Frame ):
 		# Read the html template.
 		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RawData.html')
 		try:
-			with codecs.open(htmlFile, encoding='utf-8', mode='r') as fp:
+			with codecs.open(htmlFile, 'r', 'utf-8') as fp:
 				html = fp.read()
 		except:
 			Utils.MessageOK(_('Cannot read HTML template file.  Check program installation.'),
@@ -1634,7 +1634,7 @@ class MainWin( wx.Frame ):
 
 	@logCall
 	def menuNew( self, event ):
-		self.showPageName( 'Actions' )
+		self.showPageName( _('Actions') )
 		self.closeFindDialog()
 		
 		race = Model.race
@@ -1787,7 +1787,7 @@ class MainWin( wx.Frame ):
 		importedCategories = False
 		if categoriesFile:
 			try:
-				with codecs.open(categoriesFile, encoding='utf-8', mode='r') as fp:
+				with codecs.open(categoriesFile, 'r', 'utf-8') as fp:
 					race.importCategories( fp )
 				importedCategories = True
 			except IOError:
@@ -2133,7 +2133,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 		if dlg.ShowModal() == wx.ID_OK:
 			categoriesFile = dlg.GetPath()
 			try:
-				with codecs.open(categoriesFile, encoding='utf-8', mode='r') as fp, Model.LockRace() as race:
+				with codecs.open(categoriesFile, 'r', 'utf-8') as fp, Model.LockRace() as race:
 					race.importCategories( fp )
 			except IOError:
 				Utils.MessageOK( self, _("Cannot open file:\n{}").format(categoriesFile), _("File Open Error"), iconMask=wx.ICON_ERROR)
@@ -2161,7 +2161,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 		if dlg.ShowModal() == wx.ID_OK:
 			fname = dlg.GetPath()
 			try:
-				with codecs.open(fname, encoding='utf-8', mode='w') as fp, Model.LockRace() as race:
+				with codecs.open(fname, 'w', 'utf-8') as fp, Model.LockRace() as race:
 					race.exportCategories( fp )
 			except IOError:
 				Utils.MessageOK( self, _("Cannot open file:\n{}").format(fname), _("File Open Error"), iconMask=wx.ICON_ERROR)
@@ -2174,7 +2174,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 		if self.fileName is None or len(self.fileName) < 4 or not Model.race:
 			return
 
-		self.showPageName( 'History' )
+		self.showPageName( _('History') )
 		self.history.setCategoryAll()
 		self.history.refresh()
 		

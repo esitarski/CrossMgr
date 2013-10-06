@@ -1524,7 +1524,7 @@ class Race(object):
 			if category.fullname in newCategories:
 				originalName = category.name
 				for count in xrange(1, 999):
-					category.name = '%s Copy(%d)' % (originalName, count)
+					category.name = _('{} Copy({})').format(originalName, count)
 					if not category.fullname in newCategories:
 						break
 			newCategories[category.fullname] = category
@@ -1566,11 +1566,11 @@ class Race(object):
 
 	def exportCategories( self, fp ):
 		for c in sorted( self.categories.itervalues(), key = Category.key ):
-			fp.write( '%s|%s|%s\n' % (c.name.replace('|',''), c.catStr, getattr(c,'gender','Open')) )
+			fp.write( u'{}|{}|{}\n'.format(c.name.replace('|',''), c.catStr.replace('|',''), getattr(c,'gender','Open')) )
 
 	def importCategories( self, fp ):
 		categories = []
-		for r, line in enumerate(fp):
+		for r, line in eumerate(fp):
 			line = line.strip()
 			if not line or line.startswith('#'):
 				continue
@@ -1787,7 +1787,7 @@ class Race(object):
 						ret[r][e.num] = Utils.formatTimeGap( e.t - leader.t ) if leader.num != e.num else ' '
 					else:
 						lapsDown = e.lap - leader.lap
-						ret[r][e.num] = '%d lap%s' % (lapsDown, 's' if lapsDown < -1 else '')
+						ret[r][e.num] = _('{}d lap(s)').format(lapsDown)
 				iLap += 1
 					
 		return ret
@@ -1916,7 +1916,7 @@ class Race(object):
 			Utils.getMainWin().startRaceClock()
 
 		for j, i in enumerate(xrange(100,100+riders+1,10)):
-			name = 'Cat%d' % (j+1)
+			name = 'Cat{}'.format(j+1)
 			self.categories[name] = Category(True, name, '{}-{}'.format(i, i+9) )
 
 		self.setChanged()
