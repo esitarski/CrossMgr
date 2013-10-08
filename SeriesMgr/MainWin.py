@@ -25,23 +25,21 @@ except:
 	
 import cPickle as pickle
 from optparse import OptionParser
+import cStringIO as StringIO
+import wx.lib.agw.advancedsplash as AS
+import openpyxl
 
+
+import Utils
 import SeriesModel
 from Races				import Races
 from Points				import Points
 from Results			import Results
 from Errors				import Errors
-import Utils
 import Model
-import cStringIO as StringIO
 import Version
 from Printing			import SeriesMgrPrintout
 from ExportGrid			import ExportGrid, tag
-import cStringIO as StringIO
-
-import wx.lib.agw.advancedsplash as AS
-import openpyxl
-
 #----------------------------------------------------------------------------------
 
 def ShowSplashScreen():
@@ -221,6 +219,13 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_MENU_RANGE, self.menuFileHistory, id=wx.ID_FILE1, id2=wx.ID_FILE9)
 		
 		self.menuBar.Append( self.fileMenu, "&File" )
+
+		self.optionsMenu = wx.Menu()
+		idCur = wx.NewId()
+		self.optionsMenu.Append( idCur , _("Copy Log File to &Clipboard"), _("Copy Log File to &Clipboard") )
+		self.Bind(wx.EVT_MENU, self.menuCopyLogFileToClipboard, id=idCur )
+		
+		self.menuBar.Append( self.optionsMenu, _("&Options") )
 
 		#-----------------------------------------------------------------------
 
@@ -558,6 +563,28 @@ table.results tr td.fastest{
 						'Html File Error', iconMask=wx.ICON_ERROR )
 	
 	#--------------------------------------------------------------------------------------------
+	def menuCopyLogFileToClipboard( self, event ):
+		try:
+			logData = open(redirectFileName).read()
+		except IOError:
+			Utils.MessageOK(self, _("Unable to open log file."), _("Error"), wx.ICON_ERROR )
+			return
+			
+		logData = logData.split( '\n' )
+		logData = logData[-1000:]
+		logData = '\n'.join( logData )
+		
+		dataObj = wx.TextDataObject()
+		dataObj.SetText(logData)
+		if wx.TheClipboard.Open():
+			wx.TheClipboard.SetData( dataObj )
+			wx.TheClipboard.Close()
+			Utils.MessageOK(self, _("Log file copied to clipboard.\nYou can now paste it into an email."), _("Success") )
+		else:
+			Utils.MessageOK(self, "Unable to open the clipboard.", "Error", wx.ICON_ERROR )
+	
+	#--------------------------------------------------------------------------------------------
+	
 	def onCloseWindow( self, event ):
 		self.showPageName( 'Results' )
 		self.writeSeries()
@@ -807,9 +834,24 @@ def MainLoop():
 	dataDir = Utils.getHomeDir()
 	redirectFileName = os.path.join(dataDir, 'SeriesMgr.log')
 	
+	# Set up the log file.  Otherwise, show errors on the screen unbuffered.
 	if __name__ == '__main__':
 		Utils.disable_stdout_buffering()
-			
+	else:
+		try:
+			logSize = os.path.getsize( redirectFileName )
+			if logSize > 1000000:
+				os.remove( redirectFileName )
+		except:
+			pass
+	
+		try:
+			app.RedirectStdio( redirectFileName )
+		except:
+			pass
+	
+	Utils.writeLog( 'start: {}'.format(Version.AppVerName) )
+	
 	# Configure the main window.
 	sWidth, sHeight = wx.GetDisplaySize()
 	mainWin = MainWin( None, title=Version.AppVerName, size=(sWidth*0.9,sHeight*0.9) )

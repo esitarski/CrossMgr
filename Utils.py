@@ -31,12 +31,13 @@ else:
 import locale
 locale.setlocale(locale.LC_ALL, '')
 
+from Version import AppVerName
 import gettext
 initTranslationCalled = False
 def initTranslation():
 	global initTranslationCalled
 	if not initTranslationCalled:
-		gettext.install('CrossMgr', './locale', unicode=True)
+		gettext.install(AppVerName.split(None, 1), './locale', unicode=True)
 		initTranslationCalled = True
 		
 initTranslation()

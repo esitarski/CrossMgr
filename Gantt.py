@@ -143,7 +143,7 @@ class Gantt( wx.Panel ):
 				continue
 			if caseCode < cCase:
 				continue
-			if (name.endswith('before') and not self.numBefore) or (name.endswith('after') and not self.numAfter):
+			if (_('before') in name and not self.numBefore) or (_('after') in name and not self.numAfter):
 				continue
 			menu.Append( id, name, text )
 			
@@ -153,7 +153,7 @@ class Gantt( wx.Panel ):
 				submenu.Append( id, name )
 			Utils.addMissingSeparator( menu )
 			menu.PrependSeparator()
-			menu.PrependMenu( wx.NewId(), 'Add Missing Split', submenu )
+			menu.PrependMenu( wx.NewId(), _('Add Missing Split'), submenu )
 			
 		Utils.deleteTrailingSeparators( menu )
 		self.PopupMenu( menu )

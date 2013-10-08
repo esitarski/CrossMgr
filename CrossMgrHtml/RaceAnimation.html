@@ -2137,22 +2137,22 @@ function SetCategoryResults()
 		var numHeaders = 0;
 		thead = createChild( table, 'THEAD' );
 		tr = createChild( thead, 'TR' );
-		createTextChild( td = createChild(tr, 'TH'), 'Pos' );	++numHeaders;
-		createTextChild( td = createChild(tr, 'TH'), 'Bib' );	++numHeaders;
+		createTextChild( td = createChild(tr, 'TH'), _('Pos') );	++numHeaders;
+		createTextChild( td = createChild(tr, 'TH'), _('Bib') );	++numHeaders;
 		td.id = 'idNonNumeric';
 		
 		for( var f = 0; f < infoFields.length; ++f )
 		{
 			if( curFields[infoFields[f]] )
 			{
-				createTextChild( td = createChild(tr, 'TH'), infoFields[f].replace(/Name$/,' Name') );
+				createTextChild( td = createChild(tr, 'TH'), _(infoFields[f]) );
 				td.id = 'idNonNumeric';
 				++numHeaders;
 			}
 		}
 				
-		createTextChild( td = createChild(tr, 'TH'), 'Time' );	++numHeaders;
-		createTextChild( td = createChild(tr, 'TH'), 'Gap' );	++numHeaders;
+		createTextChild( td = createChild(tr, 'TH'), _('Time') );	++numHeaders;
+		createTextChild( td = createChild(tr, 'TH'), _('Gap') );	++numHeaders;
 		if( speedUnit )
 		{
 			createTextChild( td = createChild(tr, 'TH'), displayUnits == 'km' ? 'km/h' : 'mph' );
@@ -2171,7 +2171,7 @@ function SetCategoryResults()
 			{
 				if( (i % showLapsFrequency == 0 || i == 1 || i == leaderLaps-1)  )
 				{
-					createTextChild( td = createChild(tr, 'TH'), 'Lap ' + i );
+					createTextChild( td = createChild(tr, 'TH'), _('Lap') + ' ' + i );
 					++numHeaders;
 				}
 			}
@@ -3000,7 +3000,7 @@ function Rewind()
 		return;
 	t = getStartTime();
 	animationObj.Refresh();
-	document.getElementById('idPlayStop').value = 'Play';
+	document.getElementById('idPlayStop').value = _('Play');
 	Animate( animationSeconds, tMax, t );
 	suspendAnimation = true;
 }
@@ -3012,12 +3012,12 @@ function PlayStop()
 	if( IsAnimating() )
 	{
 		SuspendAnimate();
-		document.getElementById('idPlayStop').value = 'Play';
+		document.getElementById('idPlayStop').value = _('Play');
 	}
 	else
 	{
 		Animate( animationSeconds, tMax, t );
-		document.getElementById('idPlayStop').value = 'Stop';
+		document.getElementById('idPlayStop').value = _('Stop');
 	}
 }
 
@@ -3227,6 +3227,38 @@ function SetTotalElevationGain() {
 	else
 		document.getElementById('idTotalElevationGain').innerHTML = '';
 */
+}
+
+var langCur = 0;
+var translations = {
+	'Gap':			['Gap',				'Intervalle',			'Lapso'],
+	'Name':			['Name',			'Nom',					'Nombre'],
+	'LastName':		['Last Name',		'Dernier nom',			'Apellido'],
+	'FirstName':	['First Name',		'Prénom',				'Nombre'],
+	'Team':			['Team',			'équipe',				'Equipo'],
+	'Category':		['Category',		'Catégorie',			'Categoria'],
+	'License':		['License',			'Licence',				'Licencia'],
+	'Age':			['Age',				'âge',					'Edad'],
+	'Time':			['Time',			'Temps',				'Tiempo'],
+	'Lap':			['Lap',				'Tour',					'Vuelta'],
+	'lap':			['lap',				'tour',					'vuelta'],
+	'laps':			['laps',			'tours',				'vueltas'],
+};
+
+function _( f ) {
+	var t = translations[f];
+	if( !t )
+		return f;
+	return t[langCur];
+}
+
+function setLanguage( lang ) {
+	if(      lang == 'es' )
+		langCur = 2;
+	else if( lang == 'fr' )
+		langCur = 1;
+	else
+		langCur = 0;
 }
 
 function onLoad()

@@ -13,9 +13,13 @@ import sys, traceback
 import functools
 import threading
 import getpass
+import socket
 from os.path import commonprefix
 
+import Version
+
 CurrentUser = getpass.getuser()
+CurrentComputer = socket.gethostname()
 
 maxInterpolateTime = 7.0*60.0*60.0	# 7 hours.
 
@@ -1565,6 +1569,17 @@ class Race(object):
 		return changed
 
 	def exportCategories( self, fp ):
+		fp.write( u'#################################################################\n' )
+		fp.write( u'# CrossMgr Categories File\n' )
+		fp.write( u'#\n' )
+		fp.write( u'# Created By: {}\n'.format(CurrentUser) )
+		fp.write( u'# Created On: {}\n'.format(datetime.datetime.now()) )
+		fp.write( u'#   Computer: {}\n'.format(CurrentComputer) )
+		fp.write( u'#  From Race: "{}-r{}"\n'.format(self.name, self.raceNum) )
+		fp.write( u'#    Version: {}\n'.format(Version.AppVerName) )
+		fp.write( u'#\n' )
+		fp.write( u'# for details see http://sites.google.com/site/crossmgrsoftware/\n' )
+		fp.write( u'#################################################################\n' )
 		for c in sorted( self.categories.itervalues(), key = Category.key ):
 			fp.write( u'{}|{}|{}\n'.format(c.name.replace('|',''), c.catStr.replace('|',''), getattr(c,'gender','Open')) )
 
@@ -1574,7 +1589,7 @@ class Race(object):
 			line = line.strip()
 			if not line or line.startswith('#'):
 				continue
-			fields = line.strip().split('|')
+			fields = line.split('|')
 			if len(fields) < 2:
 				continue
 			if len(fields) < 3:
