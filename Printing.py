@@ -40,17 +40,17 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		self.list.InsertColumn(2, _("Count"), wx.LIST_FORMAT_RIGHT)
 		self.list.InsertColumn(3, '' )
 		race = Model.race
+		self.catCount = defaultdict( int )
 		if race:
-			catCount = defaultdict( int )
 			for r in race.riders.itervalues():
-				catCount[race.getCategory(r.num)] += 1
+				self.catCount[race.getCategory(r.num)] += 1
 			for c in race.getCategories():
-				if catCount[c] == 0:
+				if self.catCount[c] == 0:
 					continue
 				index = self.list.InsertStringItem(sys.maxint, c.name, self.sm_rt)
 				self.list.SetStringItem( index, 1, getattr(c, 'gender', 'Open') )
-				self.list.SetStringItem( index, 2, '{}'.format(catCount[c]) )
-			
+				self.list.SetStringItem( index, 2, '{}'.format(self.catCount[c]) )
+		
 		self.list.SetColumnWidth(0, wx.LIST_AUTOSIZE)
 		self.list.SetColumnWidth(1, wx.LIST_AUTOSIZE)
 		self.list.SetColumnWidth(2, wx.LIST_AUTOSIZE)
@@ -111,9 +111,14 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 	def onOK( self, event ):
 		self.categories = []
 		race = Model.race
-		for row, c in enumerate(race.getCategories()):
+		row = 0
+		for c in race.getCategories():
+			if self.catCount[c] == 0:
+				continue
 			if self.list.GetItemState(row, wx.LIST_STATE_SELECTED) == wx.LIST_STATE_SELECTED:
 				self.categories.append( c )
+			row += 1
+		
 		race.includeLapTimesInPrintout = self.includeLapTimesInPrintoutCheckBox.GetValue()
 		self.EndModal( wx.ID_OK )
 
