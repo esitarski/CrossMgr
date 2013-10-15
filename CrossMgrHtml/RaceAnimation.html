@@ -212,6 +212,18 @@ function isEmptyObject( obj ) {
     return true;
 }
 
+function getUrlParameter( name )
+{
+	name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+	var regexS = "[\\?&]"+name+"=([^&#]*)";
+	var regex = new RegExp( regexS );
+	var results = regex.exec( window.location.href );
+	if( results == null )
+		return "";
+	else
+		return results[1];
+}
+
 var degreesToRadians = Math.PI / 180.0;
 var radiansToDegrees = 180.0 / Math.PI;
 
@@ -3231,18 +3243,20 @@ function SetTotalElevationGain() {
 
 var langCur = 0;
 var translations = {
-	'Gap':			['Gap',				'Intervalle',			'Lapso'],
+	'Gap':			['Gap',				'Écart',				'Lapso'],
 	'Name':			['Name',			'Nom',					'Nombre'],
 	'LastName':		['Last Name',		'Dernier nom',			'Apellido'],
 	'FirstName':	['First Name',		'Prénom',				'Nombre'],
-	'Team':			['Team',			'équipe',				'Equipo'],
+	'Team':			['Team',			'Équipe',				'Equipo'],
 	'Category':		['Category',		'Catégorie',			'Categoria'],
 	'License':		['License',			'Licence',				'Licencia'],
-	'Age':			['Age',				'âge',					'Edad'],
+	'Age':			['Age',				'Âge',					'Edad'],
 	'Time':			['Time',			'Temps',				'Tiempo'],
 	'Lap':			['Lap',				'Tour',					'Vuelta'],
 	'lap':			['lap',				'tour',					'vuelta'],
 	'laps':			['laps',			'tours',				'vueltas'],
+	'Show Every Lap': ['Show Every Lap', 'Afficher Tous les Tours', 'Mostrar Todas las Vueltas'],
+	'Show Every {} Laps': ['Show Every {} Laps', 'Afficher Tous les {} Tours', 'Mostrar Cada {} Vueltas'],
 };
 
 function _( f ) {

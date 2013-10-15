@@ -128,7 +128,7 @@ class Points(wx.Panel):
 		for row in xrange(self.grid.GetNumberRows()):
 			for col in xrange(self.grid.GetNumberCols()):
 				self.grid.SetCellValue( row, col, '' )
-				
+		
 		for row, ps in enumerate(model.pointStructures):
 			self.grid.SetCellValue( row, self.NameCol, ps.name )
 			self.grid.SetCellValue( row, self.OldNameCol, ps.name )
@@ -143,9 +143,10 @@ class Points(wx.Panel):
 		self.grid.DisableCellEditControl()	# Make sure the current edit is committed.
 		pointsList = []
 		for row in xrange(self.grid.GetNumberRows()):
-			pointsList.append( (self.grid.GetCellValue(row, self.NameCol),
-								self.grid.GetCellValue(row, self.OldNameCol),
-								self.grid.GetCellValue(row, self.PointsCol) ) )
+			if( self.grid.GetCellValue(row, self.NameCol).strip() ):
+				pointsList.append( (self.grid.GetCellValue(row, self.NameCol),
+									self.grid.GetCellValue(row, self.OldNameCol),
+									self.grid.GetCellValue(row, self.PointsCol) ) )
 		
 		model = SeriesModel.model
 		model.setPoints( pointsList )
