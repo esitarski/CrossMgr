@@ -3303,6 +3303,8 @@ var translations = {
 	'1st lap':		['1st lap',			'premier tour',			'primera vuelta'],
 	'more laps of':	['more laps of',	'tours de plus de',		'vueltas más de'],
 	'Estimated':	['Estimated',		'Estimé',				'Estimado'],
+	'Distance':		['Distance',		'la distance',			'la distancia'],
+	'Start':		['Start',			'au début',				'el comienzo'],
 	'Winner':		['Winner',			'Gagnant',				'Ganador'],
 	'starters':		['starters',		'entrées',				'aperitivos'],
 	'finishers':	['finishers',		'arrivées',				'finalistas'],
@@ -3529,8 +3531,8 @@ function onLoad()
 	}
 	
 	setCategory( getUrlParam('raceCat', undefined) );
-	//setLanguage( getUrlParam('lang', undefined) );
-	setLanguage( 'es' );
+	setLanguage( getUrlParam('lang', undefined) );
+	//setLanguage( 'es' );
 	initLanguages();
 	
 	SetCategoryResults();
