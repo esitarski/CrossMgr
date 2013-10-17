@@ -3303,7 +3303,7 @@ var translations = {
 	'Lap Times':	['Lap Times',		'Temps des Tours',		'Tiempos de Vuelta'],
 	'Race Times':	['Race Times',		'Temps de Course',		'Tiempos de Carrera'],
 	'Time Gaps':	['Time Gaps',		'Écarts des Tours',		'Diferencia de Tiempo de las Vueltas'],
-	'Gap Percents':	['Gap Percents',	"Pour cent de l'écart",		'Ciento Brecha'],
+	'Gap Percents':	['Gap Percents',	"Pour Cent de l'Écart",		'Ciento Brecha'],
 	'Lap Speed':	['Lap Speed',		'Vitesse des Tours',	'Velocidad de la Vuelta'],
 	'Est. Distance Gap': ['Est. Distance Gap', 'Écart de Distance Est.', 'Diferencia Est. Distancia'],
 	'Race Chart':	['Race Chart',		'Tableau de course',		'Tabla de Carrera'],
@@ -3359,6 +3359,8 @@ function setLanguage( langCode ) {
 			e[tAttr] = _(trTag);
 		}
 	}
+	
+	SetCategoryResults();
 }
 
 function getLanguageCode() {
@@ -3368,6 +3370,7 @@ function getLanguageCode() {
 function initLanguages() {
 	var languageSpan = document.getElementById('idLanguages');
 	var languageHTML = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+	languageHTML += languageHTML + languageHTML + languageHTML + languageHTML + languageHTML;
 	var languages = translations['language'];
 	var languageCodes = translations['languageCode'];
 	for( var i = 0; i < languages.length; ++i )
