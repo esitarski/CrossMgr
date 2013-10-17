@@ -34,7 +34,7 @@ body { font-family: sans-serif; }
 }
 
 .languageName {
-	vertical-align: middle;
+	vertical-align: 5%;
 }
 
 .categoryTitles {
@@ -2575,7 +2575,7 @@ function RaceChartUpdateInfo()
 			var hover = seg[4];
 			var num = seg[5];
 			var name = getRiderNameNum( num );
-			hover = name + ': Lap ' + hover;
+			hover = name + ': ' + _('Lap') + ' ' + hover;
 
 			var fontHeight = 14;
 			var height = fontHeight * 1.5;
@@ -3321,9 +3321,9 @@ var translations = {
 	'Show Start Offsets':	['Show Start Offsets',	'Afficher commencer décalages',	'Mostrar empezar a desplazamientos'],
 	'Loop Continuously':['Loop Continuously',	'Boucle continue',	'Repetirá continuamente'],
 	'Playback Speed':['Playback Speed',	'Vitesse de lecture',		'Velocidad de reproducción'],
-	'Play':			['Play',			'Lire',						'Reproduzca'],
-	'Rewind':		['Rewind',			'Rembobinez',				'Rebobine'],
-	'Stop':			['Stop',			'Arrêtez',					'Pare'],
+	'Play':			['Play',			'Lecture',					'Reproducir'],
+	'Rewind':		['Rewind',			'Rembobinez',				'Rebobinar'],
+	'Stop':			['Stop',			'Stop',						'Detener'],
 	'Size':			['Size',			'Taille',					'Ramaño'],
 	'Text':			['Text',			'Texte',					'Texto'],
 	'Highlight Numbers': ['Highlight Numbers', 'Numéros de souligner', 'Números de relieve'],
@@ -3561,7 +3561,7 @@ function onLoad()
 
 <span id="idLanguages"></span>
 <p/>
-<span data-tr='Category' class="categoryTitles"></span>: <span id="idCategories" class="categoryTitles"></span>
+<span data-tr='Category' class="categoryTitles"></span><span class="categoryTitles">:</span> <span id="idCategories" class="categoryTitles"></span>
 </p>
 <div id="idTrackDiv">
 <canvas id="idTrack" width="600" height="300" class="noprint">
