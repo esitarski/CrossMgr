@@ -27,6 +27,21 @@ body { font-family: sans-serif; }
 
 .hidden { display: none; }
 
+.languageHello {
+	font-size: 130%;
+	font-weight:	bold;
+	color:	#4Fb54F;
+}
+
+.languageName {
+	vertical-align: middle;
+}
+
+.categoryTitles {
+	font-size:		130%;
+	font-weight:	bold;
+}
+
 table.results {
 	font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
 	border-collapse:collapse;
@@ -1874,8 +1889,8 @@ function SetData( aData, tCur )
 			var cat = categories[i];
 			catHTML += ('<input type="radio" name="categoryCur" onClick="SelectCategory('+i+');" id="idICat"' + i);
 			if( i == 0 )
-				catHTML += ' checked="true" data-tr="All"';
-			catHTML += '/>' + cat.escapeHTML() + '&nbsp;&nbsp;&nbsp;';
+				catHTML += ' checked="true"><span data-tr="All"></span';
+			catHTML += '/>' + (i > 0 ? cat.escapeHTML() : '') + '&nbsp;&nbsp;&nbsp;';
 		}
 	}
 	else if( categories.length == 1 )
@@ -3266,6 +3281,10 @@ function SetTotalElevationGain() {
 var translations = {
 	'languageCode':	['en',				'fr',					'es'],
 	'language':		['English',			'Française',			'Español'],
+	'hello':		['Hello!',			'Bonjour!',				'¡Hola!'],
+	'Email Comments/Suggestions': ['Email Comments/Suggestions', 'Email Commentaires/Suggestions', 'E-mail Comentarios/Sugerencias'],
+	'Powered by':	['Powered by',		'Propulsé par',			'Desarrollado por'],
+	'by':			['by',				'par',					'por'],
 	'Gap':			['Gap',				'Écart',				'Lapso'],
 	'Name':			['Name',			'Nom',					'Nombre'],
 	'LastName':		['Last Name',		'Dernier nom',			'Apellido'],
@@ -3279,49 +3298,53 @@ var translations = {
 	'lap':			['lap',				'tour',					'vuelta'],
 	'laps':			['laps',			'tours',				'vueltas'],
 	'laps of':		['laps of',			'tours de',				'vueltas de'],
-	'Laps of':		['Laps of',			'Tours de',				'Vuelta de'],
-	'Laps to go':	['Laps to go',		'Tours à faire',		'Vueltas para el Final'],
-	'1st lap':		['1st lap',			'Premier tour',			'Primera vuelta'],
+	'Laps of':		['laps of',			'tours de',				'vuelta de'],
+	'Laps to go':	['laps to go',		'tours à faire',		'vueltas para el final'],
+	'1st lap':		['1st lap',			'premier tour',			'primera vuelta'],
 	'more laps of':	['more laps of',	'tours de plus de',		'vueltas más de'],
 	'Estimated':	['Estimated',		'Estimé',				'Estimado'],
 	'Winner':		['Winner',			'Gagnant',				'Ganador'],
 	'starters':		['starters',		'entrées',				'aperitivos'],
 	'finishers':	['finishers',		'arrivées',				'finalistas'],
-	'Show 100s of Seconds': ['Show 100s of Seconds', 'Afficer 100s de Seconds', 'Mostrar 100s de Segundos'],
+	'Show 100s of Seconds': ['Show 100s of Seconds', 'Afficer 100s de seconds', 'Mostrar 100s de segundos'],
 	'Hide Lap Info':['Hide Lap Info',	'Masquer les infos de tour',	'Ocultar la info de vuelta'],
-	'Show Every Lap':['Show Every Lap',	'Afficher Tous les Tours', 'Mostrar Todas las Vueltas'],
-	'Show Every 2 Laps': ['Show Every 2 Laps','Afficher Tous les 2 Tours', 'Mostrar Cada 2 Vueltas'],
-	'Show Every 3 Laps': ['Show Every 3 Laps','Afficher Tous les 3 Tours', 'Mostrar Cada 3 Vueltas'],
-	'Show Every 5 Laps': ['Show Every 5 Laps','Afficher Tous les 5 Tours', 'Mostrar Cada 5 Vueltas'],
-	'Show Every 10 Laps': ['Show Every 10 Laps','Afficher Tous les 10 Tours', 'Mostrar Cada 10 Vueltas'],
-	'Show Every 15 Laps': ['Show Every 15 Laps','Afficher Tous les 15 Tours', 'Mostrar Cada 15 Vueltas'],
-	'Show Every 20 Laps': ['Show Every 20 Laps','Afficher Tous les 20 Tours', 'Mostrar Cada 20 Vueltas'],
-	'Show Every 25 Laps': ['Show Every 25 Laps','Afficher Tous les 25 Tours', 'Mostrar Cada 25 Vueltas'],
-	'Show Every 50 Laps': ['Show Every 50 Laps','Afficher Tous les 50 Tours', 'Mostrar Cada 50 Vueltas'],
-	'Show Every 100 Laps': ['Show Every 100 Laps','Afficher Tous les 100 Tours', 'Mostrar Cada 100 Vueltas'],
+	'Show Every Lap':['Show Every Lap',	'Afficher tous les tours', 'Mostrar todas las vueltas'],
+	'Show Every {} Laps': ['Show Every {} Laps','Afficher tous les {} tours', 'Mostrar cada {} vueltas'],
 	'All':			['All',				'Tous',					'Todo'],
-	'Lap Times':	['Lap Times',		'Temps des Tours',		'Tiempos de Vuelta'],
-	'Race Times':	['Race Times',		'Temps de Course',		'Tiempos de Carrera'],
-	'Time Gaps':	['Time Gaps',		'Écarts des Tours',		'Diferencia de Tiempo de las Vueltas'],
-	'Gap Percents':	['Gap Percents',	"Pour Cent de l'Écart",		'Ciento Brecha'],
-	'Lap Speed':	['Lap Speed',		'Vitesse des Tours',	'Velocidad de la Vuelta'],
-	'Est. Distance Gap': ['Est. Distance Gap', 'Écart de Distance Est.', 'Diferencia Est. Distancia'],
-	'Race Chart':	['Race Chart',		'Tableau de course',		'Tabla de Carrera'],
-	'Show Start Offsets':	['Show Start Offsets',	'Afficher Commencer Décalages',	'Mostrar Empezar a Desplazamientos'],
-	'Loop Continuously':['Loop Continuously',	'Boucle Continue',	'Repetirá Continuamente'],
-	'Playback Speed':['Playback Speed',	'Vitesse de Lecture',		'Velocidad de Reproducción'],
+	'Lap Times':	['Lap Times',		'Temps des tours',		'Tiempos de vuelta'],
+	'Race Times':	['Race Times',		'Temps de course',		'Tiempos de carrera'],
+	'Time Gaps':	['Time Gaps',		"L'Écarts des tours",		'Diferencia de tiempo de las vueltas'],
+	'Gap Percents':	['Gap Percents',	"Pour cent de l'écart",		'Ciento brecha'],
+	'Lap Speed':	['Lap Speed',		'Vitesse des tours',	'Velocidad de la vuelta'],
+	'Est. Distance Gap': ['Est. Distance Gap', "L'Écart de distance est.", 'Diferencia est. distancia'],
+	'Race Chart':	['Race Chart',		'Tableau de course',		'Tabla de carrera'],
+	'Show Start Offsets':	['Show Start Offsets',	'Afficher commencer décalages',	'Mostrar empezar a desplazamientos'],
+	'Loop Continuously':['Loop Continuously',	'Boucle continue',	'Repetirá continuamente'],
+	'Playback Speed':['Playback Speed',	'Vitesse de lecture',		'Velocidad de reproducción'],
 	'Play':			['Play',			'Lire',						'Reproduzca'],
 	'Rewind':		['Rewind',			'Rembobinez',				'Rebobine'],
 	'Stop':			['Stop',			'Arrêtez',					'Pare'],
 	'Size':			['Size',			'Taille',					'Ramaño'],
 	'Text':			['Text',			'Texte',					'Texto'],
-	'Highlight Numbers': ['Highlight Numbers', 'Numéros de Souligner', 'Números de Relieve'],
-	'Track':		['Oval Track',		'Piste Oval',				'Pista Ovalada'],
+	'Highlight Numbers': ['Highlight Numbers', 'Numéros de souligner', 'Números de relieve'],
+	'Track':		['Oval Track',		'Piste oval',				'Pista ovalada'],
 	'GPX':			['GPX Course',		'GPX',						'GPX'],
 	'Apply':		['Apply',			'Appliquer',				'Aplicar'],
 	'Chip Timing':	['Chip Timing',		'RFID Chronométrage',		'Cronometraje RFID'],
 	'last':			['','','']
 };
+(function() {
+	// Expand all the lap options.
+	var key = 'Show Every {} Laps';
+	var showLaps = [2, 3, 5, 10, 15, 20, 25, 50, 100];
+	var showTr = translations[key];
+	for( var i = 0; i < showLaps.length; ++i ) {
+		var tr = [];
+		for( var j = 0; j < showTr.length; ++j )
+			tr.push( showTr[j].replace('{}', showLaps[i]) );
+		translations[key.replace('{}', showLaps[i])] = tr;
+	}
+})();
 
 function _( f ) {
 	var t = translations[f];
@@ -3369,16 +3392,18 @@ function getLanguageCode() {
 
 function initLanguages() {
 	var languageSpan = document.getElementById('idLanguages');
-	var languageHTML = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+	var languageHTML = '';
 	languageHTML += languageHTML + languageHTML + languageHTML + languageHTML + languageHTML;
 	var languages = translations['language'];
+	var hellos = translations['hello'];
 	var languageCodes = translations['languageCode'];
 	for( var i = 0; i < languages.length; ++i )
 	{
 		languageHTML += '<input type="radio" name="languageCur" onClick="setLanguage(\''+languageCodes[i]+'\');"';
 		if( i == langCur )
 			languageHTML += ' checked="true"';
-		languageHTML += '/>' + languages[i] + '&nbsp;&nbsp;&nbsp;';
+		languageHTML += '/><span class="languageHello">' + hellos[i] + '</span> ' +
+			'<span class="languageName">(' + languages[i] + ')</span>' + '&nbsp;&nbsp;&nbsp;';
 	}
 	languageSpan.innerHTML = languageHTML;
 }
@@ -3449,7 +3474,7 @@ function onLoad()
 	
 	var s = '';
 	if( organizer )
-		s = 'by ' + organizer;
+		s = organizer;
 	if( timestamp )
 	{
 		var tServer = (new Date(timestamp[0]).getTime()) / 1000.0;
@@ -3522,21 +3547,21 @@ function onLoad()
 <p>
 <table cellspacing="8"><tr>
 <td><img id="idImgHeader" alt="CrossMgr Logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEMAAABgCAIAAADJkFi8AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAlwSFlzAAAOwwAADsMBx2+oZAAAABp0RVh0U29mdHdhcmUAUGFpbnQuTkVUIHYzLjUuMTAw9HKhAAAR7ElEQVR4XsWbB1wUxx7H5zhAQIoimrwotsQSu3l+xGf0vacmNkz0JWiKLZpYwYYxBlFAEERAisDRm1S5o9yBFAURpMoB0lEpR1OaYolY4Pa9OReXvb3dvb3DvPCZD5+7vdm5+c7v///Pf2b2WId8ReD/9aeqrjJxri5gMf0+FvjviokJcw0KyW8QvwDP8sEr2P//SipAkv9b+TWi1U34RKHiUfKotscHQfZSllcbkO4PkHalSMx8RD/Z1xkfKF6+OefzbyVlmUnOBlPhnov36QfFIrZdIQy0skfJ4/KuYDGyj47n9beKaXLQq3HVjoKxhrEABMkWtmrIxFmJ//o+d79HAynSGX6HEiToLZnNKQPi/TQwCpBsOCjU0o0gZSBc1Bsb9cXOAlNOE4HnbGqn0iTwxti6st6Xv1PBMCPxES1al6nCDmaCgdX5aFrcTw51eBiHGz3DIYH3epV23ukMIRVHPgn0igWrrinEgFXWGHn5KzMhBuOU+2iYJOjt4dV1Db1uBM+RT7Lk65vKYaB3QSVX7y6EMIf9RK63e98LCWzEXdjLrSut7vZ71X8YtTc5JN8cLwOst87NCgWscKASMVTgWzK/l72oohL87a93jgU3vy8MfDucsoc3W5J6XpyhIzHjiAwmXQfaRWB0HRj7AIztBOO6hgp8q98EdMuBRiZgX6GhmrM8DQa9ExFtfwYJ2iaUiI5k9YE2qa7jMWRfj2kG2reBKg+AocAA4zIMyqifnOI9kCW5kNt9NKR20/Gs5d8nLlwdNXme36hxLjr6TrDoGjgbfuoze3nYv7cKvjlx83BQjUNWp1sx5cRKRzJ+cYcCJBjb6AYwIg1KBN1909FSzN2tBEOTyakEkbHp9akLAzS0HQCwYVhU1e0MP+Ws3Jl00LdS1uUoSWDI0p4mbU70mmCfjm35YHrTnIUJ++wLD/s2YiS26V0uhY9/di2dMt+fYddpqmmPurBie5JlggjTmZLE1FukOYWShDWujWVQAkYns/T8gbYt0DoANDYBNSMW23DR7BmvC62RJPYbgfqzRIPW+FlV3FW3YrZlp1lYWdkOnwHfggr77IwlIXvcyyAPNQlHNHpWp/6cjolLH3665oHh3wVA8yegvoalNpelMha8S2j1dTUXzx6/3XjeuYMruRe2VMYefJl/GhGehiSIABDKy3hVfZ2T7xcGbW2GUbCc2IXZxhfbnWRT6y+XTO3Lt0SENjLldyRJRZYEXtn1xcY/g0TSJsOU3vhAAIHk34smP82xIMOwERcdRwQsUhI/s7//xSTmfnVcl63/WTlz6XzDVYun2B1Y+daKZNWwQW6bizONSDHgxXznCX8xyWG/pr4iB/KuYzzFlkjGAlIPwcC6orT+YhJohF35LnJI8rZRSYFd74nWJCNxAyAKVy4DlhcACkw1CvgJJImOS79+lUcHk7VcLsldv3EA2L8tdu+QwgAopijXAYgEAAYbBrMnQ49Hq1kG1/QX21LCpBvKJVm36BguQ4NRJJkaA8MrAiAeAEc5PAqRHPITNWV7kZNAJxGQR14Mr9xzgiob9h5bOacwwMB4bgHAoYNRjMRXlCxIlCXpKzrXn21ML4iYz1r9mTkOA+aaVEZFdR2KA0eBwtIUJTl/uRQleVHkUJ3pz+cnOYcLj/g1+YcF9vF1aGAEZ+bjMGC+nKc4CSS8DQAMBmQwipLAcByXmOwWWWTuX0+419ozpT1mMilMY6DB3/RdcSRxSmGgWsE1LFn+pigJVf3lm++ojbihrpa+ednpeMtlz2M1MKRX8aor55+QXoplDoOkGLBgyJaR5b2QfPFTJYuVAcBQGaMbZ7rhUJ7zrBc8tS3L98usKAuGR5JLIsvwSXacu6+ucQOPgXt9XZUNJwTCNl8IYEHfVdTdCfW9ibIMn2T+SiEVxttpW3a38r2QcN8ziRmnaaQedEEp03r3Fs7QoWQkMHDB7fdhagK/UdpVhqnJDrv7QNpDpKkSKPZchufxklGAY+EuBTNMkq8P1VAIgqoEZSHdSoaEw9QETiyXAbg4BDNMkpXbKmhJIAzcZwmRUQZa3fCdHjohNFSXQZhhkiz9T5k8EgiThN8Ee0elUNJFKiC6XRgIwHnFsnpZZriTNNYQJnak7k64yJeBgULBaWE4Npb4blBgVmrHdB1PKt2qHZXMMFAqWZjot3mU0jAYCVTGW3mS/R6NOvpU8ZdcJb1xqapqBJ8RDINEOjAq7Sfr9lQRMhR6fVgqGaa+LebhTboGhFkfhgTlZJHeVleO5Ihfw6/+NRfND47Rhas5Jn6SMeefQnTn83Riu8EEfCdg/IHBWgkYaJy4BEIuyXH/OquAfN/Q4PiI09kxO8u5a7oSpvTxtdFUtz1M/ysjuCKXA6Opk2WT0oXt4Tpm93y++SYLPZmRFOVg4HxCS/Kbf7lbCJcfeTLvyvft8Z9inaZaRQ3wWb6mxjqa0OLJeaARbjl1n3Dk4Frcu92+Uns0ft5UKJTBbFr63BPV5KR/uVdoZEb0ngbeZ2J5y3FSpPqAD/85B66lSGCOHTCvqf+OtOTnbVq74ui7oVWIJJs420aGO92LW/KaP7Qwkrs/QlXhTQL7wq7NI9RS8TyHd5n2t7DhMwxUZaCVFe75jwl/g1O1QrP+VSKJ0v2murHcc8pnH/tAmBHqqS5WmwfaWDQY2Ee9tVoqKgrNLTLnge+dBDbYd2uEg8UPN+PmMWFA63RXjmKxmIcvGSeBrv8yYUQ/n+SsQ0nCJDBQpsIcAKtZmzMJMCYZKYkuMgu4g7bOx+1t3V33VkXOULL3uBOfgXJlMCBPVdbUaZMEaqryDQwaYdm1aRetV2uM8JXi+dnGAytnL5y4EbTsj3hNJZDEV1niKkYuQalY9abXhWfr4p2TPThux8NMt3C/XJIydXy2lobUAtNkg6P4re8JUyfr6cC9r3fi4EnQ16a2F0Iu/XA/6t3OVao+kjEXubkGyduC5H33tmwX5+8W5+1C8r6XvL21Ebm5ur9sibh+FiL6CGkeg7TTBStykuYPEaGV7O6mWGjzNOdcDc+Z7+Zz8VjYfhNeSfpsrIWcuOkG+h6DMLIk2JXooONI4UE5Jw0kh0HWSIklcucAUrUFqV2FNExHWnTleQ5LXLGN6Rc1TcS3VpD0saYGDJVBgIrkFxuPhgw7pq2THm5hF0vOIFU/IneNkGY9cqTGTxChNaPvgmPUpkZoJC7wM7ZKICXJOfeLjJqmZyB+aoVUbkWaJiDteI9iIeX7mH5X1TekY7Fv2w5QwHdw9Dorq0xugryzOMUY8CeS1kjFDolHoRN//QKmGPAbG2aSkvTWagKkYifSpt5a+VFkrMlhh/Mo0hEH99e3yU5Dle+9bGtWSPVGpEUPKTvKlKT0mKxpYWBgoEUTe/OiSZOXdMLGNyYhmsS0+ottoIBZcedTYs7HRVxIjnEcKB42bckpphhwEO99ThM5gD3HXJg7/3nDSDRIc696eseml2QEyH5BQqQjwQhdvC6+LCIJnQp0jrnIJRZIqxYdCdq5fbaulYUz/2g08OGmQBIfbpooxx3fofvX7fbaDs2hZvYXBElrmu5M7BeNQcr3/ildJ0DWrSBgdFWCknRWejRICAKe9ixJ7PrlrLulm+U94dSa0nUQAy0BvJSufGesi06eLpggRxwdOmsNhtptYyM1a5mGUeYi4Gp2XD/mba9hvo9lYsxav4o1ZyYYqSXzJPiTep2n9driNkkYSc2wwUjgi/AEwR/vniaAQRkjieKShcLGyQr4roI8u79eKP8Jdmxo+1tH+Mfx8STwdb1wC1Ly+6O806ecXTGSWzeMyO0Vzll3lyMlFE+BKNh7zByKwn5RZasoQCKqWkzA8OMlvWrRRlo1+IL1eF9PTl5Nl3206Ilr10oSFmW7jr8RPuQzdfxo+RiwBtan7JxDBBLBNQf00/KCWXgSKw+LNy2qFDBsccf4vq4lD7t+bGl0fl1G/RgCA05xsfWurxbIxdDU0p5n9K9BEnGbymX+ZQJJhXAT2t3+VjYMCXgY96B9L5vVMZi+jondXV82PD5055l33rOQrKc+N55yYMnp9a5uc31Uo2S6EGz9NYtF+RsPLR29mQuMvjt48je3y6e8ogdJeu59TMDgcFN7G8ZjfW2r/PCo4zk8zG8u1inpxjnVB3J6XNB+05T8R54NTS4Q6Xku06kw3uU7UvdQVVWfs2jZ1iNWFp5REAArgyTFhT8SSKKT/KXzPNBRM9Yp6ATMkQnzY2Cet1wStMLtrksb1s5bsWiy+bZ/BFtvbEqCeQp5ClwUtkdbU51gVzqj9JevNzGz88IDEEl4qR4EkoK8n1FBBtpVn3ZMFnWvLXl8IuupN++utzPf81TApSOul054X7K+7HmlWg7JzScSG3taZQ9dOdZxM75/2lpq0KGXzjNcu3TatvXztq2fv914/tEfjUbpaOCrjRs/yWTvrwQRCDySvvaJ9DmxqQSS9toF3Z1za3p23nrixHDIZatBP7kvcnl5Z8jvX+RZ6uvBR7yY/k2ePmebjCFRalJTuoYYfxNTsnvdlQaAN9567NXY6Pym9KxsLN5vsogJx8RPZm09dIa005QkaZlWBJLIPJ7SGNlvdXhTRsKAUhWE/EwdkCSMH0yY9IOZJb0tycKAl626AXHxBBL+vcvKkVQ8cOsrl7NmHii2njUVPnFM/jdn9nSPkHDmUgx5PK8whBh/eWnXe3wVJcl75NVdy3TecDBdJcuhqso+aWbyRz1X3CaouB3vEBijEA8gYMC3oZmJCmFkPeGIGpwGShRYdTVfPcaWTqUWL5xRnuGBtAuw8rxJEJPIZQ5DQuLHv8oti87o9mPCU9jt+eRteFW0fGk0FZVFlc22OGTS18jDY6CvB9oE1zLiGMKQkKAqcXhp4Tlx6Q8DaHjKH7i9pvZserZI+28hxiTDcSXX3GQZ8Ff4KTwmMJQkGE9UATe9w1+Wp17kIlbEoghgMMk9stv4SV00PQb8tL8lwS9CklnRFzkkGM8VYUzmk8G8EM7Z7fccFTUnqfoltuL7wXIY2hIRWKfKDd74KM/eiiOVZZFEYVmPp7oSmpGY9jAA+jfzGEVOe8cREV2hw2iKQirdkBKpFQGf6/MeNMHYfOJSb5f5DkuNSlekNZ4Cgy9ujEAqyJ9578m1f58kkkjATSvL9FcORlzjjbTxyTEaI5GKoQ0Qkk37YhtHfzpvkfITpzC+55U0JvaWnhLVL6TMR8g5a33IGVq4SPUlJkPjHRpMI8sQideVtL12XvvPeZ/xjnKPuiqXB8KIGcOI63zJMe4FEvyBBsknjBmJY0gCtoTaY+t52jvSM4aY6hPwbqSGM4K5CxdtQ5P34OvWOKTag4kUWB23oDBGmlh4hhMWg2bnfZ3CEunFKbwWLKc3tRxSNSRRWJHM4E2xjY0PXSAesi5TB1/SUyFLrwgaGLjv2phDbeUlNq9bqQIuH4HhmDFM5y0HWUGsvUPtffwCAq3jw/YOklwMT6I5pjvuGgy9iIrHj5valedE1aeee679DyjiVUOYXBLJj9cKdiM5X9XxN0YFH4kP3ZsXta40Ztnd2PktvE9e8jWwZ1MGSax9YmhI4EfmLkE0YS2WH0/1Cxu45XW3O5RyHqSPvPnbkRR9hgfRgyRHnALoSVAYGmVupVEOcGGP58POGHKYhnA5shSfQq59zARGQnIpOvWXs5fkksAKJz3CqGyME5uO39vH96+m1TX3ie/zh3HkMFXyIlixBZIm/3dTEpJzAVwmGGgda59oKpik5CukA9zcINmdET4OHGgnc5jmWLneghSaIslq9MpISE64hTAngerBmYcKpjVXkroSClxRoouC+u5wcllqKH77hWuqsckZv7KILSMOKICmv8/OmzkJrHnAnkPl/QIyWTCSrKecRx2x5LOkdOYrOxwDJWfh7hkGQ0KCn9qZ88AMgFQW6C0pyTFpKdGpKdHwP1rirsfC5SdaeDmJL5qSSGBgHiBvbqko5mDtBKYmEToATnlGMAfApzMe0ZITSSVKSkaqWDZ5gS5UKmd76VnheV8uZQIFTB18lCCBt1hcClcCA72lovgqiSz1oXJlSb1KGW8on/aQiwezTKVl8eOlP6onszHaiRJy3r3pRTV8/wMCgeTB1wlekAAAAABJRU5ErkJggg=="/></td>
-<td valign="top"><span id="idRaceName">Cyclo-Cross Race Results</span><br/><span id="idOrganizer">by CrossMgr</span>
+<td valign="top"><span id="idRaceName">Cyclo-Cross Race Results</span><br/><span data-tr="by"></span> <span id="idOrganizer">CrossMgr</span>
 &nbsp;&nbsp;&nbsp;&nbsp;
 <span class="noprint">
-<a id="idEmail" href="mailto:helpful.organizer@great_race_organization.com?subject=CrossMgr Results Output">Email Comments/Suggestions</a>.
+<a id="idEmail" href="mailto:helpful.organizer@great_race_organization.com?subject=CrossMgr Results Output"><span data-tr="Email Comments/Suggestions"></span></a>.
 <br/>
-Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
+<span data-tr="Powered by"></span> <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
 <span id="idRFID"></span>&nbsp;&nbsp;&nbsp;<button id="idVirtualTour" onclick="OpenVirtualTourWindow()">Google Earth Ride</button>
 </span>
 </tr></table><span id="idReloadStatus"></span><span id="idRaceNotes"></span>
 </p>
 <p>
 
-<strong><span id="idLanguages"></span></strong>
+<span id="idLanguages"></span>
 <p/>
-<strong><span data-tr='Category'></span>: <span id="idCategories"></span></strong>
+<span data-tr='Category' class="categoryTitles"></span>: <span id="idCategories" class="categoryTitles"></span>
 </p>
 <div id="idTrackDiv">
 <canvas id="idTrack" width="600" height="300" class="noprint">
@@ -3568,10 +3593,9 @@ Current versions of Chrome, FireFox and Opera work fine.
 <span data-tr="Highlight Numbers"></span>:
 <input type="text" id="idNumsToWatch" value="" onChange="SetNumsToWatch()"></input>
 <button><span data-tr="Apply"></span></button>
-(e.g. 124,131, or click on a row below) 
 <select class="noprint" id="idShowTrack" onChange="SetShowTrack()">
-	<option value="gpx" selected="selected" data-tr="GPX">GPX</option>
-	<option value="oval" data-tr="Track">Track</option>
+	<option value="gpx" selected="selected" data-tr="GPX"></option>
+	<option value="oval" data-tr="Track"></option>
 </select>
 </p>
 </div> <!-- idTrackDiv -->
