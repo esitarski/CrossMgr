@@ -140,6 +140,7 @@ var gpsIsPointToPoint = null;	// Flag whether course is point-to-point or a loop
 var courseCoordinates = null;	// course coordinates as an array of lon, lat pairs.
 var virtualRideTemplate = null;	// template to generate virtual ride page
 var infoFields = null;			// Potential rider fields to show in the results.
+var langCur = null;				// Display language of the page.
 
 var gpsPointsTest = [[2173,845,181],[2354,852,85],[2440,853,85],[2526,855,85],[2611,857,85],[2697,858,85],[2783,860,85],[2868,861,99],[2968,861,99],[3067,861,99],[3167,861,149],[3316,868,89],[3406,876,89],[3496,883,89],[3585,890,89],[3675,897,89],[3765,904,97],[3848,954,95],[3895,1037,99],[3903,1136,107],[3901,1244,93],[3898,1337,126],[3897,1463,90],[3897,1553,90],[3897,1643,90],[3897,1733,94],[3953,1809,109],[4024,1725,90],[4080,1654,139],[4220,1657,65],[4280,1682,115],[4381,1739,73],[4442,1780,106],[4535,1831,100],[4629,1867,88],[4715,1888,124],[4822,1952,104],[4885,2035,57],[4924,2077,91],[5011,2107,99],[5109,2096,107],[5205,2048,121],[5296,1967,72],[5345,1914,96],[5422,1858,117],[5533,1819,88],[5621,1829,107],[5729,1832,128],[5857,1821,55],[5912,1813,92],[6005,1809,111],[6113,1840,80],[6136,1916,141],[6131,2058,92],[6088,2140,104],[6003,2201,66],[5945,2231,102],[5851,2274,102],[5759,2318,101],[5692,2394,73],[5684,2467,152],[5731,2613,65],[5755,2673,100],[5808,2758,97],[5876,2828,86],[5918,2904,74],[5865,2956,90],[5787,3002,138],[5650,3023,82],[5572,3048,74],[5527,3108,97],[5515,3205,101],[5505,3305,94],[5441,3375,98],[5367,3440,113],[5350,3552,93],[5386,3638,94],[5413,3729,90],[5374,3811,102],[5343,3909,116],[5316,4022,88],[5302,4110,84],[5330,4189,100],[5261,4262,85],[5212,4192,93],[5246,4105,90],[5282,4022,114],[5316,3913,99],[5340,3817,75],[5308,3747,127],[5258,3630,94],[5261,3536,94],[5263,3441,94],[5266,3346,94],[5268,3252,94],[5270,3157,94],[5273,3063,94],[5275,2968,94],[5278,2874,94],[5280,2779,94],[5282,2684,94],[5285,2590,94],[5287,2495,58],[5238,2464,103],[5229,2567,96],[5224,2663,96],[5219,2760,96],[5215,2856,96],[5210,2952,96],[5205,3048,96],[5200,3144,96],[5195,3241,86],[5154,3317,141],[5133,3177,93],[5138,3084,93],[5143,2991,93],[5148,2898,93],[5153,2805,93],[5158,2712,93],[5163,2619,93],[5168,2526,93],[5174,2433,103],[5170,2329,144],[5027,2318,83],[4943,2315,83],[4860,2313,83],[4777,2310,90],[4695,2346,89],[4762,2405,105],[4867,2415,87],[4954,2421,87],[5041,2427,77],[5028,2503,123],[4905,2509,83],[4822,2502,83],[4739,2495,87],[4683,2562,103],[4683,2666,97],[4684,2763,97],[4685,2860,97],[4686,2958,97],[4687,3055,97],[4687,3152,97],[4688,3249,82],[4646,3320,144],[4613,3180,91],[4614,3088,91],[4616,2997,91],[4617,2905,91],[4618,2814,91],[4620,2722,91],[4621,2631,91],[4623,2539,60],[4566,2561,102],[4554,2663,96],[4544,2759,96],[4534,2855,96],[4524,2951,96],[4514,3046,96],[4504,3142,96],[4494,3238,89],[4440,3309,102],[4342,3279,101],[4247,3244,86],[4166,3213,107],[4100,3128,107],[4039,3040,94],[3983,2964,94],[3927,2887,94],[3871,2811,94],[3815,2735,94],[3759,2658,114],[3686,2570,96],[3589,2564,91],[3498,2564,91],[3407,2563,69],[3461,2518,89],[3527,2457,98],[3495,2364,95],[3401,2383,84],[3327,2424,52],[3324,2372,80],[3358,2299,82],[3367,2217,95],[3273,2198,96],[3233,2285,90],[3198,2369,63],[3174,2309,88],[3163,2222,88],[3152,2134,130],[3028,2093,81],[2961,2047,90],[2876,2078,129],[2764,2143,59],[2717,2179,98],[2655,2256,102],[2612,2349,113],[2580,2458,87],[2558,2542,103],[2545,2645,90],[2512,2730,122],[2432,2822,82],[2355,2854,89],[2359,2944,89],[2374,3032,94],[2463,3065,72],[2535,3068,114],[2597,3164,88],[2605,3252,97],[2526,3309,148],[2377,3323,84],[2293,3329,84],[2208,3335,84],[2124,3341,84],[2039,3347,84],[1955,3352,121],[1833,3356,94],[1739,3357,94],[1644,3358,94],[1550,3360,94],[1455,3361,94],[1360,3362,129],[1231,3375,88],[1143,3386,88],[1056,3398,109],[947,3389,93],[921,3299,83],[905,3216,100],[863,3126,107],[758,3107,113],[689,3017,65],[685,2951,135],[818,2924,63],[882,2921,92],[975,2922,77],[1035,2874,99],[1040,2775,146],[1035,2628,80],[1028,2548,80],[1021,2467,132],[1010,2335,86],[1004,2249,86],[997,2163,86],[991,2077,106],[976,1972,107],[944,1869,82],[882,1815,137],[862,1679,77],[860,1602,77],[857,1525,99],[833,1428,104],[793,1332,92],[737,1258,141],[648,1368,58],[615,1415,129],[567,1535,94],[538,1626,101],[513,1724,70],[525,1793,81],[499,1871,143],[361,1909,69],[292,1899,69],[222,1889,95],[134,1851,98],[63,1782,111],[0,1691,80],[14,1612,88],[55,1533,117],[143,1455,93],[200,1380,87],[255,1313,121],[278,1193,76],[302,1121,137],[400,1025,54],[436,985,105],[534,944,109],[642,961,89],[727,935,86],[788,874,85],[874,872,96],[966,845,100],[1042,779,113],[1138,719,76],[1144,642,95],[1116,551,90],[1071,474,114],[1014,374,86],[987,292,95],[962,199,134],[898,81,81],[852,15,69],[920,0,64],[970,39,99],[1036,114,128],[1118,213,86],[1174,279,86],[1230,345,86],[1286,411,112],[1364,491,132],[1455,588,56],[1491,631,120],[1540,741,72],[1542,813,106],[1476,896,85],[1432,970,120],[1520,1052,71],[1588,1074,99],[1681,1109,102],[1728,1018,99],[1700,922,97],[1786,875,87],[1873,863,84],[1956,849,100],[2056,837,117]];
 
@@ -212,18 +213,6 @@ function isEmptyObject( obj ) {
     return true;
 }
 
-function getUrlParameter( name )
-{
-	name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
-	var regexS = "[\\?&]"+name+"=([^&#]*)";
-	var regex = new RegExp( regexS );
-	var results = regex.exec( window.location.href );
-	if( results == null )
-		return "";
-	else
-		return results[1];
-}
-
 var degreesToRadians = Math.PI / 180.0;
 var radiansToDegrees = 180.0 / Math.PI;
 
@@ -294,6 +283,23 @@ function GetLapRatio( leaderRaceTimes, tCur, iLapHint )
 	return [iLapHint, lapRatio];
 }
 
+function doReload() {
+	var href = window.location.href;
+	
+	var qMark = href.indexOf( '?' );
+	if( qMark != -1 )
+		href = href.substring( 0, qMark );
+	
+	var params = [
+		'raceCat=' + categoryCur,
+		'highlight=' + document.getElementById('idNumsToWatch').value,
+		'lang=' + getLanguageCode()
+	]
+	
+	// Reload the location.
+	window.location.href = href + '?' + params.join('&');
+}
+
 var reloadTriggered = false;
 function TriggerReload( leaderRaceTimes, tCur, iLapHint )
 {
@@ -309,7 +315,8 @@ function TriggerReload( leaderRaceTimes, tCur, iLapHint )
 			leaderRaceTimes[iLapHint] <= tCur && tCur < leaderRaceTimes[iLapHint+1] ) {
 		if( tCur - leaderRaceTimes[iLapHint] < 1.0 ) {
 			reloadTriggered = true;
-			setTimeout( function(){window.location.reload(true);}, Math.round(5000 + Math.random() * 3000) );
+			setTimeout( doReload, Math.round(5000 + Math.random() * 3000) );
+			//setTimeout( function(){window.location.reload(true);}, Math.round(5000 + Math.random() * 3000) );
 			//document.getElementById( 'idReloadStatus' ).innerHTML = 'Reload Triggered';
 		}
 	}
@@ -891,8 +898,8 @@ function TrackAnimation()
 				TriggerReload( leaderRaceTimes, t, this.iLapDistance );
 				var lapRatio = glr[1];
 				lapRatio = Math.floor(lapRatio * 10.0) / 10.0		// Always round down, not to nearest decimal.
-				table[0].push( FixedFormat(this.iLapDistance + lapRatio, 5, 1) + ' Laps of ' + maxLaps );
-				table[1].push( FixedFormat(maxLaps - this.iLapDistance - lapRatio, 5, 1) + ' Laps to go' );
+				table[0].push( FixedFormat(this.iLapDistance + lapRatio, 5, 1) + ' ' + _('Laps of') + ' ' + maxLaps );
+				table[1].push( FixedFormat(maxLaps - this.iLapDistance - lapRatio, 5, 1) + ' ' + _('Laps to go') );
 				
 				var leaderCategory = data[leaders[0]]['raceCat'];
 				var cat = (leaderCategory && catDetails ? catDetails[leaderCategory] : null);
@@ -1665,8 +1672,8 @@ function GeoAnimation()
 				TriggerReload( leaderRaceTimes, t, this.iLapDistance );
 				var lapRatio = glr[1];
 				lapRatio = Math.floor(lapRatio * 10.0) / 10.0		// Always round down, not to nearest decimal.
-				table.push( FixedFormat(this.iLapDistance + lapRatio, 5, 1) + ' Laps of ' + maxLaps );
-				table.push( FixedFormat(maxLaps - this.iLapDistance - lapRatio, 5, 1) + ' Laps to go' );
+				table.push( FixedFormat(this.iLapDistance + lapRatio, 5, 1) + ' ' + _('Laps of') + ' ' + maxLaps );
+				table.push( FixedFormat(maxLaps - this.iLapDistance - lapRatio, 5, 1) + ' ' + _('Laps to go') );
 				
 				var leaderCategory = data[leaders[0]]['raceCat'];
 				var cat = (leaderCategory && catDetails ? catDetails[leaderCategory] : null);
@@ -1865,9 +1872,9 @@ function SetData( aData, tCur )
 		for( var i = 0; i < categories.length; ++i )
 		{
 			var cat = categories[i];
-			catHTML += '<input type="radio" name="categoryCur" onClick="SelectCategory('+i+');"';
+			catHTML += ('<input type="radio" name="categoryCur" onClick="SelectCategory('+i+');" id="idICat"' + i);
 			if( i == 0 )
-				catHTML += ' checked="true"';
+				catHTML += ' checked="true" data-tr="All"';
 			catHTML += '/>' + cat.escapeHTML() + '&nbsp;&nbsp;&nbsp;';
 		}
 	}
@@ -1900,7 +1907,7 @@ function SetData( aData, tCur )
 			showHTML += ' checked="true"';
 			firstOption = false;
 		}
-		showHTML += '/>' + o.name.escapeHTML() + '&nbsp;&nbsp;&nbsp;';
+		showHTML += '/><span  data-tr="' + o.name +'">' + o.name.escapeHTML() + '</span>&nbsp;&nbsp;&nbsp;';
 	}
 	showOptionsSpan.innerHTML = showHTML;
 	
@@ -2256,7 +2263,7 @@ function SetCategoryResults()
 				{
 					var cd = catDetails[cat];
 					if( cd.raceDistance )
-						catStr += 'Distance: ' + FormatDistance(cd.raceDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true);
+						catStr += _('Distance') + ': ' + FormatDistance(cd.raceDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true);
 					if( cd.lapDistance && cd.laps > 1 )
 					{
 						if( catStr )
@@ -2264,25 +2271,28 @@ function SetCategoryResults()
 						if( cd.firstLapDistance && cd.firstLapDistance != cd.lapDistance )
 						{
 							catStr += (
-								'1st lap ' + FormatDistance(cd.firstLapDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true) + ', ' +
-								(cd.laps-1) + " more laps of " + FormatDistance(cd.lapDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true));
+								_('1st lap') + ' ' + FormatDistance(cd.firstLapDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true) + ', ' +
+								(cd.laps-1) + ' ' + _('more laps of') + ' ' + FormatDistance(cd.lapDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true));
 						}
 						else
-							catStr += cd.laps + " laps of " + FormatDistance(cd.lapDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true);
+							catStr += cd.laps + ' ' + _('laps of') + ' ' + FormatDistance(cd.lapDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true);
 					}
 					if( raceStartTime )
 					{
 						if( catStr )
 							catStr += ', ';
-						catStr += 'Start: ' + FormatTime(raceStartTime + cd.startOffset);
+						catStr += _('Start') + ': ' + FormatTime(raceStartTime + cd.startOffset);
 					}
 				}
 				catStr +=  '<br/>';
-				catStr += (raceIsRunning ? "Estimated " : "") +
-					"Winner: " + tFinishStr + ' at ' +
+				catStr +=
+					(raceIsRunning ? _('Estimated') + ': ' : '') +
+					_('Winner') + ': ' + tFinishStr + ' ' + _('at') + ' ' +
 					FormatSpeed(parseFloat(d['speed'].split(' ')[0]), cd.distanceUnit ? cd.distanceUnit : 'km', true) + ', ' +
-					starters + ' starters, ' + finishers + ' finishers (' + finishersPercent.toFixed(1) + '%)';
-				catTitleTD.innerHTML = '<span class="biggerFont">' + cat + (raceIsRunning ? " (race in progress)" : "") + '</span>' +
+					starters + ' ' + _('starters') + ', ' +
+					finishers + ' ' + _('finishers') + ' (' + finishersPercent.toFixed(1) + '%)';
+				catTitleTD.innerHTML = '<span class="biggerFont">' + cat +
+						(raceIsRunning ? " (" + _('race in progress') + ')' : '') + '</span>' +
 						'<br/><span class="smallfont">' + catStr + '</span>';
 			}
 			
@@ -2310,7 +2320,7 @@ function SetCategoryResults()
 				else if( riderTime > leaderTime )
 				{
 					var lapsDown = leaderLaps - riderLaps;
-					gap = lapsDown + ' lap' + (lapsDown == 1 ? '' : 's');
+					gap = lapsDown + ' ' + (lapsDown == 1 ? _('lap') : _('laps'));
 				}
 			}
 				
@@ -2904,6 +2914,18 @@ function SelectCategory( i )
 	animationObj.Refresh();
 	RefreshRaceChart();
 }
+
+function setCategory( catName )
+{
+	for( var i = 0; i < categories.length; ++i )
+	{
+		if( catName == categories[i] ) {
+			SelectCategory( i );
+			return;
+		}
+	}
+	SelectCategory( 0 );
+}
 		
 function StartAnimateRealtime()
 {
@@ -3241,8 +3263,9 @@ function SetTotalElevationGain() {
 */
 }
 
-var langCur = 0;
 var translations = {
+	'languageCode':	['en',				'fr',					'es'],
+	'language':		['English',			'Française',			'Español'],
 	'Gap':			['Gap',				'Écart',				'Lapso'],
 	'Name':			['Name',			'Nom',					'Nombre'],
 	'LastName':		['Last Name',		'Dernier nom',			'Apellido'],
@@ -3255,24 +3278,91 @@ var translations = {
 	'Lap':			['Lap',				'Tour',					'Vuelta'],
 	'lap':			['lap',				'tour',					'vuelta'],
 	'laps':			['laps',			'tours',				'vueltas'],
-	'Show Every Lap': ['Show Every Lap', 'Afficher Tous les Tours', 'Mostrar Todas las Vueltas'],
-	'Show Every {} Laps': ['Show Every {} Laps', 'Afficher Tous les {} Tours', 'Mostrar Cada {} Vueltas'],
+	'laps of':		['laps of',			'tours de',				'vueltas de'],
+	'Laps of':		['Laps of',			'Tours de',				'Vuelta de'],
+	'Laps to go':	['Laps to go',		'Tours à faire',		'Vueltas para el Final'],
+	'1st lap':		['1st lap',			'Premier tour',			'Primera vuelta'],
+	'more laps of':	['more laps of',	'tours de plus de',		'vueltas más de'],
+	'Estimated':	['Estimated',		'Estimé',				'Estimado'],
+	'Winner':		['Winner',			'Gagnant',				'Ganador'],
+	'starters':		['starters',		'entrées',				'aperitivos'],
+	'finishers':	['finishers',		'arrivées',				'finalistas'],
+	'Show 100s of Seconds': ['Show 100s of Seconds', 'Afficer 100s de Seconds', 'Mostrar 100s de Segundos'],
+	'Hide Lap Info':['Hide Lap Info',	'Masquer les infos de tour',	'Ocultar la info de vuelta'],
+	'Show Every Lap':['Show Every Lap',	'Afficher Tous les Tours', 'Mostrar Todas las Vueltas'],
+	'Show Every 2 Laps': ['Show Every 2 Laps','Afficher Tous les 2 Tours', 'Mostrar Cada 2 Vueltas'],
+	'Show Every 3 Laps': ['Show Every 3 Laps','Afficher Tous les 3 Tours', 'Mostrar Cada 3 Vueltas'],
+	'Show Every 5 Laps': ['Show Every 5 Laps','Afficher Tous les 5 Tours', 'Mostrar Cada 5 Vueltas'],
+	'Show Every 10 Laps': ['Show Every 10 Laps','Afficher Tous les 10 Tours', 'Mostrar Cada 10 Vueltas'],
+	'Show Every 15 Laps': ['Show Every 15 Laps','Afficher Tous les 15 Tours', 'Mostrar Cada 15 Vueltas'],
+	'Show Every 20 Laps': ['Show Every 20 Laps','Afficher Tous les 20 Tours', 'Mostrar Cada 20 Vueltas'],
+	'Show Every 25 Laps': ['Show Every 25 Laps','Afficher Tous les 25 Tours', 'Mostrar Cada 25 Vueltas'],
+	'Show Every 50 Laps': ['Show Every 50 Laps','Afficher Tous les 50 Tours', 'Mostrar Cada 50 Vueltas'],
+	'Show Every 100 Laps': ['Show Every 100 Laps','Afficher Tous les 100 Tours', 'Mostrar Cada 100 Vueltas'],
+	'All':			['All',				'Tous',					'Todo'],
+	'Lap Times':	['Lap Times',		'Temps des Tours',		'Tiempos de Vuelta'],
+	'Race Times':	['Race Times',		'Temps de Course',		'Tiempos de Carrera'],
+	'Time Gaps':	['Time Gaps',		'Écarts des Tours',		'Diferencia de Tiempo de las Vueltas'],
+	'Gap Percents':	['Gap Percents',	"Pour cent de l'écart",		'Ciento Brecha'],
+	'Lap Speed':	['Lap Speed',		'Vitesse des Tours',	'Velocidad de la Vuelta'],
+	'Est. Distance Gap': ['Est. Distance Gap', 'Écart de Distance Est.', 'Diferencia Est. Distancia'],
+	'Race Chart':	['Race Chart',		'Tableau de course',		'Tabla de Carrera'],
+	'Show Start Offsets':	['Show Start Offsets',	'Afficher Commencer Décalages',	'Mostrar Empezar a Desplazamientos'],
+	'Loop Continuously':['Loop Continuously',	'Boucle Continue',	'Repetirá Continuamente'],
+	'Playback Speed':['Playback Speed',	'Vitesse de Lecture',		'Velocidad de Reproducción'],
+	'Play':			['Play',			'Lire',						'Reproduzca'],
+	'Rewind':		['Rewind',			'Rembobinez',				'Rebobine'],
+	'Stop':			['Stop',			'Arrêtez',					'Pare'],
+	'Size':			['Size',			'Taille',					'Ramaño'],
+	'Text':			['Text',			'Texte',					'Texto'],
+	'Highlight Numbers': ['Highlight Numbers', 'Numéros de Souligner', 'Números de Relieve'],
+	'Track':		['Oval Track',		'Piste Oval',				'Pista Ovalada'],
+	'GPX':			['GPX Course',		'GPX',						'GPX'],
+	'Apply':		['Apply',			'Appliquer',				'Aplicar'],
+	'Chip Timing':	['Chip Timing':		'RFID Chronométrage',		'Cronometraje RFID'],
+	'last':			['','','']
 };
 
 function _( f ) {
 	var t = translations[f];
-	if( !t )
-		return f;
-	return t[langCur];
+	return t ? t[langCur] : f;
 }
 
-function setLanguage( lang ) {
-	if(      lang == 'es' )
-		langCur = 2;
-	else if( lang == 'fr' )
-		langCur = 1;
-	else
+function setLanguage( langCode ) {
+	var langs = translations['languageCode'];
+	for( var i = 0; i < langs.length; ++i ) {
+		if( langs[i] == langCode ) {
+			langCur = i;
+			break;
+		}
+	}
+	if( langCur == null )
 		langCur = 0;
+	
+	// Crawl the DOM tree and update any nodes with a data-tr attribute.
+	// Check for exceptions to updating with innerHTML.
+	var textAttr = {
+		'#text':	'nodeValue',
+		'OPTION':	'text'
+	};
+	var elements = document.getElementsByTagName('*');
+	for( var i = 0; i < elements.length; ++i )
+	{
+		e = elements[i];
+		trTag = e.getAttribute('data-tr');
+		if( trTag )
+		{
+			var tAttr = textAttr[e.nodeName];
+			if( !tAttr )
+				tAttr = 'innerHTML';
+			//alert( 'e.nodeName=' + e.nodeName + ' trTag="' + trTag + '" _(trTag)="' + _(trTag) + '" tAttr=' + tAttr + ' e.id=' + e.id );
+			e[tAttr] = _(trTag);
+		}
+	}
+}
+
+function getLanguageCode() {
+	return translation['languageCode'][langCur];
 }
 
 function onLoad()
@@ -3306,7 +3396,7 @@ function onLoad()
 	if( !rfid )
 		document.getElementById('idRFID').className = 'hidden';
 	else
-		document.getElementById('idRFID').innerHTML = 'Chip Timing.'
+		document.getElementById('idRFID').innerHTML = _('Chip Timing.');
 	
 	if( !raceNotes )
 		document.getElementById('idRaceNotes').className = 'hidden';
@@ -3395,22 +3485,16 @@ function onLoad()
 		SetNumsToWatch();
 	}
 	
-	var category = getUrlParam( 'raceCat', undefined );
-	if( category != '' )
-		categoryStr = category;
-	if( categoryStr )
-	{
-		var ropt = document.getElementById('idCat' + cat.escapeID());
-		if( ropt )
-			ropt.checked = true;
-	}
+	setCategory( getUrlParam('raceCat', undefined) );
+	//setLanguage( getUrlParam('lang', undefined) );
+	setLanguage( 'es' );
 	
 	SetCategoryResults();
 	RefreshRaceChart();
 	
 	// Start animation.
 	Animate( animationSeconds, undefined, raceIsRunning ? t : getStartTime() );
-	document.getElementById('idPlayStop').value = 'Stop';
+	document.getElementById('idPlayStop').value = _('Stop');
 }
 
 </script>
@@ -3431,7 +3515,7 @@ Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr<
 </p>
 <p>
 
-<strong>Category: <span id="idCategories"></span></strong>
+<strong><span data-tr='Category'>Category</span>: <span id="idCategories"></span></strong>
 </p>
 <div id="idTrackDiv">
 <canvas id="idTrack" width="600" height="300" class="noprint">
@@ -3442,10 +3526,10 @@ Current versions of Chrome, FireFox and Opera work fine.
 </canvas>
 <p class="noprint">
 <span id="idAnimateControls">
-<input type="button" id="idRewind" onClick="Rewind()" value="Rewind"></input>
-<input type="button" id="idPlayStop" onClick="PlayStop()" value="Play"></input>
-<input type="checkbox" id="idLoop" onClick="LoopContinuously()" checked>Loop Continuously</input>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Playback Speed:
+<button id="idRewind" onClick="Rewind()"><span data-tr="Rewind"></span></button>
+<button id="idPlayStop" onClick="PlayStop()"><span data-tr="Play"></span></button>
+<input type="checkbox" id="idLoop" onClick="LoopContinuously()" checked><span data-tr="Loop Continuously"></span></input>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span data-tr="Playback Speed"></span>:
 <input type="radio" name="groupSpeed" value="0" onClick="SetSpeed(-2)"></input>
 <input type="radio" name="groupSpeed" value="1" onClick="SetSpeed(-1)"></input>
 <input type="radio" name="groupSpeed" value="2" checked onClick="SetSpeed(0)"></input>
@@ -3453,20 +3537,20 @@ Current versions of Chrome, FireFox and Opera work fine.
 <input type="radio" name="groupSpeed" value="4" onClick="SetSpeed(2)"></input>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </span>
-Size:
+<span data-tr="Size"></span>:
 <input type="button" id="idIncreaseSize" onClick="AdjustSize(true)" value="+"></input>
 <input type="button" id="idDecreaseSize" onClick="AdjustSize(false)" value="-"></input>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Text:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span data-tr="Text"></span>:
 <input type="button" id="idIncreaseFont" onClick="AdjustFont(true)" value="+"></input>
 <input type="button" id="idDecreaseFont" onClick="AdjustFont(false)" value="-"></input>
 <br/>
-Highlight Numbers:
+<span data-tr="Highlight Numbers"></span>:
 <input type="text" id="idNumsToWatch" value="" onChange="SetNumsToWatch()"></input>
-<input type="button" value="Apply"</input>
+<button><span data-tr="Apply"></span></button>
 (e.g. 124,131, or click on a row below) 
 <select class="noprint" id="idShowTrack" onChange="SetShowTrack()">
-	<option value="gpx" selected="selected">GPX Course</option>
-	<option value="oval">Oval Track</option>
+	<option value="gpx" selected="selected" data-tr="GPX">GPX</option>
+	<option value="oval" data-tr="Track">Track</option>
 </select>
 </p>
 </div> <!-- idTrackDiv -->
@@ -3481,28 +3565,28 @@ Highlight Numbers:
 	&nbsp;&nbsp;&nbsp;
 </span>
 <input class="noprint" type="checkbox" id="idShowTimeDecimals" onClick="ToggleTimeDecimals()">
-	<span class="noprint">Show 100s of Seconds</span></input>
+	<span class="noprint" data-tr="Show 100s of Seconds"></span></input>
 &nbsp;&nbsp;&nbsp;
 <select class="noprint" id="idShowLaps" onChange="SetShowLaps()">
-	<option value="0">Hide Lap Info</option>
-	<option value="1" selected="selected">Show Every Lap</option>
-	<option value="2">Show Every 2 Laps</option>
-	<option value="3">Show Every 3 Laps</option>
-	<option value="5">Show Every 5 Laps</option>
-	<option value="10">Show Every 10 Laps</option>
-	<option value="15">Show Every 15 Laps</option>
-	<option value="20">Show Every 20 Laps</option>
-	<option value="25">Show Every 25 Laps</option>
-	<option value="50">Show Every 50 Laps</option>
-	<option value="100">Show Every 100 Laps</option>
+	<option value="0" data-tr="Hide Lap Info"></option>
+	<option value="1" selected="selected" data-tr="Show Every Lap"></option>
+	<option value="2" data-tr="Show Every 2 Laps"></option>
+	<option value="3" data-tr="Show Every 3 Laps"></option>
+	<option value="5" data-tr="Show Every 5 Laps"></option>
+	<option value="10" data-tr="Show Every 10 Laps"></option>
+	<option value="15" data-tr="Show Every 15 Laps"></option>
+	<option value="20" data-tr="Show Every 20 Laps"></option>
+	<option value="25" data-tr="Show Every 25 Laps"></option>
+	<option value="50" data-tr="Show Every 50 Laps"></option>
+	<option value="100" data-tr="Show Every 100 Laps"></option>
 </select>
 <span id="idTotalElevationGain"> </span>
 </p>
 <div id="idResultsDiv"></div>
 <div id="idRaceChartDiv">
-<p class="noprint"><span id="idRaceName">Race Chart</span>&nbsp;&nbsp;&nbsp;&nbsp;
+<p class="noprint"><span id="idRaceName" data-tr="Race Chart"></span>&nbsp;&nbsp;&nbsp;&nbsp;
 <span id="idShowStartOffsetOption">
-	<input type="checkbox" id="idShowStartOffsets" checked onClick="RefreshRaceChart()">Show Start Offsets</input>
+	<input type="checkbox" id="idShowStartOffsets" checked onClick="RefreshRaceChart()"><span data-tr="Show Start Offsets"></span></input>
 </span>
 </p>
 <canvas id="idRaceChart" width="1000" height="800" class="noprint">
