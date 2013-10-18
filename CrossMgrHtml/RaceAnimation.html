@@ -299,20 +299,25 @@ function GetLapRatio( leaderRaceTimes, tCur, iLapHint )
 }
 
 function doReload() {
+	var params = [
+		'raceCat=' + categoryCur,
+		'highlight=' + document.getElementById('idNumsToWatch').value,
+		'lang=' + getLanguageCode()
+	];
+	
 	var href = window.location.href;
 	
 	var qMark = href.indexOf( '?' );
 	if( qMark != -1 )
 		href = href.substring( 0, qMark );
 	
-	var params = [
-		'raceCat=' + categoryCur,
-		'highlight=' + document.getElementById('idNumsToWatch').value,
-		'lang=' + getLanguageCode()
-	]
+	href += '?' + params.join('&');
 	
 	// Reload the location.
-	window.location.href = href + '?' + params.join('&');
+	if( window.location.href != href )
+		window.location.href = href;
+	else
+		window.location.reload( true );
 }
 
 var reloadTriggered = false;
