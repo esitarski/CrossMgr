@@ -3290,6 +3290,7 @@ var translations = {
 	'Email Comments/Suggestions': ['Email Comments/Suggestions', 'Email Commentaires/Suggestions', 'E-mail Comentarios/Sugerencias'],
 	'Powered by':	['Powered by',		'Propulsé par',			'Desarrollado por'],
 	'created':		['created',			'créé',					'creada'],
+	'Refresh':		['Refresh',			'Actualiser',			'Actualizar'],
 	'by':			['by',				'par',					'por'],
 	'at':			['at',				'à',					'en'],
 	'miles':		['miles',			'miles',				'millas'],
@@ -3400,7 +3401,7 @@ function setLanguage( langCode ) {
 }
 
 function getLanguageCode() {
-	return translation['languageCode'][langCur];
+	return translations['languageCode'][langCur];
 }
 
 function initLanguages() {
@@ -3566,7 +3567,9 @@ function onLoad()
 <a id="idEmail" href="mailto:helpful.organizer@great_race_organization.com?subject=CrossMgr Results Output"><span data-tr="Email Comments/Suggestions"></span></a>.
 <br/>
 <span data-tr="Powered by"></span> <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
-<span id="idRFID"></span>&nbsp;&nbsp;&nbsp;<button id="idVirtualTour" onclick="OpenVirtualTourWindow()" data-tr="Google Earth Ride"></button>
+<span id="idRFID"></span>&nbsp;&nbsp;&nbsp;
+<button onclick="doReload()" data-tr="Refresh"></button>&nbsp;&nbsp;&nbsp;
+<button id="idVirtualTour" onclick="OpenVirtualTourWindow()" data-tr="Google Earth Ride"></button>
 </span>
 </tr></table><span id="idReloadStatus"></span><span id="idRaceNotes"></span>
 </p>
