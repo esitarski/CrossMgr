@@ -7,10 +7,11 @@ import os
 import sys
 import threading
 import datetime
+import codecs
 import Utils
 from Utils				import logCall
 import Model
-import cStringIO as StringIO
+import io
 
 import inspect
 def lineno():
@@ -68,7 +69,7 @@ def FtpWriteRaceHTML():
 	
 	htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
 	try:
-		with open(htmlFile) as fp:
+		with codecs.open(htmlFile, 'r', 'utf-8') as fp:
 			html = fp.read()
 	except Exception as e:
 		Utils.writeLog( 'FtpWriteRaceHTML Error(1): {}'.format(e) )
@@ -86,8 +87,11 @@ def FtpWriteRaceHTML():
 		serverPath	= getattr( race, 'ftpPath', '' )
 		
 	fname		= os.path.basename( os.path.splitext(Utils.getFileName())[0] + '.html' )
+	defaultPath = os.path.dirname( Utils.getFileName() )
+	with codecs.open(os.path.join(defaultPath, fname), 'w', 'utf-8') as fp:
+		fp.write( html )
 	
-	file		= StringIO.StringIO( html )
+	file		= open( os.path.join(defaultPath, fname), 'rb' )
 	try:
 		FtpWriteFile(	host		= host,
 						user		= user,

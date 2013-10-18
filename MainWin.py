@@ -31,7 +31,7 @@ from optparse import OptionParser
 import xlwt
 import wx.lib.agw.advancedsplash as AS
 import openpyxl
-import cStringIO as StringIO
+import StringIO
 from setpriority import setpriority
 
 import Utils
@@ -1088,7 +1088,7 @@ class MainWin( wx.Frame ):
 			hour, minute, second = timeComponents
 			raceTime = datetime.datetime( year, month, day, hour, minute, second )
 			title = _('{} Results for {} Start on {}').format( race.name, raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
-			html = html.replace( 'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
+			html = html.replace( u'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
 			
 			payload['organizer']		= getattr(race, 'organizer', '')
 			payload['reverseDirection']	= getattr(race, 'reverseDirection', False)
@@ -1294,7 +1294,7 @@ class MainWin( wx.Frame ):
 		if ret != wx.ID_OK:
 			return
 	
-		race =  Model.race
+		race = Model.race
 		host = getattr( race, 'ftpHost', '' )
 			
 		if not host:
@@ -1307,10 +1307,10 @@ class MainWin( wx.Frame ):
 
 		if e:
 			Utils.MessageOK(self, _('Ftp Upload Failed.  Error:\n\n{}').format(e), _('Ftp Upload Failed'), iconMask=wx.ICON_ERROR )
-		
-		# Automatically open the browser on the published file for testing.
-		if race.urlFull and race.urlFull != 'http://':
-			webbrowser.open( race.urlFull, new = 0, autoraise = True )
+		else:
+			# Automatically open the browser on the published file for testing.
+			if race.urlFull and race.urlFull != 'http://':
+				webbrowser.open( race.urlFull, new = 0, autoraise = True )
 			
 	#--------------------------------------------------------------------------------------------
 	@logCall
@@ -1458,7 +1458,7 @@ class MainWin( wx.Frame ):
 		html = self.addCourseToHtmlStr( html )
 		fname = os.path.join( dName, os.path.basename(fname) )
 		try:
-			with open(fname, 'w') as fp:
+			with codecs.open(fname, 'w', 'utf-8') as fp:
 				fp.write( html )
 			webbrowser.open( fname, new = 0, autoraise = True )
 			Utils.MessageOK(self, _('Course Preview written to:\n\n   {}').format(fname), _('Html Write'))
@@ -1582,7 +1582,7 @@ class MainWin( wx.Frame ):
 		# Write out the results.
 		fname = os.path.join( dName, os.path.basename(fname) )
 		try:
-			with open(fname, 'w') as fp:
+			with codecs.open(fname, 'w', 'utf-8') as fp:
 				fp.write( html )
 			webbrowser.open( fname, new = 0, autoraise = True )
 			Utils.MessageOK(self, _('Html Raw Data written to:\n\n   {}').format(fname), _('Html Write'))
@@ -1687,7 +1687,7 @@ class MainWin( wx.Frame ):
 		race = Model.race
 		if categoriesFile:
 			try:
-				with open(categoriesFile, 'r') as fp:
+				with codecs.open(categoriesFile, 'r', 'utf-8') as fp:
 					race.importCategories( fp )
 				importedCategories = True
 			except IOError:

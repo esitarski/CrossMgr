@@ -2,7 +2,7 @@
 import wx
 import wx.richtext as rt
 from wx.lib.embeddedimage import PyEmbeddedImage
-import cStringIO as StringIO
+import StringIO
 
 #----------------------------------------------------------------------
 _rt_alignleft = PyEmbeddedImage(
