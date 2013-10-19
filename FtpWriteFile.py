@@ -11,7 +11,6 @@ import codecs
 import Utils
 from Utils				import logCall
 import Model
-import io
 
 import inspect
 def lineno():

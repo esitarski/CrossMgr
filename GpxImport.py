@@ -41,7 +41,7 @@ class IntroPage(wiz.WizardPageSimple):
 		if geoTrack:
 			s = '\n\n'.join( [
 					_('Existing GPX file:'),
-					_('Imported from: "{}"').fomrat(geoTrackFName),
+					_('Imported from: "{}"').format(geoTrackFName),
 					_('Number of Coords: {}').format(geoTrack.numPoints),
 					_('Lap Length: {:.3f} km, {:.3f} miles').format(geoTrack.lengthKm, geoTrack.lengthMiles),
 					_('Total Elevation Gain: {:.0f} m, {:.0f} ft').format(geoTrack.totalElevationGainM, geoTrack.totalElevationGainFt),
