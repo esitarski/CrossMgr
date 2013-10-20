@@ -2186,8 +2186,6 @@ function SetCategoryResults()
 		}
 	}
 	
-	var table = document.createElement('TABLE');
-	table.className = 'results';
 	var speedUnit = '';
 	var distanceUnit = '';
 	for( var c = 0; c < categories.length; ++c )
@@ -2198,6 +2196,9 @@ function SetCategoryResults()
 			
 		if( categoryCur != 'All' && categoryCur != cat )
 			continue;
+		
+		var table = document.createElement('TABLE');
+		table.className = 'results';
 		
 		var curFields = {};
 		var resultsData = [];
@@ -2567,9 +2568,8 @@ function SetCategoryResults()
 			createTextChild( td = createChild(tr, 'TD'), '' );
 			td.innerHTML = '&nbsp;'
 		}
+		resultsDiv.appendChild( table );
 	}
-	
-	resultsDiv.appendChild( table );
 }
 
 function byte2Hex(n)
@@ -3631,13 +3631,13 @@ Current versions of Chrome, FireFox and Opera work fine.
 <button id="idRewind" onClick="Rewind()"><span data-tr="Rewind"></span></button>
 <button id="idPlayStop" onClick="PlayStop()"><span data-tr="Play"></span></button>
 <input type="checkbox" id="idLoop" onClick="LoopContinuously()" checked><span data-tr="Loop Continuously"></span></input>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span data-tr="Playback Speed"></span>:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span data-tr="Playback Speed"></span>:
 <input type="radio" name="groupSpeed" value="0" onClick="SetSpeed(-2)"></input>
 <input type="radio" name="groupSpeed" value="1" onClick="SetSpeed(-1)"></input>
 <input type="radio" name="groupSpeed" value="2" checked onClick="SetSpeed(0)"></input>
 <input type="radio" name="groupSpeed" value="3" onClick="SetSpeed(1)"></input>
 <input type="radio" name="groupSpeed" value="4" onClick="SetSpeed(2)"></input>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </span>
 <span data-tr="Size"></span>:
 <input type="button" id="idIncreaseSize" onClick="AdjustSize(true)" value="+"></input>
