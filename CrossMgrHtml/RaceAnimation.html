@@ -2009,16 +2009,18 @@ function SetData( aData, tCur )
 		categories.splice( 0, 0, 'All' );
 	
 	categorySpan = document.getElementById('idCategories');
-	var catHTML = '<div id="display_menu"><label class="heading" data-tr="Category:"></label><div class="buttonset">';
+	var catHTML = '<div id="display_menu"><div class="buttonset">';
 	if( categories.length > 1 )
 	{
 		for( var i = 0; i < categories.length; ++i )
 		{
 			var cat = categories[i];
-			catHTML += '<input type="radio" name="categoryCur" onClick="SelectCategory('+i+');" id="idCat' + i + '"';
+			catHTML += '<span><input type="radio" name="categoryCur" onClick="SelectCategory('+i+');" id="idCat' + i + '"';
 			if( i == 0 )
 				catHTML += ' checked="true"';
-			catHTML += '</input><label for="idCat' + i + '"' + (i == 0 ? ' data-tr="All">' : '>' + cat.escapeHTML()) + '</label>&nbsp;';
+			catHTML += '</input><label for="idCat' + i + '"' + (i == 0 ? ' data-tr="All">' : '>' + cat.escapeHTML()) + '</label></span>&nbsp;';
+			if( (i+1) % 4 == 0 && i != categories.length - 1 )
+				catHTML += '</div></div><div id="display_menu"><div class="buttonset">'
 		}
 	}
 	else if( categories.length == 1 )
@@ -3460,7 +3462,7 @@ function initLanguages() {
 			languageHTML += ' checked="true"';
 		languageHTML += '/></input><label for="idLanguage' + i + '" >' + languages[i] + '</label>&nbsp;';
 	}
-	languageHTML += '</div></div>';
+	languageHTML += '</div></div><hr/>';
 	languageSpan.innerHTML = languageHTML;
 }
 
