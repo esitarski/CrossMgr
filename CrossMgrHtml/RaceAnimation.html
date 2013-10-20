@@ -27,19 +27,51 @@ body { font-family: sans-serif; }
 
 .hidden { display: none; }
 
-.languageHello {
-	font-size: 130%;
-	font-weight:	bold;
-	color:	#4Fb54F;
+div label input {
+   margin-right:220px;
 }
 
-.languageName {
-	vertical-align: 5%;
+#display_menu {
+  background: white;
+  font: 18px sans-serif;
+  height: 30px;
+  line-height: 30px;
+  margin-bottom: 9px;
+  margin-top: 20px;
 }
-
-.categoryTitles {
-	font-size:		130%;
-	font-weight:	bold;
+#display_menu .heading {
+  color: gray;
+  display: inline-block;
+  height: 30px;
+  line-height: 30px;
+  padding: 0 10px; }
+#display_menu .buttonset {
+  display: inline-block;
+}
+#display_menu input[type=radio], #display_menu input[type=checkbox] {
+  display: none;
+}
+#display_menu .buttonset input[type=radio]:checked + label {
+  background-color: #7FE57F;
+  color: black;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #000;
+}
+#display_menu .buttonset input[type=checkbox]:checked + label {
+  background-color: #4Fb54F;
+  color: white;
+}
+#display_menu .buttonset label {
+  background: #efefef;
+  border-radius: 5px;
+  display: inline-block;
+  height: 30px;
+  line-height: 30px;
+  padding: 0 8px;
+}
+#display_menu .buttonset label:hover {
+  background-color: #e5e5e5;
 }
 
 table.results {
@@ -227,6 +259,97 @@ function isEmptyObject( obj ) {
     }
     return true;
 }
+
+//------------------------------------------------------------------------------------
+var translations = {
+	'languageCode':	['en',				'fr',					'es'],
+	'language':		['English',			'Française',			'Español'],
+	'hello':		['Hello!',			'Bonjour!',				'¡Hola!'],
+	'Email Comments/Suggestions': ['Email Comments/Suggestions', 'Email Commentaires/Suggestions', 'E-mail Comentarios/Sugerencias'],
+	'Powered by':	['Powered by',		'Propulsé par',			'Desarrollado por'],
+	'created':		['created',			'créé',					'creada'],
+	'Refresh':		['Refresh',			'Actualiser',			'Actualizar'],
+	'by':			['by',				'par',					'por'],
+	'at':			['at',				'à',					'en'],
+	'miles':		['miles',			'miles',				'millas'],
+	'Gap':			['Gap',				'Écart',				'Lapso'],
+	'Name':			['Name',			'Nom',					'Nombre'],
+	'LastName':		['Last Name',		'Dernier nom',			'Apellido'],
+	'FirstName':	['First Name',		'Prénom',				'Nombre'],
+	'Team':			['Team',			'Équipe',				'Equipo'],
+	'Category':		['Category',		'Catégorie',			'Categoria'],
+	'Category:':	['Category:',		'Catégorie:',			'Categoria:'],
+	'License':		['License',			'Licence',				'Licencia'],
+	'Age':			['Age',				'Âge',					'Edad'],
+	'Time':			['Time',			'Temps',				'Tiempo'],
+	'Lap':			['Lap',				'Tour',					'Vuelta'],
+	'lap':			['lap',				'tour',					'vuelta'],
+	'laps':			['laps',			'tours',				'vueltas'],
+	'laps of':		['laps of',			'tours de',				'vueltas de'],
+	'Laps of':		['laps of',			'tours de',				'vuelta de'],
+	'Laps to go':	['laps to go',		'tours à faire',		'vueltas antes de la meta'],
+	'to go':		['to go',			'à faire',				'antes de la meta'],
+	'of':			['of',				'de',					'de'],
+	'1st lap':		['1st lap',			'premier tour',			'primera vuelta'],
+	'more laps of':	['more laps of',	'tours de plus de',		'vueltas más de'],
+	'Estimated':	['Estimated',		'Estimé',				'Estimado'],
+	'Distance':		['distance',		'la distance',			'la distancia'],
+	'Start':		['start',			'au début',				'el comienzo'],
+	'Winner':		['winner',			'gagnant',				'ganador'],
+	'starters':		['starters',		'entrées',				'aperitivos'],
+	'finishers':	['finishers',		'arrivées',				'finalistas'],
+	'Show 100s of Seconds': ['Show 100s of Seconds', 'Afficer 100s de seconds', 'Mostrar 100s de segundos'],
+	'Hide Lap Info':['Hide Lap Info',	'Masquer les infos de tour',	'Ocultar la info de vuelta'],
+	'Show Every Lap':['Show Every Lap',	'Afficher tous les tours', 'Mostrar todas las vueltas'],
+	'Show Every {} Laps': ['Show Every {} Laps','Afficher tous les {} tours', 'Mostrar cada {} vueltas'],
+	'Show:':		['Show:',			'Afficher:',			'Mostrar:'],
+	'All':			['All',				'Tous',					'Todo'],
+	'Lap Times':	['Times',			'Temps',				'Tiempos'],
+	'Race Times':	['Race Times',		'Temps de course',		'Tiempos de carrera'],
+	'Time Gaps':	['Gaps',			"Écarts",				'Diferencia'],
+	'Gap Percents':	['Percent',			'Pour cent',			'Ciento'],
+	'Lap Speed':	['Speed',			'Vitesse',				'Velocidad'],
+	'Est. Distance Gap': ['Est. Distance',	"Distance est.", 		'Est. distancia'],
+	'Race Chart':	['Race Chart',		'Tableau de course',		'Tabla de carrera'],
+	'Show Start Offsets':	['Show Start Offsets',	'Afficher commencer décalages',	'Mostrar empezar a desplazamientos'],
+	'Loop Continuously':['Loop Continuously',	'Boucle continue',	'Repetirá continuamente'],
+	'Playback Speed':['Playback Speed',	'Vitesse de lecture',		'Velocidad de reproducción'],
+	'Units:':		['Units:',			'Unités:',					'Unidades:'],
+	'Play':			['Play',			'Lecture',					'Reproducir'],
+	'Rewind':		['Rewind',			'Rembobinez',				'Rebobinar'],
+	'Stop':			['Stop',			'Stop',						'Detener'],
+	'Size':			['Size',			'Taille',					'Ramaño'],
+	'Text':			['Text',			'Texte',					'Texto'],
+	'Highlight Numbers': ['Highlight Numbers', 'Numéros de souligner', 'Números de relieve'],
+	'Track':		['Oval Track',		'Piste oval',				'Pista ovalada'],
+	'GPX':			['GPX Course',		'GPX',						'GPX'],
+	'Apply':		['Apply',			'Appliquer',				'Aplicar'],
+	'Chip Timing':	['Chip Timing',		'RFID Chronométrage',		'Cronometraje RFID'],
+	'Google Earth Ride': ['See Lap on Google Earth', 'Afficher un tour sur Google Earth', 'Mostrar una vuelta en Google Earth'],
+	'Total':		['Total',			'Gain',						'Ganancia'],
+	'Elevation':	['Elevation',		'total',					'total'],
+	'Gain':			['Gain',			"d'altitude",				'de la elevación'],
+	'last':			['','','']
+};
+(function() {
+	// Expand all the lap options.
+	var key = 'Show Every {} Laps';
+	var showLaps = [2, 3, 5, 10, 15, 20, 25, 50, 100];
+	var showTr = translations[key];
+	for( var i = 0; i < showLaps.length; ++i ) {
+		var tr = [];
+		for( var j = 0; j < showTr.length; ++j )
+			tr.push( showTr[j].replace('{}', showLaps[i]) );
+		translations[key.replace('{}', showLaps[i])] = tr;
+	}
+})();
+
+function _( f ) {
+	var t = translations[f];
+	return t ? t[langCur] : f;
+}
+
+//------------------------------------------------------------------------------------
 
 var degreesToRadians = Math.PI / 180.0;
 var radiansToDegrees = 180.0 / Math.PI;
@@ -1218,7 +1341,7 @@ function Altigraph()
 			teg += Math.max(0.0, altigraph[i][1] - altigraph[i-1][1]);
 		var tegLabel = '';
 		var tegWidth = 0;
-		var tegText = ['Total', 'Elevation', 'Gain'];
+		var tegText = [('Total'), ('Elevation'), ('Gain')];
 		if( gpsTotalElevationGain )
 		{
 			tegLabel = (gpsTotalElevationGain * (displayUnits == 'km' ? 1.0 : 3.28084)).toFixed(0) + (displayUnits == 'km' ? ' m' : ' ft');
@@ -1886,20 +2009,21 @@ function SetData( aData, tCur )
 		categories.splice( 0, 0, 'All' );
 	
 	categorySpan = document.getElementById('idCategories');
-	var catHTML = '';
+	var catHTML = '<div id="display_menu"><label class="heading" data-tr="Category:"></label><div class="buttonset">';
 	if( categories.length > 1 )
 	{
 		for( var i = 0; i < categories.length; ++i )
 		{
 			var cat = categories[i];
-			catHTML += ('<input type="radio" name="categoryCur" onClick="SelectCategory('+i+');" id="idICat"' + i);
+			catHTML += '<input type="radio" name="categoryCur" onClick="SelectCategory('+i+');" id="idCat' + i + '"';
 			if( i == 0 )
-				catHTML += ' checked="true"><span data-tr="All"></span';
-			catHTML += '/>' + (i > 0 ? cat.escapeHTML() : '') + '&nbsp;&nbsp;&nbsp;';
+				catHTML += ' checked="true"';
+			catHTML += '</input><label for="idCat' + i + '"' + (i == 0 ? ' data-tr="All">' : '>' + cat.escapeHTML()) + '</label>&nbsp;';
 		}
 	}
 	else if( categories.length == 1 )
 		catHTML = categories[0].escapeHTML();
+	catHTML += '</div></div>';
 	categorySpan.innerHTML = catHTML;
 	
 	// Adjust the display options based on the data.
@@ -1912,7 +2036,7 @@ function SetData( aData, tCur )
 	{ i:5, name:'Est. Distance Gap',value:'showDistanceGap',requiresMultipleLaps:true, requiresLapSpeeds:true }
 	];
 	var showOptionsSpan = document.getElementById( 'idShowOptions' );
-	var showHTML = '';
+	var showHTML = '<div id="display_menu"><label class="heading" data-tr="Show:"></label><div class="buttonset">';
 	var firstOption = true;
 	for( var i = 0; i < options.length; ++i )
 	{
@@ -1921,14 +2045,15 @@ function SetData( aData, tCur )
 			continue;
 		if( o.requiresLapSpeeds && !hasLapSpeeds )
 			continue;
-		showHTML += '<input type="radio" name="showOptions" onClick="SetLapDataOption('+o.i+');"';
+		showHTML += '<input type="radio" name="showOptions" id="idShowOption' + i + '" onClick="SetLapDataOption('+o.i+');"';
 		if( firstOption )
 		{
 			showHTML += ' checked="true"';
 			firstOption = false;
 		}
-		showHTML += '/><span  data-tr="' + o.name +'">' + o.name.escapeHTML() + '</span>&nbsp;&nbsp;&nbsp;';
+		showHTML += '/><label for="idShowOption' + i + '" data-tr="' + o.name +'"></label>&nbsp;';
 	}
+	showHTML += '</div></div>';
 	showOptionsSpan.innerHTML = showHTML;
 	
 	animationObj.Refresh();
@@ -3283,88 +3408,6 @@ function SetTotalElevationGain() {
 */
 }
 
-var translations = {
-	'languageCode':	['en',				'fr',					'es'],
-	'language':		['English',			'Française',			'Español'],
-	'hello':		['Hello!',			'Bonjour!',				'¡Hola!'],
-	'Email Comments/Suggestions': ['Email Comments/Suggestions', 'Email Commentaires/Suggestions', 'E-mail Comentarios/Sugerencias'],
-	'Powered by':	['Powered by',		'Propulsé par',			'Desarrollado por'],
-	'created':		['created',			'créé',					'creada'],
-	'Refresh':		['Refresh',			'Actualiser',			'Actualizar'],
-	'by':			['by',				'par',					'por'],
-	'at':			['at',				'à',					'en'],
-	'miles':		['miles',			'miles',				'millas'],
-	'Gap':			['Gap',				'Écart',				'Lapso'],
-	'Name':			['Name',			'Nom',					'Nombre'],
-	'LastName':		['Last Name',		'Dernier nom',			'Apellido'],
-	'FirstName':	['First Name',		'Prénom',				'Nombre'],
-	'Team':			['Team',			'Équipe',				'Equipo'],
-	'Category':		['Category',		'Catégorie',			'Categoria'],
-	'License':		['License',			'Licence',				'Licencia'],
-	'Age':			['Age',				'Âge',					'Edad'],
-	'Time':			['Time',			'Temps',				'Tiempo'],
-	'Lap':			['Lap',				'Tour',					'Vuelta'],
-	'lap':			['lap',				'tour',					'vuelta'],
-	'laps':			['laps',			'tours',				'vueltas'],
-	'laps of':		['laps of',			'tours de',				'vueltas de'],
-	'Laps of':		['laps of',			'tours de',				'vuelta de'],
-	'Laps to go':	['laps to go',		'tours à faire',		'vueltas antes de la meta'],
-	'to go':		['to go',			'à faire',				'antes de la meta'],
-	'of':			['of',				'de',					'de'],
-	'1st lap':		['1st lap',			'premier tour',			'primera vuelta'],
-	'more laps of':	['more laps of',	'tours de plus de',		'vueltas más de'],
-	'Estimated':	['Estimated',		'Estimé',				'Estimado'],
-	'Distance':		['distance',		'la distance',			'la distancia'],
-	'Start':		['start',			'au début',				'el comienzo'],
-	'Winner':		['winner',			'gagnant',				'ganador'],
-	'starters':		['starters',		'entrées',				'aperitivos'],
-	'finishers':	['finishers',		'arrivées',				'finalistas'],
-	'Show 100s of Seconds': ['Show 100s of Seconds', 'Afficer 100s de seconds', 'Mostrar 100s de segundos'],
-	'Hide Lap Info':['Hide Lap Info',	'Masquer les infos de tour',	'Ocultar la info de vuelta'],
-	'Show Every Lap':['Show Every Lap',	'Afficher tous les tours', 'Mostrar todas las vueltas'],
-	'Show Every {} Laps': ['Show Every {} Laps','Afficher tous les {} tours', 'Mostrar cada {} vueltas'],
-	'All':			['All',				'Tous',					'Todo'],
-	'Lap Times':	['Lap Times',		'Temps des tours',		'Tiempos de vuelta'],
-	'Race Times':	['Race Times',		'Temps de course',		'Tiempos de carrera'],
-	'Time Gaps':	['Time Gaps',		"L'Écarts des tours",		'Diferencia de tiempo de las vueltas'],
-	'Gap Percents':	['Gap Percents',	"Pour cent de l'écart",		'Ciento brecha'],
-	'Lap Speed':	['Lap Speed',		'Vitesse des tours',	'Velocidad de la vuelta'],
-	'Est. Distance Gap': ['Est. Distance Gap', "L'Écart de distance est.", 'Diferencia est. distancia'],
-	'Race Chart':	['Race Chart',		'Tableau de course',		'Tabla de carrera'],
-	'Show Start Offsets':	['Show Start Offsets',	'Afficher commencer décalages',	'Mostrar empezar a desplazamientos'],
-	'Loop Continuously':['Loop Continuously',	'Boucle continue',	'Repetirá continuamente'],
-	'Playback Speed':['Playback Speed',	'Vitesse de lecture',		'Velocidad de reproducción'],
-	'Play':			['Play',			'Lecture',					'Reproducir'],
-	'Rewind':		['Rewind',			'Rembobinez',				'Rebobinar'],
-	'Stop':			['Stop',			'Stop',						'Detener'],
-	'Size':			['Size',			'Taille',					'Ramaño'],
-	'Text':			['Text',			'Texte',					'Texto'],
-	'Highlight Numbers': ['Highlight Numbers', 'Numéros de souligner', 'Números de relieve'],
-	'Track':		['Oval Track',		'Piste oval',				'Pista ovalada'],
-	'GPX':			['GPX Course',		'GPX',						'GPX'],
-	'Apply':		['Apply',			'Appliquer',				'Aplicar'],
-	'Chip Timing':	['Chip Timing',		'RFID Chronométrage',		'Cronometraje RFID'],
-	'Google Earth Ride': ['See a Lap on Google Earth', 'Afficher un tour sur Google Earth', 'Mostrar una vuelta en Google Earth'],
-	'last':			['','','']
-};
-(function() {
-	// Expand all the lap options.
-	var key = 'Show Every {} Laps';
-	var showLaps = [2, 3, 5, 10, 15, 20, 25, 50, 100];
-	var showTr = translations[key];
-	for( var i = 0; i < showLaps.length; ++i ) {
-		var tr = [];
-		for( var j = 0; j < showTr.length; ++j )
-			tr.push( showTr[j].replace('{}', showLaps[i]) );
-		translations[key.replace('{}', showLaps[i])] = tr;
-	}
-})();
-
-function _( f ) {
-	var t = translations[f];
-	return t ? t[langCur] : f;
-}
-
 function setLanguage( langCode ) {
 	var langs = translations['languageCode'];
 	for( var i = 0; i < langs.length; ++i ) {
@@ -3398,6 +3441,7 @@ function setLanguage( langCode ) {
 	}
 	
 	SetCategoryResults();
+	SetTotalElevationGain();
 }
 
 function getLanguageCode() {
@@ -3406,19 +3450,17 @@ function getLanguageCode() {
 
 function initLanguages() {
 	var languageSpan = document.getElementById('idLanguages');
-	var languageHTML = '';
-	languageHTML += languageHTML + languageHTML + languageHTML + languageHTML + languageHTML;
+	var languageHTML = '<div id="display_menu"><div class="buttonset">';
 	var languages = translations['language'];
-	var hellos = translations['hello'];
 	var languageCodes = translations['languageCode'];
 	for( var i = 0; i < languages.length; ++i )
 	{
-		languageHTML += '<input type="radio" name="languageCur" onClick="setLanguage(\''+languageCodes[i]+'\');"';
+		languageHTML += '<input type="radio" name="languageSelect" id="idLanguage' + i + '" onClick="setLanguage(\''+languageCodes[i]+'\');"';
 		if( i == langCur )
 			languageHTML += ' checked="true"';
-		languageHTML += '/><span class="languageHello">' + hellos[i] + '</span> ' +
-			'<span class="languageName">(' + languages[i] + ')</span>' + '&nbsp;&nbsp;&nbsp;';
+		languageHTML += '/></input><label for="idLanguage' + i + '" >' + languages[i] + '</label>&nbsp;';
 	}
+	languageHTML += '</div></div>';
 	languageSpan.innerHTML = languageHTML;
 }
 
@@ -3437,7 +3479,7 @@ function onLoad()
 	}
 	else
 		gpsPointsTest = null;
-	
+		
 	if( gpsPoints )
 	{
 		animationObj = new GeoAnimation();
@@ -3529,8 +3571,6 @@ function onLoad()
 		document.getElementById('idShowUnits').style.display = 'none';
 	SetData( data, undefined );
 	
-	SetTotalElevationGain();
-	
 	// Check for parameters.
 	var numbers = getUrlParam( 'highlight', undefined );
 	if( numbers != '' )
@@ -3541,10 +3581,8 @@ function onLoad()
 		numsToWatch.value = numbers;
 		SetNumsToWatch();
 	}
-	
 	setCategory( getUrlParam('raceCat', undefined) );
 	setLanguage( getUrlParam('lang', undefined) );
-	//setLanguage( 'es' );
 	initLanguages();
 	
 	SetCategoryResults();
@@ -3577,7 +3615,7 @@ function onLoad()
 
 <span id="idLanguages"></span>
 <p/>
-<span data-tr='Category' class="categoryTitles"></span><span class="categoryTitles">:</span> <span id="idCategories" class="categoryTitles"></span>
+<span id="idCategories"></span>
 </p>
 <div id="idTrackDiv">
 <canvas id="idTrack" width="600" height="300" class="noprint">
@@ -3617,9 +3655,8 @@ Current versions of Chrome, FireFox and Opera work fine.
 </p>
 </div> <!-- idTrackDiv -->
 <p>
-<span id="idShowOptions"></span><br/>
 <span class="noprint" id="idShowUnits">
-	&nbsp;&nbsp;&nbsp;&nbsp;Units:
+	<span data-tr="Units:"></span>
 	<select class="noprint" id="idDisplayUnits" onChange="SetDisplayUnits()">
 		<option value="km" selected="selected">km</option>
 		<option value="miles" data-tr="miles">miles</option>
@@ -3644,6 +3681,7 @@ Current versions of Chrome, FireFox and Opera work fine.
 </select>
 <span id="idTotalElevationGain"> </span>
 </p>
+<span id="idShowOptions"></span><br/>
 <div id="idResultsDiv"></div>
 <div id="idRaceChartDiv">
 <p class="noprint"><span id="idRaceName" data-tr="Race Chart"></span>&nbsp;&nbsp;&nbsp;&nbsp;
