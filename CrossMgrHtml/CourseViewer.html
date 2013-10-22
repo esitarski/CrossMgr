@@ -812,9 +812,10 @@ function DrawMap()
 		points.push( points[0] );
 	
 	// Draw arrows to show direction.
-	var arrowLength = length * 0.012;
-	var arrowCount = 8;
+	var arrowLength = length * 0.005;
+	var arrowCount = 50;
 	var arrowTick = length / arrowCount;
+	var arrowAngle = 30.0;
 	var nextArrowDistance = arrowTick / 2;
 	var length = 0.0;
 	for( var i = 2; arrowCount > 0 && i < courseCoordinates.length; i += 2 )
@@ -839,23 +840,18 @@ function DrawMap()
 			
 			var bearing = CompassBearing(	courseCoordinates[iPrev+1], courseCoordinates[iPrev],
 											courseCoordinates[i+1], courseCoordinates[i] );
-			var pTail = DestinationPoint( p[0], p[1], bearing + 180.0, arrowLength/2.0 );
-			var pHead = DestinationPoint( p[0], p[1], bearing, arrowLength/2.0 );
-			var arrowPoints = [new google.maps.LatLng(pHead[0], pHead[1])];
-			var p = DestinationPoint( pTail[0], pTail[1], bearing + 90.0, arrowLength / 3.15 );
-			arrowPoints.push( new google.maps.LatLng(p[0], p[1]) );
-			var p = DestinationPoint( pTail[0], pTail[1], bearing - 90.0, arrowLength / 3.15 );
-			arrowPoints.push( new google.maps.LatLng(p[0], p[1]) );
-			
-			var arrow = new google.maps.Polygon( {
-				paths: arrowPoints,
+			var pHead = p;
+			var pWing1 = DestinationPoint( pHead[0], pHead[1], bearing + 180.0 - arrowAngle, arrowLength );
+			var pWing2 = DestinationPoint( pHead[0], pHead[1], bearing + 180.0 + arrowAngle, arrowLength );
+			var arrow = new google.maps.Polyline( {
+				path:  [new google.maps.LatLng(pWing1[0], pWing1[1]),
+						new google.maps.LatLng(pHead[0],  pHead[1]),
+						new google.maps.LatLng(pWing2[0], pWing2[1])],
 				strokeColor: "#ff8c00",
 				strokeOpacity: 1.0,
-				strokeWeight: 1,
-				fillColor: "#ff8c00",
-				fillOpacity: 0.6,
+				strokeWeight: 2,
 				map: mapCanvas
-			});
+			});			
 		}
 	}
 	
@@ -864,7 +860,7 @@ function DrawMap()
 			path: points,
 			strokeColor: "#FF0000",
 			strokeOpacity: 0.6,
-			strokeWeight: 6,
+			strokeWeight: 5,
 			map: mapCanvas
 		});
 	
