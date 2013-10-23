@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html>
+<!--
+	Html Template for Course Viewer.
+	Generated from CrossMgr software.
+	Copyright 2011-2013, Edward Sitarski
+	For details, see sites.google.com/site/CrossMgrSoftware
+-->
+<head>
+<meta charset="UTF-8" author="Edward Sitarski" copyright="Edward Sitarski, 2011-2013" generator="CrossMgr" />  
+<title id="idTitle">CrossMgr Race Results by Edward Sitarski</title>	<!-- Don't change this text! -->
+<style type="text/css">
+body { font-family: sans-serif; }
+table {
+	font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
+}
+
+table.CourseStats {
+	border-collapse:collapse;
+	overflow:hidden;
+	width: 800px;
+	border:1px solid #d3d3d3;
+	background:#fefefe;
+	border-radius:8px;
+}
+	
+table.CourseStats * th, table.CourseStats * td {padding:10px 26px 10px; text-align:center; }
+table.CourseStats * th {padding-top:12px; text-shadow: 1px 1px 1px #fff; background:#e8eaeb;}
+table.CourseStats * td {border-top:1px solid #e0e0e0; border-right:1px solid #e0e0e0;}
+	
+#idRaceName {
+	font-size: 200%;
+	font-weight: bold;
+}
+
+#idImgHeader {
+	box-shadow: 4px 4px 4px #888888;
+}
+
+.smallfont	{ font-size: 75%; }
+.bigfont	{ font-size: 120%; }
+.biggerFont	{ font-size: 130%; }
+
+.hidden { display: none; }
+
+@media print
+{
+	.noprint { display: none; }
+}
+
+</style>
+</head>
+
+<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+<script>
+
+// Results and race data.
+var payload = null;
+var raceName = null;
+var raceNotes = null;
+var organizer = null;
+var version = null;
+var email = null;
+
+// Control information about the course display.
+var map = null;
+var rfid = null;
+var raceName = null;
+var displayUnits = null;
+var courseObj = null;
+var gpsTotalElevationGain = null;	// total elevation gain on the course.
+var gpsAltigraph = null;		// Altigraph of the course.
+var gpsIsPointToPoint = null;	// Flag whether course is point-to-point or a loop.
+var courseCoordinates = null;	// course coordinates as an array of lon, lat pairs.
+var lengthKm = null;
+
+function isCanvasSupported() {
+	var elem = document.createElement('canvas');
+	return !!(elem.getContext && elem.getContext('2d'));
+}
+
+// Convenience function to get the last element in an array.
+Array.prototype.back = function() {
+	return this[this.length-1];
+};
+
+Array.prototype.binSearch = function( v )
+{
+	var L = this.length, i = -1, m;
+	while( L - i > 1 )
+	{
+		if( this[m = ((L + i)>>1)] < v )
+			i = m;
+		else
+			L = m;
+	}
+	return L;
+}
+
+// Make a string html safe.
+String.prototype.escapeHTML = function ()
+{                                        
+	var r =                                                               
+		this.replace(/&/g,'&amp;').
+			replace(/>/g,'&gt;').
+			replace(/</g,'&lt;').
+			replace(/"/g,'&quot;').
+			replace(/'/g,'&rsquo;');
+	return r;
+};
+
+// Make a string id safe.
+String.prototype.escapeID = function() {
+	return this.replace(/[&<>"'(){}\[\]!@#$%^* ]/g,'_');
+};
+
+//--------------------------------------------------------------------------
+
+/**
+ * Creates a new Map Label
+ * @constructor
+ * @extends google.maps.OverlayView
+ * @param {Object.<string, *>=} opt_options Optional properties to set.
+ */
+function MapLabel(opt_options) {
+  this.set('fontFamily', 'sans-serif');
+  this.set('fontSize', 12);
+  this.set('fontColor', '#000000');
+  this.set('strokeWeight', 2);
+  this.set('strokeColor', '#ffffff');
+  this.set('align', 'center');
+
+  this.set('zIndex', 1e3);
+
+  this.setValues(opt_options);
+}
+MapLabel.prototype = new google.maps.OverlayView;
+
+window['MapLabel'] = MapLabel;
+
+/** @inheritDoc */
+MapLabel.prototype.changed = function(prop) {
+  switch (prop) {
+    case 'fontFamily':
+    case 'fontSize':
+    case 'fontColor':
+    case 'strokeWeight':
+    case 'strokeColor':
+    case 'align':
+    case 'text':
+      return this.drawCanvas_();
+    case 'maxZoom':
+    case 'minZoom':
+    case 'position':
+      return this.draw();
+  }
+};
+
+/**
+ * Draws the label to the canvas 2d context.
+ * @private
+ */
+MapLabel.prototype.drawCanvas_ = function() {
+  var canvas = this.canvas_;
+  if (!canvas) return;
+
+  var style = canvas.style;
+  style.zIndex = /** @type number */(this.get('zIndex'));
+
+  var ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = this.get('strokeColor');
+  ctx.fillStyle = this.get('fontColor');
+  ctx.font = this.get('fontSize') + 'px ' + this.get('fontFamily');
+
+  var strokeWeight = Number(this.get('strokeWeight'));
+
+  var text = this.get('text');
+  if (text) {
+    if (strokeWeight) {
+      ctx.lineWidth = strokeWeight;
+      ctx.strokeText(text, strokeWeight, strokeWeight);
+    }
+
+    ctx.fillText(text, strokeWeight, strokeWeight);
+
+    var textMeasure = ctx.measureText(text);
+    var textWidth = textMeasure.width + strokeWeight;
+    style.marginLeft = this.getMarginLeft_(textWidth) + 'px';
+    // Bring actual text top in line with desired latitude.
+    // Cheaper than calculating height of text.
+    style.marginTop = '-0.4em';
+  }
+};
+
+/**
+ * @inheritDoc
+ */
+MapLabel.prototype.onAdd = function() {
+  var canvas = this.canvas_ = document.createElement('canvas');
+  var style = canvas.style;
+  style.position = 'absolute';
+
+  var ctx = canvas.getContext('2d');
+  ctx.lineJoin = 'round';
+  ctx.textBaseline = 'top';
+
+  this.drawCanvas_();
+
+  var panes = this.getPanes();
+  if (panes) {
+    panes.mapPane.appendChild(canvas);
+  }
+};
+MapLabel.prototype['onAdd'] = MapLabel.prototype.onAdd;
+
+/**
+ * Gets the appropriate margin-left for the canvas.
+ * @private
+ * @param {number} textWidth  the width of the text, in pixels.
+ * @return {number} the margin-left, in pixels.
+ */
+MapLabel.prototype.getMarginLeft_ = function(textWidth) {
+  switch (this.get('align')) {
+    case 'left':
+      return 0;
+    case 'right':
+      return -textWidth;
+  }
+  return textWidth / -2;
+};
+
+/**
+ * @inheritDoc
+ */
+MapLabel.prototype.draw = function() {
+  var projection = this.getProjection();
+
+  if (!projection) {
+    // The map projection is not ready yet so do nothing
+    return;
+  }
+
+  var latLng = /** @type {google.maps.LatLng} */ (this.get('position'));
+  if (!latLng) {
+    return;
+  }
+  var pos = projection.fromLatLngToDivPixel(latLng);
+
+  var style = this.canvas_.style;
+
+  style['top'] = pos.y + 'px';
+  style['left'] = pos.x + 'px';
+
+  style['visibility'] = this.getVisible_();
+};
+MapLabel.prototype['draw'] = MapLabel.prototype.draw;
+
+/**
+ * Get the visibility of the label.
+ * @private
+ * @return {string} blank string if visible, 'hidden' if invisible.
+ */
+MapLabel.prototype.getVisible_ = function() {
+  var minZoom = /** @type number */(this.get('minZoom'));
+  var maxZoom = /** @type number */(this.get('maxZoom'));
+
+  if (minZoom === undefined && maxZoom === undefined) {
+    return '';
+  }
+
+  var map = this.getMap();
+  if (!map) {
+    return '';
+  }
+
+  var mapZoom = map.getZoom();
+  if (mapZoom < minZoom || mapZoom > maxZoom) {
+    return 'hidden';
+  }
+  return '';
+};
+
+/**
+ * @inheritDoc
+ */
+MapLabel.prototype.onRemove = function() {
+  var canvas = this.canvas_;
+  if (canvas && canvas.parentNode) {
+    canvas.parentNode.removeChild(canvas);
+  }
+};
+MapLabel.prototype['onRemove'] = MapLabel.prototype.onRemove;
+
+//--------------------------------------------------------------------------
+
+function isEmptyObject( obj ) {
+    for ( var name in obj ) {
+        return false;
+    }
+    return true;
+}
+
+var degreesToRadians = Math.PI / 180.0;
+var radiansToDegrees = 180.0 / Math.PI;
+
+function GreatCircleDistance( lat1, lon1, lat2, lon2 )
+{
+	// Calculate the great circle distance between two points 
+	// on the earth (specified in decimal degrees) in meters.
+
+	// convert decimal degrees to radians 
+	lon1 *= degreesToRadians;
+	lat1 *= degreesToRadians;
+	lon2 *= degreesToRadians;
+	lat2 *= degreesToRadians;
+	
+	// haversine formula 
+	var dlon = lon2 - lon1;
+	var dlat = lat2 - lat1;
+	var a = Math.pow(Math.sin(dlat/2),2) + Math.cos(lat1) * Math.cos(lat2) * Math.pow(Math.sin(dlon/2),2);
+	var c = 2.0 * Math.asin(Math.sqrt(Math.max(a, 0.0)));
+	var m = 6371000.0 * c;
+	return m;
+}
+
+function CompassBearing( lat1, lon1, lat2, lon2 )
+{
+	// Calculates the bearing between two points.
+	lat1 *= degreesToRadians;
+	lat2 *= degreesToRadians;
+
+	var diffLong = (lon2 - lon1) * degreesToRadians;
+
+	var x = Math.sin(diffLong) * Math.cos(lat2);
+	var y = Math.cos(lat1) * Math.sin(lat2) - (Math.sin(lat1) * Math.cos(lat2) * Math.cos(diffLong));
+
+	var bearing = Math.atan2(x, y) * radiansToDegrees;
+
+	while( bearing < 0.0 )
+		bearing += 360.0;
+	return bearing;
+}
+
+function DestinationPoint( lat, lon, bearing, dist )
+ {
+	// Returns the destination point having travelled the given distance along the great circle
+	// starting in the direction of the bearing.
+	dist /= 6371000.0;  // convert dist to angular distance in radians
+	bearing = bearing * degreesToRadians;		// convert degrees to radians
+	var lat1 = lat * degreesToRadians, lon1 = lon * degreesToRadians;
+	var lat2 = Math.asin( Math.sin(lat1)*Math.cos(dist) + Math.cos(lat1)*Math.sin(dist)*Math.cos(bearing) );
+	var lon2 = lon1 + Math.atan2(Math.sin(bearing)*Math.sin(dist)*Math.cos(lat1), Math.cos(dist)-Math.sin(lat1)*Math.sin(lat2));
+
+	// normalise to -180...+180
+	lon2 += 3.0 * Math.PI;
+	lon2 -= 2.0 * Math.PI * Math.floor( lon2 / (2.0 * Math.PI) );
+	lon2 -= Math.PI;
+
+	return [lat2 * radiansToDegrees, lon2 * radiansToDegrees];
+}
+
+ // Returns destination in the direction of the given point.
+function DestinationPointToPoint( lat1, lon1, lat2, lon2, dist )
+{
+	return DestinationPoint( lat1, lon1, CompassBearing(lat1, lon2, lat2, lon2), dist );
+}
+
+function LineNormal( x1, y1, x2, y2, normLen )
+{
+	// Returns the coords of a normal line passing through x1, y1 of length normLen.
+	var dx = x2 - x1, dy = y2 - y1;
+	var scale = (normLen / 2.0) / Math.sqrt( dx*dx + dy*dy );
+	dx *= scale;
+	dy *= scale;
+	return [x1 + dy, y1 - dx, x1 - dy, y1 + dx];
+}
+
+//----------------------------------------------------------------------------
+
+function colorBetween( r1, g1, b1, r2, g2, b2, x )
+{
+	var r = (r1 + (r2 - r1) * x).toFixed(0);
+	var g = (g1 + (g2 - g1) * x).toFixed(0);
+	var b = (b1 + (b2 - b1) * x).toFixed(0);
+	return 'rgb(' + r + ',' + g + ',' + b + ')';
+}
+
+function getBestInterval( d, intervals )
+{
+	var k = intervals.binSearch( d );
+	if( k >= intervals.length )
+		k = intervals.length - 1;
+	return intervals[k];
+}
+
+function Altigraph()
+{
+	this.altigraph = [];
+	this.yMax = -1000000.0;
+	this.yMin = 1000000.0
+	this.xMax = 0.0;
+	this.xTick = null;
+	this.yTick = null;
+	
+	this.setData = function( altigraph, drawTEG )
+	{
+		if( !altigraph || altigraph.length == 0 )
+			altigraph = [];
+		
+		this.drawTEG = drawTEG;
+		this.altigraph = altigraph;
+		this.yMax = -1000000.0;
+		this.yMin = 1000000.0
+		this.xMax = 0.0;
+		for( var i = 0; i < altigraph.length; ++i )
+		{
+			if( altigraph[i][1] > this.yMax )
+				this.yMax = altigraph[i][1];
+			if( altigraph[i][1] < this.yMin )
+				this.yMin = altigraph[i][1];
+		}
+		if( altigraph.length > 0 )
+			this.xMax = altigraph[altigraph.length-1][0];
+			
+		if( this.yMin == this.yMax )
+		{
+			this.altigraph = []
+			gpsAltigraph = null;
+			gpsTotalElevationGain = null;
+		}
+	}
+	
+	this.empty = function() { return this.altigraph.length == 0; }
+	
+	this.draw = function( dc, x, y, width, height )
+	{
+		if( this.altigraph.length == 0 || this.xMax == 0 || !gpsTotalElevationGain )
+			return;
+			
+		dc.save();
+		
+		y += 2;		// Leave room to draw the line.
+		height -= 2;
+
+		var verticalDisplayUnits = (displayUnits == 'km' ? ' m' : ' ft');
+		var fontSize = (height*0.95)/4.0;
+		var fontSizeLegend = (height*0.95) / 10;
+		
+		dc.font = fontSizeLegend + 'px Arial';
+		var minLabel = '0';
+		var maxLabel = ((this.yMax - this.yMin) * (displayUnits == 'km' ? 1.0 : 3.28084)).toFixed(0) + '  ' + verticalDisplayUnits;
+		var labelWidth = Math.max( dc.measureText(minLabel).width, dc.measureText(maxLabel).width );
+		maxLabel = verticalDisplayUnits;
+		minLabel = '';
+		
+		dc.font = fontSize + 'px Arial';
+		var altigraph = this.altigraph;
+		var tegLabel = '';
+		var tegWidth = 0;
+		var tegText = ['Total', 'Elevation', 'Gain'];
+		if( this.drawTEG && gpsTotalElevationGain )
+		{
+			tegLabel = (gpsTotalElevationGain * (displayUnits == 'km' ? 1.0 : 3.28084)).toFixed(0) + (displayUnits == 'km' ? ' m' : ' ft');
+			tegWidth = dc.measureText(tegLabel).width;
+			for( var i = 0; i < tegText.length; ++i )
+				tegWidth = Math.max( tegWidth, dc.measureText(tegText[i]).width );
+		}
+		
+		var border = 4;
+		if( labelWidth + border*2 + tegWidth > width )
+		{
+			dc.restore();
+			return;
+		}
+		
+		// Draw the horizontal labels.
+		dc.font = fontSizeLegend + 'px Arial';
+		var textWidth = dc.measureText('00.00').width;
+			
+		// Find some reasonable tickmarks for the x axis.
+		var xLeft = labelWidth + border, xRight = width - border - tegWidth;
+		var numLabels = Math.floor((xRight - xLeft) / (textWidth * 1.5));
+		var courseLength = this.xMax/1000.0 * (displayUnits == 'km' ? 1.0 : 0.621371);
+		var d = courseLength / numLabels;
+		this.xTick = d = getBestInterval(d, [0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 15.0, 20.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0] );
+		var precision = 0;
+		if( d < 1 )
+			if( d == 0.25 )
+				precision = 2;
+			else
+				precision = 1;
+		for( var i = 1; i * d < courseLength; ++i )
+		{
+			var xCur = i * d;
+			var text = xCur.toFixed(precision);
+			var textWidth = dc.measureText(text).width;
+			var xPos = (xCur / courseLength) * (xRight - xLeft) + xLeft - textWidth / 2;
+			if( xPos + textWidth / 2 < xRight )
+				dc.fillText( text, xPos, height );
+		}
+		dc.fillText( displayUnits, xLeft - dc.measureText(displayUnits).width * 0.75, height );
+		var horizontalLabelHeight = fontSizeLegend * 1.2;
+		height -= horizontalLabelHeight;
+		
+		dc.strokeStyle = '#000000';
+		for( var i = 0; i * d < courseLength; ++i )
+		{
+			var xCur = i * d;
+			var xPos = (xCur / courseLength) * (xRight - xLeft) + xLeft;
+			dc.beginPath();
+			dc.moveTo( xPos, height );
+			dc.lineTo( xPos, height + fontSizeLegend * 0.4 );
+			dc.stroke();
+		}
+		
+		// Draw the vertical labels.
+		// Find some reasonable tickmarks for the y axis.
+		var numLabels = Math.floor(height / (fontSizeLegend * 1.5));
+		var yDelta = (this.yMax - this.yMin) * (displayUnits == 'km' ? 1.0 : 3.28084);
+		var d = yDelta / numLabels;
+		this.yTick = d = getBestInterval(d, [1, 2, 5, 10, 15, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000]);
+		dc.textBaseline = 'middle';
+		dc.strokeStyle = '#c0c0c0';
+		dc.lineWidth = 1;
+		var yPos = height;
+		var yInc = (d / yDelta) * height;
+		for( var i = 1; i * d < yDelta; ++i )
+		{
+			yPos -= yInc;
+			var text = (d * i).toFixed(0) + ' ';
+			var textWidth = dc.measureText(text).width;
+			dc.fillText( text, xLeft - textWidth, yPos );
+			dc.beginPath();
+			dc.moveTo( xLeft, yPos );
+			dc.lineTo( xRight, yPos );
+			dc.stroke();
+		}
+		
+		dc.font = fontSize + 'px Arial';
+		var xMult = (width - labelWidth - border*2 - tegWidth) / this.xMax;
+		var yMult = height / (this.yMax - this.yMin);
+		
+		var points = [];
+		for( var i = 0; i < this.altigraph.length; ++i )
+			points.push( [(x + labelWidth + border + altigraph[i][0] * xMult), (y + height - (altigraph[i][1] - this.yMin) * yMult)] );
+		
+		for( var i = 1; i < this.altigraph.length; ++i )
+		{
+			var grade = (altigraph[i][1] - altigraph[i-1][1]) / (altigraph[i][0] - altigraph[i-1][0]);
+			if( grade > 0 )
+				dc.fillStyle = colorBetween( 255,255,255, 255,0,0, Math.min(1.0,  grade / 0.12) );
+			else
+				dc.fillStyle = colorBetween( 255,255,255,   0,0,0, Math.min(1.0, -grade / 0.12) );
+			dc.beginPath();
+			dc.moveTo( points[i-1][0], points[i-1][1] );
+			dc.lineTo( points[i  ][0], points[i  ][1] );
+			dc.lineTo( points[i  ][0], y + height );
+			dc.lineTo( points[i-1][0], y + height );
+			dc.closePath();
+			dc.fill();
+		}
+		
+		dc.strokeStyle = '#000000';
+		dc.lineWidth = 2;
+		dc.beginPath();
+		dc.moveTo( points[0][0], points[0][1] );
+		for( var i = 1; i < this.altigraph.length; ++i )
+			dc.lineTo( points[i][0], points[i][1] );
+		dc.stroke();
+		
+		// Add a baseline.
+		dc.lineWidth = 1;
+		dc.beginPath();
+		dc.moveTo( x + labelWidth + border, y + height );
+		dc.lineTo( x + width - border - tegWidth, y + height );
+		dc.stroke();
+		
+		// Add a left boundary line.
+		dc.lineWidth = 1;
+		dc.beginPath();
+		dc.moveTo( x + labelWidth + border, y );
+		dc.lineTo( x + labelWidth + border, y + height );
+		dc.stroke();
+		
+		// Add a right boundary line.
+		dc.beginPath();
+		dc.moveTo( x + width - tegWidth - border, y );
+		dc.lineTo( x + width - tegWidth - border, y + height );
+		dc.stroke();
+		
+		// Add the min and max elevation.
+		dc.font = fontSizeLegend + 'px Arial';
+		dc.fillStyle = '#000000';
+		dc.textAlign = 'left';
+		dc.textBaseline = 'middle';
+		dc.fillText( maxLabel, x, y + height / 2 );
+		
+		// Add the total elevation gain.
+		if( this.drawTEG && gpsTotalElevationGain )
+		{
+			dc.font = fontSize + 'px Arial';
+			height += horizontalLabelHeight;
+			dc.textBaseline = 'top';
+			dc.textAlign = 'left';
+			var xCur = x + width - tegWidth;
+			var yCur = y + (height - fontSize * 1.05 * 4) / 2;
+			dc.fillText( tegLabel, xCur, yCur );
+			for( var i = 0; i < tegText.length; ++i )
+			{
+				yCur += fontSize * 1.05;
+				dc.fillText( tegText[i], xCur, yCur );
+			}
+		}
+		
+		dc.restore();
+	}
+}
+
+var altigraph = null;
+function DrawAltigraph()
+{
+	var canvas = document.getElementById('idAltigraph');
+	if( !isCanvasSupported() )
+		return;
+	var dc = canvas.getContext('2d');
+	altigraph = new Altigraph();
+	altigraph.setData( gpsAltigraph );
+	altigraph.draw( dc, 0, 0, canvas.width, canvas.height );
+}
+
+var mapCanvas = null;
+function CenterMap()
+{
+	var latLngBounds = new google.maps.LatLngBounds();
+	for( var i = 0; i < courseCoordinates.length; i += 2 )
+		latLngBounds.extend( new google.maps.LatLng(courseCoordinates[i+1], courseCoordinates[i]) );
+	mapCanvas.fitBounds( latLngBounds );
+}
+
+function RecenterControl( controlDiv, map )
+{
+	// Set CSS styles for the DIV containing the control
+	// Setting padding to 5 px will offset the control
+	// from the edge of the map.
+	controlDiv.style.padding = '5px';
+
+	// Set CSS for the control border.
+	var controlUI = document.createElement('div');
+	controlUI.style.backgroundColor = 'inherit';
+	controlUI.style.borderStyle = 'solid';
+	controlUI.style.borderWidth = '0px';
+	controlUI.style.cursor = 'pointer';
+	controlUI.style.textAlign = 'center';
+	controlUI.title = 'Recenter Course';
+	controlDiv.appendChild(controlUI);
+
+	// Set CSS for the control interior.
+	var controlText = document.createElement('div');
+	controlText.style.fontFamily = 'Arial,sans-serif';
+	controlText.style.fontSize = '12px';
+	controlText.style.paddingLeft = '4px';
+	controlText.style.paddingRight = '4px';
+	controlText.innerHTML = '<img alt="Recenter Course" src="data:/image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAAXNSR0IArs4c6QAAAARnQU1BAACx%0Ajwv8YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAlwSFlz%0AAAAOwwAADsMBx2%2BoZAAAABp0RVh0U29mdHdhcmUAUGFpbnQuTkVUIHYzLjUuMTAw9HKhAAANmElE%0AQVRYR62YCViO6RrHU2csiWqsY4aZOWYMJiLbWM5YKlGWkhZJyqBRmhbRJiotivaFNmVrkfbSvigS%0ApSaJVm2ISinRav7nfr7qOxrNORzzXdfvet7vfu/nf//f%2B3met%2B9qBM8nfm4%2B6%2BN92YMxJCPMM2LE%0A5zSOHMHD0wmg%2BTNenvaJo3m7xCby4RPLfNz0WzUtnyXU9YhFVvdahlf3ZkZU9z6Pqe3ti6/rRUJ9%0AL9gYXdvbQ/G6qJreuNjaXt3kuu6ZRTXPeT%2Bu0kdmZz5qHRle2SkfWtGdfbG8uyesqgdpj3uR%2B7wP%0Ad5uGkk/fbz3rQxLdD6G8oIrujvBH3eFx1Z0rip53UpP/5k94Wce8oLLOZP8HnX0%2BJZ1IrOtB7jMy%0A9wHkUE50dTe8ad6Fsq6uq1Vd/ml1nZP/NouhZa9/CSh53e5c0AGve6%2BR/rgbWU97PprE2m64/P4a%0AnqRBD1sdW/Vm5SeZTClv5rtU0mHtVfjqrU1uGxzvtiO5thNp9V3/N7TEsM1rh31%2BO%2BihX0dWdCjf%0AqW76%2BCWPL23hDShqM3e58/LtsewWHLvRgvCy10iofvPJnC95BXPSs7rVCt977W%2Bulr7aml9S%2BeHN%0AzMor5AkoaNntmPOi1yStEUbpjXC83YKo8ld/GxY3mmGc2YRj2c3wKXzZEvmwdeEHO7xwt3GW443G%0AF4cTn0KfkdwAv8JWhJa0/W04334Bg5QGDkcznsO/sKUo9f7j0R9k0u1GQ5xhXB20omuhTaPOtXoE%0AFr5ASmUbKpo7P5mE8pfwvNME7fh6HBzAMqMBl35vNvufBr2za9eaxddgb2gF9l6twr6IRzgQXQPv%0AO424VduGlx2dyClvGELb6y6U1DcPiRXXNaOjs3tI7CbNe/GqE%2Bmlz%2BF26zn2RVZzORBVDZebDS8i%0A7tZN/UuTrW96eU6l1sbtvVQC1YsPoBZUCrWQcuwJq4BL9hNkVbagtqkNThnVcM6q5/Kk9Q3C82uG%0AxEILGtD0sgPOGY%2B4cafr9ahs6kDCvXrYZzzmaKuF9rObrg/FPsK520//uosRhc%2B%2BNQx7%2BFrBuwAK%0AfkVQCiyG0oX7RAmskquR8rARj561wDqpAjapNf2kVKPuRQcu51Ryrgfjgbcf41lLO2wSy7kxa7pf%0A9qwdUfnVMImr4ui%2Bixo1xjG9puR8TPqoYbvonFylqe6Th82uudjqlQdZMirnWwhZQifsIeKLnqD8%0ASTPMoh7gaGw5l0eN7fDPeDgkdvZ6NZ40teJoVAk3bkZzSh7TYbtZhr1B9zna77LNpxBGUWU9gVnl%0AYsMatIy8H7Ll1HVIOWRho3MOpN1zIe1xm8N273xE5NWitO45jMMKYRxRzKWyoRXeSUVDYh6ppah7%0ARq%2BSKwXcuFF4Me7VNiEgrRibPe9wtQdrsHoagQXwzqzSec9gw8tOPv3zeSXrLBKx5kQq1tpfx7rT%0A2RB3vMHFN70UPT09aGt/NYSe3l60traiqampn8ZGtLa0oJfi3Ny2drwkOju7YB16E%2BJ/0mZ1WD1Z%0Atxy4JJcHvGcwp7xJaK9XduNyo2isME/ASqsUrLJJxyrbDC6nY39HYXkd1F0ToOGezOX%2Bo6cwNTWF%0AkpISFBQUIC8vDwMDA5TXPIGG6zVu3m63ZGQXVcD4HGm/o/uf63RI2GfAOup%2BWk/f26F//tLvN3wp%0Ab5fUJqZ7BYuORGGJ2TUsPZ6IpRbJXOzC83CDCmy0T8E2txuQY7hmo7DyKXR0dCAlJQVJSUmIi4tj%0A3759uF9RCznH1P48QtIhEzE5JdA/Ez9El1vjeBJW0goaBRUUdvW%2B5RvSxdR7T6avM45o/3b3OYj8%0AdgXzDSMhahyLBabxHEQJq5AcpOc/hOjhCBJKgqRdGqROpiGvtB4aGhpYvnw5li1bxkFVVRUFDyoh%0AZX0N4rapWEYPO98kHmEZhdByicACuh7U5tagenP0I6Dll3Ovq6fvH0MMZpU8nSJufLVFcIsbZqgH%0AYLZOKCWHY%2B6hKC5HL1xHSm4xZuuGcmI/GkZhoXEMbhRXc5ZWREQE8%2BbN44yysrK4mV8MUYMrmEt5%0ALH8OcTnpNn6xDxmiO1jjG%2B0rmLb3Mg763sjt7n079Nd3UXXzmE1Hw%2BvGS5/GeFl3fKF2DjMPBOO7%0Ag1fwnQ4jDEb%2BqXhQVQeby5mwDcmGbXA2bIKzUFb9BE5OTrTv9KGnpwddXV3Y2tqi4F4JzHzjYeaf%0ABDO/RJgSaTl3oWp5fkBzUJuM7Q%2BCsFogpu%2B5gEPnbka9d0hed/XyqNjGXhfecBICzOQ2D0zc6Yev%0AfrmIr/dfxteal2FwJgEl5fQy9o%2BGrX8MjYRfNIofVsInNAFW3uGwPHsVFmfC4BwYiZzb%2BTBzC%2BJg%0ASpi4BiEhLRsKpj4cPcZX%2By5hkvp5CKueg9AOX3y/LxDHg26fHPY9qOWa5DB100mMlbDBuE2OEJT3%0AgLCyNybt8scXGoHQcYtBVNptTFHxpA77cZi6ywcxGXcgoctivtz4it/8EBabjKkqHv/JpXy3S/HY%0Aaki56oGYRKskrOoPYWqE0A4fCG33wtojV/6wuZgpN6xB%2B9Bcibkqrm/5fz6GsZK2GLfZiWNSUPEs%0AhJR9sP/UVYQn52CCkgcmqfpxmLjTB%2BEpt7Bay5W%2B%2B3LjS7R8EBwRj0lK7u/k%2BsExMBpSB504ev14%0AQ4j0WZ0ZKmew5/S1loDk4i%2BGNXintGG0jOHFGoFVpuBffQwC65lJR4yXc4Pgdk/ssQ1G6LXrtEed%0ASfQMhAkhBU%2BExF/Hir2nON8/V%2Bpn4V4PXLgSDSE5p/48YrzCGdj7hkP8V3sIKnj1Q7rjt7lhGj30%0ACu0AmPhlRsTkVv31ry5d14Sj09ZbYMxPR8D/szmZpOWWOYXxW12w2/IiQmLTIbTZHsLbnCEsR0Zl%0AnXA5Og3Ld1tzvg8iquaIgKCrlGvXn0sI0X27s6FYu9cWgtvcIcgenHRn7PDAgj1nsd08tM8l/I7k%0Af/1N6BWVLyyh7dM4dqk%2BRi8zJJNHaU%2BegMBGeygae%2BNBaRnSs24iNTMbKelZSErLRF5%2BARJT0hAd%0Al4jI2GsIj45DZEw8UtPSERwWQUQOEIGk5FSs3HUc47eQ6a3O%2BF7VEws0vLBK0xuGnkkZkdmlQ1/Q%0Aw7nVdY49MFPGAqMXHsTopYcwZpUJxq6zgNB6S0yRPEIcxpT1DLoeYDKNXChnMofD7yNxGIISZvhC%0A3gUiu72wUN0TS9TdsPN4SLdrWO7i//mLmiW4h%2BeOVDK5ED9xpQFGiWph9GI9jFlhRPvSHGPFLTnL%0ALrDBDuOoq%2BOkHT4cyp%2B09TR%2B2OmOBWRsoZobFqs6Q0bXF8d9U60%2ByNxgkt35zGnS2mdKBRdrY6TI%0AfozidNOg3yhb9rUWZNaKTrt1v2E6UAJSdsNAcbo3ZYsDZim7QlTNHQt3uUJspxMWqZyCpKYnDF3i%0AIs9E3Bn%2BR%2BpwrmdsO83zubTtiMNu8bMk97s9Elp0ACPn7sHIeZoYJcaM6mPM8iOcpWdm%2BdccA//a%0A4%2BCnbdAPdZnMT9hogxlyDpi7wxnzd7pAlEwtUDkNMWUHLFa2A2njt1MR6XtsIoQFJE/wCW2wGTFl%0A8/DvaK5PMsYzVvIEL00YSQgoHw0Wk9byLJm6XAej56pjFBkdNV%2BT9qc2xizWBf9PhyCw8ggEV5ti%0Aorg5pm2wxLdbbDBb3h4/KjpAhJhPiCraY6GiHcQUbLBU0QabtDz%2B0LQJS1i27%2BwPVGcCq0V8NlbC%0Ainc6NWj4zypzHkoaMWBOkMYZhOhMRSdpWQO/9CXyVn1fLtfG5CW/YupP2pi2Sg/T1xjiGwljzNxg%0Ahu%2Blj%2BGHTRaYs8USc2WtICJnhfmEqJwlFshZYNE2C/y80w7Khn5dCiYXQyZI220l/dWsBjGdYDVH%0AUhd59dyuve%2BRJjCDfMRY4ktiMcFENMettzZZrOERIqPt9XyZvAVmrtHF1ysP4pt/6eCfa/Twnfgh%0AzKJTO1vKCHM3mkBExgTzZUyxYLMpFsma4187rCH/m9cfSkaBtbN3uJwnTWvCmNhPbCEWEdMIfnqt%0A8a3W9n/foMgud9Y9ZnAcMZNYS%2BwhjhGuhL%2BglE2w2G73bBmds082/erat0rJCmJkQnTjEczfcJgz%0Aim02xrJt5lhNpjZrOkPlsF/3Fn3/mjkqLhnj1p%2B4SjqXmRbhQpgTGsQa4ltWm7YY3wQZu/f/oTRT%0A0Xmwg2w/fE2sIJQJg4EnZia9iUDaK5dIJExM3SN9ndbZu5t0fcpl9Xzr5fR9H8sZ%2BNVt0vMtXavl%0AnSei6poiKGUdRkWDad4lImBAg5k7QegTSsRygi3zWNZBdlDf//TvQXZARhNs434/YHIzjarErwOC%0AbGlYV60IW%2BIkGXAg06f4CRpPU%2BwU4cDuETYDuaxbRoQeoTmgybRZI1itz4lRwhtseA%2B5Jwx/Tihh%0AcJmZSXb8vyJmEQsI9pRsKdYTMoQssZ1QJHYQKn%2BCxdg9%2BYFcNofNZRo/DWgybbbfWS1Wk28cefjL%0AlzYlDJ5k1snPiDEE25NMYDLBNjI73f8kviPYa2IO8SMh8idYjN1jOaxDbA6byzSYFtNk2swYq8Vq%0AjqAV%2BO9/VAZMvmuUHZx/DIiMGjDNTyM77Wy/jn8H9qpgDMaYAZbDctkc9sBMgxlimkybY4zV/fPn%0A3%2BMTuRApouXmAAAAAElFTkSuQmCC%0A"></img>'
+	controlUI.appendChild(controlText);
+
+	// Setup the click event listeners: simply set the map to Chicago.
+	google.maps.event.addDomListener(controlUI, 'click', function() {
+		CenterMap();
+	});
+}
+
+function DrawMap()
+{
+	var mapOptions = {
+		mapTypeId: google.maps.MapTypeId.ROADMAP,
+		scaleControl: true,
+	};
+	mapCanvas = new google.maps.Map(document.getElementById('idMap'), mapOptions);
+	var points = [];
+	var length = 0.0;
+	for( var i = 0; i < courseCoordinates.length; i += 2 )
+	{
+		var latLng = new google.maps.LatLng(courseCoordinates[i+1], courseCoordinates[i]);
+		points.push( latLng );
+		if( i > 0 )
+			length += GreatCircleDistance(courseCoordinates[i-2+1], courseCoordinates[i-2], courseCoordinates[i+1], courseCoordinates[i]);
+	}
+	if( !gpsIsPointToPoint )
+		points.push( points[0] );
+	
+	// Draw arrows to show direction.
+	var arrowLength = length * 0.005;
+	var arrowCount = 50;
+	var arrowTick = length / arrowCount;
+	var arrowAngle = 30.0;
+	var nextArrowDistance = arrowTick / 2;
+	var length = 0.0;
+	for( var i = 2; arrowCount > 0 && i < courseCoordinates.length; i += 2 )
+	{
+		var iPrev = (i - 2 + courseCoordinates.length) % courseCoordinates.length;
+		var iPrevPrev = (i - 4 + courseCoordinates.length) % courseCoordinates.length;
+		length += GreatCircleDistance(	courseCoordinates[i-2+1], courseCoordinates[i-2],
+										courseCoordinates[i+1], courseCoordinates[i]);
+		var angle = CompassBearing(	courseCoordinates[iPrevPrev+1], courseCoordinates[iPrevPrev],
+									courseCoordinates[iPrev+1], courseCoordinates[iPrev] ) -
+					CompassBearing(	courseCoordinates[iPrev+1], courseCoordinates[iPrev],
+									courseCoordinates[i+1], courseCoordinates[i] );
+		while( angle < 360 )
+			angle += 360;
+		if( angle < 125 )
+			continue;
+		while( length > nextArrowDistance )
+		{
+			var p = [courseCoordinates[i+1], courseCoordinates[i]];
+			nextArrowDistance += arrowTick;
+			--arrowCount;
+			
+			var bearing = CompassBearing(	courseCoordinates[iPrev+1], courseCoordinates[iPrev],
+											courseCoordinates[i+1], courseCoordinates[i] );
+			var pHead = p;
+			var pWing1 = DestinationPoint( pHead[0], pHead[1], bearing + 180.0 - arrowAngle, arrowLength );
+			var pWing2 = DestinationPoint( pHead[0], pHead[1], bearing + 180.0 + arrowAngle, arrowLength );
+			var arrow = new google.maps.Polyline( {
+				path:  [new google.maps.LatLng(pWing1[0], pWing1[1]),
+						new google.maps.LatLng(pHead[0],  pHead[1]),
+						new google.maps.LatLng(pWing2[0], pWing2[1])],
+				strokeColor: "#ff8c00",
+				strokeOpacity: 1.0,
+				strokeWeight: 2,
+				map: mapCanvas
+			});			
+		}
+	}
+	
+	// Draw the course.
+	var course = new google.maps.Polyline( {
+			path: points,
+			strokeColor: "#FF0000",
+			strokeOpacity: 0.6,
+			strokeWeight: 5,
+			map: mapCanvas
+		});
+	
+	// Draw labels showing the distance on the map - same as on the altigraph.
+	var xTick = (altigraph && altigraph.xTick ? altigraph.xTick : null);
+	if( !xTick )
+	{
+		var courseLength = lengthKm * (displayUnits == 'km' ? 1.0 : 0.621371);
+		var d = courseLength / 10.0;
+		xTick = getBestInterval(d, [0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 15.0, 20.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0] );
+	}
+	var precision = (xTick >= 1 ? 0 : xTick == 0.25 ? 2 : 1);
+	var tickMult = displayUnits == 'km' ? 1000.0 : 1609.344;
+	var nextMarkerDistance = xTick;
+	var length = 0.0;
+	for( var i = 2; i < courseCoordinates.length; i += 2 )
+	{
+		length += GreatCircleDistance(	courseCoordinates[i-2+1], courseCoordinates[i-2],
+										courseCoordinates[i+1], courseCoordinates[i]);
+		while( length >= nextMarkerDistance * tickMult )
+		{
+			var p = DestinationPointToPoint( courseCoordinates[i+1], courseCoordinates[i],
+											 courseCoordinates[i-2+1], courseCoordinates[i-2],
+											 length - nextMarkerDistance * tickMult );
+			var mapLabel = new MapLabel({
+				text: nextMarkerDistance.toFixed(precision),
+				position: new google.maps.LatLng(p[0], p[1]),
+				fontSize: 17,
+				align: 'middle',
+				map: mapCanvas
+			});
+			nextMarkerDistance += xTick;
+		}
+	}
+	
+	// Draw the finish line.
+	var finish = new google.maps.Marker({
+		position: gpsIsPointToPoint ? points[points.length-1] : points[0],
+		title: 'Finish Line',
+		icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAgCAYAAAD5VeO1AAAEsklEQVRIibWVX0jTaxjHH//029lcVqvM0taNGUHNinGOnkGohJWtQ4KaFEVySlSSUixzTFwZxYnROv2ByisLgwqCIRRhF4EcKsjgeBrDgUqYDhvLJtoyt33OTZPCKLX83L0Xz+f78uV5eUVmiM/na/b7/TUznfsuL1++PM4nbt682V5VVbXkp4jLy8uP6/V6Hj58yPPnz1mwYAEGg2Hs6NGjuT8kttvtxuXLl4dFhNWrV3PhwgXi4uIQEaxW65jP58uflbijo2Phhw8f/m1tbSUpKYlnz54BcP/+fUpLSwmFQkQikbDX6z1ps9lipy222Wyxbre7LdpzU1MTPT09AHg8HrZs2YLb7QagsbGRnJyc/rq6Ov205Lt3725ftWoVT5484erVq4gIS5cuxel0YjQaERF0Oh3Xr1+frGnjxo3B3t5ewzfFTU1NtfPmzUNEKCgowGKxEBMTQ3x8PE6nk4aGBmJjYzGZTLx//57z58+jUqm4ceMGoVAo8ObNm+Kvint7ew0TExOBy5cvk5GRgc/nA+DWrVs4HI5oS7S0tEzWAnDt2jX8fj8Aw8PDrVPEJ06cSHv9+nUPwOjoKBUVFQwMDADgdDoxmUy8evWKjx8/snXrVtavX4/L5eLx48eo1WrS09Pp6OhwtbW1ab4QX7x4UTGZTENr166lq6uL/fv3IyLo9Xru3r2LTqdDRFixYgV2ux0RQUTIysqisrISESE1NTVcU1Pz+5RbHzt27EF04NSpU+zduxcRISUlBY/HQ1VVFSLCkSNHCIVCNDY2snjxYrq6uohEIpw9ezZ8+PDhyilir9d7IBQKcfr0afbs2UMkEgHAbrfz6NGjyV6vXLnCyMjI5PnMmTOMjo4SiUTwer1TxQ0NDcXv3r0bA+ju7ubgwYMEAgEA6urqyMvLY2hoiP7+flauXElmZiZ9fX2cO3cOEWHDhg08ffq0ZYq4trbWoNfrJ4xGIy9evMBgMCAiGAwGmpubiYmJQUTIyMigoqJisueysjJ27tyJiJCZmemvrq7+ZYr8D7O5Mz4+HkVRuHfv3uRATk4Ob9++Zd++fcTFxXHnzh2CwSBlZWVs2rSJkZERJiYmsFqtfovFsm6KWETEYDBo8rdt++fSpUtBgHA4jM1mY3Bw8Iuew+FwdH+pr69nfHycUCg05vF4fv2q+HN27dp1cnBwcGB8fJzs7GwKCwsZHh6mvb0dRVEwm834fD4KCgoQETZv3ozL5TrwXXGU34zG/Jrqam+018LCQnJzcyd7djgcmEwmRISioqKOaYuj6HS6VLPZ3JeSkkJ3dzeBQIDi4mIOHToEQDAYpL6+/j+bzRY/Y7mIyPbt25U/S0tvj42NDQN0dnZisVgIh8MEg0GX2+3WzUr8OTt27Kjt7OwcSEtLQ0QoKSkZd7vdX9+M2bBmzZrsvLw8v6IolJeXW3+aOEpycvISU1bWg/nz56f/dPknYrUajUWjUpnnKkC0anWhWlGOFxUVTf8zngmLtNp1apXKISIL5yZg0aLEBLXasTAh4duf8Y+QoFbXqBWlZM4CEjWafK1GYxWR2b3a7wYkJqapVaq/tVpt0pwELFu2TJOgVv8lIskiIv8DQ4HqhmfkzxMAAAAASUVORK5CYII=",
+		animation: google.maps.Animation.BOUNCE,
+		map: mapCanvas
+	});
+	setTimeout( function() { finish.setAnimation(null); }, 4000 );
+	CenterMap();
+	
+	var recenterDiv = document.createElement( 'div' );
+	var recenterControl = new RecenterControl( recenterDiv, mapCanvas );
+	recenterControl.index = 1;
+	mapCanvas.controls[google.maps.ControlPosition.TOP_RIGHT].push(recenterDiv);
+}
+
+function DrawCourseStats()
+{
+	document.getElementById('idCourseLength').innerHTML = displayUnits == 'km'
+		? lengthKm.toFixed(2) + ' km'
+		: (lengthKm * 0.621371192).toFixed(2) + ' miles';
+		
+	var eleDisplayUnits = (displayUnits == 'km' ? '&nbsp;m' : '&nbsp;ft');
+	var prec = (displayUnits == 'km' ? 1 : 0);
+	var eleMult = displayUnits == 'km' ? 1.0 : 3.28084;
+	
+	var startElevation = gpsAltigraph[0][1];
+	var minElevation = 999999.0;
+	var maxElevation = -9999999.0;
+	var totalElevationGain = gpsTotalElevationGain;
+	for( var i = 0; i < gpsAltigraph.length; ++i )
+	{
+		minElevation = Math.min( minElevation, gpsAltigraph[i][1] );
+		maxElevation = Math.max( maxElevation, gpsAltigraph[i][1] );
+	}
+	
+	document.getElementById('idStartElevation').innerHTML = (startElevation * eleMult).toFixed(prec) + eleDisplayUnits;
+	document.getElementById('idMinElevation').innerHTML = (minElevation * eleMult).toFixed(prec) + eleDisplayUnits;
+	document.getElementById('idMaxElevation').innerHTML = (maxElevation * eleMult).toFixed(prec) + eleDisplayUnits;
+	document.getElementById('idTotalElevationGain').innerHTML = (totalElevationGain * eleMult).toFixed(prec) + eleDisplayUnits;
+}
+
+function OpenDrivingInstructions()
+{
+	var url = 'http://maps.google.com?daddr=' + courseCoordinates[1].toFixed(4) + ' ' + courseCoordinates[0].toFixed(4) + ' (' + raceName + ')';
+	window.open( url, null, null, true );
+}
+
+//----------------------------------------------------------------------------
+
+function getUrlParam( param, url )
+{
+	param = param.replace(/([\[\](){}*?+^$.\\|])/g, "\\$1");
+	var regex = new RegExp("[?&]" + param + "=([^&#]*)");
+	url   = url || decodeURIComponent(window.location.href);
+	var match = regex.exec(url);
+	return match ? match[1] : "";
+}
+
+function FormatDistance( distance, inUnit, showUnits )
+{
+	if( (inUnit ? inUnit : 'km') != displayUnits )
+		distance *= (displayUnits == 'km' ? 1.609344 : 0.621371192237334);
+	var s = distance.toFixed(2);
+	if( showUnits )
+		s += ' ' + displayUnits;
+	return s;
+}
+
+var replaceHtmlEntites = (function() {
+	var translate_re = /&(nbsp|amp|quot|lt|gt);/g;
+	var translate = {
+		"nbsp": " ", 
+		"amp" : "and", 
+		"quot": "\"",
+		"lt"  : "<", 
+		"gt"  : ">"
+	};
+	return function( s ) {
+		return ( s.replace(translate_re, function(match, entity) { 
+			return translate[entity]; 
+		}) );
+	}
+})();
+
+function onLoad()
+{
+	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
+
+	document.getElementById('idRaceName').innerHTML = document.getElementById('idTitle').innerHTML;
+	if( email )
+		document.getElementById('idEmail').href =
+							'mailto:' + email +
+							'?subject=' + replaceHtmlEntites(document.getElementById('idTitle').innerHTML);
+	
+	var s = '';
+	if( organizer )
+		s = 'by ' + organizer;
+	if( s )
+		document.getElementById('idOrganizer').innerHTML = s;
+
+	DrawAltigraph();
+	DrawMap();
+	DrawCourseStats();
+}
+google.maps.event.addDomListener(window, 'load', onLoad);
+</script>
+
+<body>
+<h1 id="idRaceName">Accessing Map Data. Please be patient...</h1>
+<span id="idOrganizer">by CrossMgr</span>
+<p/>
+</p>
+<button id="idDrivingInstructions" class="noprint" onclick="OpenDrivingInstructions()" style="font-size: 120%;">Get Directions</button>
+<p/>
+<table class="CourseStats">
+<tr><th>Length</th><th>Start Elevation</th><th>Min Elevation</th><th>Max Elevation</th><th>Total Elevation Gain</th></tr>
+<tr><td id="idCourseLength"/><td id="idStartElevation"/td><td id="idMinElevation"/td><td id="idMaxElevation"/><td id="idTotalElevationGain"/></tr>
+</table>
+<div id="idMap" style="height: 550px; width: 800px;"></div>
+<p></p>
+<div id="idInfo">
+<canvas id="idAltigraph" width="800" height="125">
+<a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a> Course viewer requires support the HTML5 Canvas.<br/>
+Please upgrade to a more recent browser version.<br/>
+For Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
+Current versions of Chrome, FireFox and Opera work fine.
+</canvas>
+</div>
+</body>
+</html>
