@@ -185,7 +185,8 @@ var gpsTotalElevationGain = null;	// total elevation gain on the course.
 var gpsAltigraph = null;		// Altigraph of the course.
 var gpsIsPointToPoint = null;	// Flag whether course is point-to-point or a loop.
 var courseCoordinates = null;	// course coordinates as an array of lon, lat pairs.
-var virtualRideTemplate = null;	// template to generate virtual ride page
+var virtualRideTemplate = null;	// template to generate virtual ride page.
+var courseViewerTemplate = null;// template to show course on a map.
 var infoFields = null;			// Potential rider fields to show in the results.
 var langCur = null;				// Display language of the page.
 
@@ -326,6 +327,7 @@ var translations = {
 	'Apply':		['Apply',			'Appliquer',				'Aplicar'],
 	'Chip Timing':	['Chip Timing',		'RFID Chronométrage',		'Cronometraje RFID'],
 	'Google Earth Ride': ['See Lap on Google Earth', 'Afficher un tour sur Google Earth', 'Mostrar una vuelta en Google Earth'],
+	'Course Map': 	['Course Map', 		'Carte du parcours', 		'Mapa del curso'],
 	'Total':		['Total',			'Gain',						'Ganancia'],
 	'Elevation':	['Elevation',		'total',					'total'],
 	'Gain':			['Gain',			"d'altitude",				'de la elevación'],
@@ -604,6 +606,37 @@ function OpenVirtualTourWindow()
 	if( p >= 0 )
 		text = text.substring( 0, p );
 	template = template.replace( "raceName = '';", "raceName='" + text.escapeHTML() + "';" );
+	
+	var w = window.open( '', '', '', true );
+	w.document.write( template.replace(/{{/g, '<').replace(/}}/g, '>') );
+	w.document.close();
+}
+
+function OpenCourseViewerWindow()
+{
+	if( !courseCoordinates || !courseViewerTemplate )
+		return;
+	
+	var payload = {};
+	
+	var fields = ['courseCoordinates', 'raceNameText', 'raceDate', 'email', 'displayUnits', 'organizer',
+					'gpsAltigraph', 'gpsIsPointToPoint', 'gpsTotalElevationGain' ];
+	for( var f = 0; f < fields.length; ++f ) {
+		var key = fields[f];
+		var value = window[key];
+		if( value )
+			payload[key] = value;
+	}
+	var lengthKm = 0.0;
+	for( var i = 0; i < courseCoordinates.length - 2; i += 2 )
+		lengthKm += GreatCircleDistance(courseCoordinates[i],courseCoordinates[i+1],courseCoordinates[i+2],courseCoordinates[i+3]);
+	if( !gpsIsPointToPoint )
+		lengthKm += GreatCircleDistance(courseCoordinates[courseCoordinates.length-2],courseCoordinates[courseCoordinates.length-1],
+										courseCoordinates[0],courseCoordinates[1] );
+	lengthKm /= 1000.0;
+	payload['lengthKm'] = lengthKm;
+	
+	template = courseViewerTemplate.replace( 'payload = null;', 'payload=' + JSON.stringify(payload) + ';' );
 	
 	var w = window.open( '', '', '', true );
 	w.document.write( template.replace(/{{/g, '<').replace(/}}/g, '>') );
@@ -3504,8 +3537,10 @@ function onLoad()
 	else
 		document.getElementById('idRaceNotes').innerHTML = raceNotes.replace(/{{/g, '<').replace(/}}/g, '>');
 	
-	if( !courseCoordinates )
+	if( !courseCoordinates ) {
 		document.getElementById('idVirtualTour').className = 'hidden';
+		document.getElementById('idCourseMap').className = 'hidden';
+	}
 		
 	if( isCanvasSupported() )
 	{
@@ -3609,7 +3644,8 @@ function onLoad()
 <span data-tr="Powered by"></span> <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
 <span id="idRFID"></span>&nbsp;&nbsp;&nbsp;
 <button onclick="doReload()" data-tr="Refresh"></button>&nbsp;&nbsp;&nbsp;
-<button id="idVirtualTour" onclick="OpenVirtualTourWindow()" data-tr="Google Earth Ride"></button>
+<button id="idVirtualTour" onclick="OpenVirtualTourWindow()" data-tr="Google Earth Ride"></button>&nbsp;&nbsp;&nbsp;
+<button id="idCourseViewer" onclick="OpenCourseViewerWindow()" data-tr="Course Map"></button>&nbsp;&nbsp;&nbsp;
 </span>
 </tr></table><span id="idReloadStatus"></span><span id="idRaceNotes"></span>
 </p>

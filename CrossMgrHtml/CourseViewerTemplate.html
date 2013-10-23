@@ -57,22 +57,21 @@ table.CourseStats * td {border-top:1px solid #e0e0e0; border-right:1px solid #e0
 // Results and race data.
 var payload = null;
 var raceName = null;
-var raceNotes = null;
 var organizer = null;
-var version = null;
 var email = null;
+var raceNameText = null;
+var raceDate = null;
 
 // Control information about the course display.
-var map = null;
-var rfid = null;
-var raceName = null;
 var displayUnits = null;
-var courseObj = null;
 var gpsTotalElevationGain = null;	// total elevation gain on the course.
 var gpsAltigraph = null;		// Altigraph of the course.
 var gpsIsPointToPoint = null;	// Flag whether course is point-to-point or a loop.
 var courseCoordinates = null;	// course coordinates as an array of lon, lat pairs.
 var lengthKm = null;
+
+var courseObj = null;
+var map = null;
 
 function isCanvasSupported() {
 	var elem = document.createElement('canvas');
@@ -116,12 +115,6 @@ String.prototype.escapeID = function() {
 
 //--------------------------------------------------------------------------
 
-/**
- * Creates a new Map Label
- * @constructor
- * @extends google.maps.OverlayView
- * @param {Object.<string, *>=} opt_options Optional properties to set.
- */
 function MapLabel(opt_options) {
   this.set('fontFamily', 'sans-serif');
   this.set('fontSize', 12);
@@ -156,16 +149,12 @@ MapLabel.prototype.changed = function(prop) {
   }
 };
 
-/**
- * Draws the label to the canvas 2d context.
- * @private
- */
 MapLabel.prototype.drawCanvas_ = function() {
   var canvas = this.canvas_;
   if (!canvas) return;
 
   var style = canvas.style;
-  style.zIndex = /** @type number */(this.get('zIndex'));
+  style.zIndex = (this.get('zIndex'));
 
   var ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -193,9 +182,6 @@ MapLabel.prototype.drawCanvas_ = function() {
   }
 };
 
-/**
- * @inheritDoc
- */
 MapLabel.prototype.onAdd = function() {
   var canvas = this.canvas_ = document.createElement('canvas');
   var style = canvas.style;
@@ -214,12 +200,6 @@ MapLabel.prototype.onAdd = function() {
 };
 MapLabel.prototype['onAdd'] = MapLabel.prototype.onAdd;
 
-/**
- * Gets the appropriate margin-left for the canvas.
- * @private
- * @param {number} textWidth  the width of the text, in pixels.
- * @return {number} the margin-left, in pixels.
- */
 MapLabel.prototype.getMarginLeft_ = function(textWidth) {
   switch (this.get('align')) {
     case 'left':
@@ -230,9 +210,6 @@ MapLabel.prototype.getMarginLeft_ = function(textWidth) {
   return textWidth / -2;
 };
 
-/**
- * @inheritDoc
- */
 MapLabel.prototype.draw = function() {
   var projection = this.getProjection();
 
@@ -241,7 +218,7 @@ MapLabel.prototype.draw = function() {
     return;
   }
 
-  var latLng = /** @type {google.maps.LatLng} */ (this.get('position'));
+  var latLng = (this.get('position'));
   if (!latLng) {
     return;
   }
@@ -256,14 +233,9 @@ MapLabel.prototype.draw = function() {
 };
 MapLabel.prototype['draw'] = MapLabel.prototype.draw;
 
-/**
- * Get the visibility of the label.
- * @private
- * @return {string} blank string if visible, 'hidden' if invisible.
- */
 MapLabel.prototype.getVisible_ = function() {
-  var minZoom = /** @type number */(this.get('minZoom'));
-  var maxZoom = /** @type number */(this.get('maxZoom'));
+  var minZoom = (this.get('minZoom'));
+  var maxZoom = (this.get('maxZoom'));
 
   if (minZoom === undefined && maxZoom === undefined) {
     return '';
@@ -281,9 +253,6 @@ MapLabel.prototype.getVisible_ = function() {
   return '';
 };
 
-/**
- * @inheritDoc
- */
 MapLabel.prototype.onRemove = function() {
   var canvas = this.canvas_;
   if (canvas && canvas.parentNode) {
@@ -612,7 +581,6 @@ function Altigraph()
 				dc.fillText( tegText[i], xCur, yCur );
 			}
 		}
-		
 		dc.restore();
 	}
 }
@@ -817,7 +785,7 @@ function DrawCourseStats()
 	document.getElementById('idTotalElevationGain').innerHTML = (totalElevationGain * eleMult).toFixed(prec) + eleDisplayUnits;
 }
 
-function OpenDrivingInstructions()
+function OpenGetDirections()
 {
 	var url = 'http://maps.google.com?daddr=' + courseCoordinates[1].toFixed(4) + ' ' + courseCoordinates[0].toFixed(4) + ' (' + raceName + ')';
 	window.open( url, null, null, true );
@@ -844,31 +812,12 @@ function FormatDistance( distance, inUnit, showUnits )
 	return s;
 }
 
-var replaceHtmlEntites = (function() {
-	var translate_re = /&(nbsp|amp|quot|lt|gt);/g;
-	var translate = {
-		"nbsp": " ", 
-		"amp" : "and", 
-		"quot": "\"",
-		"lt"  : "<", 
-		"gt"  : ">"
-	};
-	return function( s ) {
-		return ( s.replace(translate_re, function(match, entity) { 
-			return translate[entity]; 
-		}) );
-	}
-})();
-
 function onLoad()
 {
 	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
+	raceName = raceNameText + ' ' + raceDate;
 
-	document.getElementById('idRaceName').innerHTML = document.getElementById('idTitle').innerHTML;
-	if( email )
-		document.getElementById('idEmail').href =
-							'mailto:' + email +
-							'?subject=' + replaceHtmlEntites(document.getElementById('idTitle').innerHTML);
+	document.getElementById('idRaceName').innerHTML = raceName;
 	
 	var s = '';
 	if( organizer )
@@ -888,7 +837,7 @@ google.maps.event.addDomListener(window, 'load', onLoad);
 <span id="idOrganizer">by CrossMgr</span>
 <p/>
 </p>
-<button id="idDrivingInstructions" class="noprint" onclick="OpenDrivingInstructions()" style="font-size: 120%;">Get Directions</button>
+<button id="idGetDirections" class="noprint" onclick="OpenGetDirections()" style="font-size: 120%;">Get directions</button>
 <p/>
 <table class="CourseStats">
 <tr><th>Length</th><th>Start Elevation</th><th>Min Elevation</th><th>Max Elevation</th><th>Total Elevation Gain</th></tr>
@@ -904,5 +853,7 @@ For Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
 Current versions of Chrome, FireFox and Opera work fine.
 </canvas>
 </div>
+<p/>
+Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
 </body>
 </html>

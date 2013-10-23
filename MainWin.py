@@ -1095,6 +1095,8 @@ class MainWin( wx.Frame ):
 			payload['finishTop']		= getattr(race, 'finishTop', False)
 			payload['isTimeTrial']		= getattr(race, 'isTimeTrial', False)
 			payload['rfid']				= getattr(race, 'enableJChipIntegration', False)
+			payload['raceNameText']		= race.name
+			payload['raceDate']			= race.date
 			payload['raceIsRunning']	= race.isRunning()
 			notes = getattr(race, 'notes', '')
 			if notes.lstrip()[:6].lower().startswith( '<html>' ):
@@ -1126,19 +1128,33 @@ class MainWin( wx.Frame ):
 			payload['gpsPoints']		= gpsPoints
 		if courseCoordinates:
 			payload['courseCoordinates'] = courseCoordinates
-			# Fix the google maps template.
-			templateFile = os.path.join(Utils.getHtmlFolder(), 'VirtualTourTemplate.html')
-			try:
-				with codecs.open(templateFile, 'r', 'utf-8') as fp:
-					template = fp.read()
+			
+			def sanitize( template ):
 				# Sanitize the template into a safe json string.
 				template = self.reLeadingWhitespace.sub( '', template )
 				template = self.reComments.sub( '', template )
 				template = self.reBlankLines.sub( '\n', template )
 				template = template.replace( '<', '{{' ).replace( '>', '}}' )
-				payload['virtualRideTemplate'] = template
+				return template
+				
+			# Add the google maps template.
+			templateFile = os.path.join(Utils.getHtmlFolder(), 'VirtualTourTemplate.html')
+			try:
+				with codecs.open(templateFile, 'r', 'utf-8') as fp:
+					template = fp.read()
+				payload['virtualRideTemplate'] = sanitize( template )
 			except:
 				pass
+				
+			# Add the course viewer template.
+			templateFile = os.path.join(Utils.getHtmlFolder(), 'CourseViewerTemplate.html')
+			try:
+				with codecs.open(templateFile, 'r', 'utf-8') as fp:
+					template = fp.read()
+				payload['courseViewerTemplate'] = sanitize( template )
+			except:
+				pass
+		
 		if totalElevationGain:
 			payload['gpsTotalElevationGain'] = totalElevationGain
 		if gpsAltigraph:
