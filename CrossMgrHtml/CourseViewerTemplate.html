@@ -756,10 +756,13 @@ function DrawMap()
 	setTimeout( function() { finish.setAnimation(null); }, 4000 );
 	CenterMap();
 	
-	var recenterDiv = document.createElement( 'div' );
-	var recenterControl = new RecenterControl( recenterDiv, mapCanvas );
-	recenterControl.index = 1;
-	mapCanvas.controls[google.maps.ControlPosition.TOP_RIGHT].push(recenterDiv);
+	var isEI = !!window.ActiveXObject;
+	if( !isEI ) {
+		var recenterDiv = document.createElement( 'div' );
+		var recenterControl = new RecenterControl( recenterDiv, mapCanvas );
+		recenterControl.index = 1;
+		mapCanvas.controls[google.maps.ControlPosition.TOP_RIGHT].push(recenterDiv);
+	}
 }
 
 function DrawCourseStats()
