@@ -3,7 +3,7 @@
 <!--
 	Html Template for Course Viewer.
 	Generated from CrossMgr software.
-	Copyright 2011-2013, Edward Sitarski
+	Copyright 2011-2013, Edward Sitarskigp
 	For details, see sites.google.com/site/CrossMgrSoftware
 -->
 <head>
@@ -20,12 +20,12 @@ table.CourseStats {
 	overflow:hidden;
 	width: 800px;
 	border:1px solid #d3d3d3;
-	background:#fefefe;
+	background-color:#fefefe;
 	border-radius:8px;
 }
 	
 table.CourseStats * th, table.CourseStats * td {padding:10px 26px 10px; text-align:center; }
-table.CourseStats * th {padding-top:12px; text-shadow: 1px 1px 1px #fff; background:#e8eaeb;}
+table.CourseStats * th {padding-top:12px; text-shadow: 1px 1px 1px #fff; background-color:#e8eaeb;}
 table.CourseStats * td {border-top:1px solid #e0e0e0; border-right:1px solid #e0e0e0;}
 	
 #idRaceName {
@@ -43,10 +43,7 @@ table.CourseStats * td {border-top:1px solid #e0e0e0; border-right:1px solid #e0
 
 .hidden { display: none; }
 
-@media print
-{
-	.noprint { display: none; }
-}
+@media print { .noprint { display: none; } }
 
 </style>
 </head>
@@ -594,7 +591,8 @@ function DrawAltigraph()
 	var dc = canvas.getContext('2d');
 	altigraph = new Altigraph();
 	altigraph.setData( gpsAltigraph );
-	altigraph.draw( dc, 0, 0, canvas.width, canvas.height );
+	if( gpsAltigraph )
+		altigraph.draw( dc, 0, 0, canvas.width, canvas.height );
 }
 
 var mapCanvas = null;
@@ -770,7 +768,10 @@ function DrawCourseStats()
 	document.getElementById('idCourseLength').innerHTML = displayUnits == 'km'
 		? lengthKm.toFixed(2) + ' km'
 		: (lengthKm * 0.621371192).toFixed(2) + ' miles';
-		
+	
+	if( !gpsAltigraph )
+		return;
+	
 	var eleDisplayUnits = (displayUnits == 'km' ? '&nbsp;m' : '&nbsp;ft');
 	var prec = (displayUnits == 'km' ? 1 : 0);
 	var eleMult = displayUnits == 'km' ? 1.0 : 3.28084;
@@ -788,7 +789,8 @@ function DrawCourseStats()
 	document.getElementById('idStartElevation').innerHTML = (startElevation * eleMult).toFixed(prec) + eleDisplayUnits;
 	document.getElementById('idMinElevation').innerHTML = (minElevation * eleMult).toFixed(prec) + eleDisplayUnits;
 	document.getElementById('idMaxElevation').innerHTML = (maxElevation * eleMult).toFixed(prec) + eleDisplayUnits;
-	document.getElementById('idTotalElevationGain').innerHTML = (totalElevationGain * eleMult).toFixed(prec) + eleDisplayUnits;
+	if( totalElevationGain )
+		document.getElementById('idTotalElevationGain').innerHTML = (totalElevationGain * eleMult).toFixed(prec) + eleDisplayUnits;
 }
 
 function OpenGetDirections()
