@@ -636,7 +636,10 @@ function OpenCourseViewerWindow()
 	lengthKm /= 1000.0;
 	payload['lengthKm'] = lengthKm;
 	
-	template = courseViewerTemplate.replace( 'payload = null;', 'payload=' + JSON.stringify(payload) + ';' );
+	var newTitle = 'Map: ' + payload['raceNameText'] + ' ' + payload['raceDate'];
+	template = courseViewerTemplate.replace(
+					'payload = null;', 'payload=' + JSON.stringify(payload) + ';' ).replace(
+					'TTIITTLLEE', newTitle );
 	
 	var w = window.open( '', '', '', true );
 	w.document.write( template.replace(/{{/g, '<').replace(/}}/g, '>') );
