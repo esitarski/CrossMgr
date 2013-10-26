@@ -19,6 +19,7 @@ statusSortSeq = Model.Rider.statusSortSeq
 
 brandText = _('Powered by CrossMgr (sites.google.com/site/crossmgrsoftware)')
 
+'''
 def ImageToPil( image ):
 	"""Convert wx.Image to PIL Image."""
 	w, h = image.GetSize()
@@ -38,6 +39,7 @@ def ImageToPil( image ):
 	else:
 		pil = Image.merge('RGB', (redImage, greenImage, blueImage))
 	return pil
+'''
 
 class ExportGrid( object ):
 	PDFLineFactor = 1.10

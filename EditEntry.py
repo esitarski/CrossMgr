@@ -1,15 +1,11 @@
 import Utils
 from Utils				import logCall
 import wx
-import wx.grid				as gridlib
 import wx.lib.intctrl
-import wx.lib.masked		as masked
-import ColGrid
 import Model
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 from Undo import undo
 import random
-import math
 import datetime
 
 #------------------------------------------------------------------------------------------------
@@ -306,7 +302,7 @@ class SplitNumberDialog( wx.Dialog ):
 		
 		undo.pushState()
 		with Model.LockRace() as race:
-			rider = race.getRider( num )
+			rider = race.getRider( self.entry.num )
 
 			race.numTimeInfo.delete( self.entry.num, self.entry.t )
 			race.numTimeInfo.add( num1, t1 )

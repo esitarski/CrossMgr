@@ -1,12 +1,10 @@
 import wx
-import datetime
 import bisect
 import sys
-import Model
 import Utils
+import Model
 from Utils import formatTime, SetLabel
 from Utils import logException
-import Utils
 import ColGrid
 import StatusBar
 import OutputStreamer

@@ -1,10 +1,7 @@
 import wx
-import wx.lib.masked		as masked
 import datetime
 
 import Utils
-from Utils					import logCall
-import ColGrid
 import Model
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 from Undo import undo
@@ -59,7 +56,7 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 		if dTime == 0:
 			return
 		
-		if dTime > 0.0 and not Utils.MessageOkCancel( self,
+		if dTime > 0.0 and not Utils.MessageOKCancel( self,
 				_('Are you Sure you want to change the Race Start to Later?\n(you can always undo).'), _('Are you sure?') ):
 			return
 		

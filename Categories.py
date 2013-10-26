@@ -116,7 +116,7 @@ class TimeEditor(gridlib.PyGridCellEditor):
 		changed = False
 		val = self._tc.GetValue()
 		if val != self.startValue:
-			change = True
+			changed = True
 			grid.GetTable().SetValue( row, col, val )
 		self.startValue = '00:00:00'
 		self._tc.SetValue( self.startValue )
@@ -295,9 +295,6 @@ class Categories( wx.Panel ):
 		if not mainWin or not race:
 			return
 			
-		colnames = [_('Name'), _('Gender'), _('Numbers'), _('Start Offset'), _('Laps'), _('Distance')]
-		data = [[]] * len(colnames)
-		
 		pdd = wx.PrintDialogData(mainWin.printData)
 		pdd.SetAllPages( True )
 		pdd.EnableSelection( False )

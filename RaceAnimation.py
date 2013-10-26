@@ -1,5 +1,4 @@
 import wx
-import wx.grid		as gridlib
 import Model
 import Utils
 import string
@@ -8,7 +7,6 @@ from gettext import gettext as _
 from Animation import Animation
 from GeoAnimation import GeoAnimation
 from FixCategories import FixCategories
-from ReadSignOnSheet import IgnoreFields
 from GetResults import GetResults, GetCategoryDetails
 
 statusNames = Model.Rider.statusNames

@@ -3,9 +3,7 @@ from whoosh.index import create_in, open_dir
 from whoosh.analysis import StemmingAnalyzer
 from whoosh.fields import *
 
-import HTMLParser
 import os
-import sys
 import shutil
 import glob
 import re

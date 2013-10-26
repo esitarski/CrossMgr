@@ -3,7 +3,6 @@ import random
 import math
 from math import radians, sin, cos, asin, sqrt, atan2, exp
 import bisect
-import copy
 import sys
 import datetime
 import random
@@ -13,8 +12,6 @@ import cgi
 import getpass
 import socket
 from Version import AppVerName
-from operator import itemgetter, attrgetter
-from GanttChart import makePastelColours, makeColourGradient
 from Animation import GetLapRatio
 import Utils
 import xml.etree.ElementTree
@@ -1045,7 +1042,7 @@ class GeoAnimation(wx.PyControl):
 							distanceCur = lapRatio * (distanceLap * flr)
 						else:
 							distanceCur = distanceLap * (flr + self.iLapDistance - 1 + lapRatio)
-					elif cat.get('raceDistance', None) is not None and leaderRaceTime[0] != leaderRaceTime[-1]:
+					elif cat.get('raceDistance', None) is not None and leaderRaceTimes[0] != leaderRaceTimes[-1]:
 						distanceRace = cat['raceDistance']
 						distanceCur = (self.t - leaderRaceTimes[0]) / (leaderRaceTimes[-1] - leaderRaceTimes[0]) * distanceRace
 						distanceCur = max( 0.0, min(distanceCur, distanceRace) )

@@ -1,19 +1,13 @@
 import wx
 import wx.lib.intctrl
 import wx.lib.masked			as masked
-import wx.lib.mixins.listctrl 	as  listmix
-import wx.lib.rcsizer			as rcs
-import socket
-import sys
 import os
 import datetime
-import string
 
 import Model
 import Utils
 import JChip
 from JChipSetup import GetTagNums
-from Utils		import logCall, stripLeadingZeros
 from Undo		import undo
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 

@@ -1,5 +1,4 @@
 import wx
-import wx.grid		as gridlib
 import os
 import re
 from string import Template

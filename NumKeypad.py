@@ -1,15 +1,13 @@
 import wx
-import wx.lib.agw.gradientbutton as GB
 import os
 import wx.lib.intctrl
-from wx.lib.stattext import GenStaticText 
 import bisect
 import sys
 import datetime
 from collections import defaultdict
 
 import Utils
-from Utils import SetValue, SetLabel
+from Utils import SetLabel
 from GetResults import GetResults, GetLastFinisherTime, GetLeaderFinishTime
 import Model
 from keybutton import KeyButton

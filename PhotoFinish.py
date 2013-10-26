@@ -35,7 +35,7 @@ def fileFormatTime( secs ):
 	return formatTime(secs).replace(':', '-').replace('.', '-')
 	
 def HasPhotoFinish():
-	return Device is not Null
+	return Device is not None
 
 def PilImageToWxImage( pil ):
 	image = wx.EmptyImage( *pil.size )

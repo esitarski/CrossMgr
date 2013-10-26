@@ -1,9 +1,8 @@
+import wx
 import Utils
 from Utils				import logCall
-import wx
 import Model
 from Undo import undo
-import math
 
 #------------------------------------------------------------------------------------------------
 class SetAutoCorrectDialog( wx.Dialog ):

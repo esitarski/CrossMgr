@@ -1,6 +1,5 @@
 import wx
 import datetime
-import os
 
 import Model
 import Utils

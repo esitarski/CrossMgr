@@ -1,5 +1,4 @@
 import wx
-import wx.grid		as gridlib
 import bisect
 import Model
 import Utils

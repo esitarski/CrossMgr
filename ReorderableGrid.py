@@ -185,7 +185,7 @@ class KeyboardNavigationGridMixin( object ):
 				else:
 					self.MoveCursorLeft(False)
 			else:
-				if self.GetGridCursorCol() == self.GetNumberCols() - 1 and self.GetGridCursorRow() != grid.GetNumberRows() - 1:
+				if self.GetGridCursorCol() == self.GetNumberCols() - 1 and self.GetGridCursorRow() != self.GetNumberRows() - 1:
 					self.MoveCursorDown(False)
 					for c in xrange(self.GetNumberCols()):
 						self.MoveCursorLeft(False)

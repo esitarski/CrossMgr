@@ -1,5 +1,3 @@
-import wx
-import os
 import xlwt
 import Model
 import Utils

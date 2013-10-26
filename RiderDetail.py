@@ -1,9 +1,12 @@
 import wx
 import wx.lib.intctrl as intctrl
 import wx.lib.masked as masked
-import Model
+import random
+import bisect
+import re
 import Utils
 from Utils				import logCall
+import Model
 import ColGrid
 import EditEntry
 from LineGraph import LineGraph
@@ -14,11 +17,6 @@ import Gantt
 from EditEntry import CorrectNumber, ShiftNumber, DeleteEntry
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 from GetResults import GetResults, GetCategoryDetails
-import random
-import bisect
-import sys
-import re
-from gettext import gettext as _
 
 def getStFtLaps( rider ):
 	with Model.LockRace() as race:
@@ -853,7 +851,7 @@ class RiderDetail( wx.Panel ):
 		try:
 			undo.pushState()
 			with Model.LockRace() as race:
-				race.getRider(self.entry.num).setStatus( Rider.Pulled, self.entry.t + 1 )
+				race.getRider(self.entry.num).setStatus( Model.Rider.Pulled, self.entry.t + 1 )
 				race.setChanged()
 		except:
 			pass
@@ -867,7 +865,7 @@ class RiderDetail( wx.Panel ):
 		try:
 			undo.pushState()
 			with Model.LockRace() as race:
-				race.getRider(self.entry.num).setStatus( Rider.DNF, self.entry.t + 1 )
+				race.getRider(self.entry.num).setStatus( Model.Rider.DNF, self.entry.t + 1 )
 				race.setChanged()
 		except:
 			pass

@@ -4,7 +4,6 @@ from Undo import undo
 import wx
 import re
 import os
-import webbrowser
 import wx.lib.intctrl as intctrl
 import wx.lib.masked as masked
 

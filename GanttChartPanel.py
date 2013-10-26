@@ -3,7 +3,6 @@ import random
 import math
 import sys
 import bisect
-import datetime
 import Utils
 from PhotoFinish import hasPhoto
 

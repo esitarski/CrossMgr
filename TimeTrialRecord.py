@@ -1,4 +1,3 @@
-import os
 import wx
 import wx.grid			as gridlib
 from wx.lib import masked
@@ -60,7 +59,7 @@ class HighPrecisionTimeEditor(gridlib.PyGridCellEditor):
 		if val != self.startValue:
 			if val == self.Empty:
 				val = ''
-			change = True
+			changed = True
 			grid.GetTable().SetValue( row, col, val )
 		self.startValue = self.Empty
 		self._tc.SetValue( self.startValue )

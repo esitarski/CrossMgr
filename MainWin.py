@@ -10,8 +10,6 @@ import time
 import copy
 import bisect
 import json
-import multiprocessing
-import threading
 import webbrowser
 import zipfile
 import base64
@@ -31,7 +29,6 @@ from optparse import OptionParser
 import xlwt
 import wx.lib.agw.advancedsplash as AS
 import openpyxl
-import StringIO
 from setpriority import setpriority
 
 import Utils
@@ -56,11 +53,10 @@ from USACExport			import USACExport
 from HelpSearch			import HelpSearchDialog
 from Utils				import logCall, logException
 import Model
-import VersionMgr
 import JChipSetup
 import JChipImport
 import JChip
-from JChip import ChipReaderEvent, EVT_CHIP_READER 
+from JChip import EVT_CHIP_READER 
 import OrionImport
 import AlienImport
 import ImpinjImport
@@ -74,7 +70,7 @@ import Version
 from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, ExcelLink, ReportFields
 from SetGraphic			import SetGraphicDialog
 from GetResults			import GetCategoryDetails
-from PhotoFinish		import ResetPhotoInfoCache, DeletePhotos, SetCameraState
+from PhotoFinish		import ResetPhotoInfoCache, DeletePhotos
 from PhotoViewer		import PhotoViewerDialog
 from ReadTTStartTimesSheet import ImportTTStartTimes
 import VideoBuffer
@@ -628,7 +624,7 @@ class MainWin( wx.Frame ):
 			
 			try:
 				race.photoCount = getattr(race,'photoCount',0) + VideoBuffer.ModelTakePhoto( num, t )
-			except Exceptions as e:
+			except Exception as e:
 				logException( e, sys.exc_info() )
 	
 	def menuDNS( self, event ):
@@ -2352,9 +2348,6 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 				self.showPage( i )
 				break
 
-	def showRiderDetail( self ):
-		self.showPageName( _('RiderDetail') )
-				
 	def callPageRefresh( self, i ):
 		try:
 			page = self.pages[i]

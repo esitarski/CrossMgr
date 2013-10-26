@@ -1,16 +1,12 @@
 import wx
-import wx.grid		as gridlib
 import wx.lib.mixins.listctrl as listmix
-import re
 import os
 import sys
 import itertools
-from string import Template
 
 import Model
 import Utils
-import ColGrid
-from FixCategories import FixCategories, SetCategory
+from FixCategories import FixCategories
 from Undo import undo
 
 class AutoWidthListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):

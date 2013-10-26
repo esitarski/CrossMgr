@@ -1,5 +1,4 @@
 import wx
-import math
 import Utils
 
 def lighterColour( c ):

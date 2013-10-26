@@ -2,13 +2,9 @@ import wx
 import random
 import math
 import bisect
-import copy
-import sys
 import datetime
 import random
-from operator import itemgetter, attrgetter
 import Utils
-from GanttChart import makePastelColours, makeColourGradient
 
 shapes = [ [(math.cos(a), -math.sin(a)) \
 					for a in (q*(2.0*math.pi/i)+math.pi/2.0+(2.0*math.pi/(i*2.0) if i % 2 == 0 else 0)\
@@ -531,7 +527,7 @@ class Animation(wx.PyControl):
 							distanceCur = lapRatio * (distanceLap * flr)
 						else:
 							distanceCur = distanceLap * (flr + self.iLapDistance - 1 + lapRatio)
-					elif cat.get('raceDistance', None) is not None and leaderRaceTime[0] != leaderRaceTime[-1]:
+					elif cat.get('raceDistance', None) is not None and leaderRaceTimes[0] != leaderRaceTimes[-1]:
 						distanceRace = cat['raceDistance']
 						distanceCur = (self.t - leaderRaceTimes[0]) / (leaderRaceTimes[-1] - leaderRaceTimes[0]) * distanceRace
 						distanceCur = max( 0.0, min(distanceCur, distanceRace) )

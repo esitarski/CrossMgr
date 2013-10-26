@@ -1,20 +1,16 @@
 from __future__ import print_function
 
 import os
-import sys
 import itertools
 import wx
 import copy
 import wx.lib.filebrowsebutton as filebrowse
 import wx.lib.scrolledpanel as scrolled
 import wx.wizard as wiz
+import string
 import Utils
 import Model
-import string
-import webbrowser
-import traceback
-from Excel import GetExcelReader, toAscii
-from gettext import gettext as _
+from Excel import GetExcelReader
 
 #-----------------------------------------------------------------------------------------------------
 Fields = [_('Bib#'), _('LastName'), _('FirstName'), _('Team'), _('Category'), _('Age'), _('Gender'), _('License'), _('Tag'), _('Tag2')]

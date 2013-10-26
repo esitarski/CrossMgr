@@ -1,5 +1,6 @@
 import wx
 import os
+import sys
 import time
 import Utils
 import Model
@@ -223,7 +224,6 @@ def ModelStartCamera( refTime = None, raceFileName = None ):
 	return False
 	
 if __name__ == '__main__':
-	import os
 	import random
 	import shutil
 	

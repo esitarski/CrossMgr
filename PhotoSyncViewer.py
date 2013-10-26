@@ -1,12 +1,10 @@
 import wx
+import os
+import sys
 import Model
 import Utils
-Utils.initTranslation()
 import PhotoFinish
 import VideoBuffer
-import os
-import re
-import sys
 
 def getRiderName( info ):
 	lastName = info.get('LastName','')

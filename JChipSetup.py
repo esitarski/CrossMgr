@@ -1,17 +1,16 @@
-import Model
-import Utils
-import JChip
-from JChip import ChipReaderEvent, EVT_CHIP_READER 
-from Utils import logCall, stripLeadingZeros
 import wx
 import wx.lib.intctrl
 import wx.lib.masked           as masked
-import wx.lib.mixins.listctrl  as  listmix
 import wx.lib.rcsizer  as rcs
 import socket
 import sys
 import re
 import datetime
+import Model
+import Utils
+import JChip
+from JChip import EVT_CHIP_READER
+import Utils
 import PhotoSyncViewer
 import VideoBuffer
 

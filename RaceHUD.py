@@ -1,11 +1,8 @@
 import wx
-import random
-import math
-import sys
-import bisect
-import Utils
 import os
-from gettext import gettext as _
+import bisect
+import random
+import Utils
 
 def lighterColour( c ):
 	rgb = c.Get( False )

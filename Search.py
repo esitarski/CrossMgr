@@ -1,13 +1,12 @@
 import wx
-import wx.grid		as gridlib
-import os
 import re
 
-import Model
 import Utils
-import ReadSignOnSheet
+import Model
 import ColGrid
+import ReadSignOnSheet
 
+reIntPrefix = re.compile( '^[0-9]+' )
 class Search( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY, style = 0, size=(-1-1) ):
 		wx.Panel.__init__(self, parent, id, style=style, size=size )

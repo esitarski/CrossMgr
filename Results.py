@@ -1,18 +1,13 @@
-import Model
-import Utils
 import wx
-import wx.grid		as gridlib
 import re
 import os
 import sys
-import itertools
-from gettext import gettext as _
-from string import Template
+import Model
+import Utils
 import ColGrid
 from FixCategories import FixCategories, SetCategory
 from GetResults import GetResults, RidersCanSwap
 from ExportGrid import ExportGrid
-from GetResults import GetResults
 from RiderDetail import ShowRiderDetailDialog
 from EditEntry import CorrectNumber, ShiftNumber, InsertNumber, DeleteEntry, SwapEntry
 from Undo import undo
@@ -710,7 +705,6 @@ class Results( wx.Panel ):
 		pass
 		
 if __name__ == '__main__':
-	import cPickle as pickle
 	Utils.disable_stdout_buffering()
 	app = wx.PySimpleApp()
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,200))

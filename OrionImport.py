@@ -1,8 +1,9 @@
 import wx
+import datetime
 import Utils
 import Model
+import JChip
 from ChipImport import ChipImportDialog
-import string
 
 def parseTagTime( line, lineNo, errors ):
 	try:

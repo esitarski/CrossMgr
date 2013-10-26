@@ -4,11 +4,9 @@ import itertools
 import datetime
 import Utils
 import re
-import csv
 import bisect
 import math
 import copy
-import operator
 import sys, traceback
 import functools
 import threading
@@ -1167,7 +1165,7 @@ class Race(object):
 	@memoize
 	def interpolateLap( self, lap, useCategoryNumLaps = False ):
 		entries = self.interpolate() if not useCategoryNumLaps else self.interpolateCategoryNumLaps()
-		# Find the first occurance of the given lap.
+		# Find the first occurrence of the given lap.
 		if not entries:
 			return []
 
@@ -1585,7 +1583,7 @@ class Race(object):
 
 	def importCategories( self, fp ):
 		categories = []
-		for r, line in eumerate(fp):
+		for r, line in enumerate(fp):
 			line = line.strip()
 			if not line or line.startswith('#'):
 				continue

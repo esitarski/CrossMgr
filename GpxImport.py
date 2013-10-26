@@ -4,11 +4,11 @@ import sys
 import wx
 import wx.wizard as wiz
 import wx.lib.filebrowsebutton as filebrowse
+import traceback
 import Utils
 from Utils import logException
 from GeoAnimation import GeoTrack, GpxHasTimes
 import Model
-import traceback
 
 class IntroPage(wiz.WizardPageSimple):
 	def __init__(self, parent, controller):

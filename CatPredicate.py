@@ -98,7 +98,7 @@ class CategoryPredicate( object ):
 				genderFirstChar = f[1:]
 				if genderFirstChar in 'MH':
 					self.genderMatch = 1
-				elif genderFirstchar in 'WFL':
+				elif genderFirstChar in 'WFL':
 					self.genderMatch = 2
 				else:
 					self.genderMatch = 0
