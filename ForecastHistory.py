@@ -415,7 +415,7 @@ class ForecastHistory( wx.Panel ):
 			averageLapTime = race.getAverageLapTime()
 			backSecs = averageLapTime
 			
-			expectedShowMax = 64
+			expectedShowMax = 80
 			
 			tMin = tRace - backSecs
 			tMax = tRace + averageLapTime
