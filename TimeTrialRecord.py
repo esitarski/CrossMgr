@@ -96,7 +96,7 @@ class BibEditor(gridlib.PyGridCellEditor):
 		val = self._tc.GetValue()
 		val = str(val) if val else ''
 		if val != str(self.startValue):
-			change = True
+			changed = True
 			grid.GetTable().SetValue( row, col, val )
 		self._tc.SetValue( self.startValue )
 		

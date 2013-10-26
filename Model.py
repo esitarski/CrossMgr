@@ -6,7 +6,6 @@ import Utils
 import re
 import bisect
 import math
-import copy
 import sys, traceback
 import functools
 import threading

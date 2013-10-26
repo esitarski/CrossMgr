@@ -7,7 +7,6 @@ from FtpWriteFile import FtpWriteRacePhoto
 import wx
 import wx.lib.agw.thumbnailctrl as TC
 import os
-import re
 import types
 import threading
 
@@ -126,6 +125,7 @@ class PhotoPrintout(wx.Printout):
 		
 		fontHeight = int(border/2 - border/10)
 		font = wx.FontFromPixelSize( wx.Size(0,fontHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
+		dc.SetFont( font )
 		dc.DrawText( self.title, border, border )
 		dc.DrawBitmap( bitmap, border, (3 * border) // 2 )
 

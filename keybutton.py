@@ -66,8 +66,6 @@ Version 0.3
 """
 
 import wx
-import math
-
 
 HOVER = 1
 CLICK = 2

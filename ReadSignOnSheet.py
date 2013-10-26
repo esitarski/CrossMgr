@@ -1,12 +1,11 @@
 from __future__ import print_function
 
-import os
-import itertools
 import wx
-import copy
 import wx.lib.filebrowsebutton as filebrowse
 import wx.lib.scrolledpanel as scrolled
 import wx.wizard as wiz
+import os
+import copy
 import string
 import Utils
 import Model
@@ -432,9 +431,9 @@ def GetFixTag( externalInfo ):
 			except (KeyError, ValueError):
 				continue
 			try:
-				n = int( GetCleanTag(tag), 10 )		# Orion tags are all numeric, but some JChip tags might also be all numeric.
+				int( GetCleanTag(tag), 10 )		# Orion tags are all numeric, but some JChip tags might also be all numeric.
 				countOrion += 1
-			except ValueError:			# JChip tags are hex, so int() base 10 fails.
+			except ValueError:					# JChip tags are hex, so int() base 10 fails.
 				countJChip += 1
 	
 	# Assign the tag to the greatest number of matches as some JChip tags might be all numeric.
