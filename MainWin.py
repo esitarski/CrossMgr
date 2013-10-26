@@ -541,12 +541,6 @@ class MainWin( wx.Frame ):
 		self.optionsMenu.Append( idCur , _("Set &Graphic..."), _("Set Graphic for Output") )
 		self.Bind(wx.EVT_MENU, self.menuSetGraphic, id=idCur )
 		
-		self.optionsMenu.AppendSeparator()
-
-		idCur = wx.NewId()
-		self.optionsMenu.Append( idCur , _("Copy Log File to &Clipboard"), _("Copy Log File to &Clipboard") )
-		self.Bind(wx.EVT_MENU, self.menuCopyLogFileToClipboard, id=idCur )
-		
 		self.menuBar.Append( self.optionsMenu, _("&Options") )
 		
 		#-----------------------------------------------------------------------
@@ -578,6 +572,12 @@ class MainWin( wx.Frame ):
 		self.toolsMenu.Append( idCur , _("&Change Race Start Time..."), _("Change the Start Time of the Race") )
 		self.Bind(wx.EVT_MENU, self.menuChangeRaceStartTime, id=idCur )
 		
+		self.toolsMenu.AppendSeparator()
+
+		idCur = wx.NewId()
+		self.toolsMenu.Append( idCur , _("Copy Log File to &Clipboard"), _("Copy Log File to &Clipboard") )
+		self.Bind(wx.EVT_MENU, self.menuCopyLogFileToClipboard, id=idCur )
+
 		self.menuBar.Append( self.toolsMenu, _("&Tools") )
 		
 		#------------------------------------------------------------------------------
