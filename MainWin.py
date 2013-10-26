@@ -2583,8 +2583,6 @@ def MainLoop():
 	if options.verbose:
 		ShowSplashScreen()
 		ShowTipAtStartup()
-		# multiprocessing.Process( target = VersionMgr.updateVersionCache, args = (VersionMgr.getVersionFileName(),)).start()
-		# threading.Thread( target = VersionMgr.updateVersionCache ).run()
 	
 	# Try to open a specified filename.
 	fileName = options.filename
