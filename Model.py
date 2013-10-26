@@ -1,18 +1,18 @@
 from __future__ import print_function
-import random
-import itertools
-import datetime
-import Utils
 import re
-import bisect
+import sys
 import math
-import sys, traceback
+import bisect
+import socket
+import random
+import getpass
+import datetime
+import itertools
 import functools
 import threading
-import getpass
-import socket
 from os.path import commonprefix
 
+import Utils
 import Version
 
 CurrentUser = getpass.getuser()

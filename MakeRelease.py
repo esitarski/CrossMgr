@@ -8,10 +8,7 @@ from __future__ import print_function
 
 import os
 import shutil
-import stat
 import sys
-import datetime
-import hashlib
 import tarfile
 import py_compile
 import subprocess

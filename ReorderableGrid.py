@@ -215,7 +215,7 @@ class SaveEditWhenFocusChangesGridMixin( object ):
 ########################################################################
 class CornerReorderableGridLabelRenderer(glr.GridLabelRenderer):
     def __init__(self):
-        self._bmp = bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'UpDown.png'), wx.BITMAP_TYPE_PNG )
+        self._bmp = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'UpDown.png'), wx.BITMAP_TYPE_PNG )
         
     def Draw(self, grid, dc, rect, rc):
 		if grid._enableReorderRows:

@@ -5,7 +5,6 @@ from math import radians, sin, cos, asin, sqrt, atan2, exp
 import bisect
 import sys
 import datetime
-import random
 import os
 import re
 import cgi

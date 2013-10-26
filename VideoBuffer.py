@@ -75,7 +75,6 @@ class VideoBuffer( threading.Thread ):
 	
 	def run( self ):
 		self.reset()
-		tLaunch = now()
 		keepGoing = True
 		while keepGoing:
 			try:

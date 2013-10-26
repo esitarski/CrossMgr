@@ -2,21 +2,16 @@ from __future__ import print_function
 
 import os
 import sys
-import itertools
 import wx
-import re
 import copy
 import wx.lib.filebrowsebutton as filebrowse
 import wx.lib.scrolledpanel as scrolled
 import wx.wizard as wiz
 import Utils
-import string
-import webbrowser
 import traceback
 import Model
 from Undo import undo
-from Excel import GetExcelReader, toAscii
-from gettext import gettext as _
+from Excel import GetExcelReader
 
 #-----------------------------------------------------------------------------------------------------
 Fields = ['Bib#', 'StartTime']
@@ -105,7 +100,6 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 			label = wx.StaticText(sp, label=f)
 			if boldFont is None:
 				font = label.GetFont()
-				fontSize = label.GetFont()
 				boldFont = wx.Font( font.GetPointSize()+1, font.GetFamily(), font.GetStyle(), wx.FONTWEIGHT_BOLD )
 			label.SetFont( boldFont )
 			gs.Add( label )

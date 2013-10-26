@@ -252,7 +252,6 @@ if __name__ == '__main__':
 	Utils.disable_stdout_buffering()
 	
 	SetCameraState( True )
-	import datetime
 	for i in xrange(5):
 		d = datetime.datetime.now()
 		TakePhoto( 'test.cmn', 100, 129.676 + i )
