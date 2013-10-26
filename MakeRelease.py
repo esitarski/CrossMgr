@@ -6,11 +6,6 @@
 #
 from __future__ import print_function
 
-import platform
-if platform.system() != 'Linux':
-	print( 'This script only runs on Linux' )
-	sys.exit()
-
 import os
 import shutil
 import stat
@@ -20,7 +15,11 @@ import hashlib
 import tarfile
 import py_compile
 import subprocess
-from string import Template
+
+import platform
+if platform.system() != 'Linux':
+	print( 'This script only runs on Linux' )
+	sys.exit()
 
 distPath = 'dist'
 

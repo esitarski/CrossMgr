@@ -400,7 +400,6 @@ class GetExcelLink( object ):
 								headerMap.append( (f, self.headerNamesPage.headers[i]) )
 						self.summaryPage.setFileNameSheetNameInfo(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName(), info, errors, headerMap)
 					except ValueError as e:
-						print( traceback.format_exc() )
 						Utils.MessageOK( self.wizard, _('Problem extracting rider info.\nCheck the Excel format.\n\n"{}"').format(e),
 											title=_('Data Error'), iconMask=wx.ICON_ERROR)
 						evt.Veto()

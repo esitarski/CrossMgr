@@ -381,8 +381,8 @@ def SwapEntry( a, b ):
 	
 	race.deleteTime( a.num, a.t )
 	race.deleteTime( b.num, b.t )
-	race.addTime( a.num, b.t + (rider.firstTime if getattr(race, 'isTimeTrial', False) and riderA.firstTime is not None else 0.0) )
-	race.addTime( b.num, a.t + (rider.firstTime if getattr(race, 'isTimeTrial', False) and riderB.firstTime is not None else 0.0) )
+	race.addTime( a.num, b.t + (riderB.firstTime if getattr(race, 'isTimeTrial', False) and riderB.firstTime is not None else 0.0) )
+	race.addTime( b.num, a.t + (riderA.firstTime if getattr(race, 'isTimeTrial', False) and riderA.firstTime is not None else 0.0) )
 
 def DoStatusChange( parent, num, message, title, newStatus ):
 	if num is None or not Utils.MessageOKCancel(parent, message.format(num), title):
