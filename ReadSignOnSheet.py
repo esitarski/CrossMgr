@@ -17,6 +17,8 @@ Fields = [_('Bib#'), _('LastName'), _('FirstName'), _('Team'), _('Category'), _(
 IgnoreFields = [_('Bib#'), _('Tag'), _('Tag2'), _('Gender')]		# Fields to ignore when adding data to standard reports.
 ReportFields = [f for f in Fields if f not in IgnoreFields]
 
+mapFmt = u'{:15}\t\u2192   {}'
+
 class FileNamePage(wiz.WizardPageSimple):
 	def __init__(self, parent):
 		wiz.WizardPageSimple.__init__(self, parent)
@@ -119,6 +121,9 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		self.gs = gs
 		vbs.Add( sp, flag=wx.ALL, border = border )
 		
+		self.mapSummary = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_MULTILINE|wx.TE_READONLY, size=(-1,128) )
+		vbs.Add( self.mapSummary, 1, flag=wx.ALL|wx.EXPAND, border = border )
+		
 		self.SetSizer( vbs )
 	
 	def setExpectedFieldCol( self, fieldCol ):
@@ -177,11 +182,22 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 			self.choices[c].Clear()
 			self.choices[c].AppendItems( self.headers )
 			self.choices[c].SetSelection( iBest )
+			self.choices[c].Bind( wx.EVT_CHOICE, self.doUpdateSummary )
 
 		self.gs.Layout()
 		self.sp.SetAutoLayout(1)
 		self.sp.SetupScrolling( scroll_y = False )
+		self.doUpdateSummary()
 
+	def doUpdateSummary( self, event = None ):
+		mapStr = mapFmt.format( 'CrossMgr', _('Spreadsheet') )
+		mapStr += '\n\n'
+
+		map = [(f, self.choices[c].GetStringSelection()) for c, f in enumerate(Fields)]
+		mapStr += '\n'.join( mapFmt.format(a, b) for a, b in map )
+		
+		self.mapSummary.SetValue( mapStr )
+		
 	def getFieldCol( self ):
 		headerLen = len(self.headers) - 1
 		fieldCol = {}
@@ -282,12 +298,11 @@ class SummaryPage(wiz.WizardPageSimple):
 			infoLen = 0
 		self.riderNumber.SetLabel( '{}'.format(infoLen) )
 		
-		fmt = u'{:15}\t: {}'
 		errStr = '\n'.join( [err for num, err in errors] if errors else ['None'] )
 		
-		errStr += '\n\n' + fmt.format( _('CrossMgr'), _('Spreadsheet') )
+		errStr += '\n\n' + mapFmt.format( _('CrossMgr'), _('Spreadsheet') )
 		errStr += '\n\n'
-		headerMapStr = '\n'.join( fmt.format( _(f), h ) for f, h in headerMap )
+		headerMapStr = '\n'.join( mapFmt.format( _(f), h ) for f, h in headerMap )
 		errStr += headerMapStr
 		
 		self.statusName.SetLabel( _('Success!') if infoLen and not errors else _('{num} Error(s)').format( num=len(errors) ) )
@@ -329,7 +344,7 @@ class GetExcelLink( object ):
 				self.headerNamesPage.setExpectedFieldCol( excelLink.fieldCol )
 
 		self.wizard.GetPageAreaSizer().Add( self.fileNamePage )
-		self.wizard.SetPageSize( wx.Size(500,200) )
+		self.wizard.SetPageSize( wx.Size(600,300) )
 		self.wizard.FitToPage( self.fileNamePage )
 	
 	def show( self ):
@@ -634,7 +649,7 @@ if __name__ == '__main__':
 	print( Utils.approximateMatch("Team", "Last Name") )
 
 	app = wx.PySimpleApp()
-	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
+	mainWin = wx.Frame(None,title="CrossMan", size=(600,300))
 	excelLink = GetExcelLink(mainWin)
 	mainWin.Show()
 	excelLink.show()
