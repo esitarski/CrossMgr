@@ -121,14 +121,9 @@ class PhotoPrintout(wx.Printout):
 		image.Rescale( int(wImage * ratio), int(hImage * ratio) )
 		if dc.GetDepth() == 8:
 			image = image.ConvertToGreyscale()
-		bitmap = image.ConvertToBitmap()
 		
-		fontHeight = int(border/2 - border/10)
-		font = wx.FontFromPixelSize( wx.Size(0,fontHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
-		dc.SetFont( font )
-		dc.DrawText( self.title, border, border )
-		dc.DrawBitmap( bitmap, border, (3 * border) // 2 )
-
+		bitmap = image.ConvertToBitmap()
+		dc.DrawBitmap( bitmap, border, border )
 		return True
 
 class PhotoViewerDialog( wx.Dialog ):
