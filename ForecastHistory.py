@@ -10,10 +10,24 @@ import StatusBar
 import OutputStreamer
 import NumKeypad
 import VideoBuffer
+from GetResults import GetResults
 from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, DeleteEntry, DoDNS, DoDNF, DoPull
 from FtpWriteFile import realTimeFtpPublish
 
-# Define columns for recorded and expected infomation.
+@Model.memoize
+def interpolateNonZeroFinishers():
+	results = GetResults( None, False )
+	Entry = Model.Entry
+	Finisher = Model.Rider.Finisher
+	entries = []
+	for r in results:
+		if r.status == Finisher:
+			riderEntries = [Entry(r.num, lap, t, r.interp[lap]) for lap, t in enumerate(r.raceTimes)]
+			entries.extend( riderEntries[1:] )
+	entries.sort( key=Entry.key )
+	return entries
+	
+# Define columns for recorded and expected information.
 iNumCol, iNoteCol, iTimeCol, iLapCol, iGapCol, iNameCol, iColMax = range(7)
 colnames = [None] * iColMax
 colnames[iNumCol]  = _('Num')
@@ -370,8 +384,7 @@ class ForecastHistory( wx.Panel ):
 			tRace = race.curRaceTime()
 			tRaceLength = race.minutes * 60.0
 			
-			entries = race.interpolateLapNonZeroFinishers( race.numLaps if race.numLaps is not None else race.getMaxLap() + 1 )
-			entries = [e for e in entries if e.lap <= race.getCategoryNumLaps(e.num) ]
+			entries = interpolateNonZeroFinishers()
 			
 			isTimeTrial = getattr(race, 'isTimeTrial', False)
 			if isTimeTrial:
@@ -400,7 +413,7 @@ class ForecastHistory( wx.Panel ):
 			# Select the interpolated entries around now.
 			leaderPrev, leaderNext = race.getPrevNextLeader( tRace )
 			averageLapTime = race.getAverageLapTime()
-			backSecs = averageLapTime / 4.0
+			backSecs = averageLapTime
 			
 			expectedShowMax = 64
 			

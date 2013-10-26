@@ -300,7 +300,7 @@ class SummaryPage(wiz.WizardPageSimple):
 		
 		errStr = '\n'.join( [err for num, err in errors] if errors else ['None'] )
 		
-		errStr += '\n\n' + mapFmt.format( _('CrossMgr'), _('Spreadsheet') )
+		errStr += '\n\n' + mapFmt.format( 'CrossMgr', _('Spreadsheet') )
 		errStr += '\n\n'
 		headerMapStr = '\n'.join( mapFmt.format( _(f), h ) for f, h in headerMap )
 		errStr += headerMapStr
