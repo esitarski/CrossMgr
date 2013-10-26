@@ -20,10 +20,3 @@ Clicking on the email link will set the Subject to the name of the race.
 ## Set Graphic...
 Sets the graphic used in the HTML and printed output.
 To return to the default CrossMgr graphic, set this to an empty field.
-
-## Copy Log File to Clipboard
-Copies the last 1,000 lines of the CrossMgr log file to the clipboard.
-The log can then be pasted into an email.
-
-When reporting problems with CrossMgr, please include the log.
-It contains important diagnostics to find the problem.

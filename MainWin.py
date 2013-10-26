@@ -1,20 +1,20 @@
 import wx
 from wx.lib.wordwrap import wordwrap
 import wx.lib.imagebrowser as imagebrowser
-import sys
 import os
 import re
-import datetime
-import random
+import io
+import cgi
+import sys
 import time
 import copy
-import bisect
 import json
+import random
+import bisect
+import datetime
 import webbrowser
 import zipfile
 import base64
-import cgi
-import codecs
 
 import locale
 try:
@@ -1136,7 +1136,7 @@ class MainWin( wx.Frame ):
 			# Add the google maps template.
 			templateFile = os.path.join(Utils.getHtmlFolder(), 'VirtualTourTemplate.html')
 			try:
-				with codecs.open(templateFile, 'r', 'utf-8') as fp:
+				with io.open(templateFile, 'r', encoding='utf-8') as fp:
 					template = fp.read()
 				payload['virtualRideTemplate'] = sanitize( template )
 			except:
@@ -1145,7 +1145,7 @@ class MainWin( wx.Frame ):
 			# Add the course viewer template.
 			templateFile = os.path.join(Utils.getHtmlFolder(), 'CourseViewerTemplate.html')
 			try:
-				with codecs.open(templateFile, 'r', 'utf-8') as fp:
+				with io.open(templateFile, 'r', encoding='utf-8') as fp:
 					template = fp.read()
 				payload['courseViewerTemplate'] = sanitize( template )
 			except:
@@ -1217,7 +1217,7 @@ class MainWin( wx.Frame ):
 			# Fix the google maps template.
 			templateFile = os.path.join(Utils.getHtmlFolder(), 'VirtualTourTemplate.html')
 			try:
-				with codecs.open(templateFile, 'r', 'utf-8') as fp:
+				with io.open(templateFile, 'r', encoding='utf-8') as fp:
 					template = fp.read()
 				# Sanitize the template into a safe json string.
 				template = self.reLeadingWhitespace.sub( '', template )
@@ -1273,7 +1273,7 @@ class MainWin( wx.Frame ):
 		# Read the html template.
 		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
 		try:
-			with codecs.open(htmlFile, 'r', 'utf-8') as fp:
+			with io.open(htmlFile, 'r', encoding='utf-8') as fp:
 				html = fp.read()
 		except:
 			Utils.MessageOK(_('Cannot read HTML template file.  Check program installation.'),
@@ -1285,7 +1285,7 @@ class MainWin( wx.Frame ):
 		# Write out the results.
 		fname = os.path.join( dName, os.path.basename(fname) )
 		try:
-			with codecs.open(fname, 'w', 'utf-8') as fp:
+			with io.open(fname, 'w', encoding='utf-8') as fp:
 				fp.write( html )
 			webbrowser.open( fname, new = 0, autoraise = True )
 			Utils.MessageOK(self, _('Html Race Animation written to:\n\n   {}').format(fname), _('Html Write'))
@@ -1458,7 +1458,7 @@ class MainWin( wx.Frame ):
 			# Read the html template.
 			htmlFile = os.path.join(Utils.getHtmlFolder(), 'CourseViewer.html')
 			try:
-				with codecs.open(htmlFile, 'r', 'utf-8') as fp:
+				with io.open(htmlFile, 'r', encoding='utf-8') as fp:
 					html = fp.read()
 			except:
 				Utils.MessageOK(_('Cannot read HTML template file.  Check program installation.'),
@@ -1470,7 +1470,7 @@ class MainWin( wx.Frame ):
 		html = self.addCourseToHtmlStr( html )
 		fname = os.path.join( dName, os.path.basename(fname) )
 		try:
-			with codecs.open(fname, 'w', 'utf-8') as fp:
+			with io.open(fname, 'w', encoding='utf-8') as fp:
 				fp.write( html )
 			webbrowser.open( fname, new = 0, autoraise = True )
 			Utils.MessageOK(self, _('Course Preview written to:\n\n   {}').format(fname), _('Html Write'))
@@ -1505,7 +1505,7 @@ class MainWin( wx.Frame ):
 		# Read the html template.
 		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RawData.html')
 		try:
-			with codecs.open(htmlFile, 'r', 'utf-8') as fp:
+			with io.open(htmlFile, 'r', encoding='utf-8') as fp:
 				html = fp.read()
 		except:
 			Utils.MessageOK(_('Cannot read HTML template file.  Check program installation.'),
@@ -1594,7 +1594,7 @@ class MainWin( wx.Frame ):
 		# Write out the results.
 		fname = os.path.join( dName, os.path.basename(fname) )
 		try:
-			with codecs.open(fname, 'w', 'utf-8') as fp:
+			with io.open(fname, 'w', encoding='utf-8') as fp:
 				fp.write( html )
 			webbrowser.open( fname, new = 0, autoraise = True )
 			Utils.MessageOK(self, _('Html Raw Data written to:\n\n   {}').format(fname), _('Html Write'))
@@ -1699,7 +1699,7 @@ class MainWin( wx.Frame ):
 		race = Model.race
 		if categoriesFile:
 			try:
-				with codecs.open(categoriesFile, 'r', 'utf-8') as fp:
+				with io.open(categoriesFile, 'r', encoding='utf-8') as fp:
 					race.importCategories( fp )
 				importedCategories = True
 			except IOError:
@@ -1799,7 +1799,7 @@ class MainWin( wx.Frame ):
 		importedCategories = False
 		if categoriesFile:
 			try:
-				with codecs.open(categoriesFile, 'r', 'utf-8') as fp:
+				with io.open(categoriesFile, 'r', encoding='utf-8') as fp:
 					race.importCategories( fp )
 				importedCategories = True
 			except IOError:
@@ -2145,7 +2145,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 		if dlg.ShowModal() == wx.ID_OK:
 			categoriesFile = dlg.GetPath()
 			try:
-				with codecs.open(categoriesFile, 'r', 'utf-8') as fp, Model.LockRace() as race:
+				with io.open(categoriesFile, 'r', encoding='utf-8') as fp, Model.LockRace() as race:
 					race.importCategories( fp )
 			except IOError:
 				Utils.MessageOK( self, _("Cannot open file:\n{}").format(categoriesFile), _("File Open Error"), iconMask=wx.ICON_ERROR)
@@ -2173,7 +2173,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 		if dlg.ShowModal() == wx.ID_OK:
 			fname = dlg.GetPath()
 			try:
-				with codecs.open(fname, 'w', 'utf-8') as fp, Model.LockRace() as race:
+				with io.open(fname, 'w', encoding='utf-8') as fp, Model.LockRace() as race:
 					race.exportCategories( fp )
 			except IOError:
 				Utils.MessageOK( self, _("Cannot open file:\n{}").format(fname), _("File Open Error"), iconMask=wx.ICON_ERROR)

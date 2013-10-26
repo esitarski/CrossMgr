@@ -11,3 +11,10 @@ This is particularly convenient for a point-to-point race.  You don't need to ha
 This is also convenient if you are busy starting a race and are away from CrossMgr.  Go ahead and start the race, then start CrossMgr, then change its Start Time.
 
 You cannot change the start time of a Time Trial race.
+
+## Copy Log File to Clipboard
+Copies the last 1,000 lines of the CrossMgr log file to the clipboard.
+The log can then be pasted into an email.
+
+When reporting problems with CrossMgr, please include the log.
+It contains important diagnostics to find the problem.

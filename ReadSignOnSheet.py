@@ -160,7 +160,7 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		# Create a map for the field names we are looking for
 		# and the self.headers we found in the Excel sheet.
 		for c, f in enumerate(Fields):
-			# Figure out some reasonable defaults for the self.headers.
+			# Figure out some reasonable defaults for self.headers.
 			iBest = len(self.headers) - 1
 			matchBest = 0.0
 			for i, h in enumerate(self.headers):
@@ -271,7 +271,7 @@ class SummaryPage(wiz.WizardPageSimple):
 			clipboard.Close()
 			Utils.MessageOK( self, _('Excel Errors Copied to Clipboard.'), _('Excel Errors Copied to Clipboard') )
 
-	def setFileNameSheetNameInfo( self, fileName, sheetName, info, errors ):
+	def setFileNameSheetNameInfo( self, fileName, sheetName, info, errors, headerMap ):
 		self.fileName.SetLabel( fileName )
 		self.sheetName.SetLabel( sheetName )
 		self.errors = errors
@@ -281,7 +281,15 @@ class SummaryPage(wiz.WizardPageSimple):
 		except TypeError:
 			infoLen = 0
 		self.riderNumber.SetLabel( '{}'.format(infoLen) )
+		
+		fmt = u'{:15}\t: {}'
 		errStr = '\n'.join( [err for num, err in errors] if errors else ['None'] )
+		
+		errStr += '\n\n' + fmt.format( _('CrossMgr'), _('Spreadsheet') )
+		errStr += '\n\n'
+		headerMapStr = '\n'.join( fmt.format( _(f), h ) for f, h in headerMap )
+		errStr += headerMapStr
+		
 		self.statusName.SetLabel( _('Success!') if infoLen and not errors else _('{num} Error(s)').format( num=len(errors) ) )
 		self.errorName.SetValue( errStr )
 		
@@ -310,7 +318,7 @@ class GetExcelLink( object ):
 		wiz.WizardPageSimple_Chain( self.fileNamePage, self.sheetNamePage )
 		wiz.WizardPageSimple_Chain( self.sheetNamePage, self.headerNamesPage )
 		wiz.WizardPageSimple_Chain( self.headerNamesPage, self.summaryPage )
-
+		
 		self.excelLink = excelLink
 		if excelLink:
 			if excelLink.fileName:
@@ -370,7 +378,12 @@ class GetExcelLink( object ):
 					try:
 						info = excelLink.read()
 						errors = excelLink.getErrors()
-						self.summaryPage.setFileNameSheetNameInfo(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName(), info, errors)
+						headerMap = []
+						for f in Fields:
+							i = excelLink.fieldCol.get( f, 0 )
+							if i >= 0:
+								headerMap.append( (f, self.headerNamesPage.headers[i]) )
+						self.summaryPage.setFileNameSheetNameInfo(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName(), info, errors, headerMap)
 					except ValueError as e:
 						print( traceback.format_exc() )
 						Utils.MessageOK( self.wizard, _('Problem extracting rider info.\nCheck the Excel format.\n\n"{}"').format(e),
