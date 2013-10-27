@@ -513,6 +513,7 @@ class RiderDetail( wx.Panel ):
 				race.deleteRider( num )
 			self.setRider( None )
 			self.refresh()
+			wx.CallAfter( Utils.refreshForecastHistory )
 		
 	def onChangeNumber( self, event ):
 		if not Model.race:
@@ -546,14 +547,15 @@ class RiderDetail( wx.Panel ):
 									_('Cannot Change Rider Number'), iconMask = wx.ICON_ERROR )
 			return
 			
-		if Utils.MessageOKCancel( self, _("Conform Change rider's number to {}.").format(newNum), _("Change Rider Number") ):
+		if Utils.MessageOKCancel( self, _("Confirm Change rider's number to {}.").format(newNum), _("Change Rider Number") ):
 			undo.pushState()
 			with Model.LockRace() as race:
 				race.renumberRider( num, newNum )
 				race.numTimeInfo.renumberRider( num, newNum )
 			self.setRider( newNum )
 			self.refresh()
-		
+			wx.CallAfter( Utils.refreshForecastHistory )
+	
 	def onSwapNumber( self, event ):
 		if not Model.race:
 			return
@@ -593,6 +595,8 @@ class RiderDetail( wx.Panel ):
 				race.numTimeInfo.swapRiders( num, newNum )
 			self.setRider( newNum )
 			self.refresh()
+			wx.CallAfter( Utils.refreshForecastHistory )
+
 		
 	def onCopyRider( self, event ):
 		if not Model.race:
@@ -645,6 +649,7 @@ class RiderDetail( wx.Panel ):
 					numTimeInfo.add( newNum, t )
 			self.setRider( newNum )
 			self.onNumChange()
+			wx.CallAfter( Utils.refreshForecastHistory )
 	
 	def onNumChange( self, event = None ):
 		self.refresh()
@@ -679,6 +684,7 @@ class RiderDetail( wx.Panel ):
 		self.commitChange()
 		wx.CallAfter( self.refresh )
 		wx.CallAfter( Utils.refresh )
+		wx.CallAfter( Utils.refreshForecastHistory )
 		
 	def onAutocorrectLaps( self, event ):
 		num = self.num.GetValue()
@@ -691,6 +697,7 @@ class RiderDetail( wx.Panel ):
 			rider.autocorrectLaps = self.autocorrectLaps.GetValue()
 			race.setChanged()
 		self.refresh()
+		wx.CallAfter( Utils.refreshForecastHistory )
 	
 	def setRider( self, n = None ):
 		Utils.SetValue( self.num, int(n) if n is not None else None )
@@ -856,6 +863,7 @@ class RiderDetail( wx.Panel ):
 		except:
 			pass
 		wx.CallAfter( self.refresh )
+		wx.CallAfter( Utils.refreshForecastHistory )
 	
 	def OnGanttPopupDNF( self, event ):
 		if not Utils.MessageOKCancel( self,
@@ -870,6 +878,7 @@ class RiderDetail( wx.Panel ):
 		except:
 			pass
 		wx.CallAfter( self.refresh )
+		wx.CallAfter( Utils.refreshForecastHistory )
 		
 	def OnGanttPopupLapNote( self, event ):
 		if not self.entry or not Model.race:
@@ -1126,6 +1135,8 @@ class RiderDetail( wx.Panel ):
 		num = self.num.GetValue()
 		status = self.statusOption.GetSelection()
 		
+		wx.CallAfter( Utils.refreshForecastHistory )
+		
 		undo.pushState();
 		with Model.LockRace() as race:
 			# Allow new numbers to be added if status is DNS or DQ.
@@ -1144,7 +1155,7 @@ class RiderDetail( wx.Panel ):
 			newValues = (rider.status, rider.tStatus)
 			if oldValues != newValues:
 				race.setChanged()
-			
+	
 	def commit( self ):
 		self.commitChange()
 		

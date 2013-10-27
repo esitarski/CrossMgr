@@ -431,7 +431,7 @@ class Gantt( wx.Panel ):
 		wx.CallAfter( self.ganttChart.SetFocus )
 	
 	def commit( self ):
-		pass
+		wx.CallAfter( Utils.refreshForecastHistory )
 	
 if __name__ == '__main__':
 	Utils.disable_stdout_buffering()

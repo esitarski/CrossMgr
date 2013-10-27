@@ -672,7 +672,7 @@ class MainWin( wx.Frame ):
 			if not race:
 				return
 			if getattr(race, 'isTimeTrial'):
-				Utils.MessageOK( self, _('Cannot change Start Time of a Time Trial', 'Cannot Change Start Time') )
+				Utils.MessageOK( self, _('Cannot change Start Time of a Time Trial'), _('Cannot Change Start Time') )
 				return
 			dlg = ChangeRaceStartTime.ChangeRaceStartTimeDialog( self )
 			dlg.ShowModal()
@@ -1334,7 +1334,7 @@ class MainWin( wx.Frame ):
 			if not race:
 				return
 			if not race.isTimeTrial:
-				Utils.MessageOK( self, _('You must set TimeTrial mode first.', 'Race must be TimeTrial') )
+				Utils.MessageOK( self, _('You must set TimeTrial mode first.'), _('Race must be TimeTrial') )
 				return
 			
 		ImportTTStartTimes( self )
