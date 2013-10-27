@@ -399,19 +399,19 @@ def DoStatusChange( parent, num, message, title, newStatus ):
 
 @logCall
 def DoDNF( parent, num ):
-	return DoStatusChange( parent, num, _('DNF rider {}?', 'Confirm Did Not FINISH'), Model.Rider.DNF )
+	return DoStatusChange( parent, num, _('DNF rider {}?'), _('Confirm Did Not FINISH'), Model.Rider.DNF )
 
 @logCall
 def DoPull( parent, num ):
-	return DoStatusChange( parent, num, _('Pull rider {}?', 'Confirm PULL Rider'), Model.Rider.Pulled )
+	return DoStatusChange( parent, num, _('Pull rider {}?'), _('Confirm PULL Rider'), Model.Rider.Pulled )
 
 @logCall
 def DoDNS( parent, num ):
-	return DoStatusChange( parent, num, _('DNS rider {}?', 'Confirm Did Not START'), Model.Rider.DNS )
+	return DoStatusChange( parent, num, _('DNS rider {}?'), _('Confirm Did Not START'), Model.Rider.DNS )
 
 @logCall
 def DoDQ( parent, num ):
-	return DoStatusChange( parent, num, _('DQ rider {}?', 'Confirm Disqualify'), Model.Rider.DQ )
+	return DoStatusChange( parent, num, _('DQ rider {}?'), _('Confirm Disqualify'), Model.Rider.DQ )
 	
 @logCall
 def AddLapSplits( num, lap, times, splits ):
