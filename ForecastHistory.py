@@ -366,7 +366,7 @@ class ForecastHistory( wx.Panel ):
 			return
 		if not tRace:
 			tRace = Model.race.curRaceTime()
-		self.expectedGrid.SetColumn( iTimeCol, [formatTime(max(0.0, e.t - tRace)) if e.lap > 0 else ('[{}]'.format(formatTime(max(0.0, e.t - tRace + 0.99999999))))\
+		self.expectedGrid.SetColumn( iTimeCol, [formatTime(e.t - tRace) if e.lap > 0 else ('[{}]'.format(formatTime(max(0.0, e.t - tRace + 0.99999999))))\
 										for e in self.quickExpected] )
 	
 	def refresh( self ):
@@ -469,7 +469,7 @@ class ForecastHistory( wx.Panel ):
 			
 			data = [None] * iColMax
 			data[iNumCol] = ['{}'.format(e.num) for e in expected]
-			data[iTimeCol] = [formatTime(max(0.0, e.t - tRace)) if e.lap > 0 else ('[%s]' % formatTime(max(0.0, e.t - tRace + 0.99999999)))\
+			data[iTimeCol] = [formatTime(e.t - tRace) if e.lap > 0 else ('[%s]' % formatTime(max(0.0, e.t - tRace + 0.99999999)))\
 										for e in expected]
 			data[iLapCol] = ['{}'.format(e.lap) for e in expected]
 			def getNoteExpected( e ):
