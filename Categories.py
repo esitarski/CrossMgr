@@ -1,7 +1,7 @@
 import wx
 import re
-import Model
 import Utils
+import Model
 from Undo import undo
 import wx.grid			as gridlib
 import wx.lib.masked	as  masked
@@ -481,6 +481,7 @@ and remove them from other categories.''').format(category.name),
 																			if name not in self.computedFieldss )
 				numStrTuples.append( values )
 			race.setCategories( numStrTuples )
+		wx.CallAfter( Utils.refreshForecastHistory )
 	
 if __name__ == '__main__':
 	app = wx.PySimpleApp()
