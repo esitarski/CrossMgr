@@ -15,8 +15,10 @@ from RaceHUD import RaceHUD
 from EditEntry import DoDNS, DoDNF, DoPull, DoDQ
 from TimeTrialRecord import TimeTrialRecord
 
-def MakeButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1) ):
+def MakeButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1), font = None ):
 	btn = KeyButton( parent, -1, None, label=label.replace('&',''), style=style|wx.NO_BORDER, size=size)
+	if font:
+		btn.SetFont( font )
 	return btn
 
 # backspace, delete, comma, return, digits
@@ -46,48 +48,37 @@ class Keypad( wx.Panel ):
 		self.numEdit.SetFont( font )
 		gbs.Add( self.numEdit, pos=(rowCur,0), span=(1,3), flag=wx.EXPAND|wx.LEFT|wx.TOP, border = outsideBorder )
 		self.num = []
-		self.num.append( MakeButton( self, wx.ID_ANY, label='&0', style=wx.BU_EXACTFIT) )
+		self.num.append( MakeButton( self, wx.ID_ANY, label='&0', style=wx.BU_EXACTFIT, font = font) )
 		self.num[-1].Bind( wx.EVT_BUTTON, lambda event, aValue = 0 : self.onNumPress(event, aValue) )
 		gbs.Add( self.num[0], pos=(4+rowCur,0), span=(1,2), flag=wx.EXPAND )
 
 		numButtonStyle = 0
 		
 		for i in xrange(0, 9):
-			self.num.append( MakeButton( self, id=wx.ID_ANY, label='&' + '{}'.format(i+1), style=numButtonStyle, size=(wNum,hNum)) )
+			self.num.append( MakeButton( self, id=wx.ID_ANY, label='&' + '{}'.format(i+1), style=numButtonStyle, size=(wNum,hNum), font = font) )
 			self.num[-1].Bind( wx.EVT_BUTTON, lambda event, aValue = i+1 : self.onNumPress(event, aValue) )
 			j = 8-i
 			gbs.Add( self.num[-1], pos=(int(j/3)+1 + rowCur, 2-j%3) )
 		
-		for n in self.num:
-			n.SetFont( font )
-		
-		self.delBtn = MakeButton( self, id=wx.ID_DELETE, label=_('&Del'), style=numButtonStyle, size=(wNum,hNum))
-		self.delBtn.SetFont( font )
+		self.delBtn = MakeButton( self, id=wx.ID_DELETE, label=_('&Del'), style=numButtonStyle, size=(wNum,hNum), font = font)
 		self.delBtn.Bind( wx.EVT_BUTTON, self.onDelPress )
 		gbs.Add( self.delBtn, pos=(4+rowCur,2) )
 		
-		self.enterBtn= MakeButton( self, id=0, label=_('&Enter'), style=wx.EXPAND|wx.GROW)
-		self.enterBtn.SetFont( font )
+		self.enterBtn= MakeButton( self, id=0, label=_('&Enter'), style=wx.EXPAND|wx.GROW, font = font)
 		gbs.Add( self.enterBtn, pos=(5+rowCur,0), span=(1,3), flag=wx.EXPAND )
 		self.enterBtn.Bind( wx.EVT_LEFT_DOWN, self.onEnterPress )
 	
-		rowCur += 7
-		font = wx.FontFromPixelSize(wx.Size(0,fontPixels*.75), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
-		self.dnfBtn= MakeButton( self, id=wx.ID_ANY, label=_('DN&F'), style=wx.EXPAND|wx.GROW)
-		self.dnfBtn.SetFont( font )
-		gbs.Add( self.dnfBtn, pos=(rowCur,0), span=(1,1), flag=wx.EXPAND )
-		self.dnfBtn.Bind( wx.EVT_BUTTON, self.onDNFPress )
-	
-		self.pullBtn= MakeButton( self, id=wx.ID_ANY, label=_('&Pull'), style=wx.EXPAND|wx.GROW)
-		self.pullBtn.SetFont( font )
-		gbs.Add( self.pullBtn, pos=(rowCur,1), span=(1,1), flag=wx.EXPAND )
-		self.pullBtn.Bind( wx.EVT_BUTTON, self.onPullPress )
-	
-		self.pullBtn= MakeButton( self, id=wx.ID_ANY, label=_('&DQ'), style=wx.EXPAND|wx.GROW)
-		self.pullBtn.SetFont( font )
-		gbs.Add( self.pullBtn, pos=(rowCur,2), span=(1,1), flag=wx.EXPAND )
-		self.pullBtn.Bind( wx.EVT_BUTTON, self.onDQPress )
-	
+		rowCur += 6
+		font = wx.FontFromPixelSize(wx.Size(0,int(fontPixels*.6)), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
+		
+		hbs = wx.GridSizer( 2, 2, 4, 4 )
+		
+		for i, (label, cb) in enumerate([(_('DN&F'),self.onDNFPress), (_('DN&S'),self.onDNSPress), (_('&Pull'),self.onDNFPress), (_('&DQ'),self.onDQPress)]):
+			btn = MakeButton( self, id-wx.ID_ANY, label=label, style=wx.EXPAND|wx.GROW, font = font)
+			hbs.Add( btn, flag=wx.EXPAND | (wx.LEFT if i > 0 else 0), border = 2 )
+		
+		gbs.Add( hbs, pos=(rowCur,0), span=(1,3), flag=wx.EXPAND )
+		
 		self.SetSizer( gbs )
 		
 	def onNumPress( self, event, value ):
@@ -158,12 +149,6 @@ class Keypad( wx.Panel ):
 		
 	def Enable( self, enable ):
 		wx.Panel.Enable( self, enable )
-		'''
-		for b in self.num:
-			b.Enable( enable )
-		for b in [self.numEdit, self.delBtn, self.enterBtn, self.dnfBtn, self.pullBtn]:
-			b.Enable( enable )
-		'''
 		
 class NumKeypad( wx.Panel ):
 	SwitchToTimeTrialEntryMessage = _('Switch to Time Trial Entry')
@@ -547,7 +532,7 @@ class NumKeypad( wx.Panel ):
 			for f in infoFields:
 				SetLabel( f, '' )
 			changed |= SetLabel( self.lapCompleting, '1' )
-			changed |= SetLabel( self.message, 'Collecting Data' )
+			changed |= SetLabel( self.message, _('Collecting Data') )
 		else:
 			self.numLaps.SetItems( [ '{}'.format(race.numLaps) ] )
 			self.numLaps.SetSelection( 0 )
@@ -804,7 +789,7 @@ class NumKeypad( wx.Panel ):
 	def refresh( self ):
 		if self.notDrawnYet:
 			self.notDrawnYet = False
-			self.splitter.SetSashPosition( 440 )
+			self.splitter.SetSashPosition( 446 )
 	
 		if self.isKeypadInputMode():
 			wx.CallAfter( self.keypad.numEdit.SetFocus )
