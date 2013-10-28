@@ -55,6 +55,7 @@ There are a number of additional buttons:
 Button|Description
 :-----|:----------
 DNF|Enter the rider as a DNF, and uses the current time as the DNF time.
+DNS|Enter the rider as a DNS.
 Pull|Enters the rider as PUL, and uses the current time as the PUL time.
 DQ|Enters the rider as DQ, and uses the current time as the DQ time.
 
