@@ -59,6 +59,8 @@ DNS|Enter the rider as a DNS.
 Pull|Enters the rider as PUL, and uses the current time as the PUL time.
 DQ|Enters the rider as DQ, and uses the current time as the DQ time.
 
+Remember: if you change any rider's status here, you can always change it again from the [RiderDetail][] screen.
+
 ### Time Trial Entry Mode
 
 This is the standard input mode for time trial finishes.  It follows a similar process to a manual stopwatch, except you use the computer.
