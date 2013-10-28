@@ -76,7 +76,7 @@ class Keypad( wx.Panel ):
 		for i, (label, cb) in enumerate([(_('DN&F'),self.onDNFPress), (_('DN&S'),self.onDNSPress), (_('&Pull'),self.onDNFPress), (_('&DQ'),self.onDQPress)]):
 			btn = MakeButton( self, id-wx.ID_ANY, label=label, style=wx.EXPAND|wx.GROW, font = font)
 			btn.Bind( wx.EVT_BUTTON, cb )
-			hbs.Add( btn, flag=wx.EXPAND | (wx.LEFT if i > 0 else 0), border = 2 )
+			hbs.Add( btn, flag=wx.EXPAND )
 		
 		gbs.Add( hbs, pos=(rowCur,0), span=(1,3), flag=wx.EXPAND )
 		
