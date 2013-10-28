@@ -1,5 +1,5 @@
-import Model
 import Utils
+import Model
 from Undo import undo
 import wx
 import re
@@ -458,7 +458,8 @@ def ChangeProperties( parent ):
 	propertiesDialog = PropertiesDialog( parent, -1, _("Change Properties"), showFileFields = False, refreshProperties = True, size=(600,400) )
 	propertiesDialog.properties.setEditable( True )
 	try:
-		if propertiesDialog.ShowModal() != wx.ID_OK: raise NameError('User Cancel')
+		if propertiesDialog.ShowModal() != wx.ID_OK:
+			raise NameError('User Cancel')
 		mainWin = Utils.getMainWin()
 		dir = os.path.dirname( mainWin.fileName )
 		
@@ -476,6 +477,7 @@ def ChangeProperties( parent ):
 		Model.resetCache()
 		mainWin.writeRace()
 		Utils.refresh()
+		wx.CallAfter( Utils.refreshForecastHistory )
 			
 	except (NameError, AttributeError, TypeError):
 		pass
@@ -483,7 +485,6 @@ def ChangeProperties( parent ):
 	propertiesDialog.Destroy()
 		
 if __name__ == '__main__':
-	Utils.initTranslation()
 	race = Model.newRace()
 	race._populate()
 	
