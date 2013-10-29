@@ -135,17 +135,17 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		# Try to find the header columns.
 		# Look for the first row with more than 4 columns.
 		for r, row in enumerate(reader.iter_list(sheetName)):
-			cols = sum( 1 for d in row if d.strip() )
+			cols = sum( 1 for d in row if d and d.strip() )
 			if cols > 4:
-				self.headers = [h.strip() for h in row]
+				self.headers = [h.strip() for h in row if h and h.strip()]
 				break
 
 		# If we haven't found a header row yet, assume the first non-empty row is the header.
 		if not self.headers:
 			for r, row in enumerate(reader.iter_list(sheetName)):
-				cols = sum( 1 for d in row if d.strip() )
+				cols = sum( 1 for d in row if d and d.strip() )
 				if cols > 0:
-					self.headers = [h.strip() for h in row]
+					self.headers = [h.strip() for h in row if h and h.strip()]
 					break
 		
 		# Ignore empty columns on the end.
