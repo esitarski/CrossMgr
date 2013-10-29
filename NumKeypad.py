@@ -12,7 +12,7 @@ from GetResults import GetResults, GetLastFinisherTime, GetLeaderFinishTime
 import Model
 from keybutton import KeyButton
 from RaceHUD import RaceHUD
-from EditEntry import DoDNS, DoDNF, DoPull, DoDQ
+from EditEntry import DoDNF, DoDNS, DoPull, DoDQ
 from TimeTrialRecord import TimeTrialRecord
 
 def MakeButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1), font = None ):
@@ -72,10 +72,9 @@ class Keypad( wx.Panel ):
 		font = wx.FontFromPixelSize(wx.Size(0,int(fontPixels*.6)), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
 		
 		hbs = wx.GridSizer( 2, 2, 4, 4 )
-		
-		for i, (label, cb) in enumerate([(_('DN&F'),self.onDNFPress), (_('DN&S'),self.onDNSPress), (_('&Pull'),self.onDNFPress), (_('&DQ'),self.onDQPress)]):
+		for i, (label, actionFn) in enumerate([(_('DN&F'),DoDNF), (_('DN&S'),DoDNS), (_('&Pull'),DoPull), (_('D&Q'),DoDQ)]):
 			btn = MakeButton( self, id-wx.ID_ANY, label=label, style=wx.EXPAND|wx.GROW, font = font)
-			btn.Bind( wx.EVT_BUTTON, cb )
+			btn.Bind( wx.EVT_BUTTON, lambda event, fn = actionFn: self.doAction(fn) )
 			hbs.Add( btn, flag=wx.EXPAND )
 		
 		gbs.Add( hbs, pos=(rowCur,0), span=(1,3), flag=wx.EXPAND )
@@ -131,23 +130,12 @@ class Keypad( wx.Panel ):
 	def doAction( self, action ):
 		success = False
 		for num in self.getRiderNums():
-			if action(self, num ):
+			if action(self, num):
 				success = True
 		if success:
 			self.numEdit.SetValue( '' )
+			wx.CallAfter( Utils.refreshForecastHistory )
 	
-	def onDNFPress( self, event ):
-		self.doAction( DoDNF )
-	
-	def onPullPress( self, event ):
-		self.doAction( DoPull )
-	
-	def onDQPress( self, event ):
-		self.doAction( DoDQ )
-	
-	def onDNSPress( self, event ):
-		self.doAction( DoDNS )
-		
 	def Enable( self, enable ):
 		wx.Panel.Enable( self, enable )
 		
