@@ -137,7 +137,7 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		for r, row in enumerate(reader.iter_list(sheetName)):
 			cols = sum( 1 for d in row if d and d.strip() )
 			if cols > 4:
-				self.headers = [h.strip() for h in row if h and h.strip()]
+				self.headers = [(h or '').strip() for h in row]
 				break
 
 		# If we haven't found a header row yet, assume the first non-empty row is the header.
@@ -145,11 +145,11 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 			for r, row in enumerate(reader.iter_list(sheetName)):
 				cols = sum( 1 for d in row if d and d.strip() )
 				if cols > 0:
-					self.headers = [h.strip() for h in row if h and h.strip()]
+					self.headers = [(h or '').strip() for h in row]
 					break
 		
 		# Ignore empty columns on the end.
-		while self.headers and (self.headers[-1].isspace() or not self.headers[-1]):
+		while self.headers and (not self.headers[-1] or self.headers[-1].isspace()):
 			self.headers.pop()
 			
 		if not self.headers:
