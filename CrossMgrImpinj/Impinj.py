@@ -15,10 +15,15 @@ getTimeNow = datetime.datetime.now
 
 HOME_DIR = os.path.expanduser("~")
 
-RepeatSeconds				= 2		# Interval in which a tag is considered a repeat read.
+ConnectionTimeoutSecondsDefault	= 1		# Interval for connection timeout
+KeepaliveSecondsDefault			= 2		# Interval to request a Keepalive message
+RepeatSecondsDefault			= 2		# Interval in which a tag is considered a repeat read.
+
+ConnectionTimeoutSeconds	= ConnectionTimeoutSecondsDefault
+KeepaliveSeconds			= KeepaliveSecondsDefault
+RepeatSeconds				= RepeatSecondsDefault
+
 ReconnectDelaySeconds		= 2		# Interval to wait before reattempting a connection
-KeepaliveSeconds			= 2		# Interval to request a Keepalive message
-ConnectionTimeoutSeconds	= 1		# Interval for connection timeout
 ReaderUpdateMessageSeconds	= 5		# Interval to print we are waiting for input.
 
 class Impinj( object ):
