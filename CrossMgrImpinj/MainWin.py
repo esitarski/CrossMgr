@@ -133,7 +133,7 @@ class AdvancedSetup( wx.Dialog ):
 
 		row += 1
 		bs.Add( wx.StaticText(self, wx.ID_ANY, 'Repeat Seconds'), pos=(row, 0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
-		self.RepeatSeconds = intctrl.IntCtrl( self, wx.ID_ANY, min=1, max=60, limited = True,
+		self.RepeatSeconds = intctrl.IntCtrl( self, wx.ID_ANY, min=1, max=120, limited = True,
 			value = Impinj.RepeatSeconds, size=(32,-1) )
 		bs.Add( self.RepeatSeconds, pos=(row, 1), span=(1,1), border = border, flag=wx.TOP )
 		bs.Add( wx.StaticText(self, wx.ID_ANY, 'interval in which multiple tag reads are considered "repeats" and not reported'), pos=(row, 2), span=(1,1), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL )
