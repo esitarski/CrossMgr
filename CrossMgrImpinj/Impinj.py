@@ -15,7 +15,7 @@ getTimeNow = datetime.datetime.now
 
 HOME_DIR = os.path.expanduser("~")
 
-ConnectionTimeoutSecondsDefault	= 1		# Interval for connection timeout
+ConnectionTimeoutSecondsDefault	= 3		# Interval for connection timeout
 KeepaliveSecondsDefault			= 2		# Interval to request a Keepalive message
 RepeatSecondsDefault			= 2		# Interval in which a tag is considered a repeat read.
 
