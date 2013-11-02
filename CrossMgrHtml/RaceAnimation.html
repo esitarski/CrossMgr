@@ -3090,6 +3090,7 @@ function RefreshRaceChart()
 
 function Lightning()
 {
+	this.xLeft = 0;
 	this.width = 0;
 	this.height = 0;
 	
@@ -3164,7 +3165,7 @@ function Lightning()
 					dc.fillText( num, x, y );
 					
 					dc.font = fontHeight + 'px Arial';
-					var textInfo = this.showLaps[lapY] + (i != 0 ? ': ' + FormatTimeGap(gap) : '');
+					var textInfo = this.showLaps[lapY] + (i != 0 ? ': ' + FormatTimeGap(gap) + ' (' + (i+1) + ')' : '');
 					var text = textInfo;
 					if( lapY == lapYSearch )
 						text += ' ' + getRiderNameNum( num );
@@ -3209,6 +3210,7 @@ function Lightning()
 
 		this.width = canvasRaceLightning.width;
 		this.height = canvasRaceLightning.height;
+		var border = this.width / 50;
 		
 		var dc = canvasRaceLightning.getContext('2d');
 		
@@ -3294,7 +3296,7 @@ function Lightning()
 			dc.fillStyle = 'rgba(0, 0, 255, 0.20)';
 			for( var j = 0; j < lapInfo[i].length; ++j ) {
 				var gap = TimeDifference(lapInfo[i][j][0], lapInfo[i][0][0]);
-				var xCur = (this.width - this.riderWidth) * (gap / tDiffMax);
+				var xCur = border + (this.width - this.riderWidth - border * 2) * (gap / tDiffMax);
 				var lg = dc.createLinearGradient( xCur, yCur, xCur + this.riderWidth, yCur );
 				lg.addColorStop( 0.0, '#00BB00' );
 				lg.addColorStop( 1.0, '#FFFFFF' );
@@ -3307,7 +3309,7 @@ function Lightning()
 			var overlapCount = 0;
 			for( var j = 0; j < lapInfo[i].length; ++j ) {
 				var gap = TimeDifference(lapInfo[i][j][0], lapInfo[i][0][0]);
-				var xCur = (this.width - this.riderWidth) * (gap / tDiffMax);
+				var xCur = border + (this.width - this.riderWidth - border * 2) * (gap / tDiffMax);
 				
 				if( xLast != 0 && xCur < xLast )
 					++overlapCount;
