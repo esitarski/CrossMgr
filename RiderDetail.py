@@ -964,7 +964,7 @@ class RiderDetail( wx.Panel ):
 					else:
 						name = firstName
 				self.riderName.SetLabel( name )
-				self.riderTeam.SetLabel( info.get('Team', '') )
+				self.riderTeam.SetLabel( u'{}'.format(info.get('Team', '')) )
 			except KeyError:
 				pass
 
@@ -973,7 +973,7 @@ class RiderDetail( wx.Panel ):
 				tags = []
 				for tagName in ['Tag', 'Tag2']:
 					try:
-						tags.append( info[tagName].lstrip('0').upper() )
+						tags.append( u'{}'.format(info[tagName]).lstrip('0').upper() )
 					except (KeyError, ValueError):
 						pass
 				if tags:
