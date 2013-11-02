@@ -126,10 +126,7 @@ table.results tr td.fastest {
 	background-color:#80FF80;
 }
 
-@media print
-{
-	.noprint { display: none; }
-}
+@media print { .noprint { display: none; } }
 
 </style>
 </head>
@@ -178,6 +175,7 @@ var finishTop = null;			// Finish on the top rather than the bottom.
 var tRace = null;				// Race time (if the race is running).
 var raceStartTime = null;		// In seconds from midnight.
 var animationObj = null;		// Animation object to draw the course (set to TrackAnimation or GeoAnimation).
+var raceLightningObj = null;
 var catUpdateTime = {};			// Time of next update by category.
 var rfid = null;				// True if data was collected by RFID.
 var gpsPoints = null;			// gps points data for the course [[x,y,d],...].
@@ -3090,12 +3088,271 @@ function RefreshRaceChart()
 	labelsWidthCur = labelsWidthLeft;
 }
 
+function Lightning()
+{
+	this.width = 0;
+	this.height = 0;
+	
+	this.drawLapY = [];
+	this.drawLapNumX = [];
+	this.lapsShown = [];
+	
+	this.fontSize = 0;
+	this.riderWidth = 0;
+	this.riderHeight = 0;
+	this.maxLap = 0;
+	
+	this.xEvent = 0;
+	this.yEvent = 0;
+	
+	this.processMouse = function( event )
+	{
+		var canvasRaceLightning = document.getElementById('idRaceLightning');
+		var pos = findPos( canvasRaceLightning );
+		this.xEvent = event.pageX - canvasRaceLightning.offsetLeft;
+		this.yEvent = event.pageY - canvasRaceLightning.offsetTop;
+		if( hoverTimer != null )
+			clearTimeout( hoverTimer );	
+		hoverTimer = setTimeout( function() {raceLightningObj.updateInfo();}, 10 );
+	}
+
+	this.updateInfo = function()
+	{
+		this.Refresh();
+		if( this.maxLaps <= 1 )
+			return;
+		
+		var canvasRaceLightning = document.getElementById('idRaceLightning');
+		var dc = canvasRaceLightning.getContext('2d');
+
+		dc.save();
+		
+		dc.fillStyle = '#FF6600';
+		dc.strokeStyle = '#FF6600';
+		dc.lineWidth = 2;
+		dc.textBaseline = "top";
+		var fontHeight = Math.min(this.riderHeight * 0.75, 28);
+		
+		var lapYSearch = this.drawLapY.binSearch( this.yEvent ) - 1;
+		lapYSearch = Math.max( 0, lapYSearch );
+		lapYSearch = Math.min( this.drawLapY.length - 1, lapYSearch );
+		
+		var lapNumX = this.drawLapNumX[lapYSearch];
+		var lapX = 0;
+		for( var i = 0; i < lapNumX.length; ++i ) {
+			if( Math.abs(lapNumX[i][1] - this.xEvent) < Math.abs(lapNumX[lapX][1] - this.xEvent) )
+				lapX = i;
+		}
+		
+		var num = lapNumX[lapX][0];
+		var xLast = null, yLast = null;
+		for( var lapY = 0; lapY < this.drawLapNumX.length; ++lapY ) {
+			var drawLapNumX = this.drawLapNumX[lapY];
+			var y = this.drawLapY[lapY];
+			for( var i = 0; i < drawLapNumX.length; ++i ) {
+				if( drawLapNumX[i][0] == num ) {
+					var x = drawLapNumX[i][1], gap = drawLapNumX[i][2];
+
+					var lg = dc.createLinearGradient( x, y, x + this.riderWidth, y );
+					lg.addColorStop( 0.0, '#FF6600' );
+					lg.addColorStop( 1.0, '#FFFFFF' );
+					dc.fillStyle = lg;
+					dc.fillRect( x, y, this.riderWidth, this.riderHeight );
+					
+					dc.fillStyle = '#000000';
+					dc.font = this.fontSize + 'px Arial';
+					dc.fillText( num, x, y );
+					
+					dc.font = fontHeight + 'px Arial';
+					var textInfo = this.showLaps[lapY] + (i != 0 ? ': ' + FormatTimeGap(gap) : '');
+					var text = textInfo;
+					if( lapY == lapYSearch )
+						text += ' ' + getRiderNameNum( num );
+					var textWidth = dc.measureText(text).width;
+					var xAdjust = this.riderWidth;
+					if( x + xAdjust + textWidth > this.width ) {
+						xAdjust = -textWidth;
+						if( lapY == lapYSearch )
+							text = getRiderNameNum( num ) + ' ' + textInfo;
+					}
+					
+					// Lighten the background so we can see the description.
+					dc.fillStyle = 'rgba(255,255,255,0.85)';
+					dc.fillRect( x + xAdjust, y, textWidth, fontHeight );
+					dc.fillStyle = '#000';
+					dc.fillText( text, x + xAdjust, y );
+					
+					if( xLast != null ) {
+						dc.beginPath();
+						dc.moveTo( xLast, yLast );
+						dc.lineTo( xLast = drawLapNumX[i][1] + this.riderWidth / 2, y );
+						dc.stroke();
+					}
+					xLast = x + this.riderWidth / 2;
+					break;
+				}
+			}
+			yLast = y + this.riderHeight;
+		}
+		
+		dc.restore();
+	}
+
+	this.Refresh = function()
+	{
+		var canvasRaceLightning = document.getElementById('idRaceLightning');
+		if( !data || !canvasRaceLightning || !isCanvasSupported() ) {
+			this.width = 0;
+			this.height = 0;
+			return;
+		}
+
+		this.width = canvasRaceLightning.width;
+		this.height = canvasRaceLightning.height;
+		
+		var dc = canvasRaceLightning.getContext('2d');
+		
+		dc.textBaseline = "top";
+		dc.fillStyle = 'rgb(255,255,255)';
+		dc.fillRect( 0, 0, this.width, this.height );
+		
+		// Show results for this category.
+		var categoriesUsed = {};
+		var dataMax = 0;
+		var lapInfo = [];
+		var startOffset = null;
+		this.maxLaps = 0;
+		for( var num in data )
+		{
+			var d = data[num];
+			if( categoryCur == 'All' || d['raceCat'] == categoryCur )
+			{
+				var raceTimes = d['raceTimes'];
+				this.maxLaps = Math.max( this.maxLaps, raceTimes.length-1 );
+			}
+		}
+		if( this.maxLaps <= 1 )
+			return;
+		
+		this.showLaps = [];
+		var freq = Math.max( 1, Math.floor(this.maxLaps / 10.0) );
+		for( var i = 1; i < this.maxLaps; i += freq )
+			this.showLaps.push( i );
+		this.showLaps.push( this.maxLaps );
+		
+		var riderCount = 0;
+		for( var num in data )
+		{
+			var d = data[num];
+			if( categoryCur == 'All' || d['raceCat'] == categoryCur )
+			{
+				var raceTimes = d['raceTimes'];
+				if( raceTimes.length == 0 )
+					continue;
+				
+				++riderCount;
+				if( startOffset == null )
+					startOffset = categoryCur == 'All' ? 0 : raceTimes[0];
+				
+				for( var i = 0; i < this.showLaps.length; ++i ) {
+					var lap = this.showLaps[i];
+					while( i >= lapInfo.length )
+						lapInfo.push( [] );
+					if( lap < raceTimes.length )
+						lapInfo[i].push( [raceTimes[lap] - startOffset, num] );
+				}
+			}
+		}
+		
+		var tDiffMax = 0;
+		for( var i = 0; i < lapInfo.length; ++i ) {
+			lapInfo[i].sort( function(x, y) { return x[0] - y[0]; } );
+			if( lapInfo[i].length > 0 )
+				tDiffMax = Math.max( tDiffMax, lapInfo[i].back()[0] - lapInfo[i][0][0] );
+		}
+		tDiffMax = Math.max( tDiffMax, 1 );
+		
+		this.riderHeight = (this.height / this.showLaps.length) * 0.6;
+		var overlapMax = 4;
+		this.fontSize = this.riderHeight / overlapMax;
+		this.riderWidth = dc.measureText('0000').width;
+		
+		var gapShrink = 1.0;
+		dc.font = this.fontSize + "px Arial";
+		var lastPos = {};
+		this.drawLapY = [];
+		this.drawLapNumX = [];
+		dc.strokeStyle = 'rgba(0, 0, 0, 0.250)';
+		dc.lineWidth = 1;
+
+		for( var i = 0; i < lapInfo.length; ++i ) {
+			var yCur = (this.height / lapInfo.length) * i;
+			this.drawLapY.push( yCur );
+			this.drawLapNumX.push( [] );
+			
+			// Draw the boxes.
+			dc.fillStyle = 'rgba(0, 0, 255, 0.20)';
+			for( var j = 0; j < lapInfo[i].length; ++j ) {
+				var gap = TimeDifference(lapInfo[i][j][0], lapInfo[i][0][0]);
+				var xCur = (this.width - this.riderWidth) * (gap / tDiffMax);
+				var lg = dc.createLinearGradient( xCur, yCur, xCur + this.riderWidth, yCur );
+				lg.addColorStop( 0.0, '#00BB00' );
+				lg.addColorStop( 1.0, '#FFFFFF' );
+				dc.fillStyle = lg;
+				dc.fillRect( xCur, yCur, this.riderWidth, this.riderHeight );
+			}
+			
+			// Draw the bib numbers and gap times.
+			var xLast = 0;
+			var overlapCount = 0;
+			for( var j = 0; j < lapInfo[i].length; ++j ) {
+				var gap = TimeDifference(lapInfo[i][j][0], lapInfo[i][0][0]);
+				var xCur = (this.width - this.riderWidth) * (gap / tDiffMax);
+				
+				if( xLast != 0 && xCur < xLast )
+					++overlapCount;
+				else
+					overlapCount = 0;
+				
+				var num = lapInfo[i][j][1];
+				this.drawLapNumX.back().push( [num, xCur, gap] );
+				
+				if( overlapCount < overlapMax ) {
+					dc.fillStyle = '#000';
+					dc.font = this.fontSize + "px Arial";
+					dc.fillText( overlapCount == overlapMax - 1 ? '  ...' : num, xCur,
+						yCur + this.fontSize * overlapCount - (overlapCount == overlapMax - 1 ? this.fontSize/2 : 0));
+				}
+				
+				if( lastPos[num] ) {
+					dc.beginPath();
+					dc.moveTo( lastPos[num][0], lastPos[num][1] );
+					dc.lineTo( xCur + this.riderWidth / 2, yCur );
+					dc.stroke();
+				}
+				lastPos[num] = [xCur + this.riderWidth / 2, yCur + this.riderHeight];
+				
+				dc.font = (this.fontSize*gapShrink) + "px Arial Italic";
+				var gapText = ' ' + FormatTimeGap(gap) + ' ';
+				var gapWidth = dc.measureText(gapText).width;
+				if( xCur - xLast > gapWidth ) {
+					dc.fillStyle = '#000';
+					dc.fillText( gapText, xCur - gapWidth, yCur + this.riderHeight / 2 - this.fontSize * gapShrink / 2);
+				}
+				
+				xLast = xCur + this.riderWidth;
+			}
+		}
+	}
+}
+
 function SelectCategory( i )
 {
 	categoryCur = categories[i];
 	SetCategoryResults();
 	animationObj.Refresh();
 	RefreshRaceChart();
+	raceLightningObj.Refresh();
 }
 
 function setCategory( catName )
@@ -3554,12 +3811,23 @@ function onLoad()
 					clearTimeout( hoverTimer );
 				hoverTimer = null;
 				RefreshRaceChart(); }, false);
+		
+		raceLightningObj = new Lightning();
+		var raceChartCanvas = document.getElementById('idRaceLightning');
+		raceChartCanvas.addEventListener('mousemove', function(event) { raceLightningObj.processMouse(event); }, false);
+		raceChartCanvas.addEventListener('mouseout', function(event) {
+				if( hoverTimer != null )
+					clearTimeout( hoverTimer );
+				hoverTimer = null;
+				raceLightningObj.Refresh(); }, false);
+				
 		canvas = document.getElementById('idTrack');
 	}
 	else
 	{
 		document.getElementById('idTrackDiv').className = 'hidden';
 		document.getElementById('idRaceChartDiv').className = 'hidden';
+		document.getElementById('idRaceLightningDiv').className = 'hidden';
 	}
 	
 	document.getElementById('idRaceName').innerHTML = document.getElementById('idTitle').innerHTML;
@@ -3627,6 +3895,7 @@ function onLoad()
 	
 	SetCategoryResults();
 	RefreshRaceChart();
+	raceLightningObj.Refresh();
 	
 	// Start animation.
 	Animate( animationSeconds, undefined, raceIsRunning ? t : getStartTime() );
@@ -3731,12 +4000,20 @@ Current versions of Chrome, FireFox and Opera work fine.
 </span>
 </p>
 <canvas id="idRaceChart" width="1000" height="800" class="noprint">
-<a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a> Race Results requires support for the HTML5 Canvas.<br/>
+<a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a> Requires support for the HTML5 Canvas.<br/>
 Please upgrade to a more recent browser version.<br/>
 For Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
 Current versions of Chrome, FireFox and Opera work fine.
 </canvas>
 </div> <!-- idRaceChartDiv -->
+<div id="idRaceLightningDiv">
+	<canvas id="idRaceLightning" width="1000" height="800" class="noprint">
+<a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a> Requires support for the HTML5 Canvas.<br/>
+Please upgrade to a more recent browser version.<br/>
+For Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
+Current versions of Chrome, FireFox and Opera work fine.
+</canvas>
+</div> <!-- idRaceLightningDiv -->
 </body>
 
 </html>
