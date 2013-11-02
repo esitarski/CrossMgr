@@ -561,6 +561,9 @@ class ExcelLink( object ):
 						data[field] = row[col].strip()
 					except AttributeError:
 						data[field] = row[col]
+					
+					if data[field] == None:
+						data[field] = ''
 						
 					if field == 'LastName' or field.startswith('Tag'):
 						try:
