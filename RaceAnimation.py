@@ -26,7 +26,7 @@ def GetAnimationData( category = None, getExternalData = False ):
 		tempNums = set()
 		if externalInfo:
 			for num, info in externalInfo.iteritems():
-				if num not in race.riders:
+				if num not in race.riders and any(info.get(f, None) for f in [_('LastName'), _('FirstName'), _('Team')]):
 					rider = race.getRider( num )
 					rider.status = Model.Rider.NP
 					tempNums.add( num )
