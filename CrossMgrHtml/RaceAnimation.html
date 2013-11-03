@@ -1004,6 +1004,8 @@ function TrackAnimation()
 					var r = (y[3] ? y[3] : 0) - (x[3] ? x[3] : 0);	// Greatest distance.
 					if( r == 0 )
 						r = (x[4] ? x[4] : 0) - (y[4] ? y[4] : 0);	// Shortest time.
+					if( r == 0 )
+						r = (x[0] - y[0]);							// Bib number
 					return -r;
 				});
 				
@@ -1763,6 +1765,8 @@ function GeoAnimation()
 					var r = (y[3] ? y[3] : 0) - (x[3] ? x[3] : 0);	// Greatest distance.
 					if( r == 0 )
 						r = (x[4] ? x[4] : 0) - (y[4] ? y[4] : 0);	// Shortest time.
+					if( r == 0 )
+						r = (x[0] - y[0]);							// Bib number.
 					return -r;
 				});
 				
