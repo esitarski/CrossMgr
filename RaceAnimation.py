@@ -56,8 +56,10 @@ def GetAnimationData( category = None, getExternalData = False ):
 			animationData[rr.num] = info
 	
 	# Remove all temporary numbers.
-	for num in tempNums:
-		race.deleteRider( num )
+	if tempNums:
+		for num in tempNums:
+			race.deleteRider( num )
+		race.resetCache()
 	
 	return animationData
 		
