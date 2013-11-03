@@ -12,12 +12,30 @@ from GetResults import GetResults, GetCategoryDetails
 statusNames = Model.Rider.statusNames
 
 def GetAnimationData( category = None, getExternalData = False ):
+	with Model.LockRace() as race:
+		externalInfo = None
+		if getExternalData and race.isUnstarted():
+			# Enter all available riders in the spreadsheet as NP.
+			try:
+				externalInfo = race.excelLink.read()
+			except:
+				pass
+		
+		# Add all numbers from the spreadsheet if they are not already in the race.
+		# Default the status to NP.
+		tempNums = set()
+		if externalInfo:
+			for num, info in externalInfo.iteritems():
+				if num not in race.riders:
+					rider = race.getRider( num )
+					rider.status = Model.Rider.NP
+					tempNums.add( num )
+					
+			race.resetCache()
+
 	results = GetResults( category, getExternalData )
-	if not results:
-		return {}
 	
 	animationData = {}
-	
 	ignoreFields = set(['pos', 'num', 'gap', 'laps', 'lapTimes'])
 	with Model.LockRace() as race:
 		for rr in results:
@@ -34,9 +52,13 @@ def GetAnimationData( category = None, getExternalData = False ):
 					info['status'] = statusNames[getattr(rr, a)]
 				else:
 					info[a] = getattr( rr, a )
-					
+			
 			animationData[rr.num] = info
-		
+	
+	# Remove all temporary numbers.
+	for num in tempNums:
+		race.deleteRider( num )
+	
 	return animationData
 		
 class NumListValidator(wx.PyValidator):

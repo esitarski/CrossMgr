@@ -490,6 +490,9 @@ class Rider(object):
 		self.autocorrectLaps = True
 		self.firstTime = None		# Used for time trial mode.  Also used to flag the first start time.
 
+	def __repr__( self ):
+		return u'{} ({})'.format( self.num, self.statusNames[self.status] )
+		
 	def setAutoCorrect( self, on = True ):
 		self.autocorrectLaps = on
 		
@@ -1034,6 +1037,10 @@ class Race(object):
 			self.setChanged()
 		except KeyError:
 			pass
+			
+	def deleteAllRiders( self ):
+		self.riders = {}
+		self.setChanged()
 			
 	def renumberRider( self, num, newNum ):
 		try:

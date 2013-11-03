@@ -63,22 +63,20 @@ DefaultSpeed = 0.00001
 		
 @Model.memoize
 def GetResultsCore( category ):
-	
+
 	riderResults = []
 	with Model.LockRace() as race:
 		if not race:
 			return tuple()
-		
+			
 		isTimeTrial = getattr( race, 'isTimeTrial', False )
 		allCategoriesFinishAfterFastestRidersLastLap = getattr( race, 'allCategoriesFinishAfterFastestRidersLastLap', False )
 		
 		allRiderTimes = {}
 		entries = race.interpolate()
-		if not entries:
-			return tuple()
-			
+		
 		# Group finish times are defined as times which are separated from the previous time by at least 1 second.
-		groupFinishTimes = [floor(entries[0].t)]
+		groupFinishTimes = [0 if not entries else floor(entries[0].t)]
 		groupFinishTimes.extend( [floor(entries[i].t) for i in xrange(1, len(entries)) if entries[i].t - entries[i-1].t >= 1.0] )
 		groupFinishTimes.append( sys.float_info.max )
 		groupFinishTimes.append( sys.float_info.max )
@@ -142,9 +140,9 @@ def GetResultsCore( category ):
 		# Get the number of race laps for each category.
 		categoryWinningTime, categoryWinningLaps = {}, {}
 		for c, (times, nums) in race.getCategoryTimesNums().iteritems():
-			if not times or (category and c != category):
+			if category and c != category:
 				continue
-				
+			
 			# If the category num laps is specified, use that.
 			if c.getNumLaps():
 				categoryWinningLaps[c] = c.getNumLaps()
@@ -165,9 +163,6 @@ def GetResultsCore( category ):
 				except IndexError:
 					categoryWinningTime[c] = raceSeconds
 					categoryWinningLaps[c] = None
-		
-		if not categoryWinningTime:
-			return tuple()
 		
 		highPrecision = Utils.highPrecisionTimes()
 		for rider in race.riders.itervalues():
@@ -205,7 +200,7 @@ def GetResultsCore( category ):
 								[times[i] - times[i-1] for i in xrange(1, len(times))],
 								times,
 								interp )
-			
+								
 			if isTimeTrial:
 				rr.startTime = getattr( rider, 'firstTime', None )
 				if rr.status == Model.Rider.Finisher:
@@ -248,7 +243,7 @@ def GetResultsCore( category ):
 		if not riderResults:
 			return tuple()
 			
-		riderResults.sort( key = lambda x: (statusSortSeq[x.status], -x.laps, x.lastTime, getattr(x, 'startTime', 0.0) or 0.0) )
+		riderResults.sort( key = lambda x: (statusSortSeq[x.status], -x.laps, x.lastTime, getattr(x, 'startTime', 0.0) or 0.0, x.num) )
 		
 		# Add the position (or status, if not a Finisher).
 		# Fill in the gap field (include laps down if appropriate).

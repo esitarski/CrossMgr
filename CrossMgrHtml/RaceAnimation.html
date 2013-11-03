@@ -2160,7 +2160,12 @@ function CmpResultsData( x, y )
 		return x[1] - y[1];
 		
 	// Compare last time.
-	return x[5] - y[5];
+	var d = x[5] - y[5];
+	if( d != 0 )
+		return d;
+	
+	// Compare bib number.
+	return x[2] - y[2];
 }
 
 function CmpCategoryResultsData( x, y )
@@ -3171,11 +3176,8 @@ function Lightning()
 						text += ' ' + getRiderNameNum( num );
 					var textWidth = dc.measureText(text).width;
 					var xAdjust = this.riderWidth;
-					if( x + xAdjust + textWidth > this.width ) {
-						xAdjust = -textWidth;
-						if( lapY == lapYSearch )
-							text = getRiderNameNum( num ) + ' ' + textInfo;
-					}
+					if( x + xAdjust + textWidth > this.width )
+						xAdjust = -(x + xAdjust + textWidth - this.width);
 					
 					// Lighten the background so we can see the description.
 					dc.fillStyle = 'rgba(255,255,255,0.85)';
@@ -3203,8 +3205,7 @@ function Lightning()
 	{
 		var canvasRaceLightning = document.getElementById('idRaceLightning');
 		if( !data || !canvasRaceLightning || !isCanvasSupported() ) {
-			this.width = 0;
-			this.height = 0;
+			this.maxLaps = 0;
 			return;
 		}
 
@@ -3217,6 +3218,9 @@ function Lightning()
 		dc.textBaseline = "top";
 		dc.fillStyle = 'rgb(255,255,255)';
 		dc.fillRect( 0, 0, this.width, this.height );
+		
+		if( categoryCur == 'All' )
+			return;
 		
 		// Show results for this category.
 		var categoriesUsed = {};
