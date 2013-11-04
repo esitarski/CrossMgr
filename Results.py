@@ -443,7 +443,7 @@ class Results( wx.Panel ):
 		self.numSelect = None
 	
 	def setNumSelect( self, num ):
-		self.numSelect = num if num is None else '{}'.format(num)
+		self.numSelect = num if num is None else u'{}'.format(num)
 		if self.numSelect:
 			self.search.SetValue( self.numSelect )
 

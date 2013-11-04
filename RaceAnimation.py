@@ -12,10 +12,11 @@ from GetResults import GetResults, GetCategoryDetails
 statusNames = Model.Rider.statusNames
 
 def GetAnimationData( category = None, getExternalData = False ):
+	externalInfo = None
+	tempNums = set()
+	
 	with Model.LockRace() as race:
-		externalInfo = None
 		if getExternalData and race.isUnstarted():
-			# Enter all available riders in the spreadsheet as NP.
 			try:
 				externalInfo = race.excelLink.read()
 			except:
@@ -23,14 +24,12 @@ def GetAnimationData( category = None, getExternalData = False ):
 		
 		# Add all numbers from the spreadsheet if they are not already in the race.
 		# Default the status to NP.
-		tempNums = set()
 		if externalInfo:
 			for num, info in externalInfo.iteritems():
-				if num not in race.riders and any(info.get(f, None) for f in [_('LastName'), _('FirstName'), _('Team')]):
+				if num not in race.riders and any(info.get(f, None) for f in [_('LastName'), _('FirstName'), _('Team'), _('License')]):
 					rider = race.getRider( num )
 					rider.status = Model.Rider.NP
 					tempNums.add( num )
-					
 			race.resetCache()
 
 	results = GetResults( category, getExternalData )
