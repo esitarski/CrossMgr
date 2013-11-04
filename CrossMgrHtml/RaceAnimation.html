@@ -2708,8 +2708,7 @@ function RaceChartProcessMouse( event )
 	hoverTimer = setTimeout( "RaceChartUpdateInfo()", 25 );
 }
 
-function getRiderName( num )
-{
+function getRiderName( num ) {
 	var name = '';
 	var riderData = data[num];
 	if( riderData )
@@ -2727,8 +2726,15 @@ function getRiderName( num )
 	return name;
 }
 
-function getRiderNameNum( num )
-{
+function getRiderTeam( num ) {
+	var team = '';
+	var riderData = data[num];
+	if( riderData && riderData['Team'] )
+		team = riderData['Team'];
+	return team;
+}
+
+function getRiderNameNum( num ) {
 	var name = getRiderName(num);
 	if( name )
 		return name + ' ' + num;
@@ -3114,7 +3120,7 @@ function Lightning()
 	
 	this.xEvent = 0;
 	this.yEvent = 0;
-	
+
 	this.processMouse = function( event )
 	{
 		var canvasRaceLightning = document.getElementById('idRaceLightning');
@@ -3124,6 +3130,23 @@ function Lightning()
 		if( hoverTimer != null )
 			clearTimeout( hoverTimer );	
 		hoverTimer = setTimeout( function() {raceLightningObj.updateInfo();}, 10 );
+	}
+	
+	this.drawRider = function( dc, x, y, color1, color2 ) {
+		var gx = x + this.riderWidth * 0.75;
+		var gy = y + this.riderHeight * 0.25;
+		var r1 = this.riderWidth * 0.005;
+		var r2 = this.riderHeight * 1.0;
+		dc.save();
+		var g = dc.createRadialGradient( gx, gy, r1, gx, gy, r2 );
+		g.addColorStop( 0.0, color2 );
+		g.addColorStop( 1.0, color1 );
+		dc.fillStyle = g;
+		dc.fillRect( x, y, this.riderWidth, this.riderHeight );
+		dc.lineWidth = 1.0;
+		dc.strokeStyle = '#444';
+		dc.strokeRect( x, y, this.riderWidth, this.riderHeight );
+		dc.restore();
 	}
 
 	this.updateInfo = function()
@@ -3137,11 +3160,11 @@ function Lightning()
 
 		dc.save();
 		
-		dc.fillStyle = '#FF6600';
-		dc.strokeStyle = '#FF6600';
-		dc.lineWidth = 2;
+		dc.fillStyle = '#FF8300';
+		dc.strokeStyle = '#FF8300';
+		dc.lineWidth = 3;
 		dc.textBaseline = "top";
-		var fontHeight = Math.min(this.riderHeight * 0.75, 28);
+		var fontHeight = Math.min(this.riderHeight * 0.5, 28);
 		
 		var lapYSearch = this.drawLapY.binSearch( this.yEvent ) - 1;
 		lapYSearch = Math.max( 0, lapYSearch );
@@ -3154,6 +3177,7 @@ function Lightning()
 				lapX = i;
 		}
 		
+		var backgroundBorder = 4;
 		var num = lapNumX[lapX][0];
 		var xLast = null, yLast = null;
 		for( var lapY = 0; lapY < this.drawLapNumX.length; ++lapY ) {
@@ -3163,11 +3187,7 @@ function Lightning()
 				if( drawLapNumX[i][0] == num ) {
 					var x = drawLapNumX[i][1], gap = drawLapNumX[i][2];
 
-					var lg = dc.createLinearGradient( x, y, x + this.riderWidth, y );
-					lg.addColorStop( 0.0, '#FF6600' );
-					lg.addColorStop( 1.0, '#FFFFFF' );
-					dc.fillStyle = lg;
-					dc.fillRect( x, y, this.riderWidth, this.riderHeight );
+					this.drawRider( dc, x, y, '#FF9400', '#FFEE08' );
 					
 					dc.fillStyle = '#000000';
 					dc.font = this.fontSize + 'px Arial';
@@ -3175,19 +3195,28 @@ function Lightning()
 					
 					dc.font = fontHeight + 'px Arial';
 					var textInfo = this.showLaps[lapY] + (i != 0 ? ': ' + FormatTimeGap(gap) + ' (' + (i+1) + ')' : '');
-					var text = textInfo;
-					if( lapY == lapYSearch )
-						text += ' ' + getRiderNameNum( num );
-					var textWidth = dc.measureText(text).width;
-					var xAdjust = this.riderWidth;
+					var text = [textInfo];
+					if( lapY == lapYSearch ) {
+						text[0] += ' ' + getRiderNameNum( num );
+						var team = getRiderTeam( num );
+						if( team )
+							text.push( team );
+					}
+					var textWidth = 0;
+					for( var p = 0; p < text.length; ++p )
+						textWidth = Math.max( dc.measureText(text[p]).width, textWidth );
+					var xAdjust = this.riderWidth + 1;
 					if( x + xAdjust + textWidth > this.width )
 						xAdjust = -(x + xAdjust + textWidth - this.width);
 					
 					// Lighten the background so we can see the description.
-					dc.fillStyle = 'rgba(255,255,255,0.85)';
-					dc.fillRect( x + xAdjust, y, textWidth, fontHeight );
+					dc.fillStyle = 'rgba(255,255,255,0.9)';
+					dc.fillRect( x + xAdjust, y - backgroundBorder,
+									textWidth + backgroundBorder,
+									fontHeight * text.length + backgroundBorder*2 );
 					dc.fillStyle = '#000';
-					dc.fillText( text, x + xAdjust, y );
+					for( var p = 0; p < text.length; ++p )
+						dc.fillText( text[p], x + xAdjust, y + fontHeight * p - 2);
 					
 					if( xLast != null ) {
 						dc.beginPath();
@@ -3219,12 +3248,12 @@ function Lightning()
 		
 		var dc = canvasRaceLightning.getContext('2d');
 		
-		dc.textBaseline = "top";
-		dc.fillStyle = 'rgb(255,255,255)';
+		dc.textBaseline = 'top';
+		dc.fillStyle = '#FFF';
 		dc.fillRect( 0, 0, this.width, this.height );
 		
-		if( categoryCur == 'All' )
-			return;
+		//if( categoryCur == 'All' )
+		//	return;
 		
 		// Show results for this category.
 		var categoriesUsed = {};
@@ -3284,32 +3313,30 @@ function Lightning()
 		
 		this.riderHeight = (this.height / this.showLaps.length) * 0.6;
 		var overlapMax = 5;
+		
 		this.fontSize = this.riderHeight / overlapMax;
+		dc.font = this.fontSize + "px Arial";
+		
 		this.riderWidth = dc.measureText('0000').width;
 		
 		var gapShrink = 1.0;
-		dc.font = this.fontSize + "px Arial";
 		var lastPos = {};
 		this.drawLapY = [];
 		this.drawLapNumX = [];
 		dc.strokeStyle = 'rgba(0, 0, 0, 0.250)';
-		dc.lineWidth = 1;
+		dc.lineWidth = 2;
 
 		for( var i = 0; i < lapInfo.length; ++i ) {
 			var yCur = (this.height / lapInfo.length) * i;
 			this.drawLapY.push( yCur );
 			this.drawLapNumX.push( [] );
 			
-			// Draw the boxes.
+			// Draw the rider boxes.
 			dc.fillStyle = 'rgba(0, 0, 255, 0.20)';
 			for( var j = 0; j < lapInfo[i].length; ++j ) {
 				var gap = TimeDifference(lapInfo[i][j][0], lapInfo[i][0][0]);
 				var xCur = border + (this.width - this.riderWidth - border * 2) * (gap / tDiffMax);
-				var lg = dc.createLinearGradient( xCur, yCur, xCur + this.riderWidth, yCur );
-				lg.addColorStop( 0.0, '#00BB00' );
-				lg.addColorStop( 1.0, '#FFFFFF' );
-				dc.fillStyle = lg;
-				dc.fillRect( xCur, yCur, this.riderWidth, this.riderHeight );
+				this.drawRider( dc, xCur, yCur, '#0F0F0F', '#EEEEEE' );
 			}
 			
 			// Draw the bib numbers and gap times.
