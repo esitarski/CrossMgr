@@ -2054,7 +2054,7 @@ function SetData( aData, tCur )
 		{
 			var cat = categories[i];
 			catHTML += '<span><input type="radio" name="categoryCur" onClick="SelectCategory('+i+');" id="idCat' + i + '"';
-			if( i == 0 )
+			if( cat == categoryCur )
 				catHTML += ' checked="true"';
 			catHTML += '</input><label for="idCat' + i + '"' + (i == 0 ? ' data-tr="All">' : '>' + cat.escapeHTML()) + '</label></span>&nbsp;';
 			if( (i+1) % 4 == 0 && i != categories.length - 1 )
@@ -3386,6 +3386,9 @@ function Lightning()
 function SelectCategory( i )
 {
 	categoryCur = categories[i];
+	var catButton = document.getElementById('idCat' + i);
+	if( catButton )
+		catButton.checked = true;
 	SetCategoryResults();
 	animationObj.Refresh();
 	RefreshRaceChart();
