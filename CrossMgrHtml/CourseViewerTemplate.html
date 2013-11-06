@@ -69,6 +69,7 @@ var lengthKm = null;
 
 var courseObj = null;
 var map = null;
+var mapCanvas = null;
 
 function isCanvasSupported() {
 	var elem = document.createElement('canvas');
@@ -360,6 +361,19 @@ function getBestInterval( d, intervals )
 	return intervals[k];
 }
 
+function findPos(obj) {
+	var curleft = curtop = 0;
+	if (obj.offsetParent) {
+		curleft = obj.offsetLeft
+		curtop = obj.offsetTop
+		while (obj = obj.offsetParent) {
+			curleft += obj.offsetLeft
+			curtop += obj.offsetTop
+		}
+	}
+	return [curleft,curtop];
+}
+
 function Altigraph()
 {
 	this.altigraph = [];
@@ -368,6 +382,110 @@ function Altigraph()
 	this.xMax = 0.0;
 	this.xTick = null;
 	this.yTick = null;
+	this.xEvent = -1;
+	this.yEvent = -1;
+	this.hoverTimer = null;
+	this.points = [];
+	this.yBaseline = 0;
+	this.marker = null;
+	
+	var that = this;
+
+	this.valid = function() {
+		return !(this.altigraph.length == 0 || this.xMax == 0 || !gpsTotalElevationGain);
+	}
+	
+	this.processMouse = function( event ) {
+		if( !this.valid() )
+			return;
+		var canvasAltigraph = document.getElementById('idAltigraph');
+		var pos = findPos( canvasAltigraph );
+		this.xEvent = event.pageX - canvasAltigraph.offsetLeft;
+		this.yEvent = event.pageY - canvasAltigraph.offsetTop;
+		if( this.hoverTimer != null )
+			clearTimeout( this.hoverTimer );	
+		this.hoverTimer = setTimeout( function() {that.updateInfo();}, 10 );
+	}
+
+	this.updateInfo = function() {
+		if( !this.valid() )
+			return;
+		
+		var canvasAltigraph = document.getElementById('idAltigraph');
+		var dc = canvasAltigraph.getContext('2d');
+		this.draw( dc, 0, 0, canvasAltigraph.width, canvasAltigraph.height );
+		
+		this.xEvent = Math.max( this.points[0][0], this.xEvent );
+		this.xEvent = Math.min( this.points.back()[0] - 1, this.xEvent );
+		for( var i = 0; i < this.points.length - 1; ++i ) {
+			if( this.points[i][0] <= this.xEvent && this.xEvent < this.points[i+1][0] ) {
+				var x1 = this.points[i][0], y1 = this.points[i][1];
+				var x2 = this.points[i+1][0], y2 = this.points[i+1][1];
+				var x = x1, y = y1, r = 0;
+				if( x1 != x2 ) {
+					r = (this.xEvent - x1) / (x2 - x1);
+					x += (x2 - x1) * r;
+					y += (y2 - y1) * r;
+				}
+				var radius = canvasAltigraph.width / 72;
+				dc.save();
+				
+				dc.fillStyle = 'rgb(183,0,255)';
+				dc.lineWidth = 1;
+				dc.strokeStyle = '#000';
+				
+				dc.beginPath();
+				dc.moveTo( x, y );
+				dc.lineTo( x - radius/2, y + radius );
+				if( y + radius * 2 < this.yBaseline ) {
+					dc.lineTo( x - radius/2, this.yBaseline - radius );
+					dc.lineTo( x, this.yBaseline );
+					dc.lineTo( x + radius/2, this.yBaseline - radius );
+				}
+				dc.lineTo( x + radius/2, y + radius );
+				dc.closePath();
+				
+				dc.fill();
+				dc.stroke();
+				
+				var fontSize = canvasAltigraph.height / 7;
+				dc.font = fontSize + 'px Arial';
+				dc.textBaseline = 'middle';
+				
+				var xText = x + radius / 2 + 2, yText = y + (this.yBaseline - y) / 2;
+				var altitude = this.altigraph[i][1];
+				altitude += (this.altigraph[(i+1)%this.altigraph.length][1] - altitude) * r;
+				var text = altitude.toFixed(1);
+				dc.fillStyle = 'rgba(255,255,255,0.75)';
+				dc.fillRect( xText, yText - fontSize/2-2, dc.measureText(text).width, fontSize + 2 );
+				
+				dc.fillStyle = '#000000';
+				dc.fillText( text, xText, yText );
+				
+				dc.restore();
+				
+				// Move the marker on the map.
+				if( !this.marker )
+					this.marker = new google.maps.Marker({
+						map: mapCanvas,
+						draggable: false,
+						icon: 'data:image/png;base64,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'
+					});
+				var lat1 = courseCoordinates[i*2+1], lng1 = courseCoordinates[i*2];
+				var lat2, lng2;
+				if( gpsIsPointToPoint ) {
+					lat2 = courseCoordinates[i*2+3];
+					lng2 = courseCoordinates[i*2+2];
+				}
+				else {
+					lat2 = courseCoordinates[(i*2+3)%courseCoordinates.length];
+					lng2 = courseCoordinates[(i*2+2)%courseCoordinates.length];
+				}
+				this.marker.setPosition( new google.maps.LatLng(lat1 + (lat2 - lat1) * r, lng1 + (lng2 - lng1) * r) );
+				break;
+			}
+		}
+	}
 	
 	this.setData = function( altigraph, drawTEG )
 	{
@@ -405,6 +523,9 @@ function Altigraph()
 			return;
 			
 		dc.save();
+		
+		dc.fillStyle = '#FFF';
+		dc.fillRect( 0, 0, width, height );
 		
 		y += 2;		// Leave room to draw the line.
 		height -= 2;
@@ -456,6 +577,9 @@ function Altigraph()
 				precision = 2;
 			else
 				precision = 1;
+				
+		dc.textBaseline = 'bottom';
+		dc.fillStyle = '#000000';
 		for( var i = 1; i * d < courseLength; ++i )
 		{
 			var xCur = i * d;
@@ -488,6 +612,7 @@ function Altigraph()
 		this.yTick = d = getBestInterval(d, [1, 2, 5, 10, 15, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000]);
 		dc.textBaseline = 'middle';
 		dc.strokeStyle = '#c0c0c0';
+		dc.fillStyle = '#000000';
 		dc.lineWidth = 1;
 		var yPos = height;
 		var yInc = (d / yDelta) * height;
@@ -510,6 +635,7 @@ function Altigraph()
 		var points = [];
 		for( var i = 0; i < this.altigraph.length; ++i )
 			points.push( [(x + labelWidth + border + altigraph[i][0] * xMult), (y + height - (altigraph[i][1] - this.yMin) * yMult)] );
+		this.points = points;
 		
 		for( var i = 1; i < this.altigraph.length; ++i )
 		{
@@ -536,10 +662,11 @@ function Altigraph()
 		dc.stroke();
 		
 		// Add a baseline.
+		this.yBaseline = y + height;
 		dc.lineWidth = 1;
 		dc.beginPath();
-		dc.moveTo( x + labelWidth + border, y + height );
-		dc.lineTo( x + width - border - tegWidth, y + height );
+		dc.moveTo( x + labelWidth + border, this.yBaseline );
+		dc.lineTo( x + width - border - tegWidth, this.yBaseline );
 		dc.stroke();
 		
 		// Add a left boundary line.
@@ -580,6 +707,27 @@ function Altigraph()
 		}
 		dc.restore();
 	}
+
+	this.Refresh = function() {
+		var canvasAltigraph = document.getElementById('idAltigraph');
+		var dc = canvasAltigraph.getContext('2d');
+		that.draw( dc, 0, 0, canvasAltigraph.width, canvasAltigraph.height );
+	}
+	
+	this.initEvents = function() {
+		var canvasAltigraph = document.getElementById('idAltigraph');
+		canvasAltigraph.addEventListener('mousemove', function(event) { that.processMouse(event); }, false);
+		canvasAltigraph.addEventListener('mouseout', function(event) {
+				if( that.hoverTimer != null )
+					clearTimeout( that.hoverTimer );
+				that.hoverTimer = null;
+				that.Refresh();
+				if( that.marker ) {
+					that.marker.setMap( null );
+					that.marker = null;
+				}
+			}, false);
+	}
 }
 
 var altigraph = null;
@@ -588,14 +736,12 @@ function DrawAltigraph()
 	var canvas = document.getElementById('idAltigraph');
 	if( !isCanvasSupported() )
 		return;
-	var dc = canvas.getContext('2d');
 	altigraph = new Altigraph();
 	altigraph.setData( gpsAltigraph );
-	if( gpsAltigraph )
-		altigraph.draw( dc, 0, 0, canvas.width, canvas.height );
+	altigraph.initEvents();
+	altigraph.Refresh();
 }
 
-var mapCanvas = null;
 function CenterMap()
 {
 	var latLngBounds = new google.maps.LatLngBounds();

@@ -47,7 +47,44 @@ class RaceResult( object ):
 			return self.lastName.upper()
 		return self.firstName
 
-def ExtractRaceResults( fileName ):
+def ExtractRaceResults( r ):
+	if os.path.splitext(r.fname)[1] == '.cmn':
+		return ExtractRaceResultsCrossMgr( r.fname )
+	else:
+		return ExtractReceResultsExcel( r.excelLink )
+		
+def ExtractRaceResultsExcel( excelLink ):
+	if not excelLink:
+		return False, 'Missing Excel Link Definition', []
+
+	try:
+		data = excelLink.read()
+	except Exception as e:
+		return False, e, []
+	
+	tNow = datetime.datetime.now()
+	raceResults = []
+	for d in data:
+		info = {'raceDate':		tNow,
+				'raceFName':	u'{}:{}'.format( excelLink.fileName, excelLink.sheetName )
+		}
+		for fTo, fFrom in [
+				('bib', 'Bib#'), ('rank', 'Pos'),
+				('firstName', 'FirstName'), ('lastName', 'LastName'), ('license', 'License'),
+				('team', 'Team'), ('categoryName', 'Category')]:
+			info[fTo] = d.get( tFrom, '' )
+			
+		try:
+			info['rank'] = int(info['rank'])
+			info['bib'] = int(info['bib'])
+		except ValueError:
+			continue
+		
+		raceResults.append( RaceResult(**info) )
+	
+	return True, 'success', raceResults
+	
+def ExtractRaceResultsCrossMgr( fileName ):
 	try:
 		with open(fileName, 'rb') as fp, Model.LockRace() as race:
 			race = pickle.load( fp )

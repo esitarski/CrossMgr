@@ -6,6 +6,7 @@ import sys
 from ReorderableGrid import ReorderableGrid
 import SeriesModel
 import Utils
+from ReadRaceResultsSheet import GetExcelResultsLink
 
 def RaceNameFromPath( p ):
 	raceName = os.path.basename( p )
@@ -77,7 +78,12 @@ class Races(wx.Panel):
 	
 	def getGrid( self ):
 		return self.grid
-		
+	
+	wildcard = 'CrossMgr files (*.cmn)|*.cmn;|Excel files (*.xlsx, *.xlsm, *.xls)|*.xlsx;*.xlsm;*.xls'
+	
+	def doExcelLink( self, race ):
+		race.excelLink = GetExcelResultsLink(self).show()
+	
 	def editRaceFName( self, event ):
 		col = event.GetCol()
 		if col != self.RaceFileCol:
@@ -85,26 +91,35 @@ class Races(wx.Panel):
 			return
 			
 		row = event.GetRow()
-		dlg = wx.FileDialog( self, message="Choose a CrossMgr Race File",
+		dlg = wx.FileDialog( self, message="Choose a CrossMgr or Excel file",
 					defaultFile = '',
-					wildcard = 'CrossMgr files (*.cmn)|*.cmn',
+					wildcard = self.wildcard,
 					style=wx.OPEN | wx.CHANGE_DIR )
-		if dlg.ShowModal() == wx.ID_OK:
+		ret = dlg.ShowModal()
+		fname = ''
+		if ret == wx.ID_OK:
 			path = dlg.GetPath()
-			self.grid.SetCellValue( row, self.RaceCol, RaceNameFromPath(path) )
-			self.grid.SetCellValue( row, self.RaceFileCol, path )
+			self.grid.SetCellValue( row, self.RaceCol, RaceNameFromPath(fname) )
+			self.grid.SetCellValue( row, self.RaceFileCol, fname )
 		dlg.Destroy()
 		self.refresh()
+		if ret == wx.ID_OK and os.path.splitext(fname)[1] != '.cmn':
+			wx.CallAfter( self.doExcelLink, self.races[row] )
 	
 	def doAddRace( self, event ):
-		dlg = wx.FileDialog( self, message="Choose a Race file",
+		dlg = wx.FileDialog( self, message="Choose a CrossMgr or Excel file",
 					defaultFile = '',
-					wildcard = 'CrossMgr files (*.cmn)|*.cmn',
+					wildcard = self.wildcard,
 					style=wx.OPEN | wx.CHANGE_DIR )
-		if dlg.ShowModal() == wx.ID_OK:
-			SeriesModel.model.addRace( dlg.GetPath() )
+		ret = dlg.ShowModal()
+		path = ''
+		if ret == wx.ID_OK:
+			fname = dlg.GetPath()
+			SeriesModel.model.addRace( fname )
 		dlg.Destroy()
 		self.refresh()
+		if ret == wx.ID_OK and os.path.splitext(fname)[1] != '.cmn':
+			wx.CallAfter( self.doExcelLink, self.races[-1] )
 		
 	def doRemoveRace( self, event ):
 		row = self.grid.GetGridCursorRow()
