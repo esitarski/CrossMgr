@@ -80,7 +80,9 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Specify the spreadsheet columns corresponding to the Resuls fields.')),
+		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Specify the spreadsheet columns corresponding to the Results fields.')),
+				flag=wx.ALL, border = border )
+		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('You should define Pos, LastName, Category and License (at least).')),
 				flag=wx.ALL, border = border )
 		vbs.AddSpacer( 8 )
 				
