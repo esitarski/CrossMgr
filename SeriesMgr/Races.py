@@ -6,7 +6,7 @@ import sys
 from ReorderableGrid import ReorderableGrid
 import SeriesModel
 import Utils
-from ReadRaceResultsSheet import GetExcelResultsLink
+from ReadRaceResultsSheet import GetExcelResultsLink, ExcelLink
 
 def RaceNameFromPath( p ):
 	raceName = os.path.basename( p )
@@ -75,14 +75,16 @@ class Races(wx.Panel):
 		sizer.Add(hs, 0, flag=wx.EXPAND)
 		sizer.Add(self.grid, 1, flag=wx.EXPAND|wx.ALL, border = 6)
 		self.SetSizer(sizer)
-	
+
 	def getGrid( self ):
 		return self.grid
 	
-	wildcard = 'CrossMgr files (*.cmn)|*.cmn;|Excel files (*.xlsx, *.xlsm, *.xls)|*.xlsx;*.xlsm;*.xls'
+	wildcard = 'CrossMgr or Excel files (*.cmn, *.xlsx, *.xlsm, *.xls)|*.cmn;*.xlsx;*.xlsm;*.xls;'
 	
 	def doExcelLink( self, race ):
-		race.excelLink = GetExcelResultsLink(self).show()
+		excelLink = race.excelLink if race.excelLink else ExcelLink()
+		excelLink.setFileName( race.fname )
+		race.excelLink = GetExcelResultsLink( self, excelLink ).show()
 	
 	def editRaceFName( self, event ):
 		col = event.GetCol()
@@ -104,7 +106,7 @@ class Races(wx.Panel):
 		dlg.Destroy()
 		self.refresh()
 		if ret == wx.ID_OK and os.path.splitext(fname)[1] != '.cmn':
-			wx.CallAfter( self.doExcelLink, self.races[row] )
+			wx.CallAfter( self.doExcelLink, SeriesModel.model.races[row] )
 	
 	def doAddRace( self, event ):
 		dlg = wx.FileDialog( self, message="Choose a CrossMgr or Excel file",
@@ -119,7 +121,7 @@ class Races(wx.Panel):
 		dlg.Destroy()
 		self.refresh()
 		if ret == wx.ID_OK and os.path.splitext(fname)[1] != '.cmn':
-			wx.CallAfter( self.doExcelLink, self.races[-1] )
+			wx.CallAfter( self.doExcelLink, SeriesModel.model.races[-1] )
 		
 	def doRemoveRace( self, event ):
 		row = self.grid.GetGridCursorRow()
