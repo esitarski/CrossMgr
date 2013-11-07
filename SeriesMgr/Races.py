@@ -8,15 +8,6 @@ import SeriesModel
 import Utils
 from ReadRaceResultsSheet import GetExcelResultsLink, ExcelLink
 
-def RaceNameFromPath( p ):
-	raceName = os.path.basename( p )
-	raceName = os.path.splitext( raceName )[0]
-	while raceName.endswith('-'):
-		raceName = raceName[:-1]
-	raceName = raceName.replace( '-', ' ' )
-	raceName = raceName.replace( ' ', '-', 2 )
-	return raceName
-
 class Races(wx.Panel):
 	#----------------------------------------------------------------------
 	RaceCol = 0
@@ -81,10 +72,12 @@ class Races(wx.Panel):
 	
 	wildcard = 'CrossMgr or Excel files (*.cmn, *.xlsx, *.xlsm, *.xls)|*.cmn;*.xlsx;*.xlsm;*.xls;'
 	
-	def doExcelLink( self, race ):
+	def doExcelLink( self, race, row ):
 		excelLink = race.excelLink if race.excelLink else ExcelLink()
 		excelLink.setFileName( race.fname )
 		race.excelLink = GetExcelResultsLink( self, excelLink ).show()
+		self.grid.SetCellValue( row, self.RaceCol, race.getRaceName() )
+		wx.CallAfter( self.gridAutoSize )
 	
 	def editRaceFName( self, event ):
 		col = event.GetCol()
@@ -101,12 +94,12 @@ class Races(wx.Panel):
 		fname = ''
 		if ret == wx.ID_OK:
 			path = dlg.GetPath()
-			self.grid.SetCellValue( row, self.RaceCol, RaceNameFromPath(fname) )
+			self.grid.SetCellValue( row, self.RaceCol, SeriesModel.RaceNameFromPath(fname) )
 			self.grid.SetCellValue( row, self.RaceFileCol, fname )
 		dlg.Destroy()
 		self.refresh()
 		if ret == wx.ID_OK and os.path.splitext(fname)[1] != '.cmn':
-			wx.CallAfter( self.doExcelLink, SeriesModel.model.races[row] )
+			wx.CallAfter( self.doExcelLink, SeriesModel.model.races[row], row )
 	
 	def doAddRace( self, event ):
 		dlg = wx.FileDialog( self, message="Choose a CrossMgr or Excel file",
@@ -121,7 +114,7 @@ class Races(wx.Panel):
 		dlg.Destroy()
 		self.refresh()
 		if ret == wx.ID_OK and os.path.splitext(fname)[1] != '.cmn':
-			wx.CallAfter( self.doExcelLink, SeriesModel.model.races[-1] )
+			wx.CallAfter( self.doExcelLink, SeriesModel.model.races[-1], len(SeriesModel.model.races) - 1 )
 		
 	def doRemoveRace( self, event ):
 		row = self.grid.GetGridCursorRow()
@@ -159,7 +152,7 @@ class Races(wx.Panel):
 		model = SeriesModel.model
 		Utils.AdjustGridSize( self.grid, len(model.races) )
 		for row, race in enumerate(model.races):
-			self.grid.SetCellValue( row, self.RaceCol, RaceNameFromPath(race.fname) )
+			self.grid.SetCellValue( row, self.RaceCol, race.getRaceName() )
 			self.grid.SetCellValue( row, self.PointsCol, race.pointStructure.name )
 			self.grid.SetCellValue( row, self.RaceFileCol, race.fname )
 		wx.CallAfter( self.gridAutoSize )

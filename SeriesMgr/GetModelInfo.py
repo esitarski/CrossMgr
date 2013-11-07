@@ -1,4 +1,5 @@
 
+import os
 import cPickle as pickle
 import datetime
 from collections import defaultdict
@@ -15,7 +16,7 @@ from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache
 from GetResults			import GetResults, GetCategoryDetails
 
 class RaceResult( object ):
-	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, raceOrganizer, raceFName, bib, rank ):
+	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, raceFName, bib, rank, raceOrganizer ):
 		self.firstName = firstName
 		self.lastName = lastName
 		self.license = license
@@ -51,10 +52,11 @@ def ExtractRaceResults( r ):
 	if os.path.splitext(r.fname)[1] == '.cmn':
 		return ExtractRaceResultsCrossMgr( r.fname )
 	else:
-		return ExtractReceResultsExcel( r.excelLink )
+		return ExtractRaceResultsExcel( r.excelLink )
 		
 def ExtractRaceResultsExcel( excelLink ):
 	if not excelLink:
+		print 'missing excel link'
 		return False, 'Missing Excel Link Definition', []
 
 	try:
@@ -63,22 +65,33 @@ def ExtractRaceResultsExcel( excelLink ):
 		return False, e, []
 	
 	tNow = datetime.datetime.now()
+	raceFName =  u'{}:{}'.format( excelLink.fileName, excelLink.sheetName )
+	raceName = u'{}:{}'.format(	os.path.basename(os.path.splitext(excelLink.fileName)[0]), excelLink.sheetName )
 	raceResults = []
 	for d in data:
 		info = {'raceDate':		tNow,
-				'raceFName':	u'{}:{}'.format( excelLink.fileName, excelLink.sheetName )
+				'raceFName':	raceFName,
+				'raceName':		raceName,
+				'raceOrganizer': ''
 		}
 		for fTo, fFrom in [
 				('bib', 'Bib#'), ('rank', 'Pos'),
 				('firstName', 'FirstName'), ('lastName', 'LastName'), ('license', 'License'),
 				('team', 'Team'), ('categoryName', 'Category')]:
-			info[fTo] = d.get( tFrom, '' )
-			
+			info[fTo] = d.get( fFrom, '' )
+		
+		if not info['categoryName']:
+			continue
+		
 		try:
 			info['rank'] = int(info['rank'])
-			info['bib'] = int(info['bib'])
 		except ValueError:
 			continue
+		
+		try:
+			info['bib'] = int(info['bib'])
+		except ValueError:
+			pass
 		
 		raceResults.append( RaceResult(**info) )
 	
