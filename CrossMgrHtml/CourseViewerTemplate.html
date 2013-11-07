@@ -403,7 +403,7 @@ function Altigraph()
 		this.xEvent = event.pageX - canvasAltigraph.offsetLeft;
 		this.yEvent = event.pageY - canvasAltigraph.offsetTop;
 		if( this.hoverTimer != null )
-			clearTimeout( this.hoverTimer );	
+			clearTimeout( this.hoverTimer );
 		this.hoverTimer = setTimeout( function() {that.updateInfo();}, 10 );
 	}
 
@@ -427,39 +427,32 @@ function Altigraph()
 					x += (x2 - x1) * r;
 					y += (y2 - y1) * r;
 				}
-				var radius = canvasAltigraph.width / 72;
 				dc.save();
 				
-				dc.fillStyle = 'rgb(183,0,255)';
-				dc.lineWidth = 1;
-				dc.strokeStyle = '#000';
+				dc.strokeStyle = 'rgb(183,0,255)';
+				dc.lineWidth = 8;
 				
 				dc.beginPath();
-				dc.moveTo( x, y );
-				dc.lineTo( x - radius/2, y + radius );
-				if( y + radius * 2 < this.yBaseline ) {
-					dc.lineTo( x - radius/2, this.yBaseline - radius );
-					dc.lineTo( x, this.yBaseline );
-					dc.lineTo( x + radius/2, this.yBaseline - radius );
-				}
-				dc.lineTo( x + radius/2, y + radius );
-				dc.closePath();
-				
-				dc.fill();
+				dc.moveTo( x, 0 );
+				dc.lineTo( x, this.yBaseline );
 				dc.stroke();
 				
 				var fontSize = canvasAltigraph.height / 7;
 				dc.font = fontSize + 'px Arial';
-				dc.textBaseline = 'middle';
+				dc.textBaseline = 'top';
 				
-				var xText = x + radius / 2 + 2, yText = y + (this.yBaseline - y) / 2;
+				var xText = x + dc.lineWidth + 2, yText = 0;
 				var altitude = this.altigraph[i][1];
 				altitude += (this.altigraph[(i+1)%this.altigraph.length][1] - altitude) * r;
-				var text = altitude.toFixed(1);
+				var units = (displayUnits == 'km' ? 1.0 : 3.28084);
+				var text = ((altitude - this.yMin)*units).toFixed(1) + ' (' + (altitude*units).toFixed(1) + ')';
+				var textWidth = dc.measureText(text).width;
+				if( xText + textWidth > canvasAltigraph.width )
+					xText = canvasAltigraph.width - textWidth;
 				dc.fillStyle = 'rgba(255,255,255,0.75)';
-				dc.fillRect( xText, yText - fontSize/2-2, dc.measureText(text).width, fontSize + 2 );
+				dc.fillRect( xText, yText -2, dc.measureText(text).width, fontSize + 2 );
 				
-				dc.fillStyle = '#000000';
+				dc.fillStyle = '#000';
 				dc.fillText( text, xText, yText );
 				
 				dc.restore();
@@ -536,7 +529,7 @@ function Altigraph()
 		
 		dc.font = fontSizeLegend + 'px Arial';
 		var minLabel = '0';
-		var maxLabel = ((this.yMax - this.yMin) * (displayUnits == 'km' ? 1.0 : 3.28084)).toFixed(0) + '  ' + verticalDisplayUnits;
+		var maxLabel = ((this.yMax - this.yMin) * (displayUnits == 'km' ? 1.0 : 2)).toFixed(0) + '  ' + verticalDisplayUnits;
 		var labelWidth = Math.max( dc.measureText(minLabel).width, dc.measureText(maxLabel).width );
 		maxLabel = verticalDisplayUnits;
 		minLabel = '';
