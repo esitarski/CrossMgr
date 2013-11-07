@@ -7,7 +7,7 @@ from ReorderableGrid import ReorderableGrid
 import SeriesModel
 import Utils
 from ReadRaceResultsSheet import GetExcelResultsLink, ExcelLink
-
+	
 class Races(wx.Panel):
 	#----------------------------------------------------------------------
 	RaceCol = 0

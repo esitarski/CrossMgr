@@ -25,7 +25,7 @@ except:
 	
 import cPickle as pickle
 from optparse import OptionParser
-import cStringIO as StringIO
+import StringIO
 import wx.lib.agw.advancedsplash as AS
 import openpyxl
 
