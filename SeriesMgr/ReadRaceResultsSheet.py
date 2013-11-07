@@ -359,6 +359,11 @@ class ExcelLink( object ):
 					data[field] = row[col]
 				except IndexError:
 					pass
+					
+				try:
+					data[field] = unicode(data[field])
+				except:
+					data[fields] = u''
 			
 			if not data.get('Category', ''):
 				continue
@@ -368,6 +373,7 @@ class ExcelLink( object ):
 			except ValueError:
 				continue
 			
+			data['Pos'] = int(data['Pos'])
 			info.append( data )
 		
 		return info
