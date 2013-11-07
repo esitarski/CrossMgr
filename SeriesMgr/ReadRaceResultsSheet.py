@@ -363,7 +363,7 @@ class ExcelLink( object ):
 				try:
 					data[field] = unicode(data[field])
 				except:
-					data[fields] = u''
+					data[field] = ''
 			
 			if not data.get('Category', ''):
 				continue
