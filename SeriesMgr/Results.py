@@ -357,6 +357,11 @@ table.results tr td.fastest{
 					
 					headerNames = self.headerNames + [u'{}'.format(r[1]) for r in races]
 					
+					with tag(html, 'p'):
+						pass
+					with tag(html, 'hr'):
+						pass
+					
 					with tag(html, 'h2'):
 						html.write( cgi.escape(categoryName) )
 					with tag(html, 'table', {'class': 'results'} ):
