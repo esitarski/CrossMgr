@@ -5,6 +5,7 @@ import os
 import io
 import cgi
 import sys
+import base64
 import StringIO
 
 import Utils
@@ -229,6 +230,9 @@ class Results(wx.Panel):
 						'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % xlFName,
 						'Excel File Error', iconMask=wx.ICON_ERROR )
 	
+	def getHeaderGraphic( self ):
+		return os.path.join(Utils.getImageFolder(), 'SeriesMgr128.png')
+	
 	def onExportToHtml( self, event ):
 		model = SeriesModel.model
 		
@@ -250,7 +254,7 @@ class Results(wx.Panel):
 		else:
 			htmlFName = 'ResultsTest.html'
 
-		title = "Series Results"
+		title = os.path.basename( os.path.splitext(Utils.mainWin.fileName)[0] ) if Utils.mainWin and Utils.mainWin.fileName else 'Series Results'
 		
 		html = StringIO.StringIO()
 		
@@ -298,6 +302,12 @@ table.results tr.odd
 	color:#000000;
 	background-color:#EAF2D3;
 }
+
+.lborder
+{
+	border-left:1px solid #98bf21;
+}
+
 table.results tr:hover
 {
 	color:#000000;
@@ -333,25 +343,31 @@ table.results tr td.fastest{
 @media print { .noprint { display: none; } }''' )
 
 			with tag(html, 'body'):
-				with tag(html, 'h1'):
-					html.write( cgi.escape(title) )
+				with tag(html, 'table'):
+					with tag(html, 'tr'):
+						with tag(html, 'td', dict(valign='top')):
+							data = base64.b64encode(io.open(self.getHeaderGraphic(),'rb').read())
+							html.write( '<img id="idImgHeader" src="data:image/png;base64,%s" />' % data )
+						with tag(html, 'td'):
+							with tag(html, 'h1'):
+								html.write( '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + cgi.escape(title) )
 				for categoryName in categoryNames:
 					results, races = GetModelInfo.GetCategoryResults( categoryName, self.raceResults, pointsForRank, model.numPlacesTieBreaker )
 					results = [rr for rr in results if rr[3] > 0]
 					
-					headerNames = self.headerNames + [u'({})'.format(r[1]) for r in races]
+					headerNames = self.headerNames + [u'{}'.format(r[1]) for r in races]
 					
 					with tag(html, 'h2'):
 						html.write( cgi.escape(categoryName) )
 					with tag(html, 'table', {'class': 'results'} ):
 						with tag(html, 'thead'):
 							with tag(html, 'tr'):
-								for col in headerNames:
-									with tag(html, 'th'):
+								for i, col in enumerate(headerNames):
+									with tag(html, 'th', {} if i < len(self.headerNames) else {'class':'lborder'} ):
 										html.write( cgi.escape(col).replace('\n', '<br/>\n') )
 						with tag(html, 'tbody'):
 							for pos, (lastName, firstName, license, points, racePoints) in enumerate(results):
-								with tag(html, 'tr'):
+								with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
 									with tag(html, 'td', {'class':'rAlign'}):
 										html.write( unicode(pos+1) )
 									with tag(html, 'td'):
@@ -363,7 +379,7 @@ table.results tr td.fastest{
 									with tag(html, 'td', {'class':'rAlign'}):
 										html.write( unicode(points or '') )
 									for rPoints, rRank in racePoints:
-										with tag(html, 'td', {'class':'cAlign'}):
+										with tag(html, 'td', {'class':'cAlign lborder'}):
 											html.write( u'{} / {}'.format(rPoints, rRank) if rPoints else '' )
 		
 		try:
