@@ -81,19 +81,28 @@ def removeDiacritic(input):
 	else:
 		return unicodedata.normalize('NFKD', input).encode('ASCII', 'ignore')
 	
-def PlaySound( soundFile ):
-	if mainWin and not mainWin.playSounds:
-		return True
-		
+soundCache = {}
+def Play( soundFile ):
+	global soundCache
 	soundFile = os.path.join( getImageFolder(), soundFile )
+	
 	if sys.platform.startswith('linux'):
 		try:
 			subprocess.Popen(['aplay', '-q', soundFile])
 		except:
 			pass
 		return True
-	else:
-		return wx.Sound.PlaySound( soundFile )
+		
+	try:
+		return soundCache[soundFile].Play()
+	except:
+		soundCache[soundFile] = wx.Sound( soundFile )
+		return soundCache[soundFile].Play()
+		
+def PlaySound( soundFile ):
+	if mainWin and not mainWin.playSounds:
+		return True
+	return Play( soundFile )
 
 def GetSelectedRows( grid ): 
 	rows = [] 

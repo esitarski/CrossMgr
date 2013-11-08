@@ -314,6 +314,9 @@ class ForecastHistory( wx.Panel ):
 				
 	#--------------------------------------------------------------------
 	
+	def playBlip( self ):
+		Utils.Play( 'blip6.wav' )
+	
 	def logNum( self, nums ):
 		if nums is None:
 			return
@@ -347,6 +350,8 @@ class ForecastHistory( wx.Panel ):
 				race.addTime( num, t )
 				OutputStreamer.writeNumTime( num, t )
 				
+		self.playBlip()
+		
 		mainWin = Utils.getMainWin()
 		if mainWin:
 			mainWin.record.keypad.numEdit.SetValue( '' )
