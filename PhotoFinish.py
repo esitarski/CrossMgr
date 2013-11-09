@@ -247,7 +247,7 @@ else:
 		return None
 
 if __name__ == '__main__':
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	app.SetAppName("CrossMgr")
 	Utils.disable_stdout_buffering()
 	

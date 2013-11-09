@@ -52,7 +52,7 @@ def SetCategory( choice, cat ):
 					break
 	
 if __name__ == '__main__':
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	choice = wx.Choice(mainWin)
 	FixCategories( choice )

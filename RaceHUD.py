@@ -264,7 +264,7 @@ if __name__ == '__main__':
 			[t for t in xrange(0, 300, 44)],
 		]
 
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title=_("RaceHUD"), size=(800,200))
 	RaceHUD = RaceHUD(mainWin)
 	

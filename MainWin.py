@@ -2533,7 +2533,7 @@ def MainLoop():
 	global dataDir
 	global redirectFileName
 	
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	if wx.Platform == '__WXMAC__':
 		wx.Log.SetLogLevel( 0 )
 	app.SetAppName("CrossMgr")

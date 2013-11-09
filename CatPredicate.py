@@ -268,7 +268,7 @@ class CategoryPredicateDialog( wx.Dialog ):
 		self.EndModal( wx.ID_CANCEL )
 
 if __name__ == '__main__':
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(1024,600))
 	Model.newRace()
 	Model.race.enableJChipIntegration = True

@@ -294,7 +294,7 @@ if __name__ == '__main__':
 	sys.exit()
 	'''
 
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMgr", size=(600,400))
 	Model.setRace( Model.Race() )
 	Model.getRace()._populate()

@@ -159,6 +159,7 @@ class FtpPublishDialog( wx.Dialog ):
 			value = getattr(self, f).GetValue()
 			if getattr(model, f, None) != value:
 				setattr( model, f, value )
+				model.setChanged()
 		model.urlFull = self.urlFull.GetLabel()
 	
 	def onOK( self, event ):

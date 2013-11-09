@@ -539,7 +539,7 @@ class RoundButton(wx.PyControl):
 if __name__ == '__main__':
 
 	# Self-test.
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="roundbutton", size=(1024,600))
 	mainWin.SetBackgroundColour( wx.WHITE )
 	vs = wx.BoxSizer( wx.VERTICAL )

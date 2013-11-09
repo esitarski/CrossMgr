@@ -269,7 +269,7 @@ if __name__ == '__main__':
 		 4.07 4.13 3.95 4.10 2.27 4.58 1.90 4.50 1.95 4.83 4.12'''
 		return [float(x) for x in d.split()]
 
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="LineGraph", size=(600,400))
 	lineGraph = LineGraph(mainWin)
 

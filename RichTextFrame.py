@@ -857,7 +857,7 @@ class RichTextFrame(wx.Frame):
 #----------------------------------------------------------------------
 
 if __name__ == '__main__':
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = RichTextFrame(None,title="CrossMgr", size=(800,500))
 	mainWin.Show()
 	app.MainLoop()

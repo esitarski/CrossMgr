@@ -258,7 +258,7 @@ if __name__ == '__main__':
 	race = Model.newRace()
 	race._populate()
 
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	
 	dirName = 'VideoBufferTest_Photos'
 	if os.path.isdir(dirName):

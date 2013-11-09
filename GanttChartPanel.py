@@ -663,7 +663,7 @@ if __name__ == '__main__':
 			interp.append( [((t + i*10)%100)//10 for t in xrange(0, 60*60 * 3, 7*60)] )
 		return data, interp
 
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="GanttChartPanel", size=(600,400))
 	gantt = GanttChartPanel(mainWin)
 

@@ -1230,7 +1230,7 @@ if __name__ == '__main__':
 	race._populate()
 	race.isTimeTrial = True
 	
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMgr", size=(600,400))
 	riderDetail = RiderDetail(mainWin)
 	riderDetail.refresh()

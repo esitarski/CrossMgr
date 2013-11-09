@@ -221,7 +221,7 @@ if __name__ == '__main__':
 	for i, h in enumerate(bins):
 		sys.stdout.write( '{:9.3f} {:9.3f}: {:6d}: {}\n'.format(xMin + i * width, xMin + (i+1) * width, h, '*' * int(h * hFactor)) )
 	
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="Histogram", size=(600,400))
 	histogram = Histogram(mainWin)
 

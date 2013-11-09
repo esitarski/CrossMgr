@@ -273,7 +273,7 @@ class TimeTrialRecord( wx.Panel ):
 		
 if __name__ == '__main__':
 	Utils.disable_stdout_buffering()
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,600))
 	Model.setRace( Model.Race() )
 	Model.getRace()._populate()

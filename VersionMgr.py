@@ -95,7 +95,7 @@ def updateVersionCache( fname = None ):
 	socket.setdefaulttimeout( timeoutSave )
 	
 if __name__ == '__main__':
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	resetVersionCache()
 	updateVersionCache()
 	print open(getVersionFileName()).read()

@@ -681,7 +681,7 @@ if __name__ == '__main__':
 	shrink = 0.95
 	
 	backgroundColour = wx.Colour(245,245,245)
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="keybutton", size=((rowHeight+0.75) * 15 + border * 2, rowHeight * (len(keyRows)+0.75) + border * 2))
 	mainWin.SetBackgroundColour( backgroundColour )
 	

@@ -578,7 +578,7 @@ class ForecastHistory( wx.Panel ):
 				self.expectedGrid.MakeCellVisible( iNotMissing, 0 )
 
 if __name__ == '__main__':
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	
 	fh = ForecastHistory(mainWin)

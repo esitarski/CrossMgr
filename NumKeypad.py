@@ -818,7 +818,7 @@ class NumKeypad( wx.Panel ):
 	
 if __name__ == '__main__':
 	Utils.disable_stdout_buffering()
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(1000,800))
 	Model.setRace( Model.Race() )
 	model = Model.getRace()

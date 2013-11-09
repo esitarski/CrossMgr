@@ -246,7 +246,7 @@ class SearchDialog( wx.Dialog ):
 		self.search.refresh( searchStr )
 		
 if __name__ == '__main__':
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	mainWin.Show()
 	searchDialog = SearchDialog( mainWin, wx.ID_ANY, "Search Dialog Test", size=(600,400) )

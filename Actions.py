@@ -324,7 +324,7 @@ class Actions( wx.Panel ):
 			mainWin.updateRaceClock()
 		
 if __name__ == '__main__':
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(1024,600))
 	actions = Actions(mainWin)
 	Model.newRace()

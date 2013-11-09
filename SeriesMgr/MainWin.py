@@ -822,7 +822,7 @@ def MainLoop():
 	
 	random.seed()
 
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	app.SetAppName("SeriesMgr")
 	
 	parser = OptionParser( usage = "usage: %prog [options] [RaceFile.smn]" )

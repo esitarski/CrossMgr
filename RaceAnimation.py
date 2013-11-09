@@ -333,7 +333,7 @@ class RaceAnimation( wx.Panel ):
 				self.animation.StartAnimateRealtime()
 	
 if __name__ == '__main__':
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	Model.setRace( Model.Race() )
 	Model.getRace()._populate()

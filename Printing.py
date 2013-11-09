@@ -251,7 +251,7 @@ class CrossMgrPrintoutPNG( CrossMgrPrintout ):
 		
 if __name__ == '__main__':
 	Utils.disable_stdout_buffering()
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,200))
 	cpcd = ChoosePrintCategoriesDialog(mainWin)
 	cpcd.SetSize( (450, 300) )

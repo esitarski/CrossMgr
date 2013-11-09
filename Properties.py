@@ -488,7 +488,7 @@ if __name__ == '__main__':
 	race = Model.newRace()
 	race._populate()
 	
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,600))
 	properties = Properties(mainWin)
 	properties.setEditable( True )

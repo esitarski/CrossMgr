@@ -494,7 +494,7 @@ if __name__ == '__main__':
 	#	if x.startswith('MOD_'):
 	#		print x
 	Utils.disable_stdout_buffering()
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	Model.setRace( Model.Race() )
 	Model.getRace()._populate()

@@ -49,7 +49,7 @@ def ImpinjImportDialog( parent, id = wx.ID_ANY ):
 	return ChipImportDialog( 'Impinj', parseTagTime, parent, id )
 		
 if __name__ == '__main__':
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	Model.setRace( Model.Race() )
 	mainWin.Show()

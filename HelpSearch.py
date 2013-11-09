@@ -105,7 +105,7 @@ class HelpSearchDialog( wx.Dialog ):
 		sizer.Fit(self)
 		
 if __name__ == '__main__':
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	mainWin.Show()
 	searchDialog = HelpSearchDialog( mainWin, wx.ID_ANY, "Help Search", size=(600,400) )

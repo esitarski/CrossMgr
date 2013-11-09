@@ -484,7 +484,7 @@ and remove them from other categories.''').format(category.name),
 		wx.CallAfter( Utils.refreshForecastHistory )
 	
 if __name__ == '__main__':
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	Model.setRace( Model.Race() )
 	race = Model.getRace()

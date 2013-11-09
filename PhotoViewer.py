@@ -447,7 +447,7 @@ if __name__ == '__main__':
 	race = Model.newRace()
 	race._populate()
 
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	mainWin.Show()
 	photoDialog = PhotoViewerDialog( mainWin, wx.ID_ANY, "PhotoViewer", size=(600,400) )

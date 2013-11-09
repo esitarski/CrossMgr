@@ -330,7 +330,7 @@ class JChipSetupDialog( wx.Dialog ):
 if __name__ == '__main__':
 	print GetAllIps()
 	#sys.exit()
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	Model.setRace( Model.Race() )
 	Model.race._populate()

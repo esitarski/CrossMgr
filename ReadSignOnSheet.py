@@ -649,7 +649,7 @@ class ExcelLink( object ):
 if __name__ == '__main__':
 	print( Utils.approximateMatch("Team", "Last Name") )
 
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,300))
 	excelLink = GetExcelLink(mainWin)
 	mainWin.Show()

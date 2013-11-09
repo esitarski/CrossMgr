@@ -508,7 +508,7 @@ def ValidFilename( fname ):
 
 if __name__ == '__main__':
 	initTranslation()
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	
 	disable_stdout_buffering()
 	try:

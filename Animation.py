@@ -646,7 +646,7 @@ if __name__ == '__main__':
 	# import json
 	# with open('race.json', 'w') as fp: fp.write( json.dumps(data, sort_keys=True, indent=4) )
 
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="Animation", size=(600,400))
 	animation = Animation(mainWin)
 	animation.SetData( data )
