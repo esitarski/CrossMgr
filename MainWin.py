@@ -547,14 +547,14 @@ class MainWin( wx.Frame ):
 		self.helpMenu = wx.Menu()
 
 		idCur = wx.NewId()
-		self.helpMenu.Append( idCur , _("&QuickStart..."), _("Get started with CrossMgr Now...") )
-		self.Bind(wx.EVT_MENU, self.menuHelpQuickStart, id=idCur )
-		idCur = wx.NewId()
 		self.helpMenu.Append( idCur, _("Help &Search..."), _("Search Help...") )
 		self.Bind(wx.EVT_MENU, self.menuHelpSearch, id=idCur )
 		self.helpSearch = HelpSearchDialog( self, wx.ID_ANY, title=_('Help Search') )
 		self.helpMenu.Append( wx.ID_HELP, _("&Help..."), _("Help about CrossMgr...") )
 		self.Bind(wx.EVT_MENU, self.menuHelp, id=wx.ID_HELP )
+		idCur = wx.NewId()
+		self.helpMenu.Append( idCur , _("&QuickStart..."), _("Get started with CrossMgr Now...") )
+		self.Bind(wx.EVT_MENU, self.menuHelpQuickStart, id=idCur )
 		
 		self.helpMenu.AppendSeparator()
 
@@ -2534,7 +2534,8 @@ def MainLoop():
 	global redirectFileName
 	
 	app = wx.PySimpleApp()
-        wx.Log.SetLogLevel( 0 )
+        if wx.Platform == '__WXMAC__':
+                wx.Log.SetLogLevel( 0 )
 	app.SetAppName("CrossMgr")
 	
 	random.seed()
