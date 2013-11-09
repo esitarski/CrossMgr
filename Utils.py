@@ -362,9 +362,9 @@ for firefoxProg in ['/usr/bin/firefox', '']:
 		break
 
 if wx.Platform == '__WXMAC__':
-        def showHelp( url ):
-                url = os.path.join( getHelpFolder(), url )
-                os.system( 'open -a Safari %s' % url.split('#')[0] )
+	def showHelp( url ):
+		url = os.path.join( getHelpFolder(), url )
+		os.system( 'open -a Safari %s' % url.split('#')[0] )
 elif firefoxProg:
 	def showHelp( url ):
 		url = os.path.join( getHelpFolder(), url )

@@ -315,7 +315,7 @@ class ForecastHistory( wx.Panel ):
 	#--------------------------------------------------------------------
 	
 	def playBlip( self ):
-		Utils.Play( 'blip6.wav' )
+		Utils.PlaySound( 'blip6.wav' )
 	
 	def logNum( self, nums ):
 		if nums is None:

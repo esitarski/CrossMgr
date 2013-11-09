@@ -2534,8 +2534,8 @@ def MainLoop():
 	global redirectFileName
 	
 	app = wx.PySimpleApp()
-        if wx.Platform == '__WXMAC__':
-                wx.Log.SetLogLevel( 0 )
+	if wx.Platform == '__WXMAC__':
+		wx.Log.SetLogLevel( 0 )
 	app.SetAppName("CrossMgr")
 	
 	random.seed()
