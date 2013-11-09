@@ -2534,6 +2534,7 @@ def MainLoop():
 	global redirectFileName
 	
 	app = wx.PySimpleApp()
+        wx.Log.SetLogLevel( 0 )
 	app.SetAppName("CrossMgr")
 	
 	random.seed()
