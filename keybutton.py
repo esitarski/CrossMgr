@@ -634,26 +634,22 @@ class KeyButton(wx.PyControl):
 		gc.ClipRegion( wx.Region() )
 		
 		# Draw the outline of the inner rectangle.
-		gc = wx.GraphicsContext.Create(dc)
 		gc.SetPen( wx.Pen(insideLine) )
 		gc.StrokePath( innerRoundedRect )
 		
-		gc.SetFont( gc.CreateFont(self.GetFont(), textColour) )
-		textHeight = gc.GetTextExtent('0')[1]
+		dc.SetFont( self.GetFont() )
+		dc.SetTextForeground( textColour )
 		
-		#dc.SetTextForeground( textColour )
-		#gc.SetTextForeground( wx.BLACK )
-
+		textHeight = dc.GetTextExtent('0')[1]
+		
 		label = self.GetLabel()
 		lines = label.split( '\n' )
 		yText = (height - textHeight * len(lines)) // 2
 		for line in lines:
-			textWidth, textHeight = gc.GetTextExtent( line )
-                        xText = x + (width - textWidth) // 2
-			#print line, (textWidth, textHeight), width, (xText, yText), (width, height)
-			gc.DrawText( line, int(xText), int(yText) )
+			textWidth, textHeight = dc.GetTextExtent( line )
+			xText = x + (width - textWidth) // 2
+			dc.DrawText( line, int(xText), int(yText) )
 			yText += textHeight
-		
 		
 if __name__ == '__main__':
 	# Draw a keyboard with keybuttons.
