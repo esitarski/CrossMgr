@@ -1882,12 +1882,10 @@ class MainWin( wx.Frame ):
 						ResetExcelLinkCache()
 						Model.resetCache()
 						self.refreshAll()
+						Utils.writeLog( 'openRace: changed Excel file to "%s"' % newFileName )
 
 		except IOError:
 			Utils.MessageOK(self, _('Cannot open file "{}".').format(fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
-		
-		#for a in ['ftpHost', 'ftpUser', 'ftpPassword', 'ftpPath']:
-		#	print u'{}={}'.format( a, getattr( Model.race, a, '' ) )
 
 	@logCall
 	def menuOpen( self, event ):
