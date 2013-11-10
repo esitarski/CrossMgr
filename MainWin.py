@@ -1868,6 +1868,20 @@ class MainWin( wx.Frame ):
 			self.showPageName( _('Results') if isFinished else _('Actions'))
 			self.refreshAll()
 			Utils.writeLog( 'call: openRace: "%s"' % fileName )
+			
+			# Check if we have a missing spreadsheet, but can find one in the same folder as the race.
+			if getattr(race, 'excelLink', None):
+				excelLink = race.excelLink
+				if excelLink.fileName and not os.path.isfile(excelLink.fileName):
+					newFileName = os.path.join( os.path.dirname(fileName), os.path.basename(excelLink.fileName) )
+					if os.path.isfile(newFileName) and Utils.MessageOKCancel(self,
+						_('Could not find Excel file:\n\n"{}"\n\nFound this Excel file in the race folder with the same name:\n\n"{}"\n\nUse this Excel file from now on?').format( excelLink.fileName, newFileName),
+							_('Excel Link Not Found') ):
+						race.excelLink.fileName = newFileName
+						race.setChanged()
+						ResetExcelLinkCache()
+						Model.resetCache()
+						self.refreshAll()
 
 		except IOError:
 			Utils.MessageOK(self, _('Cannot open file "{}".').format(fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
