@@ -1,6 +1,7 @@
 
 import os
 import GetModelInfo
+import StringIO
 
 def RaceNameFromPath( p ):
 	raceName = os.path.basename( p )
@@ -33,7 +34,18 @@ class PointStructure( object ):
 	
 	def getStr( self ):
 		return ', '.join( str(points) for points in sorted(self.pointsForPlace.values(), reverse=True) )
+	
+	def getHtml( self ):
+		values = [(pos, points) for pos, points in self.pointsForPlace.iteritems()]
+		values.sort()
 		
+		html = StringIO.StringIO()
+		html.write( '<table>\n' )
+		for pos, points in values:
+			html.write( u'<tr><td class="rAlign">{}.</td><td class="rAlign">{}</td></tr>\n'.format( pos, points ) )
+		html.write( '</table>\n' )
+		return html.getvalue()
+	
 	def setStr( self, s ):
 		s = s.replace( ',', ' ' )
 		values = set()

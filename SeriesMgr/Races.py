@@ -123,7 +123,7 @@ class Races(wx.Panel):
 			return
 		if Utils.MessageOKCancel(self, 'Confirm Remove Race:\n\n    {}'.format( self.grid.GetCellValue(row, 0) ), 'Remove Race'):
 			self.grid.DeleteRows( row )
-			wx.CallAfter( self.gridAutoSize )
+			self.commit()
 	
 	def updatePointsChoices( self ):
 		try:

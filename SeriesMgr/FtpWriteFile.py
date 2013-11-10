@@ -167,6 +167,12 @@ class FtpPublishDialog( wx.Dialog ):
 		e = FtpWriteHtml( self.html )
 		if e:
 			Utils.MessageOK( self, u'FTP Publish: {}'.format(e), u'FTP Publish Error' )
+		else:
+			# Automatically open the browser on the published file for testing.
+			model = SeriesModel.model
+			if model.urlFull and model.urlFull != 'http://':
+				webbrowser.open( model.urlFull, new = 0, autoraise = True )
+				
 		self.EndModal( wx.ID_OK )
 		
 	def onCancel( self, event ):

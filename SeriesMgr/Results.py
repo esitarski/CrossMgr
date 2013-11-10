@@ -37,6 +37,12 @@ def tag( buf, name, attrs = {} ):
 def getHeaderGraphic():
 	return os.path.join(Utils.getImageFolder(), 'SeriesMgr128.png')
 
+def getHtmlFileName():
+	modelFileName = Utils.getFileName() if Utils.getFileName() else 'Test.smn'
+	fname		= os.path.basename( os.path.splitext(modelFileName)[0] + '.html' )
+	defaultPath = os.path.dirname( modelFileName )
+	return os.path.join( defaultPath, fname )
+	
 def getHtml():
 	model = SeriesModel.model
 	raceResults = model.extractAllRaceResults()
@@ -47,12 +53,15 @@ def getHtml():
 		
 	pointsForRank = { r.fname: r.pointStructure for r in model.races }
 	
-	if Utils.mainWin:
-		htmlFName = os.path.splitext(Utils.mainWin.fileName)[0] + '.html'
-	else:
-		htmlFName = 'ResultsTest.html'
-
 	title = os.path.basename( os.path.splitext(Utils.mainWin.fileName)[0] ) if Utils.mainWin and Utils.mainWin.fileName else 'Series Results'
+	
+	pointsStructures = {}
+	pointsStructuresList = []
+	for race in model.races:
+		if race.pointStructure not in pointsStructures:
+			pointsStructures[race.pointStructure] = []
+			pointsStructuresList.append( race.pointStructure )
+		pointsStructures[race.pointStructure].append( race )
 	
 	html = StringIO.StringIO()
 	
@@ -125,11 +134,19 @@ table.results td.noborder {
 	border-top:0px solid #98bf21;
 }
 
-table.results td.rAlign, table.results th.rAlign {
+td.rAlign, th.rAlign {
 	text-align:right;
 }
 
-table.results td.cAlign, table.results th.cAlign {
+td.rAlign, th.lAlign {
+	text-align:left;
+}
+
+td.tAlign, th.tAlign {
+	text-align:top;
+}
+
+td.cAlign, th.cAlign {
 	text-align:center;
 }
 
@@ -183,7 +200,34 @@ table.results tr td.fastest{
 									html.write( unicode(points or '') )
 								for rPoints, rRank in racePoints:
 									with tag(html, 'td', {'class':'cAlign lborder'}):
-										html.write( u'{} / {}'.format(rPoints, rRank) if rPoints else '' )
+										html.write( u'{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints else '' )
+										
+			with tag(html, 'p'):
+				pass
+			with tag(html, 'h2'):
+				html.write( 'Points Structures' )
+			with tag(html, 'table' ):
+				
+				for ps in pointsStructuresList:
+					with tag(html, 'tr'):
+						for header in [ps.name, u'Races Using "{}"'.format(ps.name)]:
+							with tag(html, 'th'):
+								html.write( header )
+					
+					with tag(html, 'tr'):
+						with tag(html, 'td', {'class': 'tAlign'}):
+							html.write( ps.getHtml() )
+						with tag(html, 'td', {'class': 'tAlign'}):
+							with tag(html, 'ul'):
+								for r in pointsStructures[ps]:
+									with tag(html, 'li'):
+										html.write( r.raceName() )
+				
+				with tag(html, 'tr'):
+					with tag(html, 'td'):
+						pass
+					with tag(html, 'td'):
+						pass
 	
 	return html.getvalue()
 
@@ -307,7 +351,7 @@ class Results(wx.Panel):
 			self.grid.SetCellValue( row, 3, unicode(license if license else '') )
 			self.grid.SetCellValue( row, 4, unicode(points) )
 			for q, (rPoints, rRank) in enumerate(racePoints):
-				self.grid.SetCellValue( row, 5 + q, u'{} / {}'.format(rPoints, rRank) if rPoints else '' )
+				self.grid.SetCellValue( row, 5 + q, u'{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints else '' )
 		
 		self.grid.AutoSizeColumns( False )
 		self.grid.AutoSizeRows( False )
@@ -367,7 +411,7 @@ class Results(wx.Panel):
 				wsFit.write( rowCur, 3, license, textStyle )
 				wsFit.write( rowCur, 4, points, numberStyle )
 				for q, (rPoints, rRank) in enumerate(racePoints):
-					wsFit.write( rowCur, 5 + q, '{} / {}'.format(rPoints, rRank) if rPoints else '', centerStyle )			
+					wsFit.write( rowCur, 5 + q, '{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints else '', centerStyle )
 				rowCur += 1
 		
 			# Add branding at the bottom of the sheet.
@@ -395,6 +439,8 @@ class Results(wx.Panel):
 				Utils.MessageOK( self, 'You must save your Series to a file first.', 'Save Series' )
 				return
 		
+		htmlFName = getHtmlFileName()
+
 		try:
 			with io.open(htmlFName, 'w', encoding='utf-8') as fp:
 				fp.write( getHtml() )
