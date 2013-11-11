@@ -193,6 +193,7 @@ table.results tr td.fastest{
 											html.write( cgi.escape(r[1]).replace('\n', '<br/>\n') )
 									else:
 										html.write( cgi.escape(r[1]).replace('\n', '<br/>\n') )
+									html.write( u'<br/>{}'.format(r[0].strftime('%b %d, %Y')) )
 					with tag(html, 'tbody'):
 						for pos, (lastName, firstName, license, points, racePoints) in enumerate(results):
 							with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
@@ -212,13 +213,15 @@ table.results tr td.fastest{
 										
 			with tag(html, 'p'):
 				pass
-			with tag(html, 'h2'):
-				html.write( 'Points Structures' )
-			with tag(html, 'table' ):
+			with tag(html, 'hr'):
+				pass
 				
+			with tag(html, 'h2'):
+				html.write( 'Point Structures' )
+			with tag(html, 'table' ):
 				for ps in pointsStructuresList:
 					with tag(html, 'tr'):
-						for header in [ps.name, u'Races Using "{}"'.format(ps.name)]:
+						for header in [ps.name, u'Races Scored with "{}"'.format(ps.name)]:
 							with tag(html, 'th'):
 								html.write( header )
 					
@@ -236,6 +239,10 @@ table.results tr td.fastest{
 						pass
 					with tag(html, 'td'):
 						pass
+						
+			with tag(html, 'p'):
+				with tag(html, 'a', dict(href='http://sites.google.com/site/crossmgrsoftware')):
+					html.write( 'Powered by CrossMgr' )
 	
 	return html.getvalue()
 
