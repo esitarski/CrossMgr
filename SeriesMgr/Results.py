@@ -221,7 +221,7 @@ table.results tr td.fastest{
 							with tag(html, 'ul'):
 								for r in pointsStructures[ps]:
 									with tag(html, 'li'):
-										html.write( r.raceName() )
+										html.write( r.getRaceName() )
 				
 				with tag(html, 'tr'):
 					with tag(html, 'td'):
