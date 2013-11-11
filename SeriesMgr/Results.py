@@ -111,9 +111,15 @@ table.results tr.odd
 	background-color:#EAF2D3;
 }
 
-.lborder
+table.results td.leftBorder, table.results th.leftBorder
 {
 	border-left:1px solid #98bf21;
+}
+
+table.results td.leftBorderCenterAlign, table.results th.leftBorderCenterAlign
+{
+	border-left:1px solid #98bf21;
+	text-align:center;
 }
 
 table.results tr:hover
@@ -135,25 +141,20 @@ table.results td.noborder {
 	border-top:0px solid #98bf21;
 }
 
-td.rAlign, th.rAlign {
+table.results td.rightAlign, table.results th.rightAlign {
 	text-align:right;
 }
 
-td.rAlign, th.lAlign {
+table.results td.leftAlign, table.results th.leftAlign {
 	text-align:left;
 }
 
-td.tAlign, th.tAlign {
+table.results td.topAlign, table.results th.topAlign {
 	text-align:top;
 }
 
-td.cAlign, th.cAlign {
+table.results td.centerAlign, table.results th.centerAlign {
 	text-align:center;
-}
-
-table.results tr td.fastest{
-	color:#000000;
-	background-color:#80FF80;
 }
 
 @media print { .noprint { display: none; } }''' )
@@ -187,7 +188,7 @@ table.results tr td.fastest{
 								with tag(html, 'th' ):
 									html.write( cgi.escape(col).replace('\n', '<br/>\n') )
 							for r in races:
-								with tag(html, 'th', {'class':'lborder'} ):
+								with tag(html, 'th', {'class':'leftBorder'} ):
 									if r[2]:
 										with tag(html,'a',dict(href=u'{}?raceCat={}'.format(r[2], urllib.quote(categoryName.encode('utf8')))) ):
 											html.write( cgi.escape(r[1]).replace('\n', '<br/>\n') )
@@ -197,7 +198,7 @@ table.results tr td.fastest{
 					with tag(html, 'tbody'):
 						for pos, (lastName, firstName, license, points, racePoints) in enumerate(results):
 							with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
-								with tag(html, 'td', {'class':'rAlign'}):
+								with tag(html, 'td', {'class':'rightAlign'}):
 									html.write( unicode(pos+1) )
 								with tag(html, 'td'):
 									html.write( unicode(lastName or '') )
@@ -205,10 +206,10 @@ table.results tr td.fastest{
 									html.write( unicode(firstName or '') )
 								with tag(html, 'td'):
 									html.write( unicode(license or '') )
-								with tag(html, 'td', {'class':'rAlign'}):
+								with tag(html, 'td', {'class':'rightAlign'}):
 									html.write( unicode(points or '') )
 								for rPoints, rRank in racePoints:
-									with tag(html, 'td', {'class':'cAlign lborder'}):
+									with tag(html, 'td', {'class':'leftBorder centerAlign'}):
 										html.write( u'{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints else '' )
 										
 			with tag(html, 'p'):
@@ -226,9 +227,9 @@ table.results tr td.fastest{
 								html.write( header )
 					
 					with tag(html, 'tr'):
-						with tag(html, 'td', {'class': 'tAlign'}):
+						with tag(html, 'td', {'class': 'topAlign'}):
 							html.write( ps.getHtml() )
-						with tag(html, 'td', {'class': 'tAlign'}):
+						with tag(html, 'td', {'class': 'topAlign'}):
 							with tag(html, 'ul'):
 								for r in pointsStructures[ps]:
 									with tag(html, 'li'):
