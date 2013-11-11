@@ -16,7 +16,7 @@ from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache
 from GetResults			import GetResults, GetCategoryDetails
 
 class RaceResult( object ):
-	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, raceFName, bib, rank, raceOrganizer ):
+	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, raceFName, bib, rank, raceOrganizer, raceURL = None ):
 		self.firstName = firstName
 		self.lastName = lastName
 		self.license = license
@@ -28,6 +28,7 @@ class RaceResult( object ):
 		self.raceDate = raceDate
 		self.raceOrganizer = raceOrganizer
 		self.raceFName = raceFName
+		self.raceURL = raceURL
 		
 		self.bib = bib
 		self.rank = rank
@@ -112,13 +113,14 @@ def ExtractRaceResultsCrossMgr( fileName ):
 	except IOError as e:
 		return False, e, []
 		
+	raceURL = getattr( race, 'urlFull', None )
 	raceResults = []
 	for category in race.getCategories():
 		results = GetResults( category, True )
 		for rr in results:
 			if rr.status != Model.Rider.Finisher:
 				continue
-			info = {}
+			info = { 'raceURL': raceURL }
 			for fTo, fFrom in [('firstName', 'FirstName'), ('lastName', 'LastName'), ('license', 'License'), ('team', 'Team')]:
 				info[fTo] = getattr(rr, fFrom, '')
 			info['categoryName'] = category.fullname
@@ -150,9 +152,9 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, numPlacesTieBr
 		return [], []
 	
 	# Get all races for this category.
-	races = set( (rr.raceDate, rr.raceName) for rr in raceResults )
+	races = set( (rr.raceDate, rr.raceName, rr.raceURL) for rr in raceResults )
 	races = sorted( races )
-	raceSequence = dict( (r, i) for i, r in enumerate(races) )
+	raceSequence = dict( ((r[0], r[1]), i) for i, r in enumerate(races) )
 	
 	# Get the individual results for each rider, and the total points.
 	riderResults = defaultdict( lambda : [(0,0)] * len(races) )

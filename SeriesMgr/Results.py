@@ -4,6 +4,7 @@ import wx.grid as gridlib
 import os
 import io
 import cgi
+import urllib
 import sys
 import base64
 import StringIO
@@ -182,9 +183,16 @@ table.results tr td.fastest{
 				with tag(html, 'table', {'class': 'results'} ):
 					with tag(html, 'thead'):
 						with tag(html, 'tr'):
-							for i, col in enumerate(headerNames):
-								with tag(html, 'th', {} if i < len(HeaderNames) else {'class':'lborder'} ):
+							for col in HeaderNames:
+								with tag(html, 'th' ):
 									html.write( cgi.escape(col).replace('\n', '<br/>\n') )
+							for r in races:
+								with tag(html, 'th', {'class':'lborder'} ):
+									if r[2]:
+										with tag(html,'a',dict(href=u'{}?raceCat={}'.format(r[2], urllib.quote(categoryName.encode('utf8')))) ):
+											html.write( cgi.escape(r[1]).replace('\n', '<br/>\n') )
+									else:
+										html.write( cgi.escape(r[1]).replace('\n', '<br/>\n') )
 					with tag(html, 'tbody'):
 						for pos, (lastName, firstName, license, points, racePoints) in enumerate(results):
 							with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
