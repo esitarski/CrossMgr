@@ -75,10 +75,12 @@ class Race( object ):
 			return RaceNameFromPath( self.fileName )
 			
 		if self.excelLink:
-			return (	self.excelLink.sheetName if self.excelLink.sheetName else
-						os.path.basename(os.path.splitext(self.fileName)[0]) )
-		else:
-			return RaceNameFromPath( self.fileName )
+			try:
+				return u'{}:{}'.format( os.path.basename(os.path.splitext(self.fileName)[0]), self.excelLink.sheetName )
+			except:
+				pass
+		
+		return RaceNameFromPath( self.fileName )
 				
 	def getFileName( self ):
 		if os.path.splitext(self.fileName)[1] == '.cmn' or not self.excelLink:

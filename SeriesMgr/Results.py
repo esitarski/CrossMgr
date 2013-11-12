@@ -52,7 +52,7 @@ def getHtml():
 	if not categoryNames:
 		return ''
 		
-	pointsForRank = { r.fileName: r.pointStructure for r in model.races }
+	pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
 	
 	title = os.path.basename( os.path.splitext(Utils.mainWin.fileName)[0] ) if Utils.mainWin and Utils.mainWin.fileName else 'Series Results'
 	

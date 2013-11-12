@@ -16,7 +16,7 @@ from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache
 from GetResults			import GetResults, GetCategoryDetails
 
 class RaceResult( object ):
-	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, racefileName, bib, rank, raceOrganizer,
+	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, raceFileName, bib, rank, raceOrganizer,
 					raceURL = None, raceInSeries = None ):
 		self.firstName = firstName
 		self.lastName = lastName
@@ -28,7 +28,7 @@ class RaceResult( object ):
 		self.raceName = raceName
 		self.raceDate = raceDate
 		self.raceOrganizer = raceOrganizer
-		self.racefileName = racefileName
+		self.raceFileName = raceFileName
 		self.raceURL = raceURL
 		self.raceInSeries = raceInSeries
 		
@@ -68,12 +68,12 @@ def ExtractRaceResultsExcel( raceInSeries ):
 	except Exception as e:
 		return False, e, []
 	
-	racefileName =  u'{}:{}'.format( excelLink.fileName, excelLink.sheetName )
+	raceFileName =  u'{}:{}'.format( excelLink.fileName, excelLink.sheetName )
 	raceName = u'{}:{}'.format(	os.path.basename(os.path.splitext(excelLink.fileName)[0]), excelLink.sheetName )
 	raceResults = []
 	for d in data:
 		info = {'raceDate':		None,
-				'racefileName':	racefileName,
+				'raceFileName':	raceFileName,
 				'raceName':		raceName,
 				'raceOrganizer': '',
 				'raceInSeries': raceInSeries,
@@ -134,7 +134,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 			
 			for fTo, fFrom in [('raceName', 'name'), ('raceOrganizer', 'organizer')]:
 				info[fTo] = getattr(race, fFrom, '')
-			info['racefileName'] = fileName
+			info['raceFileName'] = fileName
 			if race.startTime:
 				info['raceDate'] = race.startTime
 			else:
@@ -158,9 +158,13 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, numPlacesTieBr
 	if not raceResults:
 		return [], []
 	
+	# Assign a sequence number to the races in the specified order.
+	for i, r in enumerate(SeriesModel.model.races):
+		r.iSequence = i
+		
 	# Get all races for this category.
 	races = set( (rr.raceDate, rr.raceName, rr.raceURL, rr.raceInSeries) for rr in raceResults )
-	races = sorted( races )
+	races = sorted( races, key = lambda r: r[3].iSequence )
 	raceSequence = dict( (r[3], i) for i, r in enumerate(races) )
 	
 	# Get the individual results for each rider, and the total points.
@@ -169,7 +173,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, numPlacesTieBr
 	riderPlaceCount = defaultdict( lambda : defaultdict(int) )
 	for rr in raceResults:
 		rider = (rr.lastName, rr.firstName, rr.license)
-		points = pointsForRank[rr.racefileName][rr.rank]
+		points = pointsForRank[rr.raceFileName][rr.rank]
 		riderResults[rider][raceSequence[rr.raceInSeries]] = (points, rr.rank)
 		riderPoints[rider] += points
 		riderPlaceCount[rider][rr.rank] += 1

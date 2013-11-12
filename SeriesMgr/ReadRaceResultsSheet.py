@@ -9,6 +9,7 @@ import wx.lib.scrolledpanel as scrolled
 import wx.wizard as wiz
 import Utils
 import traceback
+import datetime
 import Model
 from Excel import GetExcelReader
 
@@ -326,7 +327,8 @@ class ExcelLink( object ):
 	def __init__( self ):
 		self.fileName = None
 		self.sheetName = None
-		self.date = None
+		self.raceDate = None
+		self.raceTime = None
 		self.fieldCol = dict( (f, c) for c, f in enumerate(Fields) )
 	
 	def __cmp__( self, e ):
@@ -351,11 +353,18 @@ class ExcelLink( object ):
 		reader = GetExcelReader( self.fileName )
 		
 		self.raceDate = None
+		self.raceTime = None
 		
 		info = []
 		for r, row in enumerate(reader.iter_list(self.sheetName)):
-			if len(row) >= 2 and row[0] == 'Date' and row[1]:
-				self.raceDate = row[1]
+			if len(row) == 2:
+				try:
+					if row[0] == 'Date' and row[1] and isinstance(row[1], datetime.date):
+						self.raceDate = row[1]
+					elif row[0] == 'Time' and row[1] and isinstance(row[1], datetime.time):
+						self.raceTime = row[1]
+				except:
+					pass
 				
 			data = {}
 			for field, col in self.fieldCol.iteritems():

@@ -45,7 +45,7 @@ class Races(wx.Panel):
 		self.grid.Bind( gridlib.EVT_GRID_CELL_CHANGE, self.onGridChange )
 		self.gridAutoSize()
 		self.grid.Bind( wx.grid.EVT_GRID_EDITOR_CREATED, self.onGridEditorCreated )
-		self.grid.Bind( wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.editRacefileName )
+		self.grid.Bind( wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.editraceFileName )
 		
 		self.addButton = wx.Button( self, wx.ID_ANY, 'Add Race' )
 		self.addButton.Bind( wx.EVT_BUTTON, self.doAddRace )
@@ -79,7 +79,7 @@ class Races(wx.Panel):
 		self.grid.SetCellValue( row, self.RaceCol, race.getRaceName() )
 		wx.CallAfter( self.gridAutoSize )
 	
-	def editRacefileName( self, event ):
+	def editraceFileName( self, event ):
 		col = event.GetCol()
 		if col != self.RaceFileCol:
 			event.Skip()
