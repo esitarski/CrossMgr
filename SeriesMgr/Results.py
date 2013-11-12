@@ -322,10 +322,13 @@ class Results(wx.Panel):
 		col = event.GetCol()
 		label = self.grid.GetColLabelValue( col )
 		if self.sortCol == col:
+			self.sortCol = -self.sortCol
+		elif self.sortCol == -col:
 			self.sortCol = None
 		else:
 			self.sortCol = col
-		if self.sortCol == 0 or self.sortCol == 4:
+			
+		if not self.sortCol:
 			self.sortCol = None
 		wx.CallAfter( self.refresh )
 	
@@ -405,14 +408,22 @@ class Results(wx.Panel):
 				rowCmp[5:] = [-int( v.split()[0] ) if v else 0 for v in rowCmp[5:]]
 				rowCmp.extend( rowOrig )
 				data.append( rowCmp )
+			
+			if self.sortCol > 0:
+				fg = wx.WHITE
+				bg = wx.Colour(0,100,0)
+			else:
+				fg = wx.BLACK
+				bg = wx.Colour(255,165,0)
 				
-			data.sort( key = lambda x: x[self.sortCol] )
+			iCol = abs(self.sortCol)
+			data.sort( key = lambda x: x[iCol], reverse = (self.sortCol < 0) )
 			for r, row in enumerate(data):
 				for c, v in enumerate(row[self.grid.GetNumberCols():]):
 					self.grid.SetCellValue( r, c, v )
-					if c == self.sortCol:
-						self.grid.SetCellBackgroundColour( r, c, wx.BLACK )
-						self.grid.SetCellTextColour( r, c, wx.WHITE )
+					if c == iCol:
+						self.grid.SetCellTextColour( r, c, fg )
+						self.grid.SetCellBackgroundColour( r, c, bg )
 						self.grid.SetCellAlignment( r, c, wx.ALIGN_LEFT if c < 5 else wx.ALIGN_CENTRE, wx.ALIGN_TOP )
 		
 		self.grid.AutoSizeColumns( False )
