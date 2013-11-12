@@ -45,7 +45,7 @@ class Races(wx.Panel):
 		self.grid.Bind( gridlib.EVT_GRID_CELL_CHANGE, self.onGridChange )
 		self.gridAutoSize()
 		self.grid.Bind( wx.grid.EVT_GRID_EDITOR_CREATED, self.onGridEditorCreated )
-		self.grid.Bind( wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.editRaceFName )
+		self.grid.Bind( wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.editRacefileName )
 		
 		self.addButton = wx.Button( self, wx.ID_ANY, 'Add Race' )
 		self.addButton.Bind( wx.EVT_BUTTON, self.doAddRace )
@@ -74,12 +74,12 @@ class Races(wx.Panel):
 	
 	def doExcelLink( self, race, row ):
 		excelLink = race.excelLink if race.excelLink else ExcelLink()
-		excelLink.setFileName( race.fname )
+		excelLink.setFileName( race.fileName )
 		race.excelLink = GetExcelResultsLink( self, excelLink ).show()
 		self.grid.SetCellValue( row, self.RaceCol, race.getRaceName() )
 		wx.CallAfter( self.gridAutoSize )
 	
-	def editRaceFName( self, event ):
+	def editRacefileName( self, event ):
 		col = event.GetCol()
 		if col != self.RaceFileCol:
 			event.Skip()
@@ -91,14 +91,14 @@ class Races(wx.Panel):
 					wildcard = self.wildcard,
 					style=wx.OPEN | wx.CHANGE_DIR )
 		ret = dlg.ShowModal()
-		fname = ''
+		fileName = ''
 		if ret == wx.ID_OK:
 			path = dlg.GetPath()
-			self.grid.SetCellValue( row, self.RaceCol, SeriesModel.RaceNameFromPath(fname) )
-			self.grid.SetCellValue( row, self.RaceFileCol, fname )
+			self.grid.SetCellValue( row, self.RaceCol, SeriesModel.RaceNameFromPath(fileName) )
+			self.grid.SetCellValue( row, self.RaceFileCol, fileName )
 		dlg.Destroy()
 		self.refresh()
-		if ret == wx.ID_OK and os.path.splitext(fname)[1] != '.cmn':
+		if ret == wx.ID_OK and os.path.splitext(fileName)[1] != '.cmn':
 			wx.CallAfter( self.doExcelLink, SeriesModel.model.races[row], row )
 	
 	def doAddRace( self, event ):
@@ -109,11 +109,11 @@ class Races(wx.Panel):
 		ret = dlg.ShowModal()
 		path = ''
 		if ret == wx.ID_OK:
-			fname = dlg.GetPath()
-			SeriesModel.model.addRace( fname )
+			fileName = dlg.GetPath()
+			SeriesModel.model.addRace( fileName )
 		dlg.Destroy()
 		self.refresh()
-		if ret == wx.ID_OK and os.path.splitext(fname)[1] != '.cmn':
+		if ret == wx.ID_OK and os.path.splitext(fileName)[1] != '.cmn':
 			wx.CallAfter( self.doExcelLink, SeriesModel.model.races[-1], len(SeriesModel.model.races) - 1 )
 		
 	def doRemoveRace( self, event ):
@@ -154,7 +154,7 @@ class Races(wx.Panel):
 		for row, race in enumerate(model.races):
 			self.grid.SetCellValue( row, self.RaceCol, race.getRaceName() )
 			self.grid.SetCellValue( row, self.PointsCol, race.pointStructure.name )
-			self.grid.SetCellValue( row, self.RaceFileCol, race.fname )
+			self.grid.SetCellValue( row, self.RaceFileCol, race.fileName )
 		wx.CallAfter( self.gridAutoSize )
 		
 		self.seriesName.SetValue( SeriesModel.model.name )
@@ -164,11 +164,11 @@ class Races(wx.Panel):
 		
 		raceList = []
 		for row in xrange(self.grid.GetNumberRows()):
-			fname = self.grid.GetCellValue( row, self.RaceFileCol ).strip()
+			fileName = self.grid.GetCellValue( row, self.RaceFileCol ).strip()
 			pname = self.grid.GetCellValue( row, self.PointsCol )
-			if not fname or not pname:
+			if not fileName or not pname:
 				continue
-			raceList.append( (fname, pname) )
+			raceList.append( (fileName, pname) )
 		
 		model = SeriesModel.model
 		model.setRaces( raceList )

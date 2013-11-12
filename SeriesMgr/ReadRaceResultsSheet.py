@@ -331,8 +331,8 @@ class ExcelLink( object ):
 	def __cmp__( self, e ):
 		return cmp((self.fileName, self.sheetName, self.fieldCol), (e.fileName, e.sheetName, e.fieldCol))
 	
-	def setFileName( self, fname ):
-		self.fileName = fname
+	def setFileName( self, fileName ):
+		self.fileName = fileName
 		
 	def setSheetName( self, sname ):
 		self.sheetName = sname

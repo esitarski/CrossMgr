@@ -40,9 +40,9 @@ def getHeaderGraphic():
 
 def getHtmlFileName():
 	modelFileName = Utils.getFileName() if Utils.getFileName() else 'Test.smn'
-	fname		= os.path.basename( os.path.splitext(modelFileName)[0] + '.html' )
+	fileName		= os.path.basename( os.path.splitext(modelFileName)[0] + '.html' )
 	defaultPath = os.path.dirname( modelFileName )
-	return os.path.join( defaultPath, fname )
+	return os.path.join( defaultPath, fileName )
 	
 def getHtml():
 	model = SeriesModel.model
@@ -52,7 +52,7 @@ def getHtml():
 	if not categoryNames:
 		return ''
 		
-	pointsForRank = { r.fname: r.pointStructure for r in model.races }
+	pointsForRank = { r.fileName: r.pointStructure for r in model.races }
 	
 	title = os.path.basename( os.path.splitext(Utils.mainWin.fileName)[0] ) if Utils.mainWin and Utils.mainWin.fileName else 'Series Results'
 	
@@ -111,15 +111,13 @@ table.results tr.odd
 	background-color:#EAF2D3;
 }
 
+smallFont {
+	font-size: 75%;
+}
+
 table.results td.leftBorder, table.results th.leftBorder
 {
 	border-left:1px solid #98bf21;
-}
-
-table.results td.leftBorderCenterAlign, table.results th.leftBorderCenterAlign
-{
-	border-left:1px solid #98bf21;
-	text-align:center;
 }
 
 table.results tr:hover
@@ -188,13 +186,19 @@ table.results td.centerAlign, table.results th.centerAlign {
 								with tag(html, 'th' ):
 									html.write( cgi.escape(col).replace('\n', '<br/>\n') )
 							for r in races:
-								with tag(html, 'th', {'class':'leftBorder'} ):
+								with tag(html, 'th', {'class':'leftBorder centerAlign'} ):
 									if r[2]:
 										with tag(html,'a',dict(href=u'{}?raceCat={}'.format(r[2], urllib.quote(categoryName.encode('utf8')))) ):
 											html.write( cgi.escape(r[1]).replace('\n', '<br/>\n') )
 									else:
 										html.write( cgi.escape(r[1]).replace('\n', '<br/>\n') )
-									html.write( u'<br/>{}'.format(r[0].strftime('%b %d, %Y')) )
+									if r[0]:
+										html.write( '<br/>' )
+										with tag(html, 'span', {'class': 'smallFont'}):
+											html.write( r[0].strftime('%b %d, %Y') )
+									html.write( '<br/>' )
+									with tag(html, 'span', {'class': 'smallFont'}):
+										html.write( u'(Top {})'.format(len(r[3].pointStructure)) )
 					with tag(html, 'tbody'):
 						for pos, (lastName, firstName, license, points, racePoints) in enumerate(results):
 							with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
@@ -386,7 +390,7 @@ class Results(wx.Panel):
 		if not categoryNames:
 			return
 			
-		pointsForRank = { r.fname: r.pointStructure for r in model.races }
+		pointsForRank = { r.fileName: r.pointStructure for r in model.races }
 		
 		wb = xlwt.Workbook()
 
@@ -436,17 +440,17 @@ class Results(wx.Panel):
 			ws.write( rowCur + 2, 0, brandText, style )
 		
 		if Utils.mainWin:
-			xlFName = os.path.splitext(Utils.mainWin.fileName)[0] + '.xls'
+			xlfileName = os.path.splitext(Utils.mainWin.fileName)[0] + '.xls'
 		else:
-			xlFName = 'ResultsTest.xls'
+			xlfileName = 'ResultsTest.xls'
 			
 		try:
-			wb.save( xlFName )
-			webbrowser.open( xlFName, new = 2, autoraise = True )
-			Utils.MessageOK(self, 'Excel file written to:\n\n   %s' % xlFName, 'Excel Write')
+			wb.save( xlfileName )
+			webbrowser.open( xlfileName, new = 2, autoraise = True )
+			Utils.MessageOK(self, 'Excel file written to:\n\n   %s' % xlfileName, 'Excel Write')
 		except IOError:
 			Utils.MessageOK(self,
-						'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % xlFName,
+						'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % xlfileName,
 						'Excel File Error', iconMask=wx.ICON_ERROR )
 	
 	def onExportToHtml( self, event ):
@@ -455,16 +459,16 @@ class Results(wx.Panel):
 				Utils.MessageOK( self, 'You must save your Series to a file first.', 'Save Series' )
 				return
 		
-		htmlFName = getHtmlFileName()
+		htmlfileName = getHtmlFileName()
 
 		try:
-			with io.open(htmlFName, 'w', encoding='utf-8') as fp:
+			with io.open(htmlfileName, 'w', encoding='utf-8') as fp:
 				fp.write( getHtml() )
-			webbrowser.open( htmlFName, new = 2, autoraise = True )
-			Utils.MessageOK(self, 'Html file written to:\n\n   %s' % htmlFName, 'html Write')
+			webbrowser.open( htmlfileName, new = 2, autoraise = True )
+			Utils.MessageOK(self, 'Html file written to:\n\n   %s' % htmlfileName, 'html Write')
 		except IOError:
 			Utils.MessageOK(self,
-						'Cannot write "%s".\n\nCheck if this file is open.\nIf so, close it, and try again.' % htmlFName,
+						'Cannot write "%s".\n\nCheck if this file is open.\nIf so, close it, and try again.' % htmlfileName,
 						'Html File Error', iconMask=wx.ICON_ERROR )
 	
 	def onExportToFtp( self, event ):
@@ -498,6 +502,6 @@ if __name__ == "__main__":
 	files = [
 		r'C:\Projects\CrossMgr\ParkAvenue2\2013-06-26-Park Ave Bike Camp Arrowhead mtb 4-r1-.cmn',
 	]
-	model.races = [SeriesModel.Race(fname, model.pointStructures[0]) for fname in files]
+	model.races = [SeriesModel.Race(fileName, model.pointStructures[0]) for fileName in files]
 	frame = ResultsFrame()
 	app.MainLoop()

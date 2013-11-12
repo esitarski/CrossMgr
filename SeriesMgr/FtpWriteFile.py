@@ -15,16 +15,16 @@ def lineno():
     """Returns the current line number in our program."""
     return inspect.currentframe().f_back.f_lineno
 	
-def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30, serverPath = '.', fname = '', file = None ):
+def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30, serverPath = '.', fileName = '', file = None ):
 	ftp = ftplib.FTP( host, timeout = timeout )
 	ftp.login( user, passwd )
 	if serverPath and serverPath != '.':
 		ftp.cwd( serverPath )
 	fileOpened = False
 	if file is None:
-		file = open(fname, 'rb')
+		file = open(fileName, 'rb')
 		fileOpened = True
-	ftp.storbinary( 'STOR %s' % os.path.basename(fname), file )
+	ftp.storbinary( 'STOR %s' % os.path.basename(fileName), file )
 	ftp.quit()
 	if fileOpened:
 		file.close()
@@ -32,9 +32,9 @@ def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30,
 def FtpWriteHtml( html ):
 	Utils.writeLog( 'FtpWriteHtml: called.' )
 	modelFileName = Utils.getFileName() if Utils.getFileName() else 'Test.smn'
-	fname		= os.path.basename( os.path.splitext(modelFileName)[0] + '.html' )
+	fileName		= os.path.basename( os.path.splitext(modelFileName)[0] + '.html' )
 	defaultPath = os.path.dirname( modelFileName )
-	with io.open(os.path.join(defaultPath, fname), 'w', encoding='utf-8') as fp:
+	with io.open(os.path.join(defaultPath, fileName), 'w', encoding='utf-8') as fp:
 		fp.write( html )
 		
 	model = SeriesModel.model
@@ -43,13 +43,13 @@ def FtpWriteHtml( html ):
 	passwd		= getattr( model, 'ftpPassword', '' )
 	serverPath	= getattr( model, 'ftpPath', '' )
 	
-	file		= open( os.path.join(defaultPath, fname), 'rb' )
+	file		= open( os.path.join(defaultPath, fileName), 'rb' )
 	try:
 		FtpWriteFile(	host		= host,
 						user		= user,
 						passwd		= passwd,
 						serverPath	= serverPath,
-						fname		= fname,
+						fileName		= fileName,
 						file		= file )
 	except Exception as e:
 		Utils.writeLog( 'FtpWriteHtml Error: {}'.format(e) )
@@ -133,14 +133,14 @@ class FtpPublishDialog( wx.Dialog ):
 
 	def urlPathChanged( self, event = None ):
 		url = self.urlPath.GetValue()
-		fname = Utils.getFileName()
-		if not url or url == 'http://' or not SeriesModel.model or not fname:
+		fileName = Utils.getFileName()
+		if not url or url == 'http://' or not SeriesModel.model or not fileName:
 			self.urlFull.SetLabel( '' )
 		else:
 			if not url.endswith( '/' ):
 				url += '/'
-			fname = os.path.basename( os.path.splitext(fname)[0] + '.html' )
-			url += fname
+			fileName = os.path.basename( os.path.splitext(fileName)[0] + '.html' )
+			url += fileName
 			self.urlFull.SetLabel( url )
 		
 	def refresh( self ):
@@ -187,7 +187,7 @@ if __name__ == '__main__':
 					passwd = 'crossmgr',
 					timeout = 30,
 					serverPath = '',
-					fname = 'test.html',
+					fileName = 'test.html',
 					file = None )
 	sys.exit()
 	'''

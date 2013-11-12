@@ -9,9 +9,9 @@ distDir = 'dist'
 # Cleanup existing dll, pyd and exe files.  The old ones may not be needed, so it is best to clean these up.
 for f in os.listdir(distDir):
 	if f.endswith('.dll') or f.endswith('.pyd') or f.endswith('.exe'):
-		fname = os.path.join(distDir, f)
-		print 'deleting:', fname
-		os.remove( fname )
+		fileName = os.path.join(distDir, f)
+		print 'deleting:', fileName
+		os.remove( fileName )
 		
 setup( windows=
 			[

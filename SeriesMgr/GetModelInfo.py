@@ -16,7 +16,8 @@ from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache
 from GetResults			import GetResults, GetCategoryDetails
 
 class RaceResult( object ):
-	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, raceFName, bib, rank, raceOrganizer, raceURL = None ):
+	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, racefileName, bib, rank, raceOrganizer,
+					raceURL = None, raceInSeries = None ):
 		self.firstName = firstName
 		self.lastName = lastName
 		self.license = license
@@ -27,8 +28,9 @@ class RaceResult( object ):
 		self.raceName = raceName
 		self.raceDate = raceDate
 		self.raceOrganizer = raceOrganizer
-		self.raceFName = raceFName
+		self.racefileName = racefileName
 		self.raceURL = raceURL
+		self.raceInSeries = raceInSeries
 		
 		self.bib = bib
 		self.rank = rank
@@ -50,12 +52,13 @@ class RaceResult( object ):
 		return self.firstName
 
 def ExtractRaceResults( r ):
-	if os.path.splitext(r.fname)[1] == '.cmn':
-		return ExtractRaceResultsCrossMgr( r.fname )
+	if os.path.splitext(r.fileName)[1] == '.cmn':
+		return ExtractRaceResultsCrossMgr( r )
 	else:
-		return ExtractRaceResultsExcel( r.excelLink )
+		return ExtractRaceResultsExcel( r )
 		
-def ExtractRaceResultsExcel( excelLink ):
+def ExtractRaceResultsExcel( raceInSeries ):
+	excelLink = raceInSeries.excelLink
 	if not excelLink:
 		print 'missing excel link'
 		return False, 'Missing Excel Link Definition', []
@@ -65,15 +68,15 @@ def ExtractRaceResultsExcel( excelLink ):
 	except Exception as e:
 		return False, e, []
 	
-	tNow = datetime.datetime.now()
-	raceFName =  u'{}:{}'.format( excelLink.fileName, excelLink.sheetName )
+	racefileName =  u'{}:{}'.format( excelLink.fileName, excelLink.sheetName )
 	raceName = u'{}:{}'.format(	os.path.basename(os.path.splitext(excelLink.fileName)[0]), excelLink.sheetName )
 	raceResults = []
 	for d in data:
-		info = {'raceDate':		tNow,
-				'raceFName':	raceFName,
+		info = {'raceDate':		None,
+				'racefileName':	racefileName,
 				'raceName':		raceName,
-				'raceOrganizer': ''
+				'raceOrganizer': '',
+				'raceInSeries': raceInSeries,
 		}
 		for fTo, fFrom in [
 				('bib', 'Bib#'), ('rank', 'Pos'),
@@ -98,7 +101,8 @@ def ExtractRaceResultsExcel( excelLink ):
 	
 	return True, 'success', raceResults
 	
-def ExtractRaceResultsCrossMgr( fileName ):
+def ExtractRaceResultsCrossMgr( raceInSeries ):
+	fileName = raceInSeries.fileName
 	try:
 		with open(fileName, 'rb') as fp, Model.LockRace() as race:
 			race = pickle.load( fp )
@@ -120,14 +124,17 @@ def ExtractRaceResultsCrossMgr( fileName ):
 		for rr in results:
 			if rr.status != Model.Rider.Finisher:
 				continue
-			info = { 'raceURL': raceURL }
+			info = {
+				'raceURL':		raceURL,
+				'raceInSeries':	raceInSeries,
+			}
 			for fTo, fFrom in [('firstName', 'FirstName'), ('lastName', 'LastName'), ('license', 'License'), ('team', 'Team')]:
 				info[fTo] = getattr(rr, fFrom, '')
 			info['categoryName'] = category.fullname
 			
 			for fTo, fFrom in [('raceName', 'name'), ('raceOrganizer', 'organizer')]:
 				info[fTo] = getattr(race, fFrom, '')
-			info['raceFName'] = fileName
+			info['racefileName'] = fileName
 			if race.startTime:
 				info['raceDate'] = race.startTime
 			else:
@@ -136,7 +143,7 @@ def ExtractRaceResultsCrossMgr( fileName ):
 					fields = [int(v) for v in d.split()] + [int(v) for v in race.scheduledStart.split(':')]
 					info['raceDate'] = datetime.datetime( *fields )
 				except:
-					info['raceDate'] = datetime.datetime.now()
+					info['raceDate'] = None
 			
 			info['bib'] = int(rr.num)
 			info['rank'] = int(rr.pos)
@@ -152,9 +159,9 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, numPlacesTieBr
 		return [], []
 	
 	# Get all races for this category.
-	races = set( (rr.raceDate, rr.raceName, rr.raceURL) for rr in raceResults )
+	races = set( (rr.raceDate, rr.raceName, rr.raceURL, rr.raceInSeries) for rr in raceResults )
 	races = sorted( races )
-	raceSequence = dict( ((r[0], r[1]), i) for i, r in enumerate(races) )
+	raceSequence = dict( (r[3], i) for i, r in enumerate(races) )
 	
 	# Get the individual results for each rider, and the total points.
 	riderResults = defaultdict( lambda : [(0,0)] * len(races) )
@@ -162,8 +169,8 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, numPlacesTieBr
 	riderPlaceCount = defaultdict( lambda : defaultdict(int) )
 	for rr in raceResults:
 		rider = (rr.lastName, rr.firstName, rr.license)
-		points = pointsForRank[rr.raceFName][rr.rank]
-		riderResults[rider][raceSequence[(rr.raceDate, rr.raceName)]] = (points, rr.rank)
+		points = pointsForRank[rr.racefileName][rr.rank]
+		riderResults[rider][raceSequence[rr.raceInSeries]] = (points, rr.rank)
 		riderPoints[rider] += points
 		riderPlaceCount[rider][rr.rank] += 1
 

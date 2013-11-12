@@ -24,7 +24,7 @@ class PointStructure( object ):
 		return self.pointsForPlace.get( int(rank), 0 )
 	
 	def __len__( self ):
-		return len(self.pointsForRace)
+		return len(self.pointsForPlace)
 	
 	def setUCIWorldTour( self ):
 		self.pointsForPlace = { 1:100, 2:80, 3:70, 4:60, 5:50, 6:40, 7:30, 8:20, 9:10, 10:4 }
@@ -62,25 +62,25 @@ class PointStructure( object ):
 class Race( object ):
 	excelLink = None
 	
-	def __init__( self, fname, pointStructure, excelLink = None ):
-		self.fname = fname
+	def __init__( self, fileName, pointStructure, excelLink = None ):
+		self.fileName = fileName
 		self.pointStructure = pointStructure
 		self.excelLink = excelLink
 		
 	def getRaceName( self ):
-		if os.path.splitext(self.fname)[1] == '.cmn':
-			return RaceNameFromPath( self.fname )
+		if os.path.splitext(self.fileName)[1] == '.cmn':
+			return RaceNameFromPath( self.fileName )
 			
 		if self.excelLink:
-			return u'{}:{}'.format(	os.path.basename(os.path.splitext(self.fname)[0]),
-									self.excelLink.sheetName if self.excelLink.sheetName else '' )
+			return (	self.excelLink.sheetName if self.excelLink.sheetName else
+						os.path.basename(os.path.splitext(self.fileName)[0]) )
 		else:
-			return RaceNameFromPath( self.fname )
+			return RaceNameFromPath( self.fileName )
 				
 	def getFileName( self ):
-		if os.path.splitext(self.fname)[1] == '.cmn' or not self.excelLink:
-			return self.fname
-		return u'{}:{}'.format( self.fname, self.excelLink.sheetName )
+		if os.path.splitext(self.fileName)[1] == '.cmn' or not self.excelLink:
+			return self.fileName
+		return u'{}:{}'.format( self.fileName, self.excelLink.sheetName )
 		
 class SeriesModel( object ):
 	DefaultPointStructureName = 'Example'
@@ -123,7 +123,7 @@ class SeriesModel( object ):
 		self.pointStructures = newPointStructures
 	
 	def setRaces( self, raceList ):
-		oldRaceList = [(r.fname, r.pointStructure.name) for r in self.races]
+		oldRaceList = [(r.fileName, r.pointStructure.name) for r in self.races]
 		if oldRaceList == raceList:
 			return
 			
@@ -131,16 +131,16 @@ class SeriesModel( object ):
 		
 		newRaces = []
 		ps = dict( (p.name, p) for p in self.pointStructures )
-		for fname, pname in raceList:
-			fname = fname.strip()
+		for fileName, pname in raceList:
+			fileName = fileName.strip()
 			pname = pname.strip()
-			if not fname:
+			if not fileName:
 				continue
 			try:
 				p = ps[pname]
 			except KeyError:
 				continue
-			newRaces.append( Race(fname, p) )
+			newRaces.append( Race(fileName, p) )
 			
 		self.races = newRaces
 	
@@ -155,7 +155,7 @@ class SeriesModel( object ):
 		
 	def removeRace( self, name ):
 		raceCount = len(self.races)
-		self.races = [r for r in self.races if r.fname != name]
+		self.races = [r for r in self.races if r.fileName != name]
 		if raceCount != len(self.races):
 			self.changed = True
 	

@@ -70,10 +70,10 @@ def ShowSplashScreen():
 #----------------------------------------------------------------------------------
 		
 class MyTipProvider( wx.PyTipProvider ):
-	def __init__( self, fname, tipNo = None ):
+	def __init__( self, fileName, tipNo = None ):
 		self.tips = []
 		try:
-			with open(fname, 'r') as f:
+			with open(fileName, 'r') as f:
 				for line in f:
 					line = line.strip()
 					if line and line[0] != '#':
@@ -411,16 +411,16 @@ class MainWin( wx.Frame ):
 			return
 
 		pageTitle = Utils.RemoveDisallowedFilenameChars( pageTitle.replace('/', '_') )
-		xlFName = self.fileName[:-4] + '-' + pageTitle + '.xls'
-		dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(xlFName),
-						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
+		xlfileName = self.fileName[:-4] + '-' + pageTitle + '.xls'
+		dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(xlfileName),
+						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlfileName) )
 		ret = dlg.ShowModal()
 		dName = dlg.GetPath()
 		dlg.Destroy()
 		if ret != wx.ID_OK:
 			return
 
-		xlFName = os.path.join( dName, os.path.basename(xlFName) )
+		xlfileName = os.path.join( dName, os.path.basename(xlfileName) )
 
 		title = self.getTitle()
 		
@@ -431,12 +431,12 @@ class MainWin( wx.Frame ):
 		export.toExcelSheet( sheetCur )
 
 		try:
-			wb.save( xlFName )
-			webbrowser.open( xlFName, new = 2, autoraise = True )
-			Utils.MessageOK(self, 'Excel file written to:\n\n   %s' % xlFName, 'Excel Export')
+			wb.save( xlfileName )
+			webbrowser.open( xlfileName, new = 2, autoraise = True )
+			Utils.MessageOK(self, 'Excel file written to:\n\n   %s' % xlfileName, 'Excel Export')
 		except IOError:
 			Utils.MessageOK(self,
-						'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % xlFName,
+						'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % xlfileName,
 						'Excel File Error', iconMask=wx.ICON_ERROR )
 						
 	def menuExportToHtml( self, event ):
@@ -458,16 +458,16 @@ class MainWin( wx.Frame ):
 			return
 
 		pageTitle = Utils.RemoveDisallowedFilenameChars( pageTitle.replace('/', '_') )
-		htmlFName = self.fileName[:-4] + '-' + pageTitle + '.html'
-		dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(htmlFName),
-						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(htmlFName) )
+		htmlfileName = self.fileName[:-4] + '-' + pageTitle + '.html'
+		dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(htmlfileName),
+						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(htmlfileName) )
 		ret = dlg.ShowModal()
 		dName = dlg.GetPath()
 		dlg.Destroy()
 		if ret != wx.ID_OK:
 			return
 
-		htmlFName = os.path.join( dName, os.path.basename(htmlFName) )
+		htmlfileName = os.path.join( dName, os.path.basename(htmlfileName) )
 
 		title = self.getTitle()
 		
@@ -553,13 +553,13 @@ table.results tr td.fastest{
 		html = html.getvalue()
 		
 		try:
-			with open(htmlFName, 'wb') as fp:
+			with open(htmlfileName, 'wb') as fp:
 				fp.write( html )
-			webbrowser.open( htmlFName, new = 2, autoraise = True )
-			Utils.MessageOK(self, 'Html file written to:\n\n   %s' % htmlFName, 'Html Write')
+			webbrowser.open( htmlfileName, new = 2, autoraise = True )
+			Utils.MessageOK(self, 'Html file written to:\n\n   %s' % htmlfileName, 'Html Write')
 		except IOError:
 			Utils.MessageOK(self,
-						'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % htmlFName,
+						'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % htmlfileName,
 						'Html File Error', iconMask=wx.ICON_ERROR )
 	
 	#--------------------------------------------------------------------------------------------
