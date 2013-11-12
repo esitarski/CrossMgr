@@ -301,6 +301,9 @@ class Results(wx.Panel):
 		self.grid.CreateGrid( 0, len(HeaderNames) )
 		self.grid.SetRowLabelSize( 0 )
 		self.grid.EnableReorderRows( False )
+		self.grid.Bind( wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.doLabelClick )
+		self.sortCol = None
+
 		self.setColNames(HeaderNames)
 
 		sizer = wx.BoxSizer(wx.VERTICAL)
@@ -310,6 +313,20 @@ class Results(wx.Panel):
 		self.SetSizer(sizer)
 	
 	def onCategoryChoice( self, event ):
+		wx.CallAfter( self.refresh )
+	
+	def readReset( self ):
+		self.sortCol = None
+	
+	def doLabelClick( self, event ):
+		col = event.GetCol()
+		label = self.grid.GetColLabelValue( col )
+		if self.sortCol == col:
+			self.sortCol = None
+		else:
+			self.sortCol = col
+		if self.sortCol == 0 or self.sortCol == 4:
+			self.sortCol = None
 		wx.CallAfter( self.refresh )
 	
 	def setColNames( self, headerNames ):
@@ -361,6 +378,7 @@ class Results(wx.Panel):
 		results = [rr for rr in results if rr[3] > 0]
 		
 		headerNames = HeaderNames + [r[1] for r in races]
+		
 		Utils.AdjustGridSize( self.grid, len(results), len(headerNames) )
 		self.setColNames( headerNames )
 		
@@ -372,6 +390,30 @@ class Results(wx.Panel):
 			self.grid.SetCellValue( row, 4, unicode(points) )
 			for q, (rPoints, rRank) in enumerate(racePoints):
 				self.grid.SetCellValue( row, 5 + q, u'{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints else '' )
+				
+			for c in xrange( 0, len(headerNames) ):
+				self.grid.SetCellBackgroundColour( row, c, wx.WHITE )
+				self.grid.SetCellTextColour( row, c, wx.BLACK )
+		
+		if self.sortCol is not None:
+			data = []
+			for r in xrange(0, self.grid.GetNumberRows()):
+				rowOrig = [self.grid.GetCellValue(r, c) for c in xrange(0, self.grid.GetNumberCols())]
+				rowCmp = [v for v in rowOrig]
+				rowCmp[0] = int(rowCmp[0])
+				rowCmp[4] = int(rowCmp[4])
+				rowCmp[5:] = [-int( v.split()[0] ) if v else 0 for v in rowCmp[5:]]
+				rowCmp.extend( rowOrig )
+				data.append( rowCmp )
+				
+			data.sort( key = lambda x: x[self.sortCol] )
+			for r, row in enumerate(data):
+				for c, v in enumerate(row[self.grid.GetNumberCols():]):
+					self.grid.SetCellValue( r, c, v )
+					if c == self.sortCol:
+						self.grid.SetCellBackgroundColour( r, c, wx.BLACK )
+						self.grid.SetCellTextColour( r, c, wx.WHITE )
+						self.grid.SetCellAlignment( r, c, wx.ALIGN_LEFT if c < 5 else wx.ALIGN_CENTRE, wx.ALIGN_TOP )
 		
 		self.grid.AutoSizeColumns( False )
 		self.grid.AutoSizeRows( False )

@@ -29,7 +29,6 @@ import StringIO
 import wx.lib.agw.advancedsplash as AS
 import openpyxl
 
-
 import Utils
 import SeriesModel
 from Races				import Races
@@ -634,6 +633,7 @@ table.results tr td.fastest{
 		self.fileName = fileName
 		self.updateRecentFiles()
 		SeriesModel.model.setChanged( False )
+		self.readResetAll()
 		self.refreshAll()
 		self.showPageName( 'Properties' )
 
@@ -812,6 +812,13 @@ table.results tr td.fastest{
 				self.callPageRefresh( i )
 		self.setTitle()
 
+	def readResetAll( self ):
+		for p in self.pages:
+			try:
+				p.readReset()
+			except AttributeError:
+				pass
+		
 # Set log file location.
 dataDir = ''
 redirectFileName = ''
