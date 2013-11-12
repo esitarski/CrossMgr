@@ -178,33 +178,43 @@ class Categories( wx.Panel ):
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		
-		self.newCategoryButton = wx.Button(self, id=wx.ID_ANY, label='&New Category', style=wx.BU_EXACTFIT)
+		self.selectAllButton = wx.Button(self, label='Select &All', style=wx.BU_EXACTFIT)
+		self.Bind( wx.EVT_BUTTON, self.onSelectAll, self.selectAllButton )
+		hs.Add( self.selectAllButton, 0, border = border, flag = flag )
+
+		self.deselectAllButton = wx.Button(self, label='&Deselect All', style=wx.BU_EXACTFIT)
+		self.Bind( wx.EVT_BUTTON, self.onDeselectAll, self.deselectAllButton )
+		hs.Add( self.deselectAllButton, 0, border = border, flag = (flag & ~wx.LEFT) )
+
+		hs.AddSpacer( 10 )
+		
+		self.newCategoryButton = wx.Button(self, label='&New Category', style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onNewCategory, self.newCategoryButton )
 		hs.Add( self.newCategoryButton, 0, border = border, flag = flag )
 		
-		self.delCategoryButton = wx.Button(self, id=wx.ID_ANY, label='&Delete Category', style=wx.BU_EXACTFIT)
+		self.delCategoryButton = wx.Button(self, label='&Delete Category', style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onDelCategory, self.delCategoryButton )
 		hs.Add( self.delCategoryButton, 0, border = border, flag = flag )
 
 		hs.AddSpacer( 10 )
 		
-		self.upCategoryButton = wx.Button(self, id=wx.ID_ANY, label='Move &Up', style=wx.BU_EXACTFIT)
+		self.upCategoryButton = wx.Button(self, label='Move &Up', style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onUpCategory, self.upCategoryButton )
 		hs.Add( self.upCategoryButton, 0, border = border, flag = flag )
 
-		self.downCategoryButton = wx.Button(self, id=wx.ID_ANY, label='Move D&own', style=wx.BU_EXACTFIT)
+		self.downCategoryButton = wx.Button(self, label='Move D&own', style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onDownCategory, self.downCategoryButton )
 		hs.Add( self.downCategoryButton, 0, border = border, flag = (flag & ~wx.LEFT) )
 
 		hs.AddSpacer( 10 )
 		
-		self.addExceptionsButton = wx.Button(self, id=wx.ID_ANY, label='&Add Bib Exceptions', style=wx.BU_EXACTFIT)
+		self.addExceptionsButton = wx.Button(self, label='&Add Bib Exceptions', style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onAddExceptions, self.addExceptionsButton )
 		hs.Add( self.addExceptionsButton, 0, border = border, flag = (flag & ~wx.LEFT) )
 
 		hs.AddStretchSpacer()
 		
-		self.printButton = wx.Button( self, id=wx.ID_ANY, label='Print...', style=wx.BU_EXACTFIT )
+		self.printButton = wx.Button( self, label='Print...', style=wx.BU_EXACTFIT )
 		self.Bind( wx.EVT_BUTTON, self.onPrint, self.printButton )
 		hs.Add( self.printButton, 0, border = border, flag = (flag & ~wx.LEFT) )
 		
@@ -400,6 +410,20 @@ and remove them from other categories.''').format(category.name),
 		laps = race.getCategoryRaceLaps().get(category, 0)
 		if laps:
 			self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '{}'.format(laps) )
+		
+	def onSelectAll( self, event ):
+		for c in Model.race.getAllCategories():
+			if not c.active:
+				c.active = True
+				Model.race.setChanged()
+		wx.CallAfter( self.refresh )
+		
+	def onDeselectAll( self, event ):
+		for c in Model.race.getAllCategories():
+			if c.active:
+				c.active = False
+				Model.race.setChanged()
+		wx.CallAfter( self.refresh )
 		
 	def onNewCategory( self, event ):
 		self.grid.AppendRows( 1 )

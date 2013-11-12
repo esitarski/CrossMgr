@@ -424,7 +424,13 @@ class Results(wx.Panel):
 					if c == iCol:
 						self.grid.SetCellTextColour( r, c, fg )
 						self.grid.SetCellBackgroundColour( r, c, bg )
-						self.grid.SetCellAlignment( r, c, wx.ALIGN_LEFT if c < 5 else wx.ALIGN_CENTRE, wx.ALIGN_TOP )
+						if c < 4:
+							halign = wx.ALIGN_LEFT
+						elif c == 4:
+							halign = wx.ALIGN_RIGHT
+						else:
+							halign = wx.ALIGN_CENTRE
+						self.grid.SetCellAlignment( r, c, halign, wx.ALIGN_TOP )
 		
 		self.grid.AutoSizeColumns( False )
 		self.grid.AutoSizeRows( False )
