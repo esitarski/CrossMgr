@@ -198,7 +198,7 @@ table.results td.centerAlign, table.results th.centerAlign {
 											html.write( r[0].strftime('%b %d, %Y') )
 									html.write( '<br/>' )
 									with tag(html, 'span', {'class': 'smallFont'}):
-										html.write( u'(Top {})'.format(len(r[3].pointStructure)) )
+										html.write( u'Top {}'.format(len(r[3].pointStructure)) )
 					with tag(html, 'tbody'):
 						for pos, (lastName, firstName, license, points, racePoints) in enumerate(results):
 							with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):

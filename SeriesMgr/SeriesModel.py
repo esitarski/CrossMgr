@@ -42,7 +42,10 @@ class PointStructure( object ):
 		html = StringIO.StringIO()
 		html.write( '<table>\n' )
 		for pos, points in values:
-			html.write( u'<tr><td class="rAlign">{}.</td><td class="rAlign">{}</td></tr>\n'.format( pos, points ) )
+			html.write( '<tr>' )
+			html.write( '<td style="text-align:right;">{}.</td>'.format(pos) )
+			html.write( '<td style="text-align:right;">{}</td>'.format(points) )
+			html.write( '</tr>\n' )
 		html.write( '</table>\n' )
 		return html.getvalue()
 	

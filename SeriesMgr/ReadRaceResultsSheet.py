@@ -326,6 +326,7 @@ class ExcelLink( object ):
 	def __init__( self ):
 		self.fileName = None
 		self.sheetName = None
+		self.date = None
 		self.fieldCol = dict( (f, c) for c, f in enumerate(Fields) )
 	
 	def __cmp__( self, e ):
@@ -349,8 +350,13 @@ class ExcelLink( object ):
 	def read( self ):
 		reader = GetExcelReader( self.fileName )
 		
+		self.raceDate = None
+		
 		info = []
 		for r, row in enumerate(reader.iter_list(self.sheetName)):
+			if len(row) >= 2 and row[0] == 'Date' and row[1]:
+				self.raceDate = row[1]
+				
 			data = {}
 			for field, col in self.fieldCol.iteritems():
 				if col < 0:					# Skip unmapped columns.
