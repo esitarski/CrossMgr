@@ -567,12 +567,12 @@ class ExcelLink( object ):
 						
 					if field == 'LastName' or field.startswith('Tag'):
 						try:
-							data[field] = data[field].upper()
+							data[field] = unicode(data[field] or '').upper()
 						except:
 							pass
 					elif field == 'Gender':
 						# Normalize and encode the gender information.
-						genderFirstChar = u'{}'.format(data[field]).strip().upper()[:1]
+						genderFirstChar = unicode(data[field] or 'O').strip().upper()[:1]
 						if genderFirstChar in 'MH':		# Men, Male, Hommes
 							data[field] = 'M'
 						elif genderFirstChar in 'WLF':	# Women, Ladies, Female, Femmes
@@ -620,7 +620,7 @@ class ExcelLink( object ):
 					errors.append( (num, _('Missing "{field}" in row {row} for Bib# {num}').format( field=tField, row=row, num=num)) )
 					continue
 					
-				tag = data[tField].lstrip('0').upper()
+				tag = unicode(data[tField] or '').lstrip('0').upper()
 				if tag:
 					if tag in tRow:
 						errors.append( (num,

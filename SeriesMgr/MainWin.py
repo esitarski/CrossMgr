@@ -630,6 +630,7 @@ table.results tr td.fastest{
 			Utils.MessageOK(self, 'Cannot Open File "%s".' % fileName, 'Cannot Open File', iconMask=wx.ICON_ERROR )
 			return
 		
+		SeriesModel.model.postReadFix()
 		self.fileName = fileName
 		self.updateRecentFiles()
 		SeriesModel.model.setChanged( False )

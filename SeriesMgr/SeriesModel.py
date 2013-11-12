@@ -81,6 +81,11 @@ class Race( object ):
 				pass
 		
 		return RaceNameFromPath( self.fileName )
+		
+	def postReadFix( self ):
+		if getattr( self, 'fname', None ):
+			self.fileName = getattr(self, 'fname')
+			delattr( self, 'fname' )
 				
 	def getFileName( self ):
 		if os.path.splitext(self.fileName)[1] == '.cmn' or not self.excelLink:
@@ -97,6 +102,10 @@ class SeriesModel( object ):
 		self.numPlacesTieBreaker = 5
 		self.errors = []
 		self.changed = False
+		
+	def postReadFix( self ):
+		for r in self.races:
+			r.postReadFix()
 	
 	def setPoints( self, pointsList ):
 		oldPointsList = [(p.name, p.name, p.getStr()) for p in self.pointStructures]
