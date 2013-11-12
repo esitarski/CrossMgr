@@ -178,13 +178,13 @@ class Categories( wx.Panel ):
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		
-		self.selectAllButton = wx.Button(self, label='Select &All', style=wx.BU_EXACTFIT)
-		self.Bind( wx.EVT_BUTTON, self.onSelectAll, self.selectAllButton )
-		hs.Add( self.selectAllButton, 0, border = border, flag = flag )
+		self.activateAllButton = wx.Button(self, label='&Activate All', style=wx.BU_EXACTFIT)
+		self.Bind( wx.EVT_BUTTON, self.onActivateAll, self.activateAllButton )
+		hs.Add( self.activateAllButton, 0, border = border, flag = flag )
 
-		self.deselectAllButton = wx.Button(self, label='&Deselect All', style=wx.BU_EXACTFIT)
-		self.Bind( wx.EVT_BUTTON, self.onDeselectAll, self.deselectAllButton )
-		hs.Add( self.deselectAllButton, 0, border = border, flag = (flag & ~wx.LEFT) )
+		self.deactivateAllButton = wx.Button(self, label='&Deactivate All', style=wx.BU_EXACTFIT)
+		self.Bind( wx.EVT_BUTTON, self.onDeactivateAll, self.deactivateAllButton )
+		hs.Add( self.deactivateAllButton, 0, border = border, flag = (flag & ~wx.LEFT) )
 
 		hs.AddSpacer( 10 )
 		
@@ -411,14 +411,14 @@ and remove them from other categories.''').format(category.name),
 		if laps:
 			self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '{}'.format(laps) )
 		
-	def onSelectAll( self, event ):
+	def onActivateAll( self, event ):
 		for c in Model.race.getAllCategories():
 			if not c.active:
 				c.active = True
 				Model.race.setChanged()
 		wx.CallAfter( self.refresh )
 		
-	def onDeselectAll( self, event ):
+	def onDeactivateAll( self, event ):
 		for c in Model.race.getAllCategories():
 			if c.active:
 				c.active = False
