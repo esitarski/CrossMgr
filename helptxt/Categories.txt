@@ -10,6 +10,12 @@ This is not only easier to configure in CrossMgr, it makes it easy for riders an
 
 # Controls
 
+## Activate All
+Activate all Categories.  Active Categories will be considered in the race.
+
+## Deactivate All
+Deactivate all Categories.  Deactivated Categories will not be considered in the race.
+
 ## New Category
 Add a new Category to the race.
 
