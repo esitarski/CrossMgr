@@ -21,7 +21,7 @@ class Recommendations( wx.Panel ):
 		self.blackColour = wx.Colour( 0, 0, 0 )
 
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
-		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, 'Category:' )
+		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, _('Category:') )
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
 		
@@ -289,7 +289,7 @@ class Recommendations( wx.Panel ):
 						if maxNonInterpLap < maxCatLaps and categoryMaxLapInterp[category] > maxNonInterpLap:
 							append( category.catStr, category.fullname,
 									_('Laps'),
-									_('Verify that "%s" did %d max Race Laps.  Update Race Laps in Categories if necessary.').format(
+									_('Verify that "{}" did {} max Race Laps.  Update Race Laps in Categories if necessary.').format(
 											category.fullname, maxNonInterpLap)
 									)
 					except KeyError:
