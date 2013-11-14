@@ -1,6 +1,7 @@
 import wx
 import os
 import wx.lib.intctrl
+import wx.lib.buttons
 import bisect
 import sys
 import datetime
@@ -15,8 +16,12 @@ from RaceHUD import RaceHUD
 from EditEntry import DoDNF, DoDNS, DoPull, DoDQ
 from TimeTrialRecord import TimeTrialRecord
 
-def MakeButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1), font = None ):
-	btn = KeyButton( parent, -1, None, label=label.replace('&',''), style=style|wx.NO_BORDER, size=size)
+def MakeKeypadButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1), font = None ):
+	label=label.replace('&','')
+	if wx.Platform == '__WXMAC__':
+		btn = wx.lib.buttons.GenButton( parent, label=label, style=style|wx.NO_BORDER, size=size )
+	else:
+		btn = KeyButton( parent, label=label, style=style|wx.NO_BORDER, size=size )
 	if font:
 		btn.SetFont( font )
 	return btn
@@ -48,23 +53,23 @@ class Keypad( wx.Panel ):
 		self.numEdit.SetFont( font )
 		gbs.Add( self.numEdit, pos=(rowCur,0), span=(1,3), flag=wx.EXPAND|wx.LEFT|wx.TOP, border = outsideBorder )
 		self.num = []
-		self.num.append( MakeButton( self, wx.ID_ANY, label='&0', style=wx.BU_EXACTFIT, font = font) )
+		self.num.append( MakeKeypadButton( self, wx.ID_ANY, label='&0', style=wx.BU_EXACTFIT, font = font) )
 		self.num[-1].Bind( wx.EVT_BUTTON, lambda event, aValue = 0 : self.onNumPress(event, aValue) )
 		gbs.Add( self.num[0], pos=(4+rowCur,0), span=(1,2), flag=wx.EXPAND )
 
 		numButtonStyle = 0
 		
 		for i in xrange(0, 9):
-			self.num.append( MakeButton( self, id=wx.ID_ANY, label='&' + '{}'.format(i+1), style=numButtonStyle, size=(wNum,hNum), font = font) )
+			self.num.append( MakeKeypadButton( self, id=wx.ID_ANY, label='&' + '{}'.format(i+1), style=numButtonStyle, size=(wNum,hNum), font = font) )
 			self.num[-1].Bind( wx.EVT_BUTTON, lambda event, aValue = i+1 : self.onNumPress(event, aValue) )
 			j = 8-i
 			gbs.Add( self.num[-1], pos=(int(j/3)+1 + rowCur, 2-j%3) )
 		
-		self.delBtn = MakeButton( self, id=wx.ID_DELETE, label=_('&Del'), style=numButtonStyle, size=(wNum,hNum), font = font)
+		self.delBtn = MakeKeypadButton( self, id=wx.ID_DELETE, label=_('&Del'), style=numButtonStyle, size=(wNum,hNum), font = font)
 		self.delBtn.Bind( wx.EVT_BUTTON, self.onDelPress )
 		gbs.Add( self.delBtn, pos=(4+rowCur,2) )
 		
-		self.enterBtn= MakeButton( self, id=0, label=_('&Enter'), style=wx.EXPAND|wx.GROW, font = font)
+		self.enterBtn= MakeKeypadButton( self, id=0, label=_('&Enter'), style=wx.EXPAND|wx.GROW, font = font)
 		gbs.Add( self.enterBtn, pos=(5+rowCur,0), span=(1,3), flag=wx.EXPAND )
 		self.enterBtn.Bind( wx.EVT_LEFT_DOWN, self.onEnterPress )
 	
@@ -73,7 +78,7 @@ class Keypad( wx.Panel ):
 		
 		hbs = wx.GridSizer( 2, 2, 4, 4 )
 		for label, actionFn in [(_('DN&F'),DoDNF), (_('DN&S'),DoDNS), (_('&Pull'),DoPull), (_('D&Q'),DoDQ)]:
-			btn = MakeButton( self, id-wx.ID_ANY, label=label, style=wx.EXPAND|wx.GROW, font = font)
+			btn = MakeKeypadButton( self, id-wx.ID_ANY, label=label, style=wx.EXPAND|wx.GROW, font = font)
 			btn.Bind( wx.EVT_BUTTON, lambda event, fn = actionFn: self.doAction(fn) )
 			hbs.Add( btn, flag=wx.EXPAND )
 		
