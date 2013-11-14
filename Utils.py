@@ -41,6 +41,19 @@ def initTranslation():
 		initTranslationCalled = True
 		
 initTranslation()
+
+if wx.Platform == '__WXMAC__':
+	def GetMultiLineTextExtent( dc, text, font = None ):
+		textWidth, textHeight, lineHeight = 0, 0, None
+		for line in text.split('\n'):
+			lineWidth, lineHeight = dc.GetFullTextExtent( line, font )[:2]
+			textWidth = max( textWidth, lineWidth )
+			textHeight += lineHeight
+		if lineHeight is None:
+			lineHeight = dc.GetFullTextExtent( '000Yy', font )[1]
+		return textWidth, textHeight, lineHeight
+	
+	wx.DC.GetMultiLineTextExtent = GetMultiLineTextExtent
 	
 def HighPriority():
 	""" Set the priority of the process to the highest level."""
