@@ -108,7 +108,7 @@ class ExportGrid( object ):
 		return self._getFont( left, isBold )
 	
 	def getHeaderBitmap( self ):
-		''' Get the header bitmap if specified, or use a default. '''
+		''' Get the header bitmap if specified, or use a default.  '''
 		if Utils.getMainWin():
 			graphicFName = Utils.getMainWin().getGraphicFName()
 			extension = os.path.splitext( graphicFName )[1].lower()
