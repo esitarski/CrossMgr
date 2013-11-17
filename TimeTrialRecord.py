@@ -1,6 +1,7 @@
 import wx
 import wx.grid			as gridlib
 from wx.lib import masked
+import wx.lib.buttons
 import math
 import Model
 import Utils
@@ -120,7 +121,11 @@ class TimeTrialRecord( wx.Panel ):
 		self.bigFont = wx.FontFromPixelSize( wx.Size(0,int(fontSize*1.3)), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
 		self.vbs = wx.BoxSizer(wx.VERTICAL)
 		
-		self.recordTimeButton = wx.Button( self, wx.ID_ANY, 'Tap for Time' )
+		tapForTimeLabel = _('Tap for Time')
+		if wx.Platform == '__WXMAC__':
+			self.recordTimeButton = wx.lib.buttons.GenButton( self, label=tapForTimeLabel )
+		else:
+			self.recordTimeButton = wx.Button( self, label=tapForTimeLabel )
 		self.recordTimeButton.Bind( wx.EVT_LEFT_DOWN, self.doRecordTime )
 		self.recordTimeButton.SetFont( self.bigFont )
 		self.recordTimeButton.SetToolTip(wx.ToolTip('Tap to Record Times.  Then enter the Bib numbers and press Save.'))
@@ -147,10 +152,14 @@ class TimeTrialRecord( wx.Panel ):
 				attr.SetEditor( BibEditor() )
 			self.grid.SetColAttr( col, attr )
 		
-		self.commitButton = wx.Button( self, wx.ID_ANY, 'Save' )
+		saveLabel = _('Save')
+		if wx.Platform == '__WXMAC__':
+			self.commitButton = wx.lib.buttons.GenButton( self, label=saveLabel )
+		else:
+			self.commitButton = wx.Button( self, label=saveLabel )
 		self.commitButton.Bind( wx.EVT_BUTTON, self.doCommit )
 		self.commitButton.SetFont( self.bigFont )
-		self.commitButton.SetToolTip(wx.ToolTip('Press to Save Entries'))
+		self.commitButton.SetToolTip(wx.ToolTip(_('Press to Save Entries')))
 		
 		self.vbs.Add( hbs, 0, flag=wx.ALL|wx.EXPAND, border = 4 )
 		self.vbs.Add( self.grid, 1, flag=wx.ALL|wx.EXPAND, border = 4 )

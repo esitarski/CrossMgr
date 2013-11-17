@@ -33,6 +33,7 @@ from setpriority import setpriority
 
 import Utils
 
+from LogPrintStackStderr import LogPrintStackStderr
 from ForecastHistory	import ForecastHistory
 from NumKeypad			import NumKeypad
 from Actions			import Actions
@@ -2546,9 +2547,10 @@ def MainLoop():
 	global redirectFileName
 	
 	app = wx.App(False)
-	if wx.Platform == '__WXMAC__':
-		wx.Log.SetLogLevel( 0 )
 	app.SetAppName("CrossMgr")
+	
+	if 'WXMAC' in wx.Platform:
+		wx.Log.SetLogTarget( LogPrintStackStderr() )
 	
 	random.seed()
 	setpriority( priority=4 )	# Set to real-time priority.
