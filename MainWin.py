@@ -2550,7 +2550,7 @@ def MainLoop():
 	app.SetAppName("CrossMgr")
 	
 	if 'WXMAC' in wx.Platform:
-		wx.Log.SetLogTarget( LogPrintStackStderr() )
+		wx.Log.SetActiveTarget( LogPrintStackStderr() )
 	
 	random.seed()
 	setpriority( priority=4 )	# Set to real-time priority.
