@@ -155,7 +155,58 @@ table.results td.centerAlign, table.results th.centerAlign {
 	text-align:center;
 }
 
-@media print { .noprint { display: none; } }''' )
+@media print { .noprint { display: none; } }
+
+<script type="text/javascript">
+
+function parsePoints( s ) {
+	var i = s.indexOf( ' ' );
+	if( i < 0 )
+		return 0;
+	else
+		return parseInt( s.substring(0, i) );
+}
+
+function sortTable(table, col, reverse) {
+	var tb = table.tBodies[0];							// use `<tbody>` to ignore `<thead>` and `<tfoot>` rows
+	var tr = Array.prototype.slice.call(tb.rows, 0);	// put rows into array
+	var cmpFunc;
+	if( col == 0 ) {		// Pos
+		cmpFunc = function( a, b ) {
+			var x = parseInt( a.cells[col].textContent.trim() );
+			var y = parseInt( b.cells[col].textContent.trim() );
+			return x - y;
+		}
+	}
+	else if( col == 4 ) {	// Points
+		cmpFunc = function( a, b ) {
+			var x = parseInt( a.cells[col].textContent.trim() );
+			var y = parseInt( b.cells[col].textContent.trim() );
+			return y - x;
+		}
+	}
+	else if( col > 4 ) {	// Race Points
+		cmpFunc = function( a, b ) {
+			var x = parsePoints( a.cells[col].textContent.trim() );
+			var y = parsePoints( b.cells[col].textContent.trim() );
+			return y - x;
+		}
+	}
+	else {					// Assume string field.
+		cmpFunc = function( a, b ) {
+		   a.cells[col].textContent.trim().localeCompare(b.cells[col].textContent.trim());
+		}
+	}
+	reverse = -((+reverse) || -1);
+	tr = tr.sort(function (a, b) { return reverse * cmpFunc(a, b); });
+	
+	for( var i = 0; i < tr.length; ++i)
+		tb.appendChild(tr[i]); // append each row in order
+}
+
+</script>
+
+''' )
 
 		with tag(html, 'body'):
 			with tag(html, 'table'):

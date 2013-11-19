@@ -2541,7 +2541,7 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 # Set log file location.
 dataDir = ''
 redirectFileName = ''
-			
+
 def MainLoop():
 	global dataDir
 	global redirectFileName

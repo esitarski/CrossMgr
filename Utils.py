@@ -42,7 +42,10 @@ def initTranslation():
 		
 initTranslation()
 
+import wx.lib.agw.genericmessagedialog
 if wx.Platform == '__WXMAC__':
+	# wx.DC.GetMultiLineTextExtent does not work on the Mac.
+	# Replace it with our own funcion.
 	def GetMultiLineTextExtent( dc, text, font = None ):
 		textWidth, textHeight, lineHeight = 0, 0, None
 		for line in text.split('\n'):
@@ -54,6 +57,10 @@ if wx.Platform == '__WXMAC__':
 		return textWidth, textHeight, lineHeight
 	
 	wx.DC.GetMultiLineTextExtent = GetMultiLineTextExtent
+
+	# Error, Information and Question dialogs have no icons on the Mac.
+	# Replace all message dialogs with generics dialogs.
+	wx.MessageDialog = wx.lib.agw.genericmessagedialog.GenericMessageDialog
 	
 def HighPriority():
 	""" Set the priority of the process to the highest level."""
