@@ -47,7 +47,8 @@ class Keypad( wx.Panel ):
 		gbs = wx.GridBagSizer(4, 4)
 		rowCur = 0
 		
-		self.numEdit = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value='' )
+		self.numEdit = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value='',
+							size=(-1, fontPixels*1.2) if 'WXMAC' in wx.Platform else (-1,-1) )
 		self.Bind( wx.EVT_TEXT_ENTER, self.onEnterPress, self.numEdit )
 		self.numEdit.Bind( wx.EVT_CHAR, self.handleNumKeypress )
 		self.numEdit.SetFont( font )
