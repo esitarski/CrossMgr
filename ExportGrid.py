@@ -44,8 +44,9 @@ def ImageToPil( image ):
 class ExportGrid( object ):
 	PDFLineFactor = 1.10
 
-	def __init__( self, title = '', colnames = [], data = [] ):
+	def __init__( self, title = '', colnames = [], data = [], footer = '' ):
 		self.title = title
+		self.footer = footer
 		self.colnames = colnames
 		self.data = data
 		self.leftJustifyCols = set()
@@ -263,7 +264,9 @@ class ExportGrid( object ):
 			
 		# Put CrossMgr branding at the bottom of the page.
 		w, h, lh = dc.GetMultiLineTextExtent( brandText, font )
-		self._drawMultiLineText( dc, brandText, borderPix, heightPix - borderPix + h )
+		yFooter = heightPix - borderPix + int(h*1.8)
+		
+		self._drawMultiLineText( dc, brandText, borderPix, yFooter )
 		
 		# Put the page number info at the bottom of the page.
 		if pageNumber is not None:
@@ -272,7 +275,7 @@ class ExportGrid( object ):
 			else:
 				s = _('Page {}').format(pageNumber)
 			w, h, lh = dc.GetMultiLineTextExtent( s, font )
-			self._drawMultiLineText( dc, s, widthPix - w - borderPix, heightPix - borderPix + h )
+			self._drawMultiLineText( dc, s, widthPix - w - borderPix, yFooter )
 	
 	'''
 	def _setFontPDF( self, canvas, pointSize = 24, bold = False ):
@@ -467,7 +470,15 @@ class ExportGrid( object ):
 			
 			if isSpeed:
 				self.colnames[col] = _('Speed')
-				
+		
+		if self.footer:
+			style = xlwt.XFStyle()
+			style.alignment.horz = xlwt.Alignment.HORZ_LEFT
+			rowMax += 2
+			for line in self.footer.split('\n'):
+				sheet.write( rowMax, 0, line.strip(), style )
+				rowMax += 1
+		
 		# Add branding at the bottom of the sheet.
 		style = xlwt.XFStyle()
 		style.alignment.horz = xlwt.Alignment.HORZ_LEFT
@@ -492,6 +503,7 @@ class ExportGrid( object ):
 		''' Format the results into columns. '''
 		self.data = []
 		self.colnames = []
+		self.footer = None
 
 		results = GetResults( category, getExternalData )
 		if not results:
@@ -501,7 +513,18 @@ class ExportGrid( object ):
 			cd = catDetails[category.fullname]
 		except:
 			cd = None
-		
+			
+		if category:
+			starters, lapped, dnf = [0, 0, 0]
+			for r in results:
+				if r.status != Model.Rider.DNS:
+					starters += 1
+				if r.status == Model.Rider.DNF:
+					dnf += 1
+				if r.gap.startswith('-'):
+					lapped += 1
+			self.footer = _(u'# Starters: {},  # DNF: {},  # Lapped: {}').format(starters, dnf, lapped)
+			
 		leader = results[0]
 		hasSpeeds = bool( getattr(leader, 'lapSpeeds', None) or getattr(leader, 'raceSpeeds', None) )
 		

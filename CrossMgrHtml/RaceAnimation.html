@@ -277,7 +277,10 @@ var translations = {
 	'FirstName':	['First Name',		'Prénom',				'Nombre'],
 	'Team':			['Team',			'Équipe',				'Equipo'],
 	'Category':		['Category',		'Catégorie',			'Categoria'],
-	'Category:':	['Category:',		'Catégorie:',			'Categoria:'],
+	'Nat.':			['Nat.',			'Nat.',					'Nac.'],
+	'State':		['State',			'État',					'Estado'],
+	'Prov.':		['Prov.',			'Prov.',				'Prov.'],
+	'City':			['City',			'Ville',				'Ciudad'],
 	'License':		['License',			'Licence',				'Licencia'],
 	'Age':			['Age',				'Âge',					'Edad'],
 	'Time':			['Time',			'Temps',				'Tiempo'],
@@ -2511,7 +2514,7 @@ function SetCategoryResults()
 				else if( riderTime > leaderTime )
 				{
 					var lapsDown = leaderLaps - riderLaps;
-					gap = lapsDown + ' ' + (lapsDown == 1 ? _('lap') : _('laps'));
+					gap = '-' + lapsDown + ' ' + (lapsDown == 1 ? _('lap') : _('laps'));
 				}
 			}
 				

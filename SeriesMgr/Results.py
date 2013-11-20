@@ -167,7 +167,7 @@ function parsePoints( s ) {
 		return parseInt( s.substring(0, i) );
 }
 
-function sortTable(table, col, reverse) {
+function sortTable( table, col, reverse ) {
 	var tb = table.tBodies[0];							// use `<tbody>` to ignore `<thead>` and `<tfoot>` rows
 	var tr = Array.prototype.slice.call(tb.rows, 0);	// put rows into array
 	var cmpFunc;
@@ -198,14 +198,13 @@ function sortTable(table, col, reverse) {
 		}
 	}
 	reverse = -((+reverse) || -1);
-	tr = tr.sort(function (a, b) { return reverse * cmpFunc(a, b); });
+	tr = tr.sort( function (a, b) { return reverse * cmpFunc(a, b); } );
 	
 	for( var i = 0; i < tr.length; ++i)
-		tb.appendChild(tr[i]); // append each row in order
+		tb.appendChild(tr[i]);
 }
 
 </script>
-
 ''' )
 
 		with tag(html, 'body'):

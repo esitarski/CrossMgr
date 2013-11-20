@@ -267,7 +267,7 @@ def GetResultsCore( category ):
 			if rr.laps != leader.laps:
 				if rr.lastTime > leader.lastTime:
 					lapsDown = leader.laps - rr.laps
-					rr.gap = '%d %s' % (lapsDown, 'laps' if lapsDown > 1 else 'lap')
+					rr.gap = '-%d %s' % (lapsDown, 'laps' if lapsDown > 1 else 'lap')
 			elif rr != leader and not (isTimeTrial and rr.lastTime == leader.lastTime):
 				rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
 				

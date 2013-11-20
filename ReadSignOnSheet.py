@@ -12,7 +12,13 @@ import Model
 from Excel import GetExcelReader
 
 #-----------------------------------------------------------------------------------------------------
-Fields = [_('Bib#'), _('LastName'), _('FirstName'), _('Team'), _('Category'), _('Age'), _('Gender'), _('License'), _('Tag'), _('Tag2')]
+Fields = [	_('Bib#'),
+			_('LastName'), _('FirstName'),
+			_('Team'),
+			_('Nat.'), _('Prov.'), _('City'),
+			_('Category'), _('Age'), _('Gender'),
+			_('License'),
+			_('Tag'), _('Tag2')]
 IgnoreFields = [_('Bib#'), _('Tag'), _('Tag2'), _('Gender')]		# Fields to ignore when adding data to standard reports.
 ReportFields = [f for f in Fields if f not in IgnoreFields]
 
