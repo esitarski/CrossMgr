@@ -15,7 +15,7 @@ from Excel import GetExcelReader
 Fields = [	_('Bib#'),
 			_('LastName'), _('FirstName'),
 			_('Team'),
-			_('Nat.'), _('Prov.'), _('City'),
+			_('Nat.'), _('State'), _('Prov.'), _('City'),
 			_('Category'), _('Age'), _('Gender'),
 			_('License'),
 			_('Tag'), _('Tag2')]
@@ -349,7 +349,7 @@ class GetExcelLink( object ):
 				self.headerNamesPage.setExpectedFieldCol( excelLink.fieldCol )
 
 		self.wizard.GetPageAreaSizer().Add( self.fileNamePage )
-		self.wizard.SetPageSize( wx.Size(600,300) )
+		self.wizard.SetPageSize( wx.Size(800,400) )
 		self.wizard.FitToPage( self.fileNamePage )
 	
 	def show( self ):

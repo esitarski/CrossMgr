@@ -131,6 +131,12 @@ table.results tr.odd:hover
 	background-color:#FFFFCC;
 }
 
+table.results td.colSelect
+{
+	color:#000000;
+	background-color:#FFFFCC;
+}}
+
 table.results td {
 	border-top:1px solid #98bf21;
 }
@@ -156,9 +162,10 @@ table.results td.centerAlign, table.results th.centerAlign {
 }
 
 @media print { .noprint { display: none; } }
+''')
 
-<script type="text/javascript">
-
+			with tag(html, 'script', dict( type="text/javascript")):
+				html.write( '''
 function parsePoints( s ) {
 	var i = s.indexOf( ' ' );
 	if( i < 0 )
@@ -167,44 +174,107 @@ function parsePoints( s ) {
 		return parseInt( s.substring(0, i) );
 }
 
+function removeClass( classStr, oldClass ) {
+	var classes = classStr.split( ' ' );
+	var ret = [];
+	for( var i = 0; i < classes.length; ++i ) {
+		if( classes[i] != oldClass )
+			ret.push( classes[i] );
+	}
+	return ret.join(' ');
+}
+
+function addClass( classStr, newClass ) {
+	return removeClass( classStr, newClass ) + ' ' + newClass;
+}
+
 function sortTable( table, col, reverse ) {
-	var tb = table.tBodies[0];							// use `<tbody>` to ignore `<thead>` and `<tfoot>` rows
-	var tr = Array.prototype.slice.call(tb.rows, 0);	// put rows into array
+	var tb = table.tBodies[0];
+	var tr = Array.prototype.slice.call(tb.rows, 0);
+	
+	var cmpPos = function( a, b ) {
+		var x = parseInt( a.cells[0].textContent.trim() );
+		var y = parseInt( b.cells[0].textContent.trim() );
+		return x - y;
+	};
+	var MakeCmpStable = function( a, b, res ) {
+		if( res != 0 )
+			return res;
+		return cmpPos( a, b );
+	};
+	
 	var cmpFunc;
 	if( col == 0 ) {		// Pos
-		cmpFunc = function( a, b ) {
-			var x = parseInt( a.cells[col].textContent.trim() );
-			var y = parseInt( b.cells[col].textContent.trim() );
-			return x - y;
-		}
+		cmpFunc = cmpPos;
 	}
 	else if( col == 4 ) {	// Points
 		cmpFunc = function( a, b ) {
 			var x = parseInt( a.cells[col].textContent.trim() );
 			var y = parseInt( b.cells[col].textContent.trim() );
-			return y - x;
-		}
+			return MakeCmpStable( a, b, y - x );
+		};
 	}
 	else if( col > 4 ) {	// Race Points
 		cmpFunc = function( a, b ) {
 			var x = parsePoints( a.cells[col].textContent.trim() );
 			var y = parsePoints( b.cells[col].textContent.trim() );
-			return y - x;
-		}
+			return MakeCmpStable( a, b, y - x );
+		};
 	}
 	else {					// Assume string field.
 		cmpFunc = function( a, b ) {
-		   a.cells[col].textContent.trim().localeCompare(b.cells[col].textContent.trim());
-		}
+		   return MakeCmpStable( a, b, a.cells[col].textContent.trim().localeCompare(b.cells[col].textContent.trim()) );
+		};
 	}
-	reverse = -((+reverse) || -1);
 	tr = tr.sort( function (a, b) { return reverse * cmpFunc(a, b); } );
 	
-	for( var i = 0; i < tr.length; ++i)
-		tb.appendChild(tr[i]);
+	for( var i = 0; i < tr.length; ++i) {
+		tr[i].className = (i % 2 == 1) ? addClass(tr[i].className,'odd') : removeClass(tr[i].className,'odd');
+		tb.appendChild( tr[i] );
+	}
 }
 
-</script>
+var ssPersist = {};
+function sortTableId( iTable, iCol ) {
+	var upChar = ' &#x25b2; ', dnChar = ' &#x25bc; ';
+	var isNone = 0, isDn = 1, isUp = 2;
+	var id = 'idUpDn' + iTable + '_' + iCol;
+	var upDn = document.getElementById(id);
+	var sortState = ssPersist[id] ? ssPersist[id] : isNone;
+	var table = document.getElementById('idTable' + iTable);
+	
+	console.log( id + ' ' + sortState + ' ' + upDn.innerHTML );
+	
+	// Clear all sort states.
+	var row0Len = table.tBodies[0].rows[0].cells.length
+	for( var i = 0; i < row0Len; ++i ) {
+		var idCur = 'idUpDn' + iTable + '_' + i;
+		document.getElementById(idCur).innerHTML = '';
+		ssPersist[idCur] = isNone;
+	}
+
+	if( iCol == 0 ) {
+		sortTable( table, 0, 1 );
+		return;
+	}
+	
+	++sortState;
+	switch( sortState ) {
+	case isDn:
+		upDn.innerHTML = dnChar;
+		sortTable( table, iCol, 1 );
+		break;
+	case isUp:
+		upDn.innerHTML = upChar;
+		sortTable( table, iCol, -1 );
+		break;
+	default:
+		sortState = isNone;
+		sortTable( table, 0, 1 );
+		break;
+	}
+	ssPersist[id] = sortState;
+}
 ''' )
 
 		with tag(html, 'body'):
@@ -216,7 +286,7 @@ function sortTable( table, col, reverse ) {
 					with tag(html, 'td'):
 						with tag(html, 'h1'):
 							html.write( '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + cgi.escape(title) )
-			for categoryName in categoryNames:
+			for iTable, categoryName in enumerate(categoryNames):
 				results, races = GetModelInfo.GetCategoryResults( categoryName, raceResults, pointsForRank, model.numPlacesTieBreaker )
 				results = [rr for rr in results if rr[3] > 0]
 				
@@ -229,14 +299,23 @@ function sortTable( table, col, reverse ) {
 				
 				with tag(html, 'h2'):
 					html.write( cgi.escape(categoryName) )
-				with tag(html, 'table', {'class': 'results'} ):
+				with tag(html, 'table', {'class': 'results', 'id': 'idTable{}'.format(iTable)} ):
 					with tag(html, 'thead'):
 						with tag(html, 'tr'):
-							for col in HeaderNames:
-								with tag(html, 'th' ):
+							for iHeader, col in enumerate(HeaderNames):
+								with tag(html, 'th', {
+										'onclick': 'sortTableId({}, {})'.format(iTable, iHeader),
+										} ):
+									with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,iHeader)) ):
+										pass
 									html.write( cgi.escape(col).replace('\n', '<br/>\n') )
-							for r in races:
-								with tag(html, 'th', {'class':'leftBorder centerAlign'} ):
+							for iRace, r in enumerate(races):
+								with tag(html, 'th', {
+										'class':'leftBorder centerAlign',
+										'onclick': 'sortTableId({}, {})'.format(iTable, len(HeaderNames) + iRace),
+									} ):
+									with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,len(HeaderNames) + iRace)) ):
+										pass
 									if r[2]:
 										with tag(html,'a',dict(href=u'{}?raceCat={}'.format(r[2], urllib.quote(categoryName.encode('utf8')))) ):
 											html.write( cgi.escape(r[1]).replace('\n', '<br/>\n') )
