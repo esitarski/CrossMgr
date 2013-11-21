@@ -246,7 +246,7 @@ function sortTableId( iTable, iCol ) {
 	console.log( id + ' ' + sortState + ' ' + upDn.innerHTML );
 	
 	// Clear all sort states.
-	var row0Len = table.tBodies[0].rows[0].cells.length
+	var row0Len = table.tBodies[0].rows[0].cells.length;
 	for( var i = 0; i < row0Len; ++i ) {
 		var idCur = 'idUpDn' + iTable + '_' + i;
 		document.getElementById(idCur).innerHTML = '';
