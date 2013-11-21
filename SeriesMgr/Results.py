@@ -243,8 +243,6 @@ function sortTableId( iTable, iCol ) {
 	var sortState = ssPersist[id] ? ssPersist[id] : isNone;
 	var table = document.getElementById('idTable' + iTable);
 	
-	console.log( id + ' ' + sortState + ' ' + upDn.innerHTML );
-	
 	// Clear all sort states.
 	var row0Len = table.tBodies[0].rows[0].cells.length;
 	for( var i = 0; i < row0Len; ++i ) {
