@@ -123,7 +123,7 @@ class TimeTrialRecord( wx.Panel ):
 		
 		tapForTimeLabel = _('Tap for Time')
 		if 'WXMAC' in wx.Platform:
-			self.recordTimeButton = wx.lib.buttons.GenButton( self, label=tapForTimeLabel )
+			self.recordTimeButton = wx.lib.buttons.ThemedGenButton( self, label=tapForTimeLabel )
 		else:
 			self.recordTimeButton = wx.Button( self, label=tapForTimeLabel )
 		self.recordTimeButton.Bind( wx.EVT_LEFT_DOWN, self.doRecordTime )
@@ -154,7 +154,7 @@ class TimeTrialRecord( wx.Panel ):
 		
 		saveLabel = _('Save')
 		if 'WXMAC' in wx.Platform:
-			self.commitButton = wx.lib.buttons.GenButton( self, label=saveLabel )
+			self.commitButton = wx.lib.buttons.ThemedGenButton( self, label=saveLabel )
 		else:
 			self.commitButton = wx.Button( self, label=saveLabel )
 		self.commitButton.Bind( wx.EVT_BUTTON, self.doCommit )

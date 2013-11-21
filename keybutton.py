@@ -345,11 +345,11 @@ class KeyButton(wx.PyControl):
 		Given the current font and bezel width settings, calculate
 		and set a good size.
 
-		:param `size`: an instance of `wx.Size`.		
+		:param `size`: an instance of `wx.Size`.
 		"""
 		
 		if size is None:
-			size = wx.DefaultSize			
+			size = wx.DefaultSize
 		wx.PyControl.SetInitialSize(self, size)
 
 	SetBestSize = SetInitialSize

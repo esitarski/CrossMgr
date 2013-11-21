@@ -27,7 +27,6 @@ except:
 import cPickle as pickle
 from optparse import OptionParser
 import xlwt
-import wx.lib.agw.advancedsplash as AS
 import openpyxl
 from setpriority import setpriority
 
@@ -102,19 +101,8 @@ def ShowSplashScreen():
 	dc.DrawText( Version.AppVerName.replace('CrossMgr','Version'), w // 20, int(h * 0.44) )
 	dc.SelectObject( wx.NullBitmap )
 	
-	# Show the splash screen.
-	estyle = AS.AS_TIMEOUT | AS.AS_CENTER_ON_PARENT | AS.AS_SHADOW_BITMAP
-	shadow = wx.Colour( 64, 64, 64 )
 	showSeconds = 2.5
-	try:
-		frame = AS.AdvancedSplash(Utils.getMainWin(), bitmap=bitmap, timeout=int(showSeconds*1000),
-								  extrastyle=estyle, shadowcolour=shadow)
-	except:
-		try:
-			frame = AS.AdvancedSplash(Utils.getMainWin(), bitmap=bitmap, timeout=int(showSeconds*1000),
-									  shadowcolour=shadow)
-		except:
-			pass
+	frame = wx.SplashScreen(bitmap, wx.SPLASH_CENTRE_ON_SCREEN|wx.SPLASH_TIMEOUT, int(showSeconds*1000), None)
 			
 #----------------------------------------------------------------------------------
 		
@@ -1762,7 +1750,7 @@ class MainWin( wx.Frame ):
 		categoriesFile = dlg.GetCategoriesFile()
 		properties = dlg.properties
 
-		# Check if user canceled.
+		# Check if user cancelled.
 		if ret != wx.ID_OK:
 			return
 

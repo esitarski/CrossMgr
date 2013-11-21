@@ -8,6 +8,7 @@ import urllib
 import sys
 import base64
 import StringIO
+import datetime
 
 import Utils
 import SeriesModel
@@ -70,7 +71,10 @@ def getHtml():
 		with tag(html, 'head'):
 			with tag(html, 'title'):
 				html.write( title.replace('\n', ' ') )
-			with tag(html, 'meta', dict(charset="UTF-8", author="Edward Sitarski", copyright="Edward Sitarski, 2013", generator="SeriesMgr")):
+			with tag(html, 'meta', dict(charset="UTF-8",
+										author="Edward Sitarski",
+										copyright="Edward Sitarski, 2013-{}".format(datetime.datetime.now().strftime('%Y')),
+										generator="SeriesMgr")):
 				pass
 			with tag(html, 'style', dict( type="text/css")):
 				html.write( '''
