@@ -300,6 +300,11 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_MENU, self.menuExportHtmlFtp, id=idCur )
 
 		self.fileMenu.AppendSeparator()
+		idCur = wx.NewId()
+		self.fileMenu.Append( idCur, _('Close Race'), _('Close this race without exiting CrossMgr') )
+		self.Bind(wx.EVT_MENU, self.menuCloseRace, id=idCur )
+		
+		self.fileMenu.AppendSeparator()
 		
 		recent = wx.Menu()
 		self.fileMenu.AppendMenu(wx.ID_ANY, _("Recent Fil&es"), recent)
@@ -1593,8 +1598,7 @@ class MainWin( wx.Frame ):
 							_('Html Write Error'), iconMask=wx.ICON_ERROR )
 	
 	#--------------------------------------------------------------------------------------------
-	@logCall
-	def onCloseWindow( self, event ):
+	def doCleanup( self ):
 		self.showPageName( _('Results') )
 		with Model.LockRace() as race:
 			if race is not None:
@@ -1616,7 +1620,10 @@ class MainWin( wx.Frame ):
 		OutputStreamer.StopStreamer()
 		VideoBuffer.Shutdown()
 		JChip.Cleanuplistener()
-		
+	
+	@logCall
+	def onCloseWindow( self, event ):
+		self.doCleanup()
 		wx.Exit()
 
 	def writeRace( self ):
@@ -1918,6 +1925,23 @@ class MainWin( wx.Frame ):
 		except (AttributeError, IndexError, StopIteration):
 			Utils.MessageOK(self, _('No next race.'), _('No next race'), iconMask=wx.ICON_ERROR )
 
+	@logCall
+	def menuCloseRace(self, event ):
+		race = Model.race
+
+		if race is None or not self.fileName:
+			return
+
+		if race is not None and race.isRunning():
+			if not Utils.MessageOKCancel(self,	_('The current race is still running.\nFinish it and continue?'),
+												_('Current race running') ):
+				return
+			race.finishRaceNow()
+			
+		self.doCleanup()
+		Model.setRace( None )
+		self.refresh()
+	
 	@logCall
 	def menuExit(self, event):
 		self.onCloseWindow( event )
@@ -2483,7 +2507,10 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 		with Model.LockRace() as race:
 			if race is None:
 				self.SetTitle( Version.AppVerName )
-				self.timer.Stop()
+				try:
+					self.timer.Stop()
+				except AttributeError:
+					pass
 				JChip.StopListener()
 				return
 
@@ -2504,7 +2531,10 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 								status,
 								Version.AppVerName,
 								_('<TimeTrial>') if getattr(race, 'isTimeTrial', False) else '') )
-				self.timer.Stop()
+				try:
+					self.timer.Stop()
+				except AttributeError:
+					pass
 				return
 
 			self.SetTitle( '%s %s-r%d - %s - %s %s %s' % (
