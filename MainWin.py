@@ -300,11 +300,6 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_MENU, self.menuExportHtmlFtp, id=idCur )
 
 		self.fileMenu.AppendSeparator()
-		idCur = wx.NewId()
-		self.fileMenu.Append( idCur, _('Close Race'), _('Close this race without exiting CrossMgr') )
-		self.Bind(wx.EVT_MENU, self.menuCloseRace, id=idCur )
-		
-		self.fileMenu.AppendSeparator()
 		
 		recent = wx.Menu()
 		self.fileMenu.AppendMenu(wx.ID_ANY, _("Recent Fil&es"), recent)
@@ -312,7 +307,11 @@ class MainWin( wx.Frame ):
 		self.filehistory.AddFilesToMenu()
 		
 		self.fileMenu.AppendSeparator()
-
+		idCur = wx.NewId()
+		self.fileMenu.Append( idCur, _('Close Race'), _('Close this race without exiting CrossMgr') )
+		self.Bind(wx.EVT_MENU, self.menuCloseRace, id=idCur )
+		
+		self.fileMenu.AppendSeparator()
 		self.fileMenu.Append( wx.ID_EXIT, _("E&xit"), _("Exit CrossMan") )
 		self.Bind(wx.EVT_MENU, self.menuExit, id=wx.ID_EXIT )
 		
@@ -1607,13 +1606,12 @@ class MainWin( wx.Frame ):
 
 		try:
 			self.timer.Stop()
-			del self.timer
 		except AttributeError:
 			pass
 
 		try:
 			self.simulateTimer.Stop()
-			del self.simulateTimer
+			self.simulateTimer = None
 		except AttributeError:
 			pass
 		

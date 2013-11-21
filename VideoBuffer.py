@@ -186,7 +186,6 @@ def TakePhoto( raceFileName, bib, raceSeconds ):
 	videoBuffer.takePhoto( bib, raceSeconds )
 	return videoBuffer.frameCount - getattr(race,'photoCount',0) + 3
 	
-@logCall
 def Shutdown():
 	global videoBuffer
 	if videoBuffer:
