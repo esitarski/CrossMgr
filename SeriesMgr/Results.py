@@ -236,7 +236,7 @@ function sortTable( table, col, reverse ) {
 
 var ssPersist = {};
 function sortTableId( iTable, iCol ) {
-	var upChar = ' &#x25b2; ', dnChar = ' &#x25bc; ';
+	var upChar = '&nbsp;&nbsp;&#x25b2;', dnChar = '&nbsp;&nbsp;&#x25bc;';
 	var isNone = 0, isDn = 1, isUp = 2;
 	var id = 'idUpDn' + iTable + '_' + iCol;
 	var upDn = document.getElementById(id);
