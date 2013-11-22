@@ -45,7 +45,7 @@ initTranslation()
 import wx.lib.agw.genericmessagedialog
 if wx.Platform == '__WXMAC__':
 	# wx.DC.GetMultiLineTextExtent does not work on the Mac.
-	# Replace it with our own funcion.
+	# Replace it with our own function.
 	def GetMultiLineTextExtent( dc, text, font = None ):
 		textWidth, textHeight, lineHeight = 0, 0, None
 		for line in text.split('\n'):
