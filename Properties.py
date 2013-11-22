@@ -16,102 +16,101 @@ class Properties( wx.Panel ):
 
 		rows = 0
 		
-		self.raceNameLabel = wx.StaticText( self, wx.ID_ANY, _('Race Name:') )
-		self.raceName = wx.TextCtrl( self, wx.ID_ANY, value='' )
+		self.raceNameLabel = wx.StaticText( self, label = _('Race Name:') )
+		self.raceName = wx.TextCtrl( self, value='' )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceName )
 		rows += 1
 		
-		self.dateLabel = wx.StaticText( self, wx.ID_ANY, _('Date:') )
-		self.date = wx.DatePickerCtrl( self, wx.ID_ANY, style = wx.DP_DROPDOWN )
+		self.dateLabel = wx.StaticText( self, label = _('Date:') )
+		self.date = wx.DatePickerCtrl( self, style = wx.DP_DROPDOWN )
 		self.Bind(wx.EVT_DATE_CHANGED, self.onChanged, self.date)
 		rows += 1
 		
-		self.raceNumLabel = wx.StaticText( self, wx.ID_ANY, _('Race #:') )
-		self.raceNum = intctrl.IntCtrl( self, wx.ID_ANY, min=1, max=1000, allow_none=False, value=1 )
+		self.raceNumLabel = wx.StaticText( self, label =  _('Race #:') )
+		self.raceNum = intctrl.IntCtrl( self, min=1, max=1000, allow_none=False, value=1 )
 		self.Bind(intctrl.EVT_INT, self.onChanged, self.raceNum)
 		rows += 1
 		
-		self.scheduledStartLabel = wx.StaticText( self, wx.ID_ANY, _('Scheduled Start:') )
-		self.scheduledStart = masked.TimeCtrl( self, wx.ID_ANY, fmt24hr=True, display_seconds=False, value='10:00:00' )
+		self.scheduledStartLabel = wx.StaticText( self, label =  _('Scheduled Start:') )
+		self.scheduledStart = masked.TimeCtrl( self, fmt24hr=True, display_seconds=False, value='10:00:00' )
 		rows += 1
 
-		self.minutesLabel = wx.StaticText( self, wx.ID_ANY, _('Race Minutes:') )
-		self.minutes = intctrl.IntCtrl( self, wx.ID_ANY, min=1, max=60*12, allow_none=False, value=40 )
+		self.minutesLabel = wx.StaticText( self, label =  _('Race Minutes:') )
+		self.minutes = intctrl.IntCtrl( self, min=1, max=60*12, allow_none=False, value=40 )
 		rows += 1
 
-		self.raceDisciplineLabel = wx.StaticText( self, wx.ID_ANY, _('Discipline:') )
-		self.raceDiscipline = wx.TextCtrl( self, wx.ID_ANY, value='' )
-		self.raceDiscipline.SetValue( 'Cyclo-cross' )
+		self.raceDisciplineLabel = wx.StaticText( self, label =  _('Discipline:') )
+		self.raceDiscipline = wx.TextCtrl( self, value='Cyclo-cross' )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceDiscipline )
 		rows += 1
 		
-		self.organizerLabel = wx.StaticText( self, wx.ID_ANY, _('Organizer:') )
+		self.organizerLabel = wx.StaticText( self, label =  _('Organizer:') )
 		self.organizer = wx.TextCtrl( self, wx.ID_ANY, value='' )
 		rows += 1
 		
-		self.commissaireLabel = wx.StaticText( self, wx.ID_ANY, _('Commissaire:') )
+		self.commissaireLabel = wx.StaticText( self, label =  _('Commissaire:') )
 		self.commissaire = wx.TextCtrl( self, wx.ID_ANY, value='' )
 		rows += 1
 		
-		self.memoLabel = wx.StaticText( self, wx.ID_ANY, _('Memo:') )
-		self.memo = wx.TextCtrl( self, wx.ID_ANY, value='' )
+		self.memoLabel = wx.StaticText( self, label =   _('Memo:') )
+		self.memo = wx.TextCtrl( self, value='' )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.memo )
 		rows += 1
 		
-		self.allCategoriesFinishAfterFastestRidersLastLapLabel = wx.StaticText( self, wx.ID_ANY, _("All Categories Finish After Fastest Rider's Last Lap:") )
-		self.allCategoriesFinishAfterFastestRidersLastLap = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
+		self.allCategoriesFinishAfterFastestRidersLastLapLabel = wx.StaticText( self, label = _("All Categories Finish After Fastest Rider's Last Lap:") )
+		self.allCategoriesFinishAfterFastestRidersLastLap = wx.CheckBox( self, style=wx.ALIGN_LEFT )
 		self.allCategoriesFinishAfterFastestRidersLastLap.SetValue( True )
 		rows += 1
 		
-		self.timeTrialLabel = wx.StaticText( self, wx.ID_ANY, _('Time Trial:') )
-		self.timeTrial = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
+		self.timeTrialLabel = wx.StaticText( self, label = _('Time Trial:') )
+		self.timeTrial = wx.CheckBox( self, style=wx.ALIGN_LEFT )
 		rows += 1
 		
-		self.distanceUnitLabel = wx.StaticText( self, wx.ID_ANY, _('Distance Unit: ') )
-		self.distanceUnit = wx.Choice( self, wx.ID_ANY, choices=['km', 'miles'] )
+		self.distanceUnitLabel = wx.StaticText( self, label = _('Distance Unit: ') )
+		self.distanceUnit = wx.Choice( self, choices=['km', 'miles'] )
 		self.distanceUnit.SetSelection( 0 )
 		rows += 1
 
-		self.highPrecisionTimesLabel = wx.StaticText( self, wx.ID_ANY, _('Show Times to 100s of a Second: ') )
-		self.highPrecisionTimes = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
+		self.highPrecisionTimesLabel = wx.StaticText( self, label = _('Show Times to 100s of a Second: ') )
+		self.highPrecisionTimes = wx.CheckBox( self, style=wx.ALIGN_LEFT )
 		rows += 1
 
-		self.enableUSBCameraLabel = wx.StaticText( self, wx.ID_ANY, _('Enable USB Camera Photo Finish: ') )
-		self.enableUSBCamera = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
+		self.enableUSBCameraLabel = wx.StaticText( self, label = _('Enable USB Camera Photo Finish: ') )
+		self.enableUSBCamera = wx.CheckBox( self,style=wx.ALIGN_LEFT )
 		rows += 1
 
-		self.jchipLabel = wx.StaticText( self, wx.ID_ANY, _('JChip Integration: ') )
-		self.jchip = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
+		self.jchipLabel = wx.StaticText( self, label = _('JChip Integration: ') )
+		self.jchip = wx.CheckBox( self, style=wx.ALIGN_LEFT )
 		#self.Bind( wx.EVT_CHECKBOX, self.onJChipIntegration, self.jchip )
 		rows += 1
 
-		self.autocorrectLapsDefaultLabel = wx.StaticText( self, wx.ID_ANY, _('Set "Autocorrect Lap Data" option by Default: ') )
-		self.autocorrectLapsDefault = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
+		self.autocorrectLapsDefaultLabel = wx.StaticText( self, label = _('Set "Autocorrect Lap Data" option by Default: ') )
+		self.autocorrectLapsDefault = wx.CheckBox( self, style=wx.ALIGN_LEFT )
 		self.autocorrectLapsDefault.SetValue( True )
 		rows += 1
 
-		self.finishTopLabel = wx.StaticText( self, wx.ID_ANY, _('Animation Finish on Top: ') )
-		self.finishTop = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
+		self.finishTopLabel = wx.StaticText( self, label = _('Animation Finish on Top: ') )
+		self.finishTop = wx.CheckBox( self, style=wx.ALIGN_LEFT )
 		rows += 1
 
-		self.reverseDirectionLabel = wx.StaticText( self, wx.ID_ANY, _('Animation Reverse Direction: ') )
-		self.reverseDirection = wx.CheckBox( self, wx.ID_ANY, style=wx.ALIGN_LEFT )
+		self.reverseDirectionLabel = wx.StaticText( self, label = _('Animation Reverse Direction: ') )
+		self.reverseDirection = wx.CheckBox( self, style=wx.ALIGN_LEFT )
 		rows += 1
 
-		self.notesLabel = wx.StaticText( self, wx.ID_ANY, _('Notes to appear on Html output:\n(Notes using Html tags must start with <html> and end with </html>)') )
-		self.notes = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB )
+		self.notesLabel = wx.StaticText( self, label = _('Notes to appear on Html output:\n(Notes using Html tags must start with <html> and end with </html>)') )
+		self.notes = wx.TextCtrl( self, style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB, size=(-1,96) )
 		rows += 1
 
-		self.fileNameLabel = wx.StaticText( self, wx.ID_ANY, _('File Name: ') )
-		self.fileName = wx.StaticText( self, wx.ID_ANY, '' )
+		self.fileNameLabel = wx.StaticText( self, label = _('File Name: ') )
+		self.fileName = wx.StaticText( self, label = '' )
 		rows += 1
 
-		self.excelLabel = wx.StaticText( self, wx.ID_ANY, _('Excel Sheet: ') )
-		self.excelName = wx.StaticText( self, wx.ID_ANY, '' )
+		self.excelLabel = wx.StaticText( self, label = _('Excel Sheet: ') )
+		self.excelName = wx.StaticText( self, label = '' )
 		rows += 1
 
-		self.categoriesFileLabel = wx.StaticText( self, wx.ID_ANY, _('Categories Imported From: ') )
-		self.categoriesFile = wx.StaticText( self, wx.ID_ANY, '' )
+		self.categoriesFileLabel = wx.StaticText( self, label = _('Categories Imported From: ') )
+		self.categoriesFile = wx.StaticText( self, label = '' )
 		rows += 1
 
 		self.updateFileName()
@@ -184,12 +183,12 @@ class Properties( wx.Panel ):
 		if addEditButton:
 			hs = wx.BoxSizer( wx.HORIZONTAL )
 			
-			self.editButton = wx.Button(self, wx.ID_ANY, _('Change Properties...'))
+			self.editButton = wx.Button(self, label = _('Change Properties...'))
 			self.editButton.Bind( wx.EVT_BUTTON, self.editButtonCallback )
 			hs.Add( self.editButton, border = 8, flag = wx.TOP|wx.BOTTOM )
 			row += 1
 			
-			self.excelButton = wx.Button(self, wx.ID_ANY, _('Link External Excel Sheet...'))
+			self.excelButton = wx.Button(self, label = _('Link External Excel Sheet...'))
 			self.excelButton.Bind( wx.EVT_BUTTON, self.excelButtonCallback )
 			hs.Add( self.excelButton, border = 8, flag = wx.LEFT|wx.TOP|wx.BOTTOM )
 
@@ -370,21 +369,21 @@ class PropertiesDialog( wx.Dialog ):
 
 		if showFileFields:
 			gs = wx.FlexGridSizer( rows=2, cols=3, vgap = 5, hgap = 5 )
-			gs.Add( wx.StaticText(self, -1, _('Race File Folder:')), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
-			self.folder = wx.TextCtrl( self, -1, '', size=(400,-1) )
+			gs.Add( wx.StaticText(self, label = _('Race File Folder:')), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+			self.folder = wx.TextCtrl( self, value = '', size=(400,-1) )
 			self.folder.SetValue( Utils.getDocumentsDir() )
 			gs.Add( self.folder, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.GROW)
 
-			btn = wx.Button( self, 10, label=_('Browse...') )
+			btn = wx.Button( self, label=_('Browse...') )
 			btn.Bind( wx.EVT_BUTTON, self.onBrowseFolder )
 			gs.Add( btn, 0, wx.ALIGN_CENTER_VERTICAL )
 			
-			gs.Add( wx.StaticText(self, -1, _('Categories Import File (*.brc):')), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
-			self.categoriesFile = wx.TextCtrl( self, -1, '', size=(400,-1) )
+			gs.Add( wx.StaticText(self, label = _('Categories Import File (*.brc):')), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+			self.categoriesFile = wx.TextCtrl( self, value='', size=(400,-1) )
 			self.categoriesFile.SetValue( Utils.getDocumentsDir() )
 			gs.Add( self.categoriesFile, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.GROW )
 
-			btn = wx.Button( self, 10, label=_('Browse...') )
+			btn = wx.Button( self, label=_('Browse...') )
 			btn.Bind( wx.EVT_BUTTON, self.onBrowseCategories )
 			gs.Add( btn, 0, wx.ALIGN_CENTER_VERTICAL )
 			
@@ -392,7 +391,7 @@ class PropertiesDialog( wx.Dialog ):
 			
 			sizer.Add( gs, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
 			
-			line = wx.StaticLine( self, -1, size=(20, -1), style=wx.LI_HORIZONTAL)
+			line = wx.StaticLine( self, size=(20, -1), style=wx.LI_HORIZONTAL)
 			sizer.Add( line, -1, wx.GROW|wx.ALIGN_CENTER_VERTICAL|wx.RIGHT|wx.TOP, 5)
 		
 		btnsizer = wx.StdDialogButtonSizer()
