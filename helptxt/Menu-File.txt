@@ -113,10 +113,13 @@ Say the bunch now splits up with riders all strung out, and the bunch takes 2 mi
 
 When the leaders return, the timer will reset back to 4 seconds because the gap between the last bunch rider and the leaders exceeds 32 seconds.
 
-So, this approach synchronizes publishing to groups in the race, and does nothing if there are no changes.  If riders get all strung out and there are no discernal groups anymore, it self-configures to do an update about every 30 seconds, which is the same as a fixed publishing approach.
+So, this approach synchronizes publishing to groups in the race, and does nothing if there are no changes.  If riders get all strung out and there are no discernible groups anymore, it self-configures to do an update about every 30 seconds, which is the same as a fixed publishing approach.
 
 ## Recent Files
 Keeps track of the last few files opened so then can be opened again quickly.
+
+## Close Race
+Closes the current race.  All changes are written to disk.  Clears CrossMgr.
 
 ## Exit
 Stops CrossMgr.  If a race is running, the clock will continue to run in CrossMgr.  When reopened, the race will resume, even if reopened on another computer.

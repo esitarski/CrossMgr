@@ -411,17 +411,21 @@ class Results(wx.Panel):
 		self.categoryChoice = wx.Choice( self, wx.ID_ANY, choices = ['No Categories'] )
 		self.categoryChoice.SetSelection( 0 )
 		self.categoryChoice.Bind( wx.EVT_CHOICE, self.onCategoryChoice )
-		self.exportToHtml = wx.Button( self, wx.ID_ANY, 'Export to Html' )
+		self.refreshButton = wx.Button( self, label='Refresh' )
+		self.refreshButton.Bind( wx.EVT_BUTTON, lambda event, self = self: self.refresh() )
+		self.exportToHtml = wx.Button( self, label='Export to Html' )
 		self.exportToHtml.Bind( wx.EVT_BUTTON, self.onExportToHtml )
-		self.exportToFtp = wx.Button( self, wx.ID_ANY, 'Export to Html with FTP' )
+		self.exportToFtp = wx.Button( self, label='Export to Html with FTP' )
 		self.exportToFtp.Bind( wx.EVT_BUTTON, self.onExportToFtp )
-		self.exportToExcel = wx.Button( self, wx.ID_ANY, 'Export to Excel' )
+		self.exportToExcel = wx.Button( self, label='Export to Excel' )
 		self.exportToExcel.Bind( wx.EVT_BUTTON, self.onExportToExcel )
 
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.categoryLabel, 0, flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border = 4 )
 		hs.Add( self.categoryChoice, 0, flag=wx.ALL, border = 4 )
 		hs.AddStretchSpacer()
+		hs.Add( self.refreshButton, 0, flag=wx.ALL, border = 4 )
+		hs.AddSpacer( 52 )
 		hs.Add( self.exportToHtml, 0, flag=wx.ALL, border = 4 )
 		hs.Add( self.exportToFtp, 0, flag=wx.ALL, border = 4 )
 		hs.Add( self.exportToExcel, 0, flag=wx.ALL, border = 4 )
@@ -448,7 +452,7 @@ class Results(wx.Panel):
 	
 	def readReset( self ):
 		self.sortCol = None
-	
+		
 	def doLabelClick( self, event ):
 		col = event.GetCol()
 		label = self.grid.GetColLabelValue( col )
