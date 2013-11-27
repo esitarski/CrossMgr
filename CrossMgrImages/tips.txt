@@ -16,6 +16,7 @@ Race results are always current and available during a race.
 Watch the Race Animation after a race.
 Try changing categories in a Race Animation.
 Try watching different numbers to reveal race strategy in a Race Animation.
+Use Function keys to switch screens.  Press the Function Key with the same number as the screen to instantly switch screens.
 During a race, check off expected numbers as they come up on the left side of the screen instead of retyping them in.
 CrossMgr accepts minimum input based on the Category number ranges.\nFor example, if there is one Category with numbers in the range 200-299, it is unnecessary to enter the leading "2" - entering the last two digits are sufficient.\nCrossMgr knows to automatically add the leading "2".
 Donating to CrossMgr helps make it better.\nSee sites.google.com/site/crossmgrsoftware for details.\nYour support is greatly appreciated.
