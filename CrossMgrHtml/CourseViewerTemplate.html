@@ -444,8 +444,16 @@ function Altigraph()
 				var xText = x + dc.lineWidth + 2, yText = 0;
 				var altitude = this.altigraph[i][1];
 				altitude += (this.altigraph[(i+1)%this.altigraph.length][1] - altitude) * r;
-				var units = (displayUnits == 'km' ? 1.0 : 3.28084);
-				var text = ((altitude - this.yMin)*units).toFixed(1) + ' (' + (altitude*units).toFixed(1) + ')';
+				var units, unitName;
+				if( displayUnits == 'km' ) {
+					units = 1.0;
+					unitName = 'm';
+				}
+				else {
+					units = 3.28084;
+					unitName = 'ft';
+				}
+				var text = ((altitude - this.yMin)*units).toFixed(1) + ' ' + unitName + ' (' + (altitude*units).toFixed(1) + ')';
 				var textWidth = dc.measureText(text).width;
 				if( xText + textWidth > canvasAltigraph.width )
 					xText = canvasAltigraph.width - textWidth;
