@@ -455,6 +455,11 @@ function Altigraph()
 				dc.fillStyle = '#000';
 				dc.fillText( text, xText, yText );
 				
+				yText += fontSize;
+				var courseCur = this.altigraph[i][0] + r * (this.altigraph[i+1][0] - this.altigraph[i][0]);
+				courseCur *= (displayUnits == 'km' ? 1.0 : 0.621371) / 1000.0;
+				dc.fillText( courseCur.toFixed(2) + ' ' + displayUnits, xText, yText );
+				
 				dc.restore();
 				
 				// Move the marker on the map.
