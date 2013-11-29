@@ -2712,6 +2712,26 @@ function RaceChartProcessMouse( event )
 	hoverTimer = setTimeout( "RaceChartUpdateInfo()", 25 );
 }
 
+function RaceChartProcessClick( event )
+{
+	var canvasRaceChart = document.getElementById('idRaceChart');
+	var pos = findPos( canvasRaceChart );
+	xEvent = event.pageX - canvasRaceChart.offsetLeft;
+	yEvent = event.pageY - canvasRaceChart.offsetTop;
+	for( var s = 0; s < segmentsCur.length; ++s )
+	{
+		var seg = segmentsCur[s];
+		if( seg[0] <= xEvent && xEvent < (seg[0] + seg[2]) &&
+			seg[1] <= yEvent && yEvent < (seg[1] + seg[3]) )
+		{
+			var num = seg[5];
+			document.getElementById('idNumsToWatch').value = num + '';
+			SetNumsToWatch();
+			return;
+		}
+	}
+}
+
 function getRiderName( num ) {
 	var name = '';
 	var riderData = data[num];
@@ -3098,6 +3118,15 @@ function RefreshRaceChart()
 			lab = resultsData[i][iNum] + '';
 			dc.fillText( lab, width - labelsWidthRight + legendSep, yLast );
 		}
+		if( numsToWatch[resultsData[i][iNum]] != undefined )
+		{
+			dc.save()
+			dc.strokeStyle = "#000000";
+			var lineWidth = 2;
+			dc.lineWidth = lineWidth;
+			dc.strokeRect( lineWidth / 2, yLast, width - lineWidth / 2, yCur - yLast + 1 - lineWidth );
+			dc.restore();
+		}
 
 		yLast = yCur;
 	}
@@ -3136,6 +3165,35 @@ function Lightning()
 		hoverTimer = setTimeout( function() {raceLightningObj.updateInfo();}, 10 );
 	}
 	
+	this.findRiderFromEventCoords = function()
+	{
+		var lapYSearch = this.drawLapY.binSearch( this.yEvent ) - 1;
+		lapYSearch = Math.max( 0, lapYSearch );
+		lapYSearch = Math.min( this.drawLapY.length - 1, lapYSearch );
+		
+		var lapNumX = this.drawLapNumX[lapYSearch];
+		var lapX = 0;
+		for( var i = 0; i < lapNumX.length; ++i ) {
+			if( Math.abs(lapNumX[i][1] - this.xEvent) < Math.abs(lapNumX[lapX][1] - this.xEvent) )
+				lapX = i;
+		}
+		
+		var num = lapNumX[lapX][0];
+		return [num, lapYSearch, lapNumX];
+	}
+	
+	this.processClick = function( event )
+	{
+		var canvasRaceLightning = document.getElementById('idRaceLightning');
+		var pos = findPos( canvasRaceLightning );
+		this.xEvent = event.pageX - canvasRaceLightning.offsetLeft;
+		this.yEvent = event.pageY - canvasRaceLightning.offsetTop;
+		
+		var num = this.findRiderFromEventCoords()[0];
+		document.getElementById('idNumsToWatch').value = num + '';
+		SetNumsToWatch();
+	}
+	
 	this.drawRider = function( dc, x, y, color1, color2 ) {
 		var gx = x + this.riderWidth * 0.75;
 		var gy = y + this.riderHeight * 0.25;
@@ -3170,19 +3228,10 @@ function Lightning()
 		dc.textBaseline = "top";
 		var fontHeight = Math.min(this.riderHeight * 0.5, 28);
 		
-		var lapYSearch = this.drawLapY.binSearch( this.yEvent ) - 1;
-		lapYSearch = Math.max( 0, lapYSearch );
-		lapYSearch = Math.min( this.drawLapY.length - 1, lapYSearch );
-		
-		var lapNumX = this.drawLapNumX[lapYSearch];
-		var lapX = 0;
-		for( var i = 0; i < lapNumX.length; ++i ) {
-			if( Math.abs(lapNumX[i][1] - this.xEvent) < Math.abs(lapNumX[lapX][1] - this.xEvent) )
-				lapX = i;
-		}
+		var ret = this.findRiderFromEventCoords();
+		var num = ret[0], lapYSearch = ret[1], lapNumX = ret[2];
 		
 		var backgroundBorder = 4;
-		var num = lapNumX[lapX][0];
 		var xLast = null, yLast = null;
 		for( var lapY = 0; lapY < this.drawLapNumX.length; ++lapY ) {
 			var drawLapNumX = this.drawLapNumX[lapY];
@@ -3473,6 +3522,7 @@ function SetNumsToWatch()
 	}
 	animationObj.Refresh();
 	SetCategoryResults();
+	RefreshRaceChart();
 }
 
 function ToggleNumberHighlight( num )
@@ -3849,6 +3899,7 @@ function onLoad()
 	if( isCanvasSupported() )
 	{
 		var raceChartCanvas = document.getElementById('idRaceChart');
+		raceChartCanvas.addEventListener('click', function(event) { RaceChartProcessClick(event); }, false);
 		raceChartCanvas.addEventListener('mousemove', function(event) { RaceChartProcessMouse(event); }, false);
 		raceChartCanvas.addEventListener('mouseout', function(event) {
 				if( hoverTimer != null )
@@ -3857,9 +3908,10 @@ function onLoad()
 				RefreshRaceChart(); }, false);
 		
 		raceLightningObj = new Lightning();
-		var raceChartCanvas = document.getElementById('idRaceLightning');
-		raceChartCanvas.addEventListener('mousemove', function(event) { raceLightningObj.processMouse(event); }, false);
-		raceChartCanvas.addEventListener('mouseout', function(event) {
+		var raceLightningCanvas = document.getElementById('idRaceLightning');
+		raceLightningCanvas.addEventListener('click', function(event) { raceLightningObj.processClick(event); }, false);
+		raceLightningCanvas.addEventListener('mousemove', function(event) { raceLightningObj.processMouse(event); }, false);
+		raceLightningCanvas.addEventListener('mouseout', function(event) {
 				if( hoverTimer != null )
 					clearTimeout( hoverTimer );
 				hoverTimer = null;
