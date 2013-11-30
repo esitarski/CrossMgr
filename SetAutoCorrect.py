@@ -7,7 +7,7 @@ from Undo import undo
 #------------------------------------------------------------------------------------------------
 class SetAutoCorrectDialog( wx.Dialog ):
 	def __init__( self, parent, categories, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, "Correct Number",
+		wx.Dialog.__init__( self, parent, id, _("Set Autocorrect"),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
 						
 		self.categories = categories
@@ -15,17 +15,17 @@ class SetAutoCorrectDialog( wx.Dialog ):
 		vs = wx.BoxSizer(wx.VERTICAL)
 		
 		font = wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.FONTWEIGHT_BOLD)
-		self.title1 = wx.StaticText( self, wx.ID_ANY, "Change the Autocorrect Flag by Category" )
+		self.title1 = wx.StaticText( self, label = _("Change the Autocorrect Flag by Category") )
 		self.title1.SetFont( font )
-		self.title2 = wx.StaticText( self, wx.ID_ANY, "Select Categories:" )
+		self.title2 = wx.StaticText( self, label = _("Select Categories:") )
 		
-		self.categoryList = wx.ListBox( self, wx.ID_ANY, style=wx.LB_MULTIPLE, choices=self.categoryNames, size=(120,200) )
+		self.categoryList = wx.ListBox( self, style=wx.LB_MULTIPLE, choices=self.categoryNames, size=(120,200) )
 		
-		self.title3 = wx.StaticText( self, wx.ID_ANY, "For all Riders in the Categories above:" )
-		self.setBtn = wx.Button( self, wx.ID_ANY, 'Set Autocorrect Flag' )
+		self.title3 = wx.StaticText( self, label = _("For all Riders in the Categories above:") )
+		self.setBtn = wx.Button( self, label = _('Set Autocorrect Flag') )
 		self.Bind( wx.EVT_BUTTON, self.onSetAutocorrect, self.setBtn )
 
-		self.clearBtn = wx.Button( self, wx.ID_ANY, 'Clear Autocorrect Flag' )
+		self.clearBtn = wx.Button( self, label = _('Clear Autocorrect Flag') )
 		self.Bind( wx.EVT_BUTTON, self.onClearAutocorrect, self.clearBtn )
 
 		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
@@ -49,15 +49,19 @@ class SetAutoCorrectDialog( wx.Dialog ):
 	def doSet( self, action ):
 		selections = self.categoryList.GetSelections()
 		if not selections:
-			Utils.MessageOK( self, "No Categories Selected.\n\nSelect some Catetgories first, or Cancel", "No Categories Selected", wx.ICON_EXCLAMATION )
+			Utils.MessageOK( self,
+							_("No Categories Selected.\n\nSelect some Categories, or Cancel"),
+							_("No Categories Selected"),
+							wx.ICON_EXCLAMATION )
 			return False
 		
 		if 0 in selections:
 			doAll = True
-			selectedCats = []
+			selectedCats = set()
 		else:
 			doAll = False
-			selectedCats = [self.categories[s-1] for s in selections]
+			selectedCats = set( self.categories[s-1] for s in selections )
+		
 		undo.pushState()
 		with Model.LockRace() as race:
 			for num, rider in race.riders.iteritems():

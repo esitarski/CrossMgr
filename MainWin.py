@@ -2600,6 +2600,7 @@ def MainLoop():
 	
 	# Configure the main window.
 	mainWin = MainWin( None, title=Version.AppVerName, size=(1128,600) )
+	
 	if options.fullScreen:
 		mainWin.Maximize( True )
 	mainWin.Show()
@@ -2624,9 +2625,11 @@ def MainLoop():
 		fileName = args[0]
 	
 	# Try to load a race.
+	raceLoaded = False
 	if fileName:
 		try:
 			mainWin.openRace( fileName )
+			raceLoaded = True
 		except (IndexError, AttributeError, ValueError):
 			pass
 
