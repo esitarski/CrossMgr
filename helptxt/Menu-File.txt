@@ -66,14 +66,17 @@ If "Automatically Upload Results During Race" is selected, CrossMgr will automat
 
 If you fill in the "URL Path", CrossMgr will open a browser on the "Race Results URL" after you press OK.  Use this to test whether the upload worked correctly and that the "Race Results URL" can access the FTP published file as expected.
 
+The "Print QR Code for Smartphones..." button prints a page with the QR Code corresponding to the URL Path and Race (QR Codes are square barcodes).
+Print out this page and post it at the race.  Then, spectators can read the QR Code with their Smartphones and instantly access the web Results page.
+
+### Details, Logic and Example of Live Results:
+
 Publishing results during a race does not slow down or lock up CrossMgr even if it loses the connection with the FTP server or the publish fails.  This is because publishing is run in a separate background thread.  You will not notice it is happening.
 
 Results are published with FTP in a way that balances response time with bandwidth.
 
 You will see a publish latency of 4 seconds after each group passes the line, and no updates when there are no events.
 The latency will increase when riders get strung out, to a maximum of 32 seconds.
-
-### Details, Logic and Example:
 
 The update logic was inspired by [exponential-backoff](http://en.wikipedia.org/wiki/Exponential_backoff), also used in TCP/IP.
 The idea is to minimize bandwidth and while while maximizing response time.

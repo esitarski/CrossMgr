@@ -41,6 +41,41 @@ def ImageToPil( image ):
 	return pil
 '''
 
+def getHeaderBitmap():
+	''' Get the header bitmap if specified, or use a default.  '''
+	if Utils.getMainWin():
+		graphicFName = Utils.getMainWin().getGraphicFName()
+		extension = os.path.splitext( graphicFName )[1].lower()
+		bitmapType = {
+			'.gif': wx.BITMAP_TYPE_GIF,
+			'.png': wx.BITMAP_TYPE_PNG,
+			'.jpg': wx.BITMAP_TYPE_JPEG,
+			'.jpeg':wx.BITMAP_TYPE_JPEG }.get( extension, wx.BITMAP_TYPE_PNG )
+		bitmap = wx.Bitmap( graphicFName, bitmapType )
+	else:
+		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), wx.BITMAP_TYPE_PNG )
+	return bitmap
+
+def getQRCodeBitmap( url ):
+	''' Get a QRCode image for the results url. '''
+	qr = qrcode.QRCode()
+	qr.add_data( 'http://' + url )
+	qr.make()
+	border = 0
+	img = wx.EmptyImage( qr.modules_count + border * 2, qr.modules_count + border * 2 )
+	bm = img.ConvertToMonoBitmap( 0, 0, 0 )
+	canvasQR = wx.MemoryDC()
+	canvasQR.SelectObject( bm )
+	canvasQR.SetBrush( wx.WHITE_BRUSH )
+	canvasQR.Clear()
+	canvasQR.SetPen( wx.BLACK_PEN )
+	for row in xrange(qr.modules_count):
+		for col, v in enumerate(qr.modules[row]):
+			if v:
+				canvasQR.DrawPoint( border + col, border + row )
+	canvasQR.SelectObject( wx.NullBitmap )
+	return bm
+
 class ExportGrid( object ):
 	PDFLineFactor = 1.10
 
@@ -108,47 +143,12 @@ class ExportGrid( object ):
 		
 		return self._getFont( left, isBold )
 	
-	def getHeaderBitmap( self ):
-		''' Get the header bitmap if specified, or use a default.  '''
-		if Utils.getMainWin():
-			graphicFName = Utils.getMainWin().getGraphicFName()
-			extension = os.path.splitext( graphicFName )[1].lower()
-			bitmapType = {
-				'.gif': wx.BITMAP_TYPE_GIF,
-				'.png': wx.BITMAP_TYPE_PNG,
-				'.jpg': wx.BITMAP_TYPE_JPEG,
-				'.jpeg':wx.BITMAP_TYPE_JPEG }.get( extension, wx.BITMAP_TYPE_PNG )
-			bitmap = wx.Bitmap( graphicFName, bitmapType )
-		else:
-			bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), wx.BITMAP_TYPE_PNG )
-		return bitmap
-	
-	def getQRCodeBitmap( self, url ):
-		''' Get a QRCode image for the results url. '''
-		qr = qrcode.QRCode()
-		qr.add_data( 'http://' + url )
-		qr.make()
-		border = 0
-		img = wx.EmptyImage( qr.modules_count + border * 2, qr.modules_count + border * 2 )
-		bm = img.ConvertToMonoBitmap( 0, 0, 0 )
-		canvasQR = wx.MemoryDC()
-		canvasQR.SelectObject( bm )
-		canvasQR.SetBrush( wx.WHITE_BRUSH )
-		canvasQR.Clear()
-		canvasQR.SetPen( wx.BLACK_PEN )
-		for row in xrange(qr.modules_count):
-			for col, v in enumerate(qr.modules[row]):
-				if v:
-					canvasQR.DrawPoint( border + col, border + row )
-		canvasQR.SelectObject( wx.NullBitmap )
-		return bm
-	
 	def drawToFitDC( self, dc,
 						rowDrawStart = 0, rowDrawCount = 1000000,
 						pageNumber = None, pageNumberTotal = None ):
 		self.rowDrawCount = rowDrawCount
 			
-		# Get the dimentions of what we are printing on.
+		# Get the dimensions of what we are printing on.
 		(widthPix, heightPix) = dc.GetSizeTuple()
 		
 		# Get a reasonable border.
@@ -161,7 +161,7 @@ class ExportGrid( object ):
 		yPix = borderPix
 		
 		# Draw the graphic.
-		bitmap = self.getHeaderBitmap()
+		bitmap = getHeaderBitmap()
 		bmWidth, bmHeight = bitmap.GetWidth(), bitmap.GetHeight()
 		graphicHeight = heightPix * 0.15
 		graphicWidth = float(bmWidth) / float(bmHeight) * graphicHeight
@@ -186,7 +186,7 @@ class ExportGrid( object ):
 		qrWidth = 0
 		if url:
 			qrWidth = graphicHeight
-			bm = self.getQRCodeBitmap( url )
+			bm = getQRCodeBitmap( url )
 			img = bm.ConvertToImage()
 			img.Rescale( qrWidth, qrWidth, wx.IMAGE_QUALITY_NORMAL )
 			img = img.ConvertToGreyscale()
@@ -338,7 +338,7 @@ class ExportGrid( object ):
 		yPnt = heightPnt - borderPnt
 		
 		# Draw the graphic.
-		bitmap = self.getHeaderBitmap()
+		bitmap = getHeaderBitmap()
 		bmWidth, bmHeight = bitmap.GetWidth(), bitmap.GetHeight()
 		graphicHeight = heightPnt * 0.15
 		graphicWidth = float(bmWidth) / float(bmHeight) * graphicHeight
@@ -358,7 +358,7 @@ class ExportGrid( object ):
 			
 		qrWidth = 0
 		if url:
-			bm = self.getQRCodeBitmap( url )
+			bm = getQRCodeBitmap( url )
 			img = bm.ConvertToImage()
 			img = img.ConvertToGreyscale()
 			pil = ImageToPil( img )

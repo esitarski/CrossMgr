@@ -4,10 +4,12 @@ import io
 import os
 import sys
 import ftplib
+import urllib
 import datetime
 import threading
 import Utils
 import Model
+from ExportGrid import getHeaderBitmap, getQRCodeBitmap
 
 import inspect
 def lineno():
@@ -101,7 +103,6 @@ def FtpWriteRaceHTML():
 		
 	return None
 
-	
 class RealTimeFtpPublish( object ):
 	latencyTimeMin = 3
 	latencyTimeMax = 32
@@ -157,6 +158,136 @@ class RealTimeFtpPublish( object ):
 realTimeFtpPublish = RealTimeFtpPublish()
 
 #------------------------------------------------------------------------------------------------
+def drawMultiLineText( dc, text, x, y ):
+	if not text:
+		return
+	wText, hText, lineHeightText = dc.GetMultiLineTextExtent( text, dc.GetFont() )
+	for line in text.split( '\n' ):
+		dc.DrawText( line, x, y )
+		y += lineHeightText
+
+def getFont( pixelSize = 28, isBold = False ):
+	return wx.FontFromPixelSize( (0,pixelSize), wx.FONTFAMILY_SWISS, wx.NORMAL,
+								 wx.FONTWEIGHT_BOLD if isBold else wx.FONTWEIGHT_NORMAL )
+
+def getFontToFit( dc, widthToFit, heightToFit, sizeFunc, isBold = False ):
+	left = 1
+	right = max(widthToFit, heightToFit)
+	
+	while right - left > 1:
+		mid = (left + right) / 2.0
+		font = getFont( mid, isBold )
+		widthText, heightText = sizeFunc( font )
+		if widthText <= widthToFit and heightText <= heightToFit:
+			left = mid
+		else:
+			right = mid - 1
+	
+	return getFont( left, isBold )
+	
+class FtpQRCodePrintout( wx.Printout ):
+	def __init__(self, categories = None):
+		wx.Printout.__init__(self)
+
+	def OnBeginDocument(self, start, end):
+		return super(FtpQRCodePrintout, self).OnBeginDocument(start, end)
+
+	def OnEndDocument(self):
+		super(FtpQRCodePrintout, self).OnEndDocument()
+
+	def OnBeginPrinting(self):
+		super(FtpQRCodePrintout, self).OnBeginPrinting()
+
+	def OnEndPrinting(self):
+		super(FtpQRCodePrintout, self).OnEndPrinting()
+
+	def OnPreparePrinting(self):
+		super(FtpQRCodePrintout, self).OnPreparePrinting()
+
+	def HasPage(self, page):
+		return page == 1
+
+	def GetPageInfo(self):
+		return (1,1,1,1)
+
+	def OnPrintPage(self, page):
+		race = Model.race
+		if not race:
+			return
+			
+		dc = self.GetDC()
+		
+		widthPix, heightPix = dc.GetSizeTuple()
+		
+		# Get a reasonable border.
+		borderPix = max(widthPix, heightPix) / 20
+		
+		widthFieldPix = widthPix - borderPix * 2
+		heightFieldPix = heightPix - borderPix * 2
+		
+		xPix = borderPix
+		yPix = borderPix
+		
+		# Draw the graphic.
+		bitmap = getHeaderBitmap()
+		bmWidth, bmHeight = bitmap.GetWidth(), bitmap.GetHeight()
+		graphicHeight = heightPix * 0.15
+		graphicWidth = float(bmWidth) / float(bmHeight) * graphicHeight
+		graphicBorder = int(graphicWidth * 0.15)
+
+		# Rescale the graphic to the correct size.
+		# We cannot use a GraphicContext because it does not support a PrintDC.
+		img = bitmap.ConvertToImage()
+		img.Rescale( graphicWidth, graphicHeight, wx.IMAGE_QUALITY_HIGH )
+		if dc.GetDepth() == 8:
+			img = img.ConvertToGreyscale()
+		bm = img.ConvertToBitmap( dc.GetDepth() )
+		dc.DrawBitmap( bm, xPix, yPix )
+		
+		# Draw the title.
+		title = u'{}:{}\n{} {}\n{}   {}'.format( race.name, race.raceNum, _('by'), race.organizer, race.date, race.scheduledStart )
+		font = getFontToFit( dc, widthFieldPix - graphicWidth - graphicBorder, graphicHeight,
+									lambda font: dc.GetMultiLineTextExtent(title, font)[:-1], True )
+		dc.SetFont( font )
+		drawMultiLineText( dc, title, xPix + graphicWidth + graphicBorder, yPix )
+		yPix += graphicHeight + borderPix
+		
+		heightFieldPix = heightPix - yPix - borderPix
+		url = getattr( race, 'urlFull', '' )
+		if url.startswith( 'http://' ):
+			url = urllib.quote( url[7:] )
+		else:
+			url = urllib.quote( url )
+			
+		bm = getQRCodeBitmap( url )
+		
+		qrWidth = int( min(heightPix - yPix - borderPix * 2, widthPix - borderPix * 2) )
+		magnify = int( qrWidth / bm.GetWidth() )
+		qrWidth = bm.GetWidth() * magnify
+		xLeft = (widthPix - qrWidth) // 2
+		yTop = yPix
+		
+		dc.SetBrush( wx.BLACK_BRUSH )
+		dc.SetPen( wx.TRANSPARENT_PEN )
+		
+		img = bm.ConvertToImage()
+		for y in xrange(img.GetWidth()):
+			for x in xrange(img.GetWidth()):
+				if img.GetRed(x, y) == 0:
+					dc.DrawRectangle( xLeft + x * magnify, yTop + y * magnify, magnify, magnify )
+		
+		dc.SetFont( getFont(borderPix * 0.25) )
+		dc.SetTextForeground( wx.BLACK )
+		dc.SetTextBackground( wx.WHITE )
+		xText = widthPix - borderPix - dc.GetTextExtent(url)[0]
+		yText = yPix + qrWidth + borderPix
+		print url, xText, yText, widthPix, heightPix
+		dc.DrawText( url, xText, yText )
+			
+		return True
+
+#------------------------------------------------------------------------------------------------
+
 class FtpPublishDialog( wx.Dialog ):
 
 	fields = 	['ftpHost',	'ftpPath',	'ftpPhotoPath',	'ftpUser',		'ftpPassword',	'ftpUploadDuringRace',	'urlPath']
@@ -179,6 +310,9 @@ class FtpPublishDialog( wx.Dialog ):
 		self.urlFull = wx.StaticText( self, wx.ID_ANY )
 		
 		self.refresh()
+		
+		self.printBtn = wx.Button( self, label = 'Print QR Code for Smartphones...' )
+		self.Bind( wx.EVT_BUTTON, self.onPrint, self.printBtn )
 		
 		self.okBtn = wx.Button( self, wx.ID_OK )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
@@ -230,6 +364,9 @@ class FtpPublishDialog( wx.Dialog ):
 		bs.Add( self.urlFull, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
 		row += 1
+		bs.Add( self.printBtn, pos=(row, 1), span=(1,1), border = border, flag=wx.ALL )
+		
+		row += 1
 		hb = wx.BoxSizer( wx.HORIZONTAL )
 		hb.Add( self.okBtn, border = border, flag=wx.ALL )
 		hb.Add( self.cancelBtn, border = border, flag=wx.ALL )
@@ -244,6 +381,35 @@ class FtpPublishDialog( wx.Dialog ):
 		self.CentreOnParent(wx.BOTH)
 		self.SetFocus()
 
+	def onPrint( self, event ):
+		race = Model.race
+		if not race:
+			return
+			
+		self.setRaceAttr()
+		
+		mainWin = Utils.getMainWin()
+		pd = mainWin.printData if mainWin else wx.PrintData()
+		orientationSave = pd.GetOrientation()
+		pd.SetOrientation( wx.PORTRAIT )
+		
+		pdd = wx.PrintDialogData( pd )
+		pdd.SetAllPages( True )
+		pdd.EnableSelection( False )
+		pdd.EnablePageNumbers( False )
+		pdd.EnableHelp( False )
+		pdd.EnablePrintToFile( False )
+		
+		printer = wx.Printer( pdd )
+		printout = FtpQRCodePrintout()
+
+		if not printer.Print(self, printout, True):
+			if printer.GetLastError() == wx.PRINTER_ERROR:
+				Utils.MessageOK(self, _("There was a printer problem.\nCheck your printer setup."), _("Printer Error"), iconMask=wx.ICON_ERROR)
+
+		pd.SetOrientation( orientationSave )
+		printout.Destroy()
+		
 	def urlPathChanged( self, event = None ):
 		url = self.urlPath.GetValue()
 		fname = Utils.getFileName()
