@@ -13,6 +13,13 @@ from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 
 def DoChipImport(	fname, parseTagTime, startTime = None,
 					clearExistingData = True, timeAdjustment = None ):
+	
+	race = Model.race
+	if race and race.isRunning():
+		Utils.MessageOK( self, _('Cannot Import into a Running Race.\n\nWait until you have a complete data set, then import the full data into a New race.'),
+						title = _('Cannot Import into Running Race'), iconMask = wx.ICON_ERROR )
+		return
+	
 	# If startTime is None, the first time will be taken as the start time.
 	# All first time's for each rider will then be ignored.
 	
@@ -129,7 +136,7 @@ class ChipImportDialog( wx.Dialog ):
 		intro = '\n'.join(todoList).format( chipName = chipName )
 		
 		gs = wx.FlexGridSizer( rows=5, cols=3, vgap=10, hgap=5 )
-		gs.Add( wx.StaticText(self, wx.ID_ANY, _('{chipName} Data File:').format(chipName=chipName)), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+		gs.Add( wx.StaticText(self, label = _('{chipName} Data File:').format(chipName=chipName)), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 		self.chipDataFile = wx.TextCtrl( self, -1, '', size=(450,-1) )
 		defaultPath = Utils.getFileName()
 		if not defaultPath:
@@ -139,16 +146,16 @@ class ChipImportDialog( wx.Dialog ):
 		self.chipDataFile.SetValue( defaultPath )
 		gs.Add( self.chipDataFile, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.GROW)
 
-		btn = wx.Button( self, wx.ID_ANY, label=_('Browse...') )
-		btn.Bind( wx.EVT_BUTTON, self.onBrowseAlienDataFile )
+		btn = wx.Button( self, label = _('Browse...') )
+		btn.Bind( wx.EVT_BUTTON, self.onBrowseChipReaderDataFile )
 		gs.Add( btn, 0, wx.ALIGN_CENTER_VERTICAL )
 		
 		gs.AddSpacer(1)
-		self.dataType = wx.StaticText( self, wx.ID_ANY, _("Data Is:") )
+		self.dataType = wx.StaticText( self, label = _("Data Is:") )
 		gs.Add( self.dataType, 1, wx.ALIGN_LEFT )
 		gs.AddSpacer(1)
 
-		gs.Add( wx.StaticText(self, wx.ID_ANY, _('Data Policy:') ), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+		gs.Add( wx.StaticText(self, label = _('Data Policy:') ), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 		self.importPolicy = wx.Choice( self, wx.ID_ANY, choices = [
 				_('Clear All Existing Data Before Import'),
 				_('Merge New Data with Existing')
@@ -157,9 +164,9 @@ class ChipImportDialog( wx.Dialog ):
 		gs.Add( self.importPolicy, 1, wx.ALIGN_LEFT )
 		gs.AddSpacer(1)
         
-		gs.Add( wx.StaticText(self, wx.ID_ANY, _('Import Data Time Adjustment:') ), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+		gs.Add( wx.StaticText(self, label = _('Import Data Time Adjustment:') ), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 		self.timeAdjustment = HighPrecisionTimeEdit( self, wx.ID_ANY )
-		self.behindAhead = wx.Choice( self, wx.ID_ANY, choices=[_('Behind'), _('Ahead')] )
+		self.behindAhead = wx.Choice( self, choices=[_('Behind'), _('Ahead')] )
 		if JChip.readerComputerTimeDiff:
 			rtAdjust = JChip.readerComputerTimeDiff.total_seconds()
 			if rtAdjust >= 0.0:
@@ -176,10 +183,10 @@ class ChipImportDialog( wx.Dialog ):
 		gs.Add( hb, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT )
 		gs.AddSpacer(1)
 		
-		self.manualStartTime = wx.CheckBox(self, wx.ID_ANY, _('Race Start Time (if NOT first recorded time):') )
+		self.manualStartTime = wx.CheckBox(self, label = _('Race Start Time (if NOT first recorded time):') )
 		self.Bind( wx.EVT_CHECKBOX, self.onChangeManualStartTime, self.manualStartTime )
 		gs.Add( self.manualStartTime, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
-		self.raceStartTime = masked.TimeCtrl( self, wx.ID_ANY, fmt24hr=True, value="10:00:00" )
+		self.raceStartTime = masked.TimeCtrl( self, fmt24hr=True, value="10:00:00" )
 		self.raceStartTime.Enable( False )
 		gs.Add( self.raceStartTime, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT)
 		gs.AddSpacer(1)
@@ -209,8 +216,8 @@ class ChipImportDialog( wx.Dialog ):
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		
 		image = wx.Image( os.path.join(Utils.getImageFolder(), '%sLogo.png' % chipName), wx.BITMAP_TYPE_PNG )
-		hs.Add( wx.StaticBitmap(self, wx.ID_ANY, image.ConvertToBitmap(8)), 0 )
-		hs.Add( wx.StaticText(self, wx.ID_ANY, intro), 1, wx.EXPAND|wx.LEFT, border*2 )
+		hs.Add( wx.StaticBitmap(self, bitmap = image.ConvertToBitmap(8)), 0 )
+		hs.Add( wx.StaticText(self, label = intro), 1, wx.EXPAND|wx.LEFT, border*2 )
 		
 		bs.Add( hs, 1, wx.EXPAND|wx.ALL, border )
 		
@@ -235,7 +242,7 @@ class ChipImportDialog( wx.Dialog ):
 	def onChangeManualStartTime( self, event ):
 		self.raceStartTime.Enable( event.IsChecked() )
 		
-	def onBrowseAlienDataFile( self, event ):
+	def onBrowseChipReaderDataFile( self, event ):
 		defaultPath = self.chipDataFile.GetValue()
 		if not defaultPath:
 			defaultPath = Utils.getFileName()
@@ -255,7 +262,7 @@ class ChipImportDialog( wx.Dialog ):
 							)
 		if dlg.ShowModal() == wx.ID_OK:
 			self.chipDataFile.SetValue( dlg.GetPath() )
-		dlg.Destroy()		
+		dlg.Destroy()
 	
 	def onOK( self, event ):
 		fname = self.chipDataFile.GetValue()
