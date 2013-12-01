@@ -211,7 +211,7 @@ class Search( wx.Panel ):
 				sortPairs.append( (d.zfill(32), int(data[0][r]), r) )		# Sort tags with leading zeros.
 				
 		else:
-			for r, d in enumerate(data[self.sortCol]):						# Sort as non-diacritic text.
+			for r, d in enumerate(data[self.sortCol]):						# Default sort as non-diacritic text.
 				sortPairs.append( (Utils.removeDiacritic(d.lower()) if d else '~~~~~~~~~~~~~~~~~~', int(data[0][r]), r) )
 
 		sortPairs.sort()
