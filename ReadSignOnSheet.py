@@ -571,7 +571,16 @@ class ExcelLink( object ):
 					if data[field] == None:
 						data[field] = ''
 						
-					if field == 'LastName' or field.startswith('Tag'):
+					if field == 'LastName':
+						try:
+							data[field] = unicode(data[field] or '').upper()
+						except:
+							pass
+					elif field.startswith('Tag'):
+						try:
+							data[field] = int( data[field] )
+						except ValueError:
+							pass
 						try:
 							data[field] = unicode(data[field] or '').upper()
 						except:
