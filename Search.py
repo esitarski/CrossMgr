@@ -182,23 +182,36 @@ class Search( wx.Panel ):
 					continue
 				
 			for c, f in enumerate(colnames):
-				try:
-					data[c].append( unicode(info[f]) )
-				except KeyError:
-					if f == _('In Race') and num in inRace:
-						data[c].append( _('yes') )
-					else:
+				if f.startswith('Tag'):
+					try:
+						data[c].append( unicode(info[f]).lstrip('0') )
+					except:
 						data[c].append( '' )
+				else:
+					try:
+						data[c].append( unicode(info[f]) )
+					except KeyError:
+						if f == _('In Race') and num in inRace:
+							data[c].append( _('yes') )
+						else:
+							data[c].append( '' )
 					
 		sortPairs = []
-		isBib = colnames[self.sortCol].startswith('Bib')
-		isInRace = (colnames[self.sortCol] == _('In Race'))
-		for r, d in enumerate(data[self.sortCol]):
-			if isBib:
+		
+		if colnames[self.sortCol].startswith('Bib'):
+			for r, d in enumerate(data[self.sortCol]):
 				sortPairs.append( (int(d), int(data[0][r]), r) )
-			elif isInRace:
+				
+		elif colnames[self.sortCol] == _('In Race'):
+			for r, d in enumerate(data[self.sortCol]):
 				sortPairs.append( (-1 if d else 1, int(data[0][r]), r) )
-			else:
+				
+		elif colnames[self.sortCol].startswith('Tag'):
+			for r, d in enumerate(data[self.sortCol]):
+				sortPairs.append( (d.zfill(32), int(data[0][r]), r) )
+				
+		else:
+			for r, d in enumerate(data[self.sortCol]):
 				sortPairs.append( (Utils.removeDiacritic(d.lower()) if d else '~~~~~~~~~~~~~~~~~~', int(data[0][r]), r) )
 
 		sortPairs.sort()
@@ -207,7 +220,7 @@ class Search( wx.Panel ):
 		
 		colnames[self.sortCol] = '<%s>' % colnames[self.sortCol]
 		self.grid.Set( data = data, colnames = colnames )
-		self.grid.SetLeftAlignCols( set(range(1, len(colnames))) )
+		self.grid.SetLeftAlignCols( set(i for i in xrange(1, len(colnames)) if 'Tag' not in colnames[i]) )
 		self.grid.AutoSizeColumns( True )
 		self.grid.Reset()
 			
