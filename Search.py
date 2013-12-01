@@ -200,18 +200,18 @@ class Search( wx.Panel ):
 		
 		if colnames[self.sortCol].startswith('Bib'):
 			for r, d in enumerate(data[self.sortCol]):
-				sortPairs.append( (int(d), int(data[0][r]), r) )
+				sortPairs.append( (int(d), int(data[0][r]), r) )			# Sort bib numbers as ints.
 				
 		elif colnames[self.sortCol] == _('In Race'):
 			for r, d in enumerate(data[self.sortCol]):
-				sortPairs.append( (-1 if d else 1, int(data[0][r]), r) )
+				sortPairs.append( (-1 if d else 1, int(data[0][r]), r) )	# Sort 'In Race' to the front.
 				
 		elif colnames[self.sortCol].startswith('Tag'):
 			for r, d in enumerate(data[self.sortCol]):
-				sortPairs.append( (d.zfill(32), int(data[0][r]), r) )
+				sortPairs.append( (d.zfill(32), int(data[0][r]), r) )		# Sort tags with leading zeros.
 				
 		else:
-			for r, d in enumerate(data[self.sortCol]):
+			for r, d in enumerate(data[self.sortCol]):						# Sort as non-diacritic text.
 				sortPairs.append( (Utils.removeDiacritic(d.lower()) if d else '~~~~~~~~~~~~~~~~~~', int(data[0][r]), r) )
 
 		sortPairs.sort()
