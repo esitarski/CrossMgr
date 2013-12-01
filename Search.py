@@ -44,7 +44,7 @@ class Search( wx.Panel ):
 		self.grid.AutoSizeColumns( True )
 		self.grid.DisableDragColSize()
 		self.grid.DisableDragRowSize()
-		self.grid.SetMinSize( (650, 120) )
+		self.grid.SetMinSize( (650, 360) )
 		self.grid.SetDoubleBuffered( True )
 
 		self.Bind( wx.grid.EVT_GRID_CELL_LEFT_DCLICK, self.doNumDrilldown )
@@ -236,7 +236,7 @@ class SearchDialog( wx.Dialog ):
 		# contents
 		sizer = wx.BoxSizer(wx.VERTICAL)
 
-		self.search = Search( self, wx.ID_ANY, size=(600,400) )
+		self.search = Search( self, wx.ID_ANY, size=(600,700) )
 		sizer.Add(self.search, 1, wx.ALIGN_CENTRE|wx.ALL|wx.EXPAND, 5)
 		
 		self.SetSizer(sizer)
@@ -247,8 +247,8 @@ class SearchDialog( wx.Dialog ):
 		
 if __name__ == '__main__':
 	app = wx.App(False)
-	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
+	mainWin = wx.Frame(None,title="CrossMan")
 	mainWin.Show()
-	searchDialog = SearchDialog( mainWin, wx.ID_ANY, "Search Dialog Test", size=(600,400) )
+	searchDialog = SearchDialog( mainWin, wx.ID_ANY, "Search Dialog Test" )
 	searchDialog.Show()
 	app.MainLoop()

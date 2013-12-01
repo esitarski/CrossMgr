@@ -625,7 +625,7 @@ class MainWin( wx.Frame ):
 		dns.ShowModal()
 		dns.Destroy()
 		
-	def menuFind( self, event ):
+	def menuFind( self, event = None ):
 		if not getattr(self, 'findDialog', None):
 			self.findDialog = SearchDialog( self, wx.ID_ANY )
 		self.findDialog.refresh()
@@ -1009,6 +1009,8 @@ class MainWin( wx.Frame ):
 		self.writeRace()
 		ResetExcelLinkCache()
 		self.refresh()
+		
+		wx.CallAfter( self.menuFind )
 		
 	#--------------------------------------------------------------------------------------------
 
