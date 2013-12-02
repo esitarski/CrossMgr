@@ -43,7 +43,7 @@ def initTranslation():
 initTranslation()
 
 import wx.lib.agw.genericmessagedialog
-if wx.Platform == '__WXMAC__':
+if 'WXMAC' in wx.Platform:
 	# wx.DC.GetMultiLineTextExtent does not work on the Mac.
 	# Replace it with our own function.
 	def GetMultiLineTextExtent( dc, text, font = None ):
@@ -346,20 +346,23 @@ def getDocumentsDir():
 	return sp.GetDocumentsDir()
 	
 #------------------------------------------------------------------------
-try:
-	dirName = os.path.dirname(os.path.abspath(__file__))
-except:
-	dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
+if 'WXMAC' in wx.Platform:
+	dirName = os.environ['RESOURCEPATH']
+else:
+	try:
+		dirName = os.path.dirname(os.path.abspath(__file__))
+	except:
+		dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
 	
-if os.path.basename(dirName) in ['library.zip', 'MainWin.exe', 'CrossMgr.exe']:
-	dirName = os.path.dirname(dirName)
-if 'CrossMgr?' in os.path.basename(dirName):
-	dirName = os.path.dirname(dirName)
+	if os.path.basename(dirName) in ['library.zip', 'MainWin.exe', 'CrossMgr.exe']:
+		dirName = os.path.dirname(dirName)
+	if 'CrossMgr?' in os.path.basename(dirName):
+		dirName = os.path.dirname(dirName)
 
-if os.path.isdir( os.path.join(dirName, 'CrossMgrImages') ):
-	pass
-elif os.path.isdir( '/usr/local/CrossMgrImages' ):
-	dirName = '/usr/local'
+	if os.path.isdir( os.path.join(dirName, 'CrossMgrImages') ):
+		pass
+	elif os.path.isdir( '/usr/local/CrossMgrImages' ):
+		dirName = '/usr/local'
 
 imageFolder = os.path.join(dirName, 'CrossMgrImages')
 htmlFolder = os.path.join(dirName, 'CrossMgrHtml')
@@ -381,7 +384,7 @@ for firefoxProg in ['/usr/bin/firefox', '']:
 	if os.path.exists(firefoxProg) and os.access(firefoxProg, os.X_OK):
 		break
 
-if wx.Platform == '__WXMAC__':
+if 'WXMAC' in wx.Platform:
 	def showHelp( url ):
 		url = os.path.join( getHelpFolder(), url )
 		os.system( 'open -a Safari %s' % url.split('#')[0] )
