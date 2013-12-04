@@ -640,7 +640,7 @@ def GetBasicAddRospecMessage( MessageID = None, ROSpecID = 123, inventoryParamet
 	#-----------------------------------------------------------------------------
 	# Create a basic Reader Operation Spec message
 	#
-	if not antennas:	# Defualt to all antennas if unspecified.
+	if not antennas:	# Default to all antennas if unspecified.
 		antennas = [0]
 	
 	rospecMessage = ADD_ROSPEC_Message( MessageID = MessageID, Parameters = [
@@ -662,11 +662,18 @@ def GetBasicAddRospecMessage( MessageID = None, ROSpecID = 123, inventoryParamet
 						InventoryParameterSpecID = inventoryParameterSpecID,
 						ProtocolID = AirProtocols.EPCGlobalClass1Gen2,
 					),
+					TagObservationTrigger_Parameter(
+						TriggerType = TagObservationTriggerType.Upon_Seeing_N_Tags_Or_Timeout,
+						NumberOfTags = 50,	# Number of tags
+						Timeout = 500,		# Milliseconds
+						T = 0,				# Idle time between responses.
+					),
+
 				]
 			),
-			ROReportSpec_Parameter(			# Report spec (specified how often and what to send from the reader)
-				ROReportTrigger = ROReportTriggerType.Upon_N_Tags_Or_End_Of_ROSpec,
-				N = 1,						# N = 1 --> update on each tag.
+			
+			ROReportSpec_Parameter(			# Report spec (specified what to send from the reader)
+				ROReportTrigger = ROReportTriggerType.Null,
 				Parameters = [
 					TagReportContentSelector_Parameter(
 						EnableAntennaID = True,

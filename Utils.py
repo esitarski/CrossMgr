@@ -347,7 +347,10 @@ def getDocumentsDir():
 	
 #------------------------------------------------------------------------
 if 'WXMAC' in wx.Platform:
-	dirName = os.environ['RESOURCEPATH']
+	try:
+		dirName = os.environ['RESOURCEPATH']
+	except:
+		dirName = os.path.dirname(os.path.abspath(__file__))
 else:
 	try:
 		dirName = os.path.dirname(os.path.abspath(__file__))
