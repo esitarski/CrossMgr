@@ -49,7 +49,6 @@ class Keypad( wx.Panel ):
 		
 		self.numEdit = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value='',
 							size=(-1, fontPixels*1.2) if 'WXMAC' in wx.Platform else (-1,-1) )
-		self.Bind( wx.EVT_TEXT_ENTER, self.onEnterPress, self.numEdit )
 		self.numEdit.Bind( wx.EVT_CHAR, self.handleNumKeypress )
 		self.numEdit.SetFont( font )
 		gbs.Add( self.numEdit, pos=(rowCur,0), span=(1,3), flag=wx.EXPAND|wx.LEFT|wx.TOP, border = outsideBorder )
@@ -118,7 +117,7 @@ class Keypad( wx.Panel ):
 	
 	def handleNumKeypress(self, event):
 		keycode = event.GetKeyCode()
-		if keycode == wx.WXK_NUMPAD_ENTER:
+		if keycode == wx.WXK_NUMPAD_ENTER or keycode == wx.WXK_RETURN:
 			self.onEnterPress()
 		elif keycode < 255:
 			if keycode in validKeyCodes:
