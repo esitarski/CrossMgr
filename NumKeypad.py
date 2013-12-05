@@ -131,7 +131,7 @@ class Keypad( wx.Panel ):
 			if mainWin is not None:
 				mainWin.forecastHistory.logNum( nums )
 		self.controller.refreshLaps()
-		self.numEdit.SetValue( '' )
+		wx.CallAfter( self.numEdit.SetValue, '' )
 	
 	def doAction( self, action ):
 		success = False
