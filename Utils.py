@@ -351,6 +351,8 @@ if 'WXMAC' in wx.Platform:
 		dirName = os.environ['RESOURCEPATH']
 	except:
 		dirName = os.path.dirname(os.path.abspath(__file__))
+	if not os.path.isdir( os.path.join(dirName, 'CrossMgrImages') ):
+		dirName = '/System/Library/Frameworks/Python.framework/Versions/2.7'
 else:
 	try:
 		dirName = os.path.dirname(os.path.abspath(__file__))
