@@ -2,7 +2,7 @@
 # DO NOT EDIT!
 # MACHINE GENERATED from llrp-1x0-def.xml
 #
-# Created: 2013-04-10 16:42:06.328000 
+# Created: 2013-12-03 22:39:18.248000 
 #-----------------------------------------------------------
 enums = [
  {
@@ -1002,6 +1002,857 @@ enums = [
    ]
   ], 
   "name": "C1G2BlockWriteResultType"
+ }, 
+ {
+  "choices": [
+   [
+    1000, 
+    "All_Capabilities"
+   ], 
+   [
+    1001, 
+    "Impinj_Detailed_Version"
+   ], 
+   [
+    1002, 
+    "Impinj_Frequency_Capabilities"
+   ], 
+   [
+    1003, 
+    "Impinj_Array_Capabilities"
+   ], 
+   [
+    2000, 
+    "All_Configuration"
+   ], 
+   [
+    2001, 
+    "Impinj_Sub_Regulatory_Region"
+   ], 
+   [
+    2002, 
+    "Impinj_Forklift_Configuration"
+   ], 
+   [
+    2003, 
+    "Impinj_GPI_Debounce_Configuration"
+   ], 
+   [
+    2004, 
+    "Impinj_Reader_Temperature"
+   ], 
+   [
+    2005, 
+    "Impinj_Link_Monitor_Configuration"
+   ], 
+   [
+    2006, 
+    "Impinj_Report_Buffer_Configuration"
+   ], 
+   [
+    2007, 
+    "Impinj_Access_Spec_Configuration"
+   ], 
+   [
+    2008, 
+    "Impinj_GPS_NMEA_Sentences"
+   ], 
+   [
+    2009, 
+    "Impinj_Advanced_GPO_Configuration"
+   ], 
+   [
+    2010, 
+    "Impinj_Tilt_Configuration"
+   ], 
+   [
+    2011, 
+    "Impinj_Beacon_Configuration"
+   ], 
+   [
+    2012, 
+    "Impinj_Antenna_Configuration"
+   ], 
+   [
+    2013, 
+    "Impinj_Location_Configuration"
+   ], 
+   [
+    2014, 
+    "Impinj_Transition_Configuration"
+   ]
+  ], 
+  "name": "ImpinjRequestedDataType"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "FCC_Part_15_247"
+   ], 
+   [
+    1, 
+    "ETSI_EN_300_220"
+   ], 
+   [
+    2, 
+    "ETSI_EN_302_208_With_LBT"
+   ], 
+   [
+    3, 
+    "Hong_Kong_920_925_MHz"
+   ], 
+   [
+    4, 
+    "Taiwan_922_928_MHz"
+   ], 
+   [
+    5, 
+    "Japan_952_954_MHz"
+   ], 
+   [
+    6, 
+    "Japan_952_954_MHz_Low_Power"
+   ], 
+   [
+    7, 
+    "ETSI_EN_302_208_v1_2_1"
+   ], 
+   [
+    8, 
+    "Korea_917_921_MHz"
+   ], 
+   [
+    9, 
+    "Malaysia_919_923_MHz"
+   ], 
+   [
+    10, 
+    "China_920_925_MHz"
+   ], 
+   [
+    11, 
+    "Japan_952_956_MHz_Without_LBT"
+   ], 
+   [
+    12, 
+    "South_Africa_915_919_MHz"
+   ], 
+   [
+    13, 
+    "Brazil_902_907_and_915_928_MHz"
+   ], 
+   [
+    14, 
+    "Thailand_920_925_MHz"
+   ], 
+   [
+    15, 
+    "Singapore_920_925_MHz"
+   ], 
+   [
+    16, 
+    "Australia_920_926_MHz"
+   ], 
+   [
+    17, 
+    "India_865_867_MHz"
+   ], 
+   [
+    18, 
+    "Uruguay_916_928_MHz"
+   ], 
+   [
+    19, 
+    "Vietnam_920_925_MHz"
+   ], 
+   [
+    20, 
+    "Israel_915_917_MHz"
+   ], 
+   [
+    21, 
+    "Philippines_918_920_MHz"
+   ], 
+   [
+    22, 
+    "Canada_Post"
+   ], 
+   [
+    23, 
+    "Indonesia_923_925_MHz"
+   ], 
+   [
+    24, 
+    "New_Zealand_921p5_928_MHz"
+   ], 
+   [
+    25, 
+    "Japan_916_921_MHz_Without_LBT"
+   ], 
+   [
+    26, 
+    "Latin_America_902_928_MHz"
+   ]
+  ], 
+  "name": "ImpinjRegulatoryRegion"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Reader_Selected"
+   ], 
+   [
+    1, 
+    "Single_Target"
+   ], 
+   [
+    2, 
+    "Dual_Target"
+   ], 
+   [
+    3, 
+    "Single_Target_With_Suppression"
+   ]
+  ], 
+  "name": "ImpinjInventorySearchType"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Disabled"
+   ], 
+   [
+    1, 
+    "Auto_Select"
+   ], 
+   [
+    2, 
+    "Channel_List"
+   ]
+  ], 
+  "name": "ImpinjFixedFrequencyMode"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Disabled"
+   ], 
+   [
+    1, 
+    "Enabled"
+   ]
+  ], 
+  "name": "ImpinjReducedPowerMode"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Disabled"
+   ], 
+   [
+    1, 
+    "Enabled"
+   ]
+  ], 
+  "name": "ImpinjLowDutyCycleMode"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Disabled"
+   ], 
+   [
+    1, 
+    "Enabled"
+   ]
+  ], 
+  "name": "ImpinjLinkMonitorMode"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Normal"
+   ], 
+   [
+    1, 
+    "Low_Latency"
+   ]
+  ], 
+  "name": "ImpinjReportBufferMode"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Success"
+   ], 
+   [
+    1, 
+    "Insufficient_Power"
+   ], 
+   [
+    2, 
+    "Nonspecific_Tag_Error"
+   ], 
+   [
+    3, 
+    "No_Response_From_Tag"
+   ], 
+   [
+    4, 
+    "Nonspecific_Reader_Error"
+   ], 
+   [
+    5, 
+    "Incorrect_Password_Error"
+   ], 
+   [
+    6, 
+    "Tag_Memory_Overrun_Error"
+   ]
+  ], 
+  "name": "ImpinjBlockPermalockResultType"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Success"
+   ], 
+   [
+    1, 
+    "Nonspecific_Tag_Error"
+   ], 
+   [
+    2, 
+    "No_Response_From_Tag"
+   ], 
+   [
+    3, 
+    "Nonspecific_Reader_Error"
+   ], 
+   [
+    4, 
+    "Incorrect_Password_Error"
+   ], 
+   [
+    5, 
+    "Tag_Memory_Overrun_Error"
+   ]
+  ], 
+  "name": "ImpinjGetBlockPermalockStatusResultType"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Unknown"
+   ], 
+   [
+    1, 
+    "Private"
+   ], 
+   [
+    2, 
+    "Public"
+   ]
+  ], 
+  "name": "ImpinjQTDataProfile"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Unknown"
+   ], 
+   [
+    1, 
+    "Normal_Range"
+   ], 
+   [
+    2, 
+    "Short_Range"
+   ]
+  ], 
+  "name": "ImpinjQTAccessRange"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Unknown"
+   ], 
+   [
+    1, 
+    "Temporary"
+   ], 
+   [
+    2, 
+    "Permanent"
+   ]
+  ], 
+  "name": "ImpinjQTPersistence"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Success"
+   ], 
+   [
+    1, 
+    "Insufficient_Power"
+   ], 
+   [
+    2, 
+    "Nonspecific_Tag_Error"
+   ], 
+   [
+    3, 
+    "No_Response_From_Tag"
+   ], 
+   [
+    4, 
+    "Nonspecific_Reader_Error"
+   ], 
+   [
+    5, 
+    "Incorrect_Password_Error"
+   ]
+  ], 
+  "name": "ImpinjSetQTConfigResultType"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Success"
+   ], 
+   [
+    1, 
+    "Nonspecific_Tag_Error"
+   ], 
+   [
+    2, 
+    "No_Response_From_Tag"
+   ], 
+   [
+    3, 
+    "Nonspecific_Reader_Error"
+   ], 
+   [
+    4, 
+    "Incorrect_Password_Error"
+   ]
+  ], 
+  "name": "ImpinjGetQTConfigResultType"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Disabled"
+   ], 
+   [
+    1, 
+    "Enabled"
+   ]
+  ], 
+  "name": "ImpinjSerializedTIDMode"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Disabled"
+   ], 
+   [
+    1, 
+    "Enabled"
+   ]
+  ], 
+  "name": "ImpinjRFPhaseAngleMode"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Disabled"
+   ], 
+   [
+    1, 
+    "Enabled"
+   ]
+  ], 
+  "name": "ImpinjPeakRSSIMode"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Disabled"
+   ], 
+   [
+    1, 
+    "Enabled"
+   ]
+  ], 
+  "name": "ImpinjGPSCoordinatesMode"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Normal"
+   ], 
+   [
+    1, 
+    "Pulsed"
+   ], 
+   [
+    2, 
+    "Reader_Operational_Status"
+   ], 
+   [
+    3, 
+    "LLRP_Connection_Status"
+   ], 
+   [
+    4, 
+    "Reader_Inventory_Status"
+   ], 
+   [
+    5, 
+    "Network_Connection_Status"
+   ], 
+   [
+    6, 
+    "Reader_Inventory_Tags_Status"
+   ]
+  ], 
+  "name": "ImpinjAdvancedGPOMode"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Disabled"
+   ], 
+   [
+    1, 
+    "Enabled"
+   ]
+  ], 
+  "name": "ImpinjOptimizedReadMode"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "FIFO"
+   ], 
+   [
+    1, 
+    "Ascending"
+   ]
+  ], 
+  "name": "ImpinjAccessSpecOrderingMode"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Disabled"
+   ], 
+   [
+    1, 
+    "Enabled"
+   ]
+  ], 
+  "name": "ImpinjRFDopplerFrequencyMode"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Disabled"
+   ], 
+   [
+    1, 
+    "Enabled"
+   ]
+  ], 
+  "name": "ImpinjEncodeStatus"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "No_Action"
+   ], 
+   [
+    1, 
+    "Unlock"
+   ], 
+   [
+    2, 
+    "Lock"
+   ], 
+   [
+    3, 
+    "Perma_Lock"
+   ], 
+   [
+    4, 
+    "Perma_Unlock"
+   ]
+  ], 
+  "name": "ImpinjLockPrivilege"
+ }, 
+ {
+  "choices": [
+   [
+    1, 
+    "Batch"
+   ], 
+   [
+    2, 
+    "Continuous"
+   ]
+  ], 
+  "name": "ImpinjEncodeMode"
+ }, 
+ {
+  "choices": [
+   [
+    1, 
+    "Monza3"
+   ], 
+   [
+    2, 
+    "Monza4"
+   ], 
+   [
+    3, 
+    "Monza5"
+   ], 
+   [
+    100, 
+    "AnyGen2"
+   ]
+  ], 
+  "name": "ImpinjTagICType"
+ }, 
+ {
+  "choices": [
+   [
+    1, 
+    "Op_Spec_Started"
+   ], 
+   [
+    2, 
+    "Op_Spec_Finished"
+   ], 
+   [
+    3, 
+    "Op_Spec_Success"
+   ], 
+   [
+    4, 
+    "Op_Spec_Failure"
+   ], 
+   [
+    5, 
+    "Op_Spec_SingleSuccess"
+   ], 
+   [
+    6, 
+    "Op_Spec_SingleFailure"
+   ]
+  ], 
+  "name": "ImpinjOpSpecAction"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Success"
+   ], 
+   [
+    1, 
+    "Success_With_Degraded_Performance"
+   ], 
+   [
+    2, 
+    "Encode_Timeout"
+   ], 
+   [
+    3, 
+    "Encode_Data_Cache_Empty"
+   ], 
+   [
+    4, 
+    "Wrong_Tag_IC_Detected"
+   ]
+  ], 
+  "name": "ImpinjEncodeResultType"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Success"
+   ], 
+   [
+    1, 
+    "Failure"
+   ], 
+   [
+    2, 
+    "Timeout"
+   ], 
+   [
+    3, 
+    "Not_Attempted"
+   ], 
+   [
+    4, 
+    "Insufficient_Power"
+   ], 
+   [
+    5, 
+    "No_Response_From_Tag"
+   ], 
+   [
+    6, 
+    "Incorrect_Password_Error"
+   ], 
+   [
+    7, 
+    "Tag_Memory_Locked_Error"
+   ], 
+   [
+    8, 
+    "Nonspecific_Tag_Error"
+   ], 
+   [
+    9, 
+    "Nonspecific_Reader_Error"
+   ]
+  ], 
+  "name": "ImpinjEncodeDataResultType"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Unknown"
+   ], 
+   [
+    1, 
+    "Disconnected"
+   ], 
+   [
+    2, 
+    "Connected"
+   ]
+  ], 
+  "name": "ImpinjHubConnectedType"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "No_Fault"
+   ], 
+   [
+    1, 
+    "RF_Power"
+   ], 
+   [
+    2, 
+    "RF_Power_On_Hub_1"
+   ], 
+   [
+    3, 
+    "RF_Power_On_Hub_2"
+   ], 
+   [
+    4, 
+    "RF_Power_On_Hub_3"
+   ], 
+   [
+    5, 
+    "RF_Power_On_Hub_4"
+   ], 
+   [
+    6, 
+    "No_Init"
+   ], 
+   [
+    7, 
+    "Serial_Overflow"
+   ], 
+   [
+    8, 
+    "Disconnected"
+   ]
+  ], 
+  "name": "ImpinjHubFaultType"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Entry"
+   ], 
+   [
+    1, 
+    "Update"
+   ], 
+   [
+    2, 
+    "Exit"
+   ]
+  ], 
+  "name": "ImpinjLocationReportType"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "Standard"
+   ], 
+   [
+    1, 
+    "Large"
+   ]
+  ], 
+  "name": "ImpinjTransitionZoneRange"
+ }, 
+ {
+  "choices": [
+   [
+    0, 
+    "NewTag"
+   ], 
+   [
+    1, 
+    "StrayTag"
+   ], 
+   [
+    2, 
+    "TagTransition"
+   ]
+  ], 
+  "name": "ImpinjZoneReportType"
  }
 ]
 parameters = [
@@ -3402,6 +4253,2573 @@ parameters = [
   ], 
   "name": "C1G2BlockWriteOpSpecResult", 
   "typeNum": 354
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjRequestedDataType", 
+    "name": "RequestedData", 
+    "type": "uintbe:32"
+   }
+  ], 
+  "name": "ImpinjRequestedData", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 21
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjRegulatoryRegion", 
+    "name": "RegulatoryRegion", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjSubRegulatoryRegion", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 22
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjInventorySearchType", 
+    "name": "InventorySearchMode", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjInventorySearchMode", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 23
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjFixedFrequencyMode", 
+    "name": "FixedFrequencyMode", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "skip:16", 
+    "type": "skip:16"
+   }, 
+   {
+    "name": "ChannelList", 
+    "type": "array:16"
+   }
+  ], 
+  "name": "ImpinjFixedFrequencyList", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 26
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjReducedPowerMode", 
+    "name": "ReducedPowerMode", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "skip:16", 
+    "type": "skip:16"
+   }, 
+   {
+    "name": "ChannelList", 
+    "type": "array:16"
+   }
+  ], 
+  "name": "ImpinjReducedPowerFrequencyList", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 27
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjLowDutyCycleMode", 
+    "name": "LowDutyCycleMode", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "EmptyFieldTimeout", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "FieldPingInterval", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjLowDutyCycle", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 28
+ }, 
+ {
+  "name": "ImpinjHubVersions", 
+  "parameters": [
+   {
+    "parameter": "ImpinjArrayVersion", 
+    "repeat": [
+     1, 
+     99999
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1537
+ }, 
+ {
+  "fields": [
+   {
+    "name": "ModelName", 
+    "type": "string"
+   }, 
+   {
+    "name": "SerialNumber", 
+    "type": "string"
+   }, 
+   {
+    "name": "SoftwareVersion", 
+    "type": "string"
+   }, 
+   {
+    "name": "FirmwareVersion", 
+    "type": "string"
+   }, 
+   {
+    "name": "FPGAVersion", 
+    "type": "string"
+   }, 
+   {
+    "name": "PCBAVersion", 
+    "type": "string"
+   }
+  ], 
+  "name": "ImpinjDetailedVersion", 
+  "parameters": [
+   {
+    "parameter": "ImpinjHubVersions", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjArrayVersion", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 29
+ }, 
+ {
+  "fields": [
+   {
+    "name": "FrequencyList", 
+    "type": "array:32"
+   }
+  ], 
+  "name": "ImpinjFrequencyCapabilities", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 30
+ }, 
+ {
+  "name": "ImpinjForkliftConfiguration", 
+  "parameters": [
+   {
+    "parameter": "ImpinjForkliftHeightThreshold", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjForkliftZeroMotionTimeThreshold", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 32
+ }, 
+ {
+  "fields": [
+   {
+    "name": "HeightThreshold", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjForkliftHeightThreshold", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 33
+ }, 
+ {
+  "fields": [
+   {
+    "name": "ZeroMotionTimeThreshold", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjForkliftZeroMotionTimeThreshold", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 34
+ }, 
+ {
+  "fields": [
+   {
+    "name": "BoardManufacturer", 
+    "type": "string"
+   }, 
+   {
+    "format": "Hex", 
+    "name": "FirmwareVersion", 
+    "type": "array:8"
+   }, 
+   {
+    "format": "Hex", 
+    "name": "HardwareVersion", 
+    "type": "array:8"
+   }
+  ], 
+  "name": "ImpinjForkliftCompanionBoardInfo", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 35
+ }, 
+ {
+  "fields": [
+   {
+    "name": "GPIPortNum", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "GPIDebounceTimerMSec", 
+    "type": "uintbe:32"
+   }
+  ], 
+  "name": "ImpinjGPIDebounceConfiguration", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 36
+ }, 
+ {
+  "fields": [
+   {
+    "name": "Temperature", 
+    "type": "intbe:16"
+   }
+  ], 
+  "name": "ImpinjReaderTemperature", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 37
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjLinkMonitorMode", 
+    "name": "LinkMonitorMode", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "LinkDownThreshold", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjLinkMonitorConfiguration", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 38
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjReportBufferMode", 
+    "name": "ReportBufferMode", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjReportBufferConfiguration", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 39
+ }, 
+ {
+  "name": "ImpinjAccessSpecConfiguration", 
+  "parameters": [
+   {
+    "parameter": "ImpinjBlockWriteWordCount", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjOpSpecRetryCount", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjAccessSpecOrdering", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 40
+ }, 
+ {
+  "fields": [
+   {
+    "name": "WordCount", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjBlockWriteWordCount", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 41
+ }, 
+ {
+  "fields": [
+   {
+    "name": "OpSpecID", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "AccessPassword", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "name": "MB", 
+    "type": "bits:2"
+   }, 
+   {
+    "name": "skip:6", 
+    "type": "skip:6"
+   }, 
+   {
+    "name": "BlockPointer", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "format": "Hex", 
+    "name": "BlockMask", 
+    "type": "array:16"
+   }
+  ], 
+  "name": "ImpinjBlockPermalock", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 42
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjBlockPermalockResultType", 
+    "name": "Result", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "name": "OpSpecID", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjBlockPermalockOpSpecResult", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 43
+ }, 
+ {
+  "fields": [
+   {
+    "name": "OpSpecID", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "AccessPassword", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "name": "MB", 
+    "type": "bits:2"
+   }, 
+   {
+    "name": "skip:6", 
+    "type": "skip:6"
+   }, 
+   {
+    "name": "BlockPointer", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "BlockRange", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjGetBlockPermalockStatus", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 44
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjGetBlockPermalockStatusResultType", 
+    "name": "Result", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "name": "OpSpecID", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "format": "Hex", 
+    "name": "PermalockStatus", 
+    "type": "array:16"
+   }
+  ], 
+  "name": "ImpinjGetBlockPermalockStatusOpSpecResult", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 45
+ }, 
+ {
+  "fields": [
+   {
+    "name": "OpSpecID", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "AccessPassword", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "enumeration": "ImpinjQTDataProfile", 
+    "name": "DataProfile", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "enumeration": "ImpinjQTAccessRange", 
+    "name": "AccessRange", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "enumeration": "ImpinjQTPersistence", 
+    "name": "Persistence", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "name": "skip:32", 
+    "type": "skip:32"
+   }
+  ], 
+  "name": "ImpinjSetQTConfig", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 46
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjSetQTConfigResultType", 
+    "name": "Result", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "name": "OpSpecID", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjSetQTConfigOpSpecResult", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 47
+ }, 
+ {
+  "fields": [
+   {
+    "name": "OpSpecID", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "AccessPassword", 
+    "type": "uintbe:32"
+   }
+  ], 
+  "name": "ImpinjGetQTConfig", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 48
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjGetQTConfigResultType", 
+    "name": "Result", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "name": "OpSpecID", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "enumeration": "ImpinjQTDataProfile", 
+    "name": "DataProfile", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "enumeration": "ImpinjQTAccessRange", 
+    "name": "AccessRange", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "name": "skip:32", 
+    "type": "skip:32"
+   }
+  ], 
+  "name": "ImpinjGetQTConfigOpSpecResult", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 49
+ }, 
+ {
+  "name": "ImpinjTagReportContentSelector", 
+  "parameters": [
+   {
+    "parameter": "ImpinjEnableSerializedTID", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjEnableRFPhaseAngle", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjEnablePeakRSSI", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjEnableGPSCoordinates", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjEnableOptimizedRead", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjEnableRFDopplerFrequency", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 50
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjSerializedTIDMode", 
+    "name": "SerializedTIDMode", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjEnableSerializedTID", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 51
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjRFPhaseAngleMode", 
+    "name": "RFPhaseAngleMode", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjEnableRFPhaseAngle", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 52
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjPeakRSSIMode", 
+    "name": "PeakRSSIMode", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjEnablePeakRSSI", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 53
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjGPSCoordinatesMode", 
+    "name": "GPSCoordinatesMode", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjEnableGPSCoordinates", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 54
+ }, 
+ {
+  "fields": [
+   {
+    "format": "Hex", 
+    "name": "TID", 
+    "type": "array:16"
+   }
+  ], 
+  "name": "ImpinjSerializedTID", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 55
+ }, 
+ {
+  "fields": [
+   {
+    "name": "PhaseAngle", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjRFPhaseAngle", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 56
+ }, 
+ {
+  "fields": [
+   {
+    "name": "RSSI", 
+    "type": "intbe:16"
+   }
+  ], 
+  "name": "ImpinjPeakRSSI", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 57
+ }, 
+ {
+  "fields": [
+   {
+    "name": "Latitude", 
+    "type": "intbe:32"
+   }, 
+   {
+    "name": "Longitude", 
+    "type": "intbe:32"
+   }
+  ], 
+  "name": "ImpinjGPSCoordinates", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 58
+ }, 
+ {
+  "fields": [
+   {
+    "name": "LoopCount", 
+    "type": "uintbe:32"
+   }
+  ], 
+  "name": "ImpinjLoopSpec", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 59
+ }, 
+ {
+  "name": "ImpinjGPSNMEASentences", 
+  "parameters": [
+   {
+    "parameter": "ImpinjGGASentence", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjRMCSentence", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 60
+ }, 
+ {
+  "fields": [
+   {
+    "name": "GGASentence", 
+    "type": "string"
+   }
+  ], 
+  "name": "ImpinjGGASentence", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 61
+ }, 
+ {
+  "fields": [
+   {
+    "name": "RMCSentence", 
+    "type": "string"
+   }
+  ], 
+  "name": "ImpinjRMCSentence", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 62
+ }, 
+ {
+  "fields": [
+   {
+    "name": "RetryCount", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjOpSpecRetryCount", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 63
+ }, 
+ {
+  "fields": [
+   {
+    "name": "GPOPortNum", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "enumeration": "ImpinjAdvancedGPOMode", 
+    "name": "GPOMode", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "GPOPulseDurationMSec", 
+    "type": "uintbe:32"
+   }
+  ], 
+  "name": "ImpinjAdvancedGPOConfiguration", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 64
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjOptimizedReadMode", 
+    "name": "OptimizedReadMode", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjEnableOptimizedRead", 
+  "parameters": [
+   {
+    "parameter": "C1G2Read", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 65
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjAccessSpecOrderingMode", 
+    "name": "OrderingMode", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjAccessSpecOrdering", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 66
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjRFDopplerFrequencyMode", 
+    "name": "RFDopplerFrequencyMode", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjEnableRFDopplerFrequency", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 67
+ }, 
+ {
+  "fields": [
+   {
+    "name": "DopplerFrequency", 
+    "type": "intbe:16"
+   }
+  ], 
+  "name": "ImpinjRFDopplerFrequency", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 68
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjEncodeStatus", 
+    "name": "EncodeStatus", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjSTPCapabilities", 
+  "parameters": [
+   {
+    "parameter": "ImpinjTagIC", 
+    "repeat": [
+     1, 
+     99999
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1501
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjTagICType", 
+    "name": "Type", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjTagIC", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1502
+ }, 
+ {
+  "fields": [
+   {
+    "name": "EncodeDataCacheID", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "name": "LowEncodeDataThreshold", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjEncodeDataCache", 
+  "parameters": [
+   {
+    "parameter": "ImpinjEncodeDataDefaults", 
+    "repeat": [
+     1, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1503
+ }, 
+ {
+  "name": "ImpinjEncodeDataDefaults", 
+  "parameters": [
+   {
+    "parameter": "ImpinjEncodeDataPCBits", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjEncodeDataAccessPassword", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjEncodeDataKillPassword", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjEncodeDataUserMemory", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjEncodeDataAlternateEPC", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjEncodeDataQTConfig", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjEncodeDataLockConfig", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1504
+ }, 
+ {
+  "fields": [
+   {
+    "format": "Hex", 
+    "name": "EPC", 
+    "type": "bitarray"
+   }
+  ], 
+  "name": "ImpinjEncodeData", 
+  "parameters": [
+   {
+    "parameter": "ImpinjEncodeDataPCBits", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjEncodeDataAccessPassword", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjEncodeDataKillPassword", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjEncodeDataUserMemory", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjEncodeDataAlternateEPC", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjEncodeDataQTConfig", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjEncodeDataLockConfig", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1505
+ }, 
+ {
+  "fields": [
+   {
+    "format": "Hex", 
+    "name": "PCBits", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjEncodeDataPCBits", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1506
+ }, 
+ {
+  "fields": [
+   {
+    "format": "Hex", 
+    "name": "AccessPassword", 
+    "type": "uintbe:32"
+   }
+  ], 
+  "name": "ImpinjEncodeDataAccessPassword", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1507
+ }, 
+ {
+  "fields": [
+   {
+    "format": "Hex", 
+    "name": "KillPassword", 
+    "type": "uintbe:32"
+   }
+  ], 
+  "name": "ImpinjEncodeDataKillPassword", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1508
+ }, 
+ {
+  "fields": [
+   {
+    "name": "WordPointer", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "format": "Hex", 
+    "name": "WriteData", 
+    "type": "array:16"
+   }
+  ], 
+  "name": "ImpinjEncodeDataUserMemory", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1509
+ }, 
+ {
+  "fields": [
+   {
+    "format": "Hex", 
+    "name": "AlternateEPC", 
+    "type": "array:16"
+   }
+  ], 
+  "name": "ImpinjEncodeDataAlternateEPC", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1510
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjQTDataProfile", 
+    "name": "DataProfile", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "enumeration": "ImpinjQTAccessRange", 
+    "name": "AccessRange", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "enumeration": "ImpinjQTPersistence", 
+    "name": "Persistence", 
+    "type": "uintbe:8"
+   }
+  ], 
+  "name": "ImpinjEncodeDataQTConfig", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1511
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjLockPrivilege", 
+    "name": "AccessPasswordLock", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "enumeration": "ImpinjLockPrivilege", 
+    "name": "KillPasswordLock", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "enumeration": "ImpinjLockPrivilege", 
+    "name": "EPCMemoryLock", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "enumeration": "ImpinjLockPrivilege", 
+    "name": "TIDMemoryLock", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "enumeration": "ImpinjLockPrivilege", 
+    "name": "UserMemoryLock", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "name": "UserBlockPermalockPointer", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "format": "Hex", 
+    "name": "UserBlockPermalockMask", 
+    "type": "array:16"
+   }
+  ], 
+  "name": "ImpinjEncodeDataLockConfig", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1512
+ }, 
+ {
+  "fields": [
+   {
+    "name": "EncodeDataCacheID", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "name": "Threshold", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "Count", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjLowEncodeDataThresholdEvent", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1513
+ }, 
+ {
+  "fields": [
+   {
+    "name": "OpSpecID", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "format": "Hex", 
+    "name": "AccessPassword", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "name": "EncodeDataCacheID", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "enumeration": "ImpinjEncodeMode", 
+    "name": "Mode", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "enumeration": "ImpinjTagICType", 
+    "name": "TagIC", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "EncodeCount", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "name": "TagsInViewCount", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "EncodeReportCount", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "TagInViewTimeout", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjEncodeOpSpec", 
+  "parameters": [
+   {
+    "parameter": "ImpinjOpSpecGPOPulse", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1514
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjOpSpecAction", 
+    "name": "OpSpecAction", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "GPOPortNumber", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "GPOData", 
+    "type": "bool"
+   }, 
+   {
+    "name": "skip:7", 
+    "type": "skip:7"
+   }, 
+   {
+    "name": "GPOPulseDurationMSec", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjOpSpecGPOPulse", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1515
+ }, 
+ {
+  "fields": [
+   {
+    "name": "AccessSpecID", 
+    "type": "uintbe:32"
+   }
+  ], 
+  "name": "ImpinjEncodeReportData", 
+  "parameters": [
+   {
+    "parameter": "ImpinjEncodeOpSpecResult", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjEncodeDataResult", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1516
+ }, 
+ {
+  "fields": [
+   {
+    "name": "OpSpecID", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "enumeration": "ImpinjEncodeResultType", 
+    "name": "Result", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "name": "ElapsedTime", 
+    "type": "uintbe:64"
+   }, 
+   {
+    "name": "AttemptCount", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "name": "SuccessCount", 
+    "type": "uintbe:32"
+   }
+  ], 
+  "name": "ImpinjEncodeOpSpecResult", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1517
+ }, 
+ {
+  "fields": [
+   {
+    "name": "OpSpecID", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "enumeration": "ImpinjEncodeDataResultType", 
+    "name": "Result", 
+    "type": "uintbe:8"
+   }
+  ], 
+  "name": "ImpinjEncodeDataResult", 
+  "parameters": [
+   {
+    "parameter": "EPCData", 
+    "repeat": [
+     1, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjEncodeDataDetailedResult", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1518
+ }, 
+ {
+  "fields": [
+   {
+    "enumeration": "ImpinjEncodeDataResultType", 
+    "name": "EncodeEPCResult", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "enumeration": "ImpinjEncodeDataResultType", 
+    "name": "EncodePCBitsResult", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "enumeration": "ImpinjEncodeDataResultType", 
+    "name": "EncodeAccessPasswordResult", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "enumeration": "ImpinjEncodeDataResultType", 
+    "name": "EncodeKillPasswordResult", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "enumeration": "ImpinjEncodeDataResultType", 
+    "name": "EncodeUserMemoryResult", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "enumeration": "ImpinjEncodeDataResultType", 
+    "name": "EncodeAlternateEPCResult", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "enumeration": "ImpinjEncodeDataResultType", 
+    "name": "EncodeQTConfigResult", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "enumeration": "ImpinjEncodeDataResultType", 
+    "name": "EncodeLockConfigResult", 
+    "type": "uintbe:8"
+   }
+  ], 
+  "name": "ImpinjEncodeDataDetailedResult", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1519
+ }, 
+ {
+  "fields": [
+   {
+    "name": "SerialNumber", 
+    "type": "string"
+   }, 
+   {
+    "name": "FirmwareVersion", 
+    "type": "string"
+   }, 
+   {
+    "name": "PCBAVersion", 
+    "type": "string"
+   }
+  ], 
+  "name": "ImpinjArrayVersion", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1520
+ }, 
+ {
+  "fields": [
+   {
+    "name": "MaxNumSectors", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "name": "SupportsLISpecs", 
+    "type": "bool"
+   }, 
+   {
+    "name": "SupportsDISpecs", 
+    "type": "bool"
+   }, 
+   {
+    "name": "skip:6", 
+    "type": "skip:6"
+   }
+  ], 
+  "name": "ImpinjArrayCapabilities", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1521
+ }, 
+ {
+  "fields": [
+   {
+    "name": "XAxis", 
+    "type": "intbe:32"
+   }, 
+   {
+    "name": "YAxis", 
+    "type": "intbe:32"
+   }, 
+   {
+    "name": "ZAxis", 
+    "type": "intbe:32"
+   }
+  ], 
+  "name": "ImpinjTiltConfiguration", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1522
+ }, 
+ {
+  "fields": [
+   {
+    "name": "BeaconState", 
+    "type": "bool"
+   }, 
+   {
+    "name": "skip:7", 
+    "type": "skip:7"
+   }, 
+   {
+    "name": "BeaconDuration", 
+    "type": "uintbe:64"
+   }
+  ], 
+  "name": "ImpinjBeaconConfiguration", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1523
+ }, 
+ {
+  "name": "ImpinjAntennaConfiguration", 
+  "parameters": [
+   {
+    "parameter": "ImpinjAntennaEventHysteresis", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1524
+ }, 
+ {
+  "fields": [
+   {
+    "name": "AntennaEventConnected", 
+    "type": "uintbe:64"
+   }, 
+   {
+    "name": "AntennaEventDisconnected", 
+    "type": "uintbe:64"
+   }
+  ], 
+  "name": "ImpinjAntennaEventHysteresis", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1526
+ }, 
+ {
+  "name": "ImpinjTagReporting", 
+  "parameters": [
+   {
+    "parameter": "ImpinjEnableTagReport", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjAllowStaleTags", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1534
+ }, 
+ {
+  "fields": [
+   {
+    "name": "TagMode", 
+    "type": "bool"
+   }, 
+   {
+    "name": "skip:15", 
+    "type": "skip:15"
+   }
+  ], 
+  "name": "ImpinjEnableTagReport", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1535
+ }, 
+ {
+  "fields": [
+   {
+    "name": "Allow", 
+    "type": "bool"
+   }, 
+   {
+    "name": "skip:15", 
+    "type": "skip:15"
+   }
+  ], 
+  "name": "ImpinjAllowStaleTags", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1536
+ }, 
+ {
+  "fields": [
+   {
+    "name": "HubID", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "enumeration": "ImpinjHubConnectedType", 
+    "name": "Connected", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "enumeration": "ImpinjHubFaultType", 
+    "name": "Fault", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjHubConfiguration", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1538
+ }, 
+ {
+  "fields": [
+   {
+    "name": "Metric", 
+    "type": "array:32"
+   }
+  ], 
+  "name": "ImpinjArrayReportMetric", 
+  "typeNum": 1539
+ }, 
+ {
+  "fields": [
+   {
+    "name": "HeightCm", 
+    "type": "intbe:16"
+   }, 
+   {
+    "name": "FacilityXLocationCm", 
+    "type": "intbe:32"
+   }, 
+   {
+    "name": "FacilityYLocationCm", 
+    "type": "intbe:32"
+   }, 
+   {
+    "name": "OrientationDegrees", 
+    "type": "intbe:16"
+   }
+  ], 
+  "name": "ImpinjPlacementConfiguration", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1540
+ }, 
+ {
+  "name": "ImpinjLISpec", 
+  "parameters": [
+   {
+    "parameter": "ImpinjLocationConfig", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjC1G2LocationConfig", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1541
+ }, 
+ {
+  "fields": [
+   {
+    "name": "MotionWindowSeconds", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "name": "TagAgeIntervalSeconds", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjLocationConfig", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1542
+ }, 
+ {
+  "fields": [
+   {
+    "name": "ModeIndex", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "Session", 
+    "type": "bits:2"
+   }, 
+   {
+    "name": "skip:6", 
+    "type": "skip:6"
+   }
+  ], 
+  "name": "ImpinjC1G2LocationConfig", 
+  "parameters": [
+   {
+    "parameter": "C1G2Filter", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1543
+ }, 
+ {
+  "fields": [
+   {
+    "name": "ReportIntervalSeconds", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "EnableLocationUpdateReport", 
+    "type": "bool"
+   }, 
+   {
+    "name": "EnableLocationEntryReport", 
+    "type": "bool"
+   }, 
+   {
+    "name": "EnableLocationExitReport", 
+    "type": "bool"
+   }, 
+   {
+    "name": "skip:5", 
+    "type": "skip:5"
+   }
+  ], 
+  "name": "ImpinjLocationReporting", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1544
+ }, 
+ {
+  "fields": [
+   {
+    "name": "TimestampUTC", 
+    "type": "uintbe:64"
+   }, 
+   {
+    "name": "LocXCentimeters", 
+    "type": "intbe:32"
+   }, 
+   {
+    "name": "LocYCentimeters", 
+    "type": "intbe:32"
+   }, 
+   {
+    "name": "Confidence", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "enumeration": "ImpinjLocationReportType", 
+    "name": "Type", 
+    "type": "uintbe:8"
+   }
+  ], 
+  "name": "ImpinjLocationReportData", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1545
+ }, 
+ {
+  "fields": [
+   {
+    "name": "SectorID", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjSectorID", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1528
+ }, 
+ {
+  "fields": [
+   {
+    "name": "SectorID", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "TransmitPower", 
+    "type": "intbe:32"
+   }, 
+   {
+    "name": "ReceiverSensitivity", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjSectorConfiguration", 
+  "parameters": [
+   {
+    "parameter": "ImpinjFixedFrequencyList", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1525
+ }, 
+ {
+  "fields": [
+   {
+    "name": "SectorIDs", 
+    "type": "array:16"
+   }, 
+   {
+    "name": "ZoneID", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjTransitionZone", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1546
+ }, 
+ {
+  "name": "ImpinjTISpec", 
+  "parameters": [
+   {
+    "parameter": "ImpinjTransitionZone", 
+    "repeat": [
+     1, 
+     99999
+    ]
+   }, 
+   {
+    "parameter": "ImpinjTransitionConfig", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjC1G2TransitionConfig", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjSectorConfiguration", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1547
+ }, 
+ {
+  "fields": [
+   {
+    "name": "InitialStraySearchTimeSec", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "StrayUpdateIntervalSec", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "enumeration": "ImpinjTransitionZoneRange", 
+    "name": "TransitionZoneRange", 
+    "type": "uintbe:8"
+   }, 
+   {
+    "name": "TOITagAgeSec", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "StrayTagAgeSec", 
+    "type": "uintbe:16"
+   }
+  ], 
+  "name": "ImpinjTransitionConfig", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1548
+ }, 
+ {
+  "fields": [
+   {
+    "name": "ModeIndex", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "TOISession", 
+    "type": "bits:2"
+   }, 
+   {
+    "name": "StraySession", 
+    "type": "bits:2"
+   }, 
+   {
+    "name": "skip:4", 
+    "type": "skip:4"
+   }
+  ], 
+  "name": "ImpinjC1G2TransitionConfig", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1549
+ }, 
+ {
+  "fields": [
+   {
+    "name": "ImpinjEnableTransitionReport", 
+    "type": "bool"
+   }, 
+   {
+    "name": "ImpinjEnableStrayReport", 
+    "type": "bool"
+   }, 
+   {
+    "name": "ImpinjEnableEntryReport", 
+    "type": "bool"
+   }, 
+   {
+    "name": "skip:5", 
+    "type": "skip:5"
+   }
+  ], 
+  "name": "ImpinjTransitionReporting", 
+  "typeNum": 1550
+ }, 
+ {
+  "fields": [
+   {
+    "name": "TimestampUTC", 
+    "type": "uintbe:64"
+   }, 
+   {
+    "name": "FromZoneID", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "ToZoneID", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "name": "Confidence", 
+    "type": "uintbe:16"
+   }, 
+   {
+    "enumeration": "ImpinjZoneReportType", 
+    "name": "ReportType", 
+    "type": "uintbe:8"
+   }
+  ], 
+  "name": "ImpinjTransitionReportData", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1551
+ }, 
+ {
+  "name": "ImpinjExtendedTagInformation", 
+  "parameters": [
+   {
+    "parameter": "EPCData", 
+    "repeat": [
+     1, 
+     99999
+    ]
+   }, 
+   {
+    "parameter": "ImpinjTransitionReportData", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjLocationReportData", 
+    "repeat": [
+     0, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 1552
  }
 ]
 messages = [
@@ -4082,5 +7500,252 @@ messages = [
    }
   ], 
   "typeNum": 100
+ }, 
+ {
+  "fields": [
+   {
+    "name": "skip:32", 
+    "type": "skip:32"
+   }
+  ], 
+  "name": "IMPINJ_ENABLE_EXTENSIONS", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 21
+ }, 
+ {
+  "name": "IMPINJ_ENABLE_EXTENSIONS_RESPONSE", 
+  "parameters": [
+   {
+    "parameter": "LLRPStatus", 
+    "repeat": [
+     1, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 22
+ }, 
+ {
+  "fields": [
+   {
+    "name": "SaveConfiguration", 
+    "type": "bool"
+   }, 
+   {
+    "name": "skip:7", 
+    "type": "skip:7"
+   }
+  ], 
+  "name": "IMPINJ_SAVE_SETTINGS", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 23
+ }, 
+ {
+  "name": "IMPINJ_SAVE_SETTINGS_RESPONSE", 
+  "parameters": [
+   {
+    "parameter": "LLRPStatus", 
+    "repeat": [
+     1, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 24
+ }, 
+ {
+  "name": "IMPINJ_ADD_ENCODE_DATA_CACHE", 
+  "parameters": [
+   {
+    "parameter": "ImpinjEncodeDataCache", 
+    "repeat": [
+     1, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 150
+ }, 
+ {
+  "name": "IMPINJ_ADD_ENCODE_DATA_CACHE_RESPONSE", 
+  "parameters": [
+   {
+    "parameter": "LLRPStatus", 
+    "repeat": [
+     1, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 151
+ }, 
+ {
+  "fields": [
+   {
+    "name": "EncodeDataCacheID", 
+    "type": "uintbe:32"
+   }
+  ], 
+  "name": "IMPINJ_DELETE_ENCODE_DATA_CACHE", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 152
+ }, 
+ {
+  "name": "IMPINJ_DELETE_ENCODE_DATA_CACHE_RESPONSE", 
+  "parameters": [
+   {
+    "parameter": "LLRPStatus", 
+    "repeat": [
+     1, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 153
+ }, 
+ {
+  "name": "IMPINJ_GET_ENCODE_DATA_CACHES", 
+  "parameters": [
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 154
+ }, 
+ {
+  "name": "IMPINJ_GET_ENCODE_DATA_CACHES_RESPONSE", 
+  "parameters": [
+   {
+    "parameter": "LLRPStatus", 
+    "repeat": [
+     1, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "ImpinjEncodeDataCache", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 155
+ }, 
+ {
+  "fields": [
+   {
+    "name": "EncodeDataCacheID", 
+    "type": "uintbe:32"
+   }
+  ], 
+  "name": "IMPINJ_ADD_ENCODE_DATA", 
+  "parameters": [
+   {
+    "parameter": "ImpinjEncodeData", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 156
+ }, 
+ {
+  "name": "IMPINJ_ADD_ENCODE_DATA_RESPONSE", 
+  "parameters": [
+   {
+    "parameter": "LLRPStatus", 
+    "repeat": [
+     1, 
+     1
+    ]
+   }, 
+   {
+    "parameter": "Custom", 
+    "repeat": [
+     0, 
+     99999
+    ]
+   }
+  ], 
+  "typeNum": 157
  }
 ]

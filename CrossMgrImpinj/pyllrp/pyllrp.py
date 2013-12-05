@@ -657,23 +657,27 @@ def GetBasicAddRospecMessage( MessageID = None, ROSpecID = 123, inventoryParamet
 			AISpec_Parameter(				# Antenna Inventory Spec (specifies which antennas and protocol to use)
 				AntennaIDs = antennas,		# Use specified antennas.
 				Parameters = [
-					AISpecStopTrigger_Parameter( AISpecStopTriggerType = AISpecStopTriggerType.Null ),
+					AISpecStopTrigger_Parameter(
+						AISpecStopTriggerType = AISpecStopTriggerType.Null,
+						Parameters = [
+							TagObservationTrigger_Parameter(
+								TriggerType = TagObservationTriggerType.Upon_Seeing_N_Tags_Or_Timeout,
+								NumberOfTags = 50,	# Number of tags
+								Timeout = 500,		# Milliseconds
+								T = 0,				# Idle time between responses.
+							),
+						]
+					),
 					InventoryParameterSpec_Parameter(
 						InventoryParameterSpecID = inventoryParameterSpecID,
 						ProtocolID = AirProtocols.EPCGlobalClass1Gen2,
 					),
-					TagObservationTrigger_Parameter(
-						TriggerType = TagObservationTriggerType.Upon_Seeing_N_Tags_Or_Timeout,
-						NumberOfTags = 50,	# Number of tags
-						Timeout = 500,		# Milliseconds
-						T = 0,				# Idle time between responses.
-					),
-
 				]
 			),
 			
 			ROReportSpec_Parameter(			# Report spec (specified what to send from the reader)
-				ROReportTrigger = ROReportTriggerType.Null,
+				ROReportTrigger = ROReportTriggerType.Upon_N_Tags_Or_End_Of_ROSpec,
+				N = 0,
 				Parameters = [
 					TagReportContentSelector_Parameter(
 						EnableAntennaID = True,

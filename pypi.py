@@ -179,6 +179,7 @@ setup = {
 		'whoosh >= 2.4.1',
 		'openpyxl >= 1.5.8',
 		'qrcode >= 2.4.2',
+		'PIL >= 1.1.6',
 		# 'wxPython >= 2.8.0',
 	],
 }

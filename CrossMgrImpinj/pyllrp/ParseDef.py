@@ -9,6 +9,7 @@
 from xml.dom.minidom import parse
 import datetime
 import json
+import sys
 
 # Map the xml field types to our types (bitstring standard, and our custom ones).
 fieldMap = {
@@ -35,9 +36,6 @@ fieldMap = {
 	'bytesToEnd':	'bytesToEnd',	# Used for the Custom message type.
 }
 
-llrpDefXml = 'llrp-1x0-def.xml'
-dom = parse( llrpDefXml )
-
 def toAscii( s ):
 	return s.encode('ascii', 'ignore')
 
@@ -49,7 +47,11 @@ def getEnum( e ):
 
 def getParameterMessage( n ):
 	Name = toAscii(n.attributes['name'].value)
-	TypeNum = int(n.attributes['typeNum'].value)
+	print Name
+	try:
+		TypeNum = int(n.attributes['typeNum'].value)
+	except KeyError:
+		TypeNum = int(n.attributes['subtype'].value)
 	Fields = []
 	Parameters = []
 	for c in n.childNodes:
@@ -85,9 +87,24 @@ def getParameterMessage( n ):
 		pm['parameters'] = Parameters
 	return pm
 
+enums, parameters, messages = [], [], []
+
+llrpDefXml = 'llrp-1x0-def.xml'
+dom = parse( llrpDefXml )
+
 enums = [getEnum(e) for e in dom.getElementsByTagName('enumerationDefinition')]
 parameters = [getParameterMessage(p) for p in dom.getElementsByTagName('parameterDefinition')]
 messages = [getParameterMessage(m) for m in dom.getElementsByTagName('messageDefinition')]
+
+dom.unlink()
+dom = None
+
+llrpCustomDefXml = 'Impinjdef-1.18-private.xml'
+dom = parse( llrpCustomDefXml )
+
+enums.extend( getEnum(e) for e in dom.getElementsByTagName('customEnumerationDefinition') )
+parameters.extend( getParameterMessage(p) for p in dom.getElementsByTagName('customParameterDefinition') )
+messages.extend( getParameterMessage(m) for m in dom.getElementsByTagName('customMessageDefinition') )
 
 with open('llrpdef.py', 'w') as fp:
 	fp.write( '#-----------------------------------------------------------\n' )
