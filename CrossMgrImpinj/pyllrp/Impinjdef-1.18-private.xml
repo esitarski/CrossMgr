@@ -1,0 +1,2067 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ -                                                                           -
+ -                 IMPINJ CONFIDENTIAL AND PROPRIETARY                       -
+ -                                                                           -
+ - This source code is the sole property of Impinj, Inc.  Reproduction or    -
+ - utilization of this source code in whole or in part is forbidden without  -
+ - the prior written consent of Impinj, Inc.                                 -
+ -                                                                           -
+ - (c) Copyright Impinj, Inc. 2007-2010. All rights reserved.                -
+ -                                                                           -
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ -->
+
+<llrpdef
+    xmlns="http://www.llrp.org/ltk/schema/core/encoding/binary/1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:h="http://www.w3.org/1999/xhtml"
+    xsi:schemaLocation="
+       http://www.llrp.org/ltk/schema/core/encoding/binary/1.0
+       http://www.llrp.org/ltk/schema/core/encoding/binary/1.0/llrpdef.xsd">
+
+
+  <vendorDefinition name="Impinj" vendorID="25882" />
+  <namespaceDefinition
+    prefix="Impinj"
+    URI="http://developer.impinj.com/ltk/schema/encoding/xml/1.18"
+    schemaLocation="http://developer.impinj.com/ltk/schema/encoding/xml/1.18/impinj.xsd" />
+
+<!-- ############### General Impinj Vendor Extensions ############### -->
+<!-- Be sure to see the references to them above -->
+
+  <customMessageDefinition      name="IMPINJ_ENABLE_EXTENSIONS"
+                                vendor="Impinj" subtype="21"
+                                namespace="Impinj"
+                              responseType="IMPINJ_ENABLE_EXTENSIONS_RESPONSE">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2007, 2008 Impinj Inc.">
+         <h:p>The IMPINJ_ENABLE_EXTENSIONS message only applies for the duration of the current LLRP connection. If the LLRP connection is broken and re-established, the application must re-issue this command.</h:p>
+      </description>
+    </annotation>
+    <reserved   bitCount="32"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customMessageDefinition>
+
+  <customMessageDefinition      name="IMPINJ_ENABLE_EXTENSIONS_RESPONSE"
+                                vendor="Impinj" subtype="22"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2007, 2008 Impinj Inc.">
+         <h:p>This custom message is the response by the Reader to an IMPINJ_ENABLE_EXTENSIONS message. If the Reader was capable of enabling the Impinj extensions the reader returns the success code in the LLRPStatus parameter. If there is an error, the reader returns an appropriate error code.</h:p>
+      </description>
+    </annotation>
+    <parameter  repeat="1"      type="LLRPStatus"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customMessageDefinition>
+
+  <customMessageDefinition      name="IMPINJ_SAVE_SETTINGS"
+                                vendor="Impinj" subtype="23"
+                                namespace="Impinj"
+                                responseType="IMPINJ_SAVE_SETTINGS_RESPONSE">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2007, 2009 Impinj Inc.">
+         <h:p>This custom message instructs the Reader to save its current settings to persistent storage. The saved parameters will then become the Reader&apos;s power-on and reset settings.</h:p>
+         <h:p>On Speedway the settings include only the current configuration set through SET_READER_CONFIG.</h:p>
+         <h:p>On Speedway Revolution the settings include the current configuration, ROSpecs, and AccessSpecs. The enabled or disabled state of ROSpecs and AccessSpecs are saved. An active ROSpec is saved as enabled. The current countdown of AccessSpecs, if any, are saved. The enable/disable state and countdown are not automatically updated in persistent storage during reader operation.</h:p>
+         <h:p>Note that there is no way to recall the persistent settings during runtime. Only after a Reader power-on or reset are the persistent settings applied. When ResetToFactoryDefault in SET_READER_CONFIG is true the persistent settings are deleted. The SaveConfiguration Boolean must be set TRUE. When FALSE this message does nothing.</h:p>
+      </description>
+    </annotation>
+    <field      type="u1"       name="SaveConfiguration"/>
+    <reserved   bitCount="7"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customMessageDefinition>
+
+  <customMessageDefinition      name="IMPINJ_SAVE_SETTINGS_RESPONSE"
+                                vendor="Impinj" subtype="24"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2007, 2008 Impinj Inc.">
+         <h:p>This custom message is the response by the Reader to an IMPINJ_SAVE_SETTINGS message. If the Reader was capable of saving the current configuration to persistent storage, the Reader returns the success code in the LLRPStatus parameter. If there is an error, the Reader returns an appropriate error code.</h:p>
+      </description>
+    </annotation>
+    <parameter  repeat="1"      type="LLRPStatus"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customMessageDefinition>
+
+  <customMessageDefinition      name="IMPINJ_ADD_ENCODE_DATA_CACHE"
+                                vendor="Impinj" subtype="150"
+                                namespace="Impinj"
+                                responseType="IMPINJ_ADD_ENCODE_DATA_CACHE_RESPONSE">
+    <parameter  repeat="1"      type="ImpinjEncodeDataCache"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customMessageDefinition>
+
+  <customMessageDefinition      name="IMPINJ_ADD_ENCODE_DATA_CACHE_RESPONSE"
+                                vendor="Impinj" subtype="151"
+                                namespace="Impinj">
+    <parameter  repeat="1"      type="LLRPStatus"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customMessageDefinition>
+
+  <customMessageDefinition      name="IMPINJ_DELETE_ENCODE_DATA_CACHE"
+                                vendor="Impinj" subtype="152"
+                                namespace="Impinj"
+                                responseType="IMPINJ_DELETE_ENCODE_DATA_CACHE_RESPONSE">
+    <field      type="u32"      name="EncodeDataCacheID"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customMessageDefinition>
+
+  <customMessageDefinition      name="IMPINJ_DELETE_ENCODE_DATA_CACHE_RESPONSE"
+                                vendor="Impinj" subtype="153"
+                                namespace="Impinj">
+    <parameter  repeat="1"      type="LLRPStatus"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customMessageDefinition>
+
+  <customMessageDefinition      name="IMPINJ_GET_ENCODE_DATA_CACHES"
+                                vendor="Impinj" subtype="154"
+                                namespace="Impinj"
+                                responseType="IMPINJ_GET_ENCODE_DATA_CACHES_RESPONSE">
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customMessageDefinition>
+
+  <customMessageDefinition      name="IMPINJ_GET_ENCODE_DATA_CACHES_RESPONSE"
+                                vendor="Impinj" subtype="155"
+                                namespace="Impinj">
+    <parameter  repeat="1"      type="LLRPStatus"/>
+    <parameter  repeat="0-N"    type="ImpinjEncodeDataCache"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customMessageDefinition>
+
+  <customMessageDefinition      name="IMPINJ_ADD_ENCODE_DATA"
+                                vendor="Impinj" subtype="156"
+                                namespace="Impinj"
+                                responseType="IMPINJ_ADD_ENCODE_DATA_RESPONSE">
+    <field      type="u32"      name="EncodeDataCacheID"/>
+    <parameter  repeat="0-N"    type="ImpinjEncodeData"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customMessageDefinition>
+
+  <customMessageDefinition      name="IMPINJ_ADD_ENCODE_DATA_RESPONSE"
+                                vendor="Impinj" subtype="157"
+                                namespace="Impinj">
+    <parameter  repeat="1"      type="LLRPStatus"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customMessageDefinition>
+
+  <customParameterDefinition    name="ImpinjRequestedData"
+                                vendor="Impinj" subtype="21"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+        <h:p>This custom parameter allows the Client to choose specific extensions to be included in either a GET_READER_CAPABILITIES_RESPONSE or a GET_READER_CONFIG_RESPONSE message. If the Client requests <h:b>All</h:b> in the command message and Impinj extensions have been enabled, then all Impinj extensions will be included in the response. However, if the Client wishes to reduce the response size and only request a specific response parameter, this extension may be used.</h:p>
+        <h:p>Note that this only applies to direct extensions of these two response messages. Custom extensions nested within parameters already present in either of these response messages will be included provided the Reader has received the IMPINJ_ENABLE_EXTENSIONS message. While this parameter may appear in either a GET_READER_CAPABILITIES or a GET_READER_CONFIG message, not all ranges for the enumerated RequestedData field are valid in both messages.</h:p>
+      </documentation>
+      <description copyright="Copyright 2007, 2008 Impinj Inc.">
+      </description>
+    </annotation>
+    <field      type="u32"      name="RequestedData"
+                                enumeration="ImpinjRequestedDataType"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="GET_READER_CAPABILITIES"/>
+    <allowedIn  repeat="0-1"    type="GET_READER_CONFIG"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjRequestedDataType"
+                                namespace="Impinj">
+    <entry     value="1000"     name="All_Capabilities"/>
+    <entry     value="1001"     name="Impinj_Detailed_Version"/>
+    <entry     value="1002"     name="Impinj_Frequency_Capabilities"/>
+    <entry     value="1003"     name="Impinj_Array_Capabilities"/>    
+    <entry     value="2000"     name="All_Configuration"/>
+    <entry     value="2001"     name="Impinj_Sub_Regulatory_Region"/>
+    <entry     value="2002"     name="Impinj_Forklift_Configuration"/>
+    <entry     value="2003"     name="Impinj_GPI_Debounce_Configuration"/>
+    <entry     value="2004"     name="Impinj_Reader_Temperature"/>
+    <entry     value="2005"     name="Impinj_Link_Monitor_Configuration"/>
+    <entry     value="2006"     name="Impinj_Report_Buffer_Configuration"/>
+    <entry     value="2007"     name="Impinj_Access_Spec_Configuration"/>
+    <entry     value="2008"     name="Impinj_GPS_NMEA_Sentences"/>
+    <entry     value="2009"     name="Impinj_Advanced_GPO_Configuration"/>
+    <entry     value="2010"     name="Impinj_Tilt_Configuration"/>
+    <entry     value="2011"     name="Impinj_Beacon_Configuration"/>
+    <entry     value="2012"     name="Impinj_Antenna_Configuration"/>
+    <entry     value="2013"     name="Impinj_Location_Configuration"/>
+    <entry     value="2014"     name="Impinj_Transition_Configuration"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjSubRegulatoryRegion"
+                                vendor="Impinj" subtype="22"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2007, 2008 Impinj Inc.">
+        <h:p>This custom parameter is used when a particular regulatory region supports multiple operational modes. The Reader validates the RegulatoryRegion field against the regulatory region advertised in the reader&apos;s capabilities and only allows compatible regions to be set. Note that when setting the sub-regulatory region using the SET_READER_CONFIG message, the ResetToFactoryDefault field must be set to true. This will delete any configured ROSpecs and AccessSpecs. Failure to set the ResetToFactoryDefault field will result in an error. The Client should subsequently issue a GET_READER_CAPABILITIES command after updating the regulatory region as the change may have affected the advertised tables.</h:p>
+        <h:p>After the reader accepts this parameter, it will begin to reload its regulatory settings; this can take several seconds. Applications should plan for an additional delay of several seconds for the SET_READER_CONFIG_RESPONSE. Note: An LLRP ResetToFactoryDefault that changes the RegulatoryRegion will have the same behavior.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="RegulatoryRegion"
+                                enumeration="ImpinjRegulatoryRegion"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="GET_READER_CONFIG_RESPONSE"/>
+    <allowedIn  repeat="0-1"    type="SET_READER_CONFIG"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjRegulatoryRegion"
+                                namespace="Impinj">
+    <entry      value="0"       name="FCC_Part_15_247"/>
+    <entry      value="1"       name="ETSI_EN_300_220"/>
+    <entry      value="2"       name="ETSI_EN_302_208_With_LBT"/>
+    <entry      value="3"       name="Hong_Kong_920_925_MHz"/>
+    <entry      value="4"       name="Taiwan_922_928_MHz"/>
+    <entry      value="5"       name="Japan_952_954_MHz"/>
+    <entry      value="6"       name="Japan_952_954_MHz_Low_Power"/>
+    <entry      value="7"       name="ETSI_EN_302_208_v1_2_1"/>
+    <entry      value="8"       name="Korea_917_921_MHz"/>
+    <entry      value="9"       name="Malaysia_919_923_MHz"/>
+    <entry      value="10"      name="China_920_925_MHz"/>
+    <entry      value="11"      name="Japan_952_956_MHz_Without_LBT"/>
+    <entry      value="12"      name="South_Africa_915_919_MHz"/>
+    <entry      value="13"      name="Brazil_902_907_and_915_928_MHz"/>
+    <entry      value="14"      name="Thailand_920_925_MHz"/>
+    <entry      value="15"      name="Singapore_920_925_MHz"/>
+    <entry      value="16"      name="Australia_920_926_MHz"/>
+    <entry      value="17"      name="India_865_867_MHz"/>
+    <entry      value="18"      name="Uruguay_916_928_MHz"/>
+    <entry      value="19"      name="Vietnam_920_925_MHz"/>
+    <entry      value="20"      name="Israel_915_917_MHz"/>
+    <entry      value="21"      name="Philippines_918_920_MHz"/>
+    <entry      value="22"      name="Canada_Post"/>
+    <entry      value="23"      name="Indonesia_923_925_MHz"/>
+    <entry      value="24"      name="New_Zealand_921p5_928_MHz"/>
+    <entry      value="25"      name="Japan_916_921_MHz_Without_LBT"/>  
+    <entry      value="26"      name="Latin_America_902_928_MHz"/>        
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjInventorySearchMode"
+                                vendor="Impinj" subtype="23"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2007, 2008 Impinj Inc.">
+         <h:p>This custom parameter specifies the Impinj-specific inventory search mode used by a particular antenna. The inventory search mode may be configured as either part of the default reader configuration (via a SET_READER_CONFIG message), or as part of individual AISpecs within a ROSpec (via an ADD_ROSPEC message). For any AISpec, each enabled antenna must be configured to use the same search algorithm. Mismatched antennas will result in an error reported by the Reader.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="InventorySearchMode"
+                                enumeration="ImpinjInventorySearchType"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="C1G2InventoryCommand"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjInventorySearchType"
+                                namespace="Impinj">
+    <entry      value="0"       name="Reader_Selected"/>
+    <entry      value="1"       name="Single_Target"/>
+    <entry      value="2"       name="Dual_Target"/>
+    <entry      value="3"       name="Single_Target_With_Suppression"/>
+  </customEnumerationDefinition>
+
+<!--  deleted.  Don't re-use numbers though 
+<customParameterDefinition    name="ImpinjTagDirectionReporting"
+                                vendor="Impinj" subtype="24"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2007, 2008 Impinj Inc.">
+        <h:p>This custom parameter enables the Reader to report direction information for each tag that moves through a portal. If tag direction is enabled, the Reader will provide an ImpinjTagInformation parameter containing an ImpinjTagDirection parameter in an RO_ACCESS_REPORT for each tag in which a direction determination has been made. The configuration determines the number of antennas used to calculate the direction, while the physical cabling of the antennas to the Reader determines the frame of reference.</h:p>
+      </description>
+    </annotation>
+    <field      type="u1"       name="EnableTagDirection"/>
+    <reserved   bitCount="15"/>
+    <field      type="u16"      name="AntennaConfiguration"
+                                enumeration="ImpinjTagDirectionAntennaConfiguration"/>
+    <reserved   bitCount="32"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="ROReportSpec"/>
+  </customParameterDefinition>
+  -->
+
+<!--  deleted 
+<customEnumerationDefinition  name="ImpinjTagDirectionAntennaConfiguration"
+                                namespace="Impinj">
+    <entry     value="1"        name="Dual_Antenna"/>
+    <entry     value="2"        name="Quad_Antenna"/>
+  </customEnumerationDefinition>
+  -->
+
+<!-- Deleted 
+  <customParameterDefinition    name="ImpinjTagDirection"
+                                vendor="Impinj" subtype="25"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2007, 2008 Impinj Inc.">
+         <h:p>This custom parameter conveys the direction of a tag through a portal with an associated confidence factor. If tag direction is enabled using the ImpinjTagDirectionReporting parameter, the Reader will send RO_ACCESS_REPORT messages containing direction information whenever a direction decision has been made or the confidence factor changes.</h:p>
+         <h:p>As it is impossible to define direction without a frame of reference, tag direction is reported by using abstract sides <h:b>1</h:b> and <h:b>2</h:b> as reference points. The actual definition corresponding to the values reported by the Reader are determined by the physical cabling of the antennas to the Reader. Specifically, for a dual antenna configuration, side 1 is defined as the direction of the antenna connected to the Antenna 1 BNC and side 2 is defined as the direction of the antenna connected to the Antenna 2 BNC. For the quad antenna configuration, side 1 is antennas 1 and 3, and side 2 is antennas 2 and 4.</h:p>
+      </description>
+    </annotation>
+    <field      type="u64"      name="DecisionTimestamp" format="Datetime"/>
+    <field      type="u16"      name="TagDirection"
+                                enumeration="ImpinjDirection"/>
+    <field      type="u16"      name="Confidence"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+-->
+
+<!--  deleted 
+<customEnumerationDefinition  name="ImpinjDirection"
+                                namespace="Impinj">
+    <entry     value="0"        name="Indeterminate"/>
+    <entry     value="1"        name="From_Side2_To_Side1"/>
+    <entry     value="2"        name="From_Side1_To_Side2"/>
+  </customEnumerationDefinition>
+  -->
+
+  <customParameterDefinition    name="ImpinjFixedFrequencyList"
+                                vendor="Impinj" subtype="26"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2007, 2008 Impinj Inc.">
+         <h:p>This custom parameter allows the Reader to make intelligent decisions about which channel to use in fixed frequency or intelligent hopping regulatory regions. The Mode field determines how the Reader will select the active channel. When set to zero (disabled), the Reader ignores this parameter and instead uses the frequency information in the LLRP RFTransmitter parameter. When set to one, the Reader chooses the active channel automatically based on the rules of the regulatory region. When set to two, the Reader chooses the active channel from a configurable list of channel indices based on the FixedFrequencyTable parameter advertised in the Reader&apos;s capabilities. The maximum number of channels allowed in the configurable list varies by regulatory region. A repeated channel index means the Reader will use the channel multiple times. When Mode is set to zero or one, the ChannelList array is ignored.</h:p>
+         <h:p>This parameter may only be added in an operational mode (i.e. not disabled) when the Reader is operating in a fixed frequency or intelligent hopping regulatory region. The parameter contents must be consistent across all enabled antennas in an AISpec.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="FixedFrequencyMode"
+                                enumeration="ImpinjFixedFrequencyMode"/>
+    <reserved  bitCount="16"/>
+    <field      type="u16v"     name="ChannelList"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="C1G2InventoryCommand"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjFixedFrequencyMode"
+                                namespace="Impinj">
+    <entry     value="0"        name="Disabled"/>
+    <entry     value="1"        name="Auto_Select"/>
+    <entry     value="2"        name="Channel_List"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjReducedPowerFrequencyList"
+                                vendor="Impinj" subtype="27"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2007, 2008 Impinj Inc.">
+        <h:p>This custom parameter allows the Reader to apply a reduced power to specific channels listed in the ChannelList when operating in the FCC regulatory region. The ReducedPowerMode field determines how the Reader will interpret the channels listed. When set to zero (disabled), the Reader ignores this parameter. When set to one, during inventory and access the Reader will apply a reduced power level to the list of channel indices derived from the FrequencyList supplied by the ImpinjFrequenciesCapabilities parameter advertised in the Reader&apos;s capabilities. The reduced power level is not configurable, and defaults to the lowest power possible by the device. The minimum number of channels allowed in the configurable list is two, and the maximum is sixteen.</h:p>
+        <h:p>This parameter is valid only when the Reader is operating in the FCC regulatory region. The parameter contents must be consistent across all enabled antennas in an AISpec.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="ReducedPowerMode"
+                                enumeration="ImpinjReducedPowerMode"/>
+    <reserved  bitCount="16"/>
+    <field      type="u16v"     name="ChannelList"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="C1G2InventoryCommand"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjReducedPowerMode"
+                                namespace="Impinj">
+    <entry     value="0"        name="Disabled"/>
+    <entry     value="1"        name="Enabled"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjLowDutyCycle"
+                                vendor="Impinj" subtype="28"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2007, 2008 Impinj Inc.">
+         <h:p>This custom parameter provides additional control of the RF duty cycle of the Reader beyond that provided by the TagTransitTime field in the LLRP C1G2SingulationControl parameter. During inventory, if the Reader detects zero tags on all enabled antennas in the AISpec, EmptyFieldTimeout specifies in milliseconds the time the Reader will wait before entering low duty cycle mode. In this low duty cycle mode, the Reader will revisit each enabled antenna in the AISpec every FieldPingInterval milliseconds, checking for tags. When a tag is detected, full duty cycle will resume. The Reader will exit low duty cycle mode at the start of each AISpec and restart its EmptyFieldTimeout timer.</h:p>
+         <h:p>As an example, assume EmptyFieldTimeout is set to 500 ms and FieldPingInterval is set to 200 ms for each of the enabled antennas in an AISpec, and four antennas are enabled. Once the Reader detects zero tags on each of the four antennas, the EmptyFieldTimeout timer starts while the Reader continues to search the FOV for tags. If the Reader detects tags, the timer stops. If the Reader detects zero tags for 500 ms, a timeout occurs and the Reader enters low duty cycle mode. During this mode, the Reader will visit each of the four enabled antennas once in the FieldPingInterval of 200 ms. Therefore, the Reader will switch on the transmitter briefly every 50 ms to check for tags in the FOV of one of the enabled antennas.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="LowDutyCycleMode"
+                                enumeration="ImpinjLowDutyCycleMode"/>
+    <field      type="u16"      name="EmptyFieldTimeout"/>
+    <field      type="u16"      name="FieldPingInterval"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="C1G2InventoryCommand"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjLowDutyCycleMode"
+                                namespace="Impinj">
+    <entry     value="0"        name="Disabled"/>
+    <entry     value="1"        name="Enabled"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjHubVersions"
+                                vendor="Impinj" subtype="1537"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2012 Impinj Inc.">
+        <h:p>This parameter contains Antenna Hub-specific hardware and version information that is considered additional to ImpinjDetailedVersion information.</h:p>
+      </description>
+    </annotation>
+    
+    <parameter  repeat="1-N"    type="ImpinjArrayVersion"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjDetailedVersion"
+                                vendor="Impinj" subtype="29"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2007, 2008 Impinj Inc.">
+        <h:p>This custom parameter provides detailed information about the individual components running on the Reader. The primary platform version is available in the FirmwareVersion field in the GeneralDeviceCapabilities parameter of the Reader&apos;s capabilities. However, there are sub-components of the Reader that contain independent version information that is unavailable in this manner. This parameter provides this detailed information.</h:p>
+      </description>
+    </annotation>
+    <field      type="utf8v"    name="ModelName"/>
+    <field      type="utf8v"    name="SerialNumber"/>
+    <field      type="utf8v"    name="SoftwareVersion"/>
+    <field      type="utf8v"    name="FirmwareVersion"/>
+    <field      type="utf8v"    name="FPGAVersion"/>
+    <field      type="utf8v"    name="PCBAVersion"/>
+    <parameter  repeat="0-1"    type="ImpinjHubVersions"/>  
+    <parameter  repeat="0-1"    type="ImpinjArrayVersion"/>  
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="GET_READER_CAPABILITIES_RESPONSE"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjFrequencyCapabilities"
+                                vendor="Impinj" subtype="30"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2007, 2008 Impinj Inc.">
+        <h:p>This custom parameter is included in the Reader&apos;s capabilities and carries each frequency supported by the reader (see section 4.2.9 for more information). The FrequencyList field is a one-based array of frequencies in kHz.</h:p>
+      </description>
+    </annotation>
+    <field      type="u32v"     name="FrequencyList"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="GET_READER_CAPABILITIES_RESPONSE"/>
+  </customParameterDefinition>
+
+<!--  
+<customParameterDefinition    name="ImpinjTagInformation"
+                                vendor="Impinj" subtype="31"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2007, 2008 Impinj Inc.">
+        <h:p>This custom parameter provides additional information about a tag that cannot be conveyed using the standard LLRP TagReportData parameter. The EPC is provided so an application may correlate this information with the associated TagReportData information as these parameters may arrive asynchronously with respect to the standard immediate reporting mechanism. Following the EPC is a set of parameters providing additional information about the tag, such as the direction in which it traveled through a portal.</h:p>
+        <h:p>Note that no effort was made to optimize the EPC as was done in standard LLRP. All EPCs, regardless of length, are reported using the EPCData parameter.</h:p>
+      </description>
+    </annotation>
+    <parameter  repeat="1-N"      type="EPCData"/>
+    <parameter  repeat="0-1"    type="ImpinjTagDirection"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-N"    type="RO_ACCESS_REPORT"/>
+  </customParameterDefinition>
+  -->
+  
+  <customParameterDefinition    name="ImpinjForkliftConfiguration"
+                                vendor="Impinj" subtype="32"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2007, 2008 Impinj Inc.">
+        <h:p>This custom parameter provides the configuration for the forklift sensor board. While this parameter does not carry any specific configuration items, it encapsulates those custom parameters that do. This parameter may only be present in messages sent to Impinj reader model R1005. Other reader models will respond with an error upon receiving this parameter.</h:p>
+      </description>
+    </annotation>
+    <parameter  repeat="0-1"    type="ImpinjForkliftHeightThreshold"/>
+    <parameter  repeat="0-1"    type="ImpinjForkliftZeroMotionTimeThreshold"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="SET_READER_CONFIG"/>
+    <allowedIn  repeat="0-1"    type="GET_READER_CONFIG_RESPONSE"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjForkliftHeightThreshold"
+                                vendor="Impinj" subtype="33"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2007, 2008 Impinj Inc.">
+        <h:p>This custom parameter provides the height threshold at which the Reader will issue a virtual GPI READER_EVENT_NOTIFICATION for the forklift arm height. When the forklift arm raises above the threshold value, the virtual height GPI will transition high (1), and when the forklift arm lowers below the threshold value, the virtual height GPI will transition low (0). For more information on the forklift virtual GPIs, please reference the Octane Forklift User&apos;s Guide.</h:p>
+        <h:p>The HeightThreshold field in this parameter is in centimeters. However, the Reader will round the value specified in this field down to the nearest setting supported by the hardware. For the R1005, the height resolution is in 5 cm increments. Thus, a setting of 50 cm is valid and will read back as 50 cm. A setting of 54 cm is also valid, but is rounded down to 50 cm and a subsequent read of this parameter will reflect the rounded value.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="HeightThreshold"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjForkliftZeroMotionTimeThreshold"
+                                vendor="Impinj" subtype="34"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2007, 2008 Impinj Inc.">
+        <h:p>This custom parameter provides the time threshold at which the Reader will issue a virtual GPI READER_EVENT_NOTIFICATION for forklift motion. When the forklift has been motionless for a time greater than the threshold value, the virtual motion GPI will transition low (0), and when the forklift moves again, the virtual motion GPI will transition high (1). For more information on the forklift virtual GPIs, please reference the Octane Forklift User&apos;s Guide.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="ZeroMotionTimeThreshold"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjForkliftCompanionBoardInfo"
+                                vendor="Impinj" subtype="35"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2007, 2008 Impinj Inc.">
+        <h:p>This custom parameter provides the version information for the accompanying forklift companion board. This is only valid on Forklift model readers.</h:p>
+      </description>
+    </annotation>
+    <field      type="utf8v"    name="BoardManufacturer"/>
+    <field      type="u8v"      name="FirmwareVersion" format="Hex"/>
+    <field      type="u8v"      name="HardwareVersion" format="Hex"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-N"    type="GET_READER_CAPABILITIES_RESPONSE"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjGPIDebounceConfiguration"
+                                vendor="Impinj" subtype="36"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2008 Impinj Inc.">
+        <h:p>This custom parameter controls the GPI debounce timing. It is only available on Speedway Revolution readers. The GPIPortNum is the 1-based GPI number. Once a transition, rising or falling, is detected subsequent transitions are ignored for GPIDebounceTimerMSec milliseconds. GPIDebounceTimerMSec must be a multiple of 10ms. Setting GPIDebounceTimerMSec to zero effecitvely disables debounce. The debounced GPI affects triggered ROSpecs and GPIEvent reporting.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="GPIPortNum"/>
+    <field      type="u32"      name="GPIDebounceTimerMSec"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-N"    type="GET_READER_CONFIG_RESPONSE"/>
+    <allowedIn  repeat="0-N"    type="SET_READER_CONFIG"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjReaderTemperature"
+                                vendor="Impinj" subtype="37"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2009 Impinj Inc.">
+        <h:p>This custom parameter reports the current temperature of the Reader in degrees Celsius. The temperature that is reported is the internal temperature of the Reader, not the ambient temperature of the Reader surroundings. The temperature is accurate to within +- 2 degrees Celsius across all operating temperatures.</h:p>
+      </description>
+    </annotation>
+    <field      type="s16"      name="Temperature"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="GET_READER_CONFIG_RESPONSE"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjLinkMonitorConfiguration"
+                                vendor="Impinj" subtype="38"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2009 Impinj Inc.">
+        <h:p>This custom parameter configures the Reader to monitor LLRP link health using KEEPALIVE and KEEPALIVE_ACK messages. When disabled or unsupported, the Reader ignores KEEPALIVE_ACK messages entirely. When this parameter is enabled, if the Reader fails to receive LinkDownThreshold consecutive KEEPALIVE_ACK messages from the Client, the Reader will close the current connection. Note that this parameter must be configured in conjunction with the KeepaliveSpec LLRP parameter in the standard LLRP configuration. The frequency with which the Reader is configured to send KEEPALIVE messages, along with the threshold set in this parameter determines how long the Reader will tolerate missing KEEPALIVE_ACK messages. The Reader uses the LLRP MessageID field to correlate KEEPALIVE and KEEPALIVE_ACK messages. Clients must send the same MessageID when responding to reader KEEPALIVE requests.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="LinkMonitorMode"
+                                enumeration="ImpinjLinkMonitorMode"/>
+    <field      type="u16"      name="LinkDownThreshold"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="GET_READER_CONFIG_RESPONSE"/>
+    <allowedIn  repeat="0-1"    type="SET_READER_CONFIG"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjLinkMonitorMode"
+                                namespace="Impinj">
+    <entry     value="0"        name="Disabled"/>
+    <entry     value="1"        name="Enabled"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjReportBufferConfiguration"
+                                vendor="Impinj" subtype="39"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2009 Impinj Inc.">
+        <h:p>This custom parameter configures how the Reader buffers asynchronous reports sent to the Client. In Normal mode, the Reader buffers RO_ACCESS_REPORT messages internally for an optimal time period before transmission over the network. Response messages, KEEPALIVE messages, and READER_EVENT_NOTIFICATION messages are not affected, and are sent immediately. In Low_Latency mode, the Reader sends RO_ACCESS_REPORT messages as soon as they are available. In general, the default mode is well suited to most applications. Applications requiring immediate access to inventory reports may require Low_Latency mode, but users should first evaluate network and system load.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="ReportBufferMode"
+                                enumeration="ImpinjReportBufferMode"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="GET_READER_CONFIG_RESPONSE"/>
+    <allowedIn  repeat="0-1"    type="SET_READER_CONFIG"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjReportBufferMode"
+                                namespace="Impinj">
+    <entry     value="0"        name="Normal"/>
+    <entry     value="1"        name="Low_Latency"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjAccessSpecConfiguration"
+                                vendor="Impinj" subtype="40"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2009 Impinj Inc.">
+        <h:p>This custom parameter allows for additional control over how the Reader executes AccessSpecs. This parameter does not contain any specific controls, but it encapsulates individual parameters that do. Each parameter contained within is optional, allowing for maximum flexibility for Client implementations.</h:p>
+      </description>
+    </annotation>
+    <parameter  repeat="0-1"    type="ImpinjBlockWriteWordCount"/>
+    <parameter  repeat="0-1"    type="ImpinjOpSpecRetryCount"/>
+    <parameter  repeat="0-1"    type="ImpinjAccessSpecOrdering"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="GET_READER_CONFIG_RESPONSE"/>
+    <allowedIn  repeat="0-1"    type="SET_READER_CONFIG"/>
+    <allowedIn  repeat="0-1"    type="AccessSpec"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjBlockWriteWordCount"
+                                vendor="Impinj" subtype="41"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2009 Impinj Inc.">
+        <h:p>This custom parameter configures the number of words sent at a time to a tag when processing a C1G2BlockWrite OpSpec. The LLRP C1G2BlockWrite parameter has a word vector containing the data to be written to a tag. Internally the Reader breaks this vector up into individual C1G2 BlockWrite commands. This parameter determines the number of words sent via each BlockWrite command. Note that it is the user&apos;s responsibility to ensure that the tag population supports the BlockWrite word count configured via this parameter. BlockWrite commands to tags that do not support the configured word count will fail. The Reader automatically aligns C1G2BlockWrite commands to appropriate boundaries and accounts for odd data lengths. The default word count is one.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="WordCount"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjBlockPermalock"
+                                vendor="Impinj" subtype="42"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2009 Impinj Inc.">
+        <h:p>This custom parameter is an OpSpec that configures the C1G2 BlockPermalock status of a particular memory bank from a tag. The AccessPassword field is the password required to move the tag into the secured state if needed.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="OpSpecID"/>
+    <field      type="u32"      name="AccessPassword"/>
+    <field      type="u2"       name="MB"/>
+    <reserved   bitCount="6"/>
+    <field      type="u16"      name="BlockPointer"/>
+    <field      type="u16v"     name="BlockMask"    format="Hex"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="AccessCommandOpSpec"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjBlockPermalockOpSpecResult"
+                                vendor="Impinj" subtype="43"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2009 Impinj Inc.">
+        <h:p>This custom parameter is the result of an ImpinjBlockPermalock OpSpec.</h:p>
+      </description>
+    </annotation>
+    <field      type="u8"       name="Result"
+                                enumeration="ImpinjBlockPermalockResultType"/>
+    <field      type="u16"      name="OpSpecID"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="AccessCommandOpSpecResult"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjBlockPermalockResultType"
+                                namespace="Impinj">
+    <entry     value="0"        name="Success"/>
+    <entry     value="1"        name="Insufficient_Power"/>
+    <entry     value="2"        name="Nonspecific_Tag_Error"/>
+    <entry     value="3"        name="No_Response_From_Tag"/>
+    <entry     value="4"        name="Nonspecific_Reader_Error"/>
+    <entry     value="5"        name="Incorrect_Password_Error"/>
+    <entry     value="6"        name="Tag_Memory_Overrun_Error"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjGetBlockPermalockStatus"
+                                vendor="Impinj" subtype="44"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2009 Impinj Inc.">
+        <h:p>This custom parameter is an OpSpec that retrieves the C1G2 BlockPermalock status of a particular memory bank from a tag. The AccessPassword field is the password required to move the tag into the secured state if needed.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="OpSpecID"/>
+    <field      type="u32"      name="AccessPassword"/>
+    <field      type="u2"       name="MB"/>
+    <reserved   bitCount="6"/>
+    <field      type="u16"      name="BlockPointer"/>
+    <field      type="u16"      name="BlockRange"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="AccessCommandOpSpec"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjGetBlockPermalockStatusOpSpecResult"
+                                vendor="Impinj" subtype="45"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2009 Impinj Inc.">
+        <h:p>This custom parameter is the result of an ImpinjGetBlockPermalockStatus OpSpec.</h:p>
+      </description>
+    </annotation>
+    <field      type="u8"       name="Result"
+                                enumeration="ImpinjGetBlockPermalockStatusResultType"/>
+    <field      type="u16"      name="OpSpecID"/>
+    <field      type="u16v"     name="PermalockStatus"  format="Hex"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="AccessCommandOpSpecResult"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjGetBlockPermalockStatusResultType"
+                                namespace="Impinj">
+    <entry     value="0"        name="Success"/>
+    <entry     value="1"        name="Nonspecific_Tag_Error"/>
+    <entry     value="2"        name="No_Response_From_Tag"/>
+    <entry     value="3"        name="Nonspecific_Reader_Error"/>
+    <entry     value="4"        name="Incorrect_Password_Error"/>
+    <entry     value="5"        name="Tag_Memory_Overrun_Error"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjSetQTConfig"
+                                vendor="Impinj" subtype="46"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2009 Impinj Inc.">
+        <h:p>This custom parameter is an OpSpec that sets the QT TechnologyTM configuration on Impinj Monza 4QT tags. For more information on the meaning of the fields within this parameter, and the use cases for this technology, please reference the Impinj Monza 4QT datasheet.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="OpSpecID"/>
+    <field      type="u32"      name="AccessPassword"/>
+    <field      type="u8"       name="DataProfile"
+                                enumeration="ImpinjQTDataProfile"/>
+    <field      type="u8"       name="AccessRange"
+                                enumeration="ImpinjQTAccessRange"/>
+    <field      type="u8"       name="Persistence"
+                                enumeration="ImpinjQTPersistence"/>
+    <reserved   bitCount="32"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="AccessCommandOpSpec"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjQTDataProfile"
+                                namespace="Impinj">
+    <entry      value="0"       name="Unknown"/>
+    <entry      value="1"       name="Private"/>
+    <entry      value="2"       name="Public"/>
+  </customEnumerationDefinition>
+
+  <customEnumerationDefinition  name="ImpinjQTAccessRange"
+                                namespace="Impinj">
+    <entry      value="0"       name="Unknown"/>
+    <entry      value="1"       name="Normal_Range"/>
+    <entry      value="2"       name="Short_Range"/>
+  </customEnumerationDefinition>
+
+  <customEnumerationDefinition  name="ImpinjQTPersistence"
+                                namespace="Impinj">
+    <entry      value="0"       name="Unknown"/>
+    <entry      value="1"       name="Temporary"/>
+    <entry      value="2"       name="Permanent"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjSetQTConfigOpSpecResult"
+                                vendor="Impinj" subtype="47"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2009 Impinj Inc.">
+        <h:p>This custom parameter is the result of an ImpinjSetQTConfig OpSpec.</h:p>
+      </description>
+    </annotation>
+    <field      type="u8"       name="Result"
+                                enumeration="ImpinjSetQTConfigResultType"/>
+    <field      type="u16"      name="OpSpecID"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="AccessCommandOpSpecResult"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjSetQTConfigResultType"
+                                namespace="Impinj">
+    <entry     value="0"        name="Success"/>
+    <entry     value="1"        name="Insufficient_Power"/>
+    <entry     value="2"        name="Nonspecific_Tag_Error"/>
+    <entry     value="3"        name="No_Response_From_Tag"/>
+    <entry     value="4"        name="Nonspecific_Reader_Error"/>
+    <entry     value="5"        name="Incorrect_Password_Error"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjGetQTConfig"
+                                vendor="Impinj" subtype="48"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2009 Impinj Inc.">
+        <h:p>This custom parameter is an OpSpec that retrieves the QT TechnologyTM configuration on Impinj Monza 4QT tags. For more information on the meaning of the fields within this parameter, and the use cases for this technology, please reference the Impinj Monza 4QT datasheet.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="OpSpecID"/>
+    <field      type="u32"      name="AccessPassword"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="AccessCommandOpSpec"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjGetQTConfigOpSpecResult"
+                                vendor="Impinj" subtype="49"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2009 Impinj Inc.">
+        <h:p>This custom parameter is the result of an ImpinjGetQTConfig OpSpec.</h:p>
+      </description>
+    </annotation>
+    <field      type="u8"       name="Result"
+                                enumeration="ImpinjGetQTConfigResultType"/>
+    <field      type="u16"      name="OpSpecID"/>
+    <field      type="u8"       name="DataProfile"
+                                enumeration="ImpinjQTDataProfile"/>
+    <field      type="u8"       name="AccessRange"
+                                enumeration="ImpinjQTAccessRange"/>
+    <reserved   bitCount="32"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="AccessCommandOpSpecResult"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjGetQTConfigResultType"
+                                namespace="Impinj">
+    <entry     value="0"        name="Success"/>
+    <entry     value="1"        name="Nonspecific_Tag_Error"/>
+    <entry     value="2"        name="No_Response_From_Tag"/>
+    <entry     value="3"        name="Nonspecific_Reader_Error"/>
+    <entry     value="4"        name="Incorrect_Password_Error"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjTagReportContentSelector"
+                                vendor="Impinj" subtype="50"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2011 Impinj Inc.">
+        <h:p>This custom parameter configures additional parameters to be reported via the TagReportData parameter. Each optional parameter individually enables/configures a particular feature. Note that because of how the ROReportSpec parameter is handled (see section 3.1.15), if the optional parameter used to control a particular feature is absent, the feature is considered disabled. See the documentation for the actual parameters for full feature descriptions.</h:p>
+      </description>
+    </annotation>
+    <parameter  repeat="0-1"    type="ImpinjEnableSerializedTID"/>
+    <parameter  repeat="0-1"    type="ImpinjEnableRFPhaseAngle"/>
+    <parameter  repeat="0-1"    type="ImpinjEnablePeakRSSI"/>
+    <parameter  repeat="0-1"    type="ImpinjEnableGPSCoordinates"/>
+    <parameter  repeat="0-1"    type="ImpinjEnableOptimizedRead"/>
+    <parameter  repeat="0-1"    type="ImpinjEnableRFDopplerFrequency"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="ROReportSpec"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjEnableSerializedTID"
+                                vendor="Impinj" subtype="51"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This custom parameter configures the ImpinjSerializedTID feature.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="SerializedTIDMode"
+                                enumeration="ImpinjSerializedTIDMode"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjSerializedTIDMode"
+                                namespace="Impinj">
+    <entry     value="0"        name="Disabled"/>
+    <entry     value="1"        name="Enabled"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjEnableRFPhaseAngle"
+                                vendor="Impinj" subtype="52"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This custom parameter configures the ImpinjRFPhaseAngle feature.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="RFPhaseAngleMode"
+                                enumeration="ImpinjRFPhaseAngleMode"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjRFPhaseAngleMode"
+                                namespace="Impinj">
+    <entry     value="0"        name="Disabled"/>
+    <entry     value="1"        name="Enabled"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjEnablePeakRSSI"
+                                vendor="Impinj" subtype="53"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This custom parameter configures the ImpinjPeakRSSI feature.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="PeakRSSIMode"
+                                enumeration="ImpinjPeakRSSIMode"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjPeakRSSIMode"
+                                namespace="Impinj">
+    <entry     value="0"        name="Disabled"/>
+    <entry     value="1"        name="Enabled"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjEnableGPSCoordinates"
+                                vendor="Impinj" subtype="54"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This custom parameter configures the ImpinjGPSCoordinates feature.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="GPSCoordinatesMode"
+                                enumeration="ImpinjGPSCoordinatesMode"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjGPSCoordinatesMode"
+                                namespace="Impinj">
+    <entry     value="0"        name="Disabled"/>
+    <entry     value="1"        name="Enabled"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjSerializedTID"
+                                vendor="Impinj" subtype="55"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This custom parameter reports the content of the tag TID memory bank for tags supporting the ImpinjSerializedTID feature. Only the portion of the TID memory bank supported by the feature will be included and may vary from tag to tag. Tags inventoried that do not support the feature will omit this parameter from the TagReportData within the RO_ACCESS_REPORT.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16v"     name="TID"  format="Hex"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="TagReportData"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjRFPhaseAngle"
+                                vendor="Impinj" subtype="56"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This custom parameter reports the RF phase angle of a singulated tag during normal inventory (EPC backscatter). The PhaseAngle field is a scaled, 12-bit value, with 0 representing 0 degrees (0 radians), and 4096 representing 360 degrees (2 pi radians). If report accumulation is enabled via the ROReportSpec for the currently executing ROSpec, the RF phase angle reported via this parameter is the phase angle of the last tag singulation. No accumulation of phase data is available.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="PhaseAngle"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="TagReportData"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjPeakRSSI"
+                                vendor="Impinj" subtype="57"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This custom parameter reports the peak RSSI of the tag during the current reporting interval. Standard LLRP reports peak RSSI in whole dBm units. This parameter provides the same RSSI value in more precise dBm x 100 units. Applications requiring precise RSSI calculations may enable this parameter instead of (or in addition to) the PeakRSSI LLRP parameter.</h:p>
+      </description>
+    </annotation>
+    <field      type="s16"      name="RSSI"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="TagReportData"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjGPSCoordinates"
+                                vendor="Impinj" subtype="58"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This custom parameter reports the GPS coordinates of the reader when the tag was singulated. If the GPS receiver has not acquired a location fix, this parameter will not be included in the report. If LLRP accumulation is enabled, the reported coordinates correspond to the last known reader location when the tag was singulated. The GPS coordinates are reported in signed micro-degrees, so a minor conversion is required to convert the reported value to typically used GPS coordinate formats.</h:p>
+      </description>
+    </annotation>
+    <field      type="s32"      name="Latitude"/>
+    <field      type="s32"      name="Longitude"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="TagReportData"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjLoopSpec"
+                                vendor="Impinj" subtype="59"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This custom parameter allows the Reader to loop execution of AISpecs within a ROSpec. If included within the list of SpecParameters in a ROSpec, it must be the last SpecParameter present. There also must be at least one AISpec preceding the ImpinjLoopSpec parameter. If either condition is not met, the Reader will respond with an error.</h:p>
+      </description>
+    </annotation>
+    <field      type="u32"      name="LoopCount"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="SpecParameter"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjGPSNMEASentences"
+                                vendor="Impinj" subtype="60"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This custom parameter encapsulates the various NMEA (National Marine Electronic Association) sentences supported by the GPS device attached to the Reader. The Sierra Wireless PinPoint XT cellular modem supports GGA and RMC sentences. For more information regarding these sentences, visit the NMEA website.</h:p>
+      </description>
+    </annotation>
+    <parameter  repeat="0-1"    type="ImpinjGGASentence"/>
+    <parameter  repeat="0-1"    type="ImpinjRMCSentence"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="GET_READER_CONFIG_RESPONSE"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjGGASentence"
+                                vendor="Impinj" subtype="61"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This custom parameter contains the current GPS information of the Reader&apos;s location as reported in NMEA GGA sentence format. If the GPS device has not acquired a location fix, the string is reported empty.</h:p>
+      </description>
+    </annotation>
+    <field      type="utf8v"    name="GGASentence"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjRMCSentence"
+                                vendor="Impinj" subtype="62"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This custom parameter contains the current GPS information of the Reader&apos;s location as reported in NMEA RMC sentence format. If the GPS device has not acquired a location fix, the string is reported empty.</h:p>
+      </description>
+    </annotation>
+    <field      type="utf8v"    name="RMCSentence"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjOpSpecRetryCount"
+                                vendor="Impinj" subtype="63"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2009 Impinj Inc.">
+        <h:p>This custom parameter configures the number of times an OpSpec operation will be automatically retried by the reader before failure is declared. The reader intelligently chooses which types of failures to retry. For example, the reader will not retry if the tag indicates that the operation failed due to a memory locked or memory overrun, operations that have no chance of succeeding. However, if the operation failed due to transient errors, such as CRC errors due to interference, the reader will automatically retry RetryCount attempts before failure is declared. LLRP dictates that OpSpec failure be declared once a single operation has failed, thus the default RetryCount is 0.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="RetryCount"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjAdvancedGPOConfiguration"
+                                vendor="Impinj" subtype="64"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This custom parameter controls the advanced GPO feature of Speedway Revolution readers. When set to Normal (default) the GPO is set via the regular LLRP SET_READER_CONFIG message. When set to Pulsed, the GPO changes state based on the SET_READER_CONFIG message, and will change to the opposite state after GPOPulseDurationMSec milliseconds. When set to Reader_Operational_Status, LLRP_Connection_Status, or Reader_Inventory_Status, the GPO status acts like a Boolean value. When high (true, 1), the corresponding status is true, meaning the reader is operating, has a LLRP connection, or is inventorying. When low (false, 0), the opposite is the case.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="GPOPortNum"/>
+    <field      type="u16"      name="GPOMode"
+                                enumeration="ImpinjAdvancedGPOMode"/>
+    <field      type="u32"      name="GPOPulseDurationMSec"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-N"    type="GET_READER_CONFIG_RESPONSE"/>
+    <allowedIn  repeat="0-N"    type="SET_READER_CONFIG"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjAdvancedGPOMode"
+                                namespace="Impinj">
+    <entry      value="0"       name="Normal"/>
+    <entry      value="1"       name="Pulsed"/>
+    <entry      value="2"       name="Reader_Operational_Status"/>
+    <entry      value="3"       name="LLRP_Connection_Status"/>
+    <entry      value="4"       name="Reader_Inventory_Status"/>
+    <entry      value="5"       name="Network_Connection_Status"/>
+    <entry      value="6"       name="Reader_Inventory_Tags_Status"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjEnableOptimizedRead"
+                                vendor="Impinj" subtype="65"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This custom parameter configures the ImpinjOptimizedRead feature. ImpinjOptimizedRead allows for the reporting of additional tag memory content during an inventory without the use of AccessSpecs. The reader optimizes the execution of these reads for improved overall inventory performance.</h:p>
+        <h:p>The memory bank and location of the reads are specified using the C1G2Read parameter, just as they are when using AccessSpecs. Similarly, the results of the reads are reported using the C1G2ReadOpSpecResult parameter within the TagReportData parameter. Reads issued using the ImpinjOptimizedRead feature are reported the same as reads using AccessSpecs and thus users should ensure the OpSpecIDs used for the operations are unique.</h:p>
+        <h:p>Users may configure up to two optimized read operations. One departure from the AccessSpec model is optimized reads are always attempted, even if the first read fails. So for example, if the first read results in a failure due to a memory overrun, the second read will still be attempted. Thus, if there are two optimized reads configured it is guaranteed that there will be two C1G2ReadOpSpecResult parameters in each TagReportData parameter generated by the reader.</h:p>
+        <h:p>Because this feature was designed for optimized inventory performance, any retries configured via the ImpinjOpSpecRetryCount parameter do not apply.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="OptimizedReadMode"
+                                enumeration="ImpinjOptimizedReadMode"/>
+    <parameter  repeat="0-N"    type="C1G2Read"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjOptimizedReadMode"
+                                namespace="Impinj">
+    <entry      value="0"       name="Disabled"/>
+    <entry      value="1"       name="Enabled"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjAccessSpecOrdering"
+                                vendor="Impinj" subtype="66"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This custom parameter configures how AccessSpecs are added on Speedway Revolution readers. AccessSpecs are executed based on the order in which they were added to the reader. By default, the reader adds AccessSpecs in a first-in-first-out (FIFO) order, compliant with the LLRP specification. When the OrderingMode is configured to Ascending, the reader will add new AccessSpecs in ascending order based on the AccessSpecID. If the ordering mode is changed from FIFO to Ascending while AccessSpecs are already configured, the existing AccessSpecs will be sorted.</h:p>
+        <h:p>This parameter exists within the ImpinjAccessSpecConfiguration parameter which may be present in either a SET_READER_CONFIG message, or an ADD_ACCESSSPEC message. However, because this is a global parameter and does not logically apply in a per-AccessSpec context, this parameter may only be included in a SET_READER_CONFIG message. If this parameter is present in the context of an individual AccessSpec, the message will be rejected by the reader.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="OrderingMode"
+                                enumeration="ImpinjAccessSpecOrderingMode"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjAccessSpecOrderingMode"
+                                namespace="Impinj">
+    <entry      value="0"       name="FIFO"/>
+    <entry      value="1"       name="Ascending"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjEnableRFDopplerFrequency"
+                                vendor="Impinj" subtype="67"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2011 Impinj Inc.">
+        <h:p>This custom parameter configures the ImpinjRFDopplerFrequency feature.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="RFDopplerFrequencyMode"
+                                enumeration="ImpinjRFDopplerFrequencyMode"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjRFDopplerFrequencyMode"
+                                namespace="Impinj">
+    <entry     value="0"        name="Disabled"/>
+    <entry     value="1"        name="Enabled"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjRFDopplerFrequency"
+                                vendor="Impinj" subtype="68"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2011 Impinj Inc.">
+        <h:p>This custom parameter reports the Doppler shift for a singulated tag. Doppler shift is the total phase rotation across the packet divided by the accumulation time. The DopplerFrequency field is a signed value with units in Hz. The upper twelve bits are the integer portion, the lower four bits are fractional. If report accumulation is enabled via the ROReportSpec for the currently executing ROSpec, the RF Doppler frequency reported via this parameter is the Doppler frequency of the last tag singulation. No accumulation of Doppler frequency data is available.</h:p>
+      </description>
+    </annotation>
+    <field      type="s16"      name="DopplerFrequency"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="TagReportData"/>
+  </customParameterDefinition>
+ 
+  <customParameterDefinition    name="ImpinjSTPCapabilities"
+                                vendor="Impinj" subtype="1501"
+                                namespace="Impinj">
+    <field      type="u16"      name="EncodeStatus"
+                                enumeration="ImpinjEncodeStatus"/>
+    <parameter  repeat="1-N"    type="ImpinjTagIC"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="GET_READER_CAPABILITIES_RESPONSE"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjTagIC"
+                                vendor="Impinj" subtype="1502"
+                                namespace="Impinj">
+    <field      type="u16"      name="Type"
+                                enumeration="ImpinjTagICType"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjEncodeStatus"
+                                namespace="Impinj">
+    <entry      value="0"       name="Disabled"/>
+    <entry      value="1"       name="Enabled"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjEncodeDataCache"
+                                vendor="Impinj" subtype="1503"
+                                namespace="Impinj">
+    <field      type="u32"      name="EncodeDataCacheID"/>
+    <field      type="u16"      name="LowEncodeDataThreshold"/>
+    <parameter  repeat="1"      type="ImpinjEncodeDataDefaults"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjEncodeDataDefaults"
+                                vendor="Impinj" subtype="1504"
+                                namespace="Impinj">
+    <parameter  repeat="0-1"    type="ImpinjEncodeDataPCBits"/>
+    <parameter  repeat="0-1"    type="ImpinjEncodeDataAccessPassword"/>
+    <parameter  repeat="0-1"    type="ImpinjEncodeDataKillPassword"/>
+    <parameter  repeat="0-1"    type="ImpinjEncodeDataUserMemory"/>
+    <parameter  repeat="0-1"    type="ImpinjEncodeDataAlternateEPC"/>
+    <parameter  repeat="0-1"    type="ImpinjEncodeDataQTConfig"/>
+    <parameter  repeat="0-1"    type="ImpinjEncodeDataLockConfig"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjEncodeData"
+                                vendor="Impinj" subtype="1505"
+                                namespace="Impinj">
+    <field      type="u1v"      name="EPC"
+                                format="Hex"/>
+    <parameter  repeat="0-1"    type="ImpinjEncodeDataPCBits"/>
+    <parameter  repeat="0-1"    type="ImpinjEncodeDataAccessPassword"/>
+    <parameter  repeat="0-1"    type="ImpinjEncodeDataKillPassword"/>
+    <parameter  repeat="0-1"    type="ImpinjEncodeDataUserMemory"/>
+    <parameter  repeat="0-1"    type="ImpinjEncodeDataAlternateEPC"/>
+    <parameter  repeat="0-1"    type="ImpinjEncodeDataQTConfig"/>
+    <parameter  repeat="0-1"    type="ImpinjEncodeDataLockConfig"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjEncodeDataPCBits"
+                                vendor="Impinj" subtype="1506"
+                                namespace="Impinj">
+    <field      type="u16"      name="PCBits"
+                                format="Hex"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjEncodeDataAccessPassword"
+                                vendor="Impinj" subtype="1507"
+                                namespace="Impinj">
+    <field      type="u32"      name="AccessPassword"
+                                format="Hex"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjEncodeDataKillPassword"
+                                vendor="Impinj" subtype="1508"
+                                namespace="Impinj">
+    <field      type="u32"      name="KillPassword"
+                                format="Hex"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjEncodeDataUserMemory"
+                                vendor="Impinj" subtype="1509"
+                                namespace="Impinj">
+    <field     type="u16"       name="WordPointer"/>
+    <field     type="u16v"      name="WriteData"
+                                format="Hex"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjEncodeDataAlternateEPC"
+                                vendor="Impinj" subtype="1510"
+                                namespace="Impinj">
+    <field     type="u16v"      name="AlternateEPC"
+                                format="Hex"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjEncodeDataQTConfig"
+                                vendor="Impinj" subtype="1511"
+                                namespace="Impinj">
+    <field      type="u8"       name="DataProfile"
+                                enumeration="ImpinjQTDataProfile"/>
+    <field      type="u8"       name="AccessRange"
+                                enumeration="ImpinjQTAccessRange"/>
+    <field      type="u8"       name="Persistence"
+                                enumeration="ImpinjQTPersistence"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjEncodeDataLockConfig"
+                                vendor="Impinj" subtype="1512"
+                                namespace="Impinj">
+    <field      type="u8"       name="AccessPasswordLock"
+                                enumeration="ImpinjLockPrivilege"/>
+    <field      type="u8"       name="KillPasswordLock"
+                                enumeration="ImpinjLockPrivilege"/>
+    <field      type="u8"       name="EPCMemoryLock"
+                                enumeration="ImpinjLockPrivilege"/>
+    <field      type="u8"       name="TIDMemoryLock"
+                                enumeration="ImpinjLockPrivilege"/>
+    <field      type="u8"       name="UserMemoryLock"
+                                enumeration="ImpinjLockPrivilege"/>
+    <field      type="u16"      name="UserBlockPermalockPointer"/>
+    <field      type="u16v"     name="UserBlockPermalockMask"
+                                format="Hex"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjLockPrivilege"
+                                namespace="Impinj">
+    <entry      value="0"       name="No_Action"/>
+    <entry      value="1"       name="Unlock"/>
+    <entry      value="2"       name="Lock"/>
+    <entry      value="3"       name="Perma_Lock"/>
+    <entry      value="4"       name="Perma_Unlock"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjLowEncodeDataThresholdEvent"
+                                vendor="Impinj" subtype="1513"
+                                namespace="Impinj">
+    <field      type="u32"      name="EncodeDataCacheID"/>
+    <field      type="u16"      name="Threshold"/>
+    <field      type="u16"      name="Count"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="ReaderEventNotificationData"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjEncodeOpSpec"
+                                vendor="Impinj" subtype="1514"
+                                namespace="Impinj">
+    <field      type="u16"      name="OpSpecID"/>
+    <field      type="u32"      name="AccessPassword"
+                                format="Hex"/>
+    <field      type="u32"      name="EncodeDataCacheID"/>
+    <field      type="u16"      name="Mode"
+                                enumeration="ImpinjEncodeMode"/>
+    <field      type="u16"      name="TagIC"
+                                enumeration="ImpinjTagICType"/>
+    <field      type="u32"      name="EncodeCount"/>
+    <field      type="u16"      name="TagsInViewCount"/>
+    <field      type="u16"      name="EncodeReportCount"/>
+    <field      type="u16"      name="TagInViewTimeout"/>
+    <parameter  repeat="0-N"    type="ImpinjOpSpecGPOPulse"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="AccessCommandOpSpec"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjEncodeMode"
+                                namespace="Impinj">
+    <entry      value="1"       name="Batch"/>
+    <entry      value="2"       name="Continuous"/>
+  </customEnumerationDefinition>
+
+  <customEnumerationDefinition  name="ImpinjTagICType"
+                                namespace="Impinj">
+    <entry      value="1"       name="Monza3"/>
+    <entry      value="2"       name="Monza4"/>
+    <entry      value="3"       name="Monza5"/>
+    <entry      value="100"     name="AnyGen2"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjOpSpecGPOPulse"
+                                vendor="Impinj" subtype="1515"
+                                namespace="Impinj">
+    <field      type="u16"      name="OpSpecAction"
+                                enumeration="ImpinjOpSpecAction"/>
+    <field      type="u16"      name="GPOPortNumber"/>
+    <field      type="u1"       name="GPOData"/>
+    <reserved   bitCount="7"/>
+    <field      type="u16"      name="GPOPulseDurationMSec"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjOpSpecAction"
+                                namespace="Impinj">
+    <entry      value="1"       name="Op_Spec_Started"/>
+    <entry      value="2"       name="Op_Spec_Finished"/>
+    <entry      value="3"       name="Op_Spec_Success"/>
+    <entry      value="4"       name="Op_Spec_Failure"/>
+    <entry      value="5"       name="Op_Spec_SingleSuccess"/>
+    <entry      value="6"       name="Op_Spec_SingleFailure"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjEncodeReportData"
+                                vendor="Impinj" subtype="1516"
+                                namespace="Impinj">
+    <field      type="u32"      name="AccessSpecID"/>
+    <parameter  repeat="0-1"    type="ImpinjEncodeOpSpecResult"/>
+    <parameter  repeat="0-N"    type="ImpinjEncodeDataResult"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="RO_ACCESS_REPORT"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjEncodeOpSpecResult"
+                                vendor="Impinj" subtype="1517"
+                                namespace="Impinj">
+    <field      type="u16"      name="OpSpecID"/>
+    <field      type="u8"       name="Result"
+                                enumeration="ImpinjEncodeResultType"/>
+    <field      type="u64"      name="ElapsedTime"/>
+    <field      type="u32"      name="AttemptCount"/>
+    <field      type="u32"      name="SuccessCount"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjEncodeResultType"
+                                namespace="Impinj">
+    <entry      value="0"       name="Success"/>
+    <entry      value="1"       name="Success_With_Degraded_Performance"/>
+    <entry      value="2"       name="Encode_Timeout"/>
+    <entry      value="3"       name="Encode_Data_Cache_Empty"/>
+    <entry      value="4"       name="Wrong_Tag_IC_Detected"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjEncodeDataResult"
+                                vendor="Impinj" subtype="1518"
+                                namespace="Impinj">
+    <field      type="u16"      name="OpSpecID"/>
+    <field      type="u8"       name="Result"
+                                enumeration="ImpinjEncodeDataResultType"/>
+    <parameter  repeat="1"      type="EPCData"/>
+    <parameter  repeat="0-1"    type="ImpinjEncodeDataDetailedResult"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjEncodeDataDetailedResult"
+                                vendor="Impinj" subtype="1519"
+                                namespace="Impinj">
+    <field      type="u8"       name="EncodeEPCResult"
+                                enumeration="ImpinjEncodeDataResultType"/>
+    <field      type="u8"       name="EncodePCBitsResult"
+                                enumeration="ImpinjEncodeDataResultType"/>
+    <field      type="u8"       name="EncodeAccessPasswordResult"
+                                enumeration="ImpinjEncodeDataResultType"/>
+    <field      type="u8"       name="EncodeKillPasswordResult"
+                                enumeration="ImpinjEncodeDataResultType"/>
+    <field      type="u8"       name="EncodeUserMemoryResult"
+                                enumeration="ImpinjEncodeDataResultType"/>
+    <field      type="u8"       name="EncodeAlternateEPCResult"
+                                enumeration="ImpinjEncodeDataResultType"/>
+    <field      type="u8"       name="EncodeQTConfigResult"
+                                enumeration="ImpinjEncodeDataResultType"/>
+    <field      type="u8"       name="EncodeLockConfigResult"
+                                enumeration="ImpinjEncodeDataResultType"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjEncodeDataResultType"
+                                namespace="Impinj">
+    <entry      value="0"       name="Success"/>
+    <entry      value="1"       name="Failure"/>
+    <entry      value="2"       name="Timeout"/>
+    <entry      value="3"       name="Not_Attempted"/>
+    <entry      value="4"       name="Insufficient_Power"/>
+    <entry      value="5"       name="No_Response_From_Tag"/>
+    <entry      value="6"       name="Incorrect_Password_Error"/>
+    <entry      value="7"       name="Tag_Memory_Locked_Error"/>
+    <entry      value="8"       name="Nonspecific_Tag_Error"/>
+    <entry      value="9"       name="Nonspecific_Reader_Error"/>
+  </customEnumerationDefinition>
+  
+  <customParameterDefinition    name="ImpinjArrayVersion"
+                                vendor="Impinj" subtype="1520"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This parameter contains Array specific hardware and version information that is considered additional to ImpinjDetailedVersion information.</h:p>
+      </description>
+    </annotation>
+    
+    <field      type="utf8v"    name="SerialNumber"/>
+    <field      type="utf8v"    name="FirmwareVersion"/>
+    <field      type="utf8v"    name="PCBAVersion"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjArrayCapabilities"
+                                vendor="Impinj" subtype="1521"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This parameter is used to report Array-specific capabilities.</h:p>
+      </description>
+    </annotation>
+    <field      type="u32"      name="MaxNumSectors"/>
+    <field      type="u1"       name="SupportsLISpecs"/>
+    <field      type="u1"       name="SupportsDISpecs"/>
+    <reserved   bitCount="6"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="GET_READER_CAPABILITIES_RESPONSE"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjTiltConfiguration"
+                                vendor="Impinj" subtype="1522"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This parameter is used to get the Array physical orientation from the onboard sensor.</h:p>
+      </description>
+    </annotation>
+    
+    <field      type="s32"      name="XAxis"/>
+    <field      type="s32"      name="YAxis"/>
+    <field      type="s32"      name="ZAxis"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="GET_READER_CONFIG_RESPONSE"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjBeaconConfiguration"
+                                vendor="Impinj" subtype="1523"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This parameter is used for getting and setting the Array beacon LED.</h:p>
+      </description>
+    </annotation>
+    
+    <field      type="u1"       name="BeaconState"/>
+    <reserved   bitCount="7"/>
+    <field      type="u64"      name="BeaconDuration"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="GET_READER_CONFIG_RESPONSE"/>
+    <allowedIn  repeat="0-1"    type="SET_READER_CONFIG"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjAntennaConfiguration"
+                                vendor="Impinj" subtype="1524"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This parameter is used for getting and setting Array antenna configuration.</h:p>
+        <h:p>This configuration is comprised of Antenna hysteresis and Sector configuation.</h:p>
+      </description>
+    </annotation>
+    
+    <parameter  repeat="0-1"    type="ImpinjAntennaEventHysteresis"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="GET_READER_CONFIG_RESPONSE"/>
+    <allowedIn  repeat="0-1"    type="SET_READER_CONFIG"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjAntennaEventHysteresis"
+                                vendor="Impinj" subtype="1526"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This parameter is used to control the intervals for antenna disconnect/reconnect notifications.</h:p>
+        <h:p>The AntennaEventConnected field contains the number of milliseconds that an Antenna must be working after failure before an AntennaConnected notification is reported.</h:p>
+        <h:p>The AntennaEventDisconnected field contains the number of milliseconds that an Antenna must be in failure before an AntennaDisconnected notification is reported.</h:p>
+      </description>
+    </annotation>
+    
+    <field      type="u64"      name="AntennaEventConnected"/>
+    <field      type="u64"      name="AntennaEventDisconnected"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjTagReporting"
+                                vendor="Impinj" subtype="1534"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This parameter is used to configure raw tag reporting.</h:p>
+      </description>
+    </annotation>
+    <parameter  repeat="0-1"    type="ImpinjEnableTagReport"/>
+    <parameter  repeat="0-1"    type="ImpinjAllowStaleTags"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="ROReportSpec"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjEnableTagReport"
+                                vendor="Impinj" subtype="1535"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This parameter is used to configure tag reporting.</h:p>
+        <h:p>The TagMode field is used to enable/disable tag reporting.</h:p>
+      </description>
+    </annotation>
+
+    <field      type="u1"       name="TagMode"/>
+    <reserved   bitCount="15"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjAllowStaleTags"
+                                vendor="Impinj" subtype="1536"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This parameter is used to indicate whether reader will send stale tags in its reports.</h:p>
+      </description>
+    </annotation>
+
+    <field      type="u1"       name="Allow"/>
+    <reserved   bitCount="15"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjHubConfiguration"
+                                vendor="Impinj" subtype="1538"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2012 Impinj Inc.">
+        <h:p>This parameter contains the Antenna Hub connection and fault state.</h:p>
+      </description>
+    </annotation>
+    <field      type="u16"      name="HubID"/> 
+    <field      type="u16"      name="Connected" enumeration="ImpinjHubConnectedType"/>
+    <field      type="u16"      name="Fault" enumeration="ImpinjHubFaultType"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-N"    type="GET_READER_CONFIG_RESPONSE"/>
+    <allowedIn  repeat="0-1"    type="ReaderExceptionEvent"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjHubConnectedType"
+                                namespace="Impinj">
+    <entry      value="0"       name="Unknown"/>
+    <entry      value="1"       name="Disconnected"/>
+    <entry      value="2"       name="Connected"/>
+  </customEnumerationDefinition>
+
+  <customEnumerationDefinition  name="ImpinjHubFaultType"
+                                namespace="Impinj">
+    <entry      value="0"       name="No_Fault"/>
+    <entry      value="1"       name="RF_Power"/>
+    <entry      value="2"       name="RF_Power_On_Hub_1"/>
+    <entry      value="3"       name="RF_Power_On_Hub_2"/>
+    <entry      value="4"       name="RF_Power_On_Hub_3"/>
+    <entry      value="5"       name="RF_Power_On_Hub_4"/>
+    <entry      value="6"       name="No_Init"/>
+    <entry      value="7"       name="Serial_Overflow"/>
+    <entry      value="8"       name="Disconnected"/>
+  </customEnumerationDefinition>
+
+  <customParameterDefinition    name="ImpinjArrayReportMetric"
+                                vendor="Impinj" subtype="1539"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+      </description>
+    </annotation>
+    <field      type="u32v"      name="Metric"/>
+  </customParameterDefinition>
+
+ <customParameterDefinition    name="ImpinjPlacementConfiguration"
+                                vendor="Impinj" subtype="1540"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2013 Impinj Inc.">
+        <h:p>HeightCm is used to initialize the Array mounting height above the floor. When not specified, the default value is 457 cm</h:p>
+        <h:p>FacilityXLocationCm is used to location this xArray in the facility. Its default is 0 and is not required with a single xArray</h:p>
+        <h:p>FacilityYLocationCm is used to location this xArray in the facility. Its default is 0 and is not required with a single xArray</h:p>
+        <h:p>OrientationDegrees specifies the orientation of the array in degrees (-180 - 180) with respect to the X orentation of the device.  Default is 0 and is not required with a single xArray deployment</h:p>
+      </description>
+    </annotation>
+    
+    <field      type="s16"       name="HeightCm"/>
+    <field      type="s32"       name="FacilityXLocationCm"/>
+    <field      type="s32"       name="FacilityYLocationCm"/>
+    <field      type="s16"       name="OrientationDegrees"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="GET_READER_CONFIG_RESPONSE"/>
+    <allowedIn  repeat="0-1"    type="SET_READER_CONFIG"/>
+  </customParameterDefinition>
+
+
+  <customParameterDefinition    name="ImpinjLISpec"
+                                vendor="Impinj" subtype="1541"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2013 Impinj Inc.">
+        <h:p>This parameter is specified in an ROSpec and details a location Inventory</h:p>
+        <h:p>Only one ImpinjLISpec may be specified in an ROSpec. When specifed, no other spec parameters can be present in the ROSpec.</h:p>
+      </description>
+    </annotation>
+
+    <parameter  repeat="0-1"    type="ImpinjLocationConfig"/>
+    <parameter  repeat="0-1"    type="ImpinjC1G2LocationConfig"/>    
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="SpecParameter"/>
+  </customParameterDefinition>
+
+
+  <customParameterDefinition    name="ImpinjLocationConfig"
+                                vendor="Impinj" subtype="1542"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2013 Impinj Inc.">
+        <h:p>This parameter specifies the settings of the location algorithm</h:p>
+        <h:p>The MotionWindowSeconds field contains the the smoothing window for averaging the location estimates. Default is 10 seconds</h:p>
+        <h:p>The TagAgeIntervalSeconds specifies how long a tag needs to go unseen before its removed from the location tracking. Default is 20 seconds</h:p>
+      </description>
+    </annotation>
+    
+    <field      type="u8"       name="MotionWindowSeconds"/>
+    <field      type="u16"      name="TagAgeIntervalSeconds"/>
+    <parameter  repeat="0-N"    type="Custom"/> 
+    <allowedIn  repeat="0-1"    type="GET_READER_CONFIG_RESPONSE"/>
+    <allowedIn  repeat="0-1"    type="SET_READER_CONFIG"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjC1G2LocationConfig"
+                                vendor="Impinj" subtype="1543"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>/
+      </documentation>
+      <description copyright="Copyright 2013 Impinj Inc.">
+        <h:p>This parameter specifies the C1G2 settings of the location algorithm</h:p>
+        <h:p>The ModeIndex field specifies the C1G2 mode to use for the operation.</h:p>
+        <h:p>The Session field specifies the C1G2 session to use for the operation</h:p>
+        <h:p>The C1G2Filter parameter specifies any Gen2 based tag filtering</h:p>
+      </description>
+    </annotation>
+    
+    <field      type="u16"       name="ModeIndex"/>
+    <field      type="u2"        name="Session"/>
+    <reserved   bitCount="6"/>
+    <parameter  repeat="0-N"    type="C1G2Filter"/>
+    <parameter  repeat="0-N"    type="Custom"/>   
+    <allowedIn  repeat="0-1"    type="GET_READER_CONFIG_RESPONSE"/>
+    <allowedIn  repeat="0-1"    type="SET_READER_CONFIG"/>     
+  </customParameterDefinition>
+  
+  
+  <customParameterDefinition    name="ImpinjLocationReporting"
+                                vendor="Impinj" subtype="1544"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2013 Impinj Inc.">
+        <h:p>This parameter specifies the reporting configuration for the location operation</h:p>
+       </description>
+    </annotation>
+    <field      type="u16"      name="ReportIntervalSeconds"/>
+    <field      type="u1"       name="EnableLocationUpdateReport"/>   
+    <field      type="u1"       name="EnableLocationEntryReport"/>
+    <field      type="u1"       name="EnableLocationExitReport"/>    
+    <reserved   bitCount="5"/>  
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="ROReportSpec"/>  
+  </customParameterDefinition>
+
+  
+  <customEnumerationDefinition  name="ImpinjLocationReportType"
+                                namespace="Impinj">
+    <entry     value="0"        name="Entry"/>
+    <entry     value="1"        name="Update"/>
+    <entry     value="2"        name="Exit"/>
+  </customEnumerationDefinition>    
+
+
+  <customParameterDefinition    name="ImpinjLocationReportData"
+                                vendor="Impinj" subtype="1545"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2013 Impinj Inc.">
+        <h:p>This parameter represents a single Location Report</h:p>
+        <h:p>The TimeStampUTC field contains the time stamp of the  event.</h:p>
+        <h:p>LocXCentimeres and LocYCentimeres represent the location in cm</h:p>
+        <h:p>The Confidence field contains confidence that the event occured in the form of a percentage. 0 is not confident. 100 is perfectly confident</h:p>
+      </description>
+    </annotation>
+    
+    <field      type="u64"      name="TimestampUTC"/>
+    <field      type="s32"      name="LocXCentimeters"/>
+    <field      type="s32"      name="LocYCentimeters"/>    
+    <field      type="u16"      name="Confidence"/>
+    <field      type="u8"       name="Type"
+                                enumeration="ImpinjLocationReportType"/>    
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+
+  <customParameterDefinition    name="ImpinjSectorID"
+                                vendor="Impinj" subtype="1528"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This parameter is used to report Sector information with TagData reports, when allowed.</h:p>
+      </description>
+    </annotation>
+    
+    <field      type="u16"      name="SectorID"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+
+
+  <customParameterDefinition    name="ImpinjSectorConfiguration"
+                                vendor="Impinj" subtype="1525"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This parameter is used to configure an Array Role as to which sectors to monitor and report.</h:p>
+      </description>
+    </annotation>
+
+    <field      type="u16"      name="SectorID"/>
+    <field      type="s32"      name="TransmitPower"/>
+    <field      type="u16"      name="ReceiverSensitivity"/>
+    <parameter  repeat="0-1"    type="ImpinjFixedFrequencyList"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-N"    type="GET_READER_CONFIG_RESPONSE"/>
+    <allowedIn  repeat="0-N"    type="SET_READER_CONFIG"/>    
+  </customParameterDefinition>
+  
+   <customParameterDefinition    name="ImpinjTransitionZone"
+                                vendor="Impinj" subtype="1546"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2013 Impinj Inc.">
+          <h:p>Defines a zone for the transition algorithm</h:p>
+          <h:p>A zone is a unique identifier and a list of SectorIDs that comprise the zone</h:p>
+          <h:p>A zone must contain a contiguous set of sectors</h:p>
+          <h:p>Zero is an illegal Zone Value</h:p>
+      </description>
+    </annotation>
+
+    <field type="u16v" name="SectorIDs"/>
+    <field type="u16"  name="ZoneID"/>  
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition> 
+  
+  <customParameterDefinition    name="ImpinjTISpec"
+                                vendor="Impinj" subtype="1547"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2013 Impinj Inc.">
+        <h:p>This parameter is specified in an ROSpec and details a Transition Inventory</h:p>
+        <h:p>Only one ImpinjTISpec may be specified in an ROSpec. When specifed, no other spec parameters can be present in the ROSpec.</h:p>
+        <h:p>You must specify two Transition Zones</h:p>
+      </description>
+    </annotation>
+
+    <parameter  repeat="1-N"    type="ImpinjTransitionZone"/>
+    <parameter  repeat="0-1"    type="ImpinjTransitionConfig"/>
+    <parameter  repeat="0-1"    type="ImpinjC1G2TransitionConfig"/> 
+    <parameter  repeat="0-N"    type="ImpinjSectorConfiguration"/>           
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-1"    type="SpecParameter"/>
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjTransitionZoneRange"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2013 Impinj Inc.">
+        <h:p>Specifies the size of the transition zone area. Defaults to Standard</h:p>
+      </description>
+    </annotation>      
+    <entry     value="0"        name="Standard"/>
+    <entry     value="1"        name="Large"/>
+  </customEnumerationDefinition>  
+
+
+  <customParameterDefinition    name="ImpinjTransitionConfig"
+                                vendor="Impinj" subtype="1548"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2013 Impinj Inc.">
+        <h:p>This parameter specifies the settings of the transition algorithm</h:p>
+        <h:p>InitialStraySearchTimeSec is the time to search </h:p>
+        <h:p>InitialStraySearchTimeSec: The time to search for strays when the device starts operation</h:p>
+        <h:p>StrayUpdateIntervalSec: The interval where the device updates its stray information</h:p>
+        <h:p>ImpinjTransitionZoneRange: The size of the transition zone. Defaults to Standard</h:p>
+        <h:p>TOITagAgeSec: the time before TOI tags are considered gone from the field</h:p>
+        <h:p>StrayTagAgeSec: The time before Stray tags are considered gone from the field</h:p>
+        <h:p></h:p>                                                
+      </description>
+    </annotation>
+    
+    <field      type="u16"      name="InitialStraySearchTimeSec"/>
+    <field      type="u16"      name="StrayUpdateIntervalSec"/>    
+    <field      type="u8"       name="TransitionZoneRange" 
+                                enumeration="ImpinjTransitionZoneRange"/>
+    <field      type="u16"      name="TOITagAgeSec"/>
+    <field      type="u16"      name="StrayTagAgeSec"/>        
+    <parameter  repeat="0-N"    type="Custom"/> 
+    <allowedIn  repeat="0-1"    type="GET_READER_CONFIG_RESPONSE"/>
+    <allowedIn  repeat="0-1"    type="SET_READER_CONFIG"/>
+  </customParameterDefinition>
+
+  <customParameterDefinition    name="ImpinjC1G2TransitionConfig"
+                                vendor="Impinj" subtype="1549"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2013 Impinj Inc.">
+        <h:p>This parameter specifies the C1G2 settings of the transition algorithm</h:p>
+        <h:p>The ModeIndex field specifies the C1G2 mode to use for the operation.</h:p>
+        <h:p>The TOISession field specifies the C1G2 session to use for the operation with Tags of Interest</h:p>
+        <h:p>The StraySession field specifies the C1G2 session to use for the operation with Potential Stray tags</h:p>
+      </description>
+    </annotation>
+    
+    <field      type="u16"       name="ModeIndex"/>
+    <field      type="u2"        name="TOISession"/>
+    <field      type="u2"        name="StraySession"/>    
+    <reserved   bitCount="4"/>
+    <parameter  repeat="0-N"    type="Custom"/>   
+    <allowedIn  repeat="0-1"    type="GET_READER_CONFIG_RESPONSE"/>
+    <allowedIn  repeat="0-1"    type="SET_READER_CONFIG"/>     
+  </customParameterDefinition>  
+  
+  <customParameterDefinition    name="ImpinjTransitionReporting"
+                                vendor="Impinj" subtype="1550"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2013 Impinj Inc.">
+        <h:p>This parameter specifies the reporting configuration for the transition operation</h:p>
+       </description>
+    </annotation>
+
+    <field  type="u1"    name="ImpinjEnableTransitionReport"/>
+    <field  type="u1"    name="ImpinjEnableStrayReport"/>
+    <field  type="u1"    name="ImpinjEnableEntryReport"/>    
+    <reserved   bitCount="5"/>
+    <allowedIn  repeat="0-1"    type="ROReportSpec"/>  
+  </customParameterDefinition>
+
+  <customEnumerationDefinition  name="ImpinjZoneReportType"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2013 Impinj Inc.">
+        <h:p>Specifics of the zone report</h:p>
+      </description>
+    </annotation>      
+    <entry     value="0"        name="NewTag"/>
+    <entry     value="1"        name="StrayTag"/>
+    <entry     value="2"        name="TagTransition"/>
+  </customEnumerationDefinition>  
+
+
+  <customParameterDefinition    name="ImpinjTransitionReportData"
+                                vendor="Impinj" subtype="1551"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2010 Impinj Inc.">
+        <h:p>This parameter represents a single Transition report.</h:p>
+        <h:p>The TimeStampUTC field contains the time stamp of the transition event.</h:p>
+        <h:p>The FromZoneID field contains the Zone ID where the transition event began.</h:p>
+        <h:p>The ToZoneID field contains the Zone ID where the transition event ended.</h:p>
+        <h:p>The Confidence field contains confidence that the event occured in the form of a percentage. 0 is not confident. 100 is perfectly confident</h:p>
+        <h:p>For NewTag and Stray Tag reports, FromZoneID and ToZoneID are set the same</h:p>
+      </description>
+    </annotation>
+    <field      type="u64"      name="TimestampUTC"/>
+    <field      type="u16"      name="FromZoneID"/>
+    <field      type="u16"      name="ToZoneID"/>
+    <field      type="u16"      name="Confidence"/>
+    <field      type="u8"       name="ReportType"
+                                enumeration="ImpinjZoneReportType"/>      
+    <parameter  repeat="0-N"    type="Custom"/>
+  </customParameterDefinition>
+  
+  <customParameterDefinition    name="ImpinjExtendedTagInformation"
+                                vendor="Impinj" subtype="1552"
+                                namespace="Impinj">
+    <annotation>
+      <documentation>
+      </documentation>
+      <description copyright="Copyright 2007, 2008 Impinj Inc.">
+        <h:p>This custom parameter provides additional information about one or more tags that cannot be conveyed using the standard LLRP TagReportData parameter. The EPC is provided so an application may correlate this information with the associated TagReportData information as these parameters may arrive asynchronously with respect to the standard immediate reporting mechanism. Following the EPC is a set of parameters providing additional information about the tag, such as the direction in which it traveled through a portal.</h:p>
+        <h:p>Note that no effort was made to optimize the EPC as was done in standard LLRP. All EPCs, regardless of length, are reported using the EPCData parameter.</h:p>
+        <h:p>EPCData -- contains one or more EPCs for which this tag information applies </h:p>
+      </description>
+    </annotation>
+    <parameter  repeat="1-N"      type="EPCData"/>
+    <parameter  repeat="0-1"    type="ImpinjTransitionReportData"/>
+    <parameter  repeat="0-1"    type="ImpinjLocationReportData"/>
+    <parameter  repeat="0-N"    type="Custom"/>
+    <allowedIn  repeat="0-N"    type="RO_ACCESS_REPORT"/>
+  </customParameterDefinition>
+</llrpdef>
+
