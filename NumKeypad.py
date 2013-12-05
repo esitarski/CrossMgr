@@ -118,7 +118,9 @@ class Keypad( wx.Panel ):
 	
 	def handleNumKeypress(self, event):
 		keycode = event.GetKeyCode()
-		if keycode < 255:
+		if keycode == wx.WXK_NUMPAD_ENTER:
+			self.onEnterPress()
+		elif keycode < 255:
 			if keycode in validKeyCodes:
 				event.Skip()
 		else:
