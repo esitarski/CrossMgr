@@ -508,13 +508,13 @@ class _ParameterPackUnpack( object ):
 		assert Type == self.Type
 		
 		if Type == CustomType:
-			for f in self.FieldDefs:		# Read the VendorIdentifier and MessageSubtype.
+			for f in self.FieldDefs:		# Read the VendorIdentifier and ParameterSubtype.
 				f.read( s, p )
 			
-			# Get the new fields definition based on the VendorIdentifier and MessageSubtype.
-			pCustom = _parameterClassFromType[ (Type, p.VendorIdentifier, p.MessageSubtype) ]()
+			# Get the new fields definition based on the VendorIdentifier and ParameterSubtype.
+			pCustom = _parameterClassFromType[ (Type, p.VendorIdentifier, p.ParameterSubtype) ]()
 			pCustom.VendorIdentifier	= p.VendorIdentifier
-			pCustom.MessageSubtype		= p.MessageSubtype
+			pCustom.ParameterSubtype		= p.ParameterSubtype
 			pCustom._Length		= p._Length
 			
 			# Read the rest of the defined fields for the custom type.
