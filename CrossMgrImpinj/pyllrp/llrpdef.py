@@ -2,7 +2,7 @@
 # DO NOT EDIT!
 # MACHINE GENERATED from llrp-1x0-def.xml
 #
-# Created: 2013-12-03 22:39:18.248000 
+# Created: 2013-12-08 19:25:50.361000 
 #-----------------------------------------------------------
 enums = [
  {
@@ -3080,6 +3080,7 @@ parameters = [
  {
   "fields": [
    {
+    "format": "Datetime", 
     "name": "Microseconds", 
     "type": "uintbe:64"
    }
@@ -3090,7 +3091,6 @@ parameters = [
  {
   "fields": [
    {
-    "format": "Datetime", 
     "name": "Microseconds", 
     "type": "uintbe:64"
    }
@@ -4257,6 +4257,16 @@ parameters = [
  {
   "fields": [
    {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 21, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
+   {
     "enumeration": "ImpinjRequestedDataType", 
     "name": "RequestedData", 
     "type": "uintbe:32"
@@ -4272,10 +4282,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 21
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 22, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "enumeration": "ImpinjRegulatoryRegion", 
     "name": "RegulatoryRegion", 
@@ -4292,10 +4312,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 22
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 23, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "enumeration": "ImpinjInventorySearchType", 
     "name": "InventorySearchMode", 
@@ -4312,10 +4342,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 23
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 26, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "enumeration": "ImpinjFixedFrequencyMode", 
     "name": "FixedFrequencyMode", 
@@ -4340,10 +4380,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 26
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 27, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "enumeration": "ImpinjReducedPowerMode", 
     "name": "ReducedPowerMode", 
@@ -4368,10 +4418,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 27
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 28, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "enumeration": "ImpinjLowDutyCycleMode", 
     "name": "LowDutyCycleMode", 
@@ -4396,9 +4456,21 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 28
+  "typeNum": 1023
  }, 
  {
+  "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1537, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }
+  ], 
   "name": "ImpinjHubVersions", 
   "parameters": [
    {
@@ -4416,10 +4488,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1537
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 29, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "ModelName", 
     "type": "string"
@@ -4469,10 +4551,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 29
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 30, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "FrequencyList", 
     "type": "array:32"
@@ -4488,9 +4580,21 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 30
+  "typeNum": 1023
  }, 
  {
+  "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 32, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }
+  ], 
   "name": "ImpinjForkliftConfiguration", 
   "parameters": [
    {
@@ -4515,10 +4619,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 32
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 33, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "HeightThreshold", 
     "type": "uintbe:16"
@@ -4534,10 +4648,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 33
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 34, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "ZeroMotionTimeThreshold", 
     "type": "uintbe:16"
@@ -4553,10 +4677,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 34
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 35, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "BoardManufacturer", 
     "type": "string"
@@ -4582,10 +4716,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 35
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 36, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "GPIPortNum", 
     "type": "uintbe:16"
@@ -4605,10 +4749,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 36
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 37, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "Temperature", 
     "type": "intbe:16"
@@ -4624,10 +4778,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 37
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 38, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "enumeration": "ImpinjLinkMonitorMode", 
     "name": "LinkMonitorMode", 
@@ -4648,10 +4812,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 38
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 39, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "enumeration": "ImpinjReportBufferMode", 
     "name": "ReportBufferMode", 
@@ -4668,9 +4842,21 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 39
+  "typeNum": 1023
  }, 
  {
+  "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 40, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }
+  ], 
   "name": "ImpinjAccessSpecConfiguration", 
   "parameters": [
    {
@@ -4702,10 +4888,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 40
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 41, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "WordCount", 
     "type": "uintbe:16"
@@ -4721,10 +4917,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 41
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 42, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "OpSpecID", 
     "type": "uintbe:16"
@@ -4761,10 +4967,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 42
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 43, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "enumeration": "ImpinjBlockPermalockResultType", 
     "name": "Result", 
@@ -4785,10 +5001,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 43
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 44, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "OpSpecID", 
     "type": "uintbe:16"
@@ -4824,10 +5050,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 44
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 45, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "enumeration": "ImpinjGetBlockPermalockStatusResultType", 
     "name": "Result", 
@@ -4853,10 +5089,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 45
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 46, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "OpSpecID", 
     "type": "uintbe:16"
@@ -4895,10 +5141,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 46
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 47, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "enumeration": "ImpinjSetQTConfigResultType", 
     "name": "Result", 
@@ -4919,10 +5175,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 47
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 48, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "OpSpecID", 
     "type": "uintbe:16"
@@ -4942,10 +5208,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 48
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 49, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "enumeration": "ImpinjGetQTConfigResultType", 
     "name": "Result", 
@@ -4980,9 +5256,21 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 49
+  "typeNum": 1023
  }, 
  {
+  "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 50, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }
+  ], 
   "name": "ImpinjTagReportContentSelector", 
   "parameters": [
    {
@@ -5035,10 +5323,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 50
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 51, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "enumeration": "ImpinjSerializedTIDMode", 
     "name": "SerializedTIDMode", 
@@ -5055,10 +5353,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 51
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 52, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "enumeration": "ImpinjRFPhaseAngleMode", 
     "name": "RFPhaseAngleMode", 
@@ -5075,10 +5383,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 52
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 53, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "enumeration": "ImpinjPeakRSSIMode", 
     "name": "PeakRSSIMode", 
@@ -5095,10 +5413,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 53
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 54, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "enumeration": "ImpinjGPSCoordinatesMode", 
     "name": "GPSCoordinatesMode", 
@@ -5115,10 +5443,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 54
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 55, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "format": "Hex", 
     "name": "TID", 
@@ -5135,10 +5473,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 55
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 56, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "PhaseAngle", 
     "type": "uintbe:16"
@@ -5154,10 +5502,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 56
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 57, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "RSSI", 
     "type": "intbe:16"
@@ -5173,10 +5531,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 57
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 58, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "Latitude", 
     "type": "intbe:32"
@@ -5196,10 +5564,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 58
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 59, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "LoopCount", 
     "type": "uintbe:32"
@@ -5215,9 +5593,21 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 59
+  "typeNum": 1023
  }, 
  {
+  "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 60, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }
+  ], 
   "name": "ImpinjGPSNMEASentences", 
   "parameters": [
    {
@@ -5242,10 +5632,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 60
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 61, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "GGASentence", 
     "type": "string"
@@ -5261,10 +5661,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 61
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 62, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "RMCSentence", 
     "type": "string"
@@ -5280,10 +5690,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 62
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 63, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "RetryCount", 
     "type": "uintbe:16"
@@ -5299,10 +5719,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 63
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 64, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "GPOPortNum", 
     "type": "uintbe:16"
@@ -5327,10 +5757,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 64
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 65, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "enumeration": "ImpinjOptimizedReadMode", 
     "name": "OptimizedReadMode", 
@@ -5354,10 +5794,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 65
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 66, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "enumeration": "ImpinjAccessSpecOrderingMode", 
     "name": "OrderingMode", 
@@ -5374,10 +5824,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 66
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 67, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "enumeration": "ImpinjRFDopplerFrequencyMode", 
     "name": "RFDopplerFrequencyMode", 
@@ -5394,10 +5854,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 67
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 68, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "DopplerFrequency", 
     "type": "intbe:16"
@@ -5413,10 +5883,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 68
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1501, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "enumeration": "ImpinjEncodeStatus", 
     "name": "EncodeStatus", 
@@ -5440,10 +5920,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1501
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1502, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "enumeration": "ImpinjTagICType", 
     "name": "Type", 
@@ -5460,10 +5950,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1502
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1503, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "EncodeDataCacheID", 
     "type": "uintbe:32"
@@ -5490,9 +5990,21 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1503
+  "typeNum": 1023
  }, 
  {
+  "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1504, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }
+  ], 
   "name": "ImpinjEncodeDataDefaults", 
   "parameters": [
    {
@@ -5552,10 +6064,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1504
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1505, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "format": "Hex", 
     "name": "EPC", 
@@ -5621,10 +6143,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1505
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1506, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "format": "Hex", 
     "name": "PCBits", 
@@ -5641,10 +6173,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1506
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1507, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "format": "Hex", 
     "name": "AccessPassword", 
@@ -5661,10 +6203,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1507
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1508, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "format": "Hex", 
     "name": "KillPassword", 
@@ -5681,10 +6233,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1508
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1509, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "WordPointer", 
     "type": "uintbe:16"
@@ -5705,10 +6267,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1509
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1510, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "format": "Hex", 
     "name": "AlternateEPC", 
@@ -5725,10 +6297,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1510
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1511, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "enumeration": "ImpinjQTDataProfile", 
     "name": "DataProfile", 
@@ -5755,10 +6337,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1511
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1512, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "enumeration": "ImpinjLockPrivilege", 
     "name": "AccessPasswordLock", 
@@ -5804,10 +6396,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1512
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1513, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "EncodeDataCacheID", 
     "type": "uintbe:32"
@@ -5831,10 +6433,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1513
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1514, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "OpSpecID", 
     "type": "uintbe:16"
@@ -5892,10 +6504,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1514
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1515, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "enumeration": "ImpinjOpSpecAction", 
     "name": "OpSpecAction", 
@@ -5928,10 +6550,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1515
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1516, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "AccessSpecID", 
     "type": "uintbe:32"
@@ -5961,10 +6593,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1516
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1517, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "OpSpecID", 
     "type": "uintbe:16"
@@ -5997,10 +6639,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1517
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1518, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "OpSpecID", 
     "type": "uintbe:16"
@@ -6035,10 +6687,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1518
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1519, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "enumeration": "ImpinjEncodeDataResultType", 
     "name": "EncodeEPCResult", 
@@ -6090,10 +6752,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1519
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1520, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "SerialNumber", 
     "type": "string"
@@ -6117,10 +6789,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1520
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1521, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "MaxNumSectors", 
     "type": "uintbe:32"
@@ -6148,10 +6830,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1521
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1522, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "XAxis", 
     "type": "intbe:32"
@@ -6175,10 +6867,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1522
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1523, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "BeaconState", 
     "type": "bool"
@@ -6202,9 +6904,21 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1523
+  "typeNum": 1023
  }, 
  {
+  "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1524, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }
+  ], 
   "name": "ImpinjAntennaConfiguration", 
   "parameters": [
    {
@@ -6222,10 +6936,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1524
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1526, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "AntennaEventConnected", 
     "type": "uintbe:64"
@@ -6245,9 +6969,21 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1526
+  "typeNum": 1023
  }, 
  {
+  "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1534, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }
+  ], 
   "name": "ImpinjTagReporting", 
   "parameters": [
    {
@@ -6272,10 +7008,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1534
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1535, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "TagMode", 
     "type": "bool"
@@ -6295,10 +7041,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1535
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1536, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "Allow", 
     "type": "bool"
@@ -6318,10 +7074,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1536
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1538, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "HubID", 
     "type": "uintbe:16"
@@ -6347,20 +7113,40 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1538
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1539, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "Metric", 
     "type": "array:32"
    }
   ], 
   "name": "ImpinjArrayReportMetric", 
-  "typeNum": 1539
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1540, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "HeightCm", 
     "type": "intbe:16"
@@ -6388,9 +7174,21 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1540
+  "typeNum": 1023
  }, 
  {
+  "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1541, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }
+  ], 
   "name": "ImpinjLISpec", 
   "parameters": [
    {
@@ -6415,10 +7213,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1541
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1542, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "MotionWindowSeconds", 
     "type": "uintbe:8"
@@ -6438,10 +7246,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1542
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1543, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "ModeIndex", 
     "type": "uintbe:16"
@@ -6472,10 +7290,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1543
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1544, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "ReportIntervalSeconds", 
     "type": "uintbe:16"
@@ -6507,10 +7335,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1544
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1545, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "TimestampUTC", 
     "type": "uintbe:64"
@@ -6543,10 +7381,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1545
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1528, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "SectorID", 
     "type": "uintbe:16"
@@ -6562,10 +7410,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1528
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1525, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "SectorID", 
     "type": "uintbe:16"
@@ -6596,10 +7454,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1525
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1546, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "SectorIDs", 
     "type": "array:16"
@@ -6619,9 +7487,21 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1546
+  "typeNum": 1023
  }, 
  {
+  "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1547, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }
+  ], 
   "name": "ImpinjTISpec", 
   "parameters": [
    {
@@ -6660,10 +7540,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1547
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1548, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "InitialStraySearchTimeSec", 
     "type": "uintbe:16"
@@ -6696,10 +7586,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1548
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1549, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "ModeIndex", 
     "type": "uintbe:16"
@@ -6727,10 +7627,20 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1549
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1550, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "ImpinjEnableTransitionReport", 
     "type": "bool"
@@ -6749,10 +7659,20 @@ parameters = [
    }
   ], 
   "name": "ImpinjTransitionReporting", 
-  "typeNum": 1550
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1551, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "TimestampUTC", 
     "type": "uintbe:64"
@@ -6785,9 +7705,21 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1551
+  "typeNum": 1023
  }, 
  {
+  "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 1552, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }
+  ], 
   "name": "ImpinjExtendedTagInformation", 
   "parameters": [
    {
@@ -6819,7 +7751,7 @@ parameters = [
     ]
    }
   ], 
-  "typeNum": 1552
+  "typeNum": 1023
  }
 ]
 messages = [
@@ -7504,6 +8436,16 @@ messages = [
  {
   "fields": [
    {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 21, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
+   {
     "name": "skip:32", 
     "type": "skip:32"
    }
@@ -7518,9 +8460,21 @@ messages = [
     ]
    }
   ], 
-  "typeNum": 21
+  "typeNum": 1023
  }, 
  {
+  "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 22, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }
+  ], 
   "name": "IMPINJ_ENABLE_EXTENSIONS_RESPONSE", 
   "parameters": [
    {
@@ -7538,10 +8492,20 @@ messages = [
     ]
    }
   ], 
-  "typeNum": 22
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 23, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "SaveConfiguration", 
     "type": "bool"
@@ -7561,9 +8525,21 @@ messages = [
     ]
    }
   ], 
-  "typeNum": 23
+  "typeNum": 1023
  }, 
  {
+  "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 24, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }
+  ], 
   "name": "IMPINJ_SAVE_SETTINGS_RESPONSE", 
   "parameters": [
    {
@@ -7581,9 +8557,21 @@ messages = [
     ]
    }
   ], 
-  "typeNum": 24
+  "typeNum": 1023
  }, 
  {
+  "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 150, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }
+  ], 
   "name": "IMPINJ_ADD_ENCODE_DATA_CACHE", 
   "parameters": [
    {
@@ -7601,9 +8589,21 @@ messages = [
     ]
    }
   ], 
-  "typeNum": 150
+  "typeNum": 1023
  }, 
  {
+  "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 151, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }
+  ], 
   "name": "IMPINJ_ADD_ENCODE_DATA_CACHE_RESPONSE", 
   "parameters": [
    {
@@ -7621,10 +8621,20 @@ messages = [
     ]
    }
   ], 
-  "typeNum": 151
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 152, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "EncodeDataCacheID", 
     "type": "uintbe:32"
@@ -7640,9 +8650,21 @@ messages = [
     ]
    }
   ], 
-  "typeNum": 152
+  "typeNum": 1023
  }, 
  {
+  "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 153, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }
+  ], 
   "name": "IMPINJ_DELETE_ENCODE_DATA_CACHE_RESPONSE", 
   "parameters": [
    {
@@ -7660,9 +8682,21 @@ messages = [
     ]
    }
   ], 
-  "typeNum": 153
+  "typeNum": 1023
  }, 
  {
+  "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 154, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }
+  ], 
   "name": "IMPINJ_GET_ENCODE_DATA_CACHES", 
   "parameters": [
    {
@@ -7673,9 +8707,21 @@ messages = [
     ]
    }
   ], 
-  "typeNum": 154
+  "typeNum": 1023
  }, 
  {
+  "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 155, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }
+  ], 
   "name": "IMPINJ_GET_ENCODE_DATA_CACHES_RESPONSE", 
   "parameters": [
    {
@@ -7700,10 +8746,20 @@ messages = [
     ]
    }
   ], 
-  "typeNum": 155
+  "typeNum": 1023
  }, 
  {
   "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 156, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }, 
    {
     "name": "EncodeDataCacheID", 
     "type": "uintbe:32"
@@ -7726,9 +8782,21 @@ messages = [
     ]
    }
   ], 
-  "typeNum": 156
+  "typeNum": 1023
  }, 
  {
+  "fields": [
+   {
+    "default": 25882, 
+    "name": "VendorIdentifier", 
+    "type": "uintbe:32"
+   }, 
+   {
+    "default": 157, 
+    "name": "MessageSubtype", 
+    "type": "uintbe:32"
+   }
+  ], 
   "name": "IMPINJ_ADD_ENCODE_DATA_RESPONSE", 
   "parameters": [
    {
@@ -7746,6 +8814,6 @@ messages = [
     ]
    }
   ], 
-  "typeNum": 157
+  "typeNum": 1023
  }
 ]

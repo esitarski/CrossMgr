@@ -35,10 +35,12 @@ import llrpdef
 #		pass
 #
 
+CustomType = 1023
+
 class _FieldDef( object ):
-	__slots__ = ['Name', 'Type', 'Enum', 'Format']
+	__slots__ = ['Name', 'Type', 'Enum', 'Format', 'Default']
 	
-	def __init__( self, Name, Type, Enum = None, Format = None ):
+	def __init__( self, Name, Type, Enum = None, Format = None, Default = None ):
 		self.Name = Name
 		self.Type = Type
 		if Enum:
@@ -46,6 +48,7 @@ class _FieldDef( object ):
 		else:
 			self.Enum = None
 		self.Format = Format
+		self.Default = Default
 		
 	def read( self, s, obj, bytesRemaining = None ):
 		ftype = self.Type
@@ -117,7 +120,7 @@ class _FieldDef( object ):
 		ftype = self.Type
 		attr = self.Name
 		if 'intbe' in ftype or ftype.startswith('bits'):
-			setattr( obj, attr, 0 )
+			setattr( obj, attr, self.Default if self.Default else 0 )
 		elif ftype == 'bool':
 			setattr( obj, attr, False )
 		elif ftype == 'string':
@@ -388,6 +391,23 @@ class _MessagePackUnpack( object ):
 		self.Name = Name
 		self.FieldDefs = FieldDefs
 		self.ParameterDefs = ParameterDefs
+		self.Code = self.getCode()
+
+	def isCustom( self ):
+		try:
+			return	self.Type == CustomType and \
+					self.FieldDefs[0].Name == 'VendorIdentifier' and self.FieldDefs[0].Default is not None and \
+					self.FieldDefs[1].Name == 'MessageSubtype'   and self.FieldDefs[1].Default is not None
+		except (IndexError, KeyError):
+			return False
+		
+	def getCode( self ):
+		if self.isCustom():
+			VendorIdentifier = self.FieldDefs[0].Default
+			MessageSubtype = self.FieldDefs[1].Default
+			return (self.Type, VendorIdentifier, MessageSubtype)
+		else:
+			return self.Type
 
 	def unpack( self, s ):
 		m = _messageClassFromType[self.Type]( MessageID = -1 )	# Use a dummy MessageID - get the real one from the bitstream later.
@@ -403,6 +423,17 @@ class _MessagePackUnpack( object ):
 		
 		for f in self.FieldDefs:
 			f.read( s, m, m._Length - ((s.pos - beginPos) >> 3) )
+			
+		if m.Type == CustomType:
+			mCustom = _messageClassFromType[(self.Type, m.VendorIdentifier, m.MessageSubtype)]( MessageID = m._MessageID )
+			mCustom.VendorIdentifier	= m.VendorIdentifier
+			mCustom.MessageSubtype		= m.MessageSubtype
+			mCustom._MessageID	= m._MessageID
+			mCustom._Length		= m._Length
+			m = mCustom
+			for f in m.FieldDefs[2:]:
+				f.read( s, m, m._Length - ((s.pos - beginPos) >> 3) )
+			
 		while ((s.pos - beginPos) >> 3) < m._Length:
 			m.Parameters.append( UnpackParameter(s) )
 			
@@ -415,7 +446,7 @@ class _MessagePackUnpack( object ):
 		# Add Version 1 code to the message type - the (1<<10).
 		s.append( bitstring.pack('uintbe:16, uintbe:32, uintbe:32', (1<<10) | m.Type, 0, m._MessageID) )
 		
-		for f in self.FieldDefs:
+		for f in m.FieldDefs:
 			f.write( s, m )
 		for p in m.Parameters:
 			p.pack( s )
@@ -440,6 +471,23 @@ class _ParameterPackUnpack( object ):
 		self.FieldDefs = FieldDefs
 		self.ParameterDefs = ParameterDefs
 		self.Length = Length	# only for TV encoded _parameters
+		self.Code = self.getCode()
+
+	def isCustom( self ):
+		try:
+			return	self.Type == CustomType and \
+					self.FieldDefs[0].Name == 'VendorIdentifier' and self.FieldDefs[0].Default is not None and \
+					self.FieldDefs[1].Name == 'ParameterSubtype' and self.FieldDefs[1].Default is not None
+		except (IndexError, KeyError):
+			return False
+		
+	def getCode( self ):
+		if self.isCustom():
+			VendorIdentifier = self.FieldDefs[0].Default
+			ParameterSubtype = self.FieldDefs[1].Default
+			return (self.Type, VendorIdentifier, ParameterSubtype)
+		else:
+			return self.Type
 
 	def unpack( self, s ):
 		p = _parameterClassFromType[self.Type]()
@@ -459,8 +507,23 @@ class _ParameterPackUnpack( object ):
 		
 		assert Type == self.Type
 		
-		for f in self.FieldDefs:
-			f.read( s, p )
+		if Type == CustomType:
+			for f in self.FieldDefs:		# Read the VendorIdentifier and MessageSubtype.
+				f.read( s, p )
+			
+			# Get the new fields definition based on the VendorIdentifier and MessageSubtype.
+			pCustom = _parameterClassFromType[ (Type, p.VendorIdentifier, p.MessageSubtype) ]()
+			pCustom.VendorIdentifier	= p.VendorIdentifier
+			pCustom.MessageSubtype		= p.MessageSubtype
+			pCustom._Length		= p._Length
+			
+			# Read the rest of the defined fields for the custom type.
+			p = pCustom
+			for f in p.FieldDefs[2:]:
+				f.read( s, p )
+		else:								# Regular field.
+			for f in self.FieldDefs:
+				f.read( s, p )
 			
 		if p.Encoding == self.TLV:
 			while ((s.pos - beginPos) >> 3) < p._Length:
@@ -479,7 +542,7 @@ class _ParameterPackUnpack( object ):
 			assert not p.Parameters, 'LLRP TV _parameters cannot contain nested parameters'
 			s.append( bitstring.pack('uintbe:8', p.Type | 128 ) )
 		
-		for f in self.FieldDefs:
+		for f in p.FieldDefs:	# Was self.FieldDefs.  We need to use the "p" to handle the extra fields in the custom messages.
 			f.write( s, p )
 
 		# Fix the length field.
@@ -509,7 +572,11 @@ def _DefTLV( Type, Name, FieldDefs, ParameterDefs ):
 	return _ParameterPackUnpack( Type, Name, _ParameterPackUnpack.TLV, FieldDefs, ParameterDefs )
 
 def _fixFieldDefs( fields ):
-	return [_FieldDef(f['name'], f['type'], f.get('enumeration', None), f.get('format', None) ) for f in fields]
+	return [_FieldDef(	f['name'],
+						f['type'],
+						f.get('enumeration', None),
+						f.get('format', None),
+						f.get('default', None) ) for f in fields]
 
 #-----------------------------------------------------------------------------
 # Create Enum instances and add to the global namespace.
@@ -540,7 +607,7 @@ for p in llrpdef.parameters:
 		pup = _DefTLV( Type, Name, _fixFieldDefs(p.get('fields',[])), p.get('parameters', None) )
 	parameterClassName = pup.Name + '_Parameter'
 	_ParameterPackUnpackLookup[Type] = pup
-	_parameterClassFromType[Type] = _parameterClassFromName[parameterClassName] = _MakeClass( 'Parameter', pup.Name, Type, pup )
+	_parameterClassFromType[pup.Code] = _parameterClassFromName[parameterClassName] = _MakeClass( 'Parameter', pup.Name, Type, pup )
 
 globals().update( _parameterClassFromName )	# Add Parameter classes to global namespace.
 del _parameterClassFromName
@@ -559,7 +626,7 @@ for m in llrpdef.messages:
 	pup = _MessagePackUnpack(Type, Name, _fixFieldDefs(m.get('fields',[])), m.get('parameters',None))
 	messageClassName = pup.Name + '_Message'
 	_MessagePackUnpackLookup[Type] = pup
-	_messageClassFromType[Type] = _messageClassFromName[messageClassName] = _MakeClass( 'Message', pup.Name, Type, pup )
+	_messageClassFromType[pup.Code] = _messageClassFromName[messageClassName] = _MakeClass( 'Message', pup.Name, Type, pup )
 	
 globals().update( _messageClassFromName )	# Add Message classes to global namespace.
 
@@ -750,3 +817,16 @@ if __name__ == '__main__':
 	n = UnpackMessage( t )
 	print n
 	
+	customMessage = IMPINJ_ENABLE_EXTENSIONS_Message( MessageID = 1 )
+	print customMessage
+	
+	s = customMessage.pack( bitstring.BitStream() )
+	m = UnpackMessage( s )
+	print m
+	
+	customMessage = IMPINJ_ADD_ENCODE_DATA_Message( MessageID = 1, EncodeDataCacheID = 32 )
+	print customMessage
+	
+	s = customMessage.pack( bitstring.BitStream() )
+	m = UnpackMessage( s )
+	print m

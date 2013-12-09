@@ -47,13 +47,19 @@ def getEnum( e ):
 
 def getParameterMessage( n ):
 	Name = toAscii(n.attributes['name'].value)
+	
+	Fields = []
+	Parameters = []
+	
 	print Name
 	try:
 		TypeNum = int(n.attributes['typeNum'].value)
 	except KeyError:
-		TypeNum = int(n.attributes['subtype'].value)
-	Fields = []
-	Parameters = []
+		# This is a custom parameter or message.
+		TypeNum = 1023		# Code for custom Message and Parameter.
+		Fields.append( {'name': 'VendorIdentifier', 'type': 'uintbe:32', 'default': 25882} )	# Impinj Vendor Number
+		Fields.append( {'name': 'MessageSubtype',  'type': 'uintbe:32', 'default': int(n.attributes['subtype'].value)} )
+	
 	for c in n.childNodes:
 		if c.nodeName == 'field':
 			fieldInfo = { 'name': toAscii(c.attributes['name'].value), 'type': fieldMap[toAscii(c.attributes['type'].value)] }
