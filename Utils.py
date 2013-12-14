@@ -88,6 +88,15 @@ if 'WXMAC' in wx.Platform:
 	# Error, Information and Question dialogs have no icons on the Mac.
 	# Replace all message dialogs with generics dialogs.
 	wx.MessageDialog = wx.lib.agw.genericmessagedialog.GenericMessageDialog
+
+# Fix up numeric keypad keys.
+if 'WXMAC' in wx.Platform:
+	wx.WXK_NUMPAD_ENTER = 13
+	wx.WXK_NUMPAD_MULTIPLY = 42
+	wx.WXK_NUMPAD_DIVIDE = 47
+	wx.WXK_NUMPAD_EQUAL = 61
+	wx.WXK_NUMPAD_ADD = 43
+	wx.WXK_NUMPAD_SUBTRACT = 45
 	
 def HighPriority():
 	""" Set the priority of the process to the highest level."""

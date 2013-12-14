@@ -221,6 +221,9 @@ def _getRepr( self, indent = '' ):
 		for f in self.DataFields:
 			if f.Enum:
 				s.write( '%s  %s=%s.%s,\n' % (indent, f.Name, f.Enum._name, f.Enum.getName(getattr(self, f.Name))) )
+			elif f.Name == 'ParameterType':
+				v = getattr(self, f.Name)
+				s.write( '%s  %s=%s, # %s\n' % (indent, f.Name, repr(v), _parameterClassFromType[v].Name ) )
 			else:
 				s.write( '%s  %s=%s,\n' % (indent, f.Name, repr(getattr(self, f.Name)) ) )
 		if self.Parameters:
@@ -353,7 +356,7 @@ def _MakeClass( messageOrParameter, Name, Type, PackUnpack ):
 		extraFields.append( '_MessageID' )
 		
 	classAttrs = {
-		'Name':				Name,					# Name of this message/paramter.
+		'Name':				Name,					# Name of this message/parameter.
 		'Type':				Type,					# LLRP Type integer
 		'PackUnpack':		PackUnpack,				# Instance to pack/unpack it into a bitstream.
 		'FieldDefs':		PackUnpack.FieldDefs,	# Fields specified for this object.
@@ -513,7 +516,7 @@ class _ParameterPackUnpack( object ):
 			
 			# Get the new fields definition based on the VendorIdentifier and ParameterSubtype.
 			pCustom = _parameterClassFromType[ (Type, p.VendorIdentifier, p.ParameterSubtype) ]()
-			pCustom.VendorIdentifier	= p.VendorIdentifier
+			pCustom.VendorIdentifier		= p.VendorIdentifier
 			pCustom.ParameterSubtype		= p.ParameterSubtype
 			pCustom._Length		= p._Length
 			
@@ -712,7 +715,10 @@ def GetBasicAddRospecMessage( MessageID = None, ROSpecID = 123, inventoryParamet
 	
 	rospecMessage = ADD_ROSPEC_Message( MessageID = MessageID, Parameters = [
 		# Initialize to disabled.
-		ROSpec_Parameter( ROSpecID = ROSpecID, CurrentState = ROSpecState.Disabled, Parameters = [
+		ROSpec_Parameter(
+			ROSpecID = ROSpecID,
+			CurrentState = ROSpecState.Disabled, Parameters = [
+			
 			ROBoundarySpec_Parameter(		# Configure boundary spec (start and stop triggers for the reader).
 				Parameters = [
 					# Start immediately.
@@ -721,15 +727,17 @@ def GetBasicAddRospecMessage( MessageID = None, ROSpecID = 123, inventoryParamet
 					ROSpecStopTrigger_Parameter(ROSpecStopTriggerType = ROSpecStopTriggerType.Null),
 				]
 			),
+			
 			AISpec_Parameter(				# Antenna Inventory Spec (specifies which antennas and protocol to use)
 				AntennaIDs = antennas,		# Use specified antennas.
 				Parameters = [
 					AISpecStopTrigger_Parameter(
-						AISpecStopTriggerType = AISpecStopTriggerType.Null,
+						AISpecStopTriggerType = AISpecStopTriggerType.Tag_Observation,
 						Parameters = [
 							TagObservationTrigger_Parameter(
 								TriggerType = TagObservationTriggerType.Upon_Seeing_N_Tags_Or_Timeout,
-								NumberOfTags = 50,	# Number of tags
+								NumberOfTags = 50,
+								NumberOfAttempts = 1,
 								Timeout = 500,		# Milliseconds
 								T = 0,				# Idle time between responses.
 							),

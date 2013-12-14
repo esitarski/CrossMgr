@@ -2,7 +2,7 @@
 # DO NOT EDIT!
 # MACHINE GENERATED from llrp-1x0-def.xml
 #
-# Created: 2013-12-08 19:25:50.361000 
+# Created: 2013-12-08 23:33:07.076000 
 #-----------------------------------------------------------
 enums = [
  {
@@ -4263,7 +4263,7 @@ parameters = [
    }, 
    {
     "default": 21, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -4293,7 +4293,7 @@ parameters = [
    }, 
    {
     "default": 22, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -4323,7 +4323,7 @@ parameters = [
    }, 
    {
     "default": 23, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -4353,7 +4353,7 @@ parameters = [
    }, 
    {
     "default": 26, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -4391,7 +4391,7 @@ parameters = [
    }, 
    {
     "default": 27, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -4429,7 +4429,7 @@ parameters = [
    }, 
    {
     "default": 28, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -4467,7 +4467,7 @@ parameters = [
    }, 
    {
     "default": 1537, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }
   ], 
@@ -4499,7 +4499,7 @@ parameters = [
    }, 
    {
     "default": 29, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -4562,7 +4562,7 @@ parameters = [
    }, 
    {
     "default": 30, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -4591,7 +4591,7 @@ parameters = [
    }, 
    {
     "default": 32, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }
   ], 
@@ -4630,7 +4630,7 @@ parameters = [
    }, 
    {
     "default": 33, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -4659,7 +4659,7 @@ parameters = [
    }, 
    {
     "default": 34, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -4688,7 +4688,7 @@ parameters = [
    }, 
    {
     "default": 35, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -4727,7 +4727,7 @@ parameters = [
    }, 
    {
     "default": 36, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -4760,7 +4760,7 @@ parameters = [
    }, 
    {
     "default": 37, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -4789,7 +4789,7 @@ parameters = [
    }, 
    {
     "default": 38, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -4823,7 +4823,7 @@ parameters = [
    }, 
    {
     "default": 39, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -4853,7 +4853,7 @@ parameters = [
    }, 
    {
     "default": 40, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }
   ], 
@@ -4899,7 +4899,7 @@ parameters = [
    }, 
    {
     "default": 41, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -4928,7 +4928,7 @@ parameters = [
    }, 
    {
     "default": 42, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -4978,7 +4978,7 @@ parameters = [
    }, 
    {
     "default": 43, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5012,7 +5012,7 @@ parameters = [
    }, 
    {
     "default": 44, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5061,7 +5061,7 @@ parameters = [
    }, 
    {
     "default": 45, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5100,7 +5100,7 @@ parameters = [
    }, 
    {
     "default": 46, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5152,7 +5152,7 @@ parameters = [
    }, 
    {
     "default": 47, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5186,7 +5186,7 @@ parameters = [
    }, 
    {
     "default": 48, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5219,7 +5219,7 @@ parameters = [
    }, 
    {
     "default": 49, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5267,7 +5267,7 @@ parameters = [
    }, 
    {
     "default": 50, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }
   ], 
@@ -5334,7 +5334,7 @@ parameters = [
    }, 
    {
     "default": 51, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5364,7 +5364,7 @@ parameters = [
    }, 
    {
     "default": 52, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5394,7 +5394,7 @@ parameters = [
    }, 
    {
     "default": 53, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5424,7 +5424,7 @@ parameters = [
    }, 
    {
     "default": 54, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5454,7 +5454,7 @@ parameters = [
    }, 
    {
     "default": 55, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5484,7 +5484,7 @@ parameters = [
    }, 
    {
     "default": 56, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5513,7 +5513,7 @@ parameters = [
    }, 
    {
     "default": 57, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5542,7 +5542,7 @@ parameters = [
    }, 
    {
     "default": 58, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5575,7 +5575,7 @@ parameters = [
    }, 
    {
     "default": 59, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5604,7 +5604,7 @@ parameters = [
    }, 
    {
     "default": 60, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }
   ], 
@@ -5643,7 +5643,7 @@ parameters = [
    }, 
    {
     "default": 61, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5672,7 +5672,7 @@ parameters = [
    }, 
    {
     "default": 62, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5701,7 +5701,7 @@ parameters = [
    }, 
    {
     "default": 63, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5730,7 +5730,7 @@ parameters = [
    }, 
    {
     "default": 64, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5768,7 +5768,7 @@ parameters = [
    }, 
    {
     "default": 65, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5805,7 +5805,7 @@ parameters = [
    }, 
    {
     "default": 66, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5835,7 +5835,7 @@ parameters = [
    }, 
    {
     "default": 67, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5865,7 +5865,7 @@ parameters = [
    }, 
    {
     "default": 68, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5894,7 +5894,7 @@ parameters = [
    }, 
    {
     "default": 1501, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5931,7 +5931,7 @@ parameters = [
    }, 
    {
     "default": 1502, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -5961,7 +5961,7 @@ parameters = [
    }, 
    {
     "default": 1503, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -6001,7 +6001,7 @@ parameters = [
    }, 
    {
     "default": 1504, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }
   ], 
@@ -6075,7 +6075,7 @@ parameters = [
    }, 
    {
     "default": 1505, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -6154,7 +6154,7 @@ parameters = [
    }, 
    {
     "default": 1506, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -6184,7 +6184,7 @@ parameters = [
    }, 
    {
     "default": 1507, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -6214,7 +6214,7 @@ parameters = [
    }, 
    {
     "default": 1508, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -6244,7 +6244,7 @@ parameters = [
    }, 
    {
     "default": 1509, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -6278,7 +6278,7 @@ parameters = [
    }, 
    {
     "default": 1510, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -6308,7 +6308,7 @@ parameters = [
    }, 
    {
     "default": 1511, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -6348,7 +6348,7 @@ parameters = [
    }, 
    {
     "default": 1512, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -6407,7 +6407,7 @@ parameters = [
    }, 
    {
     "default": 1513, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -6444,7 +6444,7 @@ parameters = [
    }, 
    {
     "default": 1514, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -6515,7 +6515,7 @@ parameters = [
    }, 
    {
     "default": 1515, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -6561,7 +6561,7 @@ parameters = [
    }, 
    {
     "default": 1516, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -6604,7 +6604,7 @@ parameters = [
    }, 
    {
     "default": 1517, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -6650,7 +6650,7 @@ parameters = [
    }, 
    {
     "default": 1518, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -6698,7 +6698,7 @@ parameters = [
    }, 
    {
     "default": 1519, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -6763,7 +6763,7 @@ parameters = [
    }, 
    {
     "default": 1520, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -6800,7 +6800,7 @@ parameters = [
    }, 
    {
     "default": 1521, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -6841,7 +6841,7 @@ parameters = [
    }, 
    {
     "default": 1522, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -6878,7 +6878,7 @@ parameters = [
    }, 
    {
     "default": 1523, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -6915,7 +6915,7 @@ parameters = [
    }, 
    {
     "default": 1524, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }
   ], 
@@ -6947,7 +6947,7 @@ parameters = [
    }, 
    {
     "default": 1526, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -6980,7 +6980,7 @@ parameters = [
    }, 
    {
     "default": 1534, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }
   ], 
@@ -7019,7 +7019,7 @@ parameters = [
    }, 
    {
     "default": 1535, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -7052,7 +7052,7 @@ parameters = [
    }, 
    {
     "default": 1536, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -7085,7 +7085,7 @@ parameters = [
    }, 
    {
     "default": 1538, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -7124,7 +7124,7 @@ parameters = [
    }, 
    {
     "default": 1539, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -7144,7 +7144,7 @@ parameters = [
    }, 
    {
     "default": 1540, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -7185,7 +7185,7 @@ parameters = [
    }, 
    {
     "default": 1541, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }
   ], 
@@ -7224,7 +7224,7 @@ parameters = [
    }, 
    {
     "default": 1542, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -7257,7 +7257,7 @@ parameters = [
    }, 
    {
     "default": 1543, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -7301,7 +7301,7 @@ parameters = [
    }, 
    {
     "default": 1544, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -7346,7 +7346,7 @@ parameters = [
    }, 
    {
     "default": 1545, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -7392,7 +7392,7 @@ parameters = [
    }, 
    {
     "default": 1528, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -7421,7 +7421,7 @@ parameters = [
    }, 
    {
     "default": 1525, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -7465,7 +7465,7 @@ parameters = [
    }, 
    {
     "default": 1546, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -7498,7 +7498,7 @@ parameters = [
    }, 
    {
     "default": 1547, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }
   ], 
@@ -7551,7 +7551,7 @@ parameters = [
    }, 
    {
     "default": 1548, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -7597,7 +7597,7 @@ parameters = [
    }, 
    {
     "default": 1549, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -7638,7 +7638,7 @@ parameters = [
    }, 
    {
     "default": 1550, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -7670,7 +7670,7 @@ parameters = [
    }, 
    {
     "default": 1551, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }, 
    {
@@ -7716,7 +7716,7 @@ parameters = [
    }, 
    {
     "default": 1552, 
-    "name": "MessageSubtype", 
+    "name": "ParameterSubtype", 
     "type": "uintbe:32"
    }
   ], 

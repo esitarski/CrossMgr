@@ -45,20 +45,21 @@ def getEnum( e ):
 		for c in e.childNodes if c.nodeName == 'entry' ]
 	return {'name':Name, 'choices':Choices }
 
-def getParameterMessage( n ):
+def getParameterMessage( n, isMessage ):
 	Name = toAscii(n.attributes['name'].value)
 	
 	Fields = []
 	Parameters = []
 	
-	print Name
+	print Name, 'Message' if isMessage else 'Parameter'
 	try:
 		TypeNum = int(n.attributes['typeNum'].value)
 	except KeyError:
 		# This is a custom parameter or message.
 		TypeNum = 1023		# Code for custom Message and Parameter.
 		Fields.append( {'name': 'VendorIdentifier', 'type': 'uintbe:32', 'default': 25882} )	# Impinj Vendor Number
-		Fields.append( {'name': 'MessageSubtype',  'type': 'uintbe:32', 'default': int(n.attributes['subtype'].value)} )
+		Fields.append( {'name': 'MessageSubtype' if isMessage else 'ParameterSubtype', 'type': 'uintbe:32',
+						'default': int(n.attributes['subtype'].value)} )
 	
 	for c in n.childNodes:
 		if c.nodeName == 'field':
@@ -99,8 +100,8 @@ llrpDefXml = 'llrp-1x0-def.xml'
 dom = parse( llrpDefXml )
 
 enums = [getEnum(e) for e in dom.getElementsByTagName('enumerationDefinition')]
-parameters = [getParameterMessage(p) for p in dom.getElementsByTagName('parameterDefinition')]
-messages = [getParameterMessage(m) for m in dom.getElementsByTagName('messageDefinition')]
+parameters = [getParameterMessage(p, False) for p in dom.getElementsByTagName('parameterDefinition')]
+messages = [getParameterMessage(m, True) for m in dom.getElementsByTagName('messageDefinition')]
 
 dom.unlink()
 dom = None
@@ -109,8 +110,8 @@ llrpCustomDefXml = 'Impinjdef-1.18-private.xml'
 dom = parse( llrpCustomDefXml )
 
 enums.extend( getEnum(e) for e in dom.getElementsByTagName('customEnumerationDefinition') )
-parameters.extend( getParameterMessage(p) for p in dom.getElementsByTagName('customParameterDefinition') )
-messages.extend( getParameterMessage(m) for m in dom.getElementsByTagName('customMessageDefinition') )
+parameters.extend( getParameterMessage(p, False) for p in dom.getElementsByTagName('customParameterDefinition') )
+messages.extend( getParameterMessage(m, True) for m in dom.getElementsByTagName('customMessageDefinition') )
 
 with open('llrpdef.py', 'w') as fp:
 	fp.write( '#-----------------------------------------------------------\n' )
