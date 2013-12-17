@@ -829,6 +829,7 @@ class Race(object):
 	advancePhotoMillisecondsDefault = -100
 	city = ''
 	stateProv = ''
+	country = ''
 	
 	def __init__( self ):
 		self.reset()
@@ -839,6 +840,7 @@ class Race(object):
 		
 		self.city = '<MyCity>'
 		self.stateProv = '<MyStateProv>'
+		self.country = '<MyCountry>'
 		
 		self.raceNum = 1
 		self.date = datetime.date.today().strftime('%Y-%m-%d')

@@ -29,10 +29,16 @@ class Properties( wx.Panel ):
 		self.raceStateProv = wx.TextCtrl( self, value='' )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceStateProv )
 		
+		self.raceCountryLabel = wx.StaticText( self, label = _('Country') )
+		self.raceCountry = wx.TextCtrl( self, value='' )
+		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceCountry )
+		
 		self.locationSizer = wx.BoxSizer( wx.HORIZONTAL )
-		self.locationSizer.Add( self.raceCity, 3, flag=wx.EXPAND )
+		self.locationSizer.Add( self.raceCity, 4, flag=wx.EXPAND )
 		self.locationSizer.Add( self.raceStateProvLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border = 4 )
 		self.locationSizer.Add( self.raceStateProv, 1, flag=wx.EXPAND )
+		self.locationSizer.Add( self.raceCountryLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border = 4 )
+		self.locationSizer.Add( self.raceCountry, 3, flag=wx.EXPAND )
 		rows += 1
 		
 		self.dateLabel = wx.StaticText( self, label = _('Date:') )
@@ -214,7 +220,7 @@ class Properties( wx.Panel ):
 		
 		self.editFields = [labelFieldFormats[i][0] for i in xrange(1, len(labelFieldFormats), 2)]
 		self.editFields = [e for e in self.editFields if e and not isinstance(e, wx.BoxSizer)]
-		self.editFields.extend( [self.raceCity, self.raceStateProv] )
+		self.editFields.extend( [self.raceCity, self.raceStateProv, self.raceCountry] )
 	
 	def onJChipIntegration( self, event ):
 		self.autocorrectLapsDefault.SetValue( not self.jchip.GetValue() )
@@ -287,6 +293,7 @@ class Properties( wx.Panel ):
 			self.raceName.SetValue( race.name )
 			self.raceCity.SetValue( race.city )
 			self.raceStateProv.SetValue( race.stateProv )
+			self.raceCountry.SetValue( race.country )
 			self.raceDiscipline.SetValue( getattr(race, 'discipline', 'Cyclo-cross') )
 			self.organizer.SetValue( getattr(race, 'organizer', '') )
 			d = wx.DateTime()
@@ -334,6 +341,7 @@ class Properties( wx.Panel ):
 			race.name = self.raceName.GetValue().strip()
 			race.city = self.raceCity.GetValue().strip()
 			race.stateProv = self.raceStateProv.GetValue().strip()
+			race.country = self.raceCountry.GetValue().strip()
 			race.discipline = self.raceDiscipline.GetValue().strip()
 			race.organizer = self.organizer.GetValue().strip()
 			race.date = self.date.GetValue().Format(Properties.dateFormat)

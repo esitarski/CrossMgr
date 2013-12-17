@@ -2298,11 +2298,11 @@ Continue?''' % fName, 'Simulate a Race' ):
 			
 		race = Model.race
 
-		if not race.city or not race.stateProv:
-			self.showPageName( _('Properties') )
+		if not race.city or not race.stateProv or not race.country:
 			Utils.MessageOK(self,
-						_('Missing City or State/Prov fields.\nPlease fill in these fields in Properties'),
-						_('Missing City or State/Prov'), iconMask=wx.ICON_ERROR )
+						_('Missing City, State/Prov or Country fields.\nPlease fill in these fields in Properties'),
+						_('Missing Location Fields'), iconMask=wx.ICON_ERROR )
+			self.showPageName( _('Properties') )
 			return
 			
 		if not Utils.MessageOKCancel( self,
@@ -2313,14 +2313,14 @@ Continue?''' % fName, 'Simulate a Race' ):
 					'\n'.join( u'{}. {}'.format(i+1, s) for i, s in enumerate([
 							_('Is the Race Name spelled correctly?'),
 							_('Is the Race Organizer spelled correctly?'),
-							_('Are the City and State/Prov fields correctly filled in?'),
+							_('Are the City, State/Prov and Country fields correctly filled in?'),
 							_('Are all the Category Names spelled and coded correctly?'),
 							_('Are the Category Number Ranges correct?'),
 							_('Have you fixed all scoring and data problems with the Race?'),
 							_('Are the Rider Names / Teams / License data correct (spelling?  missing data)?'),
 						]) ),
 					'',
-					_('If not, press Cancel, fix your data and publish again.')
+					_('If not, press Cancel, fix the problems and publish again.')
 				]),
 				_('Results Publish') ):
 			return
@@ -2355,7 +2355,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 				RaceName	= urllib.quote(unicode(raceName).encode('utf-8')),
 				RaceDate	= urllib.quote(unicode(raceDate).encode('utf-8')),
 				MD5			= hashlib.md5( race.name + raceDate ).hexdigest(),
-				Location	= urllib.quote(unicode(u', '.join([race.city, race.stateProv])).encode('utf-8')),
+				Location	= urllib.quote(unicode(u', '.join([race.city, race.stateProv, race.country])).encode('utf-8')),
 				PresentedBy = urllib.quote(unicode(race.organizer).encode('utf-8')),
 			)
 			webbrowser.open( url, new = 2, autoraise = True )
