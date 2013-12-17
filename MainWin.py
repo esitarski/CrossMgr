@@ -2332,7 +2332,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 							_('CrossResults Export Error'), iconMask=wx.ICON_ERROR )
 				return
 			
-			Utils.MessageOK(self, _('CrossResults file written to:\n\n   {}').format(fname), _('CrossResults File Write'))
+			#Utils.MessageOK(self, _('CrossResults file written to:\n\n   {}').format(fname), _('CrossResults File Write'))
+			
 			url = 'http://www.crossresults.com/?n=results&sn=upload&crossmgr={MD5}&name={RaceName}&date={RaceDate}&loc={Location}'.format(
 				RaceName	= urllib.quote(unicode(race.name).encode('utf-8'), ''),
 				RaceDate	= urllib.quote(unicode(raceDate).encode('utf-8'), ''),
