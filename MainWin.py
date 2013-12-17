@@ -2320,7 +2320,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 
 		
 		year, month, day = race.date.split( '-' )
-		raceName = race.name + u' Race ' + unicode(raceNum)
+		raceName = race.name + u' Race ' + unicode(race.raceNum)
 		raceDate = datetime.date( year = int(year), month = int(month), day = int(day) ).strftime( '%m/%d/%Y' )
 		
 		try:
