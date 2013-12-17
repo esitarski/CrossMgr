@@ -390,7 +390,7 @@ class MainWin( wx.Frame ):
 		self.dataMgmtMenu.AppendSeparator()
 		
 		idCur = wx.NewId()
-		self.dataMgmtMenu.Append( idCur , _("Publish Results to Cross&Results..."), _("Export Results in Cross&Results format") )
+		self.dataMgmtMenu.Append( idCur , _("Publish Results to Cross&Results.com..."), _("Publish Results to the Cross&Results.com web site") )
 		self.Bind(wx.EVT_MENU, self.menuExportCrossResults, id=idCur )
 
 		idCur = wx.NewId()

@@ -91,6 +91,10 @@ Edit|Reason for the data edit
 By|Username who made the edit (login name on the computer)
 On|Date and Time when the edit was made.
 
+## Publish Results to CrossResults.com...
+Creates a CrossResults.com compatible file for all race categories.
+Launches your web browser to the CrossResults.com upload page.
+
 ## Export Results in USAC Excel Format...
 Export the results for all race categories in a format acceptable to USA Cycling.
 
