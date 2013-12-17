@@ -8,8 +8,17 @@ class HighPrecisionTimeEdit( masked.TextCtrl ):
 	defaultValue = '00:00:00.000'
 	emptyValue   = '  :  :  .   '
 
-	def __init__( self, parent, id, seconds = None, allow_none = False, style = 0 ):
+	def __init__( self, parent, id = wx.ID_ANY, seconds = None, allow_none = False, style = 0 ):
 		self.allow_none = allow_none
+		masked.TextCtrl.__init__(
+					self, parent, id, "",
+					style		 = style,
+					mask		 = '##:##:##.###',
+					defaultValue = '00:00:00.000',
+					validRegex   = '[0-9][0-9]:[0-5][0-9]:[0-5][0-9]\.[0-9][0-9][0-9]',
+					useFixedWidthFont = False,
+				)
+		'''
 		masked.TextCtrl.__init__( self, parent, id, "",
 									style        = style,
 									mask         = '##:##:##.###',
@@ -24,6 +33,8 @@ class HighPrecisionTimeEdit( masked.TextCtrl ):
 										masked.Field(formatcodes='FSr')
 										],
 								)
+		'''
+		
 		if seconds is not None:
 			self.SetSeconds( seconds )
 									

@@ -40,12 +40,12 @@ class AdjustTimeDialog( wx.Dialog ):
 		st, ft, laps = getStFtLaps( self.rider )
 		ttPenalty = getattr( self.rider, 'ttPenalty', 0.0 )
 			
-		self.startTime = HighPrecisionTimeEdit( self, wx.ID_ANY, allow_none = not bool(st), seconds = st )
+		self.startTime = HighPrecisionTimeEdit( self, allow_none = not bool(st), seconds = st )
 		self.startTime.Bind( wx.EVT_TEXT, self.updateRideTime )
-		self.finishTime = HighPrecisionTimeEdit( self, wx.ID_ANY, allow_none = not bool(ft), seconds = ft )
+		self.finishTime = HighPrecisionTimeEdit( self, allow_none = not bool(ft), seconds = ft )
 		self.finishTime.Bind( wx.EVT_TEXT, self.updateRideTime )
 		self.rideTime = wx.StaticText( self, wx.ID_ANY, '' )
-		self.penaltyTime = HighPrecisionTimeEdit( self, wx.ID_ANY, allow_none = True, seconds = ttPenalty )
+		self.penaltyTime = HighPrecisionTimeEdit( self, allow_none = True, seconds = ttPenalty )
 		self.note = wx.TextCtrl( self, wx.ID_ANY, size=(400, -1), value = getattr(self.rider, 'ttNote', '') )
 		self.updateRideTime( None )
 				

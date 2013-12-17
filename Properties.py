@@ -21,6 +21,20 @@ class Properties( wx.Panel ):
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceName )
 		rows += 1
 		
+		self.raceCityLabel = wx.StaticText( self, label = _('City:') )
+		self.raceCity = wx.TextCtrl( self, value='' )
+		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceCity )
+		
+		self.raceStateProvLabel = wx.StaticText( self, label = _('State/Prov:') )
+		self.raceStateProv = wx.TextCtrl( self, value='' )
+		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceStateProv )
+		
+		self.locationSizer = wx.BoxSizer( wx.HORIZONTAL )
+		self.locationSizer.Add( self.raceCity, 3, flag=wx.EXPAND )
+		self.locationSizer.Add( self.raceStateProvLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border = 4 )
+		self.locationSizer.Add( self.raceStateProv, 1, flag=wx.EXPAND )
+		rows += 1
+		
 		self.dateLabel = wx.StaticText( self, label = _('Date:') )
 		self.date = wx.DatePickerCtrl( self, style = wx.DP_DROPDOWN )
 		self.Bind(wx.EVT_DATE_CHANGED, self.onChanged, self.date)
@@ -126,6 +140,7 @@ class Properties( wx.Panel ):
 		
 		labelFieldFormats = [
 			(self.raceNameLabel,	0, labelAlign),		(self.raceName, 		1, fieldAlign),
+			(self.raceCityLabel,	0, labelAlign),		(self.locationSizer,	1, fieldAlign),
 			(self.dateLabel,		0, labelAlign),		(self.date, 			1, fieldAlign),
 			(self.raceNumLabel,		0, labelAlign),		(self.raceNum,			1, fieldAlign),
 			(self.scheduledStartLabel, 0, labelAlign),	(self.scheduledStart,	1, fieldAlign),
@@ -198,7 +213,8 @@ class Properties( wx.Panel ):
 		self.SetSizer(fbs)
 		
 		self.editFields = [labelFieldFormats[i][0] for i in xrange(1, len(labelFieldFormats), 2)]
-		self.editFields = [e for e in self.editFields if e]
+		self.editFields = [e for e in self.editFields if e and not isinstance(e, wx.BoxSizer)]
+		self.editFields.extend( [self.raceCity, self.raceStateProv] )
 	
 	def onJChipIntegration( self, event ):
 		self.autocorrectLapsDefault.SetValue( not self.jchip.GetValue() )
@@ -269,6 +285,8 @@ class Properties( wx.Panel ):
 			if race is None:
 				return
 			self.raceName.SetValue( race.name )
+			self.raceCity.SetValue( race.city )
+			self.raceStateProv.SetValue( race.stateProv )
 			self.raceDiscipline.SetValue( getattr(race, 'discipline', 'Cyclo-cross') )
 			self.organizer.SetValue( getattr(race, 'organizer', '') )
 			d = wx.DateTime()
@@ -313,9 +331,11 @@ class Properties( wx.Panel ):
 				race = Model.getRace()
 			if race is None:
 				return
-			race.name = self.raceName.GetValue()
-			race.discipline = self.raceDiscipline.GetValue()
-			race.organizer = self.organizer.GetValue()
+			race.name = self.raceName.GetValue().strip()
+			race.city = self.raceCity.GetValue().strip()
+			race.stateProv = self.raceStateProv.GetValue().strip()
+			race.discipline = self.raceDiscipline.GetValue().strip()
+			race.organizer = self.organizer.GetValue().strip()
 			race.date = self.date.GetValue().Format(Properties.dateFormat)
 			race.raceNum = self.raceNum.GetValue()
 			race.scheduledStart = self.scheduledStart.GetValue()
@@ -329,9 +349,9 @@ class Properties( wx.Panel ):
 			race.enableUSBCamera = self.enableUSBCamera.IsChecked()
 			race.finishTop = self.finishTop.IsChecked()
 			race.minutes = self.minutes.GetValue()
-			race.commissaire = self.commissaire.GetValue()
-			race.memo = self.memo.GetValue()
-			race.notes = self.notes.GetValue()
+			race.commissaire = self.commissaire.GetValue().strip()
+			race.memo = self.memo.GetValue().strip()
+			race.notes = self.notes.GetValue().strip()
 			race.setChanged()
 			
 		if Utils.getMainWin():

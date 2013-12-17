@@ -165,7 +165,7 @@ class ChipImportDialog( wx.Dialog ):
 		gs.AddSpacer(1)
         
 		gs.Add( wx.StaticText(self, label = _('Import Data Time Adjustment:') ), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
-		self.timeAdjustment = HighPrecisionTimeEdit( self, wx.ID_ANY )
+		self.timeAdjustment = HighPrecisionTimeEdit( self )
 		self.behindAhead = wx.Choice( self, choices=[_('Behind'), _('Ahead')] )
 		if JChip.readerComputerTimeDiff:
 			rtAdjust = JChip.readerComputerTimeDiff.total_seconds()

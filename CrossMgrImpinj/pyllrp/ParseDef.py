@@ -3,8 +3,8 @@
 # Reformats the llrpdef.xml file into a json (aka Python) formatted description llrpdef.py
 #
 # The reason we so this is so we avoid using the xml parser during deployment.
-# It is also faster to use the pre-compiled Python data strucgures rather than parsing XML
-# on every startup.
+# It is also faster to use the pre-compiled Python data structures rather than parsing XML
+# on every start up.
 #
 from xml.dom.minidom import parse
 import datetime

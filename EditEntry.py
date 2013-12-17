@@ -18,7 +18,7 @@ class CorrectNumberDialog( wx.Dialog ):
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
 		self.numEdit = wx.lib.intctrl.IntCtrl( self, wx.ID_ANY, size=(64,-1), style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
 		
-		self.timeMsEdit = HighPrecisionTimeEdit( self, wx.ID_ANY, seconds = entry.t )
+		self.timeMsEdit = HighPrecisionTimeEdit( self, seconds = entry.t )
 				
 		self.okBtn = wx.Button( self, wx.ID_OK )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )

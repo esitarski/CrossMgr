@@ -87,8 +87,14 @@ class _FieldDef( object ):
 		ftype = self.Type
 		attr = self.Name
 		try:
-			if 'intbe' in ftype or ftype == 'bool' or ftype.startswith('bits'):
+			if 'intbe' in ftype or ftype == 'bool':
 				s.append( bitstring.pack(ftype, getattr(obj, attr)) )
+			elif ftype.startswith('bits'):
+				v = getattr( obj, attr )
+				length = int(ftype.split(':')[1])
+				#for i in xrange(length-1, -1, -1):
+				for i in xrange(length):
+					s.append( bitstring.pack('bool', bool(v & (1<<i))) )
 			elif ftype == 'string':
 				st = getattr(obj, attr, '')
 				s.append( bitstring.Bits(uintbe=len(st), length=16) )
@@ -101,6 +107,11 @@ class _FieldDef( object ):
 					s.append( bitstring.Bits(uintbe=e, length=length) )
 			elif ftype == 'bitarray':
 				st = getattr(obj, attr, '')
+				if isinstance(st, (int, long)):
+					v = bytes(st)
+					if len(v) % 2 == 1:
+						v = '0' + v
+					st = [int(v[i:i+2], 16) for i in xrange(0, len(v), 2)]
 				s.append( bitstring.Bits(uintbe=len(st)*8, length=16) )
 				s.append( bitstring.Bits(bytes=bytes(st)) )
 			elif ftype.startswith('skip'):
@@ -112,7 +123,7 @@ class _FieldDef( object ):
 			else:
 				assert False
 		except bitstring.CreationError, e:
-			print 'write:', ftype, attr
+			print 'write:', ftype, attr, getattr(obj, attr)
 			raise
 
 	def init( self, obj ):
@@ -130,9 +141,13 @@ class _FieldDef( object ):
 		elif ftype == 'bitarray':
 			setattr( obj, attr, bytes() )
 		elif ftype == 'bytesToEnd':
+			assert False
 			setattr( obj, attr, bitstring.BitStream() )
 		else:
 			assert ftype.startswith('skip'), 'Unknown field type: "%s"' % ftype
+			
+	def __repr__( self ):
+		return u'FieldDef( "{}", "{}" )'.format( self.Name, self.Type )
 
 #----------------------------------------------------------------------------------
 
@@ -422,18 +437,17 @@ class _MessagePackUnpack( object ):
 		m._Length = s.read('uintbe:32')
 		m._MessageID = s.read('uintbe:32')
 		
-		lengthRemaining = m._Length
-		
+		# Read the fields of this message.
 		for f in self.FieldDefs:
 			f.read( s, m, m._Length - ((s.pos - beginPos) >> 3) )
 			
 		if m.Type == CustomType:
+			# Rebind to the specific custom message based on vendor and subtype.
 			mCustom = _messageClassFromType[(self.Type, m.VendorIdentifier, m.MessageSubtype)]( MessageID = m._MessageID )
-			mCustom.VendorIdentifier	= m.VendorIdentifier
-			mCustom.MessageSubtype		= m.MessageSubtype
-			mCustom._MessageID	= m._MessageID
-			mCustom._Length		= m._Length
+			mCustom._Length = m._Length
 			m = mCustom
+			
+			# Read the rest of the fields.
 			for f in m.FieldDefs[2:]:
 				f.read( s, m, m._Length - ((s.pos - beginPos) >> 3) )
 			
@@ -510,22 +524,18 @@ class _ParameterPackUnpack( object ):
 		
 		assert Type == self.Type
 		
-		if Type == CustomType:
-			for f in self.FieldDefs:		# Read the VendorIdentifier and ParameterSubtype.
-				f.read( s, p )
+		# Read the fields of this parameter.
+		for f in self.FieldDefs:
+			f.read( s, p )
 			
+		if Type == CustomType:
 			# Get the new fields definition based on the VendorIdentifier and ParameterSubtype.
 			pCustom = _parameterClassFromType[ (Type, p.VendorIdentifier, p.ParameterSubtype) ]()
-			pCustom.VendorIdentifier		= p.VendorIdentifier
-			pCustom.ParameterSubtype		= p.ParameterSubtype
-			pCustom._Length		= p._Length
+			pCustom._Length = p._Length
 			
 			# Read the rest of the defined fields for the custom type.
 			p = pCustom
 			for f in p.FieldDefs[2:]:
-				f.read( s, p )
-		else:								# Regular field.
-			for f in self.FieldDefs:
 				f.read( s, p )
 			
 		if p.Encoding == self.TLV:
@@ -646,6 +656,7 @@ def UnpackMessageFromSocket( sock ):
 	headerBytes = (16+32) >> 3
 	message = ''
 	while len(message) < headerBytes:
+		# print headerBytes, len(message), headerBytes - len(message)
 		message += sock.recv( headerBytes - len(message) )
 		
 	# Convert to a BitStream to get the message Type and Length.
@@ -688,14 +699,17 @@ def UnpackParameter( s ):
 	
 def GetResponseClass( message ):
 	''' Get the corresponding response class of a message. '''
-	responseClassName = message.__class__.__name__.replace('_Message', '_RESPONSE_Message')
+	if message.Type == CustomType:
+		responseClassName = 'CUSTOM_MESSAGE_Message'
+	else:
+		responseClassName = message.__class__.__name__.replace('_Message', '_RESPONSE_Message')
 	return globals()[responseClassName]
 	
-def WaitForMessage( MessageID, ResponseClass, sock ):
-	''' Wait for an expected message matching the MessageID and ResponseClass. '''
+def WaitForMessage( MessageID, sock ):
+	''' Wait for an expected message matching the MessageID. '''
 	while 1:
 		response = UnpackMessageFromSocket( sock )
-		if response.MessageID == MessageID and isinstance(response, ResponseClass):
+		if response.MessageID == MessageID:
 			return response
 			
 #-----------------------------------------------------------------------------
@@ -717,50 +731,51 @@ def GetBasicAddRospecMessage( MessageID = None, ROSpecID = 123, inventoryParamet
 		# Initialize to disabled.
 		ROSpec_Parameter(
 			ROSpecID = ROSpecID,
-			CurrentState = ROSpecState.Disabled, Parameters = [
-			
-			ROBoundarySpec_Parameter(		# Configure boundary spec (start and stop triggers for the reader).
-				Parameters = [
-					# Start immediately.
-					ROSpecStartTrigger_Parameter(ROSpecStartTriggerType = ROSpecStartTriggerType.Immediate),
-					# No stop trigger.
-					ROSpecStopTrigger_Parameter(ROSpecStopTriggerType = ROSpecStopTriggerType.Null),
-				]
-			),
-			
-			AISpec_Parameter(				# Antenna Inventory Spec (specifies which antennas and protocol to use)
-				AntennaIDs = antennas,		# Use specified antennas.
-				Parameters = [
-					AISpecStopTrigger_Parameter(
-						AISpecStopTriggerType = AISpecStopTriggerType.Tag_Observation,
-						Parameters = [
-							TagObservationTrigger_Parameter(
-								TriggerType = TagObservationTriggerType.Upon_Seeing_N_Tags_Or_Timeout,
-								NumberOfTags = 50,
-								NumberOfAttempts = 1,
-								Timeout = 500,		# Milliseconds
-								T = 0,				# Idle time between responses.
-							),
-						]
-					),
-					InventoryParameterSpec_Parameter(
-						InventoryParameterSpecID = inventoryParameterSpecID,
-						ProtocolID = AirProtocols.EPCGlobalClass1Gen2,
-					),
-				]
-			),
-			
-			ROReportSpec_Parameter(			# Report spec (specified what to send from the reader)
-				ROReportTrigger = ROReportTriggerType.Upon_N_Tags_Or_End_Of_ROSpec,
-				N = 0,
-				Parameters = [
-					TagReportContentSelector_Parameter(
-						EnableAntennaID = True,
-						EnableFirstSeenTimestamp = True,
-					),
-				]
-			),
-		])	# ROSpec_Parameter
+			CurrentState = ROSpecState.Disabled,
+			Parameters = [
+				ROBoundarySpec_Parameter(		# Configure boundary spec (start and stop triggers for the reader).
+					Parameters = [
+						# Start immediately.
+						ROSpecStartTrigger_Parameter(ROSpecStartTriggerType = ROSpecStartTriggerType.Immediate),
+						# No stop trigger.
+						ROSpecStopTrigger_Parameter(ROSpecStopTriggerType = ROSpecStopTriggerType.Null),
+					]
+				),
+				
+				AISpec_Parameter(				# Antenna Inventory Spec (specifies which antennas and protocol to use)
+					AntennaIDs = antennas,		# Use specified antennas.
+					Parameters = [
+						AISpecStopTrigger_Parameter(
+							AISpecStopTriggerType = AISpecStopTriggerType.Tag_Observation,
+							Parameters = [
+								TagObservationTrigger_Parameter(
+									TriggerType = TagObservationTriggerType.Upon_Seeing_N_Tags_Or_Timeout,
+									NumberOfTags = 50,
+									NumberOfAttempts = 1,
+									Timeout = 500,		# Milliseconds
+									T = 0,				# Idle time between responses.
+								),
+							]
+						),
+						InventoryParameterSpec_Parameter(
+							InventoryParameterSpecID = inventoryParameterSpecID,
+							ProtocolID = AirProtocols.EPCGlobalClass1Gen2,
+						),
+					]
+				),
+				
+				ROReportSpec_Parameter(			# Report spec (specified what to send from the reader)
+					ROReportTrigger = ROReportTriggerType.Upon_N_Tags_Or_End_Of_ROSpec,
+					N = 0,
+					Parameters = [
+						TagReportContentSelector_Parameter(
+							EnableAntennaID = True,
+							EnableFirstSeenTimestamp = True,
+						),
+					]
+				),
+			]
+		)	# ROSpec_Parameter
 	])	# ADD_ROSPEC_Message
 	return rospecMessage
 
@@ -792,6 +807,10 @@ def _getTagData( self ):
 
 # Add a 'getTagData' convenience method to the RO_ACCESS_REPORT message.
 RO_ACCESS_REPORT_Message.getTagData = types.MethodType( _getTagData, None, RO_ACCESS_REPORT_Message )
+
+# Remove the bytesToEnd field from the CUSTOM_MESSAGE and Custome parameter.
+CUSTOM_MESSAGE_Message.FieldDefs = CUSTOM_MESSAGE_Message.FieldDefs[:-1]
+Custom_Parameter.FieldDefs = Custom_Parameter.FieldDefs[:-1]
 
 if __name__ == '__main__':
 	rospecMessage = GetBasicAddRospecMessage( 1 )

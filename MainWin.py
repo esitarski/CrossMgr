@@ -15,6 +15,8 @@ import datetime
 import webbrowser
 import zipfile
 import base64
+import hashlib
+import urllib
 
 import locale
 try:
@@ -50,6 +52,7 @@ from FtpWriteFile		import realTimeFtpPublish
 from SetAutoCorrect		import SetAutoCorrectDialog
 from DNSManager			import DNSManagerDialog
 from USACExport			import USACExport
+from CrossResultsExport	import CrossResultsExport
 from HelpSearch			import HelpSearchDialog
 from Utils				import logCall, logException
 import Model
@@ -383,6 +386,12 @@ class MainWin( wx.Frame ):
 		idCur = wx.NewId()
 		self.dataMgmtMenu.Append( idCur , _("Export Raw Data as &HTML..."), _("Export raw data as HTML (.html)") )
 		self.Bind(wx.EVT_MENU, self.menuExportHtmlRawData, id=idCur )
+
+		self.dataMgmtMenu.AppendSeparator()
+		
+		idCur = wx.NewId()
+		self.dataMgmtMenu.Append( idCur , _("Publish Results to Cross&Results..."), _("Export Results in Cross&Results format") )
+		self.Bind(wx.EVT_MENU, self.menuExportCrossResults, id=idCur )
 
 		idCur = wx.NewId()
 		self.dataMgmtMenu.Append( idCur , _("Export Results in &USAC Excel Format..."), _("Export Results in USAC Excel Format") )
@@ -2278,9 +2287,64 @@ Continue?''' % fName, 'Simulate a Race' ):
 			Utils.MessageOK(self, _('Excel file written to:\n\n   {}').format(xlFName), _('Excel Write'))
 		except IOError:
 			Utils.MessageOK(self,
-						
 						_('Cannot write "{}".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.').format(xlFName),
 						_('Excel File Error'), iconMask=wx.ICON_ERROR )
+	
+	@logCall
+	def menuExportCrossResults( self, event ):
+		self.commit()
+		if self.fileName is None or len(self.fileName) < 4 or not Model.race:
+			return
+			
+		race = Model.race
+
+		if not race.city or not race.stateProv:
+			self.showPageName( _('Properties') )
+			Utils.MessageOK(self,
+						_('Missing City or State/Prov fields.\nPlease fill in these fields in Properties'),
+						_('Missing City or State/Prov'), iconMask=wx.ICON_ERROR )
+			return
+			
+		self.showPageName( _('Results') )
+		
+		fname = self.fileName[:-4] + '-CrossResults.csv'
+		dlg = wx.DirDialog( self, _('Folder to write "{}"').format(os.path.basename(fname)),
+						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
+		ret = dlg.ShowModal()
+		dName = dlg.GetPath()
+		dlg.Destroy()
+		if ret != wx.ID_OK:
+			return
+
+		fname = os.path.join( dName, os.path.basename(fname) )
+
+		
+		year, month, day = race.date.split( '-' )
+		raceDate = datetime.date( year = int(year), month = int(month), day = int(day) ).strftime( '%m/%d/%Y' )
+		
+		import traceback
+
+		try:
+			success, message = CrossResultsExport( fname )
+			if not success:
+				Utils.MessageOK(self,
+							_('CrossResults Export Error: "{}".').format(message),
+							_('CrossResults Export Error'), iconMask=wx.ICON_ERROR )
+				return
+			
+			Utils.MessageOK(self, _('CrossResults file written to:\n\n   {}').format(fname), _('CrossResults File Write'))
+			url = 'http://www.crossresults.com/?n=results&sn=upload&crossmgr={MD5}&name={RaceName}&date={RaceDate}&loc={Location}'.format(
+				RaceName	= urllib.quote(unicode(race.name).encode('utf-8'), ''),
+				RaceDate	= urllib.quote(unicode(raceDate).encode('utf-8'), ''),
+				MD5			= hashlib.md5( race.name + raceDate ).hexdigest(),
+				Location	= urllib.quote(unicode(u', '.join([race.city, race.stateProv])).encode('utf-8'), ''),
+			)
+			webbrowser.open( url, new = 2, autoraise = True )
+		except Exception as e:
+			traceback.print_exc()
+			Utils.MessageOK(self,
+						_('Cannot write "{}" (Error={}).').format(fname, e),
+						_('CrossResults File Error'), iconMask=wx.ICON_ERROR )
 	
 	@logCall
 	def menuHelpQuickStart( self, event ):

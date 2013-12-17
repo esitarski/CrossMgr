@@ -287,7 +287,7 @@ class Category(object):
 	
 	@property
 	def fullname( self ):
-		return '%s (%s)' % (self.name, getattr(self, 'gender', 'Open'))
+		return u'%s (%s)' % (self.name, getattr(self, 'gender', 'Open'))
 	
 	@property
 	def firstLapRatio( self ):
@@ -827,6 +827,8 @@ class Race(object):
 	UnitMiles = 1
 	
 	advancePhotoMillisecondsDefault = -100
+	city = ''
+	stateProv = ''
 	
 	def __init__( self ):
 		self.reset()
@@ -834,6 +836,10 @@ class Race(object):
 	def reset( self ):
 		self.name = '<RaceName>'
 		self.organizer = '<Organizer>'
+		
+		self.city = '<MyCity>'
+		self.stateProv = '<MyStateProv>'
+		
 		self.raceNum = 1
 		self.date = datetime.date.today().strftime('%Y-%m-%d')
 		self.scheduledStart = '10:00'

@@ -87,7 +87,7 @@ class Impinj( object ):
 			return False
 			
 		try:
-			response = WaitForMessage( message.MessageID, GetResponseClass(message), self.readerSocket )
+			response = WaitForMessage( message.MessageID, self.readerSocket )
 		except Exception as e:
 			self.messageQ.put( ('Impinj', 'Get response fails: %s' % e) )
 			return False

@@ -21,7 +21,7 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
 		
 		seconds = (race.startTime - race.startTime.replace(hour=0, minute=0, second=0)).total_seconds()
-		self.timeMsEdit = HighPrecisionTimeEdit( self, wx.ID_ANY, seconds = seconds )
+		self.timeMsEdit = HighPrecisionTimeEdit( self, seconds = seconds )
 				
 		self.okBtn = wx.Button( self, wx.ID_OK )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
