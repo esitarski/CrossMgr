@@ -2320,10 +2320,9 @@ Continue?''' % fName, 'Simulate a Race' ):
 
 		
 		year, month, day = race.date.split( '-' )
+		raceName = race.name + u' Race ' + unicode(raceNum)
 		raceDate = datetime.date( year = int(year), month = int(month), day = int(day) ).strftime( '%m/%d/%Y' )
 		
-		import traceback
-
 		try:
 			success, message = CrossResultsExport( fname )
 			if not success:
@@ -2335,14 +2334,13 @@ Continue?''' % fName, 'Simulate a Race' ):
 			#Utils.MessageOK(self, _('CrossResults file written to:\n\n   {}').format(fname), _('CrossResults File Write'))
 			
 			url = 'http://www.crossresults.com/?n=results&sn=upload&crossmgr={MD5}&name={RaceName}&date={RaceDate}&loc={Location}'.format(
-				RaceName	= urllib.quote(unicode(race.name).encode('utf-8')),
+				RaceName	= urllib.quote(unicode(raceName).encode('utf-8')),
 				RaceDate	= urllib.quote(unicode(raceDate).encode('utf-8')),
 				MD5			= hashlib.md5( race.name + raceDate ).hexdigest(),
 				Location	= urllib.quote(unicode(u', '.join([race.city, race.stateProv])).encode('utf-8')),
 			)
 			webbrowser.open( url, new = 2, autoraise = True )
 		except Exception as e:
-			traceback.print_exc()
 			Utils.MessageOK(self,
 						_('Cannot write "{}" (Error={}).').format(fname, e),
 						_('CrossResults File Error'), iconMask=wx.ICON_ERROR )
