@@ -2305,6 +2305,26 @@ Continue?''' % fName, 'Simulate a Race' ):
 						_('Missing City or State/Prov'), iconMask=wx.ICON_ERROR )
 			return
 			
+		if not Utils.MessageOKCancel( self,
+				u'\n'.join([
+					_('Make sure you publish correct results!'),
+					_('Take a few minutes to check the following:'),
+					'',
+					'\n'.join( u'{}. {}'.format(i+1, s) for i, s in enumerate([
+							_('Is the Race Name spelled correctly?'),
+							_('Is the Race Organizer spelled correctly?'),
+							_('Are the City and State/Prov fields correctly filled in?'),
+							_('Are all the Category Names spelled and coded correctly?'),
+							_('Are the Category Number Ranges correct?'),
+							_('Have you fixed all scoring and data problems with the Race?'),
+							_('Are the Rider Names / Teams / License data correct (spelling?  missing data)?'),
+						]) ),
+					'',
+					_('If not, press Cancel, fix your data and publish again.')
+				]),
+				_('Results Publish') ):
+			return
+			
 		self.showPageName( _('Results') )
 		
 		fname = self.fileName[:-4] + '-CrossResults.csv'
@@ -2320,7 +2340,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 
 		
 		year, month, day = race.date.split( '-' )
-		raceName = race.name + u' Race ' + unicode(race.raceNum)
+		raceName = race.name
 		raceDate = datetime.date( year = int(year), month = int(month), day = int(day) ).strftime( '%m/%d/%Y' )
 		
 		try:
@@ -2331,13 +2351,12 @@ Continue?''' % fName, 'Simulate a Race' ):
 							_('CrossResults Export Error'), iconMask=wx.ICON_ERROR )
 				return
 			
-			#Utils.MessageOK(self, _('CrossResults file written to:\n\n   {}').format(fname), _('CrossResults File Write'))
-			
-			url = 'http://www.crossresults.com/?n=results&sn=upload&crossmgr={MD5}&name={RaceName}&date={RaceDate}&loc={Location}'.format(
+			url = 'http://www.crossresults.com/?n=results&sn=upload&crossmgr={MD5}&name={RaceName}&date={RaceDate}&loc={Location}%presentedby={PresentedBy}'.format(
 				RaceName	= urllib.quote(unicode(raceName).encode('utf-8')),
 				RaceDate	= urllib.quote(unicode(raceDate).encode('utf-8')),
 				MD5			= hashlib.md5( race.name + raceDate ).hexdigest(),
 				Location	= urllib.quote(unicode(u', '.join([race.city, race.stateProv])).encode('utf-8')),
+				PresentedBy = urllib.quote(unicode(race.organizer).encode('utf-8')),
 			)
 			webbrowser.open( url, new = 2, autoraise = True )
 		except Exception as e:
