@@ -2,7 +2,7 @@
 # DO NOT EDIT!
 # MACHINE GENERATED from llrp-1x0-def.xml
 #
-# Created: 2013-12-14 15:51:30.350000 
+# Created: 2013-12-17 20:49:34.634000 
 #-----------------------------------------------------------
 enums = [
  {
@@ -4264,7 +4264,7 @@ parameters = [
    {
     "default": 21, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjRequestedDataType", 
@@ -4294,7 +4294,7 @@ parameters = [
    {
     "default": 22, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjRegulatoryRegion", 
@@ -4324,7 +4324,7 @@ parameters = [
    {
     "default": 23, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjInventorySearchType", 
@@ -4354,7 +4354,7 @@ parameters = [
    {
     "default": 26, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjFixedFrequencyMode", 
@@ -4392,7 +4392,7 @@ parameters = [
    {
     "default": 27, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjReducedPowerMode", 
@@ -4430,7 +4430,7 @@ parameters = [
    {
     "default": 28, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjLowDutyCycleMode", 
@@ -4468,7 +4468,7 @@ parameters = [
    {
     "default": 1537, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }
   ], 
   "name": "ImpinjHubVersions", 
@@ -4500,7 +4500,7 @@ parameters = [
    {
     "default": 29, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "ModelName", 
@@ -4563,7 +4563,7 @@ parameters = [
    {
     "default": 30, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "FrequencyList", 
@@ -4592,7 +4592,7 @@ parameters = [
    {
     "default": 32, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }
   ], 
   "name": "ImpinjForkliftConfiguration", 
@@ -4631,7 +4631,7 @@ parameters = [
    {
     "default": 33, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "HeightThreshold", 
@@ -4660,7 +4660,7 @@ parameters = [
    {
     "default": 34, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "ZeroMotionTimeThreshold", 
@@ -4689,7 +4689,7 @@ parameters = [
    {
     "default": 35, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "BoardManufacturer", 
@@ -4728,7 +4728,7 @@ parameters = [
    {
     "default": 36, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "GPIPortNum", 
@@ -4761,7 +4761,7 @@ parameters = [
    {
     "default": 37, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "Temperature", 
@@ -4790,7 +4790,7 @@ parameters = [
    {
     "default": 38, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjLinkMonitorMode", 
@@ -4824,7 +4824,7 @@ parameters = [
    {
     "default": 39, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjReportBufferMode", 
@@ -4854,7 +4854,7 @@ parameters = [
    {
     "default": 40, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }
   ], 
   "name": "ImpinjAccessSpecConfiguration", 
@@ -4900,7 +4900,7 @@ parameters = [
    {
     "default": 41, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "WordCount", 
@@ -4929,7 +4929,7 @@ parameters = [
    {
     "default": 42, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "OpSpecID", 
@@ -4979,7 +4979,7 @@ parameters = [
    {
     "default": 43, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjBlockPermalockResultType", 
@@ -5013,7 +5013,7 @@ parameters = [
    {
     "default": 44, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "OpSpecID", 
@@ -5062,7 +5062,7 @@ parameters = [
    {
     "default": 45, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjGetBlockPermalockStatusResultType", 
@@ -5101,7 +5101,7 @@ parameters = [
    {
     "default": 46, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "OpSpecID", 
@@ -5153,7 +5153,7 @@ parameters = [
    {
     "default": 47, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjSetQTConfigResultType", 
@@ -5187,7 +5187,7 @@ parameters = [
    {
     "default": 48, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "OpSpecID", 
@@ -5220,7 +5220,7 @@ parameters = [
    {
     "default": 49, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjGetQTConfigResultType", 
@@ -5268,7 +5268,7 @@ parameters = [
    {
     "default": 50, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }
   ], 
   "name": "ImpinjTagReportContentSelector", 
@@ -5335,7 +5335,7 @@ parameters = [
    {
     "default": 51, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjSerializedTIDMode", 
@@ -5365,7 +5365,7 @@ parameters = [
    {
     "default": 52, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjRFPhaseAngleMode", 
@@ -5395,7 +5395,7 @@ parameters = [
    {
     "default": 53, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjPeakRSSIMode", 
@@ -5425,7 +5425,7 @@ parameters = [
    {
     "default": 54, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjGPSCoordinatesMode", 
@@ -5455,7 +5455,7 @@ parameters = [
    {
     "default": 55, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "format": "Hex", 
@@ -5485,7 +5485,7 @@ parameters = [
    {
     "default": 56, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "PhaseAngle", 
@@ -5514,7 +5514,7 @@ parameters = [
    {
     "default": 57, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "RSSI", 
@@ -5543,7 +5543,7 @@ parameters = [
    {
     "default": 58, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "Latitude", 
@@ -5576,7 +5576,7 @@ parameters = [
    {
     "default": 59, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "LoopCount", 
@@ -5605,7 +5605,7 @@ parameters = [
    {
     "default": 60, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }
   ], 
   "name": "ImpinjGPSNMEASentences", 
@@ -5644,7 +5644,7 @@ parameters = [
    {
     "default": 61, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "GGASentence", 
@@ -5673,7 +5673,7 @@ parameters = [
    {
     "default": 62, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "RMCSentence", 
@@ -5702,7 +5702,7 @@ parameters = [
    {
     "default": 63, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "RetryCount", 
@@ -5731,7 +5731,7 @@ parameters = [
    {
     "default": 64, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "GPOPortNum", 
@@ -5769,7 +5769,7 @@ parameters = [
    {
     "default": 65, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjOptimizedReadMode", 
@@ -5806,7 +5806,7 @@ parameters = [
    {
     "default": 66, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjAccessSpecOrderingMode", 
@@ -5836,7 +5836,7 @@ parameters = [
    {
     "default": 67, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjRFDopplerFrequencyMode", 
@@ -5866,7 +5866,7 @@ parameters = [
    {
     "default": 68, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "DopplerFrequency", 
@@ -5895,7 +5895,7 @@ parameters = [
    {
     "default": 1501, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjEncodeStatus", 
@@ -5932,7 +5932,7 @@ parameters = [
    {
     "default": 1502, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjTagICType", 
@@ -5962,7 +5962,7 @@ parameters = [
    {
     "default": 1503, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "EncodeDataCacheID", 
@@ -6002,7 +6002,7 @@ parameters = [
    {
     "default": 1504, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }
   ], 
   "name": "ImpinjEncodeDataDefaults", 
@@ -6076,7 +6076,7 @@ parameters = [
    {
     "default": 1505, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "format": "Hex", 
@@ -6155,7 +6155,7 @@ parameters = [
    {
     "default": 1506, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "format": "Hex", 
@@ -6185,7 +6185,7 @@ parameters = [
    {
     "default": 1507, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "format": "Hex", 
@@ -6215,7 +6215,7 @@ parameters = [
    {
     "default": 1508, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "format": "Hex", 
@@ -6245,7 +6245,7 @@ parameters = [
    {
     "default": 1509, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "WordPointer", 
@@ -6279,7 +6279,7 @@ parameters = [
    {
     "default": 1510, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "format": "Hex", 
@@ -6309,7 +6309,7 @@ parameters = [
    {
     "default": 1511, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjQTDataProfile", 
@@ -6349,7 +6349,7 @@ parameters = [
    {
     "default": 1512, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjLockPrivilege", 
@@ -6408,7 +6408,7 @@ parameters = [
    {
     "default": 1513, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "EncodeDataCacheID", 
@@ -6445,7 +6445,7 @@ parameters = [
    {
     "default": 1514, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "OpSpecID", 
@@ -6516,7 +6516,7 @@ parameters = [
    {
     "default": 1515, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjOpSpecAction", 
@@ -6562,7 +6562,7 @@ parameters = [
    {
     "default": 1516, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "AccessSpecID", 
@@ -6605,7 +6605,7 @@ parameters = [
    {
     "default": 1517, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "OpSpecID", 
@@ -6651,7 +6651,7 @@ parameters = [
    {
     "default": 1518, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "OpSpecID", 
@@ -6699,7 +6699,7 @@ parameters = [
    {
     "default": 1519, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "enumeration": "ImpinjEncodeDataResultType", 
@@ -6764,7 +6764,7 @@ parameters = [
    {
     "default": 1520, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "SerialNumber", 
@@ -6801,7 +6801,7 @@ parameters = [
    {
     "default": 1521, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "MaxNumSectors", 
@@ -6842,7 +6842,7 @@ parameters = [
    {
     "default": 1522, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "XAxis", 
@@ -6879,7 +6879,7 @@ parameters = [
    {
     "default": 1523, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "BeaconState", 
@@ -6916,7 +6916,7 @@ parameters = [
    {
     "default": 1524, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }
   ], 
   "name": "ImpinjAntennaConfiguration", 
@@ -6948,7 +6948,7 @@ parameters = [
    {
     "default": 1526, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "AntennaEventConnected", 
@@ -6981,7 +6981,7 @@ parameters = [
    {
     "default": 1534, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }
   ], 
   "name": "ImpinjTagReporting", 
@@ -7020,7 +7020,7 @@ parameters = [
    {
     "default": 1535, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "TagMode", 
@@ -7053,7 +7053,7 @@ parameters = [
    {
     "default": 1536, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "Allow", 
@@ -7086,7 +7086,7 @@ parameters = [
    {
     "default": 1538, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "HubID", 
@@ -7125,7 +7125,7 @@ parameters = [
    {
     "default": 1539, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "Metric", 
@@ -7145,7 +7145,7 @@ parameters = [
    {
     "default": 1540, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "HeightCm", 
@@ -7186,7 +7186,7 @@ parameters = [
    {
     "default": 1541, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }
   ], 
   "name": "ImpinjLISpec", 
@@ -7225,7 +7225,7 @@ parameters = [
    {
     "default": 1542, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "MotionWindowSeconds", 
@@ -7258,7 +7258,7 @@ parameters = [
    {
     "default": 1543, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "ModeIndex", 
@@ -7302,7 +7302,7 @@ parameters = [
    {
     "default": 1544, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "ReportIntervalSeconds", 
@@ -7347,7 +7347,7 @@ parameters = [
    {
     "default": 1545, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "TimestampUTC", 
@@ -7393,7 +7393,7 @@ parameters = [
    {
     "default": 1528, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "SectorID", 
@@ -7422,7 +7422,7 @@ parameters = [
    {
     "default": 1525, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "SectorID", 
@@ -7466,7 +7466,7 @@ parameters = [
    {
     "default": 1546, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "SectorIDs", 
@@ -7499,7 +7499,7 @@ parameters = [
    {
     "default": 1547, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }
   ], 
   "name": "ImpinjTISpec", 
@@ -7552,7 +7552,7 @@ parameters = [
    {
     "default": 1548, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "InitialStraySearchTimeSec", 
@@ -7598,7 +7598,7 @@ parameters = [
    {
     "default": 1549, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "ModeIndex", 
@@ -7639,7 +7639,7 @@ parameters = [
    {
     "default": 1550, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "ImpinjEnableTransitionReport", 
@@ -7671,7 +7671,7 @@ parameters = [
    {
     "default": 1551, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "TimestampUTC", 
@@ -7717,7 +7717,7 @@ parameters = [
    {
     "default": 1552, 
     "name": "ParameterSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }
   ], 
   "name": "ImpinjExtendedTagInformation", 
@@ -8443,7 +8443,7 @@ messages = [
    {
     "default": 21, 
     "name": "MessageSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "skip:32", 
@@ -8472,7 +8472,7 @@ messages = [
    {
     "default": 22, 
     "name": "MessageSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }
   ], 
   "name": "IMPINJ_ENABLE_EXTENSIONS_RESPONSE", 
@@ -8504,7 +8504,7 @@ messages = [
    {
     "default": 23, 
     "name": "MessageSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "SaveConfiguration", 
@@ -8537,7 +8537,7 @@ messages = [
    {
     "default": 24, 
     "name": "MessageSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }
   ], 
   "name": "IMPINJ_SAVE_SETTINGS_RESPONSE", 
@@ -8569,7 +8569,7 @@ messages = [
    {
     "default": 150, 
     "name": "MessageSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }
   ], 
   "name": "IMPINJ_ADD_ENCODE_DATA_CACHE", 
@@ -8601,7 +8601,7 @@ messages = [
    {
     "default": 151, 
     "name": "MessageSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }
   ], 
   "name": "IMPINJ_ADD_ENCODE_DATA_CACHE_RESPONSE", 
@@ -8633,7 +8633,7 @@ messages = [
    {
     "default": 152, 
     "name": "MessageSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "EncodeDataCacheID", 
@@ -8662,7 +8662,7 @@ messages = [
    {
     "default": 153, 
     "name": "MessageSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }
   ], 
   "name": "IMPINJ_DELETE_ENCODE_DATA_CACHE_RESPONSE", 
@@ -8694,7 +8694,7 @@ messages = [
    {
     "default": 154, 
     "name": "MessageSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }
   ], 
   "name": "IMPINJ_GET_ENCODE_DATA_CACHES", 
@@ -8719,7 +8719,7 @@ messages = [
    {
     "default": 155, 
     "name": "MessageSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }
   ], 
   "name": "IMPINJ_GET_ENCODE_DATA_CACHES_RESPONSE", 
@@ -8758,7 +8758,7 @@ messages = [
    {
     "default": 156, 
     "name": "MessageSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }, 
    {
     "name": "EncodeDataCacheID", 
@@ -8794,7 +8794,7 @@ messages = [
    {
     "default": 157, 
     "name": "MessageSubtype", 
-    "type": "uintbe:32"
+    "type": "uintbe:8"
    }
   ], 
   "name": "IMPINJ_ADD_ENCODE_DATA_RESPONSE", 

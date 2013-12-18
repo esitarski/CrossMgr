@@ -58,7 +58,7 @@ def getParameterMessage( n, isMessage ):
 		# This is a custom parameter or message.
 		TypeNum = 1023		# Code for custom Message and Parameter.
 		Fields.append( {'name': 'VendorIdentifier', 'type': 'uintbe:32', 'default': 25882} )	# Impinj Vendor Number
-		Fields.append( {'name': 'MessageSubtype' if isMessage else 'ParameterSubtype', 'type': 'uintbe:32',
+		Fields.append( {'name': 'MessageSubtype' if isMessage else 'ParameterSubtype', 'type': 'uintbe:8',
 						'default': int(n.attributes['subtype'].value)} )
 	
 	for c in n.childNodes:

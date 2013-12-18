@@ -2351,7 +2351,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 							_('CrossResults Export Error'), iconMask=wx.ICON_ERROR )
 				return
 			
-			url = 'http://www.crossresults.com/?n=results&sn=upload&crossmgr={MD5}&name={RaceName}&date={RaceDate}&loc={Location}%presentedby={PresentedBy}'.format(
+			url = 'http://www.crossresults.com/?n=results&sn=upload&crossmgr={MD5}&name={RaceName}&date={RaceDate}&loc={Location}&presentedby={PresentedBy}'.format(
 				RaceName	= urllib.quote(unicode(raceName).encode('utf-8')),
 				RaceDate	= urllib.quote(unicode(raceDate).encode('utf-8')),
 				MD5			= hashlib.md5( race.name + raceDate ).hexdigest(),

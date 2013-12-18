@@ -813,6 +813,18 @@ CUSTOM_MESSAGE_Message.FieldDefs = CUSTOM_MESSAGE_Message.FieldDefs[:-1]
 Custom_Parameter.FieldDefs = Custom_Parameter.FieldDefs[:-1]
 
 if __name__ == '__main__':
+	import sys
+	c = IMPINJ_ENABLE_EXTENSIONS_Message()
+	print c
+	
+	s = c.pack( bitstring.BitStream() )
+	print s
+	
+	m = UnpackMessage( s )
+	print m
+	
+	#-----------------------------
+
 	rospecMessage = GetBasicAddRospecMessage( 1 )
 	rospecEnableMessage = GetEnableRospecMesssage( 2 )
 	
