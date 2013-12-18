@@ -57,7 +57,7 @@ def getParameterMessage( n, isMessage ):
 	except KeyError:
 		# This is a custom parameter or message.
 		TypeNum = 1023		# Code for custom Message and Parameter.
-		Fields.append( {'name': 'VendorIdentifier', 'type': 'uintbe:32', 'default': 25882} )	# Impinj Vendor Number
+		Fields.append( {'name': 'VendorIdentifier', 'type': 'uintbe:32', 'default': vendors[toAscii(n.attributes['vendor'].value)]} )
 		if isMessage:
 			Fields.append( {'name': 'MessageSubtype', 'type': 'uintbe:8', 'default': int(n.attributes['subtype'].value)} )
 		else:
@@ -95,12 +95,19 @@ def getParameterMessage( n, isMessage ):
 	if Parameters:
 		pm['parameters'] = Parameters
 	return pm
+	
+def getVendorCode( n ):
+	name = toAscii(n.attributes['name'].value)
+	id = int(n.attributes['vendorID'].value)
+	return (name, id)
 
 enums, parameters, messages = [], [], []
+vendors = {}
 
 llrpDefXml = 'llrp-1x0-def.xml'
 dom = parse( llrpDefXml )
 
+vendors.update( dict(getVendorCode(v) for v in dom.getElementsByTagName('vendorDefinition')) )
 enums = [getEnum(e) for e in dom.getElementsByTagName('enumerationDefinition')]
 parameters = [getParameterMessage(p, False) for p in dom.getElementsByTagName('parameterDefinition')]
 messages = [getParameterMessage(m, True) for m in dom.getElementsByTagName('messageDefinition')]
@@ -111,6 +118,7 @@ dom = None
 llrpCustomDefXml = 'Impinjdef-1.18-private.xml'
 dom = parse( llrpCustomDefXml )
 
+vendors.update( dict(getVendorCode(v) for v in dom.getElementsByTagName('vendorDefinition')) )
 enums.extend( getEnum(e) for e in dom.getElementsByTagName('customEnumerationDefinition') )
 parameters.extend( getParameterMessage(p, False) for p in dom.getElementsByTagName('customParameterDefinition') )
 messages.extend( getParameterMessage(m, True) for m in dom.getElementsByTagName('customMessageDefinition') )
@@ -122,7 +130,7 @@ with open('llrpdef.py', 'w') as fp:
 	fp.write( '#\n' )
 	fp.write( '# Created: %s \n' % datetime.datetime.now() )
 	fp.write( '#-----------------------------------------------------------\n' )
-	for n in ['enums', 'parameters', 'messages']:
+	for n in ['vendors', 'enums', 'parameters', 'messages']:
 		fp.write( '%s = ' % n )
 		json.dump( globals()[n], fp, indent=1, sort_keys=True )
 		fp.write( '\n' )

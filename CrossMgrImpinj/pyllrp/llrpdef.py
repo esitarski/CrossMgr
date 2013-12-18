@@ -2,8 +2,11 @@
 # DO NOT EDIT!
 # MACHINE GENERATED from llrp-1x0-def.xml
 #
-# Created: 2013-12-17 20:54:03.732000 
+# Created: 2013-12-17 21:07:28.117000 
 #-----------------------------------------------------------
+vendors = {
+ "Impinj": 25882
+}
 enums = [
  {
   "choices": [
