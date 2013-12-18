@@ -17,11 +17,8 @@ from EditEntry import DoDNF, DoDNS, DoPull, DoDQ
 from TimeTrialRecord import TimeTrialRecord
 
 def MakeKeypadButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1), font = None ):
-	label=label.replace('&','')
-	if 'WXMAC' in wx.Platform:
-		btn = wx.lib.buttons.ThemedGenButton( parent, label=label, style=style, size=size )
-	else:
-		btn = KeyButton( parent, label=label, style=style|wx.NO_BORDER, size=size )
+	label = label.replace('&','')
+	btn = KeyButton( parent, label=label, style=style|wx.NO_BORDER, size=size )
 	if font:
 		btn.SetFont( font )
 	return btn

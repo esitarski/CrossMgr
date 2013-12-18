@@ -631,7 +631,7 @@ class KeyButton(wx.PyControl):
 						insideCenter, insideEdge) )				
 		gc.ClipRegion( wx.Region(xMiddle, 0, width, height) )
 		gc.FillPath( innerRoundedRect )
-		gc.ClipRegion( wx.Region() )
+		gc.ResetClip()
 		
 		# Draw the outline of the inner rectangle.
 		gc.SetPen( wx.Pen(insideLine) )
