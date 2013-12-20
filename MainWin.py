@@ -346,7 +346,7 @@ class MainWin( wx.Frame ):
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
 							_("Publish Results in WebScorer.com Format..."), _("Publish Results in WebScorer.com format"),
-							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'crossresults-icon.png'), wx.BITMAP_TYPE_PNG )
+							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'webscorer-icon.png'), wx.BITMAP_TYPE_PNG )
 		)
 		self.Bind(wx.EVT_MENU, self.menuExportWebScorer, id=idCur )
 
