@@ -336,7 +336,10 @@ class MainWin( wx.Frame ):
 		self.publishMenu.AppendSeparator()
 		
 		idCur = wx.NewId()
-		self.publishMenu.Append( idCur , _("Publish Results to Cross&Results.com..."), _("Publish Results to the Cross&Results.com web site") )
+		AppendMenuItemBitmap( self.publishMenu, idCur,
+							_("Publish Results to Cross&Results.com..."), _("Publish Results to the Cross&Results.com web site"),
+							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'crossresults-icon.png'), wx.BITMAP_TYPE_PNG )
+		)
 		self.Bind(wx.EVT_MENU, self.menuExportCrossResults, id=idCur )
 
 		self.publishMenu.AppendSeparator()
