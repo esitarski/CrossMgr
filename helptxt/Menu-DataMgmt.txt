@@ -91,30 +91,6 @@ Edit|Reason for the data edit
 By|Username who made the edit (login name on the computer)
 On|Date and Time when the edit was made.
 
-## Publish Results to CrossResults.com...
-Creates a CrossResults.com compatible file for all race categories.
-Launches your web browser to the CrossResults.com upload page.
-
-## Export Results in USAC Excel Format...
-Export the results for all race categories in a format acceptable to USA Cycling.
-
-Columns in the exported spreadsheet are as follows:
-
-Column|Description
-:-----|:----------
-rider place|Corresponds to the "Pos" field in CrossMgr [Results][].
-race gender|The gender of the this Category as specified in [Categories][]
-race discipline|As specified in the race [Properties][].  This must match the USAC standard discipline name.
-race category|The name of the Category of this rider as specified in [Categories][].
-rider last name|Corresponds to the rider's "LastName" as configured in the [External Excel][] sheet.
-rider first name|Corresponds to the rider's "FirstName" as configured in the [External Excel][] sheet.
-rider team|Corresponds to the rider's "Team" as configured in the [External Excel][] sheet.
-time|Corresponds to the "Time" field in CrossMgr [Results][].
-
-In the "rider place" column, USAC only recognizes a place (number) and the statuses "DNF", "DNS" and "DNP" (Did Not Place).
-
-CrossMgr's additional statuses "PUL" (Pulled), "DQ" (Disqualified), "OTL" (Outside Time Limit) and "NP" (Not Placed) are output as "DNP" (Did Not Place) in the USAC export.
-
 ##Import Time Trial Start Times...
 
 Imports start times for a time trial from a spreadsheet.

@@ -207,6 +207,10 @@ class CustomStatusBar(wx.StatusBar):
         self.SetStatusText(st, 2)
 
 #----------------------------------------------------------------------------------
+def AppendMenuItemBitmap( menu, id, name, help, bitmap ):
+	mi = wx.MenuItem( menu, id, name, help )
+	mi.SetBitmap( bitmap )
+	menu.AppendItem( mi )
 		
 class MainWin( wx.Frame ):
 	def __init__( self, parent, id = wx.ID_ANY, title='', size=(200,200) ):
@@ -273,36 +277,6 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_MENU, self.menuRestoreFromInput, id=idCur )
 
 		self.fileMenu.AppendSeparator()
-		self.fileMenu.Append( wx.ID_PAGE_SETUP , _("Page &Setup..."), _("Setup the print page") )
-		self.Bind(wx.EVT_MENU, self.menuPageSetup, id=wx.ID_PAGE_SETUP )
-
-		self.fileMenu.Append( wx.ID_PREVIEW , _("P&review Results..."), _("Preview the results on screen") )
-		self.Bind(wx.EVT_MENU, self.menuPrintPreview, id=wx.ID_PREVIEW )
-
-		self.fileMenu.Append( wx.ID_PRINT , _("&Print Results..."), _("Print the results to a printer") )
-		self.Bind(wx.EVT_MENU, self.menuPrint, id=wx.ID_PRINT )
-
-		self.fileMenu.AppendSeparator()
-
-		idCur = wx.NewId()
-		self.fileMenu.Append( idCur , _("&Publish Results as Excel..."), _("Publish Results as an Excel Spreadsheet (.xls)") )
-		self.Bind(wx.EVT_MENU, self.menuPublishAsExcel, id=idCur )
-		
-		idCur = wx.NewId()
-		self.fileMenu.Append( idCur , _("Publish Results as &HTML..."), _("Publish Results as HTML (.html)") )
-		self.Bind(wx.EVT_MENU, self.menuPublishHtmlRaceResults, id=idCur )
-
-		idCur = wx.NewId()
-		self.fileMenu.Append( idCur, _("Publish Results as P&NG (for Facebook)..."), _("Publish Results as PNG files for posting on Facebook") )
-		self.Bind(wx.EVT_MENU, self.menuPrintPNG, id=idCur )
-
-		self.fileMenu.AppendSeparator()
-		
-		idCur = wx.NewId()
-		self.fileMenu.Append( idCur , _("Publish HTML Results with FTP..."), _("Publish HTML Results to FTP") )
-		self.Bind(wx.EVT_MENU, self.menuExportHtmlFtp, id=idCur )
-
-		self.fileMenu.AppendSeparator()
 		
 		recent = wx.Menu()
 		self.fileMenu.AppendMenu(wx.ID_ANY, _("Recent Fil&es"), recent)
@@ -322,6 +296,69 @@ class MainWin( wx.Frame ):
 		
 		self.menuBar.Append( self.fileMenu, _("&File") )
 
+		#-----------------------------------------------------------------------
+		self.publishMenu = wx.Menu()
+		
+		self.publishMenu.Append( wx.ID_PAGE_SETUP , _("Page &Setup..."), _("Setup the print page") )
+		self.Bind(wx.EVT_MENU, self.menuPageSetup, id=wx.ID_PAGE_SETUP )
+
+		self.publishMenu.Append( wx.ID_PREVIEW , _("P&review Print Results..."), _("Preview the printed results on screen") )
+		self.Bind(wx.EVT_MENU, self.menuPrintPreview, id=wx.ID_PREVIEW )
+
+		AppendMenuItemBitmap( self.publishMenu, wx.ID_PRINT, _("&Print Results..."), _("Print the results to a printer"), wx.ArtProvider.GetBitmap(wx.ART_PRINT) )
+		self.Bind(wx.EVT_MENU, self.menuPrint, id=wx.ID_PRINT )
+
+		self.publishMenu.AppendSeparator()
+
+		idCur = wx.NewId()
+		AppendMenuItemBitmap( self.publishMenu, idCur,
+							_("&Publish Results as Excel..."), _("Publish Results as an Excel Spreadsheet (.xls)"),
+							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'excel-icon.png'), wx.BITMAP_TYPE_PNG )
+		)
+		self.Bind(wx.EVT_MENU, self.menuPublishAsExcel, id=idCur )
+		
+		self.publishMenu.AppendSeparator()
+		
+		idCur = wx.NewId()
+		AppendMenuItemBitmap( self.publishMenu, idCur,
+							_("Publish Results as &HTML..."), _("Publish Results as HTML (.html)"),
+							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'html-icon.png'), wx.BITMAP_TYPE_PNG )
+		)
+		self.Bind(wx.EVT_MENU, self.menuPublishHtmlRaceResults, id=idCur )
+
+		idCur = wx.NewId()
+		AppendMenuItemBitmap( self.publishMenu, idCur,
+							_("Publish HTML Results with FTP..."), _("Publish HTML Results to FTP"),
+							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'ftp-icon.png'), wx.BITMAP_TYPE_PNG )
+		)
+		self.Bind(wx.EVT_MENU, self.menuExportHtmlFtp, id=idCur )
+
+		self.publishMenu.AppendSeparator()
+		
+		idCur = wx.NewId()
+		self.publishMenu.Append( idCur , _("Publish Results to Cross&Results.com..."), _("Publish Results to the Cross&Results.com web site") )
+		self.Bind(wx.EVT_MENU, self.menuExportCrossResults, id=idCur )
+
+		self.publishMenu.AppendSeparator()
+		
+		idCur = wx.NewId()
+		AppendMenuItemBitmap( self.publishMenu, idCur,
+							_("Publish Results in &USAC Excel Format..."), _("Publish Results in USAC Excel Format"),
+							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'usac-icon.png'), wx.BITMAP_TYPE_PNG )
+		)
+		self.Bind(wx.EVT_MENU, self.menuExportUSAC, id=idCur )
+
+		self.publishMenu.AppendSeparator()
+		
+		idCur = wx.NewId()
+		AppendMenuItemBitmap( self.publishMenu, idCur,
+							_("Publish Results for &Facebook (as PNG)..."), _("Publish Results as PNG files for posting on Facebook"),
+							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'facebook-icon.png'), wx.BITMAP_TYPE_PNG )
+		)
+		self.Bind(wx.EVT_MENU, self.menuPrintPNG, id=idCur )
+		
+		self.menuBar.Append( self.publishMenu, _("&Publish") )
+		
 		#-----------------------------------------------------------------------
 		self.editMenu = wx.Menu()
 		self.undoMenuButton = wx.MenuItem( self.editMenu, wx.ID_UNDO , _("&Undo\tCtrl+Z"), _("Undo the last edit") )
@@ -367,17 +404,16 @@ class MainWin( wx.Frame ):
 		self.dataMgmtMenu.AppendSeparator()
 		
 		#-----------------------------------------------------------------------
-		categoryMgmtMenu = wx.Menu()
-		self.dataMgmtMenu.AppendMenu(wx.ID_ANY, _("Category Mgmt"), categoryMgmtMenu)
-
+		
 		idCur = wx.NewId()
-		categoryMgmtMenu.Append( idCur , _("&Import Categories from File..."), _("Import Categories from File") )
+		self.dataMgmtMenu.Append( idCur , _("&Import Categories from File..."), _("Import Categories from File") )
 		self.Bind(wx.EVT_MENU, self.menuImportCategories, id=idCur )
 
 		idCur = wx.NewId()
-		categoryMgmtMenu.Append( idCur , _("&Export Categories to File..."), _("Export Categories to File") )
+		self.dataMgmtMenu.Append( idCur , _("&Export Categories to File..."), _("Export Categories to File") )
 		self.Bind(wx.EVT_MENU, self.menuExportCategories, id=idCur )
 
+		self.dataMgmtMenu.AppendSeparator()
 		#-----------------------------------------------------------------------
 		idCur = wx.NewId()
 		self.dataMgmtMenu.Append( idCur , _("Export History to Excel..."), _("Export History to Excel File") )
@@ -386,16 +422,6 @@ class MainWin( wx.Frame ):
 		idCur = wx.NewId()
 		self.dataMgmtMenu.Append( idCur , _("Export Raw Data as &HTML..."), _("Export raw data as HTML (.html)") )
 		self.Bind(wx.EVT_MENU, self.menuExportHtmlRawData, id=idCur )
-
-		self.dataMgmtMenu.AppendSeparator()
-		
-		idCur = wx.NewId()
-		self.dataMgmtMenu.Append( idCur , _("Publish Results to Cross&Results.com..."), _("Publish Results to the Cross&Results.com web site") )
-		self.Bind(wx.EVT_MENU, self.menuExportCrossResults, id=idCur )
-
-		idCur = wx.NewId()
-		self.dataMgmtMenu.Append( idCur , _("Export Results in &USAC Excel Format..."), _("Export Results in USAC Excel Format") )
-		self.Bind(wx.EVT_MENU, self.menuExportUSAC, id=idCur )
 
 		self.dataMgmtMenu.AppendSeparator()
 		idCur = wx.NewId()
@@ -487,23 +513,22 @@ class MainWin( wx.Frame ):
 		self.chipMenu.Append( idCur, _("JChip &Setup..."), _("Configure and Test JChip Reader") )
 		self.Bind(wx.EVT_MENU, self.menuJChip, id=idCur )
 		
-		chipImportMenu = wx.Menu()
-		self.chipMenu.AppendMenu(wx.ID_ANY, _("&Import"), chipImportMenu)
+		self.chipMenu.AppendSeparator()
 		
 		idCur = wx.NewId()
-		chipImportMenu.Append( idCur , _("JChip File..."), _("JChip Formatted File") )
+		self.chipMenu.Append( idCur , _("Import JChip File..."), _("JChip Formatted File") )
 		self.Bind(wx.EVT_MENU, self.menuJChipImport, id=idCur )
 		
 		idCur = wx.NewId()
-		chipImportMenu.Append( idCur , _("Alien File..."), _("Alien Formatted File") )
-		self.Bind(wx.EVT_MENU, self.menuAlienImport, id=idCur )
-		
-		idCur = wx.NewId()
-		chipImportMenu.Append( idCur , _("Impinj File..."), _("Impinj Formatted File") )
+		self.chipMenu.Append( idCur , _("Import Impinj File..."), _("Impinj Formatted File") )
 		self.Bind(wx.EVT_MENU, self.menuImpinjImport, id=idCur )
 		
 		idCur = wx.NewId()
-		chipImportMenu.Append( idCur , _("Orion File..."), _("Orion Formatted File") )
+		self.chipMenu.Append( idCur , _("Import Alien File..."), _("Alien Formatted File") )
+		self.Bind(wx.EVT_MENU, self.menuAlienImport, id=idCur )
+		
+		idCur = wx.NewId()
+		self.chipMenu.Append( idCur , _("Import Orion File..."), _("Orion Formatted File") )
 		self.Bind(wx.EVT_MENU, self.menuOrionImport, id=idCur )
 		
 		self.menuBar.Append( self.chipMenu, _("Chip&Reader") )
@@ -577,7 +602,7 @@ class MainWin( wx.Frame ):
 		self.toolsMenu.AppendSeparator()
 
 		idCur = wx.NewId()
-		self.toolsMenu.Append( idCur , _("Copy Log File to &Clipboard"), _("Copy Log File to &Clipboard") )
+		self.toolsMenu.Append( idCur , _("Copy Log File to &Clipboard..."), _("Copy Log File to &Clipboard") )
 		self.Bind(wx.EVT_MENU, self.menuCopyLogFileToClipboard, id=idCur )
 
 		self.menuBar.Append( self.toolsMenu, _("&Tools") )
@@ -2300,9 +2325,10 @@ Continue?''' % fName, 'Simulate a Race' ):
 
 		if not race.city or not race.stateProv or not race.country:
 			Utils.MessageOK(self,
-						_('Missing City, State/Prov or Country fields.\nPlease fill in these fields in Properties'),
+						_('Missing City, State/Prov or Country fields.\nPlease fill in these fields in Properties.'),
 						_('Missing Location Fields'), iconMask=wx.ICON_ERROR )
 			ChangeProperties( self )
+			self.showPageName( _('Properties') )
 			return
 			
 		if not Utils.MessageOKCancel( self,
@@ -2337,7 +2363,6 @@ Continue?''' % fName, 'Simulate a Race' ):
 			return
 
 		fname = os.path.join( dName, os.path.basename(fname) )
-
 		
 		year, month, day = race.date.split( '-' )
 		raceName = race.name
@@ -2347,8 +2372,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 			success, message = CrossResultsExport( fname )
 			if not success:
 				Utils.MessageOK(self,
-							_('CrossResults Export Error: "{}".').format(message),
-							_('CrossResults Export Error'), iconMask=wx.ICON_ERROR )
+							_('CrossResults Error: "{}".').format(message),
+							_('CrossResults Error'), iconMask=wx.ICON_ERROR )
 				return
 			
 			url = 'http://www.crossresults.com/?n=results&sn=upload&crossmgr={MD5}&name={RaceName}&date={RaceDate}&loc={Location}&presentedby={PresentedBy}'.format(
