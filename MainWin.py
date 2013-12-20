@@ -2302,7 +2302,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			Utils.MessageOK(self,
 						_('Missing City, State/Prov or Country fields.\nPlease fill in these fields in Properties'),
 						_('Missing Location Fields'), iconMask=wx.ICON_ERROR )
-			self.showPageName( _('Properties') )
+			ChangeProperties( self )
 			return
 			
 		if not Utils.MessageOKCancel( self,
