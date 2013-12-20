@@ -53,6 +53,7 @@ from SetAutoCorrect		import SetAutoCorrectDialog
 from DNSManager			import DNSManagerDialog
 from USACExport			import USACExport
 from CrossResultsExport	import CrossResultsExport
+from WebScorerExport	import WebScorerExport
 from HelpSearch			import HelpSearchDialog
 from Utils				import logCall, logException
 import Model
@@ -337,10 +338,17 @@ class MainWin( wx.Frame ):
 		
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
-							_("Publish Results to Cross&Results.com..."), _("Publish Results to the Cross&Results.com web site"),
+							_("Publish Results to Cross&Results.com..."), _("Publish Results to the CrossResults.com web site"),
 							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'crossresults-icon.png'), wx.BITMAP_TYPE_PNG )
 		)
 		self.Bind(wx.EVT_MENU, self.menuExportCrossResults, id=idCur )
+
+		idCur = wx.NewId()
+		AppendMenuItemBitmap( self.publishMenu, idCur,
+							_("Publish Results in WebScorer.com Format..."), _("Publish Results in WebScorer.com format"),
+							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'crossresults-icon.png'), wx.BITMAP_TYPE_PNG )
+		)
+		self.Bind(wx.EVT_MENU, self.menuExportWebScorer, id=idCur )
 
 		self.publishMenu.AppendSeparator()
 		
@@ -2318,23 +2326,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 						_('Cannot write "{}".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.').format(xlFName),
 						_('Excel File Error'), iconMask=wx.ICON_ERROR )
 	
-	@logCall
-	def menuExportCrossResults( self, event ):
-		self.commit()
-		if self.fileName is None or len(self.fileName) < 4 or not Model.race:
-			return
-			
-		race = Model.race
-
-		if not race.city or not race.stateProv or not race.country:
-			Utils.MessageOK(self,
-						_('Missing City, State/Prov or Country fields.\nPlease fill in these fields in Properties.'),
-						_('Missing Location Fields'), iconMask=wx.ICON_ERROR )
-			ChangeProperties( self )
-			self.showPageName( _('Properties') )
-			return
-			
-		if not Utils.MessageOKCancel( self,
+	def resultsCheck( self ):
+		return Utils.MessageOKCancel( self,
 				u'\n'.join([
 					_('Make sure you publish correct results!'),
 					_('Take a few minutes to check the following:'),
@@ -2351,7 +2344,26 @@ Continue?''' % fName, 'Simulate a Race' ):
 					'',
 					_('If not, press Cancel, fix the problems and publish again.')
 				]),
-				_('Results Publish') ):
+				_('Results Publish') )
+	
+	@logCall
+	def menuExportCrossResults( self, event ):
+		self.commit()
+		if self.fileName is None or len(self.fileName) < 4 or not Model.race:
+			return
+			
+		race = Model.race
+
+		if not race.city or not race.stateProv or not race.country:
+			Utils.MessageOK(self,
+						_('Missing City, State/Prov or Country fields.') + u'\n\n' +
+							_('Please fill in these fields in Properties.'),
+						_('Missing Location Fields'), iconMask=wx.ICON_ERROR )
+			ChangeProperties( self )
+			self.showPageName( _('Properties') )
+			return
+			
+		if not self.resultsCheck():
 			return
 			
 		self.showPageName( _('Results') )
@@ -2391,6 +2403,43 @@ Continue?''' % fName, 'Simulate a Race' ):
 			Utils.MessageOK(self,
 						_('Cannot write "{}" (Error={}).').format(fname, e),
 						_('CrossResults File Error'), iconMask=wx.ICON_ERROR )
+	
+	@logCall
+	def menuExportWebScorer( self, event ):
+		self.commit()
+		if self.fileName is None or len(self.fileName) < 4 or not Model.race:
+			return
+			
+		race = Model.race
+
+		if not self.resultsCheck():
+			return
+			
+		self.showPageName( _('Results') )
+		
+		fname = self.fileName[:-4] + '-WebScorer.txt'
+		dlg = wx.DirDialog( self, _('Folder to write "{}"').format(os.path.basename(fname)),
+						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
+		ret = dlg.ShowModal()
+		dName = dlg.GetPath()
+		dlg.Destroy()
+		if ret != wx.ID_OK:
+			return
+
+		fname = os.path.join( dName, os.path.basename(fname) )
+		
+		try:
+			success, message = WebScorerExport( fname )
+			if not success:
+				Utils.MessageOK(self,
+							_('WebScorer Error: "{}".').format(message),
+							_('WebScorer Error'), iconMask=wx.ICON_ERROR )
+				return
+			Utils.MessageOK(self, _('WebScorer file written to:') + u'\n\n   {}'.format(fname), _('WebScorer Publish'))
+		except Exception as e:
+			Utils.MessageOK(self,
+						_('Cannot write "{}" (Error={}).').format(fname, e),
+						_('WebScorer Publish Error'), iconMask=wx.ICON_ERROR )
 	
 	@logCall
 	def menuHelpQuickStart( self, event ):
