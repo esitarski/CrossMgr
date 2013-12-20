@@ -5,6 +5,7 @@ Get started with CrossMgr now!
 ## Main Menu
 
 * [File][]
+* [Publish][]
 * [Edit][]
 * [DataMgmt][]
 * [JumpTo][]

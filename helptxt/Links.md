@@ -1,6 +1,7 @@
 [Quick Start]:		QuickStart.html
 
 [File]: 			Menu-File.html
+[Publish]:			Menu-Publish.html
 [Edit]: 			Menu-Edit.html
 [DataMgmt]:			Menu-DataMgmt.html
 [JumpTo]:			Menu-JumpTo.html
