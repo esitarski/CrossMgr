@@ -52,7 +52,7 @@ Download and install [TinyPDF](www.tinypdf.com).  Print CrossMgr results, and se
 
 Not recommended.
 
-From CrossMgr, do a "Publish/Publish Results as PNG (for Facebook).  This will write all the results to a 'ResultsPNG" folder in the same folder as the CrossMgr race file.
+From CrossMgr, do a "Publish/Publish Results for Facebook (as PNG)...".  This will write all the results to a 'ResultsPNG" folder in the same folder as the CrossMgr race file.
 
 Log into Facebook.  Select "Add Photos/video".  On your computer, go to the "ResultsPNG" folder.  Drag-and-drop all the png files into your Facebook post.
 
