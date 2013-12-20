@@ -7,7 +7,7 @@ Allows you to configure properties of the race itself.  Specific properties of e
 
 Property|Description
 :-------|:----------
-Race Name|Name of the race.  Also used in the filename.
+Event Name|Name of the event.  Also used in the filename with the Race #.  Multiple races in the day will have the same Event Name, but with different race numbers.
 Date|Date of the race.  Used in the filename and all output.
 Race #|The number of the race in the day at the event.  Also used in the filename.  This is automatically incremented when you do "File/New Next..."
 Scheduled Start|Scheduled start of the race.  This is used in the results output.  Of course, the race could actually start at a different time.

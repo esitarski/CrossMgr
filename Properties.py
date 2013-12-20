@@ -16,7 +16,7 @@ class Properties( wx.Panel ):
 
 		rows = 0
 		
-		self.raceNameLabel = wx.StaticText( self, label = _('Race Name:') )
+		self.raceNameLabel = wx.StaticText( self, label = _('Event Name:') )
 		self.raceName = wx.TextCtrl( self, value='' )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceName )
 		rows += 1

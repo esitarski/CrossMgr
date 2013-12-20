@@ -835,7 +835,7 @@ class Race(object):
 		self.reset()
 
 	def reset( self ):
-		self.name = '<RaceName>'
+		self.name = '<EventName>'
 		self.organizer = '<Organizer>'
 		
 		self.city = '<MyCity>'
