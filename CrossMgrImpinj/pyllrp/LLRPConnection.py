@@ -13,7 +13,7 @@ class LLRPConnection( object ):
 	# and asynchronous/synchronous monitoring of the reader socket.
 	#
 	def __init__( self ):
-		self.TimeoutSecs = 2		# Time for the reader to respond.
+		self.TimeoutSecs = 3		# Time for the reader to respond.
 		self._reset()
 		self.handlers = {}
 		
@@ -83,7 +83,7 @@ class LLRPConnection( object ):
 		''' Send a message to the reader and wait for the response. '''
 		assert not self.isListening(), 'Cannot perform transact() while listen thread is active.  Stop it first with stopListener().'
 		message.send( self.readerSocket )
-		response = WaitForMessage( message.MessageID, GetResponseClass(message), self.readerSocket )
+		response = WaitForMessage( message.MessageID, self.readerSocket )
 		return response
 		
 	def checkKeepGoing( self ):

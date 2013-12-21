@@ -20,7 +20,7 @@ host = '192.168.10.102'
 timeCorrection = None
 def AccessReportHandler( accessReport ):
 	for tag in accessReport.getTagData():
-		tagID = HexFormatToInt( tag['EPC'] )
+		tagID = HexFormatToStr( tag['EPC'] )
 		discoveryTime = tag['Timestamp']		# In microseconds since Jan 1, 1970
 		discoveryTime = datetime.datetime.utcfromtimestamp( discoveryTime / 1000000.0 ) + timeCorrection
 		print tagID, discoveryTime
@@ -114,9 +114,9 @@ def TinyExampleTest():
 	assert response.success()
 
 	# Start thread to listen to the reader for a while.
-	print 'Listen to the connection for about 5 seconds...'
+	print 'Listen to the connection for a few seconds...'
 	conn.startListener()
-	time.sleep( 5 )			# Wait for some reads (we could be doing something else here too).
+	time.sleep( 2 )			# Wait for some reads (we could be doing something else here too).
 	conn.stopListener()
 
 	print 'Shutting down the connection...'
