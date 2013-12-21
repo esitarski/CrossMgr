@@ -1,72 +1,21 @@
 #!/usr/bin/env python
-import sys
 import os
+import sys
+import time
+import socket
+import datetime
 
 # If we are running from the development folder, change to a local search path.
 if os.path.basename(os.path.dirname(os.path.abspath(__file__))) == 'pyllrp':
-	from pyllrp import *
-	from LLRPConnection import LLRPConnection
+	from TagInventory import TagInventory
 else:
-	from pyllrp.pyllrp import *
-	from pyllrp.LLRPConnection import LLRPConnection
-
-import time
-import datetime
-import socket
-
-# Change to the hostname or IP address of the reader.
-host = '192.168.10.102'
-
-timeCorrection = None
-def AccessReportHandler( accessReport ):
-	for tag in accessReport.getTagData():
-		tagID = HexFormatToStr( tag['EPC'] )
-		discoveryTime = tag['Timestamp']		# In microseconds since Jan 1, 1970
-		discoveryTime = datetime.datetime.utcfromtimestamp( discoveryTime / 1000000.0 ) + timeCorrection
-		print tagID, discoveryTime
-
-def DefaultHandler( message ):
-	print 'Unknown Message:'
-	print message
+	from pyllrp.TagInventory import TagInventory
 
 #-----------------------------------------------------------------------------------------
 
 def TinyExampleTest():
-	global timeCorrection
-	
 	rospecID = 123					# Arbitrary rospecID.
 	inventoryParameterSpecID = 1234	# Arbitrary inventory parameter spec id.
-
-	# Create a reader connection.
-	conn = LLRPConnection()
-
-	# Add a callback so we can print the tags.
-	conn.addHandler( RO_ACCESS_REPORT_Message, AccessReportHandler )
-
-	# Add a default callback so we can see what else comes from the reader.
-	conn.addHandler( 'default', DefaultHandler )
-
-	# Connect to the reader.
-	try:
-		response = conn.connect( host )
-	except socket.timeout:
-		print '**** Connect timed out.  Check reader hostname and connection. ****'
-		raise
-	print response
-
-	# Compute a correction between the reader's time and the computer's time.
-	readerTime = response.getFirstParameterByClass(UTCTimestamp_Parameter).Microseconds
-	readerTime = datetime.datetime.utcfromtimestamp( readerTime / 1000000.0 )
-	timeCorrection = datetime.datetime.now() - readerTime
-	print 'Reader timestamp is:', readerTime
-	print timeCorrection, timeCorrection.total_seconds()
-
-	# Disable all the rospecs.  This command may fail so we ignore the response.
-	response = conn.transact( DISABLE_ROSPEC_Message(ROSpecID = 0) )
-
-	# Delete our old rospec if it exists.  This command might fail so we ignore the return.
-	response = conn.transact( DELETE_ROSPEC_Message(ROSpecID = rospecID) )
-	#print response
 
 	# Create an rospec that reports every read as soon as it happens.
 	response = conn.transact(
@@ -124,4 +73,12 @@ def TinyExampleTest():
 	print response
 
 if __name__ == '__main__':
-	TinyExampleTest()
+	'''Read a tag inventory from the reader and shutdown.'''
+	host = '192.168.10.102'
+	ti = TagInventory( host )
+	ti.Connect()
+	ti.SetROSpec()
+	tagInventory = ti.GetTagInventory()
+	for t in tagInventory:
+		print t
+	ti.Disconnect()

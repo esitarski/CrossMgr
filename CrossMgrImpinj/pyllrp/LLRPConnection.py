@@ -125,7 +125,7 @@ class LLRPConnection( object ):
 		self.thread.start()
 	
 	def stopListener( self ):
-		''' Stops the thread listinging to the reader. '''
+		''' Stops the thread listening to the reader. '''
 		self.shutdownQ.put( 'Shutdown' )
 		self.thread.join()					# Wait for the thread to terminate.
 		self.shutdownQ = None
