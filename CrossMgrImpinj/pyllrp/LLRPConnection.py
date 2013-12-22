@@ -83,7 +83,7 @@ class LLRPConnection( object ):
 		''' Send a message to the reader and wait for the response. '''
 		assert not self.isListening(), 'Cannot perform transact() while listen thread is active.  Stop it first with stopListener().'
 		message.send( self.readerSocket )
-		response = WaitForMessage( message.MessageID, self.readerSocket )
+		response = WaitForMessage( message.MessageID, self.readerSocket, self.callHandler )
 		return response
 		
 	def checkKeepGoing( self ):
@@ -99,7 +99,12 @@ class LLRPConnection( object ):
 			return False
 		except (AttributeError, Empty):
 			return True
-		
+	
+	def callHandler( self, message ):
+		''' Call all the handlers for this message. '''
+		for cb in (self.handlers.get(response.__class__, None) or self.handlers.get('default', [])):
+			cb( response )
+	
 	def listen( self ):
 		''' Listen for messages from the reader. '''
 		# Calling this by itself will block.
@@ -109,10 +114,7 @@ class LLRPConnection( object ):
 				response = UnpackMessageFromSocket( self.readerSocket )
 			except socket.timeout:
 				continue
-			
-			# Call all the handlers for this message.
-			for cb in (self.handlers.get(response.__class__, None) or self.handlers.get('default', [])):
-				cb( response )
+			self.callHandler( response )
 				
 	def startListener( self ):
 		''' Starts a thread to listen to the reader. '''

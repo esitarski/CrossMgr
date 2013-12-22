@@ -705,13 +705,16 @@ def GetResponseClass( message ):
 		responseClassName = message.__class__.__name__.replace('_Message', '_RESPONSE_Message')
 	return globals()[responseClassName]
 	
-def WaitForMessage( MessageID, sock ):
-	''' Wait for an expected message matching the MessageID. '''
+def WaitForMessage( MessageID, sock, nonMatchingMessageHandler = None ):
+	''' Wait for a message matching the MessageID. '''
+	''' Call the message handler on any message not matching the MessageID. '''
 	while 1:
 		response = UnpackMessageFromSocket( sock )
 		if response.MessageID == MessageID:
 			return response
-			
+		elif nonMatchinMessageHandler:
+			nonMatchingMessageHandler( response )
+
 #-----------------------------------------------------------------------------
 
 def HexFormatToStr( value ):

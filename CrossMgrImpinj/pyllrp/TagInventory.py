@@ -27,7 +27,7 @@ class TagInventory( object ):
 		for tag in accessReport.getTagData():
 			tagID = HexFormatToStr( tag['EPC'] )
 			discoveryTime = tag['Timestamp']		# In microseconds since Jan 1, 1970
-			discoveryTime = datetime.datetime.utcfromtimestamp( discoveryTime / 1000000.0 ) + timeCorrection
+			discoveryTime = datetime.datetime.utcfromtimestamp( discoveryTime / 1000000.0 ) + self.timeCorrection
 			print tagID, discoveryTime
 			self.tagInventory.add( tagID )
 
@@ -64,7 +64,7 @@ class TagInventory( object ):
 		response = self.conn.transact( DISABLE_ROSPEC_Message(ROSpecID = 0) )
 
 		# Delete our old rospec if it exists.  This command might fail so we ignore the return.
-		response = self.conn.transact( DELETE_ROSPEC_Message(ROSpecID = rospecID) )
+		response = self.conn.transact( DELETE_ROSPEC_Message(ROSpecID = self.rospecID) )
 		#print response
 		
 	def Disconnect( self ):
@@ -74,8 +74,8 @@ class TagInventory( object ):
 		self.conn = None
 
 	def SetROSpec( self ):
-		# Create an rospec that reports every read as soon as it happens.
-		response = conn.transact(
+		# Create an rospec that reports reads.
+		response = self.conn.transact(
 			ADD_ROSPEC_Message( Parameters = [
 				ROSpec_Parameter(
 					ROSpecID = self.rospecID,
@@ -84,7 +84,10 @@ class TagInventory( object ):
 						ROBoundarySpec_Parameter(		# Configure boundary spec (start and stop triggers for the reader).
 							Parameters = [
 								ROSpecStartTrigger_Parameter(ROSpecStartTriggerType = ROSpecStartTriggerType.Immediate),
-								ROSpecStopTrigger_Parameter(ROSpecStopTriggerType = ROSpecStopTriggerType.Null),
+								ROSpecStopTrigger_Parameter(
+									ROSpecStopTriggerType = ROSpecStopTriggerType.Duration,
+									DurationTriggerValue = 500
+								),
 							]
 						), # ROBoundarySpec
 						AISpec_Parameter(				# Antenna Inventory Spec (specifies which antennas and protocol to use)
@@ -99,7 +102,7 @@ class TagInventory( object ):
 						), # AISpec
 						ROReportSpec_Parameter(			# Report spec (specified how often and what to send from the reader)
 							ROReportTrigger = ROReportTriggerType.Upon_N_Tags_Or_End_Of_ROSpec,
-							N = 1,						# N = 1 --> update on each read.
+							N = 100,
 							Parameters = [
 								TagReportContentSelector_Parameter(
 									EnableAntennaID = True,
@@ -116,18 +119,29 @@ class TagInventory( object ):
 
 	def GetTagInventory( self ):
 		# Enable our ROSpec
-		response = conn.transact( ENABLE_ROSPEC_Message(ROSpecID = self.rospecID) )
+		response = self.conn.transact( ENABLE_ROSPEC_Message(ROSpecID = self.rospecID) )
 		assert response.success()
 
 		self.tagInventory = set()
 		
 		# Start thread to listen to the reader for a while.
 		print 'Listen to the connection...'
-		conn.startListener()
-		time.sleep( 1 )			# Wait for some reads.
-		conn.stopListener()
+		self.conn.startListener()
+		time.sleep( 0.6 )			# Wait for some reads.
+		self.conn.stopListener()
 		
-		response = conn.transact( DISABLE_ROSPEC_Message(ROSpecID = self.rospecID) )
+		response = self.conn.transact( DISABLE_ROSPEC_Message(ROSpecID = self.rospecID) )
 		assert response.success()
 		
-		return self.tagInventory()
+		return self.tagInventory
+
+if __name__ == '__main__':
+	'''Read a tag inventory from the reader and shutdown.'''
+	host = '192.168.10.102'
+	ti = TagInventory( host )
+	ti.Connect()
+	ti.SetROSpec()
+	tagInventory = ti.GetTagInventory()
+	for t in tagInventory:
+		print t
+	ti.Disconnect()
