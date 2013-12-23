@@ -212,7 +212,10 @@ def _initFieldDefs( self, *args, **kwargs ):
 	# Use a default unique MessageID if None.
 	if getattr(self, '_MessageID', 'NA') is None:
 		self._MessageID = _CurMessageIDCounter.next()
-	
+
+def _setSingleField( self, value ):
+	setattr( self, self.__slots__[0], value )
+		
 def _getValues( self ):
 	''' Get all specified values of an LLRP object. '''
 	return [(f.Name, getattr(self, f.Name)) for f in self.FieldDefs if not f.Type.startswith('skip')]
@@ -396,6 +399,8 @@ def _MakeClass( messageOrParameter, Name, Type, PackUnpack ):
 		classAttrs['send'] = _sendToSocket										# Also add "send" method.
 		if Name.endswith( 'RESPONSE' ):
 			classAttrs['success'] = _getLLRPStatusSuccess
+	if classAttrs['FieldCount'] == 1:
+		classAttrs['_setSingleField'] = _setSingleField
 
 	MPClass = type( Name + '_' + messageOrParameter, (object,), classAttrs )	# Dynamically create the class.
 	return MPClass
@@ -594,14 +599,13 @@ def _fixFieldDefs( fields ):
 #-----------------------------------------------------------------------------
 # Create Enum instances and add to the global namespace.
 #
-enumClassFromName = {}
+_enumClassFromName = {}
 for e in llrpdef.enums:
 	Name = e['name']
 	Choices = e['choices']
-	enumClassFromName[Name] = _EnumDef( Name, Choices )
+	_enumClassFromName[Name] = _EnumDef( Name, Choices )
 
-globals().update( enumClassFromName )
-del enumClassFromName
+globals().update( _enumClassFromName )
 
 #-----------------------------------------------------------------------------
 # Create Parameter classes from the specs.
@@ -623,7 +627,6 @@ for p in llrpdef.parameters:
 	_parameterClassFromType[pup.Code] = _parameterClassFromName[parameterClassName] = _MakeClass( 'Parameter', pup.Name, Type, pup )
 
 globals().update( _parameterClassFromName )	# Add Parameter classes to global namespace.
-del _parameterClassFromName
 
 #-----------------------------------------------------------------------------
 # Create Messages classes from the specs.
