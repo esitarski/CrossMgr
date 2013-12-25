@@ -92,8 +92,7 @@ class _FieldDef( object ):
 			elif ftype.startswith('bits'):
 				v = getattr( obj, attr )
 				length = int(ftype.split(':')[1])
-				#for i in xrange(length-1, -1, -1):
-				for i in xrange(length):
+				for i in xrange(length-1, -1, -1):
 					s.append( bitstring.pack('bool', bool(v & (1<<i))) )
 			elif ftype == 'string':
 				st = getattr(obj, attr, '')
@@ -106,14 +105,16 @@ class _FieldDef( object ):
 				for e in arr:
 					s.append( bitstring.Bits(uintbe=e, length=length) )
 			elif ftype == 'bitarray':
+				# Expects bytes.
 				st = getattr(obj, attr, '')
 				if isinstance(st, (int, long)):
+					# Convert an int to bytes.
+					assert st > 0, 'bitarray cannot be initialized with negative integer'
 					v = bytes(st)
-					if len(v) % 2 == 1:
-						v = '0' + v
-					st = [int(v[i:i+2], 16) for i in xrange(0, len(v), 2)]
+					v = zfill( len(v) + len(v) % 1 )
+					st = ''.join(chr(int(v[i:i+2], 16)) for i in xrange(0, len(v), 2))
 				s.append( bitstring.Bits(uintbe=len(st)*8, length=16) )
-				s.append( bitstring.Bits(bytes=bytes(st)) )
+				s.append( bitstring.Bits(bytes=st) )
 			elif ftype.startswith('skip'):
 				skip = int(ftype.split(':',1)[1])
 				assert skip > 0
@@ -214,6 +215,7 @@ def _initFieldDefs( self, *args, **kwargs ):
 		self._MessageID = _CurMessageIDCounter.next()
 
 def _setSingleField( self, value ):
+	assert self.FieldCount == 1, 'Object can only have one field to initialize with _setSingleField'
 	setattr( self, self.__slots__[0], value )
 		
 def _getValues( self ):
@@ -383,6 +385,7 @@ def _MakeClass( messageOrParameter, Name, Type, PackUnpack ):
 		'FieldCount':		sum( 1 for f in PackUnpack.FieldDefs if not f.Name.startswith('skip') ),			# Field count for convenience.
 		'DataFields':		[ f for f in PackUnpack.FieldDefs if not f.Name.startswith('skip') ],				# List of data fields.
 		'__init__':			_initFieldDefs,			# Initialize the object and default field values.
+		'_setSingleField':	_setSingleField,		# Set the single field from a position argument (fails on multi-field objects).
 		'_getRepr':			_getRepr,				# Routine to format the message/parameter.
 		'__repr__':			_getRepr,				# Default formatting call.
 		'_getValues':		_getValues,				# Gets all values of specified fields.
@@ -399,8 +402,6 @@ def _MakeClass( messageOrParameter, Name, Type, PackUnpack ):
 		classAttrs['send'] = _sendToSocket										# Also add "send" method.
 		if Name.endswith( 'RESPONSE' ):
 			classAttrs['success'] = _getLLRPStatusSuccess
-	if classAttrs['FieldCount'] == 1:
-		classAttrs['_setSingleField'] = _setSingleField
 
 	MPClass = type( Name + '_' + messageOrParameter, (object,), classAttrs )	# Dynamically create the class.
 	return MPClass
@@ -715,7 +716,7 @@ def WaitForMessage( MessageID, sock, nonMatchingMessageHandler = None ):
 		response = UnpackMessageFromSocket( sock )
 		if response.MessageID == MessageID:
 			return response
-		elif nonMatchinMessageHandler:
+		elif nonMatchingMessageHandler:
 			nonMatchingMessageHandler( response )
 
 #-----------------------------------------------------------------------------

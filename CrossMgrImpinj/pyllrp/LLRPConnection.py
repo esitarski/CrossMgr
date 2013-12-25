@@ -102,8 +102,8 @@ class LLRPConnection( object ):
 	
 	def callHandler( self, message ):
 		''' Call all the handlers for this message. '''
-		for cb in (self.handlers.get(response.__class__, None) or self.handlers.get('default', [])):
-			cb( response )
+		for cb in (self.handlers.get(message.__class__, None) or self.handlers.get('default', [])):
+			cb( message )
 	
 	def listen( self ):
 		''' Listen for messages from the reader. '''
