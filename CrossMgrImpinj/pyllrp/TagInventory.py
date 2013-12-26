@@ -4,105 +4,85 @@ import sys
 import time
 import socket
 import datetime
-
-# If we are running from the development folder, change to a local search path.
-if os.path.basename(os.path.dirname(os.path.abspath(__file__))) == 'pyllrp':
-	from pyllrp import *
-	from LLRPConnection import LLRPConnection
-else:
-	from pyllrp.pyllrp import *
-	from pyllrp.LLRPConnection import LLRPConnection
+from pyllrp import *
+from LLRPConnector import LLRPConnector
 
 class TagInventory( object ):
-	rospecID = 123					# Arbitrary rospecID.
+	roSpecID = 123					# Arbitrary roSpecID.
 	inventoryParameterSpecID = 1234	# Arbitrary inventory parameter spec id.
+	readWaitMilliseconds = 100
 
-	def __init__( self, host = '192.168.10.102' ):
+	def __init__( self, host = '192.168.10.102', antennas = None ):
 		self.host = host
-		self.timeCorrection = None
-		self.conn = None
+		self.connector = None
+		self.antennas = antennas if antennas else [0]
+		self.resetTagInventory()
+		
+	def resetTagInventory( self ):
 		self.tagInventory = set()
+		self.otherMessages = []
 
-	def AccessReportHandler( self, accessReport ):
+	def AccessReportHandler( self, connector, accessReport ):
 		for tag in accessReport.getTagData():
 			tagID = HexFormatToStr( tag['EPC'] )
-			discoveryTime = tag['Timestamp']		# In microseconds since Jan 1, 1970
-			discoveryTime = datetime.datetime.utcfromtimestamp( discoveryTime / 1000000.0 ) + self.timeCorrection
-			print tagID, discoveryTime
+			discoveryTime = self.connector.tagTimeToComputerTime( tag['Timestamp'] )
 			self.tagInventory.add( tagID )
 
-	def DefaultHandler( self, message ):
+	def DefaultHandler( self, connector, message ):
 		print 'Unknown Message:'
 		print message
+		self.otherMessages.append( message )
 
 	def Connect( self ):
 		# Create the reader connection.
-		self.conn = LLRPConnection()
-
-		# Add a callback so we can record the tag reads.
-		self.conn.addHandler( RO_ACCESS_REPORT_Message, self.AccessReportHandler )
-
-		# Add a default callback so we can see what else comes from the reader.
-		self.conn.addHandler( 'default', self.DefaultHandler )
+		self.connector = LLRPConnector()
 
 		# Connect to the reader.
 		try:
-			response = self.conn.connect( self.host )
+			response = self.connector.connect( self.host )
 		except socket.timeout:
 			print '**** Connect timed out.  Check reader hostname and connection. ****'
 			raise
-		print response
 
-		# Compute a correction between the reader's time and the computer's time.
-		readerTime = response.getFirstParameterByClass(UTCTimestamp_Parameter).Microseconds
-		readerTime = datetime.datetime.utcfromtimestamp( readerTime / 1000000.0 )
-		self.timeCorrection = datetime.datetime.now() - readerTime
-		print 'Reader timestamp is:', readerTime
-		print self.timeCorrection, self.timeCorrection.total_seconds()
-
-		# Disable all the rospecs.  This command may fail so we ignore the response.
-		response = self.conn.transact( DISABLE_ROSPEC_Message(ROSpecID = 0) )
-
-		# Delete our old rospec if it exists.  This command might fail so we ignore the return.
-		response = self.conn.transact( DELETE_ROSPEC_Message(ROSpecID = self.rospecID) )
-		#print response
-		
 	def Disconnect( self ):
-		print 'Shutting down the connection...'
-		response = self.conn.disconnect()
-		print response
-		self.conn = None
+		response = self.connector.disconnect()
+		self.connector = None
 
-	def SetROSpec( self ):
+	def GetROSpec( self ):
 		# Create an rospec that reports reads.
-		response = self.conn.transact(
-			ADD_ROSPEC_Message( Parameters = [
+		return ADD_ROSPEC_Message( Parameters = [
 				ROSpec_Parameter(
-					ROSpecID = self.rospecID,
+					ROSpecID = self.roSpecID,
 					CurrentState = ROSpecState.Disabled,
 					Parameters = [
 						ROBoundarySpec_Parameter(		# Configure boundary spec (start and stop triggers for the reader).
 							Parameters = [
 								ROSpecStartTrigger_Parameter(ROSpecStartTriggerType = ROSpecStartTriggerType.Immediate),
-								ROSpecStopTrigger_Parameter(
-									ROSpecStopTriggerType = ROSpecStopTriggerType.Duration,
-									DurationTriggerValue = 500
-								),
+								ROSpecStopTrigger_Parameter(ROSpecStopTriggerType = ROSpecStopTriggerType.Null),
 							]
 						), # ROBoundarySpec
 						AISpec_Parameter(				# Antenna Inventory Spec (specifies which antennas and protocol to use)
-							AntennaIDs = [0],			# Use all antennas.
+							AntennaIDs = self.antennas,
 							Parameters = [
-								AISpecStopTrigger_Parameter( AISpecStopTriggerType = AISpecStopTriggerType.Null ),
+								AISpecStopTrigger_Parameter(
+									AISpecStopTriggerType = AISpecStopTriggerType.Tag_Observation,
+									Parameters = [
+										TagObservationTrigger_Parameter(
+											TriggerType = TagObservationTriggerType.N_Attempts_To_See_All_Tags_In_FOV_Or_Timeout,
+											NumberOfAttempts = 10,
+											Timeout = self.readWaitMilliseconds,
+										),
+									]
+								),
 								InventoryParameterSpec_Parameter(
 									InventoryParameterSpecID = self.inventoryParameterSpecID,
 									ProtocolID = AirProtocols.EPCGlobalClass1Gen2,
 								),
 							]
 						), # AISpec
-						ROReportSpec_Parameter(			# Report spec (specified how often and what to send from the reader)
+						ROReportSpec_Parameter(			# Report spec (specifies how often and what to send from the reader)
 							ROReportTrigger = ROReportTriggerType.Upon_N_Tags_Or_End_Of_ROSpec,
-							N = 100,
+							N = 10000,
 							Parameters = [
 								TagReportContentSelector_Parameter(
 									EnableAntennaID = True,
@@ -112,36 +92,51 @@ class TagInventory( object ):
 						), # ROReportSpec
 					]
 				), # ROSpec_Parameter
-			])	# ADD_ROSPEC_Message
-		)
-		#print response
-		assert response.success()
+			]
+		)	# ADD_ROSPEC_Message
 
+	def _prolog( self ):
+		# Disable all the rospecs.  This command may fail so we ignore the response.
+		response = self.connector.transact( DISABLE_ROSPEC_Message(ROSpecID = 0) )
+		# Delete our old rospec if it exists.  This command might fail so we ignore the return.
+		response = self.connector.transact( DELETE_ROSPEC_Message(ROSpecID = self.roSpecID) )
+
+		# Add callbacks so we can record the tag reads and any other messages from the reader.
+		self.resetTagInventory()
+		self.connector.addHandler( RO_ACCESS_REPORT_Message, self.AccessReportHandler )
+		self.connector.addHandler( 'default', self.DefaultHandler )
+
+		# Add and enable our ROSpec
+		response = self.connector.transact( self.GetROSpec() )
+		assert response.success(), 'Add ROSpec Fails'
+		
+	def _execute( self ):
+		response = self.connector.transact( ENABLE_ROSPEC_Message(ROSpecID = self.roSpecID) )
+		assert response.success(), 'Enable ROSpec Fails'
+		
+		# Wait for the reader to do its work.
+		time.sleep( (1.5*self.readWaitMilliseconds) / 1000.0 )
+		
+		response = self.connector.transact( DISABLE_ROSPEC_Message(ROSpecID = self.roSpecID) )
+		assert response.success(), 'Disable ROSpec Fails'
+		
+	def _epilog( self ):
+		# Cleanup.
+		response = self.connector.transact( DELETE_ROSPEC_Message(ROSpecID = self.roSpecID) )
+		assert response.success(), 'Delete ROSpec Fails'
+		self.connector.removeAllHandlers()
+		
 	def GetTagInventory( self ):
-		# Enable our ROSpec
-		response = self.conn.transact( ENABLE_ROSPEC_Message(ROSpecID = self.rospecID) )
-		assert response.success()
-
-		self.tagInventory = set()
-		
-		# Start thread to listen to the reader for a while.
-		print 'Listen to the connection...'
-		self.conn.startListener()
-		time.sleep( 0.6 )			# Wait for some reads.
-		self.conn.stopListener()
-		
-		response = self.conn.transact( DISABLE_ROSPEC_Message(ROSpecID = self.rospecID) )
-		assert response.success()
-		
-		return self.tagInventory
+		self._prolog()
+		self._execute()
+		self._epilog()
+		return self.tagInventory, self.otherMessages
 
 if __name__ == '__main__':
 	'''Read a tag inventory from the reader and shutdown.'''
 	host = '192.168.10.102'
 	ti = TagInventory( host )
 	ti.Connect()
-	ti.SetROSpec()
-	tagInventory = ti.GetTagInventory()
-	for t in tagInventory:
-		print t
+	tagInventory, otherMessages = ti.GetTagInventory()
+	print '\n'.join( tagInventory )
 	ti.Disconnect()

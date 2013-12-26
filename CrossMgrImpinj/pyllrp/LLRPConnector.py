@@ -2,9 +2,10 @@
 from pyllrp import *
 from Queue import Queue, Empty
 import socket
+import datetime
 import threading
 
-class LLRPConnection( object ):
+class LLRPConnector( object ):
 	#--------------------------------------------------------------------------
 	#
 	# A simple LLRP reader connection manager.
@@ -25,6 +26,7 @@ class LLRPConnection( object ):
 		self.thread = None
 		self.shutdownQ = None		# Used to shutdown the thread.
 		self.keepGoing = False
+		self.timeCorrection = None
 	
 	def connect( self, host, port = 5084 ):
 		''' Connect to a reader. '''
@@ -40,7 +42,21 @@ class LLRPConnection( object ):
 		# Waiting for READER_EVENT_NOTIFICATION...
 		response = UnpackMessageFromSocket( self.readerSocket )
 		self.keepGoing = True
+		
+		# Compute a correction between the reader's time and the computer's time.
+		self.timeCorrection = None
+		try:
+			microseconds = response.getFirstParameterByClass(UTCTimestamp_Parameter).Microseconds
+			readerTime = datetime.datetime.utcfromtimestamp( microseconds / 1000000.0 )
+			self.timeCorrection = datetime.datetime.now() - readerTime
+		except Exception as e:
+			pass
+		
 		return response
+		
+	def tagTimeToComputerTime( self, tagTime ):
+		# Time is in microseconds from Jan 1, 1970.
+		return datetime.datetime.utcfromtimestamp( tagTime / 1000000.0 ) + self.timeCorrection
 	
 	def disconnect( self ):
 		''' Disconnect from a reader.  Also stops the listener. '''
@@ -78,6 +94,9 @@ class LLRPConnection( object ):
 					self.handlers[messageClass].remove( handlerFunc )
 				except (KeyError, ValueError):
 					break
+					
+	def removeAllHandlers( self ):
+		self.handlers = {}
 	
 	def transact( self, message ):
 		''' Send a message to the reader and wait for the response. '''
@@ -103,7 +122,7 @@ class LLRPConnection( object ):
 	def callHandler( self, message ):
 		''' Call all the handlers for this message. '''
 		for cb in (self.handlers.get(message.__class__, None) or self.handlers.get('default', [])):
-			cb( message )
+			cb( self, message )
 	
 	def listen( self ):
 		''' Listen for messages from the reader. '''
