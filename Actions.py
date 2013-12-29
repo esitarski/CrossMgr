@@ -179,7 +179,7 @@ class Actions( wx.Panel ):
 		self.raceIntro = wx.StaticText( self, wx.ID_ANY, '' )
 		self.raceIntro.SetFont( wx.Font(24, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
 		
-		choices = [	_('Record Tags Normally'),
+		choices = [	_('Record Every Tag Individually'),
 					_('Reset Start Clock on First Tag Read (all riders will get the same start time of the first read)'),
 					_('Skip First Tag Read for All Riders (required when there is a start run-up that passes through the finish on the first lap)')]
 		self.chipTimingOptions = wx.RadioBox( self, wx.ID_ANY, "Chip Timing Options", majorDimension = 1, choices = choices, style = wx.RA_SPECIFY_COLS )

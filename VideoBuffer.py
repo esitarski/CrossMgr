@@ -5,12 +5,13 @@ import time
 import Utils
 import Model
 import PhotoFinish
-import datetime
+from FrameCircBuf import FrameCircBuf
+from datetime import datetime, timedelta
 import threading
 from Utils import logCall, logException
 from Queue import Queue, Empty
 
-now = datetime.datetime.now
+now = datetime.now
 
 fileFormat = 'bib-%04d-time-%s-%d.jpg'
 def GetFilename( bib, t, dirName, i ):
@@ -47,7 +48,7 @@ class FrameSaver( threading.Thread ):
 		self.queue.put( ['Save', fileName, bib, t, frame] )
 	
 class VideoBuffer( threading.Thread ):
-	def __init__( self, camera, refTime = None, dirName = '.', fps = 25, bufferSeconds = 3.0 ):
+	def __init__( self, camera, refTime = None, dirName = '.', fps = 25, bufferSeconds = 4.0 ):
 		threading.Thread.__init__( self )
 		self.daemon = True
 		self.name = 'VideoBuffer'
@@ -58,14 +59,15 @@ class VideoBuffer( threading.Thread ):
 		self.frameMax = int(fps * bufferSeconds)
 		self.frameDelay = 1.0 / fps
 		self.frameSaver = None
+		self.fcb = FrameCircBuf()
 		self.reset()
 	
 	def reset( self ):
+		
 		if self.frameSaver and self.frameSaver.is_alive():
 			self.frameSaver.stop()
-			
-		self.frames = [(0.0, None)] * self.frameMax
-		self.frameCur =  self.frameMax - 1
+		
+		self.fcb.reset( self.frameMax )
 		self.frameCount = 0
 		
 		self.frameSaver = FrameSaver()
@@ -77,11 +79,9 @@ class VideoBuffer( threading.Thread ):
 		self.reset()
 		keepGoing = True
 		while keepGoing:
+			tNow = now()
 			try:
-				tGrab = now()
-				tRace = (tGrab - self.refTime).total_seconds()
-				self.frames[self.frameCur] = (tRace, self.camera.getImage())
-				self.frameCur = (self.frameCur + 1) % self.frameMax
+				self.fcb.append( tNow, self.camera.getImage() )
 			except Exception as e:
 				logException( e, sys.exc_info() )
 				break
@@ -94,14 +94,15 @@ class VideoBuffer( threading.Thread ):
 				
 				if   message[0] == 'Save':
 					cmd, bib, t = message
-					tFind = t + getattr(Model.race, 'advancePhotoMilliseconds', Model.Race.advancePhotoMillisecondsDefault) / 1000.0
-					if tFind > tRace:
-						threading.Timer( tFind - tRace, self.takePhoto, args=[bib, t] ).start()
+					tFind = self.refTime + timedelta( seconds = t + getattr(Model.race, 'advancePhotoMilliseconds', Model.Race.advancePhotoMillisecondsDefault) / 1000.0 )
+					if tFind > tNow:
+						threading.Timer( (tFind - tNow).total_seconds() + 0.1, self.takePhoto, args=[bib, t] ).start()
 						continue
 						
-					frames = self.findBeforeAfter( tFind, 1, 0 )
+					times, frames = self.fcb.findBeforeAfter( tFind, 0, 1 )
 					for i, frame in enumerate( frames ):
-						self.frameSaver.save( GetFilename(bib, t, self.dirName, i), bib, t, frame[1] )
+						t = (times[i]-self.refTime).total_seconds()
+						self.frameSaver.save( GetFilename(bib, t, self.dirName, i), bib, t, frame )
 					self.frameCount += len(frames)
 					self.queue.task_done()
 					
@@ -112,10 +113,10 @@ class VideoBuffer( threading.Thread ):
 					break
 				
 			# Sleep until we need to grab the next frame.
-			frameWait = self.frameDelay - (now() - tGrab).total_seconds()
+			frameWait = self.frameDelay - (now() - tNow).total_seconds()
 			if frameWait < 0.0:
 				frameWait = self.frameDelay		# Give some more time if we are falling behind.
-			time.sleep( frameWait )	
+			time.sleep( frameWait )
 	
 	def stop( self ):
 		self.queue.put( ['Terminate'] )
@@ -128,29 +129,17 @@ class VideoBuffer( threading.Thread ):
 		self.queue.put( ['Save', bib, t] )
 	
 	def getT( self, i ):
-		return self.frames[ (i + self.frameCur) % self.frameMax ][0]
+		return self.fcb.getT(i)
 		
 	def getFrame( self, i ):
-		return self.frames[ (i + self.frameCur) % self.frameMax ][1]
+		return self.fcb.getFrame(i)
 	
 	def getTimeFrame( self, i ):
-		return self.frames[ (i + self.frameCur) % self.frameMax ]
+		return (self.fcb.getT(i), self.fcb.getFrame(i))
 		
 	def __len__( self ):
 		return self.frameMax
-		
-	def find( self, t, before = 2, after = 1 ):
-		return self.findBeforeAfter( t, before, after )
 	
-	def findBeforeAfter( self, t, before = 2, after = 1 ):
-		frames = self.frames
-		frameCur = self.frameCur
-		frameMax = self.frameMax
-		for iBest in xrange(frameMax-1, -1, -1):
-			if frames[ (iBest + frameCur) % frameMax ][0] < t:
-				return [self.getTimeFrame(i) for i in xrange(max(0, iBest-before+1), min(frameMax, iBest+after+1)) if self.getFrame(i)]
-		return []
-
 videoBuffer = None
 def StartVideoBuffer( refTime, raceFileName):
 	global videoBuffer
@@ -225,24 +214,20 @@ if __name__ == '__main__':
 	import random
 	import shutil
 	
-	'''
-	import dis
-	dis.dis( VideoBuffer.run )
-	print '------------'
-	dis.dis( VideoBuffer.grabFrame )
-	print '------------'
-	dis.dis( VideoBuffer.find )
-	sys.exit()
-	'''
-	
 	app = wx.App(False)
 	app.SetAppName("CrossMgr")
 	Utils.disable_stdout_buffering()
 	
 	dirName = 'VideoBufferTest_Photos'
 	if os.path.isdir(dirName):
-		shutil.rmtree( dirName, True )
-	os.mkdir( dirName )
+		try:
+			shutil.rmtree( dirName, True )
+		except Exception as e:
+			print e
+	try:
+		os.mkdir( dirName )
+	except Exception as e:
+		print e
 	
 	tRef = now()
 	camera = PhotoFinish.SetCameraState( True )

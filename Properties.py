@@ -56,7 +56,7 @@ class Properties( wx.Panel ):
 		rows += 1
 
 		self.minutesLabel = wx.StaticText( self, label =  _('Race Minutes:') )
-		self.minutes = intctrl.IntCtrl( self, min=1, max=60*12, allow_none=False, value=40 )
+		self.minutes = intctrl.IntCtrl( self, min=1, max=60*24, allow_none=False, value=40 )
 		rows += 1
 
 		self.raceDisciplineLabel = wx.StaticText( self, label =  _('Discipline:') )

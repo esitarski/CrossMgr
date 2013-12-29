@@ -1,7 +1,7 @@
 import types
 import datetime
 
-class PhotoCircBuf( object ):
+class FrameCircBuf( object ):
 	def __init__( self, bufSize = 75 ):
 		self.reset( bufSize )
 		
@@ -21,20 +21,27 @@ class PhotoCircBuf( object ):
 		
 		# Generate a search function for the buffer size.
 		stmts = [
-			'def find( self, t ):',
+			'def _find( self, t ):',
 			' iStart = self.iStart',
 			' bufSize = self.bufSize',
 			' times = self.times',
 		]
 		self._genFind( stmts, 1, 0, self.bufSize )
-		print( '\n'.join(stmts) + '\n' )
+		#print( '\n'.join(stmts) + '\n' )
 		exec( '\n'.join(stmts) + '\n' )
-		self.find = types.MethodType(find,self)
+		self._find = types.MethodType(_find,self)
 
 	def clear( self ):
-		self.frames = [None for i in xrange(self.bufSize)]		
+		self.frames = [None for i in xrange(self.bufSize)]
+		
+	def getT( self, i ):
+		return self.times[(i+self.iStart)%self.bufSize]
+		
+	def getFrame( self, i ):
+		return self.frames[(i+self.iStart)%self.bufSize]
 
 	def append( self, t, frame ):
+		''' Replace the oldest frame and time. '''
 		self.times[self.iStart] = t
 		self.frames[self.iStart] = frame
 		self.iStart = (0 if self.iStart == self.bufSize - 1 else self.iStart + 1)
@@ -53,8 +60,8 @@ class PhotoCircBuf( object ):
 				stmts.append( '{}i = ({}+iStart)%bufSize'.format(' '*level, left) )
 				stmts.append( '{}return i if t <= times[i] else (i+1)%bufSize '.format(' '*level) )
 
-	def getFrames( self, t, before = 0, after = 1 ):
-		i = self.find( t )
+	def findBeforeAfter( self, t, before = 0, after = 1 ):
+		i = self._find( t )
 		if self.times[i] < t:
 			return [], []
 			
@@ -65,7 +72,8 @@ class PhotoCircBuf( object ):
 		
 		retTimes = []
 		retFrames = []
-		if  before != 0 and i != self.iStart:
+		
+		if before and i != self.iStart:
 			for b in xrange(1, before):
 				k = (i-b) % bufSize
 				retTimes.append( times[k] )
@@ -74,16 +82,20 @@ class PhotoCircBuf( object ):
 					break
 			retTimes.reverse()
 			retFrames.reverse()
-		for a in xrange(0, after):
-			k = (i+a) % bufSize
-			if k == iStart:
-				break
-			retTimes.append( times[k] )
-			retFrames.append( frames[k] )
+			
+		if after:
+			retTimes.append( times[i] )
+			retFrames.append( frames[i] )
+			for a in xrange(1, after):
+				k = (i+a) % bufSize
+				if k == iStart:
+					break
+				retTimes.append( times[k] )
+				retFrames.append( frames[k] )
 		
 		return retTimes, retFrames
 
-	def loopFind( self, t ):
+	def _loopFind( self, t ):
 		iStart = self.iStart
 		bufSize = self.bufSize
 		times = self.times
@@ -101,19 +113,19 @@ class PhotoCircBuf( object ):
 
 if __name__ == '__main__':
 	bufSize = 5*75
-	pcb = PhotoCircBuf( bufSize )
-	pcb.reset( 6*75 )
+	fcb = FrameCircBuf( bufSize )
+	fcb.reset( 6*75 )
 	
-	for t in pcb.times:
+	for t in fcb.times:
 		print t.strftime( '%H:%M:%S.%f' )
 	print
 	
 	tSearch = datetime.datetime.now() - datetime.timedelta(seconds = 4)
-	i = pcb.find( tSearch )
-	print i, tSearch.strftime( '%H:%M:%S.%f' ), pcb.times[i].strftime( '%H:%M:%S.%f' )
+	i = fcb._find( tSearch )
+	print i, tSearch.strftime( '%H:%M:%S.%f' ), fcb.times[i].strftime( '%H:%M:%S.%f' )
 	
 	print 'getFrames'
-	times, frames = pcb.getFrames( tSearch, 5, 5 )
+	times, frames = fcb.findBeforeAfter( tSearch, 5, 5 )
 	for t in times:
 		print t.strftime( '%H:%M:%S.%f' )
 	
@@ -123,24 +135,24 @@ if __name__ == '__main__':
 		tSearchCur = tSearch - datetime.timedelta(seconds = i%bufSize)
 		'''
 		print i
-		f1 = pcb.find( tSearchCur )
-		f2 = pcb.loopFind( tSearchCur )
+		f1 = fcb._find( tSearchCur )
+		f2 = fcb._loopFind( tSearchCur )
 		print f1, f2
 		print tSearchCur.strftime( '%H:%M:%S.%f' )
 		print
-		print pcb.times[0].strftime( '%H:%M:%S.%f' )
-		print pcb.times[1].strftime( '%H:%M:%S.%f' )
+		print fcb.times[0].strftime( '%H:%M:%S.%f' )
+		print fcb.times[1].strftime( '%H:%M:%S.%f' )
 		'''
-		assert pcb.find( tSearchCur ) == pcb.loopFind( tSearchCur )
+		assert fcb._find( tSearchCur ) == fcb._loopFind( tSearchCur )
 	
 	print 'Performance'
 	t = datetime.datetime.now()
 	for i in xrange(300000):
-		pcb.find( tSearch - datetime.timedelta(seconds = i%bufSize) )
+		fcb._find( tSearch - datetime.timedelta(seconds = i%bufSize) )
 	print datetime.datetime.now() - t
 	
 	t = datetime.datetime.now()
 	for i in xrange(300000):
-		pcb.loopFind( t - datetime.timedelta( seconds = i%bufSize ) )
+		fcb._loopFind( t - datetime.timedelta( seconds = i%bufSize ) )
 	print datetime.datetime.now() - t
 	
