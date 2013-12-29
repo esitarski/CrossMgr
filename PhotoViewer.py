@@ -28,6 +28,7 @@ def getFileKey( f ):
 	Expects filename of the form:  "Bib-XXXX-time-HH-MM-SS-DDD.jpeg"
 	'''
 	return os.path.splitext(os.path.basename(f))[0].split('-')[3:]
+	#return os.path.getmtime( f )
 	
 def CmpThumb(first, second):
 	"""
@@ -49,11 +50,11 @@ def ListDirectory(self, directory, fileExtList):
 	:param `fileExtList`: a Python list of file extensions to consider.
 	"""
 
-	fileList = [os.path.normcase(f) for f in os.listdir(directory)]               
-	fileList = [f for f in fileList if os.path.splitext(f)[1] in fileExtList]                          
+	fileList = [os.path.normcase(f) for f in os.listdir(directory)]
+	fileList = [f for f in fileList if os.path.splitext(f)[1] in fileExtList]
 	fileList = [f for f in fileList
 		if os.path.basename(f).startswith(self.filePrefix) and os.path.splitext(f)[1] in ['.jpeg', '.jpg'] ]
-	fileList.sort( key = getFileKey )
+	fileList.sort( key = lambda f: getFileKey(os.path.join(directory, f)) )
 	return fileList[-200:]	# Limit to the last 200 photos so as not to crash the system.
 
 def getRiderNameFromFName( fname ):

@@ -169,11 +169,12 @@ def TakePhoto( raceFileName, bib, raceSeconds ):
 		return 0
 	
 	if not videoBuffer:
-		if not StartVideoBuffer(Model.race.startTime, raceFileName):
+		if not StartVideoBuffer(race.startTime, raceFileName):
 			return 0
-		
+	
+	videoBuffer.refTime = race.startTime
 	videoBuffer.takePhoto( bib, raceSeconds )
-	return videoBuffer.frameCount - getattr(race,'photoCount',0) + 3
+	return videoBuffer.frameCount - getattr(race,'photoCount',0) + 1
 	
 def Shutdown():
 	global videoBuffer

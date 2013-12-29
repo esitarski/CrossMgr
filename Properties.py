@@ -38,7 +38,7 @@ class Properties( wx.Panel ):
 		self.locationSizer.Add( self.raceStateProvLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border = 4 )
 		self.locationSizer.Add( self.raceStateProv, 1, flag=wx.EXPAND )
 		self.locationSizer.Add( self.raceCountryLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border = 4 )
-		self.locationSizer.Add( self.raceCountry, 3, flag=wx.EXPAND )
+		self.locationSizer.Add( self.raceCountry, 2, flag=wx.EXPAND )
 		rows += 1
 		
 		self.dateLabel = wx.StaticText( self, label = _('Date:') )

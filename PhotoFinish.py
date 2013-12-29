@@ -206,8 +206,8 @@ if Device:
 		# Open the camera if it is not open yet.
 		if camera is None:
 			SetCameraState( True )
-			Utils.writeLog( 'TakePhoto: SetCameraState fails' )
 			if not camera:
+				Utils.writeLog( 'TakePhoto: SetCameraState fails' )
 				return 0
 		
 		# Take the picture as quickly as possible.
