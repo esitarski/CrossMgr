@@ -757,7 +757,7 @@ def GetBasicAddRospecMessage( MessageID = None, ROSpecID = 123, inventoryParamet
 							Parameters = [
 								TagObservationTrigger_Parameter(
 									TriggerType = TagObservationTriggerType.Upon_Seeing_N_Tags_Or_Timeout,
-									NumberOfTags = 250,
+									NumberOfTags = 500,
 									NumberOfAttempts = 1,
 									Timeout = 500,		# Milliseconds
 									T = 0,				# Idle time between responses.

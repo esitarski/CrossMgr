@@ -42,9 +42,10 @@ class FrameCircBuf( object ):
 
 	def append( self, t, frame ):
 		''' Replace the oldest frame and time. '''
-		self.times[self.iStart] = t
-		self.frames[self.iStart] = frame
-		self.iStart = (0 if self.iStart == self.bufSize - 1 else self.iStart + 1)
+		iStart = self.iStart
+		self.times[iStart] = t
+		self.frames[iStart] = frame
+		self.iStart = (iStart + 1) % self.bufSize
 
 	def _genFind( self, stmts, level, left, right ):
 		if right - left > 1:
@@ -73,12 +74,12 @@ class FrameCircBuf( object ):
 		retTimes = []
 		retFrames = []
 		
-		if before and i != self.iStart:
+		if before and i != iStart:
 			for b in xrange(1, before):
 				k = (i-b) % bufSize
 				retTimes.append( times[k] )
 				retFrames.append( frames[k] )
-				if k == self.iStart:
+				if k == iStart:
 					break
 			retTimes.reverse()
 			retFrames.reverse()
