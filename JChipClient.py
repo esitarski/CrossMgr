@@ -148,7 +148,7 @@ while 1:
 
 	#------------------------------------------------------------------------------	
 	dBase = datetime.datetime.now()
-	dBase -= datetime.timedelta( seconds = 13*60+13.13 )	# Send the time for testing purposes.
+	dBase -= datetime.timedelta( seconds = 13*60+13.13 )	# Send the wrong time for testing purposes.
 
 	#------------------------------------------------------------------------------	
 	print 'Send gettime data...'
@@ -176,7 +176,7 @@ while 1:
 		
 		time.sleep( dt )
 		
-		message = formatMessage( n, lap, dBase + datetime.timedelta(seconds = t) )
+		message = formatMessage( n, lap, dBase + datetime.timedelta(seconds = t - 0.5) )
 		sys.stdout.write( 'sending: %d: %s\n' % (iMessage, message[:-1]) )
 		try:
 			sock.send( message )

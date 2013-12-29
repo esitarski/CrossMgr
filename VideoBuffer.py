@@ -33,6 +33,7 @@ class FrameSaver( threading.Thread ):
 			message = self.queue.get()
 			if   message[0] == 'Save':
 				cmd, fileName, bib, t, frame = message
+				#sys.stderr.write( 'save' )
 				PhotoFinish.SavePhoto( fileName, bib, t, frame )
 				self.queue.task_done()
 			elif message[0] == 'Terminate':
@@ -79,6 +80,7 @@ class VideoBuffer( threading.Thread ):
 		self.reset()
 		keepGoing = True
 		while keepGoing:
+			#sys.stderr.write( '.' )
 			tNow = now()
 			try:
 				self.fcb.append( tNow, self.camera.getImage() )
