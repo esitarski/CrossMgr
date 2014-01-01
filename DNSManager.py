@@ -141,7 +141,7 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 				return
 		
 			for num, info in externalInfo.iteritems():
-				if self.category and race.getCategory(num) != self.category:
+				if self.category and not race.inCategory(num, self.category):
 					continue
 				rider = race.riders.get( num, None )
 				if not rider:

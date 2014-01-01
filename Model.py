@@ -1641,7 +1641,7 @@ class Race(object):
 			return self.categoryCache.get(num, None)
 		except (TypeError, AttributeError):
 			pass
-			
+		
 		# Reset the cache for all categories by sequence number.
 		self.categoryCache = {}
 		categories = [c for c in self.categories.itervalues() if c.active]
@@ -1652,6 +1652,14 @@ class Race(object):
 					self.categoryCache[n] = c
 					
 		return self.categoryCache.get(num, None)
+	
+	def inCategory( self, num, category ):
+		# Check the cache for this rider.
+		try:
+			return category == None or self.categoryCache.get(num, None) == category
+		except (TypeError, AttributeError):
+			pass
+		return self.getCategory(num) == category
 	
 	def getCategoriesInUse( self ):
 		catSet = set()

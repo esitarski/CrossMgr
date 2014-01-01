@@ -193,7 +193,7 @@ class History( wx.Panel ):
 		undo.pushState()
 		with Model.LockRace() as race:
 			for rPrev in xrange( r - 1, -1, -1 ):
-				if not h[c][rPrev].interp and (self.category is None or race.getCategory(h[c][rPrev].num) == self.category):
+				if not h[c][rPrev].interp and (self.category is None or race.inCategory(h[c][rPrev].num, self.category)):
 					EditEntry.SwapEntry( h[c][r], h[c][rPrev] )
 					success = True
 					break
@@ -208,7 +208,7 @@ class History( wx.Panel ):
 		undo.pushState()
 		with Model.LockRace() as race:
 			for rNext in xrange( r + 1, len(h[c]) ):
-				if not h[c][rNext].interp and (self.category is None or race.getCategory(h[c][rNext].num) == self.category):
+				if not h[c][rNext].interp and (self.category is None or race.inCategory(h[c][rNext].num, self.category)):
 					EditEntry.SwapEntry( h[c][r], h[c][rNext] )
 					success = True
 					break
@@ -409,7 +409,7 @@ class History( wx.Panel ):
 			# Trim out elements not in the desired category.
 			if category:
 				for c in xrange(len(self.history)):
-					self.history[c] = [e for e in self.history[c] if race.getCategory(e.num) == category]
+					self.history[c] = [e for e in self.history[c] if race.inCategory(e.num, category)]
 			
 			if not any( h for h in self.history ):
 				self.clearGrid()

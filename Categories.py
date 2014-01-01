@@ -54,7 +54,7 @@ class CategoriesPrintout( wx.Printout ):
 		raceStart = Utils.StrToSeconds( race.scheduledStart + ':00' )
 		catData = []
 		for c in race.getCategories():
-			starters = sum( 1 for num in externalInfo.iterkeys() if c == race.getCategory(num) )
+			starters = sum( 1 for num in externalInfo.iterkeys() if race.inCategory(num, c) )
 			if not starters:
 				starters = ''
 			catInfo = catDetails.get( c.fullname, {} )

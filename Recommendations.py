@@ -211,7 +211,7 @@ class Recommendations( wx.Panel ):
 					# Get the first recorded rider of the category.
 					firstRiderTime = None
 					for e in entries:
-						if race.getCategory(e.num) != catCur:
+						if not race.inCategory(e.num, catCur):
 							continue
 						rider = race[e.num]
 						t = rider.getFirstKnownTime()
