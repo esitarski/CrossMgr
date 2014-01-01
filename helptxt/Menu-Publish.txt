@@ -38,8 +38,8 @@ If "Automatically Upload Results During Race" is selected, CrossMgr will automat
 
 If you fill in the "URL Path", CrossMgr will open a browser on the "Race Results URL" after you press OK.  Use this to test whether the upload worked correctly and that the "Race Results URL" can access the FTP published file as expected.
 
-The "Print Results URL as a QR Code..." button prints a page with the QR Code corresponding to the URL Path and Race (QR Codes are square barcodes).
-Print out this page and post it at the race.  Then, spectators can read the QR Code with their Smartphones and instantly access the web Results page.
+The "Print Results URL as a QR Code..." button prints a page with the [QR Code](http://en.wikipedia.org/wiki/QR_code) corresponding to the URL Path and Race (QR Codes are square barcodes).
+Print out this page and post it at the race.  Then, spectators can read the QR Code with their Smartphones to easily access the web Results page.
 
 ### Details, Logic and Example of Live Results:
 
