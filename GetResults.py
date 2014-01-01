@@ -2,6 +2,7 @@ import Model
 from bisect import bisect_left
 from math import floor
 import sys
+import copy
 import Utils
 import itertools
 
@@ -58,6 +59,9 @@ class RiderResult( object ):
 		
 	def __repr__( self ):
 		return str(self.__dict__)
+		
+	def getKey( self ):
+		return (statusSortSeq[self.status], -self.laps, self.lastTime, getattr(self, 'startTime', 0.0) or 0.0, self.num)
 
 DefaultSpeed = 0.00001
 		
@@ -68,7 +72,7 @@ def GetResultsCore( category ):
 	with Model.LockRace() as race:
 		if not race:
 			return tuple()
-			
+		
 		isTimeTrial = getattr( race, 'isTimeTrial', False )
 		allCategoriesFinishAfterFastestRidersLastLap = getattr( race, 'allCategoriesFinishAfterFastestRidersLastLap', False )
 		
@@ -200,7 +204,7 @@ def GetResultsCore( category ):
 								[times[i] - times[i-1] for i in xrange(1, len(times))],
 								times,
 								interp )
-								
+			
 			if isTimeTrial:
 				rr.startTime = getattr( rider, 'firstTime', None )
 				if rr.status == Model.Rider.Finisher:
@@ -243,7 +247,7 @@ def GetResultsCore( category ):
 		if not riderResults:
 			return tuple()
 			
-		riderResults.sort( key = lambda x: (statusSortSeq[x.status], -x.laps, x.lastTime, getattr(x, 'startTime', 0.0) or 0.0, x.num) )
+		riderResults.sort( key = RiderResult.getKey )
 		
 		# Add the position (or status, if not a Finisher).
 		# Fill in the gap field (include laps down if appropriate).
@@ -321,7 +325,8 @@ def GetResults( category, getExternalData = False ):
 				except ValueError:
 					pass
 		except:
-			return riderResults
+			externalFields = []
+			externalInfo = []
 				
 		for rr in riderResults:
 			for f in externalFields:
@@ -329,9 +334,57 @@ def GetResults( category, getExternalData = False ):
 					setattr( rr, f, externalInfo[rr.num][f] )
 				except KeyError:
 					setattr( rr, f, '' )
-		
+	
 	return riderResults
 
+def GetNonWaveCategoryResults( category ):
+	race = Model.race
+	if not race:
+		return tuple()
+	
+	rrCache = {}
+	riderResults = []
+	for num in race.getRiderNums():
+		if not race.inCategory(num, category):
+			continue
+		
+		try:
+			riderResults.append( copy.copy(rrCache[num]) )
+		except KeyError:
+			results = GetResults( race.getCategory(num), True )
+			rrCache.update( { (rr.num, rr) for rr in results } )
+			try:
+				riderResults.append( copy.copy(rrCache[num]) )
+			except KeyError:
+				continue
+		
+		# Remove the start offset from the race times and finish times.
+		rr = riderResults[-1]
+		try:
+			startOffset = rr.raceTimes[0]
+		except:
+			startOffset = 0.0
+			
+		try:
+			rr.lastTime -= startOffset
+		except:
+			pass
+			
+		rr.raceTimes = [t - startOffset for t in rr.raceTimes]
+	
+	# Sort the new results.
+	riderResults.sort( key = RiderResult.getKey )
+	
+	# Assign finish position and status.
+	statusNames = Model.Rider.statusNames
+	for pos, rr in enumerate(riderResults):
+		if rr.status == Model.Rider.Finisher:
+			rr.pos = u'{}'.format( pos + 1 )
+		else:
+			rr.pos = statusNames[rr.status]
+	
+	return tuple(riderResults)
+	
 @Model.memoize
 def GetLastFinisherTime():
 	results = GetResultsCore( None )

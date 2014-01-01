@@ -168,7 +168,7 @@ class NumKeypad( wx.Panel ):
 		#-------------------------------------------------------------------------------
 		# Create the edit field, numeric keybad and buttons.
 		self.keypad = Keypad( panel, self )
-		horizontalMainSizer.Add( self.keypad, 0, flag=wx.TOP|wx.LEFT, border = 4 )
+		horizontalMainSizer.Add( self.keypad, 0, flag=wx.TOP|wx.LEFT|wx.EXPAND, border = 4 )
 		
 		self.timeTrialRecord = TimeTrialRecord( panel, self )
 		self.timeTrialRecord.Show( False )

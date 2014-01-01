@@ -114,7 +114,7 @@ class TimeTrialRecord( wx.Panel ):
 
 		self.headerNames = ['Time', 'Bib']
 		
-		self.maxRows = 12
+		self.maxRows = 200
 		
 		fontSize = 18
 		self.font = wx.FontFromPixelSize( wx.Size(0,fontSize), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
@@ -136,7 +136,13 @@ class TimeTrialRecord( wx.Panel ):
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.SetFont( self.font )
 		self.grid.EnableReorderRows( False )
-		self.grid.SetRowLabelSize( 0 )
+		
+		dc = wx.WindowDC( self.grid )
+		dc.SetFont( self.font )
+		width, height = dc.GetTextExtent(" 999 ")
+		self.rowLabelSize = width
+		self.grid.SetRowLabelSize( self.rowLabelSize )
+		
 		self.grid.CreateGrid( self.maxRows, len(self.headerNames) )
 		self.grid.Bind( gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.doClickLabel )
 		for col, name in enumerate(self.headerNames):
@@ -174,6 +180,7 @@ class TimeTrialRecord( wx.Panel ):
 		self.SetAcceleratorTable(accel_tbl)
 		
 		self.SetSizer(self.vbs)
+		self.Fit()
 		
 	def doClickLabel( self, event ):
 		if event.GetCol() == 0:
@@ -269,13 +276,21 @@ class TimeTrialRecord( wx.Panel ):
 		dc = wx.WindowDC( self.grid )
 		dc.SetFont( self.font )
 		
+		widthTotal = self.rowLabelSize
 		width, height = dc.GetTextExtent(" 00:00:00.000 ")
 		self.grid.SetColSize( 0, width )
+		widthTotal += width
 		
 		width, height = dc.GetTextExtent(" 9999 ")
 		self.grid.SetColSize( 1, width )
+		widthTotal += width
+		
+		scrollBarWidth = 48
+		self.grid.SetSize( (widthTotal + scrollBarWidth, -1) )
+		self.GetSizer().SetMinSize( (widthTotal + scrollBarWidth, -1) )
 		
 		self.grid.ForceRefresh()
+		self.Fit()
 		
 	def commit( self ):
 		pass
