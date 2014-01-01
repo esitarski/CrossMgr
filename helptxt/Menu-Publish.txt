@@ -10,7 +10,7 @@ Setup the printing page when printing the results directly from CrossMgr.  Most 
 Shows how the results would look if printed.
 
 ## Print Results...
-Prints formated results directly to a printer.
+Prints formatted results directly to a printer.
 Select the Categories you want to print in the dialog, the select the Printer and Print Options.
 
 You can print results for a Category if there are riders of that Category in the race.
@@ -22,7 +22,7 @@ Publish the results in Excel format and opens Excel on the output file.
 Publish the results as an HTML file and opens a browser on the output file.  Includes the Race Animation and the Chart.
 
 ## Publish HTML Results with FTP...
-Publishes HTML formated results over an FTP upload.
+Publishes HTML formatted results over an FTP upload.  Also includes the option to print a large QR-Code with the race results URL.
 
 Field|Description
 :----|:----------
@@ -38,7 +38,7 @@ If "Automatically Upload Results During Race" is selected, CrossMgr will automat
 
 If you fill in the "URL Path", CrossMgr will open a browser on the "Race Results URL" after you press OK.  Use this to test whether the upload worked correctly and that the "Race Results URL" can access the FTP published file as expected.
 
-The "Print QR Code for Smartphones..." button prints a page with the QR Code corresponding to the URL Path and Race (QR Codes are square barcodes).
+The "Print Results URL as a QR Code..." button prints a page with the QR Code corresponding to the URL Path and Race (QR Codes are square barcodes).
 Print out this page and post it at the race.  Then, spectators can read the QR Code with their Smartphones and instantly access the web Results page.
 
 ### Details, Logic and Example of Live Results:
