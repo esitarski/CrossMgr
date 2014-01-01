@@ -311,7 +311,8 @@ class FtpPublishDialog( wx.Dialog ):
 		
 		self.refresh()
 		
-		self.printBtn = wx.Button( self, label = 'Print QR Code for Smartphones...' )
+		self.qrcodeBitmap = wx.StaticBitmap( self, bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'QRCodeIcon.png'), wx.BITMAP_TYPE_PNG ) )
+		self.printBtn = wx.Button( self, label = _('Print Results URL as a QR Code...') )
 		self.Bind( wx.EVT_BUTTON, self.onPrint, self.printBtn )
 		
 		self.okBtn = wx.Button( self, wx.ID_OK )
@@ -364,7 +365,10 @@ class FtpPublishDialog( wx.Dialog ):
 		bs.Add( self.urlFull, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
 		row += 1
-		bs.Add( self.printBtn, pos=(row, 1), span=(1,1), border = border, flag=wx.ALL )
+		hb = wx.BoxSizer( wx.HORIZONTAL )
+		hb.Add( self.qrcodeBitmap, flag=wx.ALIGN_CENTRE_VERTICAL )
+		hb.Add( self.printBtn, border = border, flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL )
+		bs.Add( hb, pos=(row, 1), span=(1,1), border = border, flag=wx.ALL )
 		
 		row += 1
 		hb = wx.BoxSizer( wx.HORIZONTAL )
