@@ -1,9 +1,11 @@
 import wx
 import re
+import os
 import Utils
 import Model
 from Undo import undo
 import wx.grid			as gridlib
+from ReorderableGrid import ReorderableGrid
 import wx.lib.masked	as  masked
 
 from GetResults import GetCategoryDetails
@@ -127,6 +129,49 @@ class TimeEditor(gridlib.PyGridCellEditor):
 	def Clone( self ):
 		return TimeEditor()
 
+class CategoryIconRenderer(gridlib.PyGridCellRenderer):
+	def __init__( self ):
+		self.bitmaps = [
+			wx.Bitmap( os.path.join(Utils.getImageFolder(), 'bullhorn_2.png'), wx.BITMAP_TYPE_PNG ),
+			wx.Bitmap( os.path.join(Utils.getImageFolder(), 'arrow_right_alt.png'), wx.BITMAP_TYPE_PNG ),
+			wx.Bitmap( os.path.join(Utils.getImageFolder(), 'point-of-interest-icon.png'), wx.BITMAP_TYPE_PNG ),
+		]
+		wMax = hMax = 0
+		for b in self.bitmaps:
+			w, h = b.GetSize()
+			wMax = max( wMax, w )
+			hMax = max( hMax, h )
+		self.wMax = wMax
+		self.hMax = hMax
+		gridlib.PyGridCellRenderer.__init__(self)
+
+	def Draw(self, grid, attr, dc, rect, row, col, isSelected):
+		value = grid.GetCellValue( row, col+1 )
+		try:
+			value = int(value)
+		except (ValueError, IndexError):
+			value = 0
+			
+		dc.SetClippingRect( rect )
+		dc.SetBackgroundMode(wx.SOLID)
+		dc.SetBrush(wx.WHITE_BRUSH)
+		dc.SetPen(wx.TRANSPARENT_PEN)
+		dc.DrawRectangleRect(rect)
+		
+		bitmap = self.bitmaps[value]
+		w, h = bitmap.GetSize()
+		x = (rect.GetWidth() - w) // 2
+		y = (rect.GetHeight() - h) // 2
+		dc.DrawBitmap(bitmap, rect.x + x, rect.y + y)
+		
+		dc.DestroyClippingRegion()
+
+	def GetBestSize(self, grid, attr, dc, row, col):
+		return wx.Size(self.wMax, self.hMax)
+
+	def Clone(self):
+		return CategoryIconRenderer()
+		
 class CustomEnumRenderer(gridlib.PyGridCellRenderer):
 	def __init__(self, choices):
 		self.choices = choices.split( ',' )
@@ -141,7 +186,7 @@ class CustomEnumRenderer(gridlib.PyGridCellRenderer):
 			
 		dc.SetClippingRect( rect )
 		dc.SetBackgroundMode(wx.SOLID)
-		dc.SetBrush(wx.WHITE_BRUSH)
+		dc.SetBrush(wx.Brush(grid.GetCellBackgroundColour(row, col)))
 		dc.SetPen(wx.TRANSPARENT_PEN)
 		dc.DrawRectangleRect(rect)
 		
@@ -151,8 +196,21 @@ class CustomEnumRenderer(gridlib.PyGridCellRenderer):
 		
 		w, h = dc.GetTextExtent( value )
 		
-		x = int((rect.GetWidth() - w) / 2) if w < rect.GetWidth() else 2
-		y = int((rect.GetHeight() - h) / 2) if h < rect.GetHeight() else 2
+		border = 3
+		hAlign, vAlign = attr.GetAlignment()
+		if hAlign == wx.ALIGN_LEFT:
+			x = border
+		elif hAlign == wx.ALIGN_RIGHT:
+			x = rect.GetWidth() - w - border
+		else:
+			x = ((rect.GetWidth() - w) // 2) if w < rect.GetWidth() else 2
+			
+		if vAlign == wx.ALIGN_TOP:
+			y = border
+		elif vAlign == wx.ALIGN_BOTTOM:
+			y = rect.GetHeight() - h - border
+		else:
+			y = ((rect.GetHeight() - h) // 2) if h < rect.GetHeight() else 2
 		
 		dc.DrawText(value, rect.x + x, rect.y + y)
 		dc.DestroyClippingRegion()
@@ -173,6 +231,8 @@ class Categories( wx.Panel ):
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		
+		self.ignoreColour = wx.Colour( 80, 80, 80 )
+		
 		border = 4
 		flag = wx.ALL
 		
@@ -186,7 +246,7 @@ class Categories( wx.Panel ):
 		self.Bind( wx.EVT_BUTTON, self.onDeactivateAll, self.deactivateAllButton )
 		hs.Add( self.deactivateAllButton, 0, border = border, flag = (flag & ~wx.LEFT) )
 
-		hs.AddSpacer( 10 )
+		hs.AddSpacer( 8 )
 		
 		self.newCategoryButton = wx.Button(self, label=_('&New Category'), style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onNewCategory, self.newCategoryButton )
@@ -196,7 +256,7 @@ class Categories( wx.Panel ):
 		self.Bind( wx.EVT_BUTTON, self.onDelCategory, self.delCategoryButton )
 		hs.Add( self.delCategoryButton, 0, border = border, flag = flag )
 
-		hs.AddSpacer( 10 )
+		hs.AddSpacer( 8 )
 		
 		self.upCategoryButton = wx.Button(self, label=_('Move &Up'), style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onUpCategory, self.upCategoryButton )
@@ -206,11 +266,17 @@ class Categories( wx.Panel ):
 		self.Bind( wx.EVT_BUTTON, self.onDownCategory, self.downCategoryButton )
 		hs.Add( self.downCategoryButton, 0, border = border, flag = (flag & ~wx.LEFT) )
 
-		hs.AddSpacer( 10 )
+		hs.AddSpacer( 8 )
 		
 		self.addExceptionsButton = wx.Button(self, label=_('&Add Bib Exceptions'), style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onAddExceptions, self.addExceptionsButton )
 		hs.Add( self.addExceptionsButton, 0, border = border, flag = (flag & ~wx.LEFT) )
+
+		hs.AddSpacer( 8 )
+		
+		self.updateStartWaveNumbersButton = wx.Button(self, label=_('&Update Start Wave Numbers'), style=wx.BU_EXACTFIT)
+		self.Bind( wx.EVT_BUTTON, self.onUpdateStartWaveNumbers, self.updateStartWaveNumbersButton )
+		hs.Add( self.updateStartWaveNumbersButton, 0, border = border, flag = (flag & ~wx.LEFT) )
 
 		hs.AddStretchSpacer()
 		
@@ -218,8 +284,10 @@ class Categories( wx.Panel ):
 		self.Bind( wx.EVT_BUTTON, self.onPrint, self.printButton )
 		hs.Add( self.printButton, 0, border = border, flag = (flag & ~wx.LEFT) )
 		
-		self.grid = gridlib.Grid( self )
+		self.grid = ReorderableGrid( self )
 		self.colNameFields = [
+			(_(''),						None),
+			(_('Category Type'),		'catType'),
 			(_('Active'),				'active'),
 			(_('Name'),					'name'),
 			(_('Gender'),				'gender'),
@@ -235,12 +303,12 @@ class Categories( wx.Panel ):
 		]
 		self.computedFieldss = {'rule80Time', 'suggestedLaps'}
 		colnames = [colName for colName, fieldName in self.colNameFields]
-		self.iCol = dict( (fieldName, i) for i, (colName, fieldName) in enumerate(self.colNameFields) )
+		self.iCol = dict( (fieldName, i) for i, (colName, fieldName) in enumerate(self.colNameFields) if fieldName )
 		
 		self.activeColumn = self.iCol['active']
 		self.genderColumn = self.iCol['gender']
 		self.grid.CreateGrid( 0, len(colnames) )
-		self.grid.SetRowLabelSize(0)
+		self.grid.SetRowLabelSize(32)
 		self.grid.SetMargins(0,0)
 		for col, name in enumerate(colnames):
 			self.grid.SetColLabelValue( col, name )
@@ -248,18 +316,36 @@ class Categories( wx.Panel ):
 		
 		self.boolCols = set()
 		self.choiceCols = set()
+		self.readOnlyCols = set()
+		self.dependentCols = set()
 		
 		# Set column attributes for the table.
 		for col, (colName, fieldName) in enumerate(self.colNameFields):
 			attr = gridlib.GridCellAttr()
 			
-			if fieldName in ['active', 'lappedRidersMustContinue']:
+			if fieldName is None:
+				attr.SetRenderer( CategoryIconRenderer() )
+				attr.SetAlignment( wx.ALIGN_LEFT, wx.ALIGN_CENTRE )
+				attr.SetReadOnly( True )
+				self.readOnlyCols.add( col )
+				
+			elif fieldName == 'catType':
+				choices = u','.join([_('Start Wave'),u'    ' + _('Component'),_('Custom')])
+				self.catTypeWidth = 64
+				attr.SetEditor( gridlib.GridCellEnumEditor(choices) )
+				attr.SetRenderer( CustomEnumRenderer(choices) )
+				attr.SetAlignment( wx.ALIGN_LEFT, wx.ALIGN_CENTRE )
+				self.choiceCols.add( col )
+				
+			elif fieldName in ['active', 'lappedRidersMustContinue']:
 				boolEditor = gridlib.GridCellBoolEditor()
 				boolEditor.UseStringValues( '1', '0' )
 				attr.SetEditor( boolEditor )
 				attr.SetRenderer( gridlib.GridCellBoolRenderer() )
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 				self.boolCols.add( col )
+				if fieldName == 'lappedRidersMustContinue':
+					self.dependentCols.add( col )
 				
 			elif fieldName == 'gender':
 				attr.SetEditor( gridlib.GridCellChoiceEditor([_('Open'),_('Men'),_('Women')], False) )
@@ -268,35 +354,46 @@ class Categories( wx.Panel ):
 			elif fieldName == 'startOffset':
 				attr.SetEditor( TimeEditor() )
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+				self.dependentCols.add( col )
 				
 			elif fieldName == 'numLaps':
 				attr.SetEditor( wx.grid.GridCellNumberEditor() )
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+				self.dependentCols.add( col )
 				
 			elif fieldName in ['rule80Time', 'suggestedLaps']:
 				attr.SetReadOnly( True )
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+				self.readOnlyCols.add( col )
+				self.dependentCols.add( col )
 				
 			elif fieldName in ['distance', 'firstLapDistance'] :
 				attr.SetEditor( gridlib.GridCellFloatEditor(7, 3) )
 				attr.SetRenderer( gridlib.GridCellFloatRenderer(7, 3) )
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+				self.dependentCols.add( col )
 				
 			elif fieldName == 'distanceType':
-				choices = 'Lap,Race'
+				choices = u','.join([_('Lap'),_('Race')])
 				attr.SetEditor( gridlib.GridCellEnumEditor(choices) )
 				attr.SetRenderer( CustomEnumRenderer(choices) )
 				attr.SetAlignment( wx.ALIGN_RIGHT, wx.ALIGN_CENTRE )
 				self.choiceCols.add( col )
+				self.dependentCols.add( col )
 				
 			self.grid.SetColAttr( col, attr )
 		
+		self.grid.SetColSize( self.iCol['catType'], self.catTypeWidth )
+		
 		self.Bind( gridlib.EVT_GRID_CELL_LEFT_CLICK, self.onGridLeftClick )
 		self.Bind( gridlib.EVT_GRID_SELECT_CELL, self.onCellSelected )
+		self.Bind( gridlib.EVT_GRID_CELL_CHANGE, self.onCellChanged )
 		
 		vs.Add( hs, 0, flag=wx.EXPAND|wx.ALL, border = 4 )
 		vs.Add( self.grid, 1, flag=wx.GROW|wx.ALL|wx.EXPAND )
 		
+		self.rowCur = 0
+		self.colCur = 0
 		self.SetSizer(vs)
 
 	def onPrint( self, event ):
@@ -332,11 +429,28 @@ class Categories( wx.Panel ):
 		event.Skip()
 		
 	def onCellSelected( self, event ):
-		if event.GetCol() in self.choiceCols or event.GetCol() in self.boolCols:
+		self.rowCur = event.GetRow()
+		self.colCur = event.GetCol()
+		if self.colCur in self.choiceCols or self.colCur in self.boolCols:
 			wx.CallAfter( self.grid.EnableCellEditControl )
 		event.Skip()
 
+	def onCellChanged( self, event ):
+		self.rowCur = event.GetRow()
+		self.colCur = event.GetCol()
+		if self.colCur == 1:
+			self.fixCells()
+		event.Skip()
+
 	#------------------------------------------
+
+	def onUpdateStartWaveNumbers( self, event ):
+		self.commit()
+		undo.pushState()
+		with Model.LockRace() as race:
+			race.adjustAllCategoryWaveNumbers()
+		wx.CallAfter( self.refresh )
+		wx.CallAfter( Utils.refreshForecastHistory )
 
 	def onAddExceptions( self, event ):
 		with Model.LockRace() as race:
@@ -376,12 +490,14 @@ and remove them from other categories.''').format(category.name),
 					numLaps = None,
 					lappedRidersMustContinue = False,
 					distance = None, distanceType = None,
-					firstLapDistance = None, gender = None ):
+					firstLapDistance = None, gender = None, catType = 0 ):
 					
 		if len(startOffset) < len('00:00:00'):
 			startOffset = '00:' + startOffset
-	
+			
+		self.grid.SetRowLabelValue( r, u'' )
 		self.grid.SetCellValue( r, self.iCol['active'], '1' if active else '0' )
+		self.grid.SetCellValue( r, self.iCol['catType'], unicode(catType) )
 		self.grid.SetCellValue( r, self.iCol['name'], name )
 		self.grid.SetCellValue( r, self.iCol['gender'], gender if gender in ['Men', 'Women'] else 'Open' )
 		self.grid.SetCellValue( r, self.iCol['catStr'], catStr )
@@ -410,7 +526,20 @@ and remove them from other categories.''').format(category.name),
 		laps = race.getCategoryRaceLaps().get(category, 0)
 		if laps:
 			self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '{}'.format(laps) )
+	
+	def fixRow( self, row, catType ):
+		for colName, fieldName in self.colNameFields:
+			if not fieldName:
+				continue
+			col = self.iCol[fieldName]
+			if col in self.dependentCols:
+				self.grid.SetCellBackgroundColour( row, col, wx.WHITE if catType == 0 else self.ignoreColour )
 		
+	def fixCells( self, event = None ):
+		for row in xrange(self.grid.GetNumberRows()):
+			catType = int(self.grid.GetCellValue( row, self.iCol['catType'] ))
+			self.fixRow( row, catType )
+	
 	def onActivateAll( self, event ):
 		for c in Model.race.getAllCategories():
 			if not c.active:
@@ -479,6 +608,7 @@ and remove them from other categories.''').format(category.name),
 								name				= cat.name,
 								gender				= getattr(cat, 'gender', None),
 								catStr				= cat.catStr,
+								catType				= cat.catType,
 								startOffset			= cat.startOffset,
 								numLaps				= cat.numLaps,
 								lappedRidersMustContinue = getattr(cat, 'lappedRidersMustContinue', False),
@@ -488,6 +618,7 @@ and remove them from other categories.''').format(category.name),
 							)
 				
 			self.grid.AutoSizeColumns( True )
+			self.fixCells()
 			
 			# Force the grid to the correct size.
 			self.grid.FitInside()
@@ -509,7 +640,7 @@ and remove them from other categories.''').format(category.name),
 	
 if __name__ == '__main__':
 	app = wx.App(False)
-	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
+	mainWin = wx.Frame(None,title="CrossMan", size=(1000,400))
 	Model.setRace( Model.Race() )
 	race = Model.getRace()
 	race.setCategories( [
