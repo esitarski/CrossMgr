@@ -294,7 +294,7 @@ class Category(object):
 	
 	@property
 	def fullname( self ):
-		return u'%s (%s)' % (self.name, getattr(self, 'gender', 'Open'))
+		return (u'%s (%s)' % (self.name, getattr(self, 'gender', 'Open'))).strip()
 	
 	@property
 	def firstLapRatio( self ):
@@ -1490,8 +1490,8 @@ class Race(object):
 	def numPulledRiders( self ):
 		return sum( (1 for r in self.riders.itervalues() if r.status == Rider.Pulled) )
 
-	def getCategories( self ):
-		activeCategories = [c for c in self.categories.itervalues() if c.active]
+	def getCategories( self, startWaveOnly = True ):
+		activeCategories = [c for c in self.categories.itervalues() if c.active and (not startWaveOnly or c.catType == Category.CatWave)]
 		activeCategories.sort( key = Category.key )
 		return activeCategories
 
@@ -1643,8 +1643,14 @@ class Race(object):
 		fp.write( u'#\n' )
 		fp.write( u'# for details see http://sites.google.com/site/crossmgrsoftware/\n' )
 		fp.write( u'#################################################################\n' )
+		categoryTypeName = ['Wave', 'Component', 'Custom']
 		for c in sorted( self.categories.itervalues(), key = Category.key ):
-			fp.write( u'{}|{}|{}\n'.format(c.name.replace('|',''), c.catStr.replace('|',''), getattr(c,'gender','Open')) )
+			fp.write( u'{}\n'.format( u'|'.join( [
+							c.name.replace('|',''),
+							c.catStr.replace('|',''),
+							getattr(c,'gender','Open'),
+							categoryTypeName[c.catType]
+						]) ) )
 
 	def importCategories( self, fp ):
 		categories = []
@@ -1657,7 +1663,10 @@ class Race(object):
 				continue
 			if len(fields) < 3:
 				fields.append( 'Open' )
-			categories.append( {'name':fields[0], 'catStr':fields[1], 'gender':fields[2]} )
+			if len(fields) < 4:
+				fields.append( 'Wave' )
+			catType = { 'Wave':0, 'Component':1, 'Custom':2 }.get( fields[4], 0 )
+			categories.append( {'name':fields[0], 'catStr':fields[1], 'gender':fields[2], 'catType':catType} )
 		self.setCategories( categories )
 
 	def isRiderInCategory( self, num, category = None ):
@@ -1954,14 +1963,19 @@ class Race(object):
 			num = int(num)
 		except ValueError:
 			return
-			
+		
+		categoryWave = self.getCategoryWave( category )
 		for c in self.categories.itervalues():
-			if c != category:
+			if c != category and c != categoryWave:
 				c.removeNum( num )
 				c.normalize()
 				
 		category.addNum( num )
 		category.normalize()
+		
+		if categoryWave:
+			categoryWave.addNum( num )
+			categoryWave.normalize()
 		
 		self.resetCategoryCache()
 		self.setChanged()

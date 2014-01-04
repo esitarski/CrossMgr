@@ -44,7 +44,7 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		if race:
 			for r in race.riders.itervalues():
 				self.catCount[race.getCategory(r.num)] += 1
-			for c in race.getCategories():
+			for c in race.getCategories(False):
 				if self.catCount[c] == 0:
 					continue
 				index = self.list.InsertStringItem(sys.maxint, c.name, self.sm_rt)
@@ -112,7 +112,7 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		self.categories = []
 		race = Model.race
 		row = 0
-		for c in race.getCategories():
+		for c in race.getCategories(False):
 			if self.catCount[c] == 0:
 				continue
 			if self.list.GetItemState(row, wx.LIST_STATE_SELECTED) == wx.LIST_STATE_SELECTED:
@@ -131,7 +131,7 @@ def getRaceCategories():
 	with Model.LockRace() as race:
 		if race is None:
 			return []
-		categories = [ (c.fullname, c) for c in race.getCategories() if race.hasCategory(c) ]
+		categories = [ (c.fullname, c) for c in race.getCategories(False) if race.hasCategory(c) ]
 	categories.append( ('All', None) )
 	return categories
 
@@ -139,7 +139,7 @@ class CrossMgrPrintout( wx.Printout ):
 	def __init__(self, categories = None):
 		wx.Printout.__init__(self)
 		if not categories:
-			self.categories = Model.race.getCategories()
+			self.categories = Model.race.getCategories(False)
 		else:
 			self.categories = categories
 		self.pageInfo = {}

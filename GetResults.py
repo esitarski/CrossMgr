@@ -310,6 +310,9 @@ def GetResultsCore( category ):
 	return tuple(riderResults)
 
 def GetResults( category, getExternalData = False ):
+	if category and category.catType != Model.Category.CatWave:
+		return GetNonWaveCategoryResults( category )
+
 	riderResults = GetResultsCore( category )
 	if not getExternalData or not riderResults:
 		return riderResults

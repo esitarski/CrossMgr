@@ -16,7 +16,7 @@ def FixCategories( choice, iSelection = None ):
 
 	nameCat = [('All', None)]
 	if race:
-		nameCat.extend( [(c.fullname, c) for c in race.getCategories()] )
+		nameCat.extend( [((u'    ' if c.catType == Model.Category.CatComponent else u'') + c.fullname, c) for c in race.getCategories(False)] )
 	
 	newItems = [ fullname for fullname, cat in nameCat ]
 	if items == newItems:
@@ -26,7 +26,7 @@ def FixCategories( choice, iSelection = None ):
 	cItems = choice.GetItems()
 	if cItems:
 		iCur = choice.GetSelection()
-		catCur = choice.GetString( iCur )
+		catCur = choice.GetString( iCur ).strip()
 	
 	choice.Clear()
 	choice.AppendItems( newItems )
@@ -47,7 +47,7 @@ def SetCategory( choice, cat ):
 			choice.SetSelection( 0 )
 		else:
 			for i, item in enumerate(choice.GetItems()):
-				if item == cat.fullname:
+				if item.strip() == cat.fullname:
 					choice.SetSelection( i )
 					break
 	
