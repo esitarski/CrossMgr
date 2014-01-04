@@ -91,6 +91,7 @@ class ReorderableGridRowMixin( object ):
 	def copyRow( self, fromRow, toRow ):
 		for c in xrange(self.GetNumberCols()):
 			self.SetCellValue( toRow, c, self.GetCellValue(fromRow, c) )
+			self.SetCellBackgroundColour( toRow, c, self.GetCellBackgroundColour(fromRow, c) )
 		
 	def OnReorderableGridMotion(self, evt):
 		"""We are moving so see whether this should be a Rearrange event or not"""
@@ -111,11 +112,13 @@ class ReorderableGridRowMixin( object ):
 		self.DeselectRow( self._lastRow )
 		
 		lastRowSave = [self.GetCellValue(self._lastRow, c) for c in xrange(self.GetNumberCols())]
+		lastRowBackgroundColourSave = [self.GetCellBackgroundColour(self._lastRow, c) for c in xrange(self.GetNumberCols())]
 		direction = cmp(row, self._lastRow)
 		for r in xrange(self._lastRow, row, direction ):
 			self.copyRow( r + direction, r )
 		for c in xrange(self.GetNumberCols()):
 			self.SetCellValue( row, c, lastRowSave[c] )
+			self.SetCellBackgroundColour( row, c, lastRowBackgroundColourSave[c] )
 		
 		self.SelectRow( row, False )
 		self._lastRow = row
