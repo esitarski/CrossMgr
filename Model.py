@@ -1669,16 +1669,9 @@ class Race(object):
 			categories.append( {'name':fields[0], 'catStr':fields[1], 'gender':fields[2], 'catType':catType} )
 		self.setCategories( categories )
 
-	def isRiderInCategory( self, num, category = None ):
-		if category is None:
-			return True
-		return category == self.getCategory(num)
-
 	def hasCategory( self, category ):
 		# Check if there is at least one rider in this category.
-		if category is None:
-			return True
-		return any( self.isRiderInCategory(num, category) for num in self.riders.iterkeys() )
+		return any( self.inCategory(num, category) for num in self.riders.iterkeys() )
 
 	def hasTime( self, num, t ):
 		try:

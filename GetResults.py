@@ -60,7 +60,7 @@ class RiderResult( object ):
 	def __repr__( self ):
 		return str(self.__dict__)
 		
-	def getKey( self ):
+	def _getKey( self ):
 		return (statusSortSeq[self.status], -self.laps, self.lastTime, getattr(self, 'startTime', 0.0) or 0.0, self.num)
 
 DefaultSpeed = 0.00001
@@ -247,7 +247,7 @@ def GetResultsCore( category ):
 		if not riderResults:
 			return tuple()
 			
-		riderResults.sort( key = RiderResult.getKey )
+		riderResults.sort( key = RiderResult._getKey )
 		
 		# Add the position (or status, if not a Finisher).
 		# Fill in the gap field (include laps down if appropriate).
@@ -376,7 +376,7 @@ def GetNonWaveCategoryResults( category ):
 		rr.raceTimes = [t - startOffset for t in rr.raceTimes]
 	
 	# Sort the new results.
-	riderResults.sort( key = RiderResult.getKey )
+	riderResults.sort( key = RiderResult._getKey )
 	
 	# Assign finish position and status.
 	statusNames = Model.Rider.statusNames
@@ -410,31 +410,51 @@ def GetCategoryDetails():
 	if not results:
 		return {}
 		
-	catDetails = {}
+	catDetails = []
 	with Model.LockRace() as race:
 		if not race:
 			return catDetails
-		for rr in results:
-			if not rr.lapTimes:
+		
+		# Create a custom category for all riders.
+		info = dict(
+				name			= 'All',
+				startOffset		= 0,
+				gender			= 'Open',
+				catType			= 'Custom',
+				laps			= 0,
+				pos				= [rr.num for rr in results] )
+		catDetails.append( info )
+		
+		# Add the remainder of the categories.
+		for cat in race.getCategories( False ):
+			results = GetResults( cat, True )
+			if not results:
 				continue
-			cat = race.getCategory( rr.num )
-			info = catDetails.get( cat.fullname, {} )
-			if not info:
-				info['startOffset'] = cat.getStartOffsetSecs()
-				info['gender'] = getattr( cat, 'gender', 'Open' )
-				info['laps'] = 0
 				
-			if info['laps'] < len(rr.lapTimes):
-				info['laps'] = len(rr.lapTimes)
-				if getattr(cat, 'distance', None):
-					if getattr(cat, 'distanceType', Model.Category.DistanceByLap) == Model.Category.DistanceByLap:
-						info['lapDistance'] = cat.distance
-						if getattr(cat, 'firstLapDistance', None):
-							info['firstLapDistance'] = cat.firstLapDistance
-						info['raceDistance'] = cat.getDistanceAtLap( info['laps'] )
-					else:
-						info['raceDistance'] = cat.distance
-				info['distanceUnit'] = race.distanceUnitStr
-				catDetails[cat.fullname] = info
-	
+			info = dict(
+					name		= cat.fullname,
+					startOffset	= cat.getStartOffsetSecs() if cat.catType == cat.CatWave else 0.0,
+					gender		= getattr( cat, 'gender', 'Open' ),
+					catType		= ['StartWave', 'Component', 'Custom'][cat.catType],
+					laps		= 0,
+					pos			= [] )
+			
+			catDetails.append( info )
+					
+			for rr in results:
+				info['pos'].append( rr.num )
+				
+				if info['laps'] < len(rr.lapTimes):
+					waveCat = race.getCategory( rr.num )
+					info['laps'] = len(rr.lapTimes)
+					if getattr(waveCat, 'distance', None):
+						if getattr(waveCat, 'distanceType', Model.Category.DistanceByLap) == Model.Category.DistanceByLap:
+							info['lapDistance'] = waveCat.distance
+							if getattr(waveCat, 'firstLapDistance', None):
+								info['firstLapDistance'] = waveCat.firstLapDistance
+							info['raceDistance'] = waveCat.getDistanceAtLap( info['laps'] )
+						else:
+							info['raceDistance'] = waveCat.distance
+					info['distanceUnit'] = race.distanceUnitStr
+					
 	return catDetails

@@ -40,7 +40,7 @@ def GetAnimationData( category = None, getExternalData = False ):
 		for rr in results:
 			info = { 'flr': race.getCategory(rr.num).firstLapRatio }
 			for a in dir(rr):
-				if a[0] == '_' or a in ignoreFields:
+				if a.startswith('_') or a in ignoreFields:
 					continue
 				if a == 'raceTimes':
 					info['raceTimes'] = getattr(rr, a)
