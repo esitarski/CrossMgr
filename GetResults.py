@@ -271,7 +271,7 @@ def GetResultsCore( category ):
 			if rr.laps != leader.laps:
 				if rr.lastTime > leader.lastTime:
 					lapsDown = leader.laps - rr.laps
-					rr.gap = '-%d %s' % (lapsDown, 'laps' if lapsDown > 1 else 'lap')
+					rr.gap = '-%d %s' % (lapsDown, _('laps') if lapsDown > 1 else _('lap'))
 			elif rr != leader and not (isTimeTrial and rr.lastTime == leader.lastTime):
 				rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
 				
@@ -345,6 +345,9 @@ def GetNonWaveCategoryResults( category ):
 	if not race:
 		return tuple()
 	
+	isTimeTrial = getattr( race, 'isTimeTrial', False )
+	highPrecision = Utils.highPrecisionTimes()
+	
 	rrCache = {}
 	riderResults = []
 	for num in race.getRiderNums():
@@ -369,7 +372,7 @@ def GetNonWaveCategoryResults( category ):
 			startOffset = 0.0
 			
 		try:
-			rr.lastTime -= startOffset
+			rr.lastTime = max( 0.0, rr.lastTime - startOffset )
 		except:
 			pass
 			
@@ -380,11 +383,20 @@ def GetNonWaveCategoryResults( category ):
 	
 	# Assign finish position and status.
 	statusNames = Model.Rider.statusNames
+	leader = riderResults[0] if riderResults else None
+	leader.gap = ''
 	for pos, rr in enumerate(riderResults):
 		if rr.status == Model.Rider.Finisher:
 			rr.pos = u'{}'.format( pos + 1 )
+			if rr.laps != leader.laps:
+				if rr.lastTime > leader.lastTime:
+					lapsDown = leader.laps - rr.laps
+					rr.gap = '-%d %s' % (lapsDown, _('laps') if lapsDown > 1 else _('lap'))
+			elif rr != leader and not (isTimeTrial and rr.lastTime == leader.lastTime):
+				rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
 		else:
 			rr.pos = statusNames[rr.status]
+			
 	
 	return tuple(riderResults)
 	

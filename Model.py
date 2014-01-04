@@ -1669,6 +1669,9 @@ class Race(object):
 			categories.append( {'name':fields[0], 'catStr':fields[1], 'gender':fields[2], 'catType':catType} )
 		self.setCategories( categories )
 
+	def catCount( self, category ):
+		return sum( 1 for num in self.riders.iterkeys() if self.inCategory(num, category) )
+		
 	def hasCategory( self, category ):
 		# Check if there is at least one rider in this category.
 		return any( self.inCategory(num, category) for num in self.riders.iterkeys() )

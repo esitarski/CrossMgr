@@ -6,7 +6,6 @@ import Utils
 Utils.initTranslation()
 from  ExportGrid import ExportGrid
 from DNSManager import AutoWidthListCtrl
-from collections import defaultdict
 from GetResults import GetResults
 import Model
 
@@ -37,26 +36,25 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		
 		self.list.InsertColumn(0, _("Name"))
 		self.list.InsertColumn(1, _("Gender"))
-		self.list.InsertColumn(2, _("Count"), wx.LIST_FORMAT_RIGHT)
-		self.list.InsertColumn(3, '' )
+		self.list.InsertColumn(2, _("Type"))
+		self.list.InsertColumn(3, _("Count"), wx.LIST_FORMAT_RIGHT)
+		self.list.InsertColumn(4, '' )
 		race = Model.race
-		self.catCount = defaultdict( int )
+		self.catCount = {}
 		if race:
-			for r in race.riders.itervalues():
-				self.catCount[race.getCategory(r.num)] += 1
 			for c in race.getCategories(False):
+				self.catCount[c] = race.catCount( c )
 				if self.catCount[c] == 0:
 					continue
 				index = self.list.InsertStringItem(sys.maxint, c.name, self.sm_rt)
 				self.list.SetStringItem( index, 1, getattr(c, 'gender', 'Open') )
-				self.list.SetStringItem( index, 2, '{}'.format(self.catCount[c]) )
+				self.list.SetStringItem( index, 2, [_('Start Wave'), _('Component'), _('Custom')][c.catType] )
+				self.list.SetStringItem( index, 3, '{}'.format(self.catCount[c]) )
 		
-		self.list.SetColumnWidth(0, wx.LIST_AUTOSIZE)
-		self.list.SetColumnWidth(1, wx.LIST_AUTOSIZE)
-		self.list.SetColumnWidth(2, wx.LIST_AUTOSIZE)
-		self.list.SetColumnWidth(3, wx.LIST_AUTOSIZE)
+		for col in xrange(4+1):
+			self.list.SetColumnWidth( 0, wx.LIST_AUTOSIZE )
 		self.list.SetColumnWidth( 1, 64 )
-		self.list.SetColumnWidth( 2, 52 )
+		self.list.SetColumnWidth( 3, 52 )
 		
 		self.includeLapTimesInPrintoutCheckBox = wx.CheckBox( self, wx.ID_ANY, _('Include Lap Times in Printout') )
 		race = Model.race
