@@ -2356,7 +2356,7 @@ function SetCategoryResults()
 		var leaderLaps	= resultsData[0][0];
 		var leaderTime	= resultsData[0][1];
 		leaderNum		= resultsData[0][2];
-		var startOffset	= resultsData[0][3][0];
+		var startOffset	= (resultsData[0][3].length > 0 resultsData[0][3][0] : 0);
 		
 		if( leaderLaps > 2 && showLapsFrequency != 0 )
 		{
