@@ -381,7 +381,7 @@ def GetNonWaveCategoryResults( category ):
 	# Sort the new results.
 	riderResults.sort( key = RiderResult._getKey )
 	
-	# Assign finish position and status.
+	# Assign finish position, gaps and status.
 	statusNames = Model.Rider.statusNames
 	leader = riderResults[0] if riderResults else None
 	leader.gap = ''
@@ -447,7 +447,7 @@ def GetCategoryDetails():
 					name		= cat.fullname,
 					startOffset	= cat.getStartOffsetSecs() if cat.catType == cat.CatWave else 0.0,
 					gender		= getattr( cat, 'gender', 'Open' ),
-					catType		= ['StartWave', 'Component', 'Custom'][cat.catType],
+					catType		= ['Start Wave', 'Component', 'Custom'][cat.catType],
 					laps		= 0,
 					pos			= [] )
 			

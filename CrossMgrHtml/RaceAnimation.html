@@ -2224,7 +2224,7 @@ function SetCategoryResults()
 		var hasLapSpeeds = false;
 		var showingAllLaps = true;
 		var starters = 0, finishers = 0, finishersPercent = 0.0;
-		for( var p = 0; p < catDetails[c].pos.length; ++p )
+		for( var p = 0; p < catDetail.pos.length; ++p )
 		{
 			var num = catDetails[c].pos[p];
 			var d = data[num];
@@ -2236,13 +2236,23 @@ function SetCategoryResults()
 			if( !hasLapSpeeds && d['lapSpeeds'] )
 				hasLapSpeeds = true;
 				
-			var raceTimes = d['raceTimes'];
+			var raceTimes = d['raceTimes'].slice(0);
 			if( raceTimesLength[num] != raceTimes.length )
 				showingAllLaps = false;
 			
+			// Remove the race start time if this is not a Wave category.
+			var lastTime = d['lastTime'];
+			if( catDetail.catType != 'Start Wave' && raceTimes.length > 0 )
+			{
+				for( var j = 1; j < raceTimes.length; ++j )
+					raceTimes[j] -= raceTimes[0];
+				lastTime -= raceTimes[0];
+				raceTimes[0] = 0;
+			}
+			
 			resultsData.push( [	raceTimesLength[num],
 								raceTimesLength[num] ? raceTimes[raceTimesLength[num]-1] : 99999,
-								num, d['raceTimes'], d['status'], d['lastTime']] );
+								num, raceTimes, d['status'], lastTime] );
 			
 			// Get the union of all the defined fields.
 			for( var f = 0; f < infoFields.length; ++f )
@@ -2832,7 +2842,7 @@ function RefreshRaceChart()
 			var raceTimes = d['raceTimes'].slice(0);	// Make a copy so we don't disturb the original.
 			
 			// Remove the race start time if this is not a Wave category.
-			if( catDetail.catType != 'Wave' && raceTimes.length > 0 )
+			if( catDetail.catType != 'Start Wave' && raceTimes.length > 0 )
 			{
 				for( var j = 1; j < raceTimes.length; ++j )
 					raceTimes[j] -= raceTimes[0];
