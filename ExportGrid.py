@@ -508,7 +508,7 @@ class ExportGrid( object ):
 		results = GetResults( category, getExternalData )
 		if not results:
 			return
-		catDetails = GetCategoryDetails()
+		catDetails = dict( (cd['name'], cd) for cd in GetCategoryDetails() )
 		try:
 			cd = catDetails[category.fullname]
 		except:

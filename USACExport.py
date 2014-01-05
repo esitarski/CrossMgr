@@ -39,7 +39,7 @@ def USACExport( sheet ):
 	rightAlignStyle = xlwt.XFStyle()
 	rightAlignStyle.alignment.horz = xlwt.Alignment.HORZ_RIGHT
 	
-	catDetails = GetCategoryDetails()
+	catDetails = dict( (cd['name'], cd) for cd in GetCategoryDetails() )
 	hasDistance = None
 	
 	maxLaps = 0

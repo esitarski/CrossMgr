@@ -326,7 +326,7 @@ class RaceAnimation( wx.Panel ):
 		self.finishTop.SetValue( getattr(race, 'finishTop', False) )
 		
 		animationData = GetAnimationData( category, True )
-		self.animation.SetData( animationData, raceTime, GetCategoryDetails() )
+		self.animation.SetData( animationData, raceTime, dict( (cd['name'], cd) for cd in GetCategoryDetails() ) )
 		self.animation.SetOptions( getattr(race, 'reverseDirection', False), getattr(race, 'finishTop', False) )
 		if raceIsRunning:
 			if not self.animation.IsAnimating():

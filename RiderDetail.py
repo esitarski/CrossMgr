@@ -342,7 +342,7 @@ class RiderDetail( wx.Panel ):
 		with Model.LockRace() as race:
 			if not race:
 				return
-			for c in race.getCategories():
+			for c in race.getCategories( startWaveOnly = False, excludeCustom = True ):
 				if c.fullname == catName:
 					race.addCategoryException( c, num )
 					break
@@ -983,7 +983,7 @@ class RiderDetail( wx.Panel ):
 				
 			category = race.getCategory( num )
 			catName = category.fullname if category else ''
-			categories = race.getCategories()
+			categories = race.getCategories( startWaveOnly = False, excludeCustom = True )
 			try:
 				iCategory = (i for i, c in enumerate(categories) if c == category).next()
 				self.category.AppendItems( [c.fullname for c in categories] )
@@ -1037,7 +1037,7 @@ class RiderDetail( wx.Panel ):
 							'adjustTime']:
 					getattr( self, w ).Show( True )
 			
-			categoryDetails = GetCategoryDetails()
+			categoryDetails = dict( (cd['name'], cd) for cd in GetCategoryDetails() )
 			try:
 				catInfo = categoryDetails[category.fullname]
 				maxLap = catInfo['laps']

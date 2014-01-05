@@ -60,7 +60,7 @@ def WebScorerExport( fname ):
 	if not hasField[2]:
 		return False, _('"LastName" must be linked to a column in the Excel sheetl')
 	
-	catDetails = GetCategoryDetails()
+	catDetails = dict( (cd['name'], cd) for cd in GetCategoryDetails() )
 	
 	# Filter the fields by what exists in the data.
 	webScorerFields = [WebScorerFields[i][0] for i in xrange(len(hasField)) if hasField[i]]

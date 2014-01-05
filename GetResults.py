@@ -420,7 +420,7 @@ def GetLeaderFinishTime():
 def GetCategoryDetails():
 	results = GetResultsCore( None )
 	if not results:
-		return {}
+		return []
 		
 	catDetails = []
 	with Model.LockRace() as race:
