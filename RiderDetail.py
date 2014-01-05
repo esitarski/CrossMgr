@@ -342,7 +342,7 @@ class RiderDetail( wx.Panel ):
 		with Model.LockRace() as race:
 			if not race:
 				return
-			for c in race.getCategories( startWaveOnly = False, excludeCustom = True ):
+			for c in race.getCategories( startWaveOnly = False, excludeCustom = True, excludeCombined = True ):
 				if c.fullname == catName:
 					race.addCategoryException( c, num )
 					break
@@ -984,7 +984,7 @@ class RiderDetail( wx.Panel ):
 			waveCategory = race.getCategory( num )
 			category = None
 			iCategory = None
-			categories = race.getCategories( startWaveOnly = False, excludeCustom = True )
+			categories = race.getCategories( startWaveOnly = False, excludeCustom = True, excludeCombined = True  )
 			for i, c in enumerate(categories):
 				if race.inCategory( num, c ) and c.catType != Model.Category.CatCustom:
 					iCategory = i

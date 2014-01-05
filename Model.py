@@ -1515,13 +1515,29 @@ class Race(object):
 	def numPulledRiders( self ):
 		return sum( (1 for r in self.riders.itervalues() if r.status == Rider.Pulled) )
 
-	def getCategories( self, startWaveOnly = True, uploadOnly = False, excludeCustom = False ):
+	def getCategories( self, startWaveOnly = True, uploadOnly = False, excludeCustom = False, excludeCombined = False ):
 		activeCategories = [c for c in self.categories.itervalues() if c.active and (not startWaveOnly or c.catType == Category.CatWave)]
+		
 		if uploadOnly:
 			activeCategories = [c for c in activeCategories if c.uploadFlag]
+			
 		if excludeCustom:
 			activeCategories = [c for c in activeCategories if c.catType != Category.CatCustom]
+			
 		activeCategories.sort( key = Category.key )
+		
+		if excludeCombined:
+			# If this is a combined category, then the following category will be a component.
+			toExclude = set()
+			for i, c in enumerate(activeCategories):
+				if c.catType == Category.CatWave:
+					try:
+						if activeCategories[i+1].catType == Category.CatComponent:
+							toExclude.add( c )
+					except IndexError:
+						pass
+			activeCategories = [c for c in activeCategories if c not in toExclude]
+			
 		return activeCategories
 
 	def setCategoryMask( self ):
