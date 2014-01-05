@@ -83,16 +83,14 @@ class JChipSetupDialog( wx.Dialog ):
 		self.receivedCount = 0
 		self.refTime = None
 		
-		self.enableJChipCheckBox = wx.CheckBox( self, -1, 'Accept JChip Data During Race' )
+		self.enableJChipCheckBox = wx.CheckBox( self, label = _('Accept JChip Data During Race') )
 		if Model.race:
 			self.enableJChipCheckBox.SetValue( getattr(Model.race, 'enableJChipIntegration', False) )
 		else:
 			self.enableJChipCheckBox.Enable( False )
 		
-		self.testJChip = wx.ToggleButton( self, wx.ID_ANY, 'Start JChip Test' )
+		self.testJChip = wx.ToggleButton( self, label = _('Start JChip Test') )
 		self.Bind(wx.EVT_TOGGLEBUTTON, self.testJChipToggle, self.testJChip)
-		if Model.race and Model.race.isRunning():
-			self.testJChip.Enable( False )
 		
 		self.testList = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_READONLY|wx.TE_MULTILINE, size=(-1,200) )
 		self.testList.Bind( wx.EVT_RIGHT_DOWN, self.skip )
@@ -103,42 +101,43 @@ class JChipSetupDialog( wx.Dialog ):
 		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
-		self.helpBtn = wx.Button( self, wx.ID_ANY, '&Help' )
+		self.helpBtn = wx.Button( self, wx.ID_ANY, _('&Help') )
 		self.Bind( wx.EVT_BUTTON, lambda evt: Utils.showHelp('Menu-ChipReader.html#jchip-setup'), self.helpBtn )
 		
 		self.Bind(EVT_CHIP_READER, self.handleChipReaderEvent)
 		
 		bs = wx.BoxSizer( wx.VERTICAL )
 		
-		todoList = [
-			'Make sure the JChip receiver is plugged into the network.',
-			'Do a "Sync PC" on the JChip receiver to synchronize with your computer clock.',
-			'Verify that the JChip has a "TCP Client" connection to the CrossMgr computer (see below).',
-			'You must have the Sign-On Excel sheet ready and linked before your race.',
-			'You must configure a "Tag" field in your Sign-On Excel Sheet.',
-			'Run this test before each race.',
-		]
-		intro = 'CrossMgr supports the JChip tag reader.\n' \
-				'For more details, consult the CrossMgr and JChip documentation.\n' \
-				'\nChecklist:\n\n%s\n' % '\n'.join( '%d)  %s' % (i + 1, s) for i, s in enumerate(todoList) )
+		todoList =  u'\n'.join( '%d)  %s' % (i + 1, s) for i, s in enumerate( [
+			_('Make sure the JChip receiver is plugged into the network.'),
+			_('Do a "Sync PC" on the JChip receiver to synchronize with your computer clock.'),
+			_('Verify that the JChip has a "TCP Client" connection to the CrossMgr computer (see below).'),
+			_('You must have the Sign-On Excel sheet ready and linked before your race.'),
+			_('You must configure a "Tag" field in your Sign-On Excel Sheet.'),
+			_('Run this test before each race.'),
+		]) )
+		intro = (u'\n'.join( [
+				_('CrossMgr supports the JChip tag reader.'),
+				_('For more details, consult the CrossMgr and JChip documentation.'),
+				] ) + u'\n' + _('Checklist:') + u'\n\n{}\n').format( todoList )
 		
 		border = 4
-		bs.Add( wx.StaticText(self, -1, intro), 0, wx.EXPAND|wx.ALL, border )
+		bs.Add( wx.StaticText(self, label = intro), 0, wx.EXPAND|wx.ALL, border )
 
 		bs.Add( self.enableJChipCheckBox, 0, wx.EXPAND|wx.ALL|wx.ALIGN_LEFT, border )
 		
 		#-------------------------------------------------------------------
 		bs.AddSpacer( border )
-		bs.Add( wx.StaticText( self, -1, 'JChip Configuration:' ), 0, wx.EXPAND|wx.ALL, border )
+		bs.Add( wx.StaticText( self, label = _('JChip Configuration:') ), 0, wx.EXPAND|wx.ALL, border )
 		
 		#-------------------------------------------------------------------
 		rowColSizer = rcs.RowColSizer()
 		bs.Add( rowColSizer, 0, wx.EXPAND|wx.ALL, border )
 		
 		row = 0
-		rowColSizer.Add( wx.StaticText( self, -1, 'Type:' ), row=row, col=0, border = border,
+		rowColSizer.Add( wx.StaticText( self, label = _('Type:') ), row=row, col=0, border = border,
 			flag=wx.TOP|wx.LEFT|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
-		rowColSizer.Add( wx.TextCtrl( self, -1, value='TCP Client', style = wx.TE_READONLY),
+		rowColSizer.Add( wx.TextCtrl( self, value=_('TCP Client'), style = wx.TE_READONLY),
 			row=row, col=1, border = border, flag=wx.EXPAND|wx.TOP|wx.RIGHT|wx.ALIGN_LEFT )
 		
 		row += 1
@@ -152,23 +151,23 @@ class JChipSetupDialog( wx.Dialog ):
 				break
 		self.ipaddr.Bind( wx.EVT_CHOICE, self.onIpAddrSelect )
 		
-		rowColSizer.Add( wx.StaticText( self, -1, 'Remote IP Address:' ),
+		rowColSizer.Add( wx.StaticText( self, label = _('Remote IP Address:') ),
 						row=row, col=0, flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		rowColSizer.Add( self.ipaddr, row=row, col=1, border = border, flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_LEFT )
 		
 		row += 1
 		self.port = wx.lib.intctrl.IntCtrl( self, -1, min=1, max=65535, value=PORT,
 											limited=True, style = wx.TE_READONLY )
-		rowColSizer.Add( wx.StaticText(self, -1, 'Remote Port:'), row=row, col=0,
+		rowColSizer.Add( wx.StaticText(self, label = _('Remote Port:')), row=row, col=0,
 						flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		rowColSizer.Add( self.port, row=row, col=1, border = border, flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_LEFT )
 		
-		bs.Add( wx.StaticText( self, -1, 'See "7  Setting of Connections" in JChip "Control Panel Soft Manual" for more details.' ),
+		bs.Add( wx.StaticText( self, label = _('See "7  Setting of Connections" in JChip "Control Panel Soft Manual" for more details.') ),
 				border = border, flag = wx.GROW|wx.ALL )
 		#-------------------------------------------------------------------
 
 		bs.Add( self.testJChip, 0, wx.EXPAND|wx.ALL, border )
-		bs.Add( wx.StaticText(self, wx.ID_ANY, 'Messages:'), 0, wx.EXPAND|wx.ALL, border = border )
+		bs.Add( wx.StaticText(self, label = _('Messages:')), 0, wx.EXPAND|wx.ALL, border = border )
 		bs.Add( self.testList, 1, wx.EXPAND|wx.ALL, border )
 		
 		buttonBox = wx.BoxSizer( wx.HORIZONTAL )
@@ -225,6 +224,11 @@ class JChipSetupDialog( wx.Dialog ):
 		PhotoSyncViewer.photoSyncViewer.refresh( VideoBuffer.videoBuffer, (dt - self.refTime).total_seconds(), num )
 
 	def testJChipToggle( self, event ):
+		if Model.race and Model.race.isRunning():
+			Utils.MessageOK( self, _('Cannot perform JChip test while race is running.'), _('Cannot Test JChip') )
+			wx.CallAfter( self.testJChip.SetValue, False )
+			return
+
 		if not JChip.listener:
 			correct, reason = CheckExcelLink()
 			explain = 	'CrossMgr will not be able to associate chip Tags with Bib numbers.\n' \
