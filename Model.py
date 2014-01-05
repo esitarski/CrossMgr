@@ -1588,7 +1588,6 @@ class Race(object):
 		
 		categories = [c for c in self.categories.itervalues() if c.active and c.catType != Category.CatCustom and c.sequence > category.sequence]
 		categories.sort( key = lambda c: c.sequence )
-		print( categories )
 		
 		unionNums = set()
 		for c in categories:

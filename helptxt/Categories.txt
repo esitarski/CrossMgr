@@ -1,14 +1,82 @@
 [TOC]
 
 # Categories
-Allows you to configure properties of each race category.  In CrossMgr, a race category is a pattern of numbers to be ranked together - it does not have to be the same as the category that appears on a rider's license code.
+
+A race category is a pattern of numbers ranked together - it does not have to be the same as the category that appears on a rider's license code.
 
 It is easy to change the categories of a race before, during and afterwards.  A rider can be moved between categories before, during and after a race too.
 
 Ideally, each category in the race would have a unique number range, for example 1-99 would be in one category, 100-199 would be in another, etc.
 This is not only easier to configure in CrossMgr, it makes it easy for riders and race officials to know the set of competitors in the same race.
 
+It is commonplace to combine categories together into a single start (for example, Elite Women and Master Women, or Cat 3 and Cat 4).
+
+Sometimes prizes are only given for the combined finish.  Sometimes prizes are also given for each component category in the combined race.  Ranking by component category can also be important for upgrade points.
+
+Sometimes there are special ranking criteria.  For example, although non-Canadian nationals are allowed to compete in the Canadian National Road Race, only Canadian Nationals are eligible for the Canadian National Champion ranking.
+
+Sometimes organizers come up with creative ranking criteria.  For example, a ranking for "Fastest Non-Elite Women" even though the Masters Women and Junior Women are in different start waves.
+
+CrossMgr makes this easy by supporting three types of Categories:
+
+1. **Start Wave:** a group of riders that start at the same time.  The riders may all be in the same category, or they may be made up of multiple component categories riding together.  A "Start Wave" may, or may not have "Components".  Riders in a "Start Wave" are considered in the same race, and can work together.  Each "Start Wave" is managed in CrossMgr with a race progress bar.
+1. **Component:** a sub-group of riders part of a "Start Wave", all of which are in the same category with respect to each other.  Riders in a "Component" can work together with other riders in their "Component", as well as other riders in their "Start Wave".  "Component" categories use the same "Start Offset", "Race Laps" and other options as their "Start Wave".
+1. **Custom:** a group of riders defined by any criteria - they don't need to be part of the same "Start Wave".  A "Custom" category could be a completely made-up ranking of riders.
+
+## Step by Step Configuration
+
+### Combined Categories
+
+For example, say that you have Elite Women (1-99), Master Women (100-149) and Junior Women (150-199) and you want to combine them in the same Start Wave.
+Define those Categories in CrossMgr as "Elite", "Master" and "Junior" including the Name, Gender and Numbers fields.
+
+Now, press the "New Category" button, and change the new category name to "Combined Women".
+
+Press and hold on the grey cell (first cell in the row) of the "Combined Women" and drag the row up to just before the "Elite" row.
+
+Click on the "Category Type" cell in the "Elite Row".  Press the "left-cursor" key to change it to a "Component" category.  Then press the "down-cursor" button to move to the next row.  A number of fields in the Elite row have turned dark grey.  This is because those values will now come from the "Start Wave", category, not the "Component" Category.
+
+Continue doing "left-cursor" and "down-cursor" to set the Master and Junior categories to "Component" (of course you can change these with the mouse, but the keyboard is faster).
+
+Finally, press the "Update Start Wave Numbers" button at the top of the screen.  This combines the number ranges in the "Elite", "Master" and "Junior" into the "Combined Women" "Start Wave" category.
+**This button is pressed automatically when you leave the page, so don't worry if you forget.**
+
+You can configure as many "Start Wave" combined categories you like.  The "Start Wave" is always the first row, followed by the "Component" rows.
+
+CrossMgr makes the following assumptions about bib numbers in a race:
+
+* **All numbers in a Race are unique**.  If the number ranges for two "Start Waves" overlap, CrossMgr will consider the rider to be in the **first** matching "Start Wave"
+* **All numbers in a "Start Wave" are unique**.  If the number ranges for two "Components" overlap, CrossMgr will consider the rider to be in the the **first** matching "Component" in the "Start Wave".
+
+Decide what you want to do with the "Start Wave" and "Component" categories:
+
+* Do you want them to be uploaded to CrossResults, WebScorer or USA Cycling?  Check the selection in the "Upload" box.
+* Do you want them to be included as part of a race Series (using SeriesMgr)?  Check the selection in the "Series" box. 
+
+### Custom Categories
+
+"Custom" categories are just a set of Numbers.  The Numbers don't all have to be in the same "Start Wave".  Riders in a "Custom" category are first scored with respect to their actual "Start Wave", then re-scored **as if** they all started in the same "Start Wave".
+
+No checking is done on numbers in a "Custom" category - you can enter any number ranges you want.
+"Custom" category number ranges **can overlap with any other categories**.  A rider may appear multiple times in "Custom" categories.
+
+For example, consider the following "Custom" categories which could be active in the same race:
+
+* All riders with Green Jerseys
+* All riders with Green Jerseys and Black Shorts
+* All riders with Black Shorts
+
+If Adam is wearing a Green Jersey and Black Shorts, he would appear in all three "Custom" categories.
+
+Decide what you want to do with the "Custom" category:
+
+* Do you want it to be uploaded to CrossResults, WebScorer or USA Cycling?  Check the selection in the "Upload" box.
+* Do you want it to be included as part of a race Series (using SeriesMgr)?  Check the selection in the "Series" box. 
+
 # Controls
+
+## Drag and Drop Rows
+Category rows can drag-and-drop by pressing in the cells under the "up-down" arrow.  The "up-down" arrow is in the upper-left of the Categories table.
 
 ## Activate All
 Activate all Categories.  Active Categories will be considered in the race.
@@ -31,6 +99,9 @@ Move a Category up in the table.  Click anywhere on the row you want to move and
 ## Add Bib Exception
 Allows you to automatically add a bib exception to a selected category.  This action also adds the appropriate exceptions to the other categories.  Although you can do this here, it is more convenient to manage category exceptions directly from the [RiderDetail](RiderDetail.html) screen.
 
+## Update Start Wave Numbers
+Press this button to automatically adjust the Start Wave category to include all the Component categories numbers.  **This button is pressed automatically when you leave the Categories page.**
+
 # Category Screen
 
 The Category screen is a table with the category details:
@@ -38,6 +109,7 @@ The Category screen is a table with the category details:
 Property|Description
 :-------|:----------
 Active|If selected, this Category will be considered in the race.  If deselected, this Category will be ignored.  Some CrossMgr users configure an external Category file with all possible categories in it.  The then select only the categories that are in this race.
+Category Type|Either "Start Wave", "Component" or "Custom"
 Name|Name of the Category
 Gender|Gender of the Category.  Choices are "Men", "Women" or "Open".
 Numbers|The numbers of riders in this Category.  Numbers can be expressed individually like 103,105 or a range, like 100-199.  Exclusions exceptions are expressed by preceding the excluded number with a '-' sign.  Exceptions can be express individually, like -201,-205 or in a range -201-205.  See [Number Patterns](#number-patterns) for more details below.
@@ -49,6 +121,8 @@ Distance is By|This field is either "Lap" if the distance you entered is by lap,
 First Lap Distance|Fill in this field if the first lap of your race is not the same as the subsequent laps.  This can happen in many situations, for example, when the rider staging area is not at the start/finish line.  If there is a run-up to the start, make the first lap longer than the rest of the laps.  For example, if the lap distance is 3.6km, and there is a 200m run-up to the start, make the first lap 3.8km, and do not log riders mapping the finish after the run-up.  If you are using chip timing, see appropriate chip timing start options here [Actions][].
 80% Lap Time|This is computed by CrossMgr.  It is the maximum time a rider can fall behind the leader before being a candidate to be pulled in a UCI CycloCross or MTB race.  It is computed as 80% of each category leader's first lap time.  If the first lap distance is not the same as the regular lap distance (see above), the second lap time is used.  Riders outside the 80% time boundary are shown in red in the [Expected](Expected.html#expected) screen.
 Suggested Laps|Computed by CrossMgr.  Important if you are running a race by time rather than laps.  The "Race Laps" column overrides this field if you don't like CrossMgr's suggestion.
+Upload|If selected, this Category will be included in CrossResults, WebScorer and USAC publish.
+Series|If selected, this Category will be included as part of a Series in SeriesMgr.
 
 ## Number Patterns
 Number patterns are expressive and flexible, and are used to identify the number range of riders in a Category.

@@ -643,6 +643,7 @@ and remove them from other categories.''').format(category.name),
 																			if name not in self.computedFieldss )
 				numStrTuples.append( values )
 			race.setCategories( numStrTuples )
+			race.adjustAllCategoryWaveNumbers()
 		wx.CallAfter( Utils.refreshForecastHistory )
 	
 if __name__ == '__main__':

@@ -91,11 +91,16 @@ When the leaders return, the timer will reset back to 4 seconds because the gap 
 So, this approach synchronizes publishing to groups in the race, and does nothing if there are no changes.  If riders get all strung out and there are no discernible groups anymore, it self-configures to do an update about every 30 seconds, which is the same as a fixed publishing approach.
 
 ## Publish Results to CrossResults.com...
-Creates a CrossResults.com compatible file for all race categories.
-Launches your web browser to the CrossResults.com upload page.
+Creates a CrossResults.com compatible file.  Only Categories flagged as "Upload" will be considered.
+Launches your web browser to the CrossResults.com upload page to upload it automatically.
+
+## Publish Results to WebScorer.com Format...
+Creates a WebScorer.com compatible file.  Only Categories flagged as "Upload" will be considered.
+Follow the instructions on the WebScorer.com site to upload this file.
 
 ## Publish Results in USAC Excel Format...
-Export the results for all race categories in a format acceptable to USA Cycling.
+Export the results for race categories in a format acceptable to USA Cycling.  Only Categories flagged as "Upload" will be considered.
+Follow the USAC instructions to upload this file.
 
 Columns in the exported spreadsheet are as follows:
 
