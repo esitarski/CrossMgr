@@ -60,13 +60,17 @@ Decide what you want to do with the "Start Wave" and "Component" categories:
 No checking is done on numbers in a "Custom" category - you can enter any number ranges you want.
 "Custom" category number ranges **can overlap with any other categories**.  A rider may appear multiple times in "Custom" categories.
 
-For example, consider the following "Custom" categories which could be active in the same race:
+For example, consider the following "Custom" categories which could be active in the same race (let's say that the number ranges have been configured):
 
-* All riders with Green Jerseys
-* All riders with Green Jerseys and Black Shorts
-* All riders with Black Shorts
+* All Riders with Green Jerseys
+* All Riders with Green Jerseys and Black Shorts
+* All Riders with Black Shorts
 
-If Adam is wearing a Green Jersey and Black Shorts, he would appear in all three "Custom" categories.
+Riders would be ranked as:
+
+* If Adam is wearing a Green Jersey and Black Shorts, he would appear in all three "Custom" categories.
+* If Betty is wearing a Red Jersey and Black Shorts, she would appear in the "All Riders with Black Shorts" custom category.
+* Is Calvin is wearing an Orange Jersey and White Shorts, he would not appear in any of these "Custom" categories.
 
 Decide what you want to do with the "Custom" category:
 
