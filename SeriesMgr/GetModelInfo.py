@@ -119,7 +119,10 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 		
 	raceURL = getattr( race, 'urlFull', None )
 	raceResults = []
-	for category in race.getCategories():
+	for category in race.getCategories( startWaveOnly = False ):
+		if not category.seriesFlag:
+			continue
+		
 		results = GetResults( category, True )
 		for rr in results:
 			if rr.status != Model.Rider.Finisher:

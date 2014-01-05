@@ -24,7 +24,8 @@ def CrossResultsExport( fname ):
 	hasField[1] = True
 	
 	# Check for what fields are actually filled in.
-	for cat in race.getCategories():
+	publishCategories = race.getCategories( startWaveOnly = False, uploadOnly = True )
+	for cat in publishCategories:
 		results = GetResults( cat, True )
 		if not results:
 			continue
@@ -46,7 +47,7 @@ def CrossResultsExport( fname ):
 		csvWriter = csv.writer( csvFile, delimiter = ',', lineterminator = '\n' )
 		csvWriter.writerow( crossResultsFields )
 		
-		for cat in race.getCategories():
+		for cat in publishCategories:
 			results = GetResults( cat, True )
 			if not results:
 				continue

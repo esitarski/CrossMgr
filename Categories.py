@@ -55,8 +55,8 @@ class CategoriesPrintout( wx.Printout ):
 		
 		raceStart = Utils.StrToSeconds( race.scheduledStart + ':00' )
 		catData = []
-		for c in race.getCategories():
-			starters = sum( 1 for num in externalInfo.iterkeys() if race.inCategory(num, c) )
+		for c in race.getCategories( startWaveOnly = False ):
+			starters = race.catCount( c )
 			if not starters:
 				starters = ''
 			catInfo = catDetails.get( c.fullname, {} )
@@ -300,6 +300,8 @@ class Categories( wx.Panel ):
 			(_('First Lap\nDistance'),	'firstLapDistance'),
 			(_('80%\nLap Time'),		'rule80Time'),
 			(_('Suggested\nLaps'),		'suggestedLaps'),
+			(_('Upload'),				'uploadFlag'),
+			(_('Series'),				'seriesFlag'),
 		]
 		self.computedFieldss = {'rule80Time', 'suggestedLaps'}
 		colnames = [colName for colName, fieldName in self.colNameFields]
@@ -337,7 +339,7 @@ class Categories( wx.Panel ):
 				attr.SetAlignment( wx.ALIGN_LEFT, wx.ALIGN_CENTRE )
 				self.choiceCols.add( col )
 				
-			elif fieldName in ['active', 'lappedRidersMustContinue']:
+			elif fieldName in {'active', 'lappedRidersMustContinue', 'uploadFlag', 'seriesFlag'}:
 				boolEditor = gridlib.GridCellBoolEditor()
 				boolEditor.UseStringValues( '1', '0' )
 				attr.SetEditor( boolEditor )
@@ -382,8 +384,6 @@ class Categories( wx.Panel ):
 				self.dependentCols.add( col )
 				
 			self.grid.SetColAttr( col, attr )
-		
-		self.grid.SetColSize( self.iCol['catType'], self.catTypeWidth )
 		
 		self.Bind( gridlib.EVT_GRID_CELL_LEFT_CLICK, self.onGridLeftClick )
 		self.Bind( gridlib.EVT_GRID_SELECT_CELL, self.onCellSelected )
@@ -490,7 +490,9 @@ and remove them from other categories.''').format(category.name),
 					numLaps = None,
 					lappedRidersMustContinue = False,
 					distance = None, distanceType = None,
-					firstLapDistance = None, gender = None, catType = 0 ):
+					firstLapDistance = None, gender = None,
+					catType = Model.Category.CatWave,
+					uploadFlag = True, seriesFlag = True ):
 					
 		if len(startOffset) < len('00:00:00'):
 			startOffset = '00:' + startOffset
@@ -509,6 +511,8 @@ and remove them from other categories.''').format(category.name),
 		self.grid.SetCellValue( r, self.iCol['distance'], ('%.3f' % distance) if distance else '' )
 		self.grid.SetCellValue( r, self.iCol['distanceType'], '%d' % (distanceType if distanceType else 0) )
 		self.grid.SetCellValue( r, self.iCol['firstLapDistance'], ('%.3f' % firstLapDistance) if firstLapDistance else '' )
+		self.grid.SetCellValue( r, self.iCol['uploadFlag'], '1' if uploadFlag else '0' )
+		self.grid.SetCellValue( r, self.iCol['seriesFlag'], '1' if seriesFlag else '0' )
 		
 		# Get the 80% time cutoff.
 		if not active or not Model.race:
@@ -528,12 +532,13 @@ and remove them from other categories.''').format(category.name),
 			self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '{}'.format(laps) )
 	
 	def fixRow( self, row, catType ):
+		colour = wx.WHITE if catType == Model.Category.CatWave else self.ignoreColour
 		for colName, fieldName in self.colNameFields:
 			if not fieldName:
 				continue
 			col = self.iCol[fieldName]
 			if col in self.dependentCols:
-				self.grid.SetCellBackgroundColour( row, col, wx.WHITE if catType == 0 else self.ignoreColour )
+				self.grid.SetCellBackgroundColour( row, col, colour )
 		
 	def fixCells( self, event = None ):
 		for row in xrange(self.grid.GetNumberRows()):
@@ -615,6 +620,8 @@ and remove them from other categories.''').format(category.name),
 								distance			= getattr(cat, 'distance', None),
 								distanceType		= getattr(cat, 'distanceType', Model.Category.DistanceByLap),
 								firstLapDistance	= getattr(cat, 'firstLapDistance', None),
+								uploadFlag			= cat.uploadFlag,
+								seriesFlag			= cat.seriesFlag,
 							)
 				
 			self.grid.AutoSizeColumns( True )

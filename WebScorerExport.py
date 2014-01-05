@@ -47,7 +47,8 @@ def WebScorerExport( fname ):
 	hasField[1] = True
 	
 	# Check for what fields are actually filled in.
-	for cat in race.getCategories():
+	publishCategories = race.getCategories( startWaveOnly = False, uploadOnly = True )
+	for cat in publishCategories:
 		results = GetResults( cat, True )
 		if not results:
 			continue
@@ -67,7 +68,7 @@ def WebScorerExport( fname ):
 	
 	hasDistance = False
 	maxLaps = 0
-	for cat in race.getCategories():
+	for cat in publishCategories:
 		results = GetResults( cat, True )
 		if not results:
 			continue
@@ -86,7 +87,7 @@ def WebScorerExport( fname ):
 	with io.open(fname, 'w', encoding = 'utf-16') as txtFile:
 		txtFile.write( u'{}\n'.format( u'\t'.join(unicode(c) for c in colNames) ) )
 		
-		for cat in race.getCategories():
+		for cat in publishCategories:
 			results = GetResults( cat, True )
 			if not results:
 				continue

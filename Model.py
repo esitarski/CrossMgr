@@ -128,6 +128,8 @@ class Category(object):
 	CatCustom = 2
 	
 	catType = 0
+	uploadFlag = True
+	seriesFlag = True
 
 	def _getStr( self ):
 		s = ['{}'.format(i[0]) if i[0] == i[1] else '{}-{}'.format(*i) for i in self.intervals]
@@ -200,17 +202,40 @@ class Category(object):
 	def __init__( self, active = True, name = 'Category 100-199', catStr = '100-199', startOffset = '00:00:00',
 						numLaps = None, sequence = 0,
 						distance = None, distanceType = None, firstLapDistance = None,
-						gender = 'Open', lappedRidersMustContinue = False, catType = CatWave ):
+						gender = 'Open', lappedRidersMustContinue = False,
+						catType = CatWave, uploadFlag = True, seriesFlag = True ):
 		self.active = False
-		active = '{}'.format(active).strip()
-		if active and active[0] in 'TtYy1':
+		active = unicode(active).strip()
+		if active and active[0] in u'TtYy1':
 			self.active = True
-			
+		
 		self.name = name
 		self.catStr = catStr
 		self.startOffset = startOffset if startOffset else '00:00:00'
-		self.catType = int(catType)
 		
+		self.catType = self.CatWave
+		catType = unicode(catType)
+		try:
+			self.catType = int(catType)
+		except ValueError:
+			try:
+				if catType.lower().startswith(u'component'):
+					self.catType = self.CatComponent
+				elif catType.lower().startswith(u'custom'):
+					self.catType = self.CatCustom
+			except:
+				pass
+				
+		self.uploadFlag = True
+		uploadFlag = unicode(uploadFlag).strip()
+		if uploadFlag and uploadFlag[0] not in u'TtYy1':
+			self.uploadFlag = False
+		
+		self.seriesFlag = True
+		seriesFlag = unicode(seriesFlag).strip()
+		if seriesFlag and seriesFlag[0] not in u'TtYy1':
+			self.seriesFlag = False
+			
 		try:
 			self._numLaps = int(numLaps)
 			if self._numLaps < 1:
@@ -351,7 +376,7 @@ class Category(object):
 
 	key_attr = ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'catStr',
 				'distance', 'distanceType', 'firstLapDistance',
-				'gender', 'lappedRidersMustContinue', 'catType']
+				'gender', 'lappedRidersMustContinue', 'catType', 'uploadFlag', 'seriesFlag']
 	def __cmp__( self, c ):
 		for attr in self.key_attr:
 			cCmp = cmp( getattr(self, attr, None), getattr(c, attr, None) )
@@ -1490,8 +1515,10 @@ class Race(object):
 	def numPulledRiders( self ):
 		return sum( (1 for r in self.riders.itervalues() if r.status == Rider.Pulled) )
 
-	def getCategories( self, startWaveOnly = True ):
+	def getCategories( self, startWaveOnly = True, uploadOnly = False ):
 		activeCategories = [c for c in self.categories.itervalues() if c.active and (not startWaveOnly or c.catType == Category.CatWave)]
+		if uploadOnly:
+			activeCategories = [c for c in activeCategories if c.uploadFlag]
 		activeCategories.sort( key = Category.key )
 		return activeCategories
 

@@ -43,7 +43,9 @@ def USACExport( sheet ):
 	hasDistance = None
 	
 	maxLaps = 0
-	for cat in race.getCategories():
+	
+	publishCategories = race.getCategories( startWaveOnly = False, uploadOnly = True )
+	for cat in publishCategories:
 		results = GetResults( cat, True )
 		if not results:
 			continue
@@ -67,7 +69,7 @@ def USACExport( sheet ):
 	raceDate = datetime.date( year = int(year), month = int(month), day = int(day) ).strftime( '%m/%d/%Y' )
 	
 	row = 0
-	for cat in race.getCategories():
+	for cat in publishCategories:
 		results = GetResults( cat, True )
 		if not results:
 			continue
