@@ -478,9 +478,9 @@ class RiderDetail( wx.Panel ):
 			if Utils.MessageOKCancel( self, _('Turn off Autocorrect first?'), _('Turn off Autocorrect') ):
 				rider.autocorrectLaps = False
 				
-		category = race.getCategory( num )
-		if category:
-			times[0] = category.getStartOffsetSecs()
+		waveCategory = race.getCategory( num )
+		if waveCategory:
+			times[0] = waveCategory.getStartOffsetSecs()
 		tNewLast = times[-1] + times[-1] - times[-2]
 				
 		with Model.LockRace() as race:
@@ -980,24 +980,32 @@ class RiderDetail( wx.Panel ):
 					self.tags.SetLabel( ', '.join(tags) )
 			except KeyError:
 				pass
-				
-			category = race.getCategory( num )
-			catName = category.fullname if category else ''
+			
+			waveCategory = race.getCategory( num )
+			category = None
+			iCategory = None
 			categories = race.getCategories( startWaveOnly = False, excludeCustom = True )
-			try:
-				iCategory = (i for i, c in enumerate(categories) if c == category).next()
+			for i, c in enumerate(categories):
+				if race.inCategory( num, c ) and c.catType != Model.Category.CatCustom:
+					iCategory = i
+					category = c
+					if c.catType == Model.Category.CatComponent:
+						break
+			
+			if iCategory is not None:
 				self.category.AppendItems( [c.fullname for c in categories] )
 				self.category.SetSelection( iCategory )
-			except StopIteration:
+			else:
 				self.category.AppendItems( [c.fullname for c in categories] + [' '] )
 				self.category.SetSelection( len(categories) )
 				
+			catName = category.fullname if category else ''
 			#--------------------------------------------------------------------------------------
 			if num not in race:
 				return
 				
-			if category and getattr(category, 'distance', None) and category.distanceIsByLap:
-				distanceByLap = getattr(category, 'distance')
+			if waveCategory and getattr(waveCategory, 'distance', None) and waveCategory.distanceIsByLap:
+				distanceByLap = getattr(waveCategory, 'distance')
 			else:
 				distanceByLap = None
 			
@@ -1074,7 +1082,7 @@ class RiderDetail( wx.Panel ):
 
 			# Populate the lap times.
 			try:
-				raceTime = min(category.getStartOffsetSecs() if category else 0.0, entries[0].t)
+				raceTime = min(waveCategory.getStartOffsetSecs() if waveCategory else 0.0, entries[0].t)
 			except IndexError:
 				raceTime = 0.0
 			ganttData = [raceTime]
@@ -1107,8 +1115,8 @@ class RiderDetail( wx.Panel ):
 						highlightColour = self.orangeColour
 						
 				if distanceByLap:
-					row[6:8] = ('%.2f' % (1000.0 if tLap <= 0.0 else (category.getLapDistance(r+1) / (tLap / (60.0*60.0)))),
-								'%.2f' % (1000.0 if tSum <= 0.0 else (category.getDistanceAtLap(r+1) / (tSum / (60.0*60.0)))) )
+					row[6:8] = ('%.2f' % (1000.0 if tLap <= 0.0 else (waveCategory.getLapDistance(r+1) / (tLap / (60.0*60.0)))),
+								'%.2f' % (1000.0 if tSum <= 0.0 else (waveCategory.getDistanceAtLap(r+1) / (tSum / (60.0*60.0)))) )
 				
 				for i, d in enumerate(row):
 					data[i].append( d )
