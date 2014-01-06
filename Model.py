@@ -1527,15 +1527,16 @@ class Race(object):
 		activeCategories.sort( key = Category.key )
 		
 		if excludeCombined:
-			# If this is a combined category, then the following category will be a component.
+			# If this is a combined category, then the following non-custom category will be a component.
 			toExclude = set()
 			for i, c in enumerate(activeCategories):
 				if c.catType == Category.CatWave:
-					try:
-						if activeCategories[i+1].catType == Category.CatComponent:
+					for j in xrange(i+1, len(activeCategories)):
+						if activeCategories[j].catType == Category.CatCustom:
+							continue
+						if activeCategories[j].catType == Category.CatComponent:
 							toExclude.add( c )
-					except IndexError:
-						pass
+						break
 			activeCategories = [c for c in activeCategories if c not in toExclude]
 			
 		return activeCategories

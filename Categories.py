@@ -232,6 +232,7 @@ class Categories( wx.Panel ):
 		vs = wx.BoxSizer( wx.VERTICAL )
 		
 		self.ignoreColour = wx.Colour( 80, 80, 80 )
+		self.inactiveColour = wx.Colour( 220, 220, 220 )
 		
 		border = 4
 		flag = wx.ALL
@@ -425,6 +426,9 @@ class Categories( wx.Panel ):
 	def onGridLeftClick( self, event ):
 		if event.GetCol() in self.boolCols:
 			r, c = event.GetRow(), event.GetCol()
+			if c == self.iCol['active']:
+				active = (self.grid.GetCellValue(r, self.iCol['active']) == '1')
+				wx.CallAfter( self.fixRow, r, int(self.grid.GetCellValue(r, self.iCol['catType'])), not active )
 			self.grid.SetCellValue( r, c, '1' if self.grid.GetCellValue(r, c) != '1' else '0' )
 		event.Skip()
 		
@@ -438,7 +442,7 @@ class Categories( wx.Panel ):
 	def onCellChanged( self, event ):
 		self.rowCur = event.GetRow()
 		self.colCur = event.GetCol()
-		if self.colCur == 1:
+		if self.colCur in [1, 2]:
 			self.fixCells()
 		event.Skip()
 
@@ -531,19 +535,23 @@ and remove them from other categories.''').format(category.name),
 		if laps:
 			self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '{}'.format(laps) )
 	
-	def fixRow( self, row, catType ):
-		colour = wx.WHITE if catType == Model.Category.CatWave else self.ignoreColour
+	def fixRow( self, row, catType, active ):
+		activeColour = wx.WHITE if active else self.inactiveColour
+		colour = activeColour if catType == Model.Category.CatWave else self.ignoreColour
 		for colName, fieldName in self.colNameFields:
 			if not fieldName:
 				continue
 			col = self.iCol[fieldName]
 			if col in self.dependentCols:
 				self.grid.SetCellBackgroundColour( row, col, colour )
+			else:
+				self.grid.SetCellBackgroundColour( row, col, activeColour )
 		
 	def fixCells( self, event = None ):
 		for row in xrange(self.grid.GetNumberRows()):
+			active = self.grid.GetCellValue( row, self.iCol['active'] )[:1] in 'TtYy1'
 			catType = int(self.grid.GetCellValue( row, self.iCol['catType'] ))
-			self.fixRow( row, catType )
+			self.fixRow( row, catType, active )
 	
 	def onActivateAll( self, event ):
 		for c in Model.race.getAllCategories():
