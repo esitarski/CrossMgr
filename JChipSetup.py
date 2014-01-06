@@ -224,7 +224,12 @@ class JChipSetupDialog( wx.Dialog ):
 		PhotoSyncViewer.photoSyncViewer.refresh( VideoBuffer.videoBuffer, (dt - self.refTime).total_seconds(), num )
 
 	def testJChipToggle( self, event ):
-		if Model.race and Model.race.isRunning():
+		if not Model.race:
+			Utils.MessageOK( self, _('No active race.  Cannot perform JChip test.  "New" or "Open" a race first.'), _('Cannot Test JChip') )
+			wx.CallAfter( self.testJChip.SetValue, False )
+			return
+			
+		if Model.race.isRunning():
 			Utils.MessageOK( self, _('Cannot perform JChip test while race is running.'), _('Cannot Test JChip') )
 			wx.CallAfter( self.testJChip.SetValue, False )
 			return
