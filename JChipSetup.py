@@ -225,12 +225,12 @@ class JChipSetupDialog( wx.Dialog ):
 
 	def testJChipToggle( self, event ):
 		if not Model.race:
-			Utils.MessageOK( self, _('No active race.  Cannot perform JChip test.  "New" or "Open" a race first.'), _('Cannot Test JChip') )
+			Utils.MessageOK( self, _('No active race.  Cannot perform JChip test.  "New" or "Open" a race first.'), _('Cannot Perform JChip Test') )
 			wx.CallAfter( self.testJChip.SetValue, False )
 			return
 			
 		if Model.race.isRunning():
-			Utils.MessageOK( self, _('Cannot perform JChip test while race is running.'), _('Cannot Test JChip') )
+			Utils.MessageOK( self, _('Cannot perform JChip test while race is running.'), _('Cannot Perform JChip Test') )
 			wx.CallAfter( self.testJChip.SetValue, False )
 			return
 
