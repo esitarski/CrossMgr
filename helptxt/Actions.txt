@@ -34,3 +34,11 @@ After the race is started with the Start button, this option ignores the first t
 The idea behind this feature is that the riders are staged in a start area behind the finish line (say, 200m).  When the race starts, the riders pass the finish line - and the reader antennas.  You do not want to register this tag read as it "does not count".
 
 When using this feature, be sure to set the "First Lap Distance" in [Categories][] to compensate for the run-up distance.  This will ensure that the riders speeds are computed correctly.
+
+# Checklist
+
+A task checklist.  The checklist helps you keep track of important steps in the timing process.  It does not change the functionality of CrossMgr in any way.
+
+To change a task's status, right-click, or double-click on the task's name.
+
+Only subtasks can be checked - parent tasks will automatically be checked off when all subtasks are complete.

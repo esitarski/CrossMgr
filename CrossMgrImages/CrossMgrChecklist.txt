@@ -1,0 +1,185 @@
+#-------------------------------------------------------------------------------------------------------
+#
+#    Checklist for CrossMgr.
+#    
+#    When CrossMgr starts, it checks for a "CrossMgrChecklist.txt" file in race folder,
+#    then your home folder, then in the CrossMgrImages folder where CrossMgr was installed.
+#    
+#    To customize the checklist, copy the standard CrossMgrChecklist.txt file into your
+#    home directory.
+#
+#    Alternatively, if you want a specific Checklist for a specific race, you can copy 
+#    CrossMgrChecklist.txt into the same folder as the race.
+#
+#    Then, edit it from there.  This is a structured file - be careful!
+#
+#    VERY IMPORTANT:  DO NOT PUT TABS IN THE FILE.  ALL INDENTATION MUST BE IN SPACES.
+#
+#    A checklist task has the following structure:
+#    
+#    task
+#        title = ...Title of the task shown in CrossMgr...
+#        note = ...note.  notes can be multi-line as long as subsequent lines "line up"
+#               with the start of the line above it...
+#        requires
+#            ...Requirements for the task to be displayed.  Optional - see below...
+#        subtasks
+#            ...Subtasks of this checklist task.  Optional.  You can nest tasks and subtasks any level deep.
+#
+#    If all the conditions in the "requires" section are met, the task (and all its subtasks) will be shown, otherwise, it will not appear.
+#    
+#    Acceptable "requires" are:
+#    
+#        RaceStatus = NotStarted | Running | Finished    # The current status of the race.
+#        TimeTrial = True | False                        # True if this is a TimeTrial.
+#        Camera = True | False                           # True if the "Enable USB Camera" options is selected.
+#        ChipReader = True | False                       # True if the "Enable JChip Integration" option is selected.
+#        
+#    Examples:
+#    
+#        requires
+#            TimeTrial = True                            # Item will be shown if TimeTrial is True
+#
+#        requires                                        # Item will be shown if both RaceStatus = NotStarted
+#            RaceStatus = NotStarted                     # And ChipReader = False
+#            ChipReader = False                          # And Camera = False
+#            Camera = False
+#        
+#    Requires conditions apply to all of the subtasks of a task.
+#-------------------------------------------------------------
+
+task
+    title = Pre-Race
+    note = Tasks before starting the race
+    requires
+        RaceStatus = NotStarted
+    subtasks
+        task
+            title = Check Chip Reader
+            requires
+                ChipReader = True
+            subtasks
+                task
+                    title = Chip reader has sufficient power
+                task
+                    title = Network is connected
+                task
+                    title = Successfully received reads from chip reader
+                    note = (ChipReader/JChip Setup...)
+        
+        task
+            title = Check Camera
+            requires
+                Camera = True
+            subtasks
+                task
+                    title = USB Camera connected to computer
+                task
+                    title = Validate advance milliseconds
+                task
+                    title = Camera test succeeds
+                    
+        task
+            title = Link Excel Registration Sheet
+            note = (DataMgmt/Link to External Excel Data...)
+            subtasks
+                task
+                    title = Excel Sheet is up-to-date
+                task
+                    title = All column headers are mapped correctly
+        
+        task
+            title = Import Time Trial Start Times
+            note = If available (DataMgmt/Import Time Trial Start Times...)
+            requires
+                TimeTrial = True
+
+        task
+            title = Import GPX Map
+       
+        task
+            title = Configure Categories
+            note = (F9) Categories
+            subtasks
+                task
+                    title = Number Ranges are correct
+                task
+                    title = Start Wave/Component/Custom categories are correct
+                task
+                    title = Laps are correct
+                task
+                    title = Distances are correct
+                
+                task
+                    title = "Upload" and "Series" flags set appropriately
+                    note = Set the "Upload" flag for all categories to be uploaded
+                           in CrossResults, WebScorer or USAC.  Pay special attention
+                           that each bib number is uploaded on one category only.
+            
+        task
+            title = Test HTML FTP Upload
+            note = (Publish/Publish HTML Results with FTP...)
+            subtasks
+                task
+                    title = FTP site is correct
+                task
+                    title = Internet connection working
+                task
+                    title = FTP Publish successful
+                task
+                    title = Web address is correct
+    
+#------------------------------------------------------------- 
+task
+    title = Post-Race
+    note = Tasks after finishing the race
+    
+    requires
+        RaceStatus = Finished
+        
+    subtasks
+        task
+            title = Backup chip reader raw data
+            requires
+                ChipReader = True
+            
+        task
+            title = Record Non-Finishers
+            note = Account for all riders who did not finish
+            subtasks
+                task
+                    title = Assign DNF riders
+                    note = (F6) Chart or (F5) Rider Detail
+                task
+                    title = Assign PUL riders
+                    note = (F6) Chart or (F5) Rider Detail
+                task
+                    title = Run DNS check
+                    note = (DataMgmt/Add DNS from External Excel Data...)
+        task
+            title = Review Gantt Chart
+            note = (F6) Check that recorded times make sense
+            subtasks
+                task
+                    title = Split or add laps for missed/free laps
+                task
+                    title = Add notes for free/pit laps
+                task
+                    title = Compare completed laps to lap count
+            
+        task
+            title = Review recommendations
+            note = (F8) Recommendations
+        task
+            title = Publish results
+            note = (Publish)
+            subtasks
+                task
+                    title = Print
+                    note = (Publish/Print Results...)
+                task
+                    title = FTP Publish
+                    note = (Publish/HTML Results with FTP...)
+                task
+                    title = Upload
+                    note = (Publish/...) for CrossResults, WebScorer, Facebook, USAC

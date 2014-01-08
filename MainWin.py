@@ -616,6 +616,12 @@ class MainWin( wx.Frame ):
 		self.toolsMenu.Append( idCur , _("Copy Log File to &Clipboard..."), _("Copy Log File to &Clipboard") )
 		self.Bind(wx.EVT_MENU, self.menuCopyLogFileToClipboard, id=idCur )
 
+		self.toolsMenu.AppendSeparator()
+
+		idCur = wx.NewId()
+		self.toolsMenu.Append( idCur , _("&Reload Checklist..."), _("Reload the Checklist from the Checklist File") )
+		self.Bind(wx.EVT_MENU, self.menuReloadChecklist, id=idCur )
+		
 		self.menuBar.Append( self.toolsMenu, _("&Tools") )
 		
 		#------------------------------------------------------------------------------
@@ -860,6 +866,13 @@ class MainWin( wx.Frame ):
 			Utils.MessageOK(self, _("Log file copied to clipboard.\nYou can now paste it into an email."), _("Success") )
 		else:
 			Utils.MessageOK(self, "Unable to open the clipboard.", "Error", wx.ICON_ERROR )
+	
+	def menuReloadChecklist( self, event ):
+		try:
+			Model.race.checklist = None
+		except:
+			pass
+		self.refresh()
 	
 	def getGraphicFName( self ):
 		defaultFName = os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png')

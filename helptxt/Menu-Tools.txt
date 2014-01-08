@@ -18,3 +18,13 @@ The log can then be pasted into an email.
 
 When reporting problems with CrossMgr, please include the log.
 It contains important diagnostics to find the problem.
+
+## Reload Checklist
+
+Reloads the checklist file.  CrossMgr looks in three places for a "CrossMgrChecklist.txt" file:
+
+1. The folder of the current Race
+1. Your home folder
+1. The CrossMgrImages folder in the install folder
+
+See the "CrossMgrChecklist.txt" file for instructions on how to customize the checklist file.

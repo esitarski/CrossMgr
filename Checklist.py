@@ -155,26 +155,26 @@ class Checklist( wx.Panel ):
 		self.tree.Bind( wx.EVT_TREE_ITEM_ACTIVATED, self.onTreeItemActivated )
 		self.tree.Bind( wx.EVT_TREE_ITEM_RIGHT_CLICK, self.onTreeItemActivated )
 		
+		self.checklist = None
+		self.refresh()
+
+	def updateChecklist( self ):
 		self.checklist = getattr( Model.race, 'checklist', None )
 		if self.checklist is None:
 			searchDirs = []
 			if Utils.getFileName():
-				searchDirs.append( os.path.dirname(Utils.getFileName) )
+				searchDirs.append( os.path.dirname(Utils.getFileName()) )
 			searchDirs.extend( [os.path.expanduser('~'), Utils.getImageFolder(), os.path.dirname(__file__)] )
 			
 			for dir in searchDirs:
-				fname = os.path.join(dir, 'CrossMgrChecklist.rson')
-				if not os.path.exists(fname):
-					continue
+				fname = os.path.join(dir, 'CrossMgrChecklist.txt')
 				try:
-					with io.open(os.path.join(dir,'CrossMgrChecklist.rson'), 'r', encoding='utf-8') as fp:
+					with io.open(fname, 'r', encoding='utf-8') as fp:
 						self.checklist = Model.race.checklist = createTasks( fp )
 					break
 				except:
 					pass
-				
-		self.refresh()
-
+	
 	def setChanged( self ):
 		try:
 			Model.race.setChanged()
@@ -284,6 +284,7 @@ class Checklist( wx.Panel ):
 		self.tree.Collapse( treeNode )
 
 	def refresh( self ):
+		self.updateChecklist()
 		self.tree.DeleteAllItems()
 		root = self.tree.AddRoot( 'root', data = wx.TreeItemData(self.checklist) )
 		self.addChildren( root )
@@ -306,7 +307,7 @@ if __name__ == '__main__':
 	app.MainLoop()
 	
 	'''
-	with io.open('Checklist.rson', 'r', encoding='utf-8') as fp:
+	with io.open('Checklist.txt', 'r', encoding='utf-8') as fp:
 		root = createTasks( fp )
 	root.pprint()
 	root.validate()
