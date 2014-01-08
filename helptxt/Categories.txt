@@ -48,11 +48,6 @@ CrossMgr makes the following assumptions about bib numbers in a race:
 * **All numbers in a Race are unique**.  If the number ranges for two "Start Waves" overlap, CrossMgr will consider the rider to be in the **first** matching "Start Wave"
 * **All numbers in a "Start Wave" are unique**.  If the number ranges for two "Components" overlap, CrossMgr will consider the rider to be in the the **first** matching "Component" in the "Start Wave".
 
-Decide what you want to do with the "Start Wave" and "Component" categories:
-
-* Do you want them to be uploaded to CrossResults, WebScorer or USA Cycling?  Check the selection in the "Upload" box.
-* Do you want them to be included as part of a race Series (using SeriesMgr)?  Check the selection in the "Series" box. 
-
 ### Custom Categories
 
 "Custom" categories are just a set of Numbers.  The Numbers don't all have to be in the same "Start Wave".  Riders in a "Custom" category are first scored with respect to their actual "Start Wave", then re-scored **as if** they all started in the same "Start Wave".
@@ -72,10 +67,12 @@ Riders would be ranked as:
 * If Betty is wearing a Red Jersey and Black Shorts, she would appear in the "All Riders with Black Shorts" custom category.
 * Is Calvin is wearing an Orange Jersey and White Shorts, he would not appear in any of these "Custom" categories.
 
-Decide what you want to do with the "Custom" category:
+## Multiple Categories and Uploading
 
-* Do you want it to be uploaded to CrossResults, WebScorer or USA Cycling?  Check the selection in the "Upload" box.
-* Do you want it to be included as part of a race Series (using SeriesMgr)?  Check the selection in the "Series" box. 
+Carefully consider how you want to publish to CrossResults, WebScorer and USA Cycling.
+Upload site want to see a rider once in the results - not in multiple categories.
+
+Check whether you want to publish the "Start Wave" (combined) results, or the "Component" results - but not both.
 
 # Controls
 

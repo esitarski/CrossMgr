@@ -8,6 +8,7 @@ import OutputStreamer
 from FtpWriteFile import realTimeFtpPublish
 from Undo import undo
 import VideoBuffer
+import Checklist
 
 import wx.lib.masked as masked
 from roundbutton import RoundButton
@@ -165,6 +166,8 @@ class Actions( wx.Panel ):
 
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
+		vs = wx.BoxSizer( wx.HORIZONTAL )
+		
 		bs = wx.BoxSizer( wx.VERTICAL )
 		
 		self.SetBackgroundColour( wx.Colour(255,255,255) )
@@ -196,7 +199,20 @@ class Actions( wx.Panel ):
 		bs.Add( hs, border=border, flag=wx.ALL )
 		bs.Add(self.startRaceTimeCheckBox, border=border, flag=wx.ALL)
 		bs.Add(self.chipTimingOptions, border=border, flag=wx.ALL)
-		self.SetSizer(bs)
+		
+		vs.Add( bs )
+		
+		checklistTitle = wx.StaticText( self, label = _('Checklist:') )
+		checklistTitle.SetFont( wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
+		self.checklist = Checklist.Checklist( self )
+		
+		hsSub = wx.BoxSizer( wx.VERTICAL )
+		hsSub.Add( checklistTitle, 0, flag=wx.ALL, border = 4 )
+		hsSub.Add( self.checklist, 1, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, border = 4 )
+		
+		vs.Add( hsSub, 1, flag = wx.EXPAND )
+		
+		self.SetSizer(vs)
 		
 		self.refresh()
 		
@@ -318,7 +334,9 @@ class Actions( wx.Panel ):
 					self.chipTimingOptions.Show( False )
 				self.raceIntro.SetLabel( race.getRaceIntro() )
 			self.GetSizer().Layout()
-					
+		
+		self.checklist.refresh()
+		
 		mainWin = Utils.getMainWin()
 		if mainWin is not None:
 			mainWin.updateRaceClock()
