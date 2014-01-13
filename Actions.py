@@ -19,6 +19,7 @@ def StartRaceNow():
 	if undoResetTimer and undoResetTimer.IsRunning():
 		undoResetTimer.Stop()
 	undoResetTimer = None
+	JChip.reset()
 	
 	undo.clear()
 	undo.pushState()

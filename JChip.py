@@ -28,7 +28,22 @@ combine = datetime.datetime.combine
 reTimeChars = re.compile( '^\d\d:\d\d:\d\d\.\d+' )
 
 CR = chr( 0x0d )	# JChip delimiter
+
 dateToday = datetime.date.today()
+tSameCount = 0
+tLast = None
+dayCur = 0
+
+def reset( raceDate = None ):
+	global dateToday
+	global tSameCount
+	global tLast
+	global dayCur
+	
+	dateToday = raceDate or datetime.date.today()
+	tLast = None
+	tSameCount = 0
+	dayCur = 0
 
 DEFAULT_PORT = 53135
 DEFAULT_HOST = socket.gethostbyname(socket.gethostname())
@@ -78,8 +93,6 @@ def socketByLine(s):
 
 # if we get the same time, make sure we give it a small offset to make it unique, but preserve the order.
 tSmall = datetime.timedelta( seconds = 0.00001 )
-tSameCount = 0
-tLast = None
 
 def parseTime( tStr ):
 	global dateToday
@@ -91,7 +104,17 @@ def parseTime( tStr ):
 	hh, mm, ssmi = int(hh), int(mm), float(ssmi)
 	mi, ss = math.modf( ssmi )
 	mi, ss = int(mi * 1000000.0), int(ss)
-	t = combine( dateToday, datetime.time(hour=hh, minute=mm, second=ss, microsecond=mi) )
+	t = combine(dateToday, datetime.time()) + datetime.timedelta( seconds = (hh * 60.0 * 60.0) + (mm  * 60.0) + ss + mi / 1000000.0 )
+	
+	if tLast is None:
+		tLast = t - tSmall
+	
+	'''
+	t += datetime.timedelta( days = 1 ) * dayCur
+	while t < tLast:
+		t += datetime.timedelta( days = 1 )
+		dayCur += 1
+	'''
 	
 	# Add a small offset to equal times so the order is preserved.
 	if t == tLast:

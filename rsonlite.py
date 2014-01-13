@@ -81,7 +81,7 @@ splitter = re.compile('(\n *|=[^\n]*|#[^\n]*|[^\n#=]+)').findall
 class RsonToken(str):
     ''' A string that may be annotated with location information
     '''
-    def __new__(cls, s, line, col):
+    def __new__(cls, s, line = 0, col = 0):
         self = str.__new__(cls, s)
         self.line = line
         self.col = col

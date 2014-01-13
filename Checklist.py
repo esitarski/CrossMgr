@@ -88,14 +88,14 @@ class Task( object ):
 				task.pprint( indent, indent_level + 2 )
 
 def _setTitle( task, val ):
-	task.title = val[0]
+	task.title = unicode(val[0])
 
 def _setNote( task, val ):
-	task.note = val[0]
+	task.note = unicode(val[0])
 
 def _setRequires( task, requires ):
 	for r in requires:
-		task.appendRequires( r[0], r[1][0])
+		task.appendRequires( unicode(r[0]), unicode(r[1][0]))
 
 def _setSubtasks( task, subtasks ):
 	for s in subtasks:
@@ -103,7 +103,7 @@ def _setSubtasks( task, subtasks ):
 		
 _processTokenLookup = dict(
 	title		= _setTitle,
-	note = _setNote,
+	note		= _setNote,
 	requires 	= _setRequires,
 	subtasks 	= _setSubtasks
 )

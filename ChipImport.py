@@ -32,7 +32,7 @@ def DoChipImport(	fname, parseTagTime, startTime = None,
 	with open(fname) as f, Model.LockRace() as race:
 		year, month, day = [int(n) for n in race.date.split('-')]
 		raceDate = datetime.date( year=year, month=month, day=day )
-		JChip.dateToday = raceDate
+		JChip.reset( raceDate )
 		if startTime:
 			raceStart = datetime.datetime.combine( raceDate, startTime )
 			race.resetStartClockOnFirstTag = False
