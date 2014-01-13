@@ -32,18 +32,15 @@ CR = chr( 0x0d )	# JChip delimiter
 dateToday = datetime.date.today()
 tSameCount = 0
 tLast = None
-dayCur = 0
 
 def reset( raceDate = None ):
 	global dateToday
 	global tSameCount
 	global tLast
-	global dayCur
 	
 	dateToday = raceDate or datetime.date.today()
 	tLast = None
 	tSameCount = 0
-	dayCur = 0
 
 DEFAULT_PORT = 53135
 DEFAULT_HOST = socket.gethostbyname(socket.gethostname())
@@ -108,13 +105,6 @@ def parseTime( tStr ):
 	
 	if tLast is None:
 		tLast = t - tSmall
-	
-	'''
-	t += datetime.timedelta( days = 1 ) * dayCur
-	while t < tLast:
-		t += datetime.timedelta( days = 1 )
-		dayCur += 1
-	'''
 	
 	# Add a small offset to equal times so the order is preserved.
 	if t == tLast:
