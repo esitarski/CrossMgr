@@ -44,9 +44,9 @@ class AdjustTimeDialog( wx.Dialog ):
 		self.startTime.Bind( wx.EVT_TEXT, self.updateRideTime )
 		self.finishTime = HighPrecisionTimeEdit( self, allow_none = not bool(ft), seconds = ft )
 		self.finishTime.Bind( wx.EVT_TEXT, self.updateRideTime )
-		self.rideTime = wx.StaticText( self, wx.ID_ANY, '' )
+		self.rideTime = wx.StaticText( self, label = u'' )
 		self.penaltyTime = HighPrecisionTimeEdit( self, allow_none = True, seconds = ttPenalty )
-		self.note = wx.TextCtrl( self, wx.ID_ANY, size=(400, -1), value = getattr(self.rider, 'ttNote', '') )
+		self.note = wx.TextCtrl( self, size=(400, -1), value = getattr(self.rider, 'ttNote', '') )
 		self.updateRideTime( None )
 				
 		self.okBtn = wx.Button( self, wx.ID_OK )
@@ -57,27 +57,27 @@ class AdjustTimeDialog( wx.Dialog ):
 		
 		border = 8
 		row = 0
-		bs.Add( wx.StaticText( self, wx.ID_ANY, _('Rider {}').format(rider.num) ),
+		bs.Add( wx.StaticText( self, label = _('Rider {}').format(rider.num) ),
 			pos=(row,0), span=(1,2), border = border, flag=wx.GROW|wx.ALL )
 			
 		row += 1
-		bs.Add( wx.StaticText( self, -1, _("Start:")),  pos=(row,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
+		bs.Add( wx.StaticText( self, label = _("Start:")),  pos=(row,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.startTime, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.ALIGN_LEFT )
 		
 		row += 1
-		bs.Add( wx.StaticText( self, -1, _("Finish:")),  pos=(row,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
+		bs.Add( wx.StaticText( self, label = _("Finish:")),  pos=(row,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.finishTime, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.ALIGN_LEFT )
 		
 		row += 1
-		bs.Add( wx.StaticText( self, -1, _("Ride Time:")),  pos=(row,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
+		bs.Add( wx.StaticText( self, label = _("Ride Time:")),  pos=(row,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.rideTime, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.ALIGN_LEFT )
 		
 		row += 1
-		bs.Add( wx.StaticText( self, -1, "Penalty Time:"),  pos=(row,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
+		bs.Add( wx.StaticText( self, label = _("Penalty Time:")),  pos=(row,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.penaltyTime, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.ALIGN_LEFT )
 		
 		row += 1
-		bs.Add( wx.StaticText( self, -1, "Note:"),  pos=(row,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
+		bs.Add( wx.StaticText( self, label = _("Note:")),  pos=(row,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.note, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.ALIGN_LEFT )
 		
 		row += 1
@@ -235,38 +235,39 @@ class RiderDetail( wx.Panel ):
 		
 		row += 1
 		
-		self.statusName = wx.StaticText( self, wx.ID_ANY, _('Status: ') )
+		self.statusName = wx.StaticText( self, label = _('Status: ') )
 		gbs.Add( self.statusName, pos=(row,0), span=(1,1), flag=labelAlign )
-		self.statusOption = wx.Choice( self, wx.ID_ANY, choices=Model.Rider.statusNames )
+		self.statusOption = wx.Choice( self, choices=Model.Rider.statusNames )
 		gbs.Add( self.statusOption, pos=(row,1), span=(1,1), flag=wx.EXPAND )
 		self.Bind(wx.EVT_CHOICE, self.onStatusChanged, self.statusOption)
 		
-		self.atRaceTimeName = wx.StaticText( self, wx.ID_ANY, _('at race time: ') )
+		self.atRaceTimeName = wx.StaticText( self, label =  _('at race time: ') )
 		gbs.Add( self.atRaceTimeName, pos=(row,2), span=(1,1), flag=labelAlign )
-		self.atRaceTime = masked.TimeCtrl( self, wx.ID_ANY, fmt24hr=True, value=Utils.SecondsToStr(0) )
+		self.atRaceTime = HighPrecisionTimeEdit( self )
+		self.atRaceTime.SetSeconds( 0 )
 		self.atRaceTime.SetEditable( False )
 		self.atRaceTime.Enable( False )
 		gbs.Add( self.atRaceTime, pos=(row,3), span=(1,1), flag=wx.EXPAND )
 		
-		self.noteName = wx.StaticText( self, wx.ID_ANY, _('Note:') )
+		self.noteName = wx.StaticText( self, label =  _('Note:') )
 		gbs.Add( self.noteName, pos=(row,5), span=(1,1), flag=labelAlign )
-		self.note = wx.StaticText( self, wx.ID_ANY, '' )
+		self.note = wx.StaticText( self, label = '' )
 		gbs.Add( self.note, pos=(row,6), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL )
 		row += 1
 		
-		self.autocorrectLaps = wx.CheckBox( self, wx.ID_ANY, _('Autocorrect Lap Data') )
+		self.autocorrectLaps = wx.CheckBox( self, label = _('Autocorrect Lap Data') )
 		gbs.Add( self.autocorrectLaps, pos = (row, 0), span=(1, 2), flag = wx.ALIGN_CENTRE|wx.EXPAND )
 		self.Bind( wx.EVT_CHECKBOX, self.onAutocorrectLaps, self.autocorrectLaps )
 		
-		self.showPhotos = wx.Button( self, wx.ID_ANY, _('Show Photos...') )
+		self.showPhotos = wx.Button( self, label = _('Show Photos...') )
 		gbs.Add( self.showPhotos, pos = (row, 3), span=(1, 1), flag = wx.ALIGN_CENTRE|wx.EXPAND )
 		self.Bind( wx.EVT_BUTTON, self.onShowPhotos, self.showPhotos )
-		self.adjustTime = wx.Button( self, wx.ID_ANY, _('Adjust...') )
+		self.adjustTime = wx.Button( self, label = _('Adjust...') )
 		self.Bind( wx.EVT_BUTTON, self.onAdjustTime, self.adjustTime )
 		gbs.Add( self.adjustTime, pos=(row,5), span=(1,2), flag=wx.EXPAND )
 		row += 1
 
-		self.notInLap = wx.StaticText( self, wx.ID_ANY, '              ' )
+		self.notInLap = wx.StaticText( self, label = u'              ' )
 		gbs.Add( self.notInLap, pos=(row,0), span=(1,4) )
 		row += 1
 	
@@ -289,8 +290,8 @@ class RiderDetail( wx.Panel ):
 
 		panel = wx.Panel( splitter, wx.ID_ANY, style = wx.BORDER_SUNKEN )
 		
-		self.lineGraph = LineGraph( panel, wx.ID_ANY, style = wx.NO_BORDER )
-		self.ganttChart = GanttChartPanel( panel, wx.ID_ANY, style = wx.NO_BORDER )
+		self.lineGraph = LineGraph( panel, style = wx.NO_BORDER )
+		self.ganttChart = GanttChartPanel( panel, style = wx.NO_BORDER )
 		self.ganttChart.getNowTimeCallback = Gantt.GetNowTime
 		self.ganttChart.minimizeLabels = True
 		self.ganttChart.rClickCallback = self.onEditGantt
@@ -909,7 +910,7 @@ class RiderDetail( wx.Panel ):
 		self.setRider( num )
 	
 	def setAtRaceTime( self, secs = 0.0, editable = False ):
-		self.atRaceTime.SetValue( Utils.SecondsToStr(secs) )
+		self.atRaceTime.SetSeconds( secs )
 		self.atRaceTime.SetEditable( editable )
 		self.atRaceTime.Enable( editable )
 		self.atRaceTimeName.Enable( editable )
@@ -1179,7 +1180,7 @@ class RiderDetailDialog( wx.Dialog ):
 		
 		vs.Add( self.riderDetail, 1, flag=wx.ALL|wx.EXPAND, border = 4 )
 		
-		self.closeBtn = wx.Button( self, wx.ID_ANY, _('&Close (Ctrl-Q)') )
+		self.closeBtn = wx.Button( self, label = _('&Close (Ctrl-Q)') )
 		self.Bind( wx.EVT_BUTTON, self.onClose, self.closeBtn )
 		self.Bind( wx.EVT_CLOSE, self.onClose )
 
