@@ -1710,7 +1710,7 @@ class Race(object):
 				fields.append( 'Open' )
 			if len(fields) < 4:
 				fields.append( 'Wave' )
-			catType = { 'Wave':0, 'Component':1, 'Custom':2 }.get( fields[4], 0 )
+			catType = { 'Wave':0, 'Component':1, 'Custom':2 }.get( fields[3], 0 )
 			categories.append( {'name':fields[0], 'catStr':fields[1], 'gender':fields[2], 'catType':catType} )
 		self.setCategories( categories )
 

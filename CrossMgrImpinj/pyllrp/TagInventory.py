@@ -29,8 +29,6 @@ class TagInventory( object ):
 			self.tagInventory.add( tagID )
 
 	def DefaultHandler( self, connector, message ):
-		print 'Unknown Message:'
-		print message
 		self.otherMessages.append( message )
 
 	def Connect( self ):
@@ -41,7 +39,6 @@ class TagInventory( object ):
 		try:
 			response = self.connector.connect( self.host )
 		except socket.timeout:
-			print '**** Connect timed out.  Check reader hostname and connection. ****'
 			raise
 
 	def Disconnect( self ):

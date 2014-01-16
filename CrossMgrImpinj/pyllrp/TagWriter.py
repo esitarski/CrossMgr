@@ -98,9 +98,7 @@ class TagWriter( TagInventory ):
 					epcOld = epcOld,
 					epcNew = epcNew,
 		)
-		print message
 		response = self.connector.transact( message )
-		print response
 		assert response.success(), 'Add AccessSpec Fails'
 	
 	def _executeTW( self ):
@@ -111,7 +109,6 @@ class TagWriter( TagInventory ):
 		self._execute()
 		
 		response = self.connector.transact( DISABLE_ACCESSSPEC_Message(AccessSpecID = self.accessSpecID) )
-		print response
 		assert response.success(), 'Disable AccessSpec Fails'
 		
 	def _epilogTW( self ):
@@ -131,7 +128,6 @@ class TagWriter( TagInventory ):
 	def WriteFOVConsecutive( self, tagStart, tagFormat = '{}' ):
 		''' Change all tags in the "Field Of View" to consecutive values, starting from tagStart. '''
 		tagInventory, otherMessages = self.GetTagInventory()
-		print tagInventory, otherMessages
 		
 		self._prolog()
 		tagCur = tagStart

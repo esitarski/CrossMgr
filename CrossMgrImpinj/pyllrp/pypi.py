@@ -66,9 +66,7 @@ See TinyExample.py and wxExample.py for how to use.
 
 A reader connection manager is also included that can connect to a reader, transact commands, then start/stop a thread to listen for tag reads.  A message handler can be configured to respond to any reader message.  See wxExample.py for a simple method to show reader messages in a wxPython application with a Queue (requires wxPython install).
 
-At this time, the module does not support XML.  As the Python representation of reader messages is so consise and has full type and semantic checking, it seems redundant to support another syntax like XML.  It is easier to modify Python code than to modify XML.
-
-This could change in the future with more support.
+The module also supports reading and writing messages in XML format.
 '''
 
 writeToFile( readme, 'README.txt' )
