@@ -143,6 +143,8 @@ class RiderDetail( wx.Panel ):
 		self.entry = None
 		self.firstTime = True
 		
+		self.visibleLap = None
+		
 		self.yellowColour = wx.Colour( 255, 255, 0 )
 		self.orangeColour = wx.Colour( 255, 165, 0 )
 		
@@ -277,10 +279,13 @@ class RiderDetail( wx.Panel ):
 		self.splitter = splitter
 		
 		self.grid = ColGrid.ColGrid(	splitter,
-										colnames = [_('Lap'), _('Lap Time'), _('Race Time'), _('Edit'), _('By'), _('On'), _('Lap Speed'), _('Race Speed')],
+										colnames = [_('Lap'), _('Lap Time'), _('Race Time'),
+													_('Edit'), _('By'), _('On'), _('Note'),
+													_('Lap Speed'), _('Race Speed')],
 										style = wx.BORDER_SUNKEN )
 		self.grid.SetRowLabelSize( 0 )
 		self.grid.SetRightAlign( True )
+		self.grid.SetLeftAlignCols( [4, 5, 6] )
 		#self.grid.SetDoubleBuffered( True )
 		self.grid.AutoSizeColumns( True )
 		self.grid.DisableDragColSize()
@@ -357,6 +362,7 @@ class RiderDetail( wx.Panel ):
 		
 	def doRightClick( self, event ):
 		self.eventRow = event.GetRow()
+		self.visibleLap = self.eventRow
 		
 		allCases = 0
 		interpCase = 1
@@ -371,7 +377,8 @@ class RiderDetail( wx.Panel ):
 				(wx.NewId(), _('Delete...'),			_('Delete lap time...'),	self.OnPopupDelete, nonInterpCase),
 				(None, None, None, None, None),
 				(wx.NewId(), _('Add Missing Last Lap'),	_('Add Missing Last Lap'),	self.OnPopupAddMissingLastLap, allCases),
-
+				(None, None, None, None, None),
+				(wx.NewId(), _('Note...'),				_('Add/Edit Lap Note'),	self.OnPopupNote, nonInterpCase),
 			]
 			for p in self.popupInfo:
 				if p[0]:
@@ -426,6 +433,12 @@ class RiderDetail( wx.Panel ):
 
 	def OnPopupDelete( self, event ):
 		rows = Utils.GetSelectedRows( self.grid )
+		
+		try:
+			self.visibleLap = rows[-1]
+		except:
+			self.visibleLap = None
+			
 		if len(rows) > 1:
 			try:
 				num = int(self.num.GetValue())
@@ -461,10 +474,9 @@ class RiderDetail( wx.Panel ):
 			return
 			
 		if not Model.race or num not in Model.race:
-				return
+			return
 			
-		with Model.LockRace() as race:
-			rider = race.riders[num]
+		rider = Model.race.riders[num]
 			
 		times = [t for t in rider.times]
 		if len(times) < 2:
@@ -488,7 +500,43 @@ class RiderDetail( wx.Panel ):
 			race.numTimeInfo.add( num, tNewLast )
 			race.addTime( num, tNewLast )
 			race.setChanged()
+			self.visibleLap = self.grid.GetNumberRows()
 			
+		wx.CallAfter( self.refresh )
+	
+	def OnPopupNote( self, event ):
+		self.grid.SelectRow( self.eventRow )
+		try:
+			num = int(self.num.GetValue())
+		except:
+			return
+			
+		if not Model.race or num not in Model.race:
+			return
+			
+		lap = self.eventRow + 1
+		race = Model.race
+		rider = race.riders[num]
+			
+		race.lapNote = getattr(race, 'lapNote', {})
+		dlg = wx.TextEntryDialog( self, _("Note for Rider {} on Lap {}:").format(num, lap), _("Lap Note"),
+					Model.race.lapNote.get( (num, lap), '' ) )
+		ret = dlg.ShowModal()
+		value = dlg.GetValue().strip()
+		dlg.Destroy()
+		if ret != wx.ID_OK:
+			return
+		
+		undo.pushState()
+		if value:
+			race.lapNote[(self.entry.num, self.entry.lap)] = value
+			race.setChanged()
+		else:
+			try:
+				del race.lapNote[(self.entry.num, self.entry.lap)]
+				race.setChanged()
+			except KeyError:
+				pass
 		wx.CallAfter( self.refresh )
 	
 	def onEditRider( self, event ):
@@ -918,6 +966,9 @@ class RiderDetail( wx.Panel ):
 	def refresh( self ):
 		self.num.SelectAll()
 		wx.CallAfter( self.num.SetFocus )
+		
+		visibleLap = self.visibleLap
+		self.visibleLap = None
 
 		data = [ [] for c in xrange(self.grid.GetNumberCols()) ]
 		self.grid.Set( data = data )
@@ -1115,8 +1166,9 @@ class RiderDetail( wx.Panel ):
 						row[3:6] = ( Model.NumTimeInfo.ReasonName[info[0]], info[1], info[2].ctime() )
 						highlightColour = self.orangeColour
 						
+				row[6] = getattr(race, 'lapNote', {}).get( (e.num, e.lap), '' )
 				if distanceByLap:
-					row[6:8] = ('%.2f' % (1000.0 if tLap <= 0.0 else (waveCategory.getLapDistance(r+1) / (tLap / (60.0*60.0)))),
+					row[7:9] = ('%.2f' % (1000.0 if tLap <= 0.0 else (waveCategory.getLapDistance(r+1) / (tLap / (60.0*60.0)))),
 								'%.2f' % (1000.0 if tSum <= 0.0 else (waveCategory.getDistanceAtLap(r+1) / (tSum / (60.0*60.0)))) )
 				
 				for i, d in enumerate(row):
@@ -1135,10 +1187,13 @@ class RiderDetail( wx.Panel ):
 		
 		if self.firstTime:
 			self.firstTime = False
-			self.splitter.SetSashPosition( 260 )
+			self.splitter.SetSashPosition( 300 )
 		self.hs.RecalcSizes()
 		self.hs.Layout()
 		self.grid.FitInside()
+		
+		if visibleLap is not None and self.grid.GetNumberRows() > 0:
+			self.grid.MakeCellVisible( min(visibleLap, self.grid.GetNumberRows()-1), 0 )
 	
 	def commitChange( self ):
 		num = self.num.GetValue()

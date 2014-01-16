@@ -10,6 +10,7 @@ import time
 import datetime
 
 import Utils
+from Version import AppVerName
 
 from pyllrp import *
 from pyllrp.TagInventory import TagInventory
@@ -62,6 +63,8 @@ class MainWin( wx.Frame ):
 
 	def __init__( self, parent, id = wx.ID_ANY, title = '', size = (550, 600) ):
 		super( MainWin, self ).__init__( parent, id, title = title, size = size )
+		
+		self.SetTitle( AppVerName )
 		
 		self.config = wx.Config(appName="CrossMgrImpinj",
 						vendorName="SmartCyclingSolutions",
@@ -334,7 +337,6 @@ class MainWin( wx.Frame ):
 				wx.Bell()
 		elif event is None:
 			self.setWriteSuccess( False )
-		
 		
 if __name__ == '__main__':
 	app = wx.App( False )

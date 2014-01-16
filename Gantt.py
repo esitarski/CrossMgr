@@ -274,8 +274,7 @@ class Gantt( wx.Panel ):
 	def OnPopupLapNote( self, event ):
 		if not self.entry or not Model.race:
 			return
-		if not hasattr(Model.race, 'lapNote'):
-			Model.race.lapNote = {}
+		Model.race.lapNote = getattr(Model.race, 'lapNote', {})
 		dlg = wx.TextEntryDialog( self, _("Note for Rider {} on Lap {}:").format(self.entry.num, self.entry.lap), _("Lap Note"),
 					Model.race.lapNote.get( (self.entry.num, self.entry.lap), '' ) )
 		ret = dlg.ShowModal()
