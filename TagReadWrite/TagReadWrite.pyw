@@ -89,23 +89,6 @@ class MainWin( wx.Frame ):
 		
 		iRow = 0
 		
-		gs = wx.GridSizer( 1, 4, 2, 2 )
-		self.antennas = []
-		for i in xrange(4):
-			gs.Add( wx.StaticText(self, wx.ID_ANY, u'{}'.format(i+1)), flag=wx.ALIGN_CENTER )
-		for i in xrange(4):
-			cb = wx.CheckBox( self, wx.ID_ANY, '')
-			if i < 2:
-				cb.SetValue( True )
-			cb.Bind( wx.EVT_CHECKBOX, lambda x: self.getAntennaStr() )
-			gs.Add( cb, flag=wx.ALIGN_CENTER )
-			self.antennas.append( cb )
-		
-		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'ANT Ports:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_BOTTOM )
-		gbs.Add( gs, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
-		
-		iRow += 1
-		
 		self.useHostName = wx.RadioButton( self, wx.ID_ANY, 'Host Name:', style=wx.wx.RB_GROUP )
 		gbs.Add( self.useHostName, pos=(iRow,0), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
 		hb = wx.BoxSizer( wx.HORIZONTAL )
@@ -248,22 +231,6 @@ class MainWin( wx.Frame ):
 			dlg.ShowModal()
 			dlg.Destroy()
 	
-	def getAntennaStr( self ):
-		s = []
-		for i in xrange(4):
-			if self.antennas[i].GetValue():
-				s.append( '{}'.format(i + 1) )
-		if not s:
-			# Ensure that at least one antenna is selected.
-			self.antennas[0].SetValue( True )
-			s.append( '1' )
-		return ' '.join( s )
-		
-	def setAntennaStr( self, s ):
-		antennas = set( int(a) for a in s.split() )
-		for i in xrange(4):
-			self.antennas[i].SetValue( (i+1) in antennas )
-	
 	def writeOptions( self ):
 		self.config.Write( 'Template', self.template.GetValue() )
 		self.config.Write( 'Number', '{}'.format(self.number.GetValue()) )
@@ -273,7 +240,6 @@ class MainWin( wx.Frame ):
 		self.config.Write( 'ImpinjHostName', ImpinjHostNamePrefix + self.impinjHostName.GetValue() + ImpinjHostNameSuffix )
 		self.config.Write( 'ImpinjAddr', self.impinjHost.GetAddress() )
 		self.config.Write( 'ImpinjPort', '{}'.format(ImpinjInboundPort) )
-		self.config.Write( 'Antennas', self.getAntennaStr() )
 	
 	def readOptions( self ):
 		self.template.SetValue( self.config.Read('Template', '{}####'.format(datetime.datetime.now().year)) )
@@ -285,7 +251,6 @@ class MainWin( wx.Frame ):
 		self.useStaticAddress.SetValue( not useHostName )
 		self.impinjHostName.SetValue( self.config.Read('ImpinjHostName', ImpinjHostNamePrefix + '00-00-00' + ImpinjHostNameSuffix)[len(ImpinjHostNamePrefix):-len(ImpinjHostNameSuffix)] )
 		self.impinjHost.SetValue( self.config.Read('ImpinjAddr', '0.0.0.0') )
-		self.setAntennaStr( self.config.Read('Antennas', '1 2 3 4') )
 		
 	def getWriteValue( self ):
 		f = self.getFormatStr()
@@ -366,6 +331,7 @@ class MainWin( wx.Frame ):
 			if event is None:
 				self.number.SetValue( self.number.GetValue() + self.increment.GetValue() )
 				self.getWriteValue()
+				wx.Bell()
 		elif event is None:
 			self.setWriteSuccess( False )
 		
