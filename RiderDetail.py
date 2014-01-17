@@ -143,7 +143,7 @@ class RiderDetail( wx.Panel ):
 		self.entry = None
 		self.firstTime = True
 		
-		self.visibleLap = None
+		self.visibleRow = None
 		
 		self.yellowColour = wx.Colour( 255, 255, 0 )
 		self.orangeColour = wx.Colour( 255, 165, 0 )
@@ -362,7 +362,7 @@ class RiderDetail( wx.Panel ):
 		
 	def doRightClick( self, event ):
 		self.eventRow = event.GetRow()
-		self.visibleLap = self.eventRow
+		self.visibleRow = self.eventRow
 		
 		allCases = 0
 		interpCase = 1
@@ -435,9 +435,9 @@ class RiderDetail( wx.Panel ):
 		rows = Utils.GetSelectedRows( self.grid )
 		
 		try:
-			self.visibleLap = rows[-1]
+			self.visibleRow = min( rows )
 		except:
-			self.visibleLap = None
+			self.visibleRow = None
 			
 		if len(rows) > 1:
 			try:
@@ -500,7 +500,7 @@ class RiderDetail( wx.Panel ):
 			race.numTimeInfo.add( num, tNewLast )
 			race.addTime( num, tNewLast )
 			race.setChanged()
-			self.visibleLap = self.grid.GetNumberRows()
+			self.visibleRow = self.grid.GetNumberRows()
 			
 		wx.CallAfter( self.refresh )
 	
@@ -967,8 +967,8 @@ class RiderDetail( wx.Panel ):
 		self.num.SelectAll()
 		wx.CallAfter( self.num.SetFocus )
 		
-		visibleLap = self.visibleLap
-		self.visibleLap = None
+		visibleRow = self.visibleRow
+		self.visibleRow = None
 
 		data = [ [] for c in xrange(self.grid.GetNumberCols()) ]
 		self.grid.Set( data = data )
@@ -1192,8 +1192,8 @@ class RiderDetail( wx.Panel ):
 		self.hs.Layout()
 		self.grid.FitInside()
 		
-		if visibleLap is not None and self.grid.GetNumberRows() > 0:
-			self.grid.MakeCellVisible( min(visibleLap, self.grid.GetNumberRows()-1), 0 )
+		if visibleRow is not None and self.grid.GetNumberRows() > 0:
+			self.grid.MakeCellVisible( min(visibleRow, self.grid.GetNumberRows()-1), 0 )
 	
 	def commitChange( self ):
 		num = self.num.GetValue()
