@@ -349,142 +349,142 @@ class History( wx.Panel ):
 			formatTime = Utils.formatTime
 			formatTimeDiff = lambda a, b: Utils.formatTimeGap(TimeDifference(a, b, False), False)
 		
-		with Model.LockRace() as race:
-			if race is None:
-				self.clearGrid()
-				return
+		race = Model.race
+		if race is None:
+			self.clearGrid()
+			return
 
-			category = FixCategories( self.categoryChoice, getattr(race, 'historyCategory', 0) )
-			self.hbs.Layout()
+		category = FixCategories( self.categoryChoice, getattr(race, 'historyCategory', 0) )
+		self.hbs.Layout()
 
-			maxLaps = race.numLaps
-			doLapsToGo = True
-			if maxLaps is None:
-				maxLaps = race.getMaxLap()
-				if race.isRunning():
-					maxLaps += 2
-				doLapsToGo = False
-					
-			entries = race.interpolateLap( maxLaps, False )
-			entries = [e for e in entries if e.lap <= race.getCategoryNumLaps(e.num)]
-			
-			isTimeTrial = getattr(race, 'isTimeTrial', False)
-			if isTimeTrial:
-				entries = [Model.Entry(e.num, e.lap, race.riders[e.num].firstTime + e.t, e.interp) for e in entries]
-			
-			# Collect the number and times for all entries so we can compute lap times.
-			numTimes = {}
-			for e in entries:
-				if e.lap != 0 or isTimeTrial:
-					numTimes[(e.num, e.lap)] = e.t
-				else:
-					try:
-						startOffset = race.getCategory(e.num).getStartOffsetSecs()
-					except:
-						startOffset = 0.0
-					numTimes[(e.num, 0)] = startOffset
-			
-			# Trim out the lap 0 starts.
-			entries = [e for e in entries if e.lap > 0]
-			if not entries:
-				self.clearGrid()
-				return
-			
-			# Organize all the entries into a grid as we would like to see them.
-			self.history = [ [] ]
-			numSeen = set()
-			lapCur = 0
-			leaderTimes = [entries[0].t]
-			for e in entries:
-				if e.num in numSeen:
-					numSeen.clear()
-					lapCur += 1
-					self.history.append( [] )
-					leaderTimes.append( e.t )
-				self.history[lapCur].append( e )
-				numSeen.add( e.num )
-			
-			self.category = category
+		maxLaps = race.numLaps
+		doLapsToGo = True
+		if not maxLaps:
+			maxLaps = race.getMaxLap()
+			if race.isRunning():
+				maxLaps += 2
+			doLapsToGo = False
 				
-			# Trim out elements not in the desired category.
-			if category:
-				for c in xrange(len(self.history)):
-					self.history[c] = [e for e in self.history[c] if race.inCategory(e.num, category)]
-			
-			if not any( h for h in self.history ):
-				self.clearGrid()
-				return
-			
-			# Show the values.
-			self.isEmpty = False
-				
-			numTimeInfo = race.numTimeInfo
-			
-			colnames = []
-			raceTime = 0
-			for c, h in enumerate(self.history):
+		entries = race.interpolateLap( maxLaps, False )
+		entries = [e for e in entries if e.lap <= race.getCategoryNumLaps(e.num)]
+		
+		isTimeTrial = getattr(race, 'isTimeTrial', False)
+		if isTimeTrial:
+			entries = [Model.Entry(e.num, e.lap, race.riders[e.num].firstTime + e.t, e.interp) for e in entries]
+		
+		# Collect the number and times for all entries so we can compute lap times.
+		numTimes = {}
+		for e in entries:
+			if e.lap != 0 or isTimeTrial:
+				numTimes[(e.num, e.lap)] = e.t
+			else:
 				try:
-					lapTime = h[0].t - raceTime
-					raceTime = h[0].t
-				except IndexError:
-					lapTime = 0
-					
-				colnames.append( '{}\n{}\n{}\n{}'.format(
-									c+1,
-									(maxLaps - c - 1) if doLapsToGo else ' ',
-									formatTime(lapTime),
-									formatTime(raceTime))
-								)
+					startOffset = race.getCategory(e.num).getStartOffsetSecs()
+				except:
+					startOffset = 0.0
+				numTimes[(e.num, 0)] = startOffset
+		
+		# Trim out the lap 0 starts.
+		entries = [e for e in entries if e.lap > 0]
+		if not entries:
+			self.clearGrid()
+			return
+		
+		# Organize all the entries into a grid as we would like to see them.
+		self.history = [ [] ]
+		numSeen = set()
+		lapCur = 0
+		leaderTimes = [entries[0].t]
+		for e in entries:
+			if e.num in numSeen:
+				numSeen.clear()
+				lapCur += 1
+				self.history.append( [] )
+				leaderTimes.append( e.t )
+			self.history[lapCur].append( e )
+			numSeen.add( e.num )
+		
+		self.category = category
 			
-			formatStr = ['$num']
-			if self.showTimes:		formatStr.append('=$raceTime')
-			if self.showLapTimes:	formatStr.append(' [$lapTime]')
-			if self.showTimeDown:	formatStr.append(' ($downTime)')
-			if self.showRiderName:	formatStr.append(' $riderName')
-			template = Template( u''.join(formatStr) )
+		# Trim out elements not in the desired category.
+		if category:
+			for c in xrange(len(self.history)):
+				self.history[c] = [e for e in self.history[c] if race.inCategory(e.num, category)]
+		
+		if not any( h for h in self.history ):
+			self.clearGrid()
+			return
+		
+		# Show the values.
+		self.isEmpty = False
 			
+		numTimeInfo = race.numTimeInfo
+		
+		colnames = []
+		raceTime = 0
+		for c, h in enumerate(self.history):
 			try:
-				info = race.excelLink.read()
-			except:
-				info = {}
+				lapTime = h[0].t - raceTime
+				raceTime = h[0].t
+			except IndexError as e:
+				lapTime = 0
 				
-			def getName( num ):
-				try:
-					d = info[num]
-				except KeyError:
-					return ''
-				try:
-					lastName = d['LastName']
-				except KeyError:
-					return d.get('FirstName', '')
-				try:
-					firstName = d['FirstName']
-				except KeyError:
-					return lastName
-				return u'{}, {}'.format(lastName, firstName)
-				
-			data = []
-			for col, h in enumerate(self.history):
-				data.append( [ template.safe_substitute(
-					{
-						'num':		e.num,
-						'raceTime':	formatTime(e.t) if self.showTimes else '',
-						'lapTime':	formatTime(e.t - numTimes[(e.num,e.lap-1)]) if self.showLapTimes and (e.num,e.lap-1) in numTimes else '',
-						'downTime':	formatTimeDiff(e.t, leaderTimes[col]) if self.showTimeDown and col < len(leaderTimes) else '',
-						'riderName': getName(e.num) if self.showRiderName else '',
-					} ) for e in h] )
-				self.rcInterp.update( (row, col) for row, e in enumerate(h) if e.interp )
-				self.rcNumTime.update( (row, col) for row, e in enumerate(h) if numTimeInfo.getInfo(e.num, e.t) is not None )
-
-			self.grid.Set( data = data, colnames = colnames )
-			self.grid.AutoSizeColumns( True )
-			self.grid.Reset()
-			self.updateColours()
-			self.grid.Set( textColour = self.textColour, backgroundColour = self.backgroundColour )
-			self.grid.MakeCellVisible( 0, len(colnames)-1 )
+			colnames.append( '{}\n{}\n{}\n{}'.format(
+								c+1,
+								(maxLaps - c - 1) if doLapsToGo else ' ',
+								formatTime(lapTime),
+								formatTime(raceTime))
+							)
+		
+		formatStr = ['$num']
+		if self.showTimes:		formatStr.append('=$raceTime')
+		if self.showLapTimes:	formatStr.append(' [$lapTime]')
+		if self.showTimeDown:	formatStr.append(' ($downTime)')
+		if self.showRiderName:	formatStr.append(' $riderName')
+		template = Template( u''.join(formatStr) )
+		
+		try:
+			info = race.excelLink.read()
+		except:
+			info = {}
 			
-			# Fix the grid's scrollbars.
-			self.grid.FitInside()
+		def getName( num ):
+			try:
+				d = info[num]
+			except KeyError:
+				return ''
+			try:
+				lastName = d['LastName']
+			except KeyError:
+				return d.get('FirstName', '')
+			try:
+				firstName = d['FirstName']
+			except KeyError:
+				return lastName
+			return u'{}, {}'.format(lastName, firstName)
+			
+		data = []
+		for col, h in enumerate(self.history):
+			data.append( [ template.safe_substitute(
+				{
+					'num':		e.num,
+					'raceTime':	formatTime(e.t) if self.showTimes else '',
+					'lapTime':	formatTime(e.t - numTimes[(e.num,e.lap-1)]) if self.showLapTimes and (e.num,e.lap-1) in numTimes else '',
+					'downTime':	formatTimeDiff(e.t, leaderTimes[col]) if self.showTimeDown and col < len(leaderTimes) else '',
+					'riderName': getName(e.num) if self.showRiderName else '',
+				} ) for e in h] )
+			self.rcInterp.update( (row, col) for row, e in enumerate(h) if e.interp )
+			self.rcNumTime.update( (row, col) for row, e in enumerate(h) if numTimeInfo.getInfo(e.num, e.t) is not None )
+
+		self.grid.Set( data = data, colnames = colnames )
+		self.grid.AutoSizeColumns( True )
+		self.grid.Reset()
+		self.updateColours()
+		self.grid.Set( textColour = self.textColour, backgroundColour = self.backgroundColour )
+		self.grid.MakeCellVisible( 0, len(colnames)-1 )
+		
+		# Fix the grid's scrollbars.
+		self.grid.FitInside()
 	
 	def commit( self ):
 		pass

@@ -1289,16 +1289,10 @@ class Race(object):
 
 	@memoize
 	def getMaxLap( self, category = None ):
-		entries = self.interpolate()
 		try:
-			if not category:
-				maxLap = max( (e.lap for e in entries if not e.interp) )
-			else:
-				maxLap = max( (e.lap for e in entries
-									if not e.interp and self.getCategory(e.num) == category) )
+			return max( e.lap for e in self.interpolate() if not e.interp and self.inCategory(e.num, category) )
 		except ValueError:
-			maxLap = 0
-		return maxLap
+			return 0
 
 	def getRaceLaps( self ):
 		raceLap = self.getMaxLap()

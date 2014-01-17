@@ -68,7 +68,7 @@ class Properties( wx.Panel ):
 		self.organizer = wx.TextCtrl( self, wx.ID_ANY, value='' )
 		rows += 1
 		
-		self.commissaireLabel = wx.StaticText( self, label =  _('Commissaire:') )
+		self.commissaireLabel = wx.StaticText( self, label =  _('Official/Commissaire:') )
 		self.commissaire = wx.TextCtrl( self, wx.ID_ANY, value='' )
 		rows += 1
 		

@@ -245,7 +245,7 @@ class MainWin( wx.Frame ):
 		self.config.Write( 'ImpinjPort', '{}'.format(ImpinjInboundPort) )
 	
 	def readOptions( self ):
-		self.template.SetValue( self.config.Read('Template', '{}####'.format(datetime.datetime.now().year)) )
+		self.template.SetValue( self.config.Read('Template', '#AA{}'.format(datetime.datetime.now().year % 100)) )
 		self.number.SetValue( toInt(self.config.Read('Number', '1')) )
 		self.increment.SetValue( toInt(self.config.Read('Increment', '1')) )
 		
