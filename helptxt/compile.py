@@ -38,7 +38,7 @@ def CompileHelp( dir = '.' ):
 	
 		md = markdown.Markdown(
 				extensions=['toc', 'tables', 'sane_lists'], 
-				safe_mode='escape',
+				#safe_mode='escape',
 				output_format='html4'
 		)
 

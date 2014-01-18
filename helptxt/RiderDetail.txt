@@ -59,13 +59,14 @@ Within each Status, riders are ranked by distance (laps completed), then time.
 
 ### Autocorrect Lap Data
 If selected, CrossMgr will try to autocorrect entries.
-Autocorrect looks for two types of errors that can happen in Manual input:
+Autocorrect looks for two types of errors:
 
-1. Duplicate entries.  This can happen manually if the number caller calls the same number twice.
-1. Missing entries.  This can happen if you miss riders.
+1. Duplicate entries.  This can happen manually if the number caller calls the same number twice, or if the chip reader records the same chip multiple times.
+1. Missing entries.  This can happen if you miss entering riders, or if the chip reader fails to read the tag.
 
 With autocorrect on, CrossMgr will also project future lap times for riders.
-Autocorrect is not perfect, and sometimes CrossMgr gets it wrong.
+
+As with all approaches, Autocorrect is not perfect, and sometimes CrossMgr gets it wrong.
 
 If this option is deselected, CrossMgr will not try to autocorrect entries.  This allows you to see the raw input data so that you can correct it manually.
 However, it also means that CrossMgr will not be able to project future lap times to show in the "Expected:" window.
@@ -77,6 +78,49 @@ You may wish to turn off the autocorrect feature when fixing up data from chip t
 This is useful if you want to make manual corrections.
 
 For example, say you had a rider who missed a lap due to a flat, but CrossMgr is auto-correcting and inserting the missed lap.  Turn off autocorrect.
+
+#### How does Autocorrect Work?
+
+Autocorrect is at the core of CrossMgr and one of its most important features.  Without it, the slightest error would make it appear to "act crazy".
+
+Autocorrect follows a Bayesian philosophy, and improve its correction ability with more data.  Autocorrection is done for all riders every time and entry is added, delete or changed.
+
+Autocorrect first looks for duplicates.  An entry is considered a duplicate when it would make a lap that was half the time of the average lap time of all riders in the race.
+
+There may be many duplicates in a single lap, however, in Manual mode, they are far less common.  With chip timing, it is easy to get dozens of duplicate reads in a short time if a rider is standing next to the antenna.  In Manual mode, duplicates can occur before or after the actual rider's time.  With Chip timing, they can only occur after the rider has passed the reader.
+
+If there are multiple duplicates, CrossMgr first removes all but the first and last one.  Of the remaining two duplicates, it removes the one that would result in making the previous and subsequent lap as equal as possible.
+
+Second, Autocorrect looks for missing entries.  A missing entry causes a long lap with a lap time that is some integer multiple of the rider's average lap time (double or triple being the most common).  Mathematically:
+
+MissedEntryLapTime &#8776; AverageLapTime &times; &mu;; &mu; &isin; {2, 3, 4, ...}
+
+Where "&#8776;" means "approximately equal to within a reasonable standard deviation".
+
+The first problem is how to compute the Average Lap Time.  We can't compute it from the average of the rider's recorded lap times as these may include missed entries.  The laps will skew the average greatly, especially in races with a low number of laps.
+So, we approximate the AverageLapTime by first removing long lap times through an outlier detect process based on the average lap time of all riders in the race.
+
+Let's call this the Outlier-Adjusted Average Lap Time (OALT).
+
+Once the OALT is computed, CrossMgr re-examines the lap times looking for times that are within a reasonable standard deviation of an integer multiple of the OALT, up to 3x.  Laps matching this criteria are "split" into equal portions corresponding to the number of entries missed.  Mathematically, 
+
+MissedEntryLapTime &#8776; OALT &times; &mu;; &mu; &isin; {2, 3, 4, ...}
+
+Checking if this has a reasonable solution for &mu;, given that it is an integer greater than 1.  A slightly different procedure is used for the first lap, as it can be a different length from subsequent laps if there is a start run-up.
+
+If this has a solution, we split the lap into equal portions by adding (&mu;-1) split times.
+
+Once the laps have been corrected, a new overall average is taken (again, adjusting for the first lap).  Additional "projected" laps with average time are added to the end of the last rider's lap.  Projected laps are until the maximum time/laps of the race.
+
+Projected laps are used to indicate the 80% rule, the Expected list in CrossMgr, as well as lap counter and projected finish.
+
+Without outlier detection and lap correction in Autocorrect, projections would be meaningless.  This is why lap projection is not available when Autocorrect is turned off for all riders.
+
+For an example of why projection is dependent on Autocorrect, imagine if there were two duplicate reads for one rider in the first lap of a 60 minute race with a 6 minute lap.
+
+Say that rider did a 6:06 lap.  With the two extra reads, the average lap time will be 2:02.  With an average lap time of 2:02, this would be a 30 lap race, not a 10 lap race.  Of course, this makes no sense to a human.  We would automatically recognize the extra times as duplicates and look for long laps that were multiple of the "average" laps.
+
+As outlined above, CrossMgr knows how to do this mathematically.
 
 ## Time Entries (bottom left of screen)
 
