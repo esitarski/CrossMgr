@@ -11,6 +11,7 @@ import datetime
 
 import Utils
 from Version import AppVerName
+import Images
 
 from pyllrp import *
 from pyllrp.TagInventory import TagInventory
@@ -60,15 +61,23 @@ class TemplateValidator(wx.PyValidator):
 
 class MainWin( wx.Frame ):
 	EPCHexCharsMax = 24
+	
+	StatusError, StatusSuccess, StatusAttempt = [0, 1, 2]
 
 	def __init__( self, parent, id = wx.ID_ANY, title = '', size = (550, 600) ):
 		super( MainWin, self ).__init__( parent, id, title = title, size = size )
 		
 		self.SetTitle( AppVerName )
 		
+		self.successBitmap = wx.BitmapFromXPMData( Images.success_xpm )
+		self.attemptBitmap = wx.BitmapFromXPMData( Images.attempt_xpm )
+		self.errorBitmap = wx.BitmapFromXPMData( Images.error_xpm )
+		
 		self.config = wx.Config(appName="CrossMgrImpinj",
 						vendorName="SmartCyclingSolutions",
 						style=wx.CONFIG_USE_LOCAL_FILE)
+		
+		self.tagWriter = None
 		
 		self.backgroundColour = wx.Colour(232,232,232)
 		self.SetBackgroundColour( self.backgroundColour )
@@ -86,16 +95,16 @@ class MainWin( wx.Frame ):
 		# Impinj configuration.
 		#
 		impinjConfiguration = wx.StaticBox( self, label = 'Impinj Configuration' )
-		impinjConfigurationSizer = wx.StaticBoxSizer( impinjConfiguration, wx.VERTICAL )
+		impinjConfigurationSizer = wx.StaticBoxSizer( impinjConfiguration, wx.HORIZONTAL )
 		gbs = wx.GridBagSizer( 4, 4 )
-		impinjConfigurationSizer.Add( gbs, 1, flag = wx.EXPAND|wx.ALL, border = 4 )
+		impinjConfigurationSizer.Add( gbs, flag = wx.ALL, border = 4 )
 		
 		iRow = 0
 		
-		self.useHostName = wx.RadioButton( self, wx.ID_ANY, 'Host Name:', style=wx.wx.RB_GROUP )
+		self.useHostName = wx.RadioButton( self, label = 'Host Name:', style=wx.wx.RB_GROUP )
 		gbs.Add( self.useHostName, pos=(iRow,0), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
 		hb = wx.BoxSizer( wx.HORIZONTAL )
-		hb.Add( wx.StaticText(self, wx.ID_ANY, ImpinjHostNamePrefix), flag=wx.ALIGN_CENTER_VERTICAL )
+		hb.Add( wx.StaticText(self, label = ImpinjHostNamePrefix), flag=wx.ALIGN_CENTER_VERTICAL )
 		self.impinjHostName = wx.lib.masked.TextCtrl( self, wx.ID_ANY,
 							mask         = 'NN-NN-NN',
 							defaultValue = '00-00-00',
@@ -103,17 +112,17 @@ class MainWin( wx.Frame ):
 							size=(80, -1),
 						)
 		hb.Add( self.impinjHostName )
-		hb.Add( wx.StaticText(self, wx.ID_ANY, ImpinjHostNameSuffix), flag=wx.ALIGN_CENTER_VERTICAL )
-		hb.Add( wx.StaticText(self, wx.ID_ANY, ' : ' + '{}'.format(ImpinjInboundPort)), flag=wx.ALIGN_CENTER_VERTICAL )
+		hb.Add( wx.StaticText(self, label = ImpinjHostNameSuffix), flag=wx.ALIGN_CENTER_VERTICAL )
+		hb.Add( wx.StaticText(self, label = ' : ' + '{}'.format(ImpinjInboundPort)), flag=wx.ALIGN_CENTER_VERTICAL )
 		gbs.Add( hb, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
 		
 		iRow += 1
 		self.useStaticAddress = wx.RadioButton( self, wx.ID_ANY, 'IP:' )
 		gbs.Add( self.useStaticAddress, pos=(iRow,0), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
 		hb = wx.BoxSizer( wx.HORIZONTAL )
-		self.impinjHost = wx.lib.masked.IpAddrCtrl( self, wx.ID_ANY, style = wx.TE_PROCESS_TAB )
+		self.impinjHost = wx.lib.masked.IpAddrCtrl( self, style = wx.TE_PROCESS_TAB )
 		hb.Add( self.impinjHost )
-		hb.Add( wx.StaticText(self, wx.ID_ANY, ' : ' + '{}'.format(ImpinjInboundPort)), flag=wx.ALIGN_CENTER_VERTICAL )
+		hb.Add( wx.StaticText(self, label = ' : ' + '{}'.format(ImpinjInboundPort)), flag=wx.ALIGN_CENTER_VERTICAL )
 
 		gbs.Add( hb, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
 		iRow += 1
@@ -124,10 +133,25 @@ class MainWin( wx.Frame ):
 		self.autoDetectButton = wx.Button(self, wx.ID_ANY, 'Auto Detect Reader')
 		self.autoDetectButton.Bind( wx.EVT_BUTTON, self.doAutoDetect )
 		gbs.Add( self.autoDetectButton, pos=(iRow,0), span=(1,2), flag=wx.ALIGN_RIGHT )
-		iRow += 1		
+		iRow += 1
 		
 		self.useHostName.SetValue( True )
 		self.useStaticAddress.SetValue( False )
+		
+		statusVS = wx.BoxSizer( wx.VERTICAL )
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		self.statusBitmap = wx.StaticBitmap( self, bitmap = self.attemptBitmap )
+		self.statusLabel = wx.StaticText( self, label = 'Connecting...' )
+		hs.Add( self.statusBitmap )
+		hs.Add( self.statusLabel, flag = wx.ALIGN_CENTRE_VERTICAL )
+		self.resetButton = wx.Button( self, label = 'Reset Connection' )
+		self.resetButton.Bind( wx.EVT_BUTTON, self.doReset )
+		
+		statusVS.Add( hs, flag = wx.ALL|wx.ALIGN_CENTRE, border = 4 )
+		statusVS.Add( self.resetButton, flag = wx.ALL|wx.ALIGN_CENTRE, border = 4 )
+		
+		impinjConfigurationSizer.Add( statusVS, 1, flag = wx.EXPAND|wx.ALL, border = 4 )
+		
 		#-------------------------------------------------------------------------------------------------
 		
 		writeTags = wx.StaticBox( self, label = 'Write Tags' )
@@ -193,9 +217,12 @@ class MainWin( wx.Frame ):
 		self.getWriteValue()
 		self.setWriteSuccess( False )
 		
+		self.SetSizer( vsMain )
 		self.readOptions()
 		
-		self.SetSizer( vsMain )
+		self.Bind( wx.EVT_CLOSE, self.onClose )
+		
+		wx.CallAfter( self.doReset )
 	
 	def setWriteSuccess( self, success ):
 		self.writeSuccess.SetValue( 100 if success else 0 )
@@ -213,12 +240,41 @@ class MainWin( wx.Frame ):
 			template = template[:m.start(0)] + u'{{n:0{}d}}'.format(len(m.group(0))) + template[m.end(0):]
 			
 		return template
+	
+	def onClose( self, event ):
+		self.shutdown()
+		self.Destroy()
+	
+	def shutdown( self ):
+		if self.tagWriter:
+			try:
+				self.tagWriter.Disconnect()
+			except Exception as e:
+				pass
+		self.tagWriter = None
 		
+	def doReset( self, event = None ):
+		self.shutdown()
+		self.setStatus( self.StatusAttempt )
+		self.tagWriter = TagWriter( self.getHost() )
+		
+		try:
+			self.tagWriter.Connect()
+		except Exception as e:
+			self.setStatus( self.StatusError )
+			Utils.MessageOK( self, 'Reader Connection Fails: {}\n\nCheck the reader connection and configuration.\nThen press "Reset Connection"'.format(e),
+							'Reader Connection Fails' )
+			self.tagWriter = None
+			return
+			
+		self.setStatus( self.StatusSuccess )
+	
 	def onTextChange( self, event ):
 		self.getWriteValue()
 		
 	def doAutoDetect( self, event ):
 		wx.BeginBusyCursor()
+		self.shutdown()
 		impinjHost = AutoDetect( ImpinjInboundPort )
 		wx.EndBusyCursor()
 		
@@ -227,6 +283,8 @@ class MainWin( wx.Frame ):
 			self.useHostName.SetValue( False )
 			
 			self.impinjHost.SetValue( impinjHost )
+			self.doReset()
+			self.writeOptions()
 		else:
 			dlg = wx.MessageDialog(self, 'Auto Detect Failed.\nCheck that reader has power and is connected to the router.',
 									'Auto Detect Failed',
@@ -262,6 +320,22 @@ class MainWin( wx.Frame ):
 		self.value.SetValue( f )
 		return f
 		
+	def setStatus( self, status ):
+		if status == self.StatusAttempt:
+			self.statusBitmap.SetBitmap( self.attemptBitmap )
+			self.statusLabel.SetLabel( '' )
+		elif status == self.StatusSuccess:
+			self.statusBitmap.SetBitmap( self.successBitmap )
+			self.statusLabel.SetLabel( 'Connected' )
+		else:
+			self.statusBitmap.SetBitmap( self.errorBitmap )
+			self.statusLabel.SetLabel( 'Connection Failed' )
+			
+		self.statusBitmap.Hide()
+		self.statusLabel.Hide()
+		self.statusBitmap.Show()
+		self.statusLabel.Show()
+		
 	def getHost( self ):
 		if self.useHostName.GetValue():
 			host = ImpinjHostNamePrefix + self.impinjHostName.GetValue() + ImpinjHostNameSuffix
@@ -270,65 +344,42 @@ class MainWin( wx.Frame ):
 		return host
 	
 	def onWriteButton( self, event ):
+		if not self.tagWriter:
+			Utils.MessageOK( self, 'Reader not connected.\n\nSet reader connection parameters and press "Reset Connection".', 'Reader Not Connected' )
 		busy = wx.BusyCursor()
-			
 		wx.CallAfter( self.writeOptions )
 		
 		self.setWriteSuccess( False )
 		
 		writeValue = self.getWriteValue()
 		
-		tw = TagWriter( self.getHost() )
 		try:
-			tw.Connect()
-		except Exception as e:
-			Utils.MessageOK( self, 'Reader Connection Fails: {}\n\nCheck the reader connection and configuration.'.format(e),
-							'Reader Connection Fails' )
-			return
-		
-		try:
-			tw.WriteTag( '', writeValue )
+			self.tagWriter.WriteTag( '', writeValue )
 		except Exception as e:
 			Utils.MessageOK( self, 'Write Fails: {}\n\nCheck the reader connection.'.format(e),
-							'Write Fails' )			
+							'Write Fails' )
 		
-		try:
-			tw.Disconnect()
-		except:
-			pass
-
 		self.setWriteSuccess( True )
-		wx.CallLater( 2000, self.onReadButton, None )
+		wx.CallLater( 1800, self.onReadButton, None )
 		
 	def onReadButton( self, event ):
+		if not self.tagWriter:
+			Utils.MessageOK( self, 'Reader not connected.\n\nSet reader connection parameters and press "Reset Connection".', 'Reader Not Connected' )
 		busy = wx.BusyCursor()
 			
 		wx.CallAfter( self.writeOptions )
 		
 		self.tags.SetBackgroundColour( wx.WHITE )
 		
-		ti = TagInventory( self.getHost() )
-		try:
-			ti.Connect()
-		except Exception as e:
-			Utils.MessageOK( self, 'Reader Connection Fails: {}\n\nCheck the reader connection.'.format(e),
-							'Reader Connection Fails' )
-			return
-
 		tagInventory = None
 		try:
-			tagInventory, otherMessages = ti.GetTagInventory()
+			tagInventory, otherMessages = self.tagWriter.GetTagInventory()
 			tagInventory = sorted(tagInventory)
 			self.tags.SetValue( '\n'.join((t or '0') for t in tagInventory) )
 		except Exception as e:
 			Utils.MessageOK( self, 'Read Fails: {}\n\nCheck the reader connection.'.format(e),
 							'Read Fails' )
 		
-		try:
-			ti.Disconnect()
-		except:
-			pass
-			
 		if tagInventory:
 			self.tags.SetBackgroundColour( self.LightGreen )
 			if event is None:
