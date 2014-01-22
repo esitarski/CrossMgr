@@ -90,18 +90,18 @@ def socketByLine(s):
 
 # if we get the same time, make sure we give it a small offset to make it unique, but preserve the order.
 tSmall = datetime.timedelta( seconds = 0.00001 )
+tDay = datetime.timedelta( days = 1 )
 
-def parseTime( tStr ):
+def parseTime( tStr, day = 0 ):
 	global dateToday
 	global tLast
 	global tSameCount
 	
-	hh, mm, ssmi = tStr.split(':')
+	hh, mm, ss = tStr.split(':')
+	t = combine(dateToday, datetime.time()) + datetime.timedelta(
+			seconds = (float(hh) * 60.0 * 60.0) + (float(mm)  * 60.0) + float(ss) )
 	
-	hh, mm, ssmi = int(hh), int(mm), float(ssmi)
-	mi, ss = math.modf( ssmi )
-	mi, ss = int(mi * 1000000.0), int(ss)
-	t = combine(dateToday, datetime.time()) + datetime.timedelta( seconds = (hh * 60.0 * 60.0) + (mm  * 60.0) + ss + mi / 1000000.0 )
+	t += tDay * day
 	
 	if tLast is None:
 		tLast = t - tSmall
@@ -237,7 +237,16 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 							continue
 						tStr = m.group(0)
 						
-						t = parseTime( tStr )
+						# Find the second field separated by a space after the time.
+						# The second character of the field is the day count.
+						iSecondField = line.find( ' ', iColon ) + 1
+						if iSecondField >= 0:
+							try:
+								day = int(line[iSecondField+1:iSecondField+2])
+							except:
+								day = 0
+						
+						t = parseTime( tStr, day )
 						t += readerComputerTimeDiff
 						
 						tag = stripLeadingZeros(tag)

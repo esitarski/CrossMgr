@@ -14,11 +14,16 @@ def parseTagTime( line, lineNo, errors ):
 		return None, None
 	
 	try:
-		t = JChip.parseTime(tStr)
+		day = int(fields[2][1:2])
+	except:
+		day = 0
+	
+	try:
+		t = JChip.parseTime(tStr, day)
 	except (IndexError, ValueError):
 		errors.append( 'line {}: invalid time: "{}"'.format(lineNo, tStr) )
 		return None, None
-		
+	
 	return tag, t
 	
 def JChipImportDialog( parent, id = wx.ID_ANY ):
