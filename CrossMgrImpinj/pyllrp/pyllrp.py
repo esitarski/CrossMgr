@@ -815,7 +815,7 @@ def _getTagData( self ):
 # Add a 'getTagData' convenience method to the RO_ACCESS_REPORT message.
 RO_ACCESS_REPORT_Message.getTagData = types.MethodType( _getTagData, None, RO_ACCESS_REPORT_Message )
 
-# Remove the bytesToEnd field from the CUSTOM_MESSAGE and Custome parameter.
+# Remove the bytesToEnd field from the CUSTOM_MESSAGE and Custom parameter.
 CUSTOM_MESSAGE_Message.FieldDefs = CUSTOM_MESSAGE_Message.FieldDefs[:-1]
 Custom_Parameter.FieldDefs = Custom_Parameter.FieldDefs[:-1]
 
