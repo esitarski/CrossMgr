@@ -40,7 +40,27 @@ class TagInventory( object ):
 			response = self.connector.connect( self.host )
 		except socket.timeout:
 			raise
+			
+		# Reset to factory defaults.
+		response = self.connector.transact( SET_READER_CONFIG_Message(ResetToFactoryDefault = True) )
+		assert response.success(), 'SET_READER_CONFIG ResetToFactorDefault fails'
 
+		# Reduce tag transit time to improve write response.
+		message = SET_READER_CONFIG_Message(Parameters = [
+				AntennaConfiguration_Parameter( AntennaID = 0, Parameters = [
+					C1G2InventoryCommand_Parameter( Parameters = [
+							C1G2SingulationControl_Parameter(
+								Session = 0,
+								TagPopulation = 100,
+								TagTransitTime = 3000,
+							),
+						]
+					),
+				] ),
+			] )
+		response = self.connector.transact( message )
+		assert response.success(), 'SET_READER_CONFIG Configuration fails' + response
+		
 	def Disconnect( self ):
 		response = self.connector.disconnect()
 		self.connector = None

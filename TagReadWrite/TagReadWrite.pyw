@@ -9,6 +9,8 @@ import sys
 import time
 import datetime
 
+sys.path.append( '../CrossMgrImpinj/pyllrp' )
+
 import Utils
 from Version import AppVerName
 import Images
@@ -360,7 +362,7 @@ class MainWin( wx.Frame ):
 							'Write Fails' )
 		
 		self.setWriteSuccess( True )
-		wx.CallLater( 1800, self.onReadButton, None )
+		wx.CallLater( 50, self.onReadButton, None )
 		
 	def onReadButton( self, event ):
 		if not self.tagWriter:
