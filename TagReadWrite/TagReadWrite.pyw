@@ -44,7 +44,7 @@ class TemplateValidator(wx.PyValidator):
 
 	def Validate(self, win):
 		tc = self.GetWindow()
-		val = tc.GetValue()		
+		val = tc.GetValue()
 		return all( x in self.validChars for x in val )
 
 	def OnChar(self, event):
