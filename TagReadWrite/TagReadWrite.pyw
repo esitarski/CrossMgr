@@ -379,8 +379,8 @@ class MainWin( wx.Frame ):
 		tagInventory = None
 		try:
 			tagInventory, otherMessages = self.tagWriter.GetTagInventory()
-			tagInventory = sorted(tagInventory)
-			self.tags.SetValue( '\n'.join((t or '0') for t in tagInventory) )
+			tagInventory = [t or '0' for t in sorted(tagInventory, key = lamba x: int(x,16))]
+			self.tags.SetValue( '\n'.join(tagInventory) )
 		except Exception as e:
 			Utils.MessageOK( self, 'Read Fails: {}\n\nCheck the reader connection.'.format(e),
 							'Read Fails' )
