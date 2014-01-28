@@ -388,18 +388,19 @@ def GetNonWaveCategoryResults( category ):
 	# Assign finish position, gaps and status.
 	statusNames = Model.Rider.statusNames
 	leader = riderResults[0] if riderResults else None
-	leader.gap = ''
-	for pos, rr in enumerate(riderResults):
-		if rr.status == Model.Rider.Finisher:
-			rr.pos = u'{}'.format( pos + 1 )
-			if rr.laps != leader.laps:
-				if rr.lastTime > leader.lastTime:
-					lapsDown = leader.laps - rr.laps
-					rr.gap = '-%d %s' % (lapsDown, _('laps') if lapsDown > 1 else _('lap'))
-			elif rr != leader and not (isTimeTrial and rr.lastTime == leader.lastTime):
-				rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
-		else:
-			rr.pos = statusNames[rr.status]
+	if leader:
+		leader.gap = ''
+		for pos, rr in enumerate(riderResults):
+			if rr.status == Model.Rider.Finisher:
+				rr.pos = u'{}'.format( pos + 1 )
+				if rr.laps != leader.laps:
+					if rr.lastTime > leader.lastTime:
+						lapsDown = leader.laps - rr.laps
+						rr.gap = '-%d %s' % (lapsDown, _('laps') if lapsDown > 1 else _('lap'))
+				elif rr != leader and not (isTimeTrial and rr.lastTime == leader.lastTime):
+					rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
+			else:
+				rr.pos = statusNames[rr.status]
 			
 	
 	return tuple(riderResults)
