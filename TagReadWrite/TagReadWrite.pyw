@@ -84,6 +84,7 @@ class MainWin( wx.Frame ):
 		self.backgroundColour = wx.Colour(232,232,232)
 		self.SetBackgroundColour( self.backgroundColour )
 		self.LightGreen = wx.Colour(153,255,153)
+		self.LightRed = wx.Colour(255,153,153)
 		
 		vsMain = wx.BoxSizer( wx.VERTICAL )
 		
@@ -233,7 +234,7 @@ class MainWin( wx.Frame ):
 	def getFormatStr( self ):
 		template = self.template.GetValue()
 		if u'#' not in template:
-			template += u'#'
+			template = u'#' + template
 		
 		while 1:
 			m = self.reTemplate.search( template )
@@ -316,8 +317,9 @@ class MainWin( wx.Frame ):
 		self.impinjHost.SetValue( self.config.Read('ImpinjAddr', '0.0.0.0') )
 		
 	def getWriteValue( self ):
-		f = self.getFormatStr()
-		f = f.format( n = int(self.number.GetValue() or 0) )
+		f = self.getFormatStr().format( n = int(self.number.GetValue() or 0) ).lstrip('0')
+		if not f:
+			f = '0'
 		f = f[:self.EPCHexCharsMax]
 		self.value.SetValue( f )
 		return f
@@ -366,7 +368,8 @@ class MainWin( wx.Frame ):
 		
 	def onReadButton( self, event ):
 		if not self.tagWriter:
-			Utils.MessageOK( self, 'Reader not connected.\n\nSet reader connection parameters and press "Reset Connection".', 'Reader Not Connected' )
+			Utils.MessageOK( self,  u'Reader not connected.\n\nSet reader connection parameters and press "Reset Connection".',
+									u'Reader Not Connected' )
 		busy = wx.BusyCursor()
 			
 		wx.CallAfter( self.writeOptions )
@@ -382,14 +385,22 @@ class MainWin( wx.Frame ):
 			Utils.MessageOK( self, 'Read Fails: {}\n\nCheck the reader connection.'.format(e),
 							'Read Fails' )
 		
-		if tagInventory:
-			self.tags.SetBackgroundColour( self.LightGreen )
-			if event is None:
+		if event is None:
+			# This read follows a write.
+			# Check that the tag read matches the tag wrote.
+			if len(tagInventory) == 1 and self.getWriteValue() == tagInventory[0]:
 				self.number.SetValue( self.number.GetValue() + self.increment.GetValue() )
 				self.getWriteValue()
+				
+				self.tags.SetBackgroundColour( self.LightGreen )
+				self.setWriteSuccess( True )
 				wx.Bell()
-		elif event is None:
-			self.setWriteSuccess( False )
+			else:
+				self.tags.SetBackgroundColour( self.LightRed )
+				self.setWriteSuccess( False )
+		else:
+			if tagInventory:
+				self.tags.SetBackgroundColour( self.LightGreen )
 		
 if __name__ == '__main__':
 	app = wx.App( False )
