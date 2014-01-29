@@ -172,7 +172,7 @@ class MainWin( wx.Frame ):
 		self.incrementLabel = wx.StaticText( self, label = 'Increment by:' )
 		self.increment = wx.lib.intctrl.IntCtrl( self, min = 0, max = 99999999, limited = True, value = 1 )
 		
-		self.valueLabel = wx.StaticText( self, label = 'Value to Write:' )
+		self.valueLabel = wx.StaticText( self, label = 'Next Value to Write:' )
 		self.value = wx.TextCtrl( self, style = wx.TE_READONLY )
 		self.value.SetMaxLength( self.EPCHexCharsMax )
 		self.value.SetBackgroundColour( wx.Colour(235,235,235) )
@@ -379,7 +379,7 @@ class MainWin( wx.Frame ):
 		tagInventory = None
 		try:
 			tagInventory, otherMessages = self.tagWriter.GetTagInventory()
-			tagInventory = [t or '0' for t in sorted(tagInventory, key = lamba x: int(x,16))]
+			tagInventory = [(t or '0') for t in sorted(tagInventory, key = lambda x: int(x,16))]
 			self.tags.SetValue( '\n'.join(tagInventory) )
 		except Exception as e:
 			Utils.MessageOK( self, 'Read Fails: {}\n\nCheck the reader connection.'.format(e),
