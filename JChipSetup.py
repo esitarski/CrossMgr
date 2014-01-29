@@ -89,7 +89,7 @@ class JChipSetupDialog( wx.Dialog ):
 		else:
 			self.enableJChipCheckBox.Enable( False )
 		
-		self.testJChip = wx.ToggleButton( self, label = _('Start RFID Reader Test') )
+		self.testJChip = wx.ToggleButton( self, label = _('Start RFID Test') )
 		self.Bind(wx.EVT_TOGGLEBUTTON, self.testJChipToggle, self.testJChip)
 		
 		self.testList = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_READONLY|wx.TE_MULTILINE, size=(-1,200) )
