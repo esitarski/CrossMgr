@@ -95,11 +95,11 @@ class Properties( wx.Panel ):
 		self.highPrecisionTimes = wx.CheckBox( self, style=wx.ALIGN_LEFT )
 		rows += 1
 
-		self.enableUSBCameraLabel = wx.StaticText( self, label = _('Enable USB Camera Photo Finish: ') )
+		self.enableUSBCameraLabel = wx.StaticText( self, label = _('Use USB Camera for Photo Finish: ') )
 		self.enableUSBCamera = wx.CheckBox( self,style=wx.ALIGN_LEFT )
 		rows += 1
 
-		self.jchipLabel = wx.StaticText( self, label = _('JChip Integration: ') )
+		self.jchipLabel = wx.StaticText( self, label = _('Use RFID Reader: ') )
 		self.jchip = wx.CheckBox( self, style=wx.ALIGN_LEFT )
 		#self.Bind( wx.EVT_CHECKBOX, self.onJChipIntegration, self.jchip )
 		rows += 1

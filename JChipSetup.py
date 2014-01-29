@@ -76,20 +76,20 @@ def GetAllIps():
 
 class JChipSetupDialog( wx.Dialog ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, "JChip Setup",
+		wx.Dialog.__init__( self, parent, id, "RFID Reader Setup",
 						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
 		
 		self.timer = None
 		self.receivedCount = 0
 		self.refTime = None
 		
-		self.enableJChipCheckBox = wx.CheckBox( self, label = _('Accept JChip Data During Race') )
+		self.enableJChipCheckBox = wx.CheckBox( self, label = _('Accept RFID Reader Data During Race') )
 		if Model.race:
 			self.enableJChipCheckBox.SetValue( getattr(Model.race, 'enableJChipIntegration', False) )
 		else:
 			self.enableJChipCheckBox.Enable( False )
 		
-		self.testJChip = wx.ToggleButton( self, label = _('Start JChip Test') )
+		self.testJChip = wx.ToggleButton( self, label = _('Start RFID Reader Test') )
 		self.Bind(wx.EVT_TOGGLEBUTTON, self.testJChipToggle, self.testJChip)
 		
 		self.testList = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_READONLY|wx.TE_MULTILINE, size=(-1,200) )
@@ -102,23 +102,22 @@ class JChipSetupDialog( wx.Dialog ):
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
 		self.helpBtn = wx.Button( self, wx.ID_ANY, _('&Help') )
-		self.Bind( wx.EVT_BUTTON, lambda evt: Utils.showHelp('Menu-ChipReader.html#jchip-setup'), self.helpBtn )
+		self.Bind( wx.EVT_BUTTON, lambda evt: Utils.showHelp('Menu-ChipReader.html#rfid-reader-setup'), self.helpBtn )
 		
 		self.Bind(EVT_CHIP_READER, self.handleChipReaderEvent)
 		
 		bs = wx.BoxSizer( wx.VERTICAL )
 		
 		todoList =  u'\n'.join( '%d)  %s' % (i + 1, s) for i, s in enumerate( [
-			_('Make sure the JChip receiver is plugged into the network.'),
-			_('Do a "Sync PC" on the JChip receiver to synchronize with your computer clock.'),
-			_('Verify that the JChip has a "TCP Client" connection to the CrossMgr computer (see below).'),
+			_('Make sure the RFID receiver is plugged into the network.'),
+			_('If not using JChip, make sure the CrossMgrImpinj or CrossMgrAlien bridge programs are running.'),
 			_('You must have the Sign-On Excel sheet ready and linked before your race.'),
 			_('You must configure a "Tag" field in your Sign-On Excel Sheet.'),
 			_('Run this test before each race.'),
 		]) )
 		intro = (u'\n'.join( [
-				_('CrossMgr supports the JChip tag reader.'),
-				_('For more details, consult the CrossMgr and JChip documentation.'),
+				_('CrossMgr supports the JChip RFID reader.'),
+				_('For more details, consult the CrossMgr, JChip, CrossMgrImpinj or CrossMgrAlien documentation.'),
 				] ) + u'\n' + _('Checklist:') + u'\n\n{}\n').format( todoList )
 		
 		border = 4
@@ -128,7 +127,7 @@ class JChipSetupDialog( wx.Dialog ):
 		
 		#-------------------------------------------------------------------
 		bs.AddSpacer( border )
-		bs.Add( wx.StaticText( self, label = _('JChip Configuration:') ), 0, wx.EXPAND|wx.ALL, border )
+		bs.Add( wx.StaticText( self, label = _('JChip/CrossMgrImpinj/CrossMgrAlien Configuration:') ), 0, wx.EXPAND|wx.ALL, border )
 		
 		#-------------------------------------------------------------------
 		rowColSizer = rcs.RowColSizer()
@@ -162,7 +161,7 @@ class JChipSetupDialog( wx.Dialog ):
 						flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		rowColSizer.Add( self.port, row=row, col=1, border = border, flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_LEFT )
 		
-		bs.Add( wx.StaticText( self, label = _('See "7  Setting of Connections" in JChip "Control Panel Soft Manual" for more details.') ),
+		bs.Add( wx.StaticText( self, label = _('If using JChip, see "7  Setting of Connections" in JChip "Control Panel Soft Manual" for more details.') ),
 				border = border, flag = wx.GROW|wx.ALL )
 		#-------------------------------------------------------------------
 
@@ -194,15 +193,15 @@ class JChipSetupDialog( wx.Dialog ):
 			if self.timer:
 				self.timer.Stop()
 				self.timer = None
-			wx.Sleep( 2 )	# Give everthing a chance to shut down.
+			wx.Sleep( 2 )	# Give everything a chance to shut down.
 			
 		global HOST
 		HOST = JChip.DEFAULT_HOST = self.ipaddr.GetStringSelection()
 		
 		if running:
-			self.appendMsg( 'restarting JChip listener (%s)...' % HOST )
+			self.appendMsg( 'restarting RFID listener (%s)...' % HOST )
 			JChip.StartListener()
-			self.appendMsg( 'listening for JChip connection...' )
+			self.appendMsg( 'listening for RFID connection...' )
 			
 			# Start a timer to monitor the receiver.
 			self.receivedCount = 0
@@ -225,12 +224,12 @@ class JChipSetupDialog( wx.Dialog ):
 
 	def testJChipToggle( self, event ):
 		if not Model.race:
-			Utils.MessageOK( self, _('No active race.  Cannot perform JChip test.  "New" or "Open" a race first.'), _('Cannot Perform JChip Test') )
+			Utils.MessageOK( self, _('No active race.  Cannot perform RFID test.  "New" or "Open" a race first.'), _('Cannot Perform RFID Test') )
 			wx.CallAfter( self.testJChip.SetValue, False )
 			return
 			
 		if Model.race.isRunning():
-			Utils.MessageOK( self, _('Cannot perform JChip test while race is running.'), _('Cannot Perform JChip Test') )
+			Utils.MessageOK( self, _('Cannot perform RFID test while race is running.'), _('Cannot Perform RFID Test') )
 			wx.CallAfter( self.testJChip.SetValue, False )
 			return
 
@@ -255,9 +254,9 @@ class JChipSetupDialog( wx.Dialog ):
 			self.testList.Clear()
 			JChip.StartListener()
 			
-			self.appendMsg( 'listening for JChip connection...' )
+			self.appendMsg( 'listening for RFID connection...' )
 			
-			self.testJChip.SetLabel( 'Stop JChip Test' )
+			self.testJChip.SetLabel( 'Stop RFID Test' )
 			self.testJChip.SetValue( True )
 			
 			# Start a timer to monitor the receiver.
@@ -277,7 +276,7 @@ class JChipSetupDialog( wx.Dialog ):
 				self.timer.Stop()
 				self.timer = None
 			
-			self.testJChip.SetLabel( 'Start JChip Test' )
+			self.testJChip.SetLabel( 'Start RFID Test' )
 			self.testJChip.SetValue( False )
 			self.testList.Clear()
 			
@@ -312,7 +311,7 @@ class JChipSetupDialog( wx.Dialog ):
 			elif d[0] == 'disconnected':
 				self.appendMsg( d[0] )
 				self.appendMsg( '' )
-				self.appendMsg( _('listening for JChip connection...') )
+				self.appendMsg( _('listening for RFID connection...') )
 			elif d[0] == 'name':
 				self.appendMsg( _('receiver name: {}').format(d[1]) )
 			else:
