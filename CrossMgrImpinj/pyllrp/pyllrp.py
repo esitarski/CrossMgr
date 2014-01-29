@@ -277,7 +277,7 @@ def _getPTypeName( pType ):
 	return pType.Name if not isinstance(pType, tuple) else ' or '.join( v.Name for v in pType )
 	
 def _validate( self, path = None ):
-	''' _validate the values of an LLRP object. '''
+	''' Validate all the values of an LLRP object. '''
 	if not path:
 		path = []
 	path.append( self.__class__.__name__ )
