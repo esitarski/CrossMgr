@@ -157,8 +157,10 @@ class TimeTrialRecord( wx.Panel ):
 				attr.SetEditor( HighPrecisionTimeEditor() )
 			elif col == 1:
 				attr.SetRenderer( gridlib.GridCellNumberRenderer() )
-				#attr.SetEditor( BibEditor() )
-				attr.SetEditor( gridlib.GridCellNumberEditor() )
+				if 'WXMAC' in wx.Platform:
+					attr.SetEditor( gridlib.GridCellNumberEditor() )
+				else:
+					attr.SetEditor( BibEditor() )
 			self.grid.SetColAttr( col, attr )
 		
 		saveLabel = _('Save')
