@@ -187,7 +187,7 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 		if not self.captureButton.GetValue():
 			return
 	
-		tCur = Model.race.startTime + datetime.timedelta( seconds = t )
+		tCur = videoBuffer.refTime + datetime.timedelta( seconds = t )
 		timeFrames = videoBuffer.findBeforeAfter( t, self.numPhotos // 2, self.numPhotos // 2 )
 		deltaMS = [((tFrame - tCur).seconds * 1000.0) for tFrame, frame in timeFrames]
 		
