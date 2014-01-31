@@ -54,7 +54,7 @@ class HighPrecisionTimeEditor(gridlib.PyGridCellEditor):
 		self._tc.SetValue( self.startValue )
 		self._tc.SetFocus()
 		
-	def EndEdit( self, row, col, grid ):
+	def EndEdit( self, row, col, grid, value = None ):
 		changed = False
 		val = self._tc.GetValue()
 		if val != self.startValue:
@@ -92,7 +92,7 @@ class BibEditor(gridlib.PyGridCellEditor):
 		self._tc.SetValue( self.startValue )
 		self._tc.SetFocus()
 		
-	def EndEdit( self, row, col, grid ):
+	def EndEdit( self, row, col, grid, value = None ):
 		changed = False
 		val = self._tc.GetValue()
 		val = str(val) if val else ''
