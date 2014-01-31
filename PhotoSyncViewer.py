@@ -189,7 +189,7 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 	
 		tCur = videoBuffer.refTime + datetime.timedelta( seconds = t )
 		timeFrames = videoBuffer.findBeforeAfter( t, self.numPhotos // 2, self.numPhotos // 2 )
-		deltaMS = [((tFrame - tCur).seconds * 1000.0) for tFrame, frame in timeFrames]
+		deltaMS = [((tFrame - tCur).total_seconds() * 1000.0) for tFrame, frame in timeFrames]
 		
 		if len(timeFrames) < self.numPhotos:
 			d = self.numPhotos - len(timeFrames)
