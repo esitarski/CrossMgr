@@ -100,7 +100,7 @@ class TimeEditor(gridlib.PyGridCellEditor):
 		self.startValue = '00:00:00'
 		gridlib.PyGridCellEditor.__init__(self)
 		
-	def Create( self, parent, id, evtHandler ):
+	def Create( self, parent, id = wx.ID_ANY, evtHandler = None ):
 		self._tc = masked.TimeCtrl( parent, id, style=wx.TE_CENTRE, fmt24hr=True, displaySeconds = True, value = '00:00:00' )
 		self.SetControl( self._tc )
 		if evtHandler:

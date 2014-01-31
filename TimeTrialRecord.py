@@ -77,7 +77,7 @@ class BibEditor(gridlib.PyGridCellEditor):
 		self.startValue = ''
 		gridlib.PyGridCellEditor.__init__(self)
 		
-	def Create( self, parent, id, evtHandler ):
+	def Create( self, parent, id = wx.ID_ANY, evtHandler = None ):
 		self._tc = masked.NumCtrl( parent, id, style = wx.TE_PROCESS_ENTER )
 		self._tc.SetAllowNone( True )
 		self.SetControl( self._tc )
@@ -124,9 +124,11 @@ class TimeTrialRecord( wx.Panel ):
 		tapForTimeLabel = _('Tap for Time')
 		if 'WXMAC' in wx.Platform:
 			self.recordTimeButton = wx.lib.buttons.ThemedGenButton( self, label=tapForTimeLabel )
+			self.recordTimeButton.Bind( wx.EVT_BUTTON, self.doRecordTime )
 		else:
 			self.recordTimeButton = wx.Button( self, label=tapForTimeLabel )
-		self.recordTimeButton.Bind( wx.EVT_LEFT_DOWN, self.doRecordTime )
+			self.recordTimeButton.Bind( wx.EVT_LEFT_DOWN, self.doRecordTime )
+		
 		self.recordTimeButton.SetFont( self.bigFont )
 		self.recordTimeButton.SetToolTip(wx.ToolTip('Tap to Record Times.  Then enter the Bib numbers and press Save.'))
 		
