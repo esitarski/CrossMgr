@@ -215,7 +215,10 @@ class ChipImportDialog( wx.Dialog ):
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		
-		image = wx.Image( os.path.join(Utils.getImageFolder(), '%sLogo.png' % chipName), wx.BITMAP_TYPE_PNG )
+		try:
+			image = wx.Image( os.path.join(Utils.getImageFolder(), '%sLogo.png' % chipName), wx.BITMAP_TYPE_PNG )
+		except Exception as e:
+			image = wx.EmptyImage( 32, 32, True )
 		hs.Add( wx.StaticBitmap(self, bitmap = image.ConvertToBitmap(8)), 0 )
 		hs.Add( wx.StaticText(self, label = intro), 1, wx.EXPAND|wx.LEFT, border*2 )
 		
