@@ -56,7 +56,7 @@ def RescaleBitmap( dc, bitmap, width, height ):
 	
 class PhotoSyncViewerDialog( wx.Dialog ):
 	def __init__(
-			self, parent, ID, title='Photo Sync Previewer', size=wx.DefaultSize, pos=wx.DefaultPosition, 
+			self, parent, ID = wx.ID_ANY, title=_('Photo Sync Previewer'), size=wx.DefaultSize, pos=wx.DefaultPosition, 
 			style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER ):
 
 		# Instead of calling wx.Dialog.__init__ we precreate the dialog
@@ -76,14 +76,14 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 
 		self.vbs = wx.BoxSizer(wx.VERTICAL)
 		
-		self.title = wx.StaticText( self, wx.ID_ANY, '', style=wx.ALIGN_LEFT )
+		self.title = wx.StaticText( self, label = '', style=wx.ALIGN_LEFT )
 		self.title.SetFont( wx.FontFromPixelSize( wx.Size(0,24), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		
-		self.captureButton = wx.ToggleButton( self, wx.ID_ANY, 'Reset Photo Capture' )
+		self.captureButton = wx.ToggleButton( self, label = _('Reset Photo Capture') )
 		self.captureButton.Bind( wx.EVT_TOGGLEBUTTON, self.OnCapture )
 		self.captureCount = 0
 		
-		self.scrolledWindow = wx.ScrolledWindow( self, wx.ID_ANY )
+		self.scrolledWindow = wx.ScrolledWindow( self )
 		self.numPhotoSeries = 4
 		self.numPhotos = 18
 		self.iSeries = 0
@@ -94,7 +94,7 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 		self.bitmap = RescaleBitmap( wx.WindowDC(self), bitmap, self.photoWidth, self.photoHeight )
 		
 		self.photoBitmaps = [[wx.BitmapButton(
-									self.scrolledWindow, wx.ID_ANY,
+									self.scrolledWindow,
 									bitmap=self.bitmap, size=(self.photoWidth+4,self.photoHeight+4),
 									style=wx.BU_AUTODRAW)
 								for i in xrange(self.numPhotos)] for s in xrange(self.numPhotoSeries)]
@@ -154,7 +154,7 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 		milliseconds = fields[0]
 		if milliseconds and Model.race:
 			Model.race.advancePhotoMilliseconds = int( milliseconds )
-			Utils.MessageOK( self, _('Advance/Delay Photo Milliseconds set to {}').format(milliseconds), 'Advance/Delay Milliseconds' )
+			Utils.MessageOK( self, _('Advance/Delay Photo Milliseconds set to {}').format(milliseconds), _('Advance/Delay Milliseconds') )
 		
 	def OnClose( self, event ):
 		self.Show( False )
@@ -207,10 +207,10 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 				deltaMin = abs(deltaMS[i])
 				iMin = i
 			if deltaMS[i] is None:
-				photoLabels[i].SetLabel( '' )
+				photoLabels[i].SetLabel( u'' )
 				photoBitmaps[i].SetBitmapLabel( wx.NullBitmap )
 			else:
-				photoLabels[i].SetLabel( str(deltaMS[i]) + ' ms')
+				photoLabels[i].SetLabel( u'{}ms'.format(deltaMS[i]) )
 				image = PhotoFinish.PilImageToWxImage( frame )
 				image = RescaleImage( image, self.photoWidth, self.photoHeight )
 				bitmap = image.ConvertToBitmap( dc.GetDepth() )
@@ -231,7 +231,7 @@ photoSyncViewer = None
 def PhotoSyncViewerShow( parent ):
 	global photoSyncViewer
 	if not photoSyncViewer:
-		photoSyncViewer = PhotoSyncViewerDialog( parent, wx.ID_ANY, "Photo Sync Viewer" )
+		photoSyncViewer = PhotoSyncViewerDialog( parent, wx.ID_ANY, _("Photo Sync Viewer") )
 	photoSyncViewer.reset()
 	photoSyncViewer.Show( True )
 	
