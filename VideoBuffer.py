@@ -139,7 +139,7 @@ class VideoBuffer( threading.Thread ):
 	def getTimeFrame( self, i ):
 		return (self.fcb.getT(i), self.fcb.getFrame(i))
 		
-	def findBeforeAfter( t, before = 0, after = 1 ):
+	def findBeforeAfter( self, t, before = 0, after = 1 ):
 		''' Call the frame cyclic buffer from race time, not clock time. '''
 		tFind = self.refTime + timedelta( seconds = t )
 		times, frames = self.fcb.findBeforeAfter( tFind, before, after )

@@ -98,7 +98,7 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 									bitmap=self.bitmap, size=(self.photoWidth+4,self.photoHeight+4),
 									style=wx.BU_AUTODRAW)
 								for i in xrange(self.numPhotos)] for s in xrange(self.numPhotoSeries)]
-		self.photoLabels = [[wx.StaticText(self.scrolledWindow, wx.ID_ANY, style=wx.ALIGN_CENTRE) for i in xrange(self.numPhotos)]
+		self.photoLabels = [[wx.StaticText(self.scrolledWindow, style=wx.ALIGN_CENTRE) for i in xrange(self.numPhotos)]
 								for s in xrange(self.numPhotoSeries)]
 		self.titles = [''] * self.numPhotoSeries
 		for s in xrange(self.numPhotoSeries):
@@ -187,8 +187,9 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 		if not self.captureButton.GetValue():
 			return
 	
+		tCur = Model.race.startTime + datetime.timedelta( seconds = t )
 		timeFrames = videoBuffer.findBeforeAfter( t, self.numPhotos // 2, self.numPhotos // 2 )
-		deltaMS = [int((tFrame - t) * 1000.0) for tFrame, frame in timeFrames]
+		deltaMS = [((tFrame - tCur).seconds * 1000.0) for tFrame, frame in timeFrames]
 		
 		if len(timeFrames) < self.numPhotos:
 			d = self.numPhotos - len(timeFrames)
