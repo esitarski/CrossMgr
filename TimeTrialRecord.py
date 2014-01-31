@@ -40,7 +40,7 @@ class HighPrecisionTimeEditor(gridlib.PyGridCellEditor):
 		self.startValue = self.Empty
 		gridlib.PyGridCellEditor.__init__(self)
 		
-	def Create( self, parent, id, evtHandler ):
+	def Create( self, parent, id = wx.ID_ANY, evtHandler = None ):
 		self._tc = HighPrecisionTimeEdit(parent, id, allow_none = False, style = wx.TE_PROCESS_ENTER)
 		self.SetControl( self._tc )
 		if evtHandler:
@@ -95,8 +95,8 @@ class BibEditor(gridlib.PyGridCellEditor):
 	def EndEdit( self, row, col, grid, value = None ):
 		changed = False
 		val = self._tc.GetValue()
-		val = str(val) if val else ''
-		if val != str(self.startValue):
+		val = unicode(val or u'')
+		if val != unicode(self.startValue):
 			changed = True
 			grid.GetTable().SetValue( row, col, val )
 		self._tc.SetValue( self.startValue )
@@ -157,7 +157,8 @@ class TimeTrialRecord( wx.Panel ):
 				attr.SetEditor( HighPrecisionTimeEditor() )
 			elif col == 1:
 				attr.SetRenderer( gridlib.GridCellNumberRenderer() )
-				attr.SetEditor( BibEditor() )
+				#attr.SetEditor( BibEditor() )
+				attr.SetEditor( gridlib.GridCellNumberEditor() )
 			self.grid.SetColAttr( col, attr )
 		
 		saveLabel = _('Save')
@@ -215,7 +216,10 @@ class TimeTrialRecord( wx.Panel ):
 				break
 		
 		if not success:
-			Utils.MessageOK( self, 'Insufficient space to Record Time.\nEnter Bib numbers and press Commit.\nOr delete some entries', 'Record Time Failed.' )
+			Utils.MessageOK( self, u'\n'.join([
+                _('Insufficient space to Record Time.'),
+                _('Enter Bib numbers and press Commit.'),
+                _('Or delete some entries')]), _('Record Time Failed.') )
 			return
 			
 		self.grid.SetCellValue( emptyRow, 0, formatTime(t) )
