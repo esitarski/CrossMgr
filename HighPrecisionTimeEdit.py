@@ -11,7 +11,7 @@ class HighPrecisionTimeEdit( masked.TextCtrl ):
 	def __init__( self, parent, id = wx.ID_ANY, seconds = None, allow_none = False, style = 0 ):
 		self.allow_none = allow_none
 		masked.TextCtrl.__init__(
-					self, parent, id, "",
+					self, parent, id,
 					style		 = style,
 					mask		 = '##:##:##.###',
 					defaultValue = '00:00:00.000',

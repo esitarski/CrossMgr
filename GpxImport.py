@@ -152,15 +152,15 @@ class SummaryPage(wiz.WizardPageSimple):
 		rows += 1
 
 		self.distanceLabel = wx.StaticText( self, label = _('Lap Length:') )
-		self.distance = wx.TextCtrl(self, label = '', style=wx.TE_READONLY)
+		self.distance = wx.TextCtrl(self, style=wx.TE_READONLY)
 		rows += 1
 
 		self.totalElevationGainLabel = wx.StaticText( self, label = _('Total Elevation Gain:') )
-		self.totalElevationGain = wx.TextCtrl(self, label = '', style=wx.TE_READONLY)
+		self.totalElevationGain = wx.TextCtrl(self, style=wx.TE_READONLY)
 		rows += 1
 
 		self.courseTypeLabel = wx.StaticText( self, label = _('Course is:') )
-		self.courseType = wx.TextCtrl(self, label = '', style=wx.TE_READONLY)
+		self.courseType = wx.TextCtrl(self, style=wx.TE_READONLY)
 		rows += 1
 
 		self.setCategoryDistanceLabel = wx.StaticText( self, label = '' )
@@ -216,7 +216,7 @@ class GetGeoTrack( object ):
 		self.parent = parent
 		prewizard = wiz.PreWizard()
 		prewizard.SetExtraStyle( wiz.WIZARD_EX_HELPBUTTON )
-		prewizard.Create( parent, label = _('Import GPX Course File'), img )
+		prewizard.Create( parent, title = _('Import GPX Course File'), bitmap = img )
 		self.wizard = prewizard
 		
 		self.introPage		= IntroPage( self.wizard, self )

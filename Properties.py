@@ -18,20 +18,20 @@ class Properties( wx.Panel ):
 		rows = 0
 		
 		self.raceNameLabel = wx.StaticText( self, label = _('Event Name:') )
-		self.raceName = wx.TextCtrl( self, value='' )
+		self.raceName = wx.TextCtrl( self )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceName )
 		rows += 1
 		
 		self.raceCityLabel = wx.StaticText( self, label = _('City:') )
-		self.raceCity = wx.TextCtrl( self, value='' )
+		self.raceCity = wx.TextCtrl( self )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceCity )
 		
 		self.raceStateProvLabel = wx.StaticText( self, label = _('State/Prov:') )
-		self.raceStateProv = wx.TextCtrl( self, value='' )
+		self.raceStateProv = wx.TextCtrl( self )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceStateProv )
 		
 		self.raceCountryLabel = wx.StaticText( self, label = _('Country') )
-		self.raceCountry = wx.TextCtrl( self, value='' )
+		self.raceCountry = wx.TextCtrl( self )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceCountry )
 		
 		self.locationSizer = wx.BoxSizer( wx.HORIZONTAL )
@@ -61,20 +61,20 @@ class Properties( wx.Panel ):
 		rows += 1
 
 		self.raceDisciplineLabel = wx.StaticText( self, label = _('Discipline:') )
-		self.raceDiscipline = wx.TextCtrl( self, value='Cyclo-cross' )
+		self.raceDiscipline = wx.TextCtrl( self, value=u'Cyclo-cross' )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceDiscipline )
 		rows += 1
 		
 		self.organizerLabel = wx.StaticText( self, label = _('Organizer:') )
-		self.organizer = wx.TextCtrl( self, value=u'' )
+		self.organizer = wx.TextCtrl( self )
 		rows += 1
 		
 		self.commissaireLabel = wx.StaticText( self, label = _('Official/Commissaire:') )
-		self.commissaire = wx.TextCtrl( self, value=u'' )
+		self.commissaire = wx.TextCtrl( self )
 		rows += 1
 		
 		self.memoLabel = wx.StaticText( self, label =  _('Memo:') )
-		self.memo = wx.TextCtrl( self, value='' )
+		self.memo = wx.TextCtrl( self )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.memo )
 		rows += 1
 		
@@ -123,15 +123,15 @@ class Properties( wx.Panel ):
 		rows += 1
 
 		self.fileNameLabel = wx.StaticText( self, label = _('File Name: ') )
-		self.fileName = wx.StaticText( self, label = '' )
+		self.fileName = wx.StaticText( self, label = u'' )
 		rows += 1
 
 		self.excelLabel = wx.StaticText( self, label = _('Excel Sheet: ') )
-		self.excelName = wx.StaticText( self, label = '' )
+		self.excelName = wx.StaticText( self, label = u'' )
 		rows += 1
 
 		self.categoriesFileLabel = wx.StaticText( self, label = _('Categories Imported From: ') )
-		self.categoriesFile = wx.StaticText( self, label = '' )
+		self.categoriesFile = wx.StaticText( self, label = u'' )
 		rows += 1
 
 		self.updateFileName()
