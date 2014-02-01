@@ -238,7 +238,8 @@ class LineGraph(wx.PyControl):
 				y = yBottom - (d - dataMinRange) * dFactor
 				points[j] = wx.Point(x, y)
 				x += thick
-			dc.DrawLines( points );
+			if points:
+				dc.DrawLines( points );
 			
 			# Draw indicators for interpolated values.
 			ctx.SetPen( wx.Pen( wx.Colour(128,128,128), 1 ) )

@@ -178,7 +178,7 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 		
 	def refresh( self, videoBuffer, t, num = None ):
 		if not videoBuffer:
-			for s in xrange(self.len(self.photoLabels)):
+			for s in xrange(len(self.photoLabels)):
 				for i in xrange(len(self.photoLabels[s])):
 					self.photoBitmaps[s][i].SetBitmapLabel( self.bitmap )
 					self.photoLabels[s][i].SetLabel( '' )
