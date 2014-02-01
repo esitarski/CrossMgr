@@ -156,7 +156,7 @@ class ChipImportDialog( wx.Dialog ):
 		gs.AddSpacer(1)
 
 		gs.Add( wx.StaticText(self, label = _('Data Policy:') ), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
-		self.importPolicy = wx.Choice( self, wx.ID_ANY, choices = [
+		self.importPolicy = wx.Choice( self, choices = [
 				_('Clear All Existing Data Before Import'),
 				_('Merge New Data with Existing')
 			] )

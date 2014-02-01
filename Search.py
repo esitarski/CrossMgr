@@ -22,7 +22,7 @@ class Search( wx.Panel ):
 		
 		hbs = wx.BoxSizer( wx.HORIZONTAL )
 		
-		self.searchLabel = wx.StaticText( self, wx.ID_ANY, _('Search:') )
+		self.searchLabel = wx.StaticText( self, label =_('Search:') )
 		self.search = wx.SearchCtrl(self, style=wx.TE_PROCESS_ENTER )
 		self.search.ShowCancelButton( True )
 		self.Bind(wx.EVT_SEARCHCTRL_SEARCH_BTN, self.OnSearch, self.search)
@@ -229,7 +229,7 @@ class Search( wx.Panel ):
 	
 class SearchDialog( wx.Dialog ):
 	def __init__(
-			self, parent, ID, title=_('Find Rider'), size=wx.DefaultSize, pos=wx.DefaultPosition, 
+			self, parent, ID = wx.ID_ANY, title=_('Find Rider'), size=wx.DefaultSize, pos=wx.DefaultPosition, 
 			style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER ):
 
 		# Instead of calling wx.Dialog.__init__ we precreate the dialog
@@ -260,8 +260,8 @@ class SearchDialog( wx.Dialog ):
 		
 if __name__ == '__main__':
 	app = wx.App(False)
-	mainWin = wx.Frame(None,title="CrossMan")
+	mainWin = wx.Frame(None, title="CrossMan")
 	mainWin.Show()
-	searchDialog = SearchDialog( mainWin, wx.ID_ANY, "Search Dialog Test" )
+	searchDialog = SearchDialog( mainWin, title = "Search Dialog Test" )
 	searchDialog.Show()
 	app.MainLoop()

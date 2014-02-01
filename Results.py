@@ -41,30 +41,30 @@ class Results( wx.Panel ):
 		self.fastestLapRC = None
 
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
-		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, _('Category:') )
+		self.categoryLabel = wx.StaticText( self, label = _('Category:') )
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
 		
-		self.showRiderDataToggle = wx.ToggleButton( self, wx.ID_ANY, _('Show Rider Data'), style=wx.BU_EXACTFIT )
+		self.showRiderDataToggle = wx.ToggleButton( self, label = _('Show Rider Data'), style=wx.BU_EXACTFIT )
 		self.showRiderDataToggle.SetValue( self.showRiderData )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowRiderData, self.showRiderDataToggle )
 		
-		self.showLapTimesRadio = wx.RadioButton( self, wx.ID_ANY, _('Lap Times'), style=wx.BU_EXACTFIT|wx.RB_GROUP )
+		self.showLapTimesRadio = wx.RadioButton( self, label = _('Lap Times'), style=wx.BU_EXACTFIT|wx.RB_GROUP )
 		self.showLapTimesRadio.SetValue( self.selectDisplay == Results.DisplayLapTimes )
 		self.Bind( wx.EVT_RADIOBUTTON, self.onSelectDisplayOption, self.showLapTimesRadio )
 		self.showLapTimesRadio.SetToolTip(wx.ToolTip(_('Useful for finding the fastest lap.')))
 		
-		self.showRaceTimesRadio = wx.RadioButton( self, wx.ID_ANY, _('Race Times'), style=wx.BU_EXACTFIT )
+		self.showRaceTimesRadio = wx.RadioButton( self, label = _('Race Times'), style=wx.BU_EXACTFIT )
 		self.showRaceTimesRadio.SetValue( self.selectDisplay == Results.DisplayRaceTimes )
 		self.Bind( wx.EVT_RADIOBUTTON, self.onSelectDisplayOption, self.showRaceTimesRadio )
 		self.showRaceTimesRadio.SetToolTip(wx.ToolTip(_('Useful for finding for Prime winners.\nAfter selecting, click on a lap header to sort.')))
 		
-		self.showLapSpeedsRadio = wx.RadioButton( self, wx.ID_ANY, _('Lap Speeds'), style=wx.BU_EXACTFIT )
+		self.showLapSpeedsRadio = wx.RadioButton( self, label = _('Lap Speeds'), style=wx.BU_EXACTFIT )
 		self.showLapSpeedsRadio.SetValue( self.selectDisplay == Results.DisplayLapSpeeds )
 		self.Bind( wx.EVT_RADIOBUTTON, self.onSelectDisplayOption, self.showLapSpeedsRadio )
 		self.showLapSpeedsRadio.SetToolTip(wx.ToolTip(_('Useful for finding the fastest lap.')))
 		
-		self.showRaceSpeedsRadio = wx.RadioButton( self, wx.ID_ANY, _('Race Speeds'), style=wx.BU_EXACTFIT )
+		self.showRaceSpeedsRadio = wx.RadioButton( self, label = _('Race Speeds'), style=wx.BU_EXACTFIT )
 		self.showRaceSpeedsRadio.SetValue( self.selectDisplay == Results.DisplayRaceSpeeds )
 		self.Bind( wx.EVT_RADIOBUTTON, self.onSelectDisplayOption, self.showRaceSpeedsRadio )
 		self.showRaceSpeedsRadio.SetToolTip(wx.ToolTip(_("Useful to predict how long a race will take based on rider's average speed.")))
@@ -105,7 +105,7 @@ class Results( wx.Panel ):
 		self.greyColour = wx.Colour( 150, 150, 150 )
 		self.greenColour = wx.Colour( 127, 255, 0 )
 		
-		self.splitter = wx.SplitterWindow( self, wx.ID_ANY )
+		self.splitter = wx.SplitterWindow( self )
 		
 		self.labelGrid = ColGrid.ColGrid( self.splitter, style=wx.BORDER_SUNKEN )
 		self.labelGrid.SetRowLabelSize( 0 )

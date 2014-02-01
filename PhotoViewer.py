@@ -153,10 +153,10 @@ class PhotoViewerDialog( wx.Dialog ):
 		
 		self.vbs = wx.BoxSizer(wx.VERTICAL)
 		
-		self.title = wx.StaticText( self, wx.ID_ANY, '' )
+		self.title = wx.StaticText( self, label = u'' )
 		self.title.SetFont( wx.FontFromPixelSize( wx.Size(0,24), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		
-		self.toolbar = wx.ToolBar( self, wx.ID_ANY )
+		self.toolbar = wx.ToolBar( self )
 		self.toolbar.Bind( wx.EVT_TOOL, self.OnToolBar )
 		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'Refresh.png'), wx.BITMAP_TYPE_PNG )
@@ -184,9 +184,9 @@ class PhotoViewerDialog( wx.Dialog ):
 		
 		self.toolbar.Realize()
 		
-		self.splitter = wx.SplitterWindow( self, wx.ID_ANY )
+		self.splitter = wx.SplitterWindow( self )
 		self.splitter.Bind( wx.EVT_SPLITTER_SASH_POS_CHANGED, self.OnSplitterChange )
-		self.thumbs = TC.ThumbnailCtrl( self.splitter, wx.ID_ANY )
+		self.thumbs = TC.ThumbnailCtrl( self.splitter )
 		self.thumbs.EnableToolTips( True )
 		self.thumbs.SetThumbOutline( TC.THUMB_OUTLINE_FULL )
 		self.thumbs._scrolled.filePrefix = '#######################'
@@ -197,8 +197,8 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.splitter.SplitVertically( self.thumbs, self.mainPhoto, 140 )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		self.advancePhotoLabel = wx.StaticText( self, wx.ID_ANY, _('Photo Milliseconds Advance/Delay:') )
-		self.advancePhoto = wx.Slider( self, wx.ID_ANY, minValue = -1000, maxValue = 1000, value = 0,
+		self.advancePhotoLabel = wx.StaticText( self, label = _('Photo Milliseconds Advance/Delay:') )
+		self.advancePhoto = wx.Slider( self, minValue = -1000, maxValue = 1000, value = 0,
 			style = wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS )
 		self.advancePhoto.SetTickFreq( 100, 1 )
 		hs.Add( self.advancePhotoLabel, proportion=0, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border = 2 )
@@ -451,7 +451,7 @@ if __name__ == '__main__':
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	mainWin.Show()
-	photoDialog = PhotoViewerDialog( mainWin, wx.ID_ANY, "PhotoViewer", size=(600,400) )
+	photoDialog = PhotoViewerDialog( mainWin, title = "PhotoViewer", size=(600,400) )
 	photoDialog.refresh( photoDialog.ShowAllPhotos )
 	photoDialog.Show()
 	app.MainLoop()

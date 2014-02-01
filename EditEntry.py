@@ -16,7 +16,7 @@ class CorrectNumberDialog( wx.Dialog ):
 						
 		self.entry = entry
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
-		self.numEdit = wx.lib.intctrl.IntCtrl( self, wx.ID_ANY, size=(64,-1), style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
+		self.numEdit = wx.lib.intctrl.IntCtrl( self, size=(64,-1), style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
 		
 		self.timeMsEdit = HighPrecisionTimeEdit( self, seconds = entry.t )
 				
@@ -27,7 +27,7 @@ class CorrectNumberDialog( wx.Dialog ):
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
 		border = 8
-		bs.Add( wx.StaticText( self, wx.ID_ANY, _('RiderLap: {}   RaceTime: {}').format(self.entry.lap, Utils.formatTime(self.entry.t, True)) ),
+		bs.Add( wx.StaticText( self, label = _('RiderLap: {}   RaceTime: {}').format(self.entry.lap, Utils.formatTime(self.entry.t, True)) ),
 			pos=(0,0), span=(1,2), border = border, flag=wx.GROW|wx.ALL )
 		bs.Add( wx.StaticText( self, -1, _("Rider:")),  pos=(1,0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.numEdit, pos=(1,1), span=(1,2), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
@@ -111,18 +111,18 @@ class ShiftNumberDialog( wx.Dialog ):
 						
 		self.entry = entry
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
-		self.numEdit = wx.lib.intctrl.IntCtrl( self, wx.ID_ANY, size=(40, -1),
+		self.numEdit = wx.lib.intctrl.IntCtrl( self, size=(40, -1),
 			style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER,
 			value=int(self.entry.num),
 			allow_none=False, min=1, max=9999 )
 		
-		self.timeMsEdit = HighPrecisionTimeEdit( self, wx.ID_ANY )
+		self.timeMsEdit = HighPrecisionTimeEdit( self )
 		self.timeMsEdit.Bind( wx.EVT_TEXT, self.updateNewTime )
-		self.newTime = wx.StaticText( self, wx.ID_ANY, "00:00:00")
+		self.newTime = wx.StaticText( self, label = u"00:00:00")
 		
 		shiftOptions = [_('Earlier'), _('Later')]
 		self.shiftBox = wx.RadioBox( self, wx.ID_ANY,
-			'Shift Direction',
+			_('Shift Direction'),
 			wx.DefaultPosition, wx.DefaultSize,
 			shiftOptions, 2, wx.RA_SPECIFY_COLS )
 		self.Bind(wx.EVT_RADIOBOX, self.updateNewTime, self.shiftBox)
@@ -201,11 +201,11 @@ class InsertNumberDialog( wx.Dialog ):
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
 		border = 8
-		bs.Add( wx.StaticText( self, wx.ID_ANY, _('RiderLap: {}   RaceTime: {}').format(self.entry.lap, Utils.formatTime(self.entry.t, True)) ),
+		bs.Add( wx.StaticText( self, label = _('RiderLap: {}   RaceTime: {}').format(self.entry.lap, Utils.formatTime(self.entry.t, True)) ),
 			pos=(0,0), span=(1,2), border = border, flag=wx.GROW|wx.ALL )
-		bs.Add( wx.StaticText( self, wx.ID_ANY, _('Original:') ),
+		bs.Add( wx.StaticText( self, label = _('Original:') ),
 				pos=(1,0), span=(1,1), border = border, flag=wx.TOP|wx.BOTTOM|wx.LEFT|wx.ALIGN_RIGHT )
-		bs.Add( wx.StaticText( self, wx.ID_ANY, '{}'.format(self.entry.num) ),
+		bs.Add( wx.StaticText( self, label = u'{}'.format(self.entry.num) ),
 				pos=(1,1), span=(1,1), border = border, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.ALIGN_BOTTOM )
 		
 		shiftOptions = [_('Before Entry'), _('After Entry')]
@@ -259,8 +259,8 @@ class SplitNumberDialog( wx.Dialog ):
 		self.entry = entry
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
 		
-		self.numEdit1 = wx.lib.intctrl.IntCtrl( self, wx.ID_ANY, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
-		self.numEdit2 = wx.lib.intctrl.IntCtrl( self, wx.ID_ANY, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
+		self.numEdit1 = wx.lib.intctrl.IntCtrl( self, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
+		self.numEdit2 = wx.lib.intctrl.IntCtrl( self, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
 		
 		self.okBtn = wx.Button( self, wx.ID_OK )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
@@ -269,14 +269,14 @@ class SplitNumberDialog( wx.Dialog ):
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
 		border = 8
-		bs.Add( wx.StaticText( self, wx.ID_ANY, _('RiderLap: {}   RaceTime: {}').format(self.entry.lap, Utils.formatTime(self.entry.t, True)) ),
+		bs.Add( wx.StaticText( self, label = _('RiderLap: {}   RaceTime: {}').format(self.entry.lap, Utils.formatTime(self.entry.t, True)) ),
 			pos=(0,0), span=(1,2), border = border, flag=wx.GROW|wx.ALL )
-		bs.Add( wx.StaticText( self, wx.ID_ANY, _('Num1:') ),
+		bs.Add( wx.StaticText( self, label = _('Num1:') ),
 				pos=(1,0), span=(1,1), border = border, flag=wx.TOP|wx.BOTTOM|wx.LEFT|wx.ALIGN_RIGHT )
 		bs.Add( self.numEdit1,
 				pos=(1,1), span=(1,1), border = border, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.ALIGN_BOTTOM )
 
-		bs.Add( wx.StaticText( self, wx.ID_ANY, _('Num2:') ),
+		bs.Add( wx.StaticText( self, label =_('Num2:') ),
 				pos=(2,0), span=(1,1), border = border, flag=wx.TOP|wx.BOTTOM|wx.LEFT|wx.ALIGN_RIGHT )
 		bs.Add( self.numEdit2,
 				pos=(2,1), span=(1,1), border = border, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.ALIGN_BOTTOM )

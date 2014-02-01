@@ -22,14 +22,14 @@ class FileNamePage(wiz.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Specify the Excel File containing TT Start Times in HH:MM:SS format.')),
+		vbs.Add( wx.StaticText(self, label = _('Specify the Excel File containing TT Start Times in HH:MM:SS format.')),
 					flag=wx.ALL, border = border )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Each race must be in a separate sheet.')), flag=wx.ALL, border = border )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('This is the Stopwatch Time usually beginning at 00:01:00, with 30 to 60 second gaps - not the clock time.')), flag=wx.ALL, border = border )
+		vbs.Add( wx.StaticText(self, label = _('Each race must be in a separate sheet.')), flag=wx.ALL, border = border )
+		vbs.Add( wx.StaticText(self, label = _('This is the Stopwatch Time usually beginning at 00:01:00, with 30 to 60 second gaps - not the clock time.')), flag=wx.ALL, border = border )
 		fileMask = [
 			'Excel Worksheets (*.xlsx;*.xlsm;*.xls)|*.xlsx;*.xlsm;*.xls',
 		]
-		self.fbb = filebrowse.FileBrowseButton( self, -1, size=(450, -1),
+		self.fbb = filebrowse.FileBrowseButton( self, size=(450, -1),
 												labelText = 'Excel Workbook:',
 												fileMode=wx.OPEN,
 												fileMask='|'.join(fileMask) )
@@ -51,7 +51,7 @@ class SheetNamePage(wiz.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Specify the sheet containing the start times for this race:')),
+		vbs.Add( wx.StaticText(self, label = _('Specify the sheet containing the start times for this race:')),
 				flag=wx.ALL, border = border )
 		self.ch = wx.Choice( self, -1, choices = self.choices )
 		vbs.Add( self.ch, flag=wx.ALL, border = border )
@@ -82,16 +82,16 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Specify the spreadsheet columns corresponding to the Start Time fields.')),
+		vbs.Add( wx.StaticText(self, label = _('Specify the spreadsheet columns corresponding to the Start Time fields.')),
 				flag=wx.ALL, border = border )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Both Bib and Start Time must be specified.')),
+		vbs.Add( wx.StaticText(self, label = _('Both Bib and Start Time must be specified.')),
 				flag=wx.ALL, border = border )
 		vbs.AddSpacer( 8 )
 				
 		border = 4
 		# Create a map for the field names we are looking for
 		# and the headers we found in the Excel sheet.
-		sp = scrolled.ScrolledPanel( self, wx.ID_ANY, size=(750, 64), style = wx.TAB_TRAVERSAL )
+		sp = scrolled.ScrolledPanel( self, size=(750, 64), style = wx.TAB_TRAVERSAL )
 		
 		boldFont = None
 		
@@ -107,7 +107,7 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		self.headers = []
 		self.choices = []
 		for c, f in enumerate(Fields):
-			self.choices.append( wx.Choice(sp, -1, choices = self.headers ) )
+			self.choices.append( wx.Choice(sp, choices = self.headers ) )
 			gs.Add( self.choices[-1] )
 		
 		sp.SetSizer( gs )
@@ -189,25 +189,25 @@ class SummaryPage(wiz.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Summary:')), flag=wx.ALL, border = border )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, ' '), flag=wx.ALL, border = border )
+		vbs.Add( wx.StaticText(self, label = _('Summary:')), flag=wx.ALL, border = border )
+		vbs.Add( wx.StaticText(self, label = u' '), flag=wx.ALL, border = border )
 
 		rows = 0
 		
-		self.fileLabel = wx.StaticText( self, wx.ID_ANY, _('Excel File:') )
-		self.fileName = wx.StaticText( self, wx.ID_ANY, '' )
+		self.fileLabel = wx.StaticText( self, label = _('Excel File:') )
+		self.fileName = wx.StaticText( self, label = u'' )
 		rows += 1
 
-		self.sheetLabel = wx.StaticText( self, wx.ID_ANY, _('Sheet Name:') )
-		self.sheetName = wx.StaticText( self, wx.ID_ANY, '' )
+		self.sheetLabel = wx.StaticText( self, label = _('Sheet Name:') )
+		self.sheetName = wx.StaticText( self, label = u'' )
 		rows += 1
 
-		self.riderLabel = wx.StaticText( self, wx.ID_ANY, _('Rider Start Times:') )
-		self.riderNumber = wx.StaticText( self, wx.ID_ANY, '' )
+		self.riderLabel = wx.StaticText( self, label = _('Rider Start Times:') )
+		self.riderNumber = wx.StaticText( self, label = u'' )
 		rows += 1
 
-		self.statusLabel = wx.StaticText( self, wx.ID_ANY, _('Status:') )
-		self.statusName = wx.StaticText( self, wx.ID_ANY, '' )
+		self.statusLabel = wx.StaticText( self, label = _('Status:') )
+		self.statusName = wx.StaticText( self, label = u'' )
 		rows += 1
 
 		fbs = wx.FlexGridSizer( rows=rows, cols=2, hgap=5, vgap=2 )

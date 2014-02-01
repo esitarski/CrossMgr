@@ -47,33 +47,33 @@ class Properties( wx.Panel ):
 		self.Bind(wx.EVT_DATE_CHANGED, self.onChanged, self.date)
 		rows += 1
 		
-		self.raceNumLabel = wx.StaticText( self, label =  _('Race #:') )
+		self.raceNumLabel = wx.StaticText( self, label = _('Race #:') )
 		self.raceNum = intctrl.IntCtrl( self, min=1, max=1000, allow_none=False, value=1 )
 		self.Bind(intctrl.EVT_INT, self.onChanged, self.raceNum)
 		rows += 1
 		
-		self.scheduledStartLabel = wx.StaticText( self, label =  _('Scheduled Start:') )
+		self.scheduledStartLabel = wx.StaticText( self, label = _('Scheduled Start:') )
 		self.scheduledStart = masked.TimeCtrl( self, fmt24hr=True, display_seconds=False, value='10:00:00' )
 		rows += 1
 
-		self.minutesLabel = wx.StaticText( self, label =  _('Race Minutes:') )
+		self.minutesLabel = wx.StaticText( self, label = _('Race Minutes:') )
 		self.minutes = intctrl.IntCtrl( self, min=1, max=60*24, allow_none=False, value=40 )
 		rows += 1
 
-		self.raceDisciplineLabel = wx.StaticText( self, label =  _('Discipline:') )
+		self.raceDisciplineLabel = wx.StaticText( self, label = _('Discipline:') )
 		self.raceDiscipline = wx.TextCtrl( self, value='Cyclo-cross' )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceDiscipline )
 		rows += 1
 		
-		self.organizerLabel = wx.StaticText( self, label =  _('Organizer:') )
-		self.organizer = wx.TextCtrl( self, wx.ID_ANY, value='' )
+		self.organizerLabel = wx.StaticText( self, label = _('Organizer:') )
+		self.organizer = wx.TextCtrl( self, value=u'' )
 		rows += 1
 		
-		self.commissaireLabel = wx.StaticText( self, label =  _('Official/Commissaire:') )
-		self.commissaire = wx.TextCtrl( self, wx.ID_ANY, value='' )
+		self.commissaireLabel = wx.StaticText( self, label = _('Official/Commissaire:') )
+		self.commissaire = wx.TextCtrl( self, value=u'' )
 		rows += 1
 		
-		self.memoLabel = wx.StaticText( self, label =   _('Memo:') )
+		self.memoLabel = wx.StaticText( self, label =  _('Memo:') )
 		self.memo = wx.TextCtrl( self, value='' )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.memo )
 		rows += 1

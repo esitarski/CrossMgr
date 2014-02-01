@@ -92,7 +92,7 @@ class JChipSetupDialog( wx.Dialog ):
 		self.testJChip = wx.ToggleButton( self, label = _('Start RFID Test') )
 		self.Bind(wx.EVT_TOGGLEBUTTON, self.testJChipToggle, self.testJChip)
 		
-		self.testList = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_READONLY|wx.TE_MULTILINE, size=(-1,200) )
+		self.testList = wx.TextCtrl( self, style=wx.TE_READONLY|wx.TE_MULTILINE, size=(-1,200) )
 		self.testList.Bind( wx.EVT_RIGHT_DOWN, self.skip )
 		
 		self.okBtn = wx.Button( self, wx.ID_OK )
@@ -101,7 +101,7 @@ class JChipSetupDialog( wx.Dialog ):
 		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
-		self.helpBtn = wx.Button( self, wx.ID_ANY, _('&Help') )
+		self.helpBtn = wx.Button( self, wx.ID_HELP )
 		self.Bind( wx.EVT_BUTTON, lambda evt: Utils.showHelp('Menu-ChipReader.html#rfid-reader-setup'), self.helpBtn )
 		
 		self.Bind(EVT_CHIP_READER, self.handleChipReaderEvent)

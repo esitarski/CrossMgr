@@ -22,17 +22,17 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 		self.category = None
 
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
-		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, _('Category:') )
+		self.categoryLabel = wx.StaticText( self, label = _('Category:') )
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
 		
-		self.selectAll = wx.Button( self, wx.ID_ANY, _('Select All'), style=wx.BU_EXACTFIT )
+		self.selectAll = wx.Button( self, label = _('Select All'), style=wx.BU_EXACTFIT )
 		self.Bind( wx.EVT_BUTTON, self.onSelectAll, self.selectAll )
 		
-		self.deSelectAll = wx.Button( self, wx.ID_ANY, 'Deselect All', style=wx.BU_EXACTFIT )
+		self.deSelectAll = wx.Button( self, label = _('Deselect All'), style=wx.BU_EXACTFIT )
 		self.Bind( wx.EVT_BUTTON, self.onDeselectAll, self.deSelectAll )
 		
-		self.setDNS = wx.Button( self, wx.ID_ANY, _('DNS Selected'), style=wx.BU_EXACTFIT )
+		self.setDNS = wx.Button( self, label = _('DNS Selected'), style=wx.BU_EXACTFIT )
 		self.Bind( wx.EVT_BUTTON, self.onSetDNS, self.setDNS )
 		
 		self.il = wx.ImageList(16, 16)
@@ -40,7 +40,7 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 		self.sm_up = self.il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'SmallUpArrow.png'), wx.BITMAP_TYPE_PNG))
 		self.sm_dn = self.il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'SmallDownArrow.png'), wx.BITMAP_TYPE_PNG ))
 		
-		self.list = AutoWidthListCtrl( self, wx.ID_ANY, style = wx.LC_REPORT 
+		self.list = AutoWidthListCtrl( self, style = wx.LC_REPORT 
 														 | wx.BORDER_NONE
 														 | wx.LC_SORT_ASCENDING
 														 | wx.LC_HRULES
@@ -58,7 +58,7 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 		bs = wx.BoxSizer(wx.VERTICAL)
 		
 		bs.Add(self.hbs, 0, wx.EXPAND )
-		bs.Add(wx.StaticText(self, wx.ID_ANY, _('  Potential DNS Entrants (use Shift-Click and Ctrl-Click to multi-select)')), 0, wx.ALL, 4 )
+		bs.Add(wx.StaticText(self, label = u'  ' + _('Potential DNS Entrants (use Shift-Click and Ctrl-Click to multi-select)')), 0, wx.ALL, 4 )
 		bs.Add(self.list, 1, wx.EXPAND|wx.GROW|wx.ALL, 5 )
 		
 		self.SetSizer(bs)
@@ -196,10 +196,10 @@ class DNSManagerDialog( wx.Dialog ):
 		
 		vs.Add( self.dnsManager, 1, flag=wx.ALL|wx.EXPAND, border = 4 )
 		
-		self.helpBtn = wx.Button( self, wx.ID_ANY, _('&Help') )
+		self.helpBtn = wx.Button( self, label = _('&Help') )
 		self.Bind( wx.EVT_BUTTON, self.onHelp, self.helpBtn )
 		
-		self.closeBtn = wx.Button( self, wx.ID_ANY, _('&Close (Ctrl-Q)') )
+		self.closeBtn = wx.Button( self, label = _('&Close (Ctrl-Q)') )
 		self.Bind( wx.EVT_BUTTON, self.onClose, self.closeBtn )
 		self.Bind( wx.EVT_CLOSE, self.onClose )
 

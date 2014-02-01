@@ -11,14 +11,14 @@ class HelpSearch( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY, style = 0, size=(-1-1) ):
 		wx.Panel.__init__(self, parent, id, style=style, size=size )
 
-		self.search = wx.SearchCtrl( self, wx.ID_ANY, style=wx.TE_PROCESS_ENTER, value='help', size=(200,-1) )
+		self.search = wx.SearchCtrl( self, style=wx.TE_PROCESS_ENTER, value='help', size=(200,-1) )
 		self.Bind( wx.EVT_TEXT_ENTER, self.doSearch, self.search )
 		self.Bind( wx.EVT_TEXT, self.doSearch, self.search )
 		self.Bind( wx.EVT_SEARCHCTRL_SEARCH_BTN, self.doSearch, self.search )
 		
 		self.vbs = wx.BoxSizer(wx.VERTICAL)
 		
-		self.html = html.HtmlWindow( self, wx.ID_ANY, size=(800,600), style=wx.BORDER_SUNKEN )
+		self.html = html.HtmlWindow( self, size=(800,600), style=wx.BORDER_SUNKEN )
 		self.Bind( wx.html.EVT_HTML_LINK_CLICKED, self.doLink, self.html )
 		
 		self.vbs.Add( self.search, 0, flag=wx.BOTTOM|wx.EXPAND, border=4 )
@@ -78,7 +78,7 @@ class HelpSearch( wx.Panel ):
 	
 class HelpSearchDialog( wx.Dialog ):
 	def __init__(
-			self, parent, ID, title='Help Search', size=wx.DefaultSize, pos=wx.DefaultPosition, 
+			self, parent, ID = wx.ID_ANY, title='Help Search', size=wx.DefaultSize, pos=wx.DefaultPosition, 
 			style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER ):
 
 		# Instead of calling wx.Dialog.__init__ we precreate the dialog
@@ -98,7 +98,7 @@ class HelpSearchDialog( wx.Dialog ):
 		# contents
 		sizer = wx.BoxSizer(wx.VERTICAL)
 
-		self.search = HelpSearch( self, wx.ID_ANY, size=(600,400) )
+		self.search = HelpSearch( self, size=(600,400) )
 		sizer.Add(self.search, 1, wx.ALIGN_CENTRE|wx.ALL|wx.EXPAND, 5)
 		
 		self.SetSizer(sizer)
@@ -108,6 +108,6 @@ if __name__ == '__main__':
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	mainWin.Show()
-	searchDialog = HelpSearchDialog( mainWin, wx.ID_ANY, "Help Search", size=(600,400) )
+	searchDialog = HelpSearchDialog( mainWin, size=(600,400) )
 	searchDialog.Show()
 	app.MainLoop()

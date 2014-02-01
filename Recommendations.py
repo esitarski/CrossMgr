@@ -21,7 +21,7 @@ class Recommendations( wx.Panel ):
 		self.blackColour = wx.Colour( 0, 0, 0 )
 
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
-		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, _('Category:') )
+		self.categoryLabel = wx.StaticText( self, label = _('Category:') )
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
 		

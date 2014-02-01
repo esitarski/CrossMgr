@@ -67,9 +67,9 @@ class GanttChartPanel(wx.PyPanel):
 		self.yellowColour = wx.Colour(220,220,0)
 		self.orangeColour = wx.Colour(255,165,0)
 		
-		self.horizontalSB = wx.ScrollBar( self, wx.ID_ANY, style=wx.SB_HORIZONTAL )
+		self.horizontalSB = wx.ScrollBar( self, style=wx.SB_HORIZONTAL )
 		self.horizontalSB.Bind( wx.EVT_SCROLL, self.OnHorizontalScroll )
-		self.verticalSB = wx.ScrollBar( self, wx.ID_ANY, style=wx.SB_VERTICAL )
+		self.verticalSB = wx.ScrollBar( self, style=wx.SB_VERTICAL )
 		self.verticalSB.Bind( wx.EVT_SCROLL, self.OnVerticalScroll )
 		self.scrollbarWidth = 16
 		self.horizontalSB.Show( False )

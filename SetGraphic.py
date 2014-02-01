@@ -1,6 +1,7 @@
 import wx
 import os
 import imagebrowser
+import Utils
 
 #------------------------------------------------------------------------------------------------
 class SetGraphicDialog( wx.Dialog ):
@@ -10,16 +11,16 @@ class SetGraphicDialog( wx.Dialog ):
 						
 		mainSizer = wx.BoxSizer( wx.VERTICAL )
 		
-		label = wx.StaticText( self, wx.ID_ANY, 'Graphic Displayed in Results:' )
+		label = wx.StaticText( self, label = _('Graphic to be Displayed in Results:') )
 		mainSizer.Add( label, flag = wx.ALL, border = 4 )
 		
 		bhh = wx.BoxSizer( wx.HORIZONTAL )
 		
-		self.chooseButton = wx.Button( self, wx.ID_ANY, 'Choose...' )
+		self.chooseButton = wx.Button( self, label = _('Choose...') )
 		bhh.Add( self.chooseButton, flag = wx.ALL, border = 4 )
 		self.Bind( wx.EVT_BUTTON, self.onChoose, self.chooseButton )
 
-		self.graphic = wx.TextCtrl( self, wx.ID_ANY, size=(600,-1) )
+		self.graphic = wx.TextCtrl( self, size=(600,-1) )
 		if graphic:
 			self.graphic.SetValue( graphic )
 		bhh.Add( self.graphic, flag = wx.ALL | wx.EXPAND, border = 4 )

@@ -299,15 +299,15 @@ class FtpPublishDialog( wx.Dialog ):
 						
 		bs = wx.GridBagSizer(vgap=0, hgap=4)
 		
-		self.ftpHost = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
-		self.ftpPath = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
-		self.ftpPhotoPath = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
-		self.ftpUser = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
-		self.ftpPassword = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER|wx.TE_PASSWORD, value='' )
-		self.ftpUploadDuringRace = wx.CheckBox( self, wx.ID_ANY, _("Automatically Upload Results During Race") )
-		self.urlPath = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
+		self.ftpHost = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
+		self.ftpPath = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
+		self.ftpPhotoPath = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
+		self.ftpUser = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
+		self.ftpPassword = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER|wx.TE_PASSWORD, value='' )
+		self.ftpUploadDuringRace = wx.CheckBox( self, _("Automatically Upload Results During Race") )
+		self.urlPath = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
 		self.urlPath.Bind( wx.EVT_TEXT, self.urlPathChanged )
-		self.urlFull = wx.StaticText( self, wx.ID_ANY )
+		self.urlFull = wx.StaticText( self )
 		
 		self.refresh()
 		
@@ -327,27 +327,27 @@ class FtpPublishDialog( wx.Dialog ):
 		
 		row = 0
 		border = 8
-		bs.Add( wx.StaticText( self, wx.ID_ANY, _("Ftp Host Name:")),  pos=(row,0), span=(1,1), border = border,
+		bs.Add( wx.StaticText( self, label = _("Ftp Host Name:")),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.ftpHost, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
 		row += 1
-		bs.Add( wx.StaticText( self, wx.ID_ANY, _("Path on Host to Write HTML:")),  pos=(row,0), span=(1,1), border = border,
+		bs.Add( wx.StaticText( self, label = _("Path on Host to Write HTML:")),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.ftpPath, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
 		row += 1
-		bs.Add( wx.StaticText( self, wx.ID_ANY, _("Path on Host to Write Photos:")),  pos=(row,0), span=(1,1), border = border,
+		bs.Add( wx.StaticText( self, label = _("Path on Host to Write Photos:")),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.ftpPhotoPath, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
 		row += 1
-		bs.Add( wx.StaticText( self, wx.ID_ANY, _("User:")),  pos=(row,0), span=(1,1), border = border,
+		bs.Add( wx.StaticText( self, label = _("User:")),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.ftpUser, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
 		row += 1
-		bs.Add( wx.StaticText( self, wx.ID_ANY, _("Password:")),  pos=(row,0), span=(1,1), border = border,
+		bs.Add( wx.StaticText( self, label = _("Password:")),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.ftpPassword, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
@@ -356,11 +356,11 @@ class FtpPublishDialog( wx.Dialog ):
 		
 		row += 1
 		row += 1
-		bs.Add( wx.StaticText( self, wx.ID_ANY, _("URL Path (optional):")),  pos=(row,0), span=(1,1), border = border,
+		bs.Add( wx.StaticText( self, label = _("URL Path (optional):")),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.urlPath, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		row += 1
-		bs.Add( wx.StaticText( self, wx.ID_ANY, _("Race Results URL:")),  pos=(row,0), span=(1,1), border = border,
+		bs.Add( wx.StaticText( self, label = _("Race Results URL:")),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.urlFull, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		

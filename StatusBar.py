@@ -74,7 +74,7 @@ class StatusBar(wx.PyControl):
 			font = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
 		dc = wx.ClientDC(self)
 		dc.SetFont(font)
-		textWidth, textHeight = dc.GetTextExtent('00:00')
+		textWidth, textHeight = dc.GetTextExtent(u'00:00')
 		return wx.Size(textWidth, textHeight)
 
 	def SetForegroundColour(self, colour):

@@ -38,23 +38,23 @@ class History( wx.Panel ):
 		self.greyColour = wx.Colour( 150, 150, 150 )
 		
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
-		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, _('Category:') )
+		self.categoryLabel = wx.StaticText( self, label = _('Category:') )
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
 		
-		self.showTimesToggle = wx.ToggleButton( self, wx.ID_ANY, _('Race Times'), style=wx.BU_EXACTFIT )
+		self.showTimesToggle = wx.ToggleButton( self, label = _('Race Times'), style=wx.BU_EXACTFIT )
 		self.showTimesToggle.SetValue( self.showTimes )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowTimes, self.showTimesToggle )
 		
-		self.showLapTimesToggle = wx.ToggleButton( self, wx.ID_ANY, _('Lap Times'), style=wx.BU_EXACTFIT )
+		self.showLapTimesToggle = wx.ToggleButton( self, label = _('Lap Times'), style=wx.BU_EXACTFIT )
 		self.showLapTimesToggle.SetValue( self.showLapTimes )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowLapTimes, self.showLapTimesToggle )
 		
-		self.showTimeDownToggle = wx.ToggleButton( self, wx.ID_ANY, _('Time Down per Lap'), style=wx.BU_EXACTFIT )
+		self.showTimeDownToggle = wx.ToggleButton( self, label = _('Time Down per Lap'), style=wx.BU_EXACTFIT )
 		self.showTimeDownToggle.SetValue( self.showTimeDown )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowTimeDown, self.showTimeDownToggle )
 		
-		self.showRiderNameToggle = wx.ToggleButton( self, wx.ID_ANY, _('Rider Names'), style=wx.BU_EXACTFIT )
+		self.showRiderNameToggle = wx.ToggleButton( self, label = _('Rider Names'), style=wx.BU_EXACTFIT )
 		self.showRiderNameToggle.SetValue( self.showRiderName )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowRiderName, self.showRiderNameToggle )
 		
@@ -77,7 +77,7 @@ class History( wx.Panel ):
 		self.hbs.Add( self.showLapTimesToggle, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.showTimeDownToggle, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.showRiderNameToggle, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
-		self.hbs.Add( wx.StaticText(self, wx.ID_ANY, ' '), proportion=2 )
+		self.hbs.Add( wx.StaticText(self, label = u' '), proportion=2 )
 		self.hbs.Add( self.search, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.zoomInButton, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.zoomOutButton, flag=wx.TOP | wx.BOTTOM | wx.RIGHT | wx.ALIGN_CENTRE_VERTICAL, border=4 )

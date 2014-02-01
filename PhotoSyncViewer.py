@@ -231,7 +231,7 @@ photoSyncViewer = None
 def PhotoSyncViewerShow( parent ):
 	global photoSyncViewer
 	if not photoSyncViewer:
-		photoSyncViewer = PhotoSyncViewerDialog( parent, wx.ID_ANY, _("Photo Sync Viewer") )
+		photoSyncViewer = PhotoSyncViewerDialog( parent, title = _("Photo Sync Viewer") )
 	photoSyncViewer.reset()
 	photoSyncViewer.Show( True )
 	
@@ -274,7 +274,7 @@ if __name__ == '__main__':
 	
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	mainWin.Show()
-	photoSyncDialog = PhotoSyncViewerDialog( mainWin, wx.ID_ANY, "PhotoSyncViewer", size=(600,400) )
+	photoSyncDialog = PhotoSyncViewerDialog( mainWin, title = u"PhotoSyncViewer", size=(600,400) )
 	def doRefresh( bib ):
 		t = (datetime.datetime.now() - tRef).total_seconds()
 		wx.CallLater( 300, photoSyncDialog.refresh, vb, t, bib )

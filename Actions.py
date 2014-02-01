@@ -65,7 +65,7 @@ class StartRaceAtTime( wx.Dialog ):
 		self.futureRaceTimes = None
 		
 		race = Model.getRace()
-		autoStartLabel = wx.StaticText( self, wx.ID_ANY, _('Automatically Start Race at:') )
+		autoStartLabel = wx.StaticText( self, label = _('Automatically Start Race at:') )
 		
 		# Make sure we don't suggest a start time in the past.
 		value = race.scheduledStart
@@ -77,9 +77,9 @@ class StartRaceAtTime( wx.Dialog ):
 			startSeconds = nowSeconds + startOffset
 			value = u'%02d:%02d' % (startSeconds / (60*60), (startSeconds / 60) % 60)
 		
-		self.autoStartTime = masked.TimeCtrl( self, wx.ID_ANY, fmt24hr=True, display_seconds=False, value=value )
+		self.autoStartTime = masked.TimeCtrl( self, fmt24hr=True, display_seconds=False, value=value )
 		
-		self.countdown = wx.StaticText( self, wx.ID_ANY, '      ' )
+		self.countdown = wx.StaticText( self, label = u'      ' )
 		self.countdown.SetFont( font )
 		
 		self.okBtn = wx.Button( self, wx.ID_OK )
@@ -174,23 +174,23 @@ class Actions( wx.Panel ):
 		self.SetBackgroundColour( wx.Colour(255,255,255) )
 		
 		buttonSize = 220
-		self.button = RoundButton( self, wx.ID_ANY, size=(buttonSize, buttonSize) )
+		self.button = RoundButton( self, size=(buttonSize, buttonSize) )
 		self.button.SetLabel( FinishText )
 		self.button.SetFontToFitLabel()
 		self.button.SetForegroundColour( wx.Colour(128,128,128) )
 		self.Bind(wx.EVT_BUTTON, self.onPress, self.button )
 		
-		self.raceIntro = wx.StaticText( self, wx.ID_ANY, '' )
+		self.raceIntro = wx.StaticText( self, label =  u'' )
 		self.raceIntro.SetFont( wx.Font(24, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
 		
 		choices = [	_('Record Every Tag Individually'),
 					_('Reset Start Clock on First Tag Read (all riders will get the same start time of the first read)'),
 					_('Skip First Tag Read for All Riders (required when there is a start run-up that passes through the finish on the first lap)')]
-		self.chipTimingOptions = wx.RadioBox( self, wx.ID_ANY, "Chip Timing Options", majorDimension = 1, choices = choices, style = wx.RA_SPECIFY_COLS )
+		self.chipTimingOptions = wx.RadioBox( self, label = _("Chip Timing Options"), majorDimension = 1, choices = choices, style = wx.RA_SPECIFY_COLS )
 																		  
 		self.Bind( wx.EVT_RADIOBOX, self.onChipTimingOptions, self.chipTimingOptions )
 		
-		self.startRaceTimeCheckBox = wx.CheckBox(self, wx.ID_ANY, _('Start Race Automatically at Future Time'))
+		self.startRaceTimeCheckBox = wx.CheckBox(self, label = _('Start Race Automatically at Future Time'))
 		
 		border = 8
 		hs = wx.BoxSizer( wx.HORIZONTAL )

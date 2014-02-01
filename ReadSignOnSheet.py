@@ -30,10 +30,10 @@ class FileNamePage(wiz.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Specify the Excel Sign-on File containing the additional rider information.')),
+		vbs.Add( wx.StaticText(self, label = _('Specify the Excel Sign-on File containing the additional rider information.')),
 					flag=wx.ALL, border = border )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Each race must be in a separate sheet.')), flag=wx.ALL, border = border )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('See documentation for examples.')), flag=wx.ALL, border = border )
+		vbs.Add( wx.StaticText(self, label = _('Each race must be in a separate sheet.')), flag=wx.ALL, border = border )
+		vbs.Add( wx.StaticText(self, label = _('See documentation for examples.')), flag=wx.ALL, border = border )
 		fileMask = [
 			'Excel Worksheets (*.xlsx;*.xlsm;*.xls)|*.xlsx;*.xlsm;*.xls',
 		]
@@ -59,7 +59,7 @@ class SheetNamePage(wiz.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Specify the sheet containing the information for this race:')),
+		vbs.Add( wx.StaticText(self, label = _('Specify the sheet containing the information for this race:')),
 				flag=wx.ALL, border = border )
 		self.ch = wx.Choice( self, -1, choices = self.choices )
 		vbs.Add( self.ch, flag=wx.ALL, border = border )
@@ -90,16 +90,16 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Specify the spreadsheet columns corresponding to CrossMgr fields.')),
+		vbs.Add( wx.StaticText(self, label = _('Specify the spreadsheet columns corresponding to CrossMgr fields.')),
 				flag=wx.ALL, border = border )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Set missing fields to blank.')),
+		vbs.Add( wx.StaticText(self, label = _('Set missing fields to blank.')),
 				flag=wx.ALL, border = border )
 		vbs.AddSpacer( 8 )
 				
 		border = 4
 		# Create a map for the field names we are looking for
 		# and the headers we found in the Excel sheet.
-		sp = scrolled.ScrolledPanel( self, wx.ID_ANY, size=(750, 64), style = wx.TAB_TRAVERSAL )
+		sp = scrolled.ScrolledPanel( self, size=(750, 64), style = wx.TAB_TRAVERSAL )
 		
 		boldFont = None
 		
@@ -126,7 +126,7 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		self.gs = gs
 		vbs.Add( sp, flag=wx.ALL, border = border )
 		
-		self.mapSummary = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_MULTILINE|wx.TE_READONLY, size=(-1,128) )
+		self.mapSummary = wx.TextCtrl( self, style=wx.TE_MULTILINE|wx.TE_READONLY, size=(-1,128) )
 		vbs.Add( self.mapSummary, 1, flag=wx.ALL|wx.EXPAND, border = border )
 		
 		self.SetSizer( vbs )
@@ -219,32 +219,32 @@ class SummaryPage(wiz.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Summary:')), flag=wx.ALL, border = border )
-		vbs.Add( wx.StaticText(self, wx.ID_ANY, ' '), flag=wx.ALL, border = border )
+		vbs.Add( wx.StaticText(self, label = _('Summary:')), flag=wx.ALL, border = border )
+		vbs.Add( wx.StaticText(self, label = u' '), flag=wx.ALL, border = border )
 
 		rows = 0
 		
-		self.fileLabel = wx.StaticText( self, wx.ID_ANY, _('Excel File:') )
-		self.fileName = wx.StaticText( self, wx.ID_ANY, '' )
+		self.fileLabel = wx.StaticText( self, label = _('Excel File:') )
+		self.fileName = wx.StaticText( self, label = u'' )
 		rows += 1
 
-		self.sheetLabel = wx.StaticText( self, wx.ID_ANY, _('Sheet Name:') )
-		self.sheetName = wx.StaticText( self, wx.ID_ANY, '' )
+		self.sheetLabel = wx.StaticText( self, label = _('Sheet Name:') )
+		self.sheetName = wx.StaticText( self, label = u'' )
 		rows += 1
 
-		self.riderLabel = wx.StaticText( self, wx.ID_ANY, _('Rider Data Entries:') )
-		self.riderNumber = wx.StaticText( self, wx.ID_ANY, '' )
+		self.riderLabel = wx.StaticText( self, label = _('Rider Data Entries:') )
+		self.riderNumber = wx.StaticText( self, label = u'' )
 		rows += 1
 
-		self.statusLabel = wx.StaticText( self, wx.ID_ANY, _('Status:') )
-		self.statusName = wx.StaticText( self, wx.ID_ANY, '' )
+		self.statusLabel = wx.StaticText( self, label = _('Status:') )
+		self.statusName = wx.StaticText( self, label = u'' )
 		rows += 1
 
-		self.errorLabel = wx.StaticText( self, wx.ID_ANY, _('Errors:') )
-		self.errorName = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_MULTILINE|wx.TE_READONLY, size=(-1,128) )
+		self.errorLabel = wx.StaticText( self, label =  _('Errors:') )
+		self.errorName = wx.TextCtrl( self, style=wx.TE_MULTILINE|wx.TE_READONLY, size=(-1,128) )
 		rows += 1
 		
-		self.copyErrorsToClipboard = wx.Button( self, wx.ID_ANY, _('Copy Errors to Clipboard') )
+		self.copyErrorsToClipboard = wx.Button( self, label = _('Copy Errors to Clipboard') )
 		self.copyErrorsToClipboard.Bind( wx.EVT_BUTTON, self.doCopyErrorsToClipboard )
 		rows += 1
 

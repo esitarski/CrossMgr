@@ -155,9 +155,9 @@ class RiderDetail( wx.Panel ):
 		
 		gbs = wx.GridBagSizer(7, 4)
 		row = 0
-		self.numName = wx.StaticText( self, wx.ID_ANY, _('Number: ') )
+		self.numName = wx.StaticText( self, label = _('Number: ') )
 		gbs.Add( self.numName, pos=(row,0), span=(1,1), flag=labelAlign )
-		self.num = intctrl.IntCtrl( self, wx.ID_ANY, min=0, max=9999, allow_none=True, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER )
+		self.num = intctrl.IntCtrl( self, min=0, max=9999, allow_none=True, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER )
 		self.Bind( wx.EVT_TEXT_ENTER, self.onNumChange, self.num )
 		gbs.Add( self.num, pos=(row,1), span=(1,1), flag=wx.EXPAND )
 		
@@ -175,7 +175,7 @@ class RiderDetail( wx.Panel ):
 		self.menu.Append( self.copyRiderMenuId, _('C&opy Rider Times to New Number...'), _("Copy these rider's times to another number") )
 		self.Bind( wx.EVT_MENU, self.onCopyRider, id = self.copyRiderMenuId )
 		
-		self.editRiderBtn = wx.Button( self, wx.ID_ANY, _('Edit...') )
+		self.editRiderBtn = wx.Button( self, label = _('Edit...') )
 		self.Bind( wx.EVT_BUTTON, self.onEditRider, self.editRiderBtn )
 		gbs.Add( self.editRiderBtn, pos=(row, 3), span=(1,1), flag=wx.EXPAND )
 		
@@ -184,56 +184,56 @@ class RiderDetail( wx.Panel ):
 		
 		row += 1
 		
-		self.nameName = wx.StaticText( self, wx.ID_ANY, _('Name: ') )
+		self.nameName = wx.StaticText( self, label = _('Name: ') )
 		gbs.Add( self.nameName, pos=(row,0), span=(1,1), flag=labelAlign )
 		self.riderName = wx.StaticText( self, wx.ID_ANY, '' )
 		self.riderName.SetDoubleBuffered( True )
 		gbs.Add( self.riderName, pos=(row,1), span=(1,4), flag=wx.EXPAND )
 		
-		self.startTimeName = wx.StaticText( self, wx.ID_ANY, _('Start:') )
+		self.startTimeName = wx.StaticText( self, label = _('Start:') )
 		gbs.Add( self.startTimeName, pos=(row,5), span=(1,1), flag=labelAlign )
-		self.startTime = wx.StaticText( self, wx.ID_ANY, '00:00:00' )
+		self.startTime = wx.StaticText( self, label = u'00:00:00' )
 		gbs.Add( self.startTime, pos=(row,6), span=(1,1), flag=wx.EXPAND )
 		
 		row += 1
 		
-		self.teamName = wx.StaticText( self, wx.ID_ANY, _('Team: ') )
+		self.teamName = wx.StaticText( self, label = _('Team: ') )
 		gbs.Add( self.teamName, pos=(row,0), span=(1,1), flag=labelAlign )
-		self.riderTeam = wx.StaticText( self, wx.ID_ANY, '' )
+		self.riderTeam = wx.StaticText( self, label = u'' )
 		self.riderTeam.SetDoubleBuffered( True )
 		gbs.Add( self.riderTeam, pos=(row,1), span=(1,4), flag=wx.EXPAND )
 		
-		self.finishTimeName = wx.StaticText( self, wx.ID_ANY, _('Finish:') )
+		self.finishTimeName = wx.StaticText( self, label = _('Finish:') )
 		gbs.Add( self.finishTimeName, pos=(row,5), span=(1,1), flag=labelAlign )
 		
-		self.finishTime = wx.StaticText( self, wx.ID_ANY, '00:00:00' )
+		self.finishTime = wx.StaticText( self, label = u'00:00:00' )
 		gbs.Add( self.finishTime, pos=(row,6), span=(1,1), flag=wx.EXPAND )
 		
 		row += 1
 		
-		self.tagsName = wx.StaticText( self, wx.ID_ANY, _('Tag(s): ') )
+		self.tagsName = wx.StaticText( self, label = _('Tag(s): ') )
 		gbs.Add( self.tagsName, pos=(row,0), span=(1,1), flag=labelAlign )
-		self.tags = wx.StaticText( self, wx.ID_ANY, '' )
+		self.tags = wx.StaticText( self, label = u'' )
 		self.tags.SetDoubleBuffered( True )
 		gbs.Add( self.tags, pos=(row,1), span=(1,4), flag=wx.EXPAND )
 
-		self.rideTimeName = wx.StaticText( self, wx.ID_ANY, _('Ride Time:') )
+		self.rideTimeName = wx.StaticText( self, label = _('Ride Time:') )
 		gbs.Add( self.rideTimeName, pos=(row,5), span=(1,1), flag=labelAlign )
 		
-		self.rideTime = wx.StaticText( self, wx.ID_ANY, '00:00:00' )
+		self.rideTime = wx.StaticText( self, label = u'00:00:00' )
 		gbs.Add( self.rideTime, pos=(row,6), span=(1,1), flag=wx.EXPAND )
 		
 		row += 1
 		
-		self.categoryName = wx.StaticText( self, wx.ID_ANY, _('Category: ') )
+		self.categoryName = wx.StaticText( self, label = _('Category: ') )
 		gbs.Add( self.categoryName, pos=(row,0), span=(1,1), flag=labelAlign )
-		self.category = wx.Choice( self, wx.ID_ANY )
+		self.category = wx.Choice( self )
 		self.Bind( wx.EVT_CHOICE, self.onCategoryChoice, self.category )
 		gbs.Add( self.category, pos=(row,1), span=(1,1), flag=wx.EXPAND )
 		
-		self.penaltyTimeName = wx.StaticText( self, wx.ID_ANY, _('Penalty Time:') )
+		self.penaltyTimeName = wx.StaticText( self, label = _('Penalty Time:') )
 		gbs.Add( self.penaltyTimeName, pos=(row,5), span=(1,1), flag=labelAlign )
-		self.penaltyTime = wx.StaticText( self, wx.ID_ANY, '00:00:00' )
+		self.penaltyTime = wx.StaticText( self, label = u'00:00:00' )
 		gbs.Add( self.penaltyTime, pos=(row,6), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL )
 		
 		row += 1
@@ -279,7 +279,7 @@ class RiderDetail( wx.Panel ):
 	
 		hs.Add( gbs, proportion = 0 )
 		
-		splitter = wx.SplitterWindow( self, wx.ID_ANY )
+		splitter = wx.SplitterWindow( self )
 		self.splitter = splitter
 		
 		self.grid = ColGrid.ColGrid(	splitter,

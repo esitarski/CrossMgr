@@ -703,7 +703,7 @@ if __name__ == '__main__':
 				mult = 1.0
 		
 			width = rowHeight * mult
-			btn = KeyButton( mainWin, wx.ID_ANY, None, key, pos=(x, y), size=(width - rowHeight * (1.0-shrink), rowHeight * shrink) )
+			btn = KeyButton( mainWin, label = key, pos=(x, y), size=(width - rowHeight * (1.0-shrink), rowHeight * shrink) )
 			btn.SetBackgroundColour( backgroundColour )
 			if key in keyFontHeight:
 				btn.SetFont( wx.FontFromPixelSize( (0, fontSize*keyFontHeight[key]), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )

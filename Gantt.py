@@ -30,10 +30,10 @@ class Gantt( wx.Panel ):
 		self.numAfter = None
 		
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
-		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, _('Category:') )
+		self.categoryLabel = wx.StaticText( self, label = _('Category:') )
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
-		self.statsLabel = wx.StaticText( self, wx.ID_ANY, '' )
+		self.statsLabel = wx.StaticText( self, label = u'' )
 		
 		self.hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.categoryChoice, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )

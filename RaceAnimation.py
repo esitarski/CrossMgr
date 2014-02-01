@@ -99,19 +99,19 @@ class RaceAnimation( wx.Panel ):
 		bs = wx.BoxSizer(wx.VERTICAL)
 
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
-		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, _('Category:') )
+		self.categoryLabel = wx.StaticText( self, label = _('Category:') )
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice )
-		self.showGPX = wx.RadioButton( self, wx.ID_ANY, _("GPX Track"), style=wx.RB_GROUP )
+		self.showGPX = wx.RadioButton( self, label = _("GPX Track"), style=wx.RB_GROUP )
 		self.showGPX.Enable( False )
 		self.Bind(wx.EVT_RADIOBUTTON, self.changeTrack, self.showGPX )
-		self.showOval = wx.RadioButton( self, wx.ID_ANY, _("Oval Track") )
+		self.showOval = wx.RadioButton( self, label = _("Oval Track") )
 		self.showOval.SetValue( True )
 		self.isShowingOval = True
 		self.Bind(wx.EVT_RADIOBUTTON, self.changeTrack, self.showOval )
-		self.finishTop = wx.CheckBox( self, wx.ID_ANY, _("Finish on Top") )
+		self.finishTop = wx.CheckBox( self, label = _("Finish on Top") )
 		self.Bind(wx.EVT_CHECKBOX, self.doFinishTop, self.finishTop)
-		self.reverseDirection = wx.Button( self, wx.ID_ANY, _("Reverse Direction") )
+		self.reverseDirection = wx.Button( self, label = _("Reverse Direction") )
 		self.Bind(wx.EVT_BUTTON, self.doReverseDirection, self.reverseDirection)
 		
 		self.hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
@@ -133,19 +133,19 @@ class RaceAnimation( wx.Panel ):
 		self.animationSeconds = self.animationSecondsNormal = 90
 
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		self.rewindButton = wx.Button( self, wx.ID_ANY, _('Rewind') )
+		self.rewindButton = wx.Button( self, label = _('Rewind') )
 		self.Bind( wx.EVT_BUTTON, self.onRewind, self.rewindButton )
 		hs.Add(self.rewindButton, 0, flag=wx.GROW|wx.ALL, border=2 )
-		self.playStopButton = wx.Button( self, wx.ID_ANY, _('Play') )
+		self.playStopButton = wx.Button( self, label = _('Play') )
 		self.Bind( wx.EVT_BUTTON, self.onPlayStop, self.playStopButton )
 		hs.Add(self.playStopButton, 0, flag=wx.GROW|wx.ALL, border=2 )
 		hs.Add( wx.Size(20, 1) )
-		self.playbackSpeed = wx.StaticText(self, wx.ID_ANY, _('Playback Speed:') )
+		self.playbackSpeed = wx.StaticText(self, label = _('Playback Speed:') )
 		hs.Add(self.playbackSpeed, 0, flag=wx.ALIGN_CENTER|wx.ALL, border=2 )
 		
 		self.speed = []
 		for i in xrange(5):
-			b = wx.RadioButton( self, wx.ID_ANY, name='PlaybackSpeed' )
+			b = wx.RadioButton( self, name='PlaybackSpeed' )
 			self.speed.append( b )
 			self.Bind( wx.EVT_RADIOBUTTON, self.onPlaybackSpeed, b )
 			hs.Add( b, 0, flag=wx.GROW|wx.ALL, border = 2 )
@@ -154,14 +154,14 @@ class RaceAnimation( wx.Panel ):
 		bs.Add( hs, 0, flag=wx.GROW|wx.ALL, border = 0 )
 
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		self.watchText = wx.StaticText( self, wx.ID_ANY, _('Highlight Numbers:') )
+		self.watchText = wx.StaticText( self, label = _('Highlight Numbers:') )
 		hs.Add( self.watchText, 0, flag=wx.ALIGN_CENTER|wx.ALL, border = 2 )
 		
-		self.watch = wx.TextCtrl( self, wx.ID_ANY, validator=NumListValidator(), style=wx.PROCESS_ENTER )
+		self.watch = wx.TextCtrl( self, validator=NumListValidator(), style=wx.PROCESS_ENTER )
 		self.watch.Bind( wx.EVT_TEXT_ENTER, self.onUpdateWatch )
 		hs.Add( self.watch, 1, flag = wx.GROW|wx.ALL, border = 2 )
 		
-		self.updateWatch = wx.Button( self, wx.ID_ANY, _('Update') )
+		self.updateWatch = wx.Button( self, label = _('Update') )
 		self.updateWatch.Bind( wx.EVT_BUTTON, self.onUpdateWatch )
 		hs.Add( self.updateWatch, 0, flag = wx.GROW|wx.ALL, border = 2 )
 		
