@@ -15,6 +15,7 @@ from keybutton import KeyButton
 from RaceHUD import RaceHUD
 from EditEntry import DoDNF, DoDNS, DoPull, DoDQ
 from TimeTrialRecord import TimeTrialRecord
+from PhotoFinish import HasPhotoFinish
 
 def MakeKeypadButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1), font = None ):
 	label = label.replace('&','')
@@ -301,6 +302,8 @@ class NumKeypad( wx.Panel ):
 		self.photoButton.SetToolTip(wx.ToolTip(_('Show Last Photos...')))
 		self.photoButton.Bind( wx.EVT_BUTTON, self.onPhotoButton )
 		self.hbClockPhoto.Add( self.photoButton, flag=wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT, border = 18 )
+		if not HasPhotoFinish():
+			self.photoButton.Disable()
 		
 		label = wx.StaticText( panel, wx.ID_ANY, _("Clock") )
 		label.SetFont( font )
@@ -474,7 +477,7 @@ class NumKeypad( wx.Panel ):
 			mainWin.forecastHistory.updatedExpectedTimes( tRace )
 	
 	def onPhotoButton( self, event ):
-		if not Utils.mainWin:
+		if not Utils.mainWin or not HasPhotoFinish():
 			return
 		Utils.mainWin.photoDialog.Show( True )
 		Utils.mainWin.photoDialog.refresh( Utils.mainWin.photoDialog.ShowAllPhotos )

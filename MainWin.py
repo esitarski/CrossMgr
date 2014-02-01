@@ -74,7 +74,7 @@ import Version
 from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, ExcelLink, ReportFields
 from SetGraphic			import SetGraphicDialog
 from GetResults			import GetCategoryDetails
-from PhotoFinish		import ResetPhotoInfoCache, DeletePhotos
+from PhotoFinish		import ResetPhotoInfoCache, DeletePhotos, HasPhotoFinish
 from PhotoViewer		import PhotoViewerDialog
 from ReadTTStartTimesSheet import ImportTTStartTimes
 import VideoBuffer
@@ -650,7 +650,7 @@ class MainWin( wx.Frame ):
 
 	def handleChipReaderEvent( self, event ):
 		race = Model.race
-		if not race or not race.isRunning() or not getattr(race, 'enableUSBCamera', False):
+		if not race or not race.isRunning() or not getattr(race, 'enableUSBCamera', False) or not HasPhotoFinish():
 			return
 		if not getattr(race, 'tagNums', None):
 			JChipSetup.GetTagNums()

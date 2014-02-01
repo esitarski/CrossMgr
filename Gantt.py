@@ -5,6 +5,7 @@ from FixCategories import FixCategories
 import GanttChartPanel
 from GetResults import GetResults, RidersCanSwap
 from Undo import undo
+from PhotoFinish import HasPhotoFinish
 import EditEntry
 
 def UpdateSetNum( num ):
@@ -107,10 +108,16 @@ class Gantt( wx.Panel ):
 				(None, None, None, None, None),
 				(wx.NewId(), _('Show Lap Details...'), 		_('Show Lap Details'),			self.OnPopupLapDetail, allCases),
 				(None, None, None, None, None),
+			]
+			if HasPhotoFinish():
+				self.popupInfo.append(
 				(wx.NewId(), _('Photos...'), 				_('Show Photos'),				self.OnPopupPhotos, allCases),
+				)
+			self.popupInfo.extend( [
 				(wx.NewId(), _('RiderDetail'),				_('Show RiderDetail Dialog'),	self.OnPopupRiderDetail, allCases),
 				(wx.NewId(), _('Results'), 					_('Switch to Results tab'),		self.OnPopupResults, allCases),
-			]
+			] )
+			
 			self.splitMenuInfo = [
 					(wx.NewId(),
 					_('{} Split(s)').format(split-1),

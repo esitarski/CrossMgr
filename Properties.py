@@ -1,5 +1,6 @@
 import Utils
 import Model
+from PhotoFinish import HasPhotoFinish
 from Undo import undo
 import wx
 import re
@@ -118,7 +119,7 @@ class Properties( wx.Panel ):
 		rows += 1
 
 		self.notesLabel = wx.StaticText( self, label = _('Notes to appear on Html output:\n(Notes using Html tags must start with <html> and end with </html>)') )
-		self.notes = wx.TextCtrl( self, style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB, size=(-1,96) )
+		self.notes = wx.TextCtrl( self, style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB, size=(-1,60) )
 		rows += 1
 
 		self.fileNameLabel = wx.StaticText( self, label = _('File Name: ') )
@@ -221,6 +222,8 @@ class Properties( wx.Panel ):
 		self.editFields = [labelFieldFormats[i][0] for i in xrange(1, len(labelFieldFormats), 2)]
 		self.editFields = [e for e in self.editFields if e and not isinstance(e, wx.BoxSizer)]
 		self.editFields.extend( [self.raceCity, self.raceStateProv, self.raceCountry] )
+		
+		self.setEditable( True )
 	
 	def onJChipIntegration( self, event ):
 		self.autocorrectLapsDefault.SetValue( not self.jchip.GetValue() )
@@ -250,6 +253,9 @@ class Properties( wx.Panel ):
 			except:
 				if not editable and not isinstance(f, wx.StaticText):
 					f.Disable()
+		if not HasPhotoFinish():
+			self.enableUSBCamera.Disable()
+			self.enableUSBCameraLabel.Disable()
 	
 	def incNext( self ):
 		self.raceNum.SetValue( self.raceNum.GetValue() + 1 )

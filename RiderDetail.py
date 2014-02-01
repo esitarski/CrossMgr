@@ -17,6 +17,7 @@ import Gantt
 from EditEntry import CorrectNumber, ShiftNumber, DeleteEntry
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 from GetResults import GetResults, GetCategoryDetails
+from PhotoFinish import HasPhotoFinish
 
 def getStFtLaps( rider ):
 	with Model.LockRace() as race:
@@ -268,6 +269,9 @@ class RiderDetail( wx.Panel ):
 		self.Bind( wx.EVT_BUTTON, self.onAdjustTime, self.adjustTime )
 		gbs.Add( self.adjustTime, pos=(row,5), span=(1,2), flag=wx.EXPAND )
 		row += 1
+		
+		if not HasPhotoFinish():
+			self.showPhotos.Disable()
 
 		self.notInLap = wx.StaticText( self, label = u'              ' )
 		gbs.Add( self.notInLap, pos=(row,0), span=(1,4) )
