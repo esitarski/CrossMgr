@@ -23,7 +23,7 @@ Time Trial|Specifies Time Trial mode.  In this mode, the first time recorded for
 Use USB Camera for Photo Finish|Takes a photo from a connected USB camera on every number entry.  See [Notes](#use-usb-camera-photo-finish) below for details.  Currently, the USB Camera option is only available on the Windows platform.
 Use RFID Reader|Use an RFID reader in the race.  When set, CrossMgr will act as a "server" that can receive real-time messages from a RFID reader.  The reader can be JChip, or the CrossMgrImpinj or CrossMgrAlien bridge programs that communicate with the Impinj and Alien readers, respectively.  See [RFID Reader Setup](Menu-ChipReader.html#rfid-reader-setup-dialog) for details.
 Set "Autocorrect Lap Data" option by Default|If true, CrossMgr sets the Autocorrect option by default when a rider is added to the race.  See [RiderDetail](RiderDetail.html) for details about Autocorrect.  If false, the Autocorrect option will not be set when a rider is added to the race.  You can change the Autocorrect option by rider in RiderDetail.  You can also enable/disable Autocorrect for all riders at once with "Edit/Enable Autocorrect for All Riders" and "Edit/Disable Autocorrect for All Riders".
-Animation Finish on Top|Tells the animation to finish on the top rather than on the bottom.  Also changes HTML ouput to match.
+Animation Finish on Top|Tells the animation to finish on the top rather than on the bottom.  Also changes HTML output to match.
 Animation Reverse Direction|Runs the animation from right-to-left (clockwise) instead of the usual left-to-right (counter-clockwise).  Also changes HTML output to match.
 Notes|Text that will appear in the HTML output.  Text entered here will be shown as-is in the HTML web page, including line breaks.  Describe weather conditions, or give credit to the CrossMgr operator and number caller.  You can also use Html tags, however, your input must then start with <html> and end with </html>.  With Html tags, you can specify a hyperlink to a URL with <a href="http://XXX">HyperLink</a>, use a list with <ol></ol>, etc.  When using Html, you control line breaks; <br/>'s will not be automatically inserted between newlines.
 Excel Sheet|Externally Linked Excel Sheet name.
@@ -56,7 +56,7 @@ The USB camera feature can be turned on and off during the race at any time.  Yo
 Photos are saved in a folder created in the same location as the race.  The Photo folder has the same name as the race with with "_Photos" added to the end.  The photo files have the following format: "bib-XXXX-time-HH-MM-SS-DD.jpg" where XXXX is the bib number, HH, MM, SS and DD are hours, minutes, seconds, and decimal seconds, respectively.
 A footer is written on each photo including the rider's Bib number, the Race Time and the Current Date/Time.
 
-Although the pictures taken are far smaller than recording the entire video on disk, they can still take a lot of space.  Make sure you have lots of disk space available to accomodate the potential 500 (or more!) pictures that might be taken.
+Although the pictures taken are far smaller than recording the entire video on disk, they can still take a lot of space.  Make sure you have lots of disk space available to accommodate the potential 500 (or more) pictures that might be taken.
 
 Get a good USB camera.  Some good ones are available for about $100.  Make sure the camera can focus on far-away objects (some webcams are only intended for faces in front of a computer).  Use a tripod or other stable support.  Use the camera's included software to frame the shot. 
 
@@ -64,7 +64,7 @@ For performance reasons, CrossMgr opens a connection to the USB webcam at the st
 
 There are many considerations when setting up the camera to get good shots.  The first issue to consider is "latency".  There are always small delays in the communication and response of the camera.  If the camera is aimed at the finish line with a very narrow field of view, the riders may be out of the frame before the camera gets the signal to take the picture.
 
-When using Chip timing, CrossMgr triggers the camera as fast as possible after receiving the tag read message from the reader - even before updating the screen.  With manual timing, CrossMgr triggers the camera as soon as it logs the entry and before it updates the screen.  However, neither of these processes are instananeous.
+When using Chip timing, CrossMgr triggers the camera as fast as possible after receiving the tag read message from the reader - even before updating the screen.  With manual timing, CrossMgr triggers the camera as soon as it logs the entry and before it updates the screen.  However, neither of these processes are instantaneous.
 
 To mitigate timing issues, it is recommended to configure the camera with a wider field of view and position it more facing the riders (or looking backwards if you need to see the numbers).  With this angle, it will be less likely that the riders will go out of frame before the camera is triggered.
 Some USB cameras have an auto-focus feature that is fast enough to follow a moving subject.  However, some cameras cannot refocus fast enough and the riders will always appear blurry (turn it off in this case).  Check what works best.
