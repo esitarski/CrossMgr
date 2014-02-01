@@ -423,12 +423,13 @@ def GetLeaderFinishTime():
 
 def UnstartedRaceDataProlog( getExternalData = True ):
 	tempNums = set()
+	externalInfo = None
 	with Model.LockRace() as race:
 		if getExternalData and race.isUnstarted():
 			try:
 				externalInfo = race.excelLink.read()
 			except:
-				externalInfo = None
+				pass
 		
 		# Add all numbers from the spreadsheet if they are not already in the race.
 		# Default the status to NP.
