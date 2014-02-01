@@ -567,6 +567,7 @@ class RiderDetail( wx.Panel ):
 			self.setRider( None )
 			self.refresh()
 			wx.CallAfter( Utils.refreshForecastHistory )
+			wx.CallAfter( Utils.refresh )
 		
 	def onChangeNumber( self, event ):
 		if not Model.race:
@@ -608,6 +609,7 @@ class RiderDetail( wx.Panel ):
 			self.setRider( newNum )
 			self.refresh()
 			wx.CallAfter( Utils.refreshForecastHistory )
+			wx.CallAfter( Utils.refresh )
 	
 	def onSwapNumber( self, event ):
 		if not Model.race:
@@ -649,6 +651,7 @@ class RiderDetail( wx.Panel ):
 			self.setRider( newNum )
 			self.refresh()
 			wx.CallAfter( Utils.refreshForecastHistory )
+			wx.CallAfter( Utils.refresh )
 
 		
 	def onCopyRider( self, event ):
@@ -703,6 +706,7 @@ class RiderDetail( wx.Panel ):
 			self.setRider( newNum )
 			self.onNumChange()
 			wx.CallAfter( Utils.refreshForecastHistory )
+			wx.CallAfter( Utils.refresh )
 	
 	def onNumChange( self, event = None ):
 		self.refresh()
@@ -751,6 +755,7 @@ class RiderDetail( wx.Panel ):
 			race.setChanged()
 		self.refresh()
 		wx.CallAfter( Utils.refreshForecastHistory )
+		wx.CallAfter( Utils.refresh )
 	
 	def setRider( self, n = None ):
 		Utils.SetValue( self.num, int(n) if n is not None else None )
