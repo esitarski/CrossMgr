@@ -304,8 +304,8 @@ class FtpPublishDialog( wx.Dialog ):
 		self.ftpPhotoPath = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
 		self.ftpUser = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
 		self.ftpPassword = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER|wx.TE_PASSWORD, value='' )
-		self.ftpUploadDuringRace = wx.CheckBox( self, _("Automatically Upload Results During Race") )
-		self.urlPath = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
+		self.ftpUploadDuringRace = wx.CheckBox( self, label = _("Automatically Upload Results During Race") )
+		self.urlPath = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER )
 		self.urlPath.Bind( wx.EVT_TEXT, self.urlPathChanged )
 		self.urlFull = wx.StaticText( self )
 		
