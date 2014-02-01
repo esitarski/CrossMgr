@@ -448,7 +448,7 @@ class NumKeypad( wx.Panel ):
 				tRace = race.lastRaceTime()
 				tStr = Utils.formatTime( tRace )
 				self.refreshRaceHUD()
-				if getattr(race, 'enableUSBCamera', False):
+				if getattr(race, 'enableUSBCamera', False) and HasPhotoFinish():
 					self.photoButton.Show( True )
 					self.photoCount.SetLabel( '{}'.format(getattr(race, 'photoCount', '')) )
 				else:
