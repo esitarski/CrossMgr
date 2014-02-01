@@ -682,7 +682,7 @@ if __name__ == '__main__':
 	
 	backgroundColour = wx.Colour(245,245,245)
 	app = wx.App(False)
-	mainWin = wx.Frame(None,title="keybutton", size=((rowHeight+0.75) * 15 + border * 2, rowHeight * (len(keyRows)+0.75) + border * 2))
+	mainWin = wx.Frame(None, title="keybutton", size=((rowHeight+0.75) * 15 + border * 2, rowHeight * (len(keyRows)+0.75) + border * 2))
 	mainWin.SetBackgroundColour( backgroundColour )
 	
 	font = wx.FontFromPixelSize( (0, fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD )

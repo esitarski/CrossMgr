@@ -7,30 +7,12 @@ from gettext import gettext as _
 from Animation import Animation
 from GeoAnimation import GeoAnimation
 from FixCategories import FixCategories
-from GetResults import GetResults, GetCategoryDetails
+from GetResults import GetResults, GetCategoryDetails, UnstartedRaceDataProlog, UnstartedRaceDataEpilog
 
 statusNames = Model.Rider.statusNames
 
 def GetAnimationData( category = None, getExternalData = False ):
-	externalInfo = None
-	tempNums = set()
-	
-	with Model.LockRace() as race:
-		if getExternalData and race.isUnstarted():
-			try:
-				externalInfo = race.excelLink.read()
-			except:
-				pass
-		
-		# Add all numbers from the spreadsheet if they are not already in the race.
-		# Default the status to NP.
-		if externalInfo:
-			for num, info in externalInfo.iteritems():
-				if num not in race.riders and any(info.get(f, None) for f in [_('LastName'), _('FirstName'), _('Team'), _('License')]):
-					rider = race.getRider( num )
-					rider.status = Model.Rider.NP
-					tempNums.add( num )
-			race.resetCache()
+	tempNums = UnstartedRaceDataProlog( getExternalData )
 
 	results = GetResults( category, getExternalData )
 	
@@ -54,11 +36,8 @@ def GetAnimationData( category = None, getExternalData = False ):
 			
 			animationData[rr.num] = info
 	
-	# Remove all temporary numbers.
-	if tempNums:
-		for num in tempNums:
-			race.deleteRider( num )
-		race.resetCache()
+	# Cleanup.
+	UnstartedRaceDataEpilog( tempNums )
 	
 	return animationData
 		

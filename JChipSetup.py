@@ -235,18 +235,18 @@ class JChipSetupDialog( wx.Dialog ):
 
 		if not JChip.listener:
 			correct, reason = CheckExcelLink()
-			explain = 	'CrossMgr will not be able to associate chip Tags with Bib numbers.\n' \
-						'You may proceed with the test, but you need to fix the Excel sheet.\n\n' \
-						'See documentation for details.'
+			explain = 	_('CrossMgr will not be able to associate chip Tags with Bib numbers.') + u'\n' + \
+						_('You may proceed with the test, but you need to fix the Excel sheet.') + u'\n\n' + \
+						_('See documentation for details.')
 			if not correct:
-				if not Utils.MessageOKCancel( self, 'Problems with Excel sheet.\n\n    Reason: %s\n\n%s' % (reason, explain),
-									title = 'Excel Link Problem', iconMask = wx.ICON_WARNING ):
+				if not Utils.MessageOKCancel( self, (_('Problems with Excel sheet.') + u'\n\n    ' + _('Reason:') + u' {}\n\n{}').format(reason, explain),
+									title = _('Excel Link Problem'), iconMask = wx.ICON_WARNING ):
 					self.testJChip.SetValue( False )
 					return
 			tagNums = GetTagNums( True )
 			if correct and not tagNums:
-				if not Utils.MessageOKCancel( self, 'All Tag entries in the Excel sheet are blank.\n\n%s' % explain,
-									title = 'Excel Link Problem', iconMask = wx.ICON_WARNING ):
+				if not Utils.MessageOKCancel( self, (_('All Tag entries in the Excel sheet are blank.') + u'\n\n{}').format(explain),
+									title = _('Excel Link Problem'), iconMask = wx.ICON_WARNING ):
 					self.testJChip.SetValue( False )
 					return
 			

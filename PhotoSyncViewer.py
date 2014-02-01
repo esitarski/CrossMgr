@@ -272,7 +272,7 @@ if __name__ == '__main__':
 	vb.start()
 	time.sleep( 1.0 )
 	
-	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
+	mainWin = wx.Frame(None, title="CrossMan", size=(600,400))
 	mainWin.Show()
 	photoSyncDialog = PhotoSyncViewerDialog( mainWin, title = u"PhotoSyncViewer", size=(600,400) )
 	def doRefresh( bib ):

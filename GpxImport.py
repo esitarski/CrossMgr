@@ -211,12 +211,12 @@ class SummaryPage(wiz.WizardPageSimple):
 class GetGeoTrack( object ):
 	def __init__( self, parent, geoTrack = None, geoTrackFName = None ):
 		img_filename = os.path.join( Utils.getImageFolder(), 'gps.png' )
-		img = wx.Bitmap(img_filename) if img_filename and os.path.exists(img_filename) else wx.NullBitmap
+		bitmap = wx.Bitmap(img_filename) if img_filename and os.path.exists(img_filename) else wx.NullBitmap
 		
 		self.parent = parent
 		prewizard = wiz.PreWizard()
 		prewizard.SetExtraStyle( wiz.WIZARD_EX_HELPBUTTON )
-		prewizard.Create( parent, title = _('Import GPX Course File'), bitmap = img )
+		prewizard.Create( parent, title = _('Import GPX Course File'), bitmap = bitmap )
 		self.wizard = prewizard
 		
 		self.introPage		= IntroPage( self.wizard, self )

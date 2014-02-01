@@ -420,18 +420,47 @@ def GetLeaderFinishTime():
 		return results[0].lastTime
 	else:
 		return 0.0
+
+def UnstartedRaceDataProlog( getExternalData = True ):
+	tempNums = set()
+	with Model.LockRace() as race:
+		if getExternalData and race.isUnstarted():
+			try:
+				externalInfo = race.excelLink.read()
+			except:
+				externalInfo = None
+		
+		# Add all numbers from the spreadsheet if they are not already in the race.
+		# Default the status to NP.
+		if externalInfo:
+			for num, info in externalInfo.iteritems():
+				if num not in race.riders and any(info.get(f, None) for f in [_('LastName'), _('FirstName'), _('Team'), _('License')]):
+					rider = race.getRider( num )
+					rider.status = Model.Rider.NP
+					tempNums.add( num )
+			race.resetCache()
+	return tempNums
 	
+def UnstartedRaceDataEpilog( tempNums ):
+	# Remove all temporary numbers.
+	race = Model.race
+	if race and tempNums:
+		for num in tempNums:
+			race.deleteRider( num )
+		race.resetCache()
+
 @Model.memoize
 def GetCategoryDetails():
-	results = GetResultsCore( None )
-	if not results:
+	if not Model.race:
 		return []
-		
+
+	tempNums = UnstartedRaceDataProlog()
+
+	results = GetResultsCore( None )
+	
 	catDetails = []
 	with Model.LockRace() as race:
-		if not race:
-			return catDetails
-		
+	
 		# Create a custom category for all riders.
 		info = dict(
 				name			= 'All',
@@ -474,4 +503,8 @@ def GetCategoryDetails():
 							info['raceDistance'] = waveCat.distance
 					info['distanceUnit'] = race.distanceUnitStr
 					
+					
+	# Cleanup.
+	UnstartedRaceDataEpilog( tempNums )
+
 	return catDetails
