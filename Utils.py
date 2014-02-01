@@ -451,11 +451,12 @@ def approximateMatch( s1, s2 ):
 	return len(set(s1) & set(s2)) / float(len(s1) + len(s2))
 	
 #------------------------------------------------------------------------
+platform = wx.Platform.replace('__WX', '').replace('__', '').lower()
 def writeLog( message ):
 	try:
 		dt = datetime.datetime.now()
 		dt = dt.replace( microsecond = 0 )
-		sys.stdout.write( '{} {}{}'.format(dt.isoformat(), message, '\n' if not message or message[-1] != '\n' else '' ) )
+		sys.stdout.write( '{} ({}) {}{}'.format(dt.isoformat(), platform, message, '\n' if not message or message[-1] != '\n' else '' ) )
 		sys.stdout.flush()
 	except IOError:
 		pass
