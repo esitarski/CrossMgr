@@ -7,6 +7,7 @@ import sys
 import math
 import string
 import subprocess
+import platform
 import unicodedata
 import webbrowser
 import traceback
@@ -451,12 +452,12 @@ def approximateMatch( s1, s2 ):
 	return len(set(s1) & set(s2)) / float(len(s1) + len(s2))
 	
 #------------------------------------------------------------------------
-platform = wx.Platform.replace('__WX', '').replace('__', '').lower()
+PlatformName = platform.system()
 def writeLog( message ):
 	try:
 		dt = datetime.datetime.now()
 		dt = dt.replace( microsecond = 0 )
-		sys.stdout.write( '{} ({}) {}{}'.format(dt.isoformat(), platform, message, '\n' if not message or message[-1] != '\n' else '' ) )
+		sys.stdout.write( '{} ({}) {}{}'.format(dt.isoformat(), PlatformName, message, '\n' if not message or message[-1] != '\n' else '' ) )
 		sys.stdout.flush()
 	except IOError:
 		pass
