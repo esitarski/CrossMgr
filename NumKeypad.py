@@ -237,7 +237,7 @@ class NumKeypad( wx.Panel ):
 		label = wx.StaticText( panel, label = _("Est. Last Rider Time"))
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
-		self.lastRiderFinishTime = wx.StaticText( panel, wx.ID_ANY, "")
+		self.lastRiderFinishTime = wx.StaticText( panel )
 		self.lastRiderFinishTime.SetFont( font )
 		gbs.Add( self.lastRiderFinishTime, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
@@ -245,7 +245,7 @@ class NumKeypad( wx.Panel ):
 		label = wx.StaticText( panel, label = _("Avg Lap Time"))
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
-		self.leadersLapTime = wx.StaticText( panel, wx.ID_ANY, "")
+		self.leadersLapTime = wx.StaticText( panel )
 		self.leadersLapTime.SetFont( font )
 		gbs.Add( self.leadersLapTime, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
@@ -253,7 +253,7 @@ class NumKeypad( wx.Panel ):
 		label = wx.StaticText( panel, label = _("Completing Lap"))
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
-		self.lapCompleting = wx.StaticText( panel, wx.ID_ANY, "")
+		self.lapCompleting = wx.StaticText( panel )
 		self.lapCompleting.SetFont( font )
 		gbs.Add( self.lapCompleting, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
@@ -261,7 +261,7 @@ class NumKeypad( wx.Panel ):
 		label = wx.StaticText( panel, label = _("Show Laps to Go"))
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
-		self.lapsToGo = wx.StaticText( panel, wx.ID_ANY, "")
+		self.lapsToGo = wx.StaticText( panel )
 		self.lapsToGo.SetFont( font )
 		gbs.Add( self.lapsToGo, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
@@ -271,7 +271,7 @@ class NumKeypad( wx.Panel ):
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
 		self.raceStartMessage = label
-		self.raceStartTime = wx.StaticText( panel, wx.ID_ANY, '' )
+		self.raceStartTime = wx.StaticText( panel )
 		self.raceStartTime.SetFont( font )
 		gbs.Add( self.raceStartTime, pos=(rowCur, colCur+1), span=(1, 1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		
@@ -286,7 +286,7 @@ class NumKeypad( wx.Panel ):
 		label = wx.StaticText( panel, label = _("Est. Last Rider Finish"))
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
-		self.estLastRiderTime = wx.StaticText( panel, wx.ID_ANY, '' )
+		self.estLastRiderTime = wx.StaticText( panel )
 		self.estLastRiderTime.SetFont( font )
 		gbs.Add( self.estLastRiderTime, pos=(rowCur, colCur+1), span=(1, 1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		

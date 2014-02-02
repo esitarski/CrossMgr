@@ -176,7 +176,7 @@ class SummaryPage(wiz.WizardPageSimple):
 					  (self.distanceLabel, 0, labelAlign),		(self.distance,		1, wx.EXPAND|wx.GROW),
 					  (self.totalElevationGainLabel, 0, labelAlign),(self.totalElevationGain,		1, wx.EXPAND|wx.GROW),
 					  (self.courseTypeLabel, 0, labelAlign),(self.courseType,		1, wx.EXPAND|wx.GROW),
-					  (wx.StaticText(self,wx.ID_ANY,''), 0, labelAlign),			(wx.StaticText(self,wx.ID_ANY,''), 1, wx.EXPAND|wx.GROW),
+					  (wx.StaticText(self), 0, labelAlign),			(wx.StaticText(self), 1, wx.EXPAND|wx.GROW),
 					  (self.setCategoryDistanceLabel, 0, labelAlign), (self.setCategoryDistanceCheckbox, 1, wx.EXPAND|wx.GROW),
 					 ] )
 		fbs.AddGrowableCol( 1 )

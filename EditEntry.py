@@ -29,7 +29,7 @@ class CorrectNumberDialog( wx.Dialog ):
 		border = 8
 		bs.Add( wx.StaticText( self, label = _('RiderLap: {}   RaceTime: {}').format(self.entry.lap, Utils.formatTime(self.entry.t, True)) ),
 			pos=(0,0), span=(1,2), border = border, flag=wx.GROW|wx.ALL )
-		bs.Add( wx.StaticText( self, -1, _("Rider:")),  pos=(1,0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		bs.Add( wx.StaticText( self, label = _("Rider:")),  pos=(1,0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.numEdit, pos=(1,1), span=(1,2), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		choices = [_("Race Time:")]
 		if Model.race and Model.race.startTime:
@@ -134,12 +134,12 @@ class ShiftNumberDialog( wx.Dialog ):
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
 		border = 8
-		bs.Add( wx.StaticText( self, wx.ID_ANY, _('RiderLap: {}   RaceTime: {}').format(self.entry.lap, Utils.formatTime(self.entry.t,True)) ),
+		bs.Add( wx.StaticText( self, label = _('RiderLap: {}   RaceTime: {}').format(self.entry.lap, Utils.formatTime(self.entry.t,True)) ),
 			pos=(0,0), span=(1,2), border = border, flag=wx.GROW|wx.ALL )
-		bs.Add( wx.StaticText( self, -1, _("Rider:")),  pos=(1,0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT )
+		bs.Add( wx.StaticText( self, label = _("Rider:")),  pos=(1,0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT )
 		bs.Add( self.numEdit, pos=(1,1), span=(1,2), border = border, flag=wx.GROW|wx.RIGHT|wx.TOP )
 		bs.Add( self.shiftBox, pos=(2, 0), span=(1, 2), border = border, flag=wx.GROW|wx.LEFT|wx.RIGHT|wx.BOTTOM )
-		bs.Add( wx.StaticText( self, -1, _("Shift Time:")),  pos=(3,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT|wx.BOTTOM )
+		bs.Add( wx.StaticText( self, label = _("Shift Time:")),  pos=(3,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT|wx.BOTTOM )
 		bs.Add( self.timeMsEdit, pos=(3,1), span=(1,1), border = border, flag=wx.GROW|wx.LEFT|wx.RIGHT )
 		bs.Add( self.newTime, pos=(4,0), span=(1,2), border = border, flag=wx.GROW|wx.LEFT|wx.RIGHT )
 		
@@ -212,7 +212,7 @@ class InsertNumberDialog( wx.Dialog ):
 		self.beforeAfterBox = wx.RadioBox( self, wx.ID_ANY, _('Insert'), wx.DefaultPosition, wx.DefaultSize, shiftOptions, 2, wx.RA_SPECIFY_COLS )
 		bs.Add( self.beforeAfterBox, pos=(2,0), span=(1,2), border = border, flag=wx.TOP|wx.LEFT|wx.ALIGN_RIGHT )
 				
-		bs.Add( wx.StaticText( self, wx.ID_ANY, _('Number:') ),
+		bs.Add( wx.StaticText( self, label = _('Number:') ),
 				pos=(3,0), span=(1,1), border = border, flag=wx.TOP|wx.LEFT|wx.ALIGN_RIGHT )
 		bs.Add( self.numEdit,
 				pos=(3,1), span=(1,1), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_BOTTOM )

@@ -399,7 +399,7 @@ class ImageDialog(wx.Dialog):
         hbox_loc = wx.BoxSizer(wx.HORIZONTAL)
         vbox_top.Add(hbox_loc, 0, wx.GROW|wx.ALIGN_LEFT|wx.ALL, 0)
 
-        loc_label = wx.StaticText( self, -1, "Folder:")
+        loc_label = wx.StaticText( self, label = "Folder:")
         hbox_loc.Add(loc_label, 0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.ADJUST_MINSIZE, 5)
 
         self.dir = wx.TextCtrl( self, -1, self.set_dir, style=wx.TE_RICH|wx.TE_PROCESS_ENTER)
@@ -424,7 +424,7 @@ class ImageDialog(wx.Dialog):
         vbox_top.Add(hbox_nav, 0, wx.ALIGN_LEFT|wx.ALL, 0)
 
 
-        label = wx.StaticText( self, -1, "Files of type:")
+        label = wx.StaticText( self, label = "Files of type:")
         hbox_nav.Add(label, 0, wx.ALIGN_CENTER_VERTICAL|wx.LEFT, 5)
 
         self.fl_ext = '*.bmp'   # initial setting for file filtering

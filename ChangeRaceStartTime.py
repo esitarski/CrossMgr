@@ -30,7 +30,7 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
 		border = 8
-		self.timeLabel = wx.StaticText( self, -1, _('New Race Start Time (24hr clock):') )
+		self.timeLabel = wx.StaticText( self, label = _('New Race Start Time (24hr clock):') )
 		bs.Add( self.timeLabel,  pos=(0,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.TOP|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.timeMsEdit, pos=(0,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.TOP|wx.ALIGN_LEFT )
 		

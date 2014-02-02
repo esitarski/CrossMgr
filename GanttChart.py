@@ -17,14 +17,14 @@ class BarInfoPopup( wx.PopupTransientWindow ):
 		wx.PopupTransientWindow.__init__(self, parent, style)
 		self.SetBackgroundColour(wx.WHITE)
 		border = 10
-		st = wx.StaticText(self, -1, text, pos=(border/2,border/2))
+		st = wx.StaticText(self, label = text, pos=(border/2,border/2))
 		sz = st.GetBestSize()
 		self.SetSize( (sz.width+border, sz.height+border) )
 
 def makeColourGradient(frequency1, frequency2, frequency3,
                         phase1, phase2, phase3,
                         center = 128, width = 127, len = 50 ):
-	fp = [(frequency1,phase1), (frequency2,phase2), (frequency3,phase3)]	
+	fp = [(frequency1,phase1), (frequency2,phase2), (frequency3,phase3)]
 	grad = [wx.Colour(*[math.sin(f*i + p) * width + center for f, p in fp]) for i in xrange(len)]
 	return grad
 	

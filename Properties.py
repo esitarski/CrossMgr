@@ -73,7 +73,7 @@ class Properties( wx.Panel ):
 		self.commissaire = wx.TextCtrl( self )
 		rows += 1
 		
-		self.memoLabel = wx.StaticText( self, label =  _('Memo:') )
+		self.memoLabel = wx.StaticText( self, label = _('Memo:') )
 		self.memo = wx.TextCtrl( self )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.memo )
 		rows += 1
