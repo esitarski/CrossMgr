@@ -20,7 +20,7 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		
 		title = wx.StaticText( self, label = _('Click to select Categories.  Use Ctrl-Click to select Multiple Categories.') )
 		
-		self.selectAllButton = wx.Button( self, wx.ID_ANY, 'Select All' )
+		self.selectAllButton = wx.Button( self, label = _('Select All') )
 		self.selectAllButton.Bind( wx.EVT_BUTTON, self.onSelectAll )
 		
 		self.il = wx.ImageList(16, 16)
@@ -28,10 +28,10 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		self.sm_up = self.il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'SmallUpArrow.png'), wx.BITMAP_TYPE_PNG))
 		self.sm_dn = self.il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'SmallDownArrow.png'), wx.BITMAP_TYPE_PNG ))
 		
-		self.list = AutoWidthListCtrl( self, wx.ID_ANY, style = wx.LC_REPORT 
-														 | wx.BORDER_SUNKEN
-														 | wx.LC_HRULES
-														 )
+		self.list = AutoWidthListCtrl( self, style = wx.LC_REPORT 
+													 | wx.BORDER_SUNKEN
+													 | wx.LC_HRULES
+					)
 		self.list.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
 		
 		self.list.InsertColumn(0, _("Name"))
@@ -56,7 +56,7 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		self.list.SetColumnWidth( 1, 64 )
 		self.list.SetColumnWidth( 3, 52 )
 		
-		self.includeLapTimesInPrintoutCheckBox = wx.CheckBox( self, wx.ID_ANY, _('Include Lap Times in Printout') )
+		self.includeLapTimesInPrintoutCheckBox = wx.CheckBox( self, label = _('Include Lap Times in Printout') )
 		race = Model.race
 		if race:
 			self.includeLapTimesInPrintoutCheckBox.SetValue( getattr(race, 'includeLapTimesInPrintout', True) )

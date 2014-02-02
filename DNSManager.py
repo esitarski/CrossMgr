@@ -10,7 +10,7 @@ from FixCategories import FixCategories
 from Undo import undo
 
 class AutoWidthListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
-	def __init__(self, parent, ID, pos=wx.DefaultPosition,
+	def __init__(self, parent, ID = wx.ID_ANY, pos=wx.DefaultPosition,
 				 size=wx.DefaultSize, style=0):
 		wx.ListCtrl.__init__(self, parent, ID, pos, size, style)
 		listmix.ListCtrlAutoWidthMixin.__init__(self)

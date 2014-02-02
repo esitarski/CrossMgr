@@ -1098,7 +1098,7 @@ function TrackAnimation()
 						else
 							distanceCur = distanceLap * (flr + this.iLapDistance - 1 + lapRatio);
 					}
-					else if( cat['raceDistance'] && leaderRaceTime[0] != leaderRaceTime.back() ) {
+					else if( cat['raceDistance'] && leaderRaceTimes[0] != leaderRaceTimes.back() ) {
 						distanceRace = cat['raceDistance'];
 						if( cat['distanceUnit'] != displayUnits )
 							distanceRace *= (displayUnits == 'km' ? 1.60934 : 0.621371);
@@ -1873,7 +1873,7 @@ function GeoAnimation()
 						else
 							distanceCur = distanceLap * (flr + this.iLapDistance - 1 + lapRatio);
 					}
-					else if( cat['raceDistance'] && leaderRaceTime[0] != leaderRaceTime.back() ) {
+					else if( cat['raceDistance'] && leaderRaceTimes[0] != leaderRaceTimes.back() ) {
 						distanceRace = cat['raceDistance'];
 						if( cat['distanceUnit'] != displayUnits )
 							distanceRace *= (displayUnits == 'km' ? 1.60934 : 0.621371);

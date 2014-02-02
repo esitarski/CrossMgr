@@ -191,7 +191,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.thumbs.SetThumbOutline( TC.THUMB_OUTLINE_FULL )
 		self.thumbs._scrolled.filePrefix = '#######################'
 		self.thumbs._scrolled.ListDirectory = types.MethodType(ListDirectory, self.thumbs._scrolled)
-		self.mainPhoto = wx.StaticBitmap( self.splitter, wx.ID_ANY, style = wx.BORDER_SUNKEN )
+		self.mainPhoto = wx.StaticBitmap( self.splitter, style = wx.BORDER_SUNKEN )
 		
 		self.splitter.SetMinimumPaneSize( 140 )
 		self.splitter.SplitVertically( self.thumbs, self.mainPhoto, 140 )

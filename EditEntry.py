@@ -192,7 +192,7 @@ class InsertNumberDialog( wx.Dialog ):
 		self.entry = entry
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
 		
-		self.numEdit = wx.lib.intctrl.IntCtrl( self, wx.ID_ANY, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
+		self.numEdit = wx.lib.intctrl.IntCtrl( self, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
 		
 		self.okBtn = wx.Button( self, wx.ID_OK )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )

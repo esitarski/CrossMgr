@@ -565,7 +565,7 @@ if __name__ == '__main__':
 	boldFont = wx.FFontFromPixelSize((0,32), wx.DEFAULT, flags=wx.FONTFLAG_BOLD)	
 	
 	for i, (label, colour, boldFlag) in enumerate(btnDefs):
-		btn = RoundButton(mainWin, wx.ID_ANY, label, size=(btnSize, btnSize))
+		btn = RoundButton(mainWin, label=label, size=(btnSize, btnSize))
 		btn.SetBackgroundColour( wx.WHITE )
 		btn.SetForegroundColour( colour )
 		

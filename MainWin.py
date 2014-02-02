@@ -588,7 +588,7 @@ class MainWin( wx.Frame ):
 		idCur = wx.NewId()
 		self.helpMenu.Append( idCur, _("Help &Search..."), _("Search Help...") )
 		self.Bind(wx.EVT_MENU, self.menuHelpSearch, id=idCur )
-		self.helpSearch = HelpSearchDialog( self, wx.ID_ANY, title=_('Help Search') )
+		self.helpSearch = HelpSearchDialog( self, title=_('Help Search') )
 		self.helpMenu.Append( wx.ID_HELP, _("&Help..."), _("Help about CrossMgr...") )
 		self.Bind(wx.EVT_MENU, self.menuHelp, id=wx.ID_HELP )
 		idCur = wx.NewId()
@@ -646,7 +646,7 @@ class MainWin( wx.Frame ):
 		self.Bind(EVT_CHIP_READER, self.handleChipReaderEvent)
 		self.lastPhotoTime = datetime.datetime.now()
 		
-		self.photoDialog = PhotoViewerDialog( self, wx.ID_ANY, _("PhotoViewer"), size=(600,400) )
+		self.photoDialog = PhotoViewerDialog( self, title = _("PhotoViewer"), size=(600,400) )
 
 	def handleChipReaderEvent( self, event ):
 		race = Model.race

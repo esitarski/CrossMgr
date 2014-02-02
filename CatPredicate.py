@@ -201,7 +201,7 @@ class CategoryPredicateDialog( wx.Dialog ):
 		bs.Add( genderLabel, pos=(row,0), span=(1,1),
 			border = border, flag=wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 			
-		self.gender = wx.Choice( self, wx.ID_ANY, choices=['Open', 'Men', 'Women'] )
+		self.gender = wx.Choice( self, choices=['Open', 'Men', 'Women'] )
 		bs.Add( self.gender, pos=(row,1), span=(1,1),
 			border = border, flag=wx.RIGHT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL|wx.EXPAND )
 		self.gender.SetSelection( 0 )

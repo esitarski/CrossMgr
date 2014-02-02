@@ -143,7 +143,7 @@ class JChipSetupDialog( wx.Dialog ):
 		#self.ipaddr = masked.IpAddrCtrl( self, -1, style = wx.TE_PROCESS_TAB | wx.TE_READONLY )
 		#self.ipaddr.SetValue( HOST )
 		ips = GetAllIps()
-		self.ipaddr = wx.Choice( self, wx.ID_ANY, choices = ips )
+		self.ipaddr = wx.Choice( self, choices = ips )
 		for i, ip in enumerate(ips):
 			if ip == HOST:
 				self.ipaddr.SetSelection( i )
