@@ -241,7 +241,7 @@ class ColGrid(Grid.Grid):
 		"""
 
 		# The base class must be initialized *first*
-		Grid.Grid.__init__(self, parent, -1, style = style)
+		Grid.Grid.__init__(self, parent, style = style)
 		self._table = ColTable()
 		self.SetTable( self._table )
 		self.Set( data, colnames, textColour, backgroundColour )

@@ -104,7 +104,7 @@ def GetNamedBitmap(name):
 
 
 class ImageView(wx.Window):
-    def __init__(self, parent, id=-1, pos=wx.DefaultPosition, size=wx.DefaultSize, 
+    def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, 
                  style=wx.BORDER_SUNKEN
                  ):
         wx.Window.__init__(self, parent, id, pos, size, style=style)
@@ -384,7 +384,7 @@ class ImagePanel(wx.Panel):
 
 class ImageDialog(wx.Dialog):
     def __init__(self, parent, set_dir = None):
-        wx.Dialog.__init__(self, parent, -1, "Image Browser", wx.DefaultPosition, (400, 400),style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        wx.Dialog.__init__(self, parent, wx.ID_ANY, "Image Browser", wx.DefaultPosition, (400, 400),style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
 
         self.set_dir = os.getcwd()
         self.set_file = None
