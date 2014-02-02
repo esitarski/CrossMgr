@@ -130,9 +130,8 @@ class PhotoPrintout(wx.Printout):
 class PhotoViewerDialog( wx.Dialog ):
 	ShowAllPhotos = -1
 
-	def __init__(
-			self, parent, ID, title='Photo Viewer', size=wx.DefaultSize, pos=wx.DefaultPosition, 
-			style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER ):
+	def __init__( self, parent, ID = wx.ID_ANY, title='Photo Viewer', size=wx.DefaultSize, pos=wx.DefaultPosition, 
+					style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER ):
 
 		# Instead of calling wx.Dialog.__init__ we precreate the dialog
 		# so we can set an extra style that must be set before
