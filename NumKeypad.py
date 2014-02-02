@@ -279,7 +279,7 @@ class NumKeypad( wx.Panel ):
 		label = wx.StaticText( panel, label = _("Est. Leader Finish"))
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
-		self.estLeaderTime = wx.StaticText( panel, wx.ID_ANY, '' )
+		self.estLeaderTime = wx.StaticText( panel )
 		self.estLeaderTime.SetFont( font )
 		gbs.Add( self.estLeaderTime, pos=(rowCur, colCur+1), span=(1, 1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
@@ -310,13 +310,13 @@ class NumKeypad( wx.Panel ):
 		self.hbClockPhoto.Add( label, flag=wx.ALIGN_CENTRE_VERTICAL )
 		
 		gbs.Add( self.hbClockPhoto, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
-		self.clockTime = wx.StaticText( panel, label = u'' )
+		self.clockTime = wx.StaticText( panel )
 		self.clockTime.SetFont( font )
 		gbs.Add( self.clockTime, pos=(rowCur, colCur+1), span=(1, 1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
 		
 		rowCur += 1
-		self.message = wx.StaticText( panel, label = '' )
+		self.message = wx.StaticText( panel )
 		self.message.SetFont( font )
 		self.message.SetDoubleBuffered( True )
 		gbs.Add( self.message, pos=(rowCur, colCur), span=(1, 2), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_CENTRE )

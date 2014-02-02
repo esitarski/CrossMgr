@@ -76,7 +76,7 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 
 		self.vbs = wx.BoxSizer(wx.VERTICAL)
 		
-		self.title = wx.StaticText( self, label = '', style=wx.ALIGN_LEFT )
+		self.title = wx.StaticText( self, style=wx.ALIGN_LEFT )
 		self.title.SetFont( wx.FontFromPixelSize( wx.Size(0,24), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		
 		self.captureButton = wx.ToggleButton( self, label = _('Reset Photo Capture') )

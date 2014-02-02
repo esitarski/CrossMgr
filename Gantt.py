@@ -33,7 +33,7 @@ class Gantt( wx.Panel ):
 		self.categoryLabel = wx.StaticText( self, label = _('Category:') )
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
-		self.statsLabel = wx.StaticText( self, label = u'' )
+		self.statsLabel = wx.StaticText( self )
 		
 		self.hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.categoryChoice, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )

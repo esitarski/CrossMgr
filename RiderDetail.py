@@ -45,7 +45,7 @@ class AdjustTimeDialog( wx.Dialog ):
 		self.startTime.Bind( wx.EVT_TEXT, self.updateRideTime )
 		self.finishTime = HighPrecisionTimeEdit( self, allow_none = not bool(ft), seconds = ft )
 		self.finishTime.Bind( wx.EVT_TEXT, self.updateRideTime )
-		self.rideTime = wx.StaticText( self, label = u'' )
+		self.rideTime = wx.StaticText( self )
 		self.penaltyTime = HighPrecisionTimeEdit( self, allow_none = True, seconds = ttPenalty )
 		self.note = wx.TextCtrl( self, size=(400, -1), value = getattr(self.rider, 'ttNote', '') )
 		self.updateRideTime( None )
@@ -179,14 +179,14 @@ class RiderDetail( wx.Panel ):
 		self.Bind( wx.EVT_BUTTON, self.onEditRider, self.editRiderBtn )
 		gbs.Add( self.editRiderBtn, pos=(row, 3), span=(1,1), flag=wx.EXPAND )
 		
-		self.riderName = wx.StaticText( self, wx.ID_ANY, '' )
+		self.riderName = wx.StaticText( self )
 		gbs.Add( self.riderName, pos=(row, 4), span=(1,1) )
 		
 		row += 1
 		
 		self.nameName = wx.StaticText( self, label = _('Name: ') )
 		gbs.Add( self.nameName, pos=(row,0), span=(1,1), flag=labelAlign )
-		self.riderName = wx.StaticText( self, wx.ID_ANY, '' )
+		self.riderName = wx.StaticText( self )
 		self.riderName.SetDoubleBuffered( True )
 		gbs.Add( self.riderName, pos=(row,1), span=(1,4), flag=wx.EXPAND )
 		
@@ -199,7 +199,7 @@ class RiderDetail( wx.Panel ):
 		
 		self.teamName = wx.StaticText( self, label = _('Team: ') )
 		gbs.Add( self.teamName, pos=(row,0), span=(1,1), flag=labelAlign )
-		self.riderTeam = wx.StaticText( self, label = u'' )
+		self.riderTeam = wx.StaticText( self )
 		self.riderTeam.SetDoubleBuffered( True )
 		gbs.Add( self.riderTeam, pos=(row,1), span=(1,4), flag=wx.EXPAND )
 		
@@ -213,7 +213,7 @@ class RiderDetail( wx.Panel ):
 		
 		self.tagsName = wx.StaticText( self, label = _('Tag(s): ') )
 		gbs.Add( self.tagsName, pos=(row,0), span=(1,1), flag=labelAlign )
-		self.tags = wx.StaticText( self, label = u'' )
+		self.tags = wx.StaticText( self )
 		self.tags.SetDoubleBuffered( True )
 		gbs.Add( self.tags, pos=(row,1), span=(1,4), flag=wx.EXPAND )
 
@@ -254,7 +254,7 @@ class RiderDetail( wx.Panel ):
 		
 		self.noteName = wx.StaticText( self, label =  _('Note:') )
 		gbs.Add( self.noteName, pos=(row,5), span=(1,1), flag=labelAlign )
-		self.note = wx.StaticText( self, label = '' )
+		self.note = wx.StaticText( self )
 		gbs.Add( self.note, pos=(row,6), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL )
 		row += 1
 		

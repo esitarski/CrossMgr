@@ -225,19 +225,19 @@ class SummaryPage(wiz.WizardPageSimple):
 		rows = 0
 		
 		self.fileLabel = wx.StaticText( self, label = _('Excel File:') )
-		self.fileName = wx.StaticText( self, label = u'' )
+		self.fileName = wx.StaticText( self )
 		rows += 1
 
 		self.sheetLabel = wx.StaticText( self, label = _('Sheet Name:') )
-		self.sheetName = wx.StaticText( self, label = u'' )
+		self.sheetName = wx.StaticText( self )
 		rows += 1
 
 		self.riderLabel = wx.StaticText( self, label = _('Rider Data Entries:') )
-		self.riderNumber = wx.StaticText( self, label = u'' )
+		self.riderNumber = wx.StaticText( self )
 		rows += 1
 
 		self.statusLabel = wx.StaticText( self, label = _('Status:') )
-		self.statusName = wx.StaticText( self, label = u'' )
+		self.statusName = wx.StaticText( self )
 		rows += 1
 
 		self.errorLabel = wx.StaticText( self, label =  _('Errors:') )

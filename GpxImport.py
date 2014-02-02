@@ -144,11 +144,11 @@ class SummaryPage(wiz.WizardPageSimple):
 		rows = 0
 		
 		self.fileLabel = wx.StaticText( self, label = _('GPX File:') )
-		self.fileName = wx.StaticText( self, label = '' )
+		self.fileName = wx.StaticText(self )
 		rows += 1
 
 		self.numCoordsLabel = wx.StaticText( self, label = _('Number of Coords:') )
-		self.numCoords = wx.StaticText( self, label = '' )
+		self.numCoords = wx.StaticText(self )
 		rows += 1
 
 		self.distanceLabel = wx.StaticText( self, label = _('Lap Length:') )
@@ -163,7 +163,7 @@ class SummaryPage(wiz.WizardPageSimple):
 		self.courseType = wx.TextCtrl(self, style=wx.TE_READONLY)
 		rows += 1
 
-		self.setCategoryDistanceLabel = wx.StaticText( self, label = '' )
+		self.setCategoryDistanceLabel = wx.StaticText( self )
 		self.setCategoryDistanceCheckbox = wx.CheckBox( self, label = _('Set Category Distances to GPX Lap Length') )
 		self.setCategoryDistanceCheckbox.SetValue( True )
 		rows += 1

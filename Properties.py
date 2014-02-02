@@ -123,15 +123,15 @@ class Properties( wx.Panel ):
 		rows += 1
 
 		self.fileNameLabel = wx.StaticText( self, label = _('File Name: ') )
-		self.fileName = wx.StaticText( self, label = u'' )
+		self.fileName = wx.StaticText( self )
 		rows += 1
 
 		self.excelLabel = wx.StaticText( self, label = _('Excel Sheet: ') )
-		self.excelName = wx.StaticText( self, label = u'' )
+		self.excelName = wx.StaticText( self )
 		rows += 1
 
 		self.categoriesFileLabel = wx.StaticText( self, label = _('Categories Imported From: ') )
-		self.categoriesFile = wx.StaticText( self, label = u'' )
+		self.categoriesFile = wx.StaticText( self )
 		rows += 1
 
 		self.updateFileName()

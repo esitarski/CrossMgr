@@ -195,19 +195,19 @@ class SummaryPage(wiz.WizardPageSimple):
 		rows = 0
 		
 		self.fileLabel = wx.StaticText( self, label = _('Excel File:') )
-		self.fileName = wx.StaticText( self, label = u'' )
+		self.fileName = wx.StaticText( self )
 		rows += 1
 
 		self.sheetLabel = wx.StaticText( self, label = _('Sheet Name:') )
-		self.sheetName = wx.StaticText( self, label = u'' )
+		self.sheetName = wx.StaticText( self )
 		rows += 1
 
 		self.riderLabel = wx.StaticText( self, label = _('Rider Start Times:') )
-		self.riderNumber = wx.StaticText( self, label = u'' )
+		self.riderNumber = wx.StaticText( self )
 		rows += 1
 
 		self.statusLabel = wx.StaticText( self, label = _('Status:') )
-		self.statusName = wx.StaticText( self, label = u'' )
+		self.statusName = wx.StaticText( self )
 		rows += 1
 
 		fbs = wx.FlexGridSizer( rows=rows, cols=2, hgap=5, vgap=2 )
