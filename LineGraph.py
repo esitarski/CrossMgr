@@ -232,11 +232,11 @@ class LineGraph(wx.PyControl):
 			pen = wx.Pen( colours[i%len(colours)], 6 )
 			pen.SetCap(wx.CAP_ROUND)
 			dc.SetPen(pen)
-			points = [None] * len(s)
+			points = []
 			x = xLeft
-			for j, d in enumerate(s):
+			for d in s:
 				y = yBottom - (d - dataMinRange) * dFactor
-				points[j] = wx.Point(x, y)
+				points.append( wx.Point(x, y) )
 				x += thick
 			if points:
 				dc.DrawLines( points );
