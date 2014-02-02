@@ -557,10 +557,11 @@ class RiderDetail( wx.Panel ):
 			
 		with Model.LockRace() as race:
 			if not num in race:
+				self.setRider( None )
+				self.refresh()
 				return
 			
-		if Utils.MessageOKCancel( self, _("Confirm Delete rider {} and all associated entries.").format(num),
-									_("Delete Rider") ):
+		if Utils.MessageOKCancel( self, _("Confirm Delete rider {} and all associated entries.").format(num), _("Delete Rider") ):
 			undo.pushState()
 			with Model.LockRace() as race:
 				race.deleteRider( num )
@@ -1288,6 +1289,7 @@ class RiderDetailDialog( wx.Dialog ):
 		self.riderDetail.commit()
 		self.EndModal( wx.ID_OK )
 
+@logCall
 def ShowRiderDetailDialog( parent, num = None ):
 	dlg = RiderDetailDialog( parent, num )
 	if Utils.getMainWin():

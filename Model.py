@@ -488,7 +488,7 @@ class Entry(object):
 		return (self.num<<16) ^ (self.lap<<8) ^ hash(self.t) ^ ((1<<20) if self.interp else 0)
 
 	def __repr__( self ):
-		return u'Entry( num={}, lap={}, interp={}, t={} )'.format(self.num, self.lap, self.interp, self.t)
+		return u'Entry(num={}, lap={}, interp={}, t={})'.format(self.num, self.lap, self.interp, self.t)
 
 class Rider(object):
 	# Rider Status.

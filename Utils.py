@@ -469,10 +469,14 @@ def disable_stdout_buffering():
 	os.dup2(temp_fd, fileno)
 	os.close(temp_fd)
 	sys.stdout = os.fdopen(fileno, "w", 0)
-		
+
 def logCall( f ):
+	def _getstr( x ):
+		return u'{}'.format(x) if not isinstance(x, wx.Object) else u'<<{}>>'.format(x.__class__.__name__)
+	
 	def new_f( *args, **kwargs ):
-		writeLog( 'call: {}'.format(f.__name__) )
+		parameters = [_getstr(a) for a in args] + [ u'{}={}'.format( key, _getstr(value) ) for key, value in kwargs.iteritems() ]
+		writeLog( 'call: {}({})'.format(f.__name__, removeDiacritic(u', '.join(parameters))) )
 		return f( *args, **kwargs)
 	return new_f
 	
