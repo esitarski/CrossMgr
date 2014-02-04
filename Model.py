@@ -319,7 +319,7 @@ class Category(object):
 	
 	@property
 	def fullname( self ):
-		return (u'%s (%s)' % (self.name, getattr(self, 'gender', 'Open'))).strip()
+		return u'%s (%s)' % (self.name.strip(), getattr(self, 'gender', 'Open'))
 	
 	@property
 	def firstLapRatio( self ):
@@ -1242,7 +1242,7 @@ class Race(object):
 			return None
 
 		if category:
-			entries = [e for e in entries if e.lap <= 2 and self.getCategory(e.num) == category]
+			entries = [e for e in entries if e.lap <= 2 and self.inCategory(e.num, category)]
 		else:
 			entries = [e for e in entries if e.lap <= 2]
 			

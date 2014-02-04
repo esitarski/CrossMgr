@@ -501,11 +501,12 @@ and remove them from other categories.''').format(category.name),
 		if len(startOffset) < len('00:00:00'):
 			startOffset = '00:' + startOffset
 			
+		gender = gender if gender in ['Men', 'Women'] else 'Open'
 		self.grid.SetRowLabelValue( r, u'' )
 		self.grid.SetCellValue( r, self.iCol['active'], '1' if active else '0' )
 		self.grid.SetCellValue( r, self.iCol['catType'], unicode(catType) )
 		self.grid.SetCellValue( r, self.iCol['name'], name )
-		self.grid.SetCellValue( r, self.iCol['gender'], gender if gender in ['Men', 'Women'] else 'Open' )
+		self.grid.SetCellValue( r, self.iCol['gender'], gender )
 		self.grid.SetCellValue( r, self.iCol['catStr'], catStr )
 		self.grid.SetCellValue( r, self.iCol['startOffset'], startOffset )
 		self.grid.SetCellValue( r, self.iCol['numLaps'], '{}'.format(numLaps) if numLaps else '' )
@@ -518,13 +519,13 @@ and remove them from other categories.''').format(category.name),
 		self.grid.SetCellValue( r, self.iCol['uploadFlag'], '1' if uploadFlag else '0' )
 		self.grid.SetCellValue( r, self.iCol['seriesFlag'], '1' if seriesFlag else '0' )
 		
-		# Get the 80% time cutoff.
-		if not active or not Model.race:
+		race = Model.race
+		category = race.categories.get(u'{} ({})'.format(name.strip(), gender), None)
+		if not category or category.catType != Model.Category.CatWave:
 			return
 			
-		race = Model.race
-		category = race.categories.get(name, None)
-		if not category:
+		# Get the 80% time cutoff.
+		if not active or not Model.race:
 			return
 			
 		rule80Time = race.getRule80CountdownTime( category )
@@ -659,6 +660,7 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="CrossMan", size=(1000,400))
 	Model.setRace( Model.Race() )
 	race = Model.getRace()
+	race._populate()
 	race.setCategories( [
 							{'name':'test1', 'catStr':'100-199,999','gender':'Men'},
 							{'name':'test2', 'catStr':'200-299,888', 'startOffset':'00:10', 'distance':'6'},
