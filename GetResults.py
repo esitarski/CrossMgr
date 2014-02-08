@@ -57,6 +57,18 @@ class RiderResult( object ):
 		self.raceTimes	= raceTimes
 		self.interp		= interp
 		
+	def full_name( self ):
+		names = []
+		try:
+			names.append( self.LastName.upper() )
+		except AttributeError:
+			pass
+		try:
+			names.append( self.FirstName )
+		except AttributeError:
+			pass
+		return u', '.join( names )
+		
 	def __repr__( self ):
 		return str(self.__dict__)
 		

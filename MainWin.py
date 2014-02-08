@@ -52,6 +52,7 @@ from FtpWriteFile		import realTimeFtpPublish
 from SetAutoCorrect		import SetAutoCorrectDialog
 from DNSManager			import DNSManagerDialog
 from USACExport			import USACExport
+from UCIExport			import UCIExport
 from CrossResultsExport	import CrossResultsExport
 from WebScorerExport	import WebScorerExport
 from HelpSearch			import HelpSearchDialog
@@ -359,6 +360,13 @@ class MainWin( wx.Frame ):
 							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'usac-icon.png'), wx.BITMAP_TYPE_PNG )
 		)
 		self.Bind(wx.EVT_MENU, self.menuExportUSAC, id=idCur )
+
+		idCur = wx.NewId()
+		AppendMenuItemBitmap( self.publishMenu, idCur,
+							_("Publish Results in UCI (&Infostrada) Excel Format..."), _("Publish Results in UCI (&Infostrada) Excel Format"),
+							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'infostrada-icon.png'), wx.BITMAP_TYPE_PNG )
+		)
+		self.Bind(wx.EVT_MENU, self.menuExportUCI, id=idCur )
 
 		self.publishMenu.AppendSeparator()
 		
@@ -2331,6 +2339,44 @@ Continue?''' % fName, 'Simulate a Race' ):
 		sheetCur = wb.add_sheet( 'Combined Results' )
 		USACExport( sheetCur )
 		
+		try:
+			wb.save( xlFName )
+			webbrowser.open( xlFName, new = 2, autoraise = True )
+			Utils.MessageOK(self, _('Excel file written to:\n\n   {}').format(xlFName), _('Excel Write'))
+		except IOError:
+			Utils.MessageOK(self,
+						_('Cannot write "{}".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.').format(xlFName),
+						_('Excel File Error'), iconMask=wx.ICON_ERROR )
+	
+	@logCall
+	def menuExportUCI( self, event ):
+		self.commit()
+		if self.fileName is None or len(self.fileName) < 4:
+			return
+
+		xlFName = self.fileName[:-4] + '-UCI.xls'
+		dlg = wx.DirDialog( self, _('Folder to write "{}"').format(os.path.basename(xlFName)),
+						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
+		ret = dlg.ShowModal()
+		dName = dlg.GetPath()
+		dlg.Destroy()
+		if ret != wx.ID_OK:
+			return
+
+		xlFName = os.path.join( dName, os.path.basename(xlFName) )
+
+		wb = xlwt.Workbook()
+		raceCategories = getRaceCategories()
+		for catName, category in raceCategories:
+			if catName == 'All':
+				continue
+			if not category.uploadFlag:
+				continue
+			sheetName = re.sub('[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', Utils.toAscii(catName))
+			sheetName = sheetName[:31]
+			sheetCur = wb.add_sheet( sheetName )
+			UCIExport( sheetCur, category )
+
 		try:
 			wb.save( xlFName )
 			webbrowser.open( xlFName, new = 2, autoraise = True )
