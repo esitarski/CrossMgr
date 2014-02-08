@@ -315,7 +315,7 @@ class MainWin( wx.Frame ):
 
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
-							_("&Publish Results as Excel..."), _("Publish Results as an Excel Spreadsheet (.xls)"),
+							_("&Excel Publish..."), _("Publish Results as an Excel Spreadsheet (.xls)"),
 							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'excel-icon.png'), wx.BITMAP_TYPE_PNG )
 		)
 		self.Bind(wx.EVT_MENU, self.menuPublishAsExcel, id=idCur )
@@ -324,14 +324,14 @@ class MainWin( wx.Frame ):
 		
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
-							_("Publish Results as &HTML..."), _("Publish Results as HTML (.html)"),
+							_("&HTML Publish..."), _("Publish Results as HTML (.html)"),
 							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'html-icon.png'), wx.BITMAP_TYPE_PNG )
 		)
 		self.Bind(wx.EVT_MENU, self.menuPublishHtmlRaceResults, id=idCur )
 
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
-							_("Publish HTML Results with FTP..."), _("Publish HTML Results to FTP"),
+							_("&Ftp HTML Publish..."), _("Publish HTML Results to FTP"),
 							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'ftp-icon.png'), wx.BITMAP_TYPE_PNG )
 		)
 		self.Bind(wx.EVT_MENU, self.menuExportHtmlFtp, id=idCur )
@@ -340,14 +340,14 @@ class MainWin( wx.Frame ):
 		
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
-							_("Publish Results to Cross&Results.com..."), _("Publish Results to the CrossResults.com web site"),
+							_("&Cross&Results.com Publish..."), _("Publish Results to the CrossResults.com web site"),
 							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'crossresults-icon.png'), wx.BITMAP_TYPE_PNG )
 		)
 		self.Bind(wx.EVT_MENU, self.menuExportCrossResults, id=idCur )
 
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
-							_("Publish Results in WebScorer.com Format..."), _("Publish Results in WebScorer.com format"),
+							_("&WebScorer.com Publish..."), _("Publish Results in WebScorer.com format"),
 							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'webscorer-icon.png'), wx.BITMAP_TYPE_PNG )
 		)
 		self.Bind(wx.EVT_MENU, self.menuExportWebScorer, id=idCur )
@@ -356,14 +356,14 @@ class MainWin( wx.Frame ):
 		
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
-							_("Publish Results in &USAC Excel Format..."), _("Publish Results in USAC Excel Format"),
+							_("&USAC Excel Publish..."), _("Publish Results in USAC Excel Format"),
 							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'usac-icon.png'), wx.BITMAP_TYPE_PNG )
 		)
 		self.Bind(wx.EVT_MENU, self.menuExportUSAC, id=idCur )
 
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
-							_("Publish Results in UCI (&Infostrada) Excel Format..."), _("Publish Results in UCI (&Infostrada) Excel Format"),
+							_("UCI (&Infostrada) Excel Publish..."), _("Publish Results in UCI (&Infostrada) Excel Format"),
 							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'infostrada-icon.png'), wx.BITMAP_TYPE_PNG )
 		)
 		self.Bind(wx.EVT_MENU, self.menuExportUCI, id=idCur )
@@ -372,7 +372,7 @@ class MainWin( wx.Frame ):
 		
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
-							_("Publish Results for &Facebook (as PNG)..."), _("Publish Results as PNG files for posting on Facebook"),
+							_("&Facebook PNG Publish..."), _("Publish Results as PNG files for posting on Facebook"),
 							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'facebook-icon.png'), wx.BITMAP_TYPE_PNG )
 		)
 		self.Bind(wx.EVT_MENU, self.menuPrintPNG, id=idCur )

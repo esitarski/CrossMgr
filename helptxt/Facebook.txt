@@ -4,14 +4,22 @@
 
 Facebook does not allow any other content than photos - no html files, and no pdf files.
 
-Consider these four methods to publish CrossMgr results to Facebook:
+The key problem with images is that search engines (Google, Bing, Yahoo, etc.) cannot index them.  This makes it much harder for anyone to find their results from a web search.
+
+A graphic cannot be searched in the browser with Ctrl+f.  This makes it harder for riders to find their names in the results page.
+
+At higher magnification, a graphic appears "pixelated" (blurry).  This does not look nice, especially when printed.
+
+Publishing images should be considered a "method of last resort".
+
+Consider these options:
 
 1. Post the CrossMgr HTML output in [pastehtml](www.pastehtml.com), then link to that from Facebook
 1. Post the CrossMgr HTML output to [dropbox](www.dropbox.com), then link to that from Facebook
 1. Create a pdf file from CrossMgr and post it to [Scribd](www.scribd.com), then link to that from Facebook
-1. Generate graphics files (png) from CrossMgr, and drag-and-drop those files directly to Facebook (not recommended)
+1. Finally, generate graphics files (png) from CrossMgr, and drag-and-drop those files directly to Facebook
 
-All methods are easy but each has its advantages and disadvantages.  By investing a small amount of time, you can get higher quality.
+All methods are easy but each has its advantages and disadvantages.  By investing a small amount of time, you can get higher quality results that are easier for your riders to find.
 
 ## Post the CrossMgr HTML output to [pastehtml](www.pastehtml.com), then link to that page from Facebook
 
@@ -58,4 +66,4 @@ Log into Facebook.  Select "Add Photos/video".  On your computer, go to the "Res
 
 **Advantages:** "quickest and dirtiest" way to post CrossMgr results to Facebook.  No additional logins or links to deal with.
 
-**Disadvantages:**  because the results files are in a graphic format, they are neither dynamic nor searchable.  They cannot be searched with Ctrl-f, and none of the search engines (like Google) can search them.  The graphics files are also very large compared to html or pdf files.  The graphics look "pixelated" at higher magnification and blurry when printed.
+**Disadvantages:**  because the results files are in a graphic format, they are neither dynamic nor searchable.  They cannot be searched with Ctrl-f, and none of the search engines (like Google) can index them.  The graphics files are also very large compared to html or pdf files.  The graphics look "pixelated" at higher magnification and blurry when printed.
