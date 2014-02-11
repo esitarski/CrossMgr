@@ -477,10 +477,11 @@ class RiderDetail( wx.Panel ):
 		except:
 			return
 			
-		if not Model.race or num not in Model.race:
+		race = Model.race
+		if not race or num not in race:
 			return
 			
-		rider = Model.race.riders[num]
+		rider = race.riders[num]
 			
 		times = [t for t in rider.times]
 		if len(times) < 2:
@@ -500,12 +501,11 @@ class RiderDetail( wx.Panel ):
 			times[0] = waveCategory.getStartOffsetSecs()
 		tNewLast = times[-1] + times[-1] - times[-2]
 				
-		with Model.LockRace() as race:
-			race.numTimeInfo.add( num, tNewLast )
-			race.addTime( num, tNewLast )
-			race.setChanged()
-			self.visibleRow = self.grid.GetNumberRows()
-			
+		race.numTimeInfo.add( num, tNewLast )
+		race.addTime( num, tNewLast )
+		race.setChanged()
+		self.visibleRow = self.grid.GetNumberRows()
+		
 		wx.CallAfter( self.refresh )
 	
 	def OnPopupNote( self, event ):
