@@ -373,16 +373,16 @@ class RiderDetail( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(wx.NewId(), _('Pull After Lap...'),	_('Pull after Lap'),	self.OnPopupPull, allCases),
-				(wx.NewId(), _('DNF After Lap...'),		_('DNF after Lap'),	self.OnPopupDNF, allCases),
+				(wx.NewId(), _('Pull After Lap...'),	_('Pull after lap'),	self.OnPopupPull, allCases),
+				(wx.NewId(), _('DNF After Lap...'),		_('DNF after lap'),	self.OnPopupDNF, allCases),
 				(None, None, None, None, None),
 				(wx.NewId(), _('Correct...'),			_('Change number or lap time...'),	self.OnPopupCorrect, interpCase),
 				(wx.NewId(), _('Shift...'),				_('Move lap time earlier/later...'),	self.OnPopupShift, interpCase),
 				(wx.NewId(), _('Delete...'),			_('Delete lap time...'),	self.OnPopupDelete, nonInterpCase),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Add Missing Last Lap'),	_('Add Missing Last Lap'),	self.OnPopupAddMissingLastLap, allCases),
+				(wx.NewId(), _('Add Missing Last Lap'),	_('Add missing last lap'),	self.OnPopupAddMissingLastLap, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Note...'),				_('Add/Edit Lap Note'),	self.OnPopupNote, nonInterpCase),
+				(wx.NewId(), _('Note...'),				_('Add/Edit lap note'),	self.OnPopupNote, nonInterpCase),
 			]
 			for p in self.popupInfo:
 				if p[0]:

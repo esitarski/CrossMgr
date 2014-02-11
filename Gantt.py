@@ -95,11 +95,13 @@ class Gantt( wx.Panel ):
 				(wx.NewId(), _('Pull after Lap End...'),	_('Pull after lap end'),		self.OnPopupPull, allCases),
 				(wx.NewId(), _('DNF after Lap End...'),		_('DNF after lap end'),			self.OnPopupDNF, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Note...'),					_('Add/Edit Lap Note'),			self.OnPopupLapNote, allCases),
+				(wx.NewId(), _('Note...'),					_('Add/Edit lap Note'),			self.OnPopupLapNote, allCases),
 				(None, None, None, None, None),
 				(wx.NewId(), _('Correct Lap End Time...'),	_('Change number or lap end time'),		self.OnPopupCorrect, interpCase),
 				(wx.NewId(), _('Shift Lap End Time...'),	_('Move lap end time earlier/later'),	self.OnPopupShift, interpCase),
 				(wx.NewId(), _('Delete Lap End Time...'),	_('Delete lap end time'),		self.OnPopupDelete, nonInterpCase),
+				(None, None, None, None, None),
+				(wx.NewId(), _('Add Missing Last Lap'),		_('Add missing last lap'),			self.OnPopupAddMissingLastLap, allCases),
 				(None, None, None, None, None),
 				(wx.NewId(), _('Turn off Autocorrect...'),	_('Turn off Autocorrect'),		self.OnPopupAutocorrect, allCases),
 				(None, None, None, None, None),
@@ -276,6 +278,41 @@ class Gantt( wx.Panel ):
 				race.setChanged()
 		except:
 			pass
+		wx.CallAfter( self.refresh )
+	
+	def OnPopupAddMissingLastLap( self, event ):
+		if not self.entry:
+			return
+		num = self.entry.num
+			
+		race = Model.race
+		if not race or num not in race:
+			return
+			
+		rider = race.riders[num]
+			
+		times = [t for t in rider.times]
+		if len(times) < 2:
+			return
+			
+		if rider.status != rider.Finisher:
+			Utils.MessageOK( self, _('Cannot add Last Lap unless Rider is Finisher'), _('Cannot add Last Lap') )
+			return
+				
+		undo.pushState()
+		if rider.autocorrectLaps:
+			if Utils.MessageOKCancel( self, _('Turn off Autocorrect first?'), _('Turn off Autocorrect') ):
+				rider.autocorrectLaps = False
+				
+		waveCategory = race.getCategory( num )
+		if waveCategory:
+			times[0] = waveCategory.getStartOffsetSecs()
+		tNewLast = times[-1] + times[-1] - times[-2]
+				
+		race.numTimeInfo.add( num, tNewLast )
+		race.addTime( num, tNewLast )
+		race.setChanged()
+		
 		wx.CallAfter( self.refresh )
 	
 	def OnPopupLapNote( self, event ):
