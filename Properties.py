@@ -200,20 +200,20 @@ class Properties( wx.Panel ):
 				if column == 1:
 					row += 1
 				
-		#fbs.AddMany( labelFieldFormats )
-		
 		if addEditButton:
 			hs = wx.BoxSizer( wx.HORIZONTAL )
 			
+			'''
 			self.editButton = wx.Button(self, label = _('Change Properties...'))
 			self.editButton.Bind( wx.EVT_BUTTON, self.editButtonCallback )
 			hs.Add( self.editButton, border = 8, flag = wx.TOP|wx.BOTTOM )
-			row += 1
+			'''
 			
 			self.excelButton = wx.Button(self, label = _('Link External Excel Sheet...'))
 			self.excelButton.Bind( wx.EVT_BUTTON, self.excelButtonCallback )
 			hs.Add( self.excelButton, border = 8, flag = wx.LEFT|wx.TOP|wx.BOTTOM )
 
+			row += 1
 			fbs.Add( hs, pos=(row, 1), span=(1,1) )
 		
 		fbs.AddGrowableCol( 1 )
@@ -224,6 +224,14 @@ class Properties( wx.Panel ):
 		self.editFields.extend( [self.raceCity, self.raceStateProv, self.raceCountry] )
 		
 		self.setEditable( True )
+		
+		'''
+		if addEditButton:
+			# Add a handler so that the change dialog gets opened on any keystroke.
+			for e in [e for e, column, flag in labelFieldFormats] + [self.raceCity, self.raceStateProv, self.raceCountry]:
+				if e and not isinstance(e, wx.BoxSizer):
+					e.Bind( wx.EVT_LEFT_DOWN, self.editButtonCallback )
+		'''
 	
 	def onJChipIntegration( self, event ):
 		self.autocorrectLapsDefault.SetValue( not self.jchip.GetValue() )
@@ -246,6 +254,7 @@ class Properties( wx.Panel ):
 			ChangeProperties( self )
 	
 	def setEditable( self, editable = True ):
+		'''
 		for f in self.editFields:
 			f.Enable()
 			try:
@@ -253,6 +262,7 @@ class Properties( wx.Panel ):
 			except:
 				if not editable and not isinstance(f, wx.StaticText):
 					f.Disable()
+		'''
 		if not HasPhotoFinish():
 			self.enableUSBCamera.Disable()
 			self.enableUSBCameraLabel.Disable()
@@ -284,11 +294,21 @@ class Properties( wx.Panel ):
 	def updateFileName( self ):
 		rDate = self.date.GetValue().Format(Properties.dateFormat)
 		rName = Properties.badFileCharsRE.sub( ' ', self.raceName.GetValue() ).strip()
+		rNum = self.raceNum.GetValue()
 		rMemo = Properties.badFileCharsRE.sub( ' ', self.memo.GetValue() ).strip()
-		fname = '%s-%s-r%d-%s.cmn' % (rDate, rName, self.raceNum.GetValue(), rMemo )
+		fname = '%s-%s-r%d-%s.cmn' % (rDate, rName, rNum, rMemo )
 		self.fileName.SetLabel( fname )
 	
+	def saveFileNameFields( self ):
+		for f in ['date', 'raceName', 'raceNum', 'memo']:
+			setattr(self, f + 'Original', getattr(self, f).GetValue())
+		
+	def restoreFileNameFields( self ):
+		for f in ['date', 'raceName', 'raceNum', 'memo']:
+			getattr(self, f).SetValue( getattr(self, f + 'Original') )
+	
 	def getFileName( self ):
+		self.updateFileName()
 		return self.fileName.GetLabel()
 	
 	def refresh( self ):
@@ -335,6 +355,8 @@ class Properties( wx.Panel ):
 				self.excelName.SetLabel( '' )
 			self.categoriesFile.SetLabel( os.path.basename(getattr(race, 'categoriesImportFile', '')) )
 			
+			self.saveFileNameFields()
+			
 		self.GetSizer().Layout()
 		
 	def update( self, race = None ):
@@ -371,9 +393,17 @@ class Properties( wx.Panel ):
 		if Utils.getMainWin():
 			Utils.getMainWin().record.setTimeTrialInput( race.isTimeTrial )
 		
+	def commit( self ):
+		SetNewFilename( self, self )
+		self.update()
+		Model.resetCache()
+		if Utils.getMainWin():
+			wx.CallAfter( Utils.getMainWin().writeRace )
+		wx.CallAfter( Utils.refreshForecastHistory )
+		
 class PropertiesDialog( wx.Dialog ):
 	def __init__(
-			self, parent, ID, title, size=wx.DefaultSize, pos=wx.DefaultPosition, 
+			self, parent, ID = wx.ID_ANY, title=_("Change Properties"), size=wx.DefaultSize, pos=wx.DefaultPosition, 
 			style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER,
 			showFileFields = True,
 			refreshProperties = False
@@ -385,7 +415,7 @@ class PropertiesDialog( wx.Dialog ):
 		# method.
 		pre = wx.PreDialog()
 		#pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-		pre.Create(parent, ID, title, pos, size, style)
+		pre.Create(parent, ID, title = title, pos = pos, size = size, style = style)
 
 		# This next step is the most important, it turns this Python
 		# object into the real wrapper of the dialog (instead of pre)
@@ -487,26 +517,46 @@ class PropertiesDialog( wx.Dialog ):
 		categoriesFile = self.categoriesFile.GetValue()
 		return categoriesFile if categoriesFile.endswith( '.brc' ) else None
 
+def SetNewFilename( parent, properties ):
+	mainWin = Utils.getMainWin()
+	if not mainWin:
+		return True
+		
+	dir = os.path.dirname( mainWin.fileName )
+	
+	newBaseName = properties.getFileName()
+	newFName = os.path.join( dir, newBaseName )
+	
+	success = True
+	if newFName != mainWin.fileName:
+		if Utils.MessageOKCancel(parent, _("The filename will be changed to:\n\n{}\n\nContinue?").format(newBaseName), _("Change Filename?")):
+			if os.path.exists(newFName):
+				if not Utils.MessageOKCancel(parent, _("This file already exists:\n\n{}\n\nOverwrite?").format(newFName), _("Overwrite Existing File?")):
+					properties.restoreFileNameFields()
+					success = False
+		else:
+			properties.restoreFileNameFields()
+			success = False
+	
+	newBaseName = properties.getFileName()
+	newFName = os.path.join( dir, newBaseName )
+	mainWin.fileName = newFName
+	return success
+
 def ChangeProperties( parent ):
-	propertiesDialog = PropertiesDialog( parent, -1, _("Change Properties"), showFileFields = False, refreshProperties = True, size=(600,400) )
+	propertiesDialog = PropertiesDialog( parent, showFileFields = False, refreshProperties = True, size=(600,400) )
 	propertiesDialog.properties.setEditable( True )
 	try:
 		if propertiesDialog.ShowModal() != wx.ID_OK:
 			raise NameError('User Cancel')
+			
+		if not SetNewFilename( propertiesDialog, propertiesDialog.properties ):
+			raise NameError('User Cancel')
+			
 		mainWin = Utils.getMainWin()
 		dir = os.path.dirname( mainWin.fileName )
 		
-		newBaseName = propertiesDialog.properties.getFileName()
-		newFName = os.path.join( dir, newBaseName )
-		
-		if newFName != mainWin.fileName:
-			if Utils.MessageOKCancel(parent, _("The filename will be changed to:\n\n{}\n\nContinue?").format(newBaseName), _("Change Filename?")):
-				if os.path.exists(newFName):
-					if not Utils.MessageOKCancel(parent, _("This file already exists:\n\n{}\n\nOverwrite?").format(newFName), _("Overwrite Existing File?")):
-						raise NameError('User Cancel')
-					
 		propertiesDialog.properties.update()
-		mainWin.fileName = newFName
 		Model.resetCache()
 		mainWin.writeRace()
 		Utils.refresh()
@@ -527,6 +577,6 @@ if __name__ == '__main__':
 	properties.setEditable( True )
 	properties.refresh()
 	mainWin.Show()
-	propertiesDialog = PropertiesDialog( mainWin, -1, "Properties Dialog Test", showFileFields=False, refreshProperties=True )
+	propertiesDialog = PropertiesDialog( mainWin, title = _("Properties Dialog Test"), showFileFields=False, refreshProperties=True )
 	propertiesDialog.Show()
 	app.MainLoop()
