@@ -224,14 +224,6 @@ class Properties( wx.Panel ):
 		self.editFields.extend( [self.raceCity, self.raceStateProv, self.raceCountry] )
 		
 		self.setEditable( True )
-		
-		'''
-		if addEditButton:
-			# Add a handler so that the change dialog gets opened on any keystroke.
-			for e in [e for e, column, flag in labelFieldFormats] + [self.raceCity, self.raceStateProv, self.raceCountry]:
-				if e and not isinstance(e, wx.BoxSizer):
-					e.Bind( wx.EVT_LEFT_DOWN, self.editButtonCallback )
-		'''
 	
 	def onJChipIntegration( self, event ):
 		self.autocorrectLapsDefault.SetValue( not self.jchip.GetValue() )
