@@ -386,12 +386,15 @@ class Properties( wx.Panel ):
 			Utils.getMainWin().record.setTimeTrialInput( race.isTimeTrial )
 		
 	def commit( self ):
-		SetNewFilename( self, self )
+		success = SetNewFilename( self, self )
 		self.update()
 		Model.resetCache()
-		if Utils.getMainWin():
-			wx.CallAfter( Utils.getMainWin().writeRace )
+		mainWin = Utils.getMainWin()
+		if mainWin:
+			wx.CallAfter( mainWin.writeRace )
 		wx.CallAfter( Utils.refreshForecastHistory )
+		if not success and mainWin:
+			wx.CallAfter( mainWin.showPageName,  _("Properties") )
 		
 class PropertiesDialog( wx.Dialog ):
 	def __init__(
@@ -532,6 +535,7 @@ def SetNewFilename( parent, properties ):
 	
 	newBaseName = properties.getFileName()
 	newFName = os.path.join( dir, newBaseName )
+	
 	mainWin.fileName = newFName
 	return success
 
