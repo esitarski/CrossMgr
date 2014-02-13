@@ -862,9 +862,11 @@ class RiderDetail( wx.Panel ):
 
 		if not hasattr(self, 'ganttMenuInfo'):
 			self.ganttMenuInfo = [
-				(wx.NewId(), _('Correct Lap End Time...'),	_('Change lap end time...'),			lambda event, s = self: CorrectNumber(s, s.entry), interpCase),
+				(wx.NewId(), _('Correct lap End Time...'),	_('Change lap end time...'),			lambda event, s = self: CorrectNumber(s, s.entry), interpCase),
 				(wx.NewId(), _('Shift Lap End Time...'),	_('Move lap end time earlier/later...'),lambda event, s = self: ShiftNumber(s, s.entry), interpCase),
 				(wx.NewId(), _('Delete Lap End Time...'),	_('Delete lap end time...'),			lambda event, s = self: DeleteEntry(s, s.entry), nonInterpCase),
+				(None, None, None, None, None),
+				(wx.NewId(), _('Add Missing Last Lap'),		_('Add missing last lap'),				self.OnPopupAddMissingLastLap, allCases),
 				(None, None, None, None, None),
 				(wx.NewId(), _('Note...'),					_('Add/Edit Lap Note'),					self.OnGanttPopupLapNote, allCases),
 				(None, None, None, None, None),
