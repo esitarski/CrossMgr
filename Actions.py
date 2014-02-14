@@ -343,9 +343,6 @@ class Actions( wx.Panel ):
 				if getattr(race, 'isTimeTrial', False):
 					self.chipTimingOptions.Enable( False )
 					self.chipTimingOptions.Show( False )
-				else:
-					self.chipTimingOptions.Enable( True )
-					self.chipTimingOptions.Show( True )
 					
 				self.raceIntro.SetLabel( race.getRaceIntro() )
 			self.GetSizer().Layout()
@@ -362,7 +359,7 @@ if __name__ == '__main__':
 	actions = Actions(mainWin)
 	Model.newRace()
 	Model.race.enableJChipIntegration = True
-	Model.race.isTimeTrial = True
+	Model.race.isTimeTrial = False
 	actions.refresh()
 	mainWin.Show()
 	app.MainLoop()
