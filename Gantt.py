@@ -92,16 +92,16 @@ class Gantt( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
+				(wx.NewId(), _('Add Missing Last Lap'),		_('Add missing last lap'),			self.OnPopupAddMissingLastLap, allCases),
+				(None, None, None, None, None),
 				(wx.NewId(), _('Pull after Lap End...'),	_('Pull after lap end'),		self.OnPopupPull, allCases),
 				(wx.NewId(), _('DNF after Lap End...'),		_('DNF after lap end'),			self.OnPopupDNF, allCases),
-				(None, None, None, None, None),
-				(wx.NewId(), _('Note...'),					_('Add/Edit lap Note'),			self.OnPopupLapNote, allCases),
 				(None, None, None, None, None),
 				(wx.NewId(), _('Correct Lap End Time...'),	_('Change number or lap end time'),		self.OnPopupCorrect, interpCase),
 				(wx.NewId(), _('Shift Lap End Time...'),	_('Move lap end time earlier/later'),	self.OnPopupShift, interpCase),
 				(wx.NewId(), _('Delete Lap End Time...'),	_('Delete lap end time'),		self.OnPopupDelete, nonInterpCase),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Add Missing Last Lap'),		_('Add missing last lap'),			self.OnPopupAddMissingLastLap, allCases),
+				(wx.NewId(), _('Note...'),					_('Add/Edit lap Note'),			self.OnPopupLapNote, allCases),
 				(None, None, None, None, None),
 				(wx.NewId(), _('Turn off Autocorrect...'),	_('Turn off Autocorrect'),		self.OnPopupAutocorrect, allCases),
 				(None, None, None, None, None),

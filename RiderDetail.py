@@ -373,14 +373,14 @@ class RiderDetail( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
+				(wx.NewId(), _('Add Missing Last Lap'),	_('Add missing last lap'),	self.OnPopupAddMissingLastLap, allCases),
+				(None, None, None, None, None),
 				(wx.NewId(), _('Pull After Lap...'),	_('Pull after lap'),	self.OnPopupPull, allCases),
 				(wx.NewId(), _('DNF After Lap...'),		_('DNF after lap'),	self.OnPopupDNF, allCases),
 				(None, None, None, None, None),
 				(wx.NewId(), _('Correct...'),			_('Change number or lap time...'),	self.OnPopupCorrect, interpCase),
 				(wx.NewId(), _('Shift...'),				_('Move lap time earlier/later...'),	self.OnPopupShift, interpCase),
 				(wx.NewId(), _('Delete...'),			_('Delete lap time...'),	self.OnPopupDelete, nonInterpCase),
-				(None, None, None, None, None),
-				(wx.NewId(), _('Add Missing Last Lap'),	_('Add missing last lap'),	self.OnPopupAddMissingLastLap, allCases),
 				(None, None, None, None, None),
 				(wx.NewId(), _('Note...'),				_('Add/Edit lap note'),	self.OnPopupNote, nonInterpCase),
 			]
@@ -862,16 +862,16 @@ class RiderDetail( wx.Panel ):
 
 		if not hasattr(self, 'ganttMenuInfo'):
 			self.ganttMenuInfo = [
+				(wx.NewId(), _('Add Missing Last Lap'),		_('Add missing last lap'),				self.OnPopupAddMissingLastLap, allCases),
+				(None, None, None, None, None),
+				(wx.NewId(), _('Pull after Lap End...'),	_('Pull after lap...'),					self.OnGanttPopupPull, allCases),
+				(wx.NewId(), _('DNF after Lap End...'),		_('DNF after lap...'),					self.OnGanttPopupDNF, allCases),
+				(None, None, None, None, None),
 				(wx.NewId(), _('Correct lap End Time...'),	_('Change lap end time...'),			lambda event, s = self: CorrectNumber(s, s.entry), interpCase),
 				(wx.NewId(), _('Shift Lap End Time...'),	_('Move lap end time earlier/later...'),lambda event, s = self: ShiftNumber(s, s.entry), interpCase),
 				(wx.NewId(), _('Delete Lap End Time...'),	_('Delete lap end time...'),			lambda event, s = self: DeleteEntry(s, s.entry), nonInterpCase),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Add Missing Last Lap'),		_('Add missing last lap'),				self.OnPopupAddMissingLastLap, allCases),
-				(None, None, None, None, None),
-				(wx.NewId(), _('Note...'),					_('Add/Edit Lap Note'),					self.OnGanttPopupLapNote, allCases),
-				(None, None, None, None, None),
-				(wx.NewId(), _('Pull after Lap End...'),	_('Pull after lap end...'),				self.OnGanttPopupPull, allCases),
-				(wx.NewId(), _('DNF after Lap End...'),		_('DNF after lap end...'),				self.OnGanttPopupDNF, allCases),
+				(wx.NewId(), _('Note...'),					_('Add/Edit lap Note'),					self.OnGanttPopupLapNote, allCases),
 				(None, None, None, None, None),
 				(wx.NewId(), _('Show Lap Details...'), 		_('Show Lap Details'),					self.OnGanttPopupLapDetail, allCases),
 			]
