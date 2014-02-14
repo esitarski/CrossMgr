@@ -6,8 +6,12 @@
 ## Undo (Ctrl-Z)
 Undo the last change.  Undo can be called repeatedly to keep undoing the changes in sequence.
 
+Undo is not enabled while a race is running.  This is so that you do not undo race entries.
+
 ## Redo (Ctrl-Y)
 Redo the last change.  Redo can be called repeatedly to keep redoing the last changes that were undo'ed.
+
+Redo is not enabled while a race is running.  This is so that you do not redo race entries.
 
 ## Find... (Ctrl-F)
 Open a window to allow searching for any data.  This window stays open until closed.
