@@ -1693,8 +1693,9 @@ class MainWin( wx.Frame ):
 		self.doCleanup()
 		wx.Exit()
 
-	def writeRace( self ):
-		self.commit()
+	def writeRace( self, doCommit = True ):
+		if doCommit:
+			self.commit()
 		with Model.LockRace() as race:
 			if race is not None:
 				with open(self.fileName, 'wb') as fp:

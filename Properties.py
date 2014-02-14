@@ -203,11 +203,9 @@ class Properties( wx.Panel ):
 		if addEditButton:
 			hs = wx.BoxSizer( wx.HORIZONTAL )
 			
-			'''
-			self.editButton = wx.Button(self, label = _('Change Properties...'))
-			self.editButton.Bind( wx.EVT_BUTTON, self.editButtonCallback )
-			hs.Add( self.editButton, border = 8, flag = wx.TOP|wx.BOTTOM )
-			'''
+			self.commitButton = wx.Button(self, label = _('Commit'))
+			self.commitButton.Bind( wx.EVT_BUTTON, self.commitButtonCallback )
+			hs.Add( self.commitButton, border = 8, flag = wx.TOP|wx.BOTTOM )
 			
 			self.excelButton = wx.Button(self, label = _('Link External Excel Sheet...'))
 			self.excelButton.Bind( wx.EVT_BUTTON, self.excelButtonCallback )
@@ -233,17 +231,17 @@ class Properties( wx.Panel ):
 		if mainWin:
 			mainWin.menuLinkExcel()
 	
-	def editButtonCallback( self, event ):
-		if not Model.race:
-			mainWin = Utils.getMainWin()
+	def commitButtonCallback( self, event ):
+		mainWin = Utils.getMainWin()
+		if Model.race:
+			wx.CallAfter( self.commit )
+		else:
 			if mainWin:
 				wx.CallAfter( mainWin.menuNew, event )
 			else:
 				Utils.MessageOK( self,
 					_('You must have a valid race File|Open...\nOr create one with File|New....'), _('Valid Race Required'),
 					wx.ICON_WARNING )
-		else:
-			ChangeProperties( self )
 	
 	def setEditable( self, editable = True ):
 		'''
@@ -391,7 +389,7 @@ class Properties( wx.Panel ):
 		Model.resetCache()
 		mainWin = Utils.getMainWin()
 		if mainWin:
-			wx.CallAfter( mainWin.writeRace )
+			wx.CallAfter( mainWin.writeRace, False )
 		wx.CallAfter( Utils.refreshForecastHistory )
 		if not success and mainWin:
 			wx.CallAfter( mainWin.showPageName,  _("Properties") )
