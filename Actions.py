@@ -308,6 +308,11 @@ class Actions( wx.Panel ):
 		
 		with Model.LockRace() as race:
 			if race:
+				# Adjust the chip recording options for TT.
+				if getattr(race, 'isTimeTrial', False):
+					race.resetStartClockOnFirstTag = False
+					race.skipFirstTagRead = False
+					
 				if getattr(race, 'resetStartClockOnFirstTag', True):
 					self.chipTimingOptions.SetSelection( self.iResetStartClockOnFirstTag )
 				elif getattr(race, 'skipFirstTagRead', False):
@@ -333,6 +338,15 @@ class Actions( wx.Panel ):
 					
 					self.chipTimingOptions.Enable( False )
 					self.chipTimingOptions.Show( False )
+					
+				# Adjust the time trial display options.
+				if getattr(race, 'isTimeTrial', False):
+					self.chipTimingOptions.Enable( False )
+					self.chipTimingOptions.Show( False )
+				else:
+					self.chipTimingOptions.Enable( True )
+					self.chipTimingOptions.Show( True )
+					
 				self.raceIntro.SetLabel( race.getRaceIntro() )
 			self.GetSizer().Layout()
 		
@@ -348,6 +362,7 @@ if __name__ == '__main__':
 	actions = Actions(mainWin)
 	Model.newRace()
 	Model.race.enableJChipIntegration = True
+	Model.race.isTimeTrial = True
 	actions.refresh()
 	mainWin.Show()
 	app.MainLoop()
