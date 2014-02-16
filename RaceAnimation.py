@@ -17,7 +17,7 @@ def GetAnimationData( category = None, getExternalData = False ):
 	results = GetResults( category, getExternalData )
 	
 	animationData = {}
-	ignoreFields = set(['pos', 'num', 'gap', 'laps', 'lapTimes'])
+	ignoreFields = set(['pos', 'num', 'gap', 'laps', 'lapTimes', 'full_name'])
 	with Model.LockRace() as race:
 		for rr in results:
 			info = { 'flr': race.getCategory(rr.num).firstLapRatio }
