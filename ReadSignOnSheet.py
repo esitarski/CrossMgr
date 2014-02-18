@@ -565,7 +565,7 @@ class ExcelLink( object ):
 				try:
 					try:
 						data[field] = row[col].strip()
-					except AttributeError:
+					except AttributeError as e:
 						data[field] = row[col]
 					
 					if data[field] == None:
@@ -579,7 +579,7 @@ class ExcelLink( object ):
 					elif field.startswith('Tag'):
 						try:
 							data[field] = int( data[field] )
-						except ValueError:
+						except (ValueError, TypeError) as e:
 							pass
 						try:
 							data[field] = unicode(data[field] or '').upper()
