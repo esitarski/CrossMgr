@@ -297,9 +297,12 @@ class NumKeypad( wx.Panel ):
 		self.photoCount.SetFont( font )
 		self.hbClockPhoto.Add( self.photoCount, flag=wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT|wx.ALIGN_RIGHT, border = 6 )
 		
-		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'camera.png'), wx.BITMAP_TYPE_PNG )
-		self.photoButton = wx.BitmapButton( panel, bitmap = bitmap )
-		self.photoButton.SetToolTip(wx.ToolTip(_('Show Last Photos...')))
+		self.camera_bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'camera.png'), wx.BITMAP_TYPE_PNG )
+		self.camera_broken_bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'camera_broken.png'), wx.BITMAP_TYPE_PNG )
+		
+		self.photoButton = wx.BitmapButton( panel, bitmap = self.camera_bitmap )
+		self.camera_tooltip = wx.ToolTip( _('Show Last Photos...') )
+		self.photoButton.SetToolTip( self.camera_tooltip )
 		self.photoButton.Bind( wx.EVT_BUTTON, self.onPhotoButton )
 		self.hbClockPhoto.Add( self.photoButton, flag=wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT, border = 18 )
 		if not HasPhotoFinish():
@@ -451,6 +454,12 @@ class NumKeypad( wx.Panel ):
 				if getattr(race, 'enableUSBCamera', False) and HasPhotoFinish():
 					self.photoButton.Show( True )
 					self.photoCount.SetLabel( '{}'.format(getattr(race, 'photoCount', '')) )
+					if Utils.cameraError:
+						self.photoButton.SetBitmap( self.camera_broken_bitmap )
+						self.photoButton.SetToolTip( wx.ToolTip(Utils.cameraError) )
+					else:
+						self.photoButton.SetBitmap( self.camera_bitmap )
+						self.photoButton.SetToolTip( self.camera_tooltip )
 				else:
 					self.photoButton.Show( False )
 					self.photoCount.SetLabel( '' )

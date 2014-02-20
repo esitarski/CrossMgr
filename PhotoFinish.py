@@ -105,6 +105,8 @@ def getAverageLatency():
 
 def SavePhoto( fileName, bib, raceSeconds, cameraImage ):
 	global font, brandingBitmap, photoCache
+	Utils.cameraError = None
+	
 	bitmap = wx.BitmapFromImage( PilImageToWxImage(cameraImage) )
 	
 	w, h = bitmap.GetSize()
@@ -174,6 +176,7 @@ def SavePhoto( fileName, bib, raceSeconds, cameraImage ):
 		try:
 			os.mkdir( os.path.dirname(fileName) )
 		except Exception as e:
+			Utils.cameraError = e
 			logException( e, sys.exc_info() )
 			return 0
 	
@@ -183,6 +186,7 @@ def SavePhoto( fileName, bib, raceSeconds, cameraImage ):
 		photoCache.add( os.path.basename(fileName) )
 		return 1
 	except Exception as e:
+		Utils.cameraError = e
 		logException( e, sys.exc_info() )
 		return 0
 
@@ -201,13 +205,16 @@ if Device:
 			logException( e, sys.exc_info() )
 			
 	def TakePhoto( raceFileName, bib, raceSeconds ):
+		print 'TakePhoto'
 		global camera, font
+		Utils.cameraError = None
 		
 		# Open the camera if it is not open yet.
 		if camera is None:
 			SetCameraState( True )
 			if not camera:
-				Utils.writeLog( 'TakePhoto: SetCameraState fails' )
+				Utils.cameraError = 'TakePhoto: SetCameraState fails'
+				Utils.writeLog( Utils.cameraError )
 				return 0
 		
 		# Take the picture as quickly as possible.
@@ -225,6 +232,7 @@ if Device:
 		
 	def SetCameraState( state = False ):
 		global camera, font
+		Utils.cameraError = None
 		camera = None
 		font = None
 		if state:
@@ -233,17 +241,21 @@ if Device:
 				camera = Device()
 			except Exception as e:
 				logException( e, sys.exc_info() )
+				Utils.cameraError = 'SetCameraState: {}'.format(e)
 				camera = None
 		return camera
 else:
 	def TakePhoto( raceFileName, bib, raceSeconds ):
-		Utils.writeLog( 'TakePhoto: Missing Device' )
+		Utils.cameraError = 'TakePhoto: Camera not supported on this platform.'
+		Utils.writeLog( Utils.cameraError )
 		return 0
 	def SetCameraState( state ):
-		Utils.writeLog( 'SetCameraState: Missing Device' )
+		Utils.cameraError = 'SetCameraState: Camera not supported on this platform.'
+		Utils.writeLog( Utils.cameraError )
 		return None
 	def AddBibToPhoto( raceFileName, bib, raceSeconds ):
-		Utils.writeLog(  'AddBibToPhoto: Missing Device' )
+		Utils.cameraError = 'AddBibToPhoto: Camera not supported on this platform.'
+		Utils.writeLog( Utils.cameraError )
 		return None
 
 if __name__ == '__main__':

@@ -2,6 +2,7 @@ import Model
 import Utils
 import ReadSignOnSheet
 from PhotoFinish import getPhotoDirName, ResetPhotoInfoCache, GetPhotoFName
+import VideoBuffer
 from LaunchFileBrowser import LaunchFileBrowser
 from FtpWriteFile import FtpWriteRacePhoto
 import wx
@@ -9,6 +10,7 @@ import wx.lib.agw.thumbnailctrl as TC
 import os
 import types
 import threading
+import datetime
 
 TestDir = r'C:\Users\Edward Sitarski\Documents\2013-02-07-test-r1-_Photos'
 
@@ -178,6 +180,10 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.printID = wx.NewId()
 		self.toolbar.AddSimpleTool( self.printID, bitmap, _('Print Photo...') )
 		
+		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'camera_toolbar.png'), wx.BITMAP_TYPE_PNG )
+		self.takePhotoID = wx.NewId()
+		self.toolbar.AddSimpleTool( self.takePhotoID, bitmap, _('Photo Test') )
+		
 		#self.closeButton = wx.Button( self, wx.ID_CANCEL, 'Close' )
 		#self.Bind(wx.EVT_BUTTON, self.OnClose, self.closeButton )
 		
@@ -263,7 +269,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		if Utils.mainWin and Utils.mainWin.fileName:
 			dir = getPhotoDirName( Utils.mainWin.fileName )
 		else:
-			dir = TestDir
+			dir = getPhotoDirName( VideoBuffer._getTestPhotoFileName() )
 		LaunchFileBrowser( dir )
 	
 	def OnFTPUpload( self, event ):
@@ -315,6 +321,7 @@ class PhotoViewerDialog( wx.Dialog ):
 			self.showFilesID:		self.OnLauchFileBrowser,
 			self.ftpID:				self.OnFTPUpload,
 			self.printID:			self.OnPrint,
+			self.takePhotoID:		self.OnTakePhoto,
 		}[event.GetId()]( event )
 	
 	def drawMainPhoto( self ):
@@ -357,6 +364,21 @@ class PhotoViewerDialog( wx.Dialog ):
 		
 		self.mainPhoto.SetBitmap( image.ConvertToBitmap(depth) )
 		self.mainPhoto.Refresh()
+		
+	def OnTakePhoto( self, event ):
+		testNum = 9999
+		if Model.race and Model.race.isRunning():
+			raceSeconds = Model.race.curRaceTime()
+		else:
+			t = datetime.datetime.now()
+			n = datetime.datetime.now()
+			today = datetime.datetime( year = n.year, month = n.month, day = n.day, hour = 0, minute = 0, second = 0 )
+			raceSeconds = (n - today).total_seconds()
+		success = VideoBuffer.ModelTakePhoto( testNum, raceSeconds )
+		if success:
+			self.refresh( testNum )
+		else:
+			Utils.MessageOK( self, unicode(Utils.cameraError), _('Camera Error') )
 		
 	def OnPhotoViewer( self, event ):
 		self.OnDoPhotoViewer()
@@ -406,7 +428,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		if Utils.mainWin and Utils.mainWin.fileName:
 			dir = getPhotoDirName( Utils.mainWin.fileName )
 		else:
-			dir = TestDir
+			dir = getPhotoDirName( VideoBuffer._getTestPhotoFileName() )
 		
 		if self.num == self.ShowAllPhotos:
 			self.thumbs._scrolled.filePrefix = ''
@@ -446,6 +468,7 @@ if __name__ == '__main__':
 	
 	race = Model.newRace()
 	race._populate()
+	race.enableUSBCamera = True
 
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))

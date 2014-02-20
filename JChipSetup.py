@@ -64,15 +64,15 @@ reIP = re.compile( '^[0-9.]+$' )
 
 def GetAllIps():
 	addrInfo = socket.getaddrinfo( socket.gethostname(), None )
-	ips = []
+	ips = set()
 	for a in addrInfo:
 		try:
 			ip = a[4][0]
 		except:
 			continue
 		if reIP.search(ip):
-			ips.append( ip )
-	return ips
+			ips.add( ip )
+	return sorted( ips )
 
 class JChipSetupDialog( wx.Dialog ):
 	def __init__( self, parent, id = wx.ID_ANY ):
