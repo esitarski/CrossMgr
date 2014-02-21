@@ -455,10 +455,10 @@ class NumKeypad( wx.Panel ):
 					self.photoButton.Show( True )
 					self.photoCount.SetLabel( '{}'.format(getattr(race, 'photoCount', '')) )
 					if Utils.cameraError:
-						self.photoButton.SetBitmap( self.camera_broken_bitmap )
+						self.photoButton.SetBitmapLabel( self.camera_broken_bitmap )
 						self.photoButton.SetToolTip( wx.ToolTip(Utils.cameraError) )
 					else:
-						self.photoButton.SetBitmap( self.camera_bitmap )
+						self.photoButton.SetBitmapLabel( self.camera_bitmap )
 						self.photoButton.SetToolTip( self.camera_tooltip )
 				else:
 					self.photoButton.Show( False )
