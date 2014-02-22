@@ -17,7 +17,7 @@ def findImpinjHost( impinjPort ):
 		impinjHost = '.'.join( '{}'.format(v) for v in ipTest )
 		
 		readerSocket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
-		readerSocket.settimeout( 0.5 )
+		readerSocket.settimeout( 3.0 )
 		try:
 			readerSocket.connect( (impinjHost, impinjPort) )
 		except Exception as e:
