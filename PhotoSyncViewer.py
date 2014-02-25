@@ -1,6 +1,7 @@
 import wx
 import os
 import sys
+import datetime
 import Model
 import Utils
 import PhotoFinish
