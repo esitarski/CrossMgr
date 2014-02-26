@@ -153,8 +153,12 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 	inputs = [server]
 	outputs = []
 	
+	def qLog( category, message ):
+		q.put( (category, message) )
+		Utils.writeLog( 'JChip: {}: {}'.format(category, message) )
+	
 	while inputs:
-		# q.put( ('waiting', 'for communication' ) )
+		# qLog( 'waiting', 'for communication' )
 		readable, writable, exceptional = select.select( inputs, outputs, inputs, 2 )
 		
 		try:
@@ -164,7 +168,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		except Empty:
 			pass
 
-		# q.put( ('waiting', 'len(readable)=%d, len(writable)=%d, len(exceptional)=%d' % (len(readable), len(writable), len(exceptional) ) ) )
+		# qLog( 'waiting', 'len(readable)=%d, len(writable)=%d, len(exceptional)=%d' % (len(readable), len(writable), len(exceptional) ) )
 		#----------------------------------------------------------------------------------
 		# Handle inputs.
 		#
@@ -182,14 +186,14 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				connCur.setblocking( 0 )
 				inputs.append( connCur )
 				readStr, writeStr = '', ''
-				q.put( ('connection', 'established {}'.format(addr) ) )
+				qLog( 'connection', 'established {}'.format(addr) )
 				continue
 			
 			# This socket is a data socket.  Get the data.
 			try:
 				data = s.recv( 4096 )
 			except Exception as e:
-				q.put( ('connection', 'error: %s' % e ) )
+				qLog( 'connection', 'error: %s' % e )
 				data = None
 			
 			if not data:
@@ -200,7 +204,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 					connCur = None
 					readStr, writeStr = '', ''
 				s.close()
-				q.put( ('connection', 'disconnected') )
+				qLog( 'connection', 'disconnected' )
 				continue
 			
 			# Accumulate the data.
@@ -221,19 +225,19 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 						# The tag and time are always separated by at least one space.
 						iSpace = line.find( ' ' )
 						if iSpace < 0:
-							q.put( ('error', line.strip() ) )
+							qLog( 'error', line.strip() )
 							continue
 						tag = line[2:iSpace]	# Skip the D and first initial letter (always the same).
 						
 						# Find the first colon of the time and parse the time working backwards.
 						iColon = line.find( ':' )
 						if iColon < 0:
-							q.put( ('error', line.strip() ) )
+							qLog( 'error', line.strip() )
 							continue
 							
 						m = reTimeChars.match( line[iColon-2:] )
 						if not m:
-							q.put( ('error', line.strip() ) )
+							qLog( 'error', line.strip() )
 							continue
 						tStr = m.group(0)
 						
@@ -258,7 +262,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 						
 						# Get the reader's current time.
 						cmd = 'GT'
-						q.put( ('transmitting', '%s command to JChip receiver (gettime)' % cmd) )
+						qLog( 'transmitting', '%s command to JChip receiver (gettime)' % cmd )
 						writeStr += '%s%s' % (cmd, CR)
 						safeAppend( outputs, s )
 					
@@ -270,27 +274,27 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 						tJChip = datetime.datetime.combine( tNow.date(), datetime.time(hh, mm, ss, hs * 10000) )
 						readerComputerTimeDiff = tNow - tJChip
 						
-						q.put( ('getTime', '%s=%02d:%02d:%02d.%02d' % (line[2:].strip(), hh,mm,ss,hs)) )
+						qLog( 'getTime', '%s=%02d:%02d:%02d.%02d' % (line[2:].strip(), hh,mm,ss,hs) )
 						rtAdjust = readerComputerTimeDiff.total_seconds()
 						if rtAdjust > 0:
 							behindAhead = 'Behind'
 						else:
 							behindAhead = 'Ahead'
 							rtAdjust *= -1
-						q.put( ('timeAdjustment', 
+						qLog( 'timeAdjustment', 
 								"JChip receiver's clock is: %s %s (relative to computer)" %
-									(behindAhead, Utils.formatTime(rtAdjust, True))) )
+									(behindAhead, Utils.formatTime(rtAdjust, True)) )
 						
 						# Send command to start sending data.
 						cmd = 'S0000'
-						q.put( ('transmitting', '%s command to JChip receiver (start transmission)' % cmd) )
+						qLog( 'transmitting', '%s command to JChip receiver (start transmission)' % cmd )
 						writeStr += '%s%s' % (cmd, CR)
 						safeAppend( outputs, s )
 					else:
 						q.put( ('unknown', line ) )
 						
-				except (ValueError, KeyError, IndexError):
-					q.put( ('exception', line ) )
+				except (ValueError, KeyError, IndexError) as e:
+					qLog( 'exception', '{}: {}'.format(line, e) )
 					pass
 			
 			sendReaderEvent( tagTimes )
@@ -302,7 +306,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 			try:
 				writeStr = writeStr[s.send(writeStr):]
 			except Exception as e:
-				q.put( ('exception', 'send error: %s' % e) )
+				qLog( 'exception', 'send error: %s' % e )
 				writeStr = ''
 			if not writeStr:
 				outputs.remove( s )

@@ -205,7 +205,6 @@ if Device:
 			logException( e, sys.exc_info() )
 			
 	def TakePhoto( raceFileName, bib, raceSeconds ):
-		print 'TakePhoto'
 		global camera, font
 		Utils.cameraError = None
 		

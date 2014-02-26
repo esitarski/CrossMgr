@@ -64,7 +64,6 @@ class VideoBuffer( threading.Thread ):
 		self.reset()
 	
 	def reset( self ):
-		
 		if self.frameSaver and self.frameSaver.is_alive():
 			self.frameSaver.stop()
 		
@@ -80,7 +79,6 @@ class VideoBuffer( threading.Thread ):
 		self.reset()
 		keepGoing = True
 		while keepGoing:
-			#sys.stderr.write( '.' )
 			tNow = now()
 			try:
 				self.fcb.append( tNow, self.camera.getImage() )
