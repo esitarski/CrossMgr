@@ -18,6 +18,7 @@ Fields = [	_('Bib#'),
 			_('Nat.'), _('State'), _('Prov.'), _('City'),
 			_('Category'), _('Age'), _('Gender'),
 			_('License'),
+			_('UCICode'),
 			_('Tag'), _('Tag2')]
 IgnoreFields = [_('Bib#'), _('Tag'), _('Tag2'), _('Gender')]		# Fields to ignore when adding data to standard reports.
 ReportFields = [f for f in Fields if f not in IgnoreFields]
