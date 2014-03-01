@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import os
 import sys
 import wx
@@ -240,7 +238,7 @@ class GetExcelResultsLink( object ):
 		
 		prewizard = wiz.PreWizard()
 		prewizard.SetExtraStyle( wiz.WIZARD_EX_HELPBUTTON )
-		prewizard.Create( parent, wx.ID_ANY, _('Import TT Start Times'), img )
+		prewizard.Create( parent, wx.ID_ANY, _('Link Excel Info'), img )
 		self.wizard = prewizard
 		self.wizard.Bind( wiz.EVT_WIZARD_PAGE_CHANGING, self.onPageChanging )
 		self.wizard.Bind( wiz.EVT_WIZARD_HELP,
@@ -330,6 +328,9 @@ class ExcelLink( object ):
 		self.raceDate = None
 		self.raceTime = None
 		self.fieldCol = dict( (f, c) for c, f in enumerate(Fields) )
+	
+	def __repr__( self ):
+		return ', '.join( '{}={}'.format(a, getattr(self, a)) for a in ['fileName', 'sheetName', 'raceDate', 'raceTime', 'fieldCol'] )
 	
 	def __cmp__( self, e ):
 		return cmp((self.fileName, self.sheetName, self.fieldCol), (e.fileName, e.sheetName, e.fieldCol))

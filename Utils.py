@@ -380,7 +380,10 @@ def getHomeDir():
 
 def getDocumentsDir():
 	sp = wx.StandardPaths.Get()
-	return sp.GetDocumentsDir()
+	dd = sp.GetDocumentsDir()
+	if not os.path.exists(dd):
+		os.makedirs( dd )
+	return dd
 	
 #------------------------------------------------------------------------
 if 'WXMAC' in wx.Platform:
