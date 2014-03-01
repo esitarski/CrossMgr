@@ -201,5 +201,6 @@ try:
 	shutil.move( 'CrossMgr-%s.zip' % version, 'PIP-Install-CrossMgr-%s.zip' % version )
 except:
 	shutil.move( 'CrossMgr-%s.tar.gz' % version, 'PIP-Install-CrossMgr-%s.tar.gz' % version )
+	shutil.copy( 'PIP-Install-CrossMgr-%s.tar.gz' % version, os.path.join( os.path.expanduser("~"), 'Google Drive', 'Mac Installs') )
 	
 print 'Done.'
