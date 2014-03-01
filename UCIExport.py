@@ -1,3 +1,4 @@
+import re
 import math
 import xlwt
 import Model
@@ -31,7 +32,10 @@ UCIFields = (
 	'Team',
 	'UCI Code',
 	'Time',
+	'Gap',
 )
+
+reHighPrecision = re.compile( '^.*\.[0-9][0-9]"$' )
 
 def UCIExport( sheet, cat ):
 	race = Model.race
@@ -65,8 +69,12 @@ def UCIExport( sheet, cat ):
 		try:
 			finishTime = formatTime(rr.lastTime - rr.raceTimes[0]) if rr.status == Model.Rider.Finisher else ''
 		except Exception as e:
-			print e
 			finishTime = ''
+			
+		gap = getattr(rr, 'gap', '')
+		if reHighPrecision.match(gap):
+			gap = gap[:-4] + '"'
+			
 		for col, field in enumerate(UCIFields):
 			{
 				'Pos':		lambda : sheetFit.write( row, col, toInt(rr.pos), rightAlignStyle ),
@@ -74,6 +82,7 @@ def UCIExport( sheet, cat ):
 				'Name':		lambda : sheetFit.write( row, col, rr.full_name(), leftAlignStyle ),
 				'Team':		lambda : sheetFit.write( row, col, getattr(rr, 'Team', ''), leftAlignStyle ),
 				'UCI Code':	lambda : sheetFit.write( row, col, getattr(rr, 'UCICode', ''), leftAlignStyle ),
-				'Time':		lambda : sheetFit.write( row, col, finishTime, leftAlignStyle ),
+				'Time':		lambda : sheetFit.write( row, col, finishTime, rightAlignStyle ),
+				'Gap':		lambda : sheetFit.write( row, col, gap, rightAlignStyle ),
 			}[field]()
 		row += 1
