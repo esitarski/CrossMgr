@@ -518,6 +518,8 @@ def SetNewFilename( parent, properties ):
 	dir = os.path.dirname(mainWin.fileName) if mainWin.fileName else Utils.getDocumentsDir()
 	
 	newBaseName = properties.getFileName()
+	if not newBaseName:
+		newBaseName = _('UnnamedRace')
 	newFName = os.path.join( dir, newBaseName )
 	
 	success = True

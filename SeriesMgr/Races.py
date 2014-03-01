@@ -167,11 +167,13 @@ class Races(wx.Panel):
 		
 		raceList = []
 		for row in xrange(self.grid.GetNumberRows()):
-			fileName = self.grid.GetCellValue( row, self.RaceFileCol ).strip()
+			race = SeriesModel.model.races[row]
+			excelLink = race.excelLink
+			fileName = self.grid.GetCellValue(row, self.RaceFileCol).strip()
 			pname = self.grid.GetCellValue( row, self.PointsCol )
 			if not fileName or not pname:
 				continue
-			raceList.append( (fileName, pname) )
+			raceList.append( (fileName, pname, excelLink) )
 		
 		model = SeriesModel.model
 		model.setRaces( raceList )

@@ -60,7 +60,6 @@ def ExtractRaceResults( r ):
 def ExtractRaceResultsExcel( raceInSeries ):
 	excelLink = raceInSeries.excelLink
 	if not excelLink:
-		print 'missing excel link'
 		return False, 'Missing Excel Link Definition', []
 
 	try:
