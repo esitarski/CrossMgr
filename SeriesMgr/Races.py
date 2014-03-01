@@ -45,7 +45,7 @@ class Races(wx.Panel):
 		self.grid.Bind( gridlib.EVT_GRID_CELL_CHANGE, self.onGridChange )
 		self.gridAutoSize()
 		self.grid.Bind( wx.grid.EVT_GRID_EDITOR_CREATED, self.onGridEditorCreated )
-		self.grid.Bind( wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.editraceFileName )
+		self.grid.Bind( wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.onEditRaceFileName )
 		
 		self.addButton = wx.Button( self, wx.ID_ANY, 'Add Race' )
 		self.addButton.Bind( wx.EVT_BUTTON, self.doAddRace )
@@ -77,9 +77,9 @@ class Races(wx.Panel):
 		excelLink.setFileName( race.fileName )
 		race.excelLink = GetExcelResultsLink( self, excelLink ).show()
 		self.grid.SetCellValue( row, self.RaceCol, race.getRaceName() )
-		wx.CallAfter( self.gridAutoSize )
+		wx.CallAfter( self.refresh )
 	
-	def editraceFileName( self, event ):
+	def onEditRaceFileName( self, event ):
 		col = event.GetCol()
 		if col != self.RaceFileCol:
 			event.Skip()
@@ -93,13 +93,17 @@ class Races(wx.Panel):
 		ret = dlg.ShowModal()
 		fileName = ''
 		if ret == wx.ID_OK:
-			path = dlg.GetPath()
+			fileName = dlg.GetPath()
 			self.grid.SetCellValue( row, self.RaceCol, SeriesModel.RaceNameFromPath(fileName) )
 			self.grid.SetCellValue( row, self.RaceFileCol, fileName )
 		dlg.Destroy()
 		self.refresh()
 		if ret == wx.ID_OK and os.path.splitext(fileName)[1] != '.cmn':
-			wx.CallAfter( self.doExcelLink, SeriesModel.model.races[row], row )
+			race = SeriesModel.model.races[row]
+			race.fileName = fileName
+			race.excelLink = ExcelLink()
+			race.excelLink.setFileName( fileName )
+			wx.CallAfter( self.doExcelLink, race, row )
 	
 	def doAddRace( self, event ):
 		dlg = wx.FileDialog( self, message="Choose a CrossMgr or Excel file",
@@ -107,7 +111,6 @@ class Races(wx.Panel):
 					wildcard = self.wildcard,
 					style=wx.OPEN | wx.CHANGE_DIR )
 		ret = dlg.ShowModal()
-		path = ''
 		if ret == wx.ID_OK:
 			fileName = dlg.GetPath()
 			SeriesModel.model.addRace( fileName )
@@ -164,11 +167,13 @@ class Races(wx.Panel):
 		
 		raceList = []
 		for row in xrange(self.grid.GetNumberRows()):
-			fileName = self.grid.GetCellValue( row, self.RaceFileCol ).strip()
+			race = SeriesModel.model.races[row]
+			excelLink = race.excelLink
+			fileName = self.grid.GetCellValue(row, self.RaceFileCol).strip()
 			pname = self.grid.GetCellValue( row, self.PointsCol )
 			if not fileName or not pname:
 				continue
-			raceList.append( (fileName, pname) )
+			raceList.append( (fileName, pname, excelLink) )
 		
 		model = SeriesModel.model
 		model.setRaces( raceList )
@@ -184,7 +189,7 @@ class Races(wx.Panel):
 class RacesFrame(wx.Frame):
 	#----------------------------------------------------------------------
 	def __init__(self):
-		wx.Frame.__init__(self, None, title="Reorder Grid Test", size=(800,600) )
+		wx.Frame.__init__(self, None, title="Races Test", size=(800,600) )
 		self.panel = Races(self)
 		self.Show()
  

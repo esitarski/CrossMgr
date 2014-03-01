@@ -15,29 +15,29 @@ import collections
 import wx.grid		as gridlib
 
 def _fix_issue_18015(collections):
-    try:
-        template = collections._class_template
-    except AttributeError:
-        # prior to 2.7.4 _class_template didn't exists
-        return
-    if not isinstance(template, basestring):
-        return  # strange
-    if "__dict__" in template or "__getstate__" in template:
-        return  # already patched
-    lines = template.splitlines()
-    indent = -1
-    for i,l in enumerate(lines):
-        if indent < 0:
-            indent = l.find('def _asdict')
-            continue
-        if l.startswith(' '*indent + 'def '):
-            lines.insert(i, ' '*indent + 'def __getstate__(self): pass')
-            lines.insert(i, ' '*indent + '__dict__ = _property(_asdict)')
-            break
-    collections._class_template = '''\n'''.join(lines)
+	try:
+		template = collections._class_template
+	except AttributeError:
+		# prior to 2.7.4 _class_template didn't exists
+		return
+	if not isinstance(template, basestring):
+		return  # strange
+	if "__dict__" in template or "__getstate__" in template:
+		return  # already patched
+	lines = template.splitlines()
+	indent = -1
+	for i,l in enumerate(lines):
+		if indent < 0:
+			indent = l.find('def _asdict')
+			continue
+		if l.startswith(' '*indent + 'def '):
+			lines.insert(i, ' '*indent + 'def __getstate__(self): pass')
+			lines.insert(i, ' '*indent + '__dict__ = _property(_asdict)')
+			break
+	collections._class_template = '''\n'''.join(lines)
     
 if sys.version_info[:3] == (2,7,5):
-    _fix_issue_18015(collections)
+	_fix_issue_18015(collections)
 
 try:
 	from win32com.shell import shell, shellcon
@@ -380,7 +380,10 @@ def getHomeDir():
 
 def getDocumentsDir():
 	sp = wx.StandardPaths.Get()
-	return sp.GetDocumentsDir()
+	dd = sp.GetDocumentsDir()
+	if not os.path.exists(dd):
+		os.makedirs( dd )
+	return dd
 	
 #------------------------------------------------------------------------
 if 'WXMAC' in wx.Platform:
@@ -592,3 +595,6 @@ if __name__ == '__main__':
 	fn = os.path.join(hd, 'Test.txt')
 	with open( fn, 'w' ) as fp:
 		print 'successfully opened: ' + fn
+
+cameraError = None
+rfidReaderError = None

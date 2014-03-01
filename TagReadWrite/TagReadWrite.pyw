@@ -217,6 +217,8 @@ class MainWin( wx.Frame ):
 		vsMain.Add( impinjConfigurationSizer, flag = wx.ALL|wx.EXPAND, border = border )
 		vsMain.Add( hs, 1, flag = wx.EXPAND )
 		
+		self.sb = self.CreateStatusBar()
+		
 		self.getWriteValue()
 		self.setWriteSuccess( False )
 		
@@ -274,11 +276,14 @@ class MainWin( wx.Frame ):
 	
 	def onTextChange( self, event ):
 		self.getWriteValue()
-		
+	
+	def autoDetectCallback( self, addr ):
+		self.sb.SetStatusText( 'Trying Reader at: {}...'.format(addr) )
+	
 	def doAutoDetect( self, event ):
 		wx.BeginBusyCursor()
 		self.shutdown()
-		impinjHost = AutoDetect( ImpinjInboundPort )
+		impinjHost = AutoDetect( ImpinjInboundPort, self.autoDetectCallback )
 		wx.EndBusyCursor()
 		
 		if impinjHost:
@@ -288,6 +293,7 @@ class MainWin( wx.Frame ):
 			self.impinjHost.SetValue( impinjHost )
 			self.doReset()
 			self.writeOptions()
+			wx.Bell()
 		else:
 			dlg = wx.MessageDialog(self, 'Auto Detect Failed.\nCheck that reader has power and is connected to the router.',
 									'Auto Detect Failed',
@@ -331,9 +337,11 @@ class MainWin( wx.Frame ):
 		elif status == self.StatusSuccess:
 			self.statusBitmap.SetBitmap( self.successBitmap )
 			self.statusLabel.SetLabel( 'Connected' )
+			self.sb.SetStatusText( 'Connected' )
 		else:
 			self.statusBitmap.SetBitmap( self.errorBitmap )
 			self.statusLabel.SetLabel( 'Connection Failed' )
+			self.sb.SetStatusText( 'Connection Failed' )
 			
 		self.statusBitmap.Hide()
 		self.statusLabel.Hide()

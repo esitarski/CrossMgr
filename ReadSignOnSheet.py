@@ -18,6 +18,7 @@ Fields = [	_('Bib#'),
 			_('Nat.'), _('State'), _('Prov.'), _('City'),
 			_('Category'), _('Age'), _('Gender'),
 			_('License'),
+			_('UCICode'),
 			_('Tag'), _('Tag2')]
 IgnoreFields = [_('Bib#'), _('Tag'), _('Tag2'), _('Gender')]		# Fields to ignore when adding data to standard reports.
 ReportFields = [f for f in Fields if f not in IgnoreFields]
@@ -565,7 +566,7 @@ class ExcelLink( object ):
 				try:
 					try:
 						data[field] = row[col].strip()
-					except AttributeError:
+					except AttributeError as e:
 						data[field] = row[col]
 					
 					if data[field] == None:
@@ -579,7 +580,7 @@ class ExcelLink( object ):
 					elif field.startswith('Tag'):
 						try:
 							data[field] = int( data[field] )
-						except ValueError:
+						except (ValueError, TypeError) as e:
 							pass
 						try:
 							data[field] = unicode(data[field] or '').upper()

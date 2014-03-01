@@ -92,6 +92,9 @@ class Race( object ):
 			return self.fileName
 		return u'{}:{}'.format( self.fileName, self.excelLink.sheetName )
 		
+	def __repr__( self ):
+		return ', '.join( '{}={}'.format(a, repr(getattr(self, a))) for a in ['fileName', 'pointStructure', 'excelLink'] )
+		
 class SeriesModel( object ):
 	DefaultPointStructureName = 'Example'
 
@@ -137,7 +140,7 @@ class SeriesModel( object ):
 		self.pointStructures = newPointStructures
 	
 	def setRaces( self, raceList ):
-		oldRaceList = [(r.fileName, r.pointStructure.name) for r in self.races]
+		oldRaceList = [(r.fileName, r.pointStructure.name, r.excelLink) for r in self.races]
 		if oldRaceList == raceList:
 			return
 			
@@ -145,7 +148,7 @@ class SeriesModel( object ):
 		
 		newRaces = []
 		ps = dict( (p.name, p) for p in self.pointStructures )
-		for fileName, pname in raceList:
+		for fileName, pname, excelLink in raceList:
 			fileName = fileName.strip()
 			pname = pname.strip()
 			if not fileName:
@@ -154,7 +157,7 @@ class SeriesModel( object ):
 				p = ps[pname]
 			except KeyError:
 				continue
-			newRaces.append( Race(fileName, p) )
+			newRaces.append( Race(fileName, p, excelLink) )
 			
 		self.races = newRaces
 	

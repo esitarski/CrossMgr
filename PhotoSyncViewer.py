@@ -1,6 +1,7 @@
 import wx
 import os
 import sys
+import datetime
 import Model
 import Utils
 import PhotoFinish
@@ -253,7 +254,6 @@ def Shutdown():
 
 if __name__ == '__main__':
 	import time
-	import datetime
 	import shutil
 	
 	race = Model.newRace()

@@ -64,7 +64,6 @@ class VideoBuffer( threading.Thread ):
 		self.reset()
 	
 	def reset( self ):
-		
 		if self.frameSaver and self.frameSaver.is_alive():
 			self.frameSaver.stop()
 		
@@ -80,7 +79,6 @@ class VideoBuffer( threading.Thread ):
 		self.reset()
 		keepGoing = True
 		while keepGoing:
-			#sys.stderr.write( '.' )
 			tNow = now()
 			try:
 				self.fcb.append( tNow, self.camera.getImage() )
@@ -190,14 +188,20 @@ def Shutdown():
 		videoBuffer.stop()
 		videoBuffer = None
 	PhotoFinish.SetCameraState( False )
-		
+
+def _getTestPhotoFileName():
+	return os.path.join(os.path.dirname(Utils.getHomeDir()), 'Test.cmn')
+	
 def ModelTakePhoto( bib, raceSeconds ):
 	race = Model.race
 	if race:
 		if race.enableVideoBuffer:
-			return TakePhoto( Utils.mainWin.fileName, bib, raceSeconds )
+			return TakePhoto( Utils.mainWin.fileName if Utils.mainWin else _getTestPhotoFileName(), bib, raceSeconds )
 		elif getattr(race, 'enableUSBCamera', False):
-			return PhotoFinish.TakePhoto( Utils.mainWin.fileName, bib, raceSeconds )
+			return PhotoFinish.TakePhoto( Utils.mainWin.fileName if Utils.mainWin else _getTestPhotoFileName(), bib, raceSeconds )
+	else:
+		return PhotoFinish.TakePhoto( _getTestPhotoFileName(), bib, raceSeconds )
+	Utils.cameraError = _('ModelTakePhoto: usb camera is not enabled')
 	return 0
 
 @logCall

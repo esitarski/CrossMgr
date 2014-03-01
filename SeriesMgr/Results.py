@@ -512,7 +512,7 @@ class Results(wx.Panel):
 			
 		pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
 
-		results, races = GetModelInfo.GetCategoryResults( categoryName, self.raceResults, pointsForRank, 0 )
+		results, races = GetModelInfo.GetCategoryResults( categoryName, self.raceResults, pointsForRank, model.numPlacesTieBreaker )
 		results = [rr for rr in results if rr[3] > 0]
 		
 		headerNames = HeaderNames + [r[1] for r in races]
@@ -584,7 +584,7 @@ class Results(wx.Panel):
 		if not categoryNames:
 			return
 			
-		pointsForRank = { r.fileName: r.pointStructure for r in model.races }
+		pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
 		
 		wb = xlwt.Workbook()
 

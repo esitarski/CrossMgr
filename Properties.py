@@ -514,15 +514,18 @@ def SetNewFilename( parent, properties ):
 	mainWin = Utils.getMainWin()
 	if not mainWin:
 		return True
-		
-	dir = os.path.dirname( mainWin.fileName )
+	
+	dir = os.path.dirname(mainWin.fileName) if mainWin.fileName else Utils.getDocumentsDir()
 	
 	newBaseName = properties.getFileName()
+	if not newBaseName:
+		newBaseName = _('UnnamedRace')
 	newFName = os.path.join( dir, newBaseName )
 	
 	success = True
 	if newFName != mainWin.fileName:
-		if Utils.MessageOKCancel(parent, _("The filename will be changed to:\n\n{}\n\nContinue?").format(newBaseName), _("Change Filename?")):
+		if		not mainWin.fileName or \
+				Utils.MessageOKCancel(parent, _("The filename will be changed to:\n\n{}\n\nContinue?").format(newBaseName), _("Change Filename?")):
 			if os.path.exists(newFName):
 				if not Utils.MessageOKCancel(parent, _("This file already exists:\n\n{}\n\nOverwrite?").format(newFName), _("Overwrite Existing File?")):
 					properties.restoreFileNameFields()

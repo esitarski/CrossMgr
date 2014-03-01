@@ -2,7 +2,7 @@ import socket
 import Utils
 from pyllrp.pyllrp import *
 
-def findImpinjHost( impinjPort ):
+def findImpinjHost( impinjPort, callback = None ):
 	''' Search ip addresses adjacent to the computer in an attempt to find the reader. '''
 	ip = [int(i) for i in Utils.GetDefaultHost().split('.')]
 	j = 0
@@ -16,8 +16,11 @@ def findImpinjHost( impinjPort ):
 			
 		impinjHost = '.'.join( '{}'.format(v) for v in ipTest )
 		
+		if callback:
+			callback( '{}:{}'.format(impinjHost, impinjPort) )
+		
 		readerSocket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
-		readerSocket.settimeout( 0.5 )
+		readerSocket.settimeout( 3.0 )
 		try:
 			readerSocket.connect( (impinjHost, impinjPort) )
 		except Exception as e:
@@ -38,11 +41,11 @@ def findImpinjHost( impinjPort ):
 			continue
 		else:
 			return impinjHost
-			
+	
 	return None
 
-def AutoDetect( impinjPort ):
-	return findImpinjHost( impinjPort )
+def AutoDetect( impinjPort, callback = None ):
+	return findImpinjHost( impinjPort, callback )
 		
 if __name__ == '__main__':
 	print AutoDetect(5084)

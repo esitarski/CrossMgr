@@ -2,14 +2,13 @@ from __future__ import print_function
 
 import xlrd
 import xml.etree.ElementTree
-from openpyxl.reader.excel import load_workbook
 import os
 import math
 import itertools
 import unicodedata
 
 def toAscii( s ):
-	if s is None or s == '':
+	if not s:
 		return ''
 	ret = unicodedata.normalize('NFKD', s).encode('ascii','ignore') if type(s) == unicode else str(s)
 	if ret.endswith( '.0' ):
@@ -18,21 +17,8 @@ def toAscii( s ):
 
 #----------------------------------------------------------------------------
 
-class ReadExcelBase( object ):
-	def __init__( self, filename ):
-		pass
-		
-	def sheet_names( self ):
-		assert( False )
-
-	def iter_list( self ):
-		assert( False )
-		
-#----------------------------------------------------------------------------
-
-class ReadExcelXls( ReadExcelBase ):
+class ReadExcelXls( object ):
 	def __init__(self, filename):
-		ReadExcelBase.__init__( self, filename )
 		if not os.path.isfile(filename):
 			raise ValueError, "%s is not a valid filename" % filename
 		self.book = xlrd.open_workbook(filename)
@@ -106,21 +92,7 @@ class ReadExcelXls( ReadExcelBase ):
 
 #----------------------------------------------------------------------------
 
-class ReadExcelXlsx( ReadExcelBase ):
-	def __init__(self, filename):
-		ReadExcelBase.__init__( self, filename )
-		if not os.path.isfile(filename):
-			raise ValueError, "%s is not a valid filename" % filename
-		self.book = load_workbook( filename = filename, use_iterators = True )
-		
-	def sheet_names( self ):
-		return self.book.get_sheet_names()
-	
-	def iter_list(self, sname):
-		ws = self.book.get_sheet_by_name( name = sname )
-		for row in ws.iter_rows():
-			r = [cell.internal_value for cell in row]
-			yield r
+ReadExcelXlsx = ReadExcelXls
 
 #----------------------------------------------------------------------------
 
@@ -131,6 +103,6 @@ def GetExcelReader( filename ):
 		return ReadExcelXlsx( filename )
 	else:
 		raise ValueError, '%s is not a recognized Excel format' % filename
-		
+
 #----------------------------------------------------------------------------
 
