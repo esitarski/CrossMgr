@@ -331,7 +331,10 @@ class Properties( wx.Panel ):
 			self.timeTrial.SetValue( getattr(race, 'isTimeTrial', False) )
 			self.minutes.SetValue( race.minutes )
 			self.commissaire.SetValue( race.commissaire )
-			(self.rule80MinLapCount1 if race.rule80MinLapCount == 1 else self.rule80MinLapCount2).SetValue( True )
+			if race.rule80MinLapCount == 1:
+				self.rule80MinLapCount1.SetValue( True )
+			else:
+				self.rule80MinLapCount2.SetValue( True )
 			self.memo.SetValue( race.memo )
 			self.updateFileName()
 			
@@ -388,7 +391,7 @@ class Properties( wx.Panel ):
 			race.minutes = self.minutes.GetValue()
 			race.commissaire = self.commissaire.GetValue().strip()
 			race.memo = self.memo.GetValue().strip()
-			race.rule80MinLapCount = 1 if self.rule80MinLapCount1.GetValue() else 2
+			race.rule80MinLapCount = (1 if self.rule80MinLapCount1.GetValue() else 2)
 			race.notes = self.notes.GetValue().strip()
 			race.setChanged()
 			
