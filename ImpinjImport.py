@@ -33,16 +33,28 @@ def parseTagTime( line, lineNo, errors ):
 	tStrSave = tStr
 	tag = tag.replace( ' ', '' )
 	
+	tStr = tStr.translate( sepTrans )
+	tFields = tStr.split()
+	
+	# Get the date (if present).
+	tDate = JChip.dateToday
 	try:
-		tStr = tStr.translate( sepTrans )
-		weekDay, shortMonth, day, hour, minute, second = tStr.split()[:6]
+		yyyy, mm, dd = [int(v) for v in tFields[-3:]]
+		if 1900 <= yyyy <= 3000 and 1 <= mm <= 12 and 1 <= dd <= 31:
+			tDate = datetime.date( yyyy, mm, dd )
+	except (IndexError, ValueError):
+		pass
+	
+	# Get the time.
+	try:
+		hour, minute, second = tFields[3:6]
 		fract, second = math.modf( float(second) )
 		microsecond = fract * 1000000.0
-		t = combine( JChip.dateToday, datetime.time(hour=int(hour), minute=int(minute), second=int(second), microsecond=int(microsecond)) )
+		t = combine( tDate, datetime.time(hour=int(hour), minute=int(minute), second=int(second), microsecond=int(microsecond)) )
 	except (IndexError, ValueError):
 		errors.append( _('line {}: invalid time: "{}"').format(lineNo, tStrSave) )
 		return None, None
-		
+	
 	return tag, t
 
 def ImpinjImportDialog( parent, id = wx.ID_ANY ):

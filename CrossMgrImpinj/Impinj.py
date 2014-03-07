@@ -284,10 +284,10 @@ class Impinj( object ):
 
 					# Write the entry to the log.
 					if pf:
-						# 									Thu Dec 04 10:14:49 PST
+						# 									Thu Dec 04 10:14:49 PST 2014
 						pf.write( '{},{}\n'.format(
 									tagID,
-									discoveryTime.strftime('%a %b %d %H:%M:%S.%f %Z %Y')) )
+									discoveryTime.strftime('%a %b %d %H:%M:%S.%f %Z %Y-%m-%d')) )
 					self.messageQ.put( ('Impinj', 'Received {}. tag={}, time={}'.format(self.tagCount, tagID, discoveryTimeStr)) )
 				
 				# Close the log file.

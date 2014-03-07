@@ -426,7 +426,7 @@ class Alien( object ):
 							# 									Thu Dec 04 10:14:49 PST
 							pf.write( '%s,%s,%s\n' % (
 										tagID,					# Keep tag in same format as read.
-										discoveryTime.strftime('%a %b %d %H:%M:%S.%f %Z %Y'),
+										discoveryTime.strftime('%a %b %d %H:%M:%S.%f %Z %Y-%m-%d'),
 										readCount) )
 						self.messageQ.put( ('Alien', 'Received %d. tag=%s, time=%s' % (self.tagCount, tagID, discoveryTimeStr)) )
 					
