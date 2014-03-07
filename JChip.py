@@ -11,6 +11,7 @@ import re
 import wx
 import wx.lib.newevent
 import Utils
+import Model
 stripLeadingZeros = Utils.stripLeadingZeros
 import select
 from threading import Thread as Process
@@ -250,6 +251,16 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 							except:
 								day = 0
 						
+						try:
+							iDate = line.index( 'date=' ) + 5
+							YYYY, MM, DD = int(line[iDate:iDate+4]), int(line[iDate+4:iDate+6]), int(line[iDate+6:iDate+8])
+							if Model.race and Model.race.isRunning():
+								startDate = datetime.date( race.startTime.year, race.startTime.month, race.startTime.day )
+								tagDate = datetime.date( YYYY, MM, DD )
+								day = (tagDate - startDate).days
+						except ValueError:
+							pass
+						
 						t = parseTime( tStr, day )
 						t += readerComputerTimeDiff
 						
@@ -262,7 +273,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 						
 						# Get the reader's current time.
 						cmd = 'GT'
-						qLog( 'transmitting', '%s command to JChip receiver (gettime)' % cmd )
+						qLog( 'transmitting', '%s command to RFID receiver (gettime)' % cmd )
 						writeStr += '%s%s' % (cmd, CR)
 						safeAppend( outputs, s )
 					
@@ -271,7 +282,15 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 						
 						iStart = 3
 						hh, mm, ss, hs = [int(line[i:i+2]) for i in xrange(iStart, iStart + 4 * 2, 2)]
-						tJChip = datetime.datetime.combine( tNow.date(), datetime.time(hh, mm, ss, hs * 10000) )
+						try:
+							iDate = line.index( 'date=' ) + 5
+							YYYY, MM, DD = int(line[iDate:iDate+4]), int(line[iDate+4:iDate+6]), int(line[iDate+6:iDate+8])
+							tJChip = datetime.datetime( YYYY, MM, DD, hh, mm, ss, hs * 10000 )
+						except ValueError:
+							tJChip = datetime.datetime.combine( tNow.date(), datetime.time(hh, mm, ss, hs * 10000) )
+						except Exception as e:
+							tJChip = datetime.datetime.combine( tNow.date(), datetime.time(hh, mm, ss, hs * 10000) )
+							
 						readerComputerTimeDiff = tNow - tJChip
 						
 						qLog( 'getTime', '%s=%02d:%02d:%02d.%02d' % (line[2:].strip(), hh,mm,ss,hs) )
@@ -282,12 +301,12 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 							behindAhead = 'Ahead'
 							rtAdjust *= -1
 						qLog( 'timeAdjustment', 
-								"JChip receiver's clock is: %s %s (relative to computer)" %
+								"RFID receiver's clock is: %s %s (relative to computer)" %
 									(behindAhead, Utils.formatTime(rtAdjust, True)) )
 						
 						# Send command to start sending data.
 						cmd = 'S0000'
-						qLog( 'transmitting', '%s command to JChip receiver (start transmission)' % cmd )
+						qLog( 'transmitting', '%s command to RFID receiver (start transmission)' % cmd )
 						writeStr += '%s%s' % (cmd, CR)
 						safeAppend( outputs, s )
 					else:

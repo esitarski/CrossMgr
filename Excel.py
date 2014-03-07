@@ -84,7 +84,7 @@ class ReadExcelXls( object ):
 				value = xlrd.error_text_from_code[value]
 			values.append(value)
 		return values
-
+		
 	def iter_list(self, sname, date_as_tuple=False):
 		sheet = self.book.sheet_by_name(sname) # XLRDError
 		for i in range(sheet.nrows):

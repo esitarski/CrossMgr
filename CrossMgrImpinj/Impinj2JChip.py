@@ -16,10 +16,11 @@ CR = chr( 0x0d )
 count = 0
 def formatMessage( tagID, t ):
 	global count
-	message = "DA{} {} 10  {:05X}      C7{}".format(
+	message = "DA{} {} 10  {:05X}      C7 date={}{}".format(
 				tagID,								# Tag code in decimal, no leading zeros.
 				t.strftime('%H:%M:%S.%f'),			# hh:mm:ss.ff
 				count,								# Data index number in hex.
+				t.strftime('%Y%m%d'),				# YYYYMMDD
 				CR
 			)
 	count += 1
@@ -127,9 +128,12 @@ class Impinj2JChip( object ):
 			
 			# Send 'GT' (GetTime response to CrossMgr).
 			self.messageQ.put( ('Impinj2JChip', 'Send gettime data...') )
-			# format is GT0HHMMSShh<CR> where hh is 100's of a second.  The '0' (zero) after GT is the number of days running and is ignored by CrossMgr.
+			# format is GT0HHMMSShh<CR> where hh is 100's of a second.  The '0' (zero) after GT is the number of days running, ignored by CrossMgr.
 			dBase = datetime.datetime.now()
-			message = 'GT0%02d%02d%02d%03d%s' % (dBase.hour, dBase.minute, dBase.second, int((dBase.microsecond / 1000000.0) * 1000.0), CR)
+			message = 'GT0%02d%02d%02d%03d date=%04d%02d%02d%s' % (
+				dBase.hour, dBase.minute, dBase.second, int((dBase.microsecond / 1000000.0) * 1000.0),
+				dBase.year, dBase.month, dBase.day,
+				CR)
 			self.messageQ.put( ('Impinj2JChip', message[:-1]) )
 			try:
 				sock.send( message )

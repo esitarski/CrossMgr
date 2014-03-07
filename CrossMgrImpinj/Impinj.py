@@ -270,7 +270,7 @@ class Impinj( object ):
 					# Convert tag and discovery Time
 					discoveryTimeStr = discoveryTime.strftime('%Y/%m/%d_%H:%M:%S.%f')
 					
-					# Check if this read happend too soon after another read.
+					# Check if this read happened too soon after another read.
 					LRT = lastReadTime.get( tagID, tOld )
 					lastReadTime[tagID] = discoveryTime
 					if (discoveryTime - LRT).total_seconds() < RepeatSeconds:

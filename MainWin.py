@@ -771,6 +771,7 @@ class MainWin( wx.Frame ):
 		ChangeProperties( self )
 		
 	def menuJChip( self, event ):
+		self.commit()
 		dlg = JChipSetup.JChipSetupDialog( self )
 		dlg.ShowModal()
 		dlg.Destroy()

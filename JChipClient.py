@@ -85,16 +85,19 @@ with open('JChipTest.csv', 'w') as f:
 	for n in nums:
 		f.write( '%d,%s\n' % (n, tag[n]) )
 
+sendDate = True
+
 #------------------------------------------------------------------------------	
 # Function to format number, lap and time in JChip format
 # Z413A35 10:11:16.4433 10  10000      C7
 count = 0
 def formatMessage( n, lap, t ):
 	global count
-	message = "DJ%s %s 10  %05X      C7%s" % (
+	message = "DJ%s %s 10  %05X      C7%s%s" % (
 				tag[n],								# Tag code
 				t.strftime('%H:%M:%S.%f'),			# hh:mm:ss.ff
 				count,								# Data index number in hex.
+				' date={}'.format( t.strftime('%Y%m%d') ) if sendDate else '',
 				CR
 			)
 	count += 1
@@ -153,7 +156,10 @@ while 1:
 	#------------------------------------------------------------------------------	
 	print 'Send gettime data...'
 	# format is GT0HHMMSShh<CR> where hh is 100's of a second.  The '0' (zero) after GT is the number of days running and is ignored by CrossMgr.
-	message = 'GT0%02d%02d%02d%02d%s' % (dBase.hour, dBase.minute, dBase.second, int((dBase.microsecond / 1000000.0) * 100.0), CR)
+	message = 'GT0%02d%02d%02d%02d%s%s' % (
+		dBase.hour, dBase.minute, dBase.second, int((dBase.microsecond / 1000000.0) * 100.0),
+		' date={}'.format( dBase.strftime('%Y%m%d') ) if sendDate else '',
+		CR)
 	print message[:-1]
 	sock.send( message )
 
