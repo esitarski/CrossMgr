@@ -78,6 +78,15 @@ class Properties( wx.Panel ):
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.memo )
 		rows += 1
 		
+		self.rule80MinLapCountLabel = wx.StaticText( self, label = _("Lap Time to Use for 80% Rule:") )
+		self.rule80MinLapCount1 = wx.RadioButton( self, label = _("1st Lap Time"), style = wx.RB_GROUP )
+		self.rule80MinLapCount2 = wx.RadioButton( self, label = _("2nd Lap Time") )
+		self.rule80MinLapCount2.SetValue( True )
+		self.rule80MinLapCountSizer = wx.BoxSizer( wx.HORIZONTAL )
+		self.rule80MinLapCountSizer.Add( self.rule80MinLapCount1, flag=wx.RIGHT, border=8 )
+		self.rule80MinLapCountSizer.Add( self.rule80MinLapCount2 )
+		rows += 1
+		
 		self.allCategoriesFinishAfterFastestRidersLastLapLabel = wx.StaticText( self, label = _("All Categories Finish After Fastest Rider's Last Lap:") )
 		self.allCategoriesFinishAfterFastestRidersLastLap = wx.CheckBox( self, style=wx.ALIGN_LEFT )
 		self.allCategoriesFinishAfterFastestRidersLastLap.SetValue( True )
@@ -158,6 +167,7 @@ class Properties( wx.Panel ):
 			(self.memoLabel,		0, labelAlign),		(self.memo, 			1, fieldAlign),
 			
 			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
+			(self.rule80MinLapCountLabel,	0, labelAlign),		(self.rule80MinLapCountSizer,		1, fieldAlign),
 			(self.allCategoriesFinishAfterFastestRidersLastLapLabel,	0, labelAlign),		(self.allCategoriesFinishAfterFastestRidersLastLap,		1, fieldAlign),
 			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
 			(self.timeTrialLabel,	0, labelAlign),		(self.timeTrial,		1, fieldAlign),
@@ -321,6 +331,7 @@ class Properties( wx.Panel ):
 			self.timeTrial.SetValue( getattr(race, 'isTimeTrial', False) )
 			self.minutes.SetValue( race.minutes )
 			self.commissaire.SetValue( race.commissaire )
+			(self.rule80MinLapCount1 if race.rule80MinLapCount == 1 else self.rule80MinLapCount2).SetValue( True )
 			self.memo.SetValue( race.memo )
 			self.updateFileName()
 			
@@ -377,6 +388,7 @@ class Properties( wx.Panel ):
 			race.minutes = self.minutes.GetValue()
 			race.commissaire = self.commissaire.GetValue().strip()
 			race.memo = self.memo.GetValue().strip()
+			race.rule80MinLapCount = 1 if self.rule80MinLapCount1.GetValue() else 2
 			race.notes = self.notes.GetValue().strip()
 			race.setChanged()
 			

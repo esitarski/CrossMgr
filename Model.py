@@ -858,6 +858,8 @@ class Race(object):
 	UnitKm = 0
 	UnitMiles = 1
 	
+	rule80MinLapCount = 2	# Minimum number of laps to compute rule80.
+	
 	advancePhotoMillisecondsDefault = -100
 	city = ''
 	stateProv = ''
@@ -1238,35 +1240,43 @@ class Race(object):
 	@memoize
 	def getRule80LapTime( self, category = None ):
 		entries = self.interpolate()
-		if not entries or self.getMaxLap(category) < 2:
+		if not entries:
 			return None
 
-		if category:
-			entries = [e for e in entries if e.lap <= 2 and self.inCategory(e.num, category)]
-		else:
-			entries = [e for e in entries if e.lap <= 2]
-			
-		# Find the first entry for the given lap.
-		iFirst = (i for i, e in enumerate(entries) if e.lap == 1).next()
+		inCategory = self.inCategory
+		rule80MinLapCount = self.rule80MinLapCount
+		
+		iFirst = iSecond = None
+		
 		try:
-			iSecond = (i for i, e in enumerate(entries) if e.lap == 2).next()
+			iFirst = (i for i, e in enumerate(entries) if inCategory(e.num, category) and e.lap == 1).next()
 		except StopIteration:
-			iSecond = None
-
+			return None
+		
+		if self.rule80MinLapCount > 1:
+			try:
+				iSecond = (i for i in xrange(iFirst+1, len(entries)) if inCategory(entries[i].num, category) and entries[i].lap == 2).next()
+			except StopIteration:
+				return None
+		
+		tFirst = entries[iFirst].t
+		if category:
+			tFirst -= category.getStartOffsetSecs()
+		
 		# Try to figure out if we should use the first lap or the second.
 		# The first lap may not be the same length as the second.
 		if iSecond is not None:
-			tFirst = entries[iFirst].t
-			tSecond = entries[iSecond].t - tFirst
+			tSecond = entries[iSecond].t - entries[iFirst].t
 			tDifference = abs(tFirst - tSecond)
 			tAverage = (tFirst + tSecond) / 2.0
-			# If there is more than 5% difference, use the second lap (assume a run-up or start offset).
+			# If there is more than 5% difference, use the second lap (assume a run-up on the first lap).
 			if tDifference / tAverage > 0.05:
 				t = tSecond
 			else:
 				t = max(tFirst, tSecond)	# Else, use the maximum of the two (aren't we nice!).
 		else:
-			t = entries[iFirst].t
+			t = tFirst
+		
 		return t
 
 	def getRule80CountdownTime( self, category = None ):
