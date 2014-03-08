@@ -86,7 +86,7 @@ class CategoriesPrintout( wx.Printout ):
 				
 			catData.append( [
 				catStart,
-				'      ' + c.name if c.catType == c.CatComponent else c.name,
+				' - ' + c.name if c.catType == c.CatComponent else c.name,
 				catInfo.get('gender', 'Open'),
 				c.catStr,
 				'{}'.format(laps),
