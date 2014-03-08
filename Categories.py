@@ -42,8 +42,10 @@ class CategoriesPrintout( wx.Printout ):
 		race = Model.race
 		if not race:
 			return
-			
+		
+		catMap = dict( (c.fullname, c) for c in race.getCategories( startWaveOnly = False ) )
 		catDetails = GetCategoryDetails()
+		catDetailsMap = dict( (cd['name'], cd) for cd in catDetails )
 		
 		try:
 			externalInfo = race.excelLink.read()
@@ -55,25 +57,36 @@ class CategoriesPrintout( wx.Printout ):
 		
 		raceStart = Utils.StrToSeconds( race.scheduledStart + ':00' )
 		catData = []
-		for c in race.getCategories( startWaveOnly = False ):
+		for catInfo in catDetails:
+			c = catMap.get( catInfo['name'], None )
+			if not c:
+				continue
+			
 			starters = race.catCount( c )
 			if not starters:
 				starters = ''
-			catInfo = catDetails.get( c.fullname, {} )
+			
 			laps = c.numLaps
 			if laps:
-				raceDistance = '%.2f' % c.getDistanceAtLap( laps )
+				raceDistance = ('%.2f' % c.getDistanceAtLap(laps)) if c.getDistanceAtLap(laps) else ''
 			else:
 				laps = catInfo.get( 'laps', '' )
 				if laps:
-					raceDistance = '%.2f' % c.getDistanceAtLap( laps )
+					raceDistance = ('%.2f' % c.getDistanceAtLap(laps)) if c.getDistanceAtLap(laps) else ''
 				else:
 					raceDistance = ''
 					laps = ''
 				
+			if c.catType == c.CatWave:
+				catStart = Utils.SecondsToStr( raceStart + c.getStartOffsetSecs() )
+			elif c.catType == c.CatCustom:
+				catStart = Utils.SecondsToStr( raceStart )
+			else:
+				catStart = ''
+				
 			catData.append( [
-				Utils.SecondsToStr( raceStart + c.getStartOffsetSecs() ),
-				c.name,
+				catStart,
+				'      ' + c.name if c.catType == c.CatComponent else c.name,
 				catInfo.get('gender', 'Open'),
 				c.catStr,
 				'{}'.format(laps),
@@ -81,8 +94,6 @@ class CategoriesPrintout( wx.Printout ):
 				'{}'.format(starters)
 			])
 			
-		catData.sort( key = lambda d: (Utils.StrToSeconds(d[0]), d[1]) )
-		
 		data = [[None] * len(catData) for i in xrange(len(colnames))]
 		for row in xrange(len(catData)):
 			for col in xrange(len(colnames)):
