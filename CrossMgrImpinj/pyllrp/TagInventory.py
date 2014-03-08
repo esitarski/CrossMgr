@@ -12,11 +12,11 @@ class TagInventory( object ):
 	inventoryParameterSpecID = 1234	# Arbitrary inventory parameter spec id.
 	readWaitMilliseconds = 100
 
-	def __init__( self, host = '192.168.10.102', antennas = None ):
+	def __init__( self, host = '192.168.10.102', defaultAntennas = None ):
 		self.host = host
 		self.connector = None
-		self.antennas = antennas if antennas else [0]
 		self.resetTagInventory()
+		self.defaultAntennas = defaultAntennas
 		
 	def resetTagInventory( self ):
 		self.tagInventory = set()
@@ -65,7 +65,13 @@ class TagInventory( object ):
 		response = self.connector.disconnect()
 		self.connector = None
 
-	def GetROSpec( self ):
+	def GetROSpec( self, antennas = None ):
+		if antennas is not None:
+			if not isinstance(antennas, list):
+				antennas = list(antennas)
+		else:
+			antennas = [0]
+	
 		# Create an rospec that reports reads.
 		return ADD_ROSPEC_Message( Parameters = [
 				ROSpec_Parameter(
@@ -79,7 +85,7 @@ class TagInventory( object ):
 							]
 						), # ROBoundarySpec
 						AISpec_Parameter(				# Antenna Inventory Spec (specifies which antennas and protocol to use)
-							AntennaIDs = self.antennas,
+							AntennaIDs = antennas,
 							Parameters = [
 								AISpecStopTrigger_Parameter(
 									AISpecStopTriggerType = AISpecStopTriggerType.Tag_Observation,
@@ -112,7 +118,7 @@ class TagInventory( object ):
 			]
 		)	# ADD_ROSPEC_Message
 
-	def _prolog( self ):
+	def _prolog( self, antennas = None ):
 		# Disable all the rospecs.  This command may fail so we ignore the response.
 		response = self.connector.transact( DISABLE_ROSPEC_Message(ROSpecID = 0) )
 		# Delete our old rospec if it exists.  This command might fail so we ignore the return.
@@ -124,7 +130,7 @@ class TagInventory( object ):
 		self.connector.addHandler( 'default', self.DefaultHandler )
 
 		# Add and enable our ROSpec
-		response = self.connector.transact( self.GetROSpec() )
+		response = self.connector.transact( self.GetROSpec(antennas) )
 		assert response.success(), 'Add ROSpec Fails'
 		
 	def _execute( self ):
@@ -143,8 +149,8 @@ class TagInventory( object ):
 		assert response.success(), 'Delete ROSpec Fails'
 		self.connector.removeAllHandlers()
 		
-	def GetTagInventory( self ):
-		self._prolog()
+	def GetTagInventory( self, antennas = None ):
+		self._prolog( antennas if antennas is not None else self.defaultAntennas )
 		self._execute()
 		self._epilog()
 		return self.tagInventory, self.otherMessages
