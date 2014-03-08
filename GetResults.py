@@ -469,6 +469,7 @@ def GetCategoryDetails():
 		return []
 
 	tempNums = UnstartedRaceDataProlog()
+	unstarted = Model.race.isUnstarted()
 
 	results = GetResultsCore( None )
 	
@@ -486,38 +487,40 @@ def GetCategoryDetails():
 		catDetails.append( info )
 		
 		# Add the remainder of the categories.
+		lastWaveLaps = 0
 		for cat in race.getCategories( False ):
 			results = GetResults( cat, True )
 			if not results:
 				continue
+			
+			if cat.catType == cat.CatWave:
+				lastWaveLaps = cat.getNumLaps
 				
 			info = dict(
 					name		= cat.fullname,
 					startOffset	= cat.getStartOffsetSecs() if cat.catType == cat.CatWave else 0.0,
 					gender		= getattr( cat, 'gender', 'Open' ),
 					catType		= ['Start Wave', 'Component', 'Custom'][cat.catType],
-					laps		= 0,
+					laps		= lastWaveLaps if unstarted else 0,
 					pos			= [] )
 			
 			catDetails.append( info )
 					
 			for rr in results:
 				info['pos'].append( rr.num )
-				
-				if info['laps'] < len(rr.lapTimes):
-					waveCat = race.getCategory( rr.num )
-					info['laps'] = len(rr.lapTimes)
-					if getattr(waveCat, 'distance', None):
-						if getattr(waveCat, 'distanceType', Model.Category.DistanceByLap) == Model.Category.DistanceByLap:
-							info['lapDistance'] = waveCat.distance
-							if getattr(waveCat, 'firstLapDistance', None):
-								info['firstLapDistance'] = waveCat.firstLapDistance
-							info['raceDistance'] = waveCat.getDistanceAtLap( info['laps'] )
-						else:
-							info['raceDistance'] = waveCat.distance
-					info['distanceUnit'] = race.distanceUnitStr
+				info['laps'] = max( info['laps'], len(rr.lapTimes) )
 					
-					
+			waveCat = race.getCategory( results[0].num )
+			if getattr(waveCat, 'distance', None):
+				if getattr(waveCat, 'distanceType', Model.Category.DistanceByLap) == Model.Category.DistanceByLap:
+					info['lapDistance'] = waveCat.distance
+					if getattr(waveCat, 'firstLapDistance', None):
+						info['firstLapDistance'] = waveCat.firstLapDistance
+					info['raceDistance'] = waveCat.getDistanceAtLap( info['laps'] )
+				else:
+					info['raceDistance'] = waveCat.distance
+			info['distanceUnit'] = race.distanceUnitStr
+	
 	# Cleanup.
 	UnstartedRaceDataEpilog( tempNums )
 

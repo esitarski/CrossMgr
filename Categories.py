@@ -66,16 +66,12 @@ class CategoriesPrintout( wx.Printout ):
 			if not starters:
 				starters = ''
 			
-			laps = c.numLaps
-			if laps:
-				raceDistance = ('%.2f' % c.getDistanceAtLap(laps)) if c.getDistanceAtLap(laps) else ''
-			else:
-				laps = catInfo.get( 'laps', '' )
-				if laps:
-					raceDistance = ('%.2f' % c.getDistanceAtLap(laps)) if c.getDistanceAtLap(laps) else ''
-				else:
-					raceDistance = ''
-					laps = ''
+			laps = catInfo.get( 'laps', '' ) or ''
+			raceDistance = catInfo.get( 'raceDistance', '' )
+			raceDistanceUnit = catInfo.get( 'distanceUnit', '')
+			
+			if raceDistance:
+				raceDistance = '%.2f' % raceDistance
 				
 			if c.catType == c.CatWave:
 				catStart = Utils.SecondsToStr( raceStart + c.getStartOffsetSecs() )
@@ -90,7 +86,7 @@ class CategoriesPrintout( wx.Printout ):
 				catInfo.get('gender', 'Open'),
 				c.catStr,
 				'{}'.format(laps),
-				' '.join([raceDistance, race.distanceUnitStr]) if raceDistance else '',
+				' '.join([raceDistance, raceDistanceUnit]) if raceDistance else '',
 				'{}'.format(starters)
 			])
 			
