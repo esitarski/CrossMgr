@@ -96,7 +96,7 @@ class CategoriesPrintout( wx.Printout ):
 				data[col][row] = catData[row][col]
 				
 		exportGrid = ExportGrid( title = title, colnames = colnames, data = data )
-		exportGrid.leftJustifyCols = set([1, 2, 3])
+		exportGrid.leftJustifyCols = { 1, 2, 3 }
 		exportGrid.drawToFitDC( self.GetDC() )
 		return True
 
