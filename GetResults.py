@@ -508,7 +508,8 @@ def GetCategoryDetails():
 					
 			for rr in results:
 				info['pos'].append( rr.num )
-				info['laps'] = max( info['laps'], len(rr.lapTimes) )
+				if rr.status == Model.Rider.Finisher:
+					info['laps'] = max( info['laps'], len(rr.lapTimes) )
 					
 			waveCat = race.getCategory( results[0].num )
 			if getattr(waveCat, 'distance', None):
