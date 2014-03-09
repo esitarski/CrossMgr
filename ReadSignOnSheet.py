@@ -17,7 +17,7 @@ from ReadPropertiesFromExcel import ReadPropertiesFromExcel
 Fields = [	_('Bib#'),
 			_('LastName'), _('FirstName'),
 			_('Team'),
-			_('Nat.'), _('State'), _('Prov.'), _('City'),
+			_('Nat.'), _('State'), _('Prov'), _('StateProv'), _('City'),
 			_('Category'), _('Age'), _('Gender'),
 			_('License'),
 			_('UCICode'),
@@ -239,6 +239,10 @@ class SummaryPage(wiz.WizardPageSimple):
 		self.riderNumber = wx.StaticText( self )
 		rows += 1
 
+		self.categoryAndPropertiesLabel = wx.StaticText( self, label = _('Categories and Properties:') )
+		self.categoryAndProperties = wx.StaticText( self )
+		rows += 1
+
 		self.statusLabel = wx.StaticText( self, label = _('Status:') )
 		self.statusName = wx.StaticText( self )
 		rows += 1
@@ -261,6 +265,7 @@ class SummaryPage(wiz.WizardPageSimple):
 					  (self.fileLabel, 0, labelAlign),		(self.fileName, 	1, fieldAlign),
 					  (self.sheetLabel, 0, labelAlign),		(self.sheetName, 	1, fieldAlign),
 					  (self.riderLabel, 0, labelAlign),		(self.riderNumber,	1, fieldAlign),
+					  (self.categoryAndPropertiesLabel, 0, labelAlign),		(self.categoryAndProperties,	1, fieldAlign),
 					  (self.statusLabel, 0, labelAlign),	(self.statusName,	1, fieldAlign),
 					  (self.errorLabel, 0, labelAlign),		(self.errorName,	1, fieldAlign),
 					  (blank(), 0, labelAlign),				(self.copyErrorsToClipboard,	1, fieldAlign),
@@ -295,9 +300,18 @@ class SummaryPage(wiz.WizardPageSimple):
 			clipboard.Close()
 			Utils.MessageOK( self, _('Excel Errors Copied to Clipboard.'), _('Excel Errors Copied to Clipboard') )
 
-	def setFileNameSheetNameInfo( self, fileName, sheetName, info, errors, headerMap ):
+	def setFileNameSheetNameInfo( self,
+			fileName, sheetName, info, errors, headerMap,
+			hasCategoriesSheet, hasPropertiesSheet ):
+			
 		self.fileName.SetLabel( fileName )
 		self.sheetName.SetLabel( sheetName )
+		cp = []
+		if hasCategoriesSheet:
+			cp.append( _('Read Categories') )
+		if hasPropertiesSheet:
+			cp.append( _('Read Properties') )
+		self.categoryAndProperties.SetLabel( u', '.join(cp) )
 		self.errors = errors
 		
 		try:
@@ -319,6 +333,9 @@ class SummaryPage(wiz.WizardPageSimple):
 		self.copyErrorsToClipboard.Enable( bool(self.errors) )
 		
 		self.Layout()
+		
+		if hasPropertiesSheet and Utils.getMainWin():
+			wx.CallAfter( Utils.getMainWin().showPageName, _('Properties') )
 	
 class GetExcelLink( object ):
 	def __init__( self, parent, excelLink = None ):
@@ -406,7 +423,12 @@ class GetExcelLink( object ):
 							i = excelLink.fieldCol.get( f, 0 )
 							if i >= 0:
 								headerMap.append( (f, self.headerNamesPage.headers[i]) )
-						self.summaryPage.setFileNameSheetNameInfo(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName(), info, errors, headerMap)
+						self.summaryPage.setFileNameSheetNameInfo(
+							self.fileNamePage.getFileName(),
+							self.sheetNamePage.getSheetName(),
+							info, errors, headerMap,
+							excelLink.hasCategoriesSheet, excelLink.hasPropertiesSheet
+						)
 					except ValueError as e:
 						Utils.MessageOK( self.wizard, _('Problem extracting rider info.\nCheck the Excel format.\n\n"{}"').format(e),
 											title=_('Data Error'), iconMask=wx.ICON_ERROR)
@@ -477,6 +499,9 @@ class ExcelLink( object ):
 	MenCode = 1
 	WomenCode = 2
 
+	hasCategoriesSheet = False
+	hasPropertiesSheet = False
+	
 	def __init__( self ):
 		self.fileName = None
 		self.sheetName = None
@@ -660,8 +685,8 @@ class ExcelLink( object ):
 		except AttributeError:
 			pass
 		
-		ReadCategoriesFromExcel( reader )
-		ReadPropertiesFromExcel( reader )
+		self.hasCategoriesSheet = ReadCategoriesFromExcel( reader )
+		self.hasPropertiesSheet = ReadPropertiesFromExcel( reader )
 		
 		return infoCache
 

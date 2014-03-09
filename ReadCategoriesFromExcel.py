@@ -46,3 +46,6 @@ def ReadCategoriesFromExcel( reader ):
 	
 	if categories:
 		race.setCategories( categories )
+		return True
+	else:
+		return False

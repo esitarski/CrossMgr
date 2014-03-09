@@ -71,4 +71,7 @@ def ReadPropertiesFromExcel( reader ):
 			
 			if v is not u'' and v is not None:
 				setattr( race, p, v )
-		break
+		
+		return True
+		
+	return False
