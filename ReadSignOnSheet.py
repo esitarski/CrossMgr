@@ -10,6 +10,8 @@ import string
 import Utils
 import Model
 from Excel import GetExcelReader
+from ReadCategoriesFromExcel import ReadCategoriesFromExcel
+from ReadPropertiesFromExcel import ReadPropertiesFromExcel
 
 #-----------------------------------------------------------------------------------------------------
 Fields = [	_('Bib#'),
@@ -657,14 +659,19 @@ class ExcelLink( object ):
 			Model.race.tagNums = None
 		except AttributeError:
 			pass
-			
+		
+		ReadCategoriesFromExcel( reader )
+		ReadPropertiesFromExcel( reader )
+		
 		return infoCache
 
 #-----------------------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
 	print( Utils.approximateMatch("Team", "Last Name") )
-
+	race = Model.newRace()
+	race._populate()
+	
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,300))
 	excelLink = GetExcelLink(mainWin)
