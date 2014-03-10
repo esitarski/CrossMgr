@@ -134,7 +134,7 @@ class Category(object):
 	# Attributes to be merged from existing catgories in category import or when reading categories from the Excel sheet.
 	MergeAttributes = (
 		'active',
-		'numLaps'
+		'numLaps',
 		'distance',
 		'distanceType',
 		'firstLapDistance',
@@ -1646,7 +1646,8 @@ class Race(object):
 	def mergeExistingCategoryAttributes( self, nameStrTuples ):
 		for cNew in nameStrTuples:
 			try:
-				cExisting = self.categories[ Category.getFullName(cNew.get('name', ''), cNew.get('gender','Open')) ]
+				key = Category.getFullName(cNew.get('name', ''), cNew.get('gender','Open'))
+				cExisting = self.categories[ key ]
 			except KeyError:
 				continue
 				
