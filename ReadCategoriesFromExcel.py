@@ -45,7 +45,7 @@ def ReadCategoriesFromExcel( reader ):
 		categories.append( catRow )
 	
 	if categories:
-		race.setCategories( categories )
+		race.setCategories( race.mergeExistingCategoryAttributes(categories) )
 		return True
 	else:
 		return False

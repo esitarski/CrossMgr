@@ -578,7 +578,7 @@ and remove them from other categories.''').format(category.name),
 	def onNewCategory( self, event ):
 		self.grid.AppendRows( 1 )
 		self._setRow( r=self.grid.GetNumberRows() - 1, active=True, name='<CategoryName>     ', catStr='100-199,504,-128' )
-		self.grid.AutoSizeColumns(True)
+		self.grid.AutoSizeColumns( False )
 		
 	def onDelCategory( self, event ):
 		r = self.grid.GetGridCursorRow()
@@ -640,7 +640,7 @@ and remove them from other categories.''').format(category.name),
 								seriesFlag			= cat.seriesFlag,
 							)
 				
-			self.grid.AutoSizeColumns( True )
+			self.grid.AutoSizeColumns( False )
 			self.fixCells()
 			
 			# Force the grid to the correct size.

@@ -130,6 +130,18 @@ class Category(object):
 	catType = 0
 	uploadFlag = True
 	seriesFlag = True
+	
+	# Attributes to be merged from existing catgories in category import or when reading categories from the Excel sheet.
+	MergeAttributes = (
+		'active',
+		'numLaps'
+		'distance',
+		'distanceType',
+		'firstLapDistance',
+		'uploadFlag',
+		'seriesflag',
+		'catType',
+	)
 
 	def _getStr( self ):
 		s = ['{}'.format(i[0]) if i[0] == i[1] else '{}-{}'.format(*i) for i in self.intervals]
@@ -209,8 +221,8 @@ class Category(object):
 		if active and active[0] in u'TtYy1':
 			self.active = True
 		
-		self.name = name
-		self.catStr = catStr
+		self.name = unicode(name).strip()
+		self.catStr = unicode(catStr).strip()
 		self.startOffset = startOffset if startOffset else '00:00:00'
 		
 		self.catType = self.CatWave
@@ -317,9 +329,13 @@ class Category(object):
 		else:
 			return distance * lap
 	
+	@staticmethod
+	def getFullName( name, gender ):
+		return u'%s (%s)' % (name, gender)
+	
 	@property
 	def fullname( self ):
-		return u'%s (%s)' % (self.name.strip(), getattr(self, 'gender', 'Open'))
+		return Category.getFullName( self.name.strip(), getattr(self, 'gender', 'Open') )
 	
 	@property
 	def firstLapRatio( self ):
@@ -1626,6 +1642,21 @@ class Race(object):
 		categories = [c for c in self.categories.itervalues() if c.active and c.catType == Category.CatWave]
 		for c in categories:
 			self.adjustCategoryWaveNumbers( c )
+			
+	def mergeExistingCategoryAttributes( self, nameStrTuples ):
+		for cNew in nameStrTuples:
+			try:
+				cExisting = self.categories[Category.getFullName(cNew.get('name', ''), cNew.get('gender','Open'))]
+			except KeyError:
+				continue
+				
+			for a in Category.MergeAttributes:
+				vNew = cNew.get( a, None )
+				vExisting = getattr( cExisting, a, None )
+				if not vNew and vExisting is not None:
+					cNew[a] = vExisting
+		
+		return nameStrTuples
 
 	def setCategories( self, nameStrTuples ):
 		i = 0
@@ -1716,7 +1747,7 @@ class Race(object):
 				fields.append( 'Wave' )
 			catType = { 'Wave':0, 'Component':1, 'Custom':2 }.get( fields[3], 0 )
 			categories.append( {'name':fields[0], 'catStr':fields[1], 'gender':fields[2], 'catType':catType} )
-		self.setCategories( categories )
+		self.setCategories( self.mergeExistingCategoryAttributes(categories) )
 
 	def catCount( self, category ):
 		return sum( 1 for num in self.riders.iterkeys() if self.inCategory(num, category) )
