@@ -1646,7 +1646,7 @@ class Race(object):
 	def mergeExistingCategoryAttributes( self, nameStrTuples ):
 		for cNew in nameStrTuples:
 			try:
-				cExisting = self.categories[Category.getFullName(cNew.get('name', ''), cNew.get('gender','Open'))]
+				cExisting = self.categories[ Category.getFullName(cNew.get('name', ''), cNew.get('gender','Open')) ]
 			except KeyError:
 				continue
 				
