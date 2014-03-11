@@ -19,8 +19,9 @@
 #    
 #    task
 #        title = ...Title of the task shown in CrossMgr...
-#        note = ...note.  notes can be multi-line as long as subsequent lines "line up"
-#               with the start of the line above it...
+#        note = ...note.  notes can be multi-line as long as subsequent lines "line up" 
+#               with the start of the line above it.  Make sure there is a "trailing space" at the end of 
+#               the line - no space is inserted after the line break.
 #        requires
 #            ...Requirements for the task to be displayed.  Optional - see below...
 #        subtasks
@@ -112,9 +113,10 @@ task
                 
                 task
                     title = "Upload" and "Series" flags set appropriately
-                    note = Set the "Upload" flag for all categories to be uploaded
-                           in CrossResults, WebScorer or USAC.  Pay special attention
-                           that each bib number is uploaded on one category only.
+                    note =
+                      Set the "Upload" flag for all categories to be uploaded 
+                      in CrossResults, WebScorer or USAC.  Pay special attention 
+                      that each bib number is uploaded on one category only.
             
         task
             title = Test HTML FTP Upload

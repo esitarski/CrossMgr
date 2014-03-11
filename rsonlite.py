@@ -296,6 +296,18 @@ def simpleparse(source, stringparse=stringparse, stddict=stddict):
 if __name__ == '__main__':
 	import io
 	import pprint
+	
+	teststr = '''
+    My key =
+           This is indented #=
+      This should be at the left edge ===#
+          This is indented differently
+'''
+	test2 = '\n'.join(x[6:] for x in teststr.splitlines()[2:])
+	loads(teststr) == [('My key', [test2])]
+	print test2
+	
+	
 	with io.open( 'Checklist.rson', 'r', encoding = 'UTF-8' ) as fp:
 		v = loads( fp.read() )
 		pprint.pprint( v )

@@ -109,17 +109,35 @@ _processTokenLookup = dict(
 )
 
 def _createTask( task_data ):
-	assert task_data[0] == 'task', 'Missing "task" keyword'
+	assert task_data[0] == 'task', 'Missing "task" keyword.  Line: "{}"'.format( task_data )
 	task = Task()
 	for key, val in task_data[1]:
 		_processTokenLookup[key.lower()](task, val)
 	return task
 
-def createTasks( fp ):
-	root = Task()
-	root.title = 'root'
-	tasks = rsonlite.loads( fp.read() )
-	_setSubtasks( root, tasks )	
+def createTasks( fname, fp ):
+	try:
+		tasks = rsonlite.loads( fp.read() )
+	except Exception as e:
+		Utils.writeLog( 'CheckList: Error: {} in "{}"'.format(e, fname) )
+		tasks = rsonlite.loads( '''
+task
+    title = File Read Error
+    note = {} in file "{}"\n'''.format(e, fname) )
+
+	try:
+		root = Task()
+		root.title = 'root'
+		_setSubtasks( root, tasks )
+	except Exception as e:
+		tasks = rsonlite.loads( '''
+task
+    title = File Content Error
+    note = {} in file "{}"\n'''.format(e, fname) )
+		root = Task()
+		root.title = 'root'
+		_setSubtasks( root, tasks )
+	
 	return root
 	
 class Checklist( wx.Panel ):
@@ -159,7 +177,9 @@ class Checklist( wx.Panel ):
 		self.refresh()
 
 	def updateChecklist( self ):
-		self.checklist = getattr( Model.race, 'checklist', None )
+		race = Model.race
+		
+		self.checklist = getattr( Model.race, 'checklist', None ) if race else None
 		if self.checklist is None:
 			searchDirs = []
 			if Utils.getFileName():
@@ -169,11 +189,16 @@ class Checklist( wx.Panel ):
 			for dir in searchDirs:
 				fname = os.path.join(dir, 'CrossMgrChecklist.txt')
 				try:
-					with io.open(fname, 'r', encoding='utf-8') as fp:
-						self.checklist = Model.race.checklist = createTasks( fp )
-					break
-				except:
-					pass
+					fp = io.open(fname, 'r', encoding='utf-8')
+				except Exception as e:
+					continue
+					
+				self.checklist = createTasks( fname, fp )
+				fp.close()
+				
+				if race:
+					race.checklist = self.checklist
+				break
 	
 	def setChanged( self ):
 		try:
