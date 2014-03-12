@@ -1,4 +1,5 @@
 import wx
+from wx.lib.wordwrap import wordwrap
 import datetime
 
 import Model
@@ -167,55 +168,71 @@ class Actions( wx.Panel ):
 
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
-		vs = wx.BoxSizer( wx.HORIZONTAL )
-		
-		bs = wx.BoxSizer( wx.VERTICAL )
 		
 		self.SetBackgroundColour( wx.Colour(255,255,255) )
 		
+		ps = wx.BoxSizer( wx.VERTICAL )
+		self.splitter = wx.SplitterWindow( self, wx.VERTICAL )
+		ps.Add( self.splitter, 1, flag=wx.EXPAND )
+		self.SetSizer( ps )
+		
+		self.leftPanel = wx.Panel( self.splitter )
+		bs = wx.BoxSizer( wx.VERTICAL )
+		self.leftPanel.SetSizer( bs )
+		self.leftPanel.SetBackgroundColour( wx.Colour(255,255,255) )
+		self.leftPanel.Bind( wx.EVT_SIZE, self.setWrappedRaceInfo )
+		
 		buttonSize = 220
-		self.button = RoundButton( self, size=(buttonSize, buttonSize) )
+		self.button = RoundButton( self.leftPanel, size=(buttonSize, buttonSize) )
 		self.button.SetLabel( FinishText )
 		self.button.SetFontToFitLabel()
 		self.button.SetForegroundColour( wx.Colour(128,128,128) )
 		self.Bind(wx.EVT_BUTTON, self.onPress, self.button )
 		
-		self.raceIntro = wx.StaticText( self, label =  u'' )
+		self.raceIntro = wx.StaticText( self.leftPanel, label =  u'' )
 		self.raceIntro.SetFont( wx.Font(24, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
 		
 		choices = [	_('Record Every Tag Individually'),
 					_('Reset Start Clock on First Tag Read (all riders will get the same start time of the first read)'),
 					_('Skip First Tag Read for All Riders (required when there is a start run-up that passes through the finish on the first lap)')]
-		self.chipTimingOptions = wx.RadioBox( self, label = _("Chip Timing Options"), majorDimension = 1, choices = choices, style = wx.RA_SPECIFY_COLS )
+		self.chipTimingOptions = wx.RadioBox( self.leftPanel, label = _("Chip Timing Options"), majorDimension = 1, choices = choices, style = wx.RA_SPECIFY_COLS )
 																		  
 		self.Bind( wx.EVT_RADIOBOX, self.onChipTimingOptions, self.chipTimingOptions )
 		
-		self.startRaceTimeCheckBox = wx.CheckBox(self, label = _('Start Race Automatically at Future Time'))
+		self.startRaceTimeCheckBox = wx.CheckBox(self.leftPanel, label = _('Start Race Automatically at Future Time'))
 		
 		border = 8
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add(self.button, border=border, flag=wx.ALL)
-		hs.Add(self.raceIntro, border=border, flag=wx.ALL)
+		hs.Add(self.raceIntro, 1, border=border, flag=wx.ALL|wx.EXPAND)
 		
 		bs.Add( hs, border=border, flag=wx.ALL )
 		bs.Add(self.startRaceTimeCheckBox, border=border, flag=wx.ALL)
 		bs.Add(self.chipTimingOptions, border=border, flag=wx.ALL)
 		
-		vs.Add( bs )
-		
-		checklistTitle = wx.StaticText( self, label = _('Checklist:') )
+		self.rightPanel = wx.Panel( self.splitter )
+		self.rightPanel.SetBackgroundColour( wx.Colour(255,255,255) )
+		checklistTitle = wx.StaticText( self.rightPanel, label = _('Checklist:') )
 		checklistTitle.SetFont( wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
-		self.checklist = Checklist.Checklist( self )
+		self.checklist = Checklist.Checklist( self.rightPanel )
 		
 		hsSub = wx.BoxSizer( wx.VERTICAL )
 		hsSub.Add( checklistTitle, 0, flag=wx.ALL, border = 4 )
 		hsSub.Add( self.checklist, 1, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, border = 4 )
+		self.rightPanel.SetSizer( hsSub )
 		
-		vs.Add( hsSub, 1, flag = wx.EXPAND )
+		self.splitter.SplitVertically( self.leftPanel, self.rightPanel )
+		self.splitter.SetMinimumPaneSize( 100 )
+		wx.CallAfter( self.refresh )
+		wx.CallAfter( self.splitter.SetSashPosition, 650 )
 		
-		self.SetSizer(vs)
-		
-		self.refresh()
+	def setWrappedRaceInfo( self, event = None ):
+		wrapWidth = self.leftPanel.GetClientSizeTuple()[0] - self.button.GetClientSizeTuple()[0] - 20
+		dc = wx.WindowDC( self.raceIntro )
+		dc.SetFont( self.raceIntro.GetFont() )
+		label = wordwrap( Model.race.getRaceIntro() if Model.race else u'', wrapWidth, dc )
+		self.raceIntro.SetLabel( label )
+		self.leftPanel.GetSizer().Layout()
 		
 	def updateChipTimingOptions( self ):
 		if not Model.race:
@@ -302,7 +319,6 @@ class Actions( wx.Panel ):
 		self.startRaceTimeCheckBox.Enable( False )
 		self.button.SetLabel( StartText )
 		self.button.SetForegroundColour( wx.Colour(100,100,100) )
-		self.raceIntro.SetLabel( '' )
 		self.chipTimingOptions.SetSelection( 0 )
 		self.chipTimingOptions.Enable( False )
 		
@@ -344,9 +360,9 @@ class Actions( wx.Panel ):
 					self.chipTimingOptions.Enable( False )
 					self.chipTimingOptions.Show( False )
 					
-				self.raceIntro.SetLabel( race.getRaceIntro() )
 			self.GetSizer().Layout()
 		
+		self.setWrappedRaceInfo()
 		self.checklist.refresh()
 		
 		mainWin = Utils.getMainWin()

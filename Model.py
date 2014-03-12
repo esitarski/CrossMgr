@@ -1861,7 +1861,7 @@ class Race(object):
 	
 	def getRaceIntro( self ):
 		intro = [
-			_('Race: {}:{}').format(self.name, self.raceNum),
+			_('{}:{}').format(self.name, self.raceNum),
 			_('Start: {} ({})').format(self.scheduledStart, self.date),
 		]
 		activeCategories = [c for c in self.categories.itervalues() if c.active]
