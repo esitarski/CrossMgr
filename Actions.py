@@ -1,5 +1,8 @@
 import wx
 from wx.lib.wordwrap import wordwrap
+import wx.lib.masked as masked
+from roundbutton import RoundButton
+
 import datetime
 
 import Model
@@ -10,9 +13,6 @@ from FtpWriteFile import realTimeFtpPublish
 from Undo import undo
 import VideoBuffer
 import Checklist
-
-import wx.lib.masked as masked
-from roundbutton import RoundButton
 
 undoResetTimer = None
 def StartRaceNow():
@@ -196,7 +196,7 @@ class Actions( wx.Panel ):
 					_('Reset Start Clock on First Tag Read (all riders will get the same start time of the first read)'),
 					_('Skip First Tag Read for All Riders (required when there is a start run-up that passes through the finish on the first lap)')]
 		self.chipTimingOptions = wx.RadioBox( self.leftPanel, label = _("Chip Timing Options"), majorDimension = 1, choices = choices, style = wx.RA_SPECIFY_COLS )
-																		  
+		
 		self.Bind( wx.EVT_RADIOBOX, self.onChipTimingOptions, self.chipTimingOptions )
 		
 		self.startRaceTimeCheckBox = wx.CheckBox(self.leftPanel, label = _('Start Race Automatically at Future Time'))
