@@ -293,7 +293,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 							
 						readerComputerTimeDiff = tNow - tJChip
 						
-						qLog( 'getTime', '%s=%02d:%02d:%02d.%02d' % (line[2:].strip(), hh,mm,ss,hs) )
+						qLog( 'getTime', '(%s)=%02d:%02d:%02d.%02d' % (line[2:].strip(), hh,mm,ss,hs) )
 						rtAdjust = readerComputerTimeDiff.total_seconds()
 						if rtAdjust > 0:
 							behindAhead = 'Behind'

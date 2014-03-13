@@ -212,7 +212,7 @@ class Actions( wx.Panel ):
 		
 		self.rightPanel = wx.Panel( self.splitter )
 		self.rightPanel.SetBackgroundColour( wx.Colour(255,255,255) )
-		checklistTitle = wx.StaticText( self.rightPanel, label = _('Checklist:') )
+		checklistTitle = wx.StaticText( self.rightPanel, label = _('Checklist: (right-click to set)') )
 		checklistTitle.SetFont( wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
 		self.checklist = Checklist.Checklist( self.rightPanel )
 		
