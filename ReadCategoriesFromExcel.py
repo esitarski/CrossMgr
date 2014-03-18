@@ -45,7 +45,11 @@ def ReadCategoriesFromExcel( reader ):
 		categories.append( catRow )
 	
 	if categories:
-		race.setCategories( race.mergeExistingCategoryAttributes(categories) )
-		return True
+		try:
+			race.setCategories( race.mergeExistingCategoryAttributes(categories) )
+			return True
+		except Exception as e:
+			Utils.writeLog( 'ReadCategoriesFromExcel: error: {}'.format(e) )
+			return False
 	else:
 		return False
