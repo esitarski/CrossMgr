@@ -47,6 +47,7 @@ def ReadCategoriesFromExcel( reader ):
 	if categories:
 		try:
 			race.setCategories( race.mergeExistingCategoryAttributes(categories) )
+			race.adjustAllCategoryWaveNumbers()
 			return True
 		except Exception as e:
 			Utils.writeLog( 'ReadCategoriesFromExcel: error: {}'.format(e) )

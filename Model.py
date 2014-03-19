@@ -135,6 +135,7 @@ class Category(object):
 	MergeAttributes = (
 		'active',
 		'numLaps',
+		'startOffset',
 		'distance',
 		'distanceType',
 		'firstLapDistance',
