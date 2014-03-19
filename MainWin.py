@@ -181,7 +181,7 @@ def ShowTipAtStartup():
 		pass
 
 def replaceJsonVar( s, varName, value ):
-	return s.replace( '%s = null' % varName, '%s = %s' % (varName, json.dumps(value)), 1 )
+	return s.replace( u'%s = null' % varName, u'%s = %s' % (varName, json.dumps(value)), 1 )
 
 #----------------------------------------------------------------------------------
 class CustomStatusBar(wx.StatusBar):

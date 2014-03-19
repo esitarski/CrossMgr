@@ -494,7 +494,7 @@ def GetCategoryDetails():
 				continue
 			
 			if cat.catType == cat.CatWave:
-				lastWaveLaps = cat.getNumLaps
+				lastWaveLaps = cat.getNumLaps()
 				
 			info = dict(
 					name		= cat.fullname,

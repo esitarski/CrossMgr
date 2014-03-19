@@ -283,14 +283,19 @@ class Category(object):
 		if self.firstLapDistance is not None and self.firstLapDistance <= 0.0:
 			self.firstLapDistance = None
 			
-		if gender in {'Men', 'Women', 'Open'}:
-			self.gender = gender
-		else:
-			self.gender = 'Open'
+		self.gender = 'Open'
+		try:
+			genderFirstChar = unicode(gender or u'Open').strip()[:1].lower()
+			if genderFirstChar in 'mh':
+				self.gender = 'Men'
+			elif genderFirstChar in 'wfl':
+				self.gender = 'Women'
+		except:
+			pass
 			
 		self.lappedRidersMustContinue = False
-		lappedRidersMustContinue = '{}'.format(lappedRidersMustContinue).strip()
-		if lappedRidersMustContinue and lappedRidersMustContinue[0] in 'TtYy1':
+		lappedRidersMustContinue = u'{}'.format(lappedRidersMustContinue).strip()
+		if lappedRidersMustContinue[:1] in u'TtYy1':
 			self.lappedRidersMustContinue = True
 
 	def __setstate( self, d ):
