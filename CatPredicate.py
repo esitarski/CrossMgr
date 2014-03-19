@@ -95,10 +95,10 @@ class CategoryPredicate( object ):
 			
 			if s.startswith( 'Gender=' ):
 				f = s.split('=', 1)[1].strip()
-				genderFirstChar = f[1:]
-				if genderFirstChar in 'MH':
+				genderFirstChar = f[1:].lower()
+				if genderFirstChar in 'mh':
 					self.genderMatch = 1
-				elif genderFirstChar in 'WFL':
+				elif genderFirstChar in 'wfl':
 					self.genderMatch = 2
 				else:
 					self.genderMatch = 0
