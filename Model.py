@@ -552,6 +552,9 @@ class Rider(object):
 		
 	def addTime( self, t ):
 		# All times in race time seconds.
+		if t < 0.0:		# Don't add negative race times.
+			return
+			
 		timesLen = len(self.times)
 		if timesLen == 0 or t > self.times[timesLen-1]:
 			self.times.append( t )
