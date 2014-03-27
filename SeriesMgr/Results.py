@@ -501,7 +501,10 @@ class Results(wx.Panel):
 
 	def refresh( self ):
 		model = SeriesModel.model
+		
+		wait = wx.BusyCursor()
 		self.raceResults = model.extractAllRaceResults()
+		del wait
 		
 		self.fixCategories()
 		self.grid.ClearGrid()
