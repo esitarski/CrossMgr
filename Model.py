@@ -1652,7 +1652,6 @@ class Race(object):
 		for c in categories:
 			self.adjustCategoryWaveNumbers( c )
 		self.resetCategoryCache()
-		self.setChanged()
 	
 	def mergeExistingCategoryAttributes( self, nameStrTuples ):
 		for cNew in nameStrTuples:
