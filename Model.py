@@ -1651,7 +1651,9 @@ class Race(object):
 		categories = [c for c in self.categories.itervalues() if c.active and c.catType == Category.CatWave]
 		for c in categories:
 			self.adjustCategoryWaveNumbers( c )
-			
+		self.resetCategoryCache()
+		self.setChanged()
+	
 	def mergeExistingCategoryAttributes( self, nameStrTuples ):
 		for cNew in nameStrTuples:
 			try:

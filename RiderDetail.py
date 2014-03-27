@@ -380,7 +380,7 @@ class RiderDetail( wx.Panel ):
 				(None, None, None, None, None),
 				(wx.NewId(), _('Correct...'),			_('Change number or lap time...'),	self.OnPopupCorrect, interpCase),
 				(wx.NewId(), _('Shift...'),				_('Move lap time earlier/later...'),	self.OnPopupShift, interpCase),
-				(wx.NewId(), _('Delete...'),			_('Delete lap time...'),	self.OnPopupDelete, nonInterpCase),
+				(wx.NewId(), _('Delete...'),			_('Delete lap time(s)...'),	self.OnPopupDelete, nonInterpCase),
 				(None, None, None, None, None),
 				(wx.NewId(), _('Note...'),				_('Add/Edit lap note'),	self.OnPopupNote, nonInterpCase),
 			]
