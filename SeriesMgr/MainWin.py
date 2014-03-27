@@ -28,16 +28,18 @@ from optparse import OptionParser
 import StringIO
 import openpyxl
 
+import Dependencies
+
 import Utils
 import SeriesModel
 from Races				import Races
 from Points				import Points
 from Results			import Results
 from Errors				import Errors
-import Model
 import Version
 from Printing			import SeriesMgrPrintout
 from ExportGrid			import ExportGrid, tag
+
 #----------------------------------------------------------------------------------
 
 def ShowSplashScreen():

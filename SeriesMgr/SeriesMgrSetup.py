@@ -4,6 +4,32 @@ import os
 import shutil
 import zipfile
 
+# Copy all dependent files into this folder.
+copyFiles = [
+	"Model.py",
+	"rsonlite.py",
+	"Checklist.py",
+	"Utils.py",
+	"GpxParse.py",
+	"GeoAnimation.py",
+	"Animation.py",
+	"GanttChart.py",
+	"arial10.py",
+	"FitSheetWrapper.py",
+	"ReadSignOnSheet.py",
+	"ReadCategoriesFromExcel.py",
+	"ReadPropertiesFromExcel.py",
+]
+
+for f in copyFiles:
+	shutil.copy( os.path.join( '..', f), f )
+	
+with open('Dependencies.py', 'w') as fp:
+	for f in copyFiles:
+		fp.write( 'import {}\n'.format(f[:-3]) )
+
+#----------------------------------------------------------------------------------------------------
+
 distDir = 'dist'
 
 # Cleanup existing dll, pyd and exe files.  The old ones may not be needed, so it is best to clean these up.

@@ -13,6 +13,7 @@ class Races(wx.Panel):
 	RaceCol = 0
 	PointsCol = 1
 	RaceFileCol = 2
+	RaceStatusCol = 3
 	
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent)
@@ -37,6 +38,12 @@ class Races(wx.Panel):
 		attr = gridlib.GridCellAttr()
 		attr.SetReadOnly( True )
 		self.grid.SetColAttr( self.RaceCol, attr )
+		
+		'''
+		attr = gridlib.GridCellAttr()
+		attr.SetReadOnly( True )
+		self.grid.SetColAttr( self.RaceStatusCol, attr )
+		'''
 		
 		attr = gridlib.GridCellAttr()
 		attr.SetReadOnly( True )

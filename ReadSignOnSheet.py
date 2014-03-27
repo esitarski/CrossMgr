@@ -694,6 +694,13 @@ class ExcelLink( object ):
 		
 		return infoCache
 
+def HasExcelLink( race ):
+	try:
+		externalInfo = race.excelLink.read()
+		return True
+	except:
+		return False
+
 #-----------------------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
