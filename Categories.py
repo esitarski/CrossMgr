@@ -657,7 +657,6 @@ and remove them from other categories.''').format(category.name),
 			for r in xrange(self.grid.GetNumberRows()):
 				values = dict( (name, self.grid.GetCellValue(r, c)) for name, c in self.iCol.iteritems()
 																			if name not in self.computedFieldss )
-				print( values )
 				numStrTuples.append( values )
 			race.setCategories( numStrTuples )
 			race.adjustAllCategoryWaveNumbers()

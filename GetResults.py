@@ -6,7 +6,7 @@ import copy
 import Utils
 import itertools
 
-from ReadSignOnSheet import IgnoreFields
+from ReadSignOnSheet import IgnoreFields, SyncExcelLink
 statusSortSeq = Model.Rider.statusSortSeq
 
 def TimeDifference( a, b, highPrecision = False ):
@@ -468,6 +468,8 @@ def GetCategoryDetails():
 	if not Model.race:
 		return []
 
+	SyncExcelLink( Model.race )
+	
 	tempNums = UnstartedRaceDataProlog()
 	unstarted = Model.race.isUnstarted()
 

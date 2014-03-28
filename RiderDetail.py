@@ -347,7 +347,7 @@ class RiderDetail( wx.Panel ):
 			return
 		num = int(self.num.GetValue())
 		catName = self.category.GetStringSelection()
-
+		
 		undo.pushState()
 		with Model.LockRace() as race:
 			if not race:

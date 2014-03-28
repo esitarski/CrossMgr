@@ -3,6 +3,7 @@ import Utils
 import datetime
 import Model
 from GetResults import GetResults, GetCategoryDetails
+from ReadSignOnSheet import SyncExcelLink
 
 CrossResultsFields = (
 	('Place',		'pos'),
@@ -18,6 +19,8 @@ def CrossResultsExport( fname ):
 	race = Model.race
 	if not race:
 		return
+	
+	SyncExcelLink( race )
 	
 	hasField = [False] * len(CrossResultsFields)
 	hasField[0] = True

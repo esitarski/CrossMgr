@@ -4,6 +4,7 @@ import Utils
 import datetime
 import Model
 from GetResults import GetResults, GetCategoryDetails
+from ReadSignOnSheet import SyncExcelLink
 
 WebScorerFields = (
 	('Place',		'pos'),
@@ -45,6 +46,8 @@ def WebScorerExport( fname ):
 	hasField = [False] * len(WebScorerFields)
 	hasField[0] = True
 	hasField[1] = True
+	
+	SyncExcelLink( race )
 	
 	# Check for what fields are actually filled in.
 	publishCategories = race.getCategories( startWaveOnly = False, uploadOnly = True )

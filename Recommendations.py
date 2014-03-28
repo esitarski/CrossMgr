@@ -6,6 +6,7 @@ import ColGrid
 from GetResults import GetResultsCore
 from FixCategories import FixCategories
 from RiderDetail import ShowRiderDetailDialog
+from ReadSignOnSheet import SyncExcelLink
 
 class Recommendations( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
@@ -167,6 +168,7 @@ class Recommendations( wx.Panel ):
 				self.clearGrid()
 				return
 
+			SyncExcelLink( race )
 			category = FixCategories( self.categoryChoice, getattr(race, 'recommendationsCategory', 0) )
 					
 			excelErrors = []

@@ -700,6 +700,9 @@ def HasExcelLink( race ):
 		return True
 	except:
 		return False
+		
+def SyncExcelLink( race ):
+	return HasExcelLink( race )
 
 #-----------------------------------------------------------------------------------------------------
 

@@ -4,6 +4,7 @@ import Utils
 import datetime
 from GetResults import GetResults, GetCategoryDetails
 from FitSheetWrapper import FitSheetWrapper
+from ReadSignOnSheet import SyncExcelLink
 
 USACFields = (
 	'Race Date',
@@ -25,6 +26,8 @@ def USACExport( sheet ):
 	if not race:
 		return
 		
+	SyncExcelLink( race )
+	
 	raceDiscipline = getattr( race, 'discipline', 'Cyclo-cross' )
 	if raceDiscipline.lower() in 'cyclocross':
 		raceDiscipline = 'Cyclo-cross'
