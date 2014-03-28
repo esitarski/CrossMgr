@@ -1705,7 +1705,7 @@ class Race(object):
 			self.resetCategoryCache()
 			self.setChanged()
 			
-			# Reclassify all the riders if something changed.
+			# Reclassify all the riders as something changed.
 			for num in self.riders.iterkeys():
 				self.getCategory( num )
 			
