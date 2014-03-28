@@ -413,7 +413,6 @@ def GetNonWaveCategoryResults( category ):
 					rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
 			else:
 				rr.pos = statusNames[rr.status]
-			
 	
 	return tuple(riderResults)
 	
