@@ -43,14 +43,14 @@ class CategoriesPrintout( wx.Printout ):
 		if not race:
 			return
 		
-		catMap = dict( (c.fullname, c) for c in race.getCategories( startWaveOnly = False ) )
-		catDetails = GetCategoryDetails()
-		catDetailsMap = dict( (cd['name'], cd) for cd in catDetails )
-		
 		try:
 			externalInfo = race.excelLink.read()
 		except:
 			externalInfo = {}
+		
+		catMap = dict( (c.fullname, c) for c in race.getCategories( startWaveOnly = False ) )
+		catDetails = GetCategoryDetails()
+		catDetailsMap = dict( (cd['name'], cd) for cd in catDetails )
 		
 		title = '\n'.join( [_('Categories'), race.name, race.scheduledStart + _(' Start on ') + Utils.formatDate(race.date)] )
 		colnames = [_('Start Time'), _('Category'), _('Gender'), _('Numbers'), _('Laps'), _('Distance'), _('Starters')]

@@ -407,6 +407,10 @@ class Category(object):
 	
 	def key( self ):
 		return tuple( getattr(self, attr, None) for attr in self.key_attr )
+		
+	def copy( self, c ):
+		for attr in self.key_attr:
+			setattr( self, attr, getattr(c, attr) )
 	
 	def removeNum( self, num ):
 		if not self.matches(num, True):
@@ -1687,16 +1691,24 @@ class Race(object):
 						break
 			newCategories[category.fullname] = category
 			i += 1
-
+		
 		if self.categories != newCategories:
-			self.categories = newCategories
+			# Copy the new values into the existing categories.
+			# This minimizes the impact if the calling code is in a category loop.
+			for cNewName, cNew in newCategories.iteritems():
+				try:
+					self.categories[cNewName].copy( cNew )
+				except KeyError:
+					self.categories[cNewName] = cNew
+			
+			self.categories = dict( (cName, cValue) for cName, cValue in self.categories.iteritems() if cName in newCategories )
 			self.resetCategoryCache()
 			self.setChanged()
 			
 			# Reclassify all the riders if something changed.
 			for num in self.riders.iterkeys():
 				self.getCategory( num )
-
+			
 			if self.categories:
 				self.allCategoriesHaveRaceLapsDefined = True
 				self.categoryLapsMax = 0

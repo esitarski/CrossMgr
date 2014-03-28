@@ -8,6 +8,7 @@ from  ExportGrid import ExportGrid
 from DNSManager import AutoWidthListCtrl
 from GetResults import GetResults
 import Model
+from ReadSignOnSheet import SyncExcelLink
 
 #----------------------------------------------------------------------
 
@@ -42,6 +43,7 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		race = Model.race
 		self.catCount = {}
 		if race:
+			SyncExcelLink( race )
 			for c in race.getCategories(False):
 				self.catCount[c] = race.catCount( c )
 				if self.catCount[c] == 0:
