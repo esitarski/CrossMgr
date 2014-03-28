@@ -140,7 +140,7 @@ class Category(object):
 		'distanceType',
 		'firstLapDistance',
 		'uploadFlag',
-		'seriesflag',
+		'seriesFlag',
 		'catType',
 	)
 
@@ -186,7 +186,6 @@ class Category(object):
 					
 			except Exception as e:
 				# Ignore any parsing errors.
-				print( e )
 				pass
 				
 		self.intervals.sort()
@@ -1664,8 +1663,8 @@ class Race(object):
 				
 			for a in Category.MergeAttributes:
 				vNew = cNew.get( a, None )
-				vExisting = getattr( cExisting, a, None )
-				if not vNew and vExisting is not None:
+				vExisting = getattr( cExisting, a )
+				if vNew is None and vExisting is not None:
 					cNew[a] = vExisting
 		
 		return nameStrTuples

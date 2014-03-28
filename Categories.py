@@ -510,7 +510,7 @@ and remove them from other categories.''').format(category.name),
 			
 		gender = gender if gender in ['Men', 'Women'] else 'Open'
 		self.grid.SetRowLabelValue( r, u'' )
-		self.grid.SetCellValue( r, self.iCol['active'], '1' if active else '0' )
+		self.grid.SetCellValue( r, self.iCol['active'], u'1' if active else u'0' )
 		self.grid.SetCellValue( r, self.iCol['catType'], unicode(catType) )
 		self.grid.SetCellValue( r, self.iCol['name'], name )
 		self.grid.SetCellValue( r, self.iCol['gender'], gender )
@@ -523,8 +523,8 @@ and remove them from other categories.''').format(category.name),
 		self.grid.SetCellValue( r, self.iCol['distance'], ('%.3f' % distance) if distance else '' )
 		self.grid.SetCellValue( r, self.iCol['distanceType'], '%d' % (distanceType if distanceType else 0) )
 		self.grid.SetCellValue( r, self.iCol['firstLapDistance'], ('%.3f' % firstLapDistance) if firstLapDistance else '' )
-		self.grid.SetCellValue( r, self.iCol['uploadFlag'], '1' if uploadFlag else '0' )
-		self.grid.SetCellValue( r, self.iCol['seriesFlag'], '1' if seriesFlag else '0' )
+		self.grid.SetCellValue( r, self.iCol['uploadFlag'], u'1' if uploadFlag else u'0' )
+		self.grid.SetCellValue( r, self.iCol['seriesFlag'], u'1' if seriesFlag else u'0' )
 		
 		race = Model.race
 		category = race.categories.get(u'{} ({})'.format(name.strip(), gender), None)
@@ -657,6 +657,7 @@ and remove them from other categories.''').format(category.name),
 			for r in xrange(self.grid.GetNumberRows()):
 				values = dict( (name, self.grid.GetCellValue(r, c)) for name, c in self.iCol.iteritems()
 																			if name not in self.computedFieldss )
+				print( values )
 				numStrTuples.append( values )
 			race.setCategories( numStrTuples )
 			race.adjustAllCategoryWaveNumbers()
