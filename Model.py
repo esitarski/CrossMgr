@@ -2064,18 +2064,15 @@ class Race(object):
 		except ValueError:
 			return
 		
-		categoryWave = self.getCategoryWave( category )
 		for c in self.categories.itervalues():
-			if c != category and c != categoryWave:
+			if c != category:
 				c.removeNum( num )
 				c.normalize()
 				
 		category.addNum( num )
 		category.normalize()
 		
-		if categoryWave:
-			categoryWave.addNum( num )
-			categoryWave.normalize()
+		self.adjustAllCategoryWaveNumbers()
 		
 		self.resetCategoryCache()
 		self.setChanged()
