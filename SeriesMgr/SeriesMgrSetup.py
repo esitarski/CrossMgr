@@ -3,18 +3,20 @@ import py2exe
 import os
 import shutil
 import zipfile
+import sys
 
 # Copy all dependent files into this folder.
 copyFiles = [
 	"Model.py",
+	"Utils.py",
 	"rsonlite.py",
 	"Checklist.py",
-	"Utils.py",
 	"GpxParse.py",
 	"GeoAnimation.py",
 	"Animation.py",
 	"GanttChart.py",
 	"arial10.py",
+	"GetResults.py",
 	"FitSheetWrapper.py",
 	"ReadSignOnSheet.py",
 	"ReadCategoriesFromExcel.py",
@@ -28,6 +30,7 @@ with open('Dependencies.py', 'w') as fp:
 	for f in copyFiles:
 		fp.write( 'import {}\n'.format(f[:-3]) )
 
+sys.exit()
 #----------------------------------------------------------------------------------------------------
 
 distDir = 'dist'

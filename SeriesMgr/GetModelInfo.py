@@ -12,7 +12,7 @@ import GanttChart
 import ReadSignOnSheet
 import SeriesModel
 import Utils
-from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache
+from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, HasExcelLink
 from GetResults			import GetResults, GetCategoryDetails
 
 class RaceResult( object ):
@@ -115,14 +115,19 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 
 	except IOError as e:
 		return False, e, []
+	
+	race = Model.race
+	if not HasExcelLink(race):	# Force a refresh of the Excel link before reading the categories.
+		pass
 		
 	raceURL = getattr( race, 'urlFull', None )
 	raceResults = []
-	for category in race.getCategories( startWaveOnly = False ):
+	for category in race.getCategories( startWaveOnly=False ):
 		if not category.seriesFlag:
 			continue
 		
 		results = GetResults( category, True )
+		
 		for rr in results:
 			if rr.status != Model.Rider.Finisher:
 				continue
