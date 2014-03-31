@@ -12,8 +12,8 @@ from JChip import EVT_CHIP_READER
 import PhotoSyncViewer
 import VideoBuffer
 
-PORT, HOST = JChip.DEFAULT_PORT, JChip.DEFAULT_HOST
-
+HOST, PORT = JChip.DEFAULT_HOST, JChip.DEFAULT_PORT
+ 
 def CheckExcelLink():
 	race = Model.race
 	if not race:
@@ -140,15 +140,9 @@ class JChipSetupDialog( wx.Dialog ):
 			row=row, col=1, border = border, flag=wx.EXPAND|wx.TOP|wx.RIGHT|wx.ALIGN_LEFT )
 		
 		row += 1
-		#self.ipaddr = masked.IpAddrCtrl( self, -1, style = wx.TE_PROCESS_TAB | wx.TE_READONLY )
-		#self.ipaddr.SetValue( HOST )
-		ips = GetAllIps()
-		self.ipaddr = wx.Choice( self, choices = ips )
-		for i, ip in enumerate(ips):
-			if ip == HOST:
-				self.ipaddr.SetSelection( i )
-				break
-		self.ipaddr.Bind( wx.EVT_CHOICE, self.onIpAddrSelect )
+		sep = u'  -' + _('or') + u'-  '
+		ips = sep.join( GetAllIps() )
+		self.ipaddr = wx.TextCtrl( self, value = ips, style = wx.TE_READONLY, size=(240,-1) )
 		
 		rowColSizer.Add( wx.StaticText( self, label = _('Remote IP Address:') ),
 						row=row, col=0, flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
@@ -185,27 +179,6 @@ class JChipSetupDialog( wx.Dialog ):
 
 	def skip(self, evt):
 		return
-	
-	def onIpAddrSelect( self, event ):
-		running = bool( JChip.listener )
-		if running:
-			JChip.StopListener()
-			if self.timer:
-				self.timer.Stop()
-				self.timer = None
-			wx.Sleep( 2 )	# Give everything a chance to shut down.
-			
-		global HOST
-		HOST = JChip.DEFAULT_HOST = self.ipaddr.GetStringSelection()
-		
-		if running:
-			self.appendMsg( 'restarting RFID listener (%s)...' % HOST )
-			JChip.StartListener()
-			self.appendMsg( 'listening for RFID connection...' )
-			
-			# Start a timer to monitor the receiver.
-			self.receivedCount = 0
-			self.timer = wx.CallLater( 1000, self.onTimerCallback, 'started' )
 	
 	def handleChipReaderEvent( self, event ):
 		if not PhotoSyncViewer.PhotoSyncViewerIsShown() or not event.tagTimes:

@@ -30,26 +30,26 @@ Open the RFID Reader Setup Dialog.
 Used to configure and test the RFID receiver.
 
 #### Configure the Reader
-If using CrossMgrImpinj or CrossMgrAlient to talk to the Impinj or Alien reader, make sure those programs are running and the reader is plugged in, on the network, etc.  Then skip to "Do Reader Test".
+If using CrossMgrImpinj or CrossMgrAlien to talk to the Impinj or Alien reader, make sure those programs are running and the reader is plugged in, on the network, etc.  Then skip to "Do Reader Test".
 
 If using JChip, make sure you have your [JChip Documentation](http://mts.greentag.to/ControlPanelSoftManual.pdf) ready if you are configuring JChip for the first time.
 
 CrossMgr is the "server", and the RFID reader is the "client".  The communication works as follows:
 
-1. CrossMgr opens a socket on its computer and listens to port 53135.
-1. The JChip receiver, configured as a "TCP Client", tries to connect to CrossMgr every 5 seconds.  You have to configure it so it knows how to connect to CrossMgr (see below).
+1. CrossMgr opens a socket on its computer and listens to port 53135.  It listens to all incoming connections including LAN and Wireless.
+1. The JChip receiver, configured as a "TCP Client", tries to connect to the CrossMgr computer every 5 seconds.  You have to configure it so it knows how to connect to CrossMgr (see below).
 1. When the JChip connection succeeds, the two systems are "connected", and start exchanging data.
 1. If the CrossMgr/JChip connection is broken for any reason, the two systems will automatically reconnect when the connection is restored as JChip will try to reconnect automatically.
 
 The JChip Setup Dialog provides the needed parameters to allow you to configure JChip.  Go to the "7 Setting of Connections" section in the JChip "Control Panel Soft Manual" and configure a JChip connection as follows:
 
 
-CrossMgr communicates with the Chip reader through a TCP/IP interface (that is, an internet connection).  This can be done with cable or wireless.  Check what hardware you need to accomplish this.
+CrossMgr communicates with the Chip reader through a TCP/IP interface (that is, an internet connection).  This can be done with cable or wireless.  CrossMgr listens for a connection on all network connections including cable and wireless.  Check what hardware you need to accomplish this.
 
 Field|Value|Description
 :----|:----|:----------
 Type|TCP Client|Tells JChip to act like a client to talk to CrossMgr's server
-Remote IP Address|Specified in CrossMgr|Internet address of the CrossMgr computer.
+Remote IP Address|One of the IP addresses shown on the screen|IP address of the CrossMgr computer.  If there are more then one, one is generally for the LAN and the other is for the wireless connection.  To tell which is which, on Windows, in a "cmd" window, run "ipconfig".  On Mac/Linux, open a terminal and run "ifconfig".  Choose the IP address which matches you connection - LAN or wireless that you are using to connect the JChip receiver.
 Remote Port|53135|Port on the CrossMgr computer that JChip connects to.
 
 The Remote IP Address will be the one shown in CrossMgr.  Don't worry about the other JChip fields, however, the CrossMgr connection must be checked for "Use".
@@ -57,7 +57,7 @@ You may have to power down/power up JChip after making this change.
 
 #### Do Reader Test
 
-Press the "Start RFID Test" button in CrossMgr.  This tells CrossMgr to connect to the reader and start listening for tag reads.
+Press the "Start RFID Test" button in CrossMgr.  This tells CrossMgr to accept the connection from the reader and start processing tag reads.
 
 You will receive a warning if you do not have an Excel sheet configured.
 If you just want to test the receiver, you don't need to worry about the warning.  If you are trying to use RFID tags during a race, you will need a properly configured Excel sheet to associate the tags to the rider information.

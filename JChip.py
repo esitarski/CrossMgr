@@ -43,26 +43,8 @@ def reset( raceDate = None ):
 	tLast = None
 	tSameCount = 0
 
+DEFAULT_HOST = '0.0.0.0'		# Listen to all available network cards on this computer.
 DEFAULT_PORT = 53135
-DEFAULT_HOST = socket.gethostbyname(socket.gethostname())
-if DEFAULT_HOST == '127.0.0.1':
-	reSplit = re.compile('[: \t]+')
-	try:
-		co = subprocess.Popen(['ifconfig'], stdout = subprocess.PIPE)
-		ifconfig = co.stdout.read()
-		for line in ifconfig.split('\n'):
-			line = line.strip()
-			try:
-				if line.startswith('inet addr:'):
-					fields = reSplit.split( line )
-					addr = fields[2]
-					if addr != '127.0.0.1':
-						DEFAULT_HOST = addr
-						break
-			except:
-				pass
-	except:
-		pass
 
 q = None
 shutdownQ = None
