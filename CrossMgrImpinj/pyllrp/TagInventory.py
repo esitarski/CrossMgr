@@ -67,8 +67,8 @@ class TagInventory( object ):
 
 	def GetROSpec( self, antennas = None ):
 		if antennas is not None:
-			if not isinstance(antennas, list):
-				antennas = list(antennas)
+			if isinstance(antennas, (int, long)):
+				antennas = [antennas]
 		else:
 			antennas = [0]
 	
