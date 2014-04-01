@@ -722,6 +722,8 @@ def WaitForMessage( MessageID, sock, nonMatchingMessageHandler = None ):
 #-----------------------------------------------------------------------------
 
 def HexFormatToStr( value ):
+	if isinstance(value, (int, long)):
+		return '{:X}'.format(value)
 	return ''.join( [ "%02X" % ord(x) for x in value ] ).lstrip('0')
 
 def HexFormatToInt( value ):

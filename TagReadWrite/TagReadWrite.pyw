@@ -8,6 +8,7 @@ import os
 import sys
 import time
 import datetime
+import traceback
 
 sys.path.append( '../CrossMgrImpinj/pyllrp' )
 
@@ -368,7 +369,7 @@ class MainWin( wx.Frame ):
 		try:
 			self.tagWriter.WriteTag( '', writeValue )
 		except Exception as e:
-			Utils.MessageOK( self, 'Write Fails: {}\n\nCheck the reader connection.'.format(e),
+			Utils.MessageOK( self, 'Write Fails: {}\n\nCheck the reader connection.\n\n{}'.format(e, traceback.format_exc()),
 							'Write Fails' )
 		
 		self.setWriteSuccess( True )
@@ -390,7 +391,7 @@ class MainWin( wx.Frame ):
 			tagInventory = [(t or '0') for t in sorted(tagInventory, key = lambda x: int(x,16))]
 			self.tags.SetValue( '\n'.join(tagInventory) )
 		except Exception as e:
-			Utils.MessageOK( self, 'Read Fails: {}\n\nCheck the reader connection.'.format(e),
+			Utils.MessageOK( self, 'Read Fails: {}\n\nCheck the reader connection.\n\n{}'.format(e, traceback.format_exc()),
 							'Read Fails' )
 		
 		if event is None:
