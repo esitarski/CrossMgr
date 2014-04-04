@@ -196,8 +196,6 @@ def GetResultsCore( category ):
 					laps = min( categoryWinningLaps[riderCategory], len(times)-1 )
 				else:
 					laps = bisect_left( times, categoryWinningTime[riderCategory], hi=len(times)-1 )
-					if laps > 1 and times[laps] > categoryWinningTime[riderCategory]:
-						laps -= 1
 				
 				times = times[:laps+1]
 				interp = interp[:laps+1]
