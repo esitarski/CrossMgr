@@ -584,8 +584,13 @@ and remove them from other categories.''').format(category.name),
 		r = self.grid.GetGridCursorRow()
 		if r is None or r < 0:
 			return
-		if Utils.MessageOKCancel(self,	_('Delete Category "{}"?').format(self.grid.GetCellValue(r, 1).strip()),
-										_('Delete Category') ):
+		if Utils.MessageOKCancel(
+					self,
+					_('Delete Category "{} ({})"?').format(
+						self.grid.GetCellValue(r, 3).strip(),
+						self.grid.GetCellValue(r, 4).strip(),
+					),
+					_('Delete Category') ):
 			self.grid.DeleteRows( r, 1, True )
 		
 	def onUpCategory( self, event ):
