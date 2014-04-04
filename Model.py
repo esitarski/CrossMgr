@@ -1448,22 +1448,25 @@ class Race(object):
 		''' Return times and nums for the leaders of each category. '''
 		ctn = {}
 		
-		activeCategories = [c for c in self.categories.itervalues() if c.active]
-		activeCategories.sort( key = Category.key )
-		
 		entries = self.interpolate()
+		categories = self.getCategories()
+		
+		categorySplit = dict( (c, []) for c in categories )
 		getCategory = self.getCategory
-		for c in activeCategories:
+		for e in entries:
+			categorySplit[getCategory(e.num)].append( e )
+			
+		for c in categories:
 			times = [0.0]
 			nums = [None]
 			lapCur = 1
-			for e in (e for e in entries if e.lap == lapCur and getCategory(e.num) == c):
-				times.append( e.t )
-				nums.append( e.num )
-				lapCur += 1
-				
+			for e in categorySplit[c]:
+				if e.lap == lapCur:
+					times.append( e.t )
+					nums.append( e.num )
+					lapCur += 1
+			
 			ctn[c] = [times, nums]
-		
 		return ctn
 		
 	@memoize
