@@ -15,27 +15,7 @@ import re
 #------------------------------------------------------------------------------	
 # CrossMgr's port and socket.
 DEFAULT_PORT = 53135
-DEFAULT_HOST = socket.gethostbyname(socket.gethostname())
-
-# If we can only find loopback, try to find the computer's real IP with ifconfig.
-if DEFAULT_HOST == '127.0.0.1':
-	reSplit = re.compile('[: \t]+')
-	try:
-		co = subprocess.Popen(['ifconfig'], stdout = subprocess.PIPE)
-		ifconfig = co.stdout.read()
-		for line in ifconfig.split('\n'):
-			line = line.strip()
-			try:
-				if line.startswith('inet addr:'):
-					fields = reSplit.split( line )
-					addr = fields[2]
-					if addr != '127.0.0.1':
-						DEFAULT_HOST = addr
-						break
-			except:
-				pass
-	except:
-		pass
+DEFAULT_HOST = '127.0.0.1'
 
 #------------------------------------------------------------------------------	
 # JChip delimiter (CR, **not** LF)
