@@ -78,7 +78,7 @@ class Impinj2JChip( object ):
 			if not self.keepGoing:
 				break
 				
-			# Set the timout with CrossMgr to 2 seconds.  If CrossMgr fails to respond within this time, re-establish the connection.
+			# Set the timeout with CrossMgr to 2 seconds.  If CrossMgr fails to respond within this time, re-establish the connection.
 			sock.settimeout( 2.0 )
 				
 			#------------------------------------------------------------------------------

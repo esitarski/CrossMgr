@@ -12,11 +12,12 @@ class TagInventory( object ):
 	inventoryParameterSpecID = 1234	# Arbitrary inventory parameter spec id.
 	readWaitMilliseconds = 100
 
-	def __init__( self, host = '192.168.10.102', defaultAntennas = None ):
+	def __init__( self, host = '192.168.10.102', defaultAntennas = None, transmitPower = None ):
 		self.host = host
 		self.connector = None
 		self.resetTagInventory()
 		self.defaultAntennas = defaultAntennas
+		self.transmitPower = transmitPower
 		
 	def resetTagInventory( self ):
 		self.tagInventory = set()
@@ -45,19 +46,33 @@ class TagInventory( object ):
 		response = self.connector.transact( SET_READER_CONFIG_Message(ResetToFactoryDefault = True) )
 		assert response.success(), 'SET_READER_CONFIG ResetToFactorDefault fails'
 
+		parameters = []
+		
+		# Change transmit power (if specified).  This value is RFID reader dependent.
+		if self.transmitPower is not None:
+			parameters.append(
+				RFTransmitter_Parameter( 
+					HopTableID = 1,
+					ChannelIndex = 0,
+					TransmitPower = self.transmitPower,
+				)
+			)
+		
 		# Reduce tag transit time to improve write response.
-		message = SET_READER_CONFIG_Message(Parameters = [
+		parameters.append(
+			C1G2SingulationControl_Parameter(
+				Session = 0,
+				TagPopulation = 100,
+				TagTransitTime = 3000,
+			)
+		)
+		
+		message = SET_READER_CONFIG_Message( Parameters = [
 				AntennaConfiguration_Parameter( AntennaID = 0, Parameters = [
-					C1G2InventoryCommand_Parameter( Parameters = [
-							C1G2SingulationControl_Parameter(
-								Session = 0,
-								TagPopulation = 100,
-								TagTransitTime = 3000,
-							),
-						]
-					),
+					C1G2InventoryCommand_Parameter( Parameters = parameters ),
 				] ),
 			] )
+		
 		response = self.connector.transact( message )
 		assert response.success(), 'SET_READER_CONFIG Configuration fails' + response
 		
@@ -121,7 +136,7 @@ class TagInventory( object ):
 	def _prolog( self, antennas = None ):
 		# Disable all the rospecs.  This command may fail so we ignore the response.
 		response = self.connector.transact( DISABLE_ROSPEC_Message(ROSpecID = 0) )
-		# Delete our old rospec if it exists.  This command might fail so we ignore the return.
+		# Delete our old rospec if it exists.  This command might fail so we ignore the response.
 		response = self.connector.transact( DELETE_ROSPEC_Message(ROSpecID = self.roSpecID) )
 
 		# Add callbacks so we can record the tag reads and any other messages from the reader.

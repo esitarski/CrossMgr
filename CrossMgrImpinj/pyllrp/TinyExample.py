@@ -82,3 +82,13 @@ if __name__ == '__main__':
 	for t in tagInventory:
 		print t
 	ti.Disconnect()
+	
+	''' Test that we can connect at different power levels. '''
+	for p in [1,5,10,20,30,40,50,60,70,80]:
+		print 'power ', p
+		ti = TagInventory( host, transmitPower = p )
+		ti.Connect()
+		tagInventory = ti.GetTagInventory()
+		for t in tagInventory:
+			print t
+		ti.Disconnect()

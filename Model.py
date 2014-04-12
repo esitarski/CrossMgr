@@ -2080,6 +2080,11 @@ class Race(object):
 		self.resetCategoryCache()
 		self.setChanged()
 		self.setCategoryMask()
+		
+	@memoize
+	def isCategoryEmpty( self, category ):
+		inCategory = self.inCategory
+		return not (category.active and any(inCategory(num, category) for num in self.riders.iterkeys()) )
 	
 	@memoize
 	def allRidersFinished( self ):

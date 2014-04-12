@@ -237,7 +237,8 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 							iDate = line.index( 'date=' ) + 5
 							YYYY, MM, DD = int(line[iDate:iDate+4]), int(line[iDate+4:iDate+6]), int(line[iDate+6:iDate+8])
 							if Model.race and Model.race.isRunning():
-								startDate = datetime.date( race.startTime.year, race.startTime.month, race.startTime.day )
+								raceStartTime = Model.race.startTime
+								startDate = datetime.date( raceStartTime.year, raceStartTime.month, raceStartTime.day )
 								tagDate = datetime.date( YYYY, MM, DD )
 								day = (tagDate - startDate).days
 						except ValueError:
