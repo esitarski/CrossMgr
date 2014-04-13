@@ -15,7 +15,8 @@ When a rider's chip is read, the chip receiver sends a timestamped message to Cr
 
 CrossMgr always uses the chip reader's time.  This ensures accuracy even if CrossMgr gets busy and cannot look at its incoming messages for a few seconds.
 
-CrossMgr works with a single chip receiver - multiple readers are not supported.
+CrossMgr can work with any number of readers connected to it simultaneously.
+It will compute a time correction between each reader's time and the CrossMgr computer's time.  This synchronizes the reads to a consistent time even if the clocks on all the readers are different, which is likely.
 
 Notes about the Chip reader:
 

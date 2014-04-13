@@ -87,7 +87,7 @@ class Impinj2JChip( object ):
 			self.messageQ.put( ('Impinj2JChip', 'state', True) )
 			self.messageQ.put( ('Impinj2JChip', '******************************' ) )
 			self.messageQ.put( ('Impinj2JChip', 'CrossMgr Connection succeeded!' ) )
-			self.messageQ.put( ('Impinj2JChip', 'Sending identifier {}...'.format(instance_name)) )
+			self.messageQ.put( ('Impinj2JChip', 'Sending identifier "{}"...'.format(instance_name)) )
 			try:
 				sock.send("N0000{}{}".format(instance_name, CR) )
 			except socket.timeout:
