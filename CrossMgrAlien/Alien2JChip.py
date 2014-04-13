@@ -52,9 +52,10 @@ class Alien2JChip( object ):
 			return True
 			
 	def runServer( self ):
+		instance_name = '{}-{}'.format(socket.gethostname(), os.getpid())
 		while self.checkKeepGoing():
 			self.messageQ.put( ('Alien2JChip', 'state', False) )
-			self.messageQ.put( ('Alien2JChip', 'Trying to connect to CrossMgr...') )
+			self.messageQ.put( ('Alien2JChip', 'Trying to connect to CrossMgr as "{}"...'.format(instance_name)) )
 			sock = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 
 			#------------------------------------------------------------------------------
@@ -65,7 +66,7 @@ class Alien2JChip( object ):
 					sock.connect((self.crossMgrHost, self.crossMgrPort))
 					break
 				except socket.error:
-					self.messageQ.put( ('Alien2JChip', 'CrossMgr Connection Failed.  Trying again in 2 seconds...') )
+					self.messageQ.put( ('Alien2JChip', 'CrossMgr Connection Failed.  Trying a "{}" again in 2 secs...'.format(instance_name)) )
 					for t in xrange(2):
 						time.sleep( 1 )
 						if not self.checkKeepGoing():
@@ -77,8 +78,8 @@ class Alien2JChip( object ):
 			#------------------------------------------------------------------------------
 			self.messageQ.put( ('Alien2JChip', 'state', True) )
 			self.messageQ.put( ('Alien2JChip', 'CrossMgr Connection succeeded!' ) )
-			self.messageQ.put( ('Alien2JChip', 'Sending identifier...') )
-			sock.send("N0000{}-{}{}".format(socket.gethostname(), os.getpid(), CR) )
+			self.messageQ.put( ('Alien2JChip', 'Sending identifier "{}"...'.format(instance_name)) )
+			sock.send("N0000{}{}".format(instance_name, CR) )
 
 			#------------------------------------------------------------------------------
 			self.messageQ.put( ('Alien2JChip', 'Waiting for "get time" command from CrossMgr...') )
