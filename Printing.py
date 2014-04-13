@@ -142,7 +142,8 @@ class CrossMgrPrintout( wx.Printout ):
 	def __init__(self, categories = None):
 		wx.Printout.__init__(self)
 		if not categories:
-			self.categories = Model.race.getCategories(False)
+			with UnstartedRaceWrapper():
+				self.categories = Model.race.getCategories(False)
 		else:
 			self.categories = categories
 		self.pageInfo = {}
@@ -181,14 +182,15 @@ class CrossMgrPrintout( wx.Printout ):
 		
 		# Compute a map by category and range for each page.
 		page = 0
-		for c in self.categories:
-			categoryLength = len(GetResults(c))
-			pageNumberTotal = int( math.ceil( float(categoryLength) / float(rowDrawCount) ) + 0.1 )
-			pageNumber = 0
-			for i in xrange(0, categoryLength, rowDrawCount):
-				page += 1
-				pageNumber += 1
-				self.pageInfo[page] = [c, i, min(categoryLength, rowDrawCount), pageNumber, pageNumberTotal, categoryLength]
+		with UnstartedRaceWrapper():
+			for c in self.categories:
+				categoryLength = len(GetResults(c))
+				pageNumberTotal = int( math.ceil( float(categoryLength) / float(rowDrawCount) ) + 0.1 )
+				pageNumber = 0
+				for i in xrange(0, categoryLength, rowDrawCount):
+					page += 1
+					pageNumber += 1
+					self.pageInfo[page] = [c, i, min(categoryLength, rowDrawCount), pageNumber, pageNumberTotal, categoryLength]
 		
 		return (1, page, 1, page)
 
