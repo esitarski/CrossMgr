@@ -6,7 +6,7 @@ import Utils
 Utils.initTranslation()
 from  ExportGrid import ExportGrid
 from DNSManager import AutoWidthListCtrl
-from GetResults import GetResults
+from GetResults import GetResults, UnstartedRaceWrapper
 import Model
 from ReadSignOnSheet import SyncExcelLink
 
@@ -43,15 +43,16 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		race = Model.race
 		self.catCount = {}
 		if race:
-			SyncExcelLink( race )
-			for c in race.getCategories(False):
-				self.catCount[c] = race.catCount( c )
-				if self.catCount[c] == 0:
-					continue
-				index = self.list.InsertStringItem(sys.maxint, c.name, self.sm_rt)
-				self.list.SetStringItem( index, 1, getattr(c, 'gender', 'Open') )
-				self.list.SetStringItem( index, 2, [_('Start Wave'), _('Component'), _('Custom')][c.catType] )
-				self.list.SetStringItem( index, 3, '{}'.format(self.catCount[c]) )
+			with UnstartedRaceWrapper():
+				SyncExcelLink( race )
+				for c in race.getCategories(False):
+					self.catCount[c] = race.catCount( c )
+					if self.catCount[c] == 0:
+						continue
+					index = self.list.InsertStringItem(sys.maxint, c.name, self.sm_rt)
+					self.list.SetStringItem( index, 1, getattr(c, 'gender', 'Open') )
+					self.list.SetStringItem( index, 2, [_('Start Wave'), _('Component'), _('Custom')][c.catType] )
+					self.list.SetStringItem( index, 3, '{}'.format(self.catCount[c]) )
 		
 		for col in xrange(4+1):
 			self.list.SetColumnWidth( 0, wx.LIST_AUTOSIZE )
@@ -112,12 +113,13 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		self.categories = []
 		race = Model.race
 		row = 0
-		for c in race.getCategories(False):
-			if self.catCount[c] == 0:
-				continue
-			if self.list.GetItemState(row, wx.LIST_STATE_SELECTED) == wx.LIST_STATE_SELECTED:
-				self.categories.append( c )
-			row += 1
+		with UnstartedRaceWrapper():
+			for c in race.getCategories(False):
+				if self.catCount[c] == 0:
+					continue
+				if self.list.GetItemState(row, wx.LIST_STATE_SELECTED) == wx.LIST_STATE_SELECTED:
+					self.categories.append( c )
+				row += 1
 		
 		race.includeLapTimesInPrintout = self.includeLapTimesInPrintoutCheckBox.GetValue()
 		self.EndModal( wx.ID_OK )
@@ -128,11 +130,12 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		
 def getRaceCategories():
 	# Get all the categories available to print.
-	with Model.LockRace() as race:
-		if race is None:
-			return []
-		categories = [ (c.fullname, c) for c in race.getCategories(False) if race.hasCategory(c) ]
-	categories.append( ('All', None) )
+	with UnstartedRaceWrapper():
+		with Model.LockRace() as race:
+			if race is None:
+				return []
+			categories = [ (c.fullname, c) for c in race.getCategories(False) if race.hasCategory(c) ]
+		categories.append( ('All', None) )
 	return categories
 
 class CrossMgrPrintout( wx.Printout ):
@@ -190,9 +193,10 @@ class CrossMgrPrintout( wx.Printout ):
 		return (1, page, 1, page)
 
 	def prepareGrid( self, page ):
-		exportGrid = ExportGrid()
 		showLapTimes = (not Model.race) or getattr( Model.race, 'includeLapTimesInPrintout', True )
-		exportGrid.setResultsOneList( self.pageInfo[page][0], True, showLapTimes = showLapTimes )
+		exportGrid = ExportGrid()
+		with UnstartedRaceWrapper():
+			exportGrid.setResultsOneList( self.pageInfo[page][0], True, showLapTimes = showLapTimes )
 		return exportGrid
 		
 	def OnPrintPage(self, page):

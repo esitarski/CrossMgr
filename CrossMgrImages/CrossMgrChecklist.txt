@@ -132,6 +132,19 @@ task
                 task
                     title = Web address is correct
     
+        task
+            title = Course is Ready
+            subtasks
+                task
+                    title = Clear of obstructions
+                    note = (Technical director gives OK)
+                task
+                    title = Medical ready
+                task
+                    title = Marshals ready
+                task
+                    title = Officials ready
+    
 #------------------------------------------------------------- 
 task
     title = Post-Race

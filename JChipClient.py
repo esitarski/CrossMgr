@@ -3,14 +3,15 @@
 # JChipClient.py: JChip simulator program for testing JChip interface and CrossMgr.
 #
 # Copyright (C) Edward Sitarski, 2012.
-import socket
+import re
+import os
 import sys
-import random
 import time
+import socket
+import random
 import datetime
 import subprocess
 from openpyxl.workbook import Workbook
-import re
 
 #------------------------------------------------------------------------------	
 # CrossMgr's port and socket.
@@ -40,8 +41,6 @@ tag = dict( (n, '413A%02X' % n) for n in nums )
 tag[random.choice(list(tag.keys()))] = 'E2001018860B01290700D0D8'
 tag[random.choice(list(tag.keys()))] = 'E2001018860B01530700D138'
 tag[random.choice(list(tag.keys()))] = 'E2001018860B01370700D0F8'
-
-
 
 #------------------------------------------------------------------------------	
 # Write out as a .xlsx file with the number tag data.
@@ -116,8 +115,9 @@ while 1:
 
 	#------------------------------------------------------------------------------	
 	print 'Connection succeeded!'
-	print 'Sending identifier...'
-	sock.send("N0000JCHIP-TEST12%s" % CR)
+	name = '{}-{}'.format(socket.gethostname(), os.getpid())
+	print 'Sending name...', name
+	sock.send( "N0000{}{}".format(name, CR) )
 
 	#------------------------------------------------------------------------------	
 	print 'Waiting for get time command...'

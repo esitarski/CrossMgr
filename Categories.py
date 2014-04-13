@@ -8,7 +8,7 @@ import wx.grid			as gridlib
 from ReorderableGrid import ReorderableGrid
 import wx.lib.masked	as  masked
 
-from GetResults import GetCategoryDetails
+from GetResults import GetCategoryDetails, UnstartedRaceWrapper
 from ExportGrid import ExportGrid
 
 #--------------------------------------------------------------------------------
@@ -48,47 +48,48 @@ class CategoriesPrintout( wx.Printout ):
 		except:
 			externalInfo = {}
 		
-		catMap = dict( (c.fullname, c) for c in race.getCategories( startWaveOnly = False ) )
-		catDetails = GetCategoryDetails()
-		catDetailsMap = dict( (cd['name'], cd) for cd in catDetails )
-		
-		title = '\n'.join( [_('Categories'), race.name, race.scheduledStart + _(' Start on ') + Utils.formatDate(race.date)] )
-		colnames = [_('Start Time'), _('Category'), _('Gender'), _('Numbers'), _('Laps'), _('Distance'), _('Starters')]
-		
-		raceStart = Utils.StrToSeconds( race.scheduledStart + ':00' )
-		catData = []
-		for catInfo in catDetails:
-			c = catMap.get( catInfo['name'], None )
-			if not c:
-				continue
+		with UnstartedRaceWrapper():
+			catMap = dict( (c.fullname, c) for c in race.getCategories( startWaveOnly = False ) )
+			catDetails = GetCategoryDetails()
+			catDetailsMap = dict( (cd['name'], cd) for cd in catDetails )
 			
-			starters = race.catCount( c )
-			if not starters:
-				starters = ''
+			title = u'\n'.join( [_('Categories'), race.name, race.scheduledStart + _(' Start on ') + Utils.formatDate(race.date)] )
+			colnames = [_('Start Time'), _('Category'), _('Gender'), _('Numbers'), _('Laps'), _('Distance'), _('Starters')]
 			
-			laps = catInfo.get( 'laps', '' ) or ''
-			raceDistance = catInfo.get( 'raceDistance', '' )
-			raceDistanceUnit = catInfo.get( 'distanceUnit', '')
-			
-			if raceDistance:
-				raceDistance = '%.2f' % raceDistance
+			raceStart = Utils.StrToSeconds( race.scheduledStart + ':00' )
+			catData = []
+			for catInfo in catDetails:
+				c = catMap.get( catInfo['name'], None )
+				if not c:
+					continue
 				
-			if c.catType == c.CatWave:
-				catStart = Utils.SecondsToStr( raceStart + c.getStartOffsetSecs() )
-			elif c.catType == c.CatCustom:
-				catStart = Utils.SecondsToStr( raceStart )
-			else:
-				catStart = ''
+				starters = race.catCount( c )
+				if not starters:
+					starters = ''
 				
-			catData.append( [
-				catStart,
-				' - ' + c.name if c.catType == c.CatComponent else c.name,
-				catInfo.get('gender', 'Open'),
-				c.catStr,
-				'{}'.format(laps),
-				' '.join([raceDistance, raceDistanceUnit]) if raceDistance else '',
-				'{}'.format(starters)
-			])
+				laps = catInfo.get( 'laps', '' ) or ''
+				raceDistance = catInfo.get( 'raceDistance', '' )
+				raceDistanceUnit = catInfo.get( 'distanceUnit', '')
+				
+				if raceDistance:
+					raceDistance = '%.2f' % raceDistance
+					
+				if c.catType == c.CatWave:
+					catStart = Utils.SecondsToStr( raceStart + c.getStartOffsetSecs() )
+				elif c.catType == c.CatCustom:
+					catStart = Utils.SecondsToStr( raceStart )
+				else:
+					catStart = ''
+					
+				catData.append( [
+					catStart,
+					u' - ' + c.name if c.catType == c.CatComponent else c.name,
+					catInfo.get('gender', 'Open'),
+					c.catStr,
+					u'{}'.format(laps),
+					u' '.join([raceDistance, raceDistanceUnit]) if raceDistance else '',
+					u'{}'.format(starters)
+				])
 			
 		data = [[None] * len(catData) for i in xrange(len(colnames))]
 		for row in xrange(len(catData)):

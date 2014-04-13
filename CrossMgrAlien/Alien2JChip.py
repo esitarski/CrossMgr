@@ -1,4 +1,5 @@
 import re
+import os
 import socket
 import time
 import threading
@@ -77,7 +78,7 @@ class Alien2JChip( object ):
 			self.messageQ.put( ('Alien2JChip', 'state', True) )
 			self.messageQ.put( ('Alien2JChip', 'CrossMgr Connection succeeded!' ) )
 			self.messageQ.put( ('Alien2JChip', 'Sending identifier...') )
-			sock.send("N0000ALIEN-DRIVER%s" % CR)
+			sock.send("N0000{}-{}{}".format(socket.gethostname(), os.getpid(), CR) )
 
 			#------------------------------------------------------------------------------
 			self.messageQ.put( ('Alien2JChip', 'Waiting for "get time" command from CrossMgr...') )

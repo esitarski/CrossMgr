@@ -74,7 +74,7 @@ import SimulationLapTimes
 import Version
 from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, ExcelLink, ReportFields
 from SetGraphic			import SetGraphicDialog
-from GetResults			import GetCategoryDetails
+from GetResults			import GetCategoryDetails, UnstartedRaceWrapper
 from PhotoFinish		import ResetPhotoInfoCache, DeletePhotos, HasPhotoFinish
 from PhotoViewer		import PhotoViewerDialog
 from ReadTTStartTimesSheet import ImportTTStartTimes
@@ -1100,16 +1100,17 @@ class MainWin( wx.Frame ):
 		xlFName = os.path.join( dName, os.path.basename(xlFName) )
 
 		wb = xlwt.Workbook()
-		raceCategories = getRaceCategories()
-		for catName, category in raceCategories:
-			if catName == 'All' and len(raceCategories) > 1:
-				continue
-			sheetName = re.sub('[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', Utils.toAscii(catName))
-			sheetName = sheetName[:31]
-			sheetCur = wb.add_sheet( sheetName )
-			export = ExportGrid()
-			export.setResultsOneList( category, showLapsFrequency = 1 )
-			export.toExcelSheet( sheetCur )
+		with UnstartedRaceWrapper():
+			raceCategories = getRaceCategories()
+			for catName, category in raceCategories:
+				if catName == 'All' and len(raceCategories) > 1:
+					continue
+				sheetName = re.sub('[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', Utils.toAscii(catName))
+				sheetName = sheetName[:31]
+				sheetCur = wb.add_sheet( sheetName )
+				export = ExportGrid()
+				export.setResultsOneList( category, showLapsFrequency = 1 )
+				export.toExcelSheet( sheetCur )
 
 		try:
 			wb.save( xlFName )

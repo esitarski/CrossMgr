@@ -7,38 +7,34 @@ from gettext import gettext as _
 from Animation import Animation
 from GeoAnimation import GeoAnimation
 from FixCategories import FixCategories
-from GetResults import GetResults, GetCategoryDetails, UnstartedRaceDataProlog, UnstartedRaceDataEpilog
+from GetResults import GetResults, GetCategoryDetails, UnstartedRaceWrapper
 
 statusNames = Model.Rider.statusNames
 
 def GetAnimationData( category = None, getExternalData = False ):
-	tempNums = UnstartedRaceDataProlog( getExternalData )
-
-	results = GetResults( category, getExternalData )
-	
-	animationData = {}
-	ignoreFields = set(['pos', 'num', 'gap', 'laps', 'lapTimes', 'full_name'])
-	with Model.LockRace() as race:
-		for rr in results:
-			info = { 'flr': race.getCategory(rr.num).firstLapRatio }
-			for a in dir(rr):
-				if a.startswith('_') or a in ignoreFields:
-					continue
-				if a == 'raceTimes':
-					info['raceTimes'] = getattr(rr, a)
-					bestLaps = race.getNumBestLaps( rr.num )
-					if bestLaps is not None and len(info['raceTimes']) > bestLaps:
-						info['raceTimes'] = info['raceTimes'][:bestLaps+1]
-				elif a == 'status':
-					info['status'] = statusNames[getattr(rr, a)]
-				else:
-					info[a] = getattr( rr, a )
-			
-			animationData[rr.num] = info
-	
-	# Cleanup.
-	UnstartedRaceDataEpilog( tempNums )
-	
+	with UnstartedRaceWrapper( getExternalData ):
+		results = GetResults( category, getExternalData )
+		
+		animationData = {}
+		ignoreFields = set(['pos', 'num', 'gap', 'laps', 'lapTimes', 'full_name'])
+		with Model.LockRace() as race:
+			for rr in results:
+				info = { 'flr': race.getCategory(rr.num).firstLapRatio }
+				for a in dir(rr):
+					if a.startswith('_') or a in ignoreFields:
+						continue
+					if a == 'raceTimes':
+						info['raceTimes'] = getattr(rr, a)
+						bestLaps = race.getNumBestLaps( rr.num )
+						if bestLaps is not None and len(info['raceTimes']) > bestLaps:
+							info['raceTimes'] = info['raceTimes'][:bestLaps+1]
+					elif a == 'status':
+						info['status'] = statusNames[getattr(rr, a)]
+					else:
+						info[a] = getattr( rr, a )
+				
+				animationData[rr.num] = info
+		
 	return animationData
 		
 class NumListValidator(wx.PyValidator):

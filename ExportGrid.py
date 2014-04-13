@@ -545,14 +545,15 @@ class ExportGrid( object ):
 				catStr += _(', {:.2f} {}, ').format(cd['raceDistance'], cd['distanceUnit'])
 				if cd.get('lapDistance', None) and cd.get('laps', 0) > 1:
 					if cd.get('firstLapDistance', None) and cd['firstLapDistance'] != cd['lapDistance']:
-						catStr += _('1st lap {:.2f} {}, {} more laps of {:.2f} {}, ').format(
+						catStr += _('1st lap {:.2f} {}, {} more laps of {:.2f} {}').format(
 									cd['firstLapDistance'], cd['distanceUnit'],
 									cd['laps'] - 1,
 									cd['lapDistance'], cd['distanceUnit']
 								)
 					else:
-						catStr += _('{} laps of {:.2f} {}, ').format(cd['laps'], cd['lapDistance'], cd['distanceUnit']);
-				catStr += _('winner: {} at {}').format(Utils.formatTime(leader.lastTime - cd['startOffset']), leader.speed);
+						catStr += _('{} laps of {:.2f} {}').format(cd['laps'], cd['lapDistance'], cd['distanceUnit']);
+				if leader.status == Model.Rider.Finisher:
+					catStr += u', ' + _('winner: {} at {}').format(Utils.formatTime(leader.lastTime - cd['startOffset']), leader.speed);
 		
 			self.title = '\n'.join( [race.name, Utils.formatDate(race.date), catStr] )
 			isTimeTrial = getattr( race, 'isTimeTrial', False )

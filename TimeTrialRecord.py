@@ -114,7 +114,7 @@ class TimeTrialRecord( wx.Panel ):
 
 		self.headerNames = ['Time', 'Bib']
 		
-		self.maxRows = 200
+		self.maxRows = 10
 		
 		fontSize = 18
 		self.font = wx.FontFromPixelSize( wx.Size(0,fontSize), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
@@ -130,7 +130,8 @@ class TimeTrialRecord( wx.Panel ):
 			self.recordTimeButton.Bind( wx.EVT_LEFT_DOWN, self.doRecordTime )
 		
 		self.recordTimeButton.SetFont( self.bigFont )
-		self.recordTimeButton.SetToolTip(wx.ToolTip('Tap to Record Times.  Then enter the Bib numbers and press Save.'))
+		self.recordTimeButton.SetToolTip(wx.ToolTip(u'\n'.join(
+			[_('Tap to Record Times.'), _('Then enter the Bib numbers and press Save as soon as possible.')]) ))
 		
 		hbs = wx.BoxSizer( wx.HORIZONTAL )
 		hbs.Add( self.recordTimeButton, 0 )
@@ -176,11 +177,12 @@ class TimeTrialRecord( wx.Panel ):
 		self.vbs.Add( self.grid, 1, flag=wx.ALL|wx.EXPAND, border = 4 )
 		self.vbs.Add( self.commitButton, flag=wx.ALL|wx.ALIGN_RIGHT, border = 4 )
 		
-		self.Bind(wx.EVT_MENU, self.doRecordTime, id=self.recordTimeButton.GetId())
-		self.Bind(wx.EVT_MENU, self.doCommit, id=self.commitButton.GetId())
+		idRecordAcceleratorId, idCommitAccelleratorId = wx.NewId(), wx.NewId()
+		self.Bind(wx.EVT_MENU, self.doRecordTime, id=idRecordAcceleratorId)
+		self.Bind(wx.EVT_MENU, self.doCommit, id=idCommitAccelleratorId)
 		accel_tbl = wx.AcceleratorTable([
-			(wx.ACCEL_NORMAL,  ord('T'), self.recordTimeButton.GetId() ),
-			(wx.ACCEL_NORMAL,  ord('C'), self.commitButton.GetId() ),
+			(wx.ACCEL_NORMAL,  ord('T'), idRecordAcceleratorId),
+			(wx.ACCEL_NORMAL,  ord('S'), idCommitAccelleratorId),
 		])
 		self.SetAcceleratorTable(accel_tbl)
 		
@@ -299,6 +301,8 @@ class TimeTrialRecord( wx.Panel ):
 		
 		self.grid.ForceRefresh()
 		self.Fit()
+		
+		wx.CallAfter( self.recordTimeButton.SetFocus )
 		
 	def commit( self ):
 		pass

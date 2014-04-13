@@ -16,7 +16,7 @@ The screen is roughly divided into four parts:
 
 This is the section of the screen where data is entered manually.  Number and times entered with chip timing come into CrossMgr directly.
 
-CrossMgr offers two "modes" to manually enter data: "Keypad" and "Time Trial"
+CrossMgr offers two "modes" to manually enter data: __Keypad__ and __Time Trial__.
 The different modes are switched by a pressing button at the top left of the screen which either shows a Keypad or a Stopwatch, depending on the mode you will switch to.
 
 In Keypad mode, the number is timestamped when you press Enter.
@@ -35,7 +35,7 @@ Downhill|Time Trial
 
 ### Keypad Number Entry Mode
 
-When you enter a number in this mode, the number is "timestamped" when you press "Enter".  This is the standard input mode for Road, Cyclo Cross and MTB races when you have number caller, and riders arrive in quick succession for laps.
+When you enter a number in this mode, the number is "timestamped" when you press __Enter__.  This is the standard input mode for Road, Cyclo Cross and MTB races when you have number caller, and riders arrive in quick succession for laps.
 
 When you hear the number caller, you type in the number and press Enter.
 After the first lap of a race, CrossMgr will predict the arrival of each rider in the [Expected](MainScreen.html#expected) window.  To enter the number again, you can just click on it rather than typing it in.
@@ -65,24 +65,34 @@ Remember: if you change any rider's status here, you can always change it again 
 
 This is the standard input mode for time trial finishes.  It follows a similar process to a manual stopwatch, except you use the computer.
 
-In time trial mode, you get times as the riders pass by pressing the "Tap for Time" button (similar to using a recording stopwatch).  This also triggers the [USB Webcam][] to take a picture, if enabled.
+In time trial mode, you get times as the riders pass by pressing the __Tap for Time__ button (similar to using a recording stopwatch).  This also triggers the [USB Webcam][] to take a picture, if enabled.
 
-You then enter the numbers next to the times (you many not be able to see the number on the back of the rider until he/she has passed).
+You then enter the Bib numbers next to the times - you many not be able to see the number on the back of the rider until he/she has passed.
 
-When you have entered all the corresponding bib numbers for the times, press the "Save" button.  This saves the input and clears the display for the next arrivals.
+When you have entered the corresponding bib numbers for the times, press the __"Save"__ button.  This saves the input and clears the display for the next arrival(s).
 
-CrossMgr gives you 12 entries before a Save is required.  In practice, you should never see more than 3-4 riders crossing the finish without a gap, so 12 entries is a large number to work with.  If you see large groups of riders finishing together, they are drafting, which is not permitted.
+Press __Save__ as soon as you can!  This records the riders in CrossMgr.
+Normally, you would __Tap for Time__ once, then enter the Bib for that time, then press __Save__.  One entry at a time.
+
+Almost always, you see one rider at a time pressing __Save__ each time.
+
+Sometimes, 3-4 riders will bunch up at the finish.  In this case, press __Tap for Time__ for each each rider, enter the Bib for each rider, then press __Save__.
+
+CrossMgr gives you up to 12 entries before you must press Save.  This is a large number to work with!  If you see large groups of riders finishing together, they are drafting, which is not permitted.
+
+If you cannot read a rider's number, and can't find it within 12 riders, enter an invalid, but unique temporary Bib number for the rider, say 8000.
+After the race you can correct the number.  This is an exceptional process.
 
 Rather than taking your hands off the keyboard to use the mouse, use keyboard shortcuts:
 
 Shortcut Key|Description
 :-------|:----------
-t|Record a Time.  Equivalent to pressing the "Tap for Time" button.
-c|Commit the current entries.  Equivalent to pressing the "Save" button.
+t|Equivalent to pressing the __Tap for Time__ button.
+s|Save the current entries.  Equivalent to pressing the __Save__ button.
 
-This allows you to do data entery quickly and accurately - without taking your hands off the keyboard.
+This allows you to do data entry quickly and accurately without taking your hands off the keyboard.
 
-Warning: The Time Trial input mode works well when there are start gaps between the riders.  If you have a timed mass single-start event, you may need Keypad mode, or alternatively, consider a [ChipReader][].
+Warning: The Time Trial input mode only works when there are start gaps between the riders.  If you have a timed mass single-start event, you may need Keypad mode, or alternatively, consider a [ChipReader][].
 
 ## Race Information
 

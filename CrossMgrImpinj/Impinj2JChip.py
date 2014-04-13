@@ -1,4 +1,5 @@
 import re
+import os
 import socket
 import time
 import threading
@@ -87,7 +88,7 @@ class Impinj2JChip( object ):
 			self.messageQ.put( ('Impinj2JChip', 'CrossMgr Connection succeeded!' ) )
 			self.messageQ.put( ('Impinj2JChip', 'Sending identifier...') )
 			try:
-				sock.send("N0000IMPINJ-BRIDGE%s" % CR)
+				sock.send("N0000{}-{}{}".format(socket.gethostname(), os.getpid(), CR) )
 			except socket.timeout:
 				self.messageQ.put( ('Impinj2JChip', 'CrossMgr connection timed out [1].') )
 				sock.close()

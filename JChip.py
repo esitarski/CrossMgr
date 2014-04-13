@@ -111,21 +111,14 @@ def safeAppend( lst, x ):
 		
 readerComputerTimeDiff = None
 def Server( q, shutdownQ, HOST, PORT, startTime ):
-	global readerComputerTimeDiff
 	global readerEventWindow
-	readerComputerTimeDiff = None
 	
 	if not readerEventWindow:
 		readerEventWindow = Utils.mainWin
 	
 	#-----------------------------------------------------
-	# We support one connection to JChip.
+	# Support multiple connections to a JChip client.
 	#
-	connCur = None
-	#
-	# Read and write buffers for JChip reader.
-	#
-	readStr, writeStr = '', ''
 	
 	server = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 	server.setblocking( 0 )
@@ -135,6 +128,22 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 	# List of ports for select.
 	inputs = [server]
 	outputs = []
+	
+	#
+	# Read and write buffers and state for JChip readers.
+	#
+	readerReadStr, readerWriteStr, readerName, readerComputerTimeDiff, nameReader = {}, {}, {}, {}, {}
+	
+	def closeReader( s ):
+		safeRemove( inputs, s )
+		safeRemove( outputs, s )
+		try:
+			del nameReader[readerName[s]]
+		except ValueError:
+			pass
+		for state in [readerReadStr, readerWriteStr, readerName, readerComputerTimeDiff]:
+			state.pop( s, None )
+		s.close()
 	
 	def qLog( category, message ):
 		q.put( (category, message) )
@@ -157,18 +166,11 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		#
 		for s in readable:
 			if s is server:
-				# This is the listener.  Accept the connection from JChip.
-				if connCur:	# If we have an existing connection, close it and use the new one.
-					safeRemove( outputs, connCur )
-					safeRemove( inputs, connCur )
-					connCur.close()
-					connCur = None
-					
-				# Accept the new connection.
+				# This is the listener.  Accept the connection from a JChip reader.
 				connCur, addr = s.accept()
 				connCur.setblocking( 0 )
 				inputs.append( connCur )
-				readStr, writeStr = '', ''
+				readerReadStr[connCur], readerWriteStr[connCur] = '', ''
 				qLog( 'connection', 'established {}'.format(addr) )
 				continue
 			
@@ -180,25 +182,20 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				data = None
 			
 			if not data:
-				# No data - close socket and wait for a new connection.
-				safeRemove( outputs, s )
-				safeRemove( inputs, s )
-				if s == connCur:
-					connCur = None
-					readStr, writeStr = '', ''
-				s.close()
-				qLog( 'connection', 'disconnected' )
+				# No data - close this socket.
+				qLog( 'connection', 'disconnected: {}'.format(readerName.get(s, '<unknown>')) )
+				closeReader( s )
 				continue
 			
 			# Accumulate the data.
-			readStr += data
-			if not readStr.endswith( CR ):
+			readerReadStr[s] += data
+			if not readerReadStr[s].endswith( CR ):
 				continue	# Missing delimiter - need to get more data.
 				
 			# The message is delimited.  Process the messages.
 			tagTimes = []
-			lines = readStr.split( CR )
-			readStr = ''
+			lines = readerReadStr[s].split( CR )
+			readerReadStr[s] = ''
 			for line in lines:
 				line = line.strip()
 				if not line:
@@ -245,19 +242,31 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 							pass
 						
 						t = parseTime( tStr, day )
-						t += readerComputerTimeDiff
+						t += readerComputerTimeDiff.get(s, datetime.timedelta())
 						
 						tag = stripLeadingZeros(tag)
 						q.put( ('data', tag, t) )
 						tagTimes.append( (tag, t) )
 						
 					elif line.startswith( 'N' ):
-						q.put( ('name', line[5:].strip()) )
+						name = line[5:].strip()
 						
-						# Get the reader's current time.
+						# Check if this reader is known to us already.
+						# If so, the reader has dropped its previous connection and is reconnecting.
+						# Close the previous connection as it is no longer needed.
+						if name in nameReader:
+							s_dropped = nameReader[name]
+							qLog( 'transmitting', '"%s" is reconnecting' % (readerName[s], cmd) )
+							closeReader( s_dropped )
+						
+						readerName[s] = name
+						nameReader[name] = s
+						q.put( ('name', name) )
+						
+						# Now, get the reader's current time.
 						cmd = 'GT'
-						qLog( 'transmitting', '%s command to RFID receiver (gettime)' % cmd )
-						writeStr += '%s%s' % (cmd, CR)
+						qLog( 'transmitting', '%s command to "%s" (gettime)' % (readerName[s], cmd) )
+						readerWriteStr[s] += '%s%s' % (cmd, CR)
 						safeAppend( outputs, s )
 					
 					elif line.startswith( 'GT' ):
@@ -274,23 +283,26 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 						except Exception as e:
 							tJChip = datetime.datetime.combine( tNow.date(), datetime.time(hh, mm, ss, hs * 10000) )
 							
-						readerComputerTimeDiff = tNow - tJChip
+						readerComputerTimeDiff[s] = tNow - tJChip
 						
 						qLog( 'getTime', '(%s)=%02d:%02d:%02d.%02d' % (line[2:].strip(), hh,mm,ss,hs) )
-						rtAdjust = readerComputerTimeDiff.total_seconds()
+						rtAdjust = readerComputerTimeDiff[s].total_seconds()
 						if rtAdjust > 0:
 							behindAhead = 'Behind'
 						else:
 							behindAhead = 'Ahead'
 							rtAdjust *= -1
 						qLog( 'timeAdjustment', 
-								"RFID receiver's clock is: %s %s (relative to computer)" %
-									(behindAhead, Utils.formatTime(rtAdjust, True)) )
+								'"{}" is: {} {} (relative to computer)'.format(
+									readerName.get(s, '<<unknown>>'),
+									behindAhead,
+									Utils.formatTime(rtAdjust, True)
+								) )
 						
 						# Send command to start sending data.
 						cmd = 'S0000'
-						qLog( 'transmitting', '%s command to RFID receiver (start transmission)' % cmd )
-						writeStr += '%s%s' % (cmd, CR)
+						qLog( 'transmitting', '%s command to "%s" (start transmission)' % (cmd, readerName.get(s, '<<unknown>>')) )
+						readerWriteStr[s] += '%s%s' % (cmd, CR)
 						safeAppend( outputs, s )
 					else:
 						q.put( ('unknown', line ) )
@@ -306,23 +318,20 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		for s in writable:
 			# Write out the waiting data.  If we sent it all, remove it from the outputs list.
 			try:
-				writeStr = writeStr[s.send(writeStr):]
+				readerWriteStr[s] = readerWriteStr[s][s.send(readerWriteStr[s]):]
 			except Exception as e:
 				qLog( 'exception', 'send error: %s' % e )
-				writeStr = ''
-			if not writeStr:
+				readerWriteStr[s] = ''
+			if not readerWriteStr[s]:
 				outputs.remove( s )
 			
 		#----------------------------------------------------------------------------------
 		# Handle exceptional list.
 		#
 		for s in exceptional:
-			# Close the socket.  Remove it from the inputs and outputs list.
-			safeRemove( inputs, s )
-			safeRemove( outputs, s )
-			s.close()
-			readStr, writeStr = '', ''
-			
+			# Close the socket and remove its state.
+			closeReader( s )
+	
 	server.close()
 
 def GetData():

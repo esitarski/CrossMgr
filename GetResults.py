@@ -76,7 +76,7 @@ class RiderResult( object ):
 		return (statusSortSeq[self.status], -self.laps, self.lastTime, getattr(self, 'startTime', 0.0) or 0.0, self.num)
 
 DefaultSpeed = 0.00001
-		
+
 @Model.memoize
 def GetResultsCore( category ):
 
@@ -454,6 +454,7 @@ def UnstartedRaceDataProlog( getExternalData = True ):
 					rider.status = Model.Rider.NP
 					tempNums.add( num )
 			race.resetCache()
+	
 	return tempNums
 	
 def UnstartedRaceDataEpilog( tempNums ):
@@ -463,6 +464,22 @@ def UnstartedRaceDataEpilog( tempNums ):
 		for num in tempNums:
 			race.deleteRider( num )
 		race.resetCache()
+
+class UnstartedRaceWrapper( object ):
+	count = 0	# Ensure that we can nest calls without problems.
+	
+	def __init__(self,  getExternalData = True):
+		self.getExternalData = getExternalData
+		
+	def __enter__( self ):
+		UnstartedRaceWrapper.count += 1
+		if UnstartedRaceWrapper.count == 1:
+			self.tempNums = UnstartedRaceDataProlog( self.getExternalData )
+	
+	def __exit__(self, type, value, traceback):
+		if UnstartedRaceWrapper.count == 1:
+			UnstartedRaceDataEpilog( self.tempNums )
+		UnstartedRaceWrapper.count -= 1
 
 @Model.memoize
 def GetCategoryDetails():
