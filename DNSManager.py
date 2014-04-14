@@ -100,13 +100,14 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 				rider = race.getRider( n )
 				rider.status = rider.DNS
 			race.setChanged()
+			race.resetAllCaches()
 		
 		wx.CallAfter( self.refresh )
 		wx.CallAfter( Utils.refresh )
 		wx.CallAfter( self.list.SetFocus )
 		
 	def doChooseCategory( self, event ):
-		Utils.setCategoryChoice( self.categoryChoice.GetSelection(), _('DNSManager') )
+		Utils.setCategoryChoice( self.categoryChoice.GetSelection(), 'DNSManagerCategory' )
 		self.refresh()
 
 	def clearGrid( self ):
@@ -141,7 +142,7 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 				return
 		
 			for num, info in externalInfo.iteritems():
-				if self.category and not race.inCategory(num, self.category):
+				if num <= 0 or (self.category and not race.inCategory(num, self.category)):
 					continue
 				rider = race.riders.get( num, None )
 				if not rider:
