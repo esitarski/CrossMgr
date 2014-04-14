@@ -78,9 +78,7 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 		if not self.list.GetItemCount() or not Model.race:
 			return
 		
-		# Get all selected items.
-		nums = [self.list.GetItemData(row) for row in xrange(self.list.GetItemCount())
-						if self.list.GetItem(row).m_state & wx.LIST_STATE_SELECTED]
+		nums = [int(self.list.GetItem(i, 0).GetText()) for i in Utils.GetListCtrlSelectedItems(self.list)]
 		
 		if not nums:
 			Utils.MessageOK( self, _('No entrants selected to DNS'), _('No entrants selected to DNS') )
@@ -95,12 +93,11 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 			return
 		
 		undo.pushState()
+		DNS = Model.Rider.DNS
 		with Model.LockRace() as race:
 			for n in nums:
-				if n <= 0:
-					continue
-				rider = race.getRider( n )
-				rider.status = rider.DNS
+				if n > 0:
+					race.getRider(n).status = DNS
 			race.setChanged()
 			race.resetAllCaches()
 		

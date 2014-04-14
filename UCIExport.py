@@ -5,6 +5,17 @@ import Model
 import Utils
 from GetResults import GetResults
 from FitSheetWrapper import FitSheetWrapper
+from ReadSignOnSheet import SyncExcelLink
+
+UCIFields = (
+	'Pos',
+	'Nr.',
+	'Name',
+	'Team',
+	'UCI Code',
+	'Time',
+	'Gap',
+)
 
 def formatTime( secs, highPrecision = False ):
 	if secs is None:
@@ -25,16 +36,6 @@ def formatTime( secs, highPrecision = False ):
 		decimal = ''
 	return "%s%02d:%02d:%02d%s" % (sign, hours, minutes, secs, decimal)
 
-UCIFields = (
-	'Pos',
-	'Nr.',
-	'Name',
-	'Team',
-	'UCI Code',
-	'Time',
-	'Gap',
-)
-
 reHighPrecision = re.compile( '^.*\.[0-9][0-9]"$' )
 
 def UCIExport( sheet, cat ):
@@ -42,6 +43,8 @@ def UCIExport( sheet, cat ):
 	if not race:
 		return
 		
+	SyncExcelLink( race )
+	
 	sheetFit = FitSheetWrapper( sheet )
 	
 	titleStyle = xlwt.XFStyle()
@@ -74,7 +77,7 @@ def UCIExport( sheet, cat ):
 		gap = getattr(rr, 'gap', '')
 		if reHighPrecision.match(gap):
 			gap = gap[:-4] + '"'
-			
+
 		for col, field in enumerate(UCIFields):
 			{
 				'Pos':		lambda : sheetFit.write( row, col, toInt(rr.pos), rightAlignStyle ),

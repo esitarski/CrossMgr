@@ -1,4 +1,5 @@
 import csv
+import math
 import Utils
 import datetime
 import Model
@@ -14,6 +15,25 @@ CrossResultsFields = (
 	('License',		'License'),
 )
 lenCrossResultsFields = len(CrossResultsFields)
+
+def formatTime( secs, highPrecision = False ):
+	if secs is None:
+		secs = 0
+	if secs < 0:
+		sign = '-'
+		secs = -secs
+	else:
+		sign = ''
+	f, ss = math.modf(secs)
+	secs = int(ss)
+	hours = int(secs // (60*60))
+	minutes = int( (secs // 60) % 60 )
+	secs = secs % 60
+	if highPrecision:
+		decimal = '.%02d' % int( f * 100 )
+	else:
+		decimal = ''
+	return "%s%02d:%02d:%02d%s" % (sign, hours, minutes, secs, decimal)
 
 def CrossResultsExport( fname ):
 	race = Model.race
@@ -58,11 +78,16 @@ def CrossResultsExport( fname ):
 			csvWriter.writerow( [unicode(cat.fullname).encode('utf-8')] )
 			
 			for rr in results:
+				try:
+					finishTime = formatTime(rr.lastTime - rr.raceTimes[0]) if rr.status == Model.Rider.Finisher else ''
+				except Exception as e:
+					finishTime = ''
+				
 				dataRow = []
 				for field in crossResultsFields:
 					dataRow.append( {
 						'Place':		lambda : 'DNP' if rr.pos in {'NP', 'OTL', 'PUL'} else rr.pos,
-						'Time':			lambda : Utils.formatTime(rr.lastTime) if rr.lastTime else '',
+						'Time':			lambda : finishTime,
 						'Last Name':	lambda : getattr(rr, 'LastName', ''),
 						'First Name':	lambda : getattr(rr, 'FirstName', ''),
 						'Team':			lambda : getattr(rr, 'Team', ''),

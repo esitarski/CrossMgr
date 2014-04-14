@@ -43,11 +43,11 @@ def WebScorerExport( fname ):
 	if not race:
 		return
 	
+	SyncExcelLink( race )
+	
 	hasField = [False] * len(WebScorerFields)
 	hasField[0] = True
 	hasField[1] = True
-	
-	SyncExcelLink( race )
 	
 	# Check for what fields are actually filled in.
 	publishCategories = race.getCategories( startWaveOnly = False, uploadOnly = True )
@@ -113,12 +113,17 @@ def WebScorerExport( fname ):
 			for rr in results:
 				dataRow = []
 				
+				try:
+					finishTime = formatTime(rr.lastTime - rr.raceTimes[0]) if rr.status == Model.Rider.Finisher else ''
+				except Exception as e:
+					finishTime = ''
+				
 				# Rider Fields.
 				for field in webScorerFields:
 					if field == 'Place':
 						dataRow.append( 'DNP' if rr.pos in {'NP', 'OTL', 'PUL'} else rr.pos )
 					elif field == 'Time':
-						dataRow.append( formatTime(rr.lastTime) if rr.lastTime else '' )
+						dataRow.append( finishTime )
 					else:
 						dataRow.append( getattr(rr, webScorerToCrossMgr[field], '') )
 

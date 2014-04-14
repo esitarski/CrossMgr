@@ -1,4 +1,5 @@
 import xlwt
+import math
 import Model
 import Utils
 import datetime
@@ -21,6 +22,25 @@ USACFields = (
 )
 lenUSACFields = len(USACFields)
 
+def formatTime( secs, highPrecision = False ):
+	if secs is None:
+		secs = 0
+	if secs < 0:
+		sign = '-'
+		secs = -secs
+	else:
+		sign = ''
+	f, ss = math.modf(secs)
+	secs = int(ss)
+	hours = int(secs // (60*60))
+	minutes = int( (secs // 60) % 60 )
+	secs = secs % 60
+	if highPrecision:
+		decimal = '.%02d' % int( f * 100 )
+	else:
+		decimal = ''
+	return "%s%02d:%02d:%02d%s" % (sign, hours, minutes, secs, decimal)
+
 def USACExport( sheet ):
 	race = Model.race
 	if not race:
@@ -33,7 +53,7 @@ def USACExport( sheet ):
 	# Correct for USAC's picky naming.
 	if 'cyclo' in raceDiscipline.lower():
 		raceDiscipline = 'Cyclo-cross'
-	else if 'road' in raceDiscipline.lower():
+	elif 'road' in raceDiscipline.lower():
 		raceDiscipline = 'Road Race'
 
 	sheetFit = FitSheetWrapper( sheet )
@@ -100,6 +120,11 @@ def USACExport( sheet ):
 					sheetFit.write( row, lapTimeStartCol + i, 'Rider Lap {}'.format(i + 1), titleStyle, bold=True )
 				row += 1
 			
+			try:
+				finishTime = formatTime(rr.lastTime - rr.raceTimes[0]) if rr.status == Model.Rider.Finisher else ''
+			except Exception as e:
+				finishTime = ''
+
 			for col, field in enumerate(USACFields):
 				{
 					'Race Date':		lambda : sheet.write( row, col, raceDate, rightAlignStyle ),
@@ -112,7 +137,7 @@ def USACExport( sheet ):
 					'Rider Team':		lambda : sheetFit.write( row, col, getattr(rr, 'Team', ''), leftAlignStyle ),
 					'Rider License #':	lambda : sheetFit.write( row, col, getattr(rr, 'License', ''), leftAlignStyle ),
 					'Rider Place':		lambda : sheetFit.write( row, col, 'DNP' if rr.pos in {'NP', 'OTL', 'PUL'} else toInt(rr.pos), rightAlignStyle ),
-					'Rider Time':		lambda : sheetFit.write( row, col, Utils.formatTime(rr.lastTime) if rr.lastTime else '', rightAlignStyle ),
+					'Rider Time':		lambda : sheetFit.write( row, col, finishTime, rightAlignStyle ),
 				}[field]()
 			
 			if hasDistance:

@@ -178,6 +178,14 @@ def GetSelectedRows( grid ):
 		rows.append(gcr) 
 	return rows 
 
+def GetListCtrlSelectedItems( listCtrl ):
+	selection = []
+	index = listCtrl.GetFirstSelected()
+	while index >= 0:
+		selection.append( index )
+		index = listCtrl.GetNextSelected(index)
+	return selection
+
 '''
 wx.ICON_EXCLAMATION	Shows an exclamation mark icon.
 wx.ICON_HAND	Shows an error icon.
