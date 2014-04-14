@@ -97,6 +97,8 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 		undo.pushState()
 		with Model.LockRace() as race:
 			for n in nums:
+				if n <= 0:
+					continue
 				rider = race.getRider( n )
 				rider.status = rider.DNS
 			race.setChanged()
