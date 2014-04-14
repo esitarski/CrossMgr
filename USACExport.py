@@ -29,8 +29,12 @@ def USACExport( sheet ):
 	SyncExcelLink( race )
 	
 	raceDiscipline = getattr( race, 'discipline', 'Cyclo-cross' )
-	if raceDiscipline.lower() in 'cyclocross':
+	
+	# Correct for USAC's picky naming.
+	if 'cyclo' in raceDiscipline.lower():
 		raceDiscipline = 'Cyclo-cross'
+	else if 'road' in raceDiscipline.lower():
+		raceDiscipline = 'Road Race'
 
 	sheetFit = FitSheetWrapper( sheet )
 	
