@@ -57,6 +57,19 @@ In the results, riders are ranked in order of Status:
 
 Within each Status, riders are ranked by distance (laps completed), then time.
 
+### Relegated to
+If set, the final position this rider was __Relegated__ in the race.
+This is only used for giving a rider a relegation penalty (for example, an improper sprint).
+
+This does not change the rider's time, only his/her position in the race finish.
+
+The relegation is indicated by __REL__ which is added to the rider's position in the results in the HTML, Excel and Printed output.
+
+Checking is done so that relegations "make sense".  For example, if you want to relegate a rider to last place, you can just enter __999__ and CrossMgr will take care of putting the rider in last place.
+
+For USAC, UCI, CrossResuls and WebScorer Publish, the rider will be also be given the relegated position.
+However, there is no way to indicate this in the output.
+
 ### Autocorrect Lap Data
 If selected, CrossMgr will try to autocorrect entries.
 Autocorrect looks for two types of errors:

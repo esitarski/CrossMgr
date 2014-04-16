@@ -354,6 +354,7 @@ def GetResultsCore( category ):
 					while relegatedResults.get(posCur, None) is not None:
 						posCur += 1
 					relegatedResults[posCur] = rr
+					posCur += 1
 			
 			riderResults = [v[1] for v in sorted(relegatedResults.iteritems(), key = lambda x: x[0])]
 			for pos, rr in enumerate(riderResults):

@@ -56,7 +56,13 @@ def ExtractRaceResults( r ):
 		return ExtractRaceResultsCrossMgr( r )
 	else:
 		return ExtractRaceResultsExcel( r )
-		
+
+def toInt( n ):
+	try:
+		return int(n.split()[0])
+	except:
+		return n
+
 def ExtractRaceResultsExcel( raceInSeries ):
 	excelLink = raceInSeries.excelLink
 	if not excelLink:
@@ -87,7 +93,7 @@ def ExtractRaceResultsExcel( raceInSeries ):
 			continue
 		
 		try:
-			info['rank'] = int(info['rank'])
+			info['rank'] = toInt(info['rank'])
 		except ValueError:
 			continue
 		
@@ -99,7 +105,7 @@ def ExtractRaceResultsExcel( raceInSeries ):
 		raceResults.append( RaceResult(**info) )
 	
 	return True, 'success', raceResults
-	
+
 def ExtractRaceResultsCrossMgr( raceInSeries ):
 	fileName = raceInSeries.fileName
 	try:
@@ -153,7 +159,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 					info['raceDate'] = None
 			
 			info['bib'] = int(rr.num)
-			info['rank'] = int(rr.pos)
+			info['rank'] = toInt(rr.pos)
 			raceResults.append( RaceResult(**info) )
 		
 	Model.race = None
