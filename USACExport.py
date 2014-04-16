@@ -41,6 +41,13 @@ def formatTime( secs, highPrecision = False ):
 		decimal = ''
 	return "%s%02d:%02d:%02d%s" % (sign, hours, minutes, secs, decimal)
 
+def toInt( n ):
+	try:
+		return int(n.split()[0])
+	except:
+		return n
+
+	
 def USACExport( sheet ):
 	race = Model.race
 	if not race:
@@ -86,12 +93,6 @@ def USACExport( sheet ):
 	
 	lapTimeStartCol = (2 if hasDistance else 0) + lenUSACFields
 	
-	def toInt( n ):
-		try:
-			return int(n.split()[0])
-		except:
-			return n
-			
 	year, month, day = race.date.split( '-' )
 	raceDate = datetime.date( year = int(year), month = int(month), day = int(day) ).strftime( '%m/%d/%Y' )
 	
