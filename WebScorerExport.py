@@ -87,6 +87,12 @@ def WebScorerExport( fname ):
 	
 	colNames = webScorerFields + webScorerCategoryFields + [u'Lap {}'.format(i+1) for i in xrange(maxLaps)]
 	
+	def toInt( n ):
+		try:
+			return int(n.split()[0])
+		except:
+			return n
+	
 	with io.open(fname, 'w', encoding = 'utf-16') as txtFile:
 		txtFile.write( u'{}\n'.format( u'\t'.join(unicode(c) for c in colNames) ) )
 		
@@ -121,7 +127,7 @@ def WebScorerExport( fname ):
 				# Rider Fields.
 				for field in webScorerFields:
 					if field == 'Place':
-						dataRow.append( 'DNP' if rr.pos in {'NP', 'OTL', 'PUL'} else rr.pos )
+						dataRow.append( 'DNP' if rr.pos in {'NP', 'OTL', 'PUL'} else toInt(rr.pos) )
 					elif field == 'Time':
 						dataRow.append( finishTime )
 					else:

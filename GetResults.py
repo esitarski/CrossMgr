@@ -43,6 +43,12 @@ def RidersCanSwap( riderResults, num, numAdjacent ):
 		pass
 	return False
 
+def toInt( n ):
+	try:
+		return int(n.split()[0])
+	except:
+		return 99999
+	
 class RiderResult( object ):
 	def __init__( self, num, status, lastTime, raceCat, lapTimes, raceTimes, interp ):
 		self.num		= num
@@ -74,6 +80,9 @@ class RiderResult( object ):
 		
 	def _getKey( self ):
 		return (statusSortSeq[self.status], -self.laps, self.lastTime, getattr(self, 'startTime', 0.0) or 0.0, self.num)
+		
+	def _getNonWaveKey( self ):
+		return (statusSortSeq[self.status], toInt(self.pos), self.lastTime, getattr(self, 'startTime', 0.0) or 0.0, self.num)
 
 DefaultSpeed = 0.00001
 
@@ -319,6 +328,39 @@ def GetResultsCore( category ):
 					rr.stageRaceTime = 48.0 * 60.0 * 60.0
 				rr.stageRaceGap = Utils.formatTimeGap( rr.stageRaceTime - leader.stageRaceTime, False ) if rr != leader else ''
 		
+		# Fix relegations.
+		if any( race[rr.num].isRelegated() for rr in riderResults ):
+			relegatedResults = {}
+			relegated = set()
+			maxRelegatedPosition = 0
+			for rr in riderResults:
+				rider = race[rr.num]
+				if rider.isRelegated():
+					rr.relegated = True
+					relegated.add( rr )
+					relegatedPosition = rider.relegatedPosition
+					while relegatedResults.get(relegatedPosition-1, None) is not None:
+						relegatedPosition += 1
+					relegatedResults[relegatedPosition-1] = rr
+					maxRelegatedPosition = max( maxRelegatedPosition, relegatedPosition )
+				
+			posCur = 0
+			doneFinishers = False
+			for rr in riderResults:
+				if rr not in relegated:
+					if not doneFinishers and rr.status != Model.Rider.Finisher:
+						doneFinishers = True
+						posCur = maxRelegatedPosition
+					while relegatedResults.get(posCur, None) is not None:
+						posCur += 1
+					relegatedResults[posCur] = rr
+			
+			riderResults = [v[1] for v in sorted(relegatedResults.iteritems(), key = lambda x: x[0])]
+			for pos, rr in enumerate(riderResults):
+				if rr.status != Model.Rider.Finisher:
+					break
+				rr.pos = '{} REL'.format(pos+1) if rr in relegated else pos + 1
+		
 		'''
 		for rr in riderResults:
 			rr.lastTime = rr.stageRaceTime
@@ -397,7 +439,7 @@ def GetNonWaveCategoryResults( category ):
 		rr.raceTimes = [t - startOffset for t in rr.raceTimes]
 	
 	# Sort the new results.
-	riderResults.sort( key = RiderResult._getKey )
+	riderResults.sort( key = RiderResult._getNonWaveKey )
 	
 	# Assign finish position, gaps and status.
 	statusNames = Model.Rider.statusNames
@@ -406,7 +448,7 @@ def GetNonWaveCategoryResults( category ):
 		leader.gap = ''
 		for pos, rr in enumerate(riderResults):
 			if rr.status == Model.Rider.Finisher:
-				rr.pos = u'{}'.format( pos + 1 )
+				rr.pos = u'{}'.format( pos + 1 ) if not getattr(rr, 'relegated', False) else u'{} REL'.format( pos + 1 )
 				if rr.laps != leader.laps:
 					if rr.lastTime > leader.lastTime:
 						lapsDown = leader.laps - rr.laps

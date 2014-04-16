@@ -258,6 +258,12 @@ class RiderDetail( wx.Panel ):
 		gbs.Add( self.note, pos=(row,6), span=(1,1), flag=wx.ALIGN_CENTRE_VERTICAL )
 		row += 1
 		
+		self.relegatedName = wx.StaticText( self, label = _('Relegated to:') )
+		gbs.Add( self.relegatedName, pos=(row,0), span=(1,1), flag=labelAlign )
+		self.relegatedPosition = intctrl.IntCtrl( self, min=2, max=9999, allow_none=True, value=None, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER )
+		gbs.Add( self.relegatedPosition, pos=(row,1), span=(1,1), flag=wx.EXPAND )
+		row += 1
+		
 		self.autocorrectLaps = wx.CheckBox( self, label = _('Autocorrect Lap Data') )
 		gbs.Add( self.autocorrectLaps, pos = (row, 0), span=(1, 2), flag = wx.ALIGN_CENTRE|wx.EXPAND )
 		self.Bind( wx.EVT_CHECKBOX, self.onAutocorrectLaps, self.autocorrectLaps )
@@ -1073,10 +1079,16 @@ class RiderDetail( wx.Panel ):
 			else:
 				distanceByLap = None
 			
-			# Trigger adding the rider to the race if it isn't in already.
 			rider = race.getRider( num )
+			
+			# Default set the relegated position.
+			self.relegatedPosition.SetValue( rider.relegatedPosition )
+			self.relegatedPosition.Enable( False )
+			
+			# Trigger adding the rider to the race if it isn't in already.
 			self.statusOption.SetSelection( rider.status )
 			if rider.status == Model.Rider.Finisher:
+				self.relegatedPosition.Enable( True )
 				results = GetResults( None )
 				self.setAtRaceTime( 0.0, False )
 				for rr in results:
@@ -1210,6 +1222,7 @@ class RiderDetail( wx.Panel ):
 	def commitChange( self ):
 		num = self.num.GetValue()
 		status = self.statusOption.GetSelection()
+		relegatedPosition = self.relegatedPosition.GetValue()
 		
 		wx.CallAfter( Utils.refreshForecastHistory )
 		
@@ -1220,15 +1233,16 @@ class RiderDetail( wx.Panel ):
 				return
 				
 			rider = race.getRider(num)
-			oldValues = (rider.status, rider.tStatus)
+			oldValues = (rider.status, rider.tStatus, rider.relegatedPosition)
 
 			tStatus = None
 			if status not in [Model.Rider.Finisher, Model.Rider.DNS, Model.Rider.DQ]:
 				tStatus = Utils.StrToSeconds( self.atRaceTime.GetValue() )
 			
 			rider.setStatus( status, tStatus )
+			rider.relegatedPosition = relegatedPosition
 
-			newValues = (rider.status, rider.tStatus)
+			newValues = (rider.status, rider.tStatus, rider.relegatedPosition)
 			if oldValues != newValues:
 				race.setChanged()
 	

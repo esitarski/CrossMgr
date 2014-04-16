@@ -2392,7 +2392,7 @@ function SetCategoryResults()
 			
 			tr.onclick = function(n) { return function() {ToggleNumberHighlight(n);}; }(num);
 			
-			var p = (isFinisher ? '' + position : resultsData[r][4] );
+			var p = (isFinisher ? '' + position + (data[num]['relegated'] ? ' REL' : ''): resultsData[r][4] );
 			createTextChild( td = createChild(tr, 'TD'), p );
 			if( numsToWatch[num] ) td.className = 'highlight';
 			

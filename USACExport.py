@@ -88,7 +88,7 @@ def USACExport( sheet ):
 	
 	def toInt( n ):
 		try:
-			return int(n)
+			return int(n.split()[0])
 		except:
 			return n
 			

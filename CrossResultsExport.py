@@ -66,6 +66,12 @@ def CrossResultsExport( fname ):
 	year, month, day = race.date.split( '-' )
 	raceDate = datetime.date( year = int(year), month = int(month), day = int(day) ).strftime( '%m/%d/%Y' )
 	
+	def toInt( n ):
+		try:
+			return int(n.split()[0])
+		except:
+			return n
+
 	with open(fname, 'w') as csvFile:
 		csvWriter = csv.writer( csvFile, delimiter = ',', lineterminator = '\n' )
 		csvWriter.writerow( crossResultsFields )
@@ -86,7 +92,7 @@ def CrossResultsExport( fname ):
 				dataRow = []
 				for field in crossResultsFields:
 					dataRow.append( {
-						'Place':		lambda : 'DNP' if rr.pos in {'NP', 'OTL', 'PUL'} else rr.pos,
+						'Place':		lambda : 'DNP' if rr.pos in {'NP', 'OTL', 'PUL'} else toInt(rr.pos),
 						'Time':			lambda : finishTime,
 						'Last Name':	lambda : getattr(rr, 'LastName', ''),
 						'First Name':	lambda : getattr(rr, 'FirstName', ''),
