@@ -81,7 +81,7 @@ class RiderResult( object ):
 	def _getKey( self ):
 		return (statusSortSeq[self.status], -self.laps, self.lastTime, getattr(self, 'startTime', 0.0) or 0.0, self.num)
 		
-	def _getNonWaveKey( self ):
+	def _getComponentKey( self ):
 		return (statusSortSeq[self.status], toInt(self.pos), self.lastTime, getattr(self, 'startTime', 0.0) or 0.0, self.num)
 
 DefaultSpeed = 0.00001
@@ -440,7 +440,7 @@ def GetNonWaveCategoryResults( category ):
 		rr.raceTimes = [t - startOffset for t in rr.raceTimes]
 	
 	# Sort the new results.
-	riderResults.sort( key = RiderResult._getNonWaveKey )
+	riderResults.sort( key = (RiderResult._getComponentKey if category.catType == Model.Category.CatComponent else RiderResult._getKey) )
 	
 	# Assign finish position, gaps and status.
 	statusNames = Model.Rider.statusNames
