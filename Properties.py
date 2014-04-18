@@ -24,6 +24,21 @@ class RaceProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(RaceProperties, self).__init__( parent, id )
 		rows = 0
+		
+		self.timeTrial = wx.CheckBox( self, style=wx.ALIGN_LEFT, label = _('Time Trial') )
+		rows += 1
+		
+		self.allCategoriesFinishAfterFastestRidersLastLap = wx.CheckBox( self, style=wx.ALIGN_LEFT, label = _("All Categories Finish After Fastest Rider's Last Lap") )
+		self.allCategoriesFinishAfterFastestRidersLastLap.SetValue( True )
+		rows += 1
+		
+		self.autocorrectLapsDefault = wx.CheckBox( self, style=wx.ALIGN_LEFT, label = _('Set "Autocorrect Lap Data" option by Default') )
+		self.autocorrectLapsDefault.SetValue( True )
+		rows += 1
+
+		self.highPrecisionTimes = wx.CheckBox( self, style=wx.ALIGN_LEFT, label = _('Show Times to 100s of a Second') )
+		rows += 1
+		
 		self.rule80MinLapCountLabel = wx.StaticText( self, label = _("Lap Time for 80% Rule: ") )
 		self.rule80MinLapCount1 = wx.RadioButton( self, label = _("1st Lap Time"), style = wx.RB_GROUP )
 		self.rule80MinLapCount2 = wx.RadioButton( self, label = _("2nd Lap Time") )
@@ -33,25 +48,11 @@ class RaceProperties( wx.Panel ):
 		self.rule80MinLapCountSizer.Add( self.rule80MinLapCount2 )
 		rows += 1
 		
-		self.allCategoriesFinishAfterFastestRidersLastLap = wx.CheckBox( self, style=wx.ALIGN_LEFT, label = _("All Categories Finish After Fastest Rider's Last Lap") )
-		self.allCategoriesFinishAfterFastestRidersLastLap.SetValue( True )
-		rows += 1
-		
-		self.timeTrial = wx.CheckBox( self, style=wx.ALIGN_LEFT, label = _('Time Trial') )
-		rows += 1
-		
-		self.autocorrectLapsDefault = wx.CheckBox( self, style=wx.ALIGN_LEFT, label = _('Set "Autocorrect Lap Data" option by Default') )
-		self.autocorrectLapsDefault.SetValue( True )
-		rows += 1
-
 		self.distanceUnitLabel = wx.StaticText( self, label = _('Distance Unit: ') )
 		self.distanceUnit = wx.Choice( self, choices=['km', 'miles'] )
 		self.distanceUnit.SetSelection( 0 )
 		rows += 1
 
-		self.highPrecisionTimes = wx.CheckBox( self, style=wx.ALIGN_LEFT, label = _('Show Times to 100s of a Second') )
-		rows += 1
-		
 		#-------------------------------------------------------------------------------
 		ms = wx.BoxSizer( wx.HORIZONTAL )
 		self.SetSizer( ms )
@@ -65,12 +66,12 @@ class RaceProperties( wx.Panel ):
 		blank = lambda : wx.StaticText( self, label='' )
 		
 		labelFieldFormats = [
-			(self.rule80MinLapCountLabel,	0, labelAlign),		(self.rule80MinLapCountSizer,		1, fieldAlign),
-			(blank(),	0, labelAlign),		(self.allCategoriesFinishAfterFastestRidersLastLap,		1, fieldAlign),
 			(blank(),				0, labelAlign),		(self.timeTrial,		1, fieldAlign),
+			(blank(),				0, labelAlign),		(self.allCategoriesFinishAfterFastestRidersLastLap,		1, fieldAlign),
 			(blank(),				0, labelAlign),(self.autocorrectLapsDefault,1, fieldAlign),
-			(self.distanceUnitLabel,0, labelAlign),		(self.distanceUnit,		1, fieldAlign),
 			(blank(),				0, labelAlign),(self.highPrecisionTimes,1, fieldAlign),
+			(self.rule80MinLapCountLabel,	0, labelAlign),		(self.rule80MinLapCountSizer,		1, fieldAlign),
+			(self.distanceUnitLabel,0, labelAlign),		(self.distanceUnit,		1, fieldAlign),
 		]
 		addToFGS( fgs, labelFieldFormats )
 
@@ -262,7 +263,6 @@ class Properties( wx.Panel ):
 		
 		bookStyle = (
 			  flatnotebook.FNB_NO_NAV_BUTTONS
-			| flatnotebook.FNB_NO_NAV_BUTTONS
 			| flatnotebook.FNB_NO_X_BUTTON
 			| flatnotebook.FNB_VC8
 			| flatnotebook.FNB_NODRAG
