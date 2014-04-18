@@ -23,7 +23,7 @@ def addToFGS( fgs, labelFieldFormats ):
 class RaceProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(RaceProperties, self).__init__( parent, id )
-		row = 0
+		rows = 0
 		self.rule80MinLapCountLabel = wx.StaticText( self, label = _("Lap Time for 80% Rule: ") )
 		self.rule80MinLapCount1 = wx.RadioButton( self, label = _("1st Lap Time"), style = wx.RB_GROUP )
 		self.rule80MinLapCount2 = wx.RadioButton( self, label = _("2nd Lap Time") )
@@ -31,32 +31,32 @@ class RaceProperties( wx.Panel ):
 		self.rule80MinLapCountSizer = wx.BoxSizer( wx.HORIZONTAL )
 		self.rule80MinLapCountSizer.Add( self.rule80MinLapCount1, flag=wx.RIGHT, border=8 )
 		self.rule80MinLapCountSizer.Add( self.rule80MinLapCount2 )
-		row += 1
+		rows += 1
 		
 		self.allCategoriesFinishAfterFastestRidersLastLap = wx.CheckBox( self, style=wx.ALIGN_LEFT, label = _("All Categories Finish After Fastest Rider's Last Lap") )
 		self.allCategoriesFinishAfterFastestRidersLastLap.SetValue( True )
-		row += 1
+		rows += 1
 		
 		self.timeTrial = wx.CheckBox( self, style=wx.ALIGN_LEFT, label = _('Time Trial') )
-		row += 1
+		rows += 1
 		
 		self.autocorrectLapsDefault = wx.CheckBox( self, style=wx.ALIGN_LEFT, label = _('Set "Autocorrect Lap Data" option by Default') )
 		self.autocorrectLapsDefault.SetValue( True )
-		row += 1
+		rows += 1
 
 		self.distanceUnitLabel = wx.StaticText( self, label = _('Distance Unit: ') )
 		self.distanceUnit = wx.Choice( self, choices=['km', 'miles'] )
 		self.distanceUnit.SetSelection( 0 )
-		row += 1
+		rows += 1
 
 		self.highPrecisionTimes = wx.CheckBox( self, style=wx.ALIGN_LEFT, label = _('Show Times to 100s of a Second') )
-		row += 1
+		rows += 1
 		
 		#-------------------------------------------------------------------------------
 		ms = wx.BoxSizer( wx.HORIZONTAL )
 		self.SetSizer( ms )
 		
-		fgs = wx.FlexGridSizer( rows=row, cols=2, vgap=3, hgap=3 )
+		fgs = wx.FlexGridSizer( rows=rows, cols=2, vgap=3, hgap=3 )
 		ms.Add( fgs, 1, flag=wx.EXPAND|wx.ALL, border=16 )
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
@@ -190,6 +190,8 @@ class Properties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY, addEditButton = True ):
 		wx.Panel.__init__(self, parent, id)
 
+		self.SetBackgroundColour( wx.WHITE )
+		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		self.SetSizer( vs )
 		
@@ -265,6 +267,7 @@ class Properties( wx.Panel ):
 		)
 		self.notebook = flatnotebook.FlatNotebook(self, wx.ID_ANY, agwStyle=bookStyle)
 		self.notebook.SetBackgroundColour( wx.WHITE )
+		self.notebook.SetTabAreaColour( wx.WHITE )
 		self.propClass = [
 			('raceProperties', RaceProperties),
 			('RFIDProperties', RfidProperties),
@@ -359,11 +362,6 @@ class Properties( wx.Panel ):
 		self.editFields.extend( [self.raceCity, self.raceStateProv, self.raceCountry] )
 		
 		self.setEditable( True )
-		self.Bind(wx.EVT_SIZE, self.OnSize)
-
-	def OnSize( self, event ):
-		self.Refresh()
-		event.Skip()
 		
 	def onJChipIntegration( self, event ):
 		self.autocorrectLapsDefault.SetValue( not self.jchip.GetValue() )
