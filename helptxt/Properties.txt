@@ -17,7 +17,7 @@ Organizer|Organizer of the race.  Included in the HTML results output.
 Commissaire|The name of the race official.
 Memo|Anything you wish to type in here (weather conditions, your mood, etc.).  This is only saved with the race and does not appear on any output.
 Options|See below for details.
-Notes|Text that will appear in the HTML output.  Text entered here will be shown as-is in the HTML web page, including line breaks.  Describe weather conditions, or give credit to the CrossMgr operator and number caller.  You can also use Html tags, however, your input must then start with <html> and end with </html>.  With Html tags, you can specify a hyperlink to a URL with `<a href="http://XXX">HyperLink</a>`, use a list with `<ol></ol>`, etc.  When using Html, you control line breaks; `<br/>`'s will not be automatically inserted between newlines.
+Notes|Text that will appear in the HTML output.  Text entered here will be shown as-is in the HTML web page, including line breaks.  Describe weather conditions, or give credit to the CrossMgr operator and number caller.  You can also embed Html tags, however, your input must then start with <html> and end with </html>.  With Html tags, you can specify a hyperlink to a URL with `<a href="http://XXX">HyperLink</a>`, use a list with `<ol></ol>`, etc.  When using Html, you control line breaks; `<br/>`'s will not be automatically inserted between newlines.
 Excel Sheet|Externally Linked Excel Sheet name.
 Categories Imported From|File name of the categories import file.  Of course, the Category properties can be changed afterwards.
 File Name|File name generated for this race.

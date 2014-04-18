@@ -275,7 +275,7 @@ class Properties( wx.Panel ):
 			setattr( self, prop, PropClass(self.notebook) )
 			self.notebook.AddPage( getattr(self, prop), prop[0].upper() + prop[1:-10] )
 		
-		self.notesLabel = wx.StaticText( self, label = _('Notes to appear on Html output:\n(Notes using Html tags must start with <html> and end with </html>)') )
+		self.notesLabel = wx.StaticText( self, label = _('Notes to appear on Html output:\n(Notes containing Html tags must start with <html> and end with </html>)') )
 		self.notes = wx.TextCtrl( self, style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB, size=(-1,60) )
 
 		self.fileNameLabel = wx.StaticText( self, label = _('File Name: ') )
