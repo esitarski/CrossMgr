@@ -24,7 +24,7 @@ class RaceProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(RaceProperties, self).__init__( parent, id )
 		row = 0
-		self.rule80MinLapCountLabel = wx.StaticText( self, label = _("Lap Time for 80% Rule") )
+		self.rule80MinLapCountLabel = wx.StaticText( self, label = _("Lap Time for 80% Rule: ") )
 		self.rule80MinLapCount1 = wx.RadioButton( self, label = _("1st Lap Time"), style = wx.RB_GROUP )
 		self.rule80MinLapCount2 = wx.RadioButton( self, label = _("2nd Lap Time") )
 		self.rule80MinLapCount2.SetValue( True )
