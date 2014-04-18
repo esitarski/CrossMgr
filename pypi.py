@@ -180,7 +180,7 @@ setup = {
 		'openpyxl >= 1.5.8',
 		'qrcode >= 4.0.4',
 		'PIL >= 1.1.6',
-		# 'wxPython >= 2.8.0',
+		# 'wxPython >= 3.0.0',
 	],
 }
 

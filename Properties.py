@@ -7,6 +7,220 @@ import re
 import os
 import wx.lib.intctrl as intctrl
 import wx.lib.masked as masked
+import wx.lib.agw.flatnotebook as flatnotebook
+
+#------------------------------------------------------------------------------------------------
+
+def addToGBS( gbs, labelFieldFormats ):
+	row = 0
+	for i, (item, column, flag) in enumerate(labelFieldFormats):
+		if not item:
+			#if column == 1:
+			#	row += 1
+			continue
+		if column == 1:
+			flag |= wx.EXPAND
+		gbs.Add( item, pos=(row, column), span=(1,1), flag=flag )
+		if column == 1:
+			row += 1
+
+class RaceProperties( wx.Panel ):
+	def __init__( self, parent, id = wx.ID_ANY ):
+		super(RaceProperties, self).__init__( parent, id )
+		self.rule80MinLapCountLabel = wx.StaticText( self, label = _("Lap Time to Use for 80% Rule:") )
+		self.rule80MinLapCount1 = wx.RadioButton( self, label = _("1st Lap Time"), style = wx.RB_GROUP )
+		self.rule80MinLapCount2 = wx.RadioButton( self, label = _("2nd Lap Time") )
+		self.rule80MinLapCount2.SetValue( True )
+		self.rule80MinLapCountSizer = wx.BoxSizer( wx.HORIZONTAL )
+		self.rule80MinLapCountSizer.Add( self.rule80MinLapCount1, flag=wx.RIGHT, border=8 )
+		self.rule80MinLapCountSizer.Add( self.rule80MinLapCount2 )
+		
+		self.allCategoriesFinishAfterFastestRidersLastLapLabel = wx.StaticText( self, label = _("All Categories Finish After Fastest Rider's Last Lap:") )
+		self.allCategoriesFinishAfterFastestRidersLastLap = wx.CheckBox( self, style=wx.ALIGN_LEFT )
+		self.allCategoriesFinishAfterFastestRidersLastLap.SetValue( True )
+		
+		self.timeTrialLabel = wx.StaticText( self, label = _('Time Trial:') )
+		self.timeTrial = wx.CheckBox( self, style=wx.ALIGN_LEFT )
+		
+		self.autocorrectLapsDefaultLabel = wx.StaticText( self, label = _('Set "Autocorrect Lap Data" option by Default: ') )
+		self.autocorrectLapsDefault = wx.CheckBox( self, style=wx.ALIGN_LEFT )
+		self.autocorrectLapsDefault.SetValue( True )
+
+		self.distanceUnitLabel = wx.StaticText( self, label = _('Distance Unit: ') )
+		self.distanceUnit = wx.Choice( self, choices=['km', 'miles'] )
+		self.distanceUnit.SetSelection( 0 )
+
+		self.highPrecisionTimesLabel = wx.StaticText( self, label = _('Show Times to 100s of a Second: ') )
+		self.highPrecisionTimes = wx.CheckBox( self, style=wx.ALIGN_LEFT )
+		
+		#-------------------------------------------------------------------------------
+		ms = wx.BoxSizer( wx.HORIZONTAL )
+		self.SetSizer( ms )
+		
+		gbs = wx.GridBagSizer( hgap=4, vgap=4 )
+		ms.Add( gbs, flag=wx.EXPAND|wx.ALL, border=16 )
+		
+		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
+		fieldAlign = wx.EXPAND|wx.GROW
+		
+		blank = lambda : None
+		
+		labelFieldFormats = [
+			(self.rule80MinLapCountLabel,	0, labelAlign),		(self.rule80MinLapCountSizer,		1, fieldAlign),
+			(self.allCategoriesFinishAfterFastestRidersLastLapLabel,	0, labelAlign),		(self.allCategoriesFinishAfterFastestRidersLastLap,		1, fieldAlign),
+			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
+			(self.timeTrialLabel,	0, labelAlign),		(self.timeTrial,		1, fieldAlign),
+			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
+			(self.autocorrectLapsDefaultLabel,0, labelAlign),(self.autocorrectLapsDefault,1, fieldAlign),
+			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
+			(self.distanceUnitLabel,0, labelAlign),		(self.distanceUnit,		1, fieldAlign),
+			(self.highPrecisionTimesLabel,0, labelAlign),(self.highPrecisionTimes,1, fieldAlign),
+		]
+		addToGBS( gbs, labelFieldFormats )
+
+	def update( self ):
+		race = Model.race
+		if race.rule80MinLapCount == 1:
+			self.rule80MinLapCount1.SetValue( True )
+		else:
+			self.rule80MinLapCount2.SetValue( True )
+		self.allCategoriesFinishAfterFastestRidersLastLap.SetValue( getattr(race, 'allCategoriesFinishAfterFastestRidersLastLap', False) )
+		self.timeTrial.SetValue( getattr(race, 'isTimeTrial', False) )
+		self.highPrecisionTimes.SetValue( getattr(race, 'highPrecisionTimes', False) )
+		self.distanceUnit.SetSelection( getattr(race, 'distanceUnit', 0) )
+		self.autocorrectLapsDefault.SetValue( getattr(race, 'autocorrectLapsDefault', True) )
+	
+	def commit( self ):
+		race = Model.race
+		race.rule80MinLapCount = (1 if self.rule80MinLapCount1.GetValue() else 2)
+		race.allCategoriesFinishAfterFastestRidersLastLap = self.allCategoriesFinishAfterFastestRidersLastLap.IsChecked()
+		race.isTimeTrial = self.timeTrial.IsChecked()
+		race.highPrecisionTimes = self.highPrecisionTimes.IsChecked()
+		race.distanceUnit = self.distanceUnit.GetSelection()
+		race.autocorrectLapsDefault = self.autocorrectLapsDefault.IsChecked()
+	
+#------------------------------------------------------------------------------------------------
+
+class RfidProperties( wx.Panel ):
+	iResetStartClockOnFirstTag = 1
+	iSkipFirstTagRead = 2
+
+	def __init__( self, parent, id = wx.ID_ANY ):
+		super(RfidProperties, self).__init__( parent, id )
+		self.jchipLabel = wx.StaticText( self, label = _('Use RFID Reader: ') )
+		self.jchip = wx.CheckBox( self, style=wx.ALIGN_LEFT )
+
+		choices = [	_('Record Every Tag Individually'),
+					_('Reset Start Clock on First Tag Read (all riders will get the same start time of the first read)'),
+					_('Skip First Tag Read for All Riders (required when there is a start run-up that passes through the finish on the first lap)')]
+		self.chipTimingOptions = wx.RadioBox( self, label = _("Chip Timing Options"), majorDimension = 1, choices = choices, style = wx.RA_SPECIFY_COLS )
+		
+		#-------------------------------------------------------------------------------
+		ms = wx.BoxSizer( wx.HORIZONTAL )
+		self.SetSizer( ms )
+		
+		gbs = wx.GridBagSizer( hgap=4, vgap=4 )
+		ms.Add( gbs, flag=wx.EXPAND|wx.ALL, border=16 )
+		
+		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
+		fieldAlign = wx.EXPAND|wx.GROW
+		
+		row = 0
+		gbs.Add( self.jchipLabel, pos=(row, 0), span=(1,1), flag=labelAlign )
+		gbs.Add( self.jchip, pos=(row, 1), span=(1,1), flag=fieldAlign )
+		row += 1
+		
+		gbs.Add( self.chipTimingOptions, pos=(row, 0), span=(1, 2), flag=fieldAlign )
+		row += 1
+		
+	def update( self ):
+		race = Model.race
+		resetStartClockOnFirstTag = getattr(race, 'resetStartClockOnFirstTag', True)
+		skipFirstTagRead = getattr(race, 'skipFirstTagRead', False)
+		if resetStartClockOnFirstTag:
+			self.chipTimingOptions.SetSelection( self.iResetStartClockOnFirstTag )
+		elif skipFirstTagRead:
+			self.chipTimingOptions.SetSelection( self.iSkipFirstTagRead )
+		else:
+			self.chipTimingOptions.SetSelection( 0 )
+		
+	def commit( self ):
+		race = Model.race
+		iSelection = self.chipTimingOptions.GetSelection()
+		race.resetStartClockOnFirstTag	= bool(iSelection == self.iResetStartClockOnFirstTag)
+		race.skipFirstTagRead			= bool(iSelection == self.iSkipFirstTagRead)
+	
+#------------------------------------------------------------------------------------------------
+
+class CameraProperties( wx.Panel ):
+	def __init__( self, parent, id = wx.ID_ANY ):
+		super(CameraProperties, self).__init__( parent, id )
+		self.enableUSBCameraLabel = wx.StaticText( self, label = _('Use USB Camera for Photo Finish: ') )
+		self.enableUSBCamera = wx.CheckBox( self,style=wx.ALIGN_LEFT )
+		
+		#-------------------------------------------------------------------------------
+		ms = wx.BoxSizer( wx.HORIZONTAL )
+		self.SetSizer( ms )
+		
+		gbs = wx.GridBagSizer( hgap=4, vgap=4 )
+		ms.Add( gbs, flag=wx.EXPAND|wx.ALL, border=16 )
+
+		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
+		fieldAlign = wx.EXPAND|wx.GROW
+		
+		blank = lambda : None
+		
+		labelFieldFormats = [
+			(self.enableUSBCameraLabel,	0, labelAlign),		(self.enableUSBCamera,		1, fieldAlign),
+		]
+		addToGBS( gbs, labelFieldFormats )
+		
+	def update( self ):
+		race = Model.race
+		self.enableUSBCamera.SetValue( getattr(race, 'enableUSBCamera', False) )
+		
+	def commit( self ):
+		race = Model.race
+		race.enableUSBCamera = self.enableUSBCamera.GetValue()
+	
+#------------------------------------------------------------------------------------------------
+
+class TrackAnimationProperties( wx.Panel ):
+	def __init__( self, parent, id = wx.ID_ANY ):
+		super(TrackAnimationProperties, self).__init__( parent, id )
+		self.finishTopLabel = wx.StaticText( self, label = _('Animation Finish on Top: ') )
+		self.finishTop = wx.CheckBox( self, style=wx.ALIGN_LEFT )
+
+		self.reverseDirectionLabel = wx.StaticText( self, label = _('Animation Reverse Direction: ') )
+		self.reverseDirection = wx.CheckBox( self, style=wx.ALIGN_LEFT )
+
+		#-------------------------------------------------------------------------------
+		ms = wx.BoxSizer( wx.HORIZONTAL )
+		self.SetSizer( ms )
+		
+		gbs = wx.GridBagSizer( hgap=4, vgap=4 )
+		ms.Add( gbs, flag=wx.EXPAND|wx.ALL, border=16 )
+
+		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
+		fieldAlign = wx.EXPAND|wx.GROW
+		
+		labelFieldFormats = [
+			(self.finishTopLabel,			0, labelAlign),		(self.finishTop,			1, fieldAlign),
+			(self.reverseDirectionLabel,	0, labelAlign),		(self.reverseDirection,		1, fieldAlign),
+		]
+		addToGBS( gbs, labelFieldFormats )
+		
+	def update( self ):
+		race = Model.race
+		self.reverseDirection.SetValue( getattr(race, 'reverseDirection', False) )
+		self.finishTop.SetValue( getattr(race, 'finishTop', False) )
+		
+	def commit( self ):
+		race = Model.race
+		race.reverseDirection = self.reverseDirection.GetValue()
+		race.finishTop = self.finishTop.GetValue()
+
+#------------------------------------------------------------------------------------------------
 
 class Properties( wx.Panel ):
 	badFileCharsRE = re.compile( '[^a-zA-Z0-9_ ]+' )
@@ -78,55 +292,26 @@ class Properties( wx.Panel ):
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.memo )
 		rows += 1
 		
-		self.rule80MinLapCountLabel = wx.StaticText( self, label = _("Lap Time to Use for 80% Rule:") )
-		self.rule80MinLapCount1 = wx.RadioButton( self, label = _("1st Lap Time"), style = wx.RB_GROUP )
-		self.rule80MinLapCount2 = wx.RadioButton( self, label = _("2nd Lap Time") )
-		self.rule80MinLapCount2.SetValue( True )
-		self.rule80MinLapCountSizer = wx.BoxSizer( wx.HORIZONTAL )
-		self.rule80MinLapCountSizer.Add( self.rule80MinLapCount1, flag=wx.RIGHT, border=8 )
-		self.rule80MinLapCountSizer.Add( self.rule80MinLapCount2 )
+		bookStyle = (
+			  flatnotebook.FNB_NO_NAV_BUTTONS
+			| flatnotebook.FNB_NO_NAV_BUTTONS
+			| flatnotebook.FNB_NO_X_BUTTON
+			| flatnotebook.FNB_VC8
+			| flatnotebook.FNB_NODRAG
+		)
+		self.notebook = flatnotebook.FlatNotebook(self, wx.ID_ANY, agwStyle=bookStyle)
+		self.notebook.SetBackgroundColour( wx.WHITE )
+		self.propClass = [
+			('raceProperties', RaceProperties),
+			('RFIDProperties', RfidProperties),
+			('cameraProperties', CameraProperties),
+			('trackAnimationProperties', TrackAnimationProperties),
+		]
+		for prop, PropClass in self.propClass:
+			setattr( self, prop, PropClass(self.notebook) )
+			self.notebook.AddPage( getattr(self, prop), prop[0].upper() + prop[1:-10] )
 		rows += 1
 		
-		self.allCategoriesFinishAfterFastestRidersLastLapLabel = wx.StaticText( self, label = _("All Categories Finish After Fastest Rider's Last Lap:") )
-		self.allCategoriesFinishAfterFastestRidersLastLap = wx.CheckBox( self, style=wx.ALIGN_LEFT )
-		self.allCategoriesFinishAfterFastestRidersLastLap.SetValue( True )
-		rows += 1
-		
-		self.timeTrialLabel = wx.StaticText( self, label = _('Time Trial:') )
-		self.timeTrial = wx.CheckBox( self, style=wx.ALIGN_LEFT )
-		rows += 1
-		
-		self.distanceUnitLabel = wx.StaticText( self, label = _('Distance Unit: ') )
-		self.distanceUnit = wx.Choice( self, choices=['km', 'miles'] )
-		self.distanceUnit.SetSelection( 0 )
-		rows += 1
-
-		self.highPrecisionTimesLabel = wx.StaticText( self, label = _('Show Times to 100s of a Second: ') )
-		self.highPrecisionTimes = wx.CheckBox( self, style=wx.ALIGN_LEFT )
-		rows += 1
-
-		self.enableUSBCameraLabel = wx.StaticText( self, label = _('Use USB Camera for Photo Finish: ') )
-		self.enableUSBCamera = wx.CheckBox( self,style=wx.ALIGN_LEFT )
-		rows += 1
-
-		self.jchipLabel = wx.StaticText( self, label = _('Use RFID Reader: ') )
-		self.jchip = wx.CheckBox( self, style=wx.ALIGN_LEFT )
-		#self.Bind( wx.EVT_CHECKBOX, self.onJChipIntegration, self.jchip )
-		rows += 1
-
-		self.autocorrectLapsDefaultLabel = wx.StaticText( self, label = _('Set "Autocorrect Lap Data" option by Default: ') )
-		self.autocorrectLapsDefault = wx.CheckBox( self, style=wx.ALIGN_LEFT )
-		self.autocorrectLapsDefault.SetValue( True )
-		rows += 1
-
-		self.finishTopLabel = wx.StaticText( self, label = _('Animation Finish on Top: ') )
-		self.finishTop = wx.CheckBox( self, style=wx.ALIGN_LEFT )
-		rows += 1
-
-		self.reverseDirectionLabel = wx.StaticText( self, label = _('Animation Reverse Direction: ') )
-		self.reverseDirection = wx.CheckBox( self, style=wx.ALIGN_LEFT )
-		rows += 1
-
 		self.notesLabel = wx.StaticText( self, label = _('Notes to appear on Html output:\n(Notes using Html tags must start with <html> and end with </html>)') )
 		self.notes = wx.TextCtrl( self, style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB, size=(-1,60) )
 		rows += 1
@@ -147,7 +332,7 @@ class Properties( wx.Panel ):
 		
 		if addEditButton:
 			rows += 1
-		fbs = wx.GridBagSizer( hgap=2, vgap=1 )
+		gbs = wx.GridBagSizer( hgap=2, vgap=1 )
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
 		fieldAlign = wx.EXPAND|wx.GROW
@@ -166,25 +351,7 @@ class Properties( wx.Panel ):
 			(self.commissaireLabel,	0, labelAlign),		(self.commissaire, 		1, fieldAlign),
 			(self.memoLabel,		0, labelAlign),		(self.memo, 			1, fieldAlign),
 			
-			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
-			(self.rule80MinLapCountLabel,	0, labelAlign),		(self.rule80MinLapCountSizer,		1, fieldAlign),
-			(self.allCategoriesFinishAfterFastestRidersLastLapLabel,	0, labelAlign),		(self.allCategoriesFinishAfterFastestRidersLastLap,		1, fieldAlign),
-			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
-			(self.timeTrialLabel,	0, labelAlign),		(self.timeTrial,		1, fieldAlign),
-			
-			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
-			(self.distanceUnitLabel,0, labelAlign),		(self.distanceUnit,		1, fieldAlign),
-			(self.highPrecisionTimesLabel,0, labelAlign),(self.highPrecisionTimes,1, fieldAlign),
-			
-			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
-			(self.enableUSBCameraLabel,		0, labelAlign),		(self.enableUSBCamera,			1, fieldAlign),
-			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
-			(self.jchipLabel,		0, labelAlign),		(self.jchip,			1, fieldAlign),
-			(self.autocorrectLapsDefaultLabel,0, labelAlign),(self.autocorrectLapsDefault,1, fieldAlign),
-			
-			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
-			(self.finishTopLabel,0, labelAlign),		(self.finishTop,		1, fieldAlign),
-			(self.reverseDirectionLabel,0, labelAlign),	(self.reverseDirection,	1, fieldAlign),
+			(self.notebook,			0, fieldAlign),
 			
 			(self.notesLabel,		0, 0),				(self.notes,			1, 0),
 			
@@ -201,12 +368,19 @@ class Properties( wx.Panel ):
 				continue
 			if column == 1:
 				flag |= wx.EXPAND
-			if item == self.notes:
+			if item == self.notesLabel:
+				gbs.Add( item, pos=(row, column), span=(1,2), flag=flag )
+			elif item == self.notes:
 				row += 1
-				fbs.Add( item, pos=(row, 0), span=(1,2), flag=flag )
+				gbs.Add( item, pos=(row, 0), span=(1,2), flag=flag )
+				row += 1
+			elif item == self.notebook:
+				gbs.Add( item, pos=(row, 0), span=(1,2), flag=flag )
+				row += 1
+				gbs.Add( wx.StaticLine(self, wx.LI_HORIZONTAL), pos=(row,0), span=(1,2), flag=wx.EXPAND )
 				row += 1
 			else:
-				fbs.Add( item, pos=(row, column), span=(1,1), flag=flag )
+				gbs.Add( item, pos=(row, column), span=(1,1), flag=flag )
 				if column == 1:
 					row += 1
 				
@@ -222,10 +396,10 @@ class Properties( wx.Panel ):
 			hs.Add( self.excelButton, border = 8, flag = wx.LEFT|wx.TOP|wx.BOTTOM )
 
 			row += 1
-			fbs.Add( hs, pos=(row, 1), span=(1,1) )
+			gbs.Add( hs, pos=(row, 1), span=(1,1) )
 		
-		fbs.AddGrowableCol( 1 )
-		self.SetSizer(fbs)
+		gbs.AddGrowableCol( 1 )
+		self.SetSizer(gbs)
 		
 		self.editFields = [labelFieldFormats[i][0] for i in xrange(1, len(labelFieldFormats), 2)]
 		self.editFields = [e for e in self.editFields if e and not isinstance(e, wx.BoxSizer)]
@@ -327,26 +501,9 @@ class Properties( wx.Panel ):
 			self.date.SetValue( d )
 			self.raceNum.SetValue( race.raceNum )
 			self.scheduledStart.SetValue( race.scheduledStart )
-			self.allCategoriesFinishAfterFastestRidersLastLap.SetValue( getattr(race, 'allCategoriesFinishAfterFastestRidersLastLap', False) )
-			self.timeTrial.SetValue( getattr(race, 'isTimeTrial', False) )
-			self.minutes.SetValue( race.minutes )
-			self.commissaire.SetValue( race.commissaire )
-			if race.rule80MinLapCount == 1:
-				self.rule80MinLapCount1.SetValue( True )
-			else:
-				self.rule80MinLapCount2.SetValue( True )
-			self.memo.SetValue( race.memo )
-			self.updateFileName()
 			
-			self.jchip.SetValue( getattr(race, 'enableJChipIntegration', False) )
-			self.autocorrectLapsDefault.SetValue( getattr(race, 'autocorrectLapsDefault', True) )
-			self.highPrecisionTimes.SetValue( getattr(race, 'highPrecisionTimes', False) )
-			self.distanceUnit.SetSelection( getattr(race, 'distanceUnit', 0) )
-			
-			self.enableUSBCamera.SetValue( getattr(race, 'enableUSBCamera', False) )
-			
-			self.reverseDirection.SetValue( getattr(race, 'reverseDirection', False) )
-			self.finishTop.SetValue( getattr(race, 'finishTop', False) )
+			for prop, PropClass in self.propClass:
+				getattr(self, prop).update()
 			
 			self.notes.SetValue( getattr(race, 'notes', '') )
 			
@@ -379,19 +536,13 @@ class Properties( wx.Panel ):
 			race.date = self.date.GetValue().Format(Properties.dateFormat)
 			race.raceNum = self.raceNum.GetValue()
 			race.scheduledStart = self.scheduledStart.GetValue()
-			race.allCategoriesFinishAfterFastestRidersLastLap = self.allCategoriesFinishAfterFastestRidersLastLap.IsChecked()
-			race.isTimeTrial = self.timeTrial.IsChecked()
-			race.enableJChipIntegration = self.jchip.IsChecked()
-			race.autocorrectLapsDefault = self.autocorrectLapsDefault.IsChecked()
-			race.highPrecisionTimes = self.highPrecisionTimes.IsChecked()
-			race.distanceUnit = self.distanceUnit.GetSelection()
-			race.reverseDirection = self.reverseDirection.IsChecked()
-			race.enableUSBCamera = self.enableUSBCamera.IsChecked()
-			race.finishTop = self.finishTop.IsChecked()
+			
+			for prop, PropClass in self.propClass:
+				getattr(self, prop).commit()
+			
 			race.minutes = self.minutes.GetValue()
 			race.commissaire = self.commissaire.GetValue().strip()
 			race.memo = self.memo.GetValue().strip()
-			race.rule80MinLapCount = (1 if self.rule80MinLapCount1.GetValue() else 2)
 			race.notes = self.notes.GetValue().strip()
 			race.setChanged()
 			

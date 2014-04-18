@@ -56,8 +56,7 @@ except:
 else:
 	isWindows = True
 
-import locale
-locale.setlocale(locale.LC_ALL, '')
+locale = wx.Locale()
 
 from Version import AppVerName
 import gettext
