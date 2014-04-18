@@ -376,12 +376,9 @@ class Properties( wx.Panel ):
 		if Model.race:
 			wx.CallAfter( self.commit )
 		else:
-			if mainWin:
-				wx.CallAfter( mainWin.menuNew, event )
-			else:
-				Utils.MessageOK( self,
-					_('You must have a valid race File|Open...\nOr create one with File|New....'), _('Valid Race Required'),
-					wx.ICON_WARNING )
+			Utils.MessageOK( self,
+				_('You must have a valid race File|Open...\nOr create one with File|New....'), _('Valid Race Required'),
+				wx.ICON_WARNING )
 	
 	def setEditable( self, editable = True ):
 		'''
