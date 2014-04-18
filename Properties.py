@@ -163,7 +163,7 @@ class AnimationProperties( wx.Panel ):
 		
 		self.finishTop = wx.CheckBox( self, style=wx.ALIGN_LEFT, label=_('Animation Finish on Top') )
 		self.reverseDirection = wx.CheckBox( self, style=wx.ALIGN_LEFT, label=_('Animation Reverse Direction') )
-		self.note = wx.StaticText( self, label=_('This only applie to the Track animation.\nThe GPX animation follows the lat/lng coordinates.') )
+		self.note = wx.StaticText( self, label=_('This only applies to the Track animation.\nThe GPX animation follows the lat/lng coordinates.') )
 		
 		#-------------------------------------------------------------------------------
 		ms = wx.BoxSizer( wx.VERTICAL )
