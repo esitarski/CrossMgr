@@ -111,14 +111,14 @@ class RfidProperties( wx.Panel ):
 					_('Skip First Tag Read for All Riders (required when there is a start run-up that passes through the finish on the first lap)')]
 		self.chipTimingOptions = wx.RadioBox( self, label = _("Chip Timing Options"), majorDimension = 1, choices = choices, style = wx.RA_SPECIFY_COLS )
 		
+		self.chipTimingOptions.SetSelection( self.iResetStartClockOnFirstTag )
+		
 		#-------------------------------------------------------------------------------
 		ms = wx.BoxSizer( wx.VERTICAL )
 		self.SetSizer( ms )
 		
 		ms.Add( self.jchip, flag=wx.ALL, border = 16 )
 		ms.Add( self.chipTimingOptions, flag=wx.ALL, border = 4 )
-		
-		self.update()
 		
 	def update( self ):
 		race = Model.race
