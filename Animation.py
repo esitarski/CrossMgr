@@ -293,6 +293,7 @@ class Animation(wx.PyControl):
 
 	def OnSize(self, event):
 		self.Refresh()
+		event.Skip()
 		
 	def getRiderPositionTime( self, num ):
 		""" Returns the fraction of the lap covered by the rider and the time. """

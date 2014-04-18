@@ -11,72 +11,68 @@ import wx.lib.agw.flatnotebook as flatnotebook
 
 #------------------------------------------------------------------------------------------------
 
-def addToGBS( gbs, labelFieldFormats ):
+def addToFGS( fgs, labelFieldFormats ):
 	row = 0
 	for i, (item, column, flag) in enumerate(labelFieldFormats):
 		if not item:
-			#if column == 1:
-			#	row += 1
 			continue
 		if column == 1:
 			flag |= wx.EXPAND
-		gbs.Add( item, pos=(row, column), span=(1,1), flag=flag )
-		if column == 1:
-			row += 1
+		fgs.Add( item, flag=flag )
 
 class RaceProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(RaceProperties, self).__init__( parent, id )
-		self.rule80MinLapCountLabel = wx.StaticText( self, label = _("Lap Time to Use for 80% Rule:") )
+		row = 0
+		self.rule80MinLapCountLabel = wx.StaticText( self, label = _("Lap Time for 80% Rule") )
 		self.rule80MinLapCount1 = wx.RadioButton( self, label = _("1st Lap Time"), style = wx.RB_GROUP )
 		self.rule80MinLapCount2 = wx.RadioButton( self, label = _("2nd Lap Time") )
 		self.rule80MinLapCount2.SetValue( True )
 		self.rule80MinLapCountSizer = wx.BoxSizer( wx.HORIZONTAL )
 		self.rule80MinLapCountSizer.Add( self.rule80MinLapCount1, flag=wx.RIGHT, border=8 )
 		self.rule80MinLapCountSizer.Add( self.rule80MinLapCount2 )
+		row += 1
 		
-		self.allCategoriesFinishAfterFastestRidersLastLapLabel = wx.StaticText( self, label = _("All Categories Finish After Fastest Rider's Last Lap:") )
-		self.allCategoriesFinishAfterFastestRidersLastLap = wx.CheckBox( self, style=wx.ALIGN_LEFT )
+		self.allCategoriesFinishAfterFastestRidersLastLap = wx.CheckBox( self, style=wx.ALIGN_LEFT, label = _("All Categories Finish After Fastest Rider's Last Lap") )
 		self.allCategoriesFinishAfterFastestRidersLastLap.SetValue( True )
+		row += 1
 		
-		self.timeTrialLabel = wx.StaticText( self, label = _('Time Trial:') )
-		self.timeTrial = wx.CheckBox( self, style=wx.ALIGN_LEFT )
+		self.timeTrial = wx.CheckBox( self, style=wx.ALIGN_LEFT, label = _('Time Trial') )
+		row += 1
 		
-		self.autocorrectLapsDefaultLabel = wx.StaticText( self, label = _('Set "Autocorrect Lap Data" option by Default: ') )
-		self.autocorrectLapsDefault = wx.CheckBox( self, style=wx.ALIGN_LEFT )
+		self.autocorrectLapsDefault = wx.CheckBox( self, style=wx.ALIGN_LEFT, label = _('Set "Autocorrect Lap Data" option by Default') )
 		self.autocorrectLapsDefault.SetValue( True )
+		row += 1
 
 		self.distanceUnitLabel = wx.StaticText( self, label = _('Distance Unit: ') )
 		self.distanceUnit = wx.Choice( self, choices=['km', 'miles'] )
 		self.distanceUnit.SetSelection( 0 )
+		row += 1
 
-		self.highPrecisionTimesLabel = wx.StaticText( self, label = _('Show Times to 100s of a Second: ') )
-		self.highPrecisionTimes = wx.CheckBox( self, style=wx.ALIGN_LEFT )
+		self.highPrecisionTimes = wx.CheckBox( self, style=wx.ALIGN_LEFT, label = _('Show Times to 100s of a Second') )
+		row += 1
 		
 		#-------------------------------------------------------------------------------
 		ms = wx.BoxSizer( wx.HORIZONTAL )
 		self.SetSizer( ms )
 		
-		gbs = wx.GridBagSizer( hgap=4, vgap=4 )
-		ms.Add( gbs, flag=wx.EXPAND|wx.ALL, border=16 )
+		fgs = wx.FlexGridSizer( rows=row, cols=2, vgap=3, hgap=3 )
+		ms.Add( fgs, 1, flag=wx.EXPAND|wx.ALL, border=16 )
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
 		fieldAlign = wx.EXPAND|wx.GROW
 		
-		blank = lambda : None
+		blank = lambda : wx.StaticText( self, label='' )
 		
 		labelFieldFormats = [
 			(self.rule80MinLapCountLabel,	0, labelAlign),		(self.rule80MinLapCountSizer,		1, fieldAlign),
-			(self.allCategoriesFinishAfterFastestRidersLastLapLabel,	0, labelAlign),		(self.allCategoriesFinishAfterFastestRidersLastLap,		1, fieldAlign),
-			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
-			(self.timeTrialLabel,	0, labelAlign),		(self.timeTrial,		1, fieldAlign),
-			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
-			(self.autocorrectLapsDefaultLabel,0, labelAlign),(self.autocorrectLapsDefault,1, fieldAlign),
-			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
+			(blank(),	0, labelAlign),		(self.allCategoriesFinishAfterFastestRidersLastLap,		1, fieldAlign),
+			(blank(),				0, labelAlign),		(self.timeTrial,		1, fieldAlign),
+			(blank(),				0, labelAlign),(self.autocorrectLapsDefault,1, fieldAlign),
 			(self.distanceUnitLabel,0, labelAlign),		(self.distanceUnit,		1, fieldAlign),
-			(self.highPrecisionTimesLabel,0, labelAlign),(self.highPrecisionTimes,1, fieldAlign),
+			(blank(),				0, labelAlign),(self.highPrecisionTimes,1, fieldAlign),
 		]
-		addToGBS( gbs, labelFieldFormats )
+		addToFGS( fgs, labelFieldFormats )
 
 	def update( self ):
 		race = Model.race
@@ -107,8 +103,7 @@ class RfidProperties( wx.Panel ):
 
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(RfidProperties, self).__init__( parent, id )
-		self.jchipLabel = wx.StaticText( self, label = _('Use RFID Reader: ') )
-		self.jchip = wx.CheckBox( self, style=wx.ALIGN_LEFT )
+		self.jchip = wx.CheckBox( self, style=wx.ALIGN_LEFT, label = _('Use RFID Reader') )
 
 		choices = [	_('Record Every Tag Individually'),
 					_('Reset Start Clock on First Tag Read (all riders will get the same start time of the first read)'),
@@ -116,22 +111,11 @@ class RfidProperties( wx.Panel ):
 		self.chipTimingOptions = wx.RadioBox( self, label = _("Chip Timing Options"), majorDimension = 1, choices = choices, style = wx.RA_SPECIFY_COLS )
 		
 		#-------------------------------------------------------------------------------
-		ms = wx.BoxSizer( wx.HORIZONTAL )
+		ms = wx.BoxSizer( wx.VERTICAL )
 		self.SetSizer( ms )
 		
-		gbs = wx.GridBagSizer( hgap=4, vgap=4 )
-		ms.Add( gbs, flag=wx.EXPAND|wx.ALL, border=16 )
-		
-		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
-		fieldAlign = wx.EXPAND|wx.GROW
-		
-		row = 0
-		gbs.Add( self.jchipLabel, pos=(row, 0), span=(1,1), flag=labelAlign )
-		gbs.Add( self.jchip, pos=(row, 1), span=(1,1), flag=fieldAlign )
-		row += 1
-		
-		gbs.Add( self.chipTimingOptions, pos=(row, 0), span=(1, 2), flag=fieldAlign )
-		row += 1
+		ms.Add( self.jchip, flag=wx.ALL, border = 16 )
+		ms.Add( self.chipTimingOptions, flag=wx.ALL, border = 4 )
 		
 	def update( self ):
 		race = Model.race
@@ -155,25 +139,13 @@ class RfidProperties( wx.Panel ):
 class CameraProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(CameraProperties, self).__init__( parent, id )
-		self.enableUSBCameraLabel = wx.StaticText( self, label = _('Use USB Camera for Photo Finish: ') )
-		self.enableUSBCamera = wx.CheckBox( self,style=wx.ALIGN_LEFT )
+		self.enableUSBCamera = wx.CheckBox( self,style=wx.ALIGN_LEFT, label = _('Use USB Camera for Photo Finish') )
 		
 		#-------------------------------------------------------------------------------
-		ms = wx.BoxSizer( wx.HORIZONTAL )
+		ms = wx.BoxSizer( wx.VERTICAL )
 		self.SetSizer( ms )
 		
-		gbs = wx.GridBagSizer( hgap=4, vgap=4 )
-		ms.Add( gbs, flag=wx.EXPAND|wx.ALL, border=16 )
-
-		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
-		fieldAlign = wx.EXPAND|wx.GROW
-		
-		blank = lambda : None
-		
-		labelFieldFormats = [
-			(self.enableUSBCameraLabel,	0, labelAlign),		(self.enableUSBCamera,		1, fieldAlign),
-		]
-		addToGBS( gbs, labelFieldFormats )
+		ms.Add( self.enableUSBCamera, flag=wx.ALL, border=16 )
 		
 	def update( self ):
 		race = Model.race
@@ -188,27 +160,16 @@ class CameraProperties( wx.Panel ):
 class TrackAnimationProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(TrackAnimationProperties, self).__init__( parent, id )
-		self.finishTopLabel = wx.StaticText( self, label = _('Animation Finish on Top: ') )
-		self.finishTop = wx.CheckBox( self, style=wx.ALIGN_LEFT )
-
-		self.reverseDirectionLabel = wx.StaticText( self, label = _('Animation Reverse Direction: ') )
-		self.reverseDirection = wx.CheckBox( self, style=wx.ALIGN_LEFT )
+		
+		self.finishTop = wx.CheckBox( self, style=wx.ALIGN_LEFT, label=_('Animation Finish on Top') )
+		self.reverseDirection = wx.CheckBox( self, style=wx.ALIGN_LEFT, label=_('Animation Reverse Direction') )
 
 		#-------------------------------------------------------------------------------
-		ms = wx.BoxSizer( wx.HORIZONTAL )
+		ms = wx.BoxSizer( wx.VERTICAL )
 		self.SetSizer( ms )
 		
-		gbs = wx.GridBagSizer( hgap=4, vgap=4 )
-		ms.Add( gbs, flag=wx.EXPAND|wx.ALL, border=16 )
-
-		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
-		fieldAlign = wx.EXPAND|wx.GROW
-		
-		labelFieldFormats = [
-			(self.finishTopLabel,			0, labelAlign),		(self.finishTop,			1, fieldAlign),
-			(self.reverseDirectionLabel,	0, labelAlign),		(self.reverseDirection,		1, fieldAlign),
-		]
-		addToGBS( gbs, labelFieldFormats )
+		ms.Add( self.finishTop, flag=wx.TOP|wx.LEFT, border=16 )
+		ms.Add( self.reverseDirection, flag=wx.TOP|wx.LEFT, border=16 )
 		
 	def update( self ):
 		race = Model.race
@@ -229,6 +190,9 @@ class Properties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY, addEditButton = True ):
 		wx.Panel.__init__(self, parent, id)
 
+		vs = wx.BoxSizer( wx.VERTICAL )
+		self.SetSizer( vs )
+		
 		rows = 0
 		
 		self.raceNameLabel = wx.StaticText( self, label = _('Event Name:') )
@@ -310,29 +274,23 @@ class Properties( wx.Panel ):
 		for prop, PropClass in self.propClass:
 			setattr( self, prop, PropClass(self.notebook) )
 			self.notebook.AddPage( getattr(self, prop), prop[0].upper() + prop[1:-10] )
-		rows += 1
 		
 		self.notesLabel = wx.StaticText( self, label = _('Notes to appear on Html output:\n(Notes using Html tags must start with <html> and end with </html>)') )
 		self.notes = wx.TextCtrl( self, style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB, size=(-1,60) )
-		rows += 1
 
 		self.fileNameLabel = wx.StaticText( self, label = _('File Name: ') )
 		self.fileName = wx.StaticText( self )
-		rows += 1
 
 		self.excelLabel = wx.StaticText( self, label = _('Excel Sheet: ') )
 		self.excelName = wx.StaticText( self )
-		rows += 1
 
 		self.categoriesFileLabel = wx.StaticText( self, label = _('Categories Imported From: ') )
 		self.categoriesFile = wx.StaticText( self )
-		rows += 1
 
 		self.updateFileName()
 		
-		if addEditButton:
-			rows += 1
-		gbs = wx.GridBagSizer( hgap=2, vgap=1 )
+		fgs = wx.FlexGridSizer( rows=rows, cols=2, vgap=2, hgap=2 )
+		fgs.AddGrowableCol( 1 )
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
 		fieldAlign = wx.EXPAND|wx.GROW
@@ -350,40 +308,38 @@ class Properties( wx.Panel ):
 			(self.organizerLabel,	0, labelAlign),		(self.organizer,		1, fieldAlign),
 			(self.commissaireLabel,	0, labelAlign),		(self.commissaire, 		1, fieldAlign),
 			(self.memoLabel,		0, labelAlign),		(self.memo, 			1, fieldAlign),
-			
-			(self.notebook,			0, fieldAlign),
-			
-			(self.notesLabel,		0, 0),				(self.notes,			1, 0),
-			
-			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
-			(self.excelLabel,		0, labelAlign),		(self.excelName, 		1, fieldAlign),
-			(self.categoriesFileLabel, 0, labelAlign),	(self.categoriesFile,	1, fieldAlign),
-			
-			(blank(),				0, labelAlign),		(blank(),				1, fieldAlign),
-			(self.fileNameLabel,	0, labelAlign),		(self.fileName, 		1, fieldAlign),
 		]
+
 		row = 0
 		for i, (item, column, flag) in enumerate(labelFieldFormats):
 			if not item:
 				continue
 			if column == 1:
 				flag |= wx.EXPAND
-			if item == self.notesLabel:
-				gbs.Add( item, pos=(row, column), span=(1,2), flag=flag )
-			elif item == self.notes:
+			fgs.Add( item, flag=flag )
+			if column == 1:
 				row += 1
-				gbs.Add( item, pos=(row, 0), span=(1,2), flag=flag )
-				row += 1
-			elif item == self.notebook:
-				gbs.Add( item, pos=(row, 0), span=(1,2), flag=flag )
-				row += 1
-				gbs.Add( wx.StaticLine(self, wx.LI_HORIZONTAL), pos=(row,0), span=(1,2), flag=wx.EXPAND )
-				row += 1
-			else:
-				gbs.Add( item, pos=(row, column), span=(1,1), flag=flag )
-				if column == 1:
-					row += 1
-				
+		
+		vs.Add( fgs )
+		
+		vs.Add( self.notebook, flag=wx.ALL, border=4 )
+		vs.Add( self.notesLabel, flag=wx.TOP|wx.LEFT|wx.RIGHT, border=4 )
+		vs.Add( self.notes, 1, flag=wx.EXPAND|wx.ALL, border=4 )
+		
+		fgs = wx.FlexGridSizer( rows=3, cols=2, vgap=2, hgap=2 )
+		fgs.AddGrowableCol( 1 )
+		
+		fgs.Add( self.excelLabel, flag=wx.ALIGN_RIGHT )
+		fgs.Add( self.excelName )
+		
+		fgs.Add( self.fileNameLabel, flag=wx.ALIGN_RIGHT )
+		fgs.Add( self.fileName )
+		
+		fgs.Add( self.categoriesFileLabel, flag=wx.ALIGN_RIGHT )
+		fgs.Add( self.categoriesFile )
+		
+		vs.Add( fgs )
+		
 		if addEditButton:
 			hs = wx.BoxSizer( wx.HORIZONTAL )
 			
@@ -395,18 +351,20 @@ class Properties( wx.Panel ):
 			self.excelButton.Bind( wx.EVT_BUTTON, self.excelButtonCallback )
 			hs.Add( self.excelButton, border = 8, flag = wx.LEFT|wx.TOP|wx.BOTTOM )
 
-			row += 1
-			gbs.Add( hs, pos=(row, 1), span=(1,1) )
+			vs.Add( hs, flag=wx.ALL, border = 4 )
 		
-		gbs.AddGrowableCol( 1 )
-		self.SetSizer(gbs)
-		
-		self.editFields = [labelFieldFormats[i][0] for i in xrange(1, len(labelFieldFormats), 2)]
+		self.editFields = [labelFieldFormats[i][0] for i in xrange(1, len(labelFieldFormats), 2)] + [
+				self.notebook, self.excelName, self.fileName,]
 		self.editFields = [e for e in self.editFields if e and not isinstance(e, wx.BoxSizer)]
 		self.editFields.extend( [self.raceCity, self.raceStateProv, self.raceCountry] )
 		
 		self.setEditable( True )
-	
+		self.Bind(wx.EVT_SIZE, self.OnSize)
+
+	def OnSize( self, event ):
+		self.Refresh()
+		event.Skip()
+		
 	def onJChipIntegration( self, event ):
 		self.autocorrectLapsDefault.SetValue( not self.jchip.GetValue() )
 	
@@ -558,7 +516,7 @@ class Properties( wx.Panel ):
 			wx.CallAfter( mainWin.writeRace, False )
 		wx.CallAfter( Utils.refreshForecastHistory )
 		if not success and mainWin:
-			wx.CallAfter( mainWin.showPageName,  _("Properties") )
+			wx.CallAfter( mainWin.showPageName, _("Properties") )
 		
 class PropertiesDialog( wx.Dialog ):
 	def __init__(

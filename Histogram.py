@@ -110,6 +110,7 @@ class Histogram(wx.PyControl):
 
 	def OnSize(self, event):
 		self.Refresh()
+		event.Skip()
 		
 	def Draw(self, dc):		
 		size = self.GetClientSize()

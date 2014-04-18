@@ -210,6 +210,7 @@ class Checklist( wx.Panel ):
 		width, height = self.GetSize()
 		self.tree.SetColumnWidth( 1, max(200, width - self.tree.GetColumnWidth(0) - 8) )
 		self.tree.SetSize( self.GetSize() )
+		event.Skip()
 
 	def onTreeItemCollapsed( self, event ):
 		treeNode = event.GetItem()

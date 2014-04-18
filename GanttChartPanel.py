@@ -172,6 +172,7 @@ class GanttChartPanel(wx.PyPanel):
 		
 	def OnSize(self, event):
 		self.Refresh()
+		event.Skip()
 		
 	def OnLeftClick( self, event ):
 		if getattr(self, 'empty', True):

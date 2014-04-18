@@ -139,6 +139,7 @@ class GanttChart(wx.PyControl):
 
 	def OnSize(self, event):
 		self.Refresh()
+		event.Skip()
 	
 	def OnLeftDClick( self, event ):
 		if getattr(self, 'empty', True):
