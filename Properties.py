@@ -118,6 +118,8 @@ class RfidProperties( wx.Panel ):
 		ms.Add( self.jchip, flag=wx.ALL, border = 16 )
 		ms.Add( self.chipTimingOptions, flag=wx.ALL, border = 4 )
 		
+		self.update()
+		
 	def update( self ):
 		race = Model.race
 		resetStartClockOnFirstTag = getattr(race, 'resetStartClockOnFirstTag', True)
