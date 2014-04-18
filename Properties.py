@@ -157,17 +157,19 @@ class CameraProperties( wx.Panel ):
 	
 #------------------------------------------------------------------------------------------------
 
-class TrackAnimationProperties( wx.Panel ):
+class AnimationProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		super(TrackAnimationProperties, self).__init__( parent, id )
+		super(AnimationProperties, self).__init__( parent, id )
 		
 		self.finishTop = wx.CheckBox( self, style=wx.ALIGN_LEFT, label=_('Animation Finish on Top') )
 		self.reverseDirection = wx.CheckBox( self, style=wx.ALIGN_LEFT, label=_('Animation Reverse Direction') )
-
+		self.note = wx.StaticText( self, label=_('This only applie to the Track animation.\nThe GPX animation follows the lat/lng coordinates.') )
+		
 		#-------------------------------------------------------------------------------
 		ms = wx.BoxSizer( wx.VERTICAL )
 		self.SetSizer( ms )
 		
+		ms.Add( self.note, flag=wx.TOP|wx.LEFT, border=16 )
 		ms.Add( self.finishTop, flag=wx.TOP|wx.LEFT, border=16 )
 		ms.Add( self.reverseDirection, flag=wx.TOP|wx.LEFT, border=16 )
 		
@@ -272,7 +274,7 @@ class Properties( wx.Panel ):
 			('raceProperties', RaceProperties),
 			('RFIDProperties', RfidProperties),
 			('cameraProperties', CameraProperties),
-			('trackAnimationProperties', TrackAnimationProperties),
+			('animationProperties', AnimationProperties),
 		]
 		for prop, PropClass in self.propClass:
 			setattr( self, prop, PropClass(self.notebook) )
