@@ -176,6 +176,8 @@ class Actions( wx.Panel ):
 		ps.Add( self.splitter, 1, flag=wx.EXPAND )
 		self.SetSizer( ps )
 		
+		#---------------------------------------------------------------------------------------------
+		
 		self.leftPanel = wx.Panel( self.splitter )
 		bs = wx.BoxSizer( wx.VERTICAL )
 		self.leftPanel.SetSizer( bs )
@@ -210,6 +212,8 @@ class Actions( wx.Panel ):
 		bs.Add(self.startRaceTimeCheckBox, border=border, flag=wx.ALL)
 		bs.Add(self.chipTimingOptions, border=border, flag=wx.ALL)
 		
+		#---------------------------------------------------------------------------------------------
+		
 		self.rightPanel = wx.Panel( self.splitter )
 		self.rightPanel.SetBackgroundColour( wx.Colour(255,255,255) )
 		checklistTitle = wx.StaticText( self.rightPanel, label = _('Checklist:') )
@@ -220,6 +224,8 @@ class Actions( wx.Panel ):
 		hsSub.Add( checklistTitle, 0, flag=wx.ALL, border = 4 )
 		hsSub.Add( self.checklist, 1, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, border = 4 )
 		self.rightPanel.SetSizer( hsSub )
+		
+		#---------------------------------------------------------------------------------------------
 		
 		self.splitter.SplitVertically( self.leftPanel, self.rightPanel )
 		self.splitter.SetMinimumPaneSize( 100 )
@@ -233,6 +239,8 @@ class Actions( wx.Panel ):
 		label = wordwrap( Model.race.getRaceIntro() if Model.race else u'', wrapWidth, dc )
 		self.raceIntro.SetLabel( label )
 		self.leftPanel.GetSizer().Layout()
+		if event:
+			event.Skip()
 		
 	def updateChipTimingOptions( self ):
 		if not Model.race:
