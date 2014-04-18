@@ -438,8 +438,8 @@ class Properties( wx.Panel ):
 					f.Disable()
 		'''
 		if not HasPhotoFinish():
-			self.enableUSBCamera.Disable()
-			self.enableUSBCameraLabel.Disable()
+			self.cameraProperties.enableUSBCamera.Disable()
+			self.cameraProperties.enableUSBCameraLabel.Disable()
 	
 	def incNext( self ):
 		self.raceNum.SetValue( self.raceNum.GetValue() + 1 )
