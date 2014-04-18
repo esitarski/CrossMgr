@@ -77,24 +77,24 @@ class RaceProperties( wx.Panel ):
 
 	def update( self ):
 		race = Model.race
+		self.timeTrial.SetValue( getattr(race, 'isTimeTrial', False) )
+		self.allCategoriesFinishAfterFastestRidersLastLap.SetValue( getattr(race, 'allCategoriesFinishAfterFastestRidersLastLap', False) )
+		self.autocorrectLapsDefault.SetValue( getattr(race, 'autocorrectLapsDefault', True) )
+		self.highPrecisionTimes.SetValue( getattr(race, 'highPrecisionTimes', False) )
 		if race.rule80MinLapCount == 1:
 			self.rule80MinLapCount1.SetValue( True )
 		else:
 			self.rule80MinLapCount2.SetValue( True )
-		self.allCategoriesFinishAfterFastestRidersLastLap.SetValue( getattr(race, 'allCategoriesFinishAfterFastestRidersLastLap', False) )
-		self.timeTrial.SetValue( getattr(race, 'isTimeTrial', False) )
-		self.highPrecisionTimes.SetValue( getattr(race, 'highPrecisionTimes', False) )
 		self.distanceUnit.SetSelection( getattr(race, 'distanceUnit', 0) )
-		self.autocorrectLapsDefault.SetValue( getattr(race, 'autocorrectLapsDefault', True) )
 	
 	def commit( self ):
 		race = Model.race
-		race.rule80MinLapCount = (1 if self.rule80MinLapCount1.GetValue() else 2)
-		race.allCategoriesFinishAfterFastestRidersLastLap = self.allCategoriesFinishAfterFastestRidersLastLap.IsChecked()
 		race.isTimeTrial = self.timeTrial.IsChecked()
-		race.highPrecisionTimes = self.highPrecisionTimes.IsChecked()
-		race.distanceUnit = self.distanceUnit.GetSelection()
+		race.allCategoriesFinishAfterFastestRidersLastLap = self.allCategoriesFinishAfterFastestRidersLastLap.IsChecked()
 		race.autocorrectLapsDefault = self.autocorrectLapsDefault.IsChecked()
+		race.highPrecisionTimes = self.highPrecisionTimes.IsChecked()
+		race.rule80MinLapCount = (1 if self.rule80MinLapCount1.GetValue() else 2)
+		race.distanceUnit = self.distanceUnit.GetSelection()
 	
 #------------------------------------------------------------------------------------------------
 
@@ -162,9 +162,13 @@ class AnimationProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(AnimationProperties, self).__init__( parent, id )
 		
+		self.note = wx.StaticText( self, label=u'\n'.join ([
+				_('This only applies to the Track animation.'),
+				_('GPX animation follows the lat/lng coordinates.')
+			])
+		)
 		self.finishTop = wx.CheckBox( self, style=wx.ALIGN_LEFT, label=_('Animation Finish on Top') )
 		self.reverseDirection = wx.CheckBox( self, style=wx.ALIGN_LEFT, label=_('Animation Reverse Direction') )
-		self.note = wx.StaticText( self, label=_('This only applies to the Track animation.\nThe GPX animation follows the lat/lng coordinates.') )
 		
 		#-------------------------------------------------------------------------------
 		ms = wx.BoxSizer( wx.VERTICAL )

@@ -184,32 +184,6 @@ def replaceJsonVar( s, varName, value ):
 	return s.replace( u'%s = null' % varName, u'%s = %s' % (varName, json.dumps(value)), 1 )
 
 #----------------------------------------------------------------------------------
-class CustomStatusBar(wx.StatusBar):
-    def __init__(self, parent):
-        wx.StatusBar.__init__(self, parent, -1)
-
-        # This status bar has three fields
-        self.SetFieldsCount(3)
-        # Sets the three fields to be relative widths to each other.
-        self.SetStatusWidths([-2, -1, -2])
-
-        # Field 0 ... just text
-        self.SetStatusText("A Custom StatusBar...", 0)
-
-        # We're going to use a timer to drive a 'clock' in the last
-        # field.
-        self.timer = wx.PyTimer(self.Notify)
-        self.timer.Start(1000)
-        self.Notify()
-
-    # Handles events from the timer we started in __init__().
-    # We're using it to drive a 'clock' in field 2 (the third field).
-    def Notify(self):
-        t = time.localtime(time.time())
-        st = time.strftime("%d-%b-%Y   %I:%M:%S", t)
-        self.SetStatusText(st, 2)
-
-#----------------------------------------------------------------------------------
 def AppendMenuItemBitmap( menu, id, name, help, bitmap ):
 	mi = wx.MenuItem( menu, id, name, help )
 	mi.SetBitmap( bitmap )
@@ -231,9 +205,6 @@ class MainWin( wx.Frame ):
 		self.fileName = None
 		self.numSelect = None
 		
-		#self.sb = CustomStatusBar( self )
-		#self.SetStatusBar( self.sb )
-
 		# Setup the objects for the race clock.
 		self.timer = wx.Timer( self, id=wx.NewId() )
 		self.secondCount = 0
