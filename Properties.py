@@ -162,9 +162,9 @@ class GeneralInfoProperties( wx.Panel ):
 
 #------------------------------------------------------------------------------------------------
 
-class RaceInfoProperties( wx.Panel ):
+class RaceOptionsProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		super(RaceInfoProperties, self).__init__( parent, id )
+		super(RaceOptionsProperties, self).__init__( parent, id )
 		rows = 0
 		
 		self.timeTrial = wx.CheckBox( self, style=wx.ALIGN_LEFT, label = _('Time Trial') )
@@ -429,21 +429,23 @@ class Properties( wx.Panel ):
 			| flatnotebook.FNB_VC8
 			| flatnotebook.FNB_NODRAG
 		)
-		self.notebook = flatnotebook.FlatNotebook(self, wx.ID_ANY, agwStyle=bookStyle)
+		self.notebook = flatnotebook.FlatNotebook( self, wx.ID_ANY, agwStyle=bookStyle )
 		self.notebook.SetBackgroundColour( wx.WHITE )
 		self.notebook.SetTabAreaColour( wx.WHITE )
-		self.propClass = [
-			('generalInfoProperties',	GeneralInfoProperties),
-			('raceInfoProperties',		RaceInfoProperties),
-			('notesProperties',			NotesProperties),
-			('RFIDProperties',			RfidProperties),
-			('cameraProperties',		CameraProperties),
-			('animationProperties',		AnimationProperties),
-			('filesProperties',			FilesProperties),
+		self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onPageChanging )
+
+		self.propClassName = [
+			('generalInfoProperties',	GeneralInfoProperties,		_('General Info') ),
+			('raceOptionsProperties',	RaceOptionsProperties,		_('Race Options') ),
+			('notesProperties',			NotesProperties,			_('Notes') ),
+			('rfidProperties',			RfidProperties,				_('RFID') ),
+			('cameraProperties',		CameraProperties,			_('Camera') ),
+			('animationProperties',		AnimationProperties,		_('Animation') ),
+			('filesProperties',			FilesProperties,			_('Files') ),
 		]
-		for prop, PropClass in self.propClass:
+		for prop, PropClass, name in self.propClassName:
 			setattr( self, prop, PropClass(self.notebook) )
-			self.notebook.AddPage( getattr(self, prop), (prop[0].upper() + prop[1:-10]).replace('Info', ' Info') )
+			self.notebook.AddPage( getattr(self, prop), name )
 		
 		self.updateFileName()
 		
@@ -466,6 +468,16 @@ class Properties( wx.Panel ):
 		
 	def onJChipIntegration( self, event ):
 		self.autocorrectLapsDefault.SetValue( not self.jchip.GetValue() )
+	
+	def onPageChanging( self, event ):
+		'''
+		if Model.race:
+			notebook = event.GetEventObject()
+			notebook.GetPage( event.GetOldSelection() ).commit()
+			notebook.GetPage( event.GetSelection() ).update()
+			self.updateFileName()
+		'''
+		event.Skip()	# Required to properly repaint the screen.
 	
 	def excelButtonCallback( self, event ):
 		mainWin = Utils.getMainWin()
@@ -512,6 +524,9 @@ class Properties( wx.Panel ):
 		self.updateFileName()
 	
 	def updateFileName( self ):
+		if not hasattr( self, 'filesProperties' ):
+			return ''
+		
 		gi = self.generalInfoProperties
 		
 		rDate = gi.date.GetValue().Format(Properties.dateFormat)
@@ -542,7 +557,7 @@ class Properties( wx.Panel ):
 			if race is None:
 				return
 			
-			for prop, PropClass in self.propClass:
+			for prop, PropClass, name in self.propClassName:
 				getattr(self, prop).update()
 			
 			self.saveFileNameFields()
@@ -556,7 +571,7 @@ class Properties( wx.Panel ):
 				race = Model.getRace()
 			if race is None:
 				return
-			for prop, PropClass in self.propClass:
+			for prop, PropClass, name in self.propClassName:
 				getattr(self, prop).commit()
 			race.setChanged()
 			

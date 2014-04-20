@@ -1695,7 +1695,7 @@ class MainWin( wx.Frame ):
 			
 		geoTrack, geoTrackFName = None, None		# Do not retain the GPX file after a full new.
 		
-		dlg = PropertiesDialog(self, -1, _('Configure Race'), style=wx.DEFAULT_DIALOG_STYLE )
+		dlg = PropertiesDialog(self, title=_('Configure Race'), style=wx.DEFAULT_DIALOG_STYLE )
 		ret = dlg.ShowModal()
 		fileName = dlg.GetPath()
 		categoriesFile = dlg.GetCategoriesFile()
@@ -1787,7 +1787,7 @@ class MainWin( wx.Frame ):
 		race = None
 		
 		# Configure the next race.
-		dlg = PropertiesDialog(self, -1, _('Configure Race'), style=wx.DEFAULT_DIALOG_STYLE )
+		dlg = PropertiesDialog(self, title=_('Configure Race'), style=wx.DEFAULT_DIALOG_STYLE )
 		dlg.properties.refresh()
 		dlg.properties.incNext()
 		dlg.properties.setEditable( True )
