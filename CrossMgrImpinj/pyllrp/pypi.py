@@ -9,7 +9,7 @@ import subprocess
 
 import ParseDef
 
-version = '0.1.0'
+version = '0.1.1'
 
 pypiDir = 'pypi'
 

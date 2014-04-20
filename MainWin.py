@@ -2606,10 +2606,12 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 		self.redoMenuButton.Enable( bool(not isRunning and undo.isRedo()) )
 		
 	def onPageChanging( self, event ):
-		self.callPageCommit( event.GetOldSelection() )
-		self.callPageRefresh( event.GetSelection() )
+		notebook = event.GetEventObject()
+		if notebook == self.notebook:
+			self.callPageCommit( event.GetOldSelection() )
+			self.callPageRefresh( event.GetSelection() )
 		try:
-			Utils.writeLog( u'page: {}\n'.format(self.pages[event.GetSelection()].__class__.__name__) )
+			Utils.writeLog( u'page: {}\n'.format(notebook.GetPage(event.GetSelection()).__class__.__name__) )
 		except IndexError:
 			pass
 		event.Skip()	# Required to properly repaint the screen.

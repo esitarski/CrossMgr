@@ -20,9 +20,151 @@ def addToFGS( fgs, labelFieldFormats ):
 			flag |= wx.EXPAND
 		fgs.Add( item, flag=flag )
 
-class RaceProperties( wx.Panel ):
+class GeneralInfoProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		super(RaceProperties, self).__init__( parent, id )
+		super(GeneralInfoProperties, self).__init__( parent, id )
+		rows = 0
+		
+		self.raceNameLabel = wx.StaticText( self, label = _('Event Name:') )
+		self.raceName = wx.TextCtrl( self )
+		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceName )
+		rows += 1
+		
+		self.raceCityLabel = wx.StaticText( self, label = _('City:') )
+		self.raceCity = wx.TextCtrl( self )
+		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceCity )
+		
+		self.raceStateProvLabel = wx.StaticText( self, label = _('State/Prov:') )
+		self.raceStateProv = wx.TextCtrl( self )
+		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceStateProv )
+		
+		self.raceCountryLabel = wx.StaticText( self, label = _('Country:') )
+		self.raceCountry = wx.TextCtrl( self )
+		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceCountry )
+		
+		self.locationSizer = wx.BoxSizer( wx.HORIZONTAL )
+		self.locationSizer.Add( self.raceCity, 4, flag=wx.EXPAND )
+		self.locationSizer.Add( self.raceStateProvLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border = 16 )
+		self.locationSizer.Add( self.raceStateProv, 2, flag=wx.EXPAND )
+		self.locationSizer.Add( self.raceCountryLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border = 16 )
+		self.locationSizer.Add( self.raceCountry, 2, flag=wx.EXPAND )
+		rows += 1
+		
+		self.dateLabel = wx.StaticText( self, label = _('Date:') )
+		self.date = wx.DatePickerCtrl( self, style = wx.DP_DROPDOWN )
+		self.Bind(wx.EVT_DATE_CHANGED, self.onChanged, self.date)
+		rows += 1
+		
+		self.raceDisciplineLabel = wx.StaticText( self, label = _('Discipline:') )
+		self.raceDiscipline = wx.TextCtrl( self, value=u'Cyclo-cross' )
+		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceDiscipline )
+		rows += 1
+		
+		self.dateDisciplineSizer = wx.BoxSizer( wx.HORIZONTAL )
+		self.dateDisciplineSizer.Add( self.date )
+		self.dateDisciplineSizer.Add( self.raceDisciplineLabel, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border = 16 )
+		self.dateDisciplineSizer.Add( self.raceDiscipline )
+		self.dateDisciplineSizer.AddStretchSpacer()
+		rows += 1
+
+		self.raceNumLabel = wx.StaticText( self, label = _('Race #:') )
+		self.raceNum = intctrl.IntCtrl( self, min=1, max=1000, allow_none=False, value=1, size=(64,-1), style=wx.ALIGN_RIGHT )
+		self.Bind(intctrl.EVT_INT, self.onChanged, self.raceNum)
+		rows += 1
+		
+		self.scheduledStartLabel = wx.StaticText( self, label = _('Scheduled Start:') )
+		self.scheduledStart = masked.TimeCtrl( self, fmt24hr=True, display_seconds=False, value='10:00:00', size=(128,-1) )
+		
+		self.minutesLabel = wx.StaticText( self, label = _('Race Minutes:') )
+		self.minutes = intctrl.IntCtrl( self, min=1, max=60*48, allow_none=False, value=40, size=(64,-1), style=wx.ALIGN_RIGHT )
+		rows += 1
+
+		self.numStartMinutesSizer = wx.BoxSizer( wx.HORIZONTAL )
+		self.numStartMinutesSizer.Add( self.raceNum )
+		self.numStartMinutesSizer.Add( self.scheduledStartLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border = 16 )
+		self.numStartMinutesSizer.Add( self.scheduledStart )
+		self.numStartMinutesSizer.Add( self.minutesLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border = 16 )
+		self.numStartMinutesSizer.Add( self.minutes )
+		self.numStartMinutesSizer.AddStretchSpacer()
+		rows += 1
+
+		self.organizerLabel = wx.StaticText( self, label = _('Organizer:') )
+		self.organizer = wx.TextCtrl( self )
+		rows += 1
+
+		self.commissaireLabel = wx.StaticText( self, label = _('Official/Commissaire:') )
+		self.commissaire = wx.TextCtrl( self )
+		rows += 1
+
+		self.memoLabel = wx.StaticText( self, label = _('Memo:') )
+		self.memo = wx.TextCtrl( self )
+		self.Bind( wx.EVT_TEXT, self.onChanged, self.memo )
+		rows += 1
+		
+		#-------------------------------------------------------------------------------
+		ms = wx.BoxSizer( wx.HORIZONTAL )
+		self.SetSizer( ms )
+		
+		fgs = wx.FlexGridSizer( rows=rows, cols=2, vgap=12, hgap=3 )
+		ms.Add( fgs, 1, flag=wx.EXPAND|wx.ALL, border=16 )
+		
+		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
+		fieldAlign = wx.EXPAND|wx.GROW
+		
+		blank = lambda : wx.StaticText( self, label='' )
+		
+		labelFieldFormats = [
+			(self.raceNameLabel,	0, labelAlign),		(self.raceName,		1, fieldAlign),
+			(self.raceCityLabel,	0, labelAlign),		(self.locationSizer,		1, fieldAlign),
+			(self.dateLabel,		0, labelAlign),		(self.dateDisciplineSizer,1, fieldAlign),
+			(self.raceNumLabel,		0, labelAlign),		(self.numStartMinutesSizer,1, fieldAlign),
+			(self.organizerLabel,		0, labelAlign),		(self.organizer, 			1, fieldAlign),
+			(self.commissaireLabel,		0, labelAlign),		(self.commissaire, 			1, fieldAlign),
+			(self.memoLabel,		0, labelAlign),		(self.memo, 			1, fieldAlign),
+		]
+		addToFGS( fgs, labelFieldFormats )
+
+	def update( self ):
+		race = Model.race
+		self.raceName.SetValue( race.name )
+		self.raceCity.SetValue( race.city )
+		self.raceStateProv.SetValue( race.stateProv )
+		self.raceCountry.SetValue( race.country )
+		self.raceDiscipline.SetValue( getattr(race, 'discipline', 'Cyclo-cross') )
+		d = wx.DateTime()
+		d.ParseDate(race.date)
+		self.date.SetValue( d )
+		self.raceNum.SetValue( race.raceNum )
+		self.scheduledStart.SetValue( race.scheduledStart )
+		self.minutes.SetValue( race.minutes )
+		self.memo.SetValue( race.memo )
+		self.organizer.SetValue( getattr(race, 'organizer', '') )
+		self.commissaire.SetValue( getattr(race, 'commissaire', '') )
+
+	def commit( self ):
+		race = Model.race
+		race.name = self.raceName.GetValue().strip()
+		race.city = self.raceCity.GetValue().strip()
+		race.stateProv = self.raceStateProv.GetValue().strip()
+		race.country = self.raceCountry.GetValue().strip()
+		race.discipline = self.raceDiscipline.GetValue().strip()
+		race.date = self.date.GetValue().Format(Properties.dateFormat)
+		race.raceNum = self.raceNum.GetValue()
+		race.scheduledStart = self.scheduledStart.GetValue()
+		race.minutes = self.minutes.GetValue()
+		race.memo = self.memo.GetValue().strip()
+		race.organizer = self.organizer.GetValue().strip()
+		race.commissaire = self.commissaire.GetValue().strip()
+
+	def onChanged( self, event ):
+		#self.updateFileName()
+		pass
+
+#------------------------------------------------------------------------------------------------
+
+class RaceInfoProperties( wx.Panel ):
+	def __init__( self, parent, id = wx.ID_ANY ):
+		super(RaceInfoProperties, self).__init__( parent, id )
 		rows = 0
 		
 		self.timeTrial = wx.CheckBox( self, style=wx.ALIGN_LEFT, label = _('Time Trial') )
@@ -51,17 +193,20 @@ class RaceProperties( wx.Panel ):
 		self.distanceUnitLabel = wx.StaticText( self, label = _('Distance Unit: ') )
 		self.distanceUnit = wx.Choice( self, choices=['km', 'miles'] )
 		self.distanceUnit.SetSelection( 0 )
+		self.distanceUnitSizer = wx.BoxSizer( wx.HORIZONTAL )
+		self.distanceUnitSizer.Add( self.distanceUnit )
+		self.distanceUnitSizer.AddStretchSpacer()
 		rows += 1
 
 		#-------------------------------------------------------------------------------
 		ms = wx.BoxSizer( wx.HORIZONTAL )
 		self.SetSizer( ms )
 		
-		fgs = wx.FlexGridSizer( rows=rows, cols=2, vgap=3, hgap=3 )
+		fgs = wx.FlexGridSizer( rows=rows, cols=2, vgap=12, hgap=3 )
 		ms.Add( fgs, 1, flag=wx.EXPAND|wx.ALL, border=16 )
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
-		fieldAlign = wx.EXPAND|wx.GROW
+		fieldAlign = wx.EXPAND
 		
 		blank = lambda : wx.StaticText( self, label='' )
 		
@@ -71,7 +216,7 @@ class RaceProperties( wx.Panel ):
 			(blank(),				0, labelAlign),(self.autocorrectLapsDefault,1, fieldAlign),
 			(blank(),				0, labelAlign),(self.highPrecisionTimes,1, fieldAlign),
 			(self.rule80MinLapCountLabel,	0, labelAlign),		(self.rule80MinLapCountSizer,		1, fieldAlign),
-			(self.distanceUnitLabel,0, labelAlign),		(self.distanceUnit,		1, fieldAlign),
+			(self.distanceUnitLabel,0, labelAlign),		(self.distanceUnitSizer,		1, fieldAlign),
 		]
 		addToFGS( fgs, labelFieldFormats )
 
@@ -191,6 +336,80 @@ class AnimationProperties( wx.Panel ):
 		race.finishTop = self.finishTop.GetValue()
 
 #------------------------------------------------------------------------------------------------
+class NotesProperties( wx.Panel ):
+	def __init__( self, parent, id = wx.ID_ANY ):
+		super(NotesProperties, self).__init__( parent, id )
+		
+		ms = wx.BoxSizer( wx.VERTICAL )
+		self.SetSizer( ms )
+		
+		self.notesLabel = wx.StaticText( self, label = _('Notes to appear on Html output:\n(Notes containing Html tags must start with <html> and end with </html>)') )
+		self.notes = wx.TextCtrl( self, style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB, size=(-1,60) )
+
+		#-------------------------------------------------------------------------------
+		ms.Add( self.notesLabel, flag=wx.TOP|wx.LEFT, border=16 )
+		ms.Add( self.notes, 1, flag=wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.EXPAND, border=16 )
+		
+	def update( self ):
+		race = Model.race
+		self.notes.SetValue( getattr(race, 'notes', '') )
+		
+	def commit( self ):
+		race = Model.race
+		race.notes = self.notes.GetValue()
+
+#------------------------------------------------------------------------------------------------
+class FilesProperties( wx.Panel ):
+	def __init__( self, parent, id = wx.ID_ANY ):
+		super(FilesProperties, self).__init__( parent, id )
+		
+		rows = 0
+		
+		self.fileNameLabel = wx.StaticText( self, label = _('File Name:') )
+		self.fileName = wx.StaticText( self )
+		rows += 1
+
+		self.excelNameLabel = wx.StaticText( self, label = _('Excel Link File:') )
+		self.excelName = wx.StaticText( self )
+		rows += 1
+
+		self.categoriesFileLabel = wx.StaticText( self, label = _('Categories Initially Loaded From:') )
+		self.categoriesFile = wx.StaticText( self )
+		rows += 1
+
+		ms = wx.BoxSizer( wx.VERTICAL )
+		self.SetSizer( ms )
+		
+		fgs = wx.FlexGridSizer( rows=rows, cols=2, vgap=12, hgap=3 )
+		ms.Add( fgs, 1, flag=wx.EXPAND|wx.ALL, border=16 )
+		
+		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
+		fieldAlign = wx.EXPAND|wx.GROW
+		
+		blank = lambda : wx.StaticText( self, label='' )
+		
+		labelFieldFormats = [
+			(self.fileNameLabel,	0, labelAlign),		(self.fileName,		1, fieldAlign),
+			(self.excelNameLabel,	0, labelAlign),		(self.excelName,	1, fieldAlign),
+			(self.categoriesFileLabel,	0, labelAlign),		(self.categoriesFile,	1, fieldAlign),
+		]
+		addToFGS( fgs, labelFieldFormats )
+		
+	def update( self ):
+		race = Model.race
+		excelLink = getattr(race, 'excelLink', None)
+		if excelLink:
+			self.excelName.SetLabel( '%s|%s' % (
+				os.path.basename(excelLink.fileName) if excelLink.fileName else '',
+				excelLink.sheetName if excelLink.sheetName else '') )
+		else:
+			self.excelName.SetLabel( '' )
+		self.categoriesFile.SetLabel( os.path.basename(getattr(race, 'categoriesImportFile', '')) )
+		
+	def commit( self ):
+		pass
+		
+#------------------------------------------------------------------------------------------------
 
 class Properties( wx.Panel ):
 	badFileCharsRE = re.compile( '[^a-zA-Z0-9_ ]+' )
@@ -204,69 +423,6 @@ class Properties( wx.Panel ):
 		vs = wx.BoxSizer( wx.VERTICAL )
 		self.SetSizer( vs )
 		
-		rows = 0
-		
-		self.raceNameLabel = wx.StaticText( self, label = _('Event Name:') )
-		self.raceName = wx.TextCtrl( self )
-		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceName )
-		rows += 1
-		
-		self.raceCityLabel = wx.StaticText( self, label = _('City:') )
-		self.raceCity = wx.TextCtrl( self )
-		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceCity )
-		
-		self.raceStateProvLabel = wx.StaticText( self, label = _('State/Prov:') )
-		self.raceStateProv = wx.TextCtrl( self )
-		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceStateProv )
-		
-		self.raceCountryLabel = wx.StaticText( self, label = _('Country') )
-		self.raceCountry = wx.TextCtrl( self )
-		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceCountry )
-		
-		self.locationSizer = wx.BoxSizer( wx.HORIZONTAL )
-		self.locationSizer.Add( self.raceCity, 4, flag=wx.EXPAND )
-		self.locationSizer.Add( self.raceStateProvLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border = 4 )
-		self.locationSizer.Add( self.raceStateProv, 1, flag=wx.EXPAND )
-		self.locationSizer.Add( self.raceCountryLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border = 4 )
-		self.locationSizer.Add( self.raceCountry, 2, flag=wx.EXPAND )
-		rows += 1
-		
-		self.dateLabel = wx.StaticText( self, label = _('Date:') )
-		self.date = wx.DatePickerCtrl( self, style = wx.DP_DROPDOWN )
-		self.Bind(wx.EVT_DATE_CHANGED, self.onChanged, self.date)
-		rows += 1
-		
-		self.raceNumLabel = wx.StaticText( self, label = _('Race #:') )
-		self.raceNum = intctrl.IntCtrl( self, min=1, max=1000, allow_none=False, value=1 )
-		self.Bind(intctrl.EVT_INT, self.onChanged, self.raceNum)
-		rows += 1
-		
-		self.scheduledStartLabel = wx.StaticText( self, label = _('Scheduled Start:') )
-		self.scheduledStart = masked.TimeCtrl( self, fmt24hr=True, display_seconds=False, value='10:00:00' )
-		rows += 1
-
-		self.minutesLabel = wx.StaticText( self, label = _('Race Minutes:') )
-		self.minutes = intctrl.IntCtrl( self, min=1, max=60*24, allow_none=False, value=40 )
-		rows += 1
-
-		self.raceDisciplineLabel = wx.StaticText( self, label = _('Discipline:') )
-		self.raceDiscipline = wx.TextCtrl( self, value=u'Cyclo-cross' )
-		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceDiscipline )
-		rows += 1
-		
-		self.organizerLabel = wx.StaticText( self, label = _('Organizer:') )
-		self.organizer = wx.TextCtrl( self )
-		rows += 1
-		
-		self.commissaireLabel = wx.StaticText( self, label = _('Official/Commissaire:') )
-		self.commissaire = wx.TextCtrl( self )
-		rows += 1
-		
-		self.memoLabel = wx.StaticText( self, label = _('Memo:') )
-		self.memo = wx.TextCtrl( self )
-		self.Bind( wx.EVT_TEXT, self.onChanged, self.memo )
-		rows += 1
-		
 		bookStyle = (
 			  flatnotebook.FNB_NO_NAV_BUTTONS
 			| flatnotebook.FNB_NO_X_BUTTON
@@ -277,79 +433,21 @@ class Properties( wx.Panel ):
 		self.notebook.SetBackgroundColour( wx.WHITE )
 		self.notebook.SetTabAreaColour( wx.WHITE )
 		self.propClass = [
-			('raceProperties', RaceProperties),
-			('RFIDProperties', RfidProperties),
-			('cameraProperties', CameraProperties),
-			('animationProperties', AnimationProperties),
+			('generalInfoProperties',	GeneralInfoProperties),
+			('raceInfoProperties',		RaceInfoProperties),
+			('notesProperties',			NotesProperties),
+			('RFIDProperties',			RfidProperties),
+			('cameraProperties',		CameraProperties),
+			('animationProperties',		AnimationProperties),
+			('filesProperties',			FilesProperties),
 		]
 		for prop, PropClass in self.propClass:
 			setattr( self, prop, PropClass(self.notebook) )
-			self.notebook.AddPage( getattr(self, prop), prop[0].upper() + prop[1:-10] )
+			self.notebook.AddPage( getattr(self, prop), (prop[0].upper() + prop[1:-10]).replace('Info', ' Info') )
 		
-		self.notesLabel = wx.StaticText( self, label = _('Notes to appear on Html output:\n(Notes containing Html tags must start with <html> and end with </html>)') )
-		self.notes = wx.TextCtrl( self, style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB, size=(-1,60) )
-
-		self.fileNameLabel = wx.StaticText( self, label = _('File Name: ') )
-		self.fileName = wx.StaticText( self )
-
-		self.excelLabel = wx.StaticText( self, label = _('Excel Sheet: ') )
-		self.excelName = wx.StaticText( self )
-
-		self.categoriesFileLabel = wx.StaticText( self, label = _('Categories Imported From: ') )
-		self.categoriesFile = wx.StaticText( self )
-
 		self.updateFileName()
 		
-		fgs = wx.FlexGridSizer( rows=rows, cols=2, vgap=2, hgap=2 )
-		fgs.AddGrowableCol( 1 )
-		
-		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
-		fieldAlign = wx.EXPAND|wx.GROW
-		
-		blank = lambda : None
-		
-		labelFieldFormats = [
-			(self.raceNameLabel,	0, labelAlign),		(self.raceName, 		1, fieldAlign),
-			(self.raceCityLabel,	0, labelAlign),		(self.locationSizer,	1, fieldAlign),
-			(self.dateLabel,		0, labelAlign),		(self.date, 			1, fieldAlign),
-			(self.raceNumLabel,		0, labelAlign),		(self.raceNum,			1, fieldAlign),
-			(self.scheduledStartLabel, 0, labelAlign),	(self.scheduledStart,	1, fieldAlign),
-			(self.minutesLabel,		0, labelAlign),		(self.minutes, 			1, fieldAlign),
-			(self.raceDisciplineLabel,	0, labelAlign),	(self.raceDiscipline, 	1, fieldAlign),
-			(self.organizerLabel,	0, labelAlign),		(self.organizer,		1, fieldAlign),
-			(self.commissaireLabel,	0, labelAlign),		(self.commissaire, 		1, fieldAlign),
-			(self.memoLabel,		0, labelAlign),		(self.memo, 			1, fieldAlign),
-		]
-
-		row = 0
-		for i, (item, column, flag) in enumerate(labelFieldFormats):
-			if not item:
-				continue
-			if column == 1:
-				flag |= wx.EXPAND
-			fgs.Add( item, flag=flag )
-			if column == 1:
-				row += 1
-		
-		vs.Add( fgs )
-		
-		vs.Add( self.notebook, flag=wx.ALL, border=4 )
-		vs.Add( self.notesLabel, flag=wx.TOP|wx.LEFT|wx.RIGHT, border=4 )
-		vs.Add( self.notes, 1, flag=wx.EXPAND|wx.ALL, border=4 )
-		
-		fgs = wx.FlexGridSizer( rows=3, cols=2, vgap=2, hgap=2 )
-		fgs.AddGrowableCol( 1 )
-		
-		fgs.Add( self.excelLabel, flag=wx.ALIGN_RIGHT )
-		fgs.Add( self.excelName )
-		
-		fgs.Add( self.fileNameLabel, flag=wx.ALIGN_RIGHT )
-		fgs.Add( self.fileName )
-		
-		fgs.Add( self.categoriesFileLabel, flag=wx.ALIGN_RIGHT )
-		fgs.Add( self.categoriesFile )
-		
-		vs.Add( fgs )
+		vs.Add( self.notebook, 1, flag=wx.ALL|wx.EXPAND, border=4 )
 		
 		if addEditButton:
 			hs = wx.BoxSizer( wx.HORIZONTAL )
@@ -363,13 +461,8 @@ class Properties( wx.Panel ):
 			hs.Add( self.excelButton, border = 8, flag = wx.LEFT|wx.TOP|wx.BOTTOM )
 
 			vs.Add( hs, flag=wx.ALL, border = 4 )
-		
-		self.editFields = [labelFieldFormats[i][0] for i in xrange(1, len(labelFieldFormats), 2)] + [
-				self.notebook, self.excelName, self.fileName,]
-		self.editFields = [e for e in self.editFields if e and not isinstance(e, wx.BoxSizer)]
-		self.editFields.extend( [self.raceCity, self.raceStateProv, self.raceCountry] )
-		
-		self.setEditable( True )
+			
+		self.setEditable()
 		
 	def onJChipIntegration( self, event ):
 		self.autocorrectLapsDefault.SetValue( not self.jchip.GetValue() )
@@ -389,92 +482,68 @@ class Properties( wx.Panel ):
 				wx.ICON_WARNING )
 	
 	def setEditable( self, editable = True ):
-		'''
-		for f in self.editFields:
-			f.Enable()
-			try:
-				f.SetEditable( editable )
-			except:
-				if not editable and not isinstance(f, wx.StaticText):
-					f.Disable()
-		'''
 		if not HasPhotoFinish():
 			self.cameraProperties.enableUSBCamera.Disable()
 	
 	def incNext( self ):
-		self.raceNum.SetValue( self.raceNum.GetValue() + 1 )
-		self.memo.SetValue( '' )
-		if	 self.scheduledStart.GetValue() == '10:00' and self.minutes.GetValue() == 40 and self.raceNum.GetValue() == 2:
-			self.scheduledStart.SetValue( '11:30' )
-			self.minutes.SetValue( 50 )
-		elif self.scheduledStart.GetValue() == '11:30' and self.minutes.GetValue() == 50 and self.raceNum.GetValue() == 3:
-			self.scheduledStart.SetValue( '13:00' )
-			self.minutes.SetValue( 60 )
+		gi = self.generalInfoProperties
+		
+		gi.raceNum.SetValue( gi.raceNum.GetValue() + 1 )
+		gi.memo.SetValue( '' )
+		if	 gi.scheduledStart.GetValue() == '10:00' and gi.minutes.GetValue() == 40 and gi.raceNum.GetValue() == 2:
+			gi.scheduledStart.SetValue( '11:30' )
+			gi.minutes.SetValue( 50 )
+		elif gi.scheduledStart.GetValue() == '11:30' and gi.minutes.GetValue() == 50 and gi.raceNum.GetValue() == 3:
+			gi.scheduledStart.SetValue( '13:00' )
+			gi.minutes.SetValue( 60 )
 		else:
-			sStr = '{}'.format(self.scheduledStart.GetValue())
+			sStr = '{}'.format(gi.scheduledStart.GetValue())
 			fields = sStr.split(':')
 			if len(fields) == 2:
 				mins = int(fields[0],10) * 60 + int(fields[1],10)
-				mins += self.minutes.GetValue()
+				mins += gi.minutes.GetValue()
 				mins += 15	# Add time for a break.
 				if (mins/60) >= 24:
 					mins = 0
 				sNew = '%02d:%02d:00' % (int(mins/60), mins%60)
-				self.scheduledStart.SetValue( sNew )
+				gi.scheduledStart.SetValue( sNew )
 	
 	def onChanged( self, event ):
 		self.updateFileName()
 	
 	def updateFileName( self ):
-		rDate = self.date.GetValue().Format(Properties.dateFormat)
-		rName = Properties.badFileCharsRE.sub( ' ', self.raceName.GetValue() ).strip()
-		rNum = self.raceNum.GetValue()
-		rMemo = Properties.badFileCharsRE.sub( ' ', self.memo.GetValue() ).strip()
+		gi = self.generalInfoProperties
+		
+		rDate = gi.date.GetValue().Format(Properties.dateFormat)
+		rName = Properties.badFileCharsRE.sub( ' ', gi.raceName.GetValue() ).strip()
+		rNum = gi.raceNum.GetValue()
+		rMemo = Properties.badFileCharsRE.sub( ' ', gi.memo.GetValue() ).strip()
+		
 		fname = '%s-%s-r%d-%s.cmn' % (rDate, rName, rNum, rMemo )
-		self.fileName.SetLabel( fname )
+		self.filesProperties.fileName.SetLabel( fname )
+		return fname
 	
 	def saveFileNameFields( self ):
+		gi = self.generalInfoProperties
 		for f in ['date', 'raceName', 'raceNum', 'memo']:
-			setattr(self, f + 'Original', getattr(self, f).GetValue())
+			setattr(self, f + 'Original', getattr(gi, f).GetValue())
 		
 	def restoreFileNameFields( self ):
+		gi = self.generalInfoProperties
 		for f in ['date', 'raceName', 'raceNum', 'memo']:
-			getattr(self, f).SetValue( getattr(self, f + 'Original') )
+			getattr(gi, f).SetValue( getattr(self, f + 'Original') )
 	
 	def getFileName( self ):
-		self.updateFileName()
-		return self.fileName.GetLabel()
+		return self.updateFileName()
 	
 	def refresh( self ):
 		with Model.LockRace() as race:
 			self.setEditable( False )
 			if race is None:
 				return
-			self.raceName.SetValue( race.name )
-			self.raceCity.SetValue( race.city )
-			self.raceStateProv.SetValue( race.stateProv )
-			self.raceCountry.SetValue( race.country )
-			self.raceDiscipline.SetValue( getattr(race, 'discipline', 'Cyclo-cross') )
-			self.organizer.SetValue( getattr(race, 'organizer', '') )
-			d = wx.DateTime()
-			d.ParseDate(race.date)
-			self.date.SetValue( d )
-			self.raceNum.SetValue( race.raceNum )
-			self.scheduledStart.SetValue( race.scheduledStart )
 			
 			for prop, PropClass in self.propClass:
 				getattr(self, prop).update()
-			
-			self.notes.SetValue( getattr(race, 'notes', '') )
-			
-			excelLink = getattr(race, 'excelLink', None)
-			if excelLink:
-				self.excelName.SetLabel( '%s|%s' % (
-					os.path.basename(excelLink.fileName) if excelLink.fileName else '',
-					excelLink.sheetName if excelLink.sheetName else '') )
-			else:
-				self.excelName.SetLabel( '' )
-			self.categoriesFile.SetLabel( os.path.basename(getattr(race, 'categoriesImportFile', '')) )
 			
 			self.saveFileNameFields()
 			
@@ -487,23 +556,8 @@ class Properties( wx.Panel ):
 				race = Model.getRace()
 			if race is None:
 				return
-			race.name = self.raceName.GetValue().strip()
-			race.city = self.raceCity.GetValue().strip()
-			race.stateProv = self.raceStateProv.GetValue().strip()
-			race.country = self.raceCountry.GetValue().strip()
-			race.discipline = self.raceDiscipline.GetValue().strip()
-			race.organizer = self.organizer.GetValue().strip()
-			race.date = self.date.GetValue().Format(Properties.dateFormat)
-			race.raceNum = self.raceNum.GetValue()
-			race.scheduledStart = self.scheduledStart.GetValue()
-			
 			for prop, PropClass in self.propClass:
 				getattr(self, prop).commit()
-			
-			race.minutes = self.minutes.GetValue()
-			race.commissaire = self.commissaire.GetValue().strip()
-			race.memo = self.memo.GetValue().strip()
-			race.notes = self.notes.GetValue().strip()
 			race.setChanged()
 			
 		if Utils.getMainWin():
