@@ -44,7 +44,7 @@ class TagInventory( object ):
 			
 		# Reset to factory defaults.
 		response = self.connector.transact( SET_READER_CONFIG_Message(ResetToFactoryDefault = True) )
-		assert response.success(), 'SET_READER_CONFIG ResetToFactorDefault fails'
+		assert response.success(), 'SET_READER_CONFIG ResetToFactorDefault fails\n{}'.format(response)
 
 		parameters = []
 		
@@ -74,7 +74,7 @@ class TagInventory( object ):
 			] )
 		
 		response = self.connector.transact( message )
-		assert response.success(), 'SET_READER_CONFIG Configuration fails' + response
+		assert response.success(), 'SET_READER_CONFIG Configuration fails:\n{}'.format(response)
 		
 	def Disconnect( self ):
 		response = self.connector.disconnect()
@@ -146,22 +146,22 @@ class TagInventory( object ):
 
 		# Add and enable our ROSpec
 		response = self.connector.transact( self.GetROSpec(antennas) )
-		assert response.success(), 'Add ROSpec Fails'
+		assert response.success(), 'Add ROSpec Fails\n{}'.format(response)
 		
 	def _execute( self ):
 		response = self.connector.transact( ENABLE_ROSPEC_Message(ROSpecID = self.roSpecID) )
-		assert response.success(), 'Enable ROSpec Fails'
+		assert response.success(), 'Enable ROSpec Fails\n{}'.format(response)
 		
 		# Wait for the reader to do its work.
 		time.sleep( (1.5*self.readWaitMilliseconds) / 1000.0 )
 		
 		response = self.connector.transact( DISABLE_ROSPEC_Message(ROSpecID = self.roSpecID) )
-		assert response.success(), 'Disable ROSpec Fails'
+		assert response.success(), 'Disable ROSpec Fails\n{}'.format(response)
 		
 	def _epilog( self ):
 		# Cleanup.
 		response = self.connector.transact( DELETE_ROSPEC_Message(ROSpecID = self.roSpecID) )
-		assert response.success(), 'Delete ROSpec Fails'
+		assert response.success(), 'Delete ROSpec Fails\n{}'.format(response)
 		self.connector.removeAllHandlers()
 		
 	def GetTagInventory( self, antennas = None ):
