@@ -124,7 +124,7 @@ class GeneralInfoProperties( wx.Panel ):
 		
 		ms.Add( fgs, 1, flag=wx.EXPAND|wx.ALL, border=16 )
 
-	def update( self ):
+	def refresh( self ):
 		race = Model.race
 		self.raceName.SetValue( race.name )
 		self.raceCity.SetValue( race.city )
@@ -222,7 +222,7 @@ class RaceOptionsProperties( wx.Panel ):
 		
 		ms.Add( fgs, 1, flag=wx.EXPAND|wx.ALL, border=16 )
 
-	def update( self ):
+	def refresh( self ):
 		race = Model.race
 		self.timeTrial.SetValue( getattr(race, 'isTimeTrial', False) )
 		self.allCategoriesFinishAfterFastestRidersLastLap.SetValue( getattr(race, 'allCategoriesFinishAfterFastestRidersLastLap', False) )
@@ -267,8 +267,9 @@ class RfidProperties( wx.Panel ):
 		ms.Add( self.jchip, flag=wx.ALL, border=16 )
 		ms.Add( self.chipTimingOptions, flag=wx.ALL, border=4 )
 		
-	def update( self ):
+	def refresh( self ):
 		race = Model.race
+		self.jchip.SetValue( getattr(race, 'enableJChipIntegration', False) )
 		resetStartClockOnFirstTag = getattr(race, 'resetStartClockOnFirstTag', True)
 		skipFirstTagRead = getattr(race, 'skipFirstTagRead', False)
 		if resetStartClockOnFirstTag:
@@ -280,6 +281,7 @@ class RfidProperties( wx.Panel ):
 		
 	def commit( self ):
 		race = Model.race
+		race.enableJChipIntegration = self.jchip.GetChecked()
 		iSelection = self.chipTimingOptions.GetSelection()
 		race.resetStartClockOnFirstTag	= bool(iSelection == self.iResetStartClockOnFirstTag)
 		race.skipFirstTagRead			= bool(iSelection == self.iSkipFirstTagRead)
@@ -297,7 +299,7 @@ class CameraProperties( wx.Panel ):
 		
 		ms.Add( self.enableUSBCamera, flag=wx.ALL, border=16 )
 		
-	def update( self ):
+	def refresh( self ):
 		race = Model.race
 		self.enableUSBCamera.SetValue( getattr(race, 'enableUSBCamera', False) )
 		
@@ -327,7 +329,7 @@ class AnimationProperties( wx.Panel ):
 		ms.Add( self.finishTop, flag=wx.TOP|wx.LEFT, border=16 )
 		ms.Add( self.reverseDirection, flag=wx.TOP|wx.LEFT, border=16 )
 		
-	def update( self ):
+	def refresh( self ):
 		race = Model.race
 		self.reverseDirection.SetValue( getattr(race, 'reverseDirection', False) )
 		self.finishTop.SetValue( getattr(race, 'finishTop', False) )
@@ -354,7 +356,7 @@ class NotesProperties( wx.Panel ):
 		ms.Add( self.notesLabel, flag=wx.TOP|wx.LEFT, border=16 )
 		ms.Add( self.notes, 1, flag=wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.EXPAND, border=16 )
 		
-	def update( self ):
+	def refresh( self ):
 		race = Model.race
 		self.notes.SetValue( getattr(race, 'notes', '') )
 		
@@ -400,7 +402,7 @@ class FilesProperties( wx.Panel ):
 		addToFGS( fgs, labelFieldFormats )
 		ms.Add( fgs, 1, flag=wx.EXPAND|wx.ALL, border=16 )
 		
-	def update( self ):
+	def refresh( self ):
 		race = Model.race
 		excelLink = getattr(race, 'excelLink', None)
 		if excelLink:
@@ -481,7 +483,7 @@ class Properties( wx.Panel ):
 		if Model.race:
 			notebook = event.GetEventObject()
 			notebook.GetPage( event.GetOldSelection() ).commit()
-			notebook.GetPage( event.GetSelection() ).update()
+			notebook.GetPage( event.GetSelection() ).refresh()
 			self.updateFileName()
 		'''
 		event.Skip()	# Required to properly repaint the screen.
@@ -566,14 +568,15 @@ class Properties( wx.Panel ):
 	def getFileName( self ):
 		return self.updateFileName()
 	
-	def update( self ):
+	def refresh( self ):
 		with Model.LockRace() as race:
 			self.setEditable( False )
 			if race is None:
 				return
 			
+			print 'refresh: called'
 			for prop, PropClass, name in self.propClassName:
-				getattr(self, prop).update()
+				getattr(self, prop).refresh()
 			
 			self.saveFileNameFields()
 			
