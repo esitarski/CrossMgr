@@ -1728,7 +1728,7 @@ class MainWin( wx.Frame ):
 		Model.resetCache()
 		ResetExcelLinkCache()
 		Model.setRace( Model.Race() )
-		properties.update()
+		properties.commit()
 		ResetPhotoInfoCache( self.fileName )
 		self.updateRecentFiles()
 
@@ -1825,7 +1825,7 @@ class MainWin( wx.Frame ):
 		ftpPublish = FtpWriteFile.FtpPublishDialog( self )
 
 		Model.newRace()
-		properties.update()			# Apply the new properties
+		properties.commit()			# Apply the new properties
 		ftpPublish.setRaceAttr()	# Apply the ftp properties
 		ftpPublish.Destroy()
 		

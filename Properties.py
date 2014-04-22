@@ -281,7 +281,7 @@ class RfidProperties( wx.Panel ):
 		
 	def commit( self ):
 		race = Model.race
-		race.enableJChipIntegration = self.jchip.GetChecked()
+		race.enableJChipIntegration = self.jchip.IsChecked()
 		iSelection = self.chipTimingOptions.GetSelection()
 		race.resetStartClockOnFirstTag	= bool(iSelection == self.iResetStartClockOnFirstTag)
 		race.skipFirstTagRead			= bool(iSelection == self.iSkipFirstTagRead)
@@ -574,7 +574,6 @@ class Properties( wx.Panel ):
 			if race is None:
 				return
 			
-			print 'refresh: called'
 			for prop, PropClass, name in self.propClassName:
 				getattr(self, prop).refresh()
 			
@@ -621,7 +620,7 @@ class PropertiesDialog( wx.Dialog ):
 		self.properties = Properties( self, addEditButton=False )
 		sizer.Add(self.properties, 1, flag=wx.ALL|wx.EXPAND, border=5)
 		if updateProperties:
-			self.properties.update()
+			self.properties.refresh()
 
 		if showFileFields:
 			fgs = wx.FlexGridSizer( rows=2, cols=3, vgap=5, hgap=5 )
@@ -761,7 +760,7 @@ def ChangeProperties( parent ):
 		mainWin = Utils.getMainWin()
 		dir = os.path.dirname( mainWin.fileName )
 		
-		propertiesDialog.properties.update()
+		propertiesDialog.properties.refresh()
 		Model.resetCache()
 		mainWin.writeRace()
 		Utils.refresh()
@@ -784,7 +783,7 @@ if __name__ == '__main__':
 	
 	properties = Properties( mainWin )
 	properties.setEditable( True )
-	properties.update()
+	properties.refresh()
 	mainWin.Show()
 	
 	app.MainLoop()
