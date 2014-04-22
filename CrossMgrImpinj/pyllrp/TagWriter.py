@@ -92,7 +92,7 @@ class TagWriter( TagInventory ):
 		
 	def _prologTW( self, epcOld, epcNew, antenna = None ):
 		response = self.connector.transact( DELETE_ACCESSSPEC_Message(AccessSpecID = 0) )
-		assert response.success(), 'Delete AccessSpec Fails'
+		assert response.success(), 'Delete AccessSpec Fails\n{}'.format(response)
 		
 		message = self.GetAccessSpec(
 					epcOld = epcOld,
@@ -100,21 +100,21 @@ class TagWriter( TagInventory ):
 					antenna = antenna,
 		)
 		response = self.connector.transact( message )
-		assert response.success(), 'Add AccessSpec Fails'
+		assert response.success(), 'Add AccessSpec Fails\n{}'.format(response)
 	
 	def _executeTW( self ):
 		response = self.connector.transact( ENABLE_ACCESSSPEC_Message(AccessSpecID = self.accessSpecID) )
-		assert response.success(), 'Enable AccessSpec Fails'
+		assert response.success(), 'Enable AccessSpec Fails\n{}'.format(response)
 		
 		# Run the TagInventory to trigger our AccessSpec.
 		self._execute()
 		
 		response = self.connector.transact( DISABLE_ACCESSSPEC_Message(AccessSpecID = self.accessSpecID) )
-		assert response.success(), 'Disable AccessSpec Fails'
+		assert response.success(), 'Disable AccessSpec Fails\n{}'.format(response)
 		
 	def _epilogTW( self ):
 		response = self.connector.transact( DELETE_ACCESSSPEC_Message(AccessSpecID = self.accessSpecID) )
-		assert response.success(), 'Delete AccessSpec Fails'
+		assert response.success(), 'Delete AccessSpec Fails\n{}'.format(response)
 		
 	def WriteTag( self, epcOld, epcNew, antenna = None ):
 		''' Change a single tag. '''
