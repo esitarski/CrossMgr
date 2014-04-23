@@ -603,7 +603,7 @@ and remove them from other categories.''').format(category.name),
 			dc = wx.WindowDC( self.grid )
 			dc.SetFont( self.grid.GetLabelFont() )
 			textHeight = dc.GetTextExtent( 'Label' )[1]
-			self.colLabelHeight = textHeight * max( name.count('\n') + 1 for name in self.colnames ) + textHeight // 4
+			self.colLabelHeight = textHeight * max(name.count('\n') + 1 for name in self.colnames) + textHeight // 4
 			self.grid.SetColLabelSize( self.colLabelHeight )
 			
 			# Force the grid to the correct size.
