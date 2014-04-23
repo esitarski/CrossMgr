@@ -180,60 +180,11 @@ class CategoryIconRenderer(gridlib.PyGridCellRenderer):
 	def Clone(self):
 		return CategoryIconRenderer()
 		
-class CustomEnumRenderer(gridlib.PyGridCellRenderer):
-	def __init__(self, choices):
-		self.choices = choices.split( ',' )
-		gridlib.PyGridCellRenderer.__init__(self)
-
-	def Draw(self, grid, attr, dc, rect, row, col, isSelected):
-		value = grid.GetCellValue( row, col )
-		try:
-			value = self.choices[int(value)]
-		except (ValueError, IndexError):
-			pass
-			
-		dc.SetClippingRect( rect )
-		dc.SetBackgroundMode(wx.SOLID)
-		dc.SetBrush(wx.Brush(grid.GetCellBackgroundColour(row, col)))
-		dc.SetPen(wx.TRANSPARENT_PEN)
-		dc.DrawRectangleRect(rect)
-		
-		dc.SetTextForeground(wx.BLACK)
-		dc.SetPen( wx.BLACK_PEN )
-		dc.SetFont( attr.GetFont() )
-		
-		w, h = dc.GetTextExtent( value )
-		
-		border = 3
-		hAlign, vAlign = attr.GetAlignment()
-		if hAlign == wx.ALIGN_LEFT:
-			x = border
-		elif hAlign == wx.ALIGN_RIGHT:
-			x = rect.GetWidth() - w - border
-		else:
-			x = ((rect.GetWidth() - w) // 2) if w < rect.GetWidth() else 2
-			
-		if vAlign == wx.ALIGN_TOP:
-			y = border
-		elif vAlign == wx.ALIGN_BOTTOM:
-			y = rect.GetHeight() - h - border
-		else:
-			y = ((rect.GetHeight() - h) // 2) if h < rect.GetHeight() else 2
-		
-		dc.DrawText(value, rect.x + x, rect.y + y)
-		dc.DestroyClippingRegion()
-
-	def GetBestSize(self, grid, attr, dc, row, col):
-		text = grid.GetCellValue(row, col)
-		dc.SetFont(attr.GetFont())
-		w, h = dc.GetTextExtent(text)
-		return wx.Size(w, h)
-
-	def Clone(self):
-		return CustomEnumRenderer()
-		
 #--------------------------------------------------------------------------------
 class Categories( wx.Panel ):
+	CategoryTypeChoices = [_('Start Wave'),u'    ' + _('Component'),_('Custom')]
+	DistanceTypeChoices = [_('Lap'),_('Race')]
+	
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
 		
@@ -301,18 +252,18 @@ class Categories( wx.Panel ):
 			(_('Name'),					'name'),
 			(_('Gender'),				'gender'),
 			(_('Numbers'),				'catStr'),
-			(_('Start Offset'),			'startOffset'),
-			(_('Race Laps'),			'numLaps'),
-			(_('Lapped Riders\nContinue'),	'lappedRidersMustContinue'),
+			(_('Start\nOffset'),		'startOffset'),
+			(_('Race\nLaps'),			'numLaps'),
+			(_('Lapped\nRiders\nContinue'),	'lappedRidersMustContinue'),
 			(_('Distance'),				'distance'),
-			(_('Distance\nBy'),			'distanceType'),
-			(_('First Lap\nDistance'),	'firstLapDistance'),
-			(_('80%\nLap Time'),		'rule80Time'),
-			(_('Suggested\nLaps'),		'suggestedLaps'),
+			(_('Dist.\nBy'),			'distanceType'),
+			(_('First\nLap\nDist.'),	'firstLapDistance'),
+			(_('80%\nLap\nTime'),		'rule80Time'),
+			(_('Proposed\nLaps'),		'suggestedLaps'),
 			(_('Upload'),				'uploadFlag'),
 			(_('Series'),				'seriesFlag'),
 		]
-		self.computedFieldss = {'rule80Time', 'suggestedLaps'}
+		self.computedFields = {'rule80Time', 'suggestedLaps'}
 		colnames = [colName for colName, fieldName in self.colNameFields]
 		self.iCol = dict( (fieldName, i) for i, (colName, fieldName) in enumerate(self.colNameFields) if fieldName )
 		
@@ -323,6 +274,13 @@ class Categories( wx.Panel ):
 		self.grid.SetMargins(0,0)
 		for col, name in enumerate(colnames):
 			self.grid.SetColLabelValue( col, name )
+			
+		maxLines = max( name.count('\n') + 1 for name in colnames )
+		dc = wx.WindowDC( self )
+		dc.SetFont( self.grid.GetLabelFont() )
+		labelHeight = dc.GetTextExtent( '\n'.join( ['Label'] * maxLines ) )[1]
+		labelHeight += dc.GetTextExtent( 'Label' )[1] // 4
+		self.grid.SetColLabelSize( labelHeight )
 		self.cb = None
 		
 		self.boolCols = set()
@@ -341,10 +299,8 @@ class Categories( wx.Panel ):
 				self.readOnlyCols.add( col )
 				
 			elif fieldName == 'catType':
-				choices = u','.join([_('Start Wave'),u'    ' + _('Component'),_('Custom')])
 				self.catTypeWidth = 64
-				attr.SetEditor( gridlib.GridCellEnumEditor(choices) )
-				attr.SetRenderer( CustomEnumRenderer(choices) )
+				attr.SetEditor( gridlib.GridCellChoiceEditor(self.CategoryTypeChoices, False) )
 				attr.SetAlignment( wx.ALIGN_LEFT, wx.ALIGN_CENTRE )
 				self.choiceCols.add( col )
 				
@@ -385,9 +341,7 @@ class Categories( wx.Panel ):
 				self.dependentCols.add( col )
 				
 			elif fieldName == 'distanceType':
-				choices = u','.join([_('Lap'),_('Race')])
-				attr.SetEditor( gridlib.GridCellEnumEditor(choices) )
-				attr.SetRenderer( CustomEnumRenderer(choices) )
+				attr.SetEditor( gridlib.GridCellChoiceEditor(self.DistanceTypeChoices, False) )
 				attr.SetAlignment( wx.ALIGN_RIGHT, wx.ALIGN_CENTRE )
 				self.choiceCols.add( col )
 				self.dependentCols.add( col )
@@ -410,7 +364,9 @@ class Categories( wx.Panel ):
 		race = Model.race
 		if not mainWin or not race:
 			return
-			
+		
+		self.commit()
+		
 		pdd = wx.PrintDialogData(mainWin.printData)
 		pdd.SetAllPages( True )
 		pdd.EnableSelection( False )
@@ -512,7 +468,7 @@ and remove them from other categories.''').format(category.name),
 		gender = gender if gender in ['Men', 'Women'] else 'Open'
 		self.grid.SetRowLabelValue( r, u'' )
 		self.grid.SetCellValue( r, self.iCol['active'], u'1' if active else u'0' )
-		self.grid.SetCellValue( r, self.iCol['catType'], unicode(catType) )
+		self.grid.SetCellValue( r, self.iCol['catType'], self.CategoryTypeChoices[catType] )
 		self.grid.SetCellValue( r, self.iCol['name'], name )
 		self.grid.SetCellValue( r, self.iCol['gender'], gender )
 		self.grid.SetCellValue( r, self.iCol['catStr'], catStr )
@@ -522,7 +478,7 @@ and remove them from other categories.''').format(category.name),
 		self.grid.SetCellValue( r, self.iCol['rule80Time'], '' )
 		self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '' )
 		self.grid.SetCellValue( r, self.iCol['distance'], ('%.3f' % distance) if distance else '' )
-		self.grid.SetCellValue( r, self.iCol['distanceType'], '%d' % (distanceType if distanceType else 0) )
+		self.grid.SetCellValue( r, self.iCol['distanceType'], self.DistanceTypeChoices[distanceType if distanceType else 0] )
 		self.grid.SetCellValue( r, self.iCol['firstLapDistance'], ('%.3f' % firstLapDistance) if firstLapDistance else '' )
 		self.grid.SetCellValue( r, self.iCol['uploadFlag'], u'1' if uploadFlag else u'0' )
 		self.grid.SetCellValue( r, self.iCol['seriesFlag'], u'1' if seriesFlag else u'0' )
@@ -559,7 +515,7 @@ and remove them from other categories.''').format(category.name),
 	def fixCells( self, event = None ):
 		for row in xrange(self.grid.GetNumberRows()):
 			active = self.grid.GetCellValue( row, self.iCol['active'] )[:1] in 'TtYy1'
-			catType = int(self.grid.GetCellValue( row, self.iCol['catType'] ))
+			catType = self.CategoryTypeChoices.index(self.grid.GetCellValue(row, self.iCol['catType']) )
 			self.fixRow( row, catType, active )
 	
 	def onActivateAll( self, event ):
@@ -662,7 +618,9 @@ and remove them from other categories.''').format(category.name),
 			numStrTuples = []
 			for r in xrange(self.grid.GetNumberRows()):
 				values = dict( (name, self.grid.GetCellValue(r, c)) for name, c in self.iCol.iteritems()
-																			if name not in self.computedFieldss )
+																			if name not in self.computedFields )
+				values['catType'] = self.CategoryTypeChoices.index(values['catType'])
+				values['distanceType'] = self.DistanceTypeChoices.index(values['distanceType'])
 				numStrTuples.append( values )
 			race.setCategories( numStrTuples )
 			race.adjustAllCategoryWaveNumbers()
