@@ -264,23 +264,17 @@ class Categories( wx.Panel ):
 			(_('Series'),				'seriesFlag'),
 		]
 		self.computedFields = {'rule80Time', 'suggestedLaps'}
-		colnames = [colName for colName, fieldName in self.colNameFields]
+		self.colnames = [colName for colName, fieldName in self.colNameFields]
 		self.iCol = dict( (fieldName, i) for i, (colName, fieldName) in enumerate(self.colNameFields) if fieldName )
 		
 		self.activeColumn = self.iCol['active']
 		self.genderColumn = self.iCol['gender']
-		self.grid.CreateGrid( 0, len(colnames) )
+		self.grid.CreateGrid( 0, len(self.colnames) )
 		self.grid.SetRowLabelSize(32)
 		self.grid.SetMargins(0,0)
-		for col, name in enumerate(colnames):
+		for col, name in enumerate(self.colnames):
 			self.grid.SetColLabelValue( col, name )
 			
-		maxLines = max( name.count('\n') + 1 for name in colnames )
-		dc = wx.WindowDC( self )
-		dc.SetFont( self.grid.GetLabelFont() )
-		labelHeight = dc.GetTextExtent( '\n'.join( ['Label'] * maxLines ) )[1]
-		labelHeight += dc.GetTextExtent( 'Label' )[1] // 4
-		self.grid.SetColLabelSize( labelHeight )
 		self.cb = None
 		
 		self.boolCols = set()
@@ -604,6 +598,14 @@ and remove them from other categories.''').format(category.name),
 				
 			self.grid.AutoSizeColumns( False )
 			self.fixCells()
+			
+			maxLines = max( name.count('\n') + 1 for name in self.colnames )
+			
+			dc = wx.WindowDC( self.grid )
+			dc.SetFont( self.grid.GetLabelFont() )
+			textHeight = dc.GetTextExtent( 'Label' )[1]
+			self.colLabelHeight = textHeight * maxLines + textHeight // 4
+			self.grid.SetColLabelSize( self.colLabelHeight )
 			
 			# Force the grid to the correct size.
 			self.grid.FitInside()
