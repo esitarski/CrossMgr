@@ -9,7 +9,7 @@ import subprocess
 
 import ParseDef
 
-version = '0.1.1'
+version = '0.1.2'
 
 pypiDir = 'pypi'
 
@@ -135,6 +135,7 @@ for fname in glob.glob( '*.*' ):
 							contents[p:]] )
 							
 	contents = removeTabs( contents )
+	contents.replace( '\r\n', '\n' )
 	with open(os.path.join(srcDir, fname), 'wb' ) as f:
 		f.write( contents )
 

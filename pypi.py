@@ -147,7 +147,8 @@ for fname in glob.glob( '*.*' ):
 							license,
 							'\n',
 							contents[p:]] )
-		
+	
+	contents.replace( '\r\n', '\n' )
 	with open(os.path.join(srcDir, fname), 'wb' ) as f:
 		f.write( contents )
 
