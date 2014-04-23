@@ -563,6 +563,13 @@ and remove them from other categories.''').format(category.name),
 		self.grid.SelectRow( min(r+1, self.grid.GetNumberRows()-1), True )
 		
 	def refresh( self ):
+		# Fix the height of the column labels.
+		dc = wx.WindowDC( self.grid )
+		dc.SetFont( self.grid.GetLabelFont() )
+		textHeight = dc.GetTextExtent( 'Label' )[1]
+		self.colLabelHeight = textHeight * max(name.count('\n') + 1 for name in self.colnames) + textHeight // 4
+		self.grid.SetColLabelSize( self.colLabelHeight )
+			
 		with Model.LockRace() as race:
 			self.grid.ClearGrid()
 			if race is None:
@@ -598,13 +605,6 @@ and remove them from other categories.''').format(category.name),
 				
 			self.grid.AutoSizeColumns( False )
 			self.fixCells()
-			
-			# Fix the height of the column labels.
-			dc = wx.WindowDC( self.grid )
-			dc.SetFont( self.grid.GetLabelFont() )
-			textHeight = dc.GetTextExtent( 'Label' )[1]
-			self.colLabelHeight = textHeight * max(name.count('\n') + 1 for name in self.colnames) + textHeight // 4
-			self.grid.SetColLabelSize( self.colLabelHeight )
 			
 			# Force the grid to the correct size.
 			self.grid.FitInside()
