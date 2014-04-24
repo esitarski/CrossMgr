@@ -46,11 +46,11 @@ class TagInventory( object ):
 		response = self.connector.transact( SET_READER_CONFIG_Message(ResetToFactoryDefault = True) )
 		assert response.success(), 'SET_READER_CONFIG ResetToFactorDefault fails\n{}'.format(response)
 
-		parameters = []
+		transmitPowerParameter = []
 		
 		# Change transmit power (if specified).  This value is RFID reader dependent.
 		if self.transmitPower is not None:
-			parameters.append(
+			transmitPowerParameter.append(
 				RFTransmitter_Parameter( 
 					HopTableID = 1,
 					ChannelIndex = 0,
@@ -58,18 +58,16 @@ class TagInventory( object ):
 				)
 			)
 		
-		# Reduce tag transit time to improve write response.
-		parameters.append(
-			C1G2SingulationControl_Parameter(
-				Session = 0,
-				TagPopulation = 100,
-				TagTransitTime = 3000,
-			)
-		)
-		
 		message = SET_READER_CONFIG_Message( Parameters = [
-				AntennaConfiguration_Parameter( AntennaID = 0, Parameters = [
-					C1G2InventoryCommand_Parameter( Parameters = parameters ),
+				AntennaConfiguration_Parameter( AntennaID = 0, Parameters =
+					transmitPowerParameter + [
+					C1G2InventoryCommand_Parameter( Parameters = [
+						C1G2SingulationControl_Parameter(
+							Session = 0,
+							TagPopulation = 100,
+							TagTransitTime = 3000,
+						),
+					] ),
 				] ),
 			] )
 		
@@ -172,9 +170,16 @@ class TagInventory( object ):
 
 if __name__ == '__main__':
 	'''Read a tag inventory from the reader and shutdown.'''
-	host = '192.168.10.102'
+	host = '192.168.10.101'
 	ti = TagInventory( host )
 	ti.Connect()
 	tagInventory, otherMessages = ti.GetTagInventory()
 	print '\n'.join( tagInventory )
 	ti.Disconnect()
+	
+	for p in xrange(1, 100, 10):
+		ti = TagInventory( host, transmitPower = p )
+		ti.Connect()
+		tagInventory, otherMessages = ti.GetTagInventory()
+		print '\n'.join( tagInventory )
+		ti.Disconnect()
