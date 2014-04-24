@@ -11,6 +11,21 @@ from Version import AppVerName
 pypiDir = 'pypi'
 version = AppVerName.split(' ')[1]
 
+def removeTabs( buf, tabStop = 4 ):
+	# Remove tabs from Python code and preserve formatting.
+	lines = []
+	for line in buf.split( '\n' ):
+		lineOut = []
+		for c in line:
+			if c == '\t':
+				lineOut.append( ' ' )
+				while len(lineOut) % tabStop != 0:
+					lineOut.append( ' ' )
+			else:
+				lineOut.append( c )
+		lines.append( ''.join(lineOut) )
+	return '\n'.join( lines ) + '\n'
+
 def writeToFile( s, fname ):
 	print 'creating', fname, '...'
 	with open(os.path.join(pypiDir,fname), 'wb') as f:
@@ -148,6 +163,7 @@ for fname in glob.glob( '*.*' ):
 							'\n',
 							contents[p:]] )
 	
+	contents = removeTabs( contents )
 	contents.replace( '\r\n', '\n' )
 	with open(os.path.join(srcDir, fname), 'wb' ) as f:
 		f.write( contents )
