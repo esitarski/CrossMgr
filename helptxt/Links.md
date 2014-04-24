@@ -27,4 +27,4 @@
 [External Excel]:	Menu-DataMgmt.html#link-to-external-excel-data
 [USAC Export]:		Menu-DataMgmt.html#export-Results-in-usac-excel-format
 [Chart Right-Click]: Chart.html#right-click
-[USB Webcam]:		Properties.html#enable-usb-camera-photo-finish
+[USB Webcam]:		Properties.html#use-usb-camera-photo-finish

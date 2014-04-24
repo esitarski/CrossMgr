@@ -91,7 +91,7 @@ Edit|Reason for the data edit
 By|Username who made the edit (login name on the computer)
 On|Date and Time when the edit was made.
 
-##Import Time Trial Start Times...
+## Import Time Trial Start Times...
 
 Imports start times for a time trial from a spreadsheet.
 The race must be in TimeTrial mode (see [Properties][]).
