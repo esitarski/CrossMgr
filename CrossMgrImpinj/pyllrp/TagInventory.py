@@ -170,7 +170,7 @@ class TagInventory( object ):
 
 if __name__ == '__main__':
 	'''Read a tag inventory from the reader and shutdown.'''
-	host = '192.168.10.101'
+	host = '192.168.0.101'
 	ti = TagInventory( host )
 	ti.Connect()
 	tagInventory, otherMessages = ti.GetTagInventory()
@@ -181,5 +181,5 @@ if __name__ == '__main__':
 		ti = TagInventory( host, transmitPower = p )
 		ti.Connect()
 		tagInventory, otherMessages = ti.GetTagInventory()
-		print '\n'.join( tagInventory )
+		print 'power={}'.format(p), '\n'.join( tagInventory )
 		ti.Disconnect()
