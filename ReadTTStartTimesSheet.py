@@ -192,25 +192,19 @@ class SummaryPage(wiz.WizardPageSimple):
 		vbs.Add( wx.StaticText(self, label = _('Summary:')), flag=wx.ALL, border = border )
 		vbs.Add( wx.StaticText(self, label = u' '), flag=wx.ALL, border = border )
 
-		rows = 0
-		
 		self.fileLabel = wx.StaticText( self, label = _('Excel File:') )
 		self.fileName = wx.StaticText( self )
-		rows += 1
 
 		self.sheetLabel = wx.StaticText( self, label = _('Sheet Name:') )
 		self.sheetName = wx.StaticText( self )
-		rows += 1
 
 		self.riderLabel = wx.StaticText( self, label = _('Rider Start Times:') )
 		self.riderNumber = wx.StaticText( self )
-		rows += 1
 
 		self.statusLabel = wx.StaticText( self, label = _('Status:') )
 		self.statusName = wx.StaticText( self )
-		rows += 1
 
-		fbs = wx.FlexGridSizer( rows=rows, cols=2, hgap=5, vgap=2 )
+		fbs = wx.FlexGridSizer( rows=0, cols=2, hgap=5, vgap=2 )
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
 		fbs.AddMany( [(self.fileLabel, 0, labelAlign),		(self.fileName, 	1, wx.EXPAND|wx.GROW),

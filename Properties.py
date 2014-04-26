@@ -23,12 +23,10 @@ def addToFGS( fgs, labelFieldFormats ):
 class GeneralInfoProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(GeneralInfoProperties, self).__init__( parent, id )
-		rows = 0
 		
 		self.raceNameLabel = wx.StaticText( self, label=_('Event Name:') )
 		self.raceName = wx.TextCtrl( self )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceName )
-		rows += 1
 		
 		self.raceCityLabel = wx.StaticText( self, label=_('City:') )
 		self.raceCity = wx.TextCtrl( self )
@@ -48,36 +46,30 @@ class GeneralInfoProperties( wx.Panel ):
 		self.locationSizer.Add( self.raceStateProv, 2, flag=wx.EXPAND )
 		self.locationSizer.Add( self.raceCountryLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
 		self.locationSizer.Add( self.raceCountry, 2, flag=wx.EXPAND )
-		rows += 1
 		
 		self.dateLabel = wx.StaticText( self, label = _('Date:') )
 		self.date = wx.DatePickerCtrl( self, style = wx.DP_DROPDOWN, size=(160,-1) )
 		self.Bind(wx.EVT_DATE_CHANGED, self.onChanged, self.date)
-		rows += 1
 		
 		self.raceDisciplineLabel = wx.StaticText( self, label = _('Discipline:') )
 		self.raceDiscipline = wx.TextCtrl( self, value=u'Cyclo-cross', size=(160,-1) )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceDiscipline )
-		rows += 1
 		
 		self.dateDisciplineSizer = wx.BoxSizer( wx.HORIZONTAL )
 		self.dateDisciplineSizer.Add( self.date )
 		self.dateDisciplineSizer.Add( self.raceDisciplineLabel, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border = 16 )
 		self.dateDisciplineSizer.Add( self.raceDiscipline )
 		self.dateDisciplineSizer.AddStretchSpacer()
-		rows += 1
 
 		self.raceNumLabel = wx.StaticText( self, label=_('Race #:') )
 		self.raceNum = intctrl.IntCtrl( self, min=1, max=1000, allow_none=False, value=1, size=(64,-1), style=wx.ALIGN_RIGHT )
 		self.Bind(intctrl.EVT_INT, self.onChanged, self.raceNum)
-		rows += 1
 		
 		self.scheduledStartLabel = wx.StaticText( self, label=_('Scheduled Start:') )
 		self.scheduledStart = masked.TimeCtrl( self, fmt24hr=True, display_seconds=False, value='10:00:00', size=(128,-1) )
 		
 		self.minutesLabel = wx.StaticText( self, label=_('Race Minutes:') )
 		self.minutes = intctrl.IntCtrl( self, min=1, max=60*48, allow_none=False, value=40, size=(64,-1), style=wx.ALIGN_RIGHT )
-		rows += 1
 
 		self.numStartMinutesSizer = wx.BoxSizer( wx.HORIZONTAL )
 		self.numStartMinutesSizer.Add( self.raceNum )
@@ -86,26 +78,22 @@ class GeneralInfoProperties( wx.Panel ):
 		self.numStartMinutesSizer.Add( self.minutesLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border = 16 )
 		self.numStartMinutesSizer.Add( self.minutes )
 		self.numStartMinutesSizer.AddStretchSpacer()
-		rows += 1
 
 		self.organizerLabel = wx.StaticText( self, label=_('Organizer:') )
 		self.organizer = wx.TextCtrl( self )
-		rows += 1
 
 		self.commissaireLabel = wx.StaticText( self, label=_('Official/Commissaire:') )
 		self.commissaire = wx.TextCtrl( self )
-		rows += 1
 
 		self.memoLabel = wx.StaticText( self, label=_('Memo:') )
 		self.memo = wx.TextCtrl( self )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.memo )
-		rows += 1
 		
 		#-------------------------------------------------------------------------------
 		ms = wx.BoxSizer( wx.VERTICAL )
 		self.SetSizer( ms )
 		
-		fgs = wx.FlexGridSizer( rows=rows, cols=2, vgap=12, hgap=3 )
+		fgs = wx.FlexGridSizer( rows=0, cols=2, vgap=12, hgap=3 )
 		fgs.AddGrowableCol( 1 )
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
@@ -165,21 +153,16 @@ class GeneralInfoProperties( wx.Panel ):
 class RaceOptionsProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(RaceOptionsProperties, self).__init__( parent, id )
-		rows = 0
 		
 		self.timeTrial = wx.CheckBox( self, label=_('Time Trial') )
-		rows += 1
 		
 		self.allCategoriesFinishAfterFastestRidersLastLap = wx.CheckBox( self, label=_("All Categories Finish After Fastest Rider's Last Lap") )
 		self.allCategoriesFinishAfterFastestRidersLastLap.SetValue( True )
-		rows += 1
 		
 		self.autocorrectLapsDefault = wx.CheckBox( self, label=_('Set "Autocorrect Lap Data" option by Default') )
 		self.autocorrectLapsDefault.SetValue( True )
-		rows += 1
 
 		self.highPrecisionTimes = wx.CheckBox( self, label=_('Show Times to 100s of a Second') )
-		rows += 1
 		
 		self.rule80MinLapCountLabel = wx.StaticText( self, label=_("Lap Time for 80% Rule: ") )
 		self.rule80MinLapCount1 = wx.RadioButton( self, label=_("1st Lap Time"), style=wx.RB_GROUP )
@@ -188,7 +171,6 @@ class RaceOptionsProperties( wx.Panel ):
 		self.rule80MinLapCountSizer = wx.BoxSizer( wx.HORIZONTAL )
 		self.rule80MinLapCountSizer.Add( self.rule80MinLapCount1, flag=wx.RIGHT, border=8 )
 		self.rule80MinLapCountSizer.Add( self.rule80MinLapCount2 )
-		rows += 1
 		
 		self.distanceUnitLabel = wx.StaticText( self, label=_('Distance Unit: ') )
 		self.distanceUnit = wx.Choice( self, choices=[u'km', u'miles'] )
@@ -196,13 +178,12 @@ class RaceOptionsProperties( wx.Panel ):
 		self.distanceUnitSizer = wx.BoxSizer( wx.HORIZONTAL )
 		self.distanceUnitSizer.Add( self.distanceUnit )
 		self.distanceUnitSizer.AddStretchSpacer()
-		rows += 1
 
 		#-------------------------------------------------------------------------------
 		ms = wx.BoxSizer( wx.HORIZONTAL )
 		self.SetSizer( ms )
 		
-		fgs = wx.FlexGridSizer( rows=rows, cols=2, vgap=12, hgap=3 )
+		fgs = wx.FlexGridSizer( rows=0, cols=2, vgap=12, hgap=3 )
 		fgs.AddGrowableCol( 1 )
 
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
@@ -369,24 +350,19 @@ class FilesProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(FilesProperties, self).__init__( parent, id )
 		
-		rows = 0
-		
 		self.fileNameLabel = wx.StaticText( self, label=_('File Name:') )
 		self.fileName = wx.StaticText( self )
-		rows += 1
 
 		self.excelNameLabel = wx.StaticText( self, label=_('Excel Link File:') )
 		self.excelName = wx.StaticText( self )
-		rows += 1
 
 		self.categoriesFileLabel = wx.StaticText( self, label=_('Categories Initially Loaded From:') )
 		self.categoriesFile = wx.StaticText( self )
-		rows += 1
 
 		ms = wx.BoxSizer( wx.VERTICAL )
 		self.SetSizer( ms )
 		
-		fgs = wx.FlexGridSizer( rows=rows, cols=2, vgap=12, hgap=3 )
+		fgs = wx.FlexGridSizer( rows=0, cols=2, vgap=12, hgap=3 )
 		fgs.AddGrowableCol( 1 )
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
@@ -623,7 +599,7 @@ class PropertiesDialog( wx.Dialog ):
 			self.properties.refresh()
 
 		if showFileFields:
-			fgs = wx.FlexGridSizer( rows=2, cols=3, vgap=5, hgap=5 )
+			fgs = wx.FlexGridSizer( rows=0, cols=3, vgap=5, hgap=5 )
 			fgs.AddGrowableCol( 1 )
 						
 			fgs.Add( wx.StaticText(self, label=_('Race File Folder:')), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )

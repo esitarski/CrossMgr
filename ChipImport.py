@@ -135,7 +135,7 @@ class ChipImportDialog( wx.Dialog ):
 		]
 		intro = '\n'.join(todoList).format( chipName = chipName )
 		
-		gs = wx.FlexGridSizer( rows=5, cols=3, vgap=10, hgap=5 )
+		gs = wx.FlexGridSizer( rows=0, cols=3, vgap=10, hgap=5 )
 		gs.Add( wx.StaticText(self, label = _('{chipName} Data File:').format(chipName=chipName)), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 		self.chipDataFile = wx.TextCtrl( self, -1, '', size=(450,-1) )
 		defaultPath = Utils.getFileName()
