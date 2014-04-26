@@ -141,34 +141,27 @@ class SummaryPage(wiz.WizardPageSimple):
 		vbs.Add( wx.StaticText(self, label = _('Summary:')), flag=wx.ALL, border = border )
 		vbs.Add( wx.StaticText(self, label = u' '), flag=wx.ALL, border = border )
 
-		rows = 0
-		
 		self.fileLabel = wx.StaticText( self, label = _('GPX File:') )
 		self.fileName = wx.StaticText(self )
-		rows += 1
 
 		self.numCoordsLabel = wx.StaticText( self, label = _('Number of Coords:') )
 		self.numCoords = wx.StaticText(self )
-		rows += 1
 
 		self.distanceLabel = wx.StaticText( self, label = _('Lap Length:') )
 		self.distance = wx.TextCtrl(self, style=wx.TE_READONLY)
-		rows += 1
 
 		self.totalElevationGainLabel = wx.StaticText( self, label = _('Total Elevation Gain:') )
 		self.totalElevationGain = wx.TextCtrl(self, style=wx.TE_READONLY)
-		rows += 1
 
 		self.courseTypeLabel = wx.StaticText( self, label = _('Course is:') )
 		self.courseType = wx.TextCtrl(self, style=wx.TE_READONLY)
-		rows += 1
 
 		self.setCategoryDistanceLabel = wx.StaticText( self )
 		self.setCategoryDistanceCheckbox = wx.CheckBox( self, label = _('Set Category Distances to GPX Lap Length') )
 		self.setCategoryDistanceCheckbox.SetValue( True )
-		rows += 1
 
-		fbs = wx.FlexGridSizer( rows=rows, cols=2, hgap=5, vgap=2 )
+		fbs = wx.FlexGridSizer( rows=0, cols=2, hgap=5, vgap=2 )
+		fbs.AddGrowableCol( 1 )
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
 		fbs.AddMany( [(self.fileLabel, 0, labelAlign),			(self.fileName, 	1, wx.EXPAND|wx.GROW),
@@ -179,7 +172,6 @@ class SummaryPage(wiz.WizardPageSimple):
 					  (wx.StaticText(self), 0, labelAlign),			(wx.StaticText(self), 1, wx.EXPAND|wx.GROW),
 					  (self.setCategoryDistanceLabel, 0, labelAlign), (self.setCategoryDistanceCheckbox, 1, wx.EXPAND|wx.GROW),
 					 ] )
-		fbs.AddGrowableCol( 1 )
 		
 		vbs.Add( fbs )
 		
