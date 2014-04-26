@@ -207,10 +207,10 @@ class SummaryPage(wiz.WizardPageSimple):
 		fbs = wx.FlexGridSizer( rows=0, cols=2, hgap=5, vgap=2 )
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
-		fbs.AddMany( [(self.fileLabel, 0, labelAlign),		(self.fileName, 	1, wx.EXPAND|wx.GROW),
-					  (self.sheetLabel, 0, labelAlign),		(self.sheetName, 	1, wx.EXPAND|wx.GROW),
-					  (self.riderLabel, 0, labelAlign),		(self.riderNumber,	1, wx.EXPAND|wx.GROW),
-					  (self.statusLabel, 0, labelAlign),	(self.statusName,	1, wx.EXPAND|wx.GROW),
+		fbs.AddMany( [(self.fileLabel, 0, labelAlign),		(self.fileName, 	1, wx.EXPAND),
+					  (self.sheetLabel, 0, labelAlign),		(self.sheetName, 	1, wx.EXPAND),
+					  (self.riderLabel, 0, labelAlign),		(self.riderNumber,	1, wx.EXPAND),
+					  (self.statusLabel, 0, labelAlign),	(self.statusName,	1, wx.EXPAND),
 					 ] )
 		fbs.AddGrowableCol( 1 )
 		
