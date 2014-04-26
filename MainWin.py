@@ -2060,6 +2060,10 @@ class MainWin( wx.Frame ):
 			self.raceMinutes = SimulationLapTimes.raceMinutes
 			self.lapTimes = copy.copy(SimulationLapTimes.lapTimes)
 			
+			# Add some out-of-category numbers to test.
+			for e in xrange(10, 50, 10):
+				self.lapTimes[e] = ( self.lapTimes[e][0], 1111+e )
+			
 		return self.lapTimes
 		
 	@logCall

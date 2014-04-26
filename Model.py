@@ -1460,7 +1460,7 @@ class Race(object):
 		
 		for e in entries:
 			category = getCategory(e.num)
-			if category is not None:
+			if category:
 				categorySplit[getCategory(e.num)].append( e )
 			
 		for c in categories:
