@@ -1458,10 +1458,10 @@ class Race(object):
 		categorySplit = dict( (c, []) for c in categories )
 		getCategory = self.getCategory
 		
-		entries = [e for e in entries if getCategory(e.num) is not None]
-		
 		for e in entries:
-			categorySplit[getCategory(e.num)].append( e )
+			category = getCategory(e.num)
+			if category is not None:
+				categorySplit[getCategory(e.num)].append( e )
 			
 		for c in categories:
 			times = [0.0]
