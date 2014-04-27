@@ -8,8 +8,8 @@ import ReadSignOnSheet
 
 reIntPrefix = re.compile( '^[0-9]+' )
 class Search( wx.Panel ):
-	def __init__( self, parent, id = wx.ID_ANY, style = 0, size=(-1-1) ):
-		wx.Panel.__init__(self, parent, id, style=style, size=size )
+	def __init__( self, parent, id=wx.ID_ANY, style=0, size=wx.DefaultSize ):
+		super(Search, self).__init__(parent, id, style=style, size=size )
 
 		self.sortCol = 0
 		self.numSelect = None
@@ -22,15 +22,15 @@ class Search( wx.Panel ):
 		
 		hbs = wx.BoxSizer( wx.HORIZONTAL )
 		
-		self.searchLabel = wx.StaticText( self, label =_('Search:') )
+		self.searchLabel = wx.StaticText( self, label=_('Search:') )
 		self.search = wx.SearchCtrl(self, style=wx.TE_PROCESS_ENTER )
 		self.search.ShowCancelButton( True )
-		self.Bind(wx.EVT_SEARCHCTRL_SEARCH_BTN, self.OnSearch, self.search)
-		self.Bind(wx.EVT_SEARCHCTRL_CANCEL_BTN, self.OnCloseSearch, self.search)
-		self.Bind(wx.EVT_TEXT_ENTER, self.OnDoSearch, self.search)
-		self.Bind(wx.EVT_TEXT, self.OnDoSearch, self.search)
+		self.search.Bind(wx.EVT_SEARCHCTRL_SEARCH_BTN, self.OnDoSearch )
+		self.search.Bind(wx.EVT_SEARCHCTRL_CANCEL_BTN, self.OnCloseSearch )
+		self.search.Bind(wx.EVT_TEXT_ENTER, self.OnDoSearch)
+		self.search.Bind(wx.EVT_TEXT, self.OnDoSearch)
 		
-		self.closeButton = wx.Button( self, wx.ID_CANCEL, _('Close') )
+		self.closeButton = wx.Button( self, wx.ID_CANCEL, label=_('Close') )
 		self.Bind(wx.EVT_BUTTON, self.OnClose, self.closeButton )
 		
 		hbs.Add( self.searchLabel, 0, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border = 4 )
@@ -47,8 +47,8 @@ class Search( wx.Panel ):
 		self.grid.SetMinSize( (650, 360) )
 		self.grid.SetDoubleBuffered( True )
 
-		self.Bind( wx.grid.EVT_GRID_CELL_LEFT_DCLICK, self.doNumDrilldown )
-		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doRightClick )
+		self.grid.Bind( wx.grid.EVT_GRID_CELL_LEFT_DCLICK, self.doNumDrilldown )
+		self.grid.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doRightClick )
 		self.grid.Bind( wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.doLabelClick )
 		self.grid.GetGridWindow().Bind( wx.EVT_MOTION, self.doMouseMove )
 		
@@ -62,13 +62,12 @@ class Search( wx.Panel ):
 		if self.GetParent():
 			self.GetParent().Show( False )
 		
-	def OnSearch( self, event ):
-		self.OnDoSearch()
-		
 	def OnCloseSearch( self, event ):
-		self.search.SetValue( '' )
+		print 'OnCloseSearch'
+		self.search.ChangeValue( u'' )
 		
 	def OnDoSearch( self, event = None ):
+		print 'OnDoSearch', self.search.GetValue()
 		self.refresh()
 
 	def doMouseMove( self, event ):
@@ -88,7 +87,6 @@ class Search( wx.Panel ):
 		
 	def doRightClick( self, event ):
 		wx.CallAfter( self.search.SetFocus )
-		pass
 		
 	def showNumSelect( self ):
 		pass
@@ -131,11 +129,10 @@ class Search( wx.Panel ):
 	def clearGrid( self ):
 		self.textColour = {}
 		self.backgroundColour = {}
-		self.grid.Set( data = [], colnames = [], textColour = {}, backgroundColour = {} )
+		self.grid.Set( data=[], colnames=[], textColour={}, backgroundColour={} )
 		self.grid.Reset()
 	
 	def refresh( self, searchStr = None ):
-		wx.CallAfter( self.search.SetFocus )
 		self.isEmpty = True
 		self.lastRow = -1
 		
@@ -160,7 +157,7 @@ class Search( wx.Panel ):
 			
 		self.isEmpty = False
 		if searchStr is not None:
-			self.search.SetValue( searchStr )
+			self.search.ChangeValue( searchStr )
 		searchText = Utils.removeDiacritic(self.search.GetValue().lower())
 		
 		fields = ReadSignOnSheet.Fields
@@ -218,7 +215,7 @@ class Search( wx.Panel ):
 		for c, col in enumerate(data):
 			data[c] = [col[r] for v, n, r in sortPairs]
 		
-		colnames[self.sortCol] = '<%s>' % colnames[self.sortCol]
+		colnames[self.sortCol] = u'<%s>' % colnames[self.sortCol]
 		self.grid.Set( data = data, colnames = colnames )
 		self.grid.SetLeftAlignCols( set(i for i in xrange(1, len(colnames)) if 'Tag' not in colnames[i]) )
 		self.grid.AutoSizeColumns( True )
