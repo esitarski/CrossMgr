@@ -881,7 +881,7 @@ class NumTimeInfo(object):
 	def getNumInfo( self, num ):
 		return self.info.get( num, {} )
 		
-class Race(object):
+class Race( object ):
 	finisherStatusList = [Rider.Finisher, Rider.Pulled]
 	finisherStatusSet = set( finisherStatusList )
 	
@@ -892,6 +892,8 @@ class Race(object):
 	UnitMiles = 1
 	
 	rule80MinLapCount = 2	# Minimum number of laps to compute rule80.
+	
+	automaticManual = 0
 	
 	advancePhotoMillisecondsDefault = -100
 	city = ''

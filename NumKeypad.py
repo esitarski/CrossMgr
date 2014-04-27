@@ -165,6 +165,7 @@ class NumKeypad( wx.Panel ):
 		
 		panel = wx.Panel( splitter, style=wx.BORDER_SUNKEN )
 		panel.SetSizer( horizontalMainSizer )
+		panel.SetBackgroundColour( wx.WHITE )
 		
 		#-------------------------------------------------------------------------------
 		# Create the edit field, numeric keypad and buttons.
@@ -790,7 +791,13 @@ class NumKeypad( wx.Panel ):
 								bold = True )
 			appendListRow( ('', count, _('on lap {}').format(lap)) )
 			lastCategory = category
-			
+	
+	def commit( self ):
+		with Model.LockRace() as race:
+			if race is None:
+				return
+			race.automaticManual = self.automaticManualChoice.GetSelection()
+	
 	def refresh( self ):
 		if self.notDrawnYet:
 			self.notDrawnYet = False

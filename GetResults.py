@@ -124,10 +124,10 @@ def GetResultsCore( category ):
 		startOffset = category.getStartOffsetSecs() if category else 0.0
 		
 		# Get the race seconds.
-		if race.numLaps:
+		raceSeconds = None
+		if race.numLaps and race.automaticManual == 1:
 			# If the number of laps is manually specified, find the category that results in the shortest race time with
 			# the manually specified number of laps.
-			raceSeconds = None
 			for c, (times, nums) in race.getCategoryTimesNums().iteritems():
 				if not times:
 					continue
@@ -136,11 +136,9 @@ def GetResultsCore( category ):
 						raceSeconds = times[race.numLaps] - 0.01
 				except IndexError:
 					pass
-			if raceSeconds is None:
-				raceSeconds = race.minutes * 60.0
-		else:
-			# Use the specified race time.
-			raceSeconds = race.minutes * 60.0
+		
+		if raceSeconds is None:
+			raceSeconds = race.minutes * 60.0	# Use the specified race time.
 		
 		# Enforce All Categories Finish After Fastest Rider's Last Lap
 		fastestRidersLastLapTime = None

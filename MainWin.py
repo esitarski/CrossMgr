@@ -1,6 +1,7 @@
 import wx
 from wx.lib.wordwrap import wordwrap
 import wx.lib.imagebrowser as imagebrowser
+import wx.lib.agw.flatnotebook as flatnotebook
 import os
 import re
 import io
@@ -279,7 +280,8 @@ class MainWin( wx.Frame ):
 		self.publishMenu.Append( wx.ID_PREVIEW , _("P&review Print Results..."), _("Preview the printed results on screen") )
 		self.Bind(wx.EVT_MENU, self.menuPrintPreview, id=wx.ID_PREVIEW )
 
-		AppendMenuItemBitmap( self.publishMenu, wx.ID_PRINT, _("&Print Results..."), _("Print the results to a printer"), wx.ArtProvider.GetBitmap(wx.ART_PRINT) )
+		AppendMenuItemBitmap( self.publishMenu, wx.ID_PRINT, _("&Print Results..."), _("Print the results to a printer"),
+								wx.ArtProvider.GetBitmap(wx.ART_PRINT) )
 		self.Bind(wx.EVT_MENU, self.menuPrint, id=wx.ID_PRINT )
 
 		self.publishMenu.AppendSeparator()
@@ -451,7 +453,15 @@ class MainWin( wx.Frame ):
 		self.forecastHistory = ForecastHistory( self.splitter, style=sty )
 
 		# Other data shown in right pane.
-		self.notebook		= wx.Notebook(	self.splitter, 1000, style=sty )
+		bookStyle = (
+			  flatnotebook.FNB_NO_X_BUTTON
+			#| flatnotebook.FNB_VC8
+			| flatnotebook.FNB_FF2
+			| flatnotebook.FNB_NODRAG
+		)
+		self.notebook = flatnotebook.FlatNotebook( self.splitter, 1000, agwStyle=bookStyle )
+		self.notebook.SetBackgroundColour( wx.WHITE )
+		self.notebook.SetTabAreaColour( wx.WHITE )
 		self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onPageChanging )
 		
 		# Add all the pages to the notebook.
@@ -2560,7 +2570,7 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 	def showPage( self, iPage ):
 		self.callPageCommit( self.notebook.GetSelection() )
 		self.callPageRefresh( iPage )
-		self.notebook.ChangeSelection( iPage )
+		self.notebook.SetSelection( iPage )
 		self.pages[self.notebook.GetSelection()].Layout()
 
 	def showPageName( self, name ):
