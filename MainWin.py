@@ -208,7 +208,7 @@ class MainWin( wx.Frame ):
 		# Setup the objects for the race clock.
 		self.timer = wx.Timer( self, id=wx.NewId() )
 		self.secondCount = 0
-		self.Bind( wx.EVT_TIMER, self.updateRaceClock, self.timer )
+		self.timer.Bind( wx.EVT_TIMER, self.updateRaceClock )
 
 		self.simulateTimer = None
 		self.simulateSeen = set()
@@ -2185,7 +2185,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 					return
 		except IndexError:
 			pass
-			
+		
 		self.simulateTimer.Stop()
 		self.nextNum = None
 		with Model.LockRace() as race:
@@ -2196,7 +2196,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 		OutputStreamer.writeRaceFinish()
 		# Give the streamer a chance to write the last message.
 		wx.CallLater( 2000, OutputStreamer.StopStreamer )
-			
+		
 		Utils.writeRace()
 		self.refresh()
 
