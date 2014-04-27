@@ -386,7 +386,7 @@ class Categories( wx.Panel ):
 			r, c = event.GetRow(), event.GetCol()
 			if c == self.iCol['active']:
 				active = (self.grid.GetCellValue(r, self.iCol['active']) == '1')
-				wx.CallAfter( self.fixRow, r, int(self.grid.GetCellValue(r, self.iCol['catType'])), not active )
+				wx.CallAfter( self.fixRow, r, self.CategoryTypeChoices.index(self.grid.GetCellValue(r, self.iCol['catType'])), not active )
 			self.grid.SetCellValue( r, c, '1' if self.grid.GetCellValue(r, c) != '1' else '0' )
 		event.Skip()
 		
