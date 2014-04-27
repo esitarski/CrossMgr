@@ -323,7 +323,9 @@ class RiderDetail( wx.Panel ):
 		splitter.SizeWindows()
 		
 		self.setAtRaceTime()
-		self.SetSizer( hs )
+		mainSizer = wx.BoxSizer( wx.VERTICAL )
+		mainSizer.Add( hs, 1, flag=wx.EXPAND|wx.ALL, border=4 )
+		self.SetSizer( mainSizer )
 		self.hs = hs
 		self.setRider()
 	
