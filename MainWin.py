@@ -455,13 +455,11 @@ class MainWin( wx.Frame ):
 		# Other data shown in right pane.
 		bookStyle = (
 			  flatnotebook.FNB_NO_X_BUTTON
-			#| flatnotebook.FNB_VC8
 			| flatnotebook.FNB_FF2
 			| flatnotebook.FNB_NODRAG
 		)
 		self.notebook = flatnotebook.FlatNotebook( self.splitter, 1000, agwStyle=bookStyle )
 		self.notebook.SetBackgroundColour( wx.WHITE )
-		self.notebook.SetTabAreaColour( wx.WHITE )
 		self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onPageChanging )
 		
 		# Add all the pages to the notebook.
