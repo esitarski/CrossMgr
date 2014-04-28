@@ -209,7 +209,7 @@ class MainWin( wx.Frame ):
 		# Setup the objects for the race clock.
 		self.timer = wx.Timer( self, id=wx.NewId() )
 		self.secondCount = 0
-		self.timer.Bind( wx.EVT_TIMER, self.updateRaceClock )
+		self.Bind( wx.EVT_TIMER, self.updateRaceClock, self.timer )
 
 		self.simulateTimer = None
 		self.simulateSeen = set()

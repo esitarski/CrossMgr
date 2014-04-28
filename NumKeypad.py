@@ -30,6 +30,7 @@ validKeyCodes = set( [8, 127, 44, 13] + [x for x in xrange(48, 48+10)] )
 class Keypad( wx.Panel ):
 	def __init__( self, parent, controller, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
+		self.SetBackgroundColour( wx.WHITE )
 		self.controller = controller
 		
 		fontPixels = 43
@@ -162,6 +163,7 @@ class NumKeypad( wx.Panel ):
 		horizontalMainSizer = wx.BoxSizer( wx.HORIZONTAL )
 		
 		splitter = wx.SplitterWindow( self, wx.ID_ANY, style = wx.SP_3DSASH )
+		splitter.Bind( wx.EVT_PAINT, self.onPaint )
 		
 		panel = wx.Panel( splitter, style=wx.BORDER_SUNKEN )
 		panel.SetSizer( horizontalMainSizer )
@@ -356,7 +358,7 @@ class NumKeypad( wx.Panel ):
 		self.isEnabled = True
 		
 		self.splitter = splitter
-		self.notDrawnYet = True
+		self.firstTimeDraw = True
 		
 		self.refreshRaceTime()
 	
@@ -763,9 +765,9 @@ class NumKeypad( wx.Panel ):
 		catLapList.sort( key=lambda x: (x[0].getStartOffsetSecs(), x[0].fullname, -x[1]) )
 		
 		def appendListRow( row = tuple(), colour = None, bold = None ):
-			r = self.lapCountList.InsertStringItem( sys.maxint, '{}'.format(row[0]) if row else '' )
+			r = self.lapCountList.InsertStringItem( sys.maxint, u'{}'.format(row[0]) if row else '' )
 			for c in xrange(1, len(row)):
-				self.lapCountList.SetStringItem( r, c, '{}'.format(row[c]) )
+				self.lapCountList.SetStringItem( r, c, u'{}'.format(row[c]) )
 			if colour is not None:
 				item = self.lapCountList.GetItem( r )
 				item.SetTextColour( colour )
@@ -778,18 +780,21 @@ class NumKeypad( wx.Panel ):
 				self.lapCountList.SetItem( item )
 			return r
 		
-		appendListRow( ('Total',
-							'%d/%d' % (	sum(count for count in catLapCount.itervalues()),
-										sum(count for count in catCount.itervalues())) ),
-							colour=wx.BLUE, bold=True )
+		appendListRow( (
+							_('Total'),
+							u'%d/%d' % (	sum(count for count in catLapCount.itervalues()),
+										sum(count for count in catCount.itervalues()))
+						),
+						colour=wx.BLUE,
+						bold=True )
 
 		lastCategory = None
 		for category, lap, categoryLaps, count in catLapList:
 			if category != lastCategory:
-				appendListRow( (category.fullname, '%d/%d' % (catRaceCount[category], catCount[category]),
-									('(%d lap%s)' % (categoryLaps, 's' if categoryLaps > 1 else '')) ),
+				appendListRow( (category.fullname, u'%d/%d' % (catRaceCount[category], catCount[category]),
+									(u'({} {})'.format(categoryLaps, _('laps') if categoryLaps > 1 else _('lap'))) ),
 								bold = True )
-			appendListRow( ('', count, _('on lap {}').format(lap)) )
+			appendListRow( ('', count, u'{} {}'.format(_('on lap'), lap)) )
 			lastCategory = category
 	
 	def commit( self ):
@@ -797,12 +802,14 @@ class NumKeypad( wx.Panel ):
 			if race is None:
 				return
 			race.automaticManual = self.automaticManualChoice.GetSelection()
-	
+			
+	def onPaint( self, event ):		
+		if self.firstTimeDraw:
+			self.firstTimeDraw = False
+			self.splitter.SetSashPosition( 460 )
+		event.Skip()
+
 	def refresh( self ):
-		if self.notDrawnYet:
-			self.notDrawnYet = False
-			self.splitter.SetSashPosition( 446 )
-	
 		if self.isKeypadInputMode():
 			wx.CallAfter( self.keypad.numEdit.SetFocus )
 		if self.isTimeTrialInputMode():
@@ -835,7 +842,7 @@ class NumKeypad( wx.Panel ):
 			changed |= SetLabel( self.raceStartTime, rst )
 			if changed:
 				Utils.LayoutChildResize( self.raceStartTime )
-				
+		
 		wx.CallAfter( self.refreshLaps )
 		wx.CallAfter( self.refreshRiderLapCountList )
 	

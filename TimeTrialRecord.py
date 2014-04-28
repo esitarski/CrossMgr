@@ -110,6 +110,8 @@ class BibEditor(gridlib.PyGridCellEditor):
 class TimeTrialRecord( wx.Panel ):
 	def __init__( self, parent, controller, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
+		self.SetBackgroundColour( wx.WHITE )
+
 		self.controller = controller
 
 		self.headerNames = ['Time', 'Bib']
