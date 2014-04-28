@@ -410,7 +410,7 @@ class ForecastHistory( wx.Panel ):
 				startTimeEntries = [Model.Entry(st[1], 0, st[0], False) for st in startTimes]
 				
 				# Add the rider firstTime to correct the times back to race times.
-				correctedEntries = [Model.Entry(e.num, e.lap, race.riders[e.num].firstTime + e.t, e.interp) for e in entries]
+				correctedEntries = [Model.Entry(e.num, e.lap, (race.riders[e.num].firstTime or 0.0) + e.t, e.interp) for e in entries]
 				startTimeEntries.extend( correctedEntries )
 				entries = startTimeEntries
 			
