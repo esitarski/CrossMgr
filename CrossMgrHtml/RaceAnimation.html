@@ -2927,16 +2927,16 @@ function RefreshRaceChart()
 		{
 			var num = resultsData[i][iNum];
 			var d = data[num];
-			var cat = catDetails[d['raceCat']];
 			var raceTimes = resultsData[i][iRaceTimes];
-			if( cat.startOffset )
-			{
-				startOffset = cat.startOffset;
-				for( var j = 0; j < raceTimes.length; ++j )
-					raceTimes[j] -= startOffset;
+			if( raceTimes.length > 0 ) {
+				startOffset = raceTimes[0];
+				if( startOffset ) {
+					for( var j = 0; j < raceTimes.length; ++j )
+						raceTimes[j] -= startOffset;
+				}
+				if( raceTimes.back() > dataMax )
+					dataMax = raceTimes.back();
 			}
-			if( raceTimes.back() > dataMax )
-				dataMax = raceTimes.back();
 		}
 	}
 	
