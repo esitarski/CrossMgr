@@ -622,7 +622,7 @@ class Results( wx.Panel ):
 			if colnames[sortCol] != 'Bib':
 				for r in xrange(len(data[sortCol])):
 					if data[sortCol][r]:
-						data[sortCol][r] += u' [{}: {}]'.format(r+1, data[1][r])
+						data[sortCol][r] = u'{} [{}: {}]'.format(data[sortCol][r], r+1, data[1][r])
 		
 		# Highlight the sorted column.
 		if sortLap:

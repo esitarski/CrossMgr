@@ -129,13 +129,13 @@ def SavePhoto( fileName, bib, raceSeconds, cameraImage ):
 			riderInfo = Model.race.excelLink.read()[int(bib)]
 		except:
 			riderInfo = {}
-		riderName = ', '.join( [n for n in [riderInfo.get('LastName',''), riderInfo.get('FirstName','')] if n] )
+		riderName = u', '.join( [n for n in [riderInfo.get('LastName',''), riderInfo.get('FirstName','')] if n] )
 		if riderName:
 			team = riderInfo.get('Team', '')
 			if team:
-				txt.append( '  %s    (%s)' % (riderName, team) )
+				txt.append( u'  %s    (%s)' % (riderName, team) )
 			else:
-				txt.append( '  %s' % riderName )
+				txt.append( u'  %s' % riderName )
 
 		txt.append( _('  Bib: {}    RaceTime: {}    {}').format(
 			bib, formatTime(raceSeconds), datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')) )
@@ -150,7 +150,8 @@ def SavePhoto( fileName, bib, raceSeconds, cameraImage ):
 	dc.SetPen( wx.BLACK_PEN )
 	dc.SetBrush( wx.WHITE_BRUSH )
 	dc.DrawRectangle( 0, 0, w, bitmapHeight+1 )
-	dc.GradientFillLinear( wx.Rect(int(w/2), 0, int(w/2), bitmapHeight), wx.WHITE, wx.Colour(200,200,200), wx.EAST )
+	wHalf = w//2
+	dc.GradientFillLinear( wx.Rect(wHalf, 0, wHalf, bitmapHeight), wx.WHITE, wx.Colour(200,200,200), wx.EAST )
 	
 	dc.DrawBitmap( brandingBitmap, 0, 0 )
 	
@@ -160,7 +161,7 @@ def SavePhoto( fileName, bib, raceSeconds, cameraImage ):
 		dc.DrawText( t, xText, yText )
 		yText += lineHeight
 		
-	dc.DrawText( AppVerName, w - dc.GetTextExtent(AppVerName)[0] - fontHeight*.25, yText - lineHeight )
+	dc.DrawText( AppVerName, w - dc.GetTextExtent(AppVerName)[0] - int(fontHeight*.25), yText - lineHeight )
 	
 	dc.DrawLine( xText, 0, xText, bitmapHeight )
 	

@@ -437,6 +437,7 @@ class GanttChartPanel(wx.PyPanel):
 		yLast = barHeight
 		yHighlight = None
 		
+		tLeaderLast = None
 		dy = 0
 		for i, s in enumerate(self.data):
 			if not( iDataShowStart <= i < iDataShowEnd ):
@@ -531,6 +532,10 @@ class GanttChartPanel(wx.PyPanel):
 
 				xLast = xCur
 			
+			# Record the leader's last x position.
+			if tLeaderLast is None:
+				tLeaderLast = t
+			
 			# Draw the last empty bar.
 			xCur = int(labelsWidthLeft + self.dataMax * xFactor)
 			if xCur > xRight:
@@ -618,34 +623,34 @@ class GanttChartPanel(wx.PyPanel):
 			ctx.DrawEllipse( xCur - radius, yCur + dy/2.0 - radius, radius*2, radius*2 )
 		
 		# Draw the now timeline.
-		if self.nowTime and self.nowTime < self.dataMax:
-			nowTimeStr = Utils.formatTime( self.nowTime )
-			labelWidth, labelHeight = dc.GetTextExtent( nowTimeStr )	
-			x = int(labelsWidthLeft + (self.nowTime - tAdjust) * xFactor)
-			
-			ntColour = '#339966'
-			dc.SetPen( wx.Pen(ntColour, 6) )
-			dc.DrawLine( x, barHeight - 4, x, yLast + 4 )
-			dc.SetPen( wx.Pen(wx.WHITE, 2) )
-			dc.DrawLine( x, barHeight - 4, x, yLast + 4 )
-			
-			dc.SetBrush( wx.Brush(ntColour) )
-			dc.SetPen( wx.Pen(ntColour,1) )
-			rect = wx.Rect( x - labelWidth/2-2, 0, labelWidth+4, labelHeight )
+		timeLineTime = self.nowTime if self.nowTime and self.nowTime < self.dataMax else tLeaderLast
+		nowTimeStr = Utils.formatTime( timeLineTime )
+		labelWidth, labelHeight = dc.GetTextExtent( nowTimeStr )	
+		x = int(labelsWidthLeft + (timeLineTime - tAdjust) * xFactor)
+		
+		ntColour = '#339966'
+		dc.SetPen( wx.Pen(ntColour, 3) )
+		dc.DrawLine( x, barHeight - 4, x, yLast + 4 )
+		dc.SetPen( wx.Pen(wx.WHITE, 1) )
+		dc.DrawLine( x, barHeight - 4, x, yLast + 4 )
+		
+		dc.SetBrush( wx.Brush(ntColour) )
+		dc.SetPen( wx.Pen(ntColour,1) )
+		rect = wx.Rect( x - labelWidth/2-2, 0, labelWidth+4, labelHeight )
+		dc.DrawRectangleRect( rect )
+		if not self.minimizeLabels:
+			rect.SetY( yLast+2 )
 			dc.DrawRectangleRect( rect )
-			if not self.minimizeLabels:
-				rect.SetY( yLast+2 )
-				dc.DrawRectangleRect( rect )
 
-			dc.SetTextForeground( wx.WHITE )
-			dc.DrawText( nowTimeStr, x - labelWidth / 2, 0 )
-			if not self.minimizeLabels:
-				dc.DrawText( nowTimeStr, x - labelWidth / 2, yLast + 2 )
-
+		dc.SetTextForeground( wx.WHITE )
+		dc.DrawText( nowTimeStr, x - labelWidth / 2, 0 )
+		if not self.minimizeLabels:
+			dc.DrawText( nowTimeStr, x - labelWidth / 2, yLast + 2 )
+		
+		# Store the drawing scale parameters.
 		self.xFactor = xFactor
 		self.barHeight = barHeight
 		self.labelsWidthLeft = labelsWidthLeft
-
 			
 	def OnEraseBackground(self, event):
 		# This is intentionally empty, because we are using the combination

@@ -61,7 +61,7 @@ class FrameCircBuf( object ):
 				stmts.append( '{}i = ({}+iStart)%bufSize'.format(' '*level, left) )
 				stmts.append( '{}return i if t <= times[i] else (i+1)%bufSize '.format(' '*level) )
 
-	def findBeforeAfter( self, t, before = 0, after = 1 ):
+	def findBeforeAfter( self, t, before = 0, after = 1, window = 2.0 ):
 		i = self._find( t )
 		if self.times[i] < t:
 			return [], []
@@ -77,22 +77,25 @@ class FrameCircBuf( object ):
 		if before and i != iStart:
 			for b in xrange(1, before):
 				k = (i-b) % bufSize
-				retTimes.append( times[k] )
-				retFrames.append( frames[k] )
+				if abs(times[k] - t).total_seconds() <= window:
+					retTimes.append( times[k] )
+					retFrames.append( frames[k] )
 				if k == iStart:
 					break
 			retTimes.reverse()
 			retFrames.reverse()
 			
 		if after:
-			retTimes.append( times[i] )
-			retFrames.append( frames[i] )
+			if abs(times[i] - t).total_seconds() <= window:
+				retTimes.append( times[i] )
+				retFrames.append( frames[i] )
 			for a in xrange(1, after):
 				k = (i+a) % bufSize
 				if k == iStart:
 					break
-				retTimes.append( times[k] )
-				retFrames.append( frames[k] )
+				if abs(times[k] - t).total_seconds() <= window:
+					retTimes.append( times[k] )
+					retFrames.append( frames[k] )
 		
 		return retTimes, retFrames
 

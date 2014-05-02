@@ -63,11 +63,9 @@ class Search( wx.Panel ):
 			self.GetParent().Show( False )
 		
 	def OnCloseSearch( self, event ):
-		print 'OnCloseSearch'
 		self.search.ChangeValue( u'' )
 		
 	def OnDoSearch( self, event = None ):
-		print 'OnDoSearch', self.search.GetValue()
 		self.refresh()
 
 	def doMouseMove( self, event ):
