@@ -30,7 +30,7 @@ class PointsEditor(gridlib.PyGridCellEditor):
 		self._tc.SetValue( self.startValue )
 		self._tc.SetFocus()
 		
-	def EndEdit( self, row, col, grid ):
+	def EndEdit( self, row, col, grid, value = None ):
 		changed = False
 		val = self._tc.GetValue().strip()
 		if val:
@@ -38,6 +38,8 @@ class PointsEditor(gridlib.PyGridCellEditor):
 		if val != self.startValue:
 			change = True
 			grid.GetTable().SetValue( row, col, val )
+			grid.GetParent().updateDepth( row )
+			wx.CallAfter( grid.GetParent().gridAutoSize )
 		self.startValue = self.DefaultStartValue
 		self._tc.SetValue( self.startValue )
 		
@@ -90,7 +92,6 @@ class Points(wx.Panel):
 		attr.SetEditor( PointsEditor() )
 		self.grid.SetColAttr( self.PointsCol, attr )
 		
-		self.grid.Bind( gridlib.EVT_GRID_CELL_CHANGE, self.onGridChange )
 		self.gridAutoSize()
 
 		sizer = wx.BoxSizer(wx.VERTICAL)
@@ -114,11 +115,12 @@ class Points(wx.Panel):
 	
 	def updateDepth( self, row ):
 		v = self.grid.GetCellValue(row, self.PointsCol).strip()
-		depth = str(len(v.split())) if v else ''
+		depth = unicode(len(v.split())) if v else u''
 		self.grid.SetCellValue( row, self.DepthCol, depth )
 	
 	def onGridChange( self, event ):
 		row = event.GetRow()
+		print 'onGridChange', row
 		if row >= 0:
 			self.updateDepth( row )
 		wx.CallAfter( self.gridAutoSize )

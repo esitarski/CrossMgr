@@ -160,22 +160,12 @@ def PlaySound( soundFile ):
 		return True
 	return Play( soundFile )
 
-def GetSelectedRows( grid ): 
-	rows = [] 
-	rowSet = set()
-	gcr = grid.GetGridCursorRow() 
-	set1 = grid.GetSelectionBlockTopLeft() 
-	set2 = grid.GetSelectionBlockBottomRight() 
-	if len(set1): 
-		assert len(set1)==len(set2) 
-		for i in range(len(set1)): 
-			for row in range(set1[i][0], set2[i][0]+1): # range in wx is inclusive of last element 
-				if row not in rowSet: 
-					rows.append( row ) 
-					rowSet.add( row )
-	else: 
-		rows.append(gcr) 
-	return rows 
+def GetSelectedRows( grid ):
+	rows = []
+	for row in xrange(grid.GetNumberRows()):
+		if any(grid.IsInSelection(row, col) for col in xrange(grid.GetNumberCols())):
+			rows.append( row )
+	return rows
 
 def GetListCtrlSelectedItems( listCtrl ):
 	selection = []

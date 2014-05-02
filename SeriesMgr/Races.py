@@ -104,7 +104,7 @@ class Races(wx.Panel):
 			self.grid.SetCellValue( row, self.RaceCol, SeriesModel.RaceNameFromPath(fileName) )
 			self.grid.SetCellValue( row, self.RaceFileCol, fileName )
 		dlg.Destroy()
-		self.refresh()
+		self.commit()
 		if ret == wx.ID_OK and os.path.splitext(fileName)[1] != '.cmn':
 			race = SeriesModel.model.races[row]
 			race.fileName = fileName
