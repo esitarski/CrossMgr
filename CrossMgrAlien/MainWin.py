@@ -436,6 +436,7 @@ class MainWin( wx.Frame ):
 		s = self.notifyHost.GetSelection()
 		if s != wx.NOT_FOUND:
 			self.config.Write( 'NotifyHost', self.notifyHost.GetString(s) )
+		self.config.Flush()
 	
 	def readOptions( self ):
 		self.crossMgrHost.SetValue( self.config.Read('CrossMgrHost', Utils.DEFAULT_HOST) )
