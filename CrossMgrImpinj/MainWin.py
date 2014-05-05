@@ -528,6 +528,7 @@ class MainWin( wx.Frame ):
 		self.config.Write( 'ConnectionTimeoutSeconds', '{}'.format(Impinj.ConnectionTimeoutSeconds) )
 		self.config.Write( 'KeepaliveSeconds', '{}'.format(Impinj.KeepaliveSeconds) )
 		self.config.Write( 'RepeatSeconds', '{}'.format(Impinj.RepeatSeconds) )
+		self.config.Flush()
 	
 	def readOptions( self ):
 		self.crossMgrHost.SetValue( self.config.Read('CrossMgrHost', Utils.DEFAULT_HOST) )

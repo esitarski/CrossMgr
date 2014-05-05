@@ -1652,7 +1652,9 @@ class MainWin( wx.Frame ):
 		with Model.LockRace() as race:
 			if race is not None:
 				race.resetAllCaches()
+		
 		self.writeRace()
+		self.config.Flush()
 
 		try:
 			self.timer.Stop()

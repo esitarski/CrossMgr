@@ -49,6 +49,7 @@ class FrameSaver( threading.Thread ):
 		self.queue.put( ['Save', fileName, bib, t, frame] )
 	
 class VideoBuffer( threading.Thread ):
+	@logCall
 	def __init__( self, camera, refTime = None, dirName = '.', fps = 25, bufferSeconds = 4.0 ):
 		threading.Thread.__init__( self )
 		self.daemon = True
@@ -147,6 +148,7 @@ class VideoBuffer( threading.Thread ):
 		return self.frameMax
 	
 videoBuffer = None
+@logCall
 def StartVideoBuffer( refTime, raceFileName):
 	global videoBuffer
 	

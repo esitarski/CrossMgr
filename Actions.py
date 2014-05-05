@@ -10,6 +10,7 @@ import Utils
 import JChip
 import OutputStreamer
 from FtpWriteFile import realTimeFtpPublish
+import Properties
 from Undo import undo
 import VideoBuffer
 import Checklist
@@ -194,10 +195,13 @@ class Actions( wx.Panel ):
 		self.raceIntro = wx.StaticText( self.leftPanel, label =  u'' )
 		self.raceIntro.SetFont( wx.Font(24, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
 		
-		choices = [	_('Record Every Tag Individually'),
-					_('Reset Start Clock on First Tag Read (all riders will get the same start time of the first read)'),
-					_('Skip First Tag Read for All Riders (required when there is a start run-up that passes through the finish on the first lap)')]
-		self.chipTimingOptions = wx.RadioBox( self.leftPanel, label = _("Chip Timing Options"), majorDimension = 1, choices = choices, style = wx.RA_SPECIFY_COLS )
+		self.chipTimingOptions = wx.RadioBox(
+			self.leftPanel,
+			label = _("Chip Timing Options"),
+			majorDimension = 1,
+			choices = Properties.RfidProperties.choices,
+			style = wx.RA_SPECIFY_COLS
+		)
 		
 		self.Bind( wx.EVT_RADIOBOX, self.onChipTimingOptions, self.chipTimingOptions )
 		
@@ -277,7 +281,7 @@ class Actions( wx.Panel ):
 				Utils.MessageOK(self, _('Cannot Start. Excel Sheet read failure.\nThe Excel file is either unconfigured or unreadable.'), _('Excel Sheet Read '), wx.ICON_ERROR )
 				return
 			try:
-				i = (i for i, field in enumerate(externalFields) if field.startswith('Tag')).next()
+				i = next((i for i, field in enumerate(externalFields) if field.startswith('Tag')))
 			except StopIteration:
 				Utils.MessageOK(self, _('Cannot Start.  Excel Sheet missing Tag or Tag2 column.\nThe Excel file must contain a Tag column to use JChip.'), _('Excel Sheet missing Tag or Tag2 column'), wx.ICON_ERROR )
 				return

@@ -33,34 +33,35 @@ Distance Unit|The units distances to show in Results.
 ## Notes
 Notes|Text that will appear in the HTML output.  Text entered here will be shown as-is in the HTML web page, including line breaks.  Describe weather conditions, or give credit to the CrossMgr operator and number caller.  You can also embed Html tags, however, your input must then start with <html> and end with </html>.  With Html tags, you can specify a hyperlink to a URL with `<a href="http://XXX">HyperLink</a>`, use a list with `<ol></ol>`, etc.  When using Html, you control your own line breaks - `<br/>`'s will not be automatically inserted between newlines.
 
-## Camera Options
-
-Property|Description
-:-------|:----------
-Use USB Camera for Photo Finish|Takes a photo from a connected USB camera on every number entry.  See [Notes](#use-usb-camera-photo-finish) below for details.  Currently, the USB Camera option is only available on the Windows platform.
-
 ## RFID Options
 Property|Description
 :-------|:----------
 Use RFID Reader|Use an RFID reader in the race.  When set, CrossMgr will act as a "server" that can receive real-time messages from a RFID reader.  The reader can be JChip, or the CrossMgrImpinj or CrossMgrAlien bridge programs that communicate with the Impinj and Alien readers, respectively.  See [RFID Reader Setup](Menu-ChipReader.html#rfid-reader-setup-dialog) for details.
 
-### Record Every Tag Individually
+### Manual Start: Collect every chip. Does NOT restart race clock on first read.
 This option records tags the same as if you entered them manually.  Every tag that is read will be recorded.
+The race is started manually.
 
-### Reset Start Clock on First Tag Read
+### Automatic Start: Reset start clock on first tag read. All riders get the start time of the first read.
 After the race is started with the Start button, this option resets the race clock to zero on the first tag read.
 It also ignores the first tag read for all riders.
 After this initialization process which starts the race clock, every tag read will be recorded.
 
 This idea behind this feature is that the riders are stages behind the start line.
-After the whistle, the first rider over the line "starts" the race.  All tags are recorded after that.
+After the whistle, the first rider to the line "starts" the race.  All tags are recorded after that.
 
-### Skip First Tag Read for All Riders
+### Manual Start: Skip first tag read for all riders. Required when start run-up passes the finish on the first lap
 After the race is started with the Start button, this option ignores the first tag read for all riders.
 
 The idea behind this feature is that the riders are staged in a start area behind the finish line (say, 200m).  When the race starts, the riders pass the finish line - and the reader antennas.  You do not want to register this tag read as it "does not count".
 
 When using this feature, be sure to set the "First Lap Distance" in [Categories][] to compensate for the run-up distance.  This will ensure that the riders speeds are computed correctly.
+
+## Camera Options
+
+Property|Description
+:-------|:----------
+Use USB Camera for Photo Finish|Takes a photo from a connected USB camera on every number entry.  See [Notes](#use-usb-camera-photo-finish) below for details.  Currently, the USB Camera option is only available on the Windows platform.
 
 ## Animation Options
 These only apply to the Track animation.  If you are using an uploaded GPX file, the animation will follow the GPX path.

@@ -229,15 +229,21 @@ class RaceOptionsProperties( wx.Panel ):
 class RfidProperties( wx.Panel ):
 	iResetStartClockOnFirstTag = 1
 	iSkipFirstTagRead = 2
+	choices = [	_('Manual Start: Collect every chip. \nDoes NOT restart race clock on first read.'),
+				_('Automatic Start: Reset start clock on first tag read. \nAll riders get the start time of the first read.'),
+				_('Manual Start: Skip first tag read for all riders. \nRequired when start run-up passes the finish on the first lap.')]
 
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(RfidProperties, self).__init__( parent, id )
 		self.jchip = wx.CheckBox( self, style=wx.ALIGN_LEFT, label = _('Use RFID Reader') )
 
-		choices = [	_('Record Every Tag Individually'),
-					_('Reset Start Clock on First Tag Read (all riders will get the same start time of the first read)'),
-					_('Skip First Tag Read for All Riders (required when there is a start run-up that passes through the finish on the first lap)')]
-		self.chipTimingOptions = wx.RadioBox( self, label=_("Chip Timing Options"), majorDimension=1, choices=choices, style=wx.RA_SPECIFY_COLS )
+		self.chipTimingOptions = wx.RadioBox(
+			self,
+			label=_("Chip Timing Options"),
+			majorDimension=1,
+			choices=self.choices,
+			style=wx.RA_SPECIFY_COLS
+		)
 		
 		self.chipTimingOptions.SetSelection( self.iResetStartClockOnFirstTag )
 		

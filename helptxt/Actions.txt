@@ -17,23 +17,8 @@ Allows you to start the race automatically at a future time.  After setting the 
 
 ## Chip Timing Options
 
-### Record Every Tag Individually
-This option records tags the same as if you entered them manually.  Every tag that is read will be recorded.
-
-### Reset Start Clock on First Tag Read
-After the race is started with the Start button, this option resets the race clock to zero on the first tag read.
-It also ignores the first tag read for all riders.
-After this initialization process which starts the race clock, every tag read will be recorded.
-
-This idea behind this feature is that the riders are stages behind the start line.
-After the whistle, the first rider over the line "starts" the race.  All tags are recorded after that.
-
-### Skip First Tag Read for All Riders
-After the race is started with the Start button, this option ignores the first tag read for all riders.
-
-The idea behind this feature is that the riders are staged in a start area behind the finish line (say, 200m).  When the race starts, the riders pass the finish line - and the reader antennas.  You do not want to register this tag read as it "does not count".
-
-When using this feature, be sure to set the "First Lap Distance" in [Categories][] to compensate for the run-up distance.  This will ensure that the riders speeds are computed correctly.
+Shortcut to RFID Options.  Has the same effect as setting these options in Properties - just easier to get to at the start of a race.
+See [RFID Options][] for details.
 
 # Checklist
 
