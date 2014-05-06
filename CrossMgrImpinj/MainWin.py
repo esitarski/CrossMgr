@@ -254,7 +254,7 @@ class MainWin( wx.Frame ):
 		
 		iRow += 1
 		
-		gs = wx.GridSizer( 1, 4, 2, 2 )
+		gs = wx.GridSizer( rows=0, cols=4, vgap=2, hgap=2 )
 		self.antennas = []
 		for i in xrange(4):
 			gs.Add( wx.StaticText(self, wx.ID_ANY, '%d' % (i+1)), flag=wx.ALIGN_CENTER )
@@ -586,7 +586,7 @@ mainWin = None
 def MainLoop():
 	global mainWin, redirectFileName
 	
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	app.SetAppName("CrossMgrImpinj")
 
 	mainWin = MainWin( None, title=AppVerName, size=(800,1000) )

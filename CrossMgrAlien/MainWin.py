@@ -143,7 +143,7 @@ class MainWin( wx.Frame ):
 		
 		self.vbs.Add( bs, flag=wx.ALL|wx.EXPAND, border = 4 )
 		
-		fgs = wx.FlexGridSizer( rows = 2, cols = 2, vgap = 4, hgap = 4 )
+		fgs = wx.FlexGridSizer( rows = 0, cols = 2, vgap = 4, hgap = 4 )
 		fgs.AddGrowableRow( 1 )
 		fgs.AddGrowableCol( 0 )
 		fgs.AddGrowableCol( 1 )
@@ -168,7 +168,7 @@ class MainWin( wx.Frame ):
 		
 		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'Antennas:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_BOTTOM )
 		
-		gs = wx.GridSizer( 1, 4, 2, 2 )
+		gs = wx.GridSizer( rows=0, cols=4, hgap=2, vgap=2 )
 		self.antennas = []
 		for i in xrange(4):
 			gs.Add( wx.StaticText(self, wx.ID_ANY, '%d' % i), flag=wx.ALIGN_CENTER )
@@ -492,7 +492,7 @@ redirectFileName = None
 def MainLoop():
 	global mainWin, redirectFileName
 	
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	app.SetAppName("CrossMgrAlien")
 
 	mainWin = MainWin( None, title=AppVerName, size=(800,600) )
