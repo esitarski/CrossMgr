@@ -275,8 +275,9 @@ class GeoTrack( object ):
 			for iSearch in xrange(iSearch, len(elevation) - 2):
 				if distance[iSearch] <= d < distance[iSearch+1]:
 					break
+			deltaDistance = max( distance[iSearch+1] - distance[iSearch], 0.000001 )
 			ele = elevation[iSearch] + (elevation[iSearch+1] - elevation[iSearch]) * \
-						(d - distance[iSearch]) / (distance[iSearch+1] - distance[iSearch])
+						(d - distance[iSearch]) / deltaDistance
 			self.gpsPoints[i] = pCur._replace( ele = ele )
 			length += GreatCircleDistance( pCur.lat, pCur.lon, pNext.lat, pNext.lon )
 			
