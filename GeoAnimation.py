@@ -115,6 +115,13 @@ def ParseGpxFile( fname, useTimes = False, isPointToPoint = False ):
 		latMin = min( latMin, lat )
 		lonMin = min( lonMin, lon )
 
+		# Skip consecutive duplicate points.
+		try:
+			if latLonEles[-1].lat == lat and latLonEles[-1].lon == lon:
+				continue
+		except IndexError:
+			pass
+		
 		latLonEles.append( LatLonEle(lat, lon, ele, t) )
 		if t is None:
 			hasTimes = False
