@@ -183,26 +183,26 @@ wx.ICON_QUESTION	Shows a question mark icon.
 wx.ICON_INFORMATION	Shows an information (i) icon.
 '''
 
-def MessageOK( parent, message, title = '', iconMask = wx.ICON_INFORMATION, pos = wx.DefaultPosition ):
-	dlg = wx.MessageDialog(parent, message, caption=title, style=wx.OK|iconMask, pos=pos)
+def MessageOK( parent, message, title = u'', iconMask = wx.ICON_INFORMATION, pos = wx.DefaultPosition ):
+	dlg = wx.MessageDialog(parent, message, title, x.OK|iconMask, pos=pos)
 	dlg.ShowModal()
 	dlg.Destroy()
 	return True
 	
-def MessageOKCancel( parent, message, title = '', iconMask = wx.ICON_QUESTION):
-	dlg = wx.MessageDialog(parent, message, caption=title, style=wx.OK|wx.CANCEL|iconMask )
+def MessageOKCancel( parent, message, title = u'', iconMask = wx.ICON_QUESTION):
+	dlg = wx.MessageDialog(parent, message, title, wx.OK|wx.CANCEL|iconMask )
 	response = dlg.ShowModal()
 	dlg.Destroy()
 	return True if response == wx.ID_OK else False
 	
-def MessageYesNo( parent, message, title = '', iconMask = wx.ICON_QUESTION):
-	dlg = wx.MessageDialog(parent, message, caption=title, style=wx.YES|wx.NO|iconMask )
+def MessageYesNo( parent, message, title = u'', iconMask = wx.ICON_QUESTION):
+	dlg = wx.MessageDialog(parent, message, title, wx.YES|wx.NO|iconMask )
 	response = dlg.ShowModal()
 	dlg.Destroy()
 	return True if response == wx.ID_YES else False
 	
-def MessageYesNoCancel( parent, message, title = '', iconMask = wx.ICON_QUESTION):
-	dlg = wx.MessageDialog(parent, message, caption=title, style=wx.YES|wx.NO|wx.CANCEL|iconMask )
+def MessageYesNoCancel( parent, message, title = u'', iconMask = wx.ICON_QUESTION):
+	dlg = wx.MessageDialog(parent, message, title, wx.YES|wx.NO|wx.CANCEL|iconMask )
 	response = dlg.ShowModal()
 	dlg.Destroy()
 	return response
