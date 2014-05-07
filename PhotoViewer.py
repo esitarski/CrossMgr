@@ -368,17 +368,19 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.mainPhoto.Refresh()
 		
 	def OnTakePhoto( self, event ):
+		race = Model.race
+		if not race or not race.isRunnning():
+			Utils.MessageOK( self, _('Race must be running'), _('Camera Test Unavailable') )
+			return
+		if not getattr(race, 'enableUSBCamera', False):
+			Utils.MessageOK( self, _('USB camera option must be enabled'), _('Camera Test Unavailable') )
+			return
+		
 		testNum = 9999
-		if Model.race and Model.race.isRunning():
-			raceSeconds = Model.race.curRaceTime()
-		else:
-			n = datetime.datetime.now()
-			today = datetime.datetime( year=n.year, month=n.month, day=n.day, hour=0, minute=0, second=0 )
-			raceSeconds = (n - today).total_seconds()
-		print raceSeconds
+		raceSeconds = race.curRaceTime()
 		success = VideoBuffer.ModelTakePhoto( testNum, raceSeconds )
 		if success:
-			self.refresh( testNum )
+			wx.CallAfter( self.refresh, testNum )
 		else:
 			Utils.MessageOK( self, unicode(Utils.cameraError), _('Camera Error') )
 		

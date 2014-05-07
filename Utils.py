@@ -184,7 +184,7 @@ wx.ICON_INFORMATION	Shows an information (i) icon.
 '''
 
 def MessageOK( parent, message, title = u'', iconMask = wx.ICON_INFORMATION, pos = wx.DefaultPosition ):
-	dlg = wx.MessageDialog(parent, message, title, x.OK|iconMask, pos=pos)
+	dlg = wx.MessageDialog(parent, message, title, wx.OK|iconMask, pos=pos)
 	dlg.ShowModal()
 	dlg.Destroy()
 	return True
