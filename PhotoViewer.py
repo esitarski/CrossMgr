@@ -180,11 +180,9 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.printID = wx.NewId()
 		self.toolbar.AddSimpleTool( self.printID, bitmap, _('Print Photo...') )
 		
-		'''
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'camera_toolbar.png'), wx.BITMAP_TYPE_PNG )
 		self.takePhotoID = wx.NewId()
 		self.toolbar.AddSimpleTool( self.takePhotoID, bitmap, _('Photo Test') )
-		'''
 		
 		#self.closeButton = wx.Button( self, wx.ID_CANCEL, 'Close' )
 		#self.Bind(wx.EVT_BUTTON, self.OnClose, self.closeButton )
@@ -369,7 +367,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		
 	def OnTakePhoto( self, event ):
 		race = Model.race
-		if not race or not race.isRunnning():
+		if not race or not race.isRunning():
 			Utils.MessageOK( self, _('Race must be running'), _('Camera Test Unavailable') )
 			return
 		if not getattr(race, 'enableUSBCamera', False):

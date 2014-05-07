@@ -1040,8 +1040,7 @@ class Race( object ):
 	def curRaceTime( self ):
 		if self.startTime is None:
 			return 0.0
-		tCur = datetime.datetime.now() - self.startTime
-		return tCur.total_seconds()
+		return (datetime.datetime.now() - self.startTime).total_seconds()
 
 	def lastRaceTime( self ):
 		if self.finishTime is not None:
