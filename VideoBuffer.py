@@ -206,21 +206,23 @@ def ModelTakePhoto( bib, raceSeconds ):
 
 @logCall
 def ModelStartCamera( refTime = None, raceFileName = None ):
+	Shutdown()
+	
 	race = Model.race
-	
-	if refTime is None:
-		refTime = race.startTime
-	if raceFileName is None:
-		raceFileName = Utils.getFileName()
-	
-	assert refTime is not None and raceFileName is not None
-	
 	if race and getattr(race, 'enableUSBCamera', False):
+		if refTime is None:
+			refTime = race.startTime
+		if raceFileName is None:
+			raceFileName = Utils.getFileName()
+		
+		assert refTime is not None and raceFileName is not None
+	
 		if getattr(race, 'enableJChipIntegration', False):
 			StartVideoBuffer( refTime, raceFileName )
 		else:
 			PhotoFinish.SetCameraState( True )
 		return True
+	
 	return False
 	
 if __name__ == '__main__':

@@ -378,7 +378,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		raceSeconds = race.curRaceTime()
 		success = VideoBuffer.ModelTakePhoto( testNum, raceSeconds )
 		if success:
-			wx.CallAfter( self.refresh, testNum )
+			wx.CallLater( 600, self.refresh, testNum )
 		else:
 			Utils.MessageOK( self, unicode(Utils.cameraError), _('Camera Error') )
 		

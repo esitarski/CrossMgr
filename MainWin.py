@@ -1931,6 +1931,8 @@ class MainWin( wx.Frame ):
 						self.refreshAll()
 						Utils.writeLog( 'openRace: changed Excel file to "%s"' % newFileName )
 
+			if race.isRunning():
+				VideoBuffer.ModelStartCamera()
 		except IOError:
 			Utils.MessageOK(self, _('Cannot open file "{}".').format(fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
 

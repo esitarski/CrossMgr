@@ -31,7 +31,19 @@ Lap Time for 80% Rule|Selects which lap you want to use to calculate the 80% tim
 Distance Unit|The units distances to show in Results.
 
 ## Notes
-Notes|Text that will appear in the HTML output.  Text entered here will be shown as-is in the HTML web page, including line breaks.  Describe weather conditions, or give credit to the CrossMgr operator and number caller.  You can also embed Html tags, however, your input must then start with <html> and end with </html>.  With Html tags, you can specify a hyperlink to a URL with `<a href="http://XXX">HyperLink</a>`, use a list with `<ol></ol>`, etc.  When using Html, you control your own line breaks - `<br/>`'s will not be automatically inserted between newlines.
+Notes|Text that will appear in the HTML output.  Text entered here will be shown as-is in the HTML web page, including line breaks.  Describe weather conditions, or give credit to the CrossMgr operator and number caller.
+
+You can also embed Html tags, however, your input must then start with `<html>` and end with `</html>`.  With Html tags, you can specify a hyperlink to a URL with `<a href="http://XXX">HyperLink</a>`, use a list with `<ol></ol>`, etc.  When using Html, you control your own line breaks: insert `<br/>` where you want a newline.
+
+For example:
+
+    <html>
+    <h2>Big Race</h2>
+    <p>
+    Organizer: <strong> <a href="mailto:organizer.email@gmail.com">Email: Awesome Organizer</a> </strong> <br/>
+    CrossMgr Operator: <strong> <a href="mailto:operator.email@gmail.com">Email: Awesome Operator</a> </strong> <br/>
+    </p>
+    </html>
 
 ## RFID Options
 Property|Description
