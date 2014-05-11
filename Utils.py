@@ -580,6 +580,11 @@ if __name__ == '__main__':
 	initTranslation()
 	app = wx.App(False)
 	
+	MessageOK( None, 'Test', 'Test', wx.ICON_INFORMATION )
+	MessageOKCancel( None, 'Test', 'Test' )
+	MessageYesNo( None, 'Test', 'Test' )
+	MessageYesNoCancel( None, 'Test', 'Test' )
+	
 	disable_stdout_buffering()
 	try:
 		a = 5 / 0

@@ -1785,7 +1785,17 @@ class Race( object ):
 
 	def catCount( self, category ):
 		return sum( 1 for num in self.riders.iterkeys() if self.inCategory(num, category) )
-		
+
+	def getNumsForCategory( self, category ):
+		try:
+			return self.categoryNumsCache[category]
+		except (TypeError, AttributeError, KeyError):
+			self._buildCategoryCache()
+		try:
+			return self.categoryNumsCache[category]
+		except (TypeError, AttributeError, KeyError):
+			return set()
+
 	def hasCategory( self, category ):
 		# Check if there is at least one rider in this category.
 		return any( self.inCategory(num, category) for num in self.riders.iterkeys() )

@@ -523,7 +523,7 @@ class UnstartedRaceWrapper( object ):
 		UnstartedRaceWrapper.count -= 1
 
 @Model.memoize
-def GetCategoryDetails():
+def GetCategoryDetails( ignoreEmptyCategories = True ):
 	if not Model.race:
 		return []
 
@@ -549,13 +549,15 @@ def GetCategoryDetails():
 		
 		# Add the remainder of the categories.
 		lastWaveLaps = 0
+		lastWaveCat = None
 		for cat in race.getCategories( False ):
 			results = GetResults( cat, True )
-			if not results:
+			if ignoreEmptyCategories and not results:
 				continue
 			
 			if cat.catType == cat.CatWave:
 				lastWaveLaps = cat.getNumLaps()
+				lastWaveCat = cat
 				
 			info = dict(
 					name		= cat.fullname,
@@ -572,15 +574,16 @@ def GetCategoryDetails():
 				if rr.status == Model.Rider.Finisher:
 					info['laps'] = max( info['laps'], len(rr.lapTimes) )
 			
-			waveCat = race.getCategory( results[0].num )
-			if getattr(waveCat, 'distance', None):
-				if getattr(waveCat, 'distanceType', Model.Category.DistanceByLap) == Model.Category.DistanceByLap:
-					info['lapDistance'] = waveCat.distance
-					if getattr(waveCat, 'firstLapDistance', None):
-						info['firstLapDistance'] = waveCat.firstLapDistance
-					info['raceDistance'] = waveCat.getDistanceAtLap( info['laps'] )
-				else:
-					info['raceDistance'] = waveCat.distance
+			waveCat = lastWaveCat
+			if waveCat:
+				if getattr(waveCat, 'distance', None):
+					if getattr(waveCat, 'distanceType', Model.Category.DistanceByLap) == Model.Category.DistanceByLap:
+						info['lapDistance'] = waveCat.distance
+						if getattr(waveCat, 'firstLapDistance', None):
+							info['firstLapDistance'] = waveCat.firstLapDistance
+						info['raceDistance'] = waveCat.getDistanceAtLap( info['laps'] )
+					else:
+						info['raceDistance'] = waveCat.distance
 			info['distanceUnit'] = race.distanceUnitStr
 	
 	# Cleanup.

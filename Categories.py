@@ -48,9 +48,10 @@ class CategoriesPrintout( wx.Printout ):
 		except:
 			externalInfo = {}
 		
+		allZeroStarters = True
 		with UnstartedRaceWrapper():
-			catMap = dict( (c.fullname, c) for c in race.getCategories( startWaveOnly = False ) )
-			catDetails = GetCategoryDetails()
+			catMap = dict( (c.fullname, c) for c in race.getCategories( startWaveOnly=False ) )
+			catDetails = GetCategoryDetails( False )
 			catDetailsMap = dict( (cd['name'], cd) for cd in catDetails )
 			
 			title = u'\n'.join( [_('Categories'), race.name, race.scheduledStart + _(' Start on ') + Utils.formatDate(race.date)] )
@@ -63,8 +64,10 @@ class CategoriesPrintout( wx.Printout ):
 				if not c:
 					continue
 				
-				starters = race.catCount( c )
-				if not starters:
+				starters = race.catCount(c)
+				if starters:
+					allZeroStarters = False
+				else:
 					starters = ''
 				
 				laps = catInfo.get( 'laps', '' ) or ''
@@ -90,7 +93,9 @@ class CategoriesPrintout( wx.Printout ):
 					u' '.join([raceDistance, raceDistanceUnit]) if raceDistance else '',
 					u'{}'.format(starters)
 				])
-			
+		
+		if allZeroStarters:
+			colnames.remove( _('Starters') )
 		data = [[None] * len(catData) for i in xrange(len(colnames))]
 		for row in xrange(len(catData)):
 			for col in xrange(len(colnames)):
