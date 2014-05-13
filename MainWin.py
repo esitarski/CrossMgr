@@ -996,7 +996,7 @@ class MainWin( wx.Frame ):
 		cpcd.SetPosition( (x, y) )
 		cpcd.SetSize( self.PrintCategoriesDialogSize )
 		result = cpcd.ShowModal()
-		categories = cpcd.categories
+		categories, positions = cpcd.categories, cpcd.positions
 		cpcd.Destroy()
 		if not categories or result != wx.ID_OK:
 			return
@@ -1010,7 +1010,7 @@ class MainWin( wx.Frame ):
 		pdd.EnablePrintToFile( False )
 		
 		printer = wx.Printer(pdd)
-		printout = CrossMgrPodiumPrintout( categories )
+		printout = CrossMgrPodiumPrintout( categories, positions )
 
 		if not printer.Print(self, printout, True):
 			if printer.GetLastError() == wx.PRINTER_ERROR:

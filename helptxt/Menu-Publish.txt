@@ -13,7 +13,18 @@ Shows how the results would look if printed.
 Prints formatted results directly to a printer.
 Select the Categories you want to print in the dialog, the select the Printer and Print Options.
 
-You can print results for a Category if there are riders of that Category in the race.
+You can print results for a Category only if there are riders of that Category in the race.
+
+## Print Podium Results...
+Prints formatted results directly to a printer in a format suitable to announce podium results.
+
+Select the Categories you want to print in the dialog, select the Podium positions, then select the Printer and Print Options.
+
+The output will not include lap times, nor will it include DNF, DNS or DQ riders (only finishers for podium).
+
+You can print results for a Category only if there are riders of that Category in the race.
+
+The report will include the specified number of podium positions, or the number of finishers in the category - whichever is less.
 
 ## Excel Publish...
 Publish the results in Excel format and opens Excel on the output file.

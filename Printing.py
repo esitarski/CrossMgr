@@ -154,7 +154,7 @@ class ChoosePrintCategoriesPodiumDialog( wx.Dialog ):
 			
 		self.podiumPositionsLabel = wx.StaticText( self, label=_('Podium Positions to Print:') )
 		self.podiumPositions = wx.Choice( self, choices=[unicode(i+1) for i in xrange(10)] )
-		self.podiumPositions.SetSelection( 4 )
+		self.podiumPositions.SetSelection( 2 )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.podiumPositionsLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT, border=4 )
@@ -199,7 +199,7 @@ class ChoosePrintCategoriesPodiumDialog( wx.Dialog ):
 					self.categories.append( c )
 				row += 1
 		
-		self.positions = self.podiumPositions.GetSelection()
+		self.positions = self.podiumPositions.GetSelection() + 1
 		self.EndModal( wx.ID_OK )
 
 	def onCancel( self, event ):
