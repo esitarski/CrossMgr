@@ -69,7 +69,8 @@ import ImpinjImport
 import OutputStreamer
 import GpxImport
 from Undo import undo
-from Printing			import CrossMgrPrintout, CrossMgrPrintoutPNG, getRaceCategories, ChoosePrintCategoriesDialog
+from Printing			import CrossMgrPrintout, CrossMgrPrintoutPNG, CrossMgrPodiumPrintout, getRaceCategories
+from Printing			import ChoosePrintCategoriesDialog, ChoosePrintCategoriesPodiumDialog
 from ExportGrid			import ExportGrid
 import SimulationLapTimes
 import Version
@@ -284,8 +285,13 @@ class MainWin( wx.Frame ):
 								wx.ArtProvider.GetBitmap(wx.ART_PRINT) )
 		self.Bind(wx.EVT_MENU, self.menuPrint, id=wx.ID_PRINT )
 
-		self.publishMenu.AppendSeparator()
+		idCur = wx.NewId()
+		AppendMenuItemBitmap( self.publishMenu, idCur, _("&Print Podium Results..."), _("Print the top position results to a printer"),
+								wx.Bitmap( os.path.join(Utils.getImageFolder(), 'Podium.png'), wx.BITMAP_TYPE_PNG ) )
+		self.Bind(wx.EVT_MENU, self.menuPrintPodium, id=idCur )
 
+		self.publishMenu.AppendSeparator()
+		
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
 							_("&Excel Publish..."), _("Publish Results as an Excel Spreadsheet (.xls)"),
@@ -968,6 +974,43 @@ class MainWin( wx.Frame ):
 		
 		printer = wx.Printer(pdd)
 		printout = CrossMgrPrintout( categories )
+
+		if not printer.Print(self, printout, True):
+			if printer.GetLastError() == wx.PRINTER_ERROR:
+				Utils.MessageOK(self, _("There was a printer problem.\nCheck your printer setup."), _("Printer Error"), iconMask=wx.ICON_ERROR)
+		else:
+			self.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
+
+		printout.Destroy()
+
+	@logCall
+	def menuPrintPodium( self, event ):
+		if not Model.race:
+			return
+		self.commit()
+
+		cpcd = ChoosePrintCategoriesPodiumDialog( self )
+		x, y = self.GetPosition().Get()
+		x += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_X, self)
+		y += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_Y, self)
+		cpcd.SetPosition( (x, y) )
+		cpcd.SetSize( self.PrintCategoriesDialogSize )
+		result = cpcd.ShowModal()
+		categories = cpcd.categories
+		cpcd.Destroy()
+		if not categories or result != wx.ID_OK:
+			return
+	
+		self.printData.SetFilename( self.fileName if self.fileName else '' )
+		pdd = wx.PrintDialogData(self.printData)
+		pdd.SetAllPages( True )
+		pdd.EnableSelection( False )
+		pdd.EnablePageNumbers( False )
+		pdd.EnableHelp( False )
+		pdd.EnablePrintToFile( False )
+		
+		printer = wx.Printer(pdd)
+		printout = CrossMgrPodiumPrintout( categories )
 
 		if not printer.Print(self, printout, True):
 			if printer.GetLastError() == wx.PRINTER_ERROR:
