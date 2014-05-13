@@ -366,9 +366,10 @@ class CrossMgrPodiumPrintout( CrossMgrPrintout ):
 		return (1, page, 1, page)
 	
 	def prepareGrid( self, page ):
-		exportGrid = ExportGrid( title=_('Podium Results') )
+		exportGrid = ExportGrid()
 		with UnstartedRaceWrapper():
 			exportGrid.setResultsOneList( self.pageInfo[page][0], True, showLapTimes=False )
+		exportGrid.title = u'\n'.join( [_('Podium Results'), u'', exportGrid.title] )
 		return exportGrid
 		
 if __name__ == '__main__':
