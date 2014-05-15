@@ -5,26 +5,28 @@ import math
 import Utils
 
 class HighPrecisionTimeEdit( masked.TextCtrl ):
-	defaultValue = '00:00:00.000'
-	emptyValue   = '  :  :  .   '
+	mask         = u'##:##:##.###'
+	defaultValue = u'00:00:00.000'
+	emptyValue   = u'  :  :  .   '
 
-	def __init__( self, parent, id = wx.ID_ANY, seconds = None, allow_none = False, style = 0 ):
+	def __init__( self, parent, id=wx.ID_ANY, seconds=None, allow_none=False, style=0, size=wx.DefaultSize ):
 		self.allow_none = allow_none
 		masked.TextCtrl.__init__(
 					self, parent, id,
-					style		 = style,
-					mask		 = '##:##:##.###',
-					defaultValue = '00:00:00.000',
-					validRegex   = '[0-9][0-9]:[0-5][0-9]:[0-5][0-9]\.[0-9][0-9][0-9]',
+					mask		 = self.mask,
+					defaultValue = self.defaultValue,
+					validRegex   = u'[0-9][0-9]:[0-5][0-9]:[0-5][0-9]\.[0-9][0-9][0-9]',
 					useFixedWidthFont = False,
+					style		 = style,
+					size         = size,
 				)
 		'''
 		masked.TextCtrl.__init__( self, parent, id, "",
 									style        = style,
-									mask         = '##:##:##.###',
-									defaultValue = ('' if allow_none else self.defaultValue),
-									fillChar     = (' ' if allow_none else '0'),
-									validRegex   = ('.*' if allow_none else '[0-9][0-9]:[0-5][0-9]:[0-5][0-9]\.[0-9][0-9][0-9]'),
+									mask         = u'##:##:##.###',
+									defaultValue = (u'' if allow_none else self.defaultValue),
+									fillChar     = (u' ' if allow_none else '0'),
+									validRegex   = (u'.*' if allow_none else u'[0-9][0-9]:[0-5][0-9]:[0-5][0-9]\.[0-9][0-9][0-9]'),
 									formatcodes  = 'FS',
 									useFixedWidthFont = True,
 									fields = [
@@ -57,6 +59,6 @@ class HighPrecisionTimeEdit( masked.TextCtrl ):
 			minutes = int( (secs // 60) % 60 )
 			secs %= 60
 			decimal = int( f * 1000 )
-			s = "%02d:%02d:%02d.%03d" % (hours, minutes, secs, decimal)
+			s = u"%02d:%02d:%02d.%03d" % (hours, minutes, secs, decimal)
 			masked.TextCtrl.SetValue( self, s )
 

@@ -31,23 +31,25 @@ def getStFtLaps( rider ):
 	return st, ft, laps
 	
 class AdjustTimeDialog( wx.Dialog ):
-	def __init__( self, parent, rider, id = wx.ID_ANY ):
+	def __init__( self, parent, rider, riderName, id=wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, _("Adjust Times"),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
 						
 		self.rider = rider
-		bs = wx.GridBagSizer(vgap=0, hgap=0)
+		self.riderName = riderName
+		fgs = wx.FlexGridSizer(rows=0, cols=2, vgap=4, hgap=4)
+		fgs.AddGrowableCol( 1 )
 		
 		st, ft, laps = getStFtLaps( self.rider )
 		ttPenalty = getattr( self.rider, 'ttPenalty', 0.0 )
 			
-		self.startTime = HighPrecisionTimeEdit( self, allow_none = not bool(st), seconds = st )
+		self.startTime = HighPrecisionTimeEdit( self, allow_none=not bool(st), seconds=st, size=(128,-1) )
 		self.startTime.Bind( wx.EVT_TEXT, self.updateRideTime )
-		self.finishTime = HighPrecisionTimeEdit( self, allow_none = not bool(ft), seconds = ft )
+		self.finishTime = HighPrecisionTimeEdit( self, allow_none=not bool(ft), seconds=ft, size=(128,-1) )
 		self.finishTime.Bind( wx.EVT_TEXT, self.updateRideTime )
 		self.rideTime = wx.StaticText( self )
-		self.penaltyTime = HighPrecisionTimeEdit( self, allow_none = True, seconds = ttPenalty )
-		self.note = wx.TextCtrl( self, size=(400, -1), value = getattr(self.rider, 'ttNote', '') )
+		self.penaltyTime = HighPrecisionTimeEdit( self, allow_none=True, seconds=ttPenalty, size=(128,-1) )
+		self.note = wx.TextCtrl( self, size=(400, -1), value=getattr(self.rider, 'ttNote', u'') )
 		self.updateRideTime( None )
 				
 		self.okBtn = wx.Button( self, wx.ID_OK )
@@ -56,38 +58,35 @@ class AdjustTimeDialog( wx.Dialog ):
 		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
-		border = 8
-		row = 0
-		bs.Add( wx.StaticText( self, label = _('Rider {}').format(rider.num) ),
-			pos=(row,0), span=(1,2), border = border, flag=wx.GROW|wx.ALL )
+		fgs.Add( wx.StaticText( self ) )
+		fgs.Add( wx.StaticText( self, label=((riderName + u': ') if riderName else u'') + unicode(rider.num) ), flag=wx.ALIGN_LEFT )
 			
-		row += 1
-		bs.Add( wx.StaticText( self, label = _("Start:")),  pos=(row,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
-		bs.Add( self.startTime, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.ALIGN_LEFT )
+		fgs.Add( wx.StaticText( self, label=_("Start:")), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		fgs.Add( self.startTime, flag=wx.ALIGN_LEFT  )
 		
-		row += 1
-		bs.Add( wx.StaticText( self, label = _("Finish:")),  pos=(row,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
-		bs.Add( self.finishTime, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.ALIGN_LEFT )
+		fgs.Add( wx.StaticText( self, label=_("Finish:")), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		fgs.Add( self.finishTime, flag=wx.ALIGN_LEFT )
 		
-		row += 1
-		bs.Add( wx.StaticText( self, label = _("Ride Time:")),  pos=(row,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
-		bs.Add( self.rideTime, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.ALIGN_LEFT )
+		fgs.Add( wx.StaticText( self, label=_("Ride Time:")), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		fgs.Add( self.rideTime, flag=wx.ALIGN_LEFT )
 		
-		row += 1
-		bs.Add( wx.StaticText( self, label = _("Penalty Time:")),  pos=(row,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
-		bs.Add( self.penaltyTime, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.ALIGN_LEFT )
+		fgs.Add( wx.StaticText( self, label=_("Penalty Time:")), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		fgs.Add( self.penaltyTime, flag=wx.ALIGN_LEFT )
 		
-		row += 1
-		bs.Add( wx.StaticText( self, label = _("Note:")),  pos=(row,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
-		bs.Add( self.note, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.ALIGN_LEFT )
+		fgs.Add( wx.StaticText( self, label=_("Note:")),  flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		fgs.Add( self.note, flag=wx.ALIGN_LEFT )
+
+		sizer = wx.BoxSizer( wx.VERTICAL )
+		sizer.Add( fgs, 1, flag=wx.EXPAND|wx.ALL, border=4 )
 		
-		row += 1
-		bs.Add( self.okBtn, pos=(row, 0), span=(1,1), border = border, flag=wx.ALL )
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( self.okBtn, border=4, flag=wx.ALL )
 		self.okBtn.SetDefault()
-		bs.Add( self.cancelBtn, pos=(row, 1), span=(1,1), border = border, flag=wx.ALL )
+		hs.Add( self.cancelBtn, border=4, flag=wx.ALL )
+		sizer.Add( hs, flag=wx.ALIGN_RIGHT|wx.ALL, border=4 )
 		
-		self.SetSizerAndFit(bs)
-		bs.Fit( self )
+		self.SetSizerAndFit(sizer)
+		sizer.Fit( self )
 		
 		self.CentreOnParent(wx.BOTH)
 		self.SetFocus()
@@ -95,6 +94,7 @@ class AdjustTimeDialog( wx.Dialog ):
 	def updateRideTime( self, event = None ):
 		st = self.startTime.GetSeconds()
 		ft = self.finishTime.GetSeconds()
+		ft = ft if ft else None
 		try:
 			self.rideTime.SetLabel( Utils.formatTime(ft - st, True) )
 		except:
@@ -103,6 +103,7 @@ class AdjustTimeDialog( wx.Dialog ):
 	def onOK( self, event ):
 		stOld, ftOld, laps = getStFtLaps(self.rider)
 		st, ft = self.startTime.GetSeconds(), self.finishTime.GetSeconds()
+		ft = ft if ft else None
 		if st is not None and ft is not None and st >= ft:
 			Utils.MessageOK( self, _('Start Time must be before Finish Time'), _('Time Error'), wx.ICON_ERROR )
 			return
@@ -244,9 +245,9 @@ class RiderDetail( wx.Panel ):
 		gbs.Add( self.statusOption, pos=(row,1), span=(1,1), flag=wx.EXPAND )
 		self.Bind(wx.EVT_CHOICE, self.onStatusChanged, self.statusOption)
 		
-		self.atRaceTimeName = wx.StaticText( self, label =  _('at race time: ') )
+		self.atRaceTimeName = wx.StaticText( self, label= _('at race time: ') )
 		gbs.Add( self.atRaceTimeName, pos=(row,2), span=(1,1), flag=labelAlign )
-		self.atRaceTime = HighPrecisionTimeEdit( self )
+		self.atRaceTime = HighPrecisionTimeEdit( self, size=(128,-1) )
 		self.atRaceTime.SetSeconds( 0 )
 		self.atRaceTime.SetEditable( False )
 		self.atRaceTime.Enable( False )
@@ -346,7 +347,7 @@ class RiderDetail( wx.Panel ):
 			if not getattr(race, 'isTimeTrial', False) or num not in race:
 				return
 			rider = race.getRider( num )
-		dlg = AdjustTimeDialog( self, rider )
+		dlg = AdjustTimeDialog( self, rider, self.riderName.GetLabel() )
 		dlg.ShowModal()
 		dlg.Destroy()
 	
