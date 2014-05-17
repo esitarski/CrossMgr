@@ -1430,6 +1430,7 @@ class MainWin( wx.Frame ):
 		if self.fileName is None or len(self.fileName) < 4:
 			return
 		
+		self.showPageName( _('Animation') )
 		with Model.LockRace() as race:
 			if not race:
 				return
@@ -1445,7 +1446,6 @@ class MainWin( wx.Frame ):
 			race.showOval = (race.geoTrack is None)
 			race.setChanged()
 			
-		self.showPageName( _('Animation') )
 		self.refresh()
 		
 	@logCall
