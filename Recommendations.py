@@ -189,7 +189,7 @@ class Recommendations( wx.Panel ):
 				
 			colnames = [ _('Num'), _('Name'), _('Issue'), _('Recommendation') ]
 			data = [[],[], [], []]
-			def append( num = '', name = '', issue = '', recommendation = '' ):
+			def append( num = u'', name = u'', issue = u'', recommendation = u'' ):
 				data[0].append( unicode(num) )
 				data[1].append( unicode(name) )
 				data[2].append( unicode(issue) )
@@ -256,6 +256,16 @@ class Recommendations( wx.Panel ):
 									_("Rider has {} extra {} not shown in results (all riders finish on leader's last lap)").format(
 										extra, 'laps' if extra > 1 else 'lap')
 								)
+					
+					# Report time penalties
+					if getattr(race, 'isTimeTrial', False):
+						for rr in results:
+							rider = race.riders[rr.num]
+							if rider.status == rider.Finisher and getattr(rr,'ttPenalty',0.0) > 0.0:
+								reason = u' '.join( [u'{:.3f}'.format(getattr(rr,'ttPenalty')), _('sec'), _("time penalty")] )
+								if getattr(rr, 'ttNote', u''):
+									reason += u' - {}'.format( getattr(rr, 'ttNote') )
+								append( rider.num, getName(rider.num), _('Penalty'), reason )
 				
 				# Trim out all entries not in this category and all non-finishers.
 				if category:

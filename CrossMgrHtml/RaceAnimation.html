@@ -334,6 +334,7 @@ var translations = {
 	'Total':		['Total',			'Gain',						'Ganancia'],
 	'Elevation':	['Elevation',		'total',					'total'],
 	'Gain':			['Gain',			"d'altitude",				'de la elevación'],
+	'time penalty':	['time penalty',	"pénalité de temps",		"penalización de tiempo"],
 	'last':			['','','']
 };
 (function() {
@@ -2377,10 +2378,11 @@ function SetCategoryResults()
 		tdTitle.colSpan = numHeaders;
 		
 		// Add the rider data.
+		tbody = createChild( table, 'TBODY' );
 		var position = 1;
 		for( var r = 0; r < resultsData.length; ++r, ++position )
 		{
-			tr = createChild(thead, 'TR');
+			tr = createChild(tbody, 'TR');
 			tr.className = ((r & 1) ? 'odd' : 'even');
 			
 			var riderLaps	= resultsData[r][0];
@@ -2584,14 +2586,76 @@ function SetCategoryResults()
 				createTextChild( td = createChild(tr, 'TD'), '' );
 		}
 		
+		// Add any tt penalties.
+		var hasTTPenalties = false;
+		for( var p = 0; p < catDetail.pos.length; ++p ) {
+			var num = catDetails[c].pos[p];
+			var d = data[num];
+			if( d.ttPenalty ) {
+				hasTTPenalties = true;
+				break;
+			}
+		}
+		if( hasTTPenalties ) {
+			// Add a blank row between the penalties.
+			tr = createChild( tbody, 'TR' );
+			tr.className = 'noborder';
+			for( var k = 0; k < numHeaders; ++k ){
+				createTextChild( td = createChild(tr, 'TD'), '' );
+				td.innerHTML = '&nbsp;'
+			}
+			
+			// Get the number of non-info fields.
+			var penaltyColCount = numHeaders;
+			for( var f in curFields )
+				--penaltyColCount;
+
+			for( var p = 0; p < catDetail.pos.length; ++p ) {
+				var num = catDetails[c].pos[p];
+				var d = data[num];
+				if( d.ttPenalty ) {
+					tr = createChild( tbody, 'TR' );
+					tr.className = 'noborder';
+					createTextChild( td = createChild(tr, 'TD'), '' );		// Skip the Pos column.
+					createTextChild( td = createChild(tr, 'TD'), num );		// Add bib num.
+					for( var f = 0; f < infoFields.length; ++f )			// Add the additional fields.
+					{
+						var field = infoFields[f];
+						if( curFields[field] )
+						{
+							var v;
+							if( field == 'Name' )
+							{
+								if( d['LastName'] && d['FirstName'] )
+									v = d['LastName'] + ',&nbsp;' + d['FirstName'];
+								else
+									v = d['LastName'] || d['FirstName'];
+							}
+							else
+								v = d[field];
+							td = createChild(tr, 'TD');
+							td.innerHTML = v;
+							if( field != 'Age' )
+								td.id = 'idNonNumeric'; 
+						}
+					}
+					// Add the penalty time and note.
+					td = createChild( tr, 'TD' );
+					td.id = 'idNonNumeric'; 
+					td.setAttribute( 'colspan', penaltyColCount );
+					td.innerHTML = d.ttPenalty.toFixed(3) + ' sec ' + _('time penalty') + (d.ttNote ? (' - ' + d.ttNote.escapeHTML()) : '');
+				}
+			}
+		}
+		
 		// Add a blank row between categories.
-		tr = createChild( thead, 'TR' );
+		tr = createChild( tbody, 'TR' );
 		tr.className = 'noborder';
-		for( var k = 0; k < numHeaders; ++k )
-		{
+		for( var k = 0; k < numHeaders; ++k ){
 			createTextChild( td = createChild(tr, 'TD'), '' );
 			td.innerHTML = '&nbsp;'
 		}
+		
 		resultsDiv.appendChild( table );
 	}
 }

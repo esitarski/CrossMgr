@@ -88,7 +88,7 @@ DefaultSpeed = 0.00001
 
 @Model.memoize
 def GetResultsCore( category ):
-
+	Finisher = Model.Rider.Finisher
 	riderResults = []
 	with Model.LockRace() as race:
 		if not race:
@@ -228,7 +228,7 @@ def GetResultsCore( category ):
 			
 			if isTimeTrial:
 				rr.startTime = getattr( rider, 'firstTime', None )
-				if rr.status == Model.Rider.Finisher:
+				if rr.status == Finisher:
 					try:
 						if rr.lastTime > 0:
 							rr.finishTime = rr.startTime + rr.lastTime
@@ -258,7 +258,7 @@ def GetResultsCore( category ):
 				else:	# Distance is by entire race.
 					riderDistance = distance
 					# Only add the rider speed if the rider finished.
-					if lastTime and rider.status == Model.Rider.Finisher:
+					if lastTime and rider.status == Finisher:
 						tCur = lastTime - startOffset
 						speed = DefaultSpeed if tCur <= 0.0 else riderDistance / (tCur / (60.0*60.0))
 						rr.speed = '%.2f %s' % (speed, ['km/h', 'mph'][getattr(race, 'distanceUnit', 0)] )
@@ -283,7 +283,7 @@ def GetResultsCore( category ):
 				rr.lapTimes = rr.lapTimes[:leaderLapTimes]
 				rr.laps = leader.laps
 		
-			if rr.status != Model.Rider.Finisher:
+			if rr.status != Finisher:
 				rr.pos = Model.Rider.statusNames[rr.status]
 				continue
 				
@@ -300,7 +300,7 @@ def GetResultsCore( category ):
 		iTime = 0
 		lastFullLapsTime = 60.0
 		for pos, rr in enumerate(riderResults):
-			if rr.status != Model.Rider.Finisher or not rr.raceTimes:
+			if rr.status != Finisher or not rr.raceTimes:
 				rr.stageRaceTime = floor(rr.lastTime)
 				rr.stageRaceGap = rr.gap
 			elif rr.laps == leader.laps:
@@ -326,6 +326,13 @@ def GetResultsCore( category ):
 					rr.stageRaceTime = 48.0 * 60.0 * 60.0
 				rr.stageRaceGap = Utils.formatTimeGap( rr.stageRaceTime - leader.stageRaceTime, False ) if rr != leader else ''
 		
+		if isTimeTrial:
+			for rr in riderResults:
+				rider = race[rr.num]
+				if rider.status == Finisher and hasattr(rider, 'ttPenalty'):
+					rr.ttPenalty = getattr(rider, 'ttPenalty')
+					rr.ttNote = getattr(rider, 'ttNote', u'')
+		
 		# Fix relegations.
 		if any( race[rr.num].isRelegated() for rr in riderResults ):
 			relegatedResults = {}
@@ -346,7 +353,7 @@ def GetResultsCore( category ):
 			doneFinishers = False
 			for rr in riderResults:
 				if rr not in relegated:
-					if not doneFinishers and rr.status != Model.Rider.Finisher:
+					if not doneFinishers and rr.status != Finisher:
 						doneFinishers = True
 						posCur = maxRelegatedPosition
 					while relegatedResults.get(posCur, None) is not None:
@@ -356,7 +363,7 @@ def GetResultsCore( category ):
 			
 			riderResults = [v[1] for v in sorted(relegatedResults.iteritems(), key = lambda x: x[0])]
 			for pos, rr in enumerate(riderResults):
-				if rr.status != Model.Rider.Finisher:
+				if rr.status != Finisher:
 					break
 				rr.pos = '{} REL'.format(pos+1) if rr in relegated else pos + 1
 		
