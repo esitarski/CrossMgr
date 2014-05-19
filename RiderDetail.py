@@ -745,7 +745,7 @@ class RiderDetail( wx.Panel ):
 						tStatus = rider.times[-1] + 1.0
 					except (IndexError, TypeError):
 						pass
-				tStatus = min( tStatus, 23*60*60 )	# Assume that no race runs longer than 23 hours.
+				tStatus = min( tStatus, 7*24*60*60 )
 				self.atRaceTime.SetValue( Utils.SecondsToStr(tStatus) )
 				
 		self.commitChange()
@@ -1231,8 +1231,8 @@ class RiderDetail( wx.Panel ):
 		
 		undo.pushState();
 		with Model.LockRace() as race:
-			# Allow new numbers to be added if status is DNS or DQ.
-			if race is None or (num not in race and status not in [Model.Rider.DNS, Model.Rider.DQ]):
+			# Allow new numbers to be added if status is DNS, DNF or DQ.
+			if race is None or (num not in race and status not in [Model.Rider.DNS, Model.Rider.DNF, Model.Rider.DQ]):
 				return
 				
 			rider = race.getRider(num)
