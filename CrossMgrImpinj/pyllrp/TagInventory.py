@@ -12,12 +12,13 @@ class TagInventory( object ):
 	inventoryParameterSpecID = 1234	# Arbitrary inventory parameter spec id.
 	readWaitMilliseconds = 100
 
-	def __init__( self, host = '192.168.10.102', defaultAntennas = None, transmitPower = None ):
+	def __init__( self, host='192.168.10.102', defaultAntennas=None, transmitPower=None, receiverSensitivity=None ):
 		self.host = host
 		self.connector = None
 		self.resetTagInventory()
 		self.defaultAntennas = defaultAntennas
 		self.transmitPower = transmitPower
+		self.receiverSensitivity = receiverSensitivity
 		
 	def resetTagInventory( self ):
 		self.tagInventory = set()
@@ -46,9 +47,17 @@ class TagInventory( object ):
 		response = self.connector.transact( SET_READER_CONFIG_Message(ResetToFactoryDefault = True) )
 		assert response.success(), 'SET_READER_CONFIG ResetToFactorDefault fails\n{}'.format(response)
 
-		transmitPowerParameter = []
+		# Change receiver sensitivity (if specified).  This value is RFID reader dependent.
+		receiverSensitivityParameter = []
+		if self.receiverSensitivity is not None:
+			receiverSensitivityParameter.append(
+				RFReceiver_Parameter( 
+					ReceiverSensitivity = self.receiverSensitivity
+				)
+			)
 		
 		# Change transmit power (if specified).  This value is RFID reader dependent.
+		transmitPowerParameter = []
 		if self.transmitPower is not None:
 			transmitPowerParameter.append(
 				RFTransmitter_Parameter( 
@@ -60,7 +69,7 @@ class TagInventory( object ):
 		
 		message = SET_READER_CONFIG_Message( Parameters = [
 				AntennaConfiguration_Parameter( AntennaID = 0, Parameters =
-					transmitPowerParameter + [
+					receiverSensitivityParameter + transmitPowerParameter + [
 					C1G2InventoryCommand_Parameter( Parameters = [
 						C1G2SingulationControl_Parameter(
 							Session = 0,
