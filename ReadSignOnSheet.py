@@ -173,8 +173,17 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		# Create a map for the field names we are looking for
 		# and the self.headers we found in the Excel sheet.
 		for c, f in enumerate(Fields):
+			if   f == _('State'):
+				iStateField = c
+			elif f == _('Prov'):
+				iProvField = c
+			elif f == _('StateProv'):
+				iStateProvField = c
+		
+		iNoMatch = len(self.headers) - 1
+		for c, f in enumerate(Fields):
 			# Figure out some reasonable defaults for self.headers.
-			iBest = len(self.headers) - 1
+			iBest = iNoMatch
 			matchBest = 0.0
 			for i, h in enumerate(self.headers):
 				matchCur = Utils.approximateMatch(f, h)
@@ -184,9 +193,17 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 			# If we don't get a high enough match, set to blank.
 			if matchBest <= 0.34:
 				try:
-					iBest = min( self.expectedFieldCol[h], len(self.headers) - 1 )
+					iBest = min( self.expectedFieldCol[h], iNoMatch )
 				except (TypeError, KeyError):
-					iBest = len(self.headers) - 1
+					iBest = iNoMatch
+			
+			# If we already have a match for State of Prov, don't match on StateProv.
+			if c == iStateProvField and (
+					self.choices[iStateField].GetSelection() != iNoMatch or
+					self.choices[iProvField].GetSelection() != iNoMatch
+				):
+				iBest = iNoMatch
+			
 			self.choices[c].Clear()
 			self.choices[c].AppendItems( self.headers )
 			self.choices[c].SetSelection( iBest )

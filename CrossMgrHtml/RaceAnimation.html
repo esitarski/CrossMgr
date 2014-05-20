@@ -104,6 +104,17 @@ table.results tr.odd:hover {
 	background-color:#FFFFCC;
 }
 
+table.results tr td.fastest-lap {
+	background-image: linear-gradient(
+		#7FE57F, #BFFABF 33%, #7FE57F
+	);
+}
+table.results tr td.slowest-lap {
+	background-image: linear-gradient(
+		#FFAA55, #FFDDBB 33%, #FFAA55
+	);
+}
+
 table.results tr td.highlight {
 	font-size: 120%;
 	font-weight: bold;
@@ -2404,6 +2415,18 @@ function SetCategoryResults()
 			
 			var d = data[num];
 			
+			// Compute the fastest and slowest lap for this rider.
+			var iFastestLap = -1, iSlowestLap = -1;
+			if( d.lapSpeeds && d.lapSpeeds.length > 1 ) {
+				iFastestLap = iSlowestLap = 0;
+				for( var i = 1; i < d.lapSpeeds.length; ++i ) {
+					if( d.lapSpeeds[i] > d.lapSpeeds[iFastestLap] )
+						iFastestLap = i;
+					if( d.lapSpeeds[i] < d.lapSpeeds[iSlowestLap] )
+						iSlowestLap = i;
+				}
+			}
+			
 			for( var f = 0; f < infoFields.length; ++f )
 			{
 				var field = infoFields[f];
@@ -2579,6 +2602,8 @@ function SetCategoryResults()
 					var classes = [];
 					if( lapMinCoords && r == lapMinCoords[0] && i == lapMinCoords[1] )	classes.push( 'fastest' );
 					if( numsToWatch[num] )												classes.push( 'highlight' );
+					if( i == iFastestLap+1 )											classes.push( 'fastest-lap' );
+					if( i == iSlowestLap+1 )											classes.push( 'slowest-lap' );
 					if( classes )	td.className = classes.join( ' ' );
 				}
 			}
