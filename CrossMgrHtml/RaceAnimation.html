@@ -228,6 +228,7 @@ function isCanvasSupported() {
 	var elem = document.createElement('canvas');
 	return !!(elem.getContext && elem.getContext('2d'));
 }
+var canvasSupported = true;
 
 // Convenience function to get the last element in an array.
 Array.prototype.back = function() {
@@ -903,7 +904,7 @@ function TrackAnimation()
 
 	this.Refresh = function()
 	{
-		if( !canvas || !isCanvasSupported() )
+		if( !canvas || !canvasSupported )
 			return;
 
 		// Redraw the canvas at this time.
@@ -1632,7 +1633,7 @@ function GeoAnimation()
 
 	this.Refresh = function()
 	{
-		if( !canvas || !isCanvasSupported() )
+		if( !canvas || !canvasSupported )
 			return;
 
 		var dc = canvas.getContext('2d');
@@ -2898,7 +2899,7 @@ function RaceChartUpdateInfo()
 function RefreshRaceChart()
 {
 	var canvasRaceChart = document.getElementById('idRaceChart');
-	if( !data || !canvasRaceChart || !isCanvasSupported() )
+	if( !data || !canvasRaceChart || !canvasSupported )
 		return;
 
 	var iFromCategory = {};
@@ -3297,8 +3298,11 @@ function Lightning()
 	this.updateInfo = function()
 	{
 		this.Refresh();
-		if( this.maxLaps <= 1 )
+		if( this.maxLaps <= 1 ) {
+			document.getElementById('idRaceLightningDiv').class = "hidden noprint";
 			return;
+		}
+		document.getElementById('idRaceLightningDiv').class = "noprint";
 		
 		var canvasRaceLightning = document.getElementById('idRaceLightning');
 		var dc = canvasRaceLightning.getContext('2d');
@@ -3373,7 +3377,7 @@ function Lightning()
 	this.Refresh = function()
 	{
 		var canvasRaceLightning = document.getElementById('idRaceLightning');
-		if( !data || !canvasRaceLightning || !isCanvasSupported() ) {
+		if( !data || !canvasRaceLightning || !canvasSupported ) {
 			this.maxLaps = 0;
 			return;
 		}
@@ -3978,8 +3982,9 @@ function onLoad()
 		document.getElementById('idVirtualTour').className = 'hidden';
 		document.getElementById('idCourseViewer').className = 'hidden';
 	}
-		
-	if( isCanvasSupported() )
+	
+	canvasSupported = isCanvasSupported();
+	if( canvasSupported )
 	{
 		var raceChartCanvas = document.getElementById('idRaceChart');
 		raceChartCanvas.addEventListener('click', function(event) { RaceChartProcessClick(event); }, false);
@@ -4173,29 +4178,36 @@ Current versions of Chrome, FireFox and Opera work fine.
 <span id="idTotalElevationGain"> </span>
 </p>
 <span id="idShowOptions"></span><br/>
+
 <div id="idResultsDiv"></div>
-<div id="idRaceChartDiv">
-<p class="noprint"><span id="idRaceChartName" data-tr="Race Chart"></span>&nbsp;&nbsp;&nbsp;&nbsp;
-<span id="idShowStartOffsetOption">
-	<input type="checkbox" id="idShowStartOffsets" checked onClick="RefreshRaceChart()"><span data-tr="Show Start Offsets"></span></input>
-</span>
+
+<div id="idRaceChartDiv" class="noprint">
+<p>
+	<span id="idRaceChartName" data-tr="Race Chart"></span>&nbsp;&nbsp;&nbsp;&nbsp;
+	<span id="idShowStartOffsetOption">
+		<input type="checkbox" id="idShowStartOffsets" checked onClick="RefreshRaceChart()"><span data-tr="Show Start Offsets"></span></input>
+	</span>
 </p>
-<canvas id="idRaceChart" width="1000" height="800" class="noprint">
+<canvas id="idRaceChart" width="1000" height="800">
 <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a> Requires support for the HTML5 Canvas.<br/>
 Please upgrade to a more recent browser version.<br/>
 For Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
 Current versions of Chrome, FireFox and Opera work fine.
 </canvas>
 </div> <!-- idRaceChartDiv -->
-<p class="noprint"><span id="idRaceLightningName" data-tr="Race Lightning"></span>
-<div id="idRaceLightningDiv">
-	<canvas id="idRaceLightning" width="1000" height="800" class="noprint">
+
+<div id="idRaceLightningDiv" class="noprint">
+<p>
+	<span id="idRaceLightningName" data-tr="Race Lightning"></span>
+</p>
+<canvas id="idRaceLightning" width="1000" height="800">
 <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a> Requires support for the HTML5 Canvas.<br/>
 Please upgrade to a more recent browser version.<br/>
 For Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
 Current versions of Chrome, FireFox and Opera work fine.
 </canvas>
 </div> <!-- idRaceLightningDiv -->
+
 </body>
 
 </html>
