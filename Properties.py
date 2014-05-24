@@ -338,11 +338,36 @@ class NotesProperties( wx.Panel ):
 			_("Notes to appear on Html output:"),
 			_("(notes containing Html tags must start with <html> and end with </html>)")] ) )
 		self.notes = wx.TextCtrl( self, style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB, size=(-1,60) )
+		self.insertButton = wx.Button( self, label=_('Insert Variable...') )
+		self.insertButton.Bind( wx.EVT_BUTTON, self.onInsertClick )
 
-		#-------------------------------------------------------------------------------
-		ms.Add( self.notesLabel, flag=wx.TOP|wx.LEFT, border=16 )
-		ms.Add( self.notes, 1, flag=wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.EXPAND, border=16 )
+		race = Model.race
+		self.menu = wx.Menu()
+		self.idVariable = {}
+		for v in sorted(race.getTemplateValues().keys()):
+			idCur = wx.NewId()
+			v = u'{=' + v + u'}'
+			self.idVariable[idCur] = v
+			self.menu.Append( idCur, v )
+			self.Bind( wx.EVT_MENU, self.onInsertVariable, id=idCur )
 		
+		#-------------------------------------------------------------------------------
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( self.notesLabel )
+		hs.AddStretchSpacer()
+		hs.Add( self.insertButton )
+		ms.Add( hs, flag=wx.TOP|wx.LEFT|wx.RIGHT|wx.EXPAND, border=16 )
+		ms.Add( self.notes, 1, flag=wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.EXPAND, border=16 )
+
+	def onInsertClick( self, event ):
+		self.PopupMenu( self.menu )
+		
+	def onInsertVariable( self, event ):
+		v = self.idVariable[event.GetId()]
+		iCur = self.notes.GetInsertionPoint()
+		self.notes.Replace( iCur, iCur, v )
+		self.notes.SetInsertionPoint( iCur + len(v) )
+	
 	def refresh( self ):
 		race = Model.race
 		self.notes.SetValue( getattr(race, 'notes', '') )
@@ -388,7 +413,7 @@ class FilesProperties( wx.Panel ):
 		race = Model.race
 		excelLink = getattr(race, 'excelLink', None)
 		if excelLink:
-			self.excelName.SetLabel( '%s|%s' % (
+			self.excelName.SetLabel( u'%s|%s' % (
 				os.path.basename(excelLink.fileName) if excelLink.fileName else '',
 				excelLink.sheetName if excelLink.sheetName else '') )
 		else:

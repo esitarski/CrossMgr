@@ -559,7 +559,7 @@ class Results( wx.Panel ):
 						fastestLapTime = t
 						self.fastestLapRC = (r, c)
 		
-		highPrecision = Utils.highPrecisionTimes()
+		highPrecision = Model.highPrecisionTimes()
 		try:
 			firstLapCol = (i for i, name in enumerate(colnames) if name.startswith('Lap')).next()
 		except StopIteration:

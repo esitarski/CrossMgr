@@ -1,4 +1,5 @@
 from __future__ import print_function
+import os
 import re
 import sys
 import math
@@ -802,12 +803,12 @@ class NumTimeInfo(object):
 	MaxReason	= 6
 	
 	ReasonName = {
-		Original:	'Original',
-		Add:		'Add',
-		Edit:		'Edit',
-		Delete:		'Delete',
-		Swap:		'Swap',
-		Split:		'Split',
+		Original:	_('Original'),
+		Add:		_('Add'),
+		Edit:		_('Edit'),
+		Delete:		_('Delete'),
+		Swap:		_('Swap'),
+		Split:		_('Split'),
 	}
 
 	def __init__( self ):
@@ -874,7 +875,7 @@ class NumTimeInfo(object):
 	def getInfoStr( self, num, t ):
 		info = self.getInfo( num, t )
 		if info is None:
-			return ''
+			return u''
 		infoStr = u'{}, {}\n    by: {}\n    on: {}\n'.format(Utils.formatTime(t, True), NumTimeInfo.ReasonName[info[0]], info[1], info[2].ctime())
 		return infoStr
 			
@@ -904,19 +905,19 @@ class Race( object ):
 		self.reset()
 
 	def reset( self ):
-		self.name = '<EventName>'
-		self.organizer = '<Organizer>'
+		self.name = 'MyEventName'
+		self.organizer = 'MyOrganizer'
 		
-		self.city = '<MyCity>'
-		self.stateProv = '<MyStateProv>'
-		self.country = '<MyCountry>'
+		self.city = 'MyCity'
+		self.stateProv = 'MyStateProv'
+		self.country = 'MyCountry'
 		
 		self.raceNum = 1
 		self.date = datetime.date.today().strftime('%Y-%m-%d')
 		self.scheduledStart = '10:00'
 		self.minutes = 60
-		self.commissaire = '<Commissaire>'
-		self.memo = '<RaceMemo>'
+		self.commissaire = 'MyCommissaire'
+		self.memo = 'MyRaceMemo'
 		self.discipline = 'Cyclo-cross'
 
 		self.categories = {}
@@ -952,6 +953,35 @@ class Race( object ):
 		
 		self.tagNums = None
 		memoize.clear()
+	
+	def getTemplateValues( self ):
+		excelLink = getattr(self, 'excelLink', None)
+		if excelLink:
+			excelLinkStr = u'%s|%s' % ( os.path.basename(excelLink.fileName or u''), excelLink.sheetName or u'')
+		else:
+			excelLinkStr = u''
+			
+		return {
+			u'EventName':	self.name,
+			u'RaceNum':		unicode(self.raceNum),
+			u'City':		self.city,
+			u'StateProv':	self.stateProv,
+			u'Country':		self.country,
+			u'Commissaire':	self.commissaire,
+			u'Organizer':	self.organizer,
+			u'Memo':		self.memo,
+			u'Discipline':	self.discipline,
+			u'RaceType':	_('Time Trial') if self.isTimeTrial else _('Mass Start'),
+			u'RaceDate':	self.date,
+			u'InputMethod':	_('RFID') if getattr(self,'enableJChipIntegration',False) else _('Manual'),
+			u'StartTime':	self.startTime.strftime('%H:%M:%S.%f')[:-3] if self.startTime else unicode(self.scheduledStart),
+			u'StartMethod':	_('Automatic: Tiggered by first tag read') if getattr(self,'enableJChipIntegration',False) and getattr(self,'resetStartClockOnFirstTag',False) else _('Manual'),
+			u'CameraStatus': _('USB Camera Enabled') if getattr(self, 'enableUSBCamera', False) else _('USB Camera Not Enabled'),
+			u'PhotoCount':	unicode(self.photoCount),
+			u'ExcelLink':	excelLinkStr,
+			u'GPXFile':		os.path.basename(getattr(self, 'geoTrackFName', '')),
+			
+		}
 	
 	@property
 	def numTimeInfo( self ):
@@ -2183,6 +2213,19 @@ class Race( object ):
 
 		self.setChanged()
 
+def highPrecisionTimes():
+	try:
+		return race.highPrecisionTimes
+	except AttributeError:
+		return False
+
+def setCategoryChoice( iSelection, categoryAttribute = None ):
+	try:
+		setCategoryChoice = race.setCategoryChoice
+	except AttributeError:
+		return
+	setCategoryChoice( iSelection, categoryAttribute )
+
 if __name__ == '__main__':
 	c = Category(True, 'test', '100-150,132,134,192,537,538,539,-199,205,-50-60,-80-90,-110,-111,-112,-113', '00:00')
 	print( c.getMatchSet() )
@@ -2195,9 +2238,11 @@ if __name__ == '__main__':
 	print( c )
 	print( c.intervals )
 	print( sorted(c.exclude) )
-	sys.exit()
 	
 	r = newRace()
+	
+	print( r.getTemplateValues() )
+	sys.exit()
 	
 	print( r.getMaxLap() )
 	

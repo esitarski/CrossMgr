@@ -341,7 +341,7 @@ class History( wx.Panel ):
 		wx.CallAfter( self.Refresh )
 		wx.CallAfter( self.search.SetFocus )
 		
-		highPrecision = Utils.highPrecisionTimes()
+		highPrecision = Model.highPrecisionTimes()
 		if highPrecision:
 			formatTime = lambda t: Utils.formatTime(t, True)
 			formatTimeDiff = lambda a, b: Utils.formatTimeGap(TimeDifference(a, b, True), True)

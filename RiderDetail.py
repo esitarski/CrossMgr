@@ -1017,7 +1017,7 @@ class RiderDetail( wx.Panel ):
 		
 		tagNums = GetTagNums()
 		
-		highPrecisionTimes = Utils.highPrecisionTimes()
+		highPrecisionTimes = Model.highPrecisionTimes()
 		with Model.LockRace() as race:
 			if race is None or num is None:
 				return

@@ -1,19 +1,8 @@
-import Model
-import datetime
-import wx
-import os
-import re
 import sys
-import math
-import string
-import subprocess
-import platform
-import unicodedata
-import webbrowser
-import traceback
-import collections
-import wx.grid		as gridlib
 
+#-----------------------------------------------------------------------
+# Fix named tuple pickle issue.
+#
 def _fix_issue_18015(collections):
 	try:
 		template = collections._class_template
@@ -39,6 +28,9 @@ def _fix_issue_18015(collections):
 if sys.version_info[:3] == (2,7,5):
 	_fix_issue_18015(collections)
 
+#-----------------------------------------------------------------------
+# Attempt to import windows libraries.
+#
 try:
 	from win32com.shell import shell, shellcon
 except ImportError:
@@ -56,6 +48,10 @@ except:
 else:
 	isWindows = True
 
+#-----------------------------------------------------------------------
+# Set translation locale.
+#
+import wx
 locale = wx.Locale()
 
 from Version import AppVerName
@@ -68,6 +64,22 @@ def initTranslation():
 		initTranslationCalled = True
 		
 initTranslation()
+
+#-----------------------------------------------------------------------
+# Now, get all the required modules required for the common functions.
+#
+import datetime
+import os
+import re
+import math
+import string
+import subprocess
+import platform
+import unicodedata
+import webbrowser
+import traceback
+import collections
+import wx.grid		as gridlib
 
 import wx.lib.agw.genericmessagedialog
 if 'WXMAC' in wx.Platform:
@@ -519,19 +531,6 @@ def getFileName():
 	
 def isMainWin():
 	return mainWin is not None
-	
-def highPrecisionTimes():
-	try:
-		return Model.race.highPrecisionTimes
-	except AttributeError:
-		return False
-
-def setCategoryChoice( iSelection, categoryAttribute = None ):
-	try:
-		setCategoryChoice = Model.race.setCategoryChoice
-	except AttributeError:
-		return
-	setCategoryChoice( iSelection, categoryAttribute )
 
 def hasTrailingSeparator( menu ):
 	itemCount = menu.GetMenuItemCount()

@@ -574,7 +574,7 @@ class ExportGrid( object ):
 			self.colnames.extend( [_('Lap {}').format(lap) for lap in xrange(1, lapsMax+1) \
 					if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax] )
 		
-		highPrecision = Utils.highPrecisionTimes()
+		highPrecision = Model.highPrecisionTimes()
 		data = [ [] for i in xrange(len(self.colnames)) ]
 		colsMax = len(self.colnames)
 		rrFields = ['pos', 'num'] + infoFields + (['startTime','finishTime'] if isTimeTrial else []) + ['lastTime', 'gap']

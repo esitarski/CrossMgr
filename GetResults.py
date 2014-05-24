@@ -187,7 +187,7 @@ def GetResultsCore( category ):
 					categoryWinningTime[c] = raceSeconds
 					categoryWinningLaps[c] = None
 		
-		highPrecision = Utils.highPrecisionTimes()
+		highPrecision = Model.highPrecisionTimes()
 		for rider in race.riders.itervalues():
 			riderCategory = race.getCategory( rider.num )
 			if (category and riderCategory != category) or riderCategory not in categoryWinningTime:
@@ -412,7 +412,7 @@ def GetNonWaveCategoryResults( category ):
 		return tuple()
 	
 	isTimeTrial = getattr( race, 'isTimeTrial', False )
-	highPrecision = Utils.highPrecisionTimes()
+	highPrecision = Model.highPrecisionTimes()
 	
 	rrCache = {}
 	riderResults = []
@@ -528,6 +528,26 @@ class UnstartedRaceWrapper( object ):
 		if UnstartedRaceWrapper.count == 1:
 			UnstartedRaceDataEpilog( self.tempNums )
 		UnstartedRaceWrapper.count -= 1
+
+@Model.memoize
+def GetLapDetails():
+	details = {}
+	
+	race = Model.race
+	if not race:
+		return details
+
+	detailStr = [u'', u'']
+	numTimeInfo = race.numTimeInfo
+	lapNote = getattr(race, 'lapNote', {})
+	for rr in GetResults():
+		for lap, t in enumerate(rr.raceTimes):
+			detailStr[0] = lapNote.get((rr.num, lap), u'')
+			detailStr[1] = numTimeInfo.getInfoStr(rr.num, t)
+			if any( detailStr ):
+				details[u'{},{}'.format(rr.num, lap)] = detailStr
+				
+	return details
 
 @Model.memoize
 def GetCategoryDetails( ignoreEmptyCategories = True ):

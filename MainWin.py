@@ -80,6 +80,7 @@ from GetResults			import GetCategoryDetails, UnstartedRaceWrapper
 from PhotoFinish		import ResetPhotoInfoCache, DeletePhotos, HasPhotoFinish
 from PhotoViewer		import PhotoViewerDialog
 from ReadTTStartTimesSheet import ImportTTStartTimes
+from TemplateSubstitute import TemplateSubstitute
 import VideoBuffer
 import ChangeRaceStartTime
 
@@ -1180,7 +1181,7 @@ class MainWin( wx.Frame ):
 			payload['raceNameText']		= race.name
 			payload['raceDate']			= race.date
 			payload['raceIsRunning']	= race.isRunning()
-			notes = getattr(race, 'notes', '')
+			notes = TemplateSubstitute( getattr(race, 'notes', ''), race.getTemplateValues() )
 			if notes.lstrip()[:6].lower().startswith( '<html>' ):
 				notes = self.reRemoveTags.sub( '', notes )
 				notes = notes.replace('<', '{{').replace( '>', '}}' )
