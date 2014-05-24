@@ -341,17 +341,6 @@ class NotesProperties( wx.Panel ):
 		self.insertButton = wx.Button( self, label=_('Insert Variable...') )
 		self.insertButton.Bind( wx.EVT_BUTTON, self.onInsertClick )
 
-		race = Model.race
-		self.menu = wx.Menu()
-		self.idVariable = {}
-		for v in sorted(race.getTemplateValues().keys()):
-			idCur = wx.NewId()
-			v = u'{=' + v + u'}'
-			self.idVariable[idCur] = v
-			self.menu.Append( idCur, v )
-			self.Bind( wx.EVT_MENU, self.onInsertVariable, id=idCur )
-		
-		#-------------------------------------------------------------------------------
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.notesLabel )
 		hs.AddStretchSpacer()
@@ -360,6 +349,20 @@ class NotesProperties( wx.Panel ):
 		ms.Add( self.notes, 1, flag=wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.EXPAND, border=16 )
 
 	def onInsertClick( self, event ):
+		race = Model.race
+		if not race:
+			return
+		
+		if not getattr(self, 'menu', None):
+			self.menu = wx.Menu()
+			self.idVariable = {}
+			for v in sorted(race.getTemplateValues().keys()):
+				idCur = wx.NewId()
+				v = u'{=' + v + u'}'
+				self.idVariable[idCur] = v
+				self.menu.Append( idCur, v )
+				self.Bind( wx.EVT_MENU, self.onInsertVariable, id=idCur )
+		
 		self.PopupMenu( self.menu )
 		
 	def onInsertVariable( self, event ):
