@@ -917,7 +917,7 @@ class Race( object ):
 		self.scheduledStart = '10:00'
 		self.minutes = 60
 		self.commissaire = 'MyCommissaire'
-		self.memo = 'MyRaceMemo'
+		self.memo = u''
 		self.discipline = 'Cyclo-cross'
 
 		self.categories = {}

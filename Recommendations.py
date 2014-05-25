@@ -147,7 +147,7 @@ class Recommendations( wx.Panel ):
 				Utils.getMainWin().setNumSelect( numSelect )
 	
 	def doChooseCategory( self, event ):
-		Utils.setCategoryChoice( self.categoryChoice.GetSelection(), 'recommendationsCategory' )
+		Model.setCategoryChoice( self.categoryChoice.GetSelection(), 'recommendationsCategory' )
 		self.refresh()
 	
 	def reset( self ):

@@ -12,6 +12,8 @@ import Model
 from Excel import GetExcelReader
 from ReadCategoriesFromExcel import ReadCategoriesFromExcel
 from ReadPropertiesFromExcel import ReadPropertiesFromExcel
+from ReadCategoriesFromExcel import sheetName as CategorySheetName
+from ReadPropertiesFromExcel import sheetName as PropertySheetName
 
 #-----------------------------------------------------------------------------------------------------
 Fields = [	_('Bib#'),
@@ -84,7 +86,74 @@ class SheetNamePage(wiz.WizardPageSimple):
 	
 	def getSheetName( self ):
 		return self.choices[self.ch.GetCurrentSelection()]
+
+def getDefaultFieldMap( fileName, sheetName, expectedFieldCol = None ):
+	reader = GetExcelReader( fileName )
+	headers, fieldCol = [], {}
 	
+	# Try to find the header columns.
+	# Look for the first row with more than 4 columns.
+	for r, row in enumerate(reader.iter_list(sheetName)):
+		cols = sum( 1 for d in row if d and unicode(d).strip() )
+		if cols > 4:
+			headers = [unicode(h or '').strip() for h in row]
+			break
+
+	# If we haven't found a header row yet, assume the first non-empty row is the header.
+	if not headers:
+		for r, row in enumerate(reader.iter_list(sheetName)):
+			cols = sum( 1 for d in row if d and unicode(d).strip() )
+			if cols > 0:
+				headers = [unicode(h or '').strip() for h in row]
+				break
+	
+	# Ignore empty columns on the end.
+	while headers and (not headers[-1] or headers[-1].isspace()):
+		headers.pop()
+		
+	if not headers:
+		raise ValueError, _('Could not find a Header Row {}::{}.').format(fileName, sheetName)
+	
+	# Rename empty columns so as not to confuse the user.
+	headers = [h if h else _('BlankHeaderName%03d') % (c+1) for c, h in enumerate(headers)]
+	
+	# Set a blank final entry.
+	headers.append( u'' )
+		
+	# Create a map for the field names we are looking for
+	# and the headers we found in the Excel sheet.
+	sStateField = _('State')
+	sProvField = _('Prov')
+	sStateProvField = _('StateProv')
+	
+	iNoMatch = len(headers) - 1
+	for c, f in enumerate(Fields):
+		# Figure out some reasonable defaults for headers.
+		iBest = iNoMatch
+		matchBest = 0.0
+		for i, h in enumerate(headers):
+			matchCur = Utils.approximateMatch(f, h)
+			if matchCur > matchBest:
+				matchBest = matchCur
+				iBest = i
+		# If we don't get a high enough match, set to blank.
+		if matchBest <= 0.34:
+			try:
+				iBest = min( expectedFieldCol[h], iNoMatch )
+			except (TypeError, KeyError):
+				iBest = iNoMatch
+		
+		# If we already have a match for State of Prov, don't match on StateProv.
+		if f == sStateProvField and (
+				fieldCol[sStateField] != iNoMatch or
+				fieldCol[sProvField] != iNoMatch
+			):
+			iBest = iNoMatch
+		
+		fieldCol[f] = iBest
+		
+	return headers, fieldCol
+
 class HeaderNamesPage(wiz.WizardPageSimple):
 	def __init__(self, parent):
 		wiz.WizardPageSimple.__init__(self, parent)
@@ -138,75 +207,12 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		self.expectedFieldCol = copy.copy(fieldCol)
 	
 	def setFileNameSheetName( self, fileName, sheetName ):
-		reader = GetExcelReader( fileName )
-		self.headers = None
-		
-		# Try to find the header columns.
-		# Look for the first row with more than 4 columns.
-		for r, row in enumerate(reader.iter_list(sheetName)):
-			cols = sum( 1 for d in row if d and unicode(d).strip() )
-			if cols > 4:
-				self.headers = [unicode(h or '').strip() for h in row]
-				break
-
-		# If we haven't found a header row yet, assume the first non-empty row is the header.
-		if not self.headers:
-			for r, row in enumerate(reader.iter_list(sheetName)):
-				cols = sum( 1 for d in row if d and unicode(d).strip() )
-				if cols > 0:
-					self.headers = [unicode(h or '').strip() for h in row]
-					break
-		
-		# Ignore empty columns on the end.
-		while self.headers and (not self.headers[-1] or self.headers[-1].isspace()):
-			self.headers.pop()
-			
-		if not self.headers:
-			raise ValueError, _('Could not find a Header Row {}::{}.').format(fileName, sheetName)
-		
-		# Rename empty columns so as not to confuse the user.
-		self.headers = [h if h else _('BlankHeaderName%03d') % (c+1) for c, h in enumerate(self.headers)]
-		
-		# Set a blank final entry.
-		self.headers.append( '' )
-			
-		# Create a map for the field names we are looking for
-		# and the self.headers we found in the Excel sheet.
-		for c, f in enumerate(Fields):
-			if   f == _('State'):
-				iStateField = c
-			elif f == _('Prov'):
-				iProvField = c
-			elif f == _('StateProv'):
-				iStateProvField = c
-		
+		self.headers, fieldCol = getDefaultFieldMap( fileName, sheetName, self.expectedFieldCol )
 		iNoMatch = len(self.headers) - 1
 		for c, f in enumerate(Fields):
-			# Figure out some reasonable defaults for self.headers.
-			iBest = iNoMatch
-			matchBest = 0.0
-			for i, h in enumerate(self.headers):
-				matchCur = Utils.approximateMatch(f, h)
-				if matchCur > matchBest:
-					matchBest = matchCur
-					iBest = i
-			# If we don't get a high enough match, set to blank.
-			if matchBest <= 0.34:
-				try:
-					iBest = min( self.expectedFieldCol[h], iNoMatch )
-				except (TypeError, KeyError):
-					iBest = iNoMatch
-			
-			# If we already have a match for State of Prov, don't match on StateProv.
-			if c == iStateProvField and (
-					self.choices[iStateField].GetSelection() != iNoMatch or
-					self.choices[iProvField].GetSelection() != iNoMatch
-				):
-				iBest = iNoMatch
-			
 			self.choices[c].Clear()
 			self.choices[c].AppendItems( self.headers )
-			self.choices[c].SetSelection( iBest )
+			self.choices[c].SetSelection( fieldCol[f] )
 			self.choices[c].Bind( wx.EVT_CHOICE, self.doUpdateSummary )
 
 		self.gs.Layout()
@@ -537,6 +543,11 @@ class ExcelLink( object ):
 	def setFieldCol( self, fieldCol ):
 		self.fieldCol = fieldCol
 		
+	def bindDefaultFieldCols( self ):
+		headers, fieldCol = getDefaultFieldMap( self.fileName, self.sheetName )
+		iNoMatch = len(headers) - 1
+		self.fieldCol = { f: fieldCol[f] if fieldCol != iNoMatch else -1 for f in fieldCol }
+
 	def hasField( self, field ):
 		return self.fieldCol.get( field, -1 ) >= 0
 		
@@ -710,6 +721,16 @@ class ExcelLink( object ):
 		self.hasPropertiesSheet = ReadPropertiesFromExcel( reader )
 		
 		return infoCache
+
+def IsValidRaceDBExcel( fileName ):
+	try:
+		reader = GetExcelReader( fileName )
+	except:
+		return False
+	for sheetName in ['Registration', PropertySheetName, CategorySheetName]:
+		if sheetName not in reader.sheet_names():
+			return False
+	return True
 
 def HasExcelLink( race ):
 	try:

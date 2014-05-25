@@ -52,7 +52,7 @@ class Gantt( wx.Panel ):
 		bs.SetSizeHints(self)
 
 	def doChooseCategory( self, event ):
-		Utils.setCategoryChoice( self.categoryChoice.GetSelection(), 'ganttCategory' )
+		Model.setCategoryChoice( self.categoryChoice.GetSelection(), 'ganttCategory' )
 		self.refresh()
 	
 	def reset( self ):

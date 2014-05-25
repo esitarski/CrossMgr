@@ -309,12 +309,12 @@ class History( wx.Panel ):
 				Utils.getMainWin().setNumSelect( numSelect )
 	
 	def doChooseCategory( self, event ):
-		Utils.setCategoryChoice( self.categoryChoice.GetSelection(), 'historyCategory' )
+		Model.setCategoryChoice( self.categoryChoice.GetSelection(), 'historyCategory' )
 		self.refresh()
 	
 	def setCategoryAll( self ):
 		FixCategories( self.categoryChoice, 0 )
-		Utils.setCategoryChoice( 0, 'historyCategory' )
+		Model.setCategoryChoice( 0, 'historyCategory' )
 	
 	def reset( self ):
 		self.numSelect = None

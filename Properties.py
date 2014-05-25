@@ -353,7 +353,7 @@ class NotesProperties( wx.Panel ):
 		if not race:
 			return
 		
-		if not getattr(self, 'menu', None):
+		if not hasattr(self, 'menu'):
 			self.menu = wx.Menu()
 			self.idVariable = {}
 			for v in sorted(race.getTemplateValues().keys()):
@@ -364,6 +364,7 @@ class NotesProperties( wx.Panel ):
 				self.Bind( wx.EVT_MENU, self.onInsertVariable, id=idCur )
 		
 		self.PopupMenu( self.menu )
+		wx.CallAfter( self.notes.SetFocus )
 		
 	def onInsertVariable( self, event ):
 		v = self.idVariable[event.GetId()]

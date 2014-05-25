@@ -427,16 +427,16 @@ class Results( wx.Panel ):
 			if historyCat is not None:
 				cat = FixCategories( self.categoryChoice )
 				if historyCat != cat:
-					Utils.setCategoryChoice( self.categoryChoice.GetSelection(), 'resultsCategory' )
+					Model.setCategoryChoice( self.categoryChoice.GetSelection(), 'resultsCategory' )
 					SetCategory( historyCategoryChoice, cat )
 			mainWin.setNumSelect( numSelect )
 				
 	def setCategoryAll( self ):
 		FixCategories( self.categoryChoice, 0 )
-		Utils.setCategoryChoice( 0, 'resultsCategory' )
+		Model.setCategoryChoice( 0, 'resultsCategory' )
 	
 	def doChooseCategory( self, event ):
-		Utils.setCategoryChoice( self.categoryChoice.GetSelection(), 'resultsCategory' )
+		Model.setCategoryChoice( self.categoryChoice.GetSelection(), 'resultsCategory' )
 		self.refresh()
 	
 	def reset( self ):

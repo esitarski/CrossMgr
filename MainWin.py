@@ -74,7 +74,7 @@ from Printing			import ChoosePrintCategoriesDialog, ChoosePrintCategoriesPodiumD
 from ExportGrid			import ExportGrid
 import SimulationLapTimes
 import Version
-from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, ExcelLink, ReportFields
+from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, ExcelLink, ReportFields, SyncExcelLink, IsValidRaceDBExcel
 from SetGraphic			import SetGraphicDialog
 from GetResults			import GetCategoryDetails, UnstartedRaceWrapper
 from PhotoFinish		import ResetPhotoInfoCache, DeletePhotos, HasPhotoFinish
@@ -234,6 +234,12 @@ class MainWin( wx.Frame ):
 		idCur = wx.NewId()
 		self.fileMenu.Append( idCur , _("New Nex&t..."), _("Create a new race starting from the current race") )
 		self.Bind(wx.EVT_MENU, self.menuNewNext, id=idCur )
+
+		self.fileMenu.AppendSeparator()
+		
+		idCur = wx.NewId()
+		self.fileMenu.Append( idCur , _("New from &RaceDB..."), _("Create a new race from RaceDB output") )
+		self.Bind(wx.EVT_MENU, self.menuNewRaceDB, id=idCur )
 
 		self.fileMenu.AppendSeparator()
 		self.fileMenu.Append( wx.ID_OPEN , _("&Open..."), _("Open a race") )
@@ -1910,6 +1916,116 @@ class MainWin( wx.Frame ):
 			race.showOval = False
 		if excelLink:
 			race.excelLink = excelLink
+		
+		self.setActiveCategories()
+		self.setNumSelect( None )
+		self.writeRace()
+		self.showPageName( _('Actions') )
+		self.refreshAll()
+
+	@logCall
+	def menuNewRaceDB( self, event ):
+		race = Model.race
+		self.closeFindDialog()
+		self.showPageName( _('Actions') )
+		
+		ftpPublish = FtpWriteFile.FtpPublishDialog( self )
+		
+		geoTrack, geoTrackFName = None, None
+		if race:
+			race.resetAllCaches()
+			ResetExcelLinkCache()
+			self.writeRace()
+			geoTrack, geoTrackFName = getattr(race, 'geoTrack', None), getattr(race, 'geoTrackFName', None)
+		
+		# Get the RaceDB Excel sheet.
+		dlg = wx.FileDialog( self, message=_("Choose a RaceDB Excel file"),
+					defaultFile = '',
+					wildcard = _('RaceDB Excel files (*.xlsx)|*.xlsx'),
+					style=wx.OPEN | wx.CHANGE_DIR )
+		fname = dlg.GetPath() if dlg.ShowModal() == wx.ID_OK else None
+		dlg.Destroy()
+		if not fname:
+			return
+			
+		if not IsValidRaceDBExcel(fname):
+			Utils.MessageOK( self, _("Excel file not in RaceDB format"), _("Excel Read Failure"), iconMask=wx.ICON_ERROR )
+			return
+		
+		# Create a new race, but keep the old one in case we fail somewhere.
+		raceSave = Model.race
+		Model.newRace()
+		race = Model.race
+		
+		# Create the link to the RaceDB excel sheet.
+		try:
+			excelLink = ExcelLink()
+			excelLink.setFileName( fname )
+			excelLink.setSheetName( 'Registration' )
+			excelLink.bindDefaultFieldCols()
+			print excelLink.fieldCol
+		except Exception as e:
+			logException( e, sys.exc_info() )
+			Utils.MessageOK( self, _("Excel Read Failure: {}").format(e), _("Excel Read Failure"), iconMask=wx.ICON_ERROR )
+			Model.race = raceSave
+			return
+		
+		race.excelLink = excelLink
+		Model.resetCache()
+		ResetExcelLinkCache()
+		SyncExcelLink( race )
+		print( 'name:', race.name )
+		
+		# Show the Properties screen for the user to review.
+		dlg = PropertiesDialog(self, title=_('Configure Race'), style=wx.DEFAULT_DIALOG_STYLE )
+		dlg.properties.refresh()
+		dlg.properties.setEditable( True )
+		dlg.folder.SetValue(os.path.dirname(fname))
+		dlg.properties.updateFileName()
+		ret = dlg.ShowModal()
+		fileName = dlg.GetPath()
+		categoriesFile = dlg.GetCategoriesFile()
+		properties = dlg.properties
+
+		# Check if user cancelled.
+		if ret != wx.ID_OK:
+			Model.race = raceSave
+			return
+
+		# Check for existing file.
+		if os.path.exists(fileName) and \
+		   not Utils.MessageOKCancel(self, _('File "{}" already exists.  Overwrite?').format(fileName), _('File Exists')):
+			Model.race = raceSave
+			return
+
+		# Try to open the file.
+		try:
+			with open(fileName, 'wb') as fp:
+				pass
+		except IOError:
+			Utils.MessageOK(self, _('Cannot open "{}".').format(fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
+			Model.race = raceSave
+			return
+
+		# Set the new race with the updated properties.
+		self.fileName = fileName
+		Model.resetCache()
+		ResetExcelLinkCache()
+		ResetPhotoInfoCache( self.fileName )
+		
+		properties.commit()			# Apply the new properties
+		ftpPublish.setRaceAttr()	# Apply the ftp properties
+		ftpPublish.Destroy()
+		
+		self.updateRecentFiles()
+
+		if geoTrack:
+			race.geoTrack, race.geoTrackFName = geoTrack, geoTrackFName
+			distance = geoTrack.lengthKm if race.distanceUnit == race.UnitKm else geoTrack.lengthMiles
+			if distance > 0.0:
+				for c in race.categories.itervalues():
+					c.distance = distance
+			race.showOval = False
 		
 		self.setActiveCategories()
 		self.setNumSelect( None )

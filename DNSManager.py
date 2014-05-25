@@ -106,7 +106,7 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 		wx.CallAfter( self.list.SetFocus )
 		
 	def doChooseCategory( self, event ):
-		Utils.setCategoryChoice( self.categoryChoice.GetSelection(), 'DNSManagerCategory' )
+		Model.setCategoryChoice( self.categoryChoice.GetSelection(), 'DNSManagerCategory' )
 		self.refresh()
 
 	def clearGrid( self ):
