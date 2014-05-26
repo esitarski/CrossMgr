@@ -76,7 +76,7 @@ import SimulationLapTimes
 import Version
 from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, ExcelLink, ReportFields, SyncExcelLink, IsValidRaceDBExcel
 from SetGraphic			import SetGraphicDialog
-from GetResults			import GetCategoryDetails, UnstartedRaceWrapper
+from GetResults			import GetCategoryDetails, UnstartedRaceWrapper, GetLapDetails
 from PhotoFinish		import ResetPhotoInfoCache, DeletePhotos, HasPhotoFinish
 from PhotoViewer		import PhotoViewerDialog
 from ReadTTStartTimesSheet import ImportTTStartTimes
@@ -1187,6 +1187,7 @@ class MainWin( wx.Frame ):
 			payload['raceNameText']		= race.name
 			payload['raceDate']			= race.date
 			payload['raceIsRunning']	= race.isRunning()
+			payload['lapDetails']		= GetLapDetails()
 			notes = TemplateSubstitute( getattr(race, 'notes', ''), race.getTemplateValues() )
 			if notes.lstrip()[:6].lower().startswith( '<html>' ):
 				notes = self.reRemoveTags.sub( '', notes )

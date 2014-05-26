@@ -537,15 +537,14 @@ def GetLapDetails():
 	if not race:
 		return details
 
-	detailStr = [u'', u'']
 	numTimeInfo = race.numTimeInfo
 	lapNote = getattr(race, 'lapNote', {})
-	for rr in GetResults():
+	for rr in GetResults( None ):
 		for lap, t in enumerate(rr.raceTimes):
-			detailStr[0] = lapNote.get((rr.num, lap), u'')
-			detailStr[1] = numTimeInfo.getInfoStr(rr.num, t)
-			if any( detailStr ):
-				details[u'{},{}'.format(rr.num, lap)] = detailStr
+			i1 = lapNote.get((rr.num, lap), u'')
+			i2 = numTimeInfo.getInfoStr(rr.num, t)
+			if i2 or i2:
+				details[u'{},{}'.format(rr.num, lap)] = [i1, i2]
 				
 	return details
 

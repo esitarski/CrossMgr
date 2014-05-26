@@ -154,6 +154,8 @@ var raceIsRunning = null;
 var data = null;
 var catDetails = null;
 var catDetailsByName = {};
+var lapDetails = null;
+var showDetails = false;	// If true, show full lap details in the Chart.
 var version = null;
 var raceNotes = null;
 
@@ -2847,12 +2849,25 @@ function RaceChartUpdateInfo()
 			var hover = seg[4];
 			var num = seg[5];
 			var name = getRiderNameNum( num );
+			var lap = seg[6];
 			hover = name + ': ' + _('Lap') + ' ' + hover;
+			var hoverLines = 1;
+			if( showDetails ){
+				detail = lapDetails[num + ',' + lap];
+				if( detail ) {
+					for( var dd = 0; dd < detail.length; ++dd ) {
+						if( detail[dd] ) {
+							hover += '\n' + detail[dd];
+							++hoverLines;
+						}
+					}
+				}
+			}
 
 			var fontHeight = 14;
-			var height = fontHeight * 1.5;
+			var height = fontHeight * hoverLines + fontHeight / 2.0;
 				
-			var margin = (height - fontHeight) / 2 - 1;
+			var margin = fontHeight / 4.0 - 1;
 				
 			var c = canvasRaceChart.getContext('2d');
 			c.font = fontHeight + 'px Arial';
@@ -3177,7 +3192,7 @@ function RefreshRaceChart()
 				var riderData = data[num];
 				var hover = j + ', ' + FormatTime(raceTimes[j] - raceTimes[j-1]);
 				drawSegment( dc, xLast, yLast, xCur - xLast + 1, yCur - yLast + 1, colors[j], lighterColors[j] );
-				segmentsCur.push( [xLast, yLast, xCur - xLast + 1, yCur - yLast + 1, hover, num] );
+				segmentsCur.push( [xLast, yLast, xCur - xLast + 1, yCur - yLast + 1, hover, num, j] );
 			}
 			xLast = xCur;
 		}
