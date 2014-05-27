@@ -402,7 +402,7 @@ class MainWin( wx.Frame ):
 		wx.BeginBusyCursor()
 		self.gracefulShutdown()
 		self.shutdown()
-		impinjHost, crossMgrHost = AutoDetect( ImpinjInboundPort )
+		impinjHost, crossMgrHost = AutoDetect(ImpinjInboundPort)[0], '127.0.0.1'
 		wx.EndBusyCursor()
 		
 		if impinjHost and crossMgrHost:

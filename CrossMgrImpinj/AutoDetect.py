@@ -1,10 +1,33 @@
+import re
 import socket
-import Utils
+import subprocess
 from pyllrp.pyllrp import *
 
+def GetDefaultHost():
+	DEFAULT_HOST = socket.gethostbyname(socket.gethostname())
+	if DEFAULT_HOST == '127.0.0.1':
+		reSplit = re.compile('[: \t]+')
+		try:
+			co = subprocess.Popen(['ifconfig'], stdout = subprocess.PIPE)
+			ifconfig = co.stdout.read()
+			for line in ifconfig.split('\n'):
+				line = line.strip()
+				try:
+					if line.startswith('inet addr:'):
+						fields = reSplit.split( line )
+						addr = fields[2]
+						if addr != '127.0.0.1':
+							DEFAULT_HOST = addr
+							break
+				except:
+					pass
+		except:
+			pass
+	return DEFAULT_HOST
+	
 def findImpinjHost( impinjPort ):
 	''' Search ip addresses adjacent to the computer in an attempt to find the reader. '''
-	ip = [int(i) for i in Utils.GetDefaultHost().split('.')]
+	ip = [int(i) for i in GetDefaultHost().split('.')]
 	j = 0
 	for i in xrange(14):
 		j = -j if j > 0 else -j + 1
@@ -42,7 +65,7 @@ def findImpinjHost( impinjPort ):
 	return None
 
 def AutoDetect( impinjPort ):
-	return findImpinjHost( impinjPort ), Utils.GetDefaultHost()
+	return findImpinjHost( impinjPort ), GetDefaultHost()
 		
 if __name__ == '__main__':
 	print AutoDetect(5084)
