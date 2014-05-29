@@ -231,7 +231,8 @@ class Impinj( object ):
 					continue
 				
 				if not isinstance(response, RO_ACCESS_REPORT_Message):
-					self.messageQ.put( ('Impinj', 'Skipping: %s' % response.__class__.__name__) )
+					if not isinstance(response, READER_EVENT_NOTIFICATION_Message):
+						self.messageQ.put( ('Impinj', 'Skipping: %s' % response.__class__.__name__) )
 					continue
 				
 				# Open the log file.
