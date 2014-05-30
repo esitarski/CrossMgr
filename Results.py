@@ -600,7 +600,9 @@ class Results( wx.Panel ):
 				if colnames[sortCol] in [_('Start'), _('Finish'), _('Time')]:
 					getFunc = Utils.StrToSeconds
 				elif colnames[sortCol] in [_('mph'), _('km')]:
-					getFunc = lambda x: -float(x)
+					getFunc = lambda x: -float(x) if x else 0.0
+				elif colnames[sortCol] == _('Factor'):
+					getFunc = lambda x: float(x) if x else maxVal
 				elif colnames[sortCol] in [_('Pos'), _('Bib')]:
 					getFunc = lambda x: int(x) if x and x.isdigit() else maxVal
 				else:

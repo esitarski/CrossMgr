@@ -349,6 +349,8 @@ var translations = {
 	'Elevation':	['Elevation',		'total',					'total'],
 	'Gain':			['Gain',			"d'altitude",				'de la elevación'],
 	'time penalty':	['time penalty',	"pénalité de temps",		"penalización de tiempo"],
+	'Factor':		['Factor%',			'Factor%',					'Factor%'],
+	'ElapsedTime':	['ElapsedTime',		'ElapsedTime',				'ElapsedTime'],
 	'last':			['','','']
 };
 (function() {
@@ -2239,10 +2241,14 @@ function SetCategoryResults()
 		var hasLapSpeeds = false;
 		var showingAllLaps = true;
 		var starters = 0, finishers = 0, finishersPercent = 0.0;
+		var hasFactor = false;
 		for( var p = 0; p < catDetail.pos.length; ++p )
 		{
 			var num = catDetails[c].pos[p];
 			var d = data[num];
+			if( d['factor'] )
+				hasFactor = true;
+			
 			if( !speedUnit && d['speed'] )
 			{
 				speedUnit = d['speed'].split(' ')[1];
@@ -2358,9 +2364,14 @@ function SetCategoryResults()
 				++numHeaders;
 			}
 		}
-				
+		
+		if( hasFactor ) {
+			createTextChild( td = createChild(tr, 'TH'), _('ElapsedTime') );	++numHeaders;
+			createTextChild( td = createChild(tr, 'TH'), _('Factor') );	++numHeaders;
+		}
 		createTextChild( td = createChild(tr, 'TH'), _('Time') );	++numHeaders;
-		createTextChild( td = createChild(tr, 'TH'), _('Gap') );	++numHeaders;
+		if( !hasFactor )
+			createTextChild( td = createChild(tr, 'TH'), _('Gap') );	++numHeaders;
 		if( speedUnit )
 		{
 			createTextChild( td = createChild(tr, 'TH'), displayUnits == 'km' ? 'km/h' : 'mph' );
@@ -2448,7 +2459,7 @@ function SetCategoryResults()
 					td = createChild(tr, 'TD');
 					td.innerHTML = v;
 					if( numsToWatch[num] ) td.className = 'highlight';
-					if( field != 'Age' )
+					if( field != 'Age' && field != 'Factor' )
 						td.id = 'idNonNumeric'; 
 				}
 			}
@@ -2496,6 +2507,18 @@ function SetCategoryResults()
 						'<br/><span class="smallfont">' + catStr + '</span>';
 			}
 			
+			if( hasFactor ) {
+				var tFinishOrig = (isFinisher ? Math.max(d['lastTimeOrig'] - startOffset, 0.0) : 0.0);
+				var finishTime = (isFinisher ? FormatTime(tFinishOrig) : '');
+				createTextChild( td = createChild(tr, 'TD'), finishTime );
+				if( numsToWatch[num] ) td.className = 'highlight';
+				
+				var factor = d['factor'];
+				if( !factor )
+					factor = 100.0;
+				createTextChild( td = createChild(tr, 'TD'), factor.toFixed(3) );
+				if( numsToWatch[num] ) td.className = 'highlight';
+			}
 			var finishTime = (isFinisher ? FormatTime(tFinish) : '');
 			createTextChild( td = createChild(tr, 'TD'), finishTime );
 			if( numsToWatch[num] ) td.className = 'highlight';
@@ -2523,9 +2546,11 @@ function SetCategoryResults()
 					gap = '-' + lapsDown + ' ' + (lapsDown == 1 ? _('lap') : _('laps'));
 				}
 			}
-				
-			createTextChild( td = createChild(tr, 'TD'), gap );
-			if( numsToWatch[num] ) td.className = 'highlight';
+			
+			if( !hasFactor ) {
+				createTextChild( td = createChild(tr, 'TD'), gap );
+				if( numsToWatch[num] ) td.className = 'highlight';
+			}
 			
 			if( speedUnit )
 			{

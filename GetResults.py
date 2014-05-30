@@ -386,14 +386,16 @@ def GetResults( category, getExternalData = False ):
 	# Add the linked external data.
 	with Model.LockRace() as race:
 		try:
-			externalFields = race.excelLink.getFields()
-			externalInfo = race.excelLink.read()
+			excelLink = race.excelLink
+			externalFields = excelLink.getFields()
+			externalInfo = excelLink.read()
 			for ignoreField in IgnoreFields:
 				try:
 					externalFields.remove( ignoreField )
 				except ValueError:
 					pass
 		except:
+			excelLink = None
 			externalFields = []
 			externalInfo = []
 				
@@ -403,6 +405,44 @@ def GetResults( category, getExternalData = False ):
 					setattr( rr, f, externalInfo[rr.num][f] )
 				except KeyError:
 					setattr( rr, f, '' )
+	
+	if excelLink and excelLink.hasField( _('Factor') ):
+		riderResults = [copy.copy(rr) for rr in riderResults]
+		for rr in riderResults:
+			try:
+				factor = float(externalInfo[rr.num][_('Factor')])
+			except Exception as e:
+				factor = 1.0
+		
+			if factor > 1.0:
+				factor /= 100.0
+			elif factor <= 0.0:
+				factor = 1.0
+			rr.factor = factor * 100.0
+			
+			try:
+				rr.lastTimeOrig = rr.lastTime
+			except:
+				rr.lastTimeOrig = 0.0
+			
+			try:
+				startOffset = rr.raceTimes[0]
+			except:
+				startOffset = 0.0
+			
+			rr.lastTime = startOffset + max(0.0, rr.lastTimeOrig - startOffset) * factor
+			
+		riderResults.sort( key=RiderResult._getKey )
+		
+		# Assign finish position.
+		statusNames = Model.Rider.statusNames
+		for pos, rr in enumerate(riderResults):
+			if rr.status == Model.Rider.Finisher:
+				rr.pos = u'{}'.format( pos + 1 ) if not getattr(rr, 'relegated', False) else u'{} REL'.format( pos + 1 )
+			else:
+				rr.pos = statusNames[rr.status]
+		
+		riderResults = tuple( riderResults )
 	
 	return riderResults
 

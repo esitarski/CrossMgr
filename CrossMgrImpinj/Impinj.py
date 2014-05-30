@@ -168,6 +168,7 @@ class Impinj( object ):
 			self.messageQ.put( ('Impinj', 'state', False) )
 			self.messageQ.put( ('Impinj', '') )
 			self.messageQ.put( ('Impinj', 'Trying to Connect to Reader: (%s:%d)...' % (self.impinjHost, self.impinjPort) ) )
+			self.messageQ.put( ('Impinj', 'ConnectionTimeout={:.2f} seconds'.format(ConnectionTimeoutSeconds) ) )
 			
 			try:
 				self.readerSocket.connect( (self.impinjHost, self.impinjPort) )

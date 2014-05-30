@@ -526,7 +526,8 @@ class ExportGrid( object ):
 			self.footer = _(u'# Starters: {},  # DNF: {},  # Lapped: {}').format(starters, dnf, lapped)
 			
 		leader = results[0]
-		hasSpeeds = bool( getattr(leader, 'lapSpeeds', None) or getattr(leader, 'raceSpeeds', None) )
+		hasSpeeds = (hasattr(leader, 'lapSpeeds') or hasattr(leader, 'raceSpeeds'))
+		hasFactor = hasattr(leader, 'factor')
 		
 		if showLapTimes and showLapsFrequency is None:
 			# Compute a reasonable number of laps to show (max around 10).
@@ -564,9 +565,16 @@ class ExportGrid( object ):
 		infoFieldsPresent = set( infoFields ) & set( dir(leader) )
 		infoFields = [f for f in infoFields if f in infoFieldsPresent]
 		
-		self.colnames = [_('Pos'), _('Bib')] + infoFields + ([_('Start'),_('Finish')] if isTimeTrial else []) + [_('Time'), _('Gap')]
+		self.colnames = ([_('Pos'), _('Bib')] +
+						infoFields +
+						([_('Start'),_('Finish')] if isTimeTrial else []) +
+						([_('ElapsedTime'), _('Factor %')] if hasFactor else []) +
+						[_('Time')] +
+						([_('Gap')] if not hasFactor else [])
+		)
 		if hasSpeeds:
 			self.colnames += [_('Speed')]
+			
 		self.colnames = [name[:-4] + _(' Name') if name.endswith(_('Name')) else name for name in self.colnames]
 		self.iLapTimes = len(self.colnames)
 		lapsMax = len(leader.lapTimes) if leader.lapTimes else 0
@@ -577,23 +585,35 @@ class ExportGrid( object ):
 		highPrecision = Model.highPrecisionTimes()
 		data = [ [] for i in xrange(len(self.colnames)) ]
 		colsMax = len(self.colnames)
-		rrFields = ['pos', 'num'] + infoFields + (['startTime','finishTime'] if isTimeTrial else []) + ['lastTime', 'gap']
+		rrFields = (['pos', 'num'] +
+					infoFields +
+					(['startTime','finishTime'] if isTimeTrial else []) +
+					(['lastTimeOrig', 'factor'] if hasFactor else []) +
+					['lastTime'] +
+					(['gap'] if not hasFactor else [])
+		)
 		if hasSpeeds:
 			rrFields += ['speed']
 		for col, f in enumerate( rrFields ):
 			for row, r in enumerate(results):
-				if f == 'lastTime':
-					lastTime = getattr( r, f, 0.0 )
-					if lastTime <= 0.0:
+				if f in ['lastTime', 'lastTimeOrig']:
+					ttt = getattr( r, f, 0.0 )
+					if ttt <= 0.0:
 						data[col].append( '' )
 					else:
 						if not isTimeTrial:
-							lastTime = max( 0.0, lastTime - startOffset )
-						data[col].append( Utils.formatTimeCompressed(lastTime, highPrecision) )
+							ttt = max( 0.0, ttt - startOffset )
+						data[col].append( Utils.formatTimeCompressed(ttt, highPrecision) )
 				elif f in ['startTime', 'finishTime']:
 					sfTime = getattr( r, f, None )
 					if sfTime is not None:
 						data[col].append( Utils.formatTimeCompressed(sfTime, highPrecision) )
+					else:
+						data[col].append( '' )
+				elif f == 'factor':
+					factor = getattr( r, f, None )
+					if factor is not None:
+						data[col].append( '{:.3f}'.format(factor) )
 					else:
 						data[col].append( '' )
 				else:
