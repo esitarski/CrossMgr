@@ -429,8 +429,14 @@ def GetResults( category, getExternalData = False ):
 				startOffset = rr.raceTimes[0]
 			except:
 				startOffset = 0.0
+				
+			try:
+				ttPenalty = rr.ttPenalty
+			except:
+				ttPenalty = 0.0
 			
-			rr.lastTime = startOffset + max(0.0, rr.lastTimeOrig - startOffset) * factor
+			# Adjust the true ride time by the factor (subtract the start offset and any penalties, add them back later).
+			rr.lastTime = startOffset + ttPenalty + max(0.0, rr.lastTimeOrig - startOffset - ttPenalty) * factor
 			
 		riderResults.sort( key=RiderResult._getKey )
 		

@@ -2413,6 +2413,7 @@ function SetCategoryResults()
 			var riderLaps	= resultsData[r][0];
 			var riderTime	= resultsData[r][1];
 			var num			= resultsData[r][2];
+			var d = data[num];
 			var raceTimes	= resultsData[r][3];
 			var isFinisher	= (resultsData[r][4] == 'Finisher');
 			var tFinish = (isFinisher ? Math.max(riderTime - startOffset, 0.0) : 0.0);
@@ -2426,8 +2427,6 @@ function SetCategoryResults()
 			createTextChild( td = createChild(tr, 'TD'), num );
 			if( numsToWatch[num] ) td.className = 'highlight';
 			td.id = 'idNonNumeric';
-			
-			var d = data[num];
 			
 			// Compute the fastest and slowest lap for this rider.
 			var iFastestLap = -1, iSlowestLap = -1;
@@ -2509,8 +2508,8 @@ function SetCategoryResults()
 			
 			if( hasFactor ) {
 				var tFinishOrig = (isFinisher ? Math.max(d['lastTimeOrig'] - startOffset, 0.0) : 0.0);
-				var finishTime = (isFinisher ? FormatTime(tFinishOrig) : '');
-				createTextChild( td = createChild(tr, 'TD'), finishTime );
+				var finishTimeOrig = (isFinisher ? FormatTime(tFinishOrig) : '');
+				createTextChild( td = createChild(tr, 'TD'), finishTimeOrig );
 				if( numsToWatch[num] ) td.className = 'highlight';
 				
 				var factor = d['factor'];
@@ -2519,7 +2518,7 @@ function SetCategoryResults()
 				createTextChild( td = createChild(tr, 'TD'), factor.toFixed(3) );
 				if( numsToWatch[num] ) td.className = 'highlight';
 			}
-			var finishTime = (isFinisher ? FormatTime(tFinish) : '');
+			var finishTime = (isFinisher ? FormatTime(d['lastTime']) : '');
 			createTextChild( td = createChild(tr, 'TD'), finishTime );
 			if( numsToWatch[num] ) td.className = 'highlight';
 			
