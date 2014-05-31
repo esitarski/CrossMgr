@@ -412,6 +412,7 @@ def GetResults( category, getExternalData = False ):
 			try:
 				factor = float(externalInfo[rr.num][_('Factor')])
 			except Exception as e:
+				print e
 				factor = 1.0
 		
 			if factor > 1.0:
