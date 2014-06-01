@@ -977,9 +977,9 @@ class Race( object ):
 			u'StartTime':	self.startTime.strftime('%H:%M:%S.%f')[:-3] if self.startTime else unicode(self.scheduledStart),
 			u'StartMethod':	_('Automatic: Tiggered by first tag read') if getattr(self,'enableJChipIntegration',False) and getattr(self,'resetStartClockOnFirstTag',False) else _('Manual'),
 			u'CameraStatus': _('USB Camera Enabled') if getattr(self, 'enableUSBCamera', False) else _('USB Camera Not Enabled'),
-			u'PhotoCount':	unicode(self.photoCount),
+			u'PhotoCount':	unicode(getattr(self, 'photoCount', 0)),
 			u'ExcelLink':	excelLinkStr,
-			u'GPXFile':		os.path.basename(getattr(self, 'geoTrackFName', '')),
+			u'GPXFile':		os.path.basename(getattr(self, 'geoTrackFName', None) or ''),
 			
 		}
 	
