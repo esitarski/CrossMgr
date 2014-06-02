@@ -2181,27 +2181,27 @@ function SetCategoryResults()
 
 	// Show results for this category.
 	var raceTimesLength = {};
-	if( raceIsRunning )
-	{
-		for( var num in data )
-		{
+	var raceTimesCopy = {};
+	if( raceIsRunning ) {
+		for( var num in data ) {
 			var raceTimes = data[num]['raceTimes'];
 			raceTimesLength[num] = raceTimes.binSearch( t );
+			raceTimesCopy[num] = raceTimes.slice(0);
 		}
 	}
-	else
-	{
-		for( var num in data )
-			raceTimesLength[num] = data[num]['raceTimes'].length;
+	else {
+		for( var num in data ) {
+			var raceTimes = data[num]['raceTimes'];
+			raceTimesLength[num] = raceTimes.length;
+			raceTimesCopy[num] = raceTimes.slice(0);
+		}
 	}
 	
-	if( showLapsFrequency < 0 )
-	{
+	if( showLapsFrequency < 0 ) {
 		// Compute a reasonable number of laps to show.
 		// Get the maximum laps in the data.
 		var maxLaps = 0;
-		for( var num in data )
-		{
+		for( var num in data ) {
 			if( maxLaps < raceTimesLength[num] )
 				maxLaps = raceTimesLength[num];
 		}
@@ -2209,11 +2209,9 @@ function SetCategoryResults()
 		var showLaps = document.getElementById('idShowLaps');
 		
 		// Choose a frequency that results in a reasonable number of laps displayed.
-		for( var i = 0; i < showLaps.options.length; ++i )
-		{
+		for( var i = 0; i < showLaps.options.length; ++i ) {
 			var freqCur = parseInt(showLaps.options[i].value, 10);
-			if( freqCur != 0 && (~~(maxLaps / freqCur) <= 12 || i == showLaps.options.length - 1) )
-			{
+			if( freqCur != 0 && (~~(maxLaps / freqCur) <= 12 || i == showLaps.options.length - 1) ) {
 				showLaps.selectedIndex = i;
 				showLapsFrequency = freqCur;
 				break;
@@ -2223,8 +2221,7 @@ function SetCategoryResults()
 	
 	var speedUnit = '';
 	var distanceUnit = '';
-	for( var c = 0; c < catDetails.length; ++c )
-	{
+	for( var c = 0; c < catDetails.length; ++c ) {
 		var catDetail = catDetails[c];
 		var catName = catDetail.name;
 		if( catName == 'All' )
@@ -2237,14 +2234,14 @@ function SetCategoryResults()
 		table.className = 'results';
 		
 		var curFields = {};
-		var resultsData = [];
 		var hasLapSpeeds = false;
 		var allFactorsEqual = true;
 		var firstFactor = null;
 		var showingAllLaps = true;
 		var starters = 0, finishers = 0, finishersPercent = 0.0;
-		for( var p = 0; p < catDetail.pos.length; ++p )
-		{
+		
+		// Compute information about the results.
+		for( var p = 0; p < catDetail.pos.length; ++p ) {
 			var num = catDetails[c].pos[p];
 			var d = data[num];
 			
@@ -2262,12 +2259,21 @@ function SetCategoryResults()
 			if( !hasLapSpeeds && d['lapSpeeds'] )
 				hasLapSpeeds = true;
 				
-			var raceTimes = d['raceTimes'].slice(0);
+			var raceTimes = raceTimesCopy[num];
 			if( raceTimesLength[num] != raceTimes.length )
 				showingAllLaps = false;
+		}
+		var hasFactor = !allFactorsEqual;
+		var lastTimeField = hasFactor ? 'lastTime' : 'lastTimeOrig';
+		
+		// Process the result data.
+		for( var p = 0; p < catDetail.pos.length; ++p ) {
+			var num = catDetails[c].pos[p];
+			var d = data[num];
 			
 			// Remove the race start time if this is not a Wave category.
-			var lastTime = d['lastTime'];
+			var lastTime = d[lastTimeField];
+			var raceTimes = raceTimesCopy[num];
 			if( catDetail.catType != 'Start Wave' && raceTimes.length > 0 )
 			{
 				for( var j = 1; j < raceTimes.length; ++j )
@@ -2275,10 +2281,6 @@ function SetCategoryResults()
 				lastTime -= raceTimes[0];
 				raceTimes[0] = 0;
 			}
-			
-			resultsData.push( [	raceTimesLength[num],
-								raceTimesLength[num] ? raceTimes[raceTimesLength[num]-1] : 99999,
-								num, raceTimes, d['status'], lastTime] );
 			
 			// Get the union of all the defined fields.
 			for( var f = 0; f < infoFields.length; ++f )
@@ -2290,13 +2292,11 @@ function SetCategoryResults()
 			if( d['status'] == 'Finisher' )
 				finishers += 1;
 		}
-		var hasFactor = !allFactorsEqual;
 		if( starters > 0 )
 			finishersPercent = (100.0 * finishers) / starters;
 		
 		var hasFirstLastName = (curFields['FirstName'] && curFields['LastName']);
-		if( hasFirstLastName )
-		{
+		if( hasFirstLastName ) {
 			curFields['FirstName'] = false;
 			curFields['LastName'] = false;
 			curFields['Name'] = true;
@@ -2306,15 +2306,13 @@ function SetCategoryResults()
 		var tLapMin = 100000 * 60.0 * 60.0;
 		var sLapMax = 0.0;
 		var lapMinCoords = null;
-		for( var r = 0; r < resultsData.length; ++r )
-		{
-			var num = resultsData[r][2];
+		for( var p = 0; p < catDetail.pos.length; ++p ) {
+			var num = catDetails[c].pos[p];
 			var info = data[num];
 			if( info.lapSpeeds )
 			{
 				var lapSpeeds = info.lapSpeeds;
-				for( var i = 0; i < lapSpeeds.length; ++i )
-				{
+				for( var i = 0; i < lapSpeeds.length; ++i ) {
 					var s = lapSpeeds[i];
 					if( s > sLapMax )
 					{
@@ -2325,12 +2323,10 @@ function SetCategoryResults()
 			}
 			else
 			{
-				var raceTimes = resultsData[r][3];
-				for( var i = 1; i < raceTimesLength[num]; ++i )
-				{
+				var raceTimes = raceTimesCopy[num];
+				for( var i = 1; i < raceTimesLength[num]; ++i ) {
 					var tMax = Math.max(raceTimes[i] - raceTimes[i-1], 0.0);
-					if( tMax < tLapMin )
-					{
+					if( tMax < tLapMin ) {
 						tLapMin = tMax;
 						lapMinCoords = [r, i];
 					}
@@ -2339,8 +2335,8 @@ function SetCategoryResults()
 		}
 
 		// Label this category.
-		var leaderNum = resultsData[0][2];
-		var leaderraceTimes = resultsData[0][3];
+		var leaderNum = catDetails[c].pos[0];
+		var leaderraceTimes = raceTimesCopy[leaderNum];
 		
 		var catStr = catName;
 		var thead = createChild( table, 'THEAD' );
@@ -2361,10 +2357,8 @@ function SetCategoryResults()
 		createTextChild( td = createChild(tr, 'TH'), _('Bib') );	++numHeaders;
 		td.id = 'idNonNumeric';
 		
-		for( var f = 0; f < infoFields.length; ++f )
-		{
-			if( curFields[infoFields[f]] )
-			{
+		for( var f = 0; f < infoFields.length; ++f ) {
+			if( curFields[infoFields[f]] ) {
 				createTextChild( td = createChild(tr, 'TH'), _(infoFields[f]) );
 				td.id = 'idNonNumeric';
 				++numHeaders;
@@ -2378,31 +2372,25 @@ function SetCategoryResults()
 		createTextChild( td = createChild(tr, 'TH'), _('Time') );	++numHeaders;
 		if( !hasFactor )
 			createTextChild( td = createChild(tr, 'TH'), _('Gap') );	++numHeaders;
-		if( speedUnit )
-		{
+		if( speedUnit ) {
 			createTextChild( td = createChild(tr, 'TH'), displayUnits == 'km' ? 'km/h' : 'mph' );
 			++numHeaders;
 		}
 
 		// Cache the leader's data.
-		var leaderLaps	= resultsData[0][0];
-		var leaderTime	= resultsData[0][1];
-		leaderNum		= resultsData[0][2];
-		var startOffset	= (resultsData[0][3].length > 0 ? resultsData[0][3][0] : 0);
+		var leaderLaps	= raceTimesLength[leaderNum];
+		var leaderTime	= raceTimesLength[leaderNum] ? raceTimesCopy[leaderNum][raceTimesLength[leaderNum]-1] : 99999;
+		var startOffset	= (raceTimesCopy[leaderNum].length > 0 ? raceTimesCopy[leaderNum][0] : 0);
 		
-		if( leaderLaps > 2 && showLapsFrequency != 0 )
-		{
-			for( var i = 1; i < leaderLaps; ++i )
-			{
-				if( (i % showLapsFrequency == 0 || i == 1 || i == leaderLaps-1)  )
-				{
+		if( leaderLaps > 2 && showLapsFrequency != 0 ) {
+			for( var i = 1; i < leaderLaps; ++i ) {
+				if( (i % showLapsFrequency == 0 || i == 1 || i == leaderLaps-1)  ) {
 					createTextChild( td = createChild(tr, 'TH'), _('Lap') + ' ' + i );
 					++numHeaders;
 				}
 			}
 		}
-		if( !showingAllLaps )
-		{
+		if( !showingAllLaps ) {
 			createTextChild( td = createChild(tr, 'TH'), '...' );
 			++numHeaders;
 		}
@@ -2411,22 +2399,22 @@ function SetCategoryResults()
 		// Add the rider data.
 		tbody = createChild( table, 'TBODY' );
 		var position = 1;
-		for( var r = 0; r < resultsData.length; ++r, ++position )
-		{
+		for( var p = 0; p < catDetail.pos.length; ++p, ++position ) {
+			var num = catDetails[c].pos[p];
+			var d = data[num];
+			
 			tr = createChild(tbody, 'TR');
 			tr.className = ((r & 1) ? 'odd' : 'even');
 			
-			var riderLaps	= resultsData[r][0];
-			var riderTime	= resultsData[r][1];
-			var num			= resultsData[r][2];
-			var d = data[num];
-			var raceTimes	= resultsData[r][3];
-			var isFinisher	= (resultsData[r][4] == 'Finisher');
+			var riderLaps	= raceTimesLength[num];
+			var riderTime	= raceTimesLength[num] ? raceTimesCopy[num][raceTimesLength[num]-1] : 99999;
+			var raceTimes	= raceTimesCopy[num];
+			var isFinisher	= (d['status'] == 'Finisher');
 			var tFinish = (isFinisher ? Math.max(riderTime - startOffset, 0.0) : 0.0);
 			
 			tr.onclick = function(n) { return function() {ToggleNumberHighlight(n);}; }(num);
 			
-			var p = (isFinisher ? '' + position + (data[num]['relegated'] ? ' REL' : ''): resultsData[r][4] );
+			var p = (isFinisher ? '' + position + (data[num]['relegated'] ? ' REL' : ''): d['status'] );
 			createTextChild( td = createChild(tr, 'TD'), p );
 			if( numsToWatch[num] ) td.className = 'highlight';
 			
@@ -2446,14 +2434,11 @@ function SetCategoryResults()
 				}
 			}
 			
-			for( var f = 0; f < infoFields.length; ++f )
-			{
+			for( var f = 0; f < infoFields.length; ++f ) {
 				var field = infoFields[f];
-				if( curFields[field] )
-				{
+				if( curFields[field] ) {
 					var v;
-					if( field == 'Name' )
-					{
+					if( field == 'Name' ) {
 						if( d['LastName'] && d['FirstName'] )
 							v = d['LastName'] + ',&nbsp;' + d['FirstName'];
 						else
@@ -2470,8 +2455,7 @@ function SetCategoryResults()
 			}
 			
 			// Fix the Category information based on the results of the first rider.
-			if( position == 1 && isFinisher && distanceUnit && d['speed'] )
-			{
+			if( position == 1 && isFinisher && distanceUnit && d['speed'] ) {
 				var tFinishStr = FormatTime( tFinish );
 				var dot = tFinishStr.indexOf('.');
 				if( dot > 0 )
@@ -2481,12 +2465,10 @@ function SetCategoryResults()
 				var cd = catDetail;
 				if( cd.raceDistance )
 					catStr += _('Distance') + ': ' + FormatDistance(cd.raceDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true);
-				if( cd.lapDistance && cd.laps > 1 )
-				{
+				if( cd.lapDistance && cd.laps > 1 ) {
 					if( catStr )
 						catStr += ', ';
-					if( cd.firstLapDistance && cd.firstLapDistance != cd.lapDistance )
-					{
+					if( cd.firstLapDistance && cd.firstLapDistance != cd.lapDistance ) {
 						catStr += (
 							_('1st lap') + ' ' + FormatDistance(cd.firstLapDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true) + ', ' +
 							(cd.laps-1) + ' ' + _('more laps of') + ' ' + FormatDistance(cd.lapDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true));
@@ -2494,8 +2476,7 @@ function SetCategoryResults()
 					else
 						catStr += cd.laps + ' ' + _('laps of') + ' ' + FormatDistance(cd.lapDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true);
 				}
-				if( raceStartTime )
-				{
+				if( raceStartTime ) {
 					if( catStr )
 						catStr += ', ';
 					catStr += _('Start') + ': ' + FormatTime(raceStartTime + cd.startOffset);
@@ -2521,32 +2502,28 @@ function SetCategoryResults()
 				var factor = d['factor'];
 				if( !factor )
 					factor = 100.0;
-				createTextChild( td = createChild(tr, 'TD'), factor.toFixed(3) );
+				createTextChild( td = createChild(tr, 'TD'), factor.toFixed(2) );
 				if( numsToWatch[num] ) td.className = 'highlight';
 			}
-			var finishTime = (isFinisher ? FormatTime(d['lastTime']) : '');
+			var finishTime = (isFinisher ? FormatTime(d[lastTimeField]) : '');
 			createTextChild( td = createChild(tr, 'TD'), finishTime );
 			if( numsToWatch[num] ) td.className = 'highlight';
 			
 			var gap = '';
-			if( isFinisher )
-			{
-				if( leaderLaps == riderLaps )
-				{
-					if( riderTime != leaderTime )
-					{
+			if( isFinisher ) {
+				if( leaderLaps == riderLaps ) {
+					if( riderTime != leaderTime ) {
 						var delta = TimeDifference(riderTime, leaderTime);
-						if( r != 0 && lapDataOption == 3 )
-						{
+						if( r != 0 && lapDataOption == 3 ) {
 							delta = (100.0 * delta) / (leaderTime - startOffset);
 							gap = '+' + delta.toFixed(2) + '%';
 						}
-						else
+						else {
 							gap = FormatTimeGap( delta );
+						}
 					}
 				}
-				else if( riderTime > leaderTime )
-				{
+				else if( riderTime > leaderTime ) {
 					var lapsDown = leaderLaps - riderLaps;
 					gap = '-' + lapsDown + ' ' + (lapsDown == 1 ? _('lap') : _('laps'));
 				}
@@ -2557,8 +2534,7 @@ function SetCategoryResults()
 				if( numsToWatch[num] ) td.className = 'highlight';
 			}
 			
-			if( speedUnit )
-			{
+			if( speedUnit ) {
 				var speed = d['speed'];
 				if( speed )
 					createTextChild( td = createChild(tr, 'TD'), FormatSpeed(parseFloat(speed.split(' ')[0]), distanceUnit, false) );
@@ -2567,14 +2543,11 @@ function SetCategoryResults()
 				if( numsToWatch[num] ) td.className = 'highlight';
 			}
 			
-			if( leaderLaps > 2 && showLapsFrequency != 0 )
-			{
-				for( var i = 1; i < leaderLaps; ++i )
-				{
+			if( leaderLaps > 2 && showLapsFrequency != 0 ) {
+				for( var i = 1; i < leaderLaps; ++i ) {
 					if( !(i % showLapsFrequency == 0 || i == 1 || i == raceTimesLength[num]-1)  )
 						continue
-					if( i >= riderLaps )
-					{
+					if( i >= riderLaps ) {
 						createTextChild( td = createChild(tr, 'TD'), ' ' );
 						continue;
 					}
@@ -2590,9 +2563,8 @@ function SetCategoryResults()
 					case 2:	// Gap Times.
 						if( r == 0 )
 							createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(raceTimes[i] - raceTimes[i-1], 0.0)) );
-						else
-						{
-							var v = TimeDifference(raceTimes[i], resultsData[0][3][i]);
+						else {
+							var v = TimeDifference(raceTimes[i], raceTimesCopy[leaderNum][i]);
 							createTextChild( td = createChild(tr, 'TD'), FormatTimeGap(v) );
 						}
 						break;
@@ -2601,7 +2573,7 @@ function SetCategoryResults()
 							createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(raceTimes[i] - raceTimes[i-1], 0.0)) );
 						else
 						{
-							var v = (100.0 * (raceTimes[i] - resultsData[0][3][i])) / resultsData[0][3][i];
+							var v = (100.0 * (raceTimes[i] - raceTimesCopy[leaderNum][i])) / raceTimesCopy[leaderNum][i];
 							var sign = '+';
 							if( v < 0 )
 							{
@@ -2617,9 +2589,8 @@ function SetCategoryResults()
 					case 5: // Est. Distance Gap
 						if( r == 0 )
 							createTextChild( td = createChild(tr, 'TD'), '-' );
-						else
-						{
-							var dt = raceTimes[i] - resultsData[0][3][i];
+						else {
+							var dt = raceTimes[i] - raceTimesCopy[leaderNum][i];
 							var s = d.lapSpeeds && d.lapSpeeds.length >= i ? d.lapSpeeds[i-1] : 0.0;
 							var v = '';
 							if( s > 0.0 )

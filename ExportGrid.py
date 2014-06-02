@@ -588,8 +588,7 @@ class ExportGrid( object ):
 		rrFields = (['pos', 'num'] +
 					infoFields +
 					(['startTime','finishTime'] if isTimeTrial else []) +
-					(['lastTimeOrig', 'factor'] if hasFactor else []) +
-					['lastTime'] +
+					(['lastTimeOrig', 'factor', 'lastTime'] if hasFactor else ['lastTimeOrig']) +
 					(['gap'] if not hasFactor else [])
 		)
 		if hasSpeeds:
