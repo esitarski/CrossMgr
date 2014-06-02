@@ -2239,16 +2239,21 @@ function SetCategoryResults()
 		var curFields = {};
 		var resultsData = [];
 		var hasLapSpeeds = false;
+		var allFactorsEqual = true;
+		var firstFactor = null;
 		var showingAllLaps = true;
 		var starters = 0, finishers = 0, finishersPercent = 0.0;
-		var hasFactor = false;
 		for( var p = 0; p < catDetail.pos.length; ++p )
 		{
 			var num = catDetails[c].pos[p];
 			var d = data[num];
-			if( d['factor'] )
-				hasFactor = true;
 			
+			if( d['factor'] ) {
+				if( firstFactor == null )
+					firstFactor = d['factor'];
+				if( firstFactor != d['factor'] )
+					allFactorsEqual = false;
+			}
 			if( !speedUnit && d['speed'] )
 			{
 				speedUnit = d['speed'].split(' ')[1];
@@ -2285,6 +2290,7 @@ function SetCategoryResults()
 			if( d['status'] == 'Finisher' )
 				finishers += 1;
 		}
+		var hasFactor = !allFactorsEqual;
 		if( starters > 0 )
 			finishersPercent = (100.0 * finishers) / starters;
 		

@@ -527,7 +527,7 @@ class ExportGrid( object ):
 			
 		leader = results[0]
 		hasSpeeds = (hasattr(leader, 'lapSpeeds') or hasattr(leader, 'raceSpeeds'))
-		hasFactor = hasattr(leader, 'factor')
+		hasFactor = (hasattr(leader, 'factor') and any( leader.factor != rr.factor for rr in results ))
 		
 		if showLapTimes and showLapsFrequency is None:
 			# Compute a reasonable number of laps to show (max around 10).
