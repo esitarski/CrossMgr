@@ -421,30 +421,28 @@ def GetResults( category, getExternalData = False ):
 				factor = 1.0
 			rr.factor = factor * 100.0
 			
-		if not all(riderResults[0].factor == rr.factor for rr in riderResults):
-			for rr in riderResults:
-				try:
-					startOffset = rr.raceTimes[0]
-				except:
-					startOffset = 0.0
-					
-				try:
-					ttPenalty = rr.ttPenalty
-				except:
-					ttPenalty = 0.0
+			try:
+				startOffset = rr.raceTimes[0]
+			except:
+				startOffset = 0.0
 				
-				# Adjust the true ride time by the factor (subtract the start offset and any penalties, add them back later).
-				rr.lastTime = startOffset + ttPenalty + max(0.0, rr.lastTimeOrig - startOffset - ttPenalty) * factor
-				
-			riderResults.sort( key=RiderResult._getKey )
-		
-			# Assign finish position.
-			statusNames = Model.Rider.statusNames
-			for pos, rr in enumerate(riderResults):
-				if rr.status == Model.Rider.Finisher:
-					rr.pos = u'{}'.format( pos + 1 ) if not getattr(rr, 'relegated', False) else u'{} REL'.format( pos + 1 )
-				else:
-					rr.pos = statusNames[rr.status]
+			try:
+				ttPenalty = rr.ttPenalty
+			except:
+				ttPenalty = 0.0
+			
+			# Adjust the true ride time by the factor (subtract the start offset and any penalties, add them back later).
+			rr.lastTime = startOffset + ttPenalty + max(0.0, rr.lastTimeOrig - startOffset - ttPenalty) * factor
+			
+		riderResults.sort( key=RiderResult._getKey )
+	
+		# Assign finish position.
+		statusNames = Model.Rider.statusNames
+		for pos, rr in enumerate(riderResults):
+			if rr.status == Model.Rider.Finisher:
+				rr.pos = u'{}'.format( pos + 1 ) if not getattr(rr, 'relegated', False) else u'{} REL'.format( pos + 1 )
+			else:
+				rr.pos = statusNames[rr.status]
 		
 		riderResults = tuple( riderResults )
 	

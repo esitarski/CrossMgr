@@ -612,7 +612,7 @@ class ExportGrid( object ):
 				elif f == 'factor':
 					factor = getattr( r, f, None )
 					if factor is not None:
-						data[col].append( '{:.3f}'.format(factor) )
+						data[col].append( '{:.2f}'.format(factor) )
 					else:
 						data[col].append( '' )
 				else:
