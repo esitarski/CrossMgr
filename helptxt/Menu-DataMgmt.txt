@@ -35,6 +35,7 @@ Age|Optional.  Rider's age.
 License|Optional.  Rider' license.  This can be the UCI code, a national code, or a regional code.  CrossMgr uses this for display only.
 Tag|Optional for manual input, required for chip input.  Rider's chip tag.
 Tag2|Optional.  Rider's additioal chip tag for a second bike.
+Factor|Optional.  Athlete's Performance Factor, as a Percent.  Used for Para Cycling to rank athletes with different abilities competing in the same combined event.  The athlete's race time is multiplied by the Factor, yielding an adjusted time.  The athlete's are then ranked by the adjusted times.  The Performance Factor will depend on the athlete's classification, as well as the classifications of the other athlete's in the combined race.  When using Performance Factors, you almost always want to set the "Lapped Riders Continue" option (see [Categories][]).  This is because, after applying the Performance Factors, lapped athletes may still be in contention for winning the combined category.
 
 To save space, CrossMgr may combine the first and last names into one field as "LASTNAME, Firstname".  In the scoreboard, it uses a further shorthand of "LASTNAME, F" where "F" is the first letter of the first name.
 

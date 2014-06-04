@@ -31,9 +31,9 @@ Lap Time for 80% Rule|Selects which lap you want to use to calculate the 80% tim
 Distance Unit|The units distances to show in Results.
 
 ## Notes
-Notes|Text that will appear in the HTML output.  Text entered here will be shown as-is in the HTML web page, including line breaks.  Describe weather conditions, or give credit to the CrossMgr operator and number caller.
+Text that will appear in the HTML output.  Text entered here will be shown as-is in the HTML web page, including line breaks.  Describe weather conditions, or give credit to the CrossMgr operator and number caller.
 
-You can also embed Html tags, however, your input must then start with `<html>` and end with `</html>`.  With Html tags, you can specify a hyperlink to a URL with `<a href="http://XXX">HyperLink</a>`, use a list with `<ol></ol>`, etc.  When using Html, you control your own line breaks: insert `<br/>` where you want a newline.
+You can also embed Html tags in notes.  To do so, your input must then start with `<html>` and end with `</html>`.  With Html tags, you can specify a hyperlink to a URL with `<a href="http://XXX">HyperLink</a>`, use a list with `<ol></ol>`, etc.  When using Html, you control your own line breaks: insert `<br/>` where you want a newline.
 
 For example:
 
@@ -44,6 +44,48 @@ For example:
     CrossMgr Operator: <strong> <a href="mailto:operator.email@gmail.com">Email: Awesome Operator</a> </strong> <br/>
     </p>
     </html>
+
+Notes can also contain variables that are automatically substituted from race values.  Variables have the form "{=VariableName}" (no spaces around the "{", "=" or "}").  For example:
+
+    <html>
+    <h2>{=EventName}</h2>
+    <h2>{=City}, {=StateProv}, {=Country}</h2>
+    <p>
+    Organizer: <strong> <a href="mailto:organizer.email@gmail.com">Email: {=Organizer}</a> </strong> <br/>
+    Commissaire: <strong> {=Commissaire} </strong> <br/>
+    Start Time: <strong> {=StartTime} </strong> <br/>
+    Start Method: <strong> {=StartMethod} </strong> <br/>
+    </p>
+    </html>
+
+The "{=VariableName}" values will be substituted with the actual race values.
+
+Variables can be conveniently inserted from the "Insert Variable..." button.
+
+Of course, variables can be used without the `<html>` option.
+
+Variables are case sensitive, so be careful.  The supported variables are:
+
+Variable|Value
+:-------|:----
+{=EventName}|Name of the event as specified in General Options
+{=RaceNum}|Race number as specified in General Options
+{=City}|City as specified in General Options
+{=StateProv}|StateProv as specified in General Options
+{=Country}|Country as specified in General Options
+{=Commissaire}|Commissaire as specified in General Options
+{=Organizer}|Organizer as specified in General Options
+{=Memo}|Memo as specified in General Options
+{=Discipline}|Discipline as specified in General Options
+{=RaceType}|"Time Trial" if the the Time Trial flag is set, otherwise "Mass Start"
+{=RaceDate}|Date of the race as specified in General Options
+{=InputMethod}|Data input method.  Either "RFID" or "Manual".
+{=StartTime}|Actual start time of the race if the races is started, else the "Scheduled Start Time" from General Options.
+{=StartMethod}|Either "Automatic: Triggered by first tag read" or "Manual"
+{=CameraStatus}|Either "USB Camera Enabled" or "USB Camera Not Enabled"
+{=PhotoCount}|Number of photos taken during the race.  Will be zero if the usb camera is not enabled.
+{=ExcelLink}|The file and sheet name of the Excel sheet linked to this race.
+{=GPXFile}}|The file name of the course in GPX format.
 
 ## RFID Options
 Property|Description

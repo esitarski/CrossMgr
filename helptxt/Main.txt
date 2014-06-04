@@ -28,4 +28,6 @@ Get started with CrossMgr now!
 * [Categories][]
 * [Properties][]
 
+## [Para-Cycling][]
+
 

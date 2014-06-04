@@ -12,7 +12,7 @@ def RescaleImage( image, width, height ):
 	wImage = image.GetWidth()
 	hImage = image.GetHeight()
 	ratio = min( float(width) / float(wImage), float(height) / float(hImage) )
-	return image.Rescale( int(wImage*ratio), int(hImage*ratio), wx.IMAGE_QUALITY_NORMAL )
+	return image.Rescale( int(wImage*ratio), int(hImage*ratio), wx.IMAGE_QUALITY_NORMAL ) if not (0.94 < ratio < 1.06) else image
 	
 class ScaledImage( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=(640,400) ):
@@ -41,10 +41,10 @@ class ScaledImage( wx.Panel ):
 		self.Refresh()
 
 class CameraTestDialog( wx.Dialog ):
-	def __init__( self, parent, id=wx.ID_ANY, title=_("Camera Test"), size=(640, 530) ):
+	def __init__( self, parent, id=wx.ID_ANY, title=_("Camera Test"), size=(690, 590) ):
 		super(CameraTestDialog, self).__init__(
 			parent, id, title=title, size=size,
-			style=wx.THICK_FRAME|wx.RESIZE_BORDER|wx.CAPTION|wx.CLOSE_BOX
+			style=wx.CAPTION
 		)
 		
 		SetCameraState( False )
@@ -64,6 +64,8 @@ class CameraTestDialog( wx.Dialog ):
 		sizer.Add( hs, 0, flag=wx.EXPAND|wx.ALL, border=4 )
 		
 		self.SetSizer( sizer )
+		
+		self.resolutionFormat = _("Camera Resolution") + u': {} x {}'
 		
 		self.tStart = now()
 		self.keepgoing = False
@@ -95,7 +97,7 @@ class CameraTestDialog( wx.Dialog ):
 				
 			try:
 				photo = AddPhotoHeader( 9999, (tNow - self.tStart).total_seconds(), cameraImage )
-				self.status.SetLabel( u"({}, {})".format(photo.GetWidth(), photo.GetHeight()) )
+				self.status.SetLabel( self.resolutionFormat.format(photo.GetWidth(), photo.GetHeight()) )
 				self.photo.SetImage( photo )
 			except:
 				pass
