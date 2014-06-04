@@ -79,6 +79,7 @@ from SetGraphic			import SetGraphicDialog
 from GetResults			import GetCategoryDetails, UnstartedRaceWrapper, GetLapDetails
 from PhotoFinish		import ResetPhotoInfoCache, DeletePhotos, HasPhotoFinish
 from PhotoViewer		import PhotoViewerDialog
+from CameraTest			import CameraTestDialog
 from ReadTTStartTimesSheet import ImportTTStartTimes
 from TemplateSubstitute import TemplateSubstitute
 import VideoBuffer
@@ -546,6 +547,15 @@ class MainWin( wx.Frame ):
 		self.menuBar.Append( self.chipMenu, _("Chip&Reader") )
 
 		#-----------------------------------------------------------------------
+		self.cameraMenu = wx.Menu()
+
+		idCur = wx.NewId()
+		self.cameraMenu.Append( idCur , _("&Test USB Camera..."), _("Test the USB Camera") )
+		self.Bind(wx.EVT_MENU, self.menuCameraTest, id=idCur )
+		
+		self.menuBar.Append( self.cameraMenu, _("C&amera") )
+		
+		#-----------------------------------------------------------------------
 		self.demoMenu = wx.Menu()
 
 		idCur = wx.NewId()
@@ -867,7 +877,26 @@ class MainWin( wx.Frame ):
 			wx.TheClipboard.Close()
 			Utils.MessageOK(self, _("Log file copied to clipboard.\nYou can now paste it into an email."), _("Success") )
 		else:
-			Utils.MessageOK(self, "Unable to open the clipboard.", "Error", wx.ICON_ERROR )
+			Utils.MessageOK(self, _("Unable to open the clipboard."), _("Error"), wx.ICON_ERROR )
+	
+	def menuCameraTest( self, event ):
+		race = Model.race
+		if not race:
+			Utils.MessageOK(self, _("Load/New a Race and try again."), _("Error"), wx.ICON_ERROR )
+			return
+		if race.isRunning():
+			Utils.MessageOK(self, _("Cannot test camera while race is running."), _("Error"), wx.ICON_ERROR )
+			return
+		if not getattr(race, 'enableUSBCamera', False):
+			Utils.MessageOK(self, _("USB Camera is not enabled.  Enable the camera in Properties and try again."), _("Error"), wx.ICON_ERROR )
+			return
+			
+		if not Utils.MessageOKCancel(self, _("Is the External USB Camera connected to the computer?"), _("Is Camera Connected") ):
+			return
+		
+		ctd = CameraTestDialog( self )
+		ctd.ShowModal()
+		ctd.Destroy()
 	
 	def menuReloadChecklist( self, event ):
 		try:

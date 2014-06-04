@@ -9,8 +9,6 @@ import Model
 import Utils
 import JChip
 from JChip import EVT_CHIP_READER
-import PhotoSyncViewer
-import VideoBuffer
 
 HOST, PORT = JChip.DEFAULT_HOST, JChip.DEFAULT_PORT
  
@@ -181,7 +179,7 @@ class JChipSetupDialog( wx.Dialog ):
 		return
 	
 	def handleChipReaderEvent( self, event ):
-		if not PhotoSyncViewer.PhotoSyncViewerIsShown() or not event.tagTimes:
+		if not event.tagTimes:
 			return
 			
 		tagNums = {}
@@ -193,7 +191,6 @@ class JChipSetupDialog( wx.Dialog ):
 		
 		tag, dt = event.tagTimes[-1]
 		num = tagNums.get(tag, None)
-		PhotoSyncViewer.photoSyncViewer.refresh( VideoBuffer.videoBuffer, (dt - self.refTime).total_seconds(), num )
 
 	def testJChipToggle( self, event ):
 		if not Model.race:
@@ -234,12 +231,7 @@ class JChipSetupDialog( wx.Dialog ):
 			
 			# Start a timer to monitor the receiver.
 			self.receivedCount = 0
-			self.timer = wx.CallLater( 1000, self.onTimerCallback, 'started' )
-			
-			if Model.race and Model.race.enableVideoBuffer:
-				self.refTime = datetime.datetime.now()
-				PhotoSyncViewer.StartPhotoSyncViewer( Utils.mainWin or self )
-				VideoBuffer.StartVideoBuffer( self.refTime, Utils.getFileName() or 'test.crm' )
+			self.timer = wx.CallLater( 1000, self.onTimerCallback, 'started' )			
 		else:
 			# Stop the listener.
 			JChip.StopListener()
@@ -254,8 +246,6 @@ class JChipSetupDialog( wx.Dialog ):
 			self.testList.Clear()
 			
 			# Shutdown the photo sync viewer and the video buffer if they were started.
-			VideoBuffer.Shutdown()
-			PhotoSyncViewer.Shutdown()
 			JChip.readerEventWindow = None
 	
 	def appendMsg( self, s ):

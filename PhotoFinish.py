@@ -103,9 +103,8 @@ def updateLatency( latency ):
 def getAverageLatency():
 	return sumLatencies / float(len(latencies))
 
-def SavePhoto( fileName, bib, raceSeconds, cameraImage ):
-	global font, brandingBitmap, photoCache
-	Utils.cameraError = None
+def AddPhotoHeader( bib, raceSeconds, cameraImage ):
+	global font, brandingBitmap
 	
 	bitmap = wx.BitmapFromImage( PilImageToWxImage(cameraImage) )
 	
@@ -128,8 +127,15 @@ def SavePhoto( fileName, bib, raceSeconds, cameraImage ):
 		try:
 			riderInfo = Model.race.excelLink.read()[int(bib)]
 		except:
-			riderInfo = {}
-		riderName = u', '.join( [n for n in [riderInfo.get('LastName',''), riderInfo.get('FirstName','')] if n] )
+			if bib == 9999:
+				riderInfo = {
+					'LastName':		'LASTNAME',
+					'FirstName':	'Firstname',
+					'Team':			'Team Name',
+				}
+			else:
+				riderInfo = {}
+		riderName = u', '.join( [n for n in [riderInfo.get('LastName',u''), riderInfo.get('FirstName',u'')] if n] )
 		if riderName:
 			team = riderInfo.get('Team', '')
 			if team:
@@ -169,8 +175,13 @@ def SavePhoto( fileName, bib, raceSeconds, cameraImage ):
 	dc.DrawRectangle( 0, 0, w, bitmapHeight+1 )
 	
 	dc.SelectObject( wx.NullBitmap )
-	image = wx.ImageFromBitmap( bitmap )
+	return wx.ImageFromBitmap( bitmap )
+
+def SavePhoto( fileName, bib, raceSeconds, cameraImage ):
+	global photoCache
 	
+	Utils.cameraError = None
+
 	# Check if the folder exists before trying to write to it.
 	# Otherwise the SaveFile will raise an error dialog, which we don't want.
 	if not os.path.isdir( os.path.dirname(fileName) ):
@@ -182,6 +193,8 @@ def SavePhoto( fileName, bib, raceSeconds, cameraImage ):
 			return 0
 	
 	# Try to save the file.
+	image = AddPhotoHeader( bib, raceSeconds, cameraImage )
+	
 	try:
 		image.SaveFile( fileName, wx.BITMAP_TYPE_JPEG )
 		photoCache.add( os.path.basename(fileName) )
@@ -204,9 +217,9 @@ if Device:
 			os.rename( fileNameOld, fileNameNew )
 		except Exception as e:
 			logException( e, sys.exc_info() )
-			
-	def TakePhoto( raceFileName, bib, raceSeconds ):
-		global camera, font
+	
+	def SnapPhoto():
+		global camera
 		Utils.cameraError = None
 		
 		# Open the camera if it is not open yet.
@@ -215,10 +228,16 @@ if Device:
 			if not camera:
 				Utils.cameraError = 'TakePhoto: SetCameraState fails'
 				Utils.writeLog( Utils.cameraError )
-				return 0
+				return None
 		
-		# Take the picture as quickly as possible.
-		cameraImage = camera.getImage()
+		return camera.getImage()
+	
+	def TakePhoto( raceFileName, bib, raceSeconds ):
+		
+		cameraImage = SnapPhoto()
+		if not cameraImage:
+			return 0
+		
 		if Model.race:
 			updateLatency( Model.race.curRaceTime() - raceSeconds )
 			
@@ -245,6 +264,10 @@ if Device:
 				camera = None
 		return camera
 else:
+	def SnapPhoto():
+		Utils.cameraError = 'SnapPhoto: Camera not supported on this platform.'
+		Utils.writeLog( Utils.cameraError )
+		return 0
 	def TakePhoto( raceFileName, bib, raceSeconds ):
 		Utils.cameraError = 'TakePhoto: Camera not supported on this platform.'
 		Utils.writeLog( Utils.cameraError )

@@ -205,13 +205,13 @@ def MessageOKCancel( parent, message, title = u'', iconMask = wx.ICON_QUESTION):
 	dlg = wx.MessageDialog(parent, message, title, wx.OK|wx.CANCEL|iconMask )
 	response = dlg.ShowModal()
 	dlg.Destroy()
-	return True if response == wx.ID_OK else False
+	return response == wx.ID_OK
 	
 def MessageYesNo( parent, message, title = u'', iconMask = wx.ICON_QUESTION):
 	dlg = wx.MessageDialog(parent, message, title, wx.YES|wx.NO|iconMask )
 	response = dlg.ShowModal()
 	dlg.Destroy()
-	return True if response == wx.ID_YES else False
+	return response == wx.ID_YES
 	
 def MessageYesNoCancel( parent, message, title = u'', iconMask = wx.ICON_QUESTION):
 	dlg = wx.MessageDialog(parent, message, title, wx.YES|wx.NO|wx.CANCEL|iconMask )
