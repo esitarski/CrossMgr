@@ -10,6 +10,7 @@ Get started with CrossMgr now!
 * [DataMgmt][]
 * [JumpTo][]
 * [ChipReader][]
+* [Camera][]
 * [Demo][]
 * [Options][]
 * [Help][]
