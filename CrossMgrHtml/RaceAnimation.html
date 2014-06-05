@@ -2240,7 +2240,7 @@ function SetCategoryResults()
 		var showingAllLaps = true;
 		var starters = 0, finishers = 0, finishersPercent = 0.0;
 		
-		// Compute information about the results.
+		// Check for what information to present in the results.
 		for( var p = 0; p < catDetail.pos.length; ++p ) {
 			var num = catDetails[c].pos[p];
 			var d = data[num];
@@ -2266,7 +2266,7 @@ function SetCategoryResults()
 		var hasFactor = !allFactorsEqual;
 		var lastTimeField = hasFactor ? 'lastTime' : 'lastTimeOrig';
 		
-		// Process the result data.
+		// Compute statistics and remove the start offset.
 		for( var p = 0; p < catDetail.pos.length; ++p ) {
 			var num = catDetails[c].pos[p];
 			var d = data[num];
@@ -2295,6 +2295,7 @@ function SetCategoryResults()
 		if( starters > 0 )
 			finishersPercent = (100.0 * finishers) / starters;
 		
+		// Adjust to get a combined name field.
 		var hasFirstLastName = (curFields['FirstName'] && curFields['LastName']);
 		if( hasFirstLastName ) {
 			curFields['FirstName'] = false;
@@ -2309,20 +2310,17 @@ function SetCategoryResults()
 		for( var p = 0; p < catDetail.pos.length; ++p ) {
 			var num = catDetails[c].pos[p];
 			var info = data[num];
-			if( info.lapSpeeds )
-			{
+			if( info.lapSpeeds ) {
 				var lapSpeeds = info.lapSpeeds;
 				for( var i = 0; i < lapSpeeds.length; ++i ) {
 					var s = lapSpeeds[i];
-					if( s > sLapMax )
-					{
+					if( s > sLapMax ) {
 						sLapMax = s;
 						lapMinCoords = [r, i+1];
 					}
 				}
 			}
-			else
-			{
+			else {
 				var raceTimes = raceTimesCopy[num];
 				for( var i = 1; i < raceTimesLength[num]; ++i ) {
 					var tMax = Math.max(raceTimes[i] - raceTimes[i-1], 0.0);
@@ -2396,10 +2394,10 @@ function SetCategoryResults()
 		}
 		tdTitle.colSpan = numHeaders;
 		
-		// Add the rider data.
+		// Add the rider data to the table.
 		tbody = createChild( table, 'TBODY' );
-		var position = 1;
-		for( var p = 0; p < catDetail.pos.length; ++p, ++position ) {
+		for( var p = 0; p < catDetail.pos.length; ++p ) {
+			var position = p + 1;
 			var num = catDetails[c].pos[p];
 			var d = data[num];
 			
@@ -2414,8 +2412,8 @@ function SetCategoryResults()
 			
 			tr.onclick = function(n) { return function() {ToggleNumberHighlight(n);}; }(num);
 			
-			var p = (isFinisher ? '' + position + (data[num]['relegated'] ? ' REL' : ''): d['status'] );
-			createTextChild( td = createChild(tr, 'TD'), p );
+			var posText = (isFinisher ? '' + position + (data[num]['relegated'] ? ' REL' : ''): d['status'] );
+			createTextChild( td = createChild(tr, 'TD'), posText );
 			if( numsToWatch[num] ) td.className = 'highlight';
 			
 			createTextChild( td = createChild(tr, 'TD'), num );
@@ -2434,6 +2432,7 @@ function SetCategoryResults()
 				}
 			}
 			
+			// Add the info fields (from the spreadsheet).
 			for( var f = 0; f < infoFields.length; ++f ) {
 				var field = infoFields[f];
 				if( curFields[field] ) {
