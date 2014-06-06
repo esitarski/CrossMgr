@@ -29,6 +29,7 @@ Distance Unit|km or miles for the distances specified in Categories
 Show Times to 100s of Second|You choice to display regular seconds or fractions of seconds in Results and History.  Also configurable from the Options menu.
 Lap Time for 80% Rule|Selects which lap you want to use to calculate the 80% time elimination rule.  If the first lap is significantly longer or shorter than the other laps, choose __2nd Lap Time__.  If the first lap is similar to the length of the other laps, choose __1st Lap Time__.  In Cyclocross, there is often a run-up which makes the first lap longer.  Sometimes it is possible time the run-up, sometimes this is difficult, and it is better to use the 2nd lap to compute the 80% time rule.  In MTB, it is often better to use the 1st lap time.
 Distance Unit|The units distances to show in Results.
+Hide Lap Notes, Edits and Projected Times in HTML Output|If set, none of the internal lap edits will be written to the HTML page.  If clear, all of the lap edits will be available in the HTML page by setting the "Show Details" option on the Race Chart.  The lap information is shown similarly to the Chart screen.
 
 ## Notes
 Text that will appear in the HTML output.  Text entered here will be shown as-is in the HTML web page, including line breaks.  Describe weather conditions, or give credit to the CrossMgr operator and number caller.
