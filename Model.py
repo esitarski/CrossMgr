@@ -901,6 +901,8 @@ class Race( object ):
 	stateProv = ''
 	country = ''
 	
+	hideDetails = True
+	
 	def __init__( self ):
 		self.reset()
 
@@ -940,6 +942,8 @@ class Race( object ):
 		self.enableUSBCamera = False
 		self.enableJChipIntegration = False
 		self.photoCount = 0
+		
+		self.hideDetails = True
 		
 		# Animation options.
 		self.finishTop = False

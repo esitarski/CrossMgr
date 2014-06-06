@@ -586,7 +586,7 @@ def GetLapDetails():
 		for lap, t in enumerate(rr.raceTimes):
 			i1 = lapNote.get((rr.num, lap), u'')
 			i2 = numTimeInfo.getInfoStr(rr.num, t)
-			if i2 or i2:
+			if i1 or i2:
 				details[u'{},{}'.format(rr.num, lap)] = [i1, i2]
 				
 	return details

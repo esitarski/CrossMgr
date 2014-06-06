@@ -155,6 +155,7 @@ var data = null;
 var catDetails = null;
 var catDetailsByName = {};
 var lapDetails = null;
+var hideDetails = null;		// If true, showDetails option will not be available.
 var showDetails = false;	// If true, show full lap details in the Chart.
 var version = null;
 var raceNotes = null;
@@ -326,9 +327,11 @@ var translations = {
 	'Time Gaps':	['Gaps',			"Écarts",				'Diferencia'],
 	'Gap Percents':	['Percent',			'Pour cent',			'Ciento'],
 	'Lap Speed':	['Speed',			'Vitesse',				'Velocidad'],
+	'Projected Time':['Projected Time',	'Temps prévu',			'Tiempo projectada'],
 	'Est. Distance Gap': ['Est. Distance',	"Distance est.", 		'Est. distancia'],
 	'Race Chart':	['Race Chart',		'Tableau de la course',		'Tabla de carrera'],
 	'Show Start Offsets':	['Show Start Offsets',	'Afficher commencer décalages',	'Mostrar empezar a desplazamientos'],
+	'Show Details':	['Show Details',	'Afficher les détails',	'Mostrar los detalles'],
 	'Race Lightning':	['Race Lightning',		"Éclair de course",	'Rayo de carrera'],
 	'Loop Continuously':['Loop Continuously',	'Boucle continue',	'Repetirá continuamente'],
 	'Playback Speed':['Playback Speed',	'Vitesse de lecture',		'Velocidad de reproducción'],
@@ -2734,6 +2737,7 @@ function lighterColor( k )
 function drawSegment( c, x, y, w, h, color, colorLighter )
 {
 	c.save();
+	
 	var gr = c.createLinearGradient( x, y, x, y+h );
 	gr.addColorStop(0.0, color);
 	gr.addColorStop(0.33, colorLighter);
@@ -2745,6 +2749,63 @@ function drawSegment( c, x, y, w, h, color, colorLighter )
 		c.strokeStyle = '#000';
 		c.strokeRect( x, y, w, h );
 	}
+	c.restore();
+}
+
+function drawDiamond( c, xCenter, yCenter, radius ) {
+	c.save();
+	
+	c.beginPath();
+	c.moveTo( xCenter + radius, yCenter );
+	c.lineTo( xCenter         , yCenter - radius );
+	c.lineTo( xCenter - radius, yCenter );
+	c.lineTo( xCenter         , yCenter + radius );
+	c.closePath();
+	
+	var grd = c.createRadialGradient( 0+ xCenter, - radius*0.50 + yCenter, 0, 0 + xCenter, radius + 1 + yCenter, radius );
+	grd.addColorStop(0, '#FFFFFF');
+	grd.addColorStop(1, 'rgb(220,220,0)');
+	
+	c.fillStyle = 'rgb(220,220,0)';
+	c.fill();
+	c.fillStyle = grd;
+	c.fill();
+	
+	c.lineWidth = 1.0;
+	c.strokeStyle = 'rgb(128,128,128)';
+	c.stroke();
+	
+	c.restore();
+}
+
+function drawStar( c, xCenter, yCenter, numPoints, radius, radiusInner ) {
+	c.save();
+	
+	c.beginPath();
+	var angle = (Math.PI * 2.0) / numPoints;
+	var angle2 = angle / 2.0;
+	c.moveTo( 0 + xCenter, -radius + yCenter );
+	for( var p = 0; p < numPoints; ++p ) {
+		var a = p * angle + angle2 + Math.PI / 2.0;
+		c.lineTo( Math.cos(a) * radiusInner+ xCenter, -Math.sin(a) * radiusInner+ yCenter );
+		a = (p + 1) * angle + Math.PI / 2.0;
+		c.lineTo( Math.cos(a) * radius+ xCenter, -Math.sin(a) * radius+ yCenter );
+	}
+	c.closePath();
+	
+	var grd = c.createRadialGradient( 0+ xCenter, - radius*0.50 + yCenter, 0, 0 + xCenter, radius + 1 + yCenter, radius );
+	grd.addColorStop(0, '#FFFFFF');
+	grd.addColorStop(1, 'rgb(255,165,0)');
+	
+	c.fillStyle = 'rgb(255,165,0)';
+	c.fill();
+	c.fillStyle = grd;
+	c.fill();
+	
+	c.lineWidth = 1.0;
+	c.strokeStyle = 'rgb(128,128,128)';
+	c.stroke();
+	
 	c.restore();
 }
 
@@ -2851,19 +2912,22 @@ function RaceChartUpdateInfo()
 			var name = getRiderNameNum( num );
 			var lap = seg[6];
 			hover = name + ': ' + _('Lap') + ' ' + hover;
-			var hoverLines = 1;
-			if( showDetails ){
-				detail = lapDetails[num + ',' + lap];
+			if( showDetails ) {
+				var d = data[num];
+				if( d.interp[lap] )
+					hover += '\n' + _('Projected Time');
+				var detail = lapDetails[num + ',' + lap];
 				if( detail ) {
 					for( var dd = 0; dd < detail.length; ++dd ) {
-						if( detail[dd] ) {
+						if( detail[dd] )
 							hover += '\n' + detail[dd];
-							++hoverLines;
-						}
 					}
 				}
 			}
 
+			hover = hover.trim();
+			var splitHover = hover.split( '\n' );
+			var hoverLines = splitHover.length;
 			var fontHeight = 14;
 			var height = fontHeight * hoverLines + fontHeight / 2.0;
 				
@@ -2877,32 +2941,38 @@ function RaceChartUpdateInfo()
 			c.strokeStyle = '#000';
 			c.strokeRect( seg[0], seg[1], seg[2]-1, seg[3]-1 );
 			
+			var textWidth = 0;
+			for( var isp = 0; isp < splitHover.length; ++isp )
+				textWidth = Math.max( textWidth, c.measureText(splitHover[isp]).width );
+			var drawDirection = (x + textWidth > canvasRaceChart.width*0.90 ? -1 : 1);
+			
 			c.lineWidth = 1;
 			var x = xEvent, y = yEvent;
-			var textWidth = c.measureText( hover ).width;
-			var drawDirection = (x + textWidth > canvasRaceChart.width*0.90 ? -1 : 1);
 			
 			c.fillStyle = '#FFF';
 			c.beginPath();
 			c.moveTo( x, y );
-			y -= height/2;
+			y -= fontHeight;
+			var yMax = y;
 			c.lineTo( x, y );
 			x += drawDirection * textWidth;
 			c.lineTo( x, y );
 			y -= height / 2;
 			c.arc( x, y, height / 2, Math.PI / 2, 3 * Math.PI / 2, drawDirection > 0 );
 			y -= height / 2;
+			var yMin = y;
 			x -= drawDirection * textWidth;
 			c.lineTo( x, y );
 			y += height / 2;
 			c.arc( x, y, height / 2, 3 * Math.PI / 2, drawDirection > 0 ? Math.PI : 0.0, drawDirection > 0 );
-			y += height;
-			c.lineTo( x, y );
 			c.closePath();
 			c.fill();
 			c.stroke();
 			c.fillStyle = '#000';
-			c.fillText( hover, xEvent - (drawDirection < 0 ? textWidth : 0), yEvent - 3 * height / 2 + margin + 1 );
+			c.textBaseline = 'top';
+			var yText = yMin + (yMax - yMin - splitHover.length*fontHeight) / 2;
+			for( var isp = 0; isp < splitHover.length; ++isp, yText += fontHeight )
+				c.fillText( splitHover[isp], xEvent - (drawDirection < 0 ? textWidth : 0), yText );
 			c.restore();
 			
 			c.lineWidth = 2;
@@ -2924,6 +2994,7 @@ function RefreshRaceChart()
 	var showStartOffsetOption = document.getElementById('idShowStartOffsetOption');
 	var showStartOffsetButton = document.getElementById('idShowStartOffsets');
 	var showStartOffsets = showStartOffsetButton.checked;
+	showDetails = document.getElementById('idShowDetails').checked;
 		
 	// Show results for this category.
 	var categoriesUsed = {};
@@ -3006,30 +3077,24 @@ function RefreshRaceChart()
 	// Check if all the data have the same offset.
 	showStartOffsetOption.className = 'hidden';
 	var startOffset = resultsData[0][iRaceTimes][0];
-	for( var i = 1; i < resultsData.length; ++i )
-	{
-		if( resultsData[i][iRaceTimes][0] != startOffset )
-		{
+	for( var i = 1; i < resultsData.length; ++i ) {
+		if( resultsData[i][iRaceTimes][0] != startOffset ) {
 			showStartOffsetOption.className = 'shown';
 			startOffset = 0.0;
 			break;
 		}
 	}
-	if( startOffset != 0.0 )
-	{
-		for( var i = 0; i < resultsData.length; ++i )
-		{
+	if( startOffset != 0.0 ) {
+		for( var i = 0; i < resultsData.length; ++i ) {
 			var raceTimes = resultsData[i][iRaceTimes];
 			for( var j = 0; j < raceTimes.length; ++j )
 				raceTimes[j] -= startOffset;
 		}
 		dataMax -= startOffset;
 	}
-	else if( !showStartOffsets )
-	{
+	else if( !showStartOffsets ) {
 		dataMax = 0;
-		for( var i = 0; i < resultsData.length; ++i )
-		{
+		for( var i = 0; i < resultsData.length; ++i ) {
 			var num = resultsData[i][iNum];
 			var d = data[num];
 			var raceTimes = resultsData[i][iRaceTimes];
@@ -3063,8 +3128,7 @@ function RefreshRaceChart()
 	dc.font = fontStr;
 	
 	var textWidthLeft = dc.measureText('0000').width;
-	for( var i = 0; i < resultsData.length; ++i )
-	{
+	for( var i = 0; i < resultsData.length; ++i ) {
 		var rd = resultsData[i];
 		var num = rd[iNum];
 		textWidthLeft = Math.max(	dc.measureText(getRiderNameNum(num) + '0:0').width,
@@ -3077,8 +3141,7 @@ function RefreshRaceChart()
 	var labelsWidthRight = dc.measureText('0000').width + legendSep;
 	var drawLabels = true;
 		
-	if( labelsWidthLeft + labelsWidthRight > width )
-	{
+	if( labelsWidthLeft + labelsWidthRight > width ) {
 		labelsWidthLeft = labelsWidthRight = 0;
 		drawLabels = false;
 	}
@@ -3107,8 +3170,7 @@ function RefreshRaceChart()
 	dc.strokeStyle = 'black';
 	dc.fillStyle = 'black';
 	dc.lineWidth = lineWidth;
-	for( var tCur = 0; tCur < dataMax; tCur += d )
-	{
+	for( var tCur = 0; tCur < dataMax; tCur += d ) {
 		var x = xLeft + tCur * dFactor;
 		var s = FormatTime(tCur);
 		var w = dc.measureText(s).width;
@@ -3133,16 +3195,13 @@ function RefreshRaceChart()
 	var yHighlight = null;
 	segmentsCur = [];
 	var iCategoryLast = -1;
-	for( var i = 0; i < resultsData.length; ++i )
-	{
+	for( var i = 0; i < resultsData.length; ++i ) {
 		// Leave a space between categories.
-		if( i == 0 || resultsData[i][iCategory] != iCategoryLast )
-		{
+		if( i == 0 || resultsData[i][iCategory] != iCategoryLast ) {
 			if( !showStartOffsets )
 				categoryStartOffset = resultsData[i][iRaceTimes] ? resultsData[i][iRaceTimes][0] : 0;
 			iCategoryLast = resultsData[i][iCategory];
-			if( i == 0 )
-			{
+			if( i == 0 ) {
 				dc.fillStyle = '#FFFFFF';
 				var w = dc.measureText(categories[iCategoryLast] + '0:00').width;
 				dc.fillRect( legendSep, yLast, w + 1, barHeight + 1 );
@@ -3150,8 +3209,7 @@ function RefreshRaceChart()
 				dc.fillText( categories[iCategoryLast], legendSep, yLast - barHeight );
 				DrawLine( dc, 0, yLast, width - labelsWidthRight + 1, yLast );
 			}
-			else
-			{
+			else {
 				var negOffset = -4;
 				dc.fillStyle = '#FFFFFF';
 				dc.fillRect( negOffset, yLast, width - labelsWidthRight + 1 - negOffset, barHeight + 1 );
@@ -3168,31 +3226,36 @@ function RefreshRaceChart()
 		var num = resultsData[i][iNum];
 		var raceTimes = resultsData[i][iRaceTimes];
 		
-		if( resultsData[i][iStatus] != 'Finisher' )
-		{
+		if( resultsData[i][iStatus] != 'Finisher' ) {
 			dc.fillStyle = '#CDCDCD';
 			dc.fillRect( 0, yLast, width, yCur - yLast + 1 );
 		}
 		
 		dc.strokeStyle = "#0F0F0F";
-		for( var j = 0; j < raceTimes.length; ++j )
-		{
+		for( var j = 0; j < raceTimes.length; ++j ) {
 			if( raceIsRunning && raceTimes[j] > t )
 				break;
 			var tCur = raceTimes[j] - categoryStartOffset;
 			xCur = ~~(labelsWidthLeft + tCur * xFactor);
-			if( j == 0 )
-			{
+			if( j == 0 ) {
 				dc.fillStyle = resultsData[i][iStatus] == 'Finisher' ? '#FFFFFF' : '#CDCDCD';
 				dc.fillRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
 				dc.strokeRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
 			}
-			else
-			{
+			else {
 				var riderData = data[num];
 				var hover = j + ', ' + FormatTime(raceTimes[j] - raceTimes[j-1]);
 				drawSegment( dc, xLast, yLast, xCur - xLast + 1, yCur - yLast + 1, colors[j], lighterColors[j] );
 				segmentsCur.push( [xLast, yLast, xCur - xLast + 1, yCur - yLast + 1, hover, num, j] );
+				
+				// Check for a note.
+				if( showDetails ) {
+					var detail = lapDetails[num + ',' + j];
+					if( detail && detail[0] ) {
+						dc.fillStyle = '#000000';
+						dc.fillText( detail[0], xLast + 2, yLast + (yCur - yLast - textHeight) / 2 );
+					}
+				}
 			}
 			xLast = xCur;
 		}
@@ -3212,13 +3275,11 @@ function RefreshRaceChart()
 			lab = resultsData[i][iNum] + '';
 		dc.fillStyle = '#000000';
 		dc.fillText( lab, labelsWidthLeft - dc.measureText(lab).width - legendSep, yLast );
-		if( !minimizeLabels )
-		{
+		if( !minimizeLabels ) {
 			lab = resultsData[i][iNum] + '';
 			dc.fillText( lab, width - labelsWidthRight + legendSep, yLast );
 		}
-		if( numsToWatch[resultsData[i][iNum]] != undefined )
-		{
+		if( numsToWatch[resultsData[i][iNum]] != undefined ) {
 			dc.save()
 			dc.strokeStyle = "#000000";
 			var lineWidth = 2;
@@ -3227,6 +3288,32 @@ function RefreshRaceChart()
 			dc.restore();
 		}
 
+		// Draw indicators on the laps to show edit or projected times.
+		if( showDetails ) {
+			xLast = labelsWidthLeft;
+			xCur = xLast;
+			for( var j = 0; j < raceTimes.length; ++j ) {
+				if( raceIsRunning && raceTimes[j] > t )
+					break;
+				var tCur = raceTimes[j] - categoryStartOffset;
+				xCur = ~~(labelsWidthLeft + tCur * xFactor);
+				
+				if( j != 0 ) {
+					var num = resultsData[i][iNum];
+					var d = data[num];
+					if( d && d.interp[j] )
+						drawDiamond( dc, xCur, (yCur + yLast) / 2.0, barHeight / 2.0 );
+					else {
+						var detail = lapDetails[num + ',' + j];
+						if( detail && detail[1] )
+							drawStar( dc, xCur, (yCur + yLast) / 2.0, 5, barHeight / 2.0, barHeight / 4.0 );
+					}
+				}
+				
+				xLast = xCur;
+			}
+		}
+		
 		yLast = yCur;
 	}
 	
@@ -3983,6 +4070,9 @@ function onLoad()
 		document.getElementById('idShowTrack').className = 'hidden';
 	}
 	
+	if( hideDetails )
+		document.getElementById('idShowDetailsOption').className = 'hidden';
+	
 	if( !rfid )
 		document.getElementById('idRFID').className = 'hidden';
 	else
@@ -4201,6 +4291,10 @@ Current versions of Chrome, FireFox and Opera work fine.
 	<span id="idRaceChartName" data-tr="Race Chart"></span>&nbsp;&nbsp;&nbsp;&nbsp;
 	<span id="idShowStartOffsetOption">
 		<input type="checkbox" id="idShowStartOffsets" checked onClick="RefreshRaceChart()"><span data-tr="Show Start Offsets"></span></input>
+	</span>
+	<span id="idShowDetailsOption">
+		&nbsp;&nbsp;&nbsp;&nbsp;
+		<input type="checkbox" id="idShowDetails" onClick="RefreshRaceChart()"><span data-tr="Show Details"></span></input>
 	</span>
 </p>
 <canvas id="idRaceChart" width="1000" height="800">

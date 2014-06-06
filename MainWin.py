@@ -471,6 +471,8 @@ class MainWin( wx.Frame ):
 			  flatnotebook.FNB_NO_X_BUTTON
 			| flatnotebook.FNB_FF2
 			| flatnotebook.FNB_NODRAG
+			| flatnotebook.FNB_DROPDOWN_TABS_LIST
+			| flatnotebook.FNB_NO_NAV_BUTTONS
 		)
 		self.notebook = flatnotebook.FlatNotebook( self.splitter, 1000, agwStyle=bookStyle )
 		self.notebook.SetBackgroundColour( wx.WHITE )
@@ -1216,7 +1218,8 @@ class MainWin( wx.Frame ):
 			payload['raceNameText']		= race.name
 			payload['raceDate']			= race.date
 			payload['raceIsRunning']	= race.isRunning()
-			payload['lapDetails']		= GetLapDetails()
+			payload['lapDetails']		= GetLapDetails() if not race.hideDetails else {}
+			payload['hideDetails']		= race.hideDetails
 			notes = TemplateSubstitute( getattr(race, 'notes', ''), race.getTemplateValues() )
 			if notes.lstrip()[:6].lower().startswith( '<html>' ):
 				notes = self.reRemoveTags.sub( '', notes )

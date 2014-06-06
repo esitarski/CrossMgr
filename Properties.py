@@ -178,6 +178,8 @@ class RaceOptionsProperties( wx.Panel ):
 		self.distanceUnitSizer = wx.BoxSizer( wx.HORIZONTAL )
 		self.distanceUnitSizer.Add( self.distanceUnit )
 		self.distanceUnitSizer.AddStretchSpacer()
+		
+		self.hideDetails = wx.CheckBox( self, label=_("Hide Lap Notes, Edits and Projected Times in HTML Output") )
 
 		#-------------------------------------------------------------------------------
 		ms = wx.BoxSizer( wx.HORIZONTAL )
@@ -189,7 +191,7 @@ class RaceOptionsProperties( wx.Panel ):
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
 		fieldAlign = wx.EXPAND
 		
-		blank = lambda : wx.StaticText( self, label='' )
+		blank = lambda : wx.StaticText( self, label=u'' )
 		
 		labelFieldFormats = [
 			(blank(),				0, labelAlign),		(self.timeTrial,				1, fieldAlign),
@@ -198,6 +200,7 @@ class RaceOptionsProperties( wx.Panel ):
 			(blank(),				0, labelAlign),		(self.highPrecisionTimes,		1, fieldAlign),
 			(self.rule80MinLapCountLabel, 0, labelAlign),(self.rule80MinLapCountSizer,	1, fieldAlign),
 			(self.distanceUnitLabel,0, labelAlign),		(self.distanceUnitSizer,		1, fieldAlign),
+			(blank(),				0, labelAlign),		(self.hideDetails,				1, fieldAlign),
 		]
 		addToFGS( fgs, labelFieldFormats )
 		
@@ -214,6 +217,7 @@ class RaceOptionsProperties( wx.Panel ):
 		else:
 			self.rule80MinLapCount2.SetValue( True )
 		self.distanceUnit.SetSelection( getattr(race, 'distanceUnit', 0) )
+		self.hideDetails.SetValue( race.hideDetails )
 	
 	def commit( self ):
 		race = Model.race
@@ -223,6 +227,7 @@ class RaceOptionsProperties( wx.Panel ):
 		race.highPrecisionTimes = self.highPrecisionTimes.IsChecked()
 		race.rule80MinLapCount = (1 if self.rule80MinLapCount1.GetValue() else 2)
 		race.distanceUnit = self.distanceUnit.GetSelection()
+		race.hideDetails = self.hideDetails.IsChecked()
 	
 #------------------------------------------------------------------------------------------------
 
