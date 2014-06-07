@@ -314,6 +314,8 @@ var translations = {
 	'Estimated':	['Estimated',		'Estimé',				'Estimado'],
 	'Distance':		['distance',		'la distance',			'la distancia'],
 	'Start':		['start',			'au début',				'el comienzo'],
+	'StartTime':	['Start',			'Départ',				'Inicio'],
+	'FinishTime':	['Finish',			"Arrivée",				'Meta'],
 	'Winner':		['winner',			'gagnant',				'ganador'],
 	'starters':		['starters',		'entrées',				'aperitivos'],
 	'finishers':	['finishers',		'arrivées',				'finalistas'],
@@ -2366,6 +2368,11 @@ function SetCategoryResults()
 			}
 		}
 		
+		if( isTimeTrial ) {
+			createTextChild( td = createChild(tr, 'TH'), _('StartTime') );	++numHeaders;
+			createTextChild( td = createChild(tr, 'TH'), _('FinishTime') );	++numHeaders;
+		}
+		
 		if( hasFactor ) {
 			createTextChild( td = createChild(tr, 'TH'), _('ElapsedTime') );	++numHeaders;
 			createTextChild( td = createChild(tr, 'TH'), _('Factor') );	++numHeaders;
@@ -2404,6 +2411,13 @@ function SetCategoryResults()
 			var num = catDetails[c].pos[p];
 			var d = data[num];
 			
+			function createTD( tr ) {
+				var td = createChild(tr, 'TD');
+				if( numsToWatch[num] )
+					td.className = 'highlight';
+				return td;
+			}
+			
 			tr = createChild(tbody, 'TR');
 			tr.className = ((r & 1) ? 'odd' : 'even');
 			
@@ -2416,11 +2430,9 @@ function SetCategoryResults()
 			tr.onclick = function(n) { return function() {ToggleNumberHighlight(n);}; }(num);
 			
 			var posText = (isFinisher ? '' + position + (data[num]['relegated'] ? ' REL' : ''): d['status'] );
-			createTextChild( td = createChild(tr, 'TD'), posText );
-			if( numsToWatch[num] ) td.className = 'highlight';
+			createTextChild( td = createTD(tr), posText );
 			
-			createTextChild( td = createChild(tr, 'TD'), num );
-			if( numsToWatch[num] ) td.className = 'highlight';
+			createTextChild( td = createTD(tr), num );
 			td.id = 'idNonNumeric';
 			
 			// Compute the fastest and slowest lap for this rider.
@@ -2448,9 +2460,8 @@ function SetCategoryResults()
 					}
 					else
 						v = d[field];
-					td = createChild(tr, 'TD');
+					td = createTD(tr);
 					td.innerHTML = v;
-					if( numsToWatch[num] ) td.className = 'highlight';
 					if( field != 'Age' && field != 'Factor' )
 						td.id = 'idNonNumeric'; 
 				}
@@ -2495,21 +2506,27 @@ function SetCategoryResults()
 						'<br/><span class="smallfont">' + catStr + '</span>';
 			}
 			
+			if( isTimeTrial ) {
+				createTextChild( td = createTD(tr), d['startTime'] ? FormatTime(d['startTime']) : '' );
+				createTextChild( td = createTD(tr),
+					isFinisher && d['startTime'] && d['lastTimeOrig']
+						? FormatTime(d['startTime']+d['lastTimeOrig'])
+						: '' );
+				if( numsToWatch[num] ) td.className = 'highlight';
+			}
+			
 			if( hasFactor ) {
 				var tFinishOrig = (isFinisher ? Math.max(d['lastTimeOrig'] - startOffset, 0.0) : 0.0);
 				var finishTimeOrig = (isFinisher ? FormatTime(tFinishOrig) : '');
-				createTextChild( td = createChild(tr, 'TD'), finishTimeOrig );
-				if( numsToWatch[num] ) td.className = 'highlight';
+				createTextChild( td = createTD(tr), finishTimeOrig );
 				
 				var factor = d['factor'];
 				if( !factor )
 					factor = 100.0;
-				createTextChild( td = createChild(tr, 'TD'), factor.toFixed(2) );
-				if( numsToWatch[num] ) td.className = 'highlight';
+				createTextChild( td = createTD(tr), factor.toFixed(2) );
 			}
 			var finishTime = (isFinisher ? FormatTime(d[lastTimeField]) : '');
-			createTextChild( td = createChild(tr, 'TD'), finishTime );
-			if( numsToWatch[num] ) td.className = 'highlight';
+			createTextChild( td = createTD(tr), finishTime );
 			
 			var gap = '';
 			if( isFinisher ) {
@@ -2532,17 +2549,15 @@ function SetCategoryResults()
 			}
 			
 			if( !hasFactor ) {
-				createTextChild( td = createChild(tr, 'TD'), gap );
-				if( numsToWatch[num] ) td.className = 'highlight';
+				createTextChild( td = createTD(tr), gap );
 			}
 			
 			if( speedUnit ) {
 				var speed = d['speed'];
 				if( speed )
-					createTextChild( td = createChild(tr, 'TD'), FormatSpeed(parseFloat(speed.split(' ')[0]), distanceUnit, false) );
+					createTextChild( td = createTD(tr), FormatSpeed(parseFloat(speed.split(' ')[0]), distanceUnit, false) );
 				else
-					createTextChild( td = createChild(tr, 'TD'), '' );
-				if( numsToWatch[num] ) td.className = 'highlight';
+					createTextChild( td = createTD(tr), '' );
 			}
 			
 			if( leaderLaps > 2 && showLapsFrequency != 0 ) {
@@ -2614,7 +2629,7 @@ function SetCategoryResults()
 				}
 			}
 			if( !showingAllLaps )
-				createTextChild( td = createChild(tr, 'TD'), '' );
+				createTextChild( td = createTD(tr), '' );
 		}
 		
 		// Add any tt penalties.
