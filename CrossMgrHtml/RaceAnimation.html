@@ -153,6 +153,7 @@ var email = null;
 var raceIsRunning = null;
 var data = null;
 var catDetails = null;
+var isTimeTrial = null;
 var catDetailsByName = {};
 var lapDetails = null;
 var hideDetails = null;		// If true, showDetails option will not be available.
@@ -2254,8 +2255,7 @@ function SetCategoryResults()
 				if( firstFactor != d['factor'] )
 					allFactorsEqual = false;
 			}
-			if( !speedUnit && d['speed'] )
-			{
+			if( !speedUnit && d['speed'] ) {
 				speedUnit = d['speed'].split(' ')[1];
 				distanceUnit = (speedUnit.substring(0, 1) == 'k' ? 'km' : 'miles');
 			}

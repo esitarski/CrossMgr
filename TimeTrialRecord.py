@@ -71,42 +71,6 @@ class HighPrecisionTimeEditor(gridlib.PyGridCellEditor):
 	def Clone( self ):
 		return HighPrecisionTimeEditor()
 
-class BibEditor(gridlib.PyGridCellEditor):
-	def __init__(self):
-		self._tc = None
-		self.startValue = ''
-		gridlib.PyGridCellEditor.__init__(self)
-		
-	def Create( self, parent, id = wx.ID_ANY, evtHandler = None ):
-		self._tc = masked.NumCtrl( parent, id, style = wx.TE_PROCESS_ENTER )
-		self._tc.SetAllowNone( True )
-		self.SetControl( self._tc )
-		if evtHandler:
-			self._tc.PushEventHandler( evtHandler )
-	
-	def SetSize( self, rect ):
-		self._tc.SetDimensions(rect.x, rect.y, rect.width+2, rect.height+2, wx.SIZE_ALLOW_MINUS_ONE )
-	
-	def BeginEdit( self, row, col, grid ):
-		self.startValue = int(grid.GetTable().GetValue(row, col).strip() or 0)
-		self._tc.SetValue( self.startValue )
-		self._tc.SetFocus()
-		
-	def EndEdit( self, row, col, grid, value = None ):
-		changed = False
-		val = self._tc.GetValue()
-		val = unicode(val or u'')
-		if val != unicode(self.startValue):
-			changed = True
-			grid.GetTable().SetValue( row, col, val )
-		self._tc.SetValue( self.startValue )
-		
-	def Reset( self ):
-		self._tc.SetValue( self.startValue )
-		
-	def Clone( self ):
-		return BibEditor()
-		
 class TimeTrialRecord( wx.Panel ):
 	def __init__( self, parent, controller, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
@@ -160,10 +124,7 @@ class TimeTrialRecord( wx.Panel ):
 				attr.SetEditor( HighPrecisionTimeEditor() )
 			elif col == 1:
 				attr.SetRenderer( gridlib.GridCellNumberRenderer() )
-				if 'WXMAC' in wx.Platform:
-					attr.SetEditor( gridlib.GridCellNumberEditor() )
-				else:
-					attr.SetEditor( BibEditor() )
+				attr.SetEditor( gridlib.GridCellNumberEditor() )
 			self.grid.SetColAttr( col, attr )
 		
 		saveLabel = _('Save')
@@ -245,14 +206,16 @@ class TimeTrialRecord( wx.Panel ):
 		timesNoBibs = []
 		for row in xrange(self.grid.GetNumberRows()):
 			tStr = self.grid.GetCellValue(row, 0).strip()
-			bib = self.grid.GetCellValue(row, 1).strip()
 			if not tStr:
 				continue
+			
+			bib = self.grid.GetCellValue(row, 1).strip()
+			try:
+				bib = int(bib)
+			except (TypeError, ValueError):
+				bib = 0
+			
 			if bib:
-				try:
-					bib = int(bib)
-				except:
-					continue
 				timesBibs.append( (tStr, bib) )
 			else:
 				timesNoBibs.append( tStr )
