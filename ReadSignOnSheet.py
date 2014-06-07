@@ -25,7 +25,7 @@ Fields = [	_('Bib#'),
 			_('UCICode'),
 			_('Factor'),
 			_('Tag'), _('Tag2')]
-IgnoreFields = [_('Bib#'), _('Tag'), _('Tag2'), _('Gender'), _('Factor')]		# Fields to ignore when adding data to standard reports.
+IgnoreFields = [_('Bib#'), _('Tag'), _('Tag2'), _('Factor')]		# Fields to ignore when adding data to standard reports.
 ReportFields = [f for f in Fields if f not in IgnoreFields]
 
 mapFmt = u'{:15}\t\u2192   {}'
