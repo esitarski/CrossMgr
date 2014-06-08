@@ -166,7 +166,6 @@ class SeriesModel( object ):
 	
 	def addRace( self, name ):
 		self.changed = True
-		self.removeRace( name )
 		race = Race( name, self.pointStructures[0] )
 		self.races.append( race )
 		

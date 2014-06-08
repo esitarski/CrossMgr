@@ -157,11 +157,11 @@ table.results td.leftAlign, table.results th.leftAlign {
 	text-align:left;
 }
 
-table.results td.topAlign, table.results th.topAlign {
-	text-align:top;
+.topAlign {
+	vertical-align:top;
 }
 
-table.results td.centerAlign, table.results th.centerAlign {
+table.results th.centerAlign, table.results td.centerAlign {
 	text-align:center;
 }
 
