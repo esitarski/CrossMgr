@@ -2433,7 +2433,6 @@ function SetCategoryResults()
 			createTextChild( td = createTD(tr), posText );
 			
 			createTextChild( td = createTD(tr), num );
-			td.id = 'idNonNumeric';
 			
 			// Compute the fastest and slowest lap for this rider.
 			var iFastestLap = -1, iSlowestLap = -1;
@@ -2508,11 +2507,11 @@ function SetCategoryResults()
 			
 			if( isTimeTrial ) {
 				createTextChild( td = createTD(tr), d['startTime'] ? FormatTime(d['startTime']) : '' );
+				var ttPenalty = (d['ttPenalty'] ? d['ttPenalty'] : 0.0);
 				createTextChild( td = createTD(tr),
-					isFinisher && d['startTime'] && d['lastTimeOrig']
-						? FormatTime(d['startTime']+d['lastTimeOrig'])
+					(isFinisher && d['startTime'] && d['lastTimeOrig'])
+						? FormatTime(d['startTime']+d['lastTimeOrig']-ttPenalty)
 						: '' );
-				if( numsToWatch[num] ) td.className = 'highlight';
 			}
 			
 			if( hasFactor ) {
@@ -2525,7 +2524,12 @@ function SetCategoryResults()
 					factor = 100.0;
 				createTextChild( td = createTD(tr), factor.toFixed(2) );
 			}
-			var finishTime = (isFinisher ? FormatTime(d[lastTimeField]) : '');
+			var finishTime = '';
+			if( isFinisher ) {
+				finishTime = FormatTime(d[lastTimeField]);
+				if( isTimeTrial && d['ttPenalty'] )
+					finishTime += '*';
+			}
 			createTextChild( td = createTD(tr), finishTime );
 			
 			var gap = '';
@@ -2662,9 +2666,9 @@ function SetCategoryResults()
 				if( d.ttPenalty ) {
 					tr = createChild( tbody, 'TR' );
 					tr.className = 'noborder';
-					createTextChild( td = createChild(tr, 'TD'), '' );		// Skip the Pos column.
-					createTextChild( td = createChild(tr, 'TD'), num );		// Add bib num.
-					for( var f = 0; f < infoFields.length; ++f )			// Add the additional fields.
+					createTextChild( td = createChild(tr, 'TD'), '' );				// Skip the Pos column.
+					createTextChild( td = createChild(tr, 'TD'), '* ' + num );		// Add start and bib num.
+					for( var f = 0; f < infoFields.length; ++f )					// Add the additional fields.
 					{
 						var field = infoFields[f];
 						if( curFields[field] )
