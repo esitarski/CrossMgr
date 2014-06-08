@@ -195,10 +195,13 @@ def _getTestPhotoFileName():
 def ModelTakePhoto( bib, raceSeconds ):
 	race = Model.race
 	if race:
-		if race.enableVideoBuffer:
-			return TakePhoto( Utils.mainWin.fileName if Utils.mainWin else _getTestPhotoFileName(), bib, raceSeconds )
-		elif getattr(race, 'enableUSBCamera', False):
-			return PhotoFinish.TakePhoto( Utils.mainWin.fileName if Utils.mainWin else _getTestPhotoFileName(), bib, raceSeconds )
+		if PhotoFinish.okTakePhoto(bib, raceSeconds):
+			if race.enableVideoBuffer:
+				return TakePhoto( Utils.mainWin.fileName if Utils.mainWin else _getTestPhotoFileName(), bib, raceSeconds )
+			elif getattr(race, 'enableUSBCamera', False):
+				return PhotoFinish.TakePhoto( Utils.mainWin.fileName if Utils.mainWin else _getTestPhotoFileName(), bib, raceSeconds )
+		else:
+			return 0
 	else:
 		return PhotoFinish.TakePhoto( _getTestPhotoFileName(), bib, raceSeconds )
 	Utils.cameraError = _('ModelTakePhoto: usb camera is not enabled')

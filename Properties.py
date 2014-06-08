@@ -284,20 +284,23 @@ class CameraProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(CameraProperties, self).__init__( parent, id )
 		self.enableUSBCamera = wx.CheckBox( self, label=_('Use USB Camera for Photo Finish') )
+		self.photosAtRaceEndOnly = wx.CheckBox( self, label=_('Take Photos at Race End Only') )
 		
-		#-------------------------------------------------------------------------------
 		ms = wx.BoxSizer( wx.VERTICAL )
 		self.SetSizer( ms )
 		
 		ms.Add( self.enableUSBCamera, flag=wx.ALL, border=16 )
+		ms.Add( self.photosAtRaceEndOnly, flag=wx.ALL, border=16 )
 		
 	def refresh( self ):
 		race = Model.race
 		self.enableUSBCamera.SetValue( getattr(race, 'enableUSBCamera', False) )
+		self.photosAtRaceEndOnly.SetValue( race.photosAtRaceEndOnly )
 		
 	def commit( self ):
 		race = Model.race
 		race.enableUSBCamera = self.enableUSBCamera.GetValue()
+		race.photosAtRaceEndOnly = self.photosAtRaceEndOnly.GetValue()
 	
 #------------------------------------------------------------------------------------------------
 

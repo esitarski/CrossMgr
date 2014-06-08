@@ -429,7 +429,7 @@ class NumKeypad( wx.Panel ):
 					newRaceTimes[-1] = rr.raceTimes[-1]
 				continue
 			categories_seen.add( category )
-			leader.append( '%s %d' % (category.fullname if category else _('<Missing>'), rr.num) )
+			leader.append( u'%s %d' % (category.fullname if category else _('<Missing>'), rr.num) )
 			# Add a copy of the race times.  Append the leader's last time as the current red lantern.
 			raceTimes.append( rr.raceTimes + [rr.raceTimes[-1]] )
 			categoryRaceTimes[category] = raceTimes[-1]

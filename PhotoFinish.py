@@ -7,6 +7,7 @@ import datetime
 
 import Utils
 import Model
+from GetResults import GetResultsCore
 from Utils import logException
 
 from Version import AppVerName
@@ -48,6 +49,22 @@ camera = None
 font = None
 brandingBitmap = None
 photoCache = set()		# Cache of all photo file names.
+
+def okTakePhoto( num, t ):
+	race = Model.race
+	if not race or not getattr(race, 'enableUSBCamera', False):
+		return False
+	if not race.photosAtRaceEndOnly or not race.isRunning() or getattr(race, 'isTimeTrial', False) or num == 9999 or not t:
+		return True
+	
+	getCategory = race.getCategory
+	category = getCategory( num )
+	try:
+		rr = next(rr for rr in GetResultsCore(None) if getCategory(rr.num) == category)
+	except StopIteration:
+		return False
+	
+	return rr.raceTimes and t > rr.raceTimes[-1] - 60.0
 
 def getPhotoDirName( raceFileName ):
 	fileName, fileExtension = os.path.splitext( raceFileName )

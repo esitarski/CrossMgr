@@ -117,6 +117,21 @@ When using this feature, be sure to set the "First Lap Distance" in [Categories]
 Property|Description
 :-------|:----------
 Use USB Camera for Photo Finish|Takes a photo from a connected USB camera on every number entry.  See [Notes](#use-usb-camera-photo-finish) below for details.  Currently, the USB Camera option is only available on the Windows platform.
+Take Photos at Race End Only|When enabled, this option tells CrossMgr to record photos one minute before the leader's finish time for each Start Wave.  If the leader has not yet finished, CrossMgr uses leader's expected time.  If the leader's time is known, CrossMgr uses the leader's actual finish time.  If this option is disabled, CrossMgr will record photos of every rider on every lap.  If this race is a time trial, this option has no effect and photos will be recorded on every lap.
+
+### Notes:
+
+The purpose of "Take Photos at Race End Only" is to minimize disk space used for recording photos, especially for high-lap races like criteriums.
+
+When using the "Take Photos at Race End Only", be aware that sometimes CrossMgr does not know who the leader is.  Especially during a criterium, this can happen if the leader takes a free lap and CrossMgr does not auto-correct it, or in any race type, the leader might have a missed read.
+
+This is the reason for the policy of recording photos one minute before the expected leader - this makes it more likely that the leader will be included if misidentified.
+
+One the leader of a Start Wave has been recorded, photos for all riders in the Start Wave will be recorded.  The same reason applies: CrossMgr may not know what lap a particular rider is on with 100% accuracy if the rider has take free laps or had missed reads.  This means that lapped riders may have their photo recorded twice.
+
+When using CrossMgr for track races, be advised that its policy of recording all photos 60 seconds in advance of the leader may result in photos of all riders for up to the last 4 laps.
+
+Regardless of the "Take Photos at Race End Only" option, CrossMgr will "open" the USB camera when the race starts even if it is not be taking photos.  This is because opening and initializing the USB Camera can take a few seconds - too long to capture a photo.  The connection to the camera must stay open for the duration of the race.
 
 ## Animation Options
 These only apply to the Track animation.  If you are using an uploaded GPX file, the animation will follow the GPX path.

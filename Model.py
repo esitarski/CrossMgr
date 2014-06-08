@@ -902,6 +902,7 @@ class Race( object ):
 	country = ''
 	
 	hideDetails = True
+	photosAtRaceEndOnly = False
 	
 	def __init__( self ):
 		self.reset()
@@ -944,6 +945,7 @@ class Race( object ):
 		self.photoCount = 0
 		
 		self.hideDetails = True
+		self.photosAtRaceEndOnly = False
 		
 		# Animation options.
 		self.finishTop = False
