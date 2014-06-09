@@ -2,6 +2,7 @@
 
 import shutil
 import os
+import sys
 import stat
 import glob
 import datetime
@@ -10,6 +11,8 @@ from Version import AppVerName
 
 pypiDir = 'pypi'
 version = AppVerName.split(' ')[1]
+
+print 'version=', version
 
 def removeTabs( buf, tabStop = 4 ):
 	# Remove tabs from Python code and preserve formatting.
@@ -217,7 +220,15 @@ os.chdir( 'dist' )
 try:
 	shutil.move( 'CrossMgr-%s.zip' % version, 'PIP-Install-CrossMgr-%s.zip' % version )
 except:
-	shutil.move( 'CrossMgr-%s.tar.gz' % version, 'PIP-Install-CrossMgr-%s.tar.gz' % version )
-	shutil.copy( 'PIP-Install-CrossMgr-%s.tar.gz' % version, os.path.join( os.path.expanduser("~"), 'Google Drive', 'Mac Installs') )
+	pipName = 'PIP-Install-CrossMgr-%s.tar.gz' % version
+	installDir = os.path.join( os.path.expanduser("~"), 'Google Drive', 'Mac Installs')
+    
+	shutil.move( 'CrossMgr-%s.tar.gz' % version, pipName )
+	shutil.copyfile( pipName, os.path.join( installDir, pipName) )
+	print
+	print '********************'
+	print installDir
+	print '********************'
+	print '\n'.join( os.listdir(installDir) )
 	
 print 'Done.'
