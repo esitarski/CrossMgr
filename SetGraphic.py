@@ -11,7 +11,7 @@ class SetGraphicDialog( wx.Dialog ):
 						
 		mainSizer = wx.BoxSizer( wx.VERTICAL )
 		
-		label = wx.StaticText( self, label = _('Graphic to be Displayed in Results:') )
+		label = wx.StaticText( self, label = _('Graphic to be Displayed in Results (set to blank to use  default graphic):') )
 		mainSizer.Add( label, flag = wx.ALL, border = 4 )
 		
 		bhh = wx.BoxSizer( wx.HORIZONTAL )
