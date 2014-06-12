@@ -179,7 +179,7 @@ class RaceOptionsProperties( wx.Panel ):
 		self.distanceUnitSizer.Add( self.distanceUnit )
 		self.distanceUnitSizer.AddStretchSpacer()
 		
-		self.hideDetails = wx.CheckBox( self, label=_("Hide Lap Notes, Edits and Projected Times in HTML Output") )
+		self.showDetails = wx.CheckBox( self, label=_("Show Lap Notes, Edits and Projected Times in HTML Output") )
 
 		#-------------------------------------------------------------------------------
 		ms = wx.BoxSizer( wx.HORIZONTAL )
@@ -200,7 +200,7 @@ class RaceOptionsProperties( wx.Panel ):
 			(blank(),				0, labelAlign),		(self.highPrecisionTimes,		1, fieldAlign),
 			(self.rule80MinLapCountLabel, 0, labelAlign),(self.rule80MinLapCountSizer,	1, fieldAlign),
 			(self.distanceUnitLabel,0, labelAlign),		(self.distanceUnitSizer,		1, fieldAlign),
-			(blank(),				0, labelAlign),		(self.hideDetails,				1, fieldAlign),
+			(blank(),				0, labelAlign),		(self.showDetails,				1, fieldAlign),
 		]
 		addToFGS( fgs, labelFieldFormats )
 		
@@ -217,7 +217,7 @@ class RaceOptionsProperties( wx.Panel ):
 		else:
 			self.rule80MinLapCount2.SetValue( True )
 		self.distanceUnit.SetSelection( getattr(race, 'distanceUnit', 0) )
-		self.hideDetails.SetValue( race.hideDetails )
+		self.showDetails.SetValue( not race.hideDetails )
 	
 	def commit( self ):
 		race = Model.race
@@ -227,7 +227,7 @@ class RaceOptionsProperties( wx.Panel ):
 		race.highPrecisionTimes = self.highPrecisionTimes.IsChecked()
 		race.rule80MinLapCount = (1 if self.rule80MinLapCount1.GetValue() else 2)
 		race.distanceUnit = self.distanceUnit.GetSelection()
-		race.hideDetails = self.hideDetails.IsChecked()
+		race.hideDetails = not self.showDetails.IsChecked()
 	
 #------------------------------------------------------------------------------------------------
 
@@ -283,24 +283,45 @@ class RfidProperties( wx.Panel ):
 class CameraProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(CameraProperties, self).__init__( parent, id )
+		
+		choices = [
+			_("Do Not Use Camera for Photo Finish"),
+			_("Photos on Every Lap"),
+			_("Photos at Race Finish Only"),
+		]
+		self.radioBox = wx.RadioBox( self, label=_("USB Camera Options"), choices=choices, majorDimension=1, style=wx.RA_SPECIFY_COLS )
+		
+		'''
 		self.enableUSBCamera = wx.CheckBox( self, label=_('Use USB Camera for Photo Finish') )
 		self.photosAtRaceEndOnly = wx.CheckBox( self, label=_('Take Photos at Race End Only') )
+		'''
 		
 		ms = wx.BoxSizer( wx.VERTICAL )
 		self.SetSizer( ms )
 		
-		ms.Add( self.enableUSBCamera, flag=wx.ALL, border=16 )
-		ms.Add( self.photosAtRaceEndOnly, flag=wx.ALL, border=16 )
+		ms.Add( self.radioBox, flag=wx.ALL, border=16 )
 		
 	def refresh( self ):
 		race = Model.race
-		self.enableUSBCamera.SetValue( getattr(race, 'enableUSBCamera', False) )
-		self.photosAtRaceEndOnly.SetValue( race.photosAtRaceEndOnly )
+		if not getattr(race, 'enableUSBCamera', False):
+			self.radioBox.SetSelection( 0 )
+		else:
+			if not race.photosAtRaceEndOnly:
+				self.radioBox.SetSelection( 1 )
+			else:
+				self.radioBox.SetSelection( 2 )
 		
 	def commit( self ):
 		race = Model.race
-		race.enableUSBCamera = self.enableUSBCamera.GetValue()
-		race.photosAtRaceEndOnly = self.photosAtRaceEndOnly.GetValue()
+		race.enableUSBCamera = False
+		race.photosAtRaceEndOnly = False
+		
+		v = self.radioBox.GetSelection()
+		if v == 1:
+			race.enableUSBCamera = True
+		elif v == 2:
+			race.enableUSBCamera = True
+			race.photosAtRaceEndOnly = True
 	
 #------------------------------------------------------------------------------------------------
 

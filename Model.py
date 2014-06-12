@@ -878,7 +878,7 @@ class NumTimeInfo(object):
 			return u''
 		infoStr = u'{}, {}\n    by: {}\n    on: {}\n'.format(Utils.formatTime(t, True), NumTimeInfo.ReasonName[info[0]], info[1], info[2].ctime())
 		return infoStr
-			
+	
 	def getNumInfo( self, num ):
 		return self.info.get( num, {} )
 		
