@@ -21,6 +21,8 @@ with open('Version.py', 'w') as f:
 	f.write( s )
 '''
 
+shutil.rmtree( 'build' )
+
 # Compile the help files
 from helptxt.compile import CompileHelp
 CompileHelp( 'helptxt' )
@@ -58,7 +60,7 @@ setup(	windows = [
 	 )
 
 # Copy additional dlls to distribution folder.
-wxHome = r'C:\Python27\Lib\site-packages\wx-2.8-msw-ansi\wx'
+wxHome = r'C:\Python27\Lib\site-packages\wx-3.0-msw\wx'
 try:
 	shutil.copy( os.path.join(wxHome, 'MSVCP71.dll'), distDir )
 except:

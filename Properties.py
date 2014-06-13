@@ -291,11 +291,6 @@ class CameraProperties( wx.Panel ):
 		]
 		self.radioBox = wx.RadioBox( self, label=_("USB Camera Options"), choices=choices, majorDimension=1, style=wx.RA_SPECIFY_COLS )
 		
-		'''
-		self.enableUSBCamera = wx.CheckBox( self, label=_('Use USB Camera for Photo Finish') )
-		self.photosAtRaceEndOnly = wx.CheckBox( self, label=_('Take Photos at Race End Only') )
-		'''
-		
 		ms = wx.BoxSizer( wx.VERTICAL )
 		self.SetSizer( ms )
 		
@@ -544,7 +539,7 @@ class Properties( wx.Panel ):
 	
 	def setEditable( self, editable = True ):
 		if hasattr(self, 'cameraProperties') and not HasPhotoFinish():
-			self.cameraProperties.enableUSBCamera.Disable()
+			self.cameraProperties.radioBox.Disable()
 	
 	def incNext( self ):
 		if not hasattr(self,'generalInfoProperties'):

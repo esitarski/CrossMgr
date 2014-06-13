@@ -128,7 +128,16 @@ time|Corresponds to the "Time" field in CrossMgr [Results][].
 
 In the "rider place" column, USAC only recognizes a place (number) and the statuses "DNF", "DNS" and "DNP" (Did Not Place).
 
-CrossMgr's additional statuses "PUL" (Pulled), "DQ" (Disqualified), "OTL" (Outside Time Limit) and "NP" (Not Placed) are output as "DNP" (Did Not Place) in the USAC export.
+CrossMgr's status codes are translated to USAC's status codes as follows:
+
+Description|CrossMgr Code|USAC Code
+:----------|:-----------:|:-------:
+Disqualified|DQ|DQ
+Did Not Start|DNS|DNS
+Did Not Finish|DNF|DNF
+Pulled|PUL|DNP
+Not Placed|NP|DNP
+Outside Time Bound|OTL|DNP
 
 ## UCI (Infostrada) Excel Publish...
 

@@ -4,6 +4,8 @@ import os
 import shutil
 import zipfile
 
+shutil.rmtree( 'build' )
+
 distDir = 'dist'
 
 # Cleanup existing dll, pyd and exe files.  The old ones may not be needed, so it is best to clean these up.

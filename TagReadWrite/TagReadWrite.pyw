@@ -414,6 +414,30 @@ class MainWin( wx.Frame ):
 if __name__ == '__main__':
 	app = wx.App( False )
 	app.SetAppName( 'TagReadWrite' )
+	
+	dataDir = Utils.getHomeDir()
+	redirectFileName = os.path.join(dataDir, 'TagReadWrite.log')
+	
+	# Set up the log file.  Otherwise, show errors on the screen.
+	try:
+		logSize = os.path.getsize( redirectFileName )
+		if logSize > 1000000:
+			os.remove( redirectFileName )
+	except:
+		pass
+
+	try:
+		app.RedirectStdio( redirectFileName )
+	except:
+		pass
+		
+	try:
+		with open(redirectFileName, 'a') as pf:
+			pf.write( '********************************************\n' )
+			pf.write( '%s: %s Started.\n' % (datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'), AppVerName) )
+	except:
+		pass
+	
 	mainWin = MainWin( None )
 	mainWin.Show()
 	app.MainLoop()

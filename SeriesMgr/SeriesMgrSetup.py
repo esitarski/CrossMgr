@@ -5,6 +5,8 @@ import shutil
 import zipfile
 import sys
 
+shutil.rmtree( 'build' )
+
 # Copy all dependent files into this folder.
 copyFiles = [
 	"Model.py",

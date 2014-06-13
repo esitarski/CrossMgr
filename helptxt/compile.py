@@ -39,7 +39,7 @@ def CompileHelp( dir = '.' ):
 		md = markdown.Markdown(
 				extensions=['toc', 'tables', 'sane_lists'], 
 				#safe_mode='escape',
-				output_format='html4'
+				output_format='html5'
 		)
 
 		with open('markdown.css') as f:
