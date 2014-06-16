@@ -2441,7 +2441,7 @@ function SetCategoryResults()
 				for( var i = 1; i < d.lapSpeeds.length; ++i ) {
 					if( d.lapSpeeds[i] > d.lapSpeeds[iFastestLap] )
 						iFastestLap = i;
-					if( d.lapSpeeds[i] < d.lapSpeeds[iSlowestLap] )
+					if( d.lapSpeeds[i] <= d.lapSpeeds[iSlowestLap] )
 						iSlowestLap = i;
 				}
 			}
@@ -2625,7 +2625,7 @@ function SetCategoryResults()
 					}
 					
 					var classes = [];
-					if( lapMinCoords && r == lapMinCoords[0] && i == lapMinCoords[1] )	classes.push( 'fastest' );
+					//if( lapMinCoords && r == lapMinCoords[0] && i == lapMinCoords[1] )	classes.push( 'fastest' );
 					if( numsToWatch[num] )												classes.push( 'highlight' );
 					if( i == iFastestLap+1 )											classes.push( 'fastest-lap' );
 					if( i == iSlowestLap+1 )											classes.push( 'slowest-lap' );
