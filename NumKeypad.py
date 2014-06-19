@@ -512,12 +512,11 @@ class NumKeypad( wx.Panel ):
 			
 		return changed
 			
+	raceMessage = { 0:_("Finishers Arriving"), 1:_("Ring Bell"), 2:_("Prepare Bell") }
 	def refreshLaps( self ):
 		with Model.LockRace() as race:
 			laps, lapsToGo, lapCompleting, leadersExpectedLapTime, leaderNum, expectedRaceFinish = self.getLapInfo()
 
-			raceMessage = { 0:_("Finishers Arriving"), 1:_("Ring Bell"), 2:_("Prepare Bell") }
-			
 			changed = False
 			
 			# Set the projected finish time and laps.
@@ -535,11 +534,8 @@ class NumKeypad( wx.Panel ):
 				elif lapsToGo == 1 and race.isLeaderExpected():
 					changed |= SetLabel( self.message, _('{}: Leader Finish Alert').format(leaderNum) )
 				else:
-					changed |= SetLabel( self.message, raceMessage.get(lapsToGo, '') )
+					changed |= SetLabel( self.message, self.raceMessage.get(lapsToGo, '') )
 				race.numLaps = laps
-				
-				if race.allRidersFinished():
-					race.finishRaceNow()
 			else:
 				changed |= SetLabel( self.numLaps, unicode(laps) )
 				changed |= SetLabel( self.leaderFinishTime, '' )

@@ -34,6 +34,8 @@ def StartRaceNow():
 		Model.resetCache()
 		race.startRaceNow()
 		
+	print race.finishTime
+		
 	OutputStreamer.writeRaceStart()
 	VideoBuffer.ModelStartCamera()
 	
