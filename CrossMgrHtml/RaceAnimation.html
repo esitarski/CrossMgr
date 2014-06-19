@@ -3419,11 +3419,8 @@ function Lightning()
 	this.updateInfo = function()
 	{
 		this.Refresh();
-		if( this.maxLaps <= 1 ) {
-			document.getElementById('idRaceLightningDiv').class = "hidden noprint";
+		if( this.maxLaps <= 1 )
 			return;
-		}
-		document.getElementById('idRaceLightningDiv').class = "noprint";
 		
 		var canvasRaceLightning = document.getElementById('idRaceLightning');
 		var dc = canvasRaceLightning.getContext('2d');
@@ -3495,11 +3492,16 @@ function Lightning()
 		dc.restore();
 	}
 
+	this.HideShow = function() {
+		document.getElementById('idRaceLightningDiv').className = (this.maxLaps <= 1 ? "hidden noprint" : "noprint");
+	}
+	
 	this.Refresh = function()
 	{
 		var canvasRaceLightning = document.getElementById('idRaceLightning');
 		if( !data || !canvasRaceLightning || !canvasSupported ) {
 			this.maxLaps = 0;
+			this.HideShow();
 			return;
 		}
 
@@ -3532,6 +3534,7 @@ function Lightning()
 			var raceTimes = d['raceTimes'];
 			this.maxLaps = Math.max( this.maxLaps, raceTimes.length-1 );
 		}
+		this.HideShow();
 		if( this.maxLaps <= 1 )
 			return;
 		
