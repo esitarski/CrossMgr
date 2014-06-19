@@ -97,7 +97,7 @@ class TimeTrialRecord( wx.Panel ):
 		
 		self.recordTimeButton.SetFont( self.bigFont )
 		self.recordTimeButton.SetToolTip(wx.ToolTip(u'\n'.join(
-			[_('Tap to Record Times.'), _('Then enter the Bib numbers and press Save as soon as possible.')]) ))
+			[_('Tap to Record Times (or press "t" key).'), _('Then enter the Bib numbers and press Save as soon as possible.')]) ))
 		
 		hbs = wx.BoxSizer( wx.HORIZONTAL )
 		hbs.Add( self.recordTimeButton, 0 )
@@ -134,7 +134,7 @@ class TimeTrialRecord( wx.Panel ):
 			self.commitButton = wx.Button( self, label=saveLabel )
 		self.commitButton.Bind( wx.EVT_BUTTON, self.doCommit )
 		self.commitButton.SetFont( self.bigFont )
-		self.commitButton.SetToolTip(wx.ToolTip(_('Press to Save Entries')))
+		self.commitButton.SetToolTip(wx.ToolTip(_('Press to Save Entries (or press "s" key)')))
 		
 		self.vbs.Add( hbs, 0, flag=wx.ALL|wx.EXPAND, border = 4 )
 		self.vbs.Add( self.grid, 1, flag=wx.ALL|wx.EXPAND, border = 4 )
