@@ -1916,13 +1916,23 @@ class Race( object ):
 		self._buildCategoryCache()
 		return num in self.categoryNumsCache[category]
 	
+	@memoize
 	def getCategoriesInUse( self ):
 		catSet = set()
 		for num in self.riders.iterkeys():
-			category = self.getCategory(num)
+			category = self.getCategory( num )
 			if category:
 				catSet.add( category )
 		return sorted( catSet, key = Category.key )
+	
+	def getCategoryMaxLapInUse( self ):
+		maxLaps = 0
+		for category in self.getCategoriesInUse():
+			categoryLaps = category.getNumLaps()
+			if not categoryLaps:
+				return None
+			maxLaps = max( maxLaps, categoryLaps )
+		return maxLaps
 	
 	def getCategoryNumLaps( self, num ):
 		try:

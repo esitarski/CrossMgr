@@ -264,7 +264,7 @@ class Categories( wx.Panel ):
 			(_('Dist.\nBy'),			'distanceType'),
 			(_('First\nLap\nDist.'),	'firstLapDistance'),
 			(_('80%\nLap\nTime'),		'rule80Time'),
-			(_('Proposed\nLaps'),		'suggestedLaps'),
+			(_('CrossMgr\nEstimated\nLaps'),	'suggestedLaps'),
 			(_('Upload'),				'uploadFlag'),
 			(_('Series'),				'seriesFlag'),
 		]

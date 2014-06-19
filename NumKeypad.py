@@ -211,21 +211,13 @@ class NumKeypad( wx.Panel ):
 
 		rowCur = 0
 		colCur = 0
-		self.automaticManualChoice = wx.Choice( panel, choices = [_('Automatic'), _('Manual')], size=(132,-1) )
-		self.Bind(wx.EVT_CHOICE, self.doChooseAutomaticManual, self.automaticManualChoice)
-		self.automaticManualChoice.SetSelection( 0 )
-		self.automaticManualChoice.SetFont( font )
-		gbs.Add( self.automaticManualChoice, pos=(rowCur, colCur+1), span=(1,1), flag=wx.ALIGN_LEFT )
 		rowCur += 1
 		
-		label = wx.StaticText( panel, label = _('Total Laps'))
+		label = wx.StaticText( panel, label = _('Max Laps'))
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
-		self.numLaps = wx.Choice( panel, choices = [''] + ['{}'.format(x) for x in xrange(2,21)], size=(64,-1) )
-		self.numLaps.SetSelection( 0 )
+		self.numLaps = wx.StaticText( panel, label=u'', size=(64,-1) )
 		self.numLaps.SetFont( font )
-		self.numLaps.SetDoubleBuffered( True )
-		self.Bind(wx.EVT_CHOICE, self.doChangeNumLaps, self.numLaps)
 		gbs.Add( self.numLaps, pos=(rowCur, colCur+1), span=(1,1) )
 		rowCur += 1
 		
@@ -494,119 +486,12 @@ class NumKeypad( wx.Panel ):
 		Utils.mainWin.photoDialog.Show( True )
 		Utils.mainWin.photoDialog.refresh( Utils.mainWin.photoDialog.ShowAllPhotos )
 	
-	def doChangeNumLaps( self, event ):
-		with Model.LockRace() as race:
-			if race and race.isFinished():
-				try:
-					numLaps = int(self.numLaps.GetString(self.numLaps.GetSelection()))
-					if race.numLaps != numLaps:
-						race.numLaps = numLaps
-						race.setChanged()
-				except ValueError:
-					pass
-		self.refreshLaps()
-	
-	def doChooseAutomaticManual( self, event ):
-		with Model.LockRace() as race:
-			if race is not None:
-				race.automaticManual = self.automaticManualChoice.GetSelection()
-		self.refreshLaps()
-		
-	def resetLaps( self, enable = False ):
-		# Assumes Model is locked.
-		infoFields = [
-				self.leaderFinishTime,
-				self.lastRiderFinishTime,
-				self.leadersLapTime,
-				self.lapCompleting,
-				self.lapsToGo,
-				self.estLeaderTime, self.estLastRiderTime,
-				self.message
-				]
-				
-		for f in infoFields:
-			f.Enable( enable )
-		
-		changed = False
-		
-		race = Model.race
-		if race is None or not race.isFinished() or race.numLaps is None:
-			if race is not None and self.automaticManualChoice.GetSelection() != 0:
-				self.numLaps.SetItems( ['{}'.format(x) for x in xrange(1, 16)] )
-				self.numLaps.SetSelection( 4 )
-			else:
-				self.numLaps.SetItems( [''] )
-				self.numLaps.SetSelection( 0 )
-			for f in infoFields:
-				SetLabel( f, '' )
-			changed |= SetLabel( self.lapCompleting, '1' )
-			changed |= SetLabel( self.message, _('Collecting Data') )
-		else:
-			self.numLaps.SetItems( [ '{}'.format(race.numLaps) ] )
-			self.numLaps.SetSelection( 0 )
-			changed |= SetLabel( self.leaderFinishTime, Utils.formatTime(GetLeaderFinishTime()) )
-			changed |= SetLabel( self.lastRiderFinishTime, Utils.formatTime(GetLastFinisherTime()) )
-			changed |= SetLabel( self.leadersLapTime, Utils.formatTime(race.getLeaderLapTime()) )
-			changed |= SetLabel( self.lapCompleting, '{}'.format(race.numLaps if race.numLaps is not None else 0) )
-			changed |= SetLabel( self.lapsToGo, '0' )
-			changed |= SetLabel( self.message, '' )
-			changed |= self.updateEstFinishTime()
-			
-		if changed:
-			Utils.LayoutChildResize( self.message )
-			
-		self.refreshRaceHUD()
-	
 	def getLapInfo( self ):
 		# Assumes Model is locked.
 		# Returns (laps, lapsToGo, lapCompleting,
 		#			leadersExpectedLapTime, leaderNum,
-		#			raceFinishTime, isAutomatic)
-		race = Model.race
-		lapCompleting = 1
-		if not race:
-			return (None, None, lapCompleting, None, None, None, False)
-
-		leaderTimes, leaderNums = race.getLeaderTimesNums()
-		if not leaderTimes:
-			return (None, None, lapCompleting, None, None, None, False)
-		
-		t = race.curRaceTime()
-		lapCompleting = bisect.bisect_right( leaderTimes, t ) - 1
-		if lapCompleting < 2:
-			return (None, None, lapCompleting, None, None, None, False)
-		
-		raceTime = race.minutes * 60.0
-		leadersExpectedLapTime = race.getLeaderLapTime()
-		
-		isAutomatic = False
-		if self.automaticManualChoice.GetSelection() == 0:
-			laps = bisect.bisect_left( leaderTimes, raceTime, hi=len(leaderTimes)-1 )
-			if leaderTimes[laps] - raceTime > leadersExpectedLapTime * 0.5:
-				laps -= 1
-			isAutomatic = True
-		else:
-			try:
-				laps = int(self.numLaps.GetString(self.numLaps.GetSelection()))
-			except ValueError:
-				laps = max(0, len(leaderTimes)-1)
-		
-		laps = max( laps, 0 )
-		raceFinishTime = leaderTimes[laps] if laps < len(leaderTimes) else None
-		leaderNum = leaderNums[laps] if laps < len(leaderNums) else None
-		
-		lapsToGo = max(0, laps - lapCompleting)
-
-		return (laps, lapsToGo, lapCompleting,
-				leadersExpectedLapTime, leaderNum,
-				raceFinishTime, isAutomatic)
-	
-	def getMinMaxLapsRange( self ):
-		race = Model.race
-		curLaps = race.numLaps if race.numLaps is not None else 1
-		minLaps = max(1, curLaps-5)
-		maxLaps = minLaps + 10
-		return minLaps, maxLaps
+		#			raceFinishTime)
+		return self.raceHUD.GetLapInfo()
 	
 	def updateEstFinishTime( self ):
 		race = Model.race
@@ -622,67 +507,22 @@ class NumKeypad( wx.Panel ):
 			changed |= SetLabel( self.estLastRiderTime,
 				(race.startTime + datetime.timedelta(seconds = GetLastFinisherTime())).strftime('%H:%M:%S') )
 		except:
-			changed |= SetLabel( self.estLeaderTime, '' )
-			changed |= SetLabel( self.estLastRiderTime, '' )
+			changed |= SetLabel( self.estLeaderTime, u'' )
+			changed |= SetLabel( self.estLastRiderTime, u'' )
 			
 		return changed
 			
 	def refreshLaps( self ):
 		with Model.LockRace() as race:
-			enable = bool(race and race.isRunning())
-			
-			allCategoriesHaveRaceLapsDefined = bool(race and getattr(race, 'allCategoriesHaveRaceLapsDefined', False))
+			laps, lapsToGo, lapCompleting, leadersExpectedLapTime, leaderNum, expectedRaceFinish = self.getLapInfo()
 
-			if allCategoriesHaveRaceLapsDefined:
-				self.automaticManualChoice.Enable( False )
-				self.automaticManualChoice.SetSelection( 0 )	# Default to Automatic and do not allow edit.
-				self.numLaps.SetItems( ['{}'.format(getattr(race, 'categoryLapsMax', 0))] )
-				self.numLaps.Enable( False )
-			else:
-				self.automaticManualChoice.Enable( enable )
-				self.automaticManualChoice.SetSelection( getattr(race, 'automaticManual', 0) )
-			
-			# Allow the number of laps to be changed after the race is finished.
-			numLapsEnable = bool(not allCategoriesHaveRaceLapsDefined and race and (race.isRunning() or race.isFinished()))
-			self.numLaps.Enable( numLapsEnable )
-			if numLapsEnable != enable:
-				self.resetLaps( enable )
-				minLaps, maxLaps = self.getMinMaxLapsRange()
-				self.numLaps.SetItems( ['{}'.format(x) for x in xrange(minLaps, maxLaps)] )
-				if race.numLaps is not None:
-					for i, v in enumerate(self.numLaps.GetItems()):
-						if int(v) == race.numLaps:
-							self.numLaps.SetSelection( i )
-							break
-				if not enable:
-					return
-					
-			if not enable:
-				self.resetLaps()
-				return
-			
-			laps, lapsToGo, lapCompleting, leadersExpectedLapTime, leaderNum, expectedRaceFinish, isAutomatic = self.getLapInfo()
-			if laps is None:
-				self.resetLaps( True )
-				SetLabel( self.lapCompleting, '{}'.format(lapCompleting) if lapCompleting is not None else '1' )
-				return
-			
-			if isAutomatic and lapCompleting >= 2:
-				if self.numLaps.GetString(0) != '{}'.format(lapCompleting):
-					self.numLaps.SetItems( ['{}'.format(x) for x in xrange(lapCompleting, laps+5)] )
-					self.numLaps.SetSelection( 0 )
-				if self.numLaps.GetString(self.numLaps.GetSelection()) != '{}'.format(laps):
-					for i, v in enumerate(self.numLaps.GetItems()):
-						if int(v) == laps:
-							self.numLaps.SetSelection( i )
-							break
-			
-			raceMessage = { 0:_('Finishers Arriving'), 1:_('Ring Bell'), 2:_('Prepare Bell') }
+			raceMessage = { 0:_("Finishers Arriving"), 1:_("Ring Bell"), 2:_("Prepare Bell") }
 			
 			changed = False
 			
 			# Set the projected finish time and laps.
-			if lapCompleting >= 1 or not isAutomatic:
+			if lapCompleting >= 1:
+				changed |= SetLabel( self.numLaps, unicode(laps) )
 				changed |= SetLabel( self.leaderFinishTime, Utils.formatTime(expectedRaceFinish) )
 				changed |= SetLabel( self.lastRiderFinishTime, Utils.formatTime(GetLastFinisherTime()) )
 				changed |= SetLabel( self.leadersLapTime, Utils.formatTime(leadersExpectedLapTime) )
@@ -696,15 +536,12 @@ class NumKeypad( wx.Panel ):
 					changed |= SetLabel( self.message, _('{}: Leader Finish Alert').format(leaderNum) )
 				else:
 					changed |= SetLabel( self.message, raceMessage.get(lapsToGo, '') )
-				if race.numLaps != laps:
-					race.numLaps = laps
-					race.setChanged()
+				race.numLaps = laps
 				
 				if race.allRidersFinished():
 					race.finishRaceNow()
 			else:
-				if self.numLaps.GetSelection() != 0:
-					self.numLaps.SetSelection( 0 )
+				changed |= SetLabel( self.numLaps, unicode(laps) )
 				changed |= SetLabel( self.leaderFinishTime, '' )
 				changed |= SetLabel( self.lastRiderFinishTime, '' )
 				changed |= SetLabel( self.leadersLapTime, '' )
@@ -713,9 +550,8 @@ class NumKeypad( wx.Panel ):
 				changed |= SetLabel( self.estLeaderTime, '' )
 				changed |= SetLabel( self.estLastRiderTime, '' )
 				changed |= SetLabel( self.message, _('Collecting Data') )
-				if race.numLaps is not None:
-					race.numLaps = None
-					race.setChanged()
+				race.numLaps = None
+				
 		if changed:
 			Utils.LayoutChildResize( self.message )
 		wx.CallAfter( self.refreshRaceHUD )
@@ -798,10 +634,7 @@ class NumKeypad( wx.Panel ):
 			lastCategory = category
 	
 	def commit( self ):
-		with Model.LockRace() as race:
-			if race is None:
-				return
-			race.automaticManual = self.automaticManualChoice.GetSelection()
+		pass
 			
 	def onPaint( self, event ):		
 		if self.firstTimeDraw:

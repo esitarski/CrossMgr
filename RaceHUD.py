@@ -69,7 +69,7 @@ class RaceHUD(wx.PyControl):
 		colours then we want this control to inherit them.
 		"""
 		return True
-
+		
 	def SetData( self, raceTimes = None, leader = None, nowTime = None ):
 		self.raceTimes = raceTimes if raceTimes and len(raceTimes[0]) >= 2 and raceTimes[0][-1] >= raceTimes[0][-2] else None
 		self.leader = leader
@@ -81,6 +81,34 @@ class RaceHUD(wx.PyControl):
 			self.leader = self.leader[:3]
 		self.Refresh()
 	
+	def GetLapInfo(self):
+		# Returns laps, lapsToGo, lapCompleting, leadersExpectedLapTime, leaderNum, raceFinishTime
+		if not self.raceTimes:
+			return 0, 0, 1, None, None, None
+		
+		lapsMax = 0
+		raceTimesMax = None
+		leaderNum = None
+		for leader, raceTimes in zip(self.leader, self.raceTimes):
+			if raceTimes and lapsMax < len(raceTimes):
+				lapsMax = len(raceTimes)
+				raceTimesMax = raceTimes
+				try:
+					leaderNum = int(leader.split()[-1])
+				except (IndexError, ValueError):
+					leaderNum = None
+		
+		if not lapsMax:
+			return 0, 0, 1, None, None, None
+		
+		lapsMax -= 1	# Remove the red lantern time.
+		lapCompleting = min( bisect.bisect_right(raceTimesMax, self.nowTime), lapsMax )
+		lapsToGo = lapsMax - lapCompleting
+		
+		leadersExpectedLapTime = (raceTimesMax[lapCompleting] - raceTimesMax[0]) / lapCompleting
+		laps = lapsMax - 1
+		return laps, lapsToGo, min(lapCompleting, laps), leadersExpectedLapTime, leaderNum, raceTimesMax[-2]
+
 	def OnPaint(self, event):
 		dc = wx.BufferedPaintDC(self)
 		self.Draw(dc)
@@ -277,7 +305,7 @@ if __name__ == '__main__':
 
 	startTime = datetime.datetime.now() - datetime.timedelta( seconds = 20 )
 	def updateTime():
-		nowTime = (datetime.datetime.now() - startTime).total_seconds()
+		nowTime = (datetime.datetime.now() - startTime).total_seconds() / 2
 		RaceHUD.SetData( data, leader = [20,120], nowTime = nowTime )
 		if nowTime < data[-1]:
 			wx.CallLater( 1000, updateTime )
