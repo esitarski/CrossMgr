@@ -67,9 +67,13 @@ This is the standard input mode for time trial finishes.  It follows a similar p
 
 In time trial mode, you get times as the riders pass by pressing the __Tap for Time__ button (similar to using a recording stopwatch).  This also triggers the [USB Webcam][] to take a picture, if enabled.
 
+Rather then using the mouse, pressing the 't' key is a shortcut to __Tap for Time__.
+
 You then enter the Bib numbers next to the times - you many not be able to see the number on the back of the rider until he/she has passed.
 
-When you have entered the corresponding bib numbers for the times, press the __"Save"__ button.  This saves the input and clears the display for the next arrival(s).
+When you have entered the corresponding bib numbers for the times, press the __Save__ button.  This saves the input and clears the display for the next arrival(s).
+
+Rather than using the mouse, pressing the 's' key is a shortcut to __Save__.
 
 Press __Save__ as soon as you can!  This records the riders in CrossMgr.
 Normally, you would __Tap for Time__ once, then enter the Bib for that time, then press __Save__.  One entry at a time.
@@ -83,14 +87,14 @@ CrossMgr gives you up to 12 entries before you must press Save.  This is a large
 If you cannot read a rider's number, and can't find it within 12 riders, enter an invalid, but unique temporary Bib number for the rider, say 8000.
 After the race you can correct the number.  This is an exceptional process.
 
-Rather than taking your hands off the keyboard to use the mouse, use keyboard shortcuts:
+Finally, remember that with keyboard shortcuts, you can operate in TT mode without using the mouse.  This is much more convenient and accurate:
 
 Shortcut Key|Description
 :-------|:----------
 t|Equivalent to pressing the __Tap for Time__ button.
-s|Save the current entries.  Equivalent to pressing the __Save__ button.
+s|SEquivalent to pressing the __Save__ button.
 
-This allows you to do data entry quickly and accurately without taking your hands off the keyboard.
+The keyboard shortcuts are quicker and more accurate.
 
 Warning: The Time Trial input mode only works when there are start gaps between the riders.  If you have a timed mass single-start event, you may need Keypad mode, or alternatively, consider a [ChipReader][].
 
