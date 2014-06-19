@@ -3493,7 +3493,14 @@ function Lightning()
 	}
 
 	this.HideShow = function() {
-		document.getElementById('idRaceLightningDiv').className = (this.maxLaps <= 1 ? "hidden noprint" : "noprint");
+		if( this.maxLaps <= 1 ) {
+			document.getElementById('idRaceLightningDiv').className = "hidden noprint";
+			return false;
+		}
+		else {
+			document.getElementById('idRaceLightningDiv').className = "noprint";
+			return true;
+		}
 	}
 	
 	this.Refresh = function()
@@ -3534,8 +3541,7 @@ function Lightning()
 			var raceTimes = d['raceTimes'];
 			this.maxLaps = Math.max( this.maxLaps, raceTimes.length-1 );
 		}
-		this.HideShow();
-		if( this.maxLaps <= 1 )
+		if( !this.HideShow() )
 			return;
 		
 		this.showLaps = [];
