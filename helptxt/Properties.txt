@@ -12,12 +12,23 @@ Event Name|Name of the event.  Also used in the filename with the Race #.  Multi
 Date|Date of the race.  Used in the filename and all output.
 Race #|The number of the race in the day at the event.  Also used in the filename.  This is automatically incremented when you do "File/New Next..."
 Scheduled Start|Scheduled start of the race.  This is used in the results output.  Of course, the race could actually start at a different time.
-Race Minutes|The number of minutes in the race for timed races (like CycloCross).  When the "Race Laps" is set for all [Categories][] (that is, a lap-counted race), this is ignored.
+Race Minutes|The number of minutes in the race for timed races (like CycloCross).  See __Notes__ below.
 Discipline|The type of race (default Cyclo-cross).  This should reflect the type of race (Road, Mountain Bike, Criterium, etc.).  Currently, this is only used in the [USAC Export][].
 Organizer|Organizer of the race.  Included in the HTML results output.
 Commissaire|The name of the race official.
-Memo|Anything you wish to type in here (weather conditions, your mood, etc.).  This is only saved with the race and does not appear on any output.
-Options|See below for details.
+Memo|Anything you wish to type in here (weather conditions, your mood, etc.).  This is saved with the race but does not appear on any output.
+
+### Notes
+Races can be run by time, or by laps, or both simultaneously for different categories:
+
+* If you enter a number in the __Race Laps__ field in [Categories][], that category will be run by the specified laps.
+* If the __Race Laps__ field is blank, CrossMgr will compute the number of laps based on the category leader's lap time divided into the __Race Minutes__.  While the race is under way, this is visible in the Race Progress charts at the bottom of the [Record][] screen.  It is also visible in the __CrossMgr Estimated Laps__ column in [Categories][].
+* If all categories have a specified __Race Laps__, then the __Race Minutes__ field will not be used.
+
+You can set or change the __Race Laps__ at any time before, during or after a race.
+If you don't like CrossMgr's estimate of the laps, by all means, override.
+
+See the [Record][] screen for details on managing a race with one lap counter, or multiple lap counters.
 
 ## Race Options
 Property|Description

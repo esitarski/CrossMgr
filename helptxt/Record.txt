@@ -100,7 +100,8 @@ Warning: The Time Trial input mode only works when there are start gaps between 
 
 ## Race Information
 
-This view is especially useful if you are managing a multi-category race with one lap counter for the fastest category.  If you want to run a multi-category race with separate lap counters, use the Race Lap Charts described below.
+This view is especially useful if you are managing a multi-category race with one lap counter for the fastest category.
+If you want to run a multi-category race with separate lap counters, use the [Race Lap Chart](#race-lap-chart) described below which shows the race progress graphically.
 
 Field|Description
 :----|:----------
@@ -116,13 +117,18 @@ Est. Leader Finish|Projected clock time of the leader's finish time.  This only 
 Est. Last Rider Finish|Projected clock time of the last rider to finish.  This only works if Autocorrect is enabled Clock|The current time of day.  Disabled in time trial mode.
 Photo Count and Camera Button|Shows the photo count and camera button if the [USB Webcam][] is enabled.  Pressing the camera button brings up the last picture taken in the race.
 
+### Notes
+The __Max Laps__, __Completing Lap__ and __Show Laps to Go__ are all with respect to the category doing the most laps in the race (fastest).  This is important for managing a race with one lap counter even if the different categories do a different number of laps.
+
+Alternatively, you can manage the race with separate lap counters by category.  In this case, use the [Race Lap Chart](#race-lap-chart).
+
 ## Riders on Course
 
 This display shows the total riders on course, a breakdown of the riders by category, and a count of which riders are on each lap.
 
 ## Race Lap Chart
 
-Shown after the 2nd lap, this display shows graphically, by Category:
+This display shows graphically, by Category:
 
 * the total number of laps in the race, and the laps to go
 * the Category leader's number
@@ -130,3 +136,5 @@ Shown after the 2nd lap, this display shows graphically, by Category:
 * a Timer counting down to when the leader is next expected
 * the projected Finish Time of the race (finish line flag)
 * the projected Expected Time of the last rider on course (broom)
+
+Use this display to manage lap counters by category.  It allows you to easily see what lap each category is on, when to ring the bell, etc.
