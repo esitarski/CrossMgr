@@ -525,8 +525,8 @@ class NumKeypad( wx.Panel ):
 				changed |= SetLabel( self.leaderFinishTime, Utils.formatTime(expectedRaceFinish) )
 				changed |= SetLabel( self.lastRiderFinishTime, Utils.formatTime(GetLastFinisherTime()) )
 				changed |= SetLabel( self.leadersLapTime, Utils.formatTime(leadersExpectedLapTime) )
-				changed |= SetLabel( self.lapsToGo, '{}'.format(lapsToGo) )
-				changed |= SetLabel( self.lapCompleting, '{}'.format(lapCompleting) )
+				changed |= SetLabel( self.lapsToGo, unicode(lapsToGo) )
+				changed |= SetLabel( self.lapCompleting, unicode(lapCompleting) )
 				changed |= self.updateEstFinishTime()
 				
 				if   lapsToGo == 2 and race.isLeaderExpected():
@@ -538,13 +538,13 @@ class NumKeypad( wx.Panel ):
 				race.numLaps = laps
 			else:
 				changed |= SetLabel( self.numLaps, unicode(laps) )
-				changed |= SetLabel( self.leaderFinishTime, '' )
-				changed |= SetLabel( self.lastRiderFinishTime, '' )
-				changed |= SetLabel( self.leadersLapTime, '' )
-				changed |= SetLabel( self.lapsToGo, '' )
-				changed |= SetLabel( self.lapCompleting, '{}'.format(lapCompleting) )
-				changed |= SetLabel( self.estLeaderTime, '' )
-				changed |= SetLabel( self.estLastRiderTime, '' )
+				changed |= SetLabel( self.leaderFinishTime, u'' )
+				changed |= SetLabel( self.lastRiderFinishTime, u'' )
+				changed |= SetLabel( self.leadersLapTime, u'' )
+				changed |= SetLabel( self.lapsToGo, u'' )
+				changed |= SetLabel( self.lapCompleting, unicode(lapCompleting) )
+				changed |= SetLabel( self.estLeaderTime, u'' )
+				changed |= SetLabel( self.estLastRiderTime, u'' )
 				changed |= SetLabel( self.message, _('Collecting Data') )
 				race.numLaps = None
 				
