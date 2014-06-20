@@ -197,7 +197,6 @@ setup = {
 		'xlrd >= 0.9.2',
 		'xlwt >= 0.7.5',
 		'whoosh >= 2.5.7',
-		'openpyxl >= 1.5.8',
 		'qrcode >= 4.0.4',
 		'PIL >= 1.1.6',
 		# 'wxPython >= 3.0.0',

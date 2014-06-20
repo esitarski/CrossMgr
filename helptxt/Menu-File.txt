@@ -17,9 +17,6 @@ Open an existing race.
 ## Open Next...
 Open the next race based on the existing one.  CrossMgr will look for a race with the next race number in the same folder.
 
-## Change Properties...
-Change the Properties of a race.  Also possible from the Properties screen.
-
 ## Restore from Original Imput...
 Restores all entries for a race from the original entered data.  CrossMgr automatically creates a backup .csv file that it write all entries to.  If you make a lot of changes by accident, you can restore from the original data here.
 

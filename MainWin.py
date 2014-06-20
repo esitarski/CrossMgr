@@ -252,11 +252,6 @@ class MainWin( wx.Frame ):
 
 		self.fileMenu.AppendSeparator()
 		idCur = wx.NewId()
-		self.fileMenu.Append( idCur , _("&Change Properties..."), _("Change the properties of the current race") )
-		self.Bind(wx.EVT_MENU, self.menuChangeProperties, id=idCur )
-
-		self.fileMenu.AppendSeparator()
-		idCur = wx.NewId()
 		self.fileMenu.Append( idCur , _("&Restore from Original Input..."), _("Restore from Original Input") )
 		self.Bind(wx.EVT_MENU, self.menuRestoreFromInput, id=idCur )
 
@@ -268,11 +263,11 @@ class MainWin( wx.Frame ):
 		self.filehistory.AddFilesToMenu()
 		
 		self.fileMenu.AppendSeparator()
+		
 		idCur = wx.NewId()
-		self.fileMenu.Append( idCur, _('Close Race'), _('Close this race without exiting CrossMgr') )
+		self.fileMenu.Append( idCur, _('&Close Race'), _('Close this race without exiting CrossMgr') )
 		self.Bind(wx.EVT_MENU, self.menuCloseRace, id=idCur )
 		
-		self.fileMenu.AppendSeparator()
 		self.fileMenu.Append( wx.ID_EXIT, _("E&xit"), _("Exit CrossMan") )
 		self.Bind(wx.EVT_MENU, self.menuExit, id=wx.ID_EXIT )
 		
@@ -283,18 +278,22 @@ class MainWin( wx.Frame ):
 		#-----------------------------------------------------------------------
 		self.publishMenu = wx.Menu()
 		
-		self.publishMenu.Append( wx.ID_PAGE_SETUP , _("Page &Setup..."), _("Setup the print page") )
-		self.Bind(wx.EVT_MENU, self.menuPageSetup, id=wx.ID_PAGE_SETUP )
+		idCur = wx.NewId()
+		AppendMenuItemBitmap( self.publishMenu, idCur, _("Page &Setup..."), _("Setup the print page"),
+								wx.Bitmap( os.path.join(Utils.getImageFolder(), 'page-setup.png'), wx.BITMAP_TYPE_PNG ) )
+		self.Bind(wx.EVT_MENU, self.menuPageSetup, id=idCur )
 
-		self.publishMenu.Append( wx.ID_PREVIEW , _("P&review Print Results..."), _("Preview the printed results on screen") )
-		self.Bind(wx.EVT_MENU, self.menuPrintPreview, id=wx.ID_PREVIEW )
+		idCur = wx.NewId()
+		AppendMenuItemBitmap( self.publishMenu, idCur, _("P&review Print Results..."), _("Preview the printed results on screen"),
+								wx.Bitmap( os.path.join(Utils.getImageFolder(), 'print-preview.png'), wx.BITMAP_TYPE_PNG ) )
+		self.Bind(wx.EVT_MENU, self.menuPrintPreview, id=idCur )
 
 		AppendMenuItemBitmap( self.publishMenu, wx.ID_PRINT, _("&Print Results..."), _("Print the results to a printer"),
-								wx.ArtProvider.GetBitmap(wx.ART_PRINT) )
+								wx.Bitmap( os.path.join(Utils.getImageFolder(), 'Printer.png'), wx.BITMAP_TYPE_PNG ) )
 		self.Bind(wx.EVT_MENU, self.menuPrint, id=wx.ID_PRINT )
 
 		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.publishMenu, idCur, _("&Print Podium Results..."), _("Print the top position results to a printer"),
+		AppendMenuItemBitmap( self.publishMenu, idCur, _("Print P&odium Results..."), _("Print the top position results to a printer"),
 								wx.Bitmap( os.path.join(Utils.getImageFolder(), 'Podium.png'), wx.BITMAP_TYPE_PNG ) )
 		self.Bind(wx.EVT_MENU, self.menuPrintPodium, id=idCur )
 
@@ -327,7 +326,7 @@ class MainWin( wx.Frame ):
 		
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
-							_("&Cross&Results.com Publish..."), _("Publish Results to the CrossResults.com web site"),
+							_("&CrossResults.com Publish..."), _("Publish Results to the CrossResults.com web site"),
 							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'crossresults-icon.png'), wx.BITMAP_TYPE_PNG )
 		)
 		self.Bind(wx.EVT_MENU, self.menuExportCrossResults, id=idCur )
