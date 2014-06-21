@@ -229,21 +229,21 @@ class MainWin( wx.Frame ):
 		#-----------------------------------------------------------------------
 		self.fileMenu = wx.Menu()
 
-		self.fileMenu.Append( wx.ID_NEW , _("&New..."), _("Create a new race") )
+		AppendMenuItemBitmap( self.fileMenu, wx.ID_NEW , _("&New..."), _("Create a new race"), Utils.GetPngBitmap('document-new.png') )
 		self.Bind(wx.EVT_MENU, self.menuNew, id=wx.ID_NEW )
 
 		idCur = wx.NewId()
-		self.fileMenu.Append( idCur , _("New Nex&t..."), _("Create a new race starting from the current race") )
+		AppendMenuItemBitmap( self.fileMenu, idCur , _("New Nex&t..."), _("Create a new race starting from the current race"), Utils.GetPngBitmap('document-new-next.png') )
 		self.Bind(wx.EVT_MENU, self.menuNewNext, id=idCur )
 
 		self.fileMenu.AppendSeparator()
 		
 		idCur = wx.NewId()
-		self.fileMenu.Append( idCur , _("New from &RaceDB..."), _("Create a new race from RaceDB output") )
+		AppendMenuItemBitmap( self.fileMenu, idCur , _("New from &RaceDB..."), _("Create a new race from RaceDB output"), Utils.GetPngBitmap('database-add.png') )
 		self.Bind(wx.EVT_MENU, self.menuNewRaceDB, id=idCur )
 
 		self.fileMenu.AppendSeparator()
-		self.fileMenu.Append( wx.ID_OPEN , _("&Open..."), _("Open a race") )
+		AppendMenuItemBitmap( self.fileMenu, wx.ID_OPEN , _("&Open..."), _("Open a race"), Utils.GetPngBitmap('document-open.png') )
 		self.Bind(wx.EVT_MENU, self.menuOpen, id=wx.ID_OPEN )
 
 		idCur = wx.NewId()
@@ -252,23 +252,25 @@ class MainWin( wx.Frame ):
 
 		self.fileMenu.AppendSeparator()
 		idCur = wx.NewId()
-		self.fileMenu.Append( idCur , _("&Restore from Original Input..."), _("Restore from Original Input") )
+		AppendMenuItemBitmap( self.fileMenu, idCur , _("&Restore from Original Input..."), _("Restore from Original Input"),
+			Utils.GetPngBitmap('document-revert.png') )
 		self.Bind(wx.EVT_MENU, self.menuRestoreFromInput, id=idCur )
 
 		self.fileMenu.AppendSeparator()
 		
 		recent = wx.Menu()
-		self.fileMenu.AppendMenu(wx.ID_ANY, _("Recent Fil&es"), recent)
+		menu = self.fileMenu.AppendMenu(wx.ID_ANY, _("Recent Fil&es"), recent)
 		self.filehistory.UseMenu( recent )
 		self.filehistory.AddFilesToMenu()
 		
 		self.fileMenu.AppendSeparator()
 		
 		idCur = wx.NewId()
-		self.fileMenu.Append( idCur, _('&Close Race'), _('Close this race without exiting CrossMgr') )
+		AppendMenuItemBitmap( self.fileMenu, idCur, _('&Close Race'), _('Close this race without exiting CrossMgr'),
+			Utils.GetPngBitmap('document-close.png') )
 		self.Bind(wx.EVT_MENU, self.menuCloseRace, id=idCur )
 		
-		self.fileMenu.Append( wx.ID_EXIT, _("E&xit"), _("Exit CrossMan") )
+		AppendMenuItemBitmap( self.fileMenu, wx.ID_EXIT, _("E&xit"), _("Exit CrossMgr"), Utils.GetPngBitmap('exit.png') )
 		self.Bind(wx.EVT_MENU, self.menuExit, id=wx.ID_EXIT )
 		
 		self.Bind(wx.EVT_MENU_RANGE, self.menuFileHistory, id=wx.ID_FILE1, id2=wx.ID_FILE9)
@@ -279,47 +281,41 @@ class MainWin( wx.Frame ):
 		self.publishMenu = wx.Menu()
 		
 		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.publishMenu, idCur, _("Page &Setup..."), _("Setup the print page"),
-								wx.Bitmap( os.path.join(Utils.getImageFolder(), 'page-setup.png'), wx.BITMAP_TYPE_PNG ) )
+		AppendMenuItemBitmap( self.publishMenu, idCur, _("Page &Setup..."), _("Setup the print page"), Utils.GetPngBitmap('page-setup.png') )
 		self.Bind(wx.EVT_MENU, self.menuPageSetup, id=idCur )
 
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur, _("P&review Print Results..."), _("Preview the printed results on screen"),
-								wx.Bitmap( os.path.join(Utils.getImageFolder(), 'print-preview.png'), wx.BITMAP_TYPE_PNG ) )
+								Utils.GetPngBitmap('print-preview.png') )
 		self.Bind(wx.EVT_MENU, self.menuPrintPreview, id=idCur )
 
 		AppendMenuItemBitmap( self.publishMenu, wx.ID_PRINT, _("&Print Results..."), _("Print the results to a printer"),
-								wx.Bitmap( os.path.join(Utils.getImageFolder(), 'Printer.png'), wx.BITMAP_TYPE_PNG ) )
+								Utils.GetPngBitmap('Printer.png') )
 		self.Bind(wx.EVT_MENU, self.menuPrint, id=wx.ID_PRINT )
 
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur, _("Print P&odium Results..."), _("Print the top position results to a printer"),
-								wx.Bitmap( os.path.join(Utils.getImageFolder(), 'Podium.png'), wx.BITMAP_TYPE_PNG ) )
+								Utils.GetPngBitmap('Podium.png') )
 		self.Bind(wx.EVT_MENU, self.menuPrintPodium, id=idCur )
 
 		self.publishMenu.AppendSeparator()
 		
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
-							_("&Excel Publish..."), _("Publish Results as an Excel Spreadsheet (.xls)"),
-							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'excel-icon.png'), wx.BITMAP_TYPE_PNG )
-		)
+							_("&Excel Publish..."), _("Publish Results as an Excel Spreadsheet (.xls)"), Utils.GetPngBitmap('excel-icon.png') )
 		self.Bind(wx.EVT_MENU, self.menuPublishAsExcel, id=idCur )
 		
 		self.publishMenu.AppendSeparator()
 		
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
-							_("&HTML Publish..."), _("Publish Results as HTML (.html)"),
-							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'html-icon.png'), wx.BITMAP_TYPE_PNG )
-		)
+							_("&HTML Publish..."), _("Publish Results as HTML (.html)"), Utils.GetPngBitmap('html-icon.png') )
 		self.Bind(wx.EVT_MENU, self.menuPublishHtmlRaceResults, id=idCur )
 
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
 							_("&Ftp HTML Publish..."), _("Publish HTML Results to FTP"),
-							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'ftp-icon.png'), wx.BITMAP_TYPE_PNG )
-		)
+							Utils.GetPngBitmap('ftp-icon.png') )
 		self.Bind(wx.EVT_MENU, self.menuExportHtmlFtp, id=idCur )
 
 		self.publishMenu.AppendSeparator()
@@ -327,15 +323,13 @@ class MainWin( wx.Frame ):
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
 							_("&CrossResults.com Publish..."), _("Publish Results to the CrossResults.com web site"),
-							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'crossresults-icon.png'), wx.BITMAP_TYPE_PNG )
-		)
+							Utils.GetPngBitmap('crossresults-icon.png') )
 		self.Bind(wx.EVT_MENU, self.menuExportCrossResults, id=idCur )
 
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
 							_("&WebScorer.com Publish..."), _("Publish Results in WebScorer.com format"),
-							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'webscorer-icon.png'), wx.BITMAP_TYPE_PNG )
-		)
+							Utils.GetPngBitmap('webscorer-icon.png') )
 		self.Bind(wx.EVT_MENU, self.menuExportWebScorer, id=idCur )
 
 		self.publishMenu.AppendSeparator()
@@ -343,15 +337,13 @@ class MainWin( wx.Frame ):
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
 							_("&USAC Excel Publish..."), _("Publish Results in USAC Excel Format"),
-							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'usac-icon.png'), wx.BITMAP_TYPE_PNG )
-		)
+							Utils.GetPngBitmap('usac-icon.png') )
 		self.Bind(wx.EVT_MENU, self.menuExportUSAC, id=idCur )
 
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
 							_("UCI (&Infostrada) Excel Publish..."), _("Publish Results in UCI (&Infostrada) Excel Format"),
-							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'infostrada-icon.png'), wx.BITMAP_TYPE_PNG )
-		)
+							Utils.GetPngBitmap('infostrada-icon.png') )
 		self.Bind(wx.EVT_MENU, self.menuExportUCI, id=idCur )
 
 		self.publishMenu.AppendSeparator()
@@ -359,8 +351,7 @@ class MainWin( wx.Frame ):
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
 							_("&Facebook PNG Publish..."), _("Publish Results as PNG files for posting on Facebook"),
-							wx.Bitmap( os.path.join(Utils.getImageFolder(), 'facebook-icon.png'), wx.BITMAP_TYPE_PNG )
-		)
+							Utils.GetPngBitmap('facebook-icon.png') )
 		self.Bind(wx.EVT_MENU, self.menuPrintPNG, id=idCur )
 		
 		self.menuBar.Append( self.publishMenu, _("&Publish") )
@@ -397,7 +388,8 @@ class MainWin( wx.Frame ):
 		self.dataMgmtMenu = wx.Menu()
 		
 		idCur = wx.NewId()
-		self.dataMgmtMenu.Append( idCur , _("&Link to External Excel Data..."), _("Link to information in an Excel spreadsheet") )
+		AppendMenuItemBitmap( self.dataMgmtMenu, idCur , _("&Link to External Excel Data..."), _("Link to information in an Excel spreadsheet"),
+			Utils.GetPngBitmap('excel-icon.png') )
 		self.Bind(wx.EVT_MENU, self.menuLinkExcel, id=idCur )
 		
 		self.dataMgmtMenu.AppendSeparator()
@@ -431,12 +423,14 @@ class MainWin( wx.Frame ):
 
 		self.dataMgmtMenu.AppendSeparator()
 		idCur = wx.NewId()
-		self.dataMgmtMenu.Append( idCur , _("&Import Time Trial Start Times..."), _("Import Time Trial Start Times") )
+		AppendMenuItemBitmap(self.dataMgmtMenu, idCur , _("&Import Time Trial Start Times..."), _("Import Time Trial Start Times"),
+			Utils.GetPngBitmap('clock-add.png') )
 		self.Bind(wx.EVT_MENU, self.menuImportTTStartTimes, id=idCur )
 		
 		self.dataMgmtMenu.AppendSeparator()
 		idCur = wx.NewId()
-		self.dataMgmtMenu.Append( idCur , _("&Import Course in GPX format..."), _("Import Course in GPX format") )
+		AppendMenuItemBitmap( self.dataMgmtMenu, idCur , _("&Import Course in GPX format..."), _("Import Course in GPX format"),
+			Utils.GetPngBitmap('gps-icon.png') )
 		self.Bind(wx.EVT_MENU, self.menuImportGpx, id=idCur )
 		
 		self.dataMgmtMenu.AppendSeparator()
@@ -524,7 +518,7 @@ class MainWin( wx.Frame ):
 		self.chipMenu = wx.Menu()
 
 		idCur = wx.NewId()
-		self.chipMenu.Append( idCur, _("RFID Reader &Setup..."), _("Configure and Test the RFID Reader") )
+		AppendMenuItemBitmap( self.chipMenu, idCur, _("RFID Reader &Setup..."), _("Configure and Test the RFID Reader"), Utils.GetPngBitmap('rfid-signal.png') )
 		self.Bind(wx.EVT_MENU, self.menuJChip, id=idCur )
 		
 		self.chipMenu.AppendSeparator()
@@ -551,7 +545,7 @@ class MainWin( wx.Frame ):
 		self.cameraMenu = wx.Menu()
 
 		idCur = wx.NewId()
-		self.cameraMenu.Append( idCur , _("&Test USB Camera..."), _("Test the USB Camera") )
+		AppendMenuItemBitmap( self.cameraMenu, idCur , _("&Test USB Camera..."), _("Test the USB Camera"), Utils.GetPngBitmap('camera-webcam.png') )
 		self.Bind(wx.EVT_MENU, self.menuCameraTest, id=idCur )
 		
 		self.menuBar.Append( self.cameraMenu, _("C&amera") )

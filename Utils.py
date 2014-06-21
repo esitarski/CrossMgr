@@ -561,6 +561,9 @@ def LayoutChildResize( child ):
 		if parent.IsTopLevel():
 			break
 		parent = parent.GetParent()
+		
+def GetPngBitmap( fname ):
+	return wx.Bitmap( os.path.join(imageFolder, fname), wx.BITMAP_TYPE_PNG )
 			
 def CombineFirstLastName( firstName, lastName ):
 	if lastName:
