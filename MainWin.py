@@ -435,15 +435,22 @@ class MainWin( wx.Frame ):
 		
 		self.dataMgmtMenu.AppendSeparator()
 		idCur = wx.NewId()
-		self.dataMgmtMenu.Append( idCur , _("Export Course in GPX format..."), _("Export Course in GPX format") )
+		self.dataMgmtMenu.Append( idCur, _("Export Course in GPX format..."), _("Export Course in GPX format") )
 		self.Bind(wx.EVT_MENU, self.menuExportGpx, id=idCur )
 		
 		idCur = wx.NewId()
-		self.dataMgmtMenu.Append( idCur , _("&Export Course as KMZ Virtual Tour..."), _("Export Course as KMZ Virtual Tour (Requires Google Earth to View)") )
+		AppendMenuItemBitmap( self.dataMgmtMenu, idCur,
+			_("&Export Course as KMZ Virtual Tour..."),
+			_("Export Course as KMZ Virtual Tour (Requires Google Earth to View)"),
+			Utils.GetPngBitmap('Google-Earth-icon.png')
+		)
 		self.Bind(wx.EVT_MENU, self.menuExportCourseAsKml, id=idCur )
 		
 		idCur = wx.NewId()
-		self.dataMgmtMenu.Append( idCur , _("Export Course &Preview in HTML..."), _("Export Course Preview in HTML") )
+		AppendMenuItemBitmap( self.dataMgmtMenu, idCur , _("Export Course &Preview in HTML..."),
+			_("Export Course Preview in HTML"),
+			Utils.GetPngBitmap('html-icon.png')
+		)
 		self.Bind(wx.EVT_MENU, self.menuExportCoursePreviewAsHtml, id=idCur )
 		
 		self.menuBar.Append( self.dataMgmtMenu, _("&DataMgmt") )

@@ -1,4 +1,5 @@
 import sys
+import collections
 
 #-----------------------------------------------------------------------
 # Fix named tuple pickle issue.
@@ -78,7 +79,6 @@ import platform
 import unicodedata
 import webbrowser
 import traceback
-import collections
 import wx.grid		as gridlib
 
 import wx.lib.agw.genericmessagedialog
