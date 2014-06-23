@@ -14,6 +14,10 @@ At any point, press [CTRL+H](Main.html) to get help on any screen.
 
 Read and work through [CrossMgrTutorial.doc.](https://www.sites.google.com/site/crossmgrsoftware/file-cabinet).  CrossMgr has a built-in [Demo](Menu-Demo.html) showing a realistic race with two categories racing at once.  The data shows how to manage missed data and lapped riders.
 
+### Watch the Demo
+
+Do __Tools/Simulate Race...__.  Explore the program features with simulated race data.
+
 ## File / New a Race
 Configure the [Properties][] of your race.  There are a lot of Properties there but don't worry - you only need to fill in the ones that are important to you.
 
@@ -77,7 +81,8 @@ There are many features available in CrossMgr that you can use as you feel more 
 1. Set the Email in the published output so people can email comments and corrections.  See [Options][] for details.
 1. Publish results directly to a website with FTP.  See [File/Publish HTML Results with FTP...](Menu-File.html#publish-html-results-with-ftp) for details.
 1. Publish results live during a race.  See [File/Publish HTML Results with FTP...](Menu-File.html#publish-html-results-with-ftp) for details.  Look at the "Automatically Upload Results During Race" feature.
-1. Use the JChip chip timing system system.  See [ChipReader][].
 1. Use CrossMgr for Time Trials.  See [Time Trial Mode](Properties.html#time-trial-mode).
+1. Use a Chip Timing system system.  See [ChipReader][].
+1. Use a USB Camera to capture finishes.
 
 Remember: press [CTRL+H](Main.html) on each screen to find out what it does and how it works.  Review [CrossMgrTutorial.doc.](https://www.sites.google.com/site/crossmgrsoftware/file-cabinet).

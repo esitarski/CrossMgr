@@ -11,6 +11,9 @@ Creates a new race based on an existing one.  New Next... will keep the same Nam
 After the new race is created, you just need to check the start time, duration and categories.
 This feature allows you to create the next race in the day very quickly.
 
+## New from RaceDB...
+Creates a new race based on an Excel file generated from RaceDB.
+
 ## Open...
 Open an existing race.
 
@@ -20,7 +23,7 @@ Open the next race based on the existing one.  CrossMgr will look for a race wit
 ## Restore from Original Input...
 Restores all entries for a race from the original entered data.  CrossMgr automatically creates a backup .csv file that it write all entries to.  If you make a lot of changes by accident, you can restore from the original data here.
 
-Although not recommended, some advanced users have edited the .csv file manually, the "restored" from it.
+Although not recommended, some advanced users have edited the .csv file manually, then "restored" from it.
 
 ## Recent Files
 Keeps track of the last few files opened so then can be opened again quickly.
@@ -29,4 +32,4 @@ Keeps track of the last few files opened so then can be opened again quickly.
 Closes the current race.  All changes are written to disk.  Clears CrossMgr.
 
 ## Exit
-Stops CrossMgr.  If a race is running, the clock will continue to run in CrossMgr.  When reopened, the race will resume, even if reopened on another computer.
+Shuts down CrossMgr.  If a race is running, the race clock will pick up exactly where it left off when the CrossMgr race file is opened again.

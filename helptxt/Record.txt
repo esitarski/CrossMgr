@@ -14,7 +14,7 @@ The screen is roughly divided into four parts:
 
 ## Number Entry
 
-This is the section of the screen where data is entered manually.  Number and times entered with chip timing come into CrossMgr directly.
+This is the section of the screen where data is entered manually.  Data from chip timing flows into CrossMgr directly.
 
 CrossMgr offers two "modes" to manually enter data: __Keypad__ and __Time Trial__.
 The different modes are switched by a pressing button at the top left of the screen which either shows a Keypad or a Stopwatch, depending on the mode you will switch to.
@@ -37,18 +37,18 @@ Downhill|Time Trial
 
 When you enter a number in this mode, the number is "timestamped" when you press __Enter__.  This is the standard input mode for Road, Cyclo Cross and MTB races when you have number caller, and riders arrive in quick succession for laps.
 
-When you hear the number caller, you type in the number and press Enter.
-After the first lap of a race, CrossMgr will predict the arrival of each rider in the [Expected](MainScreen.html#expected) window.  To enter the number again, you can just click on it rather than typing it in.
+When you hear the number caller, you type in the number and press __Enter__.
+After the first lap of a race, CrossMgr will predict the arrival of each rider in the [Expected](MainScreen.html#expected) window.  To enter the number again, you can just click on it in the list rather than typing it in.
 
 Entering a number also triggers the [USB Webcam][].
 
 You can enter data through the regular keyboard or an external numeric keypad.  If you have a touchscreen, you can also enter data by pressing the on-screen buttons.
 
-Experience has shown that using a touch-screen is a slower and less accurate method.  Additionally, touch screens tend not to work well in cold weather.  Use a keyboard or external keypad whenever possible.
+Experience has shown that using a touch-screen is a slower and less accurate method.  Additionally, touch screens tend not to work well in cold or hot weather.  Use a keyboard or external keypad whenever possible.
 
 Enter automatically enters the number and gives it a time.  The most accurate way to enter numbers is to type in the number when you hear the number caller, then press Enter just when the rider crosses the line.
 
-You can also enter multiple numbers separated by commas on the same line.  When you press enter, all these numbers be entered with exactly the same time.  This is useful for starting a team in a team time trial all with exactly the same start time. 
+You can also enter multiple numbers separated by commas on the same line.  When you press __Enter__, all these numbers be entered with exactly the same time.  This is useful for starting a team in a team time trial all with exactly the same start time. 
 
 There are a number of additional buttons:
 
@@ -65,36 +65,30 @@ Remember: if you change any rider's status here, you can always change it again 
 
 This is the standard input mode for time trial finishes.  It follows a similar process to a manual stopwatch, except you use the computer.
 
-In time trial mode, you get times as the riders pass by pressing the __Tap for Time__ button (similar to using a recording stopwatch).  This also triggers the [USB Webcam][] to take a picture, if enabled.
-
-Rather then using the mouse, pressing the 't' key is a shortcut to __Tap for Time__.
+In time trial mode, you get times as the riders pass by pressing the __Tap for Time__ button (similar to using a recording stopwatch).  This also triggers the [USB Webcam][] to take a picture, if enabled.  Rather then using the mouse, pressing the 't' key is a shortcut to __Tap for Time__.
 
 You then enter the Bib numbers next to the times - you many not be able to see the number on the back of the rider until he/she has passed.
 
-When you have entered the corresponding bib numbers for the times, press the __Save__ button.  This saves the input and clears the display for the next arrival(s).
+When you have entered the corresponding bib numbers for the times, press the __Save__ button.  This saves the input and clears the display for the next arrival(s).  Rather than using the mouse, pressing the 's' key is a shortcut to __Save__.
 
-Rather than using the mouse, pressing the 's' key is a shortcut to __Save__.
-
-Press __Save__ as soon as you can!  This records the riders in CrossMgr.
+Press __Save__ as soon as you can.  This records the entry in CrossMgr.
 Normally, you would __Tap for Time__ once, then enter the Bib for that time, then press __Save__.  One entry at a time.
 
-Almost always, you see one rider at a time pressing __Save__ each time.
+It is important to get comfortable with doing this on the keyboard alone as it will save a __lot__ of mousing.  Consider using your left hand to operate the 't' and 's' keys, and your right hand to enter bib numbers from a numeric keypad.
 
 Sometimes, 3-4 riders will bunch up at the finish.  In this case, press __Tap for Time__ for each each rider, enter the Bib for each rider, then press __Save__.
 
-CrossMgr gives you up to 12 entries before you must press Save.  This is a large number to work with!  If you see large groups of riders finishing together, they are drafting, which is not permitted.
+CrossMgr gives you up a number of entries before you must press Save.  If you see large groups of riders finishing together, they are drafting, which is not permitted.
 
-If you cannot read a rider's number, and can't find it within 12 riders, enter an invalid, but unique temporary Bib number for the rider, say 8000.
-After the race you can correct the number.  This is an exceptional process.
+If you cannot read a rider's number, and can't find it in time, enter an invalid, but unique temporary Bib number for the rider, say 8000.
+After the race you can correct the number, but retain the correct time.  This is an exceptional process.
 
-Finally, remember that with keyboard shortcuts, you can operate in TT mode without using the mouse.  This is much more convenient and accurate:
+__Shortcut Key Summary__
 
 Shortcut Key|Description
 :-------|:----------
 t|Equivalent to pressing the __Tap for Time__ button.
-s|SEquivalent to pressing the __Save__ button.
-
-The keyboard shortcuts are quicker and more accurate.
+s|Equivalent to pressing the __Save__ button.
 
 Warning: The Time Trial input mode only works when there are start gaps between the riders.  If you have a timed mass single-start event, you may need Keypad mode, or alternatively, consider a [ChipReader][].
 

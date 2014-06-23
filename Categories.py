@@ -106,6 +106,30 @@ class CategoriesPrintout( wx.Printout ):
 		exportGrid.drawToFitDC( self.GetDC() )
 		return True
 
+def PrintCategories():
+	mainWin = Utils.getMainWin()
+	race = Model.race
+	if not mainWin or not race:
+		return
+	
+	pdd = wx.PrintDialogData(mainWin.printData)
+	pdd.SetAllPages( True )
+	pdd.EnableSelection( False )
+	pdd.EnablePageNumbers( False )
+	pdd.EnableHelp( False )
+	pdd.EnablePrintToFile( False )
+	
+	printer = wx.Printer(pdd)
+	printout = CategoriesPrintout()
+
+	if not printer.Print(mainWin, printout, True):
+		if printer.GetLastError() == wx.PRINTER_ERROR:
+			Utils.MessageOK(self, _("There was a printer problem.\nCheck your printer setup."), _("Printer Error"), iconMask=wx.ICON_ERROR)
+	else:
+		mainWin.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
+
+	printout.Destroy()	
+
 #--------------------------------------------------------------------------------
 class TimeEditor(gridlib.PyGridCellEditor):
 	def __init__(self):
@@ -359,30 +383,8 @@ class Categories( wx.Panel ):
 		self.SetSizer(vs)
 
 	def onPrint( self, event ):
-		mainWin = Utils.getMainWin()
-		race = Model.race
-		if not mainWin or not race:
-			return
-		
 		self.commit()
-		
-		pdd = wx.PrintDialogData(mainWin.printData)
-		pdd.SetAllPages( True )
-		pdd.EnableSelection( False )
-		pdd.EnablePageNumbers( False )
-		pdd.EnableHelp( False )
-		pdd.EnablePrintToFile( False )
-		
-		printer = wx.Printer(pdd)
-		printout = CategoriesPrintout()
-
-		if not printer.Print(self, printout, True):
-			if printer.GetLastError() == wx.PRINTER_ERROR:
-				Utils.MessageOK(self, _("There was a printer problem.\nCheck your printer setup."), _("Printer Error"), iconMask=wx.ICON_ERROR)
-		else:
-			mainWin.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
-
-		printout.Destroy()
+		PrintCategories()
 	
 	#------------------------------------------
 	

@@ -43,7 +43,7 @@ from Gantt				import Gantt
 from History			import History
 from RiderDetail		import RiderDetail
 from Results			import Results
-from Categories			import Categories
+from Categories			import Categories, PrintCategories
 from Properties			import Properties, PropertiesDialog, ChangeProperties
 from Recommendations	import Recommendations
 from RaceAnimation		import RaceAnimation, GetAnimationData
@@ -260,6 +260,7 @@ class MainWin( wx.Frame ):
 		
 		recent = wx.Menu()
 		menu = self.fileMenu.AppendMenu(wx.ID_ANY, _("Recent Fil&es"), recent)
+		menu.SetBitmap( Utils.GetPngBitmap('document-open-recent.png') )
 		self.filehistory.UseMenu( recent )
 		self.filehistory.AddFilesToMenu()
 		
@@ -297,6 +298,10 @@ class MainWin( wx.Frame ):
 		AppendMenuItemBitmap( self.publishMenu, idCur, _("Print P&odium Results..."), _("Print the top position results to a printer"),
 								Utils.GetPngBitmap('Podium.png') )
 		self.Bind(wx.EVT_MENU, self.menuPrintPodium, id=idCur )
+
+		idCur = wx.NewId()
+		self.publishMenu.Append( idCur , _("Print C&ategories..."), _("Print Categories") )
+		self.Bind(wx.EVT_MENU, self.menuPrintCategories, id=idCur )
 
 		self.publishMenu.AppendSeparator()
 		
@@ -402,6 +407,44 @@ class MainWin( wx.Frame ):
 		self.dataMgmtMenu.AppendSeparator()
 		
 		#-----------------------------------------------------------------------
+		idCur = wx.NewId()
+		AppendMenuItemBitmap(self.dataMgmtMenu, idCur , _("&Import Time Trial Start Times..."), _("Import Time Trial Start Times"),
+			Utils.GetPngBitmap('clock-add.png') )
+		self.Bind(wx.EVT_MENU, self.menuImportTTStartTimes, id=idCur )
+		
+		#-----------------------------------------------------------------------
+		self.dataMgmtMenu.AppendSeparator()
+		idCur = wx.NewId()
+		AppendMenuItemBitmap( self.dataMgmtMenu, idCur , _("&Import Course in GPX format..."), _("Import Course in GPX format"),
+			Utils.GetPngBitmap('gps-icon.png') )
+		self.Bind(wx.EVT_MENU, self.menuImportGpx, id=idCur )
+		
+		self.exportGpxMenu = wx.Menu()
+		
+		idCur = wx.NewId()
+		self.exportGpxMenu.Append( idCur, _("in GPX Format..."), _("Export Course in GPX format") )
+		self.Bind(wx.EVT_MENU, self.menuExportGpx, id=idCur )
+		
+		idCur = wx.NewId()
+		AppendMenuItemBitmap( self.exportGpxMenu, idCur , _("as HTML &Preview..."),
+			_("Export Course Preview in HTML"),
+			Utils.GetPngBitmap('html-icon.png')
+		)
+		self.Bind(wx.EVT_MENU, self.menuExportCoursePreviewAsHtml, id=idCur )
+		
+		idCur = wx.NewId()
+		AppendMenuItemBitmap( self.exportGpxMenu, idCur,
+			_("as KMZ Virtual Tour..."),
+			_("Export Course as KMZ Virtual Tour (Requires Google Earth to View)"),
+			Utils.GetPngBitmap('Google-Earth-icon.png')
+		)
+		self.Bind(wx.EVT_MENU, self.menuExportCourseAsKml, id=idCur )
+		
+		self.dataMgmtMenu.AppendMenu( wx.NewId(), _('Export Course'), self.exportGpxMenu  )
+		
+		#-----------------------------------------------------------------------
+		
+		self.dataMgmtMenu.AppendSeparator()
 		
 		idCur = wx.NewId()
 		self.dataMgmtMenu.Append( idCur , _("&Import Categories from File..."), _("Import Categories from File") )
@@ -410,9 +453,9 @@ class MainWin( wx.Frame ):
 		idCur = wx.NewId()
 		self.dataMgmtMenu.Append( idCur , _("&Export Categories to File..."), _("Export Categories to File") )
 		self.Bind(wx.EVT_MENU, self.menuExportCategories, id=idCur )
-
+		
 		self.dataMgmtMenu.AppendSeparator()
-		#-----------------------------------------------------------------------
+
 		idCur = wx.NewId()
 		self.dataMgmtMenu.Append( idCur , _("Export History to Excel..."), _("Export History to Excel File") )
 		self.Bind(wx.EVT_MENU, self.menuExportHistory, id=idCur )
@@ -421,38 +464,6 @@ class MainWin( wx.Frame ):
 		self.dataMgmtMenu.Append( idCur , _("Export Raw Data as &HTML..."), _("Export raw data as HTML (.html)") )
 		self.Bind(wx.EVT_MENU, self.menuExportHtmlRawData, id=idCur )
 
-		self.dataMgmtMenu.AppendSeparator()
-		idCur = wx.NewId()
-		AppendMenuItemBitmap(self.dataMgmtMenu, idCur , _("&Import Time Trial Start Times..."), _("Import Time Trial Start Times"),
-			Utils.GetPngBitmap('clock-add.png') )
-		self.Bind(wx.EVT_MENU, self.menuImportTTStartTimes, id=idCur )
-		
-		self.dataMgmtMenu.AppendSeparator()
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.dataMgmtMenu, idCur , _("&Import Course in GPX format..."), _("Import Course in GPX format"),
-			Utils.GetPngBitmap('gps-icon.png') )
-		self.Bind(wx.EVT_MENU, self.menuImportGpx, id=idCur )
-		
-		self.dataMgmtMenu.AppendSeparator()
-		idCur = wx.NewId()
-		self.dataMgmtMenu.Append( idCur, _("Export Course in GPX format..."), _("Export Course in GPX format") )
-		self.Bind(wx.EVT_MENU, self.menuExportGpx, id=idCur )
-		
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.dataMgmtMenu, idCur,
-			_("&Export Course as KMZ Virtual Tour..."),
-			_("Export Course as KMZ Virtual Tour (Requires Google Earth to View)"),
-			Utils.GetPngBitmap('Google-Earth-icon.png')
-		)
-		self.Bind(wx.EVT_MENU, self.menuExportCourseAsKml, id=idCur )
-		
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.dataMgmtMenu, idCur , _("Export Course &Preview in HTML..."),
-			_("Export Course Preview in HTML"),
-			Utils.GetPngBitmap('html-icon.png')
-		)
-		self.Bind(wx.EVT_MENU, self.menuExportCoursePreviewAsHtml, id=idCur )
-		
 		self.menuBar.Append( self.dataMgmtMenu, _("&DataMgmt") )
 
 		#----------------------------------------------------------------------------------------------
@@ -506,21 +517,6 @@ class MainWin( wx.Frame ):
 		self.splitter.SplitVertically( self.forecastHistory, self.notebook, forecastHistoryWidth + 80)
 		self.splitter.UpdateSize()
 
-		#------------------------------------------------------------------------------
-		# Create a menu for quick navigation
-		self.pageMenu = wx.Menu()
-		self.idPage = {}
-		jumpToIds = []
-		for i, p in enumerate(self.pages):
-			name = self.notebook.GetPageText(i)
-			idCur = wx.NewId()
-			self.idPage[idCur] = i
-			self.pageMenu.Append( idCur, u'{}\tF{}'.format(name, i+1), _("Jump to {} Screen").format(name) )
-			self.Bind(wx.EVT_MENU, self.menuShowPage, id=idCur )
-			jumpToIds.append( idCur )
-			
-		self.menuBar.Append( self.pageMenu, _("&JumpTo") )
-
 		#-----------------------------------------------------------------------
 		self.chipMenu = wx.Menu()
 
@@ -548,24 +544,39 @@ class MainWin( wx.Frame ):
 		
 		self.menuBar.Append( self.chipMenu, _("Chip&Reader") )
 
-		#-----------------------------------------------------------------------
-		self.cameraMenu = wx.Menu()
-
+		#----------------------------------------------------------------------------------------------
+		self.toolsMenu = wx.Menu()
+		
 		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.cameraMenu, idCur , _("&Test USB Camera..."), _("Test the USB Camera"), Utils.GetPngBitmap('camera-webcam.png') )
+		AppendMenuItemBitmap( self.toolsMenu, idCur , _("&Test USB Camera..."), _("Test the USB Camera"), Utils.GetPngBitmap('camera-webcam.png') )
 		self.Bind(wx.EVT_MENU, self.menuCameraTest, id=idCur )
 		
-		self.menuBar.Append( self.cameraMenu, _("C&amera") )
+		self.toolsMenu.AppendSeparator()
 		
-		#-----------------------------------------------------------------------
-		self.demoMenu = wx.Menu()
-
 		idCur = wx.NewId()
-		self.demoMenu.Append( idCur , _("&Simulate Race..."), _("Simulate a race") )
+		self.toolsMenu.Append( idCur , _("&Simulate Race..."), _("Simulate a race") )
 		self.Bind(wx.EVT_MENU, self.menuSimulate, id=idCur )
 
-		self.menuBar.Append( self.demoMenu, _("Dem&o") )
+		self.toolsMenu.AppendSeparator()
+		
+		idCur = wx.NewId()
+		self.toolsMenu.Append( idCur , _("&Change Race Start Time..."), _("Change the Start Time of the Race") )
+		self.Bind(wx.EVT_MENU, self.menuChangeRaceStartTime, id=idCur )
+		
+		self.toolsMenu.AppendSeparator()
 
+		idCur = wx.NewId()
+		self.toolsMenu.Append( idCur , _("Copy Log File to &Clipboard..."), _("Copy Log File to &Clipboard") )
+		self.Bind(wx.EVT_MENU, self.menuCopyLogFileToClipboard, id=idCur )
+
+		self.toolsMenu.AppendSeparator()
+
+		idCur = wx.NewId()
+		self.toolsMenu.Append( idCur , _("&Reload Checklist..."), _("Reload the Checklist from the Checklist File") )
+		self.Bind(wx.EVT_MENU, self.menuReloadChecklist, id=idCur )
+		
+		self.menuBar.Append( self.toolsMenu, _("&Tools") )
+		
 		#-----------------------------------------------------------------------
 		self.optionsMenu = wx.Menu()
 		idCur = wx.NewId()
@@ -594,7 +605,23 @@ class MainWin( wx.Frame ):
 		
 		self.menuBar.Append( self.optionsMenu, _("&Options") )
 		
-		#-----------------------------------------------------------------------
+
+		#------------------------------------------------------------------------------
+		# Create a menu for quick navigation
+		self.pageMenu = wx.Menu()
+		self.idPage = {}
+		jumpToIds = []
+		for i, p in enumerate(self.pages):
+			name = self.notebook.GetPageText(i)
+			idCur = wx.NewId()
+			self.idPage[idCur] = i
+			self.pageMenu.Append( idCur, u'{}\tF{}'.format(name, i+1), _("Jump to {} Screen").format(name) )
+			self.Bind(wx.EVT_MENU, self.menuShowPage, id=idCur )
+			jumpToIds.append( idCur )
+			
+		self.menuBar.Append( self.pageMenu, _("&JumpTo") )
+
+		#------------------------------------------------------------------------------
 		self.helpMenu = wx.Menu()
 
 		idCur = wx.NewId()
@@ -616,30 +643,11 @@ class MainWin( wx.Frame ):
 		self.helpMenu.Append( idCur , _("&Tips at Startup..."), _("Enable/Disable Tips at Startup...") )
 		self.Bind(wx.EVT_MENU, self.menuTipAtStartup, id=idCur )
 
-		#----------------------------------------------------------------------------------------------
-		self.toolsMenu = wx.Menu()
-		
-		idCur = wx.NewId()
-		self.toolsMenu.Append( idCur , _("&Change Race Start Time..."), _("Change the Start Time of the Race") )
-		self.Bind(wx.EVT_MENU, self.menuChangeRaceStartTime, id=idCur )
-		
-		self.toolsMenu.AppendSeparator()
 
-		idCur = wx.NewId()
-		self.toolsMenu.Append( idCur , _("Copy Log File to &Clipboard..."), _("Copy Log File to &Clipboard") )
-		self.Bind(wx.EVT_MENU, self.menuCopyLogFileToClipboard, id=idCur )
-
-		self.toolsMenu.AppendSeparator()
-
-		idCur = wx.NewId()
-		self.toolsMenu.Append( idCur , _("&Reload Checklist..."), _("Reload the Checklist from the Checklist File") )
-		self.Bind(wx.EVT_MENU, self.menuReloadChecklist, id=idCur )
-		
-		self.menuBar.Append( self.toolsMenu, _("&Tools") )
-		
-		#------------------------------------------------------------------------------
 		self.menuBar.Append( self.helpMenu, _("&Help") )
 
+		#------------------------------------------------------------------------------
+		#------------------------------------------------------------------------------
 		#------------------------------------------------------------------------------
 		self.SetMenuBar( self.menuBar )
 
@@ -1110,6 +1118,11 @@ class MainWin( wx.Frame ):
 			if fname:
 				webbrowser.open( fname, new = 2, autoraise = True )
 			Utils.MessageOK( self, _('Results written as PNG files to:\n\n    {}').format(dir), 'PNG Publish' )
+
+	@logCall
+	def menuPrintCategories( self, event ):
+		self.commit()
+		PrintCategories()
 
 	@logCall
 	def menuLinkExcel( self, event = None ):

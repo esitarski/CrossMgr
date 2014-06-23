@@ -4,7 +4,7 @@
 # Publish
 
 ## Page Setup...
-Setup the printing page when printing the results directly from CrossMgr.  Most users create HTML output, then print from there.
+Setup the printing page when printing the results directly from CrossMgr.
 
 ## Preview Print Results...
 Shows how the results would look if printed.
@@ -25,6 +25,9 @@ The output will not include lap times, nor will it include DNF, DNS or DQ riders
 You can print results for a Category only if there are riders of that Category in the race.
 
 The report will include the specified number of podium positions, or the number of finishers in the category - whichever is less.
+
+## Print Categories...
+Prints a summary of the Categories with number of laps and number ranges.  This can be useful as a quick reference to all the categories on course and not a bulky as a full start list.
 
 ## Excel Publish...
 Publish the results in Excel format and opens Excel on the output file.

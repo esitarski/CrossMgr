@@ -58,40 +58,6 @@ Clicking on a column name will sort the potential DNS riders by that column.
 
 Remember Ctrl-Z (Undo) and Ctrl-Y (Redo) if you need to.
 
-## Category Mgmt
-### Import Categories from File...
-Read the categories from a previously exported Categories file.
-
-### Export Categories to File...
-Export the currently defined categories to a file.  This is useful is you find yourself configuring the same categories many times and wish to reuse the same category definitions from one race to another.
-
-### Export History to Excel...
-Export the History data to Excel.  This is useful for manual review.
-
-### Export Raw Data as HTML...
-Export the raw data of the race into an HTML file.  This is useful for checking input received from a chip timing system, or manual input.
-Edited entries are also shown with edit details, however, any missing entries projected by CrossMgr are not included.
-
-Columns in the table are as follows:
-
-Column|Description
-:-----|:----------
-Sequence Number|Number of the entry
-Clock Time|Clock time of the entry
-Race Time|Race time of the entry (= Clock Time - Race Start Time)
-Bib#|Bib number of the rider
-Count|The count of the number of reads for this rider.
-Race Cat.|Race category of the rider, if found
-Name|"LAST, First" name of the rider (if present in the [External Excel][] sheet)
-Team|Team of the rider (if present in the [External Excel][] sheet)
-Category|Category of the rider (if present in the [External Excel][] sheet)
-License|License of the rider (if present in the [External Excel][] sheet)
-Tag|Chip tag associated with the entry (if chip timing, and if present in the [External Excel][] sheet)
-Tag2|2nd chip tag associated with the entry (if chip timing and if present in the [External Excel][] sheet)
-Edit|Reason for the data edit
-By|Username who made the edit (login name on the computer)
-On|Date and Time when the edit was made.
-
 ## Import Time Trial Start Times...
 
 Imports start times for a time trial from a spreadsheet.
@@ -134,9 +100,9 @@ The GPX format contains Latitude/Longitude coordinates, as well as elevations an
 
 GPX files downloaded from [MapMyRide](http://www.mapmyride.com/) do not contain elevation data.  However, the elevation data can be downloaded separately on the same MapMyRide page to a file called "elevation.csv".  If you wish to use the "elevation.csv" data from [MapMyRide](http://www.mapmyride.com/), save the "elevation.csv" file in the same folder as the GPX file.  CrossMgr will detect it, and pick up the elevation information when it reads the GPX file.
 
-If you select the "Set Category Distances to GPX Lap Length" in the last screen of the wizard (the default), the Category distances will automatically be filled in with the GPX course length.
+If you select the __Set Category Distances to GPX Lap Length__ in the last screen of the wizard (the default), the Category distances will automatically be filled in with the GPX course length.
 
-### Editing GPS Files
+### Editing GPX Files
 
 Say you have GPX file from a rider for his entire 8 lap race.  But, CrossMgr requires a GPX for a single lap.  What to do?
 
@@ -163,7 +129,7 @@ From the left side of the screen, right-click on "Track Segment #1", and Delete 
 
 Then save the file.  Now you have a GPX file with one lap.
 
-## But, I only have a .fit File from a Garmin!
+### But, I only have a .fit File from a Garmin!
 
 No problem.  You just need to convert it to a GPX file with [GPSBabel](http://www.gpsbabel.org).
 
@@ -172,27 +138,65 @@ No problem.  You just need to convert it to a GPX file with [GPSBabel](http://ww
 1. Launch GPSBabel, open the .fit file of the course, then write it out as a .gpx file.
 1. Check the .gpx file you just made with [GPX Editor](http://sourceforge.net/projects/gpxeditor/).  See instructions above if it needs to be fixed in some way.
 
-Now, you can import your new .gpx file into CrossMgr for display.
+Now, you can import your new .gpx file into CrossMgr.
 
-## Export Course as KMZ Virtual Tour
+## Export Course
+### ...in GPX Format
+Write a GPX file of the course in the same format that CrossMgr reads.  Useful when you want to transfer one GPX course to another CrossMgr race or another application.
 
-This features exports the GPX imported course in KMZ format with an animated flying virtual tour.  KMZ file formats are compatible with Google Earth.  CrossMgr launches Google Earth after the download.
+### ...as HTML Preview
 
-To see the virtual tour:
-
-1. Ensure you have [Google Earth](http://www.google.com/earth/index.html) installed.
-1. Make sure you have a race with an imported GPX course.
-1. From CrossMgr, do "DataMgmt/Export Course as KMZ Virtual Tour"
-1. After Google Earth comes up, double-click on name of your Race - look for it in the left column.
-1. Then, double-click on "<Race Name>: Virtual Tour" (the first entry).
-1. Watch the virtual tour of your race in real-time.
-
-## Export Course Preview in HTML
-
-This creates a course preview web page which includes a Google Map with the course drawn on it as well as an Aligraph (altitude map).
+Creates a course preview web page which includes a Google Map with the course drawn on it as well as an Aligraph (altitude map).
 In addition, the page has two buttons:
 
 Button|Action
 :-----|:-----
 Get Directions|Opens a Google Maps page with the Destination filled in to the Course.
 Google Earth Ride|Opens a page showing a 3d course animation - requires the Google Earth plugin.  The animation looks like a helmet camera.
+
+### ...as KMZ Virtual Tour
+
+Creates a KMZ file with an animated fly-over virtual tour of the course.  KMZ file formats are compatible with Google Earth.  CrossMgr launches Google Earth after the download.
+
+To see the virtual tour:
+
+1. Ensure you have [Google Earth](http://www.google.com/earth/index.html) installed.
+1. Make sure you have a race with an imported GPX course.
+1. From CrossMgr, do "DataMgmt/Export Course.../as KMZ Virtual Tour..."
+1. After Google Earth comes up, double-click on name of your Race - look for it in the left column.
+1. Then, double-click on "`<Race Name>`: Virtual Tour" (the first entry).
+1. Watch the virtual tour of your race in real-time.
+
+## Import Categories from File...
+Read the categories from a previously exported Categories file.
+
+## Export Categories to File...
+Export the currently defined categories to a file.  This is useful is you find yourself configuring the same categories many times and wish to reuse the same category definitions from one race to another.
+
+## Export History to Excel...
+Export the History data to Excel.  This is useful for manual review.
+
+## Export Raw Data as HTML...
+Export the raw data of the race into an HTML file.  This is useful for checking input received from a chip timing system, or manual input.
+Edited entries are also shown with edit details, however, any missing entries projected by CrossMgr are not included.
+
+Columns in the table are as follows:
+
+Column|Description
+:-----|:----------
+Sequence Number|Number of the entry
+Clock Time|Clock time of the entry
+Race Time|Race time of the entry (= Clock Time - Race Start Time)
+Bib#|Bib number of the rider
+Count|The count of the number of reads for this rider.
+Race Cat.|Race category of the rider, if found
+Name|"LAST, First" name of the rider (if present in the [External Excel][] sheet)
+Team|Team of the rider (if present in the [External Excel][] sheet)
+Category|Category of the rider (if present in the [External Excel][] sheet)
+License|License of the rider (if present in the [External Excel][] sheet)
+Tag|Chip tag associated with the entry (if chip timing, and if present in the [External Excel][] sheet)
+Tag2|2nd chip tag associated with the entry (if chip timing and if present in the [External Excel][] sheet)
+Edit|Reason for the data edit
+By|Username who made the edit (login name on the computer)
+On|Date and Time when the edit was made.
+

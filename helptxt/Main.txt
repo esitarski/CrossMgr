@@ -8,11 +8,10 @@ Get started with CrossMgr now!
 * [Publish][]
 * [Edit][]
 * [DataMgmt][]
-* [JumpTo][]
 * [ChipReader][]
-* [Camera][]
-* [Demo][]
+* [Tools][]
 * [Options][]
+* [JumpTo][]
 * [Help][]
 
 ## Screens
