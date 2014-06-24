@@ -198,6 +198,7 @@ setup = {
 		'xlwt >= 0.7.5',
 		'whoosh >= 2.5.7',
 		'qrcode >= 4.0.4',
+		'beautifulsoup4 >= 4.0.0',
 		'PIL >= 1.1.6',
 		# 'wxPython >= 3.0.0',
 	],
