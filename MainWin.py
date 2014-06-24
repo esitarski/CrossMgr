@@ -300,7 +300,7 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_MENU, self.menuPrintPodium, id=idCur )
 
 		idCur = wx.NewId()
-		self.publishMenu.Append( idCur , _("Print C&ategories..."), _("Print Categories") )
+		AppendMenuItemBitmap( self.publishMenu, idCur , _("Print C&ategories..."), _("Print Categories"), Utils.GetPngBitmap('categories.png') )
 		self.Bind(wx.EVT_MENU, self.menuPrintCategories, id=idCur )
 
 		self.publishMenu.AppendSeparator()
