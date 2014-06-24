@@ -85,6 +85,9 @@ def CompileHelp( dir = '.' ):
 		
 		# Copy all the files into the htmldoc directory.
 		htmldocdir = os.path.join('..', HtmlDocFolder)
+		if not os.path.exists( htmldocdir ):
+			os.mkdir( htmldocdir )
+
 		for fname in glob.glob( os.path.join(htmldocdir, '*.html') ):
 			os.remove( fname )
 		for fname in glob.glob("./*.html"):

@@ -1,6 +1,7 @@
 import Utils
 import wx
 import os
+import sys
 import cStringIO as StringIO
 from whoosh.index import open_dir
 from whoosh.qparser import QueryParser
@@ -38,7 +39,8 @@ class HelpSearch( wx.Panel ):
 		f = StringIO.StringIO()
 		try:
 			ix = open_dir( Utils.getHelpIndexFolder(), readonly=True )
-		except IOError:
+		except Exception as e:
+			Utils.logException( e, sys.exc_info() )
 			ix = None
 			
 		f.write( '<html>\n' )

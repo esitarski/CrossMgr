@@ -535,7 +535,8 @@ class NumKeypad( wx.Panel ):
 					changed |= SetLabel( self.message, _('{}: Leader Finish Alert').format(leaderNum) )
 				else:
 					changed |= SetLabel( self.message, self.raceMessage.get(lapsToGo, '') )
-				race.numLaps = laps
+				if race:
+					race.numLaps = laps
 			else:
 				changed |= SetLabel( self.numLaps, unicode(laps) )
 				changed |= SetLabel( self.leaderFinishTime, u'' )
@@ -546,7 +547,8 @@ class NumKeypad( wx.Panel ):
 				changed |= SetLabel( self.estLeaderTime, u'' )
 				changed |= SetLabel( self.estLastRiderTime, u'' )
 				changed |= SetLabel( self.message, _('Collecting Data') )
-				race.numLaps = None
+				if race:
+					race.numLaps = None
 				
 		if changed:
 			Utils.LayoutChildResize( self.message )
