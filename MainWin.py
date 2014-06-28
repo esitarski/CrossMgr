@@ -2371,7 +2371,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			race.excelLink.setFieldCol( {'Bib#':0, 'LastName':1, 'FirstName':2, 'Team':3} )
 
 		# Start the simulation.
-		self.showPageName( 'History' )
+		self.showPageName( _('Chart') )
 		self.refresh()
 
 		self.nextNum = None
