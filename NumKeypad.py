@@ -564,6 +564,7 @@ class NumKeypad( wx.Panel ):
 		if not results:
 			return
 		
+		categoryLapTotal = {}
 		catLapCount = defaultdict(int)
 		catCount = defaultdict(int)
 		catRaceCount = defaultdict(int)
@@ -574,8 +575,11 @@ class NumKeypad( wx.Panel ):
 				catCount[category] += 1
 				if rr.status != Model.Rider.Finisher:
 					continue
-				numLaps = race.getCategoryBestLaps( category )
-				numLaps = (numLaps if numLaps else 1)
+				
+				if category not in categoryLapTotal:
+					categoryLapTotal[category] = max(1, rr.laps)
+				
+				numLaps = categoryLapTotal[category]
 				
 				tSearch = t
 				if race.isTimeTrial:
