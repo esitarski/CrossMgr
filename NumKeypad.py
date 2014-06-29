@@ -332,9 +332,9 @@ class NumKeypad( wx.Panel ):
 		
 		self.lapCountList = wx.ListCtrl( panel, wx.ID_ANY, style = wx.LC_REPORT|wx.LC_SINGLE_SEL|wx.LC_HRULES|wx.BORDER_NONE )
 		self.lapCountList.SetFont( wx.Font(int(fontSize*0.9), wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
-		self.lapCountList.InsertColumn( 0, _('Category'),	wx.LIST_FORMAT_LEFT,	80 )
+		self.lapCountList.InsertColumn( 0, _('Category'),	wx.LIST_FORMAT_LEFT,	140 )
 		self.lapCountList.InsertColumn( 1, _('Count'),		wx.LIST_FORMAT_RIGHT,	70 )
-		self.lapCountList.InsertColumn( 2, '',				wx.LIST_FORMAT_LEFT,	140 )
+		self.lapCountList.InsertColumn( 2, u'',				wx.LIST_FORMAT_LEFT,	140 )
 		rcVertical.Add( self.lapCountList, 1, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, border = 4 )
 		
 		horizontalMainSizer.Add( rcVertical, 1, flag=wx.EXPAND|wx.LEFT, border = 4 )
@@ -620,8 +620,8 @@ class NumKeypad( wx.Panel ):
 		
 		appendListRow( (
 							_('Total'),
-							u'%d/%d' % (	sum(count for count in catLapCount.itervalues()),
-										sum(count for count in catCount.itervalues()))
+							u'{}/{}'.format(sum(count for count in catLapCount.itervalues()),
+											sum(count for count in catCount.itervalues()))
 						),
 						colour=wx.BLUE,
 						bold=True )
@@ -629,12 +629,10 @@ class NumKeypad( wx.Panel ):
 		lastCategory = None
 		for category, lap, categoryLaps, count in catLapList:
 			if category != lastCategory:
-				appendListRow( (category.fullname, u'%d/%d' % (catRaceCount[category], catCount[category]),
+				appendListRow( (category.fullname, u'{}/{}'.format(catRaceCount[category], catCount[category]),
 									(u'({} {})'.format(categoryLaps, _('laps') if categoryLaps > 1 else _('lap'))) ),
 								bold = True )
-			appendListRow( ('', count, u'{} {} ({} {})'.format(
-				_('on lap'), lap,
-				categoryLapTotal[category]-lap,_('to go'))) )
+			appendListRow( (u'', count, u'{} {}'.format( _('on lap'), lap ) ) )
 			lastCategory = category
 	
 	def commit( self ):
