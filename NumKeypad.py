@@ -334,7 +334,7 @@ class NumKeypad( wx.Panel ):
 		self.lapCountList.SetFont( wx.Font(int(fontSize*0.9), wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
 		self.lapCountList.InsertColumn( 0, _('Category'),	wx.LIST_FORMAT_LEFT,	80 )
 		self.lapCountList.InsertColumn( 1, _('Count'),		wx.LIST_FORMAT_RIGHT,	70 )
-		self.lapCountList.InsertColumn( 2, '',				wx.LIST_FORMAT_LEFT,	90 )
+		self.lapCountList.InsertColumn( 2, '',				wx.LIST_FORMAT_LEFT,	140 )
 		rcVertical.Add( self.lapCountList, 1, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, border = 4 )
 		
 		horizontalMainSizer.Add( rcVertical, 1, flag=wx.EXPAND|wx.LEFT, border = 4 )
@@ -632,7 +632,9 @@ class NumKeypad( wx.Panel ):
 				appendListRow( (category.fullname, u'%d/%d' % (catRaceCount[category], catCount[category]),
 									(u'({} {})'.format(categoryLaps, _('laps') if categoryLaps > 1 else _('lap'))) ),
 								bold = True )
-			appendListRow( ('', count, u'{} {}'.format(_('on lap'), lap)) )
+			appendListRow( ('', count, u'{} {} ({} {})'.format(
+				_('on lap'), lap,
+				categoryLapTotal[category]-lap,_('to go'))) )
 			lastCategory = category
 	
 	def commit( self ):
