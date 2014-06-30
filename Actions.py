@@ -202,7 +202,7 @@ class Actions( wx.Panel ):
 		self.timer = wx.Timer( self )
 		self.timer.SetOwner( self )
 		self.Bind( wx.EVT_TIMER, self.onTimer, self.timer )
-		wx.CallAfter( self.timer.Start, 0, False )
+		wx.CallAfter( self.onTimer, None )
 		
 		self.raceIntro = wx.StaticText( self.leftPanel, label =  u'' )
 		self.raceIntro.SetFont( wx.Font(24, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
@@ -225,7 +225,10 @@ class Actions( wx.Panel ):
 		hs.Add(self.raceIntro, 1, border=border, flag=wx.ALL|wx.EXPAND)
 		
 		bs.Add( hs, border=border, flag=wx.ALL )
-		bs.Add(self.clock, border=border, flag=wx.ALL)
+		hsClock = wx.BoxSizer(wx.HORIZONTAL)
+		hsClock.AddSpacer( 54 )
+		hsClock.Add(self.clock)
+		bs.Add(hsClock, border=border, flag=wx.ALL)
 		bs.Add(self.startRaceTimeCheckBox, border=border, flag=wx.ALL)
 		bs.Add(self.chipTimingOptions, border=border, flag=wx.ALL)
 		
