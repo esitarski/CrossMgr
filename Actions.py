@@ -198,7 +198,6 @@ class Actions( wx.Panel ):
 		self.clock.SetFont( wx.Font(24, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
 		
 		self.timer = wx.Timer( self )
-		self.timer.SetOwner( self )
 		self.Bind( wx.EVT_TIMER, self.onTimer, self.timer )
 		wx.CallAfter( self.onTimer )
 		
