@@ -15,6 +15,8 @@ from Undo import undo
 import VideoBuffer
 import Checklist
 
+now = datetime.datetime.now
+
 undoResetTimer = None
 def StartRaceNow():
 	global undoResetTimer
@@ -194,6 +196,14 @@ class Actions( wx.Panel ):
 		self.button.SetForegroundColour( wx.Colour(128,128,128) )
 		self.Bind(wx.EVT_BUTTON, self.onPress, self.button )
 		
+		self.clock = wx.StaticText( self, label=u'00:00:00' )
+		self.clock.SetFont( wx.Font(24, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
+		
+		self.timer = wx.Timer( self )
+		self.timer.SetOwner( self )
+		self.Bind( wx.EVT_TIMER, self.onTimer, self.timer )
+		wx.CallAfter( self.timer.Start, 0, False )
+		
 		self.raceIntro = wx.StaticText( self.leftPanel, label =  u'' )
 		self.raceIntro.SetFont( wx.Font(24, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
 		
@@ -215,6 +225,7 @@ class Actions( wx.Panel ):
 		hs.Add(self.raceIntro, 1, border=border, flag=wx.ALL|wx.EXPAND)
 		
 		bs.Add( hs, border=border, flag=wx.ALL )
+		bs.Add(self.clock, border=border, flag=wx.ALL)
 		bs.Add(self.startRaceTimeCheckBox, border=border, flag=wx.ALL)
 		bs.Add(self.chipTimingOptions, border=border, flag=wx.ALL)
 		
@@ -256,6 +267,12 @@ class Actions( wx.Panel ):
 		race = Model.race
 		race.resetStartClockOnFirstTag	= bool(iSelection == self.iResetStartClockOnFirstTag)
 		race.skipFirstTagRead			= bool(iSelection == self.iSkipFirstTagRead)
+	
+	def onTimer( self, event ):
+		t = now()
+		self.clock.SetLabel( t.strftime( '%H:%M:%S' ) )
+		# Schedule the clock update for just after the next second.
+		self.timer.Start( 1001.0 - t.microsecond/1000.0, True )
 	
 	def onChipTimingOptions( self, event ):
 		if not Model.race:
