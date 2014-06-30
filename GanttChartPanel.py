@@ -440,9 +440,12 @@ class GanttChartPanel(wx.PyPanel):
 		tLeaderLast = None
 		dy = 0
 		for i, s in enumerate(self.data):
+			# Record the leader's last x position.
+			if tLeaderLast is None:
+				tLeaderLast = s[-1] if s else 0.0
 			if not( iDataShowStart <= i < iDataShowEnd ):
 				continue
-				
+			
 			try:
 				num = numFromLabel(self.labels[i])
 			except (TypeError, IndexError):
@@ -531,10 +534,6 @@ class GanttChartPanel(wx.PyPanel):
 							xyDuplicate.append( (xOriginal, yLast) )
 
 				xLast = xCur
-			
-			# Record the leader's last x position.
-			if tLeaderLast is None:
-				tLeaderLast = t
 			
 			# Draw the last empty bar.
 			xCur = int(labelsWidthLeft + self.dataMax * xFactor)
