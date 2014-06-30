@@ -2764,6 +2764,9 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 
 	def getCurrentPage( self ):
 		return self.pages[self.notebook.GetSelection()]
+		
+	def isShowingPage( self, page ):
+		return page == self.pages[self.notebook.GetSelection()]
 	
 	def showRiderDetail( self, num = None ):
 		self.riderDetail.setRider( num )

@@ -15,8 +15,6 @@ from Undo import undo
 import VideoBuffer
 import Checklist
 
-now = datetime.datetime.now
-
 undoResetTimer = None
 def StartRaceNow():
 	global undoResetTimer
@@ -202,7 +200,7 @@ class Actions( wx.Panel ):
 		self.timer = wx.Timer( self )
 		self.timer.SetOwner( self )
 		self.Bind( wx.EVT_TIMER, self.onTimer, self.timer )
-		wx.CallAfter( self.onTimer, None )
+		wx.CallAfter( self.onTimer )
 		
 		self.raceIntro = wx.StaticText( self.leftPanel, label =  u'' )
 		self.raceIntro.SetFont( wx.Font(24, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
@@ -271,11 +269,15 @@ class Actions( wx.Panel ):
 		race.resetStartClockOnFirstTag	= bool(iSelection == self.iResetStartClockOnFirstTag)
 		race.skipFirstTagRead			= bool(iSelection == self.iSkipFirstTagRead)
 	
-	def onTimer( self, event ):
-		t = now()
-		self.clock.SetLabel( t.strftime( '%H:%M:%S' ) )
-		# Schedule the clock update for just after the next second.
-		self.timer.Start( 1001.0 - t.microsecond/1000.0, True )
+	def onTimer( self, event = None ):
+		t = datetime.datetime.now()
+		if not self.timer.IsRunning():
+			# Only the timer if this page is being displayed - we need all the cycles we can get.
+			# Schedule the clock update for just after the next second.
+			mainWin = Utils.getMainWin()
+			if not mainWin or mainWin.isShowingPage(self):
+				self.timer.Start( 1001.0 - t.microsecond/1000.0, True )
+		self.clock.SetLabel( t.strftime('%H:%M:%S') )
 	
 	def onChipTimingOptions( self, event ):
 		if not Model.race:
@@ -349,6 +351,7 @@ class Actions( wx.Panel ):
 			realTimeFtpPublish.publishEntry( True )
 	
 	def refresh( self ):
+		self.onTimer()
 		self.button.Enable( False )
 		self.startRaceTimeCheckBox.Enable( False )
 		self.button.SetLabel( StartText )

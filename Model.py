@@ -613,10 +613,7 @@ class Rider(object):
 		if status in [Rider.Finisher, Rider.DNS, Rider.DQ]:
 			tStatus = None
 		elif status in [Rider.Pulled, Rider.DNF]:
-			if tStatus is None:
-				race = getRace()
-				if race:
-					tStatus = race.lastRaceTime()
+			tStatus = race.lastRaceTime() if race else None
 		
 		self.status = status
 		self.tStatus = tStatus
