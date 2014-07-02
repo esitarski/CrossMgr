@@ -195,7 +195,7 @@ class Actions( wx.Panel ):
 		self.button.SetForegroundColour( wx.Colour(128,128,128) )
 		self.Bind(wx.EVT_BUTTON, self.onPress, self.button )
 		
-		self.clock = Clock( self, size=(180,180), checkFunc=self.updateClock )
+		self.clock = Clock( self, size=(190,190), checkFunc=self.updateClock )
 		
 		self.raceIntro = wx.StaticText( self.leftPanel, label =  u'' )
 		self.raceIntro.SetFont( wx.Font(24, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
@@ -219,10 +219,10 @@ class Actions( wx.Panel ):
 		
 		bs.Add( hs, border=border, flag=wx.ALL )
 		hsClock = wx.BoxSizer(wx.HORIZONTAL)
-		hsClock.AddSpacer( 28 )
+		hsClock.AddSpacer( 23 )
 		hsClock.Add(self.clock)
-		hsClock.Add(self.startRaceTimeCheckBox, border=border, flag=wx.ALL)
-		bs.Add(hsClock, border=border, flag=wx.ALL)
+		hsClock.Add(self.startRaceTimeCheckBox, border=4, flag=wx.LEFT)
+		bs.Add(hsClock, border=4, flag=wx.ALL)
 		bs.Add(self.chipTimingOptions, border=border, flag=wx.ALL)
 		
 		#---------------------------------------------------------------------------------------------

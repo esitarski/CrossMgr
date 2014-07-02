@@ -54,7 +54,7 @@ class Clock(wx.PyControl):
 		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
 		self.Bind(wx.EVT_SIZE, self.OnSize)
 		
-		self.checkFunc = checkFunc
+		self.checkFunc = checkFunc if checkFunc else lambda: True
 		self.tCur = datetime.datetime.now()
 		wx.CallAfter( self.onTimer )
 		
@@ -107,7 +107,7 @@ class Clock(wx.PyControl):
 		size = self.GetClientSize()
 		width = size.width
 		height = size.height
-		radius = min(width, height) // 2
+		radius = min(width, height) // 2 * 0.9
 		xCenter, yCenter = width//2, height//2
 		
 		backColour = self.GetBackgroundColour()
@@ -135,8 +135,39 @@ class Clock(wx.PyControl):
 		wMinuteHand = wHourTicks
 		wSecondHand = wMinuteHand / 2.0
 		
+		tCos60Local = tCos60
+		tSin60Local = tSin60
 		penSecond = ctx.CreatePen( GetPen(width=wMinuteTicks, cap=wx.wx.CAP_BUTT) )
 		penHour = ctx.CreatePen( GetPen(width=wHourTicks, cap=wx.wx.CAP_BUTT) )
+		
+		#-----------------------------------------------------------------------------
+		r = radius * 1.0/0.9
+		def drawCircle( x, y, r ):
+			ctx.DrawEllipse( x - r, y - r, r * 2, r * 2 )
+		
+		# Draw the metal ring
+		ctx.SetBrush( ctx.CreateRadialGradientBrush(
+						xCenter, yCenter - r,
+						xCenter, yCenter - r,
+						r * 2,
+						wx.WHITE, wx.Colour(33,33,33) ) )
+		drawCircle( xCenter, yCenter, r )
+		
+		rSmaller = r * 0.90
+		ctx.SetBrush( ctx.CreateRadialGradientBrush(
+						xCenter, yCenter + rSmaller,
+						xCenter, yCenter + rSmaller,
+						rSmaller * 2,
+						wx.WHITE, wx.Colour(33,33,33) ) )
+		drawCircle( xCenter, yCenter, rSmaller )
+		
+		#-----------------------------------------------------------------------------
+		ctx.SetPen( penSecond )
+		ctx.SetBrush( ctx.CreateRadialGradientBrush(
+			xCenter, yCenter-radius*0.6, xCenter, yCenter, rOutside,
+			wx.Colour(252,252,252), wx.Colour(220,220,220) ) )
+		ctx.DrawEllipse( xCenter - rOutside, yCenter - rOutside, rOutside*2, rOutside*2 )
+
 		penCur = None
 		for i in xrange(60):
 			if i % 5 == 0:
@@ -149,13 +180,10 @@ class Clock(wx.PyControl):
 				penCur = pen
 				ctx.SetPen( pen )
 			ctx.StrokeLine(
-				xCenter + rIn * tCos60[i], yCenter - rIn * tSin60[i],
-				xCenter + rOutTicks * tCos60[i], yCenter - rOutTicks * tSin60[i]
+				xCenter + rIn * tCos60Local[i], yCenter + rIn * tSin60Local[i],
+				xCenter + rOutTicks * tCos60Local[i], yCenter + rOutTicks * tSin60Local[i]
 			)
 			
-		ctx.SetPen( penSecond )
-		ctx.DrawEllipse( xCenter - rOutside, yCenter - rOutside, rOutside*2, rOutside*2 )
-		
 		fHour = (t.hour % 12) / 12.0
 		fMinute = t.minute / 60.0
 		fSecond = (t.second  + t.microsecond/1000000.0) / 60.0
@@ -169,16 +197,16 @@ class Clock(wx.PyControl):
 			xCenter + rBack * GetCos(hourPos), yCenter + rBack * GetSin(hourPos),
 			xCenter + rHour * GetCos(hourPos), yCenter + rHour * GetSin(hourPos)
 		)
-		ctx.SetPen( ctx.CreatePen( GetPen(colour=wx.Colour(0,180,0,128), width=wMinuteHand) ) )
+		ctx.SetPen( ctx.CreatePen( GetPen(colour=wx.Colour(0,150,0,128), width=wMinuteHand) ) )
 		ctx.StrokeLine(
-			xCenter + rBack * GetCos(minutePos), yCenter + rBack * GetSin(minutePos),
+			xCenter + rBack * GetCos(minutePos),   yCenter + rBack * GetSin(minutePos),
 			xCenter + rMinute * GetCos(minutePos), yCenter + rMinute * GetSin(minutePos)
 		)
 		
 		ctx.SetPen( ctx.CreatePen( GetPen(colour=wx.RED,width=wSecondHand) ) )
 		ctx.SetBrush( ctx.CreateBrush(wx.Brush(wx.RED)) )
 		ctx.StrokeLine(
-			xCenter + rDot * GetCos(secondPos), yCenter + rDot * GetSin(secondPos),
+			xCenter + rDot * GetCos(secondPos),    yCenter + rDot * GetSin(secondPos),
 			xCenter + rMinute * GetCos(secondPos), yCenter + rMinute * GetSin(secondPos)
 		)
 		xDot = xCenter + rDot * GetCos(secondPos)
