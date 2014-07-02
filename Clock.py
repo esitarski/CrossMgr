@@ -2,8 +2,8 @@ import wx
 import math
 import datetime
 
-tCos300 = [math.cos((i/300.0)*2.0*math.pi-math.pi/2.0) for i in xrange(300)]
-tSin300 = [math.sin((i/300.0)*2.0*math.pi-math.pi/2.0) for i in xrange(300)]
+tCos60 = [math.cos((i/60.0)*2.0*math.pi-math.pi/2.0) for i in xrange(60)]
+tSin60 = [math.sin((i/60.0)*2.0*math.pi-math.pi/2.0) for i in xrange(60)]
 
 def GetCos( pos ):
 	return math.cos(pos*2.0*math.pi-math.pi/2.0)
@@ -138,8 +138,8 @@ class Clock(wx.PyControl):
 		penSecond = ctx.CreatePen( GetPen(width=wMinuteTicks, cap=wx.wx.CAP_BUTT) )
 		penHour = ctx.CreatePen( GetPen(width=wHourTicks, cap=wx.wx.CAP_BUTT) )
 		penCur = None
-		for i in xrange(0, 300, 5):
-			if i % 25 == 0:
+		for i in xrange(60):
+			if i % 5 == 0:
 				rIn = rInHourTicks
 				pen = penHour
 			else:
@@ -149,8 +149,8 @@ class Clock(wx.PyControl):
 				penCur = pen
 				ctx.SetPen( pen )
 			ctx.StrokeLine(
-				xCenter + rIn * tCos300[i], yCenter - rIn * tSin300[i],
-				xCenter + rOutTicks * tCos300[i], yCenter - rOutTicks * tSin300[i]
+				xCenter + rIn * tCos60[i], yCenter - rIn * tSin60[i],
+				xCenter + rOutTicks * tCos60[i], yCenter - rOutTicks * tSin60[i]
 			)
 			
 		ctx.SetPen( penSecond )
@@ -188,6 +188,8 @@ class Clock(wx.PyControl):
 		ctx.SetFont( ctx.CreateFont(wx.FFontFromPixelSize((0,radius/3), wx.DEFAULT) ) )
 		ctx.SetBrush( ctx.CreateBrush(wx.Brush(wx.BLACK)) )
 		tStr = unicode(t.strftime('%H:%M:%S'))
+		if tStr.startswith(u'0'):
+			tStr = tStr[1:]
 		w, h = ctx.GetTextExtent(tStr)
 		ctx.DrawText( tStr, xCenter-w/2, yCenter+radius/2-h )
 		
