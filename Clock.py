@@ -191,8 +191,8 @@ class Clock(wx.PyControl):
 		# Draw the clock face.
 		#
 		secondPos = (t.second  + t.microsecond/1000000.0) / 60.0
-		minutePos = t.minute / 60.0 + secondPos / 60.0
-		hourPos = ((t.hour % 12) / 12.0 + minutePos/60.0)
+		minutePos = (t.minute + secondPos) / 60.0
+		hourPos = (t.hour % 12 + minutePos) / 12.0
 		
 		ctx.SetPen( ctx.CreatePen( GetPen(colour=wx.Colour(0,0,180,128), width=wHourHand) ) )
 		ctx.StrokeLine(
