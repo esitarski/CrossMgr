@@ -20,7 +20,7 @@ def GetPen( colour=wx.BLACK, cap=wx.CAP_ROUND, join=wx.JOIN_ROUND, width=1 ):
 class Clock(wx.PyControl):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
-				name="Clock", checkFunc = None ):
+				name="Clock", checkFunc=None ):
 		"""
 		Default class constructor.
 
@@ -28,8 +28,6 @@ class Clock(wx.PyControl):
 		@param id: StatusBar identifier. A value of -1 indicates a default value.
 		@param pos: StatusBar position. If the position (-1, -1) is specified
 					then a default position is chosen.
-		@param size: StatusBar size. If the default size (-1, -1) is specified
-					then a default size is chosen.
 		@param style: not used
 		@param validator: Window validator.
 		@param name: Window name.
@@ -203,24 +201,30 @@ class Clock(wx.PyControl):
 		hourPos = (t.hour % 12 + minutePos) / 12.0
 		
 		ctx.SetPen( ctx.CreatePen( GetPen(colour=wx.Colour(0,0,180,128), width=wHourHand) ) )
+		cosCur = GetCos(hourPos)
+		sinCur = GetSin(hourPos)
 		ctx.StrokeLine(
-			xCenter + rBack * GetCos(hourPos), yCenter + rBack * GetSin(hourPos),
-			xCenter + rHour * GetCos(hourPos), yCenter + rHour * GetSin(hourPos)
+			xCenter + rBack * cosCur, yCenter + rBack * sinCur,
+			xCenter + rHour * cosCur, yCenter + rHour * sinCur
 		)
 		ctx.SetPen( ctx.CreatePen( GetPen(colour=wx.Colour(0,150,0,128), width=wMinuteHand) ) )
+		cosCur = GetCos(minutePos)
+		sinCur = GetSin(minutePos)
 		ctx.StrokeLine(
-			xCenter + rBack * GetCos(minutePos),   yCenter + rBack * GetSin(minutePos),
-			xCenter + rMinute * GetCos(minutePos), yCenter + rMinute * GetSin(minutePos)
+			xCenter + rBack * cosCur,   yCenter + rBack * sinCur,
+			xCenter + rMinute * cosCur, yCenter + rMinute * sinCur
 		)
 		
 		ctx.SetPen( ctx.CreatePen( GetPen(colour=wx.RED,width=wSecondHand) ) )
 		ctx.SetBrush( ctx.CreateBrush(wx.Brush(wx.RED)) )
+		cosCur = GetCos(secondPos)
+		sinCur = GetSin(secondPos)
 		ctx.StrokeLine(
-			xCenter + rDot * GetCos(secondPos),    yCenter + rDot * GetSin(secondPos),
-			xCenter + rMinute * GetCos(secondPos), yCenter + rMinute * GetSin(secondPos)
+			xCenter + rDot * cosCur,    yCenter + rDot * sinCur,
+			xCenter + rMinute * cosCur, yCenter + rMinute * sinCur
 		)
-		xDot = xCenter + rDot * GetCos(secondPos)
-		yDot = yCenter + rDot * GetSin(secondPos)
+		xDot = xCenter + rDot * cosCur
+		yDot = yCenter + rDot * sinCur
 		ctx.DrawEllipse( xDot - dotSize, yDot - dotSize, dotSize*2, dotSize*2 )
 		
 	def OnEraseBackground(self, event):
