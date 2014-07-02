@@ -219,7 +219,7 @@ class Actions( wx.Panel ):
 		
 		bs.Add( hs, border=border, flag=wx.ALL )
 		hsClock = wx.BoxSizer(wx.HORIZONTAL)
-		hsClock.AddSpacer( 23 )
+		hsClock.AddSpacer( 26 )
 		hsClock.Add(self.clock)
 		hsClock.Add(self.startRaceTimeCheckBox, border=4, flag=wx.LEFT)
 		bs.Add(hsClock, border=4, flag=wx.ALL)

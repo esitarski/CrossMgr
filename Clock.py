@@ -218,8 +218,8 @@ class Clock(wx.PyControl):
 		#-----------------------------------------------------------------------------
 		# Draw the digital clock.
 		#
-		ctx.SetFont( ctx.CreateFont(wx.FFontFromPixelSize((0,radius/3), wx.DEFAULT) ) )
-		ctx.SetBrush( ctx.CreateBrush(wx.Brush(wx.BLACK)) )
+		ctx.SetFont( ctx.CreateFont(wx.FFontFromPixelSize((0,radius*0.37), wx.DEFAULT) ) )
+		ctx.SetBrush( ctx.CreateBrush(wx.Brush(wx.Colour(50,50,50))) )
 		tStr = u'{}:{:02d}:{:02d}'.format( t.hour, t.minute, t.second )
 		w, h = ctx.GetTextExtent(tStr)
 		ctx.DrawText( tStr, xCenter-w/2, yCenter+radius/2-h )
