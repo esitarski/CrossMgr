@@ -178,7 +178,7 @@ class Clock(wx.PyControl):
 		ctx.SetPen( ctx.CreatePen( GetPen(colour=wx.RED,width=wSecondHand) ) )
 		ctx.SetBrush( ctx.CreateBrush(wx.Brush(wx.RED)) )
 		ctx.StrokeLine(
-			xCenter + rBack * GetCos(secondPos), yCenter + rBack * GetSin(secondPos),
+			xCenter + rDot * GetCos(secondPos), yCenter + rDot * GetSin(secondPos),
 			xCenter + rMinute * GetCos(secondPos), yCenter + rMinute * GetSin(secondPos)
 		)
 		xDot = xCenter + rDot * GetCos(secondPos)
