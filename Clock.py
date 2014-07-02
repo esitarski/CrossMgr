@@ -189,7 +189,7 @@ class Clock(wx.PyControl):
 		ctx.SetBrush( ctx.CreateBrush(wx.Brush(wx.BLACK)) )
 		tStr = unicode(t.strftime('%H:%M:%S'))
 		w, h = ctx.GetTextExtent(tStr)
-		ctx.DrawText( tStr, xCenter-w/2, yCenter-radius/2 )
+		ctx.DrawText( tStr, xCenter-w/2, yCenter+radius/2-h )
 		
 	def OnEraseBackground(self, event):
 		# This is intentionally empty, because we are using the combination
