@@ -188,7 +188,15 @@ class Clock(wx.PyControl):
 			)
 			
 		#-----------------------------------------------------------------------------
-		# Draw the clock face.
+		# Draw the digital clock.
+		#
+		ctx.SetFont( ctx.CreateFont(wx.FFontFromPixelSize((0,radius*0.37), wx.DEFAULT), wx.Colour(100,100,100)) )
+		tStr = u'{}:{:02d}:{:02d}'.format( t.hour, t.minute, t.second )
+		w, h = ctx.GetTextExtent(tStr)
+		ctx.DrawText( tStr, xCenter-w/2, yCenter+radius/2-h )
+		
+		#-----------------------------------------------------------------------------
+		# Draw the hands.
 		#
 		secondPos = (t.second  + t.microsecond/1000000.0) / 60.0
 		minutePos = (t.minute + secondPos) / 60.0
@@ -214,15 +222,6 @@ class Clock(wx.PyControl):
 		xDot = xCenter + rDot * GetCos(secondPos)
 		yDot = yCenter + rDot * GetSin(secondPos)
 		ctx.DrawEllipse( xDot - dotSize, yDot - dotSize, dotSize*2, dotSize*2 )
-		
-		#-----------------------------------------------------------------------------
-		# Draw the digital clock.
-		#
-		ctx.SetFont( ctx.CreateFont(wx.FFontFromPixelSize((0,radius*0.37), wx.DEFAULT) ) )
-		ctx.SetBrush( ctx.CreateBrush(wx.Brush(wx.Colour(50,50,50))) )
-		tStr = u'{}:{:02d}:{:02d}'.format( t.hour, t.minute, t.second )
-		w, h = ctx.GetTextExtent(tStr)
-		ctx.DrawText( tStr, xCenter-w/2, yCenter+radius/2-h )
 		
 	def OnEraseBackground(self, event):
 		# This is intentionally empty, because we are using the combination
