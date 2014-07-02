@@ -13,6 +13,9 @@ from Queue import Queue, Empty
 
 now = datetime.now
 
+PhotoEventType = wx.NewEventType()
+EVT_PHOTO_EVENT = wx.PyEventBinder(PhotoEventType, 1)
+
 fileFormat = 'bib-%04d-time-%s-%d.jpg'
 def GetFilename( bib, t, dirName, i ):
 	return os.path.join( dirName, fileFormat % (bib if bib else 0, PhotoFinish.fileFormatTime(t), (i+1) ) )
@@ -49,7 +52,7 @@ class FrameSaver( threading.Thread ):
 		self.queue.put( ['Save', fileName, bib, t, frame] )
 	
 class VideoBuffer( threading.Thread ):
-	def __init__( self, camera, refTime = None, dirName = '.', fps = 25, bufferSeconds = 4.0 ):
+	def __init__( self, camera, refTime = None, dirName = '.', fps = 25, bufferSeconds = 4.0, owner = None ):
 		threading.Thread.__init__( self )
 		self.daemon = True
 		self.name = 'VideoBuffer'
@@ -61,7 +64,11 @@ class VideoBuffer( threading.Thread ):
 		self.frameDelay = 1.0 / fps
 		self.frameSaver = None
 		self.fcb = FrameCircBuf()
+		self.owner = owner			# Destination to send photos after they are taken.
 		self.reset()
+	
+	def setOwner( self, owner = None ):
+		self.owner = owner
 	
 	def reset( self ):
 		if self.frameSaver and self.frameSaver.is_alive():
@@ -81,7 +88,10 @@ class VideoBuffer( threading.Thread ):
 		while keepGoing:
 			tNow = now()
 			try:
-				self.fcb.append( tNow, self.camera.getImage() )
+				image = self.camera.getImage()
+				self.fcb.append( tNow, image )
+				if self.owner is not None:
+					wx.PostEvent( self.owner, PhotoEventType(t=tNew, photo=image) )
 			except Exception as e:
 				logException( e, sys.exc_info() )
 				break

@@ -14,6 +14,7 @@ import Properties
 from Undo import undo
 import VideoBuffer
 import Checklist
+from Clock import Clock
 
 undoResetTimer = None
 def StartRaceNow():
@@ -194,12 +195,7 @@ class Actions( wx.Panel ):
 		self.button.SetForegroundColour( wx.Colour(128,128,128) )
 		self.Bind(wx.EVT_BUTTON, self.onPress, self.button )
 		
-		self.clock = wx.StaticText( self, label=u'00:00:00' )
-		self.clock.SetFont( wx.Font(24, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
-		
-		self.timer = wx.Timer( self )
-		self.Bind( wx.EVT_TIMER, self.onTimer, self.timer )
-		wx.CallAfter( self.onTimer )
+		self.clock = Clock( self, size=(180,180), checkFunc=self.updateClock )
 		
 		self.raceIntro = wx.StaticText( self.leftPanel, label =  u'' )
 		self.raceIntro.SetFont( wx.Font(24, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
@@ -218,15 +214,15 @@ class Actions( wx.Panel ):
 		
 		border = 8
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add(self.button, border=border, flag=wx.ALL)
-		hs.Add(self.raceIntro, 1, border=border, flag=wx.ALL|wx.EXPAND)
+		hs.Add(self.button, border=border, flag=wx.LEFT|wx.TOP)
+		hs.Add(self.raceIntro, 1, border=border, flag=wx.LEFT|wx.TOP|wx.RIGHT|wx.EXPAND)
 		
 		bs.Add( hs, border=border, flag=wx.ALL )
 		hsClock = wx.BoxSizer(wx.HORIZONTAL)
-		hsClock.AddSpacer( 54 )
+		hsClock.AddSpacer( 28 )
 		hsClock.Add(self.clock)
+		hsClock.Add(self.startRaceTimeCheckBox, border=border, flag=wx.ALL)
 		bs.Add(hsClock, border=border, flag=wx.ALL)
-		bs.Add(self.startRaceTimeCheckBox, border=border, flag=wx.ALL)
 		bs.Add(self.chipTimingOptions, border=border, flag=wx.ALL)
 		
 		#---------------------------------------------------------------------------------------------
@@ -268,15 +264,9 @@ class Actions( wx.Panel ):
 		race.resetStartClockOnFirstTag	= bool(iSelection == self.iResetStartClockOnFirstTag)
 		race.skipFirstTagRead			= bool(iSelection == self.iSkipFirstTagRead)
 	
-	def onTimer( self, event = None ):
-		t = datetime.datetime.now()
-		if not self.timer.IsRunning():
-			# Only the timer if this page is being displayed - we need all the cycles we can get.
-			# Schedule the clock update for just after the next second.
-			mainWin = Utils.getMainWin()
-			if not mainWin or mainWin.isShowingPage(self):
-				self.timer.Start( 1001.0 - t.microsecond/1000.0, True )
-		self.clock.SetLabel( t.strftime('%H:%M:%S') )
+	def updateClock( self ):
+		mainWin = Utils.getMainWin()
+		return not mainWin or mainWin.isShowingPage(self)
 	
 	def onChipTimingOptions( self, event ):
 		if not Model.race:
@@ -350,7 +340,7 @@ class Actions( wx.Panel ):
 			realTimeFtpPublish.publishEntry( True )
 	
 	def refresh( self ):
-		self.onTimer()
+		self.clock.Start()
 		self.button.Enable( False )
 		self.startRaceTimeCheckBox.Enable( False )
 		self.button.SetLabel( StartText )
