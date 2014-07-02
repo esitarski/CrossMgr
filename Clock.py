@@ -141,11 +141,12 @@ class Clock(wx.PyControl):
 		penHour = ctx.CreatePen( GetPen(width=wHourTicks, cap=wx.wx.CAP_BUTT) )
 		
 		#-----------------------------------------------------------------------------
+		# Draw the metal ring
+		#
 		r = radius * 1.0/0.9
 		def drawCircle( x, y, r ):
 			ctx.DrawEllipse( x - r, y - r, r * 2, r * 2 )
 		
-		# Draw the metal ring
 		ctx.SetBrush( ctx.CreateRadialGradientBrush(
 						xCenter, yCenter - r,
 						xCenter, yCenter - r,
@@ -162,6 +163,8 @@ class Clock(wx.PyControl):
 		drawCircle( xCenter, yCenter, rSmaller )
 		
 		#-----------------------------------------------------------------------------
+		# Draw the clock face.
+		#
 		ctx.SetPen( penSecond )
 		ctx.SetBrush( ctx.CreateRadialGradientBrush(
 			xCenter, yCenter-radius*0.6, xCenter, yCenter, rOutside,
@@ -184,13 +187,12 @@ class Clock(wx.PyControl):
 				xCenter + rOutTicks * tCos60Local[i], yCenter + rOutTicks * tSin60Local[i]
 			)
 			
-		fHour = (t.hour % 12) / 12.0
-		fMinute = t.minute / 60.0
-		fSecond = (t.second  + t.microsecond/1000000.0) / 60.0
-		
-		hourPos = (fHour + fMinute/60.0 + fSecond/(60.0*60.0))
-		minutePos = (fMinute + fSecond/60.0)
-		secondPos = fSecond
+		#-----------------------------------------------------------------------------
+		# Draw the clock face.
+		#
+		secondPos = (t.second  + t.microsecond/1000000.0) / 60.0
+		minutePos = t.minute / 60.0 + secondPos / 60.0
+		hourPos = ((t.hour % 12) / 12.0 + minutePos/60.0)
 		
 		ctx.SetPen( ctx.CreatePen( GetPen(colour=wx.Colour(0,0,180,128), width=wHourHand) ) )
 		ctx.StrokeLine(
@@ -213,11 +215,12 @@ class Clock(wx.PyControl):
 		yDot = yCenter + rDot * GetSin(secondPos)
 		ctx.DrawEllipse( xDot - dotSize, yDot - dotSize, dotSize*2, dotSize*2 )
 		
+		#-----------------------------------------------------------------------------
+		# Draw the digital clock.
+		#
 		ctx.SetFont( ctx.CreateFont(wx.FFontFromPixelSize((0,radius/3), wx.DEFAULT) ) )
 		ctx.SetBrush( ctx.CreateBrush(wx.Brush(wx.BLACK)) )
-		tStr = unicode(t.strftime('%H:%M:%S'))
-		if tStr.startswith(u'0'):
-			tStr = tStr[1:]
+		tStr = u'{}:{:02d}:{:02d}'.format( t.hour, t.minute, t.second )
 		w, h = ctx.GetTextExtent(tStr)
 		ctx.DrawText( tStr, xCenter-w/2, yCenter+radius/2-h )
 		
