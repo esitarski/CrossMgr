@@ -10,11 +10,11 @@ from datetime import datetime, timedelta
 import threading
 from Utils import logCall, logException
 from Queue import Queue, Empty
+import wx.lib.newevent
 
 now = datetime.now
 
-PhotoEventType = wx.NewEventType()
-EVT_PHOTO_EVENT = wx.PyEventBinder(PhotoEventType, 1)
+PhotoEvent, EVT_PHOTO = wx.lib.newevent.NewEvent()
 
 fileFormat = 'bib-%04d-time-%s-%d.jpg'
 def GetFilename( bib, t, dirName, i ):
@@ -91,7 +91,7 @@ class VideoBuffer( threading.Thread ):
 				image = self.camera.getImage()
 				self.fcb.append( tNow, image )
 				if self.owner is not None:
-					wx.PostEvent( self.owner, PhotoEventType(t=tNew, photo=image) )
+					wx.PostEvent( self.owner, PhotoEvent(t=tNew, photo=image) )
 			except Exception as e:
 				logException( e, sys.exc_info() )
 				break

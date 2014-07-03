@@ -1,9 +1,9 @@
 import wx
 import math
 import datetime
+import wx.lib.newevent
 
-CountdownEventType = wx.NewEventType()
-EVT_COUNTDOWN = wx.PyEventBinder(CountdownEventType, 1)
+CountdownEvent, EVT_COUNTDOWN = wx.lib.newevent.NewEvent()
 
 tCos60 = [math.cos((i/60.0)*2.0*math.pi-math.pi/2.0) for i in xrange(60)]
 tSin60 = [math.sin((i/60.0)*2.0*math.pi-math.pi/2.0) for i in xrange(60)]
@@ -55,10 +55,12 @@ class CountdownClock(wx.PyControl):
 		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
 		self.Bind(wx.EVT_SIZE, self.OnSize)
 		
+		self.owner = parent
+		
 		if tFuture is None:
-			tFuture = datetime.datetime.now() + datetime.timedelta(seconds=5*60)
+			tFuture = datetime.datetime.now() + datetime.timedelta(seconds=2*60)
 			tFuture = datetime.datetime( tFuture.year, tFuture.month, tFuture.day, tFuture.hour, tFuture.minute, tFuture.second )
-		self.tFuture = tFuture if tFuture else datetime.datetime.now()
+		self.tFuture = tFuture
 		wx.CallAfter( self.onTimer )
 		
 	def DoGetBestSize(self):
@@ -89,11 +91,12 @@ class CountdownClock(wx.PyControl):
 	def onTimer( self, event=None):
 		if not self.timer.IsRunning():
 			self.tCur = datetime.datetime.now()
-			if self.tCur >= self.tFuture:
-				wx.PostEvent( self.owner, CountdownEventType(t=self.tFuture) )
-				return
 			self.Refresh()
-			self.timer.Start( 1001 - datetime.datetime.now().microsecond//1000, True )
+			if self.tCur >= self.tFuture:
+				if self.owner:
+					wx.PostEvent( self.owner, CountdownEvent(tFuture=self.tFuture) )
+				return
+			self.timer.Start( 1000 - datetime.datetime.now().microsecond//1000, True )
 	
 	def OnPaint(self, event):
 		dc = wx.BufferedPaintDC(self)
@@ -190,14 +193,10 @@ class CountdownClock(wx.PyControl):
 				xCenter + rOutTicks * tCos60Local[i], yCenter + rOutTicks * tSin60Local[i]
 			)
 			
-			
-		if dSeconds < 0.0:
-			return 
-		
 		#-----------------------------------------------------------------------------
 		# Draw the digital CountdownClock.
 		#
-		tt = int(dSeconds)
+		tt = int(max(dSeconds,0.0) + 0.999)
 		hour = tt // 3600
 		minute = (tt // 60) % 60
 		second = tt % 60
@@ -210,17 +209,22 @@ class CountdownClock(wx.PyControl):
 		#-----------------------------------------------------------------------------
 		# Draw the hands.
 		#
+		tt = int(max(dSeconds,0.0))
+		hour = tt // 3600
+		minute = (tt // 60) % 60
+		second = tt % 60
 		secondPos = (second  + math.modf(dSeconds)[0]) / 60.0
 		minutePos = (minute + secondPos) / 60.0
 		hourPos = (hour % 12 + minutePos) / 12.0
 		
-		ctx.SetPen( ctx.CreatePen( GetPen(colour=wx.Colour(0,0,180,128), width=wHourHand) ) )
-		cosCur = GetCos(hourPos)
-		sinCur = GetSin(hourPos)
-		ctx.StrokeLine(
-			xCenter + rBack * cosCur, yCenter + rBack * sinCur,
-			xCenter + rHour * cosCur, yCenter + rHour * sinCur
-		)
+		if hour > 1.0:
+			ctx.SetPen( ctx.CreatePen( GetPen(colour=wx.Colour(0,0,180,128), width=wHourHand) ) )
+			cosCur = GetCos(hourPos)
+			sinCur = GetSin(hourPos)
+			ctx.StrokeLine(
+				xCenter + rBack * cosCur, yCenter + rBack * sinCur,
+				xCenter + rHour * cosCur, yCenter + rHour * sinCur
+			)
 		ctx.SetPen( ctx.CreatePen( GetPen(colour=wx.Colour(0,150,0,128), width=wMinuteHand) ) )
 		cosCur = GetCos(minutePos)
 		sinCur = GetSin(minutePos)
