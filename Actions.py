@@ -60,8 +60,6 @@ class StartRaceAtTime( wx.Dialog ):
 		wx.Dialog.__init__( self, parent, id, _("Start Race at Time:"),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
 						
-		bs = wx.GridBagSizer(vgap=5, hgap=5)
-
 		font = wx.Font(24, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
 		
 		self.startSeconds = None
@@ -92,19 +90,24 @@ class StartRaceAtTime( wx.Dialog ):
 		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
+		vs = wx.BoxSizer( wx.VERTICAL )
+
 		border = 8
-		bs.Add( autoStartLabel, pos=(0,0), span=(1,1),
-				border = border, flag=wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL )
-		bs.Add( self.autoStartTime, pos=(0,1), span=(1,1),
-				border = border, flag=wx.RIGHT|wx.TOP|wx.BOTTOM|wx.ALIGN_BOTTOM )
-		bs.Add( self.countdown, pos=(1,0), span=(1,2), border = border, flag=wx.ALL|wx.ALIGN_CENTRE|wx.EXPAND )
-		bs.Add( self.okBtn, pos=(2, 0), span=(1,1), border = border, flag=wx.ALL )
-		self.okBtn.SetDefault()
-		bs.Add( self.cancelBtn, pos=(2, 1), span=(1,1), border = border, flag=wx.ALL )
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( autoStartLabel, border = border, flag=wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL )
+		hs.Add( self.autoStartTime, border = border, flag=wx.RIGHT|wx.TOP|wx.BOTTOM|wx.ALIGN_BOTTOM )
+		vs.Add( hs )
 		
-		bs.AddGrowableRow( 1 )
-		self.SetSizerAndFit(bs)
-		bs.Fit( self )
+		vs.Add( self.countdown, 1, border = border, flag=wx.ALL|wx.ALIGN_CENTRE|wx.EXPAND )
+		
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( self.okBtn, border = border, flag=wx.ALL )
+		self.okBtn.SetDefault()
+		hs.AddStretchSpacer()
+		hs.Add( self.cancelBtn, border = border, flag=wx.ALL )
+		vs.Add( hs, flag=wx.EXPAND )
+		
+		self.SetSizerAndFit( vs )
 		
 		self.CentreOnParent(wx.BOTH)
 		self.SetFocus()
