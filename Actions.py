@@ -97,7 +97,7 @@ class StartRaceAtTime( wx.Dialog ):
 				border = border, flag=wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL )
 		bs.Add( self.autoStartTime, pos=(0,1), span=(1,1),
 				border = border, flag=wx.RIGHT|wx.TOP|wx.BOTTOM|wx.ALIGN_BOTTOM )
-		bs.Add( self.countdown, pos=(1,0), span=(1,2), border = border, flag=wx.ALL|wx.ALIGN_CENTRE )
+		bs.Add( self.countdown, pos=(1,0), span=(1,2), border = border, flag=wx.ALL|wx.ALIGN_CENTRE|wx.EXPAND )
 		bs.Add( self.okBtn, pos=(2, 0), span=(1,1), border = border, flag=wx.ALL )
 		self.okBtn.SetDefault()
 		bs.Add( self.cancelBtn, pos=(2, 1), span=(1,1), border = border, flag=wx.ALL )
