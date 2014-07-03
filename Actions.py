@@ -15,6 +15,7 @@ from Undo import undo
 import VideoBuffer
 import Checklist
 from Clock import Clock
+from CountdownClock import CountdownClock, EVT_COUNTDOWN
 
 undoResetTimer = None
 def StartRaceNow():
@@ -34,8 +35,6 @@ def StartRaceNow():
 			race.resetStartClockOnFirstTag = False
 		Model.resetCache()
 		race.startRaceNow()
-		
-	print race.finishTime
 		
 	OutputStreamer.writeRaceStart()
 	VideoBuffer.ModelStartCamera()
@@ -67,7 +66,7 @@ class StartRaceAtTime( wx.Dialog ):
 		
 		self.startSeconds = None
 		self.timer = None
-		self.futureRaceTimes = None
+		self.futureRaceTime = None
 		
 		race = Model.getRace()
 		autoStartLabel = wx.StaticText( self, label = _('Automatically Start Race at:') )
@@ -84,8 +83,8 @@ class StartRaceAtTime( wx.Dialog ):
 		
 		self.autoStartTime = masked.TimeCtrl( self, fmt24hr=True, display_seconds=False, value=value )
 		
-		self.countdown = wx.StaticText( self, label = u'      ' )
-		self.countdown.SetFont( font )
+		self.countdown = CountdownClock( self, size=(190,190), tFuture=None )
+		self.Bind( EVT_COUNTDOWN, self.onCountdown )
 		
 		self.okBtn = wx.Button( self, wx.ID_OK )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
@@ -98,7 +97,7 @@ class StartRaceAtTime( wx.Dialog ):
 				border = border, flag=wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL )
 		bs.Add( self.autoStartTime, pos=(0,1), span=(1,1),
 				border = border, flag=wx.RIGHT|wx.TOP|wx.BOTTOM|wx.ALIGN_BOTTOM )
-		bs.Add( self.countdown, pos=(1,0), span=(1,2), border = border, flag=wx.ALL )
+		bs.Add( self.countdown, pos=(1,0), span=(1,2), border = border, flag=wx.ALL|wx.ALIGN_CENTRE )
 		bs.Add( self.okBtn, pos=(2, 0), span=(1,1), border = border, flag=wx.ALL )
 		self.okBtn.SetDefault()
 		bs.Add( self.cancelBtn, pos=(2, 1), span=(1,1), border = border, flag=wx.ALL )
@@ -110,26 +109,9 @@ class StartRaceAtTime( wx.Dialog ):
 		self.CentreOnParent(wx.BOTH)
 		self.SetFocus()
 
-	def updateCountdownClock( self, event = None ):
-		if self.startSeconds is None:
-			return
-	
-		nowSeconds = GetNowSeconds()
-		
-		if nowSeconds < self.startSeconds:
-			self.countdown.SetLabel( Utils.SecondsToStr(self.startSeconds - nowSeconds) )
-			return
-		
-		# Stop the timer.
-		self.startSeconds = None
-		self.timer.Stop()
-		
-		# Start the race.
+	def onCountdown( self, event ):
 		StartRaceNow()
-		
-		# Patch the race time to exactly match the given start time.
 		self.startTime = self.futureRaceTime
-		
 		self.EndModal( wx.ID_OK )
 	
 	def onOK( self, event ):
@@ -145,21 +127,14 @@ class StartRaceAtTime( wx.Dialog ):
 					year=dateToday.year, month=dateToday.month, day=dateToday.day,
 					hour = 0, minute = 0, second = 0
 				) + datetime.timedelta( seconds = self.startSeconds )
-		
-		# Setup the countdown clock.
-		self.timer = wx.Timer( self, id=wx.NewId() )
-		self.Bind( wx.EVT_TIMER, self.updateCountdownClock, self.timer )
-		self.timer.Start( 200 )
+		self.countdown.Start( self.futureRaceTime )
 		
 		# Disable buttons and switch to countdown state.
 		self.okBtn.Enable( False )
 		self.autoStartTime.Enable( False )
-		self.updateCountdownClock()
 		
 	def onCancel( self, event ):
-		self.startSeconds = None
-		if self.timer is not None:
-			self.timer.Stop()
+		self.countdown.Stop()
 		self.EndModal( wx.ID_CANCEL )
 
 #-------------------------------------------------------------------------------------------
@@ -196,6 +171,7 @@ class Actions( wx.Panel ):
 		self.Bind(wx.EVT_BUTTON, self.onPress, self.button )
 		
 		self.clock = Clock( self, size=(190,190), checkFunc=self.updateClock )
+		self.clock.SetBackgroundColour( wx.WHITE )
 		
 		self.raceIntro = wx.StaticText( self.leftPanel, label =  u'' )
 		self.raceIntro.SetFont( wx.Font(24, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )

@@ -43,7 +43,6 @@ class CountdownClock(wx.PyControl):
 		# basically need to override DoGetBestSize and AcceptsFocusFromKeyboard
 		
 		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
-		self.SetBackgroundColour('white')
 		
 		self.timer = wx.Timer( self )
 		self.Bind( wx.EVT_TIMER, self.onTimer )
@@ -57,9 +56,6 @@ class CountdownClock(wx.PyControl):
 		
 		self.owner = parent
 		
-		if tFuture is None:
-			tFuture = datetime.datetime.now() + datetime.timedelta(seconds=2*60)
-			tFuture = datetime.datetime( tFuture.year, tFuture.month, tFuture.day, tFuture.hour, tFuture.minute, tFuture.second )
 		self.tFuture = tFuture
 		wx.CallAfter( self.onTimer )
 		
@@ -89,6 +85,10 @@ class CountdownClock(wx.PyControl):
 		return True
 
 	def onTimer( self, event=None):
+		if self.tFuture is None:
+			self.Refresh()
+			return
+		
 		if not self.timer.IsRunning():
 			self.tCur = datetime.datetime.now()
 			self.Refresh()
@@ -97,6 +97,14 @@ class CountdownClock(wx.PyControl):
 					wx.PostEvent( self.owner, CountdownEvent(tFuture=self.tFuture) )
 				return
 			self.timer.Start( 1000 - datetime.datetime.now().microsecond//1000, True )
+	
+	def Stop( self ):
+		if self.timer.IsRunning():
+			self.timer.Stop()
+	
+	def Start( self, tFuture ):
+		self.tFuture = tFuture
+		self.onTimer()
 	
 	def OnPaint(self, event):
 		dc = wx.BufferedPaintDC(self)
@@ -107,9 +115,6 @@ class CountdownClock(wx.PyControl):
 		event.Skip()
 		
 	def Draw(self, dc):
-		dt = self.tFuture - self.tCur
-		dSeconds = dt.total_seconds()
-		
 		size = self.GetClientSize()
 		width = size.width
 		height = size.height
@@ -193,6 +198,13 @@ class CountdownClock(wx.PyControl):
 				xCenter + rOutTicks * tCos60Local[i], yCenter + rOutTicks * tSin60Local[i]
 			)
 			
+		
+		if self.tFuture is None:
+			return
+			
+		dt = self.tFuture - self.tCur
+		dSeconds = dt.total_seconds()
+
 		#-----------------------------------------------------------------------------
 		# Draw the digital CountdownClock.
 		#
@@ -253,6 +265,10 @@ class CountdownClock(wx.PyControl):
 if __name__ == '__main__':
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CountdownClock", size=(600,400))
-	CountdownClock = CountdownClock(mainWin)
+	
+	tFuture = datetime.datetime.now() + datetime.timedelta(seconds=20)
+	tFuture = datetime.datetime( tFuture.year, tFuture.month, tFuture.day, tFuture.hour, tFuture.minute, tFuture.second )
+	countdownClock = CountdownClock( mainWin, tFuture=tFuture )
+	
 	mainWin.Show()
 	app.MainLoop()

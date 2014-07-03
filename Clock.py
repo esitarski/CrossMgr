@@ -40,7 +40,6 @@ class Clock(wx.PyControl):
 		# basically need to override DoGetBestSize and AcceptsFocusFromKeyboard
 		
 		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
-		self.SetBackgroundColour('white')
 		
 		self.timer = wx.Timer( self )
 		self.Bind( wx.EVT_TIMER, self.onTimer )
