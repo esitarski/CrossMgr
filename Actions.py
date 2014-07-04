@@ -195,13 +195,14 @@ class Actions( wx.Panel ):
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add(self.button, border=border, flag=wx.LEFT|wx.TOP)
 		hs.Add(self.raceIntro, 1, border=border, flag=wx.LEFT|wx.TOP|wx.RIGHT|wx.EXPAND)
-		
 		bs.Add( hs, border=border, flag=wx.ALL )
+		
 		hsClock = wx.BoxSizer(wx.HORIZONTAL)
 		hsClock.AddSpacer( 26 )
-		hsClock.Add(self.clock)
+		hsClock.Add( self.clock )
 		hsClock.Add(self.startRaceTimeCheckBox, border=4, flag=wx.LEFT)
 		bs.Add(hsClock, border=4, flag=wx.ALL)
+		
 		bs.Add(self.chipTimingOptions, border=border, flag=wx.ALL)
 		
 		#---------------------------------------------------------------------------------------------
@@ -379,7 +380,7 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="CrossMan", size=(1024,600))
 	actions = Actions(mainWin)
 	Model.newRace()
-	Model.race.enableJChipIntegration = True
+	Model.race.enableJChipIntegration = False
 	Model.race.isTimeTrial = False
 	actions.refresh()
 	mainWin.Show()

@@ -51,12 +51,15 @@ class Clock(wx.PyControl):
 		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
 		self.Bind(wx.EVT_SIZE, self.OnSize)
 		
+		self.initialSize = size
+		
 		self.checkFunc = checkFunc if checkFunc else lambda: True
 		self.tCur = datetime.datetime.now()
 		wx.CallAfter( self.onTimer )
 		
 	def DoGetBestSize(self):
-		return wx.Size(100, 100)
+		return wx.Size(100, 100) if self.initialSize is wx.DefaultSize else self.initialSize
+
 
 	def SetForegroundColour(self, colour):
 		wx.PyControl.SetForegroundColour(self, colour)
@@ -104,7 +107,8 @@ class Clock(wx.PyControl):
 		size = self.GetClientSize()
 		width = size.width
 		height = size.height
-		radius = min(width, height) // 2 * 0.9
+		middle = min(width, height) // 2
+		radius = middle * 0.9
 		xCenter, yCenter = width//2, height//2
 		
 		backColour = self.GetBackgroundColour()
@@ -187,9 +191,16 @@ class Clock(wx.PyControl):
 		#-----------------------------------------------------------------------------
 		# Draw the digital clock.
 		#
-		ctx.SetFont( ctx.CreateFont(wx.FFontFromPixelSize((0,radius*0.37), wx.DEFAULT), wx.Colour(100,100,100)) )
+		ctx.SetFont( ctx.CreateFont(
+				wx.FontFromPixelSize(
+					(0,radius*0.37),
+					wx.FONTFAMILY_SWISS,
+					wx.FONTSTYLE_NORMAL,
+					wx.FONTWEIGHT_NORMAL,
+				),
+				wx.Colour(100,100,100)) )
 		tStr = u'{}:{:02d}:{:02d}'.format( t.hour, t.minute, t.second )
-		w, h = ctx.GetTextExtent(tStr)
+		w, h = ctx.GetTextExtent(u'00:00:00'[:len(tStr)])
 		ctx.DrawText( tStr, xCenter-w/2, yCenter+radius/2-h )
 		
 		#-----------------------------------------------------------------------------

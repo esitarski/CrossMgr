@@ -55,12 +55,13 @@ class CountdownClock(wx.PyControl):
 		self.Bind(wx.EVT_SIZE, self.OnSize)
 		
 		self.owner = parent
+		self.initialSize = size
 		
-		self.tFuture = tFuture
-		wx.CallAfter( self.onTimer )
+		self.tFuture = None
+		wx.CallAfter( self.Start, tFuture )
 		
 	def DoGetBestSize(self):
-		return wx.Size(100, 100)
+		return wx.Size(100, 100) if self.initialSize is wx.DefaultSize else self.initialSize
 
 	def SetForegroundColour(self, colour):
 		wx.PyControl.SetForegroundColour(self, colour)
@@ -118,7 +119,8 @@ class CountdownClock(wx.PyControl):
 		size = self.GetClientSize()
 		width = size.width
 		height = size.height
-		radius = min(width, height) // 2 * 0.9
+		middle = min(width, height) // 2
+		radius = middle * 0.9
 		xCenter, yCenter = width//2, height//2
 		
 		backColour = self.GetBackgroundColour()
@@ -213,9 +215,16 @@ class CountdownClock(wx.PyControl):
 		minute = (tt // 60) % 60
 		second = tt % 60
 		
-		ctx.SetFont( ctx.CreateFont(wx.FFontFromPixelSize((0,radius*0.37), wx.DEFAULT), wx.Colour(100,100,100)) )
+		ctx.SetFont( ctx.CreateFont(
+			wx.FontFromPixelSize(
+				(0,radius*0.37),
+				wx.FONTFAMILY_SWISS,
+				wx.FONTSTYLE_NORMAL,
+				wx.FONTWEIGHT_NORMAL,
+			),
+			wx.Colour(100,100,100)) )
 		tStr = u'{}:{:02d}:{:02d}'.format( hour, minute, second )
-		w, h = ctx.GetTextExtent(tStr)
+		w, h = ctx.GetTextExtent(u'00:00:00'[:len(tStr)])
 		ctx.DrawText( tStr, xCenter-w/2, yCenter+radius/2-h )
 		
 		#-----------------------------------------------------------------------------
