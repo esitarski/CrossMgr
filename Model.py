@@ -901,6 +901,7 @@ class Race( object ):
 	
 	hideDetails = True
 	photosAtRaceEndOnly = False
+	cameraDevice = 0
 	
 	def __init__( self ):
 		self.reset()

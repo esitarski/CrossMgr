@@ -290,11 +290,21 @@ class CameraProperties( wx.Panel ):
 			_("Photos at Race Finish Only"),
 		]
 		self.radioBox = wx.RadioBox( self, label=_("USB Camera Options"), choices=choices, majorDimension=1, style=wx.RA_SPECIFY_COLS )
+		self.radioBox.SetBackgroundColour( wx.WHITE )
+		
+		self.cameraDeviceLabel = wx.StaticText( self, label=_("Camera Device:") )
+		self.cameraDevice = wx.Choice( self, choices=[unicode(i) for i in xrange(8)] )
 		
 		ms = wx.BoxSizer( wx.VERTICAL )
-		self.SetSizer( ms )
 		
 		ms.Add( self.radioBox, flag=wx.ALL, border=16 )
+		
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( self.cameraDeviceLabel, flag=wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, border=4,  )
+		hs.Add( self.cameraDevice )
+		
+		ms.Add( hs, flag=wx.ALL, border=16 )
+		self.SetSizer( ms )
 		
 	def refresh( self ):
 		race = Model.race
@@ -305,6 +315,7 @@ class CameraProperties( wx.Panel ):
 				self.radioBox.SetSelection( 1 )
 			else:
 				self.radioBox.SetSelection( 2 )
+		self.cameraDevice.SetSelection( race.cameraDevice )
 		
 	def commit( self ):
 		race = Model.race
@@ -317,7 +328,8 @@ class CameraProperties( wx.Panel ):
 		elif v == 2:
 			race.enableUSBCamera = True
 			race.photosAtRaceEndOnly = True
-	
+		race.cameraDevice = self.cameraDevice.GetSelection()
+
 #------------------------------------------------------------------------------------------------
 
 class AnimationProperties( wx.Panel ):
