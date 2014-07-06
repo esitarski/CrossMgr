@@ -4,7 +4,8 @@ import os
 import shutil
 import zipfile
 
-shutil.rmtree( 'build' )
+if os.path.exists('build'):
+	shutil.rmtree( 'build' )
 
 distDir = 'dist'
 

@@ -21,7 +21,9 @@ with open('Version.py', 'w') as f:
 	f.write( s )
 '''
 
-shutil.rmtree( 'build' )
+if os.path.exists('build'):
+	shutil.rmtree( 'build' )
+
 
 # Compile the help files
 from helptxt.compile import CompileHelp
