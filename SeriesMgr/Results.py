@@ -22,7 +22,7 @@ import re
 import webbrowser
 from contextlib import contextmanager
 
-HeaderNames = ['Pos', 'Last Name', 'First Name', 'License', 'Points']
+HeaderNames = ['Pos', 'Last Name', 'First Name', 'License', 'Team', 'Points']
 
 @contextmanager
 def tag( buf, name, attrs = {} ):
@@ -289,7 +289,12 @@ function sortTableId( iTable, iCol ) {
 						with tag(html, 'h1'):
 							html.write( '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + cgi.escape(title) )
 			for iTable, categoryName in enumerate(categoryNames):
-				results, races = GetModelInfo.GetCategoryResults( categoryName, raceResults, pointsForRank, model.numPlacesTieBreaker )
+				results, races = GetModelInfo.GetCategoryResults(
+					categoryName,
+					raceResults,
+					pointsForRank,
+					useMostEventsCompleted=model.useMostEventsCompleted,
+					numPlacesTieBreaker=model.numPlacesTieBreaker )
 				results = [rr for rr in results if rr[3] > 0]
 				
 				headerNames = HeaderNames + [u'{}'.format(r[1]) for r in races]
@@ -515,7 +520,13 @@ class Results(wx.Panel):
 			
 		pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
 
-		results, races = GetModelInfo.GetCategoryResults( categoryName, self.raceResults, pointsForRank, model.numPlacesTieBreaker )
+		results, races = GetModelInfo.GetCategoryResults(
+			categoryName,
+			self.raceResults,
+			pointsForRank,
+			useMostEventsCompleted=model.useMostEventsCompleted,
+			numPlacesTieBreaker=model.numPlacesTieBreaker,
+		)
 		results = [rr for rr in results if rr[3] > 0]
 		
 		headerNames = HeaderNames + [r[1] for r in races]
@@ -592,7 +603,13 @@ class Results(wx.Panel):
 		wb = xlwt.Workbook()
 
 		for categoryName in categoryNames:
-			results, races = GetModelInfo.GetCategoryResults( categoryName, self.raceResults, pointsForRank, model.numPlacesTieBreaker )
+			results, races = GetModelInfo.GetCategoryResults(
+				categoryName,
+				self.raceResults,
+				pointsForRank,
+				useMostEventsCompleted=model.useMostEventsCompleted,
+				numPlacesTieBreaker=model.numPlacesTieBreaker,
+			)
 			results = [rr for rr in results if rr[3] > 0]
 			
 			headerNames = HeaderNames + [r[1] for r in races]

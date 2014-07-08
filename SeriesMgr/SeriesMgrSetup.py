@@ -19,6 +19,7 @@ copyFiles = [
 	"GeoAnimation.py",
 	"Animation.py",
 	"GanttChart.py",
+	"Excel.py".
 	"arial10.py",
 	"GetResults.py",
 	"FitSheetWrapper.py",

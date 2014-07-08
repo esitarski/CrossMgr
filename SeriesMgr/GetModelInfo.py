@@ -87,7 +87,7 @@ def ExtractRaceResultsExcel( raceInSeries ):
 				('bib', 'Bib#'), ('rank', 'Pos'),
 				('firstName', 'FirstName'), ('lastName', 'LastName'), ('license', 'License'),
 				('team', 'Team'), ('categoryName', 'Category')]:
-			info[fTo] = d.get( fFrom, '' )
+			info[fTo] = d.get( fFrom, u'' )
 		
 		if not info['categoryName']:
 			continue
@@ -165,7 +165,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 	Model.race = None
 	return True, 'success', raceResults
 	
-def GetCategoryResults( categoryName, raceResults, pointsForRank, numPlacesTieBreaker = 5 ):
+def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsCompleted=False, numPlacesTieBreaker=5 ):
 	# Get all results for this category.
 	raceResults = [rr for rr in raceResults if rr.categoryName == categoryName]
 	if not raceResults:
@@ -185,8 +185,11 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, numPlacesTieBr
 	riderPoints = defaultdict( int )
 	riderEventsCompleted = defaultdict( int )
 	riderPlaceCount = defaultdict( lambda : defaultdict(int) )
+	riderTeam = defaultdict( lambda : u'' )
 	for rr in raceResults:
 		rider = (rr.lastName, rr.firstName, rr.license)
+		if rr.team:
+			riderTeam[rider] = rr.team
 		points = pointsForRank[rr.raceFileName][rr.rank]
 		riderResults[rider][raceSequence[rr.raceInSeries]] = (points, rr.rank)
 		riderPoints[rider] += points
@@ -196,13 +199,15 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, numPlacesTieBr
 	# Sort by rider points - greatest number of points first.  Break ties with place count, then
 	# most recent result.
 	riderOrder = [rider for rider, results in riderResults.iteritems()]
-	riderOrder.sort( key = lambda r:	[riderPoints[r]] +
-										[riderPlaceCount[r][k] for k in xrange(1, numPlacesTieBreaker+1)] +
-										[-rank for points, rank in reversed(riderResults[r])], reverse = True )
+	riderOrder.sort(key = lambda r:	[riderPoints[r]] +
+									([riderEventsCompleted[r]] if useMostEventsCompleted else []) +
+									[riderPlaceCount[r][k] for k in xrange(1, numPlacesTieBreaker+1)] +
+									[-rank for points, rank in reversed(riderResults[r])],
+					reverse = True )
 	
 	# List of:
-	# lastName, firstName, license, points, [list of (points, position) for each race in series]
-	categoryResult = [list(rider) + [riderPoints[rider]] + [riderResults[rider]] for rider in riderOrder]
+	# lastName, firstName, license, team, points, [list of (points, position) for each race in series]
+	categoryResult = [list(rider) + [riderTeam[rider], riderPoints[rider]] + [riderResults[rider]] for rider in riderOrder]
 	return categoryResult, races
 
 if __name__ == '__main__':
