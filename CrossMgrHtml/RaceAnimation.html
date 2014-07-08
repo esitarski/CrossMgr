@@ -4258,12 +4258,9 @@ Current versions of Chrome, FireFox and Opera work fine.
 <button id="idRewind" onClick="Rewind()"><span data-tr="Rewind"></span></button>
 <button id="idPlayStop" onClick="PlayStop()"><span data-tr="Play"></span></button>
 <input type="checkbox" id="idLoop" onClick="LoopContinuously()" checked><span data-tr="Loop Continuously"></span></input>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span data-tr="Playback Speed"></span>:
-<input type="radio" name="groupSpeed" value="0" onClick="SetSpeed(-2)"></input>
-<input type="radio" name="groupSpeed" value="1" onClick="SetSpeed(-1)"></input>
-<input type="radio" name="groupSpeed" value="2" checked onClick="SetSpeed(0)"></input>
-<input type="radio" name="groupSpeed" value="3" onClick="SetSpeed(1)"></input>
-<input type="radio" name="groupSpeed" value="4" onClick="SetSpeed(2)"></input>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<label for=playbackSpeed><span data-tr="Playback Speed">:</label>
+<input type="range" id="playbackSpeed" min="-9" value="0" max="3" step="1" oninput="SetSpeed(this.value)">
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </span>
 <span data-tr="Size"></span>:
