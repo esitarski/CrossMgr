@@ -556,8 +556,8 @@ class Results(wx.Panel):
 				rowOrig = [self.grid.GetCellValue(r, c) for c in xrange(0, self.grid.GetNumberCols())]
 				rowCmp = [v for v in rowOrig]
 				rowCmp[0] = int(rowCmp[0])
-				rowCmp[4] = int(rowCmp[4])
-				rowCmp[5:] = [-int( v.split()[0] ) if v else 0 for v in rowCmp[5:]]
+				rowCmp[4] = int(rowCmp[5])
+				rowCmp[5:] = [-int( v.split()[0] ) if v else 0 for v in rowCmp[6:]]
 				rowCmp.extend( rowOrig )
 				data.append( rowCmp )
 			
