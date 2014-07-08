@@ -183,6 +183,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, numPlacesTieBr
 	# Get the individual results for each rider, and the total points.
 	riderResults = defaultdict( lambda : [(0,0)] * len(races) )
 	riderPoints = defaultdict( int )
+	riderEventsCompleted = defaultdict( int )
 	riderPlaceCount = defaultdict( lambda : defaultdict(int) )
 	for rr in raceResults:
 		rider = (rr.lastName, rr.firstName, rr.license)
@@ -190,6 +191,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, numPlacesTieBr
 		riderResults[rider][raceSequence[rr.raceInSeries]] = (points, rr.rank)
 		riderPoints[rider] += points
 		riderPlaceCount[rider][rr.rank] += 1
+		riderEventsCompleted[rider] += 1
 
 	# Sort by rider points - greatest number of points first.  Break ties with place count, then
 	# most recent result.

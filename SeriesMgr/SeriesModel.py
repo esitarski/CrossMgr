@@ -97,6 +97,7 @@ class Race( object ):
 		
 class SeriesModel( object ):
 	DefaultPointStructureName = 'Example'
+	useMostEventsCompleted = False
 
 	def __init__( self ):
 		self.name = '<Series Name>'

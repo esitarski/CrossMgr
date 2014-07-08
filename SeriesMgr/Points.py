@@ -61,18 +61,26 @@ class Points(wx.Panel):
 		
 		box = wx.StaticBox( self, -1, 'Scoring Rules' )
 		bsizer = wx.StaticBoxSizer( box, wx.VERTICAL )
-		bsizer.Add( wx.StaticText(self, wx.ID_ANY, 'Score Riders by Points.'), 0, flag=wx.ALL, border = 2 )
-		bsizer.Add( wx.StaticText(self, wx.ID_ANY, 'If Riders are Tied on Points:'), 0, flag=wx.ALL, border = 2 )
-		self.numPlacesTieBreaker = wx.RadioBox(self, wx.ID_ANY, majorDimension = 1, choices = [
+		bsizer.Add( wx.StaticText(self, label='Score Riders by Points:'), flag=wx.ALL, border=2 )
+		
+		bsizer.Add( wx.StaticLine(self), 1, flag=wx.EXPAND|wx.ALL, border=4 )
+		bsizer.Add( wx.StaticText(self, label='If Riders are Tied on Points:'), flag=wx.ALL, border=2 )
+		self.mostEventsCompleted = wx.CheckBox( self, label='Consider Most Events Completed' )
+		self.mostEventsCompleted.SetValue( False )
+		bsizer.Add( self.mostEventsCompleted, 0, flag=wx.ALL, border=4 )
+		
+		bsizer.Add( wx.StaticLine(self), 1, flag=wx.EXPAND|wx.ALL, border=4 )
+		self.numPlacesTieBreaker = wx.RadioBox(self, majorDimension = 1, choices = [
 			'Do not consider Place Finishes.',
-			'Use Most 1st Place Finishes',
-			'Use Most 1st and 2nd Place Finishes',
-			'Use Most 1st, 2nd and 3rd Place Finishes',
-			'Use Most 1st, 2nd, 3rd and 4th Place Finishes',
-			'Use Most 1st, 2nd, 3rd, 4th and 5th Place Finishes',
+			'Most 1st Place Finishes',
+			'Most 1st and 2nd Place Finishes',
+			'Most 1st, 2nd and 3rd Place Finishes',
+			'Most 1st, 2nd, 3rd and 4th Place Finishes',
+			'Most 1st, 2nd, 3rd, 4th and 5th Place Finishes',
 		])
-		bsizer.Add( self.numPlacesTieBreaker, 0, flag=wx.ALL, border = 2 )
-		bsizer.Add( wx.StaticText(self, wx.ID_ANY, 'If there is still a Tie, use most Recent Results'), 0, flag=wx.ALL, border = 2 )
+		self.numPlacesTieBreaker.SetLabel( u'If Riders are still Tied on Points:' )
+		bsizer.Add( self.numPlacesTieBreaker, 0, flag=wx.ALL, border=2 )
+		bsizer.Add( wx.StaticText(self, label=u'If Rider are still Tied on Points, use most Recent Results'), flag=wx.ALL, border=4 )
 
 		self.headerNames = ['Name', 'OldName', 'Depth', 'Points for Position']
 		
@@ -139,6 +147,7 @@ class Points(wx.Panel):
 			
 		wx.CallAfter( self.gridAutoSize )
 		
+		self.mostEventsCompleted.SetValue( model.useMostEventsCompleted )
 		self.numPlacesTieBreaker.SetSelection( model.numPlacesTieBreaker )
 	
 	def commit( self ):
@@ -152,6 +161,9 @@ class Points(wx.Panel):
 		
 		model = SeriesModel.model
 		model.setPoints( pointsList )
+		if model.useMostEventsCompleted != self.mostEventsCompleted.GetValue():
+			model.useMostEventsCompleted = self.mostEventsCompleted.GetValue()
+			model.changed = True
 		if model.numPlacesTieBreaker != self.numPlacesTieBreaker.GetSelection():
 			model.numPlacesTieBreaker = self.numPlacesTieBreaker.GetSelection()
 			model.changed = True
