@@ -188,7 +188,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 	riderTeam = defaultdict( lambda : u'' )
 	for rr in raceResults:
 		rider = (rr.lastName, rr.firstName, rr.license)
-		if rr.team:
+		if rr.team and rr.team != u'0':
 			riderTeam[rider] = rr.team
 		points = pointsForRank[rr.raceFileName][rr.rank]
 		riderResults[rider][raceSequence[rr.raceInSeries]] = (points, rr.rank)

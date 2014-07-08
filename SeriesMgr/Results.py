@@ -336,7 +336,7 @@ function sortTableId( iTable, iCol ) {
 									with tag(html, 'span', {'class': 'smallFont'}):
 										html.write( u'Top {}'.format(len(r[3].pointStructure)) )
 					with tag(html, 'tbody'):
-						for pos, (lastName, firstName, license, points, racePoints) in enumerate(results):
+						for pos, (lastName, firstName, license, team, points, racePoints) in enumerate(results):
 							with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
 								with tag(html, 'td', {'class':'rightAlign'}):
 									html.write( unicode(pos+1) )
@@ -346,6 +346,8 @@ function sortTableId( iTable, iCol ) {
 									html.write( unicode(firstName or '') )
 								with tag(html, 'td'):
 									html.write( unicode(license or '') )
+								with tag(html, 'td'):
+									html.write( unicode(team or '') )
 								with tag(html, 'td', {'class':'rightAlign'}):
 									html.write( unicode(points or '') )
 								for rPoints, rRank in racePoints:
@@ -534,14 +536,15 @@ class Results(wx.Panel):
 		Utils.AdjustGridSize( self.grid, len(results), len(headerNames) )
 		self.setColNames( headerNames )
 		
-		for row, (lastName, firstName, license, points, racePoints) in enumerate(results):
+		for row, (lastName, firstName, license, team, points, racePoints) in enumerate(results):
 			self.grid.SetCellValue( row, 0, unicode(row+1) )
-			self.grid.SetCellValue( row, 1, unicode(lastName if lastName else '') )
-			self.grid.SetCellValue( row, 2, unicode(firstName if firstName else '') )
-			self.grid.SetCellValue( row, 3, unicode(license if license else '') )
-			self.grid.SetCellValue( row, 4, unicode(points) )
+			self.grid.SetCellValue( row, 1, unicode(lastName or u'') )
+			self.grid.SetCellValue( row, 2, unicode(firstName or u'') )
+			self.grid.SetCellValue( row, 3, unicode(license or u'') )
+			self.grid.SetCellValue( row, 4, unicode(team or u'') )
+			self.grid.SetCellValue( row, 5, unicode(points) )
 			for q, (rPoints, rRank) in enumerate(racePoints):
-				self.grid.SetCellValue( row, 5 + q, u'{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints else '' )
+				self.grid.SetCellValue( row, 6 + q, u'{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints else '' )
 				
 			for c in xrange( 0, len(headerNames) ):
 				self.grid.SetCellBackgroundColour( row, c, wx.WHITE )
@@ -638,14 +641,15 @@ class Results(wx.Panel):
 				wsFit.write( rowCur, c, headerName, labelStyle, bold = True )
 			rowCur += 1
 			
-			for pos, (lastName, firstName, license, points, racePoints) in enumerate(results):
+			for pos, (lastName, firstName, license, team, points, racePoints) in enumerate(results):
 				wsFit.write( rowCur, 0, pos+1, numberStyle )
 				wsFit.write( rowCur, 1, lastName, textStyle )
 				wsFit.write( rowCur, 2, firstName, textStyle )
 				wsFit.write( rowCur, 3, license, textStyle )
-				wsFit.write( rowCur, 4, points, numberStyle )
+				wsFit.write( rowCur, 4, team, textStyle )
+				wsFit.write( rowCur, 5, points, numberStyle )
 				for q, (rPoints, rRank) in enumerate(racePoints):
-					wsFit.write( rowCur, 5 + q, '{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints else '', centerStyle )
+					wsFit.write( rowCur, 6 + q, '{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints else '', centerStyle )
 				rowCur += 1
 		
 			# Add branding at the bottom of the sheet.
