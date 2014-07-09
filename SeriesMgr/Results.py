@@ -352,6 +352,7 @@ function sortTableId( iTable, iCol ) {
 									with tag(html, 'td', {'class':'leftBorder centerAlign'}):
 										html.write( u'{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints else '' )
 										
+			#-----------------------------------------------------------------------------
 			with tag(html, 'p'):
 				pass
 			with tag(html, 'hr'):
@@ -381,6 +382,35 @@ function sortTableId( iTable, iCol ) {
 					with tag(html, 'td'):
 						pass
 						
+			#-----------------------------------------------------------------------------
+			with tag(html, 'p'):
+				pass
+			with tag(html, 'hr'):
+				pass
+				
+			with tag(html, 'h2'):
+				html.write( 'Tie Breaking Rules' )
+				
+			with tag(html, 'p'):
+				html.write( "To break a tie on points, consider:" )
+			isFirst = True
+			tieLink = "if still a tie, use "
+			with tag(html, 'ol'):
+				if model.useMostEventsCompleted:
+					with tag(html, 'li'):
+						html.write( "{}most events completed".format( tieLink if not isFirst else "" ) )
+						isFirst = False
+				if model.numPlacesTieBreaker != 0:
+					with tag(html, 'li'):
+						html.write( "{}number of {} place wins".format( tieLink if not isFirst else "",
+							u', '.join(Utils.ordinal(p+1) for p in xrange(model.numPlacesTieBreaker))
+						) )
+						isFirst = False
+				with tag(html, 'li'):
+					html.write( "{}position in most recent result".format(tieLink if not isFirst else "") )
+					isFirst = False
+				
+			#-----------------------------------------------------------------------------
 			with tag(html, 'p'):
 				with tag(html, 'a', dict(href='http://sites.google.com/site/crossmgrsoftware')):
 					html.write( 'Powered by CrossMgr' )
