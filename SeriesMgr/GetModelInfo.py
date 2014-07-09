@@ -18,12 +18,12 @@ from GetResults			import GetResults, GetCategoryDetails
 class RaceResult( object ):
 	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, raceFileName, bib, rank, raceOrganizer,
 					raceURL = None, raceInSeries = None ):
-		self.firstName = firstName
-		self.lastName = lastName
-		self.license = license
-		self.team = team
+		self.firstName = (firstName or u'')
+		self.lastName = (lastName or u'')
+		self.license = (license or u'')
+		self.team = (team or u'')
 		
-		self.categoryName = categoryName
+		self.categoryName = (categoryName or u'')
 		
 		self.raceName = raceName
 		self.raceDate = raceDate
@@ -45,11 +45,7 @@ class RaceResult( object ):
 		
 	@property
 	def full_name( self ):
-		if self.lastName and self.firstName:
-			return ', '.join( self.lastName.upper(), self.firstName )
-		if self.lastName:
-			return self.lastName.upper()
-		return self.firstName
+		return u', '.join( [name for name in [self.lastName.upper(), self.firstName] if name] )
 
 def ExtractRaceResults( r ):
 	if os.path.splitext(r.fileName)[1] == '.cmn':
@@ -187,7 +183,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 	riderPlaceCount = defaultdict( lambda : defaultdict(int) )
 	riderTeam = defaultdict( lambda : u'' )
 	for rr in raceResults:
-		rider = (rr.lastName, rr.firstName, rr.license)
+		rider = (rr.full_name, rr.license)
 		if rr.team and rr.team != u'0':
 			riderTeam[rider] = rr.team
 		points = pointsForRank[rr.raceFileName][rr.rank]

@@ -22,7 +22,7 @@ import re
 import webbrowser
 from contextlib import contextmanager
 
-HeaderNames = ['Pos', 'Last Name', 'First Name', 'License', 'Team', 'Points']
+HeaderNames = ['Pos', 'Name', 'License', 'Team', 'Points']
 
 @contextmanager
 def tag( buf, name, attrs = {} ):
@@ -336,16 +336,14 @@ function sortTableId( iTable, iCol ) {
 									with tag(html, 'span', {'class': 'smallFont'}):
 										html.write( u'Top {}'.format(len(r[3].pointStructure)) )
 					with tag(html, 'tbody'):
-						for pos, (lastName, firstName, license, team, points, racePoints) in enumerate(results):
+						for pos, (name, license, team, points, racePoints) in enumerate(results):
 							with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
 								with tag(html, 'td', {'class':'rightAlign'}):
 									html.write( unicode(pos+1) )
 								with tag(html, 'td'):
-									html.write( unicode(lastName or '') )
+									html.write( unicode(name or u'') )
 								with tag(html, 'td'):
-									html.write( unicode(firstName or '') )
-								with tag(html, 'td'):
-									html.write( unicode(license or '') )
+									html.write( unicode(license or u'') )
 								with tag(html, 'td'):
 									html.write( unicode(team or '') )
 								with tag(html, 'td', {'class':'rightAlign'}):
@@ -478,7 +476,7 @@ class Results(wx.Panel):
 		for col, headerName in enumerate(headerNames):
 			self.grid.SetColLabelValue( col, headerName )
 			attr = gridlib.GridCellAttr()
-			if headerName in ('First Name', 'Last Name', 'Team', 'License'):
+			if headerName in ('Name', 'Team', 'License'):
 				attr.SetAlignment( wx.ALIGN_LEFT, wx.ALIGN_TOP )
 			elif headerName in ('Pos', 'Points'):
 				attr.SetAlignment( wx.ALIGN_RIGHT, wx.ALIGN_TOP )
@@ -536,15 +534,14 @@ class Results(wx.Panel):
 		Utils.AdjustGridSize( self.grid, len(results), len(headerNames) )
 		self.setColNames( headerNames )
 		
-		for row, (lastName, firstName, license, team, points, racePoints) in enumerate(results):
+		for row, (name, license, team, points, racePoints) in enumerate(results):
 			self.grid.SetCellValue( row, 0, unicode(row+1) )
-			self.grid.SetCellValue( row, 1, unicode(lastName or u'') )
-			self.grid.SetCellValue( row, 2, unicode(firstName or u'') )
-			self.grid.SetCellValue( row, 3, unicode(license or u'') )
-			self.grid.SetCellValue( row, 4, unicode(team or u'') )
-			self.grid.SetCellValue( row, 5, unicode(points) )
+			self.grid.SetCellValue( row, 1, unicode(name or u'') )
+			self.grid.SetCellValue( row, 2, unicode(license or u'') )
+			self.grid.SetCellValue( row, 3, unicode(team or u'') )
+			self.grid.SetCellValue( row, 4, unicode(points) )
 			for q, (rPoints, rRank) in enumerate(racePoints):
-				self.grid.SetCellValue( row, 6 + q, u'{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints else '' )
+				self.grid.SetCellValue( row, 5 + q, u'{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints else '' )
 				
 			for c in xrange( 0, len(headerNames) ):
 				self.grid.SetCellBackgroundColour( row, c, wx.WHITE )
@@ -556,8 +553,8 @@ class Results(wx.Panel):
 				rowOrig = [self.grid.GetCellValue(r, c) for c in xrange(0, self.grid.GetNumberCols())]
 				rowCmp = [v for v in rowOrig]
 				rowCmp[0] = int(rowCmp[0])
-				rowCmp[4] = int(rowCmp[5])
-				rowCmp[5:] = [-int( v.split()[0] ) if v else 0 for v in rowCmp[6:]]
+				rowCmp[4] = int(rowCmp[4])
+				rowCmp[5:] = [-int( v.split()[0] ) if v else 0 for v in rowCmp[5:]]
 				rowCmp.extend( rowOrig )
 				data.append( rowCmp )
 			
@@ -641,15 +638,14 @@ class Results(wx.Panel):
 				wsFit.write( rowCur, c, headerName, labelStyle, bold = True )
 			rowCur += 1
 			
-			for pos, (lastName, firstName, license, team, points, racePoints) in enumerate(results):
+			for pos, (name, license, team, points, racePoints) in enumerate(results):
 				wsFit.write( rowCur, 0, pos+1, numberStyle )
-				wsFit.write( rowCur, 1, lastName, textStyle )
-				wsFit.write( rowCur, 2, firstName, textStyle )
-				wsFit.write( rowCur, 3, license, textStyle )
-				wsFit.write( rowCur, 4, team, textStyle )
-				wsFit.write( rowCur, 5, points, numberStyle )
+				wsFit.write( rowCur, 1, name, textStyle )
+				wsFit.write( rowCur, 2, license, textStyle )
+				wsFit.write( rowCur, 3, team, textStyle )
+				wsFit.write( rowCur, 4, points, numberStyle )
 				for q, (rPoints, rRank) in enumerate(racePoints):
-					wsFit.write( rowCur, 6 + q, '{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints else '', centerStyle )
+					wsFit.write( rowCur, 5 + q, '{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints else '', centerStyle )
 				rowCur += 1
 		
 			# Add branding at the bottom of the sheet.
