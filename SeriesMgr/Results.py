@@ -16,24 +16,14 @@ import GetModelInfo
 from ReorderableGrid import ReorderableGrid
 from FitSheetWrapper import FitSheetWrapper
 import FtpWriteFile
+from ExportGrid import tag
 
 import xlwt
 import re
 import webbrowser
-from contextlib import contextmanager
 
 HeaderNames = ['Pos', 'Name', 'License', 'Team', 'Points']
 
-@contextmanager
-def tag( buf, name, attrs = {} ):
-	if isinstance(attrs, str) and attrs:
-		attrs = { 'class': attrs }
-	buf.write( '<%s>' % ' '.join(
-			[name] + ['%s="%s"' % (attr, value) for attr, value in attrs.iteritems()]
-		) )
-	yield
-	buf.write( '</%s>\n' % name )
-	
 #----------------------------------------------------------------------------------
 
 def getHeaderGraphic():
@@ -392,22 +382,27 @@ function sortTableId( iTable, iCol ) {
 				html.write( 'Tie Breaking Rules' )
 				
 			with tag(html, 'p'):
-				html.write( "To break a tie on points, consider:" )
+				html.write( "If two or more riders are tied on points, the following rules will be applied in sequence until the tie is broken:" )
 			isFirst = True
 			tieLink = "if still a tie, use "
 			with tag(html, 'ol'):
 				if model.useMostEventsCompleted:
 					with tag(html, 'li'):
-						html.write( "{}most events completed".format( tieLink if not isFirst else "" ) )
+						html.write( "{}number of events completed".format( tieLink if not isFirst else "" ) )
 						isFirst = False
 				if model.numPlacesTieBreaker != 0:
+					finishOrdinals = [Utils.ordinal(p+1) for p in xrange(model.numPlacesTieBreaker)]
+					if model.numPlacesTieBreaker == 1:
+						finishStr = finishOrdinals[0]
+					else:
+						finishStr = u', '.join(finishOrdinals[:-1]) + u' then ' + finishOrdinals[-1]
 					with tag(html, 'li'):
-						html.write( "{}number of {} place wins".format( tieLink if not isFirst else "",
-							u', '.join(Utils.ordinal(p+1) for p in xrange(model.numPlacesTieBreaker))
+						html.write( "{}number of {} place finishes".format( tieLink if not isFirst else "",
+							finishStr,
 						) )
 						isFirst = False
 				with tag(html, 'li'):
-					html.write( "{}position in most recent result".format(tieLink if not isFirst else "") )
+					html.write( "{}finish position in most recent event".format(tieLink if not isFirst else "") )
 					isFirst = False
 				
 			#-----------------------------------------------------------------------------
