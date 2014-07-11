@@ -172,7 +172,7 @@ File Name|File name generated for this race.
 ## Time Trial Mode
 Time Trial mode is a special mode that works differently from the regular race mode.  In TT mode, the first read for a rider starts his/her clock, and subsequent reads are all taken with respect to the rider's start time.
 
-TT start times can also be imported into CrossMgr from an Excel spreadsheet (see [Menu-DataMgmt.html][] for details).  This spreadsheet simply requires a header row with at least two columns: the Bib number, and the Start Time (always remember that Start Time is in __Race__ time, that is, the time after the stopwatches are synced, not clock time).  When start times are imported, each rider's time will start automatically at the imported Start time.
+TT start times can also be imported into CrossMgr from an Excel spreadsheet (see [DataMgmt][] for details).  This spreadsheet simply requires a header row with at least two columns: the Bib number, and the Start Time (always remember that Start Time is in __Race__ time, that is, the time after the stopwatches are synced, not clock time).  When start times are imported, each rider's time will start automatically at the imported Start time.
 
 Otherwise, the first input for a rider is taken as his/her start time.
 
