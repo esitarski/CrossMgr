@@ -9,6 +9,7 @@ from Queue import Empty
 from threading import Thread as Process
 from Queue import Queue
 from Alien import AlienServer
+import Alien
 from Alien2JChip import CrossMgrServer
 from AutoDetect import AutoDetect, DefaultAlienCmdPort
 
@@ -94,10 +95,71 @@ class MessageManager( object ):
 		self.messageList.ChangeValue( '' )
 		self.messageList.SetInsertionPointEnd()
 
+class AdvancedSetup( wx.Dialog ):
+	def __init__( self, parent, id = wx.ID_ANY ):
+		wx.Dialog.__init__( self, parent, id, "Advanced Setup",
+						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+						
+		'''
+		Alien.ConnectionTimeoutSeconds	= 1		# Interval for connection timeout
+		Alien.KeepaliveSeconds			= 2		# Interval to request a Keepalive message
+		Alien.RepeatSeconds			= 2		# Interval in which a tag is considered a repeat read.
+		'''
+
+		bs = wx.GridBagSizer(vgap=5, hgap=5)
+
+		border = 8
+		bs.Add( wx.StaticText(self, wx.ID_ANY, 'Advanced Reader Options:'), pos = (0,0), span=(1, 2), border = border, flag=wx.ALL )
+		
+		row = 1
+		bs.Add( wx.StaticText(self, wx.ID_ANY, 'Repeat Seconds'), pos=(row, 0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		self.RepeatSeconds = intctrl.IntCtrl( self, wx.ID_ANY, min=1, max=120, limited = True,
+			value = Alien.RepeatSeconds, size=(32,-1) )
+		bs.Add( self.RepeatSeconds, pos=(row, 1), span=(1,1), border = border, flag=wx.TOP )
+		bs.Add( wx.StaticText(self, wx.ID_ANY, 'interval in which multiple tag reads are considered "repeats" and not reported'), pos=(row, 2), span=(1,1), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL )
+
+		row += 1
+		self.restoreDefaultButton = wx.Button( self, wx.ID_ANY, 'Restore Defaults' )
+		self.restoreDefaultButton.Bind( wx.EVT_BUTTON, self.onRestoreDefault )
+		bs.Add( self.restoreDefaultButton, pos=(row, 0), span=(1,3), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_CENTER )
+		
+		row += 1
+		bs.Add( wx.StaticText(self, wx.ID_ANY, 'Reminder: Press "Reset" for these changes to take effect.'), pos=(row, 0), span=(1,3), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_RIGHT )
+		
+		self.okBtn = wx.Button( self, wx.ID_OK )
+		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
+
+		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
+		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
+		
+		row += 1
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( self.okBtn, border = border, flag=wx.ALL )
+		self.okBtn.SetDefault()
+		hs.Add( self.cancelBtn, border = border, flag=wx.ALL )
+		
+		bs.Add( hs, pos=(row, 0), span=(1,3), flag=wx.ALIGN_RIGHT )
+		
+		self.SetSizerAndFit(bs)
+		bs.Fit( self )
+		
+		self.CentreOnParent(wx.BOTH)
+		self.SetFocus()
+
+	def onRestoreDefault( self, event ):
+		self.RepeatSeconds.SetValue( Alien.RepeatSecondsDefault )
+		
+	def onOK( self, event ):
+		Alien.RepeatSeconds = self.RepeatSeconds.GetValue()
+		self.EndModal( wx.ID_OK )
+		
+	def onCancel( self, event ):
+		self.EndModal( wx.ID_CANCEL )
+
 def setFont( font, w ):
 	w.SetFont( font )
 	return w
-		
+
 class MainWin( wx.Frame ):
 	def __init__( self, parent, id = wx.ID_ANY, title='', size=(200,200) ):
 		wx.Frame.__init__(self, parent, id, title, size=size)
@@ -163,6 +225,11 @@ class MainWin( wx.Frame ):
 		self.autoDetectButton = wx.Button( self, wx.ID_ANY, 'Auto Detect' )
 		self.autoDetectButton.Bind( wx.EVT_BUTTON, self.doAutoDetect )
 		hs.Add( self.autoDetectButton, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border = 6 )
+		
+		self.advancedButton = wx.Button(self, wx.ID_ANY, 'Advanced...' )
+		self.advancedButton.Bind( wx.EVT_BUTTON, self.doAdvanced )
+		hs.Add( self.advancedButton, flag=wx.LEFT, border = 6 )
+		
 		gbs.Add( hs, pos=(iRow,0), span=(1,2), flag=wx.ALIGN_LEFT )
 		iRow += 1
 		
@@ -272,6 +339,11 @@ class MainWin( wx.Frame ):
 		self.alienProcess.start()
 		self.crossMgrProcess.start()
 	
+	def doAdvanced( self, event ):
+		dlg = AdvancedSetup( self )
+		dlg.ShowModal()
+		dlg.Destroy()
+	
 	def shutdown( self ):
 		self.alienProcess = None
 		self.crossMgrProcess = None
@@ -363,6 +435,8 @@ class MainWin( wx.Frame ):
 			'    AlienCmdHost:  {}'.format(self.cmdHost.GetAddress()),
 			'    AlienCmdPort:  {}'.format(self.cmdPort.GetValue()),
 			'',
+			'    RepeatSeconds: {}'.format(Alien.RepeatSeconds),
+			'',
 			'Configuration: CrossMgr',
 			'    CrossMgrHost:  {}'.format(self.getCrossMgrHost()),
 			'    CrossMgrPort:  {}'.format(CrossMgrPort),
@@ -433,6 +507,7 @@ class MainWin( wx.Frame ):
 		self.config.Write( 'AlienCmdAddr', self.cmdHost.GetAddress() )
 		self.config.Write( 'AlienCmdPort', str(self.cmdPort.GetValue()) )
 		self.config.Write( 'Antennas', self.getAntennaStr() )
+		self.config.Write( 'RepeatSeconds', '{}'.format(Alien.RepeatSeconds) )
 		s = self.notifyHost.GetSelection()
 		if s != wx.NOT_FOUND:
 			self.config.Write( 'NotifyHost', self.notifyHost.GetString(s) )
@@ -444,6 +519,7 @@ class MainWin( wx.Frame ):
 		self.cmdHost.SetValue( self.config.Read('AlienCmdAddr', '0.0.0.0') )
 		self.cmdPort.SetValue( int(self.config.Read('AlienCmdPort', '0')) )
 		self.setAntennaStr( self.config.Read('Antennas', '0 1') )
+		Alien.RepeatSeconds = int(self.config.Read( 'RepeatSeconds', '{}'.format(Alien.RepeatSeconds)))
 		notifyHost = self.config.Read('NotifyHost', Utils.DEFAULT_HOST)
 		self.setNotifyHost( notifyHost )
 	

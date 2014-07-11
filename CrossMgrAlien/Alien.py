@@ -18,7 +18,8 @@ import cStringIO as StringIO
 
 HOME_DIR = os.path.expanduser("~")
 
-RepeatSeconds = 2	# Number of seconds that a tag is considered a repeat read.
+RepeatSecondsDefault = 2	# Number of seconds that a tag is considered a repeat read.
+RepeatSeconds = RepeatSecondsDefault
 
 #-------------------------------------------------------------------------
 # Alien Reader Initialization Commands
