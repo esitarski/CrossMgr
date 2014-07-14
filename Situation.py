@@ -90,7 +90,7 @@ def GetSituationGaps( category=None, t=None ):
 	tClock = race.startTime.hour*60.0*60.0 + race.startTime.minute*60.0 + race.startTime.second + race.startTime.microsecond/1000000.0 + t
 	tETA = leaderRaceTimes[thisLap+1] - t if thisLap+1 != len(leaderRaceTimes) else None
 	tAfterLeader = t - leaderRaceTimes[thisLap]
-	lap = thisLap
+	lap = thisLap + (1 if t > leaderRaceTimes[thisLap] else 0)
 	lapsToGo = len(leaderRaceTimes) - lap
 	
 	title = u''
@@ -98,7 +98,7 @@ def GetSituationGaps( category=None, t=None ):
 		title = u'Race: {}'.format(Utils.formatTime(tCur))
 	if tClock is not None:
 		if title:
-			title += u'   Clock: {}'.format(Utils.formatTime(tClock))
+			title += u'   Time of Day: {}'.format(Utils.formatTime(tClock))
 	title += u'   Lap: {}   Laps to go: {}'.format(lap, lapsToGo)
 	if tETA is not None:
 		title += u'   ETA: {}'.format(Utils.formatTime(tETA))
@@ -198,14 +198,15 @@ class Situation(wx.PyPanel):
 				heightMax += tHeight
 			return widthMax, heightMax
 		
-		border = min( width, height ) // 25
+		border = min( width, height ) // 30
 		lastWidth = GetGroupTextExtent( groups[-1] )[0]
 		
 		xLeft = border*2
-		yTop = border*2 + fontHeight
+		yTop = border*2 + fontHeight*1.5
 		xRight = width - border - lastWidth
 		yBottom = height - border
 		
+		# Draw the title.
 		if self.title:
 			dc.DrawText( self.title, xLeft, border )
 		
@@ -227,7 +228,7 @@ class Situation(wx.PyPanel):
 			flWidth = width / 25
 			if x - flWidth > width:
 				return
-			flY = yTop - border / 2
+			flY = border + fontHeight*1.5
 			outlinePen = wx.Pen( wx.Colour(220,220,220), width / 800 )
 			dc.SetPen( outlinePen )
 			dc.SetBrush( wx.WHITE_BRUSH )
