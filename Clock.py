@@ -60,7 +60,6 @@ class Clock(wx.PyControl):
 	def DoGetBestSize(self):
 		return wx.Size(100, 100) if self.initialSize is wx.DefaultSize else self.initialSize
 
-
 	def SetForegroundColour(self, colour):
 		wx.PyControl.SetForegroundColour(self, colour)
 		self.Refresh()

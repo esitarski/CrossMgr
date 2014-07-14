@@ -405,13 +405,14 @@ class NumKeypad( wx.Panel ):
 			self.raceHUD.SetData()
 			return
 
+		Finisher = Model.Rider.Finisher
 		tCur = race.curRaceTime()
 		raceTimes = []
 		leader = []
 		categoryRaceTimes = {}
 		categories_seen = set()
 		for rr in results:
-			if rr.status != Model.Rider.Finisher or not rr.raceTimes:
+			if rr.status != Finisher or not rr.raceTimes:
 				continue
 			category = race.getCategory( rr.num )
 			if category in categories_seen:			# If we have not seen this category, this is not the leader.
