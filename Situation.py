@@ -2,10 +2,12 @@ import wx
 import Utils
 import Model
 import datetime
+import os
 
 from GetResults import GetResults
 from bisect import bisect_left
 from copy import copy
+import cPickle as pickle
 
 def GetSituationGaps( category=None, t=None ):
 	race = Model.race
@@ -79,29 +81,33 @@ def GetSituationGaps( category=None, t=None ):
 		else:
 			gap = thisGap
 		
+		# print 'thisLeaderLap:', thisLeaderLap, 'thisLap:', thisLap, 'lapsDown:', thisLeaderLap - thisLap
 		gaps.append( [gap, getInfo(rr, thisLeaderLap - thisLap)] )
 	
 	gaps.sort()
-	gapMin = gaps[0][0]
-	gaps = [[g[0] - gapMin, g[1]] for g in gaps]
+	
+	if gaps:
+		gapMin = gaps[0][0]
+		gaps = [[g[0] - gapMin, g[1]] for g in gaps]
 	thisLap = getLapLE(leaderRaceTimes, t)
 	
 	tCur = t
 	tClock = race.startTime.hour*60.0*60.0 + race.startTime.minute*60.0 + race.startTime.second + race.startTime.microsecond/1000000.0 + t
 	tETA = leaderRaceTimes[thisLap+1] - t if thisLap+1 != len(leaderRaceTimes) else None
 	tAfterLeader = t - leaderRaceTimes[thisLap]
-	lap = thisLap + (1 if t > leaderRaceTimes[thisLap] else 0)
-	lapsToGo = len(leaderRaceTimes) - lap
+	lap = thisLap
+	laps = len(leaderRaceTimes) - 1
+	lapsToGo = laps - lap
 	
 	title = u''
 	if tCur is not None:
 		title = u'Race: {}'.format(Utils.formatTime(tCur))
 	if tClock is not None:
 		if title:
-			title += u'   Time of Day: {}'.format(Utils.formatTime(tClock))
-	title += u'   Lap: {}   Laps to go: {}'.format(lap, lapsToGo)
+			title += u'   Clock: {}'.format(Utils.formatTime(tClock))
+	title += u'   Lap: {}/{}   Laps to go: {}'.format(lap, laps, lapsToGo)
 	if tETA is not None:
-		title += u'   ETA: {}'.format(Utils.formatTime(tETA))
+		title += u'   Leader ETA: {}'.format(Utils.formatTime(tETA))
 	
 	return gaps, tAfterLeader, title
 	
@@ -149,8 +155,8 @@ class Situation(wx.PyPanel):
 			return
 		
 		greyColour = wx.Colour(100,100,100, 64)
-		greyPen = wx.Pen( greyColour, 0 )
-		greyBrush = wx.Brush( greyColour, wx.SOLID )
+		greyPen = wx.Pen( greyColour, 1 )
+		greyBrush = wx.Brush( wx.Colour(200,200,200), wx.SOLID )
 		groupTextBrush = wx.Brush( wx.Colour(200,255,200), wx.SOLID )
 			
 		size = self.GetClientSize()
@@ -173,21 +179,32 @@ class Situation(wx.PyPanel):
 			gapPrev = gap
 		groups.append( group )
 		
+		groupMax = max( len(group) for group in groups )
+		groupTimeMaxSize = next(group[0][0] for group in groups if len(group) == groupMax)
+		
 		# Add the gap information to each group.
 		for i, group in enumerate(groups):
 			groupSize = len(group)
 			if len(group) > 10:
 				group[:] = group[:5] + [[group[5][0], u'...']] + group[-5:]
 			if i == 0:
-				group.insert( 0, [group[0][0], u'({})'.format(groupSize)] )
+				group.insert( 0, [group[0][0], u'\u2714 \u200B {}'.format(groupSize)] )
 			else:
-				group.insert( 0, [group[0][0], u'[{}] {} ({})'.format(i, Utils.formatTimeGap(group[0][0]), groupSize)] )
+				group.insert( 0, [group[0][0], u'{} {} {}'.format(i, Utils.formatTimeGap(group[0][0]), groupSize)] )
 		
 		fontHeight = height / 40
 		font = wx.FontFromPixelSize( wx.Size(0,fontHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		dc.SetFont( font )
-		spaceWidth = dc.GetTextExtent( u'  ' )[0]
-		textBorder = spaceWidth / 2
+		spaceWidth, fontHeight = dc.GetTextExtent( u'0 0' )
+		spaceWidth = fontHeight / 2
+		
+		smallFontHeight = fontHeight * 0.75
+		smallFont = wx.FontFromPixelSize( wx.Size(0,smallFontHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		dc.SetFont( smallFont )
+		smallFontHeight = dc.GetTextExtent( u'0 0' )[1]
+
+		#---------------------------------------------------------------------
+		dc.SetFont( font )
 		
 		def GetGroupTextExtent( group ):
 			widthMax = 0
@@ -198,25 +215,16 @@ class Situation(wx.PyPanel):
 				heightMax += tHeight
 			return widthMax, heightMax
 		
-		border = min( width, height ) // 30
+		border = min( width, height ) // 25
 		lastWidth = GetGroupTextExtent( groups[-1] )[0]
 		
 		xLeft = border*2
-		yTop = border*2 + fontHeight*1.5
+		yTop = border*2.25 + fontHeight
 		xRight = width - border - lastWidth
 		yBottom = height - border
 		
-		# Draw the title.
 		if self.title:
 			dc.DrawText( self.title, xLeft, border )
-		
-		# Draw a direction line.
-		dc.SetPen( greyPen )
-		dc.SetBrush( greyBrush )
-		dc.DrawLine( xLeft - border, yTop, xRight, yTop )
-		arrowLength = border * 0.8
-		points = [wx.Point(0,0), wx.Point(arrowLength, arrowLength/4), wx.Point(arrowLength, -arrowLength/4)]
-		dc.DrawPolygon( points, border/2, yTop )
 		
 		gapMax = groups[-1][-1][0] - groups[0][0][0]
 		xScale = (xRight - xLeft) / (gapMax if gapMax else 1.0)
@@ -225,26 +233,41 @@ class Situation(wx.PyPanel):
 			if self.tAfterLeader is None:
 				return
 			x = xLeft + self.tAfterLeader * xScale
-			flWidth = width / 25
+			flWidth = width / 32
 			if x - flWidth > width:
 				return
-			flY = border + fontHeight*1.5
-			outlinePen = wx.Pen( wx.Colour(220,220,220), width / 800 )
+			flTop = yTop - border / 2
+			flBottom = flTop + border
+			outlinePen = wx.Pen( wx.Colour(220,220,220), max(width / 800, 1) )
 			dc.SetPen( outlinePen )
 			dc.SetBrush( wx.WHITE_BRUSH )
-			dc.DrawRectangle( x - flWidth / 2, flY, flWidth, yBottom - flY )
+			dc.DrawRectangle( x - flWidth / 2, flTop, flWidth, flBottom - flTop )
 			outlinePen.SetWidth( flWidth / 4 )
 			outlinePen.SetCap( wx.CAP_BUTT )
 			dc.SetPen( outlinePen )
-			dc.DrawLine( x, flY, x, yBottom )
+			dc.DrawLine( x, flTop, x, flBottom )
 		
 		drawFinishLine()
 		
+		# Draw a direction line.
+		dc.SetPen( wx.Pen(wx.Colour(0,0,0), 1) )
+		dc.SetBrush( wx.Brush(wx.Colour(0,0,0), wx.SOLID) )
+		dc.DrawLine( xLeft - border, yTop, xRight, yTop )
+		arrowLength = border * 0.8
+		points = [wx.Point(0,0), wx.Point(arrowLength, arrowLength/4), wx.Point(arrowLength, -arrowLength/4)]
+		dc.DrawPolygon( points, border/2, yTop )
+		
 		dc.SetPen( greyPen )
+		
+		groupTitleBrushes = [
+			wx.Brush( wx.Colour(0xFF, 0xCC, 0x99), wx.SOLID ),	# Group Index
+			wx.WHITE_BRUSH,										# Gap
+			wx.Brush( wx.Colour(0x99, 0xCC, 0xFF), wx.SOLID ),	# Group Size
+		]
 		
 		existingRects = []	# Sequenced by decreasing GetRight().
 		groupColour = wx.Colour(128,128,255)
-		groupHeight = height // 32
+		groupHeight = height // 40
 		groupPen1 = wx.Pen( groupColour, groupHeight )
 		groupBrush = wx.Brush( groupColour, wx.SOLID )
 		groupPen1.SetCap( wx.CAP_ROUND )
@@ -266,9 +289,9 @@ class Situation(wx.PyPanel):
 			
 			# Find a non-overlapping area to draw the group text.
 			xText = xBegin
-			yText = yTop + fontHeight
+			yText = yTop + groupHeight/2 + fontHeight
 			gWidth, gHeight = GetGroupTextExtent( group )
-			gRect = wx.Rect( xText, yText, gWidth + spaceWidth, gHeight + fontHeight / 8 )
+			gRect = wx.Rect( xText, yText, gWidth + spaceWidth*2, gHeight + fontHeight / 2 )
 			
 			conflict = True
 			while conflict:
@@ -288,17 +311,78 @@ class Situation(wx.PyPanel):
 				else:
 					break
 					
+			# Draw the group outline.
+			dc.SetPen( greyPen )
+			dc.SetBrush( greyBrush if group[0][0] != groupTimeMaxSize else wx.Brush( wx.Colour(200,255,200), wx.SOLID ) )
+			dc.DrawRoundedRectangle( gRect.GetLeft(), gRect.GetTop(), gRect.GetWidth()-1, gRect.GetHeight()-fontHeight/2, -0.1 )
+			
 			# Draw the group text.
 			dc.SetPen( greyPen )
 			dc.SetBrush( groupTextBrush )
-			dc.DrawRectangle( gRect.GetLeft(), gRect.GetTop(), gRect.GetWidth(), fontHeight*1.2 )
 			yText = gRect.GetTop()
-			for g in group:
-				dc.DrawText( g[1], xText + textBorder, yText )
+			for i, g in enumerate(group):
+				
+				if i == 0:
+					# Draw the coloured rectangles to highlight the fields.
+					title = g[1]
+					fieldWidths = [-spaceWidth]
+					iSpace = 0
+					while True:
+						iSpace = title.find( u' ', iSpace )
+						if iSpace < 0:
+							fieldWidths.append( dc.GetTextExtent(title)[0] + spaceWidth/2 )
+							break
+						fieldWidths.append( dc.GetTextExtent(title[:iSpace])[0] + spaceWidth/2 )
+						iSpace += 1
+					
+					fieldWidths[-1] += spaceWidth/2
+					iBrush = 0 if len(fieldWidths) > 2 else 2
+					xLast = xText
+					for iField in xrange(1, len(fieldWidths)):
+						tWidth = fieldWidths[iField] - fieldWidths[iField-1]
+						dc.SetBrush( groupTitleBrushes[iBrush] )
+						dc.DrawRectangle( xLast, yText, tWidth, fontHeight*1.10 )
+						iBrush += 1
+						xLast += tWidth
+					
+				dc.DrawText( g[1], xText + spaceWidth, yText )
 				yText += fontHeight
 				
 			# Connect the text to the group with a line.
 			dc.DrawLine( xBegin, yTop, xBegin, gRect.GetTop() )
+			
+		# Draw the gaps between the groups with dimension lines.
+		dc.SetPen( greyPen )
+		dc.SetBrush( greyBrush )
+		dc.SetFont( smallFont )
+		yUp = yTop - groupHeight - smallFontHeight
+		yText = yUp + smallFontHeight/2
+		yTextCenter = yText + smallFontHeight * 0.5
+		yUp += smallFontHeight/4
+		
+		arrowLength = smallFontHeight * 0.75
+		leftArrow = [wx.Point(0,0), wx.Point(arrowLength, arrowLength/4), wx.Point(arrowLength, -arrowLength/4)]
+		rightArrow = [wx.Point(-p.x, p.y) for p in leftArrow]
+
+		for iGroup in xrange(1, len(groups)):
+			groupPrev, groupNext = groups[iGroup-1:iGroup+1]
+			tPrev, tNext = groupPrev[-1][0], groupNext[0][0]
+			xPrev, xNext = xLeft + tPrev * xScale, xLeft + tNext * xScale
+			sepStr = Utils.formatTimeGap(tNext - tPrev)
+			tWidth = dc.GetTextExtent( sepStr )[0]
+			if xNext - xPrev < tWidth * 1.25:
+				continue
+			
+			dc.DrawLine( xPrev, yTop, xPrev, yUp )
+			dc.DrawLine( xNext, yTop, xNext, yUp )
+			
+			if xNext - xPrev > tWidth + arrowLength * 4:
+				dc.DrawLine( xPrev, yTextCenter, xPrev + (xNext - xPrev - tWidth) / 2 - 2, yTextCenter )
+				dc.DrawLine( xNext - (xNext - xPrev - tWidth) / 2 + 2, yTextCenter, xNext, yTextCenter )
+				dc.DrawPolygon( leftArrow, xPrev, yTextCenter )
+				dc.DrawPolygon( rightArrow, xNext, yTextCenter )
+			
+			dc.DrawText( sepStr, xPrev + (xNext - xPrev - tWidth) / 2, yText )
 			
 	def OnSize(self, event):
 		self.Refresh()
@@ -316,9 +400,13 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="CrossMan", size=(1000,800))
 	situation = Situation(mainWin)
 	
-	Model.setRace( Model.Race() )
-	model = Model.getRace()
-	model._populate()
+	# Model.setRace( Model.Race() )
+	# model = Model.getRace()
+	# model._populate()
+	fileName = os.path.join( 'Binghampton', '2014-04-27-Binghamton Circuit Race-r3-.cmn' )
+	with open(fileName, 'rb') as fp:
+		race = pickle.load( fp )
+	Model.setRace( race )
 	tStart = datetime.datetime.now()
 	def timerUpdate():
 		tCur = datetime.datetime.now() + datetime.timedelta(seconds=300)
