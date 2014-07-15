@@ -12,12 +12,12 @@ import cPickle as pickle
 def GetSituationGaps( category=None, t=None ):
 	race = Model.race
 	if not race:
-		return None
+		return []
 		
 	results = GetResults( category, True )
 	validRiders = {rr.num for rr in results if rr.raceTimes and len(rr.raceTimes) >= 2}
 	if not validRiders:
-		return None
+		return []
 	results = [rr for rr in results if rr.num in validRiders]
 	
 	maxLaps = max( rr.laps for rr in results )
@@ -81,8 +81,8 @@ def GetSituationGaps( category=None, t=None ):
 		else:
 			gap = thisGap
 		
-		# print 'thisLeaderLap:', thisLeaderLap, 'thisLap:', thisLap, 'lapsDown:', thisLeaderLap - thisLap
-		gaps.append( [gap, getInfo(rr, thisLeaderLap - thisLap)] )
+		# print 'thisLeaderLap:', thisLeaderLap, 'thisLap:', thisLap, 'lapsDown:', thisLap - thisLeaderLap
+		gaps.append( (gap, getInfo(rr, thisLap - thisLeaderLap)) )
 	
 	gaps.sort()
 	
@@ -121,20 +121,18 @@ class Situation(wx.PyPanel):
 		wx.PyPanel.__init__(self, parent, id, pos, size, style, name)
 		self.SetBackgroundColour(wx.WHITE)
 		
-		self.gaps = None
-		self.tCur = None
-		self.tClock = None
-		self.tETA = None
+		self.gaps = []
 		self.tAfterLeader = None
+		self.title = None
 		
 		self.Bind(wx.EVT_PAINT, self.OnPaint)
 		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
 		self.Bind(wx.EVT_SIZE, self.OnSize)
 		
 	def SetData( self, gaps, tAfterLeader=None, title=None ):
-		# gaps are of the form: [gapSeconds, text]
+		# each gap is of the form: [gapSeconds, text]
 		# Expected to be sorted by increasing gapSeconds.
-		self.gaps = gaps
+		self.gaps = gaps or []
 		
 		self.tAfterLeader = tAfterLeader
 		self.title = title
@@ -151,8 +149,6 @@ class Situation(wx.PyPanel):
 		backBrush = wx.Brush(backColour, wx.SOLID)
 		dc.SetBackground( backBrush )
 		dc.Clear()
-		if not self.gaps:
-			return
 		
 		greyColour = wx.Colour(100,100,100, 64)
 		greyPen = wx.Pen( greyColour, 1 )
@@ -164,7 +160,7 @@ class Situation(wx.PyPanel):
 		height = size.height
 
 		# Partition the gaps into groups separated by at least one second.
-		maxGapSec = 20.0*60.0	# Ignore gaps greater than 20 minutes.
+		maxGapSec = 20.0*60.0	# Ignore gaps greater than 20 minutes from the leader.
 		groups = []
 		group = []
 		gapPrev = None
@@ -177,13 +173,19 @@ class Situation(wx.PyPanel):
 				groups.append( group )
 				group = [gap]
 			gapPrev = gap
-		groups.append( group )
+		if group:
+			groups.append( group )
 		
-		groupMax = max( len(group) for group in groups )
-		groupTimeMaxSize = next(group[0][0] for group in groups if len(group) == groupMax)
+		groupMax = max( len(group) for group in groups ) if groups else 0
+		try:
+			groupTimeMaxSize = next(group[0][0] for group in groups if len(group) == groupMax)
+		except:
+			groupTimeMaxSize = 0
 		
 		# Add the gap information to each group.
 		for i, group in enumerate(groups):
+			if not group:
+				continue
 			groupSize = len(group)
 			if len(group) > 10:
 				group[:] = group[:5] + [[group[5][0], u'...']] + group[-5:]
@@ -205,6 +207,14 @@ class Situation(wx.PyPanel):
 
 		#---------------------------------------------------------------------
 		dc.SetFont( font )
+		border = min( width, height ) // 25
+		xLeft = border*2
+		yTop = border*2.25 + fontHeight
+		if self.title:
+			dc.DrawText( self.title, xLeft, border )
+		
+		if not groups:
+			return
 		
 		def GetGroupTextExtent( group ):
 			widthMax = 0
@@ -215,18 +225,12 @@ class Situation(wx.PyPanel):
 				heightMax += tHeight
 			return widthMax, heightMax
 		
-		border = min( width, height ) // 25
-		lastWidth = GetGroupTextExtent( groups[-1] )[0]
+		lastWidth = GetGroupTextExtent( groups[-1][1] )[0]
 		
-		xLeft = border*2
-		yTop = border*2.25 + fontHeight
 		xRight = width - border - lastWidth
 		yBottom = height - border
 		
-		if self.title:
-			dc.DrawText( self.title, xLeft, border )
-		
-		gapMax = groups[-1][-1][0] - groups[0][0][0]
+		gapMax = groups[-1][-1][0] - groups[0][0][0] if groups and groups[0] else 0.0
 		xScale = (xRight - xLeft) / (gapMax if gapMax else 1.0)
 		
 		def drawFinishLine():
@@ -409,7 +413,7 @@ if __name__ == '__main__':
 	Model.setRace( race )
 	tStart = datetime.datetime.now()
 	def timerUpdate():
-		tCur = datetime.datetime.now() + datetime.timedelta(seconds=300)
+		tCur = datetime.datetime.now()
 		situation.SetData( *GetSituationGaps(t=(tCur-tStart).total_seconds()) )
 		wx.CallLater( 1001-tCur.microsecond/1000, timerUpdate )
 	wx.CallLater( 10, timerUpdate )
