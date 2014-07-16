@@ -1,6 +1,7 @@
 import wx
 import Utils
 import Model
+from ReadSignOnSheet	import ResetExcelLinkCache, SyncExcelLink
 import datetime
 import os
 
@@ -9,6 +10,16 @@ from bisect import bisect_left
 from copy import copy
 import cPickle as pickle
 
+def formatTimeGap( t ):
+	tStr = Utils.formatTimeGap( t )
+	if tStr.startswith( "0'0" ):
+		tStr = tStr[3:]
+	elif tStr.startswith( "0'" ):
+		tStr = tStr[2:]
+	return tStr
+
+circledNumbers = u''.join( unichr(i) for i in xrange(ord(u'\u278a'), ord(u'\u278a')+10) )
+circledNumbers = [u' (-{})'.format(i) for i in xrange(1, 11)]
 def GetSituationGaps( category=None, t=None ):
 	race = Model.race
 	if not race:
@@ -31,16 +42,16 @@ def GetSituationGaps( category=None, t=None ):
 	def getInfo( rr, lapsDown ):
 		names = []
 		try:
-			name.append( rr.LastName.upper() )
+			names.append( rr.LastName.upper() )
 		except:
 			pass
 		try:
-			name.append( u'{}.'.format(rr.FirstName[0]) )
+			names.append( rr.FirstName[0] )
 		except:
 			pass
 		
-		nameStr = (u': ' + u', '.join(names)) if names else u''
-		lapsDownStr = u'' if lapsDown == 0 else u' ({})'.format(lapsDown)
+		nameStr = (u' ' + u','.join(names)) if names else u''
+		lapsDownStr = u'' if lapsDown == 0 else u' ' + (circledNumbers[-lapsDown-1] if -lapsDown <= 10 else u'({})'.format(lapsDown))
 		return u''.join([unicode(rr.num), nameStr, lapsDownStr])
 	
 	def getLapLE( raceTimes, t ):
@@ -95,9 +106,9 @@ def GetSituationGaps( category=None, t=None ):
 	tClock = race.startTime.hour*60.0*60.0 + race.startTime.minute*60.0 + race.startTime.second + race.startTime.microsecond/1000000.0 + t
 	tETA = leaderRaceTimes[thisLap+1] - t if thisLap+1 != len(leaderRaceTimes) else None
 	tAfterLeader = t - leaderRaceTimes[thisLap]
-	lap = thisLap
+	lap = thisLap + 1
 	laps = len(leaderRaceTimes) - 1
-	lapsToGo = laps - lap
+	lapsToGo = max(laps - lap + 1, 0)
 	
 	title = u''
 	if tCur is not None:
@@ -140,11 +151,10 @@ class Situation(wx.PyPanel):
 		self.Refresh()
 		
 	def OnPaint( self, event ):
-		dc = wx.BufferedPaintDC(self)
-		self.Draw(dc)
+		#self.Draw(wx.GCDC(wx.BufferedPaintDC(self)))
+		self.Draw(wx.BufferedPaintDC(self))
 
 	def Draw( self, dc ):
-		dc = wx.GCDC( dc )
 		backColour = self.GetBackgroundColour()
 		backBrush = wx.Brush(backColour, wx.SOLID)
 		dc.SetBackground( backBrush )
@@ -152,7 +162,7 @@ class Situation(wx.PyPanel):
 		
 		greyColour = wx.Colour(100,100,100, 64)
 		greyPen = wx.Pen( greyColour, 1 )
-		greyBrush = wx.Brush( wx.Colour(200,200,200), wx.SOLID )
+		greyBrush = wx.Brush( wx.Colour(232,232,232), wx.SOLID )
 		groupTextBrush = wx.Brush( wx.Colour(200,255,200), wx.SOLID )
 			
 		size = self.GetClientSize()
@@ -160,7 +170,7 @@ class Situation(wx.PyPanel):
 		height = size.height
 
 		# Partition the gaps into groups separated by at least one second.
-		maxGapSec = 20.0*60.0	# Ignore gaps greater than 20 minutes from the leader.
+		maxGapSec = 20.0*60.0*60.0	# Ignore gaps that are too great.
 		groups = []
 		group = []
 		gapPrev = None
@@ -192,16 +202,16 @@ class Situation(wx.PyPanel):
 			if i == 0:
 				group.insert( 0, [group[0][0], u'\u2714 \u200B {}'.format(groupSize)] )
 			else:
-				group.insert( 0, [group[0][0], u'{} {} {}'.format(i, Utils.formatTimeGap(group[0][0]), groupSize)] )
+				group.insert( 0, [group[0][0], u'{} {} {}'.format(i, formatTimeGap(group[0][0]), groupSize)] )
 		
 		fontHeight = height / 40
-		font = wx.FontFromPixelSize( wx.Size(0,fontHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		font = wx.FontFromPixelSize( wx.Size(0,fontHeight), wx.DEFAULT, wx.NORMAL, wx.NORMAL )
 		dc.SetFont( font )
 		spaceWidth, fontHeight = dc.GetTextExtent( u'0 0' )
 		spaceWidth = fontHeight / 2
 		
 		smallFontHeight = fontHeight * 0.75
-		smallFont = wx.FontFromPixelSize( wx.Size(0,smallFontHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		smallFont = wx.FontFromPixelSize( wx.Size(0,smallFontHeight), wx.DEFAULT, wx.NORMAL, wx.NORMAL )
 		dc.SetFont( smallFont )
 		smallFontHeight = dc.GetTextExtent( u'0 0' )[1]
 
@@ -225,7 +235,7 @@ class Situation(wx.PyPanel):
 				heightMax += tHeight
 			return widthMax, heightMax
 		
-		lastWidth = GetGroupTextExtent( groups[-1][1] )[0]
+		lastWidth = GetGroupTextExtent( groups[-1] )[0]
 		
 		xRight = width - border - lastWidth
 		yBottom = height - border
@@ -250,13 +260,16 @@ class Situation(wx.PyPanel):
 			outlinePen.SetCap( wx.CAP_BUTT )
 			dc.SetPen( outlinePen )
 			dc.DrawLine( x, flTop, x, flBottom )
+			dc.SetPen( wx.TRANSPARENT_PEN )
+			dc.SetBrush( wx.WHITE_BRUSH )
+			dc.DrawRectangle( width-border, 0, width, height )
 		
 		drawFinishLine()
 		
 		# Draw a direction line.
 		dc.SetPen( wx.Pen(wx.Colour(0,0,0), 1) )
 		dc.SetBrush( wx.Brush(wx.Colour(0,0,0), wx.SOLID) )
-		dc.DrawLine( xLeft - border, yTop, xRight, yTop )
+		dc.DrawLine( xLeft - border, yTop, width-border, yTop )
 		arrowLength = border * 0.8
 		points = [wx.Point(0,0), wx.Point(arrowLength, arrowLength/4), wx.Point(arrowLength, -arrowLength/4)]
 		dc.DrawPolygon( points, border/2, yTop )
@@ -281,15 +294,12 @@ class Situation(wx.PyPanel):
 			# Draw the group.
 			xBegin = xLeft + group[0][0] * xScale
 			xEnd = xLeft + group[-1][0] * xScale
-			if xBegin != xEnd:
-				dc.SetPen( groupPen1 )
-				dc.DrawLine( xBegin, yTop, xEnd, yTop )
-				dc.SetPen( groupPen2 )
-				dc.DrawLine( xBegin, yTop, xEnd, yTop )
-			else:
-				dc.SetPen( wx.TRANSPARENT_PEN )
-				dc.SetBrush( groupBrush )
-				dc.DrawEllipse( xBegin - groupHeight/2, yTop - groupHeight/2, groupHeight, groupHeight )
+			
+			dc.SetPen( wx.TRANSPARENT_PEN )
+			dc.SetBrush( groupBrush )
+			dc.DrawRectangle( xBegin - groupHeight/2, yTop - groupHeight/2, xEnd - xBegin + groupHeight, groupHeight )
+			dc.SetPen( groupPen2 )
+			dc.DrawLine( xBegin, yTop, xEnd, yTop )
 			
 			# Find a non-overlapping area to draw the group text.
 			xText = xBegin
@@ -318,7 +328,7 @@ class Situation(wx.PyPanel):
 			# Draw the group outline.
 			dc.SetPen( greyPen )
 			dc.SetBrush( greyBrush if group[0][0] != groupTimeMaxSize else wx.Brush( wx.Colour(200,255,200), wx.SOLID ) )
-			dc.DrawRoundedRectangle( gRect.GetLeft(), gRect.GetTop(), gRect.GetWidth()-1, gRect.GetHeight()-fontHeight/2, -0.1 )
+			dc.DrawRoundedRectangle( gRect.GetLeft(), gRect.GetTop(), gRect.GetWidth()-1, gRect.GetHeight()-fontHeight/2, fontHeight/3 )
 			
 			# Draw the group text.
 			dc.SetPen( greyPen )
@@ -327,9 +337,9 @@ class Situation(wx.PyPanel):
 			for i, g in enumerate(group):
 				
 				if i == 0:
-					# Draw the coloured rectangles to highlight the fields.
+					# Draw the coloured rectangles to highlight the title fields.
 					title = g[1]
-					fieldWidths = [-spaceWidth]
+					fieldWidths = [-spaceWidth+2]
 					iSpace = 0
 					while True:
 						iSpace = title.find( u' ', iSpace )
@@ -345,7 +355,7 @@ class Situation(wx.PyPanel):
 					for iField in xrange(1, len(fieldWidths)):
 						tWidth = fieldWidths[iField] - fieldWidths[iField-1]
 						dc.SetBrush( groupTitleBrushes[iBrush] )
-						dc.DrawRectangle( xLast, yText, tWidth, fontHeight*1.10 )
+						dc.DrawRectangle( xLast, yText, tWidth, fontHeight*1.08 )
 						iBrush += 1
 						xLast += tWidth
 					
@@ -372,7 +382,7 @@ class Situation(wx.PyPanel):
 			groupPrev, groupNext = groups[iGroup-1:iGroup+1]
 			tPrev, tNext = groupPrev[-1][0], groupNext[0][0]
 			xPrev, xNext = xLeft + tPrev * xScale, xLeft + tNext * xScale
-			sepStr = Utils.formatTimeGap(tNext - tPrev)
+			sepStr = formatTimeGap(tNext - tPrev)
 			tWidth = dc.GetTextExtent( sepStr )[0]
 			if xNext - xPrev < tWidth * 1.25:
 				continue
@@ -404,17 +414,25 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="CrossMan", size=(1000,800))
 	situation = Situation(mainWin)
 	
-	# Model.setRace( Model.Race() )
-	# model = Model.getRace()
-	# model._populate()
-	fileName = os.path.join( 'Binghampton', '2014-04-27-Binghamton Circuit Race-r3-.cmn' )
-	with open(fileName, 'rb') as fp:
-		race = pickle.load( fp )
-	Model.setRace( race )
+	tOffset = datetime.timedelta( seconds=5*60 )
+	try:
+		fileName = os.path.join( 'Binghampton', '2014-04-27-Binghamton Circuit Race-r3-.cmn' )
+		with open(fileName, 'rb') as fp:
+			race = pickle.load( fp )
+		Model.setRace( race )
+		ResetExcelLinkCache()
+		race.resetAllCaches()
+		SyncExcelLink( race )
+	except Exception as e:
+		print e
+		Model.setRace( Model.Race() )
+		race = Model.getRace()
+		race._populate()
+
 	tStart = datetime.datetime.now()
 	def timerUpdate():
 		tCur = datetime.datetime.now()
-		situation.SetData( *GetSituationGaps(t=(tCur-tStart).total_seconds()) )
+		situation.SetData( *GetSituationGaps(t=(tCur-tStart+tOffset).total_seconds()) )
 		wx.CallLater( 1001-tCur.microsecond/1000, timerUpdate )
 	wx.CallLater( 10, timerUpdate )
 	
