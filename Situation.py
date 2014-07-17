@@ -286,6 +286,7 @@ class Situation(wx.PyPanel):
 		groupPen1.SetCap( wx.CAP_ROUND )
 		groupPen2 = wx.Pen( wx.BLACK, height // 100 )
 		groupPen2.SetCap( wx.CAP_BUTT )
+		groupRectList = []
 		for group in groups:
 			# Draw the group.
 			xBegin = xLeft + group[0][0] * xScale
@@ -321,10 +322,21 @@ class Situation(wx.PyPanel):
 				else:
 					break
 					
+			groupRectList.append( (group, gRect) )
+		
+		# Connect the text to the group with a line.
+		dc.SetPen( greyPen )
+		for group, gRect in groupRectList:
+			dc.DrawLine( gRect.GetLeft(), yTop, gRect.GetLeft(), gRect.GetTop() )
+			
+		for group, gRect in groupRectList:
 			# Draw the group outline.
 			dc.SetPen( greyPen )
 			dc.SetBrush( greyBrush if group[0][0] != groupTimeMaxSize else wx.Brush( wx.Colour(200,255,200), wx.SOLID ) )
 			dc.DrawRoundedRectangle( gRect.GetLeft(), gRect.GetTop(), gRect.GetWidth()-1, gRect.GetHeight()-fontHeight/2, fontHeight/3 )
+			
+			xText = gRect.GetLeft()
+
 			
 			# Draw the group text.
 			dc.SetPen( greyPen )
@@ -358,9 +370,6 @@ class Situation(wx.PyPanel):
 				dc.DrawText( g[1], xText + spaceWidth, yText )
 				yText += fontHeight
 				
-			# Connect the text to the group with a line.
-			dc.DrawLine( xBegin, yTop, xBegin, gRect.GetTop() )
-			
 		# Draw the gaps between the groups with dimension lines.
 		dc.SetPen( greyPen )
 		dc.SetBrush( greyBrush )
