@@ -87,7 +87,11 @@ def GetSituationGaps( category=None, t=None ):
 	leaderPosition, leaderSpeed = GetPositionSpeed( leaderRaceTimes, t )
 	gaps = []
 	for rr in results:
-		gap, lapsDown = GetLeaderGap( leaderPosition, leaderSpeed, leaderRaceTimes, rr.raceTimes, t )
+		try:
+			gap, lapsDown = GetLeaderGap( leaderPosition, leaderSpeed, leaderRaceTimes, rr.raceTimes, t )
+		except TypeError:
+			print 'TypeError:', leaderPosition, leaderSpeed, leaderRaceTimes, rr.raceTimes, t
+			continue
 		if gap is not None:
 			gaps.append( (gap, getInfo(rr, lapsDown)) )
 	
