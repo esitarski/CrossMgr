@@ -31,20 +31,7 @@ def GetPositionSpeed( raceTimes, t ):
 	except IndexError:
 		lapTime = raceTimes[lap] - raceTime[lap-1]
 	speed = 1.0 / lapTime
-	return lap - 1 + (t - lapStartTime) * speed, speed
-	
-def GetGap( t, leaderRaceTimes, raceTimes ):
-	if t >= raceTimes[-1]:
-		if t >= leaderRaceTimes[-1]:
-			return raceTimes[-1] - leaderRaceTimes[-1] if len(leaderRaceTimes) == len(raceTimes) else None
-		return None
-		
-	leaderPosition, leaderSpeed = GetPositionSpeed( leaderRaceTimes, t )
-	riderPosition, riderSpeed = GetPositionSpeed( raceTimes, t )
-	positionFraction = math.modf( leaderPosition - riderPosition )[0]
-	if positionFraction < 0.0:
-		positionFraction += 1.0
-	return positionFraction / leaderSpeed
+	return lap + (t - lapStartTime) * speed, speed
 	
 def GetLeaderGap( leaderPosition, leaderSpeed, leaderRaceTimes, raceTimes, t ):
 	if not raceTimes:
@@ -58,7 +45,8 @@ def GetLeaderGap( leaderPosition, leaderSpeed, leaderRaceTimes, raceTimes, t ):
 	positionFraction = math.modf( leaderPosition - riderPosition )[0]
 	if positionFraction < 0.0:
 		positionFraction += 1.0
-	return positionFraction / leaderSpeed, int(leaderPosition - riderPosition)
+	#print 'leaderPosition:', leaderPosition, 'riderPosition:', riderPosition, 'positionFraction:', positionFraction, 'lapsDown:', int(leaderPosition - riderPosition)
+	return positionFraction / leaderSpeed, int(riderPosition - leaderPosition)
 
 circledNumbers = u''.join( unichr(i) for i in xrange(ord(u'\u278a'), ord(u'\u278a')+10) )
 circledNumbers = [u' (-{})'.format(i) for i in xrange(1, 11)]
@@ -99,42 +87,6 @@ def GetSituationGaps( category=None, t=None ):
 	leaderPosition, leaderSpeed = GetPositionSpeed( leaderRaceTimes, t )
 	gaps = []
 	for rr in results:
-	
-		'''
-		if rr.raceTimes[-1] < t and (rr.status != Finisher or rr.raceTimes[-1] < leaderRaceTimes[-1]):
-			continue
-	
-		# Find the latest lap time for this rider at time t.
-		thisLap = GetLapLE( rr.raceTimes, t )
-		if thisLap == 0:
-			continue
-			
-		thisTime = rr.raceTimes[thisLap]
-		
-		# Find the latest lap time for the leader before that time.
-		thisLeaderLap = GetLapLE( leaderRaceTimes, thisTime )
-		thisLeaderTime = leaderRaceTimes[thisLeaderLap]
-		
-		thisGap = thisTime - thisLeaderTime
-		
-		nextLap = thisLap + 1
-		if nextLap < len(rr.raceTimes):
-			nextTime = rr.raceTimes[nextLap]
-			nextLeaderLap = GetLapLE( leaderRaceTimes, nextTime )
-			nextLeaderTime = leaderRaceTimes[nextLeaderLap]
-			
-			if nextLeaderLap != thisLeaderLap + 1:
-				# This rider was lapped on this lap.  Don't project a gap, otherwise the rider will appear to "move up" quickly.
-				gap = thisGap
-			else:
-				nextGap = nextTime - nextLeaderTime
-				# Predict the gap give the time.
-				gap = thisGap + (nextGap - thisGap) * (t - thisTime) / (nextTime - thisTime)
-		else:
-			gap = thisGap
-		# print 'thisLeaderLap:', thisLeaderLap, 'thisLap:', thisLap, 'lapsDown:', thisLap - thisLeaderLap
-		'''
-		
 		gap, lapsDown = GetLeaderGap( leaderPosition, leaderSpeed, leaderRaceTimes, rr.raceTimes, t )
 		if gap is not None:
 			gaps.append( (gap, getInfo(rr, lapsDown)) )
@@ -458,7 +410,7 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="CrossMan", size=(1000,800))
 	situation = Situation(mainWin)
 	
-	tOffset = datetime.timedelta( seconds=5*60 )
+	tOffset = datetime.timedelta( seconds=5*60*0 )
 	try:
 		fileName = os.path.join( 'Binghampton', '2014-04-27-Binghamton Circuit Race-r3-.cmn' )
 		with open(fileName, 'rb') as fp:
