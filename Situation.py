@@ -29,7 +29,7 @@ def GetPositionSpeed( raceTimes, t ):
 	try:
 		lapTime = raceTimes[lap+1] - raceTimes[lap]
 	except IndexError:
-		lapTime = raceTimes[lap] - raceTime[lap-1]
+		lapTime = raceTimes[lap] - raceTimes[lap-1]
 	speed = 1.0 / lapTime
 	return lap + (t - lapStartTime) * speed, speed
 	
