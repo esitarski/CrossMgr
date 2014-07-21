@@ -38,8 +38,11 @@ def GetLeaderGap( leaderPosition, leaderSpeed, leaderRaceTimes, raceTimes, t ):
 		return None, None
 	if t >= raceTimes[-1]:
 		if t >= leaderRaceTimes[-1]:
-			return raceTimes[-1] - leaderRaceTimes[-1] if len(leaderRaceTimes) == len(raceTimes) else None
-		return None, len(leaderRaceTimes) - len(raceTimes)
+			return (
+				raceTimes[-1] - leaderRaceTimes[-1] if len(leaderRaceTimes) == len(raceTimes) else None,
+				len(raceTimes) - len(leaderRaceTimes)
+			)
+		return None, len(raceTimes) - len(leaderRaceTimes)
 		
 	riderPosition, riderSpeed = GetPositionSpeed( raceTimes, t )
 	positionFraction = math.modf( leaderPosition - riderPosition )[0]

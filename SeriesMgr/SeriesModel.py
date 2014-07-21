@@ -13,15 +13,19 @@ def RaceNameFromPath( p ):
 	return raceName
 
 class PointStructure( object ):
-	def __init__( self, name, pointsStr = '' ):
+
+	participationPoints = 0
+
+	def __init__( self, name, pointsStr=None, participationPoints=0 ):
 		self.name = name
-		if pointsStr:
+		if pointsStr is not None:
 			self.setStr( pointsStr )
 		else:
 			self.setOCAOCup()
+		self.participationPoints = participationPoints
 		
 	def __getitem__( self, rank ):
-		return self.pointsForPlace.get( int(rank), 0 )
+		return self.pointsForPlace.get( int(rank), self.participationPoints )
 	
 	def __len__( self ):
 		return len(self.pointsForPlace)
@@ -41,11 +45,19 @@ class PointStructure( object ):
 		
 		html = StringIO.StringIO()
 		html.write( '<table>\n' )
+		
 		for pos, points in values:
 			html.write( '<tr>' )
 			html.write( '<td style="text-align:right;">{}.</td>'.format(pos) )
 			html.write( '<td style="text-align:right;">{}</td>'.format(points) )
 			html.write( '</tr>\n' )
+			
+		if self.participationPoints != 0:
+			html.write( '<tr>' )
+			html.write( '<td>Participation:</td>' )
+			html.write( '<td style="text-align:right;">{}</td>'.format(self.participationPoints) )
+			html.write( '</tr>\n' )
+			
 		html.write( '</table>\n' )
 		return html.getvalue()
 	
@@ -60,7 +72,7 @@ class PointStructure( object ):
 		self.pointsForPlace = dict( (i+1, v) for i, v in enumerate(sorted(values, reverse=True)) )
 		
 	def __repr__( self ):
-		return '(%s: %s)' % ( self.name, self.getStr() )
+		return '(%s: %s + %s)' % ( self.name, self.getStr(), participationPoints )
 
 class Race( object ):
 	excelLink = None
@@ -121,13 +133,14 @@ class SeriesModel( object ):
 		newPointStructures = []
 		oldToNewName = {}
 		newPS = {}
-		for name, oldName, points in pointsList:
+		for name, oldName, points, participationPoints in pointsList:
 			name = name.strip()
 			oldName = oldName.strip()
 			points = points.strip()
 			if not name or name in newPS:
 				continue
-			ps = PointStructure( name, points )
+			participationPoints = int(participationPoints or '0')
+			ps = PointStructure( name, points, participationPoints )
 			oldToNewName[oldName] = name
 			newPS[name] = ps
 			newPointStructures.append( ps )
@@ -144,7 +157,7 @@ class SeriesModel( object ):
 		oldRaceList = [(r.fileName, r.pointStructure.name, r.excelLink) for r in self.races]
 		if oldRaceList == raceList:
 			return
-			
+		
 		self.changed = True
 		
 		newRaces = []

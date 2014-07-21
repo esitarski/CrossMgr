@@ -55,6 +55,7 @@ class Points(wx.Panel):
 	OldNameCol = 1
 	DepthCol = 2
 	PointsCol = 3
+	ParticipationCol = 4
 	
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent)
@@ -82,7 +83,7 @@ class Points(wx.Panel):
 		bsizer.Add( self.numPlacesTieBreaker, 0, flag=wx.ALL, border=2 )
 		bsizer.Add( wx.StaticText(self, label=u'If Riders are still Tied on Points, use most Recent Results'), flag=wx.ALL, border=4 )
 
-		self.headerNames = ['Name', 'OldName', 'Depth', 'Points for Position']
+		self.headerNames = ['Name', 'OldName', 'Depth', 'Points for Position', 'Participation']
 		
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.DisableDragRowSize()
@@ -99,6 +100,11 @@ class Points(wx.Panel):
 		attr = gridlib.GridCellAttr()
 		attr.SetEditor( PointsEditor() )
 		self.grid.SetColAttr( self.PointsCol, attr )
+		
+		attr = gridlib.GridCellAttr()
+		attr.SetRenderer( wx.grid.GridCellNumberRenderer() )
+		attr.SetEditor( wx.grid.GridCellNumberEditor(0, 10000) )
+		self.grid.SetColAttr( self.ParticipationCol, attr )
 		
 		self.gridAutoSize()
 
@@ -143,6 +149,7 @@ class Points(wx.Panel):
 			self.grid.SetCellValue( row, self.NameCol, ps.name )
 			self.grid.SetCellValue( row, self.OldNameCol, ps.name )
 			self.grid.SetCellValue( row, self.PointsCol, ps.getStr() )
+			self.grid.SetCellValue( row, self.ParticipationCol, unicode(ps.participationPoints) )
 			self.updateDepth( row )
 			
 		wx.CallAfter( self.gridAutoSize )
@@ -157,7 +164,9 @@ class Points(wx.Panel):
 			if( self.grid.GetCellValue(row, self.NameCol).strip() ):
 				pointsList.append( (self.grid.GetCellValue(row, self.NameCol),
 									self.grid.GetCellValue(row, self.OldNameCol),
-									self.grid.GetCellValue(row, self.PointsCol) ) )
+									self.grid.GetCellValue(row, self.PointsCol),
+									self.grid.GetCellValue(row, self.ParticipationCol),
+									) )
 		
 		model = SeriesModel.model
 		model.setPoints( pointsList )
