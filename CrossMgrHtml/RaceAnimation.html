@@ -689,7 +689,7 @@ function getRiderPositionTime( num )
 	if( !info )
 		return [null, null];
 	var raceTimes = info['raceTimes'];
-	if( !raceTimes )
+	if( !raceTimes || raceTimes.length == 0 )
 		return null;
 	
 	var p;
@@ -1867,7 +1867,7 @@ function GeoAnimation()
 		// Draw the current lap and distance
 		if( leaders.length > 0 ) {
 			var leaderRaceTimes = data[leaders[0]]['raceTimes'];
-			if( leaderRaceTimes && leaderRaceTimes[0] < leaderRaceTimes.back() ) {
+			if( leaderRaceTimes && leaderRaceTimes.length > 0 && leaderRaceTimes[0] < leaderRaceTimes.back() ) {
 				var table = [];
 				
 				var leaderRaceTimes = data[leaders[0]]['raceTimes'];
@@ -1896,7 +1896,7 @@ function GeoAnimation()
 						else
 							distanceCur = distanceLap * (flr + this.iLapDistance - 1 + lapRatio);
 					}
-					else if( cat['raceDistance'] && leaderRaceTimes[0] != leaderRaceTimes.back() ) {
+					else if( cat['raceDistance'] && leaderRaceTimes.length > 0 && leaderRaceTimes[0] != leaderRaceTimes.back() ) {
 						distanceRace = cat['raceDistance'];
 						if( cat['distanceUnit'] != displayUnits )
 							distanceRace *= (displayUnits == 'km' ? 1.60934 : 0.621371);

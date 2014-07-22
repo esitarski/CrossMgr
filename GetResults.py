@@ -206,7 +206,7 @@ def GetResultsCore( category ):
 			times = [e.t for e in riderTimes]
 			interp = [e.interp for e in riderTimes]
 			
-			if times:
+			if len(times) >= 2:
 				times[0] = min(riderCategory.getStartOffsetSecs(), times[1])
 				if categoryWinningLaps.get(riderCategory, None) and getattr(riderCategory, 'lappedRidersMustContinue', False):
 					laps = min( categoryWinningLaps[riderCategory], len(times)-1 )
@@ -217,6 +217,9 @@ def GetResultsCore( category ):
 				interp = interp[:laps+1]
 			else:
 				laps = 0
+				times = []
+				interp = []
+			
 			lastTime = rider.tStatus
 			if not lastTime:
 				if times:
