@@ -753,7 +753,8 @@ class Rider(object):
 			iTimes[1:] = self.times
 			iTimes = self.removeEarlyTimes( iTimes )
 			iTimes = [(t, False) for t in iTimes]
-			iTimes = self.removeLateTimes( iTimes, dnfPulledTime )
+			if dnfPulledTime is not None:
+				iTimes = self.removeLateTimes( iTimes, dnfPulledTime )
 			return tuple(Entry(t=t[0], lap=i, num=self.num, interp=False) for i, t in enumerate(iTimes))
 
 		iTimes = self.getCleanLapTimes()
