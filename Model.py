@@ -613,8 +613,8 @@ class Rider(object):
 		if status in [Rider.Finisher, Rider.DNS, Rider.DQ]:
 			tStatus = None
 		elif status in [Rider.Pulled, Rider.DNF]:
-			tStatus = race.lastRaceTime() if race else None
-		
+			if tStatus is None:
+				tStatus = race.lastRaceTime() if race else None
 		self.status = status
 		self.tStatus = tStatus
 	
@@ -706,7 +706,16 @@ class Rider(object):
 			pass
 		assert len(times) == 0 or len(times) >= 2
 		return times
-		
+	
+	def removeLateTimes( self, iTimes, dnfPulledTime ):
+		if dnfPulledTime is not None:
+			try:
+				i = next(i for i in xrange(len(iTimes)-1, 0, -1) if iTimes[i-1][0] <= dnfPulledTime)
+				del iTimes[i:]
+			except StopIteration:
+				pass
+		return iTimes
+
 	def countEarlyTimes( self ):
 		count = 0
 		try:
@@ -725,6 +734,14 @@ class Rider(object):
 		if not self.times or self.status in [Rider.DNS, Rider.DQ]:
 			return tuple()
 		
+		# Adjust the stop time.
+		st = stopTime
+		dnfPulledTime = None
+		if self.status in [Rider.DNF, Rider.Pulled]:
+			# If no given time, use the last recorded time for DNF and Pulled riders.
+			dnfPulledTime = self.tStatus if self.tStatus is not None else self.times[-1]
+			st = min(st, dnfPulledTime + 0.01)
+		
 		# Check if we need to do any interpolation or if the user wants the raw data.
 		if not getattr(self, 'autocorrectLaps', True):
 			if not self.times:
@@ -734,17 +751,11 @@ class Rider(object):
 			# This avoids a whole lot of special cases later.
 			iTimes[0] = 0.0
 			iTimes[1:] = self.times
-			return tuple(Entry(t=t, lap=i, num=self.num, interp=False)
-						for i, t in enumerate(self.removeEarlyTimes(iTimes)))
+			iTimes = self.removeEarlyTimes( iTimes )
+			iTimes = [(t, False) for t in iTimes]
+			iTimes = self.removeLateTimes( iTimes, dnfPulledTime )
+			return tuple(Entry(t=t[0], lap=i, num=self.num, interp=False) for i, t in enumerate(iTimes))
 
-		# Adjust the stop time.
-		st = stopTime
-		dnfPulledTime = None
-		if self.status in [Rider.DNF, Rider.Pulled]:
-			# If no given time, use the last recorded time for DNF and Pulled riders.
-			dnfPulledTime = self.tStatus if self.tStatus is not None else self.times[-1]
-			st = min(st, dnfPulledTime + 0.01)
-		
 		iTimes = self.getCleanLapTimes()
 		
 		if not iTimes:
@@ -773,11 +784,8 @@ class Rider(object):
 			iTimes.extend( [(tBegin + expected * i, True) for i in xrange(iMax)] )
 
 		# Remove any entries exceeding the dnfPulledTime.
-		if dnfPulledTime is not None and tBegin > dnfPulledTime:
-			i = bisect.bisect_right( iTimes, (dnfPulledTime, False) )
-			while i < len(iTimes) and iTimes[i][0] <= dnfPulledTime:
-				i += 1
-			del iTimes[i:]
+		if dnfPulledTime is not None:
+			iTimes = self.removeLateTimes( iTimes, dnfPulledTime )
 		
 		if len(iTimes) <= 1:
 			return tuple()

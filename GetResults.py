@@ -90,6 +90,9 @@ DefaultSpeed = 0.00001
 @Model.memoize
 def GetResultsCore( category ):
 	Finisher = Model.Rider.Finisher
+	PUL = Model.Rider.Pulled
+	rankStatus = { Finisher, PUL }
+	
 	riderResults = []
 	with Model.LockRace() as race:
 		if not race:
@@ -221,7 +224,7 @@ def GetResultsCore( category ):
 				else:
 					lastTime = 0.0
 			
-			rr = RiderResult(	rider.num, rider.status, lastTime,
+			rr = RiderResult(	rider.num, Finisher if rider.status in rankStatus else rider.status, lastTime,
 								riderCategory.fullname,
 								[times[i] - times[i-1] for i in xrange(1, len(times))],
 								times,

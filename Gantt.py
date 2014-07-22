@@ -92,7 +92,7 @@ class Gantt( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(wx.NewId(), _('Add Missing Last Lap'),		_('Add missing last lap'),			self.OnPopupAddMissingLastLap, allCases),
+				(wx.NewId(), _('Add Missing Last Lap'),		_('Add missing last lap'),		self.OnPopupAddMissingLastLap, allCases),
 				(None, None, None, None, None),
 				(wx.NewId(), _('Pull after Lap End...'),	_('Pull after lap end'),		self.OnPopupPull, allCases),
 				(wx.NewId(), _('DNF after Lap End...'),		_('DNF after lap end'),			self.OnPopupDNF, allCases),
@@ -152,7 +152,7 @@ class Gantt( wx.Panel ):
 				continue
 			if caseCode < cCase:
 				continue
-			if (_('before') in name and not self.numBefore) or (_('after') in name and not self.numAfter):
+			if (name.endswith(_('before')) and not self.numBefore) or (name.endswith(_('after')) and not self.numAfter):
 				continue
 			menu.Append( id, name, text )
 			
@@ -240,7 +240,7 @@ class Gantt( wx.Panel ):
 					return
 				race.getRider(self.entry.num).setStatus( Model.Rider.Pulled, self.entry.t + 1 )
 				race.setChanged()
-		except:
+		except Exception as e:
 			pass
 		wx.CallAfter( self.refresh )
 		
