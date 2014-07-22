@@ -39,7 +39,7 @@ Status|Description
 :-----|:----------
 Finisher|This rider is a Finisher and is ranked in the results.  Riders can finish the race and not complete the same number of laps as the leader.
 DNF|This rider is a DNF (Did Not Finish).  DNF riders are not ranked, however, they are shown in the results in order of Race Time (the following field).
-PUL|This rider was pulled by the race officials and shoult not be ranked.  Although Pulled riders are not ranked, they are shown in the results in order of Race Time (the following field).
+PUL|This rider was pulled by race officials but will still be shown in the results.  DNF riders are ranked by laps completed, then by PUL time (the following field).  It is easy to 
 DNS|This rider Did Not Start (DNS)
 DQ|This rider was disqualified (DQ)
 OTL|This rider was eliminated due to being Outside the Time Limit (OTL)
@@ -48,14 +48,15 @@ NP|This rider was not placed.  This can be used as a place-holder when the finis
 In the results, riders are ranked in order of Status: 
 
 1. Finisher
-1. PUL
 1. OTL
 1. DNF
 1. DQ
 1. DNS
 1. NP
 
-Within each Status, riders are ranked by distance (laps completed), then time.
+PUL riders are shown as __Finishers__ in the results, but with the time __Gap__ shown as -1, -2, -3, etc. showing the number of incomplete laps.
+
+__Finishers__ are ranked by distance (laps completed), then time.
 
 ### Relegated to
 If set, the final position this rider was __Relegated__ in the race.
