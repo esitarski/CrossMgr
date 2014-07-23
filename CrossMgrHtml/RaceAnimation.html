@@ -894,7 +894,7 @@ function TrackAnimation()
 	{
 		// Get the rider x, y, position (distance) and time.
 		var positionTime = getRiderPositionTime( num );
-		if ( positionTime[0] == null )
+		if ( !positionTime || positionTime[0] == null )
 			return [null, null, null];
 		if( data[num]['finishTime'] != null && t >= data[num]['finishTime'] )
 		{
