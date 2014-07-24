@@ -2748,9 +2748,9 @@ Feedback is sincerely appreciated.
 Donations are also appreciated - see website for details.
 
 CRITICALLY IMPORTANT MESSAGE!
-This program is not warrented for any use whatsoever.
+This program is not warranted for any use whatsoever.
 It may not produce correct results, it might lose your data.
-The authors of this program assume no reponsibility or liability for data loss or erronious results produced by this program.
+The authors of this program assume no responsibility or liability for data loss or erroneous results produced by this program.
 
 Use entirely at your own risk.
 Do not come back and tell me that this program screwed up your event!
