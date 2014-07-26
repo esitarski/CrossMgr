@@ -587,7 +587,7 @@ class ExportGrid( object ):
 		colsMax = len(self.colnames)
 		rrFields = (['pos', 'num'] +
 					infoFields +
-					(['startClockTime','startTime','finishTime'] if isTimeTrial else []) +
+					(['clockStartTime','startTime','finishTime'] if isTimeTrial else []) +
 					(['lastTimeOrig', 'factor', 'lastTime'] if hasFactor else ['lastTimeOrig']) +
 					(['gap'] if not hasFactor else [])
 		)
@@ -595,7 +595,7 @@ class ExportGrid( object ):
 			rrFields += ['speed']
 		for col, f in enumerate( rrFields ):
 			for row, r in enumerate(results):
-				if f in ['lastTime', 'lastTimeOrig']:
+				if f in {'lastTime', 'lastTimeOrig'}:
 					ttt = getattr( r, f, 0.0 )
 					if ttt <= 0.0:
 						data[col].append( '' )
@@ -603,7 +603,7 @@ class ExportGrid( object ):
 						if not isTimeTrial:
 							ttt = max( 0.0, ttt - startOffset )
 						data[col].append( Utils.formatTimeCompressed(ttt, highPrecision) )
-				elif f in ['startTime', 'finishTime']:
+				elif f in {'clockStartTime', 'startTime', 'finishTime'}:
 					sfTime = getattr( r, f, None )
 					if sfTime is not None:
 						data[col].append( Utils.formatTimeCompressed(sfTime, highPrecision) )
