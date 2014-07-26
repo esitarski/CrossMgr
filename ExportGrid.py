@@ -567,7 +567,7 @@ class ExportGrid( object ):
 		
 		self.colnames = ([_('Pos'), _('Bib')] +
 						infoFields +
-						([_('Start'),_('Finish')] if isTimeTrial else []) +
+						([_('Clock'),_('Start'),_('Finish')] if isTimeTrial else []) +
 						([_('ElapsedTime'), _('Factor %')] if hasFactor else []) +
 						[_('Time')] +
 						([_('Gap')] if not hasFactor else [])
@@ -587,7 +587,7 @@ class ExportGrid( object ):
 		colsMax = len(self.colnames)
 		rrFields = (['pos', 'num'] +
 					infoFields +
-					(['startTime','finishTime'] if isTimeTrial else []) +
+					(['startClockTime','startTime','finishTime'] if isTimeTrial else []) +
 					(['lastTimeOrig', 'factor', 'lastTime'] if hasFactor else ['lastTimeOrig']) +
 					(['gap'] if not hasFactor else [])
 		)

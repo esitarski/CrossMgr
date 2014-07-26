@@ -91,6 +91,7 @@ DefaultSpeed = 0.00001
 def GetResultsCore( category ):
 	Finisher = Model.Rider.Finisher
 	PUL = Model.Rider.Pulled
+	NP = Model.Rider.NP
 	rankStatus = { Finisher, PUL }
 	
 	riderResults = []
@@ -100,6 +101,10 @@ def GetResultsCore( category ):
 		
 		isTimeTrial = getattr( race, 'isTimeTrial', False )
 		allCategoriesFinishAfterFastestRidersLastLap = getattr( race, 'allCategoriesFinishAfterFastestRidersLastLap', False )
+		raceStartSeconds = (
+			race.startTime.hour*60.0*60.0 + race.startTime.minute*60.0 + race.startTime.second + race.startTime.microsecond / 1000000.0 if race.startTime
+			else Utils.StrToSeconds(race.scheduledStart) * 60.0
+		)
 		
 		allRiderTimes = {}
 		entries = race.interpolate()
@@ -227,7 +232,10 @@ def GetResultsCore( category ):
 				else:
 					lastTime = 0.0
 			
-			rr = RiderResult(	rider.num, Finisher if rider.status in rankStatus else rider.status, lastTime,
+			status = Finisher if rider.status in rankStatus else rider.status
+			if isTimeTrial and not lastTime:
+				status = NP
+			rr = RiderResult(	rider.num, status, lastTime,
 								riderCategory.fullname,
 								[times[i] - times[i-1] for i in xrange(1, len(times))],
 								times,
@@ -235,6 +243,7 @@ def GetResultsCore( category ):
 			
 			if isTimeTrial:
 				rr.startTime = getattr( rider, 'firstTime', None )
+				rr.clockStartTime = rr.startTime + raceStartSeconds if rr.startTime is not None else None
 				if rr.status == Finisher:
 					try:
 						if rr.lastTime > 0:

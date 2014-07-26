@@ -314,8 +314,9 @@ var translations = {
 	'Estimated':	['Estimated',		'Estimé',				'Estimado'],
 	'Distance':		['distance',		'la distance',			'la distancia'],
 	'Start':		['start',			'au début',				'el comienzo'],
-	'StartTime':	['Start',			'Départ',				'Inicio'],
-	'FinishTime':	['Finish',			"Arrivée",				'Meta'],
+	'ClockStartTime':	['Clock Start',		"Heure de l'horloge",	'Inicio de reloj'],
+	'StartTime':	['Stopwatch Start',	"Premier chrono",		'Primero tiempo'],
+	'FinishTime':	['Stopwatch Stop',	"Deuxième chrono",		'Segundo tiempo'],
 	'Winner':		['winner',			'gagnant',				'ganador'],
 	'starters':		['starters',		'entrées',				'aperitivos'],
 	'finishers':	['finishers',		'arrivées',				'finalistas'],
@@ -2369,6 +2370,7 @@ function SetCategoryResults()
 		}
 		
 		if( isTimeTrial ) {
+			createTextChild( td = createChild(tr, 'TH'), _('ClockStartTime') );	++numHeaders;
 			createTextChild( td = createChild(tr, 'TH'), _('StartTime') );	++numHeaders;
 			createTextChild( td = createChild(tr, 'TH'), _('FinishTime') );	++numHeaders;
 		}
@@ -2506,6 +2508,7 @@ function SetCategoryResults()
 			}
 			
 			if( isTimeTrial ) {
+				createTextChild( td = createTD(tr), d['clockStartTime'] ? FormatTime(d['clockStartTime']) : '' );
 				createTextChild( td = createTD(tr), d['startTime'] ? FormatTime(d['startTime']) : '' );
 				var ttPenalty = (d['ttPenalty'] ? d['ttPenalty'] : 0.0);
 				createTextChild( td = createTD(tr),
@@ -2525,7 +2528,7 @@ function SetCategoryResults()
 				createTextChild( td = createTD(tr), factor.toFixed(2) );
 			}
 			var finishTime = '';
-			if( isFinisher ) {
+			if( isFinisher && d[lastTimeField] > 0.0 ) {
 				finishTime = FormatTime(d[lastTimeField]);
 				if( isTimeTrial && d['ttPenalty'] )
 					finishTime += '*';
