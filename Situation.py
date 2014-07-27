@@ -1,15 +1,16 @@
 import wx
-import Utils
-import Model
-from ReadSignOnSheet	import ResetExcelLinkCache, SyncExcelLink
 import datetime
 import os
 import math
-
-from GetResults import GetResults
 from bisect import bisect_left
 from copy import copy
 import cPickle as pickle
+
+import Utils
+import Model
+from ReadSignOnSheet	import ResetExcelLinkCache, SyncExcelLink
+from GetResults import GetResults
+from FixCategories import FixCategories, SetCategory
 
 def formatTimeGap( t ):
 	tStr = Utils.formatTimeGap( t )
@@ -56,7 +57,7 @@ circledNumbers = [u' (-{})'.format(i) for i in xrange(1, 11)]
 def GetSituationGaps( category=None, t=None ):
 	race = Model.race
 	if not race:
-		return []
+		return [None, None, None]
 		
 	results = GetResults( category, True )
 	validRiders = {rr.num for rr in results if rr.raceTimes and len(rr.raceTimes) >= 2}
@@ -66,7 +67,7 @@ def GetSituationGaps( category=None, t=None ):
 	
 	maxLaps = max( rr.laps for rr in results )
 	if t is None:
-		t = race.lastRaceTime()
+		t = race.lastRaceTime() if not race.isRunning() else (datetime.datetime.now() - race.startTime).total_seconds()
 	Finisher = Model.Rider.Finisher
 	t = min( t, max(rr.raceTimes[-1] for rr in results) )
 	
@@ -125,7 +126,7 @@ def GetSituationGaps( category=None, t=None ):
 	
 	return gaps, tAfterLeader, title
 	
-class Situation(wx.PyPanel):
+class SituationPanel(wx.PyPanel):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER,
 				name="GanttChartPanel" ):
@@ -138,6 +139,7 @@ class Situation(wx.PyPanel):
 		self.gaps = []
 		self.tAfterLeader = None
 		self.title = None
+		self.zoom = 1.0
 		
 		self.Bind(wx.EVT_PAINT, self.OnPaint)
 		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
@@ -151,6 +153,10 @@ class Situation(wx.PyPanel):
 		self.tAfterLeader = tAfterLeader
 		self.title = title
 		
+		self.Refresh()
+		
+	def SetZoom( self, zoom ):
+		self.zoom = zoom
 		self.Refresh()
 		
 	def OnPaint( self, event ):
@@ -244,7 +250,7 @@ class Situation(wx.PyPanel):
 		yBottom = height - border
 		
 		gapMax = groups[-1][-1][0] - groups[0][0][0] if groups and groups[0] else 0.0
-		xScale = (xRight - xLeft) / (gapMax if gapMax else 1.0)
+		xScale = (xRight - xLeft) / (gapMax if gapMax else 1.0) * self.zoom
 		
 		def drawFinishLine():
 			if self.tAfterLeader is None:
@@ -420,12 +426,106 @@ class Situation(wx.PyPanel):
 		# reduce flicker
 		pass
 
+#------------------------------------------------------------------------------------------------------
+
+class Situation( wx.Panel ):
+	def __init__( self, parent, id = wx.ID_ANY ):
+		super(Situation, self).__init__( parent, id )
+		
+		self.tCur = None
+		
+		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
+		self.categoryLabel = wx.StaticText( self, label = _('Category:') )
+		self.categoryChoice = wx.Choice( self )
+		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
+		
+		self.hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.categoryChoice, flag=wx.ALL, border=4 )
+		
+		self.zoomSlider = wx.Slider( self, style=wx.VERTICAL|wx.SL_INVERSE )
+		self.zoomSlider.SetMin( 0 )
+		self.zoomSlider.SetMax( 50 )
+		self.zoomSlider.Bind( wx.EVT_SCROLL, self.zoomScroll )
+		
+		self.timeSlider = wx.Slider( self, style=wx.HORIZONTAL )
+		self.timeSlider.SetMin( 0 )
+		self.timeSlider.SetMax( 10000 )
+		self.timeSlider.Bind( wx.EVT_SCROLL, self.timeScroll )
+		
+		self.timeSlider.SetValue( self.timeSlider.GetMax() )
+		
+		self.situation = SituationPanel( self )
+		
+		vs = wx.BoxSizer( wx.VERTICAL )
+		
+		vs.Add( self.hbs, 0, flag=wx.ALL, border=4 )
+		
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( self.situation, 1, flag=wx.EXPAND|wx.ALL, border=4 )
+		hs.Add( self.zoomSlider, 0, flag=wx.EXPAND )
+		
+		vs.Add( hs, 1, flag=wx.EXPAND|wx.ALL, border=4 )
+		hsTS = wx.BoxSizer( wx.HORIZONTAL )
+		hsTS.Add( self.timeSlider, 1, flag=wx.EXPAND )
+		hsTS.AddSpacer( self.zoomSlider.GetSize()[0] )
+		
+		vs.Add( hsTS, 0, flag=wx.EXPAND )
+		
+		self.SetSizer( vs )
+		wx.CallAfter( self.timeScroll )
+		
+	def doChooseCategory( self, event ):
+		Model.setCategoryChoice( self.categoryChoice.GetSelection(), 'situationCategory' )
+		self.refresh()
+	
+	def zoomScroll( self, event ):
+		zoom = 1.0 + (self.zoomSlider.GetValue() / float(self.zoomSlider.GetMax())) * 5.0
+		self.situation.SetZoom( zoom )
+		
+	def timeAtMax( self ):
+		return self.timeSlider.GetValue() == self.timeSlider.GetMax()
+		
+	def timeScroll( self, event=None ):
+		if self.timeAtMax():
+			self.timerUpdate()
+			return
+		
+		race = Model.race
+		category = FixCategories( self.categoryChoice, getattr(race, 'situationCategory', 0) )
+		results = GetResults( category, True )
+		validRiders = {rr.num for rr in results if rr.raceTimes and len(rr.raceTimes) >= 2}
+		if not validRiders:
+			self.situation.SetData( *GetSituationGaps(category=category, t=None ) )
+			return
+		
+		tMax = max(rr.raceTimes[-1] for rr in results if rr.num in validRiders)
+		t = tMax * (float(self.timeSlider.GetValue()) / float(self.timeSlider.GetMax()))
+		self.situation.SetData( *GetSituationGaps(category=category, t=t) )
+	
+	def timerUpdate( self ):
+		if not self.timeAtMax():
+			return
+		mainWin = Utils.getMainWin()
+		if not (mainWin and mainWin.isShowingPage(self)):
+			return
+		
+		category = FixCategories( self.categoryChoice, getattr(race, 'situationCategory', 0) )
+		situation.SetData( *GetSituationGaps(category=category, t=None) )
+		
+		race = Model.race
+		if race and race.isRunning():
+			wx.CallLater( 1001-datetime.datetime.now().microsecond//1000, self.timerUpdate )
+	
+	def refresh( self ):
+		self.timeScroll()
+	
 if __name__ == '__main__':
 	Utils.disable_stdout_buffering()
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(1000,800))
 	situation = Situation(mainWin)
 	
+	'''
 	tOffset = datetime.timedelta( seconds=5*60*0 )
 	try:
 		fileName = os.path.join( 'Binghampton', '2014-04-27-Binghamton Circuit Race-r3-.cmn' )
@@ -447,6 +547,21 @@ if __name__ == '__main__':
 		situation.SetData( *GetSituationGaps(t=(tCur-tStart+tOffset).total_seconds()) )
 		wx.CallLater( 1001-tCur.microsecond/1000, timerUpdate )
 	wx.CallLater( 10, timerUpdate )
+	'''
+	
+	try:
+		fileName = os.path.join( 'Binghampton', '2014-04-27-Binghamton Circuit Race-r3-.cmn' )
+		with open(fileName, 'rb') as fp:
+			race = pickle.load( fp )
+		Model.setRace( race )
+		ResetExcelLinkCache()
+		race.resetAllCaches()
+		SyncExcelLink( race )
+	except Exception as e:
+		print e
+		Model.setRace( Model.Race() )
+		race = Model.getRace()
+		race._populate()
 	
 	mainWin.Show()
 	app.MainLoop()
