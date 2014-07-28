@@ -48,6 +48,7 @@ from Properties			import Properties, PropertiesDialog, ChangeProperties
 from Recommendations	import Recommendations
 from RaceAnimation		import RaceAnimation, GetAnimationData
 from Search				import SearchDialog
+from Situation			import Situation
 import FtpWriteFile
 from FtpWriteFile		import realTimeFtpPublish
 from SetAutoCorrect		import SetAutoCorrectDialog
@@ -506,7 +507,8 @@ class MainWin( wx.Frame ):
 			[ 'raceAnimation',	RaceAnimation,		_('Animation') ],
 			[ 'recommendations',Recommendations,	_('Recommendations') ],
 			[ 'categories', 	Categories,			_('Categories') ],
-			[ 'properties',		Properties,			_('Properties') ]
+			[ 'properties',		Properties,			_('Properties') ],
+			[ 'situation',		Situation,			_('Situation') ],
 		]
 		
 		for i, (a, c, n) in enumerate(self.attrClassName):

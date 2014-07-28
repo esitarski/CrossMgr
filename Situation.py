@@ -153,6 +153,7 @@ class SituationPanel(wx.PyPanel):
 		self.tAfterLeader = None
 		self.title = None
 		self.zoom = 1.0
+		self.listHeight = 0
 		
 		self.Bind(wx.EVT_PAINT, self.OnPaint)
 		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
@@ -569,6 +570,10 @@ class GroupInfoPopup( wx.PopupTransientWindow, listmix.ColumnSorterMixin ):
 		self.SetSize( (10,10) )
 		self.GetSizer().Layout()
 		self.Fit()
+		
+		dc = wx.WindowDC( self.list )
+		self.listHeight = int(dc.GetTextExtent( u'00' )[1] * 1.15 * (len(data) + 4))
+		
 
 class Situation( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
@@ -639,6 +644,10 @@ class Situation( wx.Panel ):
 			self.timerUpdate()
 			return
 		
+		race = Model.race
+		if not race:
+			return
+		
 		category = FixCategories( self.categoryChoice, getattr(race, 'situationCategory', 0) )
 		tMax = GetRaceTMax(category) or 0.01
 		
@@ -667,7 +676,8 @@ class Situation( wx.Panel ):
 		self.groupInfoPopup.Dismiss()
 		self.groupInfoPopup.refresh( groupData )
 		sz = self.groupInfoPopup.GetSize()
-		self.groupInfoPopup.SetSize( (sz[0], 24*(len(groupData)+2)) )
+		#self.groupInfoPopup.SetSize( (sz[0], 24*(len(groupData)+2)) )
+		self.groupInfoPopup.SetSize( (sz[0], self.groupInfoPopup.listHeight) )
 		self.groupInfoPopup.Position(wx.Point(pos[0], pos[1]+20), wx.Size(0,0))
 		self.groupInfoPopup.Popup()
 	
