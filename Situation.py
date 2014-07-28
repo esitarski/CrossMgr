@@ -1,8 +1,11 @@
 import wx
 import datetime
 import os
+import sys
 import math
+import itertools
 from bisect import bisect_left
+import wx.lib.mixins.listctrl as listmix
 from copy import copy
 import cPickle as pickle
 
@@ -19,6 +22,16 @@ def formatTimeGap( t ):
 	elif tStr.startswith( "0'" ):
 		tStr = tStr[2:]
 	return tStr
+
+def GetRaceTMax( category ):
+	race = Model.race
+	if not race:
+		return None
+	results = GetResults( category, True )
+	try:
+		return max(rr.raceTimes[-1] for rr in results if rr.raceTimes and len(rr.raceTimes) >= 2)
+	except:
+		return None
 	
 def GetLapLE( raceTimes, t ):
 	lap = bisect_left( raceTimes, t, hi=len(raceTimes)-1 )
@@ -52,8 +65,6 @@ def GetLeaderGap( leaderPosition, leaderSpeed, leaderRaceTimes, raceTimes, t ):
 	#print 'leaderPosition:', leaderPosition, 'riderPosition:', riderPosition, 'positionFraction:', positionFraction, 'lapsDown:', int(leaderPosition - riderPosition)
 	return positionFraction / leaderSpeed, int(riderPosition - leaderPosition)
 
-circledNumbers = u''.join( unichr(i) for i in xrange(ord(u'\u278a'), ord(u'\u278a')+10) )
-circledNumbers = [u' (-{})'.format(i) for i in xrange(1, 11)]
 def GetSituationGaps( category=None, t=None ):
 	race = Model.race
 	if not race:
@@ -85,7 +96,7 @@ def GetSituationGaps( category=None, t=None ):
 			pass
 		
 		nameStr = (u' ' + u','.join(names)) if names else u''
-		lapsDownStr = u'' if lapsDown == 0 else u' ' + (circledNumbers[-lapsDown-1] if -lapsDown <= 10 else u'({})'.format(lapsDown))
+		lapsDownStr = u'' if lapsDown == 0 else u' ({})'.format(lapsDown)
 		return u''.join([unicode(rr.num), nameStr, lapsDownStr])
 	
 	leaderPosition, leaderSpeed = GetPositionSpeed( leaderRaceTimes, t )
@@ -110,17 +121,16 @@ def GetSituationGaps( category=None, t=None ):
 	tClock = race.startTime.hour*60.0*60.0 + race.startTime.minute*60.0 + race.startTime.second + race.startTime.microsecond/1000000.0 + t
 	tETA = leaderRaceTimes[thisLap+1] - t if thisLap+1 != len(leaderRaceTimes) else None
 	tAfterLeader = t - leaderRaceTimes[thisLap]
-	lap = thisLap + 1
 	laps = len(leaderRaceTimes) - 1
-	lapsToGo = max(laps - lap + 1, 0)
+	lap = min( thisLap + 1, laps )
+	lapsToGo = max(laps - lap, 0)
 	
-	title = u''
+	title =  u'   Lap: {}/{}   Laps to go: {}'.format(lap, laps, lapsToGo)
 	if tCur is not None:
-		title = u'Race: {}'.format(Utils.formatTime(tCur))
+		title += u'    Race: {}'.format(Utils.formatTime(tCur))
 	if tClock is not None:
 		if title:
 			title += u'   Clock: {}'.format(Utils.formatTime(tClock))
-	title += u'   Lap: {}/{}   Laps to go: {}'.format(lap, laps, lapsToGo)
 	if tETA is not None:
 		title += u'   Leader ETA: {}'.format(Utils.formatTime(tETA))
 	
@@ -137,6 +147,9 @@ class SituationPanel(wx.PyPanel):
 		self.SetBackgroundColour(wx.WHITE)
 		
 		self.gaps = []
+		self.groupRectList = []
+		self.groupFullData = []
+
 		self.tAfterLeader = None
 		self.title = None
 		self.zoom = 1.0
@@ -144,6 +157,9 @@ class SituationPanel(wx.PyPanel):
 		self.Bind(wx.EVT_PAINT, self.OnPaint)
 		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
 		self.Bind(wx.EVT_SIZE, self.OnSize)
+		
+		self.clickHandler = None
+		self.Bind(wx.EVT_LEFT_UP, self.OnMouseUp )
 		
 	def SetData( self, gaps, tAfterLeader=None, title=None ):
 		# each gap is of the form: [gapSeconds, text]
@@ -154,6 +170,9 @@ class SituationPanel(wx.PyPanel):
 		self.title = title
 		
 		self.Refresh()
+	
+	def SetClickHandler( self, handler=None ):
+		self.clickHandler = handler
 		
 	def SetZoom( self, zoom ):
 		self.zoom = zoom
@@ -163,11 +182,35 @@ class SituationPanel(wx.PyPanel):
 		#self.Draw(wx.GCDC(wx.BufferedPaintDC(self)))
 		self.Draw(wx.BufferedPaintDC(self))
 
+	def OnSize(self, event):
+		self.Refresh()
+		event.Skip()
+		
+	def OnMouseUp( self, event ):
+		if not self.clickHandler:
+			return
+		
+		x = event.GetX()
+		y = event.GetY()
+		for i, (group, gRect) in enumerate(self.groupRectList):
+			if gRect.ContainsXY( x, y ):
+				self.clickHandler( self, rect=gRect, groupData=self.groupFullData[i] )
+				break
+		
+	def OnEraseBackground(self, event):
+		# This is intentionally empty, because we are using the combination
+		# of wx.BufferedPaintDC + an empty OnEraseBackground event to
+		# reduce flicker
+		pass
+
 	def Draw( self, dc ):
 		backColour = self.GetBackgroundColour()
 		backBrush = wx.Brush(backColour, wx.SOLID)
 		dc.SetBackground( backBrush )
 		dc.Clear()
+		
+		self.groupRectList = []
+		self.groupFullData = []
 		
 		greyColour = wx.Colour(100,100,100, 64)
 		greyPen = wx.Pen( greyColour, 1 )
@@ -194,6 +237,8 @@ class SituationPanel(wx.PyPanel):
 			gapPrev = gap
 		if group:
 			groups.append( group )
+		
+		self.groupFullData = [group[:] for group in groups]
 		
 		groupMax = max( len(group) for group in groups ) if groups else 0
 		try:
@@ -383,6 +428,8 @@ class SituationPanel(wx.PyPanel):
 				dc.DrawText( g[1], xText + spaceWidth, yText )
 				yText += fontHeight
 				
+		self.groupRectList = groupRectList
+				
 		# Draw the gaps between the groups with dimension lines.
 		dc.SetPen( greyPen )
 		dc.SetBrush( greyBrush )
@@ -416,17 +463,92 @@ class SituationPanel(wx.PyPanel):
 			
 			dc.DrawText( sepStr, xPrev + (xNext - xPrev - tWidth) / 2, yText )
 			
-	def OnSize(self, event):
-		self.Refresh()
-		event.Skip()
-		
-	def OnEraseBackground(self, event):
-		# This is intentionally empty, because we are using the combination
-		# of wx.BufferedPaintDC + an empty OnEraseBackground event to
-		# reduce flicker
-		pass
-
 #------------------------------------------------------------------------------------------------------
+
+class AutoWidthListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
+	def __init__(self, parent, ID = wx.ID_ANY, pos=wx.DefaultPosition,
+				 size=wx.DefaultSize, style=0):
+		wx.ListCtrl.__init__(self, parent, ID, pos, size, style)
+		listmix.ListCtrlAutoWidthMixin.__init__(self)
+
+class GroupInfoPopup( wx.PopupTransientWindow, listmix.ColumnSorterMixin ):
+	def __init__( self, parent ):
+		wx.PopupTransientWindow.__init__( self, parent=parent, style=wx.SIMPLE_BORDER )
+		vs = wx.BoxSizer( wx.VERTICAL )
+		
+		self.il = wx.ImageList(16, 16)
+		self.sm_rt = self.il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'SmallRightArrow.png'), wx.BITMAP_TYPE_PNG))
+		self.sm_up = self.il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'SmallUpArrow.png'), wx.BITMAP_TYPE_PNG))
+		self.sm_dn = self.il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'SmallDownArrow.png'), wx.BITMAP_TYPE_PNG ))
+		
+		self.list = AutoWidthListCtrl( self, style = wx.LC_REPORT 
+														 | wx.BORDER_NONE
+														 | wx.LC_SORT_ASCENDING
+														 | wx.LC_HRULES
+														 )
+		self.list.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
+		
+		vs.Add( self.list, 1, flag=wx.EXPAND|wx.ALL, border=4 )
+		self.SetSizer( vs )
+		vs.Fit( self )
+		
+	def GetListCtrl( self ):
+		return self.list
+		
+	def GetSortImages(self):
+		return (self.sm_dn, self.sm_up)
+		
+	def refresh( self, groupInfo ):
+		self.list.ClearAll()
+		
+		potentialDNS = {}
+		with Model.LockRace() as race:
+			if not race:
+				return
+				
+			try:
+				externalFields = race.excelLink.getFields()
+				externalInfo = race.excelLink.read()
+			except:
+				externalFields = [ _('Bib#') ]
+				externalInfo = None
+				return
+			
+		# Add the headers.
+		for c, f in enumerate(externalFields):
+			self.list.InsertColumn( c+1, f, wx.LIST_FORMAT_RIGHT if f.startswith(_('Bib')) else wx.LIST_FORMAT_LEFT )
+		
+		# Get the bibs.
+		nums = []
+		for i, (gap, info) in enumerate(groupInfo):
+			nums.append( int(info.split()[0]) )
+		
+		# Create an artificial external info if we don't have a spreadsheet.
+		if externalInfo is None:
+			externInfo = { num: {_('Bib#'): num} for num in nums }
+			
+		# Create the data.  Sort by Bib#
+		data = [tuple( num if i == 0 else externalInfo.get(num).get(f, '') for i, f in enumerate(externalFields)) for num in nums]
+		data.sort()
+		
+		# Populate the list.
+		for row, d in enumerate(data):
+			index = self.list.InsertImageStringItem(sys.maxint, u'{}'.format(d[0]), self.sm_rt)
+			for i, v in enumerate(itertools.islice(d, 1, len(d))):
+				self.list.SetStringItem( index, i+1, unicode(v) )
+			self.list.SetItemData( row, d[0] )		# This key links to the sort fields used by ColumnSorterMixin
+		
+		# Set the sort fields and configure the sorter mixin.
+		self.itemDataMap = dict( (d[0], d) for d in data )
+		listmix.ColumnSorterMixin.__init__(self, len(externalFields))
+
+		# Make all column widths autosize.
+		for i, f in enumerate(externalFields):
+			self.list.SetColumnWidth( i, wx.LIST_AUTOSIZE )
+			
+		# Fixup the Bib number, as autosize gets confused with the graphic.
+		self.list.SetColumnWidth( 0, 64 )
+		self.list.SetFocus()
 
 class Situation( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
@@ -455,25 +577,32 @@ class Situation( wx.Panel ):
 		self.timeSlider.SetValue( self.timeSlider.GetMax() )
 		
 		self.situation = SituationPanel( self )
+		self.situation.SetClickHandler( self.groupClick )
+		
+		self.groupInfoPopup = GroupInfoPopup( self )
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		
+		# Add the Category selector.
 		vs.Add( self.hbs, 0, flag=wx.ALL, border=4 )
 		
-		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.situation, 1, flag=wx.EXPAND|wx.ALL, border=4 )
-		hs.Add( self.zoomSlider, 0, flag=wx.EXPAND )
-		
-		vs.Add( hs, 1, flag=wx.EXPAND|wx.ALL, border=4 )
+		# Add the time zoom.  Add a spacer so it lines up on the left.
 		hsTS = wx.BoxSizer( wx.HORIZONTAL )
-		hsTS.Add( self.timeSlider, 1, flag=wx.EXPAND )
 		hsTS.AddSpacer( self.zoomSlider.GetSize()[0] )
-		
+		hsTS.Add( self.timeSlider, 1, flag=wx.EXPAND )
 		vs.Add( hsTS, 0, flag=wx.EXPAND )
+		
+		# Add the zoom slider and the situation display.
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( self.zoomSlider, 0, flag=wx.EXPAND )
+		hs.Add( self.situation, 1, flag=wx.EXPAND )
+		
+		vs.Add( hs, 1, flag=wx.EXPAND )
 		
 		self.SetSizer( vs )
 		wx.CallAfter( self.timeScroll )
-		
+		wx.CallAfter( self.situation.Refresh )
+	
 	def doChooseCategory( self, event ):
 		Model.setCategoryChoice( self.categoryChoice.GetSelection(), 'situationCategory' )
 		self.refresh()
@@ -490,15 +619,9 @@ class Situation( wx.Panel ):
 			self.timerUpdate()
 			return
 		
-		race = Model.race
 		category = FixCategories( self.categoryChoice, getattr(race, 'situationCategory', 0) )
-		results = GetResults( category, True )
-		validRiders = {rr.num for rr in results if rr.raceTimes and len(rr.raceTimes) >= 2}
-		if not validRiders:
-			self.situation.SetData( *GetSituationGaps(category=category, t=None ) )
-			return
+		tMax = GetRaceTMax(category) or 0.01
 		
-		tMax = max(rr.raceTimes[-1] for rr in results if rr.num in validRiders)
 		t = tMax * (float(self.timeSlider.GetValue()) / float(self.timeSlider.GetMax()))
 		self.situation.SetData( *GetSituationGaps(category=category, t=t) )
 	
@@ -506,15 +629,25 @@ class Situation( wx.Panel ):
 		if not self.timeAtMax():
 			return
 		mainWin = Utils.getMainWin()
-		if not (mainWin and mainWin.isShowingPage(self)):
+		if mainWin and not mainWin.isShowingPage(self):
+			return
+		
+		race = Model.race
+		if not race:
 			return
 		
 		category = FixCategories( self.categoryChoice, getattr(race, 'situationCategory', 0) )
-		situation.SetData( *GetSituationGaps(category=category, t=None) )
+		self.situation.SetData( *GetSituationGaps(category=category, t=None) )
 		
-		race = Model.race
 		if race and race.isRunning():
 			wx.CallLater( 1001-datetime.datetime.now().microsecond//1000, self.timerUpdate )
+	
+	def groupClick( self, situation, rect, groupData ):
+		pos = self.situation.ClientToScreen( (rect.GetX(), rect.GetY()) )
+		self.groupInfoPopup.Dismiss()
+		self.groupInfoPopup.refresh( groupData )
+		self.groupInfoPopup.Position((pos[0], pos[1]+20), (0, 0))
+		self.groupInfoPopup.Popup()
 	
 	def refresh( self ):
 		self.timeScroll()
@@ -564,4 +697,5 @@ if __name__ == '__main__':
 		race._populate()
 	
 	mainWin.Show()
+	situation.refresh()
 	app.MainLoop()
