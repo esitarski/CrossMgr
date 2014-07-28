@@ -474,7 +474,7 @@ class AutoWidthListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 class GroupInfoPopup( wx.PopupTransientWindow, listmix.ColumnSorterMixin ):
 	def __init__( self, parent ):
 		wx.PopupTransientWindow.__init__( self, parent=parent, style=wx.SIMPLE_BORDER )
-		vs = wx.BoxSizer( wx.VERTICAL )
+		sizer = wx.BoxSizer( wx.VERTICAL )
 		
 		self.il = wx.ImageList(16, 16)
 		self.sm_rt = self.il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'SmallRightArrow.png'), wx.BITMAP_TYPE_PNG))
@@ -488,9 +488,9 @@ class GroupInfoPopup( wx.PopupTransientWindow, listmix.ColumnSorterMixin ):
 														 )
 		self.list.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
 		
-		vs.Add( self.list, 1, flag=wx.EXPAND|wx.ALL, border=4 )
-		self.SetSizer( vs )
-		vs.Fit( self )
+		sizer.Add( self.list, 1, flag=wx.EXPAND|wx.ALL, border=4 )
+		
+		self.SetSizer( sizer )
 		
 	def GetListCtrl( self ):
 		return self.list
@@ -514,10 +514,6 @@ class GroupInfoPopup( wx.PopupTransientWindow, listmix.ColumnSorterMixin ):
 				externalInfo = None
 				return
 			
-		# Add the headers.
-		for c, f in enumerate(externalFields):
-			self.list.InsertColumn( c+1, f, wx.LIST_FORMAT_RIGHT if f.startswith(_('Bib')) else wx.LIST_FORMAT_LEFT )
-		
 		# Get the bibs.
 		nums = []
 		for i, (gap, info) in enumerate(groupInfo):
@@ -525,8 +521,28 @@ class GroupInfoPopup( wx.PopupTransientWindow, listmix.ColumnSorterMixin ):
 		
 		# Create an artificial external info if we don't have a spreadsheet.
 		if externalInfo is None:
-			externInfo = { num: {_('Bib#'): num} for num in nums }
+			externalInfo = { num: {_('Bib#'): num} for num in nums }
+		else:
+			# Adjust to usual name format.
+			def GetName( info ):
+				return u', '.join( n for n in [info.get(_('LastName'),'').upper(), info.get(_('FirstName'), '')] if n )
+			externalFields = [f if f != _('LastName') else _('Name') for f in externalFields if f != _('FirstName')]
+			externalInfo = { num : externalInfo[num].copy() for num in nums }
+			for num, info in externalInfo.iteritems():
+				info[_('Name')] = GetName(info)
+				try:
+					del info[_('LastName')]
+				except:
+					pass
+				try:
+					del info[_('FirstName')]
+				except:
+					pass
 			
+		# Add the headers.
+		for c, f in enumerate(externalFields):
+			self.list.InsertColumn( c+1, f, wx.LIST_FORMAT_RIGHT if f.startswith(_('Bib')) else wx.LIST_FORMAT_LEFT )
+		
 		# Create the data.  Sort by Bib#
 		data = [tuple( num if i == 0 else externalInfo.get(num).get(f, '') for i, f in enumerate(externalFields)) for num in nums]
 		data.sort()
@@ -549,6 +565,10 @@ class GroupInfoPopup( wx.PopupTransientWindow, listmix.ColumnSorterMixin ):
 		# Fixup the Bib number, as autosize gets confused with the graphic.
 		self.list.SetColumnWidth( 0, 64 )
 		self.list.SetFocus()
+		
+		self.SetSize( (10,10) )
+		self.GetSizer().Layout()
+		self.Fit()
 
 class Situation( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
@@ -646,7 +666,9 @@ class Situation( wx.Panel ):
 		pos = self.situation.ClientToScreen( (rect.GetX(), rect.GetY()) )
 		self.groupInfoPopup.Dismiss()
 		self.groupInfoPopup.refresh( groupData )
-		self.groupInfoPopup.Position((pos[0], pos[1]+20), (0, 0))
+		sz = self.groupInfoPopup.GetSize()
+		self.groupInfoPopup.SetSize( (sz[0], 24*(len(groupData)+2)) )
+		self.groupInfoPopup.Position(wx.Point(pos[0], pos[1]+20), wx.Size(0,0))
 		self.groupInfoPopup.Popup()
 	
 	def refresh( self ):
