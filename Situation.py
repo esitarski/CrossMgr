@@ -597,6 +597,7 @@ class Situation( wx.Panel ):
 		self.timeSlider = wx.Slider( self, style=wx.HORIZONTAL )
 		self.timeSlider.SetMin( 0 )
 		self.timeSlider.SetMax( 10000 )
+		self.timeSlider.SetPageSize( 1 )
 		self.timeSlider.Bind( wx.EVT_SCROLL, self.timeScroll )
 		
 		self.timeSlider.SetValue( self.timeSlider.GetMax() )
