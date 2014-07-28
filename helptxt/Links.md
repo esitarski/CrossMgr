@@ -16,6 +16,7 @@
 [Actions]:			Actions.html
 [Record]:			Record.html
 [Results]:			Results.html
+[Situation]:		Situation.html
 [History]:			History.html
 [RiderDetail]:		RiderDetail.html
 [Chart]:			Chart.html

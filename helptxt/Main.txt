@@ -27,6 +27,7 @@ Get started with CrossMgr now!
 * [Recommendations][]
 * [Categories][]
 * [Properties][]
+* [Situation][]
 
 ## [Para-Cycling][]
 

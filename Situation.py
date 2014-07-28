@@ -515,10 +515,15 @@ class GroupInfoPopup( wx.PopupTransientWindow, listmix.ColumnSorterMixin ):
 				externalInfo = None
 				return
 			
-		# Get the bibs.
+		# Get the bibs and laps down.
 		nums = []
+		lapsDown = {}
 		for i, (gap, info) in enumerate(groupInfo):
-			nums.append( int(info.split()[0]) )
+			fields = info.split()
+			num = int( fields[0] )
+			if fields[-1].startswith(u'(') and fields[-1].endswith(u')'):
+				lapsDown[num] = fields[-1][1:-1]
+			nums.append( num )
 		
 		# Create an artificial external info if we don't have a spreadsheet.
 		if externalInfo is None:
@@ -531,14 +536,17 @@ class GroupInfoPopup( wx.PopupTransientWindow, listmix.ColumnSorterMixin ):
 			externalInfo = { num : externalInfo[num].copy() for num in nums }
 			for num, info in externalInfo.iteritems():
 				info[_('Name')] = GetName(info)
-				try:
-					del info[_('LastName')]
-				except:
-					pass
-				try:
-					del info[_('FirstName')]
-				except:
-					pass
+		
+		# Add the laps down if necessary.
+		LapsDown = 'LapsDn'
+		if lapsDown:
+			try:
+				externalFields.insert( externalFields.index(_('Name')) + 1, LapsDown )
+			except ValidError:
+				externalFields.append( LapsDown )
+			
+			for num, info in externalInfo.iteritems():
+				info[LapsDown] = lapsDown.get(num, u'')
 			
 		# Add the headers.
 		for c, f in enumerate(externalFields):
