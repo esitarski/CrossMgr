@@ -233,7 +233,7 @@ def GetResultsCore( category ):
 					lastTime = 0.0
 			
 			status = Finisher if rider.status in rankStatus else rider.status
-			if isTimeTrial and not lastTime:
+			if isTimeTrial and not lastTime and rider.status == Finisher:
 				status = NP
 			rr = RiderResult(	rider.num, status, lastTime,
 								riderCategory.fullname,
