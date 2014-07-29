@@ -159,7 +159,7 @@ class SituationPanel(wx.PyPanel):
 		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
 		self.Bind(wx.EVT_SIZE, self.OnSize)
 		
-		self.clickHandler = None
+		self.groupClickHandler = None
 		self.Bind(wx.EVT_LEFT_UP, self.OnMouseUp )
 		
 	def SetData( self, gaps, tAfterLeader=None, title=None ):
@@ -173,7 +173,7 @@ class SituationPanel(wx.PyPanel):
 		self.Refresh()
 	
 	def SetClickHandler( self, handler=None ):
-		self.clickHandler = handler
+		self.groupClickHandler = handler
 		
 	def SetZoom( self, zoom ):
 		self.zoom = zoom
@@ -188,15 +188,17 @@ class SituationPanel(wx.PyPanel):
 		event.Skip()
 		
 	def OnMouseUp( self, event ):
-		if not self.clickHandler:
+		if not self.groupClickHandler:
 			return
 		
 		x = event.GetX()
 		y = event.GetY()
 		for i, (group, gRect) in enumerate(self.groupRectList):
 			if gRect.ContainsXY( x, y ):
-				self.clickHandler( self, rect=gRect, groupData=self.groupFullData[i] )
-				break
+				self.groupClickHandler( self, rect=gRect, groupInfo=self.groupFullData[i] )
+				return
+		
+		self.groupClickHandler( self, rect=None, groupInfo=None )
 		
 	def OnEraseBackground(self, event):
 		# This is intentionally empty, because we are using the combination
@@ -260,6 +262,9 @@ class SituationPanel(wx.PyPanel):
 				group.insert( 0, [group[0][0], u'{} {} {}'.format(i, formatTimeGap(group[0][0]), groupSize)] )
 		
 		fontHeight = height / 40
+		if fontHeight == 0:
+			return
+
 		font = wx.FontFromPixelSize( wx.Size(0,fontHeight), wx.DEFAULT, wx.NORMAL, wx.NORMAL )
 		dc.SetFont( font )
 		spaceWidth, fontHeight = dc.GetTextExtent( u'0 0' )
@@ -472,9 +477,9 @@ class AutoWidthListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 		wx.ListCtrl.__init__(self, parent, ID, pos, size, style)
 		listmix.ListCtrlAutoWidthMixin.__init__(self)
 
-class GroupInfoPopup( wx.PopupTransientWindow, listmix.ColumnSorterMixin ):
+class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 	def __init__( self, parent ):
-		wx.PopupTransientWindow.__init__( self, parent=parent, style=wx.SIMPLE_BORDER )
+		wx.Panel.__init__( self, parent=parent, style=wx.BORDER_SUNKEN )
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		
 		self.il = wx.ImageList(16, 16)
@@ -490,7 +495,6 @@ class GroupInfoPopup( wx.PopupTransientWindow, listmix.ColumnSorterMixin ):
 		self.list.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
 		
 		sizer.Add( self.list, 1, flag=wx.EXPAND|wx.ALL, border=4 )
-		
 		self.SetSizer( sizer )
 		
 	def GetListCtrl( self ):
@@ -513,7 +517,6 @@ class GroupInfoPopup( wx.PopupTransientWindow, listmix.ColumnSorterMixin ):
 			except:
 				externalFields = [ _('Bib#') ]
 				externalInfo = None
-				return
 			
 		# Get the bibs and laps down.
 		nums = []
@@ -573,80 +576,92 @@ class GroupInfoPopup( wx.PopupTransientWindow, listmix.ColumnSorterMixin ):
 			
 		# Fixup the Bib number, as autosize gets confused with the graphic.
 		self.list.SetColumnWidth( 0, 64 )
-		self.list.SetFocus()
-		
-		self.SetSize( (10,10) )
-		self.GetSizer().Layout()
-		self.Fit()
-		
-		dc = wx.WindowDC( self.list )
-		self.listHeight = int(dc.GetTextExtent( u'00' )[1] * 1.15 * (len(data) + 4))
-		
 
-class Situation( wx.Panel ):
+class TopPanel( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		super(Situation, self).__init__( parent, id )
+		super(TopPanel, self).__init__( parent, id, style=wx.BORDER_SUNKEN )
 		
-		self.tCur = None
-		
-		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
 		self.categoryLabel = wx.StaticText( self, label = _('Category:') )
 		self.categoryChoice = wx.Choice( self )
-		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
-		
-		self.hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
-		self.hbs.Add( self.categoryChoice, flag=wx.ALL, border=4 )
 		
 		self.zoomSlider = wx.Slider( self, style=wx.VERTICAL|wx.SL_INVERSE )
 		self.zoomSlider.SetMin( 0 )
 		self.zoomSlider.SetMax( 50 )
-		self.zoomSlider.Bind( wx.EVT_SCROLL, self.zoomScroll )
 		
 		self.timeSlider = wx.Slider( self, style=wx.HORIZONTAL )
 		self.timeSlider.SetMin( 0 )
 		self.timeSlider.SetMax( 10000 )
 		self.timeSlider.SetPageSize( 1 )
-		self.timeSlider.Bind( wx.EVT_SCROLL, self.timeScroll )
-		
 		self.timeSlider.SetValue( self.timeSlider.GetMax() )
 		
 		self.situation = SituationPanel( self )
-		self.situation.SetClickHandler( self.groupClick )
 		
-		self.groupInfoPopup = GroupInfoPopup( self )
-		
-		vs = wx.BoxSizer( wx.VERTICAL )
+		#--------------------------------------------------------------------
+		# Layout the top panel.
+		#
+		vsTop = wx.BoxSizer( wx.VERTICAL )
 		
 		# Add the Category selector.
-		vs.Add( self.hbs, 0, flag=wx.ALL, border=4 )
+		hbs = wx.BoxSizer( wx.HORIZONTAL )
+		hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		hbs.Add( self.categoryChoice, flag=wx.ALL, border=4 )
+		vsTop.Add( hbs, 0, flag=wx.ALL, border=4 )
+		
+		self.SetSizer( vsTop )
 		
 		# Add the time zoom.  Add a spacer so it lines up on the left.
 		hsTS = wx.BoxSizer( wx.HORIZONTAL )
 		hsTS.AddSpacer( self.zoomSlider.GetSize()[0] )
 		hsTS.Add( self.timeSlider, 1, flag=wx.EXPAND )
-		vs.Add( hsTS, 0, flag=wx.EXPAND )
+		vsTop.Add( hsTS, 0, flag=wx.EXPAND )
 		
 		# Add the zoom slider and the situation display.
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.zoomSlider, 0, flag=wx.EXPAND )
 		hs.Add( self.situation, 1, flag=wx.EXPAND )
 		
-		vs.Add( hs, 1, flag=wx.EXPAND )
+		vsTop.Add( hs, 1, flag=wx.EXPAND )
+		self.SetSizer( vsTop )
+
+class Situation( wx.Panel ):
+	def __init__( self, parent, id = wx.ID_ANY ):
+		super(Situation, self).__init__( parent, id )
 		
-		self.SetSizer( vs )
+		splitter = wx.SplitterWindow( self, wx.ID_ANY, style = wx.SP_3DSASH )
+		wx.CallAfter( splitter.SetSashPosition, 1000 )
+		
+		#--------------------------------------------------------------------
+		# Create components for the top level.
+		#
+		self.topPanel = TopPanel( splitter )
+		self.topPanel.categoryChoice.Bind(wx.EVT_CHOICE, self.doChooseCategory)
+		self.topPanel.zoomSlider.Bind( wx.EVT_SCROLL, self.zoomScroll )
+		self.topPanel.timeSlider.Bind( wx.EVT_SCROLL, self.timeScroll )
+		self.topPanel.situation.SetClickHandler( self.groupClick )
+
+		self.groupInfoPopup = GroupInfoPopup( splitter )
+		
+		#--------------------------------------------------------------------
+		splitter.SetMinimumPaneSize( 100 )
+		splitter.SplitHorizontally( self.topPanel, self.groupInfoPopup, -100 )
+		
+		overallSizer = wx.BoxSizer( wx.VERTICAL )
+		overallSizer.Add( splitter, 1, flag=wx.EXPAND|wx.ALL, border=4 )
+		self.SetSizer( overallSizer )
+		
 		wx.CallAfter( self.timeScroll )
-		wx.CallAfter( self.situation.Refresh )
+		wx.CallAfter( self.topPanel.situation.Refresh )
 	
 	def doChooseCategory( self, event ):
-		Model.setCategoryChoice( self.categoryChoice.GetSelection(), 'situationCategory' )
+		Model.setCategoryChoice( self.topPanel.categoryChoice.GetSelection(), 'situationCategory' )
 		self.refresh()
 	
 	def zoomScroll( self, event ):
-		zoom = 1.0 + (self.zoomSlider.GetValue() / float(self.zoomSlider.GetMax())) * 5.0
-		self.situation.SetZoom( zoom )
+		zoom = 1.0 + (self.topPanel.zoomSlider.GetValue() / float(self.topPanel.zoomSlider.GetMax())) * 5.0
+		self.topPanel.situation.SetZoom( zoom )
 		
 	def timeAtMax( self ):
-		return self.timeSlider.GetValue() == self.timeSlider.GetMax()
+		return self.topPanel.timeSlider.GetValue() == self.topPanel.timeSlider.GetMax()
 		
 	def timeScroll( self, event=None ):
 		if self.timeAtMax():
@@ -657,11 +672,11 @@ class Situation( wx.Panel ):
 		if not race:
 			return
 		
-		category = FixCategories( self.categoryChoice, getattr(race, 'situationCategory', 0) )
+		category = FixCategories( self.topPanel.categoryChoice, getattr(race, 'situationCategory', 0) )
 		tMax = GetRaceTMax(category) or 0.01
 		
-		t = tMax * (float(self.timeSlider.GetValue()) / float(self.timeSlider.GetMax()))
-		self.situation.SetData( *GetSituationGaps(category=category, t=t) )
+		t = tMax * (float(self.topPanel.timeSlider.GetValue()) / float(self.topPanel.timeSlider.GetMax()))
+		self.topPanel.situation.SetData( *GetSituationGaps(category=category, t=t) )
 	
 	def timerUpdate( self ):
 		if not self.timeAtMax():
@@ -674,21 +689,14 @@ class Situation( wx.Panel ):
 		if not race:
 			return
 		
-		category = FixCategories( self.categoryChoice, getattr(race, 'situationCategory', 0) )
-		self.situation.SetData( *GetSituationGaps(category=category, t=None) )
+		category = FixCategories( self.topPanel.categoryChoice, getattr(race, 'situationCategory', 0) )
+		self.topPanel.situation.SetData( *GetSituationGaps(category=category, t=None) )
 		
 		if race and race.isRunning():
 			wx.CallLater( 1001-datetime.datetime.now().microsecond//1000, self.timerUpdate )
 	
-	def groupClick( self, situation, rect, groupData ):
-		pos = self.situation.ClientToScreen( (rect.GetX(), rect.GetY()) )
-		self.groupInfoPopup.Dismiss()
-		self.groupInfoPopup.refresh( groupData )
-		sz = self.groupInfoPopup.GetSize()
-		#self.groupInfoPopup.SetSize( (sz[0], 24*(len(groupData)+2)) )
-		self.groupInfoPopup.SetSize( (sz[0], self.groupInfoPopup.listHeight) )
-		self.groupInfoPopup.Position(wx.Point(pos[0], pos[1]+20), wx.Size(0,0))
-		self.groupInfoPopup.Popup()
+	def groupClick( self, situation, rect, groupInfo ):
+		self.groupInfoPopup.refresh( groupInfo or [] )
 	
 	def refresh( self ):
 		self.timeScroll()
