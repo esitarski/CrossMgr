@@ -504,11 +504,11 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 		return (self.sm_dn, self.sm_up)
 		
 	def refresh( self, groupInfo ):
-		self.list.ClearAll()
-		
 		potentialDNS = {}
 		with Model.LockRace() as race:
 			if not race:
+				self.list.ClearAll()
+				self.list.DeleteAllColumns()
 				return
 				
 			try:
@@ -517,7 +517,11 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 			except:
 				externalFields = [ _('Bib#') ]
 				externalInfo = None
-			
+		
+		self.Show( False )
+		self.list.ClearAll()
+		self.list.DeleteAllColumns()
+		
 		# Get the bibs and laps down.
 		nums = []
 		lapsDown = {}
@@ -576,6 +580,7 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 			
 		# Fixup the Bib number, as autosize gets confused with the graphic.
 		self.list.SetColumnWidth( 0, 64 )
+		self.Show( True )
 
 class TopPanel( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
@@ -699,7 +704,11 @@ class Situation( wx.Panel ):
 		self.groupInfoPopup.refresh( groupInfo or [] )
 	
 	def refresh( self ):
-		self.timeScroll()
+		race = Model.race
+		if not race:
+			return
+		category = FixCategories( self.topPanel.categoryChoice, getattr(race, 'situationCategory', 0) )
+		self.topPanel.situation.SetData( *GetSituationGaps(category=category, t=None) )
 	
 if __name__ == '__main__':
 	Utils.disable_stdout_buffering()
