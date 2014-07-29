@@ -23,7 +23,7 @@ This screen is useful for understanding the race dynamics, how groups formed, wh
 Selects the Category of the results.  Category "All" shows results as if all riders were in one category.
 
 ## Click on a Group
-Opens a window showing full details of all riders in the group.  Close this window by clicking on something else, or another group.
+Shows full details of the group in the bottom pane.
 
 ## Time Scroll
 Scroll time by using the slider at the top of the screen.  While a race is running, if the time is scrolled is all the way to the right, the screen will update in real-time.
