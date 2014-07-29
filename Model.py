@@ -1030,6 +1030,12 @@ class Race( object ):
 		self.isChangedFlag = changed
 		if changed:
 			memoize.clear()
+			
+	def raceTimeToClockTime( self, t=None ):
+		if self.startTime is None:
+			return None
+		t = self.lastRaceTime() if t is None else t
+		return t + self.startTime.hour*60.0*60.0 + self.startTime.minute*60.0 + self.startTime.second + self.startTime.microsecond/1000000.0
 		
 	def isRunning( self ):
 		return self.startTime is not None and self.finishTime is None
