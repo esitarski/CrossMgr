@@ -3579,6 +3579,8 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 	var groupGapColour = '#FFFFFF';
 	var groupSizeColour = '#99CCFF';
 	var packColour = 'rgb(200,255,200)';
+	var greyPenColour = 'rgb(100,100,100, 0.64)';
+	var greyBrushColour = 'rgb(232,232,232)';
 	var blackColour = '#000000';
 	var whiteColour = '#FFFFFF';
 	
@@ -3624,9 +3626,7 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 		this.groupRectList = [];
 		this.groupFullData = [];
 		
-		var greyPenColour = 'rgb(100,100,100, 0.64)';
 		function SetGreyPen() { dc.strokeStyle = greyPenColour; dc.lineWidth = 1; }
-		var greyBrushColour = 'rgb(232,232,232)';
 			
 		// Partition the gaps into groups separated by at least one second.
 		var maxGapSec = 20.0*60.0*60.0;	// Ignore gaps that are too great.
@@ -4023,7 +4023,7 @@ function SelectCategory( i )
 	SetCategoryResults();
 	animationObj.Refresh();
 	RefreshRaceChart();
-	situationObj.Refresh();
+	SituationRefresh();
 }
 
 function setCategory( catName )
@@ -4438,6 +4438,7 @@ function SetSituationTime( value ) {
 		
 	if( value == undefined )
 		value = 10000;
+	value = parseInt( value );
 		
 	if( situationTimer != null ) {
 		clearTimeout( situationTimer );
@@ -4462,6 +4463,10 @@ function SetSituationTime( value ) {
 	
 	if( value == 10000 && raceIsRunning )
 		situationTimer = setTimeout( SetSituationTime, 1001 - (new Date()).getTime() % 1000 );
+}
+function SituationRefresh() {
+	var timeRange = document.getElementById('idTimeRange');
+	SetSituationTime( timeRange.value );
 }
 
 function onLoad()
