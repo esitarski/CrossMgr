@@ -15,7 +15,7 @@ from ReadSignOnSheet	import ResetExcelLinkCache, SyncExcelLink
 from GetResults import GetResults
 from FixCategories import FixCategories, SetCategory
 
-def formatTimeGap( t ):
+def shortFormatTimeGap( t ):
 	tStr = Utils.formatTimeGap( t )
 	if tStr.startswith( "0'0" ):
 		tStr = tStr[3:]
@@ -263,7 +263,7 @@ class SituationPanel(wx.PyPanel):
 			if i == 0:
 				group.insert( 0, [group[0][0], u'\u2714 \u200B {}'.format(groupSize)] )
 			else:
-				group.insert( 0, [group[0][0], u'{} {} {}'.format(i, formatTimeGap(group[0][0]), groupSize)] )
+				group.insert( 0, [group[0][0], u'{} {} {}'.format(i, shortFormatTimeGap(group[0][0]), groupSize)] )
 		
 		fontHeight = height / 40
 		if fontHeight == 0:
@@ -457,7 +457,7 @@ class SituationPanel(wx.PyPanel):
 			groupPrev, groupNext = groups[iGroup-1:iGroup+1]
 			tPrev, tNext = groupPrev[-1][0], groupNext[0][0]
 			xPrev, xNext = xLeft + tPrev * xScale, xLeft + tNext * xScale
-			sepStr = formatTimeGap(tNext - tPrev)
+			sepStr = shortFormatTimeGap(tNext - tPrev)
 			tWidth = dc.GetTextExtent( sepStr )[0]
 			if xNext - xPrev < tWidth * 1.25:
 				continue
@@ -508,7 +508,6 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 		return (self.sm_dn, self.sm_up)
 		
 	def refresh( self, groupInfo ):
-		potentialDNS = {}
 		with Model.LockRace() as race:
 			if not race:
 				self.list.ClearAll()
@@ -660,7 +659,7 @@ class BottomPanel( wx.Panel ):
 		if groupInfo:
 			self.title.SetLabel( u'{}     Gap: {}     Size: {}     Race: {}     Clock: {}'.format(
 				u'Chase Group: {}'.format(groupIndex) if groupIndex else u'Leaders: \u2714',
-				formatTimeGap(groupInfo[0][0]) if groupIndex else u' ',
+				shortFormatTimeGap(groupInfo[0][0]) if groupIndex else u' ',
 				len(groupInfo),
 				Utils.formatTime(raceTime),
 				Utils.formatTime(clockTime) if clockTime is not None else u'',

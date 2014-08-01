@@ -1,0 +1,4740 @@
+<!DOCTYPE html>
+<html>
+<!--
+	Html Template for Race Animation.
+	Generated from CrossMgr software.
+	Copyright 2011-2014, Edward Sitarski
+	For details, see sites.google.com/site/CrossMgrSoftware
+-->
+<head>
+<meta charset="UTF-8" author="Edward Sitarski" copyright="Edward Sitarski, 2011-2014" generator="CrossMgr" />  
+<title id="idTitle">CrossMgr Race Results by Edward Sitarski</title>	<!-- Don't change this text! -->
+<style type="text/css">
+body { font-family: sans-serif; }
+
+#idRaceName {
+	font-size: 200%;
+	font-weight: bold;
+}
+
+#idImgHeader {
+	box-shadow: 4px 4px 4px #888888;
+}
+
+.smallfont	{ font-size: 75%; }
+.bigfont	{ font-size: 120%; }
+.biggerFont	{ font-size: 130%; }
+
+.hidden { display: none; }
+
+div label input {
+   margin-right:220px;
+}
+
+#display_menu {
+  background-color: #FFFFFF;
+  font: 18px sans-serif;
+  height: 30px;
+  line-height: 30px;
+  margin-bottom: 9px;
+  margin-top: 20px;
+}
+#display_menu .heading {
+  color: gray;
+  display: inline-block;
+  height: 30px;
+  line-height: 30px;
+  padding: 0 10px; }
+#display_menu .buttonset {
+  display: inline-block;
+}
+#display_menu input[type=radio], #display_menu input[type=checkbox] {
+  display: none;
+}
+#display_menu .buttonset input[type=radio]:checked + label {
+  background-color: #7FE57F;
+  color: black;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #000;
+}
+#display_menu .buttonset input[type=checkbox]:checked + label {
+  background-color: #4FB54F;
+  color: white;
+}
+#display_menu .buttonset label {
+  background-color: #EFEFEF;
+  border-radius: 5px;
+  display: inline-block;
+  height: 30px;
+  line-height: 30px;
+  padding: 0 8px;
+}
+#display_menu .buttonset label:hover {
+  background-color: #E5E5E5;
+}
+
+table.results {
+	font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
+	border-collapse:collapse;
+}
+table.results td, table.results th {
+	font-size:1em;
+	padding:3px 7px 2px 7px;
+	text-align: right;
+}
+table.results th {
+	font-size:1.1em;
+	text-align:right;
+	padding-top:5px;
+	padding-bottom:4px;
+	background-color:#7FE57F;
+	color:#000000;
+}
+table.results tr.odd {
+	color:#000000;
+	background-color:#EAF2D3;
+}
+table.results tr:hover {
+	color:#000000;
+	background-color:#FFFFCC;
+}
+table.results tr.odd:hover {
+	color:#000000;
+	background-color:#FFFFCC;
+}
+
+table.results tr td.fastest-lap {
+	background-image: linear-gradient(
+		#FF6A7F, #FF9EAF 25%, #FF6A7F
+	);
+}
+table.results tr td.slowest-lap {
+	background-image: linear-gradient(
+			#4496F7, #9CC7FB 25%, #4496F7
+	);
+}
+
+table.results tr td.highlight {
+	font-size: 120%;
+	font-weight: bold;
+}
+
+table.results td {
+	border-top:1px solid #98BF21;
+}
+
+table.results td.noborder {
+	border-top:0px solid #98BF21;
+}
+
+table.results td#idNonNumeric, table.results th#idNonNumeric {
+	text-align:left;
+}
+
+table.results tr td.fastest {
+	color:#000000;
+	background-color:#80FF80;
+}
+
+@media print { .noprint { display: none; } }
+
+</style>
+</head>
+
+<script type="text/javascript">
+
+// Results and race data.
+var payload = null;
+var raceName = null;
+var organizer = null;
+var timestamp = null;
+var email = null;
+var raceIsRunning = null;
+var data = null;
+var catDetails = null;
+var isTimeTrial = null;
+var catDetailsByName = {};
+var lapDetails = null;
+var hideDetails = null;		// If true, showDetails option will not be available.
+var showDetails = false;	// If true, show full lap details in the Chart.
+var version = null;
+var raceNotes = null;
+
+// Control information about the animation.
+var canvas = null;
+var r = 100.0;				// The key track size dimension
+var t = 0.0;				// Current race time of the simulation.
+var tLast = 0.0;			// Last time of simulation.
+var tDelta = 0.0;			// Difference in time from last frame.
+var tMax = 0.0;				// Maximum time in the race.
+var laneMax = 8;			// Maximum number of lanes on the track.
+var lapCur = 0;				// Current lap of the race.
+var framesPerSecond = 32;	// Maximum number of frames per seconds to show.
+var speedup = 1.0;			// Factor that animation is sped up over real time.
+var categories = [];		// Array of unique categories in the data.
+var categoryCur = 'All';	// Current selected category.
+var animationSeconds = 90;	// Default animation seconds.
+var suspendAnimation = false;	// Turn on/off animation without resetting the time.
+var numsToWatchStr = null;	// List of numbers to highlight other than the winners.
+var categoryStr = null;		// Current category.
+var numsToWatch = {};		// Set of numbers to watch.
+var resultsDiv = null;
+var showLapsFrequency = -1;	// How often to show laps
+var lapDataOption = 0;		// if 0, show race times, if 1, show lap times, if 2, show gap times.
+var loopContinuously = true;// If true, the simulation will repeat from the beginning.
+var fontMult = 1.0;			// font adjust factor.
+var showTimeDecimals = false;
+var displayUnits = 'km';
+var reverseDirection = null;	// Reverse the direction of the riders.
+var finishTop = null;			// Finish on the top rather than the bottom.
+var tRace = null;				// Race time (if the race is running).
+var raceStartTime = null;		// In seconds from midnight.
+var animationObj = null;		// Animation object to draw the course (set to TrackAnimation or GeoAnimation).
+var situationObj = null;
+var catUpdateTime = {};			// Time of next update by category.
+var rfid = null;				// True if data was collected by RFID.
+var gpsPoints = null;			// gps points data for the course [[x,y,d],...].
+var gpsTotalElevationGain = null;	// total elevation gain on the course.
+var gpsAltigraph = null;		// Altigraph of the course.
+var gpsIsPointToPoint = null;	// Flag whether course is point-to-point or a loop.
+var courseCoordinates = null;	// course coordinates as an array of lon, lat pairs.
+var virtualRideTemplate = null;	// template to generate virtual ride page.
+var courseViewerTemplate = null;// template to show course on a map.
+var infoFields = null;			// Potential rider fields to show in the results.
+var langCur = null;				// Display language of the page.
+
+var gpsPointsTest = [[2173,845,181],[2354,852,85],[2440,853,85],[2526,855,85],[2611,857,85],[2697,858,85],[2783,860,85],[2868,861,99],[2968,861,99],[3067,861,99],[3167,861,149],[3316,868,89],[3406,876,89],[3496,883,89],[3585,890,89],[3675,897,89],[3765,904,97],[3848,954,95],[3895,1037,99],[3903,1136,107],[3901,1244,93],[3898,1337,126],[3897,1463,90],[3897,1553,90],[3897,1643,90],[3897,1733,94],[3953,1809,109],[4024,1725,90],[4080,1654,139],[4220,1657,65],[4280,1682,115],[4381,1739,73],[4442,1780,106],[4535,1831,100],[4629,1867,88],[4715,1888,124],[4822,1952,104],[4885,2035,57],[4924,2077,91],[5011,2107,99],[5109,2096,107],[5205,2048,121],[5296,1967,72],[5345,1914,96],[5422,1858,117],[5533,1819,88],[5621,1829,107],[5729,1832,128],[5857,1821,55],[5912,1813,92],[6005,1809,111],[6113,1840,80],[6136,1916,141],[6131,2058,92],[6088,2140,104],[6003,2201,66],[5945,2231,102],[5851,2274,102],[5759,2318,101],[5692,2394,73],[5684,2467,152],[5731,2613,65],[5755,2673,100],[5808,2758,97],[5876,2828,86],[5918,2904,74],[5865,2956,90],[5787,3002,138],[5650,3023,82],[5572,3048,74],[5527,3108,97],[5515,3205,101],[5505,3305,94],[5441,3375,98],[5367,3440,113],[5350,3552,93],[5386,3638,94],[5413,3729,90],[5374,3811,102],[5343,3909,116],[5316,4022,88],[5302,4110,84],[5330,4189,100],[5261,4262,85],[5212,4192,93],[5246,4105,90],[5282,4022,114],[5316,3913,99],[5340,3817,75],[5308,3747,127],[5258,3630,94],[5261,3536,94],[5263,3441,94],[5266,3346,94],[5268,3252,94],[5270,3157,94],[5273,3063,94],[5275,2968,94],[5278,2874,94],[5280,2779,94],[5282,2684,94],[5285,2590,94],[5287,2495,58],[5238,2464,103],[5229,2567,96],[5224,2663,96],[5219,2760,96],[5215,2856,96],[5210,2952,96],[5205,3048,96],[5200,3144,96],[5195,3241,86],[5154,3317,141],[5133,3177,93],[5138,3084,93],[5143,2991,93],[5148,2898,93],[5153,2805,93],[5158,2712,93],[5163,2619,93],[5168,2526,93],[5174,2433,103],[5170,2329,144],[5027,2318,83],[4943,2315,83],[4860,2313,83],[4777,2310,90],[4695,2346,89],[4762,2405,105],[4867,2415,87],[4954,2421,87],[5041,2427,77],[5028,2503,123],[4905,2509,83],[4822,2502,83],[4739,2495,87],[4683,2562,103],[4683,2666,97],[4684,2763,97],[4685,2860,97],[4686,2958,97],[4687,3055,97],[4687,3152,97],[4688,3249,82],[4646,3320,144],[4613,3180,91],[4614,3088,91],[4616,2997,91],[4617,2905,91],[4618,2814,91],[4620,2722,91],[4621,2631,91],[4623,2539,60],[4566,2561,102],[4554,2663,96],[4544,2759,96],[4534,2855,96],[4524,2951,96],[4514,3046,96],[4504,3142,96],[4494,3238,89],[4440,3309,102],[4342,3279,101],[4247,3244,86],[4166,3213,107],[4100,3128,107],[4039,3040,94],[3983,2964,94],[3927,2887,94],[3871,2811,94],[3815,2735,94],[3759,2658,114],[3686,2570,96],[3589,2564,91],[3498,2564,91],[3407,2563,69],[3461,2518,89],[3527,2457,98],[3495,2364,95],[3401,2383,84],[3327,2424,52],[3324,2372,80],[3358,2299,82],[3367,2217,95],[3273,2198,96],[3233,2285,90],[3198,2369,63],[3174,2309,88],[3163,2222,88],[3152,2134,130],[3028,2093,81],[2961,2047,90],[2876,2078,129],[2764,2143,59],[2717,2179,98],[2655,2256,102],[2612,2349,113],[2580,2458,87],[2558,2542,103],[2545,2645,90],[2512,2730,122],[2432,2822,82],[2355,2854,89],[2359,2944,89],[2374,3032,94],[2463,3065,72],[2535,3068,114],[2597,3164,88],[2605,3252,97],[2526,3309,148],[2377,3323,84],[2293,3329,84],[2208,3335,84],[2124,3341,84],[2039,3347,84],[1955,3352,121],[1833,3356,94],[1739,3357,94],[1644,3358,94],[1550,3360,94],[1455,3361,94],[1360,3362,129],[1231,3375,88],[1143,3386,88],[1056,3398,109],[947,3389,93],[921,3299,83],[905,3216,100],[863,3126,107],[758,3107,113],[689,3017,65],[685,2951,135],[818,2924,63],[882,2921,92],[975,2922,77],[1035,2874,99],[1040,2775,146],[1035,2628,80],[1028,2548,80],[1021,2467,132],[1010,2335,86],[1004,2249,86],[997,2163,86],[991,2077,106],[976,1972,107],[944,1869,82],[882,1815,137],[862,1679,77],[860,1602,77],[857,1525,99],[833,1428,104],[793,1332,92],[737,1258,141],[648,1368,58],[615,1415,129],[567,1535,94],[538,1626,101],[513,1724,70],[525,1793,81],[499,1871,143],[361,1909,69],[292,1899,69],[222,1889,95],[134,1851,98],[63,1782,111],[0,1691,80],[14,1612,88],[55,1533,117],[143,1455,93],[200,1380,87],[255,1313,121],[278,1193,76],[302,1121,137],[400,1025,54],[436,985,105],[534,944,109],[642,961,89],[727,935,86],[788,874,85],[874,872,96],[966,845,100],[1042,779,113],[1138,719,76],[1144,642,95],[1116,551,90],[1071,474,114],[1014,374,86],[987,292,95],[962,199,134],[898,81,81],[852,15,69],[920,0,64],[970,39,99],[1036,114,128],[1118,213,86],[1174,279,86],[1230,345,86],[1286,411,112],[1364,491,132],[1455,588,56],[1491,631,120],[1540,741,72],[1542,813,106],[1476,896,85],[1432,970,120],[1520,1052,71],[1588,1074,99],[1681,1109,102],[1728,1018,99],[1700,922,97],[1786,875,87],[1873,863,84],[1956,849,100],[2056,837,117]];
+
+var checkeredFlag = new Image();
+checkeredFlag.src =
+"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAgCAYAAAD5VeO1AAAEsklEQVRIibWVX0jTaxjHH//029lcVqvM0taNGUHNinGOnkGohJWtQ4KaFEVySlSSUixzTFwZxYnROv2ByisLgwqCIRRhF4EcKsjgeBrDgUqYDhvLJtoyt33OTZPCKLX83L0Xz+f78uV5eUVmiM/na/b7/TUznfsuL1++PM4nbt682V5VVbXkp4jLy8uP6/V6Hj58yPPnz1mwYAEGg2Hs6NGjuT8kttvtxuXLl4dFhNWrV3PhwgXi4uIQEaxW65jP58uflbijo2Phhw8f/m1tbSUpKYlnz54BcP/+fUpLSwmFQkQikbDX6z1ps9lipy222Wyxbre7LdpzU1MTPT09AHg8HrZs2YLb7QagsbGRnJyc/rq6Ov205Lt3725ftWoVT5484erVq4gIS5cuxel0YjQaERF0Oh3Xr1+frGnjxo3B3t5ewzfFTU1NtfPmzUNEKCgowGKxEBMTQ3x8PE6nk4aGBmJjYzGZTLx//57z58+jUqm4ceMGoVAo8ObNm+Kvint7ew0TExOBy5cvk5GRgc/nA+DWrVs4HI5oS7S0tEzWAnDt2jX8fj8Aw8PDrVPEJ06cSHv9+nUPwOjoKBUVFQwMDADgdDoxmUy8evWKjx8/snXrVtavX4/L5eLx48eo1WrS09Pp6OhwtbW1ab4QX7x4UTGZTENr166lq6uL/fv3IyLo9Xru3r2LTqdDRFixYgV2ux0RQUTIysqisrISESE1NTVcU1Pz+5RbHzt27EF04NSpU+zduxcRISUlBY/HQ1VVFSLCkSNHCIVCNDY2snjxYrq6uohEIpw9ezZ8+PDhyilir9d7IBQKcfr0afbs2UMkEgHAbrfz6NGjyV6vXLnCyMjI5PnMmTOMjo4SiUTwer1TxQ0NDcXv3r0bA+ju7ubgwYMEAgEA6urqyMvLY2hoiP7+flauXElmZiZ9fX2cO3cOEWHDhg08ffq0ZYq4trbWoNfrJ4xGIy9evMBgMCAiGAwGmpubiYmJQUTIyMigoqJisueysjJ27tyJiJCZmemvrq7+ZYr8D7O5Mz4+HkVRuHfv3uRATk4Ob9++Zd++fcTFxXHnzh2CwSBlZWVs2rSJkZERJiYmsFqtfovFsm6KWETEYDBo8rdt++fSpUtBgHA4jM1mY3Bw8Iuew+FwdH+pr69nfHycUCg05vF4fv2q+HN27dp1cnBwcGB8fJzs7GwKCwsZHh6mvb0dRVEwm834fD4KCgoQETZv3ozL5TrwXXGU34zG/Jrqam+018LCQnJzcyd7djgcmEwmRISioqKOaYuj6HS6VLPZ3JeSkkJ3dzeBQIDi4mIOHToEQDAYpL6+/j+bzRY/Y7mIyPbt25U/S0tvj42NDQN0dnZisVgIh8MEg0GX2+3WzUr8OTt27Kjt7OwcSEtLQ0QoKSkZd7vdX9+M2bBmzZrsvLw8v6IolJeXW3+aOEpycvISU1bWg/nz56f/dPknYrUajUWjUpnnKkC0anWhWlGOFxUVTf8zngmLtNp1apXKISIL5yZg0aLEBLXasTAh4duf8Y+QoFbXqBWlZM4CEjWafK1GYxWR2b3a7wYkJqapVaq/tVpt0pwELFu2TJOgVv8lIskiIv8DQ4HqhmfkzxMAAAAASUVORK5CYII=";
+
+// Rider colours given out as remainder of the number.
+var colours = [
+	'rgb(255, 0, 0)',
+	'rgb(0, 0, 255)',
+	'rgb(255, 255, 0)',
+	'rgb(255, 0, 255)',
+	'rgb(0, 255, 255)'
+];
+
+// Colours of top three riders.
+var topThreeColours = [
+	'rgb(255,215,0)',
+	'rgb(230,230,230)',
+	'rgb(205,133,63)',
+	'rgb(128,128,128)',
+	'rgb(128,128,128)'
+];
+
+function isCanvasSupported() {
+	var elem = document.createElement('canvas');
+	return !!(elem.getContext && elem.getContext('2d'));
+}
+var canvasSupported = true;
+
+// Convenience function to get the last element in an array.
+Array.prototype.back = function() {
+	return this[this.length-1];
+};
+
+Array.prototype.binSearch = function( v ) {
+	var L = this.length, i = -1, m;
+	while( L - i > 1 )
+	{
+		if( this[m = ((L + i)>>1)] < v )
+			i = m;
+		else
+			L = m;
+	}
+	return L;
+}
+
+Array.prototype.swap = function( x, y ) {
+	var tmp = this[x];
+	this[x] = this[y];
+	this[y] = tmp;
+}
+
+// Make a string html safe.
+String.prototype.escapeHTML = function ()
+{                                        
+	var r =                                                               
+		this.replace(/&/g,'&amp;').
+			replace(/>/g,'&gt;').
+			replace(/</g,'&lt;').
+			replace(/"/g,'&quot;').
+			replace(/'/g,'&rsquo;');
+	return r;
+};
+
+// Make a string id safe.
+String.prototype.escapeID = function() {
+	return this.replace(/[&<>"'(){}\[\]!@#$%^* ]/g,'_');
+};
+
+function isEmptyObject( obj ) {
+    for ( var name in obj ) {
+        return false;
+    }
+    return true;
+}
+
+//------------------------------------------------------------------------------------
+var translations = {
+	'languageCode':	['en',				'fr',					'es'],
+	'language':		['English',			'Français',				'Español'],
+	'hello':		['Hello!',			'Bonjour!',				'¡Hola!'],
+	'Email Comments/Suggestions': ['Email Comments/Suggestions', 'Email Commentaires/Suggestions', 'E-mail Comentarios/Sugerencias'],
+	'Powered by':	['Powered by',		'Propulsé par',			'Desarrollado por'],
+	'created':		['created',			'créé',					'creada'],
+	'Refresh':		['Refresh',			'Actualiser',			'Actualizar'],
+	'by':			['by',				'par',					'por'],
+	'at':			['at',				'à',					'en'],
+	'miles':		['miles',			'miles',				'millas'],
+	'Gap':			['Gap',				'Écart',				'Lapso'],
+	'Name':			['Name',			'Nom',					'Nombre'],
+	'LastName':		['Last Name',		'Dernier nom',			'Apellido'],
+	'FirstName':	['First Name',		'Prénom',				'Nombre'],
+	'Team':			['Team',			'Équipe',				'Equipo'],
+	'Category':		['Category',		'Catégorie',			'Categoria'],
+	'Nat.':			['Nat.',			'Nat.',					'Nac.'],
+	'State':		['State',			'État',					'Estado'],
+	'Prov.':		['Prov.',			'Prov.',				'Prov.'],
+	'City':			['City',			'Ville',				'Ciudad'],
+	'License':		['License',			'Licence',				'Licencia'],
+	'Age':			['Age',				'Âge',					'Edad'],
+	'Time':			['Time',			'Temps',				'Tiempo'],
+	'Lap':			['Lap',				'Tour',					'Vuelta'],
+	'lap':			['lap',				'tour',					'vuelta'],
+	'laps':			['laps',			'tours',				'vueltas'],
+	'laps of':		['laps of',			'tours de',				'vueltas de'],
+	'Laps of':		['laps of',			'tours de',				'vuelta de'],
+	'Laps to go':	['laps to go',		'tours à faire',		'vueltas antes de la meta'],
+	'to go':		['to go',			'à faire',				'antes de la meta'],
+	'of':			['of',				'de',					'de'],
+	'1st lap':		['1st lap',			'premier tour',			'primera vuelta'],
+	'more laps of':	['more laps of',	'tours de plus de',		'vueltas más de'],
+	'Estimated':	['Estimated',		'Estimé',				'Estimado'],
+	'Distance':		['distance',		'la distance',			'la distancia'],
+	'Start':		['start',			'au début',				'el comienzo'],
+	'ClockStartTime':	['Clock Start',		"Heure de l'horloge",	'Inicio de reloj'],
+	'StartTime':	['Stopwatch Start',	"Premier chrono",		'Primero tiempo'],
+	'FinishTime':	['Stopwatch Stop',	"Deuxième chrono",		'Segundo tiempo'],
+	'Winner':		['winner',			'gagnant',				'ganador'],
+	'starters':		['starters',		'entrées',				'aperitivos'],
+	'finishers':	['finishers',		'arrivées',				'finalistas'],
+	'Show 100s of Seconds': ['Show 100s of Seconds', 'Afficer 100s de seconds', 'Mostrar 100s de segundos'],
+	'Hide Lap Info':['Hide Lap Info',	'Masquer les infos de tour',	'Ocultar la info de vuelta'],
+	'Show Every Lap':['Show Every Lap',	'Afficher tous les tours', 'Mostrar todas las vueltas'],
+	'Show Every {} Laps': ['Show Every {} Laps','Afficher tous les {} tours', 'Mostrar cada {} vueltas'],
+	'Show:':		['Show:',			'Afficher:',			'Mostrar:'],
+	'All':			['All',				'Tous',					'Todo'],
+	'Lap Times':	['Times',			'Temps',				'Tiempos'],
+	'Race Times':	['Race Times',		'Temps de course',		'Tiempos de carrera'],
+	'Time Gaps':	['Gaps',			"Écarts",				'Diferencia'],
+	'Gap Percents':	['Percent',			'Pour cent',			'Ciento'],
+	'Lap Speed':	['Speed',			'Vitesse',				'Velocidad'],
+	'Projected Time':['Projected Time',	'Temps prévu',			'Tiempo projectada'],
+	'Est. Distance Gap': ['Est. Distance',	"Distance est.", 		'Est. distancia'],
+	'Race Chart':	['Race Chart',		'Tableau de la course',		'Tabla de carrera'],
+	'Show Start Offsets':	['Show Start Offsets',	'Afficher commencer décalages',	'Mostrar empezar a desplazamientos'],
+	'Show Details':	['Show Details',	'Afficher les détails',	'Mostrar los detalles'],
+	'Race Lightning':	['Race Lightning',		"Éclair de course",	'Rayo de carrera'],
+	'Loop Continuously':['Loop Continuously',	'Boucle continue',	'Repetirá continuamente'],
+	'Playback Speed':['Playback Speed',	'Vitesse de lecture',		'Velocidad de reproducción'],
+	'Units:':		['Units:',			'Unités:',					'Unidades:'],
+	'Play':			['Play',			'Lecture',					'Reproducir'],
+	'Rewind':		['Rewind',			'Rembobinez',				'Rebobinar'],
+	'Stop':			['Stop',			'Stop',						'Detener'],
+	'Size':			['Size',			'Taille',					'Ramaño'],
+	'Text':			['Text',			'Texte',					'Texto'],
+	'Highlight Numbers': ['Highlight Numbers', 'Numéros de souligner', 'Números de relieve'],
+	'Track':		['Oval Track',		'Piste oval',				'Pista ovalada'],
+	'GPX':			['GPX Course',		'GPX',						'GPX'],
+	'Apply':		['Apply',			'Appliquer',				'Aplicar'],
+	'Chip Timing':	['Chip Timing',		'RFID Chronométrage',		'Cronometraje RFID'],
+	'Google Earth Ride': ['See Course on Google Earth', 'Montrez cours sur Google Earth', 'Mostrar curso en Google Earth'],
+	'Course Map': 	['Course Map', 		'Carte du parcours', 		'Mapa del curso'],
+	'Total':		['Total',			'Gain',						'Ganancia'],
+	'Elevation':	['Elevation',		'total',					'total'],
+	'Gain':			['Gain',			"d'altitude",				'de la elevación'],
+	'time penalty':	['time penalty',	"pénalité de temps",		"penalización de tiempo"],
+	'Factor':		['Factor%',			'Facteur%',					'Factor%'],
+	'ElapsedTime':	['ElapsedTime',		'Chrono',					'Tiempo transcurrido'],
+	'last':			['','','']
+};
+(function() {
+	// Expand all the lap options.
+	var key = 'Show Every {} Laps';
+	var showLaps = [2, 3, 5, 10, 15, 20, 25, 50, 100];
+	var showTr = translations[key];
+	for( var i = 0; i < showLaps.length; ++i ) {
+		var tr = [];
+		for( var j = 0; j < showTr.length; ++j )
+			tr.push( showTr[j].replace('{}', showLaps[i]) );
+		translations[key.replace('{}', showLaps[i])] = tr;
+	}
+})();
+
+function _( f ) {
+	var t = translations[f];
+	return t ? t[langCur] : f;
+}
+
+//------------------------------------------------------------------------------------
+
+var degreesToRadians = Math.PI / 180.0;
+var radiansToDegrees = 180.0 / Math.PI;
+
+function GreatCircleDistance( lat1, lon1, lat2, lon2 )
+{
+	// Calculate the great circle distance between two points 
+	// on the earth (specified in decimal degrees) in meters.
+
+	// convert decimal degrees to radians 
+	lon1 *= degreesToRadians;
+	lat1 *= degreesToRadians;
+	lon2 *= degreesToRadians;
+	lat2 *= degreesToRadians;
+	
+	// haversine formula 
+	var dlon = lon2 - lon1;
+	var dlat = lat2 - lat1;
+	var a = Math.pow(Math.sin(dlat/2),2) + Math.cos(lat1) * Math.cos(lat2) * Math.pow(Math.sin(dlon/2),2);
+	var c = 2.0 * Math.asin(Math.sqrt(Math.max(a, 0.0)));
+	var m = 6371000.0 * c;
+	return m;
+}
+
+function CompassBearing( lat1, lon1, lat2, lon2 )
+{
+	// Calculates the bearing between two points.
+	lat1 *= degreesToRadians;
+	lat2 *= degreesToRadians;
+
+	var diffLong = (lon2 - lon1) * degreesToRadians;
+
+	var x = Math.sin(diffLong) * Math.cos(lat2);
+	var y = Math.cos(lat1) * Math.sin(lat2) - (Math.sin(lat1) * Math.cos(lat2) * Math.cos(diffLong));
+
+	var bearing = Math.atan2(x, y) * radiansToDegrees;
+
+	while( bearing < 0.0 )
+		bearing += 360.0;
+	return bearing;
+}
+
+function GetLapRatio( leaderRaceTimes, tCur, iLapHint )
+{
+	var maxLaps = leaderRaceTimes.length - 1;
+	if( maxLaps < 1 )
+		return [0, 0.0];
+		
+	if( 0 <= iLapHint && iLapHint < maxLaps &&
+			leaderRaceTimes[iLapHint] <= tCur && tCur < leaderRaceTimes[iLapHint+1] ) {
+		lapRatio = (tCur - leaderRaceTimes[iLapHint]) / (leaderRaceTimes[iLapHint + 1] - leaderRaceTimes[iLapHint]);
+	}
+	else if( tCur <= leaderRaceTimes[0] ) {
+		iLapHint = 0;
+		lapRatio = 0.0;
+	}
+	else if ( tCur >= leaderRaceTimes.back() ) {
+		iLapHint = maxLaps - 1;
+		lapRatio = 1.0;
+	}
+	else {
+		iLapHint = Math.max( 0, Math.min(maxLaps, iLapHint) );
+		for( iLapHint = (leaderRaceTimes[iLapHint] < tCur ? iLapHint+1 : 0); iLapHint < maxLaps; ++iLapHint ) {
+			if( leaderRaceTimes[iLapHint] <= tCur )
+				break;
+		}
+		lapRatio = (tCur - leaderRaceTimes[iLapHint]) / (leaderRaceTimes[iLapHint + 1] - leaderRaceTimes[iLapHint]);
+	}
+	return [iLapHint, lapRatio];
+}
+
+function doReload() {
+	var params = [
+		'raceCat=' + categoryCur,
+		'highlight=' + document.getElementById('idNumsToWatch').value,
+		'lang=' + getLanguageCode()
+	];
+	
+	var href = window.location.href;
+	
+	var qMark = href.indexOf( '?' );
+	if( qMark != -1 )
+		href = href.substring( 0, qMark );
+	
+	href += '?' + params.join('&');
+	
+	// Reload the location.
+	if( window.location.href != href )
+		window.location.href = href;
+	else
+		window.location.reload( true );
+}
+
+var reloadTriggered = false;
+function TriggerReload( leaderRaceTimes, tCur, iLapHint )
+{
+	// If the race is running, trigger a reload of the page a few seconds after the leader passes.
+	if( !raceIsRunning || reloadTriggered )
+		return;
+		
+	var maxLaps = leaderRaceTimes.length - 1;
+	if( maxLaps < 1 )
+		return;
+		
+	if( 0 <= iLapHint && iLapHint < maxLaps &&
+			leaderRaceTimes[iLapHint] <= tCur && tCur < leaderRaceTimes[iLapHint+1] ) {
+		if( tCur - leaderRaceTimes[iLapHint] < 1.0 ) {
+			reloadTriggered = true;
+			setTimeout( doReload, Math.round(5000 + Math.random() * 3000) );
+			//setTimeout( function(){window.location.reload(true);}, Math.round(5000 + Math.random() * 3000) );
+			//document.getElementById( 'idReloadStatus' ).innerHTML = 'Reload Triggered';
+		}
+	}
+}
+
+function OpenVirtualTourWindow()
+{
+	var speed = null;
+	
+	if( !courseCoordinates || !virtualRideTemplate )
+		return;
+	
+	// Get the fastest finisher's speed in km/h.
+	if( data )
+	{
+		for( var num in data )
+		{
+			var d = data[num];
+			if( d.status == 'Finisher' && d.speed )
+			{
+				var fields = d.speed.split( ' ' );
+				if( fields.length >= 2 )
+				{
+					var s = parseFloat( fields[0] );
+					if( fields[1] == 'mph' )
+						s *= 1.609344;
+					if( !speed || s > speed )
+						speed = s;
+				}
+			}
+		}
+		if( speed )
+		{
+			if( speed > 60.0 )	speed = 60.0;
+			if( speed < 10.0 )	speed = 10.0;
+		}
+	}
+
+	if( !speed )
+		speed = 35.0;	// default km/h.
+	speed *= (1000.0 / (60.0*60.0));	// m/s.
+	
+	var kml = [];
+	function write( lines )
+	{
+		for( var i = 0; i < lines.length; ++i )
+			kml.push( lines[i] );
+	}
+	
+	// Prolog.
+	write( [
+		'{{?xml version="1.0" ?}}',
+		'{{kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2"}}',
+		'{{Document}}',
+		  '{{name}}Google Earth Ride - Powered by CrossMgr{{/name}}',
+	] );
+	
+	// The Virtual Tour
+	write( [
+		  '{{gx:Tour'+'>',
+		   '{{name}}Google Earth Ride - Powered by CrossMgr{{/name}}',
+		   '{{gx:Playlist}}',
+	] );
+	var courseCoordinatesLength = courseCoordinates.length;
+	var lastCompassBearing = null;
+	for( var i = 0; i < courseCoordinatesLength; i += 2 )
+	{
+		var lon = courseCoordinates[i % courseCoordinatesLength];
+		var lat = courseCoordinates[(i+1) % courseCoordinatesLength];
+		var lonNext = courseCoordinates[(i+2) % courseCoordinatesLength];
+		var latNext = courseCoordinates[(i+3) % courseCoordinatesLength];
+		var compassBearing = (gpsIsPointToPoint && i == courseCoordinatesLength - 2 ?
+					lastCompassBearing : CompassBearing(lat, lon, latNext, lonNext));
+		var duration = null;
+		if( i == 0 )
+			duration = 3;
+		else if( gpsIsPointToPoint && i == courseCoordinatesLength - 2 )
+			duration = 1;
+		else
+			duration = GreatCircleDistance(lat, lon, latNext, lonNext) / speed;
+		write( [
+		    '{{gx:FlyTo}}',
+              '{{gx:duration}}' + duration + '{{/gx:duration}}',
+              '{{gx:flyToMode}}' + (i == 0 ? 'bounce' : 'smooth') + '{{/gx:flyToMode}}',
+              '{{Camera}}',
+                '{{latitude}}' + lat + '{{/latitude}}',
+                '{{longitude}}' + lon + '{{/longitude}}',
+                '{{altitude}}'+ 2 +'{{/altitude}}',
+                '{{altitudeMode}}relativeToGround{{/altitudeMode}}',
+                '{{heading}}' + compassBearing + '{{/heading}}',
+                '{{tilt}}'+ 80 +'{{/tilt}}',
+              '{{/Camera}}',
+            '{{/gx:FlyTo}}',
+		] );
+		lastCompassBearing = compassBearing;
+	}
+	write( [
+		  '{{/gx:Playlist}}',
+		'{{/gx:Tour}}',
+	] );
+	
+	// The Finish.
+	write( [
+	   '{{Placemark}}',
+        '{{name}}Finish{{/name}}',
+        '{{Point}}',
+          '{{coordinates}}' + courseCoordinates[0] + ',' + courseCoordinates[1] + '{{/coordinates}}',
+        '{{/Point}}',
+       '{{/Placemark}}'
+	] );
+
+	// The Course.
+	write( [
+       '{{Placemark}}',
+         '{{name}}Course{{/name}}',
+         '{{LineString}}',
+           '{{tessellate}}1{{/tessellate}}',
+           '{{altitudeMode}}relativeToGround{{/altitudeMode}}',
+		   '{{coordinates}}',
+	] );
+	for( var i = 0; i < courseCoordinates.length; i += 2 )
+		kml.push( courseCoordinates[i] + ',' + courseCoordinates[i+1] + ',' + 1.0 );
+	if( !gpsIsPointToPoint )
+		kml.push( courseCoordinates[0] + ',' + courseCoordinates[1] + ',' + 1.0 );
+	
+	// Eplilog.
+	write( [
+	       '{{/coordinates}}',
+        '{{/LineString}}',
+      '{{/Placemark}}',
+	'{{/Document}}',
+    '{{/kml}}'
+	] );
+	
+	//alert( kml.join(' ') );
+	var template = virtualRideTemplate.replace( "kml = '';", "kml='" + kml.join(' ') + "';" );
+	if( organizer )
+		template = template.replace( "organizer = '';", "organizer='" + organizer.escapeHTML() + "';" );
+	var element = document.getElementById('idTitle');
+	var text = element.innerText || element.textContent;
+	var p = text.search('Results for');
+	if( p >= 0 )
+		text = text.substring( 0, p );
+	template = template.replace( "raceName = '';", "raceName='" + text.escapeHTML() + "';" );
+	
+	var w = window.open( '', '', '', true );
+	w.document.write( template.replace(/{{/g, '<').replace(/}}/g, '>') );
+	w.document.close();
+}
+
+function OpenCourseViewerWindow()
+{
+	if( !courseCoordinates || !courseViewerTemplate )
+		return;
+	
+	var payload = {};
+	
+	var fields = ['courseCoordinates', 'raceNameText', 'raceDate', 'email', 'displayUnits', 'organizer',
+					'gpsAltigraph', 'gpsIsPointToPoint', 'gpsTotalElevationGain' ];
+	for( var f = 0; f < fields.length; ++f ) {
+		var key = fields[f];
+		var value = window[key];
+		if( value )
+			payload[key] = value;
+	}
+	var lengthKm = 0.0;
+	for( var i = 0; i < courseCoordinates.length - 2; i += 2 )
+		lengthKm += GreatCircleDistance(courseCoordinates[i],courseCoordinates[i+1],courseCoordinates[i+2],courseCoordinates[i+3]);
+	if( !gpsIsPointToPoint )
+		lengthKm += GreatCircleDistance(courseCoordinates[courseCoordinates.length-2],courseCoordinates[courseCoordinates.length-1],
+										courseCoordinates[0],courseCoordinates[1] );
+	lengthKm /= 1000.0;
+	payload['lengthKm'] = lengthKm;
+	
+	var newTitle = 'Map: ' + payload['raceNameText'] + ' ' + payload['raceDate'];
+	template = courseViewerTemplate.replace(
+					'payload = null;', 'payload=' + JSON.stringify(payload) + ';' ).replace(
+					'TTIITTLLEE', newTitle );
+	
+	var w = window.open( '', '', '', true );
+	w.document.write( template.replace(/{{/g, '<').replace(/}}/g, '>') );
+	w.document.close();
+}
+
+function LineNormal( x1, y1, x2, y2, normLen )
+{
+	// Returns the coords of a normal line passing through x1, y1 of length normLen.
+	var dx = x2 - x1, dy = y2 - y1;
+	var scale = (normLen / 2.0) / Math.sqrt( dx*dx + dy*dy );
+	dx *= scale;
+	dy *= scale;
+	return [x1 + dy, y1 - dx, x1 - dy, y1 + dx];
+}
+
+function getRiderPositionTime( num )
+{
+	// Returns the fraction of the lap covered by the num.
+	var info = data[num];
+	if( !info )
+		return [null, null];
+	var raceTimes = info['raceTimes'];
+	if( !raceTimes || raceTimes.length == 0 )
+		return [null, null];
+	
+	var p;
+	if( t <= raceTimes[0] )
+	{
+		var firstLapRatio = info['flr'];
+		p = 1.0 - firstLapRatio;
+		p -= Math.floor(p) - 1.0;
+		return [p, t];
+	}
+		
+	var tSearch = t;
+	var finishTime = info['finishTime'];
+	if( finishTime != null && finishTime < t )
+		tSearch = finishTime;
+		
+	if( tSearch >= raceTimes.back() )
+	{
+		var lastRaceTime = raceTimes.back();
+		p = raceTimes.length + (tSearch - lastRaceTime) / (lastRaceTime - raceTimes[raceTimes.length-2]);
+	}
+	else
+	{
+		var i = info['iLast'];
+		if( !(raceTimes[i-1] < tSearch && tSearch <= raceTimes[i]) )
+		{
+			++i;
+			if( !(raceTimes[i-1] < tSearch && tSearch <= raceTimes[i]) )
+			{
+				i = raceTimes.binSearch( tSearch );
+				if( raceTimes[i] < tSearch )
+					++i;
+			}
+			info['iLast'] = i;
+		}
+		if( i == 1 )
+		{
+			var firstLapRatio = info['flr'];
+			p = (tSearch - raceTimes[i-1]) / (raceTimes[i] - raceTimes[i-1]);
+			p = 1.0 - firstLapRatio + p * firstLapRatio;
+			p -= Math.floor(p) - 1.0;
+		}
+		else
+			p = i + (tSearch - raceTimes[i-1]) / (raceTimes[i] - raceTimes[i-1]);
+	}
+	return [p, tSearch];
+}
+
+function DrawCircle( ctx, x, y, radius )
+{
+	ctx.beginPath();
+	ctx.arc(x, y, radius, 0.0, Math.PI*2, true);
+	ctx.closePath();
+	ctx.fill();
+	ctx.stroke();
+}
+
+function DrawLine( ctx, x1, y1, x2, y2 )
+{
+	ctx.beginPath();
+	ctx.moveTo( x1, y1 );
+	ctx.lineTo( x2, y2 );
+	ctx.stroke();
+}
+
+function TimeDifference( a, b )
+{
+	// Returns (a - b) with proper precision.
+	if( showTimeDecimals )
+	{
+		a *= 100.0;
+		b *= 100.0;
+	}
+	var t = ~~a - ~~b;
+	if( showTimeDecimals )
+		t /= 100.0;
+	return t;
+}
+
+function FormatTime( t )
+{
+	var tStr = '';
+	if( t < 0 )
+	{
+		tStr = '-';
+		t = -t;
+	}
+	var secs = ~~t;
+	var h = ~~(secs / (60*60));
+	var m = (~~(secs / 60) % 60);
+	var s = ~~(secs % 60);
+	if( h > 0 )
+		tStr += h + (m < 10 ? ':0' : ':') + m + (s < 10 ? ':0' : ':') + s;
+	else
+		tStr += m + (s < 10 ? ':0' : ':') + s;
+	if( showTimeDecimals )
+	{
+		var decimals = ~~((t - ~~t) * 100);
+		tStr += (decimals < 10 ? '.0' : '.') + decimals;
+	}
+	return tStr;
+}
+
+function FormatTimeGap( t )
+{
+	var tStr = '';
+	if( t < 0 )
+	{
+		tStr = '-';
+		t = -t;
+	}
+	var secs = ~~t;
+	var h = ~~(secs / (60*60));
+	var m = (~~(secs / 60) % 60);
+	var s = ~~(secs % 60);
+	if( h > 0 )
+		tStr += h + (m < 10 ? 'h0' : 'h') + m + (s < 10 ? "'0" : "'") + s;
+	else
+		tStr += m + (s < 10 ? "'0" : "'") + s;
+	if( showTimeDecimals )
+	{
+		var decimals = ~~((t - ~~t) * 100);
+		tStr += (decimals < 10 ? '.0' : '.') + decimals;
+	}
+	tStr += '"';
+	return tStr;
+}
+
+function getShortName( num )
+{
+	var d = data[num + ''];
+	var name = '';
+	if( d['LastName'] )
+	{
+		name = d['LastName'];
+		if( d['FirstName'] )
+			name += ', ' + d['FirstName'].substring(0, 1) + '.'
+	}
+	else if( d['FirstName'] )
+		name = d['FirstName'];
+		
+	return name;
+}
+
+//----------------------------------------------------------------------------
+function FixedFormat( x, Length, Decimals ) {
+	var s = x.toFixed( Decimals );
+	if( s.length < Length )
+		s = Array(Length - s.length + 1).join('0') + s;
+	return s;
+}
+function TrackAnimation()
+{
+	this.iLapDistance = 0;
+	
+	this.getXYfromPosition = function( lane, position )
+	{
+		// Get screen coordinates from rider position in lap.
+		// On the corner, use the ration of the angle, not the distance.
+		// This means that riders at the outer-most part of the curve will speed up
+		// so they do not lose ground to the riders in the inner part of the curve.
+		position -= ~~(position);
+		
+		var curveLength = (r/2.0) * Math.PI;
+		var trackLength = 4*r + 2 * curveLength;
+		var laneWidth = (r/2.0) / laneMax;
+		var laneLength = lane * laneWidth;
+		var riderLength = trackLength * position;
+		
+		if( riderLength <= r/2 )
+			// rider is on starting straight
+			return [2*r + r/2.0 + riderLength, r + r/2.0 + laneLength];
+			
+		riderLength -= r/2;
+		if( riderLength <= curveLength )
+		{
+			// rider is on 1st curve
+			a = Math.PI * riderLength / curveLength;
+			rd = r/2 + laneLength;
+			return [3*r + rd*Math.sin(a), r + rd*Math.cos(a)];
+		}
+
+		riderLength -= curveLength;
+		if( riderLength <= 2*r )
+			// rider is on back straight
+			return [3*r - riderLength, r/2 - laneLength];
+			
+		riderLength -= 2*r;
+		if( riderLength <= curveLength )
+		{
+			// rider is on back curve
+			a = Math.PI * (1.0 + riderLength / curveLength);
+			rd = r/2 + laneLength;
+			return [r + rd*Math.sin(a), r + rd*Math.cos(a)];
+		}	
+		riderLength -= curveLength;
+		// rider is on finishing straight
+		return [r + riderLength, r + r/2 + laneLength];
+	}
+
+	this.getRiderXYPT = function( num, lane )
+	{
+		// Get the rider x, y, position (distance) and time.
+		var positionTime = getRiderPositionTime( num );
+		if ( positionTime[0] == null )
+			return [null, null, null, null];
+		if( data[num]['finishTime'] != null && t >= data[num]['finishTime'] )
+		{
+			lapCur = Math.max( lapCur, data[num]['raceTimes'].length );
+			return [null, null, positionTime[0], positionTime[1]];
+		}
+		lapCur = Math.max(lapCur, ~~positionTime[0]);
+		var xypt = this.getXYfromPosition( lane, positionTime[0] );
+		if( reverseDirection )
+			xypt[0] = r * 4 - xypt[0];
+		if( finishTop )
+			xypt[1] = r * 2 - xypt[1];
+		xypt.push( positionTime[0] );
+		xypt.push( positionTime[1] );
+		return xypt;
+	}
+
+	this.Refresh = function()
+	{
+		if( !canvas || !canvasSupported )
+			return;
+
+		// Redraw the canvas at this time.
+		var dc = canvas.getContext('2d');
+		
+		dc.textBaseline = "top";
+		
+		var width = canvas.width;
+		var height = canvas.height;
+		var backColour = 'white';
+		dc.fillStyle = backColour;
+		dc.fillRect(0, 0, width, height );
+		
+		if( width < 80 || height < 80 )
+			return;
+
+		r = ~~(width / 4);
+		if( r * 2 > height )
+			r = ~~(height / 2);
+		r -= (r & 1);			// Make sure that r is an even number.
+
+		var tHeight = r / 8;
+		var fontHeight = ~~(tHeight * fontMult);
+		var fontStr = fontHeight + "px Arial";
+		var fontStrHightlight = ~~(tHeight * 1.6 * fontMult) + "px Arial";
+		dc.font = fontStr;
+		
+		// Draw the track.
+		//trackColour = 'rgb(0,255,0)';
+		trackColour = '#7FE57F';
+		dc.fillStyle = trackColour;
+		dc.strokeStyle = trackColour;
+		DrawCircle( dc, r, r, r );
+		DrawCircle( dc, 3*r, r, r );
+		dc.fillRect( r, 0, 2*r, 2*r + 2 );
+		
+		// Draw the negative space.
+		laneWidth = (r/2) / laneMax;
+		dc.fillStyle = backColour;
+		dc.strokeStyle = backColour;
+		DrawCircle( dc, r, r, r/2 - laneWidth );
+		DrawCircle( dc, 3*r, r, r/2 - laneWidth );
+		
+		var pp = [r, r/2 + laneWidth, 2*r, r - 2*laneWidth + 1];
+		dc.fillRect( pp[0], pp[1], pp[2], pp[3] );
+		dc.strokeRect( pp[0], pp[1], pp[2], pp[3] );
+		
+		// Draw the quarter lines and start/finish.
+		for( var i = 0; i <= 3; ++i )
+		{
+			var p = 0.25 * i;
+			var p1 = this.getXYfromPosition(-1, p);
+			var p2 = this.getXYfromPosition(laneMax+0.25, p);
+			if( reverseDirection )
+			{
+				p1[0] = 4*r - p1[0];
+				p2[0] = 4*r - p2[0];
+			}
+			if( finishTop )
+			{
+				p1[1] = 2*r - p1[1];
+				p2[1] = 2*r - p2[1];
+			}
+			if( i == 0 )
+			{
+				var sfWidth = 8;
+				dc.strokeStyle = '#FFFFFF';
+				dc.fillRect( p1[0] - sfWidth / 2, Math.min(p1[1], p2[1]), sfWidth, r );
+				dc.strokeStyle = 'black';
+				dc.lineWidth = 2;
+			}
+			else
+			{
+				dc.lineWidth = 1;
+				dc.strokeStyle = 'rgb(64,64,64)';
+			}
+			DrawLine( dc, p1[0], p1[1], p2[0], p2[1] );
+		}
+		
+		// Draw the riders
+		dc.strokeStyle = 'black';
+		dc.fillStyle = 'black';
+		dc.lineWidth = 1;
+		numSize = (r/2)/laneMax;
+		lapCur = 0;
+		var riderRadius = laneWidth * 0.75;
+		var thickLine = r / 24;
+		var hasFirstLapRatio = false;
+		firstLapRatio = 1.0;
+		if( data )
+		{
+			var riderXYPT = [];
+			var cd = catDetailsByName[categoryCur];
+			for( var p = 0; p < cd.pos.length; ++p )
+			{
+				var num = cd.pos[p];
+				if( !hasFirstLapRatio )
+				{
+					hasFirstLapRatio = true;
+					if( cd['firstLapDistance'] && cd['lapDistance'] )
+						firstLapRatio = cd['firstLapDistance'] / cd['lapDistance'];
+				}
+				var xypt = this.getRiderXYPT( num, num % laneMax );
+				if( xypt[2] == null )
+					continue;
+				xypt.splice( 0, 0, num );
+				riderXYPT.push( xypt );
+			}
+			
+			// Sort in reverse order of position so we draw leaders last on top.
+			riderXYPT.sort(function(x, y)
+				{
+					var r = (y[3] ? y[3] : 0) - (x[3] ? x[3] : 0);	// Greatest distance.
+					if( r == 0 )
+						r = (x[4] ? x[4] : 0) - (y[4] ? y[4] : 0);	// Shortest time.
+					if( r == 0 )
+						r = (x[0] - y[0]);							// Bib number
+					return -r;
+				});
+				
+			var leaders = [];
+			for( var i = riderXYPT.length - 1; i >= 0 && leaders.length < 3; --i )
+				leaders.push( riderXYPT[i][0] );
+
+			var topThree = {};
+			for( var i = 0; i < leaders.length; ++i )
+				topThree[leaders[i]] = i;
+				
+			var riderPosition = {};
+			for( var i = 0; i < riderXYPT.length; ++i )
+			{
+				var rxypt = riderXYPT[i];
+				riderPosition[rxypt[0]] = riderXYPT.length - i;
+				var x = rxypt[1];
+				if( x == null )
+					continue;
+					
+				num = rxypt[0];
+				var y = rxypt[2];
+				dc.fillStyle = colours[num % colours.length];
+				// Check for a leader.
+				var j = topThree[num];
+				if( j != undefined )
+				{
+					dc.strokeStyle = topThreeColours[j];
+					dc.lineWidth = thickLine;
+					if( numsToWatch[num] != undefined )
+						dc.font = fontStrHightlight;
+				}
+				else
+				{
+					// Check for a watch number.
+					j = numsToWatch[num];
+					if( j != undefined )
+					{
+						dc.strokeStyle = 'white';
+						dc.lineWidth = thickLine * 1.5;
+						dc.font = fontStrHightlight;
+					}
+				}
+				if( isNaN(x) || isNaN(y) )
+					continue;
+				//DrawCircle( dc, x, y, riderRadius );
+				dc.beginPath(); dc.arc(x, y, riderRadius, 0.0, Math.PI*2, true); dc.closePath(); dc.fill(); dc.stroke();
+				dc.fillStyle = 'black';
+				dc.fillText(num+'', x+numSize, y-numSize );
+				if( j != undefined )
+				{
+					dc.strokeStyle = 'black';
+					dc.lineWidth = 1;
+					dc.font = fontStr;
+				}
+			}
+		}
+
+		// Draw the current lap
+		dc.fillStyle = 'black';
+		if( lapCur > 0 )
+		{
+			var table = [[],[]];
+			if( leaders.length > 0 ) {
+				var leaderRaceTimes = data[leaders[0]]['raceTimes'];
+				var maxLaps = leaderRaceTimes.length - 1;
+				var glr = GetLapRatio( leaderRaceTimes, t, this.iLapDistance );
+				this.iLapDistance = glr[0];
+				TriggerReload( leaderRaceTimes, t, this.iLapDistance );
+				var lapRatio = glr[1];
+				lapRatio = Math.floor(lapRatio * 10.0) / 10.0		// Always round down, not to nearest decimal.
+				table[0].push( FixedFormat(this.iLapDistance + lapRatio, 5, 1) + ' ' + _('Laps of') + ' ' + maxLaps );
+				table[1].push( FixedFormat(maxLaps - this.iLapDistance - lapRatio, 5, 1) + ' ' + _('Laps to go') );
+				
+				var leaderCategory = data[leaders[0]]['raceCat'];
+				var cat = (leaderCategory && catDetailsByName ? catDetailsByName[leaderCategory] : null);
+				if( cat ) {
+					var distanceCur = null, distanceRace = null;
+					if( cat['lapDistance'] ) {
+						var flr = data[leaders[0]]['flr']; if( !flr ) flr = 1.0;
+						var distanceLap = cat['lapDistance'];
+						if( cat['distanceUnit'] != displayUnits )
+							distanceLap *= (displayUnits == 'km' ? 1.60934 : 0.621371);
+						distanceRace = distanceLap * (flr + maxLaps - 1);
+						if( this.iLapDistance == 0 )
+							distanceCur = lapRatio * (distanceLap * flr);
+						else
+							distanceCur = distanceLap * (flr + this.iLapDistance - 1 + lapRatio);
+					}
+					else if( cat['raceDistance'] && leaderRaceTimes[0] != leaderRaceTimes.back() ) {
+						distanceRace = cat['raceDistance'];
+						if( cat['distanceUnit'] != displayUnits )
+							distanceRace *= (displayUnits == 'km' ? 1.60934 : 0.621371);
+						var distanceCur = (t - leaderRaceTimes[0]) / (leaderRaceTimes.back() - leaderRaceTimes[0]) * distanceRace;
+						distanceCur = Math.max( 0.0, Math.min(distanceCur, distanceRace) );
+					}
+					if( distanceCur != null ) {
+						if( distanceCur != distanceRace )
+							distanceCur = Math.floor( distanceCur * 10.0 ) / 10.0;
+						table[0].push( FixedFormat(distanceCur, 5, 1) + ' ' + _(displayUnits) + ' ' + _('of') + ' ' + distanceRace.toFixed(1) );
+						table[1].push( FixedFormat(distanceRace - distanceCur, 5, 1) + ' ' + _(displayUnits) + ' ' + _('to go') );
+					}
+				}
+			}
+			
+			var xRight  = 3*r + r/7;
+			for( var col = table[0].length - 1; col >= 0; --col ) {
+				var tWidth = 0;
+				for( var row = 0; row < table.length; ++row ) {
+					tWidth = Math.max( tWidth, dc.measureText(table[row][col]).width );
+				}
+				xRight -= tWidth;
+				var yCur = r + r/2 - laneWidth - fontHeight * 1.2 - fontHeight;
+				for( var row = 0; row < table.length; ++row ) {
+					var value = table[row][col];
+					var tShow = value.replace(/^0+/, '');
+					if( tShow.substring(0, 1) == '.' )
+						tShow = '0' + tShow;
+					dc.fillText( tShow, xRight + dc.measureText(Array(value.length - tShow.length + 1).join('0')).width, yCur );
+					yCur += fontHeight;
+				}
+				xRight -= fontHeight / 2.5;
+			}
+		}
+
+		// Draw the leader board.
+		var leaderWidthMax = 0;
+		var xLeft = ~~(r * 0.8);
+		if( leaders )
+		{
+			var x = xLeft;
+			var y = r / 2 + laneWidth * 1.5;
+			dc.fillText( 'Leaders:', x, y );
+			y += tHeight * 1.2;
+			thickLine = tHeight / 5;
+			riderRadius = tHeight / 3.5;
+			for( var i = 0; i < leaders.length; ++i )
+			{
+				var num = leaders[i];
+				dc.lineWidth = 1;
+				dc.strokeStyle = backColour;
+				dc.fillStyle = trackColour;
+				dc.fillRect( x - thickLine/4, y - thickLine/4, tHeight + thickLine/2, tHeight  + thickLine/2 );
+				
+				dc.strokeStyle = topThreeColours[i];
+				dc.lineWidth = thickLine;
+				dc.fillStyle = colours[num % colours.length];
+				DrawCircle( dc, x + tHeight / 2, y + tHeight / 2, riderRadius );
+				
+				dc.fillStyle = 'black';
+				var leadStr = num + ' ' + getShortName(num);
+				var tWidth = dc.measureText(leadStr).width;
+				if( tWidth > leaderWidthMax )
+					leaderWidthMax = tWidth;
+				dc.fillText( leadStr, x + tHeight * 1.2, y );
+				y += tHeight * 1.2;
+			}
+		}
+		if( numsToWatch )
+		{
+			var colCount = 0;
+			var x = xLeft + tHeight * 1.2 + leaderWidthMax + dc.measureText(' ').width;
+			var yTop = r / 2 + laneWidth * 1.5 + tHeight * 1.2;
+			var y = yTop;
+			var rp = [];
+			for( n in numsToWatch )
+			{
+				var p = riderPosition[n];
+				if( p != undefined )
+					rp.push( [p, n] );
+			}
+			rp.sort(function(x, y) { return x[0] - y[0]; });
+			
+			dc.fillStyle = 'black';
+			for( var i = 0; i < rp.length && i < 3; ++i )
+			{
+				var num = rp[i][1];
+				dc.fillText( '(' + rp[i][0] + ') ' + num + ' ' + getShortName(num), x, y );
+				y += tHeight * 1.2;
+				if( y >= r * 1.5 - tHeight * 1.5 )
+				{
+					if( ++colCount == 2 )
+						break;
+					y = yTop;
+					x += tWidth * 1.2;
+				}
+			}
+		}
+		
+		// Draw the race time
+		dc.fillStyle = 'black';
+		var tStr = FormatTime( t );
+		var tWidth = dc.measureText(tStr).width;
+		dc.fillText( tStr, 4*r - tWidth, 2*r - tHeight );
+	}
+}
+
+//----------------------------------------------------------------------------
+function GeoTrack()
+{
+	this.setData = function( gpsData )
+	{
+		this.gpsPoints = gpsData;
+		
+		this.xMax = 0.0;
+		this.yMax = 0.0;
+		var dCum = 0.0;
+		this.cumDistance = [];
+		var gpsPointsLength = this.gpsPoints.length;
+		for( var i = 0; i < gpsPointsLength; ++i )
+		{
+			var g = gpsData[i];
+			this.xMax = Math.max( this.xMax, g[0] );
+			this.yMax = Math.max( this.yMax, g[1] );
+			this.cumDistance.push( dCum );
+			dCum += g[2];
+		}
+		this.distanceTotal = dCum;
+		
+		this.x = 0;
+		this.yBottom = 0;
+		this.mult = 1.0;
+		this.cache = {};
+	}
+			
+	this.getXYTrack = function()
+	{
+		var x = this.x;
+		var yBottom = this.yBottom;
+		var mult = this.mult;
+		var track = [];
+		var gpsPointsLength = this.gpsPoints.length;
+		for( var i = 0; i < gpsPointsLength; ++i )
+		{
+			var p = this.gpsPoints[i];
+			track.push( [p[0] * mult + x, yBottom - p[1] * mult] );
+		}
+		return track;
+	}
+		
+	this.getXY = function( lap, id )
+	{
+		if( id == undefined )
+			id = -1;
+			
+		// Find the segment at this distance in the lap.
+		var lap = lap - (~~lap);								// Get fraction of lap.
+		var lapDistance = lap * this.distanceTotal;				// Get distance traveled in the lap.
+		
+		// Avoid the cost of the binary search by checking if the id request is still on the last segment.
+		var lenGpsPoints = this.gpsPoints.length;
+		var i = -1;
+		if( id in this.cache )
+		{
+			i = this.cache[id] % lenGpsPoints;
+			if( !(this.cumDistance[i] <= lapDistance && lapDistance <= this.cumDistance[i] + this.gpsPoints[i][2]) )
+			{
+				i = (i + 1) % lenGpsPoints;
+				if( !(this.cumDistance[i] <= lapDistance && lapDistance <= this.cumDistance[i] + this.gpsPoints[i][2]) )
+					i = -1;
+			}
+		}
+			
+		if( i == -1 )
+		{
+			// Find the closest point LT the lap distance.
+			i = this.cumDistance.binSearch(lapDistance);
+			if( this.cumDistance[i] > lapDistance )
+				i += lenGpsPoints - 1;
+			i %= lenGpsPoints;
+		}
+		
+		if( gpsIsPointToPoint )
+			i = Math.min( i, lenGpsPoints - 2 )
+		
+		this.cache[id] = i;
+		
+		var pCur = this.gpsPoints[i], pNext = this.gpsPoints[(i+1)%lenGpsPoints];
+		var segDistance = lapDistance - this.cumDistance[i];
+		var segRatio = segDistance / pCur[2];
+		
+		var x = pCur[0] + (pNext[0] - pCur[0]) * segRatio;
+		var y = pCur[1] + (pNext[1] - pCur[1]) * segRatio;
+		return [x * this.mult + this.x, this.yBottom - y * this.mult];
+	}
+
+	this.setDisplayRect = function( x, y, width, height )
+	{
+		if( width <= 0 || height <= 0 )
+		{
+			this.mult = 1.0;
+			this.x = x;
+			this.yBottom = y + height;
+			return;
+		}
+		var mult = Math.min( width / this.xMax, height / this.yMax );
+		var w = this.xMax * mult, h = this.yMax * mult;
+		var xBorder = (width - w) / 4.0;
+		var yBorder = (height - h) / 2.0;
+		this.mult = mult;
+		this.x = xBorder + x;
+		this.yBottom = y + height;
+	}
+}
+
+function colorBetween( r1, g1, b1, r2, g2, b2, x )
+{
+	var r = (r1 + (r2 - r1) * x).toFixed(0);
+	var g = (g1 + (g2 - g1) * x).toFixed(0);
+	var b = (b1 + (b2 - b1) * x).toFixed(0);
+	return 'rgb(' + r + ',' + g + ',' + b + ')';
+}
+
+function Altigraph()
+{
+	this.altigraph = [];
+	this.yMax = -1000000.0;
+	this.yMin = 1000000.0
+	this.xMax = 0.0;
+	
+	this.setData = function( altigraph )
+	{
+		if( !altigraph || altigraph.length == 0 )
+			altigraph = [];
+			
+		this.altigraph = altigraph;
+		this.yMax = -1000000.0;
+		this.yMin = 1000000.0
+		this.xMax = 0.0;
+		for( var i = 0; i < altigraph.length; ++i )
+		{
+			if( altigraph[i][1] > this.yMax )
+				this.yMax = altigraph[i][1];
+			if( altigraph[i][1] < this.yMin )
+				this.yMin = altigraph[i][1];
+		}
+		if( altigraph.length > 0 )
+			this.xMax = altigraph[altigraph.length-1][0];
+			
+		if( this.yMin == this.yMax )
+		{
+			this.altigraph = []
+			gpsAltigraph = null;
+			gpsTotalElevationGain = null;
+		}
+	}
+	
+	this.empty = function() { return this.altigraph.length == 0; }
+	
+	this.draw = function( dc, x, y, width, height )
+	{
+		if( this.altigraph.length == 0 || this.xMax == 0 || !gpsTotalElevationGain )
+			return;
+			
+		dc.save();
+		y += 2;		// Leave room to draw the line.
+		height -= 2;
+
+		var fontSize = (height*0.95)/4.0;
+		dc.font = fontSize + 'px Arial';
+		
+		var minLabel = '0';
+		var maxLabel = ((this.yMax - this.yMin) * (displayUnits == 'km' ? 1.0 : 3.28084)).toFixed(0) + (displayUnits == 'km' ? ' m' : ' ft');
+		var labelWidth = Math.max( dc.measureText(minLabel).width, dc.measureText(maxLabel).width );
+		
+		var altigraph = this.altigraph;
+		var teg = 0.0;
+		for( var i = 1; i < this.altigraph.length; ++i )
+			teg += Math.max(0.0, altigraph[i][1] - altigraph[i-1][1]);
+		var tegLabel = '';
+		var tegWidth = 0;
+		var tegText = [('Total'), ('Elevation'), ('Gain')];
+		if( gpsTotalElevationGain )
+		{
+			tegLabel = (gpsTotalElevationGain * (displayUnits == 'km' ? 1.0 : 3.28084)).toFixed(0) + (displayUnits == 'km' ? ' m' : ' ft');
+			tegWidth = dc.measureText(tegLabel).width;
+			for( var i = 0; i < tegText.length; ++i )
+				tegWidth = Math.max( tegWidth, dc.measureText(tegText[i]).width );
+		}
+		
+		var border = 4;
+		if( labelWidth + border*2 + tegWidth > width )
+		{
+			dc.restore();
+			return;
+		}
+		
+		var xMult = (width - labelWidth - border*2 - tegWidth) / this.xMax;
+		var yMult = height / (this.yMax - this.yMin);
+		
+		var points = [];
+		for( var i = 0; i < this.altigraph.length; ++i )
+			points.push( [(x + labelWidth + border + altigraph[i][0] * xMult), (y + height - (altigraph[i][1] - this.yMin) * yMult)] );
+		
+		for( var i = 1; i < this.altigraph.length; ++i )
+		{
+			var grade = (altigraph[i][1] - altigraph[i-1][1]) / (altigraph[i][0] - altigraph[i-1][0]);
+			if( grade > 0 )
+				dc.fillStyle = colorBetween( 255,255,255, 255,0,0, Math.min(1.0,  grade / 0.12) );
+			else
+				dc.fillStyle = colorBetween( 255,255,255,   0,0,0, Math.min(1.0, -grade / 0.12) );
+			dc.beginPath();
+			dc.moveTo( points[i-1][0], points[i-1][1] );
+			dc.lineTo( points[i  ][0], points[i  ][1] );
+			dc.lineTo( points[i  ][0], y + height );
+			dc.lineTo( points[i-1][0], y + height );
+			dc.closePath();
+			dc.fill();
+		}
+		
+		dc.strokeStyle = '#000000';
+		dc.lineWidth = 2;
+		dc.beginPath();
+		dc.moveTo( points[0][0], points[0][1] );
+		for( var i = 1; i < this.altigraph.length; ++i )
+			dc.lineTo( points[i][0], points[i][1] );
+		dc.stroke();
+		
+		// Add a baseline.
+		dc.lineWidth = 1;
+		dc.beginPath();
+		dc.moveTo( x + labelWidth + border, y + height );
+		dc.lineTo( x + width - border - tegWidth, y + height );
+		dc.stroke();
+		
+		// Add a left boundary line.
+		dc.lineWidth = 1;
+		dc.beginPath();
+		dc.moveTo( x + labelWidth + border, y );
+		dc.lineTo( x + labelWidth + border, y + height );
+		dc.stroke();
+		
+		// Add a right boundary line.
+		dc.beginPath();
+		dc.moveTo( x + width - tegWidth - border, y );
+		dc.lineTo( x + width - tegWidth - border, y + height );
+		dc.stroke();
+		
+		// Add the min and max elevation.
+		dc.fillStyle = '#000000';
+		dc.textAlign = 'right';
+		dc.textBaseline = 'top';
+		dc.fillText( maxLabel, x + labelWidth, y );
+		dc.textBaseline = 'bottom';
+		dc.fillText( minLabel, x + labelWidth, y + height );
+		
+		// Add the total elevation gain.
+		if( gpsTotalElevationGain )
+		{
+			dc.textBaseline = 'top';
+			dc.textAlign = 'left';
+			var xCur = x + width - tegWidth;
+			var yCur = y + (height - fontSize * 1.05 * 4) / 2;
+			for( var i = 0; i < tegText.length; ++i )
+			{
+				dc.fillText( tegText[i], xCur, yCur );
+				yCur += fontSize * 1.05;
+			}
+			dc.fillText( tegLabel, xCur, yCur );
+		}
+		
+		dc.restore();
+	}
+}
+
+var infoLines = 1;
+function GeoAnimation()
+{
+	this.xBanner = 300;
+	this.geoTrack = new GeoTrack();
+	this.altigraph = new Altigraph();
+	this.compassLocation = 'SE';
+	this.widthLast = -1;
+	this.heightLast = -1;
+	this.iLapDistance = 0;
+	
+	this.tBannerLast = -1;
+	
+	this.drawCompass = function( dc, width, height, tHeight )
+	{
+		dc.save();
+		
+		var size = width / 20;
+		
+		var x = this.compassLocation[1] == 'E' ? width - size * 1.4 : size * 1.4;
+		var y = this.compassLocation[0] == 'N' ? size * 1.4 + tHeight * 3 : height - size * 1.4;
+		if( this.compassLocation[0] == 'S' && gpsTotalElevationGain )
+			y -= height / 20;
+		
+		var factor = 7.0;
+		var pseg1 = [[0,0], [size/factor,size/factor], [0,size]];		
+		var pseg2 = [[0,0], [-size/factor,size/factor], [0,size]];
+		var labels = ['S', 'E', 'N', 'W'];
+		
+		dc.fillStyle = '#000000';
+		dc.strokeStyle = '#000000';
+		dc.lineWidth = 1;
+		var fontSize = size/4;
+		dc.font = fontSize + 'px serif';
+		dc.textAlign = 'center';
+		for( var i = 0; i < 4; ++i )
+		{
+			dc.fillText( labels[i], x + pseg1[2][0]*1.2, y + pseg1[2][1]*1.2 - fontSize/2 );
+		
+			dc.beginPath();
+			dc.moveTo( x, y );
+			for( var p = 0; p < pseg1.length; ++p )
+			{
+				dc.lineTo( x + pseg1[p][0], y + pseg1[p][1] );
+				pseg1[p] = [pseg1[p][1], -pseg1[p][0]];	// Rotate 90.
+			}
+			dc.stroke()
+			dc.beginPath();
+			dc.moveTo( x, y );
+			for( var p = 0; p < pseg2.length; ++p )
+			{
+				dc.lineTo( x + pseg2[p][0], y + pseg2[p][1] );
+				pseg2[p] = [pseg2[p][1], -pseg2[p][0]];	// Rotate 90.
+			}
+			dc.fill()
+		}
+		
+		dc.restore();
+	}
+	
+	this.drawBanner = function( dc, width, height, tHeight, bannerItems )
+	{
+		drawSegment( dc, 0, 0, width, tHeight*1.2, '#0000CC', '#0000EE' );
+		if( bannerItems.length == 0 )
+			return
+		
+		var y = tHeight * 0.1;
+		tHeight *= 0.85;
+		var x = this.xBanner;
+		var tWidth;
+		var positionFont = (tHeight*.7) + "px Arial";
+		var numberFont = 'italic bold ' + tHeight + "px Arial";
+		var nameFont = 'bold ' + tHeight + "px Arial";
+		while( x < width )
+		{
+			for( var i = 0; i < bannerItems.length && x < width; ++i )
+			{
+				var position = bannerItems[i][1];
+				var num = bannerItems[i][0];
+				var name = getShortName( num );
+				
+				if( position == 1 )
+				{
+					x += tHeight / 2;
+					tWidth = checkeredFlag.width;
+					if( x + tWidth > 0 && x < width )
+						dc.drawImage( checkeredFlag, x, y );
+					x += tWidth + tHeight / 2;
+				}
+				
+				dc.font = positionFont;
+				tWidth = dc.measureText(position).width;
+				if( x + tWidth > 0 && x < width )
+				{
+					dc.fillStyle = '#FFFFFF';
+					dc.fillText(position, x, y );
+				}
+				x += tWidth + tHeight / 4;
+
+				dc.font = numberFont;
+				tWidth = dc.measureText(num).width;
+				if( x + tWidth > 0 && x < width)
+				{
+					dc.fillStyle = '#FFFF00';
+					dc.fillText(num, x, y );
+				}
+				x += tWidth + tHeight / 3;
+				
+				dc.font = nameFont;
+				tWidth = dc.measureText(name).width;
+				if( x + tWidth > 0 && x < width )
+				{
+					dc.fillStyle = '#FFFFFF';
+					dc.fillText(name, x, y );
+				}
+				x += tWidth + tHeight;
+			}
+			if( x < 0 )
+				this.xBanner = x;
+		}
+		
+		var tBanner = (new Date().getTime()) / 1000.0;
+		if( this.tBannerLast < 0 )
+			this.tBannerLast = tBanner;
+		this.xBanner -= 64.0 * (tBanner - this.tBannerLast);
+		this.tBannerLast = tBanner;
+	}
+	
+	this.getRiderXYPT = function( num )
+	{
+		// Get the rider x, y, position (distance) and time.
+		var positionTime = getRiderPositionTime( num );
+		if( positionTime[0] == null )
+			return [null, null, null, null];
+		if( data[num]['finishTime'] != null && t >= data[num]['finishTime'] )
+		{
+			lapCur = Math.max( lapCur, data[num]['raceTimes'].length );
+			return [null, null, positionTime[0], positionTime[1]];
+		}
+		lapCur = Math.max(lapCur, ~~positionTime[0]);
+		var xy = this.geoTrack.getXY( positionTime[0], num );
+		return [xy[0], xy[1], positionTime[0], positionTime[1]];
+	}
+
+	this.Refresh = function()
+	{
+		if( !canvas || !canvasSupported )
+			return;
+
+		var dc = canvas.getContext('2d');
+		
+		dc.textBaseline = "top";
+		
+		var width = canvas.width;
+		var height = canvas.height;
+		var sizeChanged = false;
+		if( width != this.widthLast || height != this.heightLast )
+		{
+			this.widthLast = width;
+			this.heightLast = height;
+			sizeChanged = true;
+		}
+		var backColour = 'white';
+		dc.fillStyle = backColour;
+		
+		if( width < 80 || height < 80 )
+		{
+			dc.fillRect(0, 0, width, height );
+			return;
+		}
+
+		// Draw the altigraph.
+		if( gpsTotalElevationGain && !this.altigraph.empty() )
+		{
+			var altigraphHeight = height / 8;
+			if( sizeChanged )
+			{
+				dc.fillRect(0, 0, width, height );
+				this.altigraph.draw( dc, 0, height - altigraphHeight, width, altigraphHeight );
+			}
+			height -= altigraphHeight;
+		}
+		
+		dc.fillRect(0, 0, width, height );
+		
+		r = ~~(width / 4);
+		if( r * 2 > height )
+			r = ~~(height / 2);
+		r -= (r & 1);			// Make sure that r is an even number.
+
+		var border = 8;
+		var tHeight = ~~((r / 8) * fontMult);
+		laneWidth = (r/2) / laneMax;
+
+		var fontStr = (tHeight*.8) + "px Arial";
+		var textVSpace = tHeight*0.2;
+		var fontStrHightlight = ~~(tHeight * 1.1) + "px Arial";
+		dc.font = fontStr;
+		
+		compassSize = (width / 20) * 1.4 * 2;
+		
+		var trackWidth = width - border * 2 - laneWidth*2 - compassSize;
+		var topMargin = 2*border + tHeight * infoLines + textVSpace;
+		var trackHeight = height - topMargin;
+		this.geoTrack.setDisplayRect( border, topMargin, trackWidth, trackHeight - laneWidth );
+
+		// Draw the course.
+		dc.beginPath();
+		var points = this.geoTrack.getXYTrack();
+		dc.moveTo( points[0][0], points[0][1] );
+		var pointsLength = points.length;
+		for( var i = 1; i < pointsLength; ++i )
+			dc.lineTo( points[i][0], points[i][1] );
+		if( !gpsIsPointToPoint )
+			dc.closePath();
+		
+		// Draw the outline.
+		dc.lineJoin = "round";
+		dc.strokeStyle = "#808080";
+		dc.lineWidth = laneWidth * 1.25 + 2;
+		dc.stroke();
+		
+		// Draw the course.
+		var trackColour = '#7FE57F';
+		dc.strokeStyle = trackColour;
+		dc.lineWidth = laneWidth * 1.25;
+		dc.stroke();
+		
+		dc.strokeStyle = '#505050';
+		dc.lineWidth = 1;
+		dc.stroke();
+		
+		this.drawCompass( dc, width, height, tHeight )
+		
+		// Draw the finish line.
+		var finishLineLen = laneWidth * 2;
+		var fLine;
+		if( gpsIsPointToPoint )
+			fLine = LineNormal( points[points.length-1][0], points[points.length-1][1], points[points.length-2][0], points[points.length-2][1], finishLineLen );
+		else
+			fLine = LineNormal( points[0][0], points[0][1], points[1][0], points[1][1], finishLineLen );
+		dc.beginPath()
+		dc.moveTo( fLine[0], fLine[1] );
+		dc.lineTo( fLine[2], fLine[3] );
+		dc.strokeStyle = "#FFFFFF";
+		dc.lineWidth = laneWidth / 1.5;
+		dc.stroke();
+		dc.strokeStyle = "#000000";
+		dc.lineWidth = laneWidth / 5;
+		dc.stroke();
+		if( gpsIsPointToPoint )
+			fLine = LineNormal( points[points.length-1][0], points[points.length-1][1], points[points.length-2][0], points[points.length-2][1], laneWidth * 4 );
+		else
+			fLine = LineNormal( points[0][0], points[0][1], points[1][0], points[1][1], laneWidth * 4 );
+		dc.drawImage( checkeredFlag, fLine[2] - checkeredFlag.width/2, fLine[3] - checkeredFlag.height/2 );
+		
+		// Draw the riders
+		dc.strokeStyle = 'black';
+		dc.fillStyle = 'black';
+		dc.lineWidth = 1;
+		numSize = (r/2)/laneMax;
+		lapCur = 0;
+		var riderRadius = laneWidth * 0.5;
+		var thickLine = r / 32;
+		var hasFirstLapRatio = false;
+		firstLapRatio = 1.0;
+		if( data )
+		{
+			var riderXYPT = [];
+			var cd = catDetailsByName[categoryCur];
+			for( var p = 0; p < cd.pos.length; ++p )
+			{
+				var num = cd.pos[p];
+				if( !hasFirstLapRatio )
+				{
+					hasFirstLapRatio = true;
+					if( cd['firstLapDistance'] && cd['lapDistance'] )
+						firstLapRatio = cd['firstLapDistance'] / cd['lapDistance'];
+				}
+				var xypt = this.getRiderXYPT( num );
+				if( xypt[2] == null )
+					continue;
+				xypt.splice( 0, 0, num );
+				riderXYPT.push( xypt );
+			}
+			
+			// Sort in reverse order of position so we draw leaders last on top.
+			riderXYPT.sort(function(x, y)
+				{
+					var r = (y[3] ? y[3] : 0) - (x[3] ? x[3] : 0);	// Greatest distance.
+					if( r == 0 )
+						r = (x[4] ? x[4] : 0) - (y[4] ? y[4] : 0);	// Shortest time.
+					if( r == 0 )
+						r = (x[0] - y[0]);							// Bib number.
+					return -r;
+				});
+				
+			var leaders = [];
+			for( var i = riderXYPT.length - 1; i >= 0 && leaders.length < 5; --i )
+				leaders.push( riderXYPT[i][0] );
+
+			var topThree = {};
+			for( var i = 0; i < leaders.length; ++i )
+				topThree[leaders[i]] = i;
+				
+			var riderPosition = {};
+			for( var i = 0; i < riderXYPT.length; ++i )
+			{
+				var rxypt = riderXYPT[i];
+				riderPosition[rxypt[0]] = riderXYPT.length - i;
+				var x = rxypt[1];
+				if( x == null )
+					continue;
+					
+				num = rxypt[0];
+				var y = rxypt[2];
+				dc.fillStyle = colours[num % colours.length];
+				// Check for a leader.
+				var j = topThree[num];
+				if( j != undefined )
+				{
+					dc.strokeStyle = topThreeColours[j];
+					dc.lineWidth = thickLine;
+					if( numsToWatch[num] != undefined )
+						dc.font = fontStrHightlight;
+				}
+				else
+				{
+					// Check for a watch number.
+					j = numsToWatch[num];
+					if( j != undefined )
+					{
+						dc.strokeStyle = '#ffa500';
+						dc.lineWidth = thickLine * 1.5;
+						dc.font = fontStrHightlight;
+					}
+				}
+				if( isNaN(x) || isNaN(y) )
+					continue;
+				//DrawCircle( dc, x, y, riderRadius );
+				dc.beginPath(); dc.arc(x, y, riderRadius, 0.0, Math.PI*2, true); dc.closePath(); dc.fill(); dc.stroke();
+
+				if( topThree[num] != undefined || numsToWatch[num] != undefined )
+				{
+					if( isEmptyObject(numsToWatch) || numsToWatch[num] != undefined )
+					{
+						dc.fillStyle = 'black';
+						dc.fillText(num+'', x+numSize, y-numSize );
+					}
+				}
+				if( j != undefined )
+				{
+					dc.strokeStyle = 'black';
+					dc.lineWidth = 1;
+					dc.font = fontStr;
+				}
+			}
+		}
+		
+		dc.fillStyle = '#222';
+		
+		// Draw the race time
+		yCur = tHeight+textVSpace*1.6;
+		tStr = FormatTime( t );
+		dc.fillText( tStr, width - dc.measureText(tStr).width, yCur );
+		yCur += tHeight;
+		
+		// Draw the current lap and distance
+		if( leaders.length > 0 ) {
+			var leaderRaceTimes = data[leaders[0]]['raceTimes'];
+			if( leaderRaceTimes && leaderRaceTimes.length > 0 && leaderRaceTimes[0] < leaderRaceTimes.back() ) {
+				var table = [];
+				
+				var leaderRaceTimes = data[leaders[0]]['raceTimes'];
+				var maxLaps = leaderRaceTimes.length - 1;
+				var glr = GetLapRatio( leaderRaceTimes, t, this.iLapDistance );
+				this.iLapDistance = glr[0];
+				TriggerReload( leaderRaceTimes, t, this.iLapDistance );
+				var lapRatio = glr[1];
+				lapRatio = Math.floor(lapRatio * 10.0) / 10.0		// Always round down, not to nearest decimal.
+				table.push( FixedFormat(this.iLapDistance + lapRatio, 5, 1) + ' ' + _('Laps of') + ' ' + maxLaps );
+				table.push( FixedFormat(maxLaps - this.iLapDistance - lapRatio, 5, 1) + ' ' + _('Laps to go') );
+				
+				var leaderCategory = data[leaders[0]]['raceCat'];
+				var cat = (leaderCategory && catDetails ? catDetails[leaderCategory] : null);
+				if( cat ) {
+					var distanceCur = null, distanceRace = null;
+					
+					if( cat['lapDistance'] ) {
+						var flr = data[leaders[0]]['flr']; if( !flr ) flr = 1.0;
+						var distanceLap = cat['lapDistance'];
+						if( cat['distanceUnit'] != displayUnits )
+							distanceLap *= (displayUnits == 'km' ? 1.60934 : 0.621371);
+						distanceRace = distanceLap * (flr + maxLaps - 1);
+						if( this.iLapDistance == 0 )
+							distanceCur = lapRatio * (distanceLap * flr);
+						else
+							distanceCur = distanceLap * (flr + this.iLapDistance - 1 + lapRatio);
+					}
+					else if( cat['raceDistance'] && leaderRaceTimes.length > 0 && leaderRaceTimes[0] != leaderRaceTimes.back() ) {
+						distanceRace = cat['raceDistance'];
+						if( cat['distanceUnit'] != displayUnits )
+							distanceRace *= (displayUnits == 'km' ? 1.60934 : 0.621371);
+						distanceCur = (t - leaderRaceTimes[0]) / (leaderRaceTimes.back() - leaderRaceTimes[0]) * distanceRace;
+						distanceCur = Math.max( 0.0, Math.min(distanceCur, distanceRace) );
+					}
+					if( distanceCur != null ) {
+						if( distanceCur != distanceRace )
+							distanceCur = Math.floor( distanceCur * 10.0 ) / 10.0;
+						table.push( '' );
+						table.push( FixedFormat(distanceCur, 5, 1) + ' ' + _(displayUnits) + ' ' + _('of') + ' ' + distanceRace.toFixed(1) );
+						table.push( FixedFormat(distanceRace - distanceCur, 5, 1) + ' ' + _(displayUnits) + ' ' + _('to go') );
+					}
+				}
+				
+				var widthMax = 0;
+				for( var w = 0; w < table.length; ++w )
+					widthMax = Math.max( widthMax, dc.measureText(table[w]).width );
+				
+				var yCur, xCur;
+				if( this.compassLocation[0] == 'N' )
+					yCur = height - tHeight * (table.length + 1);
+				else
+					yCur = tHeight+textVSpace*1.6 + tHeight * 2;
+				if( this.compassLocation[1] == 'E' )
+					xCur = width - widthMax;
+				else
+					xCur = 0;
+				for( var w = 0; w < table.length; ++w ) {
+					yCur += tHeight;
+					if( !table[w] )
+						continue;
+					var value = table[w];
+					var tShow = value.replace( /^0+/, '' );
+					if( tShow[0] == '.' )
+						tShow = '0' + tShow;
+					dc.fillText( tShow, xCur + dc.measureText(Array(value.length - tShow.length + 1).join('0')).width, yCur );
+				}
+			}
+		}
+
+		// Draw the leader board.
+		var bannerItems = [];
+		for( var i = 0; i < leaders.length; ++i )
+			bannerItems.push( [leaders[i], i+1] );
+		if( !isEmptyObject(numsToWatch) )
+		{
+			var rp = [];
+			for( var n in numsToWatch )
+			{
+				var p = riderPosition[n];
+				if( p != undefined )
+					rp.push( [p, n] );
+			}
+			rp.sort(function(x, y) { return x[0] - y[0]; });
+			
+			for( var i = 0; i < rp.length; ++i )
+				bannerItems.push( [rp[i][1], rp[i][0]] );
+		}
+		this.drawBanner( dc, width, height, tHeight, bannerItems );
+	}
+}
+
+//----------------------------------------------------------------------------
+
+function _initAnimation()
+{
+	tLast = (new Date).getTime();
+	suspendAnimation = false;
+}
+
+function NextFrame()
+{
+	tDelta = ((new Date).getTime() - tLast);
+	SetTime( t + (tDelta/1000.0) * speedup );
+	tLast += tDelta;
+	if( !suspendAnimation )
+	{
+		if( t < tMax )
+			setTimeout( NextFrame, 1000.0 / framesPerSecond );
+		else if( loopContinuously && !raceIsRunning )
+		{
+			t = 0;
+			setTimeout( NextFrame, 1000.0 / framesPerSecond );
+		}
+	}
+}
+
+function HasDisplayUnit( aData )
+{
+	for( var num in aData )
+	{
+		var info = aData[num];
+		if( info['speed'] )
+			return true;
+	}
+	return false;
+}
+
+function GetDistanceUnit( aData )
+{
+	for( var num in aData )
+	{
+		var info = aData[num];
+		if( info['speed'] )
+		{
+			var speedUnit = info['speed'].split(' ')[1];
+			return (speedUnit.substring(0, 1) == 'k' ? 'km' : 'miles');
+		}
+	}
+	return 'km';
+}
+
+function SetData( aData, tCur )
+{
+	// Data is rider information indexed by number.  Info includes lap times and lastTime times.
+	// lap times should include the start offset.
+	//	Example:
+	//		data = { 101: { raceTimes: [xx, yy, zz], lastTime: None, category: 'All' }, 102 { raceTimes: [aa, bb], lastTime: cc, category: 'Cat'} }
+	data = (aData || null);
+	if( tCur != undefined )
+		t = tCur;
+	
+	// Get some of the unique categories from the data.
+	var hasLapSpeeds = false;
+	var hasMultipleLaps = false;
+	for( var num in data )
+	{
+		var info = data[num];
+		info['iLast'] = 1;
+		if( info['raceTimes'] && info['raceTimes'].length > 2 )
+			hasMultipleLaps = true;
+		if( info['lapSpeeds'] )
+			hasLapSpeeds = true;
+		
+		// Adjust the finish time in case it has been modified from the last time with time penalties.
+		if( info['status'] == 'Finisher' && info['raceTimes'].length > 1 )
+			info['finishTime'] = info['raceTimes'].back()
+		else
+			info['finishTime'] = info['lastTime']
+	}
+	
+	// Create an array of the category names.
+	categories = [];
+	for( var i = 0; i < catDetails.length; ++i )
+		categories.push( catDetails[i].name );
+	
+	categorySpan = document.getElementById('idCategories');
+	var catHTML = '<div id="display_menu"><div class="buttonset">';
+	if( categories.length > 1 )
+	{
+		for( var i = 0; i < categories.length; ++i )
+		{
+			var cat = categories[i];
+			catHTML += '<span><input type="radio" name="categoryCur" onClick="SelectCategory('+i+');" id="idCat' + i + '"';
+			if( cat == categoryCur )
+				catHTML += ' checked="true"';
+			catHTML += '</input><label for="idCat' + i + '"' + (i == 0 ? ' data-tr="All">' : '>' + cat.escapeHTML()) + '</label></span>&nbsp;';
+			if( (i+1) % 4 == 0 && i != categories.length - 1 )
+				catHTML += '</div></div><div id="display_menu"><div class="buttonset">'
+		}
+	}
+	else if( categories.length == 1 )
+		catHTML = categories[0].escapeHTML();
+	catHTML += '</div></div>';
+	categorySpan.innerHTML = catHTML;
+	
+	// Adjust the display options based on the data.
+	var options = [
+	{ i:0, name:'Lap Times',	value:'showraceTimes',		requiresMultipleLaps:false, requiresLapSpeeds:false },
+	{ i:1, name:'Race Times',	value:'showRaceTimes',		requiresMultipleLaps:true, requiresLapSpeeds:false },
+	{ i:2, name:'Time Gaps',	value:'showLapGaps',		requiresMultipleLaps:true, requiresLapSpeeds:false },
+	{ i:3, name:'Gap Percents',	value:'showGapPercent',		requiresMultipleLaps:false, requiresLapSpeeds:false },
+	{ i:4, name:'Lap Speed',	value:'showLapSpeed',		requiresMultipleLaps:true, requiresLapSpeeds:true },
+	{ i:5, name:'Est. Distance Gap',value:'showDistanceGap',requiresMultipleLaps:true, requiresLapSpeeds:true }
+	];
+	var showOptionsSpan = document.getElementById( 'idShowOptions' );
+	var showHTML = '<div id="display_menu"><label class="heading" data-tr="Show:"></label><div class="buttonset">';
+	var firstOption = true;
+	for( var i = 0; i < options.length; ++i )
+	{
+		var o = options[i];
+		if( o.requiresMultipleLaps && !hasMultipleLaps )
+			continue;
+		if( o.requiresLapSpeeds && !hasLapSpeeds )
+			continue;
+		showHTML += '<input type="radio" name="showOptions" id="idShowOption' + i + '" onClick="SetLapDataOption('+o.i+');"';
+		if( firstOption )
+		{
+			showHTML += ' checked="true"';
+			firstOption = false;
+		}
+		showHTML += '/><label for="idShowOption' + i + '" data-tr="' + o.name +'"></label>&nbsp;';
+	}
+	showHTML += '</div></div>';
+	showOptionsSpan.innerHTML = showHTML;
+	
+	animationObj.Refresh();
+}
+
+function Animate( tRunning, aTMax, tCur )
+{
+	StopAnimate();
+	_initAnimation();
+	
+	if( !canvas )
+		return;
+	
+	t = (tCur || 0);
+	if( !data )
+		return;
+	if( aTMax == undefined )
+	{
+		tMax = 0;
+		for( var num in data )
+			if( data[num]['raceTimes'].length > 0 )
+				tMax = Math.max(tMax, data[num]['raceTimes'].back());
+	}
+	else
+		tMax = aTMax;
+
+	speedup = (raceIsRunning ? 1.0 : tMax / tRunning);
+	setTimeout( NextFrame, 1000.0/framesPerSecond );
+}
+
+//------------------------------------------------------------------------------
+
+function createChild( parent, tag )
+{
+	var child = document.createElement(tag);
+	parent.appendChild( child );
+	return child;
+}
+
+function createTextChild( parent, s )
+{
+	var child = document.createTextNode(s);
+	parent.appendChild( child );
+	return child;
+}
+
+//-----------------------------------------------------------------------------
+
+var statusSortSeq = { 'Finisher':1, 'PUL':2, 'OTL':6, 'DNF':3, 'DQ':4, 'DNS':5, 'NP':7 };
+function CmpResultsData( x, y )
+{
+	// [numLaps, raceTimeOfLastLap, num, raceTimes, status, lastTime]
+	//    0              1           2      3         4        5
+	
+	// Compare status.
+	var xStatus = statusSortSeq[x[4]], yStatus = statusSortSeq[y[4]];
+	var dStatus = xStatus - yStatus
+	if( dStatus != 0 )
+		return dStatus;
+
+	// Compare laps completed.
+	var d = x[0] - y[0];
+	if( d != 0 )
+		return -d;
+		
+	// Compare race finish times.
+	if( x[4] == 'Finisher' )
+		return x[1] - y[1];
+		
+	// Compare last time.
+	var d = x[5] - y[5];
+	if( d != 0 )
+		return d;
+	
+	// Compare bib number.
+	return x[2] - y[2];
+}
+
+function CmpCategoryResultsData( x, y )
+{
+	var c = x[6] - y[6];
+	if( c )
+		return c;
+	return CmpResultsData( x, y );
+}
+
+function SetCategoryResults()
+{
+	resultsDiv.innerHTML = '';
+	
+	if( !data )
+		return;
+
+	// Show results for this category.
+	var raceTimesLength = {};
+	var raceTimesCopy = {};
+	if( raceIsRunning ) {
+		for( var num in data ) {
+			var raceTimes = data[num]['raceTimes'];
+			raceTimesLength[num] = raceTimes.binSearch( t );
+			raceTimesCopy[num] = raceTimes.slice(0);
+		}
+	}
+	else {
+		for( var num in data ) {
+			var raceTimes = data[num]['raceTimes'];
+			raceTimesLength[num] = raceTimes.length;
+			raceTimesCopy[num] = raceTimes.slice(0);
+		}
+	}
+	
+	if( showLapsFrequency < 0 ) {
+		// Compute a reasonable number of laps to show.
+		// Get the maximum laps in the data.
+		var maxLaps = 0;
+		for( var num in data ) {
+			if( maxLaps < raceTimesLength[num] )
+				maxLaps = raceTimesLength[num];
+		}
+
+		var showLaps = document.getElementById('idShowLaps');
+		
+		// Choose a frequency that results in a reasonable number of laps displayed.
+		for( var i = 0; i < showLaps.options.length; ++i ) {
+			var freqCur = parseInt(showLaps.options[i].value, 10);
+			if( freqCur != 0 && (~~(maxLaps / freqCur) <= 12 || i == showLaps.options.length - 1) ) {
+				showLaps.selectedIndex = i;
+				showLapsFrequency = freqCur;
+				break;
+			}
+		}
+	}
+	
+	var speedUnit = '';
+	var distanceUnit = '';
+	for( var c = 0; c < catDetails.length; ++c ) {
+		var catDetail = catDetails[c];
+		var catName = catDetail.name;
+		if( catName == 'All' )
+			continue;
+			
+		if( categoryCur != 'All' && categoryCur != catName )
+			continue;
+		
+		var table = document.createElement('TABLE');
+		table.className = 'results';
+		
+		var curFields = {};
+		var hasLapSpeeds = false;
+		var allFactorsEqual = true;
+		var firstFactor = null;
+		var showingAllLaps = true;
+		var starters = 0, finishers = 0, finishersPercent = 0.0;
+		
+		// Check for what information to present in the results.
+		for( var p = 0; p < catDetail.pos.length; ++p ) {
+			var num = catDetails[c].pos[p];
+			var d = data[num];
+			
+			if( d['factor'] ) {
+				if( firstFactor == null )
+					firstFactor = d['factor'];
+				if( firstFactor != d['factor'] )
+					allFactorsEqual = false;
+			}
+			if( !speedUnit && d['speed'] ) {
+				speedUnit = d['speed'].split(' ')[1];
+				distanceUnit = (speedUnit.substring(0, 1) == 'k' ? 'km' : 'miles');
+			}
+			if( !hasLapSpeeds && d['lapSpeeds'] )
+				hasLapSpeeds = true;
+				
+			var raceTimes = raceTimesCopy[num];
+			if( raceTimesLength[num] != raceTimes.length )
+				showingAllLaps = false;
+		}
+		var hasFactor = !allFactorsEqual;
+		var lastTimeField = hasFactor ? 'lastTime' : 'lastTimeOrig';
+		
+		// Compute statistics and remove the start offset.
+		for( var p = 0; p < catDetail.pos.length; ++p ) {
+			var num = catDetails[c].pos[p];
+			var d = data[num];
+			
+			// Remove the race start time if this is not a Wave category.
+			var lastTime = d[lastTimeField];
+			var raceTimes = raceTimesCopy[num];
+			if( catDetail.catType != 'Start Wave' && raceTimes.length > 0 )
+			{
+				for( var j = 1; j < raceTimes.length; ++j )
+					raceTimes[j] -= raceTimes[0];
+				lastTime -= raceTimes[0];
+				raceTimes[0] = 0;
+			}
+			
+			// Get the union of all the defined fields.
+			for( var f = 0; f < infoFields.length; ++f )
+				if( d[infoFields[f]] )
+					curFields[infoFields[f]] = true;
+					
+			if( d['status'] != 'DNS' )
+				starters += 1;
+			if( d['status'] == 'Finisher' )
+				finishers += 1;
+		}
+		if( starters > 0 )
+			finishersPercent = (100.0 * finishers) / starters;
+		
+		// Adjust to get a combined name field.
+		var hasFirstLastName = (curFields['FirstName'] && curFields['LastName']);
+		if( hasFirstLastName ) {
+			curFields['FirstName'] = false;
+			curFields['LastName'] = false;
+			curFields['Name'] = true;
+		}
+
+		// Find the fastest lap for this category.
+		var tLapMin = 100000 * 60.0 * 60.0;
+		var sLapMax = 0.0;
+		var lapMinCoords = null;
+		for( var p = 0; p < catDetail.pos.length; ++p ) {
+			var num = catDetails[c].pos[p];
+			var info = data[num];
+			if( info.lapSpeeds ) {
+				var lapSpeeds = info.lapSpeeds;
+				for( var i = 0; i < lapSpeeds.length; ++i ) {
+					var s = lapSpeeds[i];
+					if( s > sLapMax ) {
+						sLapMax = s;
+						lapMinCoords = [r, i+1];
+					}
+				}
+			}
+			else {
+				var raceTimes = raceTimesCopy[num];
+				for( var i = 1; i < raceTimesLength[num]; ++i ) {
+					var tMax = Math.max(raceTimes[i] - raceTimes[i-1], 0.0);
+					if( tMax < tLapMin ) {
+						tLapMin = tMax;
+						lapMinCoords = [r, i];
+					}
+				}
+			}
+		}
+
+		// Label this category.
+		var leaderNum = catDetails[c].pos[0];
+		var leaderraceTimes = raceTimesCopy[leaderNum];
+		
+		var catStr = catName;
+		var thead = createChild( table, 'THEAD' );
+		var tr = createChild( thead, 'TR' );
+		var td;
+		createTextChild( td = createChild(tr, 'TH'), catName );
+		var catTitleTD = td;
+		td.style.fontSize = '120%';
+		td.colSpan = 4;
+		td.id = 'idNonNumeric';
+		var tdTitle = td;
+		
+		// Add the headers.
+		var numHeaders = 0;
+		thead = createChild( table, 'THEAD' );
+		tr = createChild( thead, 'TR' );
+		createTextChild( td = createChild(tr, 'TH'), _('Pos') );	++numHeaders;
+		createTextChild( td = createChild(tr, 'TH'), _('Bib') );	++numHeaders;
+		td.id = 'idNonNumeric';
+		
+		for( var f = 0; f < infoFields.length; ++f ) {
+			if( curFields[infoFields[f]] ) {
+				createTextChild( td = createChild(tr, 'TH'), _(infoFields[f]) );
+				td.id = 'idNonNumeric';
+				++numHeaders;
+			}
+		}
+		
+		if( isTimeTrial ) {
+			createTextChild( td = createChild(tr, 'TH'), _('ClockStartTime') );	++numHeaders;
+			createTextChild( td = createChild(tr, 'TH'), _('StartTime') );	++numHeaders;
+			createTextChild( td = createChild(tr, 'TH'), _('FinishTime') );	++numHeaders;
+		}
+		
+		if( hasFactor ) {
+			createTextChild( td = createChild(tr, 'TH'), _('ElapsedTime') );	++numHeaders;
+			createTextChild( td = createChild(tr, 'TH'), _('Factor') );	++numHeaders;
+		}
+		createTextChild( td = createChild(tr, 'TH'), _('Time') );	++numHeaders;
+		if( !hasFactor )
+			createTextChild( td = createChild(tr, 'TH'), _('Gap') );	++numHeaders;
+		if( speedUnit ) {
+			createTextChild( td = createChild(tr, 'TH'), displayUnits == 'km' ? 'km/h' : 'mph' );
+			++numHeaders;
+		}
+
+		// Cache the leader's data.
+		var leaderLaps	= raceTimesLength[leaderNum];
+		var leaderTime	= raceTimesLength[leaderNum] ? raceTimesCopy[leaderNum][raceTimesLength[leaderNum]-1] : 99999;
+		var startOffset	= (raceTimesCopy[leaderNum].length > 0 ? raceTimesCopy[leaderNum][0] : 0);
+		
+		if( leaderLaps > 2 && showLapsFrequency != 0 ) {
+			for( var i = 1; i < leaderLaps; ++i ) {
+				if( (i % showLapsFrequency == 0 || i == 1 || i == leaderLaps-1)  ) {
+					createTextChild( td = createChild(tr, 'TH'), _('Lap') + ' ' + i );
+					++numHeaders;
+				}
+			}
+		}
+		if( !showingAllLaps ) {
+			createTextChild( td = createChild(tr, 'TH'), '...' );
+			++numHeaders;
+		}
+		tdTitle.colSpan = numHeaders;
+		
+		// Add the rider data to the table.
+		tbody = createChild( table, 'TBODY' );
+		for( var p = 0; p < catDetail.pos.length; ++p ) {
+			var position = p + 1;
+			var num = catDetails[c].pos[p];
+			var d = data[num];
+			
+			function createTD( tr ) {
+				var td = createChild(tr, 'TD');
+				if( numsToWatch[num] )
+					td.className = 'highlight';
+				return td;
+			}
+			
+			tr = createChild(tbody, 'TR');
+			tr.className = ((r & 1) ? 'odd' : 'even');
+			
+			var riderLaps	= raceTimesLength[num];
+			var riderTime	= raceTimesLength[num] ? raceTimesCopy[num][raceTimesLength[num]-1] : 99999;
+			var raceTimes	= raceTimesCopy[num];
+			var isFinisher	= (d['status'] == 'Finisher');
+			var tFinish = (isFinisher ? Math.max(riderTime - startOffset, 0.0) : 0.0);
+			
+			tr.onclick = function(n) { return function() {ToggleNumberHighlight(n);}; }(num);
+			
+			var posText = (isFinisher ? '' + position + (data[num]['relegated'] ? ' REL' : ''): d['status'] );
+			createTextChild( td = createTD(tr), posText );
+			
+			createTextChild( td = createTD(tr), num );
+			
+			// Compute the fastest and slowest lap for this rider.
+			var iFastestLap = -1, iSlowestLap = -1;
+			if( d.lapSpeeds && d.lapSpeeds.length > 1 ) {
+				iFastestLap = iSlowestLap = 0;
+				for( var i = 1; i < d.lapSpeeds.length; ++i ) {
+					if( d.lapSpeeds[i] > d.lapSpeeds[iFastestLap] )
+						iFastestLap = i;
+					if( d.lapSpeeds[i] <= d.lapSpeeds[iSlowestLap] )
+						iSlowestLap = i;
+				}
+			}
+			
+			// Add the info fields (from the spreadsheet).
+			for( var f = 0; f < infoFields.length; ++f ) {
+				var field = infoFields[f];
+				if( curFields[field] ) {
+					var v;
+					if( field == 'Name' ) {
+						if( d['LastName'] && d['FirstName'] )
+							v = d['LastName'] + ',&nbsp;' + d['FirstName'];
+						else
+							v = d['LastName'] || d['FirstName'];
+					}
+					else
+						v = d[field];
+					td = createTD(tr);
+					td.innerHTML = v;
+					if( field != 'Age' && field != 'Factor' )
+						td.id = 'idNonNumeric'; 
+				}
+			}
+			
+			// Fix the Category information based on the results of the first rider.
+			if( position == 1 && isFinisher && distanceUnit && d['speed'] ) {
+				var tFinishStr = FormatTime( tFinish );
+				var dot = tFinishStr.indexOf('.');
+				if( dot > 0 )
+					tFinishStr = tFinishStr.substring(0, dot);
+				catStr = '';
+				
+				var cd = catDetail;
+				if( cd.raceDistance )
+					catStr += _('Distance') + ': ' + FormatDistance(cd.raceDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true);
+				if( cd.lapDistance && cd.laps > 1 ) {
+					if( catStr )
+						catStr += ', ';
+					if( cd.firstLapDistance && cd.firstLapDistance != cd.lapDistance ) {
+						catStr += (
+							_('1st lap') + ' ' + FormatDistance(cd.firstLapDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true) + ', ' +
+							(cd.laps-1) + ' ' + _('more laps of') + ' ' + FormatDistance(cd.lapDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true));
+					}
+					else
+						catStr += cd.laps + ' ' + _('laps of') + ' ' + FormatDistance(cd.lapDistance, cd.distanceUnit ? cd.distanceUnit : 'km', true);
+				}
+				if( raceStartTime ) {
+					if( catStr )
+						catStr += ', ';
+					catStr += _('Start') + ': ' + FormatTime(raceStartTime + cd.startOffset);
+				}
+				catStr +=  '<br/>';
+				catStr +=
+					(raceIsRunning ? _('Estimated') + ': ' : '') +
+					_('Winner') + ': ' + tFinishStr + ' ' + _('at') + ' ' +
+					FormatSpeed(parseFloat(d['speed'].split(' ')[0]), cd.distanceUnit ? cd.distanceUnit : 'km', true) + ', ' +
+					starters + ' ' + _('starters') + ', ' +
+					finishers + ' ' + _('finishers') + ' (' + finishersPercent.toFixed(1) + '%)';
+				catTitleTD.innerHTML = '<span class="biggerFont">' + catName +
+						(raceIsRunning ? " (" + _('race in progress') + ')' : '') + '</span>' +
+						'<br/><span class="smallfont">' + catStr + '</span>';
+			}
+			
+			if( isTimeTrial ) {
+				createTextChild( td = createTD(tr), d['clockStartTime'] ? FormatTime(d['clockStartTime']) : '' );
+				createTextChild( td = createTD(tr), d['startTime'] ? FormatTime(d['startTime']) : '' );
+				var ttPenalty = (d['ttPenalty'] ? d['ttPenalty'] : 0.0);
+				createTextChild( td = createTD(tr),
+					(isFinisher && d['startTime'] && d['lastTimeOrig'])
+						? FormatTime(d['startTime']+d['lastTimeOrig']-ttPenalty)
+						: '' );
+			}
+			
+			if( hasFactor ) {
+				var tFinishOrig = (isFinisher ? Math.max(d['lastTimeOrig'] - startOffset, 0.0) : 0.0);
+				var finishTimeOrig = (isFinisher ? FormatTime(tFinishOrig) : '');
+				createTextChild( td = createTD(tr), finishTimeOrig );
+				
+				var factor = d['factor'];
+				if( !factor )
+					factor = 100.0;
+				createTextChild( td = createTD(tr), factor.toFixed(2) );
+			}
+			var finishTime = '';
+			if( isFinisher && d[lastTimeField] > 0.0 ) {
+				finishTime = FormatTime(d[lastTimeField]);
+				if( isTimeTrial && d['ttPenalty'] )
+					finishTime += '*';
+			}
+			createTextChild( td = createTD(tr), finishTime );
+			
+			var gap = '';
+			if( isFinisher ) {
+				if( leaderLaps == riderLaps ) {
+					if( riderTime != leaderTime ) {
+						var delta = TimeDifference(riderTime, leaderTime);
+						if( r != 0 && lapDataOption == 3 ) {
+							delta = (100.0 * delta) / (leaderTime - startOffset);
+							gap = '+' + delta.toFixed(2) + '%';
+						}
+						else {
+							gap = FormatTimeGap( delta );
+						}
+					}
+				}
+				else if( riderTime > leaderTime ) {
+					var lapsDown = leaderLaps - riderLaps;
+					gap = '-' + lapsDown + ' ' + (lapsDown == 1 ? _('lap') : _('laps'));
+				}
+			}
+			
+			if( !hasFactor ) {
+				createTextChild( td = createTD(tr), gap );
+			}
+			
+			if( speedUnit ) {
+				var speed = d['speed'];
+				if( speed )
+					createTextChild( td = createTD(tr), FormatSpeed(parseFloat(speed.split(' ')[0]), distanceUnit, false) );
+				else
+					createTextChild( td = createTD(tr), '' );
+			}
+			
+			if( leaderLaps > 2 && showLapsFrequency != 0 ) {
+				for( var i = 1; i < leaderLaps; ++i ) {
+					if( !(i % showLapsFrequency == 0 || i == 1 || i == raceTimesLength[num]-1)  )
+						continue
+					if( i >= riderLaps ) {
+						createTextChild( td = createChild(tr, 'TD'), ' ' );
+						continue;
+					}
+
+					switch( lapDataOption )
+					{
+					case 0:	// Lap Times.
+						createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(raceTimes[i] - raceTimes[i-1], 0.0)) );
+						break;
+					case 1:	// Race Times.
+						createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(raceTimes[i] - startOffset, 0.0)) );
+						break;
+					case 2:	// Gap Times.
+						if( r == 0 )
+							createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(raceTimes[i] - raceTimes[i-1], 0.0)) );
+						else {
+							var v = TimeDifference(raceTimes[i], raceTimesCopy[leaderNum][i]);
+							createTextChild( td = createChild(tr, 'TD'), FormatTimeGap(v) );
+						}
+						break;
+					case 3:	// Time Percent.
+						if( r == 0 )
+							createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(raceTimes[i] - raceTimes[i-1], 0.0)) );
+						else
+						{
+							var v = (100.0 * (raceTimes[i] - raceTimesCopy[leaderNum][i])) / raceTimesCopy[leaderNum][i];
+							var sign = '+';
+							if( v < 0 )
+							{
+								sign = '-';
+								v = -v;
+							}
+							createTextChild( td = createChild(tr, 'TD'), sign + v.toFixed(2) + '%' );
+						}
+						break;
+					case 4:	// Lap Speeds.
+						createTextChild( td = createChild(tr, 'TD'), FormatSpeed(d.lapSpeeds[i-1], distanceUnit, false) );
+						break;
+					case 5: // Est. Distance Gap
+						if( r == 0 )
+							createTextChild( td = createChild(tr, 'TD'), '-' );
+						else {
+							var dt = raceTimes[i] - raceTimesCopy[leaderNum][i];
+							var s = d.lapSpeeds && d.lapSpeeds.length >= i ? d.lapSpeeds[i-1] : 0.0;
+							var v = '';
+							if( s > 0.0 )
+							{
+								var distance = s * (dt / (60.0*60.0));
+								v = FormatDistanceGap( distance, distanceUnit );
+							}
+							createTextChild( td = createChild(tr, 'TD'), v );
+						}
+						break;
+					}
+					
+					var classes = [];
+					//if( lapMinCoords && r == lapMinCoords[0] && i == lapMinCoords[1] )	classes.push( 'fastest' );
+					if( numsToWatch[num] )												classes.push( 'highlight' );
+					if( i == iFastestLap+1 )											classes.push( 'fastest-lap' );
+					if( i == iSlowestLap+1 )											classes.push( 'slowest-lap' );
+					if( classes )	td.className = classes.join( ' ' );
+				}
+			}
+			if( !showingAllLaps )
+				createTextChild( td = createTD(tr), '' );
+		}
+		
+		// Add any tt penalties.
+		var hasTTPenalties = false;
+		for( var p = 0; p < catDetail.pos.length; ++p ) {
+			var num = catDetails[c].pos[p];
+			var d = data[num];
+			if( d.ttPenalty ) {
+				hasTTPenalties = true;
+				break;
+			}
+		}
+		if( hasTTPenalties ) {
+			// Add a blank row between the penalties.
+			tr = createChild( tbody, 'TR' );
+			tr.className = 'noborder';
+			for( var k = 0; k < numHeaders; ++k ){
+				createTextChild( td = createChild(tr, 'TD'), '' );
+				td.innerHTML = '&nbsp;'
+			}
+			
+			// Get the number of non-info fields.
+			var penaltyColCount = numHeaders;
+			for( var f in curFields )
+				--penaltyColCount;
+
+			for( var p = 0; p < catDetail.pos.length; ++p ) {
+				var num = catDetails[c].pos[p];
+				var d = data[num];
+				if( d.ttPenalty ) {
+					tr = createChild( tbody, 'TR' );
+					tr.className = 'noborder';
+					createTextChild( td = createChild(tr, 'TD'), '' );				// Skip the Pos column.
+					createTextChild( td = createChild(tr, 'TD'), '* ' + num );		// Add start and bib num.
+					for( var f = 0; f < infoFields.length; ++f )					// Add the additional fields.
+					{
+						var field = infoFields[f];
+						if( curFields[field] )
+						{
+							var v;
+							if( field == 'Name' )
+							{
+								if( d['LastName'] && d['FirstName'] )
+									v = d['LastName'] + ',&nbsp;' + d['FirstName'];
+								else
+									v = d['LastName'] || d['FirstName'];
+							}
+							else
+								v = d[field];
+							td = createChild(tr, 'TD');
+							td.innerHTML = v;
+							if( field != 'Age' )
+								td.id = 'idNonNumeric'; 
+						}
+					}
+					// Add the penalty time and note.
+					td = createChild( tr, 'TD' );
+					td.id = 'idNonNumeric'; 
+					td.setAttribute( 'colspan', penaltyColCount );
+					td.innerHTML = d.ttPenalty.toFixed(3) + ' sec ' + _('time penalty') + (d.ttNote ? (' - ' + d.ttNote.escapeHTML()) : '');
+				}
+			}
+		}
+		
+		// Add a blank row between categories.
+		tr = createChild( tbody, 'TR' );
+		tr.className = 'noborder';
+		for( var k = 0; k < numHeaders; ++k ){
+			createTextChild( td = createChild(tr, 'TD'), '' );
+			td.innerHTML = '&nbsp;'
+		}
+		
+		resultsDiv.appendChild( table );
+	}
+}
+
+function byte2Hex(n)
+{
+	var nybHexString = "0123456789ABCDEF";
+	return String(nybHexString.substr((n >> 4) & 0x0F,1)) + nybHexString.substr(n & 0x0F,1);
+}
+
+function RGB2Color(r,g,b)
+{
+	return '#' + byte2Hex(r) + byte2Hex(g) + byte2Hex(b);
+}
+
+function makeColorGradient(frequency1, frequency2, frequency3,
+                             phase1, phase2, phase3,
+                             center, width, len)
+{
+	if (len == undefined)      len = 50;
+	if (center == undefined)   center = 128;
+	if (width == undefined)    width = 127;
+
+	var grad = [];
+	for (var i = 0; i < len; ++i)
+	{
+		var red = Math.sin(frequency1*i + phase1) * width + center;
+		var grn = Math.sin(frequency2*i + phase2) * width + center;
+		var blu = Math.sin(frequency3*i + phase3) * width + center;
+		grad.push( RGB2Color(red,grn,blu) );
+	}
+	return grad;
+}
+
+function lighterColor( k )
+{
+	var s = '#';
+	for( var i = 0; i < 3; ++i )
+	{
+		var c = parseInt(k.substring(1 + i*2, 1 + i*2 + 2), 16);
+		c += (255 - c) * 0.6;
+		c = ~~c;
+		s += (c < 16 ? '0' : '') + c.toString(16);
+	}
+	return s;
+}
+
+function drawSegment( c, x, y, w, h, color, colorLighter )
+{
+	c.save();
+	
+	var gr = c.createLinearGradient( x, y, x, y+h );
+	gr.addColorStop(0.0, color);
+	gr.addColorStop(0.33, colorLighter);
+	gr.addColorStop(1.0, color );
+	c.fillStyle = gr;
+	c.fillRect( x, y, w, h );
+	if( color != '#FFFFFF' )
+	{
+		c.strokeStyle = '#000';
+		c.strokeRect( x, y, w, h );
+	}
+	c.restore();
+}
+
+function drawDiamond( c, xCenter, yCenter, radius ) {
+	c.save();
+	
+	c.beginPath();
+	c.moveTo( xCenter + radius, yCenter );
+	c.lineTo( xCenter         , yCenter - radius );
+	c.lineTo( xCenter - radius, yCenter );
+	c.lineTo( xCenter         , yCenter + radius );
+	c.closePath();
+	
+	var grd = c.createRadialGradient( 0+ xCenter, - radius*0.50 + yCenter, 0, 0 + xCenter, radius + 1 + yCenter, radius );
+	grd.addColorStop(0, '#FFFFFF');
+	grd.addColorStop(1, 'rgb(220,220,0)');
+	
+	c.fillStyle = 'rgb(220,220,0)';
+	c.fill();
+	c.fillStyle = grd;
+	c.fill();
+	
+	c.lineWidth = 1.0;
+	c.strokeStyle = 'rgb(128,128,128)';
+	c.stroke();
+	
+	c.restore();
+}
+
+function drawStar( c, xCenter, yCenter, numPoints, radius, radiusInner ) {
+	c.save();
+	
+	c.beginPath();
+	var angle = (Math.PI * 2.0) / numPoints;
+	var angle2 = angle / 2.0;
+	c.moveTo( 0 + xCenter, -radius + yCenter );
+	for( var p = 0; p < numPoints; ++p ) {
+		var a = p * angle + angle2 + Math.PI / 2.0;
+		c.lineTo( Math.cos(a) * radiusInner+ xCenter, -Math.sin(a) * radiusInner+ yCenter );
+		a = (p + 1) * angle + Math.PI / 2.0;
+		c.lineTo( Math.cos(a) * radius+ xCenter, -Math.sin(a) * radius+ yCenter );
+	}
+	c.closePath();
+	
+	var grd = c.createRadialGradient( 0+ xCenter, - radius*0.50 + yCenter, 0, 0 + xCenter, radius + 1 + yCenter, radius );
+	grd.addColorStop(0, '#FFFFFF');
+	grd.addColorStop(1, 'rgb(255,165,0)');
+	
+	c.fillStyle = 'rgb(255,165,0)';
+	c.fill();
+	c.fillStyle = grd;
+	c.fill();
+	
+	c.lineWidth = 1.0;
+	c.strokeStyle = 'rgb(128,128,128)';
+	c.stroke();
+	
+	c.restore();
+}
+
+var xFactorCur = 0.0;
+var	barHeightCur = 0.0;
+var	labelsWidthCur = 0.0;
+var segmentsCur = [];
+
+function findPos(obj) {
+	var curleft = curtop = 0;
+	if (obj.offsetParent) {
+		curleft = obj.offsetLeft
+		curtop = obj.offsetTop
+		while (obj = obj.offsetParent) {
+			curleft += obj.offsetLeft
+			curtop += obj.offsetTop
+		}
+	}
+	return [curleft,curtop];
+}
+
+var hoverTimer = null;
+var xEvent = null;
+var yEvent = null;
+
+function RaceChartProcessMouse( event )
+{
+	var canvasRaceChart = document.getElementById('idRaceChart');
+	var pos = findPos( canvasRaceChart );
+	xEvent = event.pageX - canvasRaceChart.offsetLeft;
+	yEvent = event.pageY - canvasRaceChart.offsetTop;
+	if( hoverTimer != null )
+		clearTimeout( hoverTimer );	
+	hoverTimer = setTimeout( "RaceChartUpdateInfo()", 25 );
+}
+
+function RaceChartProcessClick( event )
+{
+	var canvasRaceChart = document.getElementById('idRaceChart');
+	var pos = findPos( canvasRaceChart );
+	xEvent = event.pageX - canvasRaceChart.offsetLeft;
+	yEvent = event.pageY - canvasRaceChart.offsetTop;
+	for( var s = 0; s < segmentsCur.length; ++s )
+	{
+		var seg = segmentsCur[s];
+		if( seg[0] <= xEvent && xEvent < (seg[0] + seg[2]) &&
+			seg[1] <= yEvent && yEvent < (seg[1] + seg[3]) )
+		{
+			var num = seg[5];
+			document.getElementById('idNumsToWatch').value = num + '';
+			SetNumsToWatch();
+			return;
+		}
+	}
+}
+
+function getRiderName( num ) {
+	var name = '';
+	var riderData = data[num];
+	if( riderData )
+	{
+		if( riderData['LastName'] )
+			name = riderData['LastName'];
+		if( riderData['FirstName'] )
+		{
+			if( name )
+				name = name + ', ' + riderData['FirstName'];
+			else
+				name = riderData['FirstName'];
+		}
+	}
+	return name;
+}
+
+function getRiderTeam( num ) {
+	var team = '';
+	var riderData = data[num];
+	if( riderData && riderData['Team'] )
+		team = riderData['Team'];
+	return team;
+}
+
+function getRiderNameNum( num ) {
+	var name = getRiderName(num);
+	if( name )
+		return name + ' ' + num;
+	return num + '';
+}
+
+function RaceChartUpdateInfo()
+{
+	RefreshRaceChart();
+	
+	var canvasRaceChart = document.getElementById('idRaceChart');
+	for( var s = 0; s < segmentsCur.length; ++s )
+	{
+		var seg = segmentsCur[s];
+		if( seg[0] <= xEvent && xEvent < (seg[0] + seg[2]) &&
+			seg[1] <= yEvent && yEvent < (seg[1] + seg[3]) )
+		{
+			//alert( "found segment" );
+			var hover = seg[4];
+			var num = seg[5];
+			var name = getRiderNameNum( num );
+			var lap = seg[6];
+			hover = name + ': ' + _('Lap') + ' ' + hover;
+			if( showDetails ) {
+				var d = data[num];
+				if( d.interp[lap] )
+					hover += '\n' + _('Projected Time');
+				var detail = lapDetails[num + ',' + lap];
+				if( detail ) {
+					for( var dd = 0; dd < detail.length; ++dd ) {
+						if( detail[dd] )
+							hover += '\n' + detail[dd];
+					}
+				}
+			}
+
+			hover = hover.trim();
+			var splitHover = hover.split( '\n' );
+			var hoverLines = splitHover.length;
+			var fontHeight = 14;
+			var height = fontHeight * hoverLines + fontHeight / 2.0;
+				
+			var margin = fontHeight / 4.0 - 1;
+				
+			var c = canvasRaceChart.getContext('2d');
+			c.font = fontHeight + 'px Arial';
+
+			c.save();
+			c.lineWidth = 3;
+			c.strokeStyle = '#000';
+			c.strokeRect( seg[0], seg[1], seg[2]-1, seg[3]-1 );
+			
+			var textWidth = 0;
+			for( var isp = 0; isp < splitHover.length; ++isp )
+				textWidth = Math.max( textWidth, c.measureText(splitHover[isp]).width );
+			var drawDirection = (x + textWidth > canvasRaceChart.width*0.90 ? -1 : 1);
+			
+			c.lineWidth = 1;
+			var x = xEvent, y = yEvent;
+			
+			c.fillStyle = '#FFF';
+			c.beginPath();
+			c.moveTo( x, y );
+			y -= fontHeight;
+			var yMax = y;
+			c.lineTo( x, y );
+			x += drawDirection * textWidth;
+			c.lineTo( x, y );
+			y -= height / 2;
+			c.arc( x, y, height / 2, Math.PI / 2, 3 * Math.PI / 2, drawDirection > 0 );
+			y -= height / 2;
+			var yMin = y;
+			x -= drawDirection * textWidth;
+			c.lineTo( x, y );
+			y += height / 2;
+			c.arc( x, y, height / 2, 3 * Math.PI / 2, drawDirection > 0 ? Math.PI : 0.0, drawDirection > 0 );
+			c.closePath();
+			c.fill();
+			c.stroke();
+			c.fillStyle = '#000';
+			c.textBaseline = 'top';
+			var yText = yMin + (yMax - yMin - splitHover.length*fontHeight) / 2;
+			for( var isp = 0; isp < splitHover.length; ++isp, yText += fontHeight )
+				c.fillText( splitHover[isp], xEvent - (drawDirection < 0 ? textWidth : 0), yText );
+			c.restore();
+			
+			c.lineWidth = 2;
+			return;
+		}
+	}
+}
+
+function RefreshRaceChart()
+{
+	var canvasRaceChart = document.getElementById('idRaceChart');
+	if( !data || !canvasRaceChart || !canvasSupported )
+		return;
+
+	var iFromCategory = {};
+	for( var i = 0; i < categories.length; ++i )
+		iFromCategory[categories[i]] = i;
+
+	var showStartOffsetOption = document.getElementById('idShowStartOffsetOption');
+	var showStartOffsetButton = document.getElementById('idShowStartOffsets');
+	var showStartOffsets = showStartOffsetButton.checked;
+	showDetails = document.getElementById('idShowDetails').checked;
+		
+	// Show results for this category.
+	var categoriesUsed = {};
+	var dataMax = 0;
+	var resultsData = [];
+	var lapsMax = 0;
+	for( var c = 0; c < catDetails.length; ++c )
+	{
+		var catDetail = catDetails[c];
+		var catName = catDetail.name;
+		if( catName == 'All' )
+			continue;
+		if( categoryCur != 'All' && categoryCur != catName )
+			continue;
+			
+		for( var p = 0; p < catDetail.pos.length; ++p )
+		{
+			var num = catDetail.pos[p];
+			var d = data[num];
+			
+			var raceTimes = d['raceTimes'].slice(0);	// Make a copy so we don't disturb the original.
+			
+			// Remove the race start time if this is not a Wave category.
+			if( catDetail.catType != 'Start Wave' && raceTimes.length > 0 )
+			{
+				for( var j = 1; j < raceTimes.length; ++j )
+					raceTimes[j] -= raceTimes[0];
+				raceTimes[0] = 0;
+			}
+			resultsData.push( [	raceTimes.length,
+								raceTimes.length ? raceTimes.back() : 99999,
+								num,
+								raceTimes,
+								d['status'],
+								d['finishTime'],
+								iFromCategory[catName]
+							] );
+			categoriesUsed[catName] = true;
+			if( raceTimes.length > 0 )
+			{
+				if( raceTimes.back() > dataMax )
+					dataMax = raceTimes.back();
+				if( raceTimes.length > lapsMax )
+					lapsMax = raceTimes.length;
+			}
+		}
+	}
+	
+	if( resultsData.length == 0 )
+		return;
+		
+	var categoryCount = 0;
+	for( var c in categoriesUsed )
+		++categoryCount;
+
+	// Adjust the height of the race chart to make each row reasonably high.
+	var rowMin = 14, rowMax = rowMin*2, rows = resultsData.length + categoryCount + 2;
+	if( canvasRaceChart.height / rows < rowMin )
+		canvasRaceChart.height = ~~(rowMin * rows);
+	else if( canvasRaceChart.height / rows > rowMax )
+		canvasRaceChart.height = ~~(rowMax * rows);
+	var width = canvasRaceChart.width;
+	var height = canvasRaceChart.height;
+		
+	var dc = canvasRaceChart.getContext('2d');
+	
+	var backColour = 'white';
+	dc.textBaseline = "top";
+	dc.fillStyle = backColour;
+	dc.fillRect(0, 0, width, height );
+	
+	// Sort by greatest distance and shortest time.
+	resultsData.sort( CmpCategoryResultsData );
+	
+	var iNum = 2;
+	var iRaceTimes = 3;
+	var iStatus = 4;
+	var iCategory = 6;
+
+	// Check if all the data have the same offset.
+	showStartOffsetOption.className = 'hidden';
+	var startOffset = resultsData[0][iRaceTimes][0];
+	for( var i = 1; i < resultsData.length; ++i ) {
+		if( resultsData[i][iRaceTimes][0] != startOffset ) {
+			showStartOffsetOption.className = 'shown';
+			startOffset = 0.0;
+			break;
+		}
+	}
+	if( startOffset != 0.0 ) {
+		for( var i = 0; i < resultsData.length; ++i ) {
+			var raceTimes = resultsData[i][iRaceTimes];
+			for( var j = 0; j < raceTimes.length; ++j )
+				raceTimes[j] -= startOffset;
+		}
+		dataMax -= startOffset;
+	}
+	else if( !showStartOffsets ) {
+		dataMax = 0;
+		for( var i = 0; i < resultsData.length; ++i ) {
+			var num = resultsData[i][iNum];
+			var d = data[num];
+			var raceTimes = resultsData[i][iRaceTimes];
+			if( raceTimes.length > 0 ) {
+				startOffset = raceTimes[0];
+				if( startOffset ) {
+					for( var j = 0; j < raceTimes.length; ++j )
+						raceTimes[j] -= startOffset;
+				}
+				if( raceTimes.back() > dataMax )
+					dataMax = raceTimes.back();
+			}
+		}
+	}
+	
+	lapsMax = resultsData.length > 0 ? resultsData[0][iRaceTimes].length : 0;
+	var colors = makeColorGradient(2.4,2.4,2.4,0,2,4,128,127,500);
+	var lighterColors = [];
+	for( var i = 0; i < colors.length; ++i )
+		lighterColors.push( lighterColor(colors[i]) );
+
+	var barHeight = ~~(height / (resultsData.length + 3 + (categoryCur == 'All' ? categories.length-1 : 0)));
+	if( barHeight < 4 || dataMax == 0 )
+		return;
+	barHeight = Math.min( barHeight, 18 );
+	var minimizeLabels = false;
+
+	var normalTextHeight = barHeight * 0.80;
+	var textHeight = normalTextHeight;
+	var fontStr = textHeight + "px Arial";
+	dc.font = fontStr;
+	
+	var textWidthLeft = dc.measureText('0000').width;
+	for( var i = 0; i < resultsData.length; ++i ) {
+		var rd = resultsData[i];
+		var num = rd[iNum];
+		textWidthLeft = Math.max(	dc.measureText(getRiderNameNum(num) + '0:0').width,
+									dc.measureText(categories[rd[iCategory]] + '0:0').width,
+									textWidthLeft );
+	}
+	
+	var legendSep = 4;			// Separations between legend entries and the Gantt bars.
+	var labelsWidthLeft = textWidthLeft + legendSep;
+	var labelsWidthRight = dc.measureText('0000').width + legendSep;
+	var drawLabels = true;
+		
+	if( labelsWidthLeft + labelsWidthRight > width ) {
+		labelsWidthLeft = labelsWidthRight = 0;
+		drawLabels = false;
+	}
+
+	var xLeft = labelsWidthLeft;
+	var xRight = width - labelsWidthRight;
+	var yBottom = barHeight * (resultsData.length + categoryCount + 1);
+	var yTop = 2 * barHeight;
+	var lineWidth = 0.5;
+
+	var fontLegendStr = (normalTextHeight*.75) + "px Arial";
+	dc.font = fontLegendStr;
+	textHeight = (normalTextHeight * .75);
+	textWidth = dc.measureText( dataMax < 60*60 ? '00:00' : '00:00:00' ).width;
+		
+	// Draw the horizontal labels.
+	// Find some reasonable tickmarks for the x axis.
+	var numLabels = (xRight - xLeft) / (textWidth * 2.0);
+	var idealInterval = dataMax / numLabels;
+	var intervals = [1, 2, 5, 10, 15, 20, 30, 1*60, 2*60, 5*60, 10*60, 15*60, 20*60, 30*60, 1*60*60, 2*60*60, 4*60*60, 8*60*60, 12*60*60, 24*60*60];
+	for( d = 1; d < intervals.length - 1 && intervals[d] < idealInterval; ++d )
+		continue;
+	d = intervals[d];
+	var dFactor = (xRight - xLeft) / dataMax;
+	
+	dc.strokeStyle = 'black';
+	dc.fillStyle = 'black';
+	dc.lineWidth = lineWidth;
+	for( var tCur = 0; tCur < dataMax; tCur += d ) {
+		var x = xLeft + tCur * dFactor;
+		var s = FormatTime(tCur);
+		var w = dc.measureText(s).width;
+		dc.fillText( s, x - w/2, barHeight + 2 );
+		if( !minimizeLabels )
+			dc.fillText( s, x - w/2, yBottom + 4 );
+		DrawLine( dc, x, yBottom+3, x, yTop-3 );
+	}
+	
+	// Draw the Gantt chart.
+	dc.font = fontStr;
+	textHeight = normalTextHeight;
+	textWidth = dc.measureText('0000').width;
+
+	dc.lineCap = 'butt';
+	dc.lineJoin = 'miter';
+	
+	var categoryStartOffset = 0;
+
+	var xFactor = (width - labelsWidthLeft - labelsWidthRight) / dataMax;
+	var yLast = 2 * barHeight;
+	var yHighlight = null;
+	segmentsCur = [];
+	var iCategoryLast = -1;
+	for( var i = 0; i < resultsData.length; ++i ) {
+		// Leave a space between categories.
+		if( i == 0 || resultsData[i][iCategory] != iCategoryLast ) {
+			if( !showStartOffsets )
+				categoryStartOffset = resultsData[i][iRaceTimes] ? resultsData[i][iRaceTimes][0] : 0;
+			iCategoryLast = resultsData[i][iCategory];
+			if( i == 0 ) {
+				dc.fillStyle = '#FFFFFF';
+				var w = dc.measureText(categories[iCategoryLast] + '0:00').width;
+				dc.fillRect( legendSep, yLast, w + 1, barHeight + 1 );
+				dc.fillStyle = '#000000';
+				dc.fillText( categories[iCategoryLast], legendSep, yLast - barHeight );
+				DrawLine( dc, 0, yLast, width - labelsWidthRight + 1, yLast );
+			}
+			else {
+				var negOffset = -4;
+				dc.fillStyle = '#FFFFFF';
+				dc.fillRect( negOffset, yLast, width - labelsWidthRight + 1 - negOffset, barHeight + 1 );
+				dc.strokeRect( negOffset, yLast, width - labelsWidthRight + 1 - negOffset, barHeight );
+				dc.fillStyle = '#000000';
+				dc.fillText( categories[iCategoryLast], legendSep, yLast );
+				yLast += barHeight;
+			}
+		}
+
+		yCur = yLast + barHeight;
+		xLast = labelsWidthLeft;
+		xCur = xLast;
+		var num = resultsData[i][iNum];
+		var raceTimes = resultsData[i][iRaceTimes];
+		
+		if( resultsData[i][iStatus] != 'Finisher' ) {
+			dc.fillStyle = '#CDCDCD';
+			dc.fillRect( 0, yLast, width, yCur - yLast + 1 );
+		}
+		
+		dc.strokeStyle = "#0F0F0F";
+		for( var j = 0; j < raceTimes.length; ++j ) {
+			if( raceIsRunning && raceTimes[j] > t )
+				break;
+			var tCur = raceTimes[j] - categoryStartOffset;
+			xCur = ~~(labelsWidthLeft + tCur * xFactor);
+			if( j == 0 ) {
+				dc.fillStyle = resultsData[i][iStatus] == 'Finisher' ? '#FFFFFF' : '#CDCDCD';
+				dc.fillRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
+				dc.strokeRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
+			}
+			else {
+				var riderData = data[num];
+				var hover = j + ', ' + FormatTime(raceTimes[j] - raceTimes[j-1]);
+				drawSegment( dc, xLast, yLast, xCur - xLast + 1, yCur - yLast + 1, colors[j], lighterColors[j] );
+				segmentsCur.push( [xLast, yLast, xCur - xLast + 1, yCur - yLast + 1, hover, num, j] );
+				
+				// Check for a note.
+				if( showDetails ) {
+					var detail = lapDetails[num + ',' + j];
+					if( detail && detail[0] ) {
+						dc.fillStyle = '#000000';
+						dc.fillText( detail[0], xLast + 2, yLast + (yCur - yLast - textHeight) / 2 );
+					}
+				}
+			}
+			xLast = xCur;
+		}
+		
+		// Draw the last empty bar.
+		xCur = ~~(labelsWidthLeft + dataMax * xFactor);
+		dc.fillStyle = resultsData[i][iStatus] == 'Finisher' ? '#FFFFFF' : '#CDCDCD';
+		dc.fillRect( xLast, yLast, width - xLast, yCur - yLast + 1 );
+		dc.strokeRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
+		
+		// Draw the label on both ends.
+		dc.fillStyle = '#000000';
+		var lab = getRiderName( resultsData[i][iNum] );
+		if( lab )
+			lab += ' ' + resultsData[i][iNum];
+		else
+			lab = resultsData[i][iNum] + '';
+		dc.fillStyle = '#000000';
+		dc.fillText( lab, labelsWidthLeft - dc.measureText(lab).width - legendSep, yLast );
+		if( !minimizeLabels ) {
+			lab = resultsData[i][iNum] + '';
+			dc.fillText( lab, width - labelsWidthRight + legendSep, yLast );
+		}
+		if( numsToWatch[resultsData[i][iNum]] != undefined ) {
+			dc.save()
+			dc.strokeStyle = "#000000";
+			var lineWidth = 2;
+			dc.lineWidth = lineWidth;
+			dc.strokeRect( lineWidth / 2, yLast, width - lineWidth / 2, yCur - yLast + 1 - lineWidth );
+			dc.restore();
+		}
+
+		// Draw indicators on the laps to show edit or projected times.
+		if( showDetails ) {
+			xLast = labelsWidthLeft;
+			xCur = xLast;
+			for( var j = 0; j < raceTimes.length; ++j ) {
+				if( raceIsRunning && raceTimes[j] > t )
+					break;
+				var tCur = raceTimes[j] - categoryStartOffset;
+				xCur = ~~(labelsWidthLeft + tCur * xFactor);
+				
+				if( j != 0 ) {
+					var num = resultsData[i][iNum];
+					var d = data[num];
+					if( d && d.interp[j] )
+						drawDiamond( dc, xCur, (yCur + yLast) / 2.0, barHeight / 2.0 );
+					else {
+						var detail = lapDetails[num + ',' + j];
+						if( detail && detail[1] )
+							drawStar( dc, xCur, (yCur + yLast) / 2.0, 5, barHeight / 2.0, barHeight / 4.0 );
+					}
+				}
+				
+				xLast = xCur;
+			}
+		}
+		
+		yLast = yCur;
+	}
+	
+	xFactorCur = xFactor;
+	barHeightCur = barHeight;
+	labelsWidthCur = labelsWidthLeft;
+}
+
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
+
+function Rect( x, y, width, height ) {
+	this.x = x;
+	this.y = y;
+	this.width = width;
+	this.height = height;
+}
+Rect.prototype.GetLeft = function() { return this.x; }
+Rect.prototype.GetRight = function() { return this.x + this.width; }
+Rect.prototype.GetTop = function() { return this.y; }
+Rect.prototype.GetBottom = function() { return this.y + this.height; }
+Rect.prototype.GetWidth = function() { return this.width; }
+Rect.prototype.GetHeight = function() { return this.height; }
+Rect.prototype.SetTop = function( y ) { this.y = y; }
+Rect.prototype.SetBottom = function( y ) { this.y = y - this.height; }
+Rect.prototype.SetLeft = function( x ) { this.x = x; }
+Rect.prototype.SetRight = function( x ) { this.x = x - this.width; }
+Rect.prototype.Contains = function(x, y) {
+	return this.x <= x && x <= this.x + this.width && this.y <= y && y <= this.y + this.height;
+}
+Rect.prototype.print = function( label ) {
+	console.log( label + ': Rect(' + this.x + ',' + this.y + ',' + this.width + ',' + this.height + ')' );
+}
+Rect.prototype.Intersects = function( r ) {
+	return !(
+		r.x + r.width < this.x ||
+		this.x + this.width < r.x ||
+		r.y + r.height < this.y ||
+		this.y + this.height < r.y
+	);
+}
+
+//----------------------------------------------------------------------
+
+var _resultsNums = [];
+var _raceTMax = null;
+var _lastCategory = '';
+function GetValidResultsNums() {
+	if( _lastCategory == categoryCur )
+		return _resultsNums;
+	
+	_resultsNums = [];
+	_raceTMax = null;
+	for( var c = 0; c < catDetails.length; ++c )
+	{
+		var catDetail = catDetails[c];
+		if( categoryCur != catDetail.name )
+			continue;
+		for( var p = 0; p < catDetail.pos.length; ++p ) {
+			var num = catDetail.pos[p];
+			var d = data[num];
+			var raceTimes = d['raceTimes'];
+			if( raceTimes && raceTimes.length >= 2 )
+				_resultsNums.push( num );
+		}
+		break;
+	}
+	
+	_lastCategory = categoryCur;
+	return _resultsNums;
+}
+function GetRaceTMax() {
+	if( _lastCategory == categoryCur && _raceTMax != null )
+		return _raceTMax;
+	
+	var resultsNums = GetValidResultsNums();
+	_raceTMax = 0.0;
+	for( var i = 0; i < resultsNums.length; ++i ) {
+		var d = data[resultsNums[i]];
+		var raceTimes = d['raceTimes'];
+		if( raceTimes.back() > _raceTMax )
+			_raceTMax = raceTimes.back();
+	}
+	return _raceTMax;
+}
+
+function shortFormatTimeGap( t ) {
+	var tStr = FormatTimeGap( t );
+	if( tStr.substring(0, 3) == "0'0" )
+		tStr = tStr.substring(3);
+	else if( tStr.substring(0,2) == "0'" )
+		tStr = tStr.substring(2);
+	return tStr;
+}
+
+function GetLapLE( raceTimes, t ) {
+	var lap = raceTimes.binSearch( t );
+	if( lap >= raceTimes.length )
+		lap = raceTimes.length - 1;
+	return raceTimes[lap] > t ? lap-1 : lap;
+}
+
+function GetPositionSpeed( raceTimes, t ) {
+	var lap = GetLapLE( raceTimes, t );
+	var lapStartTime = raceTimes[lap];
+	var lapTime = 0.0;
+	if( lap+1 < raceTimes.length )
+		lapTime = raceTimes[lap+1] - raceTimes[lap];
+	else
+		lapTime = raceTimes[lap] - raceTimes[lap-1];
+	var speed = 1.0 / lapTime;
+	return {'position': lap + (t - lapStartTime) * speed, 'speed': speed};
+}
+
+function GetLeaderGap( leaderPosition, leaderSpeed, leaderRaceTimes, raceTimes, t ) {
+	if( !raceTimes || raceTimes.length == 0 )
+		return null;
+	if( t >= raceTimes[raceTimes.length-1] ) {
+		if( t >= leaderRaceTimes[leaderRaceTimes.length-1] )
+			return {
+				'gap':leaderRaceTimes.length == raceTimes.length ? raceTimes[raceTimes.length-1] - leaderRaceTimes[leaderRaceTimes.length-1] : null,
+				'lapsDown': raceTimes.length - leaderRaceTimes.length
+			};
+		return {'gap':null, 'lapsDown':raceTimes.length - leaderRaceTimes.length};
+	}
+	
+	var ps = GetPositionSpeed( raceTimes, t );
+	var riderPosition = ps.position, riderSpeed = ps.speed;
+	var deltaPostion = leaderPosition - riderPosition;
+	var positionFraction = deltaPostion - Math.floor(deltaPostion);
+	if( positionFraction < 0.0 )
+		positionFraction += 1.0;
+	return {'gap':positionFraction / leaderSpeed, 'lapsDown': -Math.floor(deltaPostion)};
+}
+
+function PathFromPoints( dc, points, xTranslate, yTranslate ) {
+	xTranslate = xTranslate ? xTranslate : 0;
+	yTranslate = yTranslate ? yTranslate : 0;
+	dc.beginPath();
+	dc.moveTo( points[0][0] + xTranslate, points[0][1] + yTranslate );
+	for( var p = 1; p < points.length; ++p )
+		dc.lineTo( points[p][0] + xTranslate, points[p][1] + yTranslate );
+}
+
+function GetSituationGaps( t ) {
+	var BigTime = 1000.0*24.0*60.0*60.0;
+	
+	var resultsNums = GetValidResultsNums();
+	if( resultsNums.length == 0 )
+		return [];
+		
+	var maxLaps = 0;
+	for( var i = 0; i < resultsNums.length; ++i ) {
+		var d = data[resultsNums[i]];
+		if( d.raceTimes && d.raceTimes.length - 1 > maxLaps )
+			maxLaps = d.raceTimes.length - 1;
+	}
+	
+	if( t == undefined ) {
+		if( raceIsRunning && timestamp ) {
+			var tServer = (new Date(timestamp[0]).getTime()) / 1000.0;
+			var tBrowser = (new Date().getTime()) / 1000.0;
+			while( tBrowser - tServer < 0 )
+				tBrowser += 60*60;
+			t = timestamp[1] + (tBrowser - tServer);
+		}
+		else
+			t = BigTime;
+	}
+	var raceTMax = GetRaceTMax();
+	t = Math.min( t, raceTMax );
+	
+	var leaderRaceTimes = [];
+	for( var lap = 0; lap <= maxLaps; ++lap ) {
+		var tMinLap = BigTime;
+		for( var i = 0; i < resultsNums.length; ++i ) {
+			var d = data[resultsNums[i]];
+			if( d.raceTimes.length > lap && d.raceTimes[lap] < tMinLap )
+				tMinLap = d.raceTimes[lap];
+		}
+		leaderRaceTimes.push( tMinLap );
+	}
+	
+	function getInfo( num, lapsDown ) {
+		var d = data[num];
+		var names = [];
+		if( d.LastName ) names.push( d.LastName );
+		if( d.FirstName ) names.push( d.FirstName.slice(0, 1) );
+		return num + ' ' + names.join(',') + (lapsDown != 0 ? ' (' + lapsDown + ')': '');
+	}
+	
+	var ps = GetPositionSpeed( leaderRaceTimes, t );
+	var leaderPosition = ps.position, leaderSpeed = ps.speed;
+	var gaps = [];
+	for( var i = 0; i < resultsNums.length; ++i ) {
+		var num = resultsNums[i];
+		var d = data[num];
+		gapLapsDown = GetLeaderGap( leaderPosition, leaderSpeed, leaderRaceTimes, d.raceTimes, t );
+		if( gapLapsDown != null && gapLapsDown.gap != null )
+			gaps.push( [gapLapsDown.gap, getInfo(num, gapLapsDown.lapsDown)] );
+	}
+	
+	gaps.sort( function(a, b) { return a[0] - b[0]; } );
+	
+	if( gaps.length > 0 ) {
+		var gapMin = gaps[0][0];
+		if( gapMin > 0 ) {
+			for( var g = 0; g < gaps.length; ++g )
+				gaps[g][0] -= gapMin;
+		}
+	}
+	
+	var thisLap = GetLapLE(leaderRaceTimes, t);
+	
+	var tCur = t;
+	var tAfterLeader = t - leaderRaceTimes[thisLap];
+	var laps = leaderRaceTimes.length - 1;
+	var lap = Math.min( thisLap + 1, laps );
+	var lapsToGo = Math.max(laps - lap, 0);
+	
+	var title = 
+			'   ' + _('Lap') + ': ' + lap + '/' + laps + '   ' + _('Laps to go') + ': ' + lapsToGo +
+			'    ' + _('Race') + ': ' + FormatTime(tCur);
+	
+	return {"gaps":gaps, "tAfterLeader":tAfterLeader, "title":title, "tCur":tCur};
+}
+
+
+function Situation( situationCanvas, timeRange, detailDiv) {
+	this.situationCanvas = situationCanvas;
+	this.timeRange = timeRange;
+	this.detailDiv = detailDiv;
+
+	var groupIndexColour = '#FFCC99';
+	var groupGapColour = '#FFFFFF';
+	var groupSizeColour = '#99CCFF';
+	var packColour = 'rgb(200,255,200)';
+	var blackColour = '#000000';
+	var whiteColour = '#FFFFFF';
+	
+	this.gaps = [];
+	this.groupRectList = [];
+	this.groupFullData = [];
+
+	this.tAfterLeader = null;
+	this.title = null;
+	this.tCur = null;
+	this.zoom = 1.0;
+		
+	this.groupClickHandler = null;
+	//	self.Bind(wx.EVT_LEFT_UP, self.OnMouseUp )
+		
+	this.SetData = function( gaps, tAfterLeader, title, tCur ) {
+		// each gap is of the form: [gapSeconds, text]
+		// Expected to be sorted by increasing gapSeconds.
+		this.gaps = (gaps && gaps.length > 0) ? gaps : [];
+		
+		this.tAfterLeader = tAfterLeader;
+		this.title = title;
+		this.tCur = tCur;
+		
+		this.Refresh();
+	}
+	
+	this.SetZoom = function( zoom ) {
+		this.zoom = zoom;
+		this.Refresh();
+	}
+
+	this.Refresh = function() { this.Draw(); }
+
+	this.Draw = function() {
+		var dc = situationCanvas.getContext('2d');
+		var width = situationCanvas.width;
+		var height = situationCanvas.height;
+		
+		dc.fillStyle = whiteColour;
+		dc.fillRect( 0, 0, width, height );
+		
+		this.groupRectList = [];
+		this.groupFullData = [];
+		
+		var greyPenColour = 'rgb(100,100,100, 0.64)';
+		function SetGreyPen() { dc.strokeStyle = greyPenColour; dc.lineWidth = 1; }
+		var greyBrushColour = 'rgb(232,232,232)';
+			
+		// Partition the gaps into groups separated by at least one second.
+		var maxGapSec = 20.0*60.0*60.0;	// Ignore gaps that are too great.
+		var groups = [];
+		var group = [];
+		var gapPrev = null;
+		for( var g = 0; g < this.gaps.length; ++g ) {
+			var gap = this.gaps[g];
+			if( gap[0] > maxGapSec )
+				break;
+			if( gapPrev == null || gap[0] - gapPrev[0] <= 1.0 )
+				group.push( gap );
+			else {
+				groups.push( group );
+				group = [gap];
+			}
+			gapPrev = gap;
+		}
+		if( group.length > 0 )
+			groups.push( group );
+
+		// Make a copy of all the group info.  Also get the largest group.
+		this.groupFullData = [];
+		var groupMax = 0;
+		var groupTimeMaxSize = null;
+		for( var g = 0; g < groups.length; ++g ) {
+			var group = groups[g];
+			this.groupFullData.push( group.slice() );
+			if( group.length > groupMax ) {
+				groupMax = group.length;
+				groupTimeMaxSize = group[0][0];
+			}
+		}
+		
+		// Add the group header (index, gap and size).
+		for( var i = 0; i < groups.length; ++i ) {
+			var group = groups[i];
+			if( group.length == 0 )
+				continue;
+			var groupSize = group.length;
+			if( group.length > 10 ) {
+				group = [].concat( group.slice(0,5), [[group[5][0], '...']], group.slice(group.length-5, group.length) );
+			}
+			if( i == 0 )
+				group.splice( 0, 0, [group[0][0], '\u2714 \u200B ' + groupSize] );
+			else
+				group.splice( 0, 0, [group[0][0], i + ' ' + shortFormatTimeGap(group[0][0]) + ' ' + groupSize] );
+			groups[i] = group;
+		}
+		
+		var fontHeight = height / 40;
+		if( fontHeight == 0 )
+			return;
+
+		var font = fontHeight + 'px Arial';
+		dc.font = font;
+		var spaceWidth = fontHeight / 2;
+		
+		var smallFontHeight = fontHeight * 0.75;
+		var smallFont = smallFontHeight + 'px Arial';
+
+		//---------------------------------------------------------------------
+		dc.font = font;
+		dc.fillStyle = blackColour;
+		dc.textBaseline = "top";
+
+		var border = Math.min( width, height ) / 25;
+		var xLeft = border*2;
+		var yTop = border*2.25 + fontHeight;
+		if( this.title != null )
+			dc.fillText( this.title, xLeft, border );
+		
+		if( groups.length == 0 )
+			return;
+		
+		function GetGroupTextExtent( group ) {
+			var widthMax = 0;
+			for( var g = 0; g < group.length; ++g )
+				widthMax = Math.max( widthMax, dc.measureText(group[g][1]).width );
+			return {"width":widthMax, "height":group.length*fontHeight};
+		}
+		
+		var lastWidth = GetGroupTextExtent( groups[groups.length-1] ).width;
+		
+		var xRight = width - border - lastWidth;
+		var yBottom = height - border;
+		
+		var gapMax = 0.0;
+		if( groups.length > 0 && groups[0].length > 0 ) {
+			var groupFirst = groups[0], groupLast = groups[groups.length-1];
+			var tFirst = groupFirst[0][0];
+			var tLast = groupLast[groupLast.length-1][0];
+			gapMax = tLast - tFirst;
+		}
+		var xScale = (xRight - xLeft) / (gapMax != 0.0 ? gapMax : 1.0) * this.zoom;
+		
+		function drawFinishLine() {
+			if( this.tAfterLeader == null )
+				return;
+			var x = xLeft + this.tAfterLeader * xScale;
+			var flWidth = width / 32;
+			if( x - flWidth > width )
+				return;
+			var flTop = yTop - border / 2;
+			var flBottom = flTop + border;
+			dc.strokeStyle = 'rgb(220,220,220)';
+			dc.lineWidth = Math.max(width / 800, 1);
+			dc.fillStyle = whiteColour;
+			dc.fillRect( x - flWidth / 2, flTop, flWidth, flBottom - flTop );
+			dc.strokeRect( x - flWidth / 2, flTop, flWidth, flBottom - flTop );
+			dc.lineWidth = flWidth / 4;
+			dc.lineCap = 'butt';
+			DrawLine( dc, x, flTop, x, flBottom );
+			dc.fillStyle = whiteColour;
+			dc.fillRect( width-border, 0, width, height );
+		}
+		
+		drawFinishLine();
+		
+		// Draw a direction line.
+		dc.strokeStyle = blackColour;
+		dc.lineWidth = 1;
+		dc.fillStyle = blackColour;
+		DrawLine( dc, xLeft - border, yTop, width-border, yTop );
+		var arrowLength = border * 0.8;
+		var points = [[0,0], [arrowLength, arrowLength/4], [arrowLength, -arrowLength/4]];
+		PathFromPoints( dc, points, border/2, yTop ); dc.closePath();
+		dc.fill();
+		dc.stroke();
+		
+		SetGreyPen();
+		
+		var groupTitleBrushes = [
+			groupIndexColour,
+			groupGapColour,
+			groupSizeColour,
+		];
+		
+		var existingRects = [];	// Sequenced by decreasing GetRight().
+		var groupColour = 'rgb(128,128,255)';
+		var groupHeight = height / 40;
+		var groupRectList = [];
+		for( var g = 0; g < groups.length; ++g ) {
+			var group = groups[g];
+			
+			// Draw the group.
+			var xBegin = xLeft + group[0][0] * xScale;
+			var xEnd = xLeft + group[group.length-1][0] * xScale;
+			
+			dc.fillStyle = groupColour;
+			dc.fillRect( xBegin - groupHeight/2, yTop - groupHeight/2, xEnd - xBegin + groupHeight, groupHeight );
+			dc.strokeStyle = blackColour;
+			dc.lineCap = 'butt';
+			dc.lineWidth = height / 100;
+			DrawLine( dc, xBegin, yTop, xEnd, yTop );
+			
+			// Find a non-overlapping area to draw the group text.
+			var xText = xBegin;
+			var yText = yTop + groupHeight/2 + fontHeight;
+			var gte = GetGroupTextExtent( group );
+			var gWidth = gte.width;
+			var gHeight = gte.height;
+			var gRect = new Rect( xText, yText, gWidth + spaceWidth*2, gHeight + fontHeight*0.6 );
+			
+			var conflict = true;
+			while( conflict ) {
+				conflict = false;
+				for( var ir = 0; ir < existingRects.length; ++ir ) {
+					var r = existingRects[ir];
+					if( r.GetRight() < gRect.GetLeft() )
+						break;
+					if( r.Intersects(gRect) ) {
+						gRect.SetTop( r.GetBottom()+1 );
+						conflict = true;
+					}
+				}
+			}
+			
+			// Insert the new rectangle into the list.  Keep sequenced by decreasing GetRight().
+			existingRects.push( gRect );
+			for( var i = existingRects.length-2; i >= 0;  --i ) {
+				if( existingRects[i].GetRight() < existingRects[i+1].GetRight() )
+					existingRects.swap(i, i+1);
+				else
+					break;
+			}
+			
+			groupRectList.push( [group, gRect] );
+		}
+		
+		// Connect the text to the group with a line.
+		SetGreyPen();
+		for( var g = 0; g < groupRectList.length; ++g ) {
+			var gRect = groupRectList[g][1];
+			DrawLine( dc, gRect.GetLeft(), yTop, gRect.GetLeft(), gRect.GetTop() );
+		}
+		
+		dc.textBaseline = "top";
+		for( var ig = 0; ig < groupRectList.length; ++ig ) {
+			var group = groupRectList[ig][0], gRect = groupRectList[ig][1];
+			
+			// Draw the group outline.
+			SetGreyPen();
+			dc.fillStyle = group[0][0] != groupTimeMaxSize ? greyBrushColour : packColour;
+			dc.fillRect( gRect.GetLeft(), gRect.GetTop(), gRect.GetWidth()-1, gRect.GetHeight()-fontHeight/2, fontHeight/3 );
+			dc.strokeRect( gRect.GetLeft(), gRect.GetTop(), gRect.GetWidth()-1, gRect.GetHeight()-fontHeight/2, fontHeight/3 );
+			
+			var xText = gRect.GetLeft();
+			
+			// Draw the group text.
+			SetGreyPen();
+			dc.fillStyle = blackColour;
+			var yText = gRect.GetTop()
+			for( var i = 0; i < group.length; ++i ) {
+				var gap = group[i];
+				
+				if( i == 0 ) {
+					// Draw the coloured rectangles to highlight the title fields.
+					var title = gap[1];
+					var fieldWidths = [-spaceWidth+2];
+					var iSpace = 0;
+					while( true ) {
+						var iSpace = title.indexOf( ' ', iSpace );
+						if( iSpace < 0 ) {
+							fieldWidths.push( dc.measureText(title).width + spaceWidth/2 );
+							break;
+						}
+						fieldWidths.push( dc.measureText(title.slice(0,iSpace)).width + spaceWidth/2 );
+						iSpace += 1;
+					}
+					
+					fieldWidths[fieldWidths.length-1] += spaceWidth/2;
+					var iBrush = (fieldWidths.length > 2 ? 0 : 2);
+					var xLast = xText;
+					for( var iField = 1; iField < fieldWidths.length; ++iField ) {
+						var tWidth = fieldWidths[iField] - fieldWidths[iField-1]
+						dc.fillStyle = groupTitleBrushes[iBrush];
+						dc.fillRect( xLast, yText, tWidth, fontHeight*1.08 );
+						dc.strokeRect( xLast, yText, tWidth, fontHeight*1.08 );
+						iBrush += 1;
+						xLast += tWidth;
+					}
+				}
+					
+				dc.fillStyle = blackColour;
+				dc.fillText( gap[1], xText + spaceWidth, yText );
+				yText += fontHeight;
+			}
+		}
+				
+		this.groupRectList = groupRectList;
+				
+		// Draw the gaps between the groups with dimension lines.
+		SetGreyPen();
+		dc.fillStule = greyBrushColour;
+		dc.font = smallFont;
+		var yUp = yTop - groupHeight - smallFontHeight
+		var yText = yUp + smallFontHeight/2;
+		var yTextCenter = yText + smallFontHeight * 0.5;
+		yUp += smallFontHeight/4;
+		
+		var arrowLength = smallFontHeight * 0.75;
+		var leftArrow = [[0,0], [arrowLength, arrowLength/4], [arrowLength, -arrowLength/4]];
+		var rightArrow = [[0,0], [-arrowLength, arrowLength/4], [-arrowLength, -arrowLength/4]];
+
+		dc.textBaseline = "middle";
+		for( var iGroup = 1; iGroup < groups.length; ++iGroup ) {
+			var groupPrev = groups[iGroup-1], groupNext = groups[iGroup];
+			var tPrev = groupPrev[groupPrev.length-1][0], tNext = groupNext[0][0];
+			var xPrev = xLeft + tPrev * xScale, xNext = xLeft + tNext * xScale;
+			var sepStr = shortFormatTimeGap(tNext - tPrev);
+			var tWidth = dc.measureText( sepStr ).width;
+			if( xNext - xPrev < tWidth * 1.25 )
+				continue;
+			
+			DrawLine( dc, xPrev, yTop, xPrev, yUp );
+			DrawLine( dc, xNext, yTop, xNext, yUp );
+			
+			if( xNext - xPrev > tWidth + arrowLength * 4 ) {
+				DrawLine( dc, xPrev, yTextCenter, xPrev + (xNext - xPrev - tWidth) / 2 - 2, yTextCenter );
+				DrawLine( dc, xNext - (xNext - xPrev - tWidth) / 2 + 2, yTextCenter, xNext, yTextCenter );
+				PathFromPoints( dc, leftArrow, xPrev, yTextCenter ); dc.closePath(); dc.stroke(); dc.fill();
+				PathFromPoints( dc, rightArrow, xNext, yTextCenter ); dc.closePath(); dc.stroke(); dc.fill();
+			}
+			
+			dc.fillStyle = blackColour;
+			dc.fillText( sepStr, xPrev + (xNext - xPrev - tWidth) / 2, yTextCenter );
+		}
+	}
+	
+	this.processClick = function( event ) {
+		var xEvent = event.pageX - this.situationCanvas.offsetLeft;
+		var yEvent = event.pageY - this.situationCanvas.offsetTop;
+
+		for( var i = 0; i < this.groupRectList.length; ++i ) {
+			var group = this.groupRectList[i][0];
+			var gRect = this.groupRectList[i][1];
+			if( gRect.ContainsXY( xEvent, yEvent ) ) {
+				this.groupClickHandler( gRect, i, this.groupFullData[i], this.tCur, null );
+				return;
+			}
+		}
+		
+		this.groupClickHandler( null, null, null, null );
+	}
+	
+	/*
+	this.DrawDetails = function( groupIndex, groupInfo, raceTime, clockTime ) {
+		this.detailDiv.innerHTML = '';
+		
+		// Get the bibs and laps down.
+		var nums = [];
+		var lapsDown = {};
+		var sequence = {};
+		for( var i = 0; i < groupInfo.length; ++i ) {
+			var info = groupInfo[i][1];
+			var fields = info.split(' ');
+			var num = parseInt( fields[0] );
+			var lastField = fields[fields.length-1];
+			if( lastField.slice(0, 1) == '(' && lastField.slice(-1) == ')')
+				lapsDown[num] = lastField.slice(1).slice(0, -1);
+			nums.push( num );
+			sequence[num] = i+1;
+		}
+		
+		# Create an artificial external info if we don't have a spreadsheet.
+		if externalInfo is None:
+			externalInfo = { num: {_('Bib#'): num} for num in nums }
+		else:
+			# Adjust to usual name format.
+			def GetName( info ):
+				return u', '.join( n for n in [info.get(_('LastName'),'').upper(), info.get(_('FirstName'), '')] if n )
+			externalFields = [f if f != _('LastName') else _('Name') for f in externalFields if f != _('FirstName')]
+			externalInfo = { num : externalInfo[num].copy() for num in nums }
+			for num, info in externalInfo.iteritems():
+				info[_('Name')] = GetName(info)
+		
+		# Add the laps down if necessary.
+		LapsDown = 'LapsDn'
+		if lapsDown:
+			try:
+				externalFields.insert( externalFields.index(_('Name')) + 1, LapsDown )
+			except ValidError:
+				externalFields.append( LapsDown )
+			
+			for num, info in externalInfo.iteritems():
+				info[LapsDown] = lapsDown.get(num, u'')
+				
+		# Add the sequence number.
+		Sequence = 'Seq'
+		for num, info in externalInfo.iteritems():
+			info[Sequence] = sequence[num]
+		externalFields.insert( 0, Sequence )
+			
+		# Add the headers.
+		for c, f in enumerate(externalFields):
+			self.list.InsertColumn( c+1, f, wx.LIST_FORMAT_RIGHT if f.startswith(_('Bib')) else wx.LIST_FORMAT_LEFT )
+		
+		# Create the data.  Sort by sequence.
+		data = [tuple( sequence[num] if i == 0 else num if i == 1 else externalInfo.get(num).get(f, '') for i, f in enumerate(externalFields)) for num in nums]
+		data.sort()
+		
+		# Populate the list.
+		for row, d in enumerate(data):
+			index = self.list.InsertImageStringItem(sys.maxint, u'{}'.format(d[0]), self.sm_rt)
+			for i, v in enumerate(itertools.islice(d, 1, len(d))):
+				self.list.SetStringItem( index, i+1, unicode(v) )
+			self.list.SetItemData( row, d[0] )		# This key links to the sort fields used by ColumnSorterMixin
+		
+		# Set the sort fields and configure the sorter mixin.
+		self.itemDataMap = dict( (d[0], d) for d in data )
+		listmix.ColumnSorterMixin.__init__(self, len(externalFields))
+
+		# Make all column widths autosize.
+		for i, f in enumerate(externalFields):
+			self.list.SetColumnWidth( i, wx.LIST_AUTOSIZE )
+			
+		# Fixup the first columns as autosize gets confused with the graphic.
+		self.list.SetColumnWidth( 0, 64 )
+		self.list.SetColumnWidth( 1, 64 )
+		self.Show( True )
+	}
+	*/
+	
+}
+//----------------------------------------------------------------------
+
+function SelectCategory( i )
+{
+	categoryCur = categories[i];
+	var catButton = document.getElementById('idCat' + i);
+	if( catButton )
+		catButton.checked = true;
+	SetCategoryResults();
+	animationObj.Refresh();
+	RefreshRaceChart();
+	situationObj.Refresh();
+}
+
+function setCategory( catName )
+{
+	for( var i = 0; i < categories.length; ++i )
+	{
+		if( catName == categories[i] ) {
+			SelectCategory( i );
+			return;
+		}
+	}
+	SelectCategory( 0 );
+}
+		
+function StartAnimateRealtime()
+{
+	_initAnimation();
+	speedup = 1.0;
+	tMax = 999999;
+	setTimeout( NextFrame, 1000.0/framesPerSecond );
+}
+	
+function StopAnimate()
+{
+	t = tMax;
+}
+
+function SuspendAnimate()
+{
+	suspendAnimation = true;
+}
+			
+function IsAnimating()
+{
+	return !suspendAnimation && t < tMax;
+}
+	
+function SetTime( aT )
+{
+	t = aT;
+	animationObj.Refresh();
+}
+
+function SetSpeed( i )
+{
+	animationSeconds = 90;
+	var factor = 0.65;
+	
+	for( ; i < 0; ++i )
+		animationSeconds /= factor;
+		
+	for( ; i > 0; --i )
+		animationSeconds *= factor;
+		
+	Animate( animationSeconds, tMax, t );
+}
+
+function SetNumsToWatch()
+{
+	var numsToWatchText = document.getElementById('idNumsToWatch');
+	var numStr = numsToWatchText.value;
+	numStr = numStr.replace( / /g, ',' );
+	numStr = numStr.replace( /[^\d,]/g, '' );
+	numStr = numStr.replace( /,+/g, ',' );
+	numsToWatchText.value = numStr;
+	
+	var nums = numStr.split(',');
+	numsToWatch = {};
+	for( var i = 0; i < nums.length; ++i )
+	{
+		var num = parseInt( nums[i], 10 );
+		if( !isNaN(num) )
+			numsToWatch[num] = num;
+	}
+	animationObj.Refresh();
+	SetCategoryResults();
+	RefreshRaceChart();
+}
+
+function ToggleNumberHighlight( num )
+{
+	var numsToWatchText = document.getElementById('idNumsToWatch');
+	if( numsToWatch[num] == num )
+	{
+		var s = [];
+		for( var n in numsToWatch )
+		{
+			if( n != num )
+				s.push( n + '' );
+		}
+		numsToWatchText.value = s.join( ', ' );
+	}
+	else
+		numsToWatchText.value += (numsToWatchText.value ? ', ' : '') + num;
+	SetNumsToWatch();
+}
+
+function getStartTime()
+{
+	if( !data )
+		return 0.001;
+
+	// Show results for this category.
+	var t = 9999999;
+	for( var num in data )
+	{
+		if( categoryCur == 'All' || data[num]['raceCat'] == categoryCur )
+			if( data[num]['raceTimes'][0] < t )
+			{
+				t = data[num]['raceTimes'][0];
+			}
+	}
+	t += 0.001;
+	return t;
+}
+
+function Rewind()
+{
+	if( raceIsRunning )
+		return;
+	t = getStartTime();
+	animationObj.Refresh();
+	document.getElementById('idPlayStop').value = _('Play');
+	Animate( animationSeconds, tMax, t );
+	suspendAnimation = true;
+}
+
+function PlayStop()
+{
+	if( raceIsRunning )
+		return;
+	if( IsAnimating() )
+	{
+		SuspendAnimate();
+		document.getElementById('idPlayStop').value = _('Play');
+	}
+	else
+	{
+		Animate( animationSeconds, tMax, t );
+		document.getElementById('idPlayStop').value = _('Stop');
+	}
+}
+
+// Create random data if none is given.
+// Define some approximations to normal distribution, then the logic to create random data.
+function rnd_normal()
+{ return (Math.random()*2-1)+(Math.random()*2-1)+(Math.random()*2-1); }
+function normal_variate( mean, stdev )
+{ return rnd_normal()*stdev + mean; }
+function rand_int( iMax )
+{ if( iMax == null ) iMax = 100000000; return ~~(Math.random() * iMax); }
+function rand_str()
+{
+	var iMax = rand_int(7) + 1;
+	var s = '';
+	for( var i = 0; i < iMax; ++i )
+		s += rand_int( 10 );
+	return s
+}
+function GenerateRandomData()
+{
+	var cats = ['Test Data Junior', 'Test Data Senior', 'Test Data Women'];
+	infoFields = ['LastName', 'FirstName', 'Name', 'Team', 'Category','License', ];
+	data = {};
+	for( var num = 100; num < 150; ++num )
+	{
+		var iCat = num % cats.length;
+		var cat = cats[iCat];
+		var mean = normal_variate(6.0, 0.3);
+		var raceTimes = [60 * iCat];
+		for( var lap = 0; lap < 20; ++lap )
+			raceTimes.push( raceTimes.back() + normal_variate(mean, mean/20)*60.0 );
+		data[num] = { 'raceTimes': raceTimes, 'lastTime': raceTimes.back(), 'raceCat' : cat, 'status' : 'Finisher' };
+		data[num]['License']	= rand_str() + '';
+		data[num]['LastName']	= ["SAMPLE", "EXAMPLE", "DEMONSTRATION"][rand_int(3)];
+		data[num]['FirstName']	= ["John", "Peter", "Adam", "Kirk", "Vlad"][rand_int(5)];
+		data[num]['Team']		= ["Red", "Green", "Black"][rand_int(3)];
+		data[num]['flr'] = 1.0;
+	}
+	return data;
+}
+
+function getUrlParam( param, url )
+{
+	param = param.replace(/([\[\](){}*?+^$.\\|])/g, "\\$1");
+	var regex = new RegExp("[?&]" + param + "=([^&#]*)");
+	url   = url || decodeURIComponent(window.location.href);
+	var match = regex.exec(url);
+	return match ? match[1] : "";
+}
+
+function SetLapDataOption( opt )
+{
+	lapDataOption = opt;
+	SetCategoryResults();
+}
+
+function SetShowLaps()
+{
+	var showLaps = document.getElementById('idShowLaps');
+	showLapsFrequency = parseInt( showLaps.options[showLaps.selectedIndex].value, 10 );
+	SetCategoryResults();
+}
+
+function FormatDistance( distance, inUnit, showUnits )
+{
+	if( (inUnit ? inUnit : 'km') != displayUnits )
+		distance *= (displayUnits == 'km' ? 1.609344 : 0.621371192237334);
+	var s = distance.toFixed(2);
+	if( showUnits )
+		s += ' ' + _(displayUnits);
+	return s;
+}
+
+function FormatSpeed( speed, inUnit, showUnits )
+{
+	if( inUnit.substring(0,1) != displayUnits.substring(0,1) )
+		speed *= (displayUnits == 'km' ? 1.609344 : 0.621371192237334);
+	var s = speed.toFixed(2);
+	if( showUnits )
+		s += ' ' + (displayUnits == 'km' ? 'km/h' : 'mph');
+	return s;
+}
+
+function FormatDistanceGap( distance, inUnit )
+{
+	if( inUnit != displayUnits )
+		distance *= (displayUnits == 'km' ? 1.609344 : 0.621371192237334);
+	var v = '';
+	if( displayUnits == 'km' )
+	{
+		if( Math.abs(distance) > 1.0 )
+			v = distance.toFixed(2) + ' km';
+		else
+			v = (distance*1000).toFixed(2) + ' m';
+	}
+	else
+	{
+		if( Math.abs(distance) > 0.25 )
+			v = distance.toFixed(2) + ' ' + _('miles');
+		else if( Math.abs(distance) > 0.1 )
+			v = (distance * 1760).toFixed(1) + ' yds';
+		else
+		{
+			if( Math.abs(distance * 5280) < 3 )
+				v = (distance * 5280 * 12).toFixed(0) + ' in';
+			else
+				v = (distance * 5280).toFixed(1) + ' ft';
+		}
+	}
+	return v;
+}
+
+function SetDisplayUnits()
+{
+	var select = document.getElementById('idDisplayUnits');
+	displayUnits = select.options[select.selectedIndex].value;
+	SetCategoryResults();
+	SetTotalElevationGain();
+	animationObj.widthLast = -1;
+}
+
+function LoopContinuously()
+{
+	loopContinuously ^= true;
+}
+
+function AdjustSize( increase )
+{
+	if( !canvas )
+		return;
+	if( increase )
+	{
+		if( canvas.width < 4096 )
+		{
+			canvas.width *= 1.2;
+			canvas.height *= 1.2;
+		}
+	}
+	else
+	{
+		if( canvas.width > 100 )
+		{
+			canvas.width /= 1.2;
+			canvas.height /= 1.2;
+		}
+	}
+	animationObj.Refresh();
+}
+function AdjustFont( increase )
+{
+	if( !canvas )
+		return;
+	if( increase )
+		fontMult *= (fontMult < 3.0 ? 1.2 : 1.0);
+	else
+		fontMult /= (fontMult > 0.2 ? 1.2 : 1.0);
+	animationObj.Refresh();
+}
+
+function SetShowTrack()
+{
+	var select = document.getElementById('idShowTrack');
+	var track = select.options[select.selectedIndex].value;
+	if( track == 'gpx' && gpsPoints )
+	{
+		animationObj = new GeoAnimation();
+		animationObj.geoTrack.setData( gpsPoints );
+		animationObj.altigraph.setData( gpsAltigraph );
+	}
+	else
+		animationObj = new TrackAnimation();
+	animationObj.Refresh();
+}
+
+function ToggleTimeDecimals()
+{
+	var cb = document.getElementById('idShowTimeDecimals');
+	showTimeDecimals = cb.checked;
+	SetCategoryResults();
+}
+
+var replaceHtmlEntites = (function() {
+	var translate_re = /&(nbsp|amp|quot|lt|gt);/g;
+	var translate = {
+		"nbsp": " ", 
+		"amp" : "and", 
+		"quot": "\"",
+		"lt"  : "<", 
+		"gt"  : ">"
+	};
+	return function( s ) {
+		return ( s.replace(translate_re, function(match, entity) { 
+			return translate[entity]; 
+		}) );
+	}
+})();
+
+function SetTotalElevationGain() {
+/*
+	if( gpsTotalElevationGain )
+	{
+		var units = (displayUnits == 'km' ? 'm' : ' ft');
+		var totalElevationGain = (displayUnits == 'km' ? 1.0 : 3.28084) * gpsTotalElevationGain;
+		document.getElementById('idTotalElevationGain').innerHTML = '<' + 'br/>' + totalElevationGain.toFixed(0) + units + ' Total Elevation Gain per Lap';
+	}
+	else
+		document.getElementById('idTotalElevationGain').innerHTML = '';
+*/
+}
+
+function setLanguage( langCode ) {
+	var langs = translations['languageCode'];
+	for( var i = 0; i < langs.length; ++i ) {
+		if( langs[i] == langCode ) {
+			langCur = i;
+			break;
+		}
+	}
+	if( langCur == null )
+		langCur = 0;
+	
+	// Crawl the DOM tree and update any nodes with a data-tr attribute.
+	// Check for exceptions to updating with innerHTML.
+	var textAttr = {
+		'#text':	'nodeValue',
+		'OPTION':	'text'
+	};
+	var elements = document.getElementsByTagName('*');
+	for( var i = 0; i < elements.length; ++i )
+	{
+		e = elements[i];
+		trTag = e.getAttribute('data-tr');
+		if( trTag )
+		{
+			var tAttr = textAttr[e.nodeName];
+			if( !tAttr )
+				tAttr = 'innerHTML';
+			//alert( 'e.nodeName=' + e.nodeName + ' trTag="' + trTag + '" _(trTag)="' + _(trTag) + '" tAttr=' + tAttr + ' e.id=' + e.id );
+			e[tAttr] = _(trTag);
+		}
+	}
+	
+	SetCategoryResults();
+	SetTotalElevationGain();
+}
+
+function getLanguageCode() {
+	return translations['languageCode'][langCur];
+}
+
+function initLanguages() {
+	var languageSpan = document.getElementById('idLanguages');
+	var languageHTML = '<div id="display_menu"><div class="buttonset">';
+	var languages = translations['language'];
+	var languageCodes = translations['languageCode'];
+	for( var i = 0; i < languages.length; ++i )
+	{
+		languageHTML += '<input type="radio" name="languageSelect" id="idLanguage' + i + '" onClick="setLanguage(\''+languageCodes[i]+'\');"';
+		if( i == langCur )
+			languageHTML += ' checked="true"';
+		languageHTML += '/></input><label for="idLanguage' + i + '" >' + languages[i] + '</label>&nbsp;';
+	}
+	languageHTML += '</div></div><hr/>';
+	languageSpan.innerHTML = languageHTML;
+}
+
+var situationTimer = null;
+function SetSituationTime( value ) {
+	if( situationObj == null )
+		return;
+		
+	if( value == undefined )
+		value = 10000;
+		
+	if( situationTimer != null ) {
+		clearTimeout( situationTimer );
+		situationTimer = null;
+	}
+	
+	var tMax;
+	if( raceIsRunning ) {
+		var tServer = (new Date(timestamp[0])).getTime() / 1000.0;
+		var tBrowser = (new Date().getTime()) / 1000.0;
+		while( tBrowser - tServer < 0 )
+			tBrowser += 60*60;
+		
+		tMax = timestamp[1] + (tBrowser - tServer);
+	}
+	else
+		tMax = GetRaceTMax();
+	
+	var tRace = tMax * (value / 10000.0);
+	var gs = GetSituationGaps( tRace );
+	situationObj.SetData( gs.gaps, gs.tAfterLeader, gs.title, gs.tCur );
+	
+	if( value == 10000 && raceIsRunning )
+		situationTimer = setTimeout( SetSituationTime, 1001 - (new Date()).getTime() % 1000 );
+}
+
+function onLoad()
+{
+	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
+
+	resultsDiv = document.getElementById('idResultsDiv');
+	showLaps = document.getElementById('idShowLaps');
+	
+	if( data == null )
+	{
+		GenerateRandomData();
+		if( !gpsPoints )
+			gpsPoints = gpsPointsTest;
+	}
+	else
+		gpsPointsTest = null;
+		
+	if( gpsPoints )
+	{
+		animationObj = new GeoAnimation();
+		animationObj.geoTrack.setData( gpsPoints );
+		animationObj.altigraph.setData( gpsAltigraph );
+	}
+	else
+	{
+		animationObj = new TrackAnimation();
+		document.getElementById('idShowTrack').className = 'hidden';
+	}
+	
+	if( hideDetails )
+		document.getElementById('idShowDetailsOption').className = 'hidden';
+	
+	if( !rfid )
+		document.getElementById('idRFID').className = 'hidden';
+	else
+		document.getElementById('idRFID').innerHTML = '<span data-tr="Chip Timing"></span>.';
+	
+	if( !raceNotes )
+		document.getElementById('idRaceNotes').className = 'hidden';
+	else
+		document.getElementById('idRaceNotes').innerHTML = raceNotes.replace(/{{/g, '<').replace(/}}/g, '>');
+	
+	if( !courseCoordinates ) {
+		document.getElementById('idVirtualTour').className = 'hidden';
+		document.getElementById('idCourseViewer').className = 'hidden';
+	}
+	
+	canvasSupported = isCanvasSupported();
+	if( canvasSupported )
+	{
+		var raceChartCanvas = document.getElementById('idRaceChart');
+		raceChartCanvas.addEventListener('click', function(event) { RaceChartProcessClick(event); }, false);
+		raceChartCanvas.addEventListener('mousemove', function(event) { RaceChartProcessMouse(event); }, false);
+		raceChartCanvas.addEventListener('mouseout', function(event) {
+				if( hoverTimer != null )
+					clearTimeout( hoverTimer );
+				hoverTimer = null;
+				RefreshRaceChart(); }, false);
+		
+		var situationCanvas = document.getElementById('idSituation');
+		var timeRange = document.getElementById( 'idTimeRange' );
+		var situationDetail = document.getElementById( 'idSituationDetailDiv' );
+		situationObj = new Situation( situationCanvas, timeRange, situationDetail );
+		situationCanvas.addEventListener('click', function(event) { situationObj.processClick(event); }, false);
+				
+		canvas = document.getElementById('idTrack');
+	}
+	else
+	{
+		document.getElementById('idTrackDiv').className = 'hidden';
+		document.getElementById('idRaceChartDiv').className = 'hidden';
+		document.getElementById('idRaceLightningDiv').className = 'hidden';
+	}
+	
+	document.getElementById('idRaceName').innerHTML = document.getElementById('idTitle').innerHTML;
+	if( email )
+		document.getElementById('idEmail').href =
+							'mailto:' + email +
+							'?subject=' + replaceHtmlEntites(document.getElementById('idTitle').innerHTML);
+	
+	var s = '';
+	if( organizer )
+		s = organizer;
+	if( timestamp )
+	{
+		var tServer = (new Date(timestamp[0]).getTime()) / 1000.0;
+		var tBrowser = (new Date().getTime()) / 1000.0;
+		while( tBrowser - tServer < 0 )
+			tBrowser += 60*60;
+		
+		var tRace = timestamp[1] + (tBrowser - tServer);
+		if( tRace > 25*60*60 )
+			raceIsRunning = false;		// If the race has been running for 25 hours, finish it.
+			
+		if( raceIsRunning )
+		{
+			// Attempt to adjust for time zone differences between server and browser.
+			// Assume that the browser is not more than an hour out of sync with the server.
+			t = tRace;
+			
+			// Hide the controls as we are in real-time mode.
+			document.getElementById('idAnimateControls').className = 'hidden';
+			s += ' (race in progress, last updated ' + timestamp[0] + ')';
+			speedup = 1.0;
+		}
+		else
+			s += ' (' + '<span data-tr="created"></span> ' + timestamp[0] + ')';
+	}
+	if( s )
+		document.getElementById('idOrganizer').innerHTML = s;
+	
+	if( !catDetails )
+		catDetails = [];
+	for( var i = 0; i < catDetails.length; ++i )
+		catDetailsByName[catDetails[i].name] = catDetails[i];
+	
+	if( HasDisplayUnit(data) )
+	{
+		displayUnits = GetDistanceUnit( data );
+		document.getElementById('idDisplayUnits').selectedIndex = (displayUnits == 'km' ? 0 : 1);
+	}
+	else
+		document.getElementById('idShowUnits').style.display = 'none';
+	SetData( data, undefined );
+	
+	// Check for parameters.
+	var numbers = getUrlParam( 'highlight', undefined );
+	if( numbers != '' )
+		numsToWatchStr = numbers;
+	if( numsToWatchStr )
+	{
+		var numsToWatch = document.getElementById('idNumsToWatch');
+		numsToWatch.value = numbers;
+		SetNumsToWatch();
+	}
+	setCategory( getUrlParam('raceCat', undefined) );
+	setLanguage( getUrlParam('lang', undefined) );
+	initLanguages();
+	
+	SetCategoryResults();
+	RefreshRaceChart();
+	SetSituationTime();
+	
+	// Start animation.
+	Animate( animationSeconds, undefined, raceIsRunning ? t : getStartTime() );
+	document.getElementById('idPlayStop').value = _('Stop');
+}
+
+</script>
+
+<body onload="onLoad()">
+<p>
+<table cellspacing="8"><tr>
+<td><img id="idImgHeader" alt="CrossMgr Logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEMAAABgCAIAAADJkFi8AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAlwSFlzAAAOwwAADsMBx2+oZAAAABp0RVh0U29mdHdhcmUAUGFpbnQuTkVUIHYzLjUuMTAw9HKhAAAR7ElEQVR4XsWbB1wUxx7H5zhAQIoimrwotsQSu3l+xGf0vacmNkz0JWiKLZpYwYYxBlFAEERAisDRm1S5o9yBFAURpMoB0lEpR1OaYolY4Pa9OReXvb3dvb3DvPCZD5+7vdm5+c7v///Pf2b2WId8ReD/9aeqrjJxri5gMf0+FvjviokJcw0KyW8QvwDP8sEr2P//SipAkv9b+TWi1U34RKHiUfKotscHQfZSllcbkO4PkHalSMx8RD/Z1xkfKF6+OefzbyVlmUnOBlPhnov36QfFIrZdIQy0skfJ4/KuYDGyj47n9beKaXLQq3HVjoKxhrEABMkWtmrIxFmJ//o+d79HAynSGX6HEiToLZnNKQPi/TQwCpBsOCjU0o0gZSBc1Bsb9cXOAlNOE4HnbGqn0iTwxti6st6Xv1PBMCPxES1al6nCDmaCgdX5aFrcTw51eBiHGz3DIYH3epV23ukMIRVHPgn0igWrrinEgFXWGHn5KzMhBuOU+2iYJOjt4dV1Db1uBM+RT7Lk65vKYaB3QSVX7y6EMIf9RK63e98LCWzEXdjLrSut7vZ71X8YtTc5JN8cLwOst87NCgWscKASMVTgWzK/l72oohL87a93jgU3vy8MfDucsoc3W5J6XpyhIzHjiAwmXQfaRWB0HRj7AIztBOO6hgp8q98EdMuBRiZgX6GhmrM8DQa9ExFtfwYJ2iaUiI5k9YE2qa7jMWRfj2kG2reBKg+AocAA4zIMyqifnOI9kCW5kNt9NKR20/Gs5d8nLlwdNXme36hxLjr6TrDoGjgbfuoze3nYv7cKvjlx83BQjUNWp1sx5cRKRzJ+cYcCJBjb6AYwIg1KBN1909FSzN2tBEOTyakEkbHp9akLAzS0HQCwYVhU1e0MP+Ws3Jl00LdS1uUoSWDI0p4mbU70mmCfjm35YHrTnIUJ++wLD/s2YiS26V0uhY9/di2dMt+fYddpqmmPurBie5JlggjTmZLE1FukOYWShDWujWVQAkYns/T8gbYt0DoANDYBNSMW23DR7BmvC62RJPYbgfqzRIPW+FlV3FW3YrZlp1lYWdkOnwHfggr77IwlIXvcyyAPNQlHNHpWp/6cjolLH3665oHh3wVA8yegvoalNpelMha8S2j1dTUXzx6/3XjeuYMruRe2VMYefJl/GhGehiSIABDKy3hVfZ2T7xcGbW2GUbCc2IXZxhfbnWRT6y+XTO3Lt0SENjLldyRJRZYEXtn1xcY/g0TSJsOU3vhAAIHk34smP82xIMOwERcdRwQsUhI/s7//xSTmfnVcl63/WTlz6XzDVYun2B1Y+daKZNWwQW6bizONSDHgxXznCX8xyWG/pr4iB/KuYzzFlkjGAlIPwcC6orT+YhJohF35LnJI8rZRSYFd74nWJCNxAyAKVy4DlhcACkw1CvgJJImOS79+lUcHk7VcLsldv3EA2L8tdu+QwgAopijXAYgEAAYbBrMnQ49Hq1kG1/QX21LCpBvKJVm36BguQ4NRJJkaA8MrAiAeAEc5PAqRHPITNWV7kZNAJxGQR14Mr9xzgiob9h5bOacwwMB4bgHAoYNRjMRXlCxIlCXpKzrXn21ML4iYz1r9mTkOA+aaVEZFdR2KA0eBwtIUJTl/uRQleVHkUJ3pz+cnOYcLj/g1+YcF9vF1aGAEZ+bjMGC+nKc4CSS8DQAMBmQwipLAcByXmOwWWWTuX0+419ozpT1mMilMY6DB3/RdcSRxSmGgWsE1LFn+pigJVf3lm++ojbihrpa+ednpeMtlz2M1MKRX8aor55+QXoplDoOkGLBgyJaR5b2QfPFTJYuVAcBQGaMbZ7rhUJ7zrBc8tS3L98usKAuGR5JLIsvwSXacu6+ucQOPgXt9XZUNJwTCNl8IYEHfVdTdCfW9ibIMn2T+SiEVxttpW3a38r2QcN8ziRmnaaQedEEp03r3Fs7QoWQkMHDB7fdhagK/UdpVhqnJDrv7QNpDpKkSKPZchufxklGAY+EuBTNMkq8P1VAIgqoEZSHdSoaEw9QETiyXAbg4BDNMkpXbKmhJIAzcZwmRUQZa3fCdHjohNFSXQZhhkiz9T5k8EgiThN8Ee0elUNJFKiC6XRgIwHnFsnpZZriTNNYQJnak7k64yJeBgULBaWE4Npb4blBgVmrHdB1PKt2qHZXMMFAqWZjot3mU0jAYCVTGW3mS/R6NOvpU8ZdcJb1xqapqBJ8RDINEOjAq7Sfr9lQRMhR6fVgqGaa+LebhTboGhFkfhgTlZJHeVleO5Ihfw6/+NRfND47Rhas5Jn6SMeefQnTn83Riu8EEfCdg/IHBWgkYaJy4BEIuyXH/OquAfN/Q4PiI09kxO8u5a7oSpvTxtdFUtz1M/ysjuCKXA6Opk2WT0oXt4Tpm93y++SYLPZmRFOVg4HxCS/Kbf7lbCJcfeTLvyvft8Z9inaZaRQ3wWb6mxjqa0OLJeaARbjl1n3Dk4Frcu92+Uns0ft5UKJTBbFr63BPV5KR/uVdoZEb0ngbeZ2J5y3FSpPqAD/85B66lSGCOHTCvqf+OtOTnbVq74ui7oVWIJJs420aGO92LW/KaP7Qwkrs/QlXhTQL7wq7NI9RS8TyHd5n2t7DhMwxUZaCVFe75jwl/g1O1QrP+VSKJ0v2murHcc8pnH/tAmBHqqS5WmwfaWDQY2Ee9tVoqKgrNLTLnge+dBDbYd2uEg8UPN+PmMWFA63RXjmKxmIcvGSeBrv8yYUQ/n+SsQ0nCJDBQpsIcAKtZmzMJMCYZKYkuMgu4g7bOx+1t3V33VkXOULL3uBOfgXJlMCBPVdbUaZMEaqryDQwaYdm1aRetV2uM8JXi+dnGAytnL5y4EbTsj3hNJZDEV1niKkYuQalY9abXhWfr4p2TPThux8NMt3C/XJIydXy2lobUAtNkg6P4re8JUyfr6cC9r3fi4EnQ16a2F0Iu/XA/6t3OVao+kjEXubkGyduC5H33tmwX5+8W5+1C8r6XvL21Ebm5ur9sibh+FiL6CGkeg7TTBStykuYPEaGV7O6mWGjzNOdcDc+Z7+Zz8VjYfhNeSfpsrIWcuOkG+h6DMLIk2JXooONI4UE5Jw0kh0HWSIklcucAUrUFqV2FNExHWnTleQ5LXLGN6Rc1TcS3VpD0saYGDJVBgIrkFxuPhgw7pq2THm5hF0vOIFU/IneNkGY9cqTGTxChNaPvgmPUpkZoJC7wM7ZKICXJOfeLjJqmZyB+aoVUbkWaJiDteI9iIeX7mH5X1TekY7Fv2w5QwHdw9Dorq0xugryzOMUY8CeS1kjFDolHoRN//QKmGPAbG2aSkvTWagKkYifSpt5a+VFkrMlhh/Mo0hEH99e3yU5Dle+9bGtWSPVGpEUPKTvKlKT0mKxpYWBgoEUTe/OiSZOXdMLGNyYhmsS0+ottoIBZcedTYs7HRVxIjnEcKB42bckpphhwEO99ThM5gD3HXJg7/3nDSDRIc696eseml2QEyH5BQqQjwQhdvC6+LCIJnQp0jrnIJRZIqxYdCdq5fbaulYUz/2g08OGmQBIfbpooxx3fofvX7fbaDs2hZvYXBElrmu5M7BeNQcr3/ildJ0DWrSBgdFWCknRWejRICAKe9ixJ7PrlrLulm+U94dSa0nUQAy0BvJSufGesi06eLpggRxwdOmsNhtptYyM1a5mGUeYi4Gp2XD/mba9hvo9lYsxav4o1ZyYYqSXzJPiTep2n9driNkkYSc2wwUjgi/AEwR/vniaAQRkjieKShcLGyQr4roI8u79eKP8Jdmxo+1tH+Mfx8STwdb1wC1Ly+6O806ecXTGSWzeMyO0Vzll3lyMlFE+BKNh7zByKwn5RZasoQCKqWkzA8OMlvWrRRlo1+IL1eF9PTl5Nl3206Ilr10oSFmW7jr8RPuQzdfxo+RiwBtan7JxDBBLBNQf00/KCWXgSKw+LNy2qFDBsccf4vq4lD7t+bGl0fl1G/RgCA05xsfWurxbIxdDU0p5n9K9BEnGbymX+ZQJJhXAT2t3+VjYMCXgY96B9L5vVMZi+jondXV82PD5055l33rOQrKc+N55yYMnp9a5uc31Uo2S6EGz9NYtF+RsPLR29mQuMvjt48je3y6e8ogdJeu59TMDgcFN7G8ZjfW2r/PCo4zk8zG8u1inpxjnVB3J6XNB+05T8R54NTS4Q6Xku06kw3uU7UvdQVVWfs2jZ1iNWFp5REAArgyTFhT8SSKKT/KXzPNBRM9Yp6ATMkQnzY2Cet1wStMLtrksb1s5bsWiy+bZ/BFtvbEqCeQp5ClwUtkdbU51gVzqj9JevNzGz88IDEEl4qR4EkoK8n1FBBtpVn3ZMFnWvLXl8IuupN++utzPf81TApSOul054X7K+7HmlWg7JzScSG3taZQ9dOdZxM75/2lpq0KGXzjNcu3TatvXztq2fv914/tEfjUbpaOCrjRs/yWTvrwQRCDySvvaJ9DmxqQSS9toF3Z1za3p23nrixHDIZatBP7kvcnl5Z8jvX+RZ6uvBR7yY/k2ePmebjCFRalJTuoYYfxNTsnvdlQaAN9567NXY6Pym9KxsLN5vsogJx8RPZm09dIa005QkaZlWBJLIPJ7SGNlvdXhTRsKAUhWE/EwdkCSMH0yY9IOZJb0tycKAl626AXHxBBL+vcvKkVQ8cOsrl7NmHii2njUVPnFM/jdn9nSPkHDmUgx5PK8whBh/eWnXe3wVJcl75NVdy3TecDBdJcuhqso+aWbyRz1X3CaouB3vEBijEA8gYMC3oZmJCmFkPeGIGpwGShRYdTVfPcaWTqUWL5xRnuGBtAuw8rxJEJPIZQ5DQuLHv8oti87o9mPCU9jt+eRteFW0fGk0FZVFlc22OGTS18jDY6CvB9oE1zLiGMKQkKAqcXhp4Tlx6Q8DaHjKH7i9pvZserZI+28hxiTDcSXX3GQZ8Ff4KTwmMJQkGE9UATe9w1+Wp17kIlbEoghgMMk9stv4SV00PQb8tL8lwS9CklnRFzkkGM8VYUzmk8G8EM7Z7fccFTUnqfoltuL7wXIY2hIRWKfKDd74KM/eiiOVZZFEYVmPp7oSmpGY9jAA+jfzGEVOe8cREV2hw2iKQirdkBKpFQGf6/MeNMHYfOJSb5f5DkuNSlekNZ4Cgy9ujEAqyJ9578m1f58kkkjATSvL9FcORlzjjbTxyTEaI5GKoQ0Qkk37YhtHfzpvkfITpzC+55U0JvaWnhLVL6TMR8g5a33IGVq4SPUlJkPjHRpMI8sQideVtL12XvvPeZ/xjnKPuiqXB8KIGcOI63zJMe4FEvyBBsknjBmJY0gCtoTaY+t52jvSM4aY6hPwbqSGM4K5CxdtQ5P34OvWOKTag4kUWB23oDBGmlh4hhMWg2bnfZ3CEunFKbwWLKc3tRxSNSRRWJHM4E2xjY0PXSAesi5TB1/SUyFLrwgaGLjv2phDbeUlNq9bqQIuH4HhmDFM5y0HWUGsvUPtffwCAq3jw/YOklwMT6I5pjvuGgy9iIrHj5valedE1aeee679DyjiVUOYXBLJj9cKdiM5X9XxN0YFH4kP3ZsXta40Ztnd2PktvE9e8jWwZ1MGSax9YmhI4EfmLkE0YS2WH0/1Cxu45XW3O5RyHqSPvPnbkRR9hgfRgyRHnALoSVAYGmVupVEOcGGP58POGHKYhnA5shSfQq59zARGQnIpOvWXs5fkksAKJz3CqGyME5uO39vH96+m1TX3ie/zh3HkMFXyIlixBZIm/3dTEpJzAVwmGGgda59oKpik5CukA9zcINmdET4OHGgnc5jmWLneghSaIslq9MpISE64hTAngerBmYcKpjVXkroSClxRoouC+u5wcllqKH77hWuqsckZv7KILSMOKICmv8/OmzkJrHnAnkPl/QIyWTCSrKecRx2x5LOkdOYrOxwDJWfh7hkGQ0KCn9qZ88AMgFQW6C0pyTFpKdGpKdHwP1rirsfC5SdaeDmJL5qSSGBgHiBvbqko5mDtBKYmEToATnlGMAfApzMe0ZITSSVKSkaqWDZ5gS5UKmd76VnheV8uZQIFTB18lCCBt1hcClcCA72lovgqiSz1oXJlSb1KGW8on/aQiwezTKVl8eOlP6onszHaiRJy3r3pRTV8/wMCgeTB1wlekAAAAABJRU5ErkJggg=="/></td>
+<td valign="top"><span id="idRaceName">Cyclo-Cross Race Results</span><br/><span data-tr="by"></span> <span id="idOrganizer">CrossMgr</span>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<span class="noprint">
+<a id="idEmail" href="mailto:helpful.organizer@great_race_organization.com?subject=CrossMgr Results Output"><span data-tr="Email Comments/Suggestions"></span></a>.
+<br/>
+<span data-tr="Powered by"></span> <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
+<span id="idRFID"></span>&nbsp;&nbsp;&nbsp;
+<button onclick="doReload()" data-tr="Refresh"></button>&nbsp;&nbsp;&nbsp;
+<button id="idVirtualTour" onclick="OpenVirtualTourWindow()" data-tr="Google Earth Ride"></button>&nbsp;&nbsp;&nbsp;
+<button id="idCourseViewer" onclick="OpenCourseViewerWindow()" data-tr="Course Map"></button>&nbsp;&nbsp;&nbsp;
+</span>
+</tr></table><span id="idReloadStatus"></span><span id="idRaceNotes"></span>
+</p>
+<p>
+
+<span class="noprint" id="idLanguages"></span>
+<p/>
+<span class="noprint" id="idCategories"></span>
+</p>
+<div id="idTrackDiv">
+<canvas id="idTrack" width="600" height="300" class="noprint">
+<a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a> Race Results requires support the HTML5 Canvas.<br/>
+Please upgrade to a more recent browser version.<br/>
+For Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
+Current versions of Chrome, FireFox and Opera work fine.
+</canvas>
+<p class="noprint">
+<span id="idAnimateControls">
+<button id="idRewind" onClick="Rewind()"><span data-tr="Rewind"></span></button>
+<button id="idPlayStop" onClick="PlayStop()"><span data-tr="Play"></span></button>
+<input type="checkbox" id="idLoop" onClick="LoopContinuously()" checked><span data-tr="Loop Continuously"></span></input>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<label for=playbackSpeed><span data-tr="Playback Speed">: </label>
+<input type="range" id="playbackSpeed" min="-9" value="0" max="3" step="1" oninput="SetSpeed(this.value)" onchange="SetSpeed(this.value)">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>
+<span data-tr="Size"></span>:
+<input type="button" id="idIncreaseSize" onClick="AdjustSize(true)" value="+"></input>
+<input type="button" id="idDecreaseSize" onClick="AdjustSize(false)" value="-"></input>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span data-tr="Text"></span>:
+<input type="button" id="idIncreaseFont" onClick="AdjustFont(true)" value="+"></input>
+<input type="button" id="idDecreaseFont" onClick="AdjustFont(false)" value="-"></input>
+<br/>
+<span data-tr="Highlight Numbers"></span>:
+<input type="text" id="idNumsToWatch" value="" onChange="SetNumsToWatch()"></input>
+<button><span data-tr="Apply"></span></button>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<select class="noprint" id="idShowTrack" onChange="SetShowTrack()">
+	<option value="gpx" selected="selected" data-tr="GPX"></option>
+	<option value="oval" data-tr="Track"></option>
+</select>
+</p>
+</div> <!-- idTrackDiv -->
+<p>
+<span class="noprint" id="idShowUnits">
+	<span data-tr="Units:"></span>
+	<select class="noprint" id="idDisplayUnits" onChange="SetDisplayUnits()">
+		<option value="km" selected="selected">km</option>
+		<option value="miles" data-tr="miles">miles</option>
+	</select>
+	&nbsp;&nbsp;&nbsp;
+</span>
+<input class="noprint" type="checkbox" id="idShowTimeDecimals" onClick="ToggleTimeDecimals()">
+	<span class="noprint" data-tr="Show 100s of Seconds"></span></input>
+&nbsp;&nbsp;&nbsp;
+<select class="noprint" id="idShowLaps" onChange="SetShowLaps()">
+	<option value="0" data-tr="Hide Lap Info"></option>
+	<option value="1" selected="selected" data-tr="Show Every Lap"></option>
+	<option value="2" data-tr="Show Every 2 Laps"></option>
+	<option value="3" data-tr="Show Every 3 Laps"></option>
+	<option value="5" data-tr="Show Every 5 Laps"></option>
+	<option value="10" data-tr="Show Every 10 Laps"></option>
+	<option value="15" data-tr="Show Every 15 Laps"></option>
+	<option value="20" data-tr="Show Every 20 Laps"></option>
+	<option value="25" data-tr="Show Every 25 Laps"></option>
+	<option value="50" data-tr="Show Every 50 Laps"></option>
+	<option value="100" data-tr="Show Every 100 Laps"></option>
+</select>
+<span id="idTotalElevationGain"> </span>
+</p>
+<span id="idShowOptions"></span><br/>
+
+<div id="idSituationDiv" class="noprint">
+<p>
+	<span id="idSituationName" data-tr="Situation"></span>
+</p>
+<input id="idTimeRange" type="range" min="0" max="10000" value="10000" style="width:1000px;" oninput="SetSituationTime(this.value)" onchange="SetSituationTime(this.value)"></input><br/>
+<canvas id="idSituation" width="1000" height="800">
+<a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a> Requires support for the HTML5 Canvas.<br/>
+Please upgrade to a more recent browser version.<br/>
+For Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
+Current versions of Chrome, FireFox and Opera work fine.
+</canvas>
+<div id="idSituationDetailDiv" class="noprint">
+</div>
+</div> <!-- idSituationDiv -->
+
+<div id="idResultsDiv"></div>
+
+<div id="idRaceChartDiv" class="noprint">
+<p>
+	<span id="idRaceChartName" data-tr="Race Chart"></span>&nbsp;&nbsp;&nbsp;&nbsp;
+	<span id="idShowStartOffsetOption">
+		<input type="checkbox" id="idShowStartOffsets" checked onClick="RefreshRaceChart()"><span data-tr="Show Start Offsets"></span></input>
+	</span>
+	<span id="idShowDetailsOption">
+		&nbsp;&nbsp;&nbsp;&nbsp;
+		<input type="checkbox" id="idShowDetails" onClick="RefreshRaceChart()"><span data-tr="Show Details"></span></input>
+	</span>
+</p>
+<canvas id="idRaceChart" width="1000" height="800">
+<a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a> Requires support for the HTML5 Canvas.<br/>
+Please upgrade to a more recent browser version.<br/>
+For Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
+Current versions of Chrome, FireFox and Opera work fine.
+</canvas>
+</div> <!-- idRaceChartDiv -->
+
+</body>
+
+</html>
