@@ -21,6 +21,11 @@ body { font-family: sans-serif; }
 	box-shadow: 4px 4px 4px #888888;
 }
 
+#detailTitle {
+	font-size: 110%;
+	font-weight: bold;
+}
+
 .smallfont	{ font-size: 75%; }
 .bigfont	{ font-size: 120%; }
 .biggerFont	{ font-size: 130%; }
@@ -363,6 +368,9 @@ var translations = {
 	'time penalty':	['time penalty',	"pénalité de temps",		"penalización de tiempo"],
 	'Factor':		['Factor%',			'Facteur%',					'Factor%'],
 	'ElapsedTime':	['ElapsedTime',		'Chrono',					'Tiempo transcurrido'],
+	'TimeSlider':	['Time Slider',		'curseur de temps',			'deslizador de tiempo'],
+	'TimeSliderInstructions':	['Slide to change Time', "Faites glisser pour changer Temps", "Deslice para cambiar Tiempo"],
+	'ClickGroupInstructions':	['Click Group for Details', "Cliquez sur Groupe pour plus de détails", "Haga clic en Grupo para detalles"],
 	'last':			['','','']
 };
 (function() {
@@ -3369,7 +3377,7 @@ Rect.prototype.SetTop = function( y ) { this.y = y; }
 Rect.prototype.SetBottom = function( y ) { this.y = y - this.height; }
 Rect.prototype.SetLeft = function( x ) { this.x = x; }
 Rect.prototype.SetRight = function( x ) { this.x = x - this.width; }
-Rect.prototype.Contains = function(x, y) {
+Rect.prototype.ContainsXY = function(x, y) {
 	return this.x <= x && x <= this.x + this.width && this.y <= y && y <= this.y + this.height;
 }
 Rect.prototype.print = function( label ) {
@@ -3428,7 +3436,7 @@ function GetRaceTMax() {
 	return _raceTMax;
 }
 
-function shortFormatTimeGap( t ) {
+function ShortFormatTimeGap( t ) {
 	var tStr = FormatTimeGap( t );
 	if( tStr.substring(0, 3) == "0'0" )
 		tStr = tStr.substring(3);
@@ -3541,7 +3549,7 @@ function GetSituationGaps( t ) {
 		var d = data[num];
 		gapLapsDown = GetLeaderGap( leaderPosition, leaderSpeed, leaderRaceTimes, d.raceTimes, t );
 		if( gapLapsDown != null && gapLapsDown.gap != null )
-			gaps.push( [gapLapsDown.gap, getInfo(num, gapLapsDown.lapsDown)] );
+			gaps.push( [gapLapsDown.gap, getInfo(num, gapLapsDown.lapsDown), num] );
 	}
 	
 	gaps.sort( function(a, b) { return a[0] - b[0]; } );
@@ -3605,6 +3613,7 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 		this.title = title;
 		this.tCur = tCur;
 		
+		this.DrawDetails( null, null, null, null );
 		this.Refresh();
 	}
 	
@@ -3673,7 +3682,7 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 			if( i == 0 )
 				group.splice( 0, 0, [group[0][0], '\u2714 \u200B ' + groupSize] );
 			else
-				group.splice( 0, 0, [group[0][0], i + ' ' + shortFormatTimeGap(group[0][0]) + ' ' + groupSize] );
+				group.splice( 0, 0, [group[0][0], i + ' ' + ShortFormatTimeGap(group[0][0]) + ' ' + groupSize] );
 			groups[i] = group;
 		}
 		
@@ -3684,6 +3693,7 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 		var font = fontHeight + 'px Arial';
 		dc.font = font;
 		var spaceWidth = fontHeight / 2;
+		var boldFont = 'bold ' + fontHeight + 'px Arial';
 		
 		var smallFontHeight = fontHeight * 0.75;
 		var smallFont = smallFontHeight + 'px Arial';
@@ -3704,8 +3714,19 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 		
 		function GetGroupTextExtent( group ) {
 			var widthMax = 0;
-			for( var g = 0; g < group.length; ++g )
-				widthMax = Math.max( widthMax, dc.measureText(group[g][1]).width );
+			var widthCur;
+			for( var g = 0; g < group.length; ++g ) {
+				if( numsToWatch[group[g][2]] != undefined ) {
+					dc.save();
+					dc.font = boldFont;
+					widthCur = dc.measureText(group[g][1]).width;
+					dc.restore();
+				}
+				else
+					widthCur = dc.measureText(group[g][1]).width;
+				
+				widthMax = Math.max( widthMax, widthCur );
+			}
 			return {"width":widthMax, "height":group.length*fontHeight};
 		}
 		
@@ -3872,7 +3893,14 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 				}
 					
 				dc.fillStyle = blackColour;
-				dc.fillText( gap[1], xText + spaceWidth, yText );
+				if( numsToWatch[gap[2]] != undefined ) {
+					dc.save();
+					dc.font = boldFont;
+					dc.fillText( gap[1], xText + spaceWidth, yText );
+					dc.restore();
+				}
+				else
+					dc.fillText( gap[1], xText + spaceWidth, yText );
 				yText += fontHeight;
 			}
 		}
@@ -3897,7 +3925,7 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 			var groupPrev = groups[iGroup-1], groupNext = groups[iGroup];
 			var tPrev = groupPrev[groupPrev.length-1][0], tNext = groupNext[0][0];
 			var xPrev = xLeft + tPrev * xScale, xNext = xLeft + tNext * xScale;
-			var sepStr = shortFormatTimeGap(tNext - tPrev);
+			var sepStr = ShortFormatTimeGap(tNext - tPrev);
 			var tWidth = dc.measureText( sepStr ).width;
 			if( xNext - xPrev < tWidth * 1.25 )
 				continue;
@@ -3918,30 +3946,49 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 	}
 	
 	this.processClick = function( event ) {
-		var xEvent = event.pageX - this.situationCanvas.offsetLeft;
-		var yEvent = event.pageY - this.situationCanvas.offsetTop;
+		var rect = this.situationCanvas.getBoundingClientRect();
+		var xEvent = event.clientX - rect.left;
+		var yEvent = event.clientY - rect.top;
 
 		for( var i = 0; i < this.groupRectList.length; ++i ) {
-			var group = this.groupRectList[i][0];
 			var gRect = this.groupRectList[i][1];
 			if( gRect.ContainsXY( xEvent, yEvent ) ) {
-				this.groupClickHandler( gRect, i, this.groupFullData[i], this.tCur, null );
+				this.DrawDetails( gRect, i, this.groupFullData[i], this.tCur, null );
 				return;
 			}
 		}
-		
-		this.groupClickHandler( null, null, null, null );
+		this.DrawDetails( null, null, null, null );
 	}
 	
-	/*
-	this.DrawDetails = function( groupIndex, groupInfo, raceTime, clockTime ) {
+	this.DrawDetails = function( gRect, groupIndex, groupInfo, raceTime, clockTime ) {
 		this.detailDiv.innerHTML = '';
+		if( groupIndex == undefined || groupIndex == null ) {
+			var text = '\u25C0&nbsp;&nbsp;' + _('TimeSliderInstructions') + '<br/><br/><br/><br/><br/>\u25C0&nbsp;&nbsp;' + _('ClickGroupInstructions');
+			var para = createChild( this.detailDiv, 'p' );
+			para.innerHTML = text;
+			para.id = 'detailTitle';
+			return;
+		}
+		
+		var bigSpace = '&nbsp;&nbsp;&nbsp;&nbsp;';
+		var title = 
+			(groupIndex != 0 ? _('Chase Group') + ': ' + groupIndex : _('Leaders') + ': \u2714') + 
+			(groupIndex != 0 ? bigSpace + _('Gap') + ': ' + ShortFormatTimeGap(groupInfo[0][0]) : '') +
+			bigSpace +_('Size') + ': ' + groupInfo.length + 
+			(raceTime != null ? bigSpace + _('Race') + ': ' + FormatTime(raceTime) : '' ) + 
+			(clockTime != null ? bigSpace + _('Clock') + ': ' + FormatTime(clockTime) : '' );
+		
+		var para = createChild( this.detailDiv, 'p' );
+		para.innerHTML = title;
+		para.id = 'detailTitle';
 		
 		// Get the bibs and laps down.
 		var nums = [];
 		var lapsDown = {};
 		var sequence = {};
+		var numGap = {};
 		for( var i = 0; i < groupInfo.length; ++i ) {
+			var gap = groupInfo[i][0];
 			var info = groupInfo[i][1];
 			var fields = info.split(' ');
 			var num = parseInt( fields[0] );
@@ -3949,67 +3996,101 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 			if( lastField.slice(0, 1) == '(' && lastField.slice(-1) == ')')
 				lapsDown[num] = lastField.slice(1).slice(0, -1);
 			nums.push( num );
+			numGap[num] = gap;
 			sequence[num] = i+1;
 		}
 		
-		# Create an artificial external info if we don't have a spreadsheet.
-		if externalInfo is None:
-			externalInfo = { num: {_('Bib#'): num} for num in nums }
-		else:
-			# Adjust to usual name format.
-			def GetName( info ):
-				return u', '.join( n for n in [info.get(_('LastName'),'').upper(), info.get(_('FirstName'), '')] if n )
-			externalFields = [f if f != _('LastName') else _('Name') for f in externalFields if f != _('FirstName')]
-			externalInfo = { num : externalInfo[num].copy() for num in nums }
-			for num, info in externalInfo.iteritems():
-				info[_('Name')] = GetName(info)
+		// Adjust to get a combined name field.
+		var detailFields = infoFields.slice();
+		var curFields = {'Seq':true, 'Gap':true, 'Bib':true, 'LapsDown':true};
 		
-		# Add the laps down if necessary.
-		LapsDown = 'LapsDn'
-		if lapsDown:
-			try:
-				externalFields.insert( externalFields.index(_('Name')) + 1, LapsDown )
-			except ValidError:
-				externalFields.append( LapsDown )
-			
-			for num, info in externalInfo.iteritems():
-				info[LapsDown] = lapsDown.get(num, u'')
-				
-		# Add the sequence number.
-		Sequence = 'Seq'
-		for num, info in externalInfo.iteritems():
-			info[Sequence] = sequence[num]
-		externalFields.insert( 0, Sequence )
-			
-		# Add the headers.
-		for c, f in enumerate(externalFields):
-			self.list.InsertColumn( c+1, f, wx.LIST_FORMAT_RIGHT if f.startswith(_('Bib')) else wx.LIST_FORMAT_LEFT )
-		
-		# Create the data.  Sort by sequence.
-		data = [tuple( sequence[num] if i == 0 else num if i == 1 else externalInfo.get(num).get(f, '') for i, f in enumerate(externalFields)) for num in nums]
-		data.sort()
-		
-		# Populate the list.
-		for row, d in enumerate(data):
-			index = self.list.InsertImageStringItem(sys.maxint, u'{}'.format(d[0]), self.sm_rt)
-			for i, v in enumerate(itertools.islice(d, 1, len(d))):
-				self.list.SetStringItem( index, i+1, unicode(v) )
-			self.list.SetItemData( row, d[0] )		# This key links to the sort fields used by ColumnSorterMixin
-		
-		# Set the sort fields and configure the sorter mixin.
-		self.itemDataMap = dict( (d[0], d) for d in data )
-		listmix.ColumnSorterMixin.__init__(self, len(externalFields))
+		// Check for what information to present in the results.
+		for( var i = 0; i < nums.length; ++i ) {
+			var num = nums[i];
+			var d = data[num];			
+			// Get the union of all the defined fields.
+			for( var f = 0; f < detailFields.length; ++f )
+				if( d[infoFields[f]] )
+					curFields[infoFields[f]] = true;
+		}
 
-		# Make all column widths autosize.
-		for i, f in enumerate(externalFields):
-			self.list.SetColumnWidth( i, wx.LIST_AUTOSIZE )
+		var hasFirstLastName = (curFields['FirstName'] && curFields['LastName']);
+		if( hasFirstLastName ) {
+			curFields['FirstName'] = false;
+			curFields['LastName'] = false;
+			curFields['Name'] = true;
+		}
+		
+		detailFields.splice( 0, 0, 'Seq', 'Bib' );
+		var numericFields = {'Seq':true, 'Bib':true, 'LapsDown':true, 'Age':true};
+		for( var n in lapsDown ) {
+			var iInsert = 2;
+			for( var i = 0; i < detailFields.length; ++i ) {
+				if( detailFields[i] == 'Name' ) {
+					iInsert = i + 1;
+					break;
+				}
+			}
+			detailFields.splice( iInsert, 0, 'LapsDown' );
+			break;
+		}
+
+		var table = createChild( this.detailDiv, 'TABLE');
+		table.className = 'results';
+		var thead = createChild( table, 'THEAD' );
+		
+		var tr = createChild( thead, 'TR' );
+		for( var f = 0; f < detailFields.length; ++f ) {
+			var field = detailFields[f];
+			if( curFields[field] ) {
+				createTextChild( td = createChild(tr, 'TH'), _(detailFields[f]) );
+				td.id = 'idNonNumeric';
+			}
+		}
+		
+		var tbody = createChild( table, 'TBODY' );
+		for( var i = 0; i < nums.length; ++i ) {
+			var num = nums[i];
+			var d = data[num];			
 			
-		# Fixup the first columns as autosize gets confused with the graphic.
-		self.list.SetColumnWidth( 0, 64 )
-		self.list.SetColumnWidth( 1, 64 )
-		self.Show( True )
+			function createTD( tr ) {
+				var td = createChild(tr, 'TD');
+				if( numsToWatch[num] )
+					td.className = 'highlight';
+				return td;
+			}
+			
+			var tr = createChild(tbody, 'TR');
+			tr.onclick = function(n) { return function() {ToggleNumberHighlight(n);}; }(num);
+
+			// Add the info fields.
+			for( var f = 0; f < detailFields.length; ++f ) {
+				var field = detailFields[f];
+				if( curFields[field] ) {
+					var v;
+					if( field == 'Seq' )
+						v = i+1;
+					else if( field == 'Bib' )
+						v = num;
+					else if( field == 'LapsDown' )
+						v = lapsDown[num] != undefined ? lapsDown[num] : '';
+					else if( field == 'Name' ) {
+						if( d['LastName'] && d['FirstName'] )
+							v = d['LastName'] + ',&nbsp;' + d['FirstName'];
+						else
+							v = d['LastName'] || d['FirstName'];
+					}
+					else
+						v = d[field];
+					td = createTD(tr);
+					td.innerHTML = v;
+					if( !numericFields[field] )
+						td.id = 'idNonNumeric'; 
+				}
+			}
+		}
+		createChild( this.detailDiv, 'hr' );
 	}
-	*/
 	
 }
 //----------------------------------------------------------------------
@@ -4101,6 +4182,7 @@ function SetNumsToWatch()
 	animationObj.Refresh();
 	SetCategoryResults();
 	RefreshRaceChart();
+	SetSituationTime();
 }
 
 function ToggleNumberHighlight( num )
@@ -4431,6 +4513,11 @@ function initLanguages() {
 	languageSpan.innerHTML = languageHTML;
 }
 
+function SetSituationZoom( rbutton ) {
+	situationObj.zoom = parseFloat(rbutton.value);
+	SituationRefresh();
+}
+
 var situationTimer = null;
 function SetSituationTime( value ) {
 	if( situationObj == null )
@@ -4704,22 +4791,43 @@ Current versions of Chrome, FireFox and Opera work fine.
 </p>
 <span id="idShowOptions"></span><br/>
 
+<div id="idResultsDiv"></div>
+
 <div id="idSituationDiv" class="noprint">
+<hr>
 <p>
 	<span id="idSituationName" data-tr="Situation"></span>
 </p>
-<input id="idTimeRange" type="range" min="0" max="10000" value="10000" style="width:1000px;" oninput="SetSituationTime(this.value)" onchange="SetSituationTime(this.value)"></input><br/>
-<canvas id="idSituation" width="1000" height="800">
-<a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a> Requires support for the HTML5 Canvas.<br/>
-Please upgrade to a more recent browser version.<br/>
-For Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
-Current versions of Chrome, FireFox and Opera work fine.
-</canvas>
-<div id="idSituationDetailDiv" class="noprint">
-</div>
+<table><tr>
+	<td style="vertical-align:top; text-align:center;">
+		<br/><br/><br/><br/>
+		<span data-tr="Zoom"></span><br/>
+		+<br/>
+		<input type="radio" name="zoom" value="5.0" onclick="SetSituationZoom(this)"></input><br/>
+		<input type="radio" name="zoom" value="4.5" onclick="SetSituationZoom(this)"></input><br/>
+		<input type="radio" name="zoom" value="4.0" onclick="SetSituationZoom(this)"></input><br/>
+		<input type="radio" name="zoom" value="3.5" checked onclick="SetSituationZoom(this)"></input><br/>
+		<input type="radio" name="zoom" value="3.0" onclick="SetSituationZoom(this)"></input><br/>
+		<input type="radio" name="zoom" value="2.5" onclick="SetSituationZoom(this)"></input><br/>
+		<input type="radio" name="zoom" value="2.0" onclick="SetSituationZoom(this)"></input><br/>
+		<input type="radio" name="zoom" value="1.5" onclick="SetSituationZoom(this)"></input><br/>
+		<input type="radio" name="zoom" value="1.0" checked onclick="SetSituationZoom(this)"></input><br/>
+		-<br/>
+	</td>
+	<td style="vertical-align: top;">
+		<span data-tr="TimeSlider"></span>&nbsp;&nbsp;&nbsp;<input id="idTimeRange" type="range" min="0" max="10000" value="10000" style="width:670px;" oninput="SetSituationTime(this.value)" onchange="SetSituationTime(this.value)"></input><br/>
+		<canvas id="idSituation" width="800" height="600">
+		<a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a> Requires support for the HTML5 Canvas.<br/>
+		Please upgrade to a more recent browser version.<br/>
+		For Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
+		Current versions of Chrome, FireFox and Opera work fine.
+		</canvas>
+	</td>
+	<td style="vertical-align: top;">
+		<div id="idSituationDetailDiv"></div>
+	</td>
+</tr></table>
 </div> <!-- idSituationDiv -->
-
-<div id="idResultsDiv"></div>
 
 <div id="idRaceChartDiv" class="noprint">
 <p>
