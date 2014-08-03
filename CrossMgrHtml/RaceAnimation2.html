@@ -375,6 +375,7 @@ var translations = {
 	'Situation':	['Situation',		'Situation',				'Situación'],
 	'Leaders':		['Leaders',			'Tête',						'Cabeza'],
 	'Chase Group':	['Chase Group',		'Chase',					'Caza'],
+	'LapsDown':		['Laps Down',		'Rours de retard',			'Vueltas atrás'],
 	'last':			['','','']
 };
 (function() {
@@ -3979,7 +3980,7 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 			(groupIndex != 0 ? _('Chase Group') + ': ' + groupIndex : _('Leaders') + ': \u2714') + 
 			(groupIndex != 0 ? bigSpace + _('Gap') + ': ' + ShortFormatTimeGap(groupInfo[0][0]) : '') +
 			bigSpace +_('Size') + ': ' + groupInfo.length + 
-			(raceTime != null ? bigSpace + _('Race') + ': ' + FormatTime(raceTime) : '' ) + 
+			(raceTime != null ? bigSpace + _('Race Time') + ': ' + FormatTime(raceTime) : '' ) + 
 			(clockTime != null ? bigSpace + _('Clock') + ': ' + FormatTime(clockTime) : '' );
 		
 		var para = createChild( this.detailDiv, 'p' );
