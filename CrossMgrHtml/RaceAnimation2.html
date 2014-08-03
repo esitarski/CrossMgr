@@ -338,6 +338,7 @@ var translations = {
 	'All':			['All',				'Tous',					'Todo'],
 	'Lap Times':	['Times',			'Temps',				'Tiempos'],
 	'Race Times':	['Race Times',		'Temps de course',		'Tiempos de carrera'],
+	'Race Time':	['Race',			'Temps de la course',		'Tiempo de carrera'],
 	'Time Gaps':	['Gaps',			"Écarts",				'Diferencia'],
 	'Gap Percents':	['Percent',			'Pour cent',			'Ciento'],
 	'Lap Speed':	['Speed',			'Vitesse',				'Velocidad'],
@@ -372,6 +373,8 @@ var translations = {
 	'TimeSliderInstructions':	['Slide to Change Time', "Faites glisser pour changer Temps", "Deslice para cambiar Tiempo"],
 	'ClickGroupInstructions':	['Click Group for Details', "Cliquez sur Groupe pour plus de détails", "Haga clic en Grupo para detalles"],
 	'Situation':	['Situation',		'Situation',				'Situación'],
+	'Leaders':		['Leaders',			'Tête',						'Cabeza'],
+	'Chase Group':	['Chase Group',		'Chase',					'Caza'],
 	'last':			['','','']
 };
 (function() {
@@ -3573,7 +3576,7 @@ function GetSituationGaps( t ) {
 	
 	var title = 
 			'   ' + _('Lap') + ': ' + lap + '/' + laps + '   ' + _('Laps to go') + ': ' + lapsToGo +
-			'    ' + _('Race') + ': ' + FormatTime(tCur);
+			'    ' + _('Race Time') + ': ' + FormatTime(tCur);
 	
 	return {"gaps":gaps, "tAfterLeader":tAfterLeader, "title":title, "tCur":tCur};
 }
