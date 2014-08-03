@@ -368,9 +368,10 @@ var translations = {
 	'time penalty':	['time penalty',	"pénalité de temps",		"penalización de tiempo"],
 	'Factor':		['Factor%',			'Facteur%',					'Factor%'],
 	'ElapsedTime':	['ElapsedTime',		'Chrono',					'Tiempo transcurrido'],
-	'TimeSlider':	['Time Slider',		'curseur de temps',			'deslizador de tiempo'],
-	'TimeSliderInstructions':	['Slide to change Time', "Faites glisser pour changer Temps", "Deslice para cambiar Tiempo"],
+	'TimeSlider':	['Time Slider',		'Curseur de temps',			'Deslizador de tiempo'],
+	'TimeSliderInstructions':	['Slide to Change Time', "Faites glisser pour changer Temps", "Deslice para cambiar Tiempo"],
 	'ClickGroupInstructions':	['Click Group for Details', "Cliquez sur Groupe pour plus de détails", "Haga clic en Grupo para detalles"],
+	'Situation':	['Situation',		'Situation',				'Situación'],
 	'last':			['','','']
 };
 (function() {
@@ -4491,6 +4492,7 @@ function setLanguage( langCode ) {
 	
 	SetCategoryResults();
 	SetTotalElevationGain();
+	SituationRefresh();
 }
 
 function getLanguageCode() {
