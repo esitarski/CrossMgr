@@ -1412,7 +1412,7 @@ class MainWin( wx.Frame ):
 			return
 
 		# Read the html template.
-		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation2.html')
+		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
 		try:
 			with io.open(htmlFile, 'r', encoding='utf-8') as fp:
 				html = fp.read()
