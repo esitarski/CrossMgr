@@ -21,6 +21,11 @@ body { font-family: sans-serif; }
 	box-shadow: 4px 4px 4px #888888;
 }
 
+#detailTitle {
+	font-size: 110%;
+	font-weight: bold;
+}
+
 .smallfont	{ font-size: 75%; }
 .bigfont	{ font-size: 120%; }
 .biggerFont	{ font-size: 130%; }
@@ -191,7 +196,7 @@ var finishTop = null;			// Finish on the top rather than the bottom.
 var tRace = null;				// Race time (if the race is running).
 var raceStartTime = null;		// In seconds from midnight.
 var animationObj = null;		// Animation object to draw the course (set to TrackAnimation or GeoAnimation).
-var raceLightningObj = null;
+var situationObj = null;
 var catUpdateTime = {};			// Time of next update by category.
 var rfid = null;				// True if data was collected by RFID.
 var gpsPoints = null;			// gps points data for the course [[x,y,d],...].
@@ -239,8 +244,7 @@ Array.prototype.back = function() {
 	return this[this.length-1];
 };
 
-Array.prototype.binSearch = function( v )
-{
+Array.prototype.binSearch = function( v ) {
 	var L = this.length, i = -1, m;
 	while( L - i > 1 )
 	{
@@ -250,6 +254,12 @@ Array.prototype.binSearch = function( v )
 			L = m;
 	}
 	return L;
+}
+
+Array.prototype.swap = function( x, y ) {
+	var tmp = this[x];
+	this[x] = this[y];
+	this[y] = tmp;
 }
 
 // Make a string html safe.
@@ -328,6 +338,7 @@ var translations = {
 	'All':			['All',				'Tous',					'Todo'],
 	'Lap Times':	['Times',			'Temps',				'Tiempos'],
 	'Race Times':	['Race Times',		'Temps de course',		'Tiempos de carrera'],
+	'Race Time':	['Race',			'Temps de la course',		'Tiempo de carrera'],
 	'Time Gaps':	['Gaps',			"Écarts",				'Diferencia'],
 	'Gap Percents':	['Percent',			'Pour cent',			'Ciento'],
 	'Lap Speed':	['Speed',			'Vitesse',				'Velocidad'],
@@ -358,6 +369,13 @@ var translations = {
 	'time penalty':	['time penalty',	"pénalité de temps",		"penalización de tiempo"],
 	'Factor':		['Factor%',			'Facteur%',					'Factor%'],
 	'ElapsedTime':	['ElapsedTime',		'Chrono',					'Tiempo transcurrido'],
+	'TimeSlider':	['Time Slider',		'Curseur de temps',			'Deslizador de tiempo'],
+	'TimeSliderInstructions':	['Slide to Change Time', "Faites glisser pour changer Temps", "Deslice para cambiar Tiempo"],
+	'ClickGroupInstructions':	['Click Group for Details', "Cliquez sur Groupe pour plus de détails", "Haga clic en Grupo para detalles"],
+	'Situation':	['Situation',		'Situation',				'Situación'],
+	'Leaders':		['Leaders',			'Tête',						'Cabeza'],
+	'Chase Group':	['Chase Group',		'Chase',					'Caza'],
+	'LapsDown':		['Laps Down',		'Rours de retard',			'Vueltas atrás'],
 	'last':			['','','']
 };
 (function() {
@@ -3344,317 +3362,742 @@ function RefreshRaceChart()
 	labelsWidthCur = labelsWidthLeft;
 }
 
-function Lightning()
-{
-	this.xLeft = 0;
-	this.width = 0;
-	this.height = 0;
-	
-	this.drawLapY = [];
-	this.drawLapNumX = [];
-	this.lapsShown = [];
-	
-	this.fontSize = 0;
-	this.riderWidth = 0;
-	this.riderHeight = 0;
-	this.maxLap = 0;
-	
-	this.xEvent = 0;
-	this.yEvent = 0;
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
 
-	this.processMouse = function( event )
+function Rect( x, y, width, height ) {
+	this.x = x;
+	this.y = y;
+	this.width = width;
+	this.height = height;
+}
+Rect.prototype.GetLeft = function() { return this.x; }
+Rect.prototype.GetRight = function() { return this.x + this.width; }
+Rect.prototype.GetTop = function() { return this.y; }
+Rect.prototype.GetBottom = function() { return this.y + this.height; }
+Rect.prototype.GetWidth = function() { return this.width; }
+Rect.prototype.GetHeight = function() { return this.height; }
+Rect.prototype.SetTop = function( y ) { this.y = y; }
+Rect.prototype.SetBottom = function( y ) { this.y = y - this.height; }
+Rect.prototype.SetLeft = function( x ) { this.x = x; }
+Rect.prototype.SetRight = function( x ) { this.x = x - this.width; }
+Rect.prototype.ContainsXY = function(x, y) {
+	return this.x <= x && x <= this.x + this.width && this.y <= y && y <= this.y + this.height;
+}
+Rect.prototype.print = function( label ) {
+	console.log( label + ': Rect(' + this.x + ',' + this.y + ',' + this.width + ',' + this.height + ')' );
+}
+Rect.prototype.Intersects = function( r ) {
+	return !(
+		r.x + r.width < this.x ||
+		this.x + this.width < r.x ||
+		r.y + r.height < this.y ||
+		this.y + this.height < r.y
+	);
+}
+
+//----------------------------------------------------------------------
+
+var _resultsNums = [];
+var _raceTMax = null;
+var _lastCategory = '';
+function GetValidResultsNums() {
+	if( _lastCategory == categoryCur )
+		return _resultsNums;
+	
+	_resultsNums = [];
+	_raceTMax = null;
+	for( var c = 0; c < catDetails.length; ++c )
 	{
-		var canvasRaceLightning = document.getElementById('idRaceLightning');
-		var pos = findPos( canvasRaceLightning );
-		this.xEvent = event.pageX - canvasRaceLightning.offsetLeft;
-		this.yEvent = event.pageY - canvasRaceLightning.offsetTop;
-		if( hoverTimer != null )
-			clearTimeout( hoverTimer );	
-		hoverTimer = setTimeout( function() {raceLightningObj.updateInfo();}, 10 );
+		var catDetail = catDetails[c];
+		if( categoryCur != catDetail.name )
+			continue;
+		for( var p = 0; p < catDetail.pos.length; ++p ) {
+			var num = catDetail.pos[p];
+			var d = data[num];
+			var raceTimes = d['raceTimes'];
+			if( raceTimes && raceTimes.length >= 2 )
+				_resultsNums.push( num );
+		}
+		break;
 	}
 	
-	this.findRiderFromEventCoords = function()
-	{
-		var lapYSearch = this.drawLapY.binSearch( this.yEvent ) - 1;
-		lapYSearch = Math.max( 0, lapYSearch );
-		lapYSearch = Math.min( this.drawLapY.length - 1, lapYSearch );
+	_lastCategory = categoryCur;
+	return _resultsNums;
+}
+function GetRaceTMax() {
+	if( _lastCategory == categoryCur && _raceTMax != null )
+		return _raceTMax;
+	
+	var resultsNums = GetValidResultsNums();
+	_raceTMax = 0.0;
+	for( var i = 0; i < resultsNums.length; ++i ) {
+		var d = data[resultsNums[i]];
+		var raceTimes = d['raceTimes'];
+		if( raceTimes.back() > _raceTMax )
+			_raceTMax = raceTimes.back();
+	}
+	return _raceTMax;
+}
+
+function ShortFormatTimeGap( t ) {
+	var tStr = FormatTimeGap( t );
+	if( tStr.substring(0, 3) == "0'0" )
+		tStr = tStr.substring(3);
+	else if( tStr.substring(0,2) == "0'" )
+		tStr = tStr.substring(2);
+	return tStr;
+}
+
+function GetLapLE( raceTimes, t ) {
+	var lap = raceTimes.binSearch( t );
+	if( lap >= raceTimes.length )
+		lap = raceTimes.length - 1;
+	return raceTimes[lap] > t ? lap-1 : lap;
+}
+
+function GetPositionSpeed( raceTimes, t ) {
+	var lap = GetLapLE( raceTimes, t );
+	var lapStartTime = raceTimes[lap];
+	var lapTime = 0.0;
+	if( lap+1 < raceTimes.length )
+		lapTime = raceTimes[lap+1] - raceTimes[lap];
+	else
+		lapTime = raceTimes[lap] - raceTimes[lap-1];
+	var speed = 1.0 / lapTime;
+	return {'position': lap + (t - lapStartTime) * speed, 'speed': speed};
+}
+
+function GetLeaderGap( leaderPosition, leaderSpeed, leaderRaceTimes, raceTimes, t ) {
+	if( !raceTimes || raceTimes.length == 0 )
+		return null;
+	if( t >= raceTimes[raceTimes.length-1] ) {
+		if( t >= leaderRaceTimes[leaderRaceTimes.length-1] )
+			return {
+				'gap':leaderRaceTimes.length == raceTimes.length ? raceTimes[raceTimes.length-1] - leaderRaceTimes[leaderRaceTimes.length-1] : null,
+				'lapsDown': raceTimes.length - leaderRaceTimes.length
+			};
+		return {'gap':null, 'lapsDown':raceTimes.length - leaderRaceTimes.length};
+	}
+	
+	var ps = GetPositionSpeed( raceTimes, t );
+	var riderPosition = ps.position, riderSpeed = ps.speed;
+	var deltaPostion = leaderPosition - riderPosition;
+	var positionFraction = deltaPostion - Math.floor(deltaPostion);
+	if( positionFraction < 0.0 )
+		positionFraction += 1.0;
+	return {'gap':positionFraction / leaderSpeed, 'lapsDown': -Math.floor(deltaPostion)};
+}
+
+function PathFromPoints( dc, points, xTranslate, yTranslate ) {
+	xTranslate = xTranslate ? xTranslate : 0;
+	yTranslate = yTranslate ? yTranslate : 0;
+	dc.beginPath();
+	dc.moveTo( points[0][0] + xTranslate, points[0][1] + yTranslate );
+	for( var p = 1; p < points.length; ++p )
+		dc.lineTo( points[p][0] + xTranslate, points[p][1] + yTranslate );
+}
+
+function GetSituationGaps( t ) {
+	var BigTime = 1000.0*24.0*60.0*60.0;
+	
+	var resultsNums = GetValidResultsNums();
+	if( resultsNums.length == 0 )
+		return [];
 		
-		var lapNumX = this.drawLapNumX[lapYSearch];
-		var lapX = 0;
-		for( var i = 0; i < lapNumX.length; ++i ) {
-			if( Math.abs(lapNumX[i][1] - this.xEvent) < Math.abs(lapNumX[lapX][1] - this.xEvent) )
-				lapX = i;
+	var maxLaps = 0;
+	for( var i = 0; i < resultsNums.length; ++i ) {
+		var d = data[resultsNums[i]];
+		if( d.raceTimes && d.raceTimes.length - 1 > maxLaps )
+			maxLaps = d.raceTimes.length - 1;
+	}
+	
+	if( t == undefined ) {
+		if( raceIsRunning && timestamp ) {
+			var tServer = (new Date(timestamp[0]).getTime()) / 1000.0;
+			var tBrowser = (new Date().getTime()) / 1000.0;
+			while( tBrowser - tServer < 0 )
+				tBrowser += 60*60;
+			t = timestamp[1] + (tBrowser - tServer);
+		}
+		else
+			t = BigTime;
+	}
+	var raceTMax = GetRaceTMax();
+	t = Math.min( t, raceTMax );
+	
+	var leaderRaceTimes = [];
+	for( var lap = 0; lap <= maxLaps; ++lap ) {
+		var tMinLap = BigTime;
+		for( var i = 0; i < resultsNums.length; ++i ) {
+			var d = data[resultsNums[i]];
+			if( d.raceTimes.length > lap && d.raceTimes[lap] < tMinLap )
+				tMinLap = d.raceTimes[lap];
+		}
+		leaderRaceTimes.push( tMinLap );
+	}
+	
+	function getInfo( num, lapsDown ) {
+		var d = data[num];
+		var names = [];
+		if( d.LastName ) names.push( d.LastName );
+		if( d.FirstName ) names.push( d.FirstName.slice(0, 1) );
+		return num + ' ' + names.join(',') + (lapsDown != 0 ? ' (' + lapsDown + ')': '');
+	}
+	
+	var ps = GetPositionSpeed( leaderRaceTimes, t );
+	var leaderPosition = ps.position, leaderSpeed = ps.speed;
+	var gaps = [];
+	for( var i = 0; i < resultsNums.length; ++i ) {
+		var num = resultsNums[i];
+		var d = data[num];
+		gapLapsDown = GetLeaderGap( leaderPosition, leaderSpeed, leaderRaceTimes, d.raceTimes, t );
+		if( gapLapsDown != null && gapLapsDown.gap != null )
+			gaps.push( [gapLapsDown.gap, getInfo(num, gapLapsDown.lapsDown), num] );
+	}
+	
+	gaps.sort( function(a, b) { return a[0] - b[0]; } );
+	
+	if( gaps.length > 0 ) {
+		var gapMin = gaps[0][0];
+		if( gapMin > 0 ) {
+			for( var g = 0; g < gaps.length; ++g )
+				gaps[g][0] -= gapMin;
+		}
+	}
+	
+	var thisLap = GetLapLE(leaderRaceTimes, t);
+	
+	var tCur = t;
+	var tAfterLeader = t - leaderRaceTimes[thisLap];
+	var laps = leaderRaceTimes.length - 1;
+	var lap = Math.min( thisLap + 1, laps );
+	var lapsToGo = Math.max(laps - lap, 0);
+	
+	var title = 
+			'   ' + _('Lap') + ': ' + lap + '/' + laps + '   ' + _('Laps to go') + ': ' + lapsToGo +
+			'    ' + _('Race Time') + ': ' + FormatTime(tCur);
+	
+	return {"gaps":gaps, "tAfterLeader":tAfterLeader, "title":title, "tCur":tCur};
+}
+
+function Situation( situationCanvas, timeRange, detailDiv) {
+	this.situationCanvas = situationCanvas;
+	this.timeRange = timeRange;
+	this.detailDiv = detailDiv;
+
+	var groupIndexColour = '#FFCC99';
+	var groupGapColour = '#FFFFFF';
+	var groupSizeColour = '#99CCFF';
+	var groupColour = 'rgb(128,128,255)';
+	var packColour = 'rgb(200,255,200)';
+	var greyPenColour = 'rgb(100,100,100, 0.64)';
+	var greyBrushColour = 'rgb(232,232,232)';
+	var blackColour = '#000000';
+	var whiteColour = '#FFFFFF';
+	
+	this.gaps = [];
+	this.groupRectList = [];
+	this.groupFullData = [];
+
+	this.tAfterLeader = null;
+	this.title = null;
+	this.tCur = null;
+	this.zoom = 1.0;
+		
+	this.groupClickHandler = null;
+	//	self.Bind(wx.EVT_LEFT_UP, self.OnMouseUp )
+		
+	this.SetData = function( gaps, tAfterLeader, title, tCur ) {
+		// each gap is of the form: [gapSeconds, text]
+		// Expected to be sorted by increasing gapSeconds.
+		this.gaps = (gaps && gaps.length > 0) ? gaps : [];
+		
+		this.tAfterLeader = tAfterLeader;
+		this.title = title;
+		this.tCur = tCur;
+		
+		this.DrawDetails( null, null, null, null );
+		this.Refresh();
+	}
+	
+	this.SetZoom = function( zoom ) {
+		this.zoom = zoom;
+		this.Refresh();
+	}
+
+	this.Refresh = function() { this.Draw(); }
+
+	this.Draw = function() {
+		var dc = situationCanvas.getContext('2d');
+		var width = situationCanvas.width;
+		var height = situationCanvas.height;
+		
+		dc.fillStyle = whiteColour;
+		dc.fillRect( 0, 0, width, height );
+		
+		this.groupRectList = [];
+		this.groupFullData = [];
+		
+		function SetGreyPen() { dc.strokeStyle = greyPenColour; dc.lineWidth = 1; }
+			
+		// Partition the gaps into groups separated by at least one second.
+		var maxGapSec = 20.0*60.0*60.0;	// Ignore gaps that are too great.
+		var groups = [];
+		var group = [];
+		var gapPrev = null;
+		for( var g = 0; g < this.gaps.length; ++g ) {
+			var gap = this.gaps[g];
+			if( gap[0] > maxGapSec )
+				break;
+			if( gapPrev == null || gap[0] - gapPrev[0] <= 1.0 )
+				group.push( gap );
+			else {
+				groups.push( group );
+				group = [gap];
+			}
+			gapPrev = gap;
+		}
+		if( group.length > 0 )
+			groups.push( group );
+
+		// Make a copy of all the group info.  Also get the largest group.
+		this.groupFullData = [];
+		var groupMax = 0;
+		var groupTimeMaxSize = null;
+		for( var g = 0; g < groups.length; ++g ) {
+			var group = groups[g];
+			this.groupFullData.push( group.slice() );
+			if( group.length > groupMax ) {
+				groupMax = group.length;
+				groupTimeMaxSize = group[0][0];
+			}
 		}
 		
-		var num = lapNumX[lapX][0];
-		return [num, lapYSearch, lapNumX];
-	}
-	
-	this.processClick = function( event )
-	{
-		var canvasRaceLightning = document.getElementById('idRaceLightning');
-		var pos = findPos( canvasRaceLightning );
-		this.xEvent = event.pageX - canvasRaceLightning.offsetLeft;
-		this.yEvent = event.pageY - canvasRaceLightning.offsetTop;
+		// Add the group header (index, gap and size).
+		for( var i = 0; i < groups.length; ++i ) {
+			var group = groups[i];
+			if( group.length == 0 )
+				continue;
+			var groupSize = group.length;
+			if( group.length > 10 ) {
+				group = [].concat( group.slice(0,5), [[group[5][0], '...']], group.slice(group.length-5, group.length) );
+			}
+			if( i == 0 )
+				group.splice( 0, 0, [group[0][0], '\u2714 \u200B ' + groupSize] );
+			else
+				group.splice( 0, 0, [group[0][0], i + ' ' + ShortFormatTimeGap(group[0][0]) + ' ' + groupSize] );
+			groups[i] = group;
+		}
 		
-		var num = this.findRiderFromEventCoords()[0];
-		document.getElementById('idNumsToWatch').value = num + '';
-		SetNumsToWatch();
-	}
-	
-	this.drawRider = function( dc, x, y, color1, color2 ) {
-		var gx = x + this.riderWidth * 0.75;
-		var gy = y + this.riderHeight * 0.25;
-		var r1 = this.riderWidth * 0.005;
-		var r2 = this.riderHeight * 1.0;
-		dc.save();
-		var g = dc.createRadialGradient( gx, gy, r1, gx, gy, r2 );
-		g.addColorStop( 0.0, color2 );
-		g.addColorStop( 1.0, color1 );
-		dc.fillStyle = g;
-		dc.fillRect( x, y, this.riderWidth, this.riderHeight );
-		dc.lineWidth = 1.0;
-		dc.strokeStyle = '#444';
-		dc.strokeRect( x, y, this.riderWidth, this.riderHeight );
-		dc.restore();
-	}
+		var fontHeight = height / 40;
+		if( fontHeight == 0 )
+			return;
 
-	this.updateInfo = function()
-	{
-		this.Refresh();
-		if( this.maxLaps <= 1 )
+		var font = fontHeight + 'px Arial';
+		dc.font = font;
+		var spaceWidth = fontHeight / 2;
+		var boldFont = 'bold ' + fontHeight + 'px Arial';
+		
+		var smallFontHeight = fontHeight * 0.75;
+		var smallFont = smallFontHeight + 'px Arial';
+
+		//---------------------------------------------------------------------
+		dc.font = font;
+		dc.fillStyle = blackColour;
+		dc.textBaseline = "top";
+
+		var border = Math.min( width, height ) / 25;
+		var xLeft = border*2;
+		var yTop = border*2.25 + fontHeight;
+		if( this.title != null )
+			dc.fillText( this.title, xLeft, border );
+		
+		if( groups.length == 0 )
 			return;
 		
-		var canvasRaceLightning = document.getElementById('idRaceLightning');
-		var dc = canvasRaceLightning.getContext('2d');
-
-		dc.save();
+		function GetGroupTextExtent( group ) {
+			var widthMax = 0;
+			var widthCur;
+			for( var g = 0; g < group.length; ++g ) {
+				if( numsToWatch[group[g][2]] != undefined ) {
+					dc.save();
+					dc.font = boldFont;
+					widthCur = dc.measureText(group[g][1]).width;
+					dc.restore();
+				}
+				else
+					widthCur = dc.measureText(group[g][1]).width;
+				
+				widthMax = Math.max( widthMax, widthCur );
+			}
+			return {"width":widthMax, "height":group.length*fontHeight};
+		}
 		
-		dc.fillStyle = '#FF8300';
-		dc.strokeStyle = '#FF8300';
-		dc.lineWidth = 3;
+		var lastWidth = GetGroupTextExtent( groups[groups.length-1] ).width;
+		
+		var xRight = width - border - lastWidth;
+		var yBottom = height - border;
+		
+		var gapMax = 0.0;
+		if( groups.length > 0 && groups[0].length > 0 ) {
+			var groupFirst = groups[0], groupLast = groups[groups.length-1];
+			var tFirst = groupFirst[0][0];
+			var tLast = groupLast[groupLast.length-1][0];
+			gapMax = tLast - tFirst;
+		}
+		var xScale = (xRight - xLeft) / (gapMax != 0.0 ? gapMax : 1.0) * this.zoom;
+		
+		function drawFinishLine() {
+			if( this.tAfterLeader == null )
+				return;
+			var x = xLeft + this.tAfterLeader * xScale;
+			var flWidth = width / 32;
+			if( x - flWidth > width )
+				return;
+			var flTop = yTop - border / 2;
+			var flBottom = flTop + border;
+			dc.strokeStyle = 'rgb(220,220,220)';
+			dc.lineWidth = Math.max(width / 800, 1);
+			dc.fillStyle = whiteColour;
+			dc.fillRect( x - flWidth / 2, flTop, flWidth, flBottom - flTop );
+			dc.strokeRect( x - flWidth / 2, flTop, flWidth, flBottom - flTop );
+			dc.lineWidth = flWidth / 4;
+			dc.lineCap = 'butt';
+			DrawLine( dc, x, flTop, x, flBottom );
+			dc.fillStyle = whiteColour;
+			dc.fillRect( width-border, 0, width, height );
+		}
+		
+		drawFinishLine();
+		
+		// Draw a direction line.
+		dc.strokeStyle = blackColour;
+		dc.lineWidth = 1;
+		dc.fillStyle = blackColour;
+		DrawLine( dc, xLeft - border, yTop, width-border, yTop );
+		var arrowLength = border * 0.8;
+		var points = [[0,0], [arrowLength, arrowLength/4], [arrowLength, -arrowLength/4]];
+		PathFromPoints( dc, points, border/2, yTop ); dc.closePath();
+		dc.fill();
+		dc.stroke();
+		
+		SetGreyPen();
+		
+		var groupTitleBrushes = [
+			groupIndexColour,
+			groupGapColour,
+			groupSizeColour,
+		];
+		
+		var existingRects = [];	// Sequenced by decreasing GetRight().
+		var groupHeight = height / 40;
+		var groupRectList = [];
+		for( var g = 0; g < groups.length; ++g ) {
+			var group = groups[g];
+			
+			// Draw the group.
+			var xBegin = xLeft + group[0][0] * xScale;
+			var xEnd = xLeft + group[group.length-1][0] * xScale;
+			
+			dc.fillStyle = groupColour;
+			dc.fillRect( xBegin - groupHeight/2, yTop - groupHeight/2, xEnd - xBegin + groupHeight, groupHeight );
+			dc.strokeStyle = blackColour;
+			dc.lineCap = 'butt';
+			dc.lineWidth = height / 100;
+			DrawLine( dc, xBegin, yTop, xEnd, yTop );
+			
+			// Find a non-overlapping area to draw the group text.
+			var xText = xBegin;
+			var yText = yTop + groupHeight/2 + fontHeight;
+			var gte = GetGroupTextExtent( group );
+			var gWidth = gte.width;
+			var gHeight = gte.height;
+			var gRect = new Rect( xText, yText, gWidth + spaceWidth*2, gHeight + fontHeight*0.6 );
+			
+			var conflict = true;
+			while( conflict ) {
+				conflict = false;
+				for( var ir = 0; ir < existingRects.length; ++ir ) {
+					var r = existingRects[ir];
+					if( r.GetRight() < gRect.GetLeft() )
+						break;
+					if( r.Intersects(gRect) ) {
+						gRect.SetTop( r.GetBottom()+1 );
+						conflict = true;
+					}
+				}
+			}
+			
+			// Insert the new rectangle into the list.  Keep sequenced by decreasing GetRight().
+			existingRects.push( gRect );
+			for( var i = existingRects.length-2; i >= 0;  --i ) {
+				if( existingRects[i].GetRight() < existingRects[i+1].GetRight() )
+					existingRects.swap(i, i+1);
+				else
+					break;
+			}
+			
+			groupRectList.push( [group, gRect] );
+		}
+		
+		// Connect the text to the group with a line.
+		SetGreyPen();
+		for( var g = 0; g < groupRectList.length; ++g ) {
+			var gRect = groupRectList[g][1];
+			DrawLine( dc, gRect.GetLeft(), yTop, gRect.GetLeft(), gRect.GetTop() );
+		}
+		
 		dc.textBaseline = "top";
-		var fontHeight = Math.min(this.riderHeight * 0.5, 28);
+		for( var ig = 0; ig < groupRectList.length; ++ig ) {
+			var group = groupRectList[ig][0], gRect = groupRectList[ig][1];
+			
+			// Draw the group outline.
+			SetGreyPen();
+			dc.fillStyle = group[0][0] != groupTimeMaxSize ? greyBrushColour : packColour;
+			dc.fillRect( gRect.GetLeft(), gRect.GetTop(), gRect.GetWidth()-1, gRect.GetHeight()-fontHeight/2, fontHeight/3 );
+			dc.strokeRect( gRect.GetLeft(), gRect.GetTop(), gRect.GetWidth()-1, gRect.GetHeight()-fontHeight/2, fontHeight/3 );
+			
+			var xText = gRect.GetLeft();
+			
+			// Draw the group text.
+			SetGreyPen();
+			dc.fillStyle = blackColour;
+			var yText = gRect.GetTop()
+			for( var i = 0; i < group.length; ++i ) {
+				var gap = group[i];
+				
+				if( i == 0 ) {
+					// Draw the coloured rectangles to highlight the title fields.
+					var title = gap[1];
+					var fieldWidths = [-spaceWidth+2];
+					var iSpace = 0;
+					while( true ) {
+						var iSpace = title.indexOf( ' ', iSpace );
+						if( iSpace < 0 ) {
+							fieldWidths.push( dc.measureText(title).width + spaceWidth/2 );
+							break;
+						}
+						fieldWidths.push( dc.measureText(title.slice(0,iSpace)).width + spaceWidth/2 );
+						iSpace += 1;
+					}
+					
+					fieldWidths[fieldWidths.length-1] += spaceWidth/2;
+					var iBrush = (fieldWidths.length > 2 ? 0 : 2);
+					var xLast = xText;
+					for( var iField = 1; iField < fieldWidths.length; ++iField ) {
+						var tWidth = fieldWidths[iField] - fieldWidths[iField-1]
+						dc.fillStyle = groupTitleBrushes[iBrush];
+						dc.fillRect( xLast, yText, tWidth, fontHeight*1.08 );
+						dc.strokeRect( xLast, yText, tWidth, fontHeight*1.08 );
+						iBrush += 1;
+						xLast += tWidth;
+					}
+				}
+					
+				dc.fillStyle = blackColour;
+				if( numsToWatch[gap[2]] != undefined ) {
+					dc.save();
+					dc.font = boldFont;
+					dc.fillText( gap[1], xText + spaceWidth, yText );
+					dc.restore();
+				}
+				else
+					dc.fillText( gap[1], xText + spaceWidth, yText );
+				yText += fontHeight;
+			}
+		}
+				
+		this.groupRectList = groupRectList;
+				
+		// Draw the gaps between the groups with dimension lines.
+		SetGreyPen();
+		dc.fillStule = greyBrushColour;
+		dc.font = smallFont;
+		var yUp = yTop - groupHeight - smallFontHeight
+		var yText = yUp + smallFontHeight/2;
+		var yTextCenter = yText + smallFontHeight * 0.5;
+		yUp += smallFontHeight/4;
 		
-		var ret = this.findRiderFromEventCoords();
-		var num = ret[0], lapYSearch = ret[1], lapNumX = ret[2];
-		
-		var backgroundBorder = 4;
-		var xLast = null, yLast = null;
-		for( var lapY = 0; lapY < this.drawLapNumX.length; ++lapY ) {
-			var drawLapNumX = this.drawLapNumX[lapY];
-			var y = this.drawLapY[lapY];
-			for( var i = 0; i < drawLapNumX.length; ++i ) {
-				if( drawLapNumX[i][0] == num ) {
-					var x = drawLapNumX[i][1], gap = drawLapNumX[i][2];
+		var arrowLength = smallFontHeight * 0.75;
+		var leftArrow = [[0,0], [arrowLength, arrowLength/4], [arrowLength, -arrowLength/4]];
+		var rightArrow = [[0,0], [-arrowLength, arrowLength/4], [-arrowLength, -arrowLength/4]];
 
-					this.drawRider( dc, x, y, '#FF9400', '#FFEE08' );
-					
-					dc.fillStyle = '#000000';
-					dc.font = this.fontSize + 'px Arial';
-					dc.fillText( num, x, y );
-					
-					dc.font = fontHeight + 'px Arial';
-					var textInfo = this.showLaps[lapY] + (i != 0 ? ': ' + FormatTimeGap(gap) + ' (' + (i+1) + ')' : '');
-					var text = [textInfo];
-					if( lapY == lapYSearch ) {
-						text[0] += ' ' + getRiderNameNum( num );
-						var team = getRiderTeam( num );
-						if( team )
-							text.push( team );
-					}
-					var textWidth = 0;
-					for( var p = 0; p < text.length; ++p )
-						textWidth = Math.max( dc.measureText(text[p]).width, textWidth );
-					var xAdjust = this.riderWidth + 1;
-					if( x + xAdjust + textWidth > this.width )
-						xAdjust = -(x + xAdjust + textWidth - this.width);
-					
-					// Lighten the background so we can see the description.
-					dc.fillStyle = 'rgba(255,255,255,0.9)';
-					dc.fillRect( x + xAdjust, y - backgroundBorder,
-									textWidth + backgroundBorder,
-									fontHeight * text.length + backgroundBorder*2 );
-					dc.fillStyle = '#000';
-					for( var p = 0; p < text.length; ++p )
-						dc.fillText( text[p], x + xAdjust, y + fontHeight * p - 2);
-					
-					if( xLast != null ) {
-						dc.beginPath();
-						dc.moveTo( xLast, yLast );
-						dc.lineTo( xLast = drawLapNumX[i][1] + this.riderWidth / 2, y );
-						dc.stroke();
-					}
-					xLast = x + this.riderWidth / 2;
+		dc.textBaseline = "middle";
+		for( var iGroup = 1; iGroup < groups.length; ++iGroup ) {
+			var groupPrev = groups[iGroup-1], groupNext = groups[iGroup];
+			var tPrev = groupPrev[groupPrev.length-1][0], tNext = groupNext[0][0];
+			var xPrev = xLeft + tPrev * xScale, xNext = xLeft + tNext * xScale;
+			var sepStr = ShortFormatTimeGap(tNext - tPrev);
+			var tWidth = dc.measureText( sepStr ).width;
+			if( xNext - xPrev < tWidth * 1.25 )
+				continue;
+			
+			DrawLine( dc, xPrev, yTop, xPrev, yUp );
+			DrawLine( dc, xNext, yTop, xNext, yUp );
+			
+			if( xNext - xPrev > tWidth + arrowLength * 4 ) {
+				DrawLine( dc, xPrev, yTextCenter, xPrev + (xNext - xPrev - tWidth) / 2 - 2, yTextCenter );
+				DrawLine( dc, xNext - (xNext - xPrev - tWidth) / 2 + 2, yTextCenter, xNext, yTextCenter );
+				PathFromPoints( dc, leftArrow, xPrev, yTextCenter ); dc.closePath(); dc.stroke(); dc.fill();
+				PathFromPoints( dc, rightArrow, xNext, yTextCenter ); dc.closePath(); dc.stroke(); dc.fill();
+			}
+			
+			dc.fillStyle = blackColour;
+			dc.fillText( sepStr, xPrev + (xNext - xPrev - tWidth) / 2, yTextCenter );
+		}
+	}
+	
+	this.processClick = function( event ) {
+		var rect = this.situationCanvas.getBoundingClientRect();
+		var xEvent = event.clientX - rect.left;
+		var yEvent = event.clientY - rect.top;
+
+		for( var i = 0; i < this.groupRectList.length; ++i ) {
+			var gRect = this.groupRectList[i][1];
+			if( gRect.ContainsXY( xEvent, yEvent ) ) {
+				this.DrawDetails( gRect, i, this.groupFullData[i], this.tCur, null );
+				return;
+			}
+		}
+		this.DrawDetails( null, null, null, null );
+	}
+	
+	this.DrawDetails = function( gRect, groupIndex, groupInfo, raceTime, clockTime ) {
+		this.detailDiv.innerHTML = '';
+		if( groupIndex == undefined || groupIndex == null ) {
+			var text = '\u25C0&nbsp;&nbsp;' + _('TimeSliderInstructions') + '<br/><br/><br/><br/><br/>\u25C0&nbsp;&nbsp;' + _('ClickGroupInstructions');
+			var para = createChild( this.detailDiv, 'p' );
+			para.innerHTML = text;
+			para.id = 'detailTitle';
+			return;
+		}
+		
+		var bigSpace = '&nbsp;&nbsp;&nbsp;&nbsp;';
+		var title = 
+			(groupIndex != 0 ? _('Chase Group') + ': ' + groupIndex : _('Leaders') + ': \u2714') + 
+			(groupIndex != 0 ? bigSpace + _('Gap') + ': ' + ShortFormatTimeGap(groupInfo[0][0]) : '') +
+			bigSpace +_('Size') + ': ' + groupInfo.length + 
+			(raceTime != null ? bigSpace + _('Race Time') + ': ' + FormatTime(raceTime) : '' ) + 
+			(clockTime != null ? bigSpace + _('Clock') + ': ' + FormatTime(clockTime) : '' );
+		
+		var para = createChild( this.detailDiv, 'p' );
+		para.innerHTML = title;
+		para.id = 'detailTitle';
+		
+		// Get the bibs and laps down.
+		var nums = [];
+		var lapsDown = {};
+		var sequence = {};
+		var numGap = {};
+		for( var i = 0; i < groupInfo.length; ++i ) {
+			var gap = groupInfo[i][0];
+			var info = groupInfo[i][1];
+			var fields = info.split(' ');
+			var num = parseInt( fields[0] );
+			var lastField = fields[fields.length-1];
+			if( lastField.slice(0, 1) == '(' && lastField.slice(-1) == ')')
+				lapsDown[num] = lastField.slice(1).slice(0, -1);
+			nums.push( num );
+			numGap[num] = gap;
+			sequence[num] = i+1;
+		}
+		
+		// Adjust to get a combined name field.
+		var detailFields = infoFields.slice();
+		var curFields = {'Seq':true, 'Gap':true, 'Bib':true, 'LapsDown':true};
+		
+		// Check for what information to present in the results.
+		for( var i = 0; i < nums.length; ++i ) {
+			var num = nums[i];
+			var d = data[num];			
+			// Get the union of all the defined fields.
+			for( var f = 0; f < detailFields.length; ++f )
+				if( d[infoFields[f]] )
+					curFields[infoFields[f]] = true;
+		}
+
+		var hasFirstLastName = (curFields['FirstName'] && curFields['LastName']);
+		if( hasFirstLastName ) {
+			curFields['FirstName'] = false;
+			curFields['LastName'] = false;
+			curFields['Name'] = true;
+		}
+		
+		detailFields.splice( 0, 0, 'Seq', 'Bib' );
+		var numericFields = {'Seq':true, 'Bib':true, 'LapsDown':true, 'Age':true};
+		for( var n in lapsDown ) {
+			var iInsert = 2;
+			for( var i = 0; i < detailFields.length; ++i ) {
+				if( detailFields[i] == 'Name' ) {
+					iInsert = i + 1;
 					break;
 				}
 			}
-			yLast = y + this.riderHeight;
+			detailFields.splice( iInsert, 0, 'LapsDown' );
+			break;
+		}
+
+		var table = createChild( this.detailDiv, 'TABLE');
+		table.className = 'results';
+		var thead = createChild( table, 'THEAD' );
+		
+		var tr = createChild( thead, 'TR' );
+		for( var f = 0; f < detailFields.length; ++f ) {
+			var field = detailFields[f];
+			if( curFields[field] ) {
+				createTextChild( td = createChild(tr, 'TH'), _(detailFields[f]) );
+				td.id = 'idNonNumeric';
+			}
 		}
 		
-		dc.restore();
-	}
+		var tbody = createChild( table, 'TBODY' );
+		for( var i = 0; i < nums.length; ++i ) {
+			var num = nums[i];
+			var d = data[num];			
+			
+			function createTD( tr ) {
+				var td = createChild(tr, 'TD');
+				if( numsToWatch[num] )
+					td.className = 'highlight';
+				return td;
+			}
+			
+			var tr = createChild(tbody, 'TR');
+			tr.onclick = function(n) { return function() {ToggleNumberHighlight(n);}; }(num);
 
-	this.HideShow = function() {
-		if( this.maxLaps <= 1 ) {
-			document.getElementById('idRaceLightningDiv').className = "hidden noprint";
-			return false;
+			// Add the info fields.
+			for( var f = 0; f < detailFields.length; ++f ) {
+				var field = detailFields[f];
+				if( curFields[field] ) {
+					var v;
+					if( field == 'Seq' )
+						v = i+1;
+					else if( field == 'Bib' )
+						v = num;
+					else if( field == 'LapsDown' )
+						v = lapsDown[num] != undefined ? lapsDown[num] : '';
+					else if( field == 'Name' ) {
+						if( d['LastName'] && d['FirstName'] )
+							v = d['LastName'] + ',&nbsp;' + d['FirstName'];
+						else
+							v = d['LastName'] || d['FirstName'];
+					}
+					else
+						v = d[field];
+					td = createTD(tr);
+					td.innerHTML = v;
+					if( !numericFields[field] )
+						td.id = 'idNonNumeric'; 
+				}
+			}
 		}
-		else {
-			document.getElementById('idRaceLightningDiv').className = "noprint";
-			return true;
-		}
+		createChild( this.detailDiv, 'hr' );
 	}
 	
-	this.Refresh = function()
-	{
-		var canvasRaceLightning = document.getElementById('idRaceLightning');
-		if( !data || !canvasRaceLightning || !canvasSupported ) {
-			this.maxLaps = 0;
-			this.HideShow();
-			return;
-		}
-
-		this.width = canvasRaceLightning.width;
-		this.height = canvasRaceLightning.height;
-		var border = this.width / 50;
-		
-		var dc = canvasRaceLightning.getContext('2d');
-		
-		dc.textBaseline = 'top';
-		dc.fillStyle = '#FFF';
-		dc.fillRect( 0, 0, this.width, this.height );
-		
-		//if( categoryCur == 'All' )
-		//	return;
-		
-		// Show results for this category.
-		var categoriesUsed = {};
-		var dataMax = 0;
-		var lapInfo = [];
-		var startOffset = null;
-		this.maxLaps = 0;
-		
-		var catDetail = catDetailsByName[categoryCur];
-		
-		for( var p = 0; p < catDetail.pos.length; ++p )
-		{
-			var num = catDetail.pos[p];
-			var d = data[num];
-			var raceTimes = d['raceTimes'];
-			this.maxLaps = Math.max( this.maxLaps, raceTimes.length-1 );
-		}
-		if( !this.HideShow() )
-			return;
-		
-		this.showLaps = [];
-		var freq = Math.max( 1, Math.floor(this.maxLaps / 10.0) );
-		for( var i = 1; i < this.maxLaps; i += freq )
-			this.showLaps.push( i );
-		this.showLaps.push( this.maxLaps );
-		
-		var riderCount = 0;
-		for( var p = 0; p < catDetail.pos.length; ++p )
-		{
-			var num = catDetail.pos[p];
-			var d = data[num];
-			
-			var raceTimes = d['raceTimes'];
-			if( raceTimes.length == 0 )
-				continue;
-			
-			++riderCount;
-			if( startOffset == null )
-				startOffset = categoryCur == 'All' ? 0 : raceTimes[0];
-			
-			for( var i = 0; i < this.showLaps.length; ++i ) {
-				var lap = this.showLaps[i];
-				while( i >= lapInfo.length )
-					lapInfo.push( [] );
-				if( lap < raceTimes.length )
-					lapInfo[i].push( [raceTimes[lap] - startOffset, num] );
-			}
-		}
-		
-		var tDiffMax = 0;
-		for( var i = 0; i < lapInfo.length; ++i ) {
-			lapInfo[i].sort( function(x, y) { return x[0] - y[0]; } );
-			if( lapInfo[i].length > 0 )
-				tDiffMax = Math.max( tDiffMax, lapInfo[i].back()[0] - lapInfo[i][0][0] );
-		}
-		tDiffMax = Math.max( tDiffMax, 1 );
-		
-		this.riderHeight = (this.height / this.showLaps.length) * 0.6;
-		var overlapMax = 5;
-		
-		this.fontSize = this.riderHeight / overlapMax;
-		dc.font = this.fontSize + "px Arial";
-		
-		this.riderWidth = dc.measureText('0000').width;
-		
-		var gapShrink = 1.0;
-		var lastPos = {};
-		this.drawLapY = [];
-		this.drawLapNumX = [];
-		dc.strokeStyle = 'rgba(0, 0, 0, 0.250)';
-		dc.lineWidth = 2;
-
-		for( var i = 0; i < lapInfo.length; ++i ) {
-			var yCur = (this.height / lapInfo.length) * i;
-			this.drawLapY.push( yCur );
-			this.drawLapNumX.push( [] );
-			
-			// Draw the rider boxes.
-			dc.fillStyle = 'rgba(0, 0, 255, 0.20)';
-			for( var j = 0; j < lapInfo[i].length; ++j ) {
-				var gap = TimeDifference(lapInfo[i][j][0], lapInfo[i][0][0]);
-				var xCur = border + (this.width - this.riderWidth - border * 2) * (gap / tDiffMax);
-				this.drawRider( dc, xCur, yCur, '#0F0F0F', '#EEEEEE' );
-			}
-			
-			// Draw the bib numbers and gap times.
-			var xLast = 0;
-			var overlapCount = 0;
-			for( var j = 0; j < lapInfo[i].length; ++j ) {
-				var gap = TimeDifference(lapInfo[i][j][0], lapInfo[i][0][0]);
-				var xCur = border + (this.width - this.riderWidth - border * 2) * (gap / tDiffMax);
-				
-				if( xLast != 0 && xCur < xLast )
-					++overlapCount;
-				else
-					overlapCount = 0;
-				
-				var num = lapInfo[i][j][1];
-				this.drawLapNumX.back().push( [num, xCur, gap] );
-				
-				if( overlapCount < overlapMax ) {
-					dc.fillStyle = '#000';
-					dc.font = this.fontSize + "px Arial";
-					dc.fillText( overlapCount == overlapMax - 1 ? '  ...' : num, xCur,
-						yCur + this.fontSize * overlapCount - (overlapCount == overlapMax - 1 ? this.fontSize/2 : 0));
-				}
-				
-				if( lastPos[num] ) {
-					dc.beginPath();
-					dc.moveTo( lastPos[num][0], lastPos[num][1] );
-					dc.lineTo( xCur + this.riderWidth / 2, yCur );
-					dc.stroke();
-				}
-				lastPos[num] = [xCur + this.riderWidth / 2, yCur + this.riderHeight];
-				
-				dc.font = (this.fontSize*gapShrink) + "px Arial Italic";
-				var gapText = ' ' + FormatTimeGap(gap) + ' ';
-				var gapWidth = dc.measureText(gapText).width;
-				if( xCur - xLast > gapWidth ) {
-					dc.fillStyle = '#000';
-					dc.fillText( gapText, xCur - gapWidth, yCur + this.riderHeight / 2 - this.fontSize * gapShrink / 2);
-				}
-				
-				xLast = xCur + this.riderWidth;
-			}
-		}
-	}
 }
+//----------------------------------------------------------------------
 
 function SelectCategory( i )
 {
@@ -3665,13 +4108,12 @@ function SelectCategory( i )
 	SetCategoryResults();
 	animationObj.Refresh();
 	RefreshRaceChart();
-	raceLightningObj.Refresh();
+	SituationRefresh();
 }
 
 function setCategory( catName )
 {
-	for( var i = 0; i < categories.length; ++i )
-	{
+	for( var i = 0; i < categories.length; ++i ) {
 		if( catName == categories[i] ) {
 			SelectCategory( i );
 			return;
@@ -3743,6 +4185,7 @@ function SetNumsToWatch()
 	animationObj.Refresh();
 	SetCategoryResults();
 	RefreshRaceChart();
+	SetSituationTime();
 }
 
 function ToggleNumberHighlight( num )
@@ -4051,6 +4494,7 @@ function setLanguage( langCode ) {
 	
 	SetCategoryResults();
 	SetTotalElevationGain();
+	SituationRefresh();
 }
 
 function getLanguageCode() {
@@ -4071,6 +4515,49 @@ function initLanguages() {
 	}
 	languageHTML += '</div></div><hr/>';
 	languageSpan.innerHTML = languageHTML;
+}
+
+function SetSituationZoom( rbutton ) {
+	situationObj.zoom = parseFloat(rbutton.value);
+	SituationRefresh();
+}
+
+var situationTimer = null;
+function SetSituationTime( value ) {
+	if( situationObj == null )
+		return;
+		
+	if( value == undefined )
+		value = 10000;
+	value = parseInt( value );
+		
+	if( situationTimer != null ) {
+		clearTimeout( situationTimer );
+		situationTimer = null;
+	}
+	
+	var tMax;
+	if( raceIsRunning ) {
+		var tServer = (new Date(timestamp[0])).getTime() / 1000.0;
+		var tBrowser = (new Date().getTime()) / 1000.0;
+		while( tBrowser - tServer < 0 )
+			tBrowser += 60*60;
+		
+		tMax = timestamp[1] + (tBrowser - tServer);
+	}
+	else
+		tMax = GetRaceTMax();
+	
+	var tRace = tMax * (value / 10000.0);
+	var gs = GetSituationGaps( tRace );
+	situationObj.SetData( gs.gaps, gs.tAfterLeader, gs.title, gs.tCur );
+	
+	if( value == 10000 && raceIsRunning )
+		situationTimer = setTimeout( SetSituationTime, 1001 - (new Date()).getTime() % 1000 );
+}
+function SituationRefresh() {
+	var timeRange = document.getElementById('idTimeRange');
+	SetSituationTime( timeRange.value );
 }
 
 function onLoad()
@@ -4131,23 +4618,23 @@ function onLoad()
 				hoverTimer = null;
 				RefreshRaceChart(); }, false);
 		
-		raceLightningObj = new Lightning();
-		var raceLightningCanvas = document.getElementById('idRaceLightning');
-		raceLightningCanvas.addEventListener('click', function(event) { raceLightningObj.processClick(event); }, false);
-		raceLightningCanvas.addEventListener('mousemove', function(event) { raceLightningObj.processMouse(event); }, false);
-		raceLightningCanvas.addEventListener('mouseout', function(event) {
-				if( hoverTimer != null )
-					clearTimeout( hoverTimer );
-				hoverTimer = null;
-				raceLightningObj.Refresh(); }, false);
-				
+		if( !isTimeTrial ) {
+			var situationCanvas = document.getElementById('idSituation');
+			var timeRange = document.getElementById( 'idTimeRange' );
+			var situationDetail = document.getElementById( 'idSituationDetailDiv' );
+			situationObj = new Situation( situationCanvas, timeRange, situationDetail );
+			situationCanvas.addEventListener('click', function(event) { situationObj.processClick(event); }, false);
+		}
+		else
+			document.getElementById('idSituationDiv').className = 'hidden';
+		
 		canvas = document.getElementById('idTrack');
 	}
 	else
 	{
 		document.getElementById('idTrackDiv').className = 'hidden';
 		document.getElementById('idRaceChartDiv').className = 'hidden';
-		document.getElementById('idRaceLightningDiv').className = 'hidden';
+		document.getElementById('idSituationDiv').className = 'hidden';
 	}
 	
 	document.getElementById('idRaceName').innerHTML = document.getElementById('idTitle').innerHTML;
@@ -4217,7 +4704,7 @@ function onLoad()
 	
 	SetCategoryResults();
 	RefreshRaceChart();
-	raceLightningObj.Refresh();
+	SetSituationTime();
 	
 	// Start animation.
 	Animate( animationSeconds, undefined, raceIsRunning ? t : getStartTime() );
@@ -4314,6 +4801,42 @@ Current versions of Chrome, FireFox and Opera work fine.
 
 <div id="idResultsDiv"></div>
 
+<div id="idSituationDiv" class="noprint">
+<hr>
+<p>
+	<span id="idSituationName" data-tr="Situation"></span>
+</p>
+<table><tr>
+	<td style="vertical-align:top; text-align:center;">
+		<br/><br/><br/><br/>
+		<span data-tr="Zoom"></span><br/>
+		+<br/>
+		<input type="radio" name="zoom" value="5.0" onclick="SetSituationZoom(this)"></input><br/>
+		<input type="radio" name="zoom" value="4.5" onclick="SetSituationZoom(this)"></input><br/>
+		<input type="radio" name="zoom" value="4.0" onclick="SetSituationZoom(this)"></input><br/>
+		<input type="radio" name="zoom" value="3.5" checked onclick="SetSituationZoom(this)"></input><br/>
+		<input type="radio" name="zoom" value="3.0" onclick="SetSituationZoom(this)"></input><br/>
+		<input type="radio" name="zoom" value="2.5" onclick="SetSituationZoom(this)"></input><br/>
+		<input type="radio" name="zoom" value="2.0" onclick="SetSituationZoom(this)"></input><br/>
+		<input type="radio" name="zoom" value="1.5" onclick="SetSituationZoom(this)"></input><br/>
+		<input type="radio" name="zoom" value="1.0" checked onclick="SetSituationZoom(this)"></input><br/>
+		-<br/>
+	</td>
+	<td style="vertical-align: top;">
+		<span data-tr="TimeSlider"></span>&nbsp;&nbsp;&nbsp;<input id="idTimeRange" type="range" min="0" max="10000" value="10000" style="width:670px;" oninput="SetSituationTime(this.value)" onchange="SetSituationTime(this.value)"></input><br/>
+		<canvas id="idSituation" width="800" height="600">
+		<a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a> Requires support for the HTML5 Canvas.<br/>
+		Please upgrade to a more recent browser version.<br/>
+		For Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
+		Current versions of Chrome, FireFox and Opera work fine.
+		</canvas>
+	</td>
+	<td style="vertical-align: top;">
+		<div id="idSituationDetailDiv"></div>
+	</td>
+</tr></table>
+</div> <!-- idSituationDiv -->
+
 <div id="idRaceChartDiv" class="noprint">
 <p>
 	<span id="idRaceChartName" data-tr="Race Chart"></span>&nbsp;&nbsp;&nbsp;&nbsp;
@@ -4332,18 +4855,6 @@ For Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
 Current versions of Chrome, FireFox and Opera work fine.
 </canvas>
 </div> <!-- idRaceChartDiv -->
-
-<div id="idRaceLightningDiv" class="noprint">
-<p>
-	<span id="idRaceLightningName" data-tr="Race Lightning"></span>
-</p>
-<canvas id="idRaceLightning" width="1000" height="800">
-<a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a> Requires support for the HTML5 Canvas.<br/>
-Please upgrade to a more recent browser version.<br/>
-For Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
-Current versions of Chrome, FireFox and Opera work fine.
-</canvas>
-</div> <!-- idRaceLightningDiv -->
 
 </body>
 
