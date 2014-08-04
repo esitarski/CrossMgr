@@ -166,7 +166,7 @@ class SituationPanel(wx.PyPanel):
 		self.groupClickHandler = None
 		self.Bind(wx.EVT_LEFT_UP, self.OnMouseUp )
 		
-	def SetData( self, gaps, tAfterLeader=None, title=None, tCur=None ):
+	def SetData( self, gaps=None, tAfterLeader=None, title=None, tCur=None ):
 		# each gap is of the form: [gapSeconds, text]
 		# Expected to be sorted by increasing gapSeconds.
 		self.gaps = gaps or []
