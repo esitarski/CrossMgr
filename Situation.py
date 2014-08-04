@@ -68,7 +68,7 @@ def GetLeaderGap( leaderPosition, leaderSpeed, leaderRaceTimes, raceTimes, t ):
 def GetSituationGaps( category=None, t=None ):
 	race = Model.race
 	if not race:
-		return [None, None, None]
+		return []
 		
 	results = GetResults( category, True )
 	validRiders = {rr.num for rr in results if rr.raceTimes and len(rr.raceTimes) >= 2}
