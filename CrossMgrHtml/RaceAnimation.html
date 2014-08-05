@@ -4618,7 +4618,7 @@ function onLoad()
 				hoverTimer = null;
 				RefreshRaceChart(); }, false);
 		
-		if( !isTimeTrial ) {
+		if( true || !isTimeTrial ) {	// Show situation even for timetrial.
 			var situationCanvas = document.getElementById('idSituation');
 			var timeRange = document.getElementById( 'idTimeRange' );
 			var situationDetail = document.getElementById( 'idSituationDetailDiv' );
