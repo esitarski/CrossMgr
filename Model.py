@@ -908,6 +908,8 @@ class Race( object ):
 	stateProv = ''
 	country = ''
 	
+	showCourseAnimationInHtml = True
+	
 	hideDetails = True
 	photosAtRaceEndOnly = False
 	cameraDevice = 0

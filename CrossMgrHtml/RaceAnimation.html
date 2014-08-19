@@ -167,6 +167,7 @@ var catDetailsByName = {};
 var lapDetails = null;
 var hideDetails = null;		// If true, showDetails option will not be available.
 var showDetails = false;	// If true, show full lap details in the Chart.
+var showCourseAnimation = true;
 var version = null;
 var raceNotes = null;
 
@@ -2117,7 +2118,8 @@ function SetData( aData, tCur )
 	showHTML += '</div></div>';
 	showOptionsSpan.innerHTML = showHTML;
 	
-	animationObj.Refresh();
+	if( animationObj != null )
+		animationObj.Refresh();
 }
 
 function Animate( tRunning, aTMax, tCur )
@@ -4110,7 +4112,8 @@ function SelectCategory( i )
 	if( catButton )
 		catButton.checked = true;
 	SetCategoryResults();
-	animationObj.Refresh();
+	if( animationObj != null )
+		animationObj.Refresh();
 	RefreshRaceChart();
 	SituationRefresh();
 }
@@ -4152,7 +4155,8 @@ function IsAnimating()
 function SetTime( aT )
 {
 	t = aT;
-	animationObj.Refresh();
+	if( animationObj != null )
+		animationObj.Refresh();
 }
 
 function SetSpeed( i )
@@ -4186,7 +4190,8 @@ function SetNumsToWatch()
 		if( !isNaN(num) )
 			numsToWatch[num] = num;
 	}
-	animationObj.Refresh();
+	if( animationObj != null )
+		animationObj.Refresh();
 	SetCategoryResults();
 	RefreshRaceChart();
 	SetSituationTime();
@@ -4234,7 +4239,8 @@ function Rewind()
 	if( raceIsRunning )
 		return;
 	t = getStartTime();
-	animationObj.Refresh();
+	if( animationObj != null )
+		animationObj.Refresh();
 	document.getElementById('idPlayStop').value = _('Play');
 	Animate( animationSeconds, tMax, t );
 	suspendAnimation = true;
@@ -4400,11 +4406,12 @@ function AdjustSize( increase )
 			canvas.height /= 1.2;
 		}
 	}
-	animationObj.Refresh();
+	if( animationObj != null )
+		animationObj.Refresh();
 }
 function AdjustFont( increase )
 {
-	if( !canvas )
+	if( !canvas || !animationObj )
 		return;
 	if( increase )
 		fontMult *= (fontMult < 3.0 ? 1.2 : 1.0);
@@ -4579,22 +4586,27 @@ function onLoad()
 	}
 	else
 		gpsPointsTest = null;
-		
-	if( gpsPoints )
-	{
-		animationObj = new GeoAnimation();
-		animationObj.geoTrack.setData( gpsPoints );
-		animationObj.altigraph.setData( gpsAltigraph );
+	
+	if( showCourseAnimation ) {
+		if( gpsPoints )
+		{
+			animationObj = new GeoAnimation();
+			animationObj.geoTrack.setData( gpsPoints );
+			animationObj.altigraph.setData( gpsAltigraph );
+		}
+		else
+		{
+			animationObj = new TrackAnimation();
+			document.getElementById('idShowTrack').className = 'hidden';
+		}
 	}
-	else
-	{
-		animationObj = new TrackAnimation();
-		document.getElementById('idShowTrack').className = 'hidden';
+	else {
+		document.getElementById('idTrackDiv').className = 'hidden';
 	}
 	
 	if( hideDetails )
 		document.getElementById('idShowDetailsOption').className = 'hidden';
-	
+		
 	if( !rfid )
 		document.getElementById('idRFID').className = 'hidden';
 	else
@@ -4632,7 +4644,8 @@ function onLoad()
 		else
 			document.getElementById('idSituationDiv').className = 'hidden';
 		
-		canvas = document.getElementById('idTrack');
+		if( showCourseAnimation )
+			canvas = document.getElementById('idTrack');
 	}
 	else
 	{

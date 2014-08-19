@@ -180,6 +180,7 @@ class RaceOptionsProperties( wx.Panel ):
 		self.distanceUnitSizer.AddStretchSpacer()
 		
 		self.showDetails = wx.CheckBox( self, label=_("Show Lap Notes, Edits and Projected Times in HTML Output") )
+		self.showCourseAnimationInHtml = wx.CheckBox( self, label=_("Show Course Animation in Html") )
 
 		#-------------------------------------------------------------------------------
 		ms = wx.BoxSizer( wx.HORIZONTAL )
@@ -201,6 +202,7 @@ class RaceOptionsProperties( wx.Panel ):
 			(self.rule80MinLapCountLabel, 0, labelAlign),(self.rule80MinLapCountSizer,	1, fieldAlign),
 			(self.distanceUnitLabel,0, labelAlign),		(self.distanceUnitSizer,		1, fieldAlign),
 			(blank(),				0, labelAlign),		(self.showDetails,				1, fieldAlign),
+			(blank(),				0, labelAlign),		(self.showCourseAnimationInHtml,1, fieldAlign),
 		]
 		addToFGS( fgs, labelFieldFormats )
 		
@@ -218,6 +220,7 @@ class RaceOptionsProperties( wx.Panel ):
 			self.rule80MinLapCount2.SetValue( True )
 		self.distanceUnit.SetSelection( getattr(race, 'distanceUnit', 0) )
 		self.showDetails.SetValue( not race.hideDetails )
+		self.showCourseAnimationInHtml.SetValue( race.showCourseAnimationInHtml )
 	
 	def commit( self ):
 		race = Model.race
@@ -228,6 +231,7 @@ class RaceOptionsProperties( wx.Panel ):
 		race.rule80MinLapCount = (1 if self.rule80MinLapCount1.GetValue() else 2)
 		race.distanceUnit = self.distanceUnit.GetSelection()
 		race.hideDetails = not self.showDetails.IsChecked()
+		race.showCourseAnimationInHtml = self.showCourseAnimationInHtml.IsChecked()
 	
 #------------------------------------------------------------------------------------------------
 

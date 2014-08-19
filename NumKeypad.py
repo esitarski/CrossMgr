@@ -691,7 +691,7 @@ if __name__ == '__main__':
 	Model.setRace( Model.Race() )
 	model = Model.getRace()
 	model._populate()
-	model.enableUSBCamera = True
+	model.enableUSBCamera = False
 	numKeypad = NumKeypad(mainWin)
 	numKeypad.refresh()
 	mainWin.Show()
