@@ -385,7 +385,7 @@ def SwapEntry( a, b ):
 	race.addTime( b.num, a.t + (riderA.firstTime if getattr(race, 'isTimeTrial', False) and riderA.firstTime is not None else 0.0) )
 
 class StatusChangeDialog( wx.Dialog ):
-	def __init__( self, parent, message, title, t=None, id=wx.ID_ANY ):
+	def __init__( self, parent, message, title, t=None, externalData=None, id=wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, title,
 						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
 						
@@ -393,8 +393,15 @@ class StatusChangeDialog( wx.Dialog ):
 		
 		self.message = wx.StaticText( self, label=message )
 		self.message.SetFont( font )
+		
+		if externalData is not None:
+			self.externalData = wx.StaticText( self, label=externalData )
+			self.externalData.SetFont( font )
+		else:
+			self.externalData = None
+		
 		if t is not None:
-			self.entryTime = wx.CheckBox( self, label=_('and Enter Lap Time at: ') + Utils.formatTime(t) )
+			self.entryTime = wx.CheckBox( self, label=_('and Enter Last Lap Time at: ') + Utils.formatTime(t) )
 			self.entryTime.SetValue( True )
 			self.entryTime.SetFont( font )
 		else:
@@ -409,9 +416,10 @@ class StatusChangeDialog( wx.Dialog ):
 		border = 16
 		vs = wx.BoxSizer( wx.VERTICAL )
 		vs.Add( self.message, flag=wx.ALL, border=border )
+		if self.externalData:
+			vs.Add( self.externalData, flag=wx.RIGHT|wx.LEFT|wx.BOTTOM, border=border )
 		if self.entryTime:
 			vs.Add( self.entryTime, flag=wx.RIGHT|wx.LEFT|wx.BOTTOM, border=border )
-
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.okBtn, flag=wx.ALL, border = border )
 		self.okBtn.SetDefault()
@@ -436,7 +444,27 @@ class StatusChangeDialog( wx.Dialog ):
 def DoStatusChange( parent, num, message, title, newStatus, lapTime=None ):
 	if num is None:
 		return False
-	d = StatusChangeDialog(parent, message=message.format(num), title=title, t=lapTime)
+		
+	race = Model.race
+	externalData = []
+	try:
+		excelLink = race.excelLink
+		externalInfo = excelLink.read()
+		for f in [ _('LastName'), _('FirstName'), _('Team') ]:
+			try:
+				externalData.append( unicode(externalInfo[num][f] ) )
+				if f == _('Team'):
+					externalData[-1] = u'({})'.format(externalData[-1])
+			except KeyError:
+				pass
+		if len(externalData) == 3:	# Format the team name slightly differently.
+			externalData = u'{}: {}'.format( unicode(num), u', '.join(externalData[:-1]) ) + u' ' + externalData[-1]
+		else:
+			externalData = u'{}: {}'.format( unicode(num), u', '.join(externalData) ) if externalData else None
+	except:
+		externalData = None
+	
+	d = StatusChangeDialog(parent, message=message.format(num), title=title, externalData=externalData, t=lapTime)
 	ret = d.ShowModal()
 	lapTime = lapTime if d.getSetEntryTime() else None
 	d.Destroy()
