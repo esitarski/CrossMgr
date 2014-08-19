@@ -134,9 +134,11 @@ class Keypad( wx.Panel ):
 		wx.CallAfter( self.numEdit.SetValue, '' )
 	
 	def doAction( self, action ):
+		race = Model.race
+		t = race.curRaceTime() if race and race.isRunning() else None
 		success = False
 		for num in self.getRiderNums():
-			if action(self, num):
+			if action(self, num, t):
 				success = True
 		if success:
 			self.numEdit.SetValue( '' )

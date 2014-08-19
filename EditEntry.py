@@ -384,13 +384,71 @@ def SwapEntry( a, b ):
 	race.addTime( a.num, b.t + (riderB.firstTime if getattr(race, 'isTimeTrial', False) and riderB.firstTime is not None else 0.0) )
 	race.addTime( b.num, a.t + (riderA.firstTime if getattr(race, 'isTimeTrial', False) and riderA.firstTime is not None else 0.0) )
 
-def DoStatusChange( parent, num, message, title, newStatus ):
-	if num is None or not Utils.MessageOKCancel(parent, message.format(num), title):
+class StatusChangeDialog( wx.Dialog ):
+	def __init__( self, parent, message, title, t=None, id=wx.ID_ANY ):
+		wx.Dialog.__init__( self, parent, id, title,
+						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+						
+		font = wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
+		
+		self.message = wx.StaticText( self, label=message )
+		self.message.SetFont( font )
+		if t is not None:
+			self.entryTime = wx.CheckBox( self, label=_('and Enter Lap Time at: ') + Utils.formatTime(t) )
+			self.entryTime.SetValue( True )
+			self.entryTime.SetFont( font )
+		else:
+			self.entryTime = None
+			
+		self.okBtn = wx.Button( self, wx.ID_OK )
+		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
+
+		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
+		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
+
+		border = 16
+		vs = wx.BoxSizer( wx.VERTICAL )
+		vs.Add( self.message, flag=wx.ALL, border=border )
+		if self.entryTime:
+			vs.Add( self.entryTime, flag=wx.RIGHT|wx.LEFT|wx.BOTTOM, border=border )
+
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( self.okBtn, flag=wx.ALL, border = border )
+		self.okBtn.SetDefault()
+		hs.AddStretchSpacer()
+		hs.Add( self.cancelBtn, flag=wx.ALL, border = border )
+		vs.Add( hs, flag=wx.EXPAND )
+		
+		self.SetSizerAndFit( vs )
+		
+		self.CentreOnParent(wx.BOTH)
+		self.SetFocus()
+
+	def getSetEntryTime( self ):
+		return self.entryTime and self.entryTime.IsChecked()
+		
+	def onOK( self, event ):
+		self.EndModal( wx.ID_OK )
+		
+	def onCancel( self, event ):
+		self.EndModal( wx.ID_CANCEL )
+	
+def DoStatusChange( parent, num, message, title, newStatus, lapTime=None ):
+	if num is None:
 		return False
+	d = StatusChangeDialog(parent, message=message.format(num), title=title, t=lapTime)
+	ret = d.ShowModal()
+	lapTime = lapTime if d.getSetEntryTime() else None
+	d.Destroy()
+	if ret != wx.ID_OK:
+		return False
+	
 	undo.pushState()
 	with Model.LockRace() as race:
 		if not race:
 			return False
+		if lapTime:
+			race.addTime( num, lapTime )
 		rider = race.getRider( num )
 		rider.setStatus( newStatus )
 		race.setChanged()
@@ -398,19 +456,19 @@ def DoStatusChange( parent, num, message, title, newStatus ):
 	return True
 
 @logCall
-def DoDNF( parent, num ):
-	return DoStatusChange( parent, num, _('DNF rider {}?'), _('Confirm Did Not FINISH'), Model.Rider.DNF )
+def DoDNF( parent, num, lapTime=None ):
+	return DoStatusChange( parent, num, _('DNF rider {}?'), _('Confirm Did Not FINISH'), Model.Rider.DNF, lapTime )
 
 @logCall
-def DoPull( parent, num ):
-	return DoStatusChange( parent, num, _('Pull rider {}?'), _('Confirm PULL Rider'), Model.Rider.Pulled )
+def DoPull( parent, num, lapTime=None ):
+	return DoStatusChange( parent, num, _('Pull rider {}?'), _('Confirm PULL Rider'), Model.Rider.Pulled, lapTime)
 
 @logCall
-def DoDNS( parent, num ):
+def DoDNS( parent, num, lapTime=None ):
 	return DoStatusChange( parent, num, _('DNS rider {}?'), _('Confirm Did Not START'), Model.Rider.DNS )
 
 @logCall
-def DoDQ( parent, num ):
+def DoDQ( parent, num, lapTime=None ):
 	return DoStatusChange( parent, num, _('DQ rider {}?'), _('Confirm Disqualify'), Model.Rider.DQ )
 	
 @logCall
