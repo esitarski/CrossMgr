@@ -8,6 +8,7 @@ from FtpWriteFile import FtpWriteRacePhoto
 import wx
 import wx.lib.agw.thumbnailctrl as TC
 import os
+import sys
 import types
 import threading
 import datetime
@@ -352,7 +353,14 @@ class PhotoViewerDialog( wx.Dialog ):
 			return
 			
 		depth = bitmap.GetDepth()
-		image = bitmap.ConvertToImage()
+		try:
+			image = bitmap.ConvertToImage()
+		except Exception as e:
+			logException( e, sys.exc_info() )
+			self.mainPhoto.SetBitmap( wx.NullBitmap )
+			self.mainPhoto.Refresh()
+			return
+		
 		bitmap = None
 		
 		wPhoto, hPhoto = self.mainPhoto.GetSize()
