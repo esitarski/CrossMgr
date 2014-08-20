@@ -1871,6 +1871,7 @@ class Race( object ):
 		# Reset the cache for all categories by sequence number.
 		self.categoryCache = {}			# Returns wave category by num.
 		self.categoryNumsCache = {}		# Indexed by category, contains all numbers in that category.
+		self.startOffsetCache = {}		# Returns start offset by num.
 		categories = self.getCategories( startWaveOnly = True )
 		if not categories:
 			return None
@@ -1901,6 +1902,8 @@ class Race( object ):
 				waveCategory = c
 				waveNumsSeen = set()
 				waveCategoryNums = self.categoryNumsCache[c]
+				offsetSecs = c.getStartOffsetSecs()
+				self.startOffsetCache.update( {num: offsetSecs for num in self.categoryNumsCache[c]} )
 			elif c.catType == Category.CatComponent:
 				cNumsCache = self.categoryNumsCache[c]
 				for n in c.getMatchSet():
@@ -1960,6 +1963,7 @@ class Race( object ):
 	def resetCategoryCache( self ):
 		self.categoryCache = None
 		self.categoryNumsCache = None
+		self.startOffsetCache = None
 		
 	def resetAllCaches( self ):
 		self.resetCategoryCache()
