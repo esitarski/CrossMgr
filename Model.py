@@ -708,12 +708,12 @@ class Rider(object):
 		return times
 	
 	def removeLateTimes( self, iTimes, dnfPulledTime ):
-		if dnfPulledTime is not None:
-			try:
-				i = next(i for i in xrange(len(iTimes)-1, 0, -1) if iTimes[i-1][0] <= dnfPulledTime)
-				del iTimes[i:]
-			except StopIteration:
-				pass
+		if iTimes and dnfPulledTime is not None:
+			i = bisect.bisect_right( iTimes, (dnfPulledTime,True) )
+			if i < len(iTimes):
+				while i > 1 and iTimes[i-1][0] > dnfPulledTime:
+					i -= 1
+			del iTimes[i:]
 		return iTimes
 
 	def countEarlyTimes( self ):
