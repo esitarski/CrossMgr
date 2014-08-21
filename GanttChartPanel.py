@@ -13,11 +13,11 @@ def makeColourGradient(frequency1, frequency2, frequency3,
                         phase1, phase2, phase3,
                         center = 128, width = 127, len = 50 ):
 	fp = [(frequency1,phase1), (frequency2,phase2), (frequency3,phase3)]	
-	grad = [wx.Colour(*[math.sin(f*i + p) * width + center for f, p in fp]) for i in xrange(len)]
-	return grad
+	grad = [wx.Colour(*[math.sin(f*i + p) * width + center for f, p in fp]) for i in xrange(len+1)]
+	return grad[1:]
 	
 def makePastelColours( len = 50 ):
-	return makeColourGradient(2.4,2.4,2.4,0,2,4,128,127,len)
+	return makeColourGradient(2.4,2.4,2.4,0,2,4,128,127,len+1)
 
 def lighterColour( c ):
 	rgb = c.Get( False )
@@ -39,10 +39,9 @@ class GanttChartPanel(wx.PyPanel):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER,
 				name="GanttChartPanel" ):
-		"""
-		Default class constructor.
-		"""
+		
 		wx.PyPanel.__init__(self, parent, id, pos, size, style, name)
+		
 		self.SetBackgroundColour(wx.WHITE)
 		self.data = None
 		self.labels = None

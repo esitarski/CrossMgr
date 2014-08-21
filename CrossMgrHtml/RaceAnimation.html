@@ -2757,14 +2757,14 @@ function makeColorGradient(frequency1, frequency2, frequency3,
 	if (width == undefined)    width = 127;
 
 	var grad = [];
-	for (var i = 0; i < len; ++i)
+	for (var i = 0; i <= len; ++i)
 	{
 		var red = Math.sin(frequency1*i + phase1) * width + center;
 		var grn = Math.sin(frequency2*i + phase2) * width + center;
 		var blu = Math.sin(frequency3*i + phase3) * width + center;
 		grad.push( RGB2Color(red,grn,blu) );
 	}
-	return grad;
+	return grad.slice(1);  // Skip the first pink colour.
 }
 
 function lighterColor( k )

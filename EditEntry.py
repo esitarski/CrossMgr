@@ -5,6 +5,7 @@ import wx.lib.intctrl
 import Model
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 from Undo import undo
+import sys
 import random
 import datetime
 
@@ -512,5 +513,6 @@ def AddLapSplits( num, lap, times, splits ):
 				race.numTimeInfo.add( num, newTime, Model.NumTimeInfo.Split )
 				race.addTime( num, newTime )
 			return True
-		except (TypeError, KeyError, ValueError, IndexError):
+		except (TypeError, KeyError, ValueError, IndexError) as e:
+			Utils.logException( e, sys.exc_info )
 			return False

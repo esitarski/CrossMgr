@@ -71,11 +71,12 @@ class CameraTestDialog( wx.Dialog ):
 		self.keepgoing = False
 		self.frameDelay = 1.0/25.0
 		self.q = Queue()
+		self.thread = None
 		
 		SetCameraState( True )
+		
 		if Utils.cameraError:
 			self.status.SetLabel( Utils.cameraError )
-			self.thread = None
 		else:
 			self.thread = threading.Thread( target=self.updateLoop, name="CameraTestUpdate" )
 			self.thread.daemon = True

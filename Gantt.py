@@ -177,7 +177,8 @@ class Gantt( wx.Panel ):
 			except (TypeError, KeyError, ValueError, IndexError):
 				return
 		EditEntry.AddLapSplits( num, lap, times, splits )
-		self.refresh()
+		
+		wx.CallAfter( self.refresh )
 		
 	def doCustomSplitLap( self ):
 		dlg = wx.NumberEntryDialog( self, message = "", caption = _("Add Missing Splits"), prompt = _("Missing Splits to Add:"),

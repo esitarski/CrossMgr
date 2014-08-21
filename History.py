@@ -373,16 +373,7 @@ class History( wx.Panel ):
 			entries = [Model.Entry(e.num, e.lap, race.riders[e.num].firstTime + e.t, e.interp) for e in entries]
 		
 		# Collect the number and times for all entries so we can compute lap times.
-		numTimes = {}
-		for e in entries:
-			if e.lap != 0 or isTimeTrial:
-				numTimes[(e.num, e.lap)] = e.t
-			else:
-				try:
-					startOffset = race.getCategory(e.num).getStartOffsetSecs()
-				except:
-					startOffset = 0.0
-				numTimes[(e.num, 0)] = startOffset
+		numTimes = {(e.num, e.lap) : e.t for e in entries}
 		
 		# Trim out the lap 0 starts.
 		entries = [e for e in entries if e.lap > 0]

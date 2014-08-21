@@ -2284,7 +2284,7 @@ class MainWin( wx.Frame ):
 			# Add some out-of-category numbers to test.
 			for e in xrange(10, 50, 10):
 				self.lapTimes[e] = ( self.lapTimes[e][0], 1111+e )
-			
+		
 		return self.lapTimes
 		
 	@logCall
@@ -2337,6 +2337,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			#race.enableJChipIntegration = True
 			race.setCategories( [	{'name':'Junior', 'catStr':'100-199', 'startOffset':'00:00', 'distance':0.5, 'gender':'Men'},
 									{'name':'Senior', 'catStr':'200-299', 'startOffset':'00:15', 'distance':0.5, 'gender':'Women'}] )
+			self.lapTimes = [(lt[0] + race.getStartOffset(lt[1]), lt[1]) for lt in self.lapTimes]
 
 		self.writeRace()
 		DeletePhotos( self.fileName )

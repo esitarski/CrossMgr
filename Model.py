@@ -626,7 +626,7 @@ class Rider(object):
 		iTimes = [None] * (len(self.times) + 1)
 		# Add a zero start time for the beginning of the race.
 		# This avoids a whole lot of special cases later.
-		iTimes[0] = 0.0
+		iTimes[0] = race.getStartOffset(self.num) if race else 0.0
 		iTimes[1:] = self.times
 
 		averageLapTime = race.getAverageLapTime() if race else iTimes[-1] / float(len(iTimes) - 1)
@@ -665,11 +665,9 @@ class Rider(object):
 				return None
 
 		if len(iTimes) == 2:
-			# If only one lap is known, rely on the global average.
-			#return getRace().getAverageLapTime()
-			return iTimes[-1]
+			return iTimes[1] - iTimes[0]
 
-		# Ignore the first lap time as there is often a staggered start.
+		# Ignore the first lap time as there is often a staggered start or a different first lap length.
 		if len(iTimes) > 2:
 			iStart = 2
 		else:
@@ -697,9 +695,9 @@ class Rider(object):
 
 	def removeEarlyTimes( self, times ):
 		try:
-			startOffset = race.getCategory(self.num).getStartOffsetSecs()
+			startOffset = race.getStartOffset(self.num) if race else 0.0
 			if startOffset:
-				times = [t for t in times if t == 0.0 or t > startOffset]
+				times = [t for t in times if t >= startOffset]
 				if len(times) <= 1:
 					return []
 		except (ValueError, AttributeError):
@@ -714,17 +712,17 @@ class Rider(object):
 				while i > 1 and iTimes[i-1][0] > dnfPulledTime:
 					i -= 1
 			del iTimes[i:]
+		if len(iTimes) < 2:
+			iTimes = []
 		return iTimes
 
 	def countEarlyTimes( self ):
 		count = 0
 		try:
-			startOffset = race.getCategory(self.num).getStartOffsetSecs()
+			startOffset = race.getStartOffset(self.num)
 			if startOffset:
 				for t in self.times:
-					if t >= startOffset:
-						break
-					if t > 0.0:
+					if t < startOffset:
 						count += 1
 		except Exception as e:
 			pass
@@ -747,9 +745,9 @@ class Rider(object):
 			if not self.times:
 				return tuple()
 			iTimes = [None] * (len(self.times) + 1)
-			# Add a zero start time for the beginning of the race.
+			# Add the start time for the beginning of the rider.
 			# This avoids a whole lot of special cases later.
-			iTimes[0] = 0.0
+			iTimes[0] = race.getStartOffset(self.num) if race else 0.0
 			iTimes[1:] = self.times
 			iTimes = self.removeEarlyTimes( iTimes )
 			iTimes = [(t, False) for t in iTimes]
@@ -1739,12 +1737,23 @@ class Race( object ):
 	def setCategories( self, nameStrTuples ):
 		i = 0
 		newCategories = {}
+		waveCategory = None
 		for t in nameStrTuples:
 			args = dict( t )
 			if not 'name' in args or not args['name']:
 				continue
 			args['sequence'] = i
 			category = Category( **args )
+			
+			if category.active:
+				if category.catType == Category.CatWave:
+					# Record this category if it is a CatWave.  It controls the following component categories.
+					waveCategory = category
+				elif waveCategory is None:
+					# Else, there is a component or custom category without a start wave.
+					# Make it a start wave so that the results don't mess up.
+					category.catType = Category.CatWave
+			
 			# Ensure we don't have any duplicate category fullnames.
 			if category.fullname in newCategories:
 				originalName = category.name
@@ -1934,6 +1943,17 @@ class Race( object ):
 			
 		self._buildCategoryCache()
 		return num in self.categoryNumsCache[category]
+		
+	def getStartOffset( self, num ):
+		try:
+			return self.startOffsetCache[num]
+		except KeyError:
+			return 0.0
+		except (TypeError, AttributeError) as e:
+			pass
+			
+		self._buildCategoryCache()	
+		return self.startOffsetCache.get(num, 0.0)
 	
 	@memoize
 	def getCategoriesInUse( self ):
