@@ -298,6 +298,7 @@ class CameraProperties( wx.Panel ):
 		
 		self.cameraDeviceLabel = wx.StaticText( self, label=_("Camera Device:") )
 		self.cameraDevice = wx.Choice( self, choices=[unicode(i) for i in xrange(8)] )
+		self.cameraDevice.SetSelection( 0 )
 		
 		ms = wx.BoxSizer( wx.VERTICAL )
 		
@@ -319,7 +320,8 @@ class CameraProperties( wx.Panel ):
 				self.radioBox.SetSelection( 1 )
 			else:
 				self.radioBox.SetSelection( 2 )
-		self.cameraDevice.SetSelection( race.cameraDevice )
+		
+		self.cameraDevice.SetSelection( race.cameraDevice or 0 )
 		
 	def commit( self ):
 		race = Model.race
@@ -332,7 +334,7 @@ class CameraProperties( wx.Panel ):
 		elif v == 2:
 			race.enableUSBCamera = True
 			race.photosAtRaceEndOnly = True
-		race.cameraDevice = self.cameraDevice.GetSelection()
+		race.cameraDevice = self.cameraDevice.GetCurrentSelection()
 
 #------------------------------------------------------------------------------------------------
 

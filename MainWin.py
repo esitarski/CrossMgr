@@ -903,7 +903,7 @@ class MainWin( wx.Frame ):
 			Utils.MessageOK(self, _("USB Camera is not enabled.  Enable the camera in Properties and try again."), _("Error"), wx.ICON_ERROR )
 			return
 			
-		if not Utils.MessageOKCancel(self, _("Is the External USB Camera connected to the computer?"), _("Is Camera Connected") ):
+		if not Utils.MessageOKCancel(self, _("Verify that the External USB Camera is connected to the computer"), _("Verify Camera Connected") ):
 			return
 		
 		ctd = CameraTestDialog( self )
