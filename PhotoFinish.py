@@ -274,7 +274,7 @@ if Device:
 		if state:
 			Utils.FixPILSearchPath()
 			try:
-				camera = Device( (Model.race.cameraDevice if Model.race else 0) or 0 )
+				camera = Device( max((Model.race.cameraDevice if Model.race else 0) or 0, 0) )
 			except Exception as e:
 				logException( e, sys.exc_info() )
 				Utils.cameraError = 'SetCameraState: {}'.format(e)
