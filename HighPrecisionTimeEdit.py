@@ -20,26 +20,10 @@ class HighPrecisionTimeEdit( masked.TextCtrl ):
 					style		 = style,
 					size         = size,
 				)
-		'''
-		masked.TextCtrl.__init__( self, parent, id, "",
-									style        = style,
-									mask         = u'##:##:##.###',
-									defaultValue = (u'' if allow_none else self.defaultValue),
-									fillChar     = (u' ' if allow_none else '0'),
-									validRegex   = (u'.*' if allow_none else u'[0-9][0-9]:[0-5][0-9]:[0-5][0-9]\.[0-9][0-9][0-9]'),
-									formatcodes  = 'FS',
-									useFixedWidthFont = True,
-									fields = [
-										masked.Field(formatcodes='FSr'),
-										masked.Field(formatcodes='FSr'),
-										masked.Field(formatcodes='FSr')
-										],
-								)
-		'''
 		
 		if seconds is not None:
 			self.SetSeconds( seconds )
-									
+	
 	def GetSeconds( self ):
 		v = self.GetValue()
 		if self.allow_none and v == self.emptyValue:
@@ -57,8 +41,7 @@ class HighPrecisionTimeEdit( masked.TextCtrl ):
 			if hours > 99:
 				hours = 99
 			minutes = int( (secs // 60) % 60 )
-			secs %= 60
-			decimal = int( f * 1000 )
-			s = u"%02d:%02d:%02d.%03d" % (hours, minutes, secs, decimal)
+			secs = secs % 60 + f
+			s = u"{:02d}:{:02d}:{:06.3f}".format(hours, minutes, secs)
 			masked.TextCtrl.SetValue( self, s )
 
