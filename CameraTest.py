@@ -4,6 +4,7 @@ import datetime
 import threading
 from Queue import Queue, Empty
 import Utils
+import Model
 from PhotoFinish import AddPhotoHeader, SetCameraState, SnapPhoto
 
 now = datetime.datetime.now
@@ -39,6 +40,9 @@ class ScaledImage( wx.Panel ):
 	def SetImage( self, image ):
 		self.image = image
 		self.Refresh()
+		
+	def GetImage( self ):
+		return self.image
 
 class CameraTestDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY, title=_("Camera Test"), size=(690, 590) ):
@@ -51,6 +55,9 @@ class CameraTestDialog( wx.Dialog ):
 
 		self.photo = ScaledImage( self )
 		self.status = wx.StaticText( self )
+		
+		self.saveButton = wx.Button( self, label=_('Take Snapshot') )
+		self.saveButton.Bind( wx.EVT_BUTTON, self.onSave )
 		self.ok = wx.Button( self, wx.ID_OK )
 		self.ok.Bind( wx.EVT_BUTTON, self.onClose )
 		self.Bind( wx.EVT_CLOSE, self.onClose )
@@ -60,6 +67,7 @@ class CameraTestDialog( wx.Dialog ):
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.status, 1, flag=wx.EXPAND|wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT, border=4 )
+		hs.Add( self.saveButton, 0, flag=wx.ALL, border=4 )
 		hs.Add( self.ok, 0, flag=wx.ALL, border=4 )
 		sizer.Add( hs, 0, flag=wx.EXPAND|wx.ALL, border=4 )
 		
@@ -104,6 +112,37 @@ class CameraTestDialog( wx.Dialog ):
 				pass
 			
 			time.sleep( self.frameDelay )
+		
+	def onSave( self, event ):
+		try:
+			tNow = now()
+			image = self.photo.GetImage()
+		except:
+			Utils.MessageOK( self, _('Cannot access photo image.'), title = _("Camera Error"), iconMask=wx.ICON_ERROR )
+			return
+		
+		race = Model.race
+		fname = Utils.RemoveDisallowedFilenameChars(u'{} {}.png'.format( tNow.strftime('%Y-%m-%d %H-%M-%S'), Utils.toAscii(race.name if race else 'CameraTest')) )
+		
+		fd = wx.FileDialog( self,
+			message=_("Save Photo as PNG File:"),
+			wildcard="PNG files (*.png)| *.png",
+			style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT
+		)
+		fd.SetFilename( fname )
+		
+		ret = fd.ShowModal()
+		if ret != wx.ID_OK:
+			fd.Destroy()
+			return
+		fname = fd.GetPath()
+		fd.Destroy()
+		
+		try:
+			image.SaveFile( fname, wx.BITMAP_TYPE_PNG )
+		except Exception as e:
+			Utils.MessageOK( self, _('Cannot save photo:') + +u'\n\n' + _('Filename:') + u'  {}'.format(fname) + u'\n\n{}'.format(e),
+				title = _("Save Error"), iconMask=wx.ICON_ERROR )
 		
 	def onClose( self, event ):
 		if self.thread:

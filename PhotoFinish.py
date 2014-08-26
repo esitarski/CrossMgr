@@ -145,13 +145,21 @@ def AddPhotoHeader( bib, raceSeconds, cameraImage ):
 			riderInfo = Model.race.excelLink.read()[int(bib)]
 		except:
 			if bib == 9999:
-				riderInfo = {
-					'LastName':		'LASTNAME',
-					'FirstName':	'Firstname',
-					'Team':			'Team Name',
-				}
+				race = Model.race
+				if race:
+					riderInfo = {
+						'LastName':		race.name,
+						'FirstName':	race.city,
+						'Team':			datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+					}
+				else:
+					riderInfo = {
+						'LastName':		'CameraTest',
+						'Team':			datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+					}
 			else:
 				riderInfo = {}
+		
 		riderName = u', '.join( [n for n in [riderInfo.get('LastName',u''), riderInfo.get('FirstName',u'')] if n] )
 		if riderName:
 			team = riderInfo.get('Team', '')
@@ -160,8 +168,9 @@ def AddPhotoHeader( bib, raceSeconds, cameraImage ):
 			else:
 				txt.append( u'  %s' % riderName )
 
-		txt.append( _('  Bib: {}    RaceTime: {}    {}').format(
-			bib, formatTime(raceSeconds), datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')) )
+		if bib != 9999:
+			txt.append( _('  Bib: {}    RaceTime: {}    {}').format(
+				bib, formatTime(raceSeconds), datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')) )
 	else:
 		txt.append( _('  RaceTime: {}    {}').format(
 			formatTime(raceSeconds), datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')) )
