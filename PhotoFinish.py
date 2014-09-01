@@ -134,7 +134,7 @@ def AddPhotoHeader( bib, raceSeconds, cameraImage ):
 		font = wx.FontFromPixelSize( wx.Size(0,fontHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD )
 		smallFont = wx.FontFromPixelSize( wx.Size(0,fontHeight*0.75), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD )
 		
-		brandingHeight = fontHeight * 3.6
+		brandingHeight = fontHeight * 3.55
 		brandingBitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), wx.BITMAP_TYPE_PNG )
 		scaleMult = float(brandingHeight) / float(brandingBitmap.GetHeight())
 		
