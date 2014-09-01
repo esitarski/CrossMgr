@@ -1131,7 +1131,7 @@ class RiderDetail( wx.Panel ):
 				entries = race.getRider(num).interpolate()
 			
 			startOffset = race.getStartOffset( num )
-			entries = [e for e in entries if e.num == num and e.t != startOffset]
+			entries = [e for e in entries if e.num == num and e.t > startOffset]
 
 			leaderTimes, leaderNums = race.getLeaderTimesNums()
 			appearedInLap = [False] * (maxLap + 1)
