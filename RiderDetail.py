@@ -1029,14 +1029,7 @@ class RiderDetail( wx.Panel ):
 			
 			try:
 				info = externalInfo[int(num)]
-				name = info.get( 'LastName', '' )
-				firstName = info.get( 'FirstName', '' )
-				if firstName:
-					if name:
-						name = '%s, %s' % (name, firstName)
-					else:
-						name = firstName
-				self.riderName.SetLabel( name )
+				self.riderName.SetLabel( u', '.join( n for n in [info.get( 'LastName', u'' ), info.get( 'FirstName', u'' )] if n ) )
 				self.riderTeam.SetLabel( u'{}'.format(info.get('Team', '')) )
 			except KeyError:
 				pass
@@ -1137,7 +1130,8 @@ class RiderDetail( wx.Panel ):
 			else:
 				entries = race.getRider(num).interpolate()
 			
-			entries = [e for e in entries if e.num == num and e.t > 0]
+			startOffset = race.getStartOffset( num )
+			entries = [e for e in entries if e.num == num and e.t != startOffset]
 
 			leaderTimes, leaderNums = race.getLeaderTimesNums()
 			appearedInLap = [False] * (maxLap + 1)
