@@ -47,6 +47,7 @@ def PilImageToWxImage( pil ):
 	
 camera = None
 font = None
+smallFont = None
 brandingBitmap = None
 photoCache = set()		# Cache of all photo file names.
 
@@ -121,8 +122,9 @@ def getAverageLatency():
 	return sumLatencies / float(len(latencies))
 
 def AddPhotoHeader( bib, raceSeconds, cameraImage ):
-	global font, brandingBitmap
+	global font, smallFont, brandingBitmap
 	
+	race = Model.race
 	bitmap = wx.BitmapFromImage( PilImageToWxImage(cameraImage) )
 	
 	w, h = bitmap.GetSize()
@@ -130,8 +132,9 @@ def AddPhotoHeader( bib, raceSeconds, cameraImage ):
 	fontHeight = h//32
 	if not font:
 		font = wx.FontFromPixelSize( wx.Size(0,fontHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD )
+		smallFont = wx.FontFromPixelSize( wx.Size(0,fontHeight*0.75), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD )
 		
-		brandingHeight = fontHeight * 2.3
+		brandingHeight = fontHeight * 3.6
 		brandingBitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), wx.BITMAP_TYPE_PNG )
 		scaleMult = float(brandingHeight) / float(brandingBitmap.GetHeight())
 		
@@ -142,10 +145,9 @@ def AddPhotoHeader( bib, raceSeconds, cameraImage ):
 	txt = []
 	if bib:
 		try:
-			riderInfo = Model.race.excelLink.read()[int(bib)]
+			riderInfo = race.excelLink.read()[int(bib)]
 		except:
 			if bib == 9999:
-				race = Model.race
 				if race:
 					riderInfo = {
 						'LastName':		race.name,
@@ -175,10 +177,18 @@ def AddPhotoHeader( bib, raceSeconds, cameraImage ):
 		txt.append( _('  RaceTime: {}    {}').format(
 			formatTime(raceSeconds), datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')) )
 	
+	dc.SetFont( font )
 	bitmapHeight = brandingBitmap.GetHeight()
 	xText, yText = brandingBitmap.GetWidth(), int(fontHeight*0.14)
 	
-	dc.SetFont( font )
+	if race:
+		raceName = u'  {}'.format( race.name )
+		if race.organizer:
+			raceNameNew = u'{} {} {}'.format( raceName, _('by'), race.organizer )
+			if dc.GetTextExtent(raceNameNew)[0] + xText < w:
+				raceName = raceNameNew
+		txt.append( raceName )
+	
 	dc.SetPen( wx.BLACK_PEN )
 	dc.SetBrush( wx.WHITE_BRUSH )
 	dc.DrawRectangle( 0, 0, w, bitmapHeight+1 )
@@ -193,7 +203,9 @@ def AddPhotoHeader( bib, raceSeconds, cameraImage ):
 		dc.DrawText( t, xText, yText )
 		yText += lineHeight
 		
-	dc.DrawText( AppVerName, w - dc.GetTextExtent(AppVerName)[0] - int(fontHeight*.25), yText - lineHeight )
+	dc.SetTextForeground( wx.Colour(255,255,0) )
+	dc.SetFont( smallFont )
+	dc.DrawText( AppVerName, w - dc.GetTextExtent(AppVerName)[0] - int(fontHeight*.25), h - lineHeight )
 	
 	dc.DrawLine( xText, 0, xText, bitmapHeight )
 	

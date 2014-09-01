@@ -356,7 +356,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		try:
 			image = bitmap.ConvertToImage()
 		except Exception as e:
-			logException( e, sys.exc_info() )
+			Utils.logException( e, sys.exc_info() )
 			self.mainPhoto.SetBitmap( wx.NullBitmap )
 			self.mainPhoto.Refresh()
 			return
