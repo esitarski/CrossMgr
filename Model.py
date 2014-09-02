@@ -507,7 +507,7 @@ class Entry(object):
 		return (0 if self.lap == 0 else 1, self.t, -self.lap, self.num, self.interp)
 		
 	def set( self, e ):
-		self.num	= e.num
+		self.num	= e.num 
 		self.lap	= e.lap
 		self.t		= e.t
 		self.interp	= e.interp
@@ -629,7 +629,7 @@ class Rider(object):
 		iTimes[0] = race.getStartOffset(self.num) if race else 0.0
 		iTimes[1:] = self.times
 
-		averageLapTime = race.getAverageLapTime() if race else iTimes[-1] / float(len(iTimes) - 1)
+		averageLapTime = race.getAverageLapTime() if race else (iTimes[-1] - iTimes[0]) / float(len(iTimes) - 1)
 		mustBeRepeatInterval = averageLapTime * 0.5
 
 		# Remove duplicate entries.
@@ -638,9 +638,9 @@ class Rider(object):
 				i = (i for i in xrange(len(iTimes) - 1, 0, -1) \
 						if iTimes[i] - iTimes[i-1] < mustBeRepeatInterval).next()
 				if i == 1:
-					iDelete = i				# if the short interval is the first one, delete i
+					iDelete = i				# if the short interval is the first one, delete the next entry.
 				elif i == len(iTimes) - 1:
-					iDelete = i - 1			# if the short interval is the last one, delete i - 1
+					iDelete = i				# if the short interval is the last one, delete the last entry.
 				else:
 					#
 					# Delete the entry that equalizes the time on each side.
@@ -2283,20 +2283,13 @@ def setCategoryChoice( iSelection, categoryAttribute = None ):
 	setCategoryChoice( iSelection, categoryAttribute )
 
 if __name__ == '__main__':
-	c = Category(True, 'test', '100-150,132,134,192,537,538,539,-199,205,-50-60,-80-90,-110,-111,-112,-113', '00:00')
-	print( c.getMatchSet() )
-	print( 105 in c.getMatchSet() )
-	assert( c.matches(105) )
-	assert( c.matches(100) )
-	assert( not c.matches(99) )
-	assert( c.matches(134) )
-	assert( not c.matches(50) )
-	print( c )
-	print( c.intervals )
-	print( sorted(c.exclude) )
-	
 	r = newRace()
+	for i in xrange(1, 11):
+		r.addTime( 10, i*100 )
+	r.addTime( 10, 10*100 + 1 )
+	print( '\n'.join( unicode(f) for f in r.interpolate()[:20] ) )
 	
+	'''
 	print( r.getTemplateValues() )
 	sys.exit()
 	
@@ -2323,10 +2316,6 @@ if __name__ == '__main__':
 	rider = r.getRider( 10 )
 	entries = rider.interpolate( 36 )
 	print( [(e.t, e.interp) for e in entries] )
-	'''
-	entries = rider.interpolate( 36 )
-	print [e.t for e in entries]
-	'''
 
 	c = Category(True, 'test', '100-150-199,205,-50-60', '00:00')
 	print( c )
@@ -2341,4 +2330,5 @@ if __name__ == '__main__':
 						{'name':'test3', 'catStr':'1300-1399'}] )
 	print( r.getCategoryMask() )
 	print( r.getCategory( 2002 ) )
+	'''
 
