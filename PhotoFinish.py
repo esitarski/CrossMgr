@@ -139,8 +139,8 @@ def setDrawResources( dc, w, h ):
 	)
 	dc.SetFont( drawResources.bibFont )
 	drawResources.bibWidth, drawResources.bibHeight = dc.GetTextExtent( u' 9999' )
-	#drawResources.bibTextColour = wx.Colour(0,0,200)
-	drawResources.bibTextColour = wx.BLACK
+	drawResources.bibTextColour = wx.Colour(0,0,200)
+	#drawResources.bibTextColour = wx.BLACK
 	
 	drawResources.nameFontSize = drawResources.bibFontSize
 	drawResources.nameFont = wx.FontFromPixelSize(
@@ -185,7 +185,8 @@ def AddPhotoHeader( bib, raceSeconds, cameraImage, nameTxt=u'', teamTxt=u'' ):
 	bitmap = wx.BitmapFromImage( PilImageToWxImage(cameraImage) )
 	
 	w, h = bitmap.GetSize()
-	dc = wx.MemoryDC( bitmap )
+	dcMemory = wx.MemoryDC( bitmap )
+	dc = wx.GCDC( dcMemory )
 	
 	if not drawResources:
 		setDrawResources( dc, w, h )
