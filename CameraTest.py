@@ -78,8 +78,8 @@ class CameraTestDialog( wx.Dialog ):
 		self.tStart = now()
 		self.keepgoing = False
 		self.frameDelay = 1.0/25.0
-		self.q = Queue()
 		self.thread = None
+		self.keepgoing = True
 		
 		SetCameraState( True )
 		
@@ -91,13 +91,7 @@ class CameraTestDialog( wx.Dialog ):
 			self.thread.start()
 		
 	def updateLoop( self ):
-		while 1:
-			try:
-				message = self.q.get_nowait()
-				return
-			except Empty:
-				pass
-			
+		while self.keepgoing:
 			tNow = now()
 			cameraImage = SnapPhoto()
 			if not cameraImage:
@@ -146,8 +140,8 @@ class CameraTestDialog( wx.Dialog ):
 		
 	def onClose( self, event ):
 		if self.thread:
-			self.q.put( 'shutdown' )
-			self.thread.join()
+			self.keepgoing = False
+			time.sleep( self.frameDelay * 5 )
 		SetCameraState( False )
 		self.EndModal( wx.ID_OK )
 		

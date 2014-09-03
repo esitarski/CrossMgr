@@ -9,12 +9,16 @@ import Utils
 import Model
 from GetResults import GetResultsCore
 from Utils import logException
+from PIL import Image
 
 from Version import AppVerName
 try:
 	from VideoCapture import Device
 except:
 	Device = None
+	
+class dotdict( object ):
+	pass
 
 def formatTime( secs ):
 	if secs is None:
@@ -28,9 +32,12 @@ def formatTime( secs ):
 	secs = int(ss)
 	hours = int(secs // (60*60))
 	minutes = int( (secs // 60) % 60 )
-	secs = secs % 60
-	decimal = int( f * 1000.0 )
-	return "%s%02d:%02d:%02d.%03d" % (sign, hours, minutes, secs, decimal)
+	secs = secs % 60 + f
+	return "%s%02d:%02d:%06.3f" % (sign, hours, minutes, secs)
+	
+def LighterColour( c, percent ):
+	percent /= 100.0
+	return wx.Colour( *[v + (255-v) * percent for v in c.Get()] )
 
 def fileFormatTime( secs ):
 	return formatTime(secs).replace(':', '-').replace('.', '-')
@@ -44,11 +51,8 @@ def PilImageToWxImage( pil ):
 	return image
 
 #--------------------------------------------------------------------------------------
-	
+
 camera = None
-font = None
-smallFont = None
-brandingBitmap = None
 photoCache = set()		# Cache of all photo file names.
 
 def okTakePhoto( num, t ):
@@ -121,29 +125,77 @@ def updateLatency( latency ):
 def getAverageLatency():
 	return sumLatencies / float(len(latencies))
 
-def AddPhotoHeader( bib, raceSeconds, cameraImage ):
-	global font, smallFont, brandingBitmap
+drawResources = None		# Cached resource for drawing the photo header.
+def setDrawResources( dc, w, h ):
+	global drawResources
+	drawResources = dotdict()
+	
+	fontHeight = h//32
+	
+	drawResources.bibFontSize = fontHeight * 1.5
+	drawResources.bibFont = wx.FontFromPixelSize(
+		wx.Size(0, drawResources.bibFontSize),
+		wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD
+	)
+	dc.SetFont( drawResources.bibFont )
+	drawResources.bibWidth, drawResources.bibHeight = dc.GetTextExtent( u' 9999' )
+	#drawResources.bibTextColour = wx.Colour(0,0,200)
+	drawResources.bibTextColour = wx.BLACK
+	
+	drawResources.nameFontSize = drawResources.bibFontSize
+	drawResources.nameFont = wx.FontFromPixelSize(
+		wx.Size(0, drawResources.nameFontSize),
+		wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL
+	)
+	drawResources.nameTextColour = drawResources.bibTextColour
+	
+	drawResources.fontSize = fontHeight * 1.0
+	drawResources.font = wx.FontFromPixelSize(
+		wx.Size(0, drawResources.fontSize),
+		wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL
+	)
+	drawResources.smallFontSize = drawResources.fontSize * 0.9
+	drawResources.smallFont = wx.FontFromPixelSize(
+		wx.Size(0, drawResources.smallFontSize),
+		wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL
+	)
+	drawResources.fontColour = wx.BLACK
+	dc.SetFont( drawResources.font )
+	drawResources.fontHeight = dc.GetTextExtent( u'ATWgjjy' )[1]
+	
+	bitmapHeight = drawResources.bibHeight * 2.5
+	
+	bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), wx.BITMAP_TYPE_PNG )
+	scaleMult = float(bitmapHeight) / float(bitmap.GetHeight())
+	
+	image = bitmap.ConvertToImage()
+	drawResources.bitmapWidth, drawResources.bitmapHeight = int(image.GetWidth() * scaleMult), int(image.GetHeight() * scaleMult)
+	image.Rescale( drawResources.bitmapWidth, drawResources.bitmapHeight, wx.IMAGE_QUALITY_HIGH )
+	
+	drawResources.bitmap = image.ConvertToBitmap()
+	
+	drawResources.fadeDark = wx.Colour(114+80,119+80,168+80)
+	drawResources.fadeLight = LighterColour( drawResources.fadeDark, 50 )
+	drawResources.borderColour = wx.Colour( 71+50, 75+50, 122+50 )
+
+def AddPhotoHeader( bib, raceSeconds, cameraImage, nameTxt=u'', teamTxt=u'' ):
+	global drawResources
 	
 	race = Model.race
 	bitmap = wx.BitmapFromImage( PilImageToWxImage(cameraImage) )
 	
 	w, h = bitmap.GetSize()
 	dc = wx.MemoryDC( bitmap )
-	fontHeight = h//32
-	if not font:
-		font = wx.FontFromPixelSize( wx.Size(0,fontHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD )
-		smallFont = wx.FontFromPixelSize( wx.Size(0,fontHeight*0.75), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD )
-		
-		brandingHeight = fontHeight * 3.55
-		brandingBitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), wx.BITMAP_TYPE_PNG )
-		scaleMult = float(brandingHeight) / float(brandingBitmap.GetHeight())
-		
-		brandingImage = brandingBitmap.ConvertToImage()
-		brandingImage.Rescale( int(brandingImage.GetWidth() * scaleMult), int(brandingImage.GetHeight() * scaleMult), wx.IMAGE_QUALITY_HIGH )
-		brandingBitmap = brandingImage.ConvertToBitmap( dc.GetDepth() )
 	
-	txt = []
+	if not drawResources:
+		setDrawResources( dc, w, h )
+	
+	bibTxt = u''
+	timeTxt = u''
+	raceNameTxt = u''
 	if bib:
+		bibTxt = u' {} '.format(bib)
+		
 		try:
 			riderInfo = race.excelLink.read()[int(bib)]
 		except:
@@ -162,57 +214,107 @@ def AddPhotoHeader( bib, raceSeconds, cameraImage ):
 			else:
 				riderInfo = {}
 		
-		riderName = u', '.join( [n for n in [riderInfo.get('LastName',u''), riderInfo.get('FirstName',u'')] if n] )
-		if riderName:
-			team = riderInfo.get('Team', '')
-			if team:
-				txt.append( u'  %s    (%s)' % (riderName, team) )
-			else:
-				txt.append( u'  %s' % riderName )
+		if not nameTxt:
+			nameTxt = u' '.join( [n for n in [riderInfo.get('FirstName',u''), riderInfo.get('LastName',u'')] if n] )
+		if not teamTxt:
+			teamTxt = riderInfo.get('Team', u'')
 
 		if bib != 9999:
-			txt.append( _('  Bib: {}    RaceTime: {}    {}').format(
-				bib, formatTime(raceSeconds), datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')) )
+			timeTxt = _('{}  {}').format(
+				formatTime(raceSeconds),
+				datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+			)
 	else:
-		txt.append( _('  RaceTime: {}    {}').format(
-			formatTime(raceSeconds), datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')) )
+		timeTxt = _('{}  {}').format(
+			formatTime(raceSeconds),
+			datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+		)
+		
+	if timeTxt.startswith('0'):
+		timeTxt = timeTxt[1:]
 	
-	dc.SetFont( font )
-	bitmapHeight = brandingBitmap.GetHeight()
-	xText, yText = brandingBitmap.GetWidth(), int(fontHeight*0.14)
+	frameWidth = 4
+	borderWidth = 1
+	
+	bitmapWidth = drawResources.bitmapWidth
+	bitmapHeight = drawResources.bitmapHeight
+	xText, yText = bitmapWidth, 0
 	
 	if race:
-		raceName = u'  {}'.format( race.name )
-		if race.organizer:
-			raceNameNew = u'{} {} {}'.format( raceName, _('by'), race.organizer )
-			if dc.GetTextExtent(raceNameNew)[0] + xText < w:
-				raceName = raceNameNew
-		txt.append( raceName )
+		raceNameTxt = race.name
 	
-	dc.SetPen( wx.BLACK_PEN )
-	dc.SetBrush( wx.WHITE_BRUSH )
-	dc.DrawRectangle( 0, 0, w, bitmapHeight+1 )
-	wHalf = w//2
-	dc.GradientFillLinear( wx.Rect(wHalf, 0, wHalf, bitmapHeight), wx.WHITE, wx.Colour(200,200,200), wx.EAST )
+	x = borderWidth
+	y = borderWidth
 	
-	dc.DrawBitmap( brandingBitmap, 0, 0 )
+	def shadedRect( x, y, w, h ):
+		highlightTop = int(h/4.0)
+		dc.GradientFillLinear( wx.Rect(0, y, w, highlightTop),
+			drawResources.fadeDark, drawResources.fadeLight, wx.SOUTH )
+		dc.GradientFillLinear( wx.Rect(0, y+highlightTop, w, h-highlightTop),
+			drawResources.fadeDark, drawResources.fadeLight, wx.NORTH )
 	
-	lineHeight = int(fontHeight*1.07)
-	dc.SetTextForeground( wx.BLACK )
-	for t in txt:
-		dc.DrawText( t, xText, yText )
-		yText += lineHeight
-		
-	dc.SetTextForeground( wx.Colour(255,255,0) )
-	dc.SetFont( smallFont )
-	dc.DrawText( AppVerName, w - dc.GetTextExtent(AppVerName)[0] - int(fontHeight*.25), h - lineHeight )
+	def textInRect( txt, x, y, width, height, font=None, colour=None, alignment=wx.ALIGN_CENTER|wx.ALIGN_CENTRE_VERTICAL ):
+		if font:
+			dc.SetFont( font )
+		if colour:
+			dc.SetTextForeground( colour )
+		dc.DrawLabel( txt, wx.Rect(x, y, width, height), alignment )
 	
-	dc.DrawLine( xText, 0, xText, bitmapHeight )
+	lineHeight = int(drawResources.bibHeight * 1.15 + 0.5)
+	x += xText + frameWidth
 	
-	dc.SetBrush( wx.Brush(wx.WHITE, wx.TRANSPARENT) )
-	dc.DrawRectangle( 0, 0, w, bitmapHeight+1 )
+	dc.SetPen( wx.Pen(drawResources.borderColour, borderWidth) )
 	
-	dc.SelectObject( wx.NullBitmap )
+	shadedRect( x, y, w, lineHeight )
+
+	dc.DrawLine( 0, 0, w, 0 )
+	dc.DrawLine( xText, lineHeight, w, lineHeight )
+	
+	# Draw the bib.
+	dc.SetFont( drawResources.bibFont )
+	tWidth = dc.GetTextExtent(  bibTxt )[0]
+	textInRect( bibTxt, x, y, tWidth, lineHeight, drawResources.bibFont, drawResources.bibTextColour )
+
+	# Draw the name and team.
+	x += tWidth
+	textInRect( nameTxt, x, y, dc.GetTextExtent(nameTxt)[0], lineHeight, drawResources.nameFont, drawResources.bibTextColour )
+	x += dc.GetTextExtent(nameTxt)[0] + dc.GetTextExtent(u' ')[0]
+	remainingWidth = w - x - dc.GetTextExtent(u' ')[0] - borderWidth
+	dc.SetFont( drawResources.font )
+	teamTxtWidth = dc.GetTextExtent(teamTxt)[0]
+	if teamTxtWidth < remainingWidth:
+		textInRect( teamTxt, x, y, remainingWidth, lineHeight, drawResources.font, wx.BLACK, alignment=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+	
+	y += lineHeight
+	
+	lineHeight = drawResources.fontHeight * 1.15
+	shadedRect( 0, y, w, lineHeight )
+	dc.DrawLine( 0, y+lineHeight, w, y+lineHeight )
+	
+	# Draw the time, race time and raceName.
+	dc.SetFont( drawResources.font )
+	x = borderWidth
+	x += xText + frameWidth + dc.GetTextExtent(u'  ')[0]
+	textInRect( timeTxt, x, y, w-x, lineHeight, drawResources.font, wx.BLACK, alignment=wx.ALIGN_LEFT|wx.ALIGN_CENTRE_VERTICAL )
+	x += dc.GetTextExtent(timeTxt)[0] + dc.GetTextExtent(u' ')[0]
+	remainingWidth = w - x - dc.GetTextExtent(u' ')[0] - borderWidth
+	raceNameTxtWidth = dc.GetTextExtent(raceNameTxt)[0]
+	if raceNameTxtWidth < remainingWidth:
+		textInRect( raceNameTxt, x, y, remainingWidth, lineHeight, drawResources.font, wx.BLACK, alignment=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+	
+	dc.DrawBitmap( drawResources.bitmap, frameWidth, frameWidth )
+	
+	dc.SetBrush( wx.TRANSPARENT_BRUSH )
+	
+	frameHalf = frameWidth / 2
+	dc.SetPen( wx.Pen(drawResources.borderColour, frameWidth) )
+	dc.DrawRectangle( frameHalf, frameHalf, bitmapWidth+frameHalf, bitmapHeight+frameHalf )
+	dc.SetPen( wx.Pen(wx.WHITE, frameHalf) )
+	dc.DrawRectangle( frameHalf, frameHalf, bitmapWidth+frameHalf, bitmapHeight+frameHalf )
+	
+	dc.SetPen( wx.Pen(drawResources.borderColour, 1) )
+	dc.DrawLine( w-1, 0, w-1, y+lineHeight )
+	
 	return wx.ImageFromBitmap( bitmap )
 
 def SavePhoto( fileName, bib, raceSeconds, cameraImage ):
@@ -288,10 +390,10 @@ if Device:
 		return ret
 		
 	def SetCameraState( state = False ):
-		global camera, font
+		global camera, drawResources
 		Utils.cameraError = None
 		camera = None
-		font = None
+		drawResources = None
 		if state:
 			Utils.FixPILSearchPath()
 			try:
@@ -319,14 +421,33 @@ else:
 		Utils.writeLog( Utils.cameraError )
 		return None
 
-if __name__ == '__main__':
+if __name__ == '__main__':	
+	race = Model.newRace()
+	race._populate()
+
 	app = wx.App(False)
 	app.SetAppName("CrossMgr")
 	Utils.disable_stdout_buffering()
 	
+	mainWin = wx.Frame(None,title="CrossMan", size=(850,650))
+	bitmap = wx.StaticBitmap( mainWin, size=(800,600) )
+	pimage = Image.new('RGB', (800,600), 'grey')
+	img = AddPhotoHeader( 151, 631, pimage, nameTxt='Davide FRATTINI', teamTxt='UNITEDHEALTHCARE PRO CYCLING TEAM' )
+	bitmap.SetBitmap( wx.BitmapFromImage(img) )
+
+	vs = wx.BoxSizer( wx.VERTICAL )
+	vs.Add( bitmap )
+	mainWin.SetSizer( vs )
+	
+	mainWin.Show( True )
+	app.MainLoop()
+	
+	'''
 	SetCameraState( True )
 	for i in xrange(5):
 		d = datetime.datetime.now()
 		TakePhoto( 'test.cmn', 100, 129.676 + i )
 		print 'Video Frame Capture Time', (datetime.datetime.now() - d).total_seconds()
+	'''
+	
 
