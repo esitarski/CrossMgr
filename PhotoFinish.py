@@ -127,34 +127,43 @@ def setDrawResources( dc, w, h ):
 	global drawResources
 	drawResources = dotdict()
 	
-	fontHeight = h//32
+	fontHeight = int(h/36.0)
+	fontFace = 'Arial'
 	
 	drawResources.bibFontSize = fontHeight * 1.5
 	drawResources.bibFont = wx.FontFromPixelSize(
 		wx.Size(0, drawResources.bibFontSize),
-		wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD
+		wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD,
+		face=fontFace,
 	)
+	
 	dc.SetFont( drawResources.bibFont )
 	drawResources.bibWidth, drawResources.bibHeight = dc.GetTextExtent( u' 9999' )
 	drawResources.bibTextColour = wx.Colour(0,0,200)
-	#drawResources.bibTextColour = wx.BLACK
+	drawResources.bibSpaceWidth = dc.GetTextExtent( u'9999' )[0] / 4
 	
 	drawResources.nameFontSize = drawResources.bibFontSize
 	drawResources.nameFont = wx.FontFromPixelSize(
 		wx.Size(0, drawResources.nameFontSize),
-		wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL
+		wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL,
+		face=fontFace,
 	)
 	drawResources.nameTextColour = drawResources.bibTextColour
 	
 	drawResources.fontSize = fontHeight * 1.0
 	drawResources.font = wx.FontFromPixelSize(
 		wx.Size(0, drawResources.fontSize),
-		wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL
+		wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL,
+		face=fontFace,
 	)
+	dc.SetFont( drawResources.font )
+	drawResources.spaceWidth = dc.GetTextExtent( u'9999' )[0] / 4
+	
 	drawResources.smallFontSize = drawResources.fontSize * 0.9
 	drawResources.smallFont = wx.FontFromPixelSize(
 		wx.Size(0, drawResources.smallFontSize),
-		wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL
+		wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL,
+		face=fontFace,
 	)
 	drawResources.fontColour = wx.BLACK
 	dc.SetFont( drawResources.font )
@@ -192,7 +201,7 @@ def AddPhotoHeader( bib, raceSeconds, cameraImage, nameTxt=u'', teamTxt=u'' ):
 	timeTxt = u''
 	raceNameTxt = u''
 	if bib:
-		bibTxt = u' {} '.format(bib)
+		bibTxt = u'{}'.format(bib)
 		
 		try:
 			riderInfo = race.excelLink.read()[int(bib)]
@@ -236,6 +245,8 @@ def AddPhotoHeader( bib, raceSeconds, cameraImage, nameTxt=u'', teamTxt=u'' ):
 	
 	bitmapWidth = drawResources.bitmapWidth
 	bitmapHeight = drawResources.bitmapHeight
+	bibSpaceWidth = drawResources.bibSpaceWidth
+	spaceWidth = drawResources.spaceWidth
 	xText, yText = bitmapWidth, 0
 	
 	if race:
@@ -259,7 +270,7 @@ def AddPhotoHeader( bib, raceSeconds, cameraImage, nameTxt=u'', teamTxt=u'' ):
 		dc.DrawLabel( txt, wx.Rect(x, y, width, height), alignment )
 	
 	lineHeight = int(drawResources.bibHeight * 1.15 + 0.5)
-	x += xText + frameWidth
+	x += xText + frameWidth + bibSpaceWidth
 	
 	dc.SetPen( wx.Pen(drawResources.borderColour, borderWidth) )
 	
@@ -270,14 +281,14 @@ def AddPhotoHeader( bib, raceSeconds, cameraImage, nameTxt=u'', teamTxt=u'' ):
 	
 	# Draw the bib.
 	dc.SetFont( drawResources.bibFont )
-	tWidth = dc.GetTextExtent(  bibTxt )[0]
+	tWidth = dc.GetTextExtent( bibTxt )[0]
 	textInRect( bibTxt, x, y, tWidth, lineHeight, drawResources.bibFont, drawResources.bibTextColour )
 
 	# Draw the name and team.
-	x += tWidth
+	x += tWidth + spaceWidth
 	textInRect( nameTxt, x, y, dc.GetTextExtent(nameTxt)[0], lineHeight, drawResources.nameFont, drawResources.bibTextColour )
-	x += dc.GetTextExtent(nameTxt)[0] + dc.GetTextExtent(u' ')[0]
-	remainingWidth = w - x - dc.GetTextExtent(u' ')[0] - borderWidth
+	x += dc.GetTextExtent(nameTxt)[0] + spaceWidth
+	remainingWidth = w - x - spaceWidth - borderWidth
 	dc.SetFont( drawResources.font )
 	teamTxtWidth = dc.GetTextExtent(teamTxt)[0]
 	if teamTxtWidth < remainingWidth:
@@ -292,10 +303,10 @@ def AddPhotoHeader( bib, raceSeconds, cameraImage, nameTxt=u'', teamTxt=u'' ):
 	# Draw the time, race time and raceName.
 	dc.SetFont( drawResources.font )
 	x = borderWidth
-	x += xText + frameWidth + dc.GetTextExtent(u'  ')[0]
+	x += xText + frameWidth + bibSpaceWidth
 	textInRect( timeTxt, x, y, w-x, lineHeight, drawResources.font, wx.BLACK, alignment=wx.ALIGN_LEFT|wx.ALIGN_CENTRE_VERTICAL )
-	x += dc.GetTextExtent(timeTxt)[0] + dc.GetTextExtent(u' ')[0]
-	remainingWidth = w - x - dc.GetTextExtent(u' ')[0] - borderWidth
+	x += dc.GetTextExtent(timeTxt)[0] + spaceWidth
+	remainingWidth = w - x - spaceWidth - borderWidth
 	raceNameTxtWidth = dc.GetTextExtent(raceNameTxt)[0]
 	if raceNameTxtWidth < remainingWidth:
 		textInRect( raceNameTxt, x, y, remainingWidth, lineHeight, drawResources.font, wx.BLACK, alignment=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
