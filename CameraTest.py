@@ -76,36 +76,30 @@ class CameraTestDialog( wx.Dialog ):
 		self.resolutionFormat = _("Camera Resolution") + u': {} x {}'
 		
 		self.tStart = now()
-		self.keepgoing = False
 		self.frameDelay = 1.0/25.0
-		self.thread = None
-		self.keepgoing = True
+		self.timer = wx.Timer( self )
+		self.Bind( wx.EVT_TIMER, self.updatePhoto )
 		
 		SetCameraState( True )
 		
 		if Utils.cameraError:
 			self.status.SetLabel( Utils.cameraError )
 		else:
-			self.thread = threading.Thread( target=self.updateLoop, name="CameraTestUpdate" )
-			self.thread.daemon = True
-			self.thread.start()
+			self.timer.Start( self.frameDelay )
 		
-	def updateLoop( self ):
-		while self.keepgoing:
-			tNow = now()
-			cameraImage = SnapPhoto()
-			if not cameraImage:
-				self.status.SetLabel( Utils.cameraError if Utils.cameraError else _("Camera Failed: Unknown Error.") )
-				return
-				
-			try:
-				photo = AddPhotoHeader( 9999, (tNow - self.tStart).total_seconds(), cameraImage )
-				self.status.SetLabel( self.resolutionFormat.format(photo.GetWidth(), photo.GetHeight()) )
-				self.photo.SetImage( photo )
-			except:
-				pass
+	def updatePhoto( self, evemt ):
+		tNow = now()
+		cameraImage = SnapPhoto()
+		if not cameraImage:
+			self.status.SetLabel( Utils.cameraError if Utils.cameraError else _("Camera Failed: Unknown Error.") )
+			return
 			
-			time.sleep( self.frameDelay )
+		try:
+			photo = AddPhotoHeader( 9999, (tNow - self.tStart).total_seconds(), cameraImage )
+			self.status.SetLabel( self.resolutionFormat.format(photo.GetWidth(), photo.GetHeight()) )
+			self.photo.SetImage( photo )
+		except:
+			pass
 		
 	def onSave( self, event ):
 		try:
@@ -139,9 +133,7 @@ class CameraTestDialog( wx.Dialog ):
 				title = _("Save Error"), iconMask=wx.ICON_ERROR )
 		
 	def onClose( self, event ):
-		if self.thread:
-			self.keepgoing = False
-			time.sleep( self.frameDelay * 5 )
+		self.timer.Stop()
 		SetCameraState( False )
 		self.EndModal( wx.ID_OK )
 		
