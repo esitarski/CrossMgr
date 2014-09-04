@@ -87,7 +87,7 @@ class CameraTestDialog( wx.Dialog ):
 		else:
 			self.timer.Start( self.frameDelay )
 		
-	def updatePhoto( self, evemt ):
+	def updatePhoto( self, event ):
 		tNow = now()
 		cameraImage = SnapPhoto()
 		if not cameraImage:
