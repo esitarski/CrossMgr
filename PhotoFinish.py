@@ -4,6 +4,7 @@ import sys
 import math
 import shutil
 import datetime
+from wx.lib.agw.aui import LightColour
 
 import Utils
 import Model
@@ -35,10 +36,6 @@ def formatTime( secs ):
 	secs = secs % 60 + f
 	return "%s%02d:%02d:%06.3f" % (sign, hours, minutes, secs)
 	
-def LighterColour( c, percent ):
-	percent /= 100.0
-	return wx.Colour( *[v + (255-v) * percent for v in c.Get()] )
-
 def fileFormatTime( secs ):
 	return formatTime(secs).replace(':', '-').replace('.', '-')
 	
@@ -175,7 +172,7 @@ def setDrawResources( dc, w, h ):
 	drawResources.bitmap = image.ConvertToBitmap()
 	
 	drawResources.fadeDark = wx.Colour(114+80,119+80,168+80)
-	drawResources.fadeLight = LighterColour( drawResources.fadeDark, 50 )
+	drawResources.fadeLight = LightColour( drawResources.fadeDark, 50 )
 	drawResources.borderColour = wx.Colour( 71+50, 75+50, 122+50 )
 
 def AddPhotoHeader( bib, raceSeconds, cameraImage, nameTxt=u'', teamTxt=u'' ):
