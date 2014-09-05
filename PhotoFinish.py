@@ -311,8 +311,10 @@ def AddPhotoHeader( bib, raceSeconds, cameraImage, nameTxt=u'', teamTxt=u'' ):
 	if raceNameTxtWidth < remainingWidth:
 		textInRect( raceNameTxt, x, y, remainingWidth, lineHeight, drawResources.font, wx.BLACK, alignment=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 	
+	# Draw the bitmap.
 	dc.DrawBitmap( drawResources.bitmap, frameWidth, frameWidth )
 	
+	# Draw a frame around the bitmap.
 	dc.SetBrush( wx.TRANSPARENT_BRUSH )
 	
 	frameHalf = frameWidth / 2
@@ -321,6 +323,7 @@ def AddPhotoHeader( bib, raceSeconds, cameraImage, nameTxt=u'', teamTxt=u'' ):
 	dc.SetPen( wx.Pen(wx.WHITE, frameHalf) )
 	dc.DrawRectangle( frameHalf, frameHalf, bitmapWidth+frameHalf, bitmapHeight+frameHalf )
 	
+	# Draw a border on the right side.
 	dc.SetPen( wx.Pen(drawResources.borderColour, 1) )
 	dc.DrawLine( w-1, 0, w-1, y+lineHeight )
 	
