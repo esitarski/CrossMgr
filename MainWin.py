@@ -549,11 +549,12 @@ class MainWin( wx.Frame ):
 		#----------------------------------------------------------------------------------------------
 		self.toolsMenu = wx.Menu()
 		
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.toolsMenu, idCur , _("&Test USB Camera..."), _("Test the USB Camera"), Utils.GetPngBitmap('camera-webcam.png') )
-		self.Bind(wx.EVT_MENU, self.menuCameraTest, id=idCur )
-		
-		self.toolsMenu.AppendSeparator()
+		if HasPhotoFinish():
+			idCur = wx.NewId()
+			AppendMenuItemBitmap( self.toolsMenu, idCur , _("&Test USB Camera..."), _("Test the USB Camera"), Utils.GetPngBitmap('camera-webcam.png') )
+			self.Bind(wx.EVT_MENU, self.menuCameraTest, id=idCur )
+			
+			self.toolsMenu.AppendSeparator()
 		
 		idCur = wx.NewId()
 		self.toolsMenu.Append( idCur , _("&Simulate Race..."), _("Simulate a race") )
