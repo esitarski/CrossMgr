@@ -125,21 +125,28 @@ When using this feature, be sure to set the "First Lap Distance" in [Categories]
 
 ## Camera Options
 
+CrossMgr can record photos from an inexpensive USB camera when riders cross the finish line.
+
+Currently, the USB Camera option is only available on the Windows platform.
+
+When photos are triggered by the RFID reader, and two riders are recorded within the video buffer frame rate, a second photo is recorded.  This gives more information for close finishes.
+
 ### Options
 
 Option|Description
 :-------|:----------
 Do Not Use Camera for Photo Finish|USB Camera not used
-Photos on Every Lap|Records a photo from a connected USB camera on every number entry on every lap.  See [Notes](#use-usb-camera-photo-finish) below for details.  Currently, the USB Camera option is only available on the Windows platform.
-Photos at Race Finish Only|This option tells CrossMgr to record photos one minute before the leader's finish time for each Start Wave.  If the leader has not yet finished, CrossMgr uses leader's expected time.  If the leader's time is known, CrossMgr uses the leader's actual finish time.  If this option is disabled, CrossMgr will record photos of every rider on every lap.  If this race is a time trial, this option has no effect and photos will be recorded on every lap.
+Photos on Every Lap|Records a photo from a connected USB camera on every number entry on every lap.  See [Notes](#use-usb-camera-photo-finish) below for details.  Photos at Race Finish Only|This option tells CrossMgr to record photos one minute before the leader's finish time for each Start Wave.  If the leader has not yet finished, CrossMgr uses leader's expected time.  If the leader's time is known, CrossMgr uses the leader's actual finish time.  If this option is disabled, CrossMgr will record photos of every rider on every lap.  If this race is a time trial, this option has no effect and photos will be recorded on every lap.
 
 ### Camera Device
 Tells CrossMgr which USB camera device to use.  Normally, the external USB camera default is __device 0__, so you don't need to change this.
 
-But... on some PCs, the built-in camera is __device 0__ and the external USB camera is __device 1__.
+On some PCs, the built-in camera is __device 0__ and the external USB camera is __device 1__.
 If this is the case on your computer, set __Camera Device__ to __1__.
 
-If you have multiple USB cameras plugged into the computer (not recommended as it is confusing!), you might need to set __Camera Device__ to another value to get the camera you want.
+Use __Tools/Test USB Camera...__ to check that everything works beforehand.
+
+If you have multiple USB cameras plugged into the computer and you want to pick which one to use, set the __Camera Device__ to the value to get the camera you want.
 
 ### Notes:
 
