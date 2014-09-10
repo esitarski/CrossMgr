@@ -5,6 +5,7 @@ import wx.lib.filebrowsebutton as filebrowse
 import wx.lib.scrolledpanel as scrolled
 import wx.wizard as wiz
 import os
+import sys
 import copy
 import string
 import Utils
@@ -27,8 +28,6 @@ Fields = [	_('Bib#'),
 			_('Tag'), _('Tag2')]
 IgnoreFields = [_('Bib#'), _('Tag'), _('Tag2'), _('Factor')]		# Fields to ignore when adding data to standard reports.
 ReportFields = [f for f in Fields if f not in IgnoreFields]
-
-mapFmt = u'{:15}\t\u2192   {}'
 
 class FileNamePage(wiz.WizardPageSimple):
 	def __init__(self, parent):
@@ -199,7 +198,9 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		self.gs = gs
 		vbs.Add( sp, flag=wx.ALL, border = border )
 		
-		self.mapSummary = wx.TextCtrl( self, style=wx.TE_MULTILINE|wx.TE_READONLY, size=(-1,128) )
+		self.mapSummary = wx.ListCtrl( self, wx.ID_ANY, style = wx.LC_REPORT|wx.LC_SINGLE_SEL|wx.LC_HRULES|wx.BORDER_NONE )
+		self.mapSummary.InsertColumn( 0, _('CrossMgr'),		wx.LIST_FORMAT_RIGHT,	120 )
+		self.mapSummary.InsertColumn( 1, _('Spreadsheet'),	wx.LIST_FORMAT_LEFT,	120 )
 		vbs.Add( self.mapSummary, 1, flag=wx.ALL|wx.EXPAND, border = border )
 		
 		self.SetSizer( vbs )
@@ -222,13 +223,11 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		self.doUpdateSummary()
 
 	def doUpdateSummary( self, event = None ):
-		mapStr = mapFmt.format( 'CrossMgr', _('Spreadsheet') )
-		mapStr += '\n\n'
-
-		map = [(f, self.choices[c].GetStringSelection()) for c, f in enumerate(Fields)]
-		mapStr += '\n'.join( mapFmt.format(a, b) for a, b in map )
-		
-		self.mapSummary.SetValue( mapStr )
+		self.mapSummary.DeleteAllItems()
+		for c, f in enumerate(Fields):
+			rowFields = (f, self.choices[c].GetStringSelection())
+			r = self.mapSummary.InsertStringItem( sys.maxint, f )
+			self.mapSummary.SetStringItem( r, 1, self.choices[c].GetStringSelection() )
 		
 	def getFieldCol( self ):
 		headerLen = len(self.headers) - 1
@@ -345,11 +344,6 @@ class SummaryPage(wiz.WizardPageSimple):
 		self.riderNumber.SetLabel( '{}'.format(infoLen) )
 		
 		errStr = '\n'.join( [err for num, err in errors] if errors else ['None'] )
-		
-		errStr += '\n\n' + mapFmt.format( 'CrossMgr', _('Spreadsheet') )
-		errStr += '\n\n'
-		headerMapStr = '\n'.join( mapFmt.format( _(f), h ) for f, h in headerMap )
-		errStr += headerMapStr
 		
 		self.statusName.SetLabel( _('Success!') if infoLen and not errors else _('{num} Error(s)').format( num=len(errors) ) )
 		self.errorName.SetValue( errStr )

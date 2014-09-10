@@ -52,7 +52,7 @@ class FrameSaver( threading.Thread ):
 		self.queue.put( ['Save', fileName, bib, t, frame] )
 	
 class VideoBuffer( threading.Thread ):
-	def __init__( self, camera, refTime = None, dirName = '.', fps = 25, bufferSeconds = 4.0, owner = None ):
+	def __init__( self, camera, refTime = None, dirName = '.', fps = 25, bufferSeconds = 4.0, owner = None, burstMode = True ):
 		threading.Thread.__init__( self )
 		self.daemon = True
 		self.name = 'VideoBuffer'
@@ -61,10 +61,14 @@ class VideoBuffer( threading.Thread ):
 		self.dirName = dirName
 		self.fps = fps
 		self.frameMax = int(fps * bufferSeconds)
+		
 		self.frameDelay = 1.0 / fps
+		self.frameDelayTimeDelta = timedelta(seconds=self.frameDelay)
+		
 		self.frameSaver = None
 		self.fcb = FrameCircBuf()
 		self.owner = owner			# Destination to send photos after they are taken.
+		self.burstMode = burstMode
 		self.reset()
 	
 	def setOwner( self, owner = None ):
@@ -79,6 +83,8 @@ class VideoBuffer( threading.Thread ):
 		
 		self.frameSaver = FrameSaver()
 		self.frameSaver.start()
+		
+		self.tFindLast = now() - timedelta( seconds=100 )
 		
 		self.queue = Queue()
 	
@@ -108,7 +114,17 @@ class VideoBuffer( threading.Thread ):
 					if tFind > tNow:
 						threading.Timer( (tFind - tNow).total_seconds() + 0.1, self.takePhoto, args=[bib, t] ).start()
 						continue
-						
+					
+					# If burst mode, check if there was another rider before within frameDelay seconds.
+					# If so, also save the earlier frame.
+					if tFind - self.tFindLast < self.frameDelayTimeDelta and self.burstMode:
+						times, frames = self.fcb.findBeforeAfter( tFind - self.frameDelayTimeDelta )
+						for i, frame in enumerate( frames ):
+							t = (times[i]-self.refTime).total_seconds()
+							self.frameSaver.save( GetFilename(bib, t, self.dirName, i), bib, t, frame )
+						self.frameCount += len(frames)
+					self.tFindLast = tFind
+					
 					times, frames = self.fcb.findBeforeAfter( tFind, 0, 1 )
 					for i, frame in enumerate( frames ):
 						t = (times[i]-self.refTime).total_seconds()
