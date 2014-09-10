@@ -169,7 +169,7 @@ def setDrawResources( dc, w, h ):
 	dc.SetFont( drawResources.font )
 	drawResources.fontHeight = dc.GetTextExtent( u'ATWgjjy' )[1]
 	
-	bitmapHeight = drawResources.bibHeight * 2.5
+	bitmapHeight = drawResources.bibHeight * 2.8
 	
 	bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), wx.BITMAP_TYPE_PNG )
 	scaleMult = float(bitmapHeight) / float(bitmap.GetHeight())
@@ -269,7 +269,7 @@ def AddPhotoHeader( bib, raceSeconds, cameraImage, nameTxt=u'', teamTxt=u'' ):
 			dc.SetTextForeground( colour )
 		dc.DrawLabel( txt, wx.Rect(x, y, width, height), alignment )
 	
-	lineHeight = int(drawResources.bibHeight * 1.15 + 0.5)
+	lineHeight = int(drawResources.bibHeight * 1.25 + 0.5)
 	x += xText + frameWidth + bibSpaceWidth
 	
 	dc.SetPen( wx.Pen(drawResources.borderColour, borderWidth) )
@@ -296,7 +296,7 @@ def AddPhotoHeader( bib, raceSeconds, cameraImage, nameTxt=u'', teamTxt=u'' ):
 	
 	y += lineHeight
 	
-	lineHeight = drawResources.fontHeight * 1.15
+	lineHeight = int( drawResources.fontHeight * 1.25 + 0.5 )
 	shadedRect( 0, y, w, lineHeight )
 	dc.DrawLine( 0, y+lineHeight, w, y+lineHeight )
 	
