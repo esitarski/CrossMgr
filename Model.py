@@ -123,7 +123,7 @@ class Category(object):
 	DistanceByLap = 0
 	DistanceByRace = 1
 
-	badRangeCharsRE = re.compile( '[^0-9,\-]' )
+	badRangeCharsRE = re.compile( u'[^0-9,\-]' )
 	
 	CatWave = 0
 	CatComponent = 1
@@ -132,6 +132,8 @@ class Category(object):
 	catType = 0
 	uploadFlag = True
 	seriesFlag = True
+	
+	MaxBib = 99999
 	
 	# Attributes to be merged from existing catgories in category import or when reading categories from the Excel sheet.
 	MergeAttributes = (
@@ -152,7 +154,9 @@ class Category(object):
 		return ','.join( s )
 		
 	def _setStr( self, s ):
-		s = self.badRangeCharsRE.sub( '', u'{}'.format(s) )
+		s = self.badRangeCharsRE.sub( u'', u'{}'.format(s) )
+		if not s:
+			s = u'1-{}'.format(9999)
 		self.intervals = []
 		self.exclude = set()
 		for f in s.split(','):
@@ -175,8 +179,8 @@ class Category(object):
 				elif len(bounds) == 1:
 					bounds.append( bounds[0] )
 					
-				bounds[0] = min(bounds[0], 99999)	# Keep the numbers in a reasonable range to avoid crashing.
-				bounds[1] = min(bounds[1], 99999)
+				bounds[0] = min(bounds[0], self.MaxBib)	# Keep the numbers in a reasonable range to avoid crashing.
+				bounds[1] = min(bounds[1], self.MaxBib)
 				
 				if bounds[0] > bounds[1]:			# Swap the range if out of order.
 					bounds[0], bounds[1] = bounds[1], bounds[0]
