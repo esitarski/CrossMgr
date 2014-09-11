@@ -128,7 +128,7 @@ def setDrawResources( dc, w, h ):
 	drawResources = dotdict()
 	
 	fontHeight = int(h/36.0)
-	fontFace = 'Arial'
+	fontFace = Utils.FontFace
 	
 	drawResources.bibFontSize = fontHeight * 1.5
 	drawResources.bibFont = wx.FontFromPixelSize(

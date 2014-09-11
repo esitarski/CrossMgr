@@ -400,7 +400,7 @@ class RoundButton(wx.PyControl):
 		# Get a known font size based on the font specification.
 		fontPixels = 48
 		fontCur = wx.FontFromPixelSize((0,fontPixels), font.GetFamily(), font.GetStyle(), font.GetWeight(),
-										font.GetUnderlined(), font.GetFaceName(), font.GetEncoding() )
+										font.GetUnderlined(), face=font.GetFaceName(), encoding=font.GetEncoding() )
 		dc = wx.WindowDC( self )
 		dc.SetFont( fontCur )		
 		
@@ -430,7 +430,7 @@ class RoundButton(wx.PyControl):
 		# Adjust the font size based on the ratio that we would have drawn outside the button circle.
 		fontPixels *= rDrawable / math.sqrt( r2Max )
 		fontCur = wx.FontFromPixelSize((0,fontPixels), font.GetFamily(), font.GetStyle(), font.GetWeight(),
-								font.GetUnderlined(), font.GetFaceName(), font.GetEncoding() )
+								font.GetUnderlined(), face=font.GetFaceName(), encoding=font.GetEncoding() )
 		self.SetFont( fontCur )
 
 	def OnPaint(self, event):

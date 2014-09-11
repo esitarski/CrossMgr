@@ -71,7 +71,7 @@ class Results( wx.Panel ):
 		
 		f = self.showLapTimesRadio.GetFont()
 		self.boldFont = wx.Font( f.GetPointSize()+2, f.GetFamily(), f.GetStyle(),
-								wx.FONTWEIGHT_BOLD, f.GetUnderlined(), f.GetFaceName(), f.GetEncoding() )
+								wx.FONTWEIGHT_BOLD, f.GetUnderlined(), face=f.GetFaceName(), encoding=f.GetEncoding() )
 		
 		self.search = wx.SearchCtrl(self, size=(80,-1), style=wx.TE_PROCESS_ENTER )
 		# self.search.ShowCancelButton( True )
