@@ -94,7 +94,7 @@ class ExportGrid( object ):
 	
 	def _getFont( self, pixelSize = 28, bold = False ):
 		return wx.FontFromPixelSize( (0,pixelSize), wx.FONTFAMILY_SWISS, wx.NORMAL,
-									 wx.FONTWEIGHT_BOLD if bold else wx.FONTWEIGHT_NORMAL, False, 'Ariel' )
+									 wx.FONTWEIGHT_BOLD if bold else wx.FONTWEIGHT_NORMAL, False )
 	
 	def _getColSizeTuple( self, dc, font, col ):
 		wSpace, hSpace, lh = dc.GetMultiLineTextExtent( '    ', font )
