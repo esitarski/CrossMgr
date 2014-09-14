@@ -66,7 +66,7 @@ class GeneralInfoProperties( wx.Panel ):
 		self.Bind(intctrl.EVT_INT, self.onChanged, self.raceNum)
 		
 		self.scheduledStartLabel = wx.StaticText( self, label=_('Scheduled Start:') )
-		self.scheduledStart = masked.TimeCtrl( self, fmt24hr=True, display_seconds=False, value='10:00:00', size=(80,-1) )
+		self.scheduledStart = masked.TimeCtrl( self, fmt24hr=True, display_seconds=False, value='10:00:00', )
 		self.scheduledStart.SetSize( (64,-1) )
 		
 		self.minutesLabel = wx.StaticText( self, label=_('Race Minutes:') )
