@@ -66,7 +66,8 @@ class GeneralInfoProperties( wx.Panel ):
 		self.Bind(intctrl.EVT_INT, self.onChanged, self.raceNum)
 		
 		self.scheduledStartLabel = wx.StaticText( self, label=_('Scheduled Start:') )
-		self.scheduledStart = masked.TimeCtrl( self, fmt24hr=True, display_seconds=False, value='10:00:00', size=(128,-1) )
+		self.scheduledStart = masked.TimeCtrl( self, fmt24hr=True, display_seconds=False, value='10:00:00', size=(80,-1) )
+		self.scheduledStart.SetSize( (64,-1) )
 		
 		self.minutesLabel = wx.StaticText( self, label=_('Race Minutes:') )
 		self.minutes = intctrl.IntCtrl( self, min=1, max=60*48, allow_none=False, value=40, size=(64,-1), style=wx.ALIGN_RIGHT )
@@ -74,7 +75,7 @@ class GeneralInfoProperties( wx.Panel ):
 		self.numStartMinutesSizer = wx.BoxSizer( wx.HORIZONTAL )
 		self.numStartMinutesSizer.Add( self.raceNum )
 		self.numStartMinutesSizer.Add( self.scheduledStartLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border = 16 )
-		self.numStartMinutesSizer.Add( self.scheduledStart )
+		self.numStartMinutesSizer.Add( self.scheduledStart, flag=wx.FIXED_MINSIZE )
 		self.numStartMinutesSizer.Add( self.minutesLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border = 16 )
 		self.numStartMinutesSizer.Add( self.minutes )
 		self.numStartMinutesSizer.AddStretchSpacer()
