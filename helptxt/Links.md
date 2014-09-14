@@ -8,6 +8,7 @@
 [ChipReader]:		Menu-ChipReader.html
 [Camera]:			Menu-Camera.html
 [Demo]:				Menu-Demo.html
+[Tools]:			Menu-Tools.html
 [Options]:			Menu-Options.html
 [Help]:				Menu-Help.html
 
