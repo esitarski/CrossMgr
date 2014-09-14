@@ -49,7 +49,7 @@ def DoChipImport(	fname, parseTagTime, startTime = None,
 			lineNo += 1
 			
 			line = line.strip()
-			if not line or line.startswith('#'):
+			if not line or line[0] in '#;':
 				continue
 			
 			tag, t = parseTagTime( line, lineNo, errors )
