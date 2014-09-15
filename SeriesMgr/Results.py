@@ -201,25 +201,17 @@ function sortTable( table, col, reverse ) {
 	var tb = table.tBodies[0];
 	var tr = Array.prototype.slice.call(tb.rows, 0);
 	
-	var getKey = function( x ) {
-		var txt = x.cells[0].textContent.trim();
-		//console.log( 'txt=' + txt );
-		if( txt.indexOf(':') > 0 ) {
-			var t = 0.0;
-			var fields = txt.slice(0, txt.lastIndexOf('(')).split( ':' );
-			for( var i = 0; i < fields.length; ++i )
-				t = t * 60.0 + parseFloat( fields[i], 10 );
-			//console.log( 'fields=' + fields );
-			//console.log( 't=' + t );
-			return t;
-		}
-		else
-			return parseInt( txt, 10 );
+	var parseRank = function( s ) {
+		if( !s )
+			return 999999;
+		var fields = s.split( '(' );
+		return parseInt( fields[1] );
 	}
 	
 	var cmpPos = function( a, b ) {
-		return getKey(a) - getKey(b);
+		return parseInt( a.cells[0].textContent.trim() ) - parseInt( b.cells[0].textContent.trim() );
 	};
+	
 	var MakeCmpStable = function( a, b, res ) {
 		if( res != 0 )
 			return res;
@@ -227,24 +219,17 @@ function sortTable( table, col, reverse ) {
 	};
 	
 	var cmpFunc;
-	if( col == 0 ) {		// Pos
+	if( col == 0 || col == 4 ) {		// Pos or Points
 		cmpFunc = cmpPos;
 	}
-	else if( col == 4 ) {	// Points
+	else if( col > 4 ) {				// Race Points/Time and Rank
 		cmpFunc = function( a, b ) {
-			var x = parseInt( a.cells[col].textContent.trim() );
-			var y = parseInt( b.cells[col].textContent.trim() );
-			return MakeCmpStable( a, b, y - x );
+			var x = parseRank( a.cells[col].textContent.trim() );
+			var y = parseRank( b.cells[col].textContent.trim() );
+			return MakeCmpStable( a, b, x - y );
 		};
 	}
-	else if( col > 4 ) {	// Race Points
-		cmpFunc = function( a, b ) {
-			var x = parsePoints( a.cells[col].textContent.trim() );
-			var y = parsePoints( b.cells[col].textContent.trim() );
-			return MakeCmpStable( a, b, y - x );
-		};
-	}
-	else {					// Assume string field.
+	else {								// Rider data field.
 		cmpFunc = function( a, b ) {
 		   return MakeCmpStable( a, b, a.cells[col].textContent.trim().localeCompare(b.cells[col].textContent.trim()) );
 		};

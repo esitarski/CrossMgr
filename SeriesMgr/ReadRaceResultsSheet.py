@@ -12,7 +12,7 @@ import Model
 from Excel import GetExcelReader
 
 #-----------------------------------------------------------------------------------------------------
-Fields = ['Bib#', 'Pos', 'FirstName', 'LastName', 'Category', 'License', 'Team']
+Fields = ['Bib#', 'Pos', 'Time', 'FirstName', 'LastName', 'Category', 'License', 'Team']
 
 class FileNamePage(wiz.WizardPageSimple):
 	def __init__(self, parent):
@@ -82,6 +82,8 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('Specify the spreadsheet columns corresponding to the Results fields.')),
 				flag=wx.ALL, border = border )
 		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('You should define Pos, LastName, Category and License (at least).')),
+				flag=wx.ALL, border = border )
+		vbs.Add( wx.StaticText(self, wx.ID_ANY, _('You must also define a Time column if you are Scoring by Time.')),
 				flag=wx.ALL, border = border )
 		vbs.AddSpacer( 8 )
 				
@@ -397,8 +399,7 @@ class ExcelLink( object ):
 #-----------------------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
-	app = wx.PySimpleApp()
+	app = wx.App( False )
 	mainWin = wx.Frame(None,title="SeriesMan", size=(600,400))
 	mainWin.Show()
-	ImportTTStartTimes( mainWin )
 	app.MainLoop()

@@ -82,7 +82,8 @@ def ExtractRaceResultsExcel( raceInSeries ):
 				'raceInSeries': raceInSeries,
 		}
 		for fTo, fFrom in [
-				('bib', 'Bib#'), ('rank', 'Pos'),
+				('bib', 'Bib#'),
+				('rank', 'Pos'), ('tFinish', 'Time'),
 				('firstName', 'FirstName'), ('lastName', 'LastName'), ('license', 'License'),
 				('team', 'Team'), ('categoryName', 'Category')]:
 			info[fTo] = d.get( fFrom, u'' )
@@ -99,6 +100,15 @@ def ExtractRaceResultsExcel( raceInSeries ):
 			info['bib'] = int(info['bib'])
 		except ValueError:
 			pass
+		
+		info['tFinish'] = (info['tFinish'] or 0.0)
+		if isinstance( info['tFinish'], basestring ) and ':' in info['tFinish']:
+			info['tFinish'] = Utils.StrToSeconds( info['tFinish'] )
+		else:
+			try:
+				info['tFinish'] = float( info['tFinish'] ) * 24.0 * 60.0 * 60.0	# Convert Excel day number to seconds.
+			except Exception as e:
+				info['tFinish'] = 0.0
 		
 		raceResults.append( RaceResult(**info) )
 	
