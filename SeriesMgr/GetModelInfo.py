@@ -1,5 +1,6 @@
 
 import os
+import math
 import cPickle as pickle
 import datetime
 from collections import defaultdict
@@ -14,6 +15,30 @@ import SeriesModel
 import Utils
 from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, HasExcelLink
 from GetResults			import GetResults, GetCategoryDetails
+
+def formatTime( secs, highPrecision = False ):
+	if secs is None:
+		secs = 0
+	if secs < 0:
+		sign = '-'
+		secs = -secs
+	else:
+		sign = ''
+	f, ss = math.modf(secs)
+	secs = int(ss)
+	hours = int(secs // (60*60))
+	minutes = int( (secs // 60) % 60 )
+	secs = secs % 60
+	if highPrecision:
+		secStr = '{:05.2f}'.format( secs + f )
+	else:
+		secStr = '{:02d}'.format( secs )
+	
+	if hours > 0:
+		return "{}{}:{:02d}:{}".format(sign, hours, minutes, secStr)
+	if minutes > 0:
+		return "{}{}:{}".format(sign, minutes, secStr)
+	return "{}{}".format(sign, secStr)
 
 class RaceResult( object ):
 	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, raceFileName, bib, rank, raceOrganizer,
@@ -207,7 +232,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			rider = (rr.full_name, rr.license)
 			if rr.team and rr.team != u'0':
 				riderTeam[rider] = rr.team
-			riderResults[rider][raceSequence[rr.raceInSeries]] = (Utils.formatTime(tFinish, True), rr.rank)
+			riderResults[rider][raceSequence[rr.raceInSeries]] = (formatTime(tFinish, True), rr.rank)
 			riderTFinish[rider] += tFinish
 			riderPlaceCount[rider][rr.rank] += 1
 			riderEventsCompleted[rider] += 1
@@ -218,7 +243,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		
 		# List of:
 		# lastName, firstName, license, team, tTotalFinish, [list of (points, position) for each race in series]
-		categoryResult = [list(rider) + [riderTeam[rider], Utils.formatTime(riderTFinish[rider], True)] + [riderResults[rider]] for rider in riderOrder]
+		categoryResult = [list(rider) + [riderTeam[rider], formatTime(riderTFinish[rider], True)] + [riderResults[rider]] for rider in riderOrder]
 		return categoryResult, races
 	else:
 		# Get the individual results for each rider, and the total points.
