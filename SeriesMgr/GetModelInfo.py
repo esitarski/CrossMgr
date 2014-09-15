@@ -180,6 +180,11 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 			
 			for fTo, fFrom in [('raceName', 'name'), ('raceOrganizer', 'organizer')]:
 				info[fTo] = getattr(race, fFrom, '')
+			
+			raceNum = getattr(race, 'raceNum', '')
+			if raceNum:
+				info['raceName'] = u'{}-{}'.format(info['raceName'], raceNum)
+				
 			info['raceFileName'] = fileName
 			if race.startTime:
 				info['raceDate'] = race.startTime

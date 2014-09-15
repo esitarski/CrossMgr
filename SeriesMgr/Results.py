@@ -5,7 +5,6 @@ import os
 import io
 import cgi
 import sys
-import math
 import urllib
 import base64
 import StringIO
