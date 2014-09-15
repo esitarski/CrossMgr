@@ -17,7 +17,7 @@ from GetResults			import GetResults, GetCategoryDetails
 
 class RaceResult( object ):
 	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, raceFileName, bib, rank, raceOrganizer,
-					raceURL = None, raceInSeries = None ):
+					raceURL = None, raceInSeries = None, tFinish = None ):
 		self.firstName = (firstName or u'')
 		self.lastName = (lastName or u'')
 		self.license = (license or u'')
@@ -34,6 +34,8 @@ class RaceResult( object ):
 		
 		self.bib = bib
 		self.rank = rank
+		
+		self.tFinish = tFinish
 		
 	def keySort( self ):
 		fields = ['categoryName', 'lastName', 'firstName', 'license', 'raceDate', 'raceName']
@@ -156,12 +158,15 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 			
 			info['bib'] = int(rr.num)
 			info['rank'] = toInt(rr.pos)
+			info['tFinish'] = rr.lastTime
 			raceResults.append( RaceResult(**info) )
 		
 	Model.race = None
 	return True, 'success', raceResults
 	
 def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsCompleted=False, numPlacesTieBreaker=5 ):
+	scoreByTime = SeriesModel.model.scoreByTime
+	
 	# Get all results for this category.
 	raceResults = [rr for rr in raceResults if rr.categoryName == categoryName]
 	if not raceResults:
@@ -176,35 +181,62 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 	races = sorted( races, key = lambda r: r[3].iSequence )
 	raceSequence = dict( (r[3], i) for i, r in enumerate(races) )
 	
-	# Get the individual results for each rider, and the total points.
-	riderResults = defaultdict( lambda : [(0,0)] * len(races) )
-	riderPoints = defaultdict( int )
 	riderEventsCompleted = defaultdict( int )
 	riderPlaceCount = defaultdict( lambda : defaultdict(int) )
 	riderTeam = defaultdict( lambda : u'' )
-	for rr in raceResults:
-		rider = (rr.full_name, rr.license)
-		if rr.team and rr.team != u'0':
-			riderTeam[rider] = rr.team
-		points = pointsForRank[rr.raceFileName][rr.rank]
-		riderResults[rider][raceSequence[rr.raceInSeries]] = (points, rr.rank)
-		riderPoints[rider] += points
-		riderPlaceCount[rider][rr.rank] += 1
-		riderEventsCompleted[rider] += 1
-
-	# Sort by rider points - greatest number of points first.  Break ties with place count, then
-	# most recent result.
-	riderOrder = [rider for rider, results in riderResults.iteritems()]
-	riderOrder.sort(key = lambda r:	[riderPoints[r]] +
-									([riderEventsCompleted[r]] if useMostEventsCompleted else []) +
-									[riderPlaceCount[r][k] for k in xrange(1, numPlacesTieBreaker+1)] +
-									[-rank for points, rank in reversed(riderResults[r])],
-					reverse = True )
 	
-	# List of:
-	# lastName, firstName, license, team, points, [list of (points, position) for each race in series]
-	categoryResult = [list(rider) + [riderTeam[rider], riderPoints[rider]] + [riderResults[rider]] for rider in riderOrder]
-	return categoryResult, races
+	if scoreByTime:
+		# Get the individual results for each rider, and the total points.
+		riderResults = defaultdict( lambda : [(0,0)] * len(races) )
+		riderTFinish = defaultdict( float )
+		for rr in raceResults:
+			try:
+				tFinish = float(rr.tFinish)
+			except ValueError:
+				continue
+			rider = (rr.full_name, rr.license)
+			if rr.team and rr.team != u'0':
+				riderTeam[rider] = rr.team
+			riderResults[rider][raceSequence[rr.raceInSeries]] = (Utils.formatTime(tFinish, True), rr.rank)
+			riderTFinish[rider] += tFinish
+			riderPlaceCount[rider][rr.rank] += 1
+			riderEventsCompleted[rider] += 1
+
+		# Sort by decreasing events completed, then increasing rider time.
+		riderOrder = [rider for rider, results in riderResults.iteritems()]
+		riderOrder.sort( key = lambda r: (-riderEventsCompleted[r], riderTFinish[r]) )
+		
+		# List of:
+		# lastName, firstName, license, team, tTotalFinish, [list of (points, position) for each race in series]
+		categoryResult = [list(rider) + [riderTeam[rider], Utils.formatTime(riderTFinish[rider], True)] + [riderResults[rider]] for rider in riderOrder]
+		return categoryResult, races
+	else:
+		# Get the individual results for each rider, and the total points.
+		riderResults = defaultdict( lambda : [(0,0)] * len(races) )
+		riderPoints = defaultdict( int )
+		for rr in raceResults:
+			rider = (rr.full_name, rr.license)
+			if rr.team and rr.team != u'0':
+				riderTeam[rider] = rr.team
+			points = pointsForRank[rr.raceFileName][rr.rank]
+			riderResults[rider][raceSequence[rr.raceInSeries]] = (points, rr.rank)
+			riderPoints[rider] += points
+			riderPlaceCount[rider][rr.rank] += 1
+			riderEventsCompleted[rider] += 1
+
+		# Sort by rider points - greatest number of points first.  Break ties with place count, then
+		# most recent result.
+		riderOrder = [rider for rider, results in riderResults.iteritems()]
+		riderOrder.sort(key = lambda r:	[riderPoints[r]] +
+										([riderEventsCompleted[r]] if useMostEventsCompleted else []) +
+										[riderPlaceCount[r][k] for k in xrange(1, numPlacesTieBreaker+1)] +
+										[-rank for points, rank in reversed(riderResults[r])],
+						reverse = True )
+		
+		# List of:
+		# lastName, firstName, license, team, points, [list of (points, position) for each race in series]
+		categoryResult = [list(rider) + [riderTeam[rider], riderPoints[rider]] + [riderResults[rider]] for rider in riderOrder]
+		return categoryResult, races
 
 if __name__ == '__main__':
 	files = [

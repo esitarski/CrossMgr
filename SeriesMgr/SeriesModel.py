@@ -110,6 +110,7 @@ class Race( object ):
 class SeriesModel( object ):
 	DefaultPointStructureName = 'Example'
 	useMostEventsCompleted = False
+	scoreByTime = False
 
 	def __init__( self ):
 		self.name = '<Series Name>'

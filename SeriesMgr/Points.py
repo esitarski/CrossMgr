@@ -62,10 +62,22 @@ class Points(wx.Panel):
 		
 		box = wx.StaticBox( self, -1, 'Scoring Rules' )
 		bsizer = wx.StaticBoxSizer( box, wx.VERTICAL )
-		bsizer.Add( wx.StaticText(self, label='Score Riders by Points:'), flag=wx.ALL, border=2 )
+		
+		self.scoreByPoints = wx.RadioButton( self, label='Score by Points', style=wx.RB_GROUP )
+		self.scoreByPoints.Bind( wx.EVT_RADIOBUTTON, self.fixEnable )
+		
+		self.scoreByTime = wx.RadioButton( self, label='Score by Time' )
+		self.scoreByTime.Bind( wx.EVT_RADIOBUTTON, self.fixEnable )
+		self.scoreByPoints.SetValue( True )
+		
+		hb = wx.BoxSizer( wx.HORIZONTAL )
+		hb.Add( self.scoreByPoints )
+		hb.Add( self.scoreByTime, flag=wx.LEFT, border=16 )
+		bsizer.Add( hb, flag=wx.ALL, border=2 )
 		
 		bsizer.Add( wx.StaticLine(self), 1, flag=wx.EXPAND|wx.ALL, border=4 )
-		bsizer.Add( wx.StaticText(self, label='If Riders are Tied on Points:'), flag=wx.ALL, border=2 )
+		self.ifRidersTiedOnPoints = wx.StaticText(self, label='If Riders are Tied on Points:')
+		bsizer.Add( self.ifRidersTiedOnPoints, flag=wx.ALL, border=2 )
 		self.mostEventsCompleted = wx.CheckBox( self, label='Consider Number of Events Completed' )
 		self.mostEventsCompleted.SetValue( False )
 		bsizer.Add( self.mostEventsCompleted, 0, flag=wx.ALL, border=4 )
@@ -81,7 +93,8 @@ class Points(wx.Panel):
 		])
 		self.numPlacesTieBreaker.SetLabel( u'If Riders are still Tied on Points:' )
 		bsizer.Add( self.numPlacesTieBreaker, 0, flag=wx.ALL, border=2 )
-		bsizer.Add( wx.StaticText(self, label=u'If Riders are still Tied on Points, use most Recent Results'), flag=wx.ALL, border=4 )
+		self.ifRidersAreStillTiedOnPoints = wx.StaticText(self, label=u'If Riders are still Tied on Points, use most Recent Results')
+		bsizer.Add( self.ifRidersAreStillTiedOnPoints, flag=wx.ALL, border=4 )
 
 		self.headerNames = ['Name', 'OldName', 'Depth', 'Points for Position', 'Participation']
 		
@@ -110,9 +123,19 @@ class Points(wx.Panel):
 
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		sizer.Add(bsizer, 0, flag=wx.EXPAND|wx.ALL, border = 4 )
-		sizer.Add( wx.StaticText(self, wx.ID_ANY, 'Points Structures:'), 0, flag=wx.ALL, border = 4 )
+		self.pointsStructures = wx.StaticText(self, wx.ID_ANY, 'Points Structures:')
+		sizer.Add( self.pointsStructures, 0, flag=wx.ALL, border = 4 )
 		sizer.Add(self.grid, 1, flag=wx.EXPAND|wx.ALL, border = 6)
 		self.SetSizer(sizer)
+		
+		self.scoreByPointsControls = [
+			self.ifRidersTiedOnPoints,
+			self.mostEventsCompleted,
+			self.numPlacesTieBreaker,
+			self.ifRidersAreStillTiedOnPoints,
+			self.pointsStructures,
+			self.grid,
+		]
 		
 	def getGrid( self ):
 		return self.grid
@@ -139,6 +162,11 @@ class Points(wx.Panel):
 			self.updateDepth( row )
 		wx.CallAfter( self.gridAutoSize )
 	
+	def fixEnable( self, event = None ):
+		enable = self.scoreByPoints.GetValue()
+		for c in self.scoreByPointsControls:
+			c.Enable( enable )
+	
 	def refresh( self ):
 		model = SeriesModel.model
 		for row in xrange(self.grid.GetNumberRows()):
@@ -156,6 +184,9 @@ class Points(wx.Panel):
 		
 		self.mostEventsCompleted.SetValue( model.useMostEventsCompleted )
 		self.numPlacesTieBreaker.SetSelection( model.numPlacesTieBreaker )
+		
+		self.scoreByTime.SetValue( model.scoreByTime )
+		self.fixEnable()
 	
 	def commit( self ):
 		self.grid.DisableCellEditControl()	# Make sure the current edit is committed.
@@ -176,6 +207,8 @@ class Points(wx.Panel):
 		if model.numPlacesTieBreaker != self.numPlacesTieBreaker.GetSelection():
 			model.numPlacesTieBreaker = self.numPlacesTieBreaker.GetSelection()
 			model.changed = True
+		
+		model.scoreByTime = self.scoreByTime.GetValue()
 		
 ########################################################################
 

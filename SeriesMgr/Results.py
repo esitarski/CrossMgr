@@ -22,7 +22,9 @@ import xlwt
 import re
 import webbrowser
 
-HeaderNames = ['Pos', 'Name', 'License', 'Team', 'Points']
+HeaderNamesTemplate = ['Pos', 'Name', 'License', 'Team']
+def getHeaderNames():
+	return HeaderNamesTemplate + ['Total Time' if SeriesModel.model.scoreByTime else 'Points']
 
 #----------------------------------------------------------------------------------
 
@@ -37,12 +39,14 @@ def getHtmlFileName():
 	
 def getHtml():
 	model = SeriesModel.model
+	scoreByTime = model.scoreByTime
 	raceResults = model.extractAllRaceResults()
 	
 	categoryNames = sorted( set(rr.categoryName for rr in raceResults) )
 	if not categoryNames:
 		return ''
-		
+	
+	HeaderNames = getHeaderNames()
 	pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
 	
 	title = os.path.basename( os.path.splitext(Utils.mainWin.fileName)[0] ) if Utils.mainWin and Utils.mainWin.fileName else 'Series Results'
@@ -164,6 +168,17 @@ function parsePoints( s ) {
 	var i = s.indexOf( ' ' );
 	if( i < 0 )
 		return 0;
+	s = s.substring( 0, i );
+	//console.log( 's=' + s );
+	if( s.indexOf(':') > 0 ) {
+		var t = 0.0;
+		var fields = s.slice(0, s.lastIndexOf('(')).split( ':' );
+		for( var i = 0; i < fields.length; ++i )
+			t = t * 60.0 + parseFloat( fields[i], 10 );
+		//console.log( 'fields=' + fields );
+		//console.log( 't=' + t );
+		return -t;
+	}
 	else
 		return parseInt( s.substring(0, i) );
 }
@@ -186,10 +201,24 @@ function sortTable( table, col, reverse ) {
 	var tb = table.tBodies[0];
 	var tr = Array.prototype.slice.call(tb.rows, 0);
 	
+	var getKey = function( x ) {
+		var txt = x.cells[0].textContent.trim();
+		//console.log( 'txt=' + txt );
+		if( txt.indexOf(':') > 0 ) {
+			var t = 0.0;
+			var fields = txt.slice(0, txt.lastIndexOf('(')).split( ':' );
+			for( var i = 0; i < fields.length; ++i )
+				t = t * 60.0 + parseFloat( fields[i], 10 );
+			//console.log( 'fields=' + fields );
+			//console.log( 't=' + t );
+			return t;
+		}
+		else
+			return parseInt( txt, 10 );
+	}
+	
 	var cmpPos = function( a, b ) {
-		var x = parseInt( a.cells[0].textContent.trim() );
-		var y = parseInt( b.cells[0].textContent.trim() );
-		return x - y;
+		return getKey(a) - getKey(b);
 	};
 	var MakeCmpStable = function( a, b, res ) {
 		if( res != 0 )
@@ -307,6 +336,7 @@ function sortTableId( iTable, iCol ) {
 										pass
 									html.write( cgi.escape(col).replace('\n', '<br/>\n') )
 							for iRace, r in enumerate(races):
+								# r[0] = RaceData, r[1] = RaceName, r[2] = RaceURL, r[3] = Race
 								with tag(html, 'th', {
 										'class':'leftBorder centerAlign',
 										'onclick': 'sortTableId({}, {})'.format(iTable, len(HeaderNames) + iRace),
@@ -322,9 +352,10 @@ function sortTableId( iTable, iCol ) {
 										html.write( '<br/>' )
 										with tag(html, 'span', {'class': 'smallFont'}):
 											html.write( r[0].strftime('%b %d, %Y') )
-									html.write( '<br/>' )
-									with tag(html, 'span', {'class': 'smallFont'}):
-										html.write( u'Top {}'.format(len(r[3].pointStructure)) )
+									if not scoreByTime:
+										html.write( '<br/>' )
+										with tag(html, 'span', {'class': 'smallFont'}):
+											html.write( u'Top {}'.format(len(r[3].pointStructure)) )
 					with tag(html, 'tbody'):
 						for pos, (name, license, team, points, racePoints) in enumerate(results):
 							with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
@@ -343,67 +374,69 @@ function sortTableId( iTable, iCol ) {
 										html.write( u'{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints else '' )
 										
 			#-----------------------------------------------------------------------------
-			with tag(html, 'p'):
-				pass
-			with tag(html, 'hr'):
-				pass
-				
-			with tag(html, 'h2'):
-				html.write( 'Point Structures' )
-			with tag(html, 'table' ):
-				for ps in pointsStructuresList:
-					with tag(html, 'tr'):
-						for header in [ps.name, u'Races Scored with "{}"'.format(ps.name)]:
-							with tag(html, 'th'):
-								html.write( header )
+			if not scoreByTime:
+				with tag(html, 'p'):
+					pass
+				with tag(html, 'hr'):
+					pass
+					
+				with tag(html, 'h2'):
+					html.write( 'Point Structures' )
+				with tag(html, 'table' ):
+					for ps in pointsStructuresList:
+						with tag(html, 'tr'):
+							for header in [ps.name, u'Races Scored with "{}"'.format(ps.name)]:
+								with tag(html, 'th'):
+									html.write( header )
+						
+						with tag(html, 'tr'):
+							with tag(html, 'td', {'class': 'topAlign'}):
+								html.write( ps.getHtml() )
+							with tag(html, 'td', {'class': 'topAlign'}):
+								with tag(html, 'ul'):
+									for r in pointsStructures[ps]:
+										with tag(html, 'li'):
+											html.write( r.getRaceName() )
 					
 					with tag(html, 'tr'):
-						with tag(html, 'td', {'class': 'topAlign'}):
-							html.write( ps.getHtml() )
-						with tag(html, 'td', {'class': 'topAlign'}):
-							with tag(html, 'ul'):
-								for r in pointsStructures[ps]:
-									with tag(html, 'li'):
-										html.write( r.getRaceName() )
-				
-				with tag(html, 'tr'):
-					with tag(html, 'td'):
-						pass
-					with tag(html, 'td'):
-						pass
+						with tag(html, 'td'):
+							pass
+						with tag(html, 'td'):
+							pass
 						
-			#-----------------------------------------------------------------------------
-			with tag(html, 'p'):
-				pass
-			with tag(html, 'hr'):
-				pass
+				#-----------------------------------------------------------------------------
 				
-			with tag(html, 'h2'):
-				html.write( 'Tie Breaking Rules' )
-				
-			with tag(html, 'p'):
-				html.write( "If two or more riders are tied on points, the following rules will be applied in sequence until the tie is broken:" )
-			isFirst = True
-			tieLink = "if still a tie, use "
-			with tag(html, 'ol'):
-				if model.useMostEventsCompleted:
+				with tag(html, 'p'):
+					pass
+				with tag(html, 'hr'):
+					pass
+					
+				with tag(html, 'h2'):
+					html.write( 'Tie Breaking Rules' )
+					
+				with tag(html, 'p'):
+					html.write( "If two or more riders are tied on points, the following rules will be applied in sequence until the tie is broken:" )
+				isFirst = True
+				tieLink = "if still a tie, use "
+				with tag(html, 'ol'):
+					if model.useMostEventsCompleted:
+						with tag(html, 'li'):
+							html.write( "{}number of events completed".format( tieLink if not isFirst else "" ) )
+							isFirst = False
+					if model.numPlacesTieBreaker != 0:
+						finishOrdinals = [Utils.ordinal(p+1) for p in xrange(model.numPlacesTieBreaker)]
+						if model.numPlacesTieBreaker == 1:
+							finishStr = finishOrdinals[0]
+						else:
+							finishStr = u', '.join(finishOrdinals[:-1]) + u' then ' + finishOrdinals[-1]
+						with tag(html, 'li'):
+							html.write( "{}number of {} place finishes".format( tieLink if not isFirst else "",
+								finishStr,
+							) )
+							isFirst = False
 					with tag(html, 'li'):
-						html.write( "{}number of events completed".format( tieLink if not isFirst else "" ) )
+						html.write( "{}finish position in most recent event".format(tieLink if not isFirst else "") )
 						isFirst = False
-				if model.numPlacesTieBreaker != 0:
-					finishOrdinals = [Utils.ordinal(p+1) for p in xrange(model.numPlacesTieBreaker)]
-					if model.numPlacesTieBreaker == 1:
-						finishStr = finishOrdinals[0]
-					else:
-						finishStr = u', '.join(finishOrdinals[:-1]) + u' then ' + finishOrdinals[-1]
-					with tag(html, 'li'):
-						html.write( "{}number of {} place finishes".format( tieLink if not isFirst else "",
-							finishStr,
-						) )
-						isFirst = False
-				with tag(html, 'li'):
-					html.write( "{}finish position in most recent event".format(tieLink if not isFirst else "") )
-					isFirst = False
 				
 			#-----------------------------------------------------------------------------
 			with tag(html, 'p'):
@@ -463,13 +496,13 @@ class Results(wx.Panel):
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.DisableDragRowSize()
 		self.grid.SetRowLabelSize( 64 )
-		self.grid.CreateGrid( 0, len(HeaderNames) )
+		self.grid.CreateGrid( 0, len(HeaderNamesTemplate)+1 )
 		self.grid.SetRowLabelSize( 0 )
 		self.grid.EnableReorderRows( False )
 		self.grid.Bind( wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.doLabelClick )
 		self.sortCol = None
 
-		self.setColNames(HeaderNames)
+		self.setColNames(getHeaderNames())
 
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		
@@ -531,6 +564,8 @@ class Results(wx.Panel):
 
 	def refresh( self ):
 		model = SeriesModel.model
+		scoreByTime = model.scoreByTime
+		HeaderNames = getHeaderNames()
 		
 		wait = wx.BusyCursor()
 		self.raceResults = model.extractAllRaceResults()
@@ -611,6 +646,8 @@ class Results(wx.Panel):
 		
 	def onExportToExcel( self, event ):
 		model = SeriesModel.model
+		scoreByTime = model.scoreByTime
+		HeaderNames = getHeaderNames()
 		
 		if Utils.mainWin:
 			if not Utils.mainWin.fileName:
