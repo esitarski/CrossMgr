@@ -583,7 +583,7 @@ class Results(wx.Panel):
 				rowCmp = [v for v in rowOrig]
 				rowCmp[0] = int(rowCmp[0])
 				rowCmp[4] = Utils.StrToSeconds(rowCmp[4])
-				rowCmp[5:] = [int( filterDigits(v.split('(')[1]) ) if v else 0 for v in rowCmp[5:]]
+				rowCmp[5:] = [int( filterDigits(v.split('(')[1]) ) if v else 99999 for v in rowCmp[5:]]
 				rowCmp.extend( rowOrig )
 				data.append( rowCmp )
 			
