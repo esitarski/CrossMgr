@@ -164,25 +164,6 @@ table.results th.centerAlign, table.results td.centerAlign {
 
 			with tag(html, 'script', dict( type="text/javascript")):
 				html.write( '''
-function parsePoints( s ) {
-	var i = s.indexOf( ' ' );
-	if( i < 0 )
-		return 0;
-	s = s.substring( 0, i );
-	//console.log( 's=' + s );
-	if( s.indexOf(':') > 0 ) {
-		var t = 0.0;
-		var fields = s.slice(0, s.lastIndexOf('(')).split( ':' );
-		for( var i = 0; i < fields.length; ++i )
-			t = t * 60.0 + parseFloat( fields[i], 10 );
-		//console.log( 'fields=' + fields );
-		//console.log( 't=' + t );
-		return -t;
-	}
-	else
-		return parseInt( s.substring(0, i) );
-}
-
 function removeClass( classStr, oldClass ) {
 	var classes = classStr.split( ' ' );
 	var ret = [];
