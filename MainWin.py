@@ -2964,7 +2964,7 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 							_('<TimeTrial>') if race.isTimeTrial else u'') )
 
 			if not self.timer.IsRunning():
-				wx.CallLater( 1000 - int((datetime.datetime.now() - race.startTime).microseconds / 1000), self.timer.Start, 1000 )
+				wx.CallLater( 1000 - (datetime.datetime.now() - race.startTime).microseconds // 1000, self.timer.Start, 1000 )
 
 		self.secondCount += 1
 		if self.secondCount % 30 == 0 and race.isChanged():
