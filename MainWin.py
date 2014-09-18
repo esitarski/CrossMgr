@@ -2932,18 +2932,15 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 		with Model.LockRace() as race:
 			if race is None:
 				self.SetTitle( Version.AppVerName )
-				try:
-					self.timer.Stop()
-				except AttributeError:
-					pass
 				JChip.StopListener()
+				self.timer.Stop()
 				return
 
 			if race.isUnstarted():
 				status = _('Unstarted')
 			elif race.isRunning():
 				status = _('Running')
-				if getattr(race, 'enableJChipIntegration', False):
+				if race.enableJChipIntegration:
 					doRefresh = self.processJChipListener()
 				elif JChip.listener:
 					JChip.StopListener()
@@ -2951,27 +2948,23 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 				status = _('Finished')
 
 			if not race.isRunning():
-				self.SetTitle( '%s-r%d - %s - %s %s' % (
+				self.SetTitle( u'{}-r{} - {} - {} {}'.format(
 								race.name, race.raceNum,
 								status,
 								Version.AppVerName,
-								_('<TimeTrial>') if getattr(race, 'isTimeTrial', False) else '') )
-				try:
-					self.timer.Stop()
-				except AttributeError:
-					pass
+								_('<TimeTrial>') if race.isTimeTrial else u'') )
+				self.timer.Stop()
 				return
 
-			self.SetTitle( '%s %s-r%d - %s - %s %s %s' % (
+			self.SetTitle( u'{} {}-r{} - {} - {} {} {}'.format(
 							Utils.formatTime(race.curRaceTime()),
 							race.name, race.raceNum,
 							status, Version.AppVerName,
 							_('<JChip>') if JChip.listener else '',
-							_('<TimeTrial>') if getattr(race, 'isTimeTrial', False) else '') )
+							_('<TimeTrial>') if race.isTimeTrial else u'') )
 
-		if self.timer is None or not self.timer.IsRunning():
-			self.timer.Start( 1000 )
-			self.secondCount = 0
+			if not self.timer.IsRunning():
+				wx.CallLater( 1000 - int((datetime.datetime.now() - race.startTime).microseconds / 1000), lambda: self.timer.Start( 1000 ) )
 
 		self.secondCount += 1
 		if self.secondCount % 30 == 0 and race.isChanged():

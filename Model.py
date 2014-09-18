@@ -901,20 +901,39 @@ class Race( object ):
 	UnitKm = 0
 	UnitMiles = 1
 	
+	distanceUnit = UnitKm
+	
 	rule80MinLapCount = 2	# Minimum number of laps to compute rule80.
 	
 	automaticManual = 0
 	
-	advancePhotoMillisecondsDefault = -100
+	isChangedFlag = False
+	
+	isTimeTrial = False
+	
+	enableJChipIntegration = False
+	resetStartClockOnFirstTag = False
+	firstRecordedTime = None
+	skipFirstTagRead = False
+	
+	autocorrectLapsDefault = True
+	
+	allCategoriesHaveRaceLapsDefined = False
+	
+	enableUSBCamera = False
+	photosAtRaceEndOnly = False
+	cameraDevice = 0	
+	advancePhotoMilliseconds = 0
+	photoCount = 0
+	
+	geoTrackFName = None
+	
 	city = ''
 	stateProv = ''
 	country = ''
 	
 	showCourseAnimationInHtml = True
-	
 	hideDetails = True
-	photosAtRaceEndOnly = False
-	cameraDevice = 0
 	
 	def __init__( self ):
 		self.reset()
@@ -991,13 +1010,13 @@ class Race( object ):
 			u'Discipline':	self.discipline,
 			u'RaceType':	_('Time Trial') if self.isTimeTrial else _('Mass Start'),
 			u'RaceDate':	self.date,
-			u'InputMethod':	_('RFID') if getattr(self,'enableJChipIntegration',False) else _('Manual'),
+			u'InputMethod':	_('RFID') if self.enableJChipIntegration else _('Manual'),
 			u'StartTime':	self.startTime.strftime('%H:%M:%S.%f')[:-3] if self.startTime else unicode(self.scheduledStart),
-			u'StartMethod':	_('Automatic: Tiggered by first tag read') if getattr(self,'enableJChipIntegration',False) and getattr(self,'resetStartClockOnFirstTag',False) else _('Manual'),
-			u'CameraStatus': _('USB Camera Enabled') if getattr(self, 'enableUSBCamera', False) else _('USB Camera Not Enabled'),
-			u'PhotoCount':	unicode(getattr(self, 'photoCount', 0)),
+			u'StartMethod':	_('Automatic: Tiggered by first tag read') if self.enableJChipIntegration and self.resetStartClockOnFirstTag else _('Manual'),
+			u'CameraStatus': _('USB Camera Enabled') if self.enableUSBCamera else _('USB Camera Not Enabled'),
+			u'PhotoCount':	unicode(self.photoCount),
 			u'ExcelLink':	excelLinkStr,
-			u'GPXFile':		os.path.basename(getattr(self, 'geoTrackFName', None) or ''),
+			u'GPXFile':		os.path.basename(self.geoTrackFName or ''),
 			
 		}
 	
@@ -1011,15 +1030,15 @@ class Race( object ):
 	
 	@property
 	def enableVideoBuffer( self ):
-		return getattr(self, 'enableUSBCamera', False) and getattr(self, 'enableJChipIntegration', False)
+		return self.enableUSBCamera and self.enableJChipIntegration
 		
 	@property
 	def distanceUnitStr( self ):
-		return 'km' if getattr(self, 'distanceUnit', Race.UnitKm) == Race.UnitKm else 'miles'
+		return 'km' if self.distanceUnit == Race.UnitKm else 'miles'
 		
 	@property
 	def speedUnitStr( self ):
-		return 'km/h' if getattr(self, 'distanceUnit', Race.UnitKm) == Race.UnitKm else 'mph'
+		return 'km/h' if selfdistanceUnit == Race.UnitKm else 'mph'
 	
 	def resetCache( self ):
 		memoize.clear()
@@ -1028,7 +1047,7 @@ class Race( object ):
 		return len(self.riders) > 0
 
 	def isChanged( self ):
-		return getattr(self, 'isChangedFlag', False)
+		return self.isChangedFlag
 
 	def setChanged( self, changed = True ):
 		self.isChangedFlag = changed
@@ -1079,7 +1098,7 @@ class Race( object ):
 		except KeyError:
 			rider = Rider( num )
 			self.riders[num] = rider
-			rider.autocorrectLaps = getattr(self, 'autocorrectLapsDefault', True)
+			rider.autocorrectLaps = self.autocorrectLapsDefault
 		return rider
 
 	def getRiderNumbers( self ):
@@ -1106,16 +1125,16 @@ class Race( object ):
 		if t is None:
 			t = self.curRaceTime()
 		
-		if getattr(self, 'isTimeTrial', False):
+		if self.isTimeTrial:
 			r = self.getRider(num)
 			if r.firstTime is None:
 				r.firstTime = t
 			else:
 				r.addTime( t - r.firstTime )
 		else:
-			if getattr(race, 'enableJChipIntegration', False):
-				if getattr(self, 'resetStartClockOnFirstTag', False):
-					if not getattr(self, 'firstRecordedTime', None):
+			if self.enableJChipIntegration:
+				if self.resetStartClockOnFirstTag:
+					if not self.firstRecordedTime:
 						self.firstRecordedTime = self.startTime + datetime.timedelta( seconds = t )
 						self.startTime = self.firstRecordedTime
 						t = 0.0
@@ -1125,8 +1144,8 @@ class Race( object ):
 					else:
 						r.addTime( t )
 						
-				elif getattr(self, 'skipFirstTagRead', False):
-					if not getattr(self, 'firstRecordedTime', None):
+				elif self.skipFirstTagRead:
+					if not self.firstRecordedTime:
 						self.firstRecordedTime = self.startTime + datetime.timedelta( seconds = t )
 					r = self.getRider(num)
 					if r.firstTime is None:
@@ -1421,7 +1440,7 @@ class Race( object ):
 			leaderNums.append( e.num )
 			leaderTimesLen += 1
 		
-		if leaderTimesLen > 1 and getattr(self, 'allCategoriesHaveRaceLapsDefined', False):
+		if leaderTimesLen > 1 and self.allCategoriesHaveRaceLapsDefined:
 			maxRaceLaps = max( category.getNumLaps() for category in self.categories.itervalues() if category.active )
 			leaderTimes = leaderTimes[:maxRaceLaps + 1]
 			leaderNums = leaderNums[:maxRaceLaps + 1]

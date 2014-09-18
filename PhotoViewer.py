@@ -415,7 +415,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		with Model.LockRace() as race:
 			isShown = self.advancePhotoLabel.IsShown()
 			if race and race.enableVideoBuffer:
-				self.advancePhoto.SetValue( getattr(race, 'advancePhotoMilliseconds', Model.Race.advancePhotoMillisecondsDefault) )
+				self.advancePhoto.SetValue( race.advancePhotoMilliseconds )
 				doShow = True
 			else:
 				doShow = False

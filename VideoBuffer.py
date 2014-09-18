@@ -51,11 +51,17 @@ class FrameSaver( threading.Thread ):
 	def save( self, fileName, bib, t, frame ):
 		self.queue.put( ['Save', fileName, bib, t, frame] )
 	
-class VideoBuffer( threading.Thread ):
-	def __init__( self, camera, refTime = None, dirName = '.', fps = 25, bufferSeconds = 4.0, owner = None, burstMode = True ):
-		threading.Thread.__init__( self )
-		self.daemon = True
-		self.name = 'VideoBuffer'
+class CallbackTimer( wx.Timer ):
+	def __init__( self, callback ):
+		super(CallbackTimer, self).__init__()
+		self.callback = callback
+		
+	def Notify( self ):
+		self.callback()
+
+class VideoBuffer( object ):
+	
+	def __init__( self, camera, refTime=None, dirName='.', fps=25, bufferSeconds=4.0, owner=None, burstMode=True ):
 		self.camera = camera
 		self.refTime = refTime if refTime is not None else now()
 		self.dirName = dirName
@@ -69,14 +75,19 @@ class VideoBuffer( threading.Thread ):
 		self.fcb = FrameCircBuf()
 		self.owner = owner			# Destination to send photos after they are taken.
 		self.burstMode = burstMode
+		
+		self.timer = CallbackTimer( self.recordVideoFrame )
 		self.reset()
 	
-	def setOwner( self, owner = None ):
+	def setOwner( self, owner=None ):
 		self.owner = owner
 	
 	def reset( self ):
 		if self.frameSaver and self.frameSaver.is_alive():
 			self.frameSaver.stop()
+		
+		if self.timer.IsRunning():
+			self.timer.Stop()
 		
 		self.fcb.reset( self.frameMax )
 		self.frameCount = 0
@@ -84,75 +95,50 @@ class VideoBuffer( threading.Thread ):
 		self.frameSaver = FrameSaver()
 		self.frameSaver.start()
 		
-		self.tFindLast = now() - timedelta( seconds=100 )
-		
-		self.queue = Queue()
+		self.tFindLast = now() - timedelta( days=1 )
 	
-	def run( self ):
+	def recordVideoFrame( self ):
+		tNow = now()
+		try:
+			image = self.camera.getImage()
+			self.fcb.append( tNow, image )
+			if self.owner is not None:
+				wx.PostEvent( self.owner, PhotoEvent(t=tNew, photo=image) )
+		except Exception as e:
+			logException( e, sys.exc_info() )
+	
+	def start( self ):
 		self.reset()
-		keepGoing = True
-		while keepGoing:
-			tNow = now()
-			try:
-				image = self.camera.getImage()
-				self.fcb.append( tNow, image )
-				if self.owner is not None:
-					wx.PostEvent( self.owner, PhotoEvent(t=tNew, photo=image) )
-			except Exception as e:
-				logException( e, sys.exc_info() )
-				break
-			
-			while 1:
-				try:
-					message = self.queue.get( False )
-				except Empty:
-					break
-				
-				if   message[0] == 'Save':
-					cmd, bib, t = message
-					tFind = self.refTime + timedelta( seconds = t + getattr(Model.race, 'advancePhotoMilliseconds', Model.Race.advancePhotoMillisecondsDefault) / 1000.0 )
-					if tFind > tNow:
-						threading.Timer( (tFind - tNow).total_seconds() + 0.1, self.takePhoto, args=[bib, t] ).start()
-						continue
-					
-					# If burst mode, check if there was another rider before within frameDelay seconds.
-					# If so, also save the earlier frame.
-					if tFind - self.tFindLast < self.frameDelayTimeDelta and self.burstMode:
-						times, frames = self.fcb.findBeforeAfter( tFind - self.frameDelayTimeDelta )
-						for i, frame in enumerate( frames ):
-							t = (times[i]-self.refTime).total_seconds()
-							self.frameSaver.save( GetFilename(bib, t, self.dirName, i), bib, t, frame )
-						self.frameCount += len(frames)
-					self.tFindLast = tFind
-					
-					times, frames = self.fcb.findBeforeAfter( tFind, 0, 1 )
-					for i, frame in enumerate( frames ):
-						t = (times[i]-self.refTime).total_seconds()
-						self.frameSaver.save( GetFilename(bib, t, self.dirName, i), bib, t, frame )
-					self.frameCount += len(frames)
-					self.queue.task_done()
-					
-				elif message[0] == 'Terminate':
-					self.queue.task_done()
-					self.reset()
-					keepGoing = False
-					break
-				
-			# Sleep until we need to grab the next frame.
-			frameWait = self.frameDelay - (now() - tNow).total_seconds()
-			if frameWait < 0.0:
-				frameWait = self.frameDelay		# Give some more time if we are falling behind.
-			time.sleep( frameWait )
+		milliseconds = int(self.frameDelay * 1000.0)
+		self.timer.Start( milliseconds, oneShot=False )
 	
 	def stop( self ):
-		self.queue.put( ['Terminate'] )
-		self.join()
-		if self.frameSaver.is_alive():
+		if self.timer.IsRunning():
+			self.timer.Stop()
+		if self.frameSaver and self.frameSaver.is_alive():
 			self.frameSaver.stop()
 		self.frameSaver = None
-	
+			
 	def takePhoto( self, bib, t ):
-		self.queue.put( ['Save', bib, t] )
+		tNow = now()
+
+		tFind = self.refTime + timedelta( seconds = t + Model.Race.advancePhotoMilliseconds / 1000.0 )
+		if tFind > tNow:
+			wx.CallLater( int(((tFind - tNow).total_seconds() + 0.1) * 1000.0), self.takePhoto, bib, t )
+			return
+		
+		# If burst mode, check if there was another rider before within frameDelay seconds.
+		# If so, also save the frame just before the given time.
+		# Always save the closest frame after the given time.
+		times, frames = self.fcb.findBeforeAfter(
+							tFind,
+							1 if tFind - self.tFindLast < self.frameDelayTimeDelta and self.burstMode else 0,
+							1 )
+		for i, frame in enumerate( frames ):
+			t = (times[i]-self.refTime).total_seconds()
+			self.frameSaver.save( GetFilename(bib, t, self.dirName, i), bib, t, frame )
+		self.frameCount += len(frames)
+		self.tFindLast = tFind
 	
 	def getT( self, i ):
 		return self.fcb.getT(i)
@@ -163,9 +149,9 @@ class VideoBuffer( threading.Thread ):
 	def getTimeFrame( self, i ):
 		return (self.fcb.getT(i), self.fcb.getFrame(i))
 		
-	def findBeforeAfter( self, t, before = 0, after = 1 ):
+	def findBeforeAfter( self, t, before=0, after=1 ):
 		''' Call the frame cyclic buffer from race time, not clock time. '''
-		tFind = self.refTime + timedelta( seconds = t )
+		tFind = self.refTime + timedelta( seconds=t )
 		times, frames = self.fcb.findBeforeAfter( tFind, before, after )
 		return zip( times, frames )
 		
@@ -173,7 +159,7 @@ class VideoBuffer( threading.Thread ):
 		return self.frameMax
 	
 videoBuffer = None
-def StartVideoBuffer( refTime, raceFileName):
+def StartVideoBuffer( refTime, raceFileName ):
 	global videoBuffer
 	
 	if not videoBuffer:
@@ -206,7 +192,7 @@ def TakePhoto( raceFileName, bib, raceSeconds ):
 	
 	videoBuffer.refTime = race.startTime
 	videoBuffer.takePhoto( bib, raceSeconds )
-	return videoBuffer.frameCount - getattr(race,'photoCount',0) + 1
+	return videoBuffer.frameCount - race.photoCount + 1
 	
 def Shutdown():
 	global videoBuffer
@@ -224,7 +210,7 @@ def ModelTakePhoto( bib, raceSeconds ):
 		if PhotoFinish.okTakePhoto(bib, raceSeconds):
 			if race.enableVideoBuffer:
 				return TakePhoto( Utils.mainWin.fileName if Utils.mainWin else _getTestPhotoFileName(), bib, raceSeconds )
-			elif getattr(race, 'enableUSBCamera', False):
+			elif race.enableUSBCamera:
 				return PhotoFinish.TakePhoto( Utils.mainWin.fileName if Utils.mainWin else _getTestPhotoFileName(), bib, raceSeconds )
 		else:
 			return 0
@@ -234,11 +220,11 @@ def ModelTakePhoto( bib, raceSeconds ):
 	return 0
 
 @logCall
-def ModelStartCamera( refTime = None, raceFileName = None ):
+def ModelStartCamera( refTime=None, raceFileName=None ):
 	Shutdown()
 	
 	race = Model.race
-	if race and getattr(race, 'enableUSBCamera', False):
+	if race and race.enableUSBCamera:
 		if refTime is None:
 			refTime = race.startTime
 		if raceFileName is None:
@@ -246,7 +232,7 @@ def ModelStartCamera( refTime = None, raceFileName = None ):
 		
 		assert refTime is not None and raceFileName is not None
 	
-		if getattr(race, 'enableJChipIntegration', False):
+		if race.enableJChipIntegration:
 			StartVideoBuffer( refTime, raceFileName )
 		else:
 			PhotoFinish.SetCameraState( True )
@@ -262,6 +248,10 @@ if __name__ == '__main__':
 	app.SetAppName("CrossMgr")
 	Utils.disable_stdout_buffering()
 	
+	mainWin = wx.Frame(None, title="CrossMan", size=(200,200))
+	mainWin.Show()
+	
+	print 'initializing photo folder'
 	dirName = 'VideoBufferTest_Photos'
 	if os.path.isdir(dirName):
 		try:
@@ -273,13 +263,27 @@ if __name__ == '__main__':
 	except Exception as e:
 		print e
 	
+	print 'starting camera'
 	tRef = now()
 	camera = PhotoFinish.SetCameraState( True )
+	
+	print 'create video buffer'
 	vb = VideoBuffer( camera, tRef, dirName )
-	vb.daemon = True
+	
+	print 'start video buffer'
 	vb.start()
-	for i in xrange(60):
-		time.sleep( random.random() )
-		vb.takePhoto( i, (now() - tRef).total_seconds() )
-	vb.stop()
-	vb = None
+	
+	print 'taking photos at random intervals'
+	timer = None
+	def TestPhoto():
+		print 'Snap!'
+		vb.takePhoto( 101, (now() - tRef).total_seconds() )
+		timer.Start( random.random() * 2000, oneShot = True )
+	
+	timer = CallbackTimer( TestPhoto )
+	def StartTest():
+		timer.Start( random.random() * 2000, oneShot = True )
+		
+	wx.CallAfter( StartTest )
+	
+	app.MainLoop()
