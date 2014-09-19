@@ -197,8 +197,9 @@ def GetResultsCore( category ):
 					categoryWinningLaps[c] = None
 		
 		highPrecision = Model.highPrecisionTimes()
+		getCategory = race.getCategory
 		for rider in race.riders.itervalues():
-			riderCategory = race.getCategory( rider.num )
+			riderCategory = getCategory( rider.num )
 			if (category and riderCategory != category) or riderCategory not in categoryWinningTime:
 				continue
 			
@@ -474,6 +475,7 @@ def GetNonWaveCategoryResults( category ):
 	rrCache = {}
 	riderResults = []
 
+	getCategory = race.getCategory
 	for num in race.getRiderNums():
 		if not race.inCategory(num, category):
 			continue
@@ -481,7 +483,7 @@ def GetNonWaveCategoryResults( category ):
 		try:
 			riderResults.append( copy.copy(rrCache[num]) )
 		except KeyError:
-			results = GetResults( race.getCategory(num), True )
+			results = GetResults( getCategory(num), True )
 			rrCache.update( { (rr.num, rr) for rr in results } )
 			try:
 				riderResults.append( copy.copy(rrCache[num]) )

@@ -147,7 +147,7 @@ class VideoBuffer( object ):
 		# Always save the closest frame after the given time.
 		times, frames = self.fcb.findBeforeAfter(
 							tFind,
-							1 if tFind - self.tFindLast < self.frameDelayTimeDelta and self.burstMode else 0,
+							1, # 1 if tFind - self.tFindLast < self.frameDelayTimeDelta and self.burstMode else 0,
 							1 )
 		for i, frame in enumerate( frames ):
 			t = (times[i]-self.refTime).total_seconds()

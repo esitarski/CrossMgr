@@ -199,6 +199,9 @@ class MainWin( wx.Frame ):
 		wx.Frame.__init__(self, parent, id, title, size=size)
 
 		Utils.setMainWin( self )
+		
+		self.updateLater = None	# Used for delayed updates after chip reads.
+		self.numTimes = []
 
 		# Add code to configure file history.
 		self.filehistory = wx.FileHistory(8)
@@ -2875,8 +2878,19 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 
 	#-------------------------------------------------------------
 	
+	def processNumTimes( self ):
+		race = Model.race
+		for num, t in self.numTimes:
+			race.addTime( num, t )
+		OutputStreamer.writeNumTimes( self.numTimes )
+		if self.getCurrentPage() == self.results:
+			wx.CallAfter( self.results.showLastLap )
+		if getattr(race, 'ftpUploadDuringRace', False):
+			realTimeFtpPublish.publishEntry()
+		self.numTimes = []
+		self.updateLater = None
+	
 	def processJChipListener( self ):
-		
 		# Assumes Model is locked.
 		race = Model.race
 		
@@ -2896,8 +2910,7 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 		if not race.tagNums:
 			return False
 		
-		success = False
-		numTimes = []
+		lastNumTimesLen = len(self.numTimes)
 		for d in data:
 			if d[0] != 'data':
 				continue
@@ -2911,18 +2924,12 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 			if race.isRunning() and race.startTime <= dt:
 				delta = dt - race.startTime
 				t = delta.total_seconds()
-				t = race.addTime( num, t )
-				numTimes.append( (num, t) )
-				success = True
+				self.numTimes.append( (num, t) )
 		
-		if success:
-			OutputStreamer.writeNumTimes( numTimes )
-			if self.getCurrentPage() == self.results:
-				wx.CallAfter( self.results.showLastLap )
-			if getattr(race, 'ftpUploadDuringRace', False):
-				realTimeFtpPublish.publishEntry()
-
-		return success
+		if not self.updateLater:
+			self.updateLater = wx.CallLater( 800, self.processNumTimes )
+			
+		return lastNumTimesLen != len(self.numTimes)
 
 	def updateRaceClock( self, event = None ):
 		if hasattr(self, 'record'):
