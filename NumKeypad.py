@@ -16,6 +16,7 @@ from RaceHUD import RaceHUD
 from EditEntry import DoDNF, DoDNS, DoPull, DoDQ
 from TimeTrialRecord import TimeTrialRecord
 from PhotoFinish import HasPhotoFinish
+from VideoBuffer import GetFrameRate
 
 def MakeKeypadButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1), font = None ):
 	label = label.replace('&','')
@@ -451,9 +452,12 @@ class NumKeypad( wx.Panel ):
 				tRace = race.lastRaceTime()
 				tStr = Utils.formatTime( tRace )
 				self.refreshRaceHUD()
-				if getattr(race, 'enableUSBCamera', False) and HasPhotoFinish():
+				if race.enableUSBCamera and HasPhotoFinish():
 					self.photoButton.Show( True )
-					self.photoCount.SetLabel( '{}'.format(getattr(race, 'photoCount', '')) )
+					if race.enableVideoBuffer:
+						self.photoCount.SetLabel( '{:.1f} {} {}'.format(GetFrameRate(), _('fps'), race.photoCount) )
+					else:
+						self.photoCount.SetLabel( '{}'.format(race.photoCount) )
 					if Utils.cameraError:
 						self.photoButton.SetBitmapLabel( self.camera_broken_bitmap )
 						self.photoButton.SetToolTip( wx.ToolTip(Utils.cameraError) )
@@ -669,9 +673,8 @@ class NumKeypad( wx.Panel ):
 			rst, rstSource = '', ''
 			if race and race.startTime:
 				st = race.startTime
-				if getattr(race, 'enableJChipIntegration', False) and \
-							getattr(race, 'resetStartClockOnFirstTag', False):
-					if getattr(race, 'firstRecordedTime', None):
+				if race.enableJChipIntegration and race.resetStartClockOnFirstTag:
+					if race.firstRecordedTime:
 						rstSource = _('Chip Start')
 					else:
 						rstSource = _('Waiting...')
@@ -693,7 +696,7 @@ if __name__ == '__main__':
 	Model.setRace( Model.Race() )
 	model = Model.getRace()
 	model._populate()
-	model.enableUSBCamera = False
+	model.enableUSBCamera = True
 	numKeypad = NumKeypad(mainWin)
 	numKeypad.refresh()
 	mainWin.Show()

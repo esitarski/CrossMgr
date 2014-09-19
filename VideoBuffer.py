@@ -96,9 +96,16 @@ class VideoBuffer( object ):
 		self.frameSaver.start()
 		
 		self.tFindLast = now() - timedelta( days=1 )
+		
+		self.lastSampleTime = now()
+		self.sampleCount = 0
 	
 	def recordVideoFrame( self ):
 		tNow = now()
+		self.sampleCount += 1
+		if not self.camera:
+			return
+			
 		try:
 			image = self.camera.getImage()
 			self.fcb.append( tNow, image )
@@ -106,6 +113,13 @@ class VideoBuffer( object ):
 				wx.PostEvent( self.owner, PhotoEvent(t=tNew, photo=image) )
 		except Exception as e:
 			logException( e, sys.exc_info() )
+
+	def getFrameRate( self ):
+		tNow = now()
+		rate = self.sampleCount / (tNow -self.lastSampleTime).total_seconds()
+		self.lastSampleTime = tNow
+		self.sampleCount = 0
+		return rate
 	
 	def start( self ):
 		self.reset()
@@ -118,6 +132,7 @@ class VideoBuffer( object ):
 		if self.frameSaver and self.frameSaver.is_alive():
 			self.frameSaver.stop()
 		self.frameSaver = None
+		self.lastSampleTime = now()
 			
 	def takePhoto( self, bib, t ):
 		tNow = now()
@@ -200,6 +215,10 @@ def Shutdown():
 		videoBuffer.stop()
 		videoBuffer = None
 	PhotoFinish.SetCameraState( False )
+	
+def GetFrameRate():
+	global videoBuffer
+	return videoBuffer.getFrameRate() if videoBuffer else 0.0
 
 def _getTestPhotoFileName():
 	return os.path.join(os.path.dirname(Utils.getHomeDir()), 'Test.cmn')
@@ -276,7 +295,7 @@ if __name__ == '__main__':
 	print 'taking photos at random intervals'
 	timer = None
 	def TestPhoto():
-		print 'Snap!'
+		print 'Snap! {:.3f} fps'.format(vb.getFrameRate())
 		vb.takePhoto( 101, (now() - tRef).total_seconds() )
 		timer.Start( random.random() * 2000, oneShot = True )
 	
