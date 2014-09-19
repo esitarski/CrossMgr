@@ -2926,8 +2926,9 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 				t = delta.total_seconds()
 				self.numTimes.append( (num, t) )
 		
-		if not self.updateLater:
-			self.updateLater = wx.CallLater( 800, self.processNumTimes )
+		#if not self.updateLater:
+		#	self.updateLater = wx.CallLater( 800, self.processNumTimes )
+		self.processNumTimes()
 			
 		return lastNumTimesLen != len(self.numTimes)
 
