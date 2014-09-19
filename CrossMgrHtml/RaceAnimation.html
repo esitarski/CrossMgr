@@ -2203,6 +2203,11 @@ function CmpCategoryResultsData( x, y )
 	return CmpResultsData( x, y );
 }
 
+function getStartOffset( num ) {
+	var d = data[num];
+	return d.raceTimes && d.raceTimes.length ? d.raceTimes[0] : 0;
+}
+
 function SetCategoryResults()
 {
 	resultsDiv.innerHTML = '';
@@ -2304,12 +2309,10 @@ function SetCategoryResults()
 			// Remove the race start time if this is not a Wave category.
 			var lastTime = d[lastTimeField];
 			var raceTimes = raceTimesCopy[num];
-			if( catDetail.catType != 'Start Wave' && raceTimes.length > 0 )
-			{
-				for( var j = 1; j < raceTimes.length; ++j )
-					raceTimes[j] -= raceTimes[0];
-				lastTime -= raceTimes[0];
-				raceTimes[0] = 0;
+			if( raceTimes.length > 0 ) {
+				var firstTime = raceTimes[0];
+				for( var j = 0; j < raceTimes.length; ++j )
+					raceTimes[j] -= firstTime;
 			}
 			
 			// Get the union of all the defined fields.
@@ -2553,7 +2556,7 @@ function SetCategoryResults()
 			}
 			var finishTime = '';
 			if( isFinisher && d[lastTimeField] > 0.0 ) {
-				finishTime = FormatTime(d[lastTimeField]);
+				finishTime = FormatTime(d[lastTimeField] - startOffset );
 				if( isTimeTrial && d['ttPenalty'] )
 					finishTime += '*';
 			}
