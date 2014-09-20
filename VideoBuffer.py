@@ -137,7 +137,7 @@ class VideoBuffer( object ):
 	def takePhoto( self, bib, t ):
 		tNow = now()
 
-		tFind = self.refTime + timedelta( seconds = t + Model.Race.advancePhotoMilliseconds / 1000.0 )
+		tFind = self.refTime + timedelta( seconds = t + Model.race.advancePhotoMilliseconds / 1000.0 )
 		if tFind > tNow:
 			wx.CallLater( int(((tFind - tNow).total_seconds() + 0.1) * 1000.0), self.takePhoto, bib, t )
 			return
