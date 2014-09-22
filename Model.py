@@ -931,6 +931,7 @@ class Race( object ):
 	city = ''
 	stateProv = ''
 	country = ''
+	discipline = 'Cyclo-cross'
 	
 	showCourseAnimationInHtml = True
 	hideDetails = True

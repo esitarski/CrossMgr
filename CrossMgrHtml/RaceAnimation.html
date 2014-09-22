@@ -170,6 +170,7 @@ var showDetails = false;	// If true, show full lap details in the Chart.
 var showCourseAnimation = true;
 var version = null;
 var raceNotes = null;
+var arrivalMode = null;
 
 // Control information about the animation.
 var canvas = null;
@@ -479,6 +480,8 @@ function doReload() {
 		'highlight=' + document.getElementById('idNumsToWatch').value,
 		'lang=' + getLanguageCode()
 	];
+	if( arrivalMode )
+		params.push( 'arrivalMode=t' );
 	
 	var href = window.location.href;
 	
@@ -2208,7 +2211,172 @@ function getStartOffset( num ) {
 	return d.raceTimes && d.raceTimes.length ? d.raceTimes[0] : 0;
 }
 
-function SetCategoryResults()
+function SetCategoryResultsArrival( raceTimesLength, raceTimesCopy )
+{
+	var riderBib = [];		// Bib numbers in display sequence.
+	var riderInfo = {};		// Additional rider info.
+	
+	var leaderLaps;
+	var leaderTime;
+	
+	var speedUnit = '';
+	var distanceUnit = '';
+	var hasFactor = false;
+	
+	var catTypes = (categoryCur == 'All' ? ['Start Wave', 'Component'] : ['Start Wave']);
+	for( var cc = 0; cc < catTypes.length; ++cc ) {
+		for( var c = 0; c < catDetails.length; ++c ) {
+			var catDetail = catDetails[c];
+			var catName = catDetail.name;
+			if( categoryCur != 'All' ) {
+				if( catDetail.catType != catTypes[cc] )
+					continue;
+			}
+			else {
+				if( categoryCur != catName )
+					continue;
+			}
+			
+			for( var p = 0; p < catDetail.pos.length; ++p ) {
+				var num = catDetails[c].pos[p];
+				var d = data[num];
+				
+				if( p == 0 ) {
+					leaderLaps = raceTimesLength[num];
+					leaderTime = raceTimesCopy[num].back() - raceTimesCopy[num][0];
+					if( d['factor'] ) {
+						leaderTime *= d.factor / 100.0;
+						hasFactor = true;
+					}
+				}
+				
+				if( d['status'] != 'Finisher' || riderInfo[num] || raceTimesLength[num] == 0 )
+					continue;
+					
+				if( !speedUnit && d['speed'] ) {
+					speedUnit = d['speed'].split(' ')[1];
+					distanceUnit = (speedUnit.substring(0, 1) == 'k' ? 'km' : 'miles');
+				}
+				
+				var riderLaps = raceTimesLength[num];
+				var riderTime = raceTimesCopy[num][raceTimesLength[num]-1] - raceTimesCopy[num][0];
+				if( d.factor )
+					riderTime *= d.factor / 100.0;
+				
+				var gap = '';
+				if( leaderLaps == riderLaps ) {
+					if( riderTime != leaderTime ) {
+						var delta = TimeDifference(riderTime, leaderTime);
+						gap = FormatTimeGap( delta );
+					}
+				}
+				else if( riderTime > leaderTime ) {
+					var lapsDown = leaderLaps - riderLaps;
+					gap = '-' + lapsDown + ' ' + (lapsDown == 1 ? _('lap') : _('laps'));
+				}
+				
+				riderInfo[num] = {
+					'pos': p+1,
+					'gap': gap,
+					'catName': catName,
+					'time': riderTime,
+					'finishTime': d.finishTime
+				};
+				riderBib.push( num );
+			}
+		}
+	}
+	riderBib.sort( function(a, b) {
+			return b.finishTime - a.finishTime;
+		}
+	);
+	
+	// Create table.
+	var table = document.createElement('TABLE');
+	table.className = 'results';
+	
+	// Add the headers.
+	thead = createChild( table, 'THEAD' );
+	tr = createChild( thead, 'TR' );
+	createTextChild( td = createChild(tr, 'TH'), _('Bib') );
+	td.id = 'idNonNumeric';
+	
+	var arrivelFields = [_('Name'), _('Team')];
+	for( var f = 0; f < arrivelFields.length; ++f ) {
+		createTextChild( td = createChild(tr, 'TH'), _(infoFields[f]) );
+		td.id = 'idNonNumeric';
+	}
+	
+	createTextChild( td = createChild(tr, 'TH'), _('Pos') );
+	if( categoryCur == 'All' ) {
+		createTextChild( td = createChild(tr, 'TH'), _('Category') );
+		td.id = 'idNonNumeric';
+	}
+	createTextChild( td = createChild(tr, 'TH'), _('Time') );
+	if( !hasFactor )
+		createTextChild( td = createChild(tr, 'TH'), _('Gap') );
+	else
+		createTextChild( td = createChild(tr, 'TH'), _('Factor') );
+	if( speedUnit )
+		createTextChild( td = createChild(tr, 'TH'), displayUnits == 'km' ? 'km/h' : 'mph' );
+	
+	for( var i = 0; i < riderBib.length; ++i ) {
+		var num = riderBib[i];
+		var info = riderInfo[num];
+		var d = data[num];
+		
+		tr = createChild(tbody, 'TR');
+		tr.className = ((r & 1) ? 'odd' : 'even');
+		
+		function createTD( tr ) {
+			var td = createChild(tr, 'TD');
+			return td;
+		}
+		
+		createTextChild( td = createTD(tr), num );
+		
+		// Add the info fields (from the spreadsheet).
+		for( var f = 0; f < infoFields.length; ++f ) {
+			var field = infoFields[f];
+			if( curFields[field] ) {
+				var v;
+				if( field == 'Name' ) {
+					if( d['LastName'] && d['FirstName'] )
+						v = d['LastName'] + ',&nbsp;' + d['FirstName'];
+					else
+						v = d['LastName'] || d['FirstName'];
+				}
+				else
+					v = d[field];
+				td = createTD(tr);
+				td.innerHTML = v;
+				if( field != 'Age' && field != 'Factor' )
+					td.id = 'idNonNumeric'; 
+			}
+		}
+		
+		createTextChild( td = createTD(tr), info.pos );
+		if( categoryCur == 'All' ) {
+			createTextChild( td = createTD(tr), info.catName );
+			td.id = 'idNonNumeric';
+		}
+		createTextChild( td = createTD(tr), FormatTime(info.time) );
+		if( !hasFactor )
+			createTextChild( td = createTD(tr), info.gap );
+		else
+			createTextChild( td = createChild(tr, 'TH'), (d['factor'] ? d['factor'] : 100.0).toFixed(2) );
+		
+		if( speedUnit ) {
+			var speed = d['speed'];
+			if( speed )
+				createTextChild( td = createTD(tr), FormatSpeed(parseFloat(speed.split(' ')[0]), distanceUnit, false) );
+			else
+				createTextChild( td = createTD(tr), '' );
+		}
+	}
+}
+
+function SetCategoryResults( raceTimesLength, raceTimesCopy )
 {
 	resultsDiv.innerHTML = '';
 	
@@ -2221,7 +2389,13 @@ function SetCategoryResults()
 	if( raceIsRunning ) {
 		for( var num in data ) {
 			var raceTimes = data[num]['raceTimes'];
-			raceTimesLength[num] = raceTimes.binSearch( t );
+			var adjust = 0.0;
+			if( isTimeTrial ) {
+				adjust = data[num]['startTime'];
+				if( !adjust )
+					adjust = 0.0;
+			}
+			raceTimesLength[num] = raceTimes.binSearch( t - adjust );
 			raceTimesCopy[num] = raceTimes.slice(0);
 		}
 	}
@@ -2231,6 +2405,11 @@ function SetCategoryResults()
 			raceTimesLength[num] = raceTimes.length;
 			raceTimesCopy[num] = raceTimes.slice(0);
 		}
+	}
+	
+	if( isTimeTrial && arrivalMode ) {
+		SetCategoryResultsArrival( raceTimesLength, raceTimesCopy );
+		return;
 	}
 	
 	if( showLapsFrequency < 0 ) {
@@ -2955,7 +3134,6 @@ function RaceChartUpdateInfo()
 		if( seg[0] <= xEvent && xEvent < (seg[0] + seg[2]) &&
 			seg[1] <= yEvent && yEvent < (seg[1] + seg[3]) )
 		{
-			//alert( "found segment" );
 			var hover = seg[4];
 			var num = seg[5];
 			var name = getRiderNameNum( num );
@@ -4574,6 +4752,11 @@ function SituationRefresh() {
 	SetSituationTime( timeRange.value );
 }
 
+function SetArrivalMode() {
+	arrivalMode = document.getElementById('idArrivalMode').checked;
+	SetCategoryResults();
+}
+
 function onLoad()
 {
 	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
@@ -4589,6 +4772,9 @@ function onLoad()
 	}
 	else
 		gpsPointsTest = null;
+		
+	if( !isTimeTrial )
+		document.getElementById('idArrivalMode').className = 'hidden';
 	
 	if( showCourseAnimation ) {
 		if( gpsPoints )
@@ -4709,6 +4895,8 @@ function onLoad()
 	SetData( data, undefined );
 	
 	// Check for parameters.
+	arrivalMode = getUrlParam( 'highlight', '' );
+	arrivalMode = (arrivalMode != '' && arrivalMode[0] == 't');
 	var numbers = getUrlParam( 'highlight', undefined );
 	if( numbers != '' )
 		numsToWatchStr = numbers;
@@ -4747,6 +4935,7 @@ function onLoad()
 <button onclick="doReload()" data-tr="Refresh"></button>&nbsp;&nbsp;&nbsp;
 <button id="idVirtualTour" onclick="OpenVirtualTourWindow()" data-tr="Google Earth Ride"></button>&nbsp;&nbsp;&nbsp;
 <button id="idCourseViewer" onclick="OpenCourseViewerWindow()" data-tr="Course Map"></button>&nbsp;&nbsp;&nbsp;
+<input id="idArrivalMode" type="checkbox" onclick="SetArrivalMode()"><span data-tr="Arrivals"></span></input>
 </span>
 </tr></table><span id="idReloadStatus"></span><span id="idRaceNotes"></span>
 </p>
