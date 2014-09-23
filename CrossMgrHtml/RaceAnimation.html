@@ -4997,8 +4997,8 @@ function onLoad()
 	Animate( animationSeconds, undefined, raceIsRunning ? t : getStartTime() );
 	document.getElementById('idPlayStop').value = _('Stop');
 	
-	// Add refresh for time trial.
-	if( isTimeTrial && raceIsRunning )
+	// Add unconditional refresh is race is running.
+	if( raceIsRunning )
 		setTimeout( doReload, 5*60*1000 );
 }
 
