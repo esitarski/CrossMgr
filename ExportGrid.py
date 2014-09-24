@@ -515,7 +515,7 @@ class ExportGrid( object ):
 			cd = None
 			
 		if category:
-			starters, lapped, dnf = [0, 0, 0]
+			starters, lapped, dnf = 0, 0, 0
 			for r in results:
 				if r.status != Model.Rider.DNS:
 					starters += 1
@@ -523,7 +523,11 @@ class ExportGrid( object ):
 					dnf += 1
 				if r.gap.startswith('-'):
 					lapped += 1
-			self.footer = _(u'# Starters: {},  # DNF: {},  # Lapped: {}').format(starters, dnf, lapped)
+			self.footer = (u''.join([
+					_('Total'), u':',
+					u'   {} ', _('Starters'),
+					u',  {} ', _('DNF'),
+					u',  {} ', _('Lapped')])).format( starters, dnf, lapped )
 			
 		leader = results[0]
 		hasSpeeds = (hasattr(leader, 'lapSpeeds') or hasattr(leader, 'raceSpeeds'))
