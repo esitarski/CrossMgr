@@ -2371,6 +2371,7 @@ function SetCategoryResultsArrival( raceTimesLength, raceTimesCopy )
 	// Add the headers.
 	thead = createChild( table, 'THEAD' );
 	tr = createChild( thead, 'TR' );
+	
 	createTextChild( td = createChild(tr, 'TH'), _('Bib') );
 	td.id = 'idNonNumeric';
 	
@@ -2380,18 +2381,16 @@ function SetCategoryResultsArrival( raceTimesLength, raceTimesCopy )
 			td.id = 'idNonNumeric';
 		}
 	}
-	
-	createTextChild( td = createChild(tr, 'TH'), _('Pos') + (raceIsRunning ? '*' : '') );
-	if( categoryCur == 'All' ) {
-		createTextChild( td = createChild(tr, 'TH'), _('Category') );
-		td.id = 'idNonNumeric';
-	}
+	createTextChild( td = createChild(tr, 'TH'), _('Seq') );
+	td.id = 'idNonNumeric';
+
+	createTextChild( td = createChild(tr, 'TH'), _('CategorySummary') );
+	td.id = 'idNonNumeric';
+
 	createTextChild( td = createChild(tr, 'TH'), _('ClockFinishTime') );
 	createTextChild( td = createChild(tr, 'TH'), _('ClockStartTime') );
 	createTextChild( td = createChild(tr, 'TH'), _('Time') );
-	if( !hasFactor )
-		createTextChild( td = createChild(tr, 'TH'), _('Gap') );
-	else
+	if( hasFactor )
 		createTextChild( td = createChild(tr, 'TH'), _('Factor') );
 	if( speedUnit )
 		createTextChild( td = createChild(tr, 'TH'), displayUnits == 'km' ? 'km/h' : 'mph' );
@@ -2432,18 +2431,14 @@ function SetCategoryResultsArrival( raceTimesLength, raceTimesCopy )
 			}
 		}
 		
-		createTextChild( td = createTD(tr), info.pos );
-		if( categoryCur == 'All' ) {
-			createTextChild( td = createTD(tr), info.catName );
-			td.id = 'idNonNumeric';
-		}
+		createTextChild( td = createTD(tr), riderBib.length - i );
+		createTextChild( td = createTD(tr), GetAllCategoryResults(num) );
+		td.id = 'idNonNumeric';
 		createTextChild( td = createTD(tr), FormatTime(info.finishTime) );
 		createTextChild( td = createTD(tr), FormatTime(d.clockStartTime) );
 		createTextChild( td = createTD(tr), FormatTime(info.time) );
-		if( !hasFactor )
-			createTextChild( td = createTD(tr), info.gap );
-		else
-			createTextChild( td = createChild(tr, 'TH'), (d['factor'] ? d['factor'] : 100.0).toFixed(2) );
+		if( hasFactor )
+			createTextChild( td = createTD(tr), (d['factor'] ? d['factor'] : 100.0).toFixed(2) );
 		
 		if( speedUnit ) {
 			var speed = d['speed'];
@@ -5022,11 +5017,11 @@ function onLoad()
 	SetData( data, undefined );
 	
 	// Handle url parameters.
-	showCategorySummary = (getUrlParam( 'showCategorySummary', undefined ) == 't');
+	showCategorySummary = (getUrlParam('showCategorySummary', undefined) == 't');
 	if( showCategorySummary )
 		document.getElementById('idShowCategorySummary').checked = true;
-	finisherMode = (getUrlParam( 'finisherMode', undefined ) == 't');
-	if( isTimeTrial && finisherMode )
+	finisherMode = (getUrlParam('finisherMode', undefined) == 't' && isTimeTrial);
+	if( finisherMode )
 		document.getElementById('idFinisherMode').checked = true;
 	cycleCategoriesMode = (getUrlParam( 'cycleCategoriesMode', undefined ) == 't');
 	if( cycleCategoriesMode ) {
@@ -5075,8 +5070,8 @@ function onLoad()
 <button onclick="doReload()" data-tr="Refresh"></button>&nbsp;&nbsp;&nbsp;
 <button id="idVirtualTour" onclick="OpenVirtualTourWindow()" data-tr="Google Earth Ride"></button>&nbsp;&nbsp;&nbsp;
 <button id="idCourseViewer" onclick="OpenCourseViewerWindow()" data-tr="Course Map"></button>&nbsp;&nbsp;&nbsp;
-<input id="idShowCategorySummary" type="checkbox" onclick="SetShowCategorySummary()"><span data-tr="ShowCategorySummary"></span></input>&nbsp;&nbsp;&nbsp;
 <input id="idCycleCategoriesMode" type="checkbox" onclick="SetCycleCategoriesMode()"><span data-tr="CycleCategories"></span></input>&nbsp;&nbsp;&nbsp;
+<input id="idShowCategorySummary" type="checkbox" onclick="SetShowCategorySummary()"><span data-tr="ShowCategorySummary"></span></input>&nbsp;&nbsp;&nbsp;
 <input id="idFinisherMode" type="checkbox" onclick="SetFinisherMode()"><span id="idFinisherModeLabel" data-tr="ByFinishers"></span></input>
 </span>
 </tr></table><span id="idReloadStatus"></span><span id="idRaceNotes"></span>
