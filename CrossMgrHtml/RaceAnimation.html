@@ -4868,7 +4868,7 @@ function SetNextCategory() {
 				var k = (i + j) % categories.length;
 				if( categories[k] != 'All' ) {
 					SelectCategory( k );
-					if( cycleCount == 12 )	// 3 minutes.
+					if( cycleCount++ == 12 )	// 3 minutes.
 						doReload();
 					else
 						setTimeout( SetNextCategory, 1000*15 );
