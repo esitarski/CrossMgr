@@ -2695,8 +2695,23 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 		// Add the rider data to the table.
 		tbody = createChild( table, 'TBODY' );
 		for( var p = 0; p < catDetail.pos.length; ++p ) {
-			var position = p + 1;
-			var num = catDetails[c].pos[p];
+			var position, num;
+			if( finisherMode ) {
+				if( !catDetail.finisherCount )
+					UpdateCatPosIndex();
+				if( p < catDetail.finisherCount ) {
+					position = catDetail.finisherCount - p;
+					num = catDetails[c].pos[position-1];
+				}
+				else {
+					position = p + 1;
+					num = catDetails[c].pos[p];
+				}
+			}
+			else {
+				position = p + 1;
+				num = catDetails[c].pos[p];
+			}
 			var d = data[num];
 			
 			function createTD( tr ) {
@@ -4842,6 +4857,7 @@ function SetFinisherMode() {
 	SetCategoryResults();
 }
 
+var cycleCount = 0;
 function SetNextCategory() {
 	if( !cycleCategoriesMode || categories.length <= 1 )
 		return;
@@ -4852,7 +4868,10 @@ function SetNextCategory() {
 				var k = (i + j) % categories.length;
 				if( categories[k] != 'All' ) {
 					SelectCategory( k );
-					setTimeout( SetNextCategory, 1000*15 );
+					if( cycleCount == 12 )	// 3 minutes.
+						doReload();
+					else
+						setTimeout( SetNextCategory, 1000*15 );
 					return;
 				}
 			}
@@ -4888,11 +4907,6 @@ function onLoad()
 	else
 		gpsPointsTest = null;
 		
-	if( !isTimeTrial ) {
-		document.getElementById('idFinisherMode').className = 'hidden';
-		document.getElementById('idFinisherModeLabel').className = 'hidden';
-	}
-	
 	if( showCourseAnimation ) {
 		if( gpsPoints )
 		{
@@ -5020,7 +5034,7 @@ function onLoad()
 	showCategorySummary = (getUrlParam('showCategorySummary', undefined) == 't');
 	if( showCategorySummary )
 		document.getElementById('idShowCategorySummary').checked = true;
-	finisherMode = (getUrlParam('finisherMode', undefined) == 't' && isTimeTrial);
+	finisherMode = (getUrlParam('finisherMode', undefined) == 't');
 	if( finisherMode )
 		document.getElementById('idFinisherMode').checked = true;
 	cycleCategoriesMode = (getUrlParam( 'cycleCategoriesMode', undefined ) == 't');
@@ -5051,7 +5065,7 @@ function onLoad()
 	
 	// Add unconditional refresh is race is running.
 	if( raceIsRunning )
-		setTimeout( doReload, 5*60*1000 );
+		setTimeout( doReload, 6*60*1000+10 );
 }
 
 </script>
@@ -5068,10 +5082,10 @@ function onLoad()
 <span data-tr="Powered by"></span> <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
 <span id="idRFID"></span>&nbsp;&nbsp;&nbsp;
 <button onclick="doReload()" data-tr="Refresh"></button>&nbsp;&nbsp;&nbsp;
-<button id="idVirtualTour" onclick="OpenVirtualTourWindow()" data-tr="Google Earth Ride"></button>&nbsp;&nbsp;&nbsp;
-<button id="idCourseViewer" onclick="OpenCourseViewerWindow()" data-tr="Course Map"></button>&nbsp;&nbsp;&nbsp;
-<input id="idCycleCategoriesMode" type="checkbox" onclick="SetCycleCategoriesMode()"><span data-tr="CycleCategories"></span></input>&nbsp;&nbsp;&nbsp;
-<input id="idShowCategorySummary" type="checkbox" onclick="SetShowCategorySummary()"><span data-tr="ShowCategorySummary"></span></input>&nbsp;&nbsp;&nbsp;
+<button id="idVirtualTour" onclick="OpenVirtualTourWindow()" data-tr="Google Earth Ride"></button>&nbsp;&nbsp;
+<button id="idCourseViewer" onclick="OpenCourseViewerWindow()" data-tr="Course Map"></button>&nbsp;&nbsp;
+<input id="idCycleCategoriesMode" type="checkbox" onclick="SetCycleCategoriesMode()"><span data-tr="CycleCategories"></span></input>&nbsp;&nbsp;
+<input id="idShowCategorySummary" type="checkbox" onclick="SetShowCategorySummary()"><span data-tr="ShowCategorySummary"></span></input>&nbsp;&nbsp;
 <input id="idFinisherMode" type="checkbox" onclick="SetFinisherMode()"><span id="idFinisherModeLabel" data-tr="ByFinishers"></span></input>
 </span>
 </tr></table><span id="idReloadStatus"></span><span id="idRaceNotes"></span>
