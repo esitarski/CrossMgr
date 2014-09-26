@@ -172,6 +172,8 @@ var version = null;
 var raceNotes = null;
 var finisherMode = null;
 var cycleCategoriesMode = null;
+var catPosIndex = null;
+var showCategorySummary = null;
 
 // Control information about the animation.
 var canvas = null;
@@ -386,6 +388,8 @@ var translations = {
 	'Leaders':		['Leaders',			'Tête',						'Cabeza'],
 	'Chase Group':	['Chase Group',		'Chase',					'Caza'],
 	'LapsDown':		['Laps Down',		'Rours de retard',			'Vueltas atrás'],
+	'CategorySummary':	['Category Summary',"Catégorie résumé",			"Resumen de la categoría"],
+	'ShowCategorySummary':['Show Category Summary',"Afficher le catégorie résumé",	"Mostrar el resumen de la categoría"],
 	'last':			['','','']
 };
 (function() {
@@ -486,6 +490,8 @@ function doReload() {
 	];
 	if( cycleCategoriesMode )
 		params.push( 'cycleCategoriesMode=t' );
+	if( showCategorySummary )
+		params.push( 'showCategorySummary=t' );
 	if( finisherMode )
 		params.push( 'finisherMode=t' );
 	
@@ -2217,6 +2223,39 @@ function getStartOffset( num ) {
 	return d.raceTimes && d.raceTimes.length ? d.raceTimes[0] : 0;
 }
 
+function UpdateCatPosIndex() {
+	for( var c = 0; c < catDetails.length; ++c ) {
+		var catDetail = catDetails[c];
+		var posIndex = {};
+		var finisherCount = 0;
+		for( var p = 0; p < catDetail.pos.length; ++p ) {
+			var num = catDetail.pos[p];
+			var d = data[num];
+			if( d.status == 'Finisher' ) {
+				posIndex[num] = p+1;
+				++finisherCount;
+			}
+		}
+		catDetail.posIndex = posIndex;
+		catDetail.finisherCount = finisherCount;
+	}
+}
+
+function GetAllCategoryResults( num ) {
+	var results = [];
+	if( catDetails && catDetails.length > 0 ) {
+		if( !catDetails[0].posIndex )
+			UpdateCatPosIndex();
+		
+		for( var c = 0; c < catDetails.length; ++c ) {
+			var catDetail = catDetails[c];
+			if( catDetail.name != 'All' && catDetail.posIndex[num] )
+				results.push( catDetail.posIndex[num] + '/' + catDetail.finisherCount + ' ' + catDetail.name );
+		}
+	}
+	return results.join( ',  ' );
+}
+
 function SetCategoryResultsArrival( raceTimesLength, raceTimesCopy )
 {
 	var riderBib = [];		// Bib numbers in display sequence.
@@ -2616,6 +2655,11 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 			}
 		}
 		
+		if( showCategorySummary ) {
+			createTextChild( td = createChild(tr, 'TH'), _('CategorySummary') );	++numHeaders;
+			td.id = 'idNonNumeric';
+		}
+		
 		if( isTimeTrial ) {
 			createTextChild( td = createChild(tr, 'TH'), _('ClockStartTime') );	++numHeaders;
 			createTextChild( td = createChild(tr, 'TH'), _('StartTime') );	++numHeaders;
@@ -2752,6 +2796,11 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 				catTitleTD.innerHTML = '<span class="biggerFont">' + catName +
 						(raceIsRunning ? " (" + _('race in progress') + ')' : '') + '</span>' +
 						'<br/><span class="smallfont">' + catStr + '</span>';
+			}
+			
+			if( showCategorySummary ) {
+				createTextChild( td = createTD(tr), GetAllCategoryResults(num) );
+				td.id = 'idNonNumeric'; 
 			}
 			
 			if( isTimeTrial ) {
@@ -4816,6 +4865,11 @@ function SetNextCategory() {
 	}
 }
 
+function SetShowCategorySummary() {
+	showCategorySummary = document.getElementById('idShowCategorySummary').checked;
+	SetCategoryResults();
+}
+
 function SetCycleCategoriesMode() {
 	cycleCategoriesMode = document.getElementById('idCycleCategoriesMode').checked;
 	if( cycleCategoriesMode ) {
@@ -4967,7 +5021,10 @@ function onLoad()
 		document.getElementById('idShowUnits').style.display = 'none';
 	SetData( data, undefined );
 	
-	// Check for parameters.
+	// Handle url parameters.
+	showCategorySummary = (getUrlParam( 'showCategorySummary', undefined ) == 't');
+	if( showCategorySummary )
+		document.getElementById('idShowCategorySummary').checked = true;
 	finisherMode = (getUrlParam( 'finisherMode', undefined ) == 't');
 	if( isTimeTrial && finisherMode )
 		document.getElementById('idFinisherMode').checked = true;
@@ -5018,6 +5075,7 @@ function onLoad()
 <button onclick="doReload()" data-tr="Refresh"></button>&nbsp;&nbsp;&nbsp;
 <button id="idVirtualTour" onclick="OpenVirtualTourWindow()" data-tr="Google Earth Ride"></button>&nbsp;&nbsp;&nbsp;
 <button id="idCourseViewer" onclick="OpenCourseViewerWindow()" data-tr="Course Map"></button>&nbsp;&nbsp;&nbsp;
+<input id="idShowCategorySummary" type="checkbox" onclick="SetShowCategorySummary()"><span data-tr="ShowCategorySummary"></span></input>&nbsp;&nbsp;&nbsp;
 <input id="idCycleCategoriesMode" type="checkbox" onclick="SetCycleCategoriesMode()"><span data-tr="CycleCategories"></span></input>&nbsp;&nbsp;&nbsp;
 <input id="idFinisherMode" type="checkbox" onclick="SetFinisherMode()"><span id="idFinisherModeLabel" data-tr="ByFinishers"></span></input>
 </span>
