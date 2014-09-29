@@ -183,12 +183,15 @@ class CategoryIconRenderer(gridlib.PyGridCellRenderer):
 		gridlib.PyGridCellRenderer.__init__(self)
 
 	def Draw(self, grid, attr, dc, rect, row, col, isSelected):
-		value = grid.GetCellValue( row, col+1 )
-		try:
-			value = int(value)
-		except (ValueError, IndexError):
+		value = grid.GetCellValue( row, col+1 ).strip()
+		
+		if value.endswith( _('Start Wave') ):
 			value = 0
-			
+		elif value.endswith( _('Component') ):
+			value = 1
+		else:
+			value = 2
+		
 		dc.SetClippingRect( rect )
 		dc.SetBackgroundMode(wx.SOLID)
 		dc.SetBrush(wx.WHITE_BRUSH)
