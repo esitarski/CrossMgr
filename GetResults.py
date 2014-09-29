@@ -273,11 +273,13 @@ def GetResultsCore( category ):
 						rr.speed = '%.2f %s' % (raceSpeeds[-1], ['km/h', 'mph'][getattr(race, 'distanceUnit', 0)] )
 					rr.raceSpeeds = raceSpeeds
 				else:	# Distance is by entire race.
-					riderDistance = distance
-					# Only add the rider speed if the rider finished.
-					if lastTime and rider.status == Finisher:
-						tCur = lastTime - startOffset
-						speed = DefaultSpeed if tCur <= 0.0 else riderDistance / (tCur / (60.0*60.0))
+					if rider.status == Finisher and rr.raceTimes:
+						riderDistance = distance
+						try:
+							tCur = rr.raceTimes[-1] - rr.raceTimes[0]
+							speed = DefaultSpeed if tCur <= 0.0 else riderDistance / (tCur / (60.0*60.0))
+						except IndexError as e:
+							speed = DefaultSpeed
 						rr.speed = '%.2f %s' % (speed, ['km/h', 'mph'][getattr(race, 'distanceUnit', 0)] )
 						
 			riderResults.append( rr )

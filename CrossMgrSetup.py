@@ -125,3 +125,5 @@ z = zipfile.ZipFile(newZipName, "w")
 z.write( newExeName )
 z.close()
 print 'executable compressed.'
+
+shutil.copy( newZipName, r"c:\GoogleDrive\PC Installs"  )
