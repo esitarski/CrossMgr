@@ -2223,7 +2223,7 @@ function CmpCategoryResultsData( x, y )
 
 function getStartOffset( num ) {
 	var d = data[num];
-	return d.raceTimes && d.raceTimes.length ? d.raceTimes[0] : 0;
+	return d.raceTimes && d.raceTimes.length > 0 ? d.raceTimes[0] : 0;
 }
 
 function UpdateCatPosIndex() {
@@ -2461,8 +2461,8 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 	if( !data )
 		return;
 		
-	console.log( '********************************************' );
-
+	//console.log( '^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^' );
+		
 	// Show results for this category.
 	var raceTimesLength = {};
 	var raceTimesCopy = {};
@@ -2732,7 +2732,7 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 			var riderTime	= raceTimesLength[num] ? raceTimesCopy[num][raceTimesLength[num]-1] : 99999;
 			var raceTimes	= raceTimesCopy[num];
 			var isFinisher	= (d['status'] == 'Finisher');
-			var tFinish = (isFinisher ? Math.max(riderTime - getStartOffset(num), 0.0) : 0.0);
+			var tFinish = (isFinisher ? riderTime : 0.0);
 			
 			tr.onclick = function(n) { return function() {ToggleNumberHighlight(n);}; }(num);
 			
@@ -2840,7 +2840,7 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 			var finishTime = '';
 			if( isFinisher && d[lastTimeField] > 0.0 ) {
 				finishTime = FormatTime(d[lastTimeField] - getStartOffset(num) );
-				console.log( finishTime + ' ' + FormatTime(d[lastTimeField]) + ' ' + FormatTime(getStartOffset(num)) );
+				// console.log( [finishTime, FormatTime(d[lastTimeField]), FormatTime(getStartOffset(num))].join(', ') );
 				if( isTimeTrial && d['ttPenalty'] )
 					finishTime += '*';
 			}
