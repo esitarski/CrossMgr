@@ -2460,6 +2460,8 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 	
 	if( !data )
 		return;
+		
+	console.log( '********************************************' );
 
 	// Show results for this category.
 	var raceTimesLength = {};
@@ -2563,7 +2565,7 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 			var num = catDetails[c].pos[p];
 			var d = data[num];
 			
-			// Remove the race start time if this is not a Wave category.
+			// Remove the race start time from the lap times.
 			var lastTime = d[lastTimeField];
 			var raceTimes = raceTimesCopy[num];
 			if( raceTimes.length > 0 ) {
@@ -2679,7 +2681,6 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 		// Cache the leader's data.
 		var leaderLaps	= raceTimesLength[leaderNum];
 		var leaderTime	= raceTimesLength[leaderNum] ? raceTimesCopy[leaderNum][raceTimesLength[leaderNum]-1] : 99999;
-		var startOffset	= (raceTimesCopy[leaderNum].length > 0 ? raceTimesCopy[leaderNum][0] : 0);
 		
 		if( leaderLaps > 2 && showLapsFrequency != 0 ) {
 			for( var i = 1; i < leaderLaps; ++i ) {
@@ -2731,7 +2732,7 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 			var riderTime	= raceTimesLength[num] ? raceTimesCopy[num][raceTimesLength[num]-1] : 99999;
 			var raceTimes	= raceTimesCopy[num];
 			var isFinisher	= (d['status'] == 'Finisher');
-			var tFinish = (isFinisher ? Math.max(riderTime - startOffset, 0.0) : 0.0);
+			var tFinish = (isFinisher ? Math.max(riderTime - getStartOffset(num), 0.0) : 0.0);
 			
 			tr.onclick = function(n) { return function() {ToggleNumberHighlight(n);}; }(num);
 			
@@ -2827,7 +2828,7 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 			}
 			
 			if( hasFactor ) {
-				var tFinishOrig = (isFinisher ? Math.max(d['lastTimeOrig'] - startOffset, 0.0) : 0.0);
+				var tFinishOrig = (isFinisher ? Math.max(d['lastTimeOrig'] - getStartOffset(num), 0.0) : 0.0);
 				var finishTimeOrig = (isFinisher ? FormatTime(tFinishOrig) : '');
 				createTextChild( td = createTD(tr), finishTimeOrig );
 				
@@ -2838,7 +2839,8 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 			}
 			var finishTime = '';
 			if( isFinisher && d[lastTimeField] > 0.0 ) {
-				finishTime = FormatTime(d[lastTimeField] - startOffset );
+				finishTime = FormatTime(d[lastTimeField] - getStartOffset(num) );
+				console.log( finishTime + ' ' + FormatTime(d[lastTimeField]) + ' ' + FormatTime(getStartOffset(num)) );
 				if( isTimeTrial && d['ttPenalty'] )
 					finishTime += '*';
 			}
@@ -2850,7 +2852,7 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 					if( riderTime != leaderTime ) {
 						var delta = TimeDifference(riderTime, leaderTime);
 						if( r != 0 && lapDataOption == 3 ) {
-							delta = (100.0 * delta) / (leaderTime - startOffset);
+							delta = (100.0 * delta) / (leaderTime - getStartOffset(num));
 							gap = '+' + delta.toFixed(2) + '%';
 						}
 						else {
@@ -2891,7 +2893,7 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 						createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(raceTimes[i] - raceTimes[i-1], 0.0)) );
 						break;
 					case 1:	// Race Times.
-						createTextChild( td = createChild(tr, 'TD'), FormatTime(Math.max(raceTimes[i] - startOffset, 0.0)) );
+						createTextChild( td = createChild(tr, 'TD'), FormatTime(raceTimes[i]) );
 						break;
 					case 2:	// Gap Times.
 						if( r == 0 )

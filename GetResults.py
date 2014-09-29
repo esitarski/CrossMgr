@@ -636,6 +636,7 @@ def GetCategoryDetails( ignoreEmptyCategories = True ):
 		# Add the remainder of the categories.
 		lastWaveLaps = 0
 		lastWaveCat = None
+		lastWaveStartOffset = 0
 		for cat in race.getCategories( False ):
 			results = GetResults( cat, True )
 			if ignoreEmptyCategories and not results:
@@ -644,10 +645,11 @@ def GetCategoryDetails( ignoreEmptyCategories = True ):
 			if cat.catType == cat.CatWave:
 				lastWaveLaps = cat.getNumLaps()
 				lastWaveCat = cat
+				lastWaveStartOffset = cat.getStartOffsetSecs()
 				
 			info = dict(
 					name		= cat.fullname,
-					startOffset	= cat.getStartOffsetSecs() if cat.catType == cat.CatWave else 0.0,
+					startOffset	= lastWaveStartOffset if cat.catType == cat.CatWave or cat.catType == cat.CatComponent else 0.0,
 					gender		= getattr( cat, 'gender', 'Open' ),
 					catType		= ['Start Wave', 'Component', 'Custom'][cat.catType],
 					laps		= lastWaveLaps if unstarted else 0,
