@@ -113,9 +113,16 @@ table.results tr.odd:hover {
 	background-color:#FFFFCC;
 }
 
+table.results tr td.fastest {
+	background-image: linear-gradient(
+		/* #FF6620, #FFAA20 25%, #FF6620 */
+		#00EE00, #00FF00 25%, #00EE00
+	);
+}
 table.results tr td.fastest-lap {
 	background-image: linear-gradient(
-		#FF6A7F, #FF9EAF 25%, #FF6A7F
+		/* #FF6A7F, #FF9EAF 25%, #FF6A7F */
+		#FF8840, #FFCC40 25%, #FF8840
 	);
 }
 table.results tr td.slowest-lap {
@@ -139,11 +146,6 @@ table.results td.noborder {
 
 table.results td#idNonNumeric, table.results th#idNonNumeric {
 	text-align:left;
-}
-
-table.results tr td.fastest {
-	color:#000000;
-	background-color:#80FF80;
 }
 
 @media print { .noprint { display: none; } }
@@ -2608,7 +2610,7 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 					var s = lapSpeeds[i];
 					if( s > sLapMax ) {
 						sLapMax = s;
-						lapMinCoords = [r, i+1];
+						lapMinCoords = [p, i+1];
 					}
 				}
 			}
@@ -2618,7 +2620,7 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 					var tMax = Math.max(raceTimes[i] - raceTimes[i-1], 0.0);
 					if( tMax < tLapMin ) {
 						tLapMin = tMax;
-						lapMinCoords = [r, i];
+						lapMinCoords = [p, i];
 					}
 				}
 			}
@@ -2939,10 +2941,13 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 					}
 					
 					var classes = [];
-					//if( lapMinCoords && r == lapMinCoords[0] && i == lapMinCoords[1] )	classes.push( 'fastest' );
+					var isFastestLap = (lapMinCoords && p == lapMinCoords[0] && i == lapMinCoords[1]);
+					if( isFastestLap )													classes.push( 'fastest' );
+					else { 
+						if( i == iFastestLap+1 )										classes.push( 'fastest-lap' );
+						else if( i == iSlowestLap+1 )									classes.push( 'slowest-lap' );
+					}
 					if( numsToWatch[num] )												classes.push( 'highlight' );
-					if( i == iFastestLap+1 )											classes.push( 'fastest-lap' );
-					if( i == iSlowestLap+1 )											classes.push( 'slowest-lap' );
 					if( classes )	td.className = classes.join( ' ' );
 				}
 			}

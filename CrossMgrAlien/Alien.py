@@ -13,7 +13,7 @@ import xml.dom.minidom
 import unicodedata
 from xml.dom.minidom import parseString
 from Queue import Empty
-from Utils import readDelimitedData, timeoutSecs
+from Utils import readDelimitedData, timeoutSecs, Bell
 import cStringIO as StringIO
 
 HOME_DIR = os.path.expanduser("~")
@@ -359,7 +359,9 @@ class Alien( object ):
 				for data in response.split( self.ReaderDelim ):
 					if not data:
 						continue
-						
+					
+					Bell()
+					
 					try:
 						doc = parseString( data )
 					except Exception as e:

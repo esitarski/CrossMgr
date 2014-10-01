@@ -439,10 +439,11 @@ class Results(wx.Panel):
 		"""Constructor"""
 		wx.Panel.__init__(self, parent)
  
-		self.categoryLabel = wx.StaticText( self, wx.ID_ANY, 'Category:' )
+		self.categoryLabel = wx.StaticText( self, label='Category:' )
 		self.categoryChoice = wx.Choice( self, wx.ID_ANY, choices = ['No Categories'] )
 		self.categoryChoice.SetSelection( 0 )
 		self.categoryChoice.Bind( wx.EVT_CHOICE, self.onCategoryChoice )
+		self.statsLabel = wx.StaticText( self, label='   /   ' )
 		self.refreshButton = wx.Button( self, label='Refresh' )
 		self.refreshButton.Bind( wx.EVT_BUTTON, lambda event, self = self: self.refresh() )
 		self.exportToHtml = wx.Button( self, label='Export to Html' )
@@ -453,8 +454,9 @@ class Results(wx.Panel):
 		self.exportToExcel.Bind( wx.EVT_BUTTON, self.onExportToExcel )
 
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.categoryLabel, 0, flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border = 4 )
+		hs.Add( self.categoryLabel, 0, flag=wx.ALIGN_CENTER|wx.EXPAND|wx.ALL, border = 4 )
 		hs.Add( self.categoryChoice, 0, flag=wx.ALL, border = 4 )
+		hs.Add( self.statsLabel, 0, flag=wx.ALIGN_CENTER|wx.EXPAND|wx.ALL, border = 4 )
 		hs.AddStretchSpacer()
 		hs.Add( self.refreshButton, 0, flag=wx.ALL, border = 4 )
 		hs.AddSpacer( 52 )
@@ -609,6 +611,8 @@ class Results(wx.Panel):
 						else:
 							halign = wx.ALIGN_CENTRE
 						self.grid.SetCellAlignment( r, c, halign, wx.ALIGN_TOP )
+		
+		self.statsLabel.SetLabel( '{} / {}'.format(self.grid.GetNumberRows(), GetModelInfo.GetTotalUniqueParticipants(self.raceResults)) )
 		
 		self.grid.AutoSizeColumns( False )
 		self.grid.AutoSizeRows( False )

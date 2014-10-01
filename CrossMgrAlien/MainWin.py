@@ -119,6 +119,11 @@ class AdvancedSetup( wx.Dialog ):
 		bs.Add( wx.StaticText(self, wx.ID_ANY, 'interval in which multiple tag reads are considered "repeats" and not reported'), pos=(row, 2), span=(1,1), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL )
 
 		row += 1
+		self.playSoundsCheckbox = wx.CheckBox( self, wx.ID_ANY, 'Beep on Read' )
+		self.playSoundsCheckbox.SetValue( Utils.playBell )
+		bs.Add( self.playSoundsCheckbox, pos=(row, 0), span=(1,3), border = border, flag=wx.TOP|wx.LEFT|wx.RIGHT )
+		
+		row += 1
 		self.restoreDefaultButton = wx.Button( self, wx.ID_ANY, 'Restore Defaults' )
 		self.restoreDefaultButton.Bind( wx.EVT_BUTTON, self.onRestoreDefault )
 		bs.Add( self.restoreDefaultButton, pos=(row, 0), span=(1,3), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_CENTER )
@@ -151,6 +156,7 @@ class AdvancedSetup( wx.Dialog ):
 		
 	def onOK( self, event ):
 		Alien.RepeatSeconds = self.RepeatSeconds.GetValue()
+		Utils.playBell = self.playSoundsCheckbox.IsChecked()
 		self.EndModal( wx.ID_OK )
 		
 	def onCancel( self, event ):
@@ -343,6 +349,7 @@ class MainWin( wx.Frame ):
 		dlg = AdvancedSetup( self )
 		dlg.ShowModal()
 		dlg.Destroy()
+		self.writeOptions()
 	
 	def shutdown( self ):
 		self.alienProcess = None
@@ -508,6 +515,7 @@ class MainWin( wx.Frame ):
 		self.config.Write( 'AlienCmdPort', str(self.cmdPort.GetValue()) )
 		self.config.Write( 'Antennas', self.getAntennaStr() )
 		self.config.Write( 'RepeatSeconds', '{}'.format(Alien.RepeatSeconds) )
+		self.config.Write( 'PlaySounds', '{}'.format(Utils.playBell) )
 		s = self.notifyHost.GetSelection()
 		if s != wx.NOT_FOUND:
 			self.config.Write( 'NotifyHost', self.notifyHost.GetString(s) )
@@ -516,6 +524,7 @@ class MainWin( wx.Frame ):
 	def readOptions( self ):
 		self.crossMgrHost.SetValue( self.config.Read('CrossMgrHost', Utils.DEFAULT_HOST) )
 		self.listenForHeartbeat.SetValue( self.config.Read('ListenForAlienHeartbeat', 'True').upper()[:1] == 'T' )
+		Utils.playBell = (self.config.Read('PlaySounds', 'True').upper()[:1] == 'T')
 		self.cmdHost.SetValue( self.config.Read('AlienCmdAddr', '0.0.0.0') )
 		self.cmdPort.SetValue( int(self.config.Read('AlienCmdPort', '0')) )
 		self.setAntennaStr( self.config.Read('Antennas', '0 1') )

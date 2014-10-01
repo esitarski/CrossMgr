@@ -234,3 +234,8 @@ def GetAllIps():
 		if reIP.search(ip):
 			ips.append( ip )
 	return ips
+	
+playBell = False
+def Bell():
+	if playBell:
+		wx.Bell()

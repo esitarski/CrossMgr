@@ -600,7 +600,15 @@ class MainWin( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.menuSyncCategories, id=idCur )
 		
 		self.optionsMenu.AppendSeparator()
+		idCur = wx.NewId()
+		self.menuItemLaunchExcelAfterPublishingResults = self.optionsMenu.Append( idCur ,
+			_("&Launch Excel after Publishing Results"),
+			_("Launch Excel after Publishing Results"), wx.ITEM_CHECK )
+		self.launchExcelAfterPublishingResults = self.config.ReadBool('menuLaunchExcelAfterPublishingResults', True)
+		self.menuItemLaunchExcelAfterPublishingResults.Check( self.launchExcelAfterPublishingResults )
+		self.Bind( wx.EVT_MENU, self.menuLaunchExcelAfterPublishingResults, id=idCur )
 		
+		self.optionsMenu.AppendSeparator()
 		idCur = wx.NewId()
 		self.optionsMenu.Append( idCur , _("Set Contact &Email..."), _("Set Contact Email for HTML Output") )
 		self.Bind(wx.EVT_MENU, self.menuSetContactEmail, id=idCur )
@@ -752,6 +760,10 @@ class MainWin( wx.Frame ):
 	def menuPlaySounds( self, event ):
 		self.playSounds = self.menuItemPlaySounds.IsChecked()
 		self.config.WriteBool( 'playSounds', self.playSounds )
+		
+	def menuLaunchExcelAfterPublishingResults( self, event ):
+		self.launchExcelAfterPublishingResults = self.menuItemLaunchExcelAfterPublishingResults.IsChecked()
+		self.config.WriteBool( 'launchExcelAfterPublishingResults', self.launchExcelAfterPublishingResults )
 	
 	def menuTipAtStartup( self, event ):
 		showing = self.config.ReadBool('showTipAtStartup', True)
@@ -1193,7 +1205,8 @@ class MainWin( wx.Frame ):
 
 		try:
 			wb.save( xlFName )
-			webbrowser.open( xlFName, new = 2, autoraise = True )
+			if self.launchExcelAfterPublishingResults:
+				webbrowser.open( xlFName, new = 2, autoraise = True )
 			Utils.MessageOK(self, _('Excel file written to:\n\n   {}').format(xlFName), _('Excel Write'))
 		except IOError:
 			Utils.MessageOK(self,

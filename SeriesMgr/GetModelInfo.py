@@ -278,6 +278,9 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		categoryResult = [list(rider) + [riderTeam[rider], riderPoints[rider]] + [riderResults[rider]] for rider in riderOrder]
 		return categoryResult, races
 
+def GetTotalUniqueParticipants( raceResults ):
+	return len( set( (rr.full_name, rr.license) for rr in raceResults ) )
+		
 if __name__ == '__main__':
 	files = [
 		r'C:\Projects\CrossMgr\RacoonRally\2013-06-30-2013 Raccoon Rally Mountain Bike Race-r1-.cmn',
