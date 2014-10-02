@@ -75,7 +75,7 @@ class FrameCircBuf( object ):
 		retFrames = []
 		
 		if before and i != iStart:
-			for b in xrange(1, before):
+			for b in xrange(1, before+1):
 				k = (i-b) % bufSize
 				if abs(times[k] - t).total_seconds() <= window:
 					retTimes.append( times[k] )
@@ -118,20 +118,28 @@ class FrameCircBuf( object ):
 if __name__ == '__main__':
 	bufSize = 5*75
 	fcb = FrameCircBuf( bufSize )
-	fcb.reset( 6*75 )
+	fcb.reset( 5*25 )
+	
+	tStart = datetime.datetime.now()
+	for i in xrange(fcb.bufSize):
+		fcb.append( tStart + datetime.timedelta(seconds=i*1.0/25.0), None )
 	
 	for t in fcb.times:
-		print t.strftime( '%H:%M:%S.%f' )
+		print (t-tStart).total_seconds()
 	print
+	
+	times, frames = fcb.findBeforeAfter( tStart + datetime.timedelta(seconds=2.01), 1, 1 )
+	print [(t-tStart).total_seconds() for t in times]
 	
 	tSearch = datetime.datetime.now() - datetime.timedelta(seconds = 4)
 	i = fcb._find( tSearch )
 	print i, tSearch.strftime( '%H:%M:%S.%f' ), fcb.times[i].strftime( '%H:%M:%S.%f' )
 	
 	print 'getFrames'
-	times, frames = fcb.findBeforeAfter( tSearch, 5, 5 )
+	times, frames = fcb.findBeforeAfter( tSearch, 1, 1 )
 	for t in times:
 		print t.strftime( '%H:%M:%S.%f' )
+	
 	
 	print 'Validation'
 	tSearch = datetime.datetime.now()

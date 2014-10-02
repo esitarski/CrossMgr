@@ -922,7 +922,7 @@ class Race( object ):
 	
 	enableUSBCamera = False
 	photosAtRaceEndOnly = False
-	cameraDevice = 0	
+	cameraDevice = 0
 	advancePhotoMilliseconds = 0
 	photoCount = 0
 	
