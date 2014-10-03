@@ -73,11 +73,15 @@ class CameraTestDialog( wx.Dialog ):
 		
 		self.SetSizer( sizer )
 		
-		self.resolutionFormat = _("Camera Resolution") + u': {} x {}'
+		self.resolutionFormat = _("Camera Resolution") + u': {} x {}  fps={:.3f}'
 		
 		self.tStart = now()
-		self.frameDelay = 1.0/25.0
+		self.framesPerSecond = 25
+		self.frameDelay = 1.0/self.framesPerSecond
 		self.timer = wx.Timer( self )
+		self.frameCount = 0
+		self.tStart = now()
+		self.fps = 0.0
 		self.Bind( wx.EVT_TIMER, self.updatePhoto )
 		
 		SetCameraState( True )
@@ -85,7 +89,7 @@ class CameraTestDialog( wx.Dialog ):
 		if Utils.cameraError:
 			self.status.SetLabel( Utils.cameraError )
 		else:
-			self.timer.Start( self.frameDelay )
+			self.timer.Start( int(self.frameDelay*1000) )
 		
 	def updatePhoto( self, event ):
 		tNow = now()
@@ -96,10 +100,17 @@ class CameraTestDialog( wx.Dialog ):
 			
 		try:
 			photo = AddPhotoHeader( 9999, (tNow - self.tStart).total_seconds(), cameraImage )
-			self.status.SetLabel( self.resolutionFormat.format(photo.GetWidth(), photo.GetHeight()) )
+			self.status.SetLabel( self.resolutionFormat.format(photo.GetWidth(), photo.GetHeight(), self.fps) )
 			self.photo.SetImage( photo )
 		except:
 			pass
+			
+		self.frameCount += 1
+		if self.frameCount == self.framesPerSecond:
+			tNow = now()
+			self.fps = self.frameCount / (now() - self.tStart).total_seconds()
+			self.frameCount = 0
+			self.tStart = tNow
 		
 	def onSave( self, event ):
 		try:
