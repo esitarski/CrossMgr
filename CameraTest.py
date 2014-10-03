@@ -73,7 +73,7 @@ class CameraTestDialog( wx.Dialog ):
 		
 		self.SetSizer( sizer )
 		
-		self.resolutionFormat = _("Camera Resolution") + u': {} x {}  fps={:.3f}'
+		self.resolutionFormat = _("Camera Resolution") + u': {} x {}  fps: {:.3f}'
 		
 		self.tStart = now()
 		self.framesPerSecond = 25
@@ -97,7 +97,7 @@ class CameraTestDialog( wx.Dialog ):
 		if not cameraImage:
 			self.status.SetLabel( Utils.cameraError if Utils.cameraError else _("Camera Failed: Unknown Error.") )
 			return
-			
+		
 		try:
 			photo = AddPhotoHeader( 9999, (tNow - self.tStart).total_seconds(), cameraImage )
 			self.status.SetLabel( self.resolutionFormat.format(photo.GetWidth(), photo.GetHeight(), self.fps) )
@@ -108,7 +108,7 @@ class CameraTestDialog( wx.Dialog ):
 		self.frameCount += 1
 		if self.frameCount == self.framesPerSecond:
 			tNow = now()
-			self.fps = self.frameCount / (now() - self.tStart).total_seconds()
+			self.fps = self.frameCount / (tNow - self.tStart).total_seconds()
 			self.frameCount = 0
 			self.tStart = tNow
 		
