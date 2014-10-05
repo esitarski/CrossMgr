@@ -201,26 +201,26 @@ class MainWin( wx.Frame ):
 		
 		bs = wx.BoxSizer( wx.HORIZONTAL )
 		
-		self.reset = RoundButton(self, wx.ID_ANY, 'Reset', size=(80, 80))
+		self.reset = RoundButton(self, label='Reset', size=(80, 80))
 		self.reset.SetBackgroundColour( wx.WHITE )
 		self.reset.SetForegroundColour( wx.Colour(0,128,128) )
 		self.reset.SetFontToFitLabel()	# Use the button's default font, but change the font size to fit the label.
 		self.reset.Bind( wx.EVT_BUTTON, self.doReset )
 		self.reset.Refresh()
 		bs.Add( self.reset, border = 8, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
-		bs.Add( setFont(italicFont,wx.StaticText(self, wx.ID_ANY, 'CrossMgrImpinj')), border = 8, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
+		bs.Add( setFont(italicFont,wx.StaticText(self, label='CrossMgrImpinj')), border = 8, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
 		bs.AddStretchSpacer()
 		bitmap = wx.BitmapFromXPMData( clipboard_xpm )
-		self.copyToClipboard = wx.BitmapButton( self, wx.ID_ANY, bitmap )
+		self.copyToClipboard = wx.BitmapButton( self, bitmap=bitmap )
 		self.copyToClipboard.SetToolTip(wx.ToolTip('Copy Configuration and Logs to Clipboard...'))
 		self.copyToClipboard.Bind( wx.EVT_BUTTON, self.doCopyToClipboard )
 		bs.Add( self.copyToClipboard, border = 32, flag = wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
 		self.tStart = datetime.datetime.now()
-		bs.Add( setFont(bigFont,wx.StaticText(self, wx.ID_ANY, 'Last Reset: %s' % self.tStart.strftime('%H:%M:%S'))), border = 10, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
-		self.runningTime = setFont(bigFont,wx.StaticText(self, wx.ID_ANY, '00:00:00' ))
+		bs.Add( setFont(bigFont,wx.StaticText(self, label='Last Reset: %s' % self.tStart.strftime('%H:%M:%S'))), border = 10, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
+		self.runningTime = setFont(bigFont,wx.StaticText(self, label='00:00:00' ))
 		bs.Add( self.runningTime, border = 20, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
-		bs.Add( setFont(bigFont,wx.StaticText(self, wx.ID_ANY, ' / ')), flag=wx.ALIGN_CENTER_VERTICAL )
-		self.time = setFont(bigFont, wx.StaticText(self, wx.ID_ANY, '00:00:00' ))
+		bs.Add( setFont(bigFont,wx.StaticText(self, label=' / ')), flag=wx.ALIGN_CENTER_VERTICAL )
+		self.time = setFont(bigFont, wx.StaticText(self, label='00:00:00' ))
 		bs.Add( self.time, flag=wx.ALIGN_CENTER_VERTICAL )
 		
 		self.vbs.Add( bs, flag=wx.ALL|wx.EXPAND, border = 4 )
@@ -241,12 +241,12 @@ class MainWin( wx.Frame ):
 		
 		iRow = 0
 		hb = wx.BoxSizer( wx.HORIZONTAL )
-		hb.Add( setFont(bigFont,wx.StaticText(self, wx.ID_ANY, 'Impinj Configuration:')), flag=wx.ALIGN_CENTER_VERTICAL )
-		self.autoDetectButton = wx.Button(self, wx.ID_ANY, 'Auto Detect')
+		hb.Add( setFont(bigFont,wx.StaticText(self, label='Impinj Configuration:')), flag=wx.ALIGN_CENTER_VERTICAL )
+		self.autoDetectButton = wx.Button(self, label='Auto Detect')
 		self.autoDetectButton.Bind( wx.EVT_BUTTON, self.doAutoDetect )
 		hb.Add( self.autoDetectButton, flag=wx.LEFT, border = 6 )
 		
-		self.advancedButton = wx.Button(self, wx.ID_ANY, 'Advanced...' )
+		self.advancedButton = wx.Button(self, label='Advanced...' )
 		self.advancedButton.Bind( wx.EVT_BUTTON, self.doAdvanced )
 		hb.Add( self.advancedButton, flag=wx.LEFT, border = 6 )
 		
@@ -257,7 +257,7 @@ class MainWin( wx.Frame ):
 		gs = wx.GridSizer( rows=0, cols=4, vgap=2, hgap=2 )
 		self.antennas = []
 		for i in xrange(4):
-			gs.Add( wx.StaticText(self, wx.ID_ANY, '%d' % (i+1)), flag=wx.ALIGN_CENTER )
+			gs.Add( wx.StaticText(self, label='%d' % (i+1)), flag=wx.ALIGN_CENTER )
 		for i in xrange(4):
 			cb = wx.CheckBox( self, wx.ID_ANY, '')
 			if i < 2:
@@ -266,33 +266,33 @@ class MainWin( wx.Frame ):
 			gs.Add( cb, flag=wx.ALIGN_CENTER )
 			self.antennas.append( cb )
 		
-		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'ANT Ports:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_BOTTOM )
+		gbs.Add( wx.StaticText(self, label='ANT Ports:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_BOTTOM )
 		gbs.Add( gs, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
 		
 		iRow += 1
 		
-		self.useHostName = wx.RadioButton( self, wx.ID_ANY, 'Host Name:', style=wx.wx.RB_GROUP )
+		self.useHostName = wx.RadioButton( self, label='Host Name:', style=wx.wx.RB_GROUP )
 		gbs.Add( self.useHostName, pos=(iRow,0), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
 		hb = wx.BoxSizer( wx.HORIZONTAL )
-		hb.Add( wx.StaticText(self, wx.ID_ANY, ImpinjHostNamePrefix), flag=wx.ALIGN_CENTER_VERTICAL )
-		self.impinjHostName = masked.TextCtrl( self, wx.ID_ANY,
+		hb.Add( wx.StaticText(self, label=ImpinjHostNamePrefix), flag=wx.ALIGN_CENTER_VERTICAL )
+		self.impinjHostName = masked.TextCtrl( self,
 							mask         = 'NN-NN-NN',
 							defaultValue = '00-00-00',
 							useFixedWidthFont = True,
 							size=(80, -1),
 						)
 		hb.Add( self.impinjHostName )
-		hb.Add( wx.StaticText(self, wx.ID_ANY, ImpinjHostNameSuffix), flag=wx.ALIGN_CENTER_VERTICAL )
-		hb.Add( wx.StaticText(self, wx.ID_ANY, ' : ' + '{}'.format(ImpinjInboundPort)), flag=wx.ALIGN_CENTER_VERTICAL )
+		hb.Add( wx.StaticText(self, label=ImpinjHostNameSuffix), flag=wx.ALIGN_CENTER_VERTICAL )
+		hb.Add( wx.StaticText(self, label=' : ' + '{}'.format(ImpinjInboundPort)), flag=wx.ALIGN_CENTER_VERTICAL )
 		gbs.Add( hb, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
 		
 		iRow += 1
-		self.useStaticAddress = wx.RadioButton( self, wx.ID_ANY, 'IP:' )
+		self.useStaticAddress = wx.RadioButton( self, label='IP:' )
 		gbs.Add( self.useStaticAddress, pos=(iRow,0), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
 		hb = wx.BoxSizer( wx.HORIZONTAL )
-		self.impinjHost = masked.IpAddrCtrl( self, wx.ID_ANY, style = wx.TE_PROCESS_TAB )
+		self.impinjHost = masked.IpAddrCtrl( self, style=wx.TE_PROCESS_TAB )
 		hb.Add( self.impinjHost )
-		hb.Add( wx.StaticText(self, wx.ID_ANY, ' : ' + '{}'.format(ImpinjInboundPort)), flag=wx.ALIGN_CENTER_VERTICAL )
+		hb.Add( wx.StaticText(self, label=' : ' + '{}'.format(ImpinjInboundPort)), flag=wx.ALIGN_CENTER_VERTICAL )
 
 		gbs.Add( hb, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
 		
@@ -300,7 +300,7 @@ class MainWin( wx.Frame ):
 		self.useStaticAddress.SetValue( False )
 		
 		iRow += 1
-		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'Backup File:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT )
+		gbs.Add( wx.StaticText(self, label='Backup File:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT )
 		self.backupFile = wx.StaticText( self, wx.ID_ANY, '' )
 		gbs.Add( self.backupFile, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
 		
@@ -310,23 +310,23 @@ class MainWin( wx.Frame ):
 		gbs = wx.GridBagSizer( 4, 4 )
 		fgs.Add( gbs, flag=wx.EXPAND|wx.ALL, border = 4 )
 		
-		gbs.Add( setFont(bigFont,wx.StaticText(self, wx.ID_ANY, 'CrossMgr Configuration:')), pos=(0,0), span=(1,2), flag=wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL )
-		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'CrossMgr Address:'), pos=(1,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		gbs.Add( setFont(bigFont,wx.StaticText(self, label='CrossMgr Configuration:')), pos=(0,0), span=(1,2), flag=wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL )
+		gbs.Add( wx.StaticText(self, label='CrossMgr Address:'), pos=(1,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		
 		hb = wx.BoxSizer( wx.HORIZONTAL )
-		self.crossMgrHost = masked.IpAddrCtrl( self, wx.ID_ANY, style = wx.TE_PROCESS_TAB )
+		self.crossMgrHost = masked.IpAddrCtrl( self, style = wx.TE_PROCESS_TAB )
 		hb.Add( self.crossMgrHost, flag=wx.ALIGN_LEFT )
-		hb.Add( wx.StaticText( self, wx.ID_ANY, ' : 53135' ), flag=wx.ALIGN_CENTER_VERTICAL )
+		hb.Add( wx.StaticText( self, label=' : 53135' ), flag=wx.ALIGN_CENTER_VERTICAL )
 		gbs.Add( hb, pos=(1,1), span=(1,1), flag=wx.ALIGN_LEFT )
 		
 		#------------------------------------------------------------------------------------------------
 		# Add messages
 		#
-		self.impinjMessagesText = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_READONLY|wx.TE_MULTILINE|wx.HSCROLL, size=(-1,400) )
+		self.impinjMessagesText = wx.TextCtrl( self, style=wx.TE_READONLY|wx.TE_MULTILINE|wx.HSCROLL, size=(-1,400) )
 		fgs.Add( self.impinjMessagesText, flag=wx.EXPAND, proportion=2 )
 		self.impinjMessages = MessageManager( self.impinjMessagesText )
 		
-		self.crossMgrMessagesText = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_READONLY|wx.TE_MULTILINE|wx.HSCROLL, size=(-1,400) )
+		self.crossMgrMessagesText = wx.TextCtrl( self, style=wx.TE_READONLY|wx.TE_MULTILINE|wx.HSCROLL, size=(-1,400) )
 		fgs.Add( self.crossMgrMessagesText, flag=wx.EXPAND, proportion=2 )
 		self.crossMgrMessages = MessageManager( self.crossMgrMessagesText )
 		self.fgs = fgs
