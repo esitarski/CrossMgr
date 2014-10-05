@@ -179,7 +179,7 @@ class MainWin( wx.Frame ):
 		pfgs = wx.FlexGridSizer( rows=0, cols=3, vgap=4, hgap=8 )
 		
 		pfgs.Add( wx.StaticText(self.controlPanel, label='Camera Device'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-		self.cameraDevice = wx.Choice( self.controlPanel, choices=[unicode(i) for i in xrange(8)] )
+		self.cameraDevice = wx.StaticText( self.controlPanel )
 		pfgs.Add( self.cameraDevice )
 		pfgs.Add( wx.StaticText(self.controlPanel), flag=wx.ALIGN_CENTRE_VERTICAL )
 		
@@ -202,6 +202,12 @@ class MainWin( wx.Frame ):
 		self.frameProcessingTime = wx.StaticText(self.controlPanel, label='20')
 		pfgs.Add( self.frameProcessingTime, flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 		pfgs.Add( wx.StaticText(self.controlPanel, label='ms'), flag=wx.ALIGN_CENTRE_VERTICAL )
+		
+		self.reset = wx.Button( self.controlPanel, label=u"Reset Camera" )
+		self.reset.Bind( wx.EVT_BUTTON, self.resetCamera )
+		pfgs.Add( self.reset, flag=wx.ALIGN_RIGHT|wx.ALL, border=8 )
+		pfgs.Add( wx.StaticText(self.controlPanel) )
+		pfgs.Add( wx.StaticText(self.controlPanel) )
 		
 		phSizer.Add( pfgs )
 		
@@ -267,12 +273,12 @@ class MainWin( wx.Frame ):
 	def startCamera( self ):
 		self.camera = None
 		try:
-			self.camera = Device( max(self.cameraDevice.GetSelection(), 0) )
+			self.camera = Device( max(self.getCameraDeviceNum(), 0) )
 		except Exception as e:
 			self.messageQ.put( ('camera', 'Error: {}'.format(e)) )
 			return False
 		
-		self.messageQ.put( ('camera', 'Successfully Connected') )
+		self.messageQ.put( ('camera', 'Successfully Connected: Device: {}'.format(self.getCameraDeviceNum()) ) )
 		return True
 	
 	def startThreads( self ):
@@ -364,36 +370,35 @@ class MainWin( wx.Frame ):
 			self.writerQ.put( ('terminate', ) )
 			self.writerThread.join()
 	
-	def resetCamera( self, event, confirm = True ):
-		if confirm:
-			dlg = wx.MessageDialog(self, 'Reset Camera?',
-									'Confirm Reset',
-									wx.OK | wx.CANCEL | wx.ICON_WARNING )
-			ret = dlg.ShowModal()
-			dlg.Destroy()
-			if ret != wx.ID_OK:
-				return
-		
-		self.reset.Enable( False )		# Prevent multiple clicks while shutting down.
-		
+	def resetCamera( self, event ):
 		self.writeOptions()
+		
+		dlg = ConfigDialog( self, self.getCameraDeviceNum() )
+		ret = dlg.ShowModal()
+		cameraDeviceNum = dlg.GetCameraDeviceNum()
+		dlg.Destroy()
+		if ret != wx.ID_OK:
+			return
+		
+		self.setCameraDeviceNum( cameraDeviceNum )
 		self.grabFrameOK = self.startCamera()
 		
-		self.reset.Enable( True )
-		
 	def setCameraDeviceNum( self, num ):
-		self.cameraDevice.SetSelection( num )
+		self.cameraDevice.SetLabel( unicode(num) )
+		
+	def getCameraDeviceNum( self ):
+		return int(self.cameraDevice.GetLabel())
 		
 	def onCloseWindow( self, event ):
 		self.shutdown()
 		wx.Exit()
 		
 	def writeOptions( self ):
-		self.config.Write( 'CameraDevice', unicode(self.cameraDevice.GetSelection()) )
+		self.config.Write( 'CameraDevice', self.cameraDevice.GetLabel() )
 		self.config.Flush()
 	
 	def readOptions( self ):
-		self.cameraDevice.SetSelection( int(self.config.Read('CameraDevice', '0')) )
+		self.cameraDevice.SetLabel( self.config.Read('CameraDevice', u'0') )
 
 def disable_stdout_buffering():
 	fileno = sys.stdout.fileno()
@@ -450,14 +455,14 @@ def MainLoop():
 		pass
 
 	mainWin.Refresh()
-	dlg = ConfigDialog( mainWin, mainWin.cameraDevice.GetSelection() )
+	dlg = ConfigDialog( mainWin, mainWin.getCameraDeviceNum() )
 	ret = dlg.ShowModal()
 	cameraDeviceNum = dlg.GetCameraDeviceNum()
 	dlg.Destroy()
 	if ret != wx.ID_OK:
 		wx.Exit()
 		
-	mainWin.cameraDevice.SetSelection( cameraDeviceNum )
+	mainWin.setCameraDeviceNum( cameraDeviceNum )
 	
 	# Start processing events.
 	mainWin.Start()
