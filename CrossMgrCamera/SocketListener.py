@@ -14,14 +14,22 @@ def getDelimited( s, delimeter ):
 		if m:
 			yield m
 
-def SocketListener( s, q ):
+def SocketListener( s, q, qMessage ):
 	while 1:
 		client, addr = s.accept()
 		for message in getDelimited( client, delimiter ):
-			kwargs = json.loads( message )
+		
+			try:
+				kwargs = json.loads( message )
+			except Exception as e:
+				qMessage.put( ('error', 'Bad message format: "{}": {}'.format(message, e)) )
+				
 			try:
 				kwargs['time'] = datetime.datetime( *kwargs['time'] )
 			except KeyError:
 				pass
+			except Exception as e:
+				qMessage.put( ('error', 'Bad time format: "{}": {}'.format(kwargs['time'], e)) )
+				
 			q.put( kwargs )
 		client.close()

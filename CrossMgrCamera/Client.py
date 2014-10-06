@@ -14,7 +14,7 @@ Fields = {'dirName', 'bib', 'time', 'raceSeconds', 'firstName', 'lastName', 'tea
 
 def PhotoSendMessage( **kwargs ):
 	assert 'dirName' in kwargs, 'dirName is a required argument'
-	messageArgs = {}
+	messageArgs = {'cmd':'photo'}
 	for k, v in kwargs.iteritems():
 		assert k in Fields, 'unrecognized argument: {}'.format(key)
 		messageArgs[k] = v if k != 'time' else [v.year, v.month, v.day, v.hour, v.minute, v.second, v.microsecond]
@@ -31,6 +31,9 @@ def PhotoSendMessage( **kwargs ):
 	
 	return True, None
 
+def PhotoAcknowledge():
+	
+	
 if __name__ == '__main__':
 	now = datetime.datetime.now
 	choice = random.choice

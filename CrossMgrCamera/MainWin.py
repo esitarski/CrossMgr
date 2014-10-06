@@ -284,7 +284,7 @@ class MainWin( wx.Frame ):
 	def startThreads( self ):
 		self.grabFrameOK = False
 		
-		self.listenerThread = threading.Thread( target=SocketListener, args=(self.listenerSocket, self.requestQ) )
+		self.listenerThread = threading.Thread( target=SocketListener, args=(self.listenerSocket, self.requestQ, self.messageQ) )
 		self.listenerThread.daemon = True
 		
 		self.writerThread = threading.Thread( target=PhotoWriter, args=(self.writerQ, self.messageQ) )
