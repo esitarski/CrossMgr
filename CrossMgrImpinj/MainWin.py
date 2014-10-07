@@ -621,7 +621,7 @@ def MainLoop():
 
 	# Set the upper left icon.
 	try:
-		icon = wx.Icon( os.path.join(getImageFolder(), 'CrossMgrImpinj.ico'), wx.BITMAP_TYPE_ICO )
+		icon = wx.Icon( os.path.join(Utils.getImageFolder(), 'CrossMgrImpinj.ico'), wx.BITMAP_TYPE_ICO )
 		mainWin.SetIcon( icon )
 	except:
 		pass
