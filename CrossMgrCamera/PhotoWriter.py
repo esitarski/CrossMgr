@@ -2,10 +2,10 @@ import os
 import wx
 import cStringIO as StringIO
 
-def PhotoWriter( qIn, qMessage ):
+def PhotoWriter( qWriter, qMessage ):
 	keepGoing = True
 	while keepGoing:
-		message = qIn.get()
+		message = qWriter.get()
 		if message[0] == 'save':
 			cmd, fname, image = message
 			buf = StringIO.StringIO()
@@ -18,4 +18,5 @@ def PhotoWriter( qIn, qMessage ):
 				qMessage.put( ('save failure', '"{}": {}'.format(os.path.basename(fname), e) ) )
 		elif message[0] == 'terminate':
 			keepGoing = False
-		qIn.task_done()
+		
+		qWriter.task_done()

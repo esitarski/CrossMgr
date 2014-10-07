@@ -8,37 +8,42 @@ import shutil
 
 from MainWin import HOST, PORT
 
-delimeter = '\n\n\n'
+delimiter = '\n\n\n'
 
 Fields = {'dirName', 'bib', 'time', 'raceSeconds', 'firstName', 'lastName', 'team', 'raceName'}
 
-def PhotoSendMessage( **kwargs ):
-	assert 'dirName' in kwargs, 'dirName is a required argument'
-	messageArgs = {'cmd':'photo'}
-	for k, v in kwargs.iteritems():
-		assert k in Fields, 'unrecognized argument: {}'.format(key)
-		messageArgs[k] = v if k != 'time' else [v.year, v.month, v.day, v.hour, v.minute, v.second, v.microsecond]
-	
-	message = json.dumps( messageArgs, separators=(',',':') )
-	print message
-	
+def sendMessages( messages ):
 	try:
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		s.connect((HOST, PORT))
-		s.sendall( message + delimeter )
+		s.sendall( delimiter.join(messages) )
 	except Exception as e:
 		return False, e
 	
 	return True, None
 
-def PhotoAcknowledge():
+def PhotoGetRequest( kwargs ):
+	assert 'dirName' in kwargs, 'dirName is a required argument'
+	messageArgs = {k : v if k != 'time' else [v.year, v.month, v.day, v.hour, v.minute, v.second, v.microsecond]
+			for k, v in kwargs.iteritems() if k in Fields }
 	
+	assert all( k in Fields for k in kwargs.iterkeys() ), 'unrecognized field(s): {}'.format(', '.join([k not in Fields for k in kwargs.iterkeys()]))
+	messageArgs['cmd'] = 'photo'
+	
+	return json.dumps( messageArgs, separators=(',',':') )
+	
+def PhotoSendRequests( messages ):
+	return sendMessages( [PhotoGetRequest(m) for m in messages] )
+
+def PhotoAcknowledge():
+	return sendMessage( [json.dumps( {'cmd':'ack'}, separators=(',',':') )] )
 	
 if __name__ == '__main__':
 	now = datetime.datetime.now
 	choice = random.choice
 
 	tStart = now()
+	time.sleep( 0.5 )
 
 	firstNames = 'Liam	Ethan	Jacob	Lucas	Benjamin'.split()
 	lastNames = 'SMITH JOHNSON WILLIAMS JONES BROWN'.split()
@@ -69,18 +74,21 @@ Trek Factory Racing'''.split( '\n' )
 	os.mkdir( dirName )
 	
 	while 1:
+		requests = []
 		for i in xrange(random.randint(0, 5)):
 			tNow = now()
-			success, error = PhotoSendMessage(
-				dirName = dirName,
-				bib = int(199*random.random()+1),
-				time = tNow,
-				raceSeconds = (tNow - tStart).total_seconds(),
-				firstName = choice(firstNames),
-				lastName = choice(lastNames),
-				team = choice(teams),
-				raceName = u'Client Race Test'
+			requests.append( {
+					'dirName':		dirName,
+					'bib':			int(199*random.random()+1),
+					'time':			tNow,
+					'raceSeconds':	(tNow - tStart).total_seconds(),
+					'firstName':	choice(firstNames),
+					'lastName':		choice(lastNames),
+					'team':			choice(teams),
+					'raceName':		u'Client Race Test'
+				}
 			)
-			if not success:
-				print error
+		success, error = PhotoSendRequests( requests )
+		if not success:
+			print error
 		time.sleep( random.random() * 2 )

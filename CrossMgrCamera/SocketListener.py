@@ -1,28 +1,44 @@
 
 import wx
 import socket
+import threading
 import json
 import datetime
+import time
 
 delimiter = '\n\n\n'
 
-def getDelimited( s, delimeter ):
-	r = ''
-	while not r.endswith(delimiter):
-		r += s.recv(4096)
-	for m in r.split(delimiter):
-		if m:
-			yield m
+def postRequests( requests, qRequest ):
+	# Wait for some frames to accumulate.
+	time.sleep( 0.2 )
+	
+	# Now, post all the messages
+	for kwargs in requests:
+		qRequest.put( kwargs )
 
-def SocketListener( s, q, qMessage ):
+def SocketListener( s, qRequest, qMessage ):
 	while 1:
 		client, addr = s.accept()
-		for message in getDelimited( client, delimiter ):
 		
+		messages = ''
+		while 1:
+			data = client.recv( 4096 )
+			if not data:
+				break
+			messages += data
+		client.close()
+		
+		# Collect the messages.
+		requests = []
+		for message in messages.split( delimiter ):
+			if not message:
+				continue
+			
 			try:
 				kwargs = json.loads( message )
 			except Exception as e:
-				qMessage.put( ('error', 'Bad message format: "{}": {}'.format(message, e)) )
+				qMessage.put( ('error', 'Bad request format: "{}": {}'.format(message, e)) )
+				continue
 				
 			try:
 				kwargs['time'] = datetime.datetime( *kwargs['time'] )
@@ -30,6 +46,12 @@ def SocketListener( s, q, qMessage ):
 				pass
 			except Exception as e:
 				qMessage.put( ('error', 'Bad time format: "{}": {}'.format(kwargs['time'], e)) )
-				
-			q.put( kwargs )
-		client.close()
+				continue
+			
+			if kwargs.get('cmd', None) == 'photo':
+				requests.append( kwargs )
+
+		# Post the messages in a thread so we can add a delay.
+		thread = threading.Thread( target=postRequests, args=(requests, qRequest) )
+		thread.daemon = True
+		thread.start()

@@ -17,8 +17,7 @@ import socket
 import atexit
 import time
 import threading
-from Queue import Queue
-from Queue import Empty
+from Queue import Queue, Empty, Full
 
 import Utils
 from SocketListener import SocketListener
@@ -26,7 +25,10 @@ from PhotoWriter import PhotoWriter
 from FrameCircBuf import FrameCircBuf
 from AddPhotoHeader import AddPhotoHeader, PilImageToWxImage
 from ScaledImage import ScaledImage
-from VideoCapture import Device
+try:
+	from VideoCapture import Device
+except:
+	Device = None
 
 from Version import AppVerName
 
@@ -47,7 +49,7 @@ def formatTime( secs ):
 	hours = int(secs // (60*60))
 	minutes = int( (secs // 60) % 60 )
 	secs = secs % 60 + f
-	return "%s%02d:%02d:%06.3f" % (sign, hours, minutes, secs)
+	return "{}{:02d}:{:02d}:{:06.3f}".format(sign, hours, minutes, secs)
 	
 def fileFormatTime( secs ):
 	return formatTime(secs).replace(':', '-').replace('.', '-')
@@ -140,7 +142,7 @@ class MainWin( wx.Frame ):
 		
 		self.fps = 25
 		self.frameDelay = 1.0 / self.fps
-		self.bufferSecs = 8
+		self.bufferSecs = 10
 		
 		self.tFrameCount = self.tLaunch = self.tLast = now()
 		self.frameCount = 0
@@ -155,7 +157,7 @@ class MainWin( wx.Frame ):
 						style=wx.CONFIG_USE_LOCAL_FILE)
 		
 		self.requestQ = Queue()
-		self.writerQ = Queue()
+		self.writerQ = Queue( 400 )		# Enough to take 2 pictures of a 200 member peleton.
 		self.messageQ = Queue()
 		
 		self.SetBackgroundColour( wx.Colour(232,232,232) )
@@ -165,6 +167,7 @@ class MainWin( wx.Frame ):
 		self.primaryImage = ScaledImage( self, style=wx.BORDER_SUNKEN )
 		self.beforeImage = ScaledImage( self, style=wx.BORDER_SUNKEN )
 		self.afterImage = ScaledImage( self, style=wx.BORDER_SUNKEN )
+		self.beforeAfterImages = [self.beforeImage, self.afterImage]
 		
 		#------------------------------------------------------------------------------------------------
 		self.controlPanel = wx.Panel( self )
@@ -339,23 +342,32 @@ class MainWin( wx.Frame ):
 				break
 			
 			times, frames = self.fcb.findBeforeAfter( message['time'], 1, 1 )
+			if not frames:
+				self.messageQ.put( ('error', 'No photos for {} at {}'.format(message.get('bib', None), message['time'].isoformat()) ) )
 			for i, f in enumerate(frames):
 				fname = GetPhotoFName( message['dirName'], message.get('bib',None), message.get('raceSeconds',None), i )
 				image = AddPhotoHeader(
-							f,
-							message.get('bib', None),
-							message.get('time', None),
-							message.get('raceSeconds', None),
-							message.get('firstName',u''),
-							message.get('lastName',u''),
-							message.get('team',u''),
-							message.get('raceName',u'')
+					f,
+					message.get('bib', None),
+					message.get('time', None),
+					message.get('raceSeconds', None),
+					message.get('firstName',u''),
+					message.get('lastName',u''),
+					message.get('team',u''),
+					message.get('raceName',u'')
+				)
+				
+				self.beforeAfterImages[i].SetImage( image )
+				
+				try:
+					self.writerQ.put( ('save', fname, image), False )
+				except Full:
+					self.messageQ.put( ('error', 'Photo write queue full.  Missed {} at {}.'.format(
+								message.get('bib','NoBib'),
+								message.get('time','NoTime'),
+							)
 						)
-				if i == 0:
-					self.beforeImage.SetImage( image )
-				else:
-					self.afterImage.SetImage( image )
-				self.writerQ.put( ('save', fname, image) )
+					)
 				
 			if (now() - tNow).total_seconds() > self.frameDelay / 2.0:
 				break
