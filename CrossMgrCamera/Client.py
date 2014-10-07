@@ -66,7 +66,7 @@ Team Sky
 Tinkoff-Saxo
 Trek Factory Racing'''.split( '\n' )
 
-	dirName = 'Test_Photos'
+	dirName = os.path.join( os.path.dirname(os.path.realpath(__file__)), 'Test_Photos' )
 	
 	# Cleanup the photo directory.
 	if os.path.exists(dirName):

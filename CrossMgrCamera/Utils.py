@@ -178,6 +178,10 @@ if 'CrossMgr?' in os.path.basename(dirName):
 
 imageFolder = os.path.join(dirName, 'images')
 
+def FixPILSearchPath():
+	if imageFolder not in sys.path:
+		sys.path.append( imageFolder )
+
 def getDirName():		return dirName
 def getImageFolder():	return imageFolder
 

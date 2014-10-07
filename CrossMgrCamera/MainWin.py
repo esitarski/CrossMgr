@@ -87,6 +87,8 @@ class ConfigDialog( wx.Dialog ):
 	def __init__( self, parent, cameraDeviceNum=0, id=wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, title=_('CrossMgr Camera Configuration') )
 		
+		Utils.FixPILSearchPath()
+		
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		
 		self.title = wx.StaticText( self, label='CrossMgr Camera Configuration' )
