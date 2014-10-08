@@ -416,7 +416,7 @@ def GetResults( category, getExternalData = False ):
 		except:
 			excelLink = None
 			externalFields = []
-			externalInfo = []
+			externalInfo = {}
 				
 		for rr in riderResults:
 			for f in externalFields:

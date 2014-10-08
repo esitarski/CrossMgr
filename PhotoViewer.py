@@ -266,7 +266,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		else: 
 			Utils.MessageOK( self, _('Unable to Copy Photo to Clipboard.'), _('Copy Failed'), iconMask = wx.ICON_ERROR )
 	
-	def OnLauchFileBrowser( self, event ):
+	def OnLaunchFileBrowser( self, event ):
 		if Utils.mainWin and Utils.mainWin.fileName:
 			dir = getPhotoDirName( Utils.mainWin.fileName )
 		else:
@@ -319,7 +319,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		{
 			self.refreshID:			self.OnRefresh,
 			self.copyToClipboardID:	self.OnCopyToClipboard,
-			self.showFilesID:		self.OnLauchFileBrowser,
+			self.showFilesID:		self.OnLaunchFileBrowser,
 			self.ftpID:				self.OnFTPUpload,
 			self.printID:			self.OnPrint,
 			self.takePhotoID:		self.OnTakePhoto,

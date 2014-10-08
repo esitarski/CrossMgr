@@ -61,4 +61,5 @@ def SocketListener( s, qRequest, qMessage ):
 		if requests:
 			thread = threading.Thread( target=postRequests, args=(requests, qRequest) )
 			thread.daemon = True
+			thread.name = 'PostRequestDelay'
 			thread.start()

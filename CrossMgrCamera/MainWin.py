@@ -22,6 +22,7 @@ from Queue import Queue, Empty, Full
 import Utils
 from SocketListener import SocketListener
 from PhotoWriter import PhotoWriter
+from FTPWriter import FTPWriter
 from FrameCircBuf import FrameCircBuf
 from AddPhotoHeader import AddPhotoHeader, PilImageToWxImage
 from ScaledImage import ScaledImage
@@ -160,6 +161,7 @@ class MainWin( wx.Frame ):
 		
 		self.requestQ = Queue()
 		self.writerQ = Queue( 400 )		# Enough to take 2 pictures of a 200 member peleton.
+		self.ftpQ = Queue()
 		self.messageQ = Queue()
 		
 		self.SetBackgroundColour( wx.Colour(232,232,232) )
@@ -292,7 +294,10 @@ class MainWin( wx.Frame ):
 		self.listenerThread = threading.Thread( target=SocketListener, args=(self.listenerSocket, self.requestQ, self.messageQ) )
 		self.listenerThread.daemon = True
 		
-		self.writerThread = threading.Thread( target=PhotoWriter, args=(self.writerQ, self.messageQ) )
+		self.writerThread = threading.Thread( target=PhotoWriter, args=(self.writerQ, self.messageQ, self.ftpQ) )
+		self.writerThread.daemon = True
+		
+		self.ftpThread = threading.Thread( target=FTPWriter, args=(self.ftpQ, self.messageQ) )
 		self.writerThread.daemon = True
 		
 		self.listenerThread.start()
@@ -361,8 +366,13 @@ class MainWin( wx.Frame ):
 				
 				self.beforeAfterImages[i].SetImage( image )
 				
+				if 'ftpInfo' in message:
+					writerMessage = ('save', fname, image, message.get('ftpInfo'))
+				else:
+					writerMessage = ('save', fname, image)
+				
 				try:
-					self.writerQ.put( ('save', fname, image), False )
+					self.writerQ.put( writerMessage, False )
 				except Full:
 					self.messageQ.put( ('error', 'Photo write queue full.  Missed {} at {}.'.format(
 								message.get('bib','NoBib'),
