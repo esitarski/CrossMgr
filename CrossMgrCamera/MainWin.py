@@ -29,10 +29,28 @@ from AddPhotoHeader import AddPhotoHeader, PilImageToWxImage
 from ScaledImage import ScaledImage
 from GetPhotoFName import GetPhotoFName
 
+imageWidth, imageHeight = 640, 480
+
 try:
 	from VideoCapture import Device
 except:
-	Device = None
+	from PIL import Image, ImageDraw
+	class Device( object ):
+		def __init__( self, cameraDeviceNum = 0 ):
+			self.cameraDeviceNum = cameraDeviceNum
+			
+		def getImage( self ):
+			# Return a test image.
+			image = Image.new('RGB', (imageWidth, imageHeight), (255,255,255))
+			draw = ImageDraw.Draw( image )
+			y1 = 0
+			y2 = imageHeight
+			colours = ((0,0,0), (255,0,0), (0,255,0), (0,0,255), (255,255,0), (255,0,255), (0,255,255), (255,255,255))
+			rWidth = int(float(imageWidth) / len(colours) + 0.5)
+			for i, c in enumerate(colours):
+				x1, x2 = rWidth * i, rWidth * (i+1)
+				draw.rectangle( ((x1, y1), (x2, y2)), fill=c )
+			return image
 
 from Version import AppVerName
 
@@ -150,9 +168,9 @@ class MainWin( wx.Frame ):
 		
 		mainSizer = wx.BoxSizer( wx.VERTICAL )
 		
-		self.primaryImage = ScaledImage( self, style=wx.BORDER_SUNKEN )
-		self.beforeImage = ScaledImage( self, style=wx.BORDER_SUNKEN )
-		self.afterImage = ScaledImage( self, style=wx.BORDER_SUNKEN )
+		self.primaryImage = ScaledImage( self, style=wx.BORDER_SUNKEN, size=(imageWidth, imageHeight) )
+		self.beforeImage = ScaledImage( self, style=wx.BORDER_SUNKEN, size=(imageWidth, imageHeight) )
+		self.afterImage = ScaledImage( self, style=wx.BORDER_SUNKEN, size=(imageWidth, imageHeight) )
 		self.beforeAfterImages = [self.beforeImage, self.afterImage]
 		
 		#------------------------------------------------------------------------------------------------
@@ -161,7 +179,7 @@ class MainWin( wx.Frame ):
 		
 		phSizer = wx.BoxSizer( wx.HORIZONTAL )
 		
-		self.messagesText = wx.TextCtrl( self.controlPanel, style=wx.TE_READONLY|wx.TE_MULTILINE|wx.HSCROLL, size=(350,480) )
+		self.messagesText = wx.TextCtrl( self.controlPanel, style=wx.TE_READONLY|wx.TE_MULTILINE|wx.HSCROLL, size=(350,imageHeight) )
 		self.messageManager = MessageManager( self.messagesText )
 		phSizer.Add( self.messagesText, proportion=1, flag=wx.EXPAND|wx.ALL, border=4 )
 		
@@ -198,7 +216,7 @@ class MainWin( wx.Frame ):
 		pfgs.Add( self.frameProcessingTime, flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 		pfgs.Add( wx.StaticText(self.controlPanel, label='ms'), flag=wx.ALIGN_CENTRE_VERTICAL )
 		
-		self.reset = wx.Button( self.controlPanel, label=u"Reset Camera" )
+		self.reset = wx.Button( self.controlPanel, label="Reset Camera" )
 		self.reset.Bind( wx.EVT_BUTTON, self.resetCamera )
 		pfgs.Add( self.reset, flag=wx.ALIGN_RIGHT|wx.ALL, border=8 )
 		pfgs.Add( wx.StaticText(self.controlPanel) )
@@ -237,12 +255,13 @@ class MainWin( wx.Frame ):
 		self.grabFrameOK = False
 		
 		# Start the frame loop.
-		ms = int(1000 * self.frameDelay * 0.80)
+		delayAdjustment = 0.80 if 'win' in sys.platform else 0.98
+		ms = int(1000 * self.frameDelay * delayAdjustment)
 		self.timer.Start( ms, False )
 		
 	def Start( self ):
 		self.messageQ.put( ('', '************************************************') )
-		self.messageQ.put( ('started',now().strftime('%Y/%m/%d %H:%M:%S')) )
+		self.messageQ.put( ('started', now().strftime('%Y/%m/%d %H:%M:%S')) )
 		self.startSocket()
 		self.startThreads()
 		self.startCamera()
@@ -289,12 +308,14 @@ class MainWin( wx.Frame ):
 		self.renamerThread.daemon = True
 		
 		self.ftpThread = threading.Thread( target=FTPWriter, args=(self.ftpQ, self.messageQ) )
-		self.writerThread.daemon = True
+		self.ftpThread.daemon = True
+		
+		self.fcb = FrameCircBuf( int(self.bufferSecs * self.fps) )
 		
 		self.listenerThread.start()
 		self.writerThread.start()
-		
-		self.fcb = FrameCircBuf( int(self.bufferSecs * self.fps) )
+		self.renamerThread.start()
+		self.ftpThread.start()
 		
 		self.grabFrameOK = True
 		self.messageQ.put( ('threads', 'Successfully Launched') )
@@ -426,10 +447,15 @@ def disable_stdout_buffering():
 redirectFileName = None
 mainWin = None
 def MainLoop():
-	global mainWin, redirectFileName
+	global mainWin, redirectFileName, imageWidth, imageHeight
 	
 	app = wx.App(False)
 	app.SetAppName("CrossMgrCamera")
+
+	displayWidth, displayHeight = wx.GetDisplaySize()
+	if imageWidth*2 + 32 > displayWidth or imageHeight*2 + 32 > displayHeight:
+		imageWidth /= 2
+		imageHeight /= 2
 
 	mainWin = MainWin( None, title=AppVerName, size=(1300,864) )
 	

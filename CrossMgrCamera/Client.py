@@ -13,12 +13,13 @@ delimiter = '\n\n\n'
 Fields = {'dirName', 'bib', 'time', 'raceSeconds', 'firstName', 'lastName', 'team', 'raceName'}
 
 def sendMessages( messages ):
-	try:
-		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		s.connect((HOST, PORT))
-		s.sendall( delimiter.join(messages) )
-	except Exception as e:
-		return False, e
+	if messages:
+		try:
+			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			s.connect((HOST, PORT))
+			s.sendall( delimiter.join(messages) )
+		except Exception as e:
+			return False, e
 	
 	return True, None
 

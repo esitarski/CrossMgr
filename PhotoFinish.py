@@ -9,26 +9,15 @@ import Utils
 import Model
 
 def formatTime( secs ):
-	if secs is None:
-		secs = 0
-	if secs < 0:
-		sign = '-'
-		secs = -secs
-	else:
-		sign = ''
 	f, ss = math.modf(secs)
 	secs = int(ss)
-	hours = int(secs // (60*60))
-	minutes = int( (secs // 60) % 60 )
-	secs = secs % 60 + f
-	return "{}{:02d}:{:02d}:{:06.3f}".format(sign, hours, minutes, secs)
-	
-def fileFormatTime( secs ):
-	return formatTime(secs).replace(':', '-').replace('.', '-')
+	hours = secs // (60*60)
+	minutes = (secs // 60) % 60
+	secStr = '{:06.3f}'.format( secs%60 + f ).replace('.', '-')
+	return "{:02d}-{:02d}-{}".format(hours, minutes, secStr)
 
-fileFormat = 'bib-%04d-time-%s-%d.jpg'
 def GetPhotoFName( dirName, bib, raceSeconds, i ):
-	return os.path.join( dirName, fileFormat % (bib if bib else 0, fileFormatTime(raceSeconds), i+1 ) )
+	return os.path.join(dirName, 'bib-{:04d}-time-{}-{}.jpg'.format(int(bib or 0), formatTime(raceSeconds or 0), i+1))
 
 photoFNameCache = set()
 def updatePhotoFNameCache():

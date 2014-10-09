@@ -22,13 +22,16 @@ def SocketListener( s, qRequest, qMessage, qRename ):
 	while 1:
 		client, addr = s.accept()
 		
-		messages = ''
+		messageStrs = []
 		while 1:
 			data = client.recv( 4096 )
 			if not data:
 				break
-			messages += data
+			messageStrs.append( data )
 		client.close()
+		
+		messages = ''.join( messageStrs )
+		del messageStrs
 		
 		# Collect the photo messages.
 		tNow = now()

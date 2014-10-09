@@ -147,7 +147,7 @@ def AddPhotoHeader( image, bib=None, time=None, raceSeconds=None, firstNameTxt=u
 	
 	dc.SetPen( wx.Pen(drawResources.borderColour, borderWidth) )
 	
-	shadedRect( x, y, w, lineHeight )
+	shadedRect( x, 0, w, lineHeight + borderWidth )
 
 	dc.DrawLine( 0, 0, w, 0 )
 	dc.DrawLine( xText, lineHeight, w, lineHeight )
