@@ -139,7 +139,9 @@ __bib-XXXX-time-HH-MM-SS-DDD-X.jpg__
 
 Where bib is the rider's race number, HH-MM-SS-DDD is the race time to millisecond accuracy, and X is the frame - either 1 or 2.
 
-CrossMgrCamera supports three photo display areas:
+This makes it easy to manage the photos in a regular file browser.  Sort alphabetically to see the files by bib number.  Sort by date to see the photos in full order.
+
+The CrossMgrCamera application supports three photo display areas:
 
 1. The top left area constantly shows what the camera is looking at along the top.
 1. Two areas below show the frame before and the frame after the last photo taken.

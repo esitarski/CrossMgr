@@ -1,7 +1,8 @@
 import Model
 import Utils
 import ReadSignOnSheet
-from PhotoFinish import getPhotoDirName, GetPhotoFName, TakePhoto
+from PhotoFinish import GetPhotoFName, TakePhoto
+from SendPhotoRequests import getPhotoDirName
 from LaunchFileBrowser import LaunchFileBrowser
 from FtpWriteFile import FtpWriteRacePhoto
 import wx
@@ -390,7 +391,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.thumbs._scrolled.filePrefix = '##############'
 		self.thumbs.ShowDir( '.' )
 		
-	def refresh( self, num = None, t = None ):
+	def refresh( self, num=None, t=None ):
 		if num:
 			self.num = num
 		
@@ -406,11 +407,7 @@ class PhotoViewerDialog( wx.Dialog ):
 					return
 					
 		dir = getPhotoDirName( Utils.mainWin.fileName ) if Utils.mainWin and Utils.mainWin.fileName else 'Photos'
-		
-		if self.num == self.ShowAllPhotos:
-			self.thumbs._scrolled.filePrefix = ''
-		else:
-			self.thumbs._scrolled.filePrefix = 'bib-%04d' % self.num
+		self.thumbs._scrolled.filePrefix = '' if self.num == self.ShowAllPhotos else 'bib-{:04d}'.format(self.num)
 		
 		if os.path.isdir(dir):
 			self.thumbs.ShowDir( dir )
@@ -424,16 +421,16 @@ class PhotoViewerDialog( wx.Dialog ):
 			return
 		
 		if self.num is not None and t is not None:
-			# Select the photo specified by the time.
-			fnameMatch = os.path.splitext(GetPhotoFName(num, t))[0]
+			# Select the photo specified by the bib and time.
+			fnames = [os.path.basename(GetPhotoFName(dir, num, t, i)) for i in xrange(2)]
 			for i in xrange(itemCount):
-				print self.thumbs.GetItem(i).GetFileName()
-				if self.thumbs.GetItem(i).GetFileName().startswith(fnameMatch):
+				fnameToMatch = self.thumbs.GetItem(i).GetFileName()
+				if any( f in fnameToMatch for f in fnames ):
 					break
-			self.thumbs.SetSelection( i )
+			self.thumbs.SetSelection( min(i, self.thumbs.GetItemCount() - 1) )
 		else:
 			self.thumbs.SetSelection( self.thumbs.GetItemCount() - 1 )
-			
+		
 		self.OnSelChanged()
 	
 if __name__ == '__main__':

@@ -13,7 +13,7 @@ delimiter = '\n\n\n'
 Fields = {'dirName', 'bib', 'time', 'raceSeconds', 'firstName', 'lastName', 'team', 'raceName', 'ftpHost', 'ftpUser', 'ftpPassword', 'ftpPhotoPath'}
 
 def getPhotoDirName( raceFileName ):
-	return os.path.join( os.path.dirname( raceFileName ) or '.', os.path.splitext(raceFileName)[0] + '_Photos' )
+	return os.path.join( os.path.dirname(raceFileName) or '.', os.path.splitext(raceFileName)[0] + '_Photos' )
 
 def sendMessages( messages ):
 	try:

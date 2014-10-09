@@ -27,6 +27,8 @@ from PhotoRenamer import PhotoRenamer
 from FrameCircBuf import FrameCircBuf
 from AddPhotoHeader import AddPhotoHeader, PilImageToWxImage
 from ScaledImage import ScaledImage
+from GetPhotoFName import GetPhotoFName
+
 try:
 	from VideoCapture import Device
 except:
@@ -37,28 +39,6 @@ from Version import AppVerName
 def setFont( font, w ):
 	w.SetFont( font )
 	return w
-
-def formatTime( secs ):
-	if secs is None:
-		secs = 0
-	if secs < 0:
-		sign = '-'
-		secs = -secs
-	else:
-		sign = ''
-	f, ss = math.modf(secs)
-	secs = int(ss)
-	hours = int(secs // (60*60))
-	minutes = int( (secs // 60) % 60 )
-	secs = secs % 60 + f
-	return "{}{:02d}:{:02d}:{:06.3f}".format(sign, hours, minutes, secs)
-	
-def fileFormatTime( secs ):
-	return formatTime(secs).replace(':', '-').replace('.', '-')
-	
-fileFormat = 'bib-%04d-time-%s-%d.jpg'
-def GetPhotoFName( dirName, bib, raceSeconds, i ):
-	return os.path.join( dirName, fileFormat % (bib if bib else 0, fileFormatTime(raceSeconds), i+1 ) )
 
 class MessageManager( object ):
 	MessagesMax = 400	# Maximum number of messages before we start throwing some away.

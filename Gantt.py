@@ -5,7 +5,7 @@ from FixCategories import FixCategories
 import GanttChartPanel
 from GetResults import GetResults, RidersCanSwap
 from Undo import undo
-from PhotoFinish import HasPhotoFinish
+from PhotoFinish import HasPhotoCache, updatePhotoFNameCache
 import EditEntry
 
 def UpdateSetNum( num ):
@@ -111,7 +111,7 @@ class Gantt( wx.Panel ):
 				(wx.NewId(), _('Show Lap Details...'), 		_('Show Lap Details'),			self.OnPopupLapDetail, allCases),
 				(None, None, None, None, None),
 			]
-			if HasPhotoFinish():
+			if HasPhotoCache():
 				self.popupInfo.append(
 				(wx.NewId(), _('Photos...'), 				_('Show Photos'),				self.OnPopupPhotos, allCases),
 				)
@@ -464,7 +464,8 @@ class Gantt( wx.Panel ):
 				labels.append( u'{} {}'.format(last, r.num) )
 			else:
 				labels.append( u'{}'.format(r.num) )
-			
+
+		updatePhotoFNameCache()
 		data	= [r.raceTimes for r in results]
 		interp	= [r.interp for r in results]
 		self.ganttChart.SetData(data, labels, GetNowTime(), interp,
