@@ -1,0 +1,34 @@
+; -- SeriesMgr.iss --
+
+[Setup]
+AppName=SeriesMgr
+#include "Version.py"
+DefaultDirName={pf}\SeriesMgr
+DefaultGroupName=SeriesMgr
+UninstallDisplayIcon={app}\SeriesMgr.exe
+Compression=lzma2/ultra64
+SolidCompression=yes
+SourceDir=dist
+OutputDir=..\install
+OutputBaseFilename=SeriesMgr_Setup
+ChangesAssociations=yes
+
+[Registry]
+; Automatically configure SeriesMgr to launch .smn files.
+Root: HKCR; Subkey: ".smn"; ValueType: string; ValueName: ""; ValueData: "SeriesMgr"; Flags: uninsdeletevalue
+Root: HKCR; Subkey: "SeriesMgr"; ValueType: string; ValueName: ""; ValueData: "SeriesMgr Race File"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "SeriesMgr\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\SeriesMgr.exe,0"
+Root: HKCR; Subkey: "SeriesMgr\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\SeriesMgr.exe"" ""%1"""
+
+[Tasks] 
+Name: "desktopicon"; Description: "Create a &desktop icon"; 
+	
+[Files]
+Source: "*.*"; DestDir: "{app}"; Flags: recursesubdirs
+
+[Icons]
+Name: "{group}\SeriesMgr"; Filename: "{app}\SeriesMgr.exe"
+Name: "{userdesktop}\SeriesMgr"; Filename: "{app}\SeriesMgr.exe"; Tasks: desktopicon
+
+[Run]
+Filename: "{app}\SeriesMgr.exe"; Description: "Launch SeriesMgr"; Flags: nowait postinstall skipifsilent
