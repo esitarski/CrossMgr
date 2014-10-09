@@ -127,9 +127,30 @@ When using this feature, be sure to set the "First Lap Distance" in [Categories]
 
 CrossMgr can record photos from an inexpensive USB camera when riders cross the finish line.
 
-Currently, the USB Camera option is only available on the Windows platform.
+This is accomplished with a separate program:  __CrossMgrCamera__.  If you have not done so, download and install this program from the CrosMgr web site.
 
-When photos are triggered by the RFID reader, and two riders are recorded within the video buffer frame rate, a second photo is recorded.  This gives more information for close finishes.
+CrossMgrCamera runs for the entire race and takes photos 25 times a second.  It holds those frames in a "ring buffer" that is 10 seconds long (a ring buffer just means that the most recent photo will replace the oldest). 
+
+CrossMgr sends it a message with the rider information and a time.  CrossMgrCamera then saves the frame before and after the time after also adding the information as a header at the top of the photo.
+
+Photos are stored in a folder called __<RaceFile>_Photos__ where <RaceFile> is the name of the CrossMgr race file.  Photo names have the form:
+
+__bib-XXXX-time-HH-MM-SS-DDD-X.jpg__
+
+Where bib is the rider's race number, HH-MM-SS-DDD is the race time to millisecond accuracy, and X is the frame - either 1 or 2.
+
+CrossMgrCamera supports three photo display areas:
+
+1. The top left area constantly shows what the camera is looking at along the top.
+1. Two areas below show the frame before and the frame after the last photo taken.
+
+CrossMgr sends messages to it to save photos.
+
+When you run CrossMgrCamera, select the __Camera Device__ to use.
+Normally, the external USB camera default is __device 0__, so you don't need to change this.
+
+On some PCs, the built-in camera is __device 0__ and the external USB camera is __device 1__.
+If this is the case on your computer, set __Camera Device__ to __1__.
 
 ### Options
 
@@ -137,16 +158,6 @@ Option|Description
 :-------|:----------
 Do Not Use Camera for Photo Finish|USB Camera not used
 Photos on Every Lap|Records a photo from a connected USB camera on every number entry on every lap.  See [Notes](#use-usb-camera-photo-finish) below for details.  Photos at Race Finish Only|This option tells CrossMgr to record photos one minute before the leader's finish time for each Start Wave.  If the leader has not yet finished, CrossMgr uses leader's expected time.  If the leader's time is known, CrossMgr uses the leader's actual finish time.  If this option is disabled, CrossMgr will record photos of every rider on every lap.  If this race is a time trial, this option has no effect and photos will be recorded on every lap.
-
-### Camera Device
-Tells CrossMgr which USB camera device to use.  Normally, the external USB camera default is __device 0__, so you don't need to change this.
-
-On some PCs, the built-in camera is __device 0__ and the external USB camera is __device 1__.
-If this is the case on your computer, set __Camera Device__ to __1__.
-
-Use __Tools/Test USB Camera...__ to check that everything works beforehand.
-
-If you have multiple USB cameras plugged into the computer and you want to pick which one to use, set the __Camera Device__ to the value to get the camera you want.
 
 ### Notes:
 

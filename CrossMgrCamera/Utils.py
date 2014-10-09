@@ -185,6 +185,8 @@ def FixPILSearchPath():
 def getDirName():		return dirName
 def getImageFolder():	return imageFolder
 
+def GetPngBitmap( fname ):
+	return wx.Bitmap( os.path.join(imageFolder, fname), wx.BITMAP_TYPE_PNG )
 #------------------------------------------------------------------------
 
 def disable_stdout_buffering():

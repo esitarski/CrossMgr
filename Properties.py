@@ -1,6 +1,5 @@
 import Utils
 import Model
-from PhotoFinish import HasPhotoFinish
 from Undo import undo
 import wx
 import re
@@ -297,19 +296,13 @@ class CameraProperties( wx.Panel ):
 		self.radioBox = wx.RadioBox( self, label=_("USB Camera Options"), choices=choices, majorDimension=1, style=wx.RA_SPECIFY_COLS )
 		self.radioBox.SetBackgroundColour( wx.WHITE )
 		
-		self.cameraDeviceLabel = wx.StaticText( self, label=_("Camera Device:") )
-		self.cameraDevice = wx.Choice( self, choices=[unicode(i) for i in xrange(8)] )
-		self.cameraDevice.SetSelection( 0 )
-		
 		ms = wx.BoxSizer( wx.VERTICAL )
 		
 		ms.Add( self.radioBox, flag=wx.ALL, border=16 )
 		
-		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.cameraDeviceLabel, flag=wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, border=4,  )
-		hs.Add( self.cameraDevice )
+		self.explanation = wx.StaticText( self, label=_('Requires CrossMgrCamera.  See documentation for details') )
+		ms.Add( self.explanation, flag=wx.ALL, border=16 )
 		
-		ms.Add( hs, flag=wx.ALL, border=16 )
 		self.SetSizer( ms )
 		
 	def refresh( self ):
@@ -322,8 +315,6 @@ class CameraProperties( wx.Panel ):
 			else:
 				self.radioBox.SetSelection( 2 )
 		
-		self.cameraDevice.SetSelection( race.cameraDevice or 0 )
-		
 	def commit( self ):
 		race = Model.race
 		race.enableUSBCamera = False
@@ -335,7 +326,6 @@ class CameraProperties( wx.Panel ):
 		elif v == 2:
 			race.enableUSBCamera = True
 			race.photosAtRaceEndOnly = True
-		race.cameraDevice = self.cameraDevice.GetCurrentSelection()
 
 #------------------------------------------------------------------------------------------------
 
@@ -557,7 +547,7 @@ class Properties( wx.Panel ):
 				wx.ICON_WARNING )
 	
 	def setEditable( self, editable = True ):
-		if hasattr(self, 'cameraProperties') and not HasPhotoFinish():
+		if hasattr(self, 'cameraProperties'):
 			self.cameraProperties.radioBox.Disable()
 	
 	def incNext( self ):

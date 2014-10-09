@@ -15,8 +15,6 @@ from keybutton import KeyButton
 from RaceHUD import RaceHUD
 from EditEntry import DoDNF, DoDNS, DoPull, DoDQ
 from TimeTrialRecord import TimeTrialRecord
-from PhotoFinish import HasPhotoFinish
-from VideoBuffer import GetFrameRate
 
 def MakeKeypadButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1), font = None ):
 	label = label.replace('&','')
@@ -305,8 +303,6 @@ class NumKeypad( wx.Panel ):
 		self.photoButton.SetToolTip( self.camera_tooltip )
 		self.photoButton.Bind( wx.EVT_BUTTON, self.onPhotoButton )
 		self.hbClockPhoto.Add( self.photoButton, flag=wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT, border = 18 )
-		if not HasPhotoFinish():
-			self.photoButton.Disable()
 		
 		label = wx.StaticText( panel, label = _("Clock") )
 		label.SetFont( font )

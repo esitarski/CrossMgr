@@ -163,7 +163,7 @@ class MainWin( wx.Frame ):
 		self.requestQ = Queue()			# Select photos from photobuf.
 		self.writerQ = Queue( 400 )		# Selected photos waiting to be written out.
 		self.ftpQ = Queue()				# Photos waiting to be ftp'd.
-		self.renameQ = Queue()			# Photos waiting to be renamed and possibly ftp'd.
+		self.renamerQ = Queue()			# Photos waiting to be renamed and possibly ftp'd.
 		self.messageQ = Queue()			# Collection point for all status/failure messages.
 		
 		self.SetBackgroundColour( wx.Colour(232,232,232) )
@@ -186,6 +186,12 @@ class MainWin( wx.Frame ):
 		phSizer.Add( self.messagesText, proportion=1, flag=wx.EXPAND|wx.ALL, border=4 )
 		
 		pfgs = wx.FlexGridSizer( rows=0, cols=3, vgap=4, hgap=8 )
+		
+		self.title = wx.StaticText(self.controlPanel, label='CrossMgr Camera\nVersion {}'.format(AppVerName.split()[1]), style=wx.ALIGN_RIGHT )
+		self.title.SetFont( wx.FontFromPixelSize( wx.Size(0,24), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
+		pfgs.Add( self.title )
+		pfgs.Add( wx.StaticText(self.controlPanel) )
+		pfgs.Add( wx.StaticBitmap(self.controlPanel, bitmap=Utils.GetPngBitmap('CrossMgrHeader.png') ) )
 		
 		pfgs.Add( wx.StaticText(self.controlPanel, label='Camera Device'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 		self.cameraDevice = wx.StaticText( self.controlPanel )
@@ -293,7 +299,7 @@ class MainWin( wx.Frame ):
 	def startThreads( self ):
 		self.grabFrameOK = False
 		
-		self.listenerThread = threading.Thread( target=SocketListener, args=(self.listenerSocket, self.requestQ, self.messageQ, self.renameQ) )
+		self.listenerThread = threading.Thread( target=SocketListener, args=(self.listenerSocket, self.requestQ, self.messageQ, self.renamerQ) )
 		self.listenerThread.daemon = True
 		
 		self.writerThread = threading.Thread( target=PhotoWriter, args=(self.writerQ, self.messageQ, self.ftpQ) )
