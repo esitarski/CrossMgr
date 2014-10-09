@@ -447,10 +447,6 @@ def getHtmlFolder():	return htmlFolder
 def getHelpFolder():	return helpFolder
 def getHelpIndexFolder(): return helpIndexFolder
 
-def FixPILSearchPath():
-	if imageFolder not in sys.path:
-		sys.path.append( imageFolder )
-
 # Use Firefox to display the help if we can find it.
 for firefoxProg in ['/usr/bin/firefox', '']:
 	if os.path.exists(firefoxProg) and os.access(firefoxProg, os.X_OK):

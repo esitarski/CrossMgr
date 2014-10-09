@@ -18,7 +18,7 @@ def postRequests( requests, qRequest ):
 	for kwargs in requests:
 		qRequest.put( kwargs )
 
-def SocketListener( s, qRequest, qMessage ):
+def SocketListener( s, qRequest, qMessage, qRename ):
 	while 1:
 		client, addr = s.accept()
 		
@@ -51,11 +51,15 @@ def SocketListener( s, qRequest, qMessage ):
 				qMessage.put( ('error', 'Bad time format: "{}": {}'.format(kwargs['time'], e)) )
 				continue
 			
-			if kwargs.get('cmd', None) == 'photo':
+			cmd = kwargs.get('cmd', None)
+			if cmd == 'photo':
 				if (tNow - kwargs['time']).total_seconds() < minDelay:
 					requests.append( kwargs )
 				else:
 					qRequest.put( kwargs )
+					
+			elif cmd == 'rename':
+				qRename.put( kwargs )
 
 		# Post the messages in a thread to add a delay.
 		if requests:

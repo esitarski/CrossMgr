@@ -12,7 +12,6 @@ import OutputStreamer
 from FtpWriteFile import realTimeFtpPublish
 import Properties
 from Undo import undo
-import VideoBuffer
 import Checklist
 from Clock import Clock
 from CountdownClock import CountdownClock, EVT_COUNTDOWN
@@ -37,7 +36,6 @@ def StartRaceNow():
 		race.startRaceNow()
 		
 	OutputStreamer.writeRaceStart()
-	VideoBuffer.ModelStartCamera()
 	
 	# Refresh the main window and switch to the Record pane.
 	mainWin = Utils.getMainWin()
@@ -314,7 +312,6 @@ class Actions( wx.Panel ):
 		
 		OutputStreamer.writeRaceFinish()
 		OutputStreamer.StopStreamer()
-		VideoBuffer.Shutdown()
 		
 		if getattr(Model.race, 'ftpUploadDuringRace', False):
 			realTimeFtpPublish.publishEntry( True )

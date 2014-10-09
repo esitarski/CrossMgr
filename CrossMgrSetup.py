@@ -35,12 +35,6 @@ BuildHelpIndex()
 	
 distDir = 'dist'
 
-# Copy the "pil" and "png" files required for PIL (Python Image Library) into the images directory.
-# We then add these to the search path later.
-pyLib = r'C:\python27\Lib'
-for f in ['helvB08.pil', 'helvetica-10.pil', 'helvB08.png', 'helvetica-10.png']:
-	shutil.copy( os.path.join(pyLib, f), 'CrossMgrImages' )
-	
 # Cleanup existing dll, pyd and exe files.  The old ones may not be needed, so it is best to clean these up.
 for f in os.listdir(distDir):
 	if f.endswith('.dll') or f.endswith('.pyd') or f.endswith('.exe'):

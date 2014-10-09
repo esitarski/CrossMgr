@@ -23,6 +23,7 @@ import Utils
 from SocketListener import SocketListener
 from PhotoWriter import PhotoWriter
 from FTPWriter import FTPWriter
+from PhotoRenamer import PhotoRenamer
 from FrameCircBuf import FrameCircBuf
 from AddPhotoHeader import AddPhotoHeader, PilImageToWxImage
 from ScaledImage import ScaledImage
@@ -159,10 +160,11 @@ class MainWin( wx.Frame ):
 						vendorName="SmartCyclingSolutions",
 						style=wx.CONFIG_USE_LOCAL_FILE)
 		
-		self.requestQ = Queue()
-		self.writerQ = Queue( 400 )		# Enough to take 2 pictures of a 200 member peleton.
-		self.ftpQ = Queue()
-		self.messageQ = Queue()
+		self.requestQ = Queue()			# Select photos from photobuf.
+		self.writerQ = Queue( 400 )		# Selected photos waiting to be written out.
+		self.ftpQ = Queue()				# Photos waiting to be ftp'd.
+		self.renameQ = Queue()			# Photos waiting to be renamed and possibly ftp'd.
+		self.messageQ = Queue()			# Collection point for all status/failure messages.
 		
 		self.SetBackgroundColour( wx.Colour(232,232,232) )
 		
@@ -291,11 +293,14 @@ class MainWin( wx.Frame ):
 	def startThreads( self ):
 		self.grabFrameOK = False
 		
-		self.listenerThread = threading.Thread( target=SocketListener, args=(self.listenerSocket, self.requestQ, self.messageQ) )
+		self.listenerThread = threading.Thread( target=SocketListener, args=(self.listenerSocket, self.requestQ, self.messageQ, self.renameQ) )
 		self.listenerThread.daemon = True
 		
 		self.writerThread = threading.Thread( target=PhotoWriter, args=(self.writerQ, self.messageQ, self.ftpQ) )
 		self.writerThread.daemon = True
+		
+		self.renamerThread = threading.Thread( target=PhotoRenamer, args=(self.renamerQ, self.messageQ, self.ftpQ) )
+		self.renamerThread.daemon = True
 		
 		self.ftpThread = threading.Thread( target=FTPWriter, args=(self.ftpQ, self.messageQ) )
 		self.writerThread.daemon = True

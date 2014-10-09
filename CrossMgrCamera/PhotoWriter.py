@@ -31,7 +31,7 @@ def PhotoWriter( qWriter, qMessage, qFTP ):
 		
 			if success and len(message) > 3:
 				ftpInfo = message[3]
-				qFTP.put( ('save', name, ftpInfo) )
+				qFTP.put( ('save', fname, ftpInfo) )
 				
 		elif message[0] == 'terminate':
 			keepGoing = False

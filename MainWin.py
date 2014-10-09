@@ -78,12 +78,10 @@ import Version
 from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, ExcelLink, ReportFields, SyncExcelLink, IsValidRaceDBExcel
 from SetGraphic			import SetGraphicDialog
 from GetResults			import GetCategoryDetails, UnstartedRaceWrapper, GetLapDetails
-from PhotoFinish		import ResetPhotoInfoCache, DeletePhotos, HasPhotoFinish
+from PhotoFinish		import DeletePhotos, HasPhotoFinish
 from PhotoViewer		import PhotoViewerDialog
-from CameraTest			import CameraTestDialog
 from ReadTTStartTimesSheet import ImportTTStartTimes
 from TemplateSubstitute import TemplateSubstitute
-import VideoBuffer
 import ChangeRaceStartTime
 
 import traceback
@@ -552,13 +550,6 @@ class MainWin( wx.Frame ):
 		#----------------------------------------------------------------------------------------------
 		self.toolsMenu = wx.Menu()
 		
-		if HasPhotoFinish():
-			idCur = wx.NewId()
-			AppendMenuItemBitmap( self.toolsMenu, idCur , _("&Test USB Camera..."), _("Test the USB Camera"), Utils.GetPngBitmap('camera-webcam.png') )
-			self.Bind(wx.EVT_MENU, self.menuCameraTest, id=idCur )
-			
-			self.toolsMenu.AppendSeparator()
-		
 		idCur = wx.NewId()
 		self.toolsMenu.Append( idCur , _("&Simulate Race..."), _("Simulate a race") )
 		self.Bind(wx.EVT_MENU, self.menuSimulate, id=idCur )
@@ -684,27 +675,28 @@ class MainWin( wx.Frame ):
 
 	def handleChipReaderEvent( self, event ):
 		race = Model.race
-		if not race or not race.isRunning() or not getattr(race, 'enableUSBCamera', False) or not HasPhotoFinish():
+		if not race or not race.isRunning() or not race.enableUSBCamera:
 			return
 		if not getattr(race, 'tagNums', None):
 			JChipSetup.GetTagNums()
 		if not race.tagNums:
 			return
 		
+		requests = []
 		for tag, dt in event.tagTimes:
 			if race.startTime > dt:
 				continue
+			
 			try:
 				num = race.tagNums[tag]
 			except (TypeError, ValueError, KeyError):
 				continue
-			delta = dt - race.startTime
-			t = delta.total_seconds()
 			
-			try:
-				race.photoCount = getattr(race,'photoCount',0) + VideoBuffer.ModelTakePhoto( num, t )
-			except Exception as e:
-				logException( e, sys.exc_info() )
+			requests.append( (num, (dt - race.startTime).total_seconds()) )
+			
+		success, error = SendPhotoRequests( requests )
+		if success:
+			race.photoCount += len(requests) * 2
 	
 	def menuDNS( self, event ):
 		dns = DNSManagerDialog( self )
@@ -906,25 +898,6 @@ class MainWin( wx.Frame ):
 			Utils.MessageOK(self, _("Log file copied to clipboard.\nYou can now paste it into an email."), _("Success") )
 		else:
 			Utils.MessageOK(self, _("Unable to open the clipboard."), _("Error"), wx.ICON_ERROR )
-	
-	def menuCameraTest( self, event ):
-		race = Model.race
-		if not race:
-			Utils.MessageOK(self, _("Load/New a Race and try again."), _("Error"), wx.ICON_ERROR )
-			return
-		if race.isRunning():
-			Utils.MessageOK(self, _("Cannot test camera while race is running."), _("Error"), wx.ICON_ERROR )
-			return
-		if not getattr(race, 'enableUSBCamera', False):
-			Utils.MessageOK(self, _("USB Camera is not enabled.  Enable the camera in Properties and try again."), _("Error"), wx.ICON_ERROR )
-			return
-			
-		if not Utils.MessageOKCancel(self, _("Verify that the External USB Camera is connected to the computer."), _("Verify Camera Connected") ):
-			return
-		
-		ctd = CameraTestDialog( self )
-		ctd.ShowModal()
-		ctd.Destroy()
 	
 	def menuReloadChecklist( self, event ):
 		try:
@@ -1855,7 +1828,6 @@ class MainWin( wx.Frame ):
 		ResetExcelLinkCache()
 		Model.setRace( Model.Race() )
 		properties.commit()
-		ResetPhotoInfoCache( self.fileName )
 		self.updateRecentFiles()
 
 		importedCategories = False
@@ -1945,7 +1917,6 @@ class MainWin( wx.Frame ):
 		self.fileName = fileName
 		Model.resetCache()
 		ResetExcelLinkCache()
-		ResetPhotoInfoCache( self.fileName )
 		
 		# Save the current Ftp settings.
 		ftpPublish = FtpWriteFile.FtpPublishDialog( self )
@@ -2077,7 +2048,6 @@ class MainWin( wx.Frame ):
 		self.fileName = fileName
 		Model.resetCache()
 		ResetExcelLinkCache()
-		ResetPhotoInfoCache( self.fileName )
 		
 		properties.commit()			# Apply the new properties
 		ftpPublish.setRaceAttr()	# Apply the ftp properties
@@ -2131,13 +2101,12 @@ class MainWin( wx.Frame ):
 			
 			undo.clear()
 			ResetExcelLinkCache()
-			ResetPhotoInfoCache( self.fileName )
 			Model.resetCache()
 			
 			self.updateRecentFiles()
 			
 			self.setNumSelect( None )
-			self.record.setTimeTrialInput( getattr(race, 'isTimeTrial', False) )
+			self.record.setTimeTrialInput( race.isTimeTrial )
 			self.showPageName( _('Results') if isFinished else _('Actions'))
 			self.refreshAll()
 			Utils.writeLog( 'call: openRace: "%s"' % fileName )
@@ -2893,21 +2862,32 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 	
 	def processNumTimes( self ):
 		race = Model.race
+		
 		for num, t in self.numTimes:
 			race.addTime( num, t )
+		
 		OutputStreamer.writeNumTimes( self.numTimes )
-		if self.getCurrentPage() == self.results:
-			wx.CallAfter( self.results.showLastLap )
+		requests = [(num, t) for num, t in self.numTimes if okTakePhoto(num, t)]
+		if requests:
+			success, error = SendPhotoRequests( requests )
+			if success:
+				race.photoCount += len(requests) * 2
+			else:
+				Utils.writeLog( 'USB Camera Error: {}'.format(error) )
+		
 		if getattr(race, 'ftpUploadDuringRace', False):
 			realTimeFtpPublish.publishEntry()
+		
+		if self.getCurrentPage() == self.results:
+			wx.CallAfter( self.results.showLastLap )
+			
 		self.numTimes = []
 		self.updateLater = None
 	
 	def processJChipListener( self ):
-		# Assumes Model is locked.
 		race = Model.race
 		
-		if not race or not getattr(race, 'enableJChipIntegration', False):
+		if not race or not race.enableJChipIntegration:
 			if JChip.listener:
 				JChip.StopListener()
 			return False
@@ -2935,16 +2915,11 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 				
 			# Only process times after the start of the race.
 			if race.isRunning() and race.startTime <= dt:
-				delta = dt - race.startTime
-				t = delta.total_seconds()
-				self.numTimes.append( (num, t) )
+				self.numTimes.append( (num, (dt - race.startTime).total_seconds()) )
 		
 		doRefresh = (lastNumTimesLen != len(self.numTimes))
 		
-		#if not self.updateLater:
-		#	self.updateLater = wx.CallLater( 800, self.processNumTimes )
 		self.processNumTimes()
-			
 		return doRefresh
 
 	def updateRaceClock( self, event = None ):

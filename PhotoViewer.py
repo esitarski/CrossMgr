@@ -1,8 +1,7 @@
 import Model
 import Utils
 import ReadSignOnSheet
-from PhotoFinish import getPhotoDirName, ResetPhotoInfoCache, GetPhotoFName
-import VideoBuffer
+from PhotoFinish import getPhotoDirName, GetPhotoFName, TakePhoto
 from LaunchFileBrowser import LaunchFileBrowser
 from FtpWriteFile import FtpWriteRacePhoto
 import wx
@@ -202,19 +201,9 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.splitter.SetMinimumPaneSize( 140 )
 		self.splitter.SplitVertically( self.thumbs, self.mainPhoto, 140 )
 		
-		hs = wx.BoxSizer( wx.HORIZONTAL )
-		self.advancePhotoLabel = wx.StaticText( self, label = _('Photo Milliseconds Advance/Delay:') )
-		self.advancePhoto = wx.Slider( self, minValue = -1000, maxValue = 1000, value = 0,
-			style = wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS )
-		self.advancePhoto.SetTickFreq( 100, 1 )
-		hs.Add( self.advancePhotoLabel, proportion=0, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border = 2 )
-		hs.Add( self.advancePhoto, proportion=1, flag=wx.EXPAND|wx.ALL, border = 2 )
-		self.advancePhoto.Bind(wx.EVT_SCROLL_CHANGED, self.OnAdvancePhoto)
-		
 		self.vbs.Add( self.title, proportion=0, flag=wx.EXPAND|wx.ALL, border = 2 )
 		self.vbs.Add( self.toolbar, proportion=0, flag=wx.EXPAND|wx.ALL, border = 2 )
 		self.vbs.Add( self.splitter, proportion=1, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.EXPAND, border = 4 )
-		self.vbs.Add( hs, proportion = 0, flag=wx.EXPAND )
 		
 		self.Bind( wx.EVT_SIZE, self.OnResize )
 		self.thumbs.Bind(TC.EVT_THUMBNAILS_SEL_CHANGED, self.OnSelChanged)
@@ -224,10 +213,6 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.SetSize( (800,560) )
 		self.vbs.Layout()
 
-	def OnAdvancePhoto( self, event ):
-		if Model.race:
-			Model.race.advancePhotoMilliseconds = event.EventObject.GetValue()
-		
 	def OnResize( self, event ):
 		self.drawMainPhoto()
 		event.Skip()
@@ -267,10 +252,7 @@ class PhotoViewerDialog( wx.Dialog ):
 			Utils.MessageOK( self, _('Unable to Copy Photo to Clipboard.'), _('Copy Failed'), iconMask = wx.ICON_ERROR )
 	
 	def OnLaunchFileBrowser( self, event ):
-		if Utils.mainWin and Utils.mainWin.fileName:
-			dir = getPhotoDirName( Utils.mainWin.fileName )
-		else:
-			dir = getPhotoDirName( VideoBuffer._getTestPhotoFileName() )
+		dir = getPhotoDirName( Utils.mainWin.fileName if Utils.mainWin and Utils.mainWin.fileName else 'Photos' )
 		LaunchFileBrowser( dir )
 	
 	def OnFTPUpload( self, event ):
@@ -378,17 +360,17 @@ class PhotoViewerDialog( wx.Dialog ):
 		if not race or not race.isRunning():
 			Utils.MessageOK( self, _('Race must be running'), _('Camera Test Unavailable') )
 			return
-		if not getattr(race, 'enableUSBCamera', False):
+		if not race.enableUSBCamera:
 			Utils.MessageOK( self, _('USB camera option must be enabled'), _('Camera Test Unavailable') )
 			return
 		
 		testNum = 9999
 		raceSeconds = race.curRaceTime()
-		success = VideoBuffer.ModelTakePhoto( testNum, raceSeconds )
+		success, error = TakePhoto( testNum, raceSeconds )
 		if success:
 			wx.CallLater( 750, self.refresh, testNum )
 		else:
-			Utils.MessageOK( self, unicode(Utils.cameraError), _('Camera Error') )
+			Utils.MessageOK( self, _('Camera error') + u': {}'.format(error), _('Camera Error') )
 		
 	def OnPhotoViewer( self, event ):
 		self.OnDoPhotoViewer()
@@ -413,18 +395,6 @@ class PhotoViewerDialog( wx.Dialog ):
 			self.num = num
 		
 		with Model.LockRace() as race:
-			isShown = self.advancePhotoLabel.IsShown()
-			if race and race.enableVideoBuffer:
-				self.advancePhoto.SetValue( race.advancePhotoMilliseconds )
-				doShow = True
-			else:
-				doShow = False
-				
-			if isShown != doShow:
-				self.advancePhotoLabel.Show( doShow )
-				self.advancePhoto.Show( doShow )
-				self.Layout()
-
 			if race is None:
 				self.clear()
 				return
@@ -435,18 +405,12 @@ class PhotoViewerDialog( wx.Dialog ):
 				if rLast and rLast.num != self.num:
 					return
 					
-		if Utils.mainWin and Utils.mainWin.fileName:
-			dir = getPhotoDirName( Utils.mainWin.fileName )
-		else:
-			dir = getPhotoDirName( VideoBuffer._getTestPhotoFileName() )
+		dir = getPhotoDirName( Utils.mainWin.fileName ) if Utils.mainWin and Utils.mainWin.fileName else 'Photos'
 		
 		if self.num == self.ShowAllPhotos:
 			self.thumbs._scrolled.filePrefix = ''
 		else:
 			self.thumbs._scrolled.filePrefix = 'bib-%04d' % self.num
-		
-		if Utils.mainWin:
-			ResetPhotoInfoCache( Utils.mainWin.fileName )
 		
 		if os.path.isdir(dir):
 			self.thumbs.ShowDir( dir )
@@ -462,7 +426,6 @@ class PhotoViewerDialog( wx.Dialog ):
 		if self.num is not None and t is not None:
 			# Select the photo specified by the time.
 			fnameMatch = os.path.splitext(GetPhotoFName(num, t))[0]
-			print fnameMatch
 			for i in xrange(itemCount):
 				print self.thumbs.GetItem(i).GetFileName()
 				if self.thumbs.GetItem(i).GetFileName().startswith(fnameMatch):

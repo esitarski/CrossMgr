@@ -7,7 +7,7 @@ import Model
 import Utils
 from ReorderableGrid import ReorderableGrid
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
-from PhotoFinish import TakePhoto, AddBibToPhoto
+from PhotoFinish import TakePhoto
 import OutputStreamer
 
 def formatTime( secs ):
@@ -163,8 +163,8 @@ class TimeTrialRecord( wx.Panel ):
 		with Model.LockRace() as race:
 			if not race:
 				return
-			if getattr(race, 'enableUSBCamera', False):
-				race.photoCount = getattr(race,'photoCount',0) + TakePhoto( Utils.getFileName(), 0, StrToSeconds(formatTime(t)) )
+			if race.enableUSBCamera:
+				race.photoCount += 2 if TakePhoto( 0, StrToSeconds(formatTime(t)) )[0] else 0
 	
 		# Find the last row without a time.
 		self.grid.SetGridCursor( 0, 0, )
@@ -233,12 +233,13 @@ class TimeTrialRecord( wx.Panel ):
 			
 		if timesBibs and Model.race:
 			with Model.LockRace() as race:
-				isCamera = getattr(race, 'enableUSBCamera', False)
+				#isCamera = getattr(race, 'enableUSBCamera', False)
+				isCamera = False
 				for tStr, bib in timesBibs:
 					raceSeconds = StrToSeconds(tStr)
 					race.addTime( bib, raceSeconds )
-					if isCamera:
-						AddBibToPhoto( Utils.getFileName(), bib, raceSeconds )
+					#if isCamera:
+					#	AddBibToPhoto( Utils.getFileName(), bib, raceSeconds )
 					OutputStreamer.writeNumTime( bib, raceSeconds )
 						
 			wx.CallAfter( Utils.refresh )
