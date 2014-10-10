@@ -2,7 +2,7 @@ import Model
 import Utils
 import ReadSignOnSheet
 from PhotoFinish import GetPhotoFName, TakePhoto
-from SendPhotoRequests import getPhotoDirName
+from SendPhotoRequests import getPhotoDirName, SendPhotoRequests
 from LaunchFileBrowser import LaunchFileBrowser
 from FtpWriteFile import FtpWriteRacePhoto
 import wx
@@ -367,7 +367,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		
 		testNum = 9999
 		raceSeconds = race.curRaceTime()
-		success, error = TakePhoto( testNum, raceSeconds )
+		success, error = SendPhotoRequests( [testNum, raceSeconds] )
 		if success:
 			wx.CallLater( 750, self.refresh, testNum )
 		else:

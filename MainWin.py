@@ -78,7 +78,7 @@ import Version
 from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, ExcelLink, ReportFields, SyncExcelLink, IsValidRaceDBExcel
 from SetGraphic			import SetGraphicDialog
 from GetResults			import GetCategoryDetails, UnstartedRaceWrapper, GetLapDetails
-from PhotoFinish		import DeletePhotos, HasPhotoFinish
+from PhotoFinish		import DeletePhotos
 from PhotoViewer		import PhotoViewerDialog
 from ReadTTStartTimesSheet import ImportTTStartTimes
 from TemplateSubstitute import TemplateSubstitute
@@ -1757,7 +1757,6 @@ class MainWin( wx.Frame ):
 			pass
 		
 		OutputStreamer.StopStreamer()
-		VideoBuffer.Shutdown()
 		JChip.Cleanuplistener()
 	
 	@logCall
@@ -2126,8 +2125,6 @@ class MainWin( wx.Frame ):
 						self.refreshAll()
 						Utils.writeLog( 'openRace: changed Excel file to "%s"' % newFileName )
 
-			if race.isRunning():
-				VideoBuffer.ModelStartCamera()
 		except IOError:
 			Utils.MessageOK(self, _('Cannot open file "{}".').format(fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
 
@@ -2319,7 +2316,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			race.minutes = self.raceMinutes
 			race.raceNum = 1
 			#race.isTimeTrial = True
-			#race.enableUSBCamera = True
+			race.enableUSBCamera = True
 			#race.enableJChipIntegration = True
 			race.setCategories( [	{'name':'Junior', 'catStr':'100-199', 'startOffset':'00:00', 'distance':0.5, 'gender':'Men'},
 									{'name':'Senior', 'catStr':'200-299', 'startOffset':'00:15', 'distance':0.5, 'gender':'Women'}] )
@@ -2398,7 +2395,6 @@ Continue?''' % fName, 'Simulate a Race' ):
 		self.nextNum = None
 		with Model.LockRace() as race:
 			race.finishRaceNow()
-		VideoBuffer.Shutdown()
 		JChip.Cleanuplistener()
 		
 		OutputStreamer.writeRaceFinish()

@@ -1030,10 +1030,6 @@ class Race( object ):
 			return self.numTimeInfoField
 	
 	@property
-	def enableVideoBuffer( self ):
-		return self.enableUSBCamera and self.enableJChipIntegration
-		
-	@property
 	def distanceUnitStr( self ):
 		return 'km' if self.distanceUnit == Race.UnitKm else 'miles'
 		

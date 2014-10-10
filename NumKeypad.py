@@ -450,12 +450,9 @@ class NumKeypad( wx.Panel ):
 			tRace = race.lastRaceTime()
 			tStr = Utils.formatTime( tRace )
 			self.refreshRaceHUD()
-			if race.enableUSBCamera and HasPhotoFinish():
+			if race.enableUSBCamera:
 				self.photoButton.Show( True )
-				if race.enableVideoBuffer:
-					self.photoCount.SetLabel( '{:.1f} {} {}'.format(GetFrameRate(), _('fps'), race.photoCount) )
-				else:
-					self.photoCount.SetLabel( '{}'.format(race.photoCount) )
+				self.photoCount.SetLabel( '{}'.format(race.photoCount) )
 				if Utils.cameraError:
 					self.photoButton.SetBitmapLabel( self.camera_broken_bitmap )
 					self.photoButton.SetToolTip( wx.ToolTip(Utils.cameraError) )
@@ -488,7 +485,7 @@ class NumKeypad( wx.Panel ):
 			mainWin.forecastHistory.updatedExpectedTimes( tRace )
 	
 	def onPhotoButton( self, event ):
-		if not Utils.mainWin or not HasPhotoFinish():
+		if not Utils.mainWin:
 			return
 		Utils.mainWin.photoDialog.Show( True )
 		Utils.mainWin.photoDialog.refresh( Utils.mainWin.photoDialog.ShowAllPhotos )

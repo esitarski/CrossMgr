@@ -41,7 +41,7 @@ def PhotoSendRequests( messages, cmd='photo' ):
 	
 def getFtpInfo( race ):
 	try:
-		if includeFTP and race.ftpHost and race.ftpUser and race.ftpPassword and race.ftpPhotoPath:
+		if race.ftpHost and race.ftpUser and race.ftpPassword and race.ftpPhotoPath:
 			ftpInfo = {
 				'host':			race.ftpHost,
 				'user':			race.ftpUser,
@@ -52,17 +52,24 @@ def getFtpInfo( race ):
 		ftpInfo = None
 	return ftpInfo
 	
-def getRequest( dirName, bib, externalInfo ):
-	return {
+def getRequest( race, dirName, bib, raceSeconds, externalInfo ):
+	info = {
 		'dirName':		dirName,
 		'bib':			bib,
 		'time':			race.startTime + datetime.timedelta(seconds=raceSeconds),
 		'raceSeconds':	raceSeconds,
 		'raceName':		race.name,
-		'firstName':	externalInfo[bib].get('FirstName',''),
-		'lastName':		externalInfo[bib].get('LastName',''),
-		'team':			externalInfo[bib].get('Team',''),
 	}
+	try:
+		riderInfo = externalInfo[bib]
+		for a, b in (('firstName', 'FirstName'), ('lastName','LastName'), ('team', 'Team')):
+			try:
+				info[a] = riderInfo[b]
+			except KeyError:
+				pass
+	except KeyError:
+		pass
+	return info
 
 def SendPhotoRequests( bibRaceSeconds, includeFTP=True ):
 	if not bibRaceSeconds:
@@ -83,7 +90,7 @@ def SendPhotoRequests( bibRaceSeconds, includeFTP=True ):
 	
 	requests = []
 	for bib, raceSeconds in bibRaceSeconds:
-		request = getRequest( dirName, bib, externalInfo )
+		request = getRequest( race, dirName, bib, raceSeconds, externalInfo )
 		if ftpInfo is not None:
 			request['ftpInfo'] = ftpInfo
 		
@@ -109,7 +116,7 @@ def SendRenameRequests( bibRaceSeconds ):
 	
 	requests = []
 	for bib, raceSeconds in bibRaceSeconds:
-		request = getRequest( dirName, bib, externalInfo )
+		request = getRequest( race, dirName, bib, raceSeconds, externalInfo )
 		if ftpInfo is not None:
 			request['ftpInfo'] = ftpInfo
 		

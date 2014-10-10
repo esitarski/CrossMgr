@@ -1,6 +1,7 @@
 import os
 import wx
 import sys
+import math
 import shutil
 
 from GetResults import GetResultsCore
@@ -36,7 +37,7 @@ def updatePhotoFNameCache():
 	try:
 		photoFNameCache = { fname for fname in os.listdir(getPhotoDirName(fileName)) if fname.endswith('.jpg') and fname.startswith('bib') }
 	except Exception as e:
-		pass
+		print e
 		
 def HasPhotoCache():
 	global photoFNameCache
@@ -79,4 +80,4 @@ def DeletePhotos( raceFileName ):
 		logException( e, sys.exc_info() )
 				
 def TakePhoto( bib, raceSeconds, includeFTP=False ):
-	return SendPhotoRequests( [(bib, raceSeconds)] )
+	return 2 if SendPhotoRequests( [(bib, raceSeconds)] )[0] else 0
