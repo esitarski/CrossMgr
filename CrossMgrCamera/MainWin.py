@@ -293,6 +293,8 @@ class MainWin( wx.Frame ):
 			return False
 		
 		self.messageQ.put( ('camera', 'Successfully Connected: Device: {}'.format(self.getCameraDeviceNum()) ) )
+		for i in self.beforeAfterImages:
+			i.SetToEmpty()
 		return True
 	
 	def startThreads( self ):

@@ -465,7 +465,6 @@ class Gantt( wx.Panel ):
 			else:
 				labels.append( u'{}'.format(r.num) )
 
-		updatePhotoFNameCache()
 		data	= [r.raceTimes for r in results]
 		interp	= [r.interp for r in results]
 		self.ganttChart.SetData(data, labels, GetNowTime(), interp,
@@ -474,6 +473,7 @@ class Gantt( wx.Panel ):
 								getattr( Model.race, 'lapNote', None) )
 		self.updateStats( results )
 		wx.CallAfter( self.ganttChart.SetFocus )
+		wx.CallAfter( updatePhotoFNameCache )
 	
 	def commit( self ):
 		wx.CallAfter( Utils.refreshForecastHistory )
