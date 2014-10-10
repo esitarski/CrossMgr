@@ -712,8 +712,13 @@ class ExcelLink( object ):
 		except AttributeError:
 			pass
 		
-		self.hasCategoriesSheet = ReadCategoriesFromExcel( reader )
-		self.hasPropertiesSheet = ReadPropertiesFromExcel( reader )
+		# Do not read categories or properties after the race has started to avoid overwriting local changes.
+		if Model.race and Model.race.startTime
+			self.hasCategoriesSheet = False
+			self.hasPropertiesSheet = False
+		else:
+			self.hasCategoriesSheet = ReadCategoriesFromExcel( reader )
+			self.hasPropertiesSheet = ReadPropertiesFromExcel( reader )
 		
 		return infoCache
 
