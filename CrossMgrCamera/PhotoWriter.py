@@ -24,6 +24,7 @@ def PhotoWriter( qWriter, qMessage, qFTP ):
 						os.mkdir( os.path.dirname(fname) )
 						with open(fname, 'wb') as f:
 							f.write( buf.getvalue() )
+						qMessage.put( ('mkdir', '"{}"'.format(os.path.dirname(fname))) )
 						qMessage.put( ('saved', '"{}"'.format(os.path.basename(fname))) )
 						success = True
 					except Exception as e:

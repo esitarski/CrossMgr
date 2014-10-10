@@ -2272,7 +2272,7 @@ class MainWin( wx.Frame ):
 		
 	@logCall
 	def menuSimulate( self, event ):
-		fName = os.path.join( Utils.getHomeDir(), 'Simulation.cmn' )
+		fName = os.path.join( os.path.expanduser('~'), 'Simulation.cmn' )
 		if not Utils.MessageOKCancel(self,
 '''
 This will simulate a race using randomly generated data.
