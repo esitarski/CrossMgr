@@ -2317,6 +2317,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			race.raceNum = 1
 			#race.isTimeTrial = True
 			race.enableUSBCamera = True
+			race.photosAtRaceEndOnly = True
 			#race.enableJChipIntegration = True
 			race.setCategories( [	{'name':'Junior', 'catStr':'100-199', 'startOffset':'00:00', 'distance':0.5, 'gender':'Men'},
 									{'name':'Senior', 'catStr':'200-299', 'startOffset':'00:15', 'distance':0.5, 'gender':'Women'}] )
@@ -2863,15 +2864,15 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 			race.addTime( num, t )
 		
 		OutputStreamer.writeNumTimes( self.numTimes )
-		requests = [(num, t) for num, t in self.numTimes if okTakePhoto(num, t)]
-		if requests:
-			success, error = SendPhotoRequests( requests )
+		photoRequests = [(num, t) for num, t in self.numTimes if okTakePhoto(num, t)]
+		if photoRequests:
+			success, error = SendPhotoRequests( photoRequests )
 			if success:
-				race.photoCount += len(requests) * 2
+				race.photoCount += len(photoRequests) * 2
 			else:
 				Utils.writeLog( 'USB Camera Error: {}'.format(error) )
 		
-		if getattr(race, 'ftpUploadDuringRace', False):
+		if race.ftpUploadDuringRace:
 			realTimeFtpPublish.publishEntry()
 		
 		if self.getCurrentPage() == self.results:

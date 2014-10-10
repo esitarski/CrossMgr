@@ -650,11 +650,6 @@ class NumKeypad( wx.Panel ):
 		event.Skip()
 
 	def refresh( self ):
-		if self.isKeypadInputMode():
-			wx.CallAfter( self.keypad.numEdit.SetFocus )
-		if self.isTimeTrialInputMode():
-			wx.CallAfter( self.timeTrialRecord.refresh )
-			
 		race = Model.race
 		enable = bool(race and race.isRunning())
 		if self.isEnabled != enable:
@@ -687,6 +682,11 @@ class NumKeypad( wx.Panel ):
 	
 		wx.CallAfter( self.refreshLaps )
 		wx.CallAfter( self.refreshRiderLapCountList )
+		
+		if self.isKeypadInputMode():
+			wx.CallAfter( self.keypad.numEdit.SetFocus )
+		if self.isTimeTrialInputMode():
+			wx.CallAfter( self.timeTrialRecord.refresh )
 	
 if __name__ == '__main__':
 	Utils.disable_stdout_buffering()

@@ -9,7 +9,7 @@ import ColGrid
 import StatusBar
 import OutputStreamer
 import NumKeypad
-from PhotoFinish import TakePhoto
+from PhotoFinish import TakePhoto, okTakePhoto
 from GetResults import GetResults
 from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, DeleteEntry, DoDNS, DoDNF, DoPull
 from FtpWriteFile import realTimeFtpPublish
@@ -329,18 +329,6 @@ class ForecastHistory( wx.Panel ):
 				
 			t = race.curRaceTime()
 			
-			# Take the picture first to reduce latency to capturing the riders as they cross the line.
-			if getattr(race, 'enableUSBCamera', False):
-				for num in nums:
-					try:
-						num = int(num)
-					except:
-						continue
-					try:
-						race.photoCount += TakePhoto( num, t )
-					except Exception as e:
-						logException( e, sys.exc_info() )
-			
 			# Add the times to the model and write to the log.
 			for num in nums:
 				try:
@@ -350,14 +338,24 @@ class ForecastHistory( wx.Panel ):
 				race.addTime( num, t )
 				OutputStreamer.writeNumTime( num, t )
 				
+			# Schedule a photo.
+			if race.enableUSBCamera:
+				for num in nums:
+					try:
+						num = int(num)
+					except:
+						continue
+					
+					race.photoCount += TakePhoto(num, t) if okTakePhoto(num, t) else 0
+			
 		self.playBlip()
 		
 		mainWin = Utils.getMainWin()
 		if mainWin:
-			mainWin.record.keypad.numEdit.SetValue( '' )
+			mainWin.record.keypad.numEdit.SetValue( u'' )
 			mainWin.record.refreshLaps()
 			wx.CallAfter( mainWin.refresh )
-		if getattr(race, 'ftpUploadDuringRace', False):
+		if race.ftpUploadDuringRace:
 			realTimeFtpPublish.publishEntry()
 		
 	def clearGrids( self ):

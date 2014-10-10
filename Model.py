@@ -926,6 +926,8 @@ class Race( object ):
 	advancePhotoMilliseconds = 0
 	photoCount = 0
 	
+	ftpUploadDuringRace = False
+	
 	geoTrackFName = None
 	
 	city = ''

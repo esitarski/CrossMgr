@@ -30,7 +30,7 @@ def StartRaceNow():
 		if race is None:
 			return
 		
-		if not getattr(race, 'enableJChipIntegration', False):
+		if not race.enableJChipIntegration:
 			race.resetStartClockOnFirstTag = False
 		Model.resetCache()
 		race.startRaceNow()
@@ -46,7 +46,7 @@ def StartRaceNow():
 	# For safety, clear the undo stack after 8 seconds.
 	undoResetTimer = wx.CallLater( 8000, undo.clear )
 	
-	if getattr(race, 'ftpUploadDuringRace', False):
+	if race.ftpUploadDuringRace:
 		realTimeFtpPublish.publishEntry( True )
 
 def GetNowSeconds():

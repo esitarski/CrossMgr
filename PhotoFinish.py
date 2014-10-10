@@ -63,11 +63,10 @@ def okTakePhoto( num, t ):
 		return True
 	
 	results = GetResultsCore( race.getCategory(num) )
-	if not results:
-		return True
-	
-	rr = results[0]
-	return getattr(rr,'raceTimes',None) and t > rr.raceTimes[-1] - 60.0
+	try:
+		return t > results[0].raceTimes[-1] - 60.0
+	except:
+		return False
 
 def DeletePhotos( raceFileName ):
 	dirName = getPhotoDirName( raceFileName )
