@@ -227,7 +227,7 @@ class MainWin( wx.Frame ):
 		self.controlPanel.SetSizerAndFit( phSizer )
 		
 		row1Sizer = wx.BoxSizer( wx.HORIZONTAL )
-		row1Sizer.Add( self.primaryImage, flag=wx.ALL, border=4 )
+		row1Sizer.Add( self.primaryImage, flag=wx.ALIGN_BOTTOM|wx.ALL, border=4 )
 		row1Sizer.Add( self.controlPanel, 1, flag=wx.ALL, border=4 )
 		mainSizer.Add( row1Sizer )
 		

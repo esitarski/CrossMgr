@@ -203,10 +203,7 @@ def GetResultsCore( category ):
 			if (category and riderCategory != category) or riderCategory not in categoryWinningTime:
 				continue
 			
-			if riderCategory and riderCategory.getNumLaps():
-				cutoffTime = categoryWinningTime[riderCategory]
-			else:
-				cutoffTime = raceSeconds
+			cutoffTime = categoryWinningTime.get(riderCategory, raceSeconds)
 			
 			riderTimes = getRiderTimes( rider )
 			times = [e.t for e in riderTimes]

@@ -1018,7 +1018,7 @@ class RiderDetail( wx.Panel ):
 		highPrecisionTimes = Model.highPrecisionTimes()
 		with Model.LockRace() as race:
 		
-			self.showPhotos.Enable( race and num and race.enableUSBCamera )
+			self.showPhotos.Enable( bool(race and num and race.enableUSBCamera) )
 		
 			if race is None or num is None:
 				return

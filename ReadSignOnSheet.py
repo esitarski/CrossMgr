@@ -713,7 +713,7 @@ class ExcelLink( object ):
 			pass
 		
 		# Do not read categories or properties after the race has started to avoid overwriting local changes.
-		if Model.race and Model.race.startTime
+		if Model.race and Model.race.startTime:
 			self.hasCategoriesSheet = False
 			self.hasPropertiesSheet = False
 		else:
