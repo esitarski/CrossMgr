@@ -4,7 +4,6 @@ import ReadSignOnSheet
 from PhotoFinish import GetPhotoFName, TakePhoto
 from SendPhotoRequests import getPhotoDirName, SendPhotoRequests
 from LaunchFileBrowser import LaunchFileBrowser
-from FtpWriteFile import FtpWriteRacePhoto
 import wx
 import wx.lib.agw.thumbnailctrl as TC
 import os
@@ -173,10 +172,6 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.showFilesID = wx.NewId()
 		self.toolbar.AddSimpleTool( self.showFilesID, bitmap, _('Show Files...') )
 		
-		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'FTP.png'), wx.BITMAP_TYPE_PNG )
-		self.ftpID = wx.NewId()
-		self.toolbar.AddSimpleTool( self.ftpID, bitmap, _('Upload Photo with FTP...') )
-		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'Printer.png'), wx.BITMAP_TYPE_PNG )
 		self.printID = wx.NewId()
 		self.toolbar.AddSimpleTool( self.printID, bitmap, _('Print Photo...') )
@@ -256,17 +251,6 @@ class PhotoViewerDialog( wx.Dialog ):
 		dir = getPhotoDirName( Utils.mainWin.fileName if Utils.mainWin and Utils.mainWin.fileName else 'Photos' )
 		LaunchFileBrowser( dir )
 	
-	def OnFTPUpload( self, event ):
-		if not Model.race or not getattr(Model.race, 'ftpHost', None) or getattr(Model.race, 'ftpPhotoPath', None) is None:
-			Utils.MessageOK( self, _('FTP Upload Photo Path Not Configured.'), _('FTP Publish Failed'), iconMask = wx.ICON_ERROR )
-			return
-			
-		# Run the upload in the background so we don't hang the UI.
-		thread = threading.Thread( target = FtpWriteRacePhoto, args = (self.thumbFileName,) )
-		thread.daemon = True
-		thread.name = 'FtpUpload'
-		thread.start()
-	
 	def OnPrint( self, event ):
 		try:
 			bitmap = wx.Bitmap( self.thumbFileName, wx.BITMAP_TYPE_JPEG )
@@ -303,7 +287,6 @@ class PhotoViewerDialog( wx.Dialog ):
 			self.refreshID:			self.OnRefresh,
 			self.copyToClipboardID:	self.OnCopyToClipboard,
 			self.showFilesID:		self.OnLaunchFileBrowser,
-			self.ftpID:				self.OnFTPUpload,
 			self.printID:			self.OnPrint,
 			self.takePhotoID:		self.OnTakePhoto,
 		}[event.GetId()]( event )

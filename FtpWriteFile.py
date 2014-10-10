@@ -30,38 +30,6 @@ def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30,
 	if fileOpened:
 		file.close()
 
-def FtpWriteRacePhoto( fname ):
-	msg = ''
-	with Model.LockRace() as race:
-		if not race or not Utils.getFileName():
-			return True, msg
-		host		= getattr( race, 'ftpHost', '' )
-		user		= getattr( race, 'ftpUser', '' )
-		passwd		= getattr( race, 'ftpPassword', '' )
-		serverPath	= getattr( race, 'ftpPhotoPath', '' )
-
-	try:
-		file = open( fname, 'rb' )
-	except Exception as e:
-		msg = 'FtpWriteRacePhoto ({}): {}'.format(lineno(), e)
-		Utils.writeLog( msg )
-		return False, msg
-		
-	try:
-		FtpWriteFile(	host		= host,
-						user		= user,
-						passwd		= passwd,
-						serverPath	= serverPath,
-						fname		= os.path.basename(fname),
-						file		= file )
-	except Exception as e:
-		msg = 'FtpWriteRacePhoto ({}): {}'.format(lineno(), e)
-		Utils.writeLog( msg )
-		return False, msg
-	
-	file.close()
-	return True, msg
-	
 def FtpWriteRaceHTML():
 	Utils.writeLog( 'FtpWriteRaceHTML: called.' )
 	

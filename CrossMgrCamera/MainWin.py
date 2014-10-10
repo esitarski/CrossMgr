@@ -501,7 +501,7 @@ def MainLoop():
 	cameraDeviceNum = dlg.GetCameraDeviceNum()
 	dlg.Destroy()
 	if ret != wx.ID_OK:
-		wx.Exit()
+		return
 		
 	mainWin.setCameraDeviceNum( cameraDeviceNum )
 	

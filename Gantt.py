@@ -111,7 +111,7 @@ class Gantt( wx.Panel ):
 				(wx.NewId(), _('Show Lap Details...'), 		_('Show Lap Details'),			self.OnPopupLapDetail, allCases),
 				(None, None, None, None, None),
 			]
-			if HasPhotoCache():
+			if Model.race and Model.race.enableUSBCamera:
 				self.popupInfo.append(
 				(wx.NewId(), _('Photos...'), 				_('Show Photos'),				self.OnPopupPhotos, allCases),
 				)

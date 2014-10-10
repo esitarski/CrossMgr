@@ -663,6 +663,9 @@ class NumKeypad( wx.Panel ):
 			self.isEnabled = enable
 		if not enable and self.isKeypadInputMode():
 			self.keypad.numEdit.SetValue( '' )
+			
+		self.photoCount.Show( race and race.enableUSBCamera )
+		self.photoButton.Show( race and race.enableUSBCamera )
 		
 		# Refresh the race start time.
 		changed = False

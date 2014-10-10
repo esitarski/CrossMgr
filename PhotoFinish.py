@@ -20,40 +20,37 @@ def formatTime( secs ):
 def GetPhotoFName( dirName, bib, raceSeconds, i ):
 	return os.path.join(dirName, 'bib-{:04d}-time-{}-{}.jpg'.format(int(bib or 0), formatTime(raceSeconds or 0), i+1))
 
-photoFNameCache = set()
+photoCache = set()
 def updatePhotoFNameCache():
-	global photoFNameCache
+	global photoCache
 	
-	photoFNameCache = set()
+	photoCache = set()
 	
 	race = Model.race
 	if not race or not race.enableUSBCamera or not race.startTime:
 		return
 	
-	fileName = Utils.getFileName()
-	if not fileName:
-		return
-	
+	photoDir = getPhotoDirName( Utils.getFileName() )
 	try:
-		photoFNameCache = { fname for fname in os.listdir(getPhotoDirName(fileName)) if fname.endswith('.jpg') and fname.startswith('bib') }
+		photoCache = { fname[:-6] for fname in os.listdir(photoDir) if fname.startswith('bib') and fname.endswith('.jpg')  }
 	except Exception as e:
-		print e
+		pass
 		
 def HasPhotoCache():
-	global photoFNameCache
-	return photoFNameCache
+	global photoCache
+	return photoCache
 	
 def hasPhoto( bib, t ):
-	global photoFNameCache
+	global photoCache
 	
 	race = Model.race
-	if not race or not race.enableUSBCamera or not race.startTime:
+	if not photoCache or not race or not race.enableUSBCamera or not race.startTime:
 		return False
-	fileName = Utils.getFileName()
-	if not fileName:
+		
+	try:
+		return os.path.basename(GetPhotoFName(getPhotoDirName(Utils.getFileName()), bib, t, 0))[:-6] in photoCache
+	except Exception as e:
 		return False
-	dirName = getPhotoDirName( fileName )
-	return any( os.path.basename(GetPhotoFName(dirName, bib, t, i)) in photoFNameCache for i in xrange(2) )
 	
 def HasCamera():
 	return PhotoAcknowledge()[0]

@@ -27,11 +27,11 @@ def sendMessages( messages ):
 	return True, None
 
 def PhotoGetRequest( kwargs, cmd ):
-	assert 'dirName' in kwargs, 'dirName is a required argument'
-	messageArgs = {k : v if k != 'time' else [v.year, v.month, v.day, v.hour, v.minute, v.second, v.microsecond]
-			for k, v in kwargs.iteritems() if k in Fields }
+	# assert 'dirName' in kwargs, 'dirName is a required argument'
+	# assert all( k in Fields for k in kwargs.iterkeys() ), 'unrecognized field(s): {}'.format(', '.join([k not in Fields for k in kwargs.iterkeys()]))
 	
-	assert all( k in Fields for k in kwargs.iterkeys() ), 'unrecognized field(s): {}'.format(', '.join([k not in Fields for k in kwargs.iterkeys()]))
+	messageArgs = { k : v if k != 'time' else [v.year, v.month, v.day, v.hour, v.minute, v.second, v.microsecond]
+			for k, v in kwargs.iteritems() if k in Fields }
 	messageArgs['cmd'] = cmd
 	
 	return json.dumps( messageArgs, separators=(',',':') )
