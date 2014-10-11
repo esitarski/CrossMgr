@@ -125,11 +125,11 @@ When using this feature, be sure to set the "First Lap Distance" in [Categories]
 
 ## Camera Options
 
-CrossMgr can record photos from an inexpensive USB camera when riders cross the finish line.
+CrossMgr can record photos from an inexpensive USB camera as riders cross the finish line.
 
 This is accomplished with a separate program:  __CrossMgrCamera__.  If you have not done so, download and install this program from the CrosMgr web site.
 
-CrossMgrCamera runs for the entire race and takes photos 25 times a second.  It holds those frames in a "ring buffer" that is 10 seconds long (a ring buffer just means that the most recent photo will replace the oldest). 
+CrossMgrCamera runs for the entire race and takes photos about 25 times a second.  It holds those frames in a "ring buffer" that is 10 seconds long (a ring buffer just means that the most recent photo will replace the oldest). 
 
 CrossMgr sends it a message with the rider information and a time.  CrossMgrCamera then saves the frame before and after the time after also adding the information as a header at the top of the photo.
 
@@ -139,7 +139,7 @@ __bib-XXXX-time-HH-MM-SS-DDD-X.jpg__
 
 Where bib is the rider's race number, HH-MM-SS-DDD is the race time to millisecond accuracy, and X is the frame - either 1 or 2.
 
-This makes it easy to manage the photos in a regular file browser.  Sort alphabetically to see the files by bib number.  Sort by date to see the photos in full order.
+This makes it easy to manage the photos in a regular file browser.  Sort alphabetically to see the files by rider bib number.  Sort by date to see the photos in full order.
 
 The CrossMgrCamera application supports three photo display areas:
 
@@ -148,24 +148,27 @@ The CrossMgrCamera application supports three photo display areas:
 
 CrossMgr sends messages to it to save photos.
 
-When you run CrossMgrCamera, select the __Camera Device__ to use.
+When you run CrossMgrCamera, consider the __Camera Device__.
 Normally, the external USB camera default is __device 0__, so you don't need to change this.
 
 On some PCs, the built-in camera is __device 0__ and the external USB camera is __device 1__.
 If this is the case on your computer, set __Camera Device__ to __1__.
+
+CrossMgrCamera uses the computer intensively and will drain the battery quickly.  Make sure you have an external source of power.
 
 ### Options
 
 Option|Description
 :-------|:----------
 Do Not Use Camera for Photo Finish|USB Camera not used
-Photos on Every Lap|Records a photo from a connected USB camera on every number entry on every lap.  See [Notes](#use-usb-camera-photo-finish) below for details.  Photos at Race Finish Only|This option tells CrossMgr to record photos one minute before the leader's finish time for each Start Wave.  If the leader has not yet finished, CrossMgr uses leader's expected time.  If the leader's time is known, CrossMgr uses the leader's actual finish time.  If this option is disabled, CrossMgr will record photos of every rider on every lap.  If this race is a time trial, this option has no effect and photos will be recorded on every lap.
+Photos on Every Lap|Records a photo from a connected USB camera on every number entry on every lap.  See [Notes](#use-usb-camera-photo-finish) below for details.
+Photos at Race Finish Only|This option tells CrossMgr to record photos one minute before the leader's finish time for each Start Wave.  If the leader has not yet finished, CrossMgr uses leader's expected time.  If the leader's time is known, CrossMgr uses the leader's actual finish time.  If this option is disabled, CrossMgr will record photos of every rider on every lap.  If this race is a time trial, this option has no effect and photos will be recorded on every lap.
 
 ### Notes:
 
-The purpose of "Photos at Race Finish Only" is to avoid filling up your disk with uninteresting photos during the race.  This feature is especially useful for high-lap races like criteriums.  Aside from the space required, there is no problem with recording photos every lap, and you may wish to do for the additional information it provides.
+The purpose of __Photos at Race Finish Only__ is to avoid filling up your disk with uninteresting photos during the race.  This feature is especially useful for high-lap races like criteriums.  Aside from the space required, there is no problem with recording photos every lap, and you may wish to do for the additional information it provides.
 
-When using the "Photos at Race Finish Only" option, be aware that sometimes CrossMgr does not know who the leader is.  Especially during a criterium, this can happen if the leader takes a free lap and CrossMgr does not auto-correct it, or in any race type, the leader might have a missed read.
+When using the __Photos at Race Finish Only__ option, be aware that sometimes CrossMgr does not know who the leader is.  Especially during a criterium, this can happen if the leader takes a free lap and CrossMgr does not auto-correct it, or in any race type, the leader might have a missed read.
 
 This is the reason for the policy of recording photos one minute before the expected leader - this makes it more likely that the leader will be included if misclassified during the race.
 
@@ -173,7 +176,7 @@ One the leader of a Start Wave has been recorded, photos for all riders in the S
 
 When using CrossMgr for track races, be advised that its policy of recording all photos 60 seconds in advance of the leader may result in photos of all riders for up to the last 4 laps (depending on the length of the track).
 
-Regardless of the "Photos at Race Finish Only" option, CrossMgr will "open" the USB camera when the race starts.  This is because opening and initializing the USB Camera can take a few seconds - too long to capture a photo when needed.  The camera must remain connected for the duration of the race.
+In TimeTrial mode, __Photos at Race Finish Only__ has the same effet as __Photos on Every Lap__.
 
 ## Animation Options
 These only apply to the Track animation.  If you are using an uploaded GPX file, the animation will follow the GPX path.

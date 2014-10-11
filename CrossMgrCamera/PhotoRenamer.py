@@ -3,6 +3,7 @@ import wx
 import cStringIO as StringIO
 import Utils
 from GetPhotoFName import GetPhotoFName
+from AddPhotoHeader import AddPhotoHeader
 
 def PhotoRenamer( qRenamer, qMessage, qFTP ):
 	keepGoing = True
@@ -16,13 +17,14 @@ def PhotoRenamer( qRenamer, qMessage, qFTP ):
 			try:
 				os.rename( fnameOld, fname )
 			except Exception as e:
-				qMessage.put( ('rename', 'file rename failed: "{}"'.format(os.path.basename(fname))) )
+				qMessage.put( ('rename', 'file rename failed: "{}": {}'.format(os.path.basename(fname), e)) )
 				continue
 			
 			try:
-				image = wx.Image.LoadFile( fname, wx.BITMAP_TYPE_JPEG )
+				with open(fname, 'rb') as f:
+					image = wx.ImageFromStream( wx.InputStream(f), wx.BITMAP_TYPE_JPEG )
 			except Exception as e:
-				qMessage.put( ('rename', 'cannot load : "{}"'.format(os.path.basename(fname))) )
+				qMessage.put( ('rename', 'cannot load : "{}": {}'.format(os.path.basename(fname), e)) )
 				continue
 				
 			image = AddPhotoHeader(

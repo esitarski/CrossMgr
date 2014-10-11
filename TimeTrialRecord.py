@@ -8,6 +8,7 @@ import Utils
 from ReorderableGrid import ReorderableGrid
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 from PhotoFinish import TakePhoto
+from SendPhotoRequests import SendRenameRequests
 import OutputStreamer
 
 def formatTime( secs ):

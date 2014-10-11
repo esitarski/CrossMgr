@@ -105,7 +105,7 @@ def SendRenameRequests( bibRaceSeconds ):
 	if not race or not race.startTime:
 		return False, 'race not started'
 
-	ftpInfo = getFtpInfo(race)
+	ftpInfo = getFtpInfo( race )
 		
 	try:
 		externalInfo = race.excelLink.read( True )

@@ -285,7 +285,7 @@ class RfidProperties( wx.Panel ):
 #------------------------------------------------------------------------------------------------
 
 class CameraProperties( wx.Panel ):
-	def __init__( self, parent, id = wx.ID_ANY ):
+	def __init__( self, parent, id=wx.ID_ANY ):
 		super(CameraProperties, self).__init__( parent, id )
 		
 		choices = [
@@ -300,14 +300,14 @@ class CameraProperties( wx.Panel ):
 		
 		ms.Add( self.radioBox, flag=wx.ALL, border=16 )
 		
-		self.explanation = wx.StaticText( self, label=_('Requires CrossMgrCamera.  See documentation for details') )
+		self.explanation = wx.StaticText( self, label=_('Requires CrossMgrCamera.  See help for details') )
 		ms.Add( self.explanation, flag=wx.ALL, border=16 )
 		
 		self.SetSizer( ms )
 		
 	def refresh( self ):
 		race = Model.race
-		if not getattr(race, 'enableUSBCamera', False):
+		if not race or not race.enableUSBCamera:
 			self.radioBox.SetSelection( 0 )
 		else:
 			if not race.photosAtRaceEndOnly:
@@ -317,6 +317,8 @@ class CameraProperties( wx.Panel ):
 		
 	def commit( self ):
 		race = Model.race
+		if not race:
+			return
 		race.enableUSBCamera = False
 		race.photosAtRaceEndOnly = False
 		
@@ -547,8 +549,7 @@ class Properties( wx.Panel ):
 				wx.ICON_WARNING )
 	
 	def setEditable( self, editable = True ):
-		if hasattr(self, 'cameraProperties'):
-			self.cameraProperties.radioBox.Disable()
+		pass
 	
 	def incNext( self ):
 		if not hasattr(self,'generalInfoProperties'):
