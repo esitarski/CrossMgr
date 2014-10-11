@@ -75,7 +75,7 @@ except:
 shutil.copy( 'install\\CrossMgrImpinj_Setup.exe', 'install\\' + newExeName )
 print 'executable copied to: ' + newExeName
 
-# Create comprssed executable.
+# Create compressed executable.
 os.chdir( 'install' )
 newExeName = os.path.basename( newExeName )
 newZipName = newExeName.replace( '.exe', '.zip' )
@@ -89,3 +89,6 @@ z = zipfile.ZipFile(newZipName, "w")
 z.write( newExeName )
 z.close()
 print 'executable compressed.'
+
+shutil.copy( newZipName, r"c:\GoogleDrive\Downloads\Windows\CrossMgrImpinj"  )
+shutil.copy( '../CrossMgrImpinjReadme.pdf', r"c:\GoogleDrive\Downloads\Windows\CrossMgrImpinj"  )

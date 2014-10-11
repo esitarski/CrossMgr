@@ -8,19 +8,13 @@ class dotdict( object ):
 	pass
 
 def formatTime( secs ):
-	if secs is None:
-		secs = 0
-	if secs < 0:
-		sign = '-'
-		secs = -secs
-	else:
-		sign = ''
-	f, ss = math.modf(secs)
+	f, ss = math.modf( secs or 0.0 )
+	
 	secs = int(ss)
-	hours = int(secs // (60*60))
-	minutes = int( (secs // 60) % 60 )
+	hours = secs // (60*60)
+	minutes = (secs // 60) % 60
 	secs = secs % 60 + f
-	return "%s%02d:%02d:%06.3f" % (sign, hours, minutes, secs)
+	return '{:02d}:{:02d}:{:06.3f}'.format( hours, minutes, secs )
 	
 def PilImageToWxImage( pil ):
 	image = wx.EmptyImage( *pil.size )
