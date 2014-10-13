@@ -37,3 +37,28 @@ class ScaledImage( wx.Panel ):
 		width, height = self.GetSize()
 		bitmap = wx.EmptyBitmapRGBA( width, height, 255, 255, 255, 0 )
 		self.image = wx.ImageFromBitmap( bitmap )
+		
+	def SetTestImage( self ):
+		# Return a test image.
+		width, height = self.GetSize()
+		bitmap = wx.EmptyBitmapRGBA( width, height, 255, 255, 255, 0 )
+		dc = wx.MemoryDC()
+		dc.SelectObject( bitmap )
+		
+		colours = [(255,255,255), (255,0,0), (0,255,0), (0,0,255), (255,255,0), (255,0,255), (0,255,255), (0,0,0) ]
+		for y, hCur in ((0, height*0.75), (height*0.75, height*0.25)):
+			rWidth = int(float(width) / len(colours) + 0.5)
+			for i, c in enumerate(colours):
+				dc.SetBrush( wx.Brush(wx.Colour(*c), wx.SOLID) )
+				dc.DrawRectangle( rWidth * i, y, rWidth+1, hCur )
+			colours.reverse()
+		
+		s = min(width, height) / 1.5
+		x = (width-s) / 2
+		y = (height-s) / 2
+		angle = 360.0 / len(colours)
+		for i, c in enumerate(colours):
+			dc.SetBrush( wx.Brush(wx.Colour(*c), wx.SOLID) )
+			dc.DrawEllipticArc(x, y, s, s, angle*i, angle*(i+1))
+		
+		self.SetImage( bitmap.ConvertToImage() )
