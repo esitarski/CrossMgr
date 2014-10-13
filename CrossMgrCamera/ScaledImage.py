@@ -38,6 +38,19 @@ class ScaledImage( wx.Panel ):
 		bitmap = wx.EmptyBitmapRGBA( width, height, 255, 255, 255, 0 )
 		self.image = wx.ImageFromBitmap( bitmap )
 		
+	def SetTile( self, tile ):
+		width, height = self.GetSize()
+		bitmap = wx.EmptyBitmapRGBA( width, height, 255, 255, 255, 0 )
+		dc = wx.MemoryDC()
+		dc.SelectObject( bitmap )
+		
+		wTile = tile.GetWidth()
+		hTile = tile.GetHeight()
+		for y in xrange( 0, height, hTile ):
+			for x in xrange( 0, width, wTile ):
+				dc.DrawBitmap( tile, x, y )
+		self.SetImage( bitmap.ConvertToImage() )
+		
 	def SetTestImage( self ):
 		# Return a test image.
 		width, height = self.GetSize()
@@ -46,8 +59,8 @@ class ScaledImage( wx.Panel ):
 		dc.SelectObject( bitmap )
 		
 		colours = [(255,255,255), (255,0,0), (0,255,0), (0,0,255), (255,255,0), (255,0,255), (0,255,255), (0,0,0) ]
+		rWidth = int(float(width) / len(colours) + 0.5)
 		for y, hCur in ((0, height*0.75), (height*0.75, height*0.25)):
-			rWidth = int(float(width) / len(colours) + 0.5)
 			for i, c in enumerate(colours):
 				dc.SetBrush( wx.Brush(wx.Colour(*c), wx.SOLID) )
 				dc.DrawRectangle( rWidth * i, y, rWidth+1, hCur )

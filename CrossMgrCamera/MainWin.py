@@ -189,7 +189,8 @@ class MainWin( wx.Frame ):
 		self.title.SetFont( wx.FontFromPixelSize( wx.Size(0,24), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		pfgs.Add( self.title )
 		pfgs.Add( wx.StaticText(self.controlPanel) )
-		pfgs.Add( wx.StaticBitmap(self.controlPanel, bitmap=Utils.GetPngBitmap('CrossMgrHeader.png') ) )
+		self.logo = Utils.GetPngBitmap('CrossMgrHeader.png')
+		pfgs.Add( wx.StaticBitmap(self.controlPanel, bitmap=self.logo) )
 		
 		pfgs.Add( wx.StaticText(self.controlPanel, label='Camera Device'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 		self.cameraDevice = wx.StaticText( self.controlPanel )
@@ -253,6 +254,9 @@ class MainWin( wx.Frame ):
 		self.messageThread.start()
 		
 		self.grabFrameOK = False
+		
+		for i in [self.primaryImage, self.beforeImage, self.afterImage]:
+			i.SetTestImage()
 		
 		# Start the frame loop.
 		delayAdjustment = 0.80 if 'win' in sys.platform else 0.98
