@@ -91,5 +91,5 @@ z.write( newExeName )
 z.close()
 print 'executable compressed.'
 
-shutil.copy( newZipName, r"c:\GoogleDrive\Downloads\Windows\CrossMgrAlien"  )
+shutil.copy( newExeName, r"c:\GoogleDrive\Downloads\Windows\CrossMgrAlien"  )
 
