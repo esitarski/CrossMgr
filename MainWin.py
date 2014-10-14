@@ -592,7 +592,7 @@ class MainWin( wx.Frame ):
 		
 		self.optionsMenu.AppendSeparator()
 		idCur = wx.NewId()
-		self.menuItemLaunchExcelAfterPublishingResults = self.optionsMenu.Append( idCur ,
+		self.menuItemLaunchExcelAfterPublishingResults = self.optionsMenu.Append( idCur,
 			_("&Launch Excel after Publishing Results"),
 			_("Launch Excel after Publishing Results"), wx.ITEM_CHECK )
 		self.launchExcelAfterPublishingResults = self.config.ReadBool('menuLaunchExcelAfterPublishingResults', True)
@@ -2524,7 +2524,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 		
 		try:
 			wb.save( xlFName )
-			webbrowser.open( xlFName, new = 2, autoraise = True )
+			if self.launchExcelAfterPublishingResults:
+				webbrowser.open( xlFName, new = 2, autoraise = True )
 			Utils.MessageOK(self, _('Excel file written to:\n\n   {}').format(xlFName), _('Excel Write'))
 		except IOError:
 			Utils.MessageOK(self,
@@ -2562,7 +2563,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 
 		try:
 			wb.save( xlFName )
-			webbrowser.open( xlFName, new = 2, autoraise = True )
+			if self.launchExcelAfterPublishingResults:
+				webbrowser.open( xlFName, new = 2, autoraise = True )
 			Utils.MessageOK(self, _('Excel file written to:\n\n   {}').format(xlFName), _('Excel Write'))
 		except IOError:
 			Utils.MessageOK(self,
@@ -2641,7 +2643,8 @@ Continue?''' % fName, 'Simulate a Race' ):
 				Location	= urllib.quote(unicode(u', '.join([race.city, race.stateProv, race.country])).encode('utf-8')),
 				PresentedBy = urllib.quote(unicode(race.organizer).encode('utf-8')),
 			)
-			webbrowser.open( url, new = 2, autoraise = True )
+			if self.launchExcelAfterPublishingResults:
+				webbrowser.open( url, new = 2, autoraise = True )
 		except Exception as e:
 			Utils.MessageOK(self,
 						_('Cannot write "{}" (Error={}).').format(fname, e),

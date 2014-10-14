@@ -40,7 +40,7 @@ class ScaledImage( wx.Panel ):
 		
 	def SetTile( self, tile ):
 		width, height = self.GetSize()
-		bitmap = wx.EmptyBitmapRGBA( width, height, 255, 255, 255, 0 )
+		bitmap = wx.EmptyBitmap( width, height )
 		dc = wx.MemoryDC()
 		dc.SelectObject( bitmap )
 		
@@ -54,7 +54,7 @@ class ScaledImage( wx.Panel ):
 	def SetTestImage( self ):
 		# Return a test image.
 		width, height = self.GetSize()
-		bitmap = wx.EmptyBitmapRGBA( width, height, 255, 255, 255, 0 )
+		bitmap = wx.EmptyBitmap( width, height )
 		dc = wx.MemoryDC()
 		dc.SelectObject( bitmap )
 		
@@ -74,4 +74,21 @@ class ScaledImage( wx.Panel ):
 			dc.SetBrush( wx.Brush(wx.Colour(*c), wx.SOLID) )
 			dc.DrawEllipticArc(x, y, s, s, angle*i, angle*(i+1))
 		
+		dc.SelectObject( wx.NullBitmap )
 		self.SetImage( bitmap.ConvertToImage() )
+		
+if __name__ == '__main__':
+	app = wx.App(False)
+	
+	displayWidth, displayHeight = wx.GetDisplaySize()
+	imageWidth, imageHeight = 640, 480
+	if imageWidth*2 + 32 > displayWidth or imageHeight*2 + 32 > displayHeight:
+		imageWidth /= 2
+		imageHeight /= 2
+	
+	mainWin = wx.Frame(None,title="ScaledImage", size=(imageWidth,imageHeight))
+	scaledImage = ScaledImage( mainWin, size=(imageWidth, imageHeight) )
+	scaledImage.SetTestImage()
+	# scaledImage.SetToEmpty()
+	mainWin.Show()
+	app.MainLoop()

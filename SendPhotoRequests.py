@@ -10,8 +10,6 @@ PORT = 54111
 
 delimiter = '\n\n\n'
 
-Fields = {'dirName', 'bib', 'time', 'raceSeconds', 'firstName', 'lastName', 'team', 'raceName', 'ftpHost', 'ftpUser', 'ftpPassword', 'ftpPhotoPath'}
-
 def getPhotoDirName( raceFileName ):
 	return os.path.join( os.path.dirname(raceFileName) or '.', os.path.splitext(raceFileName)[0] + '_Photos' )
 
@@ -27,13 +25,9 @@ def sendMessages( messages ):
 	return True, None
 
 def PhotoGetRequest( kwargs, cmd ):
-	# assert 'dirName' in kwargs, 'dirName is a required argument'
-	# assert all( k in Fields for k in kwargs.iterkeys() ), 'unrecognized field(s): {}'.format(', '.join([k not in Fields for k in kwargs.iterkeys()]))
-	
 	messageArgs = { k : v if k != 'time' else [v.year, v.month, v.day, v.hour, v.minute, v.second, v.microsecond]
-			for k, v in kwargs.iteritems() if k in Fields }
-	messageArgs['cmd'] = cmd
-	
+			for k, v in kwargs.iteritems() }
+	messageArgs['cmd'] = cmd	
 	return json.dumps( messageArgs, separators=(',',':') )
 	
 def PhotoSendRequests( messages, cmd='photo' ):
@@ -41,16 +35,14 @@ def PhotoSendRequests( messages, cmd='photo' ):
 	
 def getFtpInfo( race ):
 	try:
-		if race.ftpHost and race.ftpUser and race.ftpPassword and race.ftpPhotoPath:
-			ftpInfo = {
-				'host':			race.ftpHost,
-				'user':			race.ftpUser,
-				'password':		race.ftpPassword,
-				'photoPath':	race.ftpPhotoPath,
-			}
-	except AttributeError:
-		ftpInfo = None
-	return ftpInfo
+		return {
+			'host':			race.ftpHost,
+			'user':			race.ftpUser,
+			'password':		race.ftpPassword,
+			'photoPath': 	race.ftpPhotoPath,
+		}
+	except Exception as e:
+		return None
 	
 def getRequest( race, dirName, bib, raceSeconds, externalInfo ):
 	info = {
@@ -101,6 +93,7 @@ def SendPhotoRequests( bibRaceSeconds, includeFTP=True ):
 def SendRenameRequests( bibRaceSeconds ):
 	if not bibRaceSeconds:
 		return True, 'no requests'
+	
 	race = Model.race
 	if not race or not race.startTime:
 		return False, 'race not started'
@@ -126,3 +119,17 @@ def SendRenameRequests( bibRaceSeconds ):
 	
 def PhotoAcknowledge():
 	return sendMessages( [json.dumps( {'cmd':'ack'}, separators=(',',':') )] )
+	
+if __name__ == '__main__':
+	print getFtpInfo( None )
+	
+	race = Model.newRace()
+	race._populate()
+
+	print getFtpInfo( race )
+	
+	race.ftpHost = 'ftpHost'
+	race.ftpUser = 'ftpUser'
+	race.ftpPassword = 'ftpPassword'
+	race.ftpPhotoPath = 'ftpPhotoPath'
+	print getFtpInfo( race )

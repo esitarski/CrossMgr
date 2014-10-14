@@ -28,6 +28,7 @@ from FrameCircBuf import FrameCircBuf
 from AddPhotoHeader import AddPhotoHeader, PilImageToWxImage
 from ScaledImage import ScaledImage
 from GetPhotoFName import GetPhotoFName
+from SaveImage import SaveImage
 
 imageWidth, imageHeight = 640, 480
 
@@ -310,7 +311,7 @@ class MainWin( wx.Frame ):
 		self.writerThread = threading.Thread( target=PhotoWriter, args=(self.writerQ, self.messageQ, self.ftpQ) )
 		self.writerThread.daemon = True
 		
-		self.renamerThread = threading.Thread( target=PhotoRenamer, args=(self.renamerQ, self.messageQ, self.ftpQ) )
+		self.renamerThread = threading.Thread( target=PhotoRenamer, args=(self.renamerQ, self.writerQ, self.messageQ) )
 		self.renamerThread.daemon = True
 		
 		self.ftpThread = threading.Thread( target=FTPWriter, args=(self.ftpQ, self.messageQ) )
@@ -356,10 +357,10 @@ class MainWin( wx.Frame ):
 			firstNameTxt=u'Firstname', lastNameTxt=u'LASTNAME', teamTxt=u'Team',
 			raceNameTxt='Racename'
 		)
-		self.primaryImage.SetImage( image )
 		self.fcb.append( tNow, image )
+		wx.CallAfter( self.primaryImage.SetImage, image )
 		
-		# Process save messages
+		# Process any save messages
 		while 1:
 			try:
 				message = self.requestQ.get(False)
@@ -382,22 +383,9 @@ class MainWin( wx.Frame ):
 					message.get('raceName',u'')
 				)
 				
-				self.beforeAfterImages[i].SetImage( image )
+				wx.CallAfter( self.beforeAfterImages[i].SetImage, image )
 				
-				if 'ftpInfo' in message:
-					writerMessage = ('save', fname, image, message.get('ftpInfo'))
-				else:
-					writerMessage = ('save', fname, image)
-				
-				try:
-					self.writerQ.put( writerMessage, False )
-				except Full:
-					self.messageQ.put( ('error', 'Photo write queue full.  Missed {} at {}.'.format(
-								message.get('bib','NoBib'),
-								message.get('time','NoTime'),
-							)
-						)
-					)
+				SaveImage( fname, image, message.get('ftpInfo', None), self.messageQ, self.writerQ )
 				
 			if (now() - tNow).total_seconds() > self.frameDelay / 2.0:
 				break

@@ -31,8 +31,10 @@ def FTPWriter( qFTP, qMessage ):
 					# Login
 					#
 					if login != loginLast:
-						if ftpConnection:
-							ftpConnetion.quit()
+						try:
+							ftpConnection.quit()
+						except Exception as e:
+							pass
 						ftpConnection = ftplib.FTP( host, timeout=timeout )
 						ftpConnection.login( user, password )
 						photoPathLast = None
@@ -40,15 +42,14 @@ def FTPWriter( qFTP, qMessage ):
 					#-------------------------------
 					# change to the server path
 					#
-					if photoPath != photoPathLast:
-						if photoPath != '.':
-							ftpConnection.cwd( photoPath )
+					if photoPath != photoPathLast and photoPath != '.':
+						ftpConnection.cwd( photoPath )
 					
 					#-------------------------------
 					# write file to ftp site
 					#
 					with open(fname, 'rb') as file:
-						ftpConnection.storbinary( 'STOR {}'.format( os.path.basename(fname) ), file )
+						ftpConnection.storbinary( 'STOR {}'.format(os.path.basename(fname)), file )
 					
 					#-------------------------------
 					# store state for next message
