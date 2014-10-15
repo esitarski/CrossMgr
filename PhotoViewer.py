@@ -350,7 +350,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		
 		testNum = 9999
 		raceSeconds = race.curRaceTime()
-		success, error = SendPhotoRequests( [testNum, raceSeconds] )
+		success, error = SendPhotoRequests( [(testNum, raceSeconds)] )
 		if success:
 			wx.CallLater( 750, self.refresh, testNum )
 		else:

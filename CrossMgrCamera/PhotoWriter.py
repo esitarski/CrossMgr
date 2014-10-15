@@ -33,10 +33,8 @@ def PhotoWriter( qWriter, qMessage, qFTP ):
 		
 			if success:
 				qMessage.put( ('saved', '"{}"'.format(os.path.basename(fname))) )
-				print message
 				if len(message) > 3:
 					ftpInfo = message[3]
-					print ftpInfo
 					qFTP.put( ('save', fname, ftpInfo) )
 			else:
 				qMessage.put( ('save failure', '"{}": {}'.format(os.path.dirname(fname), e) ) )
