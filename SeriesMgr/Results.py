@@ -27,7 +27,7 @@ def filterDigits( s ):
 
 HeaderNamesTemplate = ['Pos', 'Name', 'License', 'Team']
 def getHeaderNames():
-	return HeaderNamesTemplate + ['Total Time' if SeriesModel.model.scoreByTime else 'Points']
+	return HeaderNamesTemplate + ['Total Time' if SeriesModel.model.scoreByTime else 'Points', 'Gap']
 
 #----------------------------------------------------------------------------------
 
@@ -203,7 +203,7 @@ function sortTable( table, col, reverse ) {
 	};
 	
 	var cmpFunc;
-	if( col == 0 || col == 4 ) {		// Pos or Points
+	if( col == 0 || col == 4 || col == 5 ) {		// Pos, Points or Gap
 		cmpFunc = cmpPos;
 	}
 	else if( col > 4 ) {				// Race Points/Time and Rank
@@ -326,7 +326,7 @@ function sortTableId( iTable, iCol ) {
 										with tag(html, 'span', {'class': 'smallFont'}):
 											html.write( u'Top {}'.format(len(r[3].pointStructure)) )
 					with tag(html, 'tbody'):
-						for pos, (name, license, team, points, racePoints) in enumerate(results):
+						for pos, (name, license, team, points, gap, racePoints) in enumerate(results):
 							with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
 								with tag(html, 'td', {'class':'rightAlign'}):
 									html.write( unicode(pos+1) )
@@ -338,6 +338,8 @@ function sortTableId( iTable, iCol ) {
 									html.write( unicode(team or '') )
 								with tag(html, 'td', {'class':'rightAlign'}):
 									html.write( unicode(points or '') )
+								with tag(html, 'td', {'class':'rightAlign'}):
+									html.write( unicode(gap or '') )
 								for rPoints, rRank in racePoints:
 									with tag(html, 'td', {'class':'leftBorder centerAlign'}):
 										html.write( u'{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints else '' )
@@ -507,7 +509,7 @@ class Results(wx.Panel):
 			attr = gridlib.GridCellAttr()
 			if headerName in ('Name', 'Team', 'License'):
 				attr.SetAlignment( wx.ALIGN_LEFT, wx.ALIGN_TOP )
-			elif headerName in ('Pos', 'Points'):
+			elif headerName in ('Pos', 'Points', 'Gap'):
 				attr.SetAlignment( wx.ALIGN_RIGHT, wx.ALIGN_TOP )
 			else:
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_TOP )
@@ -565,14 +567,15 @@ class Results(wx.Panel):
 		Utils.AdjustGridSize( self.grid, len(results), len(headerNames) )
 		self.setColNames( headerNames )
 		
-		for row, (name, license, team, points, racePoints) in enumerate(results):
+		for row, (name, license, team, points, gap, racePoints) in enumerate(results):
 			self.grid.SetCellValue( row, 0, unicode(row+1) )
 			self.grid.SetCellValue( row, 1, unicode(name or u'') )
 			self.grid.SetCellValue( row, 2, unicode(license or u'') )
 			self.grid.SetCellValue( row, 3, unicode(team or u'') )
 			self.grid.SetCellValue( row, 4, unicode(points) )
+			self.grid.SetCellValue( row, 5, unicode(gap) )
 			for q, (rPoints, rRank) in enumerate(racePoints):
-				self.grid.SetCellValue( row, 5 + q, u'{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints else '' )
+				self.grid.SetCellValue( row, 6 + q, u'{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints else '' )
 				
 			for c in xrange( 0, len(headerNames) ):
 				self.grid.SetCellBackgroundColour( row, c, wx.WHITE )
@@ -606,7 +609,7 @@ class Results(wx.Panel):
 						self.grid.SetCellBackgroundColour( r, c, bg )
 						if c < 4:
 							halign = wx.ALIGN_LEFT
-						elif c == 4:
+						elif c == 4 or c == 5:
 							halign = wx.ALIGN_RIGHT
 						else:
 							halign = wx.ALIGN_CENTRE
@@ -673,14 +676,15 @@ class Results(wx.Panel):
 				wsFit.write( rowCur, c, headerName, labelStyle, bold = True )
 			rowCur += 1
 			
-			for pos, (name, license, team, points, racePoints) in enumerate(results):
+			for pos, (name, license, team, points, gap, racePoints) in enumerate(results):
 				wsFit.write( rowCur, 0, pos+1, numberStyle )
 				wsFit.write( rowCur, 1, name, textStyle )
 				wsFit.write( rowCur, 2, license, textStyle )
 				wsFit.write( rowCur, 3, team, textStyle )
 				wsFit.write( rowCur, 4, points, numberStyle )
+				wsFit.write( rowCur, 5, gap, numberStyle )
 				for q, (rPoints, rRank) in enumerate(racePoints):
-					wsFit.write( rowCur, 5 + q, '{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints else '', centerStyle )
+					wsFit.write( rowCur, 6 + q, '{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints else '', centerStyle )
 				rowCur += 1
 		
 			# Add branding at the bottom of the sheet.

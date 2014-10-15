@@ -39,6 +39,28 @@ def formatTime( secs, highPrecision = False ):
 	if minutes > 0:
 		return "{}{}:{}".format(sign, minutes, secStr)
 	return "{}{}".format(sign, secStr)
+	
+def formatTimeGap( secs, highPrecision = False ):
+	if secs is None:
+		secs = 0
+	if secs < 0:
+		sign = '-'
+		secs = -secs
+	else:
+		sign = ''
+	f, ss = math.modf(secs)
+	secs = int(ss)
+	hours = int(secs // (60*60))
+	minutes = int( (secs // 60) % 60 )
+	secs = secs % 60
+	if highPrecision:
+		decimal = '.%02d' % int( f * 100 )
+	else:
+		decimal = ''
+	if hours > 0:
+		return "%s%dh%d'%02d%s\"" % (sign, hours, minutes, secs, decimal)
+	else:
+		return "%s%d'%02d%s\"" % (sign, minutes, secs, decimal)
 
 class RaceResult( object ):
 	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, raceFileName, bib, rank, raceOrganizer,
@@ -246,9 +268,18 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		riderOrder = [rider for rider, results in riderResults.iteritems()]
 		riderOrder.sort( key = lambda r: (-riderEventsCompleted[r], riderTFinish[r]) )
 		
+		# Compute the gap form the leader.
+		riderGap = {}
+		if riderOrder:
+			leader = riderOrder[0]
+			leaderTFinish = riderTFinish[leader]
+			leaderEventsCompleted = riderEventsCompleted[leader]
+			riderGap = { r : riderTFinish[r] - leaderTFinish if riderEventsCompleted[r] == leaderEventsCompleted else None for r in riderOrder }
+			riderGap = { r : formatTimeGap(gap) if gap else u'' for r, gap in riderGap.iteritems() }
+		
 		# List of:
 		# lastName, firstName, license, team, tTotalFinish, [list of (points, position) for each race in series]
-		categoryResult = [list(rider) + [riderTeam[rider], formatTime(riderTFinish[rider], True)] + [riderResults[rider]] for rider in riderOrder]
+		categoryResult = [list(rider) + [riderTeam[rider], formatTime(riderTFinish[rider],True), riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
 		return categoryResult, races
 	else:
 		# Get the individual results for each rider, and the total points.
@@ -272,10 +303,16 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 										[riderPlaceCount[r][k] for k in xrange(1, numPlacesTieBreaker+1)] +
 										[-rank for points, rank in reversed(riderResults[r])],
 						reverse = True )
+		riderGap = {}
+		if riderOrder:
+			leader = riderOrder[0]
+			leaderPoints = riderPoints[leader]
+			riderGap = { r : leaderPoints - riderPoints[r] for r in riderOrder }
+			riderGap = { r : unicode(gap) if gap else u'' for r, gap in riderGap.iteritems() }
 		
 		# List of:
 		# lastName, firstName, license, team, points, [list of (points, position) for each race in series]
-		categoryResult = [list(rider) + [riderTeam[rider], riderPoints[rider]] + [riderResults[rider]] for rider in riderOrder]
+		categoryResult = [list(rider) + [riderTeam[rider], riderPoints[rider], riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
 		return categoryResult, races
 
 def GetTotalUniqueParticipants( raceResults ):

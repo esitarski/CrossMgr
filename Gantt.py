@@ -467,7 +467,11 @@ class Gantt( wx.Panel ):
 
 		data	= [r.raceTimes for r in results]
 		interp	= [r.interp for r in results]
-		self.ganttChart.SetData(data, labels, GetNowTime(), interp,
+		try:
+			nowTime = min( results[0].raceTimes[-1], Model.race.lastRaceTime() )
+		except:
+			nowTime = None
+		self.ganttChart.SetData(data, labels, nowTime, interp,
 								set(i for i, r in enumerate(results) if r.status != Model.Rider.Finisher),
 								Model.race.numTimeInfo,
 								getattr( Model.race, 'lapNote', None) )
