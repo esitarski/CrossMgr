@@ -181,12 +181,12 @@ if os.path.basename(dirName) == 'library.zip':
 if 'CrossMgr?' in os.path.basename(dirName):
 	dirName = os.path.dirname(dirName)
 
-if os.path.isdir( os.path.join(dirName, 'CrossMgrImages') ):
+if os.path.isdir( os.path.join(dirName, 'images') ):
 	pass
 elif os.path.isdir( '/usr/local/CrossMgrImages' ):
 	dirName = '/usr/local'
 
-imageFolder = os.path.join(dirName, 'CrossMgrImages')
+imageFolder = os.path.join(dirName, 'images')
 htmlFolder = os.path.join(dirName, 'CrossMgrHtml')
 helpFolder = os.path.join(dirName, 'CrossMgrHtmlDoc')
 
