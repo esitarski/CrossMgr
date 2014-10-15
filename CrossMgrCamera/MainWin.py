@@ -96,7 +96,7 @@ class ConfigDialog( wx.Dialog ):
 		self.title.SetFont( wx.FontFromPixelSize( wx.Size(0,24), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		self.explanation = [
 			'Check that the USB Webcam is plugged in.',
-			'Check the Camera Device (usually 0).',
+			'Check the Camera Device (Usually 0.  If not, try 1).',
 		]
 		pfgs = wx.FlexGridSizer( rows=0, cols=2, vgap=4, hgap=8 )
 		
@@ -175,67 +175,87 @@ class MainWin( wx.Frame ):
 		self.beforeAfterImages = [self.beforeImage, self.afterImage]
 		
 		#------------------------------------------------------------------------------------------------
-		self.controlPanel = wx.Panel( self )
-		self.controlPanel.SetDoubleBuffered(True)
+		headerSizer = wx.BoxSizer( wx.HORIZONTAL )
 		
-		phSizer = wx.BoxSizer( wx.HORIZONTAL )
-		
-		self.messagesText = wx.TextCtrl( self.controlPanel, style=wx.TE_READONLY|wx.TE_MULTILINE|wx.HSCROLL, size=(350,imageHeight) )
-		self.messageManager = MessageManager( self.messagesText )
-		phSizer.Add( self.messagesText, proportion=1, flag=wx.EXPAND|wx.ALL, border=4 )
-		
-		pfgs = wx.FlexGridSizer( rows=0, cols=3, vgap=4, hgap=8 )
-		
-		self.title = wx.StaticText(self.controlPanel, label='CrossMgr Camera\nVersion {}'.format(AppVerName.split()[1]), style=wx.ALIGN_RIGHT )
-		self.title.SetFont( wx.FontFromPixelSize( wx.Size(0,24), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
-		pfgs.Add( self.title )
-		pfgs.Add( wx.StaticText(self.controlPanel) )
 		self.logo = Utils.GetPngBitmap('CrossMgrHeader.png')
-		pfgs.Add( wx.StaticBitmap(self.controlPanel, bitmap=self.logo) )
+		headerSizer.Add( wx.StaticBitmap(self, bitmap=self.logo) )
 		
-		pfgs.Add( wx.StaticText(self.controlPanel, label='Camera Device'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-		self.cameraDevice = wx.StaticText( self.controlPanel )
-		pfgs.Add( self.cameraDevice )
-		pfgs.Add( wx.StaticText(self.controlPanel), flag=wx.ALIGN_CENTRE_VERTICAL )
+		self.title = wx.StaticText(self, label='CrossMgr Camera\nVersion {}'.format(AppVerName.split()[1]), style=wx.ALIGN_RIGHT )
+		self.title.SetFont( wx.FontFromPixelSize( wx.Size(0,28), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
+		headerSizer.Add( self.title, flag=wx.ALL, border=10 )
 		
-		pfgs.Add( wx.StaticText(self.controlPanel, label='Target Frames'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-		self.frameProcessingTime = wx.StaticText(self.controlPanel, label=u'{:.3f}'.format(self.fps))
-		pfgs.Add( self.frameProcessingTime, flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-		pfgs.Add( wx.StaticText(self.controlPanel, label='per sec'), flag=wx.ALIGN_CENTRE_VERTICAL )
-		
-		pfgs.Add( wx.StaticText(self.controlPanel, label='Actual Frames'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-		self.framesPerSecond = wx.StaticText(self.controlPanel, label='25.000')
-		pfgs.Add( self.framesPerSecond, flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-		pfgs.Add( wx.StaticText(self.controlPanel, label='per sec'), flag=wx.ALIGN_CENTRE_VERTICAL )
-		
-		pfgs.Add( wx.StaticText(self.controlPanel, label='Available Time Per Frame'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-		self.availableMsPerFrame = wx.StaticText(self.controlPanel, label=u'{:.0f}'.format(1000.0*self.frameDelay))
-		pfgs.Add( self.availableMsPerFrame, flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-		pfgs.Add( wx.StaticText(self.controlPanel, label='ms'), flag=wx.ALIGN_CENTRE_VERTICAL )
-		
-		pfgs.Add( wx.StaticText(self.controlPanel, label='Actual Frame Processing'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-		self.frameProcessingTime = wx.StaticText(self.controlPanel, label='20')
-		pfgs.Add( self.frameProcessingTime, flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-		pfgs.Add( wx.StaticText(self.controlPanel, label='ms'), flag=wx.ALIGN_CENTRE_VERTICAL )
-		
-		self.reset = wx.Button( self.controlPanel, label="Reset Camera" )
+		#------------------------------------------------------------------------------
+		self.cameraDeviceLabel = wx.StaticText(self, label='Camera Device:')
+		self.cameraDevice = wx.StaticText( self )
+		boldFont = self.cameraDevice.GetFont()
+		boldFont.SetWeight( wx.BOLD )
+		self.cameraDevice.SetFont( boldFont )
+		self.reset = wx.Button( self, label="Reset Camera" )
 		self.reset.Bind( wx.EVT_BUTTON, self.resetCamera )
-		pfgs.Add( self.reset, flag=wx.ALIGN_RIGHT|wx.ALL, border=8 )
-		pfgs.Add( wx.StaticText(self.controlPanel) )
-		pfgs.Add( wx.StaticText(self.controlPanel) )
+		cameraDeviceSizer = wx.BoxSizer( wx.HORIZONTAL )
+		cameraDeviceSizer.Add( self.cameraDeviceLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
+		cameraDeviceSizer.Add( self.cameraDevice, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
+		cameraDeviceSizer.Add( self.reset, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
+
+		#------------------------------------------------------------------------------
+		self.targetProcessingTimeLabel = wx.StaticText(self, label='Target Frames:')
+		self.targetProcessingTime = wx.StaticText(self, label=u'{:.3f}'.format(self.fps))
+		self.targetProcessingTime.SetFont( boldFont )
+		self.targetProcessingTimeUnit = wx.StaticText(self, label='per sec')
 		
-		phSizer.Add( pfgs )
+		self.framesPerSecondLabel = wx.StaticText(self, label='Actual Frames:')
+		self.framesPerSecond = wx.StaticText(self, label='25.000')
+		self.framesPerSecond.SetFont( boldFont )
+		self.framesPerSecondUnit = wx.StaticText(self, label='per sec')
 		
-		self.controlPanel.SetSizerAndFit( phSizer )
+		self.availableMsPerFrameLabel = wx.StaticText(self, label='Available Time Per Frame:')
+		self.availableMsPerFrame = wx.StaticText(self, label=u'{:.0f}'.format(1000.0*self.frameDelay))
+		self.availableMsPerFrame.SetFont( boldFont )
+		self.availableMsPerFrameUnit = wx.StaticText(self, label='ms')
 		
+		self.frameProcessingTimeLabel = wx.StaticText(self, label='Actual Frame Processing:')
+		self.frameProcessingTime = wx.StaticText(self, label='20')
+		self.frameProcessingTime.SetFont( boldFont )
+		self.frameProcessingTimeUnit = wx.StaticText(self, label='ms')
+		
+		pfgs = wx.FlexGridSizer( rows=0, cols=6, vgap=4, hgap=8 )
+		fRight = wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT
+		fLeft = wx.ALIGN_CENTRE_VERTICAL
+		
+		#------------------- Row 1 ------------------------------
+		pfgs.Add( self.targetProcessingTimeLabel, flag=fRight )
+		pfgs.Add( self.targetProcessingTime, flag=fRight )
+		pfgs.Add( self.targetProcessingTimeUnit, flag=fLeft )
+		pfgs.Add( self.availableMsPerFrameLabel, flag=fRight )
+		pfgs.Add( self.availableMsPerFrame, flag=fRight )
+		pfgs.Add( self.availableMsPerFrameUnit, flag=fLeft )
+		
+		#------------------- Row 2 ------------------------------
+		pfgs.Add( self.framesPerSecondLabel, flag=fRight )
+		pfgs.Add( self.framesPerSecond, flag=fRight )
+		pfgs.Add( self.framesPerSecondUnit, flag=fLeft )
+		pfgs.Add( self.frameProcessingTimeLabel, flag=fRight )
+		pfgs.Add( self.frameProcessingTime, flag=fRight )
+		pfgs.Add( self.frameProcessingTimeUnit, flag=fLeft )
+
+		statsSizer = wx.BoxSizer( wx.VERTICAL )
+		statsSizer.Add( cameraDeviceSizer )
+		statsSizer.Add( pfgs, flag=wx.TOP, border=8 )
+		headerSizer.Add( statsSizer, flag=wx.ALL, border=4 )
+		mainSizer.Add( headerSizer )
+		
+		self.messagesText = wx.TextCtrl( self, style=wx.TE_READONLY|wx.TE_MULTILINE|wx.HSCROLL, size=(350,imageHeight) )
+		self.messageManager = MessageManager( self.messagesText )
+		
+		border = 2
 		row1Sizer = wx.BoxSizer( wx.HORIZONTAL )
-		row1Sizer.Add( self.primaryImage, flag=wx.ALIGN_BOTTOM|wx.ALL, border=4 )
-		row1Sizer.Add( self.controlPanel, 1, flag=wx.ALL, border=4 )
-		mainSizer.Add( row1Sizer )
+		row1Sizer.Add( self.primaryImage, flag=wx.ALL, border=border )
+		row1Sizer.Add( self.messagesText, 1, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.EXPAND, border=border )
+		mainSizer.Add( row1Sizer, 1, flag=wx.EXPAND )
 		
 		row2Sizer = wx.BoxSizer( wx.HORIZONTAL )
-		row2Sizer.Add( self.beforeImage, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM, border=4 )
-		row2Sizer.Add( self.afterImage, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM, border=4 )
+		row2Sizer.Add( self.beforeImage, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM, border=border )
+		row2Sizer.Add( self.afterImage, flag=wx.RIGHT|wx.BOTTOM, border=border )
 		mainSizer.Add( row2Sizer )
 		
 		#------------------------------------------------------------------------------------------------

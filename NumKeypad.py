@@ -370,7 +370,7 @@ class NumKeypad( wx.Panel ):
 			self.keypadTimeTrialToggleButton.SetBitmapLabel( self.keypadBitmap )
 			self.keypadTimeTrialToggleButton.SetToolTip(wx.ToolTip(self.SwitchToNumberEntryMessage))
 			wx.CallAfter( self.timeTrialRecord.Refresh )
-			wx.CallAfter( self.timeTrialRecord.grid.SetFocus )
+			wx.CallLater( 100, self.timeTrialRecord.grid.SetFocus )
 		else:
 			self.keypad.Show( True )
 			self.timeTrialRecord.Show( False )
@@ -378,7 +378,7 @@ class NumKeypad( wx.Panel ):
 			self.keypadTimeTrialToggleButton.SetBitmapLabel( self.ttRecordBitmap )
 			self.keypadTimeTrialToggleButton.SetToolTip(wx.ToolTip(self.SwitchToTimeTrialEntryMessage))
 			wx.CallAfter( self.keypad.Refresh )
-			wx.CallAfter( self.keypad.numEdit.SetFocus )
+			wx.CallLater( 100, self.keypad.numEdit.SetFocus )
 		self.horizontalMainSizer.Layout()
 		self.GetSizer().Layout()
 		wx.CallAfter( self.Refresh )
@@ -684,7 +684,7 @@ class NumKeypad( wx.Panel ):
 		wx.CallAfter( self.refreshRiderLapCountList )
 		
 		if self.isKeypadInputMode():
-			wx.CallAfter( self.keypad.numEdit.SetFocus )
+			wx.CallLater( 100, self.keypad.numEdit.SetFocus )
 		if self.isTimeTrialInputMode():
 			wx.CallAfter( self.timeTrialRecord.refresh )
 	
