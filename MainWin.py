@@ -78,7 +78,8 @@ import Version
 from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, ExcelLink, ReportFields, SyncExcelLink, IsValidRaceDBExcel
 from SetGraphic			import SetGraphicDialog
 from GetResults			import GetCategoryDetails, UnstartedRaceWrapper, GetLapDetails
-from PhotoFinish		import DeletePhotos
+from PhotoFinish		import DeletePhotos, okTakePhoto
+from SendPhotoRequests	import SendPhotoRequests
 from PhotoViewer		import PhotoViewerDialog
 from ReadTTStartTimesSheet import ImportTTStartTimes
 from TemplateSubstitute import TemplateSubstitute
