@@ -390,7 +390,10 @@ class MainWin( wx.Frame ):
 			times, frames = self.fcb.findBeforeAfter( message['time'], 1, 1 )
 			if not frames:
 				self.messageQ.put( ('error', 'No photos for {} at {}'.format(message.get('bib', None), message['time'].isoformat()) ) )
+				
+			lastImage = None
 			for i, f in enumerate(frames):
+				
 				fname = GetPhotoFName( message['dirName'], message.get('bib',None), message.get('raceSeconds',None), i )
 				image = AddPhotoHeader(
 					f,
@@ -403,9 +406,14 @@ class MainWin( wx.Frame ):
 					message.get('raceName',u'')
 				)
 				
+				#if lastImage is not None and image.GetData() == lastImage.GetData():
+				#	self.messageQ.put( ('duplicate', '"{}"'.format(os.path.basename(fname))) )
+				#	continue
+				
 				wx.CallAfter( self.beforeAfterImages[i].SetImage, image )
 				
 				SaveImage( fname, image, message.get('ftpInfo', None), self.messageQ, self.writerQ )
+				lastImage = image
 				
 			if (now() - tNow).total_seconds() > self.frameDelay / 2.0:
 				break
