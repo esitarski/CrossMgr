@@ -303,12 +303,11 @@ def GetResultsCore( category ):
 				rr.pos = Model.Rider.statusNames[rr.status]
 				continue
 				
-			rr.pos = '{}'.format(pos+1)
+			rr.pos = u'{}'.format(pos+1)
 			
 			if rr.laps != leader.laps:
-				if rr.lastTime > leader.lastTime:
-					lapsDown = leader.laps - rr.laps
-					rr.gap = '-%d %s' % (lapsDown, _('laps') if lapsDown > 1 else _('lap'))
+				lapsDown = leader.laps - rr.laps
+				rr.gap = u'-{} {}'.format(lapsDown, _('lap') if lapsDown == 1 else _('laps'))
 			elif rr != leader and not (isTimeTrial and rr.lastTime == leader.lastTime):
 				rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
 				
