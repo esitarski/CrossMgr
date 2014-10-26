@@ -1227,6 +1227,7 @@ class MainWin( wx.Frame ):
 			payload['lapDetails']		= GetLapDetails() if not race.hideDetails else {}
 			payload['hideDetails']		= race.hideDetails
 			payload['showCourseAnimation'] = race.showCourseAnimationInHtml
+			payload['licenseLinkTemplate'] = race.licenseLinkTemplate
 			notes = TemplateSubstitute( getattr(race, 'notes', ''), race.getTemplateValues() )
 			if notes.lstrip()[:6].lower().startswith( '<html>' ):
 				notes = self.reRemoveTags.sub( '', notes )

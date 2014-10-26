@@ -182,6 +182,9 @@ class RaceOptionsProperties( wx.Panel ):
 		self.showDetails = wx.CheckBox( self, label=_("Show Lap Notes, Edits and Projected Times in HTML Output") )
 		self.showCourseAnimationInHtml = wx.CheckBox( self, label=_("Show Course Animation in Html") )
 
+		self.licenseLinkTemplateLabel = wx.StaticText( self, label=_('License Link HTML Template: ') )
+		self.licenseLinkTemplate = wx.TextCtrl( self, size=(64,-1), style=wx.TE_PROCESS_ENTER )
+		
 		#-------------------------------------------------------------------------------
 		ms = wx.BoxSizer( wx.HORIZONTAL )
 		self.SetSizer( ms )
@@ -203,6 +206,7 @@ class RaceOptionsProperties( wx.Panel ):
 			(self.distanceUnitLabel,0, labelAlign),		(self.distanceUnitSizer,		1, fieldAlign),
 			(blank(),				0, labelAlign),		(self.showDetails,				1, fieldAlign),
 			(blank(),				0, labelAlign),		(self.showCourseAnimationInHtml,1, fieldAlign),
+			(self.licenseLinkTemplateLabel,0, labelAlign),(self.licenseLinkTemplate,		1, fieldAlign),
 		]
 		addToFGS( fgs, labelFieldFormats )
 		
@@ -221,6 +225,7 @@ class RaceOptionsProperties( wx.Panel ):
 		self.distanceUnit.SetSelection( getattr(race, 'distanceUnit', 0) )
 		self.showDetails.SetValue( not race.hideDetails )
 		self.showCourseAnimationInHtml.SetValue( race.showCourseAnimationInHtml )
+		self.licenseLinkTemplate.SetValue( race.licenseLinkTemplate )
 	
 	def commit( self ):
 		race = Model.race
@@ -232,6 +237,7 @@ class RaceOptionsProperties( wx.Panel ):
 		race.distanceUnit = self.distanceUnit.GetSelection()
 		race.hideDetails = not self.showDetails.IsChecked()
 		race.showCourseAnimationInHtml = self.showCourseAnimationInHtml.IsChecked()
+		race.licenseLinkTemplate = self.licenseLinkTemplate.GetValue().strip()
 	
 #------------------------------------------------------------------------------------------------
 

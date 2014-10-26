@@ -936,6 +936,7 @@ class Race( object ):
 	discipline = 'Cyclo-cross'
 	
 	showCourseAnimationInHtml = True
+	licenseLinkTemplate = u''			# Used to create an html link from the rider's license number in the html output.
 	hideDetails = True
 	
 	def __init__( self ):
