@@ -98,7 +98,7 @@ Variable|Value
 {=CameraStatus}|Either "USB Camera Enabled" or "USB Camera Not Enabled"
 {=PhotoCount}|Number of photos taken during the race.  Will be zero if the usb camera is not enabled.
 {=ExcelLink}|The file and sheet name of the Excel sheet linked to this race.
-{=GPXFile}}|The file name of the course in GPX format.
+{=GPXFile}|The file name of the course in GPX format.
 
 ## RFID Options
 Property|Description
