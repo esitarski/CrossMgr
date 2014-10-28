@@ -1913,6 +1913,9 @@ class MainWin( wx.Frame ):
 		except IOError:
 			Utils.MessageOK(self, _('Cannot open "{}".').format(fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
 			return
+		except Exception as e:
+			Utils.MessageOK(self, _('Cannot open "{}".\n\nError: {}').format(fileName, e), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
+			return
 
 		# Create a new race and initialize it with the properties.
 		self.fileName = fileName
@@ -2012,7 +2015,6 @@ class MainWin( wx.Frame ):
 		Model.resetCache()
 		ResetExcelLinkCache()
 		SyncExcelLink( race )
-		print( 'name:', race.name )
 		
 		# Show the Properties screen for the user to review.
 		dlg = PropertiesDialog(self, title=_('Configure Race'), style=wx.DEFAULT_DIALOG_STYLE )
@@ -2129,6 +2131,8 @@ class MainWin( wx.Frame ):
 
 		except IOError:
 			Utils.MessageOK(self, _('Cannot open file "{}".').format(fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
+		except Exception as e:
+			Utils.MessageOK(self, _('Cannot open file "{}"\n\n{}.').format(fileName, e), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
 
 	@logCall
 	def menuOpen( self, event ):
@@ -2166,11 +2170,12 @@ class MainWin( wx.Frame ):
 		try:
 			pos = patRE.search(file).start()
 			prefix = file[:pos+2] + '{}'.format(race.raceNum+1)
-			fileName = (f for f in os.listdir(path) if f.startswith(prefix)).next()
+			suffix = os.path.splitext(file)[1]
+			fileName = (f for f in os.listdir(path) if f.startswith(prefix) and f.endswith(suffix)).next()
 			fileName = os.path.join( path, fileName )
 			self.openRace( fileName )
-		except (AttributeError, IndexError, StopIteration):
-			Utils.MessageOK(self, _('No next race.'), _('No next race'), iconMask=wx.ICON_ERROR )
+		except (AttributeError, IndexError, StopIteration) as e:
+			Utils.MessageOK(self, u'{}.\n\n{}'.format(_('No next race'),e), _('No next race'), iconMask=wx.ICON_ERROR )
 
 	@logCall
 	def menuCloseRace(self, event ):
