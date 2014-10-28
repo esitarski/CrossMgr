@@ -84,6 +84,17 @@ class MessageManager( object ):
 		self.messageList.ChangeValue( '' )
 		self.messageList.SetInsertionPointEnd()
 
+cameraResolution = (
+	(160,120),
+	(320,240),
+	(424,240),
+	(640,360),
+	(640,480),
+	(800,448),
+	(960,544),
+	(1280,720),
+)
+		
 class ConfigDialog( wx.Dialog ):
 	def __init__( self, parent, cameraDeviceNum=0, id=wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, title=_('CrossMgr Camera Configuration') )

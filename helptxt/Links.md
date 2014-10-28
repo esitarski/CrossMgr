@@ -10,6 +10,7 @@
 [Demo]:				Menu-Demo.html
 [Tools]:			Menu-Tools.html
 [Options]:			Menu-Options.html
+[Windows]:			Menu-Windows.html
 [Help]:				Menu-Help.html
 
 [Main]:				Main.html

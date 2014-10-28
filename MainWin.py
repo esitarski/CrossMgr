@@ -84,6 +84,7 @@ from PhotoViewer		import PhotoViewerDialog
 from ReadTTStartTimesSheet import ImportTTStartTimes
 from TemplateSubstitute import TemplateSubstitute
 import ChangeRaceStartTime
+from PageDialog			import PageDialog
 
 import traceback
 '''
@@ -512,10 +513,11 @@ class MainWin( wx.Frame ):
 			[ 'properties',		Properties,			_('Properties') ],
 			[ 'situation',		Situation,			_('Situation') ],
 		]
+		self.attrWindowSet = {'results', 'history', 'gantt', 'raceAnimation', 'situation'}
 		
 		for i, (a, c, n) in enumerate(self.attrClassName):
 			setattr( self, a, c(self.notebook) )
-			addPage( getattr(self, a), '%d. %s' % (i+1, n) )
+			addPage( getattr(self, a), u'{}. {}'.format(i+1, n) )
 
 		self.riderDetailDialog = None
 		self.splitter.SplitVertically( self.forecastHistory, self.notebook, forecastHistoryWidth + 80)
@@ -627,6 +629,23 @@ class MainWin( wx.Frame ):
 			
 		self.menuBar.Append( self.pageMenu, _("&JumpTo") )
 
+		#------------------------------------------------------------------------------
+		self.windowMenu = wx.Menu()
+
+		self.menuIdToWindowInfo = {}
+		for attr, cls, name in self.attrClassName:
+			if attr not in self.attrWindowSet:
+				continue
+			idCur = wx.NewId()
+			menuItem = self.windowMenu.Append( idCur, name, name, wx.ITEM_CHECK )
+			self.Bind(wx.EVT_MENU, self.menuWindow, id=idCur )
+			self.menuIdToWindowInfo[idCur] = [
+				attr, name, menuItem,
+				PageDialog(self, cls, closeCallback=lambda idIn=idCur: self.windowCloseCallback(idIn), title=name)
+			]
+		
+		self.menuBar.Append( self.windowMenu, _("&Windows") )
+		
 		#------------------------------------------------------------------------------
 		self.helpMenu = wx.Menu()
 
@@ -2694,6 +2713,27 @@ Continue?''' % fName, 'Simulate a Race' ):
 						_('Cannot write "{}" (Error={}).').format(fname, e),
 						_('WebScorer Publish Error'), iconMask=wx.ICON_ERROR )
 	
+	def windowCloseCallback( self, menuId ):
+		try:
+			attr, name, menuItem, dialog = self.menuIdToWindowInfo[menuId]
+		except KeyError:
+			return
+		menuItem.Check( False )
+	
+	@logCall
+	def menuWindow( self, event ):
+		try:
+			attr, name, menuItem, dialog = self.menuIdToWindowInfo[event.GetId()]
+		except KeyError:
+			return
+		
+		if dialog.IsShown():
+			dialog.commit()
+			dialog.Show( False )
+		else:
+			dialog.Show( True )
+			wx.CallAfter( dialog.refresh )		
+	
 	@logCall
 	def menuHelpQuickStart( self, event ):
 		Utils.showHelp( 'QuickStart.html' )
@@ -2793,21 +2833,35 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 			page = self.pages[i]
 		except IndexError:
 			return
-			
-		if hasattr(page, 'refresh'):
+		
+		try:
 			page.refresh()
+		except AttributeError:
+			pass
+
+	def refreshWindows( self ):
+		try:
+			for d in (dialog for attr, name, menuItem, dialog in self.menuIdToWindowInfo.itervalues() if dialog.IsShown()):
+				try:
+					wx.CallAfter( d.refresh )
+				except AttributeError:
+					pass
+		except AttributeError:
+			pass
 
 	def callPageCommit( self, i ):
 		try:
 			self.pages[i].commit()
 		except (AttributeError, IndexError):
 			pass
+		self.refreshWindows()
 
 	def commit( self ):
 		self.callPageCommit( self.notebook.GetSelection() )
 				
 	def refreshCurrentPage( self ):
 		self.callPageRefresh( self.notebook.GetSelection() )
+		self.refreshWindows()
 
 	def refresh( self ):
 		self.refreshCurrentPage()

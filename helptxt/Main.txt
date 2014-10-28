@@ -12,6 +12,7 @@ Get started with CrossMgr now!
 * [Tools][]
 * [Options][]
 * [JumpTo][]
+* [Windows][]
 * [Help][]
 
 ## Screens
