@@ -33,7 +33,30 @@ Prints a summary of the Categories with number of laps and number ranges.  This 
 Publish the results in Excel format and opens Excel on the output file.
 
 ## HTML Publish...
-Publish the results as an HTML file and opens a browser on the output file.  Includes the Race Animation and the Chart.
+Publish the results as an HTML file.  Includes the Race Animation and the Chart if specified in [Properties][].
+
+The HTML web page includes additional options that can be controlled by setting query values in the URL.
+For example:
+
+   <your-race>.html?kioskMode=t
+   
+This will put the page into __Kiosk Mode__.  In this mode, the page will automatically cycle through all categories while hiding the map, title, and all other non-essential information.  __Kiosk Mode__ is useful if you have a computer/big screen showing live results at the race.
+
+	<your-race>.html?finisherMode=t
+	
+This mode is useful for Time Trials and Gran Fondo events.  In this mode, the most recent finisher is shown at the top of the results, and his/her place is shown in a separate column for all categories the rider is competing in (for example, Overall, Age Group, Ability, etc.).  You only need to look at the top line to see the current result of the last rider who finished.
+
+Of course you can combine both modes together:
+
+	<your-race>.html?kioskMode=t&finisherMode=t
+
+This combination combines category cycling with listing the latest result at the top.  Very good for live Gran Fondos finishes.
+
+You can also change the default language of the page:
+
+	<your-race>.html?lang=__xx__
+	
+Where __xx__ is either __en__, __fr__ or __es__ for English, French or Spanish respectively.  When a language is specified with the "lang=xx" option, it is shown first in the language list.
 
 ## Ftp HTML Publish...
 Publishes HTML formatted results over an FTP upload.  Also includes the option to print a large QR-Code with the race results URL.

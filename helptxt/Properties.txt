@@ -41,6 +41,7 @@ Show Times to 100s of Second|You choice to display regular seconds or fractions 
 Lap Time for 80% Rule|Selects which lap you want to use to calculate the 80% time elimination rule.  If the first lap is significantly longer or shorter than the other laps, choose __2nd Lap Time__.  If the first lap is similar to the length of the other laps, choose __1st Lap Time__.  In Cyclocross, there is often a run-up which makes the first lap longer.  Sometimes it is possible time the run-up, sometimes this is difficult, and it is better to use the 2nd lap to compute the 80% time rule.  In MTB, it is often better to use the 1st lap time.
 Distance Unit|The units distances to show in Results.
 Show Lap Notes, Edits and Projected Times in HTML Output|If set, the internal lap edits will be written to the HTML page.  The lap information is shown similarly to the Chart screen.
+Show Course Animation|If set, the course animation (either the track or the GPX course) will be shown in the HTML output.
 License Link HTML Template|Text to be put in front of the License code in the HTML output to form a link to get more rider information.  For example, if you enter __http://www.usacycling.org/results/?compid=__, and a rider's License code is __12345__, a link will be generated in the HTML page by combining the two to form __http://www.usacycling.org/results/?compid=12345__.  Clicking on the rider's license code will then open the USAC rider information page for that rider.  CrossMgr has no idea whether the link will succeed - it just generates it.
 
 ## Notes
