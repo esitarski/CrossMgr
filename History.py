@@ -339,7 +339,6 @@ class History( wx.Panel ):
 		
 		self.search.SelectAll()
 		wx.CallAfter( self.Refresh )
-		wx.CallAfter( self.search.SetFocus )
 		
 		highPrecision = Model.highPrecisionTimes()
 		if highPrecision:

@@ -476,7 +476,6 @@ class Gantt( wx.Panel ):
 								Model.race.numTimeInfo,
 								getattr( Model.race, 'lapNote', None) )
 		self.updateStats( results )
-		wx.CallAfter( self.ganttChart.SetFocus )
 		wx.CallAfter( updatePhotoFNameCache )
 	
 	def commit( self ):

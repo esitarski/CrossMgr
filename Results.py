@@ -461,7 +461,6 @@ class Results( wx.Panel ):
 		self.rcNumTime = set()
 		
 		self.search.SelectAll()
-		wx.CallAfter( self.search.SetFocus )
 		
 		with Model.LockRace() as race:
 			if not race:
