@@ -550,6 +550,7 @@ function updateLapTimesChart() {
 		hAxis: {title: "lap"},
 		pointSize: 10,
 		chartArea: {left: '5%', width: '75%'},
+		animation: {duration: 500},
 	};
 	container.chart.draw( dataTable, options );
 }
@@ -576,6 +577,7 @@ function updateGapChart() {
 		legend: 'none',
 		pointSize: 10,
 		chartArea: {left: '5%', width: '75%'},
+		animation: {duration: 500},
 	};
 	container.chart.draw( dataTable, options );
 }
