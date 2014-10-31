@@ -438,7 +438,7 @@ function GetEstimatedLapTime( bib ) {
 	return (d.raceTimes.back() - d.raceTimes[0]) / (d.raceTimes.length-1);
 }
 
-function GetTimePercent( bib, bibRef ) {
+function GetPerformancePercent( bib, bibRef ) {
 	var d = data[bib], dRef = data[bibRef];
 	if( !d || !dRef || !d.raceTimes || !dRef.raceTimes || d.raceTimes.length < 2 || dRef.raceTimes.length < 2 )
 		return {v:0, f:''};
@@ -448,7 +448,7 @@ function GetTimePercent( bib, bibRef ) {
 	else if( d.raceTimes.length > dRef.raceTimes.length )
 		tRef += GetEstimatedLapTime(bibRef) * (d.raceTimes.length - dRef.raceTimes.length);
 	var p = t / tRef;
-	return {v:p, f:(p*100).toFixed(1)};
+	return {v:p, f:(p*100).toFixed(1) + '%'};
 }
 
 function updateInfoTable() {
@@ -465,7 +465,7 @@ function updateInfoTable() {
 	dataTable.addColumn( 'number', 'Gap' );
 	if( d.speed )
 		dataTable.addColumn( 'number', 'Avg Speed' + ' (' + d.speed.split(' ')[1] + ')' );
-	dataTable.addColumn( 'number', 'Est %' );
+	dataTable.addColumn( 'number', 'Performance' );
 	
 	for( var i = 0; i < 2; ++i ) {
 		var bibCur = (i == 0 ? bib : bibRef);
@@ -475,7 +475,7 @@ function updateInfoTable() {
 		var row = [ GetName(bibCur), GetPlace(bibCur), GetTime(bibCur), gap];
 		if( d.speed )
 			row.push( parseFloat(d.speed.split(' ')[0]) );
-		row.push( GetTimePercent(bibCur, bibRef) );
+		row.push( GetPerformancePercent(bibCur, bibRef) );
 		dataTable.addRow( row );
 	}
 
