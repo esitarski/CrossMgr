@@ -1303,6 +1303,15 @@ class MainWin( wx.Frame ):
 				payload['courseViewerTemplate'] = sanitize( template )
 			except:
 				pass
+			
+			# Add the rider dashboard.
+			templateFile = os.path.join(Utils.getHtmlFolder(), 'RiderDashboard.html')
+			try:
+				with io.open(templateFile, 'r', encoding='utf-8') as fp:
+					template = fp.read()
+				payload['riderDashboard'] = sanitize( template )
+			except:
+				pass
 		
 		if totalElevationGain:
 			payload['gpsTotalElevationGain'] = totalElevationGain

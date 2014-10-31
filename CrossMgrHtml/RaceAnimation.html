@@ -669,7 +669,7 @@ function OpenVirtualTourWindow()
 	] );
 	
 	//alert( kml.join(' ') );
-	var template = virtualRideTemplate.replace( "kml = '';", "kml='" + kml.join(' ') + "';" );
+	var template = virtualRideTemplate.replace(/{{/g, '<').replace(/}}/g, '>').replace( "kml = '';", "kml='" + kml.join(' ') + "';" );
 	if( organizer )
 		template = template.replace( "organizer = '';", "organizer='" + organizer.escapeHTML() + "';" );
 	var element = document.getElementById('idTitle');
@@ -680,7 +680,38 @@ function OpenVirtualTourWindow()
 	template = template.replace( "raceName = '';", "raceName='" + text.escapeHTML() + "';" );
 	
 	var w = window.open( '', '', '', true );
-	w.document.write( template.replace(/{{/g, '<').replace(/}}/g, '>') );
+	w.document.write( template );
+	w.document.close();
+}
+
+function OpenRiderDashboardViewerWindow( bib )
+{
+	var dataToGo = {};
+	var catDetailsToGo = [];
+	for( var i = 0; i < catDetails.length; ++i ) {
+		var c = catDetails[i];
+		for( var p = 0; p < c.pos.length; ++p ) {
+			if( c.pos[p] == bib ) {
+				catDetailsToGo.push( c );
+				for( var p = 0; p < c.pos.length; ++p )
+					dataToGo[c.pos[p]] = data[c.pos[p]];
+				break;
+			}
+		}
+	}	
+	var payload = {'bib': bib, 'raceName': raceNameText + ': ' + raceDate, 'data':dataToGo, 'catDetails':catDetailsToGo};
+	
+	var d = data[bib];
+	var name = (d.FirstName && d.LastName ? d.FirstName + ' ' + d.LastName : d.FirstName ? d.FirstName : d.LastName);
+	var newTitle = bib + ': ' + name + ' Dashboard';
+	var s = JSON.stringify(payload);
+	var v = JSON.parse( s );
+	var template = riderDashboard.replace(/{{/g, '<').replace(/}}/g, '>').replace(
+					'payload = null;', 'payload=' + JSON.stringify(payload) + ';' ).replace(
+					'TTIITTLLEE', newTitle.escapeHTML() );
+	
+	var w = window.open( '', '', '', true );
+	w.document.write( template );
 	w.document.close();
 }
 
@@ -709,12 +740,12 @@ function OpenCourseViewerWindow()
 	payload['lengthKm'] = lengthKm;
 	
 	var newTitle = 'Map: ' + payload['raceNameText'] + ' ' + payload['raceDate'];
-	template = courseViewerTemplate.replace(
+	var template = courseViewerTemplate.replace(/{{/g, '<').replace(/}}/g, '>').replace(
 					'payload = null;', 'payload=' + JSON.stringify(payload) + ';' ).replace(
-					'TTIITTLLEE', newTitle );
+					'TTIITTLLEE', newTitle.escapeHTML() );
 	
 	var w = window.open( '', '', '', true );
-	w.document.write( template.replace(/{{/g, '<').replace(/}}/g, '>') );
+	w.document.write( template );
 	w.document.close();
 }
 
@@ -2745,7 +2776,12 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 			var posText = (isFinisher ? '' + position + (data[num]['relegated'] ? ' REL' : ''): d['status'] );
 			createTextChild( td = createTD(tr), posText );
 			
-			createTextChild( td = createTD(tr), num );
+			var a = createChild( td = createTD(tr), 'A' );
+			createTextChild( a, num );
+			if( d['status'] != 'DNS' && d['status'] != 'NP' && raceTimes.length >= 2 ) {
+				a.onclick = function(n) { return function() {OpenRiderDashboardViewerWindow(n);}; }(num);
+				a.href = 'javascript:void(0)';
+			}
 			
 			// Compute the fastest and slowest lap for this rider.
 			var iFastestLap = -1, iSlowestLap = -1;

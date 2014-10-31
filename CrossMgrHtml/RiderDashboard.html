@@ -12,140 +12,14 @@
 <style type="text/css">
 body { font-family: sans-serif; }
 
-#idRaceName {
-	font-size: 200%;
-	font-weight: bold;
-}
-
-#idImgHeader {
-	box-shadow: 4px 4px 4px #888888;
-}
-
-#detailTitle {
-	font-size: 110%;
-	font-weight: bold;
-}
-
-input[type=range]::-ms-tooltip {
-	display: none;
-}
-
-.smallfont	{ font-size: 75%; }
-.bigfont	{ font-size: 120%; }
-.biggerFont	{ font-size: 130%; }
-
 .hidden { display: none; }
 
 div label input {
    margin-right:220px;
 }
 
-#display_menu {
-  background-color: #FFFFFF;
-  font: 18px sans-serif;
-  height: 30px;
-  line-height: 30px;
-  margin-bottom: 9px;
-  margin-top: 20px;
-}
-#display_menu .heading {
-  color: gray;
-  display: inline-block;
-  height: 30px;
-  line-height: 30px;
-  padding: 0 10px; }
-#display_menu .buttonset {
-  display: inline-block;
-}
-#display_menu input[type=radio], #display_menu input[type=checkbox] {
-  display: none;
-}
-#display_menu .buttonset input[type=radio]:checked + label {
-  background-color: #7FE57F;
-  color: black;
-  border-width: 1px;
-  border-style: solid;
-  border-color: #000;
-}
-#display_menu .buttonset input[type=checkbox]:checked + label {
-  background-color: #4FB54F;
-  color: white;
-}
-#display_menu .buttonset label {
-  background-color: #EFEFEF;
-  border-radius: 5px;
-  display: inline-block;
-  height: 30px;
-  line-height: 30px;
-  padding: 0 8px;
-}
-#display_menu .buttonset label:hover {
-  background-color: #E5E5E5;
-}
-
-table.results {
-	font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
-	border-collapse:collapse;
-}
-table.results td, table.results th {
-	font-size:1em;
-	padding:3px 7px 2px 7px;
-	text-align: right;
-}
-table.results th {
-	font-size:1.1em;
-	text-align:right;
-	padding-top:5px;
-	padding-bottom:4px;
-	background-color:#7FE57F;
-	color:#000000;
-}
-table.results tr.odd {
-	color:#000000;
-	background-color:#EAF2D3;
-}
-table.results tr:hover {
-	color:#000000;
-	background-color:#FFFFCC;
-}
-table.results tr.odd:hover {
-	color:#000000;
-	background-color:#FFFFCC;
-}
-
-table.results tr td.fastest {
-	background-image: linear-gradient(
-		/* #FF6620, #FFAA20 25%, #FF6620 */
-		#00EE00, #00FF00 25%, #00EE00
-	);
-}
-table.results tr td.fastest-lap {
-	background-image: linear-gradient(
-		/* #FF6A7F, #FF9EAF 25%, #FF6A7F */
-		#FF8840, #FFCC40 25%, #FF8840
-	);
-}
-table.results tr td.slowest-lap {
-	background-image: linear-gradient(
-			#4496F7, #9CC7FB 25%, #4496F7
-	);
-}
-
-table.results tr td.highlight {
-	font-size: 120%;
-	font-weight: bold;
-}
-
-table.results td {
-	border-top:1px solid #98BF21;
-}
-
-table.results td.noborder {
-	border-top:0px solid #98BF21;
-}
-
-table.results td#idNonNumeric, table.results th#idNonNumeric {
-	text-align:left;
+select {
+	font-size: 110%;
 }
 
 @media print { .noprint { display: none; } }
@@ -159,38 +33,17 @@ table.results td#idNonNumeric, table.results th#idNonNumeric {
 <script type="text/javascript">
 google.setOnLoadCallback(onLoad);
 
+var payload = null;
 var bib = null;
-var catDetails = null;
 var data = null;
+var catDetails = null;
+var raceName = null;
 
+//-----------------------------
 var bibRef = null;
-
-var bib = 202;
 var categoryCur = null;
 
-var catDetails =[{"raceDistance": 7.721, "catType": "Start Wave", "name": "Single Speed (Open)", "startOffset": 0.0, "distanceUnit": "miles", "gender": "Open", "laps": 7, "pos": [200, 700, 7, 203, 352, 719, 522, 319, 202, 307, 215, 216], "lapDistance": 1.103}];
-
-var data = {
-"352": {
-		"lastTimeOrig": 2592.746,
-		"status": "Finisher",
-		"lapSpeeds": [10.943153914627525, 10.757477243172954, 10.653516561941606, 10.752758054819896, 10.715066341771438, 10.857724110775694, 10.381936455479089],
-		"stageRaceGap": "2'41\"",
-		"FirstName": "Travis",
-		"License": 392682,
-		"LastName": "PEEBLES",
-		"raceCat": "Single Speed (Open)",
-		"flr": 1.0,
-		"interp": [false, false, false, false, false, false, false, false],
-		"raceSpeeds": [10.943153914627525, 10.84952122812602, 10.783389864569443, 10.775715562140896, 10.763530854479276, 10.779116073391807, 10.720525651182182],
-		"stageRaceTime": 2592.0,
-		"Team": "",
-		"lastTime": 2592.746,
-		"speed": "10.72 mph",
-		"raceTimes": [0.0, 362.857, 731.977, 1104.699, 1473.981, 1844.562, 2210.274, 2592.746]
-	},
-"7": {"lastTimeOrig": 2503.672, "status": "Finisher", "lapSpeeds": [11.287255361787404, 11.226113974402834, 10.928516580751523, 11.097540866775292, 10.791155752674143, 11.109991941982269, 11.29229491693162], "stageRaceGap": "1'12\"", "FirstName": "Zachary", "License": 358069, "LastName": "CHAPPELL", "raceCat": "Single Speed (Open)", "flr": 1.0, "interp": [false, false, false, false, false, false, false, false], "raceSpeeds": [11.287255361787404, 11.25660164477694, 11.145072877459775, 11.133151743445172, 11.063029288553714, 11.070828806608073, 11.101933480104423], "stageRaceTime": 2503.0, "Team": "Team Snakebite Racing", "lastTime": 2503.672, "speed": "11.10 mph", "raceTimes": [0.0, 351.795, 705.506, 1068.849, 1426.658, 1794.626, 2152.034, 2503.672]}, "200": {"lastTimeOrig": 2431.346, "status": "Finisher", "lapSpeeds": [11.648434818576243, 11.447846393357551, 11.734354637091414, 11.451940381154534, 11.285041948025372, 11.365405751969226, 11.115465579791286], "stageRaceGap": "0'00\"", "FirstName": "Ernesto", "License": 41544, "LastName": "MARENCHIN", "raceCat": "Single Speed (Open)", "flr": 1.0, "interp": [false, false, false, false, false, false, false, false], "raceSpeeds": [11.648434818576243, 11.547269562789806, 11.608964876069301, 11.569306433073974, 11.511313602413814, 11.486736023188698, 11.432186122419433], "stageRaceTime": 2431.0, "Team": "", "lastTime": 2431.346, "speed": "11.43 mph", "raceTimes": [0.0, 340.887, 687.747, 1026.138, 1372.874, 1724.738, 2074.114, 2431.346]}, "522": {"lastTimeOrig": 2628.954, "status": "Finisher", "lapSpeeds": [11.22916165886628, 10.747635725847053, 10.770228082119324, 10.659350689094223, 10.048791351176256, 10.299854741647644, 10.340409574800518], "stageRaceGap": "3'17\"", "FirstName": "Michael", "License": 115151, "LastName": "ADAMS", "raceCat": "Single Speed (Open)", "flr": 1.0, "interp": [false, false, false, false, false, false, false, false], "raceSpeeds": [11.22916165886628, 10.98312341907387, 10.91122924902634, 10.847150191835683, 10.677488644345082, 10.61263834408489, 10.572874230587527], "stageRaceTime": 2628.0, "Team": "", "lastTime": 2628.954, "speed": "10.57 mph", "raceTimes": [0.0, 353.615, 723.073, 1091.756, 1464.274, 1859.426, 2244.946, 2628.954]}, "203": {"lastTimeOrig": 2507.519, "status": "Finisher", "lapSpeeds": [11.090288038028952, 11.329734418333924, 10.964578017826968, 11.11425220630837, 10.810398760729953, 11.069635444689457, 11.231003770254874], "stageRaceGap": "1'16\"", "FirstName": "Sean", "License": 5533, "LastName": "BURKEY", "raceCat": "Single Speed (Open)", "flr": 1.0, "interp": [false, false, false, false, false, false, false, false], "raceSpeeds": [11.090288038028952, 11.208732581624487, 11.126148466329868, 11.123172014471216, 11.059177797422198, 11.060919366265516, 11.084901051597218], "stageRaceTime": 2507.0, "Team": "", "lastTime": 2507.519, "speed": "11.08 mph", "raceTimes": [0.0, 358.043, 708.519, 1070.667, 1427.938, 1795.251, 2153.962, 2507.519]}, "719": {"lastTimeOrig": 2598.978, "status": "Finisher", "lapSpeeds": [10.806897602821746, 10.705100208666959, 10.716946096794738, 10.781779476931098, 10.691207513031493, 10.752117496696492, 10.419203157143448], "stageRaceGap": "2'47\"", "FirstName": "David", "License": 289233, "LastName": "JOLIN", "raceCat": "Single Speed (Open)", "flr": 1.0, "interp": [false, false, false, false, false, false, false, false], "raceSpeeds": [10.806897602821746, 10.755758046909495, 10.742789532444624, 10.752510557406701, 10.740193771401676, 10.742179222083854, 10.694819271267399], "stageRaceTime": 2598.0, "Team": "", "lastTime": 2598.978, "speed": "10.69 mph", "raceTimes": [0.0, 367.432, 738.358, 1108.874, 1477.162, 1848.57, 2217.874, 2598.978]}, "307": {"lastTimeOrig": 2542.194, "status": "Finisher", "lapSpeeds": [9.587992553296809, 9.441472287609672, 9.354482297205292, 9.384926637422476, 9.34622554465513, 9.127436557557926], "stageRaceGap": "8'56\"", "FirstName": "Robert", "License": 4716, "LastName": "BREEDLOVE", "raceCat": "Single Speed (Open)", "flr": 1.0, "interp": [false, false, false, false, false, false, false], "raceSpeeds": [9.587992553296809, 9.514168342891509, 9.460337326893235, 9.441371267159564, 9.422187462330708, 9.371747396146793], "stageRaceTime": 2967.0, "Team": "", "lastTime": 2542.194, "speed": "9.37 mph", "raceTimes": [0.0, 414.143, 834.713, 1259.194, 1682.298, 2107.154, 2542.194]}, "215": {"lastTimeOrig": 2676.594, "status": "Finisher", "lapSpeeds": [6.5877840305797415, 7.616891898372384, 7.650896535246763, 7.732256877303878, 7.636271327251185], "stageRaceGap": "21'22\"", "FirstName": "David", "License": 379080, "LastName": "SCHALMO", "raceCat": "Single Speed (Open)", "flr": 1.0, "interp": [false, false, false, false, false, false], "raceSpeeds": [6.5877840305797415, 7.065059289170485, 7.250108790583452, 7.364919442715902, 7.417635995597389], "stageRaceTime": 3713.0, "Team": "", "lastTime": 2676.594, "speed": "7.42 mph", "raceTimes": [0.0, 602.752, 1124.067, 1643.065, 2156.602, 2676.594]}, "216": {"lastTimeOrig": 2880.402, "status": "Finisher", "lapSpeeds": [5.500035320565296, 5.525590715538114, 5.390136002247927, 5.647207399906703], "stageRaceGap": "43'27\"", "FirstName": "Heather", "License": 454759, "LastName": "SMITH", "raceCat": "Single Speed (Open)", "flr": 1.0, "interp": [false, false, false, false, false], "raceSpeeds": [5.500035320565296, 5.512783401673911, 5.4712854425153115, 5.514230305353211], "stageRaceTime": 5038.0, "Team": "", "lastTime": 2880.402, "speed": "5.51 mph", "raceTimes": [0.0, 721.959, 1440.579, 2177.258, 2880.402]}, "700": {"lastTimeOrig": 2489.99, "status": "Finisher", "lapSpeeds": [11.157944429457782, 11.384859753597551, 11.207609477977392, 11.130670733074695, 11.06935771632471, 11.051612041325257, 11.145041596030143], "stageRaceGap": "0'58\"", "FirstName": "Rudy", "License": 33715, "LastName": "SROKA", "raceCat": "Single Speed (Open)", "flr": 1.0, "interp": [false, false, false, false, false, false, false, false], "raceSpeeds": [11.157944429457782, 11.270260029433011, 11.249298831101871, 11.219405378296095, 11.189071296938137, 11.16592445257219, 11.16293639733493], "stageRaceTime": 2489.0, "Team": "", "lastTime": 2489.99, "speed": "11.16 mph", "raceTimes": [0.0, 355.872, 704.651, 1058.946, 1415.69, 1774.41, 2133.706, 2489.99]}, "202": {"lastTimeOrig": 2473.05, "status": "Finisher", "lapSpeeds": [9.65966866956966, 9.97109717726646, 9.492504344874247, 9.634870719776377, 9.659997664551792, 9.403774013868357], "stageRaceGap": "7'34\"", "FirstName": "Julie", "License": 143111, "LastName": "SROKA", "raceCat": "Single Speed (Open)", "flr": 1.0, "interp": [false, false, false, false, false, false, false], "raceSpeeds": [9.65966866956966, 9.812912624598264, 9.7037332703383, 9.68642551431997, 9.6811283824704, 9.633772062837387], "stageRaceTime": 2885.0, "Team": "Team Lake Effect", "lastTime": 2473.05, "speed": "9.63 mph", "raceTimes": [0.0, 411.07, 809.301, 1227.61, 1639.738, 2050.794, 2473.05]}, "319": {"lastTimeOrig": 2674.394, "status": "Finisher", "lapSpeeds": [10.276636878188157, 10.718566107002106, 10.44114824232257, 10.334623382775108, 10.295768695241824, 10.345824854679565, 10.35310804433471], "stageRaceGap": "4'03\"", "FirstName": "Scott", "License": 368324, "LastName": "MORMAN", "raceCat": "Single Speed (Open)", "flr": 1.0, "interp": [false, false, false, false, false, false, false, false], "raceSpeeds": [10.276636878188157, 10.49295039578464, 10.47562599260962, 10.440015854058528, 10.410843973676622, 10.399950760785156, 10.393233009048032], "stageRaceTime": 2674.0, "Team": "", "lastTime": 2674.394, "speed": "10.39 mph", "raceTimes": [0.0, 386.391, 756.851, 1137.154, 1521.377, 1907.05, 2290.857, 2674.394]}};
-
+//-----------------------------
 // Convenience function to get the last element in an array.
 Array.prototype.back = function() {
 	return this[this.length-1];
@@ -228,6 +81,8 @@ var colors = makeColorGradient(2.4,2.4,2.4,0,2,4,128,127,500);
 
 var catList = [];
 function dataProlog() {
+	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
+	
 	// Find all the categories that this rider was ranked in.
 	categoryCur = null;
 	for( var i = 0; i < catDetails.length; ++i ) {
@@ -238,6 +93,7 @@ function dataProlog() {
 		for( var p = 0; p < cat.pos.length; ++p ) {
 			if( cat.pos[p] == bib ) {
 				cat.place = (p+1) + '/' + cat.pos.length;
+				cat.iCat = i;
 				catList.push( cat );
 				if( !categoryCur || cat.pos.length < categoryCur.pos.length )
 					categoryCur = cat;
@@ -245,6 +101,9 @@ function dataProlog() {
 			}
 		}
 	}
+	catList.sort( function(x, y) { return x.pos.length - y.pos.length || x.iCat - y.iCat; } );
+	
+	document.getElementById( 'idRaceName' ).innerHTML = raceName;
 }
 
 function GetName( bib ) {
@@ -336,11 +195,29 @@ function updateCategories() {
 			categoryCur = cat;
 		var op = document.createElement( 'option' );
 		op.value = i;
-		op.text = cat.name + ': ' + cat.place;
+		op.text = cat.name;
 		op.selected = (cat == categoryCur ? true : false);
 		categorySelect.add( op );
 	}
 	updateCompare();
+}
+
+function updateCategoryResults() {
+	var d = data[bib];
+	var cr = [];
+	for( var i = 0; i < catList.length; ++i ) {
+		cr.push( '<strong>' + catList[i].place + '</strong> in ' + catList[i].name );
+	}
+	cr.push( '<br/><br/>' );
+	if( d.status == 'Finisher' && d.raceTimes && d.raceTimes.length >= 2 ) {
+		var s = 'Finished in ' + FormatTimeHMS(d.raceTimes.back() - d.raceTimes[0], true);
+		if( d.speed )
+			s += ' at ' + d.speed;
+		cr.push( s );
+	}
+	else if( d.status != 'Finisher' )
+		cr.push( d.status );
+	document.getElementById( 'idCategoryResults' ).innerHTML = 'Placed: ' + cr.join('&nbsp;&nbsp;&nbsp;');
 }
 
 function categorySelectChange( select ) {
@@ -363,11 +240,14 @@ function updateCompare() {
 		}
 		if( !bibRef )
 			bibRef = bibCur;
+		var d = data[bibCur];
+		if( !(d.raceTimes && d.raceTimes.length >= 2) )
+			continue;
 		if( !(i < 20 || (iBib != null && (iBib-3 < i || i < iBib+2))) )
 			continue;
 		var op = document.createElement( 'option' );
 		op.value = bibCur;
-		op.text = GetName(bibCur) + ': ' + (i+1) + '/' + categoryCur.pos.length;
+		op.text = (i+1) + '.  ' + GetName(bibCur);
 		compareSelect.add( op );
 	}
 }
@@ -391,14 +271,14 @@ function updateLapTable() {
 	dataTable.addColumn( 'number', 'Lap Time' );
 	dataTable.addColumn( 'number', 'Race Time' );
 	if( d.speed )
-		dataTable.addColumn( 'number', 'Avg Speed' + ' (' + d.speed.split(' ')[1] + ')' );
+		dataTable.addColumn( 'number', 'Lap Speed' + ' (' + d.speed.split(' ')[1] + ')' );
 	
 	for( var r = 1; r < d.raceTimes.length; ++r ) {
 		var lapTime = d.raceTimes[r] - d.raceTimes[r-1];
 		var raceTime = d.raceTimes[r] - d.raceTimes[0];
 		var row = [r, { v:lapTime, f:FormatTime(lapTime, true) }, { v:raceTime, f:FormatTime(raceTime, true) }];
 		if( d.speed )
-			row.push( { v:d.raceSpeeds[r-1], f:d.raceSpeeds[r-1].toFixed(2) } );
+			row.push( { v:d.lapSpeeds[r-1], f:d.lapSpeeds[r-1].toFixed(2) } );
 		dataTable.addRow( row );
 	}
 	container.table.draw( dataTable );
@@ -438,7 +318,7 @@ function GetEstimatedLapTime( bib ) {
 	return (d.raceTimes.back() - d.raceTimes[0]) / (d.raceTimes.length-1);
 }
 
-function GetPerformancePercent( bib, bibRef ) {
+function GetPercentComparison( bib, bibRef ) {
 	var d = data[bib], dRef = data[bibRef];
 	if( !d || !dRef || !d.raceTimes || !dRef.raceTimes || d.raceTimes.length < 2 || dRef.raceTimes.length < 2 )
 		return {v:0, f:''};
@@ -447,8 +327,8 @@ function GetPerformancePercent( bib, bibRef ) {
 		t += GetEstimatedLapTime(bib) * (dRef.raceTimes.length - d.raceTimes.length);
 	else if( d.raceTimes.length > dRef.raceTimes.length )
 		tRef += GetEstimatedLapTime(bibRef) * (d.raceTimes.length - dRef.raceTimes.length);
-	var p = t / tRef;
-	return {v:p, f:(p*100).toFixed(1) + '%'};
+	var p = 1.0 - t/tRef;
+	return {v:p, f:(p == 0 ? '' : (Math.abs(p)*100).toFixed(1) + (p<0 ? '% slower' : p>0 ? '% faster' : ''))};
 }
 
 function updateInfoTable() {
@@ -465,7 +345,7 @@ function updateInfoTable() {
 	dataTable.addColumn( 'number', 'Gap' );
 	if( d.speed )
 		dataTable.addColumn( 'number', 'Avg Speed' + ' (' + d.speed.split(' ')[1] + ')' );
-	dataTable.addColumn( 'number', 'Performance' );
+	dataTable.addColumn( 'number', 'Comparison' );
 	
 	for( var i = 0; i < 2; ++i ) {
 		var bibCur = (i == 0 ? bib : bibRef);
@@ -473,9 +353,11 @@ function updateInfoTable() {
 		var riderName = GetName(bibCur);
 		var d = data[bibCur];
 		var row = [ GetName(bibCur), GetPlace(bibCur), GetTime(bibCur), gap];
-		if( d.speed )
-			row.push( parseFloat(d.speed.split(' ')[0]) );
-		row.push( GetPerformancePercent(bibCur, bibRef) );
+		if( d.speed ) {
+			var s = parseFloat(d.speed.split(' ')[0]);
+			row.push( {v:s, f:s.toFixed(2)} );
+		}
+		row.push( GetPercentComparison(bibCur, bibRef) );
 		dataTable.addRow( row );
 	}
 
@@ -548,9 +430,10 @@ function updateLapTimesChart() {
 		title: 'Lap Times',
 		vAxis: {title: "minutes"},
 		hAxis: {title: "lap"},
-		pointSize: 10,
-		chartArea: {left: '5%', width: '75%'},
-		animation: {duration: 500},
+		colors: ['blue', '#8888FF'],
+		pointSize: 5,
+		chartArea: {left: '10%', width: '70%'},
+		animation: {duration: 250},
 	};
 	container.chart.draw( dataTable, options );
 }
@@ -574,10 +457,11 @@ function updateGapChart() {
 		title: 'Gap: ' + GetName(bib) + ' \u21E8 ' + GetName(bibRef),
 		vAxis: {title: "minutes"},
 		hAxis: {title: "lap"},
+		colors: ['blue'],
 		legend: 'none',
-		pointSize: 10,
-		chartArea: {left: '5%', width: '75%'},
-		animation: {duration: 500},
+		pointSize: 5,
+		chartArea: {left: '10%', width: '70%'},
+		animation: {duration: 250},
 	};
 	container.chart.draw( dataTable, options );
 }
@@ -590,8 +474,10 @@ function updateCompareDisplays() {
 }
 
 function onLoad() {
-	document.getElementById('idHeader').innerHTML = GetBibName(bib);
 	dataProlog();
+	var d = data[bib];
+	document.getElementById('idHeader').innerHTML = GetBibName(bib) + (d.Team ? ' (' + d.Team + ')' : '');
+	updateCategoryResults();
 	updateCategories();
 	updateLapTable();
 	updateCompareDisplays();
@@ -599,16 +485,17 @@ function onLoad() {
 </script>
 <body>
 <h1 id="idHeader"></h1>
-<h3 id="idHeader2">Race Name</h3>
+<h4 id="idRaceName">Race Name</h4>
+<p id="idCategoryResults">Category Results</p>
 <div id="idLapTable" style="width: 380px; height: 190px;"></div>
 <br/>
 Category:&nbsp;<select id="idCategorySelect" onchange="categorySelectChange(this)"></select>&nbsp;&nbsp;&nbsp;&nbsp;Compare&nbsp;to:&nbsp;<select id="idCompareSelect" onchange="compareSelectChange(this)"></select>
 <br/><br/>
 <div id="idInfoTable" style="width: 720px; height: 80px;"></div>
-<h5>Chart</h5>
+<br/>
 <div id="idGanttChart" style="width: 720px; height: 136px;"></div>
 <div id="idLapTimesChart" style="width: 900px; height: 180px;"></div>
 <div id="idGapChart" style="width: 900px; height: 180px;"></div>
-<a href="http://www.sites.google.com/site/crossmgrsoftware">Powered by CrossMgr</a>
+<a href="http://www.sites.google.com/site/crossmgrsoftware" target="_blank">Powered by CrossMgr</a>
 </body>
 </html>
