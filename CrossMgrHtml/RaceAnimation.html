@@ -347,6 +347,7 @@ var translations = {
 	'Winner':		['winner',			'gagnant',				'ganador'],
 	'starters':		['starters',		'entrées',				'aperitivos'],
 	'finishers':	['finishers',		'arrivées',				'finalistas'],
+	'registered':	['registered',		"inscrit",				"registrado"],
 	'Show 100s of Seconds': ['Show 100s of Seconds', 'Afficer 100s de seconds', 'Mostrar 100s de segundos'],
 	'Hide Lap Info':['Hide Lap Info',	'Masquer les infos de tour',	'Ocultar la info de vuelta'],
 	'Show Every Lap':['Show Every Lap',	'Afficher tous les tours', 'Mostrar todas las vueltas'],
@@ -2670,7 +2671,7 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 		var thead = createChild( table, 'THEAD' );
 		var tr = createChild( thead, 'TR' );
 		var td;
-		createTextChild( td = createChild(tr, 'TH'), catName + (raceIsUnstarted ? ': ' + catDetail.pos.length + ' ' + _('starters') : '') );
+		createTextChild( td = createChild(tr, 'TH'), catName + (raceIsUnstarted ? ': ' + catDetail.pos.length + ' ' + _('registered') : '') );
 		var catTitleTD = td;
 		td.style.fontSize = '120%';
 		td.colSpan = 4;
