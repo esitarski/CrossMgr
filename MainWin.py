@@ -1243,6 +1243,7 @@ class MainWin( wx.Frame ):
 			payload['raceNameText']		= race.name
 			payload['raceDate']			= race.date
 			payload['raceIsRunning']	= race.isRunning()
+			payload['raceIsUnstarted']	= race.isUnstarted()
 			payload['lapDetails']		= GetLapDetails() if not race.hideDetails else {}
 			payload['hideDetails']		= race.hideDetails
 			payload['showCourseAnimation'] = race.showCourseAnimationInHtml

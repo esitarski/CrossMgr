@@ -162,6 +162,7 @@ var organizer = null;
 var timestamp = null;
 var email = null;
 var raceIsRunning = null;
+var raceIsUnstarted = null;
 var data = null;
 var catDetails = null;
 var isTimeTrial = null;
@@ -2669,7 +2670,7 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 		var thead = createChild( table, 'THEAD' );
 		var tr = createChild( thead, 'TR' );
 		var td;
-		createTextChild( td = createChild(tr, 'TH'), catName );
+		createTextChild( td = createChild(tr, 'TH'), catName + (raceIsUnstarted ? ': ' + catDetail.pos.length + ' ' + _('starters') : '') );
 		var catTitleTD = td;
 		td.style.fontSize = '120%';
 		td.colSpan = 4;
