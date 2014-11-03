@@ -47,7 +47,22 @@ var categoryCur = null;
 // Convenience function to get the last element in an array.
 Array.prototype.back = function() {
 	return this[this.length-1];
-};
+}
+Array.prototype.binSearch = function( v ) {
+	var L = this.length, i = -1, m;
+	while( L - i > 1 ) {
+		if( this[m = ((L + i)>>1)] < v )
+			i = m;
+		else
+			L = m;
+	}
+	return L;
+}
+
+function getOrdinal( n ) {
+	var s = ['th', 'st', 'nd', 'rd'], v = n%100;
+	return n + (s[(v-20)%10]||s[v]||s[0]);
+}
 
 function byte2Hex(n) {
 	var nybHexString = "0123456789ABCDEF";
@@ -140,9 +155,11 @@ function FormatTimeHMS( t, highPrecision )
 	var m = (~~(secs / 60) % 60);
 	var s = (~~(secs % 60) + t - secs).toFixed( highPrecision ? 3 : 0 );
 	if( h > 0 )
-		tStr += h + 'h ' + m + 'm ' + s + 's';
+		tStr += h + 'h' + (m<10?'0':'') + m + 'm' + (s<10?'0':'') + s + 's';
+	else if( m > 0 )
+		tStr += m + 'm' + (s<10?'0':'') + s + 's';
 	else
-		tStr += m + 'm ' + s + 's';
+		tStr += s + 's';
 	return tStr;
 }
 
@@ -183,6 +200,51 @@ function FormatTimeGap( t, highPrecision )
 		tStr += m + (s < 10 ? "'0" : "'") + s;
 	tStr += '"';
 	return tStr;
+}
+
+function getPositionByLap( bibIn ) {
+	var timeLapPosBib = [];
+	for( var i = 0; i < categoryCur.pos.length; ++i ) {
+		var bibCur = categoryCur.pos[i];
+		var d = data[bibCur];
+		for( var r = 1; r < d.raceTimes.length; ++r )
+			timeLapPosBib.push( {time:d.raceTimes[r] - d.raceTimes[0], lap:r, pos:i, bib:bibCur} );
+	}
+	if( timeLapPosBib.length == 0 )
+		return [];
+		
+	timeLapPosBib.sort( function(x, y) {return (x.time - y.time) || (y.lap - x.lap) || (x.pos - y.pos);} );
+	
+	var positionByLap = [];
+	var competitorCount = categoryCur.pos.length;
+	var seenLeader = {}; seenLeader[timeLapPosBib[0].bib] = true;
+	for( var i = 0; i < timeLapPosBib.length; ++i ) {
+		var bibCur = timeLapPosBib[i].bib;
+		if( !seenLeader[bibCur] ) {
+			seenLeader[bibCur] = true;
+			continue;
+		}
+		seenLeader = {}; seenLeader[bibCur] = true;
+		
+		var seen = {};
+		var positionThisLap = [];
+		for( var j = i; j < timeLapPosBib.length && positionThisLap.length < competitorCount; ++j ) {
+			var bibCur = timeLapPosBib[j].bib;
+			if( !seen[bibCur] ) {
+				positionThisLap.push( timeLapPosBib[j] );
+				seen[bibCur] = true;
+			}
+		}
+		positionThisLap.sort( function(x, y) {return (y.lap - x.lap) || (x.time - y.time) || (x.pos - y.pos);} );
+		competitorCount = positionThisLap.length;
+		for( var j = 0; j < positionThisLap.length; ++j ) {
+			if( positionThisLap[j].bib == bibIn ) {
+				positionByLap.push( j + 1 );
+				break;
+			}
+		}
+	}
+	return positionByLap;
 }
 
 function updateCategories() {
@@ -401,6 +463,31 @@ function updateGanttChart() {
 	container.chart.draw( dataTable, options );
 }
 
+var numLabels = 4;
+function getTimeTicks( tMin, tMax, tFormat ) {
+	var d = (tMax - tMin) / numLabels;
+	var intervals = [0.01, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 15, 20, 30, 1*60, 2*60, 5*60, 10*60, 15*60, 20*60, 30*60, 1*60*60, 2*60*60, 4*60*60, 8*60*60, 12*60*60, 24*60*60, 2*24*60*60, 5*24*60*60, 10*24*60*60, 20*24*60*60, 50*24*60*60 ];
+	d = intervals[intervals.binSearch(d)];
+	var dMin = Math.floor(tMin / d) * d, dMax = Math.floor(tMax / d + 1) * d;
+	var ticks = [];
+	for( var t = dMin; t <= dMax; t += d )
+		ticks.push( {v:t, f:tFormat=='hms' ? FormatTimeHMS(t, d<1) : tFormat=='gap' ? FormatTimeGap(t, d<1) : FormatTime(t,d<1)} );
+	return ticks;
+}
+
+function getPositionTicks( pMin, pMax ) {
+	var d = (pMax - pMin) / numLabels;
+	var intervals = [1, 2, 5, 10, 20, 25, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000];
+	d = intervals[intervals.binSearch(d)];
+	var dMin = Math.max(1, Math.floor(pMin / d) * d), dMax = Math.floor(pMax / d) * d;
+	if( dMax < pMax )
+		dMax += d;
+	var ticks = [];
+	for( var p = dMin; p <= dMax; p += d )
+		ticks.push( {v:p, f:getOrdinal(p)} );
+	return ticks;
+}
+
 function updateLapTimesChart() {
 	var container = document.getElementById( 'idLapTimesChart' );
 	if( !container.chart )
@@ -412,23 +499,34 @@ function updateLapTimesChart() {
 	if( bibRef )
 		dataTable.addColumn( 'number', GetName(bibRef) );
 	
-	var dLeader = data[bibRef];
+	var dRef = data[bibRef];
 	var d = data[bib];
-	for( var r = 1; r < d.raceTimes.length; ++r ) {
+	var tMin = 999999999, tMax = 0.0;
+	var rMax = Math.min(dRef.raceTimes.length, d.raceTimes.length);
+	for( var r = 1; r < rMax; ++r ) {
 		var row = [
 			'' + r,
-			{	v:(r < d.raceTimes.length ? d.raceTimes[r] - d.raceTimes[r-1] : 0)/60.0,
+			{	v:r < d.raceTimes.length ? d.raceTimes[r] - d.raceTimes[r-1] : 0,
 				f:FormatTimeHMS(r < d.raceTimes.length ? d.raceTimes[r] - d.raceTimes[r-1] : 0)
 			}
 		];
 		if( bibRef )
-			row.push( {	v:(dLeader.raceTimes[r] - dLeader.raceTimes[r-1])/60.0,
-						f:FormatTimeHMS(dLeader.raceTimes[r] - dLeader.raceTimes[r-1]) } );
+			row.push( {	v:dRef.raceTimes[r] - dRef.raceTimes[r-1],
+						f:FormatTimeHMS(dRef.raceTimes[r] - dRef.raceTimes[r-1]) } );
+		for( var k = 1; k < row.length; ++k ) {
+			tMin = Math.min( tMin, row[k].v );
+			tMax = Math.max( tMax, row[k].v );
+		}
 		dataTable.addRow( row );
 	}
+	var timeTicks = getTimeTicks( tMin, tMax, 'hms' );
 	var options = {
 		title: 'Lap Times',
-		vAxis: {title: "minutes"},
+		vAxis: {
+			title: "lap time",
+			ticks:timeTicks,
+			viewWindow:{ min:timeTicks[0].v, max:timeTicks.back().v }
+		},
 		hAxis: {title: "lap"},
 		colors: ['blue', '#8888FF'],
 		pointSize: 5,
@@ -447,18 +545,76 @@ function updateGapChart() {
 	dataTable.addColumn( 'string', 'Lap' );
 	dataTable.addColumn( 'number', 'Gap' );
 	
-	var dLeader = data[bibRef];
+	var dRef = data[bibRef];
 	var d = data[bib];
-	for( var r = 1; r < d.raceTimes.length; ++r ) {
-		var ab = bibRef ? (d.raceTimes[r] - d.raceTimes[0]) - (dLeader.raceTimes[r] - dLeader.raceTimes[0]) : 0.0;
-		dataTable.addRow( [ '' + r, {v: ab/60.0, f: FormatTimeHMS(ab)} ] );
+	var tMin = 999999999, tMax = 0.0;
+	var rMax = Math.min(dRef.raceTimes.length, d.raceTimes.length);
+	for( var r = 1; r < rMax; ++r ) {
+		var ab = bibRef ? (d.raceTimes[r] - d.raceTimes[0]) - (dRef.raceTimes[r] - dRef.raceTimes[0]) : 0.0;
+		tMin = Math.min( tMin, ab );
+		tMax = Math.max( tMax, ab );
+		dataTable.addRow( [ '' + r, {v: ab, f: FormatTimeHMS(ab)} ] );
 	}
+	var timeTicks = getTimeTicks( tMin, tMax, 'gap' );
 	var options = {
 		title: 'Gap: ' + GetName(bib) + ' \u21E8 ' + GetName(bibRef),
-		vAxis: {title: "minutes"},
+		vAxis: {
+			title: "gap",
+			ticks:timeTicks,
+			viewWindow:{min:timeTicks[0].v, max:timeTicks.back().v}
+		},
 		hAxis: {title: "lap"},
 		colors: ['blue'],
 		legend: 'none',
+		pointSize: 5,
+		chartArea: {left: '10%', width: '70%'},
+		animation: {duration: 250},
+	};
+	container.chart.draw( dataTable, options );
+}
+
+function updateLapPositionChart() {
+	var container = document.getElementById( 'idLapPositionChart' );
+	if( !container.chart )
+		container.chart = new google.visualization.LineChart( container );
+	
+	var pos1 = getPositionByLap( bib );
+	var pos2 = bibRef ? getPositionByLap( bibRef ) : [];
+	
+	var dataTable = new google.visualization.DataTable();
+	dataTable.addColumn( 'string', 'Lap' );
+	dataTable.addColumn( 'number', GetName(bib) );
+	if( bibRef )
+		dataTable.addColumn( 'number', GetName(bibRef) );
+	
+	var dLeader = data[bibRef];
+	var d = data[bib];
+	var positionMin = 999999, positionMax = 0;
+	var iMax = Math.min(pos1.length, pos2.length);
+	for( var i = 0; i < iMax; ++i ) {
+		var row = [ '' + (i+1), pos1[i]];
+		positionMin = Math.min(positionMin, pos1[i]);
+		positionMax = Math.max(positionMax, pos1[i]);
+		if( bibRef ) {
+			row.push( pos2[i] );
+			positionMin = Math.min(positionMin, pos2[i]);
+			positionMax = Math.max(positionMax, pos2[i]);
+		}
+		dataTable.addRow( row );
+	}
+	tickMarks = getPositionTicks( positionMin, positionMax );
+	var options = {
+		title: 'Race Position by Lap',
+		vAxis: {
+				title: "position",
+				direction:-1,
+				ticks:tickMarks,
+				minValue:positionMin,
+				maxValue:positionMax,
+				viewWindow:{ min:tickMarks[0], max:tickMarks.back() }
+		},
+		hAxis: {title: "lap"},
+		colors: ['blue', '#8888FF'],
 		pointSize: 5,
 		chartArea: {left: '10%', width: '70%'},
 		animation: {duration: 250},
@@ -471,6 +627,7 @@ function updateCompareDisplays() {
 	updateGanttChart();
 	updateLapTimesChart();
 	updateGapChart();
+	updateLapPositionChart();
 }
 
 function onLoad() {
@@ -496,6 +653,7 @@ Category:&nbsp;<select id="idCategorySelect" onchange="categorySelectChange(this
 <div id="idGanttChart" style="width: 720px; height: 136px;"></div>
 <div id="idLapTimesChart" style="width: 900px; height: 180px;"></div>
 <div id="idGapChart" style="width: 900px; height: 180px;"></div>
+<div id="idLapPositionChart" style="width: 900px; height: 180px;"></div>
 <a href="http://www.sites.google.com/site/crossmgrsoftware" target="_blank">Powered by CrossMgr</a>
 </body>
 </html>
