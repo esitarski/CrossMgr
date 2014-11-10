@@ -2033,7 +2033,6 @@ class MainWin( wx.Frame ):
 			excelLink.setFileName( fname )
 			excelLink.setSheetName( 'Registration' )
 			excelLink.bindDefaultFieldCols()
-			print excelLink.fieldCol
 		except Exception as e:
 			logException( e, sys.exc_info() )
 			Utils.MessageOK( self, _("Excel Read Failure: {}").format(e), _("Excel Read Failure"), iconMask=wx.ICON_ERROR )
@@ -2158,9 +2157,8 @@ class MainWin( wx.Frame ):
 						self.refreshAll()
 						Utils.writeLog( 'openRace: changed Excel file to "%s"' % newFileName )
 
-		except IOError:
-			Utils.MessageOK(self, _('Cannot open file "{}".').format(fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
 		except Exception as e:
+			Utils.logException( e, sys.exc_info() )
 			Utils.MessageOK(self, _('Cannot open file "{}"\n\n{}.').format(fileName, e), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
 
 	@logCall

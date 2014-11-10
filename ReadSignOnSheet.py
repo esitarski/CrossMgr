@@ -608,6 +608,7 @@ class ExcelLink( object ):
 		
 		info = {}
 		rowInfo = []
+		hasTags = False
 		for r, row in enumerate(reader.iter_list(self.sheetName)):
 			data = {}
 			for field, col in self.fieldCol.iteritems():
@@ -634,6 +635,7 @@ class ExcelLink( object ):
 							pass
 						try:
 							data[field] = unicode(data[field] or '').upper()
+							hasTags = True
 						except:
 							pass
 					elif field == 'Gender':
@@ -668,10 +670,11 @@ class ExcelLink( object ):
 		numRow = {}
 		
 		tagFields = []
-		if self.fieldCol.get('Tag', -1) >= 0:
-			tagFields.append( ('Tag', {}) )
-		if self.fieldCol.get('Tag2', -1) >= 0:
-			tagFields.append( ('Tag2', {}) )
+		if hasTags:
+			if self.fieldCol.get('Tag', -1) >= 0:
+				tagFields.append( ('Tag', {}) )
+			if self.fieldCol.get('Tag2', -1) >= 0:
+				tagFields.append( ('Tag2', {}) )
 			
 		errors = []
 		rowBib = {}
@@ -690,7 +693,7 @@ class ExcelLink( object ):
 					errors.append( (num, _('Missing "{field}" in row {row} for Bib# {num}').format( field=tField, row=row, num=num)) )
 					continue
 					
-				tag = unicode(data[tField] or '').lstrip('0').upper()
+				tag = unicode(data.get(tField,u'')).lstrip('0').upper()
 				if tag:
 					if tag in tRow:
 						errors.append( (num,
@@ -736,7 +739,8 @@ def HasExcelLink( race ):
 	try:
 		externalInfo = race.excelLink.read()
 		return True
-	except:
+	except Exception as e:
+		Utils.logException( e, sys.exc_info() )
 		return False
 		
 def SyncExcelLink( race ):

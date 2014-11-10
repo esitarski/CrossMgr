@@ -125,9 +125,9 @@ class Histogram(wx.PyControl):
 		if not self.bins or width < 50 or height < 50:
 			return
 
-		textWidth, textHeight = dc.GetTextExtent( '00:00' if self.dataMax < 60*60 else '00:00:00' )
+		textWidth, textHeight = dc.GetTextExtent( u'00:00' if self.dataMax < 60*60 else u'00:00:00' )
 			
-		xLeft = dc.GetTextExtent( str(self.barMax) )[0] + 4
+		xLeft = dc.GetTextExtent( unicode(self.barMax) )[0] + 4
 		xRight = width - 8
 		yBottom = height - textHeight - 8
 		yTop = textHeight + 8
