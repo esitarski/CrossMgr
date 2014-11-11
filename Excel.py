@@ -6,6 +6,7 @@ import os
 import math
 import itertools
 import unicodedata
+from mmap import mmap, ACCESS_READ
 
 def toAscii( s ):
 	if not s:
@@ -21,7 +22,12 @@ class ReadExcelXls( object ):
 	def __init__(self, filename):
 		if not os.path.isfile(filename):
 			raise ValueError, "%s is not a valid filename" % filename
-		self.book = xlrd.open_workbook(filename)
+		with open(filename,'rb') as f:
+			self.book = xlrd.open_workbook(
+				filename=filename,
+				file_contents=mmap(f.fileno(),0,access=ACCESS_READ),
+			)
+		# self.book = xlrd.open_workbook(filename)
 		
 	def is_nonempty_row(self, sheet, i):
 		values = sheet.row_values(i)
