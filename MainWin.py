@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import wx
 from wx.lib.wordwrap import wordwrap
 import wx.lib.imagebrowser as imagebrowser
