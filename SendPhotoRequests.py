@@ -35,14 +35,17 @@ def PhotoSendRequests( messages, cmd='photo' ):
 	
 def getFtpInfo( race ):
 	try:
-		return {
-			'host':			race.ftpHost,
-			'user':			race.ftpUser,
-			'password':		race.ftpPassword,
-			'photoPath': 	race.ftpPhotoPath,
-		}
+		if race.ftpUploadPhotos:
+			return {
+				'host':			race.ftpHost,
+				'user':			race.ftpUser,
+				'password':		race.ftpPassword,
+				'photoPath':	race.ftpPhotoPath,
+			}
 	except Exception as e:
-		return None
+		pass
+	
+	return None
 	
 def getRequest( race, dirName, bib, raceSeconds, externalInfo ):
 	info = {

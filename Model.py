@@ -927,6 +927,7 @@ class Race( object ):
 	photoCount = 0
 	
 	ftpUploadDuringRace = False
+	ftpUploadPhotos = False
 	
 	geoTrackFName = None
 	

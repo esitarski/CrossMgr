@@ -56,26 +56,29 @@ You can also change the default language of the page:
 
 	<your-race>.html?lang=__xx__
 	
-Where __xx__ is either __en__, __fr__ or __es__ for English, French or Spanish respectively.  When a language is specified with the "lang=xx" option, it is shown first in the language list.
+Where __xx__ is either __en__, __fr__ or __es__ for English, French or Spanish respectively.  When a language is specified with the __lang=xx__ option, it is shown first in the language list.
 
 ## Ftp HTML Publish...
-Publishes HTML formatted results over an FTP upload.  Also includes the option to print a large QR-Code with the race results URL.
+Publishes HTML formatted Results and Photos with FTP.
+
+You can also print a large QR-Code with the race results URL.  This enables spectators at the race to instantly access the results page from their smart phones.
 
 Field|Description
 :----|:----------
 Ftp Host Name|Host name of the FTP server
-Path on Host to Store Files|Directory to write the HTML file on the server.
-User|User name to log into the FTP server.
-Password|Password for the FTP server.
+Upload HTML to Path|Directory to upload the HTML results file on the server.
+Upload Photos to Path|Optional.  If not selected, photos will not be published if using CrossMgrCamera.  If selected, specifies the directory to upload the photos on the server.  Photos are uploaded as they are taken during the race.
+User|User to access the FTP server.
+Password|Password to access the FTP server.
 Automatically Upload Results During Race|If checked, CrossMgr will automatically upload results to the FTP server while the race is running (see below for details).
-URL Path (optional)|The path to the race results url.  The HTML file name will be added to this path.
+URL Path (optional)|The path to the race results url.  The HTML file name will be added to this path.  This is useful for testing that the published html file can be accessed as expected.
 Race Results URL|Shows the full URL (URL Path + HTML file name)
 
-If "Automatically Upload Results During Race" is selected, CrossMgr will automatically publish results with FTP while the race is running.
+If __Automatically Upload Results During Race__ is selected, CrossMgr will automatically publish results with FTP while the race is running.
 
-If you fill in the "URL Path", CrossMgr will open a browser on the "Race Results URL" after you press OK.  Use this to test whether the upload worked correctly and that the "Race Results URL" can access the FTP published file as expected.
+If you fill in the __URL Path__, CrossMgr will open a browser on the __Race Results URL__ after you press OK.  Use this to test whether the upload worked correctly and that the __Race Results URL__ can access the FTP published file as expected.
 
-The "Print Results URL as a QR Code..." button prints a page with the [QR Code](http://en.wikipedia.org/wiki/QR_code) corresponding to the URL Path and Race (QR Codes are square barcodes).
+The __Print Results URL as a QR Code...__ button prints a page with the [QR Code](http://en.wikipedia.org/wiki/QR_code) corresponding to the URL Path and Race (QR Codes are square barcodes).
 Print out this page and post it at the race.  Then, spectators can read the QR Code with their Smartphones to easily access the web Results page.
 
 ### Details, Logic and Example of Live Results:
@@ -90,69 +93,69 @@ The latency will increase when riders get strung out, to a maximum of 32 seconds
 The update logic was inspired by [exponential-backoff](http://en.wikipedia.org/wiki/Exponential_backoff), also used in TCP/IP.
 The idea is to minimize bandwidth and while while maximizing response time.
 
-The update logic is only triggered when an event is received (a rider time).  For example, if all riders are on the back side of the course and there is no data input, no updates will occur.
+An update timer is triggered when a rider's time is entered.  If all riders are on the back side of the course and there is no data input, no update will occur.
 
-An event starts a timer that fires 4 seconds in the future (the latencyTime).  When the timer fires, CrossMgr does an FTP upload.
+A time entry (manual or chip) starts a timer.  When the timer fires, CrossMgr does the FTP upload.
+Additional time entries recorded while the timer is running are included in the upload.  The FTP publish time is recorded - let's call this the __LastPublishTime__.
 
-If another event is received while the timer is running, nothing happens.  That event will just be included when the timer fires in the future.
+Initially, the timer interval is 4 seconds - let's call this the __TimerInterval__.
 
-When the upload occurs, the time is recorded.  Let lastUpdateTime = the time of the last update.
+Now, let's consider the next time entry - call it __T__.
 
-Now, say a new event is received, and the timer is not running.  Let deltaTime = eventTime - lastUpdateTime.
+* If the timer is running:
+    * Do nothing - __T__ will be included when the timer fires.
+* Else, the timer is not running:
+    * If __T__ > __LastPublishTime__ + __TimerInterval__, then set __TimerInterval__ = 4
+    * Else set __TimerInterval__ = min(__TimerInterval__ * 2, 32)
+    * Start the timer
 
-* If deltaTime > latencyTime then latencyTime = max(latencyTime * 2, 32)
-* Else latencyTime = 4
+In short, if the gap from the last update exceeds the last __TimerInterval__, reset it to 4.
+If the gap does not exceed the last __TimerInterval__, double it to a max of 32 seconds.
 
-The timer is started and fires "latencyTime" seconds into the future, and the process repeats.
+For example, say the lap time is 5 minutes, and the bunch is all together on the first lap.
+The first rider in the bunch crosses the line and triggers the 4 second timer.  While the timer is running, the rest of the group crosses the line and is recorded.  After 4 seconds, the upload runs and includes the times of all riders.
 
-To paraphrase, if the last update latency exceeds the gap from the last upload, the latency is doubled (to a max of 32 seconds).
-If the gap exceeds the latency, the latency is reset back to 4 seconds.
+This is superior to publishing on a fixed schedule like every 30 or 60 seconds.  On a fixed schedule, bandwidth is wasted if nothing changed.  Worse, the results might not be updated for a full interval after some action.
+For example, if a new rider takes the lead, the update might take as long as 60 seconds to publish.
+This can feel like a very long time - especially if you are the race announcer.
 
-For example, say the lap time is 5 minutes, and the bunch is all together.
-The first rider in the bunch crosses the line on the next lap and triggers a 4 second timer.  While the timer is running, the rest of the group crosses the line.  After 4 seconds, the upload runs and includes the times of all riders.
-
-Now the riders go out on the next lap.  There are no events, so no upload is triggered and no effort or bandwidth is wasted.
-
-Now the riders come around again and we receive the leader's event.  Since the last update was more than 4 seconds ago (deltaTime > latencyTime), the timer resets to 4 seconds and starts.  The riders cross the line, the timer fires after 4 seconds, and we get another upload with 4 seconds of latency.
-
-This is better than publishing on a fixed schedule like every 30 or 60 seconds.  On a fixed schedule, we waste bandwidth publishing an update even if nothing changes.  Worse, we may have a latency of up to 30 seconds after the leaders cross the line each lap, with average latency of 15 seconds.
-
-Back to our example.  Say a break develops with a gap of 10 seconds.  We will see an update 4 seconds after the break, then 4 seconds after the group.  The timer is reset between the groups because the gap time (10 seconds) exceeds the last latency (4 seconds).
+Back to our example.  Say a break develops with a gap of 10 seconds.  An update will occur 4 seconds after the break, then 4 seconds after the group.  The timer is reset between the groups because the gap time (10 seconds) exceeds the timer interval (4 seconds).
 
 Say the break increases to 30 seconds and a chase group forms 10 seconds after that.  No problem - the logic will now do three publishes, each 4 seconds after the break, group and the bunch respectively.
 
-Say the bunch now splits up with riders all strung out, and the bunch takes 2 minutes to pass the finish line.  We will see an update 4 seconds after the break, then 4 seconds after the chase group, then 4 seconds after the beginning of the bunch, then 8 seconds for the following stragglers, then 16 seconds, then 32 seconds (repeating) as all the stragglers go by.
+Say the bunch now splits up with a line of stragglers, and the whole race now takes 2 minutes to pass the finish line.  We will see an update 4 seconds after the break, then 4 seconds after the chase group, then 4 seconds after the beginning of the bunch, then 8 seconds for the following stragglers, then 16 seconds, then 32 seconds (repeating) as all the stragglers go by.
 
 When the leaders return, the timer will reset back to 4 seconds because the gap between the last bunch rider and the leaders exceeds 32 seconds.
 
-So, this approach synchronizes publishing to groups in the race, and does nothing if there are no changes.  If riders get all strung out and there are no discernible groups anymore, it self-configures to do an update about every 30 seconds, which is the same as a fixed publishing approach.
+This approach follows race activity - no activity - no publish.
+If riders are so strung out that there are no discernible groups, it backs off to sending an update every 32 seconds - like a fixed-interval approach.
 
 ## CrossResults.com Publish...
-Creates a CrossResults.com compatible file.  Only Categories flagged as "Upload" will be considered.
+Creates a CrossResults.com compatible file.  Only Categories flagged as __Upload__ will be considered.
 Launches your web browser to the CrossResults.com upload page to upload it automatically.
 
 ## WebScorer.com Publish...
-Creates a WebScorer.com compatible file.  Only Categories flagged as "Upload" will be considered.
+Creates a WebScorer.com compatible file.  Only Categories flagged as __Upload__ will be considered.
 Follow the instructions on the WebScorer.com site to upload this file.
 
 ## USAC Excel Publish...
-Export the results for race categories in a format acceptable to USA Cycling.  Only Categories flagged as "Upload" will be considered.
+Export the results for race categories in a format acceptable to USA Cycling.  Only Categories flagged as __Upload__ will be considered.
 Follow the USAC instructions to upload this file.
 
 Columns in the exported spreadsheet are as follows:
 
 Column|Description
 :-----|:----------
-rider place|Corresponds to the "Pos" field in CrossMgr [Results][].
+rider place|Corresponds to the __Pos__ field in CrossMgr [Results][].
 race gender|The gender of the this Category as specified in [Categories][]
 race discipline|As specified in the race [Properties][].  This must match the USAC standard discipline name.
 race category|The name of the Category of this rider as specified in [Categories][].
-rider last name|Corresponds to the rider's "LastName" as configured in the [External Excel][] sheet.
-rider first name|Corresponds to the rider's "FirstName" as configured in the [External Excel][] sheet.
-rider team|Corresponds to the rider's "Team" as configured in the [External Excel][] sheet.
-time|Corresponds to the "Time" field in CrossMgr [Results][].
+rider last name|Corresponds to the rider's __LastName__ as configured in the [External Excel][] sheet.
+rider first name|Corresponds to the rider's __FirstName__ as configured in the [External Excel][] sheet.
+rider team|Corresponds to the rider's __Team__ as configured in the [External Excel][] sheet.
+time|Corresponds to the __Time__ field in CrossMgr [Results][].
 
-In the "rider place" column, USAC only recognizes a place (number) and the statuses "DNF", "DNS" and "DNP" (Did Not Place).
+In the __rider place__ column, USAC only recognizes a place (number) and the statuses __DNF__, __DNS__ and __DNP__ (Did Not Place).
 
 CrossMgr's status codes are translated to USAC's status codes as follows:
 
@@ -167,24 +170,24 @@ Outside Time Bound|OTL|DNP
 
 ## UCI (Infostrada) Excel Publish...
 
-Export the results for race categories in a format acceptable to Infostrade.  Only Categories flagged as "Upload" will be considered.
+Export the results for race categories in a format acceptable to Infostrade.  Only Categories flagged as __Upload__ will be considered.
 Follow the Infostrade instructions to upload this file.
 
 Columns in the exported spreadsheet are as follows:
 
 Column|Description
 :-----|:----------
-Pos|Same as the "Pos" field in CrossMgr [Results][].
+Pos|Same as the __Pos__ field in CrossMgr [Results][].
 Nr.|The rider's Bib number.
-Name|Name of the rider in "LASTNAME, Firstname" format
-UCI Code|Corresponds to the rider's "License" as configured in the [External Excel][] sheet.
-Team|Corresponds to the rider's "Team" as configured in the [External Excel][] sheet.
+Name|Name of the rider in __LASTNAME, Firstname__ format
+UCI Code|Corresponds to the rider's __License__ as configured in the [External Excel][] sheet.
+Team|Corresponds to the rider's __Team__ as configured in the [External Excel][] sheet.
 
 ## Facebook PNG Publish...
 Publish the results as PNG image files suitable for posting to Facebook or Tumblr, which do not allow PDF or HTML content.
-The PNG files are written into a folder called "ResultsPNG" in the same folder as the CrossMgr race file.
+The PNG files are written into a folder called __ResultsPNG__ in the same folder as the CrossMgr race file.
 
-Although "quick and dirty", this is not a recommended way to publish to Facebook.
+Although __quick and dirty__, this is not a recommended way to publish to Facebook.
 The key problem is that image files cannot be indexed by Google, Bing, Yahoo or other search engines.  This makes it much more difficult for people to find your results by searching.
 
 See [Facebook][] for some better suggestions about how to publish results in a search engine-friendly format.

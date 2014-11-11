@@ -258,8 +258,8 @@ class FtpQRCodePrintout( wx.Printout ):
 
 class FtpPublishDialog( wx.Dialog ):
 
-	fields = 	['ftpHost',	'ftpPath',	'ftpPhotoPath',	'ftpUser',		'ftpPassword',	'ftpUploadDuringRace',	'urlPath']
-	defaults =	['',		'',			'',				'anonymous',	'anonymous@',	False,					'http://']
+	fields = 	['ftpHost',	'ftpPath',	'ftpPhotoPath',	'ftpUser',		'ftpPassword',	'ftpUploadDuringRace',	'urlPath', 'ftpUploadPhotos']
+	defaults =	['',		'',			'',				'anonymous',	'anonymous@',	False,					'http://',	'False']
 
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, "Ftp Publish Results",
@@ -269,6 +269,8 @@ class FtpPublishDialog( wx.Dialog ):
 		
 		self.ftpHost = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
 		self.ftpPath = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
+		self.ftpUploadPhotos = wx.CheckBox( self, label=_("Upload Photos to Path:") )
+		self.ftpUploadPhotos.Bind( wx.EVT_CHECKBOX, self.ftpUploadPhotosChanged )
 		self.ftpPhotoPath = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
 		self.ftpUser = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
 		self.ftpPassword = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER|wx.TE_PASSWORD, value='' )
@@ -300,12 +302,12 @@ class FtpPublishDialog( wx.Dialog ):
 		bs.Add( self.ftpHost, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
 		row += 1
-		bs.Add( wx.StaticText( self, label = _("Path on Host to Write HTML:")),  pos=(row,0), span=(1,1), border = border,
+		bs.Add( wx.StaticText( self, label = _("Upload HTML to Path:")),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.ftpPath, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
 		row += 1
-		bs.Add( wx.StaticText( self, label = _("Path on Host to Write Photos:")),  pos=(row,0), span=(1,1), border = border,
+		bs.Add( self.ftpUploadPhotos,  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.ftpPhotoPath, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
@@ -393,6 +395,10 @@ class FtpPublishDialog( wx.Dialog ):
 			fname = os.path.basename( fname[:-4] + '.html' )
 			url += fname
 			self.urlFull.SetLabel( url )
+			
+	def ftpUploadPhotosChanged( self, event = None ):
+		self.ftpPhotoPath.SetEditable( self.ftpUploadPhotos.GetValue() )
+		self.ftpPhotoPath.Enable( self.ftpUploadPhotos.GetValue() )
 		
 	def refresh( self ):
 		with Model.LockRace() as race:
@@ -403,6 +409,7 @@ class FtpPublishDialog( wx.Dialog ):
 				for f, v in zip(FtpPublishDialog.fields, FtpPublishDialog.defaults):
 					getattr(self, f).SetValue( getattr(race, f, v) )
 		self.urlPathChanged()
+		self.ftpUploadPhotosChanged()
 	
 	def setRaceAttr( self ):
 		self.urlPathChanged()
