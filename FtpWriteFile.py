@@ -259,7 +259,7 @@ class FtpQRCodePrintout( wx.Printout ):
 class FtpPublishDialog( wx.Dialog ):
 
 	fields = 	['ftpHost',	'ftpPath',	'ftpPhotoPath',	'ftpUser',		'ftpPassword',	'ftpUploadDuringRace',	'urlPath', 'ftpUploadPhotos']
-	defaults =	['',		'',			'',				'anonymous',	'anonymous@',	False,					'http://',	'False']
+	defaults =	['',		'',			'',				'anonymous',	'anonymous@',	False,					'http://',	False]
 
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, "Ftp Publish Results",
