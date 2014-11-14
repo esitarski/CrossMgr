@@ -24,16 +24,19 @@ def lighterColour( c ):
 	return wx.Colour( *[int(v + (255 - v) * 0.6) for v in rgb] )
 
 def numFromLabel( s ):
-	lastSpace = s.rfind( ' ' )
-	if lastSpace >= 0:
-		try:
-			return int(s[lastSpace+1:])
-		except ValueError:
-			pass
-	firstSpace = s.find( ' ' )
-	if firstSpace < 0:
-		return int(s)
-	return int(s[:firstSpace])
+	try:
+		lastSpace = s.rfind( ' ' )
+		if lastSpace >= 0:
+			try:
+				return int(s[lastSpace+1:])
+			except ValueError:
+				pass
+		firstSpace = s.find( ' ' )
+		if firstSpace < 0:
+			return int(s)
+		return int(s[:firstSpace])
+	except Exception as e:
+		return None
 	
 class GanttChartPanel(wx.PyPanel):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
@@ -291,8 +294,8 @@ class GanttChartPanel(wx.PyPanel):
 		barHeight = int(float(height) / float(len(self.data) + 2))
 		barHeight = max( barHeight, minBarHeight )
 		barHeight = min( barHeight, maxBarHeight )
-		font = wx.FontFromPixelSize( wx.Size(0,barHeight - 1), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
-		dc.SetFont( font )
+		fontBarLabel = wx.FontFromPixelSize( wx.Size(0,int(min(barHeight-2, barHeight*0.9))), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		dc.SetFont( fontBarLabel )
 		textWidthLeftMax, textHeightMax = dc.GetTextExtent( '0000' )
 		textWidthRightMax = textWidthLeftMax
 		for label in self.labels:
@@ -334,8 +337,7 @@ class GanttChartPanel(wx.PyPanel):
 		iDataShowEnd = iDataShowStart + self.verticalSB.GetThumbSize() + 1 if self.verticalSB.IsShown() else len(self.data)
 		tShowStart = self.horizontalSB.GetThumbPosition() if self.horizontalSB.IsShown() else 0
 
-		font = wx.FontFromPixelSize( wx.Size(0,barHeight - 1), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
-		dc.SetFont( font )
+		dc.SetFont( fontBarLabel )
 
 		textWidthLeftMax, textHeightMax = dc.GetTextExtent( '0000' )
 		textWidthRightMax = textWidthLeftMax
@@ -414,7 +416,7 @@ class GanttChartPanel(wx.PyPanel):
 			dc.DrawLine( x, yBottom+3, x, yTop-3 )
 		
 		# Draw the Gantt chart.
-		dc.SetFont( font )
+		dc.SetFont( fontBarLabel )
 		textWidth, textHeight = dc.GetTextExtent( '0000' )
 
 		penBar = wx.Pen( wx.Colour(128,128,128), 1 )
@@ -508,7 +510,7 @@ class GanttChartPanel(wx.PyPanel):
 								note = note[:lenLeft].strip() + '...'
 								noteWidth, noteHeight = dc.GetTextExtent( note )
 							dc.DrawText( note, xLast + noteBorderWidth, yLast + (dy - noteHeight) / 2 )
-							dc.SetFont( font )
+							dc.SetFont( fontBarLabel )
 					
 					if j == self.moveLap and self.moveIRider == i:
 						if hasPhoto(num, t):
@@ -549,8 +551,12 @@ class GanttChartPanel(wx.PyPanel):
 				dc.SetBrush( greyBrush )
 				dc.DrawRectangle( 0, yLast, textWidthLeftMax, yCur - yLast + 1 )
 				dc.SetBrush( backBrush )
-			labelWidth = dc.GetTextExtent( self.labels[i] )[0]
-			dc.DrawText( self.labels[i], textWidthLeftMax - labelWidth, yLast )
+			if not numFromLabel(self.labels[i]):
+				# This is a Category Label.
+				dc.DrawText( self.labels[i], labelsWidthLeft + 4, yLast )
+			else:
+				labelWidth = dc.GetTextExtent( self.labels[i] )[0]
+				dc.DrawText( self.labels[i], textWidthLeftMax - labelWidth, yLast )
 			if not self.minimizeLabels:
 				label = self.labels[i]
 				lastSpace = label.rfind( ' ' )

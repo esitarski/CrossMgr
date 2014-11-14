@@ -3,7 +3,7 @@ import Model
 import Utils
 from FixCategories import FixCategories
 import GanttChartPanel
-from GetResults import GetResults, RidersCanSwap
+from GetResults import GetResults, RidersCanSwap, RiderResult
 from Undo import undo
 from PhotoFinish import HasPhotoCache, updatePhotoFNameCache
 import EditEntry
@@ -32,11 +32,14 @@ class Gantt( wx.Panel ):
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
 		self.categoryLabel = wx.StaticText( self, label = _('Category:') )
 		self.categoryChoice = wx.Choice( self )
-		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
+		self.Bind( wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice )
+		self.groupByStartWave = wx.CheckBox( self, label=_('Group by Start Wave') )
+		self.Bind( wx.EVT_CHECKBOX, self.doGroupByStartWave, self.groupByStartWave )
 		self.statsLabel = wx.StaticText( self )
 		
 		self.hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.categoryChoice, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.groupByStartWave, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.statsLabel, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL | wx.GROW, border=4 )
 		
 		self.ganttChart = GanttChartPanel.GanttChartPanel( self )
@@ -55,6 +58,11 @@ class Gantt( wx.Panel ):
 		Model.setCategoryChoice( self.categoryChoice.GetSelection(), 'ganttCategory' )
 		self.refresh()
 	
+	def doGroupByStartWave( self, event ):
+		if Model.race:
+			Model.race.groupByStartWave = self.groupByStartWave.GetValue()
+			wx.CallAfter( self.refresh )
+		
 	def reset( self ):
 		self.ganttChart.numSelect = None
 
@@ -448,8 +456,23 @@ class Gantt( wx.Panel ):
 			self.updateStats( None )
 			return
 		
-		category = FixCategories( self.categoryChoice, getattr(Model.race, 'ganttCategory', 0) )
-		results = GetResults( category, True )
+		race = Model.race
+		category = FixCategories( self.categoryChoice, getattr(race, 'ganttCategory', 0) )
+		
+		self.groupByStartWave.SetValue( race.groupByStartWave )
+		self.groupByStartWave.Enable( not category )
+		
+		leadRiderIndex = 0
+		if race.groupByStartWave and not category:
+			results = []
+			for c in race.getCategories():
+				rr = RiderResult( num='', status=Model.Rider.Finisher, lastTime=None, raceCat=c, lapTimes=[], raceTimes=[], interp=[] )
+				rr.FirstName = c.fullname
+				results.append( rr )
+				results.extend( list(GetResults(c, True)) )
+			leadRiderIndex = 1
+		else:
+			results = GetResults( category, True )
 		
 		#labels	= ['{}'.format(r.num) for r in results]
 		labels = []
@@ -468,7 +491,7 @@ class Gantt( wx.Panel ):
 		data	= [r.raceTimes for r in results]
 		interp	= [r.interp for r in results]
 		try:
-			nowTime = min( results[0].raceTimes[-1], Model.race.lastRaceTime() )
+			nowTime = min( results[leadRiderIndex].raceTimes[-1], Model.race.lastRaceTime() )
 		except:
 			nowTime = None
 		self.ganttChart.SetData(data, labels, nowTime, interp,
