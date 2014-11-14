@@ -465,11 +465,15 @@ class Gantt( wx.Panel ):
 		leadRiderIndex = 0
 		if race.groupByStartWave and not category:
 			results = []
-			for c in race.getCategories():
+			for c in sorted(race.getCategories(), key=lambda x:x.getStartOffsetSecs()):
+				catResults = GetResults(c, True)
+				if not catResults:
+					continue
+				# Create a name for the category as a bogus rider.
 				rr = RiderResult( num='', status=Model.Rider.Finisher, lastTime=None, raceCat=c, lapTimes=[], raceTimes=[], interp=[] )
 				rr.FirstName = c.fullname
 				results.append( rr )
-				results.extend( list(GetResults(c, True)) )
+				results.extend( list(catResults) )
 			leadRiderIndex = 1
 		else:
 			results = GetResults( category, True )
