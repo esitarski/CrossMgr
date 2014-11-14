@@ -474,7 +474,7 @@ class Gantt( wx.Panel ):
 				rr.FirstName = c.fullname
 				results.append( rr )
 				results.extend( list(catResults) )
-			leadRiderIndex = 1
+				leadRiderIndex = 1		# Keep this here - we don't want to set it if we have no results.
 		else:
 			results = GetResults( category, True )
 		
