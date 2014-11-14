@@ -2906,7 +2906,7 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 						}
 					}
 				}
-				else if( riderTime > leaderTime ) {
+				else {
 					var lapsDown = leaderLaps - riderLaps;
 					gap = '-' + lapsDown + ' ' + (lapsDown == 1 ? _('lap') : _('laps'));
 				}
