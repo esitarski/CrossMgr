@@ -46,6 +46,8 @@ class GanttChartPanel(wx.PyPanel):
 		wx.PyPanel.__init__(self, parent, id, pos, size, style, name)
 		
 		self.SetBackgroundColour(wx.WHITE)
+		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )
+		
 		self.data = None
 		self.labels = None
 		self.greyOutSet = None
@@ -56,6 +58,7 @@ class GanttChartPanel(wx.PyPanel):
 		self.rClickCallback = None
 		self.getNowTimeCallback = None
 		self.minimizeLabels = False
+		self.headerSet = set()
 		self.xMove = -1
 		self.yMove = -1
 		self.moveIRider = None
@@ -131,7 +134,9 @@ class GanttChartPanel(wx.PyPanel):
 		"""
 		return True
 
-	def SetData( self, data, labels = None, nowTime = None, interp = None, greyOutSet = set(), numTimeInfo = None, lapNote = None ):
+	def SetData( self, data, labels = None, nowTime = None, interp = None, greyOutSet = set(),
+					numTimeInfo = None, lapNote = None,
+					headerSet = None ):
 		"""
 		* data is a list of lists.  Each list is a list of times.
 		* labels are the names of the series.  Optional.
@@ -142,6 +147,7 @@ class GanttChartPanel(wx.PyPanel):
 		self.greyOutSet = greyOutSet
 		self.numTimeInfo = numTimeInfo
 		self.lapNote = lapNote
+		self.headerSet = headerSet or set()
 		if data and any( s for s in data ):
 			self.data = data
 			self.dataMax = max(max(s) if s else -sys.float_info.max for s in self.data)
@@ -299,8 +305,9 @@ class GanttChartPanel(wx.PyPanel):
 		textWidthLeftMax, textHeightMax = dc.GetTextExtent( '0000' )
 		textWidthRightMax = textWidthLeftMax
 		for label in self.labels:
-			textWidthLeftMax = max( textWidthLeftMax, dc.GetTextExtent(label)[0] )
-			textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent( '{}'.format(numFromLabel(label)) )[0] )
+			if label not in self.headerSet:
+				textWidthLeftMax = max( textWidthLeftMax, dc.GetTextExtent(label)[0] )
+				textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent( '{}'.format(numFromLabel(label)) )[0] )
 				
 		if textWidthLeftMax + textWidthRightMax > width:
 			self.horizontalSB.Show( False )
@@ -342,8 +349,9 @@ class GanttChartPanel(wx.PyPanel):
 		textWidthLeftMax, textHeightMax = dc.GetTextExtent( '0000' )
 		textWidthRightMax = textWidthLeftMax
 		for label in self.labels:
-			textWidthLeftMax = max( textWidthLeftMax, dc.GetTextExtent(label)[0] )
-			textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent( '{}'.format(numFromLabel(label)) )[0] )
+			if label not in self.headerSet:
+				textWidthLeftMax = max( textWidthLeftMax, dc.GetTextExtent(label)[0] )
+				textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent( '{}'.format(numFromLabel(label)) )[0] )
 				
 		if textWidthLeftMax + textWidthRightMax > width:
 			self.horizontalSB.Show( False )
@@ -551,18 +559,17 @@ class GanttChartPanel(wx.PyPanel):
 				dc.SetBrush( greyBrush )
 				dc.DrawRectangle( 0, yLast, textWidthLeftMax, yCur - yLast + 1 )
 				dc.SetBrush( backBrush )
-			if not numFromLabel(self.labels[i]):
-				# This is a Category Label.
-				dc.DrawText( self.labels[i], labelsWidthLeft + 4, yLast )
+			if self.labels[i] in self.headerSet:
+				dc.DrawText( self.labels[i], labelsWidthLeft + 4, yLast )    # This is a Category Label.
 			else:
 				labelWidth = dc.GetTextExtent( self.labels[i] )[0]
 				dc.DrawText( self.labels[i], textWidthLeftMax - labelWidth, yLast )
-			if not self.minimizeLabels:
-				label = self.labels[i]
-				lastSpace = label.rfind( ' ' )
-				if lastSpace > 0:
-					label = label[lastSpace+1:]
-				dc.DrawText( label, width - labelsWidthRight + legendSep, yLast )
+				if not self.minimizeLabels:
+					label = self.labels[i]
+					lastSpace = label.rfind( ' ' )
+					if lastSpace > 0:
+						label = label[lastSpace+1:]
+					dc.DrawText( label, width - labelsWidthRight + legendSep, yLast )
 
 			if u'{}'.format(self.numSelect) == u'{}'.format(numFromLabel(self.labels[i])):
 				yHighlight = yCur

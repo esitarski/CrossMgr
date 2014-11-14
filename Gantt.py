@@ -463,6 +463,7 @@ class Gantt( wx.Panel ):
 		self.groupByStartWave.Enable( not category )
 		
 		leadRiderIndex = 0
+		headerSet = set()
 		if race.groupByStartWave and not category:
 			results = []
 			for c in sorted(race.getCategories(), key=lambda x:x.getStartOffsetSecs()):
@@ -472,25 +473,19 @@ class Gantt( wx.Panel ):
 				# Create a name for the category as a bogus rider.
 				rr = RiderResult( num='', status=Model.Rider.Finisher, lastTime=None, raceCat=c, lapTimes=[], raceTimes=[], interp=[] )
 				rr.FirstName = c.fullname
+				headerSet.add( rr.FirstName )
 				results.append( rr )
 				results.extend( list(catResults) )
 				leadRiderIndex = 1		# Keep this here - we don't want to set it if we have no results.
 		else:
 			results = GetResults( category, True )
 		
-		#labels	= ['{}'.format(r.num) for r in results]
 		labels = []
 		for r in results:
-			last = getattr(r, 'LastName', None)
-			first = getattr(r, 'FirstName', None)
-			if last and first:
-				labels.append( u'{}, {} {}'.format(last, first, r.num) )
-			elif first:
-				labels.append( u'{} {}'.format(first, r.num) )
-			elif last:
-				labels.append( u'{} {}'.format(last, r.num) )
-			else:
-				labels.append( u'{}'.format(r.num) )
+			label = u', '.join( n for n in [getattr(r,'LastName',None), getattr(r,'FirstName',None)] if n )
+			if r.num:
+				label += u' {}'.format(r.num)
+			labels.append( label )
 
 		data	= [r.raceTimes for r in results]
 		interp	= [r.interp for r in results]
@@ -501,7 +496,8 @@ class Gantt( wx.Panel ):
 		self.ganttChart.SetData(data, labels, nowTime, interp,
 								set(i for i, r in enumerate(results) if r.status != Model.Rider.Finisher),
 								Model.race.numTimeInfo,
-								getattr( Model.race, 'lapNote', None) )
+								getattr( Model.race, 'lapNote', None),
+								headerSet = headerSet )
 		self.updateStats( results )
 		wx.CallAfter( updatePhotoFNameCache )
 	
