@@ -740,9 +740,9 @@ def HasExcelLink( race ):
 		externalInfo = race.excelLink.read()
 		return True
 	except Exception as e:
-		Utils.logException( e, sys.exc_info() )
+		#Utils.logException( e, sys.exc_info() )
 		return False
-		
+
 def SyncExcelLink( race ):
 	return HasExcelLink( race )
 
