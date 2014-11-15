@@ -1,4 +1,5 @@
 import wx
+import sys
 import Model
 import Utils
 from FixCategories import FixCategories
@@ -462,7 +463,6 @@ class Gantt( wx.Panel ):
 		self.groupByStartWave.SetValue( race.groupByStartWave )
 		self.groupByStartWave.Enable( not category )
 		
-		leadRiderIndex = 0
 		headerSet = set()
 		if race.groupByStartWave and not category:
 			results = []
@@ -476,21 +476,27 @@ class Gantt( wx.Panel ):
 				headerSet.add( rr.FirstName )
 				results.append( rr )
 				results.extend( list(catResults) )
-				leadRiderIndex = 1		# Keep this here - we don't want to set it if we have no results.
 		else:
 			results = GetResults( category, True )
 		
+		resultBest = (0, sys.float_info.max)
 		labels = []
 		for r in results:
 			label = u', '.join( n for n in [getattr(r,'LastName',None), getattr(r,'FirstName',None)] if n )
 			if r.num:
 				label += u' {}'.format(r.num)
 			labels.append( label )
+			
+			try:
+				if race.riders[r.num].status == Model.Rider.Finisher:
+					resultBest = min( resultBest, (-r.laps, r.raceTimes[-1]) )
+			except (IndexError, KeyError) as e:
+				pass
 
 		data	= [r.raceTimes for r in results]
 		interp	= [r.interp for r in results]
 		try:
-			nowTime = min( results[leadRiderIndex].raceTimes[-1], Model.race.lastRaceTime() )
+			nowTime = min( resultBest[1], Model.race.lastRaceTime() )
 		except:
 			nowTime = None
 		self.ganttChart.SetData(data, labels, nowTime, interp,

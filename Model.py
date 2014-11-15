@@ -919,6 +919,7 @@ class Race( object ):
 	autocorrectLapsDefault = True
 	
 	allCategoriesHaveRaceLapsDefined = False
+	allCategoriesFinishAfterFastestRidersLastLap = True
 	
 	enableUSBCamera = False
 	photosAtRaceEndOnly = False
