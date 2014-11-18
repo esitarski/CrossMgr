@@ -1,15 +1,15 @@
 import wx
-import math
+from math import cos, sin, pi
 import datetime
 
-tCos60 = [math.cos((i/60.0)*2.0*math.pi-math.pi/2.0) for i in xrange(60)]
-tSin60 = [math.sin((i/60.0)*2.0*math.pi-math.pi/2.0) for i in xrange(60)]
+tCos60 = [cos((i/60.0)*2.0*pi-pi/2.0) for i in xrange(60)]
+tSin60 = [sin((i/60.0)*2.0*pi-pi/2.0) for i in xrange(60)]
 
 def GetCos( pos ):
-	return math.cos(pos*2.0*math.pi-math.pi/2.0)
+	return cos(pos*2.0*pi-pi/2.0)
 	
 def GetSin( pos ):
-	return math.sin(pos*2.0*math.pi-math.pi/2.0)
+	return sin(pos*2.0*pi-pi/2.0)
 
 def GetPen( colour=wx.BLACK, cap=wx.CAP_ROUND, join=wx.JOIN_ROUND, width=1 ):
 	pen = wx.Pen( colour, width )
