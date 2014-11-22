@@ -196,7 +196,12 @@ def getHtmlFolder():	return htmlFolder
 def getHelpFolder():	return helpFolder
 
 #------------------------------------------------------------------------
-
+playBell = False
+def Bell():
+	if playBell:
+		wx.Bell()
+		
+#------------------------------------------------------------------------
 def disable_stdout_buffering():
 	fileno = sys.stdout.fileno()
 	temp_fd = os.dup(fileno)
