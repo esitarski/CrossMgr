@@ -182,8 +182,7 @@ function FormatTime( t, highPrecision )
 	return tStr;
 }
 
-function FormatTimeGap( t, highPrecision )
-{
+function FormatTimeGap( t, highPrecision ) {
 	var tStr = '';
 	if( t < 0 )
 	{
@@ -200,6 +199,24 @@ function FormatTimeGap( t, highPrecision )
 		tStr += m + (s < 10 ? "'0" : "'") + s;
 	tStr += '"';
 	return tStr;
+}
+
+function FormatDistanceGap( d, distanceUnit ) {
+	var suffix = 'behind';
+	if( d < 0 ) {
+		d *= -1;
+		suffix = 'ahead';
+	}
+	if( distanceUnit == 'km' ) {
+		if( d < 0.1 )
+			return (d*1000.0).toFixed(1) + ' m ' + suffix;
+		return d.toFixed(1) + ' ' + distanceUnit + ' ' + suffix;
+	}
+	else {
+		if( d <= 0.1 )
+			return (d*5280.0).toFixed(0) + ' ft ' + suffix;
+		return d.toFixed(1) + ' ' + distanceUnit + ' ' + suffix;
+	}
 }
 
 function getPositionByLap( bibIn ) {
@@ -332,14 +349,14 @@ function updateLapTable() {
 	dataTable.addColumn( 'number', 'Lap' );
 	dataTable.addColumn( 'number', 'Lap Time' );
 	dataTable.addColumn( 'number', 'Race Time' );
-	if( d.speed )
+	if( d.speed && d.lapSpeeds && d.lapSpeeds.length > 0 )
 		dataTable.addColumn( 'number', 'Lap Speed' + ' (' + d.speed.split(' ')[1] + ')' );
 	
 	for( var r = 1; r < d.raceTimes.length; ++r ) {
 		var lapTime = d.raceTimes[r] - d.raceTimes[r-1];
 		var raceTime = d.raceTimes[r] - d.raceTimes[0];
 		var row = [r, { v:lapTime, f:FormatTime(lapTime, true) }, { v:raceTime, f:FormatTime(raceTime, true) }];
-		if( d.speed )
+		if( d.speed && d.lapSpeeds && d.lapSpeeds.length > 0 )
 			row.push( { v:d.lapSpeeds[r-1], f:d.lapSpeeds[r-1].toFixed(2) } );
 		dataTable.addRow( row );
 	}
@@ -356,6 +373,30 @@ function GetGap( bib, bibRef ) {
 	}
 	var g = (d.raceTimes.back() - d.raceTimes[0]) - (dRef.raceTimes.back() - dRef.raceTimes[0]);
 	return {v:g, f:FormatTimeGap(g)};
+}
+function GetGapDistance( bib, bibRef ) {
+	var d = data[bib], dRef = data[bibRef];
+	if( !d || !dRef || !d.raceTimes || !dRef.raceTimes || d.raceTimes.length==0 || dRef.raceTimes.length==0 ||
+		!d.speed )
+		return {v:0, f:''};
+	var speedUnit = d.speed.split(' ')[1];
+	var distanceUnit = (speedUnit.substring(0,1) == 'm' ? 'miles' : 'km');
+	var distance = 0, t = 0;
+	if( d.lapSpeeds && d.lapSpeeds.length > 0 ) {
+		t = (d.raceTimes.back() - d.raceTimes.slice(-2,-1)[0]) / (60.0*60.0);
+		distance = t * d.lapSpeeds.back();
+	}
+	else {
+		t = (d.raceTimes.back() - d.raceTimes[0]) / (60.0*60.0);
+		distance = t * d.speed;
+	}
+	if( d.raceTimes.length != dRef.raceTimes.length ) {
+		var lapsDown = dRef.raceTimes.length - d.raceTimes.length;
+		return {v:lapsDown*distance, f:FormatDistanceGap(lapsDown*distance,distanceUnit)};
+	}
+	var g = ((d.raceTimes.back() - d.raceTimes[0]) - (dRef.raceTimes.back() - dRef.raceTimes[0])) / (60.0*60.0);
+	var distanceGap = (g / t) * distance;
+	return {v:distanceGap, f:FormatDistanceGap(distanceGap, distanceUnit)};
 }
 function GetPlace( bib ) {
 	for( var i = 0; i < categoryCur.pos.length; ++i )
@@ -405,8 +446,10 @@ function updateInfoTable() {
 	dataTable.addColumn( 'number', 'Place' );
 	dataTable.addColumn( 'number', 'Time' );
 	dataTable.addColumn( 'number', 'Gap' );
-	if( d.speed )
+	if( d.speed ) {
+		dataTable.addColumn( 'number', 'Est. Distance' );
 		dataTable.addColumn( 'number', 'Avg Speed' + ' (' + d.speed.split(' ')[1] + ')' );
+	}
 	dataTable.addColumn( 'number', 'Comparison' );
 	
 	for( var i = 0; i < 2; ++i ) {
@@ -416,6 +459,7 @@ function updateInfoTable() {
 		var d = data[bibCur];
 		var row = [ GetName(bibCur), GetPlace(bibCur), GetTime(bibCur), gap];
 		if( d.speed ) {
+			row.push( i != 0 ? {v:0,f:''} : GetGapDistance(bib, bibRef) );
 			var s = parseFloat(d.speed.split(' ')[0]);
 			row.push( {v:s, f:s.toFixed(2)} );
 		}

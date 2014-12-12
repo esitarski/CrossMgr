@@ -534,6 +534,8 @@ class MainWin( wx.Frame ):
 		self.config.Write( 'ConnectionTimeoutSeconds', '{}'.format(Impinj.ConnectionTimeoutSeconds) )
 		self.config.Write( 'KeepaliveSeconds', '{}'.format(Impinj.KeepaliveSeconds) )
 		self.config.Write( 'RepeatSeconds', '{}'.format(Impinj.RepeatSeconds) )
+		self.config.Write( 'PlaySounds', '{}'.format(Utils.playBell) )
+
 		self.config.Flush()
 	
 	def readOptions( self ):
@@ -544,6 +546,7 @@ class MainWin( wx.Frame ):
 		self.impinjHostName.SetValue( self.config.Read('ImpinjHostName', ImpinjHostNamePrefix + '00-00-00' + ImpinjHostNameSuffix)[len(ImpinjHostNamePrefix):-len(ImpinjHostNameSuffix)] )
 		self.impinjHost.SetValue( self.config.Read('ImpinjAddr', '0.0.0.0') )
 		self.setAntennaStr( self.config.Read('Antennas', '1 2 3 4') )
+		Utils.playBell = (self.config.Read('PlaySounds', 'True').upper()[:1] == 'T')
 		
 		Impinj.ConnectionTimeoutSeconds = int(self.config.Read( 'ConnectionTimeoutSeconds',
 												'{}'.format(Impinj.ConnectionTimeoutSeconds)))

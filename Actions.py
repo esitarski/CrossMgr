@@ -274,7 +274,7 @@ class Actions( wx.Panel ):
 			try:
 				i = next((i for i, field in enumerate(externalFields) if field.startswith('Tag')))
 			except StopIteration:
-				Utils.MessageOK(self, _('Cannot Start.  Excel Sheet missing Tag or Tag2 column.\nThe Excel file must contain a Tag column to use JChip.'), _('Excel Sheet missing Tag or Tag2 column'), wx.ICON_ERROR )
+				Utils.MessageOK(self, _('Cannot Start.  Excel Sheet missing Tag or Tag2 column.\nThe Excel file must contain a Tag column to use RFID.'), _('Excel Sheet missing Tag or Tag2 column'), wx.ICON_ERROR )
 				return
 				
 		if self.startRaceTimeCheckBox.IsChecked():

@@ -33,7 +33,7 @@ def parseTagTime( line, lineNo, errors ):
 				break
 			
 		if not tag or not tStr:
-			errors.append( _('line {}: unrecognized input').format(lineNo) )
+			errors.append( _('line {}: unrecognised input').format(lineNo) )
 			return None, None
 			
 		tag = tag.replace( ' ', '' )
@@ -43,7 +43,7 @@ def parseTagTime( line, lineNo, errors ):
 	try:
 		tag, tStr, antenna, readCount = line.split(',')
 	except (IndexError, ValueError):
-		errors.append( _('line {}: unrecognized input').format(lineNo) )
+		errors.append( _('line {}: unrecognised input').format(lineNo) )
 		return None, None
 	
 	if tag.startswith( 'Tag' ):
