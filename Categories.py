@@ -547,7 +547,8 @@ and remove them from other categories.''').format(category.name),
 			return
 		if Utils.MessageOKCancel(
 					self,
-					_('Delete Category "{} ({})"?').format(
+					u'{} "{} ({})"?'.format(
+						_('Delete Category'),
 						self.grid.GetCellValue(r, 3).strip(),
 						self.grid.GetCellValue(r, 4).strip(),
 					),

@@ -146,7 +146,7 @@ class ChipImportDialog( wx.Dialog ):
 		self.chipDataFile.SetValue( defaultPath )
 		gs.Add( self.chipDataFile, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.GROW)
 
-		btn = wx.Button( self, label = _('Browse...') )
+		btn = wx.Button( self, label = u'{}...'.format(_('Browse')) )
 		btn.Bind( wx.EVT_BUTTON, self.onBrowseChipReaderDataFile )
 		gs.Add( btn, 0, wx.ALIGN_CENTER_VERTICAL )
 		
