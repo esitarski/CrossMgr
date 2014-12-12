@@ -547,7 +547,7 @@ class ExportGrid( object ):
 		with Model.LockRace() as race:
 			catStr = 'All' if not category else category.fullname
 			if cd and cd.get('raceDistance', None):
-				catStr += _(', {:.2f} {}, ').format(cd['raceDistance'], cd['distanceUnit'])
+				catStr += u', {:.2f} {}, '.format(cd['raceDistance'], cd['distanceUnit'])
 				if cd.get('lapDistance', None) and cd.get('laps', 0) > 1:
 					if cd.get('firstLapDistance', None) and cd['firstLapDistance'] != cd['lapDistance']:
 						catStr += _('1st lap {:.2f} {}, {} more laps of {:.2f} {}').format(
@@ -583,7 +583,7 @@ class ExportGrid( object ):
 		self.iLapTimes = len(self.colnames)
 		lapsMax = len(leader.lapTimes) if leader.lapTimes else 0
 		if leader.lapTimes and showLapTimes:
-			self.colnames.extend( [_('Lap {}').format(lap) for lap in xrange(1, lapsMax+1) \
+			self.colnames.extend( [u'{} {}'.format(_('Lap'),lap) for lap in xrange(1, lapsMax+1) \
 					if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax] )
 		
 		highPrecision = Model.highPrecisionTimes()

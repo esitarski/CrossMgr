@@ -677,12 +677,12 @@ class PropertiesDialog( wx.Dialog ):
 			fgs = wx.FlexGridSizer( rows=0, cols=3, vgap=5, hgap=5 )
 			fgs.AddGrowableCol( 1 )
 						
-			fgs.Add( wx.StaticText(self, label=_('Race File Folder:')), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+			fgs.Add( wx.StaticText(self, label=u'{}:'.format(_('Race File Folder'))), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 			self.folder = wx.TextCtrl( self, size=(400,-1) )
 			self.folder.SetValue( Utils.getDocumentsDir() )
 			fgs.Add( self.folder, flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.EXPAND)
 
-			btn = wx.Button( self, label=_('Browse...') )
+			btn = wx.Button( self, label=u'{}...'.format(_('Browse')) )
 			btn.Bind( wx.EVT_BUTTON, self.onBrowseFolder )
 			fgs.Add( btn, wx.ALIGN_CENTER_VERTICAL )
 			
@@ -691,7 +691,7 @@ class PropertiesDialog( wx.Dialog ):
 			self.categoriesFile.SetValue( Utils.getDocumentsDir() )
 			fgs.Add( self.categoriesFile, flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.EXPAND )
 
-			btn = wx.Button( self, label=_('Browse...') )
+			btn = wx.Button( self, label=u'{}...'.format(_('Browse')) )
 			btn.Bind( wx.EVT_BUTTON, self.onBrowseCategories )
 			fgs.Add( btn, flag=wx.ALIGN_CENTER_VERTICAL )
 			

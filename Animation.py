@@ -513,9 +513,9 @@ class Animation(wx.PyControl):
 				maxLaps = len(leaderRaceTimes) - 1
 				self.iLapDistance, lapRatio = GetLapRatio( leaderRaceTimes, self.t, self.iLapDistance )
 				lapRatio = int(lapRatio * 10.0) / 10.0		# Always round down, not to nearest decimal.
-				tLap = _('{:05.1f} Laps of {},{:05.1f} Laps to go').format(	self.iLapDistance + lapRatio,
-																			maxLaps,
-																			maxLaps - self.iLapDistance - lapRatio )
+				tLap = u'{:05.1f} {} {},{:05.1f} {}'.format(	self.iLapDistance + lapRatio,
+																_('Laps of'), maxLaps,
+																maxLaps - self.iLapDistance - lapRatio, _('Laps to go') )
 				cat = self.categoryDetails.get( self.data[leaders[0]].get('raceCat', None) )
 				if cat:
 					distanceCur, distanceRace = None, None
@@ -565,14 +565,15 @@ class Animation(wx.PyControl):
 				xRight -= tHeight / 2.5
 
 		# Draw the leader board.
+		leaderHeader = u'{}:'.format(_('Leaders'))
 		xLeft = int(r * 0.85)
 		leaderWidth = 0
 		if leaders:
 			x = xLeft
 			y = r / 2 + laneWidth * 1.5
-			tWidth, tHeight = dc.GetTextExtent( 'Leaders:' )
-			dc.DrawText( 'Leaders:', x, y )
-			leaderWidth = dc.GetTextExtent('Leaders:')[0]
+			tWidth, tHeight = dc.GetTextExtent( leaderHeader )
+			dc.DrawText( leaderHeader, x, y )
+			leaderWidth = dc.GetTextExtent(leaderHeader)[0]
 			y += tHeight
 			thickLine = tHeight / 5
 			riderRadius = tHeight / 3.5
@@ -602,7 +603,7 @@ class Animation(wx.PyControl):
 			rp.sort()
 			
 			colCount = 0
-			tWidth, tHeight = dc.GetTextExtent( _('Leaders:') )
+			tWidth, tHeight = dc.GetTextExtent(leaderHeader)
 			spaceWidth, spaceHeight = dc.GetTextExtent(' ')
 			x = xLeft + leaderWidth + spaceWidth
 			yTop = r / 2 + laneWidth * 1.5+ tHeight

@@ -24,7 +24,7 @@ def parseTagTime( line, lineNo, errors ):
 	try:
 		tag, tStr = line.split(',')[:2]
 	except (IndexError, ValueError):
-		errors.append( _('line {}: unrecognized input').format(lineNo) )
+		errors.append( _('line {}: unrecognised input').format(lineNo) )
 		return None, None
 	
 	if tag.startswith( 'Tag' ):

@@ -10,7 +10,7 @@ def parseTagTime( line, lineNo, errors ):
 		tag = fields[0][1:]
 		tStr = fields[1]
 	except IndexError:
-		errors.append( 'line {}: unrecognized input'.format(lineNo) )
+		errors.append( 'line {}: unrecognised input'.format(lineNo) )
 		return None, None
 	
 	try:

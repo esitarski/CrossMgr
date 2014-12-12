@@ -87,7 +87,7 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 		lines = []
 		for i in xrange( 0, len(nums), 10 ):
 			lines.append( ', '.join( '{}'.format(n) for n in itertools.islice( nums, i, min(i+10, len(nums)) ) ) )
-		message = _('DNS the following entrants?\n\n{}').format(',\n'.join(lines))
+		message = u'{}\n\n{}'.format(_('DNS the following entrants?'), u',\n'.join(lines))
 			
 		if not Utils.MessageOKCancel( self, message, _('DNS Entrants') ):
 			return

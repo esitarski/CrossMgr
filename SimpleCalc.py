@@ -158,7 +158,7 @@ class TimeEval( object ):
 			raise TimeEvalEmptyExpressionError()
 		x = self.expr()
 		if self.tok != tokEnd:
-			raise TimeEvalSyntaxError( 'unrecognized input', self.line, self.col, self.iStr )
+			raise TimeEvalSyntaxError( 'unrecognised input', self.line, self.col, self.iStr )
 		return x
 		
 	def __call__( self, str ):

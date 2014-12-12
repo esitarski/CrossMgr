@@ -92,7 +92,7 @@ class ForecastHistory( wx.Panel ):
 		
 		self.lgHistory = LabelGrid( self.splitter, style = wx.BORDER_SUNKEN )
 		self.historyName = self.lgHistory.label
-		self.historyName.SetLabel( _('Recorded:') )
+		self.historyName.SetLabel( _('Recorded') )
 		self.historyGrid = self.lgHistory.grid
 		self.Bind( wx.grid.EVT_GRID_CELL_LEFT_DCLICK, self.doNumDrilldown, self.historyGrid )
 		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doHistoryPopup, self.historyGrid )
@@ -103,7 +103,7 @@ class ForecastHistory( wx.Panel ):
 		self.expectedGrid.SetDoubleBuffered( True )
 		colnames[iTimeCol] = _('ETA')
 		self.expectedGrid.Set( colnames = colnames )
-		self.expectedName.SetLabel( _('Expected:') )
+		self.expectedName.SetLabel( _('Expected') )
 		self.expectedGrid.SetDefaultCellBackgroundColour( wx.Colour(230,255,255) )
 		self.Bind( wx.grid.EVT_GRID_SELECT_CELL, self.doExpectedSelect, self.expectedGrid )
 		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doExpectedPopup, self.expectedGrid )	
@@ -176,13 +176,13 @@ class ForecastHistory( wx.Panel ):
 		self.entryCur = self.quickRecorded[r]
 		if not hasattr(self, 'historyPopupInfo'):
 			self.historyPopupInfo = [
-				(_('Correct...'),	wx.NewId(), self.OnPopupHistoryCorrect),
-				(_('Split...'),		wx.NewId(), self.OnPopupHistorySplit),
-				(_('Shift...'),		wx.NewId(), self.OnPopupHistoryShift),
-				(_('Insert...'),	wx.NewId(), self.OnPopupHistoryInsert),
-				(_('Delete...'),	wx.NewId(), self.OnPopupHistoryDelete),
+				(u'{}...'.format(_('Correct')),	wx.NewId(), self.OnPopupHistoryCorrect),
+				(u'{}...'.format(_('Split')),		wx.NewId(), self.OnPopupHistorySplit),
+				(u'{}...'.format(_('Shift')),		wx.NewId(), self.OnPopupHistoryShift),
+				(u'{}...'.format(_('Insert')),	wx.NewId(), self.OnPopupHistoryInsert),
+				(u'{}...'.format(_('Delete')),	wx.NewId(), self.OnPopupHistoryDelete),
 				(None,				None,		None),
-				(_('DNF...'),		wx.NewId(), self.OnPopupHistoryDNF),
+				(u'{}...'.format(_('DNF')),		wx.NewId(), self.OnPopupHistoryDNF),
 				(None,				None,		None),
 				(_('RiderDetail'),	wx.NewId(),self.OnPopupHistoryRiderDetail),
 			]
@@ -263,8 +263,8 @@ class ForecastHistory( wx.Panel ):
 		if not hasattr(self, 'expectedPopupInfo'):
 			self.expectedPopupInfo = [
 				(_('Enter'),		wx.NewId(), self.OnPopupExpectedEnter),
-				(_('DNF...'),		wx.NewId(), self.OnPopupExpectedDNF),
-				(_('Pull...'),		wx.NewId(), self.OnPopupExpectedPull),
+				(u'{}...'.format(_('DNF')),		wx.NewId(), self.OnPopupExpectedDNF),
+				(u'{}...'.format(_('Pull')),	wx.NewId(), self.OnPopupExpectedPull),
 				(None,				None,		None),
 				(_('RiderDetail'),	wx.NewId(),	self.OnPopupExpectedRiderDetail),
 			]
@@ -517,9 +517,9 @@ class ForecastHistory( wx.Panel ):
 			self.expectedGrid.AutoSizeRows()
 			
 			if iBeforeLeader:
-				Utils.SetLabel( self.expectedName, _('Expected: {} before Race Leader').format(iBeforeLeader) )
+				Utils.SetLabel( self.expectedName, u'{}: {} {}'.format(_('Expected'), iBeforeLeader, _('before race leader')) )
 			else:
-				Utils.SetLabel( self.expectedName, _('Expected:') )
+				Utils.SetLabel( self.expectedName, _('Expected') )
 			
 			#------------------------------------------------------------------
 			# Update recorded.

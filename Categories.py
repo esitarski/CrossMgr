@@ -54,7 +54,7 @@ class CategoriesPrintout( wx.Printout ):
 			catDetails = GetCategoryDetails( False )
 			catDetailsMap = dict( (cd['name'], cd) for cd in catDetails )
 			
-			title = u'\n'.join( [_('Categories'), race.name, race.scheduledStart + _(' Start on ') + Utils.formatDate(race.date)] )
+			title = u'\n'.join( [_('Categories'), race.name, race.scheduledStart + u' ' + _('Start on') + u' ' + Utils.formatDate(race.date)] )
 			colnames = [_('Start Time'), _('Category'), _('Gender'), _('Numbers'), _('Laps'), _('Distance'), _('Starters')]
 			
 			raceStart = Utils.StrToSeconds( race.scheduledStart + ':00' )
@@ -272,7 +272,7 @@ class Categories( wx.Panel ):
 
 		hs.AddStretchSpacer()
 		
-		self.printButton = wx.Button( self, label=_('Print...'), style=wx.BU_EXACTFIT )
+		self.printButton = wx.Button( self, label=u'{}...'.format(_('Print')), style=wx.BU_EXACTFIT )
 		self.Bind( wx.EVT_BUTTON, self.onPrint, self.printButton )
 		hs.Add( self.printButton, 0, border = border, flag = (flag & ~wx.LEFT) )
 		

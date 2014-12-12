@@ -187,7 +187,7 @@ class CategoryPredicateDialog( wx.Dialog ):
 		bs = wx.GridBagSizer(vgap=3, hgap=3)
 		
 		row = 0
-		numbersLabel = wx.StaticText( self, label=_('Numbers:') )
+		numbersLabel = wx.StaticText( self, label=u'{}:'.format(_('Numbers')) )
 		
 		bs.Add( numbersLabel, pos=(row,0), span=(1,1),
 			border = border, flag=wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
@@ -197,7 +197,7 @@ class CategoryPredicateDialog( wx.Dialog ):
 			border = border, flag=wx.RIGHT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL|wx.EXPAND )
 		row += 1
 			
-		genderLabel = wx.StaticText( self, label = _('Gender:') )
+		genderLabel = wx.StaticText( self, label = u'{}:'.format(_('Gender')) )
 		bs.Add( genderLabel, pos=(row,0), span=(1,1),
 			border = border, flag=wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 			
@@ -207,7 +207,7 @@ class CategoryPredicateDialog( wx.Dialog ):
 		self.gender.SetSelection( 0 )
 		row += 1
 		
-		ageLabel = wx.StaticText( self, label = _('Age:') )
+		ageLabel = wx.StaticText( self, label = u'{}:'.format(_('Age')) )
 		bs.Add( ageLabel, pos=(row,0), span=(1,1),
 			border = border, flag=wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 			
@@ -224,7 +224,7 @@ class CategoryPredicateDialog( wx.Dialog ):
 			border = border, flag=wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT )
 		row += 1
 		
-		categoryLabel = wx.StaticText( self, label = _('Categories:') )
+		categoryLabel = wx.StaticText( self, label = u'{}:'.format(_('Categories')) )
 		bs.Add( categoryLabel, pos=(row,0), span=(1,1),
 			border = 8, flag=wx.LEFT|wx.TOP|wx.ALIGN_TOP|wx.ALIGN_RIGHT )
 			
@@ -239,7 +239,7 @@ class CategoryPredicateDialog( wx.Dialog ):
 														 )
 		self.categoryList.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
 		
-		self.categoryList.InsertColumn(0, "Category")
+		self.categoryList.InsertColumn(0, _("Category"))
 		bs.Add( self.categoryList, pos=(row,1), span=(1,1),
 			border = border, flag=wx.RIGHT|wx.TOP|wx.BOTTOM|wx.EXPAND )
 		row += 1

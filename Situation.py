@@ -125,14 +125,17 @@ def GetSituationGaps( category=None, t=None ):
 	lap = min( thisLap + 1, laps )
 	lapsToGo = max(laps - lap, 0)
 	
-	title =  u'   Lap: {}/{}   Laps to go: {}'.format(lap, laps, lapsToGo)
+	title =  u'   {}: {}/{}   {}: {}'.format(
+		_('Lap'), lap, laps,
+		_('Laps to go'), lapsToGo,
+	)
 	if tCur is not None:
-		title += u'    Race: {}'.format(Utils.formatTime(tCur))
+		title += u'    {}: {}'.format(_('Race'), Utils.formatTime(tCur))
 	if tClock is not None:
 		if title:
-			title += u'   Clock: {}'.format(Utils.formatTime(tClock))
+			title += u'   {}: {}'.format(_('Clock'), Utils.formatTime(tClock))
 	if tETA is not None:
-		title += u'   Leader ETA: {}'.format(Utils.formatTime(tETA))
+		title += u'   {}: {}'.format(_('Leader ETA'), Utils.formatTime(tETA))
 	
 	return gaps, tAfterLeader, title, tCur
 	
@@ -543,11 +546,11 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 		else:
 			# Adjust to usual name format.
 			def GetName( info ):
-				return u', '.join( n for n in [info.get(_('LastName'),'').upper(), info.get(_('FirstName'), '')] if n )
-			externalFields = [f if f != _('LastName') else _('Name') for f in externalFields if f != _('FirstName')]
+				return u', '.join( n for n in [info.get('LastName','').upper(), info.get('FirstName', '')] if n )
+			externalFields = [f if f != 'LastName' else 'Name' for f in externalFields if f != 'FirstName']
 			externalInfo = { num : externalInfo[num].copy() for num in nums }
 			for num, info in externalInfo.iteritems():
-				info[_('Name')] = GetName(info)
+				info['Name'] = GetName(info)
 		
 		# Add the laps down if necessary.
 		LapsDown = 'LapsDn'
@@ -657,12 +660,12 @@ class BottomPanel( wx.Panel ):
 		
 	def refresh( self, groupIndex, groupInfo, raceTime, clockTime ):
 		if groupInfo:
-			self.title.SetLabel( u'{}     Gap: {}     Size: {}     Race: {}     Clock: {}'.format(
-				u'Chase Group: {}'.format(groupIndex) if groupIndex else u'Leaders: \u2714',
-				shortFormatTimeGap(groupInfo[0][0]) if groupIndex else u' ',
-				len(groupInfo),
-				Utils.formatTime(raceTime),
-				Utils.formatTime(clockTime) if clockTime is not None else u'',
+			self.title.SetLabel( u'{}     {}: {}     {}: {}     {}: {}     {}: {}'.format(
+				u'{}: {}'.format(_('Chase Group'), groupIndex) if groupIndex else u'{}: \u2714'.format(_('Leaders')),
+				_('Gap'), shortFormatTimeGap(groupInfo[0][0]) if groupIndex else u' ',
+				_('Size'), len(groupInfo),
+				_('Race'), Utils.formatTime(raceTime),
+				_('Clock'), Utils.formatTime(clockTime) if clockTime is not None else u'',
 			) )
 		else:
 			self.title.SetLabel( u'' )

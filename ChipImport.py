@@ -273,7 +273,7 @@ class ChipImportDialog( wx.Dialog ):
 			with open(fname) as f:
 				pass
 		except IOError:
-			Utils.MessageOK( self, _('Could not open data file for import:\n\n"{}"').format(fname),
+			Utils.MessageOK( self, u'{}:\n\n"{}"'.format(_('Could not open data file for import'), fname),
 									title = _('Cannot Open File'), iconMask = wx.ICON_ERROR)
 			return
 			
@@ -313,7 +313,7 @@ class ChipImportDialog( wx.Dialog ):
 				errors.append( '...' )
 			tagStr = '\n'.join(errors)
 			Utils.MessageOK( self,
-							_('Import File contains errors:\n\n{}\n\nAll errors have been copied to the clipboard.').format(tagStr),
+							u'{}:\n\n{}\n\n{}.'.format(_('Import File contains errors'), tagStr, _('All errors have been copied to the clipboard')),
 							_('Import Warning'),
 							iconMask = wx.ICON_WARNING )
 		else:

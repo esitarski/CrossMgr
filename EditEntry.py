@@ -28,11 +28,14 @@ class CorrectNumberDialog( wx.Dialog ):
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
 		border = 8
-		bs.Add( wx.StaticText( self, label = _('RiderLap: {}   RaceTime: {}').format(self.entry.lap, Utils.formatTime(self.entry.t, True)) ),
+		bs.Add( wx.StaticText( self, label = u'{}: {}   {}: {}'.format(
+				_('Rider Lap'), self.entry.lap,
+				_('Race Time'), Utils.formatTime(self.entry.t, True)
+			)),
 			pos=(0,0), span=(1,2), border = border, flag=wx.GROW|wx.ALL )
-		bs.Add( wx.StaticText( self, label = _("Rider:")),  pos=(1,0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		bs.Add( wx.StaticText( self, label = u'{}:'.format(_("Rider:"))),  pos=(1,0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.numEdit, pos=(1,1), span=(1,2), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
-		choices = [_("Race Time:")]
+		choices = [u'{}:'.format(_("Race Time"))]
 		if Model.race and Model.race.startTime:
 			choices.append( _("24 hr Clock Time:") )
 		self.timeChoice = wx.Choice( self, -1, choices = choices )
@@ -135,12 +138,14 @@ class ShiftNumberDialog( wx.Dialog ):
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
 		border = 8
-		bs.Add( wx.StaticText( self, label = _('RiderLap: {}   RaceTime: {}').format(self.entry.lap, Utils.formatTime(self.entry.t,True)) ),
+		bs.Add( wx.StaticText( self, label = u'{}: {}   {}: {}'.format(
+			_('Rider Lap'), self.entry.lap,
+			_('Race Time'), Utils.formatTime(self.entry.t,True)) ),
 			pos=(0,0), span=(1,2), border = border, flag=wx.GROW|wx.ALL )
-		bs.Add( wx.StaticText( self, label = _("Rider:")),  pos=(1,0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT )
+		bs.Add( wx.StaticText( self, label = u'{}:'.format(_("Rider"))),  pos=(1,0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT )
 		bs.Add( self.numEdit, pos=(1,1), span=(1,2), border = border, flag=wx.GROW|wx.RIGHT|wx.TOP )
 		bs.Add( self.shiftBox, pos=(2, 0), span=(1, 2), border = border, flag=wx.GROW|wx.LEFT|wx.RIGHT|wx.BOTTOM )
-		bs.Add( wx.StaticText( self, label = _("Shift Time:")),  pos=(3,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT|wx.BOTTOM )
+		bs.Add( wx.StaticText( self, label = u'{}:'.format(_("Shift Time"))),  pos=(3,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT|wx.BOTTOM )
 		bs.Add( self.timeMsEdit, pos=(3,1), span=(1,1), border = border, flag=wx.GROW|wx.LEFT|wx.RIGHT )
 		bs.Add( self.newTime, pos=(4,0), span=(1,2), border = border, flag=wx.GROW|wx.LEFT|wx.RIGHT )
 		
@@ -181,7 +186,7 @@ class ShiftNumberDialog( wx.Dialog ):
 		self.EndModal( wx.ID_CANCEL )
 		
 	def updateNewTime( self, event = None ):
-		s = _('Was: {}  Now: {}').format(Utils.formatTime(self.entry.t,True), Utils.formatTime(self.getNewTime(),True) )
+		s = u'{}: {}  {}: {}'.format(_('Was'), Utils.formatTime(self.entry.t,True), _('Now'), Utils.formatTime(self.getNewTime(),True) )
 		self.newTime.SetLabel( s )
 
 #------------------------------------------------------------------------------------------------
@@ -202,9 +207,11 @@ class InsertNumberDialog( wx.Dialog ):
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
 		border = 8
-		bs.Add( wx.StaticText( self, label = _('RiderLap: {}   RaceTime: {}').format(self.entry.lap, Utils.formatTime(self.entry.t, True)) ),
+		bs.Add( wx.StaticText( self, label = u'{}: {}   {}: {}'.format(
+			_('Rider Lap'), self.entry.lap,
+			_('Race Time'), Utils.formatTime(self.entry.t,True)) ),
 			pos=(0,0), span=(1,2), border = border, flag=wx.GROW|wx.ALL )
-		bs.Add( wx.StaticText( self, label = _('Original:') ),
+		bs.Add( wx.StaticText( self, label = u'{}:'.format(_('Original')) ),
 				pos=(1,0), span=(1,1), border = border, flag=wx.TOP|wx.BOTTOM|wx.LEFT|wx.ALIGN_RIGHT )
 		bs.Add( wx.StaticText( self, label = u'{}'.format(self.entry.num) ),
 				pos=(1,1), span=(1,1), border = border, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.ALIGN_BOTTOM )
@@ -213,7 +220,7 @@ class InsertNumberDialog( wx.Dialog ):
 		self.beforeAfterBox = wx.RadioBox( self, wx.ID_ANY, _('Insert'), wx.DefaultPosition, wx.DefaultSize, shiftOptions, 2, wx.RA_SPECIFY_COLS )
 		bs.Add( self.beforeAfterBox, pos=(2,0), span=(1,2), border = border, flag=wx.TOP|wx.LEFT|wx.ALIGN_RIGHT )
 				
-		bs.Add( wx.StaticText( self, label = _('Number:') ),
+		bs.Add( wx.StaticText( self, label = u'{}'.format(_('Number')) ),
 				pos=(3,0), span=(1,1), border = border, flag=wx.TOP|wx.LEFT|wx.ALIGN_RIGHT )
 		bs.Add( self.numEdit,
 				pos=(3,1), span=(1,1), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_BOTTOM )
@@ -270,7 +277,9 @@ class SplitNumberDialog( wx.Dialog ):
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
 		border = 8
-		bs.Add( wx.StaticText( self, label = _('RiderLap: {}   RaceTime: {}').format(self.entry.lap, Utils.formatTime(self.entry.t, True)) ),
+		bs.Add( wx.StaticText( self, label = u'{}: {}   {}: {}'.format(
+			_('Rider Lap'), self.entry.lap,
+			_('Race Time'), Utils.formatTime(self.entry.t,True)) ),
 			pos=(0,0), span=(1,2), border = border, flag=wx.GROW|wx.ALL )
 		bs.Add( wx.StaticText( self, label = _('Num1:') ),
 				pos=(1,0), span=(1,1), border = border, flag=wx.TOP|wx.BOTTOM|wx.LEFT|wx.ALIGN_RIGHT )
@@ -355,8 +364,11 @@ def DeleteEntry( parent, entry ):
 		return
 		
 	dlg = wx.MessageDialog(parent,
-						   _('Num: {}  Lap: {}   RaceTime: {}\n\nConfirm Delete?').format(
-								entry.num, entry.lap, Utils.formatTime(entry.t, True)), _('Delete Entry'),
+						   u'{}: {}  {}: {}   {}: {}\n\n{}?'.format(
+								_('Num'), entry.num,
+								_('Lap'), entry.lap,
+								_('Race Time'), Utils.formatTime(entry.t, True),
+								_('Confirm Delete')), _('Delete Entry'),
 							wx.OK | wx.CANCEL | wx.ICON_QUESTION )
 	# dlg.CentreOnParent(wx.BOTH)
 	if dlg.ShowModal() == wx.ID_OK:
@@ -451,10 +463,10 @@ def DoStatusChange( parent, num, message, title, newStatus, lapTime=None ):
 	try:
 		excelLink = race.excelLink
 		externalInfo = excelLink.read()
-		for f in [ _('LastName'), _('FirstName'), _('Team') ]:
+		for f in ['LastName', 'FirstName', 'Team']:
 			try:
 				externalData.append( unicode(externalInfo[num][f] ) )
-				if f == _('Team'):
+				if f == 'Team':
 					externalData[-1] = u'({})'.format(externalData[-1])
 			except KeyError:
 				pass
@@ -484,21 +496,24 @@ def DoStatusChange( parent, num, message, title, newStatus, lapTime=None ):
 	Utils.refresh()
 	return True
 
+def getActionMessage( actionName ):
+	return actionName + u' {}?'
+	
 @logCall
 def DoDNF( parent, num, lapTime=None ):
-	return DoStatusChange( parent, num, _('DNF rider {}?'), _('Confirm Did Not FINISH'), Model.Rider.DNF, lapTime )
+	return DoStatusChange( parent, num, getActionMessage(_('DNF')), _('Confirm Did Not FINISH'), Model.Rider.DNF, lapTime )
 
 @logCall
 def DoPull( parent, num, lapTime=None ):
-	return DoStatusChange( parent, num, _('Pull rider {}?'), _('Confirm PULL Rider'), Model.Rider.Pulled, lapTime)
+	return DoStatusChange( parent, num, getActionMessage(_('Pull')), _('Confirm PULL Rider'), Model.Rider.Pulled, lapTime)
 
 @logCall
 def DoDNS( parent, num, lapTime=None ):
-	return DoStatusChange( parent, num, _('DNS rider {}?'), _('Confirm Did Not START'), Model.Rider.DNS )
+	return DoStatusChange( parent, num, getActionMessage(_('DNS')), _('Confirm Did Not START'), Model.Rider.DNS )
 
 @logCall
 def DoDQ( parent, num, lapTime=None ):
-	return DoStatusChange( parent, num, _('DQ rider {}?'), _('Confirm Disqualify'), Model.Rider.DQ )
+	return DoStatusChange( parent, num, getActionMessage(_('DQ')), _('Confirm Disqualify'), Model.Rider.DQ )
 	
 @logCall
 def AddLapSplits( num, lap, times, splits ):
