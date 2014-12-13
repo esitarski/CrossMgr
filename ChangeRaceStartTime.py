@@ -57,7 +57,7 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 			return
 		
 		if dTime > 0.0 and not Utils.MessageOKCancel( self,
-				_('Are you Sure you want to change the Race Start to Later?\n(you can always undo).'), _('Are you sure?') ):
+				_('Are you Sure you want to change the Race Start to Later?') + u'\n' + _('(you can always undo).'), _('Are you sure?') ):
 			return
 		
 		undo.pushState()
