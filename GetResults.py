@@ -368,7 +368,7 @@ def GetResultsCore( category ):
 			for pos, rr in enumerate(riderResults):
 				if rr.status != Finisher:
 					break
-				rr.pos = '{} REL'.format(pos+1) if rr in relegated else pos + 1
+				rr.pos = u'{} {}'.format(pos+1, _('REL')) if rr in relegated else pos + 1
 		
 		'''
 		for rr in riderResults:
@@ -409,11 +409,11 @@ def GetResults( category, getExternalData = False ):
 				except KeyError:
 					setattr( rr, f, '' )
 	
-	if excelLink and excelLink.hasField( _('Factor') ):
+	if excelLink and excelLink.hasField( 'Factor' ):
 		riderResults = [copy.copy(rr) for rr in riderResults]
 		for rr in riderResults:
 			try:
-				factor = float(externalInfo[rr.num][_('Factor')])
+				factor = float(externalInfo[rr.num]['Factor'])
 			except Exception as e:
 				factor = 1.0
 		
@@ -442,7 +442,7 @@ def GetResults( category, getExternalData = False ):
 		statusNames = Model.Rider.statusNames
 		for pos, rr in enumerate(riderResults):
 			if rr.status == Model.Rider.Finisher:
-				rr.pos = u'{}'.format( pos + 1 ) if not getattr(rr, 'relegated', False) else u'{} REL'.format( pos + 1 )
+				rr.pos = u'{}'.format( pos + 1 ) if not getattr(rr, 'relegated', False) else u'{} {}'.format( pos + 1, _('REL') )
 			else:
 				rr.pos = statusNames[rr.status]
 		
@@ -500,11 +500,11 @@ def GetNonWaveCategoryResults( category ):
 		leader.gap = ''
 		for pos, rr in enumerate(riderResults):
 			if rr.status == Model.Rider.Finisher:
-				rr.pos = u'{}'.format( pos + 1 ) if not getattr(rr, 'relegated', False) else u'{} REL'.format( pos + 1 )
+				rr.pos = u'{}'.format( pos + 1 ) if not getattr(rr, 'relegated', False) else u'{} {}'.format(pos + 1, _('REL'))
 				if rr.laps != leader.laps:
 					if rr.lastTime > leader.lastTime:
 						lapsDown = leader.laps - rr.laps
-						rr.gap = '-%d %s' % (lapsDown, _('laps') if lapsDown > 1 else _('lap'))
+						rr.gap = u'-{} {}'.format(lapsDown, _('laps') if lapsDown > 1 else _('lap'))
 				elif rr != leader and not (isTimeTrial and rr.lastTime == leader.lastTime):
 					rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
 			else:
@@ -543,7 +543,7 @@ def UnstartedRaceDataProlog( getExternalData = True ):
 		# Default the status to NP.
 		if externalInfo:
 			for num, info in externalInfo.iteritems():
-				if num not in race.riders and any(info.get(f, None) for f in [_('LastName'), _('FirstName'), _('Team'), _('License')]):
+				if num not in race.riders and any(info.get(f, None) for f in ['LastName', 'FirstName', 'Team', 'License']):
 					rider = race.getRider( num )
 					rider.status = Model.Rider.NP
 					tempNums.add( num )

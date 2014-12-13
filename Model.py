@@ -237,9 +237,9 @@ class Category(object):
 			self.catType = int(catType)
 		except ValueError:
 			try:
-				if catType.lower().startswith(u'component'):
+				if catType.lower().startswith(u'component') or catType.lower().startswith(_('Component')).lower():
 					self.catType = self.CatComponent
-				elif catType.lower().startswith(u'custom'):
+				elif catType.lower().startswith(u'custom') or catType.lower().startswith(_('Custom')).lower():
 					self.catType = self.CatCustom
 			except:
 				pass
@@ -291,9 +291,9 @@ class Category(object):
 		self.gender = 'Open'
 		try:
 			genderFirstChar = unicode(gender or u'Open').strip()[:1].lower()
-			if genderFirstChar in 'mh':
+			if genderFirstChar in 'mhu':
 				self.gender = 'Men'
-			elif genderFirstChar in 'wfl':
+			elif genderFirstChar in 'wfld':
 				self.gender = 'Women'
 		except:
 			pass
@@ -342,7 +342,8 @@ class Category(object):
 	
 	@staticmethod
 	def getFullName( name, gender ):
-		return u'%s (%s)' % (name, gender)
+		GetTranslation = _
+		return u'%s (%s)' % (name, GetTranslation(gender))
 	
 	@property
 	def fullname( self ):
@@ -1785,7 +1786,7 @@ class Race( object ):
 			if category.fullname in newCategories:
 				originalName = category.name
 				for count in xrange(1, 999):
-					category.name = _('{} Copy({})').format(originalName, count)
+					category.name = u'{} {}({})'.format(originalName, _('Copy'), count)
 					if not category.fullname in newCategories:
 						break
 			newCategories[category.fullname] = category

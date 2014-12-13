@@ -49,25 +49,78 @@ except:
 else:
 	isWindows = True
 
-#-----------------------------------------------------------------------
-# Set translation locale.
+#------------------------------------------------------------------------
+# Get resource directories.
 #
 import wx
-locale = wx.Locale()
+import os
 
+if 'WXMAC' in wx.Platform:
+	try:
+		dirName = os.environ['RESOURCEPATH']
+	except:
+		dirName = os.path.dirname(os.path.abspath(__file__))
+	if not os.path.isdir( os.path.join(dirName, 'CrossMgrImages') ):
+		dirName = '/System/Library/Frameworks/Python.framework/Versions/2.7'
+else:
+	try:
+		dirName = os.path.dirname(os.path.abspath(__file__))
+	except:
+		dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
+	
+	if os.path.basename(dirName) in ['library.zip', 'MainWin.exe', 'CrossMgr.exe']:
+		dirName = os.path.dirname(dirName)
+	if 'CrossMgr?' in os.path.basename(dirName):
+		dirName = os.path.dirname(dirName)
+
+	if os.path.isdir( os.path.join(dirName, 'CrossMgrImages') ):
+		pass
+	elif os.path.isdir( '/usr/local/CrossMgrImages' ):
+		dirName = '/usr/local'
+
+imageFolder = os.path.join(dirName, 'CrossMgrImages')
+htmlFolder = os.path.join(dirName, 'CrossMgrHtml')
+helpFolder = os.path.join(dirName, 'CrossMgrHtmlDoc')
+helpIndexFolder = os.path.join(dirName, 'CrossMgrHelpIndex')
+
+def getDirName():		return dirName
+def getImageFolder():	return imageFolder
+def getHtmlFolder():	return htmlFolder
+def getHelpFolder():	return helpFolder
+def getHelpIndexFolder(): return helpIndexFolder
+
+#-----------------------------------------------------------------------
+# Setup translation.
+#
+import sys
 from Version import AppVerName
 import gettext
+import __builtin__
 initTranslationCalled = False
 def initTranslation():
 	global initTranslationCalled
 	if not initTranslationCalled:
-		gettext.install(AppVerName.split(None, 1), './locale', unicode=True)
+		gettext.install(AppVerName.split()[0], os.path.join(dirName,'locale'), unicode=1)
+		translation = gettext.translation(AppVerName.split()[0], os.path.join(dirName,'locale'), languages=['fr'])
+		translation.install()
+		__builtin__.__dict__['_'] = translation.ugettext
 		initTranslationCalled = True
-		
+		extra_fields = {
+			_('Search'),
+		}
+
 initTranslation()
 
+class SuspendTranslation( object ):
+	''' Temporarily suspend translation. '''
+	def __enter__(self):
+		self._Save = __builtin__.__dict__['_']
+		__builtin__.__dict__['_'] = lambda x: x
+	def __exit__(self, type, value, traceback):
+		__builtin__.__dict__['_'] = self._Save
+
 #-----------------------------------------------------------------------
-# Monkey-patch font so we always fetch a default font face.
+# Monkey-patch font function so we always fetch a nicer font face.
 #
 if 'WXMAC' not in wx.Platform:
 	FontFace = 'Arial'
@@ -89,7 +142,6 @@ if 'WXMAC' not in wx.Platform:
 # Now, get all the required modules required for the common functions.
 #
 import datetime
-import os
 import re
 import math
 import string
@@ -414,40 +466,6 @@ def getDocumentsDir():
 	return dd
 	
 #------------------------------------------------------------------------
-if 'WXMAC' in wx.Platform:
-	try:
-		dirName = os.environ['RESOURCEPATH']
-	except:
-		dirName = os.path.dirname(os.path.abspath(__file__))
-	if not os.path.isdir( os.path.join(dirName, 'CrossMgrImages') ):
-		dirName = '/System/Library/Frameworks/Python.framework/Versions/2.7'
-else:
-	try:
-		dirName = os.path.dirname(os.path.abspath(__file__))
-	except:
-		dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
-	
-	if os.path.basename(dirName) in ['library.zip', 'MainWin.exe', 'CrossMgr.exe']:
-		dirName = os.path.dirname(dirName)
-	if 'CrossMgr?' in os.path.basename(dirName):
-		dirName = os.path.dirname(dirName)
-
-	if os.path.isdir( os.path.join(dirName, 'CrossMgrImages') ):
-		pass
-	elif os.path.isdir( '/usr/local/CrossMgrImages' ):
-		dirName = '/usr/local'
-
-imageFolder = os.path.join(dirName, 'CrossMgrImages')
-htmlFolder = os.path.join(dirName, 'CrossMgrHtml')
-helpFolder = os.path.join(dirName, 'CrossMgrHtmlDoc')
-helpIndexFolder = os.path.join(dirName, 'CrossMgrHelpIndex')
-
-def getDirName():		return dirName
-def getImageFolder():	return imageFolder
-def getHtmlFolder():	return htmlFolder
-def getHelpFolder():	return helpFolder
-def getHelpIndexFolder(): return helpIndexFolder
-
 # Use Firefox to display the help if we can find it.
 for firefoxProg in ['/usr/bin/firefox', '']:
 	if os.path.exists(firefoxProg) and os.access(firefoxProg, os.X_OK):
@@ -470,9 +488,9 @@ else:
 
 reSpace = re.compile(r'\s')
 def approximateMatch( s1, s2 ):
-	s1 = reSpace.sub( '', s1 ).lower()
-	s2 = reSpace.sub( '', s2 ).lower()
-	if s1[-1].isdigit():
+	s1 = removeDiacritic(reSpace.sub('', s1).lower())
+	s2 = removeDiacritic(reSpace.sub('', s2).lower())
+	if s1[-1:].isdigit():
 		return 1.2 if s1 == s2 else 0.0
 	if s1.startswith(s2) or s2.startswith(s1):
 		return 1.1

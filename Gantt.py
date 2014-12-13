@@ -395,16 +395,17 @@ class Gantt( wx.Panel ):
 				
 			infoStart = race.numTimeInfo.getInfoStr( self.entryStart.num, tLapStart )
 			if infoStart:
-				infoStart = _('\nLap Start ') + infoStart
+				infoStart = u'\n{} '.format(_('Lap Start')) + infoStart
 			infoEnd = race.numTimeInfo.getInfoStr( self.entryEnd.num, tLapEnd )
 			if infoEnd:
-				infoEnd = _('\nLap End ') + infoEnd
+				infoEnd = u'\n{} '.format(_('Lap End')) + infoEnd
 		
-			info = (_('Rider: {}  Lap: {}\nLap Start:  {} Lap End: {}\nLap Time: {}\n{}{}{}{}').format(
-					riderName, self.entryEnd.lap,
-					Utils.formatTime(tLapStart),
-					Utils.formatTime(tLapEnd),
-					Utils.formatTime(tLapEnd - tLapStart),
+			info = (u'{}: {}  {}: {}\n{}: {}   {}: {}\n{}: {}\n{}{}{}{}'.format(
+					_('Rider'),		riderName,
+					_('Lap'),		self.entryEnd.lap,
+					_('Lap Start'),	Utils.formatTime(tLapStart),
+					_('Lap End'),	Utils.formatTime(tLapEnd),
+					_('Lap Time'),	Utils.formatTime(tLapEnd - tLapStart),
 					infoDownStart, infoDownEnd, infoStart, infoEnd )).strip()
 					
 		Utils.MessageOK( self, info, _('Lap Details') )
@@ -441,12 +442,12 @@ class Gantt( wx.Panel ):
 				projected	+= sum( 1 for i, n in enumerate(r.interp)	if n and i < len(r.raceTimes) and r.raceTimes[i] < tCur )
 			if total:
 				toPercent = 100.0 / float(total)
-				s = _('  Total Entries: {}    Projected: {} ({:.2f}%)    Edited: {} ({:.2f}%)    Projected or Edited: {} ({:.2f}%)    Photos: {}').format(
-						total,
-						projected,			projected			* toPercent,
-						edited,				edited				* toPercent,
-						edited+projected,	(edited+projected)	* toPercent,
-						getattr(Model.race, 'photoCount', 0) )
+				s = u'  {}: {}    {}: {} ({:.2f}%)    {}: {} ({:.2f}%)    {}: {} ({:.2f}%)    {}: {}'.format(
+						_('Total Entries'),	total,
+						_('Projected'),		projected,	projected * toPercent,
+						_('Edited'),		edited,		edited * toPercent,
+						_('Projected or Edited'), edited+projected, (edited+projected) * toPercent,
+						_('Photos'),		getattr(Model.race, 'photoCount', 0) )
 			
 		self.statsLabel.SetLabel( s )
 		self.hbs.Layout()

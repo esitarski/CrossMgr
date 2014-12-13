@@ -14,7 +14,7 @@ def FixCategories( choice, iSelection = None ):
 	if iSelection is not None and iSelection < len(items):
 		choice.SetSelection( iSelection )
 
-	nameCat = [('All', None)]
+	nameCat = [(_('All'), None)]
 	if race:
 		nameCat.extend( [((u'    ' if c.catType == Model.Category.CatComponent else u'') + c.fullname, c) for c in race.getCategories(False)] )
 	

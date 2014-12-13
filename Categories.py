@@ -13,6 +13,8 @@ from ExportGrid import ExportGrid
 
 #--------------------------------------------------------------------------------
 
+allName = _('All')
+
 class CategoriesPrintout( wx.Printout ):
 	def __init__(self, categories = None):
 		wx.Printout.__init__(self)
@@ -48,6 +50,7 @@ class CategoriesPrintout( wx.Printout ):
 		except:
 			externalInfo = {}
 		
+		GetTranslation = _
 		allZeroStarters = True
 		with UnstartedRaceWrapper():
 			catMap = dict( (c.fullname, c) for c in race.getCategories( startWaveOnly=False ) )
@@ -87,7 +90,7 @@ class CategoriesPrintout( wx.Printout ):
 				catData.append( [
 					catStart,
 					u' - ' + c.name if c.catType == c.CatComponent else c.name,
-					catInfo.get('gender', 'Open'),
+					GetTranslation(catInfo.get('gender', 'Open')),
 					c.catStr,
 					u'{}'.format(laps),
 					u' '.join([raceDistance, raceDistanceUnit]) if raceDistance else '',
@@ -278,7 +281,7 @@ class Categories( wx.Panel ):
 		
 		self.grid = ReorderableGrid( self )
 		self.colNameFields = [
-			(_(''),						None),
+			(u'',						None),
 			(_('Category Type'),		'catType'),
 			(_('Active'),				'active'),
 			(_('Name'),					'name'),
@@ -395,7 +398,7 @@ class Categories( wx.Panel ):
 		if event.GetCol() in self.boolCols:
 			r, c = event.GetRow(), event.GetCol()
 			if c == self.iCol['active']:
-				active = (self.grid.GetCellValue(r, self.iCol['active']) == '1')
+				active = (self.grid.GetCellValue(r, self.iCol['active']) == u'1')
 				wx.CallAfter( self.fixRow, r, self.CategoryTypeChoices.index(self.grid.GetCellValue(r, self.iCol['catType'])), not active )
 			self.grid.SetCellValue( r, c, '1' if self.grid.GetCellValue(r, c) != '1' else '0' )
 		event.Skip()
@@ -469,16 +472,17 @@ and remove them from other categories.''').format(category.name),
 		if len(startOffset) < len('00:00:00'):
 			startOffset = '00:' + startOffset
 			
+		GetTranslation = _
 		gender = gender if gender in ['Men', 'Women'] else 'Open'
 		self.grid.SetRowLabelValue( r, u'' )
 		self.grid.SetCellValue( r, self.iCol['active'], u'1' if active else u'0' )
 		self.grid.SetCellValue( r, self.iCol['catType'], self.CategoryTypeChoices[catType] )
 		self.grid.SetCellValue( r, self.iCol['name'], name )
-		self.grid.SetCellValue( r, self.iCol['gender'], gender )
+		self.grid.SetCellValue( r, self.iCol['gender'], GetTranslation(gender) )
 		self.grid.SetCellValue( r, self.iCol['catStr'], catStr )
 		self.grid.SetCellValue( r, self.iCol['startOffset'], startOffset )
-		self.grid.SetCellValue( r, self.iCol['numLaps'], '{}'.format(numLaps) if numLaps else '' )
-		self.grid.SetCellValue( r, self.iCol['lappedRidersMustContinue'], '1' if lappedRidersMustContinue else '0' )
+		self.grid.SetCellValue( r, self.iCol['numLaps'], u'{}'.format(numLaps) if numLaps else '' )
+		self.grid.SetCellValue( r, self.iCol['lappedRidersMustContinue'], u'1' if lappedRidersMustContinue else u'0' )
 		self.grid.SetCellValue( r, self.iCol['rule80Time'], '' )
 		self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '' )
 		self.grid.SetCellValue( r, self.iCol['distance'], ('%.3f' % distance) if distance else '' )
@@ -538,7 +542,7 @@ and remove them from other categories.''').format(category.name),
 		
 	def onNewCategory( self, event ):
 		self.grid.AppendRows( 1 )
-		self._setRow( r=self.grid.GetNumberRows() - 1, active=True, name='<CategoryName>     ', catStr='100-199,504,-128' )
+		self._setRow( r=self.grid.GetNumberRows() - 1, active=True, name=u'<{}>     '.format(_('CategoryName')), catStr='100-199,504,-128' )
 		self.grid.AutoSizeColumns( False )
 		
 	def onDelCategory( self, event ):
@@ -587,8 +591,8 @@ and remove them from other categories.''').format(category.name),
 				return
 			
 			for c in xrange(self.grid.GetNumberCols()):
-				if self.grid.GetColLabelValue(c).startswith('Distance'):
-					self.grid.SetColLabelValue( c, _('Distance\n({})').format(['km', 'miles'][getattr(race, 'distanceUnit', 0)]) )
+				if self.grid.GetColLabelValue(c).startswith(_('Distance')):
+					self.grid.SetColLabelValue( c, u'{}\n({})'.format(_('Distance'), ['km', 'miles'][getattr(race, 'distanceUnit', 0)]) )
 					break
 			
 			categories = race.getAllCategories()

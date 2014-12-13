@@ -105,7 +105,6 @@ def GetSituationGaps( category=None, t=None ):
 		try:
 			gap, lapsDown = GetLeaderGap( leaderPosition, leaderSpeed, leaderRaceTimes, rr.raceTimes, t )
 		except TypeError:
-			print 'TypeError:', leaderPosition, leaderSpeed, leaderRaceTimes, rr.raceTimes, t
 			continue
 		if gap is not None:
 			gaps.append( (gap, getInfo(rr, lapsDown)) )
@@ -344,7 +343,7 @@ class SituationPanel(wx.PyPanel):
 		dc.SetPen( greyPen )
 		
 		groupTitleBrushes = [
-			wx.Brush( self.groupIndexColour, wx.SOLID ),	# Group Index
+			wx.Brush( self.groupIndexColour, wx.SOLID ),# Group Index
 			wx.Brush( self.groupGapColour, wx.SOLID ),	# Gap
 			wx.Brush( self.groupSizeColour, wx.SOLID ),	# Group Size
 		]
@@ -521,7 +520,7 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 				externalFields = race.excelLink.getFields()[:]
 				externalInfo = race.excelLink.read()
 			except:
-				externalFields = [ _('Bib#') ]
+				externalFields = ['Bib#']
 				externalInfo = None
 		
 		self.Show( False )
@@ -556,7 +555,7 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 		LapsDown = 'LapsDn'
 		if lapsDown:
 			try:
-				externalFields.insert( externalFields.index(_('Name')) + 1, LapsDown )
+				externalFields.insert( externalFields.index('Name') + 1, LapsDown )
 			except ValidError:
 				externalFields.append( LapsDown )
 			
@@ -570,11 +569,12 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 		externalFields.insert( 0, Sequence )
 			
 		# Add the headers.
+		GetTranslation = _
 		for c, f in enumerate(externalFields):
-			self.list.InsertColumn( c+1, f, wx.LIST_FORMAT_RIGHT if f.startswith(_('Bib')) else wx.LIST_FORMAT_LEFT )
+			self.list.InsertColumn( c+1, GetTranslation(f), wx.LIST_FORMAT_RIGHT if f.startswith(_('Bib')) else wx.LIST_FORMAT_LEFT )
 		
 		# Create the data.  Sort by sequence.
-		data = [tuple( sequence[num] if i == 0 else num if i == 1 else externalInfo.get(num).get(f, '') for i, f in enumerate(externalFields)) for num in nums]
+		data = [tuple( sequence[num] if i == 0 else num if i == 1 else externalInfo.get(num).get(f, u'') for i, f in enumerate(externalFields)) for num in nums]
 		data.sort()
 		
 		# Populate the list.
@@ -601,7 +601,7 @@ class TopPanel( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(TopPanel, self).__init__( parent, id, style=wx.BORDER_SUNKEN )
 		
-		self.categoryLabel = wx.StaticText( self, label = _('Category:') )
+		self.categoryLabel = wx.StaticText( self, label = u'{}:'.format(_('Category')) )
 		self.categoryChoice = wx.Choice( self )
 		
 		self.zoomSlider = wx.Slider( self, style=wx.VERTICAL|wx.SL_INVERSE )

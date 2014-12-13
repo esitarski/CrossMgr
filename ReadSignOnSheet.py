@@ -16,17 +16,20 @@ from ReadPropertiesFromExcel import ReadPropertiesFromExcel
 from ReadCategoriesFromExcel import sheetName as CategorySheetName
 from ReadPropertiesFromExcel import sheetName as PropertySheetName
 
-#-----------------------------------------------------------------------------------------------------
-Fields = [	_('Bib#'),
-			_('LastName'), _('FirstName'),
-			_('Team'),
-			_('Nat.'), _('State'), _('Prov'), _('StateProv'), _('City'),
-			_('Category'), _('Age'), _('Gender'),
-			_('License'),
-			_('UCICode'),
-			_('Factor'),
-			_('Tag'), _('Tag2')]
-IgnoreFields = [_('Bib#'), _('Tag'), _('Tag2'), _('Factor')]		# Fields to ignore when adding data to standard reports.
+with Utils.SuspendTranslation():
+	Fields = [
+		_('Bib#'),
+		_('LastName'), _('FirstName'),
+		_('Team'),
+		_('Nat.'), _('State'), _('Prov'), _('StateProv'), _('City'),
+		_('Category'), _('Age'), _('Gender'),
+		_('License'),
+		_('UCICode'),
+		_('Factor'),
+		_('Tag'), _('Tag2'),
+	]
+
+IgnoreFields = ['Bib#', 'Tag', 'Tag2', 'Factor']		# Fields to ignore when adding data to standard reports.
 ReportFields = [f for f in Fields if f not in IgnoreFields]
 
 class FileNamePage(wiz.WizardPageSimple):
@@ -112,30 +115,34 @@ def getDefaultFieldMap( fileName, sheetName, expectedFieldCol = None ):
 		headers.pop()
 		
 	if not headers:
-		raise ValueError, _('Could not find a Header Row {}::{}.').format(fileName, sheetName)
+		raise ValueError, u'{} {}::{}.'.format(_('Could not find a Header Row'), fileName, sheetName)
 	
 	# Rename empty columns so as not to confuse the user.
-	headers = [h if h else _('BlankHeaderName%03d') % (c+1) for c, h in enumerate(headers)]
+	headers = [h if h else u'<{} {:03d}>'.format(_('Blank Header Column'), (c+1)) for c, h in enumerate(headers)]
+	headers = [h if len(h) < 32 else h[:29].strip() + u'...' for h in headers]
 	
 	# Set a blank final entry.
 	headers.append( u'' )
 		
 	# Create a map for the field names we are looking for
 	# and the headers we found in the Excel sheet.
-	sStateField = _('State')
-	sProvField = _('Prov')
-	sStateProvField = _('StateProv')
+	sStateField = 'State'
+	sProvField = 'Prov'
+	sStateProvField = 'StateProv'
 	
+	GetTranslation = _
 	iNoMatch = len(headers) - 1
 	for c, f in enumerate(Fields):
 		# Figure out some reasonable defaults for headers.
-		iBest = iNoMatch
-		matchBest = 0.0
-		for i, h in enumerate(headers):
-			matchCur = Utils.approximateMatch(f, h)
-			if matchCur > matchBest:
-				matchBest = matchCur
-				iBest = i
+		
+		# First try the local translation of the header name.
+		fTrans = GetTranslation( f )
+		matchBest, iBest = max( ((Utils.approximateMatch(fTrans, h), i) for i, h in enumerate(headers)), key=lambda x: x[0] )
+		
+		# If that fails, try matching the untranslated header fields.
+		if matchBest <= 0.34:
+			matchBest, iBest = max( ((Utils.approximateMatch(f, h), i) for i, h in enumerate(headers)), key=lambda x: x[0] )
+		
 		# If we don't get a high enough match, set to blank.
 		if matchBest <= 0.34:
 			try:
@@ -177,10 +184,9 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		
 		gs = wx.GridSizer( 2, len(Fields) )
 		for c, f in enumerate(Fields):
-			label = wx.StaticText(sp, label=f)
+			label = wx.StaticText(sp, label=wx.GetTranslation(f))
 			if boldFont is None:
 				font = label.GetFont()
-				fontSize = label.GetFont()
 				boldFont = wx.Font( font.GetPointSize()+1, font.GetFamily(), font.GetStyle(), wx.FONTWEIGHT_BOLD )
 			label.SetFont( boldFont )
 			gs.Add( label )
@@ -245,32 +251,32 @@ class SummaryPage(wiz.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		vbs.Add( wx.StaticText(self, label = _('Summary:')), flag=wx.ALL, border = border )
-		vbs.Add( wx.StaticText(self, label = u' '), flag=wx.ALL, border = border )
+		vbs.Add( wx.StaticText(self, label=u'{}'.format(_('Summary'))), flag=wx.ALL, border = border )
+		vbs.Add( wx.StaticText(self, label=u' '), flag=wx.ALL, border = border )
 
 		rows = 0
 		
-		self.fileLabel = wx.StaticText( self, label = _('Excel File:') )
+		self.fileLabel = wx.StaticText( self, label=u'{}:'.format(_('Excel File')) )
 		self.fileName = wx.StaticText( self )
 		rows += 1
 
-		self.sheetLabel = wx.StaticText( self, label = _('Sheet Name:') )
+		self.sheetLabel = wx.StaticText( self, label=u'{}:'.format(_('Sheet Name')) )
 		self.sheetName = wx.StaticText( self )
 		rows += 1
 
-		self.riderLabel = wx.StaticText( self, label = _('Rider Data Entries:') )
+		self.riderLabel = wx.StaticText( self, label=u'{}:'.format(_('Rider Data Entries')) )
 		self.riderNumber = wx.StaticText( self )
 		rows += 1
 
-		self.categoryAndPropertiesLabel = wx.StaticText( self, label = _('Categories and Properties:') )
+		self.categoryAndPropertiesLabel = wx.StaticText( self, label=u'{}:'.format(_('Categories and Properties')) )
 		self.categoryAndProperties = wx.StaticText( self )
 		rows += 1
 
-		self.statusLabel = wx.StaticText( self, label = _('Status:') )
+		self.statusLabel = wx.StaticText( self, label=u'{}:'.format(_('Status')) )
 		self.statusName = wx.StaticText( self )
 		rows += 1
 
-		self.errorLabel = wx.StaticText( self, label =  _('Errors:') )
+		self.errorLabel = wx.StaticText( self, label=u'{}:'.format(_('Errors')) )
 		self.errorName = wx.TextCtrl( self, style=wx.TE_MULTILINE|wx.TE_READONLY, size=(-1,128) )
 		rows += 1
 		
@@ -412,15 +418,20 @@ class GetExcelLink( object ):
 					if fileName == '':
 						message = _('Please specify an Excel file.')
 					else:
-						message = _('Cannot open file "{}".\nPlease check the file name and/or its read permissions.').format(fileName)
+						message = u'{}\n\n   "{}".\n\n{}'.format(
+							_('Cannot open file'),
+							fileName,
+							_('Please check the file name and/or its read permissions.'),
+						)
 					Utils.MessageOK( self.wizard, message, title=_('File Open Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 			elif page == self.sheetNamePage:
 				try:
 					self.headerNamesPage.setFileNameSheetName(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName())
 				except ValueError:
-					Utils.MessageOK( self.wizard, _('Cannot find at least 5 header names in the Excel sheet.\nCheck the format.'),
-										title=_('Excel Format Error'), iconMask=wx.ICON_ERROR)
+					Utils.MessageOK(
+						self.wizard, u'\n'.join( [_('Cannot find at least 5 header names in the Excel sheet.'), _('Check the format.')] ),
+						title=_('Excel Format Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 			elif page == self.headerNamesPage:
 				excelLink = ExcelLink()
@@ -428,7 +439,7 @@ class GetExcelLink( object ):
 				excelLink.setSheetName( self.sheetNamePage.getSheetName() )
 				fieldCol = self.headerNamesPage.getFieldCol()
 				if fieldCol[Fields[0]] < 0:
-					Utils.MessageOK( self.wizard, _('You must specify a "{}" column.').format(Fields[0]),
+					Utils.MessageOK( self.wizard, _('You must specify a "{}" column.').format(wx.GetTranslation(Fields[0])),
 										title=_('Excel Format Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 				else:
@@ -448,8 +459,12 @@ class GetExcelLink( object ):
 							excelLink.hasCategoriesSheet, excelLink.hasPropertiesSheet
 						)
 					except ValueError as e:
-						Utils.MessageOK( self.wizard, _('Problem extracting rider info.\nCheck the Excel format.\n\n"{}"').format(e),
-											title=_('Data Error'), iconMask=wx.ICON_ERROR)
+						Utils.MessageOK(self.wizard, u'{}\n{}\n\n"{}"'.format(
+												_('Problem extracting rider info.'),
+												_('Check the Excel format.'),
+												e,
+											),
+										title=_('Data Error'), iconMask=wx.ICON_ERROR)
 						evt.Veto()
 		
 	def onPageChanged( self, evt ):
@@ -642,9 +657,9 @@ class ExcelLink( object ):
 						# Normalize and encode the gender information.
 						try:
 							genderFirstChar = unicode(data[field] or 'Open').strip().lower()[:1]
-							if genderFirstChar in 'mh':		# Men, Male, Hommes
+							if genderFirstChar in 'mhu':	# Men, Male, Hommes, Uomini
 								data[field] = 'Men'
-							elif genderFirstChar in 'wlf':	# Women, Ladies, Female, Femmes
+							elif genderFirstChar in 'wlfd':	# Women, Ladies, Female, Femmes, Donne
 								data[field] = 'Women'
 							else:
 								data[field] = 'Open'		# Otherwise Open

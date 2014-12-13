@@ -560,7 +560,7 @@ class Results( wx.Panel ):
 		
 		highPrecision = Model.highPrecisionTimes()
 		try:
-			firstLapCol = (i for i, name in enumerate(colnames) if name.startswith('Lap')).next()
+			firstLapCol = (i for i, name in enumerate(colnames) if name.startswith(_('Lap'))).next()
 		except StopIteration:
 			firstLapCol = len(colnames)
 		

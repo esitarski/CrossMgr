@@ -35,8 +35,7 @@ def formatTime( secs ):
 	hours = int(secs // (60*60))
 	minutes = int( (secs // 60) % 60 )
 	secs = secs % 60
-	decimal = '.%03d' % int( f * 1000 )
-	return "%s%02d:%02d:%02d%s" % (sign, hours, minutes, secs, decimal)
+	return "{}{}:{:02d}:{:05.2f}".format(sign, hours, minutes, secs + f)
 
 def WebScorerExport( fname ):
 	race = Model.race
@@ -61,7 +60,7 @@ def WebScorerExport( fname ):
 					hasField[i] = True
 	
 	if not hasField[2]:
-		return False, _('"LastName" must be linked to a column in the Excel sheetl')
+		return False, _('"LastName" must be linked to a column in the Excel sheet.')
 	
 	catDetails = dict( (cd['name'], cd) for cd in GetCategoryDetails() )
 	
@@ -85,7 +84,7 @@ def WebScorerExport( fname ):
 		
 	webScorerCategoryFields = [f for f in WebScorerCategoryFields if (hasDistance or f != 'Distance')]
 	
-	colNames = webScorerFields + webScorerCategoryFields + [u'Lap {}'.format(i+1) for i in xrange(maxLaps)]
+	colNames = webScorerFields + webScorerCategoryFields + [u'{} {}'.format(_('Lap'), i+1) for i in xrange(maxLaps)]
 	
 	def toInt( n ):
 		try:

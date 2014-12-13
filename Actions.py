@@ -120,7 +120,11 @@ class StartRaceAtTime( wx.Dialog ):
 
 		self.startSeconds = Utils.StrToSeconds( startTime ) * 60.0
 		if self.startSeconds < GetNowSeconds():
-			Utils.MessageOK( None, _('Scheduled Start Time is in the Past.\n\nPlease enter a Scheduled Start Time in the Future.'), _('Scheduled Start Time is in the Past') )
+			Utils.MessageOK(
+				None,
+				u'\n'.join( [_('Scheduled Start Time is in the Past.'),_('Please enter a Scheduled Start Time in the Future.')] ),
+				_('Scheduled Start Time is in the Past')
+			)
 			return
 			
 		dateToday = datetime.date.today()
@@ -139,8 +143,8 @@ class StartRaceAtTime( wx.Dialog ):
 		self.EndModal( wx.ID_CANCEL )
 
 #-------------------------------------------------------------------------------------------
-StartText = 'Start\nRace'
-FinishText = 'Finish\nRace'
+StartText = u'\n'.join(_('Start Race').split())
+FinishText = u'\n'.join(_('Finish Race').split())
 
 class Actions( wx.Panel ):
 	iResetStartClockOnFirstTag = 1
@@ -269,12 +273,22 @@ class Actions( wx.Panel ):
 				externalFields = []
 				externalInfo = {}
 			if not externalInfo:
-				Utils.MessageOK(self, _('Cannot Start. Excel Sheet read failure.\nThe Excel file is either unconfigured or unreadable.'), _('Excel Sheet Read '), wx.ICON_ERROR )
+				Utils.MessageOK(
+					self,
+					u'\n'.join( [_('Cannot Start. Excel Sheet read failure.'), _('The Excel file is either unconfigured or unreadable.')] ),
+					_('Excel Sheet Read '),
+					wx.ICON_ERROR
+				)
 				return
 			try:
 				i = next((i for i, field in enumerate(externalFields) if field.startswith('Tag')))
 			except StopIteration:
-				Utils.MessageOK(self, _('Cannot Start.  Excel Sheet missing Tag or Tag2 column.\nThe Excel file must contain a Tag column to use RFID.'), _('Excel Sheet missing Tag or Tag2 column'), wx.ICON_ERROR )
+				Utils.MessageOK(
+					self,
+					u'\n'.join( [_('Cannot Start.  Excel Sheet missing Tag or Tag2 column.'), _('The Excel file must contain a Tag column to use RFID.')] ),
+					_('Excel Sheet missing Tag or Tag2 column'),
+					wx.ICON_ERROR
+				)
 				return
 				
 		if self.startRaceTimeCheckBox.IsChecked():
