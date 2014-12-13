@@ -3,6 +3,7 @@ import glob
 import os
 import zipfile
 import shutil
+import codecs
 import cStringIO as StringIO
 from contextlib import contextmanager
 
@@ -42,23 +43,23 @@ def CompileHelp( dir = '.' ):
 				output_format='html5'
 		)
 
-		with open('markdown.css') as f:
+		with codecs.open('markdown.css', 'r', encoding='utf-8') as f:
 			style = f.read()
-		with open('prolog.html') as f:
+		with codecs.open('prolog.html', 'r', encoding='utf-8') as f:
 			prolog = f.read()
 			prolog = prolog.replace( '<<<style>>>', style, 1 )
 			del style
-		with open('epilog.html') as f:
+		with codecs.open('epilog.html', 'r', encoding='utf-8') as f:
 			epilog = f.read()
 
 		contentDiv = '<div class="content">'
 		
-		with open('Links.md') as f:
+		with codecs.open('Links.md', 'r', encoding='utf-8') as f:
 			links = f.read()
 			
 		for fname in glob.glob("./*.txt"):
 			print fname, '...'
-			with open(fname) as f:
+			with codecs.open(fname, 'r', encoding='utf-8') as f:
 				input = StringIO.StringIO()
 				input.write( links )
 				input.write( f.read() )
@@ -70,7 +71,7 @@ def CompileHelp( dir = '.' ):
 				if htmlSave == html:
 					html = contentDiv + '\n' + html
 				html += '\n</div>\n'
-			with open( os.path.splitext(fname)[0] + '.html', 'w' ) as f:
+			with codecs.open( os.path.splitext(fname)[0] + '.html', 'w', encoding='utf-8' ) as f:
 				f.write( prolog )
 				f.write( html )
 				f.write( epilog )
