@@ -285,14 +285,14 @@ class GetExcelTTStartTimeLink( object ):
 					if fileName == '':
 						message = _('Please specify an Excel file.')
 					else:
-						message = _('Cannot open file "{}".\nPlease check the file name and/or its read permissions.').format(fileName)
+						message = u'{}:\n\n    "{}"\n\n{}'.format(_('Cannot open file'), fileName, _('Please check the file name and/or its read permissions.') )
 					Utils.MessageOK( self.wizard, message, title=_('File Open Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 			elif page == self.sheetNamePage:
 				try:
 					self.headerNamesPage.setFileNameSheetName(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName())
 				except ValueError:
-					Utils.MessageOK( self.wizard, _('Cannot find at least 5 header names in the Excel sheet.\nCheck the format.'),
+					Utils.MessageOK( self.wizard, _('Cannot find at least 5 header names in the Excel sheet.') + u'\n' + _('Check the format.'),
 										title=_('Excel Format Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 			elif page == self.headerNamesPage:
@@ -310,7 +310,7 @@ class GetExcelTTStartTimeLink( object ):
 						info = excelLink.read()
 						self.summaryPage.setFileNameSheetNameInfo(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName(), info)
 					except ValueError as e:
-						Utils.MessageOK( self.wizard, _('Problem extracting rider info.\nCheck the Excel format.'),
+						Utils.MessageOK( self.wizard, _('Problem extracting rider info.') + u'\n' + _('Check the Excel format.'),
 											title=_('Data Error'), iconMask=wx.ICON_ERROR)
 						evt.Veto()
 		
@@ -442,7 +442,7 @@ def ImportTTStartTimes( parent ):
 		Utils.MessageOK( parent, errorStr, _('Start Time Errors') )
 		
 	Utils.refresh()
-	Utils.MessageOK( parent, _('Set {} Start Times').format(len(startTimes)), _('Start Times Success') )
+	Utils.MessageOK( parent, u'{}: {}'.format(_('Start Times Set'), len(startTimes)), _('Start Times Success') )
 
 #-----------------------------------------------------------------------------------------------------
 

@@ -238,9 +238,10 @@ class RiderDetail( wx.Panel ):
 		
 		row += 1
 		
+		GetTranslation = _
 		self.statusName = wx.StaticText( self, label = u'{} '.format(_('Status')) )
 		gbs.Add( self.statusName, pos=(row,0), span=(1,1), flag=labelAlign )
-		self.statusOption = wx.Choice( self, choices=Model.Rider.statusNames )
+		self.statusOption = wx.Choice( self, choices=[GetTranslation(n) for n in Model.Rider.statusNames] )
 		gbs.Add( self.statusOption, pos=(row,1), span=(1,1), flag=wx.EXPAND )
 		self.Bind(wx.EVT_CHOICE, self.onStatusChanged, self.statusOption)
 		
@@ -380,16 +381,16 @@ class RiderDetail( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(wx.NewId(), _('Add Missing Last Lap'),	_('Add missing last lap'),	self.OnPopupAddMissingLastLap, allCases),
+				(wx.NewId(), _('Add Missing Last Lap'),		_('Add Missing Last Lap'),	self.OnPopupAddMissingLastLap, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Pull After Lap...'),	_('Pull after lap'),	self.OnPopupPull, allCases),
-				(wx.NewId(), _('DNF After Lap...'),		_('DNF after lap'),	self.OnPopupDNF, allCases),
+				(wx.NewId(), _('Pull After Lap') + u'...',	_('Pull After lap'),	self.OnPopupPull, allCases),
+				(wx.NewId(), _('DNF After Lap') + u'...',	_('DNF After lap'),	self.OnPopupDNF, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Correct...'),			_('Change number or lap time...'),	self.OnPopupCorrect, interpCase),
-				(wx.NewId(), _('Shift...'),				_('Move lap time earlier/later...'),	self.OnPopupShift, interpCase),
-				(wx.NewId(), _('Delete...'),			_('Delete lap time(s)...'),	self.OnPopupDelete, nonInterpCase),
+				(wx.NewId(), _('Correct') + u'...',			_('Change number or lap time') + u'...',	self.OnPopupCorrect, interpCase),
+				(wx.NewId(), _('Shift') + u'...',			_('Move lap time earlier/later') + u'...',	self.OnPopupShift, interpCase),
+				(wx.NewId(), _('Delete') + u'...',			_('Delete lap time(s)') + u'...',	self.OnPopupDelete, nonInterpCase),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Note...'),				_('Add/Edit lap note'),	self.OnPopupNote, nonInterpCase),
+				(wx.NewId(), _('Note') + u'...',			_('Add/Edit lap note'),	self.OnPopupNote, nonInterpCase),
 			]
 			for p in self.popupInfo:
 				if p[0]:
@@ -463,9 +464,9 @@ class RiderDetail( wx.Panel ):
 			timesPerRow = 4
 			for i in xrange(0, len(times), timesPerRow):
 				timeStr.append(
-					',  '.join( _('Lap {}: {}').format(rows[j]+1, Utils.formatTime(times[i]))
+					',  '.join( _('{} {}: {}').format(_('Lap'), rows[j]+1, Utils.formatTime(times[i]))
 							for j in xrange(i, min(len(times), i+timesPerRow) ) ) )
-			timeStr = ',\n'.join( timeStr )
+			timeStr = u',\n'.join( timeStr )
 			message = _('Delete entries of Rider {}:\n\n{}\n\nConfirm Delete?').format(num, timeStr)
 			if Utils.MessageOKCancel( self, message, _('Delete Times'), wx.ICON_WARNING ):
 				undo.pushState()
@@ -869,25 +870,25 @@ class RiderDetail( wx.Panel ):
 
 		if not hasattr(self, 'ganttMenuInfo'):
 			self.ganttMenuInfo = [
-				(wx.NewId(), _('Add Missing Last Lap'),		_('Add missing last lap'),				self.OnPopupAddMissingLastLap, allCases),
+				(wx.NewId(), _('Add Missing Last Lap'),			_('Add missing last lap'),				self.OnPopupAddMissingLastLap, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Pull after Lap End...'),	_('Pull after lap...'),					self.OnGanttPopupPull, allCases),
-				(wx.NewId(), _('DNF after Lap End...'),		_('DNF after lap...'),					self.OnGanttPopupDNF, allCases),
+				(wx.NewId(), _('Pull after Lap End') + u'...',	_('Pull after Lap End'),				self.OnGanttPopupPull, allCases),
+				(wx.NewId(), _('DNF after Lap End') + u'...',	_('DNF after Lap End'),					self.OnGanttPopupDNF, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Correct lap End Time...'),	_('Change lap end time...'),			lambda event, s = self: CorrectNumber(s, s.entry), interpCase),
-				(wx.NewId(), _('Shift Lap End Time...'),	_('Move lap end time earlier/later...'),lambda event, s = self: ShiftNumber(s, s.entry), interpCase),
-				(wx.NewId(), _('Delete Lap End Time...'),	_('Delete lap end time...'),			lambda event, s = self: DeleteEntry(s, s.entry), nonInterpCase),
+				(wx.NewId(), _('Correct lap End Time') + u'...',_('Correct lap End Time'),				lambda event, s = self: CorrectNumber(s, s.entry), interpCase),
+				(wx.NewId(), _('Shift Lap End Time') + u'...',	_('Move lap end time earlier/later'),	lambda event, s = self: ShiftNumber(s, s.entry), interpCase),
+				(wx.NewId(), _('Delete Lap End Time') + u'...',	_('Delete Lap End Time'),				lambda event, s = self: DeleteEntry(s, s.entry), nonInterpCase),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Note...'),					_('Add/Edit lap Note'),					self.OnGanttPopupLapNote, allCases),
+				(wx.NewId(), _('Note') + u'...',				_('Add/Edit lap Note'),					self.OnGanttPopupLapNote, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Show Lap Details...'), 		_('Show Lap Details'),					self.OnGanttPopupLapDetail, allCases),
+				(wx.NewId(), _('Show Lap Details') + u'...', 	_('Show Lap Details'),					self.OnGanttPopupLapDetail, allCases),
 			]
 			self.splitMenuInfo = [
 					(wx.NewId(),
-					'%d Split%s' % (split-1, 's' if split > 2 else ''),
+					u'{} {}'.format( split-1, _('Splits') if split > 2 else _('Split') ),
 					lambda evt, s = self, splits = split: s.doSplitLap(splits)) for split in xrange(2,8) ] + [
 					(wx.NewId(),
-					_('Custom...'),
+					_('Custom') + u'...',
 					lambda evt, s = self: s.doCustomSplitLap())]
 			for id, name, text, callback, cCase in self.ganttMenuInfo:
 				if id:

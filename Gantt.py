@@ -101,40 +101,40 @@ class Gantt( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(wx.NewId(), _('Add Missing Last Lap'),		_('Add missing last lap'),		self.OnPopupAddMissingLastLap, allCases),
+				(wx.NewId(), _('Add Missing Last Lap'),			_('Add missing last lap'),		self.OnPopupAddMissingLastLap, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Pull after Lap End...'),	_('Pull after lap end'),		self.OnPopupPull, allCases),
-				(wx.NewId(), _('DNF after Lap End...'),		_('DNF after lap end'),			self.OnPopupDNF, allCases),
+				(wx.NewId(), _('Pull after Lap End') + u'...',	_('Pull after lap end'),		self.OnPopupPull, allCases),
+				(wx.NewId(), _('DNF after Lap End') + u'...',	_('DNF after lap end'),			self.OnPopupDNF, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Correct Lap End Time...'),	_('Change number or lap end time'),		self.OnPopupCorrect, interpCase),
-				(wx.NewId(), _('Shift Lap End Time...'),	_('Move lap end time earlier/later'),	self.OnPopupShift, interpCase),
-				(wx.NewId(), _('Delete Lap End Time...'),	_('Delete lap end time'),		self.OnPopupDelete, nonInterpCase),
+				(wx.NewId(), _('Correct Lap End Time') + u'...',_('Change number or lap end time'),		self.OnPopupCorrect, interpCase),
+				(wx.NewId(), _('Shift Lap End Time') + u'...',	_('Move lap end time earlier/later'),	self.OnPopupShift, interpCase),
+				(wx.NewId(), _('Delete Lap End Time') + u'...',	_('Delete lap end time'),		self.OnPopupDelete, nonInterpCase),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Note...'),					_('Add/Edit lap Note'),			self.OnPopupLapNote, allCases),
+				(wx.NewId(), _('Note') + u'...',				_('Add/Edit lap Note'),			self.OnPopupLapNote, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Turn off Autocorrect...'),	_('Turn off Autocorrect'),		self.OnPopupAutocorrect, allCases),
+				(wx.NewId(), _('Turn off Autocorrect') + u'...',_('Turn off Autocorrect'),		self.OnPopupAutocorrect, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Swap with Rider before'),	_('Swap with Rider before'),	self.OnPopupSwapBefore, nonInterpCase),
-				(wx.NewId(), _('Swap with Rider after'),	_('Swap with Rider after'),		self.OnPopupSwapAfter, nonInterpCase),
+				(wx.NewId(), _('Swap with Rider before'),		_('Swap with Rider before'),	self.OnPopupSwapBefore, nonInterpCase),
+				(wx.NewId(), _('Swap with Rider after'),		_('Swap with Rider after'),		self.OnPopupSwapAfter, nonInterpCase),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Show Lap Details...'), 		_('Show Lap Details'),			self.OnPopupLapDetail, allCases),
+				(wx.NewId(), _('Show Lap Details') + u'...', 	_('Show Lap Details'),			self.OnPopupLapDetail, allCases),
 				(None, None, None, None, None),
 			]
 			if Model.race and Model.race.enableUSBCamera:
 				self.popupInfo.append(
-				(wx.NewId(), _('Photos...'), 				_('Show Photos'),				self.OnPopupPhotos, allCases),
+				(wx.NewId(), _('Photos')+ u'...', 				_('Show Photos'),				self.OnPopupPhotos, allCases),
 				)
 			self.popupInfo.extend( [
-				(wx.NewId(), _('RiderDetail'),				_('Show RiderDetail Dialog'),	self.OnPopupRiderDetail, allCases),
-				(wx.NewId(), _('Results'), 					_('Switch to Results tab'),		self.OnPopupResults, allCases),
+				(wx.NewId(), _('RiderDetail'),					_('Show RiderDetail Dialog'),	self.OnPopupRiderDetail, allCases),
+				(wx.NewId(), _('Results'), 						_('Switch to Results tab'),		self.OnPopupResults, allCases),
 			] )
 			
 			self.splitMenuInfo = [
 					(wx.NewId(),
-					_('{} Split(s)').format(split-1),
+					u'{} {}'.format(split-1, _('Split') if split-1 == 1 else _('Splits')),
 					lambda evt, s = self, splits = split: s.doSplitLap(splits)) for split in xrange(2,8) ] + [
 					(wx.NewId(),
-					'Custom...',
+					_('Custom') + u'...',
 					lambda evt, s = self: s.doCustomSplitLap())]
 			for id, name, text, callback, cCase in self.popupInfo:
 				if id:
@@ -384,21 +384,21 @@ class Gantt( wx.Panel ):
 						
 			if leaderEntryStart:
 				tDown = tLapStart - leaderEntryStart.t
-				infoDownStart = _('\nLap Start {} down from leader {}').format(Utils.formatTime(tDown, True), leaderEntryStart.num)
+				infoDownStart = u'\n' + _('Lap Start {} down from leader {}').format(Utils.formatTime(tDown, True), leaderEntryStart.num)
 			else:
 				infoDownStart = ''
 			if leaderEntryEnd:
 				tDown = tLapEnd - leaderEntryEnd.t
-				infoDownEnd = _('\nLap End {} down from leader {}').format(Utils.formatTime(tDown, True), leaderEntryStart.num)
+				infoDownEnd = u'\n' + _('Lap End {} down from leader {}').format(Utils.formatTime(tDown, True), leaderEntryStart.num)
 			else:
 				infoDownEnd = ''
 				
 			infoStart = race.numTimeInfo.getInfoStr( self.entryStart.num, tLapStart )
 			if infoStart:
-				infoStart = u'\n{} '.format(_('Lap Start')) + infoStart
+				infoStart = u'\n{} {}'.format(_('Lap Start'), infoStart)
 			infoEnd = race.numTimeInfo.getInfoStr( self.entryEnd.num, tLapEnd )
 			if infoEnd:
-				infoEnd = u'\n{} '.format(_('Lap End')) + infoEnd
+				infoEnd = u'\n{} {}'.format(_('Lap End'), infoEnd)
 		
 			info = (u'{}: {}  {}: {}\n{}: {}   {}: {}\n{}: {}\n{}{}{}{}'.format(
 					_('Rider'),		riderName,

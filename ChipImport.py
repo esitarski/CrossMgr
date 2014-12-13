@@ -111,13 +111,13 @@ def DoChipImport(	fname, parseTagTime, startTime = None,
 #------------------------------------------------------------------------------------------------
 class ChipImportDialog( wx.Dialog ):
 	def __init__( self, chipName, parseTagTime, parent, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, _("{chipName} Import").format( chipName=chipName ),
+		wx.Dialog.__init__( self, parent, id, u'{} {}'.format(chipName, _('Import')),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
 		
 		self.chipName = chipName
 		self.parseTagTime = parseTagTime
 		todoList = [
-			_('Import {chipName} Data File'),
+			_('{} Import Data File').format( chipName ),
 			'',
 			_('You must first "New" a race and fill in the details.'),
 			_('You must also configure a "Tag" field in your Sign-On Excel Sheet and link it to the race.'),
@@ -133,10 +133,10 @@ class ChipImportDialog( wx.Dialog ):
 			_('Warning: Importing from {chipName} will replace all the data in this race.'),
 			_('Proceed with caution.'),
 		]
-		intro = '\n'.join(todoList).format( chipName = chipName )
+		intro = u'\n'.join(todoList)
 		
 		gs = wx.FlexGridSizer( rows=0, cols=3, vgap=10, hgap=5 )
-		gs.Add( wx.StaticText(self, label = _('{chipName} Data File:').format(chipName=chipName)), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+		gs.Add( wx.StaticText(self, label = u'{} {}:'.format(chipName, _('Data File'))), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 		self.chipDataFile = wx.TextCtrl( self, -1, '', size=(450,-1) )
 		defaultPath = Utils.getFileName()
 		if not defaultPath:
@@ -146,7 +146,7 @@ class ChipImportDialog( wx.Dialog ):
 		self.chipDataFile.SetValue( defaultPath )
 		gs.Add( self.chipDataFile, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.GROW)
 
-		btn = wx.Button( self, label = u'{}...'.format(_('Browse')) )
+		btn = wx.Button( self, label=_('Browse') + u'...' )
 		btn.Bind( wx.EVT_BUTTON, self.onBrowseChipReaderDataFile )
 		gs.Add( btn, 0, wx.ALIGN_CENTER_VERTICAL )
 		

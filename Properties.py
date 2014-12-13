@@ -244,9 +244,9 @@ class RaceOptionsProperties( wx.Panel ):
 class RfidProperties( wx.Panel ):
 	iResetStartClockOnFirstTag = 1
 	iSkipFirstTagRead = 2
-	choices = [	_('Manual Start: Collect every chip. \nDoes NOT restart race clock on first read.'),
-				_('Automatic Start: Reset start clock on first tag read. \nAll riders get the start time of the first read.'),
-				_('Manual Start: Skip first tag read for all riders. \nRequired when start run-up passes the finish on the first lap.')]
+	choices = [	_('Manual Start: Collect every chip.') + u'  \n' + _('Does NOT restart race clock on first read.'),
+				_('Automatic Start: Reset start clock on first tag read.') + u'  \n' + _('All riders get the start time of the first read.'),
+				_('Manual Start: Skip first tag read for all riders.') + u'  \n' + _('Required when start run-up passes the finish on the first lap.')]
 
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(RfidProperties, self).__init__( parent, id )
@@ -551,7 +551,7 @@ class Properties( wx.Panel ):
 			wx.CallAfter( self.commit )
 		else:
 			Utils.MessageOK( self,
-				_('You must have a valid race File|Open...\nOr create one with File|New....'), _('Valid Race Required'),
+				_('You must have a valid race File|Open...') + u'\n' + _('Or create one with File|New....'), _('Valid Race Required'),
 				wx.ICON_WARNING )
 	
 	def setEditable( self, editable = True ):

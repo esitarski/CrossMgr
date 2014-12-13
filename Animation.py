@@ -536,12 +536,11 @@ class Animation(wx.PyControl):
 					if distanceCur is not None:
 						if distanceCur != distanceRace:
 							distanceCur = int( distanceCur * 10.0 ) / 10.0
-						tDistance = _('{:05.1f} {} of {:.1f},{:05.2f} {} to go').format(
-											distanceCur,
-											self.units,
-											distanceRace,
-											distanceRace - distanceCur,
-											self.units )
+						tDistance = u'{:05.1f} {} {} {:.1f},{:05.2f} {} {}'.format(
+											distanceCur, self.units,
+											_('of'), distanceRace,
+											distanceRace - distanceCur, self.units, _('to go')
+										)
 			
 			tWidth, tHeight = dc.GetTextExtent( '999' )
 			xRight  = 3*r + r/7

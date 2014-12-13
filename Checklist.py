@@ -50,7 +50,7 @@ class Task( object ):
 				if not _processRequirementLookup[req.lower()]( race, val ):
 					success = False
 			except KeyError:
-				raise ValueError( u'Unknown Requirement "{}"'.format(req) )
+				raise ValueError( u'{} "{}"'.format(u'Unknown Requirement', req) )
 		
 		return success
 		

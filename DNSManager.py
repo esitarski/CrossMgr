@@ -155,8 +155,9 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 			return
 		
 		# Add the headers.
+		GetTranslation = _
 		for c, f in enumerate(externalFields):
-			self.list.InsertColumn( c+1, f, wx.LIST_FORMAT_RIGHT if f.startswith('Bib') else wx.LIST_FORMAT_LEFT )
+			self.list.InsertColumn( c+1, GetTranslation(f), wx.LIST_FORMAT_RIGHT if f.startswith('Bib') else wx.LIST_FORMAT_LEFT )
 		
 		# Create the data.  Sort by Bib#
 		data = [tuple( num if i == 0 else info.get(f, '') for i, f in enumerate(externalFields)) for num, info in potentialDNS.iteritems()]
