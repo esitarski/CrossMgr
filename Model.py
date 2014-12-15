@@ -1833,6 +1833,10 @@ class Race( object ):
 		self.setCategoryMask()
 		
 		return changed
+		
+	def normalizeCategories( self ):
+		for c in self.getCategories( startWaveOnly = False ):
+			c.normalize()
 
 	def exportCategories( self, fp ):
 		fp.write( u'#################################################################\n' )

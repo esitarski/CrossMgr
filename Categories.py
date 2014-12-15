@@ -273,6 +273,10 @@ class Categories( wx.Panel ):
 		self.Bind( wx.EVT_BUTTON, self.onUpdateStartWaveNumbers, self.updateStartWaveNumbersButton )
 		hs.Add( self.updateStartWaveNumbersButton, 0, border = border, flag = (flag & ~wx.LEFT) )
 
+		self.normalizeButton = wx.Button(self, label=_('N&ormalize'), style=wx.BU_EXACTFIT)
+		self.Bind( wx.EVT_BUTTON, self.onNormalize, self.normalizeButton )
+		hs.Add( self.normalizeButton, 0, border = border, flag = (flag & ~wx.LEFT) )
+
 		hs.AddStretchSpacer()
 		
 		self.printButton = wx.Button( self, label=u'{}...'.format(_('Print')), style=wx.BU_EXACTFIT )
@@ -304,6 +308,7 @@ class Categories( wx.Panel ):
 		
 		self.activeColumn = self.iCol['active']
 		self.genderColumn = self.iCol['gender']
+		self.numbersColumn = self.iCol['catStr']
 		self.grid.CreateGrid( 0, len(self.colnames) )
 		self.grid.SetRowLabelSize(32)
 		self.grid.SetMargins(0,0)
@@ -380,6 +385,7 @@ class Categories( wx.Panel ):
 		self.Bind( gridlib.EVT_GRID_CELL_LEFT_CLICK, self.onGridLeftClick )
 		self.Bind( gridlib.EVT_GRID_SELECT_CELL, self.onCellSelected )
 		self.Bind( gridlib.EVT_GRID_CELL_CHANGE, self.onCellChanged )
+		self.Bind( gridlib.EVT_GRID_EDITOR_CREATED, self.onEditorCreated )
 		
 		vs.Add( hs, 0, flag=wx.EXPAND|wx.ALL, border = 4 )
 		vs.Add( self.grid, 1, flag=wx.GROW|wx.ALL|wx.EXPAND )
@@ -392,6 +398,12 @@ class Categories( wx.Panel ):
 		self.commit()
 		PrintCategories()
 	
+	def onNormalize( self, event ):
+		self.commit()
+		if Model.race:
+			Model.race.normalizeCategories()
+			self.refresh()
+			
 	#------------------------------------------
 	
 	def onGridLeftClick( self, event ):
@@ -402,7 +414,7 @@ class Categories( wx.Panel ):
 				wx.CallAfter( self.fixRow, r, self.CategoryTypeChoices.index(self.grid.GetCellValue(r, self.iCol['catType'])), not active )
 			self.grid.SetCellValue( r, c, '1' if self.grid.GetCellValue(r, c) != '1' else '0' )
 		event.Skip()
-		
+	
 	def onCellSelected( self, event ):
 		self.rowCur = event.GetRow()
 		self.colCur = event.GetCol()
@@ -415,6 +427,24 @@ class Categories( wx.Panel ):
 		self.colCur = event.GetCol()
 		if self.colCur in [1, 2]:
 			self.fixCells()
+		event.Skip()
+
+	def onEditorCreated( self, event ):
+		if event.GetCol() == self.numbersColumn:
+			event.GetControl().Bind( wx.EVT_KEY_DOWN, self.onNumbersKeyEvent )
+		event.Skip()
+		
+	def onNumbersKeyEvent( self, event ):
+		if event.GetModifiers() == wx.MOD_CONTROL and event.GetKeyCode() == 86:
+			if wx.TheClipboard.Open():
+				data = wx.TextDataObject()
+				if wx.TheClipboard.GetData(data):
+					txt = data.GetText()
+					txt = re.sub( '[^0-9,-]+', ',', txt )
+					event.GetEventObject().WriteText( txt )
+				wx.TheClipboard.Close()
+				return
+		
 		event.Skip()
 
 	#------------------------------------------
