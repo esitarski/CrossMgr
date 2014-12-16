@@ -86,8 +86,8 @@ def USACExport( sheet ):
 		cd = catDetails[cat.fullname]
 		if cd.get('raceDistance', None):
 			hasDistance = True
-		for rr in results:
-			maxLaps = max( maxLaps, rr.laps )
+		maxLaps = max( maxLaps, max(rr.laps for rr in results) )
+	
 	if maxLaps == 1 or maxLaps > 99:
 		maxLaps = 0
 	

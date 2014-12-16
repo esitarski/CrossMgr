@@ -19,9 +19,9 @@ Sometimes organizers come up with creative ranking criteria.  For example, a ran
 
 CrossMgr makes this easy by supporting three types of Categories:
 
-1. **Start Wave:** a group of riders that start at the same time.  The riders may all be in the same category, or they may be made up of multiple component categories riding together.  A "Start Wave" may, or may not have "Components".  Riders in a "Start Wave" are considered in the same race, and can work together.  Each "Start Wave" is managed in CrossMgr with a race progress bar.
-1. **Component:** a sub-group of riders part of a "Start Wave", all of which are in the same category with respect to each other.  Riders in a "Component" can work together with other riders in their "Component", as well as other riders in their "Start Wave".  "Component" categories use the same "Start Offset", "Race Laps" and other options as their "Start Wave".
-1. **Custom:** a group of riders defined by any criteria - they don't need to be part of the same "Start Wave".  A "Custom" category could be a completely made-up ranking of riders.
+1. __Start Wave:__ a group of riders that start at the same time.  The riders may all be in the same category, or they may be made up of multiple component categories riding together.  A "Start Wave" may, or may not have "Components".  Riders in a "Start Wave" are considered in the same race, and can work together.  Each "Start Wave" is managed in CrossMgr with a race progress bar.
+1. __Component:__ a sub-group of riders part of a "Start Wave", all of which are in the same category with respect to each other.  Riders in a "Component" can work together with other riders in their "Component", as well as other riders in their "Start Wave".  "Component" categories use the same "Start Offset", "Race Laps" and other options as their "Start Wave".
+1. __Custom:__ a group of riders defined by any criteria - they don't need to be part of the same "Start Wave".  A "Custom" category could be a completely made-up ranking of riders.
 
 ## Step by Step Configuration
 
@@ -39,21 +39,21 @@ Click on the "Category Type" cell in the "Elite Row".  Press the "left-cursor" k
 Continue doing "left-cursor" and "down-cursor" to set the Master and Junior categories to "Component" (of course you can change these with the mouse, but the keyboard is faster).
 
 Finally, press the "Update Start Wave Numbers" button at the top of the screen.  This combines the number ranges in the "Elite", "Master" and "Junior" into the "Combined Women" "Start Wave" category.
-**This button is pressed automatically when you leave the page, so don't worry if you forget.**
+__This button is pressed automatically when you leave the page, so don't worry if you forget.__
 
 You can configure as many "Start Wave" combined categories you like.  The "Start Wave" is always the first row, followed by the "Component" rows.
 
 CrossMgr makes the following assumptions about bib numbers in a race:
 
-* **All numbers in a Race are unique**.  If the number ranges for two "Start Waves" overlap, CrossMgr will consider the rider to be in the **first** matching "Start Wave"
-* **All numbers in a "Start Wave" are unique**.  If the number ranges for two "Components" overlap, CrossMgr will consider the rider to be in the the **first** matching "Component" in the "Start Wave".
+* __All numbers in a Race are unique__.  If the number ranges for two "Start Waves" overlap, CrossMgr will consider the rider to be in the __first__ matching "Start Wave"
+* __All numbers in a "Start Wave" are unique__.  If the number ranges for two "Components" overlap, CrossMgr will consider the rider to be in the the __first__ matching "Component" in the "Start Wave".
 
 ### Custom Categories
 
-"Custom" categories are just a set of Numbers.  The Numbers don't all have to be in the same "Start Wave".  Riders in a "Custom" category are first scored with respect to their actual "Start Wave", then re-scored **as if** they all started in the same "Start Wave".
+"Custom" categories are just a set of Numbers.  The Numbers don't all have to be in the same "Start Wave".  Riders in a "Custom" category are first scored with respect to their actual "Start Wave", then re-scored __as if__ they all started in the same "Start Wave".
 
 No checking is done on numbers in a "Custom" category - you can enter any number ranges you want.
-"Custom" category number ranges **can overlap with any other categories**.  A rider may appear multiple times in "Custom" categories.
+"Custom" category number ranges __can overlap with any other categories__.  A rider may appear multiple times in "Custom" categories.
 
 For example, consider the following "Custom" categories which could be active in the same race (let's say that the number ranges have been configured):
 
@@ -104,7 +104,7 @@ Allows you to automatically add a bib exception to a selected category.  This ac
 Press this button to format the number ranges in a more compact format with as many number ranges as possible.  For example, __1,2,3,4,5,8,9,10,11,12,-8__ will change to __1-5,9-12__.
 
 ## Update Start Wave Numbers
-Press this button to automatically adjust the Start Wave category to include all the Component categories numbers.  **This button is pressed automatically when you leave the Categories page.**
+Press this button to automatically adjust the Start Wave category to include all the Component categories numbers.  __This button is pressed automatically when you leave the Categories page.__
 
 # Category Screen
 
@@ -151,6 +151,21 @@ Of course, this is insanity for riders and officials.
 If you have a lot of exceptions, it can be easier set the exception from the [RiderDetail][] screen rather than from Categories.   Assigning the category from [RiderDetail][] automatically takes care of the number patterns.
 
 To find the category of a rider, CrossMgr starts with the first active category and checks for a match in the number pattern.  If that fails, it continues to the second active category, etc.  The first active Category that matches the rider's number is considered the rider's Category for the race.
+
+### Inconsistent Numbers and Excel - The Super Quick Way
+
+Sometimes you have inconsistent numbers for your race categories, but everything is correct in your Excel sheet.
+If so, there is a trick to quickly get the bib numbers from Excel into CrossMgr.
+
+Sort the riders by Category in the Excel sheet.  You might have a Category field to sort by.  Or, you might need to organize the riders by Age and Gender (for example, Master's riders).  Or out-of-state riders.  Whatever you need.  Sort by one or more criteria to get the riders grouped into race categories.
+
+In Excel, click-and-drag to select the bib number cells of all the riders in the same race category.  Then Copy to the clipboard with Ctrl-c (or Edit/Copy).
+
+In CrossMgr, click in the Numbers field of the Category you want to update (or create a new Category if you need to).  Select any existing Numbers text.  Then Paste with Ctrl-v.  This will put all the bib numbers from Excel into CrossMgr, separated by commas.
+
+Repeat for all your categories.  This is a better than typing in the numbers again.
+
+To make your new CrossMgr number ranges more comprehensible, press the __Normalize__ button at the top of the Categories screen.  This reformats the individual numbers into compact ranges.
  
 ## Scoring a Race Multiple Ways
 

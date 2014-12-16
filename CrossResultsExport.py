@@ -30,10 +30,31 @@ def formatTime( secs, highPrecision = False ):
 	minutes = int( (secs // 60) % 60 )
 	secs = secs % 60
 	if highPrecision:
-		decimal = '.%02d' % int( f * 100 )
+		secStr = '{:05.2f}'.format( secs + f )
 	else:
-		decimal = ''
-	return "%s%02d:%02d:%02d%s" % (sign, hours, minutes, secs, decimal)
+		secStr = '{:02d}'.format( secs )
+	return "{}{}:{:02d}:{}".format(sign, hours, minutes, secStr)
+
+def formatLapTime( secs, highPrecision = False ):
+	if secs is None:
+		secs = 0
+	if secs < 0:
+		sign = '-'
+		secs = -secs
+	else:
+		sign = ''
+	f, ss = math.modf(secs)
+	secs = int(ss)
+	hours = int(secs // (60*60))
+	minutes = int( (secs // 60) % 60 )
+	secs = secs % 60
+	if highPrecision:
+		secStr = '{:05.2f}'.format( secs + f )
+	else:
+		secStr = '{:02d}'.format( secs )
+	if hours > 0:
+		return "{}{}:{:02d}:{}".format(sign, hours, minutes, secStr)
+	return "{}{:02d}:{}".format(sign, minutes, secStr)
 
 def CrossResultsExport( fname ):
 	race = Model.race
@@ -72,9 +93,21 @@ def CrossResultsExport( fname ):
 		except:
 			return n
 
+	maxLaps = 1
+	for cat in publishCategories:
+		results = GetResults( cat, True )
+		if not results:
+			continue
+		maxLaps = max( maxLaps, max(rr.laps for rr in results) )
+	
+	if maxLaps == 1 or maxLaps > 99:
+		maxLaps = 0
+	
+	lapHeaders = ['lap'] * maxLaps
+			
 	with open(fname, 'w') as csvFile:
 		csvWriter = csv.writer( csvFile, delimiter = ',', lineterminator = '\n' )
-		csvWriter.writerow( crossResultsFields )
+		csvWriter.writerow( crossResultsFields + lapHeaders )
 		
 		for cat in publishCategories:
 			results = GetResults( cat, True )
@@ -99,6 +132,14 @@ def CrossResultsExport( fname ):
 						'Team':			lambda : getattr(rr, 'Team', ''),
 						'License':		lambda : getattr(rr, 'License', ''),
 					}[field]() )
+				
+				# Lap Times.
+				for i in xrange(maxLaps):
+					try:
+						lapTime = formatLapTime(rr.lapTimes[i])
+					except IndexError:
+						lapTime = ''
+					dataRow.append( lapTime )
 				
 				csvWriter.writerow( [unicode(d).encode('utf-8') for d in dataRow] )
 				
