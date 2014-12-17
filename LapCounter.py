@@ -1,4 +1,50 @@
 import wx
+import  wx.lib.colourselect as  csel
+import Utils
+
+class LapCounterOptions( wx.Dialog ):
+	def __init__( self, parent, lapCounter, id=wx.ID_ANY ):
+		wx.Dialog.__init__( self, parent, id, _("Lap Counter Options"),
+						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+		
+		self.lapCounter = lapCounter
+		
+		vs = wx.BoxSizer( wx.VERTICAL )
+		
+		vs.Add( wx.StaticText(self, label=_('Lap Counter Options') + u':'), flag=wx.LEFT|wx.TOP|wx.RIGHT, border=8 )
+
+		vs.Add( wx.StaticText(self, label=_('Colors') + u':'), flag=wx.LEFT|wx.TOP|wx.RIGHT, border=8 )
+
+		self.foreground = csel.ColourSelect(self, label=_('Foreground'), colour=lapCounter.GetForegroundColour())
+		vs.Add( self.foreground, flag=wx.LEFT|wx.RIGHT, border=16 )
+		
+		self.background = csel.ColourSelect(self, -1, _('Background'), colour=lapCounter.GetBackgroundColour())
+		vs.Add( self.background, flag=wx.LEFT|wx.RIGHT, border=16 )
+		
+		vs.Add( wx.StaticText(self, label=_("Seconds before Leader's ETA to flip Lap Counter") + u':'), flag=wx.LEFT|wx.TOP|wx.RIGHT, border=8 )
+		self.slider = wx.Slider(
+			self,
+			value=25, minValue=1, maxValue=180,
+			size=(360, -1), 
+			style = wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS 
+		)
+		self.slider.SetTickFreq(5, 1)
+		vs.Add( self.slider, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM, border=8 )
+		
+		buttonSizer = wx.StdDialogButtonSizer()
+		buttonSizer.AddButton( wx.Button(self, wx.ID_OK) )
+		buttonSizer.AddButton( wx.Button(self, wx.ID_CANCEL) )
+		buttonSizer.Realize()
+		
+		vs.Add( buttonSizer, flag=wx.ALL, border=16 )
+		
+		self.SetSizerAndFit( vs )
+		
+	def OnOK( self, event ):
+		self.EndModal( wx.ID_OK )
+		
+	def OnCancel( self, event ):
+		self.EndModal( wx.ID_CANCEL )
 
 class LapCounter( wx.Panel ):
 	millis = 500
@@ -9,7 +55,7 @@ class LapCounter( wx.Panel ):
 		self.labels = labels
 		self.Bind( wx.EVT_PAINT, self.OnPaint )
 		self.Bind( wx.EVT_SIZE, self.OnSize )
-		self.Bind( wx.EVT_RIGHT_UP, self.OnConfigure )
+		self.Bind( wx.EVT_RIGHT_UP, self.OnOptions )
 		self.timer = wx.Timer( self )
 		self.Bind( wx.EVT_TIMER, self.OnTimer )
 		self.timer.Start( self.millis )
@@ -21,8 +67,22 @@ class LapCounter( wx.Panel ):
 		self.SetBackgroundColour( self.backgroundColour )
 		self.SetForegroundColour( self.foregroundColour )
 
-	def OnConfigure( self, event ):
-		pass
+	def OnOptions( self, event ):
+		d = LapCounterOptions( self, self )
+		if d.ShowModal() == wx.ID_OK:
+			secondsBeforeLeaderETAToFlipLapCounter = d.slider.GetValue()
+			try:
+				Utils.mainWin.secondsBeforeLeaderETAToFlipLapCounter = secondsBeforeLeaderETAToFlipLapCounter
+			except:
+				pass
+			self.backgroundColour = d.foreground.GetColour()
+			self.foregroundColour = d.background.GetColour()
+			
+			self.SetForegroundColour( self.backgroundColour )
+			self.SetBackgroundColour( self.foregroundColour )
+			wx.CallAfter( self.Refresh )
+		
+		d.Destroy()
 		
 	def OnTimer( self, event ):
 		self.flashOn = not self.flashOn

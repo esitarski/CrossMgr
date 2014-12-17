@@ -215,6 +215,8 @@ class MainWin( wx.Frame ):
 		self.fileName = None
 		self.numSelect = None
 		
+		self.secondsBeforeLeaderETAToFlipLapCounter = 5
+		
 		# Setup the objects for the race clock.
 		self.timer = wx.Timer( self, id=wx.NewId() )
 		self.secondCount = 0
