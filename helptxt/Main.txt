@@ -29,6 +29,7 @@ Get started with CrossMgr now!
 * [Categories][]
 * [Properties][]
 * [Situation][]
+* [LapCounter][]
 
 ## [Para-Cycling][]
 

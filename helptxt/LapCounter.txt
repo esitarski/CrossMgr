@@ -1,0 +1,19 @@
+[TOC]
+
+# Lap Counter
+Shows a lap counter for the race.
+
+For best effect:
+
+1. Create a separate __LapCounter__ screen from the __Windows__ menu.
+1. Drag the __LapCounter__ screen to separate monitor.
+1. Set up the monitor so the riders can see it.
+
+The lap counter will flash before it is going to change.
+
+# Screen
+Shows a Lap Counter.
+
+If you are running the race by time, one lap counter is shown for the fastest category.
+
+If you are running categories with specified __Race Laps__ (see [Categories][] for more details), a separate lap counter will be shown for each category.

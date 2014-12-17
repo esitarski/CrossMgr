@@ -41,6 +41,7 @@ def StartRaceNow():
 	mainWin = Utils.getMainWin()
 	if mainWin is not None:
 		mainWin.showPageName( _('Record') )
+		mainWin.updateLapCounter()
 		mainWin.refresh()
 	
 	# For safety, clear the undo stack after 8 seconds.

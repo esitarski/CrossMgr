@@ -3,7 +3,7 @@
 # Situation
 Shows the structure of riders in the race.
 
-This screen clearly shows the structure of the race as it developed.
+This screen clearly shows the structure of the race as it develops.
 
 
 # Screen

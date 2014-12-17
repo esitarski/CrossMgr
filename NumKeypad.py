@@ -413,6 +413,20 @@ class NumKeypad( wx.Panel ):
 		categoryRaceTimes = {}
 		categories_seen = set()
 		getCategory = race.getCategory
+		leaderCategory = None
+		lapCounter = []
+		
+		def appendLapCounter( leaderCategory, category, lapCur, lapMax, tLeader=sys.float_info.max ):
+			if race.isTimeTrial or not(category == leaderCategory or category.getNumLaps()):
+				return
+			lapsToGo = max( 0, lapMax - lapCur )
+			if 5.0 <= tLeader <= 10.0:
+				lapCounter.append( ('{}'.format(lapsToGo), True) )
+			elif 0.0 <= tLeader <= 5.0:
+				lapCounter.append( ('{}'.format(max(0,lapsToGo-1)), True) )
+			else:
+				lapCounter.append( ('{}'.format(lapsToGo), False) )
+		
 		for rr in results:
 			if rr.status != Finisher or not rr.raceTimes:
 				continue
@@ -423,6 +437,8 @@ class NumKeypad( wx.Panel ):
 				if rr.raceTimes[-1] > newRaceTimes[-1]:
 					newRaceTimes[-1] = rr.raceTimes[-1]
 				continue
+			if leaderCategory is None:
+				leaderCategory = category
 			categories_seen.add( category )
 			leader.append( u'%s %d' % (category.fullname if category else _('<Missing>'), rr.num) )
 			# Add a copy of the race times.  Append the leader's last time as the current red lantern.
@@ -430,9 +446,13 @@ class NumKeypad( wx.Panel ):
 			categoryRaceTimes[category] = raceTimes[-1]
 			
 			try:
-				tLeader = rr.raceTimes[bisect.bisect_left( rr.raceTimes, tCur )] - tCur
+				lapCur = bisect.bisect_left( rr.raceTimes, tCur )
+				tLeader = rr.raceTimes[lapCur] - tCur
 			except IndexError:
+				appendLapCounter( leaderCategory, category, len(rr.raceTimes)-1, len(rr.raceTimes)-1 )
 				continue
+			
+			appendLapCounter( leaderCategory, category, lapCur, len(rr.raceTimes), tLeader )
 				
 			if 0.0 <= tLeader <= 3.0 and not getattr(race, 'isTimeTrial', False):
 				if category not in self.lapReminder:
@@ -441,6 +461,8 @@ class NumKeypad( wx.Panel ):
 				del self.lapReminder[category]
 		
 		self.raceHUD.SetData( nowTime = tCur, raceTimes = raceTimes, leader = leader )
+		if Utils.mainWin:
+			Utils.mainWin.updateLapCounter( lapCounter )
 		
 	def refreshRaceTime( self ):
 		tClockStr = ''

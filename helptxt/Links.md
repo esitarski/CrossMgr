@@ -19,6 +19,7 @@
 [Record]:			Record.html
 [Results]:			Results.html
 [Situation]:		Situation.html
+[LapCounter]:		LapCounter.html
 [History]:			History.html
 [RiderDetail]:		RiderDetail.html
 [Chart]:			Chart.html

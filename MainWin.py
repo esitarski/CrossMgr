@@ -50,6 +50,7 @@ from Recommendations	import Recommendations
 from RaceAnimation		import RaceAnimation, GetAnimationData
 from Search				import SearchDialog
 from Situation			import Situation
+from LapCounter			import LapCounter
 import FtpWriteFile
 from FtpWriteFile		import realTimeFtpPublish
 from SetAutoCorrect		import SetAutoCorrectDialog
@@ -513,8 +514,9 @@ class MainWin( wx.Frame ):
 			[ 'categories', 	Categories,			_('Categories') ],
 			[ 'properties',		Properties,			_('Properties') ],
 			[ 'situation',		Situation,			_('Situation') ],
+			[ 'lapCounter',		LapCounter,			_('LapCounter') ],
 		]
-		self.attrWindowSet = {'results', 'history', 'gantt', 'raceAnimation', 'situation'}
+		self.attrWindowSet = {'results', 'history', 'gantt', 'raceAnimation', 'situation', 'lapCounter'}
 		
 		for i, (a, c, n) in enumerate(self.attrClassName):
 			setattr( self, a, c(self.notebook) )
@@ -640,9 +642,12 @@ class MainWin( wx.Frame ):
 			idCur = wx.NewId()
 			menuItem = self.windowMenu.Append( idCur, name, name, wx.ITEM_CHECK )
 			self.Bind(wx.EVT_MENU, self.menuWindow, id=idCur )
+			pageDialog = PageDialog(self, cls, closeCallback=lambda idIn=idCur: self.windowCloseCallback(idIn), title=name)
+			if attr == 'lapCounter':
+				self.lapCounterDialog = pageDialog
 			self.menuIdToWindowInfo[idCur] = [
 				attr, name, menuItem,
-				PageDialog(self, cls, closeCallback=lambda idIn=idCur: self.windowCloseCallback(idIn), title=name)
+				pageDialog,
 			]
 		
 		self.menuBar.Append( self.windowMenu, _("&Windows") )
@@ -718,6 +723,11 @@ class MainWin( wx.Frame ):
 		success, error = SendPhotoRequests( requests )
 		if success:
 			race.photoCount += len(requests) * 2
+	
+	def updateLapCounter( self, labels=None ):
+		labels = labels or []
+		self.lapCounter.SetLabels( labels )
+		self.lapCounterDialog.page.SetLabels( labels )
 	
 	def menuDNS( self, event ):
 		dns = DNSManagerDialog( self )
@@ -2331,6 +2341,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			return
 
 		self.showPageName( _('Results') )	# Switch to a read-only view.
+		self.updateLapCounter()
 		self.refresh()
 		
 		self.lapTimes = self.genTimes()
@@ -2741,7 +2752,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			dialog.Show( False )
 		else:
 			dialog.Show( True )
-			wx.CallAfter( dialog.refresh )		
+			wx.CallAfter( dialog.refresh )
 	
 	@logCall
 	def menuHelpQuickStart( self, event ):
