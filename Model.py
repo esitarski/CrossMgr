@@ -944,6 +944,10 @@ class Race( object ):
 	licenseLinkTemplate = u''			# Used to create an html link from the rider's license number in the html output.
 	hideDetails = True
 	
+	lapCounterForeground = '#00FF00'
+	lapCounterBackground = '#000000'
+	secondsBeforeLeaderToFlipLapCounter = 15.0
+	
 	def __init__( self ):
 		self.reset()
 

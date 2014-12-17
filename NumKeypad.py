@@ -399,11 +399,21 @@ class NumKeypad( wx.Panel ):
 		race = Model.race
 		if not race:
 			self.raceHUD.SetData()
+			if Utils.mainWin:
+				Utils.mainWin.updateLapCounter()
 			return
 			
 		results = GetResults( None, False )
 		if not results:
 			self.raceHUD.SetData()
+			if Utils.mainWin:
+				lapCounter = []
+				if all( category.getNumLaps() for category in race.getCategories(startWaveOnly=True) ):
+					lapCounter = [(u'{}'.format(category.getNumLaps()),False) for category in race.getCategories(startWaveOnly=True)]
+				else:
+					lapCounter = [(u'{} min'.format(race.minutes),False)] + [(u'{}'.format(category.getNumLaps()),False)
+						for category in race.getCategories(startWaveOnly=True) if category.getNumLaps()]
+				Utils.mainWin.updateLapCounter(lapCounter)
 			return
 
 		Finisher = Model.Rider.Finisher
@@ -416,20 +426,15 @@ class NumKeypad( wx.Panel ):
 		leaderCategory = None
 		lapCounter = []
 		
-		try:
-			secondsBeforeLeaderETAToFlipLapCounter = float(Utils.mainWin.secondsBeforeLeaderETAToFlipLapCounter)
-		except:
-			secondsBeforeLeaderETAToFlipLapCounter = 5.0
+		secondsBeforeLeaderToFlipLapCounter = race.secondsBeforeLeaderToFlipLapCounter
 		
 		def appendLapCounter( leaderCategory, category, lapCur, lapMax, tLeader=sys.float_info.max ):
 			if race.isTimeTrial or not(category == leaderCategory or category.getNumLaps()):
 				return
 			lapsToGo = max( 0, lapMax - lapCur )
-			if secondsBeforeLeaderETAToFlipLapCounter <= tLeader < secondsBeforeLeaderETAToFlipLapCounter+5.0:
+			if secondsBeforeLeaderToFlipLapCounter <= tLeader < secondsBeforeLeaderToFlipLapCounter+5.0:
 				lapCounter.append( ('{}'.format(lapsToGo), True) )
-			elif max(secondsBeforeLeaderETAToFlipLapCounter-5.0, 0.0) <= tLeader < secondsBeforeLeaderETAToFlipLapCounter:
-				lapCounter.append( ('{}'.format(max(0,lapsToGo-1)), True) )
-			elif 0.0 <= tLeader <= max(secondsBeforeLeaderETAToFlipLapCounter-5.0, 0.0):
+			elif 0.0 <= tLeader <= secondsBeforeLeaderToFlipLapCounter:
 				lapCounter.append( ('{}'.format(max(0,lapsToGo-1)), False) )
 			else:
 				lapCounter.append( ('{}'.format(lapsToGo), False) )

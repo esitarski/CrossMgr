@@ -336,6 +336,16 @@ def AdjustGridSize( grid, rowsRequired = None, colsRequired = None ):
 		elif d < 0:
 			grid.AppendCols( -d )
 
+def colorFromStr( s ):
+	assert s[:1] == '#', 'Invalid colour string'
+	s = s.lstrip('#')
+	assert len(s) in (3, 6), 'Invalid colour string'
+	if len(s) == 3:
+		r, g, b = [int(c, 16) for c in s]
+	else:
+		r, g, b = [int(s[i:i+2], 16) for i in xrange(0, 6, 2)]
+	return wx.Colour(r, g, b)
+
 def formatTime( secs, highPrecision = False ):
 	if secs is None:
 		secs = 0

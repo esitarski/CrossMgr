@@ -1,5 +1,6 @@
 import wx
 import  wx.lib.colourselect as  csel
+import Model
 import Utils
 
 class LapCounterOptions( wx.Dialog ):
@@ -13,22 +14,20 @@ class LapCounterOptions( wx.Dialog ):
 		
 		vs.Add( wx.StaticText(self, label=_('Lap Counter Options') + u':'), flag=wx.LEFT|wx.TOP|wx.RIGHT, border=8 )
 
-		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( wx.StaticText(self, label=_('Foreground') + u':'), flag=wx.RIGHT, border=4 )
+		fgs = wx.FlexGridSizer( cols=2, vgap=4, hgap=4 )
+		fgs.Add( wx.StaticText(self, label=_('Foreground') + u':'), flag=wx.ALIGN_CENTRE_VERTICAL )
 		self.foreground = csel.ColourSelect(self, colour=lapCounter.GetForegroundColour(), size=(100,-1))
-		hs.Add( self.foreground )
-		vs.Add( hs, flag=wx.ALL, border=16 )
+		fgs.Add( self.foreground )
 		
-		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( wx.StaticText(self, label=_('Background') + u':'), flag=wx.RIGHT, border=4 )
+		fgs.Add( wx.StaticText(self, label=_('Background') + u':'), flag=wx.ALIGN_CENTRE_VERTICAL )
 		self.background = csel.ColourSelect(self, colour=lapCounter.GetBackgroundColour(), size=(100,-1))
-		hs.Add( self.background )
-		vs.Add( hs, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM, border=16 )
+		fgs.Add( self.background )
+		vs.Add( fgs, flag=wx.ALL, border=16 )
 		
 		vs.Add( wx.StaticText(self, label=_("Seconds before Leader's ETA to flip Lap Counter") + u':'), flag=wx.LEFT|wx.TOP|wx.RIGHT, border=8 )
 		self.slider = wx.Slider(
 			self,
-			value=25, minValue=1, maxValue=180,
+			value=Model.race.secondsBeforeLeaderToFlipLapCounter if Model.race else 5, minValue=1, maxValue=180,
 			size=(360, -1), 
 			style = wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS 
 		)
@@ -51,7 +50,7 @@ class LapCounterOptions( wx.Dialog ):
 		self.EndModal( wx.ID_CANCEL )
 
 class LapCounter( wx.Panel ):
-	millis = 500
+	millis = 333
 	
 	def __init__( self, parent, labels=[], id=wx.ID_ANY, size=(640,480), style=0 ):
 		super(LapCounter, self).__init__( parent, id, size=size, style=style )
@@ -63,27 +62,28 @@ class LapCounter( wx.Panel ):
 		self.timer = wx.Timer( self )
 		self.Bind( wx.EVT_TIMER, self.OnTimer )
 		self.timer.Start( self.millis )
+		
 		self.flashOn = False
+		self.font = None
+		self.fontSize = -1
 		
-		self.backgroundColour = wx.BLACK
-		self.foregroundColour = wx.GREEN
-		
-		self.SetBackgroundColour( self.backgroundColour )
-		self.SetForegroundColour( self.foregroundColour )
+		self.SetCursor( wx.StockCursor(wx.CURSOR_RIGHT_BUTTON) )
+		self.SetBackgroundColour( wx.BLACK )
+		self.SetForegroundColour( wx.GREEN )
 
 	def OnOptions( self, event ):
 		d = LapCounterOptions( self, self )
 		if d.ShowModal() == wx.ID_OK:
-			secondsBeforeLeaderETAToFlipLapCounter = d.slider.GetValue()
-			try:
-				Utils.mainWin.secondsBeforeLeaderETAToFlipLapCounter = secondsBeforeLeaderETAToFlipLapCounter
-			except:
-				pass
-			self.backgroundColour = d.foreground.GetColour()
-			self.foregroundColour = d.background.GetColour()
 			
-			self.SetForegroundColour( self.backgroundColour )
-			self.SetBackgroundColour( self.foregroundColour )
+			self.SetForegroundColour( d.foreground.GetColour() )
+			self.SetBackgroundColour( d.background.GetColour() )
+			
+			race = Model.race
+			if race:
+				race.lapCounterForeground = self.GetForegroundColour().GetAsString(wx.C2S_HTML_SYNTAX)
+				race.lapCounterBackground = self.GetBackgroundColour().GetAsString(wx.C2S_HTML_SYNTAX)
+				race.secondsBeforeLeaderToFlipLapCounter = d.slider.GetValue()
+				race.setChanged()
 			wx.CallAfter( self.Refresh )
 		
 		d.Destroy()
@@ -93,7 +93,7 @@ class LapCounter( wx.Panel ):
 		if any( flash for label, flash in self.labels ):
 			self.Refresh()
 
-	def SetLabels( self, labels ):
+	def SetLabels( self, labels=[] ):
 		''' labels is of the format [(label1, flash), (label2, flash)] '''
 		if self.labels == labels:
 			return
@@ -110,7 +110,11 @@ class LapCounter( wx.Panel ):
 		self.Refresh()
 	
 	def GetFont( self, lineHeight ):
-		return wx.FontFromPixelSize( wx.Size(0,lineHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD )
+		if lineHeight == self.fontSize:
+			return self.font
+		self.fontSize = lineHeight
+		self.font = wx.FontFromPixelSize( wx.Size(0,lineHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD )
+		return self.font
 	
 	def OnPaint( self, event ):
 		dc = wx.AutoBufferedPaintDC( self )
@@ -118,23 +122,27 @@ class LapCounter( wx.Panel ):
 		dc.SetTextForeground( self.GetForegroundColour() )
 		dc.Clear()
 		
+		if not self.labels:
+			return
+		
 		width, height = self.GetSizeTuple()
-		border = 4
+		border = 0
 		
 		if len(self.labels) <= 2:
-			lineHeight = (height - border*2) // max(len(self.labels), 1)
+			lineHeight = (height - border*2) // len(self.labels)
+			#lineHeight *= (1.4 if len(self.labels) == 1 else 1)
 			dc.SetFont( self.GetFont(lineHeight) )
 			
 			maxWidth = max( dc.GetTextExtent(label)[0] for label, flash in self.labels ) if self.labels else 0
 			if maxWidth > width - border*2:
-				lineHeight *= int( float(width - border*2) / float(maxWidth) )
+				lineHeight = int( lineHeight * float(width - border*2) / float(maxWidth) )
 				dc.SetFont( self.GetFont(lineHeight) )
 				maxWidth = max( dc.GetTextExtent(label)[0] for label, flash in self.labels ) if self.labels else 0
 			
 			xRight = width - (width - maxWidth) // 2
 			yTop = (height - (lineHeight * len(self.labels))) // 2
 			for label, flash in self.labels:
-				if not(flash and self.flashOn):
+				if not flash or self.flashOn:
 					dc.DrawText( label, xRight - dc.GetTextExtent(label)[0], yTop )
 				yTop += lineHeight
 		else:
@@ -144,7 +152,7 @@ class LapCounter( wx.Panel ):
 			
 			maxWidth = max( dc.GetTextExtent(label)[0] for label, flash in self.labels ) if self.labels else 0
 			if maxWidth > width - border*2:
-				lineHeight *= int( float(width - border*2) / float(maxWidth) )
+				lineHeight = int( lineHeight * float(width - border*2) / float(maxWidth) )
 				dc.SetFont( self.GetFont(lineHeight) )
 				maxWidth = max( dc.GetTextExtent(label)[0] for label, flash in self.labels ) if self.labels else 0
 			
@@ -152,7 +160,7 @@ class LapCounter( wx.Panel ):
 			for i in xrange(0, 4, 2):
 				yTop = (height - (lineHeight * 2)) // 2
 				for label, flash in self.labels[i:i+2]:
-					if not(flash and self.flashOn):
+					if not flash or self.flashOn:
 						dc.DrawText( label, xRight - dc.GetTextExtent(label)[0], yTop )
 					yTop += lineHeight
 				xRight += width
@@ -161,6 +169,22 @@ class LapCounter( wx.Panel ):
 		pass
 		
 	def refresh( self ):
+		race = Model.race
+		if race:
+			self.SetForegroundColour( Utils.colorFromStr(race.lapCounterForeground) )
+			self.SetBackgroundColour( Utils.colorFromStr(race.lapCounterBackground) )
+			if race.isUnstarted():
+				if all( category.getNumLaps() for category in race.getCategories(startWaveOnly=True) ):
+					lapCounter = [(u'{}'.format(category.getNumLaps()),False) for category in race.getCategories(startWaveOnly=True)]
+				else:
+					lapCounter = [(u'{} min'.format(race.minutes),False)] + [(u'{}'.format(category.getNumLaps()),False)
+						for category in race.getCategories(startWaveOnly=True) if category.getNumLaps()]
+				self.SetLabels( lapCounter )
+			elif race.isFinished():
+				self.SetLabels()
+		else:
+			self.SetLabels()
+		
 		self.Refresh()
 	
 if __name__ == '__main__':

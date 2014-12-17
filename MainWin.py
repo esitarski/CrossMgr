@@ -215,8 +215,6 @@ class MainWin( wx.Frame ):
 		self.fileName = None
 		self.numSelect = None
 		
-		self.secondsBeforeLeaderETAToFlipLapCounter = 5
-		
 		# Setup the objects for the race clock.
 		self.timer = wx.Timer( self, id=wx.NewId() )
 		self.secondCount = 0
@@ -2390,15 +2388,16 @@ Continue?''' % fName, 'Simulate a Race' ):
 			pass
 			
 		if riderInfo:
+			rcOffset = 1 if int(openpyxl.__version__.split('.')) >= 2 else 0
 			wb = openpyxl.workbook.Workbook()
 			ws = wb.create_sheet()
 			ws.title = 'RiderData'
 			for c, h in enumerate(['Bib#', 'LastName', 'FirstName', 'Team']):
-				ws.cell(row = 0, column = c).value = h
+				ws.cell(row = 0 + rcOffset, column = c + rcOffset).value = h
 			for r, row in enumerate(riderInfo):
-				ws.cell( row = r + 1, column = 0 ).value = r + 100
+				ws.cell( row = r + 1 + rcOffset, column = 0 + rcOffset ).value = r + 100
 				for c, v in enumerate(row):
-					ws.cell( row = r + 1, column = c + 1 ).value = v
+					ws.cell( row = r + 1 + rcOffset, column = c + 1 + rcOffset).value = v
 			fnameRiderInfo = os.path.join(Utils.getHomeDir(), 'SimulationRiderData.xlsx')
 			wb.save( fnameRiderInfo )
 			race.excelLink = ExcelLink()

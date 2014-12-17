@@ -16,8 +16,9 @@ If you are running the race by time, one lap counter is shown for the fastest ca
 
 If you are running categories with specified __Race Laps__ (see [Categories][] for more details), a separate lap counter will be shown for each category.
 
-Right-click in the Lap Counter screen to set options.
+Right-click in the Lap Counter screen to set options.  You can change the foreground and background color, as well as the seconds before the expected leader to change the lap counter.
 
-* 5 seconds before the Lap Counter changes, it will start flashing with the current lap count.
-* It will then switch to the new lap count while continuing to flash.
-* 5 seconds after that it will stop flashing.
+* 5 seconds before the Lap Counter changes, it will flash with the current lap count.
+* After 5 seconds, it will switch to the new lap count.
+
+This is to draw attention to the lap counter before it changes.
