@@ -426,13 +426,13 @@ class NumKeypad( wx.Panel ):
 		leaderCategory = None
 		lapCounter = []
 		
-		secondsBeforeLeaderToFlipLapCounter = race.secondsBeforeLeaderToFlipLapCounter
+		secondsBeforeLeaderToFlipLapCounter = race.secondsBeforeLeaderToFlipLapCounter + 1.0
 		
 		def appendLapCounter( leaderCategory, category, lapCur, lapMax, tLeader=sys.float_info.max ):
 			if race.isTimeTrial or not(category == leaderCategory or category.getNumLaps()):
 				return
 			lapsToGo = max( 0, lapMax - lapCur )
-			if secondsBeforeLeaderToFlipLapCounter <= tLeader < secondsBeforeLeaderToFlipLapCounter+5.0:
+			if secondsBeforeLeaderToFlipLapCounter < tLeader <= secondsBeforeLeaderToFlipLapCounter+5.0:
 				lapCounter.append( ('{}'.format(lapsToGo), True) )
 			elif 0.0 <= tLeader <= secondsBeforeLeaderToFlipLapCounter:
 				lapCounter.append( ('{}'.format(max(0,lapsToGo-1)), False) )

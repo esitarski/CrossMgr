@@ -2388,7 +2388,7 @@ Continue?''' % fName, 'Simulate a Race' ):
 			pass
 			
 		if riderInfo:
-			rcOffset = 1 if int(openpyxl.__version__.split('.')) >= 2 else 0
+			rcOffset = 1 if int(openpyxl.__version__.split('.')[0]) >= 2 else 0
 			wb = openpyxl.workbook.Workbook()
 			ws = wb.create_sheet()
 			ws.title = 'RiderData'

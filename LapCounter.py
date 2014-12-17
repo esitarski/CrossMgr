@@ -94,6 +94,8 @@ class LapCounter( wx.Panel ):
 			self.Refresh()
 
 	def SetLabels( self, labels=[] ):
+		labels = labels or [(u'\u25AF\u25AF', False)]
+	
 		''' labels is of the format [(label1, flash), (label2, flash)] '''
 		if self.labels == labels:
 			return
