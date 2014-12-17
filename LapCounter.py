@@ -13,13 +13,17 @@ class LapCounterOptions( wx.Dialog ):
 		
 		vs.Add( wx.StaticText(self, label=_('Lap Counter Options') + u':'), flag=wx.LEFT|wx.TOP|wx.RIGHT, border=8 )
 
-		vs.Add( wx.StaticText(self, label=_('Colors') + u':'), flag=wx.LEFT|wx.TOP|wx.RIGHT, border=8 )
-
-		self.foreground = csel.ColourSelect(self, label=_('Foreground'), colour=lapCounter.GetForegroundColour())
-		vs.Add( self.foreground, flag=wx.LEFT|wx.RIGHT, border=16 )
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( wx.StaticText(self, label=_('Foreground') + u':'), flag=wx.RIGHT, border=4 )
+		self.foreground = csel.ColourSelect(self, colour=lapCounter.GetForegroundColour(), size=(100,-1))
+		hs.Add( self.foreground )
+		vs.Add( hs, flag=wx.ALL, border=16 )
 		
-		self.background = csel.ColourSelect(self, -1, _('Background'), colour=lapCounter.GetBackgroundColour())
-		vs.Add( self.background, flag=wx.LEFT|wx.RIGHT, border=16 )
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( wx.StaticText(self, label=_('Background') + u':'), flag=wx.RIGHT, border=4 )
+		self.background = csel.ColourSelect(self, colour=lapCounter.GetBackgroundColour(), size=(100,-1))
+		hs.Add( self.background )
+		vs.Add( hs, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM, border=16 )
 		
 		vs.Add( wx.StaticText(self, label=_("Seconds before Leader's ETA to flip Lap Counter") + u':'), flag=wx.LEFT|wx.TOP|wx.RIGHT, border=8 )
 		self.slider = wx.Slider(

@@ -429,7 +429,7 @@ class NumKeypad( wx.Panel ):
 				lapCounter.append( ('{}'.format(lapsToGo), True) )
 			elif max(secondsBeforeLeaderETAToFlipLapCounter-5.0, 0.0) <= tLeader < secondsBeforeLeaderETAToFlipLapCounter:
 				lapCounter.append( ('{}'.format(max(0,lapsToGo-1)), True) )
-			elif  0.0 <= tLeader <= max(secondsBeforeLeaderETAToFlipLapCounter-5.0, 0.0):
+			elif 0.0 <= tLeader <= max(secondsBeforeLeaderETAToFlipLapCounter-5.0, 0.0):
 				lapCounter.append( ('{}'.format(max(0,lapsToGo-1)), False) )
 			else:
 				lapCounter.append( ('{}'.format(lapsToGo), False) )
