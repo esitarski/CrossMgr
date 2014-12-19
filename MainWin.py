@@ -31,7 +31,7 @@ except:
 import cPickle as pickle
 from optparse import OptionParser
 import xlwt
-import openpyxl
+import xlsxwriter
 from setpriority import setpriority
 
 import Utils
@@ -2388,21 +2388,21 @@ Continue?''' % fName, 'Simulate a Race' ):
 			pass
 			
 		if riderInfo:
-			rcOffset = 1 if int(openpyxl.__version__.split('.')[0]) >= 2 else 0
-			wb = openpyxl.workbook.Workbook()
-			ws = wb.create_sheet()
-			ws.title = 'RiderData'
-			for c, h in enumerate(['Bib#', 'LastName', 'FirstName', 'Team']):
-				ws.cell(row = 0 + rcOffset, column = c + rcOffset).value = h
-			for r, row in enumerate(riderInfo):
-				ws.cell( row = r + 1 + rcOffset, column = 0 + rcOffset ).value = r + 100
-				for c, v in enumerate(row):
-					ws.cell( row = r + 1 + rcOffset, column = c + 1 + rcOffset).value = v
 			fnameRiderInfo = os.path.join(Utils.getHomeDir(), 'SimulationRiderData.xlsx')
-			wb.save( fnameRiderInfo )
+			sheetName = 'RiderData'
+			wb = xlsxwriter.Workbook( fnameRiderInfo )
+			ws = wb.add_worksheet(sheetName)
+			for c, h in enumerate(['Bib#', 'LastName', 'FirstName', 'Team']):
+				ws.write(0, c, h)
+			for r, row in enumerate(riderInfo):
+				ws.write( r+1, 0, r+100 )
+				for c, v in enumerate(row):
+					ws.write( r+1, c+1, v )
+			wb.close()
+			
 			race.excelLink = ExcelLink()
 			race.excelLink.setFileName( fnameRiderInfo )
-			race.excelLink.setSheetName( ws.title )
+			race.excelLink.setSheetName( sheetName )
 			race.excelLink.setFieldCol( {'Bib#':0, 'LastName':1, 'FirstName':2, 'Team':3} )
 
 		# Start the simulation.
