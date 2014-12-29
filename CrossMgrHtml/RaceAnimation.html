@@ -220,6 +220,7 @@ var gpsIsPointToPoint = null;	// Flag whether course is point-to-point or a loop
 var courseCoordinates = null;	// course coordinates as an array of lon, lat pairs.
 var virtualRideTemplate = null;	// template to generate virtual ride page.
 var courseViewerTemplate = null;// template to show course on a map.
+var travelMapTemplate = null;	// template to show travel map.
 var infoFields = null;			// Potential rider fields to show in the results.
 var langCur = null;				// Index of current display language.
 
@@ -706,12 +707,44 @@ function OpenRiderDashboardViewerWindow( bib )
 	var d = data[bib];
 	var name = (d.FirstName && d.LastName ? d.FirstName + ' ' + d.LastName : d.FirstName ? d.FirstName : d.LastName);
 	var newTitle = bib + ': ' + name + ' Dashboard';
-	var s = JSON.stringify(payload);
-	var v = JSON.parse( s );
 	var template = riderDashboard.replace(/{{/g, '<').replace(/}}/g, '>').replace(
 					'payload = null;', 'payload=' + JSON.stringify(payload) + ';' ).replace(
 					'TTIITTLLEE', newTitle.escapeHTML() );
 	
+	var w = window.open( '', '', '', true );
+	w.document.write( template );
+	w.document.close();
+}
+
+function GetLocationCount() {
+	if( !travelMapTemplate || !courseCoordinates )
+		return [];
+	var locCnt = {};
+	for( bib in data ) {
+		var d = data[bib];
+		var city = d['City'];
+		var region = (d['Prov'] || d['State'] || d['StateProv']);
+		if( city && region ) {
+			var location = city + ', ' + region;
+			if( location in locCnt )
+				locCnt[location] += 1;
+			else
+				locCnt[location] = 1;
+		}
+	}
+	var locationCount = [];
+	for( location in locCnt )
+		locationCount.push( [location, locCnt[location]] );
+	return locationCount;
+}
+
+function OpenTravelMapWindow() {
+	var locationCount = GetLocationCount();
+	if( locationCount.length == 0 )
+		return;
+	var payload = {'raceName': raceNameText + ': ' + raceDate, 'locationCount':locationCount, 'raceCoords':[courseCoordinates[0],courseCoordinates[1]]};
+	var template = travelMapTemplate.replace(/{{/g, '<').replace(/}}/g, '>').replace(
+					'payload = null;', 'payload=' + JSON.stringify(payload) + ';' );
 	var w = window.open( '', '', '', true );
 	w.document.write( template );
 	w.document.close();
@@ -5008,9 +5041,12 @@ function onLoad()
 	
 	if( !courseCoordinates ) {
 		document.getElementById('idVirtualTour').className = 'hidden';
+		document.getElementById('idTravelMap').className = 'hidden';
 		document.getElementById('idCourseViewer').className = 'hidden';
 		document.getElementById('idGetDirections').className = 'hidden';
 	}
+	if( GetLocationCount().length == 0 )
+		document.getElementById('idTravelMap').className = 'hidden';
 	
 	canvasSupported = isCanvasSupported();
 	if( canvasSupported )
@@ -5169,6 +5205,7 @@ function onLoad()
 <span id="idRFID"></span>&nbsp;&nbsp;&nbsp;
 <button id="idGetDirections" onclick="OpenGetDirections()" data-tr="Get Directions"></button>&nbsp;&nbsp;
 <button id="idCourseViewer" onclick="OpenCourseViewerWindow()" data-tr="Course Map"></button>&nbsp;&nbsp;
+<button id="idTravelMap" onclick="OpenTravelMapWindow()" data-tr="Location Map"></button>&nbsp;&nbsp;
 <button id="idVirtualTour" onclick="OpenVirtualTourWindow()" data-tr="Google Earth Ride"></button>&nbsp;&nbsp;
 <button onclick="doReload()" data-tr="Refresh"></button>&nbsp;&nbsp;&nbsp;
 <br/>

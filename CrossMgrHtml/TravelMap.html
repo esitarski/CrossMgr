@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+  <head>
+	<meta charset="utf-8">
+	<style>
+		body { font-family: sans-serif; }
+	</style>
+	<title>CrossMgr Travel Map</title>
+	<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=visualization"></script>
+	<script type="text/javascript" src="https://www.google.com/jsapi?autoload={'modules':[{'name':'visualization',
+	   'version':'1','packages':['table', 'corechart']}]}"></script>
+	<script>
+var raceName = null;
+var raceCoords = [43.1656, -77.6114 - 0.5];
+
+var raceLatLng = null;
+var locationCount = [
+	["Baldwinsville, NY",3],
+	["Pittsfield, MA",2],
+	["East Aurora, NY",3],
+	["Webster, NY",5],
+	["Walworth, NY",1],
+	["West Falls, NY",1],
+	["Mendon, NY",1],
+	["Manlius, NY",1],
+	["Orchard Park, NY",2],
+	["Pittsford, NY",3],
+	["Brewerton, NY",1],
+	["Fairport, NY",4],
+	["Gowanda, NY",1],
+	["West Point, NY",11],
+	["Clay, NY",1],
+	["Fulton, NY",1],
+	["Medina, NY",1],
+	["Rochester, NY",29],
+	["Interlaken, NY",1],
+	["Amherst, NY",2],
+	["Penfield, NY",2],
+	["Honeoye Falls, NY",2],
+	["Tully, NY",1],
+	["Scarsdale, NY",1],
+	["Litchfield, CT",1],
+	["Trumansburg, NY",1],
+	["Geneseo, NY",3],
+	["Nazareth, PA",1],
+	["Greece, NY",1],
+	["Le Roy, NY",1],
+	["Henrietta, NY",2],
+	["Victor, NY",4],
+	["Elmira, NY",1],
+	["Cazenovia, NY",1],
+	["Paxton, MA",1],
+	["Big Flats, NY",1],
+	["Syracuse, NY",2],
+	["Buffalo, NY",8],
+	["Farmington, NY",3],
+	["Rocester, NY",1]
+];
+var locationGeocodeCount = 0;
+
+function lexical_compare( x, y ) {
+	var iMax = Math.min( x.length, y.length );
+	for( var i = 0; i < iMax; ++i ) {
+		if( x[i] < y[i] )		return -1;
+		if( x[i] > y[i] )		return 1;
+	}
+	return x.length < y.length ? -1 : x.length > y.length ? 1 : 0;
+}
+
+var geocoder;
+var map;
+var heatmap;
+var bounds;
+function initialize() {
+	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
+	
+	locationCount.sort( function(x, y) { return lexical_compare([-x[1], x[0]], [-y[1], y[0]]); } );
+	var countMax = 0, countTotal = 0;
+	for( var i = 0; i < locationCount.length; ++i ) {
+		countTotal += locationCount[i][1];
+		countMax = Math.max( countMax, locationCount[i][1] );
+	}
+	var countFactor = 32 * (countMax / countTotal);
+
+	raceLatLng = new google.maps.LatLng(raceCoords[0], raceCoords[1]);
+	bounds = new google.maps.LatLngBounds();
+	bounds.extend( raceLatLng );
+	map = new google.maps.Map(document.getElementById('map-canvas'), { zoom: 6, center: raceLatLng });
+	heatmap = new google.maps.visualization.HeatmapLayer({ map: map, radius: 100 });
+	
+	var marker = new google.maps.Marker({
+			map: map,
+			position: raceLatLng,
+			zIndex: 5,
+			icon: 'data:image/png;base64,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'
+		}
+	);
+	var infowindow = new google.maps.InfoWindow({ content: 'Race Location' });
+	google.maps.event.addListener(marker, 'click', function() {infowindow.open(map,marker);});
+
+	geocoder = new google.maps.Geocoder();
+	
+	locationGeocodeCount = 0;
+	function showLocation() {
+		updateTitle();
+		if( locationGeocodeCount != locationCount.length ) {
+			var lgc = locationCount[locationGeocodeCount];
+			codeAddress( lgc[0], lgc[1], lgc[1]*countFactor );
+			setTimeout( showLocation, 250 );
+		}
+	}
+	showLocation();
+	
+	updateLocationCountPieChart();
+	updateLocationRegionCountPieChart();
+	updateLocationCountTable();
+}
+
+function updateTitle() {
+	var s = (raceName ? raceName : 'Race') + ' Travel Map';
+	if( locationGeocodeCount < locationCount.length-1 )
+		s += ' (' + locationGeocodeCount + '/' + locationCount.length + ')';
+	document.getElementById( 'idTitle' ).innerHTML = s;
+}
+
+function updateLocationCountTable() {
+	var container = document.getElementById( 'idLocationCountTable' );
+	if( !container.table )
+		container.table = new google.visualization.Table( container );
+	
+	var dataTable = new google.visualization.DataTable();
+	dataTable.addColumn( 'string', 'City' );
+	dataTable.addColumn( 'number', 'Count' );
+	dataTable.addColumn( 'number', '%' );
+	dataTable.addColumn( 'number', 'Sum' );
+
+	var total = 0.0;
+	for( var i = 0; i < locationCount.length; ++i )
+		total += locationCount[i][1];
+
+	var cumulative = 0.0, cumulativePercent = 0.0;
+	for( var i = 0; i < locationCount.length; ++i ) {
+		cumulative += locationCount[i][1];
+		var percent = 100 * locationCount[i][1] / total;
+		cumulativePercent += percent;
+		dataTable.addRow( [
+				locationCount[i][0],
+				locationCount[i][1],
+				{v:locationCount[i][1], f:percent.toFixed(1)},
+				{v:cumulative, f:cumulative.toFixed(0) + ' (' + cumulativePercent.toFixed(1) + '%)'}
+			] );
+	}
+	container.table.draw( dataTable );
+}
+
+function updateLocationCountPieChart() {
+	var container = document.getElementById( 'idLocationCountPieChart' );
+	if( !container.chart )
+		container.chart = new google.visualization.PieChart( container );
+	
+	var chartData = [['Location', 'Count']];
+	for( var i = 0; i < locationCount.length; ++i )
+		chartData.push( [locationCount[i][0], locationCount[i][1]] );
+	
+	var data = google.visualization.arrayToDataTable( chartData );
+	var options = { title: 'Cities', pieHole: 0.4, legend: 'none' };
+	container.chart.draw(data, options);
+}
+
+function updateLocationRegionCountPieChart() {
+	var container = document.getElementById( 'idLocationRegionCountPieChart' );
+	if( !container.chart )
+		container.chart = new google.visualization.PieChart( container );
+	
+	var rc = {};
+	for( var i = 0; i < locationCount.length; ++i ) {
+		var fields = locationCount[i][0].split( ',' );
+		var region = fields[fields.length-1].trim();
+		if( region in rc )
+			rc[region] += 1;
+		else
+			rc[region] = 1;
+	}
+	var regionCount = [];
+	for( region in rc )
+		regionCount.push( [region, rc[region]] );
+		
+	regionCount.sort( function(x, y) { return lexical_compare([-x[1], x[0]], [-y[1], y[0]]); } );
+
+	var chartData = [['Region', 'Count']];
+	for( var i = 0; i < regionCount.length; ++i )
+		chartData.push( [regionCount[i][0], regionCount[i][1]] );
+	
+	var data = google.visualization.arrayToDataTable( chartData );
+	var options = { title: 'Regions', pieHole: 0.4, legend: 'none' };
+	container.chart.draw(data, options);
+}
+
+var pointArray = [];
+function codeAddress( address, count, width ) {
+	geocoder.geocode( { 'address': address}, function(results, status) {
+		if (status == google.maps.GeocoderStatus.OK) {
+			var marker = new google.maps.Marker({
+				map: map,
+				zIndex: 1,
+				position: results[0].geometry.location
+			});
+			var infowindow = new google.maps.InfoWindow({ content: address + '<br/>Participants: <strong>' + count + '</strong>'});
+			google.maps.event.addListener(marker, 'click', function() {infowindow.open(map,marker);});
+			
+			var coord = results[0].geometry.location;
+			pointArray.push( {location: coord, weight: count} );
+			heatmap.setData( pointArray )
+			bounds.extend( coord );
+			
+			if( ++locationGeocodeCount == locationCount.length ) {
+				map.fitBounds( bounds );
+				heatmap.setData( pointArray )
+			}
+		}
+		else
+			console.log('"' + address + '": Geocode unsuccessful: ' + status);
+		}
+	);
+}
+
+google.maps.event.addDomListener(window, 'load', initialize);
+    </script>
+  </head>
+  <body>
+    <h2 id="idTitle"></h2>
+	<table>
+		<tr><td colspan=3><div id="map-canvas" style="width: 1200px; height: 500px"></div></td></tr>
+		<tr>
+			<td><div id="idLocationCountPieChart" style="width: 400px; height: 400px"></div></td>
+			<td><div id="idLocationRegionCountPieChart" style="width: 400px; height: 400px"></div></td>
+			<td><div id="idLocationCountTable" style="width: 400px; height: 400px"></div></td>
+		</tr>
+	</table>
+	<p/>
+	Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
+  </body>
+</html>
