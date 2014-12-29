@@ -723,14 +723,14 @@ function GetLocationCount() {
 	for( bib in data ) {
 		var d = data[bib];
 		var city = d['City'];
+		if( !city ) continue;
 		var region = (d['Prov'] || d['State'] || d['StateProv']);
-		if( city && region ) {
-			var location = city + ', ' + region;
-			if( location in locCnt )
-				locCnt[location] += 1;
-			else
-				locCnt[location] = 1;
-		}
+		if( !region ) continue;
+		var location = city + ', ' + region;
+		if( location in locCnt )
+			locCnt[location] += 1;
+		else
+			locCnt[location] = 1;
 	}
 	var locationCount = [];
 	for( location in locCnt )
