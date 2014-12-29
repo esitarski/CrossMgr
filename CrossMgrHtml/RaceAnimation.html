@@ -161,6 +161,7 @@ var raceName = null;
 var organizer = null;
 var timestamp = null;
 var email = null;
+var raceAddress = null;
 var raceIsRunning = null;
 var raceIsUnstarted = null;
 var data = null;
@@ -220,7 +221,7 @@ var gpsIsPointToPoint = null;	// Flag whether course is point-to-point or a loop
 var courseCoordinates = null;	// course coordinates as an array of lon, lat pairs.
 var virtualRideTemplate = null;	// template to generate virtual ride page.
 var courseViewerTemplate = null;// template to show course on a map.
-var travelMapTemplate = null;	// template to show travel map.
+var travelMap = null;	// template to show travel map.
 var infoFields = null;			// Potential rider fields to show in the results.
 var langCur = null;				// Index of current display language.
 
@@ -382,6 +383,7 @@ var translations = {
 	'Chip Timing':	['Chip Timing',		'RFID Chronométrage',		'Cronometraje RFID'],
 	'Google Earth Ride': ['See Course on Google Earth', 'Montrez cours sur Google Earth', 'Mostrar curso en Google Earth'],
 	'Course Map': 	['See Course on Google Maps', "Montrez cours sur Google Maps", "Mostrar curso en Google Maps"],
+	'Participant Map':['Participant Map', 'Carte des participants', 'Maps de los participantes'],
 	'Get Directions':['Get Directions',	"Obtenir un itinéraire",	"Cómo llegar"],
 	'Total':		['Total',			'Gain',						'Ganancia'],
 	'Elevation':	['Elevation',		'total',					'total'],
@@ -717,7 +719,7 @@ function OpenRiderDashboardViewerWindow( bib )
 }
 
 function GetLocationCount() {
-	if( !travelMapTemplate || !courseCoordinates )
+	if( !travelMap )
 		return [];
 	var locCnt = {};
 	for( bib in data ) {
@@ -742,8 +744,15 @@ function OpenTravelMapWindow() {
 	var locationCount = GetLocationCount();
 	if( locationCount.length == 0 )
 		return;
-	var payload = {'raceName': raceNameText + ': ' + raceDate, 'locationCount':locationCount, 'raceCoords':[courseCoordinates[0],courseCoordinates[1]]};
-	var template = travelMapTemplate.replace(/{{/g, '<').replace(/}}/g, '>').replace(
+	var payload = {
+		'raceName': raceNameText + ': ' + raceDate,
+		'locationCount':locationCount
+	};
+	if( courseCoordinates )
+		payload.raceCoords = [courseCoordinates[1],courseCoordinates[0]];
+	if( raceAddress )
+		payload.raceAddress = raceAddress;
+	var template = travelMap.replace(/{{/g, '<').replace(/}}/g, '>').replace(
 					'payload = null;', 'payload=' + JSON.stringify(payload) + ';' );
 	var w = window.open( '', '', '', true );
 	w.document.write( template );
@@ -5041,11 +5050,10 @@ function onLoad()
 	
 	if( !courseCoordinates ) {
 		document.getElementById('idVirtualTour').className = 'hidden';
-		document.getElementById('idTravelMap').className = 'hidden';
 		document.getElementById('idCourseViewer').className = 'hidden';
 		document.getElementById('idGetDirections').className = 'hidden';
 	}
-	if( GetLocationCount().length == 0 )
+	if( !travelMap )
 		document.getElementById('idTravelMap').className = 'hidden';
 	
 	canvasSupported = isCanvasSupported();
@@ -5203,10 +5211,11 @@ function onLoad()
 <br/>
 <span data-tr="Powered by"></span> <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
 <span id="idRFID"></span>&nbsp;&nbsp;&nbsp;
+<br/>
 <button id="idGetDirections" onclick="OpenGetDirections()" data-tr="Get Directions"></button>&nbsp;&nbsp;
 <button id="idCourseViewer" onclick="OpenCourseViewerWindow()" data-tr="Course Map"></button>&nbsp;&nbsp;
-<button id="idTravelMap" onclick="OpenTravelMapWindow()" data-tr="Location Map"></button>&nbsp;&nbsp;
 <button id="idVirtualTour" onclick="OpenVirtualTourWindow()" data-tr="Google Earth Ride"></button>&nbsp;&nbsp;
+<button id="idTravelMap" onclick="OpenTravelMapWindow()" data-tr="Participant Map"></button>&nbsp;&nbsp;
 <button onclick="doReload()" data-tr="Refresh"></button>&nbsp;&nbsp;&nbsp;
 <br/>
 <input id="idCycleCategoriesMode" type="checkbox" class="hidden" onclick="SetCycleCategoriesMode()"><span data-tr="CycleCategories" class="hidden"></span></input>&nbsp;&nbsp;

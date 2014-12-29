@@ -1253,6 +1253,7 @@ class MainWin( wx.Frame ):
 			payload['rfid']				= getattr(race, 'enableJChipIntegration', False)
 			payload['raceNameText']		= race.name
 			payload['raceDate']			= race.date
+			payload['raceAddress']      = u', '.join( n for n in [race.city, race.stateProv, race.country] if n )
 			payload['raceIsRunning']	= race.isRunning()
 			payload['raceIsUnstarted']	= race.isUnstarted()
 			payload['lapDetails']		= GetLapDetails() if not race.hideDetails else {}
@@ -1287,17 +1288,19 @@ class MainWin( wx.Frame ):
 		payload['version']				= Version.AppVerName
 		if gpsPoints:
 			payload['gpsPoints']		= gpsPoints
+			
+		def sanitize( template ):
+			# Sanitize the template into a safe json string.
+			template = self.reLeadingWhitespace.sub( '', template )
+			template = self.reComments.sub( '', template )
+			template = self.reBlankLines.sub( '\n', template )
+			template = template.replace( '<', '{{' ).replace( '>', '}}' )
+			return template
+		
+		# If a map is defined, add the course viewers.
 		if courseCoordinates:
 			payload['courseCoordinates'] = courseCoordinates
 			
-			def sanitize( template ):
-				# Sanitize the template into a safe json string.
-				template = self.reLeadingWhitespace.sub( '', template )
-				template = self.reComments.sub( '', template )
-				template = self.reBlankLines.sub( '\n', template )
-				template = template.replace( '<', '{{' ).replace( '>', '}}' )
-				return template
-				
 			# Add the google maps template.
 			templateFile = os.path.join(Utils.getHtmlFolder(), 'VirtualTourTemplate.html')
 			try:
@@ -1316,14 +1319,28 @@ class MainWin( wx.Frame ):
 			except:
 				pass
 			
-			# Add the rider dashboard.
-			templateFile = os.path.join(Utils.getHtmlFolder(), 'RiderDashboard.html')
-			try:
-				with io.open(templateFile, 'r', encoding='utf-8') as fp:
-					template = fp.read()
-				payload['riderDashboard'] = sanitize( template )
-			except:
-				pass
+		# Add the rider dashboard.
+		templateFile = os.path.join(Utils.getHtmlFolder(), 'RiderDashboard.html')
+		try:
+			with io.open(templateFile, 'r', encoding='utf-8') as fp:
+				template = fp.read()
+			payload['riderDashboard'] = sanitize( template )
+		except:
+			pass
+	
+		# Add the travel map if the riders have locations.
+		try:
+			excelLink = race.excelLink
+			if excelLink.hasField('City') and any(excelLink.hasField(f) for f in ('Prov','State','StateProv')):
+				templateFile = os.path.join(Utils.getHtmlFolder(), 'TravelMap.html')
+				try:
+					with io.open(templateFile, 'r', encoding='utf-8') as fp:
+						template = fp.read()
+					payload['travelMap'] = sanitize( template )
+				except:
+					pass				
+		except Exception as e:
+			pass
 		
 		if totalElevationGain:
 			payload['gpsTotalElevationGain'] = totalElevationGain

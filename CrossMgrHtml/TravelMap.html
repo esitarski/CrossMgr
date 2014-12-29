@@ -4,13 +4,26 @@
 	<meta charset="utf-8">
 	<style>
 		body { font-family: sans-serif; }
+		.tooltip {
+			border: thin 1px #eee;
+			background-color: #FFFBF0;
+			padding: 5px;
+			width: 160px;
+		}
+		.left{
+			display: block;
+			float: left;
+			width: 33%;
+		}
 	</style>
 	<title>CrossMgr Travel Map</title>
 	<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=visualization"></script>
 	<script type="text/javascript" src="https://www.google.com/jsapi?autoload={'modules':[{'name':'visualization',
 	   'version':'1','packages':['table', 'corechart']}]}"></script>
 	<script>
+var payload = null;
 var raceName = null;
+var raceAddress = null;
 var raceCoords = [43.1656, -77.6114 - 0.5];
 
 var raceLatLng = null;
@@ -67,10 +80,98 @@ function lexical_compare( x, y ) {
 	return x.length < y.length ? -1 : x.length > y.length ? 1 : 0;
 }
 
-var geocoder;
-var map;
-var heatmap;
-var bounds;
+// Constructor for the tooltip
+// @ param options an object containing: marker(required), content(required) and cssClass(a css class, optional)
+// @ see google.maps.OverlayView()
+function Tooltip(options) {
+	this.marker_ = options.marker;
+	this.content_ = options.content;
+	this.map_ = options.marker.get('map');
+	this.cssClass_ = options.cssClass||null;
+
+	// We define a property to hold the content's
+	// div. We'll actually create this div
+	// upon receipt of the add() method so we'll
+	// leave it null for now.
+	this.div_ = null;
+
+	this.setMap(this.map_);
+	var me = this;
+	google.maps.event.addListener(me.marker_, 'mouseover', function() { me.show(); });
+	google.maps.event.addListener(me.marker_, 'mouseout', function() { me.hide(); });
+}
+// Now we extend google.maps.OverlayView()
+Tooltip.prototype = new google.maps.OverlayView();
+
+// onAdd is one of the functions that we must implement, 
+// it will be called when the map is ready for the overlay to be attached.
+Tooltip.prototype.onAdd = function() {
+
+	// Create the DIV and set some basic attributes.
+	var div = document.createElement('DIV');
+	div.style.position = "absolute";
+	// Hide tooltip
+	div.style.visibility = "hidden";
+	if(this.cssClass_)
+		div.className += " "+this.cssClass_;
+
+	div.innerHTML = this.content_;
+	this.div_ = div;
+
+	// We add an overlay to a map via one of the map's panes.
+	// We'll add this overlay to the floatPane pane.
+	var panes = this.getPanes();
+	panes.floatPane.appendChild(this.div_);	
+}
+ 
+Tooltip.prototype.draw = function() {
+
+	// Position the overlay. We use the position of the marker
+	// to peg it to the correct position, just northeast of the marker.
+	// We need to retrieve the projection from this overlay to do this.
+	var overlayProjection = this.getProjection();
+
+	var ne = overlayProjection.fromLatLngToDivPixel(this.marker_.getPosition());
+
+	var div = this.div_;
+	div.style.left = ne.x + 'px';
+	div.style.top = ne.y + 'px';
+}
+Tooltip.prototype.onRemove = function() {
+	this.div_.parentNode.removeChild(this.div_);
+}
+
+Tooltip.prototype.hide = function() {
+    if (this.div_) {
+      this.div_.style.visibility = "hidden";
+    }
+}
+
+Tooltip.prototype.show = function() {
+    if (this.div_) {
+      this.div_.style.visibility = "visible";
+    }
+}
+
+var geocoder = null;
+var map = null;
+var bounds = null;
+var heatmap = null;
+var pointArray = [];
+function addMarker( coord, content, markerOptions ) {
+	if( !map ) {
+		map = new google.maps.Map(document.getElementById('map-canvas'), { zoom: 6, center: coord });
+		bounds = new google.maps.LatLngBounds();
+		heatmap = new google.maps.visualization.HeatmapLayer({ map: map, radius: 80 });
+	}
+	bounds.extend( coord );
+	if( !markerOptions ) markerOptions = {};
+	markerOptions.map = map;
+	markerOptions.position = coord;
+	marker = new google.maps.Marker( markerOptions );
+	var tooltip = new Tooltip({ marker:marker, content:content, cssClass:'tooltip' });
+	return marker;
+}
 function initialize() {
 	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
 	
@@ -82,34 +183,73 @@ function initialize() {
 	}
 	var countFactor = 32 * (countMax / countTotal);
 
-	raceLatLng = new google.maps.LatLng(raceCoords[0], raceCoords[1]);
-	bounds = new google.maps.LatLngBounds();
-	bounds.extend( raceLatLng );
-	map = new google.maps.Map(document.getElementById('map-canvas'), { zoom: 6, center: raceLatLng });
-	heatmap = new google.maps.visualization.HeatmapLayer({ map: map, radius: 100 });
-	
-	var marker = new google.maps.Marker({
-			map: map,
-			position: raceLatLng,
-			zIndex: 5,
-			icon: 'data:image/png;base64,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'
-		}
-	);
-	var infowindow = new google.maps.InfoWindow({ content: 'Race Location' });
-	google.maps.event.addListener(marker, 'click', function() {infowindow.open(map,marker);});
-
 	geocoder = new google.maps.Geocoder();
+		
+	var icon = 'data:image/png;base64,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';
+	var content = '<h3>Race</h3><div>Participants: <strong>' + countTotal + '</strong></div>';
+	if( raceCoords && raceCoords.length == 2 ) {
+		raceLatLng = new google.maps.LatLng(raceCoords[0], raceCoords[1]);
+		addMarker( raceLatLng, content, { zIndex: locationCount.length+1, icon: icon } );
+	}
+	else if( raceAddress ) {
+		geocoder.geocode( {'address': raceAddress}, function(results, status) {
+				if( status == google.maps.GeocoderStatus.OK ) {
+					raceLatLng = results[0].geometry.location;
+					addMarker( raceLatLng, content, { zIndex: locationCount.length+1, icon: icon } );
+				}
+				else
+					console.log('"' + raceAddress + '": Geocode unsuccessful: ' + status);
+			}
+		);
+	}
 	
 	locationGeocodeCount = 0;
+	var delay = 300;
 	function showLocation() {
-		updateTitle();
-		if( locationGeocodeCount != locationCount.length ) {
-			var lgc = locationCount[locationGeocodeCount];
-			codeAddress( lgc[0], lgc[1], lgc[1]*countFactor );
-			setTimeout( showLocation, 250 );
+		if( locationGeocodeCount == locationCount.length ) {
+			map.fitBounds( bounds );
+			heatmap.setData( pointArray )
 		}
+		else {
+			function getGeocodeCallback(address, count) {
+				function doGeocode(results, status) {
+					if( status == google.maps.GeocoderStatus.OK ) {
+						var coord = results[0].geometry.location;
+						var content = '<h3>'+ address + '</h3>' + '<div>Participants: <strong>' + count + '</strong></div>';
+						var href = null;
+						if( raceLatLng ) {
+							content += 'Click for Directions...';
+							href = 'http://www.google.com/maps/?' +
+								'saddr=' + coord.lat() + ',' + coord.lng() +
+								'&daddr=' + raceLatLng.lat() + ',' + raceLatLng.lng();
+						}
+						var marker = addMarker( coord, content, {zIndex: locationCount.length-locationGeocodeCount} );
+						if( href )
+							google.maps.event.addListener( marker, 'click', function() { window.open(href, '_blank'); } );
+						pointArray.push( {location: coord, weight: count} );
+						heatmap.setData( pointArray );
+						setTimeout( showLocation, delay );
+					}
+					else if( status == google.maps.GeocoderStatus.OVER_QUERY_LIMIT ) {
+						console.log('"' + address + '": Geocode unsuccessful: ' + status);
+						--locationGeocodeCount;
+						if( map && bounds )
+							map.fitBounds( bounds );
+						setTimeout( showLocation, 2000 );
+					}
+					else {
+						console.log('"' + address + '": Geocode unsuccessful: ' + status);
+						setTimeout( showLocation, delay );
+					}
+				}
+				return doGeocode;
+			}
+			var lc = locationCount[locationGeocodeCount++];
+			geocoder.geocode( { 'address': lc[0]}, getGeocodeCallback(lc[0], lc[1]) );
+		}
+		updateTitle();
 	}
-	showLocation();
+	setTimeout( showLocation, delay );
 	
 	updateLocationCountPieChart();
 	updateLocationRegionCountPieChart();
@@ -117,10 +257,9 @@ function initialize() {
 }
 
 function updateTitle() {
-	var s = (raceName ? raceName : 'Race') + ' Travel Map';
-	if( locationGeocodeCount < locationCount.length-1 )
-		s += ' (' + locationGeocodeCount + '/' + locationCount.length + ')';
-	document.getElementById( 'idTitle' ).innerHTML = s;
+	document.getElementById( 'idTitle' ).innerHTML =
+		(raceName ? raceName : 'Race') + ' Travel Map' +
+		' (showing ' + locationGeocodeCount + '/' + locationCount.length + ' locations)';
 }
 
 function updateLocationCountTable() {
@@ -130,7 +269,7 @@ function updateLocationCountTable() {
 	
 	var dataTable = new google.visualization.DataTable();
 	dataTable.addColumn( 'string', 'City' );
-	dataTable.addColumn( 'number', 'Count' );
+	dataTable.addColumn( 'number', '#' );
 	dataTable.addColumn( 'number', '%' );
 	dataTable.addColumn( 'number', 'Sum' );
 
@@ -163,7 +302,7 @@ function updateLocationCountPieChart() {
 		chartData.push( [locationCount[i][0], locationCount[i][1]] );
 	
 	var data = google.visualization.arrayToDataTable( chartData );
-	var options = { title: 'Cities', pieHole: 0.4, legend: 'none' };
+	var options = { title: 'Cities (' + locationCount.length + ')', pieHole: 0.4, legend: 'none' };
 	container.chart.draw(data, options);
 }
 
@@ -192,36 +331,8 @@ function updateLocationRegionCountPieChart() {
 		chartData.push( [regionCount[i][0], regionCount[i][1]] );
 	
 	var data = google.visualization.arrayToDataTable( chartData );
-	var options = { title: 'Regions', pieHole: 0.4, legend: 'none' };
+	var options = { title: 'Regions (' + regionCount.length + ')', pieHole: 0.4, legend: 'none' };
 	container.chart.draw(data, options);
-}
-
-var pointArray = [];
-function codeAddress( address, count, width ) {
-	geocoder.geocode( { 'address': address}, function(results, status) {
-		if (status == google.maps.GeocoderStatus.OK) {
-			var marker = new google.maps.Marker({
-				map: map,
-				zIndex: 1,
-				position: results[0].geometry.location
-			});
-			var infowindow = new google.maps.InfoWindow({ content: address + '<br/>Participants: <strong>' + count + '</strong>'});
-			google.maps.event.addListener(marker, 'click', function() {infowindow.open(map,marker);});
-			
-			var coord = results[0].geometry.location;
-			pointArray.push( {location: coord, weight: count} );
-			heatmap.setData( pointArray )
-			bounds.extend( coord );
-			
-			if( ++locationGeocodeCount == locationCount.length ) {
-				map.fitBounds( bounds );
-				heatmap.setData( pointArray )
-			}
-		}
-		else
-			console.log('"' + address + '": Geocode unsuccessful: ' + status);
-		}
-	);
 }
 
 google.maps.event.addDomListener(window, 'load', initialize);
@@ -229,14 +340,12 @@ google.maps.event.addDomListener(window, 'load', initialize);
   </head>
   <body>
     <h2 id="idTitle"></h2>
-	<table>
-		<tr><td colspan=3><div id="map-canvas" style="width: 1200px; height: 500px"></div></td></tr>
-		<tr>
-			<td><div id="idLocationCountPieChart" style="width: 400px; height: 400px"></div></td>
-			<td><div id="idLocationRegionCountPieChart" style="width: 400px; height: 400px"></div></td>
-			<td><div id="idLocationCountTable" style="width: 400px; height: 400px"></div></td>
-		</tr>
-	</table>
+	<div id="map-canvas" style="display: block; float: left; width: 100%; height: 500px"></div>
+	<div>
+		<div id="idLocationCountPieChart" style="height: 400px" class="left"></div>
+		<div id="idLocationRegionCountPieChart" style="height: 400px" class="left"></div>
+		<div id="idLocationCountTable" style="height: 400px" class="left"></div>
+	</div>
 	<p/>
 	Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
   </body>
