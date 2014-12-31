@@ -123,7 +123,7 @@ class StartRaceAtTime( wx.Dialog ):
 		if self.startSeconds < GetNowSeconds():
 			Utils.MessageOK(
 				None,
-				u'\n'.join( [_('Scheduled Start Time is in the Past.'),_('Please enter a Scheduled Start Time in the Future.')] ),
+				u'\n\n'.join( [_('Scheduled Start Time is in the Past.'),_('Please enter a Scheduled Start Time in the Future.')] ),
 				_('Scheduled Start Time is in the Past')
 			)
 			return
@@ -276,7 +276,7 @@ class Actions( wx.Panel ):
 			if not externalInfo:
 				Utils.MessageOK(
 					self,
-					u'\n'.join( [_('Cannot Start. Excel Sheet read failure.'), _('The Excel file is either unconfigured or unreadable.')] ),
+					u'\n\n'.join( [_('Cannot Start. Excel Sheet read failure.'), _('The Excel file is either unconfigured or unreadable.')] ),
 					_('Excel Sheet Read '),
 					wx.ICON_ERROR
 				)
@@ -286,7 +286,7 @@ class Actions( wx.Panel ):
 			except StopIteration:
 				Utils.MessageOK(
 					self,
-					u'\n'.join( [_('Cannot Start.  Excel Sheet missing Tag or Tag2 column.'), _('The Excel file must contain a Tag column to use RFID.')] ),
+					u'\n\n'.join( [_('Cannot Start.  Excel Sheet missing Tag or Tag2 column.'), _('The Excel file must contain a Tag column to use RFID.')] ),
 					_('Excel Sheet missing Tag or Tag2 column'),
 					wx.ICON_ERROR
 				)

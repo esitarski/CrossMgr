@@ -16,7 +16,7 @@ def DoChipImport(	fname, parseTagTime, startTime = None,
 	
 	race = Model.race
 	if race and race.isRunning():
-		Utils.MessageOK( self, _('Cannot Import into a Running Race.\n\nWait until you have a complete data set, then import the full data into a New race.'),
+		Utils.MessageOK( self, u'\n\n'.join( [_('Cannot Import into a Running Race.'), _('Wait until you have a complete data set, then import the full data into a New race.')] ),
 						title = _('Cannot Import into Running Race'), iconMask = wx.ICON_ERROR )
 		return
 	
@@ -285,8 +285,10 @@ class ChipImportDialog( wx.Dialog ):
 		# Get the start time.
 		if not clearExistingData:
 			if not Model.race or not Model.race.startTime:
-				Utils.MessageOK( self, _('Cannot Merge into Unstarted Race.\n\n"Clear All Existing Data" is allowed.'),
-										title = _('Import Merge Failed'), iconMask = wx.ICON_ERROR)
+				Utils.MessageOK( self,
+					u'\n\n'.join( [_('Cannot Merge into Unstarted Race.'), _('Clear All Existing Data" is allowed.')] ),
+					title = _('Import Merge Failed'), iconMask = wx.ICON_ERROR
+				)
 				return
 			startTime = Model.race.startTime.time()
 		else:

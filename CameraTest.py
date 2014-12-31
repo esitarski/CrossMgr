@@ -140,7 +140,7 @@ class CameraTestDialog( wx.Dialog ):
 		try:
 			image.SaveFile( fname, wx.BITMAP_TYPE_PNG )
 		except Exception as e:
-			Utils.MessageOK( self, _('Cannot save photo:') + +u'\n\n' + _('Filename:') + u'  {}'.format(fname) + u'\n\n{}'.format(e),
+			Utils.MessageOK( self,  u'{}\n\n  {}\n\n{}'.format(_('Cannot save photo:'), fname, e),
 				title = _("Save Error"), iconMask=wx.ICON_ERROR )
 		
 	def onClose( self, event ):

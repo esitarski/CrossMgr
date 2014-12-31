@@ -84,7 +84,7 @@ class CorrectNumberDialog( wx.Dialog ):
 			dtStart = Model.race.startTime
 			dtInput = datetime.datetime(dtStart.year, dtStart.month, dtStart.day) + datetime.timedelta(seconds = t)
 			if dtInput < dtStart:
-				Utils.MessageOK( self, _('Cannot Enter Clock Time Before Race Start.\n\n(reminder: clock time is in 24-hour format)'),
+				Utils.MessageOK( self, u'\n\n'.join( [_('Cannot Enter Clock Time Before Race Start.'), _('(reminder: clock time is in 24-hour format)')] ),
 										_('Time Entry Error'), iconMask = wx.ICON_ERROR )
 				return
 			t = (dtInput - dtStart).total_seconds()

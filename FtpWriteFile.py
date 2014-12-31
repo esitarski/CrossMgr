@@ -379,7 +379,7 @@ class FtpPublishDialog( wx.Dialog ):
 
 		if not printer.Print(self, printout, True):
 			if printer.GetLastError() == wx.PRINTER_ERROR:
-				Utils.MessageOK(self, _("There was a printer problem.\nCheck your printer setup."), _("Printer Error"), iconMask=wx.ICON_ERROR)
+				Utils.MessageOK(self, u'\n\n'.join( [_("There was a printer problem."),_("Check your printer setup.")] ), _("Printer Error"), iconMask=wx.ICON_ERROR)
 
 		pd.SetOrientation( orientationSave )
 		printout.Destroy()

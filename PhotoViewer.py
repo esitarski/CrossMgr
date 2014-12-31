@@ -243,7 +243,7 @@ class PhotoViewerDialog( wx.Dialog ):
 			wx.TheClipboard.SetData( d ) 
 			wx.TheClipboard.Flush() 
 			wx.TheClipboard.Close() 
-			Utils.MessageOK( self, _('Photo Copied to Clipboard.\nYou can now Paste it into another program.'), _('Copy Succeeded') )
+			Utils.MessageOK( self, u'\n\n'.join([_('Photo Copied to Clipboard.'), _('You can now Paste it into another program.')]), _('Copy to Clipboard Succeeded') )
 		else: 
 			Utils.MessageOK( self, _('Unable to Copy Photo to Clipboard.'), _('Copy Failed'), iconMask = wx.ICON_ERROR )
 	
@@ -276,7 +276,7 @@ class PhotoViewerDialog( wx.Dialog ):
 
 		if not printer.Print(self, printout, True):
 			if printer.GetLastError() == wx.PRINTER_ERROR:
-				Utils.MessageOK(self, _("There was a printer problem.\nCheck your printer setup."), _("Printer Error"), iconMask=wx.ICON_ERROR)
+				Utils.MessageOK(self, u'\n\n'.join( [_("There was a printer problem."), _('Check your printer setup.')] ), _("Printer Error"), iconMask=wx.ICON_ERROR)
 		else:
 			self.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
 
@@ -354,7 +354,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		if success:
 			wx.CallLater( 750, self.refresh, testNum )
 		else:
-			Utils.MessageOK( self, _('Camera error') + u': {}'.format(error), _('Camera Error') )
+			Utils.MessageOK( self, u'{}: {}'.format(_('Camera error'), error), _('Camera Error') )
 		
 	def OnPhotoViewer( self, event ):
 		self.OnDoPhotoViewer()

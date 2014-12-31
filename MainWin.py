@@ -834,7 +834,7 @@ class MainWin( wx.Frame ):
 		explain = 	_('JChip Import requires that you have a valid Excel sheet with associated tags and Bib numbers.\n\n' \
 					'See documentation for details.')
 		if not correct:
-			Utils.MessageOK( self, _('Problems with Excel sheet.\n\n    Reason: {}\n\n{}').format(reason, explain),
+			Utils.MessageOK( self, _('{}\n\n    {}\n\n{}').format(_('Problems with Excel sheet.'), reason, explain),
 									title = _('Excel Link Problem'), iconMask = wx.ICON_ERROR )
 			return
 			
@@ -848,7 +848,7 @@ class MainWin( wx.Frame ):
 		explain = 	_('Alien Import requires that you have a valid Excel sheet with associated tags and Bib numbers.\n\n' \
 					'See documentation for details.')
 		if not correct:
-			Utils.MessageOK( self, _('Problems with Excel sheet.\n\n    Reason: {}\n\n{}').format(reason, explain),
+			Utils.MessageOK( self, _('{}\n\n    {}\n\n{}').format(_('Problems with Excel sheet.'), reason, explain),
 									title = _('Excel Link Problem'), iconMask = wx.ICON_ERROR )
 			return
 			
@@ -862,7 +862,7 @@ class MainWin( wx.Frame ):
 		explain = 	_('Impinj Import requires that you have a valid Excel sheet with associated tags and Bib numbers.\n\n' \
 					'See documentation for details.')
 		if not correct:
-			Utils.MessageOK( self, _('Problems with Excel sheet.\n\n    Reason: {}\n\n{}').format(reason, explain),
+			Utils.MessageOK( self, _('{}\n\n    {}\n\n{}').format(_('Problems with Excel sheet.'), reason, explain),
 									title = _('Excel Link Problem'), iconMask = wx.ICON_ERROR )
 			return
 			
@@ -876,7 +876,7 @@ class MainWin( wx.Frame ):
 		explain = 	_('Orion Import requires that you have a valid Excel sheet with associated tags and Bib numbers.\n\n' \
 					'See documentation for details.')
 		if not correct:
-			Utils.MessageOK( self, _('Problems with Excel sheet.\n\n    Reason: {}\n\n{}').format(reason, explain),
+			Utils.MessageOK( self, _('{}\n\n    {}\n\n{}').format(_('Problems with Excel sheet.'), reason, explain),
 									title = _('Excel Link Problem'), iconMask = wx.ICON_ERROR )
 			return
 			
@@ -926,7 +926,7 @@ class MainWin( wx.Frame ):
 		if wx.TheClipboard.Open():
 			wx.TheClipboard.SetData( dataObj )
 			wx.TheClipboard.Close()
-			Utils.MessageOK(self, _("Log file copied to clipboard.\nYou can now paste it into an email."), _("Success") )
+			Utils.MessageOK(self, u'\n\n'.join( [_("Log file copied to clipboard."), _("You can now paste it into an email.")] ), _("Success") )
 		else:
 			Utils.MessageOK(self, _("Unable to open the clipboard."), _("Error"), wx.ICON_ERROR )
 	
@@ -1045,7 +1045,7 @@ class MainWin( wx.Frame ):
 
 		if not printer.Print(self, printout, True):
 			if printer.GetLastError() == wx.PRINTER_ERROR:
-				Utils.MessageOK(self, _("There was a printer problem.\nCheck your printer setup."), _("Printer Error"), iconMask=wx.ICON_ERROR)
+				Utils.MessageOK(self, u'\n\n'.join( [_("There was a printer problem."), _("Check your printer setup.")] ), _("Printer Error"), iconMask=wx.ICON_ERROR)
 		else:
 			self.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
 
@@ -1082,7 +1082,7 @@ class MainWin( wx.Frame ):
 
 		if not printer.Print(self, printout, True):
 			if printer.GetLastError() == wx.PRINTER_ERROR:
-				Utils.MessageOK(self, _("There was a printer problem.\nCheck your printer setup."), _("Printer Error"), iconMask=wx.ICON_ERROR)
+				Utils.MessageOK(self, u'\n\n'.join( [_("There was a printer problem."), _("Check your printer setup.")] ), _("Printer Error"), iconMask=wx.ICON_ERROR)
 		else:
 			self.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
 
@@ -1139,7 +1139,7 @@ class MainWin( wx.Frame ):
 		if success:
 			if fname:
 				webbrowser.open( fname, new = 2, autoraise = True )
-			Utils.MessageOK( self, _('Results written as PNG files to:\n\n    {}').format(dir), 'PNG Publish' )
+			Utils.MessageOK( self, u'{}:\n\n    {}'.format(_('Results written as PNG files to'), dir), _('PNG Publish') )
 
 	@logCall
 	def menuPrintCategories( self, event ):
@@ -1184,7 +1184,7 @@ class MainWin( wx.Frame ):
 			return
 
 		xlFName = self.fileName[:-4] + '.xls'
-		dlg = wx.DirDialog( self, _('Folder to write "{}"').format(os.path.basename(xlFName)),
+		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(xlFName)),
 						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
 		ret = dlg.ShowModal()
 		dName = dlg.GetPath()
@@ -1211,10 +1211,14 @@ class MainWin( wx.Frame ):
 			wb.save( xlFName )
 			if self.launchExcelAfterPublishingResults:
 				webbrowser.open( xlFName, new = 2, autoraise = True )
-			Utils.MessageOK(self, _('Excel file written to:\n\n   {}').format(xlFName), _('Excel Write'))
+			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
 		except IOError:
 			Utils.MessageOK(self,
-						_('Cannot write "{}".\n\nCheck if this spreadsheet is already open.\nIf so, close it, and try again.').format(xlFName),
+						u'{} "{}"\n\n{}\n{}'.format(
+							_('Cannot write'), xlFName,
+							_('Check if this spreadsheet is already open.'),
+							_('If so, close it, and try again.')
+						),
 						_('Excel File Error'), iconMask=wx.ICON_ERROR )
 						
 	#--------------------------------------------------------------------------------------------
@@ -1479,9 +1483,9 @@ class MainWin( wx.Frame ):
 			with io.open(fname, 'w', encoding='utf-8') as fp:
 				fp.write( html )
 			webbrowser.open( fname, new = 0, autoraise = True )
-			Utils.MessageOK(self, _('Html Race Animation written to:\n\n   {}').format(fname), _('Html Write'))
+			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Html Race Animation written to'), fname), _('Html Write'))
 		except:
-			Utils.MessageOK(self, _('Cannot write HTML file ({}).').format(fname),
+			Utils.MessageOK(self, u'{} ({}).'.format(_('Cannot write HTML file'), fname),
 							_('Html Write Error'), iconMask=wx.ICON_ERROR )
 	
 	@logCall
@@ -1563,7 +1567,7 @@ class MainWin( wx.Frame ):
 				return
 				
 			if not getattr(race, 'geoTrack', None):
-				Utils.MessageOK( self, _('No GPX Course Loaded.\nNothing to export.'), _('No GPX Course Loaded') )
+				Utils.MessageOK( self, u'{}\n\n{}'.format(_('No GPX Course Loaded.'), _('Nothing to export.')), _('No GPX Course Loaded') )
 				return
 				
 			geoTrack = race.geoTrack
@@ -1620,7 +1624,7 @@ class MainWin( wx.Frame ):
 			zf.close()
 			
 		webbrowser.open( fname, new = 0, autoraise = True )
-		Utils.MessageOK(self, _('Course Virtual Tour written to KMZ file:\n\n   {}\n\nGoogle Earth Launched.').format(fname), _('KMZ Write'))
+		Utils.MessageOK(self, u'{}:\n\n   {}\n\n{}'.format(_('Course Virtual Tour written to KMZ file'), fname, _('Google Earth Launched.')), _('KMZ Write'))
 	
 	@logCall
 	def menuExportCoursePreviewAsHtml( self, event ):
@@ -1629,7 +1633,7 @@ class MainWin( wx.Frame ):
 				return
 				
 			if not getattr(race, 'geoTrack', None):
-				Utils.MessageOK( self, _('No GPX Course Loaded.\nNothing to export.'), _('No GPX Course Loaded') )
+				Utils.MessageOK( self, u'{}\n\n{}'.format(_('No GPX Course Loaded.'), _('Nothing to export.')), _('No GPX Course Loaded') )
 				return
 				
 			geoTrack = race.geoTrack
@@ -2176,7 +2180,10 @@ class MainWin( wx.Frame ):
 				if excelLink.fileName and not os.path.isfile(excelLink.fileName):
 					newFileName = os.path.join( os.path.dirname(fileName), os.path.basename(excelLink.fileName) )
 					if os.path.isfile(newFileName) and Utils.MessageOKCancel(self,
-						_('Could not find Excel file:\n\n"{}"\n\nFound this Excel file in the race folder with the same name:\n\n"{}"\n\nUse this Excel file from now on?').format( excelLink.fileName, newFileName),
+							u'{}:\n\n"{}"\n\n{}:\n\n"{}"\n\n{}'.format(
+								_('Could not find Excel file'), excelLink.fileName,
+								_('Found this Excel file in the race folder with the same name'), newFileName, _('Use this Excel file from now on?')
+							),
 							_('Excel Link Not Found') ):
 						race.excelLink.fileName = newFileName
 						race.setChanged()
@@ -2187,7 +2194,7 @@ class MainWin( wx.Frame ):
 
 		except Exception as e:
 			Utils.logException( e, sys.exc_info() )
-			Utils.MessageOK(self, _('Cannot open file "{}"\n\n{}.').format(fileName, e), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, u'{} "{}"\n\n{}.'.format(_('Cannot Open File'), fileName, e), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
 
 	@logCall
 	def menuOpen( self, event ):
@@ -2335,26 +2342,28 @@ class MainWin( wx.Frame ):
 	@logCall
 	def menuSimulate( self, event ):
 		fName = os.path.join( os.path.expanduser('~'), 'Simulation.cmn' )
-		if not Utils.MessageOKCancel(self,
-'''
-This will simulate a race using randomly generated data.
-It is a good illustration of CrossMgr's functionality with realtime data.
-
-The simulation takes about 8 minutes.
-
-Unlike a real race, the simulation will show riders crossing the line right from the start.  In a real race, riders would have to finish the first lap before they were recorded.
-
-The race will be written to:
-"%s".
-
-Continue?''' % fName, 'Simulate a Race' ):
+		if not Utils.MessageOKCancel(self, u'\n'.join( [
+				_('Simulate Race'),
+				u'',
+				_('This will simulate a race using randomly generated data.'),
+				_("It is a good illustration of CrossMgr's functionality with real time data."),
+				u'',
+				_('The simulation takes about 8 minutes.'),
+				_('Unlike a real race, the simulation will show riders crossing the line right from the start.'),
+				_('In a real race, riders would have to finish the first lap before they were recorded.'),
+				u'',
+				u'{}: "{}".'.format(_('The race will be written to'), fName),
+				u'',
+				_('Continue?'),
+				] ),
+				_('Simulate Race') ):
 			return
 
 		try:
 			with open(fName, 'wb') as fp:
 				pass
 		except IOError:
-			Utils.MessageOK(self, _('Cannot open file "{}".').format(fName), _('File Open Error'),iconMask = wx.ICON_ERROR)
+			Utils.MessageOK(self, u'{} "{}".'.format(_('Cannot open file'), fName), _('File Open Error'),iconMask = wx.ICON_ERROR)
 			return
 
 		self.showPageName( _('Results') )	# Switch to a read-only view.
@@ -2557,10 +2566,14 @@ Continue?''' % fName, 'Simulate a Race' ):
 		try:
 			wb.save( xlFName )
 			webbrowser.open( xlFName, new = 2, autoraise = True )
-			Utils.MessageOK(self, _('Excel file written to:\n\n   {}').format(xlFName), _('Excel Write'))
+			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
 		except IOError:
 			Utils.MessageOK(self,
-						_('Cannot write "{}".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.').format(xlFName),
+						u'{} "{}".\n\n{}\n{}'.format(
+							_('Cannot write'), xlFName,
+							_('Check if this spreadsheet is open.'),
+							_('If so, close it, and try again.')
+						),
 						_('Excel File Error'), iconMask=wx.ICON_ERROR )
 	
 	@logCall
