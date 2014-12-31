@@ -2496,9 +2496,9 @@ class MainWin( wx.Frame ):
 				with io.open(categoriesFile, 'r', encoding='utf-8') as fp, Model.LockRace() as race:
 					race.importCategories( fp )
 			except IOError:
-				Utils.MessageOK( self, _("Cannot open file:\n{}").format(categoriesFile), _("File Open Error"), iconMask=wx.ICON_ERROR)
+				Utils.MessageOK( self, u"{}:\n\n{}".format(_('Cannot open file'), categoriesFile), _("File Open Error"), iconMask=wx.ICON_ERROR)
 			except (ValueError, IndexError):
-				Utils.MessageOK( self, _("Bad file format:\n{}").format(categoriesFile), _("File Read Error"), iconMask=wx.ICON_ERROR)
+				Utils.MessageOK( self, u"{}:\n\n{}".format(_('Bad file format'), categoriesFile), _("File Read Error"), iconMask=wx.ICON_ERROR)
 			else:
 				self.refresh()
 				
@@ -2524,7 +2524,7 @@ class MainWin( wx.Frame ):
 				with io.open(fname, 'w', encoding='utf-8') as fp, Model.LockRace() as race:
 					race.exportCategories( fp )
 			except IOError:
-				Utils.MessageOK( self, _("Cannot open file:\n{}").format(fname), _("File Open Error"), iconMask=wx.ICON_ERROR)
+				Utils.MessageOK( self, u"{}:\n{}".format(_('Cannot open file'), fname), _("File Open Error"), iconMask=wx.ICON_ERROR)
 				
 		dlg.Destroy()	
 		
@@ -2556,7 +2556,7 @@ class MainWin( wx.Frame ):
 			colnames = ['Count'] + colnames
 			data = [['{}'.format(i) for i in xrange(1, rowMax+1)]] + data
 		with Model.LockRace() as race:
-			title = 'Race: '+ race.name + '\n' + Utils.formatDate(race.date) + '\nRace History'
+			title = u'{}\n{}\n{}'.format( race.name, Utils.formatDate(race.date), _('Race History') )
 		export = ExportGrid( title, colnames, data )
 
 		wb = xlwt.Workbook()
@@ -2585,7 +2585,7 @@ class MainWin( wx.Frame ):
 		self.showPageName( _('Results') )
 		
 		xlFName = self.fileName[:-4] + '-USAC.xls'
-		dlg = wx.DirDialog( self, _('Folder to write "{}"').format(os.path.basename(xlFName)),
+		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(xlFName)),
 						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
 		ret = dlg.ShowModal()
 		dName = dlg.GetPath()
@@ -2603,10 +2603,10 @@ class MainWin( wx.Frame ):
 			wb.save( xlFName )
 			if self.launchExcelAfterPublishingResults:
 				webbrowser.open( xlFName, new = 2, autoraise = True )
-			Utils.MessageOK(self, _('Excel file written to:\n\n   {}').format(xlFName), _('Excel Write'))
+			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
 		except IOError:
 			Utils.MessageOK(self,
-						_('Cannot write "{}".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.').format(xlFName),
+						u'{} "{}".\n\n{}\n{}'.format(_('Cannot write'), xlFName, _('Check if this spreadsheet is open.'), _('If so, close it, and try again.')),
 						_('Excel File Error'), iconMask=wx.ICON_ERROR )
 	
 	@logCall
@@ -2616,7 +2616,7 @@ class MainWin( wx.Frame ):
 			return
 
 		xlFName = self.fileName[:-4] + '-UCI.xls'
-		dlg = wx.DirDialog( self, _('Folder to write "{}"').format(os.path.basename(xlFName)),
+		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(xlFName)),
 						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
 		ret = dlg.ShowModal()
 		dName = dlg.GetPath()
@@ -2642,10 +2642,10 @@ class MainWin( wx.Frame ):
 			wb.save( xlFName )
 			if self.launchExcelAfterPublishingResults:
 				webbrowser.open( xlFName, new = 2, autoraise = True )
-			Utils.MessageOK(self, _('Excel file written to:\n\n   {}').format(xlFName), _('Excel Write'))
+			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
 		except IOError:
 			Utils.MessageOK(self,
-						_('Cannot write "{}".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.').format(xlFName),
+						u'{} "{}".\n\n{}\n{}'.format(_('Cannot write'), xlFName, _('Check if this spreadsheet is open.'), _('If so, close it, and try again.')),
 						_('Excel File Error'), iconMask=wx.ICON_ERROR )
 	
 	def resultsCheck( self ):
@@ -2664,7 +2664,7 @@ class MainWin( wx.Frame ):
 							_('Are the Rider Names / Teams / License data correct (spelling?  missing data)?'),
 						]) ),
 					'',
-					_('If not, press Cancel, fix the problems and publish again.')
+					_('If not, press Cancel, fix the issues and publish again.')
 				]),
 				_('Results Publish') )
 	
@@ -2724,7 +2724,7 @@ class MainWin( wx.Frame ):
 				webbrowser.open( url, new = 2, autoraise = True )
 		except Exception as e:
 			Utils.MessageOK(self,
-						_('Cannot write "{}" (Error={}).').format(fname, e),
+						u'{} "{}"\n\n{}'.format(_('Cannot write'), fname, e),
 						_('CrossResults File Error'), iconMask=wx.ICON_ERROR )
 	
 	@logCall
@@ -2741,7 +2741,7 @@ class MainWin( wx.Frame ):
 		self.showPageName( _('Results') )
 		
 		fname = self.fileName[:-4] + '-WebScorer.txt'
-		dlg = wx.DirDialog( self, _('Folder to write "{}"').format(os.path.basename(fname)),
+		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(fname)),
 						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
 		ret = dlg.ShowModal()
 		dName = dlg.GetPath()
@@ -2761,7 +2761,7 @@ class MainWin( wx.Frame ):
 			Utils.MessageOK(self, _('WebScorer file written to:') + u'\n\n   {}'.format(fname), _('WebScorer Publish'))
 		except Exception as e:
 			Utils.MessageOK(self,
-						_('Cannot write "{}" (Error={}).').format(fname, e),
+						u'{} "{}"\n\n{}.'.format(_('Cannot write'), fname, e),
 						_('WebScorer Publish Error'), iconMask=wx.ICON_ERROR )
 	
 	def windowCloseCallback( self, menuId ):
