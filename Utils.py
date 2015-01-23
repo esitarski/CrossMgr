@@ -305,9 +305,9 @@ def SetLabel( st, label ):
 	return False
 
 def MakeGridReadOnly( grid ):
-	attr = gridlib.GridCellAttr()
-	attr.SetReadOnly()
 	for c in xrange(grid.GetNumberCols()):
+		attr = gridlib.GridCellAttr()
+		attr.SetReadOnly()
 		grid.SetColAttr( c, attr )
 
 def SwapGridRows( grid, r, rTarget ):
