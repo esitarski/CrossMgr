@@ -1032,8 +1032,9 @@ class MainWin( wx.Frame ):
 		if not categories or result != wx.ID_OK:
 			return
 	
-		self.printData.SetFilename( self.fileName if self.fileName else '' )
+		self.printData.SetFilename( os.path.splitext(self.fileName)[0] + '.pdf' if self.fileName else 'Results.pdf' )
 		pdd = wx.PrintDialogData(self.printData)
+		self.printData.SetPrintMode( wx.PRINT_MODE_FILE if 'pdf' in self.printData.GetPrinterName().lower() else wx.PRINT_MODE_PRINTER )
 		pdd.SetAllPages( True )
 		pdd.EnableSelection( False )
 		pdd.EnablePageNumbers( False )

@@ -180,6 +180,10 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.takePhotoID = wx.NewId()
 		self.toolbar.AddSimpleTool( self.takePhotoID, bitmap, _('Photo Test') )
 		
+		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CheckeredFlagIcon.png'), wx.BITMAP_TYPE_PNG )
+		self.finishStripID = wx.NewId()
+		self.toolbar.AddSimpleTool( self.finishStripID, bitmap, _('Composite Finish Photo') )
+		
 		#self.closeButton = wx.Button( self, wx.ID_CANCEL, 'Close' )
 		#self.Bind(wx.EVT_BUTTON, self.OnClose, self.closeButton )
 		
@@ -282,6 +286,9 @@ class PhotoViewerDialog( wx.Dialog ):
 
 		printout.Destroy()
 	
+	def OnFinishStrip( self, event ):
+		pass
+	
 	def OnToolBar( self, event ):
 		{
 			self.refreshID:			self.OnRefresh,
@@ -289,6 +296,7 @@ class PhotoViewerDialog( wx.Dialog ):
 			self.showFilesID:		self.OnLaunchFileBrowser,
 			self.printID:			self.OnPrint,
 			self.takePhotoID:		self.OnTakePhoto,
+			self.finishStripID:		self.OnFinishStrip,
 		}[event.GetId()]( event )
 	
 	def drawMainPhoto( self ):

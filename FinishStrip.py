@@ -3,8 +3,12 @@ import os
 import sys
 import glob
 import math
+import Utils
 
 contrastColour = wx.Colour( 255, 130, 0 )
+
+photoWidth = 640
+photoHeight = 480
 
 def formatTime( secs, highPrecision = True ):
 	if secs is None:
@@ -18,7 +22,7 @@ def formatTime( secs, highPrecision = True ):
 	secs = int(ss)
 	hours = int(secs // (60*60))
 	minutes = int( (secs // 60) % 60 )
-	secs = secs % 60
+	secs %= 60
 	if highPrecision:
 		secStr = '{:05.2f}'.format( secs + f )
 	else:
@@ -44,8 +48,11 @@ class PhotoExists( wx.Panel ):
 		self.Bind( wx.EVT_ERASE_BACKGROUND, self.OnErase )
 
 	def SetTimeMinMax( self, tMin, tMax ):
-		self.tMin = tMin
-		self.tMax = tMax
+		if tMin is not None:
+			self.tMin = tMin
+			self.tMax = tMax
+		else:
+			self.tPhotos = []
 		wx.CallAfter( self.Refresh )
 	
 	def SetTimePhotos( self, tPhotos ):
@@ -76,17 +83,17 @@ class PhotoExists( wx.Panel ):
 		w -= x * 2
 		mult = float(w) / float(self.tMax - self.tMin)
 		
-		photoWidth = w * (float(640)/self.pixelsPerSec) / float(self.tMax - self.tMin)
+		photoWidthUpdate = w * (float(photoWidth)/self.pixelsPerSec) / float(self.tMax - self.tMin)
 		
-		dc.SetPen( wx.Pen(wx.Colour(64,64,64), max(1, photoWidth)) )
+		dc.SetPen( wx.Pen(wx.Colour(64,64,64), max(1, photoWidthUpdate)) )
 		for t in self.tPhotos:
 			tx = x + int((t - self.tMin) * mult)
 			dc.DrawLine( tx, 0, tx, h )
 
 class FinishStrip( wx.Panel ):
-	def __init__( self, parent, id=wx.ID_ANY, size=(640,480), style=0,
+	def __init__( self, parent, id=wx.ID_ANY, size=(photoWidth,480), style=0,
 			fps=25,
-			photoFolder='Test_Photos',
+			photoFolder='CrossMgrCamera/Test_Photos',
 			leftToRight=False ):
 		super(FinishStrip, self).__init__( parent, id, size=size, style=style )
 		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )
@@ -238,9 +245,8 @@ class FinishStrip( wx.Panel ):
 	def OnLeaveWindow( self, event=None ):
 		self.drawXorLine( self.xMotionLast, self.yMotionLast )
 		self.xMotionLast = None
-	
-	def OnPaint( self, event=None ):
-		dc = wx.PaintDC( self )
+		
+	def draw( self, dc ):
 		dc.SetBackground( wx.Brush(wx.Colour(128,128,150)) )
 		dc.Clear()
 		
@@ -335,6 +341,17 @@ class FinishStrip( wx.Panel ):
 		
 		gc.DrawText( text, xTimeLine - tWidth//2, border )
 		gc.DrawText( text, xTimeLine - tWidth//2, heightWin - tHeight - border/2 )
+	
+	def OnPaint( self, event=None ):
+		self.draw( wx.PaintDC(self) )
+		
+	def GetBitmap( self ):
+		widthWin, heightWin = self.GetClientSize()
+		bm = wx.EmptyBitmap( widthWin, heightWin )
+		dc = wx.MemoryDC( bm )
+		self.draw( dc )
+		dc.SelectObject( wx.NullBitmap )
+		return bm
 
 class FinishStripPanel( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=0, fps=25.0 ):
@@ -362,31 +379,44 @@ class FinishStripPanel( wx.Panel ):
 		self.speedSlider.Bind( wx.EVT_SCROLL, self.onChangeSpeed )
 		
 		self.direction = wx.RadioBox( self,
-			label=u'Direction',
-			choices=[u'Right to Left', u'Left to Right'],
+			label=_('Direction'),
+			choices=[_('Right to Left'), _('Left to Right')],
 			majorDimension=1,
 			style=wx.RA_SPECIFY_ROWS
 		)
 		self.direction.SetSelection( 1 if self.leftToRight else 0 )
 		self.direction.Bind( wx.EVT_RADIOBOX, self.onDirection )
+
+		self.copyToClipboard = wx.Button( self, label=_('Copy to Clipboard') )
+		self.copyToClipboard.Bind( wx.EVT_BUTTON, self.onCopyToClipboard )
+		
+		self.save = wx.Button( self, label=u'{}...'.format(_('Save')) )
+		self.save.Bind( wx.EVT_BUTTON, self.onSave )
 		
 		fgs = wx.FlexGridSizer( cols=2, vgap=4, hgap=0 )
 		
-		fgs.Add( wx.StaticText(self, label=u'Time:'), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		fgs.Add( wx.StaticText(self, label=u'{}:'.format(_('Time'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		fgs.Add( self.timeSlider, flag=wx.EXPAND )
 		
 		fgs.Add( wx.StaticText(self) )
 		fgs.Add( self.photoExists, flag=wx.EXPAND|wx.ALIGN_CENTRE_VERTICAL )
 		
-		fgs.Add( wx.StaticText(self, label=u'Pixels/Sec:'), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		fgs.Add( wx.StaticText(self, label=u'{}:'.format(_('Pixels/Sec'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		fgs.Add( self.speedSlider, flag=wx.EXPAND )
 		
 		fgs.AddGrowableCol( 1, 1 )
 		
-		vs.Add( self.finish, flag=wx.EXPAND )
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( self.direction )
+		hs.AddSpacer( 16 )
+		hs.Add( self.copyToClipboard, flag=wx.ALIGN_CENTRE_VERTICAL )
+		hs.AddSpacer( 4 )
+		hs.Add( self.save, flag=wx.ALIGN_CENTRE_VERTICAL )
 		
+		vs.Add( self.finish, flag=wx.EXPAND )
 		vs.Add( fgs, flag=wx.EXPAND|wx.ALL, border=4 )
-		vs.Add( self.direction, flag=wx.EXPAND|wx.ALL, border=4 )
+		vs.Add( hs, flag=wx.EXPAND|wx.ALL, border=4 )
+		
 		self.SetSizer( vs )
 		wx.CallAfter( self.initUI )
 		
@@ -400,7 +430,7 @@ class FinishStripPanel( wx.Panel ):
 		frameTime = 1.0 / self.fps
 		
 		viewWidth = 4.0			# meters seen in the finish line with the finish camera
-		widthPix = 640			# width of the photo
+		widthPix = photoWidth	# width of the photo
 		
 		minMax = []
 		for speedKMH in (2.0, 80.0):			# Speed of the target (km/h)
@@ -411,6 +441,33 @@ class FinishStripPanel( wx.Panel ):
 			minMax.append( int(pixelsPerSecond) )
 		
 		return minMax
+
+	def onCopyToClipboard( self, event ):
+		if wx.TheClipboard.Open():
+			bitmapData = wx.BitmapDataObject()
+			bitmapData.SetBitmap( self.finish.GetBitmap() )
+			wx.TheClipboard.SetData( bitmapData )
+			wx.TheClipboard.Flush() 
+			wx.TheClipboard.Close()
+			wx.MessageBox( _('Successfully copied to clipboard'), _('Success') )
+		else:
+			wx.MessageBox( _('Unable to open the clipboard'), _('Error') )
+
+	def onSave( self, event ):
+		dlg = wx.FileDialog(
+			self,
+			message=_('Save Finish as'),
+			wildcard=u"PNG {} (*.png)|*.png".format(_("files")),
+			defaultDir=os.path.dirname( Utils.getFileName() or '.' ),
+			defaultFile=os.path.splitext( os.path.basename(Utils.getFileName() or _('Default.cmn')) )[0] + u'_Finish.png',
+			style=wx.SAVE,
+		)
+		if dlg.ShowModal() == wx.ID_OK:
+			fname = dlg.GetPath()
+			bm = self.finish.GetBitmap()
+			image = wx.ImageFromBitmap( bm )
+			image.SaveFile( fname, wx.BITMAP_TYPE_PNG )
+		dlg.Destroy()
 
 	def onDirection( self, event ):
 		self.leftToRight = (event.GetInt() == 1)
@@ -425,27 +482,29 @@ class FinishStripPanel( wx.Panel ):
 	def getPhotoTimeMinMax( self ):
 		tMin, tMax = self.finish.GetTimeMinMax()
 		# Widen the range so we can see a few seconds before and after.
-		tMin -= 5.0
-		tMax += 5.0
+		if tMin is not None:
+			tMin -= 5.0
+			tMax += 5.0
 		return tMin, tMax
 		
 	def onChangeTime( self, event ):
 		r = float(event.GetPosition()) / float(event.GetEventObject().GetMax())
 		tMin, tMax = self.getPhotoTimeMinMax()
-		self.finish.SetDrawStartTime( tMin + (tMax - tMin) * r )
+		if tMin is not None:
+			self.finish.SetDrawStartTime( tMin + (tMax - tMin) * r )
 		event.Skip()
 				
 	def tDrawStartCallback( self, tDrawStart ):
 		tMin, tMax = self.getPhotoTimeMinMax()
-		vMin, vMax = self.timeSlider.GetMin(), self.timeSlider.GetMax()
-		self.timeSlider.SetValue( int((tDrawStart - tMin) * float(vMax - vMin) / float(tMax - tMin)) )
+		if tMin is not None:
+			vMin, vMax = self.timeSlider.GetMin(), self.timeSlider.GetMax()
+			self.timeSlider.SetValue( int((tDrawStart - tMin) * float(vMax - vMin) / float(tMax - tMin)) )
 		
 if __name__ == '__main__':
 	app = wx.App(False)
 	
 	displayWidth, displayHeight = wx.GetDisplaySize()
 	
-	photoHeight = 480
 	width = int(displayWidth * 0.9)
 	height = 650
 	
