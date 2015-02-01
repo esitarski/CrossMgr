@@ -2,6 +2,7 @@ import Model
 import Utils
 import ReadSignOnSheet
 from PhotoFinish import GetPhotoFName, TakePhoto
+from FinishStrip import FinishStripDialog
 from SendPhotoRequests import getPhotoDirName, SendPhotoRequests
 from LaunchFileBrowser import LaunchFileBrowser
 import wx
@@ -287,7 +288,19 @@ class PhotoViewerDialog( wx.Dialog ):
 		printout.Destroy()
 	
 	def OnFinishStrip( self, event ):
-		pass
+		race = Model.race
+		if not race:
+			return
+		fsd = FinishStripDialog( self,
+			photoFolder=getPhotoDirName( Utils.mainWin.fileName if Utils.mainWin and Utils.mainWin.fileName else 'Photos' ),
+			fps=getattr(race, 'fps', 25.0),
+			leftToRight=getattr(race, 'leftToRight', True),
+			pixelsPerSec=getattr(race, 'pixelsPerSec', None),
+		)
+		fsd.ShowModal()
+		for attr, value in fsd.GetAttrs().iteritems():
+			setattr( race, attr, value )
+		fsd.Destroy()
 	
 	def OnToolBar( self, event ):
 		{

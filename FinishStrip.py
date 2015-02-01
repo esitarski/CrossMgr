@@ -10,6 +10,8 @@ contrastColour = wx.Colour( 255, 130, 0 )
 photoWidth = 640
 photoHeight = 480
 
+DefaultPhotoFolder = 'CrossMgrCamera/Test_Photos'
+
 def formatTime( secs, highPrecision = True ):
 	if secs is None:
 		secs = 0
@@ -93,7 +95,7 @@ class PhotoExists( wx.Panel ):
 class FinishStrip( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=(photoWidth,480), style=0,
 			fps=25,
-			photoFolder='CrossMgrCamera/Test_Photos',
+			photoFolder=DefaultPhotoFolder,
 			leftToRight=False ):
 		super(FinishStrip, self).__init__( parent, id, size=size, style=style )
 		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )
@@ -354,7 +356,8 @@ class FinishStrip( wx.Panel ):
 		return bm
 
 class FinishStripPanel( wx.Panel ):
-	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=0, fps=25.0 ):
+	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=0,
+			fps=25.0, photoFolder=DefaultPhotoFolder ):
 		super(FinishStripPanel, self).__init__( parent, id, size=size, style=style )
 		
 		self.fps = fps
@@ -364,7 +367,7 @@ class FinishStripPanel( wx.Panel ):
 		displayWidth, displayHeight = wx.GetDisplaySize()
 	
 		self.leftToRight = True
-		self.finish = FinishStrip( self, size=(0, 480), leftToRight=self.leftToRight )
+		self.finish = FinishStrip( self, size=(0, 480), leftToRight=self.leftToRight, photoFolder=photoFolder )
 		self.finish.tDrawStartCallback = self.tDrawStartCallback
 		
 		self.timeSlider = wx.Slider( self, style=wx.SL_HORIZONTAL, minValue=0, maxValue=displayWidth )
@@ -470,13 +473,11 @@ class FinishStripPanel( wx.Panel ):
 		dlg.Destroy()
 
 	def onDirection( self, event ):
-		self.leftToRight = (event.GetInt() == 1)
-		self.finish.SetLeftToRight( self.leftToRight )
+		self.SetLeftToRight( event.GetInt() == 1 ) 
 		event.Skip()
 		
 	def onChangeSpeed( self, event ):
-		self.finish.SetPixelsPerSec( event.GetPosition() )
-		self.photoExists.SetPixelsPerSec( event.GetPosition() )
+		self.SetPixelsPerSec( event.GetPosition(), False )
 		event.Skip()
 		
 	def getPhotoTimeMinMax( self ):
@@ -499,7 +500,57 @@ class FinishStripPanel( wx.Panel ):
 		if tMin is not None:
 			vMin, vMax = self.timeSlider.GetMin(), self.timeSlider.GetMax()
 			self.timeSlider.SetValue( int((tDrawStart - tMin) * float(vMax - vMin) / float(tMax - tMin)) )
+			
+	def SetLeftToRight( self, leftToRight ):
+		self.leftToRight = leftToRight
+		self.finish.SetLeftToRight( self.leftToRight )
+		self.direction.SetSelection( 1 if self.leftToRight else 0 )
 		
+	def GetLeftToRight( self ):
+		return self.leftToRight
+		
+	def SetPixelsPerSec( self, pixelsPerSec, setSliderValue=True ):
+		self.finish.SetPixelsPerSec( pixelsPerSec )
+		self.photoExists.SetPixelsPerSec( pixelsPerSec )
+		if setSliderValue:
+			self.speedSlider.SetValue( pixelsPerSec )
+	
+	def GetPixelsPerSec( self ):
+		return self.speedSlider.GetValue()
+
+class FinishStripDialog( wx.Dialog ):
+	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE,
+			dir=None, fps=25.0, leftToRight=True, pixelsPerSec=None, photoFolder=DefaultPhotoFolder ):
+			
+		if size == wx.DefaultSize:
+			displayWidth, displayHeight = wx.GetDisplaySize()
+			width = int(displayWidth * 0.9)
+			height = 710
+			size = wx.Size( width, height )
+
+		super(FinishStripDialog, self).__init__( parent, id, size=size, style=style, title=_('Finish Strip') )
+		
+		self.panel = FinishStripPanel( self, fps=fps, photoFolder=photoFolder )
+		
+		self.okButton = wx.Button( self, wx.ID_OK )
+		self.okButton.SetDefault()
+		
+		vs = wx.BoxSizer( wx.VERTICAL )
+		vs.Add( self.panel, flag=wx.EXPAND )
+		vs.Add( self.okButton, flag=wx.ALIGN_CENTRE|wx.ALL, border=4 )
+		self.SetSizer( vs )
+		
+		self.panel.SetLeftToRight( leftToRight )
+		if pixelsPerSec is not None:
+			self.panel.SetPixelsPerSec( pixelsPerSec )
+			
+	def GetAttrs( self ):
+		return {
+			'fps': self.panel.fps,
+			'leftToRight': self.panel.GetLeftToRight(),
+			'pixelsPerSec': self.panel.GetPixelsPerSec(),
+		}
+
 if __name__ == '__main__':
 	app = wx.App(False)
 	
@@ -509,6 +560,11 @@ if __name__ == '__main__':
 	height = 650
 	
 	mainWin = wx.Frame(None,title="FinishStrip", size=(width, height))
-	FinishStrip = FinishStripPanel( mainWin )
+	fs = FinishStripPanel( mainWin )
 	mainWin.Show()
+	
+	fsd = FinishStripDialog( mainWin )
+	fsd.ShowModal()
+	#fsd.Destroy()
+	
 	app.MainLoop()
