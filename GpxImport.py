@@ -45,7 +45,7 @@ class IntroPage(wiz.WizardPageSimple):
 					u'{}: {}'.format(_('Number of Coords'), geoTrack.numPoints),
 					u'{}: {:.3f} km, {:.3f} {}'.format(_('Lap Length'), geoTrack.lengthKm, geoTrack.lengthMiles, _('miles')),
 					u'{}: {:.0f} m, {:.0f} ft'.format(_('Total Elevation Gain'), geoTrack.totalElevationGainM, geoTrack.totalElevationGainFt),
-					u'{}: {}'.format((_('Course Type'), _('Point to Point') if getattr(geoTrack, 'isPointToPoint', False) else _('Loop')))
+					u'{}: {}'.format(_('Course Type'), _('Point to Point') if getattr(geoTrack, 'isPointToPoint', False) else _('Loop'))
 				] )
 		else:
 			s = u''
