@@ -1,7 +1,7 @@
 [TOC]
 
-# Lap Counter
-Shows a lap counter for the race.
+# Lap Counter and Countdown Timer
+Shows a __lap counter__, or a __countdown timer__ for the race.
 
 For best effect:
 
@@ -9,7 +9,9 @@ For best effect:
 1. Drag the __LapCounter__ screen to separate monitor.
 1. Set up the monitor so the riders can see it.
 
-The LapCounter relies on CrossMgr's ability to predict the leader.  There are a few considerations:
+## Lap Counter Function
+
+The LapCounter function relies on CrossMgr's ability to predict the leader.  There are a few considerations:
 
 1. Without any data, CrossMgr has no data to predict the first lap time.  The LapCounter will start working after the first data entry.  This means the leaders may not see anything on the lap counter for the first lap, if you are showing it.  This is fine in a timed Cyclo-cross race, but may an issue for MTB or Road races.
 1. If the first lap is a different distance than subsequent laps (due to a start area/run up), the LapCounter will not be correct until lap 3.  This is because CrossMgr has no timing information about lap 2 until the leader are timed.
@@ -24,6 +26,16 @@ Of course, if the race is shorter than 3 laps in its entirety, just bell the rid
 For Cyclo-cross, MTB and Road races, the automatic lap counter should work well (with the exception of Cyclo-cross races with extremely short lap times - I have seen races with less than 4 minute lap times!).  The longer the lap time, the more in advance the lap counter can be flipped.  This also helps to solve the problem with riders arriving early, but can create a problem if some riders are just about to be lapped on their last lap.
 
 If the lap time is short and highly variable, like a criterium (especially with primes) or a track race, the automatic lap counter may not work well.   CrossMgr will by unable to predict the rider's tactics for fast-and-slow laps.
+
+## Countdown Timer Function
+
+Select this option by right-clicking on the LapCounter screen and choosing __Countdown Timer__ instead of __Lap Counter__ from the options.
+
+After the race starts, this feature will show the time remaining based on the __Race Minutes__ configured in [Properties][].
+
+After the __Race Minutes__ time has expired, the __Countdown Timer__ will begin to count up with a __+__ sign.
+
+You can start with the __Countdown Timer__, then switch to the __Lap Counter__ when the number of laps stabilizes.
 
 # Screen
 Shows a Lap Counter.
