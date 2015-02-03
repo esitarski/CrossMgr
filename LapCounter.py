@@ -1,5 +1,7 @@
 import wx
 import  wx.lib.colourselect as  csel
+import math
+import datetime
 import Model
 import Utils
 
@@ -15,16 +17,22 @@ class LapCounterOptions( wx.Dialog ):
 		vs.Add( wx.StaticText(self, label=_('Lap Counter Options') + u':'), flag=wx.LEFT|wx.TOP|wx.RIGHT, border=8 )
 
 		fgs = wx.FlexGridSizer( cols=2, vgap=4, hgap=4 )
-		fgs.Add( wx.StaticText(self, label=_('Foreground') + u':'), flag=wx.ALIGN_CENTRE_VERTICAL )
+		
+		fgs.Add( wx.StaticText(self, label=_('Type') + u':'), flag=wx.ALIGN_CENTRE_VERTICAL )
+		self.counterType = wx.Choice(self, choices=(_('Lap Counter'), _('Countdown Timer')))
+		self.counterType.SetSelection( 0 if not self.lapCounter.countdownTimer else 1 )
+		fgs.Add( self.counterType )
+		
+		fgs.Add( wx.StaticText(self, label=_('Foreground') + u':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 		self.foreground = csel.ColourSelect(self, colour=lapCounter.GetForegroundColour(), size=(100,-1))
 		fgs.Add( self.foreground )
 		
-		fgs.Add( wx.StaticText(self, label=_('Background') + u':'), flag=wx.ALIGN_CENTRE_VERTICAL )
+		fgs.Add( wx.StaticText(self, label=_('Background') + u':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 		self.background = csel.ColourSelect(self, colour=lapCounter.GetBackgroundColour(), size=(100,-1))
 		fgs.Add( self.background )
 		vs.Add( fgs, flag=wx.ALL, border=16 )
 		
-		vs.Add( wx.StaticText(self, label=_("Seconds before Leader's ETA to flip Lap Counter") + u':'), flag=wx.LEFT|wx.TOP|wx.RIGHT, border=8 )
+		vs.Add( wx.StaticText(self, label=_("Seconds before Leader's ETA to change Lap Counter") + u':'), flag=wx.LEFT|wx.TOP|wx.RIGHT|wx.ALIGN_RIGHT, border=8 )
 		self.slider = wx.Slider(
 			self,
 			value=Model.race.secondsBeforeLeaderToFlipLapCounter if Model.race else 5, minValue=1, maxValue=180,
@@ -67,6 +75,8 @@ class LapCounter( wx.Panel ):
 		self.font = None
 		self.fontSize = -1
 		
+		self.countdownTimer = False
+		
 		self.SetCursor( wx.StockCursor(wx.CURSOR_RIGHT_BUTTON) )
 		self.SetBackgroundColour( wx.BLACK )
 		self.SetForegroundColour( wx.GREEN )
@@ -77,30 +87,50 @@ class LapCounter( wx.Panel ):
 			
 			self.SetForegroundColour( d.foreground.GetColour() )
 			self.SetBackgroundColour( d.background.GetColour() )
+			self.SetCountdownTimer( d.counterType.GetSelection() == 1 )
 			
 			race = Model.race
 			if race:
 				race.lapCounterForeground = self.GetForegroundColour().GetAsString(wx.C2S_HTML_SYNTAX)
 				race.lapCounterBackground = self.GetBackgroundColour().GetAsString(wx.C2S_HTML_SYNTAX)
-				race.secondsBeforeLeaderToFlipLapCounter = d.slider.GetValue()
+				race.lapCounterBackground = self.GetBackgroundColour().GetAsString(wx.C2S_HTML_SYNTAX)
+				race.countdownTimer = self.countdownTimer
 				race.setChanged()
 			wx.CallAfter( self.Refresh )
 		
 		d.Destroy()
 		
-	def OnTimer( self, event ):
-		self.flashOn = not self.flashOn
-		if any( flash for label, flash in self.labels ):
+	def OnTimer( self, event=None ):
+		if self.countdownTimer:
+			race = Model.race
+			self.timer.Stop()
+			if not race or not race.isRunning():
+				return
+			self.timer.Start( 500, oneShot = True )
 			self.Refresh()
+		else:
+			self.flashOn = not self.flashOn
+			if any( flash for label, flash in self.labels ):
+				self.Refresh()
+
+	def SetCountdownTimer( self, countdownTimer ):
+		self.countdownTimer = countdownTimer
+		if self.countdownTimer and not self.timer.IsRunning():
+			self.OnTimer()
 
 	def SetLabels( self, labels=[] ):
 		labels = labels or [(u'\u25AF\u25AF', False)]
-	
+		
 		''' labels is of the format [(label1, flash), (label2, flash)] '''
 		if self.labels == labels:
 			return
-		
+			
 		self.labels = labels[:4]
+		if self.countdownTimer:
+			if not self.timer.IsRunning():
+				self.OnTimer()
+			return
+		
 		if not any( flash for label, flash in self.labels ):
 			self.timer.Stop()
 			self.flashOn = True
@@ -117,6 +147,31 @@ class LapCounter( wx.Panel ):
 		self.fontSize = lineHeight
 		self.font = wx.FontFromPixelSize( wx.Size(0,lineHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD )
 		return self.font
+		
+	def GetCountdownTime( self ):
+		race = Model.race
+		if not race:
+			return None
+		if race.isUnstarted():
+			return u'{} {}'.format( race.minutes, _('min') )
+		if not race.isRunning():
+			return None
+		
+		endTime = race.startTime + datetime.timedelta(seconds=race.minutes*60.0)
+		nowTime = datetime.datetime.now()
+		secs = math.floor((endTime - nowTime).total_seconds())
+		over = ''
+		if secs < 0:
+			over = '+'
+			secs = -secs
+		
+		secs = int(secs)
+		hours = secs // (60*60)
+		minutes = (secs // 60) % 60
+		seconds = secs % 60
+		if hours:
+			return '{}{}:{:02d}:{:02d}'.format( over, hours, minutes, seconds )
+		return '{}{}:{:02d}'.format( over, minutes, seconds )
 	
 	def OnPaint( self, event ):
 		dc = wx.AutoBufferedPaintDC( self )
@@ -124,11 +179,28 @@ class LapCounter( wx.Panel ):
 		dc.SetTextForeground( self.GetForegroundColour() )
 		dc.Clear()
 		
-		if not self.labels:
-			return
-		
 		width, height = self.GetSizeTuple()
 		border = 0
+
+		if self.countdownTimer:
+			label = self.GetCountdownTime()
+			if not label:
+				return
+			lineHeight = height - border*2
+			dc.SetFont( wx.FontFromPixelSize( wx.Size(0,lineHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD ) )
+			sizeLabel = '000000000:00:00'[-len(label):]
+			w, h = dc.GetTextExtent(sizeLabel)
+			if w > width-8:
+				lineHeight *= float(width-8) / float(w)
+			dc.SetFont( wx.FontFromPixelSize( wx.Size(0,lineHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD ) )
+			yTop = (height - lineHeight) // 2
+			dc.DrawText( label, (width - dc.GetTextExtent(sizeLabel)[0]) // 2, yTop )
+			if not self.timer.IsRunning():
+				self.OnTimer()
+			return
+		
+		if not self.labels:
+			return
 		
 		if len(self.labels) <= 2:
 			lineHeight = (height - border*2) // len(self.labels)
@@ -173,6 +245,7 @@ class LapCounter( wx.Panel ):
 	def refresh( self ):
 		race = Model.race
 		if race:
+			self.SetCountdownTimer( race.countdownTimer )
 			self.SetForegroundColour( Utils.colorFromStr(race.lapCounterForeground) )
 			self.SetBackgroundColour( Utils.colorFromStr(race.lapCounterBackground) )
 			if race.isUnstarted():

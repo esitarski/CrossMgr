@@ -947,6 +947,7 @@ class Race( object ):
 	lapCounterForeground = '#00FF00'
 	lapCounterBackground = '#000000'
 	secondsBeforeLeaderToFlipLapCounter = 15.0
+	countdownTimer = False
 	
 	def __init__( self ):
 		self.reset()
