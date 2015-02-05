@@ -4849,6 +4849,7 @@ function SetTotalElevationGain() {
 }
 
 function setLanguage( langCode ) {
+	// Check for a specified language.
 	var langs = translations['languageCode'];
 	for( var i = 0; i < langs.length; ++i ) {
 		if( langs[i] == langCode ) {
@@ -4856,6 +4857,23 @@ function setLanguage( langCode ) {
 			break;
 		}
 	}
+	
+	// If no specified language, check the browser preferences for a supported language.
+	if( langCur == null ) {
+		// Try to get the language code from the user's preference.
+		var browser_languages = navigator.languages ? navigator.languages : [(navigator.language || navigator.userLanguage || 'en')];
+		for( var b = 0; b < browser_languages.length && langCur == null; ++b ) {
+			var base_lang = browser_languages[b].split('-')[0];
+			for( var i = 0; i < langs.length; ++i ) {
+				if( base_lang == langs[i] ) {
+					langCur = i;
+					break;
+				}
+			}
+		}
+	}
+	
+	// Else, default to English.
 	if( langCur == null )
 		langCur = 0;
 	
