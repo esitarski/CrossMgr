@@ -38,7 +38,7 @@ class FileNamePage(wiz.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		vbs.Add( wx.StaticText(self, label = _('Specify the Excel Sign-on File containing the additional rider information.')),
+		vbs.Add( wx.StaticText(self, label = _('Specify the Excel File containing additional rider information.')),
 					flag=wx.ALL, border = border )
 		vbs.Add( wx.StaticText(self, label = _('Each race must be in a separate sheet.')), flag=wx.ALL, border = border )
 		vbs.Add( wx.StaticText(self, label = _('See documentation for examples.')), flag=wx.ALL, border = border )

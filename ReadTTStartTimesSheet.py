@@ -378,16 +378,12 @@ class ExcelLink( object ):
 		
 		return info
 
-def ImportTTStartTimes( parent ):
-	race = Model.race
-	if not race or not getattr(race, 'isTimeTrial', False):
-		return
-		
-	excelLink = GetExcelTTStartTimeLink( parent ).show()
+def DoImportTTStartTimes( excelLink ):
 	if not excelLink:
-		return
+		return ['Missing excelLink']
 		
 	info = excelLink.read()
+	
 	startTimes = {}
 	errors = []
 	for num, data in info.iteritems():
@@ -397,10 +393,10 @@ def ImportTTStartTimes( parent ):
 			errors.append( _('Bib {}: missing start time').format(num) )
 			continue
 			
-		# Try to make sense of the StartTime.
+		# Try to make sense of the StartTime (Stopwatch time, not clock time).
 		if isinstance(startTime, float):
 			t = startTime * 24.0*60.0*60.0	# Excel decimal days.
-		elif isinstance(startTime, str):
+		elif isinstance(startTime, (str, unicode)):
 			# Otherwise, string of format hh:mm:ss.ddd or mm:ss.ddd.
 			fields = startTime.split( ':' )
 			try:
@@ -412,8 +408,9 @@ def ImportTTStartTimes( parent ):
 				except:
 					errors.append( _('Bib {}: cannot read time format: {}').format(num, startTime) )
 					continue
+			t = hh * 60.0*60.0 + mm * 60.0 + ss
 			
-		startTimes[num] = hh * 60.0*60.0 + mm * 60.0 + ss
+		startTimes[num] = t
 			
 	if startTimes:
 		undo.pushState()
@@ -435,6 +432,29 @@ def ImportTTStartTimes( parent ):
 		
 		race.setChanged()
 		
+	return errors
+
+def AutoImportTTStartTimes():
+	race = Model.race
+	if not race or not race.isUnstarted() or not getattr(race, 'isTimeTrial', False) or not getattr(race, 'excelLink', None):
+		return False
+	
+	excelLink = ExcelLink()
+	excelLink.setFileName( race.excelLink.fileName )
+	excelLink.setSheetName( race.excelLink.sheetName )
+	excelLink.setFieldCol( {'Bib#': race.excelLink.fieldCol['Bib#'], 'StartTime': 0} )
+	DoImportTTStartTimes( excelLink )
+
+def ImportTTStartTimes( parent ):
+	race = Model.race
+	if not race or not getattr(race, 'isTimeTrial', False):
+		return
+		
+	excelLink = GetExcelTTStartTimeLink( parent ).show()
+	if not excelLink:
+		return
+	
+	errors = DoImportTTStartTimes( excelLink )
 	if errors:
 		errorStr = '\n'.join( errors[:20] )
 		if len(errors) > 20:
