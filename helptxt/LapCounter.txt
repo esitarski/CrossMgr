@@ -37,6 +37,8 @@ After the __Race Minutes__ time has expired, the __Countdown Timer__ will begin 
 
 You can start with the __Countdown Timer__, then switch to the __Lap Counter__ when the number of laps stabilizes.
 
+When CrossMgr gets busy, the seconds in the __Countdown Timer__ may not be updated perfectly regularly.  Sometimes it might skip a second, or a second might be shown a little longer or shorter than expected.  Do not be alarmed - the timer follows the computer's clock and it will correct itself to the accurate countdown time.
+
 # Screen
 Shows a Lap Counter.
 
