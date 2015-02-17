@@ -346,7 +346,11 @@ def colorFromStr( s ):
 		r, g, b = [int(s[i:i+2], 16) for i in xrange(0, 6, 2)]
 	return wx.Colour(r, g, b)
 
-def formatTime( secs, highPrecision = False ):
+def formatTime( secs,
+				highPrecision=False,	extraPrecision=False,
+				forceHours=False, 		twoDigitHours=False,
+				forceMinutes=True,		twoDigitMinutes=True,
+				twoDigitSeconds=False ):
 	if secs is None:
 		secs = 0
 	if secs < 0:
@@ -358,17 +362,32 @@ def formatTime( secs, highPrecision = False ):
 	secs = int(ss)
 	hours = int(secs // (60*60))
 	minutes = int( (secs // 60) % 60 )
-	secs = secs % 60
-	if highPrecision:
-		secStr = '{:05.2f}'.format( secs + f )
+	secs = (secs % 60) + f
+	if highPrecision or extraPrecision:
+		if extraPrecision:
+			secStr = '{:06.3f}'.format( secs )
+		else:
+			secStr = '{:05.2f}'.format( secs )
 	else:
-		secStr = '{:02d}'.format( secs )
-	if hours > 0:
-		return "{}{}:{:02d}:{}".format(sign, hours, minutes, secStr)
+		secStr = '{:02.0f}'.format( secs )
+	if secStr.startswith('60'):
+		secStr = '00' + secStr[2:]
+		minutes += 1
+		if minutes == 60:
+			minutes = 0
+			hours += 1
+	if forceHours or hours > 0:
+		return "{}{:0{hourWidth}d}:{:02d}:{}".format(sign, hours, minutes, secStr, hourWidth=2 if twoDigitHours else 0)
 	else:
-		return "{}{:02d}:{}".format(sign, minutes, secStr)
+		if forceMinutes or minutes > 0:
+			return "{}{:0{minuteWidth}d}:{}".format(sign, minutes, secStr, minuteWidth=2 if twoDigitMinutes else 0)
+		else:
+			return "{}{}".format(
+				sign,
+				secStr if twoDigitSeconds else (secStr.lstrip('0') if not secStr.startswith('00') else secStr[1:])
+			)
 
-def formatTimeGap( secs, highPrecision = False ):
+def formatTimeGap( secs, highPrecision=False, separateWithQuotes=True, forceHours=False ):
 	if secs is None:
 		secs = 0
 	if secs < 0:
@@ -380,15 +399,28 @@ def formatTimeGap( secs, highPrecision = False ):
 	secs = int(ss)
 	hours = int(secs // (60*60))
 	minutes = int( (secs // 60) % 60 )
-	secs = secs % 60
+	secs = (secs % 60) + f
 	if highPrecision:
-		decimal = '.%02d' % int( f * 100 )
+		secStr = '{:05.2f}'.format( secs )
 	else:
-		decimal = ''
-	if hours > 0:
-		return "%s%dh%d'%02d%s\"" % (sign, hours, minutes, secs, decimal)
+		secStr = '{:02d}'.format( int(secs) )	# Truncate fractional seconds.
+	if secStr == '60' or secStr == '60.00':
+		secStr = '00.00' if highPrecision else '00'
+		minutes += 1
+		if minutes == 60:
+			minutes = 0
+			hours += 1
+	
+	if separateWithQuotes:
+		if forceHours or hours > 0:
+			return "{}{}h{}'{}\"".format(sign, hours, minutes, secStr)
+		else:
+			return "{}{}'{}\"".format(sign, minutes, secStr)
 	else:
-		return "%s%d'%02d%s\"" % (sign, minutes, secs, decimal)
+		if forceHours or hours > 0:
+			return "{}{}:{:02d}:{}".format(sign, hours, minutes, secStr)
+		else:
+			return "{}{:02d}:{}".format(sign, minutes, secStr)
 
 def formatTimeCompressed( secs, highPrecision = False ):
 	f = formatTime( secs, highPrecision )
@@ -413,11 +445,11 @@ def StrToSeconds( str = '' ):
 	
 def SecondsToStr( secs = 0 ):
 	secs = int(secs)
-	return '%02d:%02d:%02d' % (secs // (60*60), (secs // 60)%60, secs % 60)
+	return '{:02d}:{:02d}:{:02d}'.format(secs // (60*60), (secs // 60)%60, secs % 60)
 
 def SecondsToMMSS( secs = 0 ):
 	secs = int(secs)
-	return '%02d:%02d' % ((secs // 60)%60, secs % 60)
+	return '{:02d}:{:02d}'.format((secs // 60)%60, secs % 60)
 
 def ordinal( value ):
 	"""

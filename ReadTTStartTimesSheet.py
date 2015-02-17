@@ -378,7 +378,7 @@ class ExcelLink( object ):
 		
 		return info
 
-def DoImportTTStartTimes( excelLink ):
+def DoImportTTStartTimes( race, excelLink ):
 	if not excelLink:
 		return ['Missing excelLink']
 		
@@ -409,6 +409,9 @@ def DoImportTTStartTimes( excelLink ):
 					errors.append( _('Bib {}: cannot read time format: {}').format(num, startTime) )
 					continue
 			t = hh * 60.0*60.0 + mm * 60.0 + ss
+		else:
+			errors.append( _('Bib {}: cannot read start time (neither Excel time nor String)').format(num) )
+			continue
 			
 		startTimes[num] = t
 			
@@ -443,7 +446,8 @@ def AutoImportTTStartTimes():
 	excelLink.setFileName( race.excelLink.fileName )
 	excelLink.setSheetName( race.excelLink.sheetName )
 	excelLink.setFieldCol( {'Bib#': race.excelLink.fieldCol['Bib#'], 'StartTime': 0} )
-	DoImportTTStartTimes( excelLink )
+	DoImportTTStartTimes( race, excelLink )
+	return True
 
 def ImportTTStartTimes( parent ):
 	race = Model.race
@@ -454,7 +458,7 @@ def ImportTTStartTimes( parent ):
 	if not excelLink:
 		return
 	
-	errors = DoImportTTStartTimes( excelLink )
+	errors = DoImportTTStartTimes( race, excelLink )
 	if errors:
 		errorStr = '\n'.join( errors[:20] )
 		if len(errors) > 20:

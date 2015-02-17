@@ -22,20 +22,13 @@ WebScorerCategoryFields = (
 	'Gender',
 )
 
-def formatTime( secs ):
-	if secs is None:
-		secs = 0
-	if secs < 0:
-		sign = '-'
-		secs = -secs
-	else:
-		sign = ''
-	f, ss = math.modf(secs)
-	secs = int(ss)
-	hours = int(secs // (60*60))
-	minutes = int( (secs // 60) % 60 )
-	secs = secs % 60
-	return "{}{}:{:02d}:{:05.2f}".format(sign, hours, minutes, secs + f)
+def formatTimeGap( secs ):
+	return Utils.formatTimeGap(
+		secs,
+		highPrecision=True,
+		forceHours=True,
+		separateWithQuotes=True,
+	)
 
 def WebScorerExport( fname ):
 	race = Model.race
@@ -119,7 +112,7 @@ def WebScorerExport( fname ):
 				dataRow = []
 				
 				try:
-					finishTime = formatTime(rr.lastTime - rr.raceTimes[0]) if rr.status == Model.Rider.Finisher else ''
+					finishTime = formatTimeGap(rr.lastTime - rr.raceTimes[0]) if rr.status == Model.Rider.Finisher else ''
 				except Exception as e:
 					finishTime = ''
 				
@@ -141,7 +134,7 @@ def WebScorerExport( fname ):
 				# Lap Times.
 				for i in xrange(maxLaps):
 					try:
-						lapTime = formatTime(rr.lapTimes[i])
+						lapTime = formatTimeGap(rr.lapTimes[i])
 					except IndexError:
 						lapTime = ''
 					dataRow.append( lapTime )

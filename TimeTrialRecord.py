@@ -12,20 +12,11 @@ from SendPhotoRequests import SendRenameRequests
 import OutputStreamer
 
 def formatTime( secs ):
-	if secs is None:
-		secs = 0
-	if secs < 0:
-		sign = '-'
-		secs = -secs
-	else:
-		sign = ''
-	f, ss = math.modf(secs)
-	secs = int(ss)
-	hours = int(secs // (60*60))
-	minutes = int( (secs // 60) % 60 )
-	secs = secs % 60
-	decimal = '.%03d' % int( f * 1000 )
-	return " %s%02d:%02d:%02d%s " % (sign, hours, minutes, secs, decimal)
+	return Utils.formatTime(
+		secs,
+		highPrecision=True,		extraPrecision=True,
+		forceHours=True, 		twoDigitHours=True,
+	)
 
 def StrToSeconds( tStr ):
 	secs = Utils.StrToSeconds( tStr )

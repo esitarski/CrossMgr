@@ -5,6 +5,9 @@ import glob
 import math
 import Utils
 
+def formatTime( t ):
+	return Utils.formatTime( t, highPrecision=True, forceHours=False, forceMinutes=False )
+
 contrastColour = wx.Colour( 255, 130, 0 )
 
 photoWidth = 640
@@ -12,29 +15,6 @@ photoHeight = 480
 
 DefaultPhotoFolder = 'CrossMgrCamera/Test_Photos'
 
-def formatTime( secs, highPrecision = True ):
-	if secs is None:
-		secs = 0
-	if secs < 0:
-		sign = '-'
-		secs = -secs
-	else:
-		sign = ''
-	f, ss = math.modf(secs)
-	secs = int(ss)
-	hours = int(secs // (60*60))
-	minutes = int( (secs // 60) % 60 )
-	secs %= 60
-	if highPrecision:
-		secStr = '{:05.2f}'.format( secs + f )
-	else:
-		secStr = '{:02d}'.format( secs )
-	if hours > 0:
-		return "{}{}:{:02d}:{}".format(sign, hours, minutes, secStr)
-	if minutes > 0:
-		return "{}{}:{}".format(sign, minutes, secStr)
-	return "{}{}".format(sign, secStr.lstrip('0') if not secStr.startswith('00') else secStr[1:] )
-		
 class PhotoExists( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=(640,480), style=0,
 			tMin= 0, tMax=600.0, pixelsPerSec = 1.0, tPhotos = [] ):
@@ -208,7 +188,7 @@ class FinishStrip( wx.Panel ):
 		widthWinHalf = widthWin // 2
 		
 		xTimeLine = self.getXTimeLine()
-		text = formatTime( self.tDrawStart + (x - xTimeLine) / float(self.pixelsPerSec) * (-1.0 if self.leftToRight else 1.0))
+		text = formatTime( self.tDrawStart + (x - xTimeLine) / float(self.pixelsPerSec) * (-1.0 if self.leftToRight else 1.0) )
 		fontHeight = max(5, heightWin//20)
 		font = wx.FontFromPixelSize(
 			wx.Size(0,fontHeight),

@@ -83,7 +83,7 @@ from GetResults			import GetCategoryDetails, UnstartedRaceWrapper, GetLapDetails
 from PhotoFinish		import DeletePhotos, okTakePhoto
 from SendPhotoRequests	import SendPhotoRequests
 from PhotoViewer		import PhotoViewerDialog
-from ReadTTStartTimesSheet import ImportTTStartTimes
+from ReadTTStartTimesSheet import ImportTTStartTimes, AutoImportTTStartTimes
 from TemplateSubstitute import TemplateSubstitute
 import ChangeRaceStartTime
 from PageDialog			import PageDialog
@@ -2077,6 +2077,9 @@ class MainWin( wx.Frame ):
 		ResetExcelLinkCache()
 		SyncExcelLink( race )
 		
+		# Get the start times from the spreadsheet.
+		AutoImportTTStartTimes()
+		
 		# Show the Properties screen for the user to review.
 		dlg = PropertiesDialog(self, title=_('Configure Race'), style=wx.DEFAULT_DIALOG_STYLE )
 		dlg.properties.refresh()
@@ -2724,6 +2727,7 @@ class MainWin( wx.Frame ):
 			if self.launchExcelAfterPublishingResults:
 				webbrowser.open( url, new = 2, autoraise = True )
 		except Exception as e:
+			logException( e, sys.exc_info() )
 			Utils.MessageOK(self,
 						u'{} "{}"\n\n{}'.format(_('Cannot write'), fname, e),
 						_('CrossResults File Error'), iconMask=wx.ICON_ERROR )
@@ -2761,6 +2765,7 @@ class MainWin( wx.Frame ):
 				return
 			Utils.MessageOK(self, _('WebScorer file written to:') + u'\n\n   {}'.format(fname), _('WebScorer Publish'))
 		except Exception as e:
+			logException( e, sys.exc_info() )
 			Utils.MessageOK(self,
 						u'{} "{}"\n\n{}.'.format(_('Cannot write'), fname, e),
 						_('WebScorer Publish Error'), iconMask=wx.ICON_ERROR )

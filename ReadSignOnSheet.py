@@ -132,12 +132,18 @@ def getDefaultFieldMap( fileName, sheetName, expectedFieldCol = None ):
 	
 	GetTranslation = _
 	iNoMatch = len(headers) - 1
+	exactMatch = { h.lower():(100.0, i) for i, h in enumerate(headers) }
+	matchStrength = {}
 	for c, f in enumerate(Fields):
 		# Figure out some reasonable defaults for headers.
 		
-		# First try the local translation of the header name.
-		fTrans = GetTranslation( f )
-		matchBest, iBest = max( ((Utils.approximateMatch(fTrans, h), i) for i, h in enumerate(headers)), key=lambda x: x[0] )
+		# First look for a perfect match ignoring case.
+		matchBest, iBest = exactMatch.get( f.lower(), (0.0, iNoMatch) )
+		
+		# Then try the local translation of the header name.
+		if matchBest < 2.0:
+			fTrans = GetTranslation( f )
+			matchBest, iBest = max( ((Utils.approximateMatch(fTrans, h), i) for i, h in enumerate(headers)), key=lambda x: x[0] )
 		
 		# If that fails, try matching the untranslated header fields.
 		if matchBest <= 0.34:
@@ -150,14 +156,17 @@ def getDefaultFieldMap( fileName, sheetName, expectedFieldCol = None ):
 			except (TypeError, KeyError):
 				iBest = iNoMatch
 		
-		# If we already have a match for State of Prov, don't match on StateProv.
-		if f == sStateProvField and (
-				fieldCol[sStateField] != iNoMatch or
-				fieldCol[sProvField] != iNoMatch
-			):
-			iBest = iNoMatch
-		
 		fieldCol[f] = iBest
+		matchStrength[f] = matchBest
+	
+	# If we already have a match for State of Prov, don't match on StateProv, etc.
+	if matchStrength.get(sStateProvField,0.0) > matchStrength.get(sStateField,0.0):
+		fieldCol[sStateField] = iNoMatch
+		fieldCol[sProvField] = iNoMatch
+	elif matchStrength.get(sProvField,0.0) > matchStrength.get(sStateProvField,0.0):
+		fieldCol[sStateProvField] = iNoMatch
+	elif matchStrength.get(sStateField,0.0) > matchStrength.get(sStateProvField,0.0):
+		fieldCol[sStateProvField] = iNoMatch
 		
 	return headers, fieldCol
 
@@ -556,7 +565,7 @@ class ExcelLink( object ):
 	def bindDefaultFieldCols( self ):
 		headers, fieldCol = getDefaultFieldMap( self.fileName, self.sheetName )
 		iNoMatch = len(headers) - 1
-		self.fieldCol = { f: fieldCol[f] if fieldCol != iNoMatch else -1 for f in fieldCol }
+		self.fieldCol = { f: fieldCol[f] if fieldCol[f] != iNoMatch else -1 for f in fieldCol }
 
 	def hasField( self, field ):
 		return self.fieldCol.get( field, -1 ) >= 0

@@ -6,6 +6,13 @@ import Model
 from GetResults import GetResults, GetCategoryDetails
 from ReadSignOnSheet import SyncExcelLink
 
+def formatTimeGap( secs, forceHours=False ):
+	return Utils.formatTimeGap(
+		secs,
+		forceHours=forceHours,
+		separateWithQuotes=False,
+	)
+
 CrossResultsFields = (
 	('Place',		'pos'),
 	('Time',		'lastTime'),
@@ -15,46 +22,6 @@ CrossResultsFields = (
 	('License',		'License'),
 )
 lenCrossResultsFields = len(CrossResultsFields)
-
-def formatTime( secs, highPrecision = False ):
-	if secs is None:
-		secs = 0
-	if secs < 0:
-		sign = '-'
-		secs = -secs
-	else:
-		sign = ''
-	f, ss = math.modf(secs)
-	secs = int(ss)
-	hours = int(secs // (60*60))
-	minutes = int( (secs // 60) % 60 )
-	secs = secs % 60
-	if highPrecision:
-		secStr = '{:05.2f}'.format( secs + f )
-	else:
-		secStr = '{:02d}'.format( secs )
-	return "{}{}:{:02d}:{}".format(sign, hours, minutes, secStr)
-
-def formatLapTime( secs, highPrecision = False ):
-	if secs is None:
-		secs = 0
-	if secs < 0:
-		sign = '-'
-		secs = -secs
-	else:
-		sign = ''
-	f, ss = math.modf(secs)
-	secs = int(ss)
-	hours = int(secs // (60*60))
-	minutes = int( (secs // 60) % 60 )
-	secs = secs % 60
-	if highPrecision:
-		secStr = '{:05.2f}'.format( secs + f )
-	else:
-		secStr = '{:02d}'.format( secs )
-	if hours > 0:
-		return "{}{}:{:02d}:{}".format(sign, hours, minutes, secStr)
-	return "{}{:02d}:{}".format(sign, minutes, secStr)
 
 def CrossResultsExport( fname ):
 	race = Model.race
@@ -118,7 +85,7 @@ def CrossResultsExport( fname ):
 			
 			for rr in results:
 				try:
-					finishTime = formatTime(rr.lastTime - rr.raceTimes[0]) if rr.status == Model.Rider.Finisher else ''
+					finishTime = formatTimeGap(rr.lastTime - rr.raceTimes[0], forceHours=True) if rr.status == Model.Rider.Finisher else ''
 				except Exception as e:
 					finishTime = ''
 				
@@ -136,7 +103,7 @@ def CrossResultsExport( fname ):
 				# Lap Times.
 				for i in xrange(maxLaps):
 					try:
-						lapTime = formatLapTime(rr.lapTimes[i])
+						lapTime = formatTimeGap(rr.lapTimes[i])
 					except IndexError:
 						lapTime = ''
 					dataRow.append( lapTime )

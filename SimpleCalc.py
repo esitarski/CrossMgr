@@ -164,7 +164,7 @@ class TimeEval( object ):
 	def __call__( self, str ):
 		return eval( str )
 		
-def formatTime( secs, highPrecision = True ):
+def formatTime( secs, highPrecision = False ):
 	if secs is None:
 		secs = 0
 	if secs < 0:
@@ -176,15 +176,21 @@ def formatTime( secs, highPrecision = True ):
 	secs = int(ss)
 	hours = int(secs // (60*60))
 	minutes = int( (secs // 60) % 60 )
-	secs = secs % 60
-	if hours > 0:
-		s = "%s%d:%02d:%02d" % (sign, hours, minutes, secs)
-	else:
-		s = "%s%02d:%02d" % (sign, minutes, secs)
+	secs = (secs % 60) + f
 	if highPrecision:
-		d = int( f * 100 )
-		s += '.%02d' % d
-	return s
+		secStr = '{:05.2f}'.format( secs )
+	else:
+		secStr = '{:02.0f}'.format( secs )
+	if secStr.startswith('60'):
+		secStr = '00' + secStr[2:]
+		minutes += 1
+		if minutes == 60:
+			minutes = 0
+			hours += 1
+	if hours > 0:
+		return "{}{}:{:02d}:{}".format(sign, hours, minutes, secStr)
+	else:
+		return "{}{:02d}:{}".format(sign, minutes, secStr)
 
 def testEval( str  ):
 	re = TimeEval()

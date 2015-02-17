@@ -17,24 +17,12 @@ UCIFields = (
 	'Gap',
 )
 
-def formatTime( secs, highPrecision = False ):
-	if secs is None:
-		secs = 0
-	if secs < 0:
-		sign = '-'
-		secs = -secs
-	else:
-		sign = ''
-	f, ss = math.modf(secs)
-	secs = int(ss)
-	hours = int(secs // (60*60))
-	minutes = int( (secs // 60) % 60 )
-	secs = secs % 60
-	if highPrecision:
-		secStr = '{:05.2f}'.format( secs + f )
-	else:
-		secStr = '{:02d}'.format( secs )
-	return "{}{}:{:02d}:{}".format(sign, hours, minutes, secStr)
+def formatTimeGap( secs ):
+	return Utils.formatTimeGap(
+		secs,
+		forceHours=True,
+		separateWithQuotes=False,
+	)
 
 reHighPrecision = re.compile( '^.*\.[0-9][0-9]"$' )
 
@@ -70,7 +58,7 @@ def UCIExport( sheet, cat ):
 	
 	for rr in results:
 		try:
-			finishTime = formatTime(rr.lastTime - rr.raceTimes[0]) if rr.status == Model.Rider.Finisher else ''
+			finishTime = formatTimeGap(rr.lastTime - rr.raceTimes[0]) if rr.status == Model.Rider.Finisher else ''
 		except Exception as e:
 			finishTime = ''
 			
