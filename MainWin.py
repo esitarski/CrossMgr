@@ -362,7 +362,7 @@ class MainWin( wx.Frame ):
 		
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
-							_("&VTTA Excel Publish..."), _("Publish Results in Excel Format for VTTA"),
+							_("&VTTA Excel Publish..."), _("Publish Results in Excel Format for VTTA analysis"),
 							Utils.GetPngBitmap('vtta-icon.png') )
 		self.Bind(wx.EVT_MENU, self.menuExportVTTA, id=idCur )
 

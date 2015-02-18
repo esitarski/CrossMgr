@@ -3,25 +3,25 @@ import Model
 
 sheetName = '--CrossMgr-Categories'
 
-HeadersFields = (
-	('Category Type',	'catType'),
-	('Name',			'name'),
-	('Gender',			'gender'),
-	('Numbers',			'catStr'),
-	('Start Offset',	'startOffset'),
-	('Race Laps',		'numLaps'),
-	('Race Distance',	'distance'),
-	('Race Minutes',	None),
-)
-
-HeadersToFields = dict( (k, v) for k, v in HeadersFields )
-HeaderSet = set( k for k, v in HeadersFields )
-
 def ReadCategoriesFromExcel( reader ):
 	race = Model.race
 	if not race:
 		return False
 		
+	HeadersFields = (
+		('Category Type',	'catType'),
+		('Name',			'name'),
+		('Gender',			'gender'),
+		('Numbers',			'catStr'),
+		('Start Offset',	'startOffset'),
+		('Race Laps',		'numLaps'),
+		('Race Distance',	'distance'),
+		('Race Minutes',	None),
+	)
+
+	HeadersToFields = dict( (k, v) for k, v in HeadersFields )
+	HeaderSet = set( k for k, v in HeadersFields )
+
 	if sheetName not in reader.sheet_names():
 		return False
 	
