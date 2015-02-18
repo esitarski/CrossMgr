@@ -57,6 +57,7 @@ from SetAutoCorrect		import SetAutoCorrectDialog
 from DNSManager			import DNSManagerDialog
 from USACExport			import USACExport
 from UCIExport			import UCIExport
+from VTTAExport			import VTTAExport
 from CrossResultsExport	import CrossResultsExport
 from WebScorerExport	import WebScorerExport
 from HelpSearch			import HelpSearchDialog
@@ -356,6 +357,14 @@ class MainWin( wx.Frame ):
 							_("UCI (&Infostrada) Excel Publish..."), _("Publish Results in UCI (&Infostrada) Excel Format"),
 							Utils.GetPngBitmap('infostrada-icon.png') )
 		self.Bind(wx.EVT_MENU, self.menuExportUCI, id=idCur )
+
+		self.publishMenu.AppendSeparator()
+		
+		idCur = wx.NewId()
+		AppendMenuItemBitmap( self.publishMenu, idCur,
+							_("&VTTA Excel Publish..."), _("Publish Results in Excel Format for VTTA"),
+							Utils.GetPngBitmap('vtta-icon.png') )
+		self.Bind(wx.EVT_MENU, self.menuExportVTTA, id=idCur )
 
 		self.publishMenu.AppendSeparator()
 		
@@ -2602,6 +2611,39 @@ class MainWin( wx.Frame ):
 		wb = xlwt.Workbook()
 		sheetCur = wb.add_sheet( 'Combined Results' )
 		USACExport( sheetCur )
+		
+		try:
+			wb.save( xlFName )
+			if self.launchExcelAfterPublishingResults:
+				webbrowser.open( xlFName, new = 2, autoraise = True )
+			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
+		except IOError:
+			Utils.MessageOK(self,
+						u'{} "{}".\n\n{}\n{}'.format(_('Cannot write'), xlFName, _('Check if this spreadsheet is open.'), _('If so, close it, and try again.')),
+						_('Excel File Error'), iconMask=wx.ICON_ERROR )
+	
+	@logCall
+	def menuExportVTTA( self, event ):
+		self.commit()
+		if self.fileName is None or len(self.fileName) < 4 or not Model.race:
+			return
+
+		self.showPageName( _('Results') )
+		
+		xlFName = self.fileName[:-4] + '-VTTA.xls'
+		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(xlFName)),
+						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
+		ret = dlg.ShowModal()
+		dName = dlg.GetPath()
+		dlg.Destroy()
+		if ret != wx.ID_OK:
+			return
+
+		xlFName = os.path.join( dName, os.path.basename(xlFName) )
+
+		wb = xlwt.Workbook()
+		sheetCur = wb.add_sheet( 'Combined Results' )
+		VTTAExport( sheetCur )
 		
 		try:
 			wb.save( xlFName )
