@@ -14,6 +14,7 @@ photoWidth = 640
 photoHeight = 480
 
 DefaultPhotoFolder = 'CrossMgrCamera/Test_Photos'
+DefaultPhotoFolder = 'BCC_Test_Photos'
 
 class PhotoExists( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=(640,480), style=0,
@@ -416,7 +417,7 @@ class FinishStripPanel( wx.Panel ):
 		widthPix = photoWidth	# width of the photo
 		
 		minMax = []
-		for speedKMH in (2.0, 80.0):			# Speed of the target (km/h)
+		for speedKMH in (0.0, 70.0):			# Speed of the target (km/h)
 			speedMPS = speedKMH / 3.6			# Convert to m/s
 			d = speedMPS * frameTime			# Distance the target moves between each frame at speed.
 			pixels = widthPix * d / viewWidth	# Pixels the target moves between each frame at that speed.
@@ -499,7 +500,7 @@ class FinishStripPanel( wx.Panel ):
 		return self.speedSlider.GetValue()
 
 class FinishStripDialog( wx.Dialog ):
-	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE|wx.MAXIMIZE_BOX|wx.MINIMIZE_BOX,
+	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.MAXIMIZE_BOX|wx.MINIMIZE_BOX,
 			dir=None, fps=25.0, leftToRight=True, pixelsPerSec=None, photoFolder=DefaultPhotoFolder ):
 			
 		if size == wx.DefaultSize:
