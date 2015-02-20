@@ -66,3 +66,5 @@ You can choose Lap Times, Race Times, Lap Speeds or Race Speeds in Results.
 You can set the lap distance in Categories.  If the first lap is a different distance, you can set it differently.
 Try using Rider Find (Ctrl+F).\nDouble-clicking on a rider in Find brings up the rider in RiderDetail.\nClicking on the column sorts by that column.\nIn JChip test mode, chip reads will automatically be shown in Find.  This is good for testing.
 Clicking on a column name in Results will sort on that column.  Want to know the winner of an intermediate lap sprint?  Show "Race Times" in Results, then click on the lap column.
+CrossMgr can display and flip the lap counter for mulitple categories (see LapCounter window).  You can show riders by moving the LapCounter to a separate monitor.
+CrossMgr support drag-and-drop of CrossMgr or RaceDB Excel files, both to the desktop icon, and to the main window.

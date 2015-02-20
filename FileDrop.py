@@ -19,6 +19,5 @@ class FileDrop(wx.FileDropTarget):
 		ext = os.path.splitext( fname )[1]
 		if ext == '.cmn':
 			mainWin.openRace( fname )
-		elif ext in ('.xls', '.xlsx', '.xlsm'):
-			if IsValidRaceDBExcel(fname):
-				mainWin.openRaceDBExcel( fname )
+		elif ext in ('.xls', '.xlsx', '.xlsm') and IsValidRaceDBExcel(fname):
+			mainWin.openRaceDBExcel( fname )

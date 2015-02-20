@@ -3214,8 +3214,13 @@ def MainLoop():
 	raceLoaded = False
 	if fileName:
 		try:
-			mainWin.openRace( fileName )
-			raceLoaded = True
+			ext = os.path.splitext( fileName )[1]
+			if ext == '.cmn':
+				mainWin.openRace( fileName )
+				raceLoaded = True
+			elif ext in ('.xls', '.xlsx', '.xlsm') and IsValidRaceDBExcel(fileName):
+				mainWin.openRaceDBExcel( fileName )
+				raceLoaded = True
 		except (IndexError, AttributeError, ValueError):
 			pass
 
