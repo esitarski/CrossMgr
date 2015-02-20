@@ -499,7 +499,7 @@ class FinishStripPanel( wx.Panel ):
 		return self.speedSlider.GetValue()
 
 class FinishStripDialog( wx.Dialog ):
-	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE,
+	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE|wx.MAXIMIZE_BOX|wx.MINIMIZE_BOX,
 			dir=None, fps=25.0, leftToRight=True, pixelsPerSec=None, photoFolder=DefaultPhotoFolder ):
 			
 		if size == wx.DefaultSize:
