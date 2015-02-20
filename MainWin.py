@@ -2039,6 +2039,7 @@ class MainWin( wx.Frame ):
 		self.showPageName( _('Actions') )
 		self.refreshAll()
 
+	@logCall
 	def openRaceDBExcel( self, fname ):
 		race = Model.race
 		self.showPageName( _('Actions') )
