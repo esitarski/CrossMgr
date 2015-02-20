@@ -62,6 +62,7 @@ from CrossResultsExport	import CrossResultsExport
 from WebScorerExport	import WebScorerExport
 from HelpSearch			import HelpSearchDialog
 from Utils				import logCall, logException
+from FileDrop			import FileDrop
 import Model
 import JChipSetup
 import JChipImport
@@ -504,6 +505,8 @@ class MainWin( wx.Frame ):
 		self.notebook.SetBackgroundColour( wx.WHITE )
 		self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onPageChanging )
 		
+		self.fileDrop = FileDrop()	# Create a file drop target for all the main pages.
+		
 		# Add all the pages to the notebook.
 		self.pages = []
 
@@ -529,6 +532,7 @@ class MainWin( wx.Frame ):
 		
 		for i, (a, c, n) in enumerate(self.attrClassName):
 			setattr( self, a, c(self.notebook) )
+			getattr( self, a ).SetDropTarget( self.fileDrop )
 			addPage( getattr(self, a), u'{}. {}'.format(i+1, n) )
 
 		self.riderDetailDialog = None
@@ -2035,11 +2039,10 @@ class MainWin( wx.Frame ):
 		self.showPageName( _('Actions') )
 		self.refreshAll()
 
-	@logCall
-	def menuNewRaceDB( self, event ):
+	def openRaceDBExcel( self, fname ):
 		race = Model.race
-		self.closeFindDialog()
 		self.showPageName( _('Actions') )
+		self.closeFindDialog()
 		
 		ftpPublish = FtpWriteFile.FtpPublishDialog( self )
 		
@@ -2049,20 +2052,6 @@ class MainWin( wx.Frame ):
 			ResetExcelLinkCache()
 			self.writeRace()
 			geoTrack, geoTrackFName = getattr(race, 'geoTrack', None), getattr(race, 'geoTrackFName', None)
-		
-		# Get the RaceDB Excel sheet.
-		dlg = wx.FileDialog( self, message=_("Choose a RaceDB Excel file"),
-					defaultFile = '',
-					wildcard = _('RaceDB Excel files (*.xlsx)|*.xlsx'),
-					style=wx.OPEN | wx.CHANGE_DIR )
-		fname = dlg.GetPath() if dlg.ShowModal() == wx.ID_OK else None
-		dlg.Destroy()
-		if not fname:
-			return
-			
-		if not IsValidRaceDBExcel(fname):
-			Utils.MessageOK( self, _("Excel file not in RaceDB format"), _("Excel Read Failure"), iconMask=wx.ICON_ERROR )
-			return
 		
 		# Create a new race, but keep the old one in case we fail somewhere.
 		raceSave = Model.race
@@ -2144,6 +2133,24 @@ class MainWin( wx.Frame ):
 		self.writeRace()
 		self.showPageName( _('Actions') )
 		self.refreshAll()
+		
+	@logCall
+	def menuNewRaceDB( self, event ):
+		# Get the RaceDB Excel sheet.
+		dlg = wx.FileDialog( self, message=_("Choose a RaceDB Excel file"),
+					defaultFile = '',
+					wildcard = _('RaceDB Excel files (*.xlsx)|*.xlsx'),
+					style=wx.OPEN | wx.CHANGE_DIR )
+		fname = dlg.GetPath() if dlg.ShowModal() == wx.ID_OK else None
+		dlg.Destroy()
+		if not fname:
+			return
+			
+		if not IsValidRaceDBExcel(fname):
+			Utils.MessageOK( self, _("Excel file not in RaceDB format"), _("Excel Read Failure"), iconMask=wx.ICON_ERROR )
+			return
+		
+		self.openRaceDBExcel( fname )
 
 	def updateRecentFiles( self ):
 		self.filehistory.AddFileToHistory(self.fileName)
