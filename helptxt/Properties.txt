@@ -176,9 +176,9 @@ This is the reason for the policy of recording photos one minute before the expe
 
 One the leader of a Start Wave has been recorded, photos for all riders in the Start Wave will be recorded.  The same reason applies: CrossMgr may not know what lap a particular rider is on with 100% accuracy if the rider has take free laps or had missed reads.  This means that lapped riders may have their photo recorded twice.
 
-When using CrossMgr for track races, be advised that its policy of recording all photos 60 seconds in advance of the leader may result in photos of all riders for up to the last 4 laps (depending on the length of the track).
+When using CrossMgr for track races, recording all photos 60 seconds in advance of the leader may result in photos of all riders for up to the last 4 laps (depending on the length of the track).
 
-In TimeTrial mode, __Photos at Race Finish Only__ has the same effet as __Photos on Every Lap__.
+In TimeTrial mode, __Photos at Race Finish Only__ has the same effect as __Photos on Every Lap__.
 
 ## Animation Options
 These only apply to the Track animation.  If you are using an uploaded GPX file, the animation will follow the GPX path.
