@@ -801,6 +801,9 @@ class Rider(object):
 			return any( e.interp for e in interpolate if e.t <= tMax )
 		except (ValueError, StopIteration):
 			return False
+			
+	def hasTimes( self ):
+		return self.times
 
 class NumTimeInfo(object):
 
@@ -1255,6 +1258,9 @@ class Race( object ):
 		rider = self.riders[num]
 		rider.deleteTime( t )
 		self.setChanged()
+		
+	def hasRiderTimes( self ):
+		return any( r.hasTimes() for r in self.riders.itervalues() )
 
 	@memoize
 	def getLastKnownTimeRider( self ):

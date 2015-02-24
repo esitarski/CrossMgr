@@ -35,13 +35,10 @@ class HighPrecisionTimeEdit( masked.TextCtrl ):
 		if secs is None and self.allow_none:
 			masked.TextCtrl.SetValue( self, self.emptyValue )
 		else:
-			f, ss = math.modf(secs)
-			secs = int(ss)
-			hours = int(secs // (60*60))
-			if hours > 99:
-				hours = 99
-			minutes = int( (secs // 60) % 60 )
-			secs = secs % 60 + f
-			s = u"{:02d}:{:02d}:{:06.3f}".format(hours, minutes, secs)
-			masked.TextCtrl.SetValue( self, s )
+			masked.TextCtrl.SetValue( self, Utils.formatTime(
+					secs,
+					highPrecision=True,		extraPrecision=True,
+					forceHours=True, 		twoDigitHours=True,
+				)
+			)
 

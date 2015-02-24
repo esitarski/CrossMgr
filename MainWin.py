@@ -786,8 +786,11 @@ class MainWin( wx.Frame ):
 		with Model.LockRace() as race:
 			if not race:
 				return
-			if getattr(race, 'isTimeTrial'):
-				Utils.MessageOK( self, _('Cannot change Start Time of a Time Trial'), _('Cannot Change Start Time') )
+			if race.isUnstarted():
+				Utils.MessageOK( self, _('Cannot change Start Time of unstarted race.  Start the race from Actions.'), _('Race Not Started') )
+				return
+			if race.isTimeTrial and race.hasRiderTimes():
+				Utils.MessageOK( self, _('Cannot change Start Time of a Time Trial with recorded times'), _('Cannot Change Start Time') )
 				return
 			dlg = ChangeRaceStartTime.ChangeRaceStartTimeDialog( self )
 			dlg.ShowModal()

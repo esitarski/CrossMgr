@@ -14,14 +14,14 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 		race = Model.race
 		if not race:
 			return
-		if not race.startTime:
-			Utils.MessageOK( self, _('Cannot change Start Time of Unstarted Race'), _('Unstarted Race') )
-			return
-			
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
 		
 		seconds = (race.startTime - race.startTime.replace(hour=0, minute=0, second=0)).total_seconds()
-		self.timeMsEdit = HighPrecisionTimeEdit( self, seconds = seconds )
+		self.timeMsEdit = HighPrecisionTimeEdit( self, seconds = seconds, size=(80,-1) )
+		self.timeMsEdit.SetMinSize( (80, -1) )
+		
+		self.setTimeNow = wx.Button( self, label=_('Tap for NOW') )
+		self.setTimeNow.Bind( wx.EVT_LEFT_DOWN, self.onSetTimeNow )
 				
 		self.okBtn = wx.Button( self, wx.ID_OK )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
@@ -33,16 +33,22 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 		self.timeLabel = wx.StaticText( self, label = _('New Race Start Time (24hr clock):') )
 		bs.Add( self.timeLabel,  pos=(0,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.TOP|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.timeMsEdit, pos=(0,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.TOP|wx.ALIGN_LEFT )
+		bs.Add( self.setTimeNow, pos=(0,2), span=(1,1), border = border, flag=wx.ALL )
 		
-		bs.Add( self.okBtn, pos=(1, 0), span=(1,1), border = border, flag=wx.ALL )
+		bs.Add( self.okBtn, pos=(1, 1), span=(1,1), border = border, flag=wx.ALL )
 		self.okBtn.SetDefault()
-		bs.Add( self.cancelBtn, pos=(1, 1), span=(1,1), border = border, flag=wx.ALL )
+		bs.Add( self.cancelBtn, pos=(1, 2), span=(1,1), border = border, flag=wx.ALL )
 		
 		self.SetSizerAndFit(bs)
 		bs.Fit( self )
 		
 		self.CentreOnParent(wx.BOTH)
 		self.SetFocus()
+
+	def onSetTimeNow( self, event ):
+		tNow = datetime.datetime.now()
+		self.timeMsEdit.SetSeconds( (tNow - tNow.replace(hour=0, minute=0, second=0)).total_seconds() )
+		event.Skip()
 
 	def onOK( self, event ):
 		race = Model.race
@@ -61,15 +67,18 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 			return
 		
 		undo.pushState()
-		for rider in race.riders.itervalues():
-			if getattr(rider, 'firstTime', None) is not None:
-				rider.firstTime -= dTime
 		
-			# Adjust all the recorded times to account for the new start time.
-			for k in xrange(len(rider.times)):
-				rider.times[k] -= dTime
+		if not race.isTimeTrial:
+			for rider in race.riders.itervalues():
+				if getattr(rider, 'firstTime', None) is not None:
+					rider.firstTime -= dTime
+			
+				# Adjust all the recorded times to account for the new start time.
+				for k in xrange(len(rider.times)):
+					rider.times[k] -= dTime
+			
+			race.numTimeInfo.adjustAllTimes( -dTime )
 		
-		race.numTimeInfo.adjustAllTimes( -dTime )
 		race.startTime += datetime.timedelta( seconds = dTime )
 		race.setChanged()
 		Utils.refresh()
