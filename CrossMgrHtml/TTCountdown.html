@@ -1458,8 +1458,10 @@ var startList = [
     ]
 ];
 
+var maxNext = 8;
 var resetSecond = 20;
 var beepTimes = [resetSecond, 10, 5, 4, 3, 2, 1, 0, -3];
+
 var beepsToGive = [];
 var iBeepCur = 0;
 var bibLast = '';
@@ -1546,7 +1548,6 @@ function updateCountdown() {
 		team_starting.appendChild( document.createTextNode( btgNext.startEntry.slice(3).join(', ') ) );
 		
 		var rider_next = document.getElementById('rider-next');		
-		var maxNext = 3;
 		var startEntryNext = [btgNext.startEntry];
 		for( var i = iBeepCur+1; i < beepsToGive.length; ++i ) {
 			var found = false;
@@ -1568,6 +1569,13 @@ function updateCountdown() {
 		var tbody = document.createElement('TBODY'); table.appendChild( tbody );
 		for( var i = 0; i < startEntryNext.length; ++i ) {
 			var tr = document.createElement('TR'); tbody.appendChild( tr );
+			
+			var td = document.createElement('TD'); tr.appendChild( td );
+			td.appendChild( document.createTextNode(
+					(new Date(raceStart.getTime() + startEntryNext[i][0]*1000.0)).toLocaleTimeString()
+				)
+			);
+			
 			for( var c = 1; c < startEntryNext[i].length; ++c ) {
 				var td = document.createElement('TD'); tr.appendChild( td );
 				td.appendChild( document.createTextNode(startEntryNext[i][c]) )
