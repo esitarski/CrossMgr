@@ -1547,18 +1547,12 @@ function updateCountdown() {
 		team_starting.innerHTML = '';
 		team_starting.appendChild( document.createTextNode( btgNext.startEntry.slice(3).join(', ') ) );
 		
-		var rider_next = document.getElementById('rider-next');		
+		var rider_next = document.getElementById('rider-next');
 		var startEntryNext = [btgNext.startEntry];
 		for( var i = iBeepCur+1; i < beepsToGive.length; ++i ) {
-			var found = false;
-			for( var j = 0; j < startEntryNext.length; ++j ) {
-				if( startEntryNext[j][1] == beepsToGive[i].startEntry[1] ) {
-					found = true;
-					break;
-				}
-			}
-			if( found )
+			if( startEntryNext[startEntryNext.length-1][1] == beepsToGive[i].startEntry[1] )
 				continue;
+			
 			startEntryNext.push( beepsToGive[i].startEntry );
 			if( startEntryNext.length > maxNext )
 				break;
