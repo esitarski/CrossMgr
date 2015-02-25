@@ -2,7 +2,7 @@
 <head>
 
 <style>
-body { font-family: sans-serif; }
+body { font-family: Helvetica, sans-serif; }
 
 #rider-starting-div {
 	width: 100%;
@@ -10,6 +10,7 @@ body { font-family: sans-serif; }
 	border-width: 1px;
 	border-color: rgb(121, 125, 172);
 	border-style: solid;
+	border-radius: 10px;
 }
 
 #rider-starting {
@@ -25,13 +26,14 @@ body { font-family: sans-serif; }
 	border-width: 1px;
 	border-color: rgb(121, 125, 172);
 	border-style: solid;
+	border-radius: 10px;
 }
 
 #team-starting {
 	font-size: 250%;
 	font-weight: bold;
 	color: #66c;
-	padding-left: 2cm;
+	padding-left: 2.2cm;
 }
 
 #countdown-clock-div {
@@ -57,23 +59,34 @@ table {
 	background: linear-gradient(rgb(194,199,248), rgb(240,240,255), rgb(194,199,248)); 
 }
 
-tr {
-	border-top: 1px solid rgb(121, 125, 172);;
-}
+.border-top { border-top: 1px solid rgb(121, 125, 172); }
+.border-bottom { border-bottom: 1px solid rgb(121, 125, 172); }
+.border-left { border-left: 1px solid rgb(121, 125, 172); }
+.border-right { border-right: 1px solid rgb(121, 125, 172); }
 
-th {
-	text-align: left;    
+
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+
+th { text-align: left; }
+
+h3 {
+	font-size: 80%;
+	font-weight: normal;
+	text-align: right;
+	margin-top: 0px;
 }
 
 </style>
 
 <script>
+var raceStartTuple = null;
 var raceStart = null;
 var startList = [
     [
         30, 
         219, 
-        "Alexis Vuillermoz\u2020", 
+        "Alexis Vuillermoz", 
         "Sojasun", 
         "France"
     ], 
@@ -122,7 +135,7 @@ var startList = [
     [
         240, 
         212, 
-        "Anthony Delaplace\u2020", 
+        "Anthony Delaplace", 
         "Sojasun", 
         "France"
     ], 
@@ -143,14 +156,14 @@ var startList = [
     [
         330, 
         208, 
-        "Danny van Poppel\u2020", 
+        "Danny van Poppel", 
         "Vacansoleil-DCM", 
         "Netherlands"
     ], 
     [
         360, 
         207, 
-        "Boy van Poppel\u2020", 
+        "Boy van Poppel", 
         "Vacansoleil-DCM", 
         "Netherlands"
     ], 
@@ -213,7 +226,7 @@ var startList = [
     [
         630, 
         197, 
-        "Marcel Kittel\u2020", 
+        "Marcel Kittel", 
         "Argos-Shimano", 
         "Germany"
     ], 
@@ -234,7 +247,7 @@ var startList = [
     [
         720, 
         194, 
-        "Tom Dumoulin\u2020", 
+        "Tom Dumoulin", 
         "Argos-Shimano", 
         "Netherlands"
     ], 
@@ -255,7 +268,7 @@ var startList = [
     [
         810, 
         191, 
-        "John Degenkolb\u2020", 
+        "John Degenkolb", 
         "Argos-Shimano", 
         "Germany"
     ], 
@@ -276,7 +289,7 @@ var startList = [
     [
         900, 
         187, 
-        "Cameron Meyer\u2020", 
+        "Cameron Meyer", 
         "Orica-GreenEDGE", 
         "Australia"
     ], 
@@ -332,14 +345,14 @@ var startList = [
     [
         1140, 
         178, 
-        "Andrew Talansky\u2020", 
+        "Andrew Talansky", 
         "Garmin-Sharp", 
         "United States"
     ], 
     [
         1170, 
         177, 
-        "Ram\u016bnas Navardauskas\u2020", 
+        "Ram\u016bnas Navardauskas", 
         "Garmin-Sharp", 
         "Lithuania"
     ], 
@@ -360,7 +373,7 @@ var startList = [
     [
         1260, 
         174, 
-        "Rohan Dennis\u2020", 
+        "Rohan Dennis", 
         "Garmin-Sharp", 
         "Australia"
     ], 
@@ -395,7 +408,7 @@ var startList = [
     [
         1410, 
         168, 
-        "Sep Vanmarcke\u2020", 
+        "Sep Vanmarcke", 
         "Belkin Pro Cycling", 
         "Belgium"
     ], 
@@ -458,7 +471,7 @@ var startList = [
     [
         1680, 
         158, 
-        "Matteo Trentin\u2020", 
+        "Matteo Trentin", 
         "Omega Pharma-Quick Step", 
         "Italy"
     ], 
@@ -493,7 +506,7 @@ var startList = [
     [
         1830, 
         153, 
-        "Micha\u0142 Kwiatkowski\u2020", 
+        "Micha\u0142 Kwiatkowski", 
         "Omega Pharma-Quick Step", 
         "Poland"
     ], 
@@ -535,7 +548,7 @@ var startList = [
     [
         2010, 
         146, 
-        "Adriano Malori\u2020", 
+        "Adriano Malori", 
         "Lampre-Merida", 
         "Italy"
     ], 
@@ -549,14 +562,14 @@ var startList = [
     [
         2070, 
         144, 
-        "Elia Favilli\u2020", 
+        "Elia Favilli", 
         "Lampre-Merida", 
         "Italy"
     ], 
     [
         2100, 
         143, 
-        "Davide Cimolai\u2020", 
+        "Davide Cimolai", 
         "Lampre-Merida", 
         "Italy"
     ], 
@@ -584,7 +597,7 @@ var startList = [
     [
         2220, 
         138, 
-        "Rudy Molard\u2020", 
+        "Rudy Molard", 
         "Cofidis", 
         "France"
     ], 
@@ -647,7 +660,7 @@ var startList = [
     [
         2490, 
         128, 
-        " Nairo Quintana\u2020", 
+        " Nairo Quintana", 
         "Movistar Team", 
         "Colombia"
     ], 
@@ -703,7 +716,7 @@ var startList = [
     [
         2730, 
         119, 
-        "Romain Sicard\u2020", 
+        "Romain Sicard", 
         "Euskaltel-Euskadi", 
         "France"
     ], 
@@ -731,14 +744,14 @@ var startList = [
     [
         2850, 
         115, 
-        "Juan Jos\u00e9 Lobato\u2020", 
+        "Juan Jos\u00e9 Lobato", 
         "Euskaltel-Euskadi", 
         "Spain"
     ], 
     [
         2880, 
         114, 
-        "Jon Izagirre\u2020", 
+        "Jon Izagirre", 
         "Euskaltel-Euskadi", 
         "Spain"
     ], 
@@ -941,7 +954,7 @@ var startList = [
     [
         3750, 
         82, 
-        "Romain Bardet\u2020", 
+        "Romain Bardet", 
         "Ag2r-La Mondiale", 
         "France"
     ], 
@@ -955,7 +968,7 @@ var startList = [
     [
         3810, 
         79, 
-        "Arthur Vichot\u2020", 
+        "Arthur Vichot", 
         "FDJ.fr", 
         "France"
     ], 
@@ -976,7 +989,7 @@ var startList = [
     [
         3900, 
         76, 
-        "Alexandre Geniez\u2020", 
+        "Alexandre Geniez", 
         "FDJ.fr", 
         "France"
     ], 
@@ -997,7 +1010,7 @@ var startList = [
     [
         3990, 
         73, 
-        "Nacer Bouhanni\u2020", 
+        "Nacer Bouhanni", 
         "FDJ.fr", 
         "France"
     ], 
@@ -1011,7 +1024,7 @@ var startList = [
     [
         4050, 
         71, 
-        "Thibaut Pinot\u2020", 
+        "Thibaut Pinot", 
         "FDJ.fr", 
         "France"
     ], 
@@ -1025,7 +1038,7 @@ var startList = [
     [
         4110, 
         68, 
-        "Alexey Lutsenko\u2020", 
+        "Alexey Lutsenko", 
         "Astana", 
         "Kazakhstan"
     ], 
@@ -1095,7 +1108,7 @@ var startList = [
     [
         4410, 
         57, 
-        "K\u00e9vin Reza\u2020", 
+        "K\u00e9vin Reza", 
         "Team Europcar", 
         "France"
     ], 
@@ -1123,7 +1136,7 @@ var startList = [
     [
         4530, 
         53, 
-        "J\u00e9r\u00f4me Cousin\u2020", 
+        "J\u00e9r\u00f4me Cousin", 
         "Team Europcar", 
         "France"
     ], 
@@ -1179,7 +1192,7 @@ var startList = [
     [
         4770, 
         44, 
-        "Tony Gallopin\u2020", 
+        "Tony Gallopin", 
         "RadioShack-Leopard", 
         "France"
     ], 
@@ -1207,7 +1220,7 @@ var startList = [
     [
         4890, 
         39, 
-        "Tejay van Garderen\u2020", 
+        "Tejay van Garderen", 
         "BMC Racing Team", 
         "United States"
     ], 
@@ -1347,7 +1360,7 @@ var startList = [
     [
         5490, 
         17, 
-        "Moreno Moser\u2020", 
+        "Moreno Moser", 
         "Cannondale", 
         "Italy"
     ], 
@@ -1389,7 +1402,7 @@ var startList = [
     [
         5670, 
         11, 
-        "Green jersey Peter Sagan\u2020", 
+        " Peter Sagan", 
         "Cannondale", 
         "Slovakia"
     ], 
@@ -1436,21 +1449,21 @@ var startList = [
         "Belarus"
     ], 
     [
-        5880, 
+        5880 + 30, 
         3, 
-        "Peter Kennaugh\u2020", 
+        "Peter Kennaugh", 
         "Team Sky", 
         "United Kingdom"
     ], 
     [
-        5910, 
+        5910 + 60, 
         2, 
         "Edvald Boasson Hagen", 
         "Team Sky", 
         "Norway"
     ], 
     [
-        5940, 
+        5940 + 90, 
         1, 
         " Chris Froome", 
         "Team Sky", 
@@ -1500,6 +1513,7 @@ function playBeep( beep ) {
 	oscillator.stop(audioContext.currentTime+0.2);
 }
 
+var secondsBetweenUpdate = 0;
 var intervalID = null;
 function startIntervalTimer() {
 	if( intervalID != null ) {
@@ -1509,6 +1523,7 @@ function startIntervalTimer() {
 	setTimeout(
 		function(){ intervalID = setInterval(updateCountdown, 1000); updateCountdown(); },
 		(10000 - ((new Date()).getTime() - beepsToGive[0].t.getTime()) % 1000) % 1000 );
+	secondsBetweenUpdate = 0;
 }
 
 function updateCountdown() {
@@ -1541,7 +1556,7 @@ function updateCountdown() {
 		
 		var rider_starting = document.getElementById('rider-starting');
 		rider_starting.innerHTML = '';
-		rider_starting.appendChild( document.createTextNode( btgNext.startEntry[1] + ': ' + btgNext.startEntry[2] ) );
+		rider_starting.appendChild( document.createTextNode( btgNext.startEntry[1] + ' ' + btgNext.startEntry[2] ) );
 		
 		var team_starting = document.getElementById('team-starting');
 		team_starting.innerHTML = '';
@@ -1559,21 +1574,30 @@ function updateCountdown() {
 		}
 		startEntryNext = startEntryNext.slice( 1 );
 		
+		var iIndex = btgNext.index;
 		var table = document.createElement('TABLE');
 		var tbody = document.createElement('TBODY'); table.appendChild( tbody );
 		for( var i = 0; i < startEntryNext.length; ++i ) {
 			var tr = document.createElement('TR'); tbody.appendChild( tr );
+			tr.className = 'border-top border-left border-right';
+			if( i == startEntryNext.length -1 )
+				tr.className += ' border-bottom';
+			
+			//var td = document.createElement('TD'); tr.appendChild( td );
+			//td.appendChild( document.createTextNode( ++iIndex + '.' ) );
+			
+			for( var c = 1; c < startEntryNext[i].length; ++c ) {
+				var td = document.createElement('TD'); tr.appendChild( td );
+				td.appendChild( document.createTextNode(startEntryNext[i][c]) )
+				if( c == 1 )
+					td.className = 'text-center';
+			}
 			
 			var td = document.createElement('TD'); tr.appendChild( td );
 			td.appendChild( document.createTextNode(
 					(new Date(raceStart.getTime() + startEntryNext[i][0]*1000.0)).toLocaleTimeString()
 				)
 			);
-			
-			for( var c = 1; c < startEntryNext[i].length; ++c ) {
-				var td = document.createElement('TD'); tr.appendChild( td );
-				td.appendChild( document.createTextNode(startEntryNext[i][c]) )
-			}
 		}
 		rider_next.innerHTML = '';
 		rider_next.appendChild( table );
@@ -1581,13 +1605,19 @@ function updateCountdown() {
 		bibLast = bibCur;
 	}
 	
-	if( btg.beep == 0 || btg.beep == resetSecond )
+	secondsBetweenUpdate += 1;
+	if( btg.beep == 0 || btg.beep == resetSecond || secondsBetweenUpdate >= 30 )
 		startIntervalTimer();
 }
 
 function onload() {
 	// TEST TEST TEST TEST TEST
-	raceStart = new Date(new Date().getTime() - 30*60*1000 - 3287);
+	if( !raceStartTuple )
+		raceStart = new Date(new Date().getTime() - 95*60*1000 - 3287);
+	else
+		raceStart = new Date(
+			raceStartTuple[0], raceStartTuple[1], raceStartTuple[2],						// year 0-based-month day
+			raceStartTuple[3], raceStartTuple[4], raceStartTuple[5], raceStartTuple[6] );	// hour minute second millisecond
 	
 	playBeep( 1 );
 	
@@ -1611,6 +1641,7 @@ function onload() {
 					'tStart':tStart,
 					'beep':  beepTimes[b],
 					'startEntry': startEntry,
+					'index': i + 1,
 					'given': false
 				}
 			);
@@ -1625,7 +1656,7 @@ function onload() {
 	var btgLast = beepsToGive[beepsToGive.length-1];
 	btgLast.t = new Date(btgLast.t.getTime() + tBig);
 	btgLast.tStart = new Date(btgLast.tStart.getTime() + tBig);
-	btgLast.beep = tBig / 1000;
+	btgLast.beep = -1;
 	
 	if( window.AudioContext )
 		audioContext = new AudioContext();
@@ -1638,7 +1669,7 @@ function onload() {
 <body onload="onload()">
 
 <div id="rider-starting-div">
-	<span id="rider-starting">1: CrossMgr</span>
+	<span id="rider-starting">000 CrossMgr</span>
 </div>
 <div id="team-starting-div">
 	<span id="team-starting">CrossMgr Time Trial Starter</span>
@@ -1648,10 +1679,16 @@ function onload() {
 </div>
 <div id="rider-next">
 <table>
-	<tr><td>&nbsp</td></tr>
-	<tr><td>&nbsp</td></tr>
-	<tr><td>&nbsp</td></tr>
+	<tr class="border-left border-right border-top border-bottom"><td>&nbsp</td></tr>
+	<tr class="border-left border-right border-bottom"><td>&nbsp</td></tr>
+	<tr class="border-left border-right border-bottom"><td>&nbsp</td></tr>
+	<tr class="border-left border-right border-bottom"><td>&nbsp</td></tr>
+	<tr class="border-left border-right border-bottom"><td>&nbsp</td></tr>
+	<tr class="border-left border-right border-bottom"><td>&nbsp</td></tr>
+	<tr class="border-left border-right border-bottom"><td>&nbsp</td></tr>
+	<tr class="border-left border-right border-bottom"><td>&nbsp</td></tr>
 </table>
 </div>
+<h3><a href="https://www.sites.google.com/site/crossmgrsoftware/">Powered by CrossMgr</a></h3>
 </body>
 </html>
