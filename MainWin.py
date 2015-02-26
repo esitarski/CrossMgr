@@ -1553,7 +1553,7 @@ class MainWin( wx.Frame ):
 			return
 			
 		if not race.isTimeTrial:
-			Utils.MessageOK( self, _('TT Start can only be create for a Time Trial event.'), _('Cannot Create TTStart Page') )
+			Utils.MessageOK( self, _('TT Start can only be created for a Time Trial event.'), _('Cannot Create TTStart Page') )
 			return
 			
 		if not race.isRunning():
@@ -1622,6 +1622,11 @@ class MainWin( wx.Frame ):
 		except:
 			Utils.MessageOK(self, u'{} ({}).'.format(_('Cannot write HTML file'), fname),
 							_('Html Write Error'), iconMask=wx.ICON_ERROR )
+			return
+			
+		if FtpWriteFile.FtpIsConfigured():
+			if Utils.MessageOKCancel(self, _('Upload with FTP?'), _('FTP Upload')):
+				FtpWriteFile.FtpUploadFileAsync( fname )
 	
 	#--------------------------------------------------------------------------------------------
 	@logCall

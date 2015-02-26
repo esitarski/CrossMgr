@@ -125,19 +125,27 @@ function FormatTime( t )
 	return tStr;
 }
 
-window.AudioContext = window.AudioContext || window.webkitAudioContext || null;
-var audioContext = null;
+window.AudioContext = (
+	window.AudioContext || 
+	window.webkitAudioContext || 
+	window.mozAudioContext || 
+	window.oAudioContext || 
+	window.msAudioContext ||
+	null
+);
+
+var audioContextInstance = null;
 function playBeep( beep ) {
-	if( !audioContext || beep < 0 || beep == resetSecond)
+	if( !audioContextInstance || beep < 0 || beep == resetSecond)
 		return;
 	
-	var oscillator = audioContext.createOscillator();
+	var oscillator = audioContextInstance.createOscillator();
 	oscillator.frequency.value = (beep > 0 ? 440.00 : 880.0);
 	oscillator.type = 0;
 	
-	oscillator.connect(audioContext.destination);
-	oscillator.start(audioContext.currentTime);
-	oscillator.stop(audioContext.currentTime+0.2);
+	oscillator.connect(audioContextInstance.destination);
+	oscillator.start(audioContextInstance.currentTime);
+	oscillator.stop(audioContextInstance.currentTime+0.2);
 }
 
 var secondsBetweenUpdate = 0;
@@ -294,7 +302,7 @@ function onload() {
 	btgLast.beep = -1;
 	
 	if( window.AudioContext )
-		audioContext = new AudioContext();
+		audioContextInstance = new AudioContext();
 	
 	startIntervalTimer();
 }

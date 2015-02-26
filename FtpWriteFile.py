@@ -25,10 +25,49 @@ def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30,
 	if file is None:
 		file = open(fname, 'rb')
 		fileOpened = True
-	ftp.storbinary( 'STOR %s' % os.path.basename(fname), file )
+	ftp.storbinary( 'STOR "{}"'.format(os.path.basename(fname)), file )
 	ftp.quit()
 	if fileOpened:
 		file.close()
+		
+def FtpIsConfigured():
+	with Model.LockRace() as race:
+		if not race or not Utils.getFileName():
+			return False
+			
+		host		= getattr( race, 'ftpHost', None )
+		user		= getattr( race, 'ftpUser', None )
+		
+	return host and user
+		
+def FtpUploadFile( fname ):
+	with Model.LockRace() as race:
+		if not race or not Utils.getFileName():
+			return None
+			
+		host		= getattr( race, 'ftpHost', '' )
+		user		= getattr( race, 'ftpUser', '' )
+		passwd		= getattr( race, 'ftpPassword', '' )
+		serverPath	= getattr( race, 'ftpPath', '' )
+	
+	try:
+		FtpWriteFile(
+			host		= host,
+			user		= user,
+			passwd		= passwd,
+			serverPath	= serverPath,
+			fname		= fname,
+		)
+	except Exception as e:
+		Utils.writeLog( 'UploadFile: Error: {}'.format(e) )
+		return e
+		
+	return None
+
+def FtpUploadFileAsync( fname ):
+	thread = threading.Thread( target=FtpUploadFile, args=(fname,), name='FtpUploadFileAsync: {}'.format(fname) )
+	thread.daemon = True
+	thread.start()
 
 def FtpWriteRaceHTML():
 	Utils.writeLog( 'FtpWriteRaceHTML: called.' )
@@ -45,7 +84,7 @@ def FtpWriteRaceHTML():
 	
 	with Model.LockRace() as race:
 		if not race or not Utils.getFileName():
-			return
+			return None
 			
 		host		= getattr( race, 'ftpHost', '' )
 		user		= getattr( race, 'ftpUser', '' )
