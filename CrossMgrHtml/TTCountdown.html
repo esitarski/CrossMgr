@@ -187,7 +187,11 @@ function updateCountdown() {
 		
 		var team_starting = document.getElementById('team-starting');
 		team_starting.innerHTML = '';
-		team_starting.appendChild( document.createTextNode( btgNext.startEntry.slice(3).join(', ') ) );
+		var dataFields = [];
+		for( var f = 3; f < btgNext.startEntry.length; ++f )
+			if( btgNext.startEntry[f] )
+				dataFields.push( btgNext.startEntry[f] );
+		team_starting.appendChild( document.createTextNode( dataFields.join(', ') ) );
 		
 		var rider_next = document.getElementById('rider-next');
 		var startEntryNext = [btgNext.startEntry];
