@@ -360,7 +360,6 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_MENU, self.menuExportUCI, id=idCur )
 
 		self.publishMenu.AppendSeparator()
-		
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
 							_("&VTTA Excel Publish..."), _("Publish Results in Excel Format for VTTA analysis"),
@@ -368,12 +367,18 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_MENU, self.menuExportVTTA, id=idCur )
 
 		self.publishMenu.AppendSeparator()
-		
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
 							_("&Facebook PNG Publish..."), _("Publish Results as PNG files for posting on Facebook"),
 							Utils.GetPngBitmap('facebook-icon.png') )
 		self.Bind(wx.EVT_MENU, self.menuPrintPNG, id=idCur )
+		
+		self.publishMenu.AppendSeparator()
+		idCur = wx.NewId()
+		AppendMenuItemBitmap( self.publishMenu, idCur,
+							_("TT Start HTML Publish..."), _("Publish Time Trial Start page"),
+							Utils.GetPngBitmap('stopwatch-icon.png') )
+		self.Bind(wx.EVT_MENU, self.menuPublishHtmlTTStart, id=idCur )
 		
 		self.menuBar.Append( self.publishMenu, _("&Publish") )
 		
@@ -1246,11 +1251,15 @@ class MainWin( wx.Frame ):
 	reComments = re.compile( r'// .*$', re.MULTILINE )
 	reBlankLines = re.compile( r'\n+' )
 	reRemoveTags = re.compile( r'\<html\>|\</html\>|\<body\>|\</body\>|\<head\>|\</head\>', re.I )
-	def addResultsToHtmlStr( self, html ):
+	def cleanHtml( self, html ):
 		# Remove leading whitespace, comments and consecutive blank lines to save space.
 		html = self.reLeadingWhitespace.sub( '', html )
 		html = self.reComments.sub( '', html )
 		html = self.reBlankLines.sub( '\n', html )
+		return html
+		
+	def addResultsToHtmlStr( self, html ):
+		html = self.cleanHtml( html )
 	
 		payload = {}
 		payload['raceName'] = os.path.basename(self.fileName)[:-4]
@@ -1536,6 +1545,84 @@ class MainWin( wx.Frame ):
 			if race.urlFull and race.urlFull != 'http://':
 				webbrowser.open( race.urlFull, new = 0, autoraise = True )
 			
+	@logCall
+	def menuPublishHtmlTTStart( self, event ):
+		self.commit()
+		race = Model.race
+		if not race or self.fileName is None or len(self.fileName) < 4:
+			return
+			
+		if not race.isTimeTrial:
+			Utils.MessageOK( self, _('TT Start can only be create for a Time Trial event.'), _('Cannot Create TTStart Page') )
+			return
+			
+		if not race.isRunning():
+			Utils.MessageOK( self,
+				_('The Time Trial must be started before you can create the TT Start HTML.'),
+				_('Cannot Create TTStart Page') )
+			return
+		
+		# Get the folder to write the html file.
+		fname = os.path.splitext(self.fileName)[0] + '_TTStart.html'
+		dlg = wx.DirDialog( self, _('Folder to write "{}"').format(os.path.basename(fname)),
+							style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
+		ret = dlg.ShowModal()
+		dName = dlg.GetPath()
+		dlg.Destroy()
+		if ret != wx.ID_OK:
+			return
+
+		# Read the html template.
+		htmlFile = os.path.join(Utils.getHtmlFolder(), 'TTCountdown.html')
+		try:
+			with io.open(htmlFile, 'r', encoding='utf-8') as fp:
+				html = fp.read()
+		except:
+			Utils.MessageOK(self, _('Cannot read HTML template file.  Check program installation.'),
+							_('Html Template Read Error'), iconMask=wx.ICON_ERROR )
+			return
+			
+		html = self.cleanHtml( html )
+		
+		payload = {}
+		payload['raceStartTuple'] = [
+			race.startTime.year, race.startTime.month-1, race.startTime.day,
+			race.startTime.hour, race.startTime.minute, race.startTime.second, int(race.startTime.microsecond/1000)
+		]
+		data = GetAnimationData(getExternalData = True)
+		startList = []
+		for bib, info in data.iteritems():
+			try:
+				catName = race.getCategory(bib).fullname
+			except:
+				catName = ''
+			try:
+				firstTime = int(race[bib].firstTime + 0.1)
+			except:
+				continue
+			row = [
+				firstTime,
+				bib,
+				' '.join(v for v in [info.get('FirstName',''), info.get('LastName')] if v),
+				info.get('Team', ''),
+				catName,
+			]
+			startList.append( row )
+		payload['startList'] = startList
+		
+		html = replaceJsonVar( html, 'payload', payload )
+		
+		# Write out the results.
+		fname = os.path.join( dName, os.path.basename(fname) )
+		try:
+			with io.open(fname, 'w', encoding='utf-8') as fp:
+				fp.write( html )
+			webbrowser.open( fname, new = 0, autoraise = True )
+			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Html TTStart written to'), fname), _('Html Write'))
+		except:
+			Utils.MessageOK(self, u'{} ({}).'.format(_('Cannot write HTML file'), fname),
+							_('Html Write Error'), iconMask=wx.ICON_ERROR )
+	
 	#--------------------------------------------------------------------------------------------
 	@logCall
 	def menuImportTTStartTimes( self, event ):
