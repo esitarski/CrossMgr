@@ -1558,9 +1558,12 @@ class MainWin( wx.Frame ):
 			
 		if not race.isRunning():
 			Utils.MessageOK( self,
-				_('The Time Trial must be started before you can create the TT Start HTML.'),
-				_('Cannot Create TTStart Page') )
-			return
+				u'\n'.join( [
+					_('The Time Trial has not started.'),
+					_('The TTStart page will act as countdown clock for the scheduled start time.'),
+					_('You must publish this page again after you start the Time Trial.'),
+				]),
+				_('Reminder: Publish after Time Trial is Started') )
 		
 		# Get the folder to write the html file.
 		fname = os.path.splitext(self.fileName)[0] + '_TTStart.html'
@@ -1585,32 +1588,47 @@ class MainWin( wx.Frame ):
 		html = self.cleanHtml( html )
 		
 		payload = {}
-		payload['raceStartTuple'] = [
-			race.startTime.year, race.startTime.month-1, race.startTime.day,
-			race.startTime.hour, race.startTime.minute, race.startTime.second, int(race.startTime.microsecond/1000)
-		]
-		data = GetAnimationData(getExternalData = True)
-		startList = []
-		for bib, info in data.iteritems():
-			try:
-				catName = race.getCategory(bib).fullname
-			except:
-				catName = ''
-			try:
-				firstTime = int(race[bib].firstTime + 0.1)
-			except:
-				continue
-			row = [
-				firstTime,
-				bib,
-				' '.join(v for v in [info.get('FirstName',''), info.get('LastName')] if v),
-				info.get('Team', ''),
-				catName,
+		payload['raceName'] = race.name
+		if race.isRunning():
+			payload['raceStartTuple'] = [
+				race.startTime.year, race.startTime.month-1, race.startTime.day,
+				race.startTime.hour, race.startTime.minute, race.startTime.second, int(race.startTime.microsecond/1000)
 			]
-			startList.append( row )
+		else:
+			y, m, d = [int(f) for f in race.date.split('-')]
+			m -= 1
+			HH, MM = [int(f) for f in race.scheduledStart.split(':')[:2]]
+			payload['raceScheduledStartTuple'] = [y, m, d, HH, MM, 0, 0]
+		
+		startList = []
+		if race.isRunning():
+			data = GetAnimationData(getExternalData = True)
+			for bib, info in data.iteritems():
+				try:
+					catName = race.getCategory(bib).fullname
+				except:
+					catName = ''
+				try:
+					firstTime = int(race[bib].firstTime + 0.1)
+				except:
+					continue
+				row = [
+					firstTime,
+					bib,
+					' '.join(v for v in [info.get('FirstName',''), info.get('LastName')] if v),
+					info.get('Team', ''),
+					catName,
+				]
+				startList.append( row )
+
 		payload['startList'] = startList
 		
 		html = replaceJsonVar( html, 'payload', payload )
+		html = html.replace( '<title>TTStartPage</title>', '<title>TT {} {} {}</title>'.format(
+				cgi.escape(race.name),
+				cgi.escape(race.date), cgi.escape(race.scheduledStart),
+			)
+		)
 		
 		# Write out the results.
 		fname = os.path.join( dName, os.path.basename(fname) )

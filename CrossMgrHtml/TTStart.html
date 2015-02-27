@@ -1,6 +1,6 @@
 <html>
 <head>
-
+<title>TTStartPage</title>
 <style>
 body { font-family: Helvetica, sans-serif; }
 
@@ -82,6 +82,9 @@ h3 {
 <script>
 var payload = null;
 
+var raceName = null;
+var raceScheduledStartTuple = null;
+
 var raceStartTuple = null;
 var raceStart = null;
 
@@ -100,6 +103,7 @@ var startListTest = [
 
 var maxNext = 8;
 var resetSecond = 20;
+var enableBeeps = true;
 var beepTimes = [resetSecond, 10, 5, 4, 3, 2, 1, 0, -3];
 
 var beepsToGive = [];
@@ -136,7 +140,7 @@ window.AudioContext = (
 
 var audioContextInstance = null;
 function playBeep( beep ) {
-	if( !audioContextInstance || beep < 0 || beep == resetSecond)
+	if( !audioContextInstance || beep < 0 || beep == resetSecond || !enableBeeps )
 		return;
 	
 	var oscillator = audioContextInstance.createOscillator();
@@ -171,7 +175,6 @@ function updateCountdown() {
 			break;
 		
 		if( !btg.given ) {
-			//console.log( dSecs );
 			playBeep( btg.beep );
 			btg.given = true;
 		}
@@ -222,9 +225,6 @@ function updateCountdown() {
 			if( i == startEntryNext.length -1 )
 				tr.className += ' border-bottom';
 			
-			//var td = document.createElement('TD'); tr.appendChild( td );
-			//td.appendChild( document.createTextNode( ++iIndex + '.' ) );
-			
 			for( var c = 1; c < startEntryNext[i].length; ++c ) {
 				var td = document.createElement('TD'); tr.appendChild( td );
 				td.appendChild( document.createTextNode(startEntryNext[i][c]) )
@@ -252,14 +252,24 @@ function updateCountdown() {
 function onload() {
 	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
 	
-	if( raceStartTuple == null ) {
-		raceStart = new Date(new Date().getTime() - 95*60*1000 - 3287);
-		startList = startListTest;
+	if( raceScheduledStartTuple != null ) {
+		raceStart = new Date(
+			raceScheduledStartTuple[0], raceScheduledStartTuple[1], raceScheduledStartTuple[2],
+			raceScheduledStartTuple[3], raceScheduledStartTuple[4], raceScheduledStartTuple[5], raceScheduledStartTuple[6] );
+		startList = [ [0, 1, raceName, "Countdown to Scheduled Start at " + raceStart.toLocaleString()] ];
+		
+		// Set up a callback to automatically refresh the page on or after the race start time.
+		setTimeout( Math.max(0, raceStart.getTime() - (new Date()).getTime()) + 15*1000, function() { location.reload(true); } );
+		enableBeeps = false;
+	}
+	else if( raceStartTuple != null ) {
+		raceStart = new Date(
+			raceStartTuple[0], raceStartTuple[1], raceStartTuple[2],
+			raceStartTuple[3], raceStartTuple[4], raceStartTuple[5], raceStartTuple[6] );
 	}
 	else {
-		raceStart = new Date(
-			raceStartTuple[0], raceStartTuple[1], raceStartTuple[2],						// year 0-based-month day
-			raceStartTuple[3], raceStartTuple[4], raceStartTuple[5], raceStartTuple[6] );	// hour minute second millisecond
+		raceStart = new Date(new Date().getTime() - 95*60*1000 - 3287);
+		startList = startListTest;
 	}
 	
 	playBeep( 1 );
@@ -277,7 +287,7 @@ function onload() {
 			continue;
 		for( var b = 0; b < beepTimes.length; ++b ) {
 			var tBeep = new Date(tStart.getTime() - beepTimes[b] * 1000);
-			if( tBeep < tNow )
+			if( tBeep < tNow || (beepsToGive.length > 0 && beepsToGive[beepsToGive.length-1].t >= tBeep) )
 				continue;
 			beepsToGive.push( {
 					't':tBeep,
@@ -290,8 +300,20 @@ function onload() {
 			);
 		}
 	}
-	if( !beepsToGive.length )
-		return;
+	
+	if( beepsToGive.length == 0 ) {
+		var startEntry = startList[startList.length-1];
+		var tStart = new Date(raceStart.getTime() + startEntry[0] * 1000);
+		beepsToGive.push( {
+				't':tStart,
+				'tStart':tStart,
+				'beep': -1,
+				'startEntry': startEntry,
+				'index': startList.length,
+				'given': false
+			}
+		);
+	}
 
 	// Add a long last entry to avoid special cases.
 	beepsToGive.push( beepsToGive[beepsToGive.length-1] );
