@@ -25,7 +25,7 @@ def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30,
 	if file is None:
 		file = open(fname, 'rb')
 		fileOpened = True
-	ftp.storbinary( 'STOR "{}"'.format(os.path.basename(fname)), file )
+	ftp.storbinary( 'STOR {}'.format(os.path.basename(fname)), file )
 	ftp.quit()
 	if fileOpened:
 		file.close()

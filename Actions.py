@@ -32,8 +32,10 @@ def StartRaceNow():
 		
 		if not race.enableJChipIntegration:
 			race.resetStartClockOnFirstTag = False
+		
 		Model.resetCache()
 		race.startRaceNow()
+		isTimeTrial = race.isTimeTrial
 		
 	OutputStreamer.writeRaceStart()
 	
@@ -43,6 +45,9 @@ def StartRaceNow():
 		mainWin.showPageName( _('Record') )
 		mainWin.updateLapCounter()
 		mainWin.refresh()
+		
+		if isTimeTrial and Utils.MessageOKCancel( mainWin, _('Create TTStart HTML Page?'), _('Create TTStart HTML Page?') ):
+			mainWin.menuPublishHtmlTTStart()
 	
 	# For safety, clear the undo stack after 8 seconds.
 	undoResetTimer = wx.CallLater( 8000, undo.clear )

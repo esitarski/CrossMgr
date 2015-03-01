@@ -1546,7 +1546,7 @@ class MainWin( wx.Frame ):
 				webbrowser.open( race.urlFull, new = 0, autoraise = True )
 			
 	@logCall
-	def menuPublishHtmlTTStart( self, event ):
+	def menuPublishHtmlTTStart( self, event=None ):
 		self.commit()
 		race = Model.race
 		if not race or self.fileName is None or len(self.fileName) < 4:
@@ -1600,26 +1600,25 @@ class MainWin( wx.Frame ):
 			HH, MM = [int(f) for f in race.scheduledStart.split(':')[:2]]
 			payload['raceScheduledStartTuple'] = [y, m, d, HH, MM, 0, 0]
 		
+		data = GetAnimationData(getExternalData = True)
 		startList = []
-		if race.isRunning():
-			data = GetAnimationData(getExternalData = True)
-			for bib, info in data.iteritems():
-				try:
-					catName = race.getCategory(bib).fullname
-				except:
-					catName = ''
-				try:
-					firstTime = int(race[bib].firstTime + 0.1)
-				except:
-					continue
-				row = [
-					firstTime,
-					bib,
-					' '.join(v for v in [info.get('FirstName',''), info.get('LastName')] if v),
-					info.get('Team', ''),
-					catName,
-				]
-				startList.append( row )
+		for bib, info in data.iteritems():
+			try:
+				catName = race.getCategory(bib).fullname
+			except:
+				catName = ''
+			try:
+				firstTime = int(race[bib].firstTime + 0.1)
+			except:
+				continue
+			row = [
+				firstTime,
+				bib,
+				' '.join(v for v in [info.get('FirstName',''), info.get('LastName')] if v),
+				info.get('Team', ''),
+				catName,
+			]
+			startList.append( row )
 
 		payload['startList'] = startList
 		

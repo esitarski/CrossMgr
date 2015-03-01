@@ -2036,6 +2036,7 @@ class Race( object ):
 		intro = [
 			u'{}:{}'.format(self.name, self.raceNum),
 			u'{}: {} ({})'.format(_('Start'), self.scheduledStart, self.date),
+			_('Time Trial') if self.isTimeTrial else _('Mass Start'),
 		]
 		activeCategories = [c for c in self.categories.itervalues() if c.active]
 		if all( c.numLaps for c in activeCategories ):

@@ -194,7 +194,10 @@ function updateCountdown() {
 		
 		var rider_starting = document.getElementById('rider-starting');
 		rider_starting.innerHTML = '';
-		rider_starting.appendChild( document.createTextNode( btgNext.startEntry[1] + ' ' + btgNext.startEntry[2] ) );
+		rider_starting.appendChild( document.createTextNode(
+				(bibCur < 99999 ? (bibCur + ' ') : '') + btgNext.startEntry[2]
+			)
+		);
 		
 		var team_starting = document.getElementById('team-starting');
 		team_starting.innerHTML = '';
@@ -251,12 +254,14 @@ function updateCountdown() {
 
 function onload() {
 	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
+	if( startList == null ) startList = [];
 	
 	if( raceScheduledStartTuple != null ) {
 		raceStart = new Date(
 			raceScheduledStartTuple[0], raceScheduledStartTuple[1], raceScheduledStartTuple[2],
 			raceScheduledStartTuple[3], raceScheduledStartTuple[4], raceScheduledStartTuple[5], raceScheduledStartTuple[6] );
-		startList = [ [0, 1, raceName, "Countdown to Scheduled Start at " + raceStart.toLocaleString()] ];
+		startList.push( [0, 999999, raceName, "Countdown to Scheduled Start at " + raceStart.toLocaleString() +
+							' (' + startList.length + ' Starters)'] );
 		
 		// Set up a callback to automatically refresh the page on or after the race start time.
 		setTimeout( Math.max(0, raceStart.getTime() - (new Date()).getTime()) + 15*1000, function() { location.reload(true); } );
@@ -279,7 +284,15 @@ function onload() {
 		
 	var tNow = new Date();
 	
+	for( var i = 0; i < startList.length; ++i )
+		console.log( startList[i].join(', ') );
+	console.log( '****************************' );
+	
 	startList.sort( function(a, b) { return a[0] - b[0]; } );
+	
+	for( var i = 0; i < startList.length; ++i )
+		console.log( startList[i].join(', ') );
+	
 	for( var i = 0; i < startList.length; ++i ) {
 		var startEntry = startList[i];
 		var tStart = new Date(raceStart.getTime() + startEntry[0] * 1000);

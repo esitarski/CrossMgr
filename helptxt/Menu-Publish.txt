@@ -191,3 +191,8 @@ Although __quick and dirty__, this is not a recommended way to publish to Facebo
 The key problem is that image files cannot be indexed by Google, Bing, Yahoo or other search engines.  This makes it much more difficult for people to find your results by searching.
 
 See [Facebook][] for some better suggestions about how to publish results in a search engine-friendly format.
+
+## TT Start HTML Publish
+
+Publish a page that provides a Time Trial countdown clock for eack rider, with beeps on 10, 5, 4, 3, 2, 1 and 0.
+
