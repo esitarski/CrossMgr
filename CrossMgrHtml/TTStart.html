@@ -260,7 +260,7 @@ function onload() {
 		raceStart = new Date(
 			raceScheduledStartTuple[0], raceScheduledStartTuple[1], raceScheduledStartTuple[2],
 			raceScheduledStartTuple[3], raceScheduledStartTuple[4], raceScheduledStartTuple[5], raceScheduledStartTuple[6] );
-		startList.push( [0, 999999, raceName, "Countdown to Scheduled Start at " + raceStart.toLocaleString() +
+		startList.push( [0, 999999, raceName + '(not started)', "Countdown to Scheduled Start at " + raceStart.toLocaleString() +
 							' (' + startList.length + ' Starters)'] );
 		
 		// Set up a callback to automatically refresh the page on or after the race start time.
@@ -276,6 +276,8 @@ function onload() {
 		raceStart = new Date(new Date().getTime() - 95*60*1000 - 3287);
 		startList = startListTest;
 	}
+	
+	document.getElementById('race-name').appendChild( document.createTextNode(raceName + ' (' + raceStart.toLocaleString() + ')') );
 	
 	playBeep( 1 );
 	
@@ -367,6 +369,6 @@ function onload() {
 	<tr class="border-left border-right border-bottom"><td>&nbsp</td></tr>
 </table>
 </div>
-<h3><a href="https://www.sites.google.com/site/crossmgrsoftware/">Powered by CrossMgr</a></h3>
+<h3><span id='race-name'></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://www.sites.google.com/site/crossmgrsoftware/">Powered by CrossMgr</a></h3>
 </body>
 </html>
