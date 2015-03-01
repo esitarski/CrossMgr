@@ -83,10 +83,13 @@ h3 {
 var payload = null;
 
 var raceName = null;
-var raceScheduledStartTuple = null;
 
+var raceScheduledStartTuple = null;
 var raceStartTuple = null;
 var raceStart = null;
+
+var lastUpdatedTuple = null;
+var lastUpdated = null;
 
 var startList = null;
 var startListTest = [
@@ -255,6 +258,12 @@ function updateCountdown() {
 function onload() {
 	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
 	if( startList == null ) startList = [];
+	if( lastUpdatedTuple == null )
+		lastUpdated = new Date();
+	else
+		lastUpdated = new Date(
+			lastUpdatedTupleTuple[0], lastUpdatedTupleTuple[1], lastUpdatedTupleTuple[2],
+			lastUpdatedTupleTuple[3], lastUpdatedTupleTuple[4], lastUpdatedTupleTuple[5], lastUpdatedTupleTuple[6] );
 	
 	if( raceScheduledStartTuple != null ) {
 		raceStart = new Date(
@@ -277,7 +286,7 @@ function onload() {
 		startList = startListTest;
 	}
 	
-	document.getElementById('race-name').appendChild( document.createTextNode(raceName + ' (' + raceStart.toLocaleString() + ')') );
+	document.getElementById('race-name').appendChild( document.createTextNode(raceName + '    ' + raceStart.toLocaleString() + '    Last Updated ' + lastUpdated.toLocaleString()) );
 	
 	playBeep( 1 );
 	
@@ -349,7 +358,7 @@ function onload() {
 <body onload="onload()">
 
 <div id="rider-starting-div">
-	<span id="rider-starting">000 CrossMgr</span>
+	<span id="rider-starting">CrossMgr</span>
 </div>
 <div id="team-starting-div">
 	<span id="team-starting">CrossMgr Time Trial Starter</span>

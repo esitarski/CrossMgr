@@ -1600,6 +1600,12 @@ class MainWin( wx.Frame ):
 			HH, MM = [int(f) for f in race.scheduledStart.split(':')[:2]]
 			payload['raceScheduledStartTuple'] = [y, m, d, HH, MM, 0, 0]
 		
+		tNow = datetime.datetime.now()
+		payload['lastUpdated'] = [
+				tNow.year, tNow.month-1, tNow.day,
+				tNow.hour, tNow.minute, tNow.second, int(tNow.microsecond/1000)
+		]
+		
 		data = GetAnimationData(getExternalData = True)
 		startList = []
 		for bib, info in data.iteritems():
