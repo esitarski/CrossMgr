@@ -1601,7 +1601,7 @@ class MainWin( wx.Frame ):
 			payload['raceScheduledStartTuple'] = [y, m, d, HH, MM, 0, 0]
 		
 		tNow = datetime.datetime.now()
-		payload['lastUpdated'] = [
+		payload['lastUpdatedTuple'] = [
 				tNow.year, tNow.month-1, tNow.day,
 				tNow.hour, tNow.minute, tNow.second, int(tNow.microsecond/1000)
 		]

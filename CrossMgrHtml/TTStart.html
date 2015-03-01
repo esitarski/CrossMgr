@@ -91,6 +91,8 @@ var raceStart = null;
 var lastUpdatedTuple = null;
 var lastUpdated = null;
 
+var raceStarted = true;
+
 var startList = null;
 var startListTest = [
 	[5700, 9, "Geraint Thomas", "Team Sky", "United Kingdom"], 
@@ -171,15 +173,20 @@ function startIntervalTimer() {
 function updateCountdown() {
 	var tNow = new Date();
 	var btg = null;
-	for( ; ; ++iBeepCur ) {
-		btg = beepsToGive[iBeepCur];
-		var dSecs = (tNow.getTime() - btg.t.getTime()) / 1000.0;
-		if( dSecs < -0.1 )
-			break;
-		
-		if( !btg.given ) {
-			playBeep( btg.beep );
-			btg.given = true;
+	
+	if( !raceStarted )
+		iBeepCur = 0;
+	else {
+		for( ; ; ++iBeepCur ) {
+			btg = beepsToGive[iBeepCur];
+			var dSecs = (tNow.getTime() - btg.t.getTime()) / 1000.0;
+			if( dSecs < -0.1 )
+				break;
+			
+			if( !btg.given ) {
+				playBeep( btg.beep );
+				btg.given = true;
+			}
 		}
 	}
 	
@@ -240,7 +247,7 @@ function updateCountdown() {
 			
 			var td = document.createElement('TD'); tr.appendChild( td );
 			td.appendChild( document.createTextNode(
-					(new Date(raceStart.getTime() + startEntryNext[i][0]*1000.0)).toLocaleTimeString()
+					raceStarted ? (new Date(raceStart.getTime() + startEntryNext[i][0]*1000.0)).toLocaleTimeString() : ''
 				)
 			);
 		}
@@ -262,8 +269,8 @@ function onload() {
 		lastUpdated = new Date();
 	else
 		lastUpdated = new Date(
-			lastUpdatedTupleTuple[0], lastUpdatedTupleTuple[1], lastUpdatedTupleTuple[2],
-			lastUpdatedTupleTuple[3], lastUpdatedTupleTuple[4], lastUpdatedTupleTuple[5], lastUpdatedTupleTuple[6] );
+			lastUpdatedTuple[0], lastUpdatedTuple[1], lastUpdatedTuple[2],
+			lastUpdatedTuple[3], lastUpdatedTuple[4], lastUpdatedTuple[5], lastUpdatedTuple[6] );
 	
 	if( raceScheduledStartTuple != null ) {
 		raceStart = new Date(
@@ -275,6 +282,7 @@ function onload() {
 		// Set up a callback to automatically refresh the page on or after the race start time.
 		setTimeout( Math.max(0, raceStart.getTime() - (new Date()).getTime()) + 15*1000, function() { location.reload(true); } );
 		enableBeeps = false;
+		raceStarted = false;
 	}
 	else if( raceStartTuple != null ) {
 		raceStart = new Date(
