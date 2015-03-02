@@ -262,56 +262,45 @@ function updateCountdown() {
 		startIntervalTimer();
 }
 
+function dateFromTuple( t ) {
+	return new Date(t[0], t[1], t[2], t[3], t[4], t[5], t[6]);
+}
+
 function onload() {
 	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
 	if( startList == null ) startList = [];
-	if( lastUpdatedTuple == null )
-		lastUpdated = new Date();
-	else
-		lastUpdated = new Date(
-			lastUpdatedTuple[0], lastUpdatedTuple[1], lastUpdatedTuple[2],
-			lastUpdatedTuple[3], lastUpdatedTuple[4], lastUpdatedTuple[5], lastUpdatedTuple[6] );
 	
-	if( raceScheduledStartTuple != null ) {
-		raceStart = new Date(
-			raceScheduledStartTuple[0], raceScheduledStartTuple[1], raceScheduledStartTuple[2],
-			raceScheduledStartTuple[3], raceScheduledStartTuple[4], raceScheduledStartTuple[5], raceScheduledStartTuple[6] );
-		startList.push( [0, 999999, raceName + '(not started)', "Countdown to Scheduled Start at " + raceStart.toLocaleString() +
+	lastUpdated = (lastUpdatedTuple == null ? new Date() : dateFromTuple(lastUpdatedTuple));
+	
+	if( raceStartTuple != null ) {
+		raceStart = dateFromTuple( raceStartTuple );
+	}
+	else if( raceScheduledStartTuple != null ) {
+		raceStart = dateFromTuple( raceScheduledStartTuple );
+		startList.push( [0, 999999, raceName + ' (not started)', "Countdown to Scheduled Start at " + raceStart.toLocaleString() +
 							' (' + startList.length + ' Starters)'] );
 		
 		// Set up a callback to automatically refresh the page on or after the race start time.
-		setTimeout( Math.max(0, raceStart.getTime() - (new Date()).getTime()) + 15*1000, function() { location.reload(true); } );
+		setTimeout( Math.max(0, raceStart.getTime() - (new Date()).getTime()) + 5*1000, function() { location.reload(true); } );
+		if( raceStart.getTime() > (new Date()).getTime() )
+			playBeep( 1 );
 		enableBeeps = false;
 		raceStarted = false;
-	}
-	else if( raceStartTuple != null ) {
-		raceStart = new Date(
-			raceStartTuple[0], raceStartTuple[1], raceStartTuple[2],
-			raceStartTuple[3], raceStartTuple[4], raceStartTuple[5], raceStartTuple[6] );
 	}
 	else {
 		raceStart = new Date(new Date().getTime() - 95*60*1000 - 3287);
 		startList = startListTest;
+		playBeep( 1 );
 	}
 	
 	document.getElementById('race-name').appendChild( document.createTextNode(raceName + '    ' + raceStart.toLocaleString() + '    Last Updated ' + lastUpdated.toLocaleString()) );
 	
-	playBeep( 1 );
-	
 	if( startList.length == 0 )
 		return;
 		
+	startList.sort( function(a, b) { return a[0] - b[0]; } );	// Sort by start time.
+	
 	var tNow = new Date();
-	
-	for( var i = 0; i < startList.length; ++i )
-		console.log( startList[i].join(', ') );
-	console.log( '****************************' );
-	
-	startList.sort( function(a, b) { return a[0] - b[0]; } );
-	
-	for( var i = 0; i < startList.length; ++i )
-		console.log( startList[i].join(', ') );
-	
 	for( var i = 0; i < startList.length; ++i ) {
 		var startEntry = startList[i];
 		var tStart = new Date(raceStart.getTime() + startEntry[0] * 1000);

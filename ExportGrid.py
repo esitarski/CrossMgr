@@ -446,7 +446,10 @@ class ExportGrid( object ):
 		for col, c in enumerate(self.colnames):
 			isSpeed = (c == _('Speed'))
 			if isSpeed and self.data[col]:
-				c = self.colnames[col] = self.data[col][0].split()[1]
+				try:
+					c = self.colnames[col] = self.data[col][0].split()[1]
+				except IndexError:
+					c = self.colnames[col] = ''
 
 			headerStyle = xlwt.XFStyle()
 			headerStyle.borders.bottom = xlwt.Borders.MEDIUM

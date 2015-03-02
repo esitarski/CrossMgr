@@ -194,5 +194,40 @@ See [Facebook][] for some better suggestions about how to publish results in a s
 
 ## TT Start HTML Publish
 
-Publish a page that provides a Time Trial countdown clock for eack rider, with beeps on 10, 5, 4, 3, 2, 1 and 0.
+Publish a page that provides a Time Trial countdown clock for each rider, with beeps on 10, 5, 4, 3, 2, 1 and 0.
 
+The page can be published before the TT starts.
+
+The pre-race TTStart page shows the race name and a countdown clock to the scheduled race start.
+It also shows the first 8 riders in the start list, but does not show the time-of-day start times.
+The page beeps immediately on load or refresh, so you can check if the device supports beeps.
+This is __pre-race__ mode.
+Update it as much as you like.
+
+When the TTStart page counts down to the scheduled start time, it starts refreshing itself automatically every 10 seconds.  This is __pre-start__ mode.
+
+When you start the TT from CrossMgr (that is, press the "Start" button), CrossMgr generates and uploads a new version of TTStart with the actual start time in it.
+
+This signals the device to go into running mode and start beeping rider starts.
+
+No other intervention is required.
+
+CrossMgr also automatically prompts to publish the TTStart page so you don't forget.
+
+So, here is how it works in practice:
+
+You generate the TTStart pages well before the event, and make sure all the devices are showing it correctly.
+Make sure you have the correct scheduled start of the TT defined in CrossMgr, and have closely synced your devices' clocks.
+Open the pages on the devices - they will show a countdown to the TT (pre-race mode).
+Make sure there is at least one minute before the first rider's start.
+
+Then, relax ;)
+
+When you press the Start button for the TT, CrossMgr generates a new TTStart page with the actual race start time, and uploads it with ftp.
+Because this is at-or-after the Schedule Start time, all the devices will have switched to pre-start mode - refreshing themselves looking for the page update.
+After a few seconds, each device will find the new page, switches to running mode and starts the rider countdowns.
+
+No extra stuff to remember.
+
+Of course, if anything changes while the TT is running, you can republish from CrossMgr and refresh the devices at any time.
+Of, if you don't want to wait for the TTStart page to find the updated page and start countdown, hit refresh.
