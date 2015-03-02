@@ -448,11 +448,11 @@ class FinishStripPanel( wx.Panel ):
 		widthPix = photoWidth	# width of the photo
 		
 		minMax = []
-		for speedKMH in (0.0, 70.0):			# Speed of the target (km/h)
+		for speedKMH in (0.0, 80.0):			# Speed of the target (km/h)
 			speedMPS = speedKMH / 3.6			# Convert to m/s
 			d = speedMPS * frameTime			# Distance the target moves between each frame at speed.
 			pixels = widthPix * d / viewWidth	# Pixels the target moves between each frame at that speed.
-			pixelsPerSecond = max(10, pixels * self.fps)
+			pixelsPerSecond = max(300, pixels * self.fps)
 			minMax.append( int(pixelsPerSecond) )
 		
 		return minMax
