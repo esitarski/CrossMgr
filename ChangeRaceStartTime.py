@@ -54,10 +54,10 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 		race = Model.race
 		if not race or not race.startTime:
 			return
-			
-		secondsNew = self.timeMsEdit.GetSeconds()
-		secondsOld = (race.startTime - race.startTime.replace(hour=0, minute=0, second=0)).total_seconds()
-		dTime = secondsNew - secondsOld
+		
+		tNow = datetime.datetime.now()
+		startTimeNew = tNow.replace(hour=0, minute=0, second=0) + datetime.timedelta(seconds=self.timeMsEdit.GetSeconds())
+		dTime = (startTimeNew - race.startTime).total_seconds()
 		
 		if dTime == 0:
 			return
@@ -79,7 +79,7 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 			
 			race.numTimeInfo.adjustAllTimes( -dTime )
 		
-		race.startTime += datetime.timedelta( seconds = dTime )
+		race.startTime = startTimeNew
 		race.setChanged()
 		Utils.refresh()
 		
