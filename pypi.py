@@ -196,6 +196,7 @@ setup = {
 	'install_requires':	[
 		'xlrd >= 0.9.2',
 		'xlwt >= 0.7.5',
+		'xlsxwriter >= 0.6.7',
 		'whoosh >= 2.5.7',
 		'qrcode >= 4.0.4',
 		'beautifulsoup4 >= 4.0.0',
