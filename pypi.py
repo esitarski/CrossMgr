@@ -221,10 +221,19 @@ try:
 	shutil.move( 'CrossMgr-%s.zip' % version, 'PIP-Install-CrossMgr-%s.zip' % version )
 except:
 	pipName = 'PIP-Install-CrossMgr-%s.tar.gz' % version
-	installDir = os.path.join( os.path.expanduser("~"), 'Google Drive', 'Mac Installs')
+	installDir = os.path.join( os.path.expanduser("~"), 'Google Drive', 'Downloads', 'Mac', 'CrossMgr')
     
 	shutil.move( 'CrossMgr-%s.tar.gz' % version, pipName )
 	shutil.copyfile( pipName, os.path.join( installDir, pipName) )
+	print
+	print '********************'
+	print installDir
+	print '********************'
+	print '\n'.join( os.listdir(installDir) )
+	
+	installDir = os.path.join( os.path.expanduser("~"), 'Google Drive', 'All Platforms', 'CrossMgr')
+	shutil.copyfile( pipName, os.path.join( installDir, pipName) )
+	shutil.copyfile( 'LinuxInstallReadme.txt', installDir )
 	print
 	print '********************'
 	print installDir
