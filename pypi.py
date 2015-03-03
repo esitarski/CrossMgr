@@ -231,7 +231,7 @@ except:
 	print '********************'
 	print '\n'.join( os.listdir(installDir) )
 	
-	installDir = os.path.join( os.path.expanduser("~"), 'Google Drive', 'All Platforms', 'CrossMgr')
+	installDir = os.path.join( os.path.expanduser("~"), 'Google Drive', 'Downloads', 'All Platforms', 'CrossMgr')
 	shutil.copyfile( pipName, os.path.join( installDir, pipName) )
 	shutil.copyfile( 'LinuxInstallReadme.txt', installDir )
 	print
