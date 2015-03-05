@@ -171,22 +171,30 @@ def getDocumentsDir():
 	return sp.GetDocumentsDir()
 	
 #------------------------------------------------------------------------
-try:
-	dirName = os.path.dirname(os.path.abspath(__file__))
-except:
-	dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
+if 'WXMAC' in wx.Platform:
+	try:
+		dirName = os.environ['RESOURCEPATH']
+	except:
+		dirName = os.path.dirname(os.path.abspath(__file__))
+	if not os.path.isdir( os.path.join(dirName, 'CrossMgrImages') ):
+		dirName = '/System/Library/Frameworks/Python.framework/Versions/2.7'
+else:
+	try:
+		dirName = os.path.dirname(os.path.abspath(__file__))
+	except:
+		dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
 
-if os.path.basename(dirName) == 'library.zip':
-	dirName = os.path.dirname(dirName)
-if 'CrossMgr?' in os.path.basename(dirName):
-	dirName = os.path.dirname(dirName)
+	if os.path.basename(dirName) == 'library.zip':
+		dirName = os.path.dirname(dirName)
+	if 'CrossMgrImpinj?' in os.path.basename(dirName):
+		dirName = os.path.dirname(dirName)
 
-if os.path.isdir( os.path.join(dirName, 'images') ):
-	pass
-elif os.path.isdir( '/usr/local/CrossMgrImages' ):
-	dirName = '/usr/local'
+	if os.path.isdir( os.path.join(dirName, 'CrossMgrImpinjImages') ):
+		pass
+	elif os.path.isdir( '/usr/local/CrossMgrImpinjImages' ):
+		dirName = '/usr/local'
 
-imageFolder = os.path.join(dirName, 'images')
+imageFolder = os.path.join(dirName, 'CrossMgrImpinjImages')
 htmlFolder = os.path.join(dirName, 'CrossMgrHtml')
 helpFolder = os.path.join(dirName, 'CrossMgrHtmlDoc')
 
