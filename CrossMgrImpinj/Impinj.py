@@ -9,7 +9,10 @@ import random
 from Queue import Empty
 from Utils import readDelimitedData, timeoutSecs, Bell
 import cStringIO as StringIO
-from pyllrp.pyllrp import *
+try:
+	from pyllrp.pyllrp import *
+except ImportError:
+	from pyllrp import *
 
 getTimeNow = datetime.datetime.now
 

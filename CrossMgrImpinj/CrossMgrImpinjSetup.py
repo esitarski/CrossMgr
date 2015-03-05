@@ -20,7 +20,7 @@ setup( windows=
 			[
 				{
 					'script': 'CrossMgrImpinj.pyw',
-					'icon_resources': [(1, r'images\CrossMgrImpinj.ico')]
+					'icon_resources': [(1, r'CrossMgrImpinjImages\CrossMgrImpinj.ico')]
 				}
 			]
 	 )
@@ -47,7 +47,7 @@ def copyDir( d ):
 		if i[-3:] != '.db':	# Ignore .db files.
 			shutil.copy( os.path.join(d, i), os.path.join(destD,i) )
 			
-copyDir( 'images' )
+copyDir( 'CrossMgrImpinjImages' )
 
 # Create the installer
 inno = r'\Program Files\Inno Setup 5\ISCC.exe'
