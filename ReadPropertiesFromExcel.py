@@ -17,7 +17,7 @@ def ReadPropertiesFromExcel( reader ):
 		('Event Country',	'country',			's'),
 		('Event Date',		'date',				's'),
 		('Scheduled Start',	'scheduledStart',	's'),
-		('Discipline',		'discipline',		's'),
+		('Race Discipline',	'discipline',		's'),
 		('Race Number',		'raceNum',			'n'),
 		('Enable RFID',		'enableJChipIntegration',	'b'),
 		('Distance Unit',	'distanceUnit',		's'),
