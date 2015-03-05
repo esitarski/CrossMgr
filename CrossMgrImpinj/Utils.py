@@ -42,61 +42,6 @@ def SetLabel( st, label ):
 		return True
 	return False
 
-def formatTime( secs, highPrecision = False ):
-	if secs is None:
-		secs = 0
-	if secs < 0:
-		sign = '-'
-		secs = -secs
-	else:
-		sign = ''
-	f, ss = math.modf(secs)
-	secs = int(ss)
-	hours = int(secs // (60*60))
-	minutes = int( (secs // 60) % 60 )
-	secs = secs % 60
-	if highPrecision:
-		decimal = '.%02d' % int( f * 100 )
-	else:
-		decimal = ''
-	if hours > 0:
-		return "%s%d:%02d:%02d%s" % (sign, hours, minutes, secs, decimal)
-	else:
-		return "%s%02d:%02d%s" % (sign, minutes, secs, decimal)
-
-def formatTimeGap( secs, highPrecision = False ):
-	if secs is None:
-		secs = 0
-	if secs < 0:
-		sign = '-'
-		secs = -secs
-	else:
-		sign = ''
-	f, ss = math.modf(secs)
-	secs = int(ss)
-	hours = int(secs // (60*60))
-	minutes = int( (secs // 60) % 60 )
-	secs = secs % 60
-	if highPrecision:
-		decimal = '.%02d' % int( f * 100 )
-	else:
-		decimal = ''
-	if hours > 0:
-		return "%s%dh%d'%02d%s\"" % (sign, hours, minutes, secs, decimal)
-	else:
-		return "%s%d'%02d%s\"" % (sign, minutes, secs, decimal)
-
-def formatTimeCompressed( secs, highPrecision = False ):
-	f = formatTime( secs, highPrecision )
-	if f[0] == '0':
-		return f[1:]
-	return f
-		
-def formatDate( date ):
-	y, m, d = date.split('-')
-	d = datetime.date( int(y,10), int(m,10), int(d,10) )
-	return d.strftime( '%B %d, %Y' )
-		
 def StrToSeconds( str = '' ):
 	secs = 0.0
 	for f in str.split(':'):
@@ -115,51 +60,12 @@ def SecondsToMMSS( secs = 0 ):
 	secs = int(secs)
 	return '%02d:%02d' % ((secs // 60)%60, secs % 60)
 
-def ordinal( value ):
-	"""
-	Converts zero or a *postive* integer (or their string 
-	representations) to an ordinal value.
-
-	>>> for i in range(1,13):
-	...	 ordinal(i)
-	...	 
-	'1st'
-	'2nd'
-	'3rd'
-	'4th'
-	'5th'
-	'6th'
-	'7th'
-	'8th'
-	'9th'
-	'10th'
-	'11th'
-	'12th'
-
-	>>> for i in (100, '111', '112',1011):
-	...	 ordinal(i)
-	...	 
-	'100th'
-	'111th'
-	'112th'
-	'1011th'
-
-	"""
-	try:
-		value = int(value)
-	except ValueError:
-		return value
-
-	if (value % 100)//10 != 1:
-		return "%d%s" % (value, ['th','st','nd','rd','th','th','th','th','th','th'][value%10])
-	return "%d%s" % (value, "th")
-	
 def getHomeDir():
 	sp = wx.StandardPaths.Get()
 	homedir = sp.GetUserDataDir()
 	try:
-		if os.path.basename(homedir) == '.CrossMgr':
-			homedir = os.path.join( os.path.dirname(homedir), '.CrossMgrApp' )
+		if os.path.basename(homedir) == '.CrossMgrImpinj':
+			homedir = os.path.join( os.path.dirname(homedir), '.CrossMgrImpinjApp' )
 	except:
 		pass
 	if not os.path.exists(homedir):
