@@ -47,7 +47,7 @@ If you run into trouble, see http://wiki.wxpython.org/InstallingOnUbuntuOrDebian
 Step 4:  Download the CrossMgr Python package.
 
 From www.sites.google.com/site/crossmgrsoftware, go to Downloads, All Platforms and download
-the file "PIP-Install-CrossMgr-N.NN.tar.gz" python package to a directory called "CrossMgrInstall"
+the "PIP-Install-CrossMgr-N.NN.tar.gz" python package to a directory called "CrossMgrInstall"
 (the N.NN is the version).
 
 --------------------------------------------
