@@ -7,12 +7,9 @@ import threading
 import datetime
 import random
 from Queue import Empty
-from Utils import readDelimitedData, timeoutSecs, Bell
+from Utils import readDelimitedData, timeoutSecs
 import cStringIO as StringIO
-try:
-	from pyllrp.pyllrp import *
-except ImportError:
-	from pyllrp import *
+from pyllrp.pyllrp import *
 
 getTimeNow = datetime.datetime.now
 
@@ -238,8 +235,6 @@ class Impinj( object ):
 					if not isinstance(response, READER_EVENT_NOTIFICATION_Message):
 						self.messageQ.put( ('Impinj', 'Skipping: %s' % response.__class__.__name__) )
 					continue
-				
-				Bell()
 				
 				# Open the log file.
 				try:

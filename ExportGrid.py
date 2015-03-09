@@ -432,6 +432,24 @@ class ExportGrid( object ):
 		titleStyle.font.bold = True
 		titleStyle.font.height += titleStyle.font.height / 2
 
+		headerStyleAlignLeft = xlwt.XFStyle()
+		headerStyleAlignLeft.borders.bottom = xlwt.Borders.MEDIUM
+		headerStyleAlignLeft.font.bold = True
+		headerStyleAlignLeft.alignment.horz = xlwt.Alignment.HORZ_LEFT
+		headerStyleAlignLeft.alignment.wrap = xlwt.Alignment.WRAP_AT_RIGHT
+		
+		headerStyleAlignRight = xlwt.XFStyle()
+		headerStyleAlignRight.borders.bottom = xlwt.Borders.MEDIUM
+		headerStyleAlignRight.font.bold = True
+		headerStyleAlignRight.alignment.horz = xlwt.Alignment.HORZ_RIGHT
+		headerStyleAlignRight.alignment.wrap = xlwt.Alignment.WRAP_AT_RIGHT
+		
+		styleAlignLeft = xlwt.XFStyle()
+		styleAlignLeft.alignment.horz = xlwt.Alignment.HORZ_LEFT
+		
+		styleAlignRight = xlwt.XFStyle()
+		styleAlignRight.alignment.horz = xlwt.Alignment.HORZ_RIGHT
+		
 		rowTop = 0
 		if self.title:
 			for line in self.title.split('\n'):
@@ -451,16 +469,8 @@ class ExportGrid( object ):
 				except IndexError:
 					c = self.colnames[col] = ''
 
-			headerStyle = xlwt.XFStyle()
-			headerStyle.borders.bottom = xlwt.Borders.MEDIUM
-			headerStyle.font.bold = True
-			headerStyle.alignment.horz = xlwt.Alignment.HORZ_LEFT if col in self.leftJustifyCols \
-																	else xlwt.Alignment.HORZ_RIGHT
-			headerStyle.alignment.wrap = xlwt.Alignment.WRAP_AT_RIGHT
-			
-			style = xlwt.XFStyle()
-			style.alignment.horz = xlwt.Alignment.HORZ_LEFT if col in self.leftJustifyCols \
-																	else xlwt.Alignment.HORZ_RIGHT
+			headerStyle = headerStyleAlignLeft if col in self.leftJustifyCols else headerStyleAlignRight
+			style = styleAlignLeft if col in self.leftJustifyCols else styleAlignRight
 			
 			sheetFit.write( rowTop, col, c, headerStyle, bold=True )
 			for row, v in enumerate(self.data[col]):
@@ -475,17 +485,13 @@ class ExportGrid( object ):
 				self.colnames[col] = _('Speed')
 		
 		if self.footer:
-			style = xlwt.XFStyle()
-			style.alignment.horz = xlwt.Alignment.HORZ_LEFT
 			rowMax += 2
 			for line in self.footer.split('\n'):
-				sheet.write( rowMax, 0, line.strip(), style )
+				sheet.write( rowMax, 0, line.strip(), styleAlignLeft )
 				rowMax += 1
 		
 		# Add branding at the bottom of the sheet.
-		style = xlwt.XFStyle()
-		style.alignment.horz = xlwt.Alignment.HORZ_LEFT
-		sheet.write( rowMax + 2, 0, brandText, style )
+		sheet.write( rowMax + 2, 0, brandText, styleAlignLeft )
 	
 	def _setRC( self, row, col, value ):
 		if self.data:
