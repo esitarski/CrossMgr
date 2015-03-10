@@ -17,8 +17,9 @@ This includes the steps of getting the correct Python version, installing pip, a
 --------------------------------------------
 Step 2:  Download the pyllrp package.
 
-From www.sites.google.com/site/crossmgrsoftware, go to Downloads, All Platforms and download
-the "PIP-Install-CrossMgrImpinj-N.N.N.tar.gz" python package to a directory called "CrossMgrImpinjInstall"
+Pyllrp is a package that communicates with the Impinj chip reader.
+From www.sites.google.com/site/crossmgrsoftware, go to "Downloads, CrossMgrImpinj (Linux)" and download
+the "pip-Install-pyllrp-N.N.N.tar.gz"  python package to a directory called "CrossMgrImpinjInstall"
 (the N.N.N is the version).
 
 --------------------------------------------
@@ -26,7 +27,7 @@ Step 3:  Run the pyllrp pip install
 
 "cd" to your "CrossMgrImpinjInstall" directory.  Enter:
 
-    sudo pip install pip-install-pllrp-N.N.N.tar.gz
+    sudo pip install pip-install-pyllrp-N.N.N.tar.gz
 
 Where, of course, N.N.N corresponds to the pyllrp version.
 
@@ -35,8 +36,8 @@ Pip will automatically download the python packages that pyllrp needs.
 --------------------------------------------
 Step 4:  Download the CrossMgrImpinj Python package.
 
-From www.sites.google.com/site/crossmgrsoftware, go to Downloads, All Platforms and download
-the "pip-Install-pyllrp-N.N.N.tar.gz" python package to a directory called "CrossMgrImpinjInstall"
+From www.sites.google.com/site/crossmgrsoftware, go to "Downloads, CrossMgrImpinj (Linux)" and download
+the "PIP-Install-CrossMgrImpinj-N.N.N.tar.gz" python package to a directory called "CrossMgrImpinjInstall"
 (the N.N.N is the version).
 
 --------------------------------------------
@@ -86,14 +87,15 @@ Browse to "/usr/local/CrossMgrImpinjImages/CrossMgrImpinj.png".
 --------------------------------------------
 Step 8:  Uninstalling CrossMgrImpinj.
 
-To uninstall CrossMgrImpinj, type the command:
+To uninstall CrossMgrImpinj, type the commands:
 
     sudo pip uninstall CrossMgrImpinj
+    sudo pip uninstall pyllrp
 
 This will clean up all the installed files.
 
 --------------------------------------------
 Step 9:  Upgrading CrossMgrImpinj.
 
-Follow instructions 4 and 4.
+Follow instructions 4 and 5.
 You do not need to install wxPython or CrossMgr again.
