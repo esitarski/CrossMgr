@@ -17,9 +17,6 @@ class RaceHUD(wx.PyControl):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
 				name=_("RaceHUD")):
-		"""
-		Default class constructor.
-		"""
 		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
 		self.SetBackgroundColour(wx.WHITE)
 		self.raceTimes = None	# Last time is red lantern.
@@ -57,17 +54,9 @@ class RaceHUD(wx.PyControl):
 		self.Refresh()
 		
 	def GetDefaultAttributes(self):
-		"""
-		Overridden base class virtual.  By default we should use
-		the same font/colour attributes as the native wx.StaticText.
-		"""
 		return wx.StaticText.GetClassDefaultAttributes()
 
 	def ShouldInheritColours(self):
-		"""
-		Overridden base class virtual.  If the parent has non-default
-		colours then we want this control to inherit them.
-		"""
 		return True
 		
 	def SetData( self, raceTimes = None, leader = None, nowTime = None ):
@@ -75,10 +64,11 @@ class RaceHUD(wx.PyControl):
 		self.leader = leader
 		self.nowTime = nowTime
 		
+		maxRaceTimes = 16
 		if self.raceTimes:
-			self.raceTimes = self.raceTimes[:3]
+			self.raceTimes = self.raceTimes[:maxRaceTimes]
 		if self.leader:
-			self.leader = self.leader[:3]
+			self.leader = self.leader[:maxRaceTimes]
 		self.Refresh()
 	
 	def GetLapInfo(self):

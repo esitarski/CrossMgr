@@ -466,7 +466,7 @@ class NumKeypad( wx.Panel ):
 			
 			appendLapCounter( leaderCategory, category, lapCur, len(rr.raceTimes), tLeader )
 				
-			if 0.0 <= tLeader <= 3.0 and not getattr(race, 'isTimeTrial', False):
+			if 0.0 <= tLeader <= 3.0 and not race.isTimeTrial:
 				if category not in self.lapReminder:
 					self.lapReminder[category] = Utils.PlaySound( 'reminder.wav' )
 			elif category in self.lapReminder:
