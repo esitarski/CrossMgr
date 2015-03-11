@@ -1,14 +1,14 @@
 #---------------------------------------------------------------------------
 #
-# Reformats the llrpdef.xml file into a json (aka Python) formatted description llrpdef.py
+# Reformats the llrpdef.xml file into a Python-formatted description llrpdef.py
 #
-# The reason we so this is so we avoid using the xml parser during deployment.
-# It is also faster to use the pre-compiled Python data structures rather than parsing XML
-# on every start up.
+# The reason we so this is so we avoid a dependency on the xml parser in deployment.
+# It is also much faster to use the .pyc file rather than parsing XML again
+# on startup.
 #
 from xml.dom.minidom import parse
 import datetime
-import json
+import pprint
 import sys
 
 # Map the xml field types to our types (bitstring standard, and our custom ones).
@@ -41,9 +41,9 @@ def toAscii( s ):
 
 def getEnum( e ):
 	Name = toAscii(e.attributes['name'].value)
-	Choices = [ [int(toAscii(c.attributes['value'].value)), toAscii(c.attributes['name'].value)]
+	Choices = [ (int(toAscii(c.attributes['value'].value)), toAscii(c.attributes['name'].value))
 		for c in e.childNodes if c.nodeName == 'entry' ]
-	return {'name':Name, 'choices':Choices }
+	return {'name':Name, 'choices':tuple(Choices) }
 
 def getParameterMessage( n, isMessage ):
 	Name = toAscii(n.attributes['name'].value)
@@ -79,7 +79,7 @@ def getParameterMessage( n, isMessage ):
 			bitCount = int(toAscii(c.attributes['bitCount'].value))
 			code = 'skip:%d' % bitCount
 			Fields.append( {'name':code, 'type':code} )
-		elif c.nodeName == 'parameter':
+		elif c.nodeName == 'parameter' or c.nodeName == 'choice':
 			repeat = toAscii(c.attributes['repeat'].value)
 			minMax = repeat.split('-')
 			if len(minMax) == 1:
@@ -88,12 +88,12 @@ def getParameterMessage( n, isMessage ):
 				rMin = int(minMax[0])
 				rMax = int(minMax[1]) if minMax[1] != 'N' else 99999
 			Parameter = toAscii(c.attributes['type'].value)
-			Parameters.append( {'parameter':Parameter, 'repeat': [rMin, rMax]} )
+			Parameters.append( {'parameter':Parameter, 'repeat': (rMin, rMax), 'choice': int(c.nodeName == 'choice')} )
 	pm = {'name':Name, 'typeNum':TypeNum}
 	if Fields:
-		pm['fields'] = Fields
+		pm['fields'] = tuple(Fields)
 	if Parameters:
-		pm['parameters'] = Parameters
+		pm['parameters'] = tuple(Parameters)
 	return pm
 	
 def getVendorCode( n ):
@@ -101,8 +101,17 @@ def getVendorCode( n ):
 	id = int(n.attributes['vendorID'].value)
 	return (name, id)
 
+def getChoiceDefinition( n ):
+	choices = {}
+	name = toAscii(n.attributes['name'].value)
+	for c in n.childNodes:
+		if c.nodeName == 'parameter':
+			choices[toAscii(c.attributes['type'].value)] = name	
+	return choices
+
 enums, parameters, messages = [], [], []
 vendors = {}
+choiceDefinitions = {}
 
 llrpDefXml = 'llrp-1x0-def.xml'
 dom = parse( llrpDefXml )
@@ -111,6 +120,9 @@ vendors.update( dict(getVendorCode(v) for v in dom.getElementsByTagName('vendorD
 enums = [getEnum(e) for e in dom.getElementsByTagName('enumerationDefinition')]
 parameters = [getParameterMessage(p, False) for p in dom.getElementsByTagName('parameterDefinition')]
 messages = [getParameterMessage(m, True) for m in dom.getElementsByTagName('messageDefinition')]
+for c in dom.getElementsByTagName('choiceDefinition'):
+	choiceDefinitions.update( getChoiceDefinition(c) )
+del choiceDefinitions['Custom']
 
 dom.unlink()
 dom = None
@@ -122,15 +134,17 @@ vendors.update( dict(getVendorCode(v) for v in dom.getElementsByTagName('vendorD
 enums.extend( getEnum(e) for e in dom.getElementsByTagName('customEnumerationDefinition') )
 parameters.extend( getParameterMessage(p, False) for p in dom.getElementsByTagName('customParameterDefinition') )
 messages.extend( getParameterMessage(m, True) for m in dom.getElementsByTagName('customMessageDefinition') )
+for p in dom.getElementsByTagName('customParameterDefinition'):
+	choiceDefinitions[toAscii(p.attributes['name'].value)] = 'Custom'
 
 with open('llrpdef.py', 'w') as fp:
 	fp.write( '#-----------------------------------------------------------\n' )
 	fp.write( '# DO NOT EDIT!\n' )
-	fp.write( '# MACHINE GENERATED from %s\n' % llrpDefXml )
+	fp.write( '# MACHINE GENERATED from {}\n'.format(llrpDefXml) )
 	fp.write( '#\n' )
-	fp.write( '# Created: %s \n' % datetime.datetime.now() )
+	fp.write( '# Created: {}\n'.format(datetime.datetime.now()) )
 	fp.write( '#-----------------------------------------------------------\n' )
-	for n in ['vendors', 'enums', 'parameters', 'messages']:
-		fp.write( '%s = ' % n )
-		json.dump( globals()[n], fp, indent=1, sort_keys=True )
+	for n in ['vendors', 'enums', 'parameters', 'messages', 'choiceDefinitions']:
+		fp.write( '{}='.format(n) )
+		pprint.pprint( globals()[n], fp )
 		fp.write( '\n' )

@@ -4,6 +4,7 @@ from cStringIO import StringIO
 import itertools
 import types
 import llrpdef
+llrpdef.choiceDefinitions = { k + '_Parameter' : v + '_Parameter' for k, v in llrpdef.choiceDefinitions.iteritems() }
 
 #----------------------------------------------------------------------------------
 # Python support for LLRP (Low Level Reader Protocol).
@@ -327,11 +328,30 @@ def _validate( self, path = None ):
 			pName = p['parameter'] + '_Parameter'
 			rMin, rMax = p['repeat']
 			iStart = i
-			while i < iMax and self.Parameters[i].__class__.__name__ == pName:
+			while i < iMax:
+				nameCur = self.Parameters[i].__class__.__name__
+				if nameCur != pName and llrpdef.choiceDefinitions.get(nameCur,'') != pName:
+					break
 				i += 1
-			assert i - iStart >= rMin, '%s: Missing Parameter (%d-%d) of type: %s' % ('.'.join(path), rMin, rMax, pName)
-			assert i - iStart <= rMax, '%s: Too many Parameters (%d-%d) of type: %s' % ('.'.join(path), rMin, rMax, pName)
+			assert i - iStart >= rMin, '{}: Missing Parameter ({}-{}) of type: {}'.format('.'.join(path), rMin, rMax, pName)
+			assert i - iStart <= rMax, '{}: Too many Parameters ({}-{}) of type: {}'.format('.'.join(path), rMin, rMax, pName)
 		
+	# Check that parameters are in the correct sequence.
+	sequenceLast = 0
+	for p in self.Parameters:
+		pName = p.__class__.__name__
+		try:
+			sequenceCur = self.ParameterSequence[pName]
+		except KeyError:
+			try:
+				key = llrpdef.choiceDefinitions[pName]
+				sequenceCur = self.ParameterSequence[key]
+			except KeyError:
+				sequenceCur = 99999999
+		
+		assert sequenceLast <= sequenceCur, '{}: Incorrect Parameter Sequence: {}'.format('.'.join(path), pName)
+		sequenceLast = sequenceCur
+	
 	# Recursively validate all parameters.
 	for p in self.Parameters:
 		p._validate( path )
@@ -381,6 +401,7 @@ def _MakeClass( messageOrParameter, Name, Type, PackUnpack ):
 		'PackUnpack':		PackUnpack,				# Instance to pack/unpack it into a bitstream.
 		'FieldDefs':		PackUnpack.FieldDefs,	# Fields specified for this object.
 		'ParameterDefs':	PackUnpack.ParameterDefs, # Parameters specified for this object.
+		'ParameterSequence':PackUnpack.ParameterSequence, # Required sequence of Parameters for this object.
 		'__slots__':		[ f.Name for f in PackUnpack.FieldDefs if not f.Name.startswith('skip') ] + extraFields, # Available fields in this object.
 		'FieldCount':		sum( 1 for f in PackUnpack.FieldDefs if not f.Name.startswith('skip') ),			# Field count for convenience.
 		'DataFields':		[ f for f in PackUnpack.FieldDefs if not f.Name.startswith('skip') ],				# List of data fields.
@@ -415,6 +436,10 @@ class _MessagePackUnpack( object ):
 		self.Name = Name
 		self.FieldDefs = FieldDefs
 		self.ParameterDefs = ParameterDefs
+		if ParameterDefs:
+			self.ParameterSequence = { pp['parameter']+'_Parameter':i for i, pp in enumerate(ParameterDefs) }
+		else:
+			self.ParameterSequence = {}
 		self.Code = self.getCode()
 
 	def isCustom( self ):
@@ -493,6 +518,10 @@ class _ParameterPackUnpack( object ):
 		self.Encoding = Encoding
 		self.FieldDefs = FieldDefs
 		self.ParameterDefs = ParameterDefs
+		if ParameterDefs:
+			self.ParameterSequence = { pp['parameter']+'_Parameter':i for i, pp in enumerate(ParameterDefs) }
+		else:
+			self.ParameterSequence = {}
 		self.Length = Length	# only for TV encoded _parameters
 		self.Code = self.getCode()
 
@@ -823,6 +852,7 @@ Custom_Parameter.FieldDefs = Custom_Parameter.FieldDefs[:-1]
 
 if __name__ == '__main__':
 	import sys
+	
 	c = IMPINJ_ENABLE_EXTENSIONS_Message()
 	print c
 	
@@ -835,7 +865,10 @@ if __name__ == '__main__':
 	#-----------------------------
 
 	rospecMessage = GetBasicAddRospecMessage( 1 )
+	rospecMessage._validate()
+	
 	rospecEnableMessage = GetEnableRospecMesssage( 2 )
+	rospecMessage._validate()
 	
 	print rospecMessage
 	rospecMessage._validate()

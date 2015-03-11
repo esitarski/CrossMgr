@@ -58,7 +58,7 @@ See the LLRP spec for details on the messages.
 
 Allows quick-and-easy scripting in fully portable pure Python to create LLRP applications.
 
-All Messagea and Parameters are full Python classes.
+All Message and Parameters are full Python classes.
 Full validation of all LLRP Messages and Parameters including data type, date values and parameter checking.
 Full support for enumerated values.
 
