@@ -1,6 +1,7 @@
 import re
 import Utils
 import Model
+import scramble
 
 sheetName = '--CrossMgr-Properties'
 
@@ -23,6 +24,11 @@ def ReadPropertiesFromExcel( reader ):
 		('Distance Unit',	'distanceUnit',		's'),
 		('Time Trial',		'isTimeTrial',		'b'),
 		('RFID Option',		'__rfidOption__',	'n'),
+		
+		('FTP Host',		'ftpHost',			's'),
+		('FTP User',		'ftpUser',			's'),
+		('FTP Password',	'ftpPassword',		's'),
+		('FTP Path',		'ftpPath',			's'),
 	)
 
 	HeadersToFields = dict( (h, p) for h, p, t in HeadersFields )
@@ -80,6 +86,8 @@ def ReadPropertiesFromExcel( reader ):
 					race.resetStartClockOnFirstTag = False
 					race.skipFirstTagRead = True
 				v = None
+			elif p == 'ftpPassword':
+				v = scramble.decode( v )
 			
 			if v is not u'' and v is not None:
 				setattr( race, p, v )
