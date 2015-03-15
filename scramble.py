@@ -22,6 +22,7 @@ def encode( s ):
 	if not s:
 		return s
 	
+	s = s.encode('ascii')
 	enc = [ random.randint(0,255) for i in xrange(SpiceLen) ]
 	totCur = sum( enc )
 	for i, c in enumerate(s):
@@ -35,6 +36,7 @@ def decode( s ):
 	if not s:
 		return s
 	
+	s = s.encode('ascii')
 	b = urlsafe_b64decode( s )
 	enc = pair_swap(partial_reverse( [ord(c) for c in b] ))
 	totCur = sum( enc[:SpiceLen] )

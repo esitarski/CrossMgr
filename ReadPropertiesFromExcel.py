@@ -1,6 +1,7 @@
 import re
 import Utils
 import Model
+import sys
 import scramble
 
 sheetName = '--CrossMgr-Properties'
@@ -31,9 +32,9 @@ def ReadPropertiesFromExcel( reader ):
 		('FTP Path',		'ftpPath',			's'),
 	)
 
-	HeadersToFields = dict( (h, p) for h, p, t in HeadersFields )
-	FieldType = dict( (p, t) for h, p, t in HeadersFields )
-	HeaderSet = set( h for h, p, t in HeadersFields )
+	AttributeFromHeader = { h: a for h, a, t in HeadersFields }
+	FieldType = { a: t for h, a, t in HeadersFields }
+	HeaderSet = set( h for h, a, t in HeadersFields )
 
 	reStartDate = re.compile( '^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$' )
 	reStartTime = re.compile( '^[0-2][0-9]:[0-9][0-9]$' )
@@ -44,19 +45,17 @@ def ReadPropertiesFromExcel( reader ):
 	headerMap = {}
 	for r, row in enumerate(reader.iter_list(sheetName)):
 		# Since this is machine generated, assume the headers are always in the first row.
-		if not headerMap:
+		if r == 0:
 			for c, v in enumerate(row):
 				if v in HeaderSet:
 					headerMap[v] = c
 			continue
 		
 		for h, c in headerMap.iteritems():
-			p = HeadersToFields[h]
-			if p is None:
-				continue
+			a = AttributeFromHeader[h]
 			
 			v = row[c]
-			t = FieldType[p]
+			t = FieldType[a]
 			if t == 's':
 				v = unicode(v)
 			elif t == 'b':
@@ -66,16 +65,16 @@ def ReadPropertiesFromExcel( reader ):
 					v = int(v)
 				except ValueError:
 					v = 1
-					
-			if p == 'distanceUnit':
+			
+			if a == 'distanceUnit':
 				v = 1 if v and v.lower().startswith('m') else 0
-			elif p == 'date':
+			elif a == 'date':
 				if not reStartDate.match(v or ''):
 					v = None
-			elif p == 'scheduledStart':
+			elif a == 'scheduledStart':
 				if not reStartTime.match(v or ''):
 					v = None
-			elif p == '__rfidOption__':
+			elif a == '__rfidOption__':
 				if v == 0:		# Manual start.
 					race.resetStartClockOnFirstTag = False
 					race.skipFirstTagRead = False
@@ -86,11 +85,15 @@ def ReadPropertiesFromExcel( reader ):
 					race.resetStartClockOnFirstTag = False
 					race.skipFirstTagRead = True
 				v = None
-			elif p == 'ftpPassword':
-				v = scramble.decode( v )
+			elif a == 'ftpPassword':
+				try:
+					v = scramble.decode( v )
+				except Exception as e:
+					Utils.logException( e, sys.exc_info() )
+					continue
 			
 			if v is not u'' and v is not None:
-				setattr( race, p, v )
+				setattr( race, a, v )
 		
 		return True
 		
