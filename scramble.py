@@ -22,7 +22,6 @@ def encode( s ):
 	if not s:
 		return s
 	
-	s = s.encode('ascii')
 	enc = [ random.randint(0,255) for i in xrange(SpiceLen) ]
 	totCur = sum( enc )
 	for i, c in enumerate(s):
