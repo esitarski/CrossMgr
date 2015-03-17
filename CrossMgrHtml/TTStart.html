@@ -40,17 +40,18 @@ body { font-family: Helvetica, sans-serif; }
 }
 
 #countdown-clock {
-	font-size: 3800%;
+	font-size: 4500%;
 	font-weight: bold;
 	display: inline-block;
 	width: 100%;
 	text-align: center;
-	margin-top: -6%;
-	margin-bottom: -6%;
+	line-height: 85%;
 }
 
 #rider-next {
 	font-size: 300%;
+	height: 200px;
+	overflow: auto;
 }
 
 table {
@@ -106,7 +107,7 @@ var startListTest = [
 	[5940+90, 1, "Chris Froome", "Team Sky", "United Kingdom"]
 ];
 
-var maxNext = 8;
+var maxNext = 8000;
 var resetSecond = 20;
 var enableBeeps = true;
 var beepTimes = [resetSecond, 10, 5, 4, 3, 2, 1, 0, -3];
@@ -288,7 +289,7 @@ function onload() {
 		raceStarted = false;
 	}
 	else {
-		raceStart = new Date(new Date().getTime() - 95*60*1000 - 3287);
+		raceStart = new Date(new Date().getTime() - 94*60*1000 - 3287);
 		startList = startListTest;
 		playBeep( 1 );
 	}

@@ -28,7 +28,7 @@ Recommendations|Any recommendations CrossMgr has about this rider that you might
 Start|In Time Trial mode, shows the start time of the rider.
 Finish|In Time Trial mode, shows the finish time of the rider.
 Time|In Time Trial mode, shows the rider time of the rider.
-Adjust...|In Time Trial mode, opens a dialog to adjust the Start Time and End Time of the rider.  If you add a Time Penalty, it will be visible in the Recommendations screen.  Double-clicking on any Recommendation will open the Rider Detail page again.
+Adjust Time Trial Times...|In Time Trial mode, opens a dialog to adjust the Start Time, End Time and Penalty Time of the rider.  If you add a Time Penalty, it will also be visible in the Recommendations screen.  Double-clicking on any Recommendation will open the Rider Detail page again.
 
 Turning off Autocorrect for all riders has major implications for CrossMgr.  Without Autocorrect, CrossMgr cannot reliably count laps, display laps to go, or show the race progress.
 It is recommended that you have Autocorrect on for the race leader.
