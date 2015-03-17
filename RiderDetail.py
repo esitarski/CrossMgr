@@ -31,7 +31,7 @@ def getStFtLaps( rider ):
 	
 class AdjustTimeDialog( wx.Dialog ):
 	def __init__( self, parent, rider, riderName, id=wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, _("Adjust Times"),
+		wx.Dialog.__init__( self, parent, id, _("Adjust Time Trial Times"),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
 						
 		self.rider = rider
@@ -272,7 +272,7 @@ class RiderDetail( wx.Panel ):
 		self.showPhotos = wx.Button( self, label = u'{}...'.format(_('Show Photos')) )
 		gbs.Add( self.showPhotos, pos = (row, 3), span=(1, 1), flag = wx.ALIGN_CENTRE|wx.EXPAND )
 		self.Bind( wx.EVT_BUTTON, self.onShowPhotos, self.showPhotos )
-		self.adjustTime = wx.Button( self, label = u'{}...'.format(_('Adjust')) )
+		self.adjustTime = wx.Button( self, label = u'{}...'.format(_('Adjust Time Trial Times')) )
 		self.Bind( wx.EVT_BUTTON, self.onAdjustTime, self.adjustTime )
 		gbs.Add( self.adjustTime, pos=(row,5), span=(1,2), flag=wx.EXPAND )
 		row += 1
