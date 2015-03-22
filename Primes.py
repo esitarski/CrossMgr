@@ -45,7 +45,6 @@ class PrimesList( ULC.UltimateListCtrl ):
 class Primes( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize ):
 		super(Primes, self).__init__( parent, id, size=size )
-		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )
 		
 		vsOverall = wx.BoxSizer( wx.VERTICAL )
 		
@@ -216,16 +215,18 @@ class Primes( wx.Panel ):
 	def onNew( self, event ):
 		self.itemCommit()
 		race = Model.race
-		if race:
-			race.primes = getattr(race, 'primes', None) or []
-			race.primes.append( {} )
-			rowNew = len(race.primes) - 1
-			self.updateList()
-			for i in xrange(len(race.primes)):
-				self.primeList.Select(i, False)
-			self.primeList.Select(rowNew, True)
-			self.SetValues( race.primes[rowNew] )
-			self.sponsor.SetFocus()
+		if not race:
+			Utils.MessageOK( self, _('You must have a Race to create a Prime.'), _('Missing Race') )
+			return
+		race.primes = getattr(race, 'primes', None) or []
+		race.primes.append( {} )
+		rowNew = len(race.primes) - 1
+		self.updateList()
+		for i in xrange(len(race.primes)):
+			self.primeList.Select(i, False)
+		self.primeList.Select(rowNew, True)
+		self.SetValues( race.primes[rowNew] )
+		self.sponsor.SetFocus()
 		
 	def onDelete( self, event ):
 		rowDelete = self.primeList.GetNextSelected(-1)
