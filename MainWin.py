@@ -51,6 +51,7 @@ from RaceAnimation		import RaceAnimation, GetAnimationData
 from Search				import SearchDialog
 from Situation			import Situation
 from LapCounter			import LapCounter
+from Primes				import Primes
 import FtpWriteFile
 from FtpWriteFile		import realTimeFtpPublish
 from SetAutoCorrect		import SetAutoCorrectDialog
@@ -530,6 +531,7 @@ class MainWin( wx.Frame ):
 			[ 'recommendations',Recommendations,	_('Recommendations') ],
 			[ 'categories', 	Categories,			_('Categories') ],
 			[ 'properties',		Properties,			_('Properties') ],
+			[ 'primes',			Primes,				_('Primes') ],
 			[ 'situation',		Situation,			_('Situation') ],
 			[ 'lapCounter',		LapCounter,			_('LapCounter') ],
 		]
@@ -702,7 +704,7 @@ class MainWin( wx.Frame ):
 
 		#------------------------------------------------------------------------------
 		# Set the accelerator table so we can switch windows with the function keys.
-		accTable = [(wx.ACCEL_NORMAL, wx.WXK_F1 + i, jumpToIds[i]) for i in xrange(len(jumpToIds))]
+		accTable = [(wx.ACCEL_NORMAL, wx.WXK_F1 + i, jumpToIds[i]) for i in xrange(max(12,len(jumpToIds)))]
 		self.contextHelp = wx.NewId()
 		self.Bind(wx.EVT_MENU, self.onContextHelp, id=self.contextHelp )
 		accTable.append( (wx.ACCEL_CTRL, ord('H'), self.contextHelp) )
@@ -1281,6 +1283,7 @@ class MainWin( wx.Frame ):
 			payload['finishTop']		= getattr(race, 'finishTop', False)
 			payload['isTimeTrial']		= getattr(race, 'isTimeTrial', False)
 			payload['rfid']				= getattr(race, 'enableJChipIntegration', False)
+			payload['primes']			= getattr(race, 'primes', [])
 			payload['raceNameText']		= race.name
 			payload['raceDate']			= race.date
 			payload['raceAddress']      = u', '.join( n for n in [race.city, race.stateProv, race.country] if n )
@@ -1290,6 +1293,7 @@ class MainWin( wx.Frame ):
 			payload['hideDetails']		= race.hideDetails
 			payload['showCourseAnimation'] = race.showCourseAnimationInHtml
 			payload['licenseLinkTemplate'] = race.licenseLinkTemplate
+			
 			notes = TemplateSubstitute( getattr(race, 'notes', ''), race.getTemplateValues() )
 			if notes.lstrip()[:6].lower().startswith( '<html>' ):
 				notes = self.reRemoveTags.sub( '', notes )

@@ -2,13 +2,14 @@ import Model
 import Utils
 import ReadSignOnSheet
 from PhotoFinish import GetPhotoFName, TakePhoto
-from FinishStrip import FinishStripDialog
+from FinishStrip import ShowFinishStrip
 from SendPhotoRequests import getPhotoDirName, SendPhotoRequests
 from LaunchFileBrowser import LaunchFileBrowser
 import wx
 import wx.lib.agw.thumbnailctrl as TC
 import os
 import sys
+import math
 import types
 import threading
 import datetime
@@ -16,11 +17,11 @@ import datetime
 TestDir = r'C:\Users\Edward Sitarski\Documents\2013-02-07-test-r1-_Photos'
 
 def getRiderName( info ):
-	lastName = info.get('LastName','')
-	firstName = info.get('FirstName','')
+	lastName = info.get('LastName',u'')
+	firstName = info.get('FirstName',u'')
 	if lastName:
 		if firstName:
-			return '%s, %s' % (lastName, firstName)
+			return u'{}, {}'.format(lastName, firstName)
 		else:
 			return lastName
 	return firstName
@@ -30,8 +31,16 @@ def getFileKey( f ):
 	Extracts the key from a picture filename.
 	Expects filename of the form:  "Bib-XXXX-time-HH-MM-SS-DDD.jpeg"
 	'''
-	return os.path.splitext(os.path.basename(f))[0].split('-')[3:]
-	#return os.path.getmtime( f )
+	values = os.path.splitext(os.path.basename(f))[0].split('-')[3:]
+	
+	d = values.pop()
+	secsFraction = int(d) / math.pow(10, len(d))
+	
+	secs = 0.0
+	for v in values:
+		secs = secs * 60.0 + int(v)
+
+	return secs + secsFraction
 	
 def CmpThumb(first, second):
 	"""
@@ -58,7 +67,7 @@ def ListDirectory(self, directory, fileExtList):
 	fileList = [f for f in fileList
 		if os.path.basename(f).startswith(self.filePrefix) and os.path.splitext(f)[1] in ['.jpeg', '.jpg'] ]
 	fileList.sort( key = lambda f: getFileKey(os.path.join(directory, f)) )
-	return fileList[-200:]	# Limit to the last 200 photos so as not to crash the system.
+	return fileList[-2000:]	# Limit to the last 2000 photos so as not to crash the system.
 
 def getRiderNameFromFName( fname ):
 	# Get the rider name based on the picture fname
@@ -75,8 +84,8 @@ def getRiderNameFromFName( fname ):
 			externalInfo = {}
 		info = externalInfo.get(num, {})
 		name = getRiderName( info )
-		if info.get('Team', ''):
-			name = '%s  (%s)' % (name, info.get('Team', '').strip())
+		if info.get('Team', u''):
+			name = u'{}  ({})'.format(name, info.get('Team', '').strip())
 		
 	return name
 	
@@ -135,19 +144,7 @@ class PhotoViewerDialog( wx.Dialog ):
 
 	def __init__( self, parent, ID = wx.ID_ANY, title='Photo Viewer', size=wx.DefaultSize, pos=wx.DefaultPosition, 
 					style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER ):
-
-		# Instead of calling wx.Dialog.__init__ we precreate the dialog
-		# so we can set an extra style that must be set before
-		# creation, and then we create the GUI object using the Create
-		# method.
-		pre = wx.PreDialog()
-		#pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-		pre.Create(parent, ID, title, pos, size, style)
-
-		# This next step is the most important, it turns this Python
-		# object into the real wrapper of the dialog (instead of pre)
-		# as far as the wxPython extension is concerned.
-		self.PostCreate(pre)
+		super(PhotoViewerDialog, self).__init__( parent, ID, title=title, pos=pos, size=size, style=style )
 
 		self.num = 0
 		self.thumbSelected = -1
@@ -250,7 +247,7 @@ class PhotoViewerDialog( wx.Dialog ):
 			wx.TheClipboard.Close() 
 			Utils.MessageOK( self, u'\n\n'.join([_('Photo Copied to Clipboard.'), _('You can now Paste it into another program.')]), _('Copy to Clipboard Succeeded') )
 		else: 
-			Utils.MessageOK( self, _('Unable to Copy Photo to Clipboard.'), _('Copy Failed'), iconMask = wx.ICON_ERROR )
+			Utils.MessageOK( self, _('Unable to Copy Photo to Clipboard.'), _('Copy Failed'), iconMask=wx.ICON_ERROR )
 	
 	def OnLaunchFileBrowser( self, event ):
 		dir = getPhotoDirName( Utils.mainWin.fileName if Utils.mainWin and Utils.mainWin.fileName else 'Photos' )
@@ -288,19 +285,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		printout.Destroy()
 	
 	def OnFinishStrip( self, event ):
-		race = Model.race
-		if not race:
-			return
-		fsd = FinishStripDialog( self,
-			photoFolder=getPhotoDirName( Utils.mainWin.fileName if Utils.mainWin and Utils.mainWin.fileName else 'Photos' ),
-			fps=getattr(race, 'fps', 25.0),
-			leftToRight=getattr(race, 'leftToRight', True),
-			pixelsPerSec=getattr(race, 'pixelsPerSec', None),
-		)
-		fsd.ShowModal()
-		for attr, value in fsd.GetAttrs().iteritems():
-			setattr( race, attr, value )
-		fsd.Destroy()
+		ShowFinishStrip( self )
 	
 	def OnToolBar( self, event ):
 		{
@@ -380,6 +365,9 @@ class PhotoViewerDialog( wx.Dialog ):
 	def OnPhotoViewer( self, event ):
 		self.OnDoPhotoViewer()
 		
+	def SetT( self, t ):
+		self.refresh( tClosest=t, forceRefresh=True )
+		
 	def OnClosePhotoViewer( self, event ):
 		self.clear()
 		
@@ -395,7 +383,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.thumbs._scrolled.filePrefix = '##############'
 		self.thumbs.ShowDir( '.' )
 		
-	def refresh( self, num=None, t=None ):
+	def refresh( self, num=None, t=None, tClosest=None, forceRefresh=False ):
 		if num:
 			self.num = num
 		
@@ -405,7 +393,7 @@ class PhotoViewerDialog( wx.Dialog ):
 				return
 				
 			# Automatically refresh the screen only if the rider showing has last been updated.
-			if num is None and t is None and race.isRunning():
+			if not forceRefresh and num is None and t is None and race.isRunning():
 				tLast, rLast = race.getLastKnownTimeRider()
 				if rLast and rLast.num != self.num:
 					return
@@ -432,6 +420,16 @@ class PhotoViewerDialog( wx.Dialog ):
 				if any( f in fnameToMatch for f in fnames ):
 					break
 			self.thumbs.SetSelection( min(i, self.thumbs.GetItemCount() - 1) )
+		elif tClosest is not None:
+			tDeltaBest = 1000.0*24.0*60.0*60.0
+			iBest = None
+			for i in xrange(itemCount):
+				tDelta = abs( getFileKey(self.thumbs.GetItem(i).GetFileName()) - tClosest )
+				if tDelta < tDeltaBest:
+					iBest = i
+					tDeltaBest = tDelta
+			if iBest is not None:
+				self.thumbs.SetSelection( iBest )
 		else:
 			self.thumbs.SetSelection( self.thumbs.GetItemCount() - 1 )
 		

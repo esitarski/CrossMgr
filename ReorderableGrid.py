@@ -82,6 +82,7 @@ class ReorderableGridRowMixin( object ):
 		self.ClearSelection()
 		self.SelectRow(row, True)
 		self._potentialRearrange = True
+		evt.Skip()
 
 	def OnRearrangeEnd(self, evt):
 		"""We are not Rearranging anymore, so unset the potentialRearrange flag"""

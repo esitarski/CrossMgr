@@ -4,6 +4,8 @@ import sys
 import glob
 import math
 import Utils
+import Model
+from SendPhotoRequests import getPhotoDirName
 
 def formatTime( t ):
 	return Utils.formatTime( t, highPrecision=True, forceHours=False, forceMinutes=False )
@@ -534,6 +536,15 @@ class FinishStripPanel( wx.Panel ):
 	
 	def GetPixelsPerSec( self ):
 		return self.speedSlider.GetValue()
+		
+	def SetT( self, t ):
+		tMin, tMax = self.getPhotoTimeMinMax()
+		if tMin is None or tMax is None:
+			return
+		t = min(max(t, tMin), tMax)
+		vMin, vMax = self.timeSlider.GetMin(), self.timeSlider.GetMax()
+		self.timeSlider.SetValue( int((t - tMin) * float(vMax - vMin) / float(tMax - tMin)) )
+		self.finish.SetDrawStartTime( t )
 
 class FinishStripDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.MAXIMIZE_BOX|wx.MINIMIZE_BOX,
@@ -560,13 +571,33 @@ class FinishStripDialog( wx.Dialog ):
 		self.panel.SetLeftToRight( leftToRight )
 		if pixelsPerSec is not None:
 			self.panel.SetPixelsPerSec( pixelsPerSec )
-			
+	
+	def SetT( self, t ):
+		self.panel.SetT( t )
+
 	def GetAttrs( self ):
 		return {
 			'fps': self.panel.fps,
 			'leftToRight': self.panel.GetLeftToRight(),
 			'pixelsPerSec': self.panel.GetPixelsPerSec(),
 		}
+
+def ShowFinishStrip( parent, t=None ):
+	race = Model.race
+	if not race:
+		return
+	fsd = FinishStripDialog( parent,
+		photoFolder=getPhotoDirName( Utils.mainWin.fileName if Utils.mainWin and Utils.mainWin.fileName else 'Photos' ),
+		fps=getattr(race, 'fps', 25.0),
+		leftToRight=getattr(race, 'leftToRight', True),
+		pixelsPerSec=getattr(race, 'pixelsPerSec', None),
+	)
+	if t is not None:
+		fsd.SetT( t )
+	fsd.ShowModal()
+	for attr, value in fsd.GetAttrs().iteritems():
+		setattr( race, attr, value )
+	fsd.Destroy()
 
 if __name__ == '__main__':
 	app = wx.App(False)

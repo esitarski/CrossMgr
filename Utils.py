@@ -137,6 +137,11 @@ if 'WXMAC' not in wx.Platform:
 	def FontFontFace( *args, **kwargs ):
 		if 'face' not in kwargs:
 			kwargs['face'] = FontFace
+		try:
+			return Font( *args, **kwargs )
+		except:
+			pass
+		del kwargs['face']
 		return Font( *args, **kwargs )
 	wx.Font = FontFontFace
 
