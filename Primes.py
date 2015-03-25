@@ -141,6 +141,8 @@ class Primes( wx.Panel ):
 		self.photosButton.Bind( wx.EVT_BUTTON, self.onPhotos )
 		self.finishStrip = wx.Button( self, label=u'{}...'.format(_('Finish Strip')) )
 		self.finishStrip.Bind( wx.EVT_BUTTON, self.onFinishStrip )
+		self.history = wx.Button( self, label=u'{}...'.format(_('History')) )
+		self.history.Bind( wx.EVT_BUTTON, self.onHistory )
 		
 		self.newButton = wx.Button( self, id=wx.ID_NEW )
 		self.newButton.Bind( wx.EVT_BUTTON, self.onNew )
@@ -149,6 +151,7 @@ class Primes( wx.Panel ):
 		hsButtons = wx.BoxSizer( wx.HORIZONTAL )
 		hsButtons.Add( self.photosButton, flag=wx.ALL, border=4 )
 		hsButtons.Add( self.finishStrip, flag=wx.ALL, border=4 )
+		hsButtons.Add( self.history, flag=wx.ALL, border=4 )
 		hsButtons.AddStretchSpacer()
 		hsButtons.Add( self.newButton, flag=wx.ALL, border=4 )
 		hsButtons.Add( self.deleteButton, flag=wx.ALL, border=4 )
@@ -211,7 +214,13 @@ class Primes( wx.Panel ):
 		
 	def onFinishStrip( self, event ):
 		ShowFinishStrip( self, self.getT() )
-		
+	
+	def onHistory( self, event ):
+		mainWin = Utils.getMainWin()
+		if not mainWin:
+			return
+		mainWin.openMenuWindow( 'history' )
+	
 	def onNew( self, event ):
 		self.itemCommit()
 		race = Model.race
@@ -407,6 +416,84 @@ class Primes( wx.Panel ):
 		
 	def commit( self ):
 		self.itemCommit()
+
+def GetGrid():
+	race = Model.race
+	if not race:
+		return {}
+	primes = getattr( race, 'primes', [] )
+	if not primes:
+		return {}
+	
+	try:
+		excelLink = race.excelLink
+		externalFields = set(excelLink.getFields())
+		externalInfo = excelLink.read()
+	except:
+		excelLink = None
+		externalFields = set()
+		externalInfo = {}
+	
+	title = u'\n'.join( [race.name, Utils.formatDate(race.date), u'Primes'] )
+	
+	rightJustifyCols = set([0, 1])
+	colnames = [u'Prime', _('Bib'),]
+	hasName = ('FirstName' in externalFields or 'LastName' in externalFields)
+	if hasName:
+		colnames.append( _('Name') )
+		
+	hasTeam = 'Team' in externalFields
+	if hasTeam:
+		colnames.append( _('Team') )
+	
+	rightJustifyCols.add( len(colnames) )
+	colnames.append( _('Laps to go') )
+	
+	colnames.append( _('For') )
+	
+	hasCash = any( prime['cash'] for prime in primes)
+	hasMerchandise = any( prime['merchandise'] for prime in primes)
+	if not hasCash and not hasMerchandise:
+		hasCash = True
+	if hasCash:
+		rightJustifyCols.add( len(colnames) )
+		colnames.append( _('Cash') )
+	if hasMerchandise:
+		colnames.append( _('Merchandise') )
+	
+	colnames.append( _('Sponsor') )
+
+	leftJustifyCols = set( i for i in xrange(len(colnames)) if i not in rightJustifyCols )
+	
+	data = [[] for c in xrange(len(colnames))]	# Column oriented table.
+	GetTranslation = _
+	for p, prime in enumerate(primes):
+		row = []
+		bib = prime['winnerBib']
+		info = externalInfo.get( bib, {} )
+		
+		row.append( p+1 )
+		row.append( bib or u'' )
+		
+		if hasName:
+			row.append( u', '.join( f for f in [info.get('LastName', u''), info.get('FirstName', u'')] if f ) )
+		if hasTeam:
+			row.append( info.get('Team', u'') )
+		row.append( prime['lapsToGo'] )
+		effortType = prime['effortType']
+		row.append( GetTranslation(effortType) if effortType != 'Custom' else prime.get('effortCustom',u'') )
+
+		if hasCash:
+			row.append( u'{:.2f}'.format(prime.get('cash',0.0)) )
+		if hasMerchandise:
+			row.append( prime.get('merchandise',u'') )
+			
+		row.append( prime.get('sponsor',u'') )
+		
+		for c, v in enumerate(row):
+			data[c].append( unicode(v) )
+		
+	return {'title':title, 'colnames':colnames, 'data':data, 'leftJustifyCols':leftJustifyCols}
 
 if __name__ == '__main__':
 	app = wx.App(False)

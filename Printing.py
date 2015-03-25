@@ -5,6 +5,7 @@ import math
 import Utils
 Utils.initTranslation()
 from  ExportGrid import ExportGrid
+import Primes
 from DNSManager import AutoWidthListCtrl
 from GetResults import GetResults, UnstartedRaceWrapper
 import Model
@@ -66,12 +67,16 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		self.catCount, self.il, self.list = getCatCountImagesCategoryList( self )
 		
 		self.includeLapTimesInPrintoutCheckBox = wx.CheckBox( self, label = _('Include Lap Times in Printout') )
+		self.includePrimesInPrintoutCheckBox = wx.CheckBox( self, label = _('Include Primes in Printout') )
 		
 		race = Model.race
 		if race:
 			self.includeLapTimesInPrintoutCheckBox.SetValue( getattr(race, 'includeLapTimesInPrintout', True) )
+			self.includePrimesInPrintoutCheckBox.Show( bool(getattr(race, 'primes', None)) )
+			self.includePrimesInPrintoutCheckBox.SetValue( getattr(race, 'includePrimesInPrintout', True) )
 		else:
 			self.includeLapTimesInPrintoutCheckBox.SetValue( True )
+			self.includePrimesInPrintoutCheckBox.SetValue( True )
 			
 		self.printFormatRadioBox = wx.RadioBox(
 				self, wx.ID_ANY, 'Format', wx.DefaultPosition, wx.DefaultSize,
@@ -94,6 +99,7 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		vs.Add( self.list, 1, flag = wx.ALL|wx.EXPAND, border = 4 )
 		
 		vs.Add( self.includeLapTimesInPrintoutCheckBox, flag = wx.EXPAND|wx.ALL, border = 4 )
+		vs.Add( self.includePrimesInPrintoutCheckBox, flag = wx.EXPAND|wx.ALL, border = 4 )
 		vs.Add( self.printFormatRadioBox, flag = wx.EXPAND|wx.ALL, border = 4 )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
@@ -129,6 +135,7 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 				row += 1
 		
 		race.includeLapTimesInPrintout = self.includeLapTimesInPrintoutCheckBox.GetValue()
+		race.includePrimesInPrintout = self.includePrimesInPrintoutCheckBox.GetValue()
 		self.EndModal( wx.ID_OK )
 
 	def onCancel( self, event ):
@@ -155,6 +162,13 @@ class ChoosePrintCategoriesPodiumDialog( wx.Dialog ):
 		self.podiumPositionsLabel = wx.StaticText( self, label=_('Podium Positions to Print:') )
 		self.podiumPositions = wx.Choice( self, choices=[unicode(i+1) for i in xrange(10)] )
 		self.podiumPositions.SetSelection( 2 )
+		
+		self.includePrimesInPrintoutCheckBox = wx.CheckBox( self, label = _('Include Primes in Printout') )
+		if race:
+			self.includePrimesInPrintoutCheckBox.Show( bool(getattr(race, 'primes', None)) )
+			self.includePrimesInPrintoutCheckBox( getattr(race, 'includePrimesInPrintout', True) )
+		else:
+			self.includePrimesInPrintoutCheckBox.SetValue( True )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.podiumPositionsLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT, border=4 )
@@ -200,6 +214,7 @@ class ChoosePrintCategoriesPodiumDialog( wx.Dialog ):
 				row += 1
 		
 		self.positions = self.podiumPositions.GetSelection() + 1
+		race.includePrimesInPrintout = self.includePrimesInPrintoutCheckBox.GetValue()
 		self.EndModal( wx.ID_OK )
 
 	def onCancel( self, event ):
@@ -273,14 +288,21 @@ class CrossMgrPrintout( wx.Printout ):
 					page += 1
 					pageNumber += 1
 					self.pageInfo[page] = [c, i, min(categoryLength, rowDrawCount), pageNumber, pageNumberTotal, categoryLength]
-		
+		race = Model.race
+		if race and getattr(race, 'primes', None) and getattr(race, 'includePrimesInPrintout', True):
+			page += 1
+			pageNumber += 1
+			self.pageInfo[page] = ['Primes', 0, len(race.primes), 1, 1, len(race.primes)]
 		return (1, page, 1, page)
 
 	def prepareGrid( self, page ):
 		showLapTimes = (not Model.race) or getattr( Model.race, 'includeLapTimesInPrintout', True )
-		exportGrid = ExportGrid()
 		with UnstartedRaceWrapper():
-			exportGrid.setResultsOneList( self.pageInfo[page][0], True, showLapTimes = showLapTimes )
+			if self.pageInfo[page][0] == 'Primes':
+				exportGrid = ExportGrid( **Primes.GetGrid() )
+			else:
+				exportGrid = ExportGrid()
+				exportGrid.setResultsOneList( self.pageInfo[page][0], True, showLapTimes = showLapTimes )
 		return exportGrid
 		
 	def OnPrintPage(self, page):
@@ -320,11 +342,15 @@ class CrossMgrPrintoutPNG( CrossMgrPrintout ):
 		
 		if pageTotal != 1:
 			fname = u'{categoryName} ({pageNumber}) {fileBase}.png'.format(
-								fileBase = self.fileBase, categoryName = category.fullname,
-								pageNumber = pageNumber )
+				fileBase = self.fileBase,
+				categoryName = category.fullname if category != 'Primes' else 'Primes',
+				pageNumber = pageNumber
+			)
 		else:
 			fname = u'{categoryName} {fileBase}.png'.format(
-								fileBase = self.fileBase, categoryName = category.fullname )
+				fileBase = self.fileBase,
+				categoryName = category.fullname if category != 'Primes' else 'Primes'
+			)
 								
 		fname = Utils.RemoveDisallowedFilenameChars( fname )
 		
@@ -376,8 +402,9 @@ if __name__ == '__main__':
 	Utils.disable_stdout_buffering()
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,200))
-	cpcd = ChoosePrintCategoriesPodiumDialog(mainWin)
-	cpcd.SetSize( (450, 300) )
+	#cpcd = ChoosePrintCategoriesPodiumDialog(mainWin)
+	cpcd = ChoosePrintCategoriesDialog(mainWin)
+	cpcd.SetSize( (450, 600) )
 	mainWin.Show()
 	cpcd.ShowModal()
 	for c in cpcd.categories:

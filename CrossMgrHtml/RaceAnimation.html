@@ -174,6 +174,7 @@ var showDetails = false;	// If true, show full lap details in the Chart.
 var showCourseAnimation = true;
 var version = null;
 var raceNotes = null;
+var primes = null;
 var finisherMode = null;
 var cycleCategoriesMode = null;
 var catPosIndex = null;
@@ -400,6 +401,9 @@ var translations = {
 	'LapsDown':		['Laps Down',		'Rours de retard',			'Vueltas atrás'],
 	'CategorySummary':	['Category Summary',"Catégorie résumé",			"Resumen de la categoría"],
 	'ShowCategorySummary':['Show Category Summary',"Afficher le catégorie résumé",	"Mostrar el resumen de la categoría"],
+	'Sponsor':		['Sponsor',			"Promoteur",				"Patrocinador"],
+	'Cash':			['Cash',			"Argent",					"Dinero"],
+	'Merchandise':	['Merchandise',		"Marchendise",				"Mercancía"],
 	'last':			['','','']
 };
 (function() {
@@ -2338,7 +2342,7 @@ function GetAllCategoryResults( num ) {
 	return results.join( ',  ' );
 }
 
-function SetCategoryResultsArrival( raceTimesLength, raceTimesCopy )
+function RefreshResultsTableArrival( raceTimesLength, raceTimesCopy )
 {
 	var riderBib = [];		// Bib numbers in display sequence.
 	var riderInfo = {};		// Additional rider info.
@@ -2535,7 +2539,102 @@ function SetCategoryResultsArrival( raceTimesLength, raceTimesCopy )
 	resultsDiv.appendChild( table );
 }
 
-function SetCategoryResults( raceTimesLength, raceTimesCopy )
+function GetPrimesTable( primeFromBib, pos ) {
+	if( !primes || primes.length == 0 )
+		return null;
+	
+	var primesCur = [];
+	for( var p = 0; p < pos.length; ++p ) {
+		if( primeFromBib[pos[p]] != undefined )
+			primesCur.push( primeFromBib[pos[p]] );
+	}
+	if( primesCur.length == 0 )
+		return null;
+		
+	primesCur.sort();
+	
+	// Check for report fields.
+	var hasMerchandise = false, hasCash = false, hasName = false, hasTeam = false;
+	for( var p = 0; p < primesCur.length; ++p ) {
+		var prime = primes[primesCur[p]];
+		var bib = prime.winnerBib;
+		var info = data[bib];
+		hasCash = (hasCash || prime.cash);
+		hasMerchandise = (hasMerchandise || prime.merchandise);
+		hasName = (hasName || (info['FirstName'] || info['LastName']));
+		hasTeam = (hasTeam || info['Team']);
+	}
+	
+	var table = document.createElement('TABLE');
+	table.className = 'results';
+	var thead = createChild( table, 'THEAD' );
+	
+	var tr = createChild( thead, 'TR' );
+	var td;
+	createTextChild( td = createChild(tr, 'TH'), _('Primes') );
+	td.style.fontSize = '120%';
+	td.colSpan = 1 + 1 + (hasName?1:0) + (hasTeam?1:0) + 1 + 1 + (hasCash?1:0) + (hasMerchandise?1:0) + 1;
+	td.id = 'idNonNumeric';
+	
+	var tr = createChild( thead, 'TR' );
+	
+	createTextChild( td = createChild(tr, 'TH'), '');
+	createTextChild( td = createChild(tr, 'TH'), _('Bib'));
+	if( hasName ) {
+		createTextChild( td = createChild(tr, 'TH'), _('Name'));
+		td.id = 'idNonNumeric';
+	}
+	if( hasTeam ) {
+		createTextChild( td = createChild(tr, 'TH'), _('Team'));
+		td.id = 'idNonNumeric';
+	}
+	createTextChild( td = createChild(tr, 'TH'), _('laps to go').replace(/^./, function (match) {return match.toUpperCase();}));
+	createTextChild( td = createChild(tr, 'TH'), _('For'));
+	td.id = 'idNonNumeric';
+	if( hasCash )
+		createTextChild( td = createChild(tr, 'TH'), _('Cash'));
+	if( hasMerchandise ) {
+		createTextChild( td = createChild(tr, 'TH'), _('Merchandise'));
+		td.id = 'idNonNumeric';
+	}
+	createTextChild( td = createChild(tr, 'TH'), _('Sponsor'));
+	td.id = 'idNonNumeric';
+
+	var tbody = createChild( table, 'TBODY' );
+	for( var p = 0; p < primesCur.length; ++p ) {
+		var prime = primes[primesCur[p]];
+		var bib = prime.winnerBib;
+		var info = data[bib];
+		var tr = createChild( thead, 'TR' );
+		createTextChild( td = createChild(tr, 'TD'), (primesCur[p]+1) + '.');
+		createTextChild( td = createChild(tr, 'TD'), bib );
+		if( hasName ) {
+			var s = '';
+			if( info.LastName )		s = info.LastName;
+			if( info.FirstName )	s += (s ? ', ' : '') + info.FirstName;
+			createTextChild( td = createChild(tr, 'TD'), s );
+			td.id = 'idNonNumeric';
+		}
+		if( hasTeam ) {
+			createTextChild( td = createChild(tr, 'TD'), info.Team ? info.Team : '' );
+			td.id = 'idNonNumeric';
+		}
+		createTextChild( td = createChild(tr, 'TD'), prime.lapsToGo );
+		createTextChild( td = createChild(tr, 'TD'), prime.effortType != 'Custom' ? _(prime.effortType) : prime.effortCustom );
+		td.id = 'idNonNumeric';
+		if( hasCash )
+			createTextChild( td = createChild(tr, 'TD'), prime.cash ? prime.cash.toFixed(2) : '');
+		if( hasMerchandise ) {
+			createTextChild( td = createChild(tr, 'TD'), prime.merchandise);
+			td.id = 'idNonNumeric';
+		}
+		createTextChild( td = createChild(tr, 'TD'), prime.sponsor);
+		td.id = 'idNonNumeric';
+	}
+	return table;
+}
+
+function RefreshResultsTable( raceTimesLength, raceTimesCopy )
 {
 	resultsDiv.innerHTML = '';
 	
@@ -2543,7 +2642,15 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 		return;
 		
 	//console.log( '^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^' );
-		
+
+	var primeFromBib = {};
+	if( primes && primes.length > 0 ) {
+		for( var i = 0; i < primes.length; ++i ) {
+			if( primes[i].winnerBib )
+				primeFromBib[primes[i].winnerBib] = i;
+		}
+	}
+
 	// Show results for this category.
 	var raceTimesLength = {};
 	var raceTimesCopy = {};
@@ -2569,7 +2676,7 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 	}
 	
 	if( isTimeTrial && finisherMode ) {
-		SetCategoryResultsArrival( raceTimesLength, raceTimesCopy );
+		RefreshResultsTableArrival( raceTimesLength, raceTimesCopy );
 		return;
 	}
 	
@@ -2605,9 +2712,6 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 			
 		if( categoryCur != 'All' && categoryCur != catName )
 			continue;
-		
-		var table = document.createElement('TABLE');
-		table.className = 'results';
 		
 		var curFields = {};
 		var hasLapSpeeds = false;
@@ -2705,6 +2809,10 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 			}
 		}
 
+		//-------------------------------------------------------------------------------------------
+		var table = document.createElement('TABLE');
+		table.className = 'results';
+		
 		// Label this category.
 		var leaderNum = catDetails[c].pos[0];
 		var leaderraceTimes = raceTimesCopy[leaderNum];
@@ -3103,15 +3211,14 @@ function SetCategoryResults( raceTimesLength, raceTimesCopy )
 			}
 		}
 		
-		// Add a blank row between categories.
-		tr = createChild( tbody, 'TR' );
-		tr.className = 'noborder';
-		for( var k = 0; k < numHeaders; ++k ){
-			createTextChild( td = createChild(tr, 'TD'), '' );
-			td.innerHTML = '&nbsp;'
-		}
-		
 		resultsDiv.appendChild( table );
+		
+		var primesTable = GetPrimesTable( primeFromBib, catDetail.pos );
+		if( primesTable )
+			resultsDiv.appendChild( primesTable );				
+		
+		// Add some blank space between categories.
+		createChild(resultsDiv, 'P').innerHTML = '&nbsp;'
 	}
 }
 
@@ -4478,7 +4585,6 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 		}
 		createChild( this.detailDiv, 'hr' );
 	}
-	
 }
 //----------------------------------------------------------------------
 
@@ -4488,7 +4594,7 @@ function SelectCategory( i )
 	var catButton = document.getElementById('idCat' + i);
 	if( catButton )
 		catButton.checked = true;
-	SetCategoryResults();
+	RefreshResultsTable();
 	if( animationObj != null )
 		animationObj.Refresh();
 	RefreshRaceChart();
@@ -4569,7 +4675,7 @@ function SetNumsToWatch()
 	}
 	if( animationObj != null )
 		animationObj.Refresh();
-	SetCategoryResults();
+	RefreshResultsTable();
 	RefreshRaceChart();
 	SetSituationTime();
 }
@@ -4690,14 +4796,14 @@ function getUrlParam( param, url )
 function SetLapDataOption( opt )
 {
 	lapDataOption = opt;
-	SetCategoryResults();
+	RefreshResultsTable();
 }
 
 function SetShowLaps()
 {
 	var showLaps = document.getElementById('idShowLaps');
 	showLapsFrequency = parseInt( showLaps.options[showLaps.selectedIndex].value, 10 );
-	SetCategoryResults();
+	RefreshResultsTable();
 }
 
 function FormatDistance( distance, inUnit, showUnits )
@@ -4753,7 +4859,7 @@ function SetDisplayUnits()
 {
 	var select = document.getElementById('idDisplayUnits');
 	displayUnits = select.options[select.selectedIndex].value;
-	SetCategoryResults();
+	RefreshResultsTable();
 	SetTotalElevationGain();
 	animationObj.widthLast = -1;
 }
@@ -4816,7 +4922,7 @@ function ToggleTimeDecimals()
 {
 	var cb = document.getElementById('idShowTimeDecimals');
 	showTimeDecimals = cb.checked;
-	SetCategoryResults();
+	RefreshResultsTable();
 }
 
 var replaceHtmlEntites = (function() {
@@ -4898,7 +5004,7 @@ function setLanguage( langCode ) {
 		}
 	}
 	
-	SetCategoryResults();
+	RefreshResultsTable();
 	SetTotalElevationGain();
 	SituationRefresh();
 }
@@ -4977,7 +5083,7 @@ function SituationRefresh() {
 
 function SetFinisherMode() {
 	finisherMode = document.getElementById('idFinisherMode').checked;
-	SetCategoryResults();
+	RefreshResultsTable();
 }
 
 var cycleCount = 0;
@@ -5004,7 +5110,7 @@ function SetNextCategory() {
 
 function SetShowCategorySummary() {
 	showCategorySummary = document.getElementById('idShowCategorySummary').checked;
-	SetCategoryResults();
+	RefreshResultsTable();
 }
 
 function SetCycleCategoriesMode() {
@@ -5202,7 +5308,7 @@ function onLoad()
 	setLanguage( getUrlParam('lang', undefined) );
 	initLanguages();
 	
-	SetCategoryResults();
+	RefreshResultsTable();
 	RefreshRaceChart();
 	SetSituationTime();
 	

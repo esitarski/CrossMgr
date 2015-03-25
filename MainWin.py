@@ -51,7 +51,7 @@ from RaceAnimation		import RaceAnimation, GetAnimationData
 from Search				import SearchDialog
 from Situation			import Situation
 from LapCounter			import LapCounter
-from Primes				import Primes
+from Primes				import Primes, GetGrid
 import FtpWriteFile
 from FtpWriteFile		import realTimeFtpPublish
 from SetAutoCorrect		import SetAutoCorrectDialog
@@ -1151,6 +1151,7 @@ class MainWin( wx.Frame ):
 				if fname is None:
 					fname = printout.lastFName
 			except Exception as e:
+				logException( e, sys.exc_info() )
 				Utils.MessageOK(self,
 							_('Error creating PNG files:\n\n    {}.').format(e),
 							_('PNG File Error'), iconMask=wx.ICON_ERROR )
@@ -1229,6 +1230,13 @@ class MainWin( wx.Frame ):
 				sheetCur = wb.add_sheet( sheetName )
 				export = ExportGrid()
 				export.setResultsOneList( category, showLapsFrequency = 1 )
+				export.toExcelSheet( sheetCur )
+				
+			race = Model.race
+			if race and getattr(race, 'primes', None):
+				sheetName = 'Primes'
+				sheetCur = wb.add_sheet( sheetName )
+				export = ExportGrid( **GetGrid() )
 				export.toExcelSheet( sheetCur )
 
 		try:
@@ -2962,6 +2970,14 @@ class MainWin( wx.Frame ):
 		else:
 			dialog.Show( True )
 			wx.CallAfter( dialog.refresh )
+
+	@logCall
+	def openMenuWindow( self, windowAttr ):
+		for attr, name, menuItem, dialog in self.menuIdToWindowInfo.itervalues():
+			if windowAttr == attr:
+				dialog.Show( True )
+				wx.CallAfter( dialog.refresh )
+				break
 	
 	@logCall
 	def menuHelpQuickStart( self, event ):

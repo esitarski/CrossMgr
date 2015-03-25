@@ -79,13 +79,13 @@ def getQRCodeBitmap( url ):
 class ExportGrid( object ):
 	PDFLineFactor = 1.10
 
-	def __init__( self, title = '', colnames = [], data = [], footer = '' ):
+	def __init__( self, title = '', colnames = [], data = [], footer = '', leftJustifyCols=None, infoColumns=None ):
 		self.title = title
 		self.footer = footer
 		self.colnames = colnames
 		self.data = data
-		self.leftJustifyCols = set()
-		self.infoColumns = set()
+		self.leftJustifyCols = (leftJustifyCols or set())
+		self.infoColumns = (infoColumns or set())
 		self.iLapTimes = 0
 		self.rowDrawCount = 1000000
 		
@@ -569,7 +569,7 @@ class ExportGrid( object ):
 				if leader.status == Model.Rider.Finisher:
 					catStr += u', ' + _('winner: {} at {}').format(Utils.formatTime(leader.lastTime - cd['startOffset']), leader.speed);
 		
-			self.title = '\n'.join( [race.name, Utils.formatDate(race.date), catStr] )
+			self.title = u'\n'.join( [race.name, Utils.formatDate(race.date), catStr] )
 			isTimeTrial = getattr( race, 'isTimeTrial', False )
 
 		startOffset = category.getStartOffsetSecs() if category else 0.0

@@ -48,6 +48,10 @@ body { font-family: Helvetica, sans-serif; }
 	line-height: 85%;
 }
 
+.disabled {
+	background-color: #333333;
+}
+
 #rider-next {
 	font-size: 300%;
 	height: 200px;
@@ -267,11 +271,29 @@ function dateFromTuple( t ) {
 	return new Date(t[0], t[1], t[2], t[3], t[4], t[5], t[6]);
 }
 
+function initiateSound() {
+	if( !enableBeeps ) {
+		document.getElementById('countdown-clock').className = '';
+		enableBeeps = true;
+		playBeep(10);
+	}
+}
+
 function onload() {
 	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
 	if( startList == null ) startList = [];
 	
 	lastUpdated = (lastUpdatedTuple == null ? new Date() : dateFromTuple(lastUpdatedTuple));
+	
+	if( ['iPad', 'iPhone', 'iPod'].indexOf(navigator.platform) >= 0 ) {
+		// On iOS, the first sound must be triggered by a user action.
+		enableBeeps = false;
+		var countdown_clock = document.getElementById('countdown-clock');
+		countdown_clock.className = 'disabled';
+		countdown_clock.addEventListener('click', initiateSound );
+	}
+	else
+		enableBeeps = true;
 	
 	if( raceStartTuple != null ) {
 		raceStart = dateFromTuple( raceStartTuple );

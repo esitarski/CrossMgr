@@ -5,6 +5,8 @@ import wx.lib.filebrowsebutton as filebrowse
 import wx.lib.scrolledpanel as scrolled
 import wx.wizard as wiz
 import os
+import re
+import glob
 import sys
 import copy
 import string
@@ -599,6 +601,28 @@ class ExcelLink( object ):
 		except:
 			return False
 	
+	reVersionField = re.compile( '^(.+) \(([0-9]+)\)\.(?:xls|xlsx|xlsm)$', re.IGNORECASE )
+	def getMostRecentFilename( self ):
+		dirname, basename = os.path.split(self.fileName)
+		
+		m = ReadSignOnSheet.reVersionField.match( basename )
+		nameCur = m.group(1) if m else basename.splitext()[0]
+		versionCur = int(m.group(2)) if m else 0
+		
+		mostRecentFilename = None
+		for f in os.listdir(dirname):
+			m = ReadSignOnSheet.reVersionField.match( f )
+			if not m or m.group(1) != nameCur:
+				continue
+			version = int(m.group(2))
+			if version > versionCur:
+				versionCur = version
+				mostRecentFilename = f
+		return os.path.join(dirname, mostRecentFilename) if mostRecentFilename else None
+	
+	def updateFilenameToMostRecent( self ):
+		self.fileName = (self.getMostRecentFilename() or self.fileName)
+		
 	def read( self, alwaysReturnCache = False ):
 		# Check the cache.  Return the last info if the file has not been modified, and the name, sheet and fields are the same.
 		global stateCache
