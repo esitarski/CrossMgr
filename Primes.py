@@ -257,7 +257,7 @@ class Primes( wx.Panel ):
 			self.updateList()
 		
 	def doEnter( self, event ):
-		self.itemCommit()
+		wx.CallAfter( self.itemCommit )
 
 	def itemCommit( self, rowCommit=None ):
 		race = Model.race
@@ -275,6 +275,7 @@ class Primes( wx.Panel ):
 			self.setRow( race.primes[rowCommit], rowCommit )
 			self.updateColWidths()
 			self.updateComboBoxes()
+			wx.CallAfter( self.SetValues, race.primes[rowCommit] )
 	
 	def onItemDeselected( self, event ):
 		self.itemCommit( event.GetIndex() )
