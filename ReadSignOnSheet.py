@@ -6,7 +6,6 @@ import wx.lib.scrolledpanel as scrolled
 import wx.wizard as wiz
 import os
 import re
-import glob
 import sys
 import copy
 import string
