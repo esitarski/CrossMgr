@@ -29,6 +29,7 @@
 [Properties]:		Properties.html
 [Facebook]:			Facebook.html
 [Para-Cycling]:		Para-Cycling.html
+[Primes]:			Primes.html
 [FAQ]:				FAQ.html
 
 [External Excel]:	Menu-DataMgmt.html#link-to-external-excel-data

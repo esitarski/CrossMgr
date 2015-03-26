@@ -28,6 +28,7 @@ Get started with CrossMgr now!
 * [Recommendations][]
 * [Categories][]
 * [Properties][]
+* [Primes][]
 * [Situation][]
 * [LapCounter][]
 
