@@ -345,11 +345,10 @@ class Primes( wx.Panel ):
 		if not race or not hasattr(race, 'primes'):
 			return
 		rows = [self.setRow( prime, row ) for row, prime in enumerate(race.primes)]
-		if rows:
-			dc = wx.WindowDC( self.primeList )
-			dc.SetFont( self.primeList.GetFont() )
-			for col, (name, attr) in enumerate(self.colNameFields):
-				self.primeList.SetColumnWidth( col, (max(dc.GetTextExtent(r[col])[0] for r in rows)+16) if attr != 'lapsToGo' else 72 )
+		dc = wx.WindowDC( self.primeList )
+		dc.SetFont( self.primeList.GetFont() )
+		for col, (name, attr) in enumerate(self.colNameFields):
+			self.primeList.SetColumnWidth( col, (max(dc.GetTextExtent(r[col])[0] for r in rows)+16) if rows and attr != 'lapsToGo' else 72 )
 	
 	def updateList( self ):
 		race = Model.race
