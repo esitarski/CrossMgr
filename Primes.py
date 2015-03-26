@@ -80,7 +80,7 @@ class Primes( wx.Panel ):
 		self.winnerInfo = wx.StaticText( self )
 
 		self.Bind( wx.EVT_TEXT_ENTER, self.doEnter )
-		self.Bind( wx.EVT_TEXT, self.doEnter )
+		#self.Bind( wx.EVT_TEXT, self.doEnter )
 		#---------------------------------------------------------------
 		
 		labelFlag = wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL
@@ -227,14 +227,14 @@ class Primes( wx.Panel ):
 		if not race:
 			Utils.MessageOK( self, _('You must have a Race to create a Prime.'), _('Missing Race') )
 			return
-		race.primes = getattr(race, 'primes', None) or []
+		race.primes = getattr(race, 'primes', [])
 		race.primes.append( {} )
 		rowNew = len(race.primes) - 1
 		self.updateList()
 		for i in xrange(len(race.primes)):
 			self.primeList.Select(i, False)
 		self.primeList.Select(rowNew, True)
-		self.SetValues( race.primes[rowNew] )
+		wx.CallAfter( self.SetValues,  race.primes[rowNew] )
 		self.sponsor.SetFocus()
 		
 	def onDelete( self, event ):
@@ -243,17 +243,17 @@ class Primes( wx.Panel ):
 			return
 		race = Model.race
 		if race and Utils.MessageOKCancel( self, u'{}: {} ?'.format(_('Delete Primes'), rowDelete+1), _('Confirm Delete Primes') ):
-			race.primes = getattr(race, 'primes', None) or []
+			race.primes = getattr(race, 'primes', [])
 			try:
 				del race.primes[rowDelete]
 			except Exception as e:
 				return
 			if race.primes:
 				rowDelete = min(rowDelete, len(race.primes)-1)
-				self.SetValues( race.primes[rowDelete] )
 				for i in xrange(len(race.primes)):
 					self.primeList.Select(i, False)
 				self.primeList.Select(rowDelete, True)
+				wx.CallAfter( self.SetValues, race.primes[rowDelete] )
 			self.updateList()
 		
 	def doEnter( self, event ):
@@ -263,7 +263,7 @@ class Primes( wx.Panel ):
 		race = Model.race
 		if not race:
 			return
-		race.primes = getattr(race, 'primes', None) or []
+		race.primes = getattr(race, 'primes', [])
 		if not race.primes:
 			return
 		if rowCommit is None:
@@ -283,9 +283,9 @@ class Primes( wx.Panel ):
 		race = Model.race
 		if race:
 			rowUpdate = event.GetIndex()
-			race.primes = getattr(race, 'primes', None) or []
+			race.primes = getattr(race, 'primes', [])
 			if rowUpdate < len(race.primes):
-				self.SetValues( race.primes[rowUpdate] )
+				wx.CallAfter( self.SetValues, race.primes[rowUpdate] )
 		
 	def getSponsors( self ):
 		race = Model.race
@@ -363,9 +363,9 @@ class Primes( wx.Panel ):
 			
 		self.updateColWidths()
 		
-		if self.primeList.GetNextSelected(-1) < 0 and self.primeList.GetItemCount() > 0:
+		if self.primeList.GetNextSelected(-1) < 0 and race.primes:
 			self.primeList.Select(0, True)
-			self.SetValues( race.primes[0] )
+			wx.CallAfter( self.SetValues, race.primes[0] )
 			
 		self.updateComboBoxes()
 			
@@ -399,10 +399,7 @@ class Primes( wx.Panel ):
 				('winnerBib',		self.winner, 0),
 				('lapsToGo',		self.lapsToGo, 0),
 			):
-			try:
-				widget.SetValue( values.get(attr, defaultVal) )
-			except Exception as e:
-				widget.SetValue( defaultVal )
+			widget.SetValue( values.get(attr, defaultVal) )
 		self.updateWinnerInfo()
 			
 		effortType = values.get('effortType', EffortChoices[0][1])
