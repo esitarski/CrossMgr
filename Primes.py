@@ -5,6 +5,7 @@ import sys
 import math
 import Utils
 import Model
+from ReorderableGrid import ReorderableGrid
 from FinishStrip		import ShowFinishStrip
 from ReadSignOnSheet	import ExcelLink
 from GetResults			import GetResults
@@ -35,13 +36,6 @@ with Utils.SuspendTranslation():
 		(-1, _('Custom')),	# This one must be last.
 	)
 
-from wx.lib.agw import ultimatelistctrl as ULC
-class PrimesList( ULC.UltimateListCtrl ):
-	def __init__( self, *args, **kwargs ):
-		if 'agwStyle' not in kwargs:
-			kwargs['agwStyle'] = wx.LC_REPORT
-		ULC.UltimateListCtrl.__init__( self, *args, **kwargs )
-
 class Primes( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize ):
 		super(Primes, self).__init__( parent, id, size=size )
@@ -49,94 +43,40 @@ class Primes( wx.Panel ):
 		vsOverall = wx.BoxSizer( wx.VERTICAL )
 		
 		#---------------------------------------------------------------
-		
-		fgs = wx.FlexGridSizer( cols=2, vgap=4, hgap=4 )
-		fgs.AddGrowableCol( 1, 1 )
-		
-		self.sponsorLabel = wx.StaticText( self, label=u'{}:'.format(_('Sponsor')) )
-		self.sponsor = wx.ComboBox( self, choices=self.getSponsors() )
-		
-		self.cashLabel = wx.StaticText( self, label=u'{}:'.format(_('Cash')) )
-		self.cash = NumCtrl( self, fractionWidth=2, size=(40, 0), allowNone=True, style=wx.TE_RIGHT|wx.TE_PROCESS_ENTER )
-		self.cash.SetMinSize( (100, -1) )
-		
-		self.merchandiseLabel = wx.StaticText( self, label=u'{}:'.format(_('Merchandise')) )
-		self.merchandise = wx.ComboBox( self, choices=self.getMerchandise(), )
-		
-		self.lapsToGoLabel = wx.StaticText( self,label=u'{}:'.format(_('Laps to Go')) )
-		self.lapsToGo = wx.SpinCtrl( self, min=0, max=9999, size=(64,-1), style=wx.TE_RIGHT )
-		
-		GetTranslation = _
-		self.effortLabel = wx.StaticText( self, label=u'{}:'.format(_('For')) )
-		self.effort = wx.Choice( self, choices=[GetTranslation(v) for i, v in EffortChoices] )
-		self.effort.Bind( wx.EVT_CHOICE, self.onEffortChoice )
-		self.effortCustom = wx.TextCtrl( self )
-		
-		self.winnerLabel = wx.StaticText( self, label=u'{}:'.format(_('Winner Bib')) )
-		self.winner = NumCtrl( self, min=0, max=99999, allowNone=True, groupDigits=False, style=wx.TE_RIGHT|wx.TE_PROCESS_ENTER )
-		self.winner.SetMinSize( (64, -1) )
-		self.winner.Bind( wx.EVT_TEXT, self.updateWinnerInfo )
-		
-		self.winnerInfo = wx.StaticText( self )
-
-		self.Bind( wx.EVT_TEXT_ENTER, self.doEnter )
-		
-		#---------------------------------------------------------------
-		
-		labelFlag = wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL
-		fgs.Add( self.sponsorLabel, flag=labelFlag )
-		fgs.Add( self.sponsor, 1, flag=wx.EXPAND )
-		
-		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.cash )
-		hs.Add( self.merchandiseLabel, flag=wx.LEFT|wx.ALIGN_CENTRE_VERTICAL, border=12 )
-		hs.Add( self.merchandise, 1, flag=wx.EXPAND|wx.LEFT, border=2 )
-		
-		fgs.Add( self.cashLabel, flag=labelFlag )
-		fgs.Add( hs, 1, flag=wx.EXPAND )
-		
-		fgs.Add( self.lapsToGoLabel, flag=labelFlag )
-		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.lapsToGo )
-		hs.Add( self.effortLabel, flag=labelFlag|wx.LEFT, border=12 )
-		hs.Add( self.effort, flag=wx.LEFT, border=2 )
-		hs.Add( self.effortCustom, 1, flag=wx.EXPAND|wx.LEFT, border=4 )
-		fgs.Add( hs, flag=wx.EXPAND )
-		
-		fgs.Add( self.winnerLabel, flag=labelFlag )
-		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.winner )
-		hs.Add( self.winnerInfo, flag=wx.LEFT|wx.ALIGN_CENTRE_VERTICAL, border=4 )
-		fgs.Add( hs )
-		
-		#---------------------------------------------------------------
-		self.primeList = PrimesList( self, size=(-1, 128), agwStyle=wx.LC_REPORT|wx.BORDER_SUNKEN|wx.LC_HRULES )
 		self.colNameFields = (
-			(u'',						'num'),
-			(_('Sponsor'),				'sponsor'),
-			(_('Cash'),					'cash'),
-			(_('Merchandise'),			'merchandise'),
-			(_('LapsToGo'),				'lapsToGo'),
-			(_('For'),					'effort'),
-			(_('Bib'),					'winner'),
-			(_('Info'),					'winnerInfo'),
+			(_('Sponsor'),				'sponsor', 		's'),
+			(_('Cash'),					'cash', 		'f'),
+			(_('Merchandise'),			'merchandise', 	's'),
+			(_('For'),					'effortType',	's'),
+			(_('Custom'),				'effortCustom',	's'),
+			(_('LapsToGo'),				'lapsToGo',		'i'),
+			(_('Bib'),					'winner',		'i'),
+			(_('Info'),					'winnerInfo',	's'),
 		)
-		self.colnames = [colName for colName, fieldName in self.colNameFields]
-		self.iCol = dict( (fieldName, i) for i, (colName, fieldName) in enumerate(self.colNameFields) if fieldName )
-		for col, (colName, fieldName) in enumerate(self.colNameFields):
-			self.primeList.InsertColumn(
-				col,
-				colName,
-				format=wx.LIST_FORMAT_RIGHT if fieldName in ('lapsToGo', 'cash', 'winner', 'num') else wx.LIST_FORMAT_LEFT
-			)
+		self.colnames = [colName for colName, fieldName, dataType in self.colNameFields]
+		self.iCol = dict( (fieldName, i) for i, (colName, fieldName, dataType) in enumerate(self.colNameFields) if fieldName )
+		self.grid = ReorderableGrid( self )
+		self.grid.CreateGrid( 0, len(self.colNameFields) )
+		for col, (colName, fieldName, dataType) in enumerate(self.colNameFields):
+			self.grid.SetColLabelValue( col, colName )
+			attr = wx.grid.GridCellAttr()
+			if fieldName == 'effortType':
+				attr.SetEditor( wx.grid.GridCellChoiceEditor(choices=[name for code, name in EffortChoices]) )
+			elif fieldName == 'winnerInfo':
+				attr.SetReadOnly( True )
+			elif dataType == 'i':
+				attr.SetAlignment( wx.ALIGN_RIGHT, wx.ALIGN_TOP )
+			elif dataType == 'f':
+				attr.SetAlignment( wx.ALIGN_RIGHT, wx.ALIGN_TOP )
+				attr.SetEditor( wx.grid.GridCellFloatEditor(precision=2) )
+				attr.SetRenderer( wx.grid.GridCellFloatRenderer(precision=2) )
+				attr.SetAlignment( wx.ALIGN_RIGHT, wx.ALIGN_TOP )
+			self.grid.SetColAttr( col, attr )
 		
-		self.primeList.Bind( wx.EVT_LIST_ITEM_DESELECTED, self.onItemDeselected )
-		self.primeList.Bind( wx.EVT_LIST_ITEM_SELECTED, self.onItemSelected )
-		self.primeList.Bind( wx.EVT_KEY_DOWN, self.onItemKeyDown )
-		self.primeList.Bind( ULC.EVT_LIST_BEGIN_DRAG, self.onBeginDrag )
-		self.primeList.Bind( ULC.EVT_LIST_END_DRAG, self.onEndDrag )
-		self.iDrag = -1	# Current item being dragged.
-		
+		self.grid.Bind( wx.grid.EVT_GRID_CELL_CHANGE, self.onCellChange )
+		self.grid.AutoSizeColumns( False )
+		self.grid.AutoSizeRows( False )
+
 		#---------------------------------------------------------------
 		self.photosButton = wx.Button( self, label=u'{}...'.format(_('Photos')) )
 		self.photosButton.Bind( wx.EVT_BUTTON, self.onPhotos )
@@ -159,46 +99,20 @@ class Primes( wx.Panel ):
 		
 		#---------------------------------------------------------------
 		
-		vsOverall.Add( self.primeList, 1, flag=wx.EXPAND|wx.ALL, border=4 )
-		vsOverall.Add( fgs, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.EXPAND, border=4 )
+		vsOverall.Add( self.grid, 1, flag=wx.EXPAND|wx.ALL, border=4 )
 		vsOverall.Add( hsButtons, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=4 )
 		self.SetSizer( vsOverall )
-		self.updateEffort()
 	
-	def onItemKeyDown( self, event ):
-		print event.GetKeyCode()
-		keyCode = event.GetKeyCode()
-		if keyCode not in (314, 315, 316, 317):
-			pass
-		event.Skip()
-	
-	def onBeginDrag( self, event ):
-		self.iDrag = event.GetIndex()
-		event.Skip()
-	
-	def onEndDrag( self, event ):
-		if self.iDrag < 0:
-			event.Skip()
-			return
-		race = Model.race
-		iOld, iNew = self.iDrag, event.GetIndex()
-		if not race or iOld == iNew:
-			return
-		iStart, iEnd = sorted( [iOld, iNew] )
-		
-		iMax = len(race.primes)
-		self.primeList.Select( iOld, False )
-		while iOld != iNew:
-			iNext = iOld + (1 if iOld < iNew else -1)
-			race.primes[iOld], race.primes[iNext] = race.primes[iNext], race.primes[iOld]
-			iOld = iNext
-		
-		for i in xrange(iStart, min(iEnd+1, iMax)):
-			self.setRow( race.primes[i], i )
-			
-		self.primeList.Select( min(iMax-1,max(0,iNew)), True )
-		self.iDrag = -1
-		event.Skip()
+	def onCellChange( self, event ):
+		row, col = event.GetRow(), event.GetCol()
+		GetTranslation = _
+		if self.colNameFields[col][1] == 'effortCustom':
+			if self.grid.GetCellValue(row, col).strip():
+				self.grid.SetCellValue( row, col-1, GetTranslation('Custom') )
+		elif self.colNameFields[col][1] == 'effortType':
+			if self.grid.GetCellValue(row, col) != 'Custom':
+				self.grid.SetCellValue( row, col+1, u'' )
+		wx.CallAfter( self.grid.AutoSizeColumns, False )
 	
 	def getT( self ):
 		race = Model.race
@@ -212,7 +126,7 @@ class Primes( wx.Panel ):
 			except IndexError:
 				pass
 		return tMax
-	
+		
 	def onPhotos( self, event ):
 		mainWin = Utils.getMainWin()
 		if not mainWin:
@@ -230,24 +144,21 @@ class Primes( wx.Panel ):
 		mainWin.openMenuWindow( 'history' )
 	
 	def onNew( self, event ):
-		self.itemCommit()
 		race = Model.race
 		if not race:
 			Utils.MessageOK( self, _('You must have a Race to create a Prime.'), _('Missing Race') )
 			return
 		race.primes = getattr(race, 'primes', [])
+		rowNew = len( race.primes )
 		race.primes.append( {} )
-		rowNew = len(race.primes) - 1
-		self.updateList()
-		for i in xrange(len(race.primes)):
-			self.primeList.Select(i, False)
-		self.primeList.Select(rowNew, True)
-		wx.CallAfter( self.SetValues,  race.primes[rowNew] )
-		self.sponsor.SetFocus()
+		self.updateGrid()
+		self.grid.SelectRow( rowNew )
+		self.grid.SetGridCursor( rowNew, 0 )
+		self.grid.ShowCellEditControl()
 		
 	def onDelete( self, event ):
-		rowDelete = self.primeList.GetNextSelected(-1)
-		if rowDelete < 0:
+		rowDelete = self.grid.GetGridCursorRow()
+		if rowDelete is None or rowDelete < 0:
 			return
 		race = Model.race
 		if race and Utils.MessageOKCancel( self, u'{}: {} ?'.format(_('Delete Primes'), rowDelete+1), _('Confirm Delete Primes') ):
@@ -256,47 +167,9 @@ class Primes( wx.Panel ):
 				del race.primes[rowDelete]
 			except Exception as e:
 				return
+			self.updateGrid()
 			if race.primes:
-				rowDelete = min(rowDelete, len(race.primes)-1)
-				for i in xrange(len(race.primes)):
-					self.primeList.Select(i, False)
-				self.primeList.Select(rowDelete, True)
-				wx.CallAfter( self.SetValues, race.primes[rowDelete] )
-			self.updateList()
-		
-	def doEnter( self, event ):
-		wx.CallAfter( self.itemCommit )
-
-	def itemCommit( self, rowCommit=None ):
-		race = Model.race
-		if not race:
-			return
-		race.primes = getattr(race, 'primes', [])
-		if not race.primes:
-			return
-		if rowCommit is None:
-			rowCommit = self.primeList.GetNextSelected(-1)
-		if rowCommit < 0:
-			return
-		if rowCommit < len(race.primes):
-			race.primes[rowCommit] = self.GetValues()
-			self.setRow( race.primes[rowCommit], rowCommit )
-			self.updateColWidths()
-			self.updateComboBoxes()
-			wx.CallAfter( self.SetValues, race.primes[rowCommit] )
-	
-	def onItemDeselected( self, event ):
-		self.itemCommit( event.GetIndex() )
-		
-	def onItemSelected( self, event ):
-		race = Model.race
-		if race:
-			rowUpdate = event.GetIndex()
-			race.primes = getattr(race, 'primes', [])
-			if rowUpdate < len(race.primes):
-				wx.CallAfter( self.SetValues, race.primes[rowUpdate] )
-				wx.CallAfter( self.sponsor.SetFocus )
-
+				self.grid.SetGridCursor( rowDelete, 0 )
 		
 	def getSponsors( self ):
 		race = Model.race
@@ -314,20 +187,14 @@ class Primes( wx.Panel ):
 		merchandise = [m for m in merchandise if m]
 		return merchandise
 	
-	def onEffortChoice( self, event ):
-		self.itemCommit()
-		wx.CallAfter( self.updateEffort )
-	
-	def setRow( self, prime, row, updateList=True ):
+	def setRow( self, prime, row, updateGrid=True ):
 		GetTranslation = _
 		
 		data = []
-		for col, (name, attr) in enumerate(self.colNameFields):
-			if col == 0:
-				v = u'{}.'.format(row+1)
-			elif attr == 'effort':
+		for col, (name, attr, dataType) in enumerate(self.colNameFields):
+			if attr == 'effortType':
 				effortType = prime.get('effortType', 'Pack')
-				v = prime.get('effortCustom', u'') if effortType == 'Custom' else GetTranslation(effortType)
+				v = GetTranslation(effortType)
 			elif attr == 'winner':
 				winnerBib = prime.get('winnerBib', None)
 				v = u'' if not winnerBib else unicode(winnerBib)
@@ -338,92 +205,57 @@ class Primes( wx.Panel ):
 				v = u'{:.2f}'.format( prime.get('cash', 0.0) ) if cash else u''
 			else:
 				v = unicode(prime.get(attr, u''))
-			if updateList:
-				if row == self.primeList.GetItemCount():
-					self.primeList.InsertStringItem( row, v )
-				else:
-					self.primeList.SetStringItem( row, col, v )
+			if updateGrid:
+				self.grid.SetCellValue( row, col, v )
 			data.append( v )
 		
 		return data
 	
-	def updateComboBoxes( self ):
-		self.sponsor.SetItems( self.getSponsors() )
-		self.merchandise.SetItems( self.getMerchandise() )		
+	def getRow( self, row ):
+		values = {}
+		for col, (name, attr, dataType) in enumerate(self.colNameFields):
+			v = self.grid.GetCellValue( row, col ).strip()
+			if dataType == 'i':
+				v = int(''.join( c for c in v is c.isdigit() ))
+			elif dataType == 'f':
+				try:
+					v = float(''.join( c for c in v is c.isdigit() or c == '.'))
+				except:
+					v = 0
+			values[attr] = v
+		
+		GetTranslation = _
+		for code, name in EffortChoices:
+			if values['effort'] == GetTranslation(name):
+				values['effortType'] = name
+				break
+		
+		if values['effortCustom']:
+			values['effortType'] = 'Custom'
+		return values
 	
-	def updateColWidths( self ):
+	def updateGrid( self ):
 		race = Model.race
-		if not race or not hasattr(race, 'primes'):
+		if not race or not getattr(race, 'primes', None):
+			self.grid.ClearGrid()
 			return
-		rows = [self.setRow( prime, row ) for row, prime in enumerate(race.primes)]
-		dc = wx.WindowDC( self.primeList )
-		dc.SetFont( self.primeList.GetFont() )
-		for col, (name, attr) in enumerate(self.colNameFields):
-			self.primeList.SetColumnWidth( col, (max(dc.GetTextExtent(r[col])[0] for r in rows)+16) if rows and attr != 'lapsToGo' else 72 )
-	
-	def updateList( self ):
-		race = Model.race
-		if not race or not hasattr(race, 'primes'):
-			self.primeList.DeleteAllItems()
-			return
-			
-		while self.primeList.GetItemCount() > len(race.primes):
-			self.primeList.DeleteItem( self.primeList.GetItemCount()-1 )
+		
+		Utils.AdjustGridSize( self.grid, len(race.primes) )
 		for row, prime in enumerate(race.primes):
 			self.setRow( prime, row )
-			
-		self.updateColWidths()
 		
-		if self.primeList.GetNextSelected(-1) < 0 and race.primes:
-			self.primeList.Select(0, True)
-			wx.CallAfter( self.SetValues, race.primes[0] )
-			
-		self.updateComboBoxes()
-			
-	def updateEffort( self ):
-		self.effortCustom.Enable( bool(len(self.effort.GetItems())-1 == self.effort.GetSelection()) )
-		
-	def updateWinnerInfo( self, event=None ):
-		self.winnerInfo.SetLabel( getWinnerInfo(self.winner.GetValue()) )
-		if event:
-			event.Skip()
+		self.grid.AutoSizeColumns( False )								# Resize to fit the column name.
+		self.grid.AutoSizeRows( False )
 	
-	def GetValues( self ):
-		iEffort = self.effort.GetSelection()
-		EffortCodeFromIndex = { k:i for k, (i, v) in enumerate(EffortChoices) }
-		effortCode = EffortCodeFromIndex.get( iEffort, 0)
-		return {
-			'sponsor':		self.sponsor.GetValue().strip(),
-			'effortType':	EffortChoices[iEffort][1],	# Untranslated effort name
-			'effortCustom':	self.effortCustom.GetValue().strip() if effortCode < 0 else u'',
-			'cash':			self.cash.GetValue(),
-			'merchandise':	self.merchandise.GetValue().strip(),
-			'winnerBib':	self.winner.GetValue(),
-			'lapsToGo':		self.lapsToGo.GetValue(),
-		}
-		
-	def SetValues( self, values={} ):
-		for attr, widget, defaultVal in (
-				('sponsor',			self.sponsor, u''),
-				('cash',			self.cash, 0),
-				('merchandise',		self.merchandise, u''),
-				('winnerBib',		self.winner, 0),
-				('lapsToGo',		self.lapsToGo, 0),
-			):
-			widget.SetValue( values.get(attr, defaultVal) )
-		self.updateWinnerInfo()
-			
-		effortType = values.get('effortType', EffortChoices[0][1])
-		IndexFromEffortType = { v:k for k, (i, v) in enumerate(EffortChoices) }
-		self.effort.SetSelection( IndexFromEffortType.get(effortType, 0) )
-		self.effortCustom.SetValue( values.get('effortCustom', u'') if effortType != 'Custom' else u'' )
-		self.updateEffort()
-		
 	def refresh( self ):
-		self.updateList()
+		self.updateGrid()
 		
 	def commit( self ):
-		self.itemCommit()
+		self.grid.DisableCellEditControl()	# Make sure the current edit is committed.
+		race = Model.race
+		if not race:
+			return
+		race.primes = [getRow(row) for row in xrange(self.grid.GetNumberRows())]
 
 def GetGrid():
 	race = Model.race
@@ -506,7 +338,8 @@ def GetGrid():
 if __name__ == '__main__':
 	app = wx.App(False)
 	app.SetAppName("CrossMgr")
-
+	
+	Utils.disable_stdout_buffering()
 	
 	race = Model.newRace()
 	race._populate()
@@ -520,11 +353,11 @@ if __name__ == '__main__':
 	race.excelLink.setFieldCol( {'Bib#':0, 'LastName':1, 'FirstName':2, 'Team':3} )
 	
 	race.primes = [
-		{'sponsor': u'McLovinMcLovinMcLovinMcLovinMcLovinMcLovin', 'cash': 100, 'merchandise': u'', 'winnerBib': 101, 'lapsToGo': 7 },
-		{'sponsor': u'McDuck', 'cash': 200, 'merchandise': u'', 'winnerBib': 110, 'lapsToGo': 6 },
-		{'sponsor': u'McCloud', 'cash': 0, 'merchandise': u'Water bottle', 'winnerBib': 115, 'lapsToGo': 5 },
-		{'sponsor': u'McMack', 'cash': 300, 'merchandise': u'', 'winnerBib': 199, 'lapsToGo': 4 },
-		{'sponsor': u'McDonalds', 'cash': 0.51, 'merchandise': u'New bike', 'winnerBib': 101, 'lapsToGo': 3 },
+		{'sponsor': u'11111111111111', 'cash': 100, 'merchandise': u'', 'winnerBib': 101, 'lapsToGo': 7 },
+		{'sponsor': u'22222222222222', 'cash': 200, 'merchandise': u'', 'winnerBib': 110, 'lapsToGo': 6 },
+		{'sponsor': u'33333333333333', 'cash': 0, 'merchandise': u'Water bottle', 'winnerBib': 115, 'lapsToGo': 5 },
+		{'sponsor': u'44444444444444', 'cash': 300, 'merchandise': u'', 'winnerBib': 199, 'lapsToGo': 4 },
+		{'sponsor': u'55555555555555', 'cash': 0.51, 'merchandise': u'New bike', 'winnerBib': 101, 'lapsToGo': 3 },
 	]
 	
 	mainWin = wx.Frame(None, title="Primes", size=(800,700) )
