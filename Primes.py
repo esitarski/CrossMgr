@@ -54,14 +54,14 @@ class Primes( wx.Panel ):
 		fgs.AddGrowableCol( 1, 1 )
 		
 		self.sponsorLabel = wx.StaticText( self, label=u'{}:'.format(_('Sponsor')) )
-		self.sponsor = wx.ComboBox( self, choices=self.getSponsors(), style=wx.TE_PROCESS_ENTER )
+		self.sponsor = wx.ComboBox( self, choices=self.getSponsors() )
 		
 		self.cashLabel = wx.StaticText( self, label=u'{}:'.format(_('Cash')) )
 		self.cash = NumCtrl( self, fractionWidth=2, size=(40, 0), allowNone=True, style=wx.TE_RIGHT|wx.TE_PROCESS_ENTER )
 		self.cash.SetMinSize( (100, -1) )
 		
 		self.merchandiseLabel = wx.StaticText( self, label=u'{}:'.format(_('Merchandise')) )
-		self.merchandise = wx.ComboBox( self, choices=self.getMerchandise(), style=wx.TE_PROCESS_ENTER )
+		self.merchandise = wx.ComboBox( self, choices=self.getMerchandise(), )
 		
 		self.lapsToGoLabel = wx.StaticText( self,label=u'{}:'.format(_('Laps to Go')) )
 		self.lapsToGo = wx.SpinCtrl( self, min=0, max=9999, size=(64,-1), style=wx.TE_RIGHT )
@@ -80,7 +80,7 @@ class Primes( wx.Panel ):
 		self.winnerInfo = wx.StaticText( self )
 
 		self.Bind( wx.EVT_TEXT_ENTER, self.doEnter )
-		#self.Bind( wx.EVT_TEXT, self.doEnter )
+		
 		#---------------------------------------------------------------
 		
 		labelFlag = wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL
@@ -98,7 +98,7 @@ class Primes( wx.Panel ):
 		fgs.Add( self.lapsToGoLabel, flag=labelFlag )
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.lapsToGo )
-		hs.Add( self.effortLabel, flag=labelFlag|wx.LEFT, border=12 )		
+		hs.Add( self.effortLabel, flag=labelFlag|wx.LEFT, border=12 )
 		hs.Add( self.effort, flag=wx.LEFT, border=2 )
 		hs.Add( self.effortCustom, 1, flag=wx.EXPAND|wx.LEFT, border=4 )
 		fgs.Add( hs, flag=wx.EXPAND )
@@ -132,6 +132,7 @@ class Primes( wx.Panel ):
 		
 		self.primeList.Bind( wx.EVT_LIST_ITEM_DESELECTED, self.onItemDeselected )
 		self.primeList.Bind( wx.EVT_LIST_ITEM_SELECTED, self.onItemSelected )
+		self.primeList.Bind( wx.EVT_KEY_DOWN, self.onItemKeyDown )
 		self.primeList.Bind( ULC.EVT_LIST_BEGIN_DRAG, self.onBeginDrag )
 		self.primeList.Bind( ULC.EVT_LIST_END_DRAG, self.onEndDrag )
 		self.iDrag = -1	# Current item being dragged.
@@ -163,6 +164,13 @@ class Primes( wx.Panel ):
 		vsOverall.Add( hsButtons, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=4 )
 		self.SetSizer( vsOverall )
 		self.updateEffort()
+	
+	def onItemKeyDown( self, event ):
+		print event.GetKeyCode()
+		keyCode = event.GetKeyCode()
+		if keyCode not in (314, 315, 316, 317):
+			pass
+		event.Skip()
 	
 	def onBeginDrag( self, event ):
 		self.iDrag = event.GetIndex()
@@ -287,6 +295,8 @@ class Primes( wx.Panel ):
 			race.primes = getattr(race, 'primes', [])
 			if rowUpdate < len(race.primes):
 				wx.CallAfter( self.SetValues, race.primes[rowUpdate] )
+				wx.CallAfter( self.sponsor.SetFocus )
+
 		
 	def getSponsors( self ):
 		race = Model.race
