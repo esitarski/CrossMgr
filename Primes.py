@@ -47,10 +47,10 @@ class Primes( wx.Panel ):
 			(_('Sponsor'),				'sponsor', 		's'),
 			(_('Cash'),					'cash', 		'f'),
 			(_('Merchandise'),			'merchandise', 	's'),
-			(_('For'),					'effortType',	's'),
-			(_('Custom'),				'effortCustom',	's'),
+			(_('Prime For'),			'effortType',	's'),
+			(_('or Custom'),			'effortCustom',	's'),
 			(_('LapsToGo'),				'lapsToGo',		'i'),
-			(_('Bib'),					'winner',		'i'),
+			(_('Bib'),					'winnerBib',	'i'),
 			(_('Info'),					'winnerInfo',	's'),
 		)
 		self.colnames = [colName for colName, fieldName, dataType in self.colNameFields]
@@ -62,6 +62,7 @@ class Primes( wx.Panel ):
 			attr = wx.grid.GridCellAttr()
 			if fieldName == 'effortType':
 				attr.SetEditor( wx.grid.GridCellChoiceEditor(choices=[name for code, name in EffortChoices]) )
+				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_TOP )
 			elif fieldName == 'winnerInfo':
 				attr.SetReadOnly( True )
 			elif dataType == 'i':
@@ -72,6 +73,8 @@ class Primes( wx.Panel ):
 				attr.SetRenderer( wx.grid.GridCellFloatRenderer(precision=2) )
 				attr.SetAlignment( wx.ALIGN_RIGHT, wx.ALIGN_TOP )
 			self.grid.SetColAttr( col, attr )
+			if fieldName == 'lapsToGo':
+				self.lapsToGoCol = col
 		
 		self.grid.Bind( wx.grid.EVT_GRID_CELL_CHANGE, self.onCellChange )
 		self.grid.AutoSizeColumns( False )
@@ -105,20 +108,28 @@ class Primes( wx.Panel ):
 	
 	def onCellChange( self, event ):
 		row, col = event.GetRow(), event.GetCol()
+		colName = self.colNameFields[col][1]
 		GetTranslation = _
-		if self.colNameFields[col][1] == 'effortCustom':
+		if colName == 'effortCustom':
 			if self.grid.GetCellValue(row, col).strip():
 				self.grid.SetCellValue( row, col-1, GetTranslation('Custom') )
-		elif self.colNameFields[col][1] == 'effortType':
+		elif colName == 'effortType':
 			if self.grid.GetCellValue(row, col) != 'Custom':
 				self.grid.SetCellValue( row, col+1, u'' )
+		elif colName == 'winnerBib':
+			bib = int( u''.join( c for c in self.grid.GetCellValue(row, col) if c.isdigit() ) )
+			self.grid.SetCellValue( row, col+1, getWinnerInfo(bib) )
+		
 		wx.CallAfter( self.grid.AutoSizeColumns, False )
 	
 	def getT( self ):
 		race = Model.race
 		if not race:
 			return 0
-		lapsToGo = self.lapsToGo.GetValue()
+		row = self.grid.GetGridCursorRow()
+		if row is None or row < 0:
+			return
+		lapsToGo = int( u''.join(c for c in self.grid.GetCellValue(row, self.lapsToGoCol) if c.isdigit()) )
 		tMax = 0.0
 		for rr in GetResults(None):
 			try:
@@ -195,7 +206,7 @@ class Primes( wx.Panel ):
 			if attr == 'effortType':
 				effortType = prime.get('effortType', 'Pack')
 				v = GetTranslation(effortType)
-			elif attr == 'winner':
+			elif attr == 'winnerBib':
 				winnerBib = prime.get('winnerBib', None)
 				v = u'' if not winnerBib else unicode(winnerBib)
 			elif attr == 'winnerInfo':
@@ -216,17 +227,16 @@ class Primes( wx.Panel ):
 		for col, (name, attr, dataType) in enumerate(self.colNameFields):
 			v = self.grid.GetCellValue( row, col ).strip()
 			if dataType == 'i':
-				v = int(''.join( c for c in v is c.isdigit() ))
+				v = u''.join( c for c in v if c.isdigit() )
+				v = int( v or 0 )
 			elif dataType == 'f':
-				try:
-					v = float(''.join( c for c in v is c.isdigit() or c == '.'))
-				except:
-					v = 0
+				v = u''.join( c for c in v if c.isdigit() or c == '.')
+				v = float( v or 0.0 )
 			values[attr] = v
 		
 		GetTranslation = _
 		for code, name in EffortChoices:
-			if values['effort'] == GetTranslation(name):
+			if values['effortType'] == GetTranslation(name):
 				values['effortType'] = name
 				break
 		
@@ -255,7 +265,7 @@ class Primes( wx.Panel ):
 		race = Model.race
 		if not race:
 			return
-		race.primes = [getRow(row) for row in xrange(self.grid.GetNumberRows())]
+		race.primes = [self.getRow(row) for row in xrange(self.grid.GetNumberRows())]
 
 def GetGrid():
 	race = Model.race
