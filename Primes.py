@@ -161,6 +161,7 @@ class Primes( wx.Panel ):
 		if not race:
 			Utils.MessageOK( self, _('You must have a Race to create a Prime.'), _('Missing Race') )
 			return
+		self.commit()
 		race.primes = getattr(race, 'primes', [])
 		rowNew = len( race.primes )
 		race.primes.append( {} )
@@ -173,8 +174,9 @@ class Primes( wx.Panel ):
 		rowDelete = self.grid.GetGridCursorRow()
 		if rowDelete is None or rowDelete < 0:
 			return
+		self.commit()
 		race = Model.race
-		if race and Utils.MessageOKCancel( self, u'{}: {} ?'.format(_('Delete Primes'), rowDelete+1), _('Confirm Delete Primes') ):
+		if race and Utils.MessageOKCancel( self, u'{}: {} ?'.format(_('Delete Prime'), rowDelete+1), _('Confirm Delete Primes') ):
 			race.primes = getattr(race, 'primes', [])
 			try:
 				del race.primes[rowDelete]
@@ -263,7 +265,8 @@ class Primes( wx.Panel ):
 		self.updateGrid()
 		
 	def commit( self ):
-		self.grid.DisableCellEditControl()	# Make sure the current edit is committed.
+		self.grid.SaveEditControlValue()	# Make sure the current edit is committed.
+		self.grid.DisableCellEditControl()
 		race = Model.race
 		if not race:
 			return

@@ -590,6 +590,7 @@ and remove them from other categories.''').format(category.name),
 			self.grid.DeleteRows( r, 1, True )
 		
 	def onUpCategory( self, event ):
+		self.grid.SaveEditControlValue()
 		self.grid.DisableCellEditControl()
 		r = self.grid.GetGridCursorRow()
 		Utils.SwapGridRows( self.grid, r, r-1 )
@@ -599,6 +600,7 @@ and remove them from other categories.''').format(category.name),
 		self.grid.SelectRow( max(r-1, 0), True )
 		
 	def onDownCategory( self, event ):
+		self.grid.SaveEditControlValue()
 		self.grid.DisableCellEditControl()
 		r = self.grid.GetGridCursorRow()
 		Utils.SwapGridRows( self.grid, r, r+1 )
@@ -658,6 +660,7 @@ and remove them from other categories.''').format(category.name),
 	def commit( self ):
 		undo.pushState()
 		with Model.LockRace() as race:
+			self.grid.SaveEditControlValue()
 			self.grid.DisableCellEditControl()	# Make sure the current edit is committed.
 			if race is None:
 				return
