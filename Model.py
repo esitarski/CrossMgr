@@ -156,7 +156,7 @@ class Category(object):
 	def _setStr( self, s ):
 		s = self.badRangeCharsRE.sub( u'', u'{}'.format(s) )
 		if not s:
-			s = u'99999-99999'
+			s = u'{}-{}'.format(self.MaxBib, self.MaxBib)
 		self.intervals = []
 		self.exclude = set()
 		for f in s.split(','):
