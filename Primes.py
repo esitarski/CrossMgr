@@ -44,14 +44,14 @@ class Primes( wx.Panel ):
 		
 		#---------------------------------------------------------------
 		self.colNameFields = (
+			(_('Prime For'),			'effortType',	's'),
+			(_('or Custom'),			'effortCustom',	's'),
+			(_('Laps\nTo Go'),			'lapsToGo',		'i'),
 			(_('Sponsor'),				'sponsor', 		's'),
 			(_('Cash'),					'cash', 		'f'),
 			(_('Merchandise'),			'merchandise', 	's'),
-			(_('Prime For'),			'effortType',	's'),
-			(_('or Custom'),			'effortCustom',	's'),
-			(_('LapsToGo'),				'lapsToGo',		'i'),
-			(_('Bib'),					'winnerBib',	'i'),
-			(_('Info'),					'winnerInfo',	's'),
+			(_('Winner\nBib'),			'winnerBib',	'i'),
+			(_(''),			'winnerInfo',	's'),
 		)
 		self.colnames = [colName for colName, fieldName, dataType in self.colNameFields]
 		self.iCol = dict( (fieldName, i) for i, (colName, fieldName, dataType) in enumerate(self.colNameFields) if fieldName )
@@ -67,6 +67,8 @@ class Primes( wx.Panel ):
 				attr.SetReadOnly( True )
 			elif dataType == 'i':
 				attr.SetAlignment( wx.ALIGN_RIGHT, wx.ALIGN_TOP )
+				attr.SetEditor( wx.grid.GridCellFloatEditor(precision=0) )
+				attr.SetRenderer( wx.grid.GridCellFloatRenderer(precision=0) )
 			elif dataType == 'f':
 				attr.SetAlignment( wx.ALIGN_RIGHT, wx.ALIGN_TOP )
 				attr.SetEditor( wx.grid.GridCellFloatEditor(precision=2) )
