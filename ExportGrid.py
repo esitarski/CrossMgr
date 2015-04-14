@@ -271,9 +271,9 @@ class ExportGrid( object ):
 		# Put the page number info at the bottom of the page.
 		if pageNumber is not None:
 			if pageNumberTotal is not None:
-				s = _('Page {} of {}').format(pageNumber, pageNumberTotal)
+				s = u'{} {} / {}'.format(_('Page'), pageNumber, pageNumberTotal)
 			else:
-				s = _('Page {}').format(pageNumber)
+				s = u'{} {}'.format(_('Page'), pageNumber)
 			w, h, lh = dc.GetMultiLineTextExtent( s, font )
 			self._drawMultiLineText( dc, s, widthPix - w - borderPix, yFooter )
 	

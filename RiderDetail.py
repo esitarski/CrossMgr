@@ -467,7 +467,7 @@ class RiderDetail( wx.Panel ):
 					',  '.join( _('{} {}: {}').format(_('Lap'), rows[j]+1, Utils.formatTime(times[i]))
 							for j in xrange(i, min(len(times), i+timesPerRow) ) ) )
 			timeStr = u',\n'.join( timeStr )
-			message = _('Delete entries of Rider {}:\n\n{}\n\nConfirm Delete?').format(num, timeStr)
+			message = u'{} {}:\n\n{}\n\n{}?'.format(_('Delete entries of Rider'), num, timeStr, _('Confirm Delete'))
 			if Utils.MessageOKCancel( self, message, _('Delete Times'), wx.ICON_WARNING ):
 				undo.pushState()
 				with Model.LockRace() as race:
@@ -606,11 +606,11 @@ class RiderDetail( wx.Panel ):
 		with Model.LockRace() as race:
 			inRace = (newNum in race)
 		if inRace:
-			Utils.MessageOK( self, _("Cannot Change rider to {}.\nThere is a rider with this number already.").format(newNum),
+			Utils.MessageOK( self, _("Cannot Change rider bib.\nThere is a rider with this number already."),
 									_('Cannot Change Rider Number'), iconMask = wx.ICON_ERROR )
 			return
 			
-		if Utils.MessageOKCancel( self, _("Confirm Change rider's number to {}.").format(newNum), _("Change Rider Number") ):
+		if Utils.MessageOKCancel( self, u"{}: {}.".format(_("Confirm Change rider's number"), newNum), _("Change Rider Number") ):
 			undo.pushState()
 			with Model.LockRace() as race:
 				race.renumberRider( num, newNum )
@@ -648,11 +648,11 @@ class RiderDetail( wx.Panel ):
 		with Model.LockRace() as race:
 			inRace = (newNum in race)
 		if not inRace:
-			Utils.MessageOK( self, _("Cannot swap with rider {}.\nThis rider is not in race.").format(newNum),
+			Utils.MessageOK( self, _("Cannot swap with specified rider.\nThis rider is not in race."),
 									_('Cannot Swap Rider Numbers'), iconMask = wx.ICON_ERROR )
 			return
 			
-		if Utils.MessageOKCancel( self, _("Confirm Swap numbers {} and {}.").format(num, newNum), _("Swap Rider Number") ):
+		if Utils.MessageOKCancel( self, u"{}\n\n   {} <==> {}.".format(_('Confirm Swap numbers'), num, newNum), _("Swap Rider Number") ):
 			undo.pushState()
 			with Model.LockRace() as race:
 				race.swapRiders( num, newNum )
@@ -693,7 +693,10 @@ class RiderDetail( wx.Panel ):
 			inRace = (newNum in race)
 		if inRace:
 			if num != newNum:
-				Utils.MessageOK( self, _("New Bib {} already exists.\nIf you really want to copy times to this number, delete it first.").format(newNum),
+				Utils.MessageOK( self, u'{}.\n{}'.format(
+									_("New Bib Number Already Exists"),
+									_("If you really want to copy times to this number, delete it first.")
+								),
 								_('New Bib Number Already Exists'), iconMask = wx.ICON_ERROR )
 			else:
 				Utils.MessageOK( self, _("Cannot copy to the same number ({}).").format(newNum),

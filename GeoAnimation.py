@@ -814,7 +814,7 @@ class GeoAnimation(wx.PyControl):
 				if x >= width:
 					break
 					
-				position, num, name = '{}'.format(bi[1]), '{}'.format(bi[0]), self.getShortName(bi[0])
+				position, num, name = u'{}'.format(bi[1]), u'{}'.format(bi[0]), self.getShortName(bi[0])
 				
 				if position == '1':
 					x += tHeight / 2
@@ -1034,8 +1034,8 @@ class GeoAnimation(wx.PyControl):
 				maxLaps = len(leaderRaceTimes) - 1
 				self.iLapDistance, lapRatio = GetLapRatio( leaderRaceTimes, self.t, self.iLapDistance )
 				lapRatio = int(lapRatio * 10.0) / 10.0		# Always round down, not to nearest decimal.
-				text = ['{:06.1f} Laps of {} '.format(self.iLapDistance + lapRatio, maxLaps),
-						'{:06.1f} Laps to go '.format(maxLaps - self.iLapDistance - lapRatio)]
+				text = [u'{:06.1f} {} {} '.format(self.iLapDistance + lapRatio, _('Laps of'), maxLaps),
+						u'{:06.1f}  {}'.format(maxLaps - self.iLapDistance - lapRatio, _('Laps to go'))]
 						
 				cat = self.categoryDetails.get( self.data[leaders[0]].get('raceCat', None) )
 				if cat:
@@ -1058,8 +1058,8 @@ class GeoAnimation(wx.PyControl):
 					if distanceCur is not None:
 						if distanceCur != distanceRace:
 							distanceCur = int( distanceCur * 10.0 ) / 10.0
-						text.extend( [	'{:05.1f} {} of {:.1f}'.format(distanceCur, self.units, distanceRace),
-										'{:05.1f} {} to go'.format(distanceRace - distanceCur, self.units)] )
+						text.extend( [	u'{:05.1f} {} {} {:.1f}'.format(distanceCur, self.units, _('of'), distanceRace),
+										u'{:05.1f} {} {}'.format(distanceRace - distanceCur, self.units, _('to go'))] )
 								
 				widthMax = max( dc.GetTextExtent(t)[0] for t in text )
 				if 'N' in self.compassLocation:

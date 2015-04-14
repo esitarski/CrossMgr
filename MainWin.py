@@ -1784,7 +1784,7 @@ class MainWin( wx.Frame ):
 			
 			# Get the folder to write the html file.
 			fname = self.fileName[:-4] + 'CoursePreview.html'
-			dlg = wx.DirDialog( self, _('Folder to write "{}"').format(os.path.basename(fname)),
+			dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(fname)),
 								style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
 			ret = dlg.ShowModal()
 			dName = dlg.GetPath()
@@ -1812,9 +1812,9 @@ class MainWin( wx.Frame ):
 			with io.open(fname, 'w', encoding='utf-8') as fp:
 				fp.write( html )
 			webbrowser.open( fname, new = 0, autoraise = True )
-			Utils.MessageOK(self, _('Course Preview written to:\n\n   {}').format(fname), _('Html Write'))
+			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Course Preview written to'), fname), _('Html Write'))
 		except:
-			Utils.MessageOK(self, _('Cannot write HTML file ({}).').format(fname),
+			Utils.MessageOK(self, u'{} ({}).'.format(_('Cannot write HTML file'), fname),
 							_('Html Write Error'), iconMask=wx.ICON_ERROR )
 	
 	@logCall
@@ -1827,13 +1827,13 @@ class MainWin( wx.Frame ):
 			startTime, endTime, rawData = race.getRawData()
 		
 		if not rawData:
-			Utils.MessageOK( self, _('Raw race data file:\n\n    "{}"\n\nis empty/missing.').format(OutputStreamer.getFileName()),
+			Utils.MessageOK( self, u'{}\n\n    "{}".'.format(_('Raw race data file is empty/missing.'), OutputStreamer.getFileName()),
 					_('Missing Raw Race Data'), wx.ICON_ERROR )
 			return
 		
 		# Get the folder to write the html file.
 		fname = self.fileName[:-4] + 'RawData.html'
-		dlg = wx.DirDialog( self, _('Folder to write "{}"').format(os.path.basename(fname)),
+		dlg = wx.DirDialog( self, u'"{}"'.format(_('Folder to write'), os.path.basename(fname)),
 							style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
 		ret = dlg.ShowModal()
 		dName = dlg.GetPath()
@@ -1915,7 +1915,7 @@ class MainWin( wx.Frame ):
 				timeComponents.append( 0 )
 			hour, minute, second = timeComponents
 			raceTime = datetime.datetime( year, month, day, hour, minute, second )
-			title = _('{} Raw Data for {} Start on {}').format( race.name, raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
+			title = u'{} Raw Data for {} Start on {}'.format( race.name, raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
 			html = html.replace( 'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
 			html = replaceJsonVar( html, 'organizer', getattr(race, 'organizer', '') )
 			
@@ -1936,10 +1936,10 @@ class MainWin( wx.Frame ):
 			with io.open(fname, 'w', encoding='utf-8') as fp:
 				fp.write( html )
 			webbrowser.open( fname, new = 0, autoraise = True )
-			Utils.MessageOK(self, _('Html Raw Data written to:\n\n   {}').format(fname), _('Html Write'))
+			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Html Raw Data written to'), fname), _('Html Write'))
 		except:
 			Utils.MessageOK(self,
-							_('Cannot write HTML file ({}).').format(fname),
+							u'{} ({}).'.format(_('Cannot write HTML file'), fname),
 							_('Html Write Error'), iconMask=wx.ICON_ERROR )
 	
 	#--------------------------------------------------------------------------------------------
@@ -2044,15 +2044,15 @@ class MainWin( wx.Frame ):
 					race.importCategories( fp )
 				importedCategories = True
 			except IOError:
-				Utils.MessageOK( self, _("Cannot open file:\n{}").format(categoriesFile), _("File Open Error"), iconMask=wx.ICON_ERROR)
+				Utils.MessageOK( self, u"{}:\n{}".format(_('Cannot open file'), categoriesFile), _("File Open Error"), iconMask=wx.ICON_ERROR)
 			except (ValueError, IndexError):
-				Utils.MessageOK( self, _("Bad file format:\n{}").format(categoriesFile), _("File Read Error"), iconMask=wx.ICON_ERROR)
+				Utils.MessageOK( self, u"{}:\n{}".format(_('Bad file format'), categoriesFile), _("File Read Error"), iconMask=wx.ICON_ERROR)
 
 		# Create some defaults so the page is not blank.
 		if not importedCategories:
 			race.categoriesImportFile = ''
-			race.setCategories( [{'name':'Category {}-{}'.format(max(1, i*100), (i+1)*100-1),
-								  'catStr':'{}-{}'.format(max(1, i*100), (i+1)*100-1)} for i in xrange(8)] )
+			race.setCategories( [{'name':u'{} {}-{}'.format(_('Category'), max(1, i*100), (i+1)*100-1),
+								  'catStr':u'{}-{}'.format(max(1, i*100), (i+1)*100-1)} for i in xrange(8)] )
 		else:
 			race.categoriesImportFile = categoriesFile
 			
@@ -2108,7 +2108,7 @@ class MainWin( wx.Frame ):
 
 		# Check for existing file.
 		if os.path.exists(fileName) and \
-		   not Utils.MessageOKCancel(self, _('File "{}" already exists.  Overwrite?').format(fileName), _('File Exists')):
+		   not Utils.MessageOKCancel(self, u'{}\n\n    {}'.format(_('File already exists.  Overwrite?'), fileName), _('File Exists')):
 			return
 
 		# Try to open the file.
@@ -2116,10 +2116,10 @@ class MainWin( wx.Frame ):
 			with open(fileName, 'wb') as fp:
 				pass
 		except IOError:
-			Utils.MessageOK(self, _('Cannot open "{}".').format(fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, _('{}\n\n    "{}".').format(_('Cannot open file.'), fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
 			return
 		except Exception as e:
-			Utils.MessageOK(self, _('Cannot open "{}".\n\nError: {}').format(fileName, e), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, _('{}\n\n    "{}".\n\n{}: {}').format(_('Cannot open file.'), fileName, _('Error'), e), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
 			return
 
 		# Create a new race and initialize it with the properties.
@@ -2146,9 +2146,9 @@ class MainWin( wx.Frame ):
 					race.importCategories( fp )
 				importedCategories = True
 			except IOError:
-				Utils.MessageOK( self, _("Cannot open file:\n{}").format(categoriesFile), _("File Open Error"), iconMask=wx.ICON_ERROR)
+				Utils.MessageOK( self, u"{}:\n\n    {}".format(_('Cannot open file'), categoriesFile), _("File Open Error"), iconMask=wx.ICON_ERROR)
 			except (ValueError, IndexError) as e:
-				Utils.MessageOK( self, _("Bad file format:\n{}\n\n{}").format(categoriesFile, e), _("File Read Error"), iconMask=wx.ICON_ERROR)
+				Utils.MessageOK( self, u"{}:\n\n    {}\n\n{}".format(_('Bad file format'), categoriesFile, e), _("File Read Error"), iconMask=wx.ICON_ERROR)
 
 		if not importedCategories:
 			race.categories = categoriesSave
@@ -2197,7 +2197,7 @@ class MainWin( wx.Frame ):
 			excelLink.bindDefaultFieldCols()
 		except Exception as e:
 			logException( e, sys.exc_info() )
-			Utils.MessageOK( self, _("Excel Read Failure: {}").format(e), _("Excel Read Failure"), iconMask=wx.ICON_ERROR )
+			Utils.MessageOK( self, u"{}:\n\n   {}".format(_('Excel Read Failure'), e), _("Excel Read Failure"), iconMask=wx.ICON_ERROR )
 			Model.race = raceSave
 			return
 		
@@ -2227,7 +2227,7 @@ class MainWin( wx.Frame ):
 
 		# Check for existing file.
 		if os.path.exists(fileName) and \
-		   not Utils.MessageOKCancel(self, _('File "{}" already exists.  Overwrite?').format(fileName), _('File Exists')):
+		   not Utils.MessageOKCancel(self, _('File already exists.  Overwrite?\n\n  "{}"').format(_('File already exists.  Overwrite?'), fileName), _('File Exists')):
 			Model.race = raceSave
 			return
 
@@ -2236,7 +2236,7 @@ class MainWin( wx.Frame ):
 			with open(fileName, 'wb') as fp:
 				pass
 		except IOError:
-			Utils.MessageOK(self, _('Cannot open "{}".').format(fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, u'{}\n\n    "{}".'.format(_('Cannot Open File'), fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
 			Model.race = raceSave
 			return
 

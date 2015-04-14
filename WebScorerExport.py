@@ -53,7 +53,7 @@ def WebScorerExport( fname ):
 					hasField[i] = True
 	
 	if not hasField[2]:
-		return False, _('"LastName" must be linked to a column in the Excel sheet.')
+		return False, _('LastName must be linked to a column in the Excel sheet.')
 	
 	catDetails = dict( (cd['name'], cd) for cd in GetCategoryDetails() )
 	

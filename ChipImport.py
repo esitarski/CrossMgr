@@ -56,7 +56,7 @@ def DoChipImport(	fname, parseTagTime, startTime = None,
 			if tag is None:
 				continue
 			if raceStart and t < raceStart:
-				errors.append( _('line {}: time before race start ({})').format(lineNo, t.strftime('%H:%M:%S.%f')) )
+				errors.append( u'{} {}: {} ({})'.format(_('line'), lineNo, _('time is before race start'), t.strftime('%H:%M:%S.%f')) )
 				continue
 			
 			tag = tag.lstrip('0').upper()
@@ -70,7 +70,7 @@ def DoChipImport(	fname, parseTagTime, startTime = None,
 				riderRaceTimes.setdefault( num, [] ).append( t )
 			except KeyError:
 				if tag not in race.missingTags:
-					errors.append( _('line {}: tag {} missing from Excel sheet').format(lineNo, tag) )
+					errors.append( u'{} {}: {}: {}'.format(_('line'), lineNo, _('tag missing from Excel sheet'), tag) )
 					race.missingTags.add( tag )
 				continue
 
@@ -117,8 +117,8 @@ class ChipImportDialog( wx.Dialog ):
 		self.chipName = chipName
 		self.parseTagTime = parseTagTime
 		todoList = [
-			_('{} Import Data File').format( chipName ),
-			'',
+			u'{} {}'.format(chipName, _('Import Data File')),
+			u'',
 			_('You must first "New" a race and fill in the details.'),
 			_('You must also configure a "Tag" field in your Sign-On Excel Sheet and link it to the race.'),
 			_('This is required so CrossMgr can link the tags in the {chipName} file back to rider numbers and info.'),

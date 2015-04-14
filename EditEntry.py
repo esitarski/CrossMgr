@@ -33,7 +33,7 @@ class CorrectNumberDialog( wx.Dialog ):
 				_('Race Time'), Utils.formatTime(self.entry.t, True)
 			)),
 			pos=(0,0), span=(1,2), border = border, flag=wx.GROW|wx.ALL )
-		bs.Add( wx.StaticText( self, label = u'{}:'.format(_("Rider:"))),  pos=(1,0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		bs.Add( wx.StaticText( self, label = u'{}:'.format(_("Rider"))),  pos=(1,0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.numEdit, pos=(1,1), span=(1,2), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		choices = [u'{}:'.format(_("Race Time"))]
 		if Model.race and Model.race.startTime:

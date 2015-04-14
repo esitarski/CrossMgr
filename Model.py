@@ -889,7 +889,11 @@ class NumTimeInfo(object):
 		info = self.getInfo( num, t )
 		if info is None:
 			return u''
-		infoStr = u'{}, {}\n    by: {}\n    on: {}\n'.format(Utils.formatTime(t, True), NumTimeInfo.ReasonName[info[0]], info[1], info[2].ctime())
+		infoStr = u'{}, {}\n    {}: {}\n    {}: {}\n'.format(
+			Utils.formatTime(t, True), NumTimeInfo.ReasonName[info[0]],
+			_('by'), info[1],
+			_('on'), info[2].ctime()
+		)
 		return infoStr
 	
 	def getNumInfo( self, num ):
@@ -2041,10 +2045,10 @@ class Race( object ):
 		activeCategories = [c for c in self.categories.itervalues() if c.active]
 		if all( c.numLaps for c in activeCategories ):
 			activeCategories.sort( key = Category.key )
-			intro.append( _('Category Laps: {}').format(', '.join( '{}'.format(c.numLaps) for c in activeCategories )) )
+			intro.append( u'{}: {}'.format(_('Category Laps'), ', '.join( '{}'.format(c.numLaps) for c in activeCategories )) )
 		else:
-			intro.append( _('Duration: {} min').format(self.minutes) )
-		return '\n'.join( intro )
+			intro.append( u'{}: {} min'.format(_('Duration'), self.minutes) )
+		return u'\n'.join( intro )
 	
 	def getNextExpectedLeaderTNL( self, t ):
 		leaderTimes, leaderNums = self.getLeaderTimesNums()

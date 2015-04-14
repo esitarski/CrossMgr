@@ -128,7 +128,7 @@ class StartRaceAtTime( wx.Dialog ):
 		if self.startSeconds < GetNowSeconds():
 			Utils.MessageOK(
 				None,
-				u'\n\n'.join( [_('Scheduled Start Time is in the Past.'),_('Please enter a Scheduled Start Time in the Future.')] ),
+				u'\n\n'.join( [_('Scheduled Start Time is in the Past'),_('Please enter a Scheduled Start Time in the Future.')] ),
 				_('Scheduled Start Time is in the Past')
 			)
 			return

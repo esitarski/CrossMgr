@@ -41,7 +41,7 @@ def getCatCountImagesCategoryList( parent ):
 				index = list.InsertStringItem(sys.maxint, c.name, sm_rt)
 				list.SetStringItem( index, 1, getattr(c, 'gender', 'Open') )
 				list.SetStringItem( index, 2, [_('Start Wave'), _('Component'), _('Custom')][c.catType] )
-				list.SetStringItem( index, 3, '{}'.format(catCount[c]) )
+				list.SetStringItem( index, 3, u'{}'.format(catCount[c]) )
 	
 	for col in xrange(4+1):
 		list.SetColumnWidth( 0, wx.LIST_AUTOSIZE )

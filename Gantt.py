@@ -258,7 +258,9 @@ class Gantt( wx.Panel ):
 		if not self.entry:
 			return
 		if not Utils.MessageOKCancel( self,
-			_('DNF Rider {} at {} after lap {}?').format(self.entry.num, Utils.formatTime(self.entry.t+1, True), self.entry.lap),
+			u'{} {}: {} {}, {}?'.format(
+				_('Bib'), self.entry.num,
+				_('DNF Rider after lap'), self.entry.lap, Utils.formatTime(self.entry.t+1, True)),
 			_('DNF Rider') ):
 			return
 		try:
@@ -276,7 +278,7 @@ class Gantt( wx.Panel ):
 		if not self.entry:
 			return
 		if not Utils.MessageOKCancel( self,
-			_('Turn off Autocorrect for Rider {}?').format(self.entry.num),
+			u'{} {}: {}?'.format(_('Bib'), self.entry.num, _('Turn off Autocorrect')),
 			_('Turn off Autocorrect') ):
 			return
 		try:
@@ -329,7 +331,9 @@ class Gantt( wx.Panel ):
 		if not self.entry or not Model.race:
 			return
 		Model.race.lapNote = getattr(Model.race, 'lapNote', {})
-		dlg = wx.TextEntryDialog( self, _("Note for Rider {} on Lap {}:").format(self.entry.num, self.entry.lap), _("Lap Note"),
+		dlg = wx.TextEntryDialog( self, u"{} {}: {} {}: {}:".format(
+						_('Bib'), self.entry.num, _('Lap'), self.entry.lap, _('Note'), 
+					), _("Lap Note"),
 					Model.race.lapNote.get( (self.entry.num, self.entry.lap), '' ) )
 		ret = dlg.ShowModal()
 		value = dlg.GetValue().strip()
@@ -384,12 +388,14 @@ class Gantt( wx.Panel ):
 						
 			if leaderEntryStart:
 				tDown = tLapStart - leaderEntryStart.t
-				infoDownStart = u'\n' + _('Lap Start {} down from leader {}').format(Utils.formatTime(tDown, True), leaderEntryStart.num)
+				infoDownStart = u'\n' + u'{}: {} ({})'.format(
+					_('Lap Start down from leader'), Utils.formatTime(tDown, True), leaderEntryStart.num)
 			else:
 				infoDownStart = ''
 			if leaderEntryEnd:
 				tDown = tLapEnd - leaderEntryEnd.t
-				infoDownEnd = u'\n' + _('Lap End {} down from leader {}').format(Utils.formatTime(tDown, True), leaderEntryStart.num)
+				infoDownEnd = u'\n' + u'{}: {} {}'.format(
+					_('Lap End down from leader'), Utils.formatTime(tDown, True), leaderEntryStart.num)
 			else:
 				infoDownEnd = ''
 				
