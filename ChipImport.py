@@ -286,7 +286,7 @@ class ChipImportDialog( wx.Dialog ):
 		if not clearExistingData:
 			if not Model.race or not Model.race.startTime:
 				Utils.MessageOK( self,
-					u'\n\n'.join( [_('Cannot Merge into Unstarted Race.'), _('Clear All Existing Data" is allowed.')] ),
+					u'\n\n'.join( [_('Cannot Merge into Unstarted Race.'), _('Clear All Existing Data is allowed.')] ),
 					title = _('Import Merge Failed'), iconMask = wx.ICON_ERROR
 				)
 				return
