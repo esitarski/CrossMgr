@@ -345,9 +345,11 @@ class Recommendations( wx.Panel ):
 							if missingCount:
 								append( num, getName(num),
 										_('Lapped'),
-										_("Confirm rider was lapped by Category Leader in leader's lap {}").format(
-											(', '.join( '{}'.format(i) for i, b in enumerate(appearedInLap) if not b )))
+										u'{} {}'.format(
+											_("Confirm rider was lapped by Category Leader in leader's lap"),
+											(', '.join( '{}'.format(i) for i, b in enumerate(appearedInLap) if not b ))
 										)
+								)
 						except (KeyError, IndexError, ValueError):
 							pass
 							
@@ -356,27 +358,27 @@ class Recommendations( wx.Panel ):
 						if rider.times:
 							append( num, getName(num),
 									_('DNS'),
-									_('Check {} status.  Rider has recorded times.').format(statusName)
-									)
+									u'{} {}: {}'.format(_('Rider has recorded times.'), _('Check status'), statusName)
+							)
 							
 					elif rider.status in [Model.Rider.DNF, Model.Rider.Pulled]:
 						if rider.tStatus == None:
 							# Missing status times.
 							append( num, getName(num),
 									_('Time'),
-									_('Check if {} time is accurate.').format(statusName) )
+									u'{}  {}: {}'.format(_('Check if time is accurate.'), _('Status'), statusName)
+							)
 						else:
 							# Recorded time exceeds status time.
 							if rider.times and rider.times[-1] > rider.tStatus:
-								append( num, getName(num),
-										_('Time'),
-										_('Check if {} time is accurate.  Found recorded time {} after {} time {}.').format(
-													statusName,
-													Utils.SecondsToStr(rider.times[-1]),
-													statusName,
-													Utils.SecondsToStr(rider.tStatus)
-												)
-										)
+								append(
+									num, getName(num),
+									_('Time'),
+									u'{}: {}.  {}: {} > {}'.format(
+										_('Check time for Status'), statusName,
+										_('Found recorded time'), Utils.SecondsToStr(rider.times[-1]), Utils.SecondsToStr(rider.tStatus),
+									)
+								)
 
 					# Check for bad numbers.
 					category = race.getCategory( num )
