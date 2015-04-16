@@ -729,28 +729,58 @@ class ExcelLink( object ):
 			rowBib[row] = num
 			
 			if num in numRow:
-				errors.append( (num,
-								_('Duplicate Bib# {num} in row {row} (same as Bib# in row {dupRow})').format(
-									num=num, row=row, dupRow=numRow[num])) )
+				errors.append( (
+						num,
+						u'{}: {}  {}: {}  {} {}.'.format(
+							_('Row'), row,
+							_('Duplicate Bib#'), num,
+							_('Same as row'), numRow[num],
+						)
+					)
+				)
 			else:
 				numRow[num] = row
 				
 			for tField, tRow in tagFields:
-				if tField not in data and tField == 'Tag':		# Don't check for missing Tag2s as they are optional.:
-					errors.append( (num, _('Missing "{field}" in row {row} for Bib# {num}').format( field=tField, row=row, num=num)) )
+				if tField not in data and tField == 'Tag':		# Don't check for missing Tag2s as they are optional.
+					errors.append( (
+							num,
+							u'{}: {}  {}: {}  {}: {}'.format(
+								_('Row'), row,
+								_('Bib'), num, 
+								_('Missing field'), tField,
+							)
+						)
+					)
 					continue
 					
 				tag = unicode(data.get(tField,u'')).lstrip('0').upper()
 				if tag:
 					if tag in tRow:
-						errors.append( (num,
-										_('Duplicate "{field}" {tag} for Bib# {num} in row {row} (same as "{field}" for Bib# {dupNum} in row {dupRow})').format(
-											field=tField, tag=tag, num=num, row=row, dupNum = rowBib[tRow[tag]], dupRow=tRow[tag] ) ) )
+						errors.append( (
+								num,
+								u'{}: {}  {}: {} {}.  {} {}: {}  {}: {}'.format(
+									_('Row'), row,
+									_('Duplicate Field'), tField, tag,
+									_('Same as'),
+									_('Bib'), rowBib[tRow[tag]],
+									_('Row'), tRow[tag]
+								)
+							)
+						)
 					else:
 						tRow[tag] = row
 				else:
 					if tField == 'Tag':					# Don't check for empty Tag2s as they are optional.
-						errors.append( (num, _('Empty "{field}" in row {row} for Bib# {num}').format(field=tField, row=row, num=num)) )
+						errors.append( (
+								num,
+								u'{}: {}  {}: {}  {}: {}'.format(
+									_('Row'), row,
+									_('Bib'), num,
+									_('Missing Field'), tField,
+								)
+							)
+						)
 		
 		stateCache = (os.path.getmtime(self.fileName), self.fileName, self.sheetName, self.fieldCol)
 		infoCache = info
