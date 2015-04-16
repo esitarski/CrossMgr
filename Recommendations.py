@@ -237,7 +237,7 @@ class Recommendations( wx.Panel ):
 							append( rider.num, getName(rider.num),
 									_('EarlyTimes'),
 									_('Rider has {} {} recorded before "{}" Start Offset {} ({}).  Early times are not shown in the results.').format(
-										earlyTimeCount, _('times)' if earlyTimeCount > 1 else _('time'),
+										earlyTimeCount, _('times') if earlyTimeCount > 1 else _('time'),
 										race.getCategory(rider.num).fullname,
 										startOffsetStr, 'HH:MM:SS'[-len(startOffsetStr):]
 									)
