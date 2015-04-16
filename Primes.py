@@ -51,7 +51,7 @@ class Primes( wx.Panel ):
 			(_('Cash'),					'cash', 		'f'),
 			(_('Merchandise'),			'merchandise', 	's'),
 			(_('Winner\nBib'),			'winnerBib',	'i'),
-			(_(''),			'winnerInfo',	's'),
+			(u'',						'winnerInfo',	's'),
 		)
 		self.colnames = [colName for colName, fieldName, dataType in self.colNameFields]
 		self.iCol = dict( (fieldName, i) for i, (colName, fieldName, dataType) in enumerate(self.colNameFields) if fieldName )

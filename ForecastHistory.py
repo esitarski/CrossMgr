@@ -45,7 +45,7 @@ def GetLabelGrid( parent ):
 	dc.SetFont( font )
 	w, h = dc.GetTextExtent( '999' )
 
-	label = wx.StaticText( parent, label = _('Recorded:') )
+	label = wx.StaticText( parent, label = u'{}:'.format(_('Recorded')) )
 	
 	grid = ColGrid.ColGrid( parent, colnames = colnames )
 	grid.SetLeftAlignCols( [iNameCol] )

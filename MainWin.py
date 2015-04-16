@@ -646,7 +646,7 @@ class MainWin( wx.Frame ):
 			name = self.notebook.GetPageText(i)
 			idCur = wx.NewId()
 			self.idPage[idCur] = i
-			self.pageMenu.Append( idCur, u'{}\tF{}'.format(name, i+1), _("Jump to {} Screen").format(name) )
+			self.pageMenu.Append( idCur, u'{}\tF{}'.format(name, i+1), u"{} {}".format(_('Jump to'), name) )
 			self.Bind(wx.EVT_MENU, self.menuShowPage, id=idCur )
 			jumpToIds.append( idCur )
 			
@@ -827,7 +827,11 @@ class MainWin( wx.Frame ):
 				
 		startTime, endTime, numTimes = OutputStreamer.ReadStreamFile()
 		if not numTimes:
-			Utils.MessageOK( self, _('No data found.\n\nCheck "{}" file.').format(OutputStreamer.getFileName()), _("No Data Found") )
+			Utils.MessageOK( self, u'{}.\n\n{} "{}".'.format(
+				_('No Data Found'),
+				_('Check file'),
+				OutputStreamer.getFileName()), _("No Data Found")
+			)
 			return
 		undo.pushState()
 		with Model.LockRace() as race:
@@ -854,10 +858,12 @@ class MainWin( wx.Frame ):
 
 	def menuJChipImport( self, event ):
 		correct, reason = JChipSetup.CheckExcelLink()
-		explain = 	_('JChip Import requires that you have a valid Excel sheet with associated tags and Bib numbers.\n\n' \
-					'See documentation for details.')
+		explain = u'{}\n\n{}'.format(
+			_('You must have a valid Excel sheet with associated tags and Bib numbers.'),
+			_('See documentation for details.')
+		)
 		if not correct:
-			Utils.MessageOK( self, _('{}\n\n    {}\n\n{}').format(_('Problems with Excel sheet.'), reason, explain),
+			Utils.MessageOK( self, u'{}\n\n    {}\n\n{}'.format(_('Problems with Excel sheet.'), reason, explain),
 									title = _('Excel Link Problem'), iconMask = wx.ICON_ERROR )
 			return
 			
@@ -868,10 +874,12 @@ class MainWin( wx.Frame ):
 		
 	def menuAlienImport( self, event ):
 		correct, reason = JChipSetup.CheckExcelLink()
-		explain = 	_('Alien Import requires that you have a valid Excel sheet with associated tags and Bib numbers.\n\n' \
-					'See documentation for details.')
+		explain = u'{}\n\n{}'.format(
+			_('You must have a valid Excel sheet with associated tags and Bib numbers.'),
+			_('See documentation for details.')
+		)
 		if not correct:
-			Utils.MessageOK( self, _('{}\n\n    {}\n\n{}').format(_('Problems with Excel sheet.'), reason, explain),
+			Utils.MessageOK( self, u'{}\n\n    {}\n\n{}'.format(_('Problems with Excel sheet.'), reason, explain),
 									title = _('Excel Link Problem'), iconMask = wx.ICON_ERROR )
 			return
 			
@@ -882,10 +890,12 @@ class MainWin( wx.Frame ):
 		
 	def menuImpinjImport( self, event ):
 		correct, reason = JChipSetup.CheckExcelLink()
-		explain = 	_('Impinj Import requires that you have a valid Excel sheet with associated tags and Bib numbers.\n\n' \
-					'See documentation for details.')
+		explain = u'{}\n\n{}'.format(
+			_('You must have a valid Excel sheet with associated tags and Bib numbers.'),
+			_('See documentation for details.')
+		)
 		if not correct:
-			Utils.MessageOK( self, _('{}\n\n    {}\n\n{}').format(_('Problems with Excel sheet.'), reason, explain),
+			Utils.MessageOK( self, '{}\n\n    {}\n\n{}'.format(_('Problems with Excel sheet.'), reason, explain),
 									title = _('Excel Link Problem'), iconMask = wx.ICON_ERROR )
 			return
 			
@@ -896,10 +906,12 @@ class MainWin( wx.Frame ):
 		
 	def menuOrionImport( self, event ):
 		correct, reason = JChipSetup.CheckExcelLink()
-		explain = 	_('Orion Import requires that you have a valid Excel sheet with associated tags and Bib numbers.\n\n' \
-					'See documentation for details.')
+		explain = u'{}\n\n{}'.format(
+			_('You must have a valid Excel sheet with associated tags and Bib numbers.'),
+			_('See documentation for details.')
+		)
 		if not correct:
-			Utils.MessageOK( self, _('{}\n\n    {}\n\n{}').format(_('Problems with Excel sheet.'), reason, explain),
+			Utils.MessageOK( self, '{}\n\n    {}\n\n{}'.format(_('Problems with Excel sheet.'), reason, explain),
 									title = _('Excel Link Problem'), iconMask = wx.ICON_ERROR )
 			return
 			
@@ -1119,7 +1131,10 @@ class MainWin( wx.Frame ):
 		self.commit()
 		
 		if Utils.MessageYesNo( self,
-				_('This is not the recommended method to publish results to Facebook\n\nWould you like to see the recommended options?'),
+				u'{}\n\n{}'.format(
+					_('This is not the recommended method to publish results to Facebook.'),
+					_('Would you like to see the recommended options?')
+				),
 				_('Publish to Facebook') ):
 			Utils.showHelp( 'Facebook.html' )
 			return
@@ -1153,7 +1168,7 @@ class MainWin( wx.Frame ):
 			except Exception as e:
 				logException( e, sys.exc_info() )
 				Utils.MessageOK(self,
-							_('Error creating PNG files:\n\n    {}.').format(e),
+							u'{}:\n\n    {}.'.format(_('Error creating PNG files'), e),
 							_('PNG File Error'), iconMask=wx.ICON_ERROR )
 				success = False
 				break
@@ -1283,7 +1298,7 @@ class MainWin( wx.Frame ):
 				timeComponents.append( 0 )
 			hour, minute, second = timeComponents
 			raceTime = datetime.datetime( year, month, day, hour, minute, second )
-			title = _('{} Results for {} Start on {}').format( race.name, raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
+			title = u'{} - {} {} {}'.format( race.name, _('Starting'), raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
 			html = html.replace( u'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
 			
 			payload['organizer']		= getattr(race, 'organizer', '')
@@ -1418,7 +1433,7 @@ class MainWin( wx.Frame ):
 				timeComponents.append( 0 )
 			hour, minute, second = timeComponents
 			raceTime = datetime.datetime( year, month, day, hour, minute, second )
-			title = _('{} Course for {}').format( race.name, raceTime.strftime(localDateFormat) )
+			title = u'{} {} {}'.format( race.name, _('Course for'), raceTime.strftime(localDateFormat) )
 			html = html.replace( 'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
 			
 			payload['raceName']			= cgi.escape(race.name)
@@ -1495,7 +1510,7 @@ class MainWin( wx.Frame ):
 	
 		# Get the folder to write the html file.
 		fname = os.path.splitext(self.fileName)[0] + '.html'
-		dlg = wx.DirDialog( self, _('Folder to write "{}"').format(os.path.basename(fname)),
+		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(fname)),
 							style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
 		ret = dlg.ShowModal()
 		dName = dlg.GetPath()
@@ -1579,7 +1594,7 @@ class MainWin( wx.Frame ):
 		
 		# Get the folder to write the html file.
 		fname = os.path.splitext(self.fileName)[0] + '_TTStart.html'
-		dlg = wx.DirDialog( self, _('Folder to write "{}"').format(os.path.basename(fname)),
+		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(fname)),
 							style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
 		ret = dlg.ShowModal()
 		dName = dlg.GetPath()
@@ -1718,7 +1733,7 @@ class MainWin( wx.Frame ):
 			
 		# Get the folder to write the html file.
 		fname = self.fileName[:-4] + 'Course.gpx'
-		dlg = wx.DirDialog( self, _('Folder to write "{}"').format(os.path.basename(fname)),
+		dlg = wx.DirDialog( self, u'{} "{}"'.format( _('Folder to write'), os.path.basename(fname)),
 							style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
 		ret = dlg.ShowModal()
 		dName = dlg.GetPath()
@@ -2116,10 +2131,10 @@ class MainWin( wx.Frame ):
 			with open(fileName, 'wb') as fp:
 				pass
 		except IOError:
-			Utils.MessageOK(self, _('{}\n\n    "{}".').format(_('Cannot open file.'), fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, u'{}\n\n    "{}".'.format(_('Cannot open file.'), fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
 			return
 		except Exception as e:
-			Utils.MessageOK(self, _('{}\n\n    "{}".\n\n{}: {}').format(_('Cannot open file.'), fileName, _('Error'), e), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, u'{}\n\n    "{}".\n\n{}: {}'.format(_('Cannot open file.'), fileName, _('Error'), e), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
 			return
 
 		# Create a new race and initialize it with the properties.

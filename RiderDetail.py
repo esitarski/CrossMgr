@@ -531,7 +531,7 @@ class RiderDetail( wx.Panel ):
 		rider = race.riders[num]
 			
 		race.lapNote = getattr(race, 'lapNote', {})
-		dlg = wx.TextEntryDialog( self, _("Note for Rider {} on Lap {}:").format(num, lap), _("Lap Note"),
+		dlg = wx.TextEntryDialog( self, u'{}: {}: {}: {}'.format(_("Bib"), num, _("Note on Lap"), lap), _("Lap Note"),
 					Model.race.lapNote.get( (num, lap), '' ) )
 		ret = dlg.ShowModal()
 		value = dlg.GetValue().strip()
@@ -569,7 +569,7 @@ class RiderDetail( wx.Panel ):
 				self.refresh()
 				return
 			
-		if Utils.MessageOKCancel( self, _("Confirm Delete rider {} and all associated entries.").format(num), _("Delete Rider") ):
+		if Utils.MessageOKCancel( self, u'{}: {}: {}'.format(_('Bib'), num, _("Confirm Delete")), _("Delete Rider") ):
 			undo.pushState()
 			with Model.LockRace() as race:
 				race.deleteRider( num )
@@ -591,7 +591,7 @@ class RiderDetail( wx.Panel ):
 			if not num in race:
 				return
 		
-		dlg = wx.TextEntryDialog( self, _("Rider's new number:"), _('New Number'), '{}'.format(self.num.GetValue()) )
+		dlg = wx.TextEntryDialog( self, _("Rider's new number:"), _('New Number'), u'{}'.format(self.num.GetValue()) )
 		ret = dlg.ShowModal()
 		newNum = dlg.GetValue()
 		dlg.Destroy()
@@ -606,8 +606,13 @@ class RiderDetail( wx.Panel ):
 		with Model.LockRace() as race:
 			inRace = (newNum in race)
 		if inRace:
-			Utils.MessageOK( self, _("Cannot Change rider bib.\nThere is a rider with this number already."),
-									_('Cannot Change Rider Number'), iconMask = wx.ICON_ERROR )
+			Utils.MessageOK(
+				self,
+				u'{}\n{}'.format(
+					_("Cannot Change Bib."),
+					_("There is a rider with this number already.")
+				),
+				_('Cannot Change Rider Number'), iconMask = wx.ICON_ERROR )
 			return
 			
 		if Utils.MessageOKCancel( self, u"{}: {}.".format(_("Confirm Change rider's number"), newNum), _("Change Rider Number") ):
@@ -633,7 +638,7 @@ class RiderDetail( wx.Panel ):
 			if not num in race:
 				return
 		
-		dlg = wx.TextEntryDialog( self, _("Number to swap with:"), _('Swap Numbers'), '{}'.format(self.num.GetValue()) )
+		dlg = wx.TextEntryDialog( self, _("Number to swap with:"), _('Swap Numbers'), u'{}'.format(self.num.GetValue()) )
 		ret = dlg.ShowModal()
 		newNum = dlg.GetValue()
 		dlg.Destroy()
@@ -648,8 +653,14 @@ class RiderDetail( wx.Panel ):
 		with Model.LockRace() as race:
 			inRace = (newNum in race)
 		if not inRace:
-			Utils.MessageOK( self, _("Cannot swap with specified rider.\nThis rider is not in race."),
-									_('Cannot Swap Rider Numbers'), iconMask = wx.ICON_ERROR )
+			Utils.MessageOK(
+				self,
+				u'{}\n{}'.format(
+					_("Cannot swap with specified rider."),
+					_("This rider is not in race."),
+				),
+				_('Cannot Swap Rider Numbers'), iconMask = wx.ICON_ERROR
+			)
 			return
 			
 		if Utils.MessageOKCancel( self, u"{}\n\n   {} <==> {}.".format(_('Confirm Swap numbers'), num, newNum), _("Swap Rider Number") ):
@@ -676,8 +687,15 @@ class RiderDetail( wx.Panel ):
 			if not num in race:
 				return
 		
-		dlg = wx.TextEntryDialog( self, _("All time entries for {} will be copied to the new bib number.\n\nNew Bib Number:").format(num),
-								_('Copy Rider Times'), '{}'.format(self.num.GetValue()) )
+		dlg = wx.TextEntryDialog(
+			self,
+			u'{} {}: {}\n\n{}:'.format(
+				_('Bib'), num,
+				_("All time entries will be copied to the new bib number."), 
+				_("New Bib Number")
+			),
+			_('Copy Rider Times'), u'{}'.format(self.num.GetValue())
+		)
 		ret = dlg.ShowModal()
 		newNum = dlg.GetValue()
 		dlg.Destroy()
@@ -693,20 +711,25 @@ class RiderDetail( wx.Panel ):
 			inRace = (newNum in race)
 		if inRace:
 			if num != newNum:
-				Utils.MessageOK( self, u'{}.\n{}'.format(
-									_("New Bib Number Already Exists"),
-									_("If you really want to copy times to this number, delete it first.")
-								),
-								_('New Bib Number Already Exists'), iconMask = wx.ICON_ERROR )
+				Utils.MessageOK(
+					self,
+					u'{}.\n{}'.format(
+						_("New Bib Number Already Exists"),
+						_("If you really want to copy times to this number, delete it first.")
+					),
+					_('New Bib Number Already Exists'), iconMask = wx.ICON_ERROR
+				)
 			else:
-				Utils.MessageOK( self, _("Cannot copy to the same number ({}).").format(newNum),
-								
-								_('Cannot Copy to Same Number'), iconMask = wx.ICON_ERROR )
+				Utils.MessageOK(
+					self,
+					u'{} ({})'.format(_('Cannot Copy to Same Number'), newNum),
+					_('Cannot Copy to Same Number'), iconMask = wx.ICON_ERROR
+				)
 			return
 			
 		if Utils.MessageOKCancel( self,
-				_("Entries from {} will be copied to new Bib {}.\n\nAll entries for {} will be slightly earlier then entries for {}.\nContinue?").format(
-					num, newNum, newNum, num),
+				_("Entries from {} will be copied to new Bib {}.\n\nAll entries will be slightly earlier.\nContinue?").format(
+					num, newNum),
 				_("Confirm Copy Rider Times") ):
 			undo.pushState()
 			with Model.LockRace() as race:

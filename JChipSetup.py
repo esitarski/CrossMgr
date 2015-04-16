@@ -276,7 +276,7 @@ class JChipSetupDialog( wx.Dialog ):
 				self.appendMsg( '' )
 				self.appendMsg( _('listening for RFID connection...') )
 			elif d[0] == 'name':
-				self.appendMsg( _('receiver name: {}').format(d[1]) )
+				self.appendMsg( u'{}: {}'.format(_('receiver name'), d[1]) )
 			else:
 				self.appendMsg( '{}: {}'.format(d[0], ', '.join('<<{}>>'.format(s) for s in d[1:]) ) )
 		if data:

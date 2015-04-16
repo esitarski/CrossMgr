@@ -471,11 +471,16 @@ class Categories( wx.Panel ):
 			categories = race.getAllCategories()
 			category = categories[r]
 			
-		dlg = wx.TextEntryDialog( self,
-									_('''{}: Add Bib Exceptions (comma separated).
+		dlg = wx.TextEntryDialog(
+			self,
+			u'{}: {}'.format(
+				category.name,
+				_('''Add Bib Exceptions (comma separated).
 This will add the given list of Bibs to this category,
-and remove them from other categories.''').format(category.name),
-									_('Add Bib Exceptions') )
+and remove them from other categories.'''),
+			),
+			_('Add Bib Exceptions')
+		)
 		good = (dlg.ShowModal() == wx.ID_OK)
 		if good:
 			response = dlg.GetValue()
