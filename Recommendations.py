@@ -199,7 +199,7 @@ class Recommendations( wx.Panel ):
 
 			# Check for Excel errors (very bad!).
 			for num, errorStr in excelErrors:
-				append( num, getName(num), 'Excel', _('Fix ') + errorStr )
+				append( num, getName(num), 'Excel', u'{} {}'.format(_('Fix'), errorStr) )
 			
 			firstRiderInCategory = []
 			entries = race.interpolate()
@@ -237,7 +237,7 @@ class Recommendations( wx.Panel ):
 							append( rider.num, getName(rider.num),
 									_('EarlyTimes'),
 									_('Rider has {} {} recorded before "{}" Start Offset {} ({}).  Early times are not shown in the results.').format(
-										earlyTimeCount, 'times' if earlyTimeCount > 1 else 'time',
+										earlyTimeCount, _('times)' if earlyTimeCount > 1 else _('time'),
 										race.getCategory(rider.num).fullname,
 										startOffsetStr, 'HH:MM:SS'[-len(startOffsetStr):]
 									)
@@ -323,7 +323,7 @@ class Recommendations( wx.Panel ):
 							if iLast != len(riderEntriesCur):
 								append( num, getName(num),
 										_('DNF'),
-										_('Check for DNF after rider lap {}.').format(iLast-1) )
+										u'{} {}.'.format(_('Check for DNF after rider lap'), iLast-1) )
 						except (KeyError, StopIteration):
 							pass
 							
@@ -394,10 +394,11 @@ class Recommendations( wx.Panel ):
 							projectedNums.append( (r.num, pSum) )
 					projectedNums.sort()
 					for num, count in projectedNums:
-						append( num, getName(num),
-								_('Projected'),
-								_('Check rider has projected times ({}).').format( count )
-								)
+						append(
+							num, getName(num),
+							_('Projected'),
+							u'{} ({})'.format(_('Check rider has projected times'), count)
+						)
 					
 				# Show missing tag reads.
 				missingTags = ['{}'.format(m) for m in getattr(race, 'missingTags', set())]

@@ -225,7 +225,7 @@ class SummaryPage(wiz.WizardPageSimple):
 			infoLen = len(info)
 		except TypeError:
 			infoLen = 0
-		self.riderNumber.SetLabel( '{}'.format(infoLen) )
+		self.riderNumber.SetLabel( u'{}'.format(infoLen) )
 		self.statusName.SetLabel( _('Success!') if infoLen else _('Failure') )
 	
 class GetExcelTTStartTimeLink( object ):
@@ -390,7 +390,7 @@ def DoImportTTStartTimes( race, excelLink ):
 		try:
 			startTime = data['StartTime']
 		except KeyError:
-			errors.append( _('Bib {}: missing start time').format(num) )
+			errors.append( u'{} {}: {}'.format(_('Bib'), num, _('missing start time')) )
 			continue
 			
 		# Try to make sense of the StartTime (Stopwatch time, not clock time).
@@ -406,11 +406,11 @@ def DoImportTTStartTimes( race, excelLink ):
 					hh = 0.0
 					mm, ss = [float(f.strip()) for f in fields[:2]]
 				except:
-					errors.append( _('Bib {}: cannot read time format: {}').format(num, startTime) )
+					errors.append( u'{} {}:  {}: "{}"'.format(_('Bib'), num, _('cannot read time format'), startTime) )
 					continue
 			t = hh * 60.0*60.0 + mm * 60.0 + ss
 		else:
-			errors.append( _('Bib {}: cannot read start time (neither Excel time nor String)').format(num) )
+			errors.append( u'{} {}:  {}'.format(_('Bib'), num, _('cannot read start time (neither Excel time nor String)') ) )
 			continue
 			
 		startTimes[num] = t

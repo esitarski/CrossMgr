@@ -361,7 +361,7 @@ class SummaryPage(wiz.WizardPageSimple):
 		
 		errStr = '\n'.join( [err for num, err in errors] if errors else ['None'] )
 		
-		self.statusName.SetLabel( _('Success!') if infoLen and not errors else _('{num} Error(s)').format( num=len(errors) ) )
+		self.statusName.SetLabel( _('Success!') if infoLen and not errors else u'({} {}'.format(len(errors), _('Error') if len(errors) == 1 else _('Errors')) )
 		self.errorName.SetValue( errStr )
 		
 		self.copyErrorsToClipboard.Enable( bool(self.errors) )

@@ -1545,7 +1545,14 @@ class MainWin( wx.Frame ):
 	def menuExportHtmlFtp( self, event ):
 		self.commit()
 		if not self.fileName or len(self.fileName) < 4:
-			Utils.MessageOK(self, _('Ftp Upload Failed.  Error:\n\n    No race loaded.'), _('Ftp Upload Failed'), iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(
+				self,
+				u'{}.  {}:\n\n    {}'.format(
+					_('Ftp Upload Failed'), _('Error'), _('No race loaded.')
+				),
+				_('Ftp Upload Failed'),
+				iconMask=wx.ICON_ERROR
+			)
 			return
 	
 		dlg = FtpWriteFile.FtpPublishDialog( self )
@@ -1558,7 +1565,7 @@ class MainWin( wx.Frame ):
 		host = getattr( race, 'ftpHost', '' )
 			
 		if not host:
-			Utils.MessageOK(self, _('Error:\n\n    Missing host name.'), _('Ftp Upload Failed'), iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, u'{}\n\n    {}'.format(_('Error'), _('Missing host name.')), _('Ftp Upload Failed'), iconMask=wx.ICON_ERROR )
 			return
 		
 		wx.BeginBusyCursor()
@@ -1566,7 +1573,7 @@ class MainWin( wx.Frame ):
 		wx.EndBusyCursor()
 
 		if e:
-			Utils.MessageOK(self, _('Ftp Upload Failed.  Error:\n\n{}').format(e), _('Ftp Upload Failed'), iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, u'{}  {}\n\n{}'.format(_('Ftp Upload Failed.'), _('Error'), e), _('Ftp Upload Failed'), iconMask=wx.ICON_ERROR )
 		else:
 			# Automatically open the browser on the published file for testing.
 			if race.urlFull and race.urlFull != 'http://':
@@ -1749,9 +1756,9 @@ class MainWin( wx.Frame ):
 		try:
 			with open(fname, 'wb') as f:
 				f.write( xml )
-			Utils.MessageOK(self, _('Course written to GPX file:\n\n   {}.').format(fname), _('GPX Export'))
+			Utils.MessageOK(self, u'{}\n\n    {}.'.format(_('Course written to GPX file'), fname), _('GPX Export'))
 		except Exception as e:
-			Utils.MessageOK(self, _('Write to GPX file Failed with error: {}\n\n   {}.').format(e, fname), _('GPX Export'))
+			Utils.MessageOK(self, u'{}  {}\n\n    {}\n\n"{}"'.format(_('Write to GPX file Failed.'), _('Error'), e, fname), _('GPX Export'))
 		
 	@logCall
 	def menuExportCourseAsKml( self, event ):
@@ -1760,14 +1767,14 @@ class MainWin( wx.Frame ):
 				return
 				
 			if not getattr(race, 'geoTrack', None):
-				Utils.MessageOK( self, _('No GPX Course Loaded.\nNothing to export.'), _('No GPX Course Loaded') )
+				Utils.MessageOK( self, u'{}.\n{}'.format(_('No GPX Course Loaded'), _('Nothing to export.')), _('No GPX Course Loaded') )
 				return
 				
 			geoTrack = race.geoTrack
 			
 			# Get the folder to write the html file.
 			fname = self.fileName[:-4] + 'Course.kmz'
-			dlg = wx.DirDialog( self, _('Folder to write "{}"').format(os.path.basename(fname)),
+			dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(fname)),
 								style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
 			ret = dlg.ShowModal()
 			dName = dlg.GetPath()
@@ -2705,7 +2712,7 @@ class MainWin( wx.Frame ):
 		self.history.refresh()
 		
 		xlFName = self.fileName[:-4] + '-History.xls'
-		dlg = wx.DirDialog( self, _('Folder to write "{}"').format(os.path.basename(xlFName)),
+		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(xlFName)),
 						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
 		ret = dlg.ShowModal()
 		dName = dlg.GetPath()
@@ -2890,7 +2897,7 @@ class MainWin( wx.Frame ):
 		self.showPageName( _('Results') )
 		
 		fname = self.fileName[:-4] + '-CrossResults.csv'
-		dlg = wx.DirDialog( self, _('Folder to write "{}"').format(os.path.basename(fname)),
+		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(fname)),
 						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
 		ret = dlg.ShowModal()
 		dName = dlg.GetPath()
@@ -2908,8 +2915,8 @@ class MainWin( wx.Frame ):
 			success, message = CrossResultsExport( fname )
 			if not success:
 				Utils.MessageOK(self,
-							_('CrossResults Error: "{}".').format(message),
-							_('CrossResults Error'), iconMask=wx.ICON_ERROR )
+							u'CrossResults {}: "{}"'.format(_('Error'), message),
+							u'CrossResults {}'.format(_('Error')), iconMask=wx.ICON_ERROR )
 				return
 			
 			url = 'http://www.crossresults.com/?n=results&sn=upload&crossmgr={MD5}&name={RaceName}&date={RaceDate}&loc={Location}&presentedby={PresentedBy}'.format(
@@ -2925,7 +2932,7 @@ class MainWin( wx.Frame ):
 			logException( e, sys.exc_info() )
 			Utils.MessageOK(self,
 						u'{} "{}"\n\n{}'.format(_('Cannot write'), fname, e),
-						_('CrossResults File Error'), iconMask=wx.ICON_ERROR )
+						u'CrossResults {}'.format(_('File Error')), iconMask=wx.ICON_ERROR )
 	
 	@logCall
 	def menuExportWebScorer( self, event ):
@@ -2955,8 +2962,8 @@ class MainWin( wx.Frame ):
 			success, message = WebScorerExport( fname )
 			if not success:
 				Utils.MessageOK(self,
-							_('WebScorer Error: "{}".').format(message),
-							_('WebScorer Error'), iconMask=wx.ICON_ERROR )
+							u'WebScorer {}: "{}".'.format(_('Error'), message),
+							u'WebScorer {}'.format(_('Error')), iconMask=wx.ICON_ERROR )
 				return
 			Utils.MessageOK(self, _('WebScorer file written to:') + u'\n\n   {}'.format(fname), _('WebScorer Publish'))
 		except Exception as e:
@@ -3271,7 +3278,7 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 								race.name, race.raceNum,
 								status,
 								Version.AppVerName,
-								_('<TimeTrial>') if race.isTimeTrial else u'') )
+								u'<{}>'.format(_('TimeTrial')) if race.isTimeTrial else u'') )
 				self.timer.Stop()
 				return
 
@@ -3279,8 +3286,8 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 							Utils.formatTime(race.curRaceTime()),
 							race.name, race.raceNum,
 							status, Version.AppVerName,
-							_('<JChip>') if JChip.listener else '',
-							_('<TimeTrial>') if race.isTimeTrial else u'') )
+							u'<{}>'.format(_('JChip')) if JChip.listener else u'',
+							u'<{}>'.format(_('TimeTrial')) if race.isTimeTrial else u'') )
 
 			if not self.timer.IsRunning():
 				wx.CallLater( 1000 - (datetime.datetime.now() - race.startTime).microseconds // 1000, self.timer.Start, 1000 )

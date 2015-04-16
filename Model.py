@@ -1033,7 +1033,7 @@ class Race( object ):
 			u'RaceDate':	self.date,
 			u'InputMethod':	_('RFID') if self.enableJChipIntegration else _('Manual'),
 			u'StartTime':	self.startTime.strftime('%H:%M:%S.%f')[:-3] if self.startTime else unicode(self.scheduledStart),
-			u'StartMethod':	_('Automatic: Tiggered by first tag read') if self.enableJChipIntegration and self.resetStartClockOnFirstTag else _('Manual'),
+			u'StartMethod':	_('Automatic: Triggered by first tag read') if self.enableJChipIntegration and self.resetStartClockOnFirstTag else _('Manual'),
 			u'CameraStatus': _('USB Camera Enabled') if self.enableUSBCamera else _('USB Camera Not Enabled'),
 			u'PhotoCount':	unicode(self.photoCount),
 			u'ExcelLink':	excelLinkStr,

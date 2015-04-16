@@ -464,7 +464,7 @@ class RiderDetail( wx.Panel ):
 			timesPerRow = 4
 			for i in xrange(0, len(times), timesPerRow):
 				timeStr.append(
-					',  '.join( _('{} {}: {}').format(_('Lap'), rows[j]+1, Utils.formatTime(times[i]))
+					',  '.join( u'{} {}: {}'.format(_('Lap'), rows[j]+1, Utils.formatTime(times[i]))
 							for j in xrange(i, min(len(times), i+timesPerRow) ) ) )
 			timeStr = u',\n'.join( timeStr )
 			message = u'{} {}:\n\n{}\n\n{}?'.format(_('Delete entries of Rider'), num, timeStr, _('Confirm Delete'))
@@ -1176,7 +1176,7 @@ class RiderDetail( wx.Panel ):
 			except:
 				missingCount = 0
 			if missingCount:
-				notInLapStr = _('Lapped by Race Leader in {}').format(', '.join( '{}'.format(i) for i, b in enumerate(appearedInLap) if not b ))
+				notInLapStr = u'{}: {}').format(_('Lapped by Race Leader'), ', '.join( '{}'.format(i) for i, b in enumerate(appearedInLap) if not b ))
 			else:
 				notInLapStr = ''
 			self.notInLap.SetLabel( notInLapStr )

@@ -314,8 +314,8 @@ class PhotoViewerDialog( wx.Dialog ):
 		if num:
 			name = getRiderNameFromFName( self.thumbFileName )
 			numPhotos = self.thumbs.GetItemCount()
-			name = (_('{}  ({} rider photos)') if self.num != self.ShowAllPhotos else _('{}  (last {} race photos)')).format(name, numPhotos)
-			self.title.SetLabel( '%d  %s' % (num, name) )
+			name = u'{}  ({} {})'.format(name, numPhotos, _('rider photos') if self.num != self.ShowAllPhotos else _('last race photos'))
+			self.title.SetLabel( u'{}  {}'.format(num, name) )
 		
 		try:
 			bitmap = wx.Bitmap( self.thumbFileName, wx.BITMAP_TYPE_JPEG )
