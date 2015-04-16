@@ -416,7 +416,8 @@ class Recommendations( wx.Panel ):
 				for t, rider, catCur in firstRiderInCategory:
 					append( rider.num, getName(rider.num),
 							_('Start'),
-							_('First Rider Recorded at {time} for {catName}').format( catName=catCur.name, time=Utils.formatTime(t, True) ) )
+							u'{}: {}  {}: {}'.format(_('Category'), catCur.name, _('First recorded time'), Utils.formatTime(t, True), )
+					)
 				
 				# end if entries
 				
