@@ -194,11 +194,12 @@ class GanttChart(wx.PyControl):
 		tLapStart = self.data[iRider][iLap-1]
 		tLapEnd = self.data[iRider][iLap]
 		bip = BarInfoPopup(self, wx.SIMPLE_BORDER,
-								_('Rider: {}  Lap: {}\nLap Start:  {} Lap End: {}\nLap Time: {}').format(
-								self.labels[iRider] if self.labels else '{}'.format(iRider), iLap,
-								Utils.formatTime(tLapStart),
-								Utils.formatTime(tLapEnd),
-								Utils.formatTime(tLapEnd - tLapStart)))
+								u'{}: {}  {}: {}\n{}:  {} {}: {}\n{}: {}'.format(
+								_('Rider'), self.labels[iRider] if self.labels else u'{}'.format(iRider),
+								_('Lap'), iLap,
+								_('Lap Start'), Utils.formatTime(tLapStart),
+								_('Lap End'), Utils.formatTime(tLapEnd),
+								_('Lap Time'), Utils.formatTime(tLapEnd - tLapStart)))
 
 		xPos, yPos = event.GetPositionTuple()
 		width, height = bip.GetClientSize()

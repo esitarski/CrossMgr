@@ -236,10 +236,12 @@ class Recommendations( wx.Panel ):
 							startOffsetStr = Utils.formatTime( race.getStartOffset(rider.num) )
 							append( rider.num, getName(rider.num),
 									_('EarlyTimes'),
-									_('Rider has {} {} recorded before "{}" Start Offset {} ({}).  Early times are not shown in the results.').format(
-										earlyTimeCount, _('times') if earlyTimeCount > 1 else _('time'),
-										race.getCategory(rider.num).fullname,
-										startOffsetStr, 'HH:MM:SS'[-len(startOffsetStr):]
+									u'{} {} ({}={}, {}={} {}, {}="{}")'.format(
+										_('Rider has entries before the Start Offset.'),
+										_('Early times are not shown in the results.'),
+										_('Count'), earlyTimeCount,
+										_('StartOffset'), startOffsetStr, 'HH:MM:SS'[-len(startOffsetStr):],
+										_('Category'), race.getCategory(rider.num).fullname,
 									)
 								)
 					
@@ -253,8 +255,10 @@ class Recommendations( wx.Panel ):
 							extra = numRecordedTimes - rr.laps
 							append( rider.num, getName(rider.num),
 									_('Laps'),
-									_("Rider has {} extra {} not shown in results (all riders finish on leader's last lap)").format(
-										extra, 'laps' if extra > 1 else 'lap')
+									u'{} ({}={})'.format(
+										_("Rider has extra laps not shown in results (all riders finish on leader's last lap)"),
+										_('Count'), extra,
+									),
 								)
 					
 					# Report time penalties
@@ -299,11 +303,15 @@ class Recommendations( wx.Panel ):
 					maxCatLaps = (category.getNumLaps() or raceLaps)
 					try:
 						if maxNonInterpLap < maxCatLaps and categoryMaxLapInterp[category] > maxNonInterpLap:
-							append( category.catStr, category.fullname,
-									_('Laps'),
-									_('Verify that "{}" did {} max Race Laps.  Update Race Laps in Categories if necessary.').format(
-											category.fullname, maxNonInterpLap)
-									)
+							append(
+								category.catStr, category.fullname,
+								_('Laps'),
+								u'{}: {}  {}: {}  {}'.format(
+									_('Category'), category.fullname,
+									_('Race Laps'), maxNonInterpLap,
+									_('Verify that Category did Race Laps.  Update Race Laps for Category if necessary.'),
+								)
+							)
 					except KeyError:
 						pass
 				

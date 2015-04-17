@@ -2176,7 +2176,7 @@ class Race( object ):
 						ret[r][e.num] = Utils.formatTimeGap( e.t - leader.t ) if leader.num != e.num else ' '
 					else:
 						lapsDown = e.lap - leader.lap
-						ret[r][e.num] = _('{} laps').format(lapsDown) if lapsDown < -1 else _('{} lap').format(lapsDown)
+						ret[r][e.num] = u'{} {}'.format(lapsDown, _('laps') if lapsDown < -1 else _('lap'))
 				iLap += 1
 					
 		return ret

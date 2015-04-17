@@ -2033,7 +2033,12 @@ class MainWin( wx.Frame ):
 			
 		# Check for existing file.
 		if os.path.exists(fileName) and \
-		   not Utils.MessageOKCancel(self, _('File "{}" already exists.  Overwrite?').format(fileName), _('File Exists')):
+		   not Utils.MessageOKCancel(
+				self,
+				u'{}.\n\n    "{}"\n\n{}?'.format_(
+					_('File already exists'), fileName, _('Overwrite')
+				)
+			):
 			return
 
 		# Try to open the file.
@@ -2041,7 +2046,7 @@ class MainWin( wx.Frame ):
 			with open(fileName, 'wb') as fp:
 				pass
 		except IOError:
-			Utils.MessageOK( self, _('Cannot open "{}".').format(fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
+			Utils.MessageOK( self, u'{}\n\n    "{}"'.format(_('Cannot Open File'),fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
 			return
 
 		with Model.LockRace() as race:
@@ -2249,7 +2254,7 @@ class MainWin( wx.Frame ):
 
 		# Check for existing file.
 		if os.path.exists(fileName) and \
-		   not Utils.MessageOKCancel(self, _('File already exists.  Overwrite?\n\n  "{}"').format(_('File already exists.  Overwrite?'), fileName), _('File Exists')):
+		   not Utils.MessageOKCancel(self, u'{}\n\n    "{}"'.format(_("File already exists.  Overwrite?"), fileName), _('File Exists')):
 			Model.race = raceSave
 			return
 

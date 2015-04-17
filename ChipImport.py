@@ -121,16 +121,16 @@ class ChipImportDialog( wx.Dialog ):
 			u'',
 			_('You must first "New" a race and fill in the details.'),
 			_('You must also configure a "Tag" field in your Sign-On Excel Sheet and link it to the race.'),
-			_('This is required so CrossMgr can link the tags in the {chipName} file back to rider numbers and info.'),
-			'',
+			_('This is required so CrossMgr can link the tags in the import file back to rider numbers and info.'),
+			u'',
 			_('Race Data:'),
 			_('If the first chip read is NOT the start of the race, you will need to enter the start time manually.'),
 			_('Otherwise the import will use the first chip read as the race start.'),
-			'',
+			u'',
 			_('TimeTrial Data:'),
 			_("The first chip read for each rider will be interpreted as the rider's start time."),
-			'',
-			_('Warning: Importing from {chipName} will replace all the data in this race.'),
+			u'',
+			_('Warning: Importing from chip data will replace all the data in this race.'),
 			_('Proceed with caution.'),
 		]
 		intro = u'\n'.join(todoList)
@@ -257,9 +257,9 @@ class ChipImportDialog( wx.Dialog ):
 		else:
 			defaultPath, defaultFile = os.path.split(defaultPath)
 			
-		dlg = wx.FileDialog( self, _("Choose a {chipName} file").format( chipName=self.chipName ),
+		dlg = wx.FileDialog( self, u"{} {}".format( self.chipName, _('Import file') ),
 							style=wx.OPEN | wx.CHANGE_DIR,
-							wildcard="{chipName} Data (*.txt)|*.txt".format( chipName=self.chipName ),
+							wildcard="RFID (*.txt)|*.txt",
 							defaultDir=defaultPath if defaultPath else '',
 							defaultFile=defaultFile if defaultFile else '',
 							)

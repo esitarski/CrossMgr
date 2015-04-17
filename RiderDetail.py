@@ -728,8 +728,12 @@ class RiderDetail( wx.Panel ):
 			return
 			
 		if Utils.MessageOKCancel( self,
-				_("Entries from {} will be copied to new Bib {}.\n\nAll entries will be slightly earlier.\nContinue?").format(
-					num, newNum),
+				u'{} {}:  {}: {}\n\n{}\n\n{}?'.format(
+					_('Bib'), num,
+					_('Entries will be copied to new Bib'), newNum,
+					_('All entries will be slightly earlier.'),
+					_('Continue'),
+				),
 				_("Confirm Copy Rider Times") ):
 			undo.pushState()
 			with Model.LockRace() as race:
@@ -947,7 +951,9 @@ class RiderDetail( wx.Panel ):
 		if not self.entry:
 			return
 		if not Utils.MessageOKCancel( self,
-			_('Pull Rider {} at {} after lap {}?').format(self.entry.num, Utils.formatTime(self.entry.t+1, True), self.entry.lap),
+			u'{}: {}  {} {} - {}?'.format(
+				_('Bib'), self.entry.num,
+				_('Pull after lap'), self.entry.lap, Utils.formatTime(self.entry.t+1, True), ),
 			_('Pull Rider') ):
 			return
 		try:
@@ -962,7 +968,9 @@ class RiderDetail( wx.Panel ):
 	
 	def OnGanttPopupDNF( self, event ):
 		if not Utils.MessageOKCancel( self,
-			_('DNF Rider {} at {} after lap {}?').format(self.entry.num, Utils.formatTime(self.entry.t+1, True), self.entry.lap),
+			u'{}: {}  {} {} - {}?'.format(
+				_('Bib'), self.entry.num,
+				_('DNF after lap'), self.entry.lap, Utils.formatTime(self.entry.t+1, True), ),
 			_('DNF Rider') ):
 			return
 		try:
@@ -980,8 +988,13 @@ class RiderDetail( wx.Panel ):
 			return
 		if not hasattr(Model.race, 'lapNote'):
 			Model.race.lapNote = {}
-		dlg = wx.TextEntryDialog( self, _("Note for Rider {} on Lap {}:").format(self.entry.num, self.entry.lap), _("Lap Note"),
-					Model.race.lapNote.get( (self.entry.num, self.entry.lap), '' ) )
+		dlg = wx.TextEntryDialog( self,
+				u"{} {} {}:".format(
+					_('Bib'), self.entry.num,
+					_('Note for lap'), self.entry.lap,
+				),
+				_("Lap Note"),
+				Model.race.lapNote.get( (self.entry.num, self.entry.lap), u'' ) )
 		ret = dlg.ShowModal()
 		value = dlg.GetValue().strip()
 		dlg.Destroy()

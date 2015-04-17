@@ -100,11 +100,12 @@ initTranslationCalled = False
 def initTranslation():
 	global initTranslationCalled
 	if not initTranslationCalled:
-		gettext.install(AppVerName.split()[0], os.path.join(dirName,'locale'), unicode=1)
+		gettext.install('messages', os.path.join(dirName,'locale'), unicode=1)
 		
-		#translation = gettext.translation(AppVerName.split()[0], os.path.join(dirName,'locale'), languages=['fr'])
-		#translation.install()
-		#__builtin__.__dict__['_'] = translation.ugettext
+		if False:
+			translation = gettext.translation('messages', os.path.join(dirName,'locale'), languages=['fr'])
+			translation.install()
+			__builtin__.__dict__['_'] = translation.ugettext
 		
 		initTranslationCalled = True
 		extra_fields = {

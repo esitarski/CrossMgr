@@ -161,8 +161,8 @@ class History( wx.Panel ):
 				(wx.NewId(), _('Delete...'),	_('Delete an entry'),	self.OnPopupDelete, nonInterpCase),
 				(wx.NewId(), _('Split...'),		_('Split an entry into two'),self.OnPopupSplit, nonInterpCase),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Swap with Entry before...'),	_('Swap with Entry before'), self.OnPopupSwapBefore, nonInterpCase),
-				(wx.NewId(), _('Swap with Entry after...'),		_('Swap with Entry after'),	self.OnPopupSwapAfter, nonInterpCase),
+				(wx.NewId(), u'{}...'.format(_('Swap with Entry before')),	_('Swap with Entry before'), self.OnPopupSwapBefore, nonInterpCase),
+				(wx.NewId(), u'{}...'.format(_('Swap with Entry after')),_('Swap with Entry after'),	self.OnPopupSwapAfter, nonInterpCase),
 			]
 			for id, name, text, callback, cCode in self.popupInfo:
 				if id:

@@ -46,3 +46,7 @@ if os.path.exists( po ):
 else:
 	subprocess.call( cmd + ["init", "-d", "locale", "-l", "fr", "-i", pot] )
 	
+#-----------------------------------------------------------------------
+# Compile the translation file.
+#
+subprocess.call( cmd + ["compile", "-d", "locale", "-i", po] )

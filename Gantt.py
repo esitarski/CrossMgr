@@ -101,14 +101,14 @@ class Gantt( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(wx.NewId(), _('Add Missing Last Lap'),			_('Add missing last lap'),		self.OnPopupAddMissingLastLap, allCases),
+				(wx.NewId(), _('Add Missing Last Lap'),			_('Add Missing Last Lap'),		self.OnPopupAddMissingLastLap, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Pull after Lap End') + u'...',	_('Pull after lap end'),		self.OnPopupPull, allCases),
-				(wx.NewId(), _('DNF after Lap End') + u'...',	_('DNF after lap end'),			self.OnPopupDNF, allCases),
+				(wx.NewId(), _('Pull after Lap End') + u'...',	_('Pull after Lap End'),		self.OnPopupPull, allCases),
+				(wx.NewId(), _('DNF after Lap End') + u'...',	_('DNF after Lap End'),			self.OnPopupDNF, allCases),
 				(None, None, None, None, None),
 				(wx.NewId(), _('Correct Lap End Time') + u'...',_('Change number or lap end time'),		self.OnPopupCorrect, interpCase),
 				(wx.NewId(), _('Shift Lap End Time') + u'...',	_('Move lap end time earlier/later'),	self.OnPopupShift, interpCase),
-				(wx.NewId(), _('Delete Lap End Time') + u'...',	_('Delete lap end time'),		self.OnPopupDelete, nonInterpCase),
+				(wx.NewId(), _('Delete Lap End Time') + u'...',	_('Delete Lap End Time'),		self.OnPopupDelete, nonInterpCase),
 				(None, None, None, None, None),
 				(wx.NewId(), _('Note') + u'...',				_('Add/Edit lap Note'),			self.OnPopupLapNote, allCases),
 				(None, None, None, None, None),
@@ -240,7 +240,9 @@ class Gantt( wx.Panel ):
 		if not self.entry:
 			return
 		if not Utils.MessageOKCancel( self,
-			_('Pull Rider {} at {} after lap {}?').format(self.entry.num, Utils.formatTime(self.entry.t+1, True), self.entry.lap),
+			u'{} {}: {} {}, {}?'.format(
+				_('Bib'), self.entry.num,
+				_('Pull Rider after lap'), self.entry.lap, Utils.formatTime(self.entry.t+1, True)),
 			_('Pull Rider') ):
 			return
 		try:

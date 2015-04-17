@@ -452,7 +452,7 @@ class NumKeypad( wx.Panel ):
 			if leaderCategory is None:
 				leaderCategory = category
 			categories_seen.add( category )
-			leader.append( u'%s %d' % (category.fullname if category else _('<Missing>'), rr.num) )
+			leader.append( u'%s %d' % (category.fullname if category else u'<{}>'.format(_('Missing')), rr.num) )
 			# Add a copy of the race times.  Append the leader's last time as the current red lantern.
 			raceTimes.append( rr.raceTimes + [rr.raceTimes[-1]] )
 			categoryRaceTimes[category] = raceTimes[-1]
@@ -568,9 +568,9 @@ class NumKeypad( wx.Panel ):
 			changed |= self.updateEstFinishTime()
 			
 			if   lapsToGo == 2 and race.isLeaderExpected():
-				changed |= SetLabel( self.message, _('{}: Leader Bell Lap Alert').format(leaderNum) )
+				changed |= SetLabel( self.message, u'{}: {}'.format(_('Leader Bell Lap Alert'), leaderNum) )
 			elif lapsToGo == 1 and race.isLeaderExpected():
-				changed |= SetLabel( self.message, _('{}: Leader Finish Alert').format(leaderNum) )
+				changed |= SetLabel( self.message, u'{}: {}'.format(_('Leader Finish Alert'), leaderNum) )
 			else:
 				changed |= SetLabel( self.message, self.raceMessage.get(lapsToGo, '') )
 			if race:
