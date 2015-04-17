@@ -49,4 +49,4 @@ else:
 #-----------------------------------------------------------------------
 # Compile the translation file.
 #
-subprocess.call( cmd + ["compile", "-d", "locale", "-i", po] )
+subprocess.call( cmd + ["compile", "-f", "-d", "locale", "-l", "fr", "-i", po] )

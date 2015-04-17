@@ -102,7 +102,7 @@ def initTranslation():
 	if not initTranslationCalled:
 		gettext.install('messages', os.path.join(dirName,'locale'), unicode=1)
 		
-		if False:
+		if True:
 			translation = gettext.translation('messages', os.path.join(dirName,'locale'), languages=['fr'])
 			translation.install()
 			__builtin__.__dict__['_'] = translation.ugettext
