@@ -485,7 +485,7 @@ class ForecastHistory( wx.Panel ):
 					position = prevRiderPosition.get(e.num, -1)
 					
 				if position == 1:
-					return _('Lead')
+					return _('Leader')
 				elif e.t < tMissing:
 					return _('miss')
 				elif position >= 0:
@@ -552,7 +552,7 @@ class ForecastHistory( wx.Panel ):
 
 				position = nextRiderPosition.get(e.num, -1)
 				if position == 1:
-					return 'Lead'
+					return _('Leader')
 				elif position >= 0:
 					return Utils.ordinal(position)
 				else:

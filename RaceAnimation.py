@@ -1,6 +1,6 @@
 import wx
-import Model
 import Utils
+import Model
 import string
 import re
 from gettext import gettext as _

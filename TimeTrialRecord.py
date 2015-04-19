@@ -70,7 +70,7 @@ class TimeTrialRecord( wx.Panel ):
 
 		self.controller = controller
 
-		self.headerNames = ['Time', 'Bib']
+		self.headerNames = [_('Time'), _('Bib')]
 		
 		self.maxRows = 10
 		

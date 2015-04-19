@@ -57,11 +57,12 @@ class Primes( wx.Panel ):
 		self.iCol = dict( (fieldName, i) for i, (colName, fieldName, dataType) in enumerate(self.colNameFields) if fieldName )
 		self.grid = ReorderableGrid( self )
 		self.grid.CreateGrid( 0, len(self.colNameFields) )
+		GetTranslation = _
 		for col, (colName, fieldName, dataType) in enumerate(self.colNameFields):
 			self.grid.SetColLabelValue( col, colName )
 			attr = wx.grid.GridCellAttr()
 			if fieldName == 'effortType':
-				attr.SetEditor( wx.grid.GridCellChoiceEditor(choices=[name for code, name in EffortChoices]) )
+				attr.SetEditor( wx.grid.GridCellChoiceEditor(choices=[GetTranslation(name) for code, name in EffortChoices]) )
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_TOP )
 			elif fieldName == 'winnerInfo':
 				attr.SetReadOnly( True )

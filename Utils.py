@@ -126,6 +126,7 @@ def initTranslation():
 		initTranslationCalled = True
 		extra_fields = {
 			_('Search'),
+			_('Finisher'), _('DNF'), _('PUL'), _('DNS'), _('DQ'), _('OTL'), _('NP'),
 		}
 
 initTranslation()
@@ -474,43 +475,17 @@ def SecondsToMMSS( secs = 0 ):
 	return '{:02d}:{:02d}'.format((secs // 60)%60, secs % 60)
 
 def ordinal( value ):
-	"""
-	Converts zero or a *postive* integer (or their string 
-	representations) to an ordinal value.
-
-	>>> for i in range(1,13):
-	...	 ordinal(i)
-	...	 
-	'1st'
-	'2nd'
-	'3rd'
-	'4th'
-	'5th'
-	'6th'
-	'7th'
-	'8th'
-	'9th'
-	'10th'
-	'11th'
-	'12th'
-
-	>>> for i in (100, '111', '112',1011):
-	...	 ordinal(i)
-	...	 
-	'100th'
-	'111th'
-	'112th'
-	'1011th'
-
-	"""
 	try:
 		value = int(value)
 	except ValueError:
 		return value
 
+	if lang.startswith('fr'):
+		return '{}{}'.format( value, 'er' if value == 1 else 'e' )
+	
 	if (value % 100)//10 != 1:
-		return "%d%s" % (value, ['th','st','nd','rd','th','th','th','th','th','th'][value%10])
-	return "%d%s" % (value, "th")
+		return "{}{}".format(value, ['th','st','nd','rd','th','th','th','th','th','th'][value%10])
+	return "{}{}".format(value, "th")
 
 def getHomeDir():
 	sp = wx.StandardPaths.Get()

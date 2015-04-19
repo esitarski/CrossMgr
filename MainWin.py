@@ -589,7 +589,7 @@ class MainWin( wx.Frame ):
 		self.toolsMenu.AppendSeparator()
 
 		idCur = wx.NewId()
-		self.toolsMenu.Append( idCur , _("Copy Log File to &Clipboard..."), _("Copy Log File to &Clipboard") )
+		self.toolsMenu.Append( idCur , _("Copy Log File to &Clipboard..."), _("Copy Log File to Clipboard") )
 		self.Bind(wx.EVT_MENU, self.menuCopyLogFileToClipboard, id=idCur )
 
 		self.toolsMenu.AppendSeparator()
