@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-04-19 15:10-0400\n"
+"POT-Creation-Date: 2015-04-19 15:45-0400\n"
 "PO-Revision-Date: 2015-04-15 14:17-0400\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: fr <LL@li.org>\n"
@@ -313,47 +313,65 @@ msgstr "Nom"
 msgid ""
 "Start\n"
 "Offset"
-msgstr "Démarrer\nOffset"
+msgstr ""
+"Démarrer\n"
+"Offset"
 
 #: Categories.py:295
 msgid ""
 "Race\n"
 "Laps"
-msgstr "Tours\nde Course"
+msgstr ""
+"Tours\n"
+"de Course"
 
 #: Categories.py:296
 msgid ""
 "Lapped\n"
 "Riders\n"
 "Continue"
-msgstr "Coureurs\ndoublés\ncontinuer"
+msgstr ""
+"Coureurs\n"
+"doublés\n"
+"continuer"
 
 #: Categories.py:298
 msgid ""
 "Dist.\n"
 "By"
-msgstr "Dist.\nPar"
+msgstr ""
+"Dist.\n"
+"Par"
 
 #: Categories.py:299
 msgid ""
 "First\n"
 "Lap\n"
 "Dist."
-msgstr "Première\nTour\nDist."
+msgstr ""
+"Première\n"
+"Tour\n"
+"Dist."
 
 #: Categories.py:300
 msgid ""
 "80%\n"
 "Lap\n"
 "Time"
-msgstr "Temps\nau tour\nde 80 %"
+msgstr ""
+"Temps\n"
+"au tour\n"
+"de 80 %"
 
 #: Categories.py:301
 msgid ""
 "CrossMgr\n"
 "Estimated\n"
 "Laps"
-msgstr "CrossMgr\ntours de course\nestimés"
+msgstr ""
+"CrossMgr\n"
+"tours de course\n"
+"estimés"
 
 #: Categories.py:302
 msgid "Upload"
@@ -388,7 +406,10 @@ msgid ""
 "Add Bib Exceptions (comma separated).\n"
 "This will add the given list of Bibs to this category,\n"
 "and remove them from other categories."
-msgstr "Ajoutez exceptions dossard (séparées par des virgules)\nCe seront ajouter la liste donnée de dossards à cette catégorie,\net les supprimer d'autres catégories."
+msgstr ""
+"Ajoutez exceptions dossard (séparées par des virgules)\n"
+"Ce seront ajouter la liste donnée de dossards à cette catégorie,\n"
+"et les supprimer d'autres catégories."
 
 #: Categories.py:482
 msgid "Add Bib Exceptions"
@@ -453,7 +474,9 @@ msgstr "Impossible d'importer dans une course en cours."
 msgid ""
 "Wait until you have a complete data set, then import the full data into a"
 " New race."
-msgstr "Attendez jusqu'à ce que vous avez un ensemble de données complet, puis importer les données complètes dans une nouvelle course."
+msgstr ""
+"Attendez jusqu'à ce que vous avez un ensemble de données complet, puis "
+"importer les données complètes dans une nouvelle course."
 
 #: ChipImport.py:20
 msgid "Cannot Import into Running Race"
@@ -469,7 +492,9 @@ msgstr "balise manquante de feuille Excel"
 
 #: ChipImport.py:80
 msgid "No matching tags found in Excel link.  Import aborted."
-msgstr "Pas de tags correspondants trouvés dans le lien Excel. Importation annulée."
+msgstr ""
+"Pas de tags correspondants trouvés dans le lien Excel. Importation "
+"annulée."
 
 #: ChipImport.py:114
 msgid "Import"
@@ -487,13 +512,17 @@ msgstr "Vous devez d'abord \"Nouveau\" une course et de remplir dans les détail
 msgid ""
 "You must also configure a \"Tag\" field in your Sign-On Excel Sheet and "
 "link it to the race."
-msgstr "Vous devez également configurer un champ de \"Tag\" dans votre feuille Excel Sign-On et le lier à la course."
+msgstr ""
+"Vous devez également configurer un champ de \"Tag\" dans votre feuille "
+"Excel Sign-On et le lier à la course."
 
 #: ChipImport.py:124
 msgid ""
 "This is required so CrossMgr can link the tags in the import file back to"
 " rider numbers and info."
-msgstr "Ceci est nécessaire afin CrossMgr peut relier les balises dans le fichier d'importation revenir aux chiffres des coureurs et d'info."
+msgstr ""
+"Ceci est nécessaire afin CrossMgr peut relier les balises dans le fichier"
+" d'importation revenir aux chiffres des coureurs et d'info."
 
 #: ChipImport.py:126
 msgid "Race Data:"
@@ -503,11 +532,15 @@ msgstr "Les données de course:"
 msgid ""
 "If the first chip read is NOT the start of the race, you will need to "
 "enter the start time manually."
-msgstr "Si la première puce lecture ne est pas le début de la course, vous devez entrer l'heure de début manuellement."
+msgstr ""
+"Si la première puce lecture ne est pas le début de la course, vous devez "
+"entrer l'heure de début manuellement."
 
 #: ChipImport.py:128
 msgid "Otherwise the import will use the first chip read as the race start."
-msgstr "Sinon l'importation utilisera la première puce lire comme le début de la course."
+msgstr ""
+"Sinon l'importation utilisera la première puce lire comme le début de la "
+"course."
 
 #: ChipImport.py:130
 msgid "TimeTrial Data:"
@@ -517,11 +550,15 @@ msgstr "Contre la montre données:"
 msgid ""
 "The first chip read for each rider will be interpreted as the rider's "
 "start time."
-msgstr "La première puce lire pour chaque coureur sera interprétée comme l'heure de début du coureurs."
+msgstr ""
+"La première puce lire pour chaque coureur sera interprétée comme l'heure "
+"de début du coureurs."
 
 #: ChipImport.py:133
 msgid "Warning: Importing from chip data will replace all the data in this race."
-msgstr "Attention: Importation de données de la puce remplacera toutes les données de cette course."
+msgstr ""
+"Attention: Importation de données de la puce remplacera toutes les "
+"données de cette course."
 
 #: ChipImport.py:134
 msgid "Proceed with caution."
@@ -644,7 +681,9 @@ msgstr "DNS Sélectionné"
 
 #: DNSManager.py:61
 msgid "Potential DNS Entrants (use Shift-Click and Ctrl-Click to multi-select)"
-msgstr "Les participants potentiels DNS (utilisez Maj-clic et Ctrl-Clic pour sélectionner plusieurs)"
+msgstr ""
+"Les participants potentiels DNS (utilisez Maj-clic et Ctrl-Clic pour "
+"sélectionner plusieurs)"
 
 #: DNSManager.py:84
 msgid "No entrants selected to DNS"
@@ -765,7 +804,7 @@ msgid "and Enter Last Lap Time at"
 msgstr "et Entrez le dernier temps au tour à:"
 
 #: EditEntry.py:504 ExportGrid.py:538 ForecastHistory.py:185
-#: ForecastHistory.py:266 Recommendations.py:333
+#: ForecastHistory.py:266 Recommendations.py:333 Utils.py:129
 msgid "DNF"
 msgstr "DNF"
 
@@ -781,7 +820,7 @@ msgstr "Tirer"
 msgid "Confirm PULL Rider"
 msgstr "Confirmez PULL coureur"
 
-#: EditEntry.py:512 Recommendations.py:368
+#: EditEntry.py:512 Recommendations.py:368 Utils.py:129
 msgid "DNS"
 msgstr "DNS"
 
@@ -789,7 +828,7 @@ msgstr "DNS"
 msgid "Confirm Did Not START"
 msgstr "Confirmez n'a pas commencé"
 
-#: EditEntry.py:516
+#: EditEntry.py:516 Utils.py:129
 msgid "DQ"
 msgstr "DQ"
 
@@ -1223,7 +1262,9 @@ msgstr "REL"
 msgid ""
 "Import a GPX File containing coordinates for the course.\n"
 "Continue if you want to load or change the GPX course file."
-msgstr "Importer un fichier GPX contenant les coordonnées pour le cours.\nContinuer si vous voulez charger ou modifier le fichier GPX sûr."
+msgstr ""
+"Importer un fichier GPX contenant les coordonnées pour le cours.\n"
+"Continuer si vous voulez charger ou modifier le fichier GPX sûr."
 
 #: GpxImport.py:25 GpxImport.py:33
 msgid "Remove GPX Course"
@@ -1290,7 +1331,10 @@ msgid ""
 "This GPX file does not contain times.\n"
 "\n"
 "Race times will be calculated based on distance and elevation."
-msgstr "Ce fichier GPX ne contient pas de temps.\n\nLes temps sera calculé en fonction de la distance et l'altitude."
+msgstr ""
+"Ce fichier GPX ne contient pas de temps.\n"
+"\n"
+"Les temps sera calculé en fonction de la distance et l'altitude."
 
 #: GpxImport.py:116
 msgid "Use times in the GPX file for more realistic animation"
@@ -1329,7 +1373,9 @@ msgstr "Ne peut pas ouvrir le fichier"
 #: GpxImport.py:282 GpxImport.py:316 ReadSignOnSheet.py:434
 #: ReadTTStartTimesSheet.py:288
 msgid "Please check the file name and/or its read permissions."
-msgstr "Se il vous plaît vérifier le nom de fichier et / ou de ses autorisations de lecture."
+msgstr ""
+"Se il vous plaît vérifier le nom de fichier et / ou de ses autorisations "
+"de lecture."
 
 #: GpxImport.py:284 GpxImport.py:318 MainWin.py:2074 MainWin.py:2176
 #: MainWin.py:2544 MainWin.py:2677 MainWin.py:2705 ReadSignOnSheet.py:436
@@ -1453,15 +1499,21 @@ msgstr "Assurez-vous que le récepteur RFID est branché sur le réseau."
 msgid ""
 "If not using JChip, make sure the CrossMgrImpinj or CrossMgrAlien bridge "
 "programs are running."
-msgstr "Si vous ne utilisez JChip, se assurer que les programmes de pont CrossMgrImpinj ou CrossMgrAlien sont en cours d'exécution."
+msgstr ""
+"Si vous ne utilisez JChip, se assurer que les programmes de pont "
+"CrossMgrImpinj ou CrossMgrAlien sont en cours d'exécution."
 
 #: JChipSetup.py:112
 msgid "You must have the Sign-On Excel sheet ready and linked before your race."
-msgstr "Vous devez avoir la feuille Excel Sign-On prête et liée avant votre course."
+msgstr ""
+"Vous devez avoir la feuille Excel Sign-On prête et liée avant votre "
+"course."
 
 #: JChipSetup.py:113
 msgid "You must configure a \"Tag\" field in your Sign-On Excel Sheet."
-msgstr "Vous devez configurer un champ de \"Tag\" dans votre feuille Excel Sign-On."
+msgstr ""
+"Vous devez configurer un champ de \"Tag\" dans votre feuille Excel Sign-"
+"On."
 
 #: JChipSetup.py:114
 msgid "Run this test before each race."
@@ -1475,7 +1527,9 @@ msgstr "CrossMgr soutient le lecteur JChip RFID."
 msgid ""
 "For more details, consult the CrossMgr, JChip, CrossMgrImpinj or "
 "CrossMgrAlien documentation."
-msgstr "Pour plus de détails, consultez la documentation CrossMgr, JChip, CrossMgrImpinj ou CrossMgrAlien."
+msgstr ""
+"Pour plus de détails, consultez la documentation CrossMgr, JChip, "
+"CrossMgrImpinj ou CrossMgrAlien."
 
 #: JChipSetup.py:128
 msgid "JChip/CrossMgrImpinj/CrossMgrAlien Configuration:"
@@ -1505,7 +1559,9 @@ msgstr "Port à distance:"
 msgid ""
 "If using JChip, see \"7  Setting of Connections\" in JChip \"Control "
 "Panel Soft Manual\" for more details."
-msgstr "Si vous utilisez JChip, voir \"7 Cadre de connexions\" dans JChip \"Panneau de configuration souple Manuel\" pour plus de détails."
+msgstr ""
+"Si vous utilisez JChip, voir \"7 Cadre de connexions\" dans JChip "
+"\"Panneau de configuration souple Manuel\" pour plus de détails."
 
 #: JChipSetup.py:161
 msgid "Messages:"
@@ -1515,7 +1571,9 @@ msgstr "Messages:"
 msgid ""
 "No active race.  Cannot perform RFID test.  \"New\" or \"Open\" a race "
 "first."
-msgstr "Aucune course active. Vous ne pouvez pas effectuer un test RFID. \"Nouveau\" ou \"Overt\" une course en premier."
+msgstr ""
+"Aucune course active. Vous ne pouvez pas effectuer un test RFID. "
+"\"Nouveau\" ou \"Overt\" une course en premier."
 
 #: JChipSetup.py:197 JChipSetup.py:202
 msgid "Cannot Perform RFID Test"
@@ -1527,11 +1585,15 @@ msgstr "Vous ne pouvez pas effectuer un test RFID alors que la race est en march
 
 #: JChipSetup.py:208
 msgid "CrossMgr will not be able to associate chip Tags with Bib numbers."
-msgstr "CrossMgr ne sera pas en mesure d'associer puce tags avec des numéros de dossard."
+msgstr ""
+"CrossMgr ne sera pas en mesure d'associer puce tags avec des numéros de "
+"dossard."
 
 #: JChipSetup.py:209
 msgid "You may proceed with the test, but you need to fix the Excel sheet."
-msgstr "Vous pouvez procéder à l'essai, mais vous avez besoin de fixer la feuille Excel."
+msgstr ""
+"Vous pouvez procéder à l'essai, mais vous avez besoin de fixer la feuille"
+" Excel."
 
 #: JChipSetup.py:210 MainWin.py:863 MainWin.py:879 MainWin.py:895
 #: MainWin.py:911
@@ -1782,7 +1844,9 @@ msgstr "&Facebook publier PNG..."
 
 #: MainWin.py:373
 msgid "Publish Results as PNG files for posting on Facebook"
-msgstr "Publier les résultats sous forme de fichiers PNG pour avoir publié sur Facebook"
+msgstr ""
+"Publier les résultats sous forme de fichiers PNG pour avoir publié sur "
+"Facebook"
 
 #: MainWin.py:380
 msgid "TT Start HTML Publish..."
@@ -2160,7 +2224,9 @@ msgstr "PhotoViewer"
 
 #: MainWin.py:797
 msgid "Cannot change Start Time of unstarted race.  Start the race from Actions."
-msgstr "Vous ne pouvez pas changer Heure de début de course Non Commencées. Départ de la course à partir Actions."
+msgstr ""
+"Vous ne pouvez pas changer Heure de début de course Non Commencées. "
+"Départ de la course à partir Actions."
 
 #: MainWin.py:797
 msgid "Race Not Started"
@@ -2168,7 +2234,9 @@ msgstr "Course Non commencé"
 
 #: MainWin.py:800
 msgid "Cannot change Start Time of a Time Trial with recorded times"
-msgstr "Vous ne pouvez pas changer heure de début d'une contre la montre avec les temps enregistrés"
+msgstr ""
+"Vous ne pouvez pas changer heure de début d'une contre la montre avec les"
+" temps enregistrés"
 
 #: MainWin.py:800
 msgid "Cannot Change Start Time"
@@ -2199,7 +2267,10 @@ msgid ""
 "This will restore the race from the original input and replace your "
 "adds/splits/deletes.\n"
 "Are you sure you want to continue?"
-msgstr "Cela permettra de restaurer la course de l'entrée d'origine et remplacer votre ajoute / groupes / supprime. \\ NEtes-vous sûr de vouloir continuer?"
+msgstr ""
+"Cela permettra de restaurer la course de l'entrée d'origine et remplacer "
+"votre ajoute / groupes / supprime. \\ NEtes-vous sûr de vouloir "
+"continuer?"
 
 #: MainWin.py:831 MainWin.py:833
 msgid "No Data Found"
@@ -2211,7 +2282,9 @@ msgstr "Vérifiez le fichier"
 
 #: MainWin.py:862 MainWin.py:878 MainWin.py:894 MainWin.py:910
 msgid "You must have a valid Excel sheet with associated tags and Bib numbers."
-msgstr "Vous devez avoir une feuille Excel valide avec des étiquettes associées et numéros de dossard."
+msgstr ""
+"Vous devez avoir une feuille Excel valide avec des étiquettes associées "
+"et numéros de dossard."
 
 #: MainWin.py:931
 msgid "Contact Email:"
@@ -2243,7 +2316,9 @@ msgstr "Aperçu avant impression"
 
 #: MainWin.py:1135
 msgid "This is not the recommended method to publish results to Facebook."
-msgstr "Ce ne est pas la méthode recommandée pour publier les résultats à Facebook."
+msgstr ""
+"Ce ne est pas la méthode recommandée pour publier les résultats à "
+"Facebook."
 
 #: MainWin.py:1136
 msgid "Would you like to see the recommended options?"
@@ -2324,7 +2399,10 @@ msgid ""
 "Configure it now?\n"
 "\n"
 "(you can always change it later from \"Options|Set Contact Email...\")"
-msgstr "Votre contact de messagerie ne est défini \\ n \\ nConfigurez maintenant \\ n \\ n.? (Vous pouvez toujours changer plus tard à partir de \\ \"Options | Définir Contact Email... \")"
+msgstr ""
+"Votre contact de messagerie ne est défini \\ n \\ nConfigurez maintenant "
+"\\ n \\ n.? (Vous pouvez toujours changer plus tard à partir de \\ "
+"\"Options | Définir Contact Email... \")"
 
 #: MainWin.py:1508
 msgid "Set Email Contact"
@@ -2332,7 +2410,9 @@ msgstr "Réglez E-mail Contactez"
 
 #: MainWin.py:1527 MainWin.py:1618 MainWin.py:1825 MainWin.py:1872
 msgid "Cannot read HTML template file.  Check program installation."
-msgstr "Vous ne pouvez pas lire le fichier de template HTML. Vérifiez l'installation du programme."
+msgstr ""
+"Vous ne pouvez pas lire le fichier de template HTML. Vérifiez "
+"l'installation du programme."
 
 #: MainWin.py:1528 MainWin.py:1619 MainWin.py:1826 MainWin.py:1873
 msgid "Html Template Read Error"
@@ -2384,11 +2464,15 @@ msgstr "Le contre la montre n'a pas commencé."
 
 #: MainWin.py:1597
 msgid "The TTStart page will act as countdown clock for the scheduled start time."
-msgstr "La page de CMStart agira horloge compte à rebours pour l'heure de début prévue."
+msgstr ""
+"La page de CMStart agira horloge compte à rebours pour l'heure de début "
+"prévue."
 
 #: MainWin.py:1598
 msgid "You must publish this page again after you start the Time Trial."
-msgstr "Vous devez publier à nouveau cette page après avoir démarré le contre la montre"
+msgstr ""
+"Vous devez publier à nouveau cette page après avoir démarré le contre la "
+"montre"
 
 #: MainWin.py:1600
 msgid "Reminder: Publish after Time Trial is Started"
@@ -2558,7 +2642,9 @@ msgstr "Cela simulera une course en utilisant des données générées aléatoir
 
 #: MainWin.py:2527
 msgid "It is a good illustration of CrossMgr's functionality with real time data."
-msgstr "Ce est une bonne illustration de la fonctionnalité de CrossMgr avec des données en temps réel."
+msgstr ""
+"Ce est une bonne illustration de la fonctionnalité de CrossMgr avec des "
+"données en temps réel."
 
 #: MainWin.py:2529
 msgid "The simulation takes about 8 minutes."
@@ -2568,13 +2654,17 @@ msgstr "La simulation prend environ 8 minutes."
 msgid ""
 "Unlike a real race, the simulation will show riders crossing the line "
 "right from the start."
-msgstr "Contrairement à une vraie course, la simulation montrera les coureurs franchissent la ligne droite dès le début."
+msgstr ""
+"Contrairement à une vraie course, la simulation montrera les coureurs "
+"franchissent la ligne droite dès le début."
 
 #: MainWin.py:2531
 msgid ""
 "In a real race, riders would have to finish the first lap before they "
 "were recorded."
-msgstr "Dans une vraie course, les coureurs devront terminer le premier tour avant qu'ils ne soient enregistrés."
+msgstr ""
+"Dans une vraie course, les coureurs devront terminer le premier tour "
+"avant qu'ils ne soient enregistrés."
 
 #: MainWin.py:2533
 msgid "The race will be written to"
@@ -2642,13 +2732,17 @@ msgstr "Sont le nombre de Catégorie Ranges correcte?"
 
 #: MainWin.py:2874
 msgid "Have you fixed all scoring and data problems with the Race?"
-msgstr "Avez-vous fixé tous les problèmes de marquage et de données avec le course?"
+msgstr ""
+"Avez-vous fixé tous les problèmes de marquage et de données avec le "
+"course?"
 
 #: MainWin.py:2875
 msgid ""
 "Are the Rider Names / Teams / License data correct (spelling?  missing "
 "data)?"
-msgstr "Sont les noms de coureur / équipes / données de licence correcte (orthographe? données manquantes)?"
+msgstr ""
+"Sont les noms de coureur / équipes / données de licence correcte "
+"(orthographe? données manquantes)?"
 
 #: MainWin.py:2878
 msgid "If not, press Cancel, fix the issues and publish again."
@@ -2699,7 +2793,10 @@ msgid ""
 "   * Shows rider history\n"
 "   * Allows rider lap adjustments\n"
 "   * UCI 80% Rule Countdown\n"
-msgstr "Créer résultats de la course de vélo rapidement et facilement avec peu de préparation \n\\"
+msgstr ""
+"Créer résultats de la course de vélo rapidement et facilement avec peu de"
+" préparation \n"
+"\\"
 
 #: MainWin.py:3053
 msgid ""
@@ -2718,7 +2815,9 @@ msgid ""
 "Use entirely at your own risk.\n"
 "Do not come back and tell me that this program screwed up your event!\n"
 "Computers fail, screw-ups happen.  Always use a paper manual backup.\n"
-msgstr "Méfiez-vous utilisateur\n\\"
+msgstr ""
+"Méfiez-vous utilisateur\n"
+"\\"
 
 #: MainWin.py:3271
 msgid "Unstarted"
@@ -3041,7 +3140,9 @@ msgstr "ou Personnalisé"
 msgid ""
 "Laps\n"
 "To Go"
-msgstr "Tour\nà faire"
+msgstr ""
+"Tour\n"
+"à faire"
 
 #: Primes.py:50 Primes.py:320
 msgid "Sponsor"
@@ -3059,7 +3160,9 @@ msgstr "Marchandises"
 msgid ""
 "Winner\n"
 "Bib"
-msgstr "Gagnant\nDossard"
+msgstr ""
+"Gagnant\n"
+"Dossard"
 
 #: Primes.py:163
 msgid "You must have a Race to create a Prime."
@@ -3087,7 +3190,9 @@ msgstr "Pour"
 
 #: Printing.py:62 Printing.py:153
 msgid "Click to select Categories.  Use Ctrl-Click to select Multiple Categories."
-msgstr "Cliquez pour sélectionner les catégories. Utilisez Ctrl-clic pour sélectionner plusieurs catégories."
+msgstr ""
+"Cliquez pour sélectionner les catégories. Utilisez Ctrl-clic pour "
+"sélectionner plusieurs catégories."
 
 #: Printing.py:69
 msgid "Include Lap Times in Printout"
@@ -3199,7 +3304,9 @@ msgstr "Distance Unité: "
 
 #: Properties.py:182
 msgid "Show Lap Notes, Edits and Projected Times in HTML Output"
-msgstr "Afficher les notes de tour, édite et heures d'arrivée prévues en sortie HTML"
+msgstr ""
+"Afficher les notes de tour, édite et heures d'arrivée prévues en sortie "
+"HTML"
 
 #: Properties.py:183
 msgid "Show Course Animation in Html"
@@ -3219,7 +3326,9 @@ msgstr "Ne redémarre pas la race horloge sur la première lecture."
 
 #: Properties.py:248
 msgid "Automatic Start: Reset start clock on first tag read."
-msgstr "Démarrer automatique: Redémarrez l'horloge de départ sur la première lecture de la puce."
+msgstr ""
+"Démarrer automatique: Redémarrez l'horloge de départ sur la première "
+"lecture de la puce."
 
 #: Properties.py:248
 msgid "All riders get the start time of the first read."
@@ -3227,11 +3336,15 @@ msgstr "Tous les coureurs reçoivent l'heure de début de la première lecture."
 
 #: Properties.py:249
 msgid "Manual Start: Skip first tag read for all riders."
-msgstr "Démarrage manuel: Passer la première puce de lecture pour tous les coureurs."
+msgstr ""
+"Démarrage manuel: Passer la première puce de lecture pour tous les "
+"coureurs."
 
 #: Properties.py:249
 msgid "Required when start run-up passes the finish on the first lap."
-msgstr "Nécessaire en cas de début d'exécution jusqu'à la finition passe sur le premier tour."
+msgstr ""
+"Nécessaire en cas de début d'exécution jusqu'à la finition passe sur le "
+"premier tour."
 
 #: Properties.py:253
 msgid "Use RFID Reader"
@@ -3279,7 +3392,9 @@ msgstr "Remarques à apparaître sur la sortie HTML:"
 
 #: Properties.py:380
 msgid "(notes containing Html tags must start with <html> and end with </html>)"
-msgstr "(Notes contenant des balises HTML doit lancer par <html> et finissent par </ html>)"
+msgstr ""
+"(Notes contenant des balises HTML doit lancer par <html> et finissent par"
+" </ html>)"
 
 #: Properties.py:382
 msgid "Insert Variable..."
@@ -3476,7 +3591,9 @@ msgstr "Balise2"
 
 #: ReadSignOnSheet.py:42
 msgid "Specify the Excel File containing additional rider information."
-msgstr "Spécifiez le fichier Excel contenant des informations de coureur supplémentaire."
+msgstr ""
+"Spécifiez le fichier Excel contenant des informations de coureur "
+"supplémentaire."
 
 #: ReadSignOnSheet.py:44 ReadTTStartTimesSheet.py:27
 msgid "Each race must be in a separate sheet."
@@ -3504,7 +3621,9 @@ msgstr "Colonne de tête vide"
 
 #: ReadSignOnSheet.py:182
 msgid "Specify the spreadsheet columns corresponding to CrossMgr fields."
-msgstr "Spécifiez les colonnes de feuille de calcul correspondant aux champs CrossMgr."
+msgstr ""
+"Spécifiez les colonnes de feuille de calcul correspondant aux champs "
+"CrossMgr."
 
 #: ReadSignOnSheet.py:184
 msgid "Set missing fields to blank."
@@ -3634,13 +3753,17 @@ msgstr "Champ manquant"
 
 #: ReadTTStartTimesSheet.py:25
 msgid "Specify the Excel File containing TT Start Times in HH:MM:SS format."
-msgstr "Spécifiez le fichier Excel contenant TT Démarrer Times en format hh: mm: ss."
+msgstr ""
+"Spécifiez le fichier Excel contenant TT Démarrer Times en format hh: mm: "
+"ss."
 
 #: ReadTTStartTimesSheet.py:28
 msgid ""
 "This is the Stopwatch Time usually beginning at 00:01:00, with 30 to 60 "
 "second gaps - not the clock time."
-msgstr "Ce est l'heure Chronomètre commençant généralement à 0:01:00, de 30 à 60 secondes lacunes - pas le temps d'horloge."
+msgstr ""
+"Ce est l'heure Chronomètre commençant généralement à 0:01:00, de 30 à 60 "
+"secondes lacunes - pas le temps d'horloge."
 
 #: ReadTTStartTimesSheet.py:54
 msgid "Specify the sheet containing the start times for this race:"
@@ -3648,7 +3771,9 @@ msgstr "Spécifiez la feuille contenant les heures de début pour cette course:"
 
 #: ReadTTStartTimesSheet.py:85
 msgid "Specify the spreadsheet columns corresponding to the Start Time fields."
-msgstr "Spécifiez les colonnes de feuille de calcul correspondant aux champs Heure de début."
+msgstr ""
+"Spécifiez les colonnes de feuille de calcul correspondant aux champs "
+"Heure de début."
 
 #: ReadTTStartTimesSheet.py:87
 msgid "Both Bib and Start Time must be specified."
@@ -3738,7 +3863,9 @@ msgstr "Temps de décalage"
 msgid ""
 "Rider has extra laps not shown in results (all riders finish on leader's "
 "last lap)"
-msgstr "coureur a tours supplémentaires ne apparaissent pas dans les résultats (tous les coureurs arrivent sur le dernier tour du tête de la course)"
+msgstr ""
+"coureur a tours supplémentaires ne apparaissent pas dans les résultats "
+"(tous les coureurs arrivent sur le dernier tour du tête de la course)"
 
 #: Recommendations.py:269
 msgid "sec"
@@ -3760,7 +3887,9 @@ msgstr "tours en course"
 msgid ""
 "Verify that Category did Race Laps.  Update Race Laps for Category if "
 "necessary."
-msgstr "Vérifiez que Catégorie fait tours en course. Mise à jour tours de course pour la catégorie si nécessaire."
+msgstr ""
+"Vérifiez que Catégorie fait tours en course. Mise à jour tours de course "
+"pour la catégorie si nécessaire."
 
 #: Recommendations.py:334
 msgid "Check for DNF after rider lap"
@@ -3768,7 +3897,9 @@ msgstr "Vérifiez DNF après coureur tour"
 
 #: Recommendations.py:357
 msgid "Confirm rider was lapped by Category Leader in leader's lap"
-msgstr "Confirmez coureur a été doublés par coureur de tête de catégorie dans le tour du coureur de tête"
+msgstr ""
+"Confirmez coureur a été doublés par coureur de tête de catégorie dans le "
+"tour du coureur de tête"
 
 #: Recommendations.py:369
 msgid "Rider has recorded times."
@@ -3794,7 +3925,9 @@ msgstr "Trouvé temps enregistré"
 msgid ""
 "Rider does not match any active category.  Check if rider is in right "
 "race or data entry error."
-msgstr "coureur ne correspond à aucune catégorie active. Vérifiez si coureur est en course droit ou d'une erreur de saisie de données."
+msgstr ""
+"coureur ne correspond à aucune catégorie active. Vérifiez si coureur est "
+"en course droit ou d'une erreur de saisie de données."
 
 #: Recommendations.py:410
 msgid "Check rider has projected times"
@@ -3804,7 +3937,10 @@ msgstr "Vérifiez coureur a projeté fois"
 msgid ""
 "Imported chip Tag missing from Excel sheet.  Check if a stray read.  If "
 "not, add Tag to Excel sheet and run Chip Import again"
-msgstr "Importé Tag à puce absent de la feuille Excel. Vérifiez si un chien errant lire. Sinon, ajoutez Tag à la feuille Excel et relancez Chip importation"
+msgstr ""
+"Importé Tag à puce absent de la feuille Excel. Vérifiez si un chien "
+"errant lire. Sinon, ajoutez Tag à la feuille Excel et relancez Chip "
+"importation"
 
 #: Recommendations.py:427
 msgid "First recorded time"
@@ -3822,7 +3958,9 @@ msgstr "Utile pour trouver le meilleur tour."
 msgid ""
 "Useful for finding for Prime winners.\n"
 "After selecting, click on a lap header to sort."
-msgstr "Utile pour trouver du Prime gagnants. \nAprès sélection, cliquez sur un en-tête de tour pour trier."
+msgstr ""
+"Utile pour trouver du Prime gagnants. \n"
+"Après sélection, cliquez sur un en-tête de tour pour trier."
 
 #: Results.py:62
 msgid "Lap Speeds"
@@ -3836,7 +3974,9 @@ msgstr "délais de course"
 msgid ""
 "Useful to predict how long a race will take based on rider's average "
 "speed."
-msgstr "Utile pour prédire combien de temps une course aura sur la base de la vitesse moyenne du coureur."
+msgstr ""
+"Utile pour prédire combien de temps une course aura sur la base de la "
+"vitesse moyenne du coureur."
 
 #: Results.py:241
 msgid "Switch to History tab"
@@ -4072,7 +4212,9 @@ msgstr "Swap Nombre coureur"
 
 #: RiderDetail.py:694
 msgid "All time entries will be copied to the new bib number."
-msgstr "Toutes les entrées de temps seront copiés dans le nouveau numéro de dossard."
+msgstr ""
+"Toutes les entrées de temps seront copiés dans le nouveau numéro de "
+"dossard."
 
 #: RiderDetail.py:695
 msgid "New Bib Number"
@@ -4088,7 +4230,9 @@ msgstr "Nouveau dossard existe déjà"
 
 #: RiderDetail.py:718
 msgid "If you really want to copy times to this number, delete it first."
-msgstr "Si vous voulez vraiment copier les heures à ce numéro, d'abord le supprimer."
+msgstr ""
+"Si vous voulez vraiment copier les heures à ce numéro, d'abord le "
+"supprimer."
 
 #: RiderDetail.py:725 RiderDetail.py:726
 msgid "Cannot Copy to Same Number"
@@ -4114,13 +4258,15 @@ msgstr "Confirmer la copie coureur temps"
 msgid ""
 "\n"
 "Lap Start "
-msgstr "\Tour commencer"
+msgstr "\\Tour commencer"
 
 #: RiderDetail.py:871
 msgid ""
 "\n"
 "Lap End "
-msgstr "\nTour Fin "
+msgstr ""
+"\n"
+"Tour Fin "
 
 #: RiderDetail.py:903
 msgid "Add missing last lap"
@@ -4199,7 +4345,10 @@ msgid ""
 "No Categories Selected.\n"
 "\n"
 "Select some Categories, or Cancel"
-msgstr "Aucun Catégories sélectionnées.\n\nSélectionnez certaines catégories ou annuler"
+msgstr ""
+"Aucun Catégories sélectionnées.\n"
+"\n"
+"Sélectionnez certaines catégories ou annuler"
 
 #: SetAutoCorrect.py:54
 msgid "No Categories Selected"
@@ -4207,7 +4356,9 @@ msgstr "Pas de catégories sélectionnées"
 
 #: SetGraphic.py:14
 msgid "Graphic to be Displayed in Results (set to blank to use default graphic):"
-msgstr "Graphique à afficher dans les résultats (mis à vide pour utiliser graphique par défaut):"
+msgstr ""
+"Graphique à afficher dans les résultats (mis à vide pour utiliser "
+"graphique par défaut):"
 
 #: SetGraphic.py:19
 msgid "Choose"
@@ -4260,6 +4411,24 @@ msgstr "Durée d'enregistrement a échoué."
 #: Utils.py:128
 msgid "Search"
 msgstr "Recherche"
+
+#: Utils.py:129
+#, fuzzy
+msgid "Finisher"
+msgstr "Fini"
+
+#: Utils.py:129
+msgid "PUL"
+msgstr ""
+
+#: Utils.py:129
+#, fuzzy
+msgid "OTL"
+msgstr "Total"
+
+#: Utils.py:129
+msgid "NP"
+msgstr ""
 
 #: VideoBuffer.py:238 VideoBufferProcessManager.py:109
 #: VideoBufferProcessTest.py:145

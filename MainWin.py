@@ -3326,8 +3326,11 @@ def MainLoop():
 	parser.add_option("-f", "--file", dest="filename", help="race file", metavar="RaceFile.cmn")
 	parser.add_option("-q", "--quiet", action="store_false", dest="verbose", default=True, help='hide splash screen')
 	parser.add_option("-r", "--regular", action="store_false", dest="fullScreen", default=True, help='regular size (not full screen)')
+	parser.add_option("-l", "--lang", dest="lang", default='en', help='language short form')
 	(options, args) = parser.parse_args()
-
+	
+	Utils.initTranslation( options.lang )
+	
 	dataDir = Utils.getHomeDir()
 	redirectFileName = os.path.join(dataDir, 'CrossMgr.log')
 			

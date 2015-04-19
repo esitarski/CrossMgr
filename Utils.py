@@ -93,6 +93,7 @@ def getHelpIndexFolder(): return helpIndexFolder
 # Get the user's default language.
 #
 import locale
+lang = None
 try:
 	import ctypes
 	windll = ctypes.windll.kernel32
@@ -100,8 +101,6 @@ try:
 except:
 	lang = locale.getdefaultlocale()[0]
 
-	
-lang = 'fr_QC'
 #-----------------------------------------------------------------------
 # Setup translation.
 #
@@ -110,9 +109,15 @@ from Version import AppVerName
 import gettext
 import __builtin__
 initTranslationCalled = False
-def initTranslation():
+def initTranslation( lang_suggested = None ):
+	global lang
 	global initTranslationCalled
-	if not initTranslationCalled:
+	
+	if not initTranslationCalled or (lang_suggested and lang_suggested != lang):
+		initTranslationCalled = True
+		if lang_suggested:
+			lang = lang_suggested
+		
 		gettext.install('messages', os.path.join(dirName,'CrossMgrLocale'), unicode=1)
 		
 		# Try to use a translation matching the user's language.
@@ -123,12 +128,11 @@ def initTranslation():
 		except:
 			pass
 		
-		initTranslationCalled = True
 		extra_fields = {
 			_('Search'),
 			_('Finisher'), _('DNF'), _('PUL'), _('DNS'), _('DQ'), _('OTL'), _('NP'),
 		}
-
+		
 initTranslation()
 
 class SuspendTranslation( object ):
