@@ -126,7 +126,7 @@ writeToFile( manifest, 'MANIFEST.in' )
 
 srcDir = os.path.join( pypiDir, 'CrossMgr' )
 os.mkdir( srcDir )
-for dir in ['CrossMgrImages', 'CrossMgrHtml', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex']:
+for dir in ['CrossMgrImages', 'CrossMgrHtml', 'CrossMgrLocale', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex']:
 	print 'copying', dir, '...'
 	shutil.copytree( dir, os.path.join(pypiDir,dir) )
 

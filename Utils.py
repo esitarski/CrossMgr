@@ -90,6 +90,19 @@ def getHelpFolder():	return helpFolder
 def getHelpIndexFolder(): return helpIndexFolder
 
 #-----------------------------------------------------------------------
+# Get the user's default language.
+#
+import locale
+try:
+	import ctypes
+	windll = ctypes.windll.kernel32
+	lang = locale.windows_locale[ windll.GetUserDefaultUILanguage() ]
+except:
+	lang = locale.getdefaultlocale()[0]
+
+	
+lang = 'fr_QC'
+#-----------------------------------------------------------------------
 # Setup translation.
 #
 import sys
@@ -100,12 +113,15 @@ initTranslationCalled = False
 def initTranslation():
 	global initTranslationCalled
 	if not initTranslationCalled:
-		gettext.install('messages', os.path.join(dirName,'locale'), unicode=1)
+		gettext.install('messages', os.path.join(dirName,'CrossMgrLocale'), unicode=1)
 		
-		if True:
-			translation = gettext.translation('messages', os.path.join(dirName,'locale'), languages=['fr'])
+		# Try to use a translation matching the user's language.
+		try:
+			translation = gettext.translation('messages', os.path.join(dirName,'CrossMgrLocale'), languages=[lang[:2]])
 			translation.install()
 			__builtin__.__dict__['_'] = translation.ugettext
+		except:
+			pass
 		
 		initTranslationCalled = True
 		extra_fields = {

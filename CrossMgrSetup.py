@@ -76,7 +76,7 @@ def copyDir( d ):
 		if not i.endswith( '.db' ):	# Ignore .db files.
 			shutil.copy( os.path.join(d, i), os.path.join(destD,i) )
 			
-for dir in ['CrossMgrImages', 'data', 'CrossMgrHtml', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex']: 
+for dir in ['CrossMgrImages', 'data', 'CrossMgrHtml', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex', 'CrossMgrLocale']: 
 	copyDir( dir )
 
 # Create the installer
