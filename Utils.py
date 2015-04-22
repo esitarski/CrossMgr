@@ -101,6 +101,8 @@ try:
 except:
 	lang = locale.getdefaultlocale()[0]
 
+lang = 'fr'
+
 #-----------------------------------------------------------------------
 # Setup translation.
 #
