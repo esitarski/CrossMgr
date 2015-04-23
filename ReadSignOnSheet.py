@@ -192,9 +192,10 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		
 		boldFont = None
 		
+		GetTranslation = _
 		gs = wx.GridSizer( 2, len(Fields) )
 		for c, f in enumerate(Fields):
-			label = wx.StaticText(sp, label=wx.GetTranslation(f))
+			label = wx.StaticText(sp, label=GetTranslation(f))
 			if boldFont is None:
 				font = label.GetFont()
 				boldFont = wx.Font( font.GetPointSize()+1, font.GetFamily(), font.GetStyle(), wx.FONTWEIGHT_BOLD )
@@ -240,9 +241,9 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 
 	def doUpdateSummary( self, event = None ):
 		self.mapSummary.DeleteAllItems()
+		GetTranslation = _
 		for c, f in enumerate(Fields):
-			rowFields = (f, self.choices[c].GetStringSelection())
-			r = self.mapSummary.InsertStringItem( sys.maxint, f )
+			r = self.mapSummary.InsertStringItem( sys.maxint, GetTranslation(f) )
 			self.mapSummary.SetStringItem( r, 1, self.choices[c].GetStringSelection() )
 		
 	def getFieldCol( self ):
@@ -417,6 +418,7 @@ class GetExcelLink( object ):
 	
 	def onPageChanging( self, evt ):
 		isForward = evt.GetDirection()
+		GetTranslation = _
 		if isForward:
 			page = evt.GetPage()
 			if page == self.fileNamePage:
@@ -449,7 +451,7 @@ class GetExcelLink( object ):
 				excelLink.setSheetName( self.sheetNamePage.getSheetName() )
 				fieldCol = self.headerNamesPage.getFieldCol()
 				if fieldCol[Fields[0]] < 0:
-					Utils.MessageOK( self.wizard, u'{}: "{}"'.format(_('You must specify column'), wx.GetTranslation(Fields[0])),
+					Utils.MessageOK( self.wizard, u'{}: "{}"'.format(_('You must specify column'), GetTranslation(Fields[0])),
 										title=_('Excel Format Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 				else:

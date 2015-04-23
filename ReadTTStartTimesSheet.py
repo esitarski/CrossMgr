@@ -274,6 +274,7 @@ class GetExcelTTStartTimeLink( object ):
 	
 	def onPageChanging( self, evt ):
 		isForward = evt.GetDirection()
+		GetTranslation = _
 		if isForward:
 			page = evt.GetPage()
 			if page == self.fileNamePage:
@@ -301,7 +302,7 @@ class GetExcelTTStartTimeLink( object ):
 				excelLink.setSheetName( self.sheetNamePage.getSheetName() )
 				fieldCol = self.headerNamesPage.getFieldCol()
 				if fieldCol[Fields[0]] < 0:
-					Utils.MessageOK( self.wizard, u'{}: "{}"'.format(_('You must specify column'), wx.GetTranslation(Fields[0])),
+					Utils.MessageOK( self.wizard, u'{}: "{}"'.format(_('You must specify column'), GetTranslation(Fields[0])),
 										title=_('Excel Format Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 				else:

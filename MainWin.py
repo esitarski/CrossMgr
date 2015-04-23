@@ -3328,6 +3328,8 @@ def MainLoop():
 	parser.add_option("-r", "--regular", action="store_false", dest="fullScreen", default=True, help='regular size (not full screen)')
 	(options, args) = parser.parse_args()
 	
+	Utils.initTranslation()
+	
 	dataDir = Utils.getHomeDir()
 	redirectFileName = os.path.join(dataDir, 'CrossMgr.log')
 			
@@ -3348,6 +3350,8 @@ def MainLoop():
 			pass
 	
 	Utils.writeLog( 'start: {}'.format(Version.AppVerName) )
+	Utils.writeLog( 'lang: "{}"'.format(Utils.lang) )
+
 	
 	# Configure the main window.
 	mainWin = MainWin( None, title=Version.AppVerName, size=(1128,600) )

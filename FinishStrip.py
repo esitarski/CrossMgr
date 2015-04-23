@@ -17,7 +17,7 @@ photoHeight = 480
 
 DefaultPhotoFolder = 'CrossMgrCamera/Test_Photos'
 DefaultPhotoFolder = 'BCC_Test_Photos'
-DefaultPhotoFolder = 'PhotoExample'
+DefaultPhotoFolder = 'PhotoExample2'
 
 class PhotoExists( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=(640,480), style=0,
@@ -116,6 +116,10 @@ class FinishStrip( wx.Panel ):
 		if tMin is not None:
 			self.tDrawStart = tMin
 		
+	@property
+	def scaledPixelsPerSec( self ):
+		return self.pixelsPerSec * self.scale
+	
 	def SetLeftToRight( self, leftToRight=True ):
 		self.leftToRight = leftToRight
 		wx.CallAfter( self.Refresh )
@@ -132,12 +136,17 @@ class FinishStrip( wx.Panel ):
 		self.clip = clip
 		wx.CallAfter( self.Refresh )
 		
+	def SetScale( self, scale ):
+		self.scale = scale
+		self.RefreshBitmaps( reusePrevious=False )
+		wx.CallAfter( self.Refresh )
+		
 	def GetTimeMinMax( self ):
 		return (self.timeBitmaps[0][0], self.timeBitmaps[-1][0]) if self.timeBitmaps else (None, None)
 		
 	def GetTimePhotos( self ):
 		return [t for t, bm in self.timeBitmaps]
-		
+	
 	def getPhotoTime( self, fname ):
 		try:
 			fname = os.path.splitext(os.path.basename(fname))[0]
@@ -188,7 +197,7 @@ class FinishStrip( wx.Panel ):
 		
 	def OnLeftUp( self, event ):
 		x = event.GetX()
-		self.tDrawStart += (x - self.getXTimeLine()) / float(self.pixelsPerSec) * (-1.0 if self.leftToRight else 1.0)
+		self.tDrawStart += (x - self.getXTimeLine()) / float(self.scaledPixelsPerSec) * (-1.0 if self.leftToRight else 1.0)
 		self.xTimeLine = x
 		wx.CallAfter( self.OnLeaveWindow )
 		wx.CallAfter( self.Refresh )
@@ -208,7 +217,7 @@ class FinishStrip( wx.Panel ):
 		widthWinHalf = widthWin // 2
 		
 		xTimeLine = self.getXTimeLine()
-		text = formatTime( self.tDrawStart + (x - xTimeLine) / float(self.pixelsPerSec) * (-1.0 if self.leftToRight else 1.0) )
+		text = formatTime( self.tDrawStart + (x - xTimeLine) / float(self.scaledPixelsPerSec) * (-1.0 if self.leftToRight else 1.0) )
 		fontHeight = max(5, heightWin//20)
 		font = wx.FontFromPixelSize(
 			wx.Size(0,fontHeight),
@@ -247,7 +256,7 @@ class FinishStrip( wx.Panel ):
 		if event.Dragging():
 			x = event.GetX()
 			dx = x - self.xDragLast
-			self.tDrawStart += float(dx) / float(self.pixelsPerSec)
+			self.tDrawStart += float(dx) / float(self.scaledPixelsPerSec)
 			self.xDragLast = x
 			wx.CallAfter( self.Refresh )
 		
@@ -276,7 +285,7 @@ class FinishStrip( wx.Panel ):
 		bitmapDC = wx.MemoryDC()
 		if self.leftToRight:
 			def getX( t ):
-				return int(xTimeLine - widthPhotoHalf - (t - self.tDrawStart) * self.pixelsPerSec)
+				return int(xTimeLine - widthPhotoHalf - (t - self.tDrawStart) * self.scaledPixelsPerSec)
 			
 			bmRightEdge = []
 			for t, bm in self.timeBitmaps:
@@ -302,7 +311,7 @@ class FinishStrip( wx.Panel ):
 				bitmapDC.SelectObject( wx.NullBitmap )
 		else:
 			def getX( t ):
-				return int(xTimeLine - widthPhotoHalf + (t - self.tDrawStart) * self.pixelsPerSec)
+				return int(xTimeLine - widthPhotoHalf + (t - self.tDrawStart) * self.scaledPixelsPerSec)
 			
 			bmLeftEdge = []
 			for t, bm in self.timeBitmaps:
@@ -357,11 +366,21 @@ class FinishStrip( wx.Panel ):
 		self.draw( wx.PaintDC(self) )
 		
 	def GetBitmap( self ):
+		if not self.timeBitmaps:
+			return wx.EmptyBitmap( 16, 16 )
+		
 		widthWin, heightWin = self.GetClientSize()
+		
 		bm = wx.EmptyBitmap( widthWin, heightWin )
 		dc = wx.MemoryDC( bm )
 		self.draw( dc )
 		dc.SelectObject( wx.NullBitmap )
+
+		widthPhoto, heightPhoto = self.timeBitmaps[0][1].GetSize()
+		if heightPhoto != heightWin:
+			image = bm.ConvertToImage()
+			image.Resize( (widthWin,heightPhoto), (0,0) )
+			bm = image.ConvertToBitmap()
 		return bm
 
 class FinishStripPanel( wx.Panel ):
@@ -389,6 +408,10 @@ class FinishStripPanel( wx.Panel ):
 		self.speedSlider = wx.Slider( self, style=wx.SL_HORIZONTAL|wx.SL_LABELS, minValue=minPixelsPerSecond, maxValue=maxPixelsPerSecond )
 		self.speedSlider.SetPageSize( 1 )
 		self.speedSlider.Bind( wx.EVT_SCROLL, self.onChangeSpeed )
+		
+		self.scaleSlider = wx.Slider( self, style=wx.SL_HORIZONTAL|wx.SL_LABELS|wx.SL_INVERSE, minValue=20, maxValue=100 )
+		self.scaleSlider.Bind( wx.EVT_SCROLL_CHANGED, self.onChangeScale )
+		self.scaleSlider.SetValue( 100 )
 		
 		self.clipSlider = wx.Slider( self, style=wx.SL_HORIZONTAL|wx.SL_LABELS, minValue=0, maxValue=90 )
 		self.clipSlider.Bind( wx.EVT_SCROLL, self.onChangeClip )
@@ -418,6 +441,8 @@ class FinishStripPanel( wx.Panel ):
 		
 		fgs.Add( wx.StaticText(self, label=u'{}:'.format(_('Pixels/Sec'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		fgs.Add( self.speedSlider, flag=wx.EXPAND )
+		fgs.Add( wx.StaticText(self, label=u'{}:'.format(_('Scale'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		fgs.Add( self.scaleSlider, flag=wx.EXPAND )
 		fgs.Add( wx.StaticText(self, label=u'{}:'.format(_('Clip'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		fgs.Add( self.clipSlider, flag=wx.EXPAND )
 		
@@ -499,6 +524,11 @@ class FinishStripPanel( wx.Panel ):
 		self.finish.SetClip( clip )
 		event.Skip()
 	
+	def onChangeScale( self, event ):
+		scale = float(event.GetPosition()) / 100.0
+		self.finish.SetScale( scale )
+		event.Skip()
+	
 	def getPhotoTimeMinMax( self ):
 		tMin, tMax = self.finish.GetTimeMinMax()
 		# Widen the range so we can see a few seconds before and after.
@@ -553,7 +583,7 @@ class FinishStripDialog( wx.Dialog ):
 		if size == wx.DefaultSize:
 			displayWidth, displayHeight = wx.GetDisplaySize()
 			width = int(displayWidth * 0.9)
-			height = 730
+			height = 780
 			size = wx.Size( width, height )
 
 		super(FinishStripDialog, self).__init__( parent, id, size=size, style=style, title=_('Finish Strip') )
@@ -605,7 +635,7 @@ if __name__ == '__main__':
 	displayWidth, displayHeight = wx.GetDisplaySize()
 	
 	width = int(displayWidth * 0.9)
-	height = 700
+	height = 780
 	
 	mainWin = wx.Frame(None,title="FinishStrip", size=(width, height))
 	fs = FinishStripPanel( mainWin )

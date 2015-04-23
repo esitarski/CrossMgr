@@ -93,7 +93,7 @@ def getHelpIndexFolder(): return helpIndexFolder
 # Get the user's default language.
 #
 import locale
-lang = None
+lang = 'en'
 try:
 	import ctypes
 	windll = ctypes.windll.kernel32
@@ -101,7 +101,10 @@ try:
 except:
 	lang = locale.getdefaultlocale()[0]
 
-lang = 'fr'
+try:
+	lang = os.environ['CrossMgrLanguage']
+except:
+	pass
 
 #-----------------------------------------------------------------------
 # Setup translation.
@@ -111,14 +114,12 @@ from Version import AppVerName
 import gettext
 import __builtin__
 initTranslationCalled = False
-def initTranslation( lang_suggested = None ):
+def initTranslation():
 	global lang
 	global initTranslationCalled
 	
-	if not initTranslationCalled or (lang_suggested and lang_suggested != lang):
+	if not initTranslationCalled or (lang and not lang.startswith('en')):
 		initTranslationCalled = True
-		if lang_suggested:
-			lang = lang_suggested
 		
 		gettext.install('messages', os.path.join(dirName,'CrossMgrLocale'), unicode=1)
 		
