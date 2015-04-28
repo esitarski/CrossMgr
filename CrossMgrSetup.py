@@ -76,8 +76,15 @@ def copyDir( d ):
 		if not i.endswith( '.db' ):	# Ignore .db files.
 			shutil.copy( os.path.join(d, i), os.path.join(destD,i) )
 			
-for dir in ['CrossMgrImages', 'data', 'CrossMgrHtml', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex', 'CrossMgrLocale']: 
+for dir in ['CrossMgrImages', 'data', 'CrossMgrHtml', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex']: 
 	copyDir( dir )
+
+# Copy the locale.
+localeD = 'CrossMgrLocale'
+destD = os.path.join(distDir, localeD)
+if os.path.exists( destD ):
+	shutil.rmtree( destD )
+shutil.copytree( localD, destD )
 
 # Create the installer
 inno = r'\Program Files\Inno Setup 5\ISCC.exe'
