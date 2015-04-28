@@ -68,11 +68,16 @@ class Points(wx.Panel):
 		
 		self.scoreByTime = wx.RadioButton( self, label='Score by Time' )
 		self.scoreByTime.Bind( wx.EVT_RADIOBUTTON, self.fixEnable )
+		
+		self.scoreByPercent = wx.RadioButton( self, label='Score by Percent Time (FinishTime / FastestCategoryTime) * 100' )
+		self.scoreByPercent.Bind( wx.EVT_RADIOBUTTON, self.fixEnable )
+		
 		self.scoreByPoints.SetValue( True )
 		
 		hb = wx.BoxSizer( wx.HORIZONTAL )
 		hb.Add( self.scoreByPoints )
 		hb.Add( self.scoreByTime, flag=wx.LEFT, border=16 )
+		hb.Add( self.scoreByPercent, flag=wx.LEFT, border=16 )
 		bsizer.Add( hb, flag=wx.ALL, border=2 )
 		
 		bsizer.Add( wx.StaticLine(self), 1, flag=wx.EXPAND|wx.ALL, border=4 )
@@ -184,8 +189,13 @@ class Points(wx.Panel):
 		
 		self.mostEventsCompleted.SetValue( model.useMostEventsCompleted )
 		self.numPlacesTieBreaker.SetSelection( model.numPlacesTieBreaker )
-		
-		self.scoreByTime.SetValue( model.scoreByTime )
+
+		if model.scoreByTime:
+			self.scoreByTime.SetValue( model.scoreByTime )
+		elif model.scoreByPercent:
+			self.scoreByPercent.SetValue( model.scoreByPercent )
+		else:
+			self.scoreByPoints.SetValue( True )
 		self.fixEnable()
 	
 	def commit( self ):
@@ -208,7 +218,12 @@ class Points(wx.Panel):
 			model.numPlacesTieBreaker = self.numPlacesTieBreaker.GetSelection()
 			model.changed = True
 		
-		model.scoreByTime = self.scoreByTime.GetValue()
+		if model.scoreByTime != self.scoreByTime.GetValue():
+			model.scoreByTime = self.scoreByTime.GetValue()
+			model.changed = True
+		if model.scoreByPercent != self.scoreByPercent.GetValue():
+			model.scoreByPercent = self.scoreByPercent.GetValue()
+			model.changed = True
 		
 ########################################################################
 

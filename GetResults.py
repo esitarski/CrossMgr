@@ -303,6 +303,7 @@ def GetResultsCore( category ):
 		iTime = 0
 		lastFullLapsTime = 60.0
 		for pos, rr in enumerate(riderResults):
+			rr.projectedTime = rr.lastTime
 			if rr.status != Finisher or not rr.raceTimes:
 				rr.stageRaceTime = floor(rr.lastTime)
 				rr.stageRaceGap = rr.gap
@@ -323,10 +324,11 @@ def GetResultsCore( category ):
 					raceTime = rr.raceTimes[rr.laps] - rr.raceTimes[lapStart]
 					aveLapTime = raceTime / (float(rr.laps - lapStart) if rr.laps - lapStart > 0 else 0.000001)
 					lapsDown = leader.laps - rr.laps
-					rr.stageRaceTime = max( lastFullLapsTime, floor(rr.raceTimes[-1] + lapsDown * aveLapTime) )
+					rr.projectedTime = rr.raceTimes[-1] + lapsDown * aveLapTime
+					rr.stageRaceTime = max( lastFullLapsTime, floor(rr.projectedTime) )
 					rr.stageRaceGap = Utils.formatTimeGap( rr.stageRaceTime - leader.stageRaceTime, False ) if rr != leader else ''
 				else:
-					rr.stageRaceTime = 48.0 * 60.0 * 60.0
+					rr.stageRaceTime = rr.projectedTime = 5 * 24.0 * 60.0 * 60.0
 				rr.stageRaceGap = Utils.formatTimeGap( rr.stageRaceTime - leader.stageRaceTime, False ) if rr != leader else ''
 		
 		if isTimeTrial:

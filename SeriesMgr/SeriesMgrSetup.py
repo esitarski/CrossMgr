@@ -1,5 +1,4 @@
 from distutils.core import setup
-import py2exe
 import os
 import shutil
 import zipfile
@@ -7,7 +6,6 @@ import sys
 
 if os.path.exists('build'):
 	shutil.rmtree( 'build' )
-
 
 # Copy all dependent files into this folder.
 copyFiles = [
@@ -26,6 +24,7 @@ copyFiles = [
 	"ReadSignOnSheet.py",
 	"ReadCategoriesFromExcel.py",
 	"ReadPropertiesFromExcel.py",
+	"scramble.py",
 ]
 
 for f in copyFiles:
@@ -36,6 +35,7 @@ with open('Dependencies.py', 'w') as fp:
 		fp.write( 'import {}\n'.format(f[:-3]) )
 
 #----------------------------------------------------------------------------------------------------
+import py2exe
 
 distDir = 'dist'
 

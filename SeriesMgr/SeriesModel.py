@@ -111,6 +111,7 @@ class SeriesModel( object ):
 	DefaultPointStructureName = 'Example'
 	useMostEventsCompleted = False
 	scoreByTime = False
+	scoreByPercent = False
 
 	def __init__( self ):
 		self.name = '<Series Name>'

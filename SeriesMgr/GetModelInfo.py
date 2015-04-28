@@ -64,7 +64,7 @@ def formatTimeGap( secs, highPrecision = False ):
 
 class RaceResult( object ):
 	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, raceFileName, bib, rank, raceOrganizer,
-					raceURL = None, raceInSeries = None, tFinish = None ):
+					raceURL = None, raceInSeries = None, tFinish = None, tProjected = None ):
 		self.firstName = (firstName or u'')
 		self.lastName = (lastName or u'')
 		self.license = (license or u'')
@@ -83,6 +83,7 @@ class RaceResult( object ):
 		self.rank = rank
 		
 		self.tFinish = tFinish
+		self.tProjected = tProjected if tProjected else tFinish
 		
 	def keySort( self ):
 		fields = ['categoryName', 'lastName', 'firstName', 'license', 'raceDate', 'raceName']
@@ -221,6 +222,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 			info['bib'] = int(rr.num)
 			info['rank'] = toInt(rr.pos)
 			info['tFinish'] = rr.lastTime
+			info['tProjected'] = rr.projectedTime
 			raceResults.append( RaceResult(**info) )
 		
 	Model.race = None
@@ -228,12 +230,13 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 	
 def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsCompleted=False, numPlacesTieBreaker=5 ):
 	scoreByTime = SeriesModel.model.scoreByTime
+	scoreByPercent = SeriesModel.model.scoreByPercent
 	
 	# Get all results for this category.
 	raceResults = [rr for rr in raceResults if rr.categoryName == categoryName]
 	if not raceResults:
 		return [], []
-	
+		
 	# Assign a sequence number to the races in the specified order.
 	for i, r in enumerate(SeriesModel.model.races):
 		r.iSequence = i
@@ -248,7 +251,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 	riderTeam = defaultdict( lambda : u'' )
 	
 	if scoreByTime:
-		# Get the individual results for each rider, and the total points.
+		# Get the individual results for each rider, and the total time.
 		riderResults = defaultdict( lambda : [(0,0)] * len(races) )
 		riderTFinish = defaultdict( float )
 		for rr in raceResults:
@@ -268,7 +271,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		riderOrder = [rider for rider, results in riderResults.iteritems()]
 		riderOrder.sort( key = lambda r: (-riderEventsCompleted[r], riderTFinish[r]) )
 		
-		# Compute the gap form the leader.
+		# Compute the time gap.
 		riderGap = {}
 		if riderOrder:
 			leader = riderOrder[0]
@@ -281,6 +284,51 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		# lastName, firstName, license, team, tTotalFinish, [list of (points, position) for each race in series]
 		categoryResult = [list(rider) + [riderTeam[rider], formatTime(riderTFinish[rider],True), riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
 		return categoryResult, races
+	
+	elif scoreByPercent:
+		# Get the individual results for each rider, and the total points.
+		percentFormat = u'{:.2f}'
+		riderResults = defaultdict( lambda : [(0,0)] * len(races) )
+		riderPercentTotal = defaultdict( float )
+		
+		raceLeader = {}
+		for rr in raceResults:
+			if rr.rank == 1:
+				raceLeader[rr.raceInSeries] = rr
+				
+		for rr in raceResults:
+			tFastest = raceLeader[rr.raceInSeries].tProjected
+			
+			try:
+				tFinish = rr.tProjected
+			except ValueError:
+				continue
+			rider = (rr.full_name, rr.license)
+			if rr.team and rr.team != u'0':
+				riderTeam[rider] = rr.team
+			percent = min( 100.0, (tFastest / tFinish) * 100.0 if tFinish > 0.0 else 0.0 )
+			riderResults[rider][raceSequence[rr.raceInSeries]] = (u'{}, {}'.format(percentFormat.format(percent), formatTime(tFinish, False)), rr.rank)
+			riderPercentTotal[rider] += percent
+			riderPlaceCount[rider][rr.rank] += 1
+			riderEventsCompleted[rider] += 1
+
+		# Sort by decreasing percent total.
+		riderOrder = [rider for rider, results in riderResults.iteritems()]
+		riderOrder.sort( key = lambda r: -riderPercentTotal[r] )
+		
+		# Compute the points gap.
+		riderGap = {}
+		if riderOrder:
+			leader = riderOrder[0]
+			leaderPercentTotal = riderPercentTotal[leader]
+			riderGap = { r : leaderPercentTotal - riderPercentTotal[r] for r in riderOrder }
+			riderGap = { r : percentFormat.format(gap) if gap else u'' for r, gap in riderGap.iteritems() }
+					
+		# List of:
+		# lastName, firstName, license, team, totalPercent, [list of (percent, position) for each race in series]
+		categoryResult = [list(rider) + [riderTeam[rider], percentFormat.format(riderPercentTotal[rider]), riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
+		return categoryResult, races
+		
 	else:
 		# Get the individual results for each rider, and the total points.
 		riderResults = defaultdict( lambda : [(0,0)] * len(races) )
@@ -303,6 +351,8 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 										[riderPlaceCount[r][k] for k in xrange(1, numPlacesTieBreaker+1)] +
 										[-rank for points, rank in reversed(riderResults[r])],
 						reverse = True )
+		
+		# Compute the points gap.
 		riderGap = {}
 		if riderOrder:
 			leader = riderOrder[0]

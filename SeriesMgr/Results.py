@@ -43,6 +43,7 @@ def getHtmlFileName():
 def getHtml():
 	model = SeriesModel.model
 	scoreByTime = model.scoreByTime
+	scoreByPercent = model.scoreByPercent
 	raceResults = model.extractAllRaceResults()
 	
 	categoryNames = sorted( set(rr.categoryName for rr in raceResults) )
@@ -321,7 +322,7 @@ function sortTableId( iTable, iCol ) {
 										html.write( '<br/>' )
 										with tag(html, 'span', {'class': 'smallFont'}):
 											html.write( r[0].strftime('%b %d, %Y') )
-									if not scoreByTime:
+									if not scoreByTime and not scoreByPercent:
 										html.write( '<br/>' )
 										with tag(html, 'span', {'class': 'smallFont'}):
 											html.write( u'Top {}'.format(len(r[3].pointStructure)) )
@@ -342,10 +343,10 @@ function sortTableId( iTable, iCol ) {
 									html.write( unicode(gap or '') )
 								for rPoints, rRank in racePoints:
 									with tag(html, 'td', {'class':'leftBorder centerAlign'}):
-										html.write( u'{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints else '' )
+										html.write( u'{} ({})'.format(rPoints, Utils.ordinal(rRank)).replace(' ', '&nbsp;') if rPoints else '' )
 										
 			#-----------------------------------------------------------------------------
-			if not scoreByTime:
+			if not scoreByTime and not scoreByPercent:
 				with tag(html, 'p'):
 					pass
 				with tag(html, 'hr'):
@@ -538,6 +539,7 @@ class Results(wx.Panel):
 	def refresh( self ):
 		model = SeriesModel.model
 		scoreByTime = model.scoreByTime
+		scoreByPercent = model.scoreByPercent
 		HeaderNames = getHeaderNames()
 		
 		wait = wx.BusyCursor()
@@ -623,6 +625,7 @@ class Results(wx.Panel):
 	def onExportToExcel( self, event ):
 		model = SeriesModel.model
 		scoreByTime = model.scoreByTime
+		scoreByPercent = model.scoreByPercent
 		HeaderNames = getHeaderNames()
 		
 		if Utils.mainWin:
