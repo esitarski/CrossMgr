@@ -291,11 +291,8 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		riderResults = defaultdict( lambda : [(0,0)] * len(races) )
 		riderPercentTotal = defaultdict( float )
 		
-		raceLeader = {}
-		for rr in raceResults:
-			if rr.rank == 1:
-				raceLeader[rr.raceInSeries] = rr
-				
+		raceLeader = { rr.raceInSeries: rr for rr in raceResults if rr.rank == 1 }
+		
 		for rr in raceResults:
 			tFastest = raceLeader[rr.raceInSeries].tProjected
 			
