@@ -606,13 +606,13 @@ class ExcelLink( object ):
 	def getMostRecentFilename( self ):
 		dirname, basename = os.path.split(self.fileName)
 		
-		m = ReadSignOnSheet.reVersionField.match( basename )
+		m = ExcelLink.reVersionField.match( basename )
 		nameCur = m.group(1) if m else basename.splitext()[0]
 		versionCur = int(m.group(2)) if m else 0
 		
 		mostRecentFilename = None
 		for f in os.listdir(dirname):
-			m = ReadSignOnSheet.reVersionField.match( f )
+			m = ExcelLink.reVersionField.match( f )
 			if not m or m.group(1) != nameCur:
 				continue
 			version = int(m.group(2))

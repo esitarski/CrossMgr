@@ -52,7 +52,7 @@ def parseTagTime( line, lineNo, errors ):
 		microsecond = fract * 1000000.0
 		t = combine( tDate, datetime.time(hour=int(hour), minute=int(minute), second=int(second), microsecond=int(microsecond)) )
 	except (IndexError, ValueError):
-		errors.append( u'{}: {}: "{}"'.format( _('line'), lineNo, _('invalid time'), tStrSave) )
+		errors.append( u'{}: {}  {}: "{}"'.format( _('line'), lineNo, _('invalid time'), tStrSave) )
 		return None, None
 	
 	return tag, t

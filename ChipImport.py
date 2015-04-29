@@ -16,7 +16,7 @@ def DoChipImport(	fname, parseTagTime, startTime = None,
 	
 	race = Model.race
 	if race and race.isRunning():
-		Utils.MessageOK( self, u'\n\n'.join( [_('Cannot Import into a Running Race.'), _('Wait until you have a complete data set, then import the full data into a New race.')] ),
+		Utils.MessageOK( Utils.getMainWin(), u'\n\n'.join( [_('Cannot Import into a Running Race.'), _('Wait until you have a complete data set, then import the full data into a New race.')] ),
 						title = _('Cannot Import into Running Race'), iconMask = wx.ICON_ERROR )
 		return
 	

@@ -166,7 +166,7 @@ class ChoosePrintCategoriesPodiumDialog( wx.Dialog ):
 		self.includePrimesInPrintoutCheckBox = wx.CheckBox( self, label = _('Include Primes in Printout') )
 		if race:
 			self.includePrimesInPrintoutCheckBox.Show( bool(getattr(race, 'primes', None)) )
-			self.includePrimesInPrintoutCheckBox( getattr(race, 'includePrimesInPrintout', True) )
+			self.includePrimesInPrintoutCheckBox.SetValue( getattr(race, 'includePrimesInPrintout', True) )
 		else:
 			self.includePrimesInPrintoutCheckBox.SetValue( True )
 		

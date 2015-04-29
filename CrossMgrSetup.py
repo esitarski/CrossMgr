@@ -84,7 +84,7 @@ localeD = 'CrossMgrLocale'
 destD = os.path.join(distDir, localeD)
 if os.path.exists( destD ):
 	shutil.rmtree( destD )
-shutil.copytree( localD, destD )
+shutil.copytree( localeD, destD )
 
 # Create the installer
 inno = r'\Program Files\Inno Setup 5\ISCC.exe'

@@ -556,7 +556,7 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 		if lapsDown:
 			try:
 				externalFields.insert( externalFields.index('Name') + 1, LapsDown )
-			except ValidError:
+			except ValueError:
 				externalFields.append( LapsDown )
 			
 			for num, info in externalInfo.iteritems():

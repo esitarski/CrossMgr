@@ -21,7 +21,7 @@ class GrowTable( object ):
 		self.width = None
 		self.height = None
 	
-	def fromGrid( grid, horizontalGridlines=True, verticalGridlines=False ):
+	def fromGrid( self, grid, horizontalGridlines=True, verticalGridlines=False ):
 		self.clear()
 		mapHorizontal = {
 			wx.ALIGN_LEFT: self.alignLeft,
@@ -53,7 +53,7 @@ class GrowTable( object ):
 				aHoriz, aVert = grid.GetCellAlignment(r, c)
 				self.set( r+rowLabel, c+colLabel, v, mapHorizontal.get(aHoriz, self.alignLeft) | mapVertical(aVert, self.alignTop) )
 			
-		numCols, numRow = self.getNumberCols(), self.getNumberRows()
+		numCols, numRows = self.getNumberCols(), self.getNumberRows()
 		if horizontalGridlines:
 			self.hLine( 0, 0, numCols )
 			if rowLabel > 0:

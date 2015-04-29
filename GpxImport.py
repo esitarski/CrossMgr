@@ -334,10 +334,6 @@ class GetGeoTrack( object ):
 		elif page == self.useTimesPage:
 			if self.useTimesPage.getUseTimes():
 				self.geoTrack.read( self.geoTrackFName, True )
-		elif page == self.summaryPage:
-			pass
-		elif page == self.fixCategoryDistance:
-			pass
 		
 	def onPageChanged( self, evt ):
 		isForward = evt.GetDirection()

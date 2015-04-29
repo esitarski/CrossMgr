@@ -7,6 +7,7 @@ import shutil
 from GetResults import GetResultsCore
 from SendPhotoRequests import getPhotoDirName, SendPhotoRequests, PhotoAcknowledge
 import Utils
+from Utils				import logCall, logException
 import Model
 
 def formatTime( secs ):

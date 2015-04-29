@@ -1855,7 +1855,7 @@ class MainWin( wx.Frame ):
 		
 		# Get the folder to write the html file.
 		fname = self.fileName[:-4] + 'RawData.html'
-		dlg = wx.DirDialog( self, u'"{}"'.format(_('Folder to write'), os.path.basename(fname)),
+		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(fname)),
 							style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
 		ret = dlg.ShowModal()
 		dName = dlg.GetPath()
@@ -2035,7 +2035,7 @@ class MainWin( wx.Frame ):
 		if os.path.exists(fileName) and \
 		   not Utils.MessageOKCancel(
 				self,
-				u'{}.\n\n    "{}"\n\n{}?'.format_(
+				u'{}.\n\n    "{}"\n\n{}?'.format(
 					_('File already exists'), fileName, _('Overwrite')
 				)
 			):

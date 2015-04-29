@@ -989,7 +989,7 @@ class RiderDetail( wx.Panel ):
 		if not hasattr(Model.race, 'lapNote'):
 			Model.race.lapNote = {}
 		dlg = wx.TextEntryDialog( self,
-				u"{} {} {}:".format(
+				u"{}: {}  {}: {}".format(
 					_('Bib'), self.entry.num,
 					_('Note for lap'), self.entry.lap,
 				),

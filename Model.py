@@ -1055,7 +1055,7 @@ class Race( object ):
 		
 	@property
 	def speedUnitStr( self ):
-		return 'km/h' if selfdistanceUnit == Race.UnitKm else 'mph'
+		return 'km/h' if self.distanceUnit == Race.UnitKm else 'mph'
 	
 	def resetCache( self ):
 		memoize.clear()
