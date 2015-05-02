@@ -24,7 +24,7 @@ except:
 	localTimeFormat = '%I:%M%p'
 	
 import cPickle as pickle
-from optparse import OptionParser
+from argparse import ArgumentParser
 import StringIO
 import openpyxl
 
@@ -39,6 +39,7 @@ from Errors				import Errors
 import Version
 from Printing			import SeriesMgrPrintout
 from ExportGrid			import ExportGrid, tag
+import CmdLine
 
 #----------------------------------------------------------------------------------
 
@@ -823,11 +824,28 @@ def MainLoop():
 	app = wx.App(False)
 	app.SetAppName("SeriesMgr")
 	
-	parser = OptionParser( usage = "usage: %prog [options] [RaceFile.smn]" )
-	parser.add_option("-f", "--file", dest="filename", help="race file", metavar="RaceFile.smn")
-	parser.add_option("-q", "--quiet", action="store_false", dest="verbose", default=True, help='hide splash screen')
-	parser.add_option("-r", "--regular", action="store_false", dest="fullScreen", default=True, help='regular size (not full screen)')
-	(options, args) = parser.parse_args()
+	parser = ArgumentParser( epilog='Example: {} --series MySeries.smn --races MyRace1.cmn=RegularPoints" "MyRace2.cmn=DoublePoints" MyRace2.cmn'.format(os.path.basename(sys.argv[0])) )
+	parser.add_argument("filename", help="series file", nargs="?", metavar="SeriesFile.smn")
+	parser.add_argument("-q", "--quiet", action="store_false", dest="verbose", default=True, help='hide splash screen')
+	parser.add_argument("-r", "--regular", action="store_false", dest="fullScreen", default=True, help='regular size (not full screen)')
+	parser.add_argument('--series', default=None, metavar="SeriesFile.smn", help='Specifiy a <series_mgr_file>.smn file to use for the points structures.  Optional if --score_by_time or --score_by_points options are used.')
+	parser.add_argument('--score_by_points', action='store_true', help='If specified, races will be scored by the points structures.  This is the default.' )
+	parser.add_argument('--score_by_time', action='store_true', help='If specified, races will be scored by the total time.' )
+	parser.add_argument('--score_by_percent', action='store_true', help='If specified, races will be scored by the percent of the winning time.' )
+	parser.add_argument('--output', default=None, help='Output file (default is <series_mgr_file>.html)' )
+	parser.add_argument('--races', metavar="Race.cmn[=point_structure]", nargs='+', default=[],
+		help='  '.join( (
+			'Each race is of the form "Race.cmn[=point_structure]" and Race.cmn is a CrossMgr race, with the optional name of the points structure of the series to use to score that race.',
+			'If no point_structure is specified for a race, the first point_structure in the --series will be used.',
+			'No point_structure is required if the --score_by_time or --score_by_percent options are specified.',
+			'If no --races are defined, the races defined in the --series file will be used.',
+		) )
+	)
+	args = parser.parse_args()
+	
+	if not args.filename and any(
+			[args.series, args.score_by_points, args.score_by_time, args.score_by_percent, args.output, args.races]):
+		sys.exit( CmdLine.CmdLine(args) )
 
 	dataDir = Utils.getHomeDir()
 	redirectFileName = os.path.join(dataDir, 'SeriesMgr.log')
@@ -853,7 +871,7 @@ def MainLoop():
 	# Configure the main window.
 	sWidth, sHeight = wx.GetDisplaySize()
 	mainWin = MainWin( None, title=Version.AppVerName, size=(sWidth*0.9,sHeight*0.9) )
-	if options.fullScreen:
+	if args.fullScreen:
 		mainWin.Maximize( True )
 		
 	mainWin.refreshAll()
@@ -868,19 +886,15 @@ def MainLoop():
 	#tbicon = wx.TaskBarIcon()
 	#tbicon.SetIcon( icon, "SeriesMgr" )
 
-	if options.verbose:
+	if args.verbose:
 		ShowSplashScreen()
 	#	ShowTipAtStartup()
 	
 	# Try to open a specified filename.
-	fileName = options.filename
+	fileName = args.filename
 	
-	# If nothing, try a positional argument.
-	if not fileName and args:
-		fileName = args[0]
-	
-	# Try to load a race.
-	if fileName:
+	# Try to load a series.
+	if fileName and fileName.lower().endswith('.smn'):
 		try:
 			mainWin.openSeries( fileName )
 		except (IndexError, AttributeError, ValueError):
