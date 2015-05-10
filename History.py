@@ -369,7 +369,7 @@ class History( wx.Panel ):
 		
 		isTimeTrial = getattr(race, 'isTimeTrial', False)
 		if isTimeTrial:
-			entries = [Model.Entry(e.num, e.lap, race.riders[e.num].firstTime + e.t, e.interp) for e in entries]
+			entries = [Model.Entry(e.num, e.lap, (race.riders[e.num].firstTime or 0.0) + e.t, e.interp) for e in entries]
 		
 		# Collect the number and times for all entries so we can compute lap times.
 		numTimes = {(e.num, e.lap) : e.t for e in entries}
