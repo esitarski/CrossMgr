@@ -182,6 +182,9 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 	if not HasExcelLink(race):	# Force a refresh of the Excel link before reading the categories.
 		pass
 		
+	if race.licenseLinkTemplate:
+		SeriesModel.model.licenseLinkTemplate = licenseLinkTemplate
+		
 	raceURL = getattr( race, 'urlFull', None )
 	raceResults = []
 	for category in race.getCategories( startWaveOnly=False ):

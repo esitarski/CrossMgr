@@ -40,7 +40,7 @@ def getHtmlFileName():
 	defaultPath = os.path.dirname( modelFileName )
 	return os.path.join( defaultPath, fileName )
 	
-def getHtml():
+def getHtml( seriesFileName=None ):
 	model = SeriesModel.model
 	scoreByTime = model.scoreByTime
 	scoreByPercent = model.scoreByPercent
@@ -48,12 +48,16 @@ def getHtml():
 	
 	categoryNames = sorted( set(rr.categoryName for rr in raceResults) )
 	if not categoryNames:
-		return ''
+		return '<html><body>SeriesMgr: No Categories.</body></html>'
 	
 	HeaderNames = getHeaderNames()
 	pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
+
+	if not seriesFileName:
+		seriesFileName = (os.path.splitext(Utils.mainWin.fileName)[0] if Utils.mainWin and Utils.mainWin.fileName else 'Series Results')
+	title = os.path.basename( seriesFileName )
 	
-	title = os.path.basename( os.path.splitext(Utils.mainWin.fileName)[0] ) if Utils.mainWin and Utils.mainWin.fileName else 'Series Results'
+	licenseLinkTemplate = model.licenseLinkTemplate
 	
 	pointsStructures = {}
 	pointsStructuresList = []
@@ -334,7 +338,11 @@ function sortTableId( iTable, iCol ) {
 								with tag(html, 'td'):
 									html.write( unicode(name or u'') )
 								with tag(html, 'td'):
-									html.write( unicode(license or u'') )
+									if licenseLinkTemplate and license:
+										with tag(html, 'a', {'href':u'{}{}'.format(licenseLinkTemplate, license), 'target':'_blank'}):
+											html.write( unicode(license or u'') )
+									else:
+										html.write( unicode(license or u'') )
 								with tag(html, 'td'):
 									html.write( unicode(team or '') )
 								with tag(html, 'td', {'class':'rightAlign'}):

@@ -380,13 +380,15 @@ class ExcelLink( object ):
 		return info
 
 def DoImportTTStartTimes( race, excelLink ):
+	startTimes = {}
+	errors = []
+	
 	if not excelLink:
-		return ['Missing excelLink']
+		errors.append( _('Missing excelLink') )
+		return errors, startTimes
 		
 	info = excelLink.read()
 	
-	startTimes = {}
-	errors = []
 	for num, data in info.iteritems():
 		try:
 			startTime = data['StartTime']
@@ -415,28 +417,33 @@ def DoImportTTStartTimes( race, excelLink ):
 			continue
 			
 		startTimes[num] = t
-			
+	
+	changeCount = 0
 	if startTimes:
 		undo.pushState()
-		for num, t in startTimes.iteritems():
+		for num, startTime in startTimes.iteritems():
 			rider = race.getRider( num )
 			
 			# Compute the time change difference.
 			try:
-				dTime = getattr(rider, 'firstTime', t) - t
+				firstTime = getattr(rider, 'firstTime', startTime)
 			except TypeError:
-				dTime = 0.0
+				continue
 				
-			rider.firstTime = t
+			if rider.times:
+				# Convert the race times to time of day by adding the existing first time.
+				riderTimeOfDay = [firstTime + rt for rt in rider.times]
+				
+				# Compute new lap times by subtracting the new start time.
+				rider.times = [rtod - startTime for rtod in riderTimeOfDay]
 			
-			# Adjust the lap times to account for the new start time.
-			for k in xrange(len(rider.times)):
-				if k != 0:
-					rider.times[k] += dTime
+			if rider.firstTime != startTime:
+				rider.firstTime = startTime
+				changeCount += 1
 		
 		race.setChanged()
 		
-	return errors
+	return errors, startTimes, changeCount
 
 def AutoImportTTStartTimes():
 	race = Model.race
@@ -447,7 +454,7 @@ def AutoImportTTStartTimes():
 	excelLink.setFileName( race.excelLink.fileName )
 	excelLink.setSheetName( race.excelLink.sheetName )
 	excelLink.setFieldCol( {'Bib#': race.excelLink.fieldCol['Bib#'], 'StartTime': 0} )
-	DoImportTTStartTimes( race, excelLink )
+	errors, startTimes, changeCount = DoImportTTStartTimes( race, excelLink )
 	return True
 
 def ImportTTStartTimes( parent ):
@@ -459,15 +466,15 @@ def ImportTTStartTimes( parent ):
 	if not excelLink:
 		return
 	
-	errors = DoImportTTStartTimes( race, excelLink )
+	errors, startTimes, changeCount = DoImportTTStartTimes( race, excelLink )
 	if errors:
-		errorStr = '\n'.join( errors[:20] )
+		errorStr = u'\n'.join( errors[:20] )
 		if len(errors) > 20:
 			errorStr += '\n...'
 		Utils.MessageOK( parent, errorStr, _('Start Time Errors') )
 		
 	Utils.refresh()
-	Utils.MessageOK( parent, u'{}: {}'.format(_('Start Times Set'), len(startTimes)), _('Start Times Success') )
+	Utils.MessageOK( parent, u'{}: {}'.format(_('Start Times Changed'), changeCount), _('Start Times Success') )
 
 #-----------------------------------------------------------------------------------------------------
 

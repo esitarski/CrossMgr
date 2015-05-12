@@ -459,15 +459,20 @@ class RiderDetail( wx.Panel ):
 			if not Model.race or num not in Model.race:
 				return
 			rider = Model.race[num]
-			times = [rider.times[r] for r in rows]
+			times = []
+			for r in rows:
+				try:
+					times.append( rider.times[r] )
+				except IndexError:
+					pass
 			timeStr = []
 			timesPerRow = 4
 			for i in xrange(0, len(times), timesPerRow):
 				timeStr.append(
-					',  '.join( u'{} {}: {}'.format(_('Lap'), rows[j]+1, Utils.formatTime(times[i]))
+					u',  '.join( u'{} {}: {}'.format(_('Lap'), rows[j]+1, Utils.formatTime(times[i]))
 							for j in xrange(i, min(len(times), i+timesPerRow) ) ) )
 			timeStr = u',\n'.join( timeStr )
-			message = u'{} {}:\n\n{}\n\n{}?'.format(_('Delete entries of Rider'), num, timeStr, _('Confirm Delete'))
+			message = u'{} {}:\n\n{}\n\n{}?'.format(_('Delete entries of Bib'), num, timeStr, _('Confirm Delete'))
 			if Utils.MessageOKCancel( self, message, _('Delete Times'), wx.ICON_WARNING ):
 				undo.pushState()
 				with Model.LockRace() as race:

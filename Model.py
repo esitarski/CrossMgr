@@ -2335,7 +2335,7 @@ if __name__ == '__main__':
 	for i in xrange(1, 11):
 		r.addTime( 10, i*100 )
 	r.addTime( 10, 10*100 + 1 )
-	print( '\n'.join( unicode(f) for f in r.interpolate()[:20] ) )
+	print( u'\n'.join( unicode(f) for f in r.interpolate()[:20] ) )
 	
 	'''
 	print( r.getTemplateValues() )

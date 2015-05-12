@@ -112,6 +112,7 @@ class SeriesModel( object ):
 	useMostEventsCompleted = False
 	scoreByTime = False
 	scoreByPercent = False
+	licenseLinkTemplate = u''	# Used to create an html link from the rider's license number in the html output.
 
 	def __init__( self ):
 		self.name = '<Series Name>'

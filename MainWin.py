@@ -2368,7 +2368,7 @@ class MainWin( wx.Frame ):
 						ResetExcelLinkCache()
 						Model.resetCache()
 						self.refreshAll()
-						Utils.writeLog( 'openRace: changed Excel file to "%s"' % newFileName )
+						Utils.writeLog( u'openRace: changed Excel file to "{}"'.format(newFileName) )
 
 		except Exception as e:
 			Utils.logException( e, sys.exc_info() )
