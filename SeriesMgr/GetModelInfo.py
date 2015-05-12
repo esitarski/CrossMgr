@@ -183,7 +183,8 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 		pass
 		
 	if race.licenseLinkTemplate:
-		SeriesModel.model.licenseLinkTemplate = licenseLinkTemplate
+		SeriesModel.model.licenseLinkTemplate = race.licenseLinkTemplate
+	SeriesModel.model.licenseLinkTemplate = 'blablabla'
 		
 	raceURL = getattr( race, 'urlFull', None )
 	raceResults = []
