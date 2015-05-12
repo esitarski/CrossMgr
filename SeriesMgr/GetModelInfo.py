@@ -184,8 +184,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 		
 	if race.licenseLinkTemplate:
 		SeriesModel.model.licenseLinkTemplate = race.licenseLinkTemplate
-	SeriesModel.model.licenseLinkTemplate = 'blablabla'
-		
+	
 	raceURL = getattr( race, 'urlFull', None )
 	raceResults = []
 	for category in race.getCategories( startWaveOnly=False ):

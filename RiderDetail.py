@@ -21,10 +21,9 @@ from GetResults import GetResults, GetCategoryDetails
 def getStFtLaps( rider ):
 	with Model.LockRace() as race:
 		laps = race.getCategoryNumLaps( rider.num )
-	laps = max( 0, min(laps, len(rider.times)-1) )
 	st = getattr( rider, 'firstTime', None )
 	try:
-		ft = st + rider.times[laps]
+		ft = st + rider.times[max( 0, min(laps-1, len(rider.times)-1) )]
 	except (TypeError, AttributeError, IndexError):
 		ft = None
 	return st, ft, laps
@@ -101,8 +100,7 @@ class AdjustTimeDialog( wx.Dialog ):
 
 	def onOK( self, event ):
 		stOld, ftOld, laps = getStFtLaps(self.rider)
-		st, ft = self.startTime.GetSeconds(), self.finishTime.GetSeconds()
-		ft = ft if ft else None
+		st, ft = self.startTime.GetSeconds() or None, self.finishTime.GetSeconds() or None
 		if st is not None and ft is not None and st >= ft:
 			Utils.MessageOK( self, _('Start Time must be before Finish Time'), _('Time Error'), wx.ICON_ERROR )
 			return
@@ -113,21 +111,33 @@ class AdjustTimeDialog( wx.Dialog ):
 			return
 		
 		undo.pushState()
-		self.rider.firstTime = st
-		self.rider.ttPenalty = self.penaltyTime.GetSeconds()
-		self.rider.ttNote = self.note.GetValue().strip()
-		if st and ft:
-			rt = ft - st
-			if not self.rider.times:
-				self.rider.addTime( rt )
-			elif len(self.rider.times) == 2:
-				self.rider.times[1] = rt
-			else:
-				self.rider.times = [t for t in self.rider.times if t < rt]
-				self.rider.times.append( rt )
-		elif st:
+		
+		firstTime = getattr(self.rider, 'firstTime', None)
+		if firstTime is None and not st:
+			Utils.MessageOK( self, _('You must specify the Missing Start Time'), _('Missing Start Time'), wx.ICON_ERROR )
+			return
+			
+		if firstTime is None:
+			self.rider.times = []
+			firstTime = 0.0
+		
+		riderTimeOfDay = [rt + firstTime for rt in self.rider.times]
+		
+		if ft:
+			riderTimeOfDay = [rtod for rtod in riderTimeOfDay if rtod < ft][:laps]
+			try:
+				riderTimeOfDay[laps-1] = ft
+			except IndexError:
+				riderTimeOfDay.append( ft )
+
+		if st:
 			self.rider.firstTime = st
 			
+		self.rider.times = [rtod - self.rider.firstTime for rtod in riderTimeOfDay]
+		self.rider.times = [rt for rt in self.rider.times if rt > 0.0]
+		self.rider.ttPenalty = self.penaltyTime.GetSeconds()
+		self.rider.ttNote = self.note.GetValue().strip()
+					
 		Model.race.setChanged()
 		Utils.refresh()
 		self.EndModal( wx.ID_OK )
