@@ -58,7 +58,6 @@ def getHtml( seriesFileName=None ):
 	title = os.path.basename( seriesFileName )
 	
 	licenseLinkTemplate = model.licenseLinkTemplate
-	licenseLinkTemplate = 'blablabla'
 	
 	pointsStructures = {}
 	pointsStructuresList = []
