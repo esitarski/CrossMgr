@@ -3,7 +3,6 @@ import Utils
 import Model
 import string
 import re
-from gettext import gettext as _
 from Animation import Animation
 from GeoAnimation import GeoAnimation
 from FixCategories import FixCategories
@@ -20,16 +19,21 @@ def GetAnimationData( category = None, getExternalData = False ):
 		with Model.LockRace() as race:
 			for rr in results:
 				info = { 'flr': race.getCategory(rr.num).firstLapRatio }
+				bestLaps = race.getNumBestLaps( rr.num )
 				for a in dir(rr):
 					if a.startswith('_') or a in ignoreFields:
 						continue
 					if a == 'raceTimes':
 						info['raceTimes'] = getattr(rr, a)
-						bestLaps = race.getNumBestLaps( rr.num )
 						if bestLaps is not None and len(info['raceTimes']) > bestLaps:
 							info['raceTimes'] = info['raceTimes'][:bestLaps+1]
 					elif a == 'status':
 						info['status'] = statusNames[getattr(rr, a)]
+					elif a == 'lastTime':
+						try:
+							info[a] = rr.raceTimes[-1]
+						except IndexError:
+							info[a] = rr.lastTime
 					else:
 						info[a] = getattr( rr, a )
 				

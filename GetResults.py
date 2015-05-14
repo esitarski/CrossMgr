@@ -273,9 +273,14 @@ def GetResultsCore( category ):
 			return tuple()
 		
 		if race.isRunning():
+			def overlap(start1, end1, start2, end2):
+				"""Does the range (start1, end1) overlap with (start2, end2)?"""
+				return end1 >= start2 and end2 >= start1
+				
 			# Sequence the riders based on the last lap time, not the projected winner of the race.
 			t = race.curRaceTime()
 			statusLapsTimeBest = (99, 0, 24*60*60*200)
+			rrLeader = None
 			for rr in riderResults:
 				if not rr.raceTimes:
 					continue
@@ -290,13 +295,28 @@ def GetResultsCore( category ):
 				statusLapsTime = (statusSortSeq[rr.status], -iT, rr.raceTimes[iT])
 				if statusLapsTime < statusLapsTimeBest:
 					statusLapsTimeBest = statusLapsTime
+					rrLeader = rr
 			
 			lapBest = -statusLapsTimeBest[1]
+			
+			tLapStartBest = rrLeader.raceTimes[lapBest]
+			try:
+				tLapEndBest = rrLeader.raceTimes[lapBest+1]
+			except IndexError:
+				tLapEndBest = None
+			
 			for rr in riderResults:
 				if rr.raceTimes:
 					try:
 						rr.lastTime = rr.raceTimes[lapBest]
 						rr.laps = min( rr.laps, lapBest )
+						
+						# Check for laps down.
+						if tLapEndBest is not None and rr.laps == lapBest:
+							for iLapCur in xrange(lapBest, -1, -1):
+								if overlap(tLapStartBest, tLapEndBest, rr.raceTimes[iLapCur], rr.raceTimes[iLapCur+1]):
+									rr.laps = iLapCur
+									break
 					except IndexError:
 						pass
 		
@@ -321,11 +341,15 @@ def GetResultsCore( category ):
 				
 			rr.pos = u'{}'.format(pos+1)
 			
+			# if gapValue is negative, it means laps down.  Otherwise, it is seconds.
+			rr.gapValue = 0
 			if rr.laps != leader.laps:
 				lapsDown = leader.laps - rr.laps
 				rr.gap = u'-{} {}'.format(lapsDown, _('lap') if lapsDown == 1 else _('laps'))
+				rr.gapValue = -lapsDown
 			elif rr != leader and not (isTimeTrial and rr.lastTime == leader.lastTime):
 				rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
+				rr.gapValue = rr.lastTime - leader.lastTime
 				
 		# Add stage race times and gaps.
 		iTime = 0
