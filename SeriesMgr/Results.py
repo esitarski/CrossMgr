@@ -44,6 +44,8 @@ def getHtml( seriesFileName=None ):
 	model = SeriesModel.model
 	scoreByTime = model.scoreByTime
 	scoreByPercent = model.scoreByPercent
+	bestResultsToConsider = SeriesModel.model.bestResultsToConsider
+	mustHaveCompleted = SeriesModel.model.mustHaveCompleted
 	raceResults = model.extractAllRaceResults()
 	
 	categoryNames = sorted( set(rr.categoryName for rr in raceResults) )
@@ -117,7 +119,7 @@ table.results tr.odd
 	background-color:#EAF2D3;
 }
 
-smallFont {
+.smallFont {
 	font-size: 75%;
 }
 
@@ -165,6 +167,11 @@ table.results td.leftAlign, table.results th.leftAlign {
 
 table.results th.centerAlign, table.results td.centerAlign {
 	text-align:center;
+}
+
+.ignored {
+	color: #999;
+	font-style: italic;
 }
 
 @media print { .noprint { display: none; } }
@@ -350,16 +357,29 @@ function sortTableId( iTable, iCol ) {
 								with tag(html, 'td', {'class':'rightAlign'}):
 									html.write( unicode(gap or '') )
 								for rPoints, rRank in racePoints:
-									with tag(html, 'td', {'class':'leftBorder centerAlign'}):
-										html.write( u'{} ({})'.format(rPoints, Utils.ordinal(rRank)).replace(' ', '&nbsp;') if rPoints else '' )
+									with tag(html, 'td', {'class':'leftBorder centerAlign' + (' ignored' if u'**]' in u'{}'.format(rPoints) else u'')} ):
+										html.write( u'{} ({})'.format(
+											u'{}'.format(rPoints).replace(u'[',u'').replace(u']',u''),
+											Utils.ordinal(rRank)).replace(' ', '&nbsp;') if rPoints else ''
+										)
 										
 			#-----------------------------------------------------------------------------
+			if bestResultsToConsider > 0:
+				with tag(html, 'p'):
+					html.write( u'** - Result not considered.  Not in best of {} scores.'.format(bestResultsToConsider) )
+					
+			if mustHaveCompleted > 0:
+				with tag(html, 'p'):
+					html.write( u'Participants completing fewer than {} events are not shown.'.format(mustHaveCompleted) )
+					
+			#-----------------------------------------------------------------------------
+			
 			if not scoreByTime and not scoreByPercent:
 				with tag(html, 'p'):
 					pass
 				with tag(html, 'hr'):
 					pass
-					
+				
 				with tag(html, 'h2'):
 					html.write( 'Point Structures' )
 				with tag(html, 'table' ):

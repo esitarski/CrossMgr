@@ -271,7 +271,35 @@ def GetResultsCore( category ):
 		
 		if not riderResults:
 			return tuple()
+		
+		if race.isRunning():
+			# Sequence the riders based on the last lap time, not the projected winner of the race.
+			t = race.curRaceTime()
+			statusLapsTimeBest = (99, 0, 24*60*60*200)
+			for rr in riderResults:
+				if not rr.raceTimes:
+					continue
+				iT = bisect_left( rr.raceTimes, t )
+				try:
+					if rr.raceTimes[iT] != t:
+						iT -= 1
+				except IndexError:
+					iT -= 1
+				
+				iT = max( iT, 0 )
+				statusLapsTime = (statusSortSeq[rr.status], -iT, rr.raceTimes[iT])
+				if statusLapsTime < statusLapsTimeBest:
+					statusLapsTimeBest = statusLapsTime
 			
+			lapBest = -statusLapsTimeBest[1]
+			for rr in riderResults:
+				if rr.raceTimes:
+					try:
+						rr.lastTime = rr.raceTimes[lapBest]
+						rr.laps = min( rr.laps, lapBest )
+					except IndexError:
+						pass
+		
 		riderResults.sort( key = RiderResult._getKey )
 		
 		# Add the position (or status, if not a Finisher).

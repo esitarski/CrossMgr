@@ -184,7 +184,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 		
 	if race.licenseLinkTemplate:
 		SeriesModel.model.licenseLinkTemplate = race.licenseLinkTemplate
-	
+		
 	raceURL = getattr( race, 'urlFull', None )
 	raceResults = []
 	for category in race.getCategories( startWaveOnly=False ):
@@ -234,6 +234,8 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsCompleted=False, numPlacesTieBreaker=5 ):
 	scoreByTime = SeriesModel.model.scoreByTime
 	scoreByPercent = SeriesModel.model.scoreByPercent
+	bestResultsToConsider = SeriesModel.model.bestResultsToConsider
+	mustHaveCompleted = SeriesModel.model.mustHaveCompleted
 	
 	# Get all results for this category.
 	raceResults = [rr for rr in raceResults if rr.categoryName == categoryName]
@@ -253,9 +255,12 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 	riderPlaceCount = defaultdict( lambda : defaultdict(int) )
 	riderTeam = defaultdict( lambda : u'' )
 	
+	ignoreFormat = u'[{}**]'
+	
 	if scoreByTime:
 		# Get the individual results for each rider, and the total time.
 		riderResults = defaultdict( lambda : [(0,0)] * len(races) )
+		riderFinishes = defaultdict( lambda : [None] * len(races) )
 		riderTFinish = defaultdict( float )
 		for rr in raceResults:
 			try:
@@ -266,12 +271,33 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			if rr.team and rr.team != u'0':
 				riderTeam[rider] = rr.team
 			riderResults[rider][raceSequence[rr.raceInSeries]] = (formatTime(tFinish, True), rr.rank)
+			riderFinishes[rider][raceSequence[rr.raceInSeries]] = tFinish
 			riderTFinish[rider] += tFinish
 			riderPlaceCount[rider][rr.rank] += 1
 			riderEventsCompleted[rider] += 1
 
+		# Adjust for the best scores.
+		if bestResultsToConsider > 0:
+			for rider, finishes in riderFinishes.iteritems():
+				times = [t for t in finishes if t is not None]
+				if len(times) > bestResultsToConsider:
+					times.sort()
+					riderTFinish[rider] -= sum(times[bestResultsToConsider:])
+					tBest = times[bestResultsToConsider-1]
+					count = 0
+					for r, t in enumerate(finishes):
+						if t is None:
+							continue
+						if t <= tBest and count < bestResultsToConsider:
+							count += 1
+						else:
+							v = riderResults[rider][r]
+							riderResults[rider][r] = (ignoreFormat.format(v[0]), v[1])
+
+		# Filter out minimal events completed.
+		riderOrder = [rider for rider, results in riderResults.iteritems() if riderEventsCompleted[rider] >= mustHaveCompleted]
+		
 		# Sort by decreasing events completed, then increasing rider time.
-		riderOrder = [rider for rider, results in riderResults.iteritems()]
 		riderOrder.sort( key = lambda r: (-riderEventsCompleted[r], riderTFinish[r]) )
 		
 		# Compute the time gap.
@@ -292,6 +318,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		# Get the individual results for each rider, and the total points.
 		percentFormat = u'{:.2f}'
 		riderResults = defaultdict( lambda : [(0,0)] * len(races) )
+		riderFinishes = defaultdict( lambda : [None] * len(races) )
 		riderPercentTotal = defaultdict( float )
 		
 		raceLeader = { rr.raceInSeries: rr for rr in raceResults if rr.rank == 1 }
@@ -308,12 +335,33 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 				riderTeam[rider] = rr.team
 			percent = min( 100.0, (tFastest / tFinish) * 100.0 if tFinish > 0.0 else 0.0 )
 			riderResults[rider][raceSequence[rr.raceInSeries]] = (u'{}, {}'.format(percentFormat.format(percent), formatTime(tFinish, False)), rr.rank)
+			riderFinishes[rider][raceSequence[rr.raceInSeries]] = percent
 			riderPercentTotal[rider] += percent
 			riderPlaceCount[rider][rr.rank] += 1
 			riderEventsCompleted[rider] += 1
 
+		# Adjust for the best scores.
+		if bestResultsToConsider > 0:
+			for rider, finishes in riderFinishes.iteritems():
+				percents = [p for p in finishes if p is not None]
+				if len(percents) > bestResultsToConsider:
+					percents.sort( reverse=True )
+					riderPercentTotal[rider] -= sum(percents[bestResultsToConsider:])
+					pBest = percents[bestResultsToConsider-1]
+					count = 0
+					for r, p in enumerate(finishes):
+						if p is None:
+							continue
+						if p >= pBest and count < bestResultsToConsider:
+							count += 1
+						else:
+							v = riderResults[rider][r]
+							riderResults[rider][r] = (ignoreFormat.format(v[0]), v[1])
+
+		# Filter out minimal events completed.
+		riderOrder = [rider for rider, results in riderResults.iteritems() if riderEventsCompleted[rider] >= mustHaveCompleted]
+		
 		# Sort by decreasing percent total.
-		riderOrder = [rider for rider, results in riderResults.iteritems()]
 		riderOrder.sort( key = lambda r: -riderPercentTotal[r] )
 		
 		# Compute the points gap.
@@ -332,6 +380,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 	else:
 		# Get the individual results for each rider, and the total points.
 		riderResults = defaultdict( lambda : [(0,0)] * len(races) )
+		riderFinishes = defaultdict( lambda : [None] * len(races) )
 		riderPoints = defaultdict( int )
 		for rr in raceResults:
 			rider = (rr.full_name, rr.license)
@@ -339,13 +388,34 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 				riderTeam[rider] = rr.team
 			points = pointsForRank[rr.raceFileName][rr.rank]
 			riderResults[rider][raceSequence[rr.raceInSeries]] = (points, rr.rank)
+			riderFinishes[rider][raceSequence[rr.raceInSeries]] = points
 			riderPoints[rider] += points
 			riderPlaceCount[rider][rr.rank] += 1
 			riderEventsCompleted[rider] += 1
 
+		# Adjust for the best scores.
+		if bestResultsToConsider > 0:
+			for rider, finishes in riderFinishes.iteritems():
+				points = [p for p in finishes if p is not None]
+				if len(points) > bestResultsToConsider:
+					points.sort( reverse=True )
+					riderPoints[rider] -= sum(points[bestResultsToConsider:])
+					pBest = points[bestResultsToConsider-1]
+					count = 0
+					for r, p in enumerate(finishes):
+						if p is None:
+							continue
+						if p >= pBest and count < bestResultsToConsider:
+							count += 1
+						else:
+							v = riderResults[rider][r]
+							riderResults[rider][r] = (ignoreFormat.format(v[0]), v[1])
+
+		# Filter out minimal events completed.
+		riderOrder = [rider for rider, results in riderResults.iteritems() if riderEventsCompleted[rider] >= mustHaveCompleted]
+		
 		# Sort by rider points - greatest number of points first.  Break ties with place count, then
 		# most recent result.
-		riderOrder = [rider for rider, results in riderResults.iteritems()]
 		riderOrder.sort(key = lambda r:	[riderPoints[r]] +
 										([riderEventsCompleted[r]] if useMostEventsCompleted else []) +
 										[riderPlaceCount[r][k] for k in xrange(1, numPlacesTieBreaker+1)] +

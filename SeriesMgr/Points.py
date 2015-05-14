@@ -59,7 +59,8 @@ class Points(wx.Panel):
 	
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent)
-		
+
+		#--------------------------------------------------------------------------
 		box = wx.StaticBox( self, -1, 'Scoring Rules' )
 		bsizer = wx.StaticBoxSizer( box, wx.VERTICAL )
 		
@@ -69,7 +70,7 @@ class Points(wx.Panel):
 		self.scoreByTime = wx.RadioButton( self, label='Score by Time' )
 		self.scoreByTime.Bind( wx.EVT_RADIOBUTTON, self.fixEnable )
 		
-		self.scoreByPercent = wx.RadioButton( self, label='Score by Percent Time (FinishTime / FastestCategoryTime) * 100' )
+		self.scoreByPercent = wx.RadioButton( self, label='Score by Percent Time (FastestCategoryTime / FinishTime) * 100' )
 		self.scoreByPercent.Bind( wx.EVT_RADIOBUTTON, self.fixEnable )
 		
 		self.scoreByPoints.SetValue( True )
@@ -80,6 +81,24 @@ class Points(wx.Panel):
 		hb.Add( self.scoreByPercent, flag=wx.LEFT, border=16 )
 		bsizer.Add( hb, flag=wx.ALL, border=2 )
 		
+		#--------------------------------------------------------------------------
+		bsizer.Add( wx.StaticLine(self), 1, flag=wx.EXPAND|wx.ALL, border=4 )
+		
+		maxOptions = 30
+		self.considerLabel = wx.StaticText( self, label='{}:'.format('Consider') )
+		self.bestResultsToConsider = wx.Choice( self, choices = ['All Scores', 'Best Score Only'] + ['{} {} {}'.format('Best', i, 'Scores Only') for i in xrange(2,maxOptions+1)] )
+		
+		self.participationLabel = wx.StaticText( self, label='{}:'.format('Must have completed') )
+		self.mustHaveCompleted = wx.Choice( self, choices = ['{} {}'.format(i, 'or more Events') for i in xrange(0,maxOptions+1)] )
+		
+		hb = wx.BoxSizer( wx.HORIZONTAL )
+		hb.Add( self.considerLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
+		hb.Add( self.bestResultsToConsider )
+		hb.Add( self.participationLabel, flag=wx.LEFT|wx.ALIGN_CENTRE_VERTICAL, border=16 )
+		hb.Add( self.mustHaveCompleted )
+		bsizer.Add( hb, flag=wx.ALL, border=2 )
+		
+		#--------------------------------------------------------------------------
 		bsizer.Add( wx.StaticLine(self), 1, flag=wx.EXPAND|wx.ALL, border=4 )
 		self.ifRidersTiedOnPoints = wx.StaticText(self, label='If Riders are Tied on Points:')
 		bsizer.Add( self.ifRidersTiedOnPoints, flag=wx.ALL, border=2 )
@@ -187,6 +206,9 @@ class Points(wx.Panel):
 			
 		wx.CallAfter( self.gridAutoSize )
 		
+		self.bestResultsToConsider.SetSelection( model.bestResultsToConsider )
+		self.mustHaveCompleted.SetSelection( model.mustHaveCompleted )
+		
 		self.mostEventsCompleted.SetValue( model.useMostEventsCompleted )
 		self.numPlacesTieBreaker.SetSelection( model.numPlacesTieBreaker )
 
@@ -211,6 +233,14 @@ class Points(wx.Panel):
 		
 		model = SeriesModel.model
 		model.setPoints( pointsList )
+		
+		if model.bestResultsToConsider != self.bestResultsToConsider.GetSelection():
+			model.bestResultsToConsider = self.bestResultsToConsider.GetSelection()
+			model.changed = True
+		if model.mustHaveCompleted != self.mustHaveCompleted.GetSelection():
+			model.mustHaveCompleted = self.mustHaveCompleted.GetSelection()
+			model.changed = True
+			
 		if model.useMostEventsCompleted != self.mostEventsCompleted.GetValue():
 			model.useMostEventsCompleted = self.mostEventsCompleted.GetValue()
 			model.changed = True

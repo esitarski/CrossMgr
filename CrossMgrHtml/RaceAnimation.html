@@ -541,7 +541,8 @@ function TriggerReload( leaderRaceTimes, tCur, iLapHint )
 			leaderRaceTimes[iLapHint] <= tCur && tCur < leaderRaceTimes[iLapHint+1] ) {
 		if( tCur - leaderRaceTimes[iLapHint] < 1.0 ) {
 			reloadTriggered = true;
-			setTimeout( doReload, Math.round(5000 + Math.random() * 3000) );
+			setTimeout( RefreshPayload, Math.round(5000 + Math.random() * 3000) );
+			//setTimeout( doReload, Math.round(5000 + Math.random() * 3000) );
 			//setTimeout( function(){window.location.reload(true);}, Math.round(5000 + Math.random() * 3000) );
 			//document.getElementById( 'idReloadStatus' ).innerHTML = 'Reload Triggered';
 		}
@@ -2137,6 +2138,12 @@ function GetDistanceUnit( aData )
 
 function SetData( aData, tCur )
 {
+	if( !catDetails )
+		catDetails = [];
+	catDetailsByName = {};
+	for( var i = 0; i < catDetails.length; ++i )
+		catDetailsByName[catDetails[i].name] = catDetails[i];
+	
 	// Data is rider information indexed by number.  Info includes lap times and lastTime times.
 	// lap times should include the start offset.
 	//	Example:
@@ -5126,6 +5133,95 @@ function OpenGetDirections()
 	window.open( url, null, null, true );
 }
 
+function createXMLHttpRequest() {
+	try { return new ActiveXObject("Msxml2.XMLHTTP"); } catch (e) {}
+	try { return new ActiveXObject("Microsoft.XMLHTTP"); } catch (e) {}
+	try { return new XMLHttpRequest(); } catch(e) {}
+	return null;
+}
+      
+function TryAgain() {
+	// If the request fails, wait a few seconds and try again.
+	setTimeout( RefreshPayload, Math.round(5000 + Math.random() * 3000) );
+	return true;
+}
+	
+function RefreshPayload() {
+	// Retrieve the same web page and parse out the payload.
+	var xhr = createXMLHttpRequest();
+	if( !xhr ) return;
+	
+	var requestTimer = setTimout( function() { xhr.abort(); }, 10*1000 );
+	
+	xhr.onreadystatechange = function() {
+		if( xhr.readyState != 4 )
+			return;
+			
+		clearTimout( requestTimer )
+		if( xhr.status != 200 )
+			return TryAgain();
+		
+		var startSearch = '\nvar payload = ';
+		var pStart = xhr.responseText.indexOf(startSearch);
+		if( pStart < 0 ) return TryAgain();
+		pStart += startSearch.length;
+		var pEnd = xhr.responseText.indexOf( ';\nvar raceName = null;\n', pStart );
+		if( pEnd < 0 ) return TryAgain();
+		pEnd += 1
+
+		var payload = JSON.parse( s.substring(pStart, pEnd) );
+		if( payload ) {
+			for( v in payload )
+				window[v] = payload[v];
+			payload = null;
+			
+			SetRaceTime();
+			SetData( data, undefined );
+			
+			RefreshResultsTable();
+			RefreshRaceChart();
+			SituationRefresh();
+			
+			reloadTriggered = false;
+		}
+		else
+			return TryAgain();
+	}
+	var url = [location.protocol, '//', location.host, location.pathname].join('');
+	xhr.open('GET', url);
+	xhr.send();
+}
+
+function SetRaceTime() {
+	var s = '';
+	if( timestamp )
+	{
+		var tServer = (new Date(timestamp[0]).getTime()) / 1000.0;
+		var tBrowser = (new Date().getTime()) / 1000.0;
+		while( tBrowser - tServer < 0 )
+			tBrowser += 60*60;
+		
+		var tRace = timestamp[1] + (tBrowser - tServer);
+		if( tRace > 25*60*60 )
+			raceIsRunning = false;		// If the race has been running for 25 hours, finish it.
+			
+		if( raceIsRunning )
+		{
+			// Attempt to adjust for time zone differences between server and browser.
+			// Assume that the browser is not more than an hour out of sync with the server.
+			t = tRace;
+			
+			// Hide the controls as we are in real-time mode.
+			document.getElementById('idAnimateControls').className = 'hidden';
+			s += ' (race in progress, last updated ' + timestamp[0] + ')';
+			speedup = 1.0;
+		}
+		else
+			s += ' (' + '<span data-tr="created"></span> ' + timestamp[0] + ')';
+	}
+	return s;
+}
+
 function onLoad()
 {
 	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
@@ -5226,38 +5322,9 @@ function onLoad()
 	var s = '';
 	if( organizer )
 		s = organizer;
-	if( timestamp )
-	{
-		var tServer = (new Date(timestamp[0]).getTime()) / 1000.0;
-		var tBrowser = (new Date().getTime()) / 1000.0;
-		while( tBrowser - tServer < 0 )
-			tBrowser += 60*60;
-		
-		var tRace = timestamp[1] + (tBrowser - tServer);
-		if( tRace > 25*60*60 )
-			raceIsRunning = false;		// If the race has been running for 25 hours, finish it.
-			
-		if( raceIsRunning )
-		{
-			// Attempt to adjust for time zone differences between server and browser.
-			// Assume that the browser is not more than an hour out of sync with the server.
-			t = tRace;
-			
-			// Hide the controls as we are in real-time mode.
-			document.getElementById('idAnimateControls').className = 'hidden';
-			s += ' (race in progress, last updated ' + timestamp[0] + ')';
-			speedup = 1.0;
-		}
-		else
-			s += ' (' + '<span data-tr="created"></span> ' + timestamp[0] + ')';
-	}
+	s += SetRaceTime();
 	if( s )
 		document.getElementById('idOrganizer').innerHTML = s;
-	
-	if( !catDetails )
-		catDetails = [];
-	for( var i = 0; i < catDetails.length; ++i )
-		catDetailsByName[catDetails[i].name] = catDetails[i];
 	
 	if( HasDisplayUnit(data) )
 	{
@@ -5318,7 +5385,7 @@ function onLoad()
 	
 	// Add unconditional refresh is race is running.
 	if( raceIsRunning )
-		setTimeout( doReload, 6*60*1000+10 );
+		setTimeout( RefreshPayload, 6*60*1000+10 );
 }
 
 </script>
