@@ -3,7 +3,7 @@
 <!--
 	Html Template for Race Animation.
 	Generated from CrossMgr software.
-	Copyright 2011-2014, Edward Sitarski
+	Copyright 2011-2015, Edward Sitarski
 	For details, see sites.google.com/site/CrossMgrSoftware
 -->
 <head>
@@ -156,7 +156,9 @@ table.results td#idNonNumeric, table.results th#idNonNumeric {
 <script type="text/javascript">
 
 // Results and race data.
+/* !!! payload begin !!! */
 var payload = null;
+/* !!! payload end !!! */
 var raceName = null;
 var organizer = null;
 var timestamp = null;
@@ -539,12 +541,9 @@ function TriggerReload( leaderRaceTimes, tCur, iLapHint )
 		
 	if( 0 <= iLapHint && iLapHint < maxLaps &&
 			leaderRaceTimes[iLapHint] <= tCur && tCur < leaderRaceTimes[iLapHint+1] ) {
-		if( tCur - leaderRaceTimes[iLapHint] < 1.0 ) {
+		if( leaderRaceTimes[iLapHint+1] - tCur < 1.0 ) {
 			reloadTriggered = true;
-			setTimeout( RefreshPayload, Math.round(5000 + Math.random() * 3000) );
-			//setTimeout( doReload, Math.round(5000 + Math.random() * 3000) );
-			//setTimeout( function(){window.location.reload(true);}, Math.round(5000 + Math.random() * 3000) );
-			//document.getElementById( 'idReloadStatus' ).innerHTML = 'Reload Triggered';
+			setTimeout( RefreshPayload, Math.round(7000 + Math.random() * 5000) );
 		}
 	}
 }
@@ -2391,16 +2390,10 @@ function RefreshResultsTableArrival( raceTimesLength, raceTimesCopy )
 					riderTime *= d.factor / 100.0;
 				
 				var gap = '';
-				if( leaderLaps == riderLaps ) {
-					if( riderTime != leaderTime ) {
-						var delta = TimeDifference(riderTime, leaderTime);
-						gap = FormatTimeGap( delta );
-					}
-				}
-				else {
-					var lapsDown = leaderLaps - riderLaps;
-					gap = '-' + lapsDown + ' ' + (lapsDown == 1 ? _('lap') : _('laps'));
-				}
+				if( d.gapValue > 0 )
+					gap = FormatTimeGap( d.gapValue );
+				else if( d.gapValue < 0 )
+					gap = d.gapValue + ' ' + (d.gapValue == -1 ? _('lap') : _('laps'));
 				
 				riderInfo[num] = {
 					'pos': p+1,
@@ -2641,15 +2634,13 @@ function GetPrimesTable( primeFromBib, pos ) {
 	return table;
 }
 
-function RefreshResultsTable( raceTimesLength, raceTimesCopy )
+function RefreshResultsTable()
 {
 	resultsDiv.innerHTML = '';
 	
 	if( !data )
 		return;
 		
-	//console.log( '^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^' );
-
 	var primeFromBib = {};
 	if( primes && primes.length > 0 ) {
 		for( var i = 0; i < primes.length; ++i ) {
@@ -3051,22 +3042,14 @@ function RefreshResultsTable( raceTimesLength, raceTimesCopy )
 			
 			var gap = '';
 			if( isFinisher ) {
-				if( leaderLaps == riderLaps ) {
-					if( riderTime != leaderTime ) {
-						var delta = TimeDifference(riderTime, leaderTime);
-						if( r != 0 && lapDataOption == 3 ) {
-							delta = (100.0 * delta) / (leaderTime - getStartOffset(num));
-							gap = '+' + delta.toFixed(2) + '%';
-						}
-						else {
-							gap = FormatTimeGap( delta );
-						}
-					}
+				if( d.gapValue > 0 ) {
+					if( r != 0 && lapDataOption == 3 )
+						gap = '+' + (100.0 * d.gapValue) / (leaderTime - getStartOffset(num));
+					else
+						gap = FormatTimeGap( d.gapValue );
 				}
-				else {
-					var lapsDown = leaderLaps - riderLaps;
-					gap = '-' + lapsDown + ' ' + (lapsDown == 1 ? _('lap') : _('laps'));
-				}
+				else if( d.gapValue < 0 )
+					gap = d.gapValue + ' ' + (d.gapValue == -1 ? _('lap') : _('laps'));
 			}
 			
 			if( !hasFactor ) {
@@ -3085,7 +3068,7 @@ function RefreshResultsTable( raceTimesLength, raceTimesCopy )
 				for( var i = 1; i < leaderLaps; ++i ) {
 					if( !(i % showLapsFrequency == 0 || i == 1 || i == raceTimesLength[num]-1)  )
 						continue
-					if( i >= riderLaps ) {
+					if( i >= raceTimesLength[num] ) {
 						createTextChild( td = createChild(tr, 'TD'), ' ' );
 						continue;
 					}
@@ -5140,8 +5123,9 @@ function createXMLHttpRequest() {
 	return null;
 }
       
-function TryAgain() {
+function TryAgain( error ) {
 	// If the request fails, wait a few seconds and try again.
+	console.log( 'RefreshPayload failed "' + error + '".  Trying again in a few seconds...' );
 	setTimeout( RefreshPayload, Math.round(5000 + Math.random() * 3000) );
 	return true;
 }
@@ -5151,49 +5135,58 @@ function RefreshPayload() {
 	var xhr = createXMLHttpRequest();
 	if( !xhr ) return;
 	
-	var requestTimer = setTimout( function() { xhr.abort(); }, 10*1000 );
+	var requestTimer = setTimeout( function() { xhr.abort(); }, 10*1000 );
 	
 	xhr.onreadystatechange = function() {
 		if( xhr.readyState != 4 )
 			return;
 			
-		clearTimout( requestTimer )
+		clearTimeout( requestTimer )
 		if( xhr.status != 200 )
 			return TryAgain();
 		
-		var startSearch = '\nvar payload = ';
+		console.log( 'RefreshPayload: processing...' );
+		
+		var startSearch = ':* !!! payload begin !!! *:\nvar payload = '.replace(/:/g,'/');
 		var pStart = xhr.responseText.indexOf(startSearch);
-		if( pStart < 0 ) return TryAgain();
+		if( pStart < 0 ) return TryAgain( 'missing payload start' );
 		pStart += startSearch.length;
-		var pEnd = xhr.responseText.indexOf( ';\nvar raceName = null;\n', pStart );
-		if( pEnd < 0 ) return TryAgain();
-		pEnd += 1
-
-		var payload = JSON.parse( s.substring(pStart, pEnd) );
+		var pEnd = xhr.responseText.indexOf( ';\n:* !!! payload end !!! *:'.replace(/:/g,'/'), pStart );
+		if( pEnd < 0 ) return TryAgain( 'missing payload end' );
+		
+		var payloadJSON = xhr.responseText.substring(pStart, pEnd);
+		var payload = null;
+		try { payload = JSON.parse( payloadJSON ); } catch( e ) { }
 		if( payload ) {
 			for( v in payload )
 				window[v] = payload[v];
 			payload = null;
 			
-			SetRaceTime();
 			SetData( data, undefined );
+			SetRaceTime();
+			
+			setLanguage( translations['languageCode'][langCur] );
+			setCategory( categoryCur );
 			
 			RefreshResultsTable();
 			RefreshRaceChart();
 			SituationRefresh();
 			
 			reloadTriggered = false;
+			
+			console.log( 'RefreshPayload: success.' );
 		}
 		else
-			return TryAgain();
+			return TryAgain( 'payload extract fails' );
 	}
 	var url = [location.protocol, '//', location.host, location.pathname].join('');
 	xhr.open('GET', url);
 	xhr.send();
 }
 
-function SetRaceTime() {
-	var s = '';
+function SetRaceTime() {	
+	var s = (organizer ? organizer : '');
+	
 	if( timestamp )
 	{
 		var tServer = (new Date(timestamp[0]).getTime()) / 1000.0;
@@ -5216,9 +5209,14 @@ function SetRaceTime() {
 			s += ' (race in progress, last updated ' + timestamp[0] + ')';
 			speedup = 1.0;
 		}
-		else
+		else {
+			document.getElementById('idAnimateControls').className = '';
 			s += ' (' + '<span data-tr="created"></span> ' + timestamp[0] + ')';
+			Animate( animationSeconds, undefined, getStartTime() );
+		}
 	}
+	
+	document.getElementById('idOrganizer').innerHTML = s;
 	return s;
 }
 
@@ -5319,12 +5317,7 @@ function onLoad()
 							'mailto:' + email +
 							'?subject=' + replaceHtmlEntites(document.getElementById('idTitle').innerHTML);
 	
-	var s = '';
-	if( organizer )
-		s = organizer;
-	s += SetRaceTime();
-	if( s )
-		document.getElementById('idOrganizer').innerHTML = s;
+	SetRaceTime();
 	
 	if( HasDisplayUnit(data) )
 	{

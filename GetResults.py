@@ -87,6 +87,44 @@ class RiderResult( object ):
 
 DefaultSpeed = 0.00001
 
+def FixRelegations( riderResults ):
+	race = Model.race
+	
+	if not any( race[rr.num].isRelegated() for rr in riderResults ):
+		return
+		
+	relegatedResults = {}
+	relegated = set()
+	maxRelegatedPosition = 0
+	for rr in riderResults:
+		rider = race[rr.num]
+		if rider.isRelegated():
+			rr.relegated = True
+			relegated.add( rr )
+			relegatedPosition = rider.relegatedPosition
+			while relegatedResults.get(relegatedPosition-1, None) is not None:
+				relegatedPosition += 1
+			relegatedResults[relegatedPosition-1] = rr
+			maxRelegatedPosition = max( maxRelegatedPosition, relegatedPosition )
+		
+	posCur = 0
+	doneFinishers = False
+	for rr in riderResults:
+		if rr not in relegated:
+			if not doneFinishers and rr.status != Finisher:
+				doneFinishers = True
+				posCur = maxRelegatedPosition
+			while relegatedResults.get(posCur, None) is not None:
+				posCur += 1
+			relegatedResults[posCur] = rr
+			posCur += 1
+	
+	riderResults = [v[1] for v in sorted(relegatedResults.iteritems(), key = lambda x: x[0])]
+	for pos, rr in enumerate(riderResults):
+		if rr.status != Finisher:
+			break
+		rr.pos = u'{} {}'.format(pos+1, _('REL')) if rr in relegated else pos+1
+	
 @Model.memoize
 def GetResultsCore( category ):
 	Finisher = Model.Rider.Finisher
@@ -112,11 +150,7 @@ def GetResultsCore( category ):
 		# Group finish times are defined as times which are separated from the previous time by at least 1 second.
 		groupFinishTimes = [0 if not entries else floor(entries[0].t)]
 		groupFinishTimes.extend( [floor(entries[i].t) for i in xrange(1, len(entries)) if entries[i].t - entries[i-1].t >= 1.0] )
-		groupFinishTimes.append( sys.float_info.max )
-		groupFinishTimes.append( sys.float_info.max )
-		groupFinishTimes.append( sys.float_info.max )
-		groupFinishTimes.append( sys.float_info.max )
-		groupFinishTimes.append( sys.float_info.max )
+		groupFinishTimes.extend( [sys.float_info.max] * 5 )
 		
 		for e in entries:
 			try:
@@ -306,19 +340,22 @@ def GetResultsCore( category ):
 				tLapEndBest = None
 			
 			for rr in riderResults:
-				if rr.raceTimes:
-					try:
-						rr.lastTime = rr.raceTimes[lapBest]
-						rr.laps = min( rr.laps, lapBest )
-						
-						# Check for laps down.
-						if tLapEndBest is not None and rr.laps == lapBest:
-							for iLapCur in xrange(lapBest, -1, -1):
-								if overlap(tLapStartBest, tLapEndBest, rr.raceTimes[iLapCur], rr.raceTimes[iLapCur+1]):
-									rr.laps = iLapCur
-									break
-					except IndexError:
-						pass
+				if not rr.raceTimes:
+					continue
+				try:
+					rr.lastTime = rr.raceTimes[lapBest]
+					rr.laps = min( rr.laps, lapBest )
+					
+					# Check for laps down.
+					if tLapEndBest is not None and rr.laps == lapBest:
+						for iLapCur in xrange(lapBest, -1, -1):
+							if overlap(tLapStartBest, tLapEndBest, rr.raceTimes[iLapCur], rr.raceTimes[iLapCur+1]):
+								rr.laps = iLapCur
+								rr.lastTime = rr.raceTimes[rr.laps]
+								break
+				except IndexError:
+					pass
+				rr.lastTimeOrig = rr.lastTime
 		
 		riderResults.sort( key = RiderResult._getKey )
 		
@@ -341,7 +378,7 @@ def GetResultsCore( category ):
 				
 			rr.pos = u'{}'.format(pos+1)
 			
-			# if gapValue is negative, it means laps down.  Otherwise, it is seconds.
+			# if gapValue is negative, it is laps down.  Otherwise, it is seconds.
 			rr.gapValue = 0
 			if rr.laps != leader.laps:
 				lapsDown = leader.laps - rr.laps
@@ -390,39 +427,7 @@ def GetResultsCore( category ):
 					rr.ttPenalty = getattr(rider, 'ttPenalty')
 					rr.ttNote = getattr(rider, 'ttNote', u'')
 		
-		# Fix relegations.
-		if any( race[rr.num].isRelegated() for rr in riderResults ):
-			relegatedResults = {}
-			relegated = set()
-			maxRelegatedPosition = 0
-			for rr in riderResults:
-				rider = race[rr.num]
-				if rider.isRelegated():
-					rr.relegated = True
-					relegated.add( rr )
-					relegatedPosition = rider.relegatedPosition
-					while relegatedResults.get(relegatedPosition-1, None) is not None:
-						relegatedPosition += 1
-					relegatedResults[relegatedPosition-1] = rr
-					maxRelegatedPosition = max( maxRelegatedPosition, relegatedPosition )
-				
-			posCur = 0
-			doneFinishers = False
-			for rr in riderResults:
-				if rr not in relegated:
-					if not doneFinishers and rr.status != Finisher:
-						doneFinishers = True
-						posCur = maxRelegatedPosition
-					while relegatedResults.get(posCur, None) is not None:
-						posCur += 1
-					relegatedResults[posCur] = rr
-					posCur += 1
-			
-			riderResults = [v[1] for v in sorted(relegatedResults.iteritems(), key = lambda x: x[0])]
-			for pos, rr in enumerate(riderResults):
-				if rr.status != Finisher:
-					break
-				rr.pos = u'{} {}'.format(pos+1, _('REL')) if rr in relegated else pos + 1
+		FixRelegations( riderResults )
 		
 		'''
 		for rr in riderResults:
@@ -496,10 +501,11 @@ def GetResults( category, getExternalData = False ):
 		statusNames = Model.Rider.statusNames
 		for pos, rr in enumerate(riderResults):
 			if rr.status == Model.Rider.Finisher:
-				rr.pos = u'{}'.format( pos + 1 ) if not getattr(rr, 'relegated', False) else u'{} {}'.format( pos + 1, _('REL') )
+				rr.pos = u'{}'.format( pos + 1 )
 			else:
 				rr.pos = statusNames[rr.status]
-		
+				
+		FixRelegations( riderResults )
 		riderResults = tuple( riderResults )
 	
 	return riderResults
@@ -552,15 +558,19 @@ def GetNonWaveCategoryResults( category ):
 	leader = riderResults[0] if riderResults else None
 	if leader:
 		leader.gap = ''
+		leader.gapValue = 0
 		for pos, rr in enumerate(riderResults):
+			rr.gap = ''
+			rr.gapValue = 0
 			if rr.status == Model.Rider.Finisher:
 				rr.pos = u'{}'.format( pos + 1 ) if not getattr(rr, 'relegated', False) else u'{} {}'.format(pos + 1, _('REL'))
 				if rr.laps != leader.laps:
-					if rr.lastTime > leader.lastTime:
-						lapsDown = leader.laps - rr.laps
-						rr.gap = u'-{} {}'.format(lapsDown, _('laps') if lapsDown > 1 else _('lap'))
+					lapsDown = leader.laps - rr.laps
+					rr.gap = u'-{} {}'.format(lapsDown, _('laps') if lapsDown > 1 else _('lap'))
+					rr.gapValue = -lapsDown
 				elif rr != leader and not (isTimeTrial and rr.lastTime == leader.lastTime):
 					rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
+					rr.gapValue = rr.lastTime - leader.lastTime
 			else:
 				rr.pos = statusNames[rr.status]
 	
