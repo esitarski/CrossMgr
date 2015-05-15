@@ -88,6 +88,9 @@ class RiderResult( object ):
 DefaultSpeed = 0.00001
 
 def FixRelegations( riderResults ):
+	Finisher = Model.Rider.Finisher
+	PUL = Model.Rider.Pulled
+	NP = Model.Rider.NP
 	race = Model.race
 	
 	if not any( race[rr.num].isRelegated() for rr in riderResults ):
