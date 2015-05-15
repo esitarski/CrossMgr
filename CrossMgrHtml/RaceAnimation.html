@@ -2135,6 +2135,7 @@ function GetDistanceUnit( aData )
 	return 'km';
 }
 
+var lastRaceTime = 0;
 function SetData( aData, tCur )
 {
 	if( !catDetails )
@@ -2154,6 +2155,7 @@ function SetData( aData, tCur )
 	// Get some of the unique categories from the data.
 	var hasLapSpeeds = false;
 	var hasMultipleLaps = false;
+	lastRaceTime = 0;
 	for( var num in data )
 	{
 		var info = data[num];
@@ -2168,6 +2170,8 @@ function SetData( aData, tCur )
 			info['finishTime'] = info['raceTimes'].back()
 		else
 			info['finishTime'] = info['lastTime']
+		if( info['finishTime'] )
+			lastRaceTime = Math.max( info['finishTime'], lastRaceTime );
 	}
 	
 	// Create an array of the category names.
@@ -5184,8 +5188,26 @@ function RefreshPayload() {
 	xhr.send();
 }
 
-function SetRaceTime() {	
+var finishUpdateTimer = null;
+var queryPayloadTimer = null;
+function QueryPayloadLoop() {
+	if( lastRaceTime == 0 ) {
+		RefreshPayload();
+		queryPayloadTimer = setTimeout( QueryPayload, Math.round((3 + Math.random()) * 60 * 1000) );
+	}
+}
+
+function SetRaceTime() {
 	var s = (organizer ? organizer : '');
+	
+	if( finishUpdateTimer ) {
+		clearTimeout( finishUpdateTimer );
+		finishUpdateTimer = null;
+	}
+	if( queryPayloadTimer ) {
+		clearTimeout( queryPayloadTimer );
+		queryPayloadTimer = null;
+	}
 	
 	if( timestamp )
 	{
@@ -5208,6 +5230,11 @@ function SetRaceTime() {
 			document.getElementById('idAnimateControls').className = 'hidden';
 			s += ' (race in progress, last updated ' + timestamp[0] + ')';
 			speedup = 1.0;
+			
+			if( lastRaceTime > 0 )
+				finishUpdateTimer = setTimeout( RefreshPayload, (Math.min(0, lastRaceTime - tRace) + 5*60) * 1000 );
+			else
+				queryPayloadTimer = setTimeout( QueryPayloadLoop, Math.round((3 + Math.random()) * 60 * 1000) );
 		}
 		else {
 			document.getElementById('idAnimateControls').className = '';
@@ -5376,9 +5403,9 @@ function onLoad()
 	Animate( animationSeconds, undefined, raceIsRunning ? t : getStartTime() );
 	document.getElementById('idPlayStop').value = _('Stop');
 	
-	// Add unconditional refresh is race is running.
+	// Add unconditional refresh if race is running.
 	if( raceIsRunning )
-		setTimeout( RefreshPayload, 6*60*1000+10 );
+		setTimeout( RefreshPayload, 5*60*1000+10 );
 }
 
 </script>
