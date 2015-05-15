@@ -5234,7 +5234,7 @@ function SetRaceTime() {
 			if( lastRaceTime > 0 )
 				finishUpdateTimer = setTimeout( RefreshPayload, (Math.min(0, lastRaceTime - tRace) + 5*60) * 1000 );
 			else
-				queryPayloadTimer = setTimeout( QueryPayloadLoop, Math.round((3 + Math.random()) * 60 * 1000) );
+				queryPayloadTimer = setTimeout( QueryPayloadLoop, (3 + Math.random()) * 60 * 1000 );
 		}
 		else {
 			document.getElementById('idAnimateControls').className = '';
