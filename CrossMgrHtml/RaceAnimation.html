@@ -4718,7 +4718,7 @@ function Rewind()
 	t = getStartTime();
 	if( animationObj != null )
 		animationObj.Refresh();
-	document.getElementById('idPlayStop').value = _('Play');
+	document.getElementById('idPlayStop').innerHTML = _('Play');
 	Animate( animationSeconds, tMax, t );
 	suspendAnimation = true;
 }
@@ -4730,12 +4730,12 @@ function PlayStop()
 	if( IsAnimating() )
 	{
 		SuspendAnimate();
-		document.getElementById('idPlayStop').value = _('Play');
+		document.getElementById('idPlayStop').innerHTML = _('Play');
 	}
 	else
 	{
 		Animate( animationSeconds, tMax, t );
-		document.getElementById('idPlayStop').value = _('Stop');
+		document.getElementById('idPlayStop').innerHTML = _('Stop');
 	}
 }
 
@@ -5129,9 +5129,14 @@ function createXMLHttpRequest() {
       
 function TryAgain( error ) {
 	// If the request fails, wait a few seconds and try again.
-	console.log( 'RefreshPayload failed "' + error + '".  Trying again in a few seconds...' );
+	console.log( 'RefreshPayload: failure: "' + error + '".  Trying again in a few seconds...' );
 	setTimeout( RefreshPayload, Math.round(5000 + Math.random() * 3000) );
 	return true;
+}
+
+function eqTimestamp( ts1, ts2 ) {
+	return	( (ts1 && ts1.length > 0 ? ts1[0] : '') == (ts2 && ts2.length > 0 ? ts2[0] : '') ) &&
+			( (ts1 && ts1.length > 1 ? ts1[1] : -1) == (ts2 && ts2.length > 1 ? ts2[1] : -1) );
 }
 	
 function RefreshPayload() {
@@ -5160,11 +5165,18 @@ function RefreshPayload() {
 		
 		var payloadJSON = xhr.responseText.substring(pStart, pEnd);
 		var payload = null;
-		try { payload = JSON.parse( payloadJSON ); } catch( e ) { }
+		try { payload = JSON.parse(payloadJSON); } catch( e ) { payload = null; }
+		payloadJSON = null;
 		if( payload ) {
-			for( v in payload )
-				window[v] = payload[v];
-			payload = null;
+			reloadTriggered = false;
+
+			if( eqTimestamp(timestamp, payload.timestamp) ) {
+				console.log( 'RefreshPayload: success: no change.' );
+				return;
+			}
+
+			var raceWasRunning = raceIsRunning;
+			for( v in payload ) window[v] = payload[v]; payload = null;
 			
 			SetData( data, undefined );
 			SetRaceTime();
@@ -5176,9 +5188,10 @@ function RefreshPayload() {
 			RefreshRaceChart();
 			SituationRefresh();
 			
-			reloadTriggered = false;
+			if( !raceIsRunning && raceWasRunning )
+				Animate( animationSeconds, undefined, getStartTime() );
 			
-			console.log( 'RefreshPayload: success.' );
+			console.log( 'RefreshPayload: success: new timestamp.' );
 		}
 		else
 			return TryAgain( 'payload extract fails' );
@@ -5192,6 +5205,7 @@ var finishUpdateTimer = null;
 var queryPayloadTimer = null;
 function QueryPayloadLoop() {
 	if( lastRaceTime == 0 ) {
+		console.log( 'QueryPayloadLoop:' );
 		RefreshPayload();
 		queryPayloadTimer = setTimeout( QueryPayload, (3 + Math.random()) * 60 * 1000 );
 	}
@@ -5232,14 +5246,13 @@ function SetRaceTime() {
 			speedup = 1.0;
 			
 			if( lastRaceTime > 0 )
-				finishUpdateTimer = setTimeout( RefreshPayload, (Math.min(0, lastRaceTime - tRace) + 5*60) * 1000 );
+				finishUpdateTimer = setTimeout( doReload, (Math.min(0, lastRaceTime - tRace) + 5*60) * 1000 );
 			else
 				queryPayloadTimer = setTimeout( QueryPayloadLoop, (3 + Math.random()) * 60 * 1000 );
 		}
 		else {
 			document.getElementById('idAnimateControls').className = '';
 			s += ' (' + '<span data-tr="created"></span> ' + timestamp[0] + ')';
-			Animate( animationSeconds, undefined, getStartTime() );
 		}
 	}
 	
@@ -5401,7 +5414,7 @@ function onLoad()
 	
 	// Start animation.
 	Animate( animationSeconds, undefined, raceIsRunning ? t : getStartTime() );
-	document.getElementById('idPlayStop').value = _('Stop');
+	document.getElementById('idPlayStop').innerHTML = _('Stop');
 	
 	// Add unconditional refresh if race is running.
 	if( raceIsRunning )
