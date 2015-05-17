@@ -334,31 +334,32 @@ def GetResultsCore( category ):
 					statusLapsTimeBest = statusLapsTime
 					rrLeader = rr
 			
-			lapBest = -statusLapsTimeBest[1]
+			if rrLeader:
+				lapBest = -statusLapsTimeBest[1]
 			
-			tLapStartBest = rrLeader.raceTimes[lapBest]
-			try:
-				tLapEndBest = rrLeader.raceTimes[lapBest+1]
-			except IndexError:
-				tLapEndBest = None
-			
-			for rr in riderResults:
-				if not rr.raceTimes:
-					continue
+				tLapStartBest = rrLeader.raceTimes[lapBest]
 				try:
-					rr.lastTime = rr.raceTimes[lapBest]
-					rr.laps = min( rr.laps, lapBest )
-					
-					# Check for laps down.
-					if tLapEndBest is not None and rr.laps == lapBest:
-						for iLapCur in xrange(lapBest, -1, -1):
-							if overlap(tLapStartBest, tLapEndBest, rr.raceTimes[iLapCur], rr.raceTimes[iLapCur+1]):
-								rr.laps = iLapCur
-								rr.lastTime = rr.raceTimes[rr.laps]
-								break
+					tLapEndBest = rrLeader.raceTimes[lapBest+1]
 				except IndexError:
-					pass
-				rr.lastTimeOrig = rr.lastTime
+					tLapEndBest = None
+				
+				for rr in riderResults:
+					if not rr.raceTimes:
+						continue
+					try:
+						rr.lastTime = rr.raceTimes[lapBest]
+						rr.laps = min( rr.laps, lapBest )
+						
+						# Check for laps down.
+						if tLapEndBest is not None and rr.laps == lapBest:
+							for iLapCur in xrange(lapBest, -1, -1):
+								if overlap(tLapStartBest, tLapEndBest, rr.raceTimes[iLapCur], rr.raceTimes[iLapCur+1]):
+									rr.laps = iLapCur
+									rr.lastTime = rr.raceTimes[rr.laps]
+									break
+					except IndexError:
+						pass
+					rr.lastTimeOrig = rr.lastTime
 		
 		riderResults.sort( key = RiderResult._getKey )
 		
