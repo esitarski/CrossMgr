@@ -2550,7 +2550,8 @@ function GetPrimesTable( primeFromBib, pos ) {
 	var primesCur = [];
 	for( var p = 0; p < pos.length; ++p ) {
 		if( primeFromBib[pos[p]] != undefined )
-			primesCur.push( primeFromBib[pos[p]] );
+			for( var i = 0; i < primeFromBib[pos[p]].length; ++i )
+				primesCur.push( primeFromBib[pos[p]][i] );
 	}
 	if( primesCur.length == 0 )
 		return null;
@@ -2648,8 +2649,13 @@ function RefreshResultsTable()
 	var primeFromBib = {};
 	if( primes && primes.length > 0 ) {
 		for( var i = 0; i < primes.length; ++i ) {
-			if( primes[i].winnerBib )
-				primeFromBib[primes[i].winnerBib] = i;
+			var winnerBib = primes[i].winnerBib;
+			if( !winnerBib )
+				continue;
+			if( primeFromBib[winnerBib] )
+				primeFromBib[winnerBib].push( i );
+			else
+				primeFromBib[winnerBib] = [i];
 		}
 	}
 
@@ -3209,7 +3215,7 @@ function RefreshResultsTable()
 		
 		var primesTable = GetPrimesTable( primeFromBib, catDetail.pos );
 		if( primesTable )
-			resultsDiv.appendChild( primesTable );				
+			resultsDiv.appendChild( primesTable );
 		
 		// Add some blank space between categories.
 		createChild(resultsDiv, 'P').innerHTML = '&nbsp;'
