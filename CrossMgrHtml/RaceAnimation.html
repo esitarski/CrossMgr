@@ -5204,6 +5204,7 @@ function RefreshPayload() {
 	}
 	var url = [location.protocol, '//', location.host, location.pathname].join('');
 	xhr.open('GET', url);
+	xhr.responseType = "text";
 	xhr.send();
 }
 
