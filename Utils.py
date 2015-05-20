@@ -485,14 +485,13 @@ def ordinal( value ):
 	try:
 		value = int(value)
 	except ValueError:
-		return value
+		return u'{}'.format(value)
 
-	if lang.startswith('fr'):
-		return '{}{}'.format( value, 'er' if value == 1 else 'e' )
-	
-	if (value % 100)//10 != 1:
-		return "{}{}".format(value, ['th','st','nd','rd','th','th','th','th','th','th'][value%10])
-	return "{}{}".format(value, "th")
+	return {
+		'fr': lambda v: '{}{}'.format(v, 'er' if v == 1 else 'e'),
+		'es': lambda v: u'{}.\u00B0'.format(v),
+		'en': lambda v: "{}{}".format(v, ['th','st','nd','rd','th','th','th','th','th','th'][v%10]) if (v % 100)//10 != 1 else "{}{}".format(value, "th"),
+	}.get( lang[:2], lambda v: '{}'.format(v) )( value )
 
 def getHomeDir():
 	sp = wx.StandardPaths.Get()

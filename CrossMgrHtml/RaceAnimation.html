@@ -426,6 +426,17 @@ function _( f ) {
 	return t ? t[langCur] : f;
 }
 
+function ordinal( value ) {
+	value = parseInt( value );
+	
+	if( langCur == 1 ) return value == 1 ? (value+'er') : (value+'e');
+	if( langCur == 2 ) return value + '.&#xb0;';
+	
+	if( Math.floor((value % 100)/10) != 1 )
+		return value + ['th','st','nd','rd','th','th','th','th','th','th'][value%10];
+	return value + "th";
+}
+
 //------------------------------------------------------------------------------------
 
 var degreesToRadians = Math.PI / 180.0;
@@ -2596,6 +2607,8 @@ function GetPrimesTable( primeFromBib, pos ) {
 	createTextChild( td = createChild(tr, 'TH'), _('laps to go').replace(/^./, function (match) {return match.toUpperCase();}));
 	createTextChild( td = createChild(tr, 'TH'), _('For'));
 	td.id = 'idNonNumeric';
+	createTextChild( td = createChild(tr, 'TH'), _('Position'));
+	td.id = 'idNonNumeric';
 	if( hasCash )
 		createTextChild( td = createChild(tr, 'TH'), _('Cash'));
 	if( hasMerchandise ) {
@@ -2626,6 +2639,8 @@ function GetPrimesTable( primeFromBib, pos ) {
 		}
 		createTextChild( td = createChild(tr, 'TD'), prime.lapsToGo );
 		createTextChild( td = createChild(tr, 'TD'), prime.effortType != 'Custom' ? _(prime.effortType) : prime.effortCustom );
+		td.id = 'idNonNumeric';
+		createTextChild( td = createChild(tr, 'TD'), prime.position ? ordinal(prime.position) : '' );
 		td.id = 'idNonNumeric';
 		if( hasCash )
 			createTextChild( td = createChild(tr, 'TD'), prime.cash ? prime.cash.toFixed(2) : '');
@@ -5133,9 +5148,15 @@ function createXMLHttpRequest() {
 	return null;
 }
       
-function TryAgain( error ) {
+function TryAgain( error, responseText ) {
 	// If the request fails, wait a few seconds and try again.
 	console.log( 'RefreshPayload: failure: "' + error + '".  Trying again in a few seconds...' );
+	if( responseText ) {
+		console.log( 'responseText:' );
+		console.log( responseText.slice(0, 256) + '...' );
+	}
+	else
+		console.log( 'No responseText.' );
 	setTimeout( RefreshPayload, Math.round(5000 + Math.random() * 3000) );
 	return true;
 }
@@ -5164,10 +5185,10 @@ function RefreshPayload() {
 		
 		var startSearch = ':* !!! payload begin !!! *:\nvar payload = '.replace(/:/g,'/');
 		var pStart = xhr.responseText.indexOf(startSearch);
-		if( pStart < 0 ) return TryAgain( 'missing payload start' );
+		if( pStart < 0 ) return TryAgain( 'missing payload start', xhr.responseText );
 		pStart += startSearch.length;
 		var pEnd = xhr.responseText.indexOf( ';\n:* !!! payload end !!! *:'.replace(/:/g,'/'), pStart );
-		if( pEnd < 0 ) return TryAgain( 'missing payload end' );
+		if( pEnd < 0 ) return TryAgain( 'missing payload end', xhr.responseText );
 		
 		var payloadJSON = xhr.responseText.substring(pStart, pEnd);
 		var payload = null;
@@ -5200,11 +5221,9 @@ function RefreshPayload() {
 			console.log( 'RefreshPayload: success: new timestamp.' );
 		}
 		else
-			return TryAgain( 'payload extract fails' );
+			return TryAgain( 'payload extract fails', xhr.responseText );
 	}
-	var url = [location.protocol, '//', location.host, location.pathname].join('');
-	xhr.open('GET', url);
-	xhr.responseType = "text";
+	xhr.open('GET', window.localion.ref);
 	xhr.send();
 }
 

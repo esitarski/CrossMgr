@@ -46,6 +46,7 @@ class Primes( wx.Panel ):
 		self.colNameFields = (
 			(_('Prime For'),			'effortType',	's'),
 			(_('or Custom'),			'effortCustom',	's'),
+			(_('Position'),				'position',		'i'),
 			(_('Laps\nTo Go'),			'lapsToGo',		'i'),
 			(_('Sponsor'),				'sponsor', 		's'),
 			(_('Cash'),					'cash', 		'f'),
@@ -63,6 +64,8 @@ class Primes( wx.Panel ):
 			attr = wx.grid.GridCellAttr()
 			if fieldName == 'effortType':
 				attr.SetEditor( wx.grid.GridCellChoiceEditor(choices=[GetTranslation(name) for code, name in EffortChoices]) )
+				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_TOP )
+			elif fieldName == 'position':
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_TOP )
 			elif fieldName == 'winnerInfo':
 				attr.SetReadOnly( True )
@@ -211,6 +214,9 @@ class Primes( wx.Panel ):
 			if attr == 'effortType':
 				effortType = prime.get('effortType', 'Pack')
 				v = GetTranslation(effortType)
+			elif attr == 'position':
+				position = prime.get('position', 1)
+				v = u'' if position == 0 else unicode(position)
 			elif attr == 'winnerBib':
 				winnerBib = prime.get('winnerBib', None)
 				v = u'' if not winnerBib else unicode(winnerBib)

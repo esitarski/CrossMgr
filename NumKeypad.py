@@ -616,7 +616,7 @@ class NumKeypad( wx.Panel ):
 				continue
 			
 			if category not in categoryLapTotal:
-				categoryLapTotal[category] = max(1, rr.laps)
+				categoryLapTotal[category] = max(1, len(rr.raceTimes)-1)
 			
 			numLaps = categoryLapTotal[category]
 			

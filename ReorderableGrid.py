@@ -77,7 +77,11 @@ class ReorderableGridRowMixin( object ):
 			
 		x,y = evt.GetX(), evt.GetY()
 		row, col = self.ReorderableGridRowXYToCell(x,y, colheight=0)
-		self.HideCellEditControl()
+		
+		self.SaveEditControlValue()
+		self.DisableCellEditControl()
+		self.SetFocus()
+		
 		self._lastRow = row
 		self.ClearSelection()
 		self.SelectRow(row, True)
@@ -213,7 +217,7 @@ class SaveEditWhenFocusChangesGridMixin( object ):
 		# Cell editor's grandparent, the grid GridWindow's parent, is the grid.
 		grid = event.GetEventObject().GetGrandParent()
 		grid.SaveEditControlValue()
-		grid.HideCellEditControl()
+		grid.DisableCellEditControl()
 		event.Skip()
 		
 ########################################################################
