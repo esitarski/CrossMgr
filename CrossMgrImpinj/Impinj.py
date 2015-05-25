@@ -31,6 +31,13 @@ ReaderUpdateMessageSeconds	= 5		# Interval to print we are waiting for input.
 
 class Impinj( object ):
 
+	receiverSensitivity = None
+	transmitPower = None
+	
+	inventorySession = 2		# LLRP inventory session.
+	tagPopulation = None		# Size of a group to read.  Default=100
+	tagTransitTime = None		# Time (milliseconds) expected for tag to cross read field.  Default=3000
+
 	def __init__( self, dataQ, messageQ, shutdownQ, impinjHost, impinjPort, antennaStr ):
 		self.impinjHost = impinjHost
 		self.impinjPort = impinjPort
@@ -118,11 +125,56 @@ class Impinj( object ):
 			return False
 		
 		# Configure a period Keepalive message.
-		success, response = self.sendCommand( SET_READER_CONFIG_Message(Parameters = [
-				KeepaliveSpec_Parameter(	KeepaliveTriggerType = KeepaliveTriggerType.Periodic,
-											PeriodicTriggerValue = int(KeepaliveSeconds*1000)
+		if True:
+			success, response = self.sendCommand( SET_READER_CONFIG_Message(Parameters = [
+					KeepaliveSpec_Parameter(	KeepaliveTriggerType = KeepaliveTriggerType.Periodic,
+												PeriodicTriggerValue = int(KeepaliveSeconds*1000)
+					),
+			] ) )
+		else:
+			# Change receiver sensitivity (if specified).  This value is RFID reader dependent.
+			receiverSensitivityParameter = []
+			if self.receiverSensitivity is not None:
+				receiverSensitivityParameter.append(
+					RFReceiver_Parameter( 
+						ReceiverSensitivity = self.receiverSensitivity
+					)
+				)
+			
+			# Change transmit power (if specified).  This value is RFID reader dependent.
+			transmitPowerParameter = []
+			if self.transmitPower is not None:
+				transmitPowerParameter.append(
+					RFTransmitter_Parameter( 
+						HopTableID = 1,
+						ChannelIndex = 0,
+						TransmitPower = self.transmitPower,
+					)
+				)
+			
+			# Change Invnetory Control (if specifield).
+			inventoryCommandParameter = []
+			if any(v is not None for v in [self.inventorySession, self.tagPopulation, self.tagTransitTime]):
+				inventoryCommandParameter.append(
+					C1G2InventoryCommand_Parameter( Parameters = [
+							C1G2SingulationControl_Parameter(
+								Session = self.inventorySession or 0,
+								TagPopulation = self.tagPopulation or 100,
+								TagTransitTime = self.tagTransitTime or 3000,
+							),
+						],
+					)
+				)
+			
+			success, response = self.sendCommand( SET_READER_CONFIG_Message(Parameters = [
+					KeepaliveSpec_Parameter( KeepaliveTriggerType = KeepaliveTriggerType.Periodic, PeriodicTriggerValue = int(KeepaliveSeconds*1000),),
+						AntennaConfiguration_Parameter(
+							AntennaID = 0,
+							Parameters = receiverSensitivityParameter + transmitPowerParameter + inventoryCommandParameter
+						),
+					],
 				),
-		] ) )
+			)
 		if not success:
 			return False
 		
