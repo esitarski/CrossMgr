@@ -107,49 +107,93 @@ class AdvancedSetup( wx.Dialog ):
 						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
 						
 		'''
+		Impinj.TagPopulation			= None	# Size of a group to read.
+		Impinj.ReceiverSensitivity		= None
+		Impinj.TransmitPower			= None
+		
 		Impinj.ConnectionTimeoutSeconds	= 1		# Interval for connection timeout
 		Impinj.KeepaliveSeconds			= 2		# Interval to request a Keepalive message
 		Impinj.RepeatSeconds			= 2		# Interval in which a tag is considered a repeat read.
 		'''
 
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
+		
+		row = 0
 
 		border = 8
-		bs.Add( wx.StaticText(self, wx.ID_ANY, 'Advanced Reader Options:'), pos = (0,0), span=(1, 2), border = border, flag=wx.ALL )
+		bs.Add( wx.StaticText(self, label='Advanced Reader Options:'), pos = (0,0), span=(1, 2), border = border, flag=wx.ALL )
 		
-		row = 1
-		bs.Add( wx.StaticText(self, wx.ID_ANY, 'Connection Timeout Seconds'), pos=(row, 0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
-		self.ConnectionTimeoutSeconds = intctrl.IntCtrl( self, wx.ID_ANY, min=1, max=60, limited = True,
-			value = Impinj.ConnectionTimeoutSeconds, size=(32,-1) )
+		row += 1
+		bs.Add( wx.StaticText(self, label='Tag Population'), pos=(row, 0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		self.TagPopulation = intctrl.IntCtrl( self, min=0, max=500, limited = True, allow_none=True,
+			value = Impinj.TagPopulation, size=(100,-1), style=wx.TE_RIGHT )
+		bs.Add( self.TagPopulation, pos=(row, 1), span=(1,1), border = border, flag=wx.TOP )
+		bs.Add( wx.StaticText(self, label='Expected number of tags in range of the antennas at the finish line.\nSuggestions: 4=TimeTrial/MTB, 16=Small Criterium/Road Race, 100=Large Criterium/Road Race.'), pos=(row, 2), span=(1,1), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL )
+
+		row += 1
+		bs.Add( wx.StaticLine(self), pos=(row, 0), span=(1, 3), flag=wx.EXPAND )
+
+		row += 1
+		bs.Add( wx.StaticText(self, label='Transmit Power'), pos=(row, 0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		self.TransmitPower = intctrl.IntCtrl( self, min=0, max=10000, limited = True, allow_none=True,
+			value = Impinj.TransmitPower, size=(100,-1), style=wx.TE_RIGHT )
+		bs.Add( self.TransmitPower, pos=(row, 1), span=(1,1), border = border, flag=wx.TOP )
+		bs.Add( wx.StaticText(self, label='Check reader for details.  Leave blank for full power.'), pos=(row, 2), span=(1,1), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL )
+
+		row += 1
+		bs.Add( wx.StaticText(self, label='Receiver Sensitivity'), pos=(row, 0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		self.ReceiverSensitivity = intctrl.IntCtrl( self, min=0, max=500, limited = True, allow_none=True,
+			value = Impinj.ReceiverSensitivity, size=(100,-1), style=wx.TE_RIGHT )
+		bs.Add( self.ReceiverSensitivity, pos=(row, 1), span=(1,1), border = border, flag=wx.TOP )
+		bs.Add( wx.StaticText(self, label='Check reader for details.  Leave blank for full sensitivity.'), pos=(row, 2), span=(1,1), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL )
+
+		row += 1
+		bs.Add( wx.StaticLine(self), pos=(row, 0), span=(1, 3), flag=wx.EXPAND )
+
+		row += 1
+		bs.Add( wx.StaticText(self, label='Connection Timeout Seconds'), pos=(row, 0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		self.ConnectionTimeoutSeconds = intctrl.IntCtrl( self, min=1, max=60, limited = True,
+			value = Impinj.ConnectionTimeoutSeconds, size=(100,-1), style=wx.TE_RIGHT )
 		bs.Add( self.ConnectionTimeoutSeconds, pos=(row, 1), span=(1,1), border = border, flag=wx.TOP )
-		bs.Add( wx.StaticText(self, wx.ID_ANY, 'maximum time to wait for a reader response'), pos=(row, 2), span=(1,1), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		bs.Add( wx.StaticText(self, label='Maximum seconds to wait for a reader response.'), pos=(row, 2), span=(1,1), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		
 		row += 1
-		bs.Add( wx.StaticText(self, wx.ID_ANY, 'Keepalive Seconds'), pos=(row, 0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
-		self.KeepaliveSeconds = intctrl.IntCtrl( self, wx.ID_ANY, min=1, max=60, limited = True,
-			value = Impinj.KeepaliveSeconds, size=(32,-1) )
+		bs.Add( wx.StaticText(self, label='Keepalive Seconds'), pos=(row, 0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		self.KeepaliveSeconds = intctrl.IntCtrl( self, min=1, max=60, limited = True,
+			value = Impinj.KeepaliveSeconds, size=(100,-1), style=wx.TE_RIGHT )
 		bs.Add( self.KeepaliveSeconds, pos=(row, 1), span=(1,1), border = border, flag=wx.TOP )
-		bs.Add( wx.StaticText(self, wx.ID_ANY, 'frequency of "heartbeat" messages indicating the reader is still connected'), pos=(row, 2), span=(1,1), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		bs.Add( wx.StaticText(self, label='Frequency of "heartbeat" messages indicating the reader is still connected.'), pos=(row, 2), span=(1,1), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL )
 
 		row += 1
-		bs.Add( wx.StaticText(self, wx.ID_ANY, 'Repeat Seconds'), pos=(row, 0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
-		self.RepeatSeconds = intctrl.IntCtrl( self, wx.ID_ANY, min=1, max=120, limited = True,
-			value = Impinj.RepeatSeconds, size=(32,-1) )
+		bs.Add( wx.StaticText(self, label='Repeat Seconds'), pos=(row, 0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		self.RepeatSeconds = intctrl.IntCtrl( self, min=1, max=120, limited = True,
+			value = Impinj.RepeatSeconds, size=(100,-1), style=wx.TE_RIGHT )
 		bs.Add( self.RepeatSeconds, pos=(row, 1), span=(1,1), border = border, flag=wx.TOP )
-		bs.Add( wx.StaticText(self, wx.ID_ANY, 'interval in which multiple tag reads are considered "repeats" and not reported'), pos=(row, 2), span=(1,1), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		bs.Add( wx.StaticText(self, label='Interval in which multiple tag reads are considered "repeats" and not reported.'), pos=(row, 2), span=(1,1), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL )
+
+		self.fields = [
+			'ConnectionTimeoutSeconds', 'KeepaliveSeconds', 'RepeatSeconds',
+			'TagPopulation', 'TransmitPower', 'ReceiverSensitivity',
+		]
+		
+		row += 1
+		bs.Add( wx.StaticLine(self), pos=(row, 0), span=(1, 3), flag=wx.EXPAND )
 
 		row += 1
-		self.playSoundsCheckbox = wx.CheckBox( self, wx.ID_ANY, 'Beep on Read' )
+		self.playSoundsCheckbox = wx.CheckBox( self, label='Beep on Read' )
 		self.playSoundsCheckbox.SetValue( Utils.playBell )
 		bs.Add( self.playSoundsCheckbox, pos=(row, 1), span=(1,3), border = border, flag=wx.TOP|wx.LEFT|wx.RIGHT )
 		
 		row += 1
-		self.restoreDefaultButton = wx.Button( self, wx.ID_ANY, 'Restore Defaults' )
+		bs.Add( wx.StaticLine(self), pos=(row, 0), span=(1, 3), flag=wx.EXPAND )
+
+		row += 1
+		self.restoreDefaultButton = wx.Button( self, label='Restore Defaults' )
 		self.restoreDefaultButton.Bind( wx.EVT_BUTTON, self.onRestoreDefault )
 		bs.Add( self.restoreDefaultButton, pos=(row, 0), span=(1,3), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_CENTER )
 		
 		row += 1
-		bs.Add( wx.StaticText(self, wx.ID_ANY, 'Reminder: Press "Reset" for these changes to take effect.'), pos=(row, 0), span=(1,3), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_RIGHT )
+		bs.Add( wx.StaticText(self, label='Reminder: Press "Reset" for these changes to take effect.'), pos=(row, 0), span=(1,3), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_RIGHT )
 		
 		self.okBtn = wx.Button( self, wx.ID_OK )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
@@ -172,14 +216,16 @@ class AdvancedSetup( wx.Dialog ):
 		self.SetFocus()
 
 	def onRestoreDefault( self, event ):
-		self.ConnectionTimeoutSeconds.SetValue( Impinj.ConnectionTimeoutSecondsDefault )
-		self.KeepaliveSeconds.SetValue( Impinj.KeepaliveSecondsDefault )
-		self.RepeatSeconds.SetValue( Impinj.RepeatSecondsDefault )
+		for a in self.fields:
+			try:
+				getattr( self, a ).SetValue( getattr(Impinj, a + 'Default') )
+			except AttributeError:
+				getattr( self, a ).SetValue( None )
 		
 	def onOK( self, event ):
-		Impinj.ConnectionTimeoutSeconds = self.ConnectionTimeoutSeconds.GetValue()
-		Impinj.KeepaliveSeconds = self.KeepaliveSeconds.GetValue()
-		Impinj.RepeatSeconds = self.RepeatSeconds.GetValue()
+		for a in self.fields:
+			setattr( Impinj, a, getattr(self, a).GetValue() )
+		
 		Utils.playBell = self.playSoundsCheckbox.IsChecked()
 		self.EndModal( wx.ID_OK )
 		
@@ -535,6 +581,11 @@ class MainWin( wx.Frame ):
 		self.config.Write( 'KeepaliveSeconds', '{}'.format(Impinj.KeepaliveSeconds) )
 		self.config.Write( 'RepeatSeconds', '{}'.format(Impinj.RepeatSeconds) )
 		self.config.Write( 'PlaySounds', '{}'.format(Utils.playBell) )
+		
+		self.config.Write( 'ReceiverSensitivity', '{}'.format(Impinj.ReceiverSensitivity or 0) )
+		self.config.Write( 'TransmitPower', '{}'.format(Impinj.TransmitPower or 0) )
+		self.config.Write( 'TagPopulation', '{}'.format(Impinj.TagPopulation or 0) )
+		self.config.Write( 'TagTransitTime', '{}'.format(Impinj.TagTransitTime or 0) )
 
 		self.config.Flush()
 	
@@ -554,6 +605,11 @@ class MainWin( wx.Frame ):
 												'{}'.format(Impinj.KeepaliveSeconds)))
 		Impinj.RepeatSeconds = int(self.config.Read( 'RepeatSeconds',
 												'{}'.format(Impinj.RepeatSeconds)))
+												
+		Impinj.ReceiverSensitivity = int(self.config.Read('ReceiverSensitivity', '0')) or None
+		Impinj.TransmitPower = int(self.config.Read('TransmitPower', '0')) or None
+		Impinj.TagPopulation = int(self.config.Read('TagPopulation', '0')) or None
+		Impinj.TagTransitTime = int(self.config.Read('TagTransitTime', '0')) or None
 	
 	def updateMessages( self, event ):
 		tNow = datetime.datetime.now()
