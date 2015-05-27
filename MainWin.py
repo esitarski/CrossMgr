@@ -2356,7 +2356,7 @@ class MainWin( wx.Frame ):
 			if getattr(race, 'excelLink', None):
 				excelLink = race.excelLink
 				if excelLink.fileName and not os.path.isfile(excelLink.fileName):
-					newFileName = os.path.join( os.path.dirname(fileName), os.path.basename(excelLink.fileName) )
+					newFileName = os.path.join( os.path.dirname(fileName), Utils.plat_ind_basename(excelLink.fileName) )
 					if os.path.isfile(newFileName) and Utils.MessageOKCancel(self,
 							u'{}:\n\n"{}"\n\n{}:\n\n"{}"\n\n{}'.format(
 								_('Could not find Excel file'), excelLink.fileName,

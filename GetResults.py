@@ -701,20 +701,22 @@ def GetCategoryDetails( ignoreEmptyCategories = True ):
 				lastWaveCat = cat
 				lastWaveStartOffset = cat.getStartOffsetSecs()
 				
-			info = dict(
-					name		= cat.fullname,
-					startOffset	= lastWaveStartOffset if cat.catType == cat.CatWave or cat.catType == cat.CatComponent else 0.0,
-					gender		= getattr( cat, 'gender', 'Open' ),
-					catType		= ['Start Wave', 'Component', 'Custom'][cat.catType],
-					laps		= lastWaveLaps if unstarted else 0,
-					pos			= [] )
+			info = {
+				'name'			: cat.fullname,
+				'startOffset'	: lastWaveStartOffset if cat.catType == cat.CatWave or cat.catType == cat.CatComponent else 0.0,
+				'gender'		: getattr( cat, 'gender', 'Open' ),
+				'catType'		: ['Start Wave', 'Component', 'Custom'][cat.catType],
+				'laps'			: lastWaveLaps if unstarted else 0,
+				'pos'			: [rr.num for rr in results],
+				'gapValue'		: [getattr(rr, 'gapValue', 0) for rr in results],
+			}
+			
+			try:
+				info['laps'] = max( info['laps'], max(len(rr.lapTimes) for rr in results if rr.status == Model.Rider.Finisher) )
+			except ValueError:
+				pass
 			
 			catDetails.append( info )
-					
-			for rr in results:
-				info['pos'].append( rr.num )
-				if rr.status == Model.Rider.Finisher:
-					info['laps'] = max( info['laps'], len(rr.lapTimes) )
 			
 			waveCat = lastWaveCat
 			if waveCat:

@@ -11,33 +11,35 @@ from GetResults import GetResults, GetCategoryDetails, UnstartedRaceWrapper
 statusNames = Model.Rider.statusNames
 
 def GetAnimationData( category = None, getExternalData = False ):
+	animationData = {}
+	ignoreFields = {'pos', 'num', 'gap', 'gapValue', 'laps', 'lapTimes', 'full_name'}
+	
 	with UnstartedRaceWrapper( getExternalData ):
-		results = GetResults( category, getExternalData )
-		
-		animationData = {}
-		ignoreFields = {'pos', 'num', 'gap', 'laps', 'lapTimes', 'full_name'}
 		with Model.LockRace() as race:
-			for rr in results:
-				info = { 'flr': race.getCategory(rr.num).firstLapRatio }
-				bestLaps = race.getNumBestLaps( rr.num )
-				for a in dir(rr):
-					if a.startswith('_') or a in ignoreFields:
-						continue
-					if a == 'raceTimes':
-						info['raceTimes'] = getattr(rr, a)
-						if bestLaps is not None and len(info['raceTimes']) > bestLaps:
-							info['raceTimes'] = info['raceTimes'][:bestLaps+1]
-					elif a == 'status':
-						info['status'] = statusNames[getattr(rr, a)]
-					elif a == 'lastTime':
-						try:
-							info[a] = rr.raceTimes[-1]
-						except IndexError:
-							info[a] = rr.lastTime
-					else:
-						info[a] = getattr( rr, a )
+			for cat in ([category] if category else race.getCategories()):
+				results = GetResults( cat, getExternalData )
 				
-				animationData[rr.num] = info
+				for rr in results:
+					info = { 'flr': race.getCategory(rr.num).firstLapRatio }
+					bestLaps = race.getNumBestLaps( rr.num )
+					for a in dir(rr):
+						if a.startswith('_') or a in ignoreFields:
+							continue
+						if a == 'raceTimes':
+							info['raceTimes'] = getattr(rr, a)
+							if bestLaps is not None and len(info['raceTimes']) > bestLaps:
+								info['raceTimes'] = info['raceTimes'][:bestLaps+1]
+						elif a == 'status':
+							info['status'] = statusNames[getattr(rr, a)]
+						elif a == 'lastTime':
+							try:
+								info[a] = rr.raceTimes[-1]
+							except IndexError:
+								info[a] = rr.lastTime
+						else:
+							info[a] = getattr( rr, a )
+					
+					animationData[rr.num] = info
 		
 	return animationData
 		

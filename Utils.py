@@ -228,6 +228,15 @@ def HighPriority():
 def stripLeadingZeros( s ):
 	return s.lstrip('0')
 	
+def plat_ind_basename( s ):
+	try:
+		return s[s.rindex('/')+1:]
+	except:
+		try:
+			return s[s.rindex('\\')+1:]
+		except:
+			return s
+	
 def toAscii( s ):
 	if s is None or s == '':
 		return ''

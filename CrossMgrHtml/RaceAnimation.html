@@ -2405,10 +2405,11 @@ function RefreshResultsTableArrival( raceTimesLength, raceTimesCopy )
 					riderTime *= d.factor / 100.0;
 				
 				var gap = '';
-				if( d.gapValue > 0 )
-					gap = FormatTimeGap( d.gapValue );
-				else if( d.gapValue < 0 )
-					gap = d.gapValue + ' ' + (d.gapValue == -1 ? _('lap') : _('laps'));
+				var gapValue = catDetails[c].gapValue[p];
+				if( gapValue > 0 )
+					gap = FormatTimeGap( gapValue );
+				else if( gapValue < 0 )
+					gap = gapValue + ' ' + (gapValue == -1 ? _('lap') : _('laps'));
 				
 				riderInfo[num] = {
 					'pos': p+1,
@@ -3066,15 +3067,16 @@ function RefreshResultsTable()
 			createTextChild( td = createTD(tr), finishTime );
 			
 			var gap = '';
+			var gapValue = catDetail.gapValue[p];
 			if( isFinisher ) {
-				if( d.gapValue > 0 ) {
+				if( gapValue > 0 ) {
 					if( r != 0 && lapDataOption == 3 )
-						gap = '+' + (100.0 * d.gapValue) / (leaderTime - getStartOffset(num));
+						gap = '+' + (100.0 * gapValue) / (leaderTime - getStartOffset(num));
 					else
-						gap = FormatTimeGap( d.gapValue );
+						gap = FormatTimeGap( gapValue );
 				}
-				else if( d.gapValue < 0 )
-					gap = d.gapValue + ' ' + (d.gapValue == -1 ? _('lap') : _('laps'));
+				else if( gapValue < 0 )
+					gap = gapValue + ' ' + (gapValue == -1 ? _('lap') : _('laps'));
 			}
 			
 			if( !hasFactor ) {
