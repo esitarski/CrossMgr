@@ -678,13 +678,15 @@ def GetCategoryDetails( ignoreEmptyCategories = True ):
 	with Model.LockRace() as race:
 	
 		# Create a custom category for all riders.
-		info = dict(
-				name			= 'All',
-				startOffset		= 0,
-				gender			= 'Open',
-				catType			= 'Custom',
-				laps			= 0,
-				pos				= [rr.num for rr in results] )
+		info = {
+			'name'			: 'All',
+			'startOffset'	: 0,
+			'gender'		: 'Open',
+			'catType'		: 'Custom',
+			'laps'			: 0,
+			'pos'			: [rr.num for rr in results],
+			'gapValue'		: [getattr(rr, 'gapValue', 0) for rr in results],
+		}
 		catDetails.append( info )
 		
 		# Add the remainder of the categories.
