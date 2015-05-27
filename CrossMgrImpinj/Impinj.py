@@ -29,7 +29,7 @@ RepeatSeconds				= RepeatSecondsDefault
 ReconnectDelaySeconds		= 2		# Interval to wait before reattempting a connection
 ReaderUpdateMessageSeconds	= 5		# Interval to print we are waiting for input.
 
-TagPopulation = None		# Size of a group to read.  Default=100
+TagPopulation = None		# Size of a group to read.  Default=16
 ReceiverSensitivity = None
 TransmitPower = None
 	
@@ -152,7 +152,7 @@ class Impinj( object ):
 				C1G2InventoryCommand_Parameter( Parameters = [
 						C1G2SingulationControl_Parameter(
 							Session = InventorySession or 0,
-							TagPopulation = TagPopulation or 4,
+							TagPopulation = TagPopulation or 16,
 							TagTransitTime = (TagTransitTime or 3)*1000,
 						),
 					],
