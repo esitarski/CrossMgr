@@ -5,6 +5,7 @@ import sys
 import Model
 import Utils
 import ColGrid
+from collections import defaultdict
 from FixCategories import FixCategories, SetCategory
 from GetResults import GetResults, RidersCanSwap
 from ExportGrid import ExportGrid
@@ -104,6 +105,7 @@ class Results( wx.Panel ):
 		self.orangeColour = wx.Colour( 255, 165, 0 )
 		self.greyColour = wx.Colour( 150, 150, 150 )
 		self.greenColour = wx.Colour( 127, 255, 0 )
+		self.lightBlueColour = wx.Colour( 153, 205, 255 )
 		
 		self.splitter = wx.SplitterWindow( self )
 		
@@ -115,6 +117,8 @@ class Results( wx.Panel ):
 		self.labelGrid.AutoSizeColumns( True )
 		self.labelGrid.DisableDragColSize()
 		self.labelGrid.DisableDragRowSize()
+		# put a tooltip on the cells in a column
+		self.labelGrid.GetGridWindow().Bind(wx.EVT_MOTION, self.onMouseOver)
 		
 		self.lapGrid = ColGrid.ColGrid( self.splitter, style=wx.BORDER_SUNKEN )
 		self.lapGrid.SetRowLabelSize( 0 )
@@ -157,6 +161,32 @@ class Results( wx.Panel ):
 			else:
 				wx.CallAfter( lambda: Utils.AlignVerticalScroll(self.labelGrid, self.lapGrid) )
 		evt.Skip() 
+	
+	def onMouseOver( self, event ):
+		"""
+		Displays a tooltip for the close finishes.
+		"""
+		x, y = self.labelGrid.CalcUnscrolledPosition(event.GetX(),event.GetY())
+		row, col = self.labelGrid.XYToCell(x, y)
+		
+		try:
+			num = int(self.labelGrid.GetCellValue(row, 1))
+		except:
+			return
+
+		if num in self.closeFinishBibs:
+			try:
+				pos = int(self.labelGrid.GetCellValue(row, 0))
+			except:
+				return
+			event.GetEventObject().SetToolTipString(u'{} {}, {} {}: {} {}'.format(
+					_('Pos'), pos,
+					_('Bib'), num,
+					_('close finish to'), u','.join( 'Bib {}'.format(bib) for bib in self.closeFinishBibs[num]),
+				)
+			)
+		else:
+			event.GetEventObject().SetToolTipString(u'')
 	
 	def alignLabelToLapScroll(self): 
 		Utils.AlignVerticalScroll( self.labelGrid, self.lapGrid )
@@ -240,6 +270,8 @@ class Results( wx.Panel ):
 			self.popupInfo = [
 				(wx.NewId(), _('History'), 	_('Switch to History tab'), self.OnPopupHistory, allCases),
 				(wx.NewId(), _('RiderDetail'),	_('Show RiderDetail Dialog'), self.OnPopupRiderDetail, allCases),
+				(None, None, None, None, None),
+				(wx.NewId(), _('Show Photos'),	_('Show Photos'), self.OnPopupShowPhotos, allCases),
 				(None, None, None, None, None),
 				(wx.NewId(), _('Correct...'),	_('Change number or lap time...'),	self.OnPopupCorrect, interpCase),
 				(wx.NewId(), _('Shift...'),	_('Move lap time earlier/later...'),	self.OnPopupShift, interpCase),
@@ -339,6 +371,13 @@ class Results( wx.Panel ):
 	def OnPopupRiderDetail( self, event ):
 		ShowRiderDetailDialog( self, self.numSelect )
 		
+	def OnPopupShowPhotos( self, event ):
+		mainWin = Utils.mainWin
+		if not mainWin:
+			return
+		mainWin.photoDialog.Show( True )
+		mainWin.photoDialog.setNumSelect( int(self.numSelect) )
+		
 	def showNumSelect( self ):
 		race = Model.race
 		if race is None:
@@ -353,13 +392,18 @@ class Results( wx.Panel ):
 		textColourLabel = {}
 		backgroundColourLabel = {}
 		
-		for r in xrange(self.lapGrid.GetNumberRows()):
+		timeCol = None
+		for c in xrange(self.labelGrid.GetNumberCols()):
+			if self.labelGrid.GetColLabelValue(c) == _('Time'):
+				timeCol = c
+				break
 		
-			value = self.labelGrid.GetCellValue( r, 1 )
-			if not value:
-				break	
+		for r in xrange(self.lapGrid.GetNumberRows()):		
+			try:
+				cellNum = int(self.labelGrid.GetCellValue(r,1))
+			except:
+				continue
 			
-			cellNum = value
 			if cellNum == self.numSelect:
 				for c in xrange(self.lapGrid.GetNumberCols()):
 					textColourLap[ (r,c) ] = self.whiteColour
@@ -368,7 +412,13 @@ class Results( wx.Panel ):
 				for c in xrange(self.labelGrid.GetNumberCols()):
 					textColourLabel[ (r,c) ] = self.whiteColour
 					backgroundColourLabel[ (r,c) ] = self.blackColour if (r,c) not in self.rcInterp and (r,c) not in self.rcNumTime else self.greyColour
-				break
+
+			if cellNum in self.closeFinishBibs:
+				textColourLabel[ (r,0) ] = self.blackColour
+				backgroundColourLabel[ (r,0) ] = self.lightBlueColour
+				if timeCol is not None:
+					textColourLabel[ (r,timeCol) ] = self.blackColour
+					backgroundColourLabel[ (r,timeCol) ] = self.lightBlueColour
 		
 		# Highlight the sorted columns.
 		for c in xrange(self.lapGrid.GetNumberCols()):
@@ -462,6 +512,9 @@ class Results( wx.Panel ):
 		
 		self.search.SelectAll()
 		
+		CloseFinishTime = 0.07
+		self.closeFinishBibs = defaultdict( list )
+		
 		with Model.LockRace() as race:
 			if not race:
 				self.clearGrid()
@@ -475,17 +528,40 @@ class Results( wx.Panel ):
 			self.category = category
 			sortLap = getattr( race, 'sortLap', None )
 			sortLabel = getattr( race, 'sortLabel', None )
+
+			if race.isTimeTrial:
+				def getSortTime( rr ):
+					try:
+						return rr.firstTime + rr.lastTimeOrig
+					except:
+						return 0
+			else:
+				def getSortTime( rr ):
+					try:
+						return rr.lastTimeOrig
+					except:
+						return 0
+						
+			results = sorted(
+				(rr for rr in GetResults(category, getExternalData=True)
+					if rr.status==Model.Rider.Finisher and rr.lapTimes and getSortTime(rr) > 0),
+				key = getSortTime
+			)
+			for i in xrange(1, len(results)):
+				if results[i].lastTimeOrig - results[i-1].lastTimeOrig <= CloseFinishTime:
+					self.closeFinishBibs[results[i-1].num].append( results[i].num )
+					self.closeFinishBibs[results[i].num].append( results[i-1].num )
 		
 		labelLastX, labelLastY = self.labelGrid.GetViewStart()
 		lapLastX, lapLastY = self.lapGrid.GetViewStart()
 		
 		exportGrid = ExportGrid()
 		exportGrid.setResultsOneList( category, self.showRiderData, showLapsFrequency = 1 )
-
+		
 		if not exportGrid.colnames:
 			self.clearGrid()
 			return
-		
+
 		# Fix the speed column.
 		try:
 			speedUnit = None
@@ -666,16 +742,21 @@ class Results( wx.Panel ):
 		
 		self.isEmpty = False
 		
-		# Highlight interpolated entries.
+		# Find interpolated entries.
 		with Model.LockRace() as race:
 			numTimeInfo = race.numTimeInfo
 			for r in xrange(self.lapGrid.GetNumberRows()):
 				try:
 					rider = race[int(self.labelGrid.GetCellValue(r, 1))]
+				except:
+					continue
+					
+				try:
 					entries = rider.interpolate()
-					if not entries:
-						continue
 				except (ValueError, IndexError):
+					continue
+				
+				if not entries:
 					continue
 				for c in xrange(self.lapGrid.GetNumberCols()):
 					if not self.lapGrid.GetCellValue(r, c):
