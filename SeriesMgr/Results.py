@@ -358,10 +358,13 @@ function sortTableId( iTable, iCol ) {
 									html.write( unicode(gap or '') )
 								for rPoints, rRank in racePoints:
 									with tag(html, 'td', {'class':'leftBorder centerAlign' + (' ignored' if u'**]' in u'{}'.format(rPoints) else u'')} ):
-										html.write( u'{} ({})'.format(
-											u'{}'.format(rPoints).replace(u'[',u'').replace(u']',u''),
-											Utils.ordinal(rRank)).replace(' ', '&nbsp;') if rPoints else ''
-										)
+										if rPoints:
+											html.write( u'{} ({})'.format(
+												u'{}'.format(rPoints).replace(u'[',u'').replace(u']',u''),
+												Utils.ordinal(rRank)).replace(' ', '&nbsp;') if rPoints else ''
+											)
+										else:
+											html.write( u'({})'.format(Utils.ordinal(rRank)).replace(' ', '&nbsp;') if rRank else ''  )
 										
 			#-----------------------------------------------------------------------------
 			if bestResultsToConsider > 0:
@@ -605,7 +608,11 @@ class Results(wx.Panel):
 			self.grid.SetCellValue( row, 4, unicode(points) )
 			self.grid.SetCellValue( row, 5, unicode(gap) )
 			for q, (rPoints, rRank) in enumerate(racePoints):
-				self.grid.SetCellValue( row, 6 + q, u'{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints else '' )
+				self.grid.SetCellValue( row, 6 + q,
+					u'{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints
+					else u'({})'.format(Utils.ordinal(rRank)) if rRank
+					else u''
+				)
 				
 			for c in xrange( 0, len(headerNames) ):
 				self.grid.SetCellBackgroundColour( row, c, wx.WHITE )
@@ -715,7 +722,12 @@ class Results(wx.Panel):
 				wsFit.write( rowCur, 4, points, numberStyle )
 				wsFit.write( rowCur, 5, gap, numberStyle )
 				for q, (rPoints, rRank) in enumerate(racePoints):
-					wsFit.write( rowCur, 6 + q, '{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints else '', centerStyle )
+					wsFit.write( rowCur, 6 + q,
+						'{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints
+						else '({})'.format(Utils.ordinal(rRank)) if rRank
+						else '',
+						centerStyle
+				)
 				rowCur += 1
 		
 			# Add branding at the bottom of the sheet.
