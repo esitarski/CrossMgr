@@ -174,6 +174,10 @@ table.results th.centerAlign, table.results td.centerAlign {
 	font-style: italic;
 }
 
+tbody td.points {
+	text-align:right;
+}
+
 .rank {
 	color: #999;
 	font-style: italic;
@@ -325,6 +329,7 @@ function sortTableId( iTable, iCol ) {
 								# r[0] = RaceData, r[1] = RaceName, r[2] = RaceURL, r[3] = Race
 								with tag(html, 'th', {
 										'class':'leftBorder centerAlign',
+										'colspan': 2,
 										'onclick': 'sortTableId({}, {})'.format(iTable, len(HeaderNames) + iRace),
 									} ):
 									with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,len(HeaderNames) + iRace)) ):
@@ -362,14 +367,12 @@ function sortTableId( iTable, iCol ) {
 								with tag(html, 'td', {'class':'rightAlign'}):
 									html.write( unicode(gap or '') )
 								for rPoints, rRank in racePoints:
-									with tag(html, 'td', {'class':'leftBorder centerAlign' + (' ignored' if u'**]' in u'{}'.format(rPoints) else u'')} ):
+									with tag(html, 'td', {'class':'leftBorder points' + (' ignored' if u'**' in u'{}'.format(rPoints) else '')}):
 										if rPoints:
-											html.write( u'{}&nbsp<span class="rank">({})</span>'.format(
-												u'{}'.format(rPoints).replace(u'[',u'').replace(u']',u'').replace(' ', '&nbsp;'),
-												Utils.ordinal(rRank)) if rPoints else ''
-											)
-										else:
-											html.write( u'<span class="rank">({})</span>'.format(Utils.ordinal(rRank).replace(' ', '&nbsp;')) if rRank else ''  )
+											html.write( u'{}'.format(rPoints).replace(u'[',u'').replace(u']',u'').replace(' ', '&nbsp;') )
+									with tag(html, 'td', {'class':'rank'}):
+										if rRank:
+											html.write( u'({})'.format(Utils.ordinal(rRank).replace(' ', '&nbsp;')) )
 										
 			#-----------------------------------------------------------------------------
 			if bestResultsToConsider > 0:
