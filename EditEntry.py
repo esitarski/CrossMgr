@@ -389,13 +389,23 @@ def SwapEntry( a, b ):
 	riderA = race.getRider( a.num )
 	riderB = race.getRider( b.num )
 	
-	race.numTimeInfo.change( a.num, a.t, b.t, Model.NumTimeInfo.Swap )
-	race.numTimeInfo.change( b.num, b.t, a.t, Model.NumTimeInfo.Swap )
+	# Add some numeric noise if the times are equal.
+	if a.t == b.t:
+		rAdjust = random.random() / 100000.0
+		if a.num < b.num:
+			a_tNew, b_tNew = a.t, b.t + rAdjust
+		else:
+			a_tNew, b_tNew = a.t + rAdjust, b.t
+	else:
+		a_tNew, b_tNew = a.t, b.t
+	
+	race.numTimeInfo.change( a.num, a.t, b_tNew, Model.NumTimeInfo.Swap )
+	race.numTimeInfo.change( b.num, b.t, a_tNew, Model.NumTimeInfo.Swap )
 	
 	race.deleteTime( a.num, a.t )
 	race.deleteTime( b.num, b.t )
-	race.addTime( a.num, b.t + (riderB.firstTime if getattr(race, 'isTimeTrial', False) and riderB.firstTime is not None else 0.0) )
-	race.addTime( b.num, a.t + (riderA.firstTime if getattr(race, 'isTimeTrial', False) and riderA.firstTime is not None else 0.0) )
+	race.addTime( a.num, b_tNew + (riderB.firstTime if getattr(race, 'isTimeTrial', False) and riderB.firstTime is not None else 0.0) )
+	race.addTime( b.num, a_tNew + (riderA.firstTime if getattr(race, 'isTimeTrial', False) and riderA.firstTime is not None else 0.0) )
 
 class StatusChangeDialog( wx.Dialog ):
 	def __init__( self, parent, message, title, t=None, externalData=None, id=wx.ID_ANY ):

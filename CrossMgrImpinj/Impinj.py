@@ -159,11 +159,15 @@ class Impinj( object ):
 				)
 			)
 		
-		success, response = self.sendCommand( SET_READER_CONFIG_Message(Parameters = [
-				KeepaliveSpec_Parameter( KeepaliveTriggerType = KeepaliveTriggerType.Periodic, PeriodicTriggerValue = int(KeepaliveSeconds*1000),),
+		success, response = self.sendCommand(
+			SET_READER_CONFIG_Message( Parameters = [
 					AntennaConfiguration_Parameter(
 						AntennaID = 0,
-						Parameters = receiverSensitivityParameter + transmitPowerParameter + inventoryCommandParameter
+						Parameters = receiverSensitivityParameter + transmitPowerParameter + inventoryCommandParameter,
+					),
+					KeepaliveSpec_Parameter(
+						KeepaliveTriggerType = KeepaliveTriggerType.Periodic,
+						PeriodicTriggerValue = int(KeepaliveSeconds*1000),
 					),
 				],
 			),

@@ -175,7 +175,7 @@ table.results th.centerAlign, table.results td.centerAlign {
 }
 
 tbody td.points {
-	text-align:right;
+	text-align: right;
 }
 
 .rank {
@@ -367,12 +367,19 @@ function sortTableId( iTable, iCol ) {
 								with tag(html, 'td', {'class':'rightAlign'}):
 									html.write( unicode(gap or '') )
 								for rPoints, rRank in racePoints:
-									with tag(html, 'td', {'class':'leftBorder points' + (' ignored' if u'**' in u'{}'.format(rPoints) else '')}):
-										if rPoints:
+									if rPoints:
+										with tag(html, 'td', {'class':'leftBorder points' + (' ignored' if u'**' in u'{}'.format(rPoints) else '')}):
 											html.write( u'{}'.format(rPoints).replace(u'[',u'').replace(u']',u'').replace(' ', '&nbsp;') )
-									with tag(html, 'td', {'class':'rank'}):
-										if rRank:
+									else:
+										with tag(html, 'td', {'class':'leftBorder'}):
+											pass
+									
+									if rRank:
+										with tag(html, 'td', {'class':'rank'}):
 											html.write( u'({})'.format(Utils.ordinal(rRank).replace(' ', '&nbsp;')) )
+									else:
+										with tag(html, 'td'):
+											pass
 										
 			#-----------------------------------------------------------------------------
 			if bestResultsToConsider > 0:
