@@ -935,6 +935,8 @@ class Race( object ):
 	advancePhotoMilliseconds = 0
 	photoCount = 0
 	
+	unmatchedTags = None
+	
 	ftpUploadDuringRace = False
 	ftpUploadPhotos = False
 	
@@ -2258,7 +2260,16 @@ class Race( object ):
 		self.modelCategory = iSelection
 		if categoryAttribute:
 			setattr( self, categoryAttribute, iSelection )
-			
+	
+	def addUnmatchedTag( self, tag, t ):
+		try:
+			if len(self.unmatchedTags[tag]) < 200:
+				self.unmatchedTags[tag].append( t )
+		except KeyError:
+			self.unmatchedTags[tag] = [t]
+		except TypeError:
+			self.unmatchedTags = {tag: [t]}
+		
 	def getRawData( self ):
 		''' Return all data in the model.  If edited, return the edit details. '''
 		if not self.startTime:

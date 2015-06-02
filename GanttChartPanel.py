@@ -303,11 +303,14 @@ class GanttChartPanel(wx.PyPanel):
 		fontBarLabel = wx.FontFromPixelSize( wx.Size(0,int(min(barHeight-2, barHeight*0.9))), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		dc.SetFont( fontBarLabel )
 		textWidthLeftMax, textHeightMax = dc.GetTextExtent( '0000' )
-		textWidthRightMax = textWidthLeftMax
+		fourZerosWidth = textWidthLeftMax
+		textWidthRightMax = 0
 		for label in self.labels:
 			if label not in self.headerSet:
 				textWidthLeftMax = max( textWidthLeftMax, dc.GetTextExtent(label)[0] )
-				textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent( '{}'.format(numFromLabel(label)) )[0] )
+				num = numFromLabel(label)
+				if num is not None:
+					textWidthRightMax = max( textWidthRightMax, fourZerosWidth, dc.GetTextExtent('{}'.format(num))[0] )
 				
 		if textWidthLeftMax + textWidthRightMax > width:
 			self.horizontalSB.Show( False )
@@ -347,11 +350,13 @@ class GanttChartPanel(wx.PyPanel):
 		dc.SetFont( fontBarLabel )
 
 		textWidthLeftMax, textHeightMax = dc.GetTextExtent( '0000' )
-		textWidthRightMax = textWidthLeftMax
+		textWidthRightMax = 0
 		for label in self.labels:
 			if label not in self.headerSet:
 				textWidthLeftMax = max( textWidthLeftMax, dc.GetTextExtent(label)[0] )
-				textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent( '{}'.format(numFromLabel(label)) )[0] )
+				num = numFromLabel(label)
+				if num is not None:
+					textWidthRightMax = max( textWidthRightMax, fourZerosWidth, dc.GetTextExtent( '{}'.format(num) )[0] )
 				
 		if textWidthLeftMax + textWidthRightMax > width:
 			self.horizontalSB.Show( False )
@@ -535,7 +540,7 @@ class GanttChartPanel(wx.PyPanel):
 						try:
 							if self.interp[i][j]:
 								xyInterp.append( (xOriginal, yLast) )
-						except (ValueError, IndexError):
+						except (TypeError, ValueError, IndexError):
 							pass
 						if self.numTimeInfo and self.numTimeInfo.getInfo(num, t) is not None:
 							xyNumTimeInfo.append( (xOriginal, yLast) )

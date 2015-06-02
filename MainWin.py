@@ -52,6 +52,7 @@ from Search				import SearchDialog
 from Situation			import Situation
 from LapCounter			import LapCounter
 from Primes				import Primes, GetGrid
+from UnmatchedTagsGantt	import UnmatchedTagsGantt
 import FtpWriteFile
 from FtpWriteFile		import realTimeFtpPublish
 from SetAutoCorrect		import SetAutoCorrectDialog
@@ -656,12 +657,11 @@ class MainWin( wx.Frame ):
 		self.windowMenu = wx.Menu()
 
 		self.menuIdToWindowInfo = {}
-		for attr, cls, name in self.attrClassName:
-			if attr not in self.attrWindowSet:
-				continue
+		
+		def addMenuWindow( attr, cls, name ):
 			idCur = wx.NewId()
 			menuItem = self.windowMenu.Append( idCur, name, name, wx.ITEM_CHECK )
-			self.Bind(wx.EVT_MENU, self.menuWindow, id=idCur )
+			self.Bind( wx.EVT_MENU, self.menuWindow, id=idCur )
 			pageDialog = PageDialog(self, cls, closeCallback=lambda idIn=idCur: self.windowCloseCallback(idIn), title=name)
 			if attr == 'lapCounter':
 				self.lapCounterDialog = pageDialog
@@ -669,7 +669,13 @@ class MainWin( wx.Frame ):
 				attr, name, menuItem,
 				pageDialog,
 			]
-		
+			
+		for attr, cls, name in self.attrClassName:
+			if attr not in self.attrWindowSet:
+				continue
+			addMenuWindow( attr, cls, name )
+		addMenuWindow( None, UnmatchedTagsGantt, _('Unmatched RFID Tags') )
+			
 		self.menuBar.Append( self.windowMenu, _("&Windows") )
 		
 		#------------------------------------------------------------------------------
@@ -735,7 +741,9 @@ class MainWin( wx.Frame ):
 			
 			try:
 				num = race.tagNums[tag]
-			except (TypeError, ValueError, KeyError):
+			except KeyError:
+				race.addUnmatchedTag( tag, (dt - race.startTime).total_seconds() )
+			except (TypeError, ValueError):
 				continue
 			
 			requests.append( (num, (dt - race.startTime).total_seconds()) )

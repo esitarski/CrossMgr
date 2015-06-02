@@ -16,6 +16,7 @@ from ReadCategoriesFromExcel import ReadCategoriesFromExcel
 from ReadPropertiesFromExcel import ReadPropertiesFromExcel
 from ReadCategoriesFromExcel import sheetName as CategorySheetName
 from ReadPropertiesFromExcel import sheetName as PropertySheetName
+from UnmatchedTagsUpdate import UnmatchedTagsUpdate
 
 with Utils.SuspendTranslation():
 	Fields = [
@@ -798,10 +799,11 @@ class ExcelLink( object ):
 		if Model.race and Model.race.startTime:
 			self.hasCategoriesSheet = False
 			self.hasPropertiesSheet = False
+			UnmatchedTagsUpdate()
 		else:
 			self.hasCategoriesSheet = ReadCategoriesFromExcel( reader )
 			self.hasPropertiesSheet = ReadPropertiesFromExcel( reader )
-		
+			
 		return infoCache
 
 def IsValidRaceDBExcel( fileName ):

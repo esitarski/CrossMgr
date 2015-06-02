@@ -12,3 +12,25 @@ For example, you can show the Animation while doing data entry.  Or Results.  Or
 
 The separate screens have identical display and edit capabilities as the regular screens.
 
+## Unmatched RFID Tags
+This window shows unmatched RFID tags in a Chart.
+
+This screen shows if there are riders with RFID tag recordings that do not have corresponding information in the linked Excel spreadsheet.
+
+If the Excel sheet is updated later so that the missing tags are included, the __Unmatched RFID Tags__ will be added to the race automatically.
+
+Take a close look at the laps in the __Unmatched RFID Tags__ screen.
+If the times appear to be in regular laps for a rider, this is an indication that:
+
+1. The rider is genuinely in the race, but has the wrong tag or a missing tag in the Excel sheet.  Fix your spreadsheet.  Then get CrossMgr to refresh, say, buy switching screens.  It will then automatically pull the unmatched RFID tags data into the race.
+1. The rider thinks he/she is in this race, but is actually in another race that starts at a different time.  You need to tell the rider to compete in the right event.
+1. The rider is knowingly riding in the wrong race (and was stupid enough not to remove his/her tag!).  This is serious.
+
+If there is no pattern to the reads, they are likely to be spurious and can be ignored (rider's tag too close to the finish line).
+
+The unmatched tags can be exported to Excel.  This allows you to cut-and-paste the missing tags into another sheet, or to do further analysis on where the tags came from.
+
+A maximum of 200 unmatched times will be recorded.
+
+If your races is so messed up that this does not work, consider creating another race and importing all the tags (see [ChipReader][]).
+
