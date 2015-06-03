@@ -79,11 +79,11 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 			
 			race.numTimeInfo.adjustAllTimes( -dTime )
 			
-			# Fix any unread tags.
-			if race.unmatchedTags:
-				for times in race.unmatchedTags.itervalues():
-					for k in xrange(len(times)):
-						times[k] -= dTime
+		# Fix any unread tags.
+		if race.unmatchedTags:
+			for times in race.unmatchedTags.itervalues():
+				for k in xrange(len(times)):
+					times[k] -= dTime
 		
 		race.startTime = startTimeNew
 		race.setChanged()
