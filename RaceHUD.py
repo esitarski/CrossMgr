@@ -149,6 +149,7 @@ class RaceHUD(wx.PyControl):
 		fontRaceTime = wx.FontFromPixelSize( wx.Size(0,raceTimeHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		dc.SetFont( fontRaceTime )
 		textWidth, textHeight = dc.GetTextExtent( '0' )
+		zeroCharWidth = textWidth
 		textWidth = max( dc.GetTextExtent('{}'.format(ldr))[0] for ldr in self.leader )
 		textWidth = max( textWidth, int(self.checkeredFlag.GetWidth() * 1.2) )
 		textWidth += dc.GetTextExtent('  ')[0]
@@ -178,13 +179,18 @@ class RaceHUD(wx.PyControl):
 			dc.DrawLine( xLeft, yTop + hMiddle - tickHeight, xLeft, yTop + hMiddle + tickHeight )
 
 			lapMax = len(raceTimes) - 2
-			for i, t in enumerate(raceTimes):
+			xTextRight = 10000000
+			for i in xrange(len(raceTimes)-1, -1, -1):
+				t = raceTimes[i]
 				x = xLeft + int( t * xMult )
 				dc.DrawLine( x, yTop + hMiddle - tickHeight, x, yTop + hMiddle + tickHeight )
 				if t != raceTimes[-1]:
-					n = '{}'.format(lapMax - i)
+					n = '{}'.format(lapMax-i)
 					textWidth, textHeight = dc.GetTextExtent( n )
-					dc.DrawText( n, x - textWidth // 2, yTop + hMiddle + tickHeight )
+					xTextNew = x - textWidth // 2
+					if xTextNew + textWidth <= xTextRight:
+						dc.DrawText( n, xTextNew, yTop + hMiddle + tickHeight )
+						xTextRight = xTextNew - zeroCharWidth//3
 		
 			# Draw the progress bar.
 			transparentBrush = wx.Brush( wx.WHITE, style = wx.TRANSPARENT )
@@ -277,10 +283,11 @@ class RaceHUD(wx.PyControl):
 if __name__ == '__main__':
 	import datetime
 	
+	multiple = 10
 	def GetData():
 		return [
-			[t for t in xrange(0, 300, 32)],
-			[t for t in xrange(0, 300, 44)],
+			[t for t in xrange(0, 300*multiple, 32)],
+			[t for t in xrange(0, 300*multiple, 44)],
 		]
 
 	app = wx.App(False)
