@@ -41,6 +41,8 @@ tag = dict( (n, '413A%02X' % n) for n in nums )
 tag[random.choice(list(tag.keys()))] = 'E2001018860B01290700D0D8'
 tag[random.choice(list(tag.keys()))] = 'E2001018860B01530700D138'
 tag[random.choice(list(tag.keys()))] = 'E2001018860B01370700D0F8'
+tag[random.choice(list(tag.keys()))] = '1'
+tag[random.choice(list(tag.keys()))] = '2'
 
 #------------------------------------------------------------------------
 def getRandomData( starters = 64 ):
@@ -292,10 +294,15 @@ ws.title = "JChipTest"
 for col, label in enumerate('Bib#,LastName,FirstName,Team,Tag'.split(',')):
 	ws.cell( row = 0, column = col ).value = label
 rdata = [d for d in getRandomData(len(tag))]
+rowCur = 1
 for r, (n, t) in enumerate(tag.iteritems()):
+	if t in ('1', '2'):
+		continue
+	
 	bib, firstName, lastName, Team = rdata[r]
 	for c, v in enumerate([n, lastName, firstName, Team, t]):
-		ws.cell( row = r + 1, column = c ).value = v
+		ws.cell( row = rowCur, column = c ).value = v
+	rowCur += 1
 wb.save('JChipTest.xlsx')
 wb = None
 

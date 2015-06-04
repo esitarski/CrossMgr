@@ -2262,6 +2262,7 @@ class Race( object ):
 			setattr( self, categoryAttribute, iSelection )
 	
 	def addUnmatchedTag( self, tag, t ):
+		print( 'unmatched tag:', tag, t )
 		try:
 			if len(self.unmatchedTags[tag]) < 200:
 				self.unmatchedTags[tag].append( t )

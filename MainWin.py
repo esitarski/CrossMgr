@@ -741,9 +741,7 @@ class MainWin( wx.Frame ):
 			
 			try:
 				num = race.tagNums[tag]
-			except KeyError:
-				race.addUnmatchedTag( tag, (dt - race.startTime).total_seconds() )
-			except (TypeError, ValueError):
+			except (KeyError, TypeError, ValueError):
 				continue
 			
 			requests.append( (num, (dt - race.startTime).total_seconds()) )
@@ -3248,10 +3246,16 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 		for d in data:
 			if d[0] != 'data':
 				continue
+			tag = d[1]
+			dt = d[2]
 			try:
-				num, dt = race.tagNums[d[1]], d[2]
-			except (TypeError, ValueError, KeyError):
-				race.missingTags.add( d[1] )
+				num = race.tagNums[tag]
+			except KeyError:
+				if race.isRunning() and race.startTime <= dt:
+					race.addUnmatchedTag( tag, (dt - race.startTime).total_seconds() )
+				continue
+			except (TypeError, ValueError):
+				race.missingTags.add( tag )
 				continue
 				
 			# Only process times after the start of the race.
