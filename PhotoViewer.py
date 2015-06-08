@@ -143,7 +143,7 @@ class PhotoViewerDialog( wx.Dialog ):
 	ShowAllPhotos = -1
 
 	def __init__( self, parent, ID = wx.ID_ANY, title='Photo Viewer', size=wx.DefaultSize, pos=wx.DefaultPosition, 
-					style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER ):
+					style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.MINIMIZE_BOX|wx.MAXIMIZE_BOX ):
 		super(PhotoViewerDialog, self).__init__( parent, ID, title=title, pos=pos, size=size, style=style )
 
 		self.num = 0
