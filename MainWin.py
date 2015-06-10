@@ -73,6 +73,7 @@ from JChip import EVT_CHIP_READER
 import OrionImport
 import AlienImport
 import ImpinjImport
+import IpicoImport
 import OutputStreamer
 import GpxImport
 from Undo import undo
@@ -565,6 +566,10 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_MENU, self.menuImpinjImport, id=idCur )
 		
 		idCur = wx.NewId()
+		self.chipMenu.Append( idCur , _("Import Ipico File..."), _("Ipico Formatted File") )
+		self.Bind(wx.EVT_MENU, self.menuIpicoImport, id=idCur )
+		
+		idCur = wx.NewId()
 		self.chipMenu.Append( idCur , _("Import Alien File..."), _("Alien Formatted File") )
 		self.Bind(wx.EVT_MENU, self.menuAlienImport, id=idCur )
 		
@@ -890,6 +895,22 @@ class MainWin( wx.Frame ):
 			return
 			
 		dlg = AlienImport.AlienImportDialog( self )
+		dlg.ShowModal()
+		dlg.Destroy()
+		wx.CallAfter( self.refresh )
+		
+	def menuIpicoImport( self, event ):
+		correct, reason = JChipSetup.CheckExcelLink()
+		explain = u'{}\n\n{}'.format(
+			_('You must have a valid Excel sheet with associated tags and Bib numbers.'),
+			_('See documentation for details.')
+		)
+		if not correct:
+			Utils.MessageOK( self, u'{}\n\n    {}\n\n{}'.format(_('Problems with Excel sheet.'), reason, explain),
+									title = _('Excel Link Problem'), iconMask = wx.ICON_ERROR )
+			return
+			
+		dlg = IpicoImport.AlienImportDialog( self )
 		dlg.ShowModal()
 		dlg.Destroy()
 		wx.CallAfter( self.refresh )
