@@ -910,7 +910,7 @@ class MainWin( wx.Frame ):
 									title = _('Excel Link Problem'), iconMask = wx.ICON_ERROR )
 			return
 			
-		dlg = IpicoImport.AlienImportDialog( self )
+		dlg = IpicoImport.IpicoImportImportDialog( self )
 		dlg.ShowModal()
 		dlg.Destroy()
 		wx.CallAfter( self.refresh )

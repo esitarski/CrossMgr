@@ -21,7 +21,7 @@ def parseTagTime( line, lineNo, errors ):
 		return None, None
 	
 	try:
-		tag			= line[4:15]
+		tag			= line[4:16]
 		year		= line[20:22]
 		month		= line[22:24]
 		day			= line[24:26]
@@ -52,13 +52,15 @@ def parseTagTime( line, lineNo, errors ):
 	return tag, t
 
 def IpicoImportDialog( parent, id = wx.ID_ANY ):
-	return ChipImportDialog( 'Ipico', parseTagTime, parent, id )
+	return ChipImportDialog( 'Ipico', parseTagTime, parent, id, fileSuffix = 'rtf' )
 		
 if __name__ == '__main__':
 	errors = []
-	for i, line in enumerate(open('Ipico/FS_LS.rtf')):
-		print parseTagTime( line, i, errors )
-	print errors
+	for fname in ['Ipico/FS_LS.rtf']:
+		with open(fname) as f:
+			for i, line in enumerate(f):
+				print parseTagTime( line, i, errors )
+			print errors
 
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))

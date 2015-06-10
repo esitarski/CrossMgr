@@ -110,12 +110,13 @@ def DoChipImport(	fname, parseTagTime, startTime = None,
 
 #------------------------------------------------------------------------------------------------
 class ChipImportDialog( wx.Dialog ):
-	def __init__( self, chipName, parseTagTime, parent, id = wx.ID_ANY ):
+	def __init__( self, chipName, parseTagTime, parent, id = wx.ID_ANY, fileSuffix = 'txt' ):
 		wx.Dialog.__init__( self, parent, id, u'{} {}'.format(chipName, _('Import')),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
 		
 		self.chipName = chipName
 		self.parseTagTime = parseTagTime
+		self.fileSuffix = fileSuffix
 		todoList = [
 			u'{} {}'.format(chipName, _('Import Data File')),
 			u'',
@@ -259,7 +260,7 @@ class ChipImportDialog( wx.Dialog ):
 			
 		dlg = wx.FileDialog( self, u"{} {}".format( self.chipName, _('Import file') ),
 							style=wx.OPEN | wx.CHANGE_DIR,
-							wildcard="RFID (*.txt)|*.txt",
+							wildcard="RFID (*.{})|*.{}".format(self.fileSuffix, self.fileSuffix),
 							defaultDir=defaultPath if defaultPath else '',
 							defaultFile=defaultFile if defaultFile else '',
 							)
