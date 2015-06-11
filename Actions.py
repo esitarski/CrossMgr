@@ -291,8 +291,8 @@ class Actions( wx.Panel ):
 			except StopIteration:
 				Utils.MessageOK(
 					self,
-					u'\n\n'.join( [_('Cannot Start.  Excel Sheet missing Tag or Tag2 column.'), _('The Excel file must contain a Tag column to use RFID.')] ),
-					_('Excel Sheet missing Tag or Tag2 column'),
+					u'\n\n'.join( [_('Cannot Start.  Excel Sheet missing Tag column.'), _('The Excel file must contain a Tag column to use RFID.')] ),
+					_('Excel Sheet missing Tag column'),
 					wx.ICON_ERROR
 				)
 				return

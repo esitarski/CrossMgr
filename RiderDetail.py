@@ -11,7 +11,7 @@ import ColGrid
 import EditEntry
 from LineGraph import LineGraph
 from GanttChartPanel import GanttChartPanel
-from JChipSetup import GetTagNums
+from ReadSignOnSheet import GetTagNums
 from Undo import undo
 import Gantt
 from EditEntry import CorrectNumber, ShiftNumber, DeleteEntry
@@ -1093,7 +1093,7 @@ class RiderDetail( wx.Panel ):
 			try:
 				info = externalInfo[int(num)]
 				tags = []
-				for tagName in ['Tag', 'Tag2']:
+				for tagName in ReadSignOnSheet.TagFields:
 					try:
 						tags.append( u'{}'.format(info[tagName]).lstrip('0').upper() )
 					except (KeyError, ValueError):

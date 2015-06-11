@@ -16,7 +16,11 @@ from ReadCategoriesFromExcel import ReadCategoriesFromExcel
 from ReadPropertiesFromExcel import ReadPropertiesFromExcel
 from ReadCategoriesFromExcel import sheetName as CategorySheetName
 from ReadPropertiesFromExcel import sheetName as PropertySheetName
-from UnmatchedTagsUpdate import UnmatchedTagsUpdate
+
+with Utils.SuspendTranslation():
+	TagFields = [
+		_('Tag'), _('Tag2'), _('Tag3'), _('Tag4'), _('Tag5'), _('Tag6'), _('Tag7'), _('Tag8'), _('Tag9'),
+	]
 
 with Utils.SuspendTranslation():
 	Fields = [
@@ -28,10 +32,9 @@ with Utils.SuspendTranslation():
 		_('License'),
 		_('UCICode'),
 		_('Factor'),
-		_('Tag'), _('Tag2'),
-	]
+	] + TagFields
 
-IgnoreFields = ['Bib#', 'Tag', 'Tag2', 'Factor']		# Fields to ignore when adding data to standard reports.
+IgnoreFields = ['Bib#', 'Factor'] + TagFields		# Fields to ignore when adding data to standard reports.
 ReportFields = [f for f in Fields if f not in IgnoreFields]
 
 class FileNamePage(wiz.WizardPageSimple):
@@ -142,21 +145,22 @@ def getDefaultFieldMap( fileName, sheetName, expectedFieldCol = None ):
 		# First look for a perfect match ignoring case.
 		matchBest, iBest = exactMatch.get( f.lower(), (0.0, iNoMatch) )
 		
-		# Then try the local translation of the header name.
-		if matchBest < 2.0:
-			fTrans = GetTranslation( f )
-			matchBest, iBest = max( ((Utils.approximateMatch(fTrans, h), i) for i, h in enumerate(headers)), key=lambda x: x[0] )
-		
-		# If that fails, try matching the untranslated header fields.
-		if matchBest <= 0.34:
-			matchBest, iBest = max( ((Utils.approximateMatch(f, h), i) for i, h in enumerate(headers)), key=lambda x: x[0] )
-		
-		# If we don't get a high enough match, set to blank.
-		if matchBest <= 0.34:
-			try:
-				iBest = min( expectedFieldCol[h], iNoMatch )
-			except (TypeError, KeyError):
-				iBest = iNoMatch
+		if not f.lower().startswith('tag'):			
+			# Then try the local translation of the header name.
+			if matchBest < 2.0:
+				fTrans = GetTranslation( f )
+				matchBest, iBest = max( ((Utils.approximateMatch(fTrans, h), i) for i, h in enumerate(headers)), key=lambda x: x[0] )
+			
+			# If that fails, try matching the untranslated header fields.
+			if matchBest <= 0.34:
+				matchBest, iBest = max( ((Utils.approximateMatch(f, h), i) for i, h in enumerate(headers)), key=lambda x: x[0] )
+			
+			# If we don't get a high enough match, set to blank.
+			if matchBest <= 0.34:
+				try:
+					iBest = min( expectedFieldCol[h], iNoMatch )
+				except (TypeError, KeyError):
+					iBest = iNoMatch
 		
 		fieldCol[f] = iBest
 		matchStrength[f] = matchBest
@@ -405,7 +409,7 @@ class GetExcelLink( object ):
 				self.headerNamesPage.setExpectedFieldCol( excelLink.fieldCol )
 
 		self.wizard.GetPageAreaSizer().Add( self.fileNamePage )
-		self.wizard.SetPageSize( wx.Size(800,400) )
+		self.wizard.SetPageSize( wx.Size(800,560) )
 		self.wizard.FitToPage( self.fileNamePage )
 	
 	def show( self ):
@@ -502,7 +506,7 @@ def GetFixTag( externalInfo ):
 	# Check if we have JChip or Orion tags.
 	countJChip, countOrion = 0, 0
 	for num, edata in externalInfo.iteritems():
-		for tagName in ['Tag', 'Tag2']:
+		for tagName in TagFields:
 			try:
 				tag = edata[tagName]
 			except (KeyError, ValueError):
@@ -519,13 +523,64 @@ def GetFixTag( externalInfo ):
 def FixTagFormat( externalInfo ):
 	fixTagFunc = GetFixTag( externalInfo )
 	for num, edata in externalInfo.iteritems():
-		for tagName in ['Tag', 'Tag2']:
+		for tagName in TagFields:
 			try:
 				tag = edata[tagName]
 			except (KeyError, ValueError):
 				continue
 			edata[tagName] = fixTagFunc( tag )
 
+def GetTagNums( forceUpdate = False ):
+	race = Model.race
+	if not race:
+		return {}
+		
+	# Get the linked external data.
+	try:
+		excelLink = race.excelLink
+	except:
+		race.tagNums = {}
+	else:
+		try:
+			externalInfo = excelLink.read()
+		except:
+			race.tagNums = {}
+		else:
+			if excelLink.readFromFile or not getattr(race, 'tagNums', None) or forceUpdate:
+				race.tagNums = {}
+				for tagName in TagFields:
+					if excelLink.hasField( tagName ):
+						tn = {}
+						for num, edata in externalInfo.iteritems():
+							try:
+								tag = Utils.removeDiacritic(unicode(edata[tagName] or '')).lstrip('0').upper()
+							except (KeyError, ValueError):
+								continue
+							if tag:
+								tn[tag] = num
+						race.tagNums.update( tn )
+	return race.tagNums
+
+def UnmatchedTagsUpdate():
+	race = Model.race
+	if not race or not race.unmatchedTags:
+		return
+	
+	tagNums = GetTagNums( forceUpdate=True )
+	tagsFound = False
+	for tag, times in race.unmatchedTags.iteritems():
+		try:
+			num = tagNums[tag]
+		except KeyError:
+			continue
+		
+		for t in times:
+			race.addTime( num, t )
+		tagsFound = True
+	
+	if tagsFound:
+		race.unmatchedTags = { tag: times for tag, times in race.unmatchedTags.iteritems() if tag not in tagNums }
+	
 #-----------------------------------------------------------------------------------------------------
 # Cache the Excel sheet so we don't have to re-read if it has not changed.
 stateCache = None
@@ -719,12 +774,12 @@ class ExcelLink( object ):
 		# Check for duplicate numbers, duplicate tags and missing tags.
 		numRow = {}
 		
+		# Collect how many tag fields we have.
 		tagFields = []
 		if hasTags:
-			if self.fieldCol.get('Tag', -1) >= 0:
-				tagFields.append( ('Tag', {}) )
-			if self.fieldCol.get('Tag2', -1) >= 0:
-				tagFields.append( ('Tag2', {}) )
+			for tf in TagFields:
+				if self.fieldCol.get(tf, -1) >= 0:
+					tagFields.append( (tf, {}) )
 			
 		errors = []
 		rowBib = {}

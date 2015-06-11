@@ -82,7 +82,7 @@ from Printing			import ChoosePrintCategoriesDialog, ChoosePrintCategoriesPodiumD
 from ExportGrid			import ExportGrid
 import SimulationLapTimes
 import Version
-from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, ExcelLink, ReportFields, SyncExcelLink, IsValidRaceDBExcel
+from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, ExcelLink, ReportFields, SyncExcelLink, IsValidRaceDBExcel, GetTagNums
 from SetGraphic			import SetGraphicDialog
 from GetResults			import GetCategoryDetails, UnstartedRaceWrapper, GetLapDetails
 from PhotoFinish		import DeletePhotos, okTakePhoto
@@ -735,7 +735,7 @@ class MainWin( wx.Frame ):
 		if not race or not race.isRunning() or not race.enableUSBCamera:
 			return
 		if not getattr(race, 'tagNums', None):
-			JChipSetup.GetTagNums()
+			GetTagNums()
 		if not race.tagNums:
 			return
 		
@@ -910,7 +910,7 @@ class MainWin( wx.Frame ):
 									title = _('Excel Link Problem'), iconMask = wx.ICON_ERROR )
 			return
 			
-		dlg = IpicoImport.IpicoImportImportDialog( self )
+		dlg = IpicoImport.IpicoImportDialog( self )
 		dlg.ShowModal()
 		dlg.Destroy()
 		wx.CallAfter( self.refresh )
@@ -3254,12 +3254,12 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 		
 		if not JChip.listener:
 			JChip.StartListener( race.startTime )
-			JChipSetup.GetTagNums( True )
+			GetTagNums( True )
 		
 		data = JChip.GetData()
 		
 		if not getattr(race, 'tagNums', None):
-			JChipSetup.GetTagNums()
+			GetTagNums()
 		if not race.tagNums:
 			return False
 		

@@ -7,7 +7,7 @@ import datetime
 import Model
 import Utils
 import JChip
-from JChipSetup import GetTagNums
+from ReadSignOnSheet import GetTagNums
 from Undo		import undo
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 

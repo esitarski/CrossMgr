@@ -26,37 +26,6 @@ def CheckExcelLink():
 		
 	return (True, 'Excel Link OK')
 
-def GetTagNums( forceUpdate = False ):
-	race = Model.race
-	if not race:
-		return {}
-		
-	# Get the linked external data.
-	try:
-		excelLink = race.excelLink
-	except:
-		race.tagNums = {}
-	else:
-		try:
-			externalInfo = excelLink.read()
-		except:
-			race.tagNums = {}
-		else:
-			if excelLink.readFromFile or not getattr(race, 'tagNums', None) or forceUpdate:
-				race.tagNums = {}
-				for tagName in ['Tag', 'Tag2']:
-					if excelLink.hasField( tagName ):
-						tn = {}
-						for num, edata in externalInfo.iteritems():
-							try:
-								tag = Utils.removeDiacritic(unicode(edata[tagName] or '')).lstrip('0').upper()
-							except (KeyError, ValueError):
-								continue
-							if tag:
-								tn[tag] = num
-						race.tagNums.update( tn )
-	return race.tagNums
-
 #------------------------------------------------------------------------------------------------
 reIP = re.compile( '^[0-9.]+$' )
 

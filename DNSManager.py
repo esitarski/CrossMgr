@@ -256,11 +256,12 @@ if __name__ == '__main__':
 	Model.setRace( Model.Race() )
 	Model.getRace()._populate()
 	
-	from ReadSignOnSheet import ExcelLink
+	from ReadSignOnSheet import ExcelLink, TagFields
 	e = ExcelLink()
 	e.fileName = r'Wyoming\chips and bibs for Wyoming August 26 2012.xls'
 	e.sheetName = r'chips and bibs'
-	e.fieldCol = {'Bib#':2, 'LastName':3, 'FirstName':4, 'Team':-1, 'License':-1, 'Category':-1, 'Tag':-1, 'Tag2':-1}
+	e.fieldCol = {'Bib#':2, 'LastName':3, 'FirstName':4, 'Team':-1, 'License':-1, 'Category':-1}
+	e.fieldCol.update( {tf:-1 for tf in TagFields} )
 	e.read()
 	Model.race.excelLink = e
 	
