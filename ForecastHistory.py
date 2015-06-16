@@ -28,7 +28,7 @@ def interpolateNonZeroFinishers():
 	return entries
 	
 # Define columns for recorded and expected information.
-iNumCol, iNoteCol, iTimeCol, iLapCol, iGapCol, iNameCol, iColMax = range(7)
+iNumCol, iNoteCol, iTimeCol, iLapCol, iGapCol, iNameCol, iWaveCol, iColMax = range(8)
 colnames = [None] * iColMax
 colnames[iNumCol]  = _('Num')
 colnames[iNoteCol] = _('Note')
@@ -36,6 +36,7 @@ colnames[iLapCol]  = _('Lap')
 colnames[iTimeCol] = _('Time')
 colnames[iGapCol]  = _('Gap')
 colnames[iNameCol] = _('Name')
+colnames[iWaveCol] = _('Wave')
 
 fontSize = 14
 
@@ -48,7 +49,7 @@ def GetLabelGrid( parent ):
 	label = wx.StaticText( parent, label = u'{}:'.format(_('Recorded')) )
 	
 	grid = ColGrid.ColGrid( parent, colnames = colnames )
-	grid.SetLeftAlignCols( [iNameCol] )
+	grid.SetLeftAlignCols( [iNameCol, iWaveCol] )
 	grid.SetRowLabelSize( 0 )
 	grid.SetRightAlign( True )
 	grid.AutoSizeColumns( True )
@@ -485,7 +486,7 @@ class ForecastHistory( wx.Panel ):
 					position = prevRiderPosition.get(e.num, -1)
 					
 				if position == 1:
-					return _('Leader')
+					return _('Lead')
 				elif e.t < tMissing:
 					return _('miss')
 				elif position >= 0:
@@ -507,8 +508,15 @@ class ForecastHistory( wx.Panel ):
 				first = info.get('FirstName','')
 				if last and first:
 					return u'{}, {}'.format(last, first)
-				return last or first or ' '
+				return last or first or u' '
 			data[iNameCol] = [getName(e) for e in expected]
+			
+			def getWave( e ):
+				try:
+					return race.getCategory( e.num ).fullname
+				except ValueError:
+					return u' '
+			data[iWaveCol] = [getWave(e) for e in expected]
 			
 			self.quickExpected = expected
 			
@@ -552,7 +560,7 @@ class ForecastHistory( wx.Panel ):
 
 				position = nextRiderPosition.get(e.num, -1)
 				if position == 1:
-					return _('Leader')
+					return _('Lead')
 				elif position >= 0:
 					return Utils.ordinal(position)
 				else:
@@ -564,6 +572,7 @@ class ForecastHistory( wx.Panel ):
 				return prevRiderGap.get(e.num, ' ')
 			data[iGapCol] = [getGapHistory(e) for e in recorded]
 			data[iNameCol] = [getName(e) for e in recorded]
+			data[iWaveCol] = [getWave(e) for e in recorded]
 
 			self.historyGrid.Set( data = data, backgroundColour = backgroundColour, textColour = textColour )
 			self.historyGrid.AutoSizeColumns()
