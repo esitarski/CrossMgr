@@ -514,7 +514,7 @@ class ForecastHistory( wx.Panel ):
 			def getWave( e ):
 				try:
 					return race.getCategory( e.num ).fullname
-				except ValueError:
+				except:
 					return u' '
 			data[iWaveCol] = [getWave(e) for e in expected]
 			

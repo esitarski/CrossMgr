@@ -9,6 +9,7 @@ import Model
 import Utils
 import JChip
 from JChip import EVT_CHIP_READER
+from ReadSignOnSheet import GetTagNums
 
 HOST, PORT = JChip.DEFAULT_HOST, JChip.DEFAULT_PORT
  
