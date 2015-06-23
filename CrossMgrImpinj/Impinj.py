@@ -38,9 +38,10 @@ TagTransitTime = None		# Time (seconds) expected for tag to cross read field.  D
 
 class Impinj( object ):
 
-	def __init__( self, dataQ, messageQ, shutdownQ, impinjHost, impinjPort, antennaStr ):
+	def __init__( self, dataQ, messageQ, shutdownQ, impinjHost, impinjPort, antennaStr, statusCB ):
 		self.impinjHost = impinjHost
 		self.impinjPort = impinjPort
+		self.statusCB = statusCB
 		if not antennaStr:
 			self.antennas = [0]
 		else:
@@ -51,6 +52,7 @@ class Impinj( object ):
 		self.rospecID = 123
 		self.readerSocket = None
 		self.timeCorrection = None	# Correction between the reader's time and the computer's time.
+		self.connectedAntennas = []
 		self.start()
 		
 	def start( self ):
@@ -89,40 +91,47 @@ class Impinj( object ):
 	
 	def sendCommand( self, message ):
 		self.messageQ.put( ('Impinj', '-----------------------------------------------------') )
-		self.messageQ.put( ('Impinj', 'Sending Message:\n%s\n' % message) )
+		self.messageQ.put( ('Impinj', 'Sending Message:\n{}\n'.format(message)) )
 		try:
 			message.send( self.readerSocket )
 		except Exception as e:
-			self.messageQ.put( ('Impinj', 'Send command fails: %s' % e) )
+			self.messageQ.put( ('Impinj', 'Send command fails: {}'.format(e)) )
 			return False
 			
 		try:
 			response = WaitForMessage( message.MessageID, self.readerSocket )
 		except Exception as e:
-			self.messageQ.put( ('Impinj', 'Get response fails: %s' % e) )
+			self.messageQ.put( ('Impinj', 'Get response fails: {}'.format(e)) )
 			return False
 			
-		self.messageQ.put( ('Impinj', 'Received Response:\n%s\n' % response) )
+		self.messageQ.put( ('Impinj', 'Received Response:\n{}\n'.format(response)) )
 		return True, response
 		
 	def sendCommands( self ):
-		self.messageQ.put( ('Impinj', 'Connected to: (%s:%d)' % (self.impinjHost, self.impinjPort) ) )
+		self.connectedAntennas = []
+		
+		self.messageQ.put( ('Impinj', 'Connected to: ({}:{})'.format(self.impinjHost, self.impinjPort) ) )
 		
 		self.messageQ.put( ('Impinj', 'Waiting for READER_EVENT_NOTIFICATION...') )
 		response = UnpackMessageFromSocket( self.readerSocket )
-		self.messageQ.put( ('Impinj', '\nReceived Response:\n%s\n' % response) )
+		self.messageQ.put( ('Impinj', '\nReceived Response:\n{}\n'.format(response)) )
 		
 		# Compute a correction between the reader's time and the computer's time.
 		readerTime = response.getFirstParameterByClass(UTCTimestamp_Parameter).Microseconds
 		readerTime = datetime.datetime.utcfromtimestamp( readerTime / 1000000.0 )
 		self.timeCorrection = getTimeNow() - readerTime
 		
-		self.messageQ.put( ('Impinj', '\nReader time is %f seconds different from computer time\n' % self.timeCorrection.total_seconds()) )
+		self.messageQ.put( ('Impinj', '\nReader time is {} seconds different from computer time\n'.format(self.timeCorrection.total_seconds())) )
 		
 		# Reset to factory defaults.
 		success, response = self.sendCommand( SET_READER_CONFIG_Message(ResetToFactoryDefault = True) )
 		if not success:
 			return False
+			
+		# Get the connected antennas.
+		success, response = self.sendCommand( GET_READER_CONFIG_Message(RequestedData=GetReaderConfigRequestedData.AntennaProperties) )
+		if success:
+			self.connectedAntennas = [p.AntennaID for p in response.Parameters if isinstance(p, AntennaProperties_Parameter) and p.AntennaConnected]
 		
 		# Configure a period Keepalive message.
 		# Change receiver sensitivity (if specified).  This value is reader dependent.
@@ -145,7 +154,7 @@ class Impinj( object ):
 				)
 			)
 		
-		# Change Inventory Control (if specifield).
+		# Change Inventory Control (if specified).
 		inventoryCommandParameter = []
 		if any(v is not None for v in [InventorySession, TagPopulation, TagTransitTime]):
 			inventoryCommandParameter.append(
@@ -202,7 +211,7 @@ class Impinj( object ):
 		self.messageQ.put( ('BackupFile', self.fname) )
 		
 		self.messageQ.put( ('Impinj', '*****************************************' ) )
-		self.messageQ.put( ('Impinj', 'Reader Server Started: (%s:%d)' % (self.impinjHost, self.impinjPort) ) )
+		self.messageQ.put( ('Impinj', 'Reader Server Started: ({}:{})'.format(self.impinjHost, self.impinjPort) ) )
 			
 		# Create an old default time for last tag read.
 		tOld = getTimeNow() - datetime.timedelta( days = 100 )
@@ -219,15 +228,15 @@ class Impinj( object ):
 			
 			self.messageQ.put( ('Impinj', 'state', False) )
 			self.messageQ.put( ('Impinj', '') )
-			self.messageQ.put( ('Impinj', 'Trying to Connect to Reader: (%s:%d)...' % (self.impinjHost, self.impinjPort) ) )
+			self.messageQ.put( ('Impinj', 'Trying to Connect to Reader: ({}:{})...'.format(self.impinjHost, self.impinjPort) ) )
 			self.messageQ.put( ('Impinj', 'ConnectionTimeout={:.2f} seconds'.format(ConnectionTimeoutSeconds) ) )
 			
 			try:
 				self.readerSocket.connect( (self.impinjHost, self.impinjPort) )
 			except Exception as e:
-				self.messageQ.put( ('Impinj', 'Reader Connection Failed: %s' % e ) )
+				self.messageQ.put( ('Impinj', 'Reader Connection Failed: {}'.format(e) ) )
 				self.readerSocket.close()
-				self.messageQ.put( ('Impinj', 'Attempting Reconnect in %d seconds...' % ReconnectDelaySeconds) )
+				self.messageQ.put( ('Impinj', 'Attempting Reconnect in {} seconds...'.format(ReconnectDelaySeconds)) )
 				self.reconnectDelay()
 				continue
 
@@ -236,7 +245,7 @@ class Impinj( object ):
 			try:
 				success = self.sendCommands()
 			except Exception as e:
-				self.messageQ.put( ('Impinj', 'Send Command Error=%s' % e) )
+				self.messageQ.put( ('Impinj', 'Send Command Error={}'.format(e)) )
 				success = False
 				
 			if not success:
@@ -244,9 +253,15 @@ class Impinj( object ):
 				self.messageQ.put( ('Impinj', 'Disconnecting Reader.' ) )
 				self.messageQ.put( ('Impinj', 'state', False) )
 				self.readerSocket.close()
-				self.messageQ.put( ('Impinj', 'Attempting Reconnect in %d seconds...' % ReconnectDelaySeconds) )
+				self.messageQ.put( ('Impinj', 'Attempting Reconnect in {} seconds...'.format(ReconnectDelaySeconds)) )
 				self.reconnectDelay()
+				self.statusCB()
 				continue
+				
+			self.statusCB(
+				connectedAntennas = self.connectedAntennas,
+				timeCorrection = self.timeCorrection,
+			)
 			
 			tUpdateLast = tKeepaliveLast = getTimeNow()
 			self.tagCount = 0
@@ -285,7 +300,7 @@ class Impinj( object ):
 				
 				if not isinstance(response, RO_ACCESS_REPORT_Message):
 					if not isinstance(response, READER_EVENT_NOTIFICATION_Message):
-						self.messageQ.put( ('Impinj', 'Skipping: %s' % response.__class__.__name__) )
+						self.messageQ.put( ('Impinj', 'Skipping: {}'.format(response.__class__.__name__)) )
 					continue
 				
 				Bell()
@@ -302,7 +317,7 @@ class Impinj( object ):
 					try:
 						tagID = tag['EPC']
 					except Exception as e:
-						self.messageQ.put( ('Impinj', 'Received %d.  Skipping: missing tagID.' % self.tagCount) )
+						self.messageQ.put( ('Impinj', 'Received {}.  Skipping: missing tagID.'.format(self.tagCount)) )
 						continue
 						
 					if isinstance( tagID, (int, long) ):
@@ -366,6 +381,6 @@ class Impinj( object ):
 			except Empty:
 				break
 
-def ImpinjServer( dataQ, messageQ, shutdownQ, impinjHost, impinjPort, antennaStr ):
-	impinj = Impinj(dataQ, messageQ, shutdownQ, impinjHost, impinjPort, antennaStr)
+def ImpinjServer( dataQ, messageQ, shutdownQ, impinjHost, impinjPort, antennaStr, statusCB=None ):
+	impinj = Impinj(dataQ, messageQ, shutdownQ, impinjHost, impinjPort, antennaStr, statusCB)
 	impinj.runServer()

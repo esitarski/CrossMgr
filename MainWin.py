@@ -344,6 +344,12 @@ class MainWin( wx.Frame ):
 
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
+							_("&Road-Results.com Publish..."), _("Publish Results to the Road-Results.com web site"),
+							Utils.GetPngBitmap('crossresults-icon.png') )
+		self.Bind(wx.EVT_MENU, self.menuExportRoadResults, id=idCur )
+
+		idCur = wx.NewId()
+		AppendMenuItemBitmap( self.publishMenu, idCur,
 							_("&WebScorer.com Publish..."), _("Publish Results in WebScorer.com format"),
 							Utils.GetPngBitmap('webscorer-icon.png') )
 		self.Bind(wx.EVT_MENU, self.menuExportWebScorer, id=idCur )
@@ -2907,7 +2913,13 @@ class MainWin( wx.Frame ):
 				_('Results Publish') )
 	
 	@logCall
-	def menuExportCrossResults( self, event ):
+	def menuExportRoadResults( self, event):
+		self.menuExportCrossResults( event, True )
+	
+	@logCall
+	def menuExportCrossResults( self, event, isRoadResults=False ):
+		destination = 'Road-Results' if isRoadResults else 'CrossResults'
+	
 		self.commit()
 		if self.fileName is None or len(self.fileName) < 4 or not Model.race:
 			return
@@ -2928,7 +2940,7 @@ class MainWin( wx.Frame ):
 			
 		self.showPageName( _('Results') )
 		
-		fname = self.fileName[:-4] + '-CrossResults.csv'
+		fname = self.fileName[:-4] + '-{}.csv'.format(destination)
 		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(fname)),
 						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
 		ret = dlg.ShowModal()
@@ -2947,11 +2959,12 @@ class MainWin( wx.Frame ):
 			success, message = CrossResultsExport( fname )
 			if not success:
 				Utils.MessageOK(self,
-							u'CrossResults {}: "{}"'.format(_('Error'), message),
-							u'CrossResults {}'.format(_('Error')), iconMask=wx.ICON_ERROR )
+							u'{} {}: "{}"'.format(destination, _('Error'), message),
+							u'{} {}'.format(destination,_('Error')), iconMask=wx.ICON_ERROR )
 				return
 			
-			url = 'http://www.crossresults.com/?n=results&sn=upload&crossmgr={MD5}&name={RaceName}&date={RaceDate}&loc={Location}&presentedby={PresentedBy}'.format(
+			url = 'http://www.{Destination}.com/?n=results&sn=upload&crossmgr={MD5}&name={RaceName}&date={RaceDate}&loc={Location}&presentedby={PresentedBy}'.format(
+				Destination = destination.lower(),
 				RaceName	= urllib.quote(unicode(raceName).encode('utf-8')),
 				RaceDate	= urllib.quote(unicode(raceDate).encode('utf-8')),
 				MD5			= hashlib.md5( race.name + raceDate ).hexdigest(),
@@ -2964,7 +2977,7 @@ class MainWin( wx.Frame ):
 			logException( e, sys.exc_info() )
 			Utils.MessageOK(self,
 						u'{} "{}"\n\n{}'.format(_('Cannot write'), fname, e),
-						u'CrossResults {}'.format(_('File Error')), iconMask=wx.ICON_ERROR )
+						u'{} {}'.format(destination, _('File Error')), iconMask=wx.ICON_ERROR )
 	
 	@logCall
 	def menuExportWebScorer( self, event ):

@@ -307,9 +307,11 @@ class MainWin( wx.Frame ):
 		iRow += 1
 		
 		gs = wx.GridSizer( rows=0, cols=4, vgap=2, hgap=2 )
+		self.antennaLabels = []
 		self.antennas = []
 		for i in xrange(4):
-			gs.Add( wx.StaticText(self, label='%d' % (i+1)), flag=wx.ALIGN_CENTER )
+			self.antennaLabels.append( wx.StaticText(self, label='{}'.format(i+1), style=wx.ALIGN_CENTER) )
+			gs.Add( self.antennaLabels[-1], flag=wx.ALIGN_CENTER|wx.EXPAND )
 		for i in xrange(4):
 			cb = wx.CheckBox( self, wx.ID_ANY, '')
 			if i < 2:
@@ -397,20 +399,38 @@ class MainWin( wx.Frame ):
 		self.SetSizer( self.vbs )
 		self.start()
 	
+	def readerStatusCB( self, **kwargs ):
+		# As this is called from another thread, make sure all UI updates are done from CallAfter.
+		connectedAntennas = set(kwargs.get( 'connectedAntennas', [] ))
+		for i in xrange(4):
+			wx.CallAfter( self.antennaLabels[i].SetBackgroundColour, self.LightGreen if i in connectedAntennas else wx.NullColour  )
+	
 	def start( self ):
 		self.dataQ = Queue()
 		self.messageQ = Queue()
 		self.shutdownQ = Queue()	# Queue to tell the Impinj monitor to shut down.
+		self.readerStatusCB()
 		
 		if self.useHostName.GetValue():
-			self.impinjProcess = Process( name='ImpinjProcess', target=ImpinjServer,
-				args=(self.dataQ, self.messageQ, self.shutdownQ,
-						ImpinjHostNamePrefix + self.impinjHostName.GetValue() + ImpinjHostNameSuffix, ImpinjInboundPort,
-						self.getAntennaStr() ) )
+			self.impinjProcess = Process(
+				name='ImpinjProcess', target=ImpinjServer,
+				args=(
+					self.dataQ, self.messageQ, self.shutdownQ,
+					ImpinjHostNamePrefix + self.impinjHostName.GetValue() + ImpinjHostNameSuffix, ImpinjInboundPort,
+					self.getAntennaStr(),
+					self.readerStatusCB,
+				)
+			)
 		else:
-			self.impinjProcess = Process( name='ImpinjProcess', target=ImpinjServer,
-				args=(self.dataQ, self.messageQ, self.shutdownQ,
-						self.impinjHost.GetAddress(), ImpinjInboundPort, self.getAntennaStr() ) )
+			self.impinjProcess = Process(
+				name='ImpinjProcess', target=ImpinjServer,
+				args=(
+					self.dataQ, self.messageQ, self.shutdownQ,
+					self.impinjHost.GetAddress(), ImpinjInboundPort,
+					self.getAntennaStr(),
+					self.readerStatusCB,
+				)
+			)
 		self.impinjProcess.daemon = True
 		
 		self.crossMgrProcess = Process( name='CrossMgrProcess', target=CrossMgrServer,
@@ -554,16 +574,13 @@ class MainWin( wx.Frame ):
 		return self.crossMgrHost.GetAddress()
 		
 	def getAntennaStr( self ):
-		s = []
-		for i in xrange(4):
-			if self.antennas[i].GetValue():
-				s.append( '%d' % (i + 1) )
-		if not s:
-			# Ensure that at least one antenna is selected.
+		selectedAntennas = [ i for i in xrange(4) if self.antennas[i].GetValue() ]
+		# Ensure at least one antenna is selected.
+		if not selectedAntennas:
 			self.antennas[0].SetValue( True )
-			s.append( '1' )
-		return ' '.join( s )
-		
+			selectedAntennas = [0]
+		return ' '.join( '{}'.format(a+1) for a in selectedAntennas )
+	
 	def setAntennaStr( self, s ):
 		antennas = set( int(a) for a in s.split() )
 		for i in xrange(4):
