@@ -403,7 +403,7 @@ class MainWin( wx.Frame ):
 		# As this is called from another thread, make sure all UI updates are done from CallAfter.
 		connectedAntennas = set(kwargs.get( 'connectedAntennas', [] ))
 		for i in xrange(4):
-			wx.CallAfter( self.antennaLabels[i].SetBackgroundColour, self.LightGreen if i in connectedAntennas else wx.NullColour  )
+			wx.CallAfter( self.antennaLabels[i].SetBackgroundColour, self.LightGreen if (i+1) in connectedAntennas else wx.NullColour  )
 	
 	def start( self ):
 		self.dataQ = Queue()

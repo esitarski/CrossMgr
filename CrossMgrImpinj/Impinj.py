@@ -131,7 +131,8 @@ class Impinj( object ):
 		# Get the connected antennas.
 		success, response = self.sendCommand( GET_READER_CONFIG_Message(RequestedData=GetReaderConfigRequestedData.AntennaProperties) )
 		if success:
-			self.connectedAntennas = [p.AntennaID for p in response.Parameters if isinstance(p, AntennaProperties_Parameter) and p.AntennaConnected]
+			self.connectedAntennas = [p.AntennaID for p in response.Parameters
+				if isinstance(p, AntennaProperties_Parameter) and p.AntennaConnected and p.AntennaID <= 4]
 		
 		# Configure a period Keepalive message.
 		# Change receiver sensitivity (if specified).  This value is reader dependent.
