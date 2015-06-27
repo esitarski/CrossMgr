@@ -331,11 +331,13 @@ class CameraProperties( wx.Panel ):
 		value = ctl.GetValue() or 0
 		if value != self.advancePhotoMilliseconds.GetValue():
 			self.advancePhotoMilliseconds.SetValue( value )
+			wx.CallAfter( self.commit )
 	
 	def doAdvancePhotoMillisecondsSroll( self, event ):
 		value = self.advancePhotoMilliseconds.GetValue() or 0
 		if value != self.advancePhotoMillisecondsValue.GetValue():
 			self.advancePhotoMillisecondsValue.SetValue( value )
+			wx.CallAfter( self.commit )
 	
 	def refresh( self ):
 		race = Model.race
@@ -354,6 +356,7 @@ class CameraProperties( wx.Panel ):
 		race = Model.race
 		if not race:
 			return
+		
 		race.advancePhotoMilliseconds = self.advancePhotoMilliseconds.GetValue() or 0
 		race.enableUSBCamera = False
 		race.photosAtRaceEndOnly = False

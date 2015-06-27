@@ -399,11 +399,10 @@ class MainWin( wx.Frame ):
 			except Empty:
 				break
 			
+			tSearch = message['time']
 			advanceSeconds = message.get('advanceSeconds', 0.0)
 			if advanceSeconds:
-				tSearch = message['time'] + timedelta(seconds=advanceSeconds)
-			else:
-				tSearch = message['time']
+				tSearch += timedelta(seconds=advanceSeconds)
 			times, frames = self.fcb.findBeforeAfter( tSearch, 1, 1 )
 			if not frames:
 				self.messageQ.put( ('error', 'No photos for {} at {}'.format(message.get('bib', None), message['time'].isoformat()) ) )
