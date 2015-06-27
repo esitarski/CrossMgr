@@ -347,13 +347,14 @@ class CameraProperties( wx.Panel ):
 			else:
 				self.radioBox.SetSelection( 2 )
 		if race:
-			self.advancePhotoMilliseconds.SetValue( race.advancePhotoMilliseconds )
+			self.advancePhotoMilliseconds.SetValue( race.advancePhotoMilliseconds or 0 )
+			self.advancePhotoMillisecondsValue.SetValue( race.advancePhotoMilliseconds or 0 )
 		
 	def commit( self ):
 		race = Model.race
 		if not race:
 			return
-		race.advancePhotoMilliseconds = self.advancePhotoMilliseconds.GetValue()
+		race.advancePhotoMilliseconds = self.advancePhotoMilliseconds.GetValue() or 0
 		race.enableUSBCamera = False
 		race.photosAtRaceEndOnly = False
 		

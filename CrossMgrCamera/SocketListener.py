@@ -10,11 +10,11 @@ now = datetime.datetime.now
 delimiter = '\n\n\n'
 minDelay = 0.2
 
-def postRequests( requests, qRequest ):
+def postRequests( requests, qRequest, delay ):
 	# If we process a message too early, it is possible that the before and after frame are
 	# not processed yet and could be missed.
-	# So, we delay a little to give time for some frames to accumulate.
-	time.sleep( minDelay )
+	# Or, if the photo request is in the future, we need to wait before we proess it.
+	time.sleep( delay )
 	for kwargs in requests:
 		qRequest.put( kwargs )
 
@@ -55,9 +55,12 @@ def SocketListener( s, qRequest, qMessage, qRename ):
 				continue
 			
 			cmd = kwargs.get('cmd', None)
+			dtMax = minDelay
 			if cmd == 'photo':
-				if (tNow - kwargs['time']).total_seconds() < minDelay:
+				dt = (tNow - kwargs['time']).total_seconds() - kwargs.get('advanceSeconds',0.0)
+				if dt < minDelay:
 					requests.append( kwargs )
+					dtMax = max(dtMax, -dt + minDelay if dt < 0 else minDelay)
 				else:
 					qRequest.put( kwargs )
 					
@@ -66,7 +69,7 @@ def SocketListener( s, qRequest, qMessage, qRename ):
 
 		# Post the messages in a thread to add a delay.
 		if requests:
-			thread = threading.Thread( target=postRequests, args=(requests, qRequest) )
+			thread = threading.Thread( target=postRequests, args=(requests, qRequest, dtMax) )
 			thread.daemon = True
 			thread.name = 'PostRequestDelay'
 			thread.start()
