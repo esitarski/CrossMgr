@@ -5,6 +5,7 @@ import re
 import time
 import math
 import datetime
+from datetime import timedelta
 
 HOST = 'localhost'
 PORT = 54111
@@ -162,7 +163,7 @@ class MainWin( wx.Frame ):
 		self.frameCount = 0
 		self.frameCountUpdate = self.fps * 2
 		self.fpsActual = 0.0
-		self.fpt = datetime.timedelta(0)
+		self.fpt = timedelta(seconds=0)
 		
 		self.fcb = FrameCircBuf( self.bufferSecs * self.fps )
 		
@@ -398,7 +399,12 @@ class MainWin( wx.Frame ):
 			except Empty:
 				break
 			
-			times, frames = self.fcb.findBeforeAfter( message['time'], 1, 1 )
+			advanceSeconds = message.get('advanceSeconds', 0.0)
+			if advanceSeconds:
+				tSearch = message['time'] + timedelta(seconds=advanceSeconds)
+			else:
+				tSearch = message['time']
+			times, frames = self.fcb.findBeforeAfter( tSearch, 1, 1 )
 			if not frames:
 				self.messageQ.put( ('error', 'No photos for {} at {}'.format(message.get('bib', None), message['time'].isoformat()) ) )
 				

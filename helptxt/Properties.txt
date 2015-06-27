@@ -166,6 +166,12 @@ Do Not Use Camera for Photo Finish|USB Camera not used
 Photos on Every Lap|Records a photo from a connected USB camera on every number entry on every lap.  See [Notes](#use-usb-camera-photo-finish) below for details.
 Photos at Race Finish Only|This option tells CrossMgr to record photos one minute before the leader's finish time for each Start Wave.  If the leader has not yet finished, CrossMgr uses leader's expected time.  If the leader's time is known, CrossMgr uses the leader's actual finish time.  If this option is disabled, CrossMgr will record photos of every rider on every lap.  If this race is a time trial, this option has no effect and photos will be recorded on every lap.
 
+### Photo Delay
+
+This sets a delay (in milliseconds) between when a photo is triggered (manual or RFID input) and when the camera is triggered.
+
+For example, if the reader is consistently picking up tags before the finish line, try setting the __Photo Delay__ to 150msec.  Experiment to find the right setting to capture the riders in frame.
+
 ### Notes:
 
 The purpose of __Photos at Race Finish Only__ is to avoid filling up your disk with uninteresting photos during the race.  This feature is especially useful for high-lap races like criteriums.  Aside from the space required, there is no problem with recording photos every lap, and you may wish to do for the additional information it provides.

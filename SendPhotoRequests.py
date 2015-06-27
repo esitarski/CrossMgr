@@ -11,7 +11,7 @@ PORT = 54111
 delimiter = '\n\n\n'
 
 def getPhotoDirName( raceFileName ):
-	return os.path.join( os.path.dirname(raceFileName) or '.', os.path.splitext(raceFileName)[0] + '_Photos' )
+	return os.path.join( os.path.dirname(raceFileName or '') or '.', os.path.splitext(raceFileName or '')[0] + '_Photos' )
 
 def sendMessages( messages ):
 	try:
@@ -49,11 +49,12 @@ def getFtpInfo( race ):
 	
 def getRequest( race, dirName, bib, raceSeconds, externalInfo ):
 	info = {
-		'dirName':		dirName,
-		'bib':			bib,
-		'time':			race.startTime + datetime.timedelta(seconds=raceSeconds),
-		'raceSeconds':	raceSeconds,
-		'raceName':		race.name,
+		'dirName':			dirName,
+		'bib':				bib,
+		'time':				race.startTime + datetime.timedelta(seconds=raceSeconds),
+		'raceSeconds':		raceSeconds,
+		'raceName':			race.name,
+		'advanceSeconds':	race.advancePhotoMilliseconds/1000.0,
 	}
 	try:
 		riderInfo = externalInfo[bib]

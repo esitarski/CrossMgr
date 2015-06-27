@@ -95,8 +95,16 @@ class Primes( wx.Panel ):
 		self.history.Bind( wx.EVT_BUTTON, self.onHistory )
 		
 		self.newButton = wx.Button( self, id=wx.ID_NEW )
+		self.newButton.SetToolTip( wx.ToolTip(_('Create a new Prime')) )
 		self.newButton.Bind( wx.EVT_BUTTON, self.onNew )
+		self.nextPositionButton = wx.Button( self, label=('Next Position') )
+		self.nextPositionButton.SetToolTip( wx.ToolTip(_('Create a Prime from an Existing Prime for the Next Position')) )
+		self.nextPositionButton.Bind( wx.EVT_BUTTON, self.onNextPosition )
+		self.nextPrimeButton = wx.Button( self, label=('Next Prime') )
+		self.nextPrimeButton.SetToolTip( wx.ToolTip(_('Create a Prime from an Existing Prime')) )
+		self.nextPrimeButton.Bind( wx.EVT_BUTTON, self.onNextPrime )
 		self.deleteButton = wx.Button( self, id=wx.ID_DELETE )
+		self.deleteButton.SetToolTip( wx.ToolTip(_('Delete a Prime')) )
 		self.deleteButton.Bind( wx.EVT_BUTTON, self.onDelete )
 		hsButtons = wx.BoxSizer( wx.HORIZONTAL )
 		hsButtons.Add( self.photosButton, flag=wx.ALL, border=4 )
@@ -104,6 +112,8 @@ class Primes( wx.Panel ):
 		hsButtons.Add( self.history, flag=wx.ALL, border=4 )
 		hsButtons.AddStretchSpacer()
 		hsButtons.Add( self.newButton, flag=wx.ALL, border=4 )
+		hsButtons.Add( self.nextPositionButton, flag=wx.ALL, border=4 )
+		hsButtons.Add( self.nextPrimeButton, flag=wx.ALL, border=4 )
 		hsButtons.Add( self.deleteButton, flag=wx.ALL, border=4 )
 		
 		#---------------------------------------------------------------
@@ -123,7 +133,7 @@ class Primes( wx.Panel ):
 			if self.grid.GetCellValue(row, col) != 'Custom':
 				self.grid.SetCellValue( row, col+1, u'' )
 		elif colName == 'winnerBib':
-			bib = int( u''.join( c for c in self.grid.GetCellValue(row, col) if c.isdigit() ) )
+			bib = int( u''.join(c for c in self.grid.GetCellValue(row, col) if c.isdigit()) )
 			self.grid.SetCellValue( row, col+1, getWinnerInfo(bib) )
 		
 		wx.CallAfter( self.grid.AutoSizeColumns, False )
@@ -160,6 +170,11 @@ class Primes( wx.Panel ):
 			return
 		mainWin.openMenuWindow( 'history' )
 	
+	def selectGridRow( self, row ):
+		self.grid.SelectRow( row )
+		self.grid.SetGridCursor( row, 0 )
+		self.grid.ShowCellEditControl()
+	
 	def onNew( self, event ):
 		race = Model.race
 		if not race:
@@ -170,9 +185,44 @@ class Primes( wx.Panel ):
 		rowNew = len( race.primes )
 		race.primes.append( {} )
 		self.updateGrid()
-		self.grid.SelectRow( rowNew )
-		self.grid.SetGridCursor( rowNew, 0 )
-		self.grid.ShowCellEditControl()
+		self.selectGridRow( rowNew )
+	
+	def onNextPosition( self, event ):
+		rowNext = self.grid.GetGridCursorRow()
+		if rowNext is None or rowNext < 0:
+			return
+		self.commit()
+		race = Model.race
+		if not race:
+			Utils.MessageOK( self, _('You must have a Race to create a next Prime.'), _('Missing Race') )
+			return
+		nextPrime = race.primes[rowNext].copy()
+		try:
+			nextPrime['position'] += 1
+		except:
+			pass
+		nextPrime['winnerBib'] = None
+		race.primes = race.primes[:rowNext+1] + [nextPrime] + race.primes[rowNext+1:]
+		self.updateGrid()
+		self.selectGridRow( rowNext + 1 )
+	
+	def onNextPrime( self, event ):
+		rowNext = self.grid.GetGridCursorRow()
+		if rowNext is None or rowNext < 0:
+			return
+		self.commit()
+		race = Model.race
+		if not race:
+			Utils.MessageOK( self, _('You must have a Race to create a next Prime.'), _('Missing Race') )
+			return
+		nextPrime = race.primes[rowNext].copy()
+		nextPrime['position'] = 1
+		if nextPrime['lapsToGo'] > 0:
+			nextPrime['lapsToGo'] -= 1
+		nextPrime['winnerBib'] = None
+		race.primes = race.primes[:rowNext+1] + [nextPrime] + race.primes[rowNext+1:]
+		self.updateGrid()
+		self.selectGridRow( rowNext + 1 )
 		
 	def onDelete( self, event ):
 		rowDelete = self.grid.GetGridCursorRow()

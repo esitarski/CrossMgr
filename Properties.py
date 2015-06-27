@@ -302,15 +302,41 @@ class CameraProperties( wx.Panel ):
 		self.radioBox = wx.RadioBox( self, label=_("USB Camera Options"), choices=choices, majorDimension=1, style=wx.RA_SPECIFY_COLS )
 		self.radioBox.SetBackgroundColour( wx.WHITE )
 		
+		advanceMin = -2000
+		advanceMax = 2000
+		self.advancePhotoMillisecondsLabel = wx.StaticText( self, label=_('Photo Delay (msec)') )
+		self.advancePhotoMilliseconds = wx.Slider( self, style=wx.SL_HORIZONTAL|wx.SL_LABELS|wx.SL_AUTOTICKS, minValue=advanceMin, maxValue=advanceMax, )
+		self.advancePhotoMilliseconds.SetTickFreq( 100, 1 )
+		self.advancePhotoMilliseconds.SetBackgroundColour( wx.WHITE )
+		self.advancePhotoMilliseconds.Bind( wx.EVT_SCROLL, self.doAdvancePhotoMillisecondsSroll )
+		self.advancePhotoMillisecondsValue = intctrl.IntCtrl( self, style=wx.ALIGN_RIGHT, value=0, min=advanceMin, max=advanceMax, limited=True, allow_none=True, size=(60,-1) )
+		self.advancePhotoMillisecondsValue.Bind( intctrl.EVT_INT, self.doAdvancePhotoMillisecondsText )
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( self.advancePhotoMillisecondsLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
+		hs.Add( self.advancePhotoMillisecondsValue, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=4 )
+		hs.Add( self.advancePhotoMilliseconds, 1, flag=wx.EXPAND|wx.LEFT, border=4 )
+		
 		ms = wx.BoxSizer( wx.VERTICAL )
 		
 		ms.Add( self.radioBox, flag=wx.ALL, border=16 )
+		ms.Add( hs, flag=wx.ALL|wx.EXPAND, border=16 )
 		
 		self.explanation = wx.StaticText( self, label=_('Requires CrossMgrCamera.  See help for details') )
 		ms.Add( self.explanation, flag=wx.ALL, border=16 )
 		
 		self.SetSizer( ms )
-		
+	
+	def doAdvancePhotoMillisecondsText( self, event ):
+		ctl = event.GetEventObject()
+		value = ctl.GetValue() or 0
+		if value != self.advancePhotoMilliseconds.GetValue():
+			self.advancePhotoMilliseconds.SetValue( value )
+	
+	def doAdvancePhotoMillisecondsSroll( self, event ):
+		value = self.advancePhotoMilliseconds.GetValue() or 0
+		if value != self.advancePhotoMillisecondsValue.GetValue():
+			self.advancePhotoMillisecondsValue.SetValue( value )
+	
 	def refresh( self ):
 		race = Model.race
 		if not race or not race.enableUSBCamera:
@@ -320,11 +346,14 @@ class CameraProperties( wx.Panel ):
 				self.radioBox.SetSelection( 1 )
 			else:
 				self.radioBox.SetSelection( 2 )
+		if race:
+			self.advancePhotoMilliseconds.SetValue( race.advancePhotoMilliseconds )
 		
 	def commit( self ):
 		race = Model.race
 		if not race:
 			return
+		race.advancePhotoMilliseconds = self.advancePhotoMilliseconds.GetValue()
 		race.enableUSBCamera = False
 		race.photosAtRaceEndOnly = False
 		
