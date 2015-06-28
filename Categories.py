@@ -431,22 +431,39 @@ class Categories( wx.Panel ):
 
 	def onEditorCreated( self, event ):
 		if event.GetCol() == self.numbersColumn:
-			event.GetControl().Bind( wx.EVT_KEY_DOWN, self.onNumbersKeyEvent )
+			ctrl = event.GetControl()
+			ctrl.Bind( wx.EVT_KEY_DOWN, self.onNumbersKeyEvent )
+			ctrl.Bind( wx.EVT_TEXT_PASTE, self.onPaste )
 		event.Skip()
+	
+	def getCleanClipboardText( self ):
+		if wx.TheClipboard.Open():
+			data = wx.TextDataObject()
+			if wx.TheClipboard.GetData(data):
+				txt = data.GetText()
+				txt = re.sub( '[^0-9,-]+', ',', txt )
+			wx.TheClipboard.Close()
+			return txt
+		return None
+	
+	def pasteFromClipboard( self, event ):
+		txt = self.getCleanClipboardText()
+		if txt:
+			event.GetEventObject().WriteText( txt )
+			return True
+		return False
 		
 	def onNumbersKeyEvent( self, event ):
+		# Handle column pastes from Excel when there are newlines.
 		if event.GetModifiers() == wx.MOD_CONTROL and event.GetKeyCode() == 86:
-			if wx.TheClipboard.Open():
-				data = wx.TextDataObject()
-				if wx.TheClipboard.GetData(data):
-					txt = data.GetText()
-					txt = re.sub( '[^0-9,-]+', ',', txt )
-					event.GetEventObject().WriteText( txt )
-				wx.TheClipboard.Close()
+			if self.pasteFromClipboard( event ):
 				return
-		
 		event.Skip()
 
+	def onPaste( self, event ):
+		self.pasteFromClipboard( event )
+		event.Skip()
+		
 	#------------------------------------------
 
 	def onUpdateStartWaveNumbers( self, event ):
