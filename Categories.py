@@ -544,7 +544,7 @@ and remove them from other categories.'''),
 		self.grid.SetCellValue( r, self.iCol['seriesFlag'], u'1' if seriesFlag else u'0' )
 		
 		race = Model.race
-		category = race.categories.get(u'{} ({})'.format(name.strip(), gender), None)
+		category = race.categories.get(u'{} ({})'.format(name.strip(), gender), None) if race else None
 		if not category or category.catType != Model.Category.CatWave:
 			return
 			
@@ -552,11 +552,11 @@ and remove them from other categories.'''),
 		if not active or not Model.race:
 			return
 			
-		rule80Time = race.getRule80CountdownTime( category )
+		rule80Time = race.getRule80CountdownTime( category ) if race else None
 		if rule80Time:
 			self.grid.SetCellValue( r, self.iCol['rule80Time'], Utils.formatTime(rule80Time) )
 		
-		laps = race.getCategoryRaceLaps().get(category, 0)
+		laps = race.getCategoryRaceLaps().get(category, 0) if race else None
 		if laps:
 			self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '{}'.format(laps) )
 	
@@ -579,17 +579,19 @@ and remove them from other categories.'''),
 			self.fixRow( row, catType, active )
 	
 	def onActivateAll( self, event ):
-		for c in Model.race.getAllCategories():
-			if not c.active:
-				c.active = True
-				Model.race.setChanged()
+		if Model.race:
+			for c in Model.race.getAllCategories():
+				if not c.active:
+					c.active = True
+					Model.race.setChanged()
 		wx.CallAfter( self.refresh )
 		
 	def onDeactivateAll( self, event ):
-		for c in Model.race.getAllCategories():
-			if c.active:
-				c.active = False
-				Model.race.setChanged()
+		if Model.race:
+			for c in Model.race.getAllCategories():
+				if c.active:
+					c.active = False
+					Model.race.setChanged()
 		wx.CallAfter( self.refresh )
 		
 	def onNewCategory( self, event ):
