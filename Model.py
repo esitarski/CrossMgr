@@ -933,6 +933,7 @@ class Race( object ):
 	photosAtRaceEndOnly = False
 	cameraDevice = 0
 	advancePhotoMilliseconds = 0
+	finishKMH = 50.0
 	photoCount = 0
 	
 	unmatchedTags = None
