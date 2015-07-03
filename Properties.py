@@ -308,18 +308,6 @@ class CameraProperties( wx.Panel ):
 		sbox = wx.StaticBox( self, label=_('Photo Delay Option') )
 		sboxSizer = wx.StaticBoxSizer( sbox, wx.VERTICAL )
 		
-		self.advancePhotoMillisecondsLabel = wx.StaticText( self, label=_('Milliseconds') )
-		self.advancePhotoMilliseconds = wx.Slider( self, style=wx.SL_HORIZONTAL|wx.SL_LABELS|wx.SL_AUTOTICKS, minValue=self.advanceMin, maxValue=self.advanceMax, )
-		self.advancePhotoMilliseconds.SetTickFreq( 100, 1 )
-		self.advancePhotoMilliseconds.SetBackgroundColour( wx.WHITE )
-		self.advancePhotoMilliseconds.Bind( wx.EVT_SCROLL, self.doAdvancePhotoMillisecondsScroll )
-		self.advancePhotoMillisecondsValue = intctrl.IntCtrl( self, style=wx.ALIGN_RIGHT, value=0, min=self.advanceMin, max=self.advanceMax, limited=True, allow_none=True, size=(30,-1) )
-		self.advancePhotoMillisecondsValue.Bind( intctrl.EVT_INT, self.doAdvancePhotoMillisecondsText )
-		hsDelay = wx.BoxSizer( wx.HORIZONTAL )
-		hsDelay.Add( self.advancePhotoMillisecondsLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
-		hsDelay.Add( self.advancePhotoMillisecondsValue, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=4 )
-		hsDelay.Add( self.advancePhotoMilliseconds, 1, flag=wx.EXPAND|wx.LEFT, border=4 )
-		
 		self.antennaReadDistance = numctrl.NumCtrl( self, integerWidth=3, fractionWidth=2, style=wx.ALIGN_RIGHT, min=-500, max=500, value=0, limited=True, limitOnFieldChange=True, size=(30,-1) )
 		self.antennaReadDistance.Bind( numctrl.EVT_NUM, self.doDistanceSpeedChanged )
 		self.finishKMH = numctrl.NumCtrl( self, integerWidth=3, fractionWidth=2, min=0.0, max=999.99, limited=True, limitOnFieldChange=True, value=50.0, size=(30,-1), style=wx.ALIGN_RIGHT )
@@ -333,8 +321,20 @@ class CameraProperties( wx.Panel ):
 		hsCalc.Add( self.finishKMH, flag=wx.LEFT, border=2 )
 		hsCalc.Add( wx.StaticText(self, label=u'km/h'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=2 )
 		
-		sboxSizer.Add( hsDelay, flag=wx.EXPAND )
-		sboxSizer.Add( hsCalc, flag=wx.EXPAND|wx.TOP, border=4 )
+		self.advancePhotoMillisecondsLabel = wx.StaticText( self, label=_('Milliseconds') )
+		self.advancePhotoMilliseconds = wx.Slider( self, style=wx.SL_HORIZONTAL|wx.SL_LABELS|wx.SL_AUTOTICKS, minValue=self.advanceMin, maxValue=self.advanceMax, )
+		self.advancePhotoMilliseconds.SetTickFreq( 100, 1 )
+		self.advancePhotoMilliseconds.SetBackgroundColour( wx.WHITE )
+		self.advancePhotoMilliseconds.Bind( wx.EVT_SCROLL, self.doAdvancePhotoMillisecondsScroll )
+		self.advancePhotoMillisecondsValue = intctrl.IntCtrl( self, style=wx.ALIGN_RIGHT, value=0, min=self.advanceMin, max=self.advanceMax, limited=True, allow_none=True, size=(30,-1) )
+		self.advancePhotoMillisecondsValue.Bind( intctrl.EVT_INT, self.doAdvancePhotoMillisecondsText )
+		hsDelay = wx.BoxSizer( wx.HORIZONTAL )
+		hsDelay.Add( self.advancePhotoMillisecondsLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
+		hsDelay.Add( self.advancePhotoMillisecondsValue, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=4 )
+		hsDelay.Add( self.advancePhotoMilliseconds, 1, flag=wx.EXPAND|wx.LEFT, border=4 )
+		
+		sboxSizer.Add( hsCalc, flag=wx.EXPAND )
+		sboxSizer.Add( hsDelay, flag=wx.EXPAND|wx.TOP, border=4 )
 		
 		ms = wx.BoxSizer( wx.VERTICAL )
 		

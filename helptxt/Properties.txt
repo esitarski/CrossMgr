@@ -168,9 +168,24 @@ Photos at Race Finish Only|This option tells CrossMgr to record photos one minut
 
 ### Photo Delay
 
-This sets a delay (in milliseconds) between when a photo is triggered (manual or RFID input) and when the camera is triggered.
+This sets a delay between when a photo is triggered (manual or RFID input) and when the camera is triggered.
 
-For example, if the reader is consistently picking up tags before the finish line, try setting the __Photo Delay__ to 150msec.  Experiment to find the right setting to capture the riders in frame.
+This is important when you are using __passive RFID tags__.  The reader will read the tags before the rider crosses the finish.  If the camera takes a photo when the tag is first read, the frame will be blank as the rider is not there yet.  Configuring a photo delay allows time for the rider to get in the frame.
+
+To set a reasonable delay, you need to estimate two pieces of data - the __RFID Read Distance before Finish Line__ and the __Finish Speed__.
+To figure this out, you need a helper:
+
+1. Start up CrossMgrImpinj (or CrossMgrAlien).  Make sure it is connected to the reader and working correctly.
+1. Take a spare tag, and stand on the finish line.  CrossMgrImpinj will show that the tag is constantly being read.
+1. Start walking the course in the opposite direction, away from the finish line.
+1. Ask the helper to tell you the moment the tag stops reading.
+1. At that point, make a mark on the course.
+1. Measure the distance between the mark and the finish with a tape measure.  This is the __RFID Read Distance before Finish Line__.  Enter it into CrossMgr.
+1. Enter a reasonable __Est. Finish Speed__ depending on the type of race (ask the riders if you need to).
+1. CrossMgr uses this information to calculate the photo delay in milliseconds.
+
+This can be approximate.  CrossMgr takes two photos, one before and one after, 25 milliseconds apart.  This tolerates some variation in the photo delay.
+If you notice that the photos are consistently early or late, adjust the milliseconds manually up or down by 10 milliseconds until you get the photos where you want them.
 
 ### Notes:
 
