@@ -5,6 +5,7 @@ import wx
 import re
 import os
 import wx.lib.intctrl as intctrl
+import wx.lib.masked.numctrl as numctrl
 import wx.lib.masked as masked
 import wx.lib.agw.flatnotebook as flatnotebook
 
@@ -291,6 +292,8 @@ class RfidProperties( wx.Panel ):
 #------------------------------------------------------------------------------------------------
 
 class CameraProperties( wx.Panel ):
+	advanceMin, advanceMax = -1500, 1500
+	
 	def __init__( self, parent, id=wx.ID_ANY ):
 		super(CameraProperties, self).__init__( parent, id )
 		
@@ -302,41 +305,75 @@ class CameraProperties( wx.Panel ):
 		self.radioBox = wx.RadioBox( self, label=_("USB Camera Options"), choices=choices, majorDimension=1, style=wx.RA_SPECIFY_COLS )
 		self.radioBox.SetBackgroundColour( wx.WHITE )
 		
-		advanceMin = -2000
-		advanceMax = 2000
-		self.advancePhotoMillisecondsLabel = wx.StaticText( self, label=_('Photo Delay (msec)') )
-		self.advancePhotoMilliseconds = wx.Slider( self, style=wx.SL_HORIZONTAL|wx.SL_LABELS|wx.SL_AUTOTICKS, minValue=advanceMin, maxValue=advanceMax, )
+		sbox = wx.StaticBox( self, label=_('Photo Delay Option') )
+		sboxSizer = wx.StaticBoxSizer( sbox, wx.VERTICAL )
+		
+		self.advancePhotoMillisecondsLabel = wx.StaticText( self, label=_('Milliseconds') )
+		self.advancePhotoMilliseconds = wx.Slider( self, style=wx.SL_HORIZONTAL|wx.SL_LABELS|wx.SL_AUTOTICKS, minValue=self.advanceMin, maxValue=self.advanceMax, )
 		self.advancePhotoMilliseconds.SetTickFreq( 100, 1 )
 		self.advancePhotoMilliseconds.SetBackgroundColour( wx.WHITE )
-		self.advancePhotoMilliseconds.Bind( wx.EVT_SCROLL, self.doAdvancePhotoMillisecondsSroll )
-		self.advancePhotoMillisecondsValue = intctrl.IntCtrl( self, style=wx.ALIGN_RIGHT, value=0, min=advanceMin, max=advanceMax, limited=True, allow_none=True, size=(60,-1) )
+		self.advancePhotoMilliseconds.Bind( wx.EVT_SCROLL, self.doAdvancePhotoMillisecondsScroll )
+		self.advancePhotoMillisecondsValue = intctrl.IntCtrl( self, style=wx.ALIGN_RIGHT, value=0, min=self.advanceMin, max=self.advanceMax, limited=True, allow_none=True, size=(60,-1) )
 		self.advancePhotoMillisecondsValue.Bind( intctrl.EVT_INT, self.doAdvancePhotoMillisecondsText )
-		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.advancePhotoMillisecondsLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
-		hs.Add( self.advancePhotoMillisecondsValue, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=4 )
-		hs.Add( self.advancePhotoMilliseconds, 1, flag=wx.EXPAND|wx.LEFT, border=4 )
+		hsDelay = wx.BoxSizer( wx.HORIZONTAL )
+		hsDelay.Add( self.advancePhotoMillisecondsLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
+		hsDelay.Add( self.advancePhotoMillisecondsValue, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=4 )
+		hsDelay.Add( self.advancePhotoMilliseconds, 1, flag=wx.EXPAND|wx.LEFT, border=4 )
+		
+		self.antennaReadDistanceLabel = wx.StaticText( self, label=_('RFID Read Distance before Finish Line (m)') )
+		self.antennaReadDistance = numctrl.NumCtrl( self, integerWidth=3, fractionWidth=2, style=wx.ALIGN_RIGHT, min=-500, max=500, value=0, limited=True, limitOnFieldChange=True, size=(30,-1) )
+		self.antennaReadDistance.Bind( numctrl.EVT_NUM, self.doDistanceSpeedChanged )
+		self.finishSpeedLabel = wx.StaticText( self, label=("Finish Speed (km/h)") )
+		self.finishSpeed = numctrl.NumCtrl( self, integerWidth=3, fractionWidth=2, min=0.0, max=999.99, limited=True, limitOnFieldChange=True, value=50.0, size=(30,-1), style=wx.ALIGN_RIGHT )
+		self.finishSpeed.Bind( numctrl.EVT_NUM, self.doDistanceSpeedChanged )
+
+		hsCalc = wx.BoxSizer( wx.HORIZONTAL )
+		hsCalc.Add( self.antennaReadDistanceLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_CENTRE_VERTICAL )
+		hsCalc.Add( self.antennaReadDistance, flag=wx.ALIGN_CENTRE_VERTICAL )
+		hsCalc.Add( self.finishSpeedLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=12 )
+		hsCalc.Add( self.finishSpeed, flag=wx.EXPAND|wx.LEFT )
+		
+		sboxSizer.Add( hsDelay, flag=wx.EXPAND )
+		sboxSizer.Add( hsCalc, flag=wx.EXPAND )
 		
 		ms = wx.BoxSizer( wx.VERTICAL )
 		
 		ms.Add( self.radioBox, flag=wx.ALL, border=16 )
-		ms.Add( hs, flag=wx.ALL|wx.EXPAND, border=16 )
+		ms.Add( sboxSizer, flag=wx.ALL|wx.EXPAND, border=16 )
 		
 		self.explanation = wx.StaticText( self, label=_('Requires CrossMgrCamera.  See help for details') )
 		ms.Add( self.explanation, flag=wx.ALL, border=16 )
 		
 		self.SetSizer( ms )
 	
+	def doDistanceSpeedChanged( self, event ):
+		distanceM = self.antennaReadDistance.GetValue() or 0.0
+		speedMS = (self.finishSpeed.GetValue() or 0.0) / (1000.0 / 3600.0)
+		timeS = (distanceM / speedMS) if speedMS != 0.0 else 0.0
+		timeMilliS = int(timeS * 1000)
+		timeMilliS = max( timeMilliS, self.advanceMin )
+		timeMilliS = min( timeMilliS, self.advanceMax )
+		self.advancePhotoMilliseconds.SetValue( timeMilliS )
+		self.advancePhotoMillisecondsValue.SetValue( timeMilliS )
+	
+	def updateRFIDDistance( self ):
+		timeS = (self.advancePhotoMilliseconds.GetValue() or 0) / (1000.0)
+		speedMS = (self.finishSpeed.GetValue() or 0.0) / (1000.0 / 3600.0)
+		self.antennaReadDistance.SetValue( timeS*speedMS )
+	
 	def doAdvancePhotoMillisecondsText( self, event ):
 		ctl = event.GetEventObject()
 		value = ctl.GetValue() or 0
 		if value != self.advancePhotoMilliseconds.GetValue():
 			self.advancePhotoMilliseconds.SetValue( value )
+			self.updateRFIDDistance()
 			wx.CallAfter( self.commit )
 	
-	def doAdvancePhotoMillisecondsSroll( self, event ):
+	def doAdvancePhotoMillisecondsScroll( self, event ):
 		value = self.advancePhotoMilliseconds.GetValue() or 0
 		if value != self.advancePhotoMillisecondsValue.GetValue():
 			self.advancePhotoMillisecondsValue.SetValue( value )
+			self.updateRFIDDistance()
 			wx.CallAfter( self.commit )
 	
 	def refresh( self ):
@@ -351,6 +388,7 @@ class CameraProperties( wx.Panel ):
 		if race:
 			self.advancePhotoMilliseconds.SetValue( race.advancePhotoMilliseconds or 0 )
 			self.advancePhotoMillisecondsValue.SetValue( race.advancePhotoMilliseconds or 0 )
+			self.updateRFIDDistance()
 		
 	def commit( self ):
 		race = Model.race
