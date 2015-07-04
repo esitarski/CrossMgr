@@ -181,11 +181,15 @@ To figure this out, you need a helper:
 1. Ask the helper to tell you the moment the tag stops reading.
 1. At that point, make a mark on the course.
 1. Measure the distance between the mark and the finish with a tape measure.  This is the __RFID Read Distance before Finish Line__.  Enter it into CrossMgr.
-1. Enter a reasonable __Est. Finish Speed__ depending on the type of race (ask the riders if you need to).
+1. Estimate a reasonable __Est. Finish Speed__ depending on the type of race.  Ask the riders what their finish speed is.
 1. CrossMgr uses this information to calculate the photo delay in milliseconds.
 
-This can be approximate.  CrossMgr takes two photos, one before and one after, 40 milliseconds apart.  This allows for +/-40 milliseconds variation in the photo delay.
-If you notice that the photos are consistently early or late, adjust the milliseconds manually up or down by 10 milliseconds until you get the photos where you want them.
+This can be approximate.  CrossMgr takes two photos, one before and one after, 40 milliseconds apart.  This allows for +/-40 milliseconds variation in the photo delay to get the rider in frame.
+
+If riders are consistently before, or after the finish line in the frame, this is easy to fix.
+
+For example, if the riders are 1 meter before the line, reduce __RFID Read Distance before Finish Line__ by one meter.
+If the riders are 1 meter after the line, increase __RFID Read Distance before Finish Line__ by one meter.
 
 ### Notes:
 
