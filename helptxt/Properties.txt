@@ -45,9 +45,22 @@ Show Course Animation|If set, the course animation (either the track or the GPX 
 License Link HTML Template|Text to be put in front of the License code in the HTML output to form a link to get more rider information.  For example, if you enter __http://www.usacycling.org/results/?compid=__, and a rider's License code is __12345__, a link will be generated in the HTML page by combining the two to form __http://www.usacycling.org/results/?compid=12345__.  Clicking on the rider's license code will then open the USAC rider information page for that rider.  CrossMgr has no idea whether the link will succeed - it just generates it.
 
 ## Notes
-Text that will appear in the HTML output.  Text entered here will be shown as-is in the HTML web page, including line breaks.  Describe weather conditions, or give credit to the CrossMgr operator and number caller.
+Text that will appear in the HTML output.  Text entered here will be shown as-is in the HTML web page, including line breaks.  Describe weather conditions, give credit to the CrossMgr operator and number caller, or make notes about race participants.
 
-You can also embed Html tags in notes.  To do so, your input must then start with `<html>` and end with `</html>`.  With Html tags, you can specify a hyperlink to a URL with `<a href="http://XXX">HyperLink</a>`, use a list with `<ol></ol>`, etc.  When using Html, you control your own line breaks: insert `<br/>` where you want a newline.
+For example:
+
+    Notes for {=EventName}:
+    
+    Warning to the following riders for incorrect number placement:
+    {=BibList 113, 117, 164}
+    
+    Special thanks to the following riders for helping out after the race:
+    {=BibList 142, 153, 163}
+
+This example uses "variables" which insert race information without having to retype it again.  Variables have the form "{=VariableName}" (no spaces around the "{", "=" or "}").
+"BibList" is a special variable that takes a list of bib numbers and expends them into a list (more on that later).
+
+You can also embed Html tags in notes to get nicer formatting or more powerful features, like hyperlinks.  To do so, your note must then start with `<html>` and end with `</html>`.  With Html tags, you can specify a hyperlink to a URL with `<a href="http://XXX">HyperLink</a>`, use a list with `<ol></ol>`, etc.  When using Html, you control your own line breaks: insert `<br/>` where you want a newline.
 
 For example:
 
@@ -59,7 +72,7 @@ For example:
     </p>
     </html>
 
-Notes can also contain variables that are automatically substituted from race values.  Variables have the form "{=VariableName}" (no spaces around the "{", "=" or "}").  For example:
+Notes get more powerful with html and variables.  For example:
 
     <html>
     <h2>{=EventName}</h2>
@@ -70,13 +83,20 @@ Notes can also contain variables that are automatically substituted from race va
     Start Time: <strong> {=StartTime} </strong> <br/>
     Start Method: <strong> {=StartMethod} </strong> <br/>
     </p>
+    <p>
+    Warning to the following riders for incorrect number placement:
+    {=BibList 113, 117, 164}
+    </p>
+    <p>
+    Special thanks to the following riders for helping out after the race:
+    {=BibList 142, 153, 163}
+    </p>
     </html>
 
-The "{=VariableName}" values will be substituted with the actual race values.
+Take notice of the "{=BibList 113, 117, 164}" variable.
+"BibList" takes a list of bib numbers and expands them into a list with the "Bib: Last Name, First Name, License, UCI Code, Team" fields from the spreadsheet.  The "Bib", "BibList" and "BibTable" variables  make it easy to add full information about riders (see below for more details).
 
-Variables can be conveniently inserted from the "Insert Variable..." button.
-
-Of course, variables can be used without the `<html>` option.
+Variables can be conveniently inserted from the "Insert Variable..." button.  This is also helpful if you forget a variable name.
 
 Variables are case sensitive, so be careful.  The supported variables are:
 
@@ -100,6 +120,9 @@ Variable|Value
 {=PhotoCount}|Number of photos taken during the race.  Will be zero if the usb camera is not enabled.
 {=ExcelLink}|The file and sheet name of the Excel sheet linked to this race.
 {=GPXFile}|The file name of the course in GPX format.
+{=Bib NNN}|Expand the bib number NNN to show rider information including "Bib: Last Name, First Name, License, UCI Code, Team".
+{=BibList AAA, BBB, CCC, DDD, ...}|Expand the comma-separator bib numbers into a list showing "Bib: Last Name, First Name, License, UCI Code, Team" in each line.
+{=BibTable AAA, BBB, CCC, DDD, ...}|Expand the comma-separator bib numbers into a table showing "Bib: Last Name, First Name, License, UCI Code, Team" in each row.
 
 ## RFID Options
 Property|Description

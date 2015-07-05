@@ -1350,13 +1350,16 @@ class MainWin( wx.Frame ):
 			payload['showCourseAnimation'] = race.showCourseAnimationInHtml
 			payload['licenseLinkTemplate'] = race.licenseLinkTemplate
 			
-			notes = TemplateSubstitute( getattr(race, 'notes', ''), race.getTemplateValues() )
+			notes = getattr(race, 'notes', u'')
 			if notes.lstrip()[:6].lower().startswith( '<html>' ):
+				notes = TemplateSubstitute( notes, race.getTemplateValues() )
 				notes = self.reRemoveTags.sub( '', notes )
 				notes = notes.replace('<', '{{').replace( '>', '}}' )
 				payload['raceNotes']	= notes
 			else:
-				payload['raceNotes']	= cgi.escape(notes).replace('\n','{{br/}}')
+				notes = TemplateSubstitute( cgi.escape(notes), race.getTemplateValues() )
+				notes = notes.replace('<', '{{').replace( '>', '}}' ).replace('\n','{{br/}}')
+				payload['raceNotes']	= notes
 			if race.startTime:
 				raceStartTime = (race.startTime - race.startTime.replace( hour=0, minute=0, second=0 )).total_seconds()
 				payload['raceStartTime']= raceStartTime

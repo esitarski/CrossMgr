@@ -14,7 +14,7 @@ from contextlib import contextmanager
 
 @contextmanager
 def tag( buf, name, attrs = {} ):
-	if isinstance(attrs, str) and attrs:
+	if not isinstance(attrs, dict) and attrs:
 		attrs = { 'class': attrs }
 	buf.write( '<%s>' % ' '.join(
 			[name] + ['%s="%s"' % (attr, value) for attr, value in attrs.iteritems()]

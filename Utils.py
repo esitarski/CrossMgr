@@ -170,6 +170,19 @@ if 'WXMAC' not in wx.Platform:
 		return Font( *args, **kwargs )
 	wx.Font = FontFontFace
 
+#---------------------------------------------------------------------------
+from contextlib import contextmanager
+
+@contextmanager
+def tag( buf, name, attrs = None ):
+	if not attrs:
+		attrs = {}
+	if not isinstance(attrs, dict):
+		attrs = { 'class': attrs }
+	buf.write( u'<{} {}>'.format( name, u' '.join( ['{}="{}"'.format(attr, value) for attr, value in attrs.iteritems()] ) ) )
+	yield
+	buf.write( '</{}>\n'.format(name) )
+
 #-----------------------------------------------------------------------
 # Now, get all the required modules required for the common functions.
 #

@@ -1,13 +1,17 @@
 import re
+from ReadSignOnSheet import BibInfo
 
 reVariable = re.compile( u'\{=[^}]+\}' )
 
 def TemplateSubstitute( s, keyValues ):
+	bibInfo = BibInfo()
+	
 	iLast = 0
 	components = []
 	for m in reVariable.finditer(s):
 		components.append( s[iLast:m.start()] )
-		components.append( keyValues.get(m.group()[2:-1], m.group() ) )
+		subkey = m.group()[2:-1]
+		components.append( bibInfo.getSubValue(subkey) or keyValues.get(subkey, m.group() ) )
 		iLast = m.end()
 	components.append( s[iLast:] )
 	return u''.join(components)

@@ -7,9 +7,12 @@ import wx.wizard as wiz
 import os
 import re
 import sys
+import cgi
 import copy
 import string
+from StringIO import StringIO
 import Utils
+from Utils import tag
 import Model
 from Excel import GetExcelReader
 from ReadCategoriesFromExcel import ReadCategoriesFromExcel
@@ -883,6 +886,76 @@ def SyncExcelLink( race ):
 	return HasExcelLink( race )
 
 #-----------------------------------------------------------------------------------------------------
+
+reSeparators = re.compile( '[,;:]+' )
+class BibInfo( object ):
+	AllFields = (
+		'LastName', 'FirstName',
+		'License',
+		'UCICode',
+		'Team',
+	)
+	def __init__( self ):
+		self.race = Model.race
+		excelLink = getattr(self.race, 'excelLink', None)
+		if excelLink:
+			self.externalInfo = excelLink.read()
+			self.fields = [f for f in self.AllFields if excelLink.hasField(f)]
+		else:
+			self.externalInfo = {}
+			self.fields = []
+		
+	def bibField( self, bib ):
+		try:
+			data = self.externalInfo.get( int(bib), {} )
+		except ValueError:
+			return unicode(bib)
+		values = [(u'<strong>{}</strong>' if 'Name' in f else u'{}').format(cgi.escape(unicode(data[f]))) for f in self.fields if data.get(f, None)]
+		return u'{}: {}'.format(bib, u', '.join(values))
+	
+	def bibList( self, bibs ):
+		html = StringIO()
+		with tag( html, 'ul', 'bibList' ):
+			for bib in bibs:
+				if not bib:
+					continue
+				with tag( html, 'li' ):
+					html.write( self.bibField(bib) )
+		return html.getvalue()
+	
+	def bibTable( self, bibs ):
+		GetTranslation = _
+		html = StringIO()
+		with tag( html, 'table', 'bibTable' ):
+			with tag( html, 'thead' ):
+				with tag( html, 'tr' ):
+					for f in ['Bib#'] + self.fields:
+						with tag( html, 'th' ):
+							html.write( GetTranslation(f) )
+			with tag( html, 'tbody' ):
+				for bib in bibs:
+					if not bib:
+						continue
+					with tag( html, 'tr' ):
+						try:
+							data = self.externalInfo.get( int(bib), {} )
+						except ValueError:
+							data = {}
+						with tag( html, 'td', {'style':"text-align:right"} ):
+							html.write( unicode(bib) )
+						for f in self.fields:
+							with tag( html, 'td' ):
+								html.write( cgi.escape(data.get(f,u'')) )
+		return html.getvalue()
+		
+	def getSubValue( self, subkey ):
+		if subkey.startswith('BibTable'):					# {=BibTable 132,110,98}
+			return self.bibTable( reSeparators.sub(u' ', subkey).split()[1:] )
+		elif subkey.startswith('BibList'):					# {=BibList 132,110,98}
+			return self.bibList( reSeparators.sub(u' ', subkey).split()[1:] )
+		elif subkey.startswith('Bib'):						# {=Bib 111}
+			return self.bibField( u' '.join(reSeparators.sub(u' ', subkey).split()[1:]) )
+		return None
 
 if __name__ == '__main__':
 	print( Utils.approximateMatch("Team", "Last Name") )

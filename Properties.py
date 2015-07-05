@@ -473,7 +473,7 @@ class NotesProperties( wx.Panel ):
 		if not hasattr(self, 'menu'):
 			self.menu = wx.Menu()
 			self.idVariable = {}
-			for v in sorted(race.getTemplateValues().keys()):
+			for v in sorted(race.getTemplateValues().keys() + ['Bib ', 'BibList ', 'BibTable ']):
 				idCur = wx.NewId()
 				v = u'{=' + v + u'}'
 				self.idVariable[idCur] = v
