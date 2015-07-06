@@ -195,6 +195,15 @@ def ShowTipAtStartup():
 def replaceJsonVar( s, varName, value ):
 	return s.replace( u'%s = null' % varName, u'%s = %s' % (varName, json.dumps(value)), 1 )
 
+# Code on web page required by Google Analytics.
+gaSnippet = u'''<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ga('create', '{GATID}', 'auto'); ga('send', 'pageview');
+</script>'''
+
 #----------------------------------------------------------------------------------
 def AppendMenuItemBitmap( menu, id, name, help, bitmap ):
 	mi = wx.MenuItem( menu, id, name, help )
@@ -1333,6 +1342,8 @@ class MainWin( wx.Frame ):
 			raceTime = datetime.datetime( year, month, day, hour, minute, second )
 			title = u'{} - {} {} {}'.format( race.name, _('Starting'), raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
 			html = html.replace( u'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
+			if getattr(race, 'gaTrackingID', None):
+				html = html.replace( u'<!-- Google Analytics -->', gaSnippet.replace('{GATID}', race.gaTrackingID) )
 			
 			payload['organizer']		= getattr(race, 'organizer', '')
 			payload['reverseDirection']	= getattr(race, 'reverseDirection', False)

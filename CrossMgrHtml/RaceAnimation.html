@@ -151,6 +151,7 @@ table.results td#idNonNumeric, table.results th#idNonNumeric {
 @media print { .noprint { display: none; } }
 
 </style>
+<!-- Google Analytics -->
 </head>
 
 <script type="text/javascript">
@@ -305,6 +306,22 @@ function isEmptyObject( obj ) {
     return true;
 }
 
+// Set the name of the hidden property and the change event for visibility
+var hidden, visibilityChange; 
+if (typeof document.hidden !== "undefined") { // Opera 12.10 and Firefox 18 and later support 
+  hidden = "hidden";
+  visibilityChange = "visibilitychange";
+} else if (typeof document.mozHidden !== "undefined") {
+  hidden = "mozHidden";
+  visibilityChange = "mozvisibilitychange";
+} else if (typeof document.msHidden !== "undefined") {
+  hidden = "msHidden";
+  visibilityChange = "msvisibilitychange";
+} else if (typeof document.webkitHidden !== "undefined") {
+  hidden = "webkitHidden";
+  visibilityChange = "webkitvisibilitychange";
+}
+ 
 //------------------------------------------------------------------------------------
 var translations = {
 	'languageCode':	['en',				'fr',					'es'],
@@ -1050,7 +1067,7 @@ function TrackAnimation()
 
 	this.Refresh = function()
 	{
-		if( !canvas || !canvasSupported )
+		if( !canvas || !canvasSupported || document[hidden] )
 			return;
 
 		// Redraw the canvas at this time.
@@ -1779,7 +1796,7 @@ function GeoAnimation()
 
 	this.Refresh = function()
 	{
-		if( !canvas || !canvasSupported )
+		if( !canvas || !canvasSupported || document[hidden] )
 			return;
 
 		var dc = canvas.getContext('2d');

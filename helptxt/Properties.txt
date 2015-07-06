@@ -124,6 +124,15 @@ Variable|Value
 {=BibList AAA, BBB, CCC, DDD, ...}|Expand the comma-separator bib numbers into a list showing "Bib: Last Name, First Name, License, UCI Code, Team" in each line.
 {=BibTable AAA, BBB, CCC, DDD, ...}|Expand the comma-separator bib numbers into a table showing "Bib: Last Name, First Name, License, UCI Code, Team" in each row.
 
+### Google Analytics Tracking ID
+
+If you have a __Google Analytics Tracking ID__, enter it here to track access to the race results web page.
+
+CrossMgr will insert all the proper Javascript on the html page with your __Google Analytics Tracking ID__.
+You can then track access to the page from your Google Analytics account.
+
+For more information about Google Analytics, including how to create an account and get your Tracking ID, see [here](http://www.google.com/analytics).
+
 ## RFID Options
 Property|Description
 :-------|:----------

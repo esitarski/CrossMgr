@@ -457,13 +457,20 @@ class NotesProperties( wx.Panel ):
 		self.notes = wx.TextCtrl( self, style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB, size=(-1,60) )
 		self.insertButton = wx.Button( self, label=_('Insert Variable...') )
 		self.insertButton.Bind( wx.EVT_BUTTON, self.onInsertClick )
+		self.gaTrackingIDLabel = wx.StaticText( self, label=u'{}:'.format(_('Google Analytics Tracking ID (of the form UA-XXXX-Y)')) )
+		self.gaTrackingID = wx.TextCtrl( self, size=(60,-1) )
 
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.notesLabel )
 		hs.AddStretchSpacer()
 		hs.Add( self.insertButton )
-		ms.Add( hs, flag=wx.TOP|wx.LEFT|wx.RIGHT|wx.EXPAND, border=16 )
-		ms.Add( self.notes, 1, flag=wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.EXPAND, border=16 )
+		ms.Add( hs, flag=wx.TOP|wx.LEFT|wx.RIGHT|wx.EXPAND, border=12 )
+		ms.Add( self.notes, 1, flag=wx.TOP|wx.LEFT|wx.RIGHT|wx.EXPAND, border=12 )
+		
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( self.gaTrackingIDLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
+		hs.Add( self.gaTrackingID, 1, flag=wx.EXPAND|wx.LEFT, border=8 )
+		ms.Add( hs, flag=wx.ALL|wx.EXPAND, border=12 )
 
 	def onInsertClick( self, event ):
 		race = Model.race
@@ -492,10 +499,12 @@ class NotesProperties( wx.Panel ):
 	def refresh( self ):
 		race = Model.race
 		self.notes.SetValue( getattr(race, 'notes', '') )
+		self.gaTrackingID.SetValue( getattr(race, 'gaTrackingID', '') )
 		
 	def commit( self ):
 		race = Model.race
 		race.notes = self.notes.GetValue()
+		race.gaTrackingID = re.sub( u'[^A-Z0-9]+', u'-', self.gaTrackingID.GetValue().strip().upper() )
 
 #------------------------------------------------------------------------------------------------
 class FilesProperties( wx.Panel ):
