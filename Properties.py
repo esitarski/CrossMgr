@@ -227,6 +227,10 @@ class RaceOptionsProperties( wx.Panel ):
 		self.showDetails.SetValue( not race.hideDetails )
 		self.showCourseAnimationInHtml.SetValue( race.showCourseAnimationInHtml )
 		self.licenseLinkTemplate.SetValue( race.licenseLinkTemplate )
+		
+	@property
+	def distanceUnitValue( self ):
+		return self.distanceUnit.GetSelection()
 	
 	def commit( self ):
 		race = Model.race
@@ -310,16 +314,18 @@ class CameraProperties( wx.Panel ):
 		
 		self.antennaReadDistance = numctrl.NumCtrl( self, integerWidth=3, fractionWidth=2, style=wx.ALIGN_RIGHT, min=-500, max=500, value=0, limited=True, limitOnFieldChange=True, size=(60,-1) )
 		self.antennaReadDistance.Bind( numctrl.EVT_NUM, self.doDistanceSpeedChanged )
+		self.antennaReadDistanceUnit = wx.StaticText(self, label=u'm')
 		self.finishKMH = numctrl.NumCtrl( self, integerWidth=3, fractionWidth=2, min=0.0, max=999.99, limited=True, limitOnFieldChange=True, value=50.0, size=(30,-1), style=wx.ALIGN_RIGHT )
 		self.finishKMH.Bind( numctrl.EVT_NUM, self.doDistanceSpeedChanged )
+		self.finishSpeedUnit = wx.StaticText(self, label=u'km/h')
 
 		hsCalc = wx.BoxSizer( wx.HORIZONTAL )
 		hsCalc.Add( wx.StaticText(self, label=_('RFID Read Distance before Finish Line')), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_CENTRE_VERTICAL )
 		hsCalc.Add( self.antennaReadDistance, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=2 )
-		hsCalc.Add( wx.StaticText(self, label=u'm'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=2 )
+		hsCalc.Add( self.antennaReadDistanceUnit, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=2 )
 		hsCalc.Add( wx.StaticText(self, label=("Finish Speed")), flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=12 )
 		hsCalc.Add( self.finishKMH, flag=wx.LEFT, border=2 )
-		hsCalc.Add( wx.StaticText(self, label=u'km/h'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=2 )
+		hsCalc.Add( self.finishSpeedUnit, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=2 )
 		
 		self.advancePhotoMillisecondsLabel = wx.StaticText( self, label=_('Milliseconds') )
 		self.advancePhotoMilliseconds = wx.Slider( self, style=wx.SL_HORIZONTAL|wx.SL_LABELS|wx.SL_AUTOTICKS, minValue=self.advanceMin, maxValue=self.advanceMax, )
@@ -345,12 +351,32 @@ class CameraProperties( wx.Panel ):
 		ms.Add( self.explanation, flag=wx.ALL, border=16 )
 		
 		self.SetSizer( ms )
+
+	@property
+	def distanceUnitValue( self ):
+		return self.GetParent().GetParent().raceOptionsProperties.distanceUnitValue
+	
+	@property
+	def antennaReadDistanceValue( self ):
+		return (self.antennaReadDistance.GetValue() or 0.0) / [1.0, 3.2808399][self.distanceUnitValue]
+	
+	@antennaReadDistanceValue.setter
+	def antennaReadDistanceValue( self, meters ):
+		self.antennaReadDistance.SetValue( meters * [1.0, 3.2808399][self.distanceUnitValue] )
+		
+	@property
+	def finishKMHValue( self ):
+		return (self.finishKMH.GetValue() or 0.0) / [1.0, 0.62137119][self.distanceUnitValue]
+	
+	@finishKMHValue.setter
+	def finishKMHValue( self, kmh ):
+		self.finishKMH.SetValue( kmh * [1.0, 0.62137119][self.distanceUnitValue] )
 		
 	def getSpeedMS( self ):
-		return (self.finishKMH.GetValue() or 0.0) / 3.6
+		return self.finishKMHValue / 3.6
 	
 	def doDistanceSpeedChanged( self, event ):
-		distanceM = self.antennaReadDistance.GetValue() or 0.0
+		distanceM = self.antennaReadDistanceValue
 		speedMS = self.getSpeedMS()
 		timeS = (distanceM / speedMS) if speedMS != 0.0 else 0.0
 		timeMilliS = int(timeS * 1000)
@@ -362,7 +388,7 @@ class CameraProperties( wx.Panel ):
 	def updateRFIDDistance( self ):
 		timeS = (self.advancePhotoMilliseconds.GetValue() or 0) / 1000.0
 		speedMS = self.getSpeedMS()
-		self.antennaReadDistance.SetValue( timeS*speedMS )
+		self.antennaReadDistanceValue = timeS*speedMS
 	
 	def doAdvancePhotoMillisecondsText( self, event ):
 		ctl = event.GetEventObject()
@@ -389,10 +415,14 @@ class CameraProperties( wx.Panel ):
 			else:
 				self.radioBox.SetSelection( 2 )
 		if race:
+			self.finishSpeedUnit.SetLabel( ['km/h', 'mph'][self.distanceUnitValue] )
+			self.antennaReadDistanceUnit.SetLabel( ['m', 'ft'][self.distanceUnitValue] )
 			self.advancePhotoMilliseconds.SetValue( race.advancePhotoMilliseconds or 0 )
 			self.advancePhotoMillisecondsValue.SetValue( race.advancePhotoMilliseconds or 0 )
-			self.finishKMH.SetValue( race.finishKMH )
+			self.finishKMHValue = race.finishKMH or 0.0
 			self.updateRFIDDistance()
+			
+		self.GetSizer().Layout()
 		
 	def commit( self ):
 		race = Model.race
@@ -400,7 +430,7 @@ class CameraProperties( wx.Panel ):
 			return
 		
 		race.advancePhotoMilliseconds = self.advancePhotoMilliseconds.GetValue() or 0
-		race.finishKMH = self.finishKMH.GetValue() or 0.0
+		race.finishKMH = self.finishKMHValue
 		race.enableUSBCamera = False
 		race.photosAtRaceEndOnly = False
 		
@@ -623,6 +653,12 @@ class Properties( wx.Panel ):
 			notebook.GetPage( event.GetSelection() ).refresh()
 			self.updateFileName()
 		'''
+		if hasattr(self, 'cameraProperties'):
+			notebook = event.GetEventObject()
+			if notebook.GetPage(event.GetOldSelection()) == self.cameraProperties:
+				self.cameraProperties.commit()
+			if notebook.GetPage(event.GetSelection()) == self.cameraProperties:
+				self.cameraProperties.refresh()
 		event.Skip()	# Required to properly repaint the screen.
 	
 	def excelButtonCallback( self, event ):
