@@ -894,30 +894,37 @@ class BibInfo( object ):
 		'License',
 		'UCICode',
 		'Team',
+		'Wave',
 	)
 	def __init__( self ):
 		self.race = Model.race
 		excelLink = getattr(self.race, 'excelLink', None)
 		if excelLink:
 			self.externalInfo = excelLink.read()
-			self.fields = ['Name'] + [f for f in self.AllFields if excelLink.hasField(f)]
+			self.fields = ['Name'] + [f for f in self.AllFields if excelLink.hasField(f)] + ['Wave']
 		else:
 			self.externalInfo = {}
 			self.fields = []
 			
 	def getData( self, bib ):
+		bib = int(bib)
 		try:
-			data = self.externalInfo.get( int(bib), {} ).copy()
+			data = self.externalInfo.get( bib, {} )
 		except ValueError:
 			data = {}
+		data = { k:unicode(v) for k, v in data.iteritems() }
 		data['Name'] = u', '.join( v for v in (data.get('LastName',None), data.get('FirstName', None)) if v )
+		
+		category = self.race.getCategory( bib )
+		data['Wave'] = category.name if category else u''
+		print( data )
 		return data
 		
 	def bibField( self, bib ):
 		data = self.getData( bib)
 		if not data:
 			return unicode(bib)
-		values = [(u'<strong>{}</strong>' if 'Name' in f else u'{}').format(cgi.escape(unicode(data[f]))) for f in self.fields if data.get(f, None)]
+		values = [(u'<strong>{}</strong>' if 'Name' in f else u'{}').format(cgi.escape(data[f])) for f in self.fields if data.get(f, None)]
 		return u'{}: {}'.format(bib, u', '.join(values))
 	
 	def bibList( self, bibs ):
@@ -949,7 +956,7 @@ class BibInfo( object ):
 							html.write( unicode(bib) )
 						for f in self.fields:
 							with tag( html, 'td', {'style':"text-align:left"}):
-								html.write( cgi.escape(unicode(data.get(f,u''))) )
+								html.write( cgi.escape(data.get(f,u'')) )
 		return html.getvalue()
 		
 	def getSubValue( self, subkey ):
