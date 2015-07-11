@@ -1330,7 +1330,8 @@ class MainWin( wx.Frame ):
 		html = self.reComments.sub( '', html )
 		html = self.reBlankLines.sub( '\n', html )
 		return html
-		
+	
+	reTagTrainingSpaces = re.compile( '>\s+', re.MULTILINE|re.UNICODE )
 	def addResultsToHtmlStr( self, html ):
 		html = self.cleanHtml( html )
 	
@@ -1375,6 +1376,7 @@ class MainWin( wx.Frame ):
 				payload['raceNotes']	= notes
 			else:
 				notes = TemplateSubstitute( cgi.escape(notes), race.getTemplateValues() )
+				notes = self.reTagTrainingSpaces.sub( u'>', notes ).replace( '</table>', '</table><br/>' )
 				notes = notes.replace('<', '{{').replace( '>', '}}' ).replace('\n','{{br/}}')
 				payload['raceNotes']	= notes
 			if race.startTime:

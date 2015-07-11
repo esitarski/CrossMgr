@@ -890,7 +890,7 @@ def SyncExcelLink( race ):
 reSeparators = re.compile( '[,;:]+' )
 class BibInfo( object ):
 	AllFields = (
-		'LastName', 'FirstName',
+		'Name',
 		'License',
 		'UCICode',
 		'Team',
@@ -900,15 +900,22 @@ class BibInfo( object ):
 		excelLink = getattr(self.race, 'excelLink', None)
 		if excelLink:
 			self.externalInfo = excelLink.read()
-			self.fields = [f for f in self.AllFields if excelLink.hasField(f)]
+			self.fields = ['Name'] + [f for f in self.AllFields if excelLink.hasField(f)]
 		else:
 			self.externalInfo = {}
 			self.fields = []
+			
+	def getData( self, bib ):
+		try:
+			data = self.externalInfo.get( int(bib), {} ).copy()
+		except ValueError:
+			data = {}
+		data['Name'] = u', '.join( v for v in (data.get('LastName',None), data.get('FirstName', None)) if v )
+		return data
 		
 	def bibField( self, bib ):
-		try:
-			data = self.externalInfo.get( int(bib), {} )
-		except ValueError:
+		data = self.getData( bib)
+		if not data:
 			return unicode(bib)
 		values = [(u'<strong>{}</strong>' if 'Name' in f else u'{}').format(cgi.escape(unicode(data[f]))) for f in self.fields if data.get(f, None)]
 		return u'{}: {}'.format(bib, u', '.join(values))
@@ -930,22 +937,19 @@ class BibInfo( object ):
 			with tag( html, 'thead' ):
 				with tag( html, 'tr' ):
 					for f in ['Bib#'] + self.fields:
-						with tag( html, 'th' ):
+						with tag( html, 'th', {'style':"text-align:left"} if 'Bib' in f else {'style':"text-align:left"} ):
 							html.write( GetTranslation(f) )
 			with tag( html, 'tbody' ):
 				for bib in bibs:
 					if not bib:
 						continue
 					with tag( html, 'tr' ):
-						try:
-							data = self.externalInfo.get( int(bib), {} )
-						except ValueError:
-							data = {}
+						data = self.getData( bib )
 						with tag( html, 'td', {'style':"text-align:right"} ):
 							html.write( unicode(bib) )
 						for f in self.fields:
-							with tag( html, 'td' ):
-								html.write( cgi.escape(data.get(f,u'')) )
+							with tag( html, 'td', {'style':"text-align:left"}):
+								html.write( cgi.escape(unicode(data.get(f,u''))) )
 		return html.getvalue()
 		
 	def getSubValue( self, subkey ):

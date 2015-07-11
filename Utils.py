@@ -179,7 +179,10 @@ def tag( buf, name, attrs = None ):
 		attrs = {}
 	if not isinstance(attrs, dict):
 		attrs = { 'class': attrs }
-	buf.write( u'<{} {}>'.format( name, u' '.join( ['{}="{}"'.format(attr, value) for attr, value in attrs.iteritems()] ) ) )
+	if attrs:
+		buf.write( u'<{} {}>'.format(name, u' '.join(['{}="{}"'.format(attr, value) for attr, value in attrs.iteritems()])) )
+	else:
+		buf.write( u'<{}>'.format(name) )
 	yield
 	buf.write( '</{}>\n'.format(name) )
 
