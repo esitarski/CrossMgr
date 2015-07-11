@@ -31,6 +31,8 @@ def ReadPropertiesFromExcel( reader ):
 		('FTP Password',	'ftpPassword',		's'),
 		('FTP Path',		'ftpPath',			's'),
 		('FTP Upload During Race',	'ftpUploadDuringRace',	'b'),
+		
+		('GATrackingID',	'gaTrackingID',		's'),
 	)
 
 	AttributeFromHeader = { h: a for h, a, t in HeadersFields }
