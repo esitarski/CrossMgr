@@ -909,18 +909,18 @@ class BibInfo( object ):
 	def getData( self, bib ):
 		bib = int(bib)
 		try:
-			data = self.externalInfo.get( bib, {} )
+			data = { k:unicode(v) for k, v in self.externalInfo.get(bib, {}).iteritems() }
 		except ValueError:
 			data = {}
-		data = { k:unicode(v) for k, v in data.iteritems() }
-		data['Name'] = u', '.join( v for v in (data.get('LastName',None), data.get('FirstName', None)) if v )
+		
+		data['Name'] = u', '.join( v for v in (data.get('LastName',None), data.get('FirstName',None)) if v )
 		
 		category = self.race.getCategory( bib )
 		data['Wave'] = category.name if category else u''
 		return data
 		
 	def bibField( self, bib ):
-		data = self.getData( bib)
+		data = self.getData( bib )
 		if not data:
 			return unicode(bib)
 		values = [(u'<strong>{}</strong>' if 'Name' in f else u'{}').format(cgi.escape(data[f])) for f in self.fields if data.get(f, None)]
