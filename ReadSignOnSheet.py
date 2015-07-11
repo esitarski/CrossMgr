@@ -917,7 +917,6 @@ class BibInfo( object ):
 		
 		category = self.race.getCategory( bib )
 		data['Wave'] = category.name if category else u''
-		print( data )
 		return data
 		
 	def bibField( self, bib ):
