@@ -45,6 +45,9 @@ Show Lap Notes, Edits and Projected Times in HTML Output|If set, the internal la
 Show Course Animation|If set, the course animation (either the track or the GPX course) will be shown in the HTML output.
 License Link HTML Template|Text to be put in front of the License code in the HTML output to form a link to get more rider information.  For example, if you enter __http://www.usacycling.org/results/?compid=__, and a rider's License code is __12345__, a link will be generated in the HTML page by combining the two to form __http://www.usacycling.org/results/?compid=12345__.  Clicking on the rider's license code will then open the USAC rider information page for that rider.  CrossMgr has no idea whether the link will succeed - it just generates it.
 
+### Suggestions
+Select __Road Race Finish Times__ only after you are satisfied with the results.  It can be confusing to see close finishing riders with the same times and gaps.
+
 ## Notes
 Text that will appear in the HTML output.  Text entered here will be shown as-is in the HTML web page, including line breaks.  Describe weather conditions, give credit to the CrossMgr operator and number caller, or make notes about race participants.
 
