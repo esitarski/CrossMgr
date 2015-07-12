@@ -413,7 +413,7 @@ def GetResultsCore( category ):
 								iTime -= 1
 					rr.roadRaceLastTime = groupFinishTimes[iTime]
 					rr.roadRaceGapValue = rr.roadRaceLastTime - leader.roadRaceLastTime
-					rr.roadRaceGap = Utils.formatTimeGap( rr.roadRaceLastTime - leader.roadRaceLastTime, False )
+					rr.roadRaceGap = Utils.formatTimeGap( rr.roadRaceGapValue, False )
 					lastFullLapsTime = rr.roadRaceLastTime + 60.0
 				else:
 					# Compute a projected finish time.  Try to skip the first lap in the calculation.
@@ -427,8 +427,7 @@ def GetResultsCore( category ):
 					else:
 						rr.roadRaceLastTime = rr.projectedTime = 5 * 24.0 * 60.0 * 60.0
 					rr.roadRaceGapValue = rr.roadRaceLastTime - leader.roadRaceLastTime
-					rr.roadRaceGap = Utils.formatTimeGap( rr.roadRaceLastTime - leader.roadRaceLastTime, False ) if rr != leader else ''
-				print pos, rr.lastTime, rr.roadRaceLastTime, rr.gap, rr.roadRaceGap
+					rr.roadRaceGap = Utils.formatTimeGap( rr.roadRaceGapValue, False ) if rr != leader else ''
 		
 		if isTimeTrial:
 			for rr in riderResults:
