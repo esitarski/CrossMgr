@@ -164,6 +164,7 @@ class RaceOptionsProperties( wx.Panel ):
 		self.autocorrectLapsDefault.SetValue( True )
 
 		self.highPrecisionTimes = wx.CheckBox( self, label=_('Show Times to 100s of a Second') )
+		self.roadRaceFinishTimes = wx.CheckBox( self, label=_('Road Race Finish Times (ignore decimals, groups get same time)') )
 		
 		self.rule80MinLapCountLabel = wx.StaticText( self, label=_("Lap Time for 80% Rule: ") )
 		self.rule80MinLapCount1 = wx.RadioButton( self, label=_("1st Lap Time"), style=wx.RB_GROUP )
@@ -203,6 +204,7 @@ class RaceOptionsProperties( wx.Panel ):
 			(blank(),				0, labelAlign),		(self.allCategoriesFinishAfterFastestRidersLastLap,	1, fieldAlign),
 			(blank(),				0, labelAlign),		(self.autocorrectLapsDefault,	1, fieldAlign),
 			(blank(),				0, labelAlign),		(self.highPrecisionTimes,		1, fieldAlign),
+			(blank(),				0, labelAlign),		(self.roadRaceFinishTimes,		1, fieldAlign),
 			(self.rule80MinLapCountLabel, 0, labelAlign),(self.rule80MinLapCountSizer,	1, fieldAlign),
 			(self.distanceUnitLabel,0, labelAlign),		(self.distanceUnitSizer,		1, fieldAlign),
 			(blank(),				0, labelAlign),		(self.showDetails,				1, fieldAlign),
@@ -219,6 +221,7 @@ class RaceOptionsProperties( wx.Panel ):
 		self.allCategoriesFinishAfterFastestRidersLastLap.SetValue( getattr(race, 'allCategoriesFinishAfterFastestRidersLastLap', False) )
 		self.autocorrectLapsDefault.SetValue( getattr(race, 'autocorrectLapsDefault', True) )
 		self.highPrecisionTimes.SetValue( getattr(race, 'highPrecisionTimes', False) )
+		self.roadRaceFinishTimes.SetValue( getattr(race, 'roadRaceFinishTimes', False) )
 		if race.rule80MinLapCount == 1:
 			self.rule80MinLapCount1.SetValue( True )
 		else:
@@ -238,6 +241,7 @@ class RaceOptionsProperties( wx.Panel ):
 		race.allCategoriesFinishAfterFastestRidersLastLap = self.allCategoriesFinishAfterFastestRidersLastLap.IsChecked()
 		race.autocorrectLapsDefault = self.autocorrectLapsDefault.IsChecked()
 		race.highPrecisionTimes = self.highPrecisionTimes.IsChecked()
+		race.roadRaceFinishTimes = self.roadRaceFinishTimes.IsChecked()
 		race.rule80MinLapCount = (1 if self.rule80MinLapCount1.GetValue() else 2)
 		race.distanceUnit = self.distanceUnit.GetSelection()
 		race.hideDetails = not self.showDetails.IsChecked()

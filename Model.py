@@ -916,8 +916,8 @@ class Race( object ):
 	automaticManual = 0
 	
 	isChangedFlag = False
-	
 	isTimeTrial = False
+	roadRaceFinishTimes = False
 	
 	enableJChipIntegration = False
 	resetStartClockOnFirstTag = False

@@ -140,7 +140,8 @@ def GetResultsCore( category ):
 		if not race:
 			return tuple()
 		
-		isTimeTrial = getattr( race, 'isTimeTrial', False )
+		isTimeTrial = race.isTimeTrial
+		roadRaceFinishTimes = race.roadRaceFinishTimes
 		allCategoriesFinishAfterFastestRidersLastLap = race.allCategoriesFinishAfterFastestRidersLastLap
 		raceStartSeconds = (
 			race.startTime.hour*60.0*60.0 + race.startTime.minute*60.0 + race.startTime.second + race.startTime.microsecond / 1000000.0 if race.startTime
@@ -391,38 +392,42 @@ def GetResultsCore( category ):
 			elif rr != leader and not (isTimeTrial and rr.lastTime == leader.lastTime):
 				rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
 				rr.gapValue = rr.lastTime - leader.lastTime
-				
-		# Add stage race times and gaps.
-		iTime = 0
-		lastFullLapsTime = 60.0
-		for pos, rr in enumerate(riderResults):
-			rr.projectedTime = rr.lastTime
-			if rr.status != Finisher or not rr.raceTimes:
-				rr.stageRaceTime = floor(rr.lastTime)
-				rr.stageRaceGap = rr.gap
-			elif rr.laps == leader.laps:
-				if not (groupFinishTimes[iTime] <= rr.lastTime < groupFinishTimes[iTime+1]):
-					iTime += 1
+		
+		# Compute road race times and gaps.
+		if roadRaceFinishTimes and not isTimeTrial:
+			iTime = 0
+			lastFullLapsTime = 60.0
+			for pos, rr in enumerate(riderResults):
+				rr.projectedTime = rr.lastTime
+				if rr.status != Finisher or not rr.raceTimes:
+					rr.roadRaceLastTime = floor(rr.lastTime)
+					rr.roadRaceGap = rr.gap.split(u'.')[0]
+					rr.roadRaceGapValue = 0
+				elif rr.laps == leader.laps:
 					if not (groupFinishTimes[iTime] <= rr.lastTime < groupFinishTimes[iTime+1]):
-						iTime = bisect_left( groupFinishTimes, rr.lastTime, 0, len(groupFinishTimes) - 1 )
-						if groupFinishTimes[iTime] > rr.lastTime:
-							iTime -= 1
-				rr.stageRaceTime = groupFinishTimes[iTime]
-				rr.stageRaceGap = Utils.formatTimeGap( rr.stageRaceTime - leader.stageRaceTime, False )
-				lastFullLapsTime = rr.stageRaceTime + 60.0
-			else:
-				# Compute a projected finish time.  Try to skip the first lap in the calculation.
-				if len(rr.raceTimes) > 1:
-					lapStart = min( len(rr.raceTimes), 1 if len(rr.raceTimes) > 2 else 0 )
-					raceTime = rr.raceTimes[rr.laps] - rr.raceTimes[lapStart]
-					aveLapTime = raceTime / (float(rr.laps - lapStart) if rr.laps - lapStart > 0 else 0.000001)
-					lapsDown = leader.laps - rr.laps
-					rr.projectedTime = rr.raceTimes[-1] + lapsDown * aveLapTime
-					rr.stageRaceTime = max( lastFullLapsTime, floor(rr.projectedTime) )
-					rr.stageRaceGap = Utils.formatTimeGap( rr.stageRaceTime - leader.stageRaceTime, False ) if rr != leader else ''
+						iTime += 1
+						if not (groupFinishTimes[iTime] <= rr.lastTime < groupFinishTimes[iTime+1]):
+							iTime = bisect_left( groupFinishTimes, rr.lastTime, 0, len(groupFinishTimes) - 1 )
+							if groupFinishTimes[iTime] > rr.lastTime:
+								iTime -= 1
+					rr.roadRaceLastTime = groupFinishTimes[iTime]
+					rr.roadRaceGapValue = rr.roadRaceLastTime - leader.roadRaceLastTime
+					rr.roadRaceGap = Utils.formatTimeGap( rr.roadRaceLastTime - leader.roadRaceLastTime, False )
+					lastFullLapsTime = rr.roadRaceLastTime + 60.0
 				else:
-					rr.stageRaceTime = rr.projectedTime = 5 * 24.0 * 60.0 * 60.0
-				rr.stageRaceGap = Utils.formatTimeGap( rr.stageRaceTime - leader.stageRaceTime, False ) if rr != leader else ''
+					# Compute a projected finish time.  Try to skip the first lap in the calculation.
+					if len(rr.raceTimes) > 1:
+						lapStart = min( len(rr.raceTimes), 1 if len(rr.raceTimes) > 2 else 0 )
+						raceTime = rr.raceTimes[rr.laps] - rr.raceTimes[lapStart]
+						aveLapTime = raceTime / (float(rr.laps - lapStart) if rr.laps - lapStart > 0 else 0.000001)
+						lapsDown = leader.laps - rr.laps
+						rr.projectedTime = rr.raceTimes[-1] + lapsDown * aveLapTime
+						rr.roadRaceLastTime = max( lastFullLapsTime, floor(rr.projectedTime) )
+					else:
+						rr.roadRaceLastTime = rr.projectedTime = 5 * 24.0 * 60.0 * 60.0
+					rr.roadRaceGapValue = rr.roadRaceLastTime - leader.roadRaceLastTime
+					rr.roadRaceGap = Utils.formatTimeGap( rr.roadRaceLastTime - leader.roadRaceLastTime, False ) if rr != leader else ''
+				print pos, rr.lastTime, rr.roadRaceLastTime, rr.gap, rr.roadRaceGap
 		
 		if isTimeTrial:
 			for rr in riderResults:
@@ -430,13 +435,21 @@ def GetResultsCore( category ):
 				if rider.status == Finisher and hasattr(rider, 'ttPenalty'):
 					rr.ttPenalty = getattr(rider, 'ttPenalty')
 					rr.ttNote = getattr(rider, 'ttNote', u'')
+		elif roadRaceFinishTimes:
+			for rr in riderResults:
+				rr.lastTime = rr.lastTimeOrig = rr.roadRaceLastTime
+				rr.gap = rr.roadRaceGap
+				rr.gapValue = rr.roadRaceGapValue
+				del rr.roadRaceLastTime
+				del rr.roadRaceGap
+				del rr.roadRaceGapValue
 		
 		FixRelegations( riderResults )
 		
 		'''
 		for rr in riderResults:
-			rr.lastTime = rr.stageRaceTime
-			rr.gap = rr.stageRaceGap
+			rr.lastTime = rr.roadRaceLastTime
+			rr.gap = rr.roadRaceGap
 		'''
 	
 	return tuple(riderResults)
