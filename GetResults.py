@@ -153,8 +153,9 @@ def GetResultsCore( category ):
 		
 		# Group finish times are defined as times which are separated from the previous time by at least 1 second.
 		groupFinishTimes = [0 if not entries else floor(entries[0].t)]
-		groupFinishTimes.extend( [floor(entries[i].t) for i in xrange(1, len(entries)) if entries[i].t - entries[i-1].t >= 1.0] )
-		groupFinishTimes.extend( [sys.float_info.max] * 5 )
+		if roadRaceFinishTimes and not isTimeTrial:
+			groupFinishTimes.extend( [floor(entries[i].t) for i in xrange(1, len(entries)) if entries[i].t - entries[i-1].t >= 1.0] )
+			groupFinishTimes.extend( [sys.float_info.max] * 5 )
 		
 		for e in entries:
 			try:
