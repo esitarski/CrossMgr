@@ -570,6 +570,7 @@ class ExportGrid( object ):
 		
 			self.title = u'\n'.join( [race.name, Utils.formatDate(race.date), catStr] )
 			isTimeTrial = getattr( race, 'isTimeTrial', False )
+			roadRaceFinishTimes = getattr( race, 'roadRaceFinishTimes', False )
 
 		startOffset = category.getStartOffsetSecs() if category else 0.0
 		
@@ -655,6 +656,34 @@ class ExportGrid( object ):
 		except ValueError:
 			pass
 		
-			
+		if roadRaceFinishTimes:
+			sameValue = '"    '
+			try:
+				iTime = self.colnames.index(_('Time'))
+			except ValueError:
+				iTime = -1
+			if iTime > 0:
+				lastTime = 'xxx'
+				timeCol = self.data[iTime]
+				for i in xrange(0, len(timeCol)):
+					curTime = timeCol[i]
+					if curTime == lastTime:
+						timeCol[i] = sameValue
+					else:
+						lastTime = curTime
+			try:
+				iGap = self.colnames.index(_('Gap'))
+			except ValueError:
+				iGap = -1
+			if iGap > 0:
+				lastGap = 'xxx'
+				gapCol = self.data[iGap]
+				for i in xrange(0, len(gapCol)):
+					curGap = gapCol[i]
+					if curGap and not curGap.startswith('-') and curGap == lastGap:
+						gapCol[i] = sameValue
+					else:
+						lastGap = curGap
+
 if __name__ == '__main__':
 	pass

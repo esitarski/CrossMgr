@@ -1367,6 +1367,7 @@ class MainWin( wx.Frame ):
 			payload['hideDetails']		= race.hideDetails
 			payload['showCourseAnimation'] = race.showCourseAnimationInHtml
 			payload['licenseLinkTemplate'] = race.licenseLinkTemplate
+			payload['roadRaceFinishTimes'] = getattr(race, 'roadRaceFinishTimes', False)
 			
 			notes = getattr(race, 'notes', u'')
 			if notes.lstrip()[:6].lower().startswith( '<html>' ):

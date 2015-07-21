@@ -587,7 +587,7 @@ class Results( wx.Panel ):
 					break
 		elif sortLabel:
 			race.sortLap = sortLap = None
-			if sortLabel not in [_('Bib'), _('Pos'), _('Gap'), _('Time'), _('mph'), _('km/h')]:
+			if sortLabel not in {_('Bib'), _('Pos'), _('Gap'), _('Time'), _('mph'), _('km/h')}:
 				for i, name in enumerate(colnames):
 					if name == sortLabel:
 						sortCol = i
