@@ -1179,6 +1179,8 @@ class RiderDetail( wx.Panel ):
 				maxLap = catInfo['laps']
 			except:
 				maxLap = race.getMaxLap()
+				
+			maxLap = (maxLap or 0)		# Ensure that maxLap is not None
 			
 			# Figure out which laps this rider was lapped in.
 			if getattr(rider, 'autocorrectLaps', True):
