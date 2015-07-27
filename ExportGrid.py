@@ -241,6 +241,8 @@ class ExportGrid( object ):
 				if vStr:
 					if isSpeed:
 						vStr = vStr.split()[0]
+						if vStr == '"':
+							vStr += '    '
 					w, h, lh = dc.GetMultiLineTextExtent( vStr, font )
 					if col in self.leftJustifyCols:
 						self._drawMultiLineText( dc, vStr, xPix, yPix )					# left justify
@@ -475,7 +477,9 @@ class ExportGrid( object ):
 			sheetFit.write( rowTop, col, c, headerStyle, bold=True )
 			for row, v in enumerate(self.data[col]):
 				if isSpeed and v:
-					v = '{}'.format(v).split()[0]
+					v = u'{}'.format(v).split()[0]
+					if v == u'"':
+						v += u'    '
 				rowCur = rowTop + 1 + row
 				if rowCur > rowMax:
 					rowMax = rowCur
@@ -657,7 +661,12 @@ class ExportGrid( object ):
 			pass
 		
 		if roadRaceFinishTimes:
-			sameValue = '"    '
+			sameValue = '"' + u"\u00A0" * 4
+			try:
+				iSpeed = self.colnames.index(_('Speed'))
+			except ValueError:
+				iSpeed = -1
+			
 			try:
 				iTime = self.colnames.index(_('Time'))
 			except ValueError:
@@ -665,10 +674,13 @@ class ExportGrid( object ):
 			if iTime > 0:
 				lastTime = 'xxx'
 				timeCol = self.data[iTime]
+				speedCol = self.data[iSpeed] if iSpeed >= 0 else None
 				for i in xrange(0, len(timeCol)):
 					curTime = timeCol[i]
 					if curTime == lastTime:
 						timeCol[i] = sameValue
+						if speedCol:
+							speedCol[i] = sameValue
 					else:
 						lastTime = curTime
 			try:

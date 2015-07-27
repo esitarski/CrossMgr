@@ -572,6 +572,8 @@ class Results( wx.Panel ):
 				if not speedUnit:
 					exportGrid.colnames[iSpeedCol] = speedUnit = d.split()[1]
 				exportGrid.data[iSpeedCol][r] = d.split()[0]
+				if exportGrid.data[iSpeedCol][r] == '"':
+					exportGrid.data[iSpeedCol][r] += '    '
 		except StopIteration:
 			pass
 			
