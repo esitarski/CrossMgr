@@ -33,6 +33,7 @@ def ReadPropertiesFromExcel( reader ):
 		('FTP Upload During Race',	'ftpUploadDuringRace',	'b'),
 		
 		('GATrackingID',	'gaTrackingID',		's'),
+		('Road Race Finish Times',	'roadRaceFinishTimes',	'b'),
 	)
 
 	AttributeFromHeader = { h: a for h, a, t in HeadersFields }
