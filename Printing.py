@@ -2,6 +2,7 @@ import wx
 import os
 import sys
 import math
+import getpass
 import Utils
 Utils.initTranslation()
 from  ExportGrid import ExportGrid
@@ -9,7 +10,9 @@ import Primes
 from DNSManager import AutoWidthListCtrl
 from GetResults import GetResults, UnstartedRaceWrapper
 import Model
+from pdf import PDF
 from ReadSignOnSheet import SyncExcelLink
+import Version
 
 def getCatCountImagesCategoryList( parent ):
 	il = wx.ImageList(16, 16)
@@ -53,8 +56,8 @@ def getCatCountImagesCategoryList( parent ):
 #----------------------------------------------------------------------
 
 class ChoosePrintCategoriesDialog( wx.Dialog ):
-	def __init__( self, parent, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, _("Print Categories"),
+	def __init__( self, parent, title=_("Print Categories"), id=wx.ID_ANY ):
+		wx.Dialog.__init__( self, parent, id, title,
 						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
@@ -302,7 +305,7 @@ class CrossMgrPrintout( wx.Printout ):
 				exportGrid = ExportGrid( **Primes.GetGrid() )
 			else:
 				exportGrid = ExportGrid()
-				exportGrid.setResultsOneList( self.pageInfo[page][0], True, showLapTimes = showLapTimes )
+				exportGrid.setResultsOneList( self.pageInfo[page][0], True, showLapTimes=showLapTimes )
 		return exportGrid
 		
 	def OnPrintPage(self, page):
@@ -341,26 +344,81 @@ class CrossMgrPrintoutPNG( CrossMgrPrintout ):
 		pageTotal = self.pageInfo[page][4]
 		
 		if pageTotal != 1:
-			fname = u'{categoryName} ({pageNumber}) {fileBase}.png'.format(
+			fname = u'{categoryName}-({pageNumber})-{fileBase}.png'.format(
 				fileBase = self.fileBase,
 				categoryName = category.fullname if category != 'Primes' else 'Primes',
 				pageNumber = pageNumber
 			)
 		else:
-			fname = u'{categoryName} {fileBase}.png'.format(
+			fname = u'{categoryName}-{fileBase}.png'.format(
 				fileBase = self.fileBase,
 				categoryName = category.fullname if category != 'Primes' else 'Primes'
 			)
 								
-		fname = Utils.RemoveDisallowedFilenameChars( fname )
+		fname = Utils.RemoveDisallowedFilenameChars( fname ).replace( ' ', '-' )
 		
-		if not os.path.isdir( self.dir ):
+		if self.dir and not os.path.isdir( self.dir ):
 			os.mkdir( self.dir )
 		fname = os.path.join( self.dir, fname )
 		
 		self.lastFName = fname
 			
 		image.SaveFile( fname, wx.BITMAP_TYPE_PNG )
+		return True
+
+class CrossMgrPrintoutPDF( CrossMgrPrintout ):
+	def __init__( self, dir, fileBase, orientation, categories = None, allInOne = False ):
+		CrossMgrPrintout.__init__(self, categories)
+		self.dir = dir
+		self.fileBase = fileBase
+		self.orientation = orientation
+		self.allInOne = allInOne
+		self.pdf = None
+		self.lastFName = None
+		
+	def OnEndPrinting(self):
+		if self.pdf and self.allInOne:
+			if self.dir and not os.path.isdir( self.dir ):
+				os.mkdir( self.dir )
+			fname = u'{fileBase}-{all}.pdf'.format( fileBase=self.fileBase, all=_('All') )
+			self.pdf.set_title( unicode(os.path.splitext(fname)[0].replace('-', ' ')).encode('iso-8859-1','ignore') )
+			fname = os.path.join( self.dir, fname )
+			self.pdf.output( fname, 'F' )
+			self.lastFName = fname
+			self.pdf = None
+		super(CrossMgrPrintoutPDF, self).OnEndPrinting()
+
+	def OnPrintPage( self, page ):
+		exportGrid = self.prepareGrid( page )
+
+		category = self.pageInfo[page][0]
+		pageNumber = self.pageInfo[page][3]
+		pageTotal = self.pageInfo[page][4]
+		
+		fname = u'{fileBase}-{categoryName}.pdf'.format(
+			fileBase = self.fileBase,
+			categoryName = category.fullname if category != 'Primes' else 'Primes'
+		)
+		fname = Utils.RemoveDisallowedFilenameChars( fname ).replace( ' ', '-' )
+		
+		if not self.pdf:
+			self.pdf = PDF( orientation = 'L' if self.orientation == wx.LANDSCAPE else 'P' )
+			self.pdf.set_font( 'Arial', '', 12 )
+			self.pdf.set_author( unicode(getpass.getuser()).encode('iso-8859-1','ignore') )
+			self.pdf.set_keywords( unicode('CrossMgr Results').encode('iso-8859-1','ignore') )
+			self.pdf.set_creator( unicode(Version.AppVerName).encode('iso-8859-1','ignore') )
+			self.pdf.set_title( unicode(os.path.splitext(fname)[0].replace('-', ' ')).encode('iso-8859-1','ignore') )
+		
+		exportGrid.drawToFitPDF( *([self.pdf, self.orientation] + self.pageInfo[page][1:-1]) )
+		
+		if not self.allInOne and pageNumber == pageTotal:
+			if self.dir and not os.path.isdir( self.dir ):
+				os.mkdir( self.dir )
+			fname = os.path.join( self.dir, fname )
+			self.pdf.output( fname, 'F' )
+			self.lastFName = fname
+			self.pdf = None
+		
 		return True
 
 class CrossMgrPodiumPrintout( CrossMgrPrintout ):

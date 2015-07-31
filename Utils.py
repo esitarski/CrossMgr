@@ -146,6 +146,14 @@ class SuspendTranslation( object ):
 	def __exit__(self, type, value, traceback):
 		__builtin__.__dict__['_'] = self._Save
 
+class UIBusy( object ):
+	def __enter__(self):
+		wx.BeginBusyCursor()
+	
+	def __exit__( self, type, value, traceback ):
+		wx.EndBusyCursor()
+		return False
+
 #-----------------------------------------------------------------------
 # Monkey-patch font function so we always fetch a nicer font face.
 #

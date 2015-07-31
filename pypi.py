@@ -200,6 +200,7 @@ setup = {
 		'whoosh >= 2.5.7',
 		'qrcode >= 4.0.4',
 		'beautifulsoup4 >= 4.0.0',
+		'fpdf >= 1.7',
 		'PIL >= 1.1.6',
 		# 'wxPython >= 3.0.0',
 	],

@@ -29,7 +29,7 @@ except:
 	localTimeFormat = '%I:%M%p'
 
 import cPickle as pickle
-from optparse import OptionParser
+from argparse import ArgumentParser
 import xlwt
 import xlsxwriter
 from setpriority import setpriority
@@ -77,7 +77,7 @@ import IpicoImport
 import OutputStreamer
 import GpxImport
 from Undo import undo
-from Printing			import CrossMgrPrintout, CrossMgrPrintoutPNG, CrossMgrPodiumPrintout, getRaceCategories
+from Printing			import CrossMgrPrintout, CrossMgrPrintoutPNG, CrossMgrPrintoutPDF, CrossMgrPodiumPrintout, getRaceCategories
 from Printing			import ChoosePrintCategoriesDialog, ChoosePrintCategoriesPodiumDialog
 from ExportGrid			import ExportGrid
 import SimulationLapTimes
@@ -316,6 +316,8 @@ class MainWin( wx.Frame ):
 								Utils.GetPngBitmap('print-preview.png') )
 		self.Bind(wx.EVT_MENU, self.menuPrintPreview, id=idCur )
 
+		self.publishMenu.AppendSeparator()
+		
 		AppendMenuItemBitmap( self.publishMenu, wx.ID_PRINT, _("&Print Results..."), _("Print the results to a printer"),
 								Utils.GetPngBitmap('Printer.png') )
 		self.Bind(wx.EVT_MENU, self.menuPrint, id=wx.ID_PRINT )
@@ -329,6 +331,13 @@ class MainWin( wx.Frame ):
 		AppendMenuItemBitmap( self.publishMenu, idCur , _("Print C&ategories..."), _("Print Categories"), Utils.GetPngBitmap('categories.png') )
 		self.Bind(wx.EVT_MENU, self.menuPrintCategories, id=idCur )
 
+		self.publishMenu.AppendSeparator()
+		idCur = wx.NewId()
+		AppendMenuItemBitmap( self.publishMenu, idCur,
+							_("&PDF Publish..."), _("Publish Results as PDF Files"),
+							Utils.GetPngBitmap('pdf-icon.png') )
+		self.Bind(wx.EVT_MENU, self.menuPrintPDF, id=idCur )
+		
 		self.publishMenu.AppendSeparator()
 		
 		idCur = wx.NewId()
@@ -1173,6 +1182,70 @@ class MainWin( wx.Frame ):
 		printout.Destroy()
 
 	@logCall
+	def menuPrintPDF( self, event ):
+		if not Model.race:
+			return
+		self.commit()
+		
+		cpcd = ChoosePrintCategoriesDialog( self, _("PDF Categories") )
+		x, y = self.GetPosition().Get()
+		x += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_X, self)
+		y += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_Y, self)
+		cpcd.SetPosition( (x, y) )
+		cpcd.SetSize( self.PrintCategoriesDialogSize )
+		result = cpcd.ShowModal()
+		categories = cpcd.categories
+		cpcd.Destroy()
+		if not categories or result != wx.ID_OK:
+			return
+		
+		'''
+		dlg = wx.DirDialog( self, u'{}'.format(_('Folder to write PDF Files')),
+						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(self.fileName) )
+		ret = dlg.ShowModal()
+		dName = dlg.GetPath()
+		dlg.Destroy()
+		if ret != wx.ID_OK:
+			return
+		'''
+		
+		dName = os.path.join( os.path.dirname(self.fileName), 'pdf' )
+	
+		with Utils.UIBusy():
+			fnameBase = os.path.splitext(os.path.split(self.fileName)[1])[0]
+			for i in xrange(2):
+				if i == 0:
+					printout = CrossMgrPrintoutPDF( dName, fnameBase, self.printData.GetOrientation(), categories )
+				else:
+					printout = CrossMgrPrintoutPDF( dName, fnameBase, self.printData.GetOrientation(),
+						categories=Model.race.getCategories(False), allInOne = True )
+				
+				pages = printout.GetPageInfo()[-1]
+				
+				fname = None
+				success = True
+				for page in xrange(1, pages+1):
+					try:
+						printout.OnPrintPage( page )
+						if fname is None:
+							fname = printout.lastFName
+					except Exception as e:
+						logException( e, sys.exc_info() )
+						Utils.MessageOK(self,
+									u'{}:\n\n    {}.'.format(_('Error creating PDF files'), e),
+									_('PDF File Error'), iconMask=wx.ICON_ERROR )
+						success = False
+						break
+
+				printout.OnEndPrinting()
+				printout.Destroy()
+		
+		if success:
+			if fname:
+				webbrowser.open( fname, new = 2, autoraise = True )
+			Utils.MessageOK( self, u'{}:\n\n    {}'.format(_('PDF files written to'), dName), _('PDF Publish') )
+
+	@logCall
 	def menuPrintPNG( self, event ):
 		if not Model.race:
 			return
@@ -1207,22 +1280,21 @@ class MainWin( wx.Frame ):
 		
 		fname = None
 		success = True
-		wx.BeginBusyCursor()
-		for page in xrange(1, pages+1):
-			try:
-				printout.OnPrintPage( page )
-				if fname is None:
-					fname = printout.lastFName
-			except Exception as e:
-				logException( e, sys.exc_info() )
-				Utils.MessageOK(self,
-							u'{}:\n\n    {}.'.format(_('Error creating PNG files'), e),
-							_('PNG File Error'), iconMask=wx.ICON_ERROR )
-				success = False
-				break
+		with Utils.UIBusy():
+			for page in xrange(1, pages+1):
+				try:
+					printout.OnPrintPage( page )
+					if fname is None:
+						fname = printout.lastFName
+				except Exception as e:
+					logException( e, sys.exc_info() )
+					Utils.MessageOK(self,
+								u'{}:\n\n    {}.'.format(_('Error creating PNG files'), e),
+								_('PNG File Error'), iconMask=wx.ICON_ERROR )
+					success = False
+					break
 
 		printout.Destroy()
-		wx.EndBusyCursor()
 		
 		if success:
 			if fname:
@@ -3093,7 +3165,7 @@ class MainWin( wx.Frame ):
 		info.Version = ''
 		info.Copyright = "(C) 2009-{}".format( datetime.datetime.now().year )
 		info.Description = wordwrap(
-_("""Create Cycling race results quickly and easily with little preparation.
+_("""Score Cycling races quickly and easily with little preparation.
 
 A brief list of features:
    * Input riders on the first lap
@@ -3391,11 +3463,11 @@ def MainLoop():
 	random.seed()
 	setpriority( priority=4 )	# Set to real-time priority.
 
-	parser = OptionParser( usage = "usage: %prog [options] [RaceFile.cmn]" )
-	parser.add_option("-f", "--file", dest="filename", help="race file", metavar="RaceFile.cmn")
-	parser.add_option("-q", "--quiet", action="store_false", dest="verbose", default=True, help='hide splash screen')
-	parser.add_option("-r", "--regular", action="store_false", dest="fullScreen", default=True, help='regular size (not full screen)')
-	(options, args) = parser.parse_args()
+	parser = ArgumentParser( prog="CrossMgr", description='Timing and Scoring Software' )
+	parser.add_argument("-q", "--quiet", action="store_false", dest="verbose", default=True, help='hide splash screen')
+	parser.add_argument("-r", "--regular", action="store_false", dest="fullScreen", default=True, help='regular size (not full screen)')
+	parser.add_argument(dest="filename", default=None, nargs='?', help="CrossMgr race file, or Excel generated by RaceDB", metavar="RaceFile.cmn or .xls, .xlsx, .xlsm file")
+	args = parser.parse_args()
 	
 	Utils.initTranslation()
 	
@@ -3425,7 +3497,7 @@ def MainLoop():
 	# Configure the main window.
 	mainWin = MainWin( None, title=Version.AppVerName, size=(1128,600) )
 	
-	if options.fullScreen:
+	if args.fullScreen:
 		mainWin.Maximize( True )
 	mainWin.Show()
 
@@ -3437,16 +3509,12 @@ def MainLoop():
 	#tbicon = wx.TaskBarIcon()
 	#tbicon.SetIcon( icon, "CrossMgr" )
 
-	if options.verbose:
+	if args.verbose:
 		ShowSplashScreen()
 		ShowTipAtStartup()
 	
 	# Try to open a specified filename.
-	fileName = options.filename
-	
-	# If nothing, try a positional argument.
-	if not fileName and args:
-		fileName = args[0]
+	fileName = args.filename
 	
 	# Try to load a race.
 	raceLoaded = False
