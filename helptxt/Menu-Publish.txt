@@ -29,6 +29,9 @@ The report will include the specified number of podium positions, or the number 
 ## Print Categories...
 Prints a summary of the Categories with number of laps and number ranges.  This can be useful as a quick reference to all the categories on course and not a bulky as a full start list.
 
+## PDF Publish...
+Publish the results in pdf format.  Creates a __pdf__ folder with your race file.  Write pdf files for all-in-one, as well as separate pdf flies for the selected categories.
+
 ## Excel Publish...
 Publish the results in Excel format and opens Excel on the output file.
 
