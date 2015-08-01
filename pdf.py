@@ -11,8 +11,8 @@ class PDF( fpdf.FPDF ):
 			return
 		leftJustifyCols = set( leftJustifyCols or [] )
 		
-		# Encode the entire table as utf-8.
-		table = [[unicode(v).encode('utf-8', 'ignore') for v in row] for row in table]
+		# Encode the entire table as windows-1252.
+		table = [[unicode(v).encode('windows-1252', 'ignore') for v in row] for row in table]
 		colMax = max( len(row) for row in table )
 		for row in table:
 			if len(row) < colMax:

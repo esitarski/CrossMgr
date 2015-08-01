@@ -380,7 +380,7 @@ class CrossMgrPrintoutPDF( CrossMgrPrintout ):
 		if self.pdf and self.allInOne:
 			if self.dir and not os.path.isdir( self.dir ):
 				os.mkdir( self.dir )
-			fname = u'{fileBase}-{all}.pdf'.format( fileBase=self.fileBase, all=_('All') )
+			fname = u'{fileBase}.pdf'.format( fileBase=self.fileBase )
 			self.pdf.set_title( unicode(os.path.splitext(fname)[0].replace('-', ' ')).encode('iso-8859-1','ignore') )
 			fname = os.path.join( self.dir, fname )
 			self.pdf.output( fname, 'F' )

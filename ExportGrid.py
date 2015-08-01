@@ -231,6 +231,7 @@ class ExportGrid( object ):
 			bm = img.ConvertToBitmap( dc.GetDepth() )
 			dc.DrawBitmap( bm, widthPix - borderPix - qrWidth, borderPix )
 			qrWidth += graphicBorder
+			url = url.replace( '%20', ' ' )
 		
 		# Draw the title.
 		font = self._getFontToFit( widthFieldPix - graphicWidth - graphicBorder - qrWidth, graphicHeight,
@@ -377,6 +378,8 @@ class ExportGrid( object ):
 		if url and url.startswith( 'http://' ):
 			url = urllib.quote( url[7:] )
 		qrWidth = 0
+		if url:
+			url = url.replace( '%20', ' ' )
 		
 		# Draw the title.
 		table = [ [line] for line in self.title.split('\n') ]
