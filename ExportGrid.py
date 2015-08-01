@@ -1,6 +1,7 @@
 
 import wx
 import os
+import re
 import xlwt
 import datetime
 import Utils
@@ -332,6 +333,8 @@ class ExportGrid( object ):
 		pdf.set_font( 'Helvetica', '', 12 )
 		pdf.set_draw_color( 200, 200, 200 )
 		pdf.set_line_width( 0.2 )
+		pdf.set_margins( 0, 0, 0 )
+		pdf.set_auto_page_break( False, 0 )
 		
 		# Get the dimensions of the page.
 		widthPix, heightPix = 72.0*11, 72.0*8.5
@@ -438,15 +441,36 @@ class ExportGrid( object ):
 		pdf.set_font_size( h )
 		textHeight = h * 1.15
 		
+		def write_link( x, y, text, link ):
+			pdf.set_xy( x, y )
+			pdf.set_font( '', 'U' )
+			pdf.set_text_color( 0, 0, 255 )
+			pdf.write( h, text, link.replace(' ', '%20') )
+			pdf.set_font( '', '' )
+			pdf.set_text_color( 0, 0, 0 )
+			
+		def write_text( x, y, text ):
+			pdf.set_xy( x, y )
+			pdf.write( h, text )
+		
 		yPixMax = yPix + tableHeight
 		if url:
 			yPix = yPixMax + textHeight
-			url = unicode(url).encode('utf-8', 'ignore')
-			pdf.text( widthPix - borderPix - pdf.get_string_width(url), yPix + h, url )
-			
+			url = unicode(url).encode('windows-1252', 'ignore')
+			write_link( widthPix - borderPix - pdf.get_string_width(url), yPix + h, url, url )
+		
 		# Put CrossMgr branding at the bottom of the page.
-		yFooter = heightPix - borderPix + int(h*1.8)		
-		pdf.text( borderPix, yFooter, self.brandText )
+		yFooter = heightPix - borderPix + int(h*1.8) - h
+		m = re.search( ' \([^)]+\) ', self.brandText )
+		urlStart, urlEnd = m.start() + 2, m.end() - 2
+		bt = [self.brandText[:urlStart], self.brandText[urlStart:urlEnd], self.brandText[urlEnd:]]
+		
+		xCur = borderPix
+		write_text( xCur, yFooter, bt[0] )
+		xCur += pdf.get_string_width(bt[0])
+		write_link( xCur, yFooter, bt[1], bt[1] )
+		xCur += pdf.get_string_width(bt[1])
+		write_text( xCur, yFooter, bt[2] )
 		
 		# Put the page number info at the bottom of the page.
 		if pageNumber is not None:
@@ -454,8 +478,8 @@ class ExportGrid( object ):
 				s = u'{} {} / {}'.format(_('Page'), pageNumber, pageNumberTotal)
 			else:
 				s = u'{} {}'.format(_('Page'), pageNumber)
-			s = unicode(s).encode( 'utf-8' )
-			pdf.text( widthPix - pdf.get_string_width(s) - borderPix, yFooter, s )
+			s = unicode(s).encode( 'windows-1252' )
+			write_text( widthPix - pdf.get_string_width(s) - borderPix, yFooter, s )
 			
 	def toExcelSheet( self, sheet ):
 		''' Write the contents of the grid to an xlwt excel sheet. '''
