@@ -431,7 +431,7 @@ class ExportGrid( object ):
 	
 		tableWidth, tableHeight = pdf.table_in_rectangle(
 			borderPix, yPix,
-			widthFieldPix, heightFieldPix,
+			widthFieldPix, heightFieldPix - borderPix/1.5,
 			table, 
 			leftJustifyCols=self.leftJustifyCols, hasHeader=True, horizontalLines=True, verticalLines=False,
 		)
@@ -457,7 +457,7 @@ class ExportGrid( object ):
 		if url:
 			yPix = yPixMax + textHeight
 			url = unicode(url).encode('windows-1252', 'ignore')
-			write_link( widthPix - borderPix - pdf.get_string_width(url), yPix + h, url, url )
+			write_link( widthPix - borderPix - pdf.get_string_width(url), yPix+h/2, url, url )
 		
 		# Put CrossMgr branding at the bottom of the page.
 		yFooter = heightPix - borderPix + int(h*1.8) - h
@@ -612,20 +612,23 @@ class ExportGrid( object ):
 		
 		with Model.LockRace() as race:
 			catStr = 'All' if not category else category.fullname
+			catData = []
 			if cd and cd.get('raceDistance', None):
-				catStr += u', {:.2f} {}, '.format(cd['raceDistance'], cd['distanceUnit'])
+				catData.append( u'{:.2f} {}'.format(cd['raceDistance'], cd['distanceUnit']) )
 				if cd.get('lapDistance', None) and cd.get('laps', 0) > 1:
 					if cd.get('firstLapDistance', None) and cd['firstLapDistance'] != cd['lapDistance']:
-						catStr += u'{} {:.2f} {}, {} {} {:.2f} {}'.format(
+						catData.append(
+							u'{} {:.2f} {}, {} {} {:.2f} {}'.format(
 									_('1st lap'), cd['firstLapDistance'], cd['distanceUnit'],
 									cd['laps'] - 1, _('more laps of'), cd['lapDistance'], cd['distanceUnit']
-								)
+							)
+						)
 					else:
-						catStr += u'{} {} {:.2f} {}'.format(cd['laps'], _('laps of'), cd['lapDistance'], cd['distanceUnit']);
+						catData.append( u'{} {} {:.2f} {}'.format(cd['laps'], _('laps of'), cd['lapDistance'], cd['distanceUnit']) )
 				if leader.status == Model.Rider.Finisher:
-					catStr += u', ' + u'{}: {} - {}'.format(_('winner'), Utils.formatTime(leader.lastTime - cd['startOffset']), leader.speed);
+					catData.append( u'{}: {} - {}'.format(_('winner'), Utils.formatTime(leader.lastTime - cd['startOffset']), leader.speed) )
 		
-			self.title = u'\n'.join( [race.name, Utils.formatDate(race.date), catStr] )
+			self.title = u'\n'.join( [race.name, Utils.formatDate(race.date), catStr, u', '.join(catData)] )
 			isTimeTrial = getattr( race, 'isTimeTrial', False )
 			roadRaceFinishTimes = getattr( race, 'roadRaceFinishTimes', False )
 
