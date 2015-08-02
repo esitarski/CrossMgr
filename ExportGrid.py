@@ -406,7 +406,7 @@ class ExportGrid( object ):
 			if c == _('Speed'):
 				speedCol = col
 				try:
-					c = c.split()[1]
+					c = dataDraw[col][0].split()[1]
 				except IndexError:
 					pass
 			headers.append( c )

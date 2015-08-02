@@ -1237,11 +1237,21 @@ class MainWin( wx.Frame ):
 						success = False
 						break
 
-				printout.OnEndPrinting()
+				try:
+					printout.OnEndPrinting()
+					if fname is None:
+						fname = printout.lastFName
+				except Exception as e:
+					logException( e, sys.exc_info() )
+					Utils.MessageOK(self,
+								u'{}:\n\n    {}.'.format(_('Error creating PDF files'), e),
+								_('PDF File Error'), iconMask=wx.ICON_ERROR )
+					success = False
+				
 				printout.Destroy()
 		
 		if success:
-			if fname:
+			if fname and self.launchExcelAfterPublishingResults:
 				webbrowser.open( fname, new = 2, autoraise = True )
 			Utils.MessageOK( self, u'{}:\n\n    {}'.format(_('PDF files written to'), dName), _('PDF Publish') )
 
@@ -1297,7 +1307,7 @@ class MainWin( wx.Frame ):
 		printout.Destroy()
 		
 		if success:
-			if fname:
+			if fname and self.launchExcelAfterPublishingResults:
 				webbrowser.open( fname, new = 2, autoraise = True )
 			Utils.MessageOK( self, u'{}:\n\n    {}'.format(_('Results written as PNG files to'), dir), _('PNG Publish') )
 
