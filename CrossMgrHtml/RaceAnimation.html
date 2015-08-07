@@ -3821,7 +3821,7 @@ function RefreshRaceChart()
 		var raceTimes = resultsData[i][iRaceTimes];
 		
 		if( resultsData[i][iStatus] != 'Finisher' ) {
-			dc.fillStyle = '#CDCDCD';
+			dc.fillStyle = '#F1F1F1';
 			dc.fillRect( 0, yLast, width, yCur - yLast + 1 );
 		}
 		
@@ -3832,7 +3832,7 @@ function RefreshRaceChart()
 			var tCur = raceTimes[j] - categoryStartOffset;
 			xCur = ~~(labelsWidthLeft + tCur * xFactor);
 			if( j == 0 ) {
-				dc.fillStyle = resultsData[i][iStatus] == 'Finisher' ? '#FFFFFF' : '#CDCDCD';
+				dc.fillStyle = resultsData[i][iStatus] == 'Finisher' ? '#FFFFFF' : '#F1F1F1';
 				dc.fillRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
 				dc.strokeRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
 			}
@@ -3856,7 +3856,7 @@ function RefreshRaceChart()
 		
 		// Draw the last empty bar.
 		xCur = ~~(labelsWidthLeft + dataMax * xFactor);
-		dc.fillStyle = resultsData[i][iStatus] == 'Finisher' ? '#FFFFFF' : '#CDCDCD';
+		dc.fillStyle = resultsData[i][iStatus] == 'Finisher' ? '#FFFFFF' : '#F1F1F1';
 		dc.fillRect( xLast, yLast, width - xLast, yCur - yLast + 1 );
 		dc.strokeRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
 		
@@ -4777,13 +4777,16 @@ function LapChart( ) {
 			return;
 
 		this.getData();
-			
+		if( this.lapsData.length <= 1 ) {
+			this.canvas.height = 0;
+		}
+		
+		var rowHeight = 22;
+		this.canvas.height = rowHeight * (this.nums.length+1);
 		var width = this.canvas.width;
 		var height = this.canvas.height;
-		var dc = this.canvas.getContext('2d');
-		console.log( 'width=' + width + ' height=' + height );
 		
-		var rowHeight = Math.min( height / (this.nums.length + 1), 26 );
+		var dc = this.canvas.getContext('2d');
 		var rowTextFraction = 0.7;
 		var fontHeight = rowHeight * rowTextFraction;
 		dc.font = fontHeight + 'px Arial';
@@ -4828,14 +4831,14 @@ function LapChart( ) {
 		function getY(row) { return rowHeight * (row+1); }
 		function getX(lap) { return xLeft + lapWidth * lap; }
 		
-		// Change background for lapped riders.
+		// Set the background for lapped riders.
 		dc.fillStyle = this.lappedBackgroundColour;
 		for( var lap = 0; lap < this.lapsData.length; ++lap ) {
-			for( var row = this.lapsData[lap].length - 1; row >= 0; --row ) {
-				if( this.lapsData[lap][row].lapsDown !== 0 )
-					dc.fillRect( getX(lap), getY(row), lapWidth, rowHeight );
-				else
-					break;
+			for( var row = 0; row < this.lapsData[lap].length; ++row ) {
+				if( this.lapsData[lap][row].lapsDown !== 0 ) {
+					for( ; row < this.nums.length; ++row )
+						dc.fillRect( getX(lap), getY(row), lapWidth, rowHeight );
+				}
 			}
 		}
 		
@@ -4846,7 +4849,7 @@ function LapChart( ) {
 		dc.fillRect( width - posWidth, 0, xLeft, height );
 		
 		dc.fillStyle = '#FFFFFF';
-		dc.textBaseline = 'middle'
+		dc.textBaseline = 'middle';
 		dc.textAlign = 'center';
 		for( var j = 0; j < this.nums.length; ++j ) {
 			dc.fillText( ''+(j+1), posWidth/2, getY(j) + rowHeight/2 );
@@ -4923,6 +4926,40 @@ function LapChart( ) {
 			dc.moveTo( getX(lap) + lapWidth/2, getY(path[lap])+rowHeight/2 );
 			dc.quadraticCurveTo( getX(lap) + lapWidth/2, getY(j) + rowHeight/2, xRight+ + rowHeight/2, getY(j) + rowHeight/2 );
 			dc.stroke();
+		}
+		
+		// Draw the lap numbers.
+		var lapNumHeight = fontHeight;
+		dc.font = lapNumHeight*0.8 + 'px Arial';
+		dc.textAlign = 'center';
+		dc.textBaseline = 'bottom';
+		dc.lineWidth = 1;
+		var xLast = xRight;
+		for( var lap = this.lapsData.length - 1; lap >= 0; --lap ) {
+			var sLap = ' ' + (lap+1) + ' ';
+			var tWidth = dc.measureText(sLap).width;
+			var xMiddle = getX(lap) + lapWidth/2;
+			if( xMiddle + tWidth / 2 > xLast )
+				continue;
+			
+			var x = getX(lap) + lapWidth/2;
+			var y = getY(0) - lapNumHeight;
+			dc.beginPath()
+			dc.moveTo( x - tWidth/2, y );
+			dc.lineTo( x + tWidth/2, y );
+			dc.lineTo( x + tWidth/2, y + lapNumHeight );
+			dc.lineTo( x, y + lapNumHeight * 1.25 );
+			dc.lineTo( x - tWidth/2, y + lapNumHeight );
+			dc.closePath();
+			
+			dc.fillStyle = '#FFFFFF';
+			dc.fill();
+			dc.strokeStyle = this.lapLabelBorderColour;
+			dc.stroke();
+			
+			dc.fillStyle = '#000000';
+			dc.fillText( sLap, getX(lap) + lapWidth/2, getY(0) );
+			xLast = xMiddle - tWidth/2 - 2;
 		}
 	}
 }
