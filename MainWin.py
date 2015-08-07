@@ -332,6 +332,19 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_MENU, self.menuPrintCategories, id=idCur )
 
 		self.publishMenu.AppendSeparator()
+		
+		idCur = wx.NewId()
+		AppendMenuItemBitmap( self.publishMenu, idCur,
+							_("&HTML Publish..."), _("Publish Results as HTML (.html)"), Utils.GetPngBitmap('html-icon.png') )
+		self.Bind(wx.EVT_MENU, self.menuPublishHtmlRaceResults, id=idCur )
+
+		idCur = wx.NewId()
+		AppendMenuItemBitmap( self.publishMenu, idCur,
+							_("&Ftp HTML Publish..."), _("Publish HTML Results to FTP"),
+							Utils.GetPngBitmap('ftp-icon.png') )
+		self.Bind(wx.EVT_MENU, self.menuExportHtmlFtp, id=idCur )
+
+		self.publishMenu.AppendSeparator()
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
 							_("&PDF Publish..."), _("Publish Results as PDF Files"),
@@ -345,19 +358,6 @@ class MainWin( wx.Frame ):
 							_("&Excel Publish..."), _("Publish Results as an Excel Spreadsheet (.xls)"), Utils.GetPngBitmap('excel-icon.png') )
 		self.Bind(wx.EVT_MENU, self.menuPublishAsExcel, id=idCur )
 		
-		self.publishMenu.AppendSeparator()
-		
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.publishMenu, idCur,
-							_("&HTML Publish..."), _("Publish Results as HTML (.html)"), Utils.GetPngBitmap('html-icon.png') )
-		self.Bind(wx.EVT_MENU, self.menuPublishHtmlRaceResults, id=idCur )
-
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.publishMenu, idCur,
-							_("&Ftp HTML Publish..."), _("Publish HTML Results to FTP"),
-							Utils.GetPngBitmap('ftp-icon.png') )
-		self.Bind(wx.EVT_MENU, self.menuExportHtmlFtp, id=idCur )
-
 		self.publishMenu.AppendSeparator()
 		
 		idCur = wx.NewId()

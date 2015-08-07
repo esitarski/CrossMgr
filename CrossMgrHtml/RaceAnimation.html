@@ -220,6 +220,7 @@ var tRace = null;				// Race time (if the race is running).
 var raceStartTime = null;		// In seconds from midnight.
 var animationObj = null;		// Animation object to draw the course (set to TrackAnimation or GeoAnimation).
 var situationObj = null;
+var lapChartObj = null;
 var catUpdateTime = {};			// Time of next update by category.
 var rfid = null;				// True if data was collected by RFID.
 var gpsPoints = null;			// gps points data for the course [[x,y,d],...].
@@ -4650,7 +4651,282 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 	}
 }
 //----------------------------------------------------------------------
+function LapChart( ) {
+	// From http://tools.medialab.sciences-po.fr/iwanthue/
+	this.lineColours = [
+		"#343532",
+		"#7ADD41",
+		"#CC55D7",
+		"#DE4F2D",
+		"#9CD0D4",
+		"#CE8C84",
+		"#513369",
+		"#CD8F3A",
+		"#D1D048",
+		"#D74668",
+		"#4E672F",
+		"#C8C48E",
+		"#7A6DCE",
+		"#CD9CC9",
+		"#81E085",
+		"#6F9ED3",
+		"#C34998",
+		"#62827A",
+		"#6C2940",
+		"#734F2A",
+		"#649C3B",
+		"#9A3A2C",
+		"#6BCFA6",
+		"#5A6285"
+	];
+	
+	this.lapLineColour = '#B0B0B0';
+	this.positionBackgroundColour = '#B7B7B7';
+	this.positionHorizontalLineColor = '#B9B9B9';
+	
+	this.topCornerBackgroundColour = '#8E8C8D';
+	this.legendBackgroundColour = '#C5C5C5';
+	this.lappedBackgroundColour = '#D8E6F4';
+	
+	this.lapLabelBorderColour = '#707070';
+	
+	this.regularLineWidth = 3;
+	this.selectedLineWidth = 6;
+	
+	this.canvas = null;
+	
+	this.init = function( canvas ) {
+		this.canvas = canvas;
+	}
+	
+	this.getData = function() {
+		// Get results for the current category.
+		var lapsData = [];
+		var numIndex = {};
+		var nums = [];
+		for( var c = 0; c < catDetails.length; ++c )
+		{
+			var catDetail = catDetails[c];
+			var catName = catDetail.name;
+			if( catName === 'All' )
+				continue;
+			if( categoryCur !== 'All' && categoryCur !== catName )
+				continue;
+				
+			for( var p = 0; p < catDetail.pos.length; ++p )
+			{
+				var num = catDetail.pos[p];
+				if( num in numIndex )
+					continue;
+				var d = data[num];
+				
+				var raceTimes = d['raceTimes'].slice(0);	// Make a copy so we don't disturb the original.
+				if( raceTimes.length === 0 )
+					continue
+				numIndex[num] = nums.length;
+				nums.push( num )
+				
+				// Remove the race start time if this is not a Wave category.
+				if( catDetail.catType != 'Start Wave' && raceTimes.length > 0 ) {
+					for( var j = 1; j < raceTimes.length; ++j )
+						raceTimes[j] -= raceTimes[0];
+					raceTimes[0] = 0;
+				}
+				// Add all the lap information to the overall structure.
+				for( var j = 1; j < raceTimes.length; ++j ) {
+					while( lapsData.length < j )
+						lapsData.push( [] );
+					lapsData[j-1].push( {'raceTime':raceTimes[j], 'num':num, 'lapsDown':0} );
+				}
+			}
+		}
+		
+		// Sort the race times by lap to get the current rank.
+		for( var lap = 0; lap < lapsData.length; ++lap )
+			lapsData[lap].sort( function(x, y) { return x.raceTime - y.raceTime; } );
+		
+		// Set the laps down.
+		for( var lap = 0; lap < lapsData.length-1; ++lap ) {
+			for( var j = lapsData[lap].length-1; j > 0; --j ) {
+				for( var lapNext = lap+1; lapNext < lapsData.length && lapsData[lap][j].raceTime > lapsData[lapNext][0].raceTime; ++lapNext )
+					--lapsData[lap][j].lapsDown;
+				if( lapsData[lap][j] === 0 )
+					break;
+			}
+		}
+		
+		// Compute the position by lap for each rider.
+		var numPos = {};
+		for( var lap = 0; lap < lapsData.length; ++lap ) {
+			for( var pos = 0; pos < lapsData[lap].length; ++pos ) {
+				var num = lapsData[lap][pos].num;
+				if( num in numPos )
+					numPos[num].push( pos );
+				else
+					numPos[num] = [pos];
+			}
+		}
+		
+		this.lapsData = lapsData;
+		this.numPos = numPos;
+		this.nums = nums;
+	}
+	
+	this.draw = function() {
+		if( !this.canvas )
+			return;
 
+		this.getData();
+			
+		var width = this.canvas.width;
+		var height = this.canvas.height;
+		var dc = this.canvas.getContext('2d');
+		console.log( 'width=' + width + ' height=' + height );
+		
+		var rowHeight = Math.min( height / (this.nums.length + 1), 26 );
+		var rowTextFraction = 0.7;
+		var fontHeight = rowHeight * rowTextFraction;
+		dc.font = fontHeight + 'px Arial';
+		
+		function getName( num ) {
+			var d = data[num];
+			var name = '';
+			if( d.LastName && d.FirstName ) name = d.LastName + ' ' + d.FirstName.substring(0,1).toUpperCase() + '.';
+			else if( d.LastName ) name = d.LastName;
+			else if( d.FirstName ) name = d.FirstName;
+			return name;
+		}
+		
+		var numWidth = 0;
+		var nameWidth = 0;
+		for( var j = 0; j < this.nums.length; ++j ) {
+			var num = this.nums[j];
+			numWidth = Math.max( dc.measureText(''+num).width, numWidth );
+			nameWidth = Math.max( dc.measureText(getName(num)).width, nameWidth );
+		}
+		var paddingWidth = dc.measureText('  ').width;
+		numWidth += paddingWidth;
+		nameWidth += paddingWidth;
+		
+		var posWidth = dc.measureText(''+(this.nums.length+1) ).width + paddingWidth;
+		var swatchColWidth = rowHeight;
+		var xLeft = posWidth;
+		var xRight = width - (swatchColWidth + numWidth + nameWidth + posWidth);
+		var lapsWidth = xRight - xLeft;
+		var lapWidth = lapsWidth / this.lapsData.length;
+		
+		// Draw the grid.
+		dc.clearRect(0, 0, width, height);
+		if( this.nums.length === 0 )
+			return;
+		height = rowHeight * (this.nums.length + 1);
+		
+		dc.lineCap = 'butt';
+		dc.lineJoin = 'miter';
+		dc.setLineDash( [] );
+		
+		function getY(row) { return rowHeight * (row+1); }
+		function getX(lap) { return xLeft + lapWidth * lap; }
+		
+		// Change background for lapped riders.
+		dc.fillStyle = this.lappedBackgroundColour;
+		for( var lap = 0; lap < this.lapsData.length; ++lap ) {
+			for( var row = this.lapsData[lap].length - 1; row >= 0; --row ) {
+				if( this.lapsData[lap][row].lapsDown !== 0 )
+					dc.fillRect( getX(lap), getY(row), lapWidth, rowHeight );
+				else
+					break;
+			}
+		}
+		
+		// Draw the legend.
+		dc.fillStyle = this.legendBackgroundColour;
+		dc.fillRect( 0, 0, width, rowHeight );
+		dc.fillRect( 0, 0, xLeft, height );
+		dc.fillRect( width - posWidth, 0, xLeft, height );
+		
+		dc.fillStyle = '#FFFFFF';
+		dc.textBaseline = 'middle'
+		dc.textAlign = 'center';
+		for( var j = 0; j < this.nums.length; ++j ) {
+			dc.fillText( ''+(j+1), posWidth/2, getY(j) + rowHeight/2 );
+			dc.fillText( ''+(j+1), width - posWidth/2, getY(j) + rowHeight/2 );
+		}
+		
+		dc.lineWidth = 1;
+		dc.strokeStyle = this.lapLineColour;
+		dc.fillStyle = '#F1F1F1';
+		
+		// Draw the lap lines.
+		for( var lap = 0; lap <= this.lapsData.length; ++lap ) {
+			dc.beginPath();
+			dc.moveTo( getX(lap), 0 );
+			dc.lineTo( getX(lap), height );
+			dc.stroke();
+		}
+		
+		// Draw the lines separating the names.  Also grey out the name if the rider is not a finisher.
+		for( var j = 0; j < this.nums.length; ++j ) {
+			var d = data[this.nums[j]];
+			if( d.status !== 'Finisher' )
+				dc.fillRect( xRight, getY(j), width-xRight-posWidth, rowHeight );
+			
+			dc.beginPath()
+			dc.moveTo( xRight, getY(j) );
+			dc.lineTo( width - posWidth, getY(j) );
+			dc.stroke();
+		}
+		
+		// Draw the colour swatches.
+		var swatchSize = rowHeight * rowTextFraction;
+		var swatchBorder = (rowHeight - swatchSize) / 2.0;
+		var swatchX = xRight + swatchBorder;
+		for( var j = 0; j < this.nums.length; ++j ) {
+			dc.fillStyle = this.lineColours[j % this.lineColours.length];
+			dc.fillRect( swatchX, getY(j) + swatchBorder, swatchSize, swatchSize );
+		}
+		
+		// Draw the numbers.
+		dc.fillStyle = '#000000';
+		dc.textAlign = 'right';
+		var xText = width - nameWidth - posWidth;
+		for( var j = 0; j < this.nums.length; ++j )
+			dc.fillText( this.nums[j] + ':',xText, getY(j) + rowHeight/2 );
+		
+		// Draw the names.
+		dc.textAlign = 'left';
+		var xText =  width - nameWidth - posWidth + paddingWidth/2;
+		for( var j = 0; j < this.nums.length; ++j )
+			dc.fillText( getName(this.nums[j]), xText, getY(j) + rowHeight/2 );
+		
+		// Draw the position lines in reverse order so the winner ends on top.
+		dc.lineWidth = this.regularLineWidth;
+		for( var j = this.nums.length - 1; j >= 0; --j ) {
+			var num = this.nums[j];
+			var path = this.numPos[num];
+			
+			dc.strokeStyle = this.lineColours[j % this.lineColours.length];
+			dc.setLineDash( [] );
+			
+			dc.beginPath();
+			dc.moveTo( getX(0), getY(path[0])+rowHeight/2 );
+			dc.lineTo( getX(0) + lapWidth/2, getY(path[0])+rowHeight/2 );
+			for( var lap = 1; lap < path.length; ++lap )
+				dc.lineTo( getX(lap) + lapWidth/2, getY(path[lap])+rowHeight/2 );
+			var lap = path.length-1;
+			dc.stroke();
+			
+			// Draw a curved line to the final position.
+			if( lap != this.lapsData.length-1 )
+				dc.setLineDash( [10, 5] );
+			dc.beginPath();
+			dc.moveTo( getX(lap) + lapWidth/2, getY(path[lap])+rowHeight/2 );
+			dc.quadraticCurveTo( getX(lap) + lapWidth/2, getY(j) + rowHeight/2, xRight+ + rowHeight/2, getY(j) + rowHeight/2 );
+			dc.stroke();
+		}
+	}
+}
+//-------------------------------------------------------------------------
 function SelectCategory( i )
 {
 	categoryCur = categories[i];
@@ -4662,6 +4938,8 @@ function SelectCategory( i )
 		animationObj.Refresh();
 	RefreshRaceChart();
 	SituationRefresh();
+	if( lapChartObj )
+		lapChartObj.draw();
 }
 
 function setCategory( catName )
@@ -5417,12 +5695,17 @@ function onLoad()
 			document.getElementById('idTrackDiv').className = 'hidden';
 		else
 			canvas = document.getElementById('idTrack');
+			
+		lapChartCanvas = document.getElementById('idLapChart');
+		lapChartObj = new LapChart();
+		lapChartObj.init( lapChartCanvas );
 	}
 	else
 	{
 		document.getElementById('idTrackDiv').className = 'hidden';
 		document.getElementById('idRaceChartDiv').className = 'hidden';
 		document.getElementById('idSituationDiv').className = 'hidden';
+		document.getElementById['idLapChartDiv'].className = 'hidden';
 	}
 	
 	document.getElementById('idRaceName').innerHTML = document.getElementById('idTitle').innerHTML;
@@ -5459,6 +5742,7 @@ function onLoad()
 		document.getElementById('idTrackDiv').className = 'hidden';
 		document.getElementById('idRaceChartDiv').className = 'hidden';
 		document.getElementById('idSituationDiv').className = 'hidden';
+		document.getElementById('idLapChartDiv').className = 'hidden';
 		document.getElementById('idPageHeader').className = 'hidden';
 		
 		document.getElementById('idCycleCategoriesMode').checked = true;
@@ -5629,6 +5913,15 @@ Current versions of Chrome, FireFox and Opera work fine.
 	</td>
 </tr></table>
 </div> <!-- idSituationDiv -->
+
+<div id="idLapChartDiv">
+<canvas id="idLapChart" width="1000" height="800">
+<a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a> Requires support for the HTML5 Canvas.<br/>
+Please upgrade to a more recent browser version.<br/>
+For Internet Explorer (IE), you need version 9.0 or higher.<br/><br/>
+Current versions of Chrome, FireFox and Opera work fine.
+</canvas>
+</div><!-- idLapChartDiv -->
 
 <div id="idRaceChartDiv" class="noprint">
 <p>
