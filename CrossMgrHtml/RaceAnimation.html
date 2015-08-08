@@ -4662,7 +4662,7 @@ function LapChart( ) {
 		"#69D2FD",
 		"#F04403",
 		"#FE3D94",
-		"#DEEB9E",
+		"#0EAB6E",
 		"#301F5B",
 		"#CDA303",
 		"#2C6900",
@@ -4693,12 +4693,40 @@ function LapChart( ) {
 	this.lapLabelBorderColour = '#707070';
 	
 	this.regularLineWidth = 3;
-	this.selectedLineWidth = 6;
+	this.selectedLineWidth = 9;
+	this.rowHeight = 22;
 	
 	this.canvas = null;
+	this.data = [];
+	this.numSelect = null;
+	
+	this.onMouseMove = function( evt ) {
+		var numSelectOld = this.numSelect;
+		this.numSelect = null;
+		
+		var rect = this.canvas.getBoundingClientRect();
+		var x = evt.clientX - rect.left, y = evt.clientY - rect.top;
+		
+		// Find the category of the mouse.
+		for( var c = 0; c < this.data.length; ++c ) {
+			if( this.data[c].yTop <= y && y < this.data[c].yTop + this.data[c].height ) {
+				// Check that the mouse is on the name or number.
+				if( this.data[c].xRight <= x ) {
+					var i = parseInt(((y - this.data[c].yTop) / this.rowHeight) - 1);
+					if( 0 <= i && i < this.data[c].nums.length )
+						this.numSelect = this.data[c].nums[i];
+				}
+				break;
+			}
+		}
+		if( numSelectOld != this.numSelect )
+			this.draw();
+	}
 	
 	this.init = function( canvas ) {
 		this.canvas = canvas;
+		var that = this;
+		this.canvas.addEventListener( 'mousemove', function(evt) {that.onMouseMove(evt);} );
 	}
 	
 	this.getData = function() {
@@ -4777,6 +4805,7 @@ function LapChart( ) {
 		if( !this.canvas )
 			return;
 
+		var that = this;
 		this.getData();
 		if( this.data.length == 0 ) {
 			this.canvas.height = 0;
@@ -4788,13 +4817,14 @@ function LapChart( ) {
 			rowsTotal += this.data[c].nums.length + 1.5 + 2;
 		}
 		
-		var rowHeight = 22;
+		var rowHeight = this.rowHeight;
 		this.canvas.height = rowHeight * rowsTotal;
 		var width = this.canvas.width;
 		
 		var dc = this.canvas.getContext('2d');
 		dc.setTransform( 1, 0, 0, 1, 0, 0 );
 		
+		var yTop = 0;
 		for( var c = 0; c < this.data.length; ++c ) {
 			var lapsData = this.data[c].lapsData;
 			var numPos = this.data[c].numPos;
@@ -4805,13 +4835,18 @@ function LapChart( ) {
 			dc.font = fontHeight + 'px Arial';
 			
 			dc.translate( 0, rowHeight / 2 );
+			yTop += rowHeight / 2;
+			
 			dc.fillStyle = '#000000';
 			dc.textBaseline = 'middle';
 			dc.textAlign = 'left';
 			dc.fillText( this.data[c].catName, 0, rowHeight / 2 );
 			
 			dc.translate( 0, rowHeight );
+			yTop += rowHeight;
 			var height = rowHeight * (nums.length + 2);
+			this.data[c].yTop = yTop;
+			this.data[c].height = height;
 			
 			function getName( num ) {
 				var d = data[num];
@@ -4836,6 +4871,9 @@ function LapChart( ) {
 			var swatchColWidth = rowHeight;
 			var xLeft = posWidth;
 			var xRight = width - (swatchColWidth + numWidth + nameWidth + posWidth);
+			this.data[c].xLeft = xLeft;
+			this.data[c].xRight = xRight;
+			
 			var lapsWidth = xRight - xLeft;
 			var lapWidth = lapsWidth / lapsData.length;
 			
@@ -4893,10 +4931,16 @@ function LapChart( ) {
 				dc.stroke();
 			}
 			
-			// Grey out the name if the rider is not a finisher.
+			// Change the background if the rider is selected or a non-finisher.
 			for( var j = 0; j < nums.length; ++j ) {
 				var d = data[nums[j]];
-				if( d.status !== 'Finisher' )
+				if( nums[j] == this.numSelect ) {
+					dc.save();
+					dc.fillStyle = '#FFFF66';
+					dc.fillRect( xRight, getY(j), width-xRight-posWidth, rowHeight );
+					dc.restore();
+				}
+				else if( d.status !== 'Finisher' )
 					dc.fillRect( xRight, getY(j), width-xRight-posWidth, rowHeight );
 			}
 			
@@ -4922,19 +4966,18 @@ function LapChart( ) {
 			for( var j = 0; j < nums.length; ++j )
 				dc.fillText( getName(nums[j]), xText, getY(j) + rowHeight/2 );
 			
-			// Draw the position lines in reverse order so the winner ends on top.
-			dc.lineWidth = this.regularLineWidth;
-			for( var j = nums.length - 1; j >= 0; --j ) {
+			function drawPath( j ) {
 				var num = nums[j];
 				var path = numPos[num];
 				
-				dc.strokeStyle = this.lineColours[j % this.lineColours.length];
+				dc.strokeStyle = that.lineColours[j % that.lineColours.length];
 				dc.setLineDash( [] );
 				
 				dc.beginPath();
 				dc.moveTo( getX(0), getY(path[0])+rowHeight/2 );
 				dc.lineTo( getX(0) + lapWidth/2, getY(path[0])+rowHeight/2 );
-				for( var lap = 1; lap < path.length; ++lap )
+				var lap;
+				for( lap = 1; lap < path.length; ++lap )
 					dc.lineTo( getX(lap) + lapWidth/2, getY(path[lap])+rowHeight/2 );
 				var lap = path.length-1;
 				dc.stroke();
@@ -4946,6 +4989,20 @@ function LapChart( ) {
 				dc.moveTo( getX(lap) + lapWidth/2, getY(path[lap])+rowHeight/2 );
 				dc.quadraticCurveTo( getX(lap) + lapWidth/2, getY(j) + rowHeight/2, xRight+ + rowHeight/2, getY(j) + rowHeight/2 );
 				dc.stroke();
+			}
+			
+			// Draw the position lines in reverse order so the winner ends on top.
+			dc.lineWidth = this.regularLineWidth;
+			dc.lineCap = 'round';
+			var jSelect = null;
+			for( var j = nums.length - 1; j >= 0; --j ) {
+				if( nums[j] === this.numSelect )
+					jSelect = j;
+				drawPath( j );
+			}
+			if( jSelect !== null ) {
+				dc.lineWidth = this.selectedLineWidth;
+				drawPath( jSelect );
 			}
 			
 			// Draw the lap numbers.
