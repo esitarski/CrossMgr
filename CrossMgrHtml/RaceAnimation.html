@@ -429,6 +429,7 @@ var translations = {
 	'Sponsor':		['Sponsor',			"Promoteur",				"Patrocinador"],
 	'Cash':			['Cash',			"Argent",					"Dinero"],
 	'Merchandise':	['Merchandise',		"Marchendise",				"Mercancía"],
+	'Lapped':		['Lapped',			"Doublés",					"Doblados"],
 	'last':			['','','']
 };
 (function() {
@@ -3821,7 +3822,7 @@ function RefreshRaceChart()
 		var raceTimes = resultsData[i][iRaceTimes];
 		
 		if( resultsData[i][iStatus] != 'Finisher' ) {
-			dc.fillStyle = '#F1F1F1';
+			dc.fillStyle = dnfBackgroundColour;
 			dc.fillRect( 0, yLast, width, yCur - yLast + 1 );
 		}
 		
@@ -3832,7 +3833,7 @@ function RefreshRaceChart()
 			var tCur = raceTimes[j] - categoryStartOffset;
 			xCur = ~~(labelsWidthLeft + tCur * xFactor);
 			if( j == 0 ) {
-				dc.fillStyle = resultsData[i][iStatus] == 'Finisher' ? '#FFFFFF' : '#F1F1F1';
+				dc.fillStyle = resultsData[i][iStatus] == 'Finisher' ? '#FFFFFF' : dnfBackgroundColour;
 				dc.fillRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
 				dc.strokeRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
 			}
@@ -3856,7 +3857,7 @@ function RefreshRaceChart()
 		
 		// Draw the last empty bar.
 		xCur = ~~(labelsWidthLeft + dataMax * xFactor);
-		dc.fillStyle = resultsData[i][iStatus] == 'Finisher' ? '#FFFFFF' : '#F1F1F1';
+		dc.fillStyle = resultsData[i][iStatus] == 'Finisher' ? '#FFFFFF' : dnfBackgroundColour;
 		dc.fillRect( xLast, yLast, width - xLast, yCur - yLast + 1 );
 		dc.strokeRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
 		
@@ -4651,33 +4652,34 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 	}
 }
 //----------------------------------------------------------------------
+var dnfBackgroundColour = "#E0E0E0";
 function LapChart( ) {
 	// From http://tools.medialab.sciences-po.fr/iwanthue/
 	this.lineColours = [
-		"#343532",
-		"#7ADD41",
-		"#CC55D7",
-		"#DE4F2D",
-		"#9CD0D4",
-		"#CE8C84",
-		"#513369",
-		"#CD8F3A",
-		"#D1D048",
-		"#D74668",
-		"#4E672F",
-		"#C8C48E",
-		"#7A6DCE",
-		"#CD9CC9",
-		"#81E085",
-		"#6F9ED3",
-		"#C34998",
-		"#62827A",
-		"#6C2940",
-		"#734F2A",
-		"#649C3B",
-		"#9A3A2C",
-		"#6BCFA6",
-		"#5A6285"
+		"#3A3312",
+		"#9756EF",
+		"#00D222",
+		"#69D2FD",
+		"#F04403",
+		"#FE3D94",
+		"#DEEB9E",
+		"#301F5B",
+		"#CDA303",
+		"#2C6900",
+		"#45DD97",
+		"#E8B8A4",
+		"#D629BD",
+		"#0AA2A1",
+		"#C30043",
+		"#53131A",
+		"#784B07",
+		"#395B8F",
+		"#284299",
+		"#F4B478",
+		"#993AAE",
+		"#13A3E7",
+		"#340631",
+		"#F25DEE"
 	];
 	
 	this.lapLineColour = '#B0B0B0';
@@ -4685,7 +4687,7 @@ function LapChart( ) {
 	this.positionHorizontalLineColor = '#B9B9B9';
 	
 	this.topCornerBackgroundColour = '#8E8C8D';
-	this.legendBackgroundColour = '#C5C5C5';
+	this.legendBackgroundColour = '#C8C8C8';
 	this.lappedBackgroundColour = '#D8E6F4';
 	
 	this.lapLabelBorderColour = '#707070';
@@ -4700,10 +4702,8 @@ function LapChart( ) {
 	}
 	
 	this.getData = function() {
-		// Get results for the current category.
-		var lapsData = [];
-		var numIndex = {};
-		var nums = [];
+		this.data = [];
+		
 		for( var c = 0; c < catDetails.length; ++c )
 		{
 			var catDetail = catDetails[c];
@@ -4713,6 +4713,9 @@ function LapChart( ) {
 			if( categoryCur !== 'All' && categoryCur !== catName )
 				continue;
 				
+			var lapsData = [];
+			var numIndex = {};
+			var nums = [];
 			for( var p = 0; p < catDetail.pos.length; ++p )
 			{
 				var num = catDetail.pos[p];
@@ -4739,37 +4742,35 @@ function LapChart( ) {
 					lapsData[j-1].push( {'raceTime':raceTimes[j], 'num':num, 'lapsDown':0} );
 				}
 			}
-		}
 		
-		// Sort the race times by lap to get the current rank.
-		for( var lap = 0; lap < lapsData.length; ++lap )
-			lapsData[lap].sort( function(x, y) { return x.raceTime - y.raceTime; } );
-		
-		// Set the laps down.
-		for( var lap = 0; lap < lapsData.length-1; ++lap ) {
-			for( var j = lapsData[lap].length-1; j > 0; --j ) {
-				for( var lapNext = lap+1; lapNext < lapsData.length && lapsData[lap][j].raceTime > lapsData[lapNext][0].raceTime; ++lapNext )
-					--lapsData[lap][j].lapsDown;
-				if( lapsData[lap][j] === 0 )
-					break;
+			// Sort the race times by lap to get the current rank.
+			for( var lap = 0; lap < lapsData.length; ++lap )
+				lapsData[lap].sort( function(x, y) { return x.raceTime - y.raceTime; } );
+			
+			// Set the laps down.
+			for( var lap = 0; lap < lapsData.length-1; ++lap ) {
+				for( var j = lapsData[lap].length-1; j > 0; --j ) {
+					for( var lapNext = lap+1; lapNext < lapsData.length && lapsData[lap][j].raceTime > lapsData[lapNext][0].raceTime; ++lapNext )
+						--lapsData[lap][j].lapsDown;
+					if( lapsData[lap][j] === 0 )
+						break;
+				}
 			}
-		}
-		
-		// Compute the position by lap for each rider.
-		var numPos = {};
-		for( var lap = 0; lap < lapsData.length; ++lap ) {
-			for( var pos = 0; pos < lapsData[lap].length; ++pos ) {
-				var num = lapsData[lap][pos].num;
-				if( num in numPos )
-					numPos[num].push( pos );
-				else
-					numPos[num] = [pos];
+			
+			// Compute the position by lap for each rider.
+			var numPos = {};
+			for( var lap = 0; lap < lapsData.length; ++lap ) {
+				for( var pos = 0; pos < lapsData[lap].length; ++pos ) {
+					var num = lapsData[lap][pos].num;
+					if( num in numPos )
+						numPos[num].push( pos );
+					else
+						numPos[num] = [pos];
+				}
 			}
+			if( lapsData.length > 1 && nums.length > 1 )
+				this.data.push( {'lapsData': lapsData, 'numPos': numPos, 'nums': nums, 'catName':catName} );
 		}
-		
-		this.lapsData = lapsData;
-		this.numPos = numPos;
-		this.nums = nums;
 	}
 	
 	this.draw = function() {
@@ -4777,189 +4778,227 @@ function LapChart( ) {
 			return;
 
 		this.getData();
-		if( this.lapsData.length <= 1 ) {
+		if( this.data.length == 0 ) {
 			this.canvas.height = 0;
+			return;
+		}
+		
+		var rowsTotal = 0;
+		for( var c = 0; c < this.data.length; ++c ) {
+			rowsTotal += this.data[c].nums.length + 1.5 + 2;
 		}
 		
 		var rowHeight = 22;
-		this.canvas.height = rowHeight * (this.nums.length+1);
+		this.canvas.height = rowHeight * rowsTotal;
 		var width = this.canvas.width;
-		var height = this.canvas.height;
 		
 		var dc = this.canvas.getContext('2d');
-		var rowTextFraction = 0.7;
-		var fontHeight = rowHeight * rowTextFraction;
-		dc.font = fontHeight + 'px Arial';
+		dc.setTransform( 1, 0, 0, 1, 0, 0 );
 		
-		function getName( num ) {
-			var d = data[num];
-			var name = '';
-			if( d.LastName && d.FirstName ) name = d.LastName + ' ' + d.FirstName.substring(0,1).toUpperCase() + '.';
-			else if( d.LastName ) name = d.LastName;
-			else if( d.FirstName ) name = d.FirstName;
-			return name;
-		}
-		
-		var numWidth = 0;
-		var nameWidth = 0;
-		for( var j = 0; j < this.nums.length; ++j ) {
-			var num = this.nums[j];
-			numWidth = Math.max( dc.measureText(''+num).width, numWidth );
-			nameWidth = Math.max( dc.measureText(getName(num)).width, nameWidth );
-		}
-		var paddingWidth = dc.measureText('  ').width;
-		numWidth += paddingWidth;
-		nameWidth += paddingWidth;
-		
-		var posWidth = dc.measureText(''+(this.nums.length+1) ).width + paddingWidth;
-		var swatchColWidth = rowHeight;
-		var xLeft = posWidth;
-		var xRight = width - (swatchColWidth + numWidth + nameWidth + posWidth);
-		var lapsWidth = xRight - xLeft;
-		var lapWidth = lapsWidth / this.lapsData.length;
-		
-		// Draw the grid.
-		dc.clearRect(0, 0, width, height);
-		if( this.nums.length === 0 )
-			return;
-		height = rowHeight * (this.nums.length + 1);
-		
-		dc.lineCap = 'butt';
-		dc.lineJoin = 'miter';
-		dc.setLineDash( [] );
-		
-		function getY(row) { return rowHeight * (row+1); }
-		function getX(lap) { return xLeft + lapWidth * lap; }
-		
-		// Set the background for lapped riders.
-		dc.fillStyle = this.lappedBackgroundColour;
-		for( var lap = 0; lap < this.lapsData.length; ++lap ) {
-			for( var row = 0; row < this.lapsData[lap].length; ++row ) {
-				if( this.lapsData[lap][row].lapsDown !== 0 ) {
-					for( ; row < this.nums.length; ++row )
-						dc.fillRect( getX(lap), getY(row), lapWidth, rowHeight );
-				}
+		for( var c = 0; c < this.data.length; ++c ) {
+			var lapsData = this.data[c].lapsData;
+			var numPos = this.data[c].numPos;
+			var nums = this.data[c].nums;
+			
+			var rowTextFraction = 0.7;
+			var fontHeight = rowHeight * rowTextFraction;
+			dc.font = fontHeight + 'px Arial';
+			
+			dc.translate( 0, rowHeight / 2 );
+			dc.fillStyle = '#000000';
+			dc.textBaseline = 'middle';
+			dc.textAlign = 'left';
+			dc.fillText( this.data[c].catName, 0, rowHeight / 2 );
+			
+			dc.translate( 0, rowHeight );
+			var height = rowHeight * (nums.length + 2);
+			
+			function getName( num ) {
+				var d = data[num];
+				var name = '';
+				if( d.LastName && d.FirstName ) name = d.LastName + ', ' + d.FirstName;
+				else if( d.LastName ) name = d.LastName;
+				else if( d.FirstName ) name = d.FirstName;
+				return name;
 			}
-		}
-		
-		// Draw the legend.
-		dc.fillStyle = this.legendBackgroundColour;
-		dc.fillRect( 0, 0, width, rowHeight );
-		dc.fillRect( 0, 0, xLeft, height );
-		dc.fillRect( width - posWidth, 0, xLeft, height );
-		
-		dc.fillStyle = '#FFFFFF';
-		dc.textBaseline = 'middle';
-		dc.textAlign = 'center';
-		for( var j = 0; j < this.nums.length; ++j ) {
-			dc.fillText( ''+(j+1), posWidth/2, getY(j) + rowHeight/2 );
-			dc.fillText( ''+(j+1), width - posWidth/2, getY(j) + rowHeight/2 );
-		}
-		
-		dc.lineWidth = 1;
-		dc.strokeStyle = this.lapLineColour;
-		dc.fillStyle = '#F1F1F1';
-		
-		// Draw the lap lines.
-		for( var lap = 0; lap <= this.lapsData.length; ++lap ) {
-			dc.beginPath();
-			dc.moveTo( getX(lap), 0 );
-			dc.lineTo( getX(lap), height );
-			dc.stroke();
-		}
-		
-		// Draw the lines separating the names.  Also grey out the name if the rider is not a finisher.
-		for( var j = 0; j < this.nums.length; ++j ) {
-			var d = data[this.nums[j]];
-			if( d.status !== 'Finisher' )
-				dc.fillRect( xRight, getY(j), width-xRight-posWidth, rowHeight );
 			
-			dc.beginPath()
-			dc.moveTo( xRight, getY(j) );
-			dc.lineTo( width - posWidth, getY(j) );
-			dc.stroke();
-		}
-		
-		// Draw the colour swatches.
-		var swatchSize = rowHeight * rowTextFraction;
-		var swatchBorder = (rowHeight - swatchSize) / 2.0;
-		var swatchX = xRight + swatchBorder;
-		for( var j = 0; j < this.nums.length; ++j ) {
-			dc.fillStyle = this.lineColours[j % this.lineColours.length];
-			dc.fillRect( swatchX, getY(j) + swatchBorder, swatchSize, swatchSize );
-		}
-		
-		// Draw the numbers.
-		dc.fillStyle = '#000000';
-		dc.textAlign = 'right';
-		var xText = width - nameWidth - posWidth;
-		for( var j = 0; j < this.nums.length; ++j )
-			dc.fillText( this.nums[j] + ':',xText, getY(j) + rowHeight/2 );
-		
-		// Draw the names.
-		dc.textAlign = 'left';
-		var xText =  width - nameWidth - posWidth + paddingWidth/2;
-		for( var j = 0; j < this.nums.length; ++j )
-			dc.fillText( getName(this.nums[j]), xText, getY(j) + rowHeight/2 );
-		
-		// Draw the position lines in reverse order so the winner ends on top.
-		dc.lineWidth = this.regularLineWidth;
-		for( var j = this.nums.length - 1; j >= 0; --j ) {
-			var num = this.nums[j];
-			var path = this.numPos[num];
+			var numWidth = 0;
+			var nameWidth = 0;
+			for( var j = 0; j < nums.length; ++j ) {
+				var num = nums[j];
+				numWidth = Math.max( dc.measureText(''+num).width, numWidth );
+				nameWidth = Math.max( dc.measureText(getName(num)).width, nameWidth );
+			}
+			var paddingWidth = dc.measureText('  ').width;
+			nameWidth += paddingWidth;
 			
-			dc.strokeStyle = this.lineColours[j % this.lineColours.length];
+			var posWidth = dc.measureText(''+(nums.length+1) ).width + paddingWidth;
+			var swatchColWidth = rowHeight;
+			var xLeft = posWidth;
+			var xRight = width - (swatchColWidth + numWidth + nameWidth + posWidth);
+			var lapsWidth = xRight - xLeft;
+			var lapWidth = lapsWidth / lapsData.length;
+			
+			// Draw the grid.
+			dc.clearRect(0, 0, width, height);
+			if( nums.length === 0 )
+				return;
+			height = rowHeight * (nums.length + 1);
+			
+			dc.lineCap = 'butt';
+			dc.lineJoin = 'miter';
 			dc.setLineDash( [] );
 			
-			dc.beginPath();
-			dc.moveTo( getX(0), getY(path[0])+rowHeight/2 );
-			dc.lineTo( getX(0) + lapWidth/2, getY(path[0])+rowHeight/2 );
-			for( var lap = 1; lap < path.length; ++lap )
-				dc.lineTo( getX(lap) + lapWidth/2, getY(path[lap])+rowHeight/2 );
-			var lap = path.length-1;
-			dc.stroke();
+			function getY(row) { return rowHeight * (row+1); }
+			function getX(lap) { return xLeft + lapWidth * lap; }
 			
-			// Draw a curved line to the final position.
-			if( lap != this.lapsData.length-1 )
-				dc.setLineDash( [10, 5] );
-			dc.beginPath();
-			dc.moveTo( getX(lap) + lapWidth/2, getY(path[lap])+rowHeight/2 );
-			dc.quadraticCurveTo( getX(lap) + lapWidth/2, getY(j) + rowHeight/2, xRight+ + rowHeight/2, getY(j) + rowHeight/2 );
-			dc.stroke();
-		}
-		
-		// Draw the lap numbers.
-		var lapNumHeight = fontHeight;
-		dc.font = lapNumHeight*0.8 + 'px Arial';
-		dc.textAlign = 'center';
-		dc.textBaseline = 'bottom';
-		dc.lineWidth = 1;
-		var xLast = xRight;
-		for( var lap = this.lapsData.length - 1; lap >= 0; --lap ) {
-			var sLap = ' ' + (lap+1) + ' ';
-			var tWidth = dc.measureText(sLap).width;
-			var xMiddle = getX(lap) + lapWidth/2;
-			if( xMiddle + tWidth / 2 > xLast )
-				continue;
+			// Set the background for lapped riders.
+			var hasLapped = false;
+			dc.fillStyle = this.lappedBackgroundColour;
+			for( var lap = 0; lap < lapsData.length; ++lap ) {
+				for( var row = 0; row < lapsData[lap].length; ++row ) {
+					if( lapsData[lap][row].lapsDown !== 0 ) {
+						hasLapped = true;
+						for( ; row < nums.length; ++row )
+							dc.fillRect( getX(lap), getY(row), lapWidth, rowHeight );
+					}
+				}
+			}
 			
-			var x = getX(lap) + lapWidth/2;
-			var y = getY(0) - lapNumHeight;
-			dc.beginPath()
-			dc.moveTo( x - tWidth/2, y );
-			dc.lineTo( x + tWidth/2, y );
-			dc.lineTo( x + tWidth/2, y + lapNumHeight );
-			dc.lineTo( x, y + lapNumHeight * 1.25 );
-			dc.lineTo( x - tWidth/2, y + lapNumHeight );
-			dc.closePath();
+			// Draw the legend.
+			dc.fillStyle = this.legendBackgroundColour;
+			dc.fillRect( 0, 0, width, rowHeight );
+			dc.fillRect( 0, getY(nums.length), width, rowHeight );
+			dc.fillRect( 0, 0, xLeft, height );
+			dc.fillRect( width - posWidth, 0, xLeft, height );
 			
 			dc.fillStyle = '#FFFFFF';
-			dc.fill();
-			dc.strokeStyle = this.lapLabelBorderColour;
-			dc.stroke();
+			dc.textBaseline = 'middle';
+			dc.textAlign = 'center';
+			for( var j = 0; j < nums.length; ++j ) {
+				dc.fillText( ''+(j+1), posWidth/2, getY(j) + rowHeight/2 );
+				if( data[nums[j]].status == 'Finisher' )
+					dc.fillText( ''+(j+1), width - posWidth/2, getY(j) + rowHeight/2 );
+			}
 			
+			dc.lineWidth = 1;
+			dc.strokeStyle = this.lapLineColour;
+			dc.fillStyle = dnfBackgroundColour;
+			
+			// Draw the lap lines.
+			for( var lap = 0; lap <= lapsData.length; ++lap ) {
+				dc.beginPath();
+				dc.moveTo( getX(lap), 0 );
+				dc.lineTo( getX(lap), height );
+				dc.stroke();
+			}
+			
+			// Grey out the name if the rider is not a finisher.
+			for( var j = 0; j < nums.length; ++j ) {
+				var d = data[nums[j]];
+				if( d.status !== 'Finisher' )
+					dc.fillRect( xRight, getY(j), width-xRight-posWidth, rowHeight );
+			}
+			
+			// Draw the colour swatches.
+			var swatchSize = rowHeight * rowTextFraction;
+			var swatchBorder = (rowHeight - swatchSize) / 2.0;
+			var swatchX = xRight + swatchBorder;
+			for( var j = 0; j < nums.length; ++j ) {
+				dc.fillStyle = this.lineColours[j % this.lineColours.length];
+				dc.fillRect( swatchX, getY(j) + swatchBorder, swatchSize, swatchSize );
+			}
+			
+			// Draw the numbers.
 			dc.fillStyle = '#000000';
-			dc.fillText( sLap, getX(lap) + lapWidth/2, getY(0) );
-			xLast = xMiddle - tWidth/2 - 2;
+			dc.textAlign = 'right';
+			var xText = width - nameWidth - posWidth;
+			for( var j = 0; j < nums.length; ++j )
+				dc.fillText( nums[j], xText, getY(j) + rowHeight/2 );
+			
+			// Draw the names.
+			dc.textAlign = 'left';
+			var xText =  width - nameWidth - posWidth + paddingWidth/2;
+			for( var j = 0; j < nums.length; ++j )
+				dc.fillText( getName(nums[j]), xText, getY(j) + rowHeight/2 );
+			
+			// Draw the position lines in reverse order so the winner ends on top.
+			dc.lineWidth = this.regularLineWidth;
+			for( var j = nums.length - 1; j >= 0; --j ) {
+				var num = nums[j];
+				var path = numPos[num];
+				
+				dc.strokeStyle = this.lineColours[j % this.lineColours.length];
+				dc.setLineDash( [] );
+				
+				dc.beginPath();
+				dc.moveTo( getX(0), getY(path[0])+rowHeight/2 );
+				dc.lineTo( getX(0) + lapWidth/2, getY(path[0])+rowHeight/2 );
+				for( var lap = 1; lap < path.length; ++lap )
+					dc.lineTo( getX(lap) + lapWidth/2, getY(path[lap])+rowHeight/2 );
+				var lap = path.length-1;
+				dc.stroke();
+				
+				// Draw a curved line to the final position.
+				if( lap != lapsData.length-1 )
+					dc.setLineDash( [10, 5] );
+				dc.beginPath();
+				dc.moveTo( getX(lap) + lapWidth/2, getY(path[lap])+rowHeight/2 );
+				dc.quadraticCurveTo( getX(lap) + lapWidth/2, getY(j) + rowHeight/2, xRight+ + rowHeight/2, getY(j) + rowHeight/2 );
+				dc.stroke();
+			}
+			
+			// Draw the lap numbers.
+			var lapNumHeight = fontHeight;
+			dc.font = lapNumHeight*0.8 + 'px Arial';
+			dc.textAlign = 'center';
+			dc.textBaseline = 'bottom';
+			dc.lineWidth = 1;
+			var xLast = xRight;
+			for( var lap = lapsData.length - 1; lap >= 0; --lap ) {
+				var sLap = ' ' + (lap+1) + ' ';
+				var tWidth = dc.measureText(sLap).width;
+				var xMiddle = getX(lap) + lapWidth/2;
+				if( xMiddle + tWidth / 2 > xLast )
+					continue;
+				
+				var x = getX(lap) + lapWidth/2;
+				var y = getY(0) - lapNumHeight;
+				dc.beginPath()
+				dc.moveTo( x - tWidth/2, y );
+				dc.lineTo( x + tWidth/2, y );
+				dc.lineTo( x + tWidth/2, y + lapNumHeight );
+				dc.lineTo( x, y + lapNumHeight * 1.25 );
+				dc.lineTo( x - tWidth/2, y + lapNumHeight );
+				dc.closePath();
+				
+				dc.fillStyle = '#FFFFFF';
+				dc.fill();
+				dc.strokeStyle = this.lapLabelBorderColour;
+				dc.stroke();
+				
+				dc.fillStyle = '#000000';
+				dc.fillText( sLap, getX(lap) + lapWidth/2, getY(0) );
+				xLast = xMiddle - tWidth/2 - 2;
+			}
+			
+			// Draw the legend.
+			dc.font = fontHeight + 'px Arial';
+			dc.textAlign = 'left';
+			dc.textBaseline = 'middle';
+			if( hasLapped ) {
+				var s = _('Lapped') || 'Lapped';
+				var x = xRight - dc.measureText(s).width;
+				dc.fillText( s, x, getY(nums.length) + rowHeight/2 );
+				x -= rowHeight * 1.2;
+				
+				dc.fillStyle = this.lappedBackgroundColour;
+				dc.fillRect( x + swatchBorder, getY(nums.length) + swatchBorder, swatchSize, swatchSize );
+				x -= rowHeight;
+			}
+			
+			// Update the y position for the next category.
+			dc.translate( 0, height+rowHeight );
 		}
 	}
 }
