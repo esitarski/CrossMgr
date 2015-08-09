@@ -2592,7 +2592,7 @@ function GetPrimesTable( primeFromBib, pos ) {
 	if( primesCur.length == 0 )
 		return null;
 		
-	primesCur.sort();
+	primesCur.sort( function(x, y) {return x-y;} );
 	
 	// Check for report fields.
 	var hasMerchandise = false, hasCash = false, hasName = false, hasTeam = false;
@@ -2614,7 +2614,7 @@ function GetPrimesTable( primeFromBib, pos ) {
 	var td;
 	createTextChild( td = createChild(tr, 'TH'), _('Primes') );
 	td.style.fontSize = '120%';
-	td.colSpan = 1 + 1 + (hasName?1:0) + (hasTeam?1:0) + 1 + 1 + (hasCash?1:0) + (hasMerchandise?1:0) + 1;
+	td.colSpan = 1 + 1 + (hasName?1:0) + (hasTeam?1:0) + 1 + 1 + 1 + (hasCash?1:0) + (hasMerchandise?1:0) + 1;
 	td.id = 'idNonNumeric';
 	
 	var tr = createChild( thead, 'TR' );
@@ -5011,7 +5011,7 @@ function LapChart( ) {
 			dc.textAlign = 'center';
 			dc.textBaseline = 'bottom';
 			dc.lineWidth = 1;
-			var xLast = xRight;
+			var xLast = width;
 			for( var lap = lapsData.length - 1; lap >= 0; --lap ) {
 				var sLap = ' ' + (lap+1) + ' ';
 				var tWidth = dc.measureText(sLap).width;
