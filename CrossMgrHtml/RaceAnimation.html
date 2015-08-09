@@ -4691,6 +4691,7 @@ function LapChart( ) {
 	this.lappedBackgroundColour = '#D8E6F4';
 	
 	this.lapLabelBorderColour = '#707070';
+	this.primeColour = '#FFFFAA';
 	
 	this.regularLineWidth = 3;
 	this.selectedLineWidth = 9;
@@ -4796,6 +4797,7 @@ function LapChart( ) {
 						numPos[num] = [pos];
 				}
 			}
+			
 			if( lapsData.length > 1 && nums.length > 1 )
 				this.data.push( {'lapsData': lapsData, 'numPos': numPos, 'nums': nums, 'catName':catName} );
 		}
@@ -4810,6 +4812,16 @@ function LapChart( ) {
 		if( this.data.length == 0 ) {
 			this.canvas.height = 0;
 			return;
+		}
+		
+		var primeLaps = {};
+		if( primes && primes.length > 0 ) {
+			var lapsMax = 0;
+			for( var c = 0; c < this.data.length; ++c ) {
+				lapsMax = Math.max( lapsMax, this.data[c].lapsData.length );
+			}
+			for( var i = 0; i < primes.length; ++i )
+				primeLaps[lapsMax-primes[i].lapsToGo] = true;
 		}
 		
 		var rowsTotal = 0;
@@ -4890,6 +4902,17 @@ function LapChart( ) {
 			function getY(row) { return rowHeight * (row+1); }
 			function getX(lap) { return xLeft + lapWidth * lap; }
 			
+			// Draw the primes.
+			var hasPrimes = false;
+			dc.lineWidth = 1;
+			dc.fillStyle = this.primeColour;
+			for( var lap = 0; lap < lapsData.length; ++lap ) {
+				if( lap in primeLaps ) {
+					dc.fillRect( getX(lap), getY(0), lapWidth, getY(nums.length) - getY(0) );
+					hasPrimes = true;
+				}
+			}
+			
 			// Set the background for lapped riders.
 			var hasLapped = false;
 			dc.fillStyle = this.lappedBackgroundColour;
@@ -4919,11 +4942,9 @@ function LapChart( ) {
 					dc.fillText( ''+(j+1), width - posWidth/2, getY(j) + rowHeight/2 );
 			}
 			
+			// Draw the lap lines.
 			dc.lineWidth = 1;
 			dc.strokeStyle = this.lapLineColour;
-			dc.fillStyle = dnfBackgroundColour;
-			
-			// Draw the lap lines.
 			for( var lap = 0; lap <= lapsData.length; ++lap ) {
 				dc.beginPath();
 				dc.moveTo( getX(lap), 0 );
@@ -4931,7 +4952,8 @@ function LapChart( ) {
 				dc.stroke();
 			}
 			
-			// Change the background if the rider is selected or a non-finisher.
+			// Set the background of the rider bib and name.
+			dc.fillStyle = dnfBackgroundColour;
 			for( var j = 0; j < nums.length; ++j ) {
 				var d = data[nums[j]];
 				if( nums[j] == this.numSelect ) {
@@ -5043,13 +5065,26 @@ function LapChart( ) {
 			dc.font = fontHeight + 'px Arial';
 			dc.textAlign = 'left';
 			dc.textBaseline = 'middle';
+			var x = xRight;
 			if( hasLapped ) {
 				var s = _('Lapped') || 'Lapped';
-				var x = xRight - dc.measureText(s).width;
+				x -= dc.measureText(s).width;
+				dc.fillStyle = '#000000';
 				dc.fillText( s, x, getY(nums.length) + rowHeight/2 );
 				x -= rowHeight * 1.2;
 				
 				dc.fillStyle = this.lappedBackgroundColour;
+				dc.fillRect( x + swatchBorder, getY(nums.length) + swatchBorder, swatchSize, swatchSize );
+				x -= rowHeight;
+			}
+			if( hasPrimes ) {
+				var s = _('Prime') || 'Prime';
+				x -= dc.measureText(s).width;
+				dc.fillStyle = '#000000';
+				dc.fillText( s, x, getY(nums.length) + rowHeight/2 );
+				x -= rowHeight * 1.2;
+				
+				dc.fillStyle = this.primeColour;
 				dc.fillRect( x + swatchBorder, getY(nums.length) + swatchBorder, swatchSize, swatchSize );
 				x -= rowHeight;
 			}
