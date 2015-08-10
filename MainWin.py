@@ -1405,12 +1405,14 @@ class MainWin( wx.Frame ):
 	reLeadingWhitespace = re.compile( r'^[ \t]+', re.MULTILINE )
 	reComments = re.compile( r'// .*$', re.MULTILINE )
 	reBlankLines = re.compile( r'\n+' )
+	reTestCode = re.compile( '/\*\(-\*/.*?/\*-\)\*/', re.MULTILINE )	# Use non-greedy match.
 	reRemoveTags = re.compile( r'\<html\>|\</html\>|\<body\>|\</body\>|\<head\>|\</head\>', re.I )
 	def cleanHtml( self, html ):
-		# Remove leading whitespace, comments and consecutive blank lines to save space.
+		# Remove leading whitespace, comments, consecutive blank lines and test code to save space.
 		html = self.reLeadingWhitespace.sub( '', html )
 		html = self.reComments.sub( '', html )
 		html = self.reBlankLines.sub( '\n', html )
+		html = self.reTestCode.sub( '', html )
 		return html
 	
 	reTagTrainingSpaces = re.compile( '>\s+', re.MULTILINE|re.UNICODE )
