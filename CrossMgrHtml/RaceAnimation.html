@@ -4757,9 +4757,9 @@ function LapChart( ) {
 				function getY(pos) { return yTop + rowHeight * (pos + 1); }
 				
 				function getSegment( lapCur, j ) {
-					var num = lapsData[lapCur][j].num;
-					if( lapCur >= numPos[num].length )
+					if( !lapsData[lapCur] || !lapsData[lapCur][j] )
 						return null;
+					var num = lapsData[lapCur][j].num;
 					var x1, y1;
 					if( lapCur == 0 ) {
 						x1 = getX(0);
@@ -4849,6 +4849,8 @@ function LapChart( ) {
 				}
 				// Add all the lap information to the overall structure.
 				for( var j = 1; j < raceTimes.length; ++j ) {
+					if( raceIsRunning && raceTimes[j] > t )
+						break;
 					while( lapsData.length < j )
 						lapsData.push( [] );
 					lapsData[j-1].push( {'raceTime':raceTimes[j], 'num':num, 'lapsDown':0} );
@@ -4904,7 +4906,7 @@ function LapChart( ) {
 				lapsMax = Math.max( lapsMax, this.data[c].lapsData.length );
 			}
 			for( var i = 0; i < primes.length; ++i )
-				primeLaps[lapsMax-primes[i].lapsToGo] = true;
+				primeLaps[lapsMax-primes[i].lapsToGo-1] = true;
 		}
 		
 		var rowsTotal = 0;
@@ -5119,6 +5121,7 @@ function LapChart( ) {
 			dc.textAlign = 'center';
 			dc.textBaseline = 'bottom';
 			dc.lineWidth = 1;
+			dc.setLineDash( [] );
 			var xLast = width;
 			for( var lap = lapsData.length - 1; lap >= 0; --lap ) {
 				var sLap = ' ' + (lap+1) + ' ';
@@ -5799,7 +5802,7 @@ function RefreshPayload() {
 		else
 			return TryAgain( 'payload extract fails', xhr.responseText );
 	}
-	xhr.open('GET', window.localion.ref);
+	xhr.open('GET', window.location.ref);
 	xhr.send();
 }
 
