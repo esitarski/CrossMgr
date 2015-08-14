@@ -114,7 +114,7 @@ String.prototype.escapeID = function() {
 	return this.replace(/[&<>"'(){}\[\]!@#$%^* ]/g,'_');
 };
 
-//--------------------------------------------------------------------------
+// ---------------------------------------------------------------------
 
 /**
  * Creates a new Map Label
@@ -292,7 +292,7 @@ MapLabel.prototype.onRemove = function() {
 };
 MapLabel.prototype['onRemove'] = MapLabel.prototype.onRemove;
 
-//--------------------------------------------------------------------------
+// ---------------------------------------------------------------------
 
 function isEmptyObject( obj ) {
     for ( var name in obj ) {
@@ -494,7 +494,7 @@ function LineNormal( x1, y1, x2, y2, normLen )
 	return [x1 + dy, y1 - dx, x1 - dy, y1 + dx];
 }
 
-//----------------------------------------------------------------------------
+// ---------------------------------------------------------------------
 
 function colorBetween( r1, g1, b1, r2, g2, b2, x )
 {
@@ -941,7 +941,7 @@ function OpenDrivingInstructions()
 	window.open( url, null, null, true );
 }
 
-//----------------------------------------------------------------------------
+// ---------------------------------------------------------------------
 
 function getUrlParam( param, url )
 {

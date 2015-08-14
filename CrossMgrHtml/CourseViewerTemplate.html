@@ -111,7 +111,7 @@ String.prototype.escapeID = function() {
 	return this.replace(/[&<>"'(){}\[\]!@#$%^* ]/g,'_');
 };
 
-//--------------------------------------------------------------------------
+// ---------------------------------------------------------------------
 
 function MapLabel(opt_options) {
   this.set('fontFamily', 'sans-serif');
@@ -259,7 +259,7 @@ MapLabel.prototype.onRemove = function() {
 };
 MapLabel.prototype['onRemove'] = MapLabel.prototype.onRemove;
 
-//--------------------------------------------------------------------------
+// ---------------------------------------------------------------------
 
 function isEmptyObject( obj ) {
     for ( var name in obj ) {
@@ -951,7 +951,7 @@ function OpenGetDirections()
 	window.open( url, null, null, true );
 }
 
-//----------------------------------------------------------------------------
+// ---------------------------------------------------------------------
 
 function getUrlParam( param, url )
 {

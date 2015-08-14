@@ -193,7 +193,7 @@ def ShowTipAtStartup():
 		pass
 
 def replaceJsonVar( s, varName, value ):
-	return s.replace( u'%s = null' % varName, u'%s = %s' % (varName, json.dumps(value)), 1 )
+	return s.replace( u'{} = null'.format(varName), u'{} = {}'.format(varName, json.dumps(value, separators=(',',':'))), 1 )
 
 # Code on web page required by Google Analytics.
 gaSnippet = u'''
@@ -1407,6 +1407,8 @@ class MainWin( wx.Frame ):
 	reBlankLines = re.compile( r'\n+' )
 	reTestCode = re.compile( '/\*\(-\*/.*?/\*-\)\*/', re.MULTILINE )	# Use non-greedy match.
 	reRemoveTags = re.compile( r'\<html\>|\</html\>|\<body\>|\</body\>|\<head\>|\</head\>', re.I )
+	reFloatList = re.compile( r'([+-]?[0-9]+\.[0-9]+,\s*)+([+-]?[0-9]+\.[0-9]+)', re.MULTILINE )
+	reBoolList = re.compile( r'((true|false),\s*)+(true|false)', re.MULTILINE )
 	def cleanHtml( self, html ):
 		# Remove leading whitespace, comments, consecutive blank lines and test code to save space.
 		html = self.reLeadingWhitespace.sub( '', html )
@@ -1555,6 +1557,28 @@ class MainWin( wx.Frame ):
 				html = ''.join( [html[:iStart], 'src="%s"' % graphicBase64, html[iEnd+1:]] )
 			except ValueError:
 				pass
+				
+		# Clean up spurious decimal points.
+		def fixBigFloat( f ):
+			if len(f) > 6:
+				try:
+					d = f.split('.')[1]
+					return '{:.5f}'.format(float(f)).rstrip('0') if len(d) > 5 else f
+				except IndexError:
+					pass
+			return f
+			
+		def floatListRepl( m ):
+			return ','.join([fixBigFloat(f) for f in m.group().replace(',',' ').split()])
+			
+		html = self.reFloatList.sub( floatListRepl, html )
+		
+		# Convert true/false lists to 0/1.
+		def boolListRepl( m ):
+			return ','.join(['0' if f[:1] == 'f' else '1' for f in m.group().replace(',',' ').split() ])
+			
+		html = self.reBoolList.sub( boolListRepl, html )
+		
 		return html
 	
 	def addCourseToHtmlStr( self, html ):
