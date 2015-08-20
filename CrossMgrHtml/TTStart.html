@@ -316,12 +316,54 @@ function onload() {
 		playBeep( 1 );
 	}
 	
-	document.getElementById('race-name').appendChild( document.createTextNode(raceName + '    ' + raceStart.toLocaleString() + '    Last Updated ' + lastUpdated.toLocaleString()) );
+	document.getElementById('race-name').appendChild( document.createTextNode((raceName?raceName:'') + '    ' + raceStart.toLocaleString() + '    Last Updated ' + lastUpdated.toLocaleString()) );
 	
 	if( startList.length == 0 )
 		return;
 		
 	startList.sort( function(a, b) { return a[0] - b[0]; } );	// Sort by start time.
+	
+	if( raceStarted ) {
+		// Get most frequent start gap.
+		var gapTotal = {}
+		for( var i = 1; i < startList.length; ++i ) {
+			var gap = startList[i][0] - startList[i-1][0];
+			if( gap in gapTotal )
+				gapTotal[gap] += 1;
+			else
+				gapTotal[gap] = 1;
+		}
+		var gapTotalMax = 0;
+		var gapMostFrequent = 60;
+		for( gap in gapTotal ) {
+			if( gapTotal[gap] > gapTotalMax ) {
+				gapTotalMax = gapTotal[gap];
+				gapMostFrequent = parseInt(gap);
+			}
+		}
+		gapTotal = null;
+
+		// Insert Exception starts into the start list gaps exceeding 4 minutes.
+		var startGapMin = 3*60;
+		var startListExceptions = [];
+		function addExceptionStarts( startCur, startMax ) {
+			while( startCur + gapMostFrequent < startMax ) {
+				startCur += gapMostFrequent;
+				var tFormat = FormatTime(startCur);
+				startListExceptions.push( [startCur, tFormat, '<Start Exception @ ' + tFormat + '>', '<' + tFormat + '>', ''] );
+			}
+		}
+		
+		for( var i = 1; i < startList.length; ++i ) {
+			if( startList[i][0] - startList[i-1][0] >= startGapMin )
+				addExceptionStarts( startList[i-1][0], startList[i][0] );
+		}
+		
+		// Insert Exception starts at the end.
+		addExceptionStarts( startList[startList.length-1][0], startList[startList.length-1][0] + gapMostFrequent * 9 );
+		startList = startList.concat( startListExceptions );
+		startList.sort( function(a, b) { return a[0] - b[0]; } );	// Sort by start time.
+	}
 	
 	var tNow = new Date();
 	for( var i = 0; i < startList.length; ++i ) {

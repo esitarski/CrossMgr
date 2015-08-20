@@ -385,17 +385,17 @@ function OpenVirtualTourWindow()
 	
 	// Prolog.
 	write( [
-		'{{?xml version="1.0" ?}}',
-		'{{kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2"}}',
-		'{{Document}}',
-		  '{{name}}Google Earth Ride - Powered by CrossMgr{{/name}}',
+		'{-{?xml version="1.0" ?}-}',
+		'{-{kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2"}-}',
+		'{-{Document}-}',
+		  '{-{name}-}Google Earth Ride - Powered by CrossMgr{-{/name}-}',
 	] );
 	
 	// The Virtual Tour
 	write( [
-		  '{{gx:Tour'+'>',
-		   '{{name}}Google Earth Ride - Powered by CrossMgr{{/name}}',
-		   '{{gx:Playlist}}',
+		  '{-{gx:Tour'+'>',
+		   '{-{name}-}Google Earth Ride - Powered by CrossMgr{-{/name}-}',
+		   '{-{gx:Playlist}-}',
 	] );
 	var courseCoordinatesLength = courseCoordinates.length;
 	var lastCompassBearing = null;
@@ -415,44 +415,44 @@ function OpenVirtualTourWindow()
 		else
 			duration = GreatCircleDistance(lat, lon, latNext, lonNext) / speed;
 		write( [
-		    '{{gx:FlyTo}}',
-              '{{gx:duration}}' + duration + '{{/gx:duration}}',
-              '{{gx:flyToMode}}' + (i == 0 ? 'bounce' : 'smooth') + '{{/gx:flyToMode}}',
-              '{{Camera}}',
-                '{{latitude}}' + lat + '{{/latitude}}',
-                '{{longitude}}' + lon + '{{/longitude}}',
-                '{{altitude}}'+ 2 +'{{/altitude}}',
-                '{{altitudeMode}}relativeToGround{{/altitudeMode}}',
-                '{{heading}}' + compassBearing + '{{/heading}}',
-                '{{tilt}}'+ 80 +'{{/tilt}}',
-              '{{/Camera}}',
-            '{{/gx:FlyTo}}',
+		    '{-{gx:FlyTo}-}',
+              '{-{gx:duration}-}' + duration + '{-{/gx:duration}-}',
+              '{-{gx:flyToMode}-}' + (i == 0 ? 'bounce' : 'smooth') + '{-{/gx:flyToMode}-}',
+              '{-{Camera}-}',
+                '{-{latitude}-}' + lat + '{-{/latitude}-}',
+                '{-{longitude}-}' + lon + '{-{/longitude}-}',
+                '{-{altitude}-}'+ 2 +'{-{/altitude}-}',
+                '{-{altitudeMode}-}relativeToGround{-{/altitudeMode}-}',
+                '{-{heading}-}' + compassBearing + '{-{/heading}-}',
+                '{-{tilt}-}'+ 80 +'{-{/tilt}-}',
+              '{-{/Camera}-}',
+            '{-{/gx:FlyTo}-}',
 		] );
 		lastCompassBearing = compassBearing;
 	}
 	write( [
-		  '{{/gx:Playlist}}',
-		'{{/gx:Tour}}',
+		  '{-{/gx:Playlist}-}',
+		'{-{/gx:Tour}-}',
 	] );
 	
 	// The Finish.
 	write( [
-	   '{{Placemark}}',
-        '{{name}}Finish{{/name}}',
-        '{{Point}}',
-          '{{coordinates}}' + courseCoordinates[0] + ',' + courseCoordinates[1] + '{{/coordinates}}',
-        '{{/Point}}',
-       '{{/Placemark}}'
+	   '{-{Placemark}-}',
+        '{-{name}-}Finish{-{/name}-}',
+        '{-{Point}-}',
+          '{-{coordinates}-}' + courseCoordinates[0] + ',' + courseCoordinates[1] + '{-{/coordinates}-}',
+        '{-{/Point}-}',
+       '{-{/Placemark}-}'
 	] );
 
 	// The Course.
 	write( [
-       '{{Placemark}}',
-         '{{name}}Course{{/name}}',
-         '{{LineString}}',
-           '{{tessellate}}1{{/tessellate}}',
-           '{{altitudeMode}}relativeToGround{{/altitudeMode}}',
-		   '{{coordinates}}',
+       '{-{Placemark}-}',
+         '{-{name}-}Course{-{/name}-}',
+         '{-{LineString}-}',
+           '{-{tessellate}-}1{-{/tessellate}-}',
+           '{-{altitudeMode}-}relativeToGround{-{/altitudeMode}-}',
+		   '{-{coordinates}-}',
 	] );
 	for( var i = 0; i < courseCoordinates.length; i += 2 )
 		kml.push( courseCoordinates[i] + ',' + courseCoordinates[i+1] + ',' + 1.0 );
@@ -461,11 +461,11 @@ function OpenVirtualTourWindow()
 	
 	// Eplilog.
 	write( [
-	       '{{/coordinates}}',
-        '{{/LineString}}',
-      '{{/Placemark}}',
-	'{{/Document}}',
-    '{{/kml}}'
+	       '{-{/coordinates}-}',
+        '{-{/LineString}-}',
+      '{-{/Placemark}-}',
+	'{-{/Document}-}',
+    '{-{/kml}-}'
 	] );
 	
 	//alert( kml.join(' ') );
@@ -480,7 +480,7 @@ function OpenVirtualTourWindow()
 	template = template.replace( "raceName = '';", "raceName='" + text.escapeHTML() + "';" );
 	
 	var w = window.open( '', '', '', true );
-	w.document.write( template.replace(/{{/g, '<').replace(/}}/g, '>') );
+	w.document.write( template.replace(/{-{/g, '<').replace(/}-}/g, '>') );
 	w.document.close();
 }
 
@@ -990,7 +990,7 @@ function onLoad()
 	if( !raceNotes )
 		document.getElementById('idRaceNotes').className = 'hidden';
 	else
-		document.getElementById('idRaceNotes').innerHTML = raceNotes.replace(/{{/g, '<').replace(/}}/g, '>');
+		document.getElementById('idRaceNotes').innerHTML = raceNotes.replace(/{-{/g, '<').replace(/}-}/g, '>');
 	
 	document.getElementById('idRaceName').innerHTML = document.getElementById('idTitle').innerHTML;
 	if( email )

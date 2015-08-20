@@ -1459,12 +1459,12 @@ class MainWin( wx.Frame ):
 			if notes.lstrip()[:6].lower().startswith( '<html>' ):
 				notes = TemplateSubstitute( notes, race.getTemplateValues() )
 				notes = self.reRemoveTags.sub( '', notes )
-				notes = notes.replace('<', '{{').replace( '>', '}}' )
+				notes = notes.replace('<', '{-{').replace( '>', '}-}' )
 				payload['raceNotes']	= notes
 			else:
 				notes = TemplateSubstitute( cgi.escape(notes), race.getTemplateValues() )
 				notes = self.reTagTrainingSpaces.sub( u'>', notes ).replace( '</table>', '</table><br/>' )
-				notes = notes.replace('<', '{{').replace( '>', '}}' ).replace('\n','{{br/}}')
+				notes = notes.replace('<', '{-{').replace( '>', '}-}' ).replace('\n','{-{br/}-}')
 				payload['raceNotes']	= notes
 			if race.startTime:
 				raceStartTime = (race.startTime - race.startTime.replace( hour=0, minute=0, second=0 )).total_seconds()
@@ -1493,7 +1493,7 @@ class MainWin( wx.Frame ):
 			template = self.reLeadingWhitespace.sub( '', template )
 			template = self.reComments.sub( '', template )
 			template = self.reBlankLines.sub( '\n', template )
-			template = template.replace( '<', '{{' ).replace( '>', '}}' )
+			template = template.replace( '<', '{-{' ).replace( '>', '}-}' )
 			return template
 		
 		# If a map is defined, add the course viewers.
@@ -1608,10 +1608,10 @@ class MainWin( wx.Frame ):
 			notes = getattr(race, 'notes', '')
 			if notes.lstrip()[:6].lower().startswith( '<html>' ):
 				notes = self.reRemoveTags.sub( '', notes )
-				notes = notes.replace('<', '{{').replace( '>', '}}' )
+				notes = notes.replace('<', '{-{').replace( '>', '}-}' )
 				payload['raceNotes']	= notes
 			else:
-				payload['raceNotes']	= cgi.escape(notes).replace('\n','{{br/}}')
+				payload['raceNotes']	= cgi.escape(notes).replace('\n','{-{br/}-}')
 			courseCoordinates, gpsAltigraph, totalElevationGain, lengthKm, isPointToPoint = None, None, None, None, None
 			geoTrack = getattr(race, 'geoTrack', None)
 			if geoTrack is not None:
@@ -1635,7 +1635,7 @@ class MainWin( wx.Frame ):
 				template = self.reLeadingWhitespace.sub( '', template )
 				template = self.reComments.sub( '', template )
 				template = self.reBlankLines.sub( '\n', template )
-				template = template.replace( '<', '{{' ).replace( '>', '}}' )
+				template = template.replace( '<', '{-{' ).replace( '>', '}-}' )
 				payload['virtualRideTemplate'] = template
 			except:
 				pass
