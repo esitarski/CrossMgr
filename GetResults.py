@@ -59,6 +59,7 @@ class RiderResult( object ):
 		self.laps		= len(lapTimes)
 		self.lastTime	= lastTime
 		self.lastTimeOrig = lastTime
+		self._lastTimeOrig = lastTime		# Keep an internal copy of the original last time for checking close finishes.
 		self.raceCat	= raceCat
 		self.lapTimes	= lapTimes
 		self.raceTimes	= raceTimes
@@ -437,6 +438,7 @@ def GetResultsCore( category ):
 					rr.ttNote = getattr(rider, 'ttNote', u'')
 		elif roadRaceFinishTimes:
 			for rr in riderResults:
+				rr._
 				rr.lastTime = rr.lastTimeOrig = rr.roadRaceLastTime
 				rr.gap = rr.roadRaceGap
 				rr.gapValue = rr.roadRaceGapValue

@@ -532,13 +532,13 @@ class Results( wx.Panel ):
 			if race.isTimeTrial:
 				def getSortTime( rr ):
 					try:
-						return rr.firstTime + rr.lastTimeOrig
+						return rr.firstTime + rr._lastTimeOrig
 					except:
 						return 0
 			else:
 				def getSortTime( rr ):
 					try:
-						return rr.lastTimeOrig
+						return rr._lastTimeOrig
 					except:
 						return 0
 						
@@ -548,7 +548,7 @@ class Results( wx.Panel ):
 				key = getSortTime
 			)
 			for i in xrange(1, len(results)):
-				if results[i].lastTimeOrig - results[i-1].lastTimeOrig <= CloseFinishTime:
+				if results[i]._lastTimeOrig - results[i-1]._lastTimeOrig <= CloseFinishTime:
 					self.closeFinishBibs[results[i-1].num].append( results[i].num )
 					self.closeFinishBibs[results[i].num].append( results[i-1].num )
 		
