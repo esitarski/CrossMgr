@@ -342,19 +342,20 @@ function updateLapTable() {
 	
 	var spacer = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
 	var d = data[bib];
+	var hasSpeed = (d.speed && d.lapSpeeds && d.lapSpeeds.length > 0);
 	
 	var dataTable = new google.visualization.DataTable();
 	dataTable.addColumn( 'number', 'Lap' );
 	dataTable.addColumn( 'number', 'Lap Time' );
-	dataTable.addColumn( 'number', 'Race Time' );
-	if( d.speed && d.lapSpeeds && d.lapSpeeds.length > 0 )
+	dataTable.addColumn( 'number', 'Race Time' + (!hasSpeed ? spacer : '') );
+	if( hasSpeed )
 		dataTable.addColumn( 'number', 'Lap Speed' + ' (' + d.speed.split(' ')[1] + ')' + spacer );
 	
 	for( var r = 1; r < d.raceTimes.length; ++r ) {
 		var lapTime = d.raceTimes[r] - d.raceTimes[r-1];
 		var raceTime = d.raceTimes[r] - d.raceTimes[0];
-		var row = [r, { v:lapTime, f:FormatTime(lapTime, true) }, { v:raceTime, f:FormatTime(raceTime, true) }];
-		if( d.speed && d.lapSpeeds && d.lapSpeeds.length > 0 )
+		var row = [r, { v:lapTime, f:FormatTime(lapTime, true) }, { v:raceTime, f:FormatTime(raceTime, true) + (!hasSpeed ? spacer : '') }];
+		if( hasSpeed )
 			row.push( { v:d.lapSpeeds[r-1], f:d.lapSpeeds[r-1].toFixed(2) + spacer } );
 		dataTable.addRow( row );
 	}
