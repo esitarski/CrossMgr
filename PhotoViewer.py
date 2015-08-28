@@ -27,20 +27,8 @@ def getRiderName( info ):
 	return firstName
 
 def getFileKey( f ):
-	'''
-	Extracts the key from a picture filename.
-	Expects filename of the form:  "Bib-XXXX-time-HH-MM-SS-DDD.jpeg"
-	'''
-	values = os.path.splitext(os.path.basename(f))[0].split('-')[3:]
-	
-	d = values.pop()
-	secsFraction = int(d) / math.pow(10, len(d))
-	
-	secs = 0.0
-	for v in values:
-		secs = secs * 60.0 + int(v)
-
-	return secs + secsFraction
+	bib, raceTime, count, photoTime = Utils.ParsePhotoFName(f)
+	return raceTime
 	
 def CmpThumb(first, second):
 	"""
@@ -71,12 +59,12 @@ def ListDirectory(self, directory, fileExtList):
 
 def getRiderNameFromFName( fname ):
 	# Get the rider name based on the picture fname
-	name = ''
 	try:
-		num = int(os.path.basename(fname).split('-')[1])
+		num, raceTime, count, photoTime = Utils.ParsePhotoFName(fname)
 	except:
-		num = None
+		return ''
 		
+	name = ''
 	if num:
 		try:
 			externalInfo = Model.race.excelLink.read()

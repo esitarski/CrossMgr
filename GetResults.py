@@ -438,7 +438,6 @@ def GetResultsCore( category ):
 					rr.ttNote = getattr(rider, 'ttNote', u'')
 		elif roadRaceFinishTimes:
 			for rr in riderResults:
-				rr._
 				rr.lastTime = rr.lastTimeOrig = rr.roadRaceLastTime
 				rr.gap = rr.roadRaceGap
 				rr.gapValue = rr.roadRaceGapValue

@@ -687,6 +687,17 @@ def CombineFirstLastName( firstName, lastName ):
 	else:
 		return firstName
 
+def ParsePhotoFName( fname ):
+	fname = os.path.splitext(os.path.basename(fname))[0]
+	fields = fname.split( '-' )
+	
+	bib = int(fields[1])
+	hour, minute, second, decimal = fields[3:7]
+	raceTime = float(hour)*(60.0*60.0) + float(minute)*60.0 + float(second) + float(decimal)/(10**len(decimal))
+	count = int(fields[-1])
+	photoTime = datetime.datetime.fromtimestamp(int(fields[7], 36) / 10000.0) if len(fields) >= 9 else None
+	return bib, raceTime, count, photoTime
+
 invalidFNameChars = set( c for c in '<>:"/\\|?*' )
 def ValidFilename( fname ):
 	return ''.join( c for c in fname if c not in invalidFNameChars and ord(c) > 31 )

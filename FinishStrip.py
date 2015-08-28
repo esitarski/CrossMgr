@@ -149,19 +149,16 @@ class FinishStrip( wx.Panel ):
 	
 	def getPhotoTime( self, fname ):
 		try:
-			fname = os.path.splitext(os.path.basename(fname))[0]
-			
-			# Parse time and photo index from filename.
-			tstr = fname.split( '-time-' )[1]
-			hh, mm, ss, dd, ii = tstr.split( '-' )
-			t = float(hh)*60.0*60.0 + float(mm)*60.0 + float('{}.{}'.format(ss,dd))
-			ii = float(ii) - 1.0
+			bib, raceTime, count, photoTime = Utils.ParsePhotoFName(fname)
 		except Exception as e:
 			return None
 			
-		# Round to nearest frame based on index.
-		t = math.floor(t * self.fps + ii) / self.fps
-		return t
+		if photoTime is None:
+			# Round to nearest frame based on index.
+			return math.floor(raceTime * self.fps + count) / self.fps
+		else:
+			# Return the accurate photo time in race seconds.
+			return (photoTime - Model.race.startTime).total_seconds()
 		
 	def RefreshBitmaps( self, tStart=0.0, tEnd=sys.float_info.max, reusePrevious=True ):
 		bitmaps = {t:bm for t, bm in self.timeBitmaps} if reusePrevious else {}

@@ -410,7 +410,7 @@ class MainWin( wx.Frame ):
 			lastImage = None
 			for i, f in enumerate(frames):
 				
-				fname = GetPhotoFName( message['dirName'], message.get('bib',None), message.get('raceSeconds',None), i )
+				fname = GetPhotoFName( message['dirName'], message.get('bib',None), message.get('raceSeconds',None), i, times[i] )
 				image = AddPhotoHeader(
 					f,
 					message.get('bib', None),
