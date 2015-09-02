@@ -123,7 +123,7 @@ def ShowSplashScreen():
 	frame = wx.SplashScreen(bitmap, wx.SPLASH_CENTRE_ON_SCREEN|wx.SPLASH_TIMEOUT, int(showSeconds*1000), None)
 			
 #----------------------------------------------------------------------------------
-		
+
 class MyTipProvider( wx.PyTipProvider ):
 	def __init__( self, fname, tipNo = None ):
 		self.tips = []
@@ -1537,7 +1537,7 @@ class MainWin( wx.Frame ):
 						template = fp.read()
 					payload['travelMap'] = sanitize( template )
 				except:
-					pass				
+					pass
 		except Exception as e:
 			pass
 		

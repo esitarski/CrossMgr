@@ -206,7 +206,7 @@ class Alien( object ):
 			if i == 2 and not response.lower().startswith('ReaderName'.lower()):
 				self.messageQ.put( ('Alien', 'Error: "%s" command fails.' % initCmds[2]) )
 				self.messageQ.put( ('Alien', 'Most likely cause:  Reader Login Failed.') )
-				self.messageQ.put( ('Alien', 'Check that the reader accepts Username=%s and Password=%d' % (initCmds[0], initCmds[1]) ) )
+				self.messageQ.put( ('Alien', 'Check that the reader accepts Username="{}" and Password="{}"'.format(initCmds[0], initCmds[1]) ) )
 				self.messageQ.put( ('Alien', 'Aborting.') )
 				success = False
 				break
