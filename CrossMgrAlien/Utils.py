@@ -60,9 +60,9 @@ def formatTime( secs, highPrecision = False ):
 	else:
 		decimal = ''
 	if hours > 0:
-		return "%s%d:%02d:%02d%s" % (sign, hours, minutes, secs, decimal)
+		return "{}{}:{:02d}:{:02d}{}".format(sign, hours, minutes, secs, decimal)
 	else:
-		return "%s%02d:%02d%s" % (sign, minutes, secs, decimal)
+		return "{}{:02d}:{:02d}{}".format(sign, minutes, secs, decimal)
 
 def formatTimeGap( secs, highPrecision = False ):
 	if secs is None:
@@ -78,13 +78,13 @@ def formatTimeGap( secs, highPrecision = False ):
 	minutes = int( (secs // 60) % 60 )
 	secs = secs % 60
 	if highPrecision:
-		decimal = '.%02d' % int( f * 100 )
+		decimal = '.{:02d}'.format(int(f * 100))
 	else:
 		decimal = ''
 	if hours > 0:
-		return "%s%dh%d'%02d%s\"" % (sign, hours, minutes, secs, decimal)
+		return "{}{}h{}'{:02d}{}\"".format(sign, hours, minutes, secs, decimal)
 	else:
-		return "%s%d'%02d%s\"" % (sign, minutes, secs, decimal)
+		return "{}{}'{:02d}{}\"".format(sign, minutes, secs, decimal)
 
 def formatTimeCompressed( secs, highPrecision = False ):
 	f = formatTime( secs, highPrecision )
@@ -109,11 +109,11 @@ def StrToSeconds( str = '' ):
 	
 def SecondsToStr( secs = 0 ):
 	secs = int(secs)
-	return '%02d:%02d:%02d' % (secs // (60*60), (secs // 60)%60, secs % 60)
+	return '{:02d}:{:02d}:{:02d}'.format(secs // (60*60), (secs // 60)%60, secs % 60)
 
 def SecondsToMMSS( secs = 0 ):
 	secs = int(secs)
-	return '%02d:%02d' % ((secs // 60)%60, secs % 60)
+	return '{:02d}:{:02d}'.format((secs // 60)%60, secs % 60)
 
 def ordinal( value ):
 	"""
@@ -151,8 +151,8 @@ def ordinal( value ):
 		return value
 
 	if (value % 100)//10 != 1:
-		return "%d%s" % (value, ['th','st','nd','rd','th','th','th','th','th','th'][value%10])
-	return "%d%s" % (value, "th")
+		return "{}{}".format(value, ['th','st','nd','rd','th','th','th','th','th','th'][value%10])
+	return "{}{}".format(value, "th")
 	
 def getHomeDir():
 	sp = wx.StandardPaths.Get()

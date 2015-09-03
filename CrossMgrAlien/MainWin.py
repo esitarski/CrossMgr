@@ -202,7 +202,7 @@ class MainWin( wx.Frame ):
 		self.copyToClipboard.Bind( wx.EVT_BUTTON, self.doCopyToClipboard )
 		bs.Add( self.copyToClipboard, border = 32, flag = wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
 		self.tStart = datetime.datetime.now()
-		bs.Add( setFont(bigFont,wx.StaticText(self, wx.ID_ANY, 'Last Reset: %s' % self.tStart.strftime('%H:%M:%S'))), border = 10, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
+		bs.Add( setFont(bigFont,wx.StaticText(self, wx.ID_ANY, 'Last Reset: {}'.format(self.tStart.strftime('%H:%M:%S')))), border = 10, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
 		self.runningTime = setFont(bigFont,wx.StaticText(self, wx.ID_ANY, '00:00:00' ))
 		bs.Add( self.runningTime, border = 20, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
 		bs.Add( setFont(bigFont,wx.StaticText(self, wx.ID_ANY, ' / ')), flag=wx.ALIGN_CENTER_VERTICAL )
@@ -244,7 +244,7 @@ class MainWin( wx.Frame ):
 		gs = wx.GridSizer( rows=0, cols=4, hgap=2, vgap=2 )
 		self.antennas = []
 		for i in xrange(4):
-			gs.Add( wx.StaticText(self, wx.ID_ANY, '%d' % i), flag=wx.ALIGN_CENTER )
+			gs.Add( wx.StaticText(self, wx.ID_ANY, '{}'.format(i)), flag=wx.ALIGN_CENTER )
 		for i in xrange(4):
 			cb = wx.CheckBox( self, wx.ID_ANY, '')
 			if i < 2:
@@ -263,11 +263,11 @@ class MainWin( wx.Frame ):
 		ips = Utils.GetAllIps()
 		self.notifyHost = wx.Choice( self, wx.ID_ANY, choices = ips )
 		hb.Add( self.notifyHost )
-		hb.Add( wx.StaticText(self, wx.ID_ANY, ' : %d' % NotifyPort ), flag=wx.ALIGN_CENTER_VERTICAL )
+		hb.Add( wx.StaticText(self, wx.ID_ANY, ' : {}'.format(NotifyPort) ), flag=wx.ALIGN_CENTER_VERTICAL )
 		gbs.Add( hb, pos=(iRow ,1), span=(1,1) )
 		
 		iRow += 1
-		self.listenForHeartbeat = wx.CheckBox( self, wx.ID_ANY, 'Listen for Alien Heartbeat on Port: %d' % HeartbeatPort, style=wx.ALIGN_LEFT )
+		self.listenForHeartbeat = wx.CheckBox( self, wx.ID_ANY, 'Listen for Alien Heartbeat on Port: {}'.format(HeartbeatPort), style=wx.ALIGN_LEFT )
 		self.listenForHeartbeat.SetValue( True )
 		gbs.Add( self.listenForHeartbeat, pos=(iRow, 0), span=(1,2) )
 		
@@ -535,7 +535,7 @@ class MainWin( wx.Frame ):
 	def updateMessages( self, event ):
 		tNow = datetime.datetime.now()
 		running = int((tNow - self.tStart).total_seconds())
-		self.runningTime.SetLabel( '%02d:%02d:%02d' % (running // (60*60), (running // 60) % 60, running % 60) )
+		self.runningTime.SetLabel( '{:02d}:{:02d}:{:02d}'.format(running // (60*60), (running // 60) % 60, running % 60) )
 		self.time.SetLabel( tNow.strftime('%H:%M:%S') )
 		
 		if not self.messageQ:
@@ -604,7 +604,7 @@ def MainLoop():
 		try:
 			with open(redirectFileName, 'a') as pf:
 				pf.write( '********************************************\n' )
-				pf.write( '%s: %s Started.\n' % (datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'), AppVerName) )
+				pf.write( '{}: {} Started.\n'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'), AppVerName) )
 		except:
 			pass
 	

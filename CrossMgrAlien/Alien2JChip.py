@@ -88,13 +88,13 @@ class Alien2JChip( object ):
 				try:
 					received = sock.recv(1)
 				except Exception as e:
-					self.messageQ.put( ('Alien2JChip', 'CrossMgr Communication Error: %s' % e) )
+					self.messageQ.put( ('Alien2JChip', 'CrossMgr Communication Error: {}'.format(e)) )
 					success = False
 					break
 				if received == 'G':
 					while received[-1] != CR:
 						received += sock.recv(1)
-					self.messageQ.put( ('Alien2JChip', 'Received cmd: "%s" from CrossMgr' % received[:-1]) )
+					self.messageQ.put( ('Alien2JChip', 'Received cmd: "{}" from CrossMgr'.format(received[:-1])) )
 					break
 
 			#------------------------------------------------------------------------------
@@ -108,15 +108,15 @@ class Alien2JChip( object ):
 			self.messageQ.put( ('Alien2JChip', 'Send gettime data...') )
 			# format is GT0HHMMSShh<CR> where hh is 100's of a second.  The '0' (zero) after GT is the number of days running and is ignored by CrossMgr.
 			dBase = datetime.datetime.now()
-			message = 'GT0%02d%02d%02d%03d date=%04d%02d%02d%s' % (
-				dBase.hour, dBase.minute, dBase.second, int((dBase.microsecond / 1000000.0) * 1000.0),
-				dBase.year, dBase.month, dBase.day,
+			message = 'GT0{} date={}{}'.format(
+				dBase.strftime('%H%M%S%f'),
+				dBase.strftime('%Y%m%d'),
 				CR)
 			self.messageQ.put( ('Alien2JChip', message[:-1]) )
 			try:
 				sock.send( message )
 			except Exception as e:
-				self.messageQ.put( ('Alien2JChip', 'CrossMgr Communication Error: %s' % e) )
+				self.messageQ.put( ('Alien2JChip', 'CrossMgr Communication Error: {}'.format(e)) )
 				success = False
 
 			#------------------------------------------------------------------------------	
@@ -133,7 +133,7 @@ class Alien2JChip( object ):
 				if received == 'S':
 					while received[-1] != CR:
 						received += sock.recv(1)
-					self.messageQ.put( ('Alien2JChip', 'Received cmd: "%s" from CrossMgr' % received[:-1]) )
+					self.messageQ.put( ('Alien2JChip', 'Received cmd: "{}" from CrossMgr'.format(received[:-1])) )
 					break
 
 			#------------------------------------------------------------------------------	
@@ -151,10 +151,10 @@ class Alien2JChip( object ):
 				try:
 					sock.send( message )
 					self.tagCount += 1
-					self.messageQ.put( ('Alien2JChip', 'Forwarded %d: %s' % (self.tagCount, message[:-1])) )
+					self.messageQ.put( ('Alien2JChip', 'Forwarded {}: {}'.format(self.tagCount, message[:-1])) )
 				except Exception as e:
 					self.dataQ.put( d )	# Put the data back on the queue for resend.
-					self.messageQ.put( ('Alien2JChip', 'Lost CrossMgr Connection (%s).  Attempting to reconnect...' % e) )
+					self.messageQ.put( ('Alien2JChip', 'Lost CrossMgr Connection ({}).  Attempting to reconnect...'.format(e)) )
 					break
 		
 			sock.close()

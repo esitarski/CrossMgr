@@ -91,7 +91,7 @@ for i, n in enumerate(tag):
 with open('AlienTest.csv', 'w') as f:
 	f.write( 'Bib#,Tag,dummy3,dummy4,dummy5\n' )
 	for n in nums:
-		f.write( '%d,%s\n' % (n, tag[n]) )
+		f.write( '{},{}\n'.format(n, tag[n]) )
 
 #------------------------------------------------------------------------------
 		
@@ -137,14 +137,14 @@ def MonitorCmds():
 			print 'cmd:', cmd
 			if cmd.lower().startswith( 'set' ):
 				eq = cmd.find( '=' )
-				response = '%s = %s' % (cmd[3:eq].strip(), cmd[eq+1:].strip())
+				response = '{} = {}'.format(cmd[3:eq].strip(), cmd[eq+1:].strip())
 			elif cmd.lower().startswith('get'):
-				response = '%s = TestResponse cmdCount=%d' % (cmd.split()[1], cmdCount)
+				response = '{} = TestResponse cmdCount={}'.format(cmd.split()[1], cmdCount)
 			elif cmd.endswith('?'):
-				response = '%s = TestResponse cmdCount=%d' % (cmd[:-1], cmdCount)
+				response = '{} = TestResponse cmdCount={}'.format(cmd[:-1], cmdCount)
 			else:
 				response = cmd
-			conn.sendall( '%s\r\n\0' % response )
+			conn.sendall( '{}\r\n\0'.format(response) )
 		haveCommands = True
 		cmdCount += 1
 
@@ -235,7 +235,7 @@ def SendData():
 			time.sleep( dt )
 			
 			message = formatMessage( n, lap, dBase + datetime.timedelta(seconds = t) )
-			sys.stdout.write( 'sending: %s\n' % message[:-3] )
+			sys.stdout.write( 'sending: {}\n'.format(message[:-3]) )
 			try:
 				sock.send( message )
 				sock.send( message )
