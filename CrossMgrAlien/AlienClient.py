@@ -5,7 +5,10 @@ import threading
 import random
 import datetime
 from MainWin import HeartbeatPort, NotifyPort
-from Utils import DEFAULT_HOST, readDelimitedData
+from Utils import readDelimitedData
+from AutoDetect import GetDefaultHost
+
+DEFAULT_HOST = GetDefaultHost()
 
 from xml.dom.minidom import parseString
 
@@ -97,7 +100,7 @@ def Heartbeat():
 	address = (DEFAULT_HOST, HeartbeatPort)
 	s = socket.socket( socket.AF_INET, socket.SOCK_DGRAM )
 	while keepGoing:
-		print 'sending heartbeat...'
+		print 'sending heartbeat...', address
 		s.sendto( heartbeat, address )
 		time.sleep( 5 )
 		

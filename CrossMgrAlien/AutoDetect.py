@@ -1,5 +1,28 @@
+import re
 import socket
-import Utils
+import subprocess
+
+def GetDefaultHost():
+	DEFAULT_HOST = socket.gethostbyname(socket.gethostname())
+	if DEFAULT_HOST == '127.0.0.1':
+		reSplit = re.compile('[: \t]+')
+		try:
+			co = subprocess.Popen(['ifconfig'], stdout = subprocess.PIPE)
+			ifconfig = co.stdout.read()
+			for line in ifconfig.split('\n'):
+				line = line.strip()
+				try:
+					if line.startswith('inet addr:'):
+						fields = reSplit.split( line )
+						addr = fields[2]
+						if addr != '127.0.0.1':
+							DEFAULT_HOST = addr
+							break
+				except:
+					pass
+		except:
+			pass
+	return DEFAULT_HOST
 
 cmdStr = '''
 alien							# default username
@@ -33,7 +56,7 @@ def getResponse( conn ):
 def findAlienHost( alienPort = DefaultAlienCmdPort ):
 	''' Search ip addresses adjacent to the computer in an attempt to find the reader. '''
 	success = False
-	ip = [int(i) for i in Utils.GetDefaultHost().split('.')]
+	ip = [int(i) for i in GetDefaultHost().split('.')]
 	j = 0
 	for i in xrange(14):
 		j = -j if j > 0 else -j + 1
@@ -54,7 +77,7 @@ def findAlienHost( alienPort = DefaultAlienCmdPort ):
 		
 		for i, cmd in enumerate(initCmds):
 			try:
-				cmdSocket.sendall( '%s%s%s' % ('' if i < 2 else CmdPrefix, cmd, CmdDelim) )
+				cmdSocket.sendall( '{}{}{}'.format('' if i < 2 else CmdPrefix, cmd, CmdDelim) )
 			except:
 				continue
 			try:
@@ -79,7 +102,7 @@ def findAlienHost( alienPort = DefaultAlienCmdPort ):
 	return None
 
 def AutoDetect( alienPort = DefaultAlienCmdPort ):
-	return findAlienHost( alienPort ), Utils.GetDefaultHost()
+	return findAlienHost( alienPort ), GetDefaultHost()
 		
 if __name__ == '__main__':
 	print AutoDetect(5084)

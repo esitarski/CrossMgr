@@ -173,8 +173,8 @@ class Alien( object ):
 		try:
 			cmdSocket.connect( (self.cmdHost, int(self.cmdPort)) )
 		except Exception as inst:
-			self.messageQ.put( ('Alien', 'Reader Connection Failed: CmdAddr=%s:%d' % (self.cmdHost, self.cmdPort) ) )
-			self.messageQ.put( ('Alien', '%s' % inst ) )
+			self.messageQ.put( ('Alien', 'Reader Connection Failed: CmdAddr={}:{}'.format(self.cmdHost, self.cmdPort) ) )
+			self.messageQ.put( ('Alien', '{}'.format(inst) ) )
 			self.messageQ.put( ('Alien', 'Check that the Reader is turned on and connected, and press Reset.') )
 			cmdSocket.close()
 			return False
@@ -195,16 +195,16 @@ class Alien( object ):
 				cmdContext['time'] = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
 			
 			cmd = c.format( **cmdContext )											# Perform field substitutions.
-			self.messageQ.put( ('Alien', 'Sending Command: "%s"' % cmd) )			# Write to the message queue.
+			self.messageQ.put( ('Alien', 'Sending Command: "{}"'.format(cmd)) )			# Write to the message queue.
 			# Send cmd.  Prefix with 0x01 if not username or password.
-			cmdSocket.sendall( '%s%s%s' % ('' if i < 2 else self.CmdPrefix, cmd, self.CmdDelim) )
+			cmdSocket.sendall( '{}{}{}'.format('' if i < 2 else self.CmdPrefix, cmd, self.CmdDelim) )
 			response = self.getResponse( cmdSocket )								# Get the response.
-			self.messageQ.put( ('Alien', 'Reader Response: "%s"' % self.stripReaderDelim(response) ) )
+			self.messageQ.put( ('Alien', 'Reader Response: "{}"'.format(self.stripReaderDelim(response)) ) )
 			
 			# Check if we could successfully get the ReaderName from the #2 command.  If so, the login was successful.
 			# If the login fails, the reader just returns nothing.
 			if i == 2 and not response.lower().startswith('ReaderName'.lower()):
-				self.messageQ.put( ('Alien', 'Error: "%s" command fails.' % initCmds[2]) )
+				self.messageQ.put( ('Alien', 'Error: "{}" command fails.'.format(initCmds[2])) )
 				self.messageQ.put( ('Alien', 'Most likely cause:  Reader Login Failed.') )
 				self.messageQ.put( ('Alien', 'Check that the reader accepts Username="{}" and Password="{}"'.format(initCmds[0], initCmds[1]) ) )
 				self.messageQ.put( ('Alien', 'Aborting.') )
@@ -290,8 +290,8 @@ class Alien( object ):
 				self.cmdHost = info['IPAddress']
 				self.cmdPort = int(info['CommandPort'])
 				
-			self.messageQ.put( ('Alien', 'Alien reader.  CmdAddr=%s:%d' % (self.cmdHost, self.cmdPort)) )
-			self.messageQ.put( ('CmdHost', '%s:%d' % (self.cmdHost, self.cmdPort)) )
+			self.messageQ.put( ('Alien', 'Alien reader.  CmdAddr={}:{}'.format(self.cmdHost, self.cmdPort)) )
+			self.messageQ.put( ('CmdHost', '{}:{}'.format(self.cmdHost, self.cmdPort)) )
 
 			#---------------------------------------------------------------------------
 			# Send initialization commands to the reader.
@@ -299,7 +299,7 @@ class Alien( object ):
 			try:
 				success = self.sendCommands()
 			except Exception as e:
-				self.messageQ.put( ('Alien', 'Send Commands fails.  Error: %s' % e) )
+				self.messageQ.put( ('Alien', 'Send Commands fails.  Error: {}'.format(e)) )
 				success = False
 			
 			if not success:
@@ -341,7 +341,7 @@ class Alien( object ):
 						break
 					except Exception as inst:
 						self.messageQ.put( ('Alien', 'Reader Data Connection Failed:' ) )
-						self.messageQ.put( ('Alien', '%s' % inst ) )
+						self.messageQ.put( ('Alien', '{}'.format(inst) ) )
 						readerSocket.close()
 						return False
 						
@@ -418,7 +418,7 @@ class Alien( object ):
 						if (discoveryTime - LRT).total_seconds() < RepeatSeconds:
 							self.messageQ.put( (
 								'Alien',
-								'Received %d.  tag=%s Skipped (<%d secs ago).  time=%s' % (self.tagCount, tagID, RepeatSeconds, discoveryTimeStr)) )
+								'Received {}.  tag={} Skipped (<{} secs ago).  time={}'.format(self.tagCount, tagID, RepeatSeconds, discoveryTimeStr)) )
 							continue
 						
 						# Put this read on the queue for transmission to CrossMgr.
@@ -427,11 +427,11 @@ class Alien( object ):
 						# Write the entry to the log.
 						if pf:
 							# 									Thu Dec 04 10:14:49 PST
-							pf.write( '%s,%s,%s\n' % (
+							pf.write( '{},{},{}\n'.format(
 										tagID,					# Keep tag in same format as read.
 										discoveryTime.strftime('%a %b %d %H:%M:%S.%f %Z %Y-%m-%d'),
 										readCount) )
-						self.messageQ.put( ('Alien', 'Received %d. tag=%s, time=%s' % (self.tagCount, tagID, discoveryTimeStr)) )
+						self.messageQ.put( ('Alien', 'Received {}. tag={}, time={}'.format(self.tagCount, tagID, discoveryTimeStr)) )
 					
 					# Close the log file.
 					if pf:
