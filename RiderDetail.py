@@ -868,16 +868,21 @@ class RiderDetail( wx.Panel ):
 				riderInfo = {}
 				
 			try:
-				riderName = u'{}, {} {}'.format(riderInfo['LastName'], riderInfo['FirstName'], num)
+				riderName = u'{}, {} {}: {}'.format(riderInfo['LastName'], riderInfo['FirstName'], _('Bib'), num)
 			except KeyError:
 				try:
-					riderName = u'{} {}'.format(riderInfo['LastName'], num)
+					riderName = u'{} {}: {}'.format(riderInfo['LastName'], _('Bib'), num)
 				except KeyError:
 					try:
-						riderName = u'{} {}'.format(riderInfo['FirstName'], num)
+						riderName = u'{} {}: {}'.format(riderInfo['FirstName'], _('Bib'), num)
 					except KeyError:
-						riderName = u'{}'.format(num)
-						
+						riderName = u'{}: {}'.format(_('Bib'), num)
+
+			try:
+				riderName += u' {}: {}'.format( _('Age'), riderInfo['Age'] )
+			except KeyError:
+				pass
+			
 			infoStart = race.numTimeInfo.getInfoStr( num, tLapStart )
 			if infoStart:
 				infoStart = _('\nLap Start ') + infoStart
@@ -1083,25 +1088,24 @@ class RiderDetail( wx.Panel ):
 			except AttributeError:
 				externalInfo = {}
 			
+			info = externalInfo.get(int(num), {})
+			riderName = u', '.join( n for n in [info.get( 'LastName', u'' ), info.get( 'FirstName', u'' )] if n )
 			try:
-				info = externalInfo[int(num)]
-				self.riderName.SetLabel( u', '.join( n for n in [info.get( 'LastName', u'' ), info.get( 'FirstName', u'' )] if n ) )
-				self.riderTeam.SetLabel( u'{}'.format(info.get('Team', '')) )
+				riderName += u'      {}  {}'.format( _('Age'), info['Age'] )
 			except KeyError:
 				pass
+				
+			self.riderName.SetLabel( riderName )
+			self.riderTeam.SetLabel( u'{}'.format(info.get('Team', '')) )
 
-			try:
-				info = externalInfo[int(num)]
-				tags = []
-				for tagName in TagFields:
-					try:
-						tags.append( u'{}'.format(info[tagName]).lstrip('0').upper() )
-					except (KeyError, ValueError):
-						pass
-				if tags:
-					self.tags.SetLabel( ', '.join(tags) )
-			except KeyError:
-				pass
+			tags = []
+			for tagName in TagFields:
+				try:
+					tags.append( u'{}'.format(info[tagName]).lstrip('0').upper() )
+				except (KeyError, ValueError):
+					pass
+			if tags:
+				self.tags.SetLabel( u', '.join(tags) )
 			
 			waveCategory = race.getCategory( num )
 			category = None
