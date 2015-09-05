@@ -170,6 +170,7 @@ class Alien( object ):
 		''' Send initialization commands to the Alien reader. '''
 		self.messageQ.put( ('Alien', 'Sending initialization commands to the Alien reader...') )
 		cmdSocket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+		cmdSocket.settimeout( 120.0 )
 		try:
 			cmdSocket.connect( (self.cmdHost, int(self.cmdPort)) )
 		except Exception as inst:
@@ -195,7 +196,7 @@ class Alien( object ):
 				cmdContext['time'] = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
 			
 			cmd = c.format( **cmdContext )											# Perform field substitutions.
-			self.messageQ.put( ('Alien', 'Sending Command: "{}"'.format(cmd)) )			# Write to the message queue.
+			self.messageQ.put( ('Alien', 'Sending Command: "{}"'.format(cmd)) )		# Write to the message queue.
 			# Send cmd.  Prefix with 0x01 if not username or password.
 			cmdSocket.sendall( '{}{}{}'.format('' if i < 2 else self.CmdPrefix, cmd, self.CmdDelim) )
 			response = self.getResponse( cmdSocket )								# Get the response.

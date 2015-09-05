@@ -2595,15 +2595,17 @@ function GetPrimesTable( primeFromBib, pos ) {
 	primesCur.sort( function(x, y) {return x-y;} );
 	
 	// Check for report fields.
-	var hasMerchandise = false, hasCash = false, hasName = false, hasTeam = false;
+	var hasMerchandise = false, hasCash = false, hasPoints = false, hasSponsor = false, hasName = false, hasTeam = false;
 	for( var p = 0; p < primesCur.length; ++p ) {
 		var prime = primes[primesCur[p]];
 		var bib = prime.winnerBib;
 		var info = data[bib];
 		hasCash = (hasCash || prime.cash);
+		hasPoints = (hasPoints || prime.points);
 		hasMerchandise = (hasMerchandise || prime.merchandise);
 		hasName = (hasName || (info['FirstName'] || info['LastName']));
 		hasTeam = (hasTeam || info['Team']);
+		hasSponsor = (hasSponsor || prime.sponsor)
 	}
 	
 	var table = document.createElement('TABLE');
@@ -2636,12 +2638,16 @@ function GetPrimesTable( primeFromBib, pos ) {
 	td.id = 'idNonNumeric';
 	if( hasCash )
 		createTextChild( td = createChild(tr, 'TH'), _('Cash'));
+	if( hasPoints )
+		createTextChild( td = createChild(tr, 'TH'), _('Points'));
 	if( hasMerchandise ) {
 		createTextChild( td = createChild(tr, 'TH'), _('Merchandise'));
 		td.id = 'idNonNumeric';
 	}
-	createTextChild( td = createChild(tr, 'TH'), _('Sponsor'));
-	td.id = 'idNonNumeric';
+	if( hasSponsor ) {
+		createTextChild( td = createChild(tr, 'TH'), _('Sponsor'));
+		td.id = 'idNonNumeric';
+	}
 
 	var tbody = createChild( table, 'TBODY' );
 	for( var p = 0; p < primesCur.length; ++p ) {
@@ -2669,12 +2675,16 @@ function GetPrimesTable( primeFromBib, pos ) {
 		td.id = 'idNonNumeric';
 		if( hasCash )
 			createTextChild( td = createChild(tr, 'TD'), prime.cash ? prime.cash.toFixed(2) : '');
+		if( hasPoints )
+			createTextChild( td = createChild(tr, 'TD'), prime.points ? (prime.points != parseInt(prime.points) ? prime.points.toFixed(2) : prime.points) : '');
 		if( hasMerchandise ) {
-			createTextChild( td = createChild(tr, 'TD'), prime.merchandise);
+			createTextChild( td = createChild(tr, 'TD'), prime.merchandise ? prime.merchandise : '');
 			td.id = 'idNonNumeric';
 		}
-		createTextChild( td = createChild(tr, 'TD'), prime.sponsor);
-		td.id = 'idNonNumeric';
+		if( hasSponsor ) {
+			createTextChild( td = createChild(tr, 'TD'), prime.sponsor ? prime.sponsor : '');
+			td.id = 'idNonNumeric';
+		}
 	}
 	return table;
 }

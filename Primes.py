@@ -9,6 +9,7 @@ from ReorderableGrid import ReorderableGrid
 from FinishStrip		import ShowFinishStrip
 from ReadSignOnSheet	import ExcelLink
 from GetResults			import GetResults
+from RaceInputState import RaceInputState
 
 def getWinnerInfo( bib ):
 	race = Model.race
@@ -40,6 +41,8 @@ class Primes( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize ):
 		super(Primes, self).__init__( parent, id, size=size )
 		
+		self.state = RaceInputState()
+		
 		vsOverall = wx.BoxSizer( wx.VERTICAL )
 		
 		#---------------------------------------------------------------
@@ -50,6 +53,7 @@ class Primes( wx.Panel ):
 			(_('Laps\nTo Go'),			'lapsToGo',		'i'),
 			(_('Sponsor'),				'sponsor', 		's'),
 			(_('Cash'),					'cash', 		'f'),
+			(_('Points'),				'points', 		'i'),
 			(_('Merchandise'),			'merchandise', 	's'),
 			(_('Winner\nBib'),			'winnerBib',	'i'),
 			(u'',						'winnerInfo',	's'),
@@ -196,7 +200,18 @@ class Primes( wx.Panel ):
 		if not race:
 			Utils.MessageOK( self, _('You must have a Race to create a next Prime.'), _('Missing Race') )
 			return
+		
 		nextPrime = race.primes[rowNext].copy()
+		
+		nextPoints = {
+			(1, 5):	3,
+			(2, 3): 2,
+			(3, 2): 1,
+		}.get( (nextPrime['position'], nextPrime['points']), None )
+		
+		if nextPoints is not None:
+			nextPrime['points'] = nextPoints
+		
 		try:
 			nextPrime['position'] += 1
 		except:
@@ -217,6 +232,8 @@ class Primes( wx.Panel ):
 			return
 		nextPrime = race.primes[rowNext].copy()
 		nextPrime['position'] = 1
+		if nextPrime['points']:
+			nextPrime['points'] = 5
 		if nextPrime['lapsToGo'] > 0:
 			nextPrime['lapsToGo'] -= 1
 		nextPrime['winnerBib'] = None
@@ -319,7 +336,8 @@ class Primes( wx.Panel ):
 		self.grid.AutoSizeRows( False )
 	
 	def refresh( self ):
-		self.updateGrid()
+		if self.state.changed():
+			self.updateGrid()
 		
 	def commit( self ):
 		self.grid.SaveEditControlValue()	# Make sure the current edit is committed.

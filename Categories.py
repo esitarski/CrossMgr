@@ -10,6 +10,7 @@ import wx.lib.masked	as  masked
 
 from GetResults import GetCategoryDetails, UnstartedRaceWrapper
 from ExportGrid import ExportGrid
+from RaceInputState import RaceInputState
 
 #--------------------------------------------------------------------------------
 
@@ -222,6 +223,8 @@ class Categories( wx.Panel ):
 	
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
+		
+		self.state = RaceInputState()
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		
@@ -633,7 +636,10 @@ and remove them from other categories.'''),
 		self.grid.ClearSelection()
 		self.grid.SelectRow( min(r+1, self.grid.GetNumberRows()-1), True )
 		
-	def refresh( self ):
+	def refresh( self ):		
+		if not self.state.changed():
+			return
+			
 		# Fix the height of the column labels.
 		dc = wx.WindowDC( self.grid )
 		dc.SetFont( self.grid.GetLabelFont() )

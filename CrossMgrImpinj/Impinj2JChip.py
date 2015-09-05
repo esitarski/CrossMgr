@@ -132,9 +132,9 @@ class Impinj2JChip( object ):
 			self.messageQ.put( ('Impinj2JChip', 'Send gettime data...') )
 			# format is GT0HHMMSShh<CR> where hh is 100's of a second.  The '0' (zero) after GT is the number of days running, ignored by CrossMgr.
 			dBase = datetime.datetime.now()
-			message = 'GT0%02d%02d%02d%03d date=%04d%02d%02d%s' % (
-				dBase.hour, dBase.minute, dBase.second, int((dBase.microsecond / 1000000.0) * 1000.0),
-				dBase.year, dBase.month, dBase.day,
+			message = 'GT0{} date={}{}'.format(
+				dBase.strftime('%H%M%S%f'),
+				dBase.strftime('%Y%m%d'),
 				CR)
 			self.messageQ.put( ('Impinj2JChip', message[:-1]) )
 			try:

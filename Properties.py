@@ -8,6 +8,7 @@ import wx.lib.intctrl as intctrl
 import wx.lib.masked.numctrl as numctrl
 import wx.lib.masked as masked
 import wx.lib.agw.flatnotebook as flatnotebook
+from RaceInputState import RaceInputState
 
 #------------------------------------------------------------------------------------------------
 
@@ -595,7 +596,9 @@ class Properties( wx.Panel ):
 
 	def __init__( self, parent, id=wx.ID_ANY, addEditButton=True ):
 		super(Properties, self).__init__(parent, id)
-
+		
+		self.state = RaceInputState()
+		
 		self.SetBackgroundColour( wx.WHITE )
 		
 		mainSizer = wx.BoxSizer( wx.VERTICAL )
@@ -745,6 +748,9 @@ class Properties( wx.Panel ):
 		return self.updateFileName()
 	
 	def refresh( self ):
+		if not self.state.changed():
+			return
+
 		with Model.LockRace() as race:
 			self.setEditable( False )
 			if race is None:

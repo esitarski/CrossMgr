@@ -13,6 +13,7 @@ import functools
 import traceback
 import threading
 from os.path import commonprefix
+from collections import defaultdict
 
 import Utils
 import Version
@@ -1013,6 +1014,7 @@ class Race( object ):
 		self.numTimeInfoField = NumTimeInfo()
 		
 		self.tagNums = None
+		self.lastOpened = datetime.datetime.now()
 		memoize.clear()
 	
 	def getTemplateValues( self ):
@@ -1550,17 +1552,16 @@ class Race( object ):
 		ctn = {}
 		
 		entries = self.interpolate()
-		categories = self.getCategories()
 		
-		categorySplit = dict( (c, []) for c in categories )
+		categorySplit = defaultdict( list )
 		getCategory = self.getCategory
 		
 		for e in entries:
 			category = getCategory(e.num)
 			if category:
-				categorySplit[getCategory(e.num)].append( e )
+				categorySplit[category].append( e )
 			
-		for c in categories:
+		for c in self.getCategories():
 			times = [0.0]
 			nums = [None]
 			lapCur = 1

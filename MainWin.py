@@ -2379,6 +2379,7 @@ class MainWin( wx.Frame ):
 		raceSave = Model.race
 		Model.newRace()
 		race = Model.race
+		race.lastOpened = datetime.datetime.now()
 		
 		# Create the link to the RaceDB excel sheet.
 		try:
@@ -2500,6 +2501,7 @@ class MainWin( wx.Frame ):
 				isFinished = race.isFinished()
 				race.tagNums = None
 				race.resetAllCaches()
+				race.lastOpened = datetime.datetime.now()
 				Model.setRace( race )
 			
 			self.fileName = fileName
