@@ -187,6 +187,8 @@ class CategoryIconRenderer(gridlib.PyGridCellRenderer):
 		gridlib.PyGridCellRenderer.__init__(self)
 
 	def Draw(self, grid, attr, dc, rect, row, col, isSelected):
+		if col+1 >= grid.GetNumberCols():
+			return
 		value = grid.GetCellValue( row, col+1 ).strip()
 		
 		if value.endswith( _('Start Wave') ):
@@ -293,7 +295,6 @@ class Categories( wx.Panel ):
 			(_('Active'),				'active'),
 			(_('Name'),					'name'),
 			(_('Gender'),				'gender'),
-			(_('Numbers'),				'catStr'),
 			(_('Start\nOffset'),		'startOffset'),
 			(_('Race\nLaps'),			'numLaps'),
 			(_('Lapped\nRiders\nContinue'),	'lappedRidersMustContinue'),
@@ -305,10 +306,12 @@ class Categories( wx.Panel ):
 			(_('Publish'),				'publishFlag'),
 			(_('Upload'),				'uploadFlag'),
 			(_('Series'),				'seriesFlag'),
+			(_('Numbers'),				'catStr'),
+			(u'_name2',					'name'),
 		]
 		self.computedFields = {'rule80Time', 'suggestedLaps'}
-		self.colnames = [colName for colName, fieldName in self.colNameFields]
-		self.iCol = { fieldName:i for i, (colName, fieldName) in enumerate(self.colNameFields) if fieldName }
+		self.colnames = [colName if not colName.startswith('_') else _('Name Copy') for colName, fieldName in self.colNameFields]
+		self.iCol = { fieldName:i for i, (colName, fieldName) in enumerate(self.colNameFields) if fieldName and not colName.startswith('_') }
 		
 		self.activeColumn = self.iCol['active']
 		self.genderColumn = self.iCol['gender']
@@ -384,6 +387,11 @@ class Categories( wx.Panel ):
 				self.choiceCols.add( col )
 				self.dependentCols.add( col )
 				
+			elif colName == '_name2':
+				attr.SetAlignment( wx.ALIGN_LEFT, wx.ALIGN_CENTRE )
+				attr.SetBackgroundColour( wx.Colour(240,240,240) )
+				attr.SetReadOnly( True )
+				
 			self.grid.SetColAttr( col, attr )
 		
 		self.Bind( gridlib.EVT_GRID_CELL_LEFT_CLICK, self.onGridLeftClick )
@@ -426,11 +434,16 @@ class Categories( wx.Panel ):
 			wx.CallAfter( self.grid.EnableCellEditControl )
 		event.Skip()
 
+	def fixNameCopy( self, row ):
+		name = self.grid.GetCellValue(row, self.iCol['name'])
+		self.grid.SetCellValue( row, self.grid.GetNumberCols()-1, name )
+	
 	def onCellChanged( self, event ):
 		self.rowCur = event.GetRow()
 		self.colCur = event.GetCol()
 		if self.colCur in [1, 2]:
 			self.fixCells()
+		self.fixNameCopy( self.rowCur )
 		event.Skip()
 
 	def onEditorCreated( self, event ):
@@ -547,6 +560,7 @@ and remove them from other categories.'''),
 		self.grid.SetCellValue( r, self.iCol['publishFlag'], u'1' if publishFlag else u'0' )
 		self.grid.SetCellValue( r, self.iCol['uploadFlag'], u'1' if uploadFlag else u'0' )
 		self.grid.SetCellValue( r, self.iCol['seriesFlag'], u'1' if seriesFlag else u'0' )
+		self.grid.SetCellValue( r, self.grid.GetNumberCols()-1, name )
 		
 		race = Model.race
 		category = race.categories.get(u'{} ({})'.format(name.strip(), gender), None) if race else None
@@ -638,7 +652,7 @@ and remove them from other categories.'''),
 		self.grid.ClearSelection()
 		self.grid.SelectRow( min(r+1, self.grid.GetNumberRows()-1), True )
 		
-	def refresh( self ):		
+	def refresh( self ):
 		if not self.state.changed():
 			return
 			
