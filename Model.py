@@ -131,6 +131,7 @@ class Category(object):
 	CatCustom = 2
 	
 	catType = 0
+	publishFlag = True
 	uploadFlag = True
 	seriesFlag = True
 	
@@ -144,6 +145,7 @@ class Category(object):
 		'distance',
 		'distanceType',
 		'firstLapDistance',
+		'publishFlag',
 		'uploadFlag',
 		'seriesFlag',
 		'catType',
@@ -222,7 +224,7 @@ class Category(object):
 						numLaps = None, sequence = 0,
 						distance = None, distanceType = None, firstLapDistance = None,
 						gender = 'Open', lappedRidersMustContinue = False,
-						catType = CatWave, uploadFlag = True, seriesFlag = True ):
+						catType = CatWave, uploadFlag = True, seriesFlag = True, publishFlag = True ):
 		self.active = False
 		active = unicode(active).strip()
 		if active and active[0] in u'TtYy1':
@@ -245,6 +247,11 @@ class Category(object):
 			except:
 				pass
 				
+		self.publishFlag = True
+		publishFlag = unicode(publishFlag).strip()
+		if publishFlag and publishFlag[0] not in u'TtYy1':
+			self.publishFlag = False
+		
 		self.uploadFlag = True
 		uploadFlag = unicode(uploadFlag).strip()
 		if uploadFlag and uploadFlag[0] not in u'TtYy1':
@@ -1656,9 +1663,12 @@ class Race( object ):
 	def numPulledRiders( self ):
 		return sum( (1 for r in self.riders.itervalues() if r.status == Rider.Pulled) )
 
-	def getCategories( self, startWaveOnly = True, uploadOnly = False, excludeCustom = False, excludeCombined = False ):
+	def getCategories( self, startWaveOnly=True, publishOnly=False, uploadOnly=False, excludeCustom=False, excludeCombined=False ):
 		activeCategories = [c for c in self.categories.itervalues() if c.active and (not startWaveOnly or c.catType == Category.CatWave)]
 		
+		if publishOnly:
+			activeCategories = [c for c in activeCategories if c.publishFlag]
+			
 		if uploadOnly:
 			activeCategories = [c for c in activeCategories if c.uploadFlag]
 			

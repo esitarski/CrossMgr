@@ -232,7 +232,7 @@ def getRaceCategories():
 		with Model.LockRace() as race:
 			if race is None:
 				return []
-			categories = [ (c.fullname, c) for c in race.getCategories(False) if race.hasCategory(c) ]
+			categories = [ (c.fullname, c) for c in race.getCategories(startWaveOnly=False, publishOnly=True) if race.hasCategory(c) ]
 		categories.append( ('All', None) )
 	return categories
 

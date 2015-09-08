@@ -297,7 +297,9 @@ function updateCategoryResults() {
 }
 
 function categorySelectChange( select ) {
-	categoryCur = categoryList[select.options[select.selectedIndex].value];
+	alert( select.selectedIndex );
+	alert( JSON.stringify(catList) );
+	categoryCur = catList[select.options[select.selectedIndex].value];
 	updateCompare();
 	updateCompareDisplays();
 }

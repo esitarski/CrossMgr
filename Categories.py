@@ -302,6 +302,7 @@ class Categories( wx.Panel ):
 			(_('First\nLap\nDist.'),	'firstLapDistance'),
 			(_('80%\nLap\nTime'),		'rule80Time'),
 			(_('CrossMgr\nEstimated\nLaps'),	'suggestedLaps'),
+			(_('Publish'),				'publishFlag'),
 			(_('Upload'),				'uploadFlag'),
 			(_('Series'),				'seriesFlag'),
 		]
@@ -341,7 +342,7 @@ class Categories( wx.Panel ):
 				attr.SetAlignment( wx.ALIGN_LEFT, wx.ALIGN_CENTRE )
 				self.choiceCols.add( col )
 				
-			elif fieldName in {'active', 'lappedRidersMustContinue', 'uploadFlag', 'seriesFlag'}:
+			elif fieldName in {'active', 'lappedRidersMustContinue', 'publishFlag', 'uploadFlag', 'seriesFlag'}:
 				boolEditor = gridlib.GridCellBoolEditor()
 				boolEditor.UseStringValues( '1', '0' )
 				attr.SetEditor( boolEditor )
@@ -522,7 +523,7 @@ and remove them from other categories.'''),
 					distance = None, distanceType = None,
 					firstLapDistance = None, gender = None,
 					catType = Model.Category.CatWave,
-					uploadFlag = True, seriesFlag = True ):
+					uploadFlag = True, seriesFlag = True, publishFlag = True ):
 					
 		if len(startOffset) < len('00:00:00'):
 			startOffset = '00:' + startOffset
@@ -543,6 +544,7 @@ and remove them from other categories.'''),
 		self.grid.SetCellValue( r, self.iCol['distance'], ('%.3f' % distance) if distance else '' )
 		self.grid.SetCellValue( r, self.iCol['distanceType'], self.DistanceTypeChoices[distanceType if distanceType else 0] )
 		self.grid.SetCellValue( r, self.iCol['firstLapDistance'], ('%.3f' % firstLapDistance) if firstLapDistance else '' )
+		self.grid.SetCellValue( r, self.iCol['publishFlag'], u'1' if publishFlag else u'0' )
 		self.grid.SetCellValue( r, self.iCol['uploadFlag'], u'1' if uploadFlag else u'0' )
 		self.grid.SetCellValue( r, self.iCol['seriesFlag'], u'1' if seriesFlag else u'0' )
 		

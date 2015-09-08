@@ -1482,7 +1482,7 @@ class MainWin( wx.Frame ):
 		tNow = datetime.datetime.now()
 		payload['timestamp']			= [tNow.ctime(), tLastRaceTime]
 		payload['email']				= self.getEmail()
-		payload['data']					= GetAnimationData(getExternalData = True)
+		payload['data']					= GetAnimationData(getExternalData=True, publishOnly=True)
 		payload['catDetails']			= GetCategoryDetails()
 		payload['version']				= Version.AppVerName
 		if gpsPoints:
