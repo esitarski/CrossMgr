@@ -297,8 +297,6 @@ function updateCategoryResults() {
 }
 
 function categorySelectChange( select ) {
-	alert( select.selectedIndex );
-	alert( JSON.stringify(catList) );
 	categoryCur = catList[select.options[select.selectedIndex].value];
 	updateCompare();
 	updateCompareDisplays();
