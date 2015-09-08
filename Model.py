@@ -246,21 +246,14 @@ class Category(object):
 					self.catType = self.CatCustom
 			except:
 				pass
-				
-		self.publishFlag = True
-		publishFlag = unicode(publishFlag).strip()
-		if publishFlag and publishFlag[0] not in u'TtYy1':
-			self.publishFlag = False
 		
-		self.uploadFlag = True
-		uploadFlag = unicode(uploadFlag).strip()
-		if uploadFlag and uploadFlag[0] not in u'TtYy1':
-			self.uploadFlag = False
+		def isBool( v ):
+			v = unicode(v).strip()
+			return v and v in u'TtYy1'
 		
-		self.seriesFlag = True
-		seriesFlag = unicode(seriesFlag).strip()
-		if seriesFlag and seriesFlag[0] not in u'TtYy1':
-			self.seriesFlag = False
+		self.publishFlag = isBool( publishFlag )
+		self.uploadFlag = isBool( uploadFlag )
+		self.seriesFlag = isBool( seriesFlag )
 			
 		try:
 			self._numLaps = int(numLaps)
@@ -412,7 +405,7 @@ class Category(object):
 
 	key_attr = ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'catStr',
 				'distance', 'distanceType', 'firstLapDistance',
-				'gender', 'lappedRidersMustContinue', 'catType', 'uploadFlag', 'seriesFlag']
+				'gender', 'lappedRidersMustContinue', 'catType', 'publishFlag', 'uploadFlag', 'seriesFlag']
 	def __cmp__( self, c ):
 		for attr in self.key_attr:
 			cCmp = cmp( getattr(self, attr, None), getattr(c, attr, None) )
@@ -1689,7 +1682,7 @@ class Race( object ):
 							toExclude.add( c )
 						break
 			activeCategories = [c for c in activeCategories if c not in toExclude]
-			
+		
 		return activeCategories
 
 	def setCategoryMask( self ):
@@ -1830,7 +1823,7 @@ class Race( object ):
 				except KeyError:
 					self.categories[cNewName] = cNew
 			
-			self.categories = dict( (cName, cValue) for cName, cValue in self.categories.iteritems() if cName in newCategories )
+			self.categories = { cName:cValue for cName, cValue in self.categories.iteritems() if cName in newCategories }
 			self.resetCategoryCache()
 			self.setChanged()
 			

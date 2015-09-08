@@ -55,7 +55,7 @@ class CategoriesPrintout( wx.Printout ):
 		allZeroStarters = True
 		with UnstartedRaceWrapper():
 			catMap = dict( (c.fullname, c) for c in race.getCategories( startWaveOnly=False ) )
-			catDetails = GetCategoryDetails( False )
+			catDetails = GetCategoryDetails( ignoreEmptyCategories=False, publishOnly=True )
 			catDetailsMap = dict( (cd['name'], cd) for cd in catDetails )
 			
 			title = u'\n'.join( [_('Categories'), race.name, race.scheduledStart + u' ' + _('Start on') + u' ' + Utils.formatDate(race.date)] )
@@ -308,7 +308,7 @@ class Categories( wx.Panel ):
 		]
 		self.computedFields = {'rule80Time', 'suggestedLaps'}
 		self.colnames = [colName for colName, fieldName in self.colNameFields]
-		self.iCol = dict( (fieldName, i) for i, (colName, fieldName) in enumerate(self.colNameFields) if fieldName )
+		self.iCol = { fieldName:i for i, (colName, fieldName) in enumerate(self.colNameFields) if fieldName }
 		
 		self.activeColumn = self.iCol['active']
 		self.genderColumn = self.iCol['gender']
@@ -523,7 +523,7 @@ and remove them from other categories.'''),
 					distance = None, distanceType = None,
 					firstLapDistance = None, gender = None,
 					catType = Model.Category.CatWave,
-					uploadFlag = True, seriesFlag = True, publishFlag = True ):
+					publishFlag = True, uploadFlag = True, seriesFlag = True, ):
 					
 		if len(startOffset) < len('00:00:00'):
 			startOffset = '00:' + startOffset
@@ -678,6 +678,7 @@ and remove them from other categories.'''),
 								distance			= getattr(cat, 'distance', None),
 								distanceType		= getattr(cat, 'distanceType', Model.Category.DistanceByLap),
 								firstLapDistance	= getattr(cat, 'firstLapDistance', None),
+								publishFlag			= cat.publishFlag,
 								uploadFlag			= cat.uploadFlag,
 								seriesFlag			= cat.seriesFlag,
 							)
@@ -698,8 +699,8 @@ and remove them from other categories.'''),
 				return
 			numStrTuples = []
 			for r in xrange(self.grid.GetNumberRows()):
-				values = dict( (name, self.grid.GetCellValue(r, c)) for name, c in self.iCol.iteritems()
-																			if name not in self.computedFields )
+				values = { name:self.grid.GetCellValue(r, c) for name, c in self.iCol.iteritems()
+																			if name not in self.computedFields }
 				values['catType'] = self.CategoryTypeChoices.index(values['catType'])
 				values['distanceType'] = self.DistanceTypeChoices.index(values['distanceType'])
 				numStrTuples.append( values )

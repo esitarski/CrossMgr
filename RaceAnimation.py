@@ -10,13 +10,13 @@ from GetResults import GetResults, GetCategoryDetails, UnstartedRaceWrapper
 
 statusNames = Model.Rider.statusNames
 
-def GetAnimationData( category=None, getExternalData=False, publishOnly=False ):
+def GetAnimationData( category=None, getExternalData=False ):
 	animationData = {}
 	ignoreFields = {'pos', 'num', 'gap', 'gapValue', 'laps', 'lapTimes', 'full_name'}
 	
 	with UnstartedRaceWrapper( getExternalData ):
 		with Model.LockRace() as race:
-			for cat in ([category] if category else race.getCategories(publishOnly=publishOnly)):
+			for cat in ([category] if category else race.getCategories()):
 				results = GetResults( cat, getExternalData )
 				
 				for rr in results:

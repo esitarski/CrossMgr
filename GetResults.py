@@ -677,7 +677,7 @@ def GetLapDetails():
 	return details
 
 @Model.memoize
-def GetCategoryDetails( ignoreEmptyCategories = True ):
+def GetCategoryDetails( ignoreEmptyCategories=True, publishOnly=False ):
 	if not Model.race:
 		return []
 
@@ -707,7 +707,7 @@ def GetCategoryDetails( ignoreEmptyCategories = True ):
 		lastWaveLaps = 0
 		lastWaveCat = None
 		lastWaveStartOffset = 0
-		for cat in race.getCategories( False ):
+		for cat in race.getCategories( startWaveOnly=False, publishOnly=publishOnly ):
 			results = GetResults( cat, True )
 			if ignoreEmptyCategories and not results:
 				continue
