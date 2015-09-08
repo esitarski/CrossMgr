@@ -295,6 +295,7 @@ class Categories( wx.Panel ):
 			(_('Active'),				'active'),
 			(_('Name'),					'name'),
 			(_('Gender'),				'gender'),
+			(_('Numbers'),				'catStr'),
 			(_('Start\nOffset'),		'startOffset'),
 			(_('Race\nLaps'),			'numLaps'),
 			(_('Lapped\nRiders\nContinue'),	'lappedRidersMustContinue'),
@@ -306,8 +307,6 @@ class Categories( wx.Panel ):
 			(_('Publish'),				'publishFlag'),
 			(_('Upload'),				'uploadFlag'),
 			(_('Series'),				'seriesFlag'),
-			(_('Numbers'),				'catStr'),
-			(u'_name2',					'name'),
 		]
 		self.computedFields = {'rule80Time', 'suggestedLaps'}
 		self.colnames = [colName if not colName.startswith('_') else _('Name Copy') for colName, fieldName in self.colNameFields]
@@ -434,16 +433,11 @@ class Categories( wx.Panel ):
 			wx.CallAfter( self.grid.EnableCellEditControl )
 		event.Skip()
 
-	def fixNameCopy( self, row ):
-		name = self.grid.GetCellValue(row, self.iCol['name'])
-		self.grid.SetCellValue( row, self.grid.GetNumberCols()-1, name )
-	
 	def onCellChanged( self, event ):
 		self.rowCur = event.GetRow()
 		self.colCur = event.GetCol()
 		if self.colCur in [1, 2]:
 			self.fixCells()
-		self.fixNameCopy( self.rowCur )
 		event.Skip()
 
 	def onEditorCreated( self, event ):
@@ -560,7 +554,6 @@ and remove them from other categories.'''),
 		self.grid.SetCellValue( r, self.iCol['publishFlag'], u'1' if publishFlag else u'0' )
 		self.grid.SetCellValue( r, self.iCol['uploadFlag'], u'1' if uploadFlag else u'0' )
 		self.grid.SetCellValue( r, self.iCol['seriesFlag'], u'1' if seriesFlag else u'0' )
-		self.grid.SetCellValue( r, self.grid.GetNumberCols()-1, name )
 		
 		race = Model.race
 		category = race.categories.get(u'{} ({})'.format(name.strip(), gender), None) if race else None
@@ -612,11 +605,19 @@ and remove them from other categories.'''),
 					c.active = False
 					Model.race.setChanged()
 		wx.CallAfter( self.refresh )
-		
+	
+	def doAutosize( self ):
+		self.grid.AutoSizeColumns( False )
+		colWidth = self.grid.GetColSize( self.iCol['catStr'] )
+		maxWidth = wx.GetDisplaySize().width / 3
+		if colWidth > maxWidth:
+			self.grid.SetColSize( self.iCol['catStr'], maxWidth )
+			self.grid.ForceRefresh()
+	
 	def onNewCategory( self, event ):
 		self.grid.AppendRows( 1 )
 		self._setRow( r=self.grid.GetNumberRows() - 1, active=True, name=u'<{}>     '.format(_('CategoryName')), catStr='100-199,504,-128' )
-		self.grid.AutoSizeColumns( False )
+		self.doAutosize()
 		
 	def onDelCategory( self, event ):
 		r = self.grid.GetGridCursorRow()
@@ -697,7 +698,7 @@ and remove them from other categories.'''),
 								seriesFlag			= cat.seriesFlag,
 							)
 				
-			self.grid.AutoSizeColumns( False )
+			self.doAutosize()
 			self.fixCells()
 			
 			# Force the grid to the correct size.
@@ -729,7 +730,7 @@ if __name__ == '__main__':
 	race = Model.getRace()
 	race._populate()
 	race.setCategories( [
-							{'name':'test1', 'catStr':'100-199,999','gender':'Men'},
+							{'name':'test1', 'catStr':'100-199,999'+','+','.join('{}'.format(i) for i in xrange(1, 200, 2)),'gender':'Men'},
 							{'name':'test2', 'catStr':'200-299,888', 'startOffset':'00:10', 'distance':'6'},
 							{'name':'test3', 'catStr':'300-399', 'startOffset':'00:20','gender':'Women'},
 							{'name':'test4', 'catStr':'400-499', 'startOffset':'00:30','gender':'Open'},
