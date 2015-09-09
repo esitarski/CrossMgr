@@ -525,7 +525,7 @@ class MainWin( wx.Frame ):
 		# Configure the field of the display.
 
 		# Forecast/History shown in left pane of scrolled window.
-		forecastHistoryWidth = 265
+		forecastHistoryWidth = 20
 		sty = wx.BORDER_SUNKEN
 		self.splitter = wx.SplitterWindow( self )
 		self.splitter.SetMinimumPaneSize( forecastHistoryWidth )
@@ -575,7 +575,7 @@ class MainWin( wx.Frame ):
 			addPage( getattr(self, a), u'{}. {}'.format(i+1, n) )
 
 		self.riderDetailDialog = None
-		self.splitter.SplitVertically( self.forecastHistory, self.notebook, forecastHistoryWidth + 80)
+		self.splitter.SplitVertically( self.forecastHistory, self.notebook, 256+80)
 		self.splitter.UpdateSize()
 
 		#-----------------------------------------------------------------------

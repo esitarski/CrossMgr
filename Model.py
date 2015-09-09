@@ -150,6 +150,7 @@ class Category(object):
 		'seriesFlag',
 		'catType',
 	)
+	PublishFlags = tuple( a for a in MergeAttributes if a.endswith('Flag') )
 
 	def _getStr( self ):
 		s = ['{}'.format(i[0]) if i[0] == i[1] else '{}-{}'.format(*i) for i in self.intervals]
@@ -224,7 +225,7 @@ class Category(object):
 						numLaps = None, sequence = 0,
 						distance = None, distanceType = None, firstLapDistance = None,
 						gender = 'Open', lappedRidersMustContinue = False,
-						catType = CatWave, uploadFlag = True, seriesFlag = True, publishFlag = True ):
+						catType = CatWave, publishFlag = True, uploadFlag = True, seriesFlag = True ):
 		self.active = False
 		active = unicode(active).strip()
 		if active and active[0] in u'TtYy1':
@@ -249,7 +250,7 @@ class Category(object):
 		
 		def isBool( v ):
 			v = unicode(v).strip()
-			return v and v in u'TtYy1'
+			return v[:1] in u'TtYy1'
 		
 		self.publishFlag = isBool( publishFlag )
 		self.uploadFlag = isBool( uploadFlag )
@@ -1772,10 +1773,11 @@ class Race( object ):
 		for cNew in nameStrTuples:
 			try:
 				key = Category.getFullName(cNew.get('name', ''), cNew.get('gender','Open'))
-				cExisting = self.categories[ key ]
+				cExisting = self.categories[key]
 			except KeyError:
 				continue
 				
+			print( nameStrTuples )
 			for a in Category.MergeAttributes:
 				vNew = cNew.get( a, None )
 				vExisting = getattr( cExisting, a )

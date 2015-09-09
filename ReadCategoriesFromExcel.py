@@ -41,6 +41,10 @@ def ReadCategoriesFromExcel( reader ):
 			if catField is None:
 				continue
 			catRow[catField] = row[c]
+		
+		# Default all the publish flags to True.
+		for a in Model.Category.PublishFlags:
+			catRow[a] = True
 			
 		categories.append( catRow )
 	

@@ -61,7 +61,7 @@ def GetLabelGrid( parent ):
 	return label, grid
 		
 class LabelGrid( wx.Panel ):
-	def __init__( self, parent, id = wx.ID_ANY, style = 0 ):
+	def __init__( self, parent, id=wx.ID_ANY, style=0 ):
 		wx.Panel.__init__(self, parent, id, style=style)
 		
 		bsMain = wx.BoxSizer( wx.VERTICAL )
@@ -109,10 +109,11 @@ class ForecastHistory( wx.Panel ):
 		self.Bind( wx.grid.EVT_GRID_SELECT_CELL, self.doExpectedSelect, self.expectedGrid )
 		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doExpectedPopup, self.expectedGrid )	
 		
-		self.splitter.SetMinimumPaneSize( 64 )
+		self.splitter.SetMinimumPaneSize( 4 )
 		self.splitter.SetSashGravity( 0.5 )
 		self.splitter.SplitHorizontally( self.lgExpected, self.lgHistory, 100 )
 		self.Bind( wx.EVT_SPLITTER_DCLICK, self.doSwapOrientation, self.splitter )
+		
 		bsMain.Add( self.splitter, 1, flag=wx.EXPAND | wx.ALL, border = 4 )
 				
 		self.historyGrid.Reset()
@@ -142,7 +143,7 @@ class ForecastHistory( wx.Panel ):
 			if mainWin:
 				mainWin.splitter.SetSashPosition( width * 2 )
 		self.setSash()
-		
+	
 	def doSwapOrientation( self, event ):
 		self.swapOrientation()
 	
