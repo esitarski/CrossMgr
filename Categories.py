@@ -413,6 +413,7 @@ class Categories( wx.Panel ):
 		self.commit()
 		if Model.race:
 			Model.race.normalizeCategories()
+			self.state.reset()
 			self.refresh()
 			
 	#------------------------------------------
@@ -423,7 +424,7 @@ class Categories( wx.Panel ):
 			if c == self.iCol['active']:
 				active = (self.grid.GetCellValue(r, self.iCol['active']) == u'1')
 				wx.CallAfter( self.fixRow, r, self.CategoryTypeChoices.index(self.grid.GetCellValue(r, self.iCol['catType'])), not active )
-			self.grid.SetCellValue( r, c, '1' if self.grid.GetCellValue(r, c) != '1' else '0' )
+			self.grid.SetCellValue( r, c, '1' if self.grid.GetCellValue(r, c)[:1] != '1' else '0' )
 		event.Skip()
 	
 	def onCellSelected( self, event ):
@@ -437,7 +438,7 @@ class Categories( wx.Panel ):
 		self.rowCur = event.GetRow()
 		self.colCur = event.GetCol()
 		if self.colCur in [1, 2]:
-			self.fixCells()
+			wx.CallAfter( self.fixCells )
 		event.Skip()
 
 	def onEditorCreated( self, event ):
@@ -482,6 +483,7 @@ class Categories( wx.Panel ):
 		undo.pushState()
 		with Model.LockRace() as race:
 			race.adjustAllCategoryWaveNumbers()
+		self.state.reset()
 		wx.CallAfter( self.refresh )
 		wx.CallAfter( Utils.refreshForecastHistory )
 
@@ -522,6 +524,7 @@ and remove them from other categories.'''),
 			for numException in response.split(','):
 				race.addCategoryException( category, numException )
 
+		self.state.reset()
 		self.refresh()
 		
 	def _setRow( self, r, active, name, catStr, startOffset = '00:00:00',
@@ -579,10 +582,7 @@ and remove them from other categories.'''),
 			if not fieldName:
 				continue
 			col = self.iCol[fieldName]
-			if col in self.dependentCols:
-				self.grid.SetCellBackgroundColour( row, col, colour )
-			else:
-				self.grid.SetCellBackgroundColour( row, col, activeColour )
+			self.grid.SetCellBackgroundColour( row, col, colour if col in self.dependentCols else activeColour )
 		
 	def fixCells( self, event = None ):
 		for row in xrange(self.grid.GetNumberRows()):
@@ -596,6 +596,7 @@ and remove them from other categories.'''),
 				if not c.active:
 					c.active = True
 					Model.race.setChanged()
+		self.state.reset()
 		wx.CallAfter( self.refresh )
 		
 	def onDeactivateAll( self, event ):
@@ -604,6 +605,7 @@ and remove them from other categories.'''),
 				if c.active:
 					c.active = False
 					Model.race.setChanged()
+		self.state.reset()
 		wx.CallAfter( self.refresh )
 	
 	def doAutosize( self ):

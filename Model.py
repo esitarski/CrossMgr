@@ -226,10 +226,6 @@ class Category(object):
 						distance = None, distanceType = None, firstLapDistance = None,
 						gender = 'Open', lappedRidersMustContinue = False,
 						catType = CatWave, publishFlag = True, uploadFlag = True, seriesFlag = True ):
-		self.active = False
-		active = unicode(active).strip()
-		if active and active[0] in u'TtYy1':
-			self.active = True
 		
 		self.name = unicode(name).strip()
 		self.catStr = unicode(catStr).strip()
@@ -252,6 +248,7 @@ class Category(object):
 			v = unicode(v).strip()
 			return v[:1] in u'TtYy1'
 		
+		self.active = isBool( active )
 		self.publishFlag = isBool( publishFlag )
 		self.uploadFlag = isBool( uploadFlag )
 		self.seriesFlag = isBool( seriesFlag )
