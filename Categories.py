@@ -55,7 +55,7 @@ class CategoriesPrintout( wx.Printout ):
 		allZeroStarters = True
 		with UnstartedRaceWrapper():
 			catMap = dict( (c.fullname, c) for c in race.getCategories( startWaveOnly=False ) )
-			catDetails = GetCategoryDetails( ignoreEmptyCategories=False, publishOnly=True )
+			catDetails = GetCategoryDetails( False, True )
 			catDetailsMap = dict( (cd['name'], cd) for cd in catDetails )
 			
 			title = u'\n'.join( [_('Categories'), race.name, race.scheduledStart + u' ' + _('Start on') + u' ' + Utils.formatDate(race.date)] )
