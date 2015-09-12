@@ -457,6 +457,21 @@ class Categories( wx.Panel ):
 			wx.TheClipboard.Close()
 			return txt
 		return None
+		
+	def isCatStrChanged( self ):
+		if not Model.race:
+			return False
+		
+		categories = Model.race.getAllCategories()
+		
+		if self.grid.GetNumberRows() != len(categories):
+			return True
+
+		for r, cat in enumerate(categories):
+			if cat.catStr != self.grid.GetCellValue( r, self.iCol['catStr'] ):
+				return True
+		
+		return False
 	
 	def pasteFromClipboard( self, event ):
 		txt = self.getCleanClipboardText()
@@ -656,8 +671,9 @@ and remove them from other categories.'''),
 		self.grid.SelectRow( min(r+1, self.grid.GetNumberRows()-1), True )
 		
 	def refresh( self ):
-		if not self.state.changed():
-			return
+		if not self.isCatStrChanged():
+			if not self.state.changed():
+				return
 			
 		# Fix the height of the column labels.
 		dc = wx.WindowDC( self.grid )

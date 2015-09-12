@@ -37,7 +37,7 @@ def getCatCountImagesCategoryList( parent ):
 	if race:
 		with UnstartedRaceWrapper():
 			SyncExcelLink( race )
-			for c in race.getCategories(False):
+			for c in race.getCategories(startWaveOnly=False, publishOnly=True):
 				catCount[c] = race.catCount( c )
 				if catCount[c] == 0:
 					continue
@@ -130,7 +130,7 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		race = Model.race
 		row = 0
 		with UnstartedRaceWrapper():
-			for c in race.getCategories(False):
+			for c in race.getCategories(startWaveOnly=False, publishOnly=Truee):
 				if self.catCount[c] == 0:
 					continue
 				if self.list.GetItemState(row, wx.LIST_STATE_SELECTED) == wx.LIST_STATE_SELECTED:
@@ -209,7 +209,7 @@ class ChoosePrintCategoriesPodiumDialog( wx.Dialog ):
 		race = Model.race
 		row = 0
 		with UnstartedRaceWrapper():
-			for c in race.getCategories(False):
+			for c in race.getCategories(startWaveOnly=False, publishOnly=False):
 				if self.catCount[c] == 0:
 					continue
 				if self.list.GetItemState(row, wx.LIST_STATE_SELECTED) == wx.LIST_STATE_SELECTED:
@@ -243,7 +243,7 @@ class CrossMgrPrintout( wx.Printout ):
 		wx.Printout.__init__(self)
 		if not categories:
 			with UnstartedRaceWrapper():
-				self.categories = Model.race.getCategories(False)
+				self.categories = Model.race.getCategories(startWaveOnly=False, publishOnly=True)
 		else:
 			self.categories = categories
 		self.pageInfo = {}
