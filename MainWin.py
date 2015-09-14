@@ -74,6 +74,7 @@ import OrionImport
 import AlienImport
 import ImpinjImport
 import IpicoImport
+import RaceResultImport
 import OutputStreamer
 import GpxImport
 from Undo import undo
@@ -607,6 +608,10 @@ class MainWin( wx.Frame ):
 		self.chipMenu.Append( idCur , _("Import Orion File..."), _("Orion Formatted File") )
 		self.Bind(wx.EVT_MENU, self.menuOrionImport, id=idCur )
 		
+		idCur = wx.NewId()
+		self.chipMenu.Append( idCur , _("Import RaceResult File..."), _("RaceResult File") )
+		self.Bind(wx.EVT_MENU, self.menuRaceResultImport, id=idCur )
+		
 		self.menuBar.Append( self.chipMenu, _("Chip&Reader") )
 
 		#----------------------------------------------------------------------------------------------
@@ -973,6 +978,22 @@ class MainWin( wx.Frame ):
 			return
 			
 		dlg = OrionImport.OrionImportDialog( self )
+		dlg.ShowModal()
+		dlg.Destroy()
+		wx.CallAfter( self.refresh )
+		
+	def menuRaceResultImport( self, event ):
+		correct, reason = JChipSetup.CheckExcelLink()
+		explain = u'{}\n\n{}'.format(
+			_('You must have a valid Excel sheet with associated tags and Bib numbers.'),
+			_('See documentation for details.')
+		)
+		if not correct:
+			Utils.MessageOK( self, '{}\n\n    {}\n\n{}'.format(_('Problems with Excel sheet.'), reason, explain),
+									title = _('Excel Link Problem'), iconMask = wx.ICON_ERROR )
+			return
+			
+		dlg = RaceResultImport.RaceResultImportDialog( self )
 		dlg.ShowModal()
 		dlg.Destroy()
 		wx.CallAfter( self.refresh )

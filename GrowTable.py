@@ -51,7 +51,7 @@ class GrowTable( object ):
 				if not v:
 					continue
 				aHoriz, aVert = grid.GetCellAlignment(r, c)
-				self.set( r+rowLabel, c+colLabel, v, mapHorizontal.get(aHoriz, self.alignLeft) | mapVertical(aVert, self.alignTop) )
+				self.set( r+rowLabel, c+colLabel, v, mapHorizontal.get(aHoriz, self.alignLeft) | mapVertical.get(aVert, self.alignTop) )
 			
 		numCols, numRows = self.getNumberCols(), self.getNumberRows()
 		if horizontalGridlines:

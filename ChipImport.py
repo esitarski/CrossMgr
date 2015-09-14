@@ -121,7 +121,7 @@ class ChipImportDialog( wx.Dialog ):
 			u'{} {}'.format(chipName, _('Import Data File')),
 			u'',
 			_('You must first "New" a race and fill in the details.'),
-			_('You must also configure a "Tag" field in your Sign-On Excel Sheet and link it to the race.'),
+			_('You must also configure a "Tag" field in your Sign-On Excel Sheet and link the sheet to the race.'),
 			_('This is required so CrossMgr can link the tags in the import file back to rider numbers and info.'),
 			u'',
 			_('Race Data:'),
@@ -131,7 +131,7 @@ class ChipImportDialog( wx.Dialog ):
 			_('TimeTrial Data:'),
 			_("The first chip read for each rider will be interpreted as the rider's start time."),
 			u'',
-			_('Warning: Importing from chip data will replace all the data in this race.'),
+			_('Warning: Importing from chip data could replace all the data in this race.'),
 			_('Proceed with caution.'),
 		]
 		intro = u'\n'.join(todoList)
@@ -166,7 +166,7 @@ class ChipImportDialog( wx.Dialog ):
 		gs.AddSpacer(1)
         
 		gs.Add( wx.StaticText(self, label = _('Import Data Time Adjustment:') ), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
-		self.timeAdjustment = HighPrecisionTimeEdit( self )
+		self.timeAdjustment = HighPrecisionTimeEdit( self, size=(120,-1) )
 		self.behindAhead = wx.Choice( self, choices=[_('Behind'), _('Ahead')] )
 		if JChip.readerComputerTimeDiff:
 			rtAdjust = JChip.readerComputerTimeDiff.total_seconds()
@@ -217,10 +217,10 @@ class ChipImportDialog( wx.Dialog ):
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		
 		try:
-			image = wx.Image( os.path.join(Utils.getImageFolder(), '%sLogo.png' % chipName), wx.BITMAP_TYPE_PNG )
+			image = wx.Image( os.path.join(Utils.getImageFolder(), '{}Logo.png'.format(chipName)), wx.BITMAP_TYPE_PNG )
 		except Exception as e:
 			image = wx.EmptyImage( 32, 32, True )
-		hs.Add( wx.StaticBitmap(self, bitmap = image.ConvertToBitmap(8)), 0 )
+		hs.Add( wx.StaticBitmap(self, bitmap = image.ConvertToBitmap()), 0 )
 		hs.Add( wx.StaticText(self, label = intro), 1, wx.EXPAND|wx.LEFT, border*2 )
 		
 		bs.Add( hs, 1, wx.EXPAND|wx.ALL, border )

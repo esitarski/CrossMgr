@@ -343,17 +343,6 @@ class ExcelLink( object ):
 	def getFields( self ):
 		return [f for f in Fields if self.hasField(f)]
 	
-	def get( self ):
-		# Check the cache, but don't bother with the modification date of the file for performance.
-		if stateCache and infoCache:
-			try:
-				state = (self.fileName, self.sheetName, self.fieldCol)
-				if state == stateCache[-3:]:
-					return infoCache
-			except:
-				pass
-		return None
-	
 	def read( self ):
 		try:
 			reader = GetExcelReader( self.fileName )

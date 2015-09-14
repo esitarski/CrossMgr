@@ -12,7 +12,7 @@ def LaunchFileBrowser( path ):
 	# Keep trying a command until something works.
 	for cmd in ['nautilus', 'open', 'dolphin']:
 		try:
-			subprocess.Popen( '%s "%s"' % (cmd, path) )
+			subprocess.Popen( '{} "{}"'.format(cmd, path) )
 			break
 		except:
 			pass
