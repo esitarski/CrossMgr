@@ -130,7 +130,7 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		race = Model.race
 		row = 0
 		with UnstartedRaceWrapper():
-			for c in race.getCategories(startWaveOnly=False, publishOnly=Truee):
+			for c in race.getCategories(startWaveOnly=False, publishOnly=True):
 				if self.catCount[c] == 0:
 					continue
 				if self.list.GetItemState(row, wx.LIST_STATE_SELECTED) == wx.LIST_STATE_SELECTED:
