@@ -1239,7 +1239,7 @@ class MainWin( wx.Frame ):
 					printout = CrossMgrPrintoutPDF( dName, fnameBase, self.printData.GetOrientation(), categories )
 				else:
 					printout = CrossMgrPrintoutPDF( dName, fnameBase, self.printData.GetOrientation(),
-						categories=Model.race.getCategories(False), allInOne = True )
+						categories=Model.race.getCategories(False, publishOnly=True), allInOne = True )
 				
 				pages = printout.GetPageInfo()[-1]
 				
