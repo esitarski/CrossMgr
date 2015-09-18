@@ -382,7 +382,7 @@ def StartListener( startTime = datetime.datetime.now(),
 	listener.start()
 	
 @atexit.register
-def Cleanuplistener():
+def CleanupListener():
 	global shutdownQ
 	global listener
 	if listener and listener.is_alive():

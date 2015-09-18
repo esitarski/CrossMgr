@@ -69,12 +69,13 @@ import Model
 import JChipSetup
 import JChipImport
 import JChip
+import RaceResult
+import RaceResultImport
 from JChip import EVT_CHIP_READER 
 import OrionImport
 import AlienImport
 import ImpinjImport
 import IpicoImport
-import RaceResultImport
 import OutputStreamer
 import GpxImport
 from Undo import undo
@@ -108,6 +109,35 @@ def loggingThreadStart( self, *args, **kwargs ):
 threading.Thread.start = types.MethodType(loggingThreadStart, None, threading.Thread)
 '''
 #----------------------------------------------------------------------------------
+
+class ChipReader( object ):
+	JChip = 0
+	RaceResult = 1
+	
+	def __init__( self ):
+		self.reset()
+		
+	def reset( self, chipReader = ChipReader.JChip ):
+		self.chipReader = chipReader
+		if chipReader == ChipReader.JChip:
+			self.StartListener = JChip.StartListener
+			self.GetData = JChip.GetData
+			self.StopListener = JChip.StopListener
+			self.Cleanuplistener = JChip.CleanupListener
+		elif chipReader == ChipReader.RaceResult:
+			self.StartListener = RaceResult.StartListener
+			self.GetData = RaceResult.GetData
+			self.StopListener = RaceResult.StopListener
+			self.Cleanuplistener = RaceResult.CleanupListener
+			
+	@property
+	def listener( self ):
+		if self.chipReader == ChipReader.JChip:
+			return JChip.listener
+		elif self.chipReader == ChipReader.RaceResult:
+			return RaceResult.listener
+
+chipReaderCur = ChipReader()
 
 def ShowSplashScreen():
 	bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrSplash.png'), wx.BITMAP_TYPE_PNG )
@@ -2171,7 +2201,7 @@ class MainWin( wx.Frame ):
 			pass
 		
 		OutputStreamer.StopStreamer()
-		JChip.Cleanuplistener()
+		chipReaderCur.CleanupListener()
 	
 	@logCall
 	def onCloseWindow( self, event ):
@@ -2834,7 +2864,7 @@ class MainWin( wx.Frame ):
 		self.nextNum = None
 		with Model.LockRace() as race:
 			race.finishRaceNow()
-		JChip.Cleanuplistener()
+		chipReaderCur.CleanupListener()
 		
 		OutputStreamer.writeRaceFinish()
 		# Give the streamer a chance to write the last message.
@@ -3415,15 +3445,15 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 		race = Model.race
 		
 		if not race or not race.enableJChipIntegration:
-			if JChip.listener:
-				JChip.StopListener()
+			if chipReaderCur.listener:
+				chipReaderCur.StopListener()
 			return False
 		
-		if not JChip.listener:
-			JChip.StartListener( race.startTime )
+		if not chipReaderCur.listener:
+			chipReaderCur.StartListener( race.startTime )
 			GetTagNums( True )
 		
-		data = JChip.GetData()
+		data = chipReaderCur.GetData()
 		
 		if not getattr(race, 'tagNums', None):
 			GetTagNums()
@@ -3463,7 +3493,7 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 		with Model.LockRace() as race:
 			if race is None:
 				self.SetTitle( Version.AppVerName )
-				JChip.StopListener()
+				chipReaderCur.StopListener()
 				self.timer.Stop()
 				return
 
@@ -3473,8 +3503,8 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 				status = _('Running')
 				if race.enableJChipIntegration:
 					doRefresh = self.processJChipListener()
-				elif JChip.listener:
-					JChip.StopListener()
+				elif chipReaderCur.listener:
+					chipReaderCur.StopListener()
 			else:
 				status = _('Finished')
 
@@ -3491,7 +3521,7 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 							Utils.formatTime(race.curRaceTime()),
 							race.name, race.raceNum,
 							status, Version.AppVerName,
-							u'<{}>'.format(_('JChip')) if JChip.listener else u'',
+							u'<{}>'.format(_('JChip')) if chipReaderCur.listener else u'',
 							u'<{}>'.format(_('TimeTrial')) if race.isTimeTrial else u'') )
 
 			if not self.timer.IsRunning():

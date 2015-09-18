@@ -23,11 +23,11 @@ def sendReaderEvent( tagTimes ):
 	if tagTimes and readerEventWindow:
 		wx.PostEvent( readerEventWindow, ChipReaderEvent(tagTimes = tagTimes) )
 
-EOL = chr( '\r\n' )	# RaceResult delimiter
+EOL = bytes('\r\n')		# RaceResult delimiter
 len_EOL = len(EOL)
 
 DEFAULT_PORT = 3601
-DEFAULT_HOST = '0.0.0.0'		# Listen to all available network cards on this computer.
+DEFAULT_HOST = '127.0.0.1'		# Port to connect to the RaceResult receiver.
 
 q = None
 shutdownQ = None
@@ -38,37 +38,42 @@ def socketSend( s, message ):
 	while sLen < len(message):
 		sLen += s.send( message[sLen:] )
 		
-def socketByLine( s ):
+def socketReadLines( s, count ):
+	if count == 0:
+		return
+		
 	buffer = s.recv( 4096 )
-	while 1:
-		nl = buffer.find( EOL )
-		if nl >= 0:
-			yield buffer[:nl+len_EOL]
-			buffer = buffer[nl+len_EOL:]
+	while count > 0:
+		eol = buffer.find( EOL )
+		if eol >= 0:
+			count -= 1
+			yield buffer[:eol+len_EOL]
+			buffer = buffer[eol+len_EOL:]
 		else:
 			more = s.recv( 4096 )
 			if more:
-				buffer = buffer + more
+				buffer += more
 			else:
 				break
-	if buffer:
-		yield buffer
 
 def socketReceiveLine( s ):
 	buffer = s.recv( 4096 )
-	while 1:
-		nl = buffer.find( EOL )
-		if nl < 0:
-			more = s.recv( 4096 )
-			if more:
-				buffer = buffer + more
-			else:
-				break
+	while not buffer.endswith( EOL ):
+		more = s.recv( 4096 )
+		if more:
+			buffer += more
+		else:
+			break
 	return buffer
-		
+	
 # if we get the same time, make sure we give it a small offset to make it unique, but preserve the order.
 tSmall = datetime.timedelta( seconds = 0.000001 )
 
+statusFields = [
+	'Date', 'Time', 'HasPower', 'Antennas', 'IsInTimingMode',
+	'FileNumber', 'GPSHasFix', 'Latitude', 'Longitude', 'LongInd', 'ReaderIsHealthy', 'ActiveExtConnected',
+	'Channel', 'LoopID', 'LoopPower', 'LoopConnected', 'LoopUnderPower', 'Temperature',
+]
 reNonDigit = re.compile( '[^0-9]+' )
 def Server( q, shutdownQ, HOST, PORT, startTime ):
 	global readerEventWindow
@@ -76,10 +81,12 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 	if not readerEventWindow:
 		readerEventWindow = Utils.mainWin
 	
-	readerTime = None
-	tAdjust = None
 	timeoutSecs = 5
 	delaySecs = 3
+	
+	readerTime = None
+	readerComputerTimeDiff = None
+	
 	passingsCur = 0
 	status = None
 	
@@ -109,9 +116,11 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		try:
 			s = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 			s.connect( (HOST, PORT) )
-			s.settimeout( timoutSecs )
+			s.settimeout( timeoutSecs )
 		except Exception as e:
-			qLog( ('connection', u'{}: {}'.format(_('Connection to RaceResult reader failed'), e)) )
+			qLog( 'connection', u'{}: {}'.format(_('Connection to RaceResult reader failed'), e) )
+			s = None
+			time.sleep( delaySecs )
 			continue
 
 		try:
@@ -120,18 +129,14 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				buffer = socketReceiveLine( s )
 				if buffer.startswith( 'GETSTATUS;' ):
 					fields = [f.strip() for f in buffer.strip().split(';')]
-					status = zip( [
-							'Date', 'Time', 'HasPower', 'Antennas', 'IsInTimingMode',
-							'FileNumber', 'GPSHasFix', 'Latitude', 'Longitude', 'LongInd', 'ReaderIsHealthy', 'ActiveExtConnected',
-							'Channel', 'LoopID', 'LoopPower', 'LoopConnected', 'LoopUnderPower', 'Temperature',
-							], fields[1:] )
+					status = zip( statusFields, fields[1:] )
 					for name, value in status:
-						qLog( ('status', u'{}: {}'.format(name, value)) )
+						qLog( 'status', u'{}: {}'.format(name, value) )
 				else:
-					qLog( ('command', u'GETSTATUS: {} "{}"'.format(_('Unexpected return'), buffer)) )
+					qLog( 'command', u'GETSTATUS: {} "{}"'.format(_('Unexpected return'), buffer) )
 					continue
-		except Exceptions as e:
-			qLog( ('connection', u'GETSTATUS: {}: "{}"'.format(_('Connection failed'), e)) )
+		except Exception as e:
+			qLog( 'connection', u'GETSTATUS: {}: "{}"'.format(_('Connection failed'), e) )
 			continue
 
 		try:
@@ -140,15 +145,19 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				socketSend( s, bytes('GETTIME{}'.format(EOL)) )
 				buffer = socketReceiveLine( s )
 				if buffer.startswith( 'GETTIME;' ):
-					dt = reNonDigit.sub(' ', buffer).strip()
-					fields[-1] = fields[-1].ljust(6-len(fields[-1]))	# Add zeros to convert to microseconds.
-					readerTime = datetime.datetime( *[int(f) for f in dt.split()] )
-					tAdjust = datetime.datetime.now() - readerTime
+					try:
+						dt = reNonDigit.sub(' ', buffer).strip()
+						fields[-1] = fields[-1].ljust(6-len(fields[-1]))	# Add zeros to convert to microseconds.
+						readerTime = datetime.datetime( *[int(f) for f in dt.split()] )
+						readerComputerTimeDiff = datetime.datetime.now() - readerTime
+					except Exception as e:
+						qLog( 'command', u'GETTIME: {} "{}" "{}"'.format(_('Unexpected return'), buffer, e) )
+						continue					
 				else:
-					qLog( ('command', u'GETTIME: {} "{}"'.format(_('Unexpected return'), buffer)) )
+					qLog( 'command', u'GETTIME: {} "{}"'.format(_('Unexpected return'), buffer) )
 					continue
-		except Exceptions as e:
-			qLog( ('connection', u'GETTIME: {}: "{}"'.format(_('Connection failed'), e)) )
+		except Exception as e:
+			qLog( 'connection', u'GETTIME: {}: "{}"'.format(_('Connection failed'), e) )
 			continue
 					
 		try:
@@ -156,12 +165,16 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 			socketSend( s, bytes('PASSINGS{}'.format(EOL)) )
 			buffer = socketReceiveLine( s )
 			if buffer.startswith( 'PASSINGS;' ):
-				passingsNew = int( reNonDigit.sub(' ', buffer).strip() )
+				try:
+					passingsNew = int( reNonDigit.sub(' ', buffer).strip() )
+				except Exception as e:
+					qLog( 'command', u'PASSINGS: {} "{}" "{}"'.format(_('Unexpected return'), buffer, e) )
+					continue
 			else:
-				qLog( ('command', u'PASSINGS: {} "{}"'.format(_('Unexpected return'), buffer)) )
+				qLog( 'command', u'PASSINGS: {} "{}"'.format(_('Unexpected return'), buffer) )
 				continue
 		except Exception as e:
-			qLog( ('connection', u'PASSINGS: {}: "{}"'.format(_('Connection failed'), e)) )
+			qLog( 'connection', u'PASSINGS: {}: "{}"'.format(_('Connection failed'), e) )
 			continue
 
 		if passingsNew == passingsCur:
@@ -169,25 +182,35 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 			
 		if passingsNew < passingsCur:
 			passingsCur = 0
+			
+		tagTimes = []
+		errors = []
+		times = set()
 		try:
 			# Get the passing data.
-			socketSend( s, bytes('{}:{}{}'.format(passingsCur, passingsNew - passingsCur, EOL)) )
-			errors = []
-			tagTimes = []
-			for i, line in enumerate(socketByLine(s))):
-				tag, t = parseTagTime(line, passingsCur+i+1, errors)
-				if tag and t:
-					t += tAdjust
-					if tagTimes and tagTimes[-1][-1] == t:	# Ensure that there are no equal times.
-						t += i * tSmall
-					if t >= startTime:
-						tagTimes.append( (tag, t) )
+			passingsCount = passingsNew - passingsCur
+			socketSend( s, bytes('{}:{}{}'.format(passingsCur, passingsCount, EOL)) )
+			for i, line in enumerate(socketReadLines(s, passingsCount)):
+				passingsCur += 1
+				tag, t = parseTagTime(line, passingsCur+i, errors)
+				if tag is None or t is None:
+					continue
+				t += readerComputerTimeDiff
+				if t < startTime:
+					continue
+				
+				while t in times:	# Ensure no equal times.
+					t += tSmall
+				times.add( t )
+				
+				tagTimes.append( (tag, t) )
 					
-			sendReaderEvent( tagTimes )
-			passingsCur = passingsNew
 		except Exception as e:
-			qLog( ('connection', u'DATA: {}: "{}"'.format(_('Connection failed'), e)) )
-			continue
+			qLog( 'connection', u'DATA: {}: "{}"'.format(_('Connection failed'), e) )
+		
+		sendReaderEvent( tagTimes )
+		for tag, t in tagTimes:
+			q.put( ('data', tag, t) )
 				
 	# Final cleanup.		
 	try:
@@ -195,6 +218,15 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		s.close()
 	except:
 		pass
+
+def GetData():
+	data = []
+	while 1:
+		try:
+			data.append( q.get_nowait() )
+		except (Empty, AttributeError):
+			break
+	return data
 
 def StopListener():
 	global q
@@ -222,8 +254,6 @@ def StartListener( startTime = datetime.datetime.now(),
 	global q
 	global shutdownQ
 	global listener
-	global dateToday
-	dateToday = startTime.date()
 	
 	StopListener()
 	
@@ -255,14 +285,12 @@ if __name__ == '__main__':
 		for m in messages:
 			if m[0] == 'data':
 				count += 1
-				print( '%d: %s, %s' % (count, m[1], m[2].time()) )
-			elif m[0] == 'name':
-				print( 'receiver name="%s"' % m[1] )
-			elif m[0] == 'connected':
-				print( 'connected' )
-			elif m[0] == 'disconnected':
-				print( 'disconnected' )
+				print( '{}: {}, {}'.format(count, m[1], m[2].time()) )
+			elif m[0] == 'status':
+				print( 'status: {}'.format(m[1]) )
+			elif m[0] == 'passings':
+				print( 'passings: {}'.format(m[1]) )
 			else:
-				print( 'other: %s, %s' % (m[0], ', '.join('"%s"' % '{}'.format(s) for s in m[1:])) )
+				print( 'other: {}, {}'.format(m[0], ', '.join('"{}"'.format(s) for s in m[1:])) )
 		sys.stdout.flush()
 		
