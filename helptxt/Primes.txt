@@ -3,7 +3,7 @@
 # Primes (prizes in Criterium)
 Manages Primes including the Sponsor, Cash, Merchandise, Laps to Go and the Winner.
 
-Quick access to race photos, finish strip and [History][] to record the winner.
+Quick access to race photos, finish strip and [Passings][] to record the winner.
 
 # Screen
 Shows the list of Primes:
@@ -23,6 +23,6 @@ Shows photos at the time of the __Laps to go__ lap.
 
 Shows the Finish Strip at the time of the __Laps to go__ lap.
 
-### History
+### Passings
 
-Shows the __History__ screen at the __Laps to go__ lap.
+Shows the __Passings__ screen at the __Laps to go__ lap.

@@ -147,7 +147,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 	
 	def qLog( category, message ):
 		q.put( (category, message) )
-		Utils.writeLog( 'JChip: {}: {}'.format(category, message) )
+		Utils.writeLog( u'JChip: {}: {}'.format(category, message) )
 	
 	while inputs:
 		# qLog( 'waiting', 'for communication' )

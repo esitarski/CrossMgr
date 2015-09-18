@@ -80,7 +80,7 @@ Right-click brings up a number of options about what you clicked on:
 
 Option|Action
 :-----|:-----
-History|Jumps to History tab with current rider highlighted
+Passings|Jumps to Passings tab with current rider highlighted
 RiderDetail|Opens RiderDetail dialog for current rider
 Show Photos|Shows photos for the current rider.  See [Properties][] for how to set up a usb webcam to automatically take photos as riders cross the finish line.
 Correct...|Correct the current entry

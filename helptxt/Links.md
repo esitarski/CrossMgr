@@ -20,7 +20,7 @@
 [Results]:			Results.html
 [Situation]:		Situation.html
 [LapCounter]:		LapCounter.html
-[History]:			History.html
+[Passings]:			Passings.html
 [RiderDetail]:		RiderDetail.html
 [Chart]:			Chart.html
 [Animation]:		Animation.html

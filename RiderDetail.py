@@ -145,6 +145,73 @@ class AdjustTimeDialog( wx.Dialog ):
 	def onCancel( self, event ):
 		self.EndModal( wx.ID_CANCEL )
 
+class ChangeOffsetDialog( wx.Dialog ):
+	def __init__( self, parent, rider, riderName, id=wx.ID_ANY ):
+		wx.Dialog.__init__( self, parent, id, _("Adjust Start Time"),
+						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+		
+		self.rider = rider
+		self.riderName = riderName
+		fgs = wx.FlexGridSizer(rows=0, cols=2, vgap=4, hgap=4)
+		fgs.AddGrowableCol( 1 )
+
+		self.earlyLate = wx.Choice( self, choices=(_("Rider Started Early"), _("Rider Started Late")) )
+		self.earlyLate.SetSelection( 0 )
+		self.adjustTime = HighPrecisionTimeEdit( self, allow_none=False, seconds=0.0, size=(128,-1) )
+		
+		self.okBtn = wx.Button( self, wx.ID_OK )
+		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
+
+		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
+		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
+		
+		fgs.Add( wx.StaticText( self ) )
+		fgs.Add( wx.StaticText( self, label=((riderName + u': ') if riderName else u'') + unicode(rider.num) ), flag=wx.ALIGN_LEFT )
+			
+		fgs.Add( wx.StaticText( self, label=u'{}:'.format(_("Adjust for"))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		fgs.Add( self.earlyLate, flag=wx.ALIGN_LEFT  )
+		
+		fgs.Add( wx.StaticText( self, label=u'{}:'.format(_("Adjustment Time"))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		fgs.Add( self.adjustTime, flag=wx.ALIGN_LEFT )
+		
+		sizer = wx.BoxSizer( wx.VERTICAL )
+		sizer.Add( fgs, 1, flag=wx.EXPAND|wx.ALL, border=4 )
+		
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( self.okBtn, border=4, flag=wx.ALL )
+		self.okBtn.SetDefault()
+		hs.Add( self.cancelBtn, border=4, flag=wx.ALL )
+		sizer.Add( hs, flag=wx.ALIGN_RIGHT|wx.ALL, border=4 )
+		
+		self.SetSizerAndFit(sizer)
+		sizer.Fit( self )
+		
+		self.CentreOnParent(wx.BOTH)
+		self.SetFocus()
+
+	def onOK( self, event ):
+		race = Model.race
+		adjustTime = self.adjustTime.GetSeconds()
+		if not race or adjustTime == 0.0:
+			self.EndModal( wx.ID_CANCEL )
+			return
+		
+		if not race.isFinished():
+			Utils.MessageOK( self, _('The race must be Finished before you can adjust a Start Wave Offset.'), _('Race Must be Finished'), wx.ICON_ERROR )
+			self.EndModel( wx.ID_CANCEL )
+			return
+		
+		if self.earlyLate.GetSelection() == 1:
+			adjustTime = -adjustTime 
+		
+		undo.pushState()
+		self.rider.times = [t + adjustTime for t in self.rider.times]
+		Model.race.setChanged()
+		self.EndModal( wx.ID_OK )
+		
+	def onCancel( self, event ):
+		self.EndModal( wx.ID_CANCEL )
+
 class RiderDetail( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
@@ -184,6 +251,9 @@ class RiderDetail( wx.Panel ):
 		self.copyRiderMenuId = wx.NewId()
 		self.menu.Append( self.copyRiderMenuId, _('C&opy Rider Times to New Number...'), _("Copy these rider's times to another number") )
 		self.Bind( wx.EVT_MENU, self.onCopyRider, id = self.copyRiderMenuId )
+		self.changeOffsetMenuId = wx.NewId()
+		self.menu.Append( self.changeOffsetMenuId, _('Change Start W&ave Time...'), _("Fix lap times if the rider started in the wrong start wave") )
+		self.Bind( wx.EVT_MENU, self.onChangeOffset, id = self.changeOffsetMenuId )
 		
 		self.editRiderBtn = wx.Button( self, label = u'{}...'.format(_('Edit')) )
 		self.Bind( wx.EVT_BUTTON, self.onEditRider, self.editRiderBtn )
@@ -760,6 +830,21 @@ class RiderDetail( wx.Panel ):
 			self.setRider( newNum )
 			self.onNumChange()
 			wx.CallAfter( Utils.refreshForecastHistory )
+			wx.CallAfter( Utils.refresh )
+	
+	def onChangeOffset( self, event ):
+		if self.num.GetValue() is None:
+			return
+		num = int(self.num.GetValue())
+		with Model.LockRace() as race:
+			if num not in race:
+				return
+			rider = race.getRider( num )
+		dlg = ChangeOffsetDialog( self, rider, self.riderName.GetLabel() )
+		ret = dlg.ShowModal()
+		dlg.Destroy()
+		if ret == wx.ID_OK:
+			wx.CallAfter( self.refresh )
 			wx.CallAfter( Utils.refresh )
 	
 	def onNumChange( self, event = None ):

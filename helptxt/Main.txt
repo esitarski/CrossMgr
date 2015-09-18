@@ -21,7 +21,7 @@ Get started with CrossMgr now!
 * [Actions][]
 * [Record][]
 * [Results][]
-* [History][]
+* [Passings][]
 * [RiderDetail][]
 * [Chart][]
 * [Animation][]

@@ -10,7 +10,7 @@ It is also possible to jump to a screen using the Function keys.  The function k
 1. [Actions][]
 1. [Record][]
 1. [Results][]
-1. [History][]
+1. [Passings][]
 1. [RiderDetail][]
 1. [Chart][]
 1. [Animation][]

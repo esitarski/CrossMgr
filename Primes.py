@@ -95,7 +95,7 @@ class Primes( wx.Panel ):
 		self.photosButton.Bind( wx.EVT_BUTTON, self.onPhotos )
 		self.finishStrip = wx.Button( self, label=u'{}...'.format(_('Finish Strip')) )
 		self.finishStrip.Bind( wx.EVT_BUTTON, self.onFinishStrip )
-		self.history = wx.Button( self, label=u'{}...'.format(_('History')) )
+		self.history = wx.Button( self, label=u'{}...'.format(_('Passings')) )
 		self.history.Bind( wx.EVT_BUTTON, self.onHistory )
 		
 		self.newButton = wx.Button( self, id=wx.ID_NEW )
@@ -172,7 +172,7 @@ class Primes( wx.Panel ):
 		mainWin = Utils.getMainWin()
 		if not mainWin:
 			return
-		mainWin.openMenuWindow( 'history' )
+		mainWin.openMenuWindow( 'Passings' )
 	
 	def selectGridRow( self, row ):
 		self.grid.SelectRow( row )

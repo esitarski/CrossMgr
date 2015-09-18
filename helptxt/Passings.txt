@@ -57,7 +57,7 @@ Right-click brings up a number of options about what you clicked on:
 
 Option|Action
 :-----|:-----
-History|Jumps to History tab with current rider highlighed
+Passings|Jumps to Passings tab with current rider highlighed
 RiderDetail|Opens RiderDetail dialog for current rider
 Correct...|Correct the current entry
 Shift...|Shift current entry forward/backward in time

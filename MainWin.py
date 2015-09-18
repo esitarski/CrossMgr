@@ -512,7 +512,7 @@ class MainWin( wx.Frame ):
 		self.dataMgmtMenu.AppendSeparator()
 
 		idCur = wx.NewId()
-		self.dataMgmtMenu.Append( idCur , _("Export History to Excel..."), _("Export History to Excel File") )
+		self.dataMgmtMenu.Append( idCur , _("Export Passings to Excel..."), _("Export Passings to Excel File") )
 		self.Bind(wx.EVT_MENU, self.menuExportHistory, id=idCur )
 
 		idCur = wx.NewId()
@@ -557,7 +557,7 @@ class MainWin( wx.Frame ):
 			[ 'actions',		Actions,			_('Actions') ],
 			[ 'record',			NumKeypad,			_('Record') ],
 			[ 'results',		Results,			_('Results') ],
-			[ 'history',		History,			_('History') ],
+			[ 'history',		History,			_('Passings') ],
 			[ 'riderDetail',	RiderDetail,		_('RiderDetail') ],
 			[ 'gantt', 			Gantt,				_('Chart') ],
 			[ 'raceAnimation',	RaceAnimation,		_('Animation') ],
@@ -2899,11 +2899,11 @@ class MainWin( wx.Frame ):
 		if self.fileName is None or len(self.fileName) < 4 or not Model.race:
 			return
 
-		self.showPageName( _('History') )
+		self.showPageName( _('Passings') )
 		self.history.setCategoryAll()
 		self.history.refresh()
 		
-		xlFName = self.fileName[:-4] + '-History.xls'
+		xlFName = self.fileName[:-4] + '-Passings.xls'
 		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(xlFName)),
 						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
 		ret = dlg.ShowModal()
@@ -2921,11 +2921,11 @@ class MainWin( wx.Frame ):
 			colnames = ['Count'] + colnames
 			data = [['{}'.format(i) for i in xrange(1, rowMax+1)]] + data
 		with Model.LockRace() as race:
-			title = u'{}\n{}\n{}'.format( race.name, Utils.formatDate(race.date), _('Race History') )
+			title = u'{}\n{}\n{}'.format( race.name, Utils.formatDate(race.date), _('Race Passings') )
 		export = ExportGrid( title, colnames, data )
 
 		wb = xlwt.Workbook()
-		sheetCur = wb.add_sheet( 'History' )
+		sheetCur = wb.add_sheet( 'Passings' )
 		export.toExcelSheet( sheetCur )
 		
 		try:

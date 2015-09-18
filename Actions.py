@@ -15,6 +15,7 @@ from Undo import undo
 import Checklist
 from Clock import Clock
 from CountdownClock import CountdownClock, EVT_COUNTDOWN
+from SetNoDataDNS import SetNoDataDNS
 
 undoResetTimer = None
 def StartRaceNow():
@@ -321,6 +322,7 @@ class Actions( wx.Panel ):
 			race.finishRaceNow()
 			if race.numLaps is None:
 				race.numLaps = race.getMaxLap()
+			SetNoDataDNS()
 			Model.resetCache()
 		
 		Utils.writeRace()

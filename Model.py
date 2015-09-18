@@ -958,6 +958,8 @@ class Race( object ):
 	secondsBeforeLeaderToFlipLapCounter = 15.0
 	countdownTimer = False
 	
+	setNoDataDNS = False				# If True, will set all riders in the spreadsheet to DNS if they have no data in the race.
+	
 	def __init__( self ):
 		self.reset()
 
@@ -1109,17 +1111,22 @@ class Race( object ):
 
 	def getRider( self, num ):
 		try:
-			num = int(num,10)
-		except TypeError:
-			num = int(num)
-
+			return self.riders[num]
+		except KeyError:
+			pass
+		
 		try:
-			rider = self.riders[num]
+			num = int(num, 10)
+		except:
+			num = int(num)
+		
+		try:
+			return self.riders[num]
 		except KeyError:
 			rider = Rider( num )
-			self.riders[num] = rider
 			rider.autocorrectLaps = self.autocorrectLapsDefault
-		return rider
+			self.riders[num] = rider
+			return rider
 
 	def getRiderNumbers( self ):
 		return self.riders.keys()

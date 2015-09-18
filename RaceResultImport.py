@@ -14,9 +14,9 @@ from ChipImport import ChipImportDialog
 def parseTagTime( line, lineNo, errors ):
 	try:
 		fields = line.split(';')
-		tag = fields[1].strip()	# ID
-		dStr = fields[2]		# Date
-		tStr = fields[3]		# Time
+		tag = fields[1].strip().lstrip('0')		# ID
+		dStr = fields[2]						# Date
+		tStr = fields[3]						# Time
 	except IndexError:
 		errors.append( u'{} {}: {}'.format(_('line'), lineNo, _('unrecognised input')) )
 		return None, None

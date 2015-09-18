@@ -182,7 +182,7 @@ class Results( wx.Panel ):
 			event.GetEventObject().SetToolTipString(u'{} {}, {} {}: {} {}'.format(
 					_('Pos'), pos,
 					_('Bib'), num,
-					_('close finish to'), u','.join( 'Bib {}'.format(bib) for bib in self.closeFinishBibs[num]),
+					_('close finish to'), u','.join( u'{} {}'.format(_('Bib'), bib) for bib in self.closeFinishBibs[num]),
 				)
 			)
 		else:
@@ -247,11 +247,11 @@ class Results( wx.Panel ):
 			race.sortLabel = None
 			if event.GetEventObject() == self.lapGrid:
 				label = self.lapGrid.GetColLabelValue( col )
-				if label.startswith( 'Lap' ):
+				if label.startswith( _('Lap') ):
 					race.sortLap = int(label.split()[1])
 			else:
 				label = self.labelGrid.GetColLabelValue( col )
-				if label[:1] != '<':
+				if label[:1] != u'<':
 					race.sortLabel = label
 		
 		wx.CallAfter( self.refresh )
@@ -268,7 +268,7 @@ class Results( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(wx.NewId(), _('History'), 	_('Switch to History tab'), self.OnPopupHistory, allCases),
+				(wx.NewId(), _('Passings'), 	_('Switch to Passings tab'), self.OnPopupHistory, allCases),
 				(wx.NewId(), _('RiderDetail'),	_('Show RiderDetail Dialog'), self.OnPopupRiderDetail, allCases),
 				(None, None, None, None, None),
 				(wx.NewId(), _('Show Photos'),	_('Show Photos'), self.OnPopupShowPhotos, allCases),
@@ -366,7 +366,7 @@ class Results( wx.Panel ):
 	
 	def OnPopupHistory( self, event ):
 		if Utils.isMainWin():
-			Utils.getMainWin().showPageName( _('History') )
+			Utils.getMainWin().showPageName( _('Passings') )
 			
 	def OnPopupRiderDetail( self, event ):
 		ShowRiderDetailDialog( self, self.numSelect )
@@ -584,12 +584,12 @@ class Results( wx.Panel ):
 		if sortLap:
 			race.sortLabel = sortLabel = None
 			for i, name in enumerate(colnames):
-				if name.startswith('Lap') and int(name.split()[1]) == sortLap:
+				if name.startswith(_('Lap')) and int(name.split()[1]) == sortLap:
 					sortCol = i
 					break
 		elif sortLabel:
 			race.sortLap = sortLap = None
-			if sortLabel not in {_('Bib'), _('Pos'), _('Gap'), _('Time'), _('mph'), _('km/h')}:
+			if sortLabel not in {_('Pos'), _('Gap'), _('Time'), _('mph'), _('km/h')}:
 				for i, name in enumerate(colnames):
 					if name == sortLabel:
 						sortCol = i
@@ -681,7 +681,7 @@ class Results( wx.Panel ):
 				elif colnames[sortCol] == _('Factor'):
 					getFunc = lambda x: float(x) if x else maxVal
 				elif colnames[sortCol] in [_('Pos'), _('Bib')]:
-					getFunc = lambda x: int(x) if x and x.isdigit() else maxVal
+					getFunc = lambda x: int(x) if x and unicode(x).isdigit() else maxVal
 				else:
 					getFunc = lambda x: u'{}'.format(x)
 					maxVal = '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
@@ -689,16 +689,16 @@ class Results( wx.Panel ):
 			for r, result in enumerate(results):
 				try:
 					k = (getFunc(data[sortCol][r]), r)
-				except:
+				except Exception as e:
 					k = (maxVal, r)
 				sortPairs.append( (k, r) )
 			sortPairs.sort()
 			
 			for c in xrange(len(data)):
 				col = data[c]
-				data[c] = [col[i] if i < len(col) else '' for k, i in sortPairs]
+				data[c] = [col[i] if i < len(col) else u'' for k, i in sortPairs]
 			
-			if colnames[sortCol] != 'Bib':
+			if colnames[sortCol] != _('Bib'):
 				for r in xrange(len(data[sortCol])):
 					if data[sortCol][r]:
 						data[sortCol][r] = u'{} [{}: {}]'.format(data[sortCol][r], r+1, data[1][r])
@@ -709,8 +709,8 @@ class Results( wx.Panel ):
 			for name in exportGrid.colnames:
 				try:
 					if int(name.split()[1]) == sortLap:
-						name = '<%s>\n%s' % (name,
-											[_('by Lap Time'), _('by Race Time'), _('by Lap Speed'), _('by Race Speed')][self.selectDisplay])
+						name = u'<{}>\n{}'.format(name,
+												[_('by Lap Time'), _('by Race Time'), _('by Lap Speed'), _('by Race Speed')][self.selectDisplay])
 				except:
 					pass
 				colnames.append( name )
@@ -718,7 +718,7 @@ class Results( wx.Panel ):
 			colnames = []
 			for name in exportGrid.colnames:
 				if name == sortLabel:
-					name = '<%s>' % name
+					name = u'<{}>'.format(name)
 				colnames.append( name )
 		else:
 			colnames = exportGrid.colnames
