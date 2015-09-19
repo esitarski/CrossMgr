@@ -115,20 +115,25 @@ class ChipReader( object ):
 	RaceResult = 1
 	
 	def __init__( self ):
+		self.chipReader = None
 		self.reset()
 		
 	def reset( self, chipReader = None ):
+		if self.chipReader is not None:
+			self.StopListener()
 		self.chipReader = chipReader or ChipReader.JChip
-		if chipReader == ChipReader.JChip:
+		if self.chipReader == ChipReader.JChip:
 			self.StartListener = JChip.StartListener
 			self.GetData = JChip.GetData
 			self.StopListener = JChip.StopListener
-			self.Cleanuplistener = JChip.CleanupListener
-		elif chipReader == ChipReader.RaceResult:
+			self.CleanupListener = JChip.CleanupListener
+		elif self.chipReader == ChipReader.RaceResult:
 			self.StartListener = RaceResult.StartListener
 			self.GetData = RaceResult.GetData
 			self.StopListener = RaceResult.StopListener
-			self.Cleanuplistener = RaceResult.CleanupListener
+			self.CleanupListener = RaceResult.CleanupListener
+		else:
+			assert False, 'Inrecognized ChipReader: {}'.format(self.chipReader)
 			
 	@property
 	def listener( self ):
@@ -136,6 +141,8 @@ class ChipReader( object ):
 			return JChip.listener
 		elif self.chipReader == ChipReader.RaceResult:
 			return RaceResult.listener
+		else:
+			assert False, 'Inrecognized ChipReader'
 
 chipReaderCur = ChipReader()
 
