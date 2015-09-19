@@ -133,7 +133,7 @@ class ChipReader( object ):
 			self.StopListener = RaceResult.StopListener
 			self.CleanupListener = RaceResult.CleanupListener
 		else:
-			assert False, 'Inrecognized ChipReader: {}'.format(self.chipReader)
+			assert False, 'Unrecognized ChipReader: {}'.format(self.chipReader)
 			
 	@property
 	def listener( self ):
@@ -142,7 +142,7 @@ class ChipReader( object ):
 		elif self.chipReader == ChipReader.RaceResult:
 			return RaceResult.listener
 		else:
-			assert False, 'Inrecognized ChipReader'
+			assert False, 'Unrecognized ChipReader'
 
 chipReaderCur = ChipReader()
 

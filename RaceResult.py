@@ -196,8 +196,6 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				if tag is None or t is None:
 					continue
 				t += readerComputerTimeDiff
-				if t < startTime:
-					continue
 				
 				while t in times:	# Ensure no equal times.
 					t += tSmall

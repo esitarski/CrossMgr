@@ -330,7 +330,7 @@ class Actions( wx.Panel ):
 		mainWin = Utils.getMainWin()
 		if mainWin:
 			mainWin.refresh()
-		JChip.StopListener()
+			mainWin.chipReader.StopListener()
 		
 		OutputStreamer.writeRaceFinish()
 		OutputStreamer.StopStreamer()
