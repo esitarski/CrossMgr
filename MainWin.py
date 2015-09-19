@@ -117,8 +117,8 @@ class ChipReader( object ):
 	def __init__( self ):
 		self.reset()
 		
-	def reset( self, chipReader = ChipReader.JChip ):
-		self.chipReader = chipReader
+	def reset( self, chipReader = None ):
+		self.chipReader = chipReader or ChipReader.JChip
 		if chipReader == ChipReader.JChip:
 			self.StartListener = JChip.StartListener
 			self.GetData = JChip.GetData

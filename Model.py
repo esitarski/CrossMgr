@@ -1781,7 +1781,6 @@ class Race( object ):
 			except KeyError:
 				continue
 				
-			print( nameStrTuples )
 			for a in Category.MergeAttributes:
 				vNew = cNew.get( a, None )
 				vExisting = getattr( cExisting, a )
