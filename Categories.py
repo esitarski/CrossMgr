@@ -606,6 +606,7 @@ and remove them from other categories.'''),
 			self.fixRow( row, catType, active )
 	
 	def onActivateAll( self, event ):
+		self.commit()
 		if Model.race:
 			for c in Model.race.getAllCategories():
 				if not c.active:
@@ -615,6 +616,7 @@ and remove them from other categories.'''),
 		wx.CallAfter( self.refresh )
 		
 	def onDeactivateAll( self, event ):
+		self.commit()
 		if Model.race:
 			for c in Model.race.getAllCategories():
 				if c.active:

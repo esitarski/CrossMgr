@@ -25,6 +25,7 @@ def ReadCategoriesFromExcel( reader ):
 	if sheetName not in reader.sheet_names():
 		return False
 	
+	raceMinutesMax = -1
 	headerMap = {}
 	categories = []
 	for r, row in enumerate(reader.iter_list(sheetName)):
@@ -38,9 +39,13 @@ def ReadCategoriesFromExcel( reader ):
 		catRow = {}
 		for h, c in headerMap.iteritems():
 			catField = HeadersToFields[h]
-			if catField is None:
-				continue
-			catRow[catField] = row[c]
+			if h == 'Race Minutes' and row[c]:
+				try:
+					raceMinutesMax = max( raceMinutesMax, int(row[c]) )
+				except ValueError:
+					pass
+			if catField is not None:
+				catRow[catField] = row[c]
 		
 		categories.append( catRow )
 	
@@ -48,6 +53,8 @@ def ReadCategoriesFromExcel( reader ):
 		try:
 			race.setCategories( race.mergeExistingCategoryAttributes(categories) )
 			race.adjustAllCategoryWaveNumbers()
+			if raceMinutesMax > 0:
+				race.minutes = raceMinutesMax
 			return True
 		except Exception as e:
 			Utils.writeLog( 'ReadCategoriesFromExcel: error: {}'.format(e) )
