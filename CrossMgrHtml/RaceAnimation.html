@@ -4933,7 +4933,6 @@ function LapChart( ) {
 		var dc = this.canvas.getContext('2d');
 		dc.setTransform( 1, 0, 0, 1, 0, 0 );
 		
-		var yTop = 0;
 		for( var c = 0; c < this.data.length; ++c ) {
 			var lapsData = this.data[c].lapsData;
 			var numPos = this.data[c].numPos;
@@ -4944,7 +4943,7 @@ function LapChart( ) {
 			dc.font = fontHeight + 'px Arial';
 			
 			dc.translate( 0, rowHeight / 2 );
-			yTop += rowHeight / 2;
+			var yTop = rowHeight / 2;
 			
 			dc.fillStyle = '#000000';
 			dc.textBaseline = 'middle';
@@ -4954,7 +4953,8 @@ function LapChart( ) {
 			dc.translate( 0, rowHeight );
 			yTop += rowHeight;
 			var height = rowHeight * (nums.length + 2);
-			this.data[c].yTop = yTop;
+			
+			this.data[c].yTop = (c == 0 ? yTop : this.data[c-1].yTop + this.data[c-1].height + yTop);
 			this.data[c].height = height;
 			
 			function getName( num ) {

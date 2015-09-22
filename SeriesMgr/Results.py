@@ -22,8 +22,7 @@ import xlwt
 import re
 import webbrowser
 
-def filterDigits( s ):
-	return u''.join( c for c in s if '0' <= c <= '9' )
+reNoDigits = re.compile( '[^0-9]' )
 
 HeaderNamesTemplate = ['Pos', 'Name', 'License', 'Team']
 def getHeaderNames():
@@ -634,13 +633,22 @@ class Results(wx.Panel):
 				self.grid.SetCellTextColour( row, c, wx.BLACK )
 		
 		if self.sortCol is not None:
+			def getBracketedNumber( v ):
+				numberMax = 99999
+				if not v:
+					return numberMax
+				try:
+					return int(reNoDigits.sub('', v.split('(')[1]))
+				except (IndexError, ValueError):
+					return numberMax
+				
 			data = []
 			for r in xrange(0, self.grid.GetNumberRows()):
 				rowOrig = [self.grid.GetCellValue(r, c) for c in xrange(0, self.grid.GetNumberCols())]
-				rowCmp = [v for v in rowOrig]
+				rowCmp = rowOrig[:]
 				rowCmp[0] = int(rowCmp[0])
 				rowCmp[4] = Utils.StrToSeconds(rowCmp[4])
-				rowCmp[5:] = [int( filterDigits(v.split('(')[1]) ) if v else 99999 for v in rowCmp[5:]]
+				rowCmp[5:] = [getBracketedNumber(v) for v in rowCmp[5:]]
 				rowCmp.extend( rowOrig )
 				data.append( rowCmp )
 			
