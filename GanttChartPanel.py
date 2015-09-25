@@ -399,7 +399,7 @@ class GanttChartPanel(wx.PyPanel):
 		# Find some reasonable tickmarks for the x axis.
 		numLabels = (xRight - xLeft) / (textWidth * 1.5)
 		tView = self.dataMax if not self.horizontalSB.IsShown() else self.horizontalSB.GetThumbSize()
-		d = tView / float(numLabels)
+		d = tView / max(1.0, float(numLabels))
 		intervals = [1, 2, 5, 10, 15, 20, 30, 1*60, 2*60, 5*60, 10*60, 15*60, 20*60, 30*60, 1*60*60, 2*60*60, 4*60*60, 8*60*60, 12*60*60, 24*60*60]
 		d = intervals[bisect.bisect_left(intervals, d, 0, len(intervals)-1)]
 		if self.horizontalSB.IsShown():
@@ -418,9 +418,9 @@ class GanttChartPanel(wx.PyPanel):
 			if x > xRight:
 				break
 			if t < 60*60:
-				s = '%d:%02d' % ((t / 60), t%60)
+				s = '{}:{:02d}'.format((t / 60), t%60)
 			else:
-				s = '%d:%02d:%02d' % (t/(60*60), (t / 60)%60, t%60)
+				s = '{}:{:02d}:{:02d}'.format(t/(60*60), (t / 60)%60, t%60)
 			w, h = dc.GetTextExtent(s)
 			xText = x - w/2
 			#xText = x
