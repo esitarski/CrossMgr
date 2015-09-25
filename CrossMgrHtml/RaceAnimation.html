@@ -534,7 +534,10 @@ function GetLapRatio( leaderRaceTimes, tCur, iLapHint )
 	return [iLapHint, lapRatio];
 }
 
-function doReload() {
+function doReload( forceRefresh ) {
+	if( !forceRefresh )
+		return RefreshPayload();
+	
 	var params = [
 		'raceCat=' + categoryCur,
 		'highlight=' + document.getElementById('idNumsToWatch').value,
@@ -5761,7 +5764,8 @@ function eqTimestamp( ts1, ts2 ) {
 function RefreshPayload() {
 	// Retrieve the same web page and parse out the payload.
 	var xhr = createXMLHttpRequest();
-	if( !xhr ) return;
+	if( !xhr || window.location.href.substring(0,5) == 'file:')
+		return DoReload(true);
 	
 	var requestTimer = setTimeout( function() { xhr.abort(); }, 10*1000 );
 	
@@ -5784,7 +5788,13 @@ function RefreshPayload() {
 		
 		var payloadJSON = xhr.responseText.substring(pStart, pEnd);
 		var payload = null;
-		try { payload = JSON.parse(payloadJSON); } catch( e ) { payload = null; }
+		try {
+			payload = JSON.parse(payloadJSON);
+		}
+		catch( e ) {
+			console.log( 'RefreshPayload: parse payload error: ' + e.message );
+			payload = null;
+		}
 		payloadJSON = null;
 		if( payload ) {
 			reloadTriggered = false;
@@ -5864,7 +5874,7 @@ function SetRaceTime() {
 			speedup = 1.0;
 			
 			if( lastRaceTime > 0 )
-				finishUpdateTimer = setTimeout( doReload, (Math.min(0, lastRaceTime - tRace) + 5*60) * 1000 );
+				finishUpdateTimer = setTimeout( function() {doReload(true); }, (Math.min(0, lastRaceTime - tRace) + 5*60) * 1000 );
 			else
 				queryPayloadTimer = setTimeout( QueryPayloadLoop, (3 + Math.random()) * 60 * 1000 );
 		}
