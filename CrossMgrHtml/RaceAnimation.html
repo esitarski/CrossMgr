@@ -5765,7 +5765,7 @@ function RefreshPayload() {
 	// Retrieve the same web page and parse out the payload.
 	var xhr = createXMLHttpRequest();
 	if( !xhr || window.location.href.substring(0,5) == 'file:')
-		return DoReload(true);
+		return doReload(true);
 	
 	var requestTimer = setTimeout( function() { xhr.abort(); }, 10*1000 );
 	
