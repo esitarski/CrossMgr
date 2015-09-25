@@ -5815,7 +5815,7 @@ function RefreshPayload() {
 		else
 			return TryAgain( 'payload extract fails', xhr.responseText );
 	}
-	xhr.open('GET', window.location.ref);
+	xhr.open('GET', window.location.href);
 	xhr.send();
 }
 
