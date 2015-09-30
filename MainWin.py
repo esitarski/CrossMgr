@@ -496,6 +496,10 @@ class MainWin( wx.Frame ):
 		self.dataMgmtMenu.Append( idCur, _('&Add DNS from External Excel Data...'), _('Add DNS...') )
 		self.Bind( wx.EVT_MENU, self.menuDNS, id=idCur )
 		
+		idCur = wx.NewId()
+		self.dataMgmtMenu.Append( idCur, _('&Open Excel Spreadsheet...'), _('Open Excel Spreadsheet...') )
+		self.Bind( wx.EVT_MENU, self.menuOpenExcelSheet, id=idCur )
+		
 		self.dataMgmtMenu.AppendSeparator()
 		
 		#-----------------------------------------------------------------------
@@ -836,6 +840,21 @@ class MainWin( wx.Frame ):
 		dns = DNSManagerDialog( self )
 		dns.ShowModal()
 		dns.Destroy()
+		
+	def menuOpenExcelSheet( self, event ):
+		if not Model.race:
+			Utils.MessageOK(self, _("You must have a valid race."), _("No Valid Race"), iconMask=wx.ICON_ERROR)
+			return
+		try:
+			excelLink = Model.race.excelLink
+		except:
+			Utils.MessageOK(self, _("Missing Excel Link."), _("Missing Excel Link"), iconMask=wx.ICON_ERROR)
+			return
+		
+		try:
+			webbrowser.open( excelLink.fileName, new = 2, autoraise = True )
+		except Exception as e:
+			pass
 		
 	def menuFind( self, event = None ):
 		if not getattr(self, 'findDialog', None):
