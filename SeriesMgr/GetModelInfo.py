@@ -223,9 +223,20 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 					info['raceDate'] = None
 			
 			info['bib'] = int(rr.num)
-			info['rank'] = toInt(rr.pos)
-			info['tFinish'] = rr.lastTime
-			info['tProjected'] = rr.projectedTime
+			try:
+				info['rank'] = toInt(rr.pos)
+			except Exception as e:
+				info['rank'] = 999999
+				
+			try:
+				info['tFinish'] = rr.lastTime
+			except Exception as e:
+				info['tFinish'] = 1000.0*24.0*60.0*60.0
+				
+			try:
+				info['tProjected'] = rr.projectedTime
+			except AttributeError:
+				info['tProjected'] = rr.lastTime
 			raceResults.append( RaceResult(**info) )
 		
 	Model.race = None

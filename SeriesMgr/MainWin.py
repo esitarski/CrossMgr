@@ -666,7 +666,7 @@ table.results tr td.fastest{
 		dlg = wx.FileDialog( self, message="Choose a file for your Series",
 							defaultFile = '',
 							wildcard = 'SeriesMgr files (*.smn)|*.smn',
-							style=wx.OPEN | wx.CHANGE_DIR )
+							style=wx.SAVE | wx.CHANGE_DIR )
 		response = dlg.ShowModal()
 		if response == wx.ID_OK:
 			fileName = dlg.GetPath()

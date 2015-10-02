@@ -67,7 +67,7 @@ class MainWin( wx.Frame ):
 	
 	StatusError, StatusSuccess, StatusAttempt = [0, 1, 2]
 
-	def __init__( self, parent, id = wx.ID_ANY, title = '', size = (550, 600) ):
+	def __init__( self, parent, id = wx.ID_ANY, title = '', size = (550, 480) ):
 		super( MainWin, self ).__init__( parent, id, title = title, size = size )
 		
 		self.SetTitle( AppVerName )
@@ -90,7 +90,7 @@ class MainWin( wx.Frame ):
 		vsMain = wx.BoxSizer( wx.VERTICAL )
 		
 		self.title = wx.StaticText( self, label = 'CrossMgr Impinj Tag Read/Write' )
-		self.title.SetFont( wx.Font(22, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD) )
+		self.title.SetFont( wx.Font(16, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD) )
 		
 		self.url = hl.HyperLinkCtrl( self, label = 'Powered by CrossMgr', URL = 'http://sites.google.com/site/crossmgrsoftware' )
 		self.url.SetBackgroundColour( self.backgroundColour )
@@ -193,7 +193,7 @@ class MainWin( wx.Frame ):
 		
 		labelBorderOptions = wx.TOP | wx.LEFT | wx.RIGHT
 		valueBorderOptions = wx.BOTTOM | wx.LEFT | wx.RIGHT
-		border = 4
+		border = 2
 		
 		vs1.Add( self.templateLabel, flag = labelBorderOptions, border = border )
 		vs1.Add( self.template, flag = wx.EXPAND|valueBorderOptions, border = border )
@@ -213,8 +213,11 @@ class MainWin( wx.Frame ):
 		hs.Add( vs1, 1, flag = wx.EXPAND|wx.ALL, border = border )
 		hs.Add( vs2, 1, flag = wx.EXPAND|wx.ALL, border = border )
 		
-		vsMain.Add( self.title, flag = wx.ALL, border = border )
-		vsMain.Add( self.url, flag = wx.ALL|wx.ALIGN_RIGHT, border = border )
+		hsTitle = wx.BoxSizer( wx.HORIZONTAL )
+		hsTitle.Add( self.title )
+		hsTitle.AddStretchSpacer()
+		hsTitle.Add( self.url, flag = wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		vsMain.Add( hsTitle, flag = wx.ALL|wx.EXPAND, border = border )
 		vsMain.Add( impinjConfigurationSizer, flag = wx.ALL|wx.EXPAND, border = border )
 		vsMain.Add( hs, 1, flag = wx.EXPAND )
 		
