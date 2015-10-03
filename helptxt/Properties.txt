@@ -40,6 +40,7 @@ Distance Unit|km or miles for the distances specified in Categories
 Show Times to 100s of Second|You choice to display regular seconds or fractions of seconds in Results and History.  Also configurable from the Options menu.
 Road Race Finish Times|Use Road Race rules for finish times.  Decimals are ignored, and all riders in the same group get the same time.  A rider is considered in the same group if separated by a second or less from the rider in front.
 Lap Time for 80% Rule|Selects which lap you want to use to calculate the 80% time elimination rule.  If the first lap is significantly longer or shorter than the other laps, choose __2nd Lap Time__.  If the first lap is similar to the length of the other laps, choose __1st Lap Time__.  In Cyclocross, there is often a run-up which makes the first lap longer.  Sometimes it is possible time the run-up, sometimes this is difficult, and it is better to use the 2nd lap to compute the 80% time rule.  In MTB, it is often better to use the 1st lap time.
+Consider Riders in Spreadsheet to be DNS if no race data|If there is no race data collected for a rider, and the rider is in the spreadsheet, consider the rider to be a DNS.
 Distance Unit|The units distances to show in Results.
 Show Lap Notes, Edits and Projected Times in HTML Output|If set, the internal lap edits will be written to the HTML page.  The lap information is shown similarly to the Chart screen.
 Show Course Animation|If set, the course animation (either the track or the GPX course) will be shown in the HTML output.
@@ -296,7 +297,7 @@ TT penalties and/or adjustments can be made afterwards.  You can add a note to d
 ## Question: When is a Rider in the Race?
 CrossMgr considers a rider in the race if (a) there is a time entry for the rider or (b) the rider Status (DNS, DQ, etc.) is set.  It does not automatically add all riders described in the Excel sheet.
 
-DNS riders can be added all at once from the spreadsheet after the race.  See [DataMgmt][] and the __Add DNS from External Excel Data...__ section.
+DNS riders can also be added all at once from the spreadsheet after the race.  See [DataMgmt][] and the __Add DNS from External Excel Data...__ section.
 
 # Controls
 

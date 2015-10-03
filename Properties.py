@@ -166,7 +166,7 @@ class RaceOptionsProperties( wx.Panel ):
 
 		self.highPrecisionTimes = wx.CheckBox( self, label=_('Show Times to 100s of a Second') )
 		self.roadRaceFinishTimes = wx.CheckBox( self, label=_('Road Race Finish Times (ignore decimals, groups get same time)') )
-		self.setNoDataDNS = wx.CheckBox( self, label=_('Consider Riders in Spreadsheet to be DNS they have no race data') )
+		self.setNoDataDNS = wx.CheckBox( self, label=_('Consider Riders in Spreadsheet to be DNS if no race data') )
 		
 		self.rule80MinLapCountLabel = wx.StaticText( self, label=_("Lap Time for 80% Rule: ") )
 		self.rule80MinLapCount1 = wx.RadioButton( self, label=_("1st Lap Time"), style=wx.RB_GROUP )
