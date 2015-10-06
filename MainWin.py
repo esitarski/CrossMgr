@@ -806,6 +806,10 @@ class MainWin( wx.Frame ):
 		
 		self.photoDialog = PhotoViewerDialog( self, title = _("PhotoViewer"), size=(600,400) )
 
+	@property
+	def chipReader( self ):
+		return chipReaderCur
+		
 	def handleChipReaderEvent( self, event ):
 		race = Model.race
 		if not race or not race.isRunning() or not race.enableUSBCamera:
