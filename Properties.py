@@ -582,7 +582,7 @@ class FilesProperties( wx.Panel ):
 		race = Model.race
 		excelLink = getattr(race, 'excelLink', None)
 		if excelLink:
-			self.excelName.SetLabel( u'%s|%s' % (
+			self.excelName.SetLabel( u'{}|{}'.format(
 				os.path.basename(excelLink.fileName) if excelLink.fileName else '',
 				excelLink.sheetName if excelLink.sheetName else '') )
 		else:
@@ -690,10 +690,10 @@ class Properties( wx.Panel ):
 		pass
 	
 	def incNext( self ):
-		if not hasattr(self,'generalInfoProperties'):
-			return ''
-
-		gi = self.generalInfoProperties
+		try:
+			gi = self.generalInfoProperties
+		except AttributeError:
+			return ''		
 		
 		gi.raceNum.SetValue( gi.raceNum.GetValue() + 1 )
 		gi.memo.SetValue( '' )
@@ -719,32 +719,34 @@ class Properties( wx.Panel ):
 		self.updateFileName()
 	
 	def updateFileName( self ):
-		if not hasattr(self,'filesProperties') or not hasattr(self,'generalInfoProperties'):
+		try:
+			gi = self.generalInfoProperties
+			fi = self.filesProperties
+		except ValueError:
 			return ''
-		
-		gi = self.generalInfoProperties
-		
+			
 		rDate = gi.date.GetValue().Format(Properties.dateFormat)
 		rName = Properties.badFileCharsRE.sub( ' ', gi.raceName.GetValue() ).strip()
 		rNum = gi.raceNum.GetValue()
 		rMemo = Properties.badFileCharsRE.sub( ' ', gi.memo.GetValue() ).strip()
 		
-		fname = u'%s-%s-r%d-%s.cmn' % (rDate, rName, rNum, rMemo )
-		self.filesProperties.fileName.SetLabel( fname )
+		fname = u'{}-{}-r{}-{}.cmn'.format(rDate, rName, rNum, rMemo)
+		fi.fileName.SetLabel( fname )
 		return fname
 	
 	def saveFileNameFields( self ):
-		if not hasattr(self,'generalInfoProperties'):
-			return ''
-		gi = self.generalInfoProperties
-		
+		try:
+			gi = self.generalInfoProperties
+		except AttributeError:
+			return ''		
 		for f in ['date', 'raceName', 'raceNum', 'memo']:
 			setattr(self, f + 'Original', getattr(gi, f).GetValue())
 		
 	def restoreFileNameFields( self ):
-		if not hasattr(self,'generalInfoProperties'):
+		try:
+			gi = self.generalInfoProperties
+		except AttributeError:
 			return ''
-		gi = self.generalInfoProperties
 		for f in ['date', 'raceName', 'raceNum', 'memo']:
 			getattr(gi, f).SetValue( getattr(self, f + 'Original') )
 	
@@ -752,6 +754,7 @@ class Properties( wx.Panel ):
 		return self.updateFileName()
 	
 	def refresh( self ):
+		self.updateFileName()
 		if not self.state.changed():
 			return
 

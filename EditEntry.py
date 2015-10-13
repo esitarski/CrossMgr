@@ -532,9 +532,24 @@ def AddLapSplits( num, lap, times, splits ):
 		try:
 			tLeft = times[lap-1]
 			tRight = times[lap]
-			splitTime = (tRight - tLeft) / float(splits)
+			
+			# Split the first lap time to the same ratio as the distances.
+			category = race.getCategory( num )
+			if (	lap == 1 and
+					category is not None and
+					category.distanceType == category.DistanceByLap and
+					category.distance and category.firstLapDistance and
+					category.distance != category.firstLapDistance
+				):
+				flr = float(category.firstLapDistance) / float(category.distance)
+				splitTime = (tRight - tLeft) / (flr + (splits-1))
+				firstLapSplitTime = splitTime * flr
+			else:
+				splitTime = firstLapSplitTime = (tRight - tLeft) / float(splits)
+			
+			newTime = rLeft
 			for i in xrange( 1, splits ):
-				newTime = tLeft + splitTime * i
+				newTime += (firstLapSplitTime if i == 1 else splitTime)
 				race.numTimeInfo.add( num, newTime, Model.NumTimeInfo.Split )
 				race.addTime( num, newTime )
 			return True
