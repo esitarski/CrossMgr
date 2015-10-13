@@ -92,6 +92,61 @@ body{ font-family: sans-serif; }
 .bigfont { font-size: 120%; }
 .hidden { display: none; }
 
+#buttongroup {
+	margin:4px;   
+	float:left;
+}
+
+#buttongroup label {
+	float:left;
+	margin:4px;
+	background-color:#EFEFEF;
+	border-radius:4px;
+	border:1px solid #D0D0D0;
+	overflow:auto;
+	cursor: pointer;
+}
+
+#buttongroup label span {
+	text-align:center;
+	padding:8px 8px;
+	display:block;
+}
+
+#buttongroup label input {
+	position:absolute;
+	top:-20px;
+}
+
+#buttongroup input:checked + span {
+	background-color:#404040;
+	color:#F7F7F7;
+}
+
+#buttongroup .yellow {
+	background-color:#FFCC00;
+	color:#333;
+}
+
+#buttongroup .blue {
+	background-color:#00BFFF;
+	color:#333;
+}
+
+#buttongroup .pink {
+	background-color:#FF99FF;
+	color:#333;
+}
+
+#buttongroup .green {
+	background-color:#7FE57F;
+	color:#333;
+}
+#buttongroup .purple {
+	background-color:#B399FF;
+	color:#333;
+}
+
 table.results
 {
 	font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -182,10 +237,13 @@ tbody td.points {
 	font-style: italic;
 }
 
+hr { clear: both; }
+
 @media print { .noprint { display: none; } }
 ''')
 
 			with tag(html, 'script', dict( type="text/javascript")):
+				html.write( '\nvar catMax={};\n'.format( len(categoryNames) ) )
 				html.write( '''
 function removeClass( classStr, oldClass ) {
 	var classes = classStr.split( ' ' );
@@ -199,6 +257,16 @@ function removeClass( classStr, oldClass ) {
 
 function addClass( classStr, newClass ) {
 	return removeClass( classStr, newClass ) + ' ' + newClass;
+}
+
+function selectCategory( iCat ) {
+	for( var i = 0; i < catMax; ++i ) {
+		var e = document.getElementById('catContent' + i);
+		if( i == iCat || iCat < 0 )
+			e.className = removeClass(e.className, 'hidden');
+		else
+			e.className = addClass(e.className, 'hidden');
+	}
 }
 
 function sortTable( table, col, reverse ) {
@@ -296,6 +364,23 @@ function sortTableId( iTable, iCol ) {
 					with tag(html, 'td'):
 						with tag(html, 'h1'):
 							html.write( '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + cgi.escape(title) )
+			with tag(html, 'div', {'id':'buttongroup', 'class':'noprint'} ):
+				with tag(html, 'label', {'class':'green'} ):
+					with tag(html, 'input', {
+							'type':"radio",
+							'name':"categorySelect",
+							'selected':"true",
+							'onclick':"selectCategory(-1);"} ):
+						with tag(html, 'span'):
+							html.write( 'All' )
+				for iTable, categoryName in enumerate(categoryNames):
+					with tag(html, 'label', {'class':'green'} ):
+						with tag(html, 'input', {
+								'type':"radio",
+								'name':"categorySelect",
+								'onclick':"selectCategory({});".format(iTable)} ):
+							with tag(html, 'span'):
+								html.write( cgi.escape(categoryName) )
 			for iTable, categoryName in enumerate(categoryNames):
 				results, races = GetModelInfo.GetCategoryResults(
 					categoryName,
@@ -307,78 +392,77 @@ function sortTableId( iTable, iCol ) {
 				
 				headerNames = HeaderNames + [u'{}'.format(r[1]) for r in races]
 				
-				with tag(html, 'p'):
-					pass
-				with tag(html, 'hr'):
-					pass
-				
-				with tag(html, 'h2'):
-					html.write( cgi.escape(categoryName) )
-				with tag(html, 'table', {'class': 'results', 'id': 'idTable{}'.format(iTable)} ):
-					with tag(html, 'thead'):
-						with tag(html, 'tr'):
-							for iHeader, col in enumerate(HeaderNames):
-								with tag(html, 'th', {
-										'onclick': 'sortTableId({}, {})'.format(iTable, iHeader),
+				with tag(html, 'div', {'id':'catContent{}'.format(iTable)} ):
+					html.write( '<p/>')
+					html.write( '<hr/>')
+					
+					with tag(html, 'h2'):
+						html.write( cgi.escape(categoryName) )
+					with tag(html, 'table', {'class': 'results', 'id': 'idTable{}'.format(iTable)} ):
+						with tag(html, 'thead'):
+							with tag(html, 'tr'):
+								for iHeader, col in enumerate(HeaderNames):
+									with tag(html, 'th', {
+											'onclick': 'sortTableId({}, {})'.format(iTable, iHeader),
+											} ):
+										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,iHeader)) ):
+											pass
+										html.write( cgi.escape(col).replace('\n', '<br/>\n') )
+								for iRace, r in enumerate(races):
+									# r[0] = RaceData, r[1] = RaceName, r[2] = RaceURL, r[3] = Race
+									with tag(html, 'th', {
+											'class':'leftBorder centerAlign',
+											'colspan': 2,
+											'onclick': 'sortTableId({}, {})'.format(iTable, len(HeaderNames) + iRace),
 										} ):
-									with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,iHeader)) ):
-										pass
-									html.write( cgi.escape(col).replace('\n', '<br/>\n') )
-							for iRace, r in enumerate(races):
-								# r[0] = RaceData, r[1] = RaceName, r[2] = RaceURL, r[3] = Race
-								with tag(html, 'th', {
-										'class':'leftBorder centerAlign',
-										'colspan': 2,
-										'onclick': 'sortTableId({}, {})'.format(iTable, len(HeaderNames) + iRace),
-									} ):
-									with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,len(HeaderNames) + iRace)) ):
-										pass
-									if r[2]:
-										with tag(html,'a',dict(href=u'{}?raceCat={}'.format(r[2], urllib.quote(categoryName.encode('utf8')))) ):
+										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,len(HeaderNames) + iRace)) ):
+											pass
+										if r[2]:
+											with tag(html,'a',dict(href=u'{}?raceCat={}'.format(r[2], urllib.quote(categoryName.encode('utf8')))) ):
+												html.write( cgi.escape(r[1]).replace('\n', '<br/>\n') )
+										else:
 											html.write( cgi.escape(r[1]).replace('\n', '<br/>\n') )
-									else:
-										html.write( cgi.escape(r[1]).replace('\n', '<br/>\n') )
-									if r[0]:
-										html.write( '<br/>' )
-										with tag(html, 'span', {'class': 'smallFont'}):
-											html.write( r[0].strftime('%b %d, %Y') )
-									if not scoreByTime and not scoreByPercent:
-										html.write( '<br/>' )
-										with tag(html, 'span', {'class': 'smallFont'}):
-											html.write( u'Top {}'.format(len(r[3].pointStructure)) )
-					with tag(html, 'tbody'):
-						for pos, (name, license, team, points, gap, racePoints) in enumerate(results):
-							with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
-								with tag(html, 'td', {'class':'rightAlign'}):
-									html.write( unicode(pos+1) )
-								with tag(html, 'td'):
-									html.write( unicode(name or u'') )
-								with tag(html, 'td'):
-									if licenseLinkTemplate and license:
-										with tag(html, 'a', {'href':u'{}{}'.format(licenseLinkTemplate, license), 'target':'_blank'}):
+										if r[0]:
+											html.write( '<br/>' )
+											with tag(html, 'span', {'class': 'smallFont'}):
+												html.write( r[0].strftime('%b %d, %Y') )
+										if not scoreByTime and not scoreByPercent:
+											html.write( '<br/>' )
+											with tag(html, 'span', {'class': 'smallFont'}):
+												html.write( u'Top {}'.format(len(r[3].pointStructure)) )
+						with tag(html, 'tbody'):
+							for pos, (name, license, team, points, gap, racePoints) in enumerate(results):
+								with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
+									with tag(html, 'td', {'class':'rightAlign'}):
+										html.write( unicode(pos+1) )
+									with tag(html, 'td'):
+										html.write( unicode(name or u'') )
+									with tag(html, 'td'):
+										if licenseLinkTemplate and license:
+											with tag(html, 'a', {'href':u'{}{}'.format(licenseLinkTemplate, license), 'target':'_blank'}):
+												html.write( unicode(license or u'') )
+										else:
 											html.write( unicode(license or u'') )
-									else:
-										html.write( unicode(license or u'') )
-								with tag(html, 'td'):
-									html.write( unicode(team or '') )
-								with tag(html, 'td', {'class':'rightAlign'}):
-									html.write( unicode(points or '') )
-								with tag(html, 'td', {'class':'rightAlign'}):
-									html.write( unicode(gap or '') )
-								for rPoints, rRank in racePoints:
-									if rPoints:
-										with tag(html, 'td', {'class':'leftBorder points' + (' ignored' if u'**' in u'{}'.format(rPoints) else '')}):
-											html.write( u'{}'.format(rPoints).replace(u'[',u'').replace(u']',u'').replace(' ', '&nbsp;') )
-									else:
-										with tag(html, 'td', {'class':'leftBorder'}):
-											pass
-									
-									if rRank:
-										with tag(html, 'td', {'class':'rank'}):
-											html.write( u'({})'.format(Utils.ordinal(rRank).replace(' ', '&nbsp;')) )
-									else:
-										with tag(html, 'td'):
-											pass
+									with tag(html, 'td'):
+										html.write( unicode(team or '') )
+									with tag(html, 'td', {'class':'rightAlign'}):
+										html.write( unicode(points or '') )
+									with tag(html, 'td', {'class':'rightAlign'}):
+										html.write( unicode(gap or '') )
+									for rPoints, rRank in racePoints:
+										if rPoints:
+											with tag(html, 'td', {'class':'leftBorder points' + (' ignored' if u'**' in u'{}'.format(rPoints) else '')}):
+												html.write( u'{}'.format(rPoints).replace(u'[',u'').replace(u']',u'').replace(' ', '&nbsp;') )
+										else:
+											with tag(html, 'td', {'class':'leftBorder'}):
+												pass
+										
+										if rRank:
+											with tag(html, 'td', {'class':'rank'}):
+												html.write( u'({})'.format(Utils.ordinal(rRank).replace(' ', '&nbsp;')) )
+										else:
+											with tag(html, 'td'):
+												pass
 										
 			#-----------------------------------------------------------------------------
 			if bestResultsToConsider > 0:

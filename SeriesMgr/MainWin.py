@@ -632,9 +632,11 @@ table.results tr td.fastest{
 	def menuOpen( self, event ):
 		if SeriesModel.model.changed:
 			if Utils.MessageOKCancel(self, 'You have Unsaved Changes.  Save Now?', 'Unsaved Changes') == wx.ID_OK:
-				self.writeSeries()
-			else:
-				return
+				try:
+					self.writeSeries()
+				except:
+					Utils.MessageOK(self, 'Write Failed.  Series NOT saved."%s".' % fileName, 'Write Failed', iconMask=wx.ICON_ERROR )
+					return
 				
 		dlg = wx.FileDialog( self, message="Choose a file for your Competition",
 							defaultFile = '',
@@ -652,7 +654,7 @@ table.results tr td.fastest{
 		try:
 			self.writeSeries()
 		except:
-			Utils.MessageOK(self, 'Write Failed.  Competition NOT saved."%s".' % fileName, 'Write Failed', iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, 'Write Failed.  Series NOT saved."%s".' % fileName, 'Write Failed', iconMask=wx.ICON_ERROR )
 		self.updateRecentFiles()
 
 	def setTitle( self ):
