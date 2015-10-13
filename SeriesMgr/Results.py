@@ -369,7 +369,7 @@ function sortTableId( iTable, iCol ) {
 					with tag(html, 'input', {
 							'type':"radio",
 							'name':"categorySelect",
-							'selected':"true",
+							'checked':"true",
 							'onclick':"selectCategory(-1);"} ):
 						with tag(html, 'span'):
 							html.write( 'All' )
