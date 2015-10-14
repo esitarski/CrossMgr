@@ -430,7 +430,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		riderOrder.sort(key = lambda r:	[riderPoints[r]] +
 										([riderEventsCompleted[r]] if useMostEventsCompleted else []) +
 										[riderPlaceCount[r][k] for k in xrange(1, numPlacesTieBreaker+1)] +
-										[-rank for points, rank in reversed(riderResults[r])],
+										[-rank for points, rank in riderResults[r]],
 						reverse = True )
 		
 		# Compute the points gap.

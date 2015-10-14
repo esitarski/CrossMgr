@@ -108,7 +108,7 @@ class Race( object ):
 		return ', '.join( '{}={}'.format(a, repr(getattr(self, a))) for a in ['fileName', 'pointStructure', 'excelLink'] )
 		
 class SeriesModel( object ):
-	DefaultPointStructureName = 'Example'
+	DefaultPointStructureName = 'Regular'
 	useMostEventsCompleted = False
 	scoreByTime = False
 	scoreByPercent = False

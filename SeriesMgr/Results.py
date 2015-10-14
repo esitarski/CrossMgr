@@ -166,6 +166,7 @@ table.results th
 	padding-bottom:4px;
 	background-color:#7FE57F;
 	color:#000000;
+	vertical-align:bottom;
 }
 table.results tr.odd
 {
