@@ -547,7 +547,7 @@ def AddLapSplits( num, lap, times, splits ):
 			else:
 				splitTime = firstLapSplitTime = (tRight - tLeft) / float(splits)
 			
-			newTime = rLeft
+			newTime = tLeft
 			for i in xrange( 1, splits ):
 				newTime += (firstLapSplitTime if i == 1 else splitTime)
 				race.numTimeInfo.add( num, newTime, Model.NumTimeInfo.Split )
