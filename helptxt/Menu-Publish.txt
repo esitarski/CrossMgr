@@ -38,22 +38,34 @@ Publish the results in Excel format and opens Excel on the output file.
 ## HTML Publish...
 Publish the results as an HTML file.  Includes the Race Animation and the Chart if specified in [Properties][].
 
-The HTML web page includes additional options that can be controlled by setting query values in the URL.
+The HTML web page has a drop-down button next to the __Refresh__ button to control __Kiosk Mode__.
+The options are __Results__ (regular), __Kiosk__ (__Kiosk Mode__ leader board) and __Kiosk Arrival__ (__Kiosk Mode__ with participants ordered by arrive time - most recent arrivals at the top).
+__Kiosk Mode__ cycles through results for each category every 15 seconds.  It is useful to show results at live events.
+
+__Kiosk Arrival__ mode is useful for Gran Fondos and Time Trials.
+In this mode, the most recent finisher is shown at the top.
+The position (both in the start wave and in any specific category) is shown in a separate column.
+
+A competitor can quickly check his/her result at the top of the screen after crossing the finish rather than having to scroll down to the bottom of the screen.  In this way, competitors in Gran Fondo's with 1,000s of participants can still see the results at the finish.
+
+__Tip:__ After selecting Kiosk mode, Press __F11__ to put the browser into full-screen mode (press F11 to exit full screen).  This shows the maximum screen area.
+
+For automatic control, the HTML web page includes additional options that can be controlled by setting query values in the URL.
 For example:
 
    <your-race>.html?kioskMode=t
    
 This will put the page into __Kiosk Mode__.  In this mode, the page will automatically cycle through all categories while hiding the map, title, and all other non-essential information.  __Kiosk Mode__ is useful if you have a computer/big screen showing live results at the race.
 
-	<your-race>.html?finisherMode=t
+	<your-race>.html?arrivalMode=t
 	
-This mode is useful for Time Trials and Gran Fondo events.  In this mode, the most recent finisher is shown at the top of the results, and his/her place is shown in a separate column for all categories the rider is competing in (for example, Overall, Age Group, Ability, etc.).  You only need to look at the top line to see the current result of the last rider who finished.
+In this mode, the most recent finisher is shown at the top of the results.
 
-Of course you can combine both modes together:
+Modes can be combined together:
 
-	<your-race>.html?kioskMode=t&finisherMode=t
+	<your-race>.html?kioskMode=t&arrivalMode=t
 
-This combination combines category cycling with listing the latest result at the top.  Very good for live Gran Fondos finishes.
+This combination combines category cycling with listing the latest result at the top.  Good for live Gran Fondos finishes.
 
 You can also change the default language of the page:
 

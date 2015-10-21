@@ -178,7 +178,7 @@ var showCourseAnimation = true;
 var version = null;
 var raceNotes = null;
 var primes = null;
-var finisherMode = null;
+var arrivalMode = null;
 var cycleCategoriesMode = null;
 var catPosIndex = null;
 var showCategorySummary = null;
@@ -543,8 +543,8 @@ function doReload( forceRefresh ) {
 		params.push( 'cycleCategoriesMode=t' );
 	if( showCategorySummary )
 		params.push( 'showCategorySummary=t' );
-	if( finisherMode )
-		params.push( 'finisherMode=t' );
+	if( arrivalMode )
+		params.push( 'arrivalMode=t' );
 	if( kioskMode )
 		params.push( 'kioskMode=t' );
 	
@@ -2740,7 +2740,7 @@ function RefreshResultsTable()
 		}
 	}
 	
-	if( isTimeTrial && finisherMode ) {
+	if( isTimeTrial && arrivalMode ) {
 		RefreshResultsTableArrival( raceTimesLength, raceTimesCopy );
 		return;
 	}
@@ -2957,7 +2957,7 @@ function RefreshResultsTable()
 		tbody = createChild( table, 'TBODY' );
 		for( var p = 0; p < catDetail.pos.length; ++p ) {
 			var position, num;
-			if( finisherMode ) {
+			if( arrivalMode ) {
 				if( !catDetail.finisherCount )
 					UpdateCatPosIndex();
 				if( p < catDetail.finisherCount ) {
@@ -3123,7 +3123,7 @@ function RefreshResultsTable()
 				td.className = 'same-value';
 			
 			var gap = '';
-			var gapValue = catDetail.gapValue[p];
+			var gapValue = catDetail.gapValue[position-1];
 			if( isFinisher ) {
 				if( gapValue > 0 ) {
 					if( roadRaceFinishTimes && gapValue == gapValueLast )
@@ -5700,31 +5700,56 @@ function SituationRefresh() {
 	SetSituationTime( timeRange.value );
 }
 
-function SetFinisherMode() {
-	finisherMode = document.getElementById('idFinisherMode').checked;
+function SetArrivalMode() {
+	arrivalMode = document.getElementById('idArrivalMode').checked;
 	RefreshResultsTable();
 }
 
-var cycleCount = 0;
-function SetNextCategory() {
-	if( !cycleCategoriesMode || categories.length <= 1 )
+function SelectCategoryNonAll() {
+	if( categories.length <= 1 || (categoryCur && categoryCur != 'All') )
 		return;
 	
-	for( var i = 0; i < categories.length; ++i ) {
-		if( categoryCur == categories[i] ) {
-			for( var j = 1; j < categories.length; ++j ) {
-				var k = (i + j) % categories.length;
-				if( categories[k] != 'All' ) {
-					SelectCategory( k );
-					if( cycleCount++ == 12 )	// 3 minutes.
-						doReload();
-					else
-						setTimeout( SetNextCategory, 1000*15 );
-					return;
-				}
-			}
-		}
+	var i;
+	for( i = 0; i < categories.length; ++i ) {
+		if( categoryCur == categories[i] )
+			break;
 	}
+	for( ;; ) {
+		if( ++i >= categories.length )
+			i = 0;
+		if( categories[i] != 'All' )
+			break;
+	}
+	SelectCategory( i );
+}
+
+function GetNextValidCategory() {
+	if( categories.length <= 1 )
+		return null;
+	
+	var i;
+	for( i = 0; i < categories.length; ++i ) {
+		if( categoryCur == categories[i] )
+			break;
+	}
+	for( ;; ) {
+		if( ++i >= categories.length )
+			i = 0;
+		if( categories[i] != 'All' )
+			break;
+	}
+	return i;
+}
+
+var cycleCount = 0;
+var cycleTimer = null;
+function SetNextCategory() {
+	var i = GetNextValidCategory();
+	if( i == null )
+		return;
+	SelectCategory( i );
+	if( ++cycleCount % 12 == 0 )	// 3 minutes between full updates.
+		doReload();
 }
 
 function SetShowCategorySummary() {
@@ -5734,9 +5759,9 @@ function SetShowCategorySummary() {
 
 function SetCycleCategoriesMode() {
 	cycleCategoriesMode = document.getElementById('idCycleCategoriesMode').checked;
-	if( cycleCategoriesMode ) {
-		setTimeout( SetNextCategory, 1000*15 );
-	}
+	clearInterval( cycleTimer );
+	if( cycleCategoriesMode )
+		cycleTimer = setInterval( SetNextCategory, 1000*15 );
 }
 
 function OpenGetDirections()
@@ -5897,6 +5922,28 @@ function SetRaceTime() {
 	return s;
 }
 
+function displaySelect( select ) {
+	var k = (select.value.indexOf('kiosk') >= 0);
+	var a = (select.value.indexOf('arrival') >= 0);
+	if( k || a ) {
+		var message;
+		if( k && a )
+			message = 'Switch to Kiosk Arrival Mode?';
+		else
+			message = 'Switch to Kiosk Mode?';
+		
+		if( !window.confirm(message) ) {
+			kioskMode = false;
+			arrivalMode = false;
+			select.selectedIndex = 0;
+			return;
+		}
+	}
+	kioskMode = k;
+	arrivalMode = a;
+	doReload( true );
+}
+
 function onLoad()
 {
 	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
@@ -6014,9 +6061,9 @@ function onLoad()
 	showCategorySummary = (getUrlParam('showCategorySummary', undefined) == 't');
 	if( showCategorySummary )
 		document.getElementById('idShowCategorySummary').checked = true;
-	finisherMode = (getUrlParam('finisherMode', undefined) == 't');
-	if( finisherMode )
-		document.getElementById('idFinisherMode').checked = true;
+	arrivalMode = (getUrlParam('arrivalMode', undefined) == 't');
+	if( arrivalMode )
+		document.getElementById('idArrivalMode').checked = true;
 	cycleCategoriesMode = (getUrlParam( 'cycleCategoriesMode', undefined ) == 't');
 	if( cycleCategoriesMode ) {
 		document.getElementById('idCycleCategoriesMode').checked = true;
@@ -6033,9 +6080,9 @@ function onLoad()
 		document.getElementById('idCycleCategoriesMode').checked = true;
 		document.getElementById('idShowCategorySummary').checked = true;
 		
-		//document.getElementById('idFinisherMode').checked = true;
-		SetShowCategorySummary()
-		SetFinisherMode();
+		//document.getElementById('idArrivalMode').checked = true;
+		SetShowCategorySummary();
+		SetArrivalMode();
 		SetCycleCategoriesMode();
 	}
 	var numbers = getUrlParam( 'highlight', undefined );
@@ -6062,6 +6109,8 @@ function onLoad()
 	// Add unconditional refresh if race is running.
 	if( raceIsRunning )
 		setTimeout( RefreshPayload, 5*60*1000+10 );
+		
+	document.getElementById('idDisplaySelect').selectedIndex = (kioskMode && arrivalMode ? 2 : kioskMode ? 1 : 0);
 }
 
 </script>
@@ -6084,10 +6133,15 @@ function onLoad()
 <button id="idVirtualTour" onclick="OpenVirtualTourWindow()" data-tr="Google Earth Ride"></button>&nbsp;&nbsp;
 <button id="idTravelMap" onclick="OpenTravelMapWindow()" data-tr="Participant Map"></button>&nbsp;&nbsp;
 <button onclick="doReload()" data-tr="Refresh"></button>&nbsp;&nbsp;&nbsp;
+<select id="idDisplaySelect" onchange="displaySelect(this);">
+  <option value="normal" data-tr="Results"></option>
+  <option value="kiosk" data-tr="Kiosk"></option>
+  <option value="kiosk-arrival" data-tr="Kiosk A"></option>
+</select>
 <br/>
 <input id="idCycleCategoriesMode" type="checkbox" class="hidden" onclick="SetCycleCategoriesMode()"><span data-tr="CycleCategories" class="hidden"></span></input>&nbsp;&nbsp;
 <input id="idShowCategorySummary" type="checkbox" class="hidden" onclick="SetShowCategorySummary()"><span data-tr="ShowCategorySummary" class="hidden"></span></input>&nbsp;&nbsp;
-<input id="idFinisherMode" type="checkbox" class="hidden" onclick="SetFinisherMode()"><span id="idFinisherModeLabel" data-tr="ByFinishers" class="hidden"></span></input>
+<input id="idArrivalMode" type="checkbox" class="hidden" onclick="SetArrivalMode()"><span id="idArrivalModeLabel" data-tr="ByFinishers" class="hidden"></span></input>
 </span>
 </tr></table><span id="idReloadStatus"></span><span id="idRaceNotes"></span>
 </p>
