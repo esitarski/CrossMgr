@@ -19,6 +19,7 @@ from ReadCategoriesFromExcel import ReadCategoriesFromExcel
 from ReadPropertiesFromExcel import ReadPropertiesFromExcel
 from ReadCategoriesFromExcel import sheetName as CategorySheetName
 from ReadPropertiesFromExcel import sheetName as PropertySheetName
+import MatchingCategory
 
 with Utils.SuspendTranslation():
 	TagFields = [
@@ -216,6 +217,12 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 			self.choices.append( wx.Choice(sp, -1, choices = self.headers ) )
 			gs.Add( self.choices[-1] )
 		
+		self.initCategoriesFromExcel = wx.CheckBox( self, label=_('Initialize CrossMgr Categories from Excel Category and Bib# columns') )
+		self.initCategoriesFromExcel.SetToolTip( wx.ToolTip(u'\n'.join([
+				_('Updates, adds or deletes CrossMgr categories, with bib numbers, using the Category and Bib# columns in the Excel sheet.  Use with care as the Categories will be updated every time the Excel sheet changes.  Read the documentation first!'),
+			])
+		) )
+		
 		sp.SetSizer( gs )
 		sp.SetAutoLayout(1)
 		sp.SetupScrolling( scroll_y = False )
@@ -227,6 +234,8 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		self.mapSummary.InsertColumn( 0, _('CrossMgr'),		wx.LIST_FORMAT_RIGHT,	120 )
 		self.mapSummary.InsertColumn( 1, _('Spreadsheet'),	wx.LIST_FORMAT_LEFT,	120 )
 		vbs.Add( self.mapSummary, 1, flag=wx.ALL|wx.EXPAND, border = border )
+		
+		vbs.Add( self.initCategoriesFromExcel, 0, flag=wx.ALL, border=8 )
 		
 		self.SetSizer( vbs )
 	
@@ -287,6 +296,10 @@ class SummaryPage(wiz.WizardPageSimple):
 		self.riderNumber = wx.StaticText( self )
 		rows += 1
 
+		self.getCategoriesFromCategoriesLabel = wx.StaticText( self, label=u'{}:'.format(_('CrossMgr Categories from Excel Categories')) )
+		self.initCategoriesFromExcel = wx.StaticText( self )
+		rows += 1
+
 		self.categoryAndPropertiesLabel = wx.StaticText( self, label=u'{}:'.format(_('Categories and Properties')) )
 		self.categoryAndProperties = wx.StaticText( self )
 		rows += 1
@@ -313,6 +326,7 @@ class SummaryPage(wiz.WizardPageSimple):
 					  (self.fileLabel, 0, labelAlign),		(self.fileName, 	1, fieldAlign),
 					  (self.sheetLabel, 0, labelAlign),		(self.sheetName, 	1, fieldAlign),
 					  (self.riderLabel, 0, labelAlign),		(self.riderNumber,	1, fieldAlign),
+					  (self.getCategoriesFromCategoriesLabel, 0, labelAlign),		(self.initCategoriesFromExcel,	1, fieldAlign),
 					  (self.categoryAndPropertiesLabel, 0, labelAlign),		(self.categoryAndProperties,	1, fieldAlign),
 					  (self.statusLabel, 0, labelAlign),	(self.statusName,	1, fieldAlign),
 					  (self.errorLabel, 0, labelAlign),		(self.errorName,	1, fieldAlign),
@@ -350,7 +364,7 @@ class SummaryPage(wiz.WizardPageSimple):
 
 	def setFileNameSheetNameInfo( self,
 			fileName, sheetName, info, errors, headerMap,
-			hasCategoriesSheet, hasPropertiesSheet ):
+			hasCategoriesSheet, hasPropertiesSheet, initCategoriesFromExcel ):
 			
 		self.fileName.SetLabel( fileName )
 		self.sheetName.SetLabel( sheetName )
@@ -360,6 +374,9 @@ class SummaryPage(wiz.WizardPageSimple):
 		if hasPropertiesSheet:
 			cp.append( _('Read Properties') )
 		self.categoryAndProperties.SetLabel( u', '.join(cp) )
+		
+		self.initCategoriesFromExcel.SetLabel( _('Yes') if initCategoriesFromExcel else _('No') )
+		
 		self.errors = errors
 		
 		try:
@@ -370,7 +387,7 @@ class SummaryPage(wiz.WizardPageSimple):
 		
 		errStr = '\n'.join( [err for num, err in errors] if errors else ['None'] )
 		
-		self.statusName.SetLabel( _('Success!') if infoLen and not errors else u'({} {}'.format(len(errors), _('Error') if len(errors) == 1 else _('Errors')) )
+		self.statusName.SetLabel( _('Success!') if infoLen and not errors else u'{} {}'.format(len(errors), _('Error') if len(errors) == 1 else _('Errors')) )
 		self.errorName.SetValue( errStr )
 		
 		self.copyErrorsToClipboard.Enable( bool(self.errors) )
@@ -422,6 +439,7 @@ class GetExcelLink( object ):
 			self.excelLink.setFileName( self.fileNamePage.getFileName() )
 			self.excelLink.setSheetName( self.sheetNamePage.getSheetName() )
 			self.excelLink.setFieldCol( self.headerNamesPage.getFieldCol() )
+			self.excelLink.initCategoriesFromExcel = self.headerNamesPage.initCategoriesFromExcel.GetValue()
 		return self.excelLink
 	
 	def onPageChanging( self, evt ):
@@ -457,6 +475,7 @@ class GetExcelLink( object ):
 				excelLink = ExcelLink()
 				excelLink.setFileName( self.fileNamePage.getFileName() )
 				excelLink.setSheetName( self.sheetNamePage.getSheetName() )
+				excelLink.initCategoriesFromExcel = self.headerNamesPage.initCategoriesFromExcel.GetValue()
 				fieldCol = self.headerNamesPage.getFieldCol()
 				if fieldCol[Fields[0]] < 0:
 					Utils.MessageOK( self.wizard, u'{}: "{}"'.format(_('You must specify column'), GetTranslation(Fields[0])),
@@ -476,7 +495,8 @@ class GetExcelLink( object ):
 							self.fileNamePage.getFileName(),
 							self.sheetNamePage.getSheetName(),
 							info, errors, headerMap,
-							excelLink.hasCategoriesSheet, excelLink.hasPropertiesSheet
+							excelLink.hasCategoriesSheet, excelLink.hasPropertiesSheet,
+							excelLink.initCategoriesFromExcel,
 						)
 					except ValueError as e:
 						Utils.MessageOK(self.wizard, u'{}\n{}\n\n"{}"'.format(
@@ -605,6 +625,8 @@ class ExcelLink( object ):
 
 	hasCategoriesSheet = False
 	hasPropertiesSheet = False
+	
+	initCategoriesFromExcel = False
 	
 	def __init__( self ):
 		self.fileName = None
@@ -862,6 +884,11 @@ class ExcelLink( object ):
 			self.hasCategoriesSheet = ReadCategoriesFromExcel( reader )
 			self.hasPropertiesSheet = ReadPropertiesFromExcel( reader )
 			
+		if not self.hasCategoriesSheet and self.initCategoriesFromExcel and self.hasField('Category'):
+			MatchingCategory.PrologMatchingCategory()
+			for bib, fields in infoCache.iteritems():
+				MatchingCategory.AddToMatchingCategory( bib, fields )
+			MatchingCategory.EpilogMatchingCategory()
 		return infoCache
 
 def IsValidRaceDBExcel( fileName ):

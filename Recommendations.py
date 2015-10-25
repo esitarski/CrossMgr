@@ -328,7 +328,7 @@ class Recommendations( wx.Panel ):
 						try:
 							riderEntriesCur = riderEntries[num]
 							iLast = (i for i in xrange(len(riderEntriesCur), 0, -1) if not riderEntriesCur[i-1].interp).next()
-							if iLast != len(riderEntriesCur):
+							if iLast != len(riderEntriesCur) and race.isFinished():
 								append( num, getName(num),
 										_('DNF'),
 										u'{} {}.'.format(_('Check for DNF after rider lap'), iLast-1) )

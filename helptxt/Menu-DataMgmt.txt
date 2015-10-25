@@ -11,16 +11,17 @@ This option opens up a Wizard to configure a link to an Excel sheet.  The Excel 
 1. Choose the Excel workbook containing your additional data.
 1. Choose the sheet within the Excel workbook.
 1. Choose how the CrossMgr's fields should correspond to the column names in your Excel sheet.  The CrossMgr fields are on the first row, and the Excel column names are the drop-downs in the second row.  In the drop-downs, select the Excel column corresponding to the CrossMgr field.
-The Excel sheet may contain more fields than CrossMgr uses, and the column names in the sheet do not have to be named the same as CrossMgr's names.  You just have to tell CrossMgr what Excel columns correspond to its fields.  CrossMgr can usually use the same Excel sheet used as the rider sign-on sheet.
+The Excel sheet may contain more fields than CrossMgr uses, and the column names in the sheet do not have to be named the same as CrossMgr's names.  You just have to tell CrossMgr what Excel columns correspond to its fields.  CrossMgr can usually use the same Excel sheet used as the rider sign-on sheet or pre-reg download.
+1. Consider the __Initialize CrossMgr Categories from Excel Category and Bib# columns__ option.  If selected, CrossMgr will use the __Category__ and __Bib#__ columns to Add missing categories, Update existing categories with bib numbers from the spreadsheet or Delete empty categories.  All Categories are initially added as __Open__ gender and 00:00:00 __Start Offset__ (see [Categories][] for details).  Changes to Categories made in CrossMgr will be preserved when data in the Excel spreadsheet is updated, provided the Category is not empty (and deleted).
 1. After the configuration, CrossMgr will show how many records it was able to read from the Excel workbook.
 
 Additional external information will now be shown throughout CrossMgr including in Results, HTML and Excel output.
 
-This option creates a link to the Excel sheet - CrossMgr does not store the Excel data inside CrossMgr.  If data in the Excel sheet changes at any time (before, during or after the race), CrossMgr will automatically pick up the changes and display them the next time the screen is refreshed (for example, after switching between screens).
+Specifying a spreadsheet creates a dynamic "link" to the Excel sheet - CrossMgr does not store the Excel data inside CrossMgr.  If data in the Excel sheet changes at any time (before, during or after the race), CrossMgr will automatically pick up the changes and display them the next time the screen is refreshed (for example, after switching between screens).
 
-This allows you to start a race without the full details entered into Excel, or without an Excel sheet entirely.  As the race is underway, you can update the details.
+This allows you to start a race without the full details entered into Excel, or without an Excel sheet entirely.  As the race is underway, you can update the spreadsheet, and the changes will automatically be reflected in the results when CrossMgr next updates.
 
-However, if you move the the Excel file, you will have to update the link to tell CrossMgr where to find the new location.
+If you move the the Excel file to a different folder, you will have to update the link to tell CrossMgr where to find the new location.
 
 CrossMgr supports the following fields from an external Excel sheet:
 
@@ -30,14 +31,28 @@ Bib#|Required.  Rider's bib number in the race.  Bib numbers should be allocated
 LastName|Optional.  Rider's last name.  CrossMgr will automatically capitalize the last name.
 FirstName|Optional.  Rider's first name.
 Team|Optional.  Rider's team.
-Category|Optional.  Rider's category.  This does not have to be the same as the race category.
+Category|Optional.  Rider's category.  If __Initialize CrossMgr Categories from Excel Category and Bib# columns__ is selected, this category will be added to the race, and this rider will be added to this category.  If __Initialize CrossMgr Categories from Excel Category and Bib# columns__ is not selected, this field will be shown as information only, and the rider's category will be determined by matching the number ranges of the categories (see [Categories][] for details).
 Age|Optional.  Rider's age.
 License|Optional.  Rider' license.  This can be the UCI code, a national code, or a regional code.  CrossMgr uses this for display only.
-Tag|Optional for manual input, required for chip input.  Rider's chip tag.
-Tag2|Optional.  Rider's additioal chip tag for a second bike.
+Tag1-N|Optional for manual input, required for chip input.  Rider's chip tag.
 Factor|Optional.  Athlete's Performance Factor, as a Percent.  Used for Para Cycling to rank athletes with different abilities competing in the same combined event.  The athlete's race time is multiplied by the Factor, yielding an adjusted time.  The athlete's are then ranked by the adjusted times.  The Performance Factor will depend on the athlete's classification, as well as the classifications of the other athlete's in the combined race.  When using Performance Factors, you almost always want to set the "Lapped Riders Continue" option (see [Categories][]).  This is because, after applying the Performance Factors, lapped athletes may still be in contention for winning the combined category.
 
 To save space, CrossMgr may combine the first and last names into one field as "LASTNAME, Firstname".  In the scoreboard, it uses a further shorthand of "LASTNAME, F" where "F" is the first letter of the first name.
+
+### Notes on __Initialize CrossMgr Categories from Excel Category and Bib# columns__
+
+This feature is useful if you do not have number ranges for different categories and you want to initialize the bib numbers and categories from the Excel spreadsheet using the __Bib#__ and __Category__ columns.  The behavior is as follows:
+
+1. Initialization:  For each existing Category in CrossMgr, remove all Bib numbers.
+1. New Category: If a category is found in the spreadsheet that does not exist in CrossMgr, add the new category (StartOffset=00:00:00, Gender=Open, Type=Wave), and insert the Bib# of that rider.
+1. Update Category:  If a category is found in the spreadsheet that exists in CrossMgr, add the Bib# to that category.
+1. Finalization:  After reading the Excel sheet, all empty Categories are deleted.
+
+The first time the Excel Link is read, you will get all the categories in the spreadsheet into CrossMgr as __Start Wave__ categories.
+You can then organize your into __Components__ (see [Categories][]) and add combined __Start Waves__ to match the schedule and structure of your race.
+Any category changes you make will be preserved going forward when the Excel spreadsheet changes.
+
+Alternatively, you can import a Category structure before linking to the spreadsheet.  Existing categories will be updated.
 
 ## Add DNS from External Excel Data...
 

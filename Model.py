@@ -439,6 +439,11 @@ class Category(object):
 		self.intervals.append( (num, num) )
 		self.intervals.sort()
 
+	def resetNums( self ):
+		self.intervals = []
+		self.exclude = set()
+		self.catStr = ''
+		
 	def normalize( self ):
 		# Combine any consecutive or overlapping intervals.
 		if self.intervals:
@@ -466,7 +471,7 @@ class Category(object):
 				needlessExcludes.append( num )
 				
 		self.exclude.difference_update( needlessExcludes )
-		
+	
 	def __repr__( self ):
 		return u'Category(active={}, name="{}", catStr="{}", startOffset="{}", numLaps={}, sequence={}, distance={}, distanceType={}, gender="{}", lappedRidersMustContinue="{}", catType="{}")'.format(
 				self.active,

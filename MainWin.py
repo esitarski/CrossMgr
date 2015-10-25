@@ -1425,7 +1425,9 @@ class MainWin( wx.Frame ):
 		self.refresh()
 		
 		wx.CallAfter( self.menuFind )
-		
+		if race.excelLink.initCategoriesFromExcel:
+			wx.CallAfter( self.showPageName, _('Categories') )
+	
 	#--------------------------------------------------------------------------------------------
 
 	@logCall

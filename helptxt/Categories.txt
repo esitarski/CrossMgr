@@ -74,6 +74,10 @@ Upload site want to see a rider once in the results - not in multiple categories
 
 Check whether you want to publish the "Start Wave" (combined) results, or the "Component" results - but not both.
 
+## Tip: Multiple Start Waves and Different Race Times
+
+
+
 # Controls
 
 ## Drag and Drop Rows
