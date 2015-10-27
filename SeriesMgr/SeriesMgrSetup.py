@@ -22,6 +22,7 @@ copyFiles = [
 	"GetResults.py",
 	"FitSheetWrapper.py",
 	"ReadSignOnSheet.py",
+	"MatchingCategory.py",
 	"ReadCategoriesFromExcel.py",
 	"ReadPropertiesFromExcel.py",
 	"scramble.py",

@@ -31,7 +31,7 @@ Bib#|Required.  Rider's bib number in the race.  Bib numbers should be allocated
 LastName|Optional.  Rider's last name.  CrossMgr will automatically capitalize the last name.
 FirstName|Optional.  Rider's first name.
 Team|Optional.  Rider's team.
-Category|Optional.  Rider's category.  If __Initialize CrossMgr Categories from Excel Category and Bib# columns__ is selected, this category will be added to the race, and this rider will be added to this category.  If __Initialize CrossMgr Categories from Excel Category and Bib# columns__ is not selected, this field will be shown as information only, and the rider's category will be determined by matching the number ranges of the categories (see [Categories][] for details).
+Category|Optional.  Rider's category.  If __Initialize CrossMgr Categories from Excel Category and Bib# columns__ is selected, this category will be added to the race if it isn't already there, and this rider's bib number will be included in the category.  If __Initialize CrossMgr Categories from Excel Category and Bib# columns__ is not selected, this field will be shown as information only, and the rider's category will be determined by matching the number ranges of the categories (see [Categories][] for details).
 Age|Optional.  Rider's age.
 License|Optional.  Rider' license.  This can be the UCI code, a national code, or a regional code.  CrossMgr uses this for display only.
 Tag1-N|Optional for manual input, required for chip input.  Rider's chip tag.
@@ -50,9 +50,13 @@ This feature is useful if you do not have number ranges for different categories
 
 The first time the Excel Link is read, you will get all the categories in the spreadsheet into CrossMgr as __Start Wave__ categories.
 You can then organize your into __Components__ (see [Categories][]) and add combined __Start Waves__ to match the schedule and structure of your race.
-Any category changes you make will be preserved going forward when the Excel spreadsheet changes.
 
-Alternatively, you can import a Category structure before linking to the spreadsheet.  Existing categories will be updated.
+Subsequence reads of the spreadsheet will use the existing Categories, but of course, the bib numbers be replaced based on the categories in the spreadsheet.
+This means that changes you make to categories (laps, start offset, start wave, etc.) will be preserved when the Excel spreadsheet changes.
+
+Alternatively, you can import a Category structure before linking to the spreadsheet (or use "File/New Next..." from an existing race).
+
+__Big Warning__:  This option tells CrossMgr that the spreadsheet is the "source of truth" for rider categories.  This means that any changes to rider categories made in CrossMgr will be over-written the next time the spreadsheet is read.  So, if you use this feature, don't bother making changes to rider categories in CrossMgr.  Always make the changes in Excel.
 
 ## Add DNS from External Excel Data...
 
