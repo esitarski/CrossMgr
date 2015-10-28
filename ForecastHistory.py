@@ -167,7 +167,7 @@ class ForecastHistory( wx.Panel ):
 	def doHistoryPopup( self, event ):
 		r = event.GetRow()
 		with Model.LockRace() as race:
-			if r >= len(self.quickRecorded) or not race or not race.isRunning():
+			if not self.quickRecorded or r >= len(self.quickRecorded) or not race or not race.isRunning() or self.quickRecorded[r].isGap():
 				return
 		value = ''
 		if r < self.historyGrid.GetNumberRows():
@@ -374,6 +374,19 @@ class ForecastHistory( wx.Panel ):
 		self.expectedGrid.SetColumn( iTimeCol, [formatTime(e.t - tRace) if e.lap > 0 else ('[{}]'.format(formatTime(max(0.0, e.t - tRace + 0.99999999))))\
 										for e in self.quickExpected] )
 	
+	def addGaps( self, recorded ):
+		recordedWithGaps = []
+		groupCount = 0
+		Entry = Model.Entry
+		for i, e in enumerate(recorded):
+			if i and e.t - recorded[i-1].t > 1.0:
+				recordedWithGaps.append( Entry(-groupCount, None, e.t - recorded[i-1].t, True) )
+				groupCount = 0
+			recordedWithGaps.append( e )
+			groupCount += 1
+		recordedWithGaps.append( Model.Entry(-groupCount, None, None, True) )
+		return recordedWithGaps
+
 	def refresh( self ):
 		with Model.LockRace() as race:
 			if race is None or not race.isRunning():
@@ -535,13 +548,16 @@ class ForecastHistory( wx.Panel ):
 			recordedDisplayMax = 64
 			recorded = [ e for e in entries if not e.interp and e.t <= tRace ]
 			recorded = recorded[-recordedDisplayMax:]
-			self.quickRecorded = recorded
+			
+			recorded = self.quickRecorded = self.addGaps( recorded )
 				
 			backgroundColour = {}
 			textColour = {}
 			outsideTimeBound = set()
 			# Highlight the leader in the recorded list.
 			for r, e in enumerate(recorded):
+				if e.isGap():
+					continue
 				if prevRiderPosition.get(e.num,-1) == 1:
 					backgroundColour[(r, iNoteCol)] = wx.GREEN
 					if e.num == leaderPrev:
@@ -552,10 +568,16 @@ class ForecastHistory( wx.Panel ):
 					outsideTimeBound.add( e.num )
 									
 			data = [None] * iColMax
-			data[iNumCol] = ['{}'.format(e.num) for e in recorded]
-			data[iTimeCol] = [formatTime(e.t) if e.lap > 0 else '[{}]'.format(formatTime(e.t)) for e in recorded]
-			data[iLapCol] = ['{}'.format(e.lap) for e in recorded]
+			data[iNumCol] = [u'{}'.format(e.num) if e.num > 0 else u' ' for e in recorded]
+			data[iTimeCol] = [
+				formatTime(e.t) if e.lap > 0 else
+				(u'\u2193{}'.format(formatTime(e.t)) if e.t is not None else u' ') if e.isGap() else
+				u'[{}]'.format(formatTime(e.t)) for e in recorded]
+			data[iLapCol] = [u'{}'.format(e.lap) if e.lap else u' ' for e in recorded]
 			def getNoteHistory( e ):
+				if e.isGap():
+					return u'({})'.format(e.groupCount)
+				
 				if e.lap == 0:
 					return 'Start'
 

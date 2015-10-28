@@ -523,6 +523,27 @@ class Entry(object):
 		
 	def __hash__( self ):
 		return (self.num<<16) ^ (self.lap<<8) ^ hash(self.t) ^ ((1<<20) if self.interp else 0)
+		
+	def isGap( self ):
+		return self.num <= 0
+		
+	def setGroupCountGap( self, groupCount, gapTime ):
+		self.num = -groupCount
+		self.t = gapTime
+		
+	@property
+	def gap( self ):
+		return self.t
+	@gap.setter
+	def gap( self, gt ):
+		self.t = gt
+	
+	@property
+	def groupCount( self ):
+		return -self.num
+	@groupCount.setter
+	def groupCount( self, gc ):
+		self.num = -gc
 
 	def __repr__( self ):
 		return u'Entry(num={}, lap={}, interp={}, t={})'.format(self.num, self.lap, self.interp, self.t)
