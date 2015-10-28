@@ -3,7 +3,7 @@ import bisect
 import sys
 import Utils
 import Model
-from Utils import formatTime, SetLabel
+from Utils import formatTime, formatTimeGap, SetLabel
 from Utils import logException
 import ColGrid
 import StatusBar
@@ -571,7 +571,7 @@ class ForecastHistory( wx.Panel ):
 			data[iNumCol] = [u'{}'.format(e.num) if e.num > 0 else u' ' for e in recorded]
 			data[iTimeCol] = [
 				formatTime(e.t) if e.lap > 0 else
-				(u'\u2193{}'.format(formatTime(e.t)) if e.t is not None else u' ') if e.isGap() else
+				(u'{}'.format(formatTimeGap(e.t)) if e.t is not None else u' ') if e.isGap() else
 				u'[{}]'.format(formatTime(e.t)) for e in recorded]
 			data[iLapCol] = [u'{}'.format(e.lap) if e.lap else u' ' for e in recorded]
 			def getNoteHistory( e ):
