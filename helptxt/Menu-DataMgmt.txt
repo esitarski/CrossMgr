@@ -12,7 +12,7 @@ This option opens up a Wizard to configure a link to an Excel sheet.  The Excel 
 1. Choose the sheet within the Excel workbook.
 1. Choose how the CrossMgr's fields should correspond to the column names in your Excel sheet.  The CrossMgr fields are on the first row, and the Excel column names are the drop-downs in the second row.  In the drop-downs, select the Excel column corresponding to the CrossMgr field.
 The Excel sheet may contain more fields than CrossMgr uses, and the column names in the sheet do not have to be named the same as CrossMgr's names.  You just have to tell CrossMgr what Excel columns correspond to its fields.  CrossMgr can usually use the same Excel sheet used as the rider sign-on sheet or pre-reg download.
-1. Consider the __Initialize CrossMgr Categories from Excel Category and Bib# columns__ option.  If selected, CrossMgr will use the __Category__ and __Bib#__ columns to Add missing categories, Update existing categories with bib numbers from the spreadsheet or Delete empty categories.  All Categories are initially added as __Open__ gender and 00:00:00 __Start Offset__ (see [Categories][] for details).  Changes to Categories made in CrossMgr will be preserved when data in the Excel spreadsheet is updated, provided the Category is not empty (and deleted).
+1. Consider the __Initialize CrossMgr Categories from Excel EventCategory and Bib# columns__ option.  If selected, CrossMgr will use the __EventCategory__ and __Bib#__ columns to Add missing categories, Update existing categories with bib numbers from the spreadsheet or Delete empty categories.  All Categories are initially added as __Open__ gender and 00:00:00 __Start Offset__ (see [Categories][] for details).  Changes to Categories made in CrossMgr __except bib numbers__ will be preserved when data in the Excel spreadsheet is updated, provided the Category is not empty and deleted.
 1. After the configuration, CrossMgr will show how many records it was able to read from the Excel workbook.
 
 Additional external information will now be shown throughout CrossMgr including in Results, HTML and Excel output.
@@ -39,14 +39,14 @@ Factor|Optional.  Athlete's Performance Factor, as a Percent.  Used for Para Cyc
 
 To save space, CrossMgr may combine the first and last names into one field as "LASTNAME, Firstname".  In the scoreboard, it uses a further shorthand of "LASTNAME, F" where "F" is the first letter of the first name.
 
-### Notes on __Initialize CrossMgr Categories from Excel Category and Bib# columns__
+### Notes on __Initialize CrossMgr Categories from Excel EventCategory and Bib# columns__
 
-This feature is useful if you do not have number ranges for different categories and you want to initialize the bib numbers and categories from the Excel spreadsheet using the __Bib#__ and __Category__ columns.  The behavior is as follows:
+This feature is useful if you do not have number ranges for different categories and you want to initialize the bib numbers and categories from the Excel spreadsheet using the __Bib#__ and __EventCategory__ columns.  The behavior is as follows:
 
 1. Initialization:  For each existing Category in CrossMgr, remove all Bib numbers.
-1. New Category: If a category is found in the spreadsheet that does not exist in CrossMgr, add the new category (StartOffset=00:00:00, Gender=Open, Type=Wave), and insert the Bib# of that rider.
+1. New Category: If a category is found in the spreadsheet in the EventCategory column that does not exist in CrossMgr, add the new category (StartOffset=00:00:00, Gender=Open, Type=Wave), and insert the Bib# of that rider.
 1. Update Category:  If a category is found in the spreadsheet that exists in CrossMgr, add the Bib# to that category.
-1. Finalization:  After reading the Excel sheet, all empty Categories are deleted.
+1. Finalization:  After reading the Excel sheet, all empty Categories in CrossMgr are deleted.
 
 The first time the Excel Link is read, you will get all the categories in the spreadsheet into CrossMgr as __Start Wave__ categories.
 You can then organize your into __Components__ (see [Categories][]) and add combined __Start Waves__ to match the schedule and structure of your race.
@@ -56,7 +56,7 @@ This means that changes you make to categories (laps, start offset, start wave, 
 
 Alternatively, you can import a Category structure before linking to the spreadsheet (or use "File/New Next..." from an existing race).
 
-__Big Warning__:  This option tells CrossMgr that the spreadsheet is the "source of truth" for rider categories.  This means that any changes to rider categories made in CrossMgr will be over-written the next time the spreadsheet is read.  So, if you use this feature, don't bother making changes to rider categories in CrossMgr.  Always make the changes in Excel.
+__Big Warning__:  This option tells CrossMgr that the spreadsheet is the "source of truth" for rider categories.  This means that any changes to rider categories made in CrossMgr will be over-written the next time the spreadsheet is read.  So, if you use this feature, don't make change to rider categories in CrossMgr - always do this in Excel.
 
 ## Add DNS from External Excel Data...
 

@@ -30,7 +30,7 @@ def interpolateNonZeroFinishers():
 # Define columns for recorded and expected information.
 iNumCol, iNoteCol, iTimeCol, iLapCol, iGapCol, iNameCol, iWaveCol, iColMax = range(8)
 colnames = [None] * iColMax
-colnames[iNumCol]  = _('Num')
+colnames[iNumCol]  = _('Bib')
 colnames[iNoteCol] = _('Note')
 colnames[iLapCol]  = _('Lap')
 colnames[iTimeCol] = _('Time')
@@ -38,7 +38,7 @@ colnames[iGapCol]  = _('Gap')
 colnames[iNameCol] = _('Name')
 colnames[iWaveCol] = _('Wave')
 
-fontSize = 14
+fontSize = 11
 
 def GetLabelGrid( parent ):
 	font = wx.Font( fontSize, wx.DEFAULT, wx.NORMAL, wx.NORMAL )
@@ -82,6 +82,7 @@ class ForecastHistory( wx.Panel ):
 		self.entryCur = None
 		self.orangeColour = wx.Colour(255, 165, 0)
 		self.redColour = wx.Colour(255, 51, 51)
+		self.groupColour = wx.Colour(220, 220, 220)
 
 		self.callLaterRefresh = None
 		
@@ -155,7 +156,7 @@ class ForecastHistory( wx.Panel ):
 		row = event.GetRow()
 		value = ''
 		if row < grid.GetNumberRows():
-			value = grid.GetCellValue( row, 0 )
+			value = grid.GetCellValue(row, 0).strip()
 		if not value:
 			return
 		numSelect = value
@@ -384,7 +385,8 @@ class ForecastHistory( wx.Panel ):
 				groupCount = 0
 			recordedWithGaps.append( e )
 			groupCount += 1
-		recordedWithGaps.append( Model.Entry(-groupCount, None, None, True) )
+		if groupCount:
+			recordedWithGaps.append( Model.Entry(-groupCount, None, None, True) )
 		return recordedWithGaps
 
 	def refresh( self ):
@@ -557,7 +559,8 @@ class ForecastHistory( wx.Panel ):
 			# Highlight the leader in the recorded list.
 			for r, e in enumerate(recorded):
 				if e.isGap():
-					continue
+					for i in xrange( iColMax ):
+						backgroundColour[(r, i)] = self.groupColour
 				if prevRiderPosition.get(e.num,-1) == 1:
 					backgroundColour[(r, iNoteCol)] = wx.GREEN
 					if e.num == leaderPrev:
@@ -576,7 +579,7 @@ class ForecastHistory( wx.Panel ):
 			data[iLapCol] = [u'{}'.format(e.lap) if e.lap else u' ' for e in recorded]
 			def getNoteHistory( e ):
 				if e.isGap():
-					return u'({})'.format(e.groupCount)
+					return u'{}'.format(e.groupCount)
 				
 				if e.lap == 0:
 					return 'Start'

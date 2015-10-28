@@ -18,7 +18,7 @@ Shows the numbers of riders expected to arrive.  The columns in the table are as
 
 Column|Description
 :-----|:----------
-Num|The rider's number
+Bib|The rider's number
 Note|Shows the riders position by category.  Leaders are highlighted in green.  The Race Leader is highlighted with a full green bar.  Riders outside of the 80% time rule are shown in red.
 Lap|Shows the lap the rider is currently on.
 ETA|Shows the Estimated Time of Arrival of the rider
@@ -37,15 +37,17 @@ Pull...|Pull this rider from the race (like DNF)
 RiderDetail|Jump to the RiderDetail for this rider.
 
 # Recorded
-Shows the numbers just recorded during a race.  The columns in the table are as follows:
+Shows the numbers just recorded during a race.  Between each group of riders (>= 1 second apart), a summary row is added showing the number of riders in the group (in brackets, shown in the __Num__ column) and the gap between groups (shown in the __Time__ column).
+
+The columns in the table are as follows:
 
 Column|Description
 :-----|:----------
-Num|The rider's number
+Bib|The rider's number
 Note|Shows the riders position by category.  Leaders are highlighted in green.  The Race Leader is highlighted with a full green bar.  Riders outside of the 80% time rule are shown in red.
 Lap|Shows the lap the rider is currently on.
 Time|Shows the recorded time
-Name|Shows the rider's name.  Requires configuring the [External Excel][] sheet.
+Name|Shows the rider's name.  Requires linking an [External Excel][] sheet.
 
 ## Double-click
 Jumps to the RiderDetail for the number clicked on.

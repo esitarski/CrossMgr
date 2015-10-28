@@ -77,10 +77,10 @@ Check whether you want to publish the "Start Wave" (combined) results, or the "C
 ## Tip: Multiple Start Waves and Different Race Times
 
 
-## Note about __Initialize CrossMgr Categories from Excel Category and Bib# columns__ option in [DataMgmt][]/Link to External Excel Data...
+## Note about __Initialize CrossMgr Categories from Excel EventCategory and Bib# columns__ option in [DataMgmt][]/Link to External Excel Data...
 If you choose this option, the Categories and Bib numbers will be determined by the contents of the Excel sheet.
 Any changes you make in CrossMgr will be over-written by the information in the Excel sheet.
-If you choose this option, always make Bib and Category changes in the Excel spreadsheet, not in CrossMgr.
+If you choose this option, always make Bib and EventCategory changes in the Excel spreadsheet, not in CrossMgr.
 
 # Controls
 

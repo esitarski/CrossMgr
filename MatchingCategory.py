@@ -15,7 +15,7 @@ def AddToMatchingCategory( bib, fields ):
 	race = Model.race
 	if not race:
 		return None
-	categoryName, gender = fields.get('Category',None), fields.get('Gender',None)
+	categoryName, gender = fields.get('EventCategory',None), fields.get('Gender',None)
 	if not categoryName:
 		return None
 	
