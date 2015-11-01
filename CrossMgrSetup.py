@@ -1,29 +1,13 @@
-from distutils.core import setup
-import py2exe
+#from distutils.core import setup
+#import py2exe
 import os
+import sys
 import shutil
 import zipfile
-
-# Update the minor version number.
-#AppVerName="CrossMgr 1.87.x"
-'''
-with open('Version.py', 'r') as f:
-	v = f.read().strip()
-	i = v.rfind( ' ' )
-	s = v[i+1:-1]
-	vNums = s.split('.')
-	if len(vNums) == 2:
-		vNums.append( '0' )
-	else:
-		vNums[-1] = str(int(vNums[-1]) + 1)
-	s = 'AppVerName="CrossMgr %s"\n' % ('.'.join(vNums))
-with open('Version.py', 'w') as f:
-	f.write( s )
-'''
+import subprocess
 
 if os.path.exists('build'):
 	shutil.rmtree( 'build' )
-
 
 # Compile the help files
 from helptxt.compile import CompileHelp
@@ -32,28 +16,28 @@ CompileHelp( 'helptxt' )
 # Index the help files.
 from HelpIndex import BuildHelpIndex
 BuildHelpIndex()
+
+distDir = r'dist\CrossMgr'
+distDirParent = os.path.dirname(distDir)
+if os.path.exists(distDirParent):
+	shutil.rmtree( distDirParent )
+if not os.path.exists( distDirParent ):
+	os.makedirs( distDirParent )
+
+subprocess.call( [
+	'pyinstaller',
 	
-distDir = 'dist'
-
-# Cleanup existing dll, pyd and exe files.  The old ones may not be needed, so it is best to clean these up.
-for f in os.listdir(distDir):
-	if f.endswith('.dll') or f.endswith('.pyd') or f.endswith('.exe'):
-		fname = os.path.join(distDir, f)
-		os.remove( fname )
-
-# Set up the py2exe configuration.
-setup(	windows = [
-			{
-				'script': 'CrossMgr.pyw',
-				'icon_resources': [(1, r'CrossMgrImages\CrossMgr.ico')],
-			}
-		],
-		options = {
-			'py2exe':{
-					'includes': ['VideoCapture',],
-			},
-		},
-	 )
+	'CrossMgr.pyw',
+	'--icon=CrossMgrImages\CrossMgr.ico',
+	'--clean',
+	'--windowed',
+	'--noconfirm',
+	
+	'--exclude-module=tcl',
+	'--exclude-module=tk',
+	'--exclude-module=Tkinter',
+	'--exclude-module=_tkinter',
+] )
 
 # Copy additional dlls to distribution folder.
 wxHome = r'C:\Python27\Lib\site-packages\wx-3.0-msw\wx'
@@ -108,7 +92,7 @@ try:
 	os.remove( 'install\\' + newExeName )
 except:
 	pass
-	
+
 shutil.copy( 'install\\CrossMgr_Setup.exe', 'install\\' + newExeName )
 print 'executable copied to: ' + newExeName
 

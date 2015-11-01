@@ -3,6 +3,7 @@ import os
 import shutil
 import zipfile
 import sys
+import subprocess
 
 if os.path.exists('build'):
 	shutil.rmtree( 'build' )
@@ -36,25 +37,28 @@ with open('Dependencies.py', 'w') as fp:
 		fp.write( 'import {}\n'.format(f[:-3]) )
 
 #----------------------------------------------------------------------------------------------------
-import py2exe
 
-distDir = 'dist'
+distDir = r'dist\SeriesMgr'
+distDirParent = os.path.dirname(distDir)
+if os.path.exists(distDirParent):
+	shutil.rmtree( distDirParent )
+if not os.path.exists( distDirParent ):
+	os.makedirs( distDirParent )
 
-# Cleanup existing dll, pyd and exe files.  The old ones may not be needed, so it is best to clean these up.
-for f in os.listdir(distDir):
-	if f.endswith('.dll') or f.endswith('.pyd') or f.endswith('.exe'):
-		fileName = os.path.join(distDir, f)
-		print 'deleting:', fileName
-		os.remove( fileName )
-		
-setup( windows=
-			[
-				{
-					'script': 'SeriesMgr.pyw',
-					'icon_resources': [(1, r'CrossMgrImages\SeriesMgr.ico')]
-				}
-			]
-	 )
+subprocess.call( [
+	'pyinstaller',
+	
+	'SeriesMgr.pyw',
+	'--icon=CrossMgrImages\SeriesMgr.ico',
+	'--clean',
+	'--windowed',
+	'--noconfirm',
+	
+	'--exclude-module=tcl',
+	'--exclude-module=tk',
+	'--exclude-module=Tkinter',
+	'--exclude-module=_tkinter',
+] )
 
 # Copy additional dlls to distribution folder.
 wxHome = r'C:\Python27\Lib\site-packages\wx-2.8-msw-ansi\wx'

@@ -8,8 +8,8 @@ DefaultGroupName=SeriesMgr
 UninstallDisplayIcon={app}\SeriesMgr.exe
 Compression=lzma2/ultra64
 SolidCompression=yes
-SourceDir=dist
-OutputDir=..\install
+SourceDir=dist\SeriesMgr
+OutputDir=..\..\install
 OutputBaseFilename=SeriesMgr_Setup
 ChangesAssociations=yes
 

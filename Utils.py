@@ -44,10 +44,9 @@ except:
 
 try:
 	sys.getwindowsversion()
+	isWindows = True
 except:
 	isWindows = False
-else:
-	isWindows = True
 
 #------------------------------------------------------------------------
 # Get resource directories.
@@ -71,6 +70,8 @@ else:
 	if os.path.basename(dirName) in ['library.zip', 'MainWin.exe', 'CrossMgr.exe']:
 		dirName = os.path.dirname(dirName)
 	if 'CrossMgr?' in os.path.basename(dirName):
+		dirName = os.path.dirname(dirName)
+	if not os.path.isdir( os.path.join(dirName, 'CrossMgrImages') ):
 		dirName = os.path.dirname(dirName)
 
 	if os.path.isdir( os.path.join(dirName, 'CrossMgrImages') ):

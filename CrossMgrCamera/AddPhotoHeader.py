@@ -18,7 +18,7 @@ def formatTime( secs ):
 	
 def PilImageToWxImage( pil ):
 	image = wx.EmptyImage( *pil.size )
-	image.SetData( pil.convert('RGB').tostring() )
+	image.SetData( pil.convert('RGB').tobytes() )
 	return image
 
 drawResources = None		# Cached resource for drawing the photo header.

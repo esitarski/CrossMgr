@@ -34,7 +34,8 @@ from SaveImage import SaveImage
 imageWidth, imageHeight = 640, 480
 
 try:
-	from VideoCapture import Device
+	#from VideoCapture import Device
+	from jaraco.video.capture_nofont import Device
 except:
 	from PIL import Image, ImageDraw
 	class Device( object ):
@@ -99,8 +100,6 @@ cameraResolution = (
 class ConfigDialog( wx.Dialog ):
 	def __init__( self, parent, cameraDeviceNum=0, id=wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, title=_('CrossMgr Camera Configuration') )
-		
-		Utils.FixPILSearchPath()
 		
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		

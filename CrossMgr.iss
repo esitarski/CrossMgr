@@ -8,8 +8,8 @@ DefaultGroupName=CrossMgr
 UninstallDisplayIcon={app}\CrossMgr.exe
 Compression=lzma2/ultra64
 SolidCompression=yes
-SourceDir=dist
-OutputDir=..\install
+SourceDir=dist\CrossMgr
+OutputDir=..\..\install
 OutputBaseFilename=CrossMgr_Setup
 ChangesAssociations=yes
 
@@ -25,7 +25,7 @@ Name: "desktopicon"; Description: "Create a &desktop icon";
 	
 [Files]
 Source: "*.*"; DestDir: "{app}"; Flags: recursesubdirs
-Source: "..\CrossMgrTutorial.doc"; DestDir: "{app}";
+Source: "..\..\CrossMgrTutorial.doc"; DestDir: "{app}";
 
 [Icons]
 Name: "{group}\CrossMgr"; Filename: "{app}\CrossMgr.exe"

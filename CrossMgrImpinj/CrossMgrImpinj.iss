@@ -8,8 +8,8 @@ DefaultGroupName=CrossMgrImpinj
 UninstallDisplayIcon={app}\CrossMgrImpinj.exe
 Compression=lzma2/ultra64
 SolidCompression=yes
-SourceDir=dist
-OutputDir=..\install
+SourceDir=dist/CrossMgrImpinj
+OutputDir=..\..\install
 OutputBaseFilename=CrossMgrImpinj_Setup
 ChangesAssociations=yes
 

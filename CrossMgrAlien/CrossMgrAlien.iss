@@ -8,8 +8,8 @@ DefaultGroupName=CrossMgrAlien
 UninstallDisplayIcon={app}\CrossMgrAlien.exe
 Compression=lzma2/ultra64
 SolidCompression=yes
-SourceDir=dist
-OutputDir=..\install
+SourceDir=dist\CrossMgrAlien
+OutputDir=..\..\install
 OutputBaseFilename=CrossMgrAlien_Setup
 ChangesAssociations=yes
 

@@ -3,28 +3,32 @@ import py2exe
 import os
 import shutil
 import zipfile
+import subprocess
 
 if os.path.exists('build'):
 	shutil.rmtree( 'build' )
 
+distDir = r'dist\CrossMgrAlien'
+distDirParent = os.path.dirname(distDir)
+if os.path.exists(distDirParent):
+	shutil.rmtree( distDirParent )
+if not os.path.exists( distDirParent ):
+	os.makedirs( distDirParent )
 
-distDir = 'dist'
-
-# Cleanup existing dll, pyd and exe files.  The old ones may not be needed, so it is best to clean these up.
-for f in os.listdir(distDir):
-	if f.endswith('.dll') or f.endswith('.pyd') or f.endswith('.exe'):
-		fname = os.path.join(distDir, f)
-		print 'deleting:', fname
-		os.remove( fname )
-		
-setup( windows=
-			[
-				{
-					'script': 'CrossMgrAlien.pyw',
-					'icon_resources': [(1, r'images\CrossMgrAlien.ico')]
-				}
-			]
-	 )
+subprocess.call( [
+	'pyinstaller',
+	
+	'CrossMgrAlien.pyw',
+	'--icon=images\CrossMgrAlien.ico',
+	'--clean',
+	'--windowed',
+	'--noconfirm',
+	
+	'--exclude-module=tcl',
+	'--exclude-module=tk',
+	'--exclude-module=Tkinter',
+	'--exclude-module=_tkinter',
+] )
 
 # Copy additional dlls to distribution folder.
 wxHome = r'C:\Python27\Lib\site-packages\wx-2.8-msw-ansi\wx'

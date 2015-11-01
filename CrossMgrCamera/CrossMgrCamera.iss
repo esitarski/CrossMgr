@@ -8,8 +8,8 @@ DefaultGroupName=CrossMgrCamera
 UninstallDisplayIcon={app}\CrossMgrCamera.exe
 Compression=lzma2/ultra64
 SolidCompression=yes
-SourceDir=dist
-OutputDir=..\install
+SourceDir=dist\CrossMgrCamera
+OutputDir=..\..\install
 OutputBaseFilename=CrossMgrCamera_Setup
 ChangesAssociations=yes
 
