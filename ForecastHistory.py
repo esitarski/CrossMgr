@@ -40,8 +40,8 @@ colnames[iWaveCol] = _('Wave')
 
 fontSize = 11
 
-def GetLabelGrid( parent ):
-	font = wx.Font( fontSize, wx.DEFAULT, wx.NORMAL, wx.NORMAL )
+def GetLabelGrid( parent, bigFont=False ):
+	font = wx.Font( fontSize + (fontSize//3 if bigFont else 0), wx.DEFAULT, wx.NORMAL, wx.NORMAL )
 	dc = wx.WindowDC( parent )
 	dc.SetFont( font )
 	w, h = dc.GetTextExtent( '999' )
@@ -61,12 +61,12 @@ def GetLabelGrid( parent ):
 	return label, grid
 		
 class LabelGrid( wx.Panel ):
-	def __init__( self, parent, id=wx.ID_ANY, style=0 ):
+	def __init__( self, parent, id=wx.ID_ANY, style=0, bigFont=False ):
 		wx.Panel.__init__(self, parent, id, style=style)
 		
 		bsMain = wx.BoxSizer( wx.VERTICAL )
 		
-		self.label, self.grid = GetLabelGrid( self )
+		self.label, self.grid = GetLabelGrid( self, bigFont )
 		bsMain.Add( self.label, 0, flag=wx.ALL, border=4 )
 		bsMain.Add( self.grid, 1, flag=wx.ALL|wx.EXPAND, border = 4 )
 		
@@ -92,14 +92,14 @@ class ForecastHistory( wx.Panel ):
 		# Put Recorded and Expected in a splitter window.
 		self.splitter = wx.SplitterWindow( self )
 		
-		self.lgHistory = LabelGrid( self.splitter, style = wx.BORDER_SUNKEN )
+		self.lgHistory = LabelGrid( self.splitter, style=wx.BORDER_SUNKEN )
 		self.historyName = self.lgHistory.label
 		self.historyName.SetLabel( _('Recorded') )
 		self.historyGrid = self.lgHistory.grid
 		self.Bind( wx.grid.EVT_GRID_CELL_LEFT_DCLICK, self.doNumDrilldown, self.historyGrid )
 		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doHistoryPopup, self.historyGrid )
 		
-		self.lgExpected = LabelGrid( self.splitter, style = wx.BORDER_SUNKEN )
+		self.lgExpected = LabelGrid( self.splitter, style=wx.BORDER_SUNKEN, bigFont=True )
 		self.expectedName = self.lgExpected.label
 		self.expectedGrid = self.lgExpected.grid
 		self.expectedGrid.SetDoubleBuffered( True )
