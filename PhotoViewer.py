@@ -5,6 +5,7 @@ from PhotoFinish import GetPhotoFName, TakePhoto
 from FinishStrip import ShowFinishStrip
 from SendPhotoRequests import getPhotoDirName, SendPhotoRequests
 from LaunchFileBrowser import LaunchFileBrowser
+
 import wx
 import wx.lib.agw.thumbnailctrl as TC
 import os

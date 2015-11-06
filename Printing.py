@@ -151,6 +151,9 @@ class ChoosePrintCategoriesPodiumDialog( wx.Dialog ):
 		wx.Dialog.__init__( self, parent, id, _("Print Podium Positions"),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
 		
+		self.positions = 5
+		self.categories = []
+		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		
 		title = wx.StaticText( self, label = _('Click to select Categories.  Use Ctrl-Click to select Multiple Categories.') )
@@ -222,6 +225,7 @@ class ChoosePrintCategoriesPodiumDialog( wx.Dialog ):
 
 	def onCancel( self, event ):
 		self.categories = []
+		self.positions = 5
 		self.EndModal( wx.ID_CANCEL )
 
 #---------------------------------------------------------------------------------------------------------------------
