@@ -1496,10 +1496,13 @@ class Race( object ):
 			leaderNums.append( e.num )
 			leaderTimesLen += 1
 		
-		if leaderTimesLen > 1 and self.allCategoriesHaveRaceLapsDefined:
-			maxRaceLaps = max( category.getNumLaps() for category in self.categories.itervalues() if category.active )
-			leaderTimes = leaderTimes[:maxRaceLaps + 1]
-			leaderNums = leaderNums[:maxRaceLaps + 1]
+		try:
+			if leaderTimesLen > 1 and self.allCategoriesHaveRaceLapsDefined:
+				maxRaceLaps = max( category.getNumLaps() for category in self.categories.itervalues() if category.active )
+				leaderTimes = leaderTimes[:maxRaceLaps + 1]
+				leaderNums = leaderNums[:maxRaceLaps + 1]
+		except:
+			return None, None
 		
 		if leaderTimesLen == 1:
 			return None, None
