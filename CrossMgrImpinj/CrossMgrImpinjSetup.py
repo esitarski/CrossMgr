@@ -95,5 +95,5 @@ z.write( newExeName )
 z.close()
 print 'executable compressed.'
 
-shutil.copy( newExeName, r"c:\GoogleDrive\Downloads\Windows\CrossMgrImpinj"  )
+shutil.copy( newZipName, r"c:\GoogleDrive\Downloads\Windows\CrossMgrImpinj"  )
 shutil.copy( '../CrossMgrImpinjReadme.pdf', r"c:\GoogleDrive\Downloads\Windows\CrossMgrImpinj"  )

@@ -109,6 +109,6 @@ except:
 z = zipfile.ZipFile(newZipName, "w")
 z.write( newExeName )
 z.close()
-print 'executable compressed.'
+print 'executable compressed to: ' + newZipName
 
-shutil.copy( newExeName, r"c:\GoogleDrive\Downloads\Windows\CrossMgr"  )
+shutil.copy( newZipName, r"c:\GoogleDrive\Downloads\Windows\CrossMgr"  )

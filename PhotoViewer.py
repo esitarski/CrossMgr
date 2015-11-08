@@ -178,7 +178,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		
 		self.splitter = wx.SplitterWindow( self )
 		self.splitter.Bind( wx.EVT_SPLITTER_SASH_POS_CHANGED, self.OnSplitterChange )
-		self.thumbs = TC.ThumbnailCtrl( self.splitter )
+		self.thumbs = TC.ThumbnailCtrl( self.splitter, imagehandler=TC.NativeImageHandler)
 		self.thumbs.EnableToolTips( True )
 		self.thumbs.SetThumbOutline( TC.THUMB_OUTLINE_FULL )
 		self.thumbs._scrolled.filePrefix = '#######################'
