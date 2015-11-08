@@ -4,6 +4,7 @@ import os
 import sys
 import shutil
 import zipfile
+import datetime
 import subprocess
 
 if os.path.exists('build'):
@@ -78,14 +79,30 @@ for drive in ['C', 'D']:
 	if os.path.exists( innoTest ):
 		inno = innoTest
 		break
+
+from Version import AppVerName
+def make_inno_version():
+	setup = {
+		'AppName':				AppVerName.split()[0],
+		'AppPublisher':			"Edward Sitarski",
+		'AppContact':			"Edward Sitarski",
+		'AppCopyright':			"Copyright (C) 2004-{} Edward Sitarski".format(datetime.date.today().year),
+		'AppVerName':			AppVerName,
+		'AppPublisherURL':		"http://www.sites.google.com/site/crossmgrsoftware/",
+		'AppUpdatesURL':		"http://www.sites.google.com/site/crossmgrsoftware/downloads/",
+		'VersionInfoVersion':	AppVerName.split()[1],
+	}
+	with open('inno_setup.txt', 'w') as f:
+		for k, v in setup.iteritems():
+			f.write( '{}={}\n'.format(k,v) )
+make_inno_version()
+
 cmd = '"' + inno + '" ' + 'CrossMgr.iss'
 print cmd
 os.system( cmd )
 
 # Create versioned executable.
-from Version import AppVerName
-vNum = AppVerName.split()[1]
-vNum = vNum.replace( '.', '_' )
+vNum = AppVerName.split()[1].replace( '.', '_' )
 newExeName = 'CrossMgr_Setup_v' + vNum + '.exe'
 
 try:
@@ -112,3 +129,6 @@ z.close()
 print 'executable compressed to: ' + newZipName
 
 shutil.copy( newZipName, r"c:\GoogleDrive\Downloads\Windows\CrossMgr"  )
+
+from virustotal_submit import VTHTTPScanRequest
+print VTHTTPScanRequest( os.path.abspath(newExeName) )

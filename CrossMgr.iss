@@ -1,17 +1,16 @@
 ; -- CrossMgr.iss --
 
 [Setup]
-AppName=CrossMgr
-#include "Version.py"
+#include "inno_setup.txt"
 DefaultDirName={pf}\CrossMgr
 DefaultGroupName=CrossMgr
 UninstallDisplayIcon={app}\CrossMgr.exe
-Compression=lzma2/ultra64
-SolidCompression=yes
 SourceDir=dist\CrossMgr
-OutputDir=..\..\install
 OutputBaseFilename=CrossMgr_Setup
 ChangesAssociations=yes
+Compression=lzma2/ultra64
+SolidCompression=yes
+OutputDir=..\..\install
 
 [Registry]
 ; Automatically configure CrossMgr to launch .cmn files.
