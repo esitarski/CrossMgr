@@ -99,7 +99,7 @@ make_inno_version()
 
 cmd = '"' + inno + '" ' + 'CrossMgr.iss'
 print cmd
-os.system( cmd )
+subprocess.call( cmd, shell=True )
 
 # Create versioned executable.
 vNum = AppVerName.split()[1].replace( '.', '_' )
@@ -130,5 +130,8 @@ print 'executable compressed to: ' + newZipName
 
 shutil.copy( newZipName, r"c:\GoogleDrive\Downloads\Windows\CrossMgr"  )
 
-from virustotal_submit import VTHTTPScanRequest
-print VTHTTPScanRequest( os.path.abspath(newExeName) )
+cmd = 'python virustotal_submit.py "{}"'.format(os.path.abspath(newExeName))
+print cmd
+os.chdir( '..' )
+subprocess.call( cmd, shell=True )
+shutil.copy( 'virustotal.html', r"c:\GoogleDrive\Downloads\Windows\CrossMgr"  )
