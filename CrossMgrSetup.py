@@ -134,4 +134,4 @@ cmd = 'python virustotal_submit.py "{}"'.format(os.path.abspath(newExeName))
 print cmd
 os.chdir( '..' )
 subprocess.call( cmd, shell=True )
-shutil.copy( 'virustotal.html', r"c:\GoogleDrive\Downloads\Windows\CrossMgr"  )
+shutil.copy( 'virustotal.html', os.path.join(r"c:\GoogleDrive\Downloads\Windows\CrossMgr", 'virustotal_v' + vNum + '.html') )
