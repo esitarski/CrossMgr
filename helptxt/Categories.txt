@@ -34,14 +34,23 @@ Now, press the "New Category" button, and change the new category name to "Combi
 
 Press and hold on the grey cell (first cell in the row) of the "Combined Women" and drag the row up to just before the "Elite" row.
 
-Click on the "Category Type" cell in the "Elite Row".  Press the "left-cursor" key to change it to a "Component" category.  Then press the "down-cursor" button to move to the next row.  A number of fields in the Elite row have turned dark grey.  This is because those values will now come from the "Start Wave", category, not the "Component" Category.
+Click on the "Category Type" cell in the "Elite Row".  Change it to a "Component" category with the mouse, or press the "left-cursor" key.  Then press the "down-cursor" button to move to the next row.  A number of fields in the Elite row have turned dark grey.  This is because the values now come from the "Start Wave", category, not the "Component" Category.
 
-Continue doing "left-cursor" and "down-cursor" to set the Master and Junior categories to "Component" (of course you can change these with the mouse, but the keyboard is faster).
+Set the "Category Type" to "Component" for the Master and Junior categories.
 
-Finally, press the "Update Start Wave Numbers" button at the top of the screen.  This combines the number ranges in the "Elite", "Master" and "Junior" into the "Combined Women" "Start Wave" category.
-__This button is pressed automatically when you leave the page, so don't worry if you forget.__
+The fastest way to do this for a big race is with "left-cursor" and "down-cursor", but using the mouse works fine too.
 
-You can configure as many "Start Wave" combined categories you like.  The "Start Wave" is always the first row, followed by the "Component" rows.
+You should get something like this:
+
+- __Start Wave__  Combined Women
+    - __Component__  Elite Women
+    - __Component__  Master Women
+    - __Component__  Junior Women
+
+If you like, press the "Update Start Wave Numbers" button at the top of the screen.  This combines the number ranges in the "Elite", "Master" and "Junior" into the "Combined Women" "Start Wave" category.
+__This button is pressed automatically when you leave the page, so you don't have to worry about it.
+
+You can configure as many "Start Wave" combined categories you like.  The "Start Wave" is always the first row in a group, followed by the "Component" rows, which will indent.
 
 CrossMgr makes the following assumptions about bib numbers in a race:
 

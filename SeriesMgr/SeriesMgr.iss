@@ -1,8 +1,7 @@
 ; -- SeriesMgr.iss --
 
 [Setup]
-AppName=SeriesMgr
-#include "Version.py"
+#include "inno_setup.txt"
 DefaultDirName={pf}\SeriesMgr
 DefaultGroupName=SeriesMgr
 UninstallDisplayIcon={app}\SeriesMgr.exe

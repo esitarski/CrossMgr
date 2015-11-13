@@ -3,6 +3,7 @@ import os
 import shutil
 import zipfile
 import sys
+import datetime
 import subprocess
 
 if os.path.exists('build'):
@@ -94,14 +95,30 @@ for drive in ['C', 'D']:
 	if os.path.exists( innoTest ):
 		inno = innoTest
 		break
+		
+from Version import AppVerName
+def make_inno_version():
+	setup = {
+		'AppName':				AppVerName.split()[0],
+		'AppPublisher':			"Edward Sitarski",
+		'AppContact':			"Edward Sitarski",
+		'AppCopyright':			"Copyright (C) 2004-{} Edward Sitarski".format(datetime.date.today().year),
+		'AppVerName':			AppVerName,
+		'AppPublisherURL':		"http://www.sites.google.com/site/crossmgrsoftware/",
+		'AppUpdatesURL':		"http://www.sites.google.com/site/crossmgrsoftware/downloads/",
+		'VersionInfoVersion':	AppVerName.split()[1],
+	}
+	with open('inno_setup.txt', 'w') as f:
+		for k, v in setup.iteritems():
+			f.write( '{}={}\n'.format(k,v) )
+make_inno_version()
 cmd = '"' + inno + '" ' + 'SeriesMgr.iss'
 print cmd
 os.system( cmd )
 
 # Create versioned executable.
 from Version import AppVerName
-vNum = AppVerName.split()[1]
-vNum = vNum.replace( '.', '_' )
+vNum = AppVerName.split()[1].replace( '.', '_' )
 newExeName = 'SeriesMgr_Setup_v' + vNum + '.exe'
 
 try:
@@ -127,5 +144,10 @@ z.write( newExeName )
 z.close()
 print 'executable compressed.'
 
-shutil.copy( newExeName, r"c:\GoogleDrive\Downloads\Windows\SeriesMgr"  )
+shutil.copy( newZipName, r"c:\GoogleDrive\Downloads\Windows\SeriesMgr"  )
 
+cmd = 'python virustotal_submit.py "{}"'.format(os.path.abspath(newExeName))
+print cmd
+os.chdir( '..' )
+subprocess.call( cmd, shell=True )
+shutil.copy( 'virustotal.html', os.path.join(r"c:\GoogleDrive\Downloads\Windows\SeriesMgr", 'virustotal_v' + vNum + '.html') )
