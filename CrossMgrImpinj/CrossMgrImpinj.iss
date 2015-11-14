@@ -1,8 +1,7 @@
 ; -- CrossMgrImpinj.iss --
 
 [Setup]
-AppName=CrossMgrImpinj
-#include "Version.py"
+#include "inno_setup.txt"
 DefaultDirName={pf}\CrossMgrImpinj
 DefaultGroupName=CrossMgrImpinj
 UninstallDisplayIcon={app}\CrossMgrImpinj.exe

@@ -3,6 +3,7 @@ import py2exe
 import os
 import shutil
 import zipfile
+import datetime
 import subprocess
 
 if os.path.exists('build'):
@@ -62,6 +63,23 @@ for drive in ['C', 'D']:
 	if os.path.exists( innoTest ):
 		inno = innoTest
 		break
+		
+from Version import AppVerName
+def make_inno_version():
+	setup = {
+		'AppName':				AppVerName.split()[0],
+		'AppPublisher':			"Edward Sitarski",
+		'AppContact':			"Edward Sitarski",
+		'AppCopyright':			"Copyright (C) 2004-{} Edward Sitarski".format(datetime.date.today().year),
+		'AppVerName':			AppVerName,
+		'AppPublisherURL':		"http://www.sites.google.com/site/crossmgrsoftware/",
+		'AppUpdatesURL':		"http://www.sites.google.com/site/crossmgrsoftware/downloads/",
+		'VersionInfoVersion':	AppVerName.split()[1],
+	}
+	with open('inno_setup.txt', 'w') as f:
+		for k, v in setup.iteritems():
+			f.write( '{}={}\n'.format(k,v) )
+make_inno_version()
 cmd = '"' + inno + '" ' + 'CrossMgrImpinj.iss'
 print cmd
 os.system( cmd )
@@ -97,3 +115,10 @@ print 'executable compressed.'
 
 shutil.copy( newZipName, r"c:\GoogleDrive\Downloads\Windows\CrossMgrImpinj"  )
 shutil.copy( '../CrossMgrImpinjReadme.pdf', r"c:\GoogleDrive\Downloads\Windows\CrossMgrImpinj"  )
+
+cmd = 'python virustotal_submit.py "{}"'.format(os.path.abspath(newExeName))
+print cmd
+os.chdir( '..' )
+subprocess.call( cmd, shell=True )
+shutil.copy( 'virustotal.html', os.path.join(r"c:\GoogleDrive\Downloads\Windows\CrossMgrImpinj", 'virustotal_v' + vNum + '.html') )
+

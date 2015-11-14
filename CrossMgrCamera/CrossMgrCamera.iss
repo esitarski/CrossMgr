@@ -2,7 +2,7 @@
 
 [Setup]
 AppName=CrossMgrCamera
-#include "Version.py"
+#include "inno_setup.txt"
 DefaultDirName={pf}\CrossMgrCamera
 DefaultGroupName=CrossMgrCamera
 UninstallDisplayIcon={app}\CrossMgrCamera.exe
