@@ -27,28 +27,42 @@ CrossMgr makes this easy by supporting three types of Categories:
 
 ### Combined Categories
 
-For example, say that you have Elite Women (1-99), Master Women (100-149) and Junior Women (150-199) and you want to combine them in the same Start Wave.
-Define those Categories in CrossMgr as "Elite", "Master" and "Junior" including the Name, Gender and Numbers fields.
+For example, say that you have Cat 3, Cat 4 and Junior Men and Elite Women, Master Women and Junior Women, and you want to combine them into two Start Waves, wich a start offset of 60 seconds for the women's race.
+First, set up those Categories in CrossMgr.
 
-Now, press the "New Category" button, and change the new category name to "Combined Women".
+Now, we need the Start Waves.  Start Wave is simply the whistle that a group of riders starts on.  Bt default, CrossMgr ranks riders by the Start Wave, and by the Components in the Start Wave.
 
-Press and hold on the grey cell (first cell in the row) of the "Combined Women" and drag the row up to just before the "Elite" row.
+To create some Start Waves, press the "New Category" button, and change the new category name to "Combined Men".
+Do the same and make a category for "Combined Women".
+Notice that the default "Category Type" is "Start Wave.
 
-Click on the "Category Type" cell in the "Elite Row".  Change it to a "Component" category with the mouse, or press the "left-cursor" key.  Then press the "down-cursor" button to move to the next row.  A number of fields in the Elite row have turned dark grey.  This is because the values now come from the "Start Wave", category, not the "Component" Category.
+Press and hold on the left grey cell (first cell in the row) of the "Combined Men" and drag the row up to be the 1st row.
+Drag the men's categories (Cat 3, Cat 4 and Junior) so that are in rows directly below "Combined Men".
+
+Drag the "Combined Women" category to the row just after all the men's categories.
+
+Click on the "Category Type" cell in the "Cat 3" Men row.  Change it to a "Component" category.  Do the same for the other Men's categories.
 
 Set the "Category Type" to "Component" for the Master and Junior categories.
 
-The fastest way to do this for a big race is with "left-cursor" and "down-cursor", but using the mouse works fine too.
+Now, set the "Start Offset" for the "Combined Women" category to be 60 seconds.
 
-You should get something like this:
+You should see something like this:
 
-- __Start Wave__  Combined Women
+- __Start Wave__  Combined Men
+    - __Component__ Cat 3
+    - __Component__ Cat 4
+    - __Component__ Junior
+- __Start Wave__  Combined Women  StartOffset=60
     - __Component__  Elite Women
     - __Component__  Master Women
     - __Component__  Junior Women
 
-If you like, press the "Update Start Wave Numbers" button at the top of the screen.  This combines the number ranges in the "Elite", "Master" and "Junior" into the "Combined Women" "Start Wave" category.
-__This button is pressed automatically when you leave the page, so you don't have to worry about it.
+That's it.  You now have two Start Waves, with the appropriate Component categories within each wave.
+
+The fastest way to do this for lots of categories is by using the keyboard, but using the mouse works fine too.
+
+By default, a rider is ranked within the Start Wave as well as each Component.  If you don't want the Start Wave to appear in the results, de-select the "Publish" checkbox for that Category (to the right in the Category row).
 
 You can configure as many "Start Wave" combined categories you like.  The "Start Wave" is always the first row in a group, followed by the "Component" rows, which will indent.
 
@@ -78,15 +92,12 @@ Riders would be ranked as:
 
 ## Multiple Categories and Uploading
 
-Carefully consider how you want to publish to CrossResults, WebScorer and USA Cycling.
+Carefully consider how you want to publish to web/Excel/printouts, CrossResults, WebScorer and USA Cycling.
 Upload site want to see a rider once in the results - not in multiple categories.
 
 Check whether you want to publish the "Start Wave" (combined) results, or the "Component" results - but not both.
 
-## Tip: Multiple Start Waves and Different Race Times
-
-
-## Note about __Initialize CrossMgr Categories from Excel EventCategory and Bib# columns__ option in [DataMgmt][]/Link to External Excel Data...
+### Note about __Initialize CrossMgr Categories from Excel EventCategory and Bib# columns__ option in [DataMgmt][]/Link to External Excel Data...
 If you choose this option, the Categories and Bib numbers will be determined by the contents of the Excel sheet.
 Any changes you make in CrossMgr will be over-written by the information in the Excel sheet.
 If you choose this option, always make Bib and EventCategory changes in the Excel spreadsheet, not in CrossMgr.
@@ -94,7 +105,7 @@ If you choose this option, always make Bib and EventCategory changes in the Exce
 # Controls
 
 ## Drag and Drop Rows
-Category rows can drag-and-drop by pressing in the cells under the "up-down" arrow.  The "up-down" arrow is in the upper-left of the Categories table.
+Category rows will drag-and-drop by pressing in the left-most cell in the row under the "up-down" arrow.  The "up-down" arrow is in the upper-left of the Categories table.
 
 ## Activate All
 Activate all Categories.  Active Categories will be considered in the race.
@@ -133,7 +144,7 @@ Active|If selected, this Category will be considered in the race.  If deselected
 Category Type|Either "Start Wave", "Component" or "Custom"
 Name|Name of the Category
 Gender|Gender of the Category.  Choices are "Men", "Women" or "Open".
-Numbers|The numbers of riders in this Category.  Numbers can be expressed individually like 103,105 or a range, like 100-199.  Exclusions exceptions are expressed by preceding the excluded number with a '-' sign.  Exceptions can be express individually, like -201,-205 or in a range -201-205.  See [Number Patterns](#number-patterns) for more details below.  You can cut-and-paste in numbers from Excel, either in vertical columns or horizontally in rows.  This makes it easier to enter irregular number ranges from Excel when necessary.
+Numbers|The numbers of riders in this Category.  Numbers can be expressed individually like 103,105 or a range, like 100-199.  Exclusions exceptions are expressed by preceding the excluded number with a '-' sign.  Exceptions can be express individually, like -201,-205 or in a range -201-205.  See [Number Patterns](#number-patterns) for more details below.  You can cut-and-paste in numbers from Excel, either in vertical columns or horizontally in rows.  This makes it easier to enter irregular number ranges from Excel when necessary.  When using the __Initialize CrossMgr Categories from Excel EventCategory and Bib# columns__ option, the number ranges will be automatically determined from the Excel sheet.
 Start Offset|When starting multiple categories at the same time, here is where you enter the offset of later starts from the first start.
 Race Laps|When running a race by time, leave this blank - CrossMgr will compute the laps for this category (see below).  If you know the number of laps, or you don't like CrossMgr's suggestion, enter the laps here.
 Lapped Riders Continue|If selected, riders who are lapped by their category leader will have all their laps shown in the Results, not just the laps completed before they were lapped.  With combined Paracycling categories, you will need to select this as lapped athletes may still be in contention due to the Performance Factors.
