@@ -1,7 +1,6 @@
 ; -- CrossMgrCamera.iss --
 
 [Setup]
-AppName=CrossMgrCamera
 #include "inno_setup.txt"
 DefaultDirName={pf}\CrossMgrCamera
 DefaultGroupName=CrossMgrCamera
