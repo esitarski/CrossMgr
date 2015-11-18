@@ -28,14 +28,15 @@ CrossMgr supports the following fields from an external Excel sheet:
 Field|Description
 :----|:----------
 Bib#|Required.  Rider's bib number in the race.  Bib numbers should be allocated in logical number ranges if there are multiple categories in the race (for example, 1-99 = one category, 100-199 = another category, etc.)
-LastName|Optional.  Rider's last name.  CrossMgr will automatically capitalize the last name.
-FirstName|Optional.  Rider's first name.
-Team|Optional.  Rider's team.
-Category|Optional.  Rider's category.  If __Initialize CrossMgr Categories from Excel Category and Bib# columns__ is selected, this category will be added to the race if it isn't already there, and this rider's bib number will be included in the category.  If __Initialize CrossMgr Categories from Excel Category and Bib# columns__ is not selected, this field will be shown as information only, and the rider's category will be determined by matching the number ranges of the categories (see [Categories][] for details).
-Age|Optional.  Rider's age.
+LastName|Optional.  Rider's last name.  CrossMgr will automatically capitalize the last name. Used for display only.
+FirstName|Optional.  Rider's first name. Used for display only.
+Team|Optional.  Rider's team. Used for display only.
+Category|Optional.  Rider's category.  This field is shown in the Results as information only, and does not have to match the rider's racing category.
+EventCategpry|Optional.  If __Initialize CrossMgr Categories from Excel Category and Bib# columns__ is selected, values in thie column will be added to the race as a category (if not already present), and this rider's bib number will be included in that category.  If __Initialize CrossMgr Categories from Excel Category and Bib# columns__ is not selected, the rider's category will be determined by matching the number ranges of the categories (see [Categories][] for details).
+Age|Optional.  Rider's age.  Used for display only.
 License|Optional.  Rider' license.  This can be the UCI code, a national code, or a regional code.  CrossMgr uses this for display only.
-Tag1-N|Optional for manual input, required for chip input.  Rider's chip tag.
 Factor|Optional.  Athlete's Performance Factor, as a Percent.  Used for Para Cycling to rank athletes with different abilities competing in the same combined event.  The athlete's race time is multiplied by the Factor, yielding an adjusted time.  The athlete's are then ranked by the adjusted times.  The Performance Factor will depend on the athlete's classification, as well as the classifications of the other athlete's in the combined race.  When using Performance Factors, you almost always want to set the "Lapped Riders Continue" option (see [Categories][]).  This is because, after applying the Performance Factors, lapped athletes may still be in contention for winning the combined category.
+Tag1-N|Optional for manual input, required for chip input.  Rider's chip tag.
 
 To save space, CrossMgr may combine the first and last names into one field as "LASTNAME, Firstname".  In the scoreboard, it uses a further shorthand of "LASTNAME, F" where "F" is the first letter of the first name.
 

@@ -203,11 +203,12 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		
 		GetTranslation = _
 		gs = wx.GridSizer( 2, len(Fields) )
+		gs.SetHGap( 3 )
 		for c, f in enumerate(Fields):
 			label = wx.StaticText(sp, label=GetTranslation(f))
 			if boldFont is None:
 				font = label.GetFont()
-				boldFont = wx.Font( font.GetPointSize()+1, font.GetFamily(), font.GetStyle(), wx.FONTWEIGHT_BOLD )
+				boldFont = wx.Font( int(font.GetPointSize()*1.2), font.GetFamily(), font.GetStyle(), wx.FONTWEIGHT_BOLD )
 			label.SetFont( boldFont )
 			gs.Add( label )
 		
