@@ -94,7 +94,7 @@ For example, consider the following "Custom" categories which could be active in
 Riders would be ranked as:
 
 * If Adam is a member of LCC and 17 years old, he would appear in all three "Custom" categories.
-* If Bart is not a member of LCC and 19 years old, he would appear in the "All Riders with Black Shorts" custom category.
+* If Bart is not a member of LCC and 18 years old, he would appear in the "All Riders <19 years old" Custom category.
 * Is Calvin is not a member of LCC and is 23, he would not appear in any of these "Custom" categories.
 
 ## Multiple Categories, Uploading and Series
