@@ -458,7 +458,7 @@ class Categories( wx.Panel ):
 			return txt
 		return None
 		
-	def isCatStrChanged( self ):
+	def isExternalChange( self ):
 		if not Model.race:
 			return False
 		
@@ -466,12 +466,22 @@ class Categories( wx.Panel ):
 		
 		if self.grid.GetNumberRows() != len(categories):
 			return True
-
-		for r, cat in enumerate(categories):
-			if cat.catStr != self.grid.GetCellValue( r, self.iCol['catStr'] ):
-				return True
 		
-		return False
+		def distanceMatches( distance, cellValue ):
+			try:
+				value = float(cellValue)
+			except ValueError:
+				value = None
+				
+			if not distance and not value:
+				return True
+			return u'{:.3f}'.format(distance) == cellValue
+		
+		return any(	(
+						cat.catStr != self.grid.GetCellValue(r, self.iCol['catStr']) or
+						distanceMatches(cat.distance, self.grid.GetCellValue(r, self.iCol['distance'])) or
+						distanceMatches(cat.firstLapDistance, self.grid.GetCellValue(r, self.iCol['firstLapDistance']))
+					) for r, cat in enumerate(categories) )
 	
 	def pasteFromClipboard( self, event ):
 		txt = self.getCleanClipboardText()
@@ -673,9 +683,8 @@ and remove them from other categories.'''),
 		self.grid.SelectRow( min(r+1, self.grid.GetNumberRows()-1), True )
 		
 	def refresh( self ):
-		if not self.isCatStrChanged():
-			if not self.state.changed():
-				return
+		if not self.isExternalChange() and not self.state.changed():
+			return
 			
 		# Fix the height of the column labels.
 		dc = wx.WindowDC( self.grid )
