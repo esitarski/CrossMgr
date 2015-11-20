@@ -104,7 +104,7 @@ class JChipSetupDialog( wx.Dialog ):
 		bs.Add( rowColSizer, 0, wx.EXPAND|wx.ALL, border )
 		
 		row = 0
-		rowColSizer.Add( wx.StaticText( self, label = _('Reader Type:') ), row=row, col=0, border=border,
+		rowColSizer.Add( wx.StaticText( self, label=u'{}:'.format(_('Reader Type')), row=row, col=0, border=border,
 			flag=wx.TOP|wx.LEFT|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		self.clientType = wx.Choice( self, choices=[_('JChip/Impinj/Alien'), _('RaceResult')] )
 		self.clientType.Bind( wx.EVT_CHOICE, self.changeClientType )
