@@ -68,8 +68,6 @@ from FileDrop			import FileDrop
 import Model
 import JChipSetup
 import JChipImport
-import JChip
-import RaceResult
 import RaceResultImport
 from JChip import EVT_CHIP_READER 
 import OrionImport
@@ -94,6 +92,7 @@ from ReadTTStartTimesSheet import ImportTTStartTimes, AutoImportTTStartTimes
 from TemplateSubstitute import TemplateSubstitute
 import ChangeRaceStartTime
 from PageDialog			import PageDialog
+import ChipReader
 
 import traceback
 '''
@@ -109,42 +108,6 @@ def loggingThreadStart( self, *args, **kwargs ):
 threading.Thread.start = types.MethodType(loggingThreadStart, None, threading.Thread)
 '''
 #----------------------------------------------------------------------------------
-
-class ChipReader( object ):
-	JChip = 0
-	RaceResult = 1
-	
-	def __init__( self ):
-		self.chipReader = None
-		self.reset()
-		
-	def reset( self, chipReader = None ):
-		if self.chipReader is not None:
-			self.StopListener()
-		self.chipReader = chipReader or ChipReader.JChip
-		if self.chipReader == ChipReader.JChip:
-			self.StartListener = JChip.StartListener
-			self.GetData = JChip.GetData
-			self.StopListener = JChip.StopListener
-			self.CleanupListener = JChip.CleanupListener
-		elif self.chipReader == ChipReader.RaceResult:
-			self.StartListener = RaceResult.StartListener
-			self.GetData = RaceResult.GetData
-			self.StopListener = RaceResult.StopListener
-			self.CleanupListener = RaceResult.CleanupListener
-		else:
-			assert False, 'Unrecognized ChipReader: {}'.format(self.chipReader)
-			
-	@property
-	def listener( self ):
-		if self.chipReader == ChipReader.JChip:
-			return JChip.listener
-		elif self.chipReader == ChipReader.RaceResult:
-			return RaceResult.listener
-		else:
-			assert False, 'Unrecognized ChipReader'
-
-chipReaderCur = ChipReader()
 
 def ShowSplashScreen():
 	bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrSplash.png'), wx.BITMAP_TYPE_PNG )
@@ -808,7 +771,7 @@ class MainWin( wx.Frame ):
 
 	@property
 	def chipReader( self ):
-		return chipReaderCur
+		return ChipReader.chipReaderCur
 		
 	def handleChipReaderEvent( self, event ):
 		race = Model.race
@@ -2236,7 +2199,7 @@ class MainWin( wx.Frame ):
 			pass
 		
 		OutputStreamer.StopStreamer()
-		chipReaderCur.CleanupListener()
+		ChipReader.chipReaderCur.CleanupListener()
 	
 	@logCall
 	def onCloseWindow( self, event ):
@@ -2527,6 +2490,7 @@ class MainWin( wx.Frame ):
 		ftpPublish.setRaceAttr()	# Apply the ftp properties
 		ftpPublish.Destroy()
 		
+		ChipReader.chipReaderCur.reset( race.chipReaderType )
 		self.updateRecentFiles()
 
 		if geoTrack:
@@ -2590,6 +2554,7 @@ class MainWin( wx.Frame ):
 				race.lastOpened = datetime.datetime.now()
 				Model.setRace( race )
 			
+			ChipReader.chipReaderCur.reset( race.chipReaderType )
 			self.fileName = fileName
 			
 			undo.clear()
@@ -2865,6 +2830,8 @@ class MainWin( wx.Frame ):
 		self.showPageName( _('Chart') )
 		self.refresh()
 
+		ChipReader.chipReaderCur.reset( race.chipReaderType )
+
 		self.nextNum = None
 		with Model.LockRace() as race:
 			race.startRaceNow()		
@@ -2899,7 +2866,7 @@ class MainWin( wx.Frame ):
 		self.nextNum = None
 		with Model.LockRace() as race:
 			race.finishRaceNow()
-		chipReaderCur.CleanupListener()
+		ChipReader.chipReaderCur.CleanupListener()
 		
 		OutputStreamer.writeRaceFinish()
 		# Give the streamer a chance to write the last message.
@@ -3480,15 +3447,16 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 		race = Model.race
 		
 		if not race or not race.enableJChipIntegration:
-			if chipReaderCur.listener:
-				chipReaderCur.StopListener()
+			if ChipReader.chipReaderCur.listener:
+				ChipReader.chipReaderCur.StopListener()
 			return False
 		
-		if not chipReaderCur.listener:
-			chipReaderCur.StartListener( race.startTime )
+		if not ChipReader.chipReaderCur.listener:
+			ChipReader.chipReaderCur.reset( race.chipReaderType )
+			ChipReader.chipReaderCur.StartListener( race.startTime )
 			GetTagNums( True )
 		
-		data = chipReaderCur.GetData()
+		data = ChipReader.chipReaderCur.GetData()
 		
 		if not getattr(race, 'tagNums', None):
 			GetTagNums()
@@ -3528,7 +3496,7 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 		with Model.LockRace() as race:
 			if race is None:
 				self.SetTitle( Version.AppVerName )
-				chipReaderCur.StopListener()
+				ChipReader.chipReaderCur.StopListener()
 				self.timer.Stop()
 				return
 
@@ -3538,8 +3506,8 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 				status = _('Running')
 				if race.enableJChipIntegration:
 					doRefresh = self.processJChipListener()
-				elif chipReaderCur.listener:
-					chipReaderCur.StopListener()
+				elif ChipReader.chipReaderCur.listener:
+					ChipReader.chipReaderCur.StopListener()
 			else:
 				status = _('Finished')
 
@@ -3556,7 +3524,7 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 							Utils.formatTime(race.curRaceTime()),
 							race.name, race.raceNum,
 							status, Version.AppVerName,
-							u'<{}>'.format(_('JChip')) if chipReaderCur.listener else u'',
+							u'<{}>'.format(_('JChip')) if ChipReader.chipReaderCur.listener else u'',
 							u'<{}>'.format(_('TimeTrial')) if race.isTimeTrial else u'') )
 
 			if not self.timer.IsRunning():

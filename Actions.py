@@ -7,7 +7,7 @@ import datetime
 
 import Model
 import Utils
-import JChip
+import ChipReader
 import OutputStreamer
 from FtpWriteFile import realTimeFtpPublish
 import Properties
@@ -23,7 +23,7 @@ def StartRaceNow():
 	if undoResetTimer and undoResetTimer.IsRunning():
 		undoResetTimer.Stop()
 	undoResetTimer = None
-	JChip.reset()
+	ChipReader.chipReaderCur.reset( Model.race.chipReaderType if Model.race else None )
 	
 	undo.clear()
 	undo.pushState()

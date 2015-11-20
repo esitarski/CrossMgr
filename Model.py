@@ -949,6 +949,10 @@ class Race( object ):
 	firstRecordedTime = None
 	skipFirstTagRead = False
 	
+	chipReaderType = 0
+	chipReaderPort = 3601
+	chipReaderIpAddr = '127.0.0.1'
+	
 	autocorrectLapsDefault = True
 	
 	allCategoriesHaveRaceLapsDefined = False

@@ -207,6 +207,7 @@ import platform
 import unicodedata
 import webbrowser
 import traceback
+import socket
 import wx.grid		as gridlib
 
 import wx.lib.agw.genericmessagedialog
@@ -639,6 +640,15 @@ def updateUndoStatus():
 def writeRace():
 	if mainWin is not None:
 		mainWin.writeRace()
+		
+def writeConfig( key, value ):
+	if mainWin:
+		return mainWin.config.Write( key, value )
+
+def readConfig( key, defaultVal ):
+	if mainWin:
+		return mainWin.config.Read( key, defaultVal )
+	return None
 	
 def getFileName():
 	return mainWin.fileName if mainWin is not None else None
@@ -702,6 +712,28 @@ def ParsePhotoFName( fname ):
 invalidFNameChars = set( c for c in '<>:"/\\|?*' )
 def ValidFilename( fname ):
 	return ''.join( c for c in fname if c not in invalidFNameChars and ord(c) > 31 )
+
+def GetDefaultHost():
+	DEFAULT_HOST = socket.gethostbyname(socket.gethostname())
+	if DEFAULT_HOST in ('127.0.0.1', '127.0.1.1'):
+		reSplit = re.compile('[: \t]+')
+		try:
+			co = subprocess.Popen(['ifconfig'], stdout=subprocess.PIPE)
+			ifconfig = co.stdout.read()
+			for line in ifconfig.split('\n'):
+				line = line.strip()
+				try:
+					if line.startswith('inet addr:'):
+						fields = reSplit.split( line )
+						addr = fields[2]
+						if addr != '127.0.0.1':
+							DEFAULT_HOST = addr
+							break
+				except:
+					pass
+		except:
+			pass
+	return DEFAULT_HOST	
 
 if __name__ == '__main__':
 	initTranslation()

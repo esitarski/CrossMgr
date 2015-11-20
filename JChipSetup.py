@@ -8,7 +8,9 @@ import datetime
 import Model
 import Utils
 import JChip
+import ChipReader
 from JChip import EVT_CHIP_READER
+import RaceResult
 from ReadSignOnSheet import GetTagNums
 
 HOST, PORT = JChip.DEFAULT_HOST, JChip.DEFAULT_PORT
@@ -85,7 +87,7 @@ class JChipSetupDialog( wx.Dialog ):
 		]) )
 		intro = (u'\n'.join( [
 				_('CrossMgr supports the JChip RFID reader.'),
-				_('For more details, consult the CrossMgr, JChip, CrossMgrImpinj or CrossMgrAlien documentation.'),
+				_('For more details, consult the CrossMgr, JChip, RaceResult, CrossMgrImpinj or CrossMgrAlien documentation.'),
 				] ) + u'\n' + _('Checklist:') + u'\n\n{}\n').format( todoList )
 		
 		border = 4
@@ -95,45 +97,53 @@ class JChipSetupDialog( wx.Dialog ):
 		
 		#-------------------------------------------------------------------
 		bs.AddSpacer( border )
-		bs.Add( wx.StaticText( self, label = _('JChip/CrossMgrImpinj/CrossMgrAlien Configuration:') ), 0, wx.EXPAND|wx.ALL, border )
+		bs.Add( wx.StaticText( self, label = _('JChip/CrossMgrImpinj/CrossMgrAlien/RaceResult Configuration:') ), 0, wx.EXPAND|wx.ALL, border )
 		
 		#-------------------------------------------------------------------
 		rowColSizer = rcs.RowColSizer()
 		bs.Add( rowColSizer, 0, wx.EXPAND|wx.ALL, border )
 		
 		row = 0
-		rowColSizer.Add( wx.StaticText( self, label = _('Type:') ), row=row, col=0, border = border,
+		rowColSizer.Add( wx.StaticText( self, label = _('Reader Type:') ), row=row, col=0, border=border,
 			flag=wx.TOP|wx.LEFT|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
-		rowColSizer.Add( wx.TextCtrl( self, value=_('TCP Client'), style = wx.TE_READONLY),
-			row=row, col=1, border = border, flag=wx.EXPAND|wx.TOP|wx.RIGHT|wx.ALIGN_LEFT )
+		self.clientType = wx.Choice( self, choices=[_('JChip/Impinj/Alien'), _('RaceResult')] )
+		self.clientType.Bind( wx.EVT_CHOICE, self.changeClientType )
+		rowColSizer.Add( self.clientType,
+			row=row, col=1, border=border, flag=wx.EXPAND|wx.TOP|wx.RIGHT|wx.ALIGN_LEFT )
 		
 		row += 1
 		sep = u'  -' + _('or') + u'-  '
 		ips = sep.join( GetAllIps() )
 		self.ipaddr = wx.TextCtrl( self, value = ips, style = wx.TE_READONLY, size=(240,-1) )
+		self.autoDetect = wx.Button( self, label=_('AutoDetect') )
+		self.autoDetect.Bind( wx.EVT_BUTTON, self.doAutoDetect )
 		
-		rowColSizer.Add( wx.StaticText( self, label = _('Remote IP Address:') ),
+		iphs = wx.BoxSizer( wx.HORIZONTAL )
+		iphs.Add( self.ipaddr, 1, flag=wx.EXPAND )
+		iphs.Add( self.autoDetect, 0, flag=wx.LEFT, border=4 )		
+		
+		rowColSizer.Add( wx.StaticText( self, label=_('Remote IP Address:') ),
 						row=row, col=0, flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
-		rowColSizer.Add( self.ipaddr, row=row, col=1, border = border, flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_LEFT )
+		rowColSizer.Add( iphs, row=row, col=1, border=border, flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_LEFT )
 		
 		row += 1
 		self.port = wx.lib.intctrl.IntCtrl( self, -1, min=1, max=65535, value=PORT,
 											limited=True, style = wx.TE_READONLY )
 		rowColSizer.Add( wx.StaticText(self, label = _('Remote Port:')), row=row, col=0,
 						flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
-		rowColSizer.Add( self.port, row=row, col=1, border = border, flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_LEFT )
+		rowColSizer.Add( self.port, row=row, col=1, border=border, flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_LEFT )
 		
 		bs.Add( wx.StaticText( self, label = _('If using JChip, see "7  Setting of Connections" in JChip "Control Panel Soft Manual" for more details.') ),
-				border = border, flag = wx.GROW|wx.ALL )
+				border=border, flag = wx.GROW|wx.ALL )
 		#-------------------------------------------------------------------
 
 		bs.Add( self.testJChip, 0, wx.EXPAND|wx.ALL, border )
-		bs.Add( wx.StaticText(self, label = _('Messages:')), 0, wx.EXPAND|wx.ALL, border = border )
+		bs.Add( wx.StaticText(self, label = _('Messages:')), 0, wx.EXPAND|wx.ALL, border=border )
 		bs.Add( self.testList, 1, wx.EXPAND|wx.ALL, border )
 		
 		buttonBox = wx.BoxSizer( wx.HORIZONTAL )
 		buttonBox.AddStretchSpacer()
-		buttonBox.Add( self.okBtn, flag = wx.RIGHT, border = border )
+		buttonBox.Add( self.okBtn, flag = wx.RIGHT, border=border )
 		self.okBtn.SetDefault()
 		buttonBox.Add( self.cancelBtn )
 		buttonBox.Add( self.helpBtn )
@@ -142,12 +152,83 @@ class JChipSetupDialog( wx.Dialog ):
 		self.SetSizerAndFit(bs)
 		bs.Fit( self )
 		
+		self.update()
+		
 		self.CentreOnParent(wx.BOTH)
 		self.SetFocus()
 
 	def skip(self, evt):
 		return
+		
+	def commit( self ):
+		race = Model.race
+		if not race:
+			return
+		race.chipReaderType = self.clientType.GetSelection()
+		race.chipReaderIpAddr = self.ipaddr.GetValue()
+		if race.chipReaderType == 1:
+			Utils.writeConfig( 'RaceResultHost', race.chipReaderIpAddr )
+		race.chipReaderPort = self.port.GetValue()
+		race.enableJChipIntegration = bool(self.enableJChipCheckBox.GetValue())
+		ChipReader.chipReaderCur.reset( race.chipReaderType )
+
+	def update( self ):
+		race = Model.race
+		if not race:
+			return
+		self.enableJChipCheckBox.SetValue( race.enableJChipIntegration )
+		self.clientType.SetSelection( race.chipReaderType )
+		self.ipaddr.SetValue( race.chipReaderIpAddr )
+		self.port.SetValue( race.chipReaderPort )
+		self.changeClientType()
+		
+	def changeClientType( self, event=None ):
+		selection = self.clientType.GetSelection()
+		if selection == 0:	# JChip/CrossMgrImpinj/CrossMgrAlien
+			self.port.SetValue( 53135 )
+			self.port.SetEditable( False )
+			self.ipaddr.SetValue( Utils.GetDefaultHost() )
+			self.ipaddr.SetEditable( False )
+			self.autoDetect.Show( False )
+		else:
+			self.port.SetValue( 3601 )
+			self.port.SetEditable( True )
+			self.ipaddr.SetEditable( True )
+			raceReaderHost = Utils.readConfig( 'RaceReaderHost', None )
+			if raceReaderHost:
+				try:
+					self.ipaddr.SetValue( raceReaderHost )
+				except Exception as e:
+					self.ipaddr.SetValue( Utils.GetDefaultHost() )
+			self.autoDetect.Show( True )
+		self.Layout()
 	
+	def doAutoDetect( self, event ):
+		def getHost():
+			wait = wx.BusyCursor()
+			try:
+				return None, RaceResult.AutoDetect(self.port.GetValue())
+			except Exception as e:
+				return e, None
+		
+		error, raceResultHost = getHost()
+		if error:
+			Utils.MessageOK(
+				self,
+				u'{}:\n\n{}'.format(_("AutoDetect Error"), error),
+				_("AutoDetect Error"),
+				wx.ICON_ERROR
+			)
+			return
+		if not raceResultHost:
+			Utils.MessageOK(
+				self, u'{}:\n\n{}'.format(_("AutoDetect Failure"), _('RaceResult reader not found.')),
+				_("AutoDetect Failure"),
+				wx.ICON_ERROR
+			)
+			return
+		self.ipaddr.SetValue( raceResultHost )
+		
 	def handleChipReaderEvent( self, event ):
 		if not event.tagTimes:
 			return
@@ -163,6 +244,8 @@ class JChipSetupDialog( wx.Dialog ):
 		num = tagNums.get(tag, None)
 
 	def testJChipToggle( self, event ):
+		self.commit()
+		
 		if not Model.race:
 			Utils.MessageOK( self, _('No active race.  Cannot perform RFID test.  "New" or "Open" a race first.'), _('Cannot Perform RFID Test') )
 			wx.CallAfter( self.testJChip.SetValue, False )
@@ -173,7 +256,7 @@ class JChipSetupDialog( wx.Dialog ):
 			wx.CallAfter( self.testJChip.SetValue, False )
 			return
 
-		if not JChip.listener:
+		if not ChipReader.chipReaderCur.listener:
 			correct, reason = CheckExcelLink()
 			explain = 	_('CrossMgr will not be able to associate chip Tags with Bib numbers.') + u'\n' + \
 						_('You may proceed with the test, but you need to fix the Excel sheet.') + u'\n\n' + \
@@ -190,9 +273,9 @@ class JChipSetupDialog( wx.Dialog ):
 					self.testJChip.SetValue( False )
 					return
 			
-			JChip.readerEventWindow = self
+			ChipReader.chipReaderCur.readerEventWindow = self
 			self.testList.Clear()
-			JChip.StartListener()
+			ChipReader.chipReaderCur.StartListener()
 			
 			self.appendMsg( 'listening for RFID connection...' )
 			
@@ -204,25 +287,25 @@ class JChipSetupDialog( wx.Dialog ):
 			self.timer = wx.CallLater( 1000, self.onTimerCallback, 'started' )			
 		else:
 			# Stop the listener.
-			JChip.StopListener()
+			ChipReader.chipReaderCur.StopListener()
 			
 			# Stop the timer sampling the reader.
 			if self.timer:
 				self.timer.Stop()
 				self.timer = None
 			
-			self.testJChip.SetLabel( 'Start RFID Test' )
+			self.testJChip.SetLabel( _('Start RFID Test') )
 			self.testJChip.SetValue( False )
 			self.testList.Clear()
 			
 			# Shutdown the photo sync viewer and the video buffer if they were started.
-			JChip.readerEventWindow = None
+			ChipReader.chipReaderCur.readerEventWindow = None
 	
 	def appendMsg( self, s ):
 		self.testList.AppendText( s + '\n' )
 	
 	def onTimerCallback( self, stat ):
-		data = JChip.GetData()
+		data = ChipReader.chipReaderCur.GetData()
 		lastTag = None
 		for d in data:
 			if d[0] == 'data':
@@ -258,13 +341,12 @@ class JChipSetupDialog( wx.Dialog ):
 				Utils.mainWin.findDialog.refresh( lastTag )
 		
 	def onOK( self, event ):
-		if Model.race:
-			Model.race.enableJChipIntegration = bool(self.enableJChipCheckBox.GetValue())
+		self.commit()
 		wx.CallAfter( Utils.refresh )
 		self.EndModal( wx.ID_OK )
 		
 	def onCancel( self, event ):
-		if JChip.listener:
+		if ChipReader.chipReaderCur.listener:
 			self.testJChipToggle( event )
 		self.EndModal( wx.ID_CANCEL )
 		

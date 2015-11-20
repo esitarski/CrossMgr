@@ -5,6 +5,7 @@ import sys
 import time
 import datetime
 import atexit
+import subprocess
 import re
 import wx
 import wx.lib.newevent
@@ -66,6 +67,47 @@ def socketReceiveLine( s ):
 			break
 	return buffer
 	
+def AutoDetect( raceResultPort=3601 ):
+	''' Search ip addresses adjacent to the computer in an attempt to find the reader. '''
+	ip = [int(i) for i in Utils.GetDefaultHost().split('.')]
+	j = 0
+	for i in xrange(14):
+		j = -j if j > 0 else -j + 1
+		
+		ipTest = list( ip )
+		ipTest[-1] += j
+		if not (0 <= ipTest[-1] < 256):
+			continue
+			
+		raceResultHost = '.'.join( '{}'.format(v) for v in ipTest )
+		
+		try:
+			s = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+			s.connect( (raceResultHost, raceResultPort) )
+			s.settimeout( 1 )
+		except Exception as e:
+			continue
+
+		try:
+			socketSend( s, bytes('GETSTATUS{}'.format(EOL)) )
+		except Exception as e:
+			continue
+			
+		try:
+			buffer = socketReceiveLine( s )
+		except Exception as e:
+			continue
+			
+		try:
+			s.close()
+		except Exception as e:
+			pass
+		
+		if buffer.startswith( 'GETSTATUS;' ):
+			return raceResultHost
+			
+	return None
+	
 # if we get the same time, make sure we give it a small offset to make it unique, but preserve the order.
 tSmall = datetime.timedelta( seconds = 0.000001 )
 
@@ -120,7 +162,13 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		except Exception as e:
 			qLog( 'connection', u'{}: {}'.format(_('Connection to RaceResult reader failed'), e) )
 			s = None
-			time.sleep( delaySecs )
+			
+			HOST_AUTO = AutoDetect()
+			if HOST_AUTO:
+				qLog( 'connection', u'{}: {}'.format(_('AutoDetect RaceResult at'), HOST_AUTO) )
+				HOST = HOST_AUTO
+			else:
+				time.sleep( delaySecs )
 			continue
 
 		try:
@@ -147,7 +195,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				if buffer.startswith( 'GETTIME;' ):
 					try:
 						dt = reNonDigit.sub(' ', buffer).strip()
-						fields[-1] = fields[-1].ljust(6-len(fields[-1]))	# Add zeros to convert to microseconds.
+						fields[-1] = (fields[-1] + '000000')[:6]	# Pad with zeros to convert to microseconds.
 						readerTime = datetime.datetime( *[int(f) for f in dt.split()] )
 						readerComputerTimeDiff = datetime.datetime.now() - readerTime
 					except Exception as e:
@@ -247,13 +295,16 @@ def StopListener():
 			
 	shutdownQ = None
 		
-def StartListener( startTime = datetime.datetime.now(),
-					HOST = DEFAULT_HOST, PORT = DEFAULT_PORT ):
+def StartListener( startTime=datetime.datetime.now(), HOST=None, PORT=None ):
 	global q
 	global shutdownQ
 	global listener
 	
 	StopListener()
+	
+	if Model.race:
+		HOST = (HOST or Model.race.chipReaderIpAddr)
+		PORT = (PORT or Model.race.chipReaderPort)
 	
 	q = Queue()
 	shutdownQ = Queue()
@@ -263,7 +314,7 @@ def StartListener( startTime = datetime.datetime.now(),
 	listener.start()
 	
 @atexit.register
-def Cleanuplistener():
+def CleanupListener():
 	global shutdownQ
 	global listener
 	if listener and listener.is_alive():
@@ -272,7 +323,7 @@ def Cleanuplistener():
 	listener = None
 	
 if __name__ == '__main__':
-	StartListener()
+	StartListener( HOST=DEFAULT_HOST, PORT=DEFAULT_PORT )
 	count = 0
 	while 1:
 		time.sleep( 1 )
