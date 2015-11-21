@@ -17,6 +17,7 @@ from collections import defaultdict
 
 import Utils
 import Version
+import minimal_intervals
 
 CurrentUser = getpass.getuser()
 CurrentComputer = socket.gethostname()
@@ -1804,6 +1805,10 @@ class Race( object ):
 		categories = [c for c in self.categories.itervalues() if c.active and c.catType == Category.CatWave]
 		for c in categories:
 			self.adjustCategoryWaveNumbers( c )
+		
+		category_sets = [c.getMatchSet() for c in categories]
+		for c, i in zip(categories, minimal_intervals.minimal_intervals(category_sets) ):
+			c.catStr = minimal_intervals.interval_to_str( i )
 		self.resetCategoryCache()
 	
 	def mergeExistingCategoryAttributes( self, nameStrTuples ):
