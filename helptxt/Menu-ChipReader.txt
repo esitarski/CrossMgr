@@ -3,11 +3,11 @@
 
 # ChipReader
 
-CrossMgr can accept real-time messages from [JChip](http://mts.greentag.to/english/index.html) and [RaceResult](http://www.raceresult.ca/en-ca/home/index.php) receivers as well as an Impinj and Alien reader with the CrossMgrImpinj or CrossMgrAlien bridge programs.
+CrossMgr can accept real-time messages from [JChip](http://mts.greentag.to/english/index.html) and [RaceResult](http://www.raceresult.ca/en-ca/home/index.php) receivers as well as an Impinj and Alien readers through the CrossMgrImpinj or CrossMgrAlien bridge programs respectively.
 CrossMgr can also import a file that was generated from the JChip and RaceResult systems, or the CrossMgrImpinj or CrossMgrAlien bridge programs.
 
 All chip systems log the time and code when it reads a chip, and each chip has a unique code.  This code may be the same as the rider's Bib number, or it might be something different.  The code must to be associated with a rider's name, team, bib, etc.
-CrossMgr allows you to configure which tag goes with which rider through the [External Excel][] sheet.  CrossMgr supports two columns, Tag and optionally Tag2, that contain the chip tag code(s) for that rider.  CrossMgr supports two tags in case you wish to give one two tags - the one intended for a backup bike.
+CrossMgr allows you to configure which tag goes with which rider through the [External Excel][] sheet.  CrossMgr supports two columns, Tag and optionally Tag2, that contain the chip tag code(s) for that rider.  CrossMgr supports two tags in case you wish to give one two tags - the one intended for a backup bike.  Alternatively, multpiple chip tags can be programmed to the same code enablig a rider to be identiified from race to race or on different bikes (this is what RaceDB does).
 
 If you are using RaceDB, this is managed for you from the RaceDB database and communicated to CrossMgr transparently.
 
@@ -37,26 +37,21 @@ Used to configure and test the RFID receiver.
 #### Configure the Reader
 If using CrossMgrImpinj or CrossMgrAlien to talk to the Impinj or Alien reader, make sure those programs are running and the reader is plugged in, on the network, etc.  Then skip to "Do Reader Test".
 
-If using JChip, make sure you have your [JChip Documentation](http://mts.greentag.to/ControlPanelSoftManual.pdf) ready if you are configuring JChip for the first time.
+__JChip:__ make sure you have your [JChip Documentation](http://mts.greentag.to/ControlPanelSoftManual.pdf) ready if you are configuring JChip for the first time.
 
-If using RaceResult, make sure your RaceResult reader is plugged into the network.
+__RaceResult:__ make sure your RaceResult reader is plugged into the network.
 
-For JChip and the Impinj and Alien bridge, CrossMgr is the "server", and the RFID reader is the "client".  The communication works as follows:
+__JChip:__ The JChip Setup Dialog provides the needed parameters to allow you to configure JChip.  Go to the "7 Setting of Connections" section in the JChip "Control Panel Soft Manual" and configure a JChip connection as follows:
 
-1. CrossMgr opens a socket on its computer and listens to port 53135.  It listens to all incoming connections including LAN and Wireless.
-1. The JChip receiver, configured as a "TCP Client", tries to connect to the CrossMgr computer every 5 seconds.  You have to configure it so it knows how to connect to CrossMgr (see below).
-1. When the JChip connection succeeds, the two systems are "connected", and start exchanging data.
-1. If the CrossMgr/JChip connection is broken for any reason, the two systems will automatically reconnect when the connection is restored as JChip will try to reconnect automatically.
+__Impinj and Alien bridge:__ CrossMgr will find these programs automatically as they are running on the same machine.
 
-The JChip Setup Dialog provides the needed parameters to allow you to configure JChip.  Go to the "7 Setting of Connections" section in the JChip "Control Panel Soft Manual" and configure a JChip connection as follows:
-
-CrossMgr communicates with the Chip reader through a TCP/IP interface (that is, an internet connection).  This can be done with cable or wireless.  CrossMgr listens for a connection on all network connections including cable and wireless.  Check what hardware you need to accomplish this.
+CrossMgr communicates with the Chip or RaceResult reader through a TCP/IP interface (that is, an internet connection).  This can be done with cable or wireless.  CrossMgr listens for a connection on all network connections including cable and wireless.  Check what hardware you need to accomplish this.
 
 Field|Value|Description
 :----|:----|:----------
 Type|JChip/Impinj/Alien or RaceResult|The typs of reader you are using.  There is one setting for RaceResult.  Use the other setting for everything else.
-Remote IP Address|One of the IP addresses shown on the screen|If not RaceReader, this is the IP address of the CrossMgr computer.  If there are more then one, one is generally for the LAN and the other is for the wireless connection.  To tell which is which, on Windows, in a "cmd" window, run "ipconfig".  On Mac/Linux, open a terminal and run "ifconfig".  Choose the IP address which matches you connection - LAN or wireless that you are using to connect the JChip receiver.  If you are using RaceResult, this is the IP address of the RaceResult reader.  If you are on a LAN, the __AutoConnect__ button should find the reader automatically.
-Remote Port|53135 or 3601|Port on the CrossMgr computer that JChip connects to, or the port that CrossMgr uses to talk to RaceResult.
+Remote IP Address|One of the IP addresses shown on the screen|__JChip/Impinj/Alien:__ this is the IP address of the CrossMgr computer.  If there are more then one, one is generally for the LAN and the other is for the wireless connection.  To tell which is which, on Windows, in a "cmd" window, run "ipconfig".  On Mac/Linux, open a terminal and run "ifconfig".  Choose the IP address which matches you connection - LAN or wireless that you are using to connect the JChip receiver.  __RaceResult:__ this is the IP address of the RaceResult reader.  If you are on a LAN, the __AutoConnect__ button should find the reader automatically.  If not, or you are using a static IP, enter the IP of the RaceResult reader here.
+Remote Port|53135 or 3601|__JChip/Impnj/Alien:__ port on the CrossMgr computer that JChip reader or bridge programs connect to.  __RaceResult__ port that CrossMgr uses to talk to RaceResult.  You should not have to change these.
 
 __JChip__
 
@@ -65,7 +60,7 @@ You may have to power down/power up JChip after making this change.
 
 __RaceResult__
 
-The __Remote IP Address__ is the address of the RaceResult reader.  If the AutoDetect button to fine it, or enter it if you are using a fixed IP.
+The __Remote IP Address__ is the address of the RaceResult reader.  If the AutoDetect button cannot find it on the LAN, of if you are using a fixed IP, you will have to enter it manually.
 
 #### Do Reader Test
 
@@ -74,9 +69,11 @@ Press the "Start RFID Test" button in CrossMgr.  This tells CrossMgr to connect 
 You may receive a warning if you do not have an Excel sheet configured.
 If you just want to test the receiver, you don't need to worry about the warning.  If you are trying to use RFID tags during a race, you will need a properly configured Excel sheet to associate the tags to the rider information.
 
-If using JChip, turn on the JChip receiver.  In the CrossMgr Messages section, you should soon see the connection succeed.  If not, check that you have the correct "Remote IP Address" and "Remote Port".  You may need to open port 50353 in Windows.
+__JChip:)) turn on the JChip receiver.  In the CrossMgr Messages section, you should soon see the connection succeed.  If not, check that you have the correct "Remote IP Address" and "Remote Port".  You may need to open port 50353 in Windows.
 
-If using RaceResult, make sure it is on and plugged into the network.  If CrossMgr cannot find it, you may need to open port 3601 in Windows.
+__RaceResult:__ make sure it is on and plugged into the network.  If CrossMgr cannot find it, you may need to open port 3601 in Windows.
+
+__Impinj/Alien__: ensure the CrossMgrImpinj and CrossMgrAlien programs are running.
 
 After starting the test, you should immediately see the connection between CrossMgr and the reader..
 
