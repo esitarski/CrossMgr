@@ -107,6 +107,7 @@ class JChipSetupDialog( wx.Dialog ):
 		rowColSizer.Add( wx.StaticText( self, label=u'{}:'.format(_('Reader Type')) ), row=row, col=0, border=border,
 			flag=wx.TOP|wx.LEFT|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		self.clientType = wx.Choice( self, choices=[_('JChip/Impinj/Alien'), _('RaceResult')] )
+		self.clientType.SetSelection( 0 )
 		self.clientType.Bind( wx.EVT_CHOICE, self.changeClientType )
 		rowColSizer.Add( self.clientType,
 			row=row, col=1, border=border, flag=wx.EXPAND|wx.TOP|wx.RIGHT|wx.ALIGN_LEFT )
@@ -116,11 +117,12 @@ class JChipSetupDialog( wx.Dialog ):
 		ips = sep.join( GetAllIps() )
 		self.ipaddr = wx.TextCtrl( self, value = ips, style = wx.TE_READONLY, size=(240,-1) )
 		self.autoDetect = wx.Button( self, label=_('AutoDetect') )
+		self.autoDetect.Show( False )
 		self.autoDetect.Bind( wx.EVT_BUTTON, self.doAutoDetect )
 		
 		iphs = wx.BoxSizer( wx.HORIZONTAL )
 		iphs.Add( self.ipaddr, 1, flag=wx.EXPAND )
-		iphs.Add( self.autoDetect, 0, flag=wx.LEFT, border=4 )		
+		iphs.Add( self.autoDetect, 0, flag=wx.LEFT, border=4 )
 		
 		rowColSizer.Add( wx.StaticText( self, label=_('Remote IP Address:') ),
 						row=row, col=0, flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )

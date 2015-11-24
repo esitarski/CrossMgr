@@ -642,13 +642,16 @@ def writeRace():
 		mainWin.writeRace()
 		
 def writeConfig( key, value ):
-	if mainWin:
+	try:
 		return mainWin.config.Write( key, value )
+	except:
+		pass
 
 def readConfig( key, defaultVal ):
-	if mainWin:
+	try:
 		return mainWin.config.Read( key, defaultVal )
-	return None
+	except:
+		return None
 	
 def getFileName():
 	return mainWin.fileName if mainWin is not None else None
