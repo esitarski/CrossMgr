@@ -30,19 +30,20 @@ def BuildHelpIndex():
 	nonNumeric = re.compile( r'[^\d]' )
 
 	def addDocument( fname, section, lastTitle, textCur ):
+		# print u'addDocument: lastTitle={}'.format(lastTitle)
 		if lastTitle and textCur:
 			section = '|'.join( section ) if section else lastTitle.get_text()
-			# print 'Indexing: %s: %s' % (os.path.basename(fname), section)
-			content = newLines.sub( '\n', '\n'.join(textCur) )
-			writer.add_document(	path = os.path.basename(fname) + '#' + lastTitle['id'],
+			# print u'Indexing: {}: {}'.format(os.path.basename(fname), section)
+			content = newLines.sub( u'\n', u'\n'.join(textCur) )
+			writer.add_document(	path = os.path.basename(fname) + u'#' + lastTitle['id'],
 									title = lastTitle.get_text(),
 									section = section,
-									level = int(nonNumeric.sub('', lastTitle.name)),
+									level = int(nonNumeric.sub(u'', lastTitle.name)),
 									content = content )
 
 	# Extract content sections from the html pages.
 	for f in glob.iglob( os.path.join(htmlDocDir, '*.html') ):
-		doc = BeautifulSoup( open(f).read() )
+		doc = BeautifulSoup( open(f).read(), 'html.parser' )
 		div = doc.find('div', class_='content')
 		if not div:
 			continue
@@ -50,12 +51,12 @@ def BuildHelpIndex():
 		lastTitle = None
 		textCur = []
 		section = []
-		for child in div.children:
+		for child in div.contents:
 			try:
 				tag = child.name
 			except:
 				tag = None
-				
+			
 			if tag not in titleTags:
 				try:
 					textCur.append( child.get_text() )
