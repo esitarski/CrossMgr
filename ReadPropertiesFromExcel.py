@@ -35,6 +35,7 @@ def ReadPropertiesFromExcel( reader ):
 		('GATrackingID',	'gaTrackingID',		's'),
 		('Road Race Finish Times',	'roadRaceFinishTimes',	'b'),
 		('No Data DNS',		'setNoDataDNS',		'b'),
+		('Chip Reader Type','chipReaderType',	'n'),
 	)
 
 	AttributeFromHeader = { h: a for h, a, t in HeadersFields }
