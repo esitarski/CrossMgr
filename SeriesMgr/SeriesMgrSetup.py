@@ -12,6 +12,7 @@ if os.path.exists('build'):
 # Copy all dependent files into this folder.
 copyFiles = [
 	"Model.py",
+	"minimal_intervals.py",
 	"Utils.py",
 	"rsonlite.py",
 	"Checklist.py",
