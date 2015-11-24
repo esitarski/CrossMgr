@@ -185,6 +185,7 @@ class RaceOptionsProperties( wx.Panel ):
 		
 		self.showDetails = wx.CheckBox( self, label=_("Show Lap Notes, Edits and Projected Times in HTML Output") )
 		self.showCourseAnimationInHtml = wx.CheckBox( self, label=_("Show Course Animation in Html") )
+		self.showCourseAnimationInHtml.SetValue( True )
 
 		self.licenseLinkTemplateLabel = wx.StaticText( self, label=_('License Link HTML Template: ') )
 		self.licenseLinkTemplate = wx.TextCtrl( self, size=(64,-1), style=wx.TE_PROCESS_ENTER )
