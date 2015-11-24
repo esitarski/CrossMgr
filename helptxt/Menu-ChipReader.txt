@@ -69,7 +69,7 @@ Press the "Start RFID Test" button in CrossMgr.  This tells CrossMgr to connect 
 You may receive a warning if you do not have an Excel sheet configured.
 If you just want to test the receiver, you don't need to worry about the warning.  If you are trying to use RFID tags during a race, you will need a properly configured Excel sheet to associate the tags to the rider information.
 
-__JChip:)) turn on the JChip receiver.  In the CrossMgr Messages section, you should soon see the connection succeed.  If not, check that you have the correct "Remote IP Address" and "Remote Port".  You may need to open port 50353 in Windows.
+__JChip:__ turn on the JChip receiver.  In the CrossMgr Messages section, you should soon see the connection succeed.  If not, check that you have the correct "Remote IP Address" and "Remote Port".  You may need to open port 50353 in Windows.
 
 __RaceResult:__ make sure it is on and plugged into the network.  If CrossMgr cannot find it, you may need to open port 3601 in Windows.
 
