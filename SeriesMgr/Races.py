@@ -18,9 +18,12 @@ class Races(wx.Panel):
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent)
 		
-		self.seriesNameLabel = wx.StaticText( self, wx.ID_ANY, 'Series Name:' )
-		self.seriesName = wx.TextCtrl( self, wx.ID_ANY )
+		self.seriesNameLabel = wx.StaticText( self, label='Series Name:' )
+		self.seriesName = wx.TextCtrl( self )
 
+		self.organizerNameLabel = wx.StaticText( self, label='Organizer:' )
+		self.organizerName = wx.TextCtrl( self )
+		
 		self.headerNames = ['Race', 'Points', 'Race File']
 		
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
@@ -60,16 +63,20 @@ class Races(wx.Panel):
 		self.removeButton = wx.Button( self, wx.ID_ANY, 'Remove Race' )
 		self.removeButton.Bind( wx.EVT_BUTTON, self.doRemoveRace )
 
-		hsName = wx.BoxSizer( wx.HORIZONTAL )
-		hsName.Add( self.seriesNameLabel, 0, flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL, border = 4 )
-		hsName.Add( self.seriesName, 1, flag=wx.ALL|wx.EXPAND, border = 4 )
+		fgs = wx.FlexGridSizer( rows=2, cols=2, vgap=2, hgap=2 )
+		fgs.AddGrowableCol( 1, proportion=1 )
+		
+		fgs.Add( self.seriesNameLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
+		fgs.Add( self.seriesName, flag=wx.EXPAND )
+		fgs.Add( self.organizerNameLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
+		fgs.Add( self.organizerName, flag=wx.EXPAND )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.addButton, 0, flag=wx.ALL, border = 4 )
 		hs.Add( self.removeButton, 0, flag=wx.ALL, border = 4 )
 		
 		sizer = wx.BoxSizer(wx.VERTICAL)
-		sizer.Add(hsName, 0, flag=wx.EXPAND)
+		sizer.Add(fgs, 0, flag=wx.EXPAND|wx.ALL, border=4 )
 		sizer.Add(hs, 0, flag=wx.EXPAND)
 		sizer.Add(self.grid, 1, flag=wx.EXPAND|wx.ALL, border = 6)
 		self.SetSizer(sizer)
@@ -168,6 +175,7 @@ class Races(wx.Panel):
 		wx.CallAfter( self.gridAutoSize )
 		
 		self.seriesName.SetValue( SeriesModel.model.name )
+		self.organizerName.SetValue( SeriesModel.model.organizer )
 	
 	def commit( self ):
 		self.grid.DisableCellEditControl()	# Make sure the current edit is committed.
@@ -187,6 +195,10 @@ class Races(wx.Panel):
 		
 		if self.seriesName.GetValue() != model.name:
 			model.name = self.seriesName.GetValue()
+			model.changed = True
+			
+		if self.organizerName.GetValue() != model.organizer:
+			model.organizer = self.organizerName.GetValue()
 			model.changed = True
 			
 		wx.CallAfter( self.refresh )

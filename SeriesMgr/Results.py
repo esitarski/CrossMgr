@@ -19,6 +19,7 @@ import FtpWriteFile
 from ExportGrid import tag
 
 import xlwt
+import io
 import re
 import webbrowser
 
@@ -45,7 +46,7 @@ def getHtmlFileName():
 	defaultPath = os.path.dirname( modelFileName )
 	return os.path.join( defaultPath, fileName )
 	
-def getHtml( seriesFileName=None ):
+def getHtml( htmlfileName=None, seriesFileName=None ):
 	model = SeriesModel.model
 	scoreByTime = model.scoreByTime
 	scoreByPercent = model.scoreByPercent
@@ -74,20 +75,26 @@ def getHtml( seriesFileName=None ):
 			pointsStructuresList.append( race.pointStructure )
 		pointsStructures[race.pointStructure].append( race )
 	
-	html = StringIO.StringIO()
+	html = io.open( htmlfileName, 'w', encoding='utf-8', newline='' )
+	
+	def write( s ):
+		html.write( unicode(s) )
 	
 	with tag(html, 'html'):
 		with tag(html, 'head'):
 			with tag(html, 'title'):
-				html.write( title.replace('\n', ' ') )
+				write( title.replace('\n', ' ') )
 			with tag(html, 'meta', dict(charset="UTF-8",
 										author="Edward Sitarski",
 										copyright="Edward Sitarski, 2013-{}".format(datetime.datetime.now().strftime('%Y')),
 										generator="SeriesMgr")):
 				pass
 			with tag(html, 'style', dict( type="text/css")):
-				html.write( '''
+				write( u'''
 body{ font-family: sans-serif; }
+
+h1{ font-size: 250%; }
+h2{ font-size: 200%; }
 
 #idRaceName {
 	font-size: 200%;
@@ -250,8 +257,8 @@ hr { clear: both; }
 ''')
 
 			with tag(html, 'script', dict( type="text/javascript")):
-				html.write( '\nvar catMax={};\n'.format( len(categoryNames) ) )
-				html.write( '''
+				write( u'\nvar catMax={};\n'.format( len(categoryNames) ) )
+				write( u'''
 function removeClass( classStr, oldClass ) {
 	var classes = classStr.split( ' ' );
 	var ret = [];
@@ -366,10 +373,13 @@ function sortTableId( iTable, iCol ) {
 			with tag(html, 'table'):
 				with tag(html, 'tr'):
 					with tag(html, 'td', dict(valign='top')):
-						html.write( '<img id="idImgHeader" src="{}" />'.format(getHeaderGraphicBase64()) )
+						write( u'<img id="idImgHeader" src="{}" />'.format(getHeaderGraphicBase64()) )
 					with tag(html, 'td'):
-						with tag(html, 'h1'):
-							html.write( '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + cgi.escape(title) )
+						with tag(html, 'h1', {'style': 'margin-left: 1cm;'}):
+							write( cgi.escape(model.name) )
+						if model.organizer:
+							with tag(html, 'h2', {'style': 'margin-left: 1cm;'}):
+								write( u'by {}'.format(cgi.escape(model.organizer)) )
 			with tag(html, 'div', {'id':'buttongroup', 'class':'noprint'} ):
 				with tag(html, 'label', {'class':'green'} ):
 					with tag(html, 'input', {
@@ -378,7 +388,7 @@ function sortTableId( iTable, iCol ) {
 							'checked':"true",
 							'onclick':"selectCategory(-1);"} ):
 						with tag(html, 'span'):
-							html.write( 'All' )
+							write( u'All' )
 				for iTable, categoryName in enumerate(categoryNames):
 					with tag(html, 'label', {'class':'green'} ):
 						with tag(html, 'input', {
@@ -386,7 +396,7 @@ function sortTableId( iTable, iCol ) {
 								'name':"categorySelect",
 								'onclick':"selectCategory({});".format(iTable)} ):
 							with tag(html, 'span'):
-								html.write( cgi.escape(categoryName) )
+								write( unicode(cgi.escape(categoryName)) )
 			for iTable, categoryName in enumerate(categoryNames):
 				results, races = GetModelInfo.GetCategoryResults(
 					categoryName,
@@ -399,11 +409,11 @@ function sortTableId( iTable, iCol ) {
 				headerNames = HeaderNames + [u'{}'.format(r[1]) for r in races]
 				
 				with tag(html, 'div', {'id':'catContent{}'.format(iTable)} ):
-					html.write( '<p/>')
-					html.write( '<hr/>')
+					write( u'<p/>')
+					write( u'<hr/>')
 					
 					with tag(html, 'h2'):
-						html.write( cgi.escape(categoryName) )
+						write( cgi.escape(categoryName) )
 					with tag(html, 'table', {'class': 'results', 'id': 'idTable{}'.format(iTable)} ):
 						with tag(html, 'thead'):
 							with tag(html, 'tr'):
@@ -413,7 +423,7 @@ function sortTableId( iTable, iCol ) {
 											} ):
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,iHeader)) ):
 											pass
-										html.write( cgi.escape(col).replace('\n', '<br/>\n') )
+										write( unicode(cgi.escape(col).replace('\n', '<br/>\n')) )
 								for iRace, r in enumerate(races):
 									# r[0] = RaceData, r[1] = RaceName, r[2] = RaceURL, r[3] = Race
 									with tag(html, 'th', {
@@ -425,47 +435,47 @@ function sortTableId( iTable, iCol ) {
 											pass
 										if r[2]:
 											with tag(html,'a',dict(href=u'{}?raceCat={}'.format(r[2], urllib.quote(categoryName.encode('utf8')))) ):
-												html.write( cgi.escape(r[1]).replace('\n', '<br/>\n') )
+												write( unicode(cgi.escape(r[1]).replace('\n', '<br/>\n')) )
 										else:
-											html.write( cgi.escape(r[1]).replace('\n', '<br/>\n') )
+											write( unicode(cgi.escape(r[1]).replace('\n', '<br/>\n')) )
 										if r[0]:
-											html.write( '<br/>' )
+											write( u'<br/>' )
 											with tag(html, 'span', {'class': 'smallFont'}):
-												html.write( r[0].strftime('%b %d, %Y') )
+												write( unicode(r[0].strftime('%b %d, %Y')) )
 										if not scoreByTime and not scoreByPercent:
-											html.write( '<br/>' )
+											write( u'<br/>' )
 											with tag(html, 'span', {'class': 'smallFont'}):
-												html.write( u'Top {}'.format(len(r[3].pointStructure)) )
+												write( u'Top {}'.format(len(r[3].pointStructure)) )
 						with tag(html, 'tbody'):
 							for pos, (name, license, team, points, gap, racePoints) in enumerate(results):
 								with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
 									with tag(html, 'td', {'class':'rightAlign'}):
-										html.write( unicode(pos+1) )
+										write( unicode(pos+1) )
 									with tag(html, 'td'):
-										html.write( unicode(name or u'') )
+										write( unicode(name or u'') )
 									with tag(html, 'td'):
 										if licenseLinkTemplate and license:
 											with tag(html, 'a', {'href':u'{}{}'.format(licenseLinkTemplate, license), 'target':'_blank'}):
-												html.write( unicode(license or u'') )
+												write( unicode(license or u'') )
 										else:
-											html.write( unicode(license or u'') )
+											write( unicode(license or u'') )
 									with tag(html, 'td'):
-										html.write( unicode(team or '') )
+										write( unicode(team or '') )
 									with tag(html, 'td', {'class':'rightAlign'}):
-										html.write( unicode(points or '') )
+										write( unicode(points or '') )
 									with tag(html, 'td', {'class':'rightAlign'}):
-										html.write( unicode(gap or '') )
+										write( unicode(gap or '') )
 									for rPoints, rRank in racePoints:
 										if rPoints:
 											with tag(html, 'td', {'class':'leftBorder points' + (' ignored' if u'**' in u'{}'.format(rPoints) else '')}):
-												html.write( u'{}'.format(rPoints).replace(u'[',u'').replace(u']',u'').replace(' ', '&nbsp;') )
+												write( u'{}'.format(rPoints).replace(u'[',u'').replace(u']',u'').replace(' ', '&nbsp;') )
 										else:
 											with tag(html, 'td', {'class':'leftBorder'}):
 												pass
 										
 										if rRank:
 											with tag(html, 'td', {'class':'rank'}):
-												html.write( u'({})'.format(Utils.ordinal(rRank).replace(' ', '&nbsp;')) )
+												write( u'({})'.format(Utils.ordinal(rRank).replace(' ', '&nbsp;')) )
 										else:
 											with tag(html, 'td'):
 												pass
@@ -473,11 +483,11 @@ function sortTableId( iTable, iCol ) {
 			#-----------------------------------------------------------------------------
 			if bestResultsToConsider > 0:
 				with tag(html, 'p'):
-					html.write( u'** - Result not considered.  Not in best of {} scores.'.format(bestResultsToConsider) )
+					write( u'** - Result not considered.  Not in best of {} scores.'.format(bestResultsToConsider) )
 					
 			if mustHaveCompleted > 0:
 				with tag(html, 'p'):
-					html.write( u'Participants completing fewer than {} events are not shown.'.format(mustHaveCompleted) )
+					write( u'Participants completing fewer than {} events are not shown.'.format(mustHaveCompleted) )
 					
 			#-----------------------------------------------------------------------------
 			
@@ -488,22 +498,22 @@ function sortTableId( iTable, iCol ) {
 					pass
 				
 				with tag(html, 'h2'):
-					html.write( 'Point Structures' )
+					write( 'Point Structures' )
 				with tag(html, 'table' ):
 					for ps in pointsStructuresList:
 						with tag(html, 'tr'):
 							for header in [ps.name, u'Races Scored with "{}"'.format(ps.name)]:
 								with tag(html, 'th'):
-									html.write( header )
+									write( header )
 						
 						with tag(html, 'tr'):
 							with tag(html, 'td', {'class': 'topAlign'}):
-								html.write( ps.getHtml() )
+								write( ps.getHtml() )
 							with tag(html, 'td', {'class': 'topAlign'}):
 								with tag(html, 'ul'):
 									for r in pointsStructures[ps]:
 										with tag(html, 'li'):
-											html.write( r.getRaceName() )
+											write( r.getRaceName() )
 					
 					with tag(html, 'tr'):
 						with tag(html, 'td'):
@@ -519,16 +529,16 @@ function sortTableId( iTable, iCol ) {
 					pass
 					
 				with tag(html, 'h2'):
-					html.write( 'Tie Breaking Rules' )
+					write( u'Tie Breaking Rules' )
 					
 				with tag(html, 'p'):
-					html.write( "If two or more riders are tied on points, the following rules will be applied in sequence until the tie is broken:" )
+					write( u"If two or more riders are tied on points, the following rules will be applied in sequence until the tie is broken:" )
 				isFirst = True
-				tieLink = "if still a tie, use "
+				tieLink = u"if still a tie, use "
 				with tag(html, 'ol'):
 					if model.useMostEventsCompleted:
 						with tag(html, 'li'):
-							html.write( "{}number of events completed".format( tieLink if not isFirst else "" ) )
+							write( u"{}number of events completed".format( tieLink if not isFirst else "" ) )
 							isFirst = False
 					if model.numPlacesTieBreaker != 0:
 						finishOrdinals = [Utils.ordinal(p+1) for p in xrange(model.numPlacesTieBreaker)]
@@ -537,20 +547,20 @@ function sortTableId( iTable, iCol ) {
 						else:
 							finishStr = u', '.join(finishOrdinals[:-1]) + u' then ' + finishOrdinals[-1]
 						with tag(html, 'li'):
-							html.write( "{}number of {} place finishes".format( tieLink if not isFirst else "",
+							write( u"{}number of {} place finishes".format( tieLink if not isFirst else "",
 								finishStr,
 							) )
 							isFirst = False
 					with tag(html, 'li'):
-						html.write( "{}finish position in most recent event".format(tieLink if not isFirst else "") )
+						write( u"{}finish position in most recent event".format(tieLink if not isFirst else "") )
 						isFirst = False
 				
 			#-----------------------------------------------------------------------------
 			with tag(html, 'p'):
 				with tag(html, 'a', dict(href='http://sites.google.com/site/crossmgrsoftware')):
-					html.write( 'Powered by CrossMgr' )
+					write( u'Powered by CrossMgr' )
 	
-	return html.getvalue()
+	html.close()
 
 brandText = 'Powered by CrossMgr (sites.google.com/site/crossmgrsoftware)'
 
@@ -816,7 +826,11 @@ class Results(wx.Panel):
 			
 			rowCur = 0
 			ws.write_merge( rowCur, rowCur, 0, 8, model.name, headerStyle )
-			rowCur += 2
+			rowCur += 1
+			if model.organizer:
+				ws.write_merge( rowCur, rowCur, 0, 8, u'by {}'.format(model.organizer), headerStyle )
+				rowCur += 1
+			rowCur += 1
 			colCur = 0
 			ws.write_merge( rowCur, rowCur, colCur, colCur + 4, categoryName, xlwt.easyxf(
 																	"font: name Arial, bold on;"
@@ -871,10 +885,9 @@ class Results(wx.Panel):
 		htmlfileName = getHtmlFileName()
 
 		try:
-			with io.open(htmlfileName, 'w', encoding='utf-8') as fp:
-				fp.write( getHtml() )
+			getHtml( htmlfileName )
 			webbrowser.open( htmlfileName, new = 2, autoraise = True )
-			Utils.MessageOK(self, 'Html file written to:\n\n   %s' % htmlfileName, 'html Write')
+			Utils.MessageOK(self, u'Html file written to:\n\n   {}'.format(htmlfileName), 'html Write')
 		except IOError:
 			Utils.MessageOK(self,
 						'Cannot write "%s".\n\nCheck if this file is open.\nIf so, close it, and try again.' % htmlfileName,
@@ -886,7 +899,13 @@ class Results(wx.Panel):
 				Utils.MessageOK( self, 'You must save your Series to a file first.', 'Save Series' )
 				return
 		
-		with FtpWriteFile.FtpPublishDialog( self, getHtml() )  as dlg:
+		htmlfileName = getHtmlFileName()
+		try:
+			getHtml( htmlfileName )
+		except IOError:
+			return
+			
+		with FtpWriteFile.FtpPublishDialog( self, fileName=htmlfileName ) as dlg:
 			dlg.ShowModal();
 	
 	def commit( self ):

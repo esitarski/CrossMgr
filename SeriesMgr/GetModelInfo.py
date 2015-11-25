@@ -292,7 +292,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			for rider, finishes in riderFinishes.iteritems():
 				iTimes = [(i, t) for i, t in enumerate(finishes) if t is not None]
 				if len(iTimes) > bestResultsToConsider:
-					iTimes.sort( key=lambda x: (x[1], -x[0]) )
+					iTimes.sort( key=lambda x: (x[1], x[0]) )
 					for i, t in iTimes[bestResultsToConsider:]:
 						riderTFinish[rider] -= t
 						v = riderResults[rider][i]
@@ -349,7 +349,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			for rider, finishes in riderFinishes.iteritems():
 				iPercents = [(i, p) for i, p in enumerate(finishes) if p is not None]
 				if len(iPercents) > bestResultsToConsider:
-					iPercents.sort( key=lambda x: (-x[1], -x[0]) )
+					iPercents.sort( key=lambda x: (-x[1], x[0]) )
 					for i, p in iPercents[bestResultsToConsider:]:
 						riderPercentTotal[rider] -= p
 						v = riderResults[rider][i]
@@ -395,11 +395,11 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			for rider, finishes in riderFinishes.iteritems():
 				iPoints = [(i, p) for i, p in enumerate(finishes) if p is not None]
 				if len(iPoints) > bestResultsToConsider:
-					iPoints.sort( key=lambda x: (-x[1], -x[0]) )
+					iPoints.sort( key=lambda x: (-x[1], x[0]) )
 					for i, p in iPoints[bestResultsToConsider:]:
 						riderPoints[rider] -= p
 						v = riderResults[rider][i]
-						riderResults[rider][i] = (ignoreFormat.format(v[0]), v[1])
+						riderResults[rider][i] = (ignoreFormat.format(v[0] if v[0] else ''), v[1])
 
 		# Filter out minimal events completed.
 		riderOrder = [rider for rider, results in riderResults.iteritems() if riderEventsCompleted[rider] >= mustHaveCompleted]

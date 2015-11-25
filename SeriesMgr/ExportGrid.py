@@ -16,11 +16,11 @@ from contextlib import contextmanager
 def tag( buf, name, attrs = {} ):
 	if not isinstance(attrs, dict) and attrs:
 		attrs = { 'class': attrs }
-	buf.write( '<%s>' % ' '.join(
-			[name] + ['%s="%s"' % (attr, value) for attr, value in attrs.iteritems()]
-		) )
+	buf.write(
+		u'<{}>'.format(u' '.join( [name] + [u'{}="{}"'.format(attr, value) for attr, value in attrs.iteritems()] ) )
+	)
 	yield
-	buf.write( '</%s>\n' % name )
+	buf.write( u'</{}>\n'.format(name) )
 
 brandText = 'Powered by SprintMgr (sites.google.com/site/crossmgrsoftware)'
 
