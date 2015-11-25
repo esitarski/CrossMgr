@@ -11,6 +11,7 @@ import webbrowser
 import locale
 import traceback
 import xlwt
+import base64
 import wx.lib.agw.flatnotebook as fnb
 
 FontSize = 24
@@ -39,6 +40,7 @@ from Errors				import Errors
 import Version
 from Printing			import SeriesMgrPrintout
 from ExportGrid			import ExportGrid, tag
+from SetGraphic			import SetGraphicDialog
 import CmdLine
 
 #----------------------------------------------------------------------------------
@@ -215,6 +217,10 @@ class MainWin( wx.Frame ):
 		self.optionsMenu.Append( idCur , _("Copy Log File to &Clipboard"), _("Copy Log File to &Clipboard") )
 		self.Bind(wx.EVT_MENU, self.menuCopyLogFileToClipboard, id=idCur )
 		
+		idCur = wx.NewId()
+		self.optionsMenu.Append( idCur , _("Set &Graphic..."), _("Set Graphic for Output") )
+		self.Bind(wx.EVT_MENU, self.menuSetGraphic, id=idCur )
+		
 		self.menuBar.Append( self.optionsMenu, _("&Options") )
 
 		#-----------------------------------------------------------------------
@@ -302,6 +308,46 @@ class MainWin( wx.Frame ):
 	def getDirName( self ):
 		return Utils.getDirName()
 		
+	def getGraphicFName( self ):
+		defaultFName = os.path.join(Utils.getImageFolder(), 'SeriesMgr128.png')
+		graphicFName = self.config.Read( 'graphic', defaultFName )
+		if graphicFName != defaultFName:
+			try:
+				with open(graphicFName, 'rb') as f:
+					return graphicFName
+			except IOError:
+				pass
+		return defaultFName
+	
+	def getGraphicBase64( self ):
+		graphicFName = self.getGraphicFName()
+		if not graphicFName:
+			return None
+		fileType = os.path.splitext(graphicFName)[1].lower()
+		if not fileType:
+			return None
+		fileType = fileType[1:]
+		if fileType == 'jpg':
+			fileType = 'jpeg'
+		if fileType not in ['png', 'gif', 'jpeg']:
+			return None
+		try:
+			with open(graphicFName, 'rb') as f:
+				b64 = 'data:image/%s;base64,%s' % (fileType, base64.standard_b64encode(f.read()))
+				return b64
+		except IOError:
+			pass
+		return None
+	
+	def menuSetGraphic( self, event ):
+		imgPath = self.getGraphicFName()
+		dlg = SetGraphicDialog( self, graphic = imgPath )
+		if dlg.ShowModal() == wx.ID_OK:
+			imgPath = dlg.GetValue()
+			self.config.Write( 'graphic', imgPath )
+			self.config.Flush()
+		dlg.Destroy()
+
 	def menuPageSetup( self, event ):
 		psdd = wx.PageSetupDialogData(self.printData)
 		psdd.CalculatePaperSizeFromId()

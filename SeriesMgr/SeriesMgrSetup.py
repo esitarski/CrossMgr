@@ -28,6 +28,8 @@ copyFiles = [
 	"MatchingCategory.py",
 	"ReadCategoriesFromExcel.py",
 	"ReadPropertiesFromExcel.py",
+	"SetGraphic.py",
+	"imagebrowser.py",
 	"scramble.py",
 ]
 

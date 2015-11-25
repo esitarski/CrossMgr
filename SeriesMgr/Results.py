@@ -30,8 +30,14 @@ def getHeaderNames():
 
 #----------------------------------------------------------------------------------
 
-def getHeaderGraphic():
-	return os.path.join(Utils.getImageFolder(), 'SeriesMgr128.png')
+def getHeaderGraphicBase64():
+	if Utils.mainWin:
+		b64 = Utils.mainWin.getGraphicBase64()
+		if b64:
+			return b64
+	graphicFName = os.path.join(Utils.getImageFolder(), 'SeriesMgr128.png')
+	with open(graphicFName, 'rb') as f:
+		return 'data:image/png;base64,{}'.format(base64.standard_b64encode(f.read()))
 
 def getHtmlFileName():
 	modelFileName = Utils.getFileName() if Utils.getFileName() else 'Test.smn'
@@ -360,8 +366,7 @@ function sortTableId( iTable, iCol ) {
 			with tag(html, 'table'):
 				with tag(html, 'tr'):
 					with tag(html, 'td', dict(valign='top')):
-						data = base64.b64encode(io.open(getHeaderGraphic(),'rb').read())
-						html.write( '<img id="idImgHeader" src="data:image/png;base64,%s" />' % data )
+						html.write( '<img id="idImgHeader" src="{}" />'.format(getHeaderGraphicBase64()) )
 					with tag(html, 'td'):
 						with tag(html, 'h1'):
 							html.write( '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + cgi.escape(title) )
