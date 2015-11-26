@@ -100,7 +100,7 @@ class RaceResult( object ):
 		return tuple( safe_upper(getattr(self, a)) for a in fields )
 		
 	def key( self ):
-		return (self.full_name.upper(), self.license)
+		return (Utils.removeDiacritic(self.full_name.upper()), Utils.removeDiacritic(self.license))
 		
 	@property
 	def full_name( self ):
