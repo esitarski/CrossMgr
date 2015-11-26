@@ -93,6 +93,7 @@ from TemplateSubstitute import TemplateSubstitute
 import ChangeRaceStartTime
 from PageDialog			import PageDialog
 import ChipReader
+import Flags
 
 import traceback
 '''
@@ -1532,6 +1533,10 @@ class MainWin( wx.Frame ):
 		payload['timestamp']			= [tNow.ctime(), tLastRaceTime]
 		payload['email']				= self.getEmail()
 		payload['data']					= GetAnimationData(getExternalData=True)
+		payload['flags'] = (
+			Flags.GetFlagBase64ForUCI( r['UCICode'] for r in payload['data'].itervalues() if r.get('UCICode',None) )
+			if 'UCICode' in payload['infoFields'] else {}
+		)
 		payload['catDetails']			= GetCategoryDetails( True, True )
 		payload['version']				= Version.AppVerName
 		if gpsPoints:

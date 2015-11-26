@@ -12,6 +12,7 @@ from ReadSignOnSheet import ReportFields
 from FitSheetWrapper import FitSheetWrapper
 import qrcode
 import urllib
+import Flags
 # from reportlab.lib.pagesizes import letter, A4
 
 #---------------------------------------------------------------------------
@@ -402,6 +403,7 @@ class ExportGrid( object ):
 		# Get the table headers.
 		headers = []
 		speedCol = None
+		uciCodeCol = None
 		for col, c in enumerate(self.colnames):
 			if c == _('Speed'):
 				speedCol = col
@@ -409,6 +411,8 @@ class ExportGrid( object ):
 					c = dataDraw[col][0].split()[1]
 				except IndexError:
 					pass
+			elif c == _('UCICode'):
+				uciCodeCol = col
 			headers.append( c )
 
 		table = [headers]
@@ -426,6 +430,8 @@ class ExportGrid( object ):
 					v = (v.split() or [''])[0]
 					if v == u'"':
 						v += u'    '
+				elif c == uciCodeCol:
+					v = u'     ' + v	# Add some spacing to fit the flag on the UCI code.
 				row.append( v )
 			table.append( row )
 	
@@ -435,6 +441,21 @@ class ExportGrid( object ):
 			table, 
 			leftJustifyCols=self.leftJustifyCols, hasHeader=True, horizontalLines=True, verticalLines=False,
 		)
+		if uciCodeCol is not None:
+			flagStatus = {}
+			for r in xrange(1, len(table)):
+				ioc = table[r][uciCodeCol].strip()[:3].upper()
+				flagFName = Flags.GetFlagFName( ioc )
+				if ioc not in flagStatus:
+					flagStatus[ioc] = os.path.exists( flagFName )
+				if not flagStatus[ioc]:
+					continue
+				x, y, height = pdf.xCol[uciCodeCol], pdf.yRow[r], pdf.yRow[r+1] - pdf.yRow[r]
+				img = Flags.GetFlagImage( ioc )
+				h = int( height * 0.66 )
+				w = int( float(img.GetWidth()) / float(img.GetHeight()) * float(h) )
+				padding = (height - h) // 2
+				pdf.image( flagFName, x=x, y=y+int(padding*1.75), w=w, h=h, type='PNG' )
 				
 		# Switch to smaller font.
 		h = borderPix / 4.0

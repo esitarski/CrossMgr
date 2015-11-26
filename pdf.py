@@ -61,7 +61,7 @@ class PDF( fpdf.FPDF ):
 			for row in table:
 				yCur += lineHeight
 				self.line( x, yCur, x+widthMax, yCur )
-				
+
 		yCur = y + fs
 		for r, row in enumerate(table):
 			if r == 0 and hasHeader:
@@ -77,4 +77,11 @@ class PDF( fpdf.FPDF ):
 				self.set_font( '', '' )
 			yCur += lineHeight
 		
+		self.yRow = [y + lineHeight * 0.08]
+		for i in xrange(len(table)+1):
+			self.yRow.append( self.yRow[-1] + lineHeight )
+		
+		self.xCol = [x+cellPad]
+		for w in widths:
+			self.xCol.append( self.xCol[-1] + w )
 		return widthMax, heightMax

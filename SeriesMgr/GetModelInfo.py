@@ -62,6 +62,12 @@ def formatTimeGap( secs, highPrecision = False ):
 	else:
 		return "%s%d'%02d%s\"" % (sign, minutes, secs, decimal)
 
+def safe_upper( f ):
+	try:
+		return f.upper()
+	except:
+		return f
+
 class RaceResult( object ):
 	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, raceFileName, bib, rank, raceOrganizer,
 					raceURL = None, raceInSeries = None, tFinish = None, tProjected = None ):
@@ -84,14 +90,17 @@ class RaceResult( object ):
 		
 		self.tFinish = tFinish
 		self.tProjected = tProjected if tProjected else tFinish
-		
+	
 	def keySort( self ):
 		fields = ['categoryName', 'lastName', 'firstName', 'license', 'raceDate', 'raceName']
-		return tuple( getattr(self, a) for a in fields )
+		return tuple( safe_upper(getattr(self, a)) for a in fields )
 		
 	def keyMatch( self ):
 		fields = ['categoryName', 'lastName', 'firstName', 'license']
-		return tuple( getattr(self, a) for a in fields )
+		return tuple( safe_upper(getattr(self, a)) for a in fields )
+		
+	def key( self ):
+		return (self.full_name.upper(), self.license)
 		
 	@property
 	def full_name( self ):
@@ -265,6 +274,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 	riderEventsCompleted = defaultdict( int )
 	riderPlaceCount = defaultdict( lambda : defaultdict(int) )
 	riderTeam = defaultdict( lambda : u'' )
+	riderNameLicense = {}
 	
 	ignoreFormat = u'[{}**]'
 	
@@ -278,7 +288,8 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 				tFinish = float(rr.tFinish)
 			except ValueError:
 				continue
-			rider = (rr.full_name, rr.license)
+			rider = rr.key()
+			riderNameLicense[rider] = (rr.full_name, rr.license)
 			if rr.team and rr.team != u'0':
 				riderTeam[rider] = rr.team
 			riderResults[rider][raceSequence[rr.raceInSeries]] = (formatTime(tFinish, True), rr.rank)
@@ -315,7 +326,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		
 		# List of:
 		# lastName, firstName, license, team, tTotalFinish, [list of (points, position) for each race in series]
-		categoryResult = [list(rider) + [riderTeam[rider], formatTime(riderTFinish[rider],True), riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
+		categoryResult = [list(riderNameLicense[rider]) + [riderTeam[rider], formatTime(riderTFinish[rider],True), riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
 		return categoryResult, races
 	
 	elif scoreByPercent:
@@ -334,7 +345,8 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 				tFinish = rr.tProjected
 			except ValueError:
 				continue
-			rider = (rr.full_name, rr.license)
+			rider = rr.key()
+			riderNameLicense[rider] = (rr.full_name, rr.license)
 			if rr.team and rr.team != u'0':
 				riderTeam[rider] = rr.team
 			percent = min( 100.0, (tFastest / tFinish) * 100.0 if tFinish > 0.0 else 0.0 )
@@ -371,7 +383,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 					
 		# List of:
 		# lastName, firstName, license, team, totalPercent, [list of (percent, position) for each race in series]
-		categoryResult = [list(rider) + [riderTeam[rider], percentFormat.format(riderPercentTotal[rider]), riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
+		categoryResult = [list(riderNameLicense[rider]) + [riderTeam[rider], percentFormat.format(riderPercentTotal[rider]), riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
 		return categoryResult, races
 		
 	else:
@@ -380,7 +392,8 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		riderFinishes = defaultdict( lambda : [None] * len(races) )
 		riderPoints = defaultdict( int )
 		for rr in raceResults:
-			rider = (rr.full_name, rr.license)
+			rider = rr.key()
+			riderNameLicense[rider] = (rr.full_name, rr.license)
 			if rr.team and rr.team != u'0':
 				riderTeam[rider] = rr.team
 			points = pointsForRank[rr.raceFileName][rr.rank]
@@ -422,7 +435,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		
 		# List of:
 		# lastName, firstName, license, team, points, [list of (points, position) for each race in series]
-		categoryResult = [list(rider) + [riderTeam[rider], riderPoints[rider], riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
+		categoryResult = [list(riderNameLicense[rider]) + [riderTeam[rider], riderPoints[rider], riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
 		return categoryResult, races
 
 def GetTotalUniqueParticipants( raceResults ):

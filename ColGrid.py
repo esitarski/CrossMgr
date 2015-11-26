@@ -16,6 +16,7 @@ class ColTable( Grid.PyGridTableBase ):
 		self.attrs = {}				# Set of unique cell attributes.
 		self.rightAlign = False
 		self.leftAlignCols = set()
+		self.colRenderer = {}
 		
 		# The base class must be initialized *first*
 		Grid.PyGridTableBase.__init__(self)
@@ -45,6 +46,9 @@ class ColTable( Grid.PyGridTableBase ):
 				self.leftAlignCols.remove( col )
 			except KeyError:
 				pass
+	
+	def SetColRenderer( self, col, renderer ):
+		self.colRenderer[col] = renderer
 	
 	def _adjustDimension( self, grid, current, new, isCol ):
 		if isCol:
@@ -176,7 +180,7 @@ class ColTable( Grid.PyGridTableBase ):
 
 	def GetAttr(self, row, col, someExtraParameter ):
 		rc = (row, col)
-		key = (self.textColour.get(rc, None), self.backgroundColour.get(rc, None))
+		key = (self.textColour.get(rc, None), self.backgroundColour.get(rc, None), col)
 		try:
 			attr = self.attrs[key]
 		except KeyError:
@@ -196,6 +200,7 @@ class ColTable( Grid.PyGridTableBase ):
 			hCellAlign = wx.ALIGN_RIGHT
 		if hCellAlign is not None:
 			attr.SetAlignment( hAlign = hCellAlign, vAlign = wx.ALIGN_CENTRE )
+		attr.SetRenderer( self.colRenderer.get(col, wx.grid.GridCellStringRenderer()).Clone() )
 			
 		# We must increment the ref count so the attr does not get GC'd after it is referenced.
 		attr.IncRef()
@@ -257,6 +262,9 @@ class ColGrid(Grid.Grid):
 	
 	def SetColumn( self, iCol, colData ):
 		self._table.SetColumn( self, iCol, colData )
+	
+	def SetColRenderer( self, col, renderer ):
+		self._table.SetColRenderer( col, renderer )
 	
 	def GetData( self ):
 		return self._table.GetData()
