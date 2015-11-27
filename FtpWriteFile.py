@@ -9,7 +9,7 @@ import datetime
 import threading
 import Utils
 import Model
-from ExportGrid import getHeaderBitmap, getQRCodeBitmap
+from ExportGrid import getHeaderBitmap, drawQRCode
 
 import inspect
 def lineno():
@@ -266,29 +266,16 @@ class FtpQRCodePrintout( wx.Printout ):
 		else:
 			url = urllib.quote( url )
 			
-		bm = getQRCodeBitmap( url )
-		
 		qrWidth = int( min(heightPix - yPix - borderPix * 2, widthPix - borderPix * 2) )
-		magnify = int( qrWidth / bm.GetWidth() )
-		qrWidth = bm.GetWidth() * magnify
 		xLeft = (widthPix - qrWidth) // 2
-		yTop = yPix
-		
-		dc.SetBrush( wx.BLACK_BRUSH )
-		dc.SetPen( wx.TRANSPARENT_PEN )
-		
-		img = bm.ConvertToImage()
-		for y in xrange(img.GetWidth()):
-			for x in xrange(img.GetWidth()):
-				if img.GetRed(x, y) == 0:
-					dc.DrawRectangle( xLeft + x * magnify, yTop + y * magnify, magnify, magnify )
+		yTop = yPix		
+		drawQRCode( url, dc, xLeft, yTop, qrWidth )
 		
 		dc.SetFont( getFont(borderPix * 0.25) )
 		dc.SetTextForeground( wx.BLACK )
 		dc.SetTextBackground( wx.WHITE )
 		xText = widthPix - borderPix - dc.GetTextExtent(url)[0]
 		yText = yPix + qrWidth + borderPix
-		print url, xText, yText, widthPix, heightPix
 		dc.DrawText( url, xText, yText )
 			
 		return True

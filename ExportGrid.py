@@ -61,25 +61,20 @@ def getHeaderBitmap():
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), wx.BITMAP_TYPE_PNG )
 	return bitmap
 
-def getQRCodeBitmap( url ):
-	''' Get a QRCode image for the results url. '''
+def drawQRCode( url, dc, x, y, size ):
 	qr = qrcode.QRCode()
 	qr.add_data( 'http://' + url )
 	qr.make()
-	border = 0
-	img = wx.EmptyImage( qr.modules_count + border * 2, qr.modules_count + border * 2 )
-	bm = img.ConvertToMonoBitmap( 0, 0, 0 )
-	canvasQR = wx.MemoryDC()
-	canvasQR.SelectObject( bm )
-	canvasQR.SetBrush( wx.WHITE_BRUSH )
-	canvasQR.Clear()
-	canvasQR.SetPen( wx.BLACK_PEN )
+	dc.SetBrush( wx.BLACK_BRUSH )
+	dc.SetPen( wx.TRANSPARENT_PEN )
+	squareSize = float(size) / float(qr.modules_count)
+	offset = [int(squareSize*i + 0.5) for i in xrange(qr.modules_count+1)];
 	for row in xrange(qr.modules_count):
 		for col, v in enumerate(qr.modules[row]):
 			if v:
-				canvasQR.DrawPoint( border + col, border + row )
-	canvasQR.SelectObject( wx.NullBitmap )
-	return bm
+				dc.DrawRectangle( x + offset[col], y + offset[row], offset[col+1] - offset[col], offset[row+1] - offset[row] )
+	dc.SetBrush( wx.NullBrush )
+	dc.SetPen( wx.NullPen )
 
 class ExportGrid( object ):
 	PDFLineFactor = 1.10
@@ -186,6 +181,7 @@ class ExportGrid( object ):
 						rowDrawStart = 0, rowDrawCount = 1000000,
 						pageNumber = None, pageNumberTotal = None ):
 		self.combineFirstLastNames()
+		bitmapCache = {}
 		
 		self.rowDrawCount = rowDrawCount
 			
@@ -211,9 +207,7 @@ class ExportGrid( object ):
 		# We cannot use a GraphicContext because it does not support a PrintDC.
 		image = bitmap.ConvertToImage()
 		image.Rescale( graphicWidth, graphicHeight, wx.IMAGE_QUALITY_HIGH )
-		if dc.GetDepth() == 8:
-			image = image.ConvertToGreyscale()
-		bitmap = image.ConvertToBitmap( dc.GetDepth() )
+		bitmap = wx.BitmapFromImage( image.ConvertToGreyscale() if dc.GetDepth() == 8 else image )
 		dc.DrawBitmap( bitmap, xPix, yPix )
 		image, bitmap = None, None
 		
@@ -226,12 +220,7 @@ class ExportGrid( object ):
 		qrWidth = 0
 		if url:
 			qrWidth = graphicHeight
-			bm = getQRCodeBitmap( url )
-			img = bm.ConvertToImage()
-			img.Rescale( qrWidth, qrWidth, wx.IMAGE_QUALITY_NORMAL )
-			img = img.ConvertToGreyscale()
-			bm = img.ConvertToBitmap( dc.GetDepth() )
-			dc.DrawBitmap( bm, widthPix - borderPix - qrWidth, borderPix )
+			drawQRCode( url, dc, widthPix - borderPix - qrWidth, borderPix, qrWidth )
 			qrWidth += graphicBorder
 			url = url.replace( '%20', ' ' )
 		
@@ -247,6 +236,14 @@ class ExportGrid( object ):
 		heightFieldPix = heightPix - yPix - borderPix
 		
 		# Draw the table.
+		# Add space for the flag on the UCICode.
+		try:
+			iUCICodeCol = self.colnames.index( _("UCICode") )
+			for c, v in enumerate(self.data[iUCICodeCol]):
+				self.data[iUCICodeCol][c] = u'     ' + v
+		except ValueError:
+			iUCICodeCol = None
+		
 		# Remember: _getDataSizeTuple understands self.rowDrawCount and will compute the height using the count.
 		font = self._getFontToFit( widthFieldPix, heightFieldPix, lambda font: self._getDataSizeTuple(dc, font) )
 		dc.SetFont( font )
@@ -291,6 +288,23 @@ class ExportGrid( object ):
 						self._drawMultiLineText( dc, vStr, xPix, yPix )					# left justify
 					else:
 						self._drawMultiLineText( dc, vStr, xPix + colWidth - w, yPix )	# right justify
+				if col == iUCICodeCol:
+					ioc = vStr.strip()[:3]
+					try:
+						bmp = bitmapCache[ioc]
+					except KeyError:
+						img = Flags.GetFlagImage( ioc )
+						if img:
+							h = int( textHeight * 0.66 )
+							w = int( float(img.GetWidth()) / float(img.GetHeight()) * float(h) )
+							bmp = bitmapCache[ioc] = wx.BitmapFromImage( img.Scale(w, h, wx.IMAGE_QUALITY_HIGH) )
+						else:
+							bmp = bitmapCache[ioc] = None
+					if bmp:
+						padding = (textHeight - bmp.GetHeight()) // 2
+						dc.DrawBitmap( bmp, xPix, yPix+padding )
+						# dc.DrawRectangle( xPix, yPix+padding, bmp.GetWidth(), bmp.GetHeight() )
+
 				yPix += textHeight
 			yPixMax = max(yPixMax, yPix)
 			xPix += colWidth + wSpace
@@ -321,6 +335,11 @@ class ExportGrid( object ):
 				s = u'{} {}'.format(_('Page'), pageNumber)
 			w, h, lh = dc.GetMultiLineTextExtent( s, font )
 			self._drawMultiLineText( dc, s, widthPix - w - borderPix, yFooter )
+			
+		# Clean up the extra spaces for the flags.
+		if iUCICodeCol is not None:
+			for c, v in enumerate(self.data[iUCICodeCol]):
+				self.data[iUCICodeCol][c] = v.strip()
 	
 	def drawToFitPDF( self, pdf, orientation,
 						rowDrawStart = 0, rowDrawCount = 1000000,
