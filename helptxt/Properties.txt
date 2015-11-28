@@ -162,6 +162,9 @@ The idea behind this feature is that the riders are staged in a start area behin
 
 When using this feature, be sure to set the "First Lap Distance" in [Categories][] to compensate for the run-up distance.  This will ensure that the riders speeds are computed correctly.
 
+### Reader Type
+Either JChip/Impinj/Alien or RaceResult.  See [ChipReader][] for more details.
+
 ## Camera Options
 
 CrossMgr can record photos from an inexpensive USB camera as riders cross the finish line.

@@ -49,7 +49,7 @@ CrossMgr communicates with the Chip or RaceResult reader through a TCP/IP interf
 
 Field|Value|Description
 :----|:----|:----------
-Type|JChip/Impinj/Alien or RaceResult|The typs of reader you are using.  There is one setting for RaceResult.  Use the other setting for everything else.
+Type|JChip/Impinj/Alien or RaceResult|The type of reader you are using.
 Remote IP Address|One of the IP addresses shown on the screen|__JChip/Impinj/Alien:__ this is the IP address of the CrossMgr computer.  If there are more then one, one is generally for the LAN and the other is for the wireless connection.  To tell which is which, on Windows, in a "cmd" window, run "ipconfig".  On Mac/Linux, open a terminal and run "ifconfig".  Choose the IP address which matches you connection - LAN or wireless that you are using to connect the JChip receiver.  __RaceResult:__ this is the IP address of the RaceResult reader.  If you are on a LAN, the __AutoConnect__ button should find the reader automatically.  If not, or you are using a static IP, enter the IP of the RaceResult reader here.
 Remote Port|53135 or 3601|__JChip/Impnj/Alien:__ port on the CrossMgr computer that JChip reader or bridge programs connect to.  __RaceResult__ port that CrossMgr uses to talk to RaceResult.  You should not have to change these.
 

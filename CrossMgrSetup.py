@@ -56,12 +56,9 @@ def copyDir( d ):
 	destD = os.path.join(distDir, d)
 	if os.path.exists( destD ):
 		shutil.rmtree( destD )
-	os.mkdir( destD )
-	for i in os.listdir( d ):
-		if not i.endswith('.db') and not os.path.isdir(i):	# Ignore .db files and subdirs
-			shutil.copy( os.path.join(d, i), os.path.join(destD,i) )
+	shutil.copytree( d, destD, ignore=shutil.ignore_patterns('*.db') )
 			
-for dir in ['CrossMgrImages', os.path.join('CrossMgrImages', 'flags'), 'data', 'CrossMgrHtml', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex']: 
+for dir in ['CrossMgrImages', 'data', 'CrossMgrHtml', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex']: 
 	copyDir( dir )
 
 # Copy the locale.
