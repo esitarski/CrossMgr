@@ -50,8 +50,9 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	model = SeriesModel.model
 	scoreByTime = model.scoreByTime
 	scoreByPercent = model.scoreByPercent
-	bestResultsToConsider = SeriesModel.model.bestResultsToConsider
-	mustHaveCompleted = SeriesModel.model.mustHaveCompleted
+	bestResultsToConsider = model.bestResultsToConsider
+	mustHaveCompleted = model.mustHaveCompleted
+	hasUpgrades = model.upgradePaths
 	raceResults = model.extractAllRaceResults()
 	
 	categoryNames = sorted( set(rr.categoryName for rr in raceResults) )
@@ -488,7 +489,10 @@ function sortTableId( iTable, iCol ) {
 			if mustHaveCompleted > 0:
 				with tag(html, 'p'):
 					write( u'Participants completing fewer than {} events are not shown.'.format(mustHaveCompleted) )
-					
+			
+			if hasUpgrades:
+				with tag(html, 'p'):
+					write( u'pre-upg - Points carried forward from results in pre-upgrade category (factor adjusted - see below).' )
 			#-----------------------------------------------------------------------------
 			
 			if not scoreByTime and not scoreByPercent:
@@ -555,6 +559,13 @@ function sortTableId( iTable, iCol ) {
 						write( u"{}finish position in most recent event".format(tieLink if not isFirst else "") )
 						isFirst = False
 				
+				if hasUpgrades:
+					with tag(html, 'h2'):
+						write( u"Upgrades Progression" )
+					with tag(html, 'ol'):
+						for i in xrange(len(model.upgradePaths)):
+							with tag(html, 'li'):
+								write( u"{}: {:.2f} points in pre-upgrade category carried forward".format(model.upgradePaths[i], model.upgradeFactors[i]) )
 			#-----------------------------------------------------------------------------
 			with tag(html, 'p'):
 				with tag(html, 'a', dict(href='http://sites.google.com/site/crossmgrsoftware')):
@@ -602,9 +613,9 @@ class Results(wx.Panel):
 		self.exportToExcel.Bind( wx.EVT_BUTTON, self.onExportToExcel )
 
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.categoryLabel, 0, flag=wx.ALIGN_CENTER|wx.EXPAND|wx.ALL, border = 4 )
+		hs.Add( self.categoryLabel, 0, flag=wx.ALIGN_CENTRE|wx.ALIGN_CENTRE_VERTICAL|wx.EXPAND|wx.ALL, border = 4 )
 		hs.Add( self.categoryChoice, 0, flag=wx.ALL, border = 4 )
-		hs.Add( self.statsLabel, 0, flag=wx.ALIGN_CENTER|wx.EXPAND|wx.ALL, border = 4 )
+		hs.Add( self.statsLabel, 0, flag=wx.ALIGN_CENTER|wx.ALIGN_CENTRE_VERTICAL|wx.EXPAND|wx.ALL, border = 4 )
 		hs.AddStretchSpacer()
 		hs.Add( self.refreshButton, 0, flag=wx.ALL, border = 4 )
 		hs.AddSpacer( 52 )

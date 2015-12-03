@@ -181,7 +181,6 @@ class Points(wx.Panel):
 	
 	def onGridChange( self, event ):
 		row = event.GetRow()
-		print 'onGridChange', row
 		if row >= 0:
 			self.updateDepth( row )
 		wx.CallAfter( self.gridAutoSize )

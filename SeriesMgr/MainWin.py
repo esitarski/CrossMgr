@@ -35,6 +35,7 @@ import Utils
 import SeriesModel
 from Races				import Races
 from Points				import Points
+from Upgrades			import Upgrades
 from Results			import Results
 from Errors				import Errors
 import Version
@@ -243,6 +244,7 @@ class MainWin( wx.Frame ):
 		self.attrClassName = [
 			[ 'races',			Races,				'Races' ],
 			[ 'points',			Points,				'Points' ],
+			[ 'upgrades',		Upgrades,			'Upgrades' ],
 			[ 'results',		Results,			'Results' ],
 			[ 'errors',			Errors,				'Errors' ],
 		]
@@ -673,7 +675,7 @@ table.results tr td.fastest{
 		SeriesModel.model.setChanged( False )
 		self.readResetAll()
 		self.refreshAll()
-		self.showPageName( 'Properties' )
+		self.showPageName( 'Races' )
 
 	def menuOpen( self, event ):
 		if SeriesModel.model.changed:

@@ -116,6 +116,8 @@ class SeriesModel( object ):
 	bestResultsToConsider = 0	# 0 == all
 	mustHaveCompleted = 0		# Number of events to complete to be eligible for results.
 	organizer = ''
+	upgradePaths = []
+	upgradeFactors = []
 
 	def __init__( self ):
 		self.name = '<Series Name>'
@@ -205,6 +207,9 @@ class SeriesModel( object ):
 				raceResults.extend( results )
 			else:
 				self.errors.append( (r, ex) )
+				
+		GetModelInfo.AdjustForUpgrades( raceResults )
+		
 		if oldErrors != self.errors:
 			self.changed = True
 		return raceResults

@@ -90,6 +90,9 @@ class RaceResult( object ):
 		
 		self.tFinish = tFinish
 		self.tProjected = tProjected if tProjected else tFinish
+		
+		self.upgradeFactor = 1
+		self.upgradeResult = False
 	
 	def keySort( self ):
 		fields = ['categoryName', 'lastName', 'firstName', 'license', 'raceDate', 'raceName']
@@ -105,6 +108,9 @@ class RaceResult( object ):
 	@property
 	def full_name( self ):
 		return u', '.join( [name for name in [self.lastName.upper(), self.firstName] if name] )
+		
+	def __unicode__( self ):
+		return u', '.join( u'{}'.format(p) for p in [self.full_name, self.license, self.categoryName, self.raceName, self.raceDate] if p )
 
 def ExtractRaceResults( r ):
 	if os.path.splitext(r.fileName)[1] == '.cmn':
@@ -250,7 +256,48 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 		
 	Model.race = None
 	return True, 'success', raceResults
+
+def AdjustForUpgrades( raceResults ):
+	upgradePaths = []
+	for path in SeriesModel.model.upgradePaths:
+		upgradePaths.append( [p.strip() for p in path.split(',')] )
+	upgradeFactors = SeriesModel.model.upgradeFactors
 	
+	competitionCategories = defaultdict( lambda: defaultdict(list) )
+	for rr in raceResults:
+		competitionCategories[rr.key()][rr.categoryName].append( rr )
+	
+	for key, categories in competitionCategories.iteritems():
+		if len(categories) == 1:
+			continue
+		
+		for i, path in enumerate(upgradePaths):
+			upgradeCategories = { cName: rrs for cName, rrs in categories.iteritems() if cName in path }
+			if len(upgradeCategories) <= 1:
+				continue
+			
+			try:
+				upgradeFactor = upgradeFactors[i]
+			except:
+				upgradeFactor = 0.5
+			
+			categoryPosition = {}
+			highestCategoryPosition, highestCategoryName = -1, None
+			for cName in upgradeCategories.iterkeys():
+				pos = path.index( cName )
+				categoryPosition[cName] = pos
+				if pos > highestCategoryPosition:
+					highestCategoryPosition, highestCategoryName = pos, cName
+			
+			for cName, rrs in upgradeCategories.iteritems():
+				for rr in rrs:
+					if rr.categoryName != highestCategoryName:
+						rr.categoryName = highestCategoryName
+						rr.upgradeFactor = upgradeFactor ** (highestCategoryPosition - categoryPosition[cName])
+						rr.upgradeResult = True
+		
+			break
+
 def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsCompleted=False, numPlacesTieBreaker=5 ):
 	scoreByTime = SeriesModel.model.scoreByTime
 	scoreByPercent = SeriesModel.model.scoreByPercent
@@ -274,9 +321,22 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 	riderEventsCompleted = defaultdict( int )
 	riderPlaceCount = defaultdict( lambda : defaultdict(int) )
 	riderTeam = defaultdict( lambda : u'' )
+	riderUpgrades = defaultdict( lambda : [False] * len(races) )
 	riderNameLicense = {}
 	
+	def asInt( v ):
+		return int(v) if int(v) == v else v
+	
 	ignoreFormat = u'[{}**]'
+	upgradeFormat = u'{} pre-upg'
+	
+	def FixUpgradeFormat( riderUpgrades, riderResults ):
+		# Format upgrades so they are visible in the results.
+		for rider, upgrades in riderUpgrades.iteritems():
+			for i, u in enumerate(upgrades):
+				if u:
+					v = riderResults[rider][i]
+					riderResults[rider][i] = (upgradeFormat.format(v[0] if v[0] else ''), v[1])
 	
 	if scoreByTime:
 		# Get the individual results for each rider, and the total time.
@@ -285,7 +345,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		riderTFinish = defaultdict( float )
 		for rr in raceResults:
 			try:
-				tFinish = float(rr.tFinish)
+				tFinish = float(rr.tFinish) / (rr.upgradeFactor if rr.upgradeResult else 1)
 			except ValueError:
 				continue
 			rider = rr.key()
@@ -295,6 +355,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			riderResults[rider][raceSequence[rr.raceInSeries]] = (formatTime(tFinish, True), rr.rank)
 			riderFinishes[rider][raceSequence[rr.raceInSeries]] = tFinish
 			riderTFinish[rider] += tFinish
+			riderUpgrades[rider][raceSequence[rr.raceInSeries]] = rr.upgradeResult
 			riderPlaceCount[rider][rr.rank] += 1
 			riderEventsCompleted[rider] += 1
 
@@ -308,6 +369,8 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 						riderTFinish[rider] -= t
 						v = riderResults[rider][i]
 						riderResults[rider][i] = (ignoreFormat.format(v[0]), v[1])
+
+		FixUpgradeFormat( riderUpgrades, riderResults )
 
 		# Filter out minimal events completed.
 		riderOrder = [rider for rider, results in riderResults.iteritems() if riderEventsCompleted[rider] >= mustHaveCompleted]
@@ -336,7 +399,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		riderFinishes = defaultdict( lambda : [None] * len(races) )
 		riderPercentTotal = defaultdict( float )
 		
-		raceLeader = { rr.raceInSeries: rr for rr in raceResults if rr.rank == 1 }
+		raceLeader = { rr.raceInSeries: rr for rr in raceResults if rr.rank == 1 and not rr.upgradeResult }
 		
 		for rr in raceResults:
 			tFastest = raceLeader[rr.raceInSeries].tProjected
@@ -349,10 +412,11 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			riderNameLicense[rider] = (rr.full_name, rr.license)
 			if rr.team and rr.team != u'0':
 				riderTeam[rider] = rr.team
-			percent = min( 100.0, (tFastest / tFinish) * 100.0 if tFinish > 0.0 else 0.0 )
+			percent = min( 100.0, (tFastest / tFinish) * 100.0 if tFinish > 0.0 else 0.0 ) * (rr.upgradeFactor if rr.upgradeResult else 1)
 			riderResults[rider][raceSequence[rr.raceInSeries]] = (u'{}, {}'.format(percentFormat.format(percent), formatTime(tFinish, False)), rr.rank)
 			riderFinishes[rider][raceSequence[rr.raceInSeries]] = percent
 			riderPercentTotal[rider] += percent
+			riderUpgrades[rider][raceSequence[rr.raceInSeries]] = rr.upgradeResult
 			riderPlaceCount[rider][rr.rank] += 1
 			riderEventsCompleted[rider] += 1
 
@@ -366,6 +430,8 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 						riderPercentTotal[rider] -= p
 						v = riderResults[rider][i]
 						riderResults[rider][i] = (ignoreFormat.format(v[0]), v[1])
+
+		FixUpgradeFormat( riderUpgrades, riderResults )
 
 		# Filter out minimal events completed.
 		riderOrder = [rider for rider, results in riderResults.iteritems() if riderEventsCompleted[rider] >= mustHaveCompleted]
@@ -396,10 +462,12 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			riderNameLicense[rider] = (rr.full_name, rr.license)
 			if rr.team and rr.team != u'0':
 				riderTeam[rider] = rr.team
-			points = pointsForRank[rr.raceFileName][rr.rank]
+			points = asInt( pointsForRank[rr.raceFileName][rr.rank] * rr.upgradeFactor )
 			riderResults[rider][raceSequence[rr.raceInSeries]] = (points, rr.rank)
 			riderFinishes[rider][raceSequence[rr.raceInSeries]] = points
 			riderPoints[rider] += points
+			riderPoints[rider] = asInt( riderPoints[rider] )
+			riderUpgrades[rider][raceSequence[rr.raceInSeries]] = rr.upgradeResult
 			riderPlaceCount[rider][rr.rank] += 1
 			riderEventsCompleted[rider] += 1
 
@@ -413,6 +481,8 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 						riderPoints[rider] -= p
 						v = riderResults[rider][i]
 						riderResults[rider][i] = (ignoreFormat.format(v[0] if v[0] else ''), v[1])
+
+		FixUpgradeFormat( riderUpgrades, riderResults )
 
 		# Filter out minimal events completed.
 		riderOrder = [rider for rider, results in riderResults.iteritems() if riderEventsCompleted[rider] >= mustHaveCompleted]
@@ -439,8 +509,8 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		return categoryResult, races
 
 def GetTotalUniqueParticipants( raceResults ):
-	return len( set( (rr.full_name, rr.license) for rr in raceResults ) )
-		
+	return len( set( rr.key() for rr in raceResults ) )
+	
 if __name__ == '__main__':
 	files = [
 		r'C:\Projects\CrossMgr\RacoonRally\2013-06-30-2013 Raccoon Rally Mountain Bike Race-r1-.cmn',
