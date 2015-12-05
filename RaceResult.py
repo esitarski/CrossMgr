@@ -266,7 +266,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				
 				#---------------------------------------------------------------------------------------------
 				cmd = '{}:{}'.format(passingsCur, passingsCount)
-				qLog( 'command', u'{}+{}={} passings: cmd={}'.format(passingsCur, passingsCount, passingsNew, cmd) )
+				qLog( 'command', u'cmd="{}" {}+{}={} passings'.format(cmd, passingsCur, passingsCount, passingsNew) )
 				try:
 					# Get the passing data.
 					socketSend( s, bytes('{}{}'.format(cmd, EOL)) )
