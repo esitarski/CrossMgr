@@ -1392,7 +1392,7 @@ class MainWin( wx.Frame ):
 		try:
 			if race.excelLink.initCategoriesFromExcel:
 				wx.CallAfter( self.showPageName, _('Categories') )
-		except AttributError:
+		except AttributeError:
 			pass
 	
 	#--------------------------------------------------------------------------------------------

@@ -388,6 +388,12 @@ while 1:
 			response = 'PASSINGS;{}{}'.format(len(passings), EOL)
 			print response[:-len(EOL)]
 			clientsocket.send( response )
+		elif cmd == 'STARTOPERATION':
+			response = 'STARTOPERATION;OK{}'.format(EOL)
+			clientsocket.send( response )
+		elif cmd == 'STOPOPERATION':
+			response = 'STOPOPERATION;OK{}'.format(EOL)
+			clientsocket.send( response )
 		elif cmd == 'GETSTATUS':
 			status = [
 				'GETSTATUS',
@@ -418,6 +424,8 @@ while 1:
 				fields.append( '1' )
 			begin, count = [int(f.strip()) for f in fields]
 			clientsocket.send( ''.join( passings[begin:begin+count]) )
+			if begin + count == len(numLapTimes):
+				sys.exit()
 		else:
 			print 'unknown command:', cmd
 				

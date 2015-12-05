@@ -67,7 +67,7 @@ def socketReceiveLine( s ):
 			break
 	return buffer
 	
-def AutoDetect( raceResultPort=3601 ):
+def AutoDetect( raceResultPort=3601, callback=None ):
 	''' Search ip addresses adjacent to the computer in an attempt to find the reader. '''
 	ip = [int(i) for i in Utils.GetDefaultHost().split('.')]
 	j = 0
@@ -80,16 +80,19 @@ def AutoDetect( raceResultPort=3601 ):
 			continue
 			
 		raceResultHost = '.'.join( '{}'.format(v) for v in ipTest )
+		if callback:
+			callback( '{}:{}'.format(raceResultHost,raceResultPort) )
 		
 		try:
 			s = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+			s.settimeout( 0.5 )
 			s.connect( (raceResultHost, raceResultPort) )
-			s.settimeout( 1 )
 		except Exception as e:
 			continue
 
+		cmd = 'GETSTATUS'
 		try:
-			socketSend( s, bytes('GETSTATUS{}'.format(EOL)) )
+			socketSend( s, bytes('{}{}'.format(cmd, EOL)) )
 		except Exception as e:
 			continue
 			
@@ -103,7 +106,7 @@ def AutoDetect( raceResultPort=3601 ):
 		except Exception as e:
 			pass
 		
-		if buffer.startswith( 'GETSTATUS;' ):
+		if buffer.startswith( '{};'.format(cmd) ):
 			return raceResultHost
 			
 	return None
@@ -129,8 +132,10 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 	readerTime = None
 	readerComputerTimeDiff = None
 	
+	s = None
 	passingsCur = 0
 	status = None
+	startOperation = None
 	
 	def qLog( category, message ):
 		q.put( (category, message) )
@@ -144,26 +149,27 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		except Empty:
 			return True
 	
-	s = None
 	while keepGoing():
 		if s:
 			try:
 				s.shutdown( socket.SHUT_RDWR )
 				s.close()
-				time.sleep( delaySecs )
 			except Exception as e:
 				pass
-			s = None
+			time.sleep( delaySecs )
 		
+		#-----------------------------------------------------------------------------------------------------
+		qLog( 'connection', u'{} {}:{}'.format(_('Attempting to connect to RaceResult reader at'), HOST, PORT) )
 		try:
 			s = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
-			s.connect( (HOST, PORT) )
 			s.settimeout( timeoutSecs )
+			s.connect( (HOST, PORT) )
 		except Exception as e:
 			qLog( 'connection', u'{}: {}'.format(_('Connection to RaceResult reader failed'), e) )
-			s = None
+			s, status, startOperation = None, None, None
 			
-			HOST_AUTO = AutoDetect()
+			qLog( 'connection', u'{}'.format(_('Attempting AutoDetect...')) )
+			HOST_AUTO = AutoDetect( callback = lambda m: qLog( 'autodetect', '{} {}'.format(_('Checking'), m)) )
 			if HOST_AUTO:
 				qLog( 'connection', u'{}: {}'.format(_('AutoDetect RaceResult at'), HOST_AUTO) )
 				HOST = HOST_AUTO
@@ -171,95 +177,138 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				time.sleep( delaySecs )
 			continue
 
+		#-----------------------------------------------------------------------------------------------------
+		cmd = 'GETSTATUS'
+		qLog( 'command', u'sending: {}'.format(cmd) )
 		try:
-			if status is None:
-				socketSend( s, bytes('GETSTATUS{}'.format(EOL)) )
-				buffer = socketReceiveLine( s )
-				if buffer.startswith( 'GETSTATUS;' ):
-					fields = [f.strip() for f in buffer.strip().split(';')]
-					status = zip( statusFields, fields[1:] )
-					for name, value in status:
-						qLog( 'status', u'{}: {}'.format(name, value) )
-				else:
-					qLog( 'command', u'GETSTATUS: {} "{}"'.format(_('Unexpected return'), buffer) )
-					continue
-		except Exception as e:
-			qLog( 'connection', u'GETSTATUS: {}: "{}"'.format(_('Connection failed'), e) )
-			continue
-
-		try:
-			# Check if we have the reader time.
-			if readerTime is None:
-				socketSend( s, bytes('GETTIME{}'.format(EOL)) )
-				buffer = socketReceiveLine( s )
-				if buffer.startswith( 'GETTIME;' ):
-					try:
-						dt = reNonDigit.sub(' ', buffer).strip()
-						fields[-1] = (fields[-1] + '000000')[:6]	# Pad with zeros to convert to microseconds.
-						readerTime = datetime.datetime( *[int(f) for f in dt.split()] )
-						readerComputerTimeDiff = datetime.datetime.now() - readerTime
-					except Exception as e:
-						qLog( 'command', u'GETTIME: {} "{}" "{}"'.format(_('Unexpected return'), buffer, e) )
-						continue					
-				else:
-					qLog( 'command', u'GETTIME: {} "{}"'.format(_('Unexpected return'), buffer) )
-					continue
-		except Exception as e:
-			qLog( 'connection', u'GETTIME: {}: "{}"'.format(_('Connection failed'), e) )
-			continue
-					
-		try:
-			# Get the current number of passings.
-			socketSend( s, bytes('PASSINGS{}'.format(EOL)) )
+			socketSend( s, bytes('{}{}'.format(cmd, EOL)) )
 			buffer = socketReceiveLine( s )
-			if buffer.startswith( 'PASSINGS;' ):
-				try:
-					passingsNew = int( reNonDigit.sub(' ', buffer).strip() )
-				except Exception as e:
-					qLog( 'command', u'PASSINGS: {} "{}" "{}"'.format(_('Unexpected return'), buffer, e) )
-					continue
-			else:
-				qLog( 'command', u'PASSINGS: {} "{}"'.format(_('Unexpected return'), buffer) )
-				continue
 		except Exception as e:
-			qLog( 'connection', u'PASSINGS: {}: "{}"'.format(_('Connection failed'), e) )
+			qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
 			continue
-
-		if passingsNew == passingsCur:
-			continue	# Nothing to do
-			
-		if passingsNew < passingsCur:
-			passingsCur = 0
-			
-		tagTimes = []
-		errors = []
-		times = set()
-		try:
-			# Get the passing data.
-			passingsCount = passingsNew - passingsCur
-			socketSend( s, bytes('{}:{}{}'.format(passingsCur, passingsCount, EOL)) )
-			for i, line in enumerate(socketReadLines(s, passingsCount)):
-				passingsCur += 1
-				tag, t = parseTagTime(line, passingsCur+i, errors)
-				if tag is None or t is None:
-					continue
-				t += readerComputerTimeDiff
-				
-				while t in times:	# Ensure no equal times.
-					t += tSmall
-				times.add( t )
-				
-				tagTimes.append( (tag, t) )
-					
-		except Exception as e:
-			qLog( 'connection', u'DATA: {}: "{}"'.format(_('Connection failed'), e) )
 		
-		sendReaderEvent( tagTimes )
-		for tag, t in tagTimes:
-			q.put( ('data', tag, t) )
+		if not buffer.startswith( '{};'.format(cmd) ):
+			qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected return'), buffer) )
+			continue
+		fields = [f.strip() for f in buffer.strip().split(';')]
+		status = zip( statusFields, fields[1:] )
+		for name, value in status:
+			qLog( 'status', u'{}: {}'.format(name, value) )
+		
+		#-----------------------------------------------------------------------------------------------------
+		cmd = 'GETTIME'
+		qLog( 'command', u'sending: {}'.format(cmd) )
+		try:
+			socketSend( s, bytes('{}{}'.format(cmd, EOL)) )
+			buffer = socketReceiveLine( s )
+		except Exception as e:
+			qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
+			continue
+		
+		if not buffer.startswith( '{};'.format(cmd) ):
+			qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected return'), buffer) )
+			continue
+		
+		try:
+			dt = reNonDigit.sub(' ', buffer).strip()
+			fields[-1] = (fields[-1] + '000000')[:6]	# Pad with zeros to convert to microseconds.
+			readerTime = datetime.datetime( *[int(f) for f in dt.split()] )
+			readerComputerTimeDiff = datetime.datetime.now() - readerTime
+		except Exception as e:
+			qLog( 'command', u'{}: {} "{}" "{}"'.format(cmd, _('Unexpected return'), buffer, e) )
+			continue
+		
+		#-----------------------------------------------------------------------------------------------------
+		cmd = 'STARTOPERATION'
+		qLog( 'command', u'sending: {}'.format(cmd) )
+		try:
+			# Put the reader in start opeation mode.
+			socketSend( s, bytes('{}{}'.format(cmd, EOL)) )
+			buffer = socketReceiveLine( s )
+		except Exception as e:
+			qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
+			continue
+		
+		if not buffer.startswith( '{};'.format(cmd) ):
+			qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected return'), buffer) )
+			continue
+			
+		qLog( 'status', u'{}'.format(buffer) )
+		
+		while keepGoing():
+			#-------------------------------------------------------------------------------------------------
+			cmd = 'PASSINGS'
+			try:
+				socketSend( s, bytes('{}{}'.format(cmd, EOL)) )
+				buffer = socketReceiveLine( s )
+				if buffer.startswith( '{};'.format(cmd) ):
+					try:
+						passingsNew = int( reNonDigit.sub(' ', buffer).strip() )
+					except Exception as e:
+						qLog( 'command', u'{}: {} "{}" "{}"'.format(cmd, _('Unexpected return'), buffer, e) )
+						continue
+				else:
+					qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected return'), buffer) )
+					continue
+			except Exception as e:
+				qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
+				break
+
+			if passingsNew != passingsCur:
+				if passingsNew < passingsCur:
+					passingsCur = 0
+					
+				tagTimes = []
+				errors = []
+				times = set()
 				
-	# Final cleanup.		
+				passingsCount = passingsNew - passingsCur
+				
+				#---------------------------------------------------------------------------------------------
+				cmd = '{}:{}'.format(passingsCur, passingsCount)
+				qLog( 'command', u'{}+{}={} passings: cmd={}'.format(passingsCur, passingsCount, passingsNew, cmd) )
+				try:
+					# Get the passing data.
+					socketSend( s, bytes('{}{}'.format(cmd, EOL)) )
+				except Exception as e:
+					qLog( 'connection', u'cmd={}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
+					break
+				
+				tagReadSuccess = False
+				try:
+					for i, line in enumerate(socketReadLines(s, passingsCount)):
+						passingsCur += 1
+						tag, t = parseTagTime(line, passingsCur+i, errors)
+						if tag is None or t is None:
+							continue
+						t += readerComputerTimeDiff
+						
+						while t in times:	# Ensure no equal times.
+							t += tSmall
+						
+						times.add( t )
+						tagTimes.append( (tag, t) )
+					
+					tagReadSuccess = True
+				
+				except Exception as e:
+					qLog( 'connection', u'cmd={}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
+				
+				sendReaderEvent( tagTimes )
+				for tag, t in tagTimes:
+					q.put( ('data', tag, t) )
+				
+				if not tagReadSuccess:
+					break
+			
+			time.sleep( delaySecs )
+	
+	# Final cleanup.
+	cmd = 'STOPOPERATION'
 	try:
+		
+		socketSend( s, '{}{}'.format(cmd, EOL) )
+		buffer = socketReceiveLine( s )
 		s.shutdown( socket.SHUT_RDWR )
 		s.close()
 	except:
@@ -323,7 +372,7 @@ def CleanupListener():
 	listener = None
 	
 if __name__ == '__main__':
-	StartListener( HOST=DEFAULT_HOST, PORT=DEFAULT_PORT )
+	StartListener( HOST='127.0.0.1', PORT=DEFAULT_PORT )
 	count = 0
 	while 1:
 		time.sleep( 1 )
@@ -343,3 +392,4 @@ if __name__ == '__main__':
 				print( 'other: {}, {}'.format(m[0], ', '.join('"{}"'.format(s) for s in m[1:])) )
 		sys.stdout.flush()
 		
+
