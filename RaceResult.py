@@ -263,8 +263,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 						if not line:
 							continue
 						
-						passingsCur += 1
-						tag, t = parseTagTime(line, passingsCur, errors)
+						tag, t = parseTagTime(line, passingsCur+i, errors)
 						if tag is None or t is None:
 							continue
 						t += readerComputerTimeDiff
@@ -283,6 +282,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				sendReaderEvent( tagTimes )
 				for tag, t in tagTimes:
 					q.put( ('data', tag, t) )
+				passingsCur += len(tagTimes)
 				
 				if not tagReadSuccess:
 					break
