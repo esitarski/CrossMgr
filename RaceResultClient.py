@@ -383,17 +383,17 @@ while 1:
 		if cmd == 'GETTIME':
 			response = 'GETTIME;{}{}'.format( dBase.strftime('%Y-%m-%d;%H:%M:%S.%f'), EOL )
 			print response[:-len(EOL)]
-			clientsocket.send( response )
+			clientsocket.sendall( response )
 		elif cmd == 'PASSINGS':
 			response = 'PASSINGS;{}{}'.format(len(passings), EOL)
 			print response[:-len(EOL)]
-			clientsocket.send( response )
+			clientsocket.sendall( response )
 		elif cmd == 'STARTOPERATION':
 			response = 'STARTOPERATION;OK{}'.format(EOL)
-			clientsocket.send( response )
+			clientsocket.sendall( response )
 		elif cmd == 'STOPOPERATION':
 			response = 'STOPOPERATION;OK{}'.format(EOL)
-			clientsocket.send( response )
+			clientsocket.sendall( response )
 		elif cmd == 'GETSTATUS':
 			status = [
 				'GETSTATUS',
@@ -417,13 +417,13 @@ while 1:
 			]
 			response = '{}{}'.format( ';'.join('{}'.format(f) for f in status), EOL )
 			print response[:-len(EOL)]
-			clientsocket.send( response )
+			clientsocket.sendall( response )
 		elif ':' in cmd or cmd.isdigit():
 			fields = cmd.split(':')
 			if len(fields) != 2:
 				fields.append( '1' )
 			begin, count = [int(f.strip()) for f in fields]
-			clientsocket.send( ''.join( passings[begin:begin+count]) )
+			clientsocket.sendall( ''.join( passings[begin:begin+count]) + EOL )
 			if begin + count == len(numLapTimes):
 				sys.exit()
 		else:

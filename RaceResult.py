@@ -39,27 +39,9 @@ def socketSend( s, message ):
 	while sLen < len(message):
 		sLen += s.send( message[sLen:] )
 		
-def socketReadLines( s, count ):
-	if count == 0:
-		return
-		
+def socketReadDelimited( s, delimiter=EOL ):
 	buffer = s.recv( 4096 )
-	while count > 0:
-		eol = buffer.find( EOL )
-		if eol >= 0:
-			count -= 1
-			yield buffer[:eol+len_EOL]
-			buffer = buffer[eol+len_EOL:]
-		else:
-			more = s.recv( 4096 )
-			if more:
-				buffer += more
-			else:
-				break
-
-def socketReceiveLine( s ):
-	buffer = s.recv( 4096 )
-	while not buffer.endswith( EOL ):
+	while not buffer.endswith( delimiter ):
 		more = s.recv( 4096 )
 		if more:
 			buffer += more
@@ -97,7 +79,7 @@ def AutoDetect( raceResultPort=3601, callback=None ):
 			continue
 			
 		try:
-			buffer = socketReceiveLine( s )
+			buffer = socketReadDelimited( s )
 		except Exception as e:
 			continue
 			
@@ -182,7 +164,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		qLog( 'command', u'sending: {}'.format(cmd) )
 		try:
 			socketSend( s, bytes('{}{}'.format(cmd, EOL)) )
-			buffer = socketReceiveLine( s )
+			buffer = socketReadDelimited( s )
 		except Exception as e:
 			qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
 			continue
@@ -200,7 +182,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		qLog( 'command', u'sending: {}'.format(cmd) )
 		try:
 			socketSend( s, bytes('{}{}'.format(cmd, EOL)) )
-			buffer = socketReceiveLine( s )
+			buffer = socketReadDelimited( s )
 		except Exception as e:
 			qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
 			continue
@@ -224,7 +206,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		try:
 			# Put the reader in start opeation mode.
 			socketSend( s, bytes('{}{}'.format(cmd, EOL)) )
-			buffer = socketReceiveLine( s )
+			buffer = socketReadDelimited( s )
 		except Exception as e:
 			qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
 			continue
@@ -240,7 +222,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 			cmd = 'PASSINGS'
 			try:
 				socketSend( s, bytes('{}{}'.format(cmd, EOL)) )
-				buffer = socketReceiveLine( s )
+				buffer = socketReadDelimited( s )
 				if buffer.startswith( '{};'.format(cmd) ):
 					try:
 						passingsNew = int( reNonDigit.sub(' ', buffer).strip() )
@@ -276,9 +258,13 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				
 				tagReadSuccess = False
 				try:
-					for i, line in enumerate(socketReadLines(s, passingsCount)):
+					response = socketReadDelimited( s, EOL+EOL ).strip()
+					for i, line in enumerate(response.split(EOL)):
+						if not line:
+							continue
+						
 						passingsCur += 1
-						tag, t = parseTagTime(line, passingsCur+i, errors)
+						tag, t = parseTagTime(line, passingsCur, errors)
 						if tag is None or t is None:
 							continue
 						t += readerComputerTimeDiff
@@ -308,7 +294,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 	try:
 		
 		socketSend( s, '{}{}'.format(cmd, EOL) )
-		buffer = socketReceiveLine( s )
+		buffer = socketReadDelimited( s )
 		s.shutdown( socket.SHUT_RDWR )
 		s.close()
 	except:
