@@ -49,7 +49,7 @@ def FtpWriteHtml( html ):
 						user		= user,
 						passwd		= passwd,
 						serverPath	= serverPath,
-						fileName		= fileName,
+						fileName	= fileName,
 						file		= file )
 	except Exception as e:
 		Utils.writeLog( 'FtpWriteHtml Error: {}'.format(e) )

@@ -926,9 +926,10 @@ class Results(wx.Panel):
 			getHtml( htmlfileName )
 		except IOError:
 			return
-			
-		with FtpWriteFile.FtpPublishDialog( self, html=htmlfileName ) as dlg:
-			dlg.ShowModal();
+		
+		html = io.open( htmlfileName, 'r', encoding='utf-8', newline='' ).read()
+		with FtpWriteFile.FtpPublishDialog( self, html=html ) as dlg:
+			dlg.ShowModal()
 	
 	def commit( self ):
 		pass
