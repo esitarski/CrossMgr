@@ -24,6 +24,19 @@ class Races(wx.Panel):
 		self.organizerNameLabel = wx.StaticText( self, label='Organizer:' )
 		self.organizerName = wx.TextCtrl( self )
 		
+		self.explanation = wx.StaticText( self, label=u'\n'.join( [
+				_("Add all the races in your Series."),
+				_("Make sure the races are in chronological order."),
+				_("You can easily change the order by dragging-and-dropping the first grey column in the table."),
+				u'',
+				_("Choose the Points Structure to score each race."),
+				_("You can change or define your own Points Structure (say Double Points) on the Points page."),
+				u'',
+				_("Race results are shown Last-to-First in the output by default."),
+				_("You can change this on the Options page."),
+			] )
+		)
+		
 		self.headerNames = ['Race', 'Points', 'Race File']
 		
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
@@ -77,6 +90,7 @@ class Races(wx.Panel):
 		
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		sizer.Add(fgs, 0, flag=wx.EXPAND|wx.ALL, border=4 )
+		sizer.Add( self.explanation, 0, flag=wx.EXPAND|wx.ALL, border=4 )
 		sizer.Add(hs, 0, flag=wx.EXPAND)
 		sizer.Add(self.grid, 1, flag=wx.EXPAND|wx.ALL, border = 6)
 		self.SetSizer(sizer)

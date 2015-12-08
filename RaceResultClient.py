@@ -317,16 +317,16 @@ sendDate = True
 
 #------------------------------------------------------------------------------	
 # Function to format number, lap and time in RaceResult format
-count = 0
+messageCount = 0
 def formatMessage( n, lap, t ):
-	global count
+	global messageCount
+	messageCount += 1
 	message = "{};{};{}{}".format(
-				count,
+				messageCount,
 				tag[n],									# Tag code
 				t.strftime('%Y-%m-%d;%H:%M:%S.%f'),
 				EOL,
 			)
-	count += 1
 	return message
 
 #------------------------------------------------------------------------------	
@@ -342,6 +342,8 @@ for n in nums:
 	for lap in xrange(0, lapMax+1):
 		numLapTimes.append( (n, lap, lapTime*lap) )
 numLapTimes.sort( key = lambda x: (x[1], x[2]) )	# Sort by lap, then race time.
+
+print 'len(numLapTimes)=', len(numLapTimes)
 
 dBase = datetime.datetime.now()
 dBase -= datetime.timedelta( seconds = 13*60+13.13 )	# Send the wrong time for testing purposes.
@@ -423,6 +425,7 @@ while 1:
 			if len(fields) != 2:
 				fields.append( '1' )
 			begin, count = [int(f.strip()) for f in fields]
+			begin -= 1
 			clientsocket.sendall( ''.join( passings[begin:begin+count]) + EOL )
 			if begin + count == len(numLapTimes):
 				sys.exit()

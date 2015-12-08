@@ -484,15 +484,20 @@ function sortTableId( iTable, iCol ) {
 			#-----------------------------------------------------------------------------
 			if bestResultsToConsider > 0:
 				with tag(html, 'p'):
-					write( u'** - Result not considered.  Not in best of {} scores.'.format(bestResultsToConsider) )
+					with tag(html, 'strong'):
+						write( u'**' )
+					write( u' - {}'.format( u'Result not considered.  Not in best of {} scores.'.format(bestResultsToConsider) ) )
 					
+			if hasUpgrades:
+				with tag(html, 'p'):
+					with tag(html, 'strong'):
+						write( u'pre-upg' )
+					write( u' - {}'.format( u'Points carried forward from pre-upgrade category results (see Upgrades Progression below).' ) )
+			
 			if mustHaveCompleted > 0:
 				with tag(html, 'p'):
 					write( u'Participants completing fewer than {} events are not shown.'.format(mustHaveCompleted) )
 			
-			if hasUpgrades:
-				with tag(html, 'p'):
-					write( u'pre-upg - Points carried forward from results in pre-upgrade category (factor adjusted - see below).' )
 			#-----------------------------------------------------------------------------
 			
 			if not scoreByTime and not scoreByPercent:
@@ -560,6 +565,10 @@ function sortTableId( iTable, iCol ) {
 						isFirst = False
 				
 				if hasUpgrades:
+					with tag(html, 'p'):
+						pass
+					with tag(html, 'hr'):
+						pass
 					with tag(html, 'h2'):
 						write( u"Upgrades Progression" )
 					with tag(html, 'ol'):
@@ -613,9 +622,9 @@ class Results(wx.Panel):
 		self.exportToExcel.Bind( wx.EVT_BUTTON, self.onExportToExcel )
 
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.categoryLabel, 0, flag=wx.ALIGN_CENTRE|wx.ALIGN_CENTRE_VERTICAL|wx.EXPAND|wx.ALL, border = 4 )
+		hs.Add( self.categoryLabel, 0, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT|wx.RIGHT, border = 4 )
 		hs.Add( self.categoryChoice, 0, flag=wx.ALL, border = 4 )
-		hs.Add( self.statsLabel, 0, flag=wx.ALIGN_CENTER|wx.ALIGN_CENTRE_VERTICAL|wx.EXPAND|wx.ALL, border = 4 )
+		hs.Add( self.statsLabel, 0, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT|wx.RIGHT, border = 4 )
 		hs.AddStretchSpacer()
 		hs.Add( self.refreshButton, 0, flag=wx.ALL, border = 4 )
 		hs.AddSpacer( 52 )
@@ -791,6 +800,8 @@ class Results(wx.Panel):
 		self.grid.AutoSizeColumns( False )
 		self.grid.AutoSizeRows( False )
 		
+		self.GetSizer.Layout()
+		
 	def onExportToExcel( self, event ):
 		model = SeriesModel.model
 		scoreByTime = model.scoreByTime
@@ -916,7 +927,7 @@ class Results(wx.Panel):
 		except IOError:
 			return
 			
-		with FtpWriteFile.FtpPublishDialog( self, fileName=htmlfileName ) as dlg:
+		with FtpWriteFile.FtpPublishDialog( self, html=htmlfileName ) as dlg:
 			dlg.ShowModal();
 	
 	def commit( self ):

@@ -247,8 +247,8 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				passingsCount = passingsNew - passingsCur
 				
 				#---------------------------------------------------------------------------------------------
-				cmd = '{}:{}'.format(passingsCur, passingsCount)
-				qLog( 'command', u'cmd="{}" {}+{}={} passings'.format(cmd, passingsCur, passingsCount, passingsNew) )
+				cmd = '{}:{}'.format(passingsCur+1, passingsCount)	# Add one as the reader counts inclusively.
+				qLog( 'command', u'sending: {} ({}+{}={} passings)'.format(cmd, passingsCur, passingsCount, passingsNew) )
 				try:
 					# Get the passing data.
 					socketSend( s, bytes('{}{}'.format(cmd, EOL)) )
@@ -258,21 +258,33 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				
 				tagReadSuccess = False
 				try:
-					response = socketReadDelimited( s, EOL+EOL ).strip()
-					for i, line in enumerate(response.split(EOL)):
-						if not line:
-							continue
+					readAllPassings = False
+					while not readAllPassings:
+						response = socketReadDelimited( s )
 						
-						tag, t = parseTagTime(line, passingsCur+i, errors)
-						if tag is None or t is None:
-							continue
-						t += readerComputerTimeDiff
+						sStart = 0
+						while 1:
+							sEnd = response.find( EOL, sStart )
+							if sEnd < 0:
+								break
+							if sEnd == sStart:		# An empty passing indicates this is the last one.
+								readAllPassings = True
+								break
+							
+							line = response[sStart:sEnd]
+							sStart = sEnd + len_EOL
 						
-						while t in times:	# Ensure no equal times.
-							t += tSmall
-						
-						times.add( t )
-						tagTimes.append( (tag, t) )
+							tag, t = parseTagTime(line, passingsCur+len(tagTimes), errors)
+							if tag is None or t is None:
+								qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected return'), line) )
+								continue
+							
+							t += readerComputerTimeDiff
+							while t in times:	# Ensure no equal times.
+								t += tSmall
+							
+							times.add( t )
+							tagTimes.append( (tag, t) )
 					
 					tagReadSuccess = True
 				
@@ -374,6 +386,8 @@ if __name__ == '__main__':
 				print( 'status: {}'.format(m[1]) )
 			elif m[0] == 'passings':
 				print( 'passings: {}'.format(m[1]) )
+			elif m[0] == 'command':
+				print( 'command: {}'.format(m[1]) )
 			else:
 				print( 'other: {}, {}'.format(m[0], ', '.join('"{}"'.format(s) for s in m[1:])) )
 		sys.stdout.flush()

@@ -83,7 +83,7 @@ class Upgrades(wx.Panel):
 class UpgradesFrame(wx.Frame):
 	#----------------------------------------------------------------------
 	def __init__(self):
-		wx.Frame.__init__(self, None, title="Reorder Grid Test", size=(800,600) )
+		wx.Frame.__init__(self, None, title="Upgrades Test", size=(800,600) )
 		self.panel = Upgrades(self)
 		self.Show()
  

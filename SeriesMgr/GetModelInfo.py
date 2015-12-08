@@ -303,6 +303,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 	scoreByPercent = SeriesModel.model.scoreByPercent
 	bestResultsToConsider = SeriesModel.model.bestResultsToConsider
 	mustHaveCompleted = SeriesModel.model.mustHaveCompleted
+	showLastToFirst = SeriesModel.model.showLastToFirst
 	
 	# Get all results for this category.
 	raceResults = [rr for rr in raceResults if rr.categoryName == categoryName]
@@ -502,6 +503,12 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			leaderPoints = riderPoints[leader]
 			riderGap = { r : leaderPoints - riderPoints[r] for r in riderOrder }
 			riderGap = { r : unicode(gap) if gap else u'' for r, gap in riderGap.iteritems() }
+		
+		# Reverse the race order if required.
+		if showLastToFirst:
+			races.reverse()
+			for results in riderResults.itervalues():
+				results.reverse()
 		
 		# List of:
 		# lastName, firstName, license, team, points, [list of (points, position) for each race in series]

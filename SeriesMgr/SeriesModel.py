@@ -115,9 +115,10 @@ class SeriesModel( object ):
 	licenseLinkTemplate = u''	# Used to create an html link from the rider's license number in the html output.
 	bestResultsToConsider = 0	# 0 == all
 	mustHaveCompleted = 0		# Number of events to complete to be eligible for results.
-	organizer = ''
+	organizer = u''
 	upgradePaths = []
 	upgradeFactors = []
+	showLastToFirst = True		# If True, show the latest races first in the output.
 
 	def __init__( self ):
 		self.name = '<Series Name>'

@@ -37,6 +37,7 @@ from Races				import Races
 from Points				import Points
 from Upgrades			import Upgrades
 from Results			import Results
+from Options			import Options
 from Errors				import Errors
 import Version
 from Printing			import SeriesMgrPrintout
@@ -245,6 +246,7 @@ class MainWin( wx.Frame ):
 			[ 'races',			Races,				'Races' ],
 			[ 'points',			Points,				'Points' ],
 			[ 'upgrades',		Upgrades,			'Upgrades' ],
+			[ 'options',		Options,			'Options' ],
 			[ 'results',		Results,			'Results' ],
 			[ 'errors',			Errors,				'Errors' ],
 		]
