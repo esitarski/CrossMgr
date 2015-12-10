@@ -247,9 +247,6 @@ class JChipSetupDialog( wx.Dialog ):
 		num = tagNums.get(tag, None)
 
 	def testJChipToggle( self, event ):
-		print( 'testJChipToggle: called' )
-		print( '**checkpoint 1' )
-		
 		self.commit()
 		
 		if not Model.race:
@@ -263,8 +260,6 @@ class JChipSetupDialog( wx.Dialog ):
 			return
 
 		if self.testJChip.GetValue():
-			print( 'not ChipReader.chipReaderCur.IsListening()' )
-			print( '**checkpoint 2' )
 			correct, reason = CheckExcelLink()
 			explain = 	_('CrossMgr will not be able to associate chip Tags with Bib numbers.') + u'\n' + \
 						_('You may proceed with the test, but you need to fix the Excel sheet.') + u'\n\n' + \
@@ -295,9 +290,7 @@ class JChipSetupDialog( wx.Dialog ):
 			self.receivedCount = 0
 			self.timer = wx.CallLater( 1000, self.onTimerCallback, 'started' )
 		else:
-			print( '**checkpoint 3' )
 			self.stopTest()
-			print( '**checkpoint 6' )
 	
 	def appendMsg( self, s ):
 		self.testList.AppendText( s + '\n' )
