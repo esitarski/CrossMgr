@@ -28,11 +28,11 @@ Notes about Chip reader input:
 1. Reads after the start of the race, but before the Start Offset of a category will be registered, but ignored in the results.
 1. A race can be started by the first tag read.  See [Actions][] for more details.  When a race is started with the first tag read, the riders are staged behind the start/finish line, CrossMgr is started, then the riders are started.  The first rider over the line will reset the CrossMgr start clock.  This allows you to start a race without being at the computer.
 
-## RFID Reader Setup
-Open the RFID Reader Setup Dialog.
+## Chip Reader Setup
+Open the Chip Reader Setup Dialog.
 
-### RFID Reader Setup Dialog
-Used to configure and test the RFID receiver.
+### Chip Reader Setup Dialog
+Used to configure and test the Chip receiver.
 
 #### Configure the Reader
 If using CrossMgrImpinj or CrossMgrAlien to talk to the Impinj or Alien reader, make sure those programs are running and the reader is plugged in, on the network, etc.  Then skip to "Do Reader Test".

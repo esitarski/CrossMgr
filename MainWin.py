@@ -588,7 +588,7 @@ class MainWin( wx.Frame ):
 		self.chipMenu = wx.Menu()
 
 		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.chipMenu, idCur, _("RFID Reader &Setup..."), _("Configure and Test the RFID Reader"), Utils.GetPngBitmap('rfid-signal.png') )
+		AppendMenuItemBitmap( self.chipMenu, idCur, _("Chip Reader &Setup..."), _("Configure and Test the Chip Reader"), Utils.GetPngBitmap('rfid-signal.png') )
 		self.Bind(wx.EVT_MENU, self.menuJChip, id=idCur )
 		
 		self.chipMenu.AppendSeparator()

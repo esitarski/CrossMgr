@@ -349,10 +349,12 @@ def StopListener():
 	global shutdownQ
 
 	# Terminate the server process if it is running.
+	# Add a number of shutdown commands as we may check a number of times.
 	if listener:
-		shutdownQ.put( 'shutdown' )
+		for i in xrange(32):
+			shutdownQ.put( 'shutdown' )
 		listener.join()
-		listener = None
+	listener = None
 	
 	# Purge the queues.
 	while q:
@@ -361,7 +363,7 @@ def StopListener():
 		except Empty:
 			q = None
 			break
-			
+	
 	shutdownQ = None
 		
 def StartListener( startTime = datetime.datetime.now(),
@@ -380,6 +382,9 @@ def StartListener( startTime = datetime.datetime.now(),
 	listener.name = 'JChip Listener'
 	listener.daemon = True
 	listener.start()
+	
+def IsListening():
+	return listener is not None
 	
 @atexit.register
 def CleanupListener():

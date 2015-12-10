@@ -63,7 +63,8 @@ def AutoDetect( raceResultPort=3601, callback=None ):
 			
 		raceResultHost = '.'.join( '{}'.format(v) for v in ipTest )
 		if callback:
-			callback( '{}:{}'.format(raceResultHost,raceResultPort) )
+			if not callback( '{}:{}'.format(raceResultHost,raceResultPort) ):
+				return None
 		
 		try:
 			s = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
@@ -125,11 +126,14 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 	
 	def keepGoing():
 		try:
-			# Check if we have been told to shutdown.
 			shutdownQ.get_nowait()
-			return False
 		except Empty:
 			return True
+		return False
+	
+	def autoDetectCallback( m ):
+		qLog( 'autodetect', '{} {}'.format(_('Checking'), m) )
+		return keepGoing()
 	
 	while keepGoing():
 		if s:
@@ -151,7 +155,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 			s, status, startOperation = None, None, None
 			
 			qLog( 'connection', u'{}'.format(_('Attempting AutoDetect...')) )
-			HOST_AUTO = AutoDetect( callback = lambda m: qLog( 'autodetect', '{} {}'.format(_('Checking'), m)) )
+			HOST_AUTO = AutoDetect( callback = autoDetectCallback )
 			if HOST_AUTO:
 				qLog( 'connection', u'{}: {}'.format(_('AutoDetect RaceResult at'), HOST_AUTO) )
 				HOST = HOST_AUTO
@@ -325,12 +329,14 @@ def StopListener():
 	global q
 	global listener
 	global shutdownQ
-
+	
 	# Terminate the server process if it is running.
+	# Add a number of shutdown commands as we may check a number of times.
 	if listener:
-		shutdownQ.put( 'shutdown' )
+		for i in xrange(32):
+			shutdownQ.put( 'shutdown' )
 		listener.join()
-		listener = None
+	listener = None
 	
 	# Purge the queues.
 	while q:
@@ -339,9 +345,12 @@ def StopListener():
 		except Empty:
 			q = None
 			break
-			
+	
 	shutdownQ = None
-		
+	
+def IsListening():
+	return listener is not None
+
 def StartListener( startTime=datetime.datetime.now(), HOST=None, PORT=None ):
 	global q
 	global shutdownQ

@@ -46,7 +46,7 @@ def GetAllIps():
 
 class JChipSetupDialog( wx.Dialog ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, "RFID Reader Setup",
+		wx.Dialog.__init__( self, parent, id, _("Chip Reader Setup"),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
 		
 		self.timer = None
@@ -72,7 +72,7 @@ class JChipSetupDialog( wx.Dialog ):
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
 		self.helpBtn = wx.Button( self, wx.ID_HELP )
-		self.Bind( wx.EVT_BUTTON, lambda evt: Utils.showHelp('Menu-ChipReader.html#rfid-reader-setup'), self.helpBtn )
+		self.Bind( wx.EVT_BUTTON, lambda evt: Utils.showHelp('Menu-ChipReader.html#chip-reader-setup'), self.helpBtn )
 		
 		self.Bind(EVT_CHIP_READER, self.handleChipReaderEvent)
 		
@@ -151,6 +151,7 @@ class JChipSetupDialog( wx.Dialog ):
 		buttonBox.Add( self.helpBtn )
 		bs.Add( buttonBox, 0, wx.EXPAND | wx.ALL, border )
 		
+		self.stopTest()
 		self.SetSizerAndFit(bs)
 		bs.Fit( self )
 		
@@ -246,19 +247,24 @@ class JChipSetupDialog( wx.Dialog ):
 		num = tagNums.get(tag, None)
 
 	def testJChipToggle( self, event ):
+		print( 'testJChipToggle: called' )
+		print( '**checkpoint 1' )
+		
 		self.commit()
 		
 		if not Model.race:
+			self.stopTest()
 			Utils.MessageOK( self, _('No active race.  Cannot perform RFID test.  "New" or "Open" a race first.'), _('Cannot Perform RFID Test') )
-			wx.CallAfter( self.testJChip.SetValue, False )
 			return
 			
 		if Model.race.isRunning():
+			self.stopTest()
 			Utils.MessageOK( self, _('Cannot perform RFID test while race is running.'), _('Cannot Perform RFID Test') )
-			wx.CallAfter( self.testJChip.SetValue, False )
 			return
 
-		if not ChipReader.chipReaderCur.listener:
+		if self.testJChip.GetValue():
+			print( 'not ChipReader.chipReaderCur.IsListening()' )
+			print( '**checkpoint 2' )
 			correct, reason = CheckExcelLink()
 			explain = 	_('CrossMgr will not be able to associate chip Tags with Bib numbers.') + u'\n' + \
 						_('You may proceed with the test, but you need to fix the Excel sheet.') + u'\n\n' + \
@@ -276,32 +282,22 @@ class JChipSetupDialog( wx.Dialog ):
 					return
 			
 			ChipReader.chipReaderCur.readerEventWindow = self
+			
 			self.testList.Clear()
+			self.testJChip.SetLabel( 'Stop RFID Test' )
+			self.testJChip.SetValue( True )
+			
 			ChipReader.chipReaderCur.StartListener()
 			
 			self.appendMsg( 'listening for RFID connection...' )
 			
-			self.testJChip.SetLabel( 'Stop RFID Test' )
-			self.testJChip.SetValue( True )
-			
 			# Start a timer to monitor the receiver.
 			self.receivedCount = 0
-			self.timer = wx.CallLater( 1000, self.onTimerCallback, 'started' )			
+			self.timer = wx.CallLater( 1000, self.onTimerCallback, 'started' )
 		else:
-			# Stop the listener.
-			ChipReader.chipReaderCur.StopListener()
-			
-			# Stop the timer sampling the reader.
-			if self.timer:
-				self.timer.Stop()
-				self.timer = None
-			
-			self.testJChip.SetLabel( _('Start RFID Test') )
-			self.testJChip.SetValue( False )
-			self.testList.Clear()
-			
-			# Shutdown the photo sync viewer and the video buffer if they were started.
-			ChipReader.chipReaderCur.readerEventWindow = None
+			print( '**checkpoint 3' )
+			self.stopTest()
+			print( '**checkpoint 6' )
 	
 	def appendMsg( self, s ):
 		self.testList.AppendText( s + '\n' )
@@ -341,15 +337,25 @@ class JChipSetupDialog( wx.Dialog ):
 		if lastTag and Utils.mainWin and getattr(Utils.mainWin, 'findDialog', None):
 			if Utils.mainWin.findDialog.IsShown():
 				Utils.mainWin.findDialog.refresh( lastTag )
-		
+	
+	def stopTest( self ):
+		ChipReader.chipReaderCur.StopListener()
+		if self.timer:
+			self.timer.Stop()
+			self.timer = None
+		self.testList.Clear()
+		ChipReader.chipReaderCur.readerEventWindow = None
+		self.testJChip.SetLabel( _('Start RFID Test') )
+		self.testJChip.SetValue( False )
+
 	def onOK( self, event ):
+		self.stopTest()
 		self.commit()
 		wx.CallAfter( Utils.refresh )
 		self.EndModal( wx.ID_OK )
 		
 	def onCancel( self, event ):
-		if ChipReader.chipReaderCur.listener:
-			self.testJChipToggle( event )
+		self.stopTest()
 		self.EndModal( wx.ID_CANCEL )
 		
 if __name__ == '__main__':
