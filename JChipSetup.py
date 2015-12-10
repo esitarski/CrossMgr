@@ -106,10 +106,10 @@ class JChipSetupDialog( wx.Dialog ):
 		row = 0
 		rowColSizer.Add( wx.StaticText( self, label=u'{}:'.format(_('Reader Type')) ), row=row, col=0, border=border,
 			flag=wx.TOP|wx.LEFT|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
-		self.clientType = wx.Choice( self, choices=[_('JChip/Impinj/Alien'), _('RaceResult')] )
-		self.clientType.SetSelection( 0 )
-		self.clientType.Bind( wx.EVT_CHOICE, self.changeClientType )
-		rowColSizer.Add( self.clientType,
+		self.chipReaderType = wx.Choice( self, choices=[_('JChip/Impinj/Alien'), _('RaceResult')] )
+		self.chipReaderType.SetSelection( 0 )
+		self.chipReaderType.Bind( wx.EVT_CHOICE, self.changechipReaderType )
+		rowColSizer.Add( self.chipReaderType,
 			row=row, col=1, border=border, flag=wx.EXPAND|wx.TOP|wx.RIGHT|wx.ALIGN_LEFT )
 		
 		row += 1
@@ -166,7 +166,7 @@ class JChipSetupDialog( wx.Dialog ):
 		race = Model.race
 		if not race:
 			return
-		race.chipReaderType = self.clientType.GetSelection()
+		race.chipReaderType = max( 0, self.chipReaderType.GetSelection() )
 		race.chipReaderIpAddr = self.ipaddr.GetValue()
 		if race.chipReaderType == 1:
 			Utils.writeConfig( 'RaceResultHost', race.chipReaderIpAddr )
@@ -179,13 +179,13 @@ class JChipSetupDialog( wx.Dialog ):
 		if not race:
 			return
 		self.enableJChipCheckBox.SetValue( race.enableJChipIntegration )
-		self.clientType.SetSelection( race.chipReaderType )
+		self.chipReaderType.SetSelection( max(0, race.chipReaderType) )
 		self.ipaddr.SetValue( race.chipReaderIpAddr )
 		self.port.SetValue( race.chipReaderPort )
-		self.changeClientType()
+		self.changechipReaderType()
 		
-	def changeClientType( self, event=None ):
-		selection = self.clientType.GetSelection()
+	def changechipReaderType( self, event=None ):
+		selection = self.chipReaderType.GetSelection()
 		if selection == 0:	# JChip/CrossMgrImpinj/CrossMgrAlien
 			self.port.SetValue( 53135 )
 			self.port.SetEditable( False )

@@ -278,9 +278,10 @@ class RfidProperties( wx.Panel ):
 		self.chipTimingOptions.SetSelection( self.iResetStartClockOnFirstTag )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		self.clientType = wx.Choice( self, choices=[_('JChip/Impinj/Alien'), _('RaceResult')] )
+		self.chipReaderType = wx.Choice( self, choices=[_('JChip/Impinj/Alien'), _('RaceResult')] )
+		self.chipReaderType.SetSelection( 0 )
 		hs.Add( wx.StaticText( self, label=u'{}:'.format(_('Reader Type')) ), flag=wx.ALIGN_CENTER_VERTICAL )
-		hs.Add( self.clientType, flag=wx.LEFT, border=4)
+		hs.Add( self.chipReaderType, flag=wx.LEFT, border=4)
 		#-------------------------------------------------------------------------------
 		ms = wx.BoxSizer( wx.VERTICAL )
 		self.SetSizer( ms )
@@ -301,7 +302,7 @@ class RfidProperties( wx.Panel ):
 			self.chipTimingOptions.SetSelection( self.iSkipFirstTagRead )
 		else:
 			self.chipTimingOptions.SetSelection( 0 )
-		self.clientType.SetSelection( getattr(race, 'chipReaderType', 0) )
+		self.chipReaderType.SetSelection( max(getattr(race, 'chipReaderType', 0), 0) )
 		
 	def commit( self ):
 		race = Model.race
@@ -309,7 +310,7 @@ class RfidProperties( wx.Panel ):
 		iSelection = self.chipTimingOptions.GetSelection()
 		race.resetStartClockOnFirstTag	= bool(iSelection == self.iResetStartClockOnFirstTag)
 		race.skipFirstTagRead			= bool(iSelection == self.iSkipFirstTagRead)
-		race.chipReaderType = self.clientType.GetSelection()
+		race.chipReaderType = max( 0, self.chipReaderType.GetSelection() )
 	
 #------------------------------------------------------------------------------------------------
 

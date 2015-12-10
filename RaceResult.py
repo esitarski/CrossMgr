@@ -215,7 +215,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 			qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected return'), buffer) )
 			continue
 			
-		qLog( 'status', u'{}'.format(buffer) )
+		qLog( 'status', u'{}'.format(buffer.strip()) )
 		
 		while keepGoing():
 			#-------------------------------------------------------------------------------------------------

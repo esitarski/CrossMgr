@@ -916,11 +916,14 @@ class MainWin( wx.Frame ):
 			
 	def menuChangeProperties( self, event ):
 		if not Model.race:
-			Utils.MessageOK(self, _("You must have a valid race."), _("No Valid Race"), iconMask=wx.ICON_ERROR)
+			Utils.MessageOK(self, _("You must have a valid race.  Open or New a race first."), _("No Valid Race"), iconMask=wx.ICON_ERROR)
 			return
 		ChangeProperties( self )
 		
 	def menuJChip( self, event ):
+		if not Model.race:
+			Utils.MessageOK(self, _("You must have a valid race.  Open or New a race first."), _("No Valid Race"), iconMask=wx.ICON_ERROR)
+			return
 		self.commit()
 		dlg = JChipSetup.JChipSetupDialog( self )
 		dlg.ShowModal()
