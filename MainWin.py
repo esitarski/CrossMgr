@@ -925,6 +925,9 @@ class MainWin( wx.Frame ):
 			Utils.MessageOK(self, _("You must have a valid race.  Open or New a race first."), _("No Valid Race"), iconMask=wx.ICON_ERROR)
 			return
 		self.commit()
+		if Model.race.isRunning():
+			Utils.MessageOK( self, _('Cannot perform RFID setup while race is running.'), _('Cannot Perform RFID Setup'), iconMask=wx.ICON_ERROR )
+			return
 		dlg = JChipSetup.JChipSetupDialog( self )
 		dlg.ShowModal()
 		dlg.Destroy()

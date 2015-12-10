@@ -337,6 +337,7 @@ class JChipSetupDialog( wx.Dialog ):
 			self.timer.Stop()
 			self.timer = None
 		self.testList.Clear()
+		self.appendMsg( _('No test running.') )
 		ChipReader.chipReaderCur.readerEventWindow = None
 		self.testJChip.SetLabel( _('Start RFID Test') )
 		self.testJChip.SetValue( False )
