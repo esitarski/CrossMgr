@@ -3458,11 +3458,11 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 		race = Model.race
 		
 		if not race or not race.enableJChipIntegration:
-			if ChipReader.chipReaderCur.listener:
+			if ChipReader.chipReaderCur.IsListening():
 				ChipReader.chipReaderCur.StopListener()
 			return False
 		
-		if not ChipReader.chipReaderCur.listener:
+		if not ChipReader.chipReaderCur.IsListening():
 			ChipReader.chipReaderCur.reset( race.chipReaderType )
 			ChipReader.chipReaderCur.StartListener( race.startTime )
 			GetTagNums( True )
@@ -3517,7 +3517,7 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 				status = _('Running')
 				if race.enableJChipIntegration:
 					doRefresh = self.processJChipListener()
-				elif ChipReader.chipReaderCur.listener:
+				elif ChipReader.chipReaderCur.IsListening():
 					ChipReader.chipReaderCur.StopListener()
 			else:
 				status = _('Finished')
@@ -3535,7 +3535,7 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 							Utils.formatTime(race.curRaceTime()),
 							race.name, race.raceNum,
 							status, Version.AppVerName,
-							u'<{}>'.format(_('JChip')) if ChipReader.chipReaderCur.listener else u'',
+							u'<{}>'.format(_('JChip')) if ChipReader.chipReaderCur.IsListening() else u'',
 							u'<{}>'.format(_('TimeTrial')) if race.isTimeTrial else u'') )
 
 			if not self.timer.IsRunning():

@@ -16,29 +16,25 @@ class ChipReader( object ):
 			JChip.StopListener()
 			RaceResult.StopListener()
 		self.chipReaderType = (chipReaderType or ChipReader.JChip)
-		if self.chipReaderType == ChipReader.JChip:
-			self.StartListener = JChip.StartListener
-			self.GetData = JChip.GetData
-			self.StopListener = JChip.StopListener
-			self.CleanupListener = JChip.CleanupListener
-			self.IsListening = JChip.IsListening
-		elif self.chipReaderType == ChipReader.RaceResult:
+		if self.chipReaderType == ChipReader.RaceResult:
 			self.StartListener = RaceResult.StartListener
 			self.GetData = RaceResult.GetData
 			self.StopListener = RaceResult.StopListener
 			self.CleanupListener = RaceResult.CleanupListener
 			self.IsListening = RaceResult.IsListening
 		else:
-			assert False, 'Unconfigured ChipReader: {}'.format(self.chipReaderType)
+			self.StartListener = JChip.StartListener
+			self.GetData = JChip.GetData
+			self.StopListener = JChip.StopListener
+			self.CleanupListener = JChip.CleanupListener
+			self.IsListening = JChip.IsListening
 	
 	@property
 	def listener( self ):
-		if self.chipReaderType == ChipReader.JChip:
-			return JChip.listener
-		elif self.chipReaderType == ChipReader.RaceResult:
+		if self.chipReaderType == ChipReader.RaceResult:
 			return RaceResult.listener
 		else:
-			assert False, 'Unconfigured ChipReader'
+			return JChip.listener
 
 chipReaderCur = ChipReader()
 
