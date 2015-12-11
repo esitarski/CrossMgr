@@ -28,13 +28,6 @@ class ChipReader( object ):
 			self.StopListener = JChip.StopListener
 			self.CleanupListener = JChip.CleanupListener
 			self.IsListening = JChip.IsListening
-	
-	@property
-	def listener( self ):
-		if self.chipReaderType == ChipReader.RaceResult:
-			return RaceResult.listener
-		else:
-			return JChip.listener
 
 chipReaderCur = ChipReader()
 
