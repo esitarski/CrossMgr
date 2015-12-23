@@ -8,10 +8,14 @@ import Clock
 import Model
 from ReadSignOnSheet	import ExcelLink
 
-RaceDBUrlDefault = 'http://127.0.0.1:8000/RaceDB'
+def RaceDBUrlDefault():
+	return 'http://{}:8000/RaceDB'.format( Utils.GetDefaultHost() )
+	
+def CrossMgrFolderDefault():
+	return os.path.join( os.path.expanduser('~'), 'CrossMgrRaces' )
 
 def GetRaceDBEvents( url = None, date=None ):
-	url = url or RaceDBUrlDefault
+	url = url or RaceDBUrlDefault()
 	url += '/GetEvents'
 	if date:
 		url += date.strftime('/%Y-%m-%d')
@@ -20,7 +24,7 @@ def GetRaceDBEvents( url = None, date=None ):
 	return events
 	
 def GetEventCrossMgr( url, eventId, eventType ):
-	url = url or RaceDBUrlDefault
+	url = url or RaceDBUrlDefault()
 	url +=['/EventMassStartCrossMgr','/EventTTCrossMgr'][eventType] + '/{}'.format(eventId)
 	req = requests.get( url + '/' )
 	content_disposition = req.headers['content-disposition'].encode('latin-1').decode('utf-8')
@@ -35,16 +39,21 @@ class RaceDB( wx.Dialog ):
 		
 		self.clock = Clock.Clock( self, size=(190,190) )
 		
-		self.raceDBUrl = wx.TextCtrl( self )
-		self.raceFolder = wx.DirPickerCtrl( self )
+		self.raceDBUrl = wx.TextCtrl( self, value=RaceDBUrlDefault(), style=wx.TE_PROCESS_ENTER )
+		self.raceDBUrl.Bind( wx.EVT_TEXT_ENTER, self.onChange )
+		self.raceFolder = wx.DirPickerCtrl( self, path=CrossMgrFolderDefault() )
+		self.datePicker = wx.DatePickerCtrl( self, size=(120,-1), style = wx.DP_DROPDOWN | wx.DP_SHOWCENTURY )
+		self.datePicker.Bind( wx.EVT_DATE_CHANGED, self.onChange )
 		
 		fgs = wx.FlexGridSizer( cols=2, rows=0, vgap=4, hgap=4 )
 		fgs.AddGrowableCol( 1, 1 )
 		
-		fgs.Add( wx.StaticText(self, label=_('RaceDB URL')), flag=wx.ALIGN_RIGHT )
+		fgs.Add( wx.StaticText(self, label=_('RaceDB URL')), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		fgs.Add( self.raceDBUrl, 1, flag=wx.EXPAND )
-		fgs.Add( wx.StaticText(self, label=_('Race Folder')), flag=wx.ALIGN_RIGHT )
+		fgs.Add( wx.StaticText(self, label=_('Race Folder Base')), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		fgs.Add( self.raceFolder, 1, flag=wx.EXPAND )
+		fgs.Add( wx.StaticText(self, label=_('All Events On')), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		fgs.Add( self.datePicker )
 		
 		hsHeader = wx.BoxSizer( wx.HORIZONTAL )
 		hsHeader.Add( raceDBLogo )
@@ -96,11 +105,16 @@ class RaceDB( wx.Dialog ):
 		vs.Add( self.tree, 1, flag=wx.EXPAND )
 		vs.Add( hs, 0, flag=wx.EXPAND|wx.ALL, border=8 )
 		self.SetSizer( vs )
+		
+		self.refresh()
 
+	def onChange( self, event ):
+		wx.CallAfter( self.refresh )
+		
 	def doOK( self, event ):
 		url = self.raceDBUrl.GetValue().strip()
 		if not url:
-			url = RaceDBUrlDefault
+			url = RaceDBUrlDefault()
 		while url.endswith( '/' ):
 			url = url[:-1]
 		
@@ -117,14 +131,11 @@ class RaceDB( wx.Dialog ):
 		if not Utils.MessageOKCancel( self, u'{}:n\n"{}"'.format( _('Initialize Timing for'), filename), _('Confirm Initialize Timing') ):
 			return
 		
-		dir = self.raceFolder.GetPath().strip()
-		if not dir:
-			dir = os.path.join(
-				os.path.expanduser('~'),
-				'CrossMgr',
-				Utils.RemoveDisallowedFilenameChars(self.dataSelect['competition_name'])
-			)
-		if not os.isdir(dir):
+		dir = os.path.join(
+			self.raceFolder.GetPath().strip() or CrossMgrFolderDefault(),
+			Utils.RemoveDisallowedFilenameChars(self.dataSelect['competition_name']),
+		)
+		if not os.path.isdir(dir):
 			try:
 				os.makedirs( dir )
 			except Exception as e:
@@ -132,7 +143,7 @@ class RaceDB( wx.Dialog ):
 					self,
 					u'{}\n\n"{}"'.format( _('Error Creating Folder'), e),
 					_('Error Creating Folder'),
-					iconMask=wx.ICON_ERROR
+					iconMask=wx.ICON_ERROR,
 				)
 				return
 		
@@ -145,7 +156,7 @@ class RaceDB( wx.Dialog ):
 				self,
 				u'{}\n\n{}\n\n{}'.format( _('Error Writing File'), e, excelFName),
 				_('Error Writing File'),
-				iconMask=wx.ICON_ERROR
+				iconMask=wx.ICON_ERROR,
 			)
 			return
 		
@@ -169,7 +180,18 @@ class RaceDB( wx.Dialog ):
 		except Exception as e:
 			self.dataSelect = None
 		
-	def refresh( self, events ):
+	def refresh( self, events=None ):
+		if events is None:
+			try:
+				d = self.datePicker.GetValue()
+				events = GetRaceDBEvents(
+					url=self.raceDBUrl.GetValue(),
+					date=datetime.date( d.GetYear(), d.GetMonth()+1, d.GetDay() ),
+				)
+			except Exception as e:
+				print e
+				events = {'events':[]}
+		
 		competitions = {}
 		for e in events['events']:
 			try:
