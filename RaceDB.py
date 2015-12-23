@@ -39,19 +39,19 @@ class RaceDB( wx.Dialog ):
 		
 		self.clock = Clock.Clock( self, size=(190,190) )
 		
+		self.raceFolder = wx.DirPickerCtrl( self, path=CrossMgrFolderDefault() )
 		self.raceDBUrl = wx.TextCtrl( self, value=RaceDBUrlDefault(), style=wx.TE_PROCESS_ENTER )
 		self.raceDBUrl.Bind( wx.EVT_TEXT_ENTER, self.onChange )
-		self.raceFolder = wx.DirPickerCtrl( self, path=CrossMgrFolderDefault() )
 		self.datePicker = wx.DatePickerCtrl( self, size=(120,-1), style = wx.DP_DROPDOWN | wx.DP_SHOWCENTURY )
 		self.datePicker.Bind( wx.EVT_DATE_CHANGED, self.onChange )
 		
 		fgs = wx.FlexGridSizer( cols=2, rows=0, vgap=4, hgap=4 )
 		fgs.AddGrowableCol( 1, 1 )
 		
-		fgs.Add( wx.StaticText(self, label=_('RaceDB URL')), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
-		fgs.Add( self.raceDBUrl, 1, flag=wx.EXPAND )
 		fgs.Add( wx.StaticText(self, label=_('Race Folder')), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		fgs.Add( self.raceFolder, 1, flag=wx.EXPAND )
+		fgs.Add( wx.StaticText(self, label=_('RaceDB URL')), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		fgs.Add( self.raceDBUrl, 1, flag=wx.EXPAND )
 		fgs.Add( wx.StaticText(self, label=_('All Events On')), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
@@ -134,7 +134,7 @@ class RaceDB( wx.Dialog ):
 				iconMask=wx.ICON_ERROR )
 			return
 		
-		if not Utils.MessageOKCancel( self, u'{}:n\n"{}"'.format( _('Initialize Timing for'), filename), _('Confirm Initialize Timing') ):
+		if not Utils.MessageOKCancel( self, u'{}:\n\n"{}"'.format( _('Open Event'), filename), _('Open Event') ):
 			return
 		
 		dir = os.path.join(

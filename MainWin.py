@@ -65,6 +65,7 @@ from WebScorerExport	import WebScorerExport
 from HelpSearch			import HelpSearchDialog
 from Utils				import logCall, logException
 from FileDrop			import FileDrop
+from RaceDB				import RaceDB
 import Model
 import JChipSetup
 import JChipImport
@@ -267,7 +268,7 @@ class MainWin( wx.Frame ):
 		self.fileMenu.AppendSeparator()
 		
 		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.fileMenu, idCur , _("New from &RaceDB..."), _("Create a new race from RaceDB output"), Utils.GetPngBitmap('database-add.png') )
+		AppendMenuItemBitmap( self.fileMenu, idCur , _("New from &RaceDB Excel..."), _("Create a new race from RaceDB Excel output"), Utils.GetPngBitmap('database-add.png') )
 		self.Bind(wx.EVT_MENU, self.menuNewRaceDB, id=idCur )
 
 		self.fileMenu.AppendSeparator()
@@ -279,6 +280,12 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_MENU, self.menuOpenNext, id=idCur )
 
 		self.fileMenu.AppendSeparator()
+		idCur = wx.NewId()
+		self.fileMenu.Append( idCur , _("Open from RaceDB..."), _("Open a Race from RaceDB") )
+		self.Bind(wx.EVT_MENU, self.menuOpenRaceDB, id=idCur )
+
+		self.fileMenu.AppendSeparator()
+		
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.fileMenu, idCur , _("&Restore from Original Input..."), _("Restore from Original Input"),
 			Utils.GetPngBitmap('document-revert.png') )
@@ -2644,6 +2651,12 @@ class MainWin( wx.Frame ):
 			self.openRace( fileName )
 		except (AttributeError, IndexError, StopIteration) as e:
 			Utils.MessageOK(self, u'{}.\n\n{}'.format(_('No next race'),e), _('No next race'), iconMask=wx.ICON_ERROR )
+
+	@logCall
+	def menuOpenRaceDB( self, event ):
+		dlg = RaceDB( self )
+		dlg.ShowModal()
+		dlg.Destroy()
 
 	@logCall
 	def menuCloseRace(self, event ):
