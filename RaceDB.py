@@ -1,5 +1,6 @@
 import requests
 import datetime
+import os
 import wx
 import wx.gizmos as gizmos
 import Utils
@@ -22,11 +23,32 @@ def GetEventCrossMgr( eventId, eventType ):
 	return req.content
 
 class RaceDB( wx.Dialog ):
-	def __init__( self, parent, id=wx.ID_ANY, size=(600,600) ):
+	def __init__( self, parent, id=wx.ID_ANY, size=(600,900) ):
 		super(RaceDB, self).__init__(parent, id, style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME, size=size, title=_('Select RaceDB Event'))
 		
-		self.clock = Clock.Clock( self )
-		self.clock.SetSize( wx.Size(96,96) )
+		raceDBLogo = wx.StaticBitmap( self, bitmap=wx.Bitmap( os.path.join(Utils.getImageFolder(), 'RaceDB_big.png'), wx.BITMAP_TYPE_PNG ) )
+		
+		self.clock = Clock.Clock( self, size=(190,190) )
+		
+		self.raceDBUrl = wx.TextCtrl( self )
+		self.raceFolder = wx.DirPickerCtrl( self )
+		
+		fgs = wx.FlexGridSizer( cols=2, rows=0, vgap=4, hgap=4 )
+		fgs.AddGrowableCol( 1, 1 )
+		
+		fgs.Add( wx.StaticText(self, label=_('RaceDB URL')), flag=wx.ALIGN_RIGHT )
+		fgs.Add( self.raceDBUrl, 1, flag=wx.EXPAND )
+		fgs.Add( wx.StaticText(self, label=_('Race Folder')), flag=wx.ALIGN_RIGHT )
+		fgs.Add( self.raceFolder, 1, flag=wx.EXPAND )
+		
+		hsHeader = wx.BoxSizer( wx.HORIZONTAL )
+		hsHeader.Add( raceDBLogo )
+		hsHeader.AddStretchSpacer()
+		hsHeader.Add( self.clock )
+		
+		vsHeader = wx.BoxSizer( wx.VERTICAL )
+		vsHeader.Add( hsHeader, flag=wx.EXPAND )
+		vsHeader.Add( fgs, 1, flag=wx.EXPAND )
 		
 		self.tree = gizmos.TreeListCtrl( self, style=wx.TR_DEFAULT_STYLE|wx.TR_FULL_ROW_HIGHLIGHT|wx.TR_ROW_LINES )
 		
@@ -60,7 +82,7 @@ class RaceDB( wx.Dialog ):
 		hs.Add( self.cancelButton, flag=wx.LEFT, border=4 )
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
-		vs.Add( self.clock, flag=wx.ALIGN_CENTER|wx.ALL, border=8 )
+		vs.Add( vsHeader, flag=wx.ALL|wx.EXPAND, border=8 )
 		vs.Add( self.tree, 1, flag=wx.EXPAND )
 		vs.Add( hs, 0, flag=wx.EXPAND|wx.ALL, border=8 )
 		self.SetSizer( vs )
