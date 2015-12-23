@@ -32,13 +32,13 @@ with Utils.SuspendTranslation():
 		_('LastName'), _('FirstName'),
 		_('Team'),
 		_('Nat.'), _('State'), _('Prov'), _('StateProv'), _('City'),
-		_('Category'), _('EventCategory'), _('Age'), _('Gender'),
+		_('Category'), _('EventCategory'), _('CustomCategory'), _('Age'), _('Gender'),
 		_('License'),
 		_('UCICode'),
 		_('Factor'),
 	] + TagFields
 
-IgnoreFields = ['Bib#', 'Factor', 'EventCategory'] + TagFields	# Fields to ignore when adding data to standard reports.
+IgnoreFields = ['Bib#', 'Factor', 'EventCategory', 'CustomCategory'] + TagFields	# Fields to ignore when adding data to standard reports.
 ReportFields = [f for f in Fields if f not in IgnoreFields]
 
 class FileNamePage(wiz.WizardPageSimple):
@@ -218,9 +218,9 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 			self.choices.append( wx.Choice(sp, -1, choices = self.headers ) )
 			gs.Add( self.choices[-1] )
 		
-		self.initCategoriesFromExcel = wx.CheckBox( self, label=_('Initialize CrossMgr Categories from Excel EventCategory and Bib# columns') )
+		self.initCategoriesFromExcel = wx.CheckBox( self, label=_('Initialize CrossMgr Categories from Excel EventCategory/CustomCategory and Bib# columns') )
 		self.initCategoriesFromExcel.SetToolTip( wx.ToolTip(u'\n'.join([
-				_('Updates, adds or deletes CrossMgr categories, with bib numbers, using the EventCategory and Bib# columns in the Excel sheet.  Use with care as the Categories will be updated every time the Excel sheet changes.  Read the documentation first!'),
+				_('Updates, adds or deletes CrossMgr categories, with bib numbers, using the EventCategory/CustomCategory and Bib# columns in the Excel sheet.  Use with care as the Categories will be updated every time the Excel sheet changes.  Read the documentation first!'),
 			])
 		) )
 		
@@ -297,7 +297,7 @@ class SummaryPage(wiz.WizardPageSimple):
 		self.riderNumber = wx.StaticText( self )
 		rows += 1
 
-		self.getCategoriesFromCategoriesLabel = wx.StaticText( self, label=u'{}:'.format(_('CrossMgr Categories from Excel EventCategory')) )
+		self.getCategoriesFromCategoriesLabel = wx.StaticText( self, label=u'{}:'.format(_('CrossMgr Categories from Excel EventCategory/CustomCategory')) )
 		self.initCategoriesFromExcel = wx.StaticText( self )
 		rows += 1
 
@@ -885,7 +885,8 @@ class ExcelLink( object ):
 			self.hasCategoriesSheet = ReadCategoriesFromExcel( reader )
 			self.hasPropertiesSheet = ReadPropertiesFromExcel( reader )
 			
-		if not self.hasCategoriesSheet and self.initCategoriesFromExcel and self.hasField('EventCategory'):
+		if not self.hasCategoriesSheet and self.initCategoriesFromExcel and (
+				self.hasField('EventCategory') or self.hasField('CustomCategory')):
 			MatchingCategory.PrologMatchingCategory()
 			for bib, fields in infoCache.iteritems():
 				MatchingCategory.AddToMatchingCategory( bib, fields )

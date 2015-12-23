@@ -15,25 +15,32 @@ def AddToMatchingCategory( bib, fields ):
 	race = Model.race
 	if not race:
 		return None
-	categoryName, gender = fields.get('EventCategory',None), fields.get('Gender',None)
-	if not categoryName:
-		return None
-	
-	categories = race.categories
-	getFullName = Model.Category.getFullName
-	
-	found = None
-	if gender:
-		found = categories.get(getFullName(categoryName,gender), None)
-	
-	if found is None:
-		found = categories.get(getFullName(categoryName,'Men'), None) or categories.get(getFullName(categoryName,'Women'), None) or categories.get(getFullName(categoryName,'Open'), None)
-	
-	if found is None:
-		found = Model.Category( name=categoryName, catStr=unicode(bib), sequence=len(categories), gender=gender )
-		categories[found.fullname] = found
-	else:
-		found.intervals.append( (bib, bib) )
+	for isCustom, CategoryType in ((False, 'EventCategory'), (True, 'CustomCategory')):
+		categoryName, gender = fields.get(CategoryType,None), fields.get('Gender',None)
+		if not categoryName:
+			continue
+		
+		categories = race.categories
+		getFullName = Model.Category.getFullName
+		
+		found = None
+		if gender:
+			found = categories.get(getFullName(categoryName,gender), None)
+		
+		if found is None:
+			found = categories.get(getFullName(categoryName,'Men'), None) or categories.get(getFullName(categoryName,'Women'), None) or categories.get(getFullName(categoryName,'Open'), None)
+		
+		if found is None:
+			found = Model.Category(
+				name=categoryName,
+				catStr=unicode(bib),
+				sequence=len(categories),
+				gender=gender,
+				catType=Model.Category.CatCustom if isCustom else Model.Category.CatWave
+			)
+			categories[found.fullname] = found
+		else:
+			found.intervals.append( (bib, bib) )
 
 def EpilogMatchingCategory():
 	race = Model.race

@@ -9,7 +9,7 @@ It is easy to change CrossMgr categories before, during and afterwards.  A rider
 Ideally, each category in the race would have a unique number range, for example 1-99 would be in one category, 100-199 would be in another, etc.
 This is not only easier to configure in CrossMgr, it makes it easy for riders and race officials to know the set of competitors in the same race.
 
-If you don't have number ranges by category, and you have "arbitrary" numbers, consider using the __Initialize CrossMgr Categories from Excel EventCategory and Bib# columns__ option in [DataMgmt][].  This feature allows you to set the Category numbers automatically from a spreadsheet.
+If you don't have number ranges by category, and you have "arbitrary" numbers, consider using the __Initialize CrossMgr Categories from Excel EventCategory/CustomCategory and Bib# columns__ option in [DataMgmt][].  This feature allows you to set the Category numbers automatically from a spreadsheet.
 
 It is commonplace to combine categories together into a single start wave (for example, Elite Women and Master Women, or Cat 3 and Cat 4).
 Or, sometimes categories are in different start waves with a time offset between them.
@@ -108,10 +108,27 @@ Set the __Upload__ flag to control whether you want to upload the the "Start Wav
 
 The __Series__flag works similarly, but indicates that a category should be included in a race Series.  The program SeriesMgr looks at this flag.
 
-### Note about __Initialize CrossMgr Categories from Excel EventCategory and Bib# columns__ option in [DataMgmt][]/Link to External Excel Data...
+### Note about __Initialize CrossMgr Categories from Excel EventCategory/CustomCategory and Bib# columns__ option in [DataMgmt][]/Link to External Excel Data...
 If you choose this option, the Categories and Bib numbers will be determined by the contents of the Excel sheet.
 Any changes you make in CrossMgr will be over-written by the information in the Excel sheet.
-If you choose this option, always make Bib and EventCategory changes in the Excel spreadsheet, not in CrossMgr.
+
+If you choose this option, always your changes in the Excel spreadsheet, not in CrossMgr.
+
+The __EventCategory__ column initializes the "Start Wave" or "Component" CrossMgr category.
+
+The __CustomCategory__ initializes the "Custom" CrossMgr category (for a description of "Start Wave" and "Custom" categories, see above).
+
+For example, say you had a Gran Fondo with Fast, Medium and Slow start waves, each starting 10 minutes apart.
+Riders pick which start they want at registration.
+
+You also need to rank the riders by Age Group, regardless of the wave they started in.
+Riders of any age can choose any Wave, so you could have 20-29, 30-39, 40-49 etc. riders in each Wave.
+
+Because there is no relationship between Start Wave and Age Group, you cannot use Start Wave/Component categories.
+
+This is where the __CustomCategory__ comes in.  From the spreadsheet, set the Wave as the __EventCategory__, and set the Age Group as the __CustomCategory__.
+This tells CrossMgr to add the rider to two categories - the Start Wave, and the Age Group.
+It will then rank the riders in both.  This allows you to produce results for the Wave as well as the Age Group at the same time.
 
 # Controls
 
