@@ -33,7 +33,7 @@ def GetEventCrossMgr( url, eventId, eventType ):
 
 class RaceDB( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY, size=(600,900) ):
-		super(RaceDB, self).__init__(parent, id, style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME, size=size, title=_('Select RaceDB Event'))
+		super(RaceDB, self).__init__(parent, id, style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME, size=size, title=_('Open RaceDB Event'))
 		
 		raceDBLogo = wx.StaticBitmap( self, bitmap=wx.Bitmap( os.path.join(Utils.getImageFolder(), 'RaceDB_big.png'), wx.BITMAP_TYPE_PNG ) )
 		
@@ -50,15 +50,21 @@ class RaceDB( wx.Dialog ):
 		
 		fgs.Add( wx.StaticText(self, label=_('RaceDB URL')), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		fgs.Add( self.raceDBUrl, 1, flag=wx.EXPAND )
-		fgs.Add( wx.StaticText(self, label=_('Race Folder Base')), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		fgs.Add( wx.StaticText(self, label=_('Race Folder')), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		fgs.Add( self.raceFolder, 1, flag=wx.EXPAND )
 		fgs.Add( wx.StaticText(self, label=_('All Events On')), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
-		fgs.Add( self.datePicker )
+		
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( self.datePicker, flag=wx.ALIGN_CENTER_VERTICAL )
+		self.updateButton = wx.Button( self, label=_('Update') )
+		self.updateButton.Bind( wx.EVT_BUTTON, self.onChange )
+		hs.Add( self.updateButton, flag=wx.LEFT, border=16 )
+		fgs.Add( hs )
 		
 		hsHeader = wx.BoxSizer( wx.HORIZONTAL )
 		hsHeader.Add( raceDBLogo )
 		hsHeader.AddStretchSpacer()
-		hsHeader.Add( self.clock )
+		hsHeader.Add( self.clock, flag=wx.TOP|wx.RIGHT, border=8 )
 		
 		vsHeader = wx.BoxSizer( wx.VERTICAL )
 		vsHeader.Add( hsHeader, flag=wx.EXPAND )
@@ -93,7 +99,7 @@ class RaceDB( wx.Dialog ):
 		self.dataSelect = None
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		self.okButton = wx.Button( self, label=_("Initialize Timing for Event") )
+		self.okButton = wx.Button( self, label=_("Open Event") )
 		self.okButton.Bind( wx.EVT_BUTTON, self.doOK )
 		self.cancelButton = wx.Button( self, id=wx.ID_CANCEL )
 		hs.Add( self.okButton )
