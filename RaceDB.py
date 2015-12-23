@@ -5,19 +5,23 @@ import wx
 import wx.gizmos as gizmos
 import Utils
 import Clock
+import Model
+from ReadSignOnSheet	import ExcelLink
 
 RaceDBUrlDefault = 'http://127.0.0.1:8000/RaceDB'
 
-def GetRaceDBEvents( date=None ):
-	url = RaceDBUrlDefault + '/GetEvents'
+def GetRaceDBEvents( url = None, date=None ):
+	url = url or RaceDBUrlDefault
+	url += '/GetEvents'
 	if date:
 		url += date.strftime('/%Y-%m-%d')
 	req = requests.get( url + '/' )
 	events = req.json()
 	return events
 	
-def GetEventCrossMgr( eventId, eventType ):
-	url = RaceDBUrlDefault + ['/EventMassStartCrossMgr','/EventTTCrossMgr'][eventType] + '/{}'.format(eventId)
+def GetEventCrossMgr( url, eventId, eventType ):
+	url = url or RaceDBUrlDefault
+	url +=['/EventMassStartCrossMgr','/EventTTCrossMgr'][eventType] + '/{}'.format(eventId)
 	req = requests.get( url + '/' )
 	content_disposition = req.headers['content-disposition'].encode('latin-1').decode('utf-8')
 	filename = content_disposition.split('=')[1].replace("'",'').replace('"','')
@@ -97,16 +101,68 @@ class RaceDB( wx.Dialog ):
 		url = self.raceDBUrl.GetValue().strip()
 		if not url:
 			url = RaceDBUrlDefault
+		while url.endswith( '/' ):
+			url = url[:-1]
+		
+		try:
+			filename, content = GetEventCrossMgr( url, self.dataSelect['pk'], self.dataSelect['event_type'] )
+		except Exception as e:
+			Utils.MessageOK(
+				self,
+				u'{}\n\n"{}"\n\n{}'.format(_('Error Connecting to RaceDB Server'), url, e),
+				_('Error Connecting to RaceDB Server'),
+				iconMask=wx.ICON_ERROR )
+			return
+		
+		if not Utils.MessageOKCancel( self, u'{}:n\n"{}"'.format( _('Initialize Timing for'), filename), _('Confirm Initialize Timing') ):
+			return
+		
 		dir = self.raceFolder.GetPath().strip()
 		if not dir:
-			dir = os.path.expanduser('~')
-		try:
-			filename, content = GetEventCrossMgr( self.dataSelect['pk'], self.dataSelect['event_type'] )
-		except Exception as e:
-			raise e
-		print filename
-		self.EndModal( wx.ID_OK )
+			dir = os.path.join(
+				os.path.expanduser('~'),
+				'CrossMgr',
+				Utils.RemoveDisallowedFilenameChars(self.dataSelect['competition_name'])
+			)
+		if not os.isdir(dir):
+			try:
+				os.makedirs( dir )
+			except Exception as e:
+				Utils.MessageOK(
+					self,
+					u'{}\n\n"{}"'.format( _('Error Creating Folder'), e),
+					_('Error Creating Folder'),
+					iconMask=wx.ICON_ERROR
+				)
+				return
 		
+		excelFName = os.path.join(dir, filename)
+		try:
+			with open( excelFName, 'wb' ) as f:
+				f.write( content )
+		except Exception as e:
+			Utils.MessageOKCancel(
+				self,
+				u'{}\n\n{}\n\n{}'.format( _('Error Writing File'), e, excelFName),
+				_('Error Writing File'),
+				iconMask=wx.ICON_ERROR
+			)
+			return
+		
+		mainWin = Utils.getMainWin()
+		if mainWin:
+			crossMgrFName = os.path.splitext( excelFName )[0] + '.cmn'
+			if os.path.exists(crossMgrFName):
+				mainWin.openRace( crossMgrFName )
+				excelLink = ExcelLink()
+				excelLink.setFileName( excelFName )
+				excelLink.setSheetName( 'Registration' )
+				excelLink.bindDefaultFieldCols()
+				Model.race.excelLink = excelLink
+			else:
+				mainWin.openRaceDBExcel( excelFName )
+		self.EndModal( wx.ID_OK )
+	
 	def selectChangedCB( self, evt ):
 		try:
 			self.dataSelect = self.tree.GetItemPyData(evt.GetItem())
@@ -128,7 +184,7 @@ class RaceDB( wx.Dialog ):
 			competition['events'].append( e )
 			competition['participant_count'] += e['participant_count']
 		
-		self.tree.DeleteAllItems()		
+		self.tree.DeleteAllItems()
 		self.root = self.tree.AddRoot( _('All') )
 		self.tree.SetItemText( self.root, unicode(sum(c['participant_count'] for c in competitions.itervalues())), self.participantCountCol )
 		
@@ -147,7 +203,7 @@ class RaceDB( wx.Dialog ):
 			competition = self.tree.AppendItem( self.root, cName )
 			self.tree.SetItemText( competition, unicode(participant_count), self.participantCountCol )
 			for e in events:
-				eventData = {'pk':e['pk'], 'event_type':e['event_type']}
+				eventData = e
 				event = self.tree.AppendItem( competition, u'{}: {}'.format(_('Event'), e['name']), data=wx.TreeItemData(eventData) )
 				self.tree.SetItemText( event, get_tod(e['date_time']), self.startTimeCol )
 				self.tree.SetItemText( event, _('Mass Start') if e['event_type'] == 0 else _('Time Trial'), self.eventTypeCol )
@@ -156,7 +212,7 @@ class RaceDB( wx.Dialog ):
 				tEvent = datetime.datetime.combine( tNow.date(), get_time(e['date_time']) )
 				if eventClosest is None and tEvent > tNow:
 					eventClosest = event
-					self.dataSelect = e['pk']
+					self.dataSelect = eventData
 				
 				for w in e['waves']:
 					wave = self.tree.AppendItem( event, u'{}: {}'.format(_('Wave'), w['name']), data=wx.TreeItemData(eventData) )
@@ -176,8 +232,8 @@ class RaceDB( wx.Dialog ):
 
 if __name__ == '__main__':
 	events = GetRaceDBEvents()
-	print GetRaceDBEvents( datetime.date.today() )
-	print GetRaceDBEvents( datetime.date.today() - datetime.timedelta(days=2) )
+	print GetRaceDBEvents( date=datetime.date.today() )
+	print GetRaceDBEvents( date=datetime.date.today() - datetime.timedelta(days=2) )
 	
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(1000,400))
