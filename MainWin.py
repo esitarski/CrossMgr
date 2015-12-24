@@ -238,6 +238,8 @@ class MainWin( wx.Frame ):
 		self.fileName = None
 		self.numSelect = None
 		
+		self.raceDBDialog = None
+		
 		# Setup the objects for the race clock.
 		self.timer = wx.Timer( self, id=wx.NewId() )
 		self.secondCount = 0
@@ -2662,9 +2664,9 @@ class MainWin( wx.Frame ):
 
 	@logCall
 	def menuOpenRaceDB( self, event ):
-		dlg = RaceDB( self )
-		dlg.ShowModal()
-		dlg.Destroy()
+		if self.raceDBDialog is None:
+			self.raceDBDialog = RaceDB( self )
+		self.raceDBDialog.ShowModal()
 
 	@logCall
 	def menuCloseRace(self, event ):
