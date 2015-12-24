@@ -32,9 +32,38 @@ def GetEventCrossMgr( url, eventId, eventType ):
 	filename = content_disposition.split('=')[1].replace("'",'').replace('"','')
 	return filename, req.content
 
+class URLDropTarget(wx.PyDropTarget):
+	def __init__(self, window, callback=None):
+		wx.PyDropTarget.__init__(self)
+		self.window = window
+		self.callback = callback
+		self.data = wx.URLDataObject();
+		self.SetDataObject(self.data)
+
+	def OnDragOver(self, x, y, d):
+		return wx.DragLink
+
+	def OnData(self, x, y, d):
+		if not self.GetData():
+			return wx.DragNone
+		url = self.data.GetURL()
+		if not (url.startswith('http://') or url.startswith('https://')):
+			url = 'http://' + url
+		self.window.SetValue(url)
+		if self.callback:
+			wx.CallAfter( self.callback )
+		return d
+
 class RaceDB( wx.Dialog ):
-	def __init__( self, parent, id=wx.ID_ANY, size=(600,700) ):
+	def __init__( self, parent, id=wx.ID_ANY, size=(600,900) ):
 		super(RaceDB, self).__init__(parent, id, style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME, size=size, title=_('Open RaceDB Event'))
+		
+		fontPixels = 24
+		font = wx.FontFromPixelSize(wx.Size(0,fontPixels), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
+		
+		explain = wx.StaticText( self, label=u'{}:\n         \u2193\u2193\u2193\u2193\u2193'.format(
+			_('Drag and Drop the RaceDB Url from your browser\nonto the RaceDB logo') ) )
+		explain.SetFont( font )
 		
 		raceDBLogo = wx.StaticBitmap( self, bitmap=wx.Bitmap( os.path.join(Utils.getImageFolder(), 'RaceDB_big.png'), wx.BITMAP_TYPE_PNG ) )
 		
@@ -43,6 +72,8 @@ class RaceDB( wx.Dialog ):
 		self.raceFolder = wx.DirPickerCtrl( self, path=CrossMgrFolderDefault() )
 		self.raceDBUrl = wx.TextCtrl( self, value=RaceDBUrlDefault(), style=wx.TE_PROCESS_ENTER )
 		self.raceDBUrl.Bind( wx.EVT_TEXT_ENTER, self.onChange )
+		self.raceDBUrl.SetDropTarget(URLDropTarget(self.raceDBUrl, self.refresh))
+		raceDBLogo.SetDropTarget(URLDropTarget(self.raceDBUrl, self.refresh))
 		self.datePicker = wx.DatePickerCtrl( self, size=(120,-1), style = wx.DP_DROPDOWN | wx.DP_SHOWCENTURY )
 		self.datePicker.Bind( wx.EVT_DATE_CHANGED, self.onChange )
 		
@@ -108,6 +139,7 @@ class RaceDB( wx.Dialog ):
 		hs.Add( self.cancelButton, flag=wx.LEFT, border=4 )
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
+		vs.Add( explain, flag=wx.ALL, border=8 )
 		vs.Add( vsHeader, flag=wx.ALL|wx.EXPAND, border=8 )
 		vs.Add( self.tree, 1, flag=wx.EXPAND )
 		vs.Add( hs, 0, flag=wx.EXPAND|wx.ALL, border=8 )
@@ -193,6 +225,7 @@ class RaceDB( wx.Dialog ):
 					date=datetime.date( d.GetYear(), d.GetMonth()+1, d.GetDay() ),
 				)
 			except Exception as e:
+				print e
 				events = {'events':[]}
 		
 		competitions = {}
