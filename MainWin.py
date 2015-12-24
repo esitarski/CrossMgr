@@ -2428,7 +2428,7 @@ class MainWin( wx.Frame ):
 		self.refreshAll()
 
 	@logCall
-	def openRaceDBExcel( self, fname ):
+	def openRaceDBExcel( self, fname, overwriteExisting=True ):
 		race = Model.race
 		self.showPageName( _('Actions') )
 		self.closeFindDialog()
@@ -2484,11 +2484,18 @@ class MainWin( wx.Frame ):
 			Model.race = raceSave
 			return
 
-		# Check for existing file.
-		if os.path.exists(fileName) and \
-		   not Utils.MessageOKCancel(self, u'{}\n\n    "{}"'.format(_("File already exists.  Overwrite?"), fileName), _('File Exists')):
-			Model.race = raceSave
-			return
+		if os.path.exists(fileName):
+			if overwriteExisting:
+				if not Utils.MessageOKCancel( self,
+					u'{}\n\n    "{}"'.format(_("File already exists.  Overwrite?"), fileName),
+					_('File Exists') ):
+					Model.race = raceSave
+					return
+			else:
+				Model.race = raceSave
+				self.openRace( fileName )
+				Model.race.excelLink = excelLink
+				return
 
 		# Try to open the file.
 		try:

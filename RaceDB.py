@@ -32,7 +32,7 @@ def GetEventCrossMgr( url, eventId, eventType ):
 	return filename, req.content
 
 class RaceDB( wx.Dialog ):
-	def __init__( self, parent, id=wx.ID_ANY, size=(600,900) ):
+	def __init__( self, parent, id=wx.ID_ANY, size=(600,700) ):
 		super(RaceDB, self).__init__(parent, id, style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME, size=size, title=_('Open RaceDB Event'))
 		
 		raceDBLogo = wx.StaticBitmap( self, bitmap=wx.Bitmap( os.path.join(Utils.getImageFolder(), 'RaceDB_big.png'), wx.BITMAP_TYPE_PNG ) )
@@ -168,16 +168,7 @@ class RaceDB( wx.Dialog ):
 		
 		mainWin = Utils.getMainWin()
 		if mainWin:
-			crossMgrFName = os.path.splitext( excelFName )[0] + '.cmn'
-			if os.path.exists(crossMgrFName):
-				mainWin.openRace( crossMgrFName )
-				excelLink = ExcelLink()
-				excelLink.setFileName( excelFName )
-				excelLink.setSheetName( 'Registration' )
-				excelLink.bindDefaultFieldCols()
-				Model.race.excelLink = excelLink
-			else:
-				mainWin.openRaceDBExcel( excelFName )
+			mainWin.openRaceDBExcel( excelFName, overwriteExisting=False )
 		self.EndModal( wx.ID_OK )
 	
 	def selectChangedCB( self, evt ):
@@ -195,7 +186,6 @@ class RaceDB( wx.Dialog ):
 					date=datetime.date( d.GetYear(), d.GetMonth()+1, d.GetDay() ),
 				)
 			except Exception as e:
-				print e
 				events = {'events':[]}
 		
 		competitions = {}
@@ -214,7 +204,10 @@ class RaceDB( wx.Dialog ):
 		
 		self.tree.DeleteAllItems()
 		self.root = self.tree.AddRoot( _('All') )
-		self.tree.SetItemText( self.root, unicode(sum(c['participant_count'] for c in competitions.itervalues())), self.participantCountCol )
+		self.tree.SetItemText(
+			self.root,
+			unicode(sum(c['participant_count'] for c in competitions.itervalues())), self.participantCountCol
+		)
 		
 		def get_tod( t ):
 			return t.split()[1][:5].lstrip('0')
