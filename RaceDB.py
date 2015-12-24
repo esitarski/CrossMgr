@@ -9,7 +9,8 @@ import Model
 from ReadSignOnSheet	import ExcelLink
 
 def RaceDBUrlDefault():
-	return 'http://{}:8000/RaceDB'.format( Utils.GetDefaultHost() )
+	#return 'http://{}:8000/RaceDB'.format( Utils.GetDefaultHost() )
+	return 'http://{}:8000/RaceDB'.format( '127.0.0.1' )
 	
 def CrossMgrFolderDefault():
 	return os.path.join( os.path.expanduser('~'), 'CrossMgrRaces' )
