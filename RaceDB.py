@@ -116,13 +116,19 @@ class RaceDB( wx.Dialog ):
 
 	def onChange( self, event ):
 		wx.CallAfter( self.refresh )
-		
-	def doOK( self, event ):
+	
+	def fixUrl( self ):
 		url = self.raceDBUrl.GetValue().strip()
 		if not url:
 			url = RaceDBUrlDefault()
+		url = url.split('RaceDB')[0] + 'RaceDB'
 		while url.endswith( '/' ):
 			url = url[:-1]
+		self.raceDBUrl.SetValue( url )
+		return url
+	
+	def doOK( self, event ):
+		url = self.fixUrl()
 		
 		try:
 			filename, content = GetEventCrossMgr( url, self.dataSelect['pk'], self.dataSelect['event_type'] )
@@ -134,7 +140,7 @@ class RaceDB( wx.Dialog ):
 				iconMask=wx.ICON_ERROR )
 			return
 		
-		if not Utils.MessageOKCancel( self, u'{}:\n\n"{}"'.format( _('Open Event'), filename), _('Open Event') ):
+		if not Utils.MessageOKCancel( self, u'{}:\n\n"{}"'.format( _('Confirm Open Event'), filename), _('Confirm Open Event') ):
 			return
 		
 		dir = os.path.join(
@@ -182,7 +188,7 @@ class RaceDB( wx.Dialog ):
 			try:
 				d = self.datePicker.GetValue()
 				events = GetRaceDBEvents(
-					url=self.raceDBUrl.GetValue(),
+					url=self.fixUrl(),
 					date=datetime.date( d.GetYear(), d.GetMonth()+1, d.GetDay() ),
 				)
 			except Exception as e:
