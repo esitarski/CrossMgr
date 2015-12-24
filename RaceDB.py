@@ -58,11 +58,11 @@ class RaceDB( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY, size=(600,900) ):
 		super(RaceDB, self).__init__(parent, id, style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME, size=size, title=_('Open RaceDB Event'))
 		
-		fontPixels = 24
+		fontPixels = 20
 		font = wx.FontFromPixelSize(wx.Size(0,fontPixels), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
 		
-		explain = wx.StaticText( self, label=u'{}:\n         \u2193\u2193\u2193\u2193\u2193'.format(
-			_('Drag and Drop the RaceDB Url from your browser\nonto the RaceDB logo') ) )
+		explain = wx.StaticText( self, label=(u'{}:\n' + u'\u2193'*20).format(
+			_('Drag and Drop any RaceDB URL from the browser.\n\nDrag the small icon just to the left of the URL\non the browser page to the RaceDB logo below') ) )
 		explain.SetFont( font )
 		
 		raceDBLogo = wx.StaticBitmap( self, bitmap=wx.Bitmap( os.path.join(Utils.getImageFolder(), 'RaceDB_big.png'), wx.BITMAP_TYPE_PNG ) )
@@ -80,7 +80,7 @@ class RaceDB( wx.Dialog ):
 		fgs = wx.FlexGridSizer( cols=2, rows=0, vgap=4, hgap=4 )
 		fgs.AddGrowableCol( 1, 1 )
 		
-		fgs.Add( wx.StaticText(self, label=_('Race Folder')), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		fgs.Add( wx.StaticText(self, label=_('Race Folder Base')), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		fgs.Add( self.raceFolder, 1, flag=wx.EXPAND )
 		fgs.Add( wx.StaticText(self, label=_('RaceDB URL')), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		fgs.Add( self.raceDBUrl, 1, flag=wx.EXPAND )
