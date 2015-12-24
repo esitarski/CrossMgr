@@ -2474,6 +2474,13 @@ class MainWin( wx.Frame ):
 		dlg.properties.setEditable( True )
 		dlg.folder.SetValue(os.path.dirname(fname))
 		dlg.properties.updateFileName()
+		
+		if not overwriteExisting and os.path.isfile(dlg.GetPath()):
+			Model.race = raceSave
+			self.openRace( dlg.GetPath() )
+			Model.race.excelLink = excelLink
+			return
+		
 		ret = dlg.ShowModal()
 		fileName = dlg.GetPath()
 		categoriesFile = dlg.GetCategoriesFile()
@@ -2484,17 +2491,11 @@ class MainWin( wx.Frame ):
 			Model.race = raceSave
 			return
 
-		if os.path.exists(fileName):
-			if overwriteExisting:
-				if not Utils.MessageOKCancel( self,
-					u'{}\n\n    "{}"'.format(_("File already exists.  Overwrite?"), fileName),
-					_('File Exists') ):
-					Model.race = raceSave
-					return
-			else:
+		if overwriteExisting and os.path.isfile(fileName):
+			if not Utils.MessageOKCancel( self,
+				u'{}\n\n    "{}"'.format(_("File already exists.  Overwrite?"), fileName),
+				_('File Exists') ):
 				Model.race = raceSave
-				self.openRace( fileName )
-				Model.race.excelLink = excelLink
 				return
 
 		# Try to open the file.
