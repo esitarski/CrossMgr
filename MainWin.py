@@ -2666,6 +2666,8 @@ class MainWin( wx.Frame ):
 	def menuOpenRaceDB( self, event ):
 		if self.raceDBDialog is None:
 			self.raceDBDialog = RaceDB( self )
+		else:
+			self.raceDBDialog.refresh()
 		self.raceDBDialog.ShowModal()
 
 	@logCall

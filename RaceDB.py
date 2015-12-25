@@ -61,7 +61,7 @@ class RaceDB( wx.Dialog ):
 		fontPixels = 20
 		font = wx.FontFromPixelSize(wx.Size(0,fontPixels), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
 		
-		explain = wx.StaticText( self, label=(u'{}:\n' + u'\u2193'*20).format(
+		explain = wx.StaticText( self, label=(u'{}:').format(
 			_('Drag and Drop any RaceDB URL from the browser.\n\nDrag the small icon just to the left of the URL\non the browser page to the RaceDB logo below') ) )
 		explain.SetFont( font )
 		
