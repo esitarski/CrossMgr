@@ -46,7 +46,6 @@ def ParseHtmlPayload( fname ):
 				datetime.timedelta( seconds = payload['raceStartTime'] )
 			)
 		except Exception as e:
-			print e
 			pass
 			
 	if not raceScheduledStart:
