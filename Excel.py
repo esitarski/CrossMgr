@@ -94,7 +94,7 @@ class ReadExcelXls( object ):
 		
 	def iter_list(self, sname, date_as_tuple=False):
 		sheet = self.book.sheet_by_name(sname) # XLRDError
-		for i in range(sheet.nrows):
+		for i in xrange(sheet.nrows):
 			yield self._parse_row(sheet, i, date_as_tuple)
 
 #----------------------------------------------------------------------------

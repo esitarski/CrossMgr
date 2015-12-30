@@ -1511,6 +1511,7 @@ class MainWin( wx.Frame ):
 			payload['primes']			= getattr(race, 'primes', [])
 			payload['raceNameText']		= race.name
 			payload['raceDate']			= race.date
+			payload['raceScheduledStart']	= race.date + ' ' + race.scheduledStart
 			payload['raceAddress']      = u', '.join( n for n in [race.city, race.stateProv, race.country] if n )
 			payload['raceIsRunning']	= race.isRunning()
 			payload['raceIsUnstarted']	= race.isUnstarted()

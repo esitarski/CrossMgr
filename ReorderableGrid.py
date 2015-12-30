@@ -153,7 +153,7 @@ class ReorderableGridRowMixin( object ):
 		# bounding boxes.
 		x += xoff - rowwidth
 		xpos = 0
-		for col in range(self.GetNumberCols()):
+		for col in xrange(self.GetNumberCols()):
 			nextx = xpos + self.GetColSize(col)
 			if xpos <= x <= nextx:
 				break
@@ -220,7 +220,7 @@ class SaveEditWhenFocusChangesGridMixin( object ):
 		grid.DisableCellEditControl()
 		event.Skip()
 		
-########################################################################
+#-----------------------------------------------------------------------------
 class CornerReorderableGridLabelRenderer(glr.GridLabelRenderer):
     def __init__(self):
         self._bmp = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'UpDown.png'), wx.BITMAP_TYPE_PNG )
@@ -254,8 +254,8 @@ class ReorderableGrid(	gridlib.Grid,
 		set2=self.GetSelectionBlockBottomRight() 
 		if len(set1): 
 			assert len(set1)==len(set2) 
-			for i in range(len(set1)): 
-				for row in range(set1[i][0], set2[i][0]+1): # range in wx is inclusive of last element 
+			for i in xrange(len(set1)): 
+				for row in xrange(set1[i][0], set2[i][0]+1): # range in wx is inclusive of last element 
 					if row not in rows: 
 						rows.append(row) 
 		else: 
