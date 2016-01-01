@@ -4,15 +4,20 @@ import re
 import json
 import datetime
 
-def ParseHtmlPayload( fname ):
+def ParseHtmlPayload( fname=None, content=None ):
+	assert fname or content
+	
 	payloadStart = u"/* !!! payload begin !!! */"
 	payloadEnd = u"/* !!! payload end !!! */"
+	
+	srcStart = u'<img id="idImgHeader" alt="CrossMgr Logo" src='
 
-	try:
-		with io.open(fname, encoding='utf-8') as f:
-			content = f.read()
-	except Exception as e:
-		return {'success':False, 'error':e, 'payload':None}
+	if not content:
+		try:
+			with io.open(fname, encoding='utf-8') as f:
+				content = f.read()
+		except Exception as e:
+			return {'success':False, 'error':e, 'payload':None}
 	
 	try:
 		iStart = content.index( payloadStart )
@@ -55,10 +60,28 @@ def ParseHtmlPayload( fname ):
 			raceScheduledStart = datetime.fromtimestamp(os.path.getmtime(fname))
 	
 	payload['raceScheduledStart'] = raceScheduledStart
-	return {'success':True, 'error':None, 'payload':payload}
+	
+	try:
+		iStart = content.index( srcStart )
+		iStart = content.index( '"', iStart + len(srcStart) ) + 1
+		iEnd = content.index( '"', iStart )
+		payload['logoSrc'] = content[iStart:iEnd]
+	except ValueError as e:
+		payload['logoSrc'] = None
+	
+	# Remove unneeded payload fields to save space.
+	for key in ('riderDashboard', 'travelMap', 'virtualRideTemplate',
+				'courseViewerTemplate', 'courseCoordinates', 'gpsPoints',
+				'gpsTotalElevationGain', 'gpsAltigraph', 'gpsIsPointToPoint', 
+				'flags', 'primes',):
+		payload.pop( key, None )
+	
+	return {'success':True, 'error':None, 'payload':payload, 'content':content}
 	
 if __name__ == '__main__':
-	result = ParseHtmlPayload( os.path.join('Gemma', '2015-11-10-CXC Open BWomen-r2-.html') )
+	htmlFile = os.path.join('Gemma', '2015-11-10-CXC Open BWomen-r2-.html')
+	htmlFile = os.path.join('Larkin', '2015-06-12-Larkinville Challenge 5-r3-.html' )
+	result = ParseHtmlPayload( htmlFile )
 	if result['success']:
 		payload = result['payload']
 		print payload['raceScheduledStart']
@@ -67,3 +90,4 @@ if __name__ == '__main__':
 		for c in catDetails:
 			if c['name'] != 'All':
 				print c['name'], c['startOffset']
+		print payload['logoSrc']

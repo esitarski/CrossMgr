@@ -1857,6 +1857,8 @@ class MainWin( wx.Frame ):
 		
 		payload = {}
 		payload['raceName'] = race.name
+		payload['isTimerCountdown'] = True
+		payload['raceScheduledStart'] = race.date + ' ' + race.scheduledStart
 		if race.isRunning():
 			payload['raceStartTuple'] = [
 				race.startTime.year, race.startTime.month-1, race.startTime.day,
