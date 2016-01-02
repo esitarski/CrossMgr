@@ -212,7 +212,7 @@ function Draw() {
 	w( '</script>' )
 	w( '</head>' )
 	w( '<body onload="Draw();">' )
-	w( '<h1>Get Race Results</h1>' )
+	w( '<h1>Race Results Share</h1>' )
 	w( '<canvas id="idqrcode" width="360" height="360"></canvas>' )
 	w( '<h2>{}</h2>'.format(data) )
 	w( '<br/>' )
