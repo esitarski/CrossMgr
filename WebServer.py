@@ -8,16 +8,28 @@ import datetime
 import traceback
 import urllib
 import base64
-from qrcode import QRCode
 from collections import defaultdict
-from multiprocessing import Queue
-import tornado.ioloop
-import tornado.web
+from Queue import Queue
+try:
+    # Python 2.x
+    from SocketServer import ThreadingMixIn
+    from SimpleHTTPServer import SimpleHTTPRequestHandler
+    from BaseHTTPServer import HTTPServer
+except ImportError:
+    # Python 3.x
+    from socketserver import ThreadingMixIn
+    from http.server import SimpleHTTPRequestHandler, HTTPServer
+
+from qrcode import QRCode
+from tornado.template import Template
 import Utils
 from ParseHtmlPayload import ParseHtmlPayload
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import urlparse
 from StringIO import StringIO
+
+class ThreadingSimpleServer(ThreadingMixIn, HTTPServer):
+    pass
 
 reCrossMgrHtml = re.compile( r'^\d\d\d\d-\d\d-\d\d-.*\.html$' )
 futureDate = datetime.datetime( datetime.datetime.now().year+20, 1, 1 )
@@ -29,6 +41,9 @@ with io.open( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), 'rb' )
 	
 with io.open( os.path.join(Utils.getImageFolder(), 'QRCodeIcon.png'), 'rb' ) as f:
 	QRCodeIcon = f.read()
+
+with io.open(os.path.join(Utils.getHtmlFolder(), 'Index.html'), encoding='utf-8') as f:
+	indexTemplate = Template( f.read() )
 
 PORT_NUMBER = 8765
 
@@ -145,9 +160,6 @@ class ContentBuffer( object ):
 
 resourceLock = threading.Lock()
 contentBuffer = ContentBuffer()
-with io.open('Index.html', encoding='utf-8') as f:
-	indexTemplate = tornado.template.Template( f.read() )
-
 def queueListener( q ):
 	resourceCmds = { 'results', 'tt_start' }
 	while 1:
@@ -212,10 +224,10 @@ function Draw() {
 	w( '</script>' )
 	w( '</head>' )
 	w( '<body onload="Draw();">' )
-	w( '<h1>Race Results Share</h1>' )
+	w( '<h1 style="margin-top: 32px;">Share Race Results</h1>' )
 	w( '<canvas id="idqrcode" width="360" height="360"></canvas>' )
+	w( '<h2>Read the QRCode<br/>to see the Race Results page.</h2>' )
 	w( '<h2>{}</h2>'.format(data) )
-	w( '<br/>' )
 	w( 'Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.' )
 	w( '</body>' )
 	w( '</html>' )
@@ -229,35 +241,44 @@ def getIndexPage( share=True ):
 #---------------------------------------------------------------------------
 
 class CrossMgrHandler( BaseHTTPRequestHandler ):
+	html_content = 'text/html; charset=utf-8'
 	
-	#Handler for the GET requests
 	def do_GET(self):
+		global keepGoing
 		up = urlparse.urlparse( self.path )
-		content_type = 'text/html; charset=utf-8'
 		try:
 			if up.path=="/":
 				content = getIndexPage()
+				content_type = self.html_content
 			elif up.path=='/favicon.ico':
-				content_type = 'image/x-icon'
 				content = favicon
+				content_type = 'image/x-icon'
 			elif up.path=='/qrcode.png':
-				content_type = 'image/png'
 				content = QRCodeIcon
+				content_type = 'image/png'
 			elif up.path=='/qrcode.html':
 				content = getQRCodePage( '/' )
+				content_type = self.html_content
 			else:
 				file = urllib.url2pathname(os.path.basename(up.path))
 				with resourceLock:
 					content = contentBuffer.getContent( file ).encode('utf8')
+				content_type = self.html_content
 		except Exception as e:
 			self.send_error(404,'File Not Found: {} {}\n{}'.format(self.path, e, traceback.format_exc()))
 			return
 		
 		self.send_response( 200 )
 		self.send_header('Content-type',content_type)
+		if content_type == self.html_content:
+			self.send_header( 'Cache-Control', 'no-cache, no-store, must-revalidate' )
+			self.send_header( 'Pragma', 'no-cache' )
+			self.send_header( 'Expires', '0' )
 		self.end_headers()
 		self.wfile.write( content )
-
+	
+	def log_message(self, format, *args):
+		return
 '''
 try:
 	#Create a web server and define the handler to manage the
@@ -280,12 +301,12 @@ def WebServer( queue ):
 	thread.daemon = True
 	thread.start()
 	
-	server = HTTPServer(('', PORT_NUMBER), CrossMgrHandler)
-	print 'Started httpserver on port ' , PORT_NUMBER
-	server.serve_forever()
+	server = ThreadingSimpleServer(('', PORT_NUMBER), CrossMgrHandler)
+	server.serve_forever( poll_interval = 2 )
 
 if __name__ == '__main__':
 	q = Queue()
 	q.put( {'cmd':'folder', 'folder':'Gemma'} )
+	print 'Started httpserver on port ' , PORT_NUMBER
 	WebServer( q )
-	
+
