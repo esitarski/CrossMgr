@@ -72,7 +72,7 @@ def FtpUploadFileAsync( fname ):
 def FtpWriteRaceHTML():
 	Utils.writeLog( 'FtpWriteRaceHTML: called.' )
 	
-	html = Utils.getCurrentHtml()
+	html = Model.getCurrentHtml()
 	
 	with Model.LockRace() as race:
 		if not race or not html:

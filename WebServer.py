@@ -52,7 +52,7 @@ def validContent( content ):
 
 @syncfunc
 def getCurrentHtml():
-	Utils.getCurrentHtml()
+	Model.getCurrentHtml()
 	
 class ContentBuffer( object ):
 	Unchanged = 0
@@ -69,17 +69,19 @@ class ContentBuffer( object ):
 	def _updateFile( self, fname, forceUpdate=False ):
 		if not self.fnameRace:
 			return None
-		print '_updateFile:', fname
+		print '_updateFile:', fname, self.dirRace, self.fnameRace
 		fnameBase = os.path.basename( fname )
-		if not (fnameBase == 'Simulation.cmn' or reCrossMgrHtml.match(fnameBase)):
+		if not (fnameBase == 'Simulation.html' or reCrossMgrHtml.match(fnameBase)):
 			return None
+		
+		cache = self.fileCache.get( fname, {} )
 		
 		fnameFull = os.path.join( self.dirRace, fname )
 		race = Model.race
 		if race:
 			if (	self.fnameRace and
 					os.path.splitext(self.fnameRace)[0] == os.path.splitext(fnameFull)[0] and
-					race.lastChangedTime > cache['mtime']
+					race.lastChangedTime > cache.get('mtime',0.0)
 				):
 				content = getCurrentHtml()
 				if content:
@@ -96,7 +98,6 @@ class ContentBuffer( object ):
 			self.fileCache.pop( fname, None )
 			return None
 			
-		cache = self.fileCache.get( fname, {} )
 		if not forceUpdate and (cache.get('mtime',None) == mtime and cache.get('content',None)):
 			cache['status'] = self.Unchanged
 			return cache
@@ -177,14 +178,18 @@ class ContentBuffer( object ):
 				if not cache:
 					continue
 				payload = cache.get('payload', {})
+				fnameShow = os.path.splitext(os.path.basename(fname))[0].strip('-')
+				if fnameShow != 'Simulation':
+					fnameShow = fnameShow[11:]
 				info.append( (
 						payload.get('raceScheduledStart',None),
-						os.path.splitext(os.path.basename(fname))[0].strip('-')[11:],
+						fnameShow,
 						[(c['name'], urllib.pathname2url(c['name'])) for c in payload.get('catDetails',[]) if c['name'] != 'All'],
 						urllib.pathname2url(fname),
 						payload.get('raceIsRunning',False),
 					)
 				)
+			print info
 			result['info'] = info
 			return result
 

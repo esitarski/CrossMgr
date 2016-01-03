@@ -2,7 +2,7 @@ import wx
 import threading
 
 class Synchronizer( object ):
-	def _init__( self, func, *args, **kwargs ):
+	def __init__( self, func, *args, **kwargs ):
 		super( Synchronizer, self ).__init__()
 		
 		self.func = func
@@ -34,7 +34,7 @@ def syncfunc( func ):
 		if wx.Thread_IsMain():
 			return self.func( *args, **kwargs )
 		else:
-			sync = Synchronizer( func, args, kwargs )
+			sync = Synchronizer( func, *args, **kwargs )
 			return sync.Run()
 	
 	syncwrap.__name__ = func.__name__

@@ -1,4 +1,4 @@
-{% whitespace oneline %}
+{% whitespace all %}
 {% import os %}
 <!DOCTYPE html>
 <html>
@@ -29,7 +29,7 @@ body {
 }
 
 li.highlight {
-	background-color:#FFFFCC;
+	background-color:#FFFF66;
 }
 ol {
     counter-reset:li;
@@ -82,6 +82,9 @@ ol ol li:last-child {margin-bottom:0;}
 {% if share %}&nbsp;&nbsp;&nbsp;&nbsp;<a href="./qrcode.html">Share <img src="./qrcode.png" /></a>{% end %}
 <h1>Race Results<br/><span style="font-size: 80%">{% if organizer %}by {% end %}{{organizer}}</span></h1>
 <ol>
+{% if not info %}
+	<h2>Results will be available shortly.<br/>Check back/refresh in a few minutes...</h2>
+{% end %}
 {% for i, (scheduledStart, name, categories, url, raceIsRunning) in enumerate(info) %}
 	<li {{'class=highlight' if raceIsRunning else ''}} >
 		<a href="{{url}}" class=racename>{{name}}</a><span style="white-space: nowrap;">{{scheduledStart.strftime('%H:%M %a %b %d, %Y')}}</span><br/>

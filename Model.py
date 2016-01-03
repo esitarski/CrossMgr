@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+import io
 import re
 import sys
 import math
@@ -2391,6 +2392,29 @@ def setCategoryChoice( iSelection, categoryAttribute = None ):
 	except AttributeError:
 		return
 	setCategoryChoice( iSelection, categoryAttribute )
+
+def getCurrentHtml():
+	if not race:
+		return None
+	htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
+	try:
+		with io.open(htmlFile, 'r', encoding='utf-8') as fp:
+			html = fp.read()
+		return mainWin.addResultsToHtmlStr( html )
+	except:
+		return None
+
+def writeCurrentHtml():
+	html = getCurrentHtml()
+	if not html:
+		return False
+	fname = os.path.splitext(Utils.getFileName())[0] + '.html'
+	try:
+		with io.open(fname, 'w', encoding='utf-8') as fp:
+			fp.write( html )
+		return True
+	except:
+		return False
 
 if __name__ == '__main__':
 	r = newRace()
