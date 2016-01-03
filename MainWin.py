@@ -2882,7 +2882,7 @@ class MainWin( wx.Frame ):
 
 		self.nextNum = None
 		with Model.LockRace() as race:
-			race.startRaceNow()		
+			race.startRaceNow()
 			# Backup all the events and race start so we don't have to wait for the first lap.
 			race.startTime -= datetime.timedelta( seconds = (tMin-1) )
 

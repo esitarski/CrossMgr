@@ -42,7 +42,7 @@ with io.open( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), 'rb' )
 	DefaultLogoSrc = "data:image/png;base64," + base64.b64encode( f.read() )
 with io.open( os.path.join(Utils.getImageFolder(), 'QRCodeIcon.png'), 'rb' ) as f:
 	QRCodeIcon = f.read()
-with io.open(os.path.join(Utils.getHtmlFolder(), 'Index.html'), encoding='utf8') as f:
+with io.open(os.path.join(Utils.getHtmlFolder(), 'Index.html'), encoding='utf-8') as f:
 	indexTemplate = Template( f.read() )
 
 PORT_NUMBER = 8765
@@ -52,7 +52,10 @@ def validContent( content ):
 
 @syncfunc
 def getCurrentHtml():
-	Model.getCurrentHtml()
+	return Model.getCurrentHtml()
+	
+def coreName( fname ):
+	return os.path.splitext(os.path.basename(fname))[0]
 	
 class ContentBuffer( object ):
 	Unchanged = 0
@@ -69,7 +72,6 @@ class ContentBuffer( object ):
 	def _updateFile( self, fname, forceUpdate=False ):
 		if not self.fnameRace:
 			return None
-		print '_updateFile:', fname, self.dirRace, self.fnameRace
 		fnameBase = os.path.basename( fname )
 		if not (fnameBase == 'Simulation.html' or reCrossMgrHtml.match(fnameBase)):
 			return None
@@ -80,7 +82,7 @@ class ContentBuffer( object ):
 		race = Model.race
 		if race:
 			if (	self.fnameRace and
-					os.path.splitext(self.fnameRace)[0] == os.path.splitext(fnameFull)[0] and
+					coreName(self.fnameRace) == coreName(fnameFull) and
 					race.lastChangedTime > cache.get('mtime',0.0)
 				):
 				content = getCurrentHtml()
@@ -88,7 +90,7 @@ class ContentBuffer( object ):
 					cache['mtime'] = time.time()
 					result = ParseHtmlPayload( content=content )
 					cache['payload'] = result['payload'] if result['success'] else {}
-					cache['content'] = content.encode('utf8')
+					cache['content'] = content.encode('utf-8')
 					self.fileCache[fname] = cache
 					return cache
 		
@@ -104,7 +106,7 @@ class ContentBuffer( object ):
 			
 		cache['status'] = self.Changed
 		try:
-			with io.open(fnameFull, encoding='utf8') as f:
+			with io.open(fnameFull, encoding='utf-8') as f:
 				content = f.read()
 		except Exception as e:
 			cache['status'] = self.ReadError
@@ -117,7 +119,7 @@ class ContentBuffer( object ):
 		cache['mtime'] = mtime
 		result = ParseHtmlPayload( content=content )
 		cache['payload'] = result['payload'] if result['success'] else {}
-		cache['content'] = content.encode('utf8')
+		cache['content'] = content.encode('utf-8')
 		self.fileCache[fname] = cache
 		return cache
 	
@@ -126,14 +128,17 @@ class ContentBuffer( object ):
 			self.setFolder( self.fnameRace )
 	
 	def setFNameRace( self, fnameRace ):
-		print 'setFNameRace:', fnameRace
 		with self.lock:
 			self.fnameRace = fnameRace
 			self.dirRace = os.path.dirname( fnameRace )
 			self.fileCache = {}
+			newRace = True
 			for f in glob.glob( os.path.join(self.dirRace, '*.html') ):
 				self._updateFile( os.path.basename(f) )
-			self._updateFile( '/' + os.path.basename(fnameRace) )
+				if coreName(fnameRace) == coreName(f):
+					newRace = False
+			if newRace:
+				self._updateFile( '/' + os.path.basename(fnameRace) )
 	
 	def _getFiles( self ):
 		return [fname for fname, cache in sorted(
@@ -189,7 +194,6 @@ class ContentBuffer( object ):
 						payload.get('raceIsRunning',False),
 					)
 				)
-			print info
 			result['info'] = info
 			return result
 
@@ -250,17 +254,17 @@ function Draw() {
 	w( 'Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.' )
 	w( '</body>' )
 	w( '</html>' )
-	return result.getvalue().encode( 'utf8' )
+	return result.getvalue().encode( 'utf-8' )
 
 def getIndexPage( share=True ):
 	info = contentBuffer.getIndexInfo()
 	info['share'] = share
-	return indexTemplate.generate( **info ).encode('utf8')
+	return indexTemplate.generate( **info ).encode('utf-8')
 
 #---------------------------------------------------------------------------
 
 class CrossMgrHandler( BaseHTTPRequestHandler ):
-	html_content = 'text/html; charset=utf8'
+	html_content = 'text/html; charset=utf-8'
 	
 	def do_GET(self):
 		up = urlparse.urlparse( self.path )
@@ -294,8 +298,8 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 		self.end_headers()
 		self.wfile.write( content )
 	
-	#def log_message(self, format, *args):
-	#	return
+	def log_message(self, format, *args):
+		return
 
 #--------------------------------------------------------------------------
 

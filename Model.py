@@ -2400,8 +2400,8 @@ def getCurrentHtml():
 	try:
 		with io.open(htmlFile, 'r', encoding='utf-8') as fp:
 			html = fp.read()
-		return mainWin.addResultsToHtmlStr( html )
-	except:
+		return Utils.mainWin.addResultsToHtmlStr( html )
+	except Exception as e:
 		return None
 
 def writeCurrentHtml():

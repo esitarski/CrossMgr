@@ -83,7 +83,7 @@ ol ol li:last-child {margin-bottom:0;}
 <h1>Race Results<br/><span style="font-size: 80%">{% if organizer %}by {% end %}{{organizer}}</span></h1>
 <ol>
 {% if not info %}
-	<h2>Results will be available shortly.<br/>Check back/refresh in a few minutes...</h2>
+	<h2>Results will be available shortly.<br/>Check or Refresh in a few minutes...</h2>
 {% end %}
 {% for i, (scheduledStart, name, categories, url, raceIsRunning) in enumerate(info) %}
 	<li {{'class=highlight' if raceIsRunning else ''}} >
