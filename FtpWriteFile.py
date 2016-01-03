@@ -72,18 +72,10 @@ def FtpUploadFileAsync( fname ):
 def FtpWriteRaceHTML():
 	Utils.writeLog( 'FtpWriteRaceHTML: called.' )
 	
-	htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
-	try:
-		with io.open(htmlFile, 'r', encoding='utf-8') as fp:
-			html = fp.read()
-	except Exception as e:
-		Utils.writeLog( 'FtpWriteRaceHTML Error(1): {}'.format(e) )
-		return e
-	
-	html = Utils.mainWin.addResultsToHtmlStr( html )
+	html = Utils.getCurrentHtml()
 	
 	with Model.LockRace() as race:
-		if not race or not Utils.getFileName():
+		if not race or not html:
 			return None
 			
 		host		= getattr( race, 'ftpHost', '' )

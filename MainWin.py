@@ -2208,6 +2208,7 @@ class MainWin( wx.Frame ):
 				race.resetAllCaches()
 		
 		self.writeRace()
+		Utils.writeCurrentHtml()
 		self.config.Flush()
 
 		try:
@@ -2573,6 +2574,7 @@ class MainWin( wx.Frame ):
 		Model.resetCache()
 		ResetExcelLinkCache()
 		self.writeRace()
+		Utils.writeCurrentHtml()
 		self.closeFindDialog()
 		
 		try:
@@ -2685,7 +2687,8 @@ class MainWin( wx.Frame ):
 												_('Current race running') ):
 				return
 			race.finishRaceNow()
-			
+		
+		Utils.writeCurrentHtml()
 		self.doCleanup()
 		Model.setRace( None )
 		self.refresh()

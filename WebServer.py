@@ -3,6 +3,7 @@ import io
 import re
 import sys
 import glob
+import time
 import threading
 import datetime
 import traceback
@@ -22,11 +23,12 @@ except ImportError:
 
 from qrcode import QRCode
 from tornado.template import Template
-import Utils
 from ParseHtmlPayload import ParseHtmlPayload
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import urlparse
 from StringIO import StringIO
+import Utils
+import Model
 
 class ThreadingSimpleServer(ThreadingMixIn, HTTPServer):
     pass
@@ -49,7 +51,7 @@ PORT_NUMBER = 8765
 
 def validContent( content ):
 	return content.strip().endswith( '</html>' )
-	
+
 class ContentBuffer( object ):
 	Unchanged = 0
 	Changed = 1
@@ -67,6 +69,22 @@ class ContentBuffer( object ):
 			return None
 		
 		fnameFull = os.path.join( self.folder, fname )
+		race = Model.race
+		if race:
+			fnameRace = Utils.getFileName()
+			if (	fnameRace is not None and
+					os.path.splitext(fnameRace)[0] == os.path.splitext(fnameFull)[0] and
+					race.lastChangedTime > cache['mtime']
+				):
+				content = getCurrentHtml()
+				if content:
+					cache['mtime'] = time.time()
+					cache['content'] = content
+					result = ParseHtmlPayload( content=content )
+					cache['payload'] = result['payload'] if result['success'] else {}
+					self.fileCache[fname] = cache
+					return cache
+		
 		try:
 			mtime = os.path.getmtime( fnameFull )
 		except Exception as e:

@@ -3,6 +3,7 @@ import os
 import re
 import sys
 import math
+import time
 import bisect
 import socket
 import random
@@ -990,6 +991,7 @@ class Race( object ):
 	countdownTimer = False
 	
 	setNoDataDNS = False				# If True, will set all riders in the spreadsheet to DNS if they have no data in the race.
+	lastChangedTime = sys.float_info.max
 	
 	def __init__( self ):
 		self.reset()
@@ -1106,6 +1108,7 @@ class Race( object ):
 		self.isChangedFlag = changed
 		if changed:
 			memoize.clear()
+			self.lastChangedTime = time.time()
 			
 	def raceTimeToClockTime( self, t=None ):
 		if self.startTime is None:

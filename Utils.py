@@ -53,6 +53,7 @@ except:
 #
 import wx
 import os
+import io
 
 if 'WXMAC' in wx.Platform:
 	try:
@@ -658,6 +659,29 @@ def getFileName():
 	
 def isMainWin():
 	return mainWin is not None
+	
+def getCurrentHtml():
+	if not race:
+		return None
+	htmlFile = os.path.join(getHtmlFolder(), 'RaceAnimation.html')
+	try:
+		with io.open(htmlFile, 'r', encoding='utf-8') as fp:
+			html = fp.read()
+		return mainWin.addResultsToHtmlStr( html )
+	except:
+		return None
+
+def writeCurrentHtml():
+	html = getCurrentHtml()
+	if not html:
+		return False
+	fname = os.path.splitext(getFileName())[0] + '.html'
+	try:
+		with io.open(fname, 'w', encoding='utf-8') as fp:
+			fp.write( html )
+		return True
+	except:
+		return False
 
 def hasTrailingSeparator( menu ):
 	itemCount = menu.GetMenuItemCount()
