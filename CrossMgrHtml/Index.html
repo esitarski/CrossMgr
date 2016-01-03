@@ -80,7 +80,7 @@ ol ol li:last-child {margin-bottom:0;}
 <body>
 <img id="idImgHeader" alt="CrossMgr Logo" src="{{logoSrc}}"/>
 {% if share %}&nbsp;&nbsp;&nbsp;&nbsp;<a href="./qrcode.html">Share <img src="./qrcode.png" /></a>{% end %}
-<h1>Race Results<br/><span style="font-size: 80%">by {{organizer}}</span></h1>
+<h1>Race Results<br/><span style="font-size: 80%">{% if organizer %}by {% end %}{{organizer}}</span></h1>
 <ol>
 {% for i, (scheduledStart, name, categories, url, raceIsRunning) in enumerate(info) %}
 	<li {{'class=highlight' if raceIsRunning else ''}} >

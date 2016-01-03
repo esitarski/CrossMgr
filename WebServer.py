@@ -29,6 +29,7 @@ import urlparse
 from StringIO import StringIO
 import Utils
 import Model
+from Synchronizer import syncfunc
 
 class ThreadingSimpleServer(ThreadingMixIn, HTTPServer):
     pass
@@ -37,14 +38,11 @@ reCrossMgrHtml = re.compile( r'^\d\d\d\d-\d\d-\d\d-.*\.html$' )
 futureDate = datetime.datetime( datetime.datetime.now().year+20, 1, 1 )
 with io.open( os.path.join(Utils.getImageFolder(), 'CrossMgr.ico'), 'rb' ) as f:
 	favicon = f.read()
-
 with io.open( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), 'rb' ) as f:
 	DefaultLogoSrc = "data:image/png;base64," + base64.b64encode( f.read() )
-	
 with io.open( os.path.join(Utils.getImageFolder(), 'QRCodeIcon.png'), 'rb' ) as f:
 	QRCodeIcon = f.read()
-
-with io.open(os.path.join(Utils.getHtmlFolder(), 'Index.html'), encoding='utf-8') as f:
+with io.open(os.path.join(Utils.getHtmlFolder(), 'Index.html'), encoding='utf8') as f:
 	indexTemplate = Template( f.read() )
 
 PORT_NUMBER = 8765
@@ -52,36 +50,43 @@ PORT_NUMBER = 8765
 def validContent( content ):
 	return content.strip().endswith( '</html>' )
 
+@syncfunc
+def getCurrentHtml():
+	Utils.getCurrentHtml()
+	
 class ContentBuffer( object ):
 	Unchanged = 0
 	Changed = 1
 	ReadError = 2
 	ContentError = 3
-	
+
 	def __init__( self ):
 		self.fileCache = {}
-		self.folder = None
-		
-	def updateFile( self, fname, forceUpdate=False ):
-		if not self.folder:
+		self.fnameRace = None
+		self.dirRace = None
+		self.lock = threading.Lock()
+	
+	def _updateFile( self, fname, forceUpdate=False ):
+		if not self.fnameRace:
 			return None
-		if not reCrossMgrHtml.match(os.path.basename(fname)):
+		print '_updateFile:', fname
+		fnameBase = os.path.basename( fname )
+		if not (fnameBase == 'Simulation.cmn' or reCrossMgrHtml.match(fnameBase)):
 			return None
 		
-		fnameFull = os.path.join( self.folder, fname )
+		fnameFull = os.path.join( self.dirRace, fname )
 		race = Model.race
 		if race:
-			fnameRace = Utils.getFileName()
-			if (	fnameRace is not None and
-					os.path.splitext(fnameRace)[0] == os.path.splitext(fnameFull)[0] and
+			if (	self.fnameRace and
+					os.path.splitext(self.fnameRace)[0] == os.path.splitext(fnameFull)[0] and
 					race.lastChangedTime > cache['mtime']
 				):
 				content = getCurrentHtml()
 				if content:
 					cache['mtime'] = time.time()
-					cache['content'] = content
 					result = ParseHtmlPayload( content=content )
 					cache['payload'] = result['payload'] if result['success'] else {}
+					cache['content'] = content.encode('utf8')
 					self.fileCache[fname] = cache
 					return cache
 		
@@ -98,7 +103,7 @@ class ContentBuffer( object ):
 			
 		cache['status'] = self.Changed
 		try:
-			with io.open(fnameFull, encoding='utf-8') as f:
+			with io.open(fnameFull, encoding='utf8') as f:
 				content = f.read()
 		except Exception as e:
 			cache['status'] = self.ReadError
@@ -109,101 +114,92 @@ class ContentBuffer( object ):
 			content = ''
 			
 		cache['mtime'] = mtime
-		cache['content'] = content
 		result = ParseHtmlPayload( content=content )
 		cache['payload'] = result['payload'] if result['success'] else {}
+		cache['content'] = content.encode('utf8')
 		self.fileCache[fname] = cache
 		return cache
 	
 	def reset( self ):
-		if self.folder:
-			self.setFolder( self.folder )
+		if self.fnameRace:
+			self.setFolder( self.fnameRace )
 	
-	def setFolder( self, folder ):
-		self.folder = folder
-		self.fileCache = {}
-		for f in glob.glob( os.path.join(folder, '*.html') ):
-			self.updateFile( os.path.basename( f ) )
+	def setFNameRace( self, fnameRace ):
+		print 'setFNameRace:', fnameRace
+		with self.lock:
+			self.fnameRace = fnameRace
+			self.dirRace = os.path.dirname( fnameRace )
+			self.fileCache = {}
+			for f in glob.glob( os.path.join(self.dirRace, '*.html') ):
+				self._updateFile( os.path.basename(f) )
+			self._updateFile( '/' + os.path.basename(fnameRace) )
 	
-	def getFiles( self ):
+	def _getFiles( self ):
 		return [fname for fname, cache in sorted(
 			self.fileCache.iteritems(),
 			key=lambda x: (x[1]['payload'].get('raceScheduledStart',futureDate), x[0])
 		)]
 	
-	def getCache( self, fname, checkForUpdate=True ):
+	def _getCache( self, fname, checkForUpdate=True ):
 		if checkForUpdate:
-			cache = self.updateFile( fname )
+			cache = self._updateFile( fname )
 		else:
 			try:
 				cache = self.fileCache[fname]
 			except KeyError:
-				cache = self.updateFile( fname, True )
+				cache = self._updateFile( fname, True )
 		return cache
 		
 	def getContent( self, fname, checkForUpdate=True ):
-		cache = self.getCache( fname, checkForUpdate=True )
-		return cache.get('content', '') if cache else ''
+		with self.lock:
+			cache = self._getCache( fname, checkForUpdate )
+			return cache.get('content', '') if cache else ''
 		
 	def getIndexInfo( self ):
-		files = self.getFiles()
-		result = {}
-		for data in ('logoSrc', 'organizer'):
-			result[data] = None
-		for f in reversed(files):
-			for key in result.iterkeys():
-				if not result[key]:
-					result[key] = self.fileCache[f]['payload'].get(key,None)
-			if all( result.itervalues() ):
-				break
-		
-		info = []
-		for fname in files:
-			cache = self.getCache( fname, False )
-			if not cache:
-				continue
-			payload = cache.get('payload', {})
-			info.append( (
-					payload.get('raceScheduledStart',None),
-					os.path.splitext(os.path.basename(fname))[0].strip('-')[11:],
-					[(c['name'], urllib.pathname2url(c['name'])) for c in payload.get('catDetails',[]) if c['name'] != 'All'],
-					urllib.pathname2url(fname),
-					payload.get('raceIsRunning',False),
+		with self.lock:
+			files = self._getFiles()
+			result = { data:None for data in ('logoSrc', 'organizer') }
+			for f in reversed(files):
+				for key in result.iterkeys():
+					if not result[key]:
+						result[key] = self.fileCache[f]['payload'].get(key,None)
+				if all( result.itervalues() ):
+					break
+			
+			if not result['logoSrc']:
+				result['logoSrc'] = DefaultLogoSrc
+			if not result['organizer']:
+				result['organizer'] = ''
+				
+			info = []
+			for fname in files:
+				cache = self._getCache( fname, False )
+				if not cache:
+					continue
+				payload = cache.get('payload', {})
+				info.append( (
+						payload.get('raceScheduledStart',None),
+						os.path.splitext(os.path.basename(fname))[0].strip('-')[11:],
+						[(c['name'], urllib.pathname2url(c['name'])) for c in payload.get('catDetails',[]) if c['name'] != 'All'],
+						urllib.pathname2url(fname),
+						payload.get('raceIsRunning',False),
+					)
 				)
-			)
-		result['info'] = info
-		return result
+			result['info'] = info
+			return result
 
 #-----------------------------------------------------------------------
 
-resourceLock = threading.Lock()
 contentBuffer = ContentBuffer()
-def queueListener( q ):
-	resourceCmds = { 'results', 'tt_start' }
-	while 1:
-		message = q.get()
-		cmd = message.get('cmd', None)
-		if cmd == 'folder':
-			with resourceLock:
-				contentBuffer.setFolder( message['folder'] )
-		elif cmd == 'results' or cmd == 'tt_start':
-			with resourceLock:
-				contentBuffer.updateFile( message['file_name'] )
-
-'''
-class HtmlHandler( tornado.web.RequestHandler ):
-	def get( self, type=None, file_name=None ):
-		if not type or type == 'Index':
-			with resourceLock:
-				return indexTemplate.generate( **contentBuffer.getIndexInfo() )
-		else:
-			with resourceLock:
-				return contentBuffer.getContent( file_name )
-'''
+DEFAULT_HOST = None
+def SetFileName( fname ):
+	if fname.endswith( '.cmn' ):
+		fname = os.path.splitext( fname )[0] + '.html'
+	q.put( {'cmd':'fileName', 'fileName':fname} )
 
 def getQRCodePage( url ):
 	qr = QRCode()
-	data = 'http://{}:{}{}'.format( Utils.GetDefaultHost(), PORT_NUMBER, url)
+	data = 'http://{}:{}{}'.format( DEFAULT_HOST, PORT_NUMBER, url)
 	qr.add_data( data )
 	qr.make()
 	qrcode = '["' + '",\n"'.join(
@@ -252,17 +248,16 @@ function Draw() {
 	return result.getvalue().encode( 'utf8' )
 
 def getIndexPage( share=True ):
-	with resourceLock:
-		info = contentBuffer.getIndexInfo()
+	info = contentBuffer.getIndexInfo()
 	info['share'] = share
 	return indexTemplate.generate( **info ).encode('utf8')
+
 #---------------------------------------------------------------------------
 
 class CrossMgrHandler( BaseHTTPRequestHandler ):
-	html_content = 'text/html; charset=utf-8'
+	html_content = 'text/html; charset=utf8'
 	
 	def do_GET(self):
-		global keepGoing
 		up = urlparse.urlparse( self.path )
 		try:
 			if up.path=="/":
@@ -279,8 +274,7 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 				content_type = self.html_content
 			else:
 				file = urllib.url2pathname(os.path.basename(up.path))
-				with resourceLock:
-					content = contentBuffer.getContent( file ).encode('utf8')
+				content = contentBuffer.getContent( file )
 				content_type = self.html_content
 		except Exception as e:
 			self.send_error(404,'File Not Found: {} {}\n{}'.format(self.path, e, traceback.format_exc()))
@@ -295,36 +289,48 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 		self.end_headers()
 		self.wfile.write( content )
 	
-	def log_message(self, format, *args):
-		return
-'''
-try:
-	#Create a web server and define the handler to manage the
-	#incoming request
-	server = HTTPServer(('', PORT_NUMBER), CrossMgrHandler)
-	print 'Started httpserver on port ' , PORT_NUMBER
-	
-	#Wait forever for incoming htto requests
-	server.serve_forever()
-
-except KeyboardInterrupt:
-	print '^C received, shutting down the web server'
-	server.socket.close()
-'''
+	#def log_message(self, format, *args):
+	#	return
 
 #--------------------------------------------------------------------------
 
-def WebServer( queue ):
-	thread = threading.Thread( target=queueListener, name='queueListener', args=(queue,) )
-	thread.daemon = True
-	thread.start()
-	
+server = None
+def WebServer():
+	global server
 	server = ThreadingSimpleServer(('', PORT_NUMBER), CrossMgrHandler)
 	server.serve_forever( poll_interval = 2 )
 
+def queueListener( q ):
+	global DEFAULT_HOST, server
+	keepGoing = True
+	while keepGoing:
+		message = q.get()
+		cmd = message.get('cmd', None)
+		if cmd == 'fileName':
+			DEFAULT_HOST = Utils.GetDefaultHost()
+			contentBuffer.setFNameRace( message['fileName'] )
+		
+		if cmd == 'exit':
+			keepGoing = False
+		q.task_done()
+	
+	server.shutdown()
+	server = None
+
+q = Queue()
+qThread = threading.Thread( target=queueListener, name='queueListener', args=(q,) )
+qThread.daemon = True
+qThread.start()
+
+webThread = threading.Thread( target=WebServer, name='WebServer' )
+webThread.daemon = True
+webThread.start()
+
 if __name__ == '__main__':
-	q = Queue()
-	q.put( {'cmd':'folder', 'folder':'Gemma'} )
+	SetFileName( os.path.join('Gemma', '2015-11-10-A Men-r4-.html') )
 	print 'Started httpserver on port ' , PORT_NUMBER
-	WebServer( q )
+	try:
+		time.sleep( 10000 )
+	except KeyboardInterrupt:
+		q.put( {'cmd':'exit'} )
 

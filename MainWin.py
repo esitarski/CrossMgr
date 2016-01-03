@@ -95,6 +95,7 @@ import ChangeRaceStartTime
 from PageDialog			import PageDialog
 import ChipReader
 import Flags
+import WebServer
 
 import traceback
 '''
@@ -2294,6 +2295,7 @@ class MainWin( wx.Frame ):
 		
 		# Create a new race and initialize it with the properties.
 		self.fileName = fileName
+		WebServer.SetFileName( self.fileMName )
 		Model.resetCache()
 		ResetExcelLinkCache()
 		Model.setRace( Model.Race() )
@@ -2388,6 +2390,7 @@ class MainWin( wx.Frame ):
 
 		# Create a new race and initialize it with the properties.
 		self.fileName = fileName
+		WebServer.SetFileName( self.fileMName )
 		Model.resetCache()
 		ResetExcelLinkCache()
 		
@@ -2515,6 +2518,7 @@ class MainWin( wx.Frame ):
 
 		# Set the new race with the updated properties.
 		self.fileName = fileName
+		WebServer.SetFileName( self.fileName )
 		Model.resetCache()
 		ResetExcelLinkCache()
 		
@@ -2589,6 +2593,7 @@ class MainWin( wx.Frame ):
 			
 			ChipReader.chipReaderCur.reset( race.chipReaderType )
 			self.fileName = fileName
+			WebServer.SetFileName( self.fileName )
 			
 			undo.clear()
 			ResetExcelLinkCache()
@@ -2813,6 +2818,7 @@ class MainWin( wx.Frame ):
 
 		# Set up a new file and model for the simulation.
 		self.fileName = fName
+		WebServer.SetFileName( self.fileName )
 		OutputStreamer.DeleteStreamerFile()
 		self.simulateSeen = set()
 		undo.clear()
