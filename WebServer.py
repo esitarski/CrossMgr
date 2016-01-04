@@ -73,7 +73,6 @@ class ContentBuffer( object ):
 		if not self.fnameRace:
 			return None
 		fnameBase = os.path.basename(fname).split('?')[0]
-		print fnameBase
 		if not (fnameBase == 'Simulation.html' or reCrossMgrHtml.match(fnameBase)):
 			return None
 		
