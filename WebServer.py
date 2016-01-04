@@ -55,7 +55,7 @@ def getCurrentHtml():
 	return Model.getCurrentHtml()
 	
 def coreName( fname ):
-	return os.path.splitext(os.path.basename(fname))[0]
+	return os.path.splitext(os.path.basename(fname).split('?')[0])[0].strip('-')
 	
 class ContentBuffer( object ):
 	Unchanged = 0
@@ -72,7 +72,8 @@ class ContentBuffer( object ):
 	def _updateFile( self, fname, forceUpdate=False ):
 		if not self.fnameRace:
 			return None
-		fnameBase = os.path.basename( fname )
+		fnameBase = os.path.basename(fname).split('?')[0]
+		print fnameBase
 		if not (fnameBase == 'Simulation.html' or reCrossMgrHtml.match(fnameBase)):
 			return None
 		
@@ -80,20 +81,19 @@ class ContentBuffer( object ):
 		
 		fnameFull = os.path.join( self.dirRace, fname )
 		race = Model.race
-		if race:
-			if (	self.fnameRace and
-					coreName(self.fnameRace) == coreName(fnameFull) and
-					race.lastChangedTime > cache.get('mtime',0.0)
-				):
-				content = getCurrentHtml()
-				if content:
-					cache['mtime'] = time.time()
-					result = ParseHtmlPayload( content=content )
-					cache['payload'] = result['payload'] if result['success'] else {}
-					cache['content'] = content.encode('utf-8')
-					self.fileCache[fname] = cache
-					return cache
-		
+		if race and self.fnameRace and coreName(self.fnameRace) == coreName(fnameFull):
+			if race.lastChangedTime <= cache.get('mtime',0.0):
+				return cache
+			
+			content = getCurrentHtml()
+			if content:
+				cache['mtime'] = time.time()
+				result = ParseHtmlPayload( content=content )
+				cache['payload'] = result['payload'] if result['success'] else {}
+				cache['content'] = content.encode('utf-8')
+				self.fileCache[fname] = cache
+				return cache
+				
 		try:
 			mtime = os.path.getmtime( fnameFull )
 		except Exception as e:

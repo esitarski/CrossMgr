@@ -2888,6 +2888,7 @@ function RefreshResultsTable()
 		var catStr = catName;
 		var thead = createChild( table, 'THEAD' );
 		var tr = createChild( thead, 'TR' );
+		tr.onclick = doReload;
 		var td;
 		createTextChild( td = createChild(tr, 'TH'), catName + (raceIsUnstarted ? ': ' + catDetail.pos.length + ' ' + _('registered') : '') );
 		var catTitleTD = td;
@@ -2900,6 +2901,7 @@ function RefreshResultsTable()
 		var numHeaders = 0;
 		thead = createChild( table, 'THEAD' );
 		tr = createChild( thead, 'TR' );
+		tr.onclick = doReload;
 		createTextChild( td = createChild(tr, 'TH'), _('Pos') );	++numHeaders;
 		createTextChild( td = createChild(tr, 'TH'), _('Bib') );	++numHeaders;
 		td.id = 'idNonNumeric';
