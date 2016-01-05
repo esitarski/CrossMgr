@@ -87,7 +87,7 @@ ol ol li:last-child {margin-bottom:0;}
 {% end %}
 {% for i, g in enumerate(info) %}
 	<li {{'class=highlight' if g.raceIsRunning else ''}} >
-		<a href="{{g.url}}" class=racename>{{g.name}}</a><span style="white-space: nowrap;">{{g.raceScheduledStart.strftime('%H:%M %a %b %d, %Y')}}</span>{% if g.isTimeTrial %}<a href="{{g.urlTTStart}}"<a><img src=./stopwatch.png" /></a>{% end %}<br/>
+		<a href="{{g.url}}" class=racename>{{g.name}}</a><span style="white-space: nowrap;">{{g.raceScheduledStart.strftime('%H:%M %a %b %d, %Y')}}</span>{% if g.isTimeTrial %}<a href="{{g.urlTTStart}}"<a><img src="/stopwatch.png" /></a>{% end %}<br/>
 		{% for catName, catUrl in g.categories %}
 			<a href="{{g.url}}?raceCat={{catUrl}}" class='btn'>{{catName}}</a>
 		{% end %}
