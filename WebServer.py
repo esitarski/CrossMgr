@@ -195,14 +195,14 @@ class ContentBuffer( object ):
 				if fnameShow != 'Simulation':
 					fnameShow = fnameShow[11:]
 				g = Generic()
-				g.raceScheduledStart = payload.get('raceScheduledStart',None),
-				g.fnameShow = fnameShow,
-				g.catgegories = [(c['name'], urllib.pathname2url(c['name'])) for c in payload.get('catDetails',[]) if c['name'] != 'All'],
-				g.url = urllib.pathname2url(fname),
-				g.isTimeTrial = payload.get('isTimeTrial',False),
-				g.raceIsRunning = payload.get('raceIsRunning',False),
+				g.raceScheduledStart = payload.get('raceScheduledStart',None)
+				g.name = fnameShow
+				g.categories = [(c['name'], urllib.pathname2url(c['name'])) for c in payload.get('catDetails',[]) if c['name'] != 'All']
+				g.url = urllib.pathname2url(fname)
+				g.isTimeTrial = payload.get('isTimeTrial',False)
+				g.raceIsRunning = payload.get('raceIsRunning',False)
 				if g.isTimeTrial:
-					g.urlTTStart = rllib.pathname2url(os.path.splitext(fname)[0] + '_TTStart.html')
+					g.urlTTStart = urllib.pathname2url(os.path.splitext(fname)[0] + '_TTStart.html')
 				info.append( g )
 			result['info'] = info
 			return result
