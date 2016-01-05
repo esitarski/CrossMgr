@@ -64,7 +64,9 @@ def coreName( fname ):
 	return os.path.splitext(os.path.basename(fname).split('?')[0])[0].replace('_TTStart','').strip('-')
 
 class Generic( object ):
-	pass
+	def __init__( self, **kwargs ):
+		for key, data in kwargs.iteritems():
+			setattr( self, key, data )
 
 class ContentBuffer( object ):
 	Unchanged = 0
@@ -194,13 +196,15 @@ class ContentBuffer( object ):
 				fnameShow = os.path.splitext(os.path.basename(fname))[0].strip('-')
 				if fnameShow != 'Simulation':
 					fnameShow = fnameShow[11:]
-				g = Generic()
-				g.raceScheduledStart = payload.get('raceScheduledStart',None)
-				g.name = fnameShow
-				g.categories = [(c['name'], urllib.pathname2url(c['name'])) for c in payload.get('catDetails',[]) if c['name'] != 'All']
-				g.url = urllib.pathname2url(fname)
-				g.isTimeTrial = payload.get('isTimeTrial',False)
-				g.raceIsRunning = payload.get('raceIsRunning',False)
+				g = Generic(
+					raceScheduledStart = payload.get('raceScheduledStart',None),
+					name = fnameShow,
+					categories = [(c['name'], urllib.pathname2url(c['name']))
+						for c in payload.get('catDetails',[]) if c['name'] != 'All'],
+					url = urllib.pathname2url(fname),
+					isTimeTrial = payload.get('isTimeTrial',False),
+					raceIsRunning = payload.get('raceIsRunning',False)
+				)
 				if g.isTimeTrial:
 					g.urlTTStart = urllib.pathname2url(os.path.splitext(fname)[0] + '_TTStart.html')
 				info.append( g )
