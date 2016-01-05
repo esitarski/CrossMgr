@@ -58,6 +58,7 @@ def getCurrentHtml():
 	
 @syncfunc
 def getCurrentTTStartHtml():
+	print 'getCurrentTTStartHtml: called'
 	return Model.getCurrentTTStartHtml()
 	
 def coreName( fname ):
@@ -83,7 +84,7 @@ class ContentBuffer( object ):
 		if not self.fnameRace:
 			return None
 		fnameBase = os.path.basename(fname).split('?')[0]
-		if not (fnameBase == 'Simulation.html' or reCrossMgrHtml.match(fnameBase)):
+		if not (reCrossMgrHtml.match(fnameBase) or fnameBase == 'Simulation.html' or fnameBase == 'Simulation_TTStart.html'):
 			return None
 		
 		cache = self.fileCache.get( fname, {} )
@@ -102,7 +103,7 @@ class ContentBuffer( object ):
 				cache['content'] = content.encode('utf-8')
 				self.fileCache[fname] = cache
 				return cache
-				
+			
 		try:
 			mtime = os.path.getmtime( fnameFull )
 		except Exception as e:
@@ -262,7 +263,7 @@ function Draw() {
 	w( '<body onload="Draw();">' )
 	w( '<h1 style="margin-top: 32px;">Share Race Results</h1>' )
 	w( '<canvas id="idqrcode" width="360" height="360"></canvas>' )
-	w( '<h2>Read the QRCode<br/>to see the Race Results page.</h2>' )
+	w( '<h2>Scan the QRCode.<br/>Follow it to the Race Results page.</h2>' )
 	w( '<h2>{}</h2>'.format(data) )
 	w( 'Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.' )
 	w( '</body>' )
@@ -327,6 +328,8 @@ def WebServer():
 
 def queueListener( q ):
 	global DEFAULT_HOST, server
+	
+	DEFAULT_HOST = Utils.GetDefaultHost()
 	keepGoing = True
 	while keepGoing:
 		message = q.get()

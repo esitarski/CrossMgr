@@ -1815,6 +1815,8 @@ class MainWin( wx.Frame ):
 				webbrowser.open( race.urlFull, new = 0, autoraise = True )
 			
 	def addTTStartToHtmlStr( self, html ):
+		race = Model.race
+		
 		html = self.cleanHtml( html )
 		
 		payload = {}

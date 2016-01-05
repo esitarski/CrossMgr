@@ -719,7 +719,16 @@ def ValidFilename( fname ):
 
 def GetDefaultHost():
 	DEFAULT_HOST = socket.gethostbyname(socket.gethostname())
-	if DEFAULT_HOST in ('127.0.0.1', '127.0.1.1'):
+	
+	if not DEFAULT_HOST or DEFAULT_HOST in ('127.0.0.1', '127.0.1.1'):
+		try:
+			s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+			s.connect(('8.8.8.8', 0))  # connecting to a UDP address doesn't send packets
+			DEFAULT_HOST = s.getsockname()[0]
+		except:
+			pass
+		
+	if not DEFAULT_HOST or DEFAULT_HOST in ('127.0.0.1', '127.0.1.1'):
 		reSplit = re.compile('[: \t]+')
 		try:
 			co = subprocess.Popen(['ifconfig'], stdout=subprocess.PIPE)
@@ -737,6 +746,7 @@ def GetDefaultHost():
 					pass
 		except:
 			pass
+	
 	return DEFAULT_HOST	
 
 if __name__ == '__main__':
