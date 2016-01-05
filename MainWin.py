@@ -2834,7 +2834,7 @@ class MainWin( wx.Frame ):
 			race.memo = ''
 			race.minutes = self.raceMinutes
 			race.raceNum = 1
-			#race.isTimeTrial = True
+			race.isTimeTrial = True
 			#race.enableUSBCamera = True
 			#race.photosAtRaceEndOnly = True
 			#race.enableJChipIntegration = True

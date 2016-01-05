@@ -42,7 +42,7 @@ with io.open( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), 'rb' )
 	DefaultLogoSrc = "data:image/png;base64," + base64.b64encode( f.read() )
 with io.open( os.path.join(Utils.getImageFolder(), 'QRCodeIcon.png'), 'rb' ) as f:
 	QRCodeIcon = f.read()
-with io.open( os.path.join(Utils.getImageFolder(), 'stopwatch48x48.png'), 'rb' ) as f:
+with io.open( os.path.join(Utils.getImageFolder(), 'stopwatch-32px.png'), 'rb' ) as f:
 	StopwatchIcon = f.read()
 with io.open(os.path.join(Utils.getHtmlFolder(), 'Index.html'), encoding='utf-8') as f:
 	indexTemplate = Template( f.read() )
@@ -65,8 +65,7 @@ def coreName( fname ):
 
 class Generic( object ):
 	def __init__( self, **kwargs ):
-		for key, data in kwargs.iteritems():
-			setattr( self, key, data )
+		self.__dict__.update( kwargs )
 
 class ContentBuffer( object ):
 	Unchanged = 0
