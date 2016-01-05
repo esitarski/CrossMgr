@@ -42,6 +42,8 @@ with io.open( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), 'rb' )
 	DefaultLogoSrc = "data:image/png;base64," + base64.b64encode( f.read() )
 with io.open( os.path.join(Utils.getImageFolder(), 'QRCodeIcon.png'), 'rb' ) as f:
 	QRCodeIcon = f.read()
+with io.open( os.path.join(Utils.getImageFolder(), 'stopwatch48x48.png'), 'rb' ) as f:
+	StopwatchIcon = f.read()
 with io.open(os.path.join(Utils.getHtmlFolder(), 'Index.html'), encoding='utf-8') as f:
 	indexTemplate = Template( f.read() )
 
@@ -54,9 +56,16 @@ def validContent( content ):
 def getCurrentHtml():
 	return Model.getCurrentHtml()
 	
-def coreName( fname ):
-	return os.path.splitext(os.path.basename(fname).split('?')[0])[0].strip('-')
+@syncfunc
+def getCurrentTTStartHtml():
+	return Model.getCurrentTTStartHtml()
 	
+def coreName( fname ):
+	return os.path.splitext(os.path.basename(fname).split('?')[0])[0].replace('_TTStart','').strip('-')
+
+class Generic( object ):
+	pass
+
 class ContentBuffer( object ):
 	Unchanged = 0
 	Changed = 1
@@ -84,7 +93,7 @@ class ContentBuffer( object ):
 			if race.lastChangedTime <= cache.get('mtime',0.0):
 				return cache
 			
-			content = getCurrentHtml()
+			content = getCurrentTTStartHtml() if '_TTStart' in fname else getCurrentHtml()
 			if content:
 				cache['mtime'] = time.time()
 				result = ParseHtmlPayload( content=content )
@@ -143,7 +152,7 @@ class ContentBuffer( object ):
 		return [fname for fname, cache in sorted(
 			self.fileCache.iteritems(),
 			key=lambda x: (x[1]['payload'].get('raceScheduledStart',futureDate), x[0])
-		)]
+		) if not fname.endswith('_TTStart.html')]
 	
 	def _getCache( self, fname, checkForUpdate=True ):
 		if checkForUpdate:
@@ -185,14 +194,16 @@ class ContentBuffer( object ):
 				fnameShow = os.path.splitext(os.path.basename(fname))[0].strip('-')
 				if fnameShow != 'Simulation':
 					fnameShow = fnameShow[11:]
-				info.append( (
-						payload.get('raceScheduledStart',None),
-						fnameShow,
-						[(c['name'], urllib.pathname2url(c['name'])) for c in payload.get('catDetails',[]) if c['name'] != 'All'],
-						urllib.pathname2url(fname),
-						payload.get('raceIsRunning',False),
-					)
-				)
+				g = Generic()
+				g.raceScheduledStart = payload.get('raceScheduledStart',None),
+				g.fnameShow = fnameShow,
+				g.catgegories = [(c['name'], urllib.pathname2url(c['name'])) for c in payload.get('catDetails',[]) if c['name'] != 'All'],
+				g.url = urllib.pathname2url(fname),
+				g.isTimeTrial = payload.get('isTimeTrial',False),
+				g.raceIsRunning = payload.get('raceIsRunning',False),
+				if g.isTimeTrial:
+					g.urlTTStart = rllib.pathname2url(os.path.splitext(fname)[0] + '_TTStart.html')
+				info.append( g )
 			result['info'] = info
 			return result
 
@@ -274,6 +285,9 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 			elif up.path=='/favicon.ico':
 				content = favicon
 				content_type = 'image/x-icon'
+			elif up.path=='/stopwatch.png':
+				content = StopwatchIcon
+				content_type = 'image/png'
 			elif up.path=='/qrcode.png':
 				content = QRCodeIcon
 				content_type = 'image/png'

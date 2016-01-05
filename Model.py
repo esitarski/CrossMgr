@@ -2404,6 +2404,17 @@ def getCurrentHtml():
 	except Exception as e:
 		return None
 
+def getCurrentTTStartHtml():
+	if not race:
+		return None
+	htmlFile = os.path.join(Utils.getHtmlFolder(), 'TTStart.html')
+	try:
+		with io.open(htmlFile, 'r', encoding='utf-8') as fp:
+			html = fp.read()
+		return Utils.mainWin.addTTStartToHtmlStr( html )
+	except Exception as e:
+		return None
+
 def writeCurrentHtml():
 	html = getCurrentHtml()
 	if not html:

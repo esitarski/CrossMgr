@@ -33,7 +33,7 @@ CrossMgr makes this easy by supporting three types of Categories:
 For example, say that you have Cat 3, Cat 4 and Junior Men and Elite Women, Master Women and Junior Women, and you want to combine them into two Start Waves, wich a start offset of 60 seconds for the women's race.
 First, set up those Categories in CrossMgr.
 
-Now, we need the Start Waves.  A Start Wave is simply the whistle that a group of riders starts on.  Bt default, CrossMgr ranks riders both by the Start Wave overall, and by the Components in the Start Wave.  If you don't want the overall ranking in the results, you can de-select the __Publish__ flag on the Category row (more on that later).
+Now, we need the Start Waves.  A Start Wave is simply the whistle that a group of riders starts on.  By default, CrossMgr ranks riders both by the Start Wave overall, and by the Components in the Start Wave.  If you don't want the overall ranking in the results, you can de-select the __Publish__ flag on the Category row (more on that later).
 
 To create some Start Waves, press the "New Category" button, and change the new category name to "Combined Men".
 Do the same and make a category for "Combined Women".

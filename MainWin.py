@@ -1814,46 +1814,7 @@ class MainWin( wx.Frame ):
 			if race.urlFull and race.urlFull != 'http://':
 				webbrowser.open( race.urlFull, new = 0, autoraise = True )
 			
-	@logCall
-	def menuPublishHtmlTTStart( self, event=None ):
-		self.commit()
-		race = Model.race
-		if not race or self.fileName is None or len(self.fileName) < 4:
-			return
-			
-		if not race.isTimeTrial:
-			Utils.MessageOK( self, _('TT Start can only be created for a Time Trial event.'), _('Cannot Create TTStart Page') )
-			return
-			
-		if not race.isRunning():
-			Utils.MessageOK( self,
-				u'\n'.join( [
-					_('The Time Trial has not started.'),
-					_('The TTStart page will act as countdown clock for the scheduled start time.'),
-					_('You must publish this page again after you start the Time Trial.'),
-				]),
-				_('Reminder: Publish after Time Trial is Started') )
-		
-		# Get the folder to write the html file.
-		fname = os.path.splitext(self.fileName)[0] + '_TTStart.html'
-		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(fname)),
-							style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
-		ret = dlg.ShowModal()
-		dName = dlg.GetPath()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
-
-		# Read the html template.
-		htmlFile = os.path.join(Utils.getHtmlFolder(), 'TTStart.html')
-		try:
-			with io.open(htmlFile, 'r', encoding='utf-8') as fp:
-				html = fp.read()
-		except:
-			Utils.MessageOK(self, _('Cannot read HTML template file.  Check program installation.'),
-							_('Html Template Read Error'), iconMask=wx.ICON_ERROR )
-			return
-			
+	def addTTStartToHtmlStr( self, html ):
 		html = self.cleanHtml( html )
 		
 		payload = {}
@@ -1905,6 +1866,49 @@ class MainWin( wx.Frame ):
 				cgi.escape(race.date), cgi.escape(race.scheduledStart),
 			)
 		)
+		return html
+	
+	@logCall
+	def menuPublishHtmlTTStart( self, event=None ):
+		self.commit()
+		race = Model.race
+		if not race or self.fileName is None or len(self.fileName) < 4:
+			return
+			
+		if not race.isTimeTrial:
+			Utils.MessageOK( self, _('TT Start can only be created for a Time Trial event.'), _('Cannot Create TTStart Page') )
+			return
+			
+		if not race.isRunning():
+			Utils.MessageOK( self,
+				u'\n'.join( [
+					_('The Time Trial has not started.'),
+					_('The TTStart page will act as countdown clock for the scheduled start time.'),
+					_('You must publish this page again after you start the Time Trial.'),
+				]),
+				_('Reminder: Publish after Time Trial is Started') )
+		
+		# Get the folder to write the html file.
+		fname = os.path.splitext(self.fileName)[0] + '_TTStart.html'
+		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(fname)),
+							style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
+		ret = dlg.ShowModal()
+		dName = dlg.GetPath()
+		dlg.Destroy()
+		if ret != wx.ID_OK:
+			return
+
+		# Read the html template.
+		htmlFile = os.path.join(Utils.getHtmlFolder(), 'TTStart.html')
+		try:
+			with io.open(htmlFile, 'r', encoding='utf-8') as fp:
+				html = fp.read()
+		except:
+			Utils.MessageOK(self, _('Cannot read HTML template file.  Check program installation.'),
+							_('Html Template Read Error'), iconMask=wx.ICON_ERROR )
+			return
+			
+		html = self.addTTStartToHtmlStr( html )
 		
 		# Write out the results.
 		fname = os.path.join( dName, os.path.basename(fname) )
@@ -2578,7 +2582,7 @@ class MainWin( wx.Frame ):
 		Model.resetCache()
 		ResetExcelLinkCache()
 		self.writeRace()
-		Utils.writeCurrentHtml()
+		Model.writeCurrentHtml()
 		self.closeFindDialog()
 		
 		try:

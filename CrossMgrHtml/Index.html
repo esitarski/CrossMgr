@@ -85,11 +85,11 @@ ol ol li:last-child {margin-bottom:0;}
 {% if not info %}
 	<h2>Results will be available shortly.<br/>Check or Refresh in a few minutes...</h2>
 {% end %}
-{% for i, (scheduledStart, name, categories, url, raceIsRunning) in enumerate(info) %}
-	<li {{'class=highlight' if raceIsRunning else ''}} >
-		<a href="{{url}}" class=racename>{{name}}</a><span style="white-space: nowrap;">{{scheduledStart.strftime('%H:%M %a %b %d, %Y')}}</span><br/>
-		{% for catName, catUrl in categories %}
-			<a href="{{url}}?raceCat={{catUrl}}" class='btn'>{{catName}}</a>
+{% for i, g in enumerate(info) %}
+	<li {{'class=highlight' if g.raceIsRunning else ''}} >
+		<a href="{{url}}" class=racename>{{g.name}}</a><span style="white-space: nowrap;">{{g.scheduledStart.strftime('%H:%M %a %b %d, %Y')}}</span>{% if g.isTimeTrial %}<a href="{{g.urlTTStart}}"<a><img src=./stopwatch.png" /></a>{% end %}<br/>
+		{% for catName, catUrl in g.categories %}
+			<a href="{{g.url}}?raceCat={{catUrl}}" class='btn'>{{catName}}</a>
 		{% end %}
 	</li>
 {% end %}
