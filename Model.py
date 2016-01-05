@@ -2405,7 +2405,7 @@ def getCurrentHtml():
 		return None
 
 def getCurrentTTStartHtml():
-	if not race:
+	if not race or not race.isTimeTrial:
 		return None
 	htmlFile = os.path.join(Utils.getHtmlFolder(), 'TTStart.html')
 	try:
@@ -2423,10 +2423,20 @@ def writeCurrentHtml():
 	try:
 		with io.open(fname, 'w', encoding='utf-8') as fp:
 			fp.write( html )
-		return True
 	except:
 		return False
 
+	html = getCurrentTTStartHtml()
+	if not html:
+		return True
+	fname = os.path.splitext(Utils.getFileName())[0] + '_TTStart.html'
+	try:
+		with io.open(fname, 'w', encoding='utf-8') as fp:
+			fp.write( html )
+		return True
+	except:
+		return False
+		
 if __name__ == '__main__':
 	r = newRace()
 	for i in xrange(1, 11):
