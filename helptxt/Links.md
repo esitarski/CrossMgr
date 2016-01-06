@@ -11,6 +11,7 @@
 [Tools]:			Menu-Tools.html
 [Options]:			Menu-Options.html
 [Windows]:			Menu-Windows.html
+[Web]:				Menu-Web.html
 [Help]:				Menu-Help.html
 
 [Main]:				Main.html

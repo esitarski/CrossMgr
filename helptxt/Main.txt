@@ -13,6 +13,7 @@ Get started with CrossMgr now!
 * [Options][]
 * [JumpTo][]
 * [Windows][]
+* [Web][]
 * [Help][]
 
 ## Screens
