@@ -32,6 +32,13 @@ __Share the QR Code with Race Attendees__
 
 That's it!
 
+## Time Trials and the TTStart page.
+
+For Time Trials, the TTStart countdown page is available from the Index page.  Just click on the stopwatch icon next to the race name.
+This allows the starting official, wip and anyone else to see the start countdown in real-time.
+
+Of course, accessing the results of a time trial will also show the start times.
+
 ### Tutorial 1
 You can try this out for yourself.  For this experiment, you will need a CrossMgr computer and a tablet on the same wireless network.
 
@@ -48,7 +55,9 @@ You can try this out for yourself.  For this experiment, you will need a CrossMg
 Races in progress are highlighted on the Index page.
 
 ### Notes:
-Remember - live results are a direct connection between your CrossMgr race and the web.  All changes you make will be immediately visible.  Use caution.
+__Remember:__ live results are a direct connection between your CrossMgr race and the web.  All changes you make will be immediately visible.  Use caution.
+
+__Multiple versions of CrossMgr open at the same time:__  The first one open will act as the web server.  If the first on is closed, another will take over after a few seconds.
 
 ## Index Page
 Opens a browser showing the CrossMgr web index page.
