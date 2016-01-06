@@ -2256,7 +2256,7 @@ class MainWin( wx.Frame ):
 				race.resetAllCaches()
 		
 		self.writeRace()
-		Utils.writeCurrentHtml()
+		Model.writeCurrentHtml()
 		self.config.Flush()
 
 		try:
