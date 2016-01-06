@@ -1,0 +1,47 @@
+
+[TOC]
+
+# Web
+
+## Introduction
+
+Riders and spectators appreciate live results at the race - it creates a richer experience for the participants and creates a more professional impression for you.
+
+CrossMgr makes it __extremely__ easy to publish real-time results at race on a local wireless network.
+CrossMgr itself it a web sever and can serve up real-time results from the race data.
+
+### Step 1:
+__Make sure the CrossMgr computer is connected to a wireless network.__
+1. The wireless network does not have to be connected to the external internet.  It is better if it isn't as members of the public will be connecting to it to get the race results.
+1. Make sure the wireless network is __not__ password protected.  Riders and spectators need to connect to it.
+1. If you are not using a chip reader, you can just connect the CrosMgr computer to a local wireless network produce from a wireless router.
+1. If you are using a chip reader with CrossMgr, use a cable plugged into a wireless router to connect the CrossMgr computer to the chip reader.
+
+### Step 2:
+__Share the QR Code with Race Attendees__
+
+### Tutorial 1
+You can try this out for yourself.  For this experiment, you will need a CrossMgr computer and a tablet on the same wireless network.
+
+1. Start CrossMgr
+1. Do __Tools|Sumulate Race...__ to start the race simulation.
+1. Do __Web|Index Page...__ to show the index page.  This is live connected to the CrossMgr program.
+1. From the Index page, click on the __Share__ link at the top
+1. This brings up a __QR Code__ of the page.
+1. With a tablet on the same wireless network of the CrossMgr computer, launch the QR Code app and point it at the CrossMgr computer screen.  Follow the link on the tablet.
+1. The tablet will now show the Index page.  Notice that the tablet also has access to the __Share__ link.  This allows other people to share the link to the race results.
+1. On the tablet, click on the __Simulation__ race.  The tablet now shows the live results of the race.  Clicking on the logo at the top of the screen will refresh the page.  The page will also refresh automatically after each leader's lap.
+
+Races in progress are highlighted.
+
+## Index Page
+Opens a browser showing the CrossMgr web index page.
+
+The current race is connectd to real-time CrossMgr data.
+Other races in the same folder 
+
+## QR Code Share Page
+Opens a browser and loads the CrossMgr web QR Code Share page.
+
+Publish this to allow people to connect to real-time results.
+Print this out and post it at the race.  This will allow people to easily access the real-time results.

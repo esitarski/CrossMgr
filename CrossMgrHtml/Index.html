@@ -78,12 +78,12 @@ ol ol li:last-child {margin-bottom:0;}
 </head>
 
 <body>
-<img id="idImgHeader" alt="CrossMgr Logo" src="{{logoSrc}}"/>
+<img id="idImgHeader" alt="CrossMgr Logo" onclick="location.reload(true)" style="cursor: pointer;" src="{{logoSrc}}"/>
 {% if share %}&nbsp;&nbsp;&nbsp;&nbsp;<a href="./qrcode.html">Share <img src="./qrcode.png" /></a>{% end %}
 <h1>Race Results<br/><span style="font-size: 80%">{% if organizer %}by {% end %}{{organizer}}</span></h1>
 <ol>
 {% if not info %}
-	<h2>Results will be available shortly.<br/>Try a Refresh in a few minutes...</h2>
+	<h2>Results will be available shortly.<br/>Wait a few minutes, then press the Image above to Refresh.</h2>
 {% end %}
 {% for i, g in enumerate(info) %}
 	<li {% if g.raceIsRunning %} class=highlight {% end %} >

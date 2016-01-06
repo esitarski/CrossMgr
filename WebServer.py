@@ -323,8 +323,13 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 server = None
 def WebServer():
 	global server
-	server = ThreadingSimpleServer(('', PORT_NUMBER), CrossMgrHandler)
-	server.serve_forever( poll_interval = 2 )
+	while 1:
+		try:
+			server = ThreadingSimpleServer(('', PORT_NUMBER), CrossMgrHandler)
+			server.serve_forever( poll_interval = 2 )
+		except Exception as e:
+			server = None
+			time.sleep( 5 )
 
 def queueListener( q ):
 	global DEFAULT_HOST, server
@@ -342,8 +347,9 @@ def queueListener( q ):
 			keepGoing = False
 		q.task_done()
 	
-	server.shutdown()
-	server = None
+	if server:
+		server.shutdown()
+		server = None
 
 q = Queue()
 qThread = threading.Thread( target=queueListener, name='queueListener', args=(q,) )

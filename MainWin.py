@@ -734,6 +734,19 @@ class MainWin( wx.Frame ):
 		self.menuBar.Append( self.windowMenu, _("&Windows") )
 		
 		#------------------------------------------------------------------------------
+		self.webMenu = wx.Menu()
+
+		idCur = wx.NewId()
+		self.webMenu.Append( idCur, _("&Index Page..."), _("Index Page...") )
+		self.Bind(wx.EVT_MENU, self.menuWebIndexPage, id=idCur )
+
+		idCur = wx.NewId()
+		self.webMenu.Append( idCur, _("&QR Code Share Page..."), _("QR Code Share Page...") )
+		self.Bind(wx.EVT_MENU, self.menuWebQRCodePage, id=idCur )
+		
+		self.menuBar.Append( self.webMenu, _("&Web") )
+		
+		#------------------------------------------------------------------------------
 		self.helpMenu = wx.Menu()
 
 		idCur = wx.NewId()
@@ -1743,6 +1756,7 @@ class MainWin( wx.Frame ):
 				_('Set Email Contact'), wx.ICON_EXCLAMATION ):
 				self.menuSetContactEmail()
 	
+		'''
 		# Get the folder to write the html file.
 		fname = os.path.splitext(self.fileName)[0] + '.html'
 		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(fname)),
@@ -1752,7 +1766,10 @@ class MainWin( wx.Frame ):
 		dlg.Destroy()
 		if ret != wx.ID_OK:
 			return
-
+		'''
+		
+		dName = os.path.dirname(fname)
+		
 		# Read the html template.
 		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
 		try:
@@ -1890,8 +1907,10 @@ class MainWin( wx.Frame ):
 				]),
 				_('Reminder: Publish after Time Trial is Started') )
 		
-		# Get the folder to write the html file.
 		fname = os.path.splitext(self.fileName)[0] + '_TTStart.html'
+		
+		'''
+		# Get the folder to write the html file.
 		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(fname)),
 							style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
 		ret = dlg.ShowModal()
@@ -1899,6 +1918,9 @@ class MainWin( wx.Frame ):
 		dlg.Destroy()
 		if ret != wx.ID_OK:
 			return
+		'''
+			
+		dName = os.path.dirname(fname)
 
 		# Read the html template.
 		htmlFile = os.path.join(Utils.getHtmlFolder(), 'TTStart.html')
@@ -1981,8 +2003,10 @@ class MainWin( wx.Frame ):
 				
 			geoTrack = race.geoTrack
 			
+		fname = os.path.splitext(self.fileName)[0] + 'Course.gpx'
+		
+		'''
 		# Get the folder to write the html file.
-		fname = self.fileName[:-4] + 'Course.gpx'
 		dlg = wx.DirDialog( self, u'{} "{}"'.format( _('Folder to write'), os.path.basename(fname)),
 							style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
 		ret = dlg.ShowModal()
@@ -1990,6 +2014,9 @@ class MainWin( wx.Frame ):
 		dlg.Destroy()
 		if ret != wx.ID_OK:
 			return
+		'''
+		
+		dName = os.path.dirname( fname )
 		
 		fname = os.path.join( dName, os.path.basename(fname) )
 		
@@ -2015,8 +2042,10 @@ class MainWin( wx.Frame ):
 				
 			geoTrack = race.geoTrack
 			
+			fname = os.path.splitext(self.fileName)[0] + 'Course.kmz'
+			
+			'''
 			# Get the folder to write the html file.
-			fname = self.fileName[:-4] + 'Course.kmz'
 			dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(fname)),
 								style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
 			ret = dlg.ShowModal()
@@ -2024,6 +2053,9 @@ class MainWin( wx.Frame ):
 			dlg.Destroy()
 			if ret != wx.ID_OK:
 				return
+			'''
+		
+			dName = os.path.dirname( fname )
 			
 			fname = os.path.join( dName, os.path.basename(fname) )
 			courseFName = os.path.splitext(os.path.basename(fname))[0] + '.kml'
@@ -2047,8 +2079,10 @@ class MainWin( wx.Frame ):
 				
 			geoTrack = race.geoTrack
 			
+			fname = os.path.splitext(self.fileName)[0] + 'CoursePreview.html'
+			
+			'''
 			# Get the folder to write the html file.
-			fname = self.fileName[:-4] + 'CoursePreview.html'
 			dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(fname)),
 								style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
 			ret = dlg.ShowModal()
@@ -2056,6 +2090,9 @@ class MainWin( wx.Frame ):
 			dlg.Destroy()
 			if ret != wx.ID_OK:
 				return
+			'''
+			
+			dName = os.path.dirname( fname )
 			
 			fname = os.path.join( dName, os.path.basename(fname) )
 			
@@ -2096,8 +2133,10 @@ class MainWin( wx.Frame ):
 					_('Missing Raw Race Data'), wx.ICON_ERROR )
 			return
 		
+		fname = os.path.splitext(self.fileName)[0] + 'RawData.html'
+		
+		'''
 		# Get the folder to write the html file.
-		fname = self.fileName[:-4] + 'RawData.html'
 		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(fname)),
 							style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
 		ret = dlg.ShowModal()
@@ -2105,6 +2144,8 @@ class MainWin( wx.Frame ):
 		dlg.Destroy()
 		if ret != wx.ID_OK:
 			return
+		'''
+		dName = os.path.dirname( fname )
 
 		# Read the html template.
 		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RawData.html')
@@ -2836,7 +2877,7 @@ class MainWin( wx.Frame ):
 			race.memo = ''
 			race.minutes = self.raceMinutes
 			race.raceNum = 1
-			race.isTimeTrial = True
+			#race.isTimeTrial = True
 			#race.enableUSBCamera = True
 			#race.photosAtRaceEndOnly = True
 			#race.enableJChipIntegration = True
@@ -3301,6 +3342,20 @@ class MainWin( wx.Frame ):
 	@logCall
 	def onContextHelp( self, event ):
 		Utils.showHelp( self.attrClassName[self.notebook.GetSelection()][2] + '.html' )
+		
+	@logCall
+	def menuWebIndexPage( self, event ):
+		try:
+			webbrowser.open( 'http://' + Utils.GetDefaultHost() + ':8765/' , new = 2, autoraise = True )
+		except Exception as e:
+			pass
+	
+	@logCall
+	def menuWebQRCodePage( self, event ):
+		try:
+			webbrowser.open( 'http://' + Utils.GetDefaultHost() + ':8765/qrcode.html' , new = 2, autoraise = True )
+		except Exception as e:
+			pass
 	
 	@logCall
 	def menuAbout( self, event ):
