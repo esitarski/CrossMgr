@@ -2740,7 +2740,7 @@ class MainWin( wx.Frame ):
 				return
 			race.finishRaceNow()
 		
-		Utils.writeCurrentHtml()
+		Model.writeCurrentHtml()
 		self.doCleanup()
 		Model.setRace( None )
 		self.refresh()
