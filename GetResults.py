@@ -83,6 +83,10 @@ class RiderResult( object ):
 	def _getKey( self ):
 		return (statusSortSeq[self.status], -self.laps, self.lastTime, getattr(self, 'startTime', 0.0) or 0.0, self.num)
 		
+	def _getWinAndOutKey( self ):
+		k = self._getKey()
+		return (k[0], -k[1],) + k[2:]		# Sort by increasing lap count.
+		
 	def _getComponentKey( self ):
 		return (statusSortSeq[self.status], toInt(self.pos), self.lastTime, getattr(self, 'startTime', 0.0) or 0.0, self.num)
 
