@@ -976,6 +976,7 @@ class Race( object ):
 	geoTrackFName = None
 	
 	groupByStartWave = True
+	winAndOut = False
 	
 	city = ''
 	stateProv = ''

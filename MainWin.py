@@ -1273,16 +1273,6 @@ class MainWin( wx.Frame ):
 		if not categories or result != wx.ID_OK:
 			return
 		
-		'''
-		dlg = wx.DirDialog( self, u'{}'.format(_('Folder to write PDF Files')),
-						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(self.fileName) )
-		ret = dlg.ShowModal()
-		dName = dlg.GetPath()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
-		'''
-		
 		dName = os.path.join( os.path.dirname(self.fileName), 'pdf' )
 	
 		with Utils.UIBusy():
@@ -1432,16 +1422,7 @@ class MainWin( wx.Frame ):
 		if self.fileName is None or len(self.fileName) < 4:
 			return
 
-		xlFName = self.fileName[:-4] + '.xls'
-		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(xlFName)),
-						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
-		ret = dlg.ShowModal()
-		dName = dlg.GetPath()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
-
-		xlFName = os.path.join( dName, os.path.basename(xlFName) )
+		xlFName = os.path.splitext(self.fileName)[0] + '.xls'
 
 		wb = xlwt.Workbook()
 		with UnstartedRaceWrapper():
@@ -1520,12 +1501,13 @@ class MainWin( wx.Frame ):
 			payload['organizer']		= getattr(race, 'organizer', '')
 			payload['reverseDirection']	= getattr(race, 'reverseDirection', False)
 			payload['finishTop']		= getattr(race, 'finishTop', False)
-			payload['isTimeTrial']		= getattr(race, 'isTimeTrial', False)
-			payload['rfid']				= getattr(race, 'enableJChipIntegration', False)
+			payload['isTimeTrial']		= race.isTimeTrial
+			payload['winAndOut']		= race.winAndOut
+			payload['rfid']				= race.enableJChipIntegration
 			payload['primes']			= getattr(race, 'primes', [])
 			payload['raceNameText']		= race.name
 			payload['raceDate']			= race.date
-			payload['raceScheduledStart']	= race.date + ' ' + race.scheduledStart
+			payload['raceScheduledStart']= race.date + ' ' + race.scheduledStart
 			payload['raceAddress']      = u', '.join( n for n in [race.city, race.stateProv, race.country] if n )
 			payload['raceIsRunning']	= race.isRunning()
 			payload['raceIsUnstarted']	= race.isUnstarted()
@@ -1533,7 +1515,7 @@ class MainWin( wx.Frame ):
 			payload['hideDetails']		= race.hideDetails
 			payload['showCourseAnimation'] = race.showCourseAnimationInHtml
 			payload['licenseLinkTemplate'] = race.licenseLinkTemplate
-			payload['roadRaceFinishTimes'] = getattr(race, 'roadRaceFinishTimes', False)
+			payload['roadRaceFinishTimes'] = race.roadRaceFinishTimes
 			
 			notes = getattr(race, 'notes', u'')
 			if notes.lstrip()[:6].lower().startswith( '<html>' ):
@@ -1756,20 +1738,6 @@ class MainWin( wx.Frame ):
 				_('Set Email Contact'), wx.ICON_EXCLAMATION ):
 				self.menuSetContactEmail()
 	
-		'''
-		# Get the folder to write the html file.
-		fname = os.path.splitext(self.fileName)[0] + '.html'
-		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(fname)),
-							style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
-		ret = dlg.ShowModal()
-		dName = dlg.GetPath()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
-		'''
-		
-		dName = os.path.dirname(fname)
-		
 		# Read the html template.
 		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
 		try:
@@ -1783,7 +1751,7 @@ class MainWin( wx.Frame ):
 		html = self.addResultsToHtmlStr( html )
 			
 		# Write out the results.
-		fname = os.path.join( dName, os.path.basename(fname) )
+		fname = os.path.splitext(self.fileName)[0] + '.html'
 		try:
 			with io.open(fname, 'w', encoding='utf-8') as fp:
 				fp.write( html )
@@ -1907,21 +1875,7 @@ class MainWin( wx.Frame ):
 				]),
 				_('Reminder: Publish after Time Trial is Started') )
 		
-		fname = os.path.splitext(self.fileName)[0] + '_TTStart.html'
 		
-		'''
-		# Get the folder to write the html file.
-		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(fname)),
-							style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
-		ret = dlg.ShowModal()
-		dName = dlg.GetPath()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
-		'''
-			
-		dName = os.path.dirname(fname)
-
 		# Read the html template.
 		htmlFile = os.path.join(Utils.getHtmlFolder(), 'TTStart.html')
 		try:
@@ -1935,7 +1889,7 @@ class MainWin( wx.Frame ):
 		html = self.addTTStartToHtmlStr( html )
 		
 		# Write out the results.
-		fname = os.path.join( dName, os.path.basename(fname) )
+		fname = os.path.splitext(self.fileName)[0] + '_TTStart.html'
 		try:
 			with io.open(fname, 'w', encoding='utf-8') as fp:
 				fp.write( html )
@@ -2003,22 +1957,8 @@ class MainWin( wx.Frame ):
 				
 			geoTrack = race.geoTrack
 			
+		
 		fname = os.path.splitext(self.fileName)[0] + 'Course.gpx'
-		
-		'''
-		# Get the folder to write the html file.
-		dlg = wx.DirDialog( self, u'{} "{}"'.format( _('Folder to write'), os.path.basename(fname)),
-							style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
-		ret = dlg.ShowModal()
-		dName = dlg.GetPath()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
-		'''
-		
-		dName = os.path.dirname( fname )
-		
-		fname = os.path.join( dName, os.path.basename(fname) )
 		
 		doc = geoTrack.getGPX( os.path.splitext(os.path.basename(fname))[0] )
 		xml = doc.toprettyxml( indent = '', encoding = 'utf-8' )
@@ -2041,23 +1981,8 @@ class MainWin( wx.Frame ):
 				return
 				
 			geoTrack = race.geoTrack
-			
+						
 			fname = os.path.splitext(self.fileName)[0] + 'Course.kmz'
-			
-			'''
-			# Get the folder to write the html file.
-			dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(fname)),
-								style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
-			ret = dlg.ShowModal()
-			dName = dlg.GetPath()
-			dlg.Destroy()
-			if ret != wx.ID_OK:
-				return
-			'''
-		
-			dName = os.path.dirname( fname )
-			
-			fname = os.path.join( dName, os.path.basename(fname) )
 			courseFName = os.path.splitext(os.path.basename(fname))[0] + '.kml'
 			
 			zf = zipfile.ZipFile( fname, 'w', zipfile.ZIP_DEFLATED )
@@ -2079,23 +2004,6 @@ class MainWin( wx.Frame ):
 				
 			geoTrack = race.geoTrack
 			
-			fname = os.path.splitext(self.fileName)[0] + 'CoursePreview.html'
-			
-			'''
-			# Get the folder to write the html file.
-			dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(fname)),
-								style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
-			ret = dlg.ShowModal()
-			dName = dlg.GetPath()
-			dlg.Destroy()
-			if ret != wx.ID_OK:
-				return
-			'''
-			
-			dName = os.path.dirname( fname )
-			
-			fname = os.path.join( dName, os.path.basename(fname) )
-			
 			# Read the html template.
 			htmlFile = os.path.join(Utils.getHtmlFolder(), 'CourseViewer.html')
 			try:
@@ -2109,7 +2017,7 @@ class MainWin( wx.Frame ):
 			
 		# Write out the results.
 		html = self.addCourseToHtmlStr( html )
-		fname = os.path.join( dName, os.path.basename(fname) )
+		fname = os.path.splitext(self.fileName)[0] + 'CoursePreview.html'			
 		try:
 			with io.open(fname, 'w', encoding='utf-8') as fp:
 				fp.write( html )
@@ -2133,20 +2041,7 @@ class MainWin( wx.Frame ):
 					_('Missing Raw Race Data'), wx.ICON_ERROR )
 			return
 		
-		fname = os.path.splitext(self.fileName)[0] + 'RawData.html'
 		
-		'''
-		# Get the folder to write the html file.
-		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(fname)),
-							style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
-		ret = dlg.ShowModal()
-		dName = dlg.GetPath()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
-		'''
-		dName = os.path.dirname( fname )
-
 		# Read the html template.
 		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RawData.html')
 		try:
@@ -2237,7 +2132,7 @@ class MainWin( wx.Frame ):
 				pass
 			
 		# Write out the results.
-		fname = os.path.join( dName, os.path.basename(fname) )
+		fname = os.path.splitext(self.fileName)[0] + 'RawData.html'
 		try:
 			with io.open(fname, 'w', encoding='utf-8') as fp:
 				fp.write( html )
@@ -3030,16 +2925,7 @@ class MainWin( wx.Frame ):
 		self.history.setCategoryAll()
 		self.history.refresh()
 		
-		xlFName = self.fileName[:-4] + '-Passings.xls'
-		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(xlFName)),
-						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
-		ret = dlg.ShowModal()
-		dName = dlg.GetPath()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
-
-		xlFName = os.path.join( dName, os.path.basename(xlFName) )
+		xlFName = os.path.splitext(self.fileName)[0] + '-Passings.xls'
 
 		colnames = self.history.grid.GetColNames()
 		data = self.history.grid.GetData()
@@ -3076,16 +2962,7 @@ class MainWin( wx.Frame ):
 
 		self.showPageName( _('Results') )
 		
-		xlFName = self.fileName[:-4] + '-USAC.xls'
-		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(xlFName)),
-						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
-		ret = dlg.ShowModal()
-		dName = dlg.GetPath()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
-
-		xlFName = os.path.join( dName, os.path.basename(xlFName) )
+		xlFName = os.path.splitext(self.fileName)[0] + '-USAC.xls'
 
 		wb = xlwt.Workbook()
 		sheetCur = wb.add_sheet( 'Combined Results' )
@@ -3109,16 +2986,7 @@ class MainWin( wx.Frame ):
 
 		self.showPageName( _('Results') )
 		
-		xlFName = self.fileName[:-4] + '-VTTA.xls'
-		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(xlFName)),
-						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
-		ret = dlg.ShowModal()
-		dName = dlg.GetPath()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
-
-		xlFName = os.path.join( dName, os.path.basename(xlFName) )
+		xlFName = os.path.splitext(self.fileName)[0] + '-VTTA.xls'
 
 		wb = xlwt.Workbook()
 		sheetCur = wb.add_sheet( 'Combined Results' )
@@ -3140,16 +3008,7 @@ class MainWin( wx.Frame ):
 		if self.fileName is None or len(self.fileName) < 4:
 			return
 
-		xlFName = self.fileName[:-4] + '-UCI.xls'
-		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(xlFName)),
-						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
-		ret = dlg.ShowModal()
-		dName = dlg.GetPath()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
-
-		xlFName = os.path.join( dName, os.path.basename(xlFName) )
+		xlFName = os.path.splitext(self.fileName)[0] + '-UCI.xls'
 
 		wb = xlwt.Workbook()
 		raceCategories = getRaceCategories()
@@ -3221,16 +3080,7 @@ class MainWin( wx.Frame ):
 			
 		self.showPageName( _('Results') )
 		
-		fname = self.fileName[:-4] + '-{}.csv'.format(destination)
-		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(fname)),
-						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
-		ret = dlg.ShowModal()
-		dName = dlg.GetPath()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
-
-		fname = os.path.join( dName, os.path.basename(fname) )
+		fname = os.path.splitext(self.fileName)[0] + '-{}.csv'.format(destination)
 		
 		year, month, day = race.date.split( '-' )
 		raceName = race.name
@@ -3273,16 +3123,7 @@ class MainWin( wx.Frame ):
 			
 		self.showPageName( _('Results') )
 		
-		fname = self.fileName[:-4] + '-WebScorer.txt'
-		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(fname)),
-						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(fname) )
-		ret = dlg.ShowModal()
-		dName = dlg.GetPath()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
-
-		fname = os.path.join( dName, os.path.basename(fname) )
+		fname = os.path.splitext(self.fileName)[0] + '-WebScorer.txt'
 		
 		try:
 			success, message = WebScorerExport( fname )

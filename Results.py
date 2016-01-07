@@ -859,6 +859,7 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,200))
 	Model.setRace( Model.Race() )
 	Model.getRace()._populate()
+	Model.race.winAndOut = True
 	results = Results(mainWin)
 	results.refresh()
 	mainWin.Show()

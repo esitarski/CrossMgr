@@ -32,7 +32,8 @@ import Utils
 import Model
 from Synchronizer import syncfunc
 
-class ThreadingSimpleServer(ThreadingMixIn, HTTPServer):
+from ThreadPoolMixIn import ThreadPoolMixIn
+class CrossMgrServer(ThreadPoolMixIn, HTTPServer):
     pass
 
 reCrossMgrHtml = re.compile( r'^\d\d\d\d-\d\d-\d\d-.*\.html$' )
@@ -320,15 +321,27 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 		return
 
 #--------------------------------------------------------------------------
-def GetCrossMgrHomePage( ip=False ):
-	return 'http://{}:{}'.format(DEFAULT_HOST if ip else (socket.gethostname() or DEFAULT_HOST) , PORT_NUMBER)
+def GetCrossMgrHomePage( ip=None ):
+	if ip is None:
+		ip = not sys.platform.lower().startswith('win')
+	
+	if ip:
+		hostname = DEFAULT_HOST
+	else:
+		hostname = socket.gethostname()
+		try:
+			socket.gethostbyname( hostname )
+		except:
+			hostname = DEFAULT_HOST
+	return 'http://{}:{}'.format(hostname, PORT_NUMBER)
 
 server = None
 def WebServer():
 	global server
 	while 1:
 		try:
-			server = ThreadingSimpleServer(('', PORT_NUMBER), CrossMgrHandler)
+			server = CrossMgrServer(('', PORT_NUMBER), CrossMgrHandler)
+			server.init_thread_pool()
 			server.serve_forever( poll_interval = 2 )
 		except Exception as e:
 			server = None

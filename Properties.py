@@ -187,6 +187,9 @@ class RaceOptionsProperties( wx.Panel ):
 		self.showCourseAnimationInHtml = wx.CheckBox( self, label=_("Show Course Animation in Html") )
 		self.showCourseAnimationInHtml.SetValue( True )
 
+		self.winAndOut = wx.CheckBox( self, label=_("Win and Out") )
+		self.winAndOut.SetValue( False )
+
 		self.licenseLinkTemplateLabel = wx.StaticText( self, label=_('License Link HTML Template: ') )
 		self.licenseLinkTemplate = wx.TextCtrl( self, size=(64,-1), style=wx.TE_PROCESS_ENTER )
 		
@@ -213,6 +216,7 @@ class RaceOptionsProperties( wx.Panel ):
 			(self.distanceUnitLabel,0, labelAlign),		(self.distanceUnitSizer,		1, fieldAlign),
 			(blank(),				0, labelAlign),		(self.showDetails,				1, fieldAlign),
 			(blank(),				0, labelAlign),		(self.showCourseAnimationInHtml,1, fieldAlign),
+			(blank(),				0, labelAlign),		(self.winAndOut,				1, fieldAlign),
 			(self.licenseLinkTemplateLabel,0, labelAlign),(self.licenseLinkTemplate,		1, fieldAlign),
 		]
 		addToFGS( fgs, labelFieldFormats )
@@ -222,6 +226,7 @@ class RaceOptionsProperties( wx.Panel ):
 	def refresh( self ):
 		race = Model.race
 		self.timeTrial.SetValue( getattr(race, 'isTimeTrial', False) )
+		self.winAndOut.SetValue( race.winAndOut )
 		self.allCategoriesFinishAfterFastestRidersLastLap.SetValue( getattr(race, 'allCategoriesFinishAfterFastestRidersLastLap', False) )
 		self.autocorrectLapsDefault.SetValue( getattr(race, 'autocorrectLapsDefault', True) )
 		self.highPrecisionTimes.SetValue( getattr(race, 'highPrecisionTimes', False) )
@@ -252,6 +257,7 @@ class RaceOptionsProperties( wx.Panel ):
 		race.distanceUnit = self.distanceUnit.GetSelection()
 		race.hideDetails = not self.showDetails.IsChecked()
 		race.showCourseAnimationInHtml = self.showCourseAnimationInHtml.IsChecked()
+		race.winAndOut = self.winAndOut.IsChecked()
 		race.licenseLinkTemplate = self.licenseLinkTemplate.GetValue().strip()
 	
 #------------------------------------------------------------------------------------------------

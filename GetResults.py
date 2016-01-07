@@ -89,6 +89,10 @@ class RiderResult( object ):
 		
 	def _getComponentKey( self ):
 		return (statusSortSeq[self.status], toInt(self.pos), self.lastTime, getattr(self, 'startTime', 0.0) or 0.0, self.num)
+	
+	def _getWinAndOutComponentKey( self ):
+		k = self._getComponentKey()
+		return (k[0], -k[1],) + k[2:]		# Sort by increasing lap count.	
 
 DefaultSpeed = 0.00001
 
@@ -148,6 +152,7 @@ def GetResultsCore( category ):
 		isTimeTrial = race.isTimeTrial
 		roadRaceFinishTimes = race.roadRaceFinishTimes
 		allCategoriesFinishAfterFastestRidersLastLap = race.allCategoriesFinishAfterFastestRidersLastLap
+		winAndOut = race.winAndOut
 		raceStartSeconds = (
 			race.startTime.hour*60.0*60.0 + race.startTime.minute*60.0 + race.startTime.second + race.startTime.microsecond / 1000000.0 if race.startTime
 			else Utils.StrToSeconds(race.scheduledStart) * 60.0
@@ -368,7 +373,7 @@ def GetResultsCore( category ):
 						pass
 					rr.lastTimeOrig = rr.lastTime
 		
-		riderResults.sort( key = RiderResult._getKey )
+		riderResults.sort( key=RiderResult._getKey )
 		
 		# Add the position (or status, if not a Finisher).
 		# Fill in the gap field (include laps down if appropriate).
@@ -395,7 +400,7 @@ def GetResultsCore( category ):
 				lapsDown = leader.laps - rr.laps
 				rr.gap = u'-{} {}'.format(lapsDown, _('lap') if lapsDown == 1 else _('laps'))
 				rr.gapValue = -lapsDown
-			elif rr != leader and not (isTimeTrial and rr.lastTime == leader.lastTime):
+			elif (winAndOut or rr != leader) and not (isTimeTrial and rr.lastTime == leader.lastTime):
 				rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
 				rr.gapValue = rr.lastTime - leader.lastTime
 		
@@ -440,7 +445,10 @@ def GetResultsCore( category ):
 				if rider.status == Finisher and hasattr(rider, 'ttPenalty'):
 					rr.ttPenalty = getattr(rider, 'ttPenalty')
 					rr.ttNote = getattr(rider, 'ttNote', u'')
-		elif roadRaceFinishTimes:
+		elif winAndOut:
+			riderResults.sort( key=RiderResult._getWinAndOutKey )
+			
+		if roadRaceFinishTimes and not isTimeTrial:
 			for rr in riderResults:
 				rr.lastTime = rr.lastTimeOrig = rr.roadRaceLastTime
 				rr.gap = rr.roadRaceGap
@@ -517,7 +525,7 @@ def GetResults( category, getExternalData = False ):
 			# Adjust the true ride time by the factor (subtract the start offset and any penalties, add them back later).
 			rr.lastTime = startOffset + ttPenalty + max(0.0, rr.lastTimeOrig - startOffset - ttPenalty) * factor
 			
-		riderResults.sort( key=RiderResult._getKey )
+		riderResults.sort( key = RiderResult._getWinAndOutKey if race.winAndOut else RiderResult._getKey )
 	
 		# Assign finish position.
 		statusNames = Model.Rider.statusNames
@@ -538,6 +546,7 @@ def GetNonWaveCategoryResults( category ):
 		return tuple()
 	
 	isTimeTrial = getattr( race, 'isTimeTrial', False )
+	winAndOut = race.winAndOut
 	highPrecision = Model.highPrecisionTimes()
 	
 	rrCache = {}
@@ -573,11 +582,20 @@ def GetNonWaveCategoryResults( category ):
 		rr.raceTimes = [t - startOffset for t in rr.raceTimes]
 	
 	# Sort the new results.
-	riderResults.sort( key = (RiderResult._getComponentKey if category.catType == Model.Category.CatComponent else RiderResult._getKey) )
+	riderResults.sort( key =
+		RiderResult._getComponentKey if category.catType == Model.Category.CatComponent else RiderResult._getKey
+	)
 	
 	# Assign finish position, gaps and status.
 	statusNames = Model.Rider.statusNames
 	leader = riderResults[0] if riderResults else None
+	
+	if winAndOut:
+		riderResults.sort( key =
+			RiderResult._getWinAndOutComponentKeyComponentKey if category.catType == Model.Category.CatComponent else
+					RiderResult._getWinAndOutKey
+		)
+		
 	if leader:
 		leader.gap = ''
 		leader.gapValue = 0
@@ -590,7 +608,7 @@ def GetNonWaveCategoryResults( category ):
 					lapsDown = leader.laps - rr.laps
 					rr.gap = u'-{} {}'.format(lapsDown, _('laps') if lapsDown > 1 else _('lap'))
 					rr.gapValue = -lapsDown
-				elif rr != leader and not (isTimeTrial and rr.lastTime == leader.lastTime):
+				elif (winAndOut or rr != leader) and not (isTimeTrial and rr.lastTime == leader.lastTime):
 					rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
 					rr.gapValue = rr.lastTime - leader.lastTime
 			else:

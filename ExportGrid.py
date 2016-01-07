@@ -650,27 +650,27 @@ class ExportGrid( object ):
 					pass
 			showLapsFrequency = max( 1, int(math.ceil(maxLaps / 10.0)) )
 		
-		with Model.LockRace() as race:
-			catStr = 'All' if not category else category.fullname
-			catData = []
-			if cd and cd.get('raceDistance', None):
-				catData.append( u'{:.2f} {}'.format(cd['raceDistance'], cd['distanceUnit']) )
-				if cd.get('lapDistance', None) and cd.get('laps', 0) > 1:
-					if cd.get('firstLapDistance', None) and cd['firstLapDistance'] != cd['lapDistance']:
-						catData.append(
-							u'{} {:.2f} {}, {} {} {:.2f} {}'.format(
-									_('1st lap'), cd['firstLapDistance'], cd['distanceUnit'],
-									cd['laps'] - 1, _('more laps of'), cd['lapDistance'], cd['distanceUnit']
-							)
+		race = Model.race
+		catStr = 'All' if not category else category.fullname
+		catData = []
+		if cd and cd.get('raceDistance', None):
+			catData.append( u'{:.2f} {}'.format(cd['raceDistance'], cd['distanceUnit']) )
+			if cd.get('lapDistance', None) and cd.get('laps', 0) > 1:
+				if cd.get('firstLapDistance', None) and cd['firstLapDistance'] != cd['lapDistance']:
+					catData.append(
+						u'{} {:.2f} {}, {} {} {:.2f} {}'.format(
+								_('1st lap'), cd['firstLapDistance'], cd['distanceUnit'],
+								cd['laps'] - 1, _('more laps of'), cd['lapDistance'], cd['distanceUnit']
 						)
-					else:
-						catData.append( u'{} {} {:.2f} {}'.format(cd['laps'], _('laps of'), cd['lapDistance'], cd['distanceUnit']) )
-				if leader.status == Model.Rider.Finisher:
-					catData.append( u'{}: {} - {}'.format(_('winner'), Utils.formatTime(leader.lastTime - cd['startOffset']), leader.speed) )
-		
-			self.title = u'\n'.join( [race.name, Utils.formatDate(race.date), catStr, u', '.join(catData)] )
-			isTimeTrial = getattr( race, 'isTimeTrial', False )
-			roadRaceFinishTimes = getattr( race, 'roadRaceFinishTimes', False )
+					)
+				else:
+					catData.append( u'{} {} {:.2f} {}'.format(cd['laps'], _('laps of'), cd['lapDistance'], cd['distanceUnit']) )
+			if leader.status == Model.Rider.Finisher:
+				catData.append( u'{}: {} - {}'.format(_('winner'), Utils.formatTime(leader.lastTime - cd['startOffset']), leader.speed) )
+	
+		self.title = u'\n'.join( [race.name, Utils.formatDate(race.date), catStr, u', '.join(catData)] )
+		isTimeTrial = getattr( race, 'isTimeTrial', False )
+		roadRaceFinishTimes = getattr( race, 'roadRaceFinishTimes', False )
 
 		startOffset = category.getStartOffsetSecs() if category else 0.0
 		
@@ -690,7 +690,10 @@ class ExportGrid( object ):
 			
 		self.colnames = [u'{} {}'.format(name[:-len(_('Name'))], _('Name')) if name.endswith(_('Name')) else name for name in self.colnames]
 		self.iLapTimes = len(self.colnames)
-		lapsMax = len(leader.lapTimes) if leader.lapTimes else 0
+		if not leader.lapTimes:
+			lapsMax = 0
+		else:
+			lapsMax = max(len(rr.lapTimes or []) for rr in results) if race.winAndOut else len(leader.lapTimes)
 		if leader.lapTimes and showLapTimes:
 			self.colnames.extend( [u'{} {}'.format(_('Lap'),lap) for lap in xrange(1, lapsMax+1) \
 					if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax] )
