@@ -3346,14 +3346,14 @@ class MainWin( wx.Frame ):
 	@logCall
 	def menuWebIndexPage( self, event ):
 		try:
-			webbrowser.open( 'http://' + Utils.GetDefaultHost() + ':8765/' , new = 2, autoraise = True )
+			webbrowser.open( WebServer.GetCrossMgrHomePage(), new = 2, autoraise = True )
 		except Exception as e:
 			pass
 	
 	@logCall
 	def menuWebQRCodePage( self, event ):
 		try:
-			webbrowser.open( 'http://' + Utils.GetDefaultHost() + ':8765/qrcode.html' , new = 2, autoraise = True )
+			webbrowser.open( WebServer.GetCrossMgrHomePage() + '/qrcode.html' , new = 2, autoraise = True )
 		except Exception as e:
 			pass
 	

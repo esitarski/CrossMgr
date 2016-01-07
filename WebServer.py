@@ -11,6 +11,7 @@ import urllib
 import base64
 from collections import defaultdict
 from Queue import Queue
+import socket
 try:
     # Python 2.x
     from SocketServer import ThreadingMixIn
@@ -220,10 +221,9 @@ def SetFileName( fname ):
 		fname = os.path.splitext( fname )[0] + '.html'
 	q.put( {'cmd':'fileName', 'fileName':fname} )
 
-def getQRCodePage( url ):
+def getQRCodePage( urlPage ):
 	qr = QRCode()
-	data = 'http://{}:{}{}'.format( DEFAULT_HOST, PORT_NUMBER, url)
-	qr.add_data( data )
+	qr.add_data( urlPage )
 	qr.make()
 	qrcode = '["' + '",\n"'.join(
 		[''.join( '1' if v else '0' for v in qr.modules[row] ) for row in xrange(qr.modules_count)]
@@ -264,7 +264,7 @@ function Draw() {
 	w( '<h1 style="margin-top: 32px;">Share Race Results</h1>' )
 	w( '<canvas id="idqrcode" width="360" height="360"></canvas>' )
 	w( '<h2>Scan the QRCode.<br/>Follow it to the Race Results page.</h2>' )
-	w( '<h2>{}</h2>'.format(data) )
+	w( '<h2>{}</h2>'.format(urlPage) )
 	w( 'Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.' )
 	w( '</body>' )
 	w( '</html>' )
@@ -296,7 +296,8 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 				content = QRCodeIcon
 				content_type = 'image/png'
 			elif up.path=='/qrcode.html':
-				content = getQRCodePage( '/' )
+				urlPage = GetCrossMgrHomePage()
+				content = getQRCodePage( urlPage )
 				content_type = self.html_content
 			else:
 				file = urllib.url2pathname(os.path.basename(up.path))
@@ -319,6 +320,8 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 		return
 
 #--------------------------------------------------------------------------
+def GetCrossMgrHomePage( ip=False ):
+	return 'http://{}:{}'.format(DEFAULT_HOST if ip else (socket.gethostname() or DEFAULT_HOST) , PORT_NUMBER)
 
 server = None
 def WebServer():

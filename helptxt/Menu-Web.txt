@@ -25,17 +25,19 @@ __Make sure the CrossMgr computer is connected to a Wifi Network.__
 1. If you are using a chip reader with CrossMgr, use a cable plugged into a wireless router to connect the CrossMgr computer to the chip reader.
 
 ### Step 2:
-__Share the QR Code with Race Attendees__
+__Publish and Share the Page with Race Attendees__
 
-1. On the __Index Page__ (see below), click on the __Share__ link.
-1. Print out, or otherwise share the QR Code with race attendees and participants.  Using their QR Code app, and being connected to you local Wifi network, they can not get access to live results.
+1. Routers support access through the computer's name.  For example, if your computer is named "results-local", you can access the CrossMgr page with  __http://results-local:8765__.  You may wish to rename you computer to something web-friendly that makes sense.
+1. CrossMgr makes sharing the results page easy.  On the __Index Page__ (see below), click on the __Share__ link.
+1. Print out, or otherwise share the QR Code with race attendees and participants.  Participants connect to your local Wifi network, then using their QR Code app, they can instantly connect to the live results.  Alternatively, they can type in the url listed on the page.
+1. Once connected, participants can easily share their connected by clickong in the __Share__ link right on the page.  This shows the QR Code page which makes it easy for other participants to get access to the page.
 
 That's it!
 
 ## Time Trials and the TTStart page.
 
 For Time Trials, the TTStart countdown page is available from the Index page.  Just click on the stopwatch icon next to the race name.
-This allows the starting official, wip and anyone else to see the start countdown in real-time.
+This allows the starting official, wip, coaches, spectators and anyone else to see the start countdown in real-time.
 
 Of course, accessing the results of a time trial will also show the start times.
 
@@ -45,10 +47,10 @@ You can try this out for yourself.  For this experiment, you will need a CrossMg
 1. Start CrossMgr
 1. Do __Tools|Sumulate Race...__ to start the race simulation.
 1. Do __Web|Index Page...__ to show the index page.  This is live connected to the CrossMgr program.
-1. From the Index page, click on the __Share__ link at the top.  This brings up a __QR Code__ of the page.
-1. With a tablet on the same wireless network of the CrossMgr computer, launch the QR Code app and point it at the CrossMgr computer screen.  Follow the link on the tablet.
+1. From the Index page, click on the __Share__ link at the top.  This brings up a __QR Code__ for the page.
+1. With a tablet on the same wireless network of the CrossMgr computer, launch the QR Code app and point it at the CrossMgr computer screen.  Follow the link on the tablet read from the QR cCode.
 1. The tablet will now show the Index page.  Notice that the tablet also has access to the __Share__ link.  This allows other people to share the link to the race results.
-1. If this does not work, you may have to open port 8765 on your computer.  Check the instructions for how to do this based on your operating system.
+1. If this does not work, you may have to open port 8765 on your computer.  Check the instructions for how to do for your operating system.
 1. On the tablet, click on the __Simulation__ race.  The tablet now shows the live results of the race.  Clicking on the logo at the top of the screen will refresh the page.  The page will also refresh automatically after each leader's lap.
 1. All races in the same folder will be shown in the Index page - not just the race that is running.  If you have used CrossMgr previously and have a number of races with published html in the same folder, try opening one of the races and refreshing the Index page.
 
