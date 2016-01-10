@@ -43,9 +43,9 @@ with io.open( os.path.join(Utils.getImageFolder(), 'CrossMgr.ico'), 'rb' ) as f:
 with io.open( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), 'rb' ) as f:
 	DefaultLogoSrc = "data:image/png;base64," + base64.b64encode( f.read() )
 with io.open( os.path.join(Utils.getImageFolder(), 'QRCodeIcon.png'), 'rb' ) as f:
-	QRCodeIcon = f.read()
+	QRCodeIconSrc = "data:image/png;base64," + base64.b64encode( f.read() )
 with io.open( os.path.join(Utils.getImageFolder(), 'stopwatch-32px.png'), 'rb' ) as f:
-	StopwatchIcon = f.read()
+	StopwatchIconSrc = "data:image/png;base64," + base64.b64encode( f.read() )
 with io.open(os.path.join(Utils.getHtmlFolder(), 'Index.html'), encoding='utf-8') as f:
 	indexTemplate = Template( f.read() )
 
@@ -273,10 +273,19 @@ function Draw() {
 
 def getIndexPage( share=True ):
 	info = contentBuffer.getIndexInfo()
-	info['share'] = share
+	info.update( {
+		'share': share,
+		'QRCodeIconSrc':  QRCodeIconSrc,
+		'StopwatchIconSrc': StopwatchIconSrc,
+	} )
 	return indexTemplate.generate( **info ).encode('utf-8')
 
 #---------------------------------------------------------------------------
+
+def WriteHtmlIndexPage():
+	fname = os.path.splitext( Utils.getFileName() )[0] + 'Index.html'
+	with io.open(fname, 'w', encoding='utf-8') as f:
+		f.write( getIndexPage(share=False) )
 
 class CrossMgrHandler( BaseHTTPRequestHandler ):
 	html_content = 'text/html; charset=utf-8'
@@ -290,12 +299,6 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 			elif up.path=='/favicon.ico':
 				content = favicon
 				content_type = 'image/x-icon'
-			elif up.path=='/stopwatch.png':
-				content = StopwatchIcon
-				content_type = 'image/png'
-			elif up.path=='/qrcode.png':
-				content = QRCodeIcon
-				content_type = 'image/png'
 			elif up.path=='/qrcode.html':
 				urlPage = GetCrossMgrHomePage()
 				content = getQRCodePage( urlPage )

@@ -468,7 +468,7 @@ class GanttChartPanel(wx.PyPanel):
 			yCur = yLast + barHeight
 			xLast = labelsWidthLeft
 			xCur = xLast
-			tTooShort = 15.0	# If a lap is shorter than 15 seconds, consider it a duplicate entry.
+			tTooShort = 9.0	# If a lap is shorter than 9 seconds, consider it a duplicate entry.
 			for j, t in enumerate(s):
 				if xLast >= xRight:
 					break
