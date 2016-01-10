@@ -137,22 +137,19 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		return keepGoing()
 		
 	def makeCall( s, message ):
-		print( 'makeCall: called' )
 		cmd = message.split(';', 1)[0]
-		print( 'sendimg message: "{}"'.format(message) )
 		qLog( 'command', u'sending: {}'.format(message) )
 		try:
 			socketSend( s, bytes('{}{}'.format(message,EOL)) )
 			buffer = socketReadDelimited( s )
 		except Exception as e:
-			print( '*****************', e )
 			qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
 			raise ValueError
 		
 		if not buffer.startswith( '{};'.format(cmd) ):
 			qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected return'), buffer) )
 			raise ValueError
-			
+		
 		return buffer
 	
 	while keepGoing():
@@ -183,7 +180,6 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				time.sleep( delaySecs )
 			continue
 
-		print( '****Connection to RaceResults successful' )
 		#-----------------------------------------------------------------------------------------------------
 		try:
 			buffer = makeCall( s, 'GETSTATUS' )

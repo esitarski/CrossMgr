@@ -385,9 +385,10 @@ while 1:
 		if not message:
 			break
 			
+		print 'message:', message
+		
 		cmd = message.split( ';', 1 )[0]
 		
-		print 'message:', message
 		if cmd == 'PASSINGS':
 			sendResponse( 'PASSINGS;{}'.format(len(passings)) )
 			
