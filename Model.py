@@ -2417,26 +2417,47 @@ def getCurrentTTStartHtml():
 		return None
 
 def writeCurrentHtml():
+	# Make sure the html, TTstart, Excel and pdf files are up-to-date on exit.
+
+	success = True
+
 	html = getCurrentHtml()
 	if not html:
-		return False
-	fname = os.path.splitext(Utils.getFileName())[0] + '.html'
-	try:
-		with io.open(fname, 'w', encoding='utf-8') as fp:
-			fp.write( html )
-	except:
-		return False
+		success = False
+	else:
+		fname = os.path.splitext(Utils.getFileName())[0] + '.html'
+		try:
+			with io.open(fname, 'w', encoding='utf-8') as fp:
+				fp.write( html )
+		except Exception as e:
+			success = False
 
 	html = getCurrentTTStartHtml()
-	if not html:
-		return True
-	fname = os.path.splitext(Utils.getFileName())[0] + '_TTStart.html'
+	if html:
+		fname = os.path.splitext(Utils.getFileName())[0] + '_TTStart.html'
+		try:
+			with io.open(fname, 'w', encoding='utf-8') as fp:
+				fp.write( html )
+		except Exception as e:
+			success = False
+	
+	mainWin = Utils.getMainWin()
+	if not mainWin:
+		return success
+	
 	try:
-		with io.open(fname, 'w', encoding='utf-8') as fp:
-			fp.write( html )
-		return True
-	except:
-		return False
+		mainWin.menuPublishAsExcel( silent=True )
+	except Exception as e:
+		Utils.logException( e, sys.exc_info() )
+		success = False
+	
+	try:
+		mainWin.menuPrintPDF( silent=True )
+	except Exception as e:
+		Utils.logException( e, sys.exc_info() )
+		success = False
+	
+	return success
 		
 if __name__ == '__main__':
 	r = newRace()

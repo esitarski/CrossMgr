@@ -1256,68 +1256,58 @@ class MainWin( wx.Frame ):
 		printout.Destroy()
 
 	@logCall
-	def menuPrintPDF( self, event ):
+	def menuPrintPDF( self, event=None, silent=False ):
 		if not Model.race:
 			return
 		self.commit()
 		
-		cpcd = ChoosePrintCategoriesDialog( self, _("PDF Categories") )
-		x, y = self.GetPosition().Get()
-		x += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_X, self)
-		y += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_Y, self)
-		cpcd.SetPosition( (x, y) )
-		cpcd.SetSize( self.PrintCategoriesDialogSize )
-		result = cpcd.ShowModal()
-		categories = cpcd.categories
-		cpcd.Destroy()
-		if not categories or result != wx.ID_OK:
-			return
-		
-		dName = os.path.join( os.path.dirname(self.fileName), 'pdf' )
+		dName = os.path.dirname(self.fileName)
+		fnameBase = os.path.splitext(os.path.split(self.fileName)[1])[0]
 	
 		with Utils.UIBusy():
-			fnameBase = os.path.splitext(os.path.split(self.fileName)[1])[0]
-			for i in xrange(2):
-				if i == 0:
-					printout = CrossMgrPrintoutPDF( dName, fnameBase, self.printData.GetOrientation(), categories )
-				else:
-					printout = CrossMgrPrintoutPDF( dName, fnameBase, self.printData.GetOrientation(),
-						categories=Model.race.getCategories(False, publishOnly=True), allInOne = True )
-				
-				pages = printout.GetPageInfo()[-1]
-				
-				fname = None
-				success = True
-				for page in xrange(1, pages+1):
-					try:
-						printout.OnPrintPage( page )
-						if fname is None:
-							fname = printout.lastFName
-					except Exception as e:
-						logException( e, sys.exc_info() )
-						Utils.MessageOK(self,
-									u'{}:\n\n    {}.'.format(_('Error creating PDF files'), e),
-									_('PDF File Error'), iconMask=wx.ICON_ERROR )
-						success = False
-						break
-
+			printout = CrossMgrPrintoutPDF(
+				dName, fnameBase,
+				self.printData.GetOrientation(),
+				categories=Model.race.getCategories(False, publishOnly=True),
+				allInOne=True
+			)
+			
+			pages = printout.GetPageInfo()[-1]
+			
+			fname = None
+			success = True
+			for page in xrange(1, pages+1):
 				try:
-					printout.OnEndPrinting()
+					printout.OnPrintPage( page )
 					if fname is None:
 						fname = printout.lastFName
 				except Exception as e:
 					logException( e, sys.exc_info() )
-					Utils.MessageOK(self,
-								u'{}:\n\n    {}.'.format(_('Error creating PDF files'), e),
-								_('PDF File Error'), iconMask=wx.ICON_ERROR )
+					if not silent:
+						Utils.MessageOK(self,
+									u'{}:\n\n    {}.'.format(_('Error creating PDF files'), e),
+									_('PDF File Error'), iconMask=wx.ICON_ERROR )
 					success = False
+					break
+
+			try:
+				printout.OnEndPrinting()
+				if fname is None:
+					fname = printout.lastFName
+			except Exception as e:
+				logException( e, sys.exc_info() )
+				Utils.MessageOK(self,
+							u'{}:\n\n    {}.'.format(_('Error creating PDF files'), e),
+							_('PDF File Error'), iconMask=wx.ICON_ERROR )
+				success = False
 				
-				printout.Destroy()
+			printout.Destroy()
 		
-		if success:
+		if success and not silent:
 			if fname and self.launchExcelAfterPublishingResults:
 				webbrowser.open( fname, new = 2, autoraise = True )
-			Utils.MessageOK( self, u'{}:\n\n    {}'.format(_('PDF files written to'), dName), _('PDF Publish') )
+			if fname:
+				Utils.MessageOK( self, u'{}:\n\n    {}'.format(_('PDF file written to'), fname), _('PDF Publish') )
 
 	@logCall
 	def menuPrintPNG( self, event ):
@@ -1417,7 +1407,7 @@ class MainWin( wx.Frame ):
 	#--------------------------------------------------------------------------------------------
 
 	@logCall
-	def menuPublishAsExcel( self, event ):
+	def menuPublishAsExcel( self, event=None, silent=False ):
 		self.commit()
 		if self.fileName is None or len(self.fileName) < 4:
 			return
@@ -1444,6 +1434,13 @@ class MainWin( wx.Frame ):
 				export = ExportGrid( **GetGrid() )
 				export.toExcelSheet( sheetCur )
 
+		if silent:
+			try:
+				wb.save( xlFName )
+			except:
+				pass
+			return
+			
 		try:
 			wb.save( xlFName )
 			if self.launchExcelAfterPublishingResults:
@@ -1457,7 +1454,7 @@ class MainWin( wx.Frame ):
 							_('If so, close it, and try again.')
 						),
 						_('Excel File Error'), iconMask=wx.ICON_ERROR )
-						
+	
 	#--------------------------------------------------------------------------------------------
 	def getEmail( self ):
 		return self.config.Read('email', '')
