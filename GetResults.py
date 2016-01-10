@@ -592,7 +592,7 @@ def GetNonWaveCategoryResults( category ):
 	
 	if winAndOut:
 		riderResults.sort( key =
-			RiderResult._getWinAndOutComponentKeyComponentKey if category.catType == Model.Category.CatComponent else
+			RiderResult._getWinAndOutComponentKey if category.catType == Model.Category.CatComponent else
 					RiderResult._getWinAndOutKey
 		)
 		

@@ -3,7 +3,7 @@ import wx.lib.intctrl
 import io
 import os
 import sys
-import ftplib
+import ftputil
 import urllib
 import datetime
 import threading
@@ -13,23 +13,14 @@ from ExportGrid import getHeaderBitmap, drawQRCode
 
 import inspect
 def lineno():
-    """Returns the current line number in our program."""
-    return inspect.currentframe().f_back.f_lineno
+	"""Returns the current line number in our program."""
+	return inspect.currentframe().f_back.f_lineno
 
-def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30, serverPath = '.', fname = '', file = None ):
-	ftp = ftplib.FTP( host, timeout = timeout )
-	ftp.login( user, passwd )
-	if serverPath and serverPath != '.':
-		ftp.cwd( serverPath )
-	fileOpened = False
-	if file is None:
-		file = open(fname, 'rb')
-		fileOpened = True
-	ftp.storbinary( 'STOR {}'.format(os.path.basename(fname)), file )
-	ftp.quit()
-	if fileOpened:
-		file.close()
-		
+def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30, serverPath = '.', fname = '' ):
+	with ftputil.FTPHost( host, user, passwd ) as host:
+		host.makedirs( serverPath )
+		host.upload_if_newer( fname, serverPath + '/' + os.path.basename(file) )
+
 def FtpIsConfigured():
 	with Model.LockRace() as race:
 		if not race or not Utils.getFileName():
@@ -73,29 +64,15 @@ def FtpWriteRaceHTML():
 	Utils.writeLog( 'FtpWriteRaceHTML: called.' )
 	
 	html = Model.getCurrentHtml()
+	if not html:
+		return None
 	
-	with Model.LockRace() as race:
-		if not race or not html:
-			return None
-			
-		host		= getattr( race, 'ftpHost', '' )
-		user		= getattr( race, 'ftpUser', '' )
-		passwd		= getattr( race, 'ftpPassword', '' )
-		serverPath	= getattr( race, 'ftpPath', '' )
-		
-	fname		= os.path.basename( os.path.splitext(Utils.getFileName())[0] + '.html' )
-	defaultPath = os.path.dirname( Utils.getFileName() )
-	with io.open(os.path.join(defaultPath, fname), 'w', encoding='utf-8') as fp:
+	fname = os.path.splitext(Utils.getFileName())[0] + '.html'
+	with io.open(fname, 'w', encoding='utf-8') as fp:
 		fp.write( html )
 	
-	file		= open( os.path.join(defaultPath, fname), 'rb' )
 	try:
-		FtpWriteFile(	host		= host,
-						user		= user,
-						passwd		= passwd,
-						serverPath	= serverPath,
-						fname		= fname,
-						file		= file )
+		FtpUploadFile( fname )
 	except Exception as e:
 		Utils.writeLog( 'FtpWriteRaceHTML Error(2): {}'.format(e) )
 		return e
@@ -453,7 +430,7 @@ if __name__ == '__main__':
 					timeout = 30,
 					serverPath = '',
 					fname = 'test.html',
-					file = None )
+	)
 	sys.exit()
 	'''
 

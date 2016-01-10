@@ -2234,7 +2234,7 @@ class MainWin( wx.Frame ):
 		
 		# Create a new race and initialize it with the properties.
 		self.fileName = fileName
-		WebServer.SetFileName( self.fileMName )
+		WebServer.SetFileName( self.fileName )
 		Model.resetCache()
 		ResetExcelLinkCache()
 		Model.setRace( Model.Race() )
@@ -2329,7 +2329,7 @@ class MainWin( wx.Frame ):
 
 		# Create a new race and initialize it with the properties.
 		self.fileName = fileName
-		WebServer.SetFileName( self.fileMName )
+		WebServer.SetFileName( self.fileName )
 		Model.resetCache()
 		ResetExcelLinkCache()
 		

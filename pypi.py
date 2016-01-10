@@ -203,6 +203,7 @@ setup = {
 		'fpdf >= 1.7',
 		'tornado >= 4.3',
 		'PIL >= 1.1.6',
+		'ftputil >= 3.3',
 		# 'wxPython >= 3.0.0',
 	],
 }
