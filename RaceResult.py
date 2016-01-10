@@ -6,6 +6,7 @@ import time
 import datetime
 import atexit
 import subprocess
+import threading
 import re
 import wx
 import wx.lib.newevent
@@ -134,6 +135,25 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 	def autoDetectCallback( m ):
 		qLog( 'autodetect', '{} {}'.format(_('Checking'), m) )
 		return keepGoing()
+		
+	def makeCall( s, message ):
+		print( 'makeCall: called' )
+		cmd = message.split(';', 1)[0]
+		print( 'sendimg message: "{}"'.format(message) )
+		qLog( 'command', u'sending: {}'.format(message) )
+		try:
+			socketSend( s, bytes('{}{}'.format(message,EOL)) )
+			buffer = socketReadDelimited( s )
+		except Exception as e:
+			print( '*****************', e )
+			qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
+			raise ValueError
+		
+		if not buffer.startswith( '{};'.format(cmd) ):
+			qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected return'), buffer) )
+			raise ValueError
+			
+		return buffer
 	
 	while keepGoing():
 		if s:
@@ -163,36 +183,41 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				time.sleep( delaySecs )
 			continue
 
+		print( '****Connection to RaceResults successful' )
 		#-----------------------------------------------------------------------------------------------------
-		cmd = 'GETSTATUS'
-		qLog( 'command', u'sending: {}'.format(cmd) )
 		try:
-			socketSend( s, bytes('{}{}'.format(cmd, EOL)) )
-			buffer = socketReadDelimited( s )
-		except Exception as e:
-			qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
+			buffer = makeCall( s, 'GETSTATUS' )
+		except ValueError:
 			continue
 		
-		if not buffer.startswith( '{};'.format(cmd) ):
-			qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected return'), buffer) )
-			continue
 		fields = [f.strip() for f in buffer.strip().split(';')]
 		status = zip( statusFields, fields[1:] )
 		for name, value in status:
 			qLog( 'status', u'{}: {}'.format(name, value) )
 		
 		#-----------------------------------------------------------------------------------------------------
-		cmd = 'GETTIME'
-		qLog( 'command', u'sending: {}'.format(cmd) )
 		try:
-			socketSend( s, bytes('{}{}'.format(cmd, EOL)) )
-			buffer = socketReadDelimited( s )
-		except Exception as e:
-			qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
+			buffer = makeCall( s, 'STOPOPERATION' )
+		except ValueError:
 			continue
 		
-		if not buffer.startswith( '{};'.format(cmd) ):
-			qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected return'), buffer) )
+		#-----------------------------------------------------------------------------------------------------
+		try:
+			buffer = makeCall( s, 'SETTIME;{}'.format(datetime.datetime.now().strftime('%Y-%m-%d;%H:%M:%S.%f')[:-3]) )
+		except ValueError:
+			continue
+		
+		#-----------------------------------------------------------------------------------------------------
+		try:
+			buffer = makeCall( s, 'STARTOPERATION' )
+		except ValueError:
+			continue
+		qLog( 'status', u'{}'.format(buffer.strip()) )
+		
+		#-----------------------------------------------------------------------------------------------------
+		try:
+			buffer = makeCall( s, 'GETTIME' )
+		except ValueError:
 			continue
 		
 		try:
@@ -201,25 +226,8 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 			readerTime = datetime.datetime( *[int(f) for f in dt.split()] )
 			readerComputerTimeDiff = datetime.datetime.now() - readerTime
 		except Exception as e:
-			qLog( 'command', u'{}: {} "{}" "{}"'.format(cmd, _('Unexpected return'), buffer, e) )
+			qLog( 'command', u'GETTIME: {} "{}" "{}"'.format(_('Unexpected return'), buffer, e) )
 			continue
-		
-		#-----------------------------------------------------------------------------------------------------
-		cmd = 'STARTOPERATION'
-		qLog( 'command', u'sending: {}'.format(cmd) )
-		try:
-			# Put the reader in start opeation mode.
-			socketSend( s, bytes('{}{}'.format(cmd, EOL)) )
-			buffer = socketReadDelimited( s )
-		except Exception as e:
-			qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
-			continue
-		
-		if not buffer.startswith( '{};'.format(cmd) ):
-			qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected return'), buffer) )
-			continue
-			
-		qLog( 'status', u'{}'.format(buffer.strip()) )
 		
 		while keepGoing():
 			#-------------------------------------------------------------------------------------------------
@@ -379,26 +387,35 @@ def CleanupListener():
 	listener = None
 	
 if __name__ == '__main__':
-	StartListener( HOST='127.0.0.1', PORT=DEFAULT_PORT )
-	count = 0
-	while 1:
-		time.sleep( 1 )
-		sys.stdout.write( '.' )
-		messages = GetData()
-		if messages:
-			sys.stdout.write( '\n' )
-		for m in messages:
-			if m[0] == 'data':
-				count += 1
-				print( '{}: {}, {}'.format(count, m[1], m[2].time()) )
-			elif m[0] == 'status':
-				print( 'status: {}'.format(m[1]) )
-			elif m[0] == 'passings':
-				print( 'passings: {}'.format(m[1]) )
-			elif m[0] == 'command':
-				print( 'command: {}'.format(m[1]) )
-			else:
-				print( 'other: {}, {}'.format(m[0], ', '.join('"{}"'.format(s) for s in m[1:])) )
-		sys.stdout.flush()
+	def doTest():
+		try:
+			StartListener( HOST='127.0.0.1', PORT=DEFAULT_PORT )
+			count = 0
+			while 1:
+				time.sleep( 1 )
+				sys.stdout.write( '.' )
+				messages = GetData()
+				if messages:
+					sys.stdout.write( '\n' )
+				for m in messages:
+					if m[0] == 'data':
+						count += 1
+						print( '{}: {}, {}'.format(count, m[1], m[2].time()) )
+					elif m[0] == 'status':
+						print( 'status: {}'.format(m[1]) )
+					elif m[0] == 'passings':
+						print( 'passings: {}'.format(m[1]) )
+					elif m[0] == 'command':
+						print( 'command: {}'.format(m[1]) )
+					else:
+						print( 'other: {}, {}'.format(m[0], ', '.join('"{}"'.format(s) for s in m[1:])) )
+				sys.stdout.flush()
+		except KeyboardInterrupt:
+			return
 		
+	t = threading.Thread( target=doTest )
+	t.daemon = True
+	t.run()
+	
+	time.sleep( 1000000 )
 

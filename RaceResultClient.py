@@ -371,31 +371,41 @@ while 1:
 	(clientsocket, address) = serversocket.accept()
 	clientsocket.settimeout( 5 )
 	
+	def sendResponse( response ):
+		print response
+		clientsocket.sendall( bytes(response + EOL) )
+	
 	print 'Connection from:', address
 
 	while 1:
 		try:
-			cmd = clientsocket.recv( 4096 ).strip()
+			message = clientsocket.recv( 4096 ).strip()
 		except Exception as e:
 			break
-		if not cmd:
+		if not message:
 			break
+			
+		cmd = message.split( ';', 1 )[0]
 		
-		print 'cmd:', cmd
-		if cmd == 'GETTIME':
-			response = 'GETTIME;{}{}'.format( dBase.strftime('%Y-%m-%d;%H:%M:%S.%f'), EOL )
-			print response[:-len(EOL)]
-			clientsocket.sendall( response )
-		elif cmd == 'PASSINGS':
-			response = 'PASSINGS;{}{}'.format(len(passings), EOL)
-			print response[:-len(EOL)]
-			clientsocket.sendall( response )
+		print 'message:', message
+		if cmd == 'PASSINGS':
+			sendResponse( 'PASSINGS;{}'.format(len(passings)) )
+			
+		elif cmd == 'SETTIME':
+			tFields = [int(f) for f in re.split( '[^0-9]', message.split(';', 1)[1] ) ]
+			tFields[-1] *= 1000	# Convert milliseconds to microseconds.
+			dBase = datetime.datetime( *tFields )
+			sendResponse( 'SETTIME;{}'.format( dBase.strftime('%Y-%m-%d;%H:%M:%S.%f')[:-3] ) )
+			
+		elif cmd == 'GETTIME':
+			sendResponse( 'GETTIME;{}'.format( dBase.strftime('%Y-%m-%d;%H:%M:%S.%f')[:-3], ) )
+			
 		elif cmd == 'STARTOPERATION':
-			response = 'STARTOPERATION;OK{}'.format(EOL)
-			clientsocket.sendall( response )
+			sendResponse( 'STARTOPERATION;OK' )
+			
 		elif cmd == 'STOPOPERATION':
-			response = 'STOPOPERATION;OK{}'.format(EOL)
-			clientsocket.sendall( response )
+			sendResponse( 'STOPOPERATION;OK' )
+			
 		elif cmd == 'GETSTATUS':
 			status = [
 				'GETSTATUS',
@@ -417,18 +427,18 @@ while 1:
 				1,
 				23.2,
 			]
-			response = '{}{}'.format( ';'.join('{}'.format(f) for f in status), EOL )
-			print response[:-len(EOL)]
-			clientsocket.sendall( response )
+			sendResponse( '{}'.format( ';'.join('{}'.format(f) for f in status) ) )
+			
 		elif ':' in cmd or cmd.isdigit():
 			fields = cmd.split(':')
 			if len(fields) != 2:
 				fields.append( '1' )
 			begin, count = [int(f.strip()) for f in fields]
 			begin -= 1
-			clientsocket.sendall( ''.join( passings[begin:begin+count]) + EOL )
+			sendResponse( ''.join( passings[begin:begin+count]) )
 			if begin + count == len(numLapTimes):
 				sys.exit()
+		
 		else:
 			print 'unknown command:', cmd
-				
+

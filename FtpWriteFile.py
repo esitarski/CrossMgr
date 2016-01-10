@@ -19,7 +19,7 @@ def lineno():
 def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30, serverPath = '.', fname = '' ):
 	with ftputil.FTPHost( host, user, passwd ) as host:
 		host.makedirs( serverPath )
-		host.upload_if_newer( fname, serverPath + '/' + os.path.basename(file) )
+		host.upload_if_newer( fname, serverPath + '/' + os.path.basename(fname) )
 
 def FtpIsConfigured():
 	with Model.LockRace() as race:
@@ -35,18 +35,13 @@ def FtpUploadFile( fname ):
 	with Model.LockRace() as race:
 		if not race or not Utils.getFileName():
 			return None
-			
-		host		= getattr( race, 'ftpHost', '' )
-		user		= getattr( race, 'ftpUser', '' )
-		passwd		= getattr( race, 'ftpPassword', '' )
-		serverPath	= getattr( race, 'ftpPath', '' )
 	
 	try:
 		FtpWriteFile(
-			host		= host,
-			user		= user,
-			passwd		= passwd,
-			serverPath	= serverPath,
+			host		= getattr( race, 'ftpHost', '' ),
+			user		= getattr( race, 'ftpUser', '' ),
+			passwd		= getattr( race, 'ftpPassword', '' ),
+			serverPath	= getattr( race, 'ftpPath', '' ),
 			fname		= fname,
 		)
 	except Exception as e:
@@ -70,13 +65,9 @@ def FtpWriteRaceHTML():
 	fname = os.path.splitext(Utils.getFileName())[0] + '.html'
 	with io.open(fname, 'w', encoding='utf-8') as fp:
 		fp.write( html )
+	html = None
 	
-	try:
-		FtpUploadFile( fname )
-	except Exception as e:
-		Utils.writeLog( 'FtpWriteRaceHTML Error(2): {}'.format(e) )
-		return e
-		
+	FtpUploadFile( fname )
 	return None
 
 class RealTimeFtpPublish( object ):
@@ -422,8 +413,6 @@ class FtpPublishDialog( wx.Dialog ):
 		self.EndModal( wx.ID_CANCEL )
 		
 if __name__ == '__main__':
-	'''
-	file = StringIO.StringIO( 'This is a test' )
 	FtpWriteFile(	host = 'ftp://127.0.0.1:55555',
 					user = 'crossmgr',
 					passwd = 'crossmgr',
@@ -432,7 +421,6 @@ if __name__ == '__main__':
 					fname = 'test.html',
 	)
 	sys.exit()
-	'''
 
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMgr", size=(600,400))
