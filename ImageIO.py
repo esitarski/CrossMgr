@@ -12,6 +12,9 @@ def toBufFromImage( image ):
 	image.SaveStream( stream, wx.BITMAP_TYPE_PNG )
 	return srcPrefix + base64.b64encode(stream.getvalue())
 
+def toBufFromBitmap( bitmap ):
+	return toBufFromImage( wx.ImageFromBitmap(bitmap) )
+
 def toBufFromFile( fname, type=wx.BITMAP_TYPE_ANY ):
 	return toBufFromImage( wx.Image(fname, type) )
 

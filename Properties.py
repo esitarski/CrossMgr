@@ -9,6 +9,8 @@ import wx.lib.masked.numctrl as numctrl
 import wx.lib.masked as masked
 import wx.lib.agw.flatnotebook as flatnotebook
 from RaceInputState import RaceInputState
+import ImageIO
+from SetGraphic			import SetGraphicDialog
 
 #------------------------------------------------------------------------------------------------
 
@@ -318,6 +320,78 @@ class RfidProperties( wx.Panel ):
 		race.skipFirstTagRead			= bool(iSelection == self.iSkipFirstTagRead)
 		race.chipReaderType = max( 0, self.chipReaderType.GetSelection() )
 	
+#------------------------------------------------------------------------------------------------
+
+class WebProperties( wx.Panel ):
+
+	def __init__( self, parent, id = wx.ID_ANY ):
+		super(WebProperties, self).__init__( parent, id )
+		
+		hsEmail = wx.BoxSizer( wx.HORIZONTAL )
+		hsEmail.Add( wx.StaticText(self, label=_("Contact Email:")), flag=wx.ALIGN_CENTER_VERTICAL )
+		self.email = wx.TextCtrl( self )
+		hsEmail.Add( self.email, 1, flag=wx.EXPAND|wx.LEFT, border=4 )
+		
+		self.headerImageBitmap = wx.BitmapButton( self )
+		self.headerImageBitmap.Bind( wx.EVT_BUTTON, self.onSetGraphic )
+		
+		self.graphicFName = None
+		
+		self.graphicButton = wx.Button( self, label=_("Set Graphic...") )
+		self.graphicButton.Bind( wx.EVT_BUTTON, self.onSetGraphic )
+		
+		self.graphicSize = wx.StaticText( self )
+		
+		hsHeaderGraphic = wx.BoxSizer( wx.HORIZONTAL )
+		hsHeaderGraphic.Add( wx.StaticText(self, label=_("Page Header Graphic:")), flag=wx.ALIGN_CENTER_VERTICAL )
+		hsHeaderGraphic.Add( self.graphicButton, flag=wx.LEFT, border=4 )
+		hsHeaderGraphic.Add( self.graphicSize, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=4 )
+		
+		#-------------------------------------------------------------------------------
+		ms = wx.BoxSizer( wx.VERTICAL )
+		
+		ms.Add( hsEmail, flag=wx.EXPAND|wx.ALL, border=4 )
+		ms.Add( hsHeaderGraphic, flag=wx.ALL, border=4 )
+		ms.Add( self.headerImageBitmap, 0, flag=wx.ALL, border=4 )
+		self.SetSizer( ms )
+
+	def onSetGraphic( self, event ):
+		dlg = SetGraphicDialog( self, graphic = self.graphicFName )
+		if dlg.ShowModal() == wx.ID_OK:
+			self.graphicFName = dlg.GetValue()
+			self.headerImage = ImageIO.toBufFromFile( self.graphicFName )
+			self.headerImageBitmap.SetBitmap( ImageIO.toBitmapFromBuf(self.headerImage) )
+			self.setGraphicStats()
+			self.GetSizer().Layout()
+		dlg.Destroy()
+	
+	def setGraphicStats( self ):
+		bitmap = self.headerImageBitmap.GetBitmap()
+		self.graphicSize.SetLabel( u'({} x {})'.format(bitmap.GetWidth(), bitmap.GetHeight()) )
+	
+	def refresh( self ):
+		race = Model.race
+		mainWin = Utils.getMainWin()
+		
+		self.email.SetValue( race.email or '' )
+		
+		if race.headerImage:
+			self.headerImage = race.headerImage
+		elif mainWin:
+			self.headerImage = ImageIO.toBufFromFile( mainWin.getGraphicFName() )
+		else:
+			self.headerImage = ImageIO.toBufFromFile( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), wx.BITMAP_TYPE_PNG )
+
+		self.graphicFName = mainWin.getGraphicFName() if mainWin else os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png')
+		self.headerImageBitmap.SetBitmap( ImageIO.toBitmapFromBuf(self.headerImage) )
+		self.setGraphicStats()
+		self.GetSizer().Layout()
+		
+	def commit( self ):
+		race = Model.race
+		race.email = self.email.GetValue().strip()
+		race.headerImage = self.headerImage
+		
 #------------------------------------------------------------------------------------------------
 
 class CameraProperties( wx.Panel ):
@@ -639,6 +713,7 @@ class Properties( wx.Panel ):
 			('generalInfoProperties',	GeneralInfoProperties,		_('General Info') ),
 			('raceOptionsProperties',	RaceOptionsProperties,		_('Race Options') ),
 			('notesProperties',			NotesProperties,			_('Notes') ),
+			('webProperties',			WebProperties,				_('Web') ),
 			('rfidProperties',			RfidProperties,				_('RFID') ),
 			('cameraProperties',		CameraProperties,			_('Camera') ),
 			('animationProperties',		AnimationProperties,		_('Animation') ),
