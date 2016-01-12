@@ -11,6 +11,7 @@ import wx.lib.agw.flatnotebook as flatnotebook
 from RaceInputState import RaceInputState
 import ImageIO
 from SetGraphic			import SetGraphicDialog
+from FtpWriteFile import FtpProperties
 
 #------------------------------------------------------------------------------------------------
 
@@ -31,65 +32,65 @@ class GeneralInfoProperties( wx.Panel ):
 		self.raceName = wx.TextCtrl( self )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceName )
 		
-		self.raceCityLabel = wx.StaticText( self, label=_('City:') )
+		self.raceCityLabel = wx.StaticText( self, label=_('City') )
 		self.raceCity = wx.TextCtrl( self )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceCity )
 		
-		self.raceStateProvLabel = wx.StaticText( self, label=_('State/Prov:') )
+		self.raceStateProvLabel = wx.StaticText( self, label=_('State/Prov') )
 		self.raceStateProv = wx.TextCtrl( self )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceStateProv )
 		
-		self.raceCountryLabel = wx.StaticText( self, label=_('Country:') )
+		self.raceCountryLabel = wx.StaticText( self, label=_('Country') )
 		self.raceCountry = wx.TextCtrl( self )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceCountry )
 		
 		self.locationSizer = wx.BoxSizer( wx.HORIZONTAL )
 		self.locationSizer.Add( self.raceCity, 4, flag=wx.EXPAND )
 		self.locationSizer.Add( self.raceStateProvLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
-		self.locationSizer.Add( self.raceStateProv, 2, flag=wx.EXPAND )
+		self.locationSizer.Add( self.raceStateProv, 2, flag=wx.EXPAND|wx.LEFT, border=3 )
 		self.locationSizer.Add( self.raceCountryLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
-		self.locationSizer.Add( self.raceCountry, 2, flag=wx.EXPAND )
+		self.locationSizer.Add( self.raceCountry, 2, flag=wx.EXPAND|wx.LEFT, border=3 )
 		
-		self.dateLabel = wx.StaticText( self, label = _('Date:') )
+		self.dateLabel = wx.StaticText( self, label = _('Date') )
 		self.date = wx.DatePickerCtrl( self, style = wx.DP_DROPDOWN, size=(160,-1) )
 		self.Bind(wx.EVT_DATE_CHANGED, self.onChanged, self.date)
 		
-		self.raceDisciplineLabel = wx.StaticText( self, label = _('Discipline:') )
+		self.raceDisciplineLabel = wx.StaticText( self, label = _('Discipline') )
 		self.raceDiscipline = wx.TextCtrl( self, value=u'Cyclo-cross', size=(160,-1) )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceDiscipline )
 		
 		self.dateDisciplineSizer = wx.BoxSizer( wx.HORIZONTAL )
 		self.dateDisciplineSizer.Add( self.date )
 		self.dateDisciplineSizer.Add( self.raceDisciplineLabel, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border = 16 )
-		self.dateDisciplineSizer.Add( self.raceDiscipline )
+		self.dateDisciplineSizer.Add( self.raceDiscipline, flag=wx.LEFT, border=3 )
 		self.dateDisciplineSizer.AddStretchSpacer()
 
-		self.raceNumLabel = wx.StaticText( self, label=_('Race #:') )
+		self.raceNumLabel = wx.StaticText( self, label=_('Race #') )
 		self.raceNum = intctrl.IntCtrl( self, min=1, max=1000, allow_none=False, value=1, size=(64,-1), style=wx.ALIGN_RIGHT )
 		self.Bind(intctrl.EVT_INT, self.onChanged, self.raceNum)
 		
-		self.scheduledStartLabel = wx.StaticText( self, label=_('Scheduled Start:') )
+		self.scheduledStartLabel = wx.StaticText( self, label=_('Scheduled Start') )
 		self.scheduledStart = masked.TimeCtrl( self, fmt24hr=True, display_seconds=False, value='10:00:00', )
 		self.scheduledStart.SetSize( (64,-1) )
 		
-		self.minutesLabel = wx.StaticText( self, label=_('Race Minutes:') )
+		self.minutesLabel = wx.StaticText( self, label=_('Race Minutes') )
 		self.minutes = intctrl.IntCtrl( self, min=1, max=60*48, allow_none=False, value=40, size=(64,-1), style=wx.ALIGN_RIGHT )
 
 		self.numStartMinutesSizer = wx.BoxSizer( wx.HORIZONTAL )
 		self.numStartMinutesSizer.Add( self.raceNum )
 		self.numStartMinutesSizer.Add( self.scheduledStartLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border = 16 )
-		self.numStartMinutesSizer.Add( self.scheduledStart, flag=wx.FIXED_MINSIZE )
+		self.numStartMinutesSizer.Add( self.scheduledStart, flag=wx.FIXED_MINSIZE|wx.LEFT, border = 3 )
 		self.numStartMinutesSizer.Add( self.minutesLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border = 16 )
-		self.numStartMinutesSizer.Add( self.minutes )
+		self.numStartMinutesSizer.Add( self.minutes, flag=wx.LEFT, border = 3 )
 		self.numStartMinutesSizer.AddStretchSpacer()
 
-		self.organizerLabel = wx.StaticText( self, label=_('Organizer:') )
+		self.organizerLabel = wx.StaticText( self, label=_('Organizer') )
 		self.organizer = wx.TextCtrl( self )
 
-		self.commissaireLabel = wx.StaticText( self, label=_('Official/Commissaire:') )
+		self.commissaireLabel = wx.StaticText( self, label=_('Official/Commissaire') )
 		self.commissaire = wx.TextCtrl( self )
 
-		self.memoLabel = wx.StaticText( self, label=_('Memo:') )
+		self.memoLabel = wx.StaticText( self, label=_('Memo') )
 		self.memo = wx.TextCtrl( self )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.memo )
 		
@@ -288,7 +289,7 @@ class RfidProperties( wx.Panel ):
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		self.chipReaderType = wx.Choice( self, choices=[_('JChip/Impinj/Alien'), _('RaceResult')] )
 		self.chipReaderType.SetSelection( 0 )
-		hs.Add( wx.StaticText( self, label=u'{}:'.format(_('Reader Type')) ), flag=wx.ALIGN_CENTER_VERTICAL )
+		hs.Add( wx.StaticText( self, label=u'{}'.format(_('Reader Type')) ), flag=wx.ALIGN_CENTER_VERTICAL )
 		hs.Add( self.chipReaderType, flag=wx.LEFT, border=4)
 		#-------------------------------------------------------------------------------
 		ms = wx.BoxSizer( wx.VERTICAL )
@@ -328,7 +329,7 @@ class WebProperties( wx.Panel ):
 		super(WebProperties, self).__init__( parent, id )
 		
 		hsEmail = wx.BoxSizer( wx.HORIZONTAL )
-		hsEmail.Add( wx.StaticText(self, label=_("Contact Email:")), flag=wx.ALIGN_CENTER_VERTICAL )
+		hsEmail.Add( wx.StaticText(self, label=_("Contact Email")), flag=wx.ALIGN_CENTER_VERTICAL )
 		self.email = wx.TextCtrl( self )
 		hsEmail.Add( self.email, 1, flag=wx.EXPAND|wx.LEFT, border=4 )
 		
@@ -337,13 +338,13 @@ class WebProperties( wx.Panel ):
 		
 		self.graphicFName = None
 		
-		self.graphicButton = wx.Button( self, label=_("Set Graphic...") )
+		self.graphicButton = wx.Button( self, label=_("Set Graphic") )
 		self.graphicButton.Bind( wx.EVT_BUTTON, self.onSetGraphic )
 		
 		self.graphicSize = wx.StaticText( self )
 		
 		hsHeaderGraphic = wx.BoxSizer( wx.HORIZONTAL )
-		hsHeaderGraphic.Add( wx.StaticText(self, label=_("Page Header Graphic:")), flag=wx.ALIGN_CENTER_VERTICAL )
+		hsHeaderGraphic.Add( wx.StaticText(self, label=_("Page Header Graphic")), flag=wx.ALIGN_CENTER_VERTICAL )
 		hsHeaderGraphic.Add( self.graphicButton, flag=wx.LEFT, border=4 )
 		hsHeaderGraphic.Add( self.graphicSize, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=4 )
 		
@@ -351,14 +352,20 @@ class WebProperties( wx.Panel ):
 		ms = wx.BoxSizer( wx.VERTICAL )
 		
 		ms.Add( hsEmail, flag=wx.EXPAND|wx.ALL, border=4 )
+		ms.Add( wx.StaticText(self, label=_("The Contact Email will appear on HTML pages.")), flag=wx.ALL, border=4 )
+		ms.AddSpacer( 16 )
 		ms.Add( hsHeaderGraphic, flag=wx.ALL, border=4 )
-		ms.Add( self.headerImageBitmap, 0, flag=wx.ALL, border=4 )
+		ms.Add( self.headerImageBitmap, flag=wx.ALL, border=4 )
+		ms.Add( wx.StaticText(self, label=_("The Page Header will appears on HTML, Printouts and PDF files.")), flag=wx.ALL, border=4 )
 		self.SetSizer( ms )
 
+	def getDefaultGraphicFNameType( self ):
+		return os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), wx.BITMAP_TYPE_PNG
+		
 	def onSetGraphic( self, event ):
 		dlg = SetGraphicDialog( self, graphic = self.graphicFName )
 		if dlg.ShowModal() == wx.ID_OK:
-			self.graphicFName = dlg.GetValue()
+			self.graphicFName = dlg.GetValue().strip() or self.getDefaultGraphicFNameType()[0]
 			self.headerImage = ImageIO.toBufFromFile( self.graphicFName )
 			self.headerImageBitmap.SetBitmap( ImageIO.toBitmapFromBuf(self.headerImage) )
 			self.setGraphicStats()
@@ -367,22 +374,22 @@ class WebProperties( wx.Panel ):
 	
 	def setGraphicStats( self ):
 		bitmap = self.headerImageBitmap.GetBitmap()
-		self.graphicSize.SetLabel( u'({} x {})'.format(bitmap.GetWidth(), bitmap.GetHeight()) )
+		self.graphicSize.SetLabel( u'({}px \u2715 {}px)'.format(bitmap.GetWidth(), bitmap.GetHeight()) )
 	
 	def refresh( self ):
 		race = Model.race
 		mainWin = Utils.getMainWin()
 		
-		self.email.SetValue( race.email or '' )
+		self.email.SetValue( race.email or u'' )
 		
 		if race.headerImage:
 			self.headerImage = race.headerImage
 		elif mainWin:
 			self.headerImage = ImageIO.toBufFromFile( mainWin.getGraphicFName() )
 		else:
-			self.headerImage = ImageIO.toBufFromFile( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), wx.BITMAP_TYPE_PNG )
+			self.headerImage = ImageIO.toBufFromFile( *self.getDefaultGraphicFNameType() )
 
-		self.graphicFName = mainWin.getGraphicFName() if mainWin else os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png')
+		self.graphicFName = mainWin.getGraphicFName() if mainWin else self.getDefaultGraphicFNameType()[0]
 		self.headerImageBitmap.SetBitmap( ImageIO.toBitmapFromBuf(self.headerImage) )
 		self.setGraphicStats()
 		self.GetSizer().Layout()
@@ -712,9 +719,10 @@ class Properties( wx.Panel ):
 		self.propClassName = [
 			('generalInfoProperties',	GeneralInfoProperties,		_('General Info') ),
 			('raceOptionsProperties',	RaceOptionsProperties,		_('Race Options') ),
-			('notesProperties',			NotesProperties,			_('Notes') ),
-			('webProperties',			WebProperties,				_('Web') ),
 			('rfidProperties',			RfidProperties,				_('RFID') ),
+			('webProperties',			WebProperties,				_('Web') ),
+			('ftpProperties',			FtpProperties,				_('FTP') ),
+			('notesProperties',			NotesProperties,			_('Notes') ),
 			('cameraProperties',		CameraProperties,			_('Camera') ),
 			('animationProperties',		AnimationProperties,		_('Animation') ),
 			('filesProperties',			FilesProperties,			_('Files') ),

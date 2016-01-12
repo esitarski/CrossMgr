@@ -18,8 +18,11 @@ def lineno():
 
 def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30, serverPath = '.', fname = '' ):
 	with ftputil.FTPHost( host, user, passwd ) as host:
-		host.makedirs( serverPath )
-		host.upload_if_newer( fname, serverPath + '/' + os.path.basename(fname) )
+		try:
+			host.makedirs( serverPath )
+		except Exception as e:
+			pass
+		host.upload( fname, serverPath + '/' + os.path.basename(fname) )
 
 def FtpIsConfigured():
 	with Model.LockRace() as race:
@@ -242,177 +245,183 @@ class FtpQRCodePrintout( wx.Printout ):
 
 #------------------------------------------------------------------------------------------------
 
-class FtpPublishDialog( wx.Dialog ):
+def GetFtpPublish( isDialog=True ):
+	class FtpPublishObject( wx.Dialog if isDialog else wx.Panel ):
 
-	fields = 	['ftpHost',	'ftpPath',	'ftpPhotoPath',	'ftpUser',		'ftpPassword',	'ftpUploadDuringRace',	'urlPath', 'ftpUploadPhotos']
-	defaults =	['',		'',			'',				'anonymous',	'anonymous@',	False,					'http://',	False]
+		fields = 	['ftpHost',	'ftpPath',	'ftpPhotoPath',	'ftpUser',		'ftpPassword',	'ftpUploadDuringRace',	'urlPath', 'ftpUploadPhotos']
+		defaults =	['',		'',			'',				'anonymous',	'anonymous@',	False,					'http://',	False]
 
-	def __init__( self, parent, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, "Ftp Publish Results",
-						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
-						
-		bs = wx.GridBagSizer(vgap=0, hgap=4)
-		
-		self.ftpHost = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
-		self.ftpPath = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
-		self.ftpUploadPhotos = wx.CheckBox( self, label=_("Upload Photos to Path:") )
-		self.ftpUploadPhotos.Bind( wx.EVT_CHECKBOX, self.ftpUploadPhotosChanged )
-		self.ftpPhotoPath = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
-		self.ftpUser = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
-		self.ftpPassword = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER|wx.TE_PASSWORD, value='' )
-		self.ftpUploadDuringRace = wx.CheckBox( self, label = _("Automatically Upload Results During Race") )
-		self.urlPath = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER )
-		self.urlPath.Bind( wx.EVT_TEXT, self.urlPathChanged )
-		self.urlFull = wx.StaticText( self )
-		
-		self.refresh()
-		
-		self.qrcodeBitmap = wx.StaticBitmap( self, bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'QRCodeIcon.png'), wx.BITMAP_TYPE_PNG ) )
-		self.printBtn = wx.Button( self, label = _('Print Results URL as a QR Code...') )
-		self.Bind( wx.EVT_BUTTON, self.onPrint, self.printBtn )
-		
-		self.okBtn = wx.Button( self, wx.ID_OK )
-		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
-
-		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
-		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
-		
-		self.helpBtn = wx.Button( self, wx.ID_HELP )
-		self.Bind( wx.EVT_BUTTON, lambda evt: Utils.showHelp('Menu-File.html#publish-html-results-with-ftp'),
-					self.helpBtn )
-		
-		row = 0
-		border = 8
-		bs.Add( wx.StaticText( self, label = _("Ftp Host Name:")),  pos=(row,0), span=(1,1), border = border,
-				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
-		bs.Add( self.ftpHost, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
-		
-		row += 1
-		bs.Add( wx.StaticText( self, label = _("Upload HTML to Path:")),  pos=(row,0), span=(1,1), border = border,
-				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
-		bs.Add( self.ftpPath, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
-		
-		row += 1
-		bs.Add( self.ftpUploadPhotos,  pos=(row,0), span=(1,1), border = border,
-				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
-		bs.Add( self.ftpPhotoPath, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
-		
-		row += 1
-		bs.Add( wx.StaticText( self, label = _("User:")),  pos=(row,0), span=(1,1), border = border,
-				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
-		bs.Add( self.ftpUser, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
-		
-		row += 1
-		bs.Add( wx.StaticText( self, label = _("Password:")),  pos=(row,0), span=(1,1), border = border,
-				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
-		bs.Add( self.ftpPassword, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
-		
-		row += 1
-		bs.Add( self.ftpUploadDuringRace, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
-		
-		row += 1
-		row += 1
-		bs.Add( wx.StaticText( self, label = _("URL Path (optional):")),  pos=(row,0), span=(1,1), border = border,
-				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
-		bs.Add( self.urlPath, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
-		row += 1
-		bs.Add( wx.StaticText( self, label = _("Race Results URL:")),  pos=(row,0), span=(1,1), border = border,
-				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
-		bs.Add( self.urlFull, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
-		
-		row += 1
-		hb = wx.BoxSizer( wx.HORIZONTAL )
-		hb.Add( self.qrcodeBitmap, flag=wx.ALIGN_CENTRE_VERTICAL )
-		hb.Add( self.printBtn, border = border, flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL )
-		bs.Add( hb, pos=(row, 1), span=(1,1), border = border, flag=wx.ALL )
-		
-		row += 1
-		hb = wx.BoxSizer( wx.HORIZONTAL )
-		hb.Add( self.okBtn, border = border, flag=wx.ALL )
-		hb.Add( self.cancelBtn, border = border, flag=wx.ALL )
-		hb.Add( self.helpBtn, border = border, flag=wx.ALL )
-		self.okBtn.SetDefault()
-		
-		bs.Add( hb, pos=(row, 1), span=(1,1), border = border, flag=wx.ALL|wx.ALIGN_RIGHT )
-		
-		self.SetSizerAndFit(bs)
-		bs.Fit( self )
-		
-		self.CentreOnParent(wx.BOTH)
-		self.SetFocus()
-
-	def onPrint( self, event ):
-		race = Model.race
-		if not race:
-			return
+		def __init__( self, parent, id = wx.ID_ANY ):
+			if isDialog:
+				super(FtpPublishObject, self).__init__( parent, id, "Ftp Publish Results",
+								style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+			else:
+				super(FtpPublishObject, self).__init__( parent, id )
+							
+			fgs = wx.FlexGridSizer(vgap=4, hgap=4, rows=0, cols=2)
+			fgs.AddGrowableCol( 1, 1 )
 			
-		self.setRaceAttr()
-		
-		mainWin = Utils.getMainWin()
-		pd = mainWin.printData if mainWin else wx.PrintData()
-		orientationSave = pd.GetOrientation()
-		pd.SetOrientation( wx.PORTRAIT )
-		
-		pdd = wx.PrintDialogData( pd )
-		pdd.SetAllPages( True )
-		pdd.EnableSelection( False )
-		pdd.EnablePageNumbers( False )
-		pdd.EnableHelp( False )
-		pdd.EnablePrintToFile( False )
-		
-		printer = wx.Printer( pdd )
-		printout = FtpQRCodePrintout()
-
-		if not printer.Print(self, printout, True):
-			if printer.GetLastError() == wx.PRINTER_ERROR:
-				Utils.MessageOK(self, u'\n\n'.join( [_("There was a printer problem."),_("Check your printer setup.")] ), _("Printer Error"), iconMask=wx.ICON_ERROR)
-
-		pd.SetOrientation( orientationSave )
-		printout.Destroy()
-		
-	def urlPathChanged( self, event = None ):
-		url = self.urlPath.GetValue()
-		fname = Utils.getFileName()
-		if not url or url == 'http://' or not Model.race or not fname:
-			self.urlFull.SetLabel( '' )
-		else:
-			if not url.endswith( '/' ):
-				url += '/'
-			fname = os.path.basename( fname[:-4] + '.html' )
-			url += fname
-			self.urlFull.SetLabel( url )
+			self.ftpHost = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
+			self.ftpPath = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
+			self.ftpUploadPhotos = wx.CheckBox( self, label=_("Upload Photos to Path") )
+			self.ftpUploadPhotos.Bind( wx.EVT_CHECKBOX, self.ftpUploadPhotosChanged )
+			self.ftpPhotoPath = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
+			self.ftpUser = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
+			self.ftpPassword = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER|wx.TE_PASSWORD, value='' )
+			self.ftpUploadDuringRace = wx.CheckBox( self, label = _("Automatically Upload Results During Race") )
+			self.urlPath = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER )
+			self.urlPath.Bind( wx.EVT_TEXT, self.urlPathChanged )
+			self.urlFull = wx.StaticText( self )
 			
-	def ftpUploadPhotosChanged( self, event = None ):
-		self.ftpPhotoPath.SetEditable( self.ftpUploadPhotos.GetValue() )
-		self.ftpPhotoPath.Enable( self.ftpUploadPhotos.GetValue() )
-		
-	def refresh( self ):
-		with Model.LockRace() as race:
+			self.refresh()
+			
+			self.qrcodeBitmap = wx.StaticBitmap( self, bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'QRCodeIcon.png'), wx.BITMAP_TYPE_PNG ) )
+			self.printBtn = wx.Button( self, label = _('Print Results URL as a QR Code...') )
+			self.Bind( wx.EVT_BUTTON, self.onPrint, self.printBtn )
+			
+			if isDialog:
+				self.okBtn = wx.Button( self, wx.ID_OK )
+				self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
+
+				self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
+				self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
+				
+				self.helpBtn = wx.Button( self, wx.ID_HELP )
+				self.Bind( wx.EVT_BUTTON, lambda evt: Utils.showHelp('Menu-File.html#publish-html-results-with-ftp'), self.helpBtn )
+			
+			fgs.Add( wx.StaticText( self, label = _("Ftp Host Name")), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+			fgs.Add( self.ftpHost, 1, flag=wx.TOP|wx.ALIGN_LEFT|wx.EXPAND )
+			
+			fgs.Add( wx.StaticText( self, label = _("Upload HTML to Path")),  flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+			fgs.Add( self.ftpPath, 1, flag=wx.EXPAND )
+			
+			fgs.Add( self.ftpUploadPhotos, flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+			fgs.Add( self.ftpPhotoPath, 1, flag=wx.EXPAND )
+			
+			fgs.Add( wx.StaticText( self, label = _("User")), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+			fgs.Add( self.ftpUser, 1, flag=wx.EXPAND )
+			
+			fgs.Add( wx.StaticText( self, label = _("Password")), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+			fgs.Add( self.ftpPassword, 1, flag=wx.EXPAND )
+			
+			fgs.AddSpacer( 16 )
+			fgs.Add( self.ftpUploadDuringRace )
+			
+			fgs.AddSpacer( 16 )
+			fgs.AddSpacer( 16 )
+			
+			fgs.Add( wx.StaticText( self, label = _("URL Path (optional)")),  flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+			fgs.Add( self.urlPath, 1, flag=wx.EXPAND )
+			
+			fgs.Add( wx.StaticText( self, label = _("Published Results URL")),  flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+			fgs.Add( self.urlFull, 1, flag=wx.EXPAND )
+			
+			border = 4
+			hb = wx.BoxSizer( wx.HORIZONTAL )
+			hb.Add( self.qrcodeBitmap, flag=wx.ALIGN_CENTRE_VERTICAL )
+			hb.Add( self.printBtn, flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL, border=border )
+			fgs.AddSpacer( 16 )
+			fgs.Add( hb )
+			
+			if isDialog:
+				hb = wx.BoxSizer( wx.HORIZONTAL )
+				hb.Add( self.okBtn, border = border, flag=wx.ALL )
+				hb.Add( self.cancelBtn, border = border, flag=wx.ALL )
+				hb.Add( self.helpBtn, border = border, flag=wx.ALL )
+				self.okBtn.SetDefault()
+				
+				mvs = wx.BoxSizer( wx.VERTICAL )
+				mvs.Add( fgs, 1, flag=wx.EXPAND|wx.ALL, border=4 )
+				mvs.Add( hb, flag=wx.ALL|wx.ALIGN_CENTER, border=4 )
+				self.SetSizerAndFit( mvs )
+				mvs.Fit( self )
+			
+				self.CentreOnParent( wx.BOTH )
+				self.SetFocus()
+			else:
+				self.SetSizer( fgs )
+
+		def onPrint( self, event ):
+			race = Model.race
 			if not race:
-				for f, v in zip(FtpPublishDialog.fields, FtpPublishDialog.defaults):
+				return
+				
+			self.commit()
+			
+			mainWin = Utils.getMainWin()
+			pd = mainWin.printData if mainWin else wx.PrintData()
+			orientationSave = pd.GetOrientation()
+			pd.SetOrientation( wx.PORTRAIT )
+			
+			pdd = wx.PrintDialogData( pd )
+			pdd.SetAllPages( True )
+			pdd.EnableSelection( False )
+			pdd.EnablePageNumbers( False )
+			pdd.EnableHelp( False )
+			pdd.EnablePrintToFile( False )
+			
+			printer = wx.Printer( pdd )
+			printout = FtpQRCodePrintout()
+
+			if not printer.Print(self, printout, True):
+				if printer.GetLastError() == wx.PRINTER_ERROR:
+					Utils.MessageOK(self, u'\n\n'.join( [_("There was a printer problem."),_("Check your printer setup.")] ), _("Printer Error"), iconMask=wx.ICON_ERROR)
+
+			pd.SetOrientation( orientationSave )
+			printout.Destroy()
+			
+		def urlPathChanged( self, event = None ):
+			url = self.urlPath.GetValue()
+			fname = Utils.getFileName()
+			if not url or url == 'http://' or not Model.race or not fname:
+				self.urlFull.SetLabel( '' )
+			else:
+				if not url.endswith( '/' ):
+					url += '/'
+				fname = os.path.basename( fname[:-4] + '.html' )
+				url += fname
+				self.urlFull.SetLabel( url )
+				
+		def ftpUploadPhotosChanged( self, event = None ):
+			self.ftpPhotoPath.SetEditable( self.ftpUploadPhotos.GetValue() )
+			self.ftpPhotoPath.Enable( self.ftpUploadPhotos.GetValue() )
+			
+		def refresh( self ):
+			race = Model.race
+			if not race:
+				for f, v in zip(self.fields, self.defaults):
 					getattr(self, f).SetValue( v )
 			else:
-				for f, v in zip(FtpPublishDialog.fields, FtpPublishDialog.defaults):
+				for f, v in zip(self.fields, self.defaults):
 					getattr(self, f).SetValue( getattr(race, f, v) )
-		self.urlPathChanged()
-		self.ftpUploadPhotosChanged()
-	
-	def setRaceAttr( self ):
-		self.urlPathChanged()
-		with Model.LockRace() as race:
-			if race:
-				for f in FtpPublishDialog.fields:
-					setattr( race, f, getattr(self, f).GetValue() )
-				race.urlFull = self.urlFull.GetLabel()
-	
-	def onOK( self, event ):
-		self.setRaceAttr()
-		self.EndModal( wx.ID_OK )
+			self.urlPathChanged()
+			self.ftpUploadPhotosChanged()
 		
-	def onCancel( self, event ):
-		self.EndModal( wx.ID_CANCEL )
+		def commit( self ):
+			self.urlPathChanged()
+			with Model.LockRace() as race:
+				if race:
+					for f in self.fields:
+						setattr( race, f, getattr(self, f).GetValue() )
+					race.urlFull = self.urlFull.GetLabel()
 		
+		def onOK( self, event ):
+			self.commit()
+			self.EndModal( wx.ID_OK )
+			
+		def onCancel( self, event ):
+			self.EndModal( wx.ID_CANCEL )
+			
+	return FtpPublishObject
+
+def FtpPublishDialog( parent ):
+	return GetFtpPublish( True )( parent )
+
+def FtpProperties( parent ):
+	return GetFtpPublish( False )( parent )
+
 if __name__ == '__main__':
+	'''
 	FtpWriteFile(	host = 'ftp://127.0.0.1:55555',
 					user = 'crossmgr',
 					passwd = 'crossmgr',
@@ -421,6 +430,7 @@ if __name__ == '__main__':
 					fname = 'test.html',
 	)
 	sys.exit()
+	'''
 
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMgr", size=(600,400))

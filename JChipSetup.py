@@ -80,14 +80,14 @@ class JChipSetupDialog( wx.Dialog ):
 		
 		todoList =  u'\n'.join( '%d)  %s' % (i + 1, s) for i, s in enumerate( [
 			_('Make sure the RFID receiver is plugged into the network.'),
-			_('If not using JChip, make sure the CrossMgrImpinj or CrossMgrAlien bridge programs are running.'),
+			_('If not using JChip/RaceResult, make sure the CrossMgrImpinj or CrossMgrAlien bridge programs are running.'),
 			_('You must have the Sign-On Excel sheet ready and linked before your race.'),
 			_('You must configure a "Tag" field in your Sign-On Excel Sheet.'),
 			_('Run this test before each race.'),
 		]) )
 		intro = (u'\n'.join( [
-				_('CrossMgr supports the JChip RFID reader.'),
-				_('For more details, consult the CrossMgr, JChip, RaceResult, CrossMgrImpinj or CrossMgrAlien documentation.'),
+				_('CrossMgr supports the JChip, RaceResult, Impinj and Alien RFID readers.'),
+				_('For more details, consult the documentation for your reader.'),
 				] ) + u'\n' + _('Checklist:') + u'\n\n{}\n').format( todoList )
 		
 		border = 4

@@ -72,8 +72,8 @@ publishing to the web.
 CrossMgr was created by a cycling official, and has extensive features to
 settle disputes.
 
-CrossMgr is also fully integrated with the `JChip <http://www.j-chipusa.com/>`_
-chip timing system.
+CrossMgr supports the`JChip <http://www.j-chipusa.com/>`_
+and RaceResult <http://www.raceresult.com> chip timing systems.
 CrossMgr also support the `Alien <http://www.alientechnology.com>`_ and
 `Impinj <http://www.impinj.com`_ passive chip readers.
 It can read data from the `Orion <http://www.orion-timing.com/>`_ system.

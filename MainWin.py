@@ -2385,7 +2385,7 @@ class MainWin( wx.Frame ):
 
 		Model.newRace()
 		properties.commit()			# Apply the new properties
-		ftpPublish.setRaceAttr()	# Apply the ftp properties
+		ftpPublish.commit()	# Apply the ftp properties
 		ftpPublish.Destroy()
 		
 		self.updateRecentFiles()
@@ -2509,7 +2509,7 @@ class MainWin( wx.Frame ):
 		ResetExcelLinkCache()
 		
 		properties.commit()			# Apply the new properties
-		ftpPublish.setRaceAttr()	# Apply the ftp properties
+		ftpPublish.commit()	# Apply the ftp properties
 		ftpPublish.Destroy()
 		
 		ChipReader.chipReaderCur.reset( race.chipReaderType )
@@ -3518,7 +3518,7 @@ Computers fail, screw-ups happen.  Always use a paper manual backup.
 							Utils.formatTime(race.curRaceTime()),
 							race.name, race.raceNum,
 							status, Version.AppVerName,
-							u'<{}>'.format(_('JChip')) if ChipReader.chipReaderCur.IsListening() else u'',
+							u'<{}>'.format(_('RFID')) if ChipReader.chipReaderCur.IsListening() else u'',
 							u'<{}>'.format(_('TimeTrial')) if race.isTimeTrial else u'') )
 
 			if not self.timer.IsRunning():

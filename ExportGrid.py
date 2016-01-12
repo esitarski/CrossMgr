@@ -13,7 +13,7 @@ from FitSheetWrapper import FitSheetWrapper
 import qrcode
 import urllib
 import Flags
-iport ImageIO
+import ImageIO
 # from reportlab.lib.pagesizes import letter, A4
 
 #---------------------------------------------------------------------------
