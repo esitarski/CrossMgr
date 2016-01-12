@@ -995,6 +995,9 @@ class Race( object ):
 	setNoDataDNS = False				# If True, will set all riders in the spreadsheet to DNS if they have no data in the race.
 	lastChangedTime = sys.float_info.max
 	
+	headerImage = None
+	email = None
+	
 	def __init__( self ):
 		self.reset()
 

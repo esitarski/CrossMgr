@@ -96,6 +96,7 @@ from PageDialog			import PageDialog
 import ChipReader
 import Flags
 import WebServer
+import ImageIO
 
 import traceback
 '''
@@ -687,8 +688,17 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_MENU, self.menuSetContactEmail, id=idCur )
 		
 		idCur = wx.NewId()
-		self.optionsMenu.Append( idCur , _("Set &Graphic..."), _("Set Graphic for Output") )
+		self.optionsMenu.Append( idCur , _("Set &Graphic..."), _("Set Graphic") )
 		self.Bind(wx.EVT_MENU, self.menuSetGraphic, id=idCur )
+		
+		self.optionsMenu.AppendSeparator()
+		idCur = wx.NewId()
+		self.optionsMenu.Append( idCur , _("Set Default Contact &Email..."), _("Set Default Contact Email for HTML Output") )
+		self.Bind(wx.EVT_MENU, self.menuSetDefaultContactEmail, id=idCur )
+		
+		idCur = wx.NewId()
+		self.optionsMenu.Append( idCur , _("Set Default &Graphic..."), _("Set Default Graphic for New Races") )
+		self.Bind(wx.EVT_MENU, self.menuSetDefaultGraphic, id=idCur )
 		
 		self.menuBar.Append( self.optionsMenu, _("&Options") )
 		
@@ -1057,16 +1067,21 @@ class MainWin( wx.Frame ):
 	def getDirName( self ):
 		return Utils.getDirName()
 		
+	#--------------------------------------------------------------------------------------------
+	
 	def menuSetContactEmail( self, event = None ):
-		email = self.config.Read( 'email', 'my_name@my_address' )
-		dlg = wx.TextEntryDialog( self, message=_('Contact Email:'), caption=_('Contact Email for HTML output'), defaultValue=email )
+		if Model.race and Model.race.email:
+			email = Model.race.email
+		else:
+			email = self.config.Read( 'email', 'my_name@my_address' )
+		dlg = wx.TextEntryDialog( self, message=_('Default Contact Email:'), caption=_('Default Contact Email for HTML output'), defaultValue=email )
 		result = dlg.ShowModal()
 		if result == wx.ID_OK:
 			value = dlg.GetValue()
-			self.config.Write( 'email', value )
-			self.config.Flush()
+			if Model.race:
+				Model.race.email = value
 		dlg.Destroy()
-
+	
 	def menuSetGraphic( self, event ):
 		imgPath = self.getGraphicFName()
 		dlg = SetGraphicDialog( self, graphic = imgPath )
@@ -1075,6 +1090,32 @@ class MainWin( wx.Frame ):
 			self.config.Write( 'graphic', imgPath )
 			self.config.Flush()
 		dlg.Destroy()
+		if Model.race:
+			try:
+				Model.race.headerImage = ImageIO.toBufFromFile( imgPath )
+			except Exception as e:
+				pass
+	
+	def menuSetDefaultContactEmail( self, event = None ):
+		email = self.config.Read( 'email', 'my_name@my_address' )
+		dlg = wx.TextEntryDialog( self, message=_('Default Contact Email:'), caption=_('Default Contact Email for HTML output - New Races'), defaultValue=email )
+		result = dlg.ShowModal()
+		if result == wx.ID_OK:
+			value = dlg.GetValue()
+			self.config.Write( 'email', value )
+			self.config.Flush()
+		dlg.Destroy()
+
+	def menuSetDefaultGraphic( self, event ):
+		imgPath = self.getGraphicFName()
+		dlg = SetGraphicDialog( self, graphic = imgPath )
+		if dlg.ShowModal() == wx.ID_OK:
+			imgPath = dlg.GetValue()
+			self.config.Write( 'graphic', imgPath )
+			self.config.Flush()
+		dlg.Destroy()
+	
+	#--------------------------------------------------------------------------------------------
 	
 	def menuCopyLogFileToClipboard( self, event ):
 		try:
@@ -1115,6 +1156,9 @@ class MainWin( wx.Frame ):
 		return defaultFName
 	
 	def getGraphicBase64( self ):
+		if Model.race and Model.race.headerImage:
+			return Model.race.headerImage
+		
 		graphicFName = self.getGraphicFName()
 		if not graphicFName:
 			return None
@@ -1127,9 +1171,10 @@ class MainWin( wx.Frame ):
 		if fileType not in ['png', 'gif', 'jpeg']:
 			return None
 		try:
-			with open(graphicFName, 'rb') as f:
-				b64 = 'data:image/%s;base64,%s' % (fileType, base64.standard_b64encode(f.read()))
-				return b64
+			b64 = ImageIO.toBufFromFile( graphicFName )
+			if b64 and Model.race:
+				Model.race.headerImage = b64
+			return b64
 		except IOError:
 			pass
 		return None
@@ -1457,6 +1502,8 @@ class MainWin( wx.Frame ):
 	
 	#--------------------------------------------------------------------------------------------
 	def getEmail( self ):
+		if Model.race and Model.race.email is not None:
+			return Model.race.email
 		return self.config.Read('email', '')
 	
 	reLeadingWhitespace = re.compile( r'^[ \t]+', re.MULTILINE )
