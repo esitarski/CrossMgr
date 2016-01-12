@@ -13,6 +13,7 @@ from FitSheetWrapper import FitSheetWrapper
 import qrcode
 import urllib
 import Flags
+iport ImageIO
 # from reportlab.lib.pagesizes import letter, A4
 
 #---------------------------------------------------------------------------
@@ -49,6 +50,12 @@ def ImageToPil( image ):
 def getHeaderBitmap():
 	''' Get the header bitmap if specified, or use a default.  '''
 	if Utils.getMainWin():
+		if Model.race and Model.race.headerImage:
+			try:
+				bitmap = ImageIO.toBitmapFromBuf( Model.race.headerImage )
+				return bitmap
+			except:
+				pass
 		graphicFName = Utils.getMainWin().getGraphicFName()
 		extension = os.path.splitext( graphicFName )[1].lower()
 		bitmapType = {
