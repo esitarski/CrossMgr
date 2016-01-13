@@ -101,7 +101,7 @@ def GpxHasTimes( fname ):
 			return False
 		tLast = t
 	return True
-	
+
 def ParseGpxFile( fname, useTimes = False, isPointToPoint = False ):
 	points = GpxParse( fname )
 	
@@ -610,7 +610,7 @@ class GeoAnimation(wx.PyControl):
 		self.Bind(wx.EVT_SIZE, self.OnSize)
 		
 	def SetGeoTrack( self, geoTrack ):
-		if self.geoTrack != geoTrack:		
+		if self.geoTrack != geoTrack:
 			self.geoTrack = geoTrack
 		
 	def SetOptions( self, *argc, **kwargs ):

@@ -4,6 +4,7 @@ import json
 import getpass
 import socket
 import datetime
+import cPickle as pickle
 import Version
 import Utils
 import Model
@@ -72,6 +73,8 @@ class Profile( object ):
 		
 		'headerImage',
 		'email',
+		
+		'geoTrack', 'geoTrackFName',
 	]
 	
 	def __init__( self, model=None ):
@@ -80,37 +83,13 @@ class Profile( object ):
 			self.fromModel( model )
 		
 	def write( self, fname ):
-		header = '''
-		---------------------------------------------
-		CrossMgr Profile
-		Machine Generated File. Do Not Edit!
-		
-		for details see http://www.sites.google.com/site/crossmgrsoftware
-		
-		Created On: {timestamp}
-		User      : {user}
-		Computer  : {computer}
-		Version   : {version}
-		---------------------------------------------
-		'''.format(
-				timestamp=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-				user=getpass.getuser(),
-				version=Version.AppVerName,
-				computer=socket.gethostname(),
-			)
-		profile = { '//{:03d}'.format(i):line.strip() for i, line in enumerate(header.strip().split('\n')) }
-		profile.update( self.profile )
-		with io.open( fname, 'wb' ) as f:
-			json.dump( profile, f, indent=1, sort_keys=True )
+		with io.open( fname, 'wb' ) as fp:
+			pickle.dump( Model.race, fp, 2 )
 		
 	def read( self, fname ):
-		with io.open( fname, 'rb' ) as f:
-			profile = json.load( f )
-		delkeys = [key for key in profile.iterkeys() if key.startswith('//') ]
-		for key in delkeys:
-			del profile[key]
-		self.profile = profile
-		
+		with io.open( fname, 'rb' ) as fp:
+			self.profile = pickle.load( fp )
+	
 	def fromModel( self, model ):
 		self.profile = { attr:getattr(model, attr) for attr in self.profileAttributes if hasattr(model, attr) }
 		
@@ -127,12 +106,10 @@ if __name__ == '__main__':
 	Model.race.winAndOut = True
 	Model.race.organizer = u'\u2713\u2713\u2713\u2713\u2713\u2713'
 	p1 = Profile( Model.race )
-	p1.write( 'ProfileTest1.json' )
+	p1.write( 'ProfileTest1.profile' )
 	p2 = Profile()
-	p2.read( 'ProfileTest1.json' )
-	assert p1 == p2
+	p2.read( 'ProfileTest1.profile' )
 	
 	Model.race.winAndOut = False
 	p2 = Profile( Model.race )
-	p2.write( 'ProfileTest2.json' )
-	assert p1 != p2
+	p2.write( 'ProfileTest2.profile' )

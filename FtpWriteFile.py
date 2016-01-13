@@ -245,11 +245,11 @@ class FtpQRCodePrintout( wx.Printout ):
 
 #------------------------------------------------------------------------------------------------
 
+ftpFields = 	['ftpHost',	'ftpPath',	'ftpPhotoPath',	'ftpUser',		'ftpPassword',	'ftpUploadDuringRace',	'urlPath', 'ftpUploadPhotos']
+ftpDefaults =	['',		'',			'',				'anonymous',	'anonymous@',	False,					'http://',	False]
+
 def GetFtpPublish( isDialog=True ):
 	class FtpPublishObject( wx.Dialog if isDialog else wx.Panel ):
-
-		fields = 	['ftpHost',	'ftpPath',	'ftpPhotoPath',	'ftpUser',		'ftpPassword',	'ftpUploadDuringRace',	'urlPath', 'ftpUploadPhotos']
-		defaults =	['',		'',			'',				'anonymous',	'anonymous@',	False,					'http://',	False]
 
 		def __init__( self, parent, id = wx.ID_ANY ):
 			if isDialog:
@@ -389,21 +389,22 @@ def GetFtpPublish( isDialog=True ):
 		def refresh( self ):
 			race = Model.race
 			if not race:
-				for f, v in zip(self.fields, self.defaults):
+				for f, v in zip(ftpFields, ftpDefaults):
 					getattr(self, f).SetValue( v )
 			else:
-				for f, v in zip(self.fields, self.defaults):
+				for f, v in zip(ftpFields, ftpDefaults):
 					getattr(self, f).SetValue( getattr(race, f, v) )
 			self.urlPathChanged()
 			self.ftpUploadPhotosChanged()
 		
 		def commit( self ):
 			self.urlPathChanged()
-			with Model.LockRace() as race:
-				if race:
-					for f in self.fields:
-						setattr( race, f, getattr(self, f).GetValue() )
-					race.urlFull = self.urlFull.GetLabel()
+			race = Model.race
+			if race:
+				for f in ftpFields:
+					setattr( race, f, getattr(self, f).GetValue() )
+				race.urlFull = self.urlFull.GetLabel()
+			race.setChanged()
 		
 		def onOK( self, event ):
 			self.commit()

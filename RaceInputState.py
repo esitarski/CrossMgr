@@ -2,6 +2,7 @@
 import Utils
 import Model
 import ReadSignOnSheet
+from FtpWriteFile import ftpFields
 
 class RaceInputState( object ):
 	def __init__( self ):
@@ -29,6 +30,7 @@ class RaceInputState( object ):
 					race.chipReaderIpAddr,
 				]
 			)
+			newState.extend( [getattr(race, attr, None) for attr in ftpFields] )
 		if not self.state or self.state != newState:
 			self.state = newState
 			return True
