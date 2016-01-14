@@ -4,13 +4,13 @@ import json
 import getpass
 import socket
 import datetime
-import cPickle as pickle
 import Version
 import Utils
 import Model
+from GeoAnimation import GpsPoint, GeoTrack
 
 class Profile( object ):
-	profileAttributes = [
+	profileAttributes = {
 		'distanceUnit',	
 		'rule80MinLapCount',
 
@@ -74,28 +74,51 @@ class Profile( object ):
 		'headerImage',
 		'email',
 		
-		'geoTrack', 'geoTrackFName',
-	]
+		'course',
+	}
 	
-	def __init__( self, model=None ):
+	def __init__( self, race=None ):
 		self.profile = {}
-		if model:
-			self.fromModel( model )
+		if race:
+			self.fromRace( race )
 		
 	def write( self, fname ):
 		with io.open( fname, 'wb' ) as fp:
-			pickle.dump( Model.race, fp, 2 )
+			json.dump( self.profile, fp, indent=1, sort_keys=True )
 		
 	def read( self, fname ):
 		with io.open( fname, 'rb' ) as fp:
-			self.profile = pickle.load( fp )
+			self.profile = json.load( fp )
 	
-	def fromModel( self, model ):
-		self.profile = { attr:getattr(model, attr) for attr in self.profileAttributes if hasattr(model, attr) }
+	def fromRace( self, race ):
+		if not race:
+			self.profile = {}
+			return
 		
-	def toModel( self, model ):
+		self.profile = { attr:getattr(race, attr) for attr in self.profileAttributes if hasattr(race, attr) }
+		try:
+			self.profile['course'] = {
+				'isPointToPoint': race.geoTrack.isPointToPoint,
+				'geoTrackFName': race.geoTrackFName,
+				'points': [p._asdict() for p in race.geoTrack.gpsPoints],
+			}
+		except AttributeError:
+			pass
+		
+	def toRace( self, race ):
+		if not race:
+			return
 		for attr, value in self.profile.iteritems():
-			setattr( model, attr, value )
+			if attr not in self.profileAttributes:
+				continue
+			if attr == 'course':
+				course = self.profile['course']
+				race.geoTrackFName = course.get('geoTrackFName', 'geoTrackFName')
+				race.geoTrack = GeoTrack()
+				race.geoTrack.setPoints( [GpsPoint(**p) for p in course.get('points',[])], course.get('isPointToPoint',False) )
+			else:
+				setattr( race, attr, value )
+		race.setChanged()
 			
 	def __eq__(self, other):
 		return (isinstance(other, self.__class__) and self.profile == other.profile)
@@ -109,7 +132,9 @@ if __name__ == '__main__':
 	p1.write( 'ProfileTest1.profile' )
 	p2 = Profile()
 	p2.read( 'ProfileTest1.profile' )
+	assert p1 == p2
 	
 	Model.race.winAndOut = False
 	p2 = Profile( Model.race )
 	p2.write( 'ProfileTest2.profile' )
+	assert p1 != p2

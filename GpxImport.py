@@ -338,4 +338,4 @@ class GetGeoTrack( object ):
 		
 	def onPageChanged( self, evt ):
 		isForward = evt.GetDirection()
-		
+

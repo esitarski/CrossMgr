@@ -12,6 +12,9 @@ from RaceInputState import RaceInputState
 import ImageIO
 from SetGraphic			import SetGraphicDialog
 from FtpWriteFile import FtpProperties
+from GeoAnimation import GeoAnimation, GeoTrack
+from GpxImport import GetGeoTrack
+import Profile
 
 #------------------------------------------------------------------------------------------------
 
@@ -401,6 +404,121 @@ class WebProperties( wx.Panel ):
 		
 #------------------------------------------------------------------------------------------------
 
+class GPXProperties( wx.Panel ):
+
+	def __init__( self, parent, id = wx.ID_ANY ):
+		super(GPXProperties, self).__init__( parent, id )
+		
+		self.distance = wx.StaticText( self )
+		self.elevationGain = wx.StaticText( self )
+		self.courseType = wx.StaticText( self )
+		self.gpsPoints = wx.StaticText( self )
+		
+		fgs = wx.FlexGridSizer( rows=0, cols=2, vgap=7, hgap=6 )
+		fgs.AddGrowableCol( 1 )
+		
+		fgs.Add( wx.StaticText(self, label=_("Distance")), flag=wx.ALIGN_RIGHT )
+		fgs.Add( self.distance )
+		
+		fgs.Add( wx.StaticText(self, label=_("Elevation Gain")), flag=wx.ALIGN_RIGHT )
+		fgs.Add( self.elevationGain )
+
+		fgs.Add( wx.StaticText(self, label=_("Course Type")), flag=wx.ALIGN_RIGHT )
+		fgs.Add( self.courseType )
+
+		fgs.Add( wx.StaticText(self, label=_("Number of Coords")), flag=wx.ALIGN_RIGHT )
+		fgs.Add( self.gpsPoints )
+		
+		self.geoAnimation = GeoAnimation( self )
+		
+		self.setGPXCourse = wx.Button( self, label=_('Change GPX Course') )
+		self.setGPXCourse.Bind( wx.EVT_BUTTON, self.onSetGPXCourse )
+		
+		self.showGoogleMap = wx.Button( self, label=_('Show on Google Map') )
+		self.showGoogleMap.Bind( wx.EVT_BUTTON, self.onShowOnGoogleMap )
+		
+		self.exportAsGPX = wx.Button( self, label=_('Export in GPX Format') )
+		self.exportAsGPX.Bind( wx.EVT_BUTTON, self.onExportAsGPX )
+		
+		self.exportAsKML = wx.Button( self, label=_('Export in KML Formal (required Google Earth)') )
+		self.exportAsKML.Bind( wx.EVT_BUTTON, self.onExportAsKML )
+		
+		hsButtons = wx.BoxSizer( wx.HORIZONTAL )
+		hsButtons.Add( self.setGPXCourse )
+		hsButtons.Add( self.showGoogleMap, flag=wx.LEFT, border=32 )
+		hsButtons.Add( self.exportAsGPX, flag=wx.LEFT, border=32 )
+		hsButtons.Add( self.exportAsKML, flag=wx.LEFT, border=4 )
+		
+		#-------------------------------------------------------------------------------
+		ms = wx.BoxSizer( wx.VERTICAL )
+		
+		ms.Add( fgs, flag=wx.ALL, border=4 )
+		ms.Add( hsButtons, flag=wx.ALL, border=4 )
+		ms.Add( self.geoAnimation, 1, flag=wx.EXPAND|wx.ALL, border=4 )
+		self.SetSizer( ms )
+
+	def onSetGPXCourse( self, event ):
+		race = Model.race
+		args = [self]
+		if race:
+			args.extend( [getattr(race, 'geoTrack', None), getattr(race, 'geoTrackFName', '')] )
+		gt = GetGeoTrack( *args )
+		geoTrack, geoTrackFName = gt.show()
+		if race:
+			if not geoTrackFName:
+				race.geoTrack, race.geoTrackFName = None, None
+			else:
+				race.geoTrack, race.geoTrackFName = geoTrack, geoTrackFName
+			race.showOval = (race.geoTrack is None)
+			race.setChanged()
+		self.refresh()
+	
+	def onShowOnGoogleMap( self, event ):
+		mainWin = Utils.getMainWin()
+		if mainWin:
+			mainWin.menuExportCoursePreviewAsHtml()
+	
+	def onExportAsGPX( self, event ):
+		mainWin = Utils.getMainWin()
+		if mainWin:
+			mainWin.menuExportGpx()
+		
+	def onExportAsKML( self, event ):
+		mainWin = Utils.getMainWin()
+		if mainWin:
+			mainWin.menuExportCourseAsKml()
+		
+	def refresh( self ):
+		race = Model.race
+		if not race:
+			return
+		geoTrack = getattr(race, 'geoTrack', None)
+		self.geoAnimation.SetGeoTrack( geoTrack )
+		self.geoAnimation.Refresh()
+		
+		if geoTrack:
+			distanceKm = geoTrack.distanceTotal / 1000.0
+			distanceMiles = distanceKm*0.621371
+			totalElevationGainM = geoTrack.totalElevationGain
+			totalElevationGainFt = totalElevationGainM*3.28084
+			
+			self.distance.SetLabel( u'{:.3f} km, {:.3f} miles'.format(distanceKm, distanceMiles) )
+			self.elevationGain.SetLabel( u'{:.0f} m, {:.0f} ft'.format(totalElevationGainM, totalElevationGainFt) )
+			self.courseType.SetLabel( u'Point to Point' if geoTrack.isPointToPoint else u'Loop' )
+			self.gpsPoints.SetLabel( u'{}'.format( len(geoTrack.gpsPoints) ) )
+		else:
+			self.distance.SetLabel( u'' )
+			self.elevationGain.SetLabel( u'' )
+			self.courseType.SetLabel( u'' )
+			self.gpsPoints.SetLabel( u'' )
+		
+		self.GetSizer().Layout()
+		
+	def commit( self ):
+		pass
+	
+#------------------------------------------------------------------------------------------------
+
 class CameraProperties( wx.Panel ):
 	advanceMin, advanceMax = -2000, 2000
 	
@@ -722,6 +840,7 @@ class Properties( wx.Panel ):
 			('rfidProperties',			RfidProperties,				_('RFID') ),
 			('webProperties',			WebProperties,				_('Web') ),
 			('ftpProperties',			FtpProperties,				_('FTP') ),
+			('gpxProperties',			GPXProperties,				_('GPX Course') ),
 			('notesProperties',			NotesProperties,			_('Notes') ),
 			('cameraProperties',		CameraProperties,			_('Camera') ),
 			('animationProperties',		AnimationProperties,		_('Animation') ),
@@ -736,17 +855,26 @@ class Properties( wx.Panel ):
 		mainSizer.Add( self.notebook, 1, flag=wx.ALL|wx.EXPAND, border=4 )
 		
 		if addEditButton:
-			hs = wx.BoxSizer( wx.HORIZONTAL )
 			
 			self.commitButton = wx.Button(self, label=_('Commit'))
 			self.commitButton.Bind( wx.EVT_BUTTON, self.commitButtonCallback )
-			hs.Add( self.commitButton, flag=wx.TOP|wx.BOTTOM, border=8 )
 			
 			self.excelButton = wx.Button(self, label=_('Link External Excel Sheet...'))
 			self.excelButton.Bind( wx.EVT_BUTTON, self.excelButtonCallback )
-			hs.Add( self.excelButton, flag=wx.LEFT|wx.TOP|wx.BOTTOM, border=8 )
 
-			mainSizer.Add( hs, flag=wx.ALL, border=4 )
+			self.saveProfileButton = wx.Button(self, label=_('Save Profile'))
+			self.saveProfileButton.Bind( wx.EVT_BUTTON, self.saveProfileButtonCallback )
+			
+			self.loadProfileButton = wx.Button(self, label=_('Load Profile'))
+			self.loadProfileButton.Bind( wx.EVT_BUTTON, self.loadProfileButtonCallback )
+			
+			hs = wx.BoxSizer( wx.HORIZONTAL )
+			hs.Add( self.commitButton )
+			hs.Add( self.excelButton, flag=wx.LEFT, border=16 )
+			hs.Add( self.saveProfileButton, flag=wx.LEFT, border=16 )
+			hs.Add( self.loadProfileButton, flag=wx.LEFT, border=16 )
+
+			mainSizer.Add( hs, flag=wx.ALL, border=12 )
 			
 		self.setEditable()
 		mainSizer.Fit(self)
@@ -784,6 +912,68 @@ class Properties( wx.Panel ):
 			Utils.MessageOK( self,
 				_('You must have a valid race File|Open...') + u'\n' + _('Or create one with File|New....'), _('Valid Race Required'),
 				wx.ICON_WARNING )
+	
+	def loadProfileButtonCallback( self, event ):
+		profilesFolder = os.path.join( os.path.expanduser("~"), 'CrossMgrProfiles' )
+		try:
+			os.makedirs( profilesFolder )
+		except Exception as e:
+			pass
+		fd = wx.FileDialog(
+			self,
+			defaultDir=profilesFolder,
+			message=_("Load Profile"),
+			wildcard="CrossMgr profile files (*.cmnpro)|*.cmnpro",
+			style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST,
+		)
+		ret = fd.ShowModal()
+		if ret == wx.ID_OK:
+			path = fd.GetPath()
+			if not Utils.MessageOKCancel(
+					self, u'{}\n\n{}\n\n{}\n\n{}'.format(
+						_("Load Profile"),
+						os.path.basename(path),
+						_("This will replace existing Properties."),
+						_('Continue?')
+					),
+					_("Confirm Load Profile"),
+					wx.ICON_QUESTION,
+				):
+				return
+
+			profile = Profile.Profile()
+			try:
+				profile.read( path )
+				profile.toRace( Model.race )
+				self.refresh()
+			except Exception as e:
+				Utils.MessageOK( self, u'{}\n\n{}\n{}'.format(_("Load Profile Failure"), e, path), _("Load Profile Failure"), wx.ICON_ERROR )
+		fd.Destroy()
+	
+	def saveProfileButtonCallback( self, event ):
+		profilesFolder = os.path.join( os.path.expanduser("~"), 'CrossMgrProfiles' )
+		try:
+			os.makedirs( profilesFolder )
+		except Exception as e:
+			pass
+		fd = wx.FileDialog(
+			self,
+			defaultDir=profilesFolder,
+			message=_("Save Profile"),
+			wildcard="CrossMgr profile files (*.cmnpro)|*.cmnpro",
+			style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT,
+		)
+		ret = fd.ShowModal()
+		if ret == wx.ID_OK:
+			profile = Profile.Profile( Model.race )
+			path = fd.GetPath()
+			print path
+			try:
+				profile.write( path )
+				Utils.MessageOK( self, u'{}\n\n{}'.format(_("Profile Saved to"), path), _("Save Profile Successful") )
+			except Exception as e:
+				Utils.MessageOK( self, u'{}\n\n{}\n{}'.format(_("Save Profile Failure"), e, path), _("Save Profile Failure"), wx.ICON_ERROR )
+		fd.Destroy()
 	
 	def setEditable( self, editable = True ):
 		pass

@@ -1987,7 +1987,7 @@ class MainWin( wx.Frame ):
 		self.refresh()
 		
 	@logCall
-	def menuExportGpx( self, event ):
+	def menuExportGpx( self, event=None ):
 		if self.fileName is None or len(self.fileName) < 4:
 			return
 		
@@ -2015,7 +2015,7 @@ class MainWin( wx.Frame ):
 			Utils.MessageOK(self, u'{}  {}\n\n    {}\n\n"{}"'.format(_('Write to GPX file Failed.'), _('Error'), e, fname), _('GPX Export'))
 		
 	@logCall
-	def menuExportCourseAsKml( self, event ):
+	def menuExportCourseAsKml( self, event=None ):
 		with Model.LockRace() as race:
 			if not race:
 				return
@@ -2037,7 +2037,7 @@ class MainWin( wx.Frame ):
 		Utils.MessageOK(self, u'{}:\n\n   {}\n\n{}'.format(_('Course Virtual Tour written to KMZ file'), fname, _('Google Earth Launched.')), _('KMZ Write'))
 	
 	@logCall
-	def menuExportCoursePreviewAsHtml( self, event ):
+	def menuExportCoursePreviewAsHtml( self, event=None ):
 		with Model.LockRace() as race:
 			if not race:
 				return
@@ -2058,10 +2058,9 @@ class MainWin( wx.Frame ):
 								_('Html Template Read Error'), iconMask=wx.ICON_ERROR )
 				return
 				
-			
 		# Write out the results.
 		html = self.addCourseToHtmlStr( html )
-		fname = os.path.splitext(self.fileName)[0] + 'CoursePreview.html'			
+		fname = os.path.splitext(self.fileName)[0] + 'CoursePreview.html'
 		try:
 			with io.open(fname, 'w', encoding='utf-8') as fp:
 				fp.write( html )

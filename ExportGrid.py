@@ -649,12 +649,7 @@ class ExportGrid( object ):
 		if showLapTimes and showLapsFrequency is None:
 			# Compute a reasonable number of laps to show (max around 10).
 			# Get the maximum laps in the data.
-			maxLaps = 0
-			for r in results:
-				try:
-					maxLaps = max(maxLaps, len(r.lapTimes))
-				except:
-					pass
+			maxLaps = max( len(r.lapTimes or []) for r in results )
 			showLapsFrequency = max( 1, int(math.ceil(maxLaps / 10.0)) )
 		
 		race = Model.race
@@ -697,10 +692,11 @@ class ExportGrid( object ):
 			
 		self.colnames = [u'{} {}'.format(name[:-len(_('Name'))], _('Name')) if name.endswith(_('Name')) else name for name in self.colnames]
 		self.iLapTimes = len(self.colnames)
-		if not leader.lapTimes:
-			lapsMax = 0
+		if race.winAndOut:
+			lapsMax = max(len(rr.lapTimes or []) for rr in results)
 		else:
-			lapsMax = max(len(rr.lapTimes or []) for rr in results) if race.winAndOut else len(leader.lapTimes)
+			lapsMax = len(leader.lapTimes or [])
+			
 		if leader.lapTimes and showLapTimes:
 			self.colnames.extend( [u'{} {}'.format(_('Lap'),lap) for lap in xrange(1, lapsMax+1) \
 					if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax] )
@@ -747,16 +743,23 @@ class ExportGrid( object ):
 				for i, t in enumerate(r.lapTimes):
 					lap = i + 1
 					if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax:
-						data[iCol].append( Utils.formatTimeCompressed(t, highPrecision) )
-						iCol += 1
-						if iCol >= colsMax:
+						try:
+							data[iCol].append( Utils.formatTimeCompressed(t, highPrecision) )
+							iCol += 1
+							if iCol >= colsMax:
+								break
+						except IndexError as e:
 							break
+				
 				# Pad out the rest of the columns.
 				for i in xrange(len(r.lapTimes), lapsMax):
 					lap = i + 1
 					if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax:
-						data[iCol].append( '' )
-						iCol += 1
+						try:
+							data[iCol].append( '' )
+							iCol += 1
+						except IndexError as e:
+							break
 		
 		self.data = data
 		self.infoColumns     = set( xrange(2, 2+len(infoFields)) ) if infoFields else set()

@@ -85,14 +85,20 @@ class RiderResult( object ):
 		
 	def _getWinAndOutKey( self ):
 		k = self._getKey()
-		return (k[0], -k[1],) + k[2:]		# Sort by increasing lap count.
+		laps = -k[1]
+		if laps == 0:
+			laps = 999999
+		return (k[0], laps,) + k[2:]		# Sort by increasing lap count.
 		
 	def _getComponentKey( self ):
 		return (statusSortSeq[self.status], toInt(self.pos), self.lastTime, getattr(self, 'startTime', 0.0) or 0.0, self.num)
 	
 	def _getWinAndOutComponentKey( self ):
 		k = self._getComponentKey()
-		return (k[0], -k[1],) + k[2:]		# Sort by increasing lap count.	
+		laps = -k[1]
+		if laps == 0:
+			laps = 999999
+		return (k[0], laps,) + k[2:]		# Sort by increasing lap count.
 
 DefaultSpeed = 0.00001
 
@@ -447,6 +453,13 @@ def GetResultsCore( category ):
 					rr.ttNote = getattr(rider, 'ttNote', u'')
 		elif winAndOut:
 			riderResults.sort( key=RiderResult._getWinAndOutKey )
+			for pos, rr in enumerate(riderResults):
+				if rr.status != Finisher:
+					rr.pos = Model.Rider.statusNames[rr.status]
+				else:
+					rr.pos = u'{}'.format(pos+1)
+				
+			rr.pos = u'{}'.format(pos+1)
 			
 		if roadRaceFinishTimes and not isTimeTrial:
 			for rr in riderResults:

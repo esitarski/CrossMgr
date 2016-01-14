@@ -7,6 +7,7 @@ import sys
 import datetime
 import os
 import re
+import io
 import cgi
 import getpass
 import socket
@@ -173,7 +174,7 @@ def CreateGPX( courseName, gpsPoints ):
 	gpx.attributes['xmlns:xsi'] = "http://www.w3.org/2001/XMLSchema-instance"
 	gpx.attributes['xsi:schemaLocation'] = "http://www.topografix.com/GPX/1/0 http://www.topografix.com/GPX/1/0/gpx.xsd"
 	
-	gpx.appendChild( doc.createComment( '\n'.join( [
+	gpx.appendChild( doc.createComment( u'\n'.join( [
 		'',
 		'DO NOT EDIT!',
 		'',
@@ -198,6 +199,7 @@ def CreateGPX( courseName, gpsPoints ):
 		if p.ele:
 			ele = createAppendChild( doc, trkpnt, 'ele' )
 			createAppendTextChild( doc, ele, '{}'.format(p.ele) )
+	
 	return doc
 	
 class GeoTrack( object ):
@@ -225,10 +227,9 @@ class GeoTrack( object ):
 			totalElevationGain += max(0.0, pNext.ele - pCur.ele)
 		self.length = length
 		self.totalElevationGain = totalElevationGain
-		
-	def read( self, fname, useTimes = False, isPointToPoint = False ):
-		self.isPointToPoint = isPointToPoint
-		self.gpsPoints = ParseGpxFile( fname, useTimes = useTimes, isPointToPoint = isPointToPoint )
+	
+	def setPoints( self, gpsPoints, isPointToPoint = False ):
+		self.gpsPoints = gpsPoints
 		self.xMax = max( p.x for p in self.gpsPoints )
 		self.yMax = max( p.y for p in self.gpsPoints )
 		dCum = 0.0
@@ -238,10 +239,18 @@ class GeoTrack( object ):
 			dCum += p.d
 		self.distanceTotal = dCum
 		self.computeSummary()
+	
+	def read( self, fname, useTimes = False, isPointToPoint = False ):
+		self.isPointToPoint = isPointToPoint
+		self.setPoints( ParseGpxFile(fname, useTimes=useTimes, isPointToPoint=isPointToPoint), isPointToPoint=isPointToPoint )
 		
 	def getGPX( self, courseName ):
 		return CreateGPX( courseName, self.gpsPoints )
-		
+	
+	def writeGPXFile( self, fname ):
+		with io.open( fname, 'wb' ) as fp:
+			self.getGPX( os.path.splitext(os.path.basename(fname))[0] ).writexml(fp, indent="", addindent=" ", newl="\n", encoding='utf-8')
+	
 	def readElevation( self, fname ):
 		header = None
 		distance, elevation = [], []
@@ -1092,7 +1101,8 @@ class GeoAnimation(wx.PyControl):
 			rp.sort()
 			for w in rp:
 				bannerItems.append( (w[1], w[0]) )
-		self.drawBanner( dc, width, height, tHeight, bannerItems )
+		if self.data:
+			self.drawBanner( dc, width, height, tHeight, bannerItems )
 		
 	def OnEraseBackground(self, event):
 		# This is intentionally empty, because we are using the combination
@@ -1119,6 +1129,9 @@ if __name__ == '__main__':
 	animation = GeoAnimation(mainWin)
 	geoTrack = GeoTrack()
 	geoTrack.read( 'EdgeField_Cyclocross_Course.gpx' )
+	geoTrack.writeGPXFile( 'geotrack.gpx' )
+	#sys.exit()
+	
 	#geoTrack.read( 'St._John__039_s_Cyclocross_course_v2.gpx' )
 	#geoTrack.read( 'Camp Arrowhead mtb GPS course.gpx' )
 	#geoTrack.read( 'Races/Midweek/Midweek_Learn_to_Race_and_Elite_Series_course.gpx' )

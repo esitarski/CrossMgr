@@ -28,6 +28,9 @@ class RaceInputState( object ):
 					race.chipReaderType,
 					race.chipReaderPort,
 					race.chipReaderIpAddr,
+					
+					getattr(race, 'geoTrack', None),
+					getattr(race, 'geoTrackFName', None),
 				]
 			)
 			newState.extend( [getattr(race, attr, None) for attr in ftpFields] )
