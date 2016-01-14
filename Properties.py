@@ -14,9 +14,12 @@ from SetGraphic			import SetGraphicDialog
 from FtpWriteFile import FtpProperties
 from GeoAnimation import GeoAnimation, GeoTrack
 from GpxImport import GetGeoTrack
-import Profile
+import Template
 
 #------------------------------------------------------------------------------------------------
+
+def GetTemplatesFolder():
+	return os.path.join( os.path.expanduser("~"), 'CrossMgrTemplates' )
 
 def addToFGS( fgs, labelFieldFormats ):
 	row = 0
@@ -497,13 +500,8 @@ class GPXProperties( wx.Panel ):
 		self.geoAnimation.Refresh()
 		
 		if geoTrack:
-			distanceKm = geoTrack.distanceTotal / 1000.0
-			distanceMiles = distanceKm*0.621371
-			totalElevationGainM = geoTrack.totalElevationGain
-			totalElevationGainFt = totalElevationGainM*3.28084
-			
-			self.distance.SetLabel( u'{:.3f} km, {:.3f} miles'.format(distanceKm, distanceMiles) )
-			self.elevationGain.SetLabel( u'{:.0f} m, {:.0f} ft'.format(totalElevationGainM, totalElevationGainFt) )
+			self.distance.SetLabel( u'{:.3f} km, {:.3f} miles'.format(geoTrack.lengthKm, geoTrack.lengthMiles) )
+			self.elevationGain.SetLabel( u'{:.0f} m, {:.0f} ft'.format(geoTrack.totalElevationGainM, geoTrack.totalElevationGainFt) )
 			self.courseType.SetLabel( u'Point to Point' if geoTrack.isPointToPoint else u'Loop' )
 			self.gpsPoints.SetLabel( u'{}'.format( len(geoTrack.gpsPoints) ) )
 		else:
@@ -862,17 +860,17 @@ class Properties( wx.Panel ):
 			self.excelButton = wx.Button(self, label=_('Link External Excel Sheet...'))
 			self.excelButton.Bind( wx.EVT_BUTTON, self.excelButtonCallback )
 
-			self.saveProfileButton = wx.Button(self, label=_('Save Profile'))
-			self.saveProfileButton.Bind( wx.EVT_BUTTON, self.saveProfileButtonCallback )
+			self.saveTemplateButton = wx.Button(self, label=_('Save Template'))
+			self.saveTemplateButton.Bind( wx.EVT_BUTTON, self.saveTemplateButtonCallback )
 			
-			self.loadProfileButton = wx.Button(self, label=_('Load Profile'))
-			self.loadProfileButton.Bind( wx.EVT_BUTTON, self.loadProfileButtonCallback )
+			self.loadTemplateButton = wx.Button(self, label=_('Load Template'))
+			self.loadTemplateButton.Bind( wx.EVT_BUTTON, self.loadTemplateButtonCallback )
 			
 			hs = wx.BoxSizer( wx.HORIZONTAL )
 			hs.Add( self.commitButton )
 			hs.Add( self.excelButton, flag=wx.LEFT, border=16 )
-			hs.Add( self.saveProfileButton, flag=wx.LEFT, border=16 )
-			hs.Add( self.loadProfileButton, flag=wx.LEFT, border=16 )
+			hs.Add( self.saveTemplateButton, flag=wx.LEFT, border=16 )
+			hs.Add( self.loadTemplateButton, flag=wx.LEFT, border=16 )
 
 			mainSizer.Add( hs, flag=wx.ALL, border=12 )
 			
@@ -913,17 +911,17 @@ class Properties( wx.Panel ):
 				_('You must have a valid race File|Open...') + u'\n' + _('Or create one with File|New....'), _('Valid Race Required'),
 				wx.ICON_WARNING )
 	
-	def loadProfileButtonCallback( self, event ):
-		profilesFolder = os.path.join( os.path.expanduser("~"), 'CrossMgrProfiles' )
+	def loadTemplateButtonCallback( self, event ):
+		templatesFolder = GetTemplatesFolder()
 		try:
-			os.makedirs( profilesFolder )
+			os.makedirs( templatesFolder )
 		except Exception as e:
 			pass
 		fd = wx.FileDialog(
 			self,
-			defaultDir=profilesFolder,
-			message=_("Load Profile"),
-			wildcard="CrossMgr profile files (*.cmnpro)|*.cmnpro",
+			defaultDir=templatesFolder,
+			message=_("Load Template"),
+			wildcard="CrossMgr template files (*.cmnt)|*.cmnt",
 			style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST,
 		)
 		ret = fd.ShowModal()
@@ -931,48 +929,48 @@ class Properties( wx.Panel ):
 			path = fd.GetPath()
 			if not Utils.MessageOKCancel(
 					self, u'{}\n\n{}\n\n{}\n\n{}'.format(
-						_("Load Profile"),
+						_("Load Template"),
 						os.path.basename(path),
 						_("This will replace existing Properties."),
 						_('Continue?')
 					),
-					_("Confirm Load Profile"),
+					_("Confirm Load Template"),
 					wx.ICON_QUESTION,
 				):
 				return
 
-			profile = Profile.Profile()
+			template = Template.Template()
 			try:
-				profile.read( path )
-				profile.toRace( Model.race )
+				template.read( path )
+				template.toRace( Model.race )
 				self.refresh()
 			except Exception as e:
-				Utils.MessageOK( self, u'{}\n\n{}\n{}'.format(_("Load Profile Failure"), e, path), _("Load Profile Failure"), wx.ICON_ERROR )
+				Utils.MessageOK( self, u'{}\n\n{}\n{}'.format(_("Template Load Failure"), e, path), _("Template Load Failure"), wx.ICON_ERROR )
 		fd.Destroy()
 	
-	def saveProfileButtonCallback( self, event ):
-		profilesFolder = os.path.join( os.path.expanduser("~"), 'CrossMgrProfiles' )
+	def saveTemplateButtonCallback( self, event ):
+		templatesFolder = os.path.join( os.path.expanduser("~"), 'CrossMgrTemplates' )
 		try:
-			os.makedirs( profilesFolder )
+			os.makedirs( templatesFolder )
 		except Exception as e:
 			pass
 		fd = wx.FileDialog(
 			self,
-			defaultDir=profilesFolder,
-			message=_("Save Profile"),
-			wildcard="CrossMgr profile files (*.cmnpro)|*.cmnpro",
+			defaultDir=templatesFolder,
+			message=_("Save as Template"),
+			wildcard="CrossMgr template files (*.cmnt)|*.cmnt",
 			style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT,
 		)
 		ret = fd.ShowModal()
 		if ret == wx.ID_OK:
-			profile = Profile.Profile( Model.race )
+			template = Template.Template( Model.race )
 			path = fd.GetPath()
 			print path
 			try:
-				profile.write( path )
-				Utils.MessageOK( self, u'{}\n\n{}'.format(_("Profile Saved to"), path), _("Save Profile Successful") )
+				template.write( path )
+				Utils.MessageOK( self, u'{}\n\n{}'.format(_("Template Saved to"), path), _("Save Template Successful") )
 			except Exception as e:
-				Utils.MessageOK( self, u'{}\n\n{}\n{}'.format(_("Save Profile Failure"), e, path), _("Save Profile Failure"), wx.ICON_ERROR )
+				Utils.MessageOK( self, u'{}\n\n{}\n{}'.format(_("Template Save Failure"), e, path), _("Template Save Failure"), wx.ICON_ERROR )
 		fd.Destroy()
 	
 	def setEditable( self, editable = True ):
@@ -1248,7 +1246,18 @@ def ChangeProperties( parent ):
 		pass
 	
 	propertiesDialog.Destroy()
-		
+	
+def ApplyDefaultTemplate( race ):
+	if not race:
+		return
+	fname = os.path.join( GetTemplatesFolder(), 'default.cmnt' )
+	template = Template()
+	try:
+		template.read( fname )
+	except:
+		return
+	template.toRace( race )
+
 if __name__ == '__main__':
 	race = Model.newRace()
 	race._populate()

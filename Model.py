@@ -129,6 +129,7 @@ class Category(object):
 
 	badRangeCharsRE = re.compile( u'[^0-9,\-]' )
 	
+	active = True
 	CatWave = 0
 	CatComponent = 1
 	CatCustom = 2
@@ -137,6 +138,9 @@ class Category(object):
 	publishFlag = True
 	uploadFlag = True
 	seriesFlag = True
+	
+	distance = None
+	firstLapDistance = None
 	
 	MaxBib = 99999
 	
@@ -1836,6 +1840,18 @@ class Race( object ):
 		return nameStrTuples
 
 	def setCategories( self, nameStrTuples ):
+		try:
+			distance = self.geoTrack.lengthKm if self.distanceUnit == self.UnitKM else self.geoTrack.lengthMiles
+		except  AttributeError:
+			distance = None
+			
+		try:
+			firstLapDistance = (
+				self.geoTrack.firstLapDistance / 1000.0 if self.distanceUnit == self.UnitKM else self.geoTrack.firstLapDistance / 1609.344
+			)
+		except  AttributeError:
+			firstLapDistance = None
+		
 		i = 0
 		newCategories = {}
 		waveCategory = None
@@ -1854,6 +1870,12 @@ class Race( object ):
 					# Else, there is a component or custom category without a start wave.
 					# Make it a start wave so that the results don't mess up.
 					category.catType = Category.CatWave
+			
+			if category.fullname not in self.categories:
+				if category.distance is None:
+					category.distance = distance
+				if category.firstLapDistance is None:
+					category.firstLapDistance = firstLapDistance
 			
 			# Ensure we don't have any duplicate category fullnames.
 			if category.fullname in newCategories:

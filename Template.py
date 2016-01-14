@@ -9,8 +9,8 @@ import Utils
 import Model
 from GeoAnimation import GpsPoint, GeoTrack
 
-class Profile( object ):
-	profileAttributes = {
+class Template( object ):
+	templateAttributes = {
 		'distanceUnit',	
 		'rule80MinLapCount',
 
@@ -78,29 +78,37 @@ class Profile( object ):
 	}
 	
 	def __init__( self, race=None ):
-		self.profile = {}
+		self.template = {}
 		if race:
 			self.fromRace( race )
 		
 	def write( self, fname ):
 		with io.open( fname, 'wb' ) as fp:
-			json.dump( self.profile, fp, indent=1, sort_keys=True )
+			json.dump( self.template, fp, indent=1, sort_keys=True )
 		
 	def read( self, fname ):
 		with io.open( fname, 'rb' ) as fp:
-			self.profile = json.load( fp )
+			self.template = json.load( fp )
 	
 	def fromRace( self, race ):
 		if not race:
-			self.profile = {}
+			self.template = {}
 			return
 		
-		self.profile = { attr:getattr(race, attr) for attr in self.profileAttributes if hasattr(race, attr) }
+		self.template = { attr:getattr(race, attr) for attr in self.templateAttributes if hasattr(race, attr) }
+		
 		try:
-			self.profile['course'] = {
+			firstLapDistance = max( c.firstLapDistance for c in race.getCategories( startWaveOnly=True ) if c.firstLapDistance )
+			firstLapDistance *= 1000.0 if race.distanceUnit.UnitKM else 1609.344
+		except ValueError:
+			firstLapDistance = None
+		
+		try:
+			self.template['course'] = {
 				'isPointToPoint': race.geoTrack.isPointToPoint,
 				'geoTrackFName': race.geoTrackFName,
 				'points': [p._asdict() for p in race.geoTrack.gpsPoints],
+				'firstLapDistance': firstLapDistance,
 			}
 		except AttributeError:
 			pass
@@ -108,33 +116,35 @@ class Profile( object ):
 	def toRace( self, race ):
 		if not race:
 			return
-		for attr, value in self.profile.iteritems():
-			if attr not in self.profileAttributes:
+		for attr, value in self.template.iteritems():
+			if attr not in self.templateAttributes:
 				continue
 			if attr == 'course':
-				course = self.profile['course']
+				course = self.template['course']
 				race.geoTrackFName = course.get('geoTrackFName', 'geoTrackFName')
 				race.geoTrack = GeoTrack()
 				race.geoTrack.setPoints( [GpsPoint(**p) for p in course.get('points',[])], course.get('isPointToPoint',False) )
+				if course['firstLapDistance']:
+					race.geoTrack.firstLapDistance = course['firstLapDistance']
 			else:
 				setattr( race, attr, value )
 		race.setChanged()
 			
 	def __eq__(self, other):
-		return (isinstance(other, self.__class__) and self.profile == other.profile)
-			
+		return (isinstance(other, self.__class__) and self.template == other.template)
+
 if __name__ == '__main__':
 	Model.setRace( Model.Race() )
 	Model.getRace()._populate()
 	Model.race.winAndOut = True
 	Model.race.organizer = u'\u2713\u2713\u2713\u2713\u2713\u2713'
-	p1 = Profile( Model.race )
-	p1.write( 'ProfileTest1.profile' )
-	p2 = Profile()
-	p2.read( 'ProfileTest1.profile' )
+	p1 = Template( Model.race )
+	p1.write( 'TemplateTest1.template' )
+	p2 = Template()
+	p2.read( 'TemplateTest1.template' )
 	assert p1 == p2
 	
 	Model.race.winAndOut = False
-	p2 = Profile( Model.race )
-	p2.write( 'ProfileTest2.profile' )
+	p2 = Template( Model.race )
+	p2.write( 'TemplateTest2.template' )
 	assert p1 != p2

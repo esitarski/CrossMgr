@@ -45,7 +45,7 @@ from History			import History
 from RiderDetail		import RiderDetail
 from Results			import Results
 from Categories			import Categories, PrintCategories
-from Properties			import Properties, PropertiesDialog, ChangeProperties
+from Properties			import Properties, PropertiesDialog, ChangeProperties, ApplyDefaultTemplate
 from Recommendations	import Recommendations
 from RaceAnimation		import RaceAnimation, GetAnimationData
 from Search				import SearchDialog
@@ -2246,6 +2246,8 @@ class MainWin( wx.Frame ):
 		geoTrack, geoTrackFName = None, None		# Do not retain the GPX file after a full new.
 		
 		dlg = PropertiesDialog(self, title=_('Configure Race'), style=wx.DEFAULT_DIALOG_STYLE )
+		ApplyDefaultTemplate( race )
+		dlg.properties.refresh()
 		ret = dlg.ShowModal()
 		fileName = dlg.GetPath()
 		categoriesFile = dlg.GetCategoriesFile()
@@ -2441,6 +2443,7 @@ class MainWin( wx.Frame ):
 		Model.newRace()
 		race = Model.race
 		race.lastOpened = datetime.datetime.now()
+		ApplyDefaultTemplate( race )
 		
 		# Create the link to the RaceDB excel sheet.
 		try:
