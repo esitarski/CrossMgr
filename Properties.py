@@ -333,14 +333,20 @@ class WebProperties( wx.Panel ):
 
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(WebProperties, self).__init__( parent, id )
-		
-		hsEmail = wx.BoxSizer( wx.HORIZONTAL )
-		hsEmail.Add( wx.StaticText(self, label=_("Contact Email")), flag=wx.ALIGN_CENTER_VERTICAL )
+
+		fgs = wx.FlexGridSizer( rows=0, cols=2, vgap=7, hgap=6 )
+		fgs.AddGrowableCol( 1 )
+				
+		fgs.Add( wx.StaticText(self, label=_("Contact Email")), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		self.email = wx.TextCtrl( self )
-		hsEmail.Add( self.email, 1, flag=wx.EXPAND|wx.LEFT, border=4 )
+		fgs.Add( self.email, 1, flag=wx.EXPAND )
 		
-		self.headerImageBitmap = wx.BitmapButton( self )
-		self.headerImageBitmap.Bind( wx.EVT_BUTTON, self.onSetGraphic )
+		fgs.Add( wx.StaticText( self, label=_('Google Analytics Tracking ID (of the form UA-XXXX-Y)') ),
+				flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		self.gaTrackingID = wx.TextCtrl( self )
+		fgs.Add( self.gaTrackingID, 1, flag=wx.EXPAND )
+				
+		self.headerImageBitmap = wx.StaticBitmap( self )
 		
 		self.graphicFName = None
 		
@@ -357,12 +363,11 @@ class WebProperties( wx.Panel ):
 		#-------------------------------------------------------------------------------
 		ms = wx.BoxSizer( wx.VERTICAL )
 		
-		ms.Add( hsEmail, flag=wx.EXPAND|wx.ALL, border=4 )
-		ms.Add( wx.StaticText(self, label=_("The Contact Email will appear on HTML pages.")), flag=wx.ALL, border=4 )
+		ms.Add( fgs, flag=wx.EXPAND|wx.ALL, border=4 )
 		ms.AddSpacer( 16 )
 		ms.Add( hsHeaderGraphic, flag=wx.ALL, border=4 )
 		ms.Add( self.headerImageBitmap, flag=wx.ALL, border=4 )
-		ms.Add( wx.StaticText(self, label=_("The Page Header will appears on HTML, Printouts and PDF files.")), flag=wx.ALL, border=4 )
+		ms.Add( wx.StaticText(self, label=_("The Page Header Graphic will appears on HTML, Printouts and PDF files.")), flag=wx.ALL, border=4 )
 		self.SetSizer( ms )
 
 	def getDefaultGraphicFNameType( self ):
@@ -387,6 +392,7 @@ class WebProperties( wx.Panel ):
 		mainWin = Utils.getMainWin()
 		
 		self.email.SetValue( race.email or u'' )
+		self.gaTrackingID.SetValue( getattr(race, 'gaTrackingID', '') )
 		
 		if race.headerImage:
 			self.headerImage = race.headerImage
@@ -403,8 +409,9 @@ class WebProperties( wx.Panel ):
 	def commit( self ):
 		race = Model.race
 		race.email = self.email.GetValue().strip()
+		race.gaTrackingID = re.sub( u'[^A-Z0-9]+', u'-', self.gaTrackingID.GetValue().strip().upper() )
 		race.headerImage = self.headerImage
-		
+
 #------------------------------------------------------------------------------------------------
 
 class GPXProperties( wx.Panel ):
@@ -434,7 +441,7 @@ class GPXProperties( wx.Panel ):
 		
 		self.geoAnimation = GeoAnimation( self )
 		
-		self.setGPXCourse = wx.Button( self, label=_('Change GPX Course') )
+		self.setGPXCourse = wx.Button( self, label=_('Import GPX Course') )
 		self.setGPXCourse.Bind( wx.EVT_BUTTON, self.onSetGPXCourse )
 		
 		self.showGoogleMap = wx.Button( self, label=_('Show on Google Map') )
@@ -443,7 +450,7 @@ class GPXProperties( wx.Panel ):
 		self.exportAsGPX = wx.Button( self, label=_('Export in GPX Format') )
 		self.exportAsGPX.Bind( wx.EVT_BUTTON, self.onExportAsGPX )
 		
-		self.exportAsKML = wx.Button( self, label=_('Export in KML Formal (required Google Earth)') )
+		self.exportAsKML = wx.Button( self, label=_('Export in KML Format (requires Google Earth)') )
 		self.exportAsKML.Bind( wx.EVT_BUTTON, self.onExportAsKML )
 		
 		hsButtons = wx.BoxSizer( wx.HORIZONTAL )
@@ -709,8 +716,6 @@ class NotesProperties( wx.Panel ):
 		self.notes = wx.TextCtrl( self, style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB, size=(-1,60) )
 		self.insertButton = wx.Button( self, label=_('Insert Variable...') )
 		self.insertButton.Bind( wx.EVT_BUTTON, self.onInsertClick )
-		self.gaTrackingIDLabel = wx.StaticText( self, label=u'{}:'.format(_('Google Analytics Tracking ID (of the form UA-XXXX-Y)')) )
-		self.gaTrackingID = wx.TextCtrl( self, size=(60,-1) )
 
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.notesLabel )
@@ -719,11 +724,6 @@ class NotesProperties( wx.Panel ):
 		ms.Add( hs, flag=wx.TOP|wx.LEFT|wx.RIGHT|wx.EXPAND, border=12 )
 		ms.Add( self.notes, 1, flag=wx.TOP|wx.LEFT|wx.RIGHT|wx.EXPAND, border=12 )
 		
-		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.gaTrackingIDLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
-		hs.Add( self.gaTrackingID, 1, flag=wx.EXPAND|wx.LEFT, border=8 )
-		ms.Add( hs, flag=wx.ALL|wx.EXPAND, border=12 )
-
 	def onInsertClick( self, event ):
 		race = Model.race
 		if not race:
@@ -751,12 +751,10 @@ class NotesProperties( wx.Panel ):
 	def refresh( self ):
 		race = Model.race
 		self.notes.SetValue( getattr(race, 'notes', '') )
-		self.gaTrackingID.SetValue( getattr(race, 'gaTrackingID', '') )
 		
 	def commit( self ):
 		race = Model.race
 		race.notes = self.notes.GetValue()
-		race.gaTrackingID = re.sub( u'[^A-Z0-9]+', u'-', self.gaTrackingID.GetValue().strip().upper() )
 
 #------------------------------------------------------------------------------------------------
 class FilesProperties( wx.Panel ):
@@ -838,7 +836,7 @@ class Properties( wx.Panel ):
 			('rfidProperties',			RfidProperties,				_('RFID') ),
 			('webProperties',			WebProperties,				_('Web') ),
 			('ftpProperties',			FtpProperties,				_('FTP') ),
-			('gpxProperties',			GPXProperties,				_('GPX Course') ),
+			('gpxProperties',			GPXProperties,				_('GPX') ),
 			('notesProperties',			NotesProperties,			_('Notes') ),
 			('cameraProperties',		CameraProperties,			_('Camera') ),
 			('animationProperties',		AnimationProperties,		_('Animation') ),
@@ -872,7 +870,12 @@ class Properties( wx.Panel ):
 			hs.Add( self.saveTemplateButton, flag=wx.LEFT, border=16 )
 			hs.Add( self.loadTemplateButton, flag=wx.LEFT, border=16 )
 
-			mainSizer.Add( hs, flag=wx.ALL, border=12 )
+			mainSizer.AddSpacer( 12 )
+			mainSizer.Add( hs, flag=wx.ALL, border=4 )
+			mainSizer.Add(
+				wx.StaticText(self, label=_('Save as "default" for a default Template that is applied automatically to all New races')),
+				flag=wx.ALL, border=4
+			)
 			
 		self.setEditable()
 		mainSizer.Fit(self)
@@ -942,7 +945,7 @@ class Properties( wx.Panel ):
 			template = Template.Template()
 			try:
 				template.read( path )
-				template.toRace( Model.race )
+				template.toRace( Model.race, True )
 				self.refresh()
 			except Exception as e:
 				Utils.MessageOK( self, u'{}\n\n{}\n{}'.format(_("Template Load Failure"), e, path), _("Template Load Failure"), wx.ICON_ERROR )
@@ -1251,7 +1254,7 @@ def ApplyDefaultTemplate( race ):
 	if not race:
 		return
 	fname = os.path.join( GetTemplatesFolder(), 'default.cmnt' )
-	template = Template()
+	template = Template.Template()
 	try:
 		template.read( fname )
 	except:

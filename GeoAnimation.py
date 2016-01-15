@@ -77,7 +77,7 @@ def CompassBearing(lat1, lon1, lat2, lon2):
 	x = math.sin(diffLong) * math.cos(lat2)
 	y = math.cos(lat1) * math.sin(lat2) - (math.sin(lat1) * math.cos(lat2) * math.cos(diffLong))
 
-	initial_bearing = math.atan2(x, y)
+	initial_bearing = atan2(x, y)
 
 	# Now we have the initial bearing but math.atan2 return values
 	# from -180 to + 180 which is not what we want for a compass bearing
@@ -872,7 +872,8 @@ class GeoAnimation(wx.PyControl):
 		
 		if width < 80 or height < 80 or not self.geoTrack:
 			return
-
+			
+		avePoints = 1
 		isPointToPoint = getattr(self.geoTrack, 'isPointToPoint', False)
 		
 		self.r = int(width / 4)
@@ -962,6 +963,26 @@ class GeoAnimation(wx.PyControl):
 			x1, y1, x2, y2 = LineNormal( drawPoints[0][0], drawPoints[0][1], drawPoints[1][0], drawPoints[1][1], laneWidth * 4 )
 		dc.DrawBitmap( self.checkeredFlag, x2 - self.checkeredFlag.Width/2, y2 - self.checkeredFlag.Height/2, False )
 
+		# Draw starting arrow showing direction.
+		if not self.data and not isPointToPoint and len(drawPoints) > avePoints:
+			x1, y1 = drawPoints[0][0], drawPoints[0][1]
+			x2, y2 = drawPoints[1][0], drawPoints[1][1]
+			a = atan2( y2-y1, x2-x1 )
+			x2 = int(x1 + cos(a) * laneWidth*4)
+			y2 = int(y1 + sin(a) * laneWidth*4)
+			dc.SetPen( wx.Pen(wx.BLACK, laneWidth / 4, wx.SOLID) )
+			dc.DrawLine( x1, y1, x2, y2 )
+			a = atan2( y1-y2, x1-x2 )
+			x1, y1 = x2, y2
+			arrowLength = 1.25
+			arrowAngle = 3.14159/8.0
+			x2 = int(x1 + cos(a+arrowAngle) * laneWidth*arrowLength)
+			y2 = int(y1 + sin(a+arrowAngle) * laneWidth*arrowLength)
+			dc.DrawLine( x1, y1, x2, y2 )
+			x2 = int(x1 + cos(a-arrowAngle) * laneWidth*arrowLength)
+			y2 = int(y1 + sin(a-arrowAngle) * laneWidth*arrowLength)
+			dc.DrawLine( x1, y1, x2, y2 )
+			
 		# Draw the riders
 		dc.SetFont( self.numberFont )
 		dc.SetPen( wx.BLACK_PEN )

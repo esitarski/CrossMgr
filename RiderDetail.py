@@ -198,7 +198,7 @@ class ChangeOffsetDialog( wx.Dialog ):
 		
 		if not race.isFinished():
 			Utils.MessageOK( self, _('The race must be Finished before you can adjust a Start Wave Offset.'), _('Race Must be Finished'), wx.ICON_ERROR )
-			self.EndModel( wx.ID_CANCEL )
+			self.EndModal( wx.ID_CANCEL )
 			return
 		
 		if self.earlyLate.GetSelection() == 1:

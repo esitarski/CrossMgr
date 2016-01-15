@@ -483,6 +483,7 @@ class MainWin( wx.Frame ):
 			Utils.GetPngBitmap('clock-add.png') )
 		self.Bind(wx.EVT_MENU, self.menuImportTTStartTimes, id=idCur )
 		
+		'''
 		#-----------------------------------------------------------------------
 		self.dataMgmtMenu.AppendSeparator()
 		idCur = wx.NewId()
@@ -512,6 +513,7 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_MENU, self.menuExportCourseAsKml, id=idCur )
 		
 		self.dataMgmtMenu.AppendMenu( wx.NewId(), _('Export Course'), self.exportGpxMenu  )
+		'''
 		
 		#-----------------------------------------------------------------------
 		
@@ -682,6 +684,7 @@ class MainWin( wx.Frame ):
 		self.menuItemLaunchExcelAfterPublishingResults.Check( self.launchExcelAfterPublishingResults )
 		self.Bind( wx.EVT_MENU, self.menuLaunchExcelAfterPublishingResults, id=idCur )
 		
+		'''
 		self.optionsMenu.AppendSeparator()
 		idCur = wx.NewId()
 		self.optionsMenu.Append( idCur , _("Set Contact &Email..."), _("Set Contact Email for HTML Output") )
@@ -690,14 +693,15 @@ class MainWin( wx.Frame ):
 		idCur = wx.NewId()
 		self.optionsMenu.Append( idCur , _("Set &Graphic..."), _("Set Graphic") )
 		self.Bind(wx.EVT_MENU, self.menuSetGraphic, id=idCur )
+		'''
 		
 		self.optionsMenu.AppendSeparator()
 		idCur = wx.NewId()
-		self.optionsMenu.Append( idCur , _("Set Default Contact &Email..."), _("Set Default Contact Email for HTML Output") )
+		self.optionsMenu.Append( idCur , _("Set Default Contact &Email..."), _("Set Default Contact Email") )
 		self.Bind(wx.EVT_MENU, self.menuSetDefaultContactEmail, id=idCur )
 		
 		idCur = wx.NewId()
-		self.optionsMenu.Append( idCur , _("Set Default &Graphic..."), _("Set Default Graphic for New Races") )
+		self.optionsMenu.Append( idCur , _("Set Default &Graphic..."), _("Set Default Graphic") )
 		self.Bind(wx.EVT_MENU, self.menuSetDefaultGraphic, id=idCur )
 		
 		self.menuBar.Append( self.optionsMenu, _("&Options") )
@@ -1074,7 +1078,7 @@ class MainWin( wx.Frame ):
 			email = Model.race.email
 		else:
 			email = self.config.Read( 'email', 'my_name@my_address' )
-		dlg = wx.TextEntryDialog( self, message=_('Default Contact Email:'), caption=_('Default Contact Email for HTML output'), defaultValue=email )
+		dlg = wx.TextEntryDialog( self, message=_(' Contact Email:'), caption=_('Contact Email for HTML output'), defaultValue=email )
 		result = dlg.ShowModal()
 		if result == wx.ID_OK:
 			value = dlg.GetValue()
@@ -1089,12 +1093,12 @@ class MainWin( wx.Frame ):
 			imgPath = dlg.GetValue()
 			self.config.Write( 'graphic', imgPath )
 			self.config.Flush()
+			if Model.race:
+				try:
+					Model.race.headerImage = ImageIO.toBufFromFile( imgPath )
+				except Exception as e:
+					pass
 		dlg.Destroy()
-		if Model.race:
-			try:
-				Model.race.headerImage = ImageIO.toBufFromFile( imgPath )
-			except Exception as e:
-				pass
 	
 	def menuSetDefaultContactEmail( self, event = None ):
 		email = self.config.Read( 'email', 'my_name@my_address' )
@@ -1104,6 +1108,8 @@ class MainWin( wx.Frame ):
 			value = dlg.GetValue()
 			self.config.Write( 'email', value )
 			self.config.Flush()
+			if Model.race:
+				Model.race.email = email
 		dlg.Destroy()
 
 	def menuSetDefaultGraphic( self, event ):
@@ -1113,6 +1119,11 @@ class MainWin( wx.Frame ):
 			imgPath = dlg.GetValue()
 			self.config.Write( 'graphic', imgPath )
 			self.config.Flush()
+			if Model.race:
+				try:
+					Model.race.headerImage = ImageIO.toBufFromFile( imgPath )
+				except Exception as e:
+					pass
 		dlg.Destroy()
 	
 	#--------------------------------------------------------------------------------------------
@@ -1156,8 +1167,10 @@ class MainWin( wx.Frame ):
 		return defaultFName
 	
 	def getGraphicBase64( self ):
-		if Model.race and Model.race.headerImage:
+		try:
 			return Model.race.headerImage
+		except:
+			pass
 		
 		graphicFName = self.getGraphicFName()
 		if not graphicFName:

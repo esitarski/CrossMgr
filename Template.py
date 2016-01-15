@@ -98,8 +98,9 @@ class Template( object ):
 		self.template = { attr:getattr(race, attr) for attr in self.templateAttributes if hasattr(race, attr) }
 		
 		try:
-			firstLapDistance = max( c.firstLapDistance for c in race.getCategories( startWaveOnly=True ) if c.firstLapDistance )
-			firstLapDistance *= 1000.0 if race.distanceUnit.UnitKM else 1609.344
+			firstLapDistance = (
+				max( c.firstLapDistance for c in race.getCategories( startWaveOnly=True ) if c.firstLapDistance )
+					* (1000.0 if race.distanceUnit == UnitKm else 1609.344) )
 		except ValueError:
 			firstLapDistance = None
 		
@@ -113,21 +114,33 @@ class Template( object ):
 		except AttributeError:
 			pass
 		
-	def toRace( self, race ):
+	def toRace( self, race, updateCategoryDistances=True ):
 		if not race:
 			return
+		geoTrack = None
+		firstLapDistance = None
 		for attr, value in self.template.iteritems():
 			if attr not in self.templateAttributes:
 				continue
 			if attr == 'course':
 				course = self.template['course']
 				race.geoTrackFName = course.get('geoTrackFName', 'geoTrackFName')
-				race.geoTrack = GeoTrack()
-				race.geoTrack.setPoints( [GpsPoint(**p) for p in course.get('points',[])], course.get('isPointToPoint',False) )
+				race.geoTrack = geoTrack = GeoTrack()
+				geoTrack.setPoints( [GpsPoint(**p) for p in course.get('points',[])], course.get('isPointToPoint',False) )
 				if course['firstLapDistance']:
-					race.geoTrack.firstLapDistance = course['firstLapDistance']
+					geoTrack.firstLapDistance = firstLapDistance = course['firstLapDistance']
 			else:
 				setattr( race, attr, value )
+		
+		if updateCategoryDistances and geoTrack:
+			distance = geoTrack.lengthKm if race.distanceUnit == race.UnitKm else geoTrack.lengthMiles
+			firstLapDistance = firstLapDistance or None
+			if firstLapDistance:
+				firstLapDistance /= (1000.0 if race.distanceUnit == race.UnitKm else 1609.344)
+			for c in race.getCategories():
+				c.distance = distance
+				c.firstLapDistance = firstLapDistance
+				
 		race.setChanged()
 			
 	def __eq__(self, other):

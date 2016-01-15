@@ -249,11 +249,12 @@ ftpFields = 	['ftpHost',	'ftpPath',	'ftpPhotoPath',	'ftpUser',		'ftpPassword',	'
 ftpDefaults =	['',		'',			'',				'anonymous',	'anonymous@',	False,					'http://',	False]
 
 def GetFtpPublish( isDialog=True ):
-	class FtpPublishObject( wx.Dialog if isDialog else wx.Panel ):
+	ParentClass = wx.Dialog if isDialog else wx.Panel
+	class FtpPublishObject( ParentClass ):
 
 		def __init__( self, parent, id = wx.ID_ANY ):
 			if isDialog:
-				super(FtpPublishObject, self).__init__( parent, id, "Ftp Publish Results",
+				super(FtpPublishObject, self).__init__( parent, id, _("Ftp Publish Results"),
 								style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
 			else:
 				super(FtpPublishObject, self).__init__( parent, id )

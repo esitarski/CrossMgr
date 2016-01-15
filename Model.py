@@ -1841,13 +1841,13 @@ class Race( object ):
 
 	def setCategories( self, nameStrTuples ):
 		try:
-			distance = self.geoTrack.lengthKm if self.distanceUnit == self.UnitKM else self.geoTrack.lengthMiles
+			distance = self.geoTrack.lengthKm if self.distanceUnit == self.UnitKm else self.geoTrack.lengthMiles
 		except  AttributeError:
 			distance = None
 			
 		try:
 			firstLapDistance = (
-				self.geoTrack.firstLapDistance / 1000.0 if self.distanceUnit == self.UnitKM else self.geoTrack.firstLapDistance / 1609.344
+				self.geoTrack.firstLapDistance / 1000.0 if self.distanceUnit == self.UnitKm else self.geoTrack.firstLapDistance / 1609.344
 			)
 		except  AttributeError:
 			firstLapDistance = None
