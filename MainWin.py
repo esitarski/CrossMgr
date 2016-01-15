@@ -1838,24 +1838,8 @@ class MainWin( wx.Frame ):
 		if ret != wx.ID_OK:
 			return
 	
-		race = Model.race
-		host = getattr( race, 'ftpHost', '' )
-			
-		if not host:
-			Utils.MessageOK(self, u'{}\n\n    {}'.format(_('Error'), _('Missing host name.')), _('Ftp Upload Failed'), iconMask=wx.ICON_ERROR )
-			return
-		
-		wx.BeginBusyCursor()
-		e = FtpWriteFile.FtpWriteRaceHTML()
-		wx.EndBusyCursor()
-
-		if e:
-			Utils.MessageOK(self, u'{}  {}\n\n{}'.format(_('Ftp Upload Failed.'), _('Error'), e), _('Ftp Upload Failed'), iconMask=wx.ICON_ERROR )
-		else:
-			# Automatically open the browser on the published file for testing.
-			if race.urlFull and race.urlFull != 'http://':
-				webbrowser.open( race.urlFull, new = 0, autoraise = True )
-			
+		FtpWriteFile.FtpUploadNow( self )
+	
 	def addTTStartToHtmlStr( self, html ):
 		race = Model.race
 		

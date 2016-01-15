@@ -3,6 +3,7 @@ import wx.lib.intctrl
 import io
 import os
 import sys
+import webbrowser
 import ftputil
 import urllib
 import datetime
@@ -340,8 +341,17 @@ def GetFtpPublish( isDialog=True ):
 				self.CentreOnParent( wx.BOTH )
 				self.SetFocus()
 			else:
+				self.ftpUploadNowButton = wx.Button( self, label=_('Do FTP Upload Now') )
+				self.ftpUploadNowButton.Bind( wx.EVT_BUTTON, self.onFtpUploadNow )
+				fgs.AddSpacer( 16 )
+				fgs.AddSpacer( 16 )
+				fgs.AddSpacer( 16 )
+				fgs.Add( self.ftpUploadNowButton )
 				self.SetSizer( fgs )
 
+		def onFtpUploadNow( self, event ):
+			FtpUploadNow( self )
+		
 		def onPrint( self, event ):
 			race = Model.race
 			if not race:
@@ -421,6 +431,25 @@ def FtpPublishDialog( parent ):
 
 def FtpProperties( parent ):
 	return GetFtpPublish( False )( parent )
+
+def FtpUploadNow( parent ):
+	race = Model.race
+	host = getattr( race, 'ftpHost', '' )
+		
+	if not host:
+		Utils.MessageOK(parent, u'{}\n\n    {}'.format(_('Error'), _('Missing host name.')), _('Ftp Upload Failed'), iconMask=wx.ICON_ERROR )
+		return
+	
+	wx.BeginBusyCursor()
+	e = FtpWriteRaceHTML()
+	wx.EndBusyCursor()
+
+	if e:
+		Utils.MessageOK(parent, u'{}  {}\n\n{}'.format(_('Ftp Upload Failed.'), _('Error'), e), _('Ftp Upload Failed'), iconMask=wx.ICON_ERROR )
+	else:
+		# Automatically open the browser on the published file for testing.
+		if race.urlFull and race.urlFull != 'http://':
+			webbrowser.open( race.urlFull, new = 0, autoraise = True )
 
 if __name__ == '__main__':
 	'''

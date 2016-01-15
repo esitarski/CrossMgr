@@ -79,16 +79,19 @@ class Template( object ):
 	
 	def __init__( self, race=None ):
 		self.template = {}
+		self.fileName = None
 		if race:
 			self.fromRace( race )
 		
 	def write( self, fname ):
 		with io.open( fname, 'wb' ) as fp:
 			json.dump( self.template, fp, indent=1, sort_keys=True )
+		self.fileName = fname
 		
 	def read( self, fname ):
 		with io.open( fname, 'rb' ) as fp:
 			self.template = json.load( fp )
+		self.fileName = fname
 	
 	def fromRace( self, race ):
 		if not race:
@@ -140,7 +143,8 @@ class Template( object ):
 			for c in race.getCategories():
 				c.distance = distance
 				c.firstLapDistance = firstLapDistance
-				
+		
+		race.templateFileName = self.fileName
 		race.setChanged()
 			
 	def __eq__(self, other):

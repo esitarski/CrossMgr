@@ -761,19 +761,24 @@ class FilesProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(FilesProperties, self).__init__( parent, id )
 		
-		self.fileNameLabel = wx.StaticText( self, label=_('File Name:') )
+		self.fileNameLabel = wx.StaticText( self, label=_('File Name') )
 		self.fileName = wx.StaticText( self )
 
-		self.excelNameLabel = wx.StaticText( self, label=_('Excel Link File:') )
+		self.excelButton = wx.Button(self, label=_('Link External Excel Sheet...'))
+		self.excelButton.Bind( wx.EVT_BUTTON, self.excelButtonCallback )
+
 		self.excelName = wx.StaticText( self )
 
-		self.categoriesFileLabel = wx.StaticText( self, label=_('Categories Initially Loaded From:') )
+		self.categoriesFileLabel = wx.StaticText( self, label=_('Categories Initially Loaded From') )
 		self.categoriesFile = wx.StaticText( self )
-
+		
+		self.templateFileNameLabel = wx.StaticText( self, label=_('Template File') )
+		self.templateFileName = wx.StaticText( self )
+		
 		ms = wx.BoxSizer( wx.VERTICAL )
 		self.SetSizer( ms )
 		
-		fgs = wx.FlexGridSizer( rows=0, cols=2, vgap=12, hgap=3 )
+		fgs = wx.FlexGridSizer( rows=0, cols=2, vgap=12, hgap=8 )
 		fgs.AddGrowableCol( 1 )
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
@@ -783,12 +788,18 @@ class FilesProperties( wx.Panel ):
 		
 		labelFieldFormats = [
 			(self.fileNameLabel,		0, labelAlign),		(self.fileName,			1, fieldAlign),
-			(self.excelNameLabel,		0, labelAlign),		(self.excelName,		1, fieldAlign),
+			(self.excelButton,			0, labelAlign),		(self.excelName,		1, fieldAlign),
 			(self.categoriesFileLabel,	0, labelAlign),		(self.categoriesFile,	1, fieldAlign),
+			(self.templateFileNameLabel,0, labelAlign),		(self.templateFileName,	1, fieldAlign),
 		]
 		addToFGS( fgs, labelFieldFormats )
 		ms.Add( fgs, 1, flag=wx.EXPAND|wx.ALL, border=16 )
 		
+	def excelButtonCallback( self, event ):
+		mainWin = Utils.getMainWin()
+		if mainWin:
+			mainWin.menuLinkExcel()
+	
 	def refresh( self ):
 		race = Model.race
 		excelLink = getattr(race, 'excelLink', None)
@@ -798,7 +809,8 @@ class FilesProperties( wx.Panel ):
 				excelLink.sheetName if excelLink.sheetName else '') )
 		else:
 			self.excelName.SetLabel( '' )
-		self.categoriesFile.SetLabel( os.path.basename(getattr(race, 'categoriesImportFile', '')) )
+		self.categoriesFile.SetLabel( os.path.basename(getattr(race, 'categoriesImportFile', u'')) )
+		self.templateFileName.SetLabel( os.path.basename(getattr(race, 'templateFileName', u'')) )
 		
 	def commit( self ):
 		pass
@@ -840,7 +852,7 @@ class Properties( wx.Panel ):
 			('notesProperties',			NotesProperties,			_('Notes') ),
 			('cameraProperties',		CameraProperties,			_('Camera') ),
 			('animationProperties',		AnimationProperties,		_('Animation') ),
-			('filesProperties',			FilesProperties,			_('Files') ),
+			('filesProperties',			FilesProperties,			_('Files/Excel') ),
 		]
 		for prop, PropClass, name in self.propClassName:
 			setattr( self, prop, PropClass(self.notebook) )
@@ -855,9 +867,6 @@ class Properties( wx.Panel ):
 			self.commitButton = wx.Button(self, label=_('Commit'))
 			self.commitButton.Bind( wx.EVT_BUTTON, self.commitButtonCallback )
 			
-			self.excelButton = wx.Button(self, label=_('Link External Excel Sheet...'))
-			self.excelButton.Bind( wx.EVT_BUTTON, self.excelButtonCallback )
-
 			self.saveTemplateButton = wx.Button(self, label=_('Save Template'))
 			self.saveTemplateButton.Bind( wx.EVT_BUTTON, self.saveTemplateButtonCallback )
 			
@@ -866,8 +875,7 @@ class Properties( wx.Panel ):
 			
 			hs = wx.BoxSizer( wx.HORIZONTAL )
 			hs.Add( self.commitButton )
-			hs.Add( self.excelButton, flag=wx.LEFT, border=16 )
-			hs.Add( self.saveTemplateButton, flag=wx.LEFT, border=16 )
+			hs.Add( self.saveTemplateButton, flag=wx.LEFT, border=48 )
 			hs.Add( self.loadTemplateButton, flag=wx.LEFT, border=16 )
 
 			mainSizer.AddSpacer( 12 )
@@ -899,11 +907,6 @@ class Properties( wx.Panel ):
 			if notebook.GetPage(event.GetSelection()) == self.cameraProperties:
 				self.cameraProperties.refresh()
 		event.Skip()	# Required to properly repaint the screen.
-	
-	def excelButtonCallback( self, event ):
-		mainWin = Utils.getMainWin()
-		if mainWin:
-			mainWin.menuLinkExcel()
 	
 	def commitButtonCallback( self, event ):
 		mainWin = Utils.getMainWin()
@@ -968,9 +971,10 @@ class Properties( wx.Panel ):
 		if ret == wx.ID_OK:
 			template = Template.Template( Model.race )
 			path = fd.GetPath()
-			print path
 			try:
 				template.write( path )
+				Model.race.templateFileName = path
+				self.refresh()
 				Utils.MessageOK( self, u'{}\n\n{}'.format(_("Template Saved to"), path), _("Save Template Successful") )
 			except Exception as e:
 				Utils.MessageOK( self, u'{}\n\n{}\n{}'.format(_("Template Save Failure"), e, path), _("Template Save Failure"), wx.ICON_ERROR )

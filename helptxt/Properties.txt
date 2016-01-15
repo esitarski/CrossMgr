@@ -412,3 +412,8 @@ To create a template that is automatically applied for every New race, save the 
 
 ## Load Template
 Loads an existing configuration into the current race.
+
+This feature is related to File|New Next..., which create a new race based on the existing race.
+
+However, a template can be loaded into a completely New race, and by saving a template as "default", it will be automatically applied to new and RaceDB races.
+
