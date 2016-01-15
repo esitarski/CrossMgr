@@ -408,5 +408,7 @@ Allows you to link to an [External Excel][] sheet right from this page.  See [Da
 ## Save Template
 Saves your configuration as a template file.
 
+To create a template that is automatically applied for every New race, save the template as "default".  The "default" template will be applied for New races, and races opened from RaceDB.
+
 ## Load Template
 Loads an existing configuration into the current race.
