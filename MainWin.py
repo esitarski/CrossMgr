@@ -2232,6 +2232,7 @@ class MainWin( wx.Frame ):
 	def menuNew( self, event ):
 		self.showPageName( _('Actions') )
 		self.closeFindDialog()
+		self.writeRace()
 		
 		race = Model.race
 		if race:
@@ -2242,6 +2243,11 @@ class MainWin( wx.Frame ):
 			
 		geoTrack, geoTrackFName = None, None		# Do not retain the GPX file after a full new.
 		
+		raceSave = Model.race
+		
+		Model.setRace( Model.Race() )
+		race = Model.race
+		
 		dlg = PropertiesDialog(self, title=_('Configure Race'), style=wx.DEFAULT_DIALOG_STYLE )
 		ApplyDefaultTemplate( race )
 		dlg.properties.refresh()
@@ -2251,6 +2257,7 @@ class MainWin( wx.Frame ):
 		properties = dlg.properties
 
 		if ret != wx.ID_OK:
+			Model.race = raceSave
 			return
 			
 		# Check for existing file.
@@ -2261,6 +2268,7 @@ class MainWin( wx.Frame ):
 					_('File already exists'), fileName, _('Overwrite')
 				)
 			):
+			Model.race = raceSave
 			return
 
 		# Try to open the file.
@@ -2269,25 +2277,20 @@ class MainWin( wx.Frame ):
 				pass
 		except IOError:
 			Utils.MessageOK( self, u'{}\n\n    "{}"'.format(_('Cannot Open File'),fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
+			Model.race = raceSave
 			return
 
-		with Model.LockRace() as race:
-			if race:
-				race.resetAllCaches()
-		
-		self.writeRace()
+		race.resetAllCaches()
 		
 		# Create a new race and initialize it with the properties.
 		self.fileName = fileName
 		WebServer.SetFileName( self.fileName )
 		Model.resetCache()
 		ResetExcelLinkCache()
-		Model.setRace( Model.Race() )
 		properties.commit()
 		self.updateRecentFiles()
 
 		importedCategories = False
-		race = Model.race
 		if categoriesFile:
 			try:
 				with io.open(categoriesFile, 'r', encoding='utf-8') as fp:

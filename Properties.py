@@ -15,7 +15,7 @@ from FtpWriteFile import FtpProperties
 from GeoAnimation import GeoAnimation, GeoTrack
 from GpxImport import GetGeoTrack
 import Template
-from JChipSetup import JChipSetupDialog
+import JChipSetup
 
 #------------------------------------------------------------------------------------------------
 
