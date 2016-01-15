@@ -1,7 +1,14 @@
 [TOC]
 
 # Properties
-Allows you to configure properties of the race itself.  Specific properties of each Category are defined in the Category screen.
+Allows you to configure properties of the race itself.
+
+Properties include many race options, camera options, web options and the race course in GPX format.
+
+Properties can be saved to a __Template__.  This allows you to save the options you configured for a race and use them in another race - just load the template.
+
+The __Template__ includes all configurable options including FTP, Graphic and GPX Course.
+It does not include data specific to the race like the Categories or the Excel spreadsheet.
 
 # Property Screen
 
@@ -130,15 +137,6 @@ Variable|Value
 {=BibList AAA, BBB, CCC, DDD, ...}|Expand the comma-separator bib numbers into a list showing "Bib: Last Name, First Name, License, UCI Code, Team" in each line.
 {=BibTable AAA, BBB, CCC, DDD, ...}|Expand the comma-separator bib numbers into a table showing "Bib: Last Name, First Name, License, UCI Code, Team" in each row.
 
-### Google Analytics Tracking ID
-
-If you have a __Google Analytics Tracking ID__, enter it here to track access to the race results web page.
-
-CrossMgr will insert all the proper Javascript on the html page with your __Google Analytics Tracking ID__.
-You can then track access to the page from your Google Analytics account.
-
-For more information about Google Analytics, including how to create an account and get your Tracking ID, see [here](http://www.google.com/analytics).
-
 ## RFID Options
 Property|Description
 :-------|:----------
@@ -166,7 +164,103 @@ When using this feature, be sure to set the "First Lap Distance" in [Categories]
 ### Reader Type
 Either JChip/Impinj/Alien or RaceResult.  See [ChipReader][] for more details.
 
-## Camera Options
+## GPX
+
+CrossMgr can import a course in GPX format and use it to display a race animation in the HTML output.
+
+GPX files are standard files that can be generated from GPS receivers (Garmin, etc.).
+
+The course fill be shown in the Animation screen, as well as in the html web output.
+
+When the GPX file is in use, the animation works a little differently.  The numbers of the top 5 riders are always shown, and the numbers of the Highlight numbers are also shown.
+
+The GPX format contains Latitude/Longitude coordinates, as well as elevations and times.  CrossMgr uses all of this information to make a more realistic animation of the race.
+
+GPX files downloaded from [MapMyRide](http://www.mapmyride.com/) do not contain elevation data.  However, the elevation data can be downloaded separately on the same MapMyRide page to a file called "elevation.csv".  If you wish to use the "elevation.csv" data from [MapMyRide](http://www.mapmyride.com/), save the "elevation.csv" file in the same folder as the GPX file.  CrossMgr will detect it, and pick up the elevation information when it reads the GPX file.
+
+If you select the __Set Category Distances to GPX Lap Length__ in the last screen of the wizard (the default), the Category distances will automatically be filled in with the GPX course length.
+
+### Editing GPX Files
+
+Say you have GPX file from a rider for his entire 8 lap race.  But, CrossMgr requires a GPX for a single lap.  What to do?
+
+Fortunately, there are GPX file editors that allow you to edit a full (for example, [GPX Editor](http://sourceforge.net/projects/gpxeditor/).  If you want to use GPX Editor, download it unzip it into a folder.
+
+GPX Editor has some features that make it easy to edit a multi-lap recording to a single lap.
+
+Open the GPX file.  On the left side of the screen, expand "Tracks".
+Then click on the Date entry, then on "Track Segment #1" underneath that.
+
+This shows the track, and brings up an altitude graph at the bottom of the screen.
+
+From the beginning of the altitude graph, hold the left mouse button down and drag to the right.
+This selects a part of the path, also showing it in yellow on the screen.
+
+Keep dragging until you select just enough points for the 1st lap.
+The first point and lat point do not need to overlap perfectly - CrossMgr will automatically join them to make a circuit.
+Depending on whether you have a run up, it might make sense to click-and-drag a middle section of the track.
+
+Then, right-click on your selection in the altitude area.  Choose "Selection|Copy to a new track...".
+This make a new track of the single lap called "Track Segment #2".
+
+From the left side of the screen, right-click on "Track Segment #1", and Delete it ("Oui" is french for yes ;).
+
+Then save the file.  Now you have a GPX file with one lap.
+
+### But, I only have a .fit File from a Garmin!
+
+No problem.  You just need to convert it to a GPX file with [GPSBabel](http://www.gpsbabel.org).
+
+1. Download [GPSBabel](http://www.gpsbabel.org).
+1. Plug in the Garmin GPS device.  Navigate to the device (it looks like a USB flash drive).  Go to the Activities folder.  There you should find the .fit files.
+1. Launch GPSBabel, open the .fit file of the course, then write it out as a .gpx file.
+1. Check the .gpx file you just made with [GPX Editor](http://sourceforge.net/projects/gpxeditor/).  See instructions above if it needs to be fixed in some way.
+
+Now, you can import your new .gpx file into CrossMgr.
+
+## Show on Google Map
+Creates a course preview web page which includes a Google Map with the course drawn on it as well as an Aligraph (altitude map).
+In addition, the page has two buttons:
+
+Button|Action
+:-----|:-----
+Get Directions|Opens a Google Maps page with the Destination filled in to the Course.
+Google Earth Ride|Opens a page showing a 3d course animation - requires the Google Earth plugin.  The animation looks like a helmet camera.
+
+## Export in GPX Format
+Write a GPX file of the course in the same format that CrossMgr reads.  Useful when you want to transfer one GPX course to another CrossMgr race or another application.
+
+### Export in KML Format
+
+Creates a KMZ file with an animated fly-over virtual tour of the course (KMZ is compressed KML).  KMZ file formats are compatible with Google Earth.  CrossMgr launches Google Earth after the download.
+
+To see the virtual tour:
+
+1. Ensure you have [Google Earth](http://www.google.com/earth/index.html) installed.
+1. Make sure you have a race with an imported GPX course.
+1. From CrossMgr, do "DataMgmt/Export Course.../as KMZ Virtual Tour..."
+1. After Google Earth comes up, double-click on name of your Race - look for it in the left column.
+1. Then, double-click on "`<Race Name>`: Virtual Tour" (the first entry).
+1. Watch the virtual tour of your race in real-time.
+
+## Web
+
+Options for HTML output including Contact Email, Google Analytics Tracking ID and Header Graphic.
+
+### Google Analytics Tracking ID
+
+If you have a __Google Analytics Tracking ID__, enter it here to track access to the race results web page.
+
+CrossMgr will insert all the proper Javascript on the html page with your __Google Analytics Tracking ID__.
+You can then track access to the page from your Google Analytics account.
+
+For more information about Google Analytics, including how to create an account and get your Tracking ID, see [here](http://www.google.com/analytics).
+
+## FTP
+
+Options for FTP upload including host, password, directory and real-time publish option.
+
+## Camera
 
 CrossMgr can record photos from an inexpensive USB camera as riders cross the finish line.
 In addition to making nice pictures of the event for publishing later, this feature is useful in resolving disputes.
@@ -310,3 +404,9 @@ Commits your changes to CrossMgr.  Changing screens will commit your changes aut
 
 ## Link External Excel Sheet
 Allows you to link to an [External Excel][] sheet right from this page.  See [DataMgmt][].
+
+## Save Template
+Saves your configuration as a template file.
+
+## Load Template
+Loads an existing configuration into the current race.
