@@ -86,7 +86,7 @@ class JChipSetupDialog( wx.Dialog ):
 			_('Run this test before each race.'),
 		]) )
 		intro = (u'\n'.join( [
-				_('CrossMgr supports the JChip, RaceResult, Impinj and Alien RFID readers.'),
+				_('CrossMgr supports the JChip, RaceResult, Ultra, Impinj and Alien RFID readers.'),
 				_('For more details, consult the documentation for your reader.'),
 				] ) + u'\n' + _('Checklist:') + u'\n\n{}\n').format( todoList )
 		
@@ -106,7 +106,7 @@ class JChipSetupDialog( wx.Dialog ):
 		row = 0
 		rowColSizer.Add( wx.StaticText( self, label=u'{}:'.format(_('Reader Type')) ), row=row, col=0, border=border,
 			flag=wx.TOP|wx.LEFT|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
-		self.chipReaderType = wx.Choice( self, choices=[_('JChip/Impinj/Alien'), _('RaceResult')] )
+		self.chipReaderType = wx.Choice( self, choices=[_('JChip/Impinj/Alien'), _('RaceResult'),  _('Ultra')] )
 		self.chipReaderType.SetSelection( 0 )
 		self.chipReaderType.Bind( wx.EVT_CHOICE, self.changechipReaderType )
 		rowColSizer.Add( self.chipReaderType,
@@ -193,14 +193,25 @@ class JChipSetupDialog( wx.Dialog ):
 			self.ipaddr.SetValue( Utils.GetDefaultHost() )
 			self.ipaddr.SetEditable( False )
 			self.autoDetect.Show( False )
-		else:
+		elif selection == 1:	# RaceResult
 			self.port.SetValue( 3601 )
 			self.port.SetEditable( True )
 			self.ipaddr.SetEditable( True )
-			raceReaderHost = Utils.readConfig( 'RaceReaderHost', None )
-			if raceReaderHost:
+			rfidReaderHost = Utils.readConfig( 'RfidReaderHost', None )
+			if rfidReaderHost:
 				try:
-					self.ipaddr.SetValue( raceReaderHost )
+					self.ipaddr.SetValue( rfidReaderHost )
+				except Exception as e:
+					self.ipaddr.SetValue( Utils.GetDefaultHost() )
+			self.autoDetect.Show( True )
+		elif selection == 2:	# Ultra
+			self.port.SetValue( 23 )
+			self.port.SetEditable( True )
+			self.ipaddr.SetEditable( True )
+			rfidReaderHost = Utils.readConfig( 'RfidReaderHost', None )
+			if rfidReaderHost:
+				try:
+					self.ipaddr.SetValue( rfidReaderHost )
 				except Exception as e:
 					self.ipaddr.SetValue( Utils.GetDefaultHost() )
 			self.autoDetect.Show( True )

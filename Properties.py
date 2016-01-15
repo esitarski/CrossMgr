@@ -15,6 +15,7 @@ from FtpWriteFile import FtpProperties
 from GeoAnimation import GeoAnimation, GeoTrack
 from GpxImport import GetGeoTrack
 import Template
+from JChipSetup import JChipSetupDialog
 
 #------------------------------------------------------------------------------------------------
 
@@ -293,10 +294,13 @@ class RfidProperties( wx.Panel ):
 		self.chipTimingOptions.SetSelection( self.iResetStartClockOnFirstTag )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		self.chipReaderType = wx.Choice( self, choices=[_('JChip/Impinj/Alien'), _('RaceResult')] )
-		self.chipReaderType.SetSelection( 0 )
+		self.chipReaderChoices=[_('JChip/Impinj/Alien'), _('RaceResult'), _('Ultra')] 
+		self.chipReaderType = wx.StaticText( self )
 		hs.Add( wx.StaticText( self, label=u'{}'.format(_('Reader Type')) ), flag=wx.ALIGN_CENTER_VERTICAL )
 		hs.Add( self.chipReaderType, flag=wx.LEFT, border=4)
+		
+		self.setupButton = wx.Button( self, label=_('Setup/Test Rfid Reader...') )
+		self.setupButton.Bind( wx.EVT_BUTTON, self.onSetup )
 		#-------------------------------------------------------------------------------
 		ms = wx.BoxSizer( wx.VERTICAL )
 		self.SetSizer( ms )
@@ -304,7 +308,18 @@ class RfidProperties( wx.Panel ):
 		ms.Add( self.jchip, flag=wx.ALL, border=16 )
 		ms.Add( self.chipTimingOptions, flag=wx.ALL, border=4 )
 		ms.Add( hs, flag=wx.ALL, border=4 )
+		ms.AddSpacer( 16 )
+		ms.Add( self.setupButton, flag=wx.ALL, border=4 )
 
+	def onSetup( self, event ):
+		self.commit()
+		if Model.race.isRunning():
+			Utils.MessageOK( self, _('Cannot perform RFID setup while race is running.'), _('Cannot Perform RFID Setup'), iconMask=wx.ICON_ERROR )
+			return
+		dlg = JChipSetup.JChipSetupDialog( self )
+		dlg.ShowModal()
+		dlg.Destroy()
+		self.refresh()
 		
 	def refresh( self ):
 		race = Model.race
@@ -317,7 +332,8 @@ class RfidProperties( wx.Panel ):
 			self.chipTimingOptions.SetSelection( self.iSkipFirstTagRead )
 		else:
 			self.chipTimingOptions.SetSelection( 0 )
-		self.chipReaderType.SetSelection( max(getattr(race, 'chipReaderType', 0), 0) )
+		self.chipReaderType.SetLabel( self.chipReaderChoices[max(getattr(race, 'chipReaderType', 0), 0)] )
+		self.GetSizer().Layout()
 		
 	def commit( self ):
 		race = Model.race
@@ -325,7 +341,6 @@ class RfidProperties( wx.Panel ):
 		iSelection = self.chipTimingOptions.GetSelection()
 		race.resetStartClockOnFirstTag	= bool(iSelection == self.iResetStartClockOnFirstTag)
 		race.skipFirstTagRead			= bool(iSelection == self.iSkipFirstTagRead)
-		race.chipReaderType = max( 0, self.chipReaderType.GetSelection() )
 	
 #------------------------------------------------------------------------------------------------
 

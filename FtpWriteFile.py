@@ -341,7 +341,7 @@ def GetFtpPublish( isDialog=True ):
 				self.CentreOnParent( wx.BOTH )
 				self.SetFocus()
 			else:
-				self.ftpUploadNowButton = wx.Button( self, label=_('Do FTP Upload Now') )
+				self.ftpUploadNowButton = wx.Button( self, label=_('Do FTP Upload Now / Test') )
 				self.ftpUploadNowButton.Bind( wx.EVT_BUTTON, self.onFtpUploadNow )
 				fgs.AddSpacer( 16 )
 				fgs.AddSpacer( 16 )
@@ -350,6 +350,7 @@ def GetFtpPublish( isDialog=True ):
 				self.SetSizer( fgs )
 
 		def onFtpUploadNow( self, event ):
+			self.commit()
 			FtpUploadNow( self )
 		
 		def onPrint( self, event ):
