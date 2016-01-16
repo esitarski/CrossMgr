@@ -36,6 +36,7 @@ def ReadPropertiesFromExcel( reader ):
 		('Road Race Finish Times',	'roadRaceFinishTimes',	'b'),
 		('No Data DNS',		'setNoDataDNS',		'b'),
 		('Chip Reader Type','chipReaderType',	'n'),
+		('Win and Out',		'winAndOut',		'b'),
 	)
 
 	AttributeFromHeader = { h: a for h, a, t in HeadersFields }
