@@ -139,7 +139,7 @@ class JChipSetupDialog( wx.Dialog ):
 				border=border, flag = wx.GROW|wx.ALL )
 		#-------------------------------------------------------------------
 
-		bs.Add( self.testJChip, 0, wx.EXPAND|wx.ALL, border )
+		bs.Add( self.testJChip, 0, wx.ALIGN_CENTER|wx.ALL, border )
 		bs.Add( wx.StaticText(self, label = _('Messages:')), 0, wx.EXPAND|wx.ALL, border=border )
 		bs.Add( self.testList, 1, wx.EXPAND|wx.ALL, border )
 		
@@ -291,6 +291,7 @@ class JChipSetupDialog( wx.Dialog ):
 			
 			self.testList.Clear()
 			self.testJChip.SetLabel( 'Stop RFID Test' )
+			self.testJChip.SetBackgroundColour( wx.Colour(255,128,128) )
 			self.testJChip.SetValue( True )
 			
 			ChipReader.chipReaderCur.StartListener()
@@ -351,6 +352,7 @@ class JChipSetupDialog( wx.Dialog ):
 		self.appendMsg( _('No test running.') )
 		ChipReader.chipReaderCur.readerEventWindow = None
 		self.testJChip.SetLabel( _('Start RFID Test') )
+		self.testJChip.SetBackgroundColour( wx.NullColour )
 		self.testJChip.SetValue( False )
 
 	def onOK( self, event ):

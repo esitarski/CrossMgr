@@ -2248,6 +2248,16 @@ class MainWin( wx.Frame ):
 		Model.setRace( Model.Race() )
 		race = Model.race
 		
+		if geoTrack:
+			race.geoTrack, race.geoTrackFName = geoTrack, geoTrackFName
+			distance = geoTrack.length if race.distanceUnit == race.UnitKm else geoTrack.length * 0.621371
+			if distance > 0.0:
+				for c in race.categories.itervalues():
+					c.distance = distance
+			race.showOval = False
+		if excelLink:
+			race.excelLink = excelLink
+		
 		dlg = PropertiesDialog(self, title=_('Configure Race'), style=wx.DEFAULT_DIALOG_STYLE )
 		ApplyDefaultTemplate( race )
 		dlg.properties.refresh()
@@ -2288,6 +2298,7 @@ class MainWin( wx.Frame ):
 		Model.resetCache()
 		ResetExcelLinkCache()
 		properties.commit()
+		
 		self.updateRecentFiles()
 
 		importedCategories = False
@@ -2309,16 +2320,6 @@ class MainWin( wx.Frame ):
 		else:
 			race.categoriesImportFile = categoriesFile
 			
-		if geoTrack:
-			race.geoTrack, race.geoTrackFName = geoTrack, geoTrackFName
-			distance = geoTrack.length if race.distanceUnit == race.UnitKm else geoTrack.length * 0.621371
-			if distance > 0.0:
-				for c in race.categories.itervalues():
-					c.distance = distance
-			race.showOval = False
-		if excelLink:
-			race.excelLink = excelLink
-
 		self.setNumSelect( None )
 		self.writeRace()
 		self.showPageName( _('Actions') )
