@@ -283,9 +283,18 @@ def getIndexPage( share=True ):
 #---------------------------------------------------------------------------
 
 def WriteHtmlIndexPage():
-	fname = os.path.splitext( Utils.getFileName() )[0] + 'Index.html'
-	with io.open(fname, 'w', encoding='utf-8') as f:
-		f.write( getIndexPage(share=False) )
+	fname = os.path.join( os.path.dirname(Utils.getFileName()), 'index.html' )
+	try:
+		with io.open(fname, 'rb') as f:
+			previousContent = f.read()
+	except Exception as e:
+		previousContent = ''
+	
+	content = getIndexPage(share=False)
+	if content != previousContent:
+		with io.open(fname, 'wb') as f:
+			f.write( getIndexPage(share=False) )
+	return fname
 
 class CrossMgrHandler( BaseHTTPRequestHandler ):
 	html_content = 'text/html; charset=utf-8'

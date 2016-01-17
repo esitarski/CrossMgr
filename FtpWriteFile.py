@@ -11,6 +11,7 @@ import threading
 import Utils
 import Model
 from ExportGrid import getHeaderBitmap, drawQRCode
+from WebServer import WriteHtmlIndexPage
 
 import inspect
 def lineno():
@@ -23,7 +24,10 @@ def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30,
 			host.makedirs( serverPath )
 		except Exception as e:
 			pass
-		host.upload( fname, serverPath + '/' + os.path.basename(fname) )
+		if isinstance(fname, basestring):
+			fname = [fname]
+		for f in fname:
+			host.upload_if_newer( f, serverPath + '/' + os.path.basename(f) )
 
 def FtpIsConfigured():
 	with Model.LockRace() as race:
@@ -71,7 +75,7 @@ def FtpWriteRaceHTML():
 		fp.write( html )
 	html = None
 	
-	FtpUploadFile( fname )
+	FtpUploadFile( [fname, WriteHtmlIndexPage()] )
 	return None
 
 class RealTimeFtpPublish( object ):
@@ -95,7 +99,7 @@ class RealTimeFtpPublish( object ):
 		
 		When we get a new entry, we schedule an update in the future to give time for more entries to accumulate.
 		The longer we wait, the more likely that more entries are going to arrive.
-		However, the out of date the new information will be.
+		However, the more out of date the new information will be.
 		
 		The logic below attempts to balance bandwidth and latency.
 		The procedure is based on latencyTime, the current time to wait before publishing an update,
