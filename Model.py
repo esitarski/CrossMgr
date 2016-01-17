@@ -981,6 +981,7 @@ class Race( object ):
 	
 	groupByStartWave = True
 	winAndOut = False
+	isTimeTrial = False
 	
 	city = ''
 	stateProv = ''
@@ -1029,7 +1030,6 @@ class Race( object ):
 		self.firstRecordedTime = None	# Used to trigger the race on the first recorded time.
 		
 		self.allCategoriesFinishAfterFastestRidersLastLap = True
-		self.isTimeTrial = False
 		
 		self.autocorrectLapsDefault = True
 		self.highPrecisionTimes = False

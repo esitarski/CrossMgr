@@ -7,7 +7,7 @@
 	For details, see sites.google.com/site/CrossMgrSoftware
 -->
 <head>
-<meta charset="UTF-8" author="Edward Sitarski" copyright="Edward Sitarski, 2011-2014" generator="CrossMgr" />  
+<meta charset="UTF-8" author="Edward Sitarski" copyright="Edward Sitarski, 2011-2016" generator="CrossMgr" />  
 <title id="idTitle">CrossMgr Race Results by Edward Sitarski</title>	<!-- Don't change this text! -->
 <style type="text/css">
 body { font-family: sans-serif; }
@@ -170,6 +170,7 @@ var raceIsUnstarted = null;
 var data = null;
 var catDetails = null;
 var isTimeTrial = null;
+var winAndOut = null;
 var catDetailsByName = {};
 var lapDetails = null;
 var hideDetails = null;		// If true, showDetails option will not be available.
@@ -2398,7 +2399,7 @@ function RefreshResultsTableArrival( raceTimesLength, raceTimesCopy )
 	var riderBib = [];		// Bib numbers in display sequence.
 	var riderInfo = {};		// Additional rider info.
 	
-	var leaderLaps;
+	var categoryLaps;
 	var leaderTime;
 	
 	var catTypes = (categoryCur == 'All' ? ['Start Wave', 'Component'] : ['Start Wave']);
@@ -2420,7 +2421,7 @@ function RefreshResultsTableArrival( raceTimesLength, raceTimesCopy )
 				var d = data[num];
 				
 				if( p == 0 ) {
-					leaderLaps = raceTimesLength[num];
+					categoryLaps = raceTimesLength[num];
 					leaderTime = raceTimesCopy[num].back() - raceTimesCopy[num][0];
 					if( d['factor'] )
 						leaderTime *= d.factor / 100.0;
@@ -2940,12 +2941,19 @@ function RefreshResultsTable()
 		}
 
 		// Cache the leader's data.
-		var leaderLaps	= raceTimesLength[leaderNum];
+		var categoryLaps	= raceTimesLength[leaderNum];
+		if( winAndOut ) {
+			for( var p = 0; p < catDetail.pos.length; ++p ) {
+				var num = catDetails[c].pos[p];
+				if( raceTimesLength[num] && raceTimesLength[num] > categoryLaps )
+					categoryLaps = raceTimesLength[num];
+			}
+		}
 		var leaderTime	= raceTimesLength[leaderNum] ? raceTimesCopy[leaderNum][raceTimesLength[leaderNum]-1] : 99999;
 		
-		if( leaderLaps > 2 && showLapsFrequency != 0 ) {
-			for( var i = 1; i < leaderLaps; ++i ) {
-				if( (i % showLapsFrequency == 0 || i == 1 || i == leaderLaps-1)  ) {
+		if( categoryLaps > 2 && showLapsFrequency != 0 ) {
+			for( var i = 1; i < categoryLaps; ++i ) {
+				if( (i % showLapsFrequency == 0 || i == 1 || i == categoryLaps-1)  ) {
 					createTextChild( td = createChild(tr, 'TH'), _('Lap') + ' ' + i );
 					++numHeaders;
 				}
@@ -3126,7 +3134,7 @@ function RefreshResultsTable()
 			if( finishTime == sameValue )
 				td.className = 'same-value';
 			
-			var gap = '';
+			var gap = (winAndOut ? FormatTimeGap(0) : '');
 			var gapValue = catDetail.gapValue[position-1];
 			if( isFinisher ) {
 				if( gapValue > 0 ) {
@@ -3143,7 +3151,6 @@ function RefreshResultsTable()
 				else if( roadRaceFinishTimes && gapValue == 0.0 && gapValueLast == 0.0 ) {
 					gap = sameValue;
 				}
-				
 				gapValueLast = gapValue;
 			}
 			
@@ -3161,8 +3168,8 @@ function RefreshResultsTable()
 					createTextChild( td = createTD(tr), '' );
 			}
 			
-			if( leaderLaps > 2 && showLapsFrequency != 0 ) {
-				for( var i = 1; i < leaderLaps; ++i ) {
+			if( categoryLaps > 2 && showLapsFrequency != 0 ) {
+				for( var i = 1; i < categoryLaps; ++i ) {
 					if( !(i % showLapsFrequency == 0 || i == 1 || i == raceTimesLength[num]-1)  )
 						continue
 					if( i >= raceTimesLength[num] ) {
@@ -3599,7 +3606,7 @@ function RaceChartUpdateInfo()
 function RefreshRaceChart()
 {
 	var canvasRaceChart = document.getElementById('idRaceChart');
-	if( !data || !canvasRaceChart || !canvasSupported )
+	if( !data || !canvasRaceChart || !canvasSupported || winAndOut )
 		return;
 
 	var iFromCategory = {};
@@ -4919,7 +4926,7 @@ function LapChart( ) {
 	this.draw = function() {
 		if( !this.canvas )
 			return;
-
+		
 		var that = this;
 		this.getData();
 		if( this.data.length == 0 || this.lapsMax <= 1 ) {
@@ -6011,7 +6018,7 @@ function onLoad()
 		document.getElementById('idTravelMap').className = 'hidden';
 	
 	canvasSupported = isCanvasSupported();
-	if( canvasSupported )
+	if( canvasSupported && !winAndOut )
 	{
 		var raceChartCanvas = document.getElementById('idRaceChart');
 		raceChartCanvas.addEventListener('click', function(event) { RaceChartProcessClick(event); }, false);
@@ -6049,14 +6056,15 @@ function onLoad()
 		document.getElementById('idTrackDiv').className = 'hidden';
 		document.getElementById('idRaceChartDiv').className = 'hidden';
 		document.getElementById('idSituationDiv').className = 'hidden';
-		document.getElementById['idLapChartDiv'].className = 'hidden';
+		document.getElementById('idLapChartDiv').className = 'hidden';
 	}
 	
 	document.getElementById('idRaceName').innerHTML = document.getElementById('idTitle').innerHTML;
-	if( email )
+	if( email ) {
 		document.getElementById('idEmail').href =
 							'mailto:' + email +
 							'?subject=' + replaceHtmlEntites(document.getElementById('idTitle').innerHTML);
+	}
 	
 	SetRaceTime();
 	

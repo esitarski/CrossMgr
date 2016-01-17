@@ -94,11 +94,16 @@ class RiderResult( object ):
 		return (statusSortSeq[self.status], toInt(self.pos), self.lastTime, getattr(self, 'startTime', 0.0) or 0.0, self.num)
 	
 	def _getWinAndOutComponentKey( self ):
-		k = self._getComponentKey()
-		laps = -k[1]
-		if laps == 0:
-			laps = 999999
-		return (k[0], laps,) + k[2:]		# Sort by increasing lap count.
+		return (statusSortSeq[self.status], self.laps if self.laps else 999999, toInt(self.pos), self.lastTime, getattr(self, 'startTime', 0.0) or 0.0, self.num)
+
+def assignFinishPositions( riderResults ):
+	Finisher = Model.Rider.Finisher
+	statusNames = Model.Rider.statusNames
+	for pos, rr in enumerate(riderResults):
+		if rr.status != Finisher:
+			rr.pos = statusNames[rr.status]
+		else:
+			rr.pos = u'{}'.format(pos+1)
 
 DefaultSpeed = 0.00001
 
@@ -453,13 +458,7 @@ def GetResultsCore( category ):
 					rr.ttNote = getattr(rider, 'ttNote', u'')
 		elif winAndOut:
 			riderResults.sort( key=RiderResult._getWinAndOutKey )
-			for pos, rr in enumerate(riderResults):
-				if rr.status != Finisher:
-					rr.pos = Model.Rider.statusNames[rr.status]
-				else:
-					rr.pos = u'{}'.format(pos+1)
-				
-			rr.pos = u'{}'.format(pos+1)
+			assignFinishPositions( riderResults )
 			
 		if roadRaceFinishTimes and not isTimeTrial:
 			for rr in riderResults:
@@ -480,7 +479,85 @@ def GetResultsCore( category ):
 	
 	return tuple(riderResults)
 
+def GetNonWaveCategoryResults( category ):
+	race = Model.race
+	if not race:
+		return tuple()
+	
+	isTimeTrial = race.isTimeTrial
+	winAndOut = race.winAndOut
+	highPrecision = Model.highPrecisionTimes()
+	
+	rrCache = {}
+	riderResults = []
+
+	getCategory = race.getCategory
+	for num in race.getRiderNums():
+		if not race.inCategory(num, category):
+			continue
+		
+		try:
+			riderResults.append( rrCache[num] )
+		except KeyError:
+			results = GetResults( getCategory(num), True )
+			rrCache.update( { (rr.num, rr) for rr in results } )
+			try:
+				riderResults.append( copy.deepcopy(rrCache[num]) )
+			except KeyError:
+				continue
+		
+		# Remove the start offset from the race times and finish times.
+		rr = riderResults[-1]
+		try:
+			startOffset = rr.raceTimes[0]
+		except:
+			startOffset = 0.0
+			
+		try:
+			rr.lastTime = max( 0.0, rr.lastTime - startOffset )
+		except:
+			pass
+			
+		rr.raceTimes = [t - startOffset for t in rr.raceTimes]
+	
+	# Sort the new results.
+	if winAndOut:	# Make sure we forward-sort the results.  This is required as we assign gaps/pos below and we do not want to use the winAndOut position.
+		riderResults.sort( key = RiderResult._getKey )
+	else:
+		riderResults.sort( key = RiderResult._getComponentKey if category.catType == Model.Category.CatComponent else RiderResult._getKey )
+	
+	# Assign finish position, gaps and status.
+	statusNames = Model.Rider.statusNames
+	leader = riderResults[0] if riderResults else None
+	
+	if leader:
+		leader.gap = ''
+		leader.gapValue = 0
+		for pos, rr in enumerate(riderResults):
+			rr.gap = ''
+			rr.gapValue = 0
+			if rr.status == Model.Rider.Finisher:
+				rr.pos = u'{}'.format( pos + 1 ) if not getattr(rr, 'relegated', False) else u'{} {}'.format(pos + 1, _('REL'))
+				if rr.laps != leader.laps:
+					lapsDown = leader.laps - rr.laps
+					rr.gap = u'-{} {}'.format(lapsDown, _('laps') if lapsDown > 1 else _('lap'))
+					rr.gapValue = -lapsDown
+				elif (rr != leader or winAndOut) and not (isTimeTrial and rr.lastTime == leader.lastTime):
+					rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
+					rr.gapValue = rr.lastTime - leader.lastTime
+			else:
+				rr.pos = statusNames[rr.status]
+	
+	if winAndOut:
+		riderResults.sort( key =
+			RiderResult._getWinAndOutComponentKey if category.catType == Model.Category.CatComponent else RiderResult._getWinAndOutKey
+		)
+		assignFinishPositions( riderResults )
+	
+	return tuple(riderResults)
+
 def GetResults( category, getExternalData = False ):
+
 	if category and category.catType != Model.Category.CatWave:
 		return GetNonWaveCategoryResults( category )
 
@@ -539,96 +616,12 @@ def GetResults( category, getExternalData = False ):
 			rr.lastTime = startOffset + ttPenalty + max(0.0, rr.lastTimeOrig - startOffset - ttPenalty) * factor
 			
 		riderResults.sort( key = RiderResult._getWinAndOutKey if race.winAndOut else RiderResult._getKey )
-	
-		# Assign finish position.
-		statusNames = Model.Rider.statusNames
-		for pos, rr in enumerate(riderResults):
-			if rr.status == Model.Rider.Finisher:
-				rr.pos = u'{}'.format( pos + 1 )
-			else:
-				rr.pos = statusNames[rr.status]
-				
+		assignFinishPositions( riderResults )
 		FixRelegations( riderResults )
 		riderResults = tuple( riderResults )
 	
 	return riderResults
 
-def GetNonWaveCategoryResults( category ):
-	race = Model.race
-	if not race:
-		return tuple()
-	
-	isTimeTrial = getattr( race, 'isTimeTrial', False )
-	winAndOut = race.winAndOut
-	highPrecision = Model.highPrecisionTimes()
-	
-	rrCache = {}
-	riderResults = []
-
-	getCategory = race.getCategory
-	for num in race.getRiderNums():
-		if not race.inCategory(num, category):
-			continue
-		
-		try:
-			riderResults.append( copy.copy(rrCache[num]) )
-		except KeyError:
-			results = GetResults( getCategory(num), True )
-			rrCache.update( { (rr.num, rr) for rr in results } )
-			try:
-				riderResults.append( copy.copy(rrCache[num]) )
-			except KeyError:
-				continue
-		
-		# Remove the start offset from the race times and finish times.
-		rr = riderResults[-1]
-		try:
-			startOffset = rr.raceTimes[0]
-		except:
-			startOffset = 0.0
-			
-		try:
-			rr.lastTime = max( 0.0, rr.lastTime - startOffset )
-		except:
-			pass
-			
-		rr.raceTimes = [t - startOffset for t in rr.raceTimes]
-	
-	# Sort the new results.
-	riderResults.sort( key =
-		RiderResult._getComponentKey if category.catType == Model.Category.CatComponent else RiderResult._getKey
-	)
-	
-	# Assign finish position, gaps and status.
-	statusNames = Model.Rider.statusNames
-	leader = riderResults[0] if riderResults else None
-	
-	if winAndOut:
-		riderResults.sort( key =
-			RiderResult._getWinAndOutComponentKey if category.catType == Model.Category.CatComponent else
-					RiderResult._getWinAndOutKey
-		)
-		
-	if leader:
-		leader.gap = ''
-		leader.gapValue = 0
-		for pos, rr in enumerate(riderResults):
-			rr.gap = ''
-			rr.gapValue = 0
-			if rr.status == Model.Rider.Finisher:
-				rr.pos = u'{}'.format( pos + 1 ) if not getattr(rr, 'relegated', False) else u'{} {}'.format(pos + 1, _('REL'))
-				if rr.laps != leader.laps:
-					lapsDown = leader.laps - rr.laps
-					rr.gap = u'-{} {}'.format(lapsDown, _('laps') if lapsDown > 1 else _('lap'))
-					rr.gapValue = -lapsDown
-				elif (winAndOut or rr != leader) and not (isTimeTrial and rr.lastTime == leader.lastTime):
-					rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
-					rr.gapValue = rr.lastTime - leader.lastTime
-			else:
-				rr.pos = statusNames[rr.status]
-	
-	return tuple(riderResults)
-	
 @Model.memoize
 def GetLastFinisherTime():
 	results = GetResultsCore( None )
