@@ -76,6 +76,8 @@ Where __xx__ is either __en__, __fr__ or __es__ for English, French or Spanish r
 ## Ftp HTML Publish...
 Publishes HTML formatted Results and Photos with FTP.
 
+Also publishes an "index.html" page showing all CrossMgr races in the same folder.
+
 You can also print a large QR-Code with the race results URL.  This enables spectators at the race to instantly access the results page from their smart phones.
 
 Field|Description
