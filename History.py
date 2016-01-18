@@ -163,6 +163,9 @@ class History( wx.Panel ):
 				(None, None, None, None, None),
 				(wx.NewId(), u'{}...'.format(_('Swap with Entry before')),	_('Swap with Entry before'), self.OnPopupSwapBefore, nonInterpCase),
 				(wx.NewId(), u'{}...'.format(_('Swap with Entry after')),_('Swap with Entry after'),	self.OnPopupSwapAfter, nonInterpCase),
+				(None, None, None, None, None),
+				(wx.NewId(), _('Pull After Lap') + u'...',	_('Pull After lap'),	self.OnPopupPull, nonInterpCase),
+				(wx.NewId(), _('DNF After Lap') + u'...',	_('DNF After lap'),	self.OnPopupDNF, nonInterpCase),
 			]
 			for id, name, text, callback, cCode in self.popupInfo:
 				if id:
@@ -215,6 +218,52 @@ class History( wx.Panel ):
 		if success and Utils.isMainWin():
 			Utils.getMainWin().refresh()
 			
+	def OnPopupPull( self, event ):
+		if not hasattr(self, 'rowPopup'):
+			return
+			
+		entry = self.history[self.colPopup][self.rowPopup]
+
+		if not entry:
+			return
+		if not Utils.MessageOKCancel( self,
+			u'{}: {}  {} {} - {}?'.format(
+				_('Bib'), entry.num,
+				_('Pull after lap'), entry.lap, Utils.formatTime(entry.t+1, True), ),
+			_('Pull Rider') ):
+			return
+		try:
+			undo.pushState()
+			with Model.LockRace() as race:
+				race.getRider(entry.num).setStatus( Model.Rider.Pulled, entry.t + 1 )
+				race.setChanged()
+		except:
+			pass
+		wx.CallAfter( self.refresh )
+		wx.CallAfter( Utils.refreshForecastHistory )
+		
+	def OnPopupDNF( self, event ):
+		if not hasattr(self, 'rowPopup'):
+			return
+			
+		entry = self.history[self.colPopup][self.rowPopup]
+
+		if not Utils.MessageOKCancel( self,
+			u'{}: {}  {} {} - {}?'.format(
+				_('Bib'), entry.num,
+				_('DNF after lap'), entry.lap, Utils.formatTime(entry.t+1, True), ),
+			_('DNF Rider') ):
+			return
+		try:
+			undo.pushState()
+			with Model.LockRace() as race:
+				race.getRider(entry.num).setStatus( Model.Rider.DNF, entry.t + 1 )
+				race.setChanged()
+		except:
+			pass
+		wx.CallAfter( self.refresh )
+		wx.CallAfter( Utils.refreshForecastHistory )
+		
 	def OnPopupCorrect( self, event ):
 		if hasattr(self, 'rowPopup'):
 			EditEntry.CorrectNumber( self, self.history[self.colPopup][self.rowPopup] )
@@ -356,13 +405,28 @@ class History( wx.Panel ):
 		category = FixCategories( self.categoryChoice, getattr(race, 'historyCategory', 0) )
 		self.hbs.Layout()
 
-		maxLaps = race.numLaps
+		maxLaps = 0
 		doLapsToGo = True
-		if not maxLaps:
-			maxLaps = race.getMaxLap()
-			if race.isRunning():
-				maxLaps += 2
-			doLapsToGo = False
+		if race.winAndOut:
+			entries = race.interpolate()
+			if entries:
+				try:
+					if category:
+						maxLaps = max( e.lap for e in entries if race.inCategory(e.num, category) and not e.interp )
+					else:
+						maxLaps = max( e.lap for e in entries if not e.interp )
+				except ValueError:
+					pass
+				if race.isRunning():
+					maxLaps += 2
+		else:
+			maxLaps = race.numLaps
+			doLapsToGo = True
+			if not maxLaps:
+				maxLaps = race.getMaxLap()
+				if race.isRunning():
+					maxLaps += 2
+				doLapsToGo = False
 				
 		entries = race.interpolateLap( maxLaps, False )
 		entries = [e for e in entries if e.lap <= race.getCategoryNumLaps(e.num)]
