@@ -1,5 +1,6 @@
 import wx
-import  wx.lib.colourselect as  csel
+import wx.lib.colourselect as  csel
+import wx.lib.intctrl as intctrl
 import math
 import datetime
 import Model
@@ -30,6 +31,11 @@ class LapCounterOptions( wx.Dialog ):
 		fgs.Add( wx.StaticText(self, label=_('Background') + u':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 		self.background = csel.ColourSelect(self, colour=lapCounter.GetBackgroundColour(), size=(100,-1))
 		fgs.Add( self.background )
+		
+		fgs.Add( wx.StaticText(self, label=_('Lap Cycle') + u':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
+		self.lapCounterCycle = intctrl.IntCtrl(self, value=lapCounter.lapCounterCycle, min=0, max=None, limited=True, allow_none=True, )
+		fgs.Add( self.lapCounterCycle )
+		
 		vs.Add( fgs, flag=wx.ALL, border=16 )
 		
 		vs.Add( wx.StaticText(self, label=_("Seconds before Leader's ETA to change Lap Counter") + u':'), flag=wx.LEFT|wx.TOP|wx.RIGHT|wx.ALIGN_RIGHT, border=8 )
@@ -59,6 +65,8 @@ class LapCounterOptions( wx.Dialog ):
 
 class LapCounter( wx.Panel ):
 	millis = 333
+	lapCounterCycle = None
+	countdownTimer = False
 	
 	def __init__( self, parent, labels=[], id=wx.ID_ANY, size=(640,480), style=0 ):
 		super(LapCounter, self).__init__( parent, id, size=size, style=style )
@@ -75,8 +83,6 @@ class LapCounter( wx.Panel ):
 		self.font = None
 		self.fontSize = -1
 		
-		self.countdownTimer = False
-		
 		self.SetCursor( wx.StockCursor(wx.CURSOR_RIGHT_BUTTON) )
 		self.SetBackgroundColour( wx.BLACK )
 		self.SetForegroundColour( wx.GREEN )
@@ -88,12 +94,14 @@ class LapCounter( wx.Panel ):
 			self.SetForegroundColour( d.foreground.GetColour() )
 			self.SetBackgroundColour( d.background.GetColour() )
 			self.SetCountdownTimer( d.counterType.GetSelection() == 1 )
+			self.lapCounterCycle = d.lapCounterCycle.GetValue() or None
 			
 			race = Model.race
 			if race:
 				race.lapCounterForeground = self.GetForegroundColour().GetAsString(wx.C2S_HTML_SYNTAX)
 				race.lapCounterBackground = self.GetBackgroundColour().GetAsString(wx.C2S_HTML_SYNTAX)
 				race.lapCounterBackground = self.GetBackgroundColour().GetAsString(wx.C2S_HTML_SYNTAX)
+				race.lapCounterCycle = self.lapCounterCycle
 				race.countdownTimer = self.countdownTimer
 				race.setChanged()
 			wx.CallAfter( self.Refresh )
@@ -118,8 +126,10 @@ class LapCounter( wx.Panel ):
 		if self.countdownTimer and not self.timer.IsRunning():
 			self.OnTimer()
 
-	def SetLabels( self, labels=[] ):
+	def SetLabels( self, labels=[], showTime=False ):
 		labels = labels or [(u'\u25AF\u25AF', False)]
+		
+		self.showTime = showTime
 		
 		''' labels is of the format [(label1, flash), (label2, flash)] '''
 		if self.labels == labels:
@@ -202,12 +212,17 @@ class LapCounter( wx.Panel ):
 		if not self.labels:
 			return
 		
+		def getCycleLap( label ):
+			if not self.lapCounterCycle or not label.strip().isdigit():
+				return label
+			return u'{}'.format(int(label.strip()) % self.lapCounterCycle)
+		
 		if len(self.labels) <= 2:
 			lineHeight = (height - border*2) // len(self.labels)
 			#lineHeight *= (1.4 if len(self.labels) == 1 else 1)
 			dc.SetFont( self.GetFont(lineHeight) )
 			
-			maxWidth = max( dc.GetTextExtent(label)[0] for label, flash in self.labels ) if self.labels else 0
+			maxWidth = max( dc.GetTextExtent(getCycleLap(label))[0] for label, flash in self.labels ) if self.labels else 0
 			if maxWidth > width - border*2:
 				lineHeight = int( lineHeight * float(width - border*2) / float(maxWidth) )
 				dc.SetFont( self.GetFont(lineHeight) )
@@ -216,6 +231,7 @@ class LapCounter( wx.Panel ):
 			xRight = width - (width - maxWidth) // 2
 			yTop = (height - (lineHeight * len(self.labels))) // 2
 			for label, flash in self.labels:
+				label = getCycleLap(label)
 				if not flash or self.flashOn:
 					dc.DrawText( label, xRight - dc.GetTextExtent(label)[0], yTop )
 				yTop += lineHeight
@@ -224,16 +240,17 @@ class LapCounter( wx.Panel ):
 			width /= 2
 			dc.SetFont( self.GetFont(lineHeight) )
 			
-			maxWidth = max( dc.GetTextExtent(label)[0] for label, flash in self.labels ) if self.labels else 0
+			maxWidth = max( dc.GetTextExtent(getCycleLap(label))[0] for label, flash in self.labels ) if self.labels else 0
 			if maxWidth > width - border*2:
 				lineHeight = int( lineHeight * float(width - border*2) / float(maxWidth) )
 				dc.SetFont( self.GetFont(lineHeight) )
-				maxWidth = max( dc.GetTextExtent(label)[0] for label, flash in self.labels ) if self.labels else 0
+				maxWidth = max( dc.GetTextExtent(getCycleLap(label))[0] for label, flash in self.labels ) if self.labels else 0
 			
 			xRight = width - (width - maxWidth) // 2
 			for i in xrange(0, 4, 2):
 				yTop = (height - (lineHeight * 2)) // 2
 				for label, flash in self.labels[i:i+2]:
+					label = getCycleLap(label)
 					if not flash or self.flashOn:
 						dc.DrawText( label, xRight - dc.GetTextExtent(label)[0], yTop )
 					yTop += lineHeight
@@ -242,17 +259,25 @@ class LapCounter( wx.Panel ):
 	def commit( self ):
 		pass
 		
+	def getLapCycle( self, category ):
+		lap = category.getNumLaps()
+		if not self.lapCounterCycle:
+			return lap
+		return lap % self.lapCounterCycle
+					
 	def refresh( self ):
 		race = Model.race
 		if race:
 			self.SetCountdownTimer( race.countdownTimer )
 			self.SetForegroundColour( Utils.colorFromStr(race.lapCounterForeground) )
 			self.SetBackgroundColour( Utils.colorFromStr(race.lapCounterBackground) )
+			self.lapCounterCycle = race.lapCounterCycle or None
 			if race.isUnstarted():
+				
 				if all( category.getNumLaps() for category in race.getCategories(startWaveOnly=True) ):
-					lapCounter = [(u'{}'.format(category.getNumLaps()),False) for category in race.getCategories(startWaveOnly=True)]
+					lapCounter = [(u'{}'.format(self.getLapCycle(category)),False) for category in race.getCategories(startWaveOnly=True)]
 				else:
-					lapCounter = [(u'{} min'.format(race.minutes),False)] + [(u'{}'.format(category.getNumLaps()),False)
+					lapCounter = [(u'{} min'.format(race.minutes),False)] + [(u'{}'.format(self.getLapCycle(category)),False)
 						for category in race.getCategories(startWaveOnly=True) if category.getNumLaps()]
 				self.SetLabels( lapCounter )
 			elif race.isFinished():
