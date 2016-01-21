@@ -11,10 +11,12 @@ import wx.lib.agw.flatnotebook as flatnotebook
 from RaceInputState import RaceInputState
 import ImageIO
 from SetGraphic			import SetGraphicDialog
-from FtpWriteFile import FtpProperties
+from FtpWriteFile import FtpProperties, FtpUploadFile
+from LapCounter import LapCounterProperties
 from GeoAnimation import GeoAnimation, GeoTrack
 from GpxImport import GetGeoTrack
 import Template
+from BatchPublishAttrs import batchPublishAttr, batchPublishRaceAttr
 import JChipSetup
 
 #------------------------------------------------------------------------------------------------
@@ -22,9 +24,9 @@ import JChipSetup
 def GetTemplatesFolder():
 	return os.path.join( os.path.expanduser("~"), 'CrossMgrTemplates' )
 
-def addToFGS( fgs, labelFieldFormats ):
+def addToFGS( fgs, labelFieldBatchPublish ):
 	row = 0
-	for i, (item, column, flag) in enumerate(labelFieldFormats):
+	for i, (item, column, flag) in enumerate(labelFieldBatchPublish):
 		if not item:
 			continue
 		if column == 1:
@@ -111,7 +113,7 @@ class GeneralInfoProperties( wx.Panel ):
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
 		fieldAlign = wx.EXPAND
 		
-		labelFieldFormats = [
+		labelFieldBatchPublish = [
 			(self.raceNameLabel,	0, labelAlign),	(self.raceName,				1, fieldAlign),
 			(self.raceCityLabel,	0, labelAlign),	(self.locationSizer,		1, fieldAlign),
 			(self.dateLabel,		0, labelAlign),	(self.dateDisciplineSizer,	1, fieldAlign),
@@ -120,7 +122,7 @@ class GeneralInfoProperties( wx.Panel ):
 			(self.commissaireLabel,	0, labelAlign),	(self.commissaire, 			1, fieldAlign),
 			(self.memoLabel,		0, labelAlign),	(self.memo, 				1, fieldAlign),
 		]
-		addToFGS( fgs, labelFieldFormats )
+		addToFGS( fgs, labelFieldBatchPublish )
 		
 		ms.Add( fgs, 1, flag=wx.EXPAND|wx.ALL, border=16 )
 
@@ -215,7 +217,7 @@ class RaceOptionsProperties( wx.Panel ):
 		
 		blank = lambda : wx.StaticText( self, label=u'' )
 		
-		labelFieldFormats = [
+		labelFieldBatchPublish = [
 			(blank(),				0, labelAlign),		(self.timeTrial,				1, fieldAlign),
 			(blank(),				0, labelAlign),		(self.allCategoriesFinishAfterFastestRidersLastLap,	1, fieldAlign),
 			(blank(),				0, labelAlign),		(self.autocorrectLapsDefault,	1, fieldAlign),
@@ -229,7 +231,7 @@ class RaceOptionsProperties( wx.Panel ):
 			(blank(),				0, labelAlign),		(self.winAndOut,				1, fieldAlign),
 			(self.licenseLinkTemplateLabel,0, labelAlign),(self.licenseLinkTemplate,		1, fieldAlign),
 		]
-		addToFGS( fgs, labelFieldFormats )
+		addToFGS( fgs, labelFieldBatchPublish )
 		
 		ms.Add( fgs, 1, flag=wx.EXPAND|wx.ALL, border=16 )
 
@@ -718,6 +720,130 @@ class AnimationProperties( wx.Panel ):
 		race.finishTop = self.finishTop.GetValue()
 
 #------------------------------------------------------------------------------------------------
+class BatchPublishProperties( wx.Panel ):
+	def __init__( self, parent, id = wx.ID_ANY ):
+		super(BatchPublishProperties, self).__init__( parent, id )
+
+		GetTranslation = _
+		
+		explain = wx.StaticText( self, label=_('Choose the formats to publish as a Batch.') )
+		
+		fgs = wx.FlexGridSizer( cols=2, rows=0, hgap=8, vgap=8 )
+		self.widget = []
+		fgs.Add( wx.StaticText(self, label=('Format') ) )
+		fgs.Add( wx.StaticText(self, label=('Ftp Upload') ) )
+		for i, attr in enumerate(batchPublishAttr):
+			attrCB = wx.CheckBox(self, label=GetTranslation(attr[0]))
+			attrCB.Bind( wx.EVT_CHECKBOX, lambda event, iAttr=i: self.onSelect(iAttr) )
+			ftpCB = wx.CheckBox(self, label=u'          ')
+			fgs.Add( attrCB )
+			fgs.Add( ftpCB, flag=wx.ALIGN_CENTER )
+			self.widget.append( (attrCB, ftpCB) )
+		
+		self.bikeRegChoice = wx.RadioBox(
+			self,
+			label=_('BikeReg'),
+			choices=[_('None'), u'CrossResults', u'RoadResults'],
+			majorDimension=1
+		)
+		
+		vs = wx.BoxSizer( wx.VERTICAL )
+		vs.Add( explain, flag=wx.TOP|wx.LEFT|wx.RIGHT, border=16 )
+		vs.Add( fgs, flag=wx.TOP|wx.LEFT|wx.RIGHT, border=16 )
+		vs.Add( self.bikeRegChoice, flag=wx.ALL, border=16 )
+		
+		self.SetSizer( vs )
+		
+	def onSelect( self, iAttr ):
+		v = self.widget[iAttr][0].GetValue()
+		if not v:
+			self.widget[iAttr][1].SetValue( False )
+		self.widget[iAttr][1].Enable( v )
+		
+	def refresh( self ):
+		race = Model.race
+		for i, attr in enumerate(batchPublishAttr):
+			raceAttr = batchPublishRaceAttr[i]
+			attrCB, ftpCB = self.widget[i]
+			v = getattr( race, raceAttr, 0 )
+			if v & 1:
+				attrCB.SetValue( True )
+				ftpCB.Enable( True )
+				ftpCB.SetValue( v & 2 != 0 )
+			else:
+				attrCB.SetValue( False )
+				ftpCB.SetValue( False )
+				ftpCB.Enable( False )
+		self.bikeRegChoice.SetSelection( getattr(race, 'publishFormatBikeReg', 0) )
+		
+	def commit( self ):
+		race = Model.race
+		for i, attr in enumerate(batchPublishAttr):
+			raceAttr = batchPublishRaceAttr[i]
+			attrCB, ftpCB = self.widget[i]
+			setattr( race, raceAttr, 0 if not attrCB.GetValue() else (1 + (2 if ftpCB.GetValue() else 0)) )
+		race.publishFormatBikeReg = self.bikeRegChoice.GetSelection()
+				
+def doBatchPublish( silent=False ):
+	race = Model.race
+	mainWin = Utils.getMainWin()
+	ftpFiles = []
+	for i, attr in enumerate(batchPublishAttr):
+		v = getattr( race, batchPublishRaceAttr[i], 0 )
+		if v & 1:
+			getattr( mainWin, attr[2] )( silent=True )
+			if v & 2:
+				ftpFiles.append( mainWin.getFormatFilename(attr[1]) )
+	
+	publishFormatBikeReg = getattr(race, 'publishFormatBikeReg', 0)
+	print 'publishFormatBikeReg', publishFormatBikeReg
+	if publishFormatBikeReg == 1:
+		mainWin.menuExportCrossResults( silent=True )
+	elif publishFormatBikeReg == 2:
+		mainWin.menuExportRoadResults( silent=True )
+	
+	e = None
+	if ftpFiles:
+		e = FtpUploadFile( ftpFiles )
+		if e and not silent:
+			Utils.MessageOK( mainWin, u'{}\n\n{}'.format( _('Ftp Upload Error'), e), _('Ftp Upload Error'), wx.ICON_ERROR )
+	if not silent and not e:
+		Utils.MessageOK( mainWin, _('Batch Publish Complete'), _('Batch Publish Complete') )
+
+class BatchPublishPropertiesDialog( wx.Dialog ):
+	def __init__( self, parent, id=wx.ID_ANY ):
+		super(BatchPublishPropertiesDialog, self).__init__( parent, id, _("Batch Publish Results"),
+					style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+					
+		self.batchPublishProperties = BatchPublishProperties(self)
+		self.batchPublishProperties.refresh()
+		
+		self.okBtn = wx.Button( self, label=_('Publish') )
+		self.okBtn.Bind( wx.EVT_BUTTON, self.onOK )
+		self.cancelBtn = wx.Button( self, id=wx.ID_CANCEL )
+		self.cancelBtn.Bind( wx.EVT_BUTTON, self.onCancel )
+
+		border = 4
+		hb = wx.BoxSizer( wx.HORIZONTAL )
+		hb.Add( self.okBtn, border = border, flag=wx.ALL )
+		hb.Add( self.cancelBtn, border = border, flag=wx.ALL )
+		self.okBtn.SetDefault()
+		
+		vs = wx.BoxSizer( wx.VERTICAL )
+		vs.Add( self.batchPublishProperties )
+		vs.Add( hb, flag=wx.ALIGN_CENTRE )
+		
+		self.SetSizerAndFit( vs )
+		
+	def onOK( self, event ):
+		self.batchPublishProperties.commit()
+		doBatchPublish()
+		self.EndModal( wx.ID_OK )
+		
+	def onCancel( self, event ):
+		self.EndModal( wx.ID_CANCEL )
+
+#------------------------------------------------------------------------------------------------
 class NotesProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(NotesProperties, self).__init__( parent, id )
@@ -801,13 +927,13 @@ class FilesProperties( wx.Panel ):
 		
 		blank = lambda : wx.StaticText( self, label='' )
 		
-		labelFieldFormats = [
+		labelFieldBatchPublish = [
 			(self.fileNameLabel,		0, labelAlign),		(self.fileName,			1, fieldAlign),
 			(self.excelButton,			0, labelAlign),		(self.excelName,		1, fieldAlign),
 			(self.categoriesFileLabel,	0, labelAlign),		(self.categoriesFile,	1, fieldAlign),
 			(self.templateFileNameLabel,0, labelAlign),		(self.templateFileName,	1, fieldAlign),
 		]
-		addToFGS( fgs, labelFieldFormats )
+		addToFGS( fgs, labelFieldBatchPublish )
 		ms.Add( fgs, 1, flag=wx.EXPAND|wx.ALL, border=16 )
 		
 	def excelButtonCallback( self, event ):
@@ -863,9 +989,11 @@ class Properties( wx.Panel ):
 			('rfidProperties',			RfidProperties,				_('RFID') ),
 			('webProperties',			WebProperties,				_('Web') ),
 			('ftpProperties',			FtpProperties,				_('FTP') ),
+			('batchPublishProperties',	BatchPublishProperties,		_('Batch Publish') ),
 			('gpxProperties',			GPXProperties,				_('GPX') ),
 			('notesProperties',			NotesProperties,			_('Notes') ),
 			('cameraProperties',		CameraProperties,			_('Camera') ),
+			('lapCounterProperties',	LapCounterProperties,		_('Lap Counter') ),
 			('animationProperties',		AnimationProperties,		_('Animation') ),
 			('filesProperties',			FilesProperties,			_('Files/Excel') ),
 		]
@@ -1097,6 +1225,7 @@ class Properties( wx.Panel ):
 		Model.resetCache()
 		mainWin = Utils.getMainWin()
 		if mainWin:
+			wx.CallAfter( mainWin.lapCounterDialog.refresh )
 			wx.CallAfter( mainWin.writeRace, False )
 		wx.CallAfter( Utils.refreshForecastHistory )
 		if not success and mainWin:

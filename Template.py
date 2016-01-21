@@ -8,74 +8,78 @@ import Version
 import Utils
 import Model
 from GeoAnimation import GpsPoint, GeoTrack
+from BatchPublishAttrs import batchPublishRaceAttr
 
 class Template( object ):
-	templateAttributes = {
-		'distanceUnit',	
-		'rule80MinLapCount',
+	templateAttributes = set.union( {
+			'distanceUnit',	
+			'rule80MinLapCount',
 
-		'isTimeTrial',
-		'roadRaceFinishTimes',
+			'isTimeTrial',
+			'roadRaceFinishTimes',
 
-		'enableJChipIntegration',
-		'resetStartClockOnFirstTag',
-		'skipFirstTagRead',
+			'enableJChipIntegration',
+			'resetStartClockOnFirstTag',
+			'skipFirstTagRead',
 
-		'chipReaderType',
-		'chipReaderPort',
-		'chipReaderIpAddr',
+			'chipReaderType',
+			'chipReaderPort',
+			'chipReaderIpAddr',
 
-		'autocorrectLapsDefault',
+			'autocorrectLapsDefault',
 
-		'enableUSBCamera',
-		'photosAtRaceEndOnly',
+			'enableUSBCamera',
+			'photosAtRaceEndOnly',
+			
+			'advancePhotoMilliseconds',
+			'finishKMH',
 		
-		'advancePhotoMilliseconds',
-		'finishKMH',
-	
-		'ftpUploadDuringRace',
-		'ftpUploadPhotos',
+			'ftpUploadDuringRace',
+			'ftpUploadPhotos',
+			
+			'ftpHost',
+			'ftpUser',
+			'ftpPassword',
+			'ftpPath',
+
+			'groupByStartWave',
+			'winAndOut',
+
+			'city',
+			'stateProv',
+			'country',
+			'discipline',
+
+			'showCourseAnimationInHtml',
+			'licenseLinkTemplate',
+			'hideDetails',
+
+			'lapCounterForeground',
+			'lapCounterBackground',
+			'secondsBeforeLeaderToFlipLapCounter',
+			'countdownTimer',
+			'lapCounterCycle',
+
+			'setNoDataDNS',
+
+			'organizer',
 		
-		'ftpHost',
-		'ftpUser',
-		'ftpPassword',
-		'ftpPath',
+			'minutes',
 
-		'groupByStartWave',
-		'winAndOut',
-
-		'city',
-		'stateProv',
-		'country',
-		'discipline',
-
-		'showCourseAnimationInHtml',
-		'licenseLinkTemplate',
-		'hideDetails',
-
-		'lapCounterForeground',
-		'lapCounterBackground',
-		'secondsBeforeLeaderToFlipLapCounter',
-		'countdownTimer',
-
-		'setNoDataDNS',
-
-		'organizer',
-	
-		'minutes',
-
-		'allCategoriesFinishAfterFastestRidersLastLap',
-	
-		'highPrecisionTimes'
-		'syncCategories',
-		'finishTop',
-		'reverseDirection',
+			'allCategoriesFinishAfterFastestRidersLastLap',
 		
-		'headerImage',
-		'email',
-		
-		'course',
-	}
+			'highPrecisionTimes'
+			'syncCategories',
+			'finishTop',
+			'reverseDirection',
+			
+			'headerImage',
+			'email',
+			
+			'course',
+		},
+		set(batchPublishRaceAttr),
+	)
 	
 	def __init__( self, race=None ):
 		self.template = {}

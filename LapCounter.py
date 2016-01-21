@@ -6,63 +6,101 @@ import datetime
 import Model
 import Utils
 
-class LapCounterOptions( wx.Dialog ):
-	def __init__( self, parent, lapCounter, id=wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, _("Lap Counter Options"),
-						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
-		
-		self.lapCounter = lapCounter
-		
-		vs = wx.BoxSizer( wx.VERTICAL )
-		
-		vs.Add( wx.StaticText(self, label=_('Lap Counter Options') + u':'), flag=wx.LEFT|wx.TOP|wx.RIGHT, border=8 )
+def getLapCounterOptions( isDialog ):
+	parentClass = wx.Dialog if isDialog else wx.Panel
+	class LapCounterOptionsClass( parentClass ):
+		def __init__( self, parent, id=wx.ID_ANY ):
+			if isDialog:
+				super( LapCounterOptionsClass, self ).__init__( parent, id, _("Lap Counter Options"),
+							style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+			else:
+				super( LapCounterOptionsClass, self ).__init__( parent, id )
+			
+			vs = wx.BoxSizer( wx.VERTICAL )
+			
+			vs.Add( wx.StaticText(self, label=_('Lap Counter Options')), flag=wx.LEFT|wx.TOP|wx.RIGHT, border=8 )
 
-		fgs = wx.FlexGridSizer( cols=2, vgap=4, hgap=4 )
-		
-		fgs.Add( wx.StaticText(self, label=_('Type') + u':'), flag=wx.ALIGN_CENTRE_VERTICAL )
-		self.counterType = wx.Choice(self, choices=(_('Lap Counter'), _('Countdown Timer')))
-		self.counterType.SetSelection( 0 if not self.lapCounter.countdownTimer else 1 )
-		fgs.Add( self.counterType )
-		
-		fgs.Add( wx.StaticText(self, label=_('Foreground') + u':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-		self.foreground = csel.ColourSelect(self, colour=lapCounter.GetForegroundColour(), size=(100,-1))
-		fgs.Add( self.foreground )
-		
-		fgs.Add( wx.StaticText(self, label=_('Background') + u':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-		self.background = csel.ColourSelect(self, colour=lapCounter.GetBackgroundColour(), size=(100,-1))
-		fgs.Add( self.background )
-		
-		fgs.Add( wx.StaticText(self, label=_('Lap Cycle') + u':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-		self.lapCounterCycle = intctrl.IntCtrl(self, value=lapCounter.lapCounterCycle, min=0, max=None, limited=True, allow_none=True, )
-		fgs.Add( self.lapCounterCycle )
-		
-		vs.Add( fgs, flag=wx.ALL, border=16 )
-		
-		vs.Add( wx.StaticText(self, label=_("Seconds before Leader's ETA to change Lap Counter") + u':'), flag=wx.LEFT|wx.TOP|wx.RIGHT|wx.ALIGN_RIGHT, border=8 )
-		self.slider = wx.Slider(
-			self,
-			value=Model.race.secondsBeforeLeaderToFlipLapCounter if Model.race else 5, minValue=1, maxValue=180,
-			size=(360, -1), 
-			style = wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS 
-		)
-		self.slider.SetTickFreq(5, 1)
-		vs.Add( self.slider, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM, border=8 )
-		
-		buttonSizer = wx.StdDialogButtonSizer()
-		buttonSizer.AddButton( wx.Button(self, wx.ID_OK) )
-		buttonSizer.AddButton( wx.Button(self, wx.ID_CANCEL) )
-		buttonSizer.Realize()
-		
-		vs.Add( buttonSizer, flag=wx.ALL, border=16 )
-		
-		self.SetSizerAndFit( vs )
-		
-	def OnOK( self, event ):
-		self.EndModal( wx.ID_OK )
-		
-	def OnCancel( self, event ):
-		self.EndModal( wx.ID_CANCEL )
+			fgs = wx.FlexGridSizer( cols=2, vgap=4, hgap=4 )
+			
+			fgs.Add( wx.StaticText(self, label=_('Type')), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
+			self.counterType = wx.Choice(self, choices=(_('Lap Counter'), _('Countdown Timer')))
+			self.counterType.SetSelection( 0 )
+			fgs.Add( self.counterType )
+			
+			fgs.Add( wx.StaticText(self, label=_('Foreground')), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
+			self.foreground = csel.ColourSelect(self, colour=wx.GREEN, size=(100,-1))
+			fgs.Add( self.foreground )
+			
+			fgs.Add( wx.StaticText(self, label=_('Background')), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
+			self.background = csel.ColourSelect(self, size=(100,-1))
+			fgs.Add( self.background )
+			
+			fgs.Add( wx.StaticText(self, label=_('Lap Cycle')), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
+			self.lapCounterCycle = intctrl.IntCtrl(self, min=0, max=None, limited=True, allow_none=True, )
+			fgs.Add( self.lapCounterCycle )
+			
+			vs.Add( fgs, flag=wx.ALL, border=16 )
+			
+			vs.Add( wx.StaticText(self, label=_("Seconds before Leader's ETA to change Lap Counter")), flag=wx.LEFT|wx.TOP|wx.RIGHT, border=8 )
+			self.slider = wx.Slider(
+				self,
+				value=Model.race.secondsBeforeLeaderToFlipLapCounter if Model.race else 5, minValue=1, maxValue=180,
+				size=(360, -1), 
+				style = wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS 
+			)
+			self.slider.SetTickFreq(5, 1)
+			vs.Add( self.slider, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM, border=8 )
+			
+			if isDialog:
+				self.okButton = wx.Button(self, wx.ID_OK)
+				self.okButton.Bind(wx.EVT_BUTTON, self.OnOK)
+				self.cancelButton = wx.Button(self, wx.ID_CANCEL)
+				self.cancelButton.Bind(wx.EVT_BUTTON, self.OnCancel)
+				
+				buttonSizer = wx.StdDialogButtonSizer()
+				buttonSizer.AddButton( self.okButton )
+				buttonSizer.AddButton( self.cancelButton )
+				buttonSizer.Realize()
+				
+				vs.Add( buttonSizer, flag=wx.ALL, border=16 )
+				
+				self.refresh()
+			
+			self.SetSizerAndFit( vs )
+			
+		def commit( self ):
+			race = Model.race
+			if race:
+				race.lapCounterForeground = self.foreground.GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
+				race.lapCounterBackground = self.background.GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
+				race.lapCounterCycle = self.lapCounterCycle.GetValue() or None
+				race.countdownTimer = (self.counterType.GetSelection() == 1)
+				race.secondsBeforeLeaderToFlipLapCounter = self.slider.GetValue()
+			
+		def refresh( self ):
+			race = Model.race
+			if race:
+				self.counterType.SetSelection( 1 if race.countdownTimer else 0 )
+				self.foreground.SetColour( Utils.colorFromStr(race.lapCounterForeground) )
+				self.background.SetColour( Utils.colorFromStr(race.lapCounterBackground) )
+				self.lapCounterCycle.SetValue( race.lapCounterCycle or None )
+				self.slider.SetValue( race.secondsBeforeLeaderToFlipLapCounter )
+			
+		def OnOK( self, event ):
+			self.commit()
+			self.EndModal( wx.ID_OK )
+			
+		def OnCancel( self, event ):
+			self.EndModal( wx.ID_CANCEL )
+			
+	return LapCounterOptionsClass
 
+def LapCounterOptions( *args, **kwargs ):
+	return getLapCounterOptions(True)( *args, **kwargs )
+	
+def LapCounterProperties( *args, **kwargs ):
+	return getLapCounterOptions(False)( *args, **kwargs )
+	
 class LapCounter( wx.Panel ):
 	millis = 333
 	lapCounterCycle = None
@@ -88,24 +126,12 @@ class LapCounter( wx.Panel ):
 		self.SetForegroundColour( wx.GREEN )
 
 	def OnOptions( self, event ):
-		d = LapCounterOptions( self, self )
+		d = LapCounterOptions( self )
 		if d.ShowModal() == wx.ID_OK:
-			
-			self.SetForegroundColour( d.foreground.GetColour() )
-			self.SetBackgroundColour( d.background.GetColour() )
-			self.SetCountdownTimer( d.counterType.GetSelection() == 1 )
-			self.lapCounterCycle = d.lapCounterCycle.GetValue() or None
-			
-			race = Model.race
-			if race:
-				race.lapCounterForeground = self.GetForegroundColour().GetAsString(wx.C2S_HTML_SYNTAX)
-				race.lapCounterBackground = self.GetBackgroundColour().GetAsString(wx.C2S_HTML_SYNTAX)
-				race.lapCounterBackground = self.GetBackgroundColour().GetAsString(wx.C2S_HTML_SYNTAX)
-				race.lapCounterCycle = self.lapCounterCycle
-				race.countdownTimer = self.countdownTimer
-				race.setChanged()
-			wx.CallAfter( self.Refresh )
-		
+			wx.CallAfter( self.refresh )
+			mainWin = Utils.getMainWin()
+			if mainWin:
+				wx.CallAfter( mainWin.lapCounterDialog.refresh )
 		d.Destroy()
 		
 	def OnTimer( self, event=None ):
@@ -261,9 +287,7 @@ class LapCounter( wx.Panel ):
 		
 	def getLapCycle( self, category ):
 		lap = category.getNumLaps()
-		if not self.lapCounterCycle:
-			return lap
-		return lap % self.lapCounterCycle
+		return lap % self.lapCounterCycle if self.lapCounterCycle else lap
 					
 	def refresh( self ):
 		race = Model.race
@@ -273,7 +297,6 @@ class LapCounter( wx.Panel ):
 			self.SetBackgroundColour( Utils.colorFromStr(race.lapCounterBackground) )
 			self.lapCounterCycle = race.lapCounterCycle or None
 			if race.isUnstarted():
-				
 				if all( category.getNumLaps() for category in race.getCategories(startWaveOnly=True) ):
 					lapCounter = [(u'{}'.format(self.getLapCycle(category)),False) for category in race.getCategories(startWaveOnly=True)]
 				else:
@@ -290,12 +313,14 @@ class LapCounter( wx.Panel ):
 if __name__ == '__main__':
 	app = wx.App(False)
 	
+	Model.setRace( Model.Race() )
+	model = Model.getRace()
+	model._populate()
+	
 	displayWidth, displayHeight = wx.GetDisplaySize()
 	mainWin = wx.Frame(None,title="LapCounter", size=(displayWidth/2,displayHeight/2))
 	lapCounter = LapCounter( mainWin, labels=(('17',False), ('15',True)) )
-	lapCounter.SetBackgroundColour( wx.BLACK )
-	#lapCounter.SetForegroundColour( wx.GREEN )
-	lapCounter.SetForegroundColour( wx.WHITE )
+	lapCounter.refresh()
 	
 	mainWin.Show()
 	

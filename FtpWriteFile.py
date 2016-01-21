@@ -39,7 +39,7 @@ def FtpIsConfigured():
 		
 	return host and user
 		
-def FtpUploadFile( fname ):
+def FtpUploadFile( fname=None ):
 	with Model.LockRace() as race:
 		if not race or not Utils.getFileName():
 			return None
@@ -50,13 +50,16 @@ def FtpUploadFile( fname ):
 			user		= getattr( race, 'ftpUser', '' ),
 			passwd		= getattr( race, 'ftpPassword', '' ),
 			serverPath	= getattr( race, 'ftpPath', '' ),
-			fname		= fname,
+			fname		= fname or [],
 		)
 	except Exception as e:
 		Utils.writeLog( 'UploadFile: Error: {}'.format(e) )
 		return e
 		
 	return None
+	
+def FtpTest():
+	return FtpUploadFile()
 
 def FtpUploadFileAsync( fname ):
 	thread = threading.Thread( target=FtpUploadFile, args=(fname,), name='FtpUploadFileAsync: {}'.format(fname) )
@@ -345,13 +348,23 @@ def GetFtpPublish( isDialog=True ):
 				self.CentreOnParent( wx.BOTH )
 				self.SetFocus()
 			else:
-				self.ftpUploadNowButton = wx.Button( self, label=_('Do FTP Upload Now / Test') )
+				self.ftpTestButton = wx.Button( self, label=_('Test FTP Connection') )
+				self.ftpTestButton.Bind( wx.EVT_BUTTON, self.onFtpTest )
+				self.ftpUploadNowButton = wx.Button( self, label=_('Do FTP Upload Now') )
 				self.ftpUploadNowButton.Bind( wx.EVT_BUTTON, self.onFtpUploadNow )
 				fgs.AddSpacer( 16 )
 				fgs.AddSpacer( 16 )
-				fgs.AddSpacer( 16 )
+				fgs.Add( self.ftpTestButton, flag=wx.ALIGN_RIGHT )
 				fgs.Add( self.ftpUploadNowButton )
 				self.SetSizer( fgs )
+
+		def onFtpTest( self, event ):
+			self.commit()
+			result = FtpTest()
+			if result:
+				Utils.MessageOK(self, u'{}\n\n{}\n'.format(_("Ftp Test Failed"), result), _("Ftp Test Failed"), iconMask=wx.ICON_ERROR)
+			else:
+				Utils.MessageOK(self, _("Ftp Test Successful"), _("Ftp Test Successful"))				
 
 		def onFtpUploadNow( self, event ):
 			self.commit()

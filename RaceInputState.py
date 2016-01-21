@@ -31,6 +31,12 @@ class RaceInputState( object ):
 					
 					getattr(race, 'geoTrack', None),
 					getattr(race, 'geoTrackFName', None),
+					
+					race.lapCounterForeground,
+					race.lapCounterBackground,
+					race.lapCounterCycle,
+					race.countdownTimer,
+					race.secondsBeforeLeaderToFlipLapCounter,
 				]
 			)
 			newState.extend( [getattr(race, attr, None) for attr in ftpFields] )

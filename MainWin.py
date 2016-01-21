@@ -45,7 +45,7 @@ from History			import History
 from RiderDetail		import RiderDetail
 from Results			import Results
 from Categories			import Categories, PrintCategories
-from Properties			import Properties, PropertiesDialog, ChangeProperties, ApplyDefaultTemplate
+from Properties			import Properties, PropertiesDialog, ChangeProperties, ApplyDefaultTemplate, BatchPublishPropertiesDialog
 from Recommendations	import Recommendations
 from RaceAnimation		import RaceAnimation, GetAnimationData
 from Search				import SearchDialog
@@ -344,6 +344,13 @@ class MainWin( wx.Frame ):
 		AppendMenuItemBitmap( self.publishMenu, idCur , _("Print C&ategories..."), _("Print Categories"), Utils.GetPngBitmap('categories.png') )
 		self.Bind(wx.EVT_MENU, self.menuPrintCategories, id=idCur )
 
+		self.publishMenu.AppendSeparator()
+		
+		idCur = wx.NewId()
+		AppendMenuItemBitmap( self.publishMenu, idCur,
+							_("&Batch Publish..."), _("Publish Output Batch"), Utils.GetPngBitmap('batch_process_icon.png') )
+		self.Bind(wx.EVT_MENU, self.menuPublishBatch, id=idCur )
+		
 		self.publishMenu.AppendSeparator()
 		
 		idCur = wx.NewId()
@@ -1313,14 +1320,27 @@ class MainWin( wx.Frame ):
 
 		printout.Destroy()
 
+	def getFormatFilename( self, format ):
+		fnameBase = os.path.splitext(self.fileName)[0]
+		return {
+			'excel':			lambda: fnameBase + '.xls',
+			'pdf':				lambda: fnameBase + '.pdf',
+			'html':				lambda: fnameBase + '.html',
+			'indexhtml':		lambda: os.path.join(os.path.basname(fnameBase), 'index.html'),
+			'webscorertxt':		lambda: fnameBase + '-WebScorer.txt',
+			'usacexcel':		lambda: fnameBase + '-USAC.xls',
+			'uciexcel':			lambda: fnameBase + '-UCI.xls',
+		}[format.lower()]()
+
 	@logCall
 	def menuPrintPDF( self, event=None, silent=False ):
 		if not Model.race:
 			return
 		self.commit()
 		
-		dName = os.path.dirname(self.fileName)
-		fnameBase = os.path.splitext(os.path.split(self.fileName)[1])[0]
+		fname = self.getFormatFilename('pdf')
+		dName = os.path.dirname(fname)
+		fnameBase = os.path.splitext(os.path.split(fname)[1])[0]
 	
 		with Utils.UIBusy():
 			printout = CrossMgrPrintoutPDF(
@@ -1368,31 +1388,37 @@ class MainWin( wx.Frame ):
 				Utils.MessageOK( self, u'{}:\n\n    {}'.format(_('PDF file written to'), fname), _('PDF Publish') )
 
 	@logCall
-	def menuPrintPNG( self, event ):
+	def menuPrintPNG( self, event=None, silent=False ):
 		if not Model.race:
 			return
 		self.commit()
 		
-		if Utils.MessageYesNo( self,
-				u'{}\n\n{}'.format(
-					_('This is not the recommended method to publish results to Facebook.'),
-					_('Would you like to see the recommended options?')
-				),
-				_('Publish to Facebook') ):
-			Utils.showHelp( 'Facebook.html' )
-			return
+		if not silent:
+			if Utils.MessageYesNo( self,
+					u'{}\n\n{}'.format(
+						_('This is not the recommended method to publish results to Facebook.'),
+						_('Would you like to see the recommended options?')
+					),
+					_('Publish to Facebook') ):
+				Utils.showHelp( 'Facebook.html' )
+				return
 
-		cpcd = ChoosePrintCategoriesDialog( self )
-		x, y = self.GetPosition().Get()
-		x += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_X, self)
-		y += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_Y, self)
-		cpcd.SetPosition( (x, y) )
-		cpcd.SetSize( self.PrintCategoriesDialogSize )
-		result = cpcd.ShowModal()
-		categories = cpcd.categories
-		cpcd.Destroy()
-		if not categories or result != wx.ID_OK:
-			return
+		if not silent:
+			cpcd = ChoosePrintCategoriesDialog( self )
+			x, y = self.GetPosition().Get()
+			x += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_X, self)
+			y += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_Y, self)
+			cpcd.SetPosition( (x, y) )
+			cpcd.SetSize( self.PrintCategoriesDialogSize )
+			result = cpcd.ShowModal()
+			categories = cpcd.categories
+			cpcd.Destroy()
+			if not categories or result != wx.ID_OK:
+				return
+		else:
+			categories = Model.race.getCategories(startWaveOnly=False, publishOnly=True)
+			if not categories:
+				return
 	
 		dir, fnameBase = os.path.split( self.fileName )
 		dir = os.path.join( dir, 'ResultsPNG' )
@@ -1410,15 +1436,16 @@ class MainWin( wx.Frame ):
 						fname = printout.lastFName
 				except Exception as e:
 					logException( e, sys.exc_info() )
-					Utils.MessageOK(self,
-								u'{}:\n\n    {}.'.format(_('Error creating PNG files'), e),
-								_('PNG File Error'), iconMask=wx.ICON_ERROR )
+					if not silent:
+						Utils.MessageOK(self,
+									u'{}:\n\n    {}.'.format(_('Error creating PNG files'), e),
+									_('PNG File Error'), iconMask=wx.ICON_ERROR )
 					success = False
 					break
 
 		printout.Destroy()
 		
-		if success:
+		if success and not silent:
 			if fname and self.launchExcelAfterPublishingResults:
 				webbrowser.open( fname, new = 2, autoraise = True )
 			Utils.MessageOK( self, u'{}:\n\n    {}'.format(_('Results written as PNG files to'), dir), _('PNG Publish') )
@@ -1470,7 +1497,7 @@ class MainWin( wx.Frame ):
 		if self.fileName is None or len(self.fileName) < 4:
 			return
 
-		xlFName = os.path.splitext(self.fileName)[0] + '.xls'
+		xlFName = self.getFormatFilename('excel')
 
 		wb = xlwt.Workbook()
 		with UnstartedRaceWrapper():
@@ -1784,12 +1811,21 @@ class MainWin( wx.Frame ):
 		return html
 	
 	@logCall
-	def menuPublishHtmlRaceResults( self, event ):
+	def menuPublishBatch( self, event ):
+		self.commit()
+		if self.fileName is None or len(self.fileName) < 4:
+			return
+		d = BatchPublishPropertiesDialog( self )
+		d.ShowModal()
+		d.Destroy()
+		
+	@logCall
+	def menuPublishHtmlRaceResults( self, event=None, silent=False ):
 		self.commit()
 		if self.fileName is None or len(self.fileName) < 4:
 			return
 			
-		if not self.getEmail():
+		if not silent and not self.getEmail():
 			if Utils.MessageOKCancel( self,
 				_('Your Email contact is not set.\n\nConfigure it now?\n\n(you can always change it later from "Options|Set Contact Email...")'),
 				_('Set Email Contact'), wx.ICON_EXCLAMATION ):
@@ -1808,12 +1844,13 @@ class MainWin( wx.Frame ):
 		html = self.addResultsToHtmlStr( html )
 			
 		# Write out the results.
-		fname = os.path.splitext(self.fileName)[0] + '.html'
+		fname = self.getFormatFilename('html')
 		try:
 			with io.open(fname, 'w', encoding='utf-8') as fp:
 				fp.write( html )
-			webbrowser.open( fname, new = 0, autoraise = True )
-			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Html Race Animation written to'), fname), _('Html Write'))
+			if not silent:
+				webbrowser.open( fname, new = 0, autoraise = True )
+				Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Html Race Animation written to'), fname), _('Html Write'))
 		except:
 			Utils.MessageOK(self, u'{} ({}).'.format(_('Cannot write HTML file'), fname),
 							_('Html Write Error'), iconMask=wx.ICON_ERROR )
@@ -3002,7 +3039,7 @@ class MainWin( wx.Frame ):
 						_('Excel File Error'), iconMask=wx.ICON_ERROR )
 	
 	@logCall
-	def menuExportUSAC( self, event ):
+	def menuExportUSAC( self, event=None, silent=False ):
 		self.commit()
 		if self.fileName is None or len(self.fileName) < 4 or not Model.race:
 			return
@@ -3017,9 +3054,10 @@ class MainWin( wx.Frame ):
 		
 		try:
 			wb.save( xlFName )
-			if self.launchExcelAfterPublishingResults:
-				webbrowser.open( xlFName, new = 2, autoraise = True )
-			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
+			if not silent:
+				if self.launchExcelAfterPublishingResults:
+					webbrowser.open( xlFName, new = 2, autoraise = True )
+				Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
 		except IOError:
 			Utils.MessageOK(self,
 						u'{} "{}".\n\n{}\n{}'.format(_('Cannot write'), xlFName, _('Check if this spreadsheet is open.'), _('If so, close it, and try again.')),
@@ -3050,7 +3088,7 @@ class MainWin( wx.Frame ):
 						_('Excel File Error'), iconMask=wx.ICON_ERROR )
 	
 	@logCall
-	def menuExportUCI( self, event ):
+	def menuExportUCI( self, event=None, silent=False ):
 		self.commit()
 		if self.fileName is None or len(self.fileName) < 4:
 			return
@@ -3071,9 +3109,10 @@ class MainWin( wx.Frame ):
 
 		try:
 			wb.save( xlFName )
-			if self.launchExcelAfterPublishingResults:
-				webbrowser.open( xlFName, new = 2, autoraise = True )
-			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
+			if not silent:
+				if self.launchExcelAfterPublishingResults:
+					webbrowser.open( xlFName, new = 2, autoraise = True )
+				Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
 		except IOError:
 			Utils.MessageOK(self,
 						u'{} "{}".\n\n{}\n{}'.format(_('Cannot write'), xlFName, _('Check if this spreadsheet is open.'), _('If so, close it, and try again.')),
@@ -3082,7 +3121,9 @@ class MainWin( wx.Frame ):
 	def resultsCheck( self ):
 		return Utils.MessageOKCancel( self,
 				u'\n'.join([
-					_('Make sure you publish correct results!'),
+					_('CrossResults/Race-Result Publish'),
+					u'',
+					_('Make sure you publish correct results.'),
 					_('Take a few minutes to check the following:'),
 					'',
 					'\n'.join( u'{}. {}'.format(i+1, s) for i, s in enumerate([
@@ -3091,7 +3132,7 @@ class MainWin( wx.Frame ):
 							_('Are the City, State/Prov and Country fields correctly filled in?'),
 							_('Are all the Category Names spelled and coded correctly?'),
 							_('Are the Category Number Ranges correct?'),
-							_('Have you fixed all scoring and data problems with the Race?'),
+							_('Have you fixed all scoring and data problems?'),
 							_('Are the Rider Names / Teams / License data correct (spelling?  missing data)?'),
 						]) ),
 					'',
@@ -3100,11 +3141,11 @@ class MainWin( wx.Frame ):
 				_('Results Publish') )
 	
 	@logCall
-	def menuExportRoadResults( self, event):
-		self.menuExportCrossResults( event, True )
+	def menuExportRoadResults( self, event=None, silent=False):
+		self.menuExportCrossResults( event, isRoadResults=True, silent=silent )
 	
 	@logCall
-	def menuExportCrossResults( self, event, isRoadResults=False ):
+	def menuExportCrossResults( self, event=None, isRoadResults=False, silent=False ):
 		destination = 'Road-Results' if isRoadResults else 'CrossResults'
 	
 		self.commit()
@@ -3136,9 +3177,10 @@ class MainWin( wx.Frame ):
 		try:
 			success, message = CrossResultsExport( fname )
 			if not success:
-				Utils.MessageOK(self,
-							u'{} {}: "{}"'.format(destination, _('Error'), message),
-							u'{} {}'.format(destination,_('Error')), iconMask=wx.ICON_ERROR )
+				if not silent:
+					Utils.MessageOK(self,
+								u'{} {}: "{}"'.format(destination, _('Error'), message),
+								u'{} {}'.format(destination,_('Error')), iconMask=wx.ICON_ERROR )
 				return
 			
 			url = 'http://www.{Destination}.com/?n=results&sn=upload&crossmgr={MD5}&name={RaceName}&date={RaceDate}&loc={Location}&presentedby={PresentedBy}'.format(
@@ -3149,8 +3191,7 @@ class MainWin( wx.Frame ):
 				Location	= urllib.quote(unicode(u', '.join([race.city, race.stateProv, race.country])).encode('utf-8')),
 				PresentedBy = urllib.quote(unicode(race.organizer).encode('utf-8')),
 			)
-			if self.launchExcelAfterPublishingResults:
-				webbrowser.open( url, new = 2, autoraise = True )
+			webbrowser.open( url, new = 2, autoraise = True )
 		except Exception as e:
 			logException( e, sys.exc_info() )
 			Utils.MessageOK(self,
@@ -3158,14 +3199,14 @@ class MainWin( wx.Frame ):
 						u'{} {}'.format(destination, _('File Error')), iconMask=wx.ICON_ERROR )
 	
 	@logCall
-	def menuExportWebScorer( self, event ):
+	def menuExportWebScorer( self, event=None, silent=False ):
 		self.commit()
 		if self.fileName is None or len(self.fileName) < 4 or not Model.race:
 			return
 			
 		race = Model.race
 
-		if not self.resultsCheck():
+		if not silent and not self.resultsCheck():
 			return
 			
 		self.showPageName( _('Results') )
@@ -3174,17 +3215,20 @@ class MainWin( wx.Frame ):
 		
 		try:
 			success, message = WebScorerExport( fname )
-			if not success:
-				Utils.MessageOK(self,
-							u'WebScorer {}: "{}".'.format(_('Error'), message),
-							u'WebScorer {}'.format(_('Error')), iconMask=wx.ICON_ERROR )
-				return
-			Utils.MessageOK(self, _('WebScorer file written to:') + u'\n\n   {}'.format(fname), _('WebScorer Publish'))
+			if not silent:
+				if not success:
+					Utils.MessageOK(self,
+								u'WebScorer {}: "{}".'.format(_('Error'), message),
+								u'WebScorer {}'.format(_('Error')), iconMask=wx.ICON_ERROR )
+					return
+				Utils.MessageOK(self, _('WebScorer file written to:') + u'\n\n   {}'.format(fname), _('WebScorer Publish'))
 		except Exception as e:
 			logException( e, sys.exc_info() )
 			Utils.MessageOK(self,
 						u'{} "{}"\n\n{}.'.format(_('Cannot write'), fname, e),
 						_('WebScorer Publish Error'), iconMask=wx.ICON_ERROR )
+	
+	#--------------------------------------------------------------------------------------------------
 	
 	def windowCloseCallback( self, menuId ):
 		try:

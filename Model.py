@@ -996,6 +996,7 @@ class Race( object ):
 	lapCounterBackground = '#000000'
 	secondsBeforeLeaderToFlipLapCounter = 15.0
 	countdownTimer = False
+	lapCounterCycle = None
 	
 	setNoDataDNS = False				# If True, will set all riders in the spreadsheet to DNS if they have no data in the race.
 	lastChangedTime = sys.float_info.max
@@ -2441,7 +2442,7 @@ def getCurrentTTStartHtml():
 	except Exception as e:
 		return None
 
-def writeCurrentHtml():
+def writeCurrentHtml( includeExcel=True, includePDF=True ):
 	# Make sure the html, TTstart, Excel and pdf files are up-to-date on exit.
 
 	success = True
@@ -2470,17 +2471,19 @@ def writeCurrentHtml():
 	if not mainWin:
 		return success
 	
-	try:
-		mainWin.menuPublishAsExcel( silent=True )
-	except Exception as e:
-		Utils.logException( e, sys.exc_info() )
-		success = False
-	
-	try:
-		mainWin.menuPrintPDF( silent=True )
-	except Exception as e:
-		Utils.logException( e, sys.exc_info() )
-		success = False
+	if includeExcel:
+		try:
+			mainWin.menuPublishAsExcel( silent=True )
+		except Exception as e:
+			Utils.logException( e, sys.exc_info() )
+			success = False
+
+	if includePDF:
+		try:
+			mainWin.menuPrintPDF( silent=True )
+		except Exception as e:
+			Utils.logException( e, sys.exc_info() )
+			success = False
 	
 	return success
 		
