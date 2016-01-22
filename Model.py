@@ -19,6 +19,7 @@ from collections import defaultdict
 
 import Utils
 import Version
+from BatchPublishAttrs import setDefaultRaceAttr
 import minimal_intervals
 
 CurrentUser = getpass.getuser()
@@ -2406,6 +2407,8 @@ class Race( object ):
 			self.categories[name] = Category(True, name, '{}-{}'.format(i, i+9) )
 
 		self.setChanged()
+		
+setDefaultRaceAttr( Race )
 
 def highPrecisionTimes():
 	try:
@@ -2442,10 +2445,11 @@ def getCurrentTTStartHtml():
 	except Exception as e:
 		return None
 
-def writeCurrentHtml( includeExcel=True, includePDF=True ):
-	# Make sure the html, TTstart, Excel and pdf files are up-to-date on exit.
-
+def writeModelUpdate( includeExcel=True, includePDF=True ):
 	success = True
+	
+	'''
+	# Make sure the html, TTstart, Excel and pdf files are up-to-date on exit.
 
 	html = getCurrentHtml()
 	if not html:
@@ -2484,6 +2488,7 @@ def writeCurrentHtml( includeExcel=True, includePDF=True ):
 		except Exception as e:
 			Utils.logException( e, sys.exc_info() )
 			success = False
+	'''
 	
 	return success
 		

@@ -11,7 +11,7 @@ import wx.lib.agw.flatnotebook as flatnotebook
 from RaceInputState import RaceInputState
 import ImageIO
 from SetGraphic			import SetGraphicDialog
-from FtpWriteFile import FtpProperties, FtpUploadFile
+from FtpWriteFile import FtpProperties, FtpUploadFile, FtpIsConfigured, FtpPublishDialog
 from LapCounter import LapCounterProperties
 from GeoAnimation import GeoAnimation, GeoTrack
 from GpxImport import GetGeoTrack
@@ -724,21 +724,37 @@ class BatchPublishProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(BatchPublishProperties, self).__init__( parent, id )
 
-		GetTranslation = _
+		explain = [
+			wx.StaticText( self, label=_('Choose the File Formats to Publish.') ),
+			wx.StaticText( self, label=_('Select the Ftp option if you want output files uploaded to an Ftp server.') ),
+		]
+		font = explain[0].GetFont()
+		fontUnderline = wx.FFont( font.GetPointSize(), font.GetFamily(), flags=wx.FONTFLAG_BOLD )
 		
-		explain = wx.StaticText( self, label=_('Choose the formats to publish as a Batch.') )
-		
-		fgs = wx.FlexGridSizer( cols=2, rows=0, hgap=8, vgap=8 )
+		fgs = wx.FlexGridSizer( cols=3, rows=0, hgap=0, vgap=2 )
 		self.widget = []
-		fgs.Add( wx.StaticText(self, label=('Format') ) )
-		fgs.Add( wx.StaticText(self, label=('Ftp Upload') ) )
+		
+		for h in [wx.StaticText(self, label=('Format')), wx.StaticText(self, label=('Upload with Ftp')), wx.StaticText(self, label=('Note'))]:
+			h.SetFont( fontUnderline )
+			fgs.Add( h, flag=wx.ALL, border=4 )
+		
 		for i, attr in enumerate(batchPublishAttr):
-			attrCB = wx.CheckBox(self, label=GetTranslation(attr[0]))
+			for k in xrange(3): fgs.Add( wx.StaticLine(self), flag=wx.EXPAND )
+		
+			attrCB = wx.CheckBox(self, label=attr.uiname)
 			attrCB.Bind( wx.EVT_CHECKBOX, lambda event, iAttr=i: self.onSelect(iAttr) )
-			ftpCB = wx.CheckBox(self, label=u'          ')
 			fgs.Add( attrCB )
-			fgs.Add( ftpCB, flag=wx.ALIGN_CENTER )
-			self.widget.append( (attrCB, ftpCB) )
+			if attr.ftp:
+				ftpCB = wx.CheckBox(self, label=u'          ')
+				fgs.Add( ftpCB, flag=wx.ALIGN_CENTER )
+				self.widget.append( (attrCB, ftpCB) )
+			else:
+				fgs.AddSpacer( 8 )
+				self.widget.append( (attrCB, None) )
+			if attr.note:
+				fgs.Add( wx.StaticText(self, label=attr.note) )
+			else:
+				fgs.AddSpacer( 0 )
 		
 		self.bikeRegChoice = wx.RadioBox(
 			self,
@@ -748,7 +764,8 @@ class BatchPublishProperties( wx.Panel ):
 		)
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
-		vs.Add( explain, flag=wx.TOP|wx.LEFT|wx.RIGHT, border=16 )
+		for e in explain:
+			vs.Add( e, flag=wx.TOP|wx.LEFT|wx.RIGHT, border=16 )
 		vs.Add( fgs, flag=wx.TOP|wx.LEFT|wx.RIGHT, border=16 )
 		vs.Add( self.bikeRegChoice, flag=wx.ALL, border=16 )
 		
@@ -756,7 +773,7 @@ class BatchPublishProperties( wx.Panel ):
 		
 	def onSelect( self, iAttr ):
 		v = self.widget[iAttr][0].GetValue()
-		if not v:
+		if self.widget[iAttr][1] and not v:
 			self.widget[iAttr][1].SetValue( False )
 		self.widget[iAttr][1].Enable( v )
 		
@@ -772,8 +789,9 @@ class BatchPublishProperties( wx.Panel ):
 				ftpCB.SetValue( v & 2 != 0 )
 			else:
 				attrCB.SetValue( False )
-				ftpCB.SetValue( False )
-				ftpCB.Enable( False )
+				if ftpCB:
+					ftpCB.SetValue( False )
+					ftpCB.Enable( False )
 		self.bikeRegChoice.SetSelection( getattr(race, 'publishFormatBikeReg', 0) )
 		
 	def commit( self ):
@@ -791,12 +809,11 @@ def doBatchPublish( silent=False ):
 	for i, attr in enumerate(batchPublishAttr):
 		v = getattr( race, batchPublishRaceAttr[i], 0 )
 		if v & 1:
-			getattr( mainWin, attr[2] )( silent=True )
-			if v & 2:
-				ftpFiles.append( mainWin.getFormatFilename(attr[1]) )
+			getattr( mainWin, attr.func )( silent=True )
+			if v & 2 and attr.filecode:
+				ftpFiles.append( mainWin.getFormatFilename(attr.filecode) )
 	
 	publishFormatBikeReg = getattr(race, 'publishFormatBikeReg', 0)
-	print 'publishFormatBikeReg', publishFormatBikeReg
 	if publishFormatBikeReg == 1:
 		mainWin.menuExportCrossResults( silent=True )
 	elif publishFormatBikeReg == 2:
@@ -804,11 +821,21 @@ def doBatchPublish( silent=False ):
 	
 	e = None
 	if ftpFiles:
+		if not FtpIsConfigured() and Utils.MessageOKCancel(
+					mainWin,
+					u'{}\n\n{}'.format( _('Ftp is Not Configured'), _('Configure it now?')), 
+					('Ftp is Not Configured')
+				):
+			dlg = FtpPublishDialog( mainWin )
+			ret = dlg.ShowModal()
+			dlg.Destroy()
+			
 		e = FtpUploadFile( ftpFiles )
 		if e and not silent:
 			Utils.MessageOK( mainWin, u'{}\n\n{}'.format( _('Ftp Upload Error'), e), _('Ftp Upload Error'), wx.ICON_ERROR )
-	if not silent and not e:
-		Utils.MessageOK( mainWin, _('Batch Publish Complete'), _('Batch Publish Complete') )
+			
+	if not silent:
+		Utils.MessageOK( mainWin, _('Publish Complete'), _('Publish Complete') )
 
 class BatchPublishPropertiesDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY ):

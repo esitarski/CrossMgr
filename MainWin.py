@@ -348,9 +348,10 @@ class MainWin( wx.Frame ):
 		
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
-							_("&Batch Publish..."), _("Publish Output Batch"), Utils.GetPngBitmap('batch_process_icon.png') )
+							_("&Batch Publish Files..."), _("Publish Multiple Results File Formats"), Utils.GetPngBitmap('batch_process_icon.png') )
 		self.Bind(wx.EVT_MENU, self.menuPublishBatch, id=idCur )
 		
+		'''
 		self.publishMenu.AppendSeparator()
 		
 		idCur = wx.NewId()
@@ -358,9 +359,11 @@ class MainWin( wx.Frame ):
 							_("&HTML Publish..."), _("Publish Results as HTML (.html)"), Utils.GetPngBitmap('html-icon.png') )
 		self.Bind(wx.EVT_MENU, self.menuPublishHtmlRaceResults, id=idCur )
 
+		self.publishMenu.AppendSeparator()
+		
 		idCur = wx.NewId()
 		AppendMenuItemBitmap( self.publishMenu, idCur,
-							_("&Ftp HTML Publish..."), _("Publish HTML Results to FTP"),
+							_("&Ftp Publish..."), _("Publish Results to FTP"),
 							Utils.GetPngBitmap('ftp-icon.png') )
 		self.Bind(wx.EVT_MENU, self.menuExportHtmlFtp, id=idCur )
 
@@ -432,6 +435,7 @@ class MainWin( wx.Frame ):
 							_("TT Start HTML Publish..."), _("Publish Time Trial Start page"),
 							Utils.GetPngBitmap('stopwatch-icon.png') )
 		self.Bind(wx.EVT_MENU, self.menuPublishHtmlTTStart, id=idCur )
+		'''
 		
 		self.menuBar.Append( self.publishMenu, _("&Publish") )
 		
@@ -1084,8 +1088,8 @@ class MainWin( wx.Frame ):
 		if Model.race and Model.race.email:
 			email = Model.race.email
 		else:
-			email = self.config.Read( 'email', 'my_name@my_address' )
-		dlg = wx.TextEntryDialog( self, message=_(' Contact Email:'), caption=_('Contact Email for HTML output'), defaultValue=email )
+			email = self.config.Read( 'email', 'results_name@results_address' )
+		dlg = wx.TextEntryDialog( self, message=_('Results Contact Email'), caption=_('Results Contact Email'), defaultValue=email )
 		result = dlg.ShowModal()
 		if result == wx.ID_OK:
 			value = dlg.GetValue()
@@ -1393,35 +1397,12 @@ class MainWin( wx.Frame ):
 			return
 		self.commit()
 		
-		if not silent:
-			if Utils.MessageYesNo( self,
-					u'{}\n\n{}'.format(
-						_('This is not the recommended method to publish results to Facebook.'),
-						_('Would you like to see the recommended options?')
-					),
-					_('Publish to Facebook') ):
-				Utils.showHelp( 'Facebook.html' )
-				return
-
-		if not silent:
-			cpcd = ChoosePrintCategoriesDialog( self )
-			x, y = self.GetPosition().Get()
-			x += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_X, self)
-			y += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_Y, self)
-			cpcd.SetPosition( (x, y) )
-			cpcd.SetSize( self.PrintCategoriesDialogSize )
-			result = cpcd.ShowModal()
-			categories = cpcd.categories
-			cpcd.Destroy()
-			if not categories or result != wx.ID_OK:
-				return
-		else:
-			categories = Model.race.getCategories(startWaveOnly=False, publishOnly=True)
-			if not categories:
-				return
+		categories = Model.race.getCategories(startWaveOnly=False, publishOnly=True)
+		if not categories:
+			return
 	
 		dir, fnameBase = os.path.split( self.fileName )
-		dir = os.path.join( dir, 'ResultsPNG' )
+		dir = os.path.join( dir, 'FacebookPNG' )
 		fnameBase = os.path.splitext( fnameBase )[0]
 		printout = CrossMgrPrintoutPNG( dir, fnameBase, self.printData.GetOrientation(), categories )
 		pages = printout.GetPageInfo()[-1]
@@ -1436,10 +1417,9 @@ class MainWin( wx.Frame ):
 						fname = printout.lastFName
 				except Exception as e:
 					logException( e, sys.exc_info() )
-					if not silent:
-						Utils.MessageOK(self,
-									u'{}:\n\n    {}.'.format(_('Error creating PNG files'), e),
-									_('PNG File Error'), iconMask=wx.ICON_ERROR )
+					Utils.MessageOK(self,
+								u'{}:\n\n    {}.'.format(_('Error creating PNG files'), e),
+								_('PNG File Error'), iconMask=wx.ICON_ERROR )
 					success = False
 					break
 
@@ -1448,7 +1428,7 @@ class MainWin( wx.Frame ):
 		if success and not silent:
 			if fname and self.launchExcelAfterPublishingResults:
 				webbrowser.open( fname, new = 2, autoraise = True )
-			Utils.MessageOK( self, u'{}:\n\n    {}'.format(_('Results written as PNG files to'), dir), _('PNG Publish') )
+			Utils.MessageOK( self, u'{}:\n\n    {}'.format(_('Results written as PNG files to'), dir), _('Facebook Publish') )
 
 	@logCall
 	def menuPrintCategories( self, event ):
@@ -1595,6 +1575,7 @@ class MainWin( wx.Frame ):
 			payload['raceAddress']      = u', '.join( n for n in [race.city, race.stateProv, race.country] if n )
 			payload['raceIsRunning']	= race.isRunning()
 			payload['raceIsUnstarted']	= race.isUnstarted()
+			payload['raceIsFinished']	= race.isFinished()
 			payload['lapDetails']		= GetLapDetails() if not race.hideDetails else {}
 			payload['hideDetails']		= race.hideDetails
 			payload['showCourseAnimation'] = race.showCourseAnimationInHtml
@@ -1813,8 +1794,17 @@ class MainWin( wx.Frame ):
 	@logCall
 	def menuPublishBatch( self, event ):
 		self.commit()
+		race = Model.race
 		if self.fileName is None or len(self.fileName) < 4:
+			Utils.MessageOK(self, u'{}\n\n{}.'.format(_('No Race'), _('New/Open a Race and try again.')),
+				_('No Race'), iconMask=wx.ICON_ERROR )
 			return
+		if not race.email:
+			if Utils.MessageOKCancel( self,
+				_('Your Email contact is not set.\n\nConfigure it now?'),
+				_('Set Email Contact'), wx.ICON_EXCLAMATION ):
+				self.menuSetContactEmail()
+			
 		d = BatchPublishPropertiesDialog( self )
 		d.ShowModal()
 		d.Destroy()
@@ -1827,7 +1817,7 @@ class MainWin( wx.Frame ):
 			
 		if not silent and not self.getEmail():
 			if Utils.MessageOKCancel( self,
-				_('Your Email contact is not set.\n\nConfigure it now?\n\n(you can always change it later from "Options|Set Contact Email...")'),
+				_('Your Email contact is not set.\n\nConfigure it now?'),
 				_('Set Email Contact'), wx.ICON_EXCLAMATION ):
 				self.menuSetContactEmail()
 	
@@ -1854,6 +1844,17 @@ class MainWin( wx.Frame ):
 		except:
 			Utils.MessageOK(self, u'{} ({}).'.format(_('Cannot write HTML file'), fname),
 							_('Html Write Error'), iconMask=wx.ICON_ERROR )
+	
+	@logCall
+	def menuPublishHtmlIndex( self, event=None, silent=False ):
+		self.commit()
+		if self.fileName is None or len(self.fileName) < 4:
+			return
+		try:
+			WebServer.WriteHtmlIndexPage()
+		except Exception as e:
+			Utils.MessageOK(self, u'{}\n\n{}.'.format(_('HTML Index Failure'), e),
+							_('Error'), iconMask=wx.ICON_ERROR )
 	
 	@logCall
 	def menuExportHtmlFtp( self, event ):
@@ -2228,7 +2229,7 @@ class MainWin( wx.Frame ):
 				race.resetAllCaches()
 		
 		self.writeRace()
-		Model.writeCurrentHtml()
+		Model.writeModelUpdate()
 		self.config.Flush()
 
 		try:
@@ -2604,7 +2605,7 @@ class MainWin( wx.Frame ):
 		Model.resetCache()
 		ResetExcelLinkCache()
 		self.writeRace()
-		Model.writeCurrentHtml()
+		Model.writeModelUpdate()
 		self.closeFindDialog()
 		
 		try:
@@ -2719,7 +2720,7 @@ class MainWin( wx.Frame ):
 				return
 			race.finishRaceNow()
 		
-		Model.writeCurrentHtml()
+		Model.writeModelUpdate()
 		self.doCleanup()
 		Model.setRace( None )
 		self.refresh()

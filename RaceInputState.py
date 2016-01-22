@@ -3,6 +3,7 @@ import Utils
 import Model
 import ReadSignOnSheet
 from FtpWriteFile import ftpFields
+from BatchPublishAttrs import batchPublishRaceAttr
 
 class RaceInputState( object ):
 	def __init__( self ):
@@ -37,9 +38,11 @@ class RaceInputState( object ):
 					race.lapCounterCycle,
 					race.countdownTimer,
 					race.secondsBeforeLeaderToFlipLapCounter,
+					race.email,
 				]
 			)
 			newState.extend( [getattr(race, attr, None) for attr in ftpFields] )
+			newState.extend( [getattr(race, attr, None) for attr in batchPublishRaceAttr] )
 		if not self.state or self.state != newState:
 			self.state = newState
 			return True

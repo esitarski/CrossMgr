@@ -205,7 +205,8 @@ class ContentBuffer( object ):
 						for c in payload.get('catDetails',[]) if c['name'] != 'All'],
 					url = urllib.pathname2url(fname),
 					isTimeTrial = payload.get('isTimeTrial',False),
-					raceIsRunning = payload.get('raceIsRunning',False)
+					raceIsRunning = payload.get('raceIsRunning',False),
+					raceIsFinished = payload.get('raceIsFinished',False),
 				)
 				if g.isTimeTrial:
 					g.urlTTStart = urllib.pathname2url(os.path.splitext(fname)[0] + '_TTStart.html')
