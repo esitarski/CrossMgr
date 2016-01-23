@@ -8,6 +8,7 @@ import wx.lib.intctrl as intctrl
 import wx.lib.masked.numctrl as numctrl
 import wx.lib.masked as masked
 import wx.lib.agw.flatnotebook as flatnotebook
+import glob
 import webbrowser
 from RaceInputState import RaceInputState
 import ImageIO
@@ -787,20 +788,26 @@ class BatchPublishProperties( wx.Panel ):
 		mainWin = Utils.getMainWin()
 		attr = batchPublishAttr[iAttr]
 		
-		fname = mainWin.getFormatFilename(attr.filecode)
-		if doFtp and race.urlFull and race.urlFull != 'http://':
-			webbrowser.open( os.path.basename(race.urlFull) + '/' + os.path.basename(fname), new = 0, autoraise = True )
+		if attr.filecode:
+			fname = mainWin.getFormatFilename(attr.filecode)
+			if doFtp and race.urlFull and race.urlFull != 'http://':
+				webbrowser.open( os.path.basename(race.urlFull) + '/' + os.path.basename(fname), new = 0, autoraise = True )
+			else:
+				webbrowser.open( fname, new = 0, autoraise = True )
 		else:
-			webbrowser.open( fname, new = 0, autoraise = True )
+			pngFiles = os.path.join( os.path.dirname(Utils.getFileName()), 'FaceBookPNG', '*.png' )
+			for fname in glob.glob(pngFiles):
+				webbrowser.open( fname, new = 0, autoraise = True )
+				return
 	
 	def onSelect( self, iAttr ):
 		attrCB, ftpCB, testBtn = self.widget[iAttr]
+		v = attrCB.GetValue()
 		if ftpCB:
-			v = attrCB.GetValue()
 			ftpCB.Enable( v )
-			testBtn.Enable( v )
 			if not v:
 				ftpCB.SetValue( False )
+		testBtn.Enable( v )
 		
 	def refresh( self ):
 		race = Model.race
@@ -810,9 +817,10 @@ class BatchPublishProperties( wx.Panel ):
 			v = getattr( race, raceAttr, 0 )
 			if v & 1:
 				attrCB.SetValue( True )
-				ftpCB.Enable( True )
+				if ftpCB:
+					ftpCB.Enable( True )
+					ftpCB.SetValue( v & 2 != 0 )
 				testBtn.Enable( True )
-				ftpCB.SetValue( v & 2 != 0 )
 			else:
 				attrCB.SetValue( False )
 				if ftpCB:
@@ -825,8 +833,8 @@ class BatchPublishProperties( wx.Panel ):
 		race = Model.race
 		for i, attr in enumerate(batchPublishAttr):
 			raceAttr = batchPublishRaceAttr[i]
-			attrCB, ftpCB = self.widget[i]
-			setattr( race, raceAttr, 0 if not attrCB.GetValue() else (1 + (2 if ftpCB.GetValue() else 0)) )
+			attrCB, ftpCB, testBtn = self.widget[i]
+			setattr( race, raceAttr, 0 if not attrCB.GetValue() else (1 + (2 if ftpCB and ftpCB.GetValue() else 0)) )
 		race.publishFormatBikeReg = self.bikeRegChoice.GetSelection()
 
 def doBatchPublish( silent=False, iAttr=None ):
@@ -875,26 +883,54 @@ class BatchPublishPropertiesDialog( wx.Dialog ):
 		self.batchPublishProperties = BatchPublishProperties(self)
 		self.batchPublishProperties.refresh()
 		
-		self.okBtn = wx.Button( self, label=_('Publish') )
+		'''
+		self.cp = cp = wx.CollapsiblePane(
+			self,
+			label=_("Click here to configure Ftp"),
+			style=wx.CP_DEFAULT_STYLE|wx.CP_NO_TLW_RESIZE
+		)
+		self.Bind(wx.EVT_COLLAPSIBLEPANE_CHANGED, self.onPaneChanged, cp)
+		self.ftp = FtpProperties( cp.GetPane() )
+		self.ftp.refresh()
+		'''
+		
+		self.okBtn = wx.Button( self, label=_('Publish Now') )
 		self.okBtn.Bind( wx.EVT_BUTTON, self.onOK )
+		self.saveBtn = wx.Button( self, label=_('Save Options and Close') )
+		self.saveBtn.Bind( wx.EVT_BUTTON, self.onSave )
 		self.cancelBtn = wx.Button( self, id=wx.ID_CANCEL )
 		self.cancelBtn.Bind( wx.EVT_BUTTON, self.onCancel )
 
 		border = 4
 		hb = wx.BoxSizer( wx.HORIZONTAL )
 		hb.Add( self.okBtn, border = border, flag=wx.ALL )
+		hb.Add( self.saveBtn, border = border, flag=wx.ALL )
 		hb.Add( self.cancelBtn, border = border, flag=wx.ALL )
 		self.okBtn.SetDefault()
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		vs.Add( self.batchPublishProperties )
-		vs.Add( hb, flag=wx.ALIGN_CENTRE )
+		#vs.Add( self.cp, flag=wx.EXPAND|wx.ALL, border=4 )
+		vs.Add( hb, flag=wx.ALIGN_CENTRE|wx.ALL, border=8 )
 		
 		self.SetSizerAndFit( vs )
-		
+	
+	def onPaneChanged( self, event ):
+		self.ftp.GetSizer().Layout()
+		self.ftp.Layout()
+		width, height = self.ftp.GetSizer().GetMinSize()
+		self.ftp.Fit()
+		self.GetSizer().Layout()
+		self.Fit()
+	
 	def onOK( self, event ):
 		self.batchPublishProperties.commit()
 		doBatchPublish()
+		Utils.refresh()
+		self.EndModal( wx.ID_OK )
+		
+	def onSave( self, event ):
+		self.batchPublishProperties.commit()
 		Utils.refresh()
 		self.EndModal( wx.ID_OK )
 		
