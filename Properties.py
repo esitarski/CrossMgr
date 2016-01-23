@@ -723,9 +723,11 @@ class AnimationProperties( wx.Panel ):
 
 #------------------------------------------------------------------------------------------------
 class BatchPublishProperties( wx.Panel ):
-	def __init__( self, parent, id = wx.ID_ANY ):
+	def __init__( self, parent, id=wx.ID_ANY, testCallback=None ):
 		super(BatchPublishProperties, self).__init__( parent, id )
 
+		self.testCallback = testCallback
+		
 		explain = [
 			wx.StaticText( self, label=_('Choose the File Formats to Publish.') ),
 			wx.StaticText( self, label=_('Select the Ftp option if you want output files uploaded to an Ftp server.') ),
@@ -780,6 +782,9 @@ class BatchPublishProperties( wx.Panel ):
 		self.SetSizer( vs )
 	
 	def onTest( self, iAttr ):
+		if self.testCallback:
+			self.testCallback()
+		
 		attrCB, ftpCB, testBtn = self.widget[iAttr]
 		doFtp = ftpCB and ftpCB.GetValue()
 		doBatchPublish( iAttr )
@@ -880,19 +885,17 @@ class BatchPublishPropertiesDialog( wx.Dialog ):
 		super(BatchPublishPropertiesDialog, self).__init__( parent, id, _("Batch Publish Results"),
 					style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
 					
-		self.batchPublishProperties = BatchPublishProperties(self)
+		self.batchPublishProperties = BatchPublishProperties(self, testCallback=self.commit)
 		self.batchPublishProperties.refresh()
 		
-		'''
 		self.cp = cp = wx.CollapsiblePane(
 			self,
 			label=_("Click here to configure Ftp"),
 			style=wx.CP_DEFAULT_STYLE|wx.CP_NO_TLW_RESIZE
 		)
 		self.Bind(wx.EVT_COLLAPSIBLEPANE_CHANGED, self.onPaneChanged, cp)
-		self.ftp = FtpProperties( cp.GetPane() )
+		self.ftp = FtpProperties( cp.GetPane(), uploadNowButton=False )
 		self.ftp.refresh()
-		'''
 		
 		self.okBtn = wx.Button( self, label=_('Publish Now') )
 		self.okBtn.Bind( wx.EVT_BUTTON, self.onOK )
@@ -910,27 +913,28 @@ class BatchPublishPropertiesDialog( wx.Dialog ):
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		vs.Add( self.batchPublishProperties )
-		#vs.Add( self.cp, flag=wx.EXPAND|wx.ALL, border=4 )
+		vs.Add( self.cp, 1, flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=4 )
 		vs.Add( hb, flag=wx.ALIGN_CENTRE|wx.ALL, border=8 )
 		
 		self.SetSizerAndFit( vs )
 	
+	def commit( self ):
+		self.batchPublishProperties.commit()
+		self.ftp.commit()
+	
 	def onPaneChanged( self, event ):
-		self.ftp.GetSizer().Layout()
 		self.ftp.Layout()
-		width, height = self.ftp.GetSizer().GetMinSize()
-		self.ftp.Fit()
 		self.GetSizer().Layout()
 		self.Fit()
 	
 	def onOK( self, event ):
-		self.batchPublishProperties.commit()
+		self.commit()
 		doBatchPublish()
 		Utils.refresh()
 		self.EndModal( wx.ID_OK )
 		
 	def onSave( self, event ):
-		self.batchPublishProperties.commit()
+		self.commit()
 		Utils.refresh()
 		self.EndModal( wx.ID_OK )
 		

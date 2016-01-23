@@ -260,7 +260,7 @@ def GetFtpPublish( isDialog=True ):
 	ParentClass = wx.Dialog if isDialog else wx.Panel
 	class FtpPublishObject( ParentClass ):
 
-		def __init__( self, parent, id = wx.ID_ANY ):
+		def __init__( self, parent, id=wx.ID_ANY, uploadNowButton=True ):
 			if isDialog:
 				super(FtpPublishObject, self).__init__( parent, id, _("Ftp Publish Results"),
 								style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
@@ -350,13 +350,18 @@ def GetFtpPublish( isDialog=True ):
 			else:
 				self.ftpTestButton = wx.Button( self, label=_('Test FTP Connection') )
 				self.ftpTestButton.Bind( wx.EVT_BUTTON, self.onFtpTest )
-				self.ftpUploadNowButton = wx.Button( self, label=_('Do FTP Upload Now') )
-				self.ftpUploadNowButton.Bind( wx.EVT_BUTTON, self.onFtpUploadNow )
+				if uploadNowButton:
+					self.ftpUploadNowButton = wx.Button( self, label=_('Do FTP Upload Now') )
+					self.ftpUploadNowButton.Bind( wx.EVT_BUTTON, self.onFtpUploadNow )
 				fgs.AddSpacer( 16 )
 				fgs.AddSpacer( 16 )
 				fgs.Add( self.ftpTestButton, flag=wx.ALIGN_RIGHT )
-				fgs.Add( self.ftpUploadNowButton )
-				self.SetSizer( fgs )
+				if uploadNowButton:
+					fgs.Add( self.ftpUploadNowButton )
+				else:
+					fgs.AddSpacer( 4 )
+				self.SetSizerAndFit( fgs )
+				fgs.Fit( self )
 
 		def onFtpTest( self, event ):
 			self.commit()
@@ -444,11 +449,11 @@ def GetFtpPublish( isDialog=True ):
 			
 	return FtpPublishObject
 
-def FtpPublishDialog( parent ):
-	return GetFtpPublish( True )( parent )
+def FtpPublishDialog( parent, *args, **kwargs ):
+	return GetFtpPublish( True )( parent, *args, **kwargs )
 
-def FtpProperties( parent ):
-	return GetFtpPublish( False )( parent )
+def FtpProperties( parent, *args, **kwargs ):
+	return GetFtpPublish( False )( parent, *args, **kwargs )
 
 def FtpUploadNow( parent ):
 	race = Model.race
