@@ -708,8 +708,21 @@ def ParsePhotoFName( fname ):
 	
 	bib = int(fields[1])
 	hour, minute, second, decimal = fields[3:7]
-	raceTime = float(hour)*(60.0*60.0) + float(minute)*60.0 + float(second) + float(decimal)/(10**len(decimal))
-	count = int(fields[-1])
+	
+	try:
+		raceTime = float(hour)*(60.0*60.0) + float(minute)*60.0 + float(second) + float(decimal)/(10**len(decimal))
+	except:
+		writeLog( 'ParsePhotoFName: raceTime fname="{}"'.format(fname) )
+		logException( e, sys.exc_info() )
+		raise
+	
+	try:
+		count = int(fields[-1])
+	except:
+		writeLog( 'ParsePhotoFName: count fname="{}"'.format(fname) )
+		logException( e, sys.exc_info() )
+		raise
+
 	photoTime = datetime.datetime.fromtimestamp(int(fields[7], 36) / 10000.0) if len(fields) >= 9 else None
 	return bib, raceTime, count, photoTime
 

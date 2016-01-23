@@ -303,7 +303,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		if num:
 			name = getRiderNameFromFName( self.thumbFileName )
 			numPhotos = self.thumbs.GetItemCount()
-			name = u'{}  ({} {})'.format(name, numPhotos, _('rider photos') if self.num != self.ShowAllPhotos else _('last race photos'))
+			name = u'{}  ({} {})'.format(name, numPhotos, _('photos') if self.num != self.ShowAllPhotos else _('last race photos'))
 			self.title.SetLabel( u'{}  {}'.format(num, name) )
 		
 		try:

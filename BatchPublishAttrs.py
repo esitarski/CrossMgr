@@ -5,7 +5,7 @@ BatchAttr = namedtuple('BatchAttr', 'name uiname filecode func ftp note')
 
 batchPublishAttr = (
 	BatchAttr('Html',	_('Html'),			'html', 		'menuPublishHtmlRaceResults', True, _('as .html file')),
-	BatchAttr('IndexHtml',	_('Index Html'),'indexhtml', 	'menuPublishHtmlIndex', True, _('index.html file for all CrossMgr races in folder')),
+	BatchAttr('IndexHtml',	_('Index Html'),'indexhtml', 	'menuPublishHtmlIndex', True, _('index.html for all CrossMgr races in folder')),
 	BatchAttr('Pdf',	_('Pdf'),			'pdf',  		'menuPrintPDF', True, _('as .pdf file')),
 	BatchAttr('Excel',	_('Excel'), 		'excel', 		'menuPublishAsExcel', True, _('as .xls file')),
 	BatchAttr('USAC',	_('USAC'),			'usacexcel',	'menuExportUSAC', True, _('as .xls upload file')),

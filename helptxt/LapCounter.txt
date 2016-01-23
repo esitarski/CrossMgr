@@ -9,6 +9,10 @@ For best effect:
 1. Drag the __LapCounter__ screen to separate monitor.
 1. Set up the monitor so the riders can see it.
 
+_Lap Cycle__ cycles through laps for the duration of the race.
+For example, if __Lap Cycle__ is set to 3, the lap counter will show 2, 1, 0, 2, 1, 0 etc. for the duration of the race.  The last 1 will be on the last lap.
+This is useful for Elimination races.
+
 ## Lap Counter Function
 
 The LapCounter function relies on CrossMgr's ability to predict the leader.  There are a few considerations:

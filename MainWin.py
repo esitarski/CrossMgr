@@ -1330,7 +1330,7 @@ class MainWin( wx.Frame ):
 			'excel':			lambda: fnameBase + '.xls',
 			'pdf':				lambda: fnameBase + '.pdf',
 			'html':				lambda: fnameBase + '.html',
-			'indexhtml':		lambda: os.path.join(os.path.basname(fnameBase), 'index.html'),
+			'indexhtml':		lambda: os.path.join(os.path.dirname(fnameBase), 'index.html'),
 			'webscorertxt':		lambda: fnameBase + '-WebScorer.txt',
 			'usacexcel':		lambda: fnameBase + '-USAC.xls',
 			'uciexcel':			lambda: fnameBase + '-UCI.xls',
