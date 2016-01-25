@@ -241,7 +241,12 @@ class LapCounter( wx.Panel ):
 		def getCycleLap( label ):
 			if not self.lapCounterCycle or not label.strip().isdigit():
 				return label
-			return u'{}'.format(int(label.strip()) % self.lapCounterCycle)
+			lapCur = int(label.strip())
+			if lapCur > 0:
+				lapCur %= self.lapCounterCycle
+				if lapCur == 0:
+					lapCur = self.lapCounterCycle
+			return u'{}'.format(lapCur)
 		
 		if len(self.labels) <= 2:
 			lineHeight = (height - border*2) // len(self.labels)
