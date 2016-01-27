@@ -10,10 +10,13 @@ import wx.lib.masked as masked
 import wx.lib.agw.flatnotebook as flatnotebook
 import glob
 import webbrowser
+import threading
+import datetime
 from RaceInputState import RaceInputState
 import ImageIO
 from SetGraphic			import SetGraphicDialog
 from FtpWriteFile import FtpProperties, FtpUploadFile, FtpIsConfigured, FtpPublishDialog
+from FtpUploadProgress import FtpUploadProgress
 from LapCounter import LapCounterProperties
 from GeoAnimation import GeoAnimation, GeoTrack
 from GpxImport import GetGeoTrack
@@ -861,6 +864,8 @@ def doBatchPublish( silent=False, iAttr=None ):
 	race = Model.race
 	mainWin = Utils.getMainWin()
 	ftpFiles = []
+	
+	wait = wx.BusyCursor()
 	for i, attr in enumerate(batchPublishAttr):
 		if iAttr is not None and i != iAttr:
 			continue
@@ -877,6 +882,8 @@ def doBatchPublish( silent=False, iAttr=None ):
 		elif publishFormatBikeReg == 2:
 			mainWin.menuExportRoadResults( silent=True )
 	
+	del wait
+	
 	e = None
 	if ftpFiles:
 		if not FtpIsConfigured() and Utils.MessageOKCancel(
@@ -887,8 +894,29 @@ def doBatchPublish( silent=False, iAttr=None ):
 			dlg = FtpPublishDialog( mainWin )
 			ret = dlg.ShowModal()
 			dlg.Destroy()
-			
-		e = FtpUploadFile( ftpFiles )
+		
+		if not silent:
+			class FtpThread( threading.Thread ):
+				def __init__(self, ftpFiles, progressDialog):
+					super( FtpThread, self ).__init__()
+					self.ftpFiles = ftpFiles
+					self.progressDialog = progressDialog
+					self.e = None
+			 
+				def run(self):
+					wx.CallAfter( self.progressDialog.ShowModal )
+					self.e = FtpUploadFile( self.ftpFiles, self.progressDialog.update )
+					wx.CallAfter( self.progressDialog.Show, False )
+				
+			bytesTotal = sum( os.path.getsize(f) for f in ftpFiles )
+			uploadProgress = FtpUploadProgress( mainWin, fileTotal=len(ftpFiles), bytesTotal=bytesTotal, )
+			uploadProgress.Centre()
+			ftpThread = FtpThread( ftpFiles, uploadProgress )
+			ftpThread.start()
+			e = ftpThread.e
+		else:
+			e = FtpUploadFile( ftpFiles )
+		
 		if e and not silent:
 			Utils.MessageOK( mainWin, u'{}\n\n{}'.format( _('Ftp Upload Error'), e), _('Ftp Upload Error'), wx.ICON_ERROR )
 			
@@ -1184,8 +1212,7 @@ class Properties( wx.Panel ):
 			wildcard="CrossMgr template files (*.cmnt)|*.cmnt",
 			style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST,
 		)
-		ret = fd.ShowModal()
-		if ret == wx.ID_OK:
+		if fd.ShowModal() == wx.ID_OK:
 			path = fd.GetPath()
 			if not Utils.MessageOKCancel(
 					self, u'{}\n\n{}\n\n{}\n\n{}'.format(
@@ -1206,7 +1233,6 @@ class Properties( wx.Panel ):
 				self.refresh()
 			except Exception as e:
 				Utils.MessageOK( self, u'{}\n\n{}\n{}'.format(_("Template Load Failure"), e, path), _("Template Load Failure"), wx.ICON_ERROR )
-		fd.Destroy()
 	
 	def saveTemplateButtonCallback( self, event ):
 		templatesFolder = os.path.join( os.path.expanduser("~"), 'CrossMgrTemplates' )
@@ -1221,8 +1247,7 @@ class Properties( wx.Panel ):
 			wildcard="CrossMgr template files (*.cmnt)|*.cmnt",
 			style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT,
 		)
-		ret = fd.ShowModal()
-		if ret == wx.ID_OK:
+		if fd.ShowModal() == wx.ID_OK:
 			template = Template.Template( Model.race )
 			path = fd.GetPath()
 			try:
@@ -1232,7 +1257,6 @@ class Properties( wx.Panel ):
 				Utils.MessageOK( self, u'{}\n\n{}'.format(_("Template Saved to"), path), _("Save Template Successful") )
 			except Exception as e:
 				Utils.MessageOK( self, u'{}\n\n{}\n{}'.format(_("Template Save Failure"), e, path), _("Template Save Failure"), wx.ICON_ERROR )
-		fd.Destroy()
 	
 	def setEditable( self, editable = True ):
 		pass

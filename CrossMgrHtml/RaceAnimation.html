@@ -167,6 +167,7 @@ var email = null;
 var raceAddress = null;
 var raceIsRunning = null;
 var raceIsUnstarted = null;
+var raceIsFinished = null;
 var data = null;
 var catDetails = null;
 var isTimeTrial = null;
@@ -5017,7 +5018,7 @@ function LapChart( ) {
 			height = rowHeight * (nums.length + 1);
 			
 			dc.lineCap = 'butt';
-			dc.lineJoin = 'miter';
+			dc.lineJoin = 'round';
 			dc.setLineDash( [] );
 			
 			function getY(row) { return rowHeight * (row+1); }

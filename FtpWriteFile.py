@@ -18,16 +18,39 @@ def lineno():
 	"""Returns the current line number in our program."""
 	return inspect.currentframe().f_back.f_lineno
 
-def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30, serverPath = '.', fname = '' ):
+def FtpWriteFile( host, user='anonymous', passwd='anonymous@', timeout=30, serverPath='.', fname='', callback=None ):
+	
+	if isinstance(fname, basestring):
+		fname = [fname]
+	
+	'''
+	if callback:
+		print 'FtpWriteFile: called with callback'
+		import time
+		for i, f in enumerate(fname):
+			fSize = os.path.getsize(f)
+			for s in xrange(0, fSize, 1024 ):
+				callback( ' '*1024, f, i )
+				time.sleep( 0.1 )
+			if s != fSize:
+				callback( ' '*(fSize-s), f, i )
+				time.sleep( 0.1 )
+			#if i == 2:
+			#	raise ValueError, 'Testing exception'
+		return
+	'''
+	
 	with ftputil.FTPHost( host, user, passwd ) as host:
 		try:
 			host.makedirs( serverPath )
 		except Exception as e:
 			pass
-		if isinstance(fname, basestring):
-			fname = [fname]
-		for f in fname:
-			host.upload_if_newer( f, serverPath + '/' + os.path.basename(f) )
+		for i, f in enumerate(fname):
+			host.upload_if_newer(
+				f,
+				serverPath + '/' + os.path.basename(f),
+				(lambda byteStr, fname=f, i=i: callback(byteStr, fname, i)) if callback else None
+			)
 
 def FtpIsConfigured():
 	with Model.LockRace() as race:
@@ -39,7 +62,7 @@ def FtpIsConfigured():
 		
 	return host and user
 		
-def FtpUploadFile( fname=None ):
+def FtpUploadFile( fname=None, callback=None ):
 	with Model.LockRace() as race:
 		if not race or not Utils.getFileName():
 			return None
@@ -51,6 +74,7 @@ def FtpUploadFile( fname=None ):
 			passwd		= getattr( race, 'ftpPassword', '' ),
 			serverPath	= getattr( race, 'ftpPath', '' ),
 			fname		= fname or [],
+			callback	= callback,
 		)
 	except Exception as e:
 		Utils.writeLog( 'UploadFile: Error: {}'.format(e) )
