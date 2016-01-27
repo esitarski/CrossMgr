@@ -33,13 +33,13 @@ class FtpUploadProgress( wx.Dialog ):
 			tEnd = tCur * float(self.bytesTotal) / float(self.bytesCur)
 			eta = u'{},  {} {}'.format(Utils.formatTime(
 				max(0.0, tEnd - tCur + 1.0)),
-				max(0.0, self.bytesTotal - self.bytesCur) // 1000, _('KB to go'),
+				max(0.0, self.bytesTotal - self.bytesCur) // 1024, _('KB to go'),
 			)
 	
 		self.bytesGauge.SetValue( self.bytesCur )
-		self.message.SetLabel( u'{}:  {}\n\n{} {} {}:  {}'.format(
+		self.message.SetLabel( u'{}:  {}\n\n{} {} {} {}:  {}'.format(
 				_('Ftp Update Progress'), eta,
-				i+1, _('of'), self.fileTotal,
+				_('Uploading'), i+1, _('of'), self.fileTotal,
 				os.path.basename(fname),
 			)
 		)
