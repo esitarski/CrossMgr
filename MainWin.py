@@ -1631,15 +1631,6 @@ class MainWin( wx.Frame ):
 		if courseCoordinates:
 			payload['courseCoordinates'] = courseCoordinates
 			
-			# Add the google maps template.
-			templateFile = os.path.join(Utils.getHtmlFolder(), 'VirtualTourTemplate.html')
-			try:
-				with io.open(templateFile, 'r', encoding='utf-8') as fp:
-					template = fp.read()
-				payload['virtualRideTemplate'] = sanitize( template )
-			except:
-				pass
-				
 			# Add the course viewer template.
 			templateFile = os.path.join(Utils.getHtmlFolder(), 'CourseViewerTemplate.html')
 			try:
@@ -2663,8 +2654,8 @@ class MainWin( wx.Frame ):
 							wildcard = _('CrossMgr files (*.cmn)|*.cmn'),
 							style=wx.OPEN | wx.CHANGE_DIR )
 		if dlg.ShowModal() == wx.ID_OK:
+			busy = wx.BusyCursor()
 			self.openRace( dlg.GetPath() )
-		dlg.Destroy()
 
 	def menuFileHistory( self, event ):
 		fileNum = event.GetId() - wx.ID_FILE1

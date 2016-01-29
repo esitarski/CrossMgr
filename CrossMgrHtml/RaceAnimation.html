@@ -226,7 +226,6 @@ var gpsTotalElevationGain = null;	// total elevation gain on the course.
 var gpsAltigraph = null;		// Altigraph of the course.
 var gpsIsPointToPoint = null;	// Flag whether course is point-to-point or a loop.
 var courseCoordinates = null;	// course coordinates as an array of lon, lat pairs.
-var virtualRideTemplate = null;	// template to generate virtual ride page.
 var courseViewerTemplate = null;// template to show course on a map.
 var travelMap = null;	// template to show travel map.
 var infoFields = null;			// Potential rider fields to show in the results.
@@ -583,151 +582,6 @@ function TriggerReload( leaderRaceTimes, tCur, iLapHint )
 			setTimeout( RefreshPayload, Math.round(7000 + Math.random() * 5000) );
 		}
 	}
-}
-
-function OpenVirtualTourWindow()
-{
-	var speed = null;
-	
-	if( !courseCoordinates || !virtualRideTemplate )
-		return;
-	
-	// Get the fastest finisher's speed in km/h.
-	if( data )
-	{
-		for( var num in data )
-		{
-			var d = data[num];
-			if( d.status == 'Finisher' && d.speed )
-			{
-				var fields = d.speed.split( ' ' );
-				if( fields.length >= 2 )
-				{
-					var s = parseFloat( fields[0] );
-					if( fields[1] == 'mph' )
-						s *= 1.609344;
-					if( !speed || s > speed )
-						speed = s;
-				}
-			}
-		}
-		if( speed )
-		{
-			if( speed > 60.0 )	speed = 60.0;
-			if( speed < 10.0 )	speed = 10.0;
-		}
-	}
-
-	if( !speed )
-		speed = 35.0;	// default km/h.
-	speed *= (1000.0 / (60.0*60.0));	// m/s.
-	
-	var kml = [];
-	function write( lines )
-	{
-		for( var i = 0; i < lines.length; ++i )
-			kml.push( lines[i] );
-	}
-	
-	// Prolog.
-	write( [
-		'{-{?xml version="1.0" ?}-}',
-		'{-{kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2"}-}',
-		'{-{Document}-}',
-		  '{-{name}-}Google Earth Ride - Powered by CrossMgr{-{/name}-}',
-	] );
-	
-	// The Virtual Tour
-	write( [
-		  '{-{gx:Tour'+'>',
-		   '{-{name}-}Google Earth Ride - Powered by CrossMgr{-{/name}-}',
-		   '{-{gx:Playlist}-}',
-	] );
-	var courseCoordinatesLength = courseCoordinates.length;
-	var lastCompassBearing = null;
-	for( var i = 0; i < courseCoordinatesLength; i += 2 )
-	{
-		var lon = courseCoordinates[i % courseCoordinatesLength];
-		var lat = courseCoordinates[(i+1) % courseCoordinatesLength];
-		var lonNext = courseCoordinates[(i+2) % courseCoordinatesLength];
-		var latNext = courseCoordinates[(i+3) % courseCoordinatesLength];
-		var compassBearing = (gpsIsPointToPoint && i == courseCoordinatesLength - 2 ?
-					lastCompassBearing : CompassBearing(lat, lon, latNext, lonNext));
-		var duration = null;
-		if( i == 0 )
-			duration = 3;
-		else if( gpsIsPointToPoint && i == courseCoordinatesLength - 2 )
-			duration = 1;
-		else
-			duration = GreatCircleDistance(lat, lon, latNext, lonNext) / speed;
-		write( [
-		    '{-{gx:FlyTo}-}',
-              '{-{gx:duration}-}' + duration + '{-{/gx:duration}-}',
-              '{-{gx:flyToMode}-}' + (i == 0 ? 'bounce' : 'smooth') + '{-{/gx:flyToMode}-}',
-              '{-{Camera}-}',
-                '{-{latitude}-}' + lat + '{-{/latitude}-}',
-                '{-{longitude}-}' + lon + '{-{/longitude}-}',
-                '{-{altitude}-}'+ 2 +'{-{/altitude}-}',
-                '{-{altitudeMode}-}relativeToGround{-{/altitudeMode}-}',
-                '{-{heading}-}' + compassBearing + '{-{/heading}-}',
-                '{-{tilt}-}'+ 80 +'{-{/tilt}-}',
-              '{-{/Camera}-}',
-            '{-{/gx:FlyTo}-}',
-		] );
-		lastCompassBearing = compassBearing;
-	}
-	write( [
-		  '{-{/gx:Playlist}-}',
-		'{-{/gx:Tour}-}',
-	] );
-	
-	// The Finish.
-	write( [
-	   '{-{Placemark}-}',
-        '{-{name}-}Finish{-{/name}-}',
-        '{-{Point}-}',
-          '{-{coordinates}-}' + courseCoordinates[0] + ',' + courseCoordinates[1] + '{-{/coordinates}-}',
-        '{-{/Point}-}',
-       '{-{/Placemark}-}'
-	] );
-
-	// The Course.
-	write( [
-       '{-{Placemark}-}',
-         '{-{name}-}Course{-{/name}-}',
-         '{-{LineString}-}',
-           '{-{tessellate}-}1{-{/tessellate}-}',
-           '{-{altitudeMode}-}relativeToGround{-{/altitudeMode}-}',
-		   '{-{coordinates}-}',
-	] );
-	for( var i = 0; i < courseCoordinates.length; i += 2 )
-		kml.push( courseCoordinates[i] + ',' + courseCoordinates[i+1] + ',' + 1.0 );
-	if( !gpsIsPointToPoint )
-		kml.push( courseCoordinates[0] + ',' + courseCoordinates[1] + ',' + 1.0 );
-	
-	// Eplilog.
-	write( [
-	       '{-{/coordinates}-}',
-        '{-{/LineString}-}',
-      '{-{/Placemark}-}',
-	'{-{/Document}-}',
-    '{-{/kml}-}'
-	] );
-	
-	//alert( kml.join(' ') );
-	var template = virtualRideTemplate.replace(/{-{/g, '<').replace(/}-}/g, '>').replace( "kml = '';", "kml='" + kml.join(' ') + "';" );
-	if( organizer )
-		template = template.replace( "organizer = '';", "organizer='" + organizer.escapeHTML() + "';" );
-	var element = document.getElementById('idTitle');
-	var text = element.innerText || element.textContent;
-	var p = text.search('Results for');
-	if( p >= 0 )
-		text = text.substring( 0, p );
-	template = template.replace( "raceName = '';", "raceName='" + text.escapeHTML() + "';" );
-	
-	var w = window.open( '', '', '', true );
-	w.document.write( template );
-	w.document.close();
 }
 
 function OpenRiderDashboardViewerWindow( bib )
@@ -6011,7 +5865,6 @@ function onLoad()
 		document.getElementById('idRaceNotes').innerHTML = raceNotes.replace(/{-{/g, '<').replace(/}-}/g, '>');
 	
 	if( !courseCoordinates ) {
-		document.getElementById('idVirtualTour').className = 'hidden';
 		document.getElementById('idCourseViewer').className = 'hidden';
 		document.getElementById('idGetDirections').className = 'hidden';
 	}
@@ -6151,7 +6004,6 @@ function onLoad()
 <br/>
 <button id="idGetDirections" onclick="OpenGetDirections()" data-tr="Get Directions"></button>&nbsp;&nbsp;
 <button id="idCourseViewer" onclick="OpenCourseViewerWindow()" data-tr="Course Map"></button>&nbsp;&nbsp;
-<button id="idVirtualTour" onclick="OpenVirtualTourWindow()" data-tr="Google Earth Ride"></button>&nbsp;&nbsp;
 <button id="idTravelMap" onclick="OpenTravelMapWindow()" data-tr="Participant Map"></button>&nbsp;&nbsp;
 <button onclick="doReload()" data-tr="Refresh"></button>&nbsp;&nbsp;&nbsp;
 <select id="idDisplaySelect" onchange="displaySelect(this);">
