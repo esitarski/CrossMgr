@@ -175,20 +175,13 @@ class ContentBuffer( object ):
 		
 	def getIndexInfo( self ):
 		with self.lock:
-			files = self._getFiles()
-			result = { data:None for data in ('logoSrc', 'organizer') }
-			for f in reversed(files):
-				for key in result.iterkeys():
-					if not result[key]:
-						result[key] = self.fileCache[f]['payload'].get(key,None)
-				if all( result.itervalues() ):
-					break
+			race = Model.race
+			result = {
+				'logoSrc': race.headerImage or DefaultLogoSrc,
+				'organizer': race.organizer,
+			}
 			
-			if not result['logoSrc']:
-				result['logoSrc'] = DefaultLogoSrc
-			if not result['organizer']:
-				result['organizer'] = ''
-				
+			files = self._getFiles()
 			info = []
 			for fname in files:
 				cache = self._getCache( fname, False )
@@ -211,6 +204,7 @@ class ContentBuffer( object ):
 				if g.isTimeTrial:
 					g.urlTTStart = urllib.pathname2url(os.path.splitext(fname)[0] + '_TTStart.html')
 				info.append( g )
+			
 			result['info'] = info
 			return result
 

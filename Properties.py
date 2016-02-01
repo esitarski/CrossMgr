@@ -395,7 +395,7 @@ class WebProperties( wx.Panel ):
 		hsButtons = wx.BoxSizer( wx.HORIZONTAL )
 		self.webIndexPageBtn = wx.Button( self, label=_('Show Index Page') )
 		self.webIndexPageBtn.Bind( wx.EVT_BUTTON, self.doWebIndexPage )
-		self.webQRCodePageBtn = wx.Button( self, label=_('Show Index Page') )
+		self.webQRCodePageBtn = wx.Button( self, label=_('Show QR Code Share') )
 		self.webQRCodePageBtn.Bind( wx.EVT_BUTTON, self.doWebQRCodePage )
 		
 		hsButtons.Add( self.webIndexPageBtn )
