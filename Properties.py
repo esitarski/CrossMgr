@@ -23,6 +23,7 @@ from GpxImport import GetGeoTrack
 import Template
 from BatchPublishAttrs import batchPublishAttr, batchPublishRaceAttr
 import JChipSetup
+import WebServer
 
 #------------------------------------------------------------------------------------------------
 
@@ -390,7 +391,31 @@ class WebProperties( wx.Panel ):
 		ms.Add( hsHeaderGraphic, flag=wx.ALL, border=4 )
 		ms.Add( self.headerImageBitmap, flag=wx.ALL, border=4 )
 		ms.Add( wx.StaticText(self, label=_("The Page Header Graphic will appears on HTML, Printouts and PDF files.")), flag=wx.ALL, border=4 )
+		
+		hsButtons = wx.BoxSizer( wx.HORIZONTAL )
+		self.webIndexPageBtn = wx.Button( self, label=_('Show Index Page') )
+		self.webIndexPageBtn.Bind( wx.EVT_BUTTON, self.doWebIndexPage )
+		self.webQRCodePageBtn = wx.Button( self, label=_('Show Index Page') )
+		self.webQRCodePageBtn.Bind( wx.EVT_BUTTON, self.doWebQRCodePage )
+		
+		hsButtons.Add( self.webIndexPageBtn )
+		hsButtons.Add( self.webQRCodePageBtn, flag=wx.LEFT, border=16 )
+		
+		ms.Add( hsButtons, flag=wx.ALL, border=8 )
+		
 		self.SetSizer( ms )
+
+	def doWebIndexPage( self, event ):
+		try:
+			webbrowser.open( WebServer.GetCrossMgrHomePage(), new=2, autoraise=True )
+		except Exception as e:
+			pass
+	
+	def doWebQRCodePage( self, event ):
+		try:
+			webbrowser.open( WebServer.GetCrossMgrHomePage() + '/qrcode.html' , new=2, autoraise=True )
+		except Exception as e:
+			pass
 
 	def getDefaultGraphicFNameType( self ):
 		return os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), wx.BITMAP_TYPE_PNG
@@ -403,6 +428,7 @@ class WebProperties( wx.Panel ):
 			self.headerImageBitmap.SetBitmap( ImageIO.toBitmapFromBuf(self.headerImage) )
 			self.setGraphicStats()
 			self.GetSizer().Layout()
+			self.Refresh()
 		dlg.Destroy()
 	
 	def setGraphicStats( self ):

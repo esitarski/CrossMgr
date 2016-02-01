@@ -1676,7 +1676,7 @@ class MainWin( wx.Frame ):
 			try:
 				iStart = html.index( 'src="data:image/png' )
 				iEnd = html.index( '"/>', iStart )
-				html = ''.join( [html[:iStart], 'src="%s"' % graphicBase64, html[iEnd+1:]] )
+				html = ''.join( [html[:iStart], 'src="{}"'.format(graphicBase64), html[iEnd+1:]] )
 			except ValueError:
 				pass
 				

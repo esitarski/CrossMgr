@@ -10,7 +10,7 @@ def ParseHtmlPayload( fname=None, content=None ):
 	payloadStart = u"/* !!! payload begin !!! */"
 	payloadEnd = u"/* !!! payload end !!! */"
 	
-	srcStart = u'<img id="idImgHeader" alt="CrossMgr Logo" src='
+	imgHeaderStart = u'id="idImgHeader" src='
 
 	if not content:
 		try:
@@ -62,8 +62,8 @@ def ParseHtmlPayload( fname=None, content=None ):
 	payload['raceScheduledStart'] = raceScheduledStart
 	
 	try:
-		iStart = content.index( srcStart )
-		iStart = content.index( '"', iStart + len(srcStart) ) + 1
+		iStart = content.index( imgHeaderStart )
+		iStart = content.index( '"', iStart + len(imgHeaderStart) ) + 1
 		iEnd = content.index( '"', iStart )
 		payload['logoSrc'] = content[iStart:iEnd]
 	except ValueError as e:
@@ -81,6 +81,7 @@ def ParseHtmlPayload( fname=None, content=None ):
 if __name__ == '__main__':
 	htmlFile = os.path.join('Gemma', '2015-11-10-CXC Open BWomen-r2-.html')
 	htmlFile = os.path.join('Larkin', '2015-06-12-Larkinville Challenge 5-r3-.html' )
+	htmlFile = 'parseTest.html'
 	result = ParseHtmlPayload( htmlFile )
 	if result['success']:
 		payload = result['payload']
