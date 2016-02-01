@@ -325,7 +325,7 @@ def GetFtpPublish( isDialog=True ):
 			fgs.Add( wx.StaticText( self, label = _("Ftp Host Name")), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 			fgs.Add( self.ftpHost, 1, flag=wx.TOP|wx.ALIGN_LEFT|wx.EXPAND )
 			
-			fgs.Add( wx.StaticText( self, label = _("Upload HTML to Path")),  flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+			fgs.Add( wx.StaticText( self, label = _("Upload files to Path")),  flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 			fgs.Add( self.ftpPath, 1, flag=wx.EXPAND )
 			
 			fgs.Add( self.ftpUploadPhotos, flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
