@@ -406,12 +406,14 @@ class WebProperties( wx.Panel ):
 		self.SetSizer( ms )
 
 	def doWebIndexPage( self, event ):
+		self.commit()
 		try:
 			webbrowser.open( WebServer.GetCrossMgrHomePage(), new=2, autoraise=True )
 		except Exception as e:
 			pass
 	
 	def doWebQRCodePage( self, event ):
+		self.commit()
 		try:
 			webbrowser.open( WebServer.GetCrossMgrHomePage() + '/qrcode.html' , new=2, autoraise=True )
 		except Exception as e:
