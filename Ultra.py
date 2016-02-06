@@ -30,7 +30,7 @@ EOL = bytes('\r')		# Ultra delimiter
 len_EOL = len(EOL)
 
 def parseTagTime( s ):
-	_, ChipCode, Seconds, Milliseconds, _ = s.split(',', 4 )
+	_, ChipCode, Seconds, Milliseconds, _ = s.split(',', 4)
 	t = datetime.datetime(1980, 1, 1) + datetime.timedelta( seconds=int(Seconds), milliseconds=int(Milliseconds) )
 	return ChipCode, t
 
@@ -57,19 +57,26 @@ def socketReadDelimited( s, delimiter=EOL ):
 			break
 	return buffer
 	
-def AutoDetect( ultraPort=DEFAULT_PORT, callback=None ):
-	''' Search ip addresses adjacent to the computer in an attempt to find the reader. '''
+def iterAdjacentIPs():
+	''' Return ip addresses adjacent to the computer in an attempt to find the reader. '''
 	ip = [int(i) for i in Utils.GetDefaultHost().split('.')]
+	ipPrefix = '.'.join( '{}'.format(v) for v in ip[:-1] )
+	ipLast = ip[-1]
+	
+	count = 0
 	j = 0
-	for i in xrange(14):
+	while 1:
 		j = -j if j > 0 else -j + 1
 		
-		ipTest = list( ip )
-		ipTest[-1] += j
-		if not (0 <= ipTest[-1] < 256):
-			continue
-			
-		ultraHost = '.'.join( '{}'.format(v) for v in ipTest )
+		ipTest = ipLast + j
+		if 0 <= ipTest < 256:
+			yield '{}.{}'.format(ipPrefix, ipTest)
+			count += 1
+			if count >= 8:
+				break
+		
+def AutoDetect( ultraPort=DEFAULT_PORT, callback=None ):
+	for ultraHost in iterAdjacentIPs():
 		if callback:
 			if not callback( '{}:{}'.format(ultraHost,ultraPort) ):
 				return None
@@ -91,7 +98,7 @@ def AutoDetect( ultraPort=DEFAULT_PORT, callback=None ):
 		except Exception as e:
 			pass
 		
-		if buffer.startswith( 'Connected' ):
+		if buffer.startswith('Connected'):
 			return ultraHost
 			
 	return None
