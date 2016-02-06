@@ -11,6 +11,7 @@ import JChip
 import ChipReader
 from JChip import EVT_CHIP_READER
 import RaceResult
+import Ultra
 from ReadSignOnSheet import GetTagNums
 
 HOST, PORT = JChip.DEFAULT_HOST, JChip.DEFAULT_PORT
@@ -81,7 +82,7 @@ class JChipSetupDialog( wx.Dialog ):
 		
 		todoList =  u'\n'.join( '%d)  %s' % (i + 1, s) for i, s in enumerate( [
 			_('Make sure the RFID receiver is plugged into the network.'),
-			_('If not using JChip/RaceResult, make sure the CrossMgrImpinj or CrossMgrAlien bridge programs are running.'),
+			_('If you are using Impinj/Alien, make sure the CrossMgrImpinj or CrossMgrAlien bridge programs are running.'),
 			_('You must have the Sign-On Excel sheet ready and linked before your race.'),
 			_('You must configure a "Tag" field in your Sign-On Excel Sheet.'),
 			_('Run this test before each race.'),
@@ -98,7 +99,7 @@ class JChipSetupDialog( wx.Dialog ):
 		
 		#-------------------------------------------------------------------
 		bs.AddSpacer( border )
-		bs.Add( wx.StaticText( self, label = _('JChip/CrossMgrImpinj/CrossMgrAlien/RaceResult Configuration:') ), 0, wx.EXPAND|wx.ALL, border )
+		bs.Add( wx.StaticText( self, label = _('Reader Configuration:') ), 0, wx.EXPAND|wx.ALL, border )
 		
 		#-------------------------------------------------------------------
 		rowColSizer = rcs.RowColSizer()
@@ -172,6 +173,8 @@ class JChipSetupDialog( wx.Dialog ):
 		race.chipReaderIpAddr = self.ipaddr.GetValue()
 		if race.chipReaderType == 1:
 			Utils.writeConfig( 'RaceResultHost', race.chipReaderIpAddr )
+		elif race.chipReaderType == 2:
+			Utils.writeConfig( 'UltraHost', race.chipReaderIpAddr )
 		race.chipReaderPort = self.port.GetValue()
 		race.enableJChipIntegration = bool(self.enableJChipCheckBox.GetValue())
 		ChipReader.chipReaderCur.reset( race.chipReaderType )
@@ -188,14 +191,16 @@ class JChipSetupDialog( wx.Dialog ):
 		
 	def changechipReaderType( self, event=None ):
 		selection = self.chipReaderType.GetSelection()
+		
 		if selection == 0:	# JChip/CrossMgrImpinj/CrossMgrAlien
 			self.port.SetValue( 53135 )
 			self.port.SetEditable( False )
 			self.ipaddr.SetValue( Utils.GetDefaultHost() )
 			self.ipaddr.SetEditable( False )
 			self.autoDetect.Show( False )
+			
 		elif selection == 1:	# RaceResult
-			self.port.SetValue( 3601 )
+			self.port.SetValue( RaceResult.DEFAULT_PORT )
 			self.port.SetEditable( True )
 			self.ipaddr.SetEditable( True )
 			rfidReaderHost = Utils.readConfig( 'RfidReaderHost', None )
@@ -205,8 +210,9 @@ class JChipSetupDialog( wx.Dialog ):
 				except Exception as e:
 					self.ipaddr.SetValue( Utils.GetDefaultHost() )
 			self.autoDetect.Show( True )
+		
 		elif selection == 2:	# Ultra
-			self.port.SetValue( 23 )
+			self.port.SetValue( Ultra.DEFAULT_PORT )
 			self.port.SetEditable( True )
 			self.ipaddr.SetEditable( True )
 			rfidReaderHost = Utils.readConfig( 'RfidReaderHost', None )
@@ -216,17 +222,22 @@ class JChipSetupDialog( wx.Dialog ):
 				except Exception as e:
 					self.ipaddr.SetValue( Utils.GetDefaultHost() )
 			self.autoDetect.Show( True )
+		
 		self.Layout()
+		self.Refresh()
 	
 	def doAutoDetect( self, event ):
+		selection = self.chipReaderType.GetSelection()
+		autoDetect = [RaceResult.AutoDetect, Ultra.AutoDetect][selection-1]
+		
 		def getHost():
 			wait = wx.BusyCursor()
 			try:
-				return None, RaceResult.AutoDetect(self.port.GetValue())
+				return None, autoDetect(self.port.GetValue())
 			except Exception as e:
 				return e, None
 		
-		error, raceResultHost = getHost()
+		error, readerHost = getHost()
 		if error:
 			Utils.MessageOK(
 				self,
@@ -235,14 +246,14 @@ class JChipSetupDialog( wx.Dialog ):
 				wx.ICON_ERROR
 			)
 			return
-		if not raceResultHost:
+		if not readerHost:
 			Utils.MessageOK(
-				self, u'{}:\n\n{}'.format(_("AutoDetect Failure"), _('RaceResult reader not found.')),
+				self, u'{}:\n\n{}'.format(_("AutoDetect Failure"), _('Reader not found.')),
 				_("AutoDetect Failure"),
 				wx.ICON_ERROR
 			)
 			return
-		self.ipaddr.SetValue( raceResultHost )
+		self.ipaddr.SetValue( readerHost )
 		
 	def handleChipReaderEvent( self, event ):
 		if not event.tagTimes:

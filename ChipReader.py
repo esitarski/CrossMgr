@@ -1,4 +1,3 @@
-
 import Utils
 import JChip
 import RaceResult
@@ -20,18 +19,21 @@ class ChipReader( object ):
 			Ultra.StopListener()
 		
 		self.chipReaderType = (chipReaderType or ChipReader.JChip)
+		
 		if self.chipReaderType == ChipReader.RaceResult:
 			self.StartListener = RaceResult.StartListener
 			self.GetData = RaceResult.GetData
 			self.StopListener = RaceResult.StopListener
 			self.CleanupListener = RaceResult.CleanupListener
 			self.IsListening = RaceResult.IsListening
+			
 		elif self.chipReaderType == ChipReader.Ultra:
 			self.StartListener = Ultra.StartListener
 			self.GetData = Ultra.GetData
 			self.StopListener = Ultra.StopListener
 			self.CleanupListener = Ultra.CleanupListener
 			self.IsListening = Ultra.IsListening
+			
 		else: # self.chipReaderType == ChipReader.JChip:
 			self.StartListener = JChip.StartListener
 			self.GetData = JChip.GetData

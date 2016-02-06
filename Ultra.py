@@ -30,12 +30,12 @@ EOL = bytes('\r')		# Ultra delimiter
 len_EOL = len(EOL)
 
 def parseTagTime( s ):
-	_, ChipCode, Seconds, Milliseconds, _ = s.split(',', 5 )
+	_, ChipCode, Seconds, Milliseconds, _ = s.split(',', 4 )
 	t = datetime.datetime(1980, 1, 1) + datetime.timedelta( seconds=int(Seconds), milliseconds=int(Milliseconds) )
 	return ChipCode, t
 
-#DEFAULT_PORT = 23
-DEFAULT_PORT = 8642
+DEFAULT_PORT = 23
+#DEFAULT_PORT = 8642
 DEFAULT_HOST = '127.0.0.1'		# Port to connect to the Ultra receiver.
 
 q = None
@@ -57,7 +57,7 @@ def socketReadDelimited( s, delimiter=EOL ):
 			break
 	return buffer
 	
-def AutoDetect( ultraPort=23, callback=None ):
+def AutoDetect( ultraPort=DEFAULT_PORT, callback=None ):
 	''' Search ip addresses adjacent to the computer in an attempt to find the reader. '''
 	ip = [int(i) for i in Utils.GetDefaultHost().split('.')]
 	j = 0
