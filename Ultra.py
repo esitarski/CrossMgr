@@ -139,10 +139,10 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		qLog( 'autodetect', '{} {}'.format(_('Checking'), m) )
 		return keepGoing()
 		
-	def makeCall( s, message, getReply=True ):
+	def makeCall( s, message, getReply=True, comment='' ):
 		cmd = message.split(';', 1)[0]
 		buffer = None
-		qLog( 'command', u'sending: {}'.format(message) )
+		qLog( 'command', u'sending: {}{}'.format(message, ' ({})'.format(comment) if comment else '') )
 		try:
 			#socketSend( s, bytes('{}{}'.format(message,EOL)) )
 			socketSend( s, bytes(message) )
@@ -182,10 +182,11 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				time.sleep( delaySecs )
 			continue
 
+		qLog( 'connection', u'{} {}:{}'.format(_('connect to Ultra reader SUCCEEDS on'), HOST, PORT) )
+		
 		#-----------------------------------------------------------------------------------------------------
-		# Stop the reader.
 		try:
-			makeCall( s, 'S', False )
+			makeCall( s, 'S', False, comment='stop reading' )
 		except ValueError:
 			continue
 		
@@ -194,21 +195,19 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		# Wait for the boundary of a second.  This is the best synchronization we are going to get.
 		time.sleep( (1000000 - now().microsecond) / 1000000.0 )
 		try:
-			buffer = makeCall( s, 't {}'.format( now().strftime('%H:%M:%S %d-%m-%Y'), True ) )
+			buffer = makeCall( s, 't {}'.format( now().strftime('%H:%M:%S %d-%m-%Y') ), True, comment='set reader time' )
 		except ValueError:
 			continue
 		readerComputerTimeDiff = datetime.timedelta( seconds=0 )
 		
 		#-----------------------------------------------------------------------------------------------------
-		# Start the reader.
 		try:
-			makeCall( s, 'R', False )
+			makeCall( s, 'R', False, comment='start reading' )
 		except ValueError:
 			continue
 		
 		lastVoltage = now()
 		while keepGoing():
-			#-------------------------------------------------------------------------------------------------
 			try:
 				buffer = socketReadDelimited( s )
 			except socket.timeout:
@@ -226,16 +225,16 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				if not message:
 					continue
 				
-				# Reset the last heartbeat time.
+				# Check for a heartbeat.
 				if message.startswith( 'V=' ):
-					lastVoltage = now()
+					lastVoltage = now()	# If so, reset the last heartbeat time.
 					continue
 				
-				# Assume this is a chip read.
+				# Otherwise, assume this is a chip read.
 				tag, t = parseTagTime( message )
 				
 				if tag is None or t is None:
-					qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected return'), line) )
+					qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected reader message'), line) )
 					continue
 				
 				t += readerComputerTimeDiff
