@@ -1,1 +1,1 @@
-AppVerName="SeriesMgr 0.0.35"
+AppVerName="SeriesMgr 0.0.36"

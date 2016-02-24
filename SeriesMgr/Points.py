@@ -220,6 +220,7 @@ class Points(wx.Panel):
 		self.fixEnable()
 	
 	def commit( self ):
+		self.grid.SaveEditControlValue()
 		self.grid.DisableCellEditControl()	# Make sure the current edit is committed.
 		pointsList = []
 		for row in xrange(self.grid.GetNumberRows()):

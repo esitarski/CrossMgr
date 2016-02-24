@@ -63,10 +63,10 @@ class PointStructure( object ):
 	
 	def setStr( self, s ):
 		s = s.replace( ',', ' ' )
-		values = set()
+		values = []
 		for v in s.split():
 			try:
-				values.add( int(v) )
+				values.append( int(v) )
 			except:
 				continue
 		self.pointsForPlace = dict( (i+1, v) for i, v in enumerate(sorted(values, reverse=True)) )

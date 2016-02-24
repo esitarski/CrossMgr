@@ -192,6 +192,7 @@ class Races(wx.Panel):
 		self.organizerName.SetValue( SeriesModel.model.organizer )
 	
 	def commit( self ):
+		self.grid.SaveEditControlValue()
 		self.grid.DisableCellEditControl()	# Make sure the current edit is committed.
 		
 		raceList = []
