@@ -26,6 +26,7 @@ copyFiles = [
 	"FitSheetWrapper.py",
 	"ReadSignOnSheet.py",
 	"MatchingCategory.py",
+	"BatchPublishAttrs.py",
 	"ReadCategoriesFromExcel.py",
 	"ReadPropertiesFromExcel.py",
 	"SetGraphic.py",
