@@ -10,6 +10,10 @@ import subprocess
 if os.path.exists('build'):
 	shutil.rmtree( 'build' )
 
+googleDrive = r"c:\GoogleDrive\Downloads\Windows\CrossMgr"
+if not os.path.exists(googleDrive):
+	googleDrive = r"C:\Users\Edward Sitarski\Google Drive\Downloads\Windows\CrossMgr"
+	
 # Compile the help files
 from helptxt.compile import CompileHelp
 CompileHelp( 'helptxt' )
@@ -69,7 +73,7 @@ if os.path.exists( destD ):
 shutil.copytree( localeD, destD )
 
 # Create the installer
-inno = r'\Program Files\Inno Setup 5\ISCC.exe'
+inno = r'\Program Files (x86)\Inno Setup 5\ISCC.exe'
 # Find the drive inno is installed on.
 for drive in ['C', 'D']:
 	innoTest = drive + ':' + inno
@@ -125,10 +129,11 @@ z.write( newExeName )
 z.close()
 print 'executable compressed to: ' + newZipName
 
-shutil.copy( newZipName, r"c:\GoogleDrive\Downloads\Windows\CrossMgr"  )
+	
+shutil.copy( newZipName, googleDrive  )
 
 cmd = 'python virustotal_submit.py "{}"'.format(os.path.abspath(newExeName))
 print cmd
 os.chdir( '..' )
 subprocess.call( cmd, shell=True )
-shutil.copy( 'virustotal.html', os.path.join(r"c:\GoogleDrive\Downloads\Windows\CrossMgr", 'virustotal_v' + vNum + '.html') )
+shutil.copy( 'virustotal.html', os.path.join(googleDrive, 'virustotal_v' + vNum + '.html') )

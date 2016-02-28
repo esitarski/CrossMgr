@@ -497,14 +497,15 @@ def GetNonWaveCategoryResults( category ):
 			continue
 		
 		try:
-			riderResults.append( rrCache[num] )
+			rrFound = rrCache[num]
 		except KeyError:
-			results = GetResults( getCategory(num), True )
-			rrCache.update( { (rr.num, rr) for rr in results } )
-			try:
-				riderResults.append( copy.deepcopy(rrCache[num]) )
-			except KeyError:
-				continue
+			rrCache.update( { rr.num: rr for rr in GetResults(getCategory(num), True) } )
+			rrFound = rrCache.get( num, None )
+				
+		if not rrFound:
+			continue
+		
+		riderResults.append( copy.deepcopy(rrFound) )
 		
 		# Remove the start offset from the race times and finish times.
 		rr = riderResults[-1]
