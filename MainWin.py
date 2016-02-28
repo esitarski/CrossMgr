@@ -1799,6 +1799,7 @@ class MainWin( wx.Frame ):
 		d = BatchPublishPropertiesDialog( self )
 		d.ShowModal()
 		d.Destroy()
+		Utils.MessageOK(self, _('Publish Complete'), _('Publish Complete') )
 		
 	@logCall
 	def menuPublishHtmlRaceResults( self, event=None, silent=False ):
