@@ -21,6 +21,7 @@ from FtpUploadProgress import FtpUploadProgress
 from LapCounter import LapCounterProperties
 from GeoAnimation import GeoAnimation, GeoTrack
 from GpxImport import GetGeoTrack
+from TemplateSubstitute import TemplateSubstitute
 import Template
 from BatchPublishAttrs import batchPublishAttr, batchPublishRaceAttr
 import JChipSetup
@@ -834,8 +835,9 @@ class BatchPublishProperties( wx.Panel ):
 		vs.Add( pps, flag=wx.ALL|wx.EXPAND, border=8 )
 		vs.Add( wx.StaticText(self,label=u'\n'.join([
 				_('The Command is run on CrossMgr generated files.  Use %* to insert the file names into the command line.'),
-				_('Scripts can be shell cmds or scripts (.bat, .py, .rb, .perl, ...).'),
-				_(r'For example:  "for %I in (%*) do @copy %I /B c:\webdir\ -Y", "dosomething.bat %*" or "python dosomething.py %*".'),
+				_('You can also use Notes variables, for example: {=RaceDate}, {=Organizer} and {=City}.'),
+				_('Scripts can be shell cmds or scripts (.bat, .py, .rb, .perl, ...).  For example:'),
+				_(r'"for %I in (%*) do @copy %I /B c:\webdir\ -Y", "dosomething.bat %*" or "python dosomething.py -date {=RaceDate} -files %*".'),
 			])),
 			flag=wx.ALL|wx.EXPAND, border=4 )
 		
@@ -969,6 +971,7 @@ def doBatchPublish( silent=False, iAttr=None ):
 	
 	postPublishCmd = getattr(race, 'postPublishCmd', None)
 	if postPublishCmd and allFiles:
+		postPublishCmd = TemplateSubstitute( postPublishCmd, race.getTemplateValues() )
 		files = ' '.join('"{}"'.format(f) for f in allFiles)
 		if '%*' in postPublishCmd:
 			cmd = postPublishCmd.replace('%*', files)
