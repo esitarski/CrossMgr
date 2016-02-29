@@ -1088,7 +1088,7 @@ class Race( object ):
 			u'PhotoCount':	unicode(self.photoCount),
 			u'ExcelLink':	excelLinkStr,
 			u'GPXFile':		os.path.basename(self.geoTrackFName or ''),
-			
+
 		}
 	
 	@property

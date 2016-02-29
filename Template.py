@@ -76,6 +76,8 @@ class Template( object ):
 			'headerImage',
 			'email',
 			
+			'postPublishCmd',
+			
 			'course',
 		},
 		set(batchPublishRaceAttr),
