@@ -12,6 +12,7 @@ import glob
 import webbrowser
 import threading
 import datetime
+import subprocess
 from RaceInputState import RaceInputState
 import ImageIO
 from SetGraphic			import SetGraphicDialog
@@ -811,6 +812,11 @@ class BatchPublishProperties( wx.Panel ):
 			majorDimension=0
 		)
 		
+		pps = wx.BoxSizer( wx.HORIZONTAL )
+		pps.Add( wx.StaticText(self, label=_('Post Publish Command')), flag=wx.ALIGN_CENTRE_VERTICAL )
+		self.postPublishCmd = wx.TextCtrl( self )
+		pps.Add( self.postPublishCmd, 1, flag=wx.LEFT|wx.EXPAND, border=4 )
+		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		if ftpBtn:
 			for e in explain[:-1]:
@@ -824,6 +830,14 @@ class BatchPublishProperties( wx.Panel ):
 				vs.Add( e, flag=wx.TOP|wx.LEFT|wx.RIGHT, border=8 )
 		vs.Add( fgs, flag=wx.TOP|wx.LEFT|wx.RIGHT, border=8 )
 		vs.Add( self.bikeRegChoice, flag=wx.ALL, border=8 )
+		vs.AddSpacer( 16 )
+		vs.Add( pps, flag=wx.ALL|wx.EXPAND, border=8 )
+		vs.Add( wx.StaticText(self,label=u'\n'.join([
+				_('The Command is run on CrossMgr generated files.  Use %* to insert the file names into the command line.'),
+				_('Scripts can be shell cmds or scripts (.bat, .py, .rb, .perl, ...).'),
+				_(r'For example:  "for %I in (%*) do @copy %I /B c:\webdir\ -Y", "dosomething.bat %*" or "python dosomething.py %*".'),
+			])),
+			flag=wx.ALL|wx.EXPAND, border=4 )
 		
 		self.SetSizer( vs )
 	
@@ -879,6 +893,7 @@ class BatchPublishProperties( wx.Panel ):
 					ftpCB.Enable( False )
 				testBtn.Enable( False )
 		self.bikeRegChoice.SetSelection( getattr(race, 'publishFormatBikeReg', 0) )
+		self.postPublishCmd.SetValue( race.postPublishCmd )
 	
 	def commit( self ):
 		race = Model.race
@@ -887,11 +902,13 @@ class BatchPublishProperties( wx.Panel ):
 			attrCB, ftpCB, testBtn = self.widget[i]
 			setattr( race, raceAttr, 0 if not attrCB.GetValue() else (1 + (2 if ftpCB and ftpCB.GetValue() else 0)) )
 		race.publishFormatBikeReg = self.bikeRegChoice.GetSelection()
+		race.postPublishCmd = self.postPublishCmd.GetValue().strip()
 
 def doBatchPublish( silent=False, iAttr=None ):
 	race = Model.race
 	mainWin = Utils.getMainWin()
 	ftpFiles = []
+	allFiles = []
 	
 	wait = wx.BusyCursor()
 	for i, attr in enumerate(batchPublishAttr):
@@ -900,8 +917,10 @@ def doBatchPublish( silent=False, iAttr=None ):
 		v = getattr( race, batchPublishRaceAttr[i], 0 )
 		if v & 1:
 			getattr( mainWin, attr.func )( silent=True )
-			if v & 2 and attr.filecode:
-				ftpFiles.append( mainWin.getFormatFilename(attr.filecode) )
+			if attr.filecode:
+				allFiles.append( mainWin.getFormatFilename(attr.filecode) )
+				if v & 2:
+					ftpFiles.append( mainWin.getFormatFilename(attr.filecode) )
 	
 	if iAttr is None:
 		publishFormatBikeReg = getattr(race, 'publishFormatBikeReg', 0)
@@ -947,7 +966,27 @@ def doBatchPublish( silent=False, iAttr=None ):
 		
 		if e and not silent:
 			Utils.MessageOK( mainWin, u'{}\n\n{}'.format( _('Ftp Upload Error'), e), _('Ftp Upload Error'), wx.ICON_ERROR )
-			
+	
+	postPublishCmd = getattr(race, 'postPublishCmd', None)
+	if postPublishCmd and allFiles:
+		files = ' '.join('"{}"'.format(f) for f in allFiles)
+		if '%*' in postPublishCmd:
+			cmd = postPublishCmd.replace('%*', files)
+		else:
+			cmd = ' '.join( [postPublishCmd, files] )
+		
+		try:
+			ret = subprocess.check_output( cmd, shell=True )
+		except subprocess.CalledProcessError as e:
+			if not silent:
+				Utils.MessageOK( mainWin, u'{}\n\n    {}: {}'.format(_('Post Publish Cmd Error'), _('return code'), e.returncode), _('Post Publish Cmd Error')  )
+		except Exception as e:
+			if not silent:
+				Utils.MessageOK( mainWin, u'{}\n\n    {}'.format(_('Post Publish Cmd Error'), e), _('Post Publish Cmd Error')  )
+		else:
+			if not silent and ret:
+				Utils.MessageOK( mainWin, u'{}\n\n    {}'.format(_('Post Publish Cmd'), ret), _('Post Publish Cmd')  )
+	
 	if not silent and iAttr is not None:
 		Utils.MessageOK( mainWin, _('Publish Complete'), _('Publish Complete') )
 
@@ -1577,7 +1616,7 @@ if __name__ == '__main__':
 	race._populate()
 	
 	app = wx.App(False)
-	mainWin = wx.Frame(None,title="CrossMan", size=(600,600))
+	mainWin = wx.Frame(None,title="CrossMan", size=(600,660))
 	
 	propertiesDialog = PropertiesDialog( mainWin, title=_("Properties Dialog Test"), showFileFields=True, updateProperties=True )
 	propertiesDialog.Show()

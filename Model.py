@@ -1004,6 +1004,7 @@ class Race( object ):
 	
 	headerImage = None
 	email = None
+	postPublishCmd = ''
 	
 	def __init__( self ):
 		self.reset()
