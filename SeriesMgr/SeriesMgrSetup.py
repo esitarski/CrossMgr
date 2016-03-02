@@ -9,6 +9,10 @@ import subprocess
 if os.path.exists('build'):
 	shutil.rmtree( 'build' )
 
+googleDrive = r"c:\GoogleDrive\Downloads\Windows\SeriesMgr"
+if not os.path.exists(googleDrive):
+	googleDrive = r"C:\Users\Edward Sitarski\Google Drive\Downloads\Windows\SeriesMgr"
+	
 # Copy all dependent files into this folder.
 copyFiles = [
 	"Model.py",
@@ -43,7 +47,7 @@ with open('Dependencies.py', 'w') as fp:
 
 #----------------------------------------------------------------------------------------------------
 
-distDir = r'dist\SeriesMgr'
+distDir = os.path.join('dist', 'SeriesMgr')
 distDirParent = os.path.dirname(distDir)
 if os.path.exists(distDirParent):
 	shutil.rmtree( distDirParent )
@@ -82,7 +86,7 @@ def copyDir( d ):
 	destD = os.path.join(distDir, d)
 	if os.path.exists( destD ):
 		shutil.rmtree( destD )
-	os.mkdir( destD )
+	os.makedirs( destD )
 	for i in os.listdir( d ):
 		if i[-3:] != '.db':	# Ignore .db files.
 			shutil.copy( os.path.join(d, i), os.path.join(destD,i) )
@@ -92,7 +96,7 @@ copyDir( 'CrossMgrImages' )
 #copyDir( 'html' )
 
 # Create the installer
-inno = r'\Program Files\Inno Setup 5\ISCC.exe'
+inno = r'\Program Files (x86)\Inno Setup 5\ISCC.exe'
 # Find the drive it is installed on.
 for drive in ['C', 'D']:
 	innoTest = drive + ':' + inno
@@ -148,10 +152,10 @@ z.write( newExeName )
 z.close()
 print 'executable compressed.'
 
-shutil.copy( newZipName, r"c:\GoogleDrive\Downloads\Windows\SeriesMgr"  )
+shutil.copy( newZipName, googleDrive  )
 
 cmd = 'python virustotal_submit.py "{}"'.format(os.path.abspath(newExeName))
 print cmd
 os.chdir( '..' )
 subprocess.call( cmd, shell=True )
-shutil.copy( 'virustotal.html', os.path.join(r"c:\GoogleDrive\Downloads\Windows\SeriesMgr", 'virustotal_v' + vNum + '.html') )
+shutil.copy( 'virustotal.html', os.path.join(googleDrive, 'virustotal_v' + vNum + '.html') )

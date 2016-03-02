@@ -2,6 +2,7 @@
 
 [Setup]
 #include "inno_setup.txt"
+ArchitecturesInstallIn64BitMode=x64
 DefaultDirName={pf}\SeriesMgr
 DefaultGroupName=SeriesMgr
 UninstallDisplayIcon={app}\SeriesMgr.exe
