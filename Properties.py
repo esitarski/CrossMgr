@@ -13,6 +13,7 @@ import webbrowser
 import threading
 import datetime
 import subprocess
+import platform
 from RaceInputState import RaceInputState
 import ImageIO
 from SetGraphic			import SetGraphicDialog
@@ -972,7 +973,10 @@ def doBatchPublish( silent=False, iAttr=None ):
 	postPublishCmd = getattr(race, 'postPublishCmd', None)
 	if postPublishCmd and allFiles:
 		postPublishCmd = TemplateSubstitute( postPublishCmd, race.getTemplateValues() )
-		files = ' '.join('"{}"'.format(f) for f in allFiles)
+		if system.platform() == 'Windows':
+			files = ' '.join('""{}""'.format(f) for f in allFiles)
+		else:
+			files = ' '.join('"{}"'.format(f) for f in allFiles)
 		if '%*' in postPublishCmd:
 			cmd = postPublishCmd.replace('%*', files)
 		else:
