@@ -973,7 +973,7 @@ def doBatchPublish( silent=False, iAttr=None ):
 	postPublishCmd = getattr(race, 'postPublishCmd', None)
 	if postPublishCmd and allFiles:
 		postPublishCmd = TemplateSubstitute( postPublishCmd, race.getTemplateValues() )
-		if system.platform() == 'Windows':
+		if platform.system() == 'Windows':
 			files = ' '.join('""{}""'.format(f) for f in allFiles)
 		else:
 			files = ' '.join('"{}"'.format(f) for f in allFiles)
@@ -983,16 +983,16 @@ def doBatchPublish( silent=False, iAttr=None ):
 			cmd = ' '.join( [postPublishCmd, files] )
 		
 		try:
-			ret = subprocess.check_output( cmd, shell=True )
+			subprocess.check_call( cmd, shell=True )
 		except subprocess.CalledProcessError as e:
 			if not silent:
-				Utils.MessageOK( mainWin, u'{}\n\n    {}: {}'.format(_('Post Publish Cmd Error'), _('return code'), e.returncode), _('Post Publish Cmd Error')  )
+				Utils.MessageOK( mainWin, u'{}\n\n    {}\n{}: {}'.format(_('Post Publish Cmd Error'), e, _('return code'), e.returncode), _('Post Publish Cmd Error')  )
 		except Exception as e:
 			if not silent:
 				Utils.MessageOK( mainWin, u'{}\n\n    {}'.format(_('Post Publish Cmd Error'), e), _('Post Publish Cmd Error')  )
 		else:
-			if not silent and ret:
-				Utils.MessageOK( mainWin, u'{}\n\n    {}'.format(_('Post Publish Cmd'), ret), _('Post Publish Cmd')  )
+			if not silent:
+				Utils.MessageOK( mainWin, _('Post Publish Cmd Succeeded'), _('Post Publish Cmd Succeeded')  )
 	
 	if not silent and iAttr is not None:
 		Utils.MessageOK( mainWin, _('Publish Complete'), _('Publish Complete') )
