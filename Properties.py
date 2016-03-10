@@ -990,9 +990,6 @@ def doBatchPublish( silent=False, iAttr=None ):
 		except Exception as e:
 			if not silent:
 				Utils.MessageOK( mainWin, u'{}\n\n    {}'.format(_('Post Publish Cmd Error'), e), _('Post Publish Cmd Error')  )
-		else:
-			if not silent:
-				Utils.MessageOK( mainWin, _('Post Publish Cmd Succeeded'), _('Post Publish Cmd Succeeded')  )
 	
 	if not silent and iAttr is not None:
 		Utils.MessageOK( mainWin, _('Publish Complete'), _('Publish Complete') )
