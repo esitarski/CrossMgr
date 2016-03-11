@@ -37,6 +37,7 @@ if not os.path.exists( distDirParent ):
 
 subprocess.call( [
 	'pyinstaller',
+	#'--debug',
 	
 	'CrossMgr.pyw',
 	'--icon=CrossMgrImages\CrossMgr.ico',
@@ -77,6 +78,9 @@ destD = os.path.join(distDir, localeD)
 if os.path.exists( destD ):
 	shutil.rmtree( destD )
 shutil.copytree( localeD, destD )
+
+#-------------------------------
+#sys.exit()
 
 # Create the installer
 inno = r'\Program Files (x86)\Inno Setup 5\ISCC.exe'
@@ -134,13 +138,14 @@ z = zipfile.ZipFile(newZipName, "w")
 z.write( newExeName )
 z.close()
 print 'executable compressed to: ' + newZipName
-	
+
 shutil.copy( newZipName, googleDrive  )
+
+cmd = 'python virustotal_submit.py "{}"'.format(os.path.abspath(newExeName))
+print cmd
 
 os.chdir( '..' )
 shutil.copy( os.path.join('helptxt', 'CrossMgrDocHtml.zip'), googleDrive )
 
-cmd = 'python virustotal_submit.py "{}"'.format(os.path.abspath(newExeName))
-print cmd
 subprocess.call( cmd, shell=True )
 shutil.copy( 'virustotal.html', os.path.join(googleDrive, 'virustotal_v' + vNum + '.html') )
