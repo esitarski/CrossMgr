@@ -134,12 +134,13 @@ z = zipfile.ZipFile(newZipName, "w")
 z.write( newExeName )
 z.close()
 print 'executable compressed to: ' + newZipName
-
 	
 shutil.copy( newZipName, googleDrive  )
 
+os.chdir( '..' )
+shutil.copy( os.path.join('helptxt', 'CrossMgrDocHtml.zip'), googleDrive )
+
 cmd = 'python virustotal_submit.py "{}"'.format(os.path.abspath(newExeName))
 print cmd
-os.chdir( '..' )
 subprocess.call( cmd, shell=True )
 shutil.copy( 'virustotal.html', os.path.join(googleDrive, 'virustotal_v' + vNum + '.html') )
