@@ -2,7 +2,7 @@
 # DO NOT EDIT!
 # MACHINE GENERATED from llrp-1x0-def.xml
 #
-# Created: 2016-02-26 10:26:34.538000
+# Created: 2016-03-10 20:28:14.905000
 #-----------------------------------------------------------
 vendors={'Impinj': 25882}
 
@@ -805,12 +805,12 @@ parameters=[{'fields': ({'format': 'Datetime',
               'type': 'uintbe:64'},),
   'name': 'FirstSeenTimestampUTC',
   'typeNum': 2},
+ {'fields': ({'name': 'Microseconds', 'type': 'uintbe:64'},),
+  'name': 'FirstSeenTimestampUptime',
+  'typeNum': 3},
  {'fields': ({'format': 'Datetime',
               'name': 'Microseconds',
               'type': 'uintbe:64'},),
-  'name': 'FirstSeenTimestampUptime',
-  'typeNum': 3},
- {'fields': ({'name': 'Microseconds', 'type': 'uintbe:64'},),
   'name': 'LastSeenTimestampUTC',
   'typeNum': 4},
  {'fields': ({'name': 'Microseconds', 'type': 'uintbe:64'},),

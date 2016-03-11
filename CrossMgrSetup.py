@@ -10,9 +10,15 @@ import subprocess
 if os.path.exists('build'):
 	shutil.rmtree( 'build' )
 
-googleDrive = r"c:\GoogleDrive\Downloads\Windows\CrossMgr"
-if not os.path.exists(googleDrive):
-	googleDrive = r"C:\Users\Edward Sitarski\Google Drive\Downloads\Windows\CrossMgr"
+gds = [
+	r"c:\GoogleDrive\Downloads\Windows",
+	r"C:\Users\edwar\Google Drive\Downloads\Windows",
+	r"C:\Users\Edward Sitarski\Google Drive\Downloads\Windows",
+]
+for googleDrive in gds:
+	if os.path.exists(googleDrive):
+		break
+googleDrive = os.path.join( googleDrive, 'CrossMgr' )
 	
 # Compile the help files
 from helptxt.compile import CompileHelp
