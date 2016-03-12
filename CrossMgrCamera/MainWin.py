@@ -18,6 +18,7 @@ import socket
 import atexit
 import time
 import threading
+import platform
 from Queue import Queue, Empty, Full
 
 import Utils
@@ -37,6 +38,8 @@ try:
 	#from VideoCapture import Device
 	from jaraco.video.capture_nofont import Device
 except:
+	if platform.system() == 'Windows':
+		raise
 	from PIL import Image, ImageDraw
 	class Device( object ):
 		def __init__( self, cameraDeviceNum = 0 ):
@@ -107,7 +110,7 @@ class ConfigDialog( wx.Dialog ):
 		self.title.SetFont( wx.FontFromPixelSize( wx.Size(0,24), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		self.explanation = [
 			'Check that the USB Webcam is plugged in.',
-			'Check the Camera Device (Usually 0.  If not, try 1).',
+			'Check the Camera Device (Usually 0 but could be 1, 2, etc.).',
 		]
 		pfgs = wx.FlexGridSizer( rows=0, cols=2, vgap=4, hgap=8 )
 		
@@ -328,6 +331,7 @@ class MainWin( wx.Frame ):
 			self.messageQ.put( ('camera', 'Error: {}'.format(e)) )
 			return False
 		
+		#self.camera.set_resolution( 640, 480 )
 		self.messageQ.put( ('camera', 'Successfully Connected: Device: {}'.format(self.getCameraDeviceNum()) ) )
 		for i in self.beforeAfterImages:
 			i.SetTestImage()

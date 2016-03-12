@@ -1,5 +1,4 @@
 from distutils.core import setup
-import py2exe
 import os
 import shutil
 import zipfile
