@@ -310,16 +310,21 @@ class RoundButton(wx.PyControl):
 	SetBestSize = SetInitialSize
 	
 
-	def AcceptsFocus(self):
-		"""
-		Can this window be given focus by mouse click?
+	#def AcceptsFocus(self):
+		#"""
+		#Can this window be given focus by mouse click?
 
-		:note: Overridden from `wx.PyControl`.
-		"""
+		#:note: Overridden from `wx.PyControl`.
+		#"""
 		
-		return self.IsShown() and self.IsEnabled()
+		#return self.IsShown() and self.IsEnabled()
 
-
+	def AcceptsFocusFromKeyboard( self ):
+		return True
+		
+	def AcceptsFocus( self ):
+		return False
+	
 	def GetDefaultAttributes(self):
 		"""
 		Overridden base class virtual. By default we should use
