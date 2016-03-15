@@ -1048,7 +1048,7 @@ class BatchPublishPropertiesDialog( wx.Dialog ):
 	def onSave( self, event ):
 		self.commit()
 		Utils.refresh()
-		self.EndModal( wx.ID_OK )
+		self.EndModal( wx.ID_CANCEL )
 		
 	def onCancel( self, event ):
 		self.EndModal( wx.ID_CANCEL )

@@ -1796,9 +1796,10 @@ class MainWin( wx.Frame ):
 				self.menuSetContactEmail()
 			
 		d = BatchPublishPropertiesDialog( self )
-		d.ShowModal()
+		ret = d.ShowModal()
 		d.Destroy()
-		Utils.MessageOK(self, _('Publish Complete'), _('Publish Complete') )
+		if ret != wx.ID_CANCEL:
+			Utils.MessageOK(self, _('Publish Complete'), _('Publish Complete') )
 		
 	@logCall
 	def menuPublishHtmlRaceResults( self, event=None, silent=False ):
