@@ -1341,7 +1341,7 @@ class MainWin( wx.Frame ):
 		if not Model.race:
 			return
 		self.commit()
-		
+
 		fname = self.getFormatFilename('pdf')
 		dName = os.path.dirname(fname)
 		fnameBase = os.path.splitext(os.path.split(fname)[1])[0]
@@ -1365,10 +1365,9 @@ class MainWin( wx.Frame ):
 						fname = printout.lastFName
 				except Exception as e:
 					logException( e, sys.exc_info() )
-					if not silent:
-						Utils.MessageOK(self,
-									u'{}:\n\n    {}.'.format(_('Error creating PDF files'), e),
-									_('PDF File Error'), iconMask=wx.ICON_ERROR )
+					Utils.MessageOK(self,
+								u'{}:\n\n    {}.'.format(_('Error creating PDF files'), e),
+								_('PDF File Error'), iconMask=wx.ICON_ERROR )
 					success = False
 					break
 
