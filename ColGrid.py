@@ -186,7 +186,7 @@ class ColTable( Grid.PyGridTableBase ):
 			hCellAlign = wx.ALIGN_RIGHT
 		
 		rc = (row, col)
-		key = (self.textColour.get(rc, None), self.backgroundColour.get(rc, None), col, hCellAlign)
+		key = (self.textColour.get(rc, None), self.backgroundColour.get(rc, None), hCellAlign)
 		try:
 			attr = self.attrs[key]
 		except KeyError:
