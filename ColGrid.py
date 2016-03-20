@@ -199,7 +199,10 @@ class ColTable( Grid.PyGridTableBase ):
 				attr.SetBackgroundColour( self.backgroundColour[rc] )
 			if hCellAlign is not None:
 				attr.SetAlignment( hAlign = hCellAlign, vAlign = wx.ALIGN_CENTRE )
-			attr.SetRenderer( self.colRenderer.get(col, wx.grid.GridCellStringRenderer()).Clone() )
+			
+			renderer = self.colRenderer.get(col, None)
+			if renderer:
+				attr.SetRenderer( renderer.Clone() )
 			self.attrs[key] = attr
 		
 		attr.IncRef()
