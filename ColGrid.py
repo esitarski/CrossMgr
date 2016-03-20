@@ -179,8 +179,14 @@ class ColTable( Grid.PyGridTableBase ):
 		self._adjustDimension( grid, oldCols, newCols, True )
 
 	def GetAttr(self, row, col, someExtraParameter ):
+		hCellAlign = None
+		if col in self.leftAlignCols:
+			hCellAlign = wx.ALIGN_LEFT
+		elif self.rightAlign:
+			hCellAlign = wx.ALIGN_RIGHT
+		
 		rc = (row, col)
-		key = (self.textColour.get(rc, None), self.backgroundColour.get(rc, None), col)
+		key = (self.textColour.get(rc, None), self.backgroundColour.get(rc, None), col, hCellAlign)
 		try:
 			attr = self.attrs[key]
 		except KeyError:
@@ -191,18 +197,11 @@ class ColTable( Grid.PyGridTableBase ):
 				attr.SetTextColour( self.textColour[rc] )
 			if rc in self.backgroundColour:
 				attr.SetBackgroundColour( self.backgroundColour[rc] )
+			if hCellAlign is not None:
+				attr.SetAlignment( hAlign = hCellAlign, vAlign = wx.ALIGN_CENTRE )
+			attr.SetRenderer( self.colRenderer.get(col, wx.grid.GridCellStringRenderer()).Clone() )
 			self.attrs[key] = attr
 		
-		hCellAlign = None
-		if col in self.leftAlignCols:
-			hCellAlign = wx.ALIGN_LEFT
-		elif self.rightAlign:
-			hCellAlign = wx.ALIGN_RIGHT
-		if hCellAlign is not None:
-			attr.SetAlignment( hAlign = hCellAlign, vAlign = wx.ALIGN_CENTRE )
-		attr.SetRenderer( self.colRenderer.get(col, wx.grid.GridCellStringRenderer()).Clone() )
-			
-		# We must increment the ref count so the attr does not get GC'd after it is referenced.
 		attr.IncRef()
 		return attr
 

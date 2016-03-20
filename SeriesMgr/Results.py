@@ -800,7 +800,7 @@ class Results(wx.Panel):
 		self.grid.AutoSizeColumns( False )
 		self.grid.AutoSizeRows( False )
 		
-		self.GetSizer.Layout()
+		self.GetSizer().Layout()
 		
 	def onExportToExcel( self, event ):
 		model = SeriesModel.model

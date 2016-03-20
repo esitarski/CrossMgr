@@ -69,6 +69,8 @@ def safe_upper( f ):
 		return f
 
 class RaceResult( object ):
+	rankDNF = 999999
+	
 	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, raceFileName, bib, rank, raceOrganizer,
 					raceURL = None, raceInSeries = None, tFinish = None, tProjected = None ):
 		self.firstName = (firstName or u'')
@@ -119,6 +121,9 @@ def ExtractRaceResults( r ):
 		return ExtractRaceResultsExcel( r )
 
 def toInt( n ):
+	if n == 'DNF':
+		return RaceResult.rankDNF
+	
 	try:
 		return int(n.split()[0])
 	except:
@@ -199,7 +204,8 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 		
 	if race.licenseLinkTemplate:
 		SeriesModel.model.licenseLinkTemplate = race.licenseLinkTemplate
-		
+	
+	acceptedStatus = { Model.Rider.Finisher, Model.Rider.DNF }
 	raceURL = getattr( race, 'urlFull', None )
 	raceResults = []
 	for category in race.getCategories( startWaveOnly=False ):
@@ -209,7 +215,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 		results = GetResults( category, True )
 		
 		for rr in results:
-			if rr.status != Model.Rider.Finisher:
+			if rr.status not in acceptedStatus:
 				continue
 			info = {
 				'raceURL':		raceURL,
@@ -241,7 +247,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 			try:
 				info['rank'] = toInt(rr.pos)
 			except Exception as e:
-				info['rank'] = 999999
+				info['rank'] = RaceResult.rankDNF
 				
 			try:
 				info['tFinish'] = rr.lastTime

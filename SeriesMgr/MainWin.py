@@ -27,7 +27,6 @@ except:
 import cPickle as pickle
 from argparse import ArgumentParser
 import StringIO
-import openpyxl
 
 import Dependencies
 
@@ -662,6 +661,8 @@ table.results tr td.fastest{
 		self.config.Flush()
 		
 	def openSeries( self, fileName ):
+		wait = wx.BusyCursor()
+		
 		if not fileName:
 			return
 		try:

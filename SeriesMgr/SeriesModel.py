@@ -15,17 +15,20 @@ def RaceNameFromPath( p ):
 class PointStructure( object ):
 
 	participationPoints = 0
+	dnfPoints = 0
 
-	def __init__( self, name, pointsStr=None, participationPoints=0 ):
+	def __init__( self, name, pointsStr=None, participationPoints=0, dnfPoints=0 ):
 		self.name = name
 		if pointsStr is not None:
 			self.setStr( pointsStr )
 		else:
 			self.setOCAOCup()
 		self.participationPoints = participationPoints
+		self.dnfPoints = dnfPoints
 		
 	def __getitem__( self, rank ):
-		return self.pointsForPlace.get( int(rank), self.participationPoints )
+		rank = int(rank)
+		return self.dnfPoints if rank == 999999 else self.pointsForPlace.get( rank, self.participationPoints )
 	
 	def __len__( self ):
 		return len(self.pointsForPlace)
@@ -54,8 +57,14 @@ class PointStructure( object ):
 			
 		if self.participationPoints != 0:
 			html.write( '<tr>' )
-			html.write( '<td>Participation:</td>' )
+			html.write( '<td style="text-align:right;">Participation:</td>' )
 			html.write( '<td style="text-align:right;">{}</td>'.format(self.participationPoints) )
+			html.write( '</tr>\n' )
+			
+		if self.dnfPoints != 0:
+			html.write( '<tr>' )
+			html.write( '<td style="text-align:right;">DNF:</td>' )
+			html.write( '<td style="text-align:right;">{}</td>'.format(self.dnfPoints) )
 			html.write( '</tr>\n' )
 			
 		html.write( '</table>\n' )
@@ -72,7 +81,7 @@ class PointStructure( object ):
 		self.pointsForPlace = dict( (i+1, v) for i, v in enumerate(sorted(values, reverse=True)) )
 		
 	def __repr__( self ):
-		return '(%s: %s + %s)' % ( self.name, self.getStr(), participationPoints )
+		return u'({}: {} + {}, dnf={})'.format( self.name, self.getStr(), self.participationPoints, self.dnfPoints )
 
 class Race( object ):
 	excelLink = None
@@ -133,7 +142,8 @@ class SeriesModel( object ):
 			r.postReadFix()
 	
 	def setPoints( self, pointsList ):
-		oldPointsList = [(p.name, p.name, p.getStr()) for p in self.pointStructures]
+		oldPointsList = [(p.name, p.name, p.getStr(), u'{}'.format(p.participationPoints), u'{}'.format(p.dnfPoints))
+			for p in self.pointStructures]
 		if oldPointsList == pointsList:
 			return
 			
@@ -142,14 +152,15 @@ class SeriesModel( object ):
 		newPointStructures = []
 		oldToNewName = {}
 		newPS = {}
-		for name, oldName, points, participationPoints in pointsList:
+		for name, oldName, points, participationPoints, dnfPoints in pointsList:
 			name = name.strip()
 			oldName = oldName.strip()
 			points = points.strip()
 			if not name or name in newPS:
 				continue
 			participationPoints = int(participationPoints or '0')
-			ps = PointStructure( name, points, participationPoints )
+			dnfPoints = int(dnfPoints or '0')
+			ps = PointStructure( name, points, participationPoints, dnfPoints )
 			oldToNewName[oldName] = name
 			newPS[name] = ps
 			newPointStructures.append( ps )
