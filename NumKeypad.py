@@ -51,14 +51,14 @@ class Keypad( wx.Panel ):
 		self.numEdit.SetFont( font )
 		gbs.Add( self.numEdit, pos=(rowCur,0), span=(1,3), flag=wx.EXPAND|wx.LEFT|wx.TOP, border = outsideBorder )
 		self.num = []
-		self.num.append( MakeKeypadButton( self, label='&0', style=wx.BU_EXACTFIT, font = font) )
+		self.num.append( MakeKeypadButton( self, label=u'&0', style=wx.BU_EXACTFIT, font = font) )
 		self.num[-1].Bind( wx.EVT_BUTTON, lambda event, aValue = 0 : self.onNumPress(event, aValue) )
 		gbs.Add( self.num[0], pos=(4+rowCur,0), span=(1,2), flag=wx.EXPAND )
 
 		numButtonStyle = 0
 		
 		for i in xrange(0, 9):
-			self.num.append( MakeKeypadButton( self, label='&' + '{}'.format(i+1), style=numButtonStyle, size=(wNum,hNum), font = font) )
+			self.num.append( MakeKeypadButton( self, label=u'&{}'.format(i+1), style=numButtonStyle, size=(wNum,hNum), font = font) )
 			self.num[-1].Bind( wx.EVT_BUTTON, lambda event, aValue = i+1 : self.onNumPress(event, aValue) )
 			j = 8-i
 			gbs.Add( self.num[-1], pos=(int(j/3)+1 + rowCur, 2-j%3) )

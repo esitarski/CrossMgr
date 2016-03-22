@@ -30,13 +30,11 @@ class ColTable( Grid.PyGridTableBase ):
 		self.backgroundColour = {}
 
 	def __del__( self ):
-		# Make sure we free up our allocated attribues.
-		#for a in attrs:
-		#	a.DecRef()
 		pass
 		
 	def SetRightAlign( self, ra = True ):
 		self.rightAlign = ra
+		self.attrs = {}
 		
 	def SetLeftAlignCols( self, col, la = True ):
 		if la:
@@ -46,9 +44,11 @@ class ColTable( Grid.PyGridTableBase ):
 				self.leftAlignCols.remove( col )
 			except KeyError:
 				pass
+		self.attrs = {}
 	
 	def SetColRenderer( self, col, renderer ):
 		self.colRenderer[col] = renderer
+		self.attrs = {}
 	
 	def _adjustDimension( self, grid, current, new, isCol ):
 		if isCol:
@@ -79,6 +79,8 @@ class ColTable( Grid.PyGridTableBase ):
 			
 		if backgroundColour is not None:
 			self.backgroundColour = dict(backgroundColour)
+			
+		self.attrs = {}
 	
 	def SetColumn( self, grid, iCol, colData ):
 		self.data[iCol] = copy.copy(colData)
@@ -177,6 +179,7 @@ class ColTable( Grid.PyGridTableBase ):
 			setattr( self, a, colD )
 		newCols = len(self.colnames) if self.colnames else 0
 		self._adjustDimension( grid, oldCols, newCols, True )
+		self.attrs = {}
 
 	def GetAttr(self, row, col, someExtraParameter ):
 		hCellAlign = None
@@ -186,7 +189,7 @@ class ColTable( Grid.PyGridTableBase ):
 			hCellAlign = wx.ALIGN_RIGHT
 		
 		rc = (row, col)
-		key = (self.textColour.get(rc, None), self.backgroundColour.get(rc, None), hCellAlign)
+		key = (self.textColour.get(rc, None), self.backgroundColour.get(rc, None), col, hCellAlign)
 		try:
 			attr = self.attrs[key]
 		except KeyError:
@@ -198,7 +201,7 @@ class ColTable( Grid.PyGridTableBase ):
 			if rc in self.backgroundColour:
 				attr.SetBackgroundColour( self.backgroundColour[rc] )
 			if hCellAlign is not None:
-				attr.SetAlignment( hAlign = hCellAlign, vAlign = wx.ALIGN_CENTRE )
+				attr.SetAlignment( hAlign=hCellAlign, vAlign=wx.ALIGN_CENTRE )
 			
 			renderer = self.colRenderer.get(col, None)
 			if renderer:
@@ -218,17 +221,7 @@ class ColTable( Grid.PyGridTableBase ):
 		"""
 		(Grid) -> Reset the grid view.   Call this to redraw the grid.
 		"""
-		for col in xrange(self.GetNumberCols()):
-			attr = Grid.GridCellAttr()
-			if col in self.leftAlignCols:
-				hCellAlign = wx.ALIGN_LEFT
-			elif self.rightAlign:
-				hCellAlign = wx.ALIGN_RIGHT
-			else:
-				hCellAlign = wx.ALIGN_CENTRE
-			attr.SetAlignment( hAlign = hCellAlign, vAlign = wx.ALIGN_CENTRE )
-			self.SetColAttr( col, attr )
-
+		self.attrs = {}
 		grid.AdjustScrollbars()
 		grid.ForceRefresh()
 

@@ -1878,6 +1878,7 @@ class MainWin( wx.Frame ):
 		payload = {}
 		payload['raceName'] = race.name
 		payload['isTimerCountdown'] = True
+		payload['organizer'] = getattr(race, 'organizer', '')
 		payload['raceScheduledStart'] = race.date + ' ' + race.scheduledStart
 		if race.isRunning():
 			payload['raceStartTuple'] = [
@@ -1895,6 +1896,7 @@ class MainWin( wx.Frame ):
 				tNow.year, tNow.month-1, tNow.day,
 				tNow.hour, tNow.minute, tNow.second, int(tNow.microsecond/1000)
 		]
+		payload['infoFields'] = ReportFields[:iTeam] + ['Name'] + ReportFields[iTeam:]
 		
 		data = GetAnimationData(getExternalData = True)
 		startList = []
@@ -1913,10 +1915,14 @@ class MainWin( wx.Frame ):
 				' '.join(v for v in [info.get('FirstName',''), info.get('LastName')] if v),
 				info.get('Team', ''),
 				catName,
+				info.get('UCICode', ''),
 			]
 			startList.append( row )
 
 		payload['startList'] = startList
+		payload['flags'] = Flags.GetFlagBase64ForUCI( r['UCICode'] for r in data.itervalues() if r.get('UCICode',None) )
+		payload['version'] = Version.AppVerName
+
 		
 		html = replaceJsonVar( html, 'payload', payload )
 		html = html.replace( '<title>TTStartPage</title>', '<title>TT {} {} {}</title>'.format(
@@ -1927,7 +1933,7 @@ class MainWin( wx.Frame ):
 		return html
 	
 	@logCall
-	def menuPublishHtmlTTStart( self, event=None ):
+	def menuPublishHtmlTTStart( self, event=None, silent=False ):
 		self.commit()
 		race = Model.race
 		if not race or self.fileName is None or len(self.fileName) < 4:
@@ -1941,39 +1947,39 @@ class MainWin( wx.Frame ):
 			Utils.MessageOK( self,
 				u'\n'.join( [
 					_('The Time Trial has not started.'),
-					_('The TTStart page will act as countdown clock for the scheduled start time.'),
+					_('The TTCountdown page will act as countdown clock for the scheduled start time.'),
 					_('You must publish this page again after you start the Time Trial.'),
 				]),
 				_('Reminder: Publish after Time Trial is Started') )
 		
-		
-		# Read the html template.
-		htmlFile = os.path.join(Utils.getHtmlFolder(), 'TTStart.html')
-		try:
-			with io.open(htmlFile, 'r', encoding='utf-8') as fp:
-				html = fp.read()
-		except:
-			Utils.MessageOK(self, _('Cannot read HTML template file.  Check program installation.'),
-							_('Html Template Read Error'), iconMask=wx.ICON_ERROR )
-			return
+		for fTemplate in ('TTCountdown.html', 'TTStartList.html'):
+			htmlFile = os.path.join(Utils.getHtmlFolder(), fTemplate)
+			try:
+				with io.open(htmlFile, 'r', encoding='utf-8') as fp:
+					html = fp.read()
+			except:
+				Utils.MessageOK(self, _('Cannot read HTML template file.  Check program installation.'),
+								_('Html Template Read Error'), iconMask=wx.ICON_ERROR )
+				return
+				
+			html = self.addTTStartToHtmlStr( html )
 			
-		html = self.addTTStartToHtmlStr( html )
-		
-		# Write out the results.
-		fname = os.path.splitext(self.fileName)[0] + '_TTStart.html'
-		try:
-			with io.open(fname, 'w', encoding='utf-8') as fp:
-				fp.write( html )
-			webbrowser.open( fname, new = 0, autoraise = True )
-			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Html TTStart written to'), fname), _('Html Write'))
-		except:
-			Utils.MessageOK(self, u'{} ({}).'.format(_('Cannot write HTML file'), fname),
-							_('Html Write Error'), iconMask=wx.ICON_ERROR )
-			return
-			
-		if FtpWriteFile.FtpIsConfigured():
-			if Utils.MessageOKCancel(self, _('Upload with FTP?'), _('FTP Upload')):
-				FtpWriteFile.FtpUploadFileAsync( fname )
+			# Write out the results.
+			fname = os.path.splitext(self.fileName)[0] + ('_TTCountdown.html' if fTemplate == 'TTCountdown.html' else '_TTStartList.html')
+			try:
+				with io.open(fname, 'w', encoding='utf-8') as fp:
+					fp.write( html )
+				webbrowser.open( fname, new = 0, autoraise = True )
+				if not silent:
+					Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Html TTStart written to'), fname), _('Html Write'))
+			except:
+				Utils.MessageOK(self, u'{} ({}).'.format(_('Cannot write HTML file'), fname),
+								_('Html Write Error'), iconMask=wx.ICON_ERROR )
+				return
+				
+			if FtpWriteFile.FtpIsConfigured():
+				if not silent and Utils.MessageOKCancel(self, _('Upload with FTP?'), _('FTP Upload')):
+					FtpWriteFile.FtpUploadFileAsync( fname )
 	
 	#--------------------------------------------------------------------------------------------
 	@logCall

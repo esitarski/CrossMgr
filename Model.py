@@ -1065,10 +1065,11 @@ class Race( object ):
 	def getTemplateValues( self ):
 		excelLink = getattr(self, 'excelLink', None)
 		if excelLink:
-			excelLinkStr = u'%s|%s' % ( os.path.basename(excelLink.fileName or u''), excelLink.sheetName or u'')
+			excelLinkStr = u'{}|{}'.format( os.path.basename(excelLink.fileName or u''), excelLink.sheetName or u'')
 		else:
 			excelLinkStr = u''
-			
+		
+		path = Utils.getFileName() or ''
 		return {
 			u'EventName':	self.name,
 			u'RaceNum':		unicode(self.raceNum),
@@ -1089,6 +1090,9 @@ class Race( object ):
 			u'ExcelLink':	excelLinkStr,
 			u'GPXFile':		os.path.basename(self.geoTrackFName or ''),
 
+			u'Path':		path,
+			u'DirName':		os.path.dirname(path),
+			u'FileName':	os.path.basename(path),
 		}
 	
 	@property
@@ -2435,10 +2439,21 @@ def getCurrentHtml():
 	except Exception as e:
 		return None
 
-def getCurrentTTStartHtml():
+def getCurrentTTCountdownHtml():
 	if not race or not race.isTimeTrial:
 		return None
-	htmlFile = os.path.join(Utils.getHtmlFolder(), 'TTStart.html')
+	htmlFile = os.path.join(Utils.getHtmlFolder(), 'TTCountdown.html')
+	try:
+		with io.open(htmlFile, 'r', encoding='utf-8') as fp:
+			html = fp.read()
+		return Utils.mainWin.addTTStartToHtmlStr( html )
+	except Exception as e:
+		return None
+
+def getCurrentTTStartListHtml():
+	if not race or not race.isTimeTrial:
+		return None
+	htmlFile = os.path.join(Utils.getHtmlFolder(), 'TTStartList.html')
 	try:
 		with io.open(htmlFile, 'r', encoding='utf-8') as fp:
 			html = fp.read()
@@ -2465,7 +2480,7 @@ def writeModelUpdate( includeExcel=True, includePDF=True ):
 
 	html = getCurrentTTStartHtml()
 	if html:
-		fname = os.path.splitext(Utils.getFileName())[0] + '_TTStart.html'
+		fname = os.path.splitext(Utils.getFileName())[0] + '_TTCountdown.html'
 		try:
 			with io.open(fname, 'w', encoding='utf-8') as fp:
 				fp.write( html )

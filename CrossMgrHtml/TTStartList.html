@@ -1,0 +1,301 @@
+<html>
+<head>
+<title>TTStartListPage</title>
+<style>
+body { font-family: Helvetica, sans-serif; }
+
+#idRaceName {
+	font-size: 200%;
+	font-weight: bold;
+}
+
+#idImgHeader {
+	box-shadow: 4px 4px 4px #888888;
+}
+
+.disabled {
+	background-color: #333333;
+}
+
+table {
+	border-collapse: collapse;
+	border-spacing: 5px;
+}
+table.start-list {
+	font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
+	border-collapse:collapse;
+	margin-left: 16px;
+}
+table.start-list td, table.start-list th {
+	font-size:1em;
+	padding:3px 7px 2px 7px;
+}
+table.start-list th {
+	font-size:1.1em;
+	padding-top:5px;
+	padding-bottom:4px;
+	background-color:#7FE57F;
+	color:#000000;
+}
+table.start-list tr:hover {
+	color:#000000;
+	background-color:#FFFFCC;
+}
+
+.border-top { border-top: 1px solid rgb(121, 125, 172); }
+.border-bottom { border-bottom: 1px solid rgb(121, 125, 172); }
+.border-left { border-left: 1px solid rgb(121, 125, 172); }
+.border-right { border-right: 1px solid rgb(121, 125, 172); }
+
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+
+th { padding: 5px; text-align: left; }
+td { padding: 5px; vertical-align: middle; }
+tr:nth-child(even) {background-color: #EAF2D3}
+
+td.time-in-past { background-color: #BBBBBB; }
+
+table.start-list td.numeric, table.start-list th.numeric {
+	text-align:right;
+}
+
+h3 {
+	font-size: 80%;
+	font-weight: normal;
+	margin-top: 0px;
+}
+h2 {
+	margin-left: 16px;
+}
+
+table.start-list tr td.start-time {
+	font-weight: bold;
+}
+table.start-list tr td.clock-time {
+	white-space: nowrap;
+}
+.gap-change {
+	border-top: 3px solid #000;
+}
+
+.flag {
+    border: 1px solid #CCC;
+}
+
+</style>
+
+<script>
+/* !!! payload begin !!! */
+var payload = null;
+/* !!! payload end !!! */
+
+var raceName = null;
+
+var raceScheduledStartTuple = null;
+var raceStartTuple = null;
+var raceStart = null;
+
+var lastUpdatedTuple = null;
+var lastUpdated = null;
+
+var raceStarted = true;
+var organizer = null;
+
+var startList = null;
+var startListTest = [/*(-*/
+	[5700-5760, 9, "Geraint Thomas", "Team Sky", "RME", "GBR19880303"], 
+	[5730-5760, 8, "Ian Stannard", "Team Sky", "RME", "GBR19880303"], 
+	[5760-5760, 7, "Kanstantsin Sivtsov", "Team Sky", "RME", "GBR19880303"], 
+	[5790-5760, 6, "Richie Porte", "Team Sky", "RME", "GBR19880303"], 
+	[5820-5760, 5, "David L\u00f3pez", "Team Sky", "RME", "GBR19880303"], 
+	[5850-5760, 4, "Vasil Kiryienka", "Team Sky", "RME", "GBR19880303"], 
+	[5880+30-5760, 3, "Peter Kennaugh", "Team Sky", "RME", "GBR19880303"], 
+	[5910+60-5760, 2, "Edvald Boasson Hagen", "Team Sky", "RME", "GBR19880303"], 
+	[5940+90-5760, 1, "Chris Froome", "Team Sky", "RME", "GBR19880303"]
+/*-)*/];
+
+var flags = {"GBR":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABYAAAAOCAYAAAArMezNAAAAAXNSR0IArs4c6QAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9oDBAo1B4Zxqq0AAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAADv0lEQVQ4y02Tf0zVZRTGP+/7fuGSiQoIMhTBMHUjA1O5sRJNnLOcTVcunfi7FrXZVqZMcmnRhMj1jxU0wMo0JwtqJWtozoQwkNR0osuxEoRxRfAORAfc+31Pf3yt9d85z9k5z55znqNOP5937skPCudHps9if2UTxZ834IYFQRCB4ZEQJ/YtJXHvbgACe4rILagnItJBBASLQrN7cxbrzn+P7Q8i+3a06s75C2zgw0/pLihi56a5NBx7hYVZKYRCLsYojFEoQBmDMhqUQhuF0YpwOEzughnUr45na8Mhxi9dyIxT1VwMDFv98a+32RGbwxj/E1zNXskjgwF+rMij7P0VWGsx2huG1qA0CjBGY0WoKFpB+cAZpradJ6m6krgta1m25Wve2X8SLVhONF5nbvlftOa9Tk/JAboKS9i8OJULx7exyD8NEQGjUUZjBRZlpXBmQzK5Bz8i+tnFTK+t4sjJduLmFVP/y5+ICOrN9440ixPjtxa0UaSnxPBS7BBDF66Q8Op6wuPGE+rspnNtPoiQUlPF4Omz6Nu9TMzfiBn7MGVHW7l8LYBrBVA4Ntji5GdEkxYfi1gBBNe6jLoPEZ2Tzb2LbWAtob5+xFqUCMONvzE2JQlSJzPUdA4EtiQ6mKQYREAraO9zUT8vXtWc2D/oRwAErPVCK/AA4sEqRATcsJdbQQAl4uGeRUCEW5NiWhy0tzsRTwbKcwH6fw0o0AYtFhEDIogSFF5dPRgo/8ZK4UzZtom0iQl4/GCtZWTEBQTt84EIo90Bbh2oAhEmvbEVJy7Ws53Phw2F8BlBKwWAQhHZdxvni7b7aN+gJ10pZqXFs2FlBu69+9z5qhobF0v00350xWEQweefS8SUJMzdQXorviE6M53DvWNouxHEhq1HGL6HuTUy8+UTTTendAUG2PTCHNYsn02wpo7+0k/oSZ7OnkthJo/RRLe2oLTi+rTZ7Co7yzz/o0z1P0ZfTR3JLQ2EUlKpPPU3LRc6CAaD3Xo0FCY7czIXf8hn6ZwErizPo7/2OD89t5GVx7povtSNNvq/BzFG0fxHF0vWVXK06SZJe98mcXs+WbUHaclPY9mimUQ4GqforSWsefEZAuWHGP7uOB2ZT1HaM46Gnd9CpIERl2B/kKgbnSituTswRFfPHaJ8Duu3V1NVfY59BcvIqvuS9l2l7O64SePj83AyJkXpa7mrURMmcCxnHSWHfsfaXoiK8OxmrHdx10Vcl3A4hB0e5b61AJw62072qs8ofC2HguJCRi5fJfndYv0Pm/a+HCONOTIAAAAASUVORK5CYII="};
+var version = '';
+
+function _( s ) { return s; }
+
+function FormatTime( t )
+{
+	var tStr = '';
+	if( t < 0 )
+	{
+		tStr = '-';
+		t = -t;
+	}
+	var secs = ~~t;
+	var h = ~~(secs / (60*60));
+	var m = (~~(secs / 60) % 60);
+	var s = ~~(secs % 60);
+	if( h > 0 )
+		tStr += h + (m < 10 ? ':0' : ':') + m + (s < 10 ? ':0' : ':') + s;
+	else
+		tStr += m + (s < 10 ? ':0' : ':') + s;
+	return tStr;
+}
+
+function FormatTOD( d ) {
+	return d.toLocaleTimeString().toLowerCase();
+}
+
+function dateFromTuple( t ) {
+	return new Date(t[0], t[1], t[2], t[3], t[4], t[5], t[6]);
+}
+
+var flagImages = null;
+function GetFlagImage( uci ) {
+	if( !flagImages ) {
+		if( !flags )
+			return null;
+		flagImages = {};
+		for( var cc in flags ) {
+			img = new Image();
+			img.src = flags[cc];
+			img.className = 'flag';
+			flagImages[cc] = img;
+		}
+	}
+	return flagImages[uci.substring(0, 3)];
+}
+
+function createChild( parent, tag ) {
+	var child = document.createElement(tag);
+	parent.appendChild( child );
+	return child;
+}
+
+function createTextChild( parent, s ) {
+	var child = document.createTextNode(s);
+	parent.appendChild( child );
+	return child;
+}
+
+function updateStartList() {
+	startList.sort( function(a, b) { return a[0] - b[0]; } );	// Sort by start time.
+	
+	// -----------------------------------------------------------------
+	// Create table.
+	var thead, tr, td;
+	var table = document.createElement('TABLE');
+	table.className = 'start-list';
+	
+	// Add the headers.
+	thead = createChild( table, 'THEAD' );
+	tr = createChild( thead, 'TR' );
+	
+	createTextChild( td = createChild(tr, 'TH'), '' ); // Count
+	createTextChild( td = createChild(tr, 'TH'), _('Clock') ); td.className = 'text-center';
+	createTextChild( td = createChild(tr, 'TH'), _('Stopwatch') ); td.className = 'numeric';
+	createTextChild( td = createChild(tr, 'TH'), _('Bib') ); td.className = 'numeric';
+	createTextChild( td = createChild(tr, 'TH'), _('Name') );
+	createTextChild( td = createChild(tr, 'TH'), _('Team') );
+	createTextChild( td = createChild(tr, 'TH'), _('Category') );
+	createTextChild( td = createChild(tr, 'TH'), '' ); // UCI-code
+	
+	var tNow = new Date();
+	
+	var gap = null, lastGap = null;
+	tbody = createChild( table, 'TBODY' );
+	for( var i = 0; i < startList.length; ++i ) {
+		var sle = startList[i];
+		
+		gap = (i > 0 ? sle[0] - startList[i-1][0] : null);
+		
+		tr = createChild( thead, 'TR' );
+		if( i > 2 && gap != lastGap )
+			tr.className = 'gap-change';
+		
+		gap = (i > 0 ? sle[0] - startList[i-1][0] : null);
+		var tClock = (raceStart ? new Date(raceStart.getTime() + sle[0]*1000) : None);
+		var clock = (tClock ? FormatTOD(tClock) : '');		
+		var stopwatch = FormatTime( sle[0] );
+		var bib = sle[1];
+		var name = sle[2];
+		var team = sle[3];
+		var category = sle[4];
+		var uci_code = sle[5];
+		
+		var tip = (tClock < tNow ? ' time-in-past' : '')
+		createTextChild( td = createChild(tr, 'TD'), (i+1) + '.' ); td.className = 'numeric' + tip;
+		createTextChild( td = createChild(tr, 'TD'), clock ); td.className = 'numeric' + tip; td.style.whiteSpace = 'nowrap';
+		createTextChild( td = createChild(tr, 'TD'), stopwatch ); td.className = 'numeric start-time' + tip;
+		createTextChild( td = createChild(tr, 'TD'), bib ); td.className = 'numeric';
+		createTextChild( td = createChild(tr, 'TD'), name );
+		createTextChild( td = createChild(tr, 'TD'), team );
+		createTextChild( td = createChild(tr, 'TD'), category ); td.className = 'text-center';
+		if( uci_code ) {
+			td = createChild(tr, 'TD');
+			var img = GetFlagImage( uci_code );
+			if( img ) {
+				td.style.whiteSpace = "nowrap";
+				td.appendChild( img.cloneNode(true) );
+				createTextChild( td, ' ' + uci_code );
+			}
+			else
+				createTextChild( td, uci_code );
+		}
+		
+		lastGap = gap;
+	}
+	
+	startlistDiv = document.getElementById('startlist');
+	startList.innerHTML = '';
+	startlist.appendChild( table );
+}
+
+function doReload() {
+	window.location.reload(true);
+}
+
+function onload() {
+	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
+	if( startList == null ) startList = [];
+	
+	lastUpdated = (lastUpdatedTuple == null ? new Date() : dateFromTuple(lastUpdatedTuple));
+	
+	if( raceStartTuple != null ) {
+		raceStart = dateFromTuple( raceStartTuple );
+	}
+	else {
+		raceStart = new Date();
+		startList = startListTest;
+	}
+	
+	if( raceName ) {
+		document.getElementById('idRaceName').appendChild( document.createTextNode(raceName) );
+		document.getElementById('idRaceNameFooter').appendChild( document.createTextNode(raceName + '    ' + raceStart.toLocaleString() + '    Last Updated ' + lastUpdated.toLocaleString()) );
+	}
+	if( organizer ) {
+		document.getElementById('idOrganizer').appendChild( document.createTextNode('by ' + organizer) );
+	}
+	document.getElementById('start-date').innerHTML = raceStart.toISOString().split('T')[0];
+	
+	updateStartList();
+}
+</script>
+</head>
+
+<body onload="onload()">
+<table cellspacing="8">
+<tr>
+<td style="vertical-align: top;"><img alt="CrossMgr Logo" onclick="doReload();" style="cursor:pointer" id="idImgHeader" src="data:image/png;base64,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"/></td>
+<td valign="top"><span id="idRaceName" onclick="doReload();" style="cursor:pointer">Cyclo-Cross Race Results</span><br/><span data-tr="by"></span> <span id="idOrganizer">by CrossMgr</span>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<span class="noprint">
+<a id="idEmail" href="mailto:helpful.organizer@great_race_organization.com?subject=CrossMgr Results Output"><span data-tr="Email Comments/Suggestions"></span></a>.
+<br/>
+<span>Powered by</span> <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
+</tr></table>
+<h2>Time Trial Start List: <span id="start-date"/></h2>
+<div id="startlist">
+</div>
+<br/>
+<h3><span id='idRaceNameFooter'></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://www.sites.google.com/site/crossmgrsoftware/">Powered by CrossMgr</a></h3>
+</body>
+</html>

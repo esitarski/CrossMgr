@@ -47,6 +47,8 @@ with io.open( os.path.join(Utils.getImageFolder(), 'QRCodeIcon.png'), 'rb' ) as 
 	QRCodeIconSrc = "data:image/png;base64," + base64.b64encode( f.read() )
 with io.open( os.path.join(Utils.getImageFolder(), 'stopwatch-32px.png'), 'rb' ) as f:
 	StopwatchIconSrc = "data:image/png;base64," + base64.b64encode( f.read() )
+with io.open( os.path.join(Utils.getImageFolder(), 'list_accept.png'), 'rb' ) as f:
+	StartListIconSrc = "data:image/png;base64," + base64.b64encode( f.read() )
 with io.open(os.path.join(Utils.getHtmlFolder(), 'Index.html'), encoding='utf-8') as f:
 	indexTemplate = Template( f.read() )
 
@@ -60,12 +62,15 @@ def getCurrentHtml():
 	return Model.getCurrentHtml()
 	
 @syncfunc
-def getCurrentTTStartHtml():
-	print 'getCurrentTTStartHtml: called'
-	return Model.getCurrentTTStartHtml()
+def getCurrentTTCountdownHtml():
+	return Model.getCurrentTTCountdownHtml()
+	
+@syncfunc
+def getCurrentTTStartListHtml():
+	return Model.getCurrentTTStartListHtml()
 	
 def coreName( fname ):
-	return os.path.splitext(os.path.basename(fname).split('?')[0])[0].replace('_TTStart','').strip('-')
+	return os.path.splitext(os.path.basename(fname).split('?')[0])[0].replace('_TTCountdown','').replace('_TTStartList','').strip('-')
 
 class Generic( object ):
 	def __init__( self, **kwargs ):
@@ -87,7 +92,8 @@ class ContentBuffer( object ):
 		if not self.fnameRace:
 			return None
 		fnameBase = os.path.basename(fname).split('?')[0]
-		if not (reCrossMgrHtml.match(fnameBase) or fnameBase == 'Simulation.html' or fnameBase == 'Simulation_TTStart.html'):
+		if not (reCrossMgrHtml.match(fnameBase) or
+				fnameBase in ('Simulation.html', 'Simulation_TTCountdown.html', 'Simulation_TTStartList.html' )):
 			return None
 		
 		cache = self.fileCache.get( fname, {} )
@@ -98,7 +104,13 @@ class ContentBuffer( object ):
 			if race.lastChangedTime <= cache.get('mtime',0.0):
 				return cache
 			
-			content = getCurrentTTStartHtml() if '_TTStart' in fname else getCurrentHtml()
+			if '_TTCountdown' in fname:
+				content = getCurrentTTCountdownHtml()
+			if '_TTStartList' in fname:
+				content = getCurrentTTStartListHtml()
+			else:
+				content = getCurrentHtml()
+			
 			if content:
 				cache['mtime'] = time.time()
 				result = ParseHtmlPayload( content=content )
@@ -157,7 +169,7 @@ class ContentBuffer( object ):
 		return [fname for fname, cache in sorted(
 			self.fileCache.iteritems(),
 			key=lambda x: (x[1]['payload'].get('raceScheduledStart',futureDate), x[0])
-		) if not fname.endswith('_TTStart.html')]
+		) if not (fname.endswith('_TTCountdown.html') or fname.endswith('_TTStartList.html'))]
 	
 	def _getCache( self, fname, checkForUpdate=True ):
 		if checkForUpdate:
@@ -203,7 +215,8 @@ class ContentBuffer( object ):
 					raceIsFinished = payload.get('raceIsFinished',False),
 				)
 				if g.isTimeTrial:
-					g.urlTTStart = urllib.pathname2url(os.path.splitext(fname)[0] + '_TTStart.html')
+					g.urlTTCountdown = urllib.pathname2url(os.path.splitext(fname)[0] + '_TTCountdown.html')
+					g.urlTTStartList = urllib.pathname2url(os.path.splitext(fname)[0] + '_TTStartList.html')
 				info.append( g )
 			
 			result['info'] = info
@@ -273,6 +286,7 @@ def getIndexPage( share=True ):
 		'share': share,
 		'QRCodeIconSrc':  QRCodeIconSrc,
 		'StopwatchIconSrc': StopwatchIconSrc,
+		'StartListIconSrc': StartListIconSrc,
 	} )
 	return indexTemplate.generate( **info ).encode('utf-8')
 

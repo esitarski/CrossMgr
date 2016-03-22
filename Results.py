@@ -37,10 +37,10 @@ class UCICodeRenderer(wx.grid.PyGridCellRenderer):
 		ioc = text[:3]
 		img, imgWidth, imgHeight, padding = self.getImgWidth(ioc, h)
 		
+		fg = attr.GetTextColour()
+		bg = attr.GetBackgroundColour()
 		if isSelected:
-			fg, bg = 'white', 'black'
-		else:
-			fg, bg = 'black', 'white'
+			fg, bg = bg, fg
 		
 		dc.SetBrush( wx.Brush(bg, wx.SOLID) )
 		dc.SetPen( wx.TRANSPARENT_PEN )
@@ -443,6 +443,11 @@ class Results( wx.Panel ):
 		if race is None:
 			return
 			
+		try:
+			numSelectSearch = int(self.numSelect)
+		except (TypeError, ValueError):
+			numSelectSearch = None
+		
 		textColourLap = {}
 		backgroundColourLap = dict( ((rc, self.yellowColour) for rc in self.rcInterp) )
 		backgroundColourLap.update( dict( ((rc, self.orangeColour) for rc in self.rcNumTime) ) )
@@ -464,15 +469,15 @@ class Results( wx.Panel ):
 			except:
 				continue
 			
-			if cellNum == self.numSelect:
+			if cellNum == numSelectSearch:
+				for c in xrange(self.labelGrid.GetNumberCols()):
+					textColourLabel[ (r,c) ] = self.whiteColour
+					backgroundColourLabel[ (r,c) ] = self.blackColour
+
 				for c in xrange(self.lapGrid.GetNumberCols()):
 					textColourLap[ (r,c) ] = self.whiteColour
 					backgroundColourLap[ (r,c) ] = self.blackColour if (r,c) not in self.rcInterp and (r,c) not in self.rcNumTime else self.greyColour
 					
-				for c in xrange(self.labelGrid.GetNumberCols()):
-					textColourLabel[ (r,c) ] = self.whiteColour
-					backgroundColourLabel[ (r,c) ] = self.blackColour if (r,c) not in self.rcInterp and (r,c) not in self.rcNumTime else self.greyColour
-
 			if cellNum in self.closeFinishBibs:
 				textColourLabel[ (r,0) ] = self.blackColour
 				backgroundColourLabel[ (r,0) ] = self.lightBlueColour
@@ -496,9 +501,9 @@ class Results( wx.Panel ):
 					backgroundColourLabel[ (r,c) ] = self.blackColour
 				break
 
-		self.labelGrid.Set( textColour = textColourLabel, backgroundColour = backgroundColourLabel )
+		self.labelGrid.Set( textColour=textColourLabel, backgroundColour=backgroundColourLabel )
+		self.lapGrid.Set( textColour=textColourLap, backgroundColour=backgroundColourLap )
 		self.labelGrid.Reset()
-		self.lapGrid.Set( textColour = textColourLap, backgroundColour = backgroundColourLap )
 		self.lapGrid.Reset()
 			
 	def doNumDrilldown( self, event ):
@@ -558,10 +563,10 @@ class Results( wx.Panel ):
 			self.search.SetValue( self.numSelect )
 
 	def clearGrid( self ):
-		self.lapGrid.Set( data = [], colnames = [], textColour = {}, backgroundColour = {} )
-		self.lapGrid.Reset()
 		self.labelGrid.Set( data = [], colnames = [], textColour = {}, backgroundColour = {} )
 		self.labelGrid.Reset()
+		self.lapGrid.Set( data = [], colnames = [], textColour = {}, backgroundColour = {} )
+		self.lapGrid.Reset()
 
 	def refresh( self ):
 		self.category = None

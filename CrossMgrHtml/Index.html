@@ -86,6 +86,11 @@ function onLoad() {
 	}
 	{% end %}
 	{% if any(g.isTimeTrial for g in info) %}
+	var StartListIconSrc = "{{StartListIconSrc}}";
+	var elements = document.getElementsByClassName( 'startlist' );
+	for( var i = 0; i < elements.length; ++i ) {
+		elements[i].src = StartListIconSrc;
+	}
 	var StopwatchIconSrc = "{{StopwatchIconSrc}}";
 	var elements = document.getElementsByClassName( 'stopwatch' );
 	for( var i = 0; i < elements.length; ++i ) {
@@ -108,7 +113,11 @@ function onLoad() {
 	<li {% if g.raceIsRunning %} class=highlight {% end %} >
 		<a href="{{g.url}}" class=racename>{{g.name}}</a>
 		{% if g.raceScheduledStart %}<span style="white-space: nowrap;">{{g.raceScheduledStart.strftime('%H:%M %a %b %d, %Y')}}</span>{% end %}
-		{% if g.isTimeTrial %}&nbsp;&nbsp;<a href="{{g.urlTTStart}}"<a><img class="stopwatch" /></a>{% end %}<br/>
+		{% if g.isTimeTrial %}
+			&nbsp;&nbsp;<a href="{{g.urlTTStartList}}"><img class="startlist" /></a>
+			&nbsp;&nbsp;<a href="{{g.urlTTCountdown}}"><img class="stopwatch" /></a>
+		{% end %}
+		<br/>
 		{% for catName, catUrl in g.categories %}
 			<a href="{{g.url}}?raceCat={{catUrl}}" class='btn'>{{catName}}</a>
 		{% end %}

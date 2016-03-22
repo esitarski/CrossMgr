@@ -145,6 +145,10 @@ table.results tr td.same-value {
 	text-align:center;
 }
 
+.flag {
+    border: 1px solid #CCC;
+}
+
 hr { clear: both; }
 hr.invisible { clear: both; visibility: hidden; }
 
@@ -186,6 +190,7 @@ var catPosIndex = null;
 var showCategorySummary = null;
 var kioskMode = null;
 var licenseLinkTemplate = null;
+var flags = null;
 
 // Control information about the animation.
 var canvas = null;
@@ -323,6 +328,22 @@ if (typeof document.hidden !== "undefined") { // Opera 12.10 and Firefox 18 and 
 } else if (typeof document.webkitHidden !== "undefined") {
   hidden = "webkitHidden";
   visibilityChange = "webkitvisibilitychange";
+}
+
+var flagImages = null;
+function GetFlagImage( uci ) {
+	if( !flagImages ) {
+		if( !flags )
+			return null;
+		flagImages = {};
+		for( var cc in flags ) {
+			img = new Image();
+			img.src = flags[cc];
+			img.className = 'flag';
+			flagImages[cc] = img;
+		}
+	}
+	return flagImages[uci.substring(0, 3)];
 }
  
 // ---------------------------------------------------------------------
@@ -2898,7 +2919,18 @@ function RefreshResultsTable()
 					td = createTD(tr);
 					if( v && field == 'License' && licenseLinkTemplate )
 						v = '<a href="' + licenseLinkTemplate + v + '" target="_blank">'+v+'</a>';
-					td.innerHTML = v;
+					else if( field == 'UCICode' && v ) {
+						var img = GetFlagImage( v );
+						if( img ) {
+							span = createChild( td, 'SPAN' );
+							span.style.whiteSpace = "nowrap";
+							span.appendChild( img.cloneNode(true) );
+							createTextChild( span, ' ' + v );
+							v = null;
+						}
+					}
+					if( v )
+						td.innerHTML = v;
 					if( field != 'Age' && field != 'Factor' )
 						td.id = 'idNonNumeric'; 
 				}
