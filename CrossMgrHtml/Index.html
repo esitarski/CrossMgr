@@ -111,11 +111,11 @@ function onLoad() {
 {% end %}
 {% for i, g in enumerate(info) %}
 	<li {% if g.raceIsRunning %} class=highlight {% end %} >
-		<a href="{{g.url}}" class=racename>{{g.name}}</a>
+		<a href="{{g.url}}" class=racename title="Results">{{g.name}}</a>
 		{% if g.raceScheduledStart %}<span style="white-space: nowrap;">{{g.raceScheduledStart.strftime('%H:%M %a %b %d, %Y')}}</span>{% end %}
 		{% if g.isTimeTrial %}
-			&nbsp;&nbsp;<a href="{{g.urlTTStartList}}"><img class="startlist" /></a>
-			&nbsp;&nbsp;<a href="{{g.urlTTCountdown}}"><img class="stopwatch" /></a>
+			&nbsp;&nbsp;<a href="{{g.urlTTStartList}}"><img class="startlist" title="Start List"/></a>
+			&nbsp;&nbsp;<a href="{{g.urlTTCountdown}}"><img class="stopwatch" title="Countdown Clock" /></a>
 		{% end %}
 		<br/>
 		{% for catName, catUrl in g.categories %}
