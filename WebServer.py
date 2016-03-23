@@ -45,9 +45,9 @@ with io.open( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), 'rb' )
 	DefaultLogoSrc = "data:image/png;base64," + base64.b64encode( f.read() )
 with io.open( os.path.join(Utils.getImageFolder(), 'QRCodeIcon.png'), 'rb' ) as f:
 	QRCodeIconSrc = "data:image/png;base64," + base64.b64encode( f.read() )
-with io.open( os.path.join(Utils.getImageFolder(), 'stopwatch-32px.png'), 'rb' ) as f:
-	StopwatchIconSrc = "data:image/png;base64," + base64.b64encode( f.read() )
-with io.open( os.path.join(Utils.getImageFolder(), 'list_accept.png'), 'rb' ) as f:
+with io.open( os.path.join(Utils.getImageFolder(), 'countdown.png'), 'rb' ) as f:
+	CountdownIconSrc = "data:image/png;base64," + base64.b64encode( f.read() )
+with io.open( os.path.join(Utils.getImageFolder(), 'tt_start_list.png'), 'rb' ) as f:
 	StartListIconSrc = "data:image/png;base64," + base64.b64encode( f.read() )
 with io.open(os.path.join(Utils.getHtmlFolder(), 'Index.html'), encoding='utf-8') as f:
 	indexTemplate = Template( f.read() )
@@ -285,7 +285,7 @@ def getIndexPage( share=True ):
 	info.update( {
 		'share': share,
 		'QRCodeIconSrc':  QRCodeIconSrc,
-		'StopwatchIconSrc': StopwatchIconSrc,
+		'CountdownIconSrc': CountdownIconSrc,
 		'StartListIconSrc': StartListIconSrc,
 	} )
 	return indexTemplate.generate( **info ).encode('utf-8')

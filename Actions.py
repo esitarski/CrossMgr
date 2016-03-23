@@ -47,7 +47,7 @@ def StartRaceNow():
 		mainWin.updateLapCounter()
 		mainWin.refresh()
 		
-		if isTimeTrial and Utils.MessageOKCancel( mainWin, _('Create TTStart HTML Page?'), _('Create TTStart HTML Page?') ):
+		if isTimeTrial:
 			mainWin.menuPublishHtmlTTStart()
 	
 	# For safety, clear the undo stack after 8 seconds.

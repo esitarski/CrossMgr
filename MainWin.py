@@ -1968,17 +1968,13 @@ class MainWin( wx.Frame ):
 			try:
 				with io.open(fname, 'w', encoding='utf-8') as fp:
 					fp.write( html )
-				webbrowser.open( fname, new = 0, autoraise = True )
-				if not silent:
-					Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Html TTStart written to'), fname), _('Html Write'))
 			except:
 				Utils.MessageOK(self, u'{} ({}).'.format(_('Cannot write HTML file'), fname),
 								_('Html Write Error'), iconMask=wx.ICON_ERROR )
-				return
+				continue
 				
 			if FtpWriteFile.FtpIsConfigured():
-				if not silent and Utils.MessageOKCancel(self, _('Upload with FTP?'), _('FTP Upload')):
-					FtpWriteFile.FtpUploadFileAsync( fname )
+				FtpWriteFile.FtpUploadFileAsync( fname )
 	
 	#--------------------------------------------------------------------------------------------
 	@logCall
@@ -2911,6 +2907,8 @@ class MainWin( wx.Frame ):
 			race.startTime -= datetime.timedelta( seconds = (tMin-1) )
 
 		OutputStreamer.writeRaceStart()
+		if race.isTimeTrial:
+			self.menuPublishHtmlTTStart()
 		self.simulateTimer = wx.CallLater( 1, self.updateSimulation, True )
 		self.updateRaceClock()
 		self.refresh()
