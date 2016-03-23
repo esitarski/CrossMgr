@@ -106,7 +106,7 @@ class ContentBuffer( object ):
 			
 			if '_TTCountdown' in fname:
 				content = getCurrentTTCountdownHtml()
-			if '_TTStartList' in fname:
+			elif '_TTStartList' in fname:
 				content = getCurrentTTStartListHtml()
 			else:
 				content = getCurrentHtml()

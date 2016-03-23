@@ -1896,7 +1896,6 @@ class MainWin( wx.Frame ):
 				tNow.year, tNow.month-1, tNow.day,
 				tNow.hour, tNow.minute, tNow.second, int(tNow.microsecond/1000)
 		]
-		payload['infoFields'] = ReportFields[:iTeam] + ['Name'] + ReportFields[iTeam:]
 		
 		data = GetAnimationData(getExternalData = True)
 		startList = []
@@ -2855,7 +2854,7 @@ class MainWin( wx.Frame ):
 			race.memo = ''
 			race.minutes = self.raceMinutes
 			race.raceNum = 1
-			#race.isTimeTrial = True
+			race.isTimeTrial = True
 			#race.enableUSBCamera = True
 			#race.photosAtRaceEndOnly = True
 			#race.enableJChipIntegration = True

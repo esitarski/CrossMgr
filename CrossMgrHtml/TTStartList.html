@@ -228,7 +228,7 @@ function updateStartList() {
 		createTextChild( td = createChild(tr, 'TD'), bib ); td.className = 'numeric';
 		createTextChild( td = createChild(tr, 'TD'), name );
 		createTextChild( td = createChild(tr, 'TD'), team );
-		createTextChild( td = createChild(tr, 'TD'), category ); td.className = 'text-center';
+		createTextChild( td = createChild(tr, 'TD'), category );
 		if( uci_code ) {
 			td = createChild(tr, 'TD');
 			var img = GetFlagImage( uci_code );
@@ -240,6 +240,8 @@ function updateStartList() {
 			else
 				createTextChild( td, uci_code );
 		}
+		else
+			createTextChild( td = createChild(tr, 'TD'), '' );
 		
 		lastGap = gap;
 	}
