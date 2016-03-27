@@ -1484,17 +1484,14 @@ class MainWin( wx.Frame ):
 			for catName, category in raceCategories:
 				if catName == 'All' and len(raceCategories) > 1:
 					continue
-				sheetName = re.sub('[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', Utils.toAscii(catName))
-				sheetName = sheetName[:31]
-				sheetCur = wb.add_sheet( sheetName )
+				sheetCur = wb.add_sheet( Utils.RemoveDisallowedSheetChars(catName) )
 				export = ExportGrid()
 				export.setResultsOneList( category, showLapsFrequency = 1 )
 				export.toExcelSheet( sheetCur )
 				
 			race = Model.race
 			if race and getattr(race, 'primes', None):
-				sheetName = 'Primes'
-				sheetCur = wb.add_sheet( sheetName )
+				sheetCur = wb.add_sheet( Utils.RemoveDisallowedSheetChars('Primes') )
 				export = ExportGrid( **GetGrid() )
 				export.toExcelSheet( sheetCur )
 

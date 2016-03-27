@@ -272,12 +272,15 @@ def toAscii( s ):
 		ret = ret[:-2]
 	return ret
 
-validFilenameChars = set( c for c in ("-_.() %s%s" % (string.ascii_letters, string.digits)) )
+validFilenameChars = set( "-_.() " + string.ascii_letters + string.digits )
 def RemoveDisallowedFilenameChars( filename ):
 	cleanedFilename = unicodedata.normalize('NFKD', unicode(filename)).encode('ASCII', 'ignore')
 	cleanedFilename = cleanedFilename.replace( '/', '_' )
 	return ''.join(c for c in cleanedFilename if c in validFilenameChars)
 
+def RemoveDisallowedSheetChars( sheetName ):
+	return re.sub('[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', unicodedata.normalize('NFKD', unicode(sheetName)).encode('ASCII', 'ignore'))[:31]
+	
 def removeDiacritic(input):
 	'''
 	Accept a unicode string, and return a normal string (bytes in Python 3)
@@ -765,6 +768,9 @@ def GetDefaultHost():
 if __name__ == '__main__':
 	initTranslation()
 	app = wx.App(False)
+	
+	print RemoveDisallowedSheetChars('Cat A/B')
+	print RemoveDisallowedFilenameChars('Cat A/B')
 	
 	MessageOK( None, 'Test', 'Test', wx.ICON_INFORMATION )
 	MessageOKCancel( None, 'Test', 'Test' )
