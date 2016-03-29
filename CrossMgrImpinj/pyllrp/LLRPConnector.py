@@ -32,15 +32,27 @@ class LLRPConnector( object ):
 		''' Connect to a reader. '''
 		self._reset()
 		self.readerSocket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+		
 		# Set a timeout for the socket.  This is also the maximum time it will take to shut down the listener.
 		self.readerSocket.settimeout( self.TimeoutSecs )
 		self.readerSocket.connect( (host, port) )
+		tNow = datetime.datetime.now()	# Get the time here to minimize latency.
 		
 		self.host = host
 		self.port = port
 		
-		# Looking for READER_EVENT_NOTIFICATION...
+		# Expecting READER_EVENT_NOTIFICATION message.
 		response = UnpackMessageFromSocket( self.readerSocket )
+		
+		# Check if the connection succeeded.
+		connectionAttemptEvent = response.getFirstParameterByClass(ConnectionAttemptEvent_Parameter)
+		if connectionAttemptEvent and connectionAttemptEvent.Status != ConnectionAttemptStatusType.Success:
+			self.disconnect()
+			raise EnvironmentError(
+				connectionAttemptEvent.Status,
+				ConnectionAttemptStatusType.getName(connectionAttemptEvent.Status).replace('_',' ')
+			)
+		
 		self.keepGoing = True
 		
 		# Compute a correction between the reader's time and the computer's time.
@@ -48,15 +60,11 @@ class LLRPConnector( object ):
 		try:
 			microseconds = response.getFirstParameterByClass(UTCTimestamp_Parameter).Microseconds
 			readerTime = datetime.datetime.utcfromtimestamp( microseconds / 1000000.0 )
-			self.timeCorrection = datetime.datetime.now() - readerTime
+			self.timeCorrection = tNow - readerTime
 		except Exception as e:
-			pass
+			self.disconnect()
+			raise ValueError('Missing Timestamp: ' + response.__repr__())
 
-		for p in response.parameters:
-			if isinstance(p, ConnectionAttemptEvent_Parameter) and 1 <= p.status <= 3:
-				self.disconnect()
-				raise ValueError(ConnectionAttemptStatusType.getName(p.status).replace('_', ' '))
-			
 		return response
 		
 	def tagTimeToComputerTime( self, tagTime ):
@@ -65,6 +73,7 @@ class LLRPConnector( object ):
 	
 	def disconnect( self ):
 		''' Disconnect from a reader.  Also stops the listener. '''
+		self.timeCorrection = None
 		if not self.readerSocket:
 			return None
 		
@@ -72,8 +81,12 @@ class LLRPConnector( object ):
 			self.stopListener()
 		
 		# Send the reader a disconnect message.
-		response = self.transact( CLOSE_CONNECTION_Message() )
-			
+		response = None
+		try:
+			response = self.transact( CLOSE_CONNECTION_Message() )
+		except:
+			pass
+		
 		self.readerSocket.close()
 		self.readerSocket = None
 		return response

@@ -21,6 +21,7 @@ import Utils
 import Version
 from BatchPublishAttrs import setDefaultRaceAttr
 import minimal_intervals
+from InSortedIntervalList import InSortedIntervalList
 
 CurrentUser = getpass.getuser()
 CurrentComputer = socket.gethostname()
@@ -392,15 +393,7 @@ class Category(object):
 		if not ignoreActiveFlag:
 			if not self.active:
 				return False
-		
-		if num in self.exclude:
-			return False
-		
-		i = bisect.bisect_left( self.intervals, (num, num) )
-		for k in xrange(max(0, i-1), min(i+2, len(self.intervals))):
-			if self.intervals[k][0] <= num <= self.intervals[k][1]:
-				return True
-		return False
+		return False if num in self.exclude else InSortedIntervalList( self.intervals, num )
 		
 	def getMatchSet( self ):
 		matchSet = set()
@@ -1825,18 +1818,10 @@ class Race( object ):
 		for c in categories:
 			self.adjustCategoryWaveNumbers( c )
 		
-		category_sets = [c.getMatchSet() for c in categories]
+		category_sets = [c.getMatchSet() for c in categories]		
+		for c, i in zip(categories, minimal_intervals.minimal_intervals(category_sets) ):
+			c.catStr = minimal_intervals.interval_to_str( i )
 		
-		# Check if any number ranges are too large to combine.
-		doMinimalIntervals = True
-		for cs in category_sets:
-			if any( n > 99999 for n in cs ):
-				doMinimalIntervals = False
-				break
-		
-		if doMinimalIntervals:
-			for c, i in zip(categories, minimal_intervals.minimal_intervals(category_sets) ):
-				c.catStr = minimal_intervals.interval_to_str( i )
 		self.resetCategoryCache()
 	
 	def mergeExistingCategoryAttributes( self, nameStrTuples ):

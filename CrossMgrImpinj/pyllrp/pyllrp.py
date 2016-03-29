@@ -911,3 +911,16 @@ if __name__ == '__main__':
 	s = customMessage.pack( bitstring.BitStream() )
 	m = UnpackMessage( s )
 	print m
+	
+	message = READER_EVENT_NOTIFICATION_Message( MessageID = 1234, Parameters = [
+		UTCTimestamp_Parameter( Microseconds = 31415626 ),
+		ReaderEventNotificationData_Parameter( Parameters = [
+			ConnectionAttemptEvent_Parameter(
+				Status = 2,
+			),
+		]),
+	])	# ADD_ROSPEC_Message
+	print message.__repr__()
+	print message.getFirstParameterByClass(ConnectionAttemptEvent_Parameter)
+	
+	print ConnectionAttemptStatusType.getName(2), ConnectionAttemptStatusType.Success
