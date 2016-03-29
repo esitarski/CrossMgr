@@ -41,6 +41,7 @@ class TagInventory( object ):
 		try:
 			response = self.connector.connect( self.host )
 		except socket.timeout:
+			self.connector.disconnect()
 			raise
 			
 		# Reset to factory defaults.

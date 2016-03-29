@@ -14,7 +14,7 @@ class LLRPConnector( object ):
 	# and asynchronous/synchronous monitoring of the reader socket.
 	#
 	def __init__( self ):
-		self.TimeoutSecs = 3		# Time for the reader to respond.
+		self.TimeoutSecs = 6		# Time for the reader to respond.
 		self._reset()
 		self.handlers = {}
 		
@@ -39,7 +39,7 @@ class LLRPConnector( object ):
 		self.host = host
 		self.port = port
 		
-		# Waiting for READER_EVENT_NOTIFICATION...
+		# Looking for READER_EVENT_NOTIFICATION...
 		response = UnpackMessageFromSocket( self.readerSocket )
 		self.keepGoing = True
 		
@@ -51,7 +51,12 @@ class LLRPConnector( object ):
 			self.timeCorrection = datetime.datetime.now() - readerTime
 		except Exception as e:
 			pass
-		
+
+		for p in response.parameters:
+			if isinstance(p, ConnectionAttemptEvent_Parameter) and 1 <= p.status <= 3:
+				self.disconnect()
+				raise ValueError(ConnectionAttemptStatusType.getName(p.status).replace('_', ' '))
+			
 		return response
 		
 	def tagTimeToComputerTime( self, tagTime ):

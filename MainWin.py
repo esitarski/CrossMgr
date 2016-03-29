@@ -66,6 +66,7 @@ from HelpSearch			import HelpSearchDialog
 from Utils				import logCall, logException
 from FileDrop			import FileDrop
 from RaceDB				import RaceDB
+import BatchPublishAttrs
 import Model
 import JChipSetup
 import JChipImport
@@ -1324,17 +1325,8 @@ class MainWin( wx.Frame ):
 
 		printout.Destroy()
 
-	def getFormatFilename( self, format ):
-		fnameBase = os.path.splitext(self.fileName)[0]
-		return {
-			'excel':			lambda: fnameBase + '.xls',
-			'pdf':				lambda: fnameBase + '.pdf',
-			'html':				lambda: fnameBase + '.html',
-			'indexhtml':		lambda: os.path.join(os.path.dirname(fnameBase), 'index.html'),
-			'webscorertxt':		lambda: fnameBase + '-WebScorer.txt',
-			'usacexcel':		lambda: fnameBase + '-USAC.xls',
-			'uciexcel':			lambda: fnameBase + '-UCI.xls',
-		}[format.lower()]()
+	def getFormatFilename( self, filecode ):
+		return BatchPublishAttrs.formatFilename[filecode]( os.path.splitext(self.fileName)[0] )
 
 	@logCall
 	def menuPrintPDF( self, event=None, silent=False ):
@@ -3039,7 +3031,7 @@ class MainWin( wx.Frame ):
 
 		self.showPageName( _('Results') )
 		
-		xlFName = os.path.splitext(self.fileName)[0] + '-USAC.xls'
+		xlFName = self.getFormatFilename( 'usacexcel' )
 
 		wb = xlwt.Workbook()
 		sheetCur = wb.add_sheet( 'Combined Results' )
@@ -3057,14 +3049,14 @@ class MainWin( wx.Frame ):
 						_('Excel File Error'), iconMask=wx.ICON_ERROR )
 	
 	@logCall
-	def menuExportVTTA( self, event ):
+	def menuExportVTTA( self, event=None, silent=False ):
 		self.commit()
 		if self.fileName is None or len(self.fileName) < 4 or not Model.race:
 			return
 
 		self.showPageName( _('Results') )
 		
-		xlFName = os.path.splitext(self.fileName)[0] + '-VTTA.xls'
+		xlFName = self.getFormatFilename( 'vttaexcel' )
 
 		wb = xlwt.Workbook()
 		sheetCur = wb.add_sheet( 'Combined Results' )
@@ -3072,9 +3064,10 @@ class MainWin( wx.Frame ):
 		
 		try:
 			wb.save( xlFName )
-			if self.launchExcelAfterPublishingResults:
-				webbrowser.open( xlFName, new = 2, autoraise = True )
-			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
+			if not silent:
+				if self.launchExcelAfterPublishingResults:
+					webbrowser.open( xlFName, new = 2, autoraise = True )
+				Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
 		except IOError:
 			Utils.MessageOK(self,
 						u'{} "{}".\n\n{}\n{}'.format(_('Cannot write'), xlFName, _('Check if this spreadsheet is open.'), _('If so, close it, and try again.')),
@@ -3086,7 +3079,7 @@ class MainWin( wx.Frame ):
 		if self.fileName is None or len(self.fileName) < 4:
 			return
 
-		xlFName = os.path.splitext(self.fileName)[0] + '-UCI.xls'
+		xlFName = self.getFormatFilename( 'uciexcel' )
 
 		wb = xlwt.Workbook()
 		raceCategories = getRaceCategories()
@@ -3204,7 +3197,7 @@ class MainWin( wx.Frame ):
 			
 		self.showPageName( _('Results') )
 		
-		fname = os.path.splitext(self.fileName)[0] + '-WebScorer.txt'
+		fname = self.getFormatFilename( 'webscorertxt' )
 		
 		try:
 			success, message = WebScorerExport( fname )
@@ -3323,7 +3316,7 @@ The authors of this program assume no responsibility or liability for data loss 
 
 Use entirely at your own risk.
 Do not come back and tell me that this program screwed up your event!
-Computers fail, screw-ups happen.  Always use a paper manual backup.
+Computers fail, screw-ups happen.  Always use a manual backup.
 """)
 		info.License = wordwrap(licenseText, 500, wx.ClientDC(self))
 

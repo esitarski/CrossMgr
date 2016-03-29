@@ -554,13 +554,18 @@ if __name__ == '__main__':
 	# Pure colours seem to work best as they approximate the jewel tones of coloured glass.
 	btnDefs = [
 		# Label				# Colour				# Use bold Font?
-		['OK',				wx.Colour(0,128,0),		True ],
+		#['OK',				wx.Colour(0,128,0),		True ],
+		#['SCAN',			wx.Colour(0,128,128),	False ],
+		#['Cancel',			wx.Colour(128,0,0),		True ],
+		
+		['OK',				wx.Colour(128,128,128),True ],
+		['SCAN',			wx.Colour(128,128,128),	False ],
+		['Cancel',			wx.Colour(128,128,128),True ],
+		
 		['STOP',			wx.Colour(128,0,0),		True ],
 		['SLOW',			wx.Colour(100,100,0),	True ],
-		['Cancel',			wx.Colour(128,0,0),		True ],
 		['ENGINE\nSTART',	wx.Colour(0,128, 0),	False ],
 		['Manual\nOverride',wx.Colour(0,0,128),		False ],
-		['SCAN',			wx.Colour(0,128,128),	False ],
 		['RESET',			wx.Colour(128,0,128),	False ],
 	]
 	

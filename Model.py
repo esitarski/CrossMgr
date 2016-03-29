@@ -143,7 +143,7 @@ class Category(object):
 	distance = None
 	firstLapDistance = None
 	
-	MaxBib = 99999
+	MaxBib = 999999
 	
 	# Attributes to be merged from existing catgories in category import or when reading categories from the Excel sheet.
 	MergeAttributes = (
@@ -1826,8 +1826,17 @@ class Race( object ):
 			self.adjustCategoryWaveNumbers( c )
 		
 		category_sets = [c.getMatchSet() for c in categories]
-		for c, i in zip(categories, minimal_intervals.minimal_intervals(category_sets) ):
-			c.catStr = minimal_intervals.interval_to_str( i )
+		
+		# Check if any number ranges are too large to combine.
+		doMinimalIntervals = True
+		for cs in category_sets:
+			if any( n > 99999 for n in cs ):
+				doMinimalIntervals = False
+				break
+		
+		if doMinimalIntervals:
+			for c, i in zip(categories, minimal_intervals.minimal_intervals(category_sets) ):
+				c.catStr = minimal_intervals.interval_to_str( i )
 		self.resetCategoryCache()
 	
 	def mergeExistingCategoryAttributes( self, nameStrTuples ):
