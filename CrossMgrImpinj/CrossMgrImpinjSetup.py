@@ -1,5 +1,4 @@
 from distutils.core import setup
-import py2exe
 import os
 import shutil
 import zipfile
@@ -16,6 +15,16 @@ if os.path.exists(distDirParent):
 if not os.path.exists( distDirParent ):
 	os.makedirs( distDirParent )
 
+gds = [
+	r"c:\GoogleDrive\Downloads\Windows",
+	r"C:\Users\edwar\Google Drive\Downloads\Windows",
+	r"C:\Users\Edward Sitarski\Google Drive\Downloads\Windows",
+]
+for googleDrive in gds:
+	if os.path.exists(googleDrive):
+		break
+googleDrive = os.path.join( googleDrive, 'CrossMgrImpinj' )
+	
 subprocess.call( [
 	'pyinstaller',
 	
@@ -56,7 +65,7 @@ def copyDir( d ):
 copyDir( 'CrossMgrImpinjImages' )
 
 # Create the installer
-inno = r'\Program Files\Inno Setup 5\ISCC.exe'
+inno = r'\Program Files (x86)\Inno Setup 5\ISCC.exe'
 # Find the drive it is installed on.
 for drive in ['C', 'D']:
 	innoTest = drive + ':' + inno
@@ -113,12 +122,12 @@ z.write( newExeName )
 z.close()
 print 'executable compressed.'
 
-shutil.copy( newZipName, r"c:\GoogleDrive\Downloads\Windows\CrossMgrImpinj"  )
-shutil.copy( '../CrossMgrImpinjReadme.pdf', r"c:\GoogleDrive\Downloads\Windows\CrossMgrImpinj"  )
+shutil.copy( newZipName, googleDrive  )
+shutil.copy( '../CrossMgrImpinjReadme.pdf', googleDrive  )
 
 cmd = 'python virustotal_submit.py "{}"'.format(os.path.abspath(newExeName))
 print cmd
 os.chdir( '..' )
 subprocess.call( cmd, shell=True )
-shutil.copy( 'virustotal.html', os.path.join(r"c:\GoogleDrive\Downloads\Windows\CrossMgrImpinj", 'virustotal_v' + vNum + '.html') )
+shutil.copy( 'virustotal.html', os.path.join(googleDrive, 'virustotal_v' + vNum + '.html') )
 

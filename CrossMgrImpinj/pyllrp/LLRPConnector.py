@@ -36,13 +36,13 @@ class LLRPConnector( object ):
 		# Set a timeout for the socket.  This is also the maximum time it will take to shut down the listener.
 		self.readerSocket.settimeout( self.TimeoutSecs )
 		self.readerSocket.connect( (host, port) )
-		tNow = datetime.datetime.now()	# Get the time here to minimize latency.
 		
 		self.host = host
 		self.port = port
 		
 		# Expecting READER_EVENT_NOTIFICATION message.
 		response = UnpackMessageFromSocket( self.readerSocket )
+		tNow = datetime.datetime.now()	# Get the time here to minimize latency.
 		
 		# Check if the connection succeeded.
 		connectionAttemptEvent = response.getFirstParameterByClass(ConnectionAttemptEvent_Parameter)
@@ -172,4 +172,3 @@ class LLRPConnector( object ):
 	
 	def isListening( self ):
 		return self.thread and self.thread.is_alive()
-		

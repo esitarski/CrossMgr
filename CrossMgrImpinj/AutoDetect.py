@@ -5,7 +5,7 @@ from pyllrp.pyllrp import *
 
 def GetDefaultHost():
 	DEFAULT_HOST = socket.gethostbyname(socket.gethostname())
-	if DEFAULT_HOST == '127.0.0.1':
+	if DEFAULT_HOST in ('127.0.0.1', '127.0.1.1'):
 		reSplit = re.compile('[: \t]+')
 		try:
 			co = subprocess.Popen(['ifconfig'], stdout = subprocess.PIPE)

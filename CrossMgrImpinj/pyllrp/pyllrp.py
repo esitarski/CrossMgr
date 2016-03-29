@@ -685,27 +685,49 @@ del llrpdef.messages
 # Routines to handle messages over a socket.
 #
 def UnpackMessageFromSocket( sock ):
+	zeroLenChunkMax = 4
+	
 	# Read the header bytes to get the messageID and length.
 	headerBytes = (16+32) >> 3
-	message = ''
-	while len(message) < headerBytes:
-		# print headerBytes, len(message), headerBytes - len(message)
-		message += sock.recv( headerBytes - len(message) )
-		
+	
+	zeroLenChunkCount = 0
+	chunks = []
+	messageLen = 0
+	while messageLen < headerBytes:
+		# print headerBytes, messageLen, headerBytes - messageLen
+		chunk = sock.recv( headerBytes - messageLen )
+		if not chunk:
+			zeroLenChunkCount += 1
+			if zeroLenChunkCount < zeroLenChunkMax:
+				continue
+			raise RuntimeError( 'LLRP socket connection broken' )
+		chunks.append( chunk )
+		messageLen += len(chunk)
+		zeroLenChunkCount = 0
+	
 	# Convert to a BitStream to get the message Type and Length.
-	s = bitstring.ConstBitStream( bytes=message )
+	s = bitstring.ConstBitStream( bytes=b''.join(chunks) )
 	Type = s.read('uintbe:16')
 	Type &= ((1<<10)-1)
 	Length = s.read('uintbe:32')
 	
-	# print 'UnpackMessageFromSocket: Type=%d Length=%d %s' % (Type, Length, _messageClassFromType[Type].__name__)
+	# print 'UnpackMessageFromSocket: Type={} Length={} {}'.format(Type, Length, _messageClassFromType[Type].__name__)
 	
-	# Read the remaining message from the socket into memory based on the Length.
-	while len(message) < Length:
-		message += sock.recv( Length - len(message) )
-		
+	# Read the remaining message based on the Length.
+	zeroLenChunkCount = 0
+	while messageLen < Length:
+		chunk = sock.recv( Length - messageLen )
+		if not chunk:
+			zeroLenChunkCount += 1
+			if zeroLenChunkCount < zeroLenChunkMax:
+				continue
+			raise RuntimeError( 'LLRP socket connection broken' )
+		chunks.append( chunk )
+		messageLen += len(chunk)
+		zeroLenChunkCount = 0
+	
 	# Convert the full message to a BitStream and parse it.
-	s = bitstring.ConstBitStream( bytes=message )
+	s = bitstring.ConstBitStream( bytes=b''.join(chunks) )
 	return _MessagePackUnpackLookup[Type].unpack( s )
 
 def UnpackMessage( s ):
