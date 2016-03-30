@@ -685,7 +685,7 @@ del llrpdef.messages
 # Routines to handle messages over a socket.
 #
 def UnpackMessageFromSocket( sock ):
-	zeroLenChunkMax = 4
+	zeroLenChunkMax = 2
 	
 	# Read the header bytes to get the messageID and length.
 	headerBytes = (16+32) >> 3

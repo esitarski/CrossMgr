@@ -304,8 +304,6 @@ class Impinj( object ):
 						self.messageQ.put( ('Impinj', 'Skipping: {}'.format(response.__class__.__name__)) )
 					continue
 				
-				Bell()
-				
 				# Open the log file.
 				try:
 					pf = open( self.fname, 'a' )
@@ -361,6 +359,7 @@ class Impinj( object ):
 									tagID,
 									discoveryTime.strftime('%a %b %d %H:%M:%S.%f %Z %Y-%m-%d')) )
 					self.messageQ.put( ('Impinj', 'Received {}. tag={}, time={}'.format(self.tagCount, tagID, discoveryTimeStr)) )
+					Bell()
 				
 				# Close the log file.
 				if pf:
