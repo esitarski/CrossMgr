@@ -525,6 +525,9 @@ def ordinal( value ):
 		value = int(value)
 	except ValueError:
 		return u'{}'.format(value)
+		
+	if value == 999999:
+		return u'DNF'
 
 	return {
 		'fr': lambda v: '{}{}'.format(v, 'er' if v == 1 else 'e'),
