@@ -40,7 +40,7 @@ def findImpinjHost( impinjPort ):
 		impinjHost = '.'.join( '{}'.format(v) for v in ipTest )
 		
 		readerSocket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
-		readerSocket.settimeout( 3.0 )
+		readerSocket.settimeout( 4.0 )
 		try:
 			readerSocket.connect( (impinjHost, impinjPort) )
 		except Exception as e:
@@ -54,12 +54,9 @@ def findImpinjHost( impinjPort ):
 			
 		readerSocket.close()
 		
-		# Check that the return from the reader is valid.
-		try:
-			readerTime = response.getFirstParameterByClass(UTCTimestamp_Parameter).Microseconds
-		except Exception as e:
-			continue
-		else:
+		# Check if the connection succeeded.
+		connectionAttemptEvent = response.getFirstParameterByClass(ConnectionAttemptEvent_Parameter)
+		if connectionAttemptEvent and connectionAttemptEvent.Status == ConnectionAttemptStatusType.Success:
 			return impinjHost
 			
 	return None

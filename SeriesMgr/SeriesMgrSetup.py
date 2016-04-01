@@ -22,6 +22,7 @@ googleDrive = os.path.join( googleDrive, 'SeriesMgr' )
 # Copy all dependent files into this folder.
 copyFiles = [
 	"Model.py",
+	"InSortedIntervalList.py",
 	"minimal_intervals.py",
 	"Utils.py",
 	"rsonlite.py",

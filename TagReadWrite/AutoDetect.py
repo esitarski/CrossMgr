@@ -34,12 +34,11 @@ def findImpinjHost( impinjPort, callback = None ):
 			
 		readerSocket.close()
 		
-		# Check that the return from the reader is valid.
-		try:
-			readerTime = response.getFirstParameterByClass(UTCTimestamp_Parameter).Microseconds
-		except Exception as e:
-			continue
-		else:
+		# Check if the connection succeeded.
+		connectionAttemptEvent = response.getFirstParameterByClass(ConnectionAttemptEvent_Parameter)
+		if connectionAttemptEvent and connectionAttemptEvent.Status == ConnectionAttemptStatusType.Success:
+			if callback:
+				callback( 'Success!' )
 			return impinjHost
 	
 	return None
