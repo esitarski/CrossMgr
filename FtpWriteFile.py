@@ -97,10 +97,14 @@ def FtpWriteRaceHTML():
 	if not html:
 		return None
 	
-	fname = os.path.splitext(Utils.getFileName())[0] + '.html'
-	with io.open(fname, 'w', encoding='utf-8') as fp:
-		fp.write( html )
-	html = None
+	try:
+		fname = os.path.splitext(Utils.getFileName())[0] + '.html'
+		with io.open(fname, 'w', encoding='utf-8') as fp:
+			fp.write( html )
+		html = None
+	except Exception as e:
+		Utils.writeLog( 'FtpWriteRaceHTML: (2) "{}"'.format(e) )
+		return None
 	
 	FtpUploadFile( [fname, WriteHtmlIndexPage()] )
 	return None

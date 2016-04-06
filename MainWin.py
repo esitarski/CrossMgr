@@ -2206,27 +2206,36 @@ class MainWin( wx.Frame ):
 	#--------------------------------------------------------------------------------------------
 	def doCleanup( self ):
 		self.showPageName( _('Results') )
-		with Model.LockRace() as race:
-			if race is not None:
+		race = Model.race
+		if race:
+			try:
 				race.resetAllCaches()
-		
-		self.writeRace()
-		Model.writeModelUpdate()
-		self.config.Flush()
+				self.writeRace()
+				Model.writeModelUpdate()
+				self.config.Flush()
+			except Exception as e:
+				Utils.writeLog( 'call: doCleanup: (1) "{}"'.format(e) )
 
 		try:
 			self.timer.Stop()
 		except AttributeError:
 			pass
+		except Exception as e:
+			Utils.writeLog( 'call: doCleanup: (2) "{}"'.format(e) )
 
 		try:
 			self.simulateTimer.Stop()
 			self.simulateTimer = None
 		except AttributeError:
 			pass
-		
-		OutputStreamer.StopStreamer()
-		ChipReader.chipReaderCur.CleanupListener()
+		except Exception as e:
+			Utils.writeLog( 'call: doCleanup: (3) "{}"'.format(e) )
+
+		try:
+			OutputStreamer.StopStreamer()
+			ChipReader.chipReaderCur.CleanupListener()
+		except Exception as e:
+			Utils.writeLog( 'call: doCleanup: (4) "{}"'.format(e) )
 	
 	@logCall
 	def onCloseWindow( self, event ):

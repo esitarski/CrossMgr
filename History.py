@@ -389,19 +389,20 @@ class History( wx.Panel ):
 		self.search.SelectAll()
 		wx.CallAfter( self.Refresh )
 		
+		race = Model.race
+		if race is None:
+			self.clearGrid()
+			return
+
 		highPrecision = Model.highPrecisionTimes()
-		if highPrecision:
+		
+		if highPrecision or race.isTimeTrial:
 			formatTime = lambda t: Utils.formatTime(t, True)
 			formatTimeDiff = lambda a, b: Utils.formatTimeGap(TimeDifference(a, b, True), True)
 		else:
 			formatTime = Utils.formatTime
 			formatTimeDiff = lambda a, b: Utils.formatTimeGap(TimeDifference(a, b, False), False)
 		
-		race = Model.race
-		if race is None:
-			self.clearGrid()
-			return
-
 		category = FixCategories( self.categoryChoice, getattr(race, 'historyCategory', 0) )
 		self.hbs.Layout()
 
@@ -431,9 +432,9 @@ class History( wx.Panel ):
 		entries = race.interpolateLap( maxLaps, False )
 		entries = [e for e in entries if e.lap <= race.getCategoryNumLaps(e.num)]
 		
-		isTimeTrial = getattr(race, 'isTimeTrial', False)
-		if isTimeTrial:
+		if race.isTimeTrial:
 			entries = [Model.Entry(e.num, e.lap, (race.riders[e.num].firstTime or 0.0) + e.t, e.interp) for e in entries]
+			entries.sort( key = lambda e: (e.t, e.num) )
 		
 		# Collect the number and times for all entries so we can compute lap times.
 		numTimes = {(e.num, e.lap) : e.t for e in entries}
@@ -503,19 +504,8 @@ class History( wx.Panel ):
 			info = {}
 			
 		def getName( num ):
-			try:
-				d = info[num]
-			except KeyError:
-				return ''
-			try:
-				lastName = d['LastName']
-			except KeyError:
-				return d.get('FirstName', '')
-			try:
-				firstName = d['FirstName']
-			except KeyError:
-				return lastName
-			return u'{}, {}'.format(lastName, firstName)
+			d = info.get(num, {})
+			return u', '.join( v for v in [d.get('LastName',None), d.get('FirstName',None)] if v )
 			
 		data = []
 		for col, h in enumerate(self.history):
