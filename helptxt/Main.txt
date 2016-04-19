@@ -1,7 +1,6 @@
 ## [Quick Start][]
 Get started with CrossMgr now!
 
-
 ## Main Menu
 
 * [File][]

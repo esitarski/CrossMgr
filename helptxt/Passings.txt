@@ -24,7 +24,7 @@ Projected and auto-corrected entries suggested by CrossMgr are highlighed in yel
 
 # Controls
 ## Category
-Selects the Category of the results.  Category "All" will show results as if all riders were in one category.  This is useful for comparing against manually collected data for the race as a whole.
+Selects the Category of the results.  Category __All__ will show results as if all riders were in one category.  This is useful for comparing against manually collected data for the race as a whole.
 
 ## Race Times
 Shows the race time for each entry.
@@ -67,4 +67,4 @@ Split...|Split this entry into two entries
 Swap with Entry Before|Swap this entry with preceeding entry time
 Swap with Entry After|Swap this entry with following entry time
 
-Remember, Ctrl-Z is undo, Ctrl-Y is redo!
+Remember, Ctrl-Z is undo, Ctrl-Y is redo.

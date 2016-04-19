@@ -1,9 +1,12 @@
 import markdown
 import glob
 import os
+import re
+import base64
 import zipfile
 import shutil
 import codecs
+import datetime
 import cStringIO as StringIO
 from contextlib import contextmanager
 
@@ -23,6 +26,22 @@ def fileOlderThan( srcFile, transFile ):
 		return os.path.getmtime(srcFile) <= os.path.getmtime(transFile)
 	except:
 		return False
+
+reImage = re.compile( r'src="\.\/images\/([^"]+)"' )
+def InlineImages( html ):
+	while 1:
+		match = reImage.search( html )
+		if not match:
+			break
+		fname = match.group(1)
+		with codecs.open(os.path.join('images',fname), 'rb') as f:
+			b64 = base64.b64encode( f.read() )
+		sReplace = 'src="data:image/{};base64,{}'.format(
+			os.path.splitext(fname)[1][1:],
+			b64,
+		)
+		html = html.replace( match.group(0), sReplace )
+	return html
 		
 def CompileHelp( dir = '.' ):
 	with working_directory( dir ):
@@ -50,7 +69,7 @@ def CompileHelp( dir = '.' ):
 			prolog = prolog.replace( '<<<style>>>', style, 1 )
 			del style
 		with codecs.open('epilog.html', 'r', encoding='utf-8') as f:
-			epilog = f.read()
+			epilog = f.read().replace('YYYY','{}'.format(datetime.datetime.now().year))
 
 		contentDiv = '<div class="content">'
 		
@@ -71,6 +90,7 @@ def CompileHelp( dir = '.' ):
 				if htmlSave == html:
 					html = contentDiv + '\n' + html
 				html += '\n</div>\n'
+				html = InlineImages( html )
 			with codecs.open( os.path.splitext(fname)[0] + '.html', 'w', encoding='utf-8' ) as f:
 				f.write( prolog )
 				f.write( html )

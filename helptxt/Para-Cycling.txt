@@ -6,7 +6,7 @@ CrossMgr supports Para-Cycling.  There are a number of configurations that need 
 
 ## Performance Factors
 
-Athlete's Performance Factors for combined Para categories are entered in the linked Excel sheet under a "Factor" column.
+Athlete's Performance Factors for combined Para categories are entered in the linked Excel sheet under a __Factor__ column.
 The Factor must be a percent.  See [External Excel][] for details.
 
 When a Factor is present, it will be multiplied by the athlete's time to get an adjusted time.  The athlete's will them be ranked according to the adjusted time.
@@ -15,7 +15,7 @@ There is no additional configuration required.  If Factor is present, CrossMgr w
 
 In all published output for combined categories using Factors (this includes Results, Spreasheet, HTML, Printing), the ElapsedTime, Factor and adjusted Time are shown, making it easy to validate the result.  Gap is not shown, as it make little sense with adjusted times.
 
-For Component and Custom Categories (see [Categories][]) where all the athletes have the same Factor, the "regular" results are shown without ElapsedTime and Factor, and the Time is the race time.  Gap is shown.
+For Component and Custom Categories (see [Categories][]) where all the athletes have the same Factor, the __regular__ results are shown without ElapsedTime and Factor, and the Time is the race time.  Gap is shown.
 
 ## Combined Handcycling Category Example
 
@@ -37,7 +37,7 @@ If you don't want CrossMgr to split out the results for individual classificatio
 
 Assign number ranges corresponding to the athlete's numbers to your Category(ies).
 
-Because lapped riders could still be in contention, set the "Lapped Riders Continue" flag of the "Combined" category.  This is very important!  H1 athletes may be lapped by the H3 riders, but because of the Performance Factor, an H1 athlete might be the winner.  All riders must complete the full distance.
+Because lapped riders could still be in contention, set the __Lapped Riders Continue__ flag of the __Combined__ category.  This is very important!  H1 athletes may be lapped by the H3 riders, but because of the Performance Factor, an H1 athlete might be the winner.  All riders must complete the full distance.
 
 In your Excel spreadsheet, create a Factor column (in addition to the athlete information) and enter the factors from the UCI table (see [here](http://www.uci.ch/includes/asp/getTarget.asp?type=FILE&id=MzQwMzY)).
 
@@ -52,11 +52,11 @@ You can change the Factors at any time - before, during or after the race.  Cros
 
 Whether a Road Race or a Time Trial, use the same procedure for setting up the Categories and Factors.
 
-Be mindful that there can be a number of complexities with Performance Factors.  For example, say a fast H3 athlete wants to compete in an H4-H5 race.  In this case, the H3 rider would __not__ get a 97.25 factor because he is "racing up".  Although he has an H3 classification, he is not entitled to the H3 performance factor in this case.
+Be mindful that there can be a number of complexities with Performance Factors.  For example, say a fast H3 athlete wants to compete in an H4-H5 race.  In this case, the H3 rider would __not__ get a 97.25 factor because he is __racing up__.  Although he has an H3 classification, he is not entitled to the H3 performance factor in this case.
 
 ## Para-Cycling and RFID
 
-It is __highly recommended__ to use RFID chips with Para-Cycling, in fact, an RFID system is a "must have" not a "nice to have".
+It is __highly recommended__ to use RFID chips with Para-Cycling, in fact, an RFID system is a __must have__ not a __nice to have__.
 
 First, the RFID counts all the laps of every athlete on course.  This is critical: athletes are ranked by distance completed, then by factor-adjusted finish time.  With athletes of different abilities on course, counting laps can be difficult and requires a lot of manual backup.
 
