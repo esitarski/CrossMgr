@@ -27,7 +27,7 @@ class Races(wx.Panel):
 		self.explanation = wx.StaticText( self, label=u'\n'.join( [
 				_("Add all the races in your Series."),
 				_("Make sure the races are in chronological order."),
-				_("You can easily change the order by dragging-and-dropping the first grey column in the table."),
+				_("You can change the order by dragging-and-dropping the first grey column in the table."),
 				u'',
 				_("Choose the Points Structure to score each race."),
 				_("You can change or define your own Points Structure (say Double Points) on the Points page."),

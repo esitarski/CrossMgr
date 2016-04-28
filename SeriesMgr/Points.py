@@ -101,6 +101,12 @@ class Points(wx.Panel):
 		
 		#--------------------------------------------------------------------------
 		bsizer.Add( wx.StaticLine(self), 1, flag=wx.EXPAND|wx.ALL, border=4 )
+		self.addPrimePoints = wx.CheckBox( self, label='Add Prime Points to Points for Position' )
+		self.addPrimePoints.SetValue( False )
+		bsizer.Add( self.addPrimePoints, 0, flag=wx.ALL, border=4 )
+		
+		#--------------------------------------------------------------------------
+		bsizer.Add( wx.StaticLine(self), 1, flag=wx.EXPAND|wx.ALL, border=4 )
 		self.ifRidersTiedOnPoints = wx.StaticText(self, label='If Riders are Tied on Points:')
 		bsizer.Add( self.ifRidersTiedOnPoints, flag=wx.ALL, border=2 )
 		self.mostEventsCompleted = wx.CheckBox( self, label='Consider Number of Events Completed' )
@@ -117,7 +123,7 @@ class Points(wx.Panel):
 			'Number of 1st, 2nd, 3rd, 4th then 5th Place Finishes',
 		])
 		self.numPlacesTieBreaker.SetLabel( u'If Riders are still Tied on Points:' )
-		bsizer.Add( self.numPlacesTieBreaker, 0, flag=wx.ALL, border=2 )
+		bsizer.Add( self.numPlacesTieBreaker, 0, flag=wx.ALL|wx.EXPAND, border=2 )
 		self.ifRidersAreStillTiedOnPoints = wx.StaticText(self, label=u'If Riders are still Tied on Points, use most Recent Results')
 		bsizer.Add( self.ifRidersAreStillTiedOnPoints, flag=wx.ALL, border=4 )
 
@@ -158,6 +164,7 @@ class Points(wx.Panel):
 			self.ifRidersTiedOnPoints,
 			self.mostEventsCompleted,
 			self.numPlacesTieBreaker,
+			self.addPrimePoints,
 			self.ifRidersAreStillTiedOnPoints,
 			self.pointsStructures,
 			self.grid,
@@ -208,6 +215,7 @@ class Points(wx.Panel):
 			
 		wx.CallAfter( self.gridAutoSize )
 		
+		self.addPrimePoints.SetValue( model.addPrimePoints )
 		self.bestResultsToConsider.SetSelection( model.bestResultsToConsider )
 		self.mustHaveCompleted.SetSelection( model.mustHaveCompleted )
 		
@@ -238,26 +246,20 @@ class Points(wx.Panel):
 		model = SeriesModel.model
 		model.setPoints( pointsList )
 		
-		if model.bestResultsToConsider != self.bestResultsToConsider.GetSelection():
-			model.bestResultsToConsider = self.bestResultsToConsider.GetSelection()
-			model.changed = True
-		if model.mustHaveCompleted != self.mustHaveCompleted.GetSelection():
-			model.mustHaveCompleted = self.mustHaveCompleted.GetSelection()
-			model.changed = True
-			
-		if model.useMostEventsCompleted != self.mostEventsCompleted.GetValue():
-			model.useMostEventsCompleted = self.mostEventsCompleted.GetValue()
-			model.changed = True
-		if model.numPlacesTieBreaker != self.numPlacesTieBreaker.GetSelection():
-			model.numPlacesTieBreaker = self.numPlacesTieBreaker.GetSelection()
-			model.changed = True
+		modelUpdate = {
+			'addPrimePoints': self.addPrimePoints.GetValue(),
+			'bestResultsToConsider': self.bestResultsToConsider.GetSelection(),
+			'mustHaveCompleted': self.mustHaveCompleted.GetSelection(),
+			'useMostEventsCompleted': self.mostEventsCompleted.GetValue(),
+			'numPlacesTieBreaker': self.numPlacesTieBreaker.GetSelection(),
+			'scoreByTime': self.scoreByTime.GetValue(),
+			'scoreByPercent': self.scoreByPercent.GetValue(),
+		}
 		
-		if model.scoreByTime != self.scoreByTime.GetValue():
-			model.scoreByTime = self.scoreByTime.GetValue()
-			model.changed = True
-		if model.scoreByPercent != self.scoreByPercent.GetValue():
-			model.scoreByPercent = self.scoreByPercent.GetValue()
-			model.changed = True
+		for attr, value in modelUpdate.iteritems():
+			if getattr(model, attr) != value:
+				setattr( model, attr, value )
+				model.changed = True
 		
 ########################################################################
 

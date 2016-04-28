@@ -53,6 +53,7 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	bestResultsToConsider = model.bestResultsToConsider
 	mustHaveCompleted = model.mustHaveCompleted
 	hasUpgrades = model.upgradePaths
+	addPrimePoints = model.addPrimePoints and not (scoreByTime or scoreByPercent)
 	raceResults = model.extractAllRaceResults()
 	
 	categoryNames = sorted( set(rr.categoryName for rr in raceResults) )
@@ -466,7 +467,7 @@ function sortTableId( iTable, iCol ) {
 										write( unicode(points or '') )
 									with tag(html, 'td', {'class':'rightAlign'}):
 										write( unicode(gap or '') )
-									for rPoints, rRank in racePoints:
+									for rPoints, rRank, rPrimePoints in racePoints:
 										if rPoints:
 											with tag(html, 'td', {'class':'leftBorder points' + (' ignored' if u'**' in u'{}'.format(rPoints) else '')}):
 												write( u'{}'.format(rPoints).replace(u'[',u'').replace(u']',u'').replace(' ', '&nbsp;') )
@@ -475,13 +476,23 @@ function sortTableId( iTable, iCol ) {
 												pass
 										
 										if rRank:
-											with tag(html, 'td', {'class':'rank'}):
-												write( u'({})'.format(Utils.ordinal(rRank).replace(' ', '&nbsp;')) )
+											if rPrimePoints:
+												with tag(html, 'td', {'class':'rank'}):
+													write( u'({})&nbsp;+{}'.format(Utils.ordinal(rRank).replace(' ', '&nbsp;'), rPrimePoints) )
+											else:
+												with tag(html, 'td', {'class':'rank'}):
+													write( u'({})'.format(Utils.ordinal(rRank).replace(' ', '&nbsp;')) )
 										else:
 											with tag(html, 'td'):
 												pass
 										
 			#-----------------------------------------------------------------------------
+			if addPrimePoints > 0:
+				with tag(html, 'p'):
+					with tag(html, 'strong'):
+						write( u'+N' )
+					write( u' - {}'.format( u'Bonus Points Added.') )
+					
 			if bestResultsToConsider > 0:
 				with tag(html, 'p'):
 					with tag(html, 'strong'):
@@ -741,9 +752,10 @@ class Results(wx.Panel):
 			self.grid.SetCellValue( row, 3, unicode(team or u'') )
 			self.grid.SetCellValue( row, 4, unicode(points) )
 			self.grid.SetCellValue( row, 5, unicode(gap) )
-			for q, (rPoints, rRank) in enumerate(racePoints):
+			for q, (rPoints, rRank, rPrimePoints) in enumerate(racePoints):
 				self.grid.SetCellValue( row, 6 + q,
-					u'{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints
+					u'{} ({}) +{}'.format(rPoints, Utils.ordinal(rRank), rPrimePoints) if rPoints and rPrimePoints
+					else u'{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints
 					else u'({})'.format(Utils.ordinal(rRank)) if rRank
 					else u''
 				)
@@ -870,9 +882,10 @@ class Results(wx.Panel):
 				wsFit.write( rowCur, 3, team, textStyle )
 				wsFit.write( rowCur, 4, points, numberStyle )
 				wsFit.write( rowCur, 5, gap, numberStyle )
-				for q, (rPoints, rRank) in enumerate(racePoints):
+				for q, (rPoints, rRank, rPrimePoints) in enumerate(racePoints):
 					wsFit.write( rowCur, 6 + q,
-						'{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints
+						'{} ({}) +{}'.format(rPoints, Utils.ordinal(rRank), rPrimePoints) if rPoints and rPrimePoints
+						else '{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints
 						else '({})'.format(Utils.ordinal(rRank)) if rRank
 						else '',
 						centerStyle

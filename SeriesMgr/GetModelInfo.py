@@ -1,4 +1,3 @@
-
 import os
 import math
 import cPickle as pickle
@@ -72,7 +71,7 @@ class RaceResult( object ):
 	rankDNF = 999999
 	
 	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, raceFileName, bib, rank, raceOrganizer,
-					raceURL = None, raceInSeries = None, tFinish = None, tProjected = None ):
+					raceURL = None, raceInSeries = None, tFinish = None, tProjected = None, primePoints = 0 ):
 		self.firstName = (firstName or u'')
 		self.lastName = (lastName or u'')
 		self.license = (license or u'')
@@ -89,6 +88,7 @@ class RaceResult( object ):
 		
 		self.bib = bib
 		self.rank = rank
+		self.primePoints = primePoints
 		
 		self.tFinish = tFinish
 		self.tProjected = tProjected if tProjected else tFinish
@@ -207,6 +207,13 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 	
 	acceptedStatus = { Model.Rider.Finisher, Model.Rider.DNF }
 	raceURL = getattr( race, 'urlFull', None )
+	
+	racePrimes = getattr( race, 'primes', None )
+	primePoints = defaultdict( int )
+	if racePrimes:
+		for p in racePrimes:
+			primePoints[p['winnerBib']] += p.get('points', 0)
+	
 	raceResults = []
 	for category in race.getCategories( startWaveOnly=False ):
 		if not category.seriesFlag:
@@ -258,6 +265,9 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 				info['tProjected'] = rr.projectedTime
 			except AttributeError:
 				info['tProjected'] = rr.lastTime
+				
+			info['primePoints'] = primePoints.get(rr.num, 0)
+			
 			raceResults.append( RaceResult(**info) )
 		
 	Model.race = None
@@ -310,6 +320,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 	bestResultsToConsider = SeriesModel.model.bestResultsToConsider
 	mustHaveCompleted = SeriesModel.model.mustHaveCompleted
 	showLastToFirst = SeriesModel.model.showLastToFirst
+	addPrimePoints = SeriesModel.model.addPrimePoints
 	
 	# Get all results for this category.
 	raceResults = [rr for rr in raceResults if rr.categoryName == categoryName]
@@ -343,7 +354,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			for i, u in enumerate(upgrades):
 				if u:
 					v = riderResults[rider][i]
-					riderResults[rider][i] = (upgradeFormat.format(v[0] if v[0] else ''), v[1])
+					riderResults[rider][i] = tuple([upgradeFormat.format(v[0] if v[0] else '')] + list(v[1:]))
 	
 	if scoreByTime:
 		# Get the individual results for each rider, and the total time.
@@ -359,7 +370,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			riderNameLicense[rider] = (rr.full_name, rr.license)
 			if rr.team and rr.team != u'0':
 				riderTeam[rider] = rr.team
-			riderResults[rider][raceSequence[rr.raceInSeries]] = (formatTime(tFinish, True), rr.rank)
+			riderResults[rider][raceSequence[rr.raceInSeries]] = (formatTime(tFinish, True), rr.rank, rr.primePoints)
 			riderFinishes[rider][raceSequence[rr.raceInSeries]] = tFinish
 			riderTFinish[rider] += tFinish
 			riderUpgrades[rider][raceSequence[rr.raceInSeries]] = rr.upgradeResult
@@ -375,7 +386,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 					for i, t in iTimes[bestResultsToConsider:]:
 						riderTFinish[rider] -= t
 						v = riderResults[rider][i]
-						riderResults[rider][i] = (ignoreFormat.format(v[0]), v[1])
+						riderResults[rider][i] = tuple([ignoreFormat.format(v[0])] + list(v[1:]))
 
 		FixUpgradeFormat( riderUpgrades, riderResults )
 
@@ -420,7 +431,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			if rr.team and rr.team != u'0':
 				riderTeam[rider] = rr.team
 			percent = min( 100.0, (tFastest / tFinish) * 100.0 if tFinish > 0.0 else 0.0 ) * (rr.upgradeFactor if rr.upgradeResult else 1)
-			riderResults[rider][raceSequence[rr.raceInSeries]] = (u'{}, {}'.format(percentFormat.format(percent), formatTime(tFinish, False)), rr.rank)
+			riderResults[rider][raceSequence[rr.raceInSeries]] = (u'{}, {}'.format(percentFormat.format(percent), formatTime(tFinish, False)), rr.rank, rr.primePoints)
 			riderFinishes[rider][raceSequence[rr.raceInSeries]] = percent
 			riderPercentTotal[rider] += percent
 			riderUpgrades[rider][raceSequence[rr.raceInSeries]] = rr.upgradeResult
@@ -436,7 +447,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 					for i, p in iPercents[bestResultsToConsider:]:
 						riderPercentTotal[rider] -= p
 						v = riderResults[rider][i]
-						riderResults[rider][i] = (ignoreFormat.format(v[0]), v[1])
+						riderResults[rider][i] = tuple([ignoreFormat.format(v[0])] + list(v[1:]))
 
 		FixUpgradeFormat( riderUpgrades, riderResults )
 
@@ -461,7 +472,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		
 	else:
 		# Get the individual results for each rider, and the total points.
-		riderResults = defaultdict( lambda : [(0,0)] * len(races) )
+		riderResults = defaultdict( lambda : [(0,0,0)] * len(races) )
 		riderFinishes = defaultdict( lambda : [None] * len(races) )
 		riderPoints = defaultdict( int )
 		for rr in raceResults:
@@ -469,8 +480,10 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			riderNameLicense[rider] = (rr.full_name, rr.license)
 			if rr.team and rr.team != u'0':
 				riderTeam[rider] = rr.team
-			points = asInt( pointsForRank[rr.raceFileName][rr.rank] * rr.upgradeFactor )
-			riderResults[rider][raceSequence[rr.raceInSeries]] = (points, rr.rank)
+			primePoints = rr.primePoints if addPrimePoints else 0
+			earnedPoints = pointsForRank[rr.raceFileName][rr.rank] + primePoints
+			points = asInt( earnedPoints * rr.upgradeFactor )
+			riderResults[rider][raceSequence[rr.raceInSeries]] = (points, rr.rank, primePoints)
 			riderFinishes[rider][raceSequence[rr.raceInSeries]] = points
 			riderPoints[rider] += points
 			riderPoints[rider] = asInt( riderPoints[rider] )
@@ -487,7 +500,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 					for i, p in iPoints[bestResultsToConsider:]:
 						riderPoints[rider] -= p
 						v = riderResults[rider][i]
-						riderResults[rider][i] = (ignoreFormat.format(v[0] if v[0] else ''), v[1])
+						riderResults[rider][i] = tuple([ignoreFormat.format(v[0] if v[0] else '')] + list(v[1:]))
 
 		FixUpgradeFormat( riderUpgrades, riderResults )
 
@@ -496,10 +509,11 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		
 		# Sort by rider points - greatest number of points first.  Break ties with place count, then
 		# most recent result.
+		iRank = 1
 		riderOrder.sort(key = lambda r:	[riderPoints[r]] +
 										([riderEventsCompleted[r]] if useMostEventsCompleted else []) +
 										[riderPlaceCount[r][k] for k in xrange(1, numPlacesTieBreaker+1)] +
-										[-rank for points, rank in riderResults[r]],
+										[-rank for points, rank, primePoints in riderResults[r]],
 						reverse = True )
 		
 		# Compute the points gap.

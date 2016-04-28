@@ -243,10 +243,10 @@ class MainWin( wx.Frame ):
 			
 		self.attrClassName = [
 			[ 'races',			Races,				'Races' ],
+			[ 'results',		Results,			'Results' ],
 			[ 'points',			Points,				'Points' ],
 			[ 'upgrades',		Upgrades,			'Upgrades' ],
 			[ 'options',		Options,			'Options' ],
-			[ 'results',		Results,			'Results' ],
 			[ 'errors',			Errors,				'Errors' ],
 		]
 		
