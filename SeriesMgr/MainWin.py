@@ -14,7 +14,7 @@ import xlwt
 import base64
 import wx.lib.agw.flatnotebook as fnb
 
-FontSize = 24
+FontSize = 20
 
 locale.setlocale(locale.LC_ALL, '')
 try:
@@ -244,7 +244,7 @@ class MainWin( wx.Frame ):
 		self.attrClassName = [
 			[ 'races',			Races,				'Races' ],
 			[ 'results',		Results,			'Results' ],
-			[ 'points',			Points,				'Points' ],
+			[ 'points',			Points,				'Scoring Criteria' ],
 			[ 'upgrades',		Upgrades,			'Upgrades' ],
 			[ 'options',		Options,			'Options' ],
 			[ 'errors',			Errors,				'Errors' ],

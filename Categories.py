@@ -136,13 +136,15 @@ def PrintCategories():
 
 #--------------------------------------------------------------------------------
 class TimeEditor(gridlib.PyGridCellEditor):
+	defaultValue = '00:00:00'
+
 	def __init__(self):
 		self._tc = None
-		self.startValue = '00:00:00'
+		self.startValue = self.defaultValue
 		gridlib.PyGridCellEditor.__init__(self)
 		
 	def Create( self, parent, id = wx.ID_ANY, evtHandler = None ):
-		self._tc = masked.TimeCtrl( parent, id, style=wx.TE_CENTRE, fmt24hr=True, displaySeconds = True, value = '00:00:00' )
+		self._tc = masked.TimeCtrl( parent, id, style=wx.TE_CENTRE, fmt24hr=True, displaySeconds = True, value=self.defaultValue )
 		self.SetControl( self._tc )
 		if evtHandler:
 			self._tc.PushEventHandler( evtHandler )
@@ -152,7 +154,7 @@ class TimeEditor(gridlib.PyGridCellEditor):
 	
 	def BeginEdit( self, row, col, grid ):
 		self.startValue = grid.GetTable().GetValue(row, col)
-		self._tc.SetValue( self.startValue )
+		self._tc.SetValue( self.startValue or self.defaultValue )
 		self._tc.SetFocus()
 		
 	def EndEdit( self, row, col, grid, value = None ):

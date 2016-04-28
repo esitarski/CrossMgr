@@ -29,6 +29,8 @@ class Upgrades(wx.Panel):
 				u'or Intermediate to Expert), 0.5 of the total points earned in the previous category carry forward',
 				u'to the new category.',
 				u'',
+				u'Upgrades only apply when you score by Points.  They have no effect on time-based scoring.',
+				u'',
 			]))
 		)
 		

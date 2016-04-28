@@ -806,8 +806,7 @@ function TimeDifference( a, b )
 	return t;
 }
 
-function FormatTime( t )
-{
+function FormatTime( t ) {
 	var tStr = '';
 	if( t < 0 )
 	{
@@ -2478,17 +2477,18 @@ function GetPrimesTable( primeFromBib, pos ) {
 	primesCur.sort( function(x, y) {return x-y;} );
 	
 	// Check for report fields.
-	var hasMerchandise = false, hasCash = false, hasPoints = false, hasSponsor = false, hasName = false, hasTeam = false;
+	var hasMerchandise=false, hasCash=false, hasPoints=false, hasTimeBonus=false, hasSponsor=false, hasName=false, hasTeam=false;
 	for( var p = 0; p < primesCur.length; ++p ) {
 		var prime = primes[primesCur[p]];
 		var bib = prime.winnerBib;
 		var info = data[bib];
 		hasCash = (hasCash || prime.cash);
-		hasPoints = (hasPoints || prime.points);
 		hasMerchandise = (hasMerchandise || prime.merchandise);
+		hasSponsor = (hasSponsor || prime.sponsor);
+		hasPoints = (hasPoints || prime.points);
+		hasTimeBonus = (hasTimeBonus || prime.timeBonus);
 		hasName = (hasName || (info['FirstName'] || info['LastName']));
 		hasTeam = (hasTeam || info['Team']);
-		hasSponsor = (hasSponsor || prime.sponsor)
 	}
 	
 	var table = document.createElement('TABLE');
@@ -2499,7 +2499,8 @@ function GetPrimesTable( primeFromBib, pos ) {
 	var td;
 	createTextChild( td = createChild(tr, 'TH'), _('Primes') );
 	td.style.fontSize = '120%';
-	td.colSpan = 1 + 1 + (hasName?1:0) + (hasTeam?1:0) + 1 + 1 + 1 + (hasCash?1:0) + (hasMerchandise?1:0) + 1;
+	td.colSpan = (1 + 1 + (hasName?1:0) + (hasTeam?1:0) + 1 + 1 + 1 +
+		(hasCash?1:0) + (hasMerchandise?1:0) + (hasPoints?1:0) + (hasTimeBonus?1:0) + 1);
 	td.id = 'idNonNumeric';
 	
 	var tr = createChild( thead, 'TR' );
@@ -2521,8 +2522,6 @@ function GetPrimesTable( primeFromBib, pos ) {
 	td.id = 'idNonNumeric';
 	if( hasCash )
 		createTextChild( td = createChild(tr, 'TH'), _('Cash'));
-	if( hasPoints )
-		createTextChild( td = createChild(tr, 'TH'), _('Points'));
 	if( hasMerchandise ) {
 		createTextChild( td = createChild(tr, 'TH'), _('Merchandise'));
 		td.id = 'idNonNumeric';
@@ -2531,6 +2530,10 @@ function GetPrimesTable( primeFromBib, pos ) {
 		createTextChild( td = createChild(tr, 'TH'), _('Sponsor'));
 		td.id = 'idNonNumeric';
 	}
+	if( hasPoints )
+		createTextChild( td = createChild(tr, 'TH'), _('Points'));
+	if( hasTimeBonus )
+		createTextChild( td = createChild(tr, 'TH'), _('Time Bonus'));
 
 	var tbody = createChild( table, 'TBODY' );
 	for( var p = 0; p < primesCur.length; ++p ) {
@@ -2558,8 +2561,6 @@ function GetPrimesTable( primeFromBib, pos ) {
 		td.id = 'idNonNumeric';
 		if( hasCash )
 			createTextChild( td = createChild(tr, 'TD'), prime.cash ? prime.cash.toFixed(2) : '');
-		if( hasPoints )
-			createTextChild( td = createChild(tr, 'TD'), prime.points ? (prime.points != parseInt(prime.points) ? prime.points.toFixed(2) : prime.points) : '');
 		if( hasMerchandise ) {
 			createTextChild( td = createChild(tr, 'TD'), prime.merchandise ? prime.merchandise : '');
 			td.id = 'idNonNumeric';
@@ -2568,6 +2569,10 @@ function GetPrimesTable( primeFromBib, pos ) {
 			createTextChild( td = createChild(tr, 'TD'), prime.sponsor ? prime.sponsor : '');
 			td.id = 'idNonNumeric';
 		}
+		if( hasPoints )
+			createTextChild( td = createChild(tr, 'TD'), prime.points ? (prime.points != parseInt(prime.points) ? prime.points.toFixed(2) : prime.points) : '');
+		if( hasTimeBonus )
+			createTextChild( td = createChild(tr, 'TD'), prime.timeBonus ? FormatTime(prime.timeBonus).replace(/\..+$/,'') : '' );
 	}
 	return table;
 }

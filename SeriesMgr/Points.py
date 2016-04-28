@@ -71,7 +71,7 @@ class Points(wx.Panel):
 		self.scoreByTime = wx.RadioButton( self, label='Score by Time' )
 		self.scoreByTime.Bind( wx.EVT_RADIOBUTTON, self.fixEnable )
 		
-		self.scoreByPercent = wx.RadioButton( self, label='Score by Percent Time (FastestCategoryTime / FinishTime) * 100' )
+		self.scoreByPercent = wx.RadioButton( self, label='Score by Percent Time (WinnersTime / FinishTime) * 100' )
 		self.scoreByPercent.Bind( wx.EVT_RADIOBUTTON, self.fixEnable )
 		
 		self.scoreByPoints.SetValue( True )
@@ -81,6 +81,12 @@ class Points(wx.Panel):
 		hb.Add( self.scoreByTime, flag=wx.LEFT, border=16 )
 		hb.Add( self.scoreByPercent, flag=wx.LEFT, border=16 )
 		bsizer.Add( hb, flag=wx.ALL, border=2 )
+		
+		#--------------------------------------------------------------------------
+		bsizer.Add( wx.StaticLine(self), 1, flag=wx.EXPAND|wx.ALL, border=4 )
+		self.considerPrimePointsOrTimeBonus = wx.CheckBox( self, label='Consider Points or Time Bonuses from CrossMgr Primes' )
+		self.considerPrimePointsOrTimeBonus.SetValue( True )
+		bsizer.Add( self.considerPrimePointsOrTimeBonus, 0, flag=wx.ALL, border=4 )
 		
 		#--------------------------------------------------------------------------
 		bsizer.Add( wx.StaticLine(self), 1, flag=wx.EXPAND|wx.ALL, border=4 )
@@ -101,12 +107,6 @@ class Points(wx.Panel):
 		
 		#--------------------------------------------------------------------------
 		bsizer.Add( wx.StaticLine(self), 1, flag=wx.EXPAND|wx.ALL, border=4 )
-		self.addPrimePoints = wx.CheckBox( self, label='Add Prime Points to Points for Position' )
-		self.addPrimePoints.SetValue( False )
-		bsizer.Add( self.addPrimePoints, 0, flag=wx.ALL, border=4 )
-		
-		#--------------------------------------------------------------------------
-		bsizer.Add( wx.StaticLine(self), 1, flag=wx.EXPAND|wx.ALL, border=4 )
 		self.ifRidersTiedOnPoints = wx.StaticText(self, label='If Riders are Tied on Points:')
 		bsizer.Add( self.ifRidersTiedOnPoints, flag=wx.ALL, border=2 )
 		self.mostEventsCompleted = wx.CheckBox( self, label='Consider Number of Events Completed' )
@@ -114,7 +114,7 @@ class Points(wx.Panel):
 		bsizer.Add( self.mostEventsCompleted, 0, flag=wx.ALL, border=4 )
 		
 		bsizer.Add( wx.StaticLine(self), 1, flag=wx.EXPAND|wx.ALL, border=4 )
-		self.numPlacesTieBreaker = wx.RadioBox(self, majorDimension = 1, choices = [
+		self.numPlacesTieBreaker = wx.RadioBox(self, majorDimension=3, style=wx.RA_SPECIFY_ROWS, choices = [
 			'Do not consider Place Finishes.',
 			'Number of 1st Place Finishes',
 			'Number of 1st then 2nd Place Finishes',
@@ -164,7 +164,6 @@ class Points(wx.Panel):
 			self.ifRidersTiedOnPoints,
 			self.mostEventsCompleted,
 			self.numPlacesTieBreaker,
-			self.addPrimePoints,
 			self.ifRidersAreStillTiedOnPoints,
 			self.pointsStructures,
 			self.grid,
@@ -215,7 +214,7 @@ class Points(wx.Panel):
 			
 		wx.CallAfter( self.gridAutoSize )
 		
-		self.addPrimePoints.SetValue( model.addPrimePoints )
+		self.considerPrimePointsOrTimeBonus.SetValue( model.considerPrimePointsOrTimeBonus )
 		self.bestResultsToConsider.SetSelection( model.bestResultsToConsider )
 		self.mustHaveCompleted.SetSelection( model.mustHaveCompleted )
 		
@@ -247,7 +246,7 @@ class Points(wx.Panel):
 		model.setPoints( pointsList )
 		
 		modelUpdate = {
-			'addPrimePoints': self.addPrimePoints.GetValue(),
+			'considerPrimePointsOrTimeBonus': self.considerPrimePointsOrTimeBonus.GetValue(),
 			'bestResultsToConsider': self.bestResultsToConsider.GetSelection(),
 			'mustHaveCompleted': self.mustHaveCompleted.GetSelection(),
 			'useMostEventsCompleted': self.mostEventsCompleted.GetValue(),

@@ -10,6 +10,7 @@ from FinishStrip		import ShowFinishStrip
 from ReadSignOnSheet	import ExcelLink
 from GetResults			import GetResults
 from RaceInputState import RaceInputState
+from Categories import TimeEditor
 
 def getWinnerInfo( bib ):
 	race = Model.race
@@ -53,8 +54,9 @@ class Primes( wx.Panel ):
 			(_('Laps\nTo Go'),			'lapsToGo',		'i'),
 			(_('Sponsor'),				'sponsor', 		's'),
 			(_('Cash'),					'cash', 		'f'),
-			(_('Points'),				'points', 		'i'),
 			(_('Merchandise'),			'merchandise', 	's'),
+			(_('Points'),				'points', 		'i'),
+			(_('Time\nBonus'),			'timeBonus', 	't'),
 			(_('Winner\nBib'),			'winnerBib',	'i'),
 			(u'',						'winnerInfo',	's'),
 		)
@@ -81,7 +83,10 @@ class Primes( wx.Panel ):
 				attr.SetAlignment( wx.ALIGN_RIGHT, wx.ALIGN_TOP )
 				attr.SetEditor( wx.grid.GridCellFloatEditor(precision=2) )
 				attr.SetRenderer( wx.grid.GridCellFloatRenderer(precision=2) )
-				attr.SetAlignment( wx.ALIGN_RIGHT, wx.ALIGN_TOP )
+			elif dataType == 't':
+				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+				attr.SetEditor( TimeEditor() )
+			
 			self.grid.SetColAttr( col, attr )
 			if fieldName == 'lapsToGo':
 				self.lapsToGoCol = col
@@ -284,14 +289,20 @@ class Primes( wx.Panel ):
 			elif attr == 'position':
 				position = prime.get('position', 1)
 				v = u'' if position == 0 else unicode(position)
+			elif attr == 'points':
+				points = prime.get('points', 0)
+				v = u'' if points == 0 else unicode(points)
 			elif attr == 'winnerBib':
 				winnerBib = prime.get('winnerBib', None)
 				v = u'' if not winnerBib else unicode(winnerBib)
 			elif attr == 'winnerInfo':
 				v = getWinnerInfo(winnerBib)
-			elif attr == 'cash':
-				cash = prime.get('cash', 0.0)
-				v = u'{:.2f}'.format( prime.get('cash', 0.0) ) if cash else u''
+			elif dataType == 'f':
+				f = prime.get(attr, 0.0)
+				v = u'{:.2f}'.format(f) if f else u''
+			elif dataType == 't':
+				t = prime.get(attr, 0.0)
+				v = Utils.formatTime(t, forceHours=True, twoDigitHours=True) if t != 0 else u''
 			else:
 				v = unicode(prime.get(attr, u''))
 			if updateGrid:
@@ -310,6 +321,12 @@ class Primes( wx.Panel ):
 			elif dataType == 'f':
 				v = u''.join( c for c in v if c.isdigit() or c == '.')
 				v = float( v or 0.0 )
+			elif dataType == 't':
+				v = Utils.StrToSeconds( v )
+				
+			if attr == 'position' and not v:
+				v = 1
+			
 			values[attr] = v
 		
 		GetTranslation = _
@@ -381,17 +398,28 @@ def GetGrid():
 	
 	colnames.append( _('For') )
 	
-	hasCash = any( prime['cash'] for prime in primes)
-	hasMerchandise = any( prime['merchandise'] for prime in primes)
-	if not hasCash and not hasMerchandise:
+	hasCash = any( prime.get('cash',0) for prime in primes)
+	hasMerchandise = any( prime.get('merchandise',None) for prime in primes)
+	hasPoints = any( prime.get('points',0) for prime in primes )
+	hasTimeBonus = any( prime.get('timeBonus',0) for prime in primes )
+	hasSponsor = any( prime.get('sponsor',None) for prime in primes )
+	
+	if not any( [hasCash, hasMerchandise, hasPoints, hasTimeBonus] ):
 		hasCash = True
+	
 	if hasCash:
 		rightJustifyCols.add( len(colnames) )
 		colnames.append( _('Cash') )
 	if hasMerchandise:
 		colnames.append( _('Merchandise') )
-	
-	colnames.append( _('Sponsor') )
+	if hasPoints:
+		rightJustifyCols.add( len(colnames) )
+		colnames.append( _('Points') )
+	if hasTimeBonus:
+		rightJustifyCols.add( len(colnames) )
+		colnames.append( _('Time Bonus') )
+	if hasSponsor:
+		colnames.append( _('Sponsor') )
 
 	leftJustifyCols = set( i for i in xrange(len(colnames)) if i not in rightJustifyCols )
 	
@@ -417,8 +445,14 @@ def GetGrid():
 			row.append( u'{:.2f}'.format(prime.get('cash',0.0)) )
 		if hasMerchandise:
 			row.append( prime.get('merchandise',u'') )
-			
-		row.append( prime.get('sponsor',u'') )
+		if hasPoints:
+			points = prime.get('points',0)
+			row.append( '{}'.format(points) if points else '' )
+		if hasTimeBonus:
+			timeBonus = prime.get('timeBonus',0)
+			row.append( Utils.formatTime(timeBonus) if timeBonus else '' )
+		if hasSponsor:
+			row.append( prime.get('sponsor',u'') )
 		
 		for c, v in enumerate(row):
 			data[c].append( unicode(v) )

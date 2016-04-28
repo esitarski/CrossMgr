@@ -71,7 +71,7 @@ class RaceResult( object ):
 	rankDNF = 999999
 	
 	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, raceFileName, bib, rank, raceOrganizer,
-					raceURL = None, raceInSeries = None, tFinish = None, tProjected = None, primePoints = 0 ):
+					raceURL=None, raceInSeries=None, tFinish=None, tProjected=None, primePoints=0, timeBonus=0 ):
 		self.firstName = (firstName or u'')
 		self.lastName = (lastName or u'')
 		self.license = (license or u'')
@@ -89,6 +89,7 @@ class RaceResult( object ):
 		self.bib = bib
 		self.rank = rank
 		self.primePoints = primePoints
+		self.timeBonus = timeBonus
 		
 		self.tFinish = tFinish
 		self.tProjected = tProjected if tProjected else tFinish
@@ -210,9 +211,11 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 	
 	racePrimes = getattr( race, 'primes', None )
 	primePoints = defaultdict( int )
+	timeBonus = defaultdict( float )
 	if racePrimes:
 		for p in racePrimes:
 			primePoints[p['winnerBib']] += p.get('points', 0)
+			timeBonus[p['winnerBib']] += p.get('timeBonus', 0.0)
 	
 	raceResults = []
 	for category in race.getCategories( startWaveOnly=False ):
@@ -267,6 +270,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 				info['tProjected'] = rr.lastTime
 				
 			info['primePoints'] = primePoints.get(rr.num, 0)
+			info['timeBonus'] = timeBonus.get(rr.num, 0.0)
 			
 			raceResults.append( RaceResult(**info) )
 		
@@ -320,7 +324,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 	bestResultsToConsider = SeriesModel.model.bestResultsToConsider
 	mustHaveCompleted = SeriesModel.model.mustHaveCompleted
 	showLastToFirst = SeriesModel.model.showLastToFirst
-	addPrimePoints = SeriesModel.model.addPrimePoints
+	considerPrimePointsOrTimeBonus = SeriesModel.model.considerPrimePointsOrTimeBonus
 	
 	# Get all results for this category.
 	raceResults = [rr for rr in raceResults if rr.categoryName == categoryName]
@@ -356,21 +360,24 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 					v = riderResults[rider][i]
 					riderResults[rider][i] = tuple([upgradeFormat.format(v[0] if v[0] else '')] + list(v[1:]))
 	
+	riderResults = defaultdict( lambda : [(0,0,0,0)] * len(races) )
+	riderFinishes = defaultdict( lambda : [None] * len(races) )
 	if scoreByTime:
-		# Get the individual results for each rider, and the total time.
-		riderResults = defaultdict( lambda : [(0,0)] * len(races) )
-		riderFinishes = defaultdict( lambda : [None] * len(races) )
+		# Get the individual results for each rider, and the total time.  Do not consider DNF riders as they have invalid times.
 		riderTFinish = defaultdict( float )
+		raceResults = [rr for rr in raceResults if rr.rank != RaceResult.rankDNF]
 		for rr in raceResults:
 			try:
-				tFinish = float(rr.tFinish) / (rr.upgradeFactor if rr.upgradeResult else 1)
+				tFinish = float(rr.tFinish - (rr.timeBonus if considerPrimePointsOrTimeBonus else 0.0))
 			except ValueError:
 				continue
 			rider = rr.key()
 			riderNameLicense[rider] = (rr.full_name, rr.license)
 			if rr.team and rr.team != u'0':
 				riderTeam[rider] = rr.team
-			riderResults[rider][raceSequence[rr.raceInSeries]] = (formatTime(tFinish, True), rr.rank, rr.primePoints)
+			riderResults[rider][raceSequence[rr.raceInSeries]] = (
+				formatTime(tFinish, True), rr.rank, 0, rr.timeBonus if considerPrimePointsOrTimeBonus else 0.0
+			)
 			riderFinishes[rider][raceSequence[rr.raceInSeries]] = tFinish
 			riderTFinish[rider] += tFinish
 			riderUpgrades[rider][raceSequence[rr.raceInSeries]] = rr.upgradeResult
@@ -411,13 +418,11 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		return categoryResult, races
 	
 	elif scoreByPercent:
-		# Get the individual results for each rider, and the total points.
+		# Get the individual results for each rider as a percentage of the winner's time.
 		percentFormat = u'{:.2f}'
-		riderResults = defaultdict( lambda : [(0,0)] * len(races) )
-		riderFinishes = defaultdict( lambda : [None] * len(races) )
 		riderPercentTotal = defaultdict( float )
 		
-		raceLeader = { rr.raceInSeries: rr for rr in raceResults if rr.rank == 1 and not rr.upgradeResult }
+		raceLeader = { rr.raceInSeries: rr for rr in raceResults if rr.rank == 1 }
 		
 		for rr in raceResults:
 			tFastest = raceLeader[rr.raceInSeries].tProjected
@@ -431,7 +436,9 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			if rr.team and rr.team != u'0':
 				riderTeam[rider] = rr.team
 			percent = min( 100.0, (tFastest / tFinish) * 100.0 if tFinish > 0.0 else 0.0 ) * (rr.upgradeFactor if rr.upgradeResult else 1)
-			riderResults[rider][raceSequence[rr.raceInSeries]] = (u'{}, {}'.format(percentFormat.format(percent), formatTime(tFinish, False)), rr.rank, rr.primePoints)
+			riderResults[rider][raceSequence[rr.raceInSeries]] = (
+				u'{}, {}'.format(percentFormat.format(percent), formatTime(tFinish, False)), rr.rank, 0, 0
+			)
 			riderFinishes[rider][raceSequence[rr.raceInSeries]] = percent
 			riderPercentTotal[rider] += percent
 			riderUpgrades[rider][raceSequence[rr.raceInSeries]] = rr.upgradeResult
@@ -472,18 +479,16 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		
 	else:
 		# Get the individual results for each rider, and the total points.
-		riderResults = defaultdict( lambda : [(0,0,0)] * len(races) )
-		riderFinishes = defaultdict( lambda : [None] * len(races) )
 		riderPoints = defaultdict( int )
 		for rr in raceResults:
 			rider = rr.key()
 			riderNameLicense[rider] = (rr.full_name, rr.license)
 			if rr.team and rr.team != u'0':
 				riderTeam[rider] = rr.team
-			primePoints = rr.primePoints if addPrimePoints else 0
+			primePoints = rr.primePoints if considerPrimePointsOrTimeBonus else 0
 			earnedPoints = pointsForRank[rr.raceFileName][rr.rank] + primePoints
 			points = asInt( earnedPoints * rr.upgradeFactor )
-			riderResults[rider][raceSequence[rr.raceInSeries]] = (points, rr.rank, primePoints)
+			riderResults[rider][raceSequence[rr.raceInSeries]] = (points, rr.rank, primePoints, 0)
 			riderFinishes[rider][raceSequence[rr.raceInSeries]] = points
 			riderPoints[rider] += points
 			riderPoints[rider] = asInt( riderPoints[rider] )
@@ -513,7 +518,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		riderOrder.sort(key = lambda r:	[riderPoints[r]] +
 										([riderEventsCompleted[r]] if useMostEventsCompleted else []) +
 										[riderPlaceCount[r][k] for k in xrange(1, numPlacesTieBreaker+1)] +
-										[-rank for points, rank, primePoints in riderResults[r]],
+										[-rank for points, rank, primePoints, timeBonus in riderResults[r]],
 						reverse = True )
 		
 		# Compute the points gap.
