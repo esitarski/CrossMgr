@@ -364,8 +364,8 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 	riderFinishes = defaultdict( lambda : [None] * len(races) )
 	if scoreByTime:
 		# Get the individual results for each rider, and the total time.  Do not consider DNF riders as they have invalid times.
-		riderTFinish = defaultdict( float )
 		raceResults = [rr for rr in raceResults if rr.rank != RaceResult.rankDNF]
+		riderTFinish = defaultdict( float )
 		for rr in raceResults:
 			try:
 				tFinish = float(rr.tFinish - (rr.timeBonus if considerPrimePointsOrTimeBonus else 0.0))
@@ -395,8 +395,6 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 						v = riderResults[rider][i]
 						riderResults[rider][i] = tuple([ignoreFormat.format(v[0])] + list(v[1:]))
 
-		FixUpgradeFormat( riderUpgrades, riderResults )
-
 		# Filter out minimal events completed.
 		riderOrder = [rider for rider, results in riderResults.iteritems() if riderEventsCompleted[rider] >= mustHaveCompleted]
 		
@@ -418,7 +416,9 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		return categoryResult, races
 	
 	elif scoreByPercent:
-		# Get the individual results for each rider as a percentage of the winner's time.
+		# Get the individual results for each rider as a percentage of the winner's time.  Ignore DNF riders.
+		raceResults = [rr for rr in raceResults if rr.rank != RaceResult.rankDNF]
+
 		percentFormat = u'{:.2f}'
 		riderPercentTotal = defaultdict( float )
 		
@@ -455,8 +455,6 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 						riderPercentTotal[rider] -= p
 						v = riderResults[rider][i]
 						riderResults[rider][i] = tuple([ignoreFormat.format(v[0])] + list(v[1:]))
-
-		FixUpgradeFormat( riderUpgrades, riderResults )
 
 		# Filter out minimal events completed.
 		riderOrder = [rider for rider, results in riderResults.iteritems() if riderEventsCompleted[rider] >= mustHaveCompleted]

@@ -53,7 +53,7 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	bestResultsToConsider = model.bestResultsToConsider
 	mustHaveCompleted = model.mustHaveCompleted
 	hasUpgrades = model.upgradePaths
-	considerPrimePointsOrTimeBonus = model.considerPrimePointsOrTimeBonus and not (scoreByTime or scoreByPercent)
+	considerPrimePointsOrTimeBonus = model.considerPrimePointsOrTimeBonus
 	raceResults = model.extractAllRaceResults()
 	
 	categoryNames = sorted( set(rr.categoryName for rr in raceResults) )
@@ -483,7 +483,7 @@ function sortTableId( iTable, iCol ) {
 												with tag(html, 'td', {'class':'rank'}):
 													write( u'({})&nbsp;-{}'.format(
 														Utils.ordinal(rRank).replace(' ', '&nbsp;'),
-														Utils.formatTime(rTimeBonus)),
+														Utils.formatTime(rTimeBonus, twoDigitMinutes=False)),
 													)
 											else:
 												with tag(html, 'td', {'class':'rank'}):
@@ -493,11 +493,18 @@ function sortTableId( iTable, iCol ) {
 												pass
 										
 			#-----------------------------------------------------------------------------
-			if considerPrimePointsOrTimeBonus > 0:
+			if considerPrimePointsOrTimeBonus:
 				with tag(html, 'p'):
-					with tag(html, 'strong'):
-						write( u'+N' )
-					write( u' - {}'.format( u'Bonus Points Added.') )
+					if scoreByTime:
+						with tag(html, 'strong'):
+							with tag(html, 'span', {'style':'font-style: italic;'}):
+								write( u'-MM:SS' )
+						write( u' - {}'.format( u'Time Bonus subtracted from Finish Time.') )
+					elif not scoreByTime and not scoreByPercent:
+						with tag(html, 'strong'):
+							with tag(html, 'span', {'style':'font-style: italic;'}):
+								write( u'+N' )
+						write( u' - {}'.format( u'Bonus Points added to Points for Place.') )
 					
 			if bestResultsToConsider > 0:
 				with tag(html, 'p'):
@@ -761,7 +768,7 @@ class Results(wx.Panel):
 			for q, (rPoints, rRank, rPrimePoints, rTimeBonus) in enumerate(racePoints):
 				self.grid.SetCellValue( row, 6 + q,
 					u'{} ({}) +{}'.format(rPoints, Utils.ordinal(rRank), rPrimePoints) if rPoints and rPrimePoints
-					else u'{} ({}) -{}'.format(rPoints, Utils.ordinal(rRank), Utils.formatTime(rTimeBonus)) if rPoints and rRank and rTimeBonus
+					else u'{} ({}) -{}'.format(rPoints, Utils.ordinal(rRank), Utils.formatTime(rTimeBonus, twoDigitMinutes=False)) if rPoints and rRank and rTimeBonus
 					else u'{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints
 					else u'({})'.format(Utils.ordinal(rRank)) if rRank
 					else u''
@@ -892,7 +899,7 @@ class Results(wx.Panel):
 				for q, (rPoints, rRank, rPrimePoints, rTimeBonus) in enumerate(racePoints):
 					wsFit.write( rowCur, 6 + q,
 						'{} ({}) +{}'.format(rPoints, Utils.ordinal(rRank), rPrimePoints) if rPoints and rPrimePoints
-						else '{} ({}) -{}'.format(rPoints, Utils.ordinal(rRank), Utils.formatTime(rTimeBonus)) if rPoints and rRank and rTimeBonus
+						else '{} ({}) -{}'.format(rPoints, Utils.ordinal(rRank), Utils.formatTime(rTimeBonus, twoDigitMinutes=False)) if rPoints and rRank and rTimeBonus
 						else '{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints
 						else '({})'.format(Utils.ordinal(rRank)) if rRank
 						else '',
