@@ -466,9 +466,19 @@ class Categories( wx.Panel ):
 		
 		categories = Model.race.getAllCategories()
 		
+		for cat in categories:
+			try:
+				cat.distance = float(cat.distance)
+			except:
+				cat.distance = None
+			try:
+				cat.firstLapDistance = float(cat.firstLapDistance)
+			except:
+				cat.firstLapDistance = None
+		
 		if self.grid.GetNumberRows() != len(categories):
 			return True
-		
+			
 		def distanceMatches( distance, cellValue ):
 			try:
 				value = float(cellValue)
@@ -477,7 +487,7 @@ class Categories( wx.Panel ):
 				
 			if not distance and not value:
 				return True
-			return u'{:.3f}'.format(distance) == cellValue
+			return u'{:.3f}'.format(distance or 0.0) == cellValue
 		
 		return any(	(
 						cat.name != self.grid.GetCellValue(r, self.iCol['name']) or

@@ -65,6 +65,7 @@ class Template( object ):
 			'organizer',
 		
 			'minutes',
+			'notes',
 
 			'allCategoriesFinishAfterFastestRidersLastLap',
 		

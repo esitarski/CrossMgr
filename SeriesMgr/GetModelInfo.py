@@ -72,14 +72,19 @@ class RaceResult( object ):
 	
 	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, raceFileName, bib, rank, raceOrganizer,
 					raceURL=None, raceInSeries=None, tFinish=None, tProjected=None, primePoints=0, timeBonus=0 ):
-		self.firstName = (firstName or u'')
-		self.lastName = (lastName or u'')
+		self.firstName = unicode(firstName or u'')
+		self.lastName = unicode(lastName or u'')
+		
 		self.license = (license or u'')
-		self.team = (team or u'')
+		if isinstance(self.license, float) and int(self.license) == self.license:
+			self.license = int(self.license)
+		self.license = unicode(self.license)
 		
-		self.categoryName = (categoryName or u'')
+		self.team = unicode(team or u'')
 		
-		self.raceName = raceName
+		self.categoryName = unicode(categoryName or u'')
+		
+		self.raceName = unicode(raceName)
 		self.raceDate = raceDate
 		self.raceOrganizer = raceOrganizer
 		self.raceFileName = raceFileName

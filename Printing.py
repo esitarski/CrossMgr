@@ -313,6 +313,8 @@ class CrossMgrPrintout( wx.Printout ):
 		return exportGrid
 		
 	def OnPrintPage(self, page):
+		if not self.pageInfo:
+			return False
 		exportGrid = self.prepareGrid( page )
 		exportGrid.drawToFitDC( *([self.GetDC()] + self.pageInfo[page][1:-1]) )
 		return True
