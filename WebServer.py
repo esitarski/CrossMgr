@@ -91,6 +91,7 @@ class ContentBuffer( object ):
 	def _updateFile( self, fname, forceUpdate=False ):
 		if not self.fnameRace:
 			return None
+		
 		fnameBase = os.path.basename(fname).split('?')[0]
 		if not (reCrossMgrHtml.match(fnameBase) or
 				fnameBase in ('Simulation.html', 'Simulation_TTCountdown.html', 'Simulation_TTStartList.html' )):
@@ -207,7 +208,7 @@ class ContentBuffer( object ):
 				g = Generic(
 					raceScheduledStart = payload.get('raceScheduledStart',None),
 					name = fnameShow,
-					categories = [(c['name'], urllib.pathname2url(c['name']))
+					categories = [(c['name'], urllib.pathname2url(unicode(c['name']).encode('utf8')))
 						for c in payload.get('catDetails',[]) if c['name'] != 'All'],
 					url = urllib.pathname2url(fname),
 					isTimeTrial = payload.get('isTimeTrial',False),

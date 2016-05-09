@@ -50,6 +50,7 @@ class GanttChartPanel(wx.PyPanel):
 		
 		self.data = None
 		self.labels = None
+		self.status = None
 		self.greyOutSet = None
 		self.nowTime = None
 		self.numSelect = None
@@ -135,7 +136,7 @@ class GanttChartPanel(wx.PyPanel):
 		return True
 
 	def SetData( self, data, labels = None, nowTime = None, interp = None, greyOutSet = set(),
-					numTimeInfo = None, lapNote = None,
+					numTimeInfo = None, lapNote = None, status = None,
 					headerSet = None ):
 		"""
 		* data is a list of lists.  Each list is a list of times.
@@ -143,6 +144,7 @@ class GanttChartPanel(wx.PyPanel):
 		"""
 		self.data = None
 		self.labels = None
+		self.status = status
 		self.nowTime = None
 		self.greyOutSet = greyOutSet
 		self.numTimeInfo = numTimeInfo
@@ -159,6 +161,7 @@ class GanttChartPanel(wx.PyPanel):
 					self.labels = self.labels[:len(self.data)]
 			else:
 				self.labels = [''] * len(data)
+				self.status = [''] * len(data)
 			self.nowTime = nowTime
 			
 		self.interp = interp
@@ -273,6 +276,8 @@ class GanttChartPanel(wx.PyPanel):
 		width = size.width
 		height = size.height
 		
+		maxBib = unicode(999999)
+		
 		minBarWidth = 48
 		minBarHeight = 18
 		maxBarHeight = 28
@@ -302,15 +307,28 @@ class GanttChartPanel(wx.PyPanel):
 		barHeight = min( barHeight, maxBarHeight )
 		fontBarLabel = wx.FontFromPixelSize( wx.Size(0,int(min(barHeight-2, barHeight*0.9))), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		dc.SetFont( fontBarLabel )
-		textWidthLeftMax, textHeightMax = dc.GetTextExtent( '0000' )
-		fourZerosWidth = textWidthLeftMax
+		textWidthLeftMax, textHeightMax = dc.GetTextExtent( maxBib )
+		
+		statusTextSpace = dc.GetTextExtent(' ')[0]
+		if self.status:
+			statusTextWidth = max( dc.GetTextExtent(s)[0] for s in self.status )
+			if statusTextWidth:
+				statusTextWidth += statusTextSpace
+		else:
+			statusTextWidth = 0
+			self.status = [''] * len(self.data)
+			
+		textWidthLeftMax += statusTextWidth
+		
+		maxBibWidth = textWidthLeftMax
 		textWidthRightMax = 0
 		for label in self.labels:
 			if label not in self.headerSet:
-				textWidthLeftMax = max( textWidthLeftMax, dc.GetTextExtent(label)[0] )
+				textWidthLeftMax = max( textWidthLeftMax, dc.GetTextExtent(label)[0] + statusTextWidth )
 				num = numFromLabel(label)
 				if num is not None:
-					textWidthRightMax = max( textWidthRightMax, fourZerosWidth, dc.GetTextExtent('{}'.format(num))[0] )
+					textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent('{}'.format(num))[0] )
+		textWidthRightMax += statusTextWidth
 				
 		if textWidthLeftMax + textWidthRightMax > width:
 			self.horizontalSB.Show( False )
@@ -349,14 +367,15 @@ class GanttChartPanel(wx.PyPanel):
 
 		dc.SetFont( fontBarLabel )
 
-		textWidthLeftMax, textHeightMax = dc.GetTextExtent( '0000' )
+		textWidthLeftMax, textHeightMax = dc.GetTextExtent( maxBib )
 		textWidthRightMax = 0
 		for label in self.labels:
 			if label not in self.headerSet:
-				textWidthLeftMax = max( textWidthLeftMax, dc.GetTextExtent(label)[0] )
+				textWidthLeftMax = max( textWidthLeftMax, dc.GetTextExtent(label)[0] + statusTextWidth )
 				num = numFromLabel(label)
 				if num is not None:
-					textWidthRightMax = max( textWidthRightMax, fourZerosWidth, dc.GetTextExtent( '{}'.format(num) )[0] )
+					textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent( '{}'.format(num) )[0] )
+		textWidthRightMax += statusTextWidth
 				
 		if textWidthLeftMax + textWidthRightMax > width:
 			self.horizontalSB.Show( False )
@@ -430,7 +449,7 @@ class GanttChartPanel(wx.PyPanel):
 		
 		# Draw the Gantt chart.
 		dc.SetFont( fontBarLabel )
-		textWidth, textHeight = dc.GetTextExtent( '0000' )
+		textWidth, textHeight = dc.GetTextExtent( maxBib )
 
 		penBar = wx.Pen( wx.Colour(128,128,128), 1 )
 		penBar.SetCap( wx.CAP_BUTT )
@@ -568,13 +587,18 @@ class GanttChartPanel(wx.PyPanel):
 				dc.DrawText( self.labels[i], labelsWidthLeft + 4, yLast )    # This is a Category Label.
 			else:
 				labelWidth = dc.GetTextExtent( self.labels[i] )[0]
-				dc.DrawText( self.labels[i], textWidthLeftMax - labelWidth, yLast )
+				dc.DrawText( self.labels[i], textWidthLeftMax - labelWidth - statusTextWidth, yLast )
+				if statusTextWidth and self.status[i]:
+					dc.DrawText( self.status[i], textWidthLeftMax - statusTextWidth + statusTextSpace, yLast )
 				if not self.minimizeLabels:
 					label = self.labels[i]
 					lastSpace = label.rfind( ' ' )
 					if lastSpace > 0:
 						label = label[lastSpace+1:]
+					labelWidth = dc.GetTextExtent( self.labels[i] )[0]
 					dc.DrawText( label, width - labelsWidthRight + legendSep, yLast )
+					if statusTextWidth and self.status[i]:
+						dc.DrawText( self.status[i], width - labelsWidthRight + legendSep + labelWidth + statusTextSpace, yLast )
 
 			if u'{}'.format(self.numSelect) == u'{}'.format(numFromLabel(self.labels[i])):
 				yHighlight = yCur
@@ -693,7 +717,10 @@ if __name__ == '__main__':
 	t = 55*60
 	tVar = t * 0.15
 	data, interp = GetData()
-	gantt.SetData( data, ['{}'.format(i) for i in xrange(100, 100+len(data))], interp = interp )
+	gantt.SetData( data, ['{}'.format(i) for i in xrange(100, 100+len(data))],
+		interp = interp,
+		status = [['','PUL ', 'DNF ', 'DQ ', 'NP '][i%5] for i in xrange(len(data))],
+	)
 
 	mainWin.Show()
 	app.MainLoop()

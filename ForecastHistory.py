@@ -483,8 +483,8 @@ class ForecastHistory( wx.Panel ):
 						backgroundColour[(r, iNumCol)] = wx.GREEN
 						iBeforeLeader = r
 				elif tRace < tRaceLength and race.isOutsideTimeBound(e.num):
-					backgroundColour[(r, iNumCol)] = backgroundColour[(r, iNoteCol)] = self.redColour
-					textColour[(r, iNumCol)] = textColour[(r, iNoteCol)] = wx.WHITE
+					backgroundColour[(r, iNoteCol)] = self.redColour
+					textColour[(r, iNoteCol)] = wx.WHITE
 					outsideTimeBound.add( e.num )
 			
 			data = [None] * iColMax
@@ -566,8 +566,8 @@ class ForecastHistory( wx.Panel ):
 					if e.num == leaderPrev:
 						backgroundColour[(r, iNumCol)] = wx.GREEN
 				elif tRace < tRaceLength and race.isOutsideTimeBound(e.num):
-					backgroundColour[(r, iNumCol)] = backgroundColour[(r, iNoteCol)] = self.redColour
-					textColour[(r, iNumCol)] = textColour[(r, iNoteCol)] = wx.WHITE
+					backgroundColour[(r, iNoteCol)] = self.redColour
+					textColour[(r, iNoteCol)] = wx.WHITE
 					outsideTimeBound.add( e.num )
 									
 			data = [None] * iColMax
@@ -582,7 +582,7 @@ class ForecastHistory( wx.Panel ):
 					return u'{}'.format(e.groupCount)
 				
 				if e.lap == 0:
-					return 'Start'
+					return _('Start')
 
 				position = nextRiderPosition.get(e.num, -1)
 				if position == 1:

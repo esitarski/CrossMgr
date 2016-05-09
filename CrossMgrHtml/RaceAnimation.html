@@ -307,6 +307,15 @@ String.prototype.escapeID = function() {
 	return this.replace(/[&<>"'(){}\[\]!@#$%^* ]/g,'_');
 };
 
+// Encode/decode utf8
+function encode_utf8( s ) {
+  return unescape( encodeURIComponent(s) );
+}
+
+function decode_utf8( s ) {
+  return decodeURIComponent( escape(s) );
+}
+
 function isEmptyObject( obj ) {
     for ( var name in obj ) {
         return false;
@@ -557,7 +566,7 @@ function doReload( forceRefresh ) {
 		return RefreshPayload();
 	
 	var params = [
-		'raceCat=' + categoryCur,
+		'raceCat=' + encodeURIComponent(encode_utf8(categoryCur)),
 		'highlight=' + document.getElementById('idNumsToWatch').value,
 		'lang=' + getLanguageCode()
 	];
@@ -5128,8 +5137,9 @@ function SelectCategory( i )
 
 function setCategory( catName )
 {
+	var catNameDecode = decode_utf8( decodeURIComponent(catName) );
 	for( var i = 0; i < categories.length; ++i ) {
-		if( catName == categories[i] ) {
+		if( catName == categories[i] || catNameDecode == categories[i] ) {
 			SelectCategory( i );
 			return;
 		}

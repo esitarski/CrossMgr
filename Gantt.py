@@ -468,6 +468,9 @@ class Gantt( wx.Panel ):
 		
 		race = Model.race
 		category = FixCategories( self.categoryChoice, getattr(race, 'ganttCategory', 0) )
+		Finisher = Model.Rider.Finisher
+		statusNames = Model.Rider.statusNames
+		translate = _
 		
 		self.groupByStartWave.SetValue( race.groupByStartWave )
 		self.groupByStartWave.Enable( not category )
@@ -480,7 +483,7 @@ class Gantt( wx.Panel ):
 				if not catResults:
 					continue
 				# Create a name for the category as a bogus rider.
-				rr = RiderResult( num='', status=Model.Rider.Finisher, lastTime=None, raceCat=c, lapTimes=[], raceTimes=[], interp=[] )
+				rr = RiderResult( num='', status=Finisher, lastTime=None, raceCat=c, lapTimes=[], raceTimes=[], interp=[] )
 				rr.FirstName = c.fullname
 				headerSet.add( rr.FirstName )
 				results.append( rr )
@@ -489,7 +492,7 @@ class Gantt( wx.Panel ):
 			results = GetResults( category, True )
 		
 		resultBest = (0, sys.float_info.max)
-		labels = []
+		labels, status = [], []
 		for r in results:
 			label = u', '.join( n for n in [getattr(r,'LastName',None), getattr(r,'FirstName',None)] if n )
 			if r.num:
@@ -497,10 +500,12 @@ class Gantt( wx.Panel ):
 			labels.append( label )
 			
 			try:
-				if race.riders[r.num].status == Model.Rider.Finisher:
+				riderStatus = race.riders[r.num].status
+				status.append( translate(statusNames[riderStatus] if riderStatus != Finisher else '') )
+				if riderStatus == Finisher:
 					resultBest = min( resultBest, (-r.laps, r.raceTimes[-1]) )
 			except (IndexError, KeyError) as e:
-				pass
+				status.append( '' )
 
 		data	= [r.raceTimes for r in results]
 		interp	= [r.interp for r in results]
@@ -509,10 +514,12 @@ class Gantt( wx.Panel ):
 		except:
 			nowTime = None
 		self.ganttChart.SetData(data, labels, nowTime, interp,
-								set(i for i, r in enumerate(results) if r.status != Model.Rider.Finisher),
+								set(i for i, r in enumerate(results) if r.status != Finisher),
 								Model.race.numTimeInfo,
 								getattr( Model.race, 'lapNote', None),
-								headerSet = headerSet )
+								headerSet = headerSet,
+								status = status,
+		)
 		self.updateStats( results )
 		wx.CallAfter( updatePhotoFNameCache )
 	
