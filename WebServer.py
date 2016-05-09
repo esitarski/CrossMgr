@@ -192,7 +192,7 @@ class ContentBuffer( object ):
 			race = Model.race
 			result = {
 				'logoSrc': race.headerImage or DefaultLogoSrc,
-				'organizer': race.organizer,
+				'organizer': race.organizer.encode('utf-8'),
 			}
 			
 			files = self._getFiles()
@@ -208,7 +208,11 @@ class ContentBuffer( object ):
 				g = Generic(
 					raceScheduledStart = payload.get('raceScheduledStart',None),
 					name = fnameShow,
-					categories = [(c['name'], urllib.pathname2url(unicode(c['name']).encode('utf8')))
+					categories = [
+							(
+								c['name'].encode('utf-8'),
+								urllib.quote(unicode(c['name']).encode('utf-8'))
+							)
 						for c in payload.get('catDetails',[]) if c['name'] != 'All'],
 					url = urllib.pathname2url(fname),
 					isTimeTrial = payload.get('isTimeTrial',False),
@@ -289,7 +293,10 @@ def getIndexPage( share=True ):
 		'CountdownIconSrc': CountdownIconSrc,
 		'StartListIconSrc': StartListIconSrc,
 	} )
-	return indexTemplate.generate( **info ).encode('utf-8')
+	data = indexTemplate.generate( **info )
+	with open('data.txt', 'w') as f:
+		f.write( data )
+	return indexTemplate.generate( **info )
 
 #---------------------------------------------------------------------------
 
