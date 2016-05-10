@@ -105,23 +105,22 @@ class LockRace:
 def SetToIntervals( s ):
 	if not s:
 		return []
-	seq = sorted( s )
-	intervals = [(seq[0], seq[0])]
-	for num in itertools.islice(seq, 1, len(seq)):
-		if num <= intervals[-1][1]:
-			pass
-		elif num == intervals[-1][1] + 1:
-			intervals[-1] = (intervals[-1][0], num)
-		else:
-			intervals.append( (num, num) )
+	
+	all_nums = sorted( s )
+	nBegin = nLast = all_nums.pop( 0 )
+	
+	intervals = []
+	for n in all_nums:
+		if n != nLast + 1:
+			intervals.append( (nBegin, nLast) )
+			nBegin = n
+		nLast = n
+
+	intervals.append( (nBegin, nLast) )		
 	return intervals
 	
 def IntervalsToSet( intervals ):
-	ret = set()
-	for i in intervals:
-		ret.update( xrange(i[0], i[1]+1) )
-	return ret
-
+	return set.union( *[set(xrange(i[0], i[1]+1)) for i in intervals] ) if intervals else set()
 
 #----------------------------------------------------------------------
 class Category(object):
@@ -192,7 +191,7 @@ class Category(object):
 				elif len(bounds) == 1:
 					bounds.append( bounds[0] )
 					
-				bounds[0] = min(bounds[0], self.MaxBib)	# Keep the numbers in a reasonable range to avoid crashing.
+				bounds[0] = min(bounds[0], self.MaxBib)	# Keep the numbers in a reasonable range to avoid performance issues.
 				bounds[1] = min(bounds[1], self.MaxBib)
 				
 				if bounds[0] > bounds[1]:			# Swap the range if out of order.
@@ -396,9 +395,7 @@ class Category(object):
 		return False if num in self.exclude else InSortedIntervalList( self.intervals, num )
 		
 	def getMatchSet( self ):
-		matchSet = set()
-		for i in self.intervals:
-			matchSet.update( xrange(i[0], i[1] + 1) )
+		matchSet = IntervalsToSet( self.intervals )
 		matchSet.difference_update( self.exclude )
 		return matchSet
 
@@ -447,31 +444,16 @@ class Category(object):
 		
 	def normalize( self ):
 		# Combine any consecutive or overlapping intervals.
-		if self.intervals:
-			newIntervals = [self.intervals[0]]
-			for interval in self.intervals[1:]:
-				if interval[0] <= newIntervals[-1][1] + 1:
-					if interval[1] > newIntervals[-1][1]:
-						newIntervals[-1] = (newIntervals[-1][0], interval[1])
-				else:
-					newIntervals.append( interval )
-			self.intervals = newIntervals
+		all_nums = IntervalsToSet( self.intervals )
 		
-		# Check if there are some excludes that don't have to be there.
+		# Remove unnecessary excludes.
 		needlessExcludes = []
 		for num in self.exclude:
-			found = False
-			i = bisect.bisect_left( self.intervals, (num, num) )
-			if i > 0:
-				i -= 1
-			for j in xrange(i, min(i+2,len(self.intervals)) ):
-				if self.intervals[j][0] <= num <= self.intervals[j][1]:
-					found = True
-					break
-			if not found:
+			if num not in all_nums:
 				needlessExcludes.append( num )
-				
 		self.exclude.difference_update( needlessExcludes )
+
+		self.intervals = SetToIntervals( all_nums )
 	
 	def __repr__( self ):
 		return u'Category(active={}, name="{}", catStr="{}", startOffset="{}", numLaps={}, sequence={}, distance={}, distanceType={}, gender="{}", lappedRidersMustContinue="{}", catType="{}")'.format(
@@ -490,6 +472,10 @@ class Category(object):
 
 	def getStartOffsetSecs( self ):
 		return Utils.StrToSeconds( self.startOffset )
+		
+	def setFromSet( self, s ):
+		self.exclude = set()
+		self.intervals = SetToIntervals( s )
 
 #------------------------------------------------------------------------------------------------------------------
 
@@ -1810,17 +1796,18 @@ class Race( object ):
 			unionNums |= c.getMatchSet()
 		
 		if unionNums:
-			category.catStr = u','.join( unicode(n) for n in sorted(unionNums) )
-			category.normalize()
+			category.setFromSet( unionNums )
 		
 	def adjustAllCategoryWaveNumbers( self ):
 		categories = [c for c in self.categories.itervalues() if c.active and c.catType == Category.CatWave]
 		for c in categories:
 			self.adjustCategoryWaveNumbers( c )
-		
+
+		'''
 		category_sets = [c.getMatchSet() for c in categories]		
 		for c, i in zip(categories, minimal_intervals.minimal_intervals(category_sets) ):
-			c.catStr = minimal_intervals.interval_to_str( i )
+			c.setFromSet( IntervalsToSet(i) )
+		'''
 		
 		self.resetCategoryCache()
 	
@@ -2503,6 +2490,14 @@ def writeModelUpdate( includeExcel=True, includePDF=True ):
 	return success
 		
 if __name__ == '__main__':
+	s = set.union( set(xrange(10)), set(xrange(20,30)) )
+	i = SetToIntervals( s )
+	ss = IntervalsToSet( i )
+	print( s )
+	print( i )
+	print( ss )
+	sys.exit()
+	
 	r = newRace()
 	for i in xrange(1, 11):
 		r.addTime( 10, i*100 )
