@@ -293,9 +293,6 @@ def getIndexPage( share=True ):
 		'CountdownIconSrc': CountdownIconSrc,
 		'StartListIconSrc': StartListIconSrc,
 	} )
-	data = indexTemplate.generate( **info )
-	with open('data.txt', 'w') as f:
-		f.write( data )
 	return indexTemplate.generate( **info )
 
 #---------------------------------------------------------------------------

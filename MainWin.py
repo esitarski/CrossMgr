@@ -2852,7 +2852,7 @@ class MainWin( wx.Frame ):
 			#race.enableUSBCamera = True
 			#race.photosAtRaceEndOnly = True
 			#race.enableJChipIntegration = True
-			race.setCategories( [	{'name':u'ɹoᴉunſ', 'catStr':'100-199', 'startOffset':'00:00', 'distance':0.5, 'gender':'Men'},
+			race.setCategories( [	{'name':'Junior', 'catStr':'100-199', 'startOffset':'00:00', 'distance':0.5, 'gender':'Men'},
 									{'name':'Senior', 'catStr':'200-299', 'startOffset':'00:15', 'distance':0.5, 'gender':'Women'}] )
 			self.lapTimes = [(lt[0] + race.getStartOffset(lt[1]), lt[1]) for lt in self.lapTimes]
 
