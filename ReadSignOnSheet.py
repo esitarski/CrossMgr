@@ -891,6 +891,12 @@ class ExcelLink( object ):
 			for bib, fields in infoCache.iteritems():
 				MatchingCategory.AddToMatchingCategory( bib, fields )
 			MatchingCategory.EpilogMatchingCategory()
+			
+		try:
+			Model.race.resetAllCaches()
+		except:
+			pass
+		
 		return infoCache
 
 def IsValidRaceDBExcel( fileName ):
