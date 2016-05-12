@@ -770,8 +770,8 @@ class BatchPublishProperties( wx.Panel ):
 			ftpBtn = None
 			
 		explain = [
-			wx.StaticText( self, label=_('Choose the File Formats to Publish.') ),
-			wx.StaticText( self, label=_('Select the Ftp option to send output files to the Ftp server.') ),
+			wx.StaticText( self, label=_('Choose File Formats to Publish.') ),
+			wx.StaticText( self, label=_('Select Ftp option to upload files to Ftp server.') ),
 		]
 		font = explain[0].GetFont()
 		fontUnderline = wx.FFont( font.GetPointSize(), font.GetFamily(), flags=wx.FONTFLAG_BOLD )
@@ -837,8 +837,7 @@ class BatchPublishProperties( wx.Panel ):
 		vs.Add( wx.StaticText(self,label=u'\n'.join([
 				_('The Command is run on CrossMgr generated files.  Use %* to insert the file names into the command line.'),
 				_('You can also use Notes variables, for example: {=RaceDate}, {=Organizer} and {=City}.'),
-				_('Scripts can be shell cmds or scripts (.bat, .py, .rb, .perl, ...).  For example:'),
-				_(r'"for %I in (%*) do @copy %I /B c:\webdir\ -Y", "dosomething.bat %*" or "python dosomething.py -date {=RaceDate} -files %*".'),
+				_('Scripts can be shell cmds or scripts (.bat, .py, .rb, .perl, ...).'),
 			])),
 			flag=wx.ALL|wx.EXPAND, border=4 )
 		
@@ -1447,11 +1446,10 @@ class PropertiesDialog( wx.Dialog ):
 
 		super( PropertiesDialog, self ).__init__( parent, ID, title=title, size=size, pos=pos, style=style )
 		
-		sizer = wx.BoxSizer( wx.VERTICAL )
-		self.SetSizer(sizer)
-
 		self.properties = Properties( self, addEditButton=False )
-		sizer.Add(self.properties, 1, flag=wx.ALL|wx.EXPAND, border=5)
+		
+		vsizer = wx.BoxSizer( wx.VERTICAL )
+		vsizer.Add(self.properties, 1, flag=wx.ALL|wx.EXPAND, border=5)
 		if updateProperties:
 			self.properties.refresh()
 
@@ -1477,29 +1475,31 @@ class PropertiesDialog( wx.Dialog ):
 			btn.Bind( wx.EVT_BUTTON, self.onBrowseCategories )
 			fgs.Add( btn, flag=wx.ALIGN_CENTER_VERTICAL )
 			
-			sizer.Add( fgs, flag=wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALL, border=5)
+			vsizer.Add( fgs, flag=wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALL, border=5)
 			
-			sizer.Add( wx.StaticLine(self, style=wx.LI_HORIZONTAL), flag=wx.EXPAND|wx.RIGHT|wx.TOP, border=5)
+			vsizer.Add( wx.StaticLine(self, style=wx.LI_HORIZONTAL), flag=wx.EXPAND|wx.RIGHT|wx.TOP, border=5)
 		
 		#-------------------------------------------------------------------------------------------------------------
-		btnsizer = wx.StdDialogButtonSizer()
+		btnsizer = wx.BoxSizer( wx.VERTICAL )
         
+		btnsizer.AddSpacer( 40 )
 		btn = wx.Button( self, wx.ID_OK )
 		btn.SetDefault()
-		btnsizer.AddButton( btn )
+		btnsizer.Add( btn, flag=wx.ALL, border=4 )
 
 		btn = wx.Button( self, wx.ID_CANCEL )
-		btnsizer.AddButton( btn )
+		btnsizer.Add( btn, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM, border=4 )
 		
 		helpBtn = wx.Button( self, wx.ID_HELP )
 		self.Bind( wx.EVT_BUTTON, lambda evt: Utils.showHelp('Properties.html'), helpBtn )
-		btnsizer.AddButton( helpBtn )
-		
-		btnsizer.Realize()
-
-		sizer.Add(btnsizer, flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.ALIGN_RIGHT, border=5)
+		btnsizer.Add( helpBtn, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM, border=4 )
 		#-------------------------------------------------------------------------------------------------------------
+
+		sizer = wx.BoxSizer( wx.HORIZONTAL )
+		sizer.Add( btnsizer )
+		sizer.Add( vsizer )
 		
+		self.SetSizer(sizer)
 		sizer.Fit(self)
 		self.Layout()
 		

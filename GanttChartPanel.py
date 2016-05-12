@@ -285,6 +285,7 @@ class GanttChartPanel(wx.PyPanel):
 		backColour = self.GetBackgroundColour()
 		backBrush = wx.Brush(backColour, wx.SOLID)
 		greyBrush = wx.Brush( wx.Colour(196,196,196), wx.SOLID )
+		lightGreyBrush = wx.Brush( wx.Colour(220,220,220), wx.SOLID )
 		backPen = wx.Pen(backColour, 0)
 		dc.SetBackground(backBrush)
 		dc.Clear()
@@ -583,6 +584,11 @@ class GanttChartPanel(wx.PyPanel):
 				dc.SetBrush( greyBrush )
 				dc.DrawRectangle( 0, yLast, textWidthLeftMax, yCur - yLast + 1 )
 				dc.SetBrush( backBrush )
+			if self.status[i] == _('PUL'):
+				dc.SetPen( wx.TRANSPARENT_PEN )
+				dc.SetBrush( lightGreyBrush )
+				dc.DrawRectangle( 0, yLast, textWidthLeftMax, yCur - yLast + 1 )
+				dc.SetBrush( backBrush )
 			if self.labels[i] in self.headerSet:
 				dc.DrawText( self.labels[i], labelsWidthLeft + 4, yLast )    # This is a Category Label.
 			else:
@@ -595,10 +601,10 @@ class GanttChartPanel(wx.PyPanel):
 					lastSpace = label.rfind( ' ' )
 					if lastSpace > 0:
 						label = label[lastSpace+1:]
-					labelWidth = dc.GetTextExtent( self.labels[i] )[0]
+					labelWidth = dc.GetTextExtent( label )[0]
 					dc.DrawText( label, width - labelsWidthRight + legendSep, yLast )
 					if statusTextWidth and self.status[i]:
-						dc.DrawText( self.status[i], width - labelsWidthRight + legendSep + labelWidth + statusTextSpace, yLast )
+						dc.DrawText( self.status[i], width - statusTextWidth + statusTextSpace, yLast )
 
 			if u'{}'.format(self.numSelect) == u'{}'.format(numFromLabel(self.labels[i])):
 				yHighlight = yCur
