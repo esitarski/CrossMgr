@@ -306,7 +306,7 @@ class MainWin( wx.Frame ):
 		
 		iRow += 1
 		
-		gs = wx.GridSizer( rows=0, cols=4, vgap=2, hgap=2 )
+		gs = wx.GridSizer( rows=0, cols=4, vgap=0, hgap=2 )
 		self.antennaLabels = []
 		self.antennas = []
 		for i in xrange(4):
@@ -354,9 +354,14 @@ class MainWin( wx.Frame ):
 		self.useStaticAddress.SetValue( False )
 		
 		iRow += 1
+		gbs.Add( wx.StaticText(self, label='ANT Reads:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT )
+		self.antennaReadCount = wx.StaticText( self, label='1:0 0% | 2:0 0% | 3:0 0% | 4:0 0%               ' )
+		gbs.Add( self.antennaReadCount, pos=(iRow,1), span=(1,2), flag=wx.ALIGN_LEFT )
+		
+		iRow += 1
 		gbs.Add( wx.StaticText(self, label='Backup File:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT )
-		self.backupFile = wx.StaticText( self, wx.ID_ANY, '' )
-		gbs.Add( self.backupFile, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
+		self.backupFile = wx.StaticText( self, label='                                                   ' )
+		gbs.Add( self.backupFile, pos=(iRow,1), span=(1,2), flag=wx.ALIGN_LEFT )
 		
 		#------------------------------------------------------------------------------------------------
 		# CrossMgr configuration.
@@ -641,12 +646,21 @@ class MainWin( wx.Frame ):
 				d = self.messageQ.get( False )
 			except Empty:
 				break
-			message = ' '.join( str(x) for x in d[1:] )
+			if isinstance(d[-1], dict):
+				antennaReadCount = d[-1]
+				d = d[:-1]
+			else:
+				antennaReadCount = None
+			
+			message = ' '.join( unicode(x) for x in d[1:] )
 			if   d[0] == 'Impinj':
 				if 'state' in d:
 					self.impinjMessages.messageList.SetBackgroundColour( self.LightGreen if d[2] else self.LightRed )
 				else:
 					self.impinjMessages.write( message )
+					if antennaReadCount is not None:
+						total = max(1, sum( antennaReadCount[i] for i in xrange(1,4+1)) )
+						self.antennaReadCount.SetLabel(' | '.join('{}:{} {:.1f}%'.format(i, antennaReadCount[i], antennaReadCount[i]*100.0/total) for i in xrange(1,4+1)) )
 			elif d[0] == 'Impinj2JChip':
 				if 'state' in d:
 					self.crossMgrMessages.messageList.SetBackgroundColour( self.LightGreen if d[2] else self.LightRed )

@@ -6,6 +6,7 @@ import socket
 import threading
 import datetime
 import random
+from collections import defaultdict
 from Queue import Empty
 from Utils import readDelimitedData, timeoutSecs, Bell
 import cStringIO as StringIO
@@ -55,6 +56,7 @@ class Impinj( object ):
 		self.readerSocket = None
 		self.timeCorrection = None	# Correction between the reader's time and the computer's time.
 		self.connectedAntennas = []
+		self.antennaReadCount = defaultdict(int)
 		self.start()
 		
 	def start( self ):
@@ -111,6 +113,7 @@ class Impinj( object ):
 		
 	def sendCommands( self ):
 		self.connectedAntennas = []
+		self.antennaReadCount = defaultdict(int)
 		
 		self.messageQ.put( ('Impinj', 'Connected to: ({}:{})'.format(self.impinjHost, self.impinjPort) ) )
 		
@@ -316,6 +319,11 @@ class Impinj( object ):
 					self.tagCount += 1
 					
 					try:
+						self.antennaReadCount[tag['AntennaID']] += 1
+					except Exception as e:
+						self.messageQ.put( ('Impinj', 'Received {}.  Missing AntennaID.'.format(self.tagCount)) )
+					
+					try:
 						tagID = tag['EPC']
 					except Exception as e:
 						self.messageQ.put( ('Impinj', 'Received {}.  Skipping: missing tagID.'.format(self.tagCount)) )
@@ -333,7 +341,7 @@ class Impinj( object ):
 					try:
 						discoveryTime = tag['Timestamp']		# In microseconds since Jan 1, 1970
 					except Exception as e:
-						self.messageQ.put( ('Impinj', 'Received %d.  Skipping: Missing Timestamp' % self.tagCount) )
+						self.messageQ.put( ('Impinj', 'Received {}.  Skipping: Missing Timestamp'.format(self.tagCount)) )
 						continue
 						
 					# Convert discoveryTime to Python format and correct for reader time difference.
@@ -348,7 +356,10 @@ class Impinj( object ):
 					if (discoveryTime - LRT).total_seconds() < RepeatSeconds:
 						self.messageQ.put( (
 							'Impinj',
-							'Received {}.  tag={} Skipped (<{} secs ago).  time={}'.format(self.tagCount, tagID, RepeatSeconds, discoveryTimeStr)) )
+							'Received {}.  tag={} Skipped (<{} secs ago).  time={}'.format(self.tagCount, tagID, RepeatSeconds, discoveryTimeStr),
+							self.antennaReadCount,
+							)
+						)
 						continue
 					
 					# Put this read on the queue for transmission to CrossMgr.
@@ -360,7 +371,12 @@ class Impinj( object ):
 						pf.write( '{},{}\n'.format(
 									tagID,
 									discoveryTime.strftime('%a %b %d %H:%M:%S.%f %Z %Y-%m-%d')) )
-					self.messageQ.put( ('Impinj', 'Received {}. tag={}, time={}'.format(self.tagCount, tagID, discoveryTimeStr)) )
+					self.messageQ.put( (
+						'Impinj',
+						'Received {}. tag={}, time={}'.format(self.tagCount, tagID, discoveryTimeStr),
+						self.antennaReadCount,
+						)
+					)
 					Bell()
 				
 				# Close the log file.

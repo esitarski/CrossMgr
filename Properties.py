@@ -770,8 +770,7 @@ class BatchPublishProperties( wx.Panel ):
 			ftpBtn = None
 			
 		explain = [
-			wx.StaticText( self, label=_('Choose File Formats to Publish.') ),
-			wx.StaticText( self, label=_('Select Ftp option to upload files to Ftp server.') ),
+			wx.StaticText(self,label=_('Choose File Formats to Publish.  Select Ftp option to upload files to Ftp server.')),
 		]
 		font = explain[0].GetFont()
 		fontUnderline = wx.FFont( font.GetPointSize(), font.GetFamily(), flags=wx.FONTFLAG_BOLD )
@@ -786,7 +785,7 @@ class BatchPublishProperties( wx.Panel ):
 			fgs.Add( st, flag=wx.ALL, border=4 )
 		
 		for i, attr in enumerate(batchPublishAttr):
-			for k in xrange(len(headers)): fgs.Add( wx.StaticLine(self), flag=wx.EXPAND )
+			for k in xrange(len(headers)): fgs.Add( wx.StaticLine(self, size=(1,1)), flag=wx.EXPAND )
 		
 			attrCB = wx.CheckBox(self, label=attr.uiname)
 			attrCB.Bind( wx.EVT_CHECKBOX, lambda event, iAttr=i: self.onSelect(iAttr) )
@@ -822,7 +821,7 @@ class BatchPublishProperties( wx.Panel ):
 		vs = wx.BoxSizer( wx.VERTICAL )
 		if ftpBtn:
 			for e in explain[:-1]:
-				vs.Add( e, flag=wx.TOP|wx.LEFT|wx.RIGHT, border=8 )
+				vs.Add( e, flag=wx.TOP|wx.LEFT|wx.RIGHT, border=4 )
 			h = wx.BoxSizer( wx.HORIZONTAL )
 			h.Add( explain[-1], flag=wx.ALIGN_CENTRE_VERTICAL )
 			h.Add( ftpBtn, flag=wx.LEFT, border=8 )
@@ -831,11 +830,10 @@ class BatchPublishProperties( wx.Panel ):
 			for e in explain:
 				vs.Add( e, flag=wx.TOP|wx.LEFT|wx.RIGHT, border=8 )
 		vs.Add( fgs, flag=wx.TOP|wx.LEFT|wx.RIGHT, border=8 )
-		vs.Add( self.bikeRegChoice, flag=wx.ALL, border=8 )
-		vs.AddSpacer( 16 )
-		vs.Add( pps, flag=wx.ALL|wx.EXPAND, border=8 )
+		vs.Add( self.bikeRegChoice, flag=wx.ALL, border=4 )
+		vs.Add( pps, flag=wx.ALL|wx.EXPAND, border=4 )
 		vs.Add( wx.StaticText(self,label=u'\n'.join([
-				_('The Command is run on CrossMgr generated files.  Use %* to insert the file names into the command line.'),
+				_('Postpublish Command is run on CrossMgr generated files.  Use %* to insert the file names into the command line.'),
 				_('You can also use Notes variables, for example: {=RaceDate}, {=Organizer} and {=City}.'),
 				_('Scripts can be shell cmds or scripts (.bat, .py, .rb, .perl, ...).'),
 			])),
