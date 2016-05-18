@@ -624,6 +624,16 @@ def GetResults( category, getExternalData = False ):
 	return riderResults
 
 @Model.memoize
+def GetEntries( category ):
+	results = GetResults( category, getExternalData=False )
+	entries = []
+	Entry = Model.Entry
+	for rr in results:
+		entries.extend( [Entry(rr.num, i, t, rr.interp[i] ) for i, t in enumerate(rr.raceTimes)] )
+	entries.sort( key=Entry.key )
+	return entries
+
+@Model.memoize
 def GetLastFinisherTime():
 	results = GetResultsCore( None )
 	finisher = Model.Rider.Finisher

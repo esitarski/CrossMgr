@@ -22,8 +22,7 @@ def interpolateNonZeroFinishers():
 	entries = []
 	for r in results:
 		if r.status == Finisher:
-			riderEntries = [Entry(r.num, lap, t, r.interp[lap]) for lap, t in enumerate(r.raceTimes)]
-			entries.extend( riderEntries[1:] )
+			entries.extend( [Entry(r.num, lap, t, r.interp[lap]) for lap, t in enumerate(r.raceTimes)] )
 	entries.sort( key=Entry.key )
 	return entries
 	

@@ -1783,7 +1783,7 @@ class Race( object ):
 	def adjustCategoryWaveNumbers( self, category ):
 		if category.catType != Category.CatWave or not category.active:
 			return
-		if not getattr(self, 'categoryNumsCache', None):
+		if not self.hasCategoryCache():
 			self._buildCategoryCache()
 		
 		categories = [c for c in self.categories.itervalues() if c.active and c.catType != Category.CatCustom and c.sequence > category.sequence]
@@ -1885,31 +1885,27 @@ class Race( object ):
 					self.categories[cNewName] = cNew
 			
 			self.categories = { cName:cValue for cName, cValue in self.categories.iteritems() if cName in newCategories }
-			self.resetCategoryCache()
 			self.setChanged()
 			
-			# Reclassify all the riders as something changed.
-			for num in self.riders.iterkeys():
-				self.getCategory( num )
-			
-			if self.categories:
-				self.allCategoriesHaveRaceLapsDefined = True
-				self.categoryLapsMax = 0
-				for category in self.categories.itervalues():
-					if not category.active:
-						continue
-					if category.getNumLaps():
-						self.categoryLapsMax = max( self.categoryLapsMax, category.getNumLaps() )
-					else:
-						self.allCategoriesHaveRaceLapsDefined = False
-						break
-			else:
-				self.allCategoriesHaveRaceLapsDefined = False
-				
 			changed = True
 		else:
 			changed = False
 			
+		self.resetCategoryCache()
+		
+		if self.categories:
+			self.allCategoriesHaveRaceLapsDefined = True
+			self.categoryLapsMax = 0
+			for category in self.categories.itervalues():
+				if not category.active:
+					continue
+				if category.getNumLaps():
+					self.categoryLapsMax = max( self.categoryLapsMax, category.getNumLaps() )
+				else:
+					self.allCategoriesHaveRaceLapsDefined = False
+		else:
+			self.allCategoriesHaveRaceLapsDefined = False
+				
 		if self.allCategoriesHaveRaceLapsDefined:
 			self.numLaps = self.categoryLapsMax
 			
@@ -1964,11 +1960,11 @@ class Race( object ):
 
 	def getNumsForCategory( self, category ):
 		try:
-			return self.categoryNumsCache[category]
+			return category.bibSet
 		except (TypeError, AttributeError, KeyError):
 			self._buildCategoryCache()
 		try:
-			return self.categoryNumsCache[category]
+			return category.bibSet
 		except (TypeError, AttributeError, KeyError):
 			return set()
 
@@ -1992,50 +1988,42 @@ class Race( object ):
 		return c.name if c else ''
 
 	def _buildCategoryCache( self ):
+		if hasattr(self, 'categoryNumsCache'):
+			delattr( self, 'categoryNumsCache' )
+		
 		# Reset the cache for all categories by sequence number.
 		self.categoryCache = {}			# Returns wave category by num.
-		self.categoryNumsCache = {}		# Indexed by category, contains all numbers in that category.
 		self.startOffsetCache = {}		# Returns start offset by num.
-		categories = self.getCategories( startWaveOnly = True )
-		if not categories:
-			return None
-			
+		
 		# Handle bib exclusivity for wave categories.
-		for c in categories:
-			for n in c.getMatchSet():
-				if n not in self.categoryCache:
-					self.categoryCache[n] = c
+		numsSeen = set()
+		for c in self.getCategories( startWaveOnly=True ):
+			c.bibSet = c.getMatchSet() - numsSeen
+			numsSeen |= c.bibSet
+			offsetSecs = c.getStartOffsetSecs()
+			for n in c.bibSet:
+				self.startOffsetCache[n] = offsetSecs
+				self.categoryCache[n] = c
 
 		# Now handle all categories.
 		# Bib exclusivity in enforced for component categories based on their wave.
-		# Custom categories have no exclusivity rules.
-		categories = list(self.categories.itervalues())
-		categories.sort( key = Category.key )
-		
-		self.categoryNumsCache = dict( (c, set()) for c in categories if c.catType != Category.CatCustom )
-		for n, c in self.categoryCache.iteritems():
-			self.categoryNumsCache[c].add( n )
-		
-		waveCategory = categories[0]
+		# Custom categories have no exclusivity rules.		
+		waveCategory = None
 		waveNumsSeen = set()
-		waveCategoryNums = set()
-		for c in categories:
-			if not c.active:
-				continue
+		for c in self.getCategories( startWaveOnly=False ):
 			if c.catType == Category.CatWave:
 				waveCategory = c
 				waveNumsSeen = set()
-				waveCategoryNums = self.categoryNumsCache[c]
-				offsetSecs = c.getStartOffsetSecs()
-				self.startOffsetCache.update( {num: offsetSecs for num in self.categoryNumsCache[c]} )
 			elif c.catType == Category.CatComponent:
-				cNumsCache = self.categoryNumsCache[c]
-				for n in c.getMatchSet():
-					if n in waveCategoryNums and n not in waveNumsSeen:
-						cNumsCache.add( n )
-						waveNumsSeen.add( n )
+				c.bibSet = c.getMatchSet() - waveNumsSeen
+				if waveCategory:
+					c.bibSet &= waveCategory.bibSet
+				waveNumsSeen |= c.bibSet
 			else:	# c.catType == Category.CatCustom
-				self.categoryNumsCache[c] = c.getMatchSet()
+				c.bibSet = c.getMatchSet()
+
+	def hasCategoryCache( self ):
+		return getattr(self, 'categoryCache', None) is not None
 
 	def getCategory( self, num ):
 		# Check the cache for this rider.
@@ -2050,14 +2038,9 @@ class Race( object ):
 	def inCategory( self, num, category ):
 		if category is None:
 			return True
-			
-		try:
-			return num in self.categoryNumsCache[category]
-		except (TypeError, AttributeError) as e:
-			pass
-			
-		self._buildCategoryCache()
-		return num in self.categoryNumsCache[category]
+		if getattr(self, 'categoryCache', None) is None:
+			self._buildCategoryCache()		
+		return num in category.bibSet
 		
 	def getStartOffset( self, num ):
 		try:
@@ -2097,7 +2080,6 @@ class Race( object ):
 	
 	def resetCategoryCache( self ):
 		self.categoryCache = None
-		self.categoryNumsCache = None
 		self.startOffsetCache = None
 		
 	def resetAllCaches( self ):

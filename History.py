@@ -6,7 +6,7 @@ import Model
 import Utils
 import ColGrid
 from FixCategories import FixCategories
-from GetResults import TimeDifference
+from GetResults import TimeDifference, GetEntries
 import EditEntry
 from RiderDetail import ShowRiderDetailDialog
 from Undo import undo
@@ -409,27 +409,29 @@ class History( wx.Panel ):
 		maxLaps = 0
 		doLapsToGo = True
 		if race.winAndOut:
-			entries = race.interpolate()
+			entries = GetEntries( category )
 			if entries:
 				try:
-					if category:
-						maxLaps = max( e.lap for e in entries if race.inCategory(e.num, category) and not e.interp )
-					else:
-						maxLaps = max( e.lap for e in entries if not e.interp )
+					maxLaps = max( e.lap for e in entries if not e.interp )
 				except ValueError:
 					pass
 				if race.isRunning():
 					maxLaps += 2
 		else:
-			maxLaps = race.numLaps
+			try:
+				maxLaps = category.getNumLaps()
+			except Exception as e:
+				maxLaps = race.numLaps
 			doLapsToGo = True
 			if not maxLaps:
 				maxLaps = race.getMaxLap()
 				if race.isRunning():
 					maxLaps += 2
 				doLapsToGo = False
-				
-		entries = race.interpolateLap( maxLaps, False )
+			
+		entries = GetEntries( category )
+		if maxLaps:
+			entries = [e for e in entries if e.lap <= maxLaps]
 		entries = [e for e in entries if e.lap <= race.getCategoryNumLaps(e.num)]
 		
 		if race.isTimeTrial:
@@ -439,8 +441,11 @@ class History( wx.Panel ):
 		# Collect the number and times for all entries so we can compute lap times.
 		numTimes = {(e.num, e.lap) : e.t for e in entries}
 		
+		self.category = category
+		
 		# Trim out the lap 0 starts.
 		entries = [e for e in entries if e.lap > 0]
+		
 		if not entries:
 			self.clearGrid()
 			return
@@ -458,13 +463,6 @@ class History( wx.Panel ):
 				leaderTimes.append( e.t )
 			self.history[lapCur].append( e )
 			numSeen.add( e.num )
-		
-		self.category = category
-			
-		# Trim out elements not in the desired category.
-		if category:
-			for c in xrange(len(self.history)):
-				self.history[c] = [e for e in self.history[c] if race.inCategory(e.num, category)]
 		
 		if not any( h for h in self.history ):
 			self.clearGrid()

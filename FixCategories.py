@@ -12,34 +12,31 @@ def FixCategories( choice, iSelection = None ):
 	items = choice.GetItems()
 	
 	if iSelection is not None and iSelection < len(items):
-		choice.SetSelection( iSelection )
+		choice.SetSelection( iSelection or 0 )
 
-	nameCat = [(_('All'), None)]
-	if race:
-		nameCat.extend( [((u'    ' if c.catType == Model.Category.CatComponent else u'') + c.fullname, c) for c in race.getCategories(False)] )
-	
-	newItems = [ fullname for fullname, cat in nameCat ]
+	categories = race.getCategories( startWaveOnly=False ) if race else []
+	newItems = [(u'    ' if c.catType == Model.Category.CatComponent else u'') + c.name for c in categories]
+	newItems.insert( 0, _('All') )
+	categories.insert( 0, None )
 	if items == newItems:
-		return nameCat[choice.GetSelection()][1]
+		return categories[choice.GetSelection()]
 	
-	catCur = None
-	cItems = choice.GetItems()
-	if cItems:
-		iCur = choice.GetSelection()
-		catCur = choice.GetString( iCur ).strip()
+	catNameCur = None
+	if items:
+		catNameCur = items[choice.GetSelection()]
 	
 	choice.Clear()
 	choice.AppendItems( newItems )
 	
 	iNew = 0
-	if catCur is not None:
-		for i, (fullname, cat) in enumerate(nameCat):
-			if catCur == fullname:
+	if catNameCur is not None:
+		for i, fullname in enumerate(newItems):
+			if catNameCur == fullname:
 				iNew = i
 				break
 		
 	choice.SetSelection( iNew )
-	return nameCat[choice.GetSelection()][1]
+	return categories[choice.GetSelection()]
 	
 def SetCategory( choice, cat ):
 	if FixCategories(choice) != cat:
