@@ -29,6 +29,7 @@ class Gantt( wx.Panel ):
 		self.entry = None
 		self.numBefore = None
 		self.numAfter = None
+		self.refreshTimer = None
 		
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
 		self.categoryLabel = wx.StaticText( self, label = _('Category:') )
@@ -459,7 +460,17 @@ class Gantt( wx.Panel ):
 			
 		self.statsLabel.SetLabel( s )
 		self.hbs.Layout()
-		
+	
+	def timerRefresh( self, doRefresh=True ):
+		race = Model.race
+		if self.IsShown() and race and race.isRunning():
+			if doRefresh:
+				wx.CallAfter( self.refresh )
+			t = race.lastRaceTime()
+			tNext = int(t + 5.0)
+			tNext -= tNext % 5
+			self.refreshTimer = wx.CallLater( int((tNext - t)*1000), self.timerRefresh )
+	
 	def refresh( self ):
 		if not Model.race:
 			self.ganttChart.SetData( None )
@@ -474,6 +485,11 @@ class Gantt( wx.Panel ):
 		
 		self.groupByStartWave.SetValue( race.groupByStartWave )
 		self.groupByStartWave.Enable( not category )
+		
+		if race and race.isRunning():
+			if self.refreshTimer:
+				self.refreshTimer.Stop()
+			self.timerRefresh( False )
 		
 		headerSet = set()
 		if race.groupByStartWave and not category:

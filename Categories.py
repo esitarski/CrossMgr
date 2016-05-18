@@ -240,55 +240,55 @@ class Categories( wx.Panel ):
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		
-		self.activateAllButton = wx.Button(self, label=_('&Activate All'), style=wx.BU_EXACTFIT)
+		self.activateAllButton = wx.Button(self, label=_('Activate All'), style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onActivateAll, self.activateAllButton )
 		hs.Add( self.activateAllButton, 0, border = border, flag = flag )
 
-		self.deactivateAllButton = wx.Button(self, label=_('&Deactivate All'), style=wx.BU_EXACTFIT)
+		self.deactivateAllButton = wx.Button(self, label=_('Deactivate All'), style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onDeactivateAll, self.deactivateAllButton )
 		hs.Add( self.deactivateAllButton, 0, border = border, flag = (flag & ~wx.LEFT) )
 
 		hs.AddSpacer( 8 )
 		
-		self.newCategoryButton = wx.Button(self, label=_('&New Category'), style=wx.BU_EXACTFIT)
+		self.newCategoryButton = wx.Button(self, label=_('New'), style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onNewCategory, self.newCategoryButton )
 		hs.Add( self.newCategoryButton, 0, border = border, flag = flag )
 		
-		self.delCategoryButton = wx.Button(self, label=_('&Delete Category'), style=wx.BU_EXACTFIT)
+		self.delCategoryButton = wx.Button(self, label=_('Delete'), style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onDelCategory, self.delCategoryButton )
-		hs.Add( self.delCategoryButton, 0, border = border, flag = flag )
+		hs.Add( self.delCategoryButton, 0, border = border, flag = (flag & ~wx.LEFT) )
 
 		hs.AddSpacer( 8 )
 		
-		self.upCategoryButton = wx.Button(self, label=_('Move &Up'), style=wx.BU_EXACTFIT)
+		self.upCategoryButton = wx.Button(self, label=_('Move') + u' \u2191', style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onUpCategory, self.upCategoryButton )
 		hs.Add( self.upCategoryButton, 0, border = border, flag = flag )
 
-		self.downCategoryButton = wx.Button(self, label=_('Move D&own'), style=wx.BU_EXACTFIT)
+		self.downCategoryButton = wx.Button(self, label=_('Move') + u' \u2193', style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onDownCategory, self.downCategoryButton )
 		hs.Add( self.downCategoryButton, 0, border = border, flag = (flag & ~wx.LEFT) )
 
 		hs.AddSpacer( 8 )
 		
-		self.addExceptionsButton = wx.Button(self, label=_('&Add Bib Exceptions'), style=wx.BU_EXACTFIT)
+		self.addExceptionsButton = wx.Button(self, label=_('Add Bib Exceptions'), style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onAddExceptions, self.addExceptionsButton )
-		hs.Add( self.addExceptionsButton, 0, border = border, flag = (flag & ~wx.LEFT) )
+		hs.Add( self.addExceptionsButton, 0, border = border, flag = flag )
 
 		hs.AddSpacer( 8 )
 		
-		self.updateStartWaveNumbersButton = wx.Button(self, label=_('&Update Start Wave Numbers'), style=wx.BU_EXACTFIT)
+		self.updateStartWaveNumbersButton = wx.Button(self, label=_('Update Start Wave Bibs'), style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onUpdateStartWaveNumbers, self.updateStartWaveNumbersButton )
-		hs.Add( self.updateStartWaveNumbersButton, 0, border = border, flag = (flag & ~wx.LEFT) )
+		hs.Add( self.updateStartWaveNumbersButton, 0, border = border, flag = flag )
 
-		self.normalizeButton = wx.Button(self, label=_('N&ormalize'), style=wx.BU_EXACTFIT)
+		self.normalizeButton = wx.Button(self, label=_('Normalize'), style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onNormalize, self.normalizeButton )
-		hs.Add( self.normalizeButton, 0, border = border, flag = (flag & ~wx.LEFT) )
+		hs.Add( self.normalizeButton, 0, border = border, flag = flag )
 
 		hs.AddStretchSpacer()
 		
 		self.printButton = wx.Button( self, label=u'{}...'.format(_('Print')), style=wx.BU_EXACTFIT )
 		self.Bind( wx.EVT_BUTTON, self.onPrint, self.printButton )
-		hs.Add( self.printButton, 0, border = border, flag = (flag & ~wx.LEFT) )
+		hs.Add( self.printButton, 0, border = border, flag = flag )
 		
 		self.grid = ReorderableGrid( self )
 		self.colNameFields = [

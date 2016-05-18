@@ -375,6 +375,9 @@ class ForecastHistory( wx.Panel ):
 										for e in self.quickExpected] )
 	
 	def addGaps( self, recorded ):
+		if not (Model.race and Model.race.enableJChipIntegration):
+			return recorded
+		
 		recordedWithGaps = []
 		groupCount = 0
 		Entry = Model.Entry
@@ -389,225 +392,241 @@ class ForecastHistory( wx.Panel ):
 		return recordedWithGaps
 
 	def refresh( self ):
-		with Model.LockRace() as race:
-			if race is None or not race.isRunning():
-				self.quickExpected = None
-				self.clearGrids()
-				return
-				
-			try:
-				externalInfo = race.excelLink.read( True )
-			except:
-				externalInfo = {}
-						
-			tRace = race.curRaceTime()
-			tRaceLength = race.minutes * 60.0
+		race = Model.race
+		if race is None or not race.isRunning():
+			self.quickExpected = None
+			self.clearGrids()
+			return
 			
-			entries = interpolateNonZeroFinishers()
-			
-			isTimeTrial = getattr(race, 'isTimeTrial', False)
-			if isTimeTrial:
-				# Update the start times in as recorded times.
-				startTimes = [(rider.firstTime, rider.num) for rider in race.riders.itervalues() \
-								if rider.status == Model.Rider.Finisher and rider.firstTime]
-				startTimes.sort()
-				
-				# Find the next start time so we can update the display.
-				iClosestStartTime = bisect.bisect_left( startTimes, (tRace, 0) )
-				if iClosestStartTime < len(startTimes):
-					tClosestStartTime = startTimes[iClosestStartTime][0]
-					milliSeconds = max( 0, int((tClosestStartTime - tRace)*1000.0 + 10.0) )
-					if self.callLaterRefresh is None:
-						self.callLaterRefresh = wx.CallLater( milliSeconds, self.refresh )
-					self.callLaterRefresh.Restart( milliSeconds )
-				
-				startTimeEntries = [Model.Entry(st[1], 0, st[0], False) for st in startTimes]
-				
-				# Add the rider firstTime to correct the times back to race times.
-				correctedEntries = [Model.Entry(e.num, e.lap, (race.riders[e.num].firstTime or 0.0) + e.t, e.interp) for e in entries]
-				startTimeEntries.extend( correctedEntries )
-				entries = startTimeEntries
-			
-			#------------------------------------------------------------------
-			# Select the interpolated entries around now.
-			leaderPrev, leaderNext = race.getPrevNextLeader( tRace )
-			averageLapTime = race.getAverageLapTime()
-			backSecs = averageLapTime
-			
-			expectedShowMax = 80
-			
-			tMin = tRace - backSecs
-			tMax = tRace + averageLapTime
-			iCur = bisect.bisect_left( entries, Model.Entry(0, 0, tRace, True) )
-			iLeft = max(0, iCur - expectedShowMax/2)
-			seen = {}
-			expected = [ seen.setdefault(e.num, e) for e in entries[iLeft:] if e.interp and tMin <= e.t <= tMax and e.num not in seen ]
-			if isTimeTrial:
-				# Update the expected start times.
-				expectedStarters = [(rider.firstTime, rider.num) for rider in race.riders.itervalues() \
-								if rider.status == Model.Rider.Finisher and rider.firstTime and rider.firstTime >= tRace]
-				expectedStarters.sort()
-				expectedStarterEntries = [Model.Entry(st[1], 0, st[0], False) for st in expectedStarters]
-				expectedStarterEntries.extend( expected )
-				expected = expectedStarterEntries
-				
-			expected = expected[:expectedShowMax]
-			
-			prevCatLeaders, nextCatLeaders = race.getCatPrevNextLeaders( tRace )
-			prevRiderPosition, nextRiderPosition = race.getPrevNextRiderPositions( tRace )
-			prevRiderGap, nextRiderGap = race.getPrevNextRiderGaps( tRace )
-			
-			backgroundColour = {}
-			textColour = {}
-			#------------------------------------------------------------------
-			# Highlight the missing riders.
-			tMissing = tRace - averageLapTime / 8.0
-			iNotMissing = 0
-			for r in (i for i, e in enumerate(expected) if e.t < tMissing):
-				for c in xrange(iColMax):
-					backgroundColour[(r, c)] = self.orangeColour
-				iNotMissing = r + 1
-				
-			#------------------------------------------------------------------
-			# Highlight the leaders in the expected list.
-			iBeforeLeader = None
-			# Highlight the leader by category.
-			catNextTime = {}
-			outsideTimeBound = set()
-			for r, e in enumerate(expected):
-				if e.num in nextCatLeaders:
-					backgroundColour[(r, iNoteCol)] = wx.GREEN
-					catNextTime[nextCatLeaders[e.num]] = e.t
-					if e.num == leaderNext:
-						backgroundColour[(r, iNumCol)] = wx.GREEN
-						iBeforeLeader = r
-				elif tRace < tRaceLength and race.isOutsideTimeBound(e.num):
-					backgroundColour[(r, iNoteCol)] = self.redColour
-					textColour[(r, iNoteCol)] = wx.WHITE
-					outsideTimeBound.add( e.num )
-			
-			data = [None] * iColMax
-			data[iNumCol] = ['{}'.format(e.num) for e in expected]
-			data[iTimeCol] = [formatTime(e.t - tRace) if e.lap > 0 else ('[%s]' % formatTime(max(0.0, e.t - tRace + 0.99999999)))\
-										for e in expected]
-			data[iLapCol] = ['{}'.format(e.lap) for e in expected]
-			def getNoteExpected( e ):
-				if e.lap == 0:
-					return _('Start')
-				try:
-					position = prevRiderPosition.get(e.num, -1) if e.t < catNextTime[race.getCategory(e.num)] else \
-							   nextRiderPosition.get(e.num, -1)
-				except KeyError:
-					position = prevRiderPosition.get(e.num, -1)
+		try:
+			externalInfo = race.excelLink.read( True )
+		except:
+			externalInfo = {}
 					
-				if position == 1:
-					return _('Lead')
-				elif e.t < tMissing:
-					return _('miss')
-				elif position >= 0:
-					return Utils.ordinal(position)
-				else:
-					return ' '
-			data[iNoteCol] = [getNoteExpected(e) for e in expected]
-			def getGapExpected( e ):
-				try:
-					gap = prevRiderGap.get(e.num, ' ') if e.t < catNextTime[race.getCategory(e.num)] else \
-							   nextRiderGap.get(e.num, ' ')
-				except KeyError:
-					gap = prevRiderGap.get(e.num, ' ')
-				return gap
-			data[iGapCol] = [getGapExpected(e) for e in expected]
-			def getName( e ):
-				info = externalInfo.get(e.num, {})
-				last = info.get('LastName','')
-				first = info.get('FirstName','')
-				if last and first:
-					return u'{}, {}'.format(last, first)
-				return last or first or u' '
-			data[iNameCol] = [getName(e) for e in expected]
+		tRace = race.curRaceTime()
+		tRaceLength = race.minutes * 60.0
+		
+		entries = interpolateNonZeroFinishers()
+		
+		isTimeTrial = race.isTimeTrial
+		if isTimeTrial:
+			# Update the start times in as recorded times.
+			startTimes = [(rider.firstTime, rider.num) for rider in race.riders.itervalues() \
+							if rider.status == Model.Rider.Finisher and rider.firstTime]
+			startTimes.sort()
 			
-			def getWave( e ):
-				try:
-					return race.getCategory( e.num ).fullname
-				except:
-					return u' '
-			data[iWaveCol] = [getWave(e) for e in expected]
+			# Find the next start time so we can update the display.
+			iClosestStartTime = bisect.bisect_left( startTimes, (tRace, 0) )
+			if iClosestStartTime < len(startTimes):
+				tClosestStartTime = startTimes[iClosestStartTime][0]
+				milliSeconds = max( 0, int((tClosestStartTime - tRace)*1000.0 + 10.0) )
+				if self.callLaterRefresh is None:
+					self.callLaterRefresh = wx.CallLater( milliSeconds, self.refresh )
+				self.callLaterRefresh.Restart( milliSeconds )
 			
-			self.quickExpected = expected
+			startTimeEntries = [Model.Entry(st[1], 0, st[0], False) for st in startTimes]
 			
-			self.expectedGrid.Set( data = data, backgroundColour = backgroundColour, textColour = textColour )
-			self.expectedGrid.AutoSizeColumns()
-			self.expectedGrid.AutoSizeRows()
+			# Add the rider firstTime to correct the times back to race times.
+			correctedEntries = [Model.Entry(e.num, e.lap, (race.riders[e.num].firstTime or 0.0) + e.t, e.interp) for e in entries]
+			startTimeEntries.extend( correctedEntries )
+			entries = startTimeEntries
+		
+		#------------------------------------------------------------------
+		# Select the interpolated entries around now.
+		leaderPrev, leaderNext = race.getPrevNextLeader( tRace )
+		averageLapTime = race.getAverageLapTime()
+		backSecs = averageLapTime
+		
+		expectedShowMax = 80
+		
+		tMin = tRace - max( race.getAverageLapTime(), 10*60.0 )
+		tMax = tRace + max( race.getAverageLapTime(), 10*60.0 )
+		iCur = bisect.bisect_left( entries, Model.Entry(0, 0, tRace, True) )
+		iLeft = max(0, iCur - expectedShowMax//2)
+		
+		seen = set()
+		expected = []
+		for i in xrange(iLeft, len(entries)):
+			e = entries[i]
+			if not e.interp or e.t < tMin or e.num in seen:
+				continue
+			if e.t > tMax:
+				break
+			seen.add( e.num )
+			expected.append( e )
+			if len(expected) >= expectedShowMax:
+				break
 			
-			if iBeforeLeader:
-				Utils.SetLabel( self.expectedName, u'{}: {} {}'.format(_('Expected'), iBeforeLeader, _('before race leader')) )
+		if isTimeTrial:
+			# Update the expected start times.
+			expectedStarters = [(rider.firstTime, rider.num) for rider in race.riders.itervalues() \
+							if rider.status == Model.Rider.Finisher and rider.firstTime and rider.firstTime >= tRace]
+			expectedStarters.sort()
+			expectedStarterEntries = [Model.Entry(st[1], 0, st[0], False) for st in expectedStarters]
+			expectedStarterEntries.extend( expected )
+			expected = expectedStarterEntries
+			
+		expected = expected[:expectedShowMax]
+		
+		prevCatLeaders, nextCatLeaders = race.getCatPrevNextLeaders( tRace )
+		prevRiderPosition, nextRiderPosition = race.getPrevNextRiderPositions( tRace )
+		prevRiderGap, nextRiderGap = race.getPrevNextRiderGaps( tRace )
+		
+		backgroundColour = {}
+		textColour = {}
+		#------------------------------------------------------------------
+		# Highlight the missing riders.
+		tMissing = tRace - averageLapTime / 8.0
+		iNotMissing = 0
+		for r in (i for i, e in enumerate(expected) if e.t < tMissing):
+			for c in xrange(iColMax):
+				backgroundColour[(r, c)] = self.orangeColour
+			iNotMissing = r + 1
+			
+		#------------------------------------------------------------------
+		# Highlight the leaders in the expected list.
+		iBeforeLeader = None
+		# Highlight the leader by category.
+		catNextTime = {}
+		outsideTimeBound = set()
+		for r, e in enumerate(expected):
+			if e.num in nextCatLeaders:
+				backgroundColour[(r, iNoteCol)] = wx.GREEN
+				catNextTime[nextCatLeaders[e.num]] = e.t
+				if e.num == leaderNext:
+					backgroundColour[(r, iNumCol)] = wx.GREEN
+					iBeforeLeader = r
+			elif tRace < tRaceLength and race.isOutsideTimeBound(e.num):
+				backgroundColour[(r, iNoteCol)] = self.redColour
+				textColour[(r, iNoteCol)] = wx.WHITE
+				outsideTimeBound.add( e.num )
+		
+		data = [None] * iColMax
+		data[iNumCol] = ['{}'.format(e.num) for e in expected]
+		data[iTimeCol] = [formatTime(e.t - tRace) if e.lap > 0 else ('[%s]' % formatTime(max(0.0, e.t - tRace + 0.99999999)))\
+									for e in expected]
+		data[iLapCol] = ['{}'.format(e.lap) for e in expected]
+		def getNoteExpected( e ):
+			if e.lap == 0:
+				return _('Start')
+			try:
+				position = prevRiderPosition.get(e.num, -1) if e.t < catNextTime[race.getCategory(e.num)] else \
+						   nextRiderPosition.get(e.num, -1)
+			except KeyError:
+				position = prevRiderPosition.get(e.num, -1)
+				
+			if position == 1:
+				return _('Lead')
+			elif e.t < tMissing:
+				return _('miss')
+			elif position >= 0:
+				return Utils.ordinal(position)
 			else:
-				Utils.SetLabel( self.expectedName, _('Expected') )
+				return ' '
+		data[iNoteCol] = [getNoteExpected(e) for e in expected]
+		def getGapExpected( e ):
+			try:
+				gap = prevRiderGap.get(e.num, ' ') if e.t < catNextTime[race.getCategory(e.num)] else \
+						   nextRiderGap.get(e.num, ' ')
+			except KeyError:
+				gap = prevRiderGap.get(e.num, ' ')
+			return gap
+		data[iGapCol] = [getGapExpected(e) for e in expected]
+		def getName( e ):
+			info = externalInfo.get(e.num, {})
+			last = info.get('LastName','')
+			first = info.get('FirstName','')
+			if last and first:
+				return u'{}, {}'.format(last, first)
+			return last or first or u' '
+		data[iNameCol] = [getName(e) for e in expected]
+		
+		def getWave( e ):
+			try:
+				return race.getCategory( e.num ).fullname
+			except:
+				return u' '
+		data[iWaveCol] = [getWave(e) for e in expected]
+		
+		self.quickExpected = expected
+		
+		self.expectedGrid.Set( data = data, backgroundColour = backgroundColour, textColour = textColour )
+		self.expectedGrid.AutoSizeColumns()
+		self.expectedGrid.AutoSizeRows()
+		
+		if iBeforeLeader:
+			Utils.SetLabel( self.expectedName, u'{}: {} {}'.format(_('Expected'), iBeforeLeader, _('before race leader')) )
+		else:
+			Utils.SetLabel( self.expectedName, _('Expected') )
+		
+		#------------------------------------------------------------------
+		# Update recorded.
+		recordedDisplayMax = 64
+		recorded = []
+		for e in reversed(entries):
+			if not e.interp and e.t <= tRace:
+				recorded.append( e )
+				if len(recorded) >= recordedDisplayMax:
+					break
+		recorded.reverse()			
+		recorded = self.quickRecorded = self.addGaps( recorded )
 			
-			#------------------------------------------------------------------
-			# Update recorded.
-			recordedDisplayMax = 64
-			recorded = [ e for e in entries if not e.interp and e.t <= tRace ]
-			recorded = recorded[-recordedDisplayMax:]
+		backgroundColour = {}
+		textColour = {}
+		outsideTimeBound = set()
+		# Highlight the leader in the recorded list.
+		for r, e in enumerate(recorded):
+			if e.isGap():
+				for i in xrange( iColMax ):
+					backgroundColour[(r, i)] = self.groupColour
+			if prevRiderPosition.get(e.num,-1) == 1:
+				backgroundColour[(r, iNoteCol)] = wx.GREEN
+				if e.num == leaderPrev:
+					backgroundColour[(r, iNumCol)] = wx.GREEN
+			elif tRace < tRaceLength and race.isOutsideTimeBound(e.num):
+				backgroundColour[(r, iNoteCol)] = self.redColour
+				textColour[(r, iNoteCol)] = wx.WHITE
+				outsideTimeBound.add( e.num )
+								
+		data = [None] * iColMax
+		data[iNumCol] = [u'{}'.format(e.num) if e.num > 0 else u' ' for e in recorded]
+		data[iTimeCol] = [
+			formatTime(e.t) if e.lap > 0 else
+			(u'{}'.format(formatTimeGap(e.t)) if e.t is not None else u' ') if e.isGap() else
+			u'[{}]'.format(formatTime(e.t)) for e in recorded]
+		data[iLapCol] = [u'{}'.format(e.lap) if e.lap else u' ' for e in recorded]
+		def getNoteHistory( e ):
+			if e.isGap():
+				return u'{}'.format(e.groupCount)
 			
-			recorded = self.quickRecorded = self.addGaps( recorded )
-				
-			backgroundColour = {}
-			textColour = {}
-			outsideTimeBound = set()
-			# Highlight the leader in the recorded list.
-			for r, e in enumerate(recorded):
-				if e.isGap():
-					for i in xrange( iColMax ):
-						backgroundColour[(r, i)] = self.groupColour
-				if prevRiderPosition.get(e.num,-1) == 1:
-					backgroundColour[(r, iNoteCol)] = wx.GREEN
-					if e.num == leaderPrev:
-						backgroundColour[(r, iNumCol)] = wx.GREEN
-				elif tRace < tRaceLength and race.isOutsideTimeBound(e.num):
-					backgroundColour[(r, iNoteCol)] = self.redColour
-					textColour[(r, iNoteCol)] = wx.WHITE
-					outsideTimeBound.add( e.num )
-									
-			data = [None] * iColMax
-			data[iNumCol] = [u'{}'.format(e.num) if e.num > 0 else u' ' for e in recorded]
-			data[iTimeCol] = [
-				formatTime(e.t) if e.lap > 0 else
-				(u'{}'.format(formatTimeGap(e.t)) if e.t is not None else u' ') if e.isGap() else
-				u'[{}]'.format(formatTime(e.t)) for e in recorded]
-			data[iLapCol] = [u'{}'.format(e.lap) if e.lap else u' ' for e in recorded]
-			def getNoteHistory( e ):
-				if e.isGap():
-					return u'{}'.format(e.groupCount)
-				
-				if e.lap == 0:
-					return _('Start')
+			if e.lap == 0:
+				return _('Start')
 
-				position = nextRiderPosition.get(e.num, -1)
-				if position == 1:
-					return _('Lead')
-				elif position >= 0:
-					return Utils.ordinal(position)
-				else:
-					return ' '
-			data[iNoteCol] = [getNoteHistory(e) for e in recorded]
-			def getGapHistory( e ):
-				if e.lap == 0:
-					return ' '
-				return prevRiderGap.get(e.num, ' ')
-			data[iGapCol] = [getGapHistory(e) for e in recorded]
-			data[iNameCol] = [getName(e) for e in recorded]
-			data[iWaveCol] = [getWave(e) for e in recorded]
+			position = nextRiderPosition.get(e.num, -1)
+			if position == 1:
+				return _('Lead')
+			elif position >= 0:
+				return Utils.ordinal(position)
+			else:
+				return ' '
+		data[iNoteCol] = [getNoteHistory(e) for e in recorded]
+		def getGapHistory( e ):
+			if e.lap == 0:
+				return ' '
+			return prevRiderGap.get(e.num, ' ')
+		data[iGapCol] = [getGapHistory(e) for e in recorded]
+		data[iNameCol] = [getName(e) for e in recorded]
+		data[iWaveCol] = [getWave(e) for e in recorded]
 
-			self.historyGrid.Set( data = data, backgroundColour = backgroundColour, textColour = textColour )
-			self.historyGrid.AutoSizeColumns()
-			self.historyGrid.AutoSizeRows()
-			
-			# Show the relevant cells in each table.
-			if recorded:
-				self.historyGrid.MakeCellVisible( len(recorded)-1, 0 )
-			if iNotMissing < self.expectedGrid.GetNumberRows():
-				self.expectedGrid.MakeCellVisible( iNotMissing, 0 )
+		self.historyGrid.Set( data = data, backgroundColour = backgroundColour, textColour = textColour )
+		self.historyGrid.AutoSizeColumns()
+		self.historyGrid.AutoSizeRows()
+		
+		# Show the relevant cells in each table.
+		if recorded:
+			self.historyGrid.MakeCellVisible( len(recorded)-1, 0 )
+		if iNotMissing < self.expectedGrid.GetNumberRows():
+			self.expectedGrid.MakeCellVisible( iNotMissing, 0 )
 
 if __name__ == '__main__':
 	app = wx.App(False)

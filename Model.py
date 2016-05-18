@@ -693,7 +693,7 @@ class Rider(object):
 		# Compute differences between times.
 		dTimes = [iTimes[i] - iTimes[i-1] for i in xrange(iStart, len(iTimes))]
 		dTimes.sort()
-		median = dTimes[int(len(dTimes) / 2)]
+		median = dTimes[len(dTimes) // 2]
 
 		mMin = median * Rider.pMin
 		mMax = median * Rider.pMax
@@ -1337,6 +1337,18 @@ class Race( object ):
 		else:
 			averageLapTime = 8.0 * 60.0	# Default to 8 minutes.
 		return averageLapTime
+		
+	@memoize
+	def getMedianLapTime( self ):
+		lapTimes = []
+		for r in self.riders.itervalues():
+			for i in xrange(1, len(r.times)):
+				lapTimes.append( r.times[i] - r.times[i-1] )
+		if not lapTimes:
+			return None
+		lapTimes.sort()
+		iMid = len(lapTimes) // 2
+		return lapTimes[iMid] if len(lapTimes) & 1 == 1 else (lapTimes[iMid] + lapTimes[iMid+1]) / 2.0
 
 	@memoize
 	def interpolate( self ):
