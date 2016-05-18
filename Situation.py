@@ -146,9 +146,6 @@ class SituationPanel(wx.PyPanel):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER,
 				name="GanttChartPanel" ):
-		"""
-		Default class constructor.
-		"""
 		wx.PyPanel.__init__(self, parent, id, pos, size, style, name)
 		self.SetBackgroundColour(wx.WHITE)
 		
@@ -625,6 +622,12 @@ class TopPanel( wx.Panel ):
 		hbs = wx.BoxSizer( wx.HORIZONTAL )
 		hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		hbs.Add( self.categoryChoice, flag=wx.ALL, border=4 )
+		hbs.Add( wx.StaticText(self, label=u'{} \u2190        {} \u2193'.format(
+				_('Drag Slider at Left to Zoom'),
+				_('Drag Slider at Top to Change Time'),
+			)),
+			flag=wx.ALL, border=4
+		)
 		vsTop.Add( hbs, 0, flag=wx.ALL, border=4 )
 		
 		self.SetSizer( vsTop )
