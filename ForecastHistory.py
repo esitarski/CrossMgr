@@ -14,17 +14,20 @@ from GetResults import GetResults
 from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, DeleteEntry, DoDNS, DoDNF, DoPull
 from FtpWriteFile import realTimeFtpPublish
 
+import itertools
+
 @Model.memoize
 def interpolateNonZeroFinishers():
 	results = GetResults( None, False )
 	Entry = Model.Entry
 	Finisher = Model.Rider.Finisher
-	entries = []
-	for r in results:
-		if r.status == Finisher:
-			entries.extend( [Entry(r.num, lap, t, r.interp[lap]) for lap, t in enumerate(r.raceTimes)] )
-	entries.sort( key=Entry.key )
-	return entries
+	return sorted(
+		itertools.chain(
+			*[[Entry(r.num, lap, t, r.interp[lap]) for lap, t in enumerate(r.raceTimes)]
+				for r in results if r.status == Finisher]
+		),
+		key=Entry.key
+	)
 	
 # Define columns for recorded and expected information.
 iNumCol, iNoteCol, iTimeCol, iLapCol, iGapCol, iNameCol, iWaveCol, iColMax = range(8)
