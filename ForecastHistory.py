@@ -1,6 +1,7 @@
 import wx
 import bisect
 import sys
+import itertools
 import Utils
 import Model
 from Utils import formatTime, formatTimeGap, SetLabel
@@ -14,17 +15,15 @@ from GetResults import GetResults
 from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, DeleteEntry, DoDNS, DoDNF, DoPull
 from FtpWriteFile import realTimeFtpPublish
 
-import itertools
-
 @Model.memoize
 def interpolateNonZeroFinishers():
 	results = GetResults( None, False )
 	Entry = Model.Entry
 	Finisher = Model.Rider.Finisher
 	return sorted(
-		itertools.chain(
-			*[[Entry(r.num, lap, t, r.interp[lap]) for lap, t in enumerate(r.raceTimes)]
-				for r in results if r.status == Finisher]
+		itertools.chain.from_iterable(
+			((Entry(r.num, lap, t, r.interp[lap]) for lap, t in enumerate(r.raceTimes))
+				for r in results if r.status == Finisher)
 		),
 		key=Entry.key
 	)

@@ -626,12 +626,14 @@ def GetResults( category, getExternalData = False ):
 @Model.memoize
 def GetEntries( category ):
 	results = GetResults( category, getExternalData=False )
-	entries = []
 	Entry = Model.Entry
-	for rr in results:
-		entries.extend( [Entry(rr.num, i, t, rr.interp[i] ) for i, t in enumerate(rr.raceTimes)] )
-	entries.sort( key=Entry.key )
-	return entries
+	return sorted(
+		itertools.chain.from_iterable(
+			((Entry(r.num, lap, t, r.interp[lap]) for lap, t in enumerate(r.raceTimes))
+				for r in results )
+		),
+		key=Entry.key
+	)
 
 @Model.memoize
 def GetLastFinisherTime():
