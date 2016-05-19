@@ -156,7 +156,8 @@ class ChoosePrintCategoriesPodiumDialog( wx.Dialog ):
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		
-		title = wx.StaticText( self, label = _('Click to select Categories.  Use Ctrl-Click to select Multiple Categories.') )
+		title = wx.StaticText( self, label = u'{}\n{}'.format(
+			_('Click to select Categories.'), _('Use Ctrl-Click to select Multiple Categories.')) )
 		
 		self.selectAllButton = wx.Button( self, label=_('Select All') )
 		self.selectAllButton.Bind( wx.EVT_BUTTON, self.onSelectAll )
@@ -171,10 +172,11 @@ class ChoosePrintCategoriesPodiumDialog( wx.Dialog ):
 		
 		self.includePrimesInPrintoutCheckBox = wx.CheckBox( self, label = _('Include Primes in Printout') )
 		if race:
-			self.includePrimesInPrintoutCheckBox.Show( bool(getattr(race, 'primes', None)) )
+			self.includePrimesInPrintoutCheckBox.Enable( bool(getattr(race, 'primes', None)) )
 			self.includePrimesInPrintoutCheckBox.SetValue( getattr(race, 'includePrimesInPrintout', True) )
 		else:
-			self.includePrimesInPrintoutCheckBox.SetValue( True )
+			self.includePrimesInPrintoutCheckBox.SetValue( False )
+			self.includePrimesInPrintoutCheckBox.Enable( False )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.podiumPositionsLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT, border=4 )
@@ -191,6 +193,7 @@ class ChoosePrintCategoriesPodiumDialog( wx.Dialog ):
 		vs.Add( self.list, 1, flag = wx.ALL|wx.EXPAND, border = 4 )
 		
 		vs.Add( hs, flag = wx.EXPAND|wx.ALL, border = 4 )
+		vs.Add( self.includePrimesInPrintoutCheckBox, flag = wx.EXPAND|wx.ALL, border = 4 )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.okButton )
@@ -452,13 +455,22 @@ class CrossMgrPodiumPrintout( CrossMgrPrintout ):
 					page += 1
 					pageNumber += 1
 					self.pageInfo[page] = [c, i, min(categoryLength, rowDrawCount), pageNumber, pageNumberTotal, categoryLength]
+
+		race = Model.race
+		if race and getattr(race, 'primes', None) and getattr(race, 'includePrimesInPrintout', True):
+			page += 1
+			pageNumber += 1
+			self.pageInfo[page] = ['Primes', 0, len(race.primes), 1, 1, len(race.primes)]
 		
 		return (1, page, 1, page)
 	
 	def prepareGrid( self, page ):
 		exportGrid = ExportGrid()
 		with UnstartedRaceWrapper():
-			exportGrid.setResultsOneList( self.pageInfo[page][0], True, showLapTimes=False )
+			if self.pageInfo[page][0] == 'Primes':
+				exportGrid = ExportGrid( **Primes.GetGrid() )
+			else:
+				exportGrid.setResultsOneList( self.pageInfo[page][0], True, showLapTimes=False )
 		exportGrid.title = u'\n'.join( [_('Podium Results'), u'', exportGrid.title] )
 		return exportGrid
 		

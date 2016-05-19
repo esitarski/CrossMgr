@@ -27,7 +27,7 @@ def interpolateNonZeroFinishers():
 		),
 		key=Entry.key
 	)
-
+	
 # Define columns for recorded and expected information.
 iNumCol, iNoteCol, iTimeCol, iLapCol, iGapCol, iNameCol, iWaveCol, iColMax = range(8)
 colnames = [None] * iColMax
