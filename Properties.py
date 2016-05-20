@@ -858,11 +858,11 @@ class BatchPublishProperties( wx.Panel ):
 			if doFtp and race.urlFull and race.urlFull != 'http://':
 				webbrowser.open( os.path.basename(race.urlFull) + '/' + os.path.basename(fname), new = 0, autoraise = True )
 			else:
-				webbrowser.open( fname, new = 0, autoraise = True )
+				Utils.LaunchApplication( fname )
 		else:
 			pngFiles = os.path.join( os.path.dirname(Utils.getFileName()), 'FaceBookPNG', '*.png' )
 			for fname in glob.glob(pngFiles):
-				webbrowser.open( fname, new = 0, autoraise = True )
+				Utils.LaunchApplication( fname )
 				return
 	
 	def onSelect( self, iAttr ):

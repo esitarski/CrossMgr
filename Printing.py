@@ -307,19 +307,23 @@ class CrossMgrPrintout( wx.Printout ):
 
 	def prepareGrid( self, page ):
 		showLapTimes = (not Model.race) or getattr( Model.race, 'includeLapTimesInPrintout', True )
-		with UnstartedRaceWrapper():
-			if self.pageInfo[page][0] == 'Primes':
-				exportGrid = ExportGrid( **Primes.GetGrid() )
-			else:
-				exportGrid = ExportGrid()
-				exportGrid.setResultsOneList( self.pageInfo[page][0], True, showLapTimes=showLapTimes )
+		try:
+			with UnstartedRaceWrapper():
+				if self.pageInfo[page][0] == 'Primes':
+					exportGrid = ExportGrid( **Primes.GetGrid() )
+				else:
+					exportGrid = ExportGrid()
+					exportGrid.setResultsOneList( self.pageInfo[page][0], True, showLapTimes=showLapTimes )
+		except KeyError:
+			return ExportGrid()
 		return exportGrid
 		
 	def OnPrintPage(self, page):
 		if not self.pageInfo:
 			return False
 		exportGrid = self.prepareGrid( page )
-		exportGrid.drawToFitDC( *([self.GetDC()] + self.pageInfo[page][1:-1]) )
+		if exportGrid:
+			exportGrid.drawToFitDC( *([self.GetDC()] + self.pageInfo[page][1:-1]) )
 		return True
 
 class CrossMgrPrintoutPNG( CrossMgrPrintout ):
@@ -466,11 +470,14 @@ class CrossMgrPodiumPrintout( CrossMgrPrintout ):
 	
 	def prepareGrid( self, page ):
 		exportGrid = ExportGrid()
-		with UnstartedRaceWrapper():
-			if self.pageInfo[page][0] == 'Primes':
-				exportGrid = ExportGrid( **Primes.GetGrid() )
-			else:
-				exportGrid.setResultsOneList( self.pageInfo[page][0], True, showLapTimes=False )
+		try:
+			with UnstartedRaceWrapper():
+				if self.pageInfo[page][0] == 'Primes':
+					exportGrid = ExportGrid( **Primes.GetGrid() )
+				else:
+					exportGrid.setResultsOneList( self.pageInfo[page][0], True, showLapTimes=False )
+		except KeyError:
+			return ExportGrid()
 		exportGrid.title = u'\n'.join( [_('Podium Results'), u'', exportGrid.title] )
 		return exportGrid
 		

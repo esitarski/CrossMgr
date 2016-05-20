@@ -77,7 +77,7 @@ class UnmatchedTagsGantt( wx.Panel ):
 		
 		try:
 			wb.save( xlFName )
-			webbrowser.open( xlFName, new = 2, autoraise = True )
+			Utils.LaunchApplication( xlFName )
 			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
 		except IOError:
 			Utils.MessageOK(self,

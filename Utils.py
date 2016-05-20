@@ -571,7 +571,7 @@ elif firefoxProg:
 else:
 	def showHelp( url ):
 		url = os.path.join( getHelpFolder(), url )
-		webbrowser.open( url, new = 0, autoraise = True )
+		Utils.LaunchApplication( url )
 
 #------------------------------------------------------------------------
 
@@ -768,6 +768,14 @@ def GetDefaultHost():
 	
 	return DEFAULT_HOST	
 
+def LaunchApplication( fname ):
+	if os.name is 'nt':
+		subprocess.call(('cmd', '/C', 'start', '', fname))
+	elif sys.platform.startswith('darwin'):
+		subprocess.call(('open', fname))
+	else:
+		subprocess.call( 'xdg-open', fname )
+	
 if __name__ == '__main__':
 	initTranslation()
 	app = wx.App(False)

@@ -869,7 +869,7 @@ class MainWin( wx.Frame ):
 			return
 		
 		try:
-			webbrowser.open( excelLink.fileName, new = 2, autoraise = True )
+			Utils.LaunchApplication( excelLink.fileName )
 		except Exception as e:
 			pass
 		
@@ -1378,7 +1378,7 @@ class MainWin( wx.Frame ):
 		
 		if success and not silent:
 			if fname and self.launchExcelAfterPublishingResults:
-				webbrowser.open( fname, new = 2, autoraise = True )
+				Utils.LaunchApplication( fname )
 			if fname:
 				Utils.MessageOK( self, u'{}:\n\n    {}'.format(_('PDF file written to'), fname), _('PDF Publish') )
 
@@ -1418,7 +1418,7 @@ class MainWin( wx.Frame ):
 		
 		if success and not silent:
 			if fname and self.launchExcelAfterPublishingResults:
-				webbrowser.open( fname, new = 2, autoraise = True )
+				Utils.LaunchApplication( fname )
 			Utils.MessageOK( self, u'{}:\n\n    {}'.format(_('Results written as PNG files to'), dir), _('Facebook Publish') )
 
 	@logCall
@@ -1497,7 +1497,7 @@ class MainWin( wx.Frame ):
 		try:
 			wb.save( xlFName )
 			if self.launchExcelAfterPublishingResults:
-				webbrowser.open( xlFName, new = 2, autoraise = True )
+				Utils.LaunchApplication( xlFName )
 			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
 		except IOError:
 			Utils.MessageOK(self,
@@ -1820,7 +1820,7 @@ class MainWin( wx.Frame ):
 			with io.open(fname, 'w', encoding='utf-8') as fp:
 				fp.write( html )
 			if not silent:
-				webbrowser.open( fname, new = 0, autoraise = True )
+				Utils.LaunchApplication( fname )
 				Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Html Race Animation written to'), fname), _('Html Write'))
 		except:
 			Utils.MessageOK(self, u'{} ({}).'.format(_('Cannot write HTML file'), fname),
@@ -2050,7 +2050,7 @@ class MainWin( wx.Frame ):
 			zf.writestr( courseFName, geoTrack.asKmlTour(race.name) )
 			zf.close()
 			
-		webbrowser.open( fname, new = 0, autoraise = True )
+		Utils.LaunchApplication( fname )
 		Utils.MessageOK(self, u'{}:\n\n   {}\n\n{}'.format(_('Course Virtual Tour written to KMZ file'), fname, _('Google Earth Launched.')), _('KMZ Write'))
 	
 	@logCall
@@ -2081,7 +2081,7 @@ class MainWin( wx.Frame ):
 		try:
 			with io.open(fname, 'w', encoding='utf-8') as fp:
 				fp.write( html )
-			webbrowser.open( fname, new = 0, autoraise = True )
+			Utils.LaunchApplication( fname )
 			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Course Preview written to'), fname), _('Html Write'))
 		except:
 			Utils.MessageOK(self, u'{} ({}).'.format(_('Cannot write HTML file'), fname),
@@ -2196,7 +2196,7 @@ class MainWin( wx.Frame ):
 		try:
 			with io.open(fname, 'w', encoding='utf-8') as fp:
 				fp.write( html )
-			webbrowser.open( fname, new = 0, autoraise = True )
+			Utils.LaunchApplication( fname )
 			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Html Raw Data written to'), fname), _('Html Write'))
 		except:
 			Utils.MessageOK(self,
@@ -3021,7 +3021,7 @@ class MainWin( wx.Frame ):
 		
 		try:
 			wb.save( xlFName )
-			webbrowser.open( xlFName, new = 2, autoraise = True )
+			Utils.LaunchApplication( xlFName )
 			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
 		except IOError:
 			Utils.MessageOK(self,
@@ -3050,7 +3050,7 @@ class MainWin( wx.Frame ):
 			wb.save( xlFName )
 			if not silent:
 				if self.launchExcelAfterPublishingResults:
-					webbrowser.open( xlFName, new = 2, autoraise = True )
+					Utils.LaunchApplication( xlFName )
 				Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
 		except IOError:
 			Utils.MessageOK(self,
@@ -3106,7 +3106,7 @@ class MainWin( wx.Frame ):
 			wb.save( xlFName )
 			if not silent:
 				if self.launchExcelAfterPublishingResults:
-					webbrowser.open( xlFName, new = 2, autoraise = True )
+					Utils.LaunchApplication( xlFName )
 				Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
 		except IOError:
 			Utils.MessageOK(self,
