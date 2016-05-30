@@ -23,6 +23,9 @@ def FtpWriteFile( host, user='anonymous', passwd='anonymous@', timeout=30, serve
 	if isinstance(fname, basestring):
 		fname = [fname]
 	
+	# This stops the ftputils from going into an infinite loop.
+	serverPath = serverPath.strip().lstrip('/').lstrip('\\')
+	
 	'''
 	if callback:
 		print 'FtpWriteFile: called with callback'
@@ -77,6 +80,7 @@ def FtpUploadFile( fname=None, callback=None ):
 			callback	= callback,
 		)
 	except Exception as e:
+		Utils.logException( e, sys.exc_info() )
 		Utils.writeLog( 'UploadFile: Error: {}'.format(e) )
 		return e
 		

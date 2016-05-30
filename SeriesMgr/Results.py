@@ -22,6 +22,8 @@ import xlwt
 import io
 import re
 import webbrowser
+import subprocess
+import platform
 
 reNoDigits = re.compile( '[^0-9]' )
 
@@ -638,23 +640,32 @@ class Results(wx.Panel):
 		self.statsLabel = wx.StaticText( self, label='   /   ' )
 		self.refreshButton = wx.Button( self, label='Refresh' )
 		self.refreshButton.Bind( wx.EVT_BUTTON, lambda event, self = self: self.refresh() )
-		self.exportToHtml = wx.Button( self, label='Export to Html' )
-		self.exportToHtml.Bind( wx.EVT_BUTTON, self.onExportToHtml )
-		self.exportToFtp = wx.Button( self, label='Export to Html with FTP' )
-		self.exportToFtp.Bind( wx.EVT_BUTTON, self.onExportToFtp )
-		self.exportToExcel = wx.Button( self, label='Export to Excel' )
-		self.exportToExcel.Bind( wx.EVT_BUTTON, self.onExportToExcel )
+		self.publishToHtml = wx.Button( self, label='Publish to Html' )
+		self.publishToHtml.Bind( wx.EVT_BUTTON, self.onPublishToHtml )
+		self.publishToFtp = wx.Button( self, label='Publish to Html with FTP' )
+		self.publishToFtp.Bind( wx.EVT_BUTTON, self.onPublishToFtp )
+		self.publishToExcel = wx.Button( self, label='Publish to Excel' )
+		self.publishToExcel.Bind( wx.EVT_BUTTON, self.onPublishToExcel )
+		
+		self.postPublishCmdLabel = wx.StaticText( self, label='Post Publish Cmd:' )
+		self.postPublishCmd = wx.TextCtrl( self, size=(300,-1) )
+		self.postPublishExplain = wx.StaticText( self, label='Command to run after publish.  Use "%*" for filenames (eg. "cp %* dirname")' )
 
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.categoryLabel, 0, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT|wx.RIGHT, border = 4 )
+		hs.Add( self.categoryLabel, 0, flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALL, border = 4 )
 		hs.Add( self.categoryChoice, 0, flag=wx.ALL, border = 4 )
 		hs.Add( self.statsLabel, 0, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT|wx.RIGHT, border = 4 )
 		hs.AddStretchSpacer()
 		hs.Add( self.refreshButton, 0, flag=wx.ALL, border = 4 )
 		hs.AddSpacer( 52 )
-		hs.Add( self.exportToHtml, 0, flag=wx.ALL, border = 4 )
-		hs.Add( self.exportToFtp, 0, flag=wx.ALL, border = 4 )
-		hs.Add( self.exportToExcel, 0, flag=wx.ALL, border = 4 )
+		hs.Add( self.publishToHtml, 0, flag=wx.ALL, border = 4 )
+		hs.Add( self.publishToFtp, 0, flag=wx.ALL, border = 4 )
+		hs.Add( self.publishToExcel, 0, flag=wx.ALL, border = 4 )
+		
+		hs2 = wx.BoxSizer( wx.HORIZONTAL )
+		hs2.Add( self.postPublishCmdLabel, 0, flag=wx.ALIGN_CENTRE_VERTICAL )
+		hs2.Add( self.postPublishCmd, 0, flag=wx.ALIGN_CENTRE_VERTICAL )
+		hs2.Add( self.postPublishExplain, 0, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=4 )
 		
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.DisableDragRowSize()
@@ -670,6 +681,7 @@ class Results(wx.Panel):
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		
 		sizer.Add(hs, 0, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border = 6 )
+		sizer.Add(hs2, 0, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT, border = 6 )
 		sizer.Add(self.grid, 1, flag=wx.EXPAND|wx.ALL, border = 6)
 		self.SetSizer(sizer)
 	
@@ -730,6 +742,9 @@ class Results(wx.Panel):
 		scoreByTime = model.scoreByTime
 		scoreByPercent = model.scoreByPercent
 		HeaderNames = getHeaderNames()
+		
+		model = SeriesModel.model
+		self.postPublishCmd.SetValue( model.postPublishCmd )
 		
 		wait = wx.BusyCursor()
 		self.raceResults = model.extractAllRaceResults()
@@ -828,8 +843,9 @@ class Results(wx.Panel):
 		
 		self.GetSizer().Layout()
 		
-	def onExportToExcel( self, event ):
+	def onPublishToExcel( self, event ):
 		model = SeriesModel.model
+		
 		scoreByTime = model.scoreByTime
 		scoreByPercent = model.scoreByPercent
 		HeaderNames = getHeaderNames()
@@ -920,19 +936,22 @@ class Results(wx.Panel):
 		try:
 			wb.save( xlfileName )
 			webbrowser.open( xlfileName, new = 2, autoraise = True )
-			Utils.MessageOK(self, 'Excel file written to:\n\n   %s' % xlfileName, 'Excel Write')
+			Utils.MessageOK(self, 'Excel file written to:\n\n   {}'.format(xlfileName), 'Excel Write')
+			self.callPostPublishCmd( xlfileName )
 		except IOError:
 			Utils.MessageOK(self,
-						'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % xlfileName,
+						'Cannot write "{}".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.'.format(xlfileName),
 						'Excel File Error', iconMask=wx.ICON_ERROR )
 	
-	def onExportToHtml( self, event ):
+	def onPublishToHtml( self, event ):
 		if Utils.mainWin:
 			if not Utils.mainWin.fileName:
 				Utils.MessageOK( self, 'You must save your Series to a file first.', 'Save Series' )
 				return
 		
 		htmlfileName = getHtmlFileName()
+		model = SeriesModel.model
+		model.postPublishCmd = self.postPublishCmd.GetValue().strip()
 
 		try:
 			getHtml( htmlfileName )
@@ -942,14 +961,16 @@ class Results(wx.Panel):
 			Utils.MessageOK(self,
 						'Cannot write "%s".\n\nCheck if this file is open.\nIf so, close it, and try again.' % htmlfileName,
 						'Html File Error', iconMask=wx.ICON_ERROR )
+		self.callPostPublishCmd( htmlfileName )
 	
-	def onExportToFtp( self, event ):
+	def onPublishToFtp( self, event ):
 		if Utils.mainWin:
 			if not Utils.mainWin.fileName:
 				Utils.MessageOK( self, 'You must save your Series to a file first.', 'Save Series' )
 				return
 		
 		htmlfileName = getHtmlFileName()
+		
 		try:
 			getHtml( htmlfileName )
 		except IOError:
@@ -958,9 +979,35 @@ class Results(wx.Panel):
 		html = io.open( htmlfileName, 'r', encoding='utf-8', newline='' ).read()
 		with FtpWriteFile.FtpPublishDialog( self, html=html ) as dlg:
 			dlg.ShowModal()
+		self.callPostPublishCmd( htmlfileName )
 	
 	def commit( self ):
-		pass
+		model = SeriesModel.model
+		if model.postPublishCmd != self.postPublishCmd.GetValue().strip():
+			model.postPublishCmd = self.postPublishCmd.GetValue().strip()
+			model.setChanged()
+
+	def callPostPublishCmd( self, fname ):
+		self.commit()
+		postPublishCmd = SeriesModel.model.postPublishCmd
+		if postPublishCmd and fname:
+			allFiles = [fname]
+			if platform.system() == 'Windows':
+				files = ' '.join('""{}""'.format(f) for f in allFiles)
+			else:
+				files = ' '.join('"{}"'.format(f) for f in allFiles)
+
+			if '%*' in postPublishCmd:
+				cmd = postPublishCmd.replace('%*', files)
+			else:
+				cmd = ' '.join( [postPublishCmd, files] )
+			
+			try:
+				subprocess.check_call( cmd, shell=True )
+			except subprocess.CalledProcessError as e:
+				Utils.MessageOK( mainWin, u'{}\n\n    {}\n{}: {}'.format('Post Publish Cmd Error', e, 'return code', e.returncode), _('Post Publish Cmd Error')  )
+			except Exception as e:
+				Utils.MessageOK( mainWin, u'{}\n\n    {}'.format('Post Publish Cmd Error', e), 'Post Publish Cmd Error'  )
 		
 ########################################################################
 

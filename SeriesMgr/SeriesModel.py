@@ -129,6 +129,7 @@ class SeriesModel( object ):
 	upgradePaths = []
 	upgradeFactors = []
 	showLastToFirst = True		# If True, show the latest races first in the output.
+	postPublishCmd = ''
 
 	def __init__( self ):
 		self.name = '<Series Name>'

@@ -1356,10 +1356,10 @@ class MainWin( wx.Frame ):
 					if fname is None:
 						fname = printout.lastFName
 				except Exception as e:
-					logException( e, sys.exc_info() )
 					Utils.MessageOK(self,
 								u'{}:\n\n    {}.'.format(_('Error creating PDF files'), e),
 								_('PDF File Error'), iconMask=wx.ICON_ERROR )
+					logException( e, sys.exc_info() )
 					success = False
 					break
 
