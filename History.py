@@ -2,6 +2,7 @@ import wx
 import os
 import re
 from string import Template
+import operator
 import Model
 import Utils
 import ColGrid
@@ -436,7 +437,7 @@ class History( wx.Panel ):
 		
 		if race.isTimeTrial:
 			entries = [Model.Entry(e.num, e.lap, (race.riders[e.num].firstTime or 0.0) + e.t, e.interp) for e in entries]
-			entries.sort( key = lambda e: (e.t, e.num) )
+			entries.sort( key = operator.attrgetter('t', 'num') )
 		
 		# Collect the number and times for all entries so we can compute lap times.
 		numTimes = {(e.num, e.lap) : e.t for e in entries}

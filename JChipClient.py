@@ -9,6 +9,7 @@ import sys
 import time
 import socket
 import random
+import operator
 import datetime
 import subprocess
 from openpyxl.workbook import Workbook
@@ -344,7 +345,7 @@ for n in nums:
 	lapTime = random.normalvariate( mean, mean/(varFactor * 4.0) )
 	for lap in xrange(0, lapMax+1):
 		numLapTimes.append( (n, lap, lapTime*lap) )
-numLapTimes.sort( key = lambda x: (x[1], x[2]) )	# Sort by lap, then race time.
+numLapTimes.sort( key = operator.itemgetter(1, 2) )	# Sort by lap, then race time.
 
 #------------------------------------------------------------------------------	
 # Create a socket (SOCK_STREAM means a TCP socket)

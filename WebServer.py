@@ -90,17 +90,20 @@ class ContentBuffer( object ):
 	
 	def _updateFile( self, fname, forceUpdate=False ):
 		if not self.fnameRace:
-			return None
+			return None		
 		
 		fnameBase = os.path.basename(fname).split('?')[0]
-		if not (reCrossMgrHtml.match(fnameBase) or
-				fnameBase in ('Simulation.html', 'Simulation_TTCountdown.html', 'Simulation_TTStartList.html' )):
-			return None
+		race = Model.race
+		if getattr(race, 'simulation', False):
+			if fnameBase not in ('Simulation.html', 'Simulation_TTCountdown.html', 'Simulation_TTStartList.html'):
+				return None
+		else:
+			if not reCrossMgrHtml.match(fnameBase):
+				return None
 		
 		cache = self.fileCache.get( fname, {} )
 		
 		fnameFull = os.path.join( self.dirRace, fname )
-		race = Model.race
 		if race and self.fnameRace and coreName(self.fnameRace) == coreName(fnameFull):
 			if race.lastChangedTime <= cache.get('mtime',0.0):
 				return cache

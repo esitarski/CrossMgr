@@ -1339,11 +1339,10 @@ class Race( object ):
 		return averageLapTime
 		
 	@memoize
-	def getMedianLapTime( self ):
-		lapTimes = []
-		for r in self.riders.itervalues():
-			for i in xrange(1, len(r.times)):
-				lapTimes.append( r.times[i] - r.times[i-1] )
+	def getMedianLapTime( self, category=None ):
+		lapTimes = itertools.chain.from_iterable( [b-a for b, a in zip(r.times[1:], r.times)]
+			for r in self.riders.itervalue() if self.inCategory(r.num, category) )
+		
 		if not lapTimes:
 			return None
 		lapTimes.sort()
@@ -1799,7 +1798,7 @@ class Race( object ):
 			self._buildCategoryCache()
 		
 		categories = [c for c in self.categories.itervalues() if c.active and c.catType != Category.CatCustom and c.sequence > category.sequence]
-		categories.sort( key = lambda c: c.sequence )
+		categories.sort( key = operator.attrgetter('sequence') )
 		
 		unionNums = set()
 		for c in categories:

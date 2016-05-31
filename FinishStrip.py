@@ -3,6 +3,7 @@ import os
 import sys
 import glob
 import math
+import operator
 import Utils
 import Model
 from SendPhotoRequests import getPhotoDirName
@@ -173,7 +174,7 @@ class FinishStrip( wx.Panel ):
 			bitmaps[t] = wx.BitmapFromImage( image )
 		
 		self.timeBitmaps = [(t, bm) for t, bm in bitmaps.iteritems()]
-		self.timeBitmaps.sort( key=lambda tb: tb[0] )
+		self.timeBitmaps.sort( key=operator.itemgetter(0) )
 		
 	def OnErase( self, event ):
 		pass

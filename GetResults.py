@@ -5,6 +5,7 @@ import sys
 import copy
 import Utils
 import itertools
+import operator
 
 from ReadSignOnSheet import IgnoreFields, SyncExcelLink
 statusSortSeq = Model.Rider.statusSortSeq
@@ -142,7 +143,7 @@ def FixRelegations( riderResults ):
 			relegatedResults[posCur] = rr
 			posCur += 1
 	
-	riderResults = [v[1] for v in sorted(relegatedResults.iteritems(), key = lambda x: x[0])]
+	riderResults = [v[1] for v in sorted(relegatedResults.iteritems(), key = operator.itemgetter(0))]
 	for pos, rr in enumerate(riderResults):
 		if rr.status != Finisher:
 			break
