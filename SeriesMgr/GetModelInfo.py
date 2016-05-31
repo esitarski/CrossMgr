@@ -2,6 +2,7 @@ import os
 import math
 import cPickle as pickle
 import datetime
+import operator
 from collections import defaultdict
 
 import Model
@@ -394,7 +395,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			for rider, finishes in riderFinishes.iteritems():
 				iTimes = [(i, t) for i, t in enumerate(finishes) if t is not None]
 				if len(iTimes) > bestResultsToConsider:
-					iTimes.sort( key=lambda x: (x[1], x[0]) )
+					iTimes.sort( key=operator.itemgetter(1, 0) )
 					for i, t in iTimes[bestResultsToConsider:]:
 						riderTFinish[rider] -= t
 						v = riderResults[rider][i]
