@@ -408,11 +408,11 @@ class NumKeypad( wx.Panel ):
 			self.raceHUD.SetData()
 			if Utils.mainWin:
 				lapCounter = []
-				if all( category.getNumLaps() for category in race.getCategories(startWaveOnly=True) ):
-					lapCounter = [(u'{}'.format(category.getNumLaps()),False) for category in race.getCategories(startWaveOnly=True)]
+				if all( race.getNumLapsFromCategory(category) for category in race.getCategories(startWaveOnly=True) ):
+					lapCounter = [(u'{}'.format(race.getNumLapsFromCategory(category)),False) for category in race.getCategories(startWaveOnly=True)]
 				else:
-					lapCounter = [(u'{} min'.format(race.minutes),False)] + [(u'{}'.format(category.getNumLaps()),False)
-						for category in race.getCategories(startWaveOnly=True) if category.getNumLaps()]
+					lapCounter = [(u'{} min'.format(race.minutes),False)] + [(u'{}'.format(race.getNumLapsFromCategory(category)),False)
+						for category in race.getCategories(startWaveOnly=True) if race.getNumLapsFromCategory(category)]
 				Utils.mainWin.updateLapCounter(lapCounter)
 			return
 
@@ -429,7 +429,7 @@ class NumKeypad( wx.Panel ):
 		secondsBeforeLeaderToFlipLapCounter = race.secondsBeforeLeaderToFlipLapCounter + 1.0
 		
 		def appendLapCounter( leaderCategory, category, lapCur, lapMax, tLeader=sys.float_info.max ):
-			if race.isTimeTrial or not(category == leaderCategory or category.getNumLaps()):
+			if race.isTimeTrial or not(category == leaderCategory or race.getNumLapsFromCategory(category)):
 				return
 			lapsToGo = max( 0, lapMax - lapCur )
 			if secondsBeforeLeaderToFlipLapCounter < tLeader <= secondsBeforeLeaderToFlipLapCounter+5.0:

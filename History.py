@@ -420,7 +420,7 @@ class History( wx.Panel ):
 					maxLaps += 2
 		else:
 			try:
-				maxLaps = category.getNumLaps()
+				maxLaps = race.getNumLapsFromCategory(category)
 			except Exception as e:
 				maxLaps = race.numLaps
 			doLapsToGo = True

@@ -300,6 +300,7 @@ class Categories( wx.Panel ):
 			(_('Numbers'),				'catStr'),
 			(_('Start\nOffset'),		'startOffset'),
 			(_('Race\nLaps'),			'numLaps'),
+			(_('Race\nMinutes'),		'raceMinutes'),
 			(_('Lapped\nRiders\nContinue'),	'lappedRidersMustContinue'),
 			(_('Distance'),				'distance'),
 			(_('Dist.\nBy'),			'distanceType'),
@@ -366,6 +367,11 @@ class Categories( wx.Panel ):
 				self.dependentCols.add( col )
 				
 			elif fieldName == 'numLaps':
+				attr.SetEditor( wx.grid.GridCellNumberEditor() )
+				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+				self.dependentCols.add( col )
+				
+			elif fieldName == 'raceMinutes':
 				attr.SetEditor( wx.grid.GridCellNumberEditor() )
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 				self.dependentCols.add( col )
@@ -566,7 +572,7 @@ and remove them from other categories.'''),
 		self.refresh()
 		
 	def _setRow( self, r, active, name, catStr, startOffset = '00:00:00',
-					numLaps = None,
+					numLaps = None, raceMinutes = None,
 					lappedRidersMustContinue = False,
 					distance = None, distanceType = None,
 					firstLapDistance = None, gender = None,
@@ -586,6 +592,7 @@ and remove them from other categories.'''),
 		self.grid.SetCellValue( r, self.iCol['catStr'], catStr )
 		self.grid.SetCellValue( r, self.iCol['startOffset'], startOffset )
 		self.grid.SetCellValue( r, self.iCol['numLaps'], u'{}'.format(numLaps) if numLaps else '' )
+		self.grid.SetCellValue( r, self.iCol['raceMinutes'], u'{}'.format(raceMinutes) if raceMinutes else '' )
 		self.grid.SetCellValue( r, self.iCol['lappedRidersMustContinue'], u'1' if lappedRidersMustContinue else u'0' )
 		self.grid.SetCellValue( r, self.iCol['rule80Time'], '' )
 		self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '' )
@@ -730,7 +737,8 @@ and remove them from other categories.'''),
 								catStr				= cat.catStr,
 								catType				= cat.catType,
 								startOffset			= cat.startOffset,
-								numLaps				= cat.numLaps,
+								numLaps				= cat._numLaps,
+								raceMinutes			= cat.raceMinutes,
 								lappedRidersMustContinue = getattr(cat, 'lappedRidersMustContinue', False),
 								distance			= getattr(cat, 'distance', None),
 								distanceType		= getattr(cat, 'distanceType', Model.Category.DistanceByLap),

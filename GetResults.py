@@ -220,8 +220,8 @@ def GetResultsCore( category ):
 				continue
 			
 			# If the category num laps is specified, use that.
-			if c.getNumLaps():
-				categoryWinningLaps[c] = c.getNumLaps()
+			if race.getNumLapsFromCategory(c):
+				categoryWinningLaps[c] = race.getNumLapsFromCategory(c)
 				categoryWinningTime[c] = times[min(len(times)-1, categoryWinningLaps[c])]
 			else:
 				# Otherwise, set the number of laps by the winner's time closest to the race finish time.
@@ -316,7 +316,7 @@ def GetResultsCore( category ):
 						for i, t in enumerate(rr.lapTimes):
 							tCur += t
 							raceSpeeds.append( DefaultSpeed if tCur <= 0.0 else (riderCategory.getDistanceAtLap(i+1) / (tCur / (60.0*60.0))) )
-						rr.speed = '%.2f %s' % (raceSpeeds[-1], ['km/h', 'mph'][getattr(race, 'distanceUnit', 0)] )
+						rr.speed = '{:.2f} {}'.format(raceSpeeds[-1], ['km/h', 'mph'][getattr(race, 'distanceUnit', 0)] )
 					rr.raceSpeeds = raceSpeeds
 				else:	# Distance is by entire race.
 					if rider.status == Finisher and rr.raceTimes:
@@ -326,7 +326,7 @@ def GetResultsCore( category ):
 							speed = DefaultSpeed if tCur <= 0.0 else riderDistance / (tCur / (60.0*60.0))
 						except IndexError as e:
 							speed = DefaultSpeed
-						rr.speed = '%.2f %s' % (speed, ['km/h', 'mph'][getattr(race, 'distanceUnit', 0)] )
+						rr.speed = '{:.2f} {}'.format(speed, ['km/h', 'mph'][getattr(race, 'distanceUnit', 0)] )
 						
 			riderResults.append( rr )
 		
@@ -334,16 +334,12 @@ def GetResultsCore( category ):
 			return tuple()
 		
 		if race.isRunning():
-			def overlap(start1, end1, start2, end2):
-				"""Does the range (start1, end1) overlap with (start2, end2)?"""
-				return end1 >= start2 and end2 >= start1
-				
 			# Sequence the riders based on the last lap time, not the projected winner of the race.
 			t = race.curRaceTime()
-			statusLapsTimeBest = (99, 0, 24*60*60*200)
+			statusLapsTimeBest = (999, 0, 24*60*60*200)
 			rrLeader = None
 			for rr in riderResults:
-				if not rr.raceTimes:
+				if not rr.raceTimes or not rr.status == Finisher:
 					continue
 				iT = bisect_left( rr.raceTimes, t )
 				try:
@@ -352,39 +348,23 @@ def GetResultsCore( category ):
 				except IndexError:
 					iT -= 1
 				
-				iT = max( iT, 0 )
-				statusLapsTime = (statusSortSeq[rr.status], -iT, rr.raceTimes[iT])
-				if statusLapsTime < statusLapsTimeBest:
-					statusLapsTimeBest = statusLapsTime
-					rrLeader = rr
+				if iT > 0:
+					statusLapsTime = (statusSortSeq[rr.status], -iT, rr.raceTimes[iT])
+					if statusLapsTime < statusLapsTimeBest:
+						statusLapsTimeBest = statusLapsTime
+						rrLeader = rr
 			
 			if rrLeader:
-				lapBest = -statusLapsTimeBest[1]
-			
-				tLapStartBest = rrLeader.raceTimes[lapBest]
-				try:
-					tLapEndBest = rrLeader.raceTimes[lapBest+1]
-				except IndexError:
-					tLapEndBest = None
-				
+				tBest = statusLapsTimeBest[2]
 				for rr in riderResults:
-					if not rr.raceTimes:
+					if not rr.raceTimes or not rr.status == Finisher:
 						continue
-					try:
-						rr.lastTime = rr.raceTimes[lapBest]
-						rr.laps = min( rr.laps, lapBest )
-						
-						# Check for laps down.
-						if tLapEndBest is not None and rr.laps == lapBest:
-							for iLapCur in xrange(lapBest, -1, -1):
-								if overlap(tLapStartBest, tLapEndBest, rr.raceTimes[iLapCur], rr.raceTimes[iLapCur+1]):
-									rr.laps = iLapCur
-									rr.lastTime = rr.raceTimes[rr.laps]
-									break
-					except IndexError:
-						pass
-					rr.lastTimeOrig = rr.lastTime
-		
+					iT = bisect_left( rr.raceTimes, tBest )
+					if 0 < iT < len(rr.raceTimes):
+						rr.laps = iT
+						rr.lastTime = rr.raceTimes[iT]
+						rr.lastTimeOrig = rr.lastTime
+				
 		riderResults.sort( key=RiderResult._getKey )
 		
 		# Add the position (or status, if not a Finisher).
@@ -532,13 +512,14 @@ def GetNonWaveCategoryResults( category ):
 	statusNames = Model.Rider.statusNames
 	leader = riderResults[0] if riderResults else None
 	
+	Finisher = Model.Rider.Finisher
 	if leader:
 		leader.gap = ''
 		leader.gapValue = 0
 		for pos, rr in enumerate(riderResults):
 			rr.gap = ''
 			rr.gapValue = 0
-			if rr.status == Model.Rider.Finisher:
+			if rr.status == Finisher:
 				rr.pos = u'{}'.format( pos + 1 ) if not getattr(rr, 'relegated', False) else u'{} {}'.format(pos + 1, _('REL'))
 				if rr.laps != leader.laps:
 					lapsDown = leader.laps - rr.laps
@@ -755,7 +736,7 @@ def GetCategoryDetails( ignoreEmptyCategories=True, publishOnly=False ):
 				continue
 			
 			if cat.catType == cat.CatWave:
-				lastWaveLaps = cat.getNumLaps()
+				lastWaveLaps = race.getNumLapsFromCategory(cat)
 				lastWaveCat = cat
 				lastWaveStartOffset = cat.getStartOffsetSecs()
 				

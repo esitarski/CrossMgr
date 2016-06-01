@@ -110,11 +110,11 @@ def FtpWriteRaceHTML():
 		Utils.writeLog( 'FtpWriteRaceHTML: (2) "{}"'.format(e) )
 		return None
 	
-	files = [fname, WriteHtmlIndexPage()]
+	files = [fname]
 	try:
-		if (getattr(Model.race, 'publishFormatIndexHtml', 3) & 3) != 3:
-			files = files[:-1]
-	except:
+		if (getattr(Model.race, 'publishFormatIndexHtml', 3) & 3) == 3:
+			files.append( WriteHtmlIndexPage() )
+	except Exception as e:
 		pass
 	
 	FtpUploadFile( files )

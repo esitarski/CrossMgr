@@ -12,6 +12,7 @@ import getpass
 import datetime
 import itertools
 import functools
+import operator
 import traceback
 import threading
 from os.path import commonprefix
@@ -142,6 +143,7 @@ class Category(object):
 	
 	distance = None
 	firstLapDistance = None
+	raceMinutes = None
 	
 	MaxBib = 999999
 	
@@ -149,6 +151,7 @@ class Category(object):
 	MergeAttributes = (
 		'active',
 		'numLaps',
+		'raceMinutes',
 		'startOffset',
 		'distance',
 		'distanceType',
@@ -231,6 +234,7 @@ class Category(object):
 
 	def __init__( self, active = True, name = 'Category 100-199', catStr = '100-199', startOffset = '00:00:00',
 						numLaps = None, sequence = 0,
+						raceLaps = None, raceMinutes = None,
 						distance = None, distanceType = None, firstLapDistance = None,
 						gender = 'Open', lappedRidersMustContinue = False,
 						catType = CatWave, publishFlag = True, uploadFlag = True, seriesFlag = True ):
@@ -267,7 +271,12 @@ class Category(object):
 				self._numLaps = None
 		except (ValueError, TypeError):
 			self._numLaps = None
-			
+		
+		try:
+			self.raceMinutes = int( raceMinutes )
+		except (ValueError, TypeError):
+			self.raceMinutes = None
+		
 		try:
 			self.sequence = int(sequence)
 		except (ValueError, TypeError):
@@ -350,7 +359,7 @@ class Category(object):
 	@staticmethod
 	def getFullName( name, gender ):
 		GetTranslation = _
-		return u'%s (%s)' % (name, GetTranslation(gender))
+		return u'{} ({})'.format(name, GetTranslation(gender))
 	
 	@property
 	def fullname( self ):
@@ -375,9 +384,33 @@ class Category(object):
 	@property
 	def distanceIsByRace( self ):
 		return getattr(self, 'distanceType', Category.DistanceByLap) == Category.DistanceByRace
-		
+
 	def getNumLaps( self ):
-		return getattr( self, '_numLaps', None )
+		laps = getattr( self, '_numLaps', None )
+		if laps or not self.raceMinutes or not race or race.isTimeTrial:
+			return laps
+		
+		# Estimate the number of laps based on the wave category leader's time.
+		entries = race.interpolateCategory( self )
+		if not entries:
+			return None
+		
+		tFinish = self.raceMinutes * 60.0 + race.getStartOffset(entries[0].num)
+		lapCur = 1
+		tLeader = []
+		for e in entries:
+			if e.lap == lapCur:
+				tLeader.append( e.t )
+				if e.t > tFinish:
+					break
+				lapCur += 1
+		if len(tLeader) <= 1:
+			return 1
+		
+		# Check if the expected overlap exceeds race time by less than half a lap.
+		if (tLeader[-1] - tFinish) < (tLeader[-1] - tLeader[-2]) / 2.0:
+			return len(tLeader)
+		return len(tLeader) - 1
 		
 	def setNumLaps( self, numLaps ):
 		try:
@@ -399,7 +432,7 @@ class Category(object):
 		matchSet.difference_update( self.exclude )
 		return matchSet
 
-	key_attr = ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'catStr',
+	key_attr = ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'raceMinutes', 'catStr',
 				'distance', 'distanceType', 'firstLapDistance',
 				'gender', 'lappedRidersMustContinue', 'catType', 'publishFlag', 'uploadFlag', 'seriesFlag']
 	def __cmp__( self, c ):
@@ -456,12 +489,13 @@ class Category(object):
 		self.intervals = SetToIntervals( all_nums )
 	
 	def __repr__( self ):
-		return u'Category(active={}, name="{}", catStr="{}", startOffset="{}", numLaps={}, sequence={}, distance={}, distanceType={}, gender="{}", lappedRidersMustContinue="{}", catType="{}")'.format(
+		return u'Category(active={}, name="{}", catStr="{}", startOffset="{}", numLaps={}, raceMinutes={}, sequence={}, distance={}, distanceType={}, gender="{}", lappedRidersMustContinue="{}", catType="{}")'.format(
 				self.active,
 				self.name,
 				self.catStr,
 				self.startOffset,
-				self.numLaps,
+				self._numLaps,
+				self.raceMinutes,
 				self.sequence,
 				getattr(self,'distance',None),
 				getattr(self,'distanceType', Category.DistanceByLap),
@@ -596,33 +630,42 @@ class Rider(object):
 			pass
 
 	def getTimeCount( self ):
-		if not self.times:
-			return 0.0, 0					# No times, no count.
-			
-		# If there is only the first lap, return that.
-		if len(self.times) == 1:
-			return self.times[0], 1
-		
-		# Make sure we don't include times recorded over the number of laps.
+		# Make sure we don't include times that exceed the number of laps.
 		try:
-			numLaps = min( Model.race.getCategory(self.num).numLaps, len(self.times) )
+			numLaps = min( race.getCategory(self.num)._numLaps or 999999, len(self.times) )
 		except Exception as e:
-			numLaps = len( self.times )
-		
-		# If there is more than one lap, return the time from the other laps.
-		return self.times[numLaps-1] - self.times[0], numLaps-1
+			numLaps = len(self.times)
+			
+		if not numLaps:
+			return 0.0, 0					# No times, no count.		
+		elif numLaps == 1:
+			# If we only have one lap, make sure we consider the start offset.
+			try:
+				startOffset = race.getStartOffset( self.num ) if not race.isTimeTrial else 0.0
+			except:
+				startOffset = 0.0
+			return self.times[0] - startOffset, 1
+		else:
+			# Otherwise ignore the first lap.
+			return self.times[numLaps-1] - self.times[0], numLaps-1
 
 	def getLastKnownTime( self ):
+		# Make sure we don't include times that exceed the number of laps.
 		try:
-			return self.times[-1]
+			numLaps = min( race.getCategory(self.num)._numLaps or 999999, len(self.times) )
+		except Exception as e:
+			numLaps = len(self.times)
+		
+		try:
+			return self.times[numLaps-1]
 		except IndexError:
-			return 0
+			return 0.0
 			
 	def getFirstKnownTime( self ):
 		t = getattr( self, 'firstTime', None )
 		if t is None:
 			try:
-				t = self.times[1]
+				t = self.times[0]
 			except IndexError:
 				pass
 		return t
@@ -651,6 +694,11 @@ class Rider(object):
 		# This avoids a whole lot of special cases later.
 		iTimes[0] = race.getStartOffset(self.num) if race else 0.0
 		iTimes[1:] = self.times
+		try:
+			numLaps = min( race.getCategory(self.num)._numLaps or 999999, len(iTimes) )
+		except Exception as e:
+			numLaps = len(iTimes)
+		iTimes = iTimes[:numLaps+1]
 
 		averageLapTime = race.getAverageLapTime() if race else (iTimes[-1] - iTimes[0]) / float(len(iTimes) - 1)
 		mustBeRepeatInterval = averageLapTime * 0.5
@@ -690,39 +738,41 @@ class Rider(object):
 		if len(iTimes) == 2:
 			return iTimes[1] - iTimes[0]
 
+		try:
+			numLaps = min( Model.race.getCategory(self.num)._numLaps, len(iTimes)-1 )
+		except Exception as e:
+			numLaps = len(iTimes) - 1
+
 		# Ignore the first lap time as there is often a staggered start or a different first lap length.
-		if len(iTimes) > 2:
+		if numLaps > 2:
 			iStart = 2
 		else:
 			iStart = 1
 			
-		try:
-			numLaps = min( Model.race.getCategory(self.num).numLaps, len(self.times) )
-		except Exception as e:
-			numLaps = len( self.times )
-
 		# Compute differences between times.
-		dTimes = [iTimes[i] - iTimes[i-1] for i in xrange(iStart, numLaps)]
+		dTimes = [iTimes[i] - iTimes[i-1] for i in xrange(iStart, numLaps+1)]
 		dTimes.sort()
-		if len(dTimes) & 1:
-			median = dTimes[len(dTimes) // 2]
+		dTimesLen = len(dTimes)
+		if (dTimesLen & 1) == 1:
+			median = dTimes[dTimesLen // 2]
 		else:
-			median = (dTimes[len(dTimes)//2] + dTimes[len(dTimes)//2 + 1]) / 2.0
+			median = (dTimes[dTimesLen//2-1] + dTimes[dTimesLen//2]) / 2.0
 
 		mMin = median * Rider.pMin
 		mMax = median * Rider.pMax
 
-		#print 'median = %f' % median
-
 		# Compute the average lap time (ignore times that are way off based on the median).
 		# Check the most common case first (no wacky lap times).
-		if mMin < dTimes[0] and dTimes[-1] < mMax:
-			return sum(dTimes, 0.0) / len(dTimes)
+		if (mMin < dTimes[0] and dTimes[-1] < mMax) or len(dTimes) <= 2:
+			return math.fsum(dTimes) / len(dTimes)
 
 		# Ignore the outliers and compute the average based on the core data.
 		iLeft  = (i for i in xrange(0, len(dTimes))     if dTimes[i]   > mMin).next()
 		iRight = (i for i in xrange(len(dTimes), 0, -1) if dTimes[i-1] < mMax).next()
-		return sum(dTimes[iLeft:iRight], 0.0) / (iRight - iLeft)
+		try:
+			return math.fsum(dTimes[iLeft:iRight]) / (iRight - iLeft)
+		except:
+			return median
 
 	def removeEarlyTimes( self, times ):
 		try:
@@ -775,10 +825,9 @@ class Rider(object):
 		if not getattr(self, 'autocorrectLaps', True):
 			if not self.times:
 				return tuple()
-			iTimes = [None] * (len(self.times) + 1)
 			# Add the start time for the beginning of the rider.
 			# This avoids a whole lot of special cases later.
-			iTimes[0] = race.getStartOffset(self.num) if race else 0.0
+			iTimes = [race.getStartOffset(self.num) if race else 0.0]
 			iTimes[1:] = self.times
 			iTimes = self.removeEarlyTimes( iTimes )
 			iTimes = [(t, False) for t in iTimes]
@@ -830,6 +879,19 @@ class Rider(object):
 			
 	def hasTimes( self ):
 		return self.times
+		
+	def getRawLapTimes( self ):
+		# Create a separate working list.
+		# Add a zero start time for the beginning of the race.
+		# This avoids a whole lot of special cases later.
+		iTimes = [race.getStartOffset(self.num) if race else 0.0]
+		iTimes[1:] = self.times
+		try:
+			numLaps = min( race.getCategory(self.num)._numLaps or 999999, len(iTimes) )
+		except Exception as e:
+			numLaps = len(iTimes)
+		iTimes = iTimes[:numLaps+1]
+		return [b-a for b, a in zip(iTimes[1:], iTimes)]
 
 class NumTimeInfo(object):
 
@@ -1354,28 +1416,25 @@ class Race( object ):
 		
 	@memoize
 	def getMedianLapTime( self, category=None ):
-		lapTimes = itertools.chain.from_iterable( [b-a for b, a in zip(r.times[1:], r.times)]
-			for r in self.riders.itervalue() if self.inCategory(r.num, category) )
-		
+		lapTimes = itertools.chain.from_iterable( r.getRawLapTimes()
+			for r in self.riders.itervalues() if race.inCategory(r.num, category) )		
 		if not lapTimes:
 			return None
 		lapTimes.sort()
 		iMid = len(lapTimes) // 2
-		return lapTimes[iMid] if len(lapTimes) & 1 == 1 else (lapTimes[iMid] + lapTimes[iMid+1]) / 2.0
+		return lapTimes[iMid] if len(lapTimes) & 1 == 1 else (lapTimes[iMid-1] + lapTimes[iMid]) / 2.0
 
 	@memoize
 	def interpolate( self ):
-		# Reduce memory management in the list assignment.
-		entries = [None] * Rider.entriesMax * len(self.riders)
-		iCur, iEnd = 0, 0
-		for rider in self.riders.itervalues():
-			interpolate = rider.interpolate()
-			iEnd = iCur + len(interpolate)
-			entries[iCur:iEnd] = interpolate
-			iCur = iEnd
-		del entries[iEnd:]
-		entries.sort( key=Entry.key )
-		return entries
+		return sorted(
+			itertools.chain.from_iterable( rider.interpolate() for rider in self.riders.itervalues() ),
+			key=Entry.key
+		)
+
+	@memoize
+	def interpolateCategory( self, category ):
+		inCategory = self.inCategory
+		return [e for e in self.interpolate() if inCategory(e.num, category)]
 
 	def getLastRecordedTime( self ):
 		try:
@@ -1393,10 +1452,10 @@ class Race( object ):
 		riderNumLapsMax = {}
 		for r in self.riders.iterkeys():
 			try:
-				catNumLaps = self.getCategory(r).getNumLaps()
-				riderNumLapsMax[r] = catNumLaps if catNumLaps else 500
+				catNumLaps = self.getNumLapsFromCategory(self.getCategory(r))
+				riderNumLapsMax[r] = catNumLaps if catNumLaps else 999999
 			except AttributeError:
-				riderNumLapsMax[r] = 500
+				riderNumLapsMax[r] = 999999
 		
 		# Filter results so that only the allowed number of laps is returned.
 		return [e for e in entries if e.lap <= riderNumLapsMax[e.num]]
@@ -1526,7 +1585,7 @@ class Race( object ):
 		
 		try:
 			if leaderTimesLen > 1 and self.allCategoriesHaveRaceLapsDefined:
-				maxRaceLaps = max( category.getNumLaps() for category in self.categories.itervalues() if category.active )
+				maxRaceLaps = max( self.getNumLapsFromCategory(category) for category in self.categories.itervalues() if category.active )
 				leaderTimes = leaderTimes[:maxRaceLaps + 1]
 				leaderNums = leaderNums[:maxRaceLaps + 1]
 		except:
@@ -1924,8 +1983,8 @@ class Race( object ):
 			for category in self.categories.itervalues():
 				if not category.active:
 					continue
-				if category.getNumLaps():
-					self.categoryLapsMax = max( self.categoryLapsMax, category.getNumLaps() )
+				if self.getNumLapsFromCategory(category):
+					self.categoryLapsMax = max( self.categoryLapsMax, self.getNumLapsFromCategory(category) )
 				else:
 					self.allCategoriesHaveRaceLapsDefined = False
 		else:
@@ -2091,16 +2150,20 @@ class Race( object ):
 	def getCategoryMaxLapInUse( self ):
 		maxLaps = 0
 		for category in self.getCategoriesInUse():
-			categoryLaps = category.getNumLaps()
+			categoryLaps = self.getNumLapsFromCategory(category)
 			if not categoryLaps:
 				return None
 			maxLaps = max( maxLaps, categoryLaps )
 		return maxLaps
 	
+	@memoize
+	def getNumLapsFromCategory( self, category ):
+		return category.getNumLaps()
+	
 	def getCategoryNumLaps( self, num ):
 		try:
 			category = self.getCategory( num )
-			return category.getNumLaps() or 1000
+			return self.getNumLapsFromCategory(category) or 1000
 		except AttributeError:
 			return 1000
 	
@@ -2264,7 +2327,7 @@ class Race( object ):
 		if category:
 			# Check if the number of laps is specified.  If so, use that.
 			# Otherwise, check if we can figure out the number of laps.
-			lap = (category.getNumLaps() or self.getCategoryRaceLaps().get(category, None))
+			lap = (self.getNumLapsFromCategory(category) or self.getCategoryRaceLaps().get(category, None))
 			if lap:
 				return lap
 				

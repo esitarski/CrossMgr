@@ -291,7 +291,8 @@ class LapCounter( wx.Panel ):
 		pass
 		
 	def getLapCycle( self, category ):
-		lap = category.getNumLaps()
+		race = Model.race
+		lap = race.getNumLapsFromCategory(category) if race else category.getNumLaps()
 		return lap % self.lapCounterCycle if self.lapCounterCycle else lap
 					
 	def refresh( self ):
@@ -302,11 +303,11 @@ class LapCounter( wx.Panel ):
 			self.SetBackgroundColour( Utils.colorFromStr(race.lapCounterBackground) )
 			self.lapCounterCycle = race.lapCounterCycle or None
 			if race.isUnstarted():
-				if all( category.getNumLaps() for category in race.getCategories(startWaveOnly=True) ):
+				if all( race.getNumLapsFromCategory(category) for category in race.getCategories(startWaveOnly=True) ):
 					lapCounter = [(u'{}'.format(self.getLapCycle(category)),False) for category in race.getCategories(startWaveOnly=True)]
 				else:
 					lapCounter = [(u'{} min'.format(race.minutes),False)] + [(u'{}'.format(self.getLapCycle(category)),False)
-						for category in race.getCategories(startWaveOnly=True) if category.getNumLaps()]
+						for category in race.getCategories(startWaveOnly=True) if race.getNumLapsFromCategory(category)]
 				self.SetLabels( lapCounter )
 			elif race.isFinished():
 				self.SetLabels()

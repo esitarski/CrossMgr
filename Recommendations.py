@@ -300,7 +300,7 @@ class Recommendations( wx.Panel ):
 				# Check if all the riders in a particular category did not complete the maximum number of laps.
 				raceLaps = race.getRaceLaps()
 				for category, maxNonInterpLap in categoryMaxLapNonInterp.iteritems():
-					maxCatLaps = (category.getNumLaps() or raceLaps)
+					maxCatLaps = (race.getNumLapsFromCategory(category) or raceLaps)
 					try:
 						if maxNonInterpLap < maxCatLaps and categoryMaxLapInterp[category] > maxNonInterpLap:
 							append(

@@ -19,21 +19,28 @@ Event Name|Name of the event.  Also used in the filename with the Race #.  Multi
 Date|Date of the race.  Used in the filename and all output.
 Race #|The number of the race in the day at the event.  Also used in the filename.  This is automatically incremented when you do "File/New Next..."
 Scheduled Start|Scheduled start of the race.  This is used in the results output.  Of course, the race could actually start at a different time.
-Race Minutes|The number of minutes in the race for timed races (like CycloCross).  See __Notes__ below.
+Race Minutes|The __global__ number of minutes in the race for timed races (like CycloCross).  See __Notes__ below.
 Discipline|The type of race (default Cyclo-cross).  This should reflect the type of race (Road, Mountain Bike, Criterium, etc.).  Currently, this is only used in the [USAC Export][].
 Organizer|Organizer of the race.  Included in the HTML results output.
 Commissaire|The name of the race official.
 Memo|Anything you wish to type in here (weather conditions, your mood, etc.).  This is saved with the race but does not appear on any output.
 
 ### Notes
-Races can be run by time, or by laps, or both simultaneously for different categories:
+Races can be run by time, or by laps, or both simultaneously for different categories.
+In CrossMgr, you can set the __Race Time__ in Properties.  You can also set it individually by Category.
 
-* If you enter a number in the __Race Laps__ field in [Categories][], that category will be run by the specified laps.
-* If the __Race Laps__ field is blank, CrossMgr will compute the number of laps based on the category leader's lap time divided into the __Race Minutes__.  While the race is under way, this is visible in the Race Progress charts at the bottom of the [Record][] screen.  It is also visible in the __CrossMgr Estimated Laps__ column in [Categories][].
-* If all categories have a specified __Race Laps__, then the __Race Minutes__ field will not be used.
+* If you enter the __Race Laps__ in [Categories][], that category will be run by the specified laps.  This overrides all other settings - if you specify the number of laps, CrossMgr will respect that number.
+* If you specify the __Race Minutes__ in the [Categories][] screen for a category, CrossMgr will compute the number of laps based on the category leader's lap times divided into the category __Race Minutes__.
+* If the __Race Laps__ and __Race Minutes__ fields are both blank for a category, CrossMgr will compute the number of laps based on the __Race Minutes__ Property.  The Lap Counter will be follow the fastest category on course.
 
-You can set or change the __Race Laps__ at any time before, during or after a race.
-If you don't like CrossMgr's estimate of the laps, by all means, override.
+When running a race with different __Race Laps__ or __Race Minutes__ by Category, consider that you may need a separate lap counter for each category.  Fortunately, CrossMgr supports up to 4 lap counters (see [LapCounter][] for details).  The Lap Counter can be opened as a separate window and dragged onto another screen to show to the riders (see [Windows][] for details).
+
+When running a race with the global Properties __Race Minutes__, all riders generally finish on the last lap and there is only one lap counter.  This can simplify races considerably.
+
+While the race is under way, the Race Progress charts at the bottom of the [Record][] screen shows the laps and other race status for each category.
+
+You can change a category's __Race Laps__ and __Race Minutes__ at any time before, during or after a race.
+If you don't like CrossMgr's estimate of the laps, by all means, override it by setting the Category __Race Laps__.
 
 See the [Record][] screen for details on managing a race with one lap counter, or multiple lap counters.
 

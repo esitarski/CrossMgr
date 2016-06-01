@@ -41,7 +41,9 @@ def ReadCategoriesFromExcel( reader ):
 			catField = HeadersToFields[h]
 			if h == 'Race Minutes' and row[c]:
 				try:
-					raceMinutesMax = max( raceMinutesMax, int(row[c]) )
+					raceMinutes = int(row[c])
+					raceMinutesMax = max( raceMinutesMax, raceMinutes )
+					catRow['raceMinutes'] = raceMinutes
 				except ValueError:
 					pass
 			if catField is not None:
