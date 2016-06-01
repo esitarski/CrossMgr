@@ -110,7 +110,14 @@ def FtpWriteRaceHTML():
 		Utils.writeLog( 'FtpWriteRaceHTML: (2) "{}"'.format(e) )
 		return None
 	
-	FtpUploadFile( [fname, WriteHtmlIndexPage()] )
+	files = [fname, WriteHtmlIndexPage()]
+	try:
+		if (getattr(Model.race, 'publishFormatIndexHtml', 3) & 3) != 3:
+			files = files[:-1]
+	except:
+		pass
+	
+	FtpUploadFile( files )
 	return None
 
 class RealTimeFtpPublish( object ):

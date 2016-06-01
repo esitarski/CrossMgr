@@ -602,9 +602,15 @@ class Rider(object):
 		# If there is only the first lap, return that.
 		if len(self.times) == 1:
 			return self.times[0], 1
-			
+		
+		# Make sure we don't include times recorded over the number of laps.
+		try:
+			numLaps = min( Model.race.getCategory(self.num).numLaps, len(self.times) )
+		except Exception as e:
+			numLaps = len( self.times )
+		
 		# If there is more than one lap, return the time from the other laps.
-		return self.times[-1] - self.times[0], len(self.times) - 1
+		return self.times[numLaps-1] - self.times[0], numLaps-1
 
 	def getLastKnownTime( self ):
 		try:
@@ -689,11 +695,19 @@ class Rider(object):
 			iStart = 2
 		else:
 			iStart = 1
+			
+		try:
+			numLaps = min( Model.race.getCategory(self.num).numLaps, len(self.times) )
+		except Exception as e:
+			numLaps = len( self.times )
 
 		# Compute differences between times.
-		dTimes = [iTimes[i] - iTimes[i-1] for i in xrange(iStart, len(iTimes))]
+		dTimes = [iTimes[i] - iTimes[i-1] for i in xrange(iStart, numLaps)]
 		dTimes.sort()
-		median = dTimes[len(dTimes) // 2]
+		if len(dTimes) & 1:
+			median = dTimes[len(dTimes) // 2]
+		else:
+			median = (dTimes[len(dTimes)//2] + dTimes[len(dTimes)//2 + 1]) / 2.0
 
 		mMin = median * Rider.pMin
 		mMax = median * Rider.pMax
@@ -2037,6 +2051,7 @@ class Race( object ):
 		return getattr(self, 'categoryCache', None) is not None
 
 	def getCategory( self, num ):
+		''' Get the start wave category for this rider. '''
 		# Check the cache for this rider.
 		try:
 			return self.categoryCache.get(num, None)
