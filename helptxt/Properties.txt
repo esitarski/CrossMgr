@@ -35,7 +35,9 @@ In CrossMgr, you can set the __Race Time__ in Properties.  You can also set it i
 
 When running a race with different __Race Laps__ or __Race Minutes__ by Category, consider that you may need a separate lap counter for each category.  Fortunately, CrossMgr supports up to 4 lap counters (see [LapCounter][] for details).  The Lap Counter can be opened as a separate window and dragged onto another screen to show to the riders (see [Windows][] for details).
 
-When running a race with the global Properties __Race Minutes__, all riders generally finish on the last lap and there is only one lap counter.  This can simplify races considerably.
+When running a race with the global Properties __Race Minutes__, all riders generally finish on the last lap and can be managed with one lap counter.  This can simplify race management considerably.
+
+The __Start Offset__ is not included in the __Race Minutes__ when __Race Minutes__ is specified at the Category level.  For example, if a Category has __Start Offset=2:00__ and __Race Minutes=40__, CrossMgr will target finishing the race at 42 minutes.
 
 While the race is under way, the Race Progress charts at the bottom of the [Record][] screen shows the laps and other race status for each category.
 
