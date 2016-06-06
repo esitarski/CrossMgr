@@ -98,7 +98,7 @@ class ContentBuffer( object ):
 			if fnameBase not in ('Simulation.html', 'Simulation_TTCountdown.html', 'Simulation_TTStartList.html'):
 				return None
 		else:
-			if not reCrossMgrHtml.match(fnameBase):
+			if 'CoursePreview.html' in fnameBase or not reCrossMgrHtml.match(fnameBase):
 				return None
 		
 		cache = self.fileCache.get( fname, {} )
