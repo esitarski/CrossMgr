@@ -64,7 +64,7 @@ def FtpIsConfigured():
 		user		= getattr( race, 'ftpUser', None )
 		
 	return host and user
-		
+	
 def FtpUploadFile( fname=None, callback=None ):
 	with Model.LockRace() as race:
 		if not race or not Utils.getFileName():
@@ -79,9 +79,12 @@ def FtpUploadFile( fname=None, callback=None ):
 			fname		= fname or [],
 			callback	= callback,
 		)
+	except ftputil.error.FTPOSError as e:
+		Utils.writeLog( 'FtpUploadFile: Error: {}'.format(e) )
+		return e
 	except Exception as e:
 		Utils.logException( e, sys.exc_info() )
-		Utils.writeLog( 'UploadFile: Error: {}'.format(e) )
+		Utils.writeLog( 'FtpUploadFile: Error: {}'.format(e) )
 		return e
 		
 	return None
