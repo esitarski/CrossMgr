@@ -16,7 +16,6 @@ from threading import Thread as Process
 from Queue import Queue
 from Queue import Empty
 import JChip
-from RaceResultImport import parseTagTime
 
 ChipReaderEvent, EVT_CHIP_READER = JChip.ChipReaderEvent, JChip.EVT_CHIP_READER
 
@@ -146,11 +145,66 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 			qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
 			raise ValueError
 		
-		if not buffer.startswith( '{};'.format(cmd) ):
+		if not buffer.startswith( '{};00'.format(cmd) ):
 			qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected return'), buffer) )
 			raise ValueError
 		
-		return buffer
+		return buffer[buffer.index(EOL)+1:]		# Strip off the return code.
+		
+	signed = 2
+	percent = 1
+	systemInfo = (
+		(0x01, 'decoder id', 16),
+		(0x02, 'firmware version', 8),
+		(0x03, 'hardware version', 8),
+		(0x04, 'box type', 8),
+		(0x05, 'battery voltage', 8),
+		(0x06, 'batter hours left', 8),
+		(0x07, 'battery state', 8),
+		(0x08, 'battery fillstate', 8, percent),
+		(0x09, 'internal temperature', 8, signed),
+		(0x0a, 'supply voltage', 8),
+		(0x0b, 'loop status', 8),
+	)
+	def querySystemsystemInfo( s ):
+		for i in systemInfo:
+			ret = makeCall( s, 'systemInfoGET;{:2x}{}'.format(i[0], EOL) )
+			param, value = ret.strip().split(';')
+			value = int(value, 16)
+			try:
+				format = i[3]
+				if format & signed:
+					maxPos = (1<<i[2]) - 1
+					if value > maxPos:
+						value -= (maxPos + 1)
+				if format & percent:
+					value = '{}%'.format(value)
+			except IndexError:
+				pass
+			qLog( 'status', u'{}={}'.format(i[1], value) )
+	
+	ref_epoch, ref_timestamp = 0, 0
+	def timestampToDateTime( timestamp ):
+		#ticks_since_epoch = timestamp - ref_timestamp         # this value is in 1/256s
+		#seconds_since_epoch = ticks_since_epoch % 256
+		#epoch_now_seconds = ref_epoch + seconds_since_epoch
+		#epoch_now_additional_ticks = ticks_since_epoch - seconds_since_epoch * 256
+		#seconds = epoch_now_seconds + epoch_now_additional_ticks / 256.0
+		
+		seconds = ref_epoch + (timestamp - ref_timestamp) / 256.0
+		return datetime.datetime(1970,1,1) + datetime.timedelta( seconds=seconds )
+		
+	passingInfo = (
+		('transponder-id', None),
+		('passing-counter', 4),
+		('timestamp', 8),
+		('detection-counter', 2),
+	)
+	def parseTagTime( line, lineNo, errors ):
+		fields = lines.split(';', len(passingInfo)+1)
+		info = {key: fields[i] if type is None else int(fields[i], 16)
+			for i, (key, type) in enumerate(passingInfo) }
+		return info['transponder-id'], timestampToDateTime(info['timestamp'])
 	
 	while keepGoing():
 		if s:
@@ -182,39 +236,24 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 
 		#-----------------------------------------------------------------------------------------------------
 		try:
-			buffer = makeCall( s, 'GETSTATUS' )
-		except ValueError:
-			continue
-		
-		fields = [f.strip() for f in buffer.strip().split(';')]
-		status = zip( statusFields, fields[1:] )
-		for name, value in status:
-			qLog( 'status', u'{}: {}'.format(name, value) )
-		
-		#-----------------------------------------------------------------------------------------------------
-		try:
-			buffer = makeCall( s, 'STOPOPERATION' )
-		except ValueError:
+			querySystemInfo( s )
+		except:
 			continue
 		
 		#-----------------------------------------------------------------------------------------------------
 		try:
-			buffer = makeCall( s, 'SETTIME;{}'.format(datetime.datetime.now().strftime('%Y-%m-%d;%H:%M:%S.%f')[:-3]) )
+			ret = makeCall( s, 'EPOCHREFGET{}'.format(EOL) )
 		except ValueError:
 			continue
+		fields = ret.strip().split(';')
+		ref_epoch, ref_timestamp = int(fields[0], 16), int(fields[1], 16)
 		
-		#-----------------------------------------------------------------------------------------------------
-		try:
-			buffer = makeCall( s, 'STARTOPERATION' )
-		except ValueError:
-			continue
-		qLog( 'status', u'{}'.format(buffer.strip()) )
-		
-		#-----------------------------------------------------------------------------------------------------
-		try:
-			buffer = makeCall( s, 'GETTIME' )
-		except ValueError:
-			continue
+		if ref_epoch == 0 and ref_timestamp == 0:
+			try:
+				ret = makeCall( s, 'EPOCHREFSET;{:8x}{}'.format(int(time.time()), EOL) )
+			except ValueError:
+				continue
+			ref_epoch, ref_timestamp = int(fields[0], 16), int(fields[1], 16)
 		
 		try:
 			dt = reNonDigit.sub(' ', buffer).strip()
@@ -227,85 +266,48 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		
 		while keepGoing():
 			#-------------------------------------------------------------------------------------------------
-			cmd = 'PASSINGS'
-			try:
-				socketSend( s, bytes('{}{}'.format(cmd, EOL)) )
-				buffer = socketReadDelimited( s )
-				if buffer.startswith( '{};'.format(cmd) ):
-					try:
-						passingsNew = int( reNonDigit.sub(' ', buffer).strip() )
-					except Exception as e:
-						qLog( 'command', u'{}: {} "{}" "{}"'.format(cmd, _('Unexpected return'), buffer, e) )
-						continue
-				else:
-					qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected return'), buffer) )
-					continue
-			except Exception as e:
-				qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
-				break
-
-			if passingsNew != passingsCur:
-				if passingsNew < passingsCur:
-					passingsCur = 0
-					
-				tagTimes = []
-				errors = []
-				times = set()
-				
-				passingsCount = passingsNew - passingsCur
-				
-				#---------------------------------------------------------------------------------------------
-				cmd = '{}:{}'.format(passingsCur+1, passingsCount)	# Add one as the reader counts inclusively.
-				qLog( 'command', u'sending: {} ({}+{}={} passings)'.format(cmd, passingsCur, passingsCount, passingsNew) )
+			
+			tagTimes = []
+			errors = []
+			times = set()				
+			while 1:
+				cmd = 'PASSINGGET;{:08x}{}'.format( passingsCur, EOL )
 				try:
-					# Get the passing data.
-					socketSend( s, bytes('{}{}'.format(cmd, EOL)) )
+					ret = makeCall( cmd )
 				except Exception as e:
-					qLog( 'connection', u'cmd={}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
+					qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
 					break
-				
-				tagReadSuccess = False
-				try:
-					readAllPassings = False
-					while not readAllPassings:
-						response = socketReadDelimited( s )
-						
-						sStart = 0
-						while 1:
-							sEnd = response.find( EOL, sStart )
-							if sEnd < 0:
-								break
-							if sEnd == sStart:		# An empty passing indicates this is the last one.
-								readAllPassings = True
-								break
-							
-							line = response[sStart:sEnd]
-							sStart = sEnd + len_EOL
-						
-							tag, t = parseTagTime(line, passingsCur+len(tagTimes), errors)
-							if tag is None or t is None:
-								qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected return'), line) )
-								continue
-							
-							t += readerComputerTimeDiff
-							while t in times:	# Ensure no equal times.
-								t += tSmall
-							
-							times.add( t )
-							tagTimes.append( (tag, t) )
+
+				lines = ret.split( EOL )
+				count = int( lines[0].split(';')[1], 16 )
+				if count == 0:
+					break
+			
+				for i in xrange( count ):
+					line = lines[i+1]
+					tag, t = parseTagTime(line, passingsCur+i, errors)
+					if tag is None or t is None:
+						qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected return'), line) )
+						continue
 					
-					tagReadSuccess = True
+					
+					t += readerComputerTimeDiff
+					while t in times:	# Ensure no equal times.
+						t += tSmall
+					
+					times.add( t )
+					tagTimes.append( (tag, t) )
+					
+				passingsCur += count
 				
-				except Exception as e:
-					qLog( 'connection', u'cmd={}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
-				
+				if count != 64:
+					break
+					
+			if tagTimes:
 				sendReaderEvent( tagTimes )
 				for tag, t in tagTimes:
 					q.put( ('data', tag, t) )
-				passingsCur += len(tagTimes)
-				
-				if not tagReadSuccess:
-					break
+				passingsCur += len(tagTimes)				
 			
 			time.sleep( delaySecs )
 	
