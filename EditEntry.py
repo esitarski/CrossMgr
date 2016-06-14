@@ -504,6 +504,7 @@ def DoStatusChange( parent, num, message, title, newStatus, lapTime=None ):
 		rider.setStatus( newStatus )
 		race.setChanged()
 	Utils.refresh()
+	Utils.refreshForecastHistory()
 	return True
 
 def getActionMessage( actionName ):

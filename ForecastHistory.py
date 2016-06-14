@@ -2,6 +2,7 @@ import wx
 import bisect
 import sys
 import itertools
+import operator
 import Utils
 import Model
 from Utils import formatTime, formatTimeGap, SetLabel
@@ -21,12 +22,13 @@ def interpolateNonZeroFinishers():
 	Entry = Model.Entry
 	Finisher = Model.Rider.Finisher
 	if Model.race and Model.race.isTimeTrial:
+		startTimes = {r.num:getattr(r, 'startTime', 0.0) for r in results}
 		return sorted(
 			itertools.chain.from_iterable(
-				((Entry(r.num, lap, t + getattr(r, 'startTime', 0.0), r.interp[lap]) for lap, t in enumerate(r.raceTimes))
+				((Entry(r.num, lap, t, r.interp[lap]) for lap, t in enumerate(r.raceTimes))
 					for r in results if r.status == Finisher)
 			),
-			key=Entry.key
+			key=lambda e: (e.t + startTimes[e.num], e.num)
 		)
 	else:
 		return sorted(
@@ -377,12 +379,27 @@ class ForecastHistory( wx.Panel ):
 		self.expectedGrid.Set( data = [] )
 		self.expectedGrid.Reset()
 	
+	def getETATimeFunc( self ):
+		race = Model.race
+		if race.isTimeTrial:
+			def getT( e ):
+				try:
+					return e.t + race.riders[e.num].firstTime
+				except Exception as e:
+					print( 'getT: failure', e )
+					return e.t
+		else:
+			getT = operator.attrgetter('t')
+		return getT
+	
 	def updatedExpectedTimes( self, tRace = None ):
 		if not self.quickExpected:
 			return
+		race = Model.race
 		if not tRace:
-			tRace = Model.race.curRaceTime()
-		self.expectedGrid.SetColumn( iTimeCol, [formatTime(e.t - tRace) if e.lap > 0 else ('[{}]'.format(formatTime(max(0.0, e.t - tRace + 0.99999999))))\
+			tRace = race.curRaceTime()
+		getT = self.getETATimeFunc()
+		self.expectedGrid.SetColumn( iTimeCol, [formatTime(getT(e) - tRace) if e.lap > 0 else ('[{}]'.format(formatTime(max(0.0, getT(e) - tRace + 0.99999999))))\
 										for e in self.quickExpected] )
 	
 	def addGaps( self, recorded ):
@@ -514,7 +531,8 @@ class ForecastHistory( wx.Panel ):
 		
 		data = [None] * iColMax
 		data[iNumCol] = ['{}'.format(e.num) for e in expected]
-		data[iTimeCol] = [formatTime(e.t - tRace) if e.lap > 0 else ('[%s]' % formatTime(max(0.0, e.t - tRace + 0.99999999)))\
+		getT = self.getETATimeFunc()
+		data[iTimeCol] = [formatTime(getT(e) - tRace) if e.lap > 0 else ('[%s]' % formatTime(max(0.0, getT(e) - tRace + 0.99999999)))\
 									for e in expected]
 		data[iLapCol] = ['{}'.format(e.lap) for e in expected]
 		def getNoteExpected( e ):

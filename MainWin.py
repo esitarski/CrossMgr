@@ -19,6 +19,7 @@ import zipfile
 import base64
 import hashlib
 import urllib
+from collections import defaultdict
 
 import locale
 try:
@@ -2849,14 +2850,28 @@ class MainWin( wx.Frame ):
 			race.minutes = self.raceMinutes
 			race.raceNum = 1
 			race.simulation = True	# Flag this as a simulation race.
-			#race.isTimeTrial = True
+			race.isTimeTrial = True
 			#race.enableUSBCamera = True
 			#race.photosAtRaceEndOnly = True
 			#race.enableJChipIntegration = True
 			if race.isTimeTrial:
 				race.setCategories( [	{'name':'Junior', 'catStr':'100-199', 'startOffset':'00:00', 'distance':0.5, 'gender':'Men', 'numLaps':5},
 										{'name':'Senior', 'catStr':'200-299', 'startOffset':'00:00', 'distance':0.5, 'gender':'Women', 'numLaps':4}] )
-				nums = sorted( set( num for t, num in self.lapTimes if 100 <= num <= 299 ), reverse=True )
+				nums = list( set( num for t, num in self.lapTimes if 100 <= num <= 299 ) )
+				
+				numTimes = defaultdict( list )
+				numMean = {}
+				for t, num in self.lapTimes:
+					numTimes[num].append( t )
+				for num, times in numTimes.iteritems():
+					times.sort()
+					dt = sorted( t2 - t1 for t2, t1 in zip(times[1:], times) )
+					try:
+						numMean[num] = dt[len(td)//2]
+					except:
+						numMean[num] = 99999
+				nums.sort( key = lambda n: (n//100, numMean.get(n, 99999)), reverse = True )
+				
 				offset = 5.0
 				numOffset = {n:i*offset for i, n in enumerate(nums)}
 				self.lapTimes = [(t + numOffset.get(num, 0.0), num) for t, num in self.lapTimes]
