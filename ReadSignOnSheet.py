@@ -271,6 +271,10 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 			s = self.choices[c].GetSelection()
 			fieldCol[f] = s if s < headerLen else -1
 		return fieldCol
+		
+	def hasTagField( self ):
+		fieldCol = self.getFieldCol()
+		return any( fieldCol[tf] >= 0 in fieldCol for tf in TagFields )
 			
 class SummaryPage(wiz.WizardPageSimple):
 	def __init__(self, parent):
@@ -473,6 +477,13 @@ class GetExcelLink( object ):
 						title=_('Excel Format Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 			elif page == self.headerNamesPage:
+				if Model.race and Model.race.enableJChipIntegration and not self.headerNamesPage.hasTagField():
+					if Utils.MessageOKCancel(
+							self.wizard, u'{}\n\n{}'.format(_('No RFID Tag Columns Specified.'),_('Fix it now?')),
+							title=_('No RFID Tag Columns'), iconMask=wx.ICON_ERROR):
+						evt.Veto()
+						return
+				
 				excelLink = ExcelLink()
 				excelLink.setFileName( self.fileNamePage.getFileName() )
 				excelLink.setSheetName( self.sheetNamePage.getSheetName() )
@@ -1006,6 +1017,7 @@ if __name__ == '__main__':
 	print( Utils.approximateMatch("Team", "Last Name") )
 	race = Model.newRace()
 	race._populate()
+	race.enableJChipIntegration = True
 	
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,300))

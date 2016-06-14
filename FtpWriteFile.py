@@ -83,7 +83,7 @@ def FtpUploadFile( fname=None, callback=None ):
 		Utils.writeLog( 'FtpUploadFile: Error: {}'.format(e) )
 		return e
 	except Exception as e:
-		Utils.logException( e, sys.exc_info() )
+		# Utils.logException( e, sys.exc_info() )
 		Utils.writeLog( 'FtpUploadFile: Error: {}'.format(e) )
 		return e
 		
