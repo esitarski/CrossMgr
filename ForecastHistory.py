@@ -212,8 +212,11 @@ class ForecastHistory( wx.Panel ):
 			else:
 				menu.AppendSeparator()
 		
-		self.PopupMenu( menu )
-		menu.Destroy()
+		try:
+			self.PopupMenu( menu )
+			menu.Destroy()
+		except Exception as e:
+			Utils.writeLog( 'ForecastHistory:doHistoryPopup: {}'.format(e) )
 		
 	def OnPopupHistoryCorrect( self, event ):
 		if self.entryCur:
@@ -294,8 +297,11 @@ class ForecastHistory( wx.Panel ):
 			else:
 				menu.AppendSeparator()
 		
-		self.PopupMenu( menu )
-		menu.Destroy()
+		try:
+			self.PopupMenu( menu )
+			menu.Destroy()
+		except Exception as e:
+			Utils.writeLog( 'ForecastHistory:doExpectedPopup: {}'.format(e) )
 		
 	def OnPopupExpectedEnter( self, event ):
 		try:

@@ -378,8 +378,11 @@ class Results( wx.Panel ):
 				menu.Append( id, name, text )
 				
 		Utils.deleteTrailingSeparators( menu )
-		self.PopupMenu( menu )
-		menu.Destroy()
+		try:
+			self.PopupMenu( menu )
+			menu.Destroy()
+		except Exception as e:
+			Utils.writeLog( 'Results:doRightClick: {}'.format(e) )
 		
 	def OnPopupCorrect( self, event ):
 		CorrectNumber( self, self.entry )

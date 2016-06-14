@@ -185,9 +185,11 @@ class History( wx.Panel ):
 			menu.Append( id, name, text )
 		
 		Utils.deleteTrailingSeparators( menu )
-		self.PopupMenu( menu )
-		menu.Destroy()
-
+		try:
+			self.PopupMenu( menu )
+			menu.Destroy()
+		except Exception as e:
+			Utils.writeLog( 'History:doRightClick: {}'.format(e) )
 			
 	def OnPopupSwapBefore( self, event ):
 		if not hasattr(self, 'rowPopup'):

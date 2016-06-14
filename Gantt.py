@@ -175,8 +175,11 @@ class Gantt( wx.Panel ):
 			menu.PrependMenu( wx.NewId(), _('Add Missing Split'), submenu )
 			
 		Utils.deleteTrailingSeparators( menu )
-		self.PopupMenu( menu )
-		menu.Destroy()
+		try:
+			self.PopupMenu( menu )
+			menu.Destroy()
+		except Exception as e:
+			Utils.writeLog( 'Gantt:onRightClick: {}'.format(e) )
 
 	def doSplitLap( self, splits ):
 		with Model.LockRace() as race:

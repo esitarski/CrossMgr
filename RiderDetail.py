@@ -504,8 +504,11 @@ class RiderDetail( wx.Panel ):
 			if caseCode >= cCase:
 				menu.Append( id, name, text )
 		
-		self.PopupMenu( menu )
-		menu.Destroy()
+		try:
+			self.PopupMenu( menu )
+			menu.Destroy()
+		except Exception as e:
+			Utils.writeLog( 'RiderDetail:doRightClick: {}'.format(e) )
 
 	def OnPopupPull( self, event ):
 		self.grid.SelectRow( self.eventRow )
@@ -1049,8 +1052,11 @@ class RiderDetail( wx.Panel ):
 			menu.PrependMenu( wx.NewId(), _('Add Missing Split'), submenu )
 			
 		Utils.deleteTrailingSeparators( menu )
-		self.PopupMenu( menu )
-		menu.Destroy()
+		try:
+			self.PopupMenu( menu )
+			menu.Destroy()
+		except Exception as e:
+			Utils.writeLog( 'RiderDetail:onEditGantt: {}'.format(e) )
 	
 	def OnGanttPopupPull( self, event ):
 		if not self.entry:
