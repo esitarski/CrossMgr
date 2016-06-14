@@ -10,6 +10,7 @@ import threading
 import re
 import wx
 import wx.lib.newevent
+import serial
 import Utils
 import Model
 from threading import Thread as Process
@@ -24,86 +25,55 @@ def sendReaderEvent( tagTimes ):
 	if tagTimes and readerEventWindow:
 		wx.PostEvent( readerEventWindow, ChipReaderEvent(tagTimes = tagTimes) )
 
-EOL = bytes('\r\n')		# RaceResult delimiter
+EOL = bytes('\n')		# RaceResult USB delimiter
 len_EOL = len(EOL)
-
-DEFAULT_PORT = 3601
-DEFAULT_HOST = '127.0.0.1'		# Port to connect to the RaceResult receiver.
 
 q = None
 shutdownQ = None
 listener = None
 
-def socketSend( s, message ):
-	sLen = 0
-	while sLen < len(message):
-		sLen += s.send( message[sLen:] )
-		
-def socketReadDelimited( s, delimiter=EOL ):
-	buffer = s.recv( 4096 )
-	while not buffer.endswith( delimiter ):
-		more = s.recv( 4096 )
-		if more:
-			buffer += more
-		else:
-			break
-	return buffer
-	
-def AutoDetect( raceResultPort=3601, callback=None ):
-	''' Search ip addresses adjacent to the computer in an attempt to find the reader. '''
-	ip = [int(i) for i in Utils.GetDefaultHost().split('.')]
-	j = 0
-	for i in xrange(14):
-		j = -j if j > 0 else -j + 1
-		
-		ipTest = list( ip )
-		ipTest[-1] += j
-		if not (0 <= ipTest[-1] < 256):
-			continue
-			
-		raceResultHost = '.'.join( '{}'.format(v) for v in ipTest )
-		if callback:
-			if not callback( '{}:{}'.format(raceResultHost,raceResultPort) ):
-				return None
-		
-		try:
-			s = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
-			s.settimeout( 0.5 )
-			s.connect( (raceResultHost, raceResultPort) )
-		except Exception as e:
-			continue
+def readResponse( s ):
+	response = []
+	while 1:
+		c = s.read()
+		if len(c) != 1:
+			raise ValueError
+		if c == '\n' and response[-1] == '\n':
+			return ''.join( response )
+		reponse.append( c )
 
-		cmd = 'GETSTATUS'
-		try:
-			socketSend( s, bytes('{}{}'.format(cmd, EOL)) )
-		except Exception as e:
-			continue
-			
-		try:
-			buffer = socketReadDelimited( s )
-		except Exception as e:
-			continue
-			
-		try:
-			s.close()
-		except Exception as e:
-			pass
+def AutoDetect( callback=None ):
+	''' Search COM ports in an attempt to find the reader. '''
+	for com in xrange(1, 8+1):
+		if callback:
+			callback( com )
 		
-		if buffer.startswith( '{};'.format(cmd) ):
-			return raceResultHost
+		try:
+			s = serial.Serial( port='COM{}'.format(com), baudrate=19200, timeout=2, write_timeout=2 )
+			s.open()
+		except Exception as e:
+			continue
+		
+		s.write( 'ASCII\n' )
+		s.flush()
+
+		try:
+			response = readResponse( s )
+		except Exception as e:
+			s.close()
+			continue
+		
+		s.close()
+		if response.startswith( 'ASCII;00' ):
+			return com
 			
 	return None
 	
 # if we get the same time, make sure we give it a small offset to make it unique, but preserve the order.
 tSmall = datetime.timedelta( seconds = 0.000001 )
 
-statusFields = [
-	'Date', 'Time', 'HasPower', 'Antennas', 'IsInTimingMode',
-	'FileNumber', 'GPSHasFix', 'Latitude', 'Longitude', 'LongInd', 'ReaderIsHealthy', 'ActiveExtConnected',
-	'Channel', 'LoopID', 'LoopPower', 'LoopConnected', 'LoopUnderPower', 'Temperature',
-]
 reNonDigit = re.compile( '[^0-9]+' )
-def Server( q, shutdownQ, HOST, PORT, startTime ):
+def Server( q, shutdownQ, comPort, startTime ):
 	global readerEventWindow
 	
 	if not readerEventWindow:
@@ -131,25 +101,32 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 			return True
 		return False
 	
-	def autoDetectCallback( m ):
-		qLog( 'autodetect', '{} {}'.format(_('Checking'), m) )
+	def autoDetectCallback( com ):
+		qLog( 'autodetect', '{}{}...'.format(_('Checking COM'), com) )
 		return keepGoing()
 		
 	def makeCall( s, message ):
+		if not messages.endswith(EOL):
+			message += EOL
 		cmd = message.split(';', 1)[0]
 		qLog( 'command', u'sending: {}'.format(message) )
 		try:
-			socketSend( s, bytes('{}{}'.format(message,EOL)) )
-			buffer = socketReadDelimited( s )
+			bMsg = bytes(message.encode('utf-8'))
+			bytesWritten = s.write( bMsg )
+			if bytesWritten != len(bMsg):
+				qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), _('Write length error')) )
+				raise ValueError
+			s.flush()
+			buffer = readResponse( s )
 		except Exception as e:
 			qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
 			raise ValueError
 		
 		if not buffer.startswith( '{};00'.format(cmd) ):
-			qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected return'), buffer) )
+			qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Command failed'), buffer) )
 			raise ValueError
 		
-		return buffer[buffer.index(EOL)+1:]		# Strip off the return code.
+		return buffer[buffer.index(EOL)+1:]		# Strip off the cmd repeat and return code.
 		
 	signed = 2
 	percent = 1
@@ -166,22 +143,63 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		(0x0a, 'supply voltage', 8),
 		(0x0b, 'loop status', 8),
 	)
-	def querySystemsystemInfo( s ):
+	def querySystemInfo( s ):
 		for i in systemInfo:
-			ret = makeCall( s, 'systemInfoGET;{:2x}{}'.format(i[0], EOL) )
+			ret = makeCall( s, 'INFOGET;{:2x}'.format(i[0]) )
 			param, value = ret.strip().split(';')
 			value = int(value, 16)
 			try:
 				format = i[3]
 				if format & signed:
-					maxPos = (1<<i[2]) - 1
-					if value > maxPos:
-						value -= (maxPos + 1)
+					if value >> (i[2]-1):
+						value -= (1<<i[2])
 				if format & percent:
 					value = '{}%'.format(value)
 			except IndexError:
 				pass
 			qLog( 'status', u'{}={}'.format(i[1], value) )
+	
+	beaconFields = (
+		('decoderID', 4),
+		('loopstatus', 1, (
+				'OK',
+				'Unplugged/Broken Cable',
+				'Underpower',
+				'Overvoltage',
+			)
+		),
+		('mode', 2),
+		('loopData', 2),
+		('loopPower', 2),
+		('channel', 1),
+		('loopID', 1),
+		('powerstatus', 1, (
+				'12V',
+				'USB',
+				'Battery',
+			)
+		),
+		('voltageAndBattery', 2),
+	)
+	def parseBeacon( buf ):
+		beacon = []
+		dataFields = buf.split(';', len(beaconFields)+1 )
+		for data, info in zip(dataFields, beaconFields):
+			try:
+				v = int(data, 16)
+			except ValueError:
+				v = data
+			try:
+				v = info[2][v]
+			except IndexError:
+				pass
+			if info[0] == 'voltageAndBattery':
+				if beacon['powerstatus'] == 'Battery':
+					v = '{}hrs'.format( v )
+				else:
+					v = '{:.1f}V'.format( v / 10.0 )
+			beacon.append( (info[0], v) )
+		return beacon
 	
 	ref_epoch, ref_timestamp = 0, 0
 	def timestampToDateTime( timestamp ):
@@ -198,10 +216,9 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		('transponder-id', None),
 		('passing-counter', 4),
 		('timestamp', 8),
-		('detection-counter', 2),
 	)
 	def parseTagTime( line, lineNo, errors ):
-		fields = lines.split(';', len(passingInfo)+1)
+		fields = line.split(';', len(passingInfo)+1)
 		info = {key: fields[i] if type is None else int(fields[i], 16)
 			for i, (key, type) in enumerate(passingInfo) }
 		return info['transponder-id'], timestampToDateTime(info['timestamp'])
@@ -209,69 +226,113 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 	while keepGoing():
 		if s:
 			try:
-				s.shutdown( socket.SHUT_RDWR )
 				s.close()
 			except Exception as e:
 				pass
 			time.sleep( delaySecs )
 		
 		#-----------------------------------------------------------------------------------------------------
-		qLog( 'connection', u'{} {}:{}'.format(_('Attempting to connect to RaceResult reader at'), HOST, PORT) )
+		qLog( 'connection', u'{}{}'.format(_('Attempting to connect to RaceResult reader on COM'), comPort) )
 		try:
-			s = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
-			s.settimeout( timeoutSecs )
-			s.connect( (HOST, PORT) )
+			s = serial.Serial( port='COM{}'.format(comPort), baudrate=19200,
+				timeout=timeoutSecs, write_timeout=timeoutSecs )
+			s.open()
 		except Exception as e:
 			qLog( 'connection', u'{}: {}'.format(_('Connection to RaceResult reader failed'), e) )
 			s, status, startOperation = None, None, None
 			
 			qLog( 'connection', u'{}'.format(_('Attempting AutoDetect...')) )
-			HOST_AUTO = AutoDetect( callback = autoDetectCallback )
-			if HOST_AUTO:
-				qLog( 'connection', u'{}: {}'.format(_('AutoDetect RaceResult at'), HOST_AUTO) )
-				HOST = HOST_AUTO
+			comPortAuto = AutoDetect( callback = autoDetectCallback )
+			if comPortAuto is not None:
+				qLog( 'connection', u'{}{}'.format(_('AutoDetect RaceResult at COM'), comPort) )
+				comPort = comPortAuto
 			else:
 				time.sleep( delaySecs )
 			continue
 
 		#-----------------------------------------------------------------------------------------------------
+		# Enable ASCII mode.
+		try:
+			ret = makeCall( s, 'ASCII' )
+		except ValueError:
+			continue
+			
+		#-----------------------------------------------------------------------------------------------------
+		# Switch to timing mode.
+		try:
+			ret = makeCall( s, 'TIMING;1' )
+		except ValueError:
+			continue
+		
+		#-----------------------------------------------------------------------------------------------------
+		# Report on system info.
 		try:
 			querySystemInfo( s )
 		except:
 			continue
 		
 		#-----------------------------------------------------------------------------------------------------
+		# Display a warning if the loop id is not zero (as recommended)
 		try:
-			ret = makeCall( s, 'EPOCHREFGET{}'.format(EOL) )
+			ret = makeCall( s, 'CONFGET;07' )
+		except ValueError:
+			continue
+		loopID = int(ret.strip(), 16)
+		if loopID != 0:
+			qLog( 'reader', u'{} "{}"'.format(_('Warning: Loop ID != 0'), loopID) )			
+				
+		#-----------------------------------------------------------------------------------------------------
+		# Get the epoch reference.
+		try:
+			ret = makeCall( s, 'EPOCHREFGET' )
 		except ValueError:
 			continue
 		fields = ret.strip().split(';')
 		ref_epoch, ref_timestamp = int(fields[0], 16), int(fields[1], 16)
 		
+		# If the epoch reference is zero, the box has been rebooted.
+		# Set it to the computer's time.
 		if ref_epoch == 0 and ref_timestamp == 0:
 			try:
-				ret = makeCall( s, 'EPOCHREFSET;{:8x}{}'.format(int(time.time()), EOL) )
+				ret = makeCall( s, 'EPOCHREFSET;{:8x}'.format(int(time.time())) )
 			except ValueError:
 				continue
+			fields = ret.strip().split(';')
 			ref_epoch, ref_timestamp = int(fields[0], 16), int(fields[1], 16)
 		
+		# Check if the reader has been on for two days and we need to readjust the epoch to avoid overflow.
+		# This will also update any internal times still in the reader's buffer.
 		try:
-			dt = reNonDigit.sub(' ', buffer).strip()
-			fields[-1] = (fields[-1] + '000000')[:6]	# Pad with zeros to convert to microseconds.
-			readerTime = datetime.datetime( *[int(f) for f in dt.split()] )
-			readerComputerTimeDiff = datetime.datetime.now() - readerTime
-		except Exception as e:
-			qLog( 'command', u'GETTIME: {} "{}" "{}"'.format(_('Unexpected return'), buffer, e) )
+			ret = makeCall( s, 'TIMESTAMPGET' )
+		except ValueError:
 			continue
+		cur_timestamp = int(ret.strip(), 16)
 		
+		if cur_timestamp > 44236800:
+			try:
+				ret = makeCall( s, 'EPOCHREFADJ1D' )
+			except ValueError:
+				continue
+			fields = ret.strip().split(';')
+			ref_epoch, ref_timestamp = int(fields[0], 16), int(fields[1], 16)			
+		
+			# Get another timestamp based on the adjusted epoch.
+			try:
+				ret = makeCall( s, 'TIMESTAMPGET' )
+			except ValueError:
+				continue
+			cur_timestamp = int(ret.strip(), 16)
+		
+		# Compute a correction between the reader's time and the computer's time.
+		readerComputerTimeDiff = datetime.datetime.now() - timestampToDateTime(cur_timestamp)
+		
+		# Main loop to query passings.
+		tagTimes, errors, times = [], [], set()
 		while keepGoing():
-			#-------------------------------------------------------------------------------------------------
 			
-			tagTimes = []
-			errors = []
-			times = set()				
-			while 1:
-				cmd = 'PASSINGGET;{:08x}{}'.format( passingsCur, EOL )
+			count = 64			
+			while count == 64:
+				cmd = 'PASSINGGET;{:08x}'.format( passingsCur )
 				try:
 					ret = makeCall( cmd )
 				except Exception as e:
@@ -280,16 +341,15 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 
 				lines = ret.split( EOL )
 				count = int( lines[0].split(';')[1], 16 )
-				if count == 0:
-					break
 			
 				for i in xrange( count ):
 					line = lines[i+1]
+					if not line:
+						continue
 					tag, t = parseTagTime(line, passingsCur+i, errors)
 					if tag is None or t is None:
 						qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected return'), line) )
 						continue
-					
 					
 					t += readerComputerTimeDiff
 					while t in times:	# Ensure no equal times.
@@ -299,24 +359,17 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 					tagTimes.append( (tag, t) )
 					
 				passingsCur += count
-				
-				if count != 64:
-					break
 					
 			if tagTimes:
 				sendReaderEvent( tagTimes )
 				for tag, t in tagTimes:
 					q.put( ('data', tag, t) )
-				passingsCur += len(tagTimes)				
+				tagTimes, errors, times = [], [], set()
 			
 			time.sleep( delaySecs )
 	
 	# Final cleanup.
-	cmd = 'STOPOPERATION'
 	try:
-		socketSend( s, '{}{}'.format(cmd, EOL) )
-		buffer = socketReadDelimited( s )
-		s.shutdown( socket.SHUT_RDWR )
 		s.close()
 	except:
 		pass
@@ -356,21 +409,20 @@ def StopListener():
 def IsListening():
 	return listener is not None
 
-def StartListener( startTime=datetime.datetime.now(), HOST=None, PORT=None ):
+def StartListener( startTime=datetime.datetime.now(), comPort=1 ):
 	global q
 	global shutdownQ
 	global listener
 	
 	StopListener()
-	
+
 	if Model.race:
-		HOST = (HOST or Model.race.chipReaderIpAddr)
-		PORT = (PORT or Model.race.chipReaderPort)
+		comPort = (comPort or getattr(Model.race, 'comPort', 1))
 	
 	q = Queue()
 	shutdownQ = Queue()
-	listener = Process( target = Server, args=(q, shutdownQ, HOST, PORT, startTime) )
-	listener.name = 'RaceResult Listener'
+	listener = Process( target = Server, args=(q, shutdownQ, comPort, startTime) )
+	listener.name = 'RaceResultUSB Listener'
 	listener.daemon = True
 	listener.start()
 	
@@ -386,7 +438,7 @@ def CleanupListener():
 if __name__ == '__main__':
 	def doTest():
 		try:
-			StartListener( HOST='127.0.0.1', PORT=DEFAULT_PORT )
+			StartListener( comPort=1 )
 			count = 0
 			while 1:
 				time.sleep( 1 )

@@ -2849,13 +2849,23 @@ class MainWin( wx.Frame ):
 			race.minutes = self.raceMinutes
 			race.raceNum = 1
 			race.simulation = True	# Flag this as a simulation race.
-			#race.isTimeTrial = True
+			race.isTimeTrial = True
 			#race.enableUSBCamera = True
 			#race.photosAtRaceEndOnly = True
 			#race.enableJChipIntegration = True
-			race.setCategories( [	{'name':'Junior', 'catStr':'100-199', 'startOffset':'00:00', 'distance':0.5, 'gender':'Men'},
-									{'name':'Senior', 'catStr':'200-299', 'startOffset':'00:10', 'distance':0.5, 'gender':'Women', 'raceMinutes':6}] )
-			self.lapTimes = [(lt[0] + race.getStartOffset(lt[1]), lt[1]) for lt in self.lapTimes]
+			if race.isTimeTrial:
+				race.setCategories( [	{'name':'Junior', 'catStr':'100-199', 'startOffset':'00:00', 'distance':0.5, 'gender':'Men', 'numLaps':5},
+										{'name':'Senior', 'catStr':'200-299', 'startOffset':'00:00', 'distance':0.5, 'gender':'Women', 'numLaps':4}] )
+				nums = sorted( set( num for t, num in self.lapTimes if 100 <= num <= 299 ), reverse=True )
+				offset = 5.0
+				numOffset = {n:i*offset for i, n in enumerate(nums)}
+				self.lapTimes = [(t + numOffset.get(num, 0.0), num) for t, num in self.lapTimes]
+				self.lapTimes.extend( [(offset+5.0, num) for num, offset in numOffset.iteritems()] )
+				self.lapTimes.sort( reverse=True )
+			else:
+				race.setCategories( [	{'name':'Junior', 'catStr':'100-199', 'startOffset':'00:00', 'distance':0.5, 'gender':'Men'},
+										{'name':'Senior', 'catStr':'200-299', 'startOffset':'00:10', 'distance':0.5, 'gender':'Women', 'raceMinutes':6}] )
+				self.lapTimes = [(t + race.getStartOffset(num), num) for t, num in self.lapTimes]
 
 		self.writeRace()
 		DeletePhotos( self.fileName )
@@ -2902,8 +2912,9 @@ class MainWin( wx.Frame ):
 		self.nextNum = None
 		with Model.LockRace() as race:
 			race.startRaceNow()
-			# Backup all the events and race start so we don't have to wait for the first lap.
-			race.startTime -= datetime.timedelta( seconds = (tMin-1) )
+			if not race.isTimeTrial:
+				# Backup all the events and race start so we don't have to wait for the first lap.
+				race.startTime -= datetime.timedelta( seconds = (tMin-1) )
 
 		OutputStreamer.writeRaceStart()
 		if race.isTimeTrial:

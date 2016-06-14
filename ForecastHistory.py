@@ -20,13 +20,22 @@ def interpolateNonZeroFinishers():
 	results = GetResults( None, False )
 	Entry = Model.Entry
 	Finisher = Model.Rider.Finisher
-	return sorted(
-		itertools.chain.from_iterable(
-			((Entry(r.num, lap, t, r.interp[lap]) for lap, t in enumerate(r.raceTimes))
-				for r in results if r.status == Finisher)
-		),
-		key=Entry.key
-	)
+	if Model.race and Model.race.isTimeTrial:
+		return sorted(
+			itertools.chain.from_iterable(
+				((Entry(r.num, lap, t + getattr(r, 'startTime', 0.0), r.interp[lap]) for lap, t in enumerate(r.raceTimes))
+					for r in results if r.status == Finisher)
+			),
+			key=Entry.key
+		)
+	else:
+		return sorted(
+			itertools.chain.from_iterable(
+				((Entry(r.num, lap, t, r.interp[lap]) for lap, t in enumerate(r.raceTimes[1:], 1))
+					for r in results if r.status == Finisher)
+			),
+			key=Entry.key
+		)
 	
 # Define columns for recorded and expected information.
 iNumCol, iNoteCol, iTimeCol, iLapCol, iGapCol, iNameCol, iWaveCol, iColMax = range(8)
