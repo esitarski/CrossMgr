@@ -199,11 +199,11 @@ def CreateGPX( courseName, gpsPoints ):
 	} )
 	trkseg = createAppendChild( doc, trk, 'trkseg' )
 	for p in gpsPoints:
-		trkpnt = createAppendChild( doc, trkseg, 'trkpnt' )
-		trkpnt.attributes['lat'] = '{}'.format(p.lat)
-		trkpnt.attributes['lon'] = '{}'.format(p.lon)
+		trkpt = createAppendChild( doc, trkseg, 'trkpt' )
+		trkpt.attributes['lat'] = '{}'.format(p.lat)
+		trkpt.attributes['lon'] = '{}'.format(p.lon)
 		if p.ele:
-			ele = createAppendChild( doc, trkpnt, 'ele' )
+			ele = createAppendChild( doc, trkpt, 'ele' )
 			createAppendTextChild( doc, ele, '{}'.format(p.ele) )
 	
 	return doc
@@ -1141,7 +1141,8 @@ class GeoAnimation(wx.PyControl):
 		pass
 		
 if __name__ == '__main__':
-	print GpxHasTimes( 'FantasyIsland.gpx' )
+	fname = r'C:\Projects\CrossMgr\bugs\Stuart\20160419-glenlyon\2016-04-19-WTNC Glenlyon 710-r2-Course.gpx'
+	print GpxHasTimes( fname )
 	
 	data = {}
 	for num in xrange(100,200):
@@ -1158,7 +1159,7 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="GeoAnimation", size=(800,700))
 	animation = GeoAnimation(mainWin)
 	geoTrack = GeoTrack()
-	geoTrack.read( 'FantasyIsland.gpx' )
+	geoTrack.read( fname )
 	geoTrack.writeGPXFile( 'geotrack.gpx' )
 	#sys.exit()
 	
