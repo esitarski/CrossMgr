@@ -178,27 +178,15 @@ class SummaryPage(wiz.WizardPageSimple):
 		
 		self.SetSizer(vbs)
 	
-	def doFixCategoryDistances( self, event ):
-		if not self.setCategoryDistanceCheckbox.GetValue():
-			return
-			
-		with Model.LockRace() as race:
-			if not race:
-				return
-			distance = self.distanceKm if race.distanceUnit == race.UnitKm else self.distanceMiles
-			for c in race.categories.itervalues():
-				c.distance = distance
-			race.setChanged()
-	
 	def setInfo( self, fileName, numCoords, distance, totalElevationGain, isPointToPoint ):
 		self.fileName.SetLabel( fileName )
-		self.numCoords.SetLabel( u'%d' % numCoords )
+		self.numCoords.SetLabel( u'{}'.format(numCoords) )
 		self.distanceKm = distance
 		self.distanceMiles = distance*0.621371
-		self.distance.ChangeValue( u'%.3f km, %.3f miles' % (self.distanceKm, self.distanceMiles) )
+		self.distance.ChangeValue( u'{:.3f} km, {:.3f} miles'.format(self.distanceKm, self.distanceMiles) )
 		self.totalElevationGainM = totalElevationGain
 		self.totalElevationGainFt = totalElevationGain*3.28084
-		self.totalElevationGain.ChangeValue( u'%.0f m, %.0f ft' % (self.totalElevationGainM, self.totalElevationGainFt) )
+		self.totalElevationGain.ChangeValue( u'{:.0f} m, {:.0f} ft'.format(self.totalElevationGainM, self.totalElevationGainFt) )
 		self.courseType.ChangeValue( _('Point to Point') if isPointToPoint else _('Loop') )
 		
 class GetGeoTrack( object ):
@@ -221,7 +209,6 @@ class GetGeoTrack( object ):
 		self.wizard.Bind( wiz.EVT_WIZARD_CANCEL, self.onCancel )
 		self.wizard.Bind( wiz.EVT_WIZARD_HELP,
 			lambda evt: Utils.showHelp('Menu-DataMgmt.html#import-course-in-gpx-format') )
-		self.wizard.Bind( wiz.EVT_WIZARD_FINISHED, self.summaryPage.doFixCategoryDistances )
 		
 		wiz.WizardPageSimple_Chain( self.introPage, self.fileNamePage )
 		wiz.WizardPageSimple_Chain( self.fileNamePage, self.useTimesPage )
@@ -241,9 +228,13 @@ class GetGeoTrack( object ):
 
 	def show( self ):
 		if self.wizard.RunWizard(self.introPage):
-			return self.geoTrack, self.geoTrackFName
+			return (
+				self.geoTrack,
+				self.geoTrackFName,
+				self.summaryPage.distanceKm if self.summaryPage.setCategoryDistanceCheckbox.GetValue() else None
+			)
 		else:
-			return self.geoTrackOriginal, self.geoTrackFNameOriginal
+			return self.geoTrackOriginal, self.geoTrackFNameOriginal, None
 	
 	def onCancel( self, evt ):
 		page = evt.GetPage()

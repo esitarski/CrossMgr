@@ -1835,13 +1835,10 @@ class Race( object ):
 		return self.categoryMask
 
 	def getAllCategories( self ):
-		allCategories = [c for c in self.categories.itervalues()]
-		allCategories.sort( key = Category.key )
-		return allCategories
+		return sorted( self.categories.itervalues(), key=Category.key )
 
 	def setActiveCategories( self, active = None ):
-		allCategories = self.getAllCategories()
-		for i, c in enumerate(allCategories):
+		for i, c in enumerate(self.getAllCategories()):
 			c.active = True if active is None or i in active else False
 		self.setChanged()
 		
@@ -2166,6 +2163,16 @@ class Race( object ):
 			return self.getNumLapsFromCategory(category) or 1000
 		except AttributeError:
 			return 1000
+			
+	def setDistanceForCategories( self, distanceKm ):
+		print( 'setDistanceForCategories:', distanceKm )
+		if distanceKm is not None and distanceKm > 0.0:
+			distance = distanceKm if self.distanceUnit == self.UnitKm else distanceKm*0.621371
+		else:
+			distance = None
+		for c in self.categories.itervalues():
+			print( 'setDistanceForCategories:', c.name, distanceKm )
+			c.distance = distance
 	
 	def resetCategoryCache( self ):
 		self.categoryCache = None

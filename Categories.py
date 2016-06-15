@@ -498,8 +498,8 @@ class Categories( wx.Panel ):
 		return any(	(
 						cat.name != self.grid.GetCellValue(r, self.iCol['name']) or
 						cat.catStr != self.grid.GetCellValue(r, self.iCol['catStr']) or
-						distanceMatches(cat.distance, self.grid.GetCellValue(r, self.iCol['distance'])) or
-						distanceMatches(cat.firstLapDistance, self.grid.GetCellValue(r, self.iCol['firstLapDistance']))
+						not distanceMatches(cat.distance, self.grid.GetCellValue(r, self.iCol['distance'])) or
+						not distanceMatches(cat.firstLapDistance, self.grid.GetCellValue(r, self.iCol['firstLapDistance']))
 					) for r, cat in enumerate(categories) )
 	
 	def pasteFromClipboard( self, event ):

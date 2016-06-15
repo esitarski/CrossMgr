@@ -1987,20 +1987,21 @@ class MainWin( wx.Frame ):
 			return
 		
 		self.showPageName( _('Animation') )
-		with Model.LockRace() as race:
-			if not race:
-				return
-			gt = GpxImport.GetGeoTrack( self, getattr(race, 'geoTrack', None), getattr(race, 'geoTrackFName', '') )
+		if not Model.race:
+			return
+		race = Model.race
+		gt = GpxImport.GetGeoTrack( self, getattr(race, 'geoTrack', None), getattr(race, 'geoTrackFName', '') )
 			
-		geoTrack, geoTrackFName = gt.show()
+		geoTrack, geoTrackFName, distanceKm = gt.show()
 		
-		with Model.LockRace() as race:
-			if not geoTrackFName:
-				race.geoTrack, race.geoTrackFName = None, None
-			else:
-				race.geoTrack, race.geoTrackFName = geoTrack, geoTrackFName
-			race.showOval = (race.geoTrack is None)
-			race.setChanged()
+		if not geoTrackFName:
+			race.geoTrack, race.geoTrackFName = None, None
+		else:
+			race.geoTrack, race.geoTrackFName = geoTrack, geoTrackFName
+			if race.geoTrack and distanceKm:
+				race.setDistanceForCategories( distanceKm )
+		race.showOval = (race.geoTrack is None)
+		race.setChanged()
 			
 		self.refresh()
 		
@@ -2518,6 +2519,9 @@ class MainWin( wx.Frame ):
 		if ret != wx.ID_OK:
 			Model.race = raceSave
 			return
+		
+		race = Model.race
+		geoTrack, geoTrackFName = getattr(race, 'geoTrack', None), getattr(race, 'geoTrackFName', None)
 
 		if overwriteExisting and os.path.isfile(fileName):
 			if not Utils.MessageOKCancel( self,
@@ -2542,25 +2546,26 @@ class MainWin( wx.Frame ):
 		ResetExcelLinkCache()
 		
 		properties.commit()			# Apply the new properties
-		ftpPublish.commit()	# Apply the ftp properties
+		ftpPublish.commit()			# Apply the ftp properties
 		ftpPublish.Destroy()
 		
 		ChipReader.chipReaderCur.reset( race.chipReaderType )
 		self.updateRecentFiles()
 
-		if geoTrack:
-			race.geoTrack, race.geoTrackFName = geoTrack, geoTrackFName
-			distance = geoTrack.lengthKm if race.distanceUnit == race.UnitKm else geoTrack.lengthMiles
-			if distance > 0.0:
-				for c in race.categories.itervalues():
-					c.distance = distance
-			race.showOval = False
-		
 		self.setActiveCategories()
 		self.setNumSelect( None )
-		self.writeRace()
-		self.showPageName( _('Actions') )
+		
+		# Make sure we apply the course distances if known.
+		race = Model.race
+		if geoTrack and not race.geoTrack:
+			race.geoTrack, race.geoTrackFName = geoTrack, geoTrackFName
+		if race.geoTrack:
+			race.setDistanceForCategories( race.geoTrack.lengthKm )
+			race.showOval = False
+		
 		self.refreshAll()
+		self.showPageName( _('Actions') )
+		self.writeRace()
 		
 	@logCall
 	def menuNewRaceDB( self, event ):

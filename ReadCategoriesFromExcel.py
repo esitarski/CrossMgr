@@ -7,7 +7,7 @@ def ReadCategoriesFromExcel( reader ):
 	race = Model.race
 	if not race:
 		return False
-		
+	
 	HeadersFields = (
 		('Category Type',	'catType'),
 		('Name',			'name'),
@@ -25,6 +25,12 @@ def ReadCategoriesFromExcel( reader ):
 	if sheetName not in reader.sheet_names():
 		return False
 	
+	# If the course is defined, default the Categories to the course length.
+	if race.geoTrack:
+		distance = race.geoTrack.lengthKm if race.distanceUnit == race.UnitKm else race.geoTrack.lengthMiles
+	else:
+		distance = None
+		
 	raceMinutesMax = -1
 	headerMap = {}
 	categories = []
@@ -46,6 +52,8 @@ def ReadCategoriesFromExcel( reader ):
 					catRow['raceMinutes'] = raceMinutes
 				except ValueError:
 					pass
+			elif h == 'Race Distance' and not row[c] and distance:
+				catRow['distance'] = distance
 			if catField is not None:
 				catRow[catField] = row[c]
 		

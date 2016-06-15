@@ -526,12 +526,15 @@ class GPXProperties( wx.Panel ):
 		if race:
 			args.extend( [getattr(race, 'geoTrack', None), getattr(race, 'geoTrackFName', '')] )
 		gt = GetGeoTrack( *args )
-		geoTrack, geoTrackFName = gt.show()
+		geoTrack, geoTrackFName, distanceKm = gt.show()
 		if race:
 			if not geoTrackFName:
 				race.geoTrack, race.geoTrackFName = None, None
 			else:
 				race.geoTrack, race.geoTrackFName = geoTrack, geoTrackFName
+				if race.geoTrack and distanceKm:
+					race.setDistanceForCategories( distanceKm )
+
 			race.showOval = (race.geoTrack is None)
 			race.setChanged()
 		self.refresh()
@@ -1482,6 +1485,7 @@ class PropertiesDialog( wx.Dialog ):
         
 		btnsizer.AddSpacer( 40 )
 		btn = wx.Button( self, wx.ID_OK )
+		btn.Bind( wx.EVT_BUTTON, self.onOK )
 		btn.SetDefault()
 		btnsizer.Add( btn, flag=wx.ALL, border=4 )
 
@@ -1500,7 +1504,12 @@ class PropertiesDialog( wx.Dialog ):
 		self.SetSizer(sizer)
 		sizer.Fit(self)
 		self.Layout()
-		
+	
+	def onOK( self, event ):
+		Utils.refresh()
+		Utils.refreshForecastHistory()
+		self.EndModal( wx.ID_OK )
+	
 	def onBrowseFolder( self, event ):
 		defaultPath = self.folder.GetValue()
 		if not defaultPath:
