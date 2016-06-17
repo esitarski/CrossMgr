@@ -274,7 +274,7 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		
 	def hasTagField( self ):
 		fieldCol = self.getFieldCol()
-		return any( fieldCol[tf] >= 0 in fieldCol for tf in TagFields )
+		return any( fieldCol.get(tf,-1) >= 0 for tf in TagFields )
 			
 class SummaryPage(wiz.WizardPageSimple):
 	def __init__(self, parent):

@@ -43,30 +43,11 @@ def readResponse( s ):
 		reponse.append( c )
 
 def AutoDetect( callback=None ):
-	''' Search COM ports in an attempt to find the reader. '''
-	for com in xrange(1, 8+1):
-		if callback:
-			callback( com )
-		
-		try:
-			s = serial.Serial( port='COM{}'.format(com), baudrate=19200, timeout=2, write_timeout=2 )
-			s.open()
-		except Exception as e:
-			continue
-		
-		s.write( 'ASCII\n' )
-		s.flush()
-
-		try:
-			response = readResponse( s )
-		except Exception as e:
-			s.close()
-			continue
-		
-		s.close()
-		if response.startswith( 'ASCII;00' ):
-			return com
-			
+	for comport in serial.tools.list_ports.comports():
+		if comport.pid == 403 and comport.vid == 6001:
+			found = re.search( r'(\d+)$', comport.name )
+			if found:
+				return int(found.group(1))
 	return None
 	
 # if we get the same time, make sure we give it a small offset to make it unique, but preserve the order.
@@ -260,7 +241,7 @@ def Server( q, shutdownQ, comPort, startTime ):
 		#-----------------------------------------------------------------------------------------------------
 		# Switch to timing mode.
 		try:
-			ret = makeCall( s, 'TIMING;1' )
+			ret = makeCall( s, 'CONFSET;05;06' )
 		except ValueError:
 			continue
 		
