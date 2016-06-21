@@ -72,3 +72,36 @@ Opens a browser and loads the CrossMgr web QR Code Share page.
 
 Publish this to allow people to connect to real-time results.
 Print this out and post it at the race.  This will allow people to easily access the real-time results.
+
+## Controlling Results Web Page
+
+### Changing the Results Web Page Format
+
+On the Results web page there is a dropdown at the top which normally shows "Results".
+This dropdown supports other display modes:
+
+Mode|Description
+:---|:----------
+Results|Default.  Shows the results of the competition with animation.
+Kiosk|Enables Kiosk Mode.  This cycles through each category showing one at a time.
+Kiosk A|Enable Kiosk Arrival Mode.  Similar to Kiosk Mode, however, the riders are shown in reverse rank.  This allows finishing riders to see their finish time without being scrolled off the bottom of the screen.
+
+### Results Web Page Parameters
+
+The CrossMgr web page supports configuration through parameters instead of changing them on the screen.  These are passed to the web page in the usual manner: 
+
+    [page_url]?param1=value&param1=value.
+
+Parameter|Value|Description
+:--------|:----|:----------
+kioskMode|t or f|Enables Kiosk Mode.  Designed for a live results screen, in Kiosk Mode, one category is shown at a time, and all categories are cycled through.
+arrivalMode|t or f|Enables Arrival Mode and only works if Kiosk Mode is set.  Designed for Gran Fondos, this options shows rider in reverse order (i.e. last rider first).  This makes it easy for finishing riders to see their time.  If riders are shown first-to-last, arriving riders are scrolled off the screen and cannot see their time easily.
+lang|en or fr or es|Set default language.  Supports English, French and Spanish.  This just sets the default Language.  The display language can still be changed on the page.
+highlight|list of comma separated bib numbers|Numbers to highlight in the results (for example, "highlight=31,21,15")
+raceCat|race category|A race category to show by default instead of all categories.
+
+Example:
+
+    [page_url]?kioskMode=t&arrivalMode=t&lang=fr
+
+Enable Kiosk Mode, enable Arrival Mode and set default language to French.
