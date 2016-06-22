@@ -67,6 +67,7 @@ from HelpSearch			import HelpSearchDialog
 from Utils				import logCall, logException
 from FileDrop			import FileDrop
 from RaceDB				import RaceDB
+from SimulateData		import SimulateData
 import BatchPublishAttrs
 import Model
 import JChipSetup
@@ -2729,75 +2730,17 @@ class MainWin( wx.Frame ):
 	def genTimes( self ):
 		regen = False
 		if regen:
-			fname = 'SimulationLapTimes.py'
-		
-			# Generate all the random rider events.
-			random.seed( 10101021 )
-
-			self.raceMinutes = 8
-			mean = 8*60.0 / 8	# Average lap time.
-			var = mean/20		# Variance between riders.
-			lapsTotal = int(self.raceMinutes * 60 / mean + 3)
-			raceTime = mean * lapsTotal
-			errorPercent = 1.0/25.0
-
-			riders = 30
-			numStart = 200 - riders/2
-
-			self.lapTimes = []
-			for num in xrange(numStart,numStart+riders+1):
-				t = 0
-				if num < numStart + riders / 2:
-					mu = random.normalvariate( mean, mean/20.0 )			# Rider's random average lap time.
-				else:
-					mu = random.normalvariate( mean * 1.15, mean/20.0 )		# These riders are slower, on average.
-					t += 60.0												# Account for offset start.
-				for laps in xrange(lapsTotal):
-					t += random.normalvariate( mu, var/2 )	# Rider's lap time.
-					if random.random() > errorPercent:		# Respect error rate.
-						self.lapTimes.append( (t, num) )
-
-			self.lapTimes.sort()
-			
-			# Get the times and leaders for each lap.
-			leaderTimes = [self.lapTimes[0][0]]
-			leaderNums  = [self.lapTimes[0][1]]
-			numSeen = set()
-			for t, n in self.lapTimes:
-				if n in numSeen:
-					leaderTimes.append( t )
-					leaderNums.append( n )
-					numSeen.clear()
-				numSeen.add( n )
-			
-			# Find the leader's time after the end of the race.
-			iLast = bisect.bisect_left( leaderTimes, self.raceMinutes * 60.0, hi = len(leaderTimes) - 1 )
-			if leaderTimes[iLast] < self.raceMinutes * 60.0:
-				iLast += 1
-				
-			# Trim out everything except next arrivals after the finish time.
-			tLeaderLast = leaderTimes[iLast]
-			numSeen = set()
-			afterLeaderFinishEvents = [evt for evt in self.lapTimes if evt[0] >= tLeaderLast]
-			self.lapTimes = [evt for evt in self.lapTimes if evt[0] < tLeaderLast]
-			
-			# Find the next unique arrival of all finishers.
-			lastLapFinishers = []
-			tStop = self.raceMinutes * 60.0
-			numSeen = set()
-			for t, n in afterLeaderFinishEvents:
-				if n not in numSeen:
-					numSeen.add( n )
-					lastLapFinishers.append( (t, n) )
-					
-			self.lapTimes.extend( lastLapFinishers )
-			
-			with open(fname, 'w') as f:
-				print >> f, 'raceMinutes =', self.raceMinutes
-				print >> f, 'lapTimes =', self.lapTimes
+			for k, v in SimulateData().iteritems():
+				setattr( self, k, v )
 		else:
 			self.raceMinutes = SimulationLapTimes.raceMinutes
 			self.lapTimes = copy.copy(SimulationLapTimes.lapTimes)
+				
+			self.riderInfo = None
+			self.categories = [
+				{'name':'Junior', 'catStr':'100-199', 'startOffset':'00:00', 'distance':0.5, 'gender':'Men'},
+				{'name':'Senior', 'catStr':'200-299', 'startOffset':'00:10', 'distance':0.5, 'gender':'Women', 'raceMinutes':6}
+			]
 			
 			# Add some out-of-category numbers to test.
 			for e in xrange(10, 50, 10):
@@ -2859,9 +2802,16 @@ class MainWin( wx.Frame ):
 			#race.enableUSBCamera = True
 			#race.photosAtRaceEndOnly = True
 			#race.enableJChipIntegration = True
+			categories = getattr( self, 'categories', None )
+			if not categories:
+				categories = [	{'name':'Junior', 'catStr':'100-199', 'startOffset':'00:00', 'distance':0.5, 'gender':'Men'},
+								{'name':'Senior', 'catStr':'200-299', 'startOffset':'00:10', 'distance':0.5, 'gender':'Women', 'raceMinutes':6}]
 			if race.isTimeTrial:
-				race.setCategories( [	{'name':'Junior', 'catStr':'100-199', 'startOffset':'00:00', 'distance':0.5, 'gender':'Men', 'numLaps':5},
-										{'name':'Senior', 'catStr':'200-299', 'startOffset':'00:00', 'distance':0.5, 'gender':'Women', 'numLaps':4}] )
+				for c in categories:
+					c.pop( 'raceMinutes', None )
+				categories[0]['numLaps'] = 6
+				categories[1]['numLaps'] = 4
+				race.setCategories( categories )
 				nums = list( set( num for t, num in self.lapTimes if 100 <= num <= 299 ) )
 				
 				numTimes = defaultdict( list )
@@ -2883,39 +2833,39 @@ class MainWin( wx.Frame ):
 				self.lapTimes.extend( [(offset+5.0, num) for num, offset in numOffset.iteritems()] )
 				self.lapTimes.sort( reverse=True )
 			else:
-				race.setCategories( [	{'name':'Junior', 'catStr':'100-199', 'startOffset':'00:00', 'distance':0.5, 'gender':'Men'},
-										{'name':'Senior', 'catStr':'200-299', 'startOffset':'00:10', 'distance':0.5, 'gender':'Women', 'raceMinutes':6}] )
+				race.setCategories( categories )
 				self.lapTimes = [(t + race.getStartOffset(num), num) for t, num in self.lapTimes]
 
 		self.writeRace()
 		DeletePhotos( self.fileName )
 		
 		# Create an Excel data file of rider data.
-		fnameInfo = os.path.join( Utils.getImageFolder(), 'NamesTeams.csv' )
-		riderInfo = []
-		try:
-			with open(fnameInfo) as fp:
-				header = None
-				for line in fp:
-					line = line.decode('iso-8859-1')
-					if not header:
-						header = line.split(',')
-						continue
-					riderInfo.append( line.split(',') )
-		except IOError:
-			pass
+		riderInfo = getattr( self, 'riderInfo', None )
+		if not riderInfo:
+			riderInfo = []
+			fnameInfo = os.path.join( Utils.getImageFolder(), 'NamesTeams.csv' )
+			try:
+				with open(fnameInfo) as fp:
+					header = None
+					for r, line in enumerate(fp):
+						line = line.decode('iso-8859-1')
+						if not header:
+							header = line.split(',')
+							continue
+						riderInfo.append( [r+100] + line.split(',') )
+			except IOError:
+				pass
 			
 		if riderInfo:
 			fnameRiderInfo = os.path.join(Utils.getHomeDir(), 'SimulationRiderData.xlsx')
-			sheetName = 'RiderData'
+			sheetName = 'Registration'
 			wb = xlsxwriter.Workbook( fnameRiderInfo )
 			ws = wb.add_worksheet(sheetName)
 			for c, h in enumerate(['Bib#', 'LastName', 'FirstName', 'Team']):
 				ws.write(0, c, h)
 			for r, row in enumerate(riderInfo):
-				ws.write( r+1, 0, r+100 )
 				for c, v in enumerate(row):
-					ws.write( r+1, c+1, v )
+					ws.write( r+1, c, v )
 			wb.close()
 			
 			race.excelLink = ExcelLink()

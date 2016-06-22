@@ -812,17 +812,18 @@ class Results( wx.Panel ):
 			pass
 		
 		self.lapGrid.Set( data = dataLaps, colnames = colnameLaps )
-		self.lapGrid.AutoSizeColumns( True )
 		self.lapGrid.Reset()
+		self.lapGrid.AutoSizeColumns( self.lapGrid.GetNumberCols() < 100 )
 		
 		self.isEmpty = False
 		
 		# Find interpolated entries.
 		with Model.LockRace() as race:
 			numTimeInfo = race.numTimeInfo
+			riders = race.riders
 			for r in xrange(self.lapGrid.GetNumberRows()):
 				try:
-					rider = race[int(self.labelGrid.GetCellValue(r, 1))]
+					rider = riders[int(self.labelGrid.GetCellValue(r, 1))]
 				except:
 					continue
 					

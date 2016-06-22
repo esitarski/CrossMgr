@@ -526,9 +526,16 @@ class Entry(object):
 		self.lap	= lap
 		self.t		= t
 		self.interp	= interp
-
+		
 	def __cmp__( self, e ):
-		return cmp( (self.t, -self.lap, self.num, self.interp), (e.t, -e.lap, e.num, e.interp) )
+		d = cmp( self.t, e.t )
+		if d != 0:	return d
+		d = cmp( self.lap, e.lap )
+		if d != 0:	return -d
+		d = cmp(self.num, e.num)
+		if d != 0:	return d
+		return cmp(self.interp, e.interp)
+		#return cmp( (self.t, -self.lap, self.num, self.interp), (e.t, -e.lap, e.num, e.interp) )
 
 	def key( self ):
 		return (self.t, -self.lap, self.num, self.interp)
@@ -604,6 +611,14 @@ class Rider(object):
 		self.firstTime = None			# Used for time trial mode.  Also used to flag the first start time.
 		self.relegatedPosition = None	# Used to indicate relegation in the results.
 
+	def __getstate__( self ):
+		state = self.__dict__.copy()
+		
+		# Don't pickle cached entries.
+		state.pop( '_iTimesLast', None )
+		state.pop( '_entriesLast', None )
+		return state
+
 	def __repr__( self ):
 		return u'{} ({})'.format( self.num, self.statusNames[self.status] )
 		
@@ -615,13 +630,17 @@ class Rider(object):
 		if t < 0.0:		# Don't add negative race times.
 			return
 			
-		timesLen = len(self.times)
-		if timesLen == 0 or t > self.times[timesLen-1]:
+		try:
+			if t > self.times[-1]:
+				self.times.append( t )
+				return
+		except IndexError:
 			self.times.append( t )
-		else:
-			i = bisect.bisect_left(self.times, t, 0, timesLen)
-			if i >= timesLen or self.times[i] != t:
-				self.times.insert( i, t )
+			return
+			
+		i = bisect.bisect_left(self.times, t)
+		if i >= len(self.times) or self.times[i] != t:
+			self.times.insert( i, t )
 
 	def deleteTime( self, t ):
 		try:
@@ -689,11 +708,10 @@ class Rider(object):
 			return None
 
 		# Create a separate working list.
-		iTimes = [None] * (len(self.times) + 1)
 		# Add a zero start time for the beginning of the race.
 		# This avoids a whole lot of special cases later.
-		iTimes[0] = race.getStartOffset(self.num) if race else 0.0
-		iTimes[1:] = self.times
+		iTimes = self.times[:]
+		iTimes.insert( 0, race.getStartOffset(self.num) if race else 0.0 )
 		try:
 			numLaps = min( race.getCategory(self.num)._numLaps or 999999, len(iTimes) )
 		except Exception as e:
@@ -808,10 +826,22 @@ class Rider(object):
 		except Exception as e:
 			pass
 		return count
-		
+	
+	def getEntries( self, iTimes ):
+		try:
+			if self._iTimesLast == iTimes:
+				return self._entriesLast
+		except AttributeError:
+			pass
+			
+		num = self.num
+		self._entriesLast = tuple(Entry(num, lap, it[0], it[1]) for lap, it in enumerate(iTimes))
+		self._iTimesLast = iTimes
+		return self._entriesLast
+			
 	def interpolate( self, stopTime = maxInterpolateTime ):
 		if not self.times or self.status in [Rider.DNS, Rider.DQ]:
-			return tuple()
+			return getEntries( [] )
 		
 		# Adjust the stop time.
 		st = stopTime
@@ -824,7 +854,7 @@ class Rider(object):
 		# Check if we need to do any interpolation or if the user wants the raw data.
 		if not getattr(self, 'autocorrectLaps', True):
 			if not self.times:
-				return tuple()
+				return getEntries( [] )
 			# Add the start time for the beginning of the rider.
 			# This avoids a whole lot of special cases later.
 			iTimes = [race.getStartOffset(self.num) if race else 0.0]
@@ -833,12 +863,12 @@ class Rider(object):
 			iTimes = [(t, False) for t in iTimes]
 			if dnfPulledTime is not None:
 				iTimes = self.removeLateTimes( iTimes, dnfPulledTime )
-			return tuple(Entry(t=t[0], lap=i, num=self.num, interp=False) for i, t in enumerate(iTimes))
+			return self.getEntries( iTimes )
 
 		iTimes = self.getCleanLapTimes()
 		
 		if not iTimes:
-			return tuple()
+			return getEntries( [] )
 
 		# Flag that these are not interpolated times.
 		expected = self.getExpectedLapTime( iTimes )
@@ -867,8 +897,8 @@ class Rider(object):
 			iTimes = self.removeLateTimes( iTimes, dnfPulledTime )
 		
 		if len(iTimes) <= 1:
-			return tuple()
-		return tuple(Entry(t=it[0], lap=i, num=self.num, interp=it[1]) for i, it in enumerate(iTimes))
+			iTimes = []
+		return self.getEntries( iTimes )
 		
 	def hasInterpolatedTime( self, tMax ):
 		interpolate = self.interpolate()
@@ -1669,30 +1699,21 @@ class Race( object ):
 
 	@memoize
 	def getCategoryTimesNums( self ):
-		''' Return times and nums for the leaders of each category. '''
-		ctn = {}
+		# Return times and nums for the leaders of each category.
+		ctn = defaultdict( lambda: ([0.0], [None]) )
 		
-		entries = self.interpolate()
-		
-		categorySplit = defaultdict( list )
 		getCategory = self.getCategory
-		
-		for e in entries:
+
+		catLapCur = defaultdict( lambda: 1 )
+		for e in self.interpolate():
 			category = getCategory(e.num)
-			if category:
-				categorySplit[category].append( e )
-			
-		for c in self.getCategories():
-			times = [0.0]
-			nums = [None]
-			lapCur = 1
-			for e in categorySplit[c]:
-				if e.lap == lapCur:
-					times.append( e.t )
-					nums.append( e.num )
-					lapCur += 1
-			
-			ctn[c] = [times, nums]
+			if e.lap == catLapCur[category]:
+				v = ctn[category]
+				v[0].append( e.t )
+				v[1].append( e.num )
+				catLapCur[category] += 1
+
+		ctn.pop( None, None )	# Remove unmatched categories.
 		return ctn
 		
 	@memoize
@@ -2244,8 +2265,9 @@ class Race( object ):
 		getCategory = self.getCategory
 		finisherStatusSet = Race.finisherStatusSet
 		localCat = {}
+		riders = race.riders
 		for e in self.interpolate():
-			if race[e.num].status in finisherStatusSet:
+			if riders[e.num].status in finisherStatusSet:
 				try:
 					category = localCat[e.num]
 				except KeyError:

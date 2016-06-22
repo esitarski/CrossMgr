@@ -114,14 +114,15 @@ def FixRelegations( riderResults ):
 	NP = Model.Rider.NP
 	race = Model.race
 	
-	if not any( race[rr.num].isRelegated() for rr in riderResults ):
+	riders = race.riders
+	if not any( riders[rr.num].isRelegated() for rr in riderResults ):
 		return
 		
 	relegatedResults = {}
 	relegated = set()
 	maxRelegatedPosition = 0
 	for rr in riderResults:
-		rider = race[rr.num]
+		rider = riders[rr.num]
 		if rider.isRelegated():
 			rr.relegated = True
 			relegated.add( rr )
@@ -165,6 +166,7 @@ def GetResultsCore( category ):
 		roadRaceFinishTimes = race.roadRaceFinishTimes
 		allCategoriesFinishAfterFastestRidersLastLap = race.allCategoriesFinishAfterFastestRidersLastLap
 		winAndOut = race.winAndOut
+		riders = race.riders
 		raceStartSeconds = (
 			race.startTime.hour*60.0*60.0 + race.startTime.minute*60.0 + race.startTime.second + race.startTime.microsecond / 1000000.0 if race.startTime
 			else Utils.StrToSeconds(race.scheduledStart) * 60.0
@@ -233,7 +235,7 @@ def GetResultsCore( category ):
 					else:
 						winningLaps = bisect_left( times, raceSeconds, hi=len(times)-1 )
 						if winningLaps >= 2:
-							winner = race[nums[winningLaps]]
+							winner = riders[nums[winningLaps]]
 							entries = winner.interpolate()
 							if entries[winningLaps].interp:
 								lastLapTime = times[winningLaps] - times[winningLaps-1]
@@ -433,7 +435,7 @@ def GetResultsCore( category ):
 		
 		if isTimeTrial:
 			for rr in riderResults:
-				rider = race[rr.num]
+				rider = riders[rr.num]
 				if rider.status == Finisher and hasattr(rider, 'ttPenalty'):
 					rr.ttPenalty = getattr(rider, 'ttPenalty')
 					rr.ttNote = getattr(rider, 'ttNote', u'')
