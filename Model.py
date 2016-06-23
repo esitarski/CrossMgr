@@ -841,7 +841,7 @@ class Rider(object):
 			
 	def interpolate( self, stopTime = maxInterpolateTime ):
 		if not self.times or self.status in [Rider.DNS, Rider.DQ]:
-			return getEntries( [] )
+			return self.getEntries( [] )
 		
 		# Adjust the stop time.
 		st = stopTime
@@ -854,7 +854,7 @@ class Rider(object):
 		# Check if we need to do any interpolation or if the user wants the raw data.
 		if not getattr(self, 'autocorrectLaps', True):
 			if not self.times:
-				return getEntries( [] )
+				return self.getEntries( [] )
 			# Add the start time for the beginning of the rider.
 			# This avoids a whole lot of special cases later.
 			iTimes = [race.getStartOffset(self.num) if race else 0.0]
@@ -868,7 +868,7 @@ class Rider(object):
 		iTimes = self.getCleanLapTimes()
 		
 		if not iTimes:
-			return getEntries( [] )
+			return self.getEntries( [] )
 
 		# Flag that these are not interpolated times.
 		expected = self.getExpectedLapTime( iTimes )

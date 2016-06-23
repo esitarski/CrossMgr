@@ -571,7 +571,7 @@ elif firefoxProg:
 else:
 	def showHelp( url ):
 		url = os.path.join( getHelpFolder(), url )
-		Utils.LaunchApplication( url )
+		LaunchApplication( url )
 
 #------------------------------------------------------------------------
 
