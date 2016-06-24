@@ -173,7 +173,6 @@ class Results( wx.Panel ):
 		self.labelGrid.SetRowLabelSize( 0 )
 		self.labelGrid.SetMargins( 0, 0 )
 		self.labelGrid.SetRightAlign( True )
-		self.labelGrid.SetDoubleBuffered( True )
 		self.labelGrid.AutoSizeColumns( True )
 		self.labelGrid.DisableDragColSize()
 		self.labelGrid.DisableDragRowSize()
@@ -184,7 +183,6 @@ class Results( wx.Panel ):
 		self.lapGrid.SetRowLabelSize( 0 )
 		self.lapGrid.SetMargins( 0, 0 )
 		self.lapGrid.SetRightAlign( True )
-		self.lapGrid.SetDoubleBuffered( True )
 		self.lapGrid.AutoSizeColumns( True )
 		self.lapGrid.DisableDragColSize()
 		self.lapGrid.DisableDragRowSize()
@@ -209,6 +207,7 @@ class Results( wx.Panel ):
 		bs.Add(self.hbs, 0, wx.EXPAND )
 		bs.Add(self.splitter, 1, wx.EXPAND|wx.GROW|wx.ALL, 5 )
 		
+		self.SetDoubleBuffered( True )
 		self.SetSizer(bs)
 		bs.SetSizeHints(self)
 	

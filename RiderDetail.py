@@ -408,6 +408,7 @@ class RiderDetail( wx.Panel ):
 		self.SetSizer( mainSizer )
 		self.hs = hs
 		self.setRider()
+		self.SetDoubleBuffered( True )
 	
 	@logCall
 	def onShowPhotos( self, event ):

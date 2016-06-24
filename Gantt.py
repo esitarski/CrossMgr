@@ -55,6 +55,7 @@ class Gantt( wx.Panel ):
 		bs.Add(self.ganttChart, 1, wx.GROW|wx.ALL, 5)
 		self.SetSizer(bs)
 		bs.SetSizeHints(self)
+		self.SetDoubleBuffered( True )
 
 	def doChooseCategory( self, event ):
 		Model.setCategoryChoice( self.categoryChoice.GetSelection(), 'ganttCategory' )

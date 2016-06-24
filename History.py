@@ -104,6 +104,7 @@ class History( wx.Panel ):
 		bs.Add(self.grid, 1, wx.GROW|wx.ALL, 5)
 		self.SetSizer(bs)
 		bs.SetSizeHints(self)
+		self.SetDoubleBuffered( True )
 
 	def OnSearch( self, event ):
 		self.OnDoSearch()
