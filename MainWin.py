@@ -2728,7 +2728,7 @@ class MainWin( wx.Frame ):
 		self.onCloseWindow( event )
 
 	def genTimes( self ):
-		regen = True
+		regen = False
 		if regen:
 			for k, v in SimulateData().iteritems():
 				setattr( self, k, v )
