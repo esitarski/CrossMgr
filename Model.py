@@ -535,7 +535,6 @@ class Entry(object):
 		d = cmp(self.num, e.num)
 		if d != 0:	return d
 		return cmp(self.interp, e.interp)
-		#return cmp( (self.t, -self.lap, self.num, self.interp), (e.t, -e.lap, e.num, e.interp) )
 
 	def key( self ):
 		return (self.t, -self.lap, self.num, self.interp)

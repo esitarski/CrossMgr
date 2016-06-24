@@ -158,307 +158,307 @@ def GetResultsCore( category ):
 	rankStatus = { Finisher, PUL }
 	
 	riderResults = []
-	with Model.LockRace() as race:
-		if not race:
+	race = Model.race
+	if not race:
+		return tuple()
+	
+	isTimeTrial = race.isTimeTrial
+	roadRaceFinishTimes = race.roadRaceFinishTimes
+	allCategoriesFinishAfterFastestRidersLastLap = race.allCategoriesFinishAfterFastestRidersLastLap
+	winAndOut = race.winAndOut
+	riders = race.riders
+	raceStartSeconds = (
+		race.startTime.hour*60.0*60.0 + race.startTime.minute*60.0 + race.startTime.second + race.startTime.microsecond / 1000000.0 if race.startTime
+		else Utils.StrToSeconds(race.scheduledStart) * 60.0
+	)
+	
+	allRiderTimes = {}
+	entries = race.interpolate()
+	
+	# Group finish times are defined as times which are separated from the previous time by at least 1 second.
+	groupFinishTimes = [0 if not entries else floor(entries[0].t)]
+	if roadRaceFinishTimes and not isTimeTrial:
+		groupFinishTimes.extend( [floor(entries[i].t) for i in xrange(1, len(entries)) if entries[i].t - entries[i-1].t >= 1.0] )
+		groupFinishTimes.extend( [sys.float_info.max] * 5 )
+	
+	for e in entries:
+		try:
+			allRiderTimes[e.num].append( e )
+		except KeyError:
+			allRiderTimes[e.num] = [e]
+	
+	def getRiderTimes( rider ):
+		try:
+			return allRiderTimes[rider.num]
+		except KeyError:
 			return tuple()
-		
-		isTimeTrial = race.isTimeTrial
-		roadRaceFinishTimes = race.roadRaceFinishTimes
-		allCategoriesFinishAfterFastestRidersLastLap = race.allCategoriesFinishAfterFastestRidersLastLap
-		winAndOut = race.winAndOut
-		riders = race.riders
-		raceStartSeconds = (
-			race.startTime.hour*60.0*60.0 + race.startTime.minute*60.0 + race.startTime.second + race.startTime.microsecond / 1000000.0 if race.startTime
-			else Utils.StrToSeconds(race.scheduledStart) * 60.0
-		)
-		
-		allRiderTimes = {}
-		entries = race.interpolate()
-		
-		# Group finish times are defined as times which are separated from the previous time by at least 1 second.
-		groupFinishTimes = [0 if not entries else floor(entries[0].t)]
-		if roadRaceFinishTimes and not isTimeTrial:
-			groupFinishTimes.extend( [floor(entries[i].t) for i in xrange(1, len(entries)) if entries[i].t - entries[i-1].t >= 1.0] )
-			groupFinishTimes.extend( [sys.float_info.max] * 5 )
-		
-		for e in entries:
+	
+	startOffset = category.getStartOffsetSecs() if category else 0.0
+	
+	raceSeconds = race.minutes * 60.0
+	
+	# Enforce All Categories Finish After Fastest Rider's Last Lap
+	fastestRidersLastLapTime = None
+	if allCategoriesFinishAfterFastestRidersLastLap:
+		resultBest = (0, sys.float_info.max)
+		for c, (times, nums) in race.getCategoryTimesNums().iteritems():
+			if not times:
+				continue
 			try:
-				allRiderTimes[e.num].append( e )
-			except KeyError:
-				allRiderTimes[e.num] = [e]
+				winningLaps = bisect_left( times, raceSeconds, hi=len(times)-1 )
+				if winningLaps >= 2:
+					lastLapTime = times[winningLaps] - times[winningLaps-1]
+					if (times[winningLaps] - raceSeconds) > lastLapTime / 2.0:
+						winningLaps -= 1
+				resultBest = min( resultBest, (-winningLaps, times[winningLaps] - 0.01) )
+			except IndexError:
+				pass
+		fastestRidersLastLapTime = resultBest[1] if resultBest[0] != 0 else None
+				
+	# Get the number of race laps for each category.
+	categoryWinningTime, categoryWinningLaps = {}, {}
+	for c, (times, nums) in race.getCategoryTimesNums().iteritems():
+		if category and c != category:
+			continue
 		
-		def getRiderTimes( rider ):
+		# If the category num laps is specified, use that.
+		if race.getNumLapsFromCategory(c):
+			categoryWinningLaps[c] = race.getNumLapsFromCategory(c)
+			categoryWinningTime[c] = times[min(len(times)-1, categoryWinningLaps[c])]
+		else:
+			# Otherwise, set the number of laps by the winner's time closest to the race finish time.
 			try:
-				return allRiderTimes[rider.num]
-			except KeyError:
-				return tuple()
-		
-		startOffset = category.getStartOffsetSecs() if category else 0.0
-		
-		raceSeconds = race.minutes * 60.0
-		
-		# Enforce All Categories Finish After Fastest Rider's Last Lap
-		fastestRidersLastLapTime = None
-		if allCategoriesFinishAfterFastestRidersLastLap:
-			resultBest = (0, sys.float_info.max)
-			for c, (times, nums) in race.getCategoryTimesNums().iteritems():
-				if not times:
-					continue
-				try:
+				if fastestRidersLastLapTime is not None:
+					winningLaps = bisect_left( times, fastestRidersLastLapTime, hi=len(times)-1 )
+					categoryWinningTime[c] = fastestRidersLastLapTime
+					categoryWinningLaps[c] = winningLaps
+				else:
 					winningLaps = bisect_left( times, raceSeconds, hi=len(times)-1 )
 					if winningLaps >= 2:
-						lastLapTime = times[winningLaps] - times[winningLaps-1]
-						if (times[winningLaps] - raceSeconds) > lastLapTime / 2.0:
-							winningLaps -= 1
-					resultBest = min( resultBest, (-winningLaps, times[winningLaps] - 0.01) )
-				except IndexError:
-					pass
-			fastestRidersLastLapTime = resultBest[1] if resultBest[0] != 0 else None
-					
-		# Get the number of race laps for each category.
-		categoryWinningTime, categoryWinningLaps = {}, {}
-		for c, (times, nums) in race.getCategoryTimesNums().iteritems():
-			if category and c != category:
-				continue
-			
-			# If the category num laps is specified, use that.
-			if race.getNumLapsFromCategory(c):
-				categoryWinningLaps[c] = race.getNumLapsFromCategory(c)
-				categoryWinningTime[c] = times[min(len(times)-1, categoryWinningLaps[c])]
-			else:
-				# Otherwise, set the number of laps by the winner's time closest to the race finish time.
-				try:
-					if fastestRidersLastLapTime is not None:
-						winningLaps = bisect_left( times, fastestRidersLastLapTime, hi=len(times)-1 )
-						categoryWinningTime[c] = fastestRidersLastLapTime
-						categoryWinningLaps[c] = winningLaps
-					else:
-						winningLaps = bisect_left( times, raceSeconds, hi=len(times)-1 )
-						if winningLaps >= 2:
-							winner = riders[nums[winningLaps]]
-							entries = winner.interpolate()
-							if entries[winningLaps].interp:
-								lastLapTime = times[winningLaps] - times[winningLaps-1]
-								if (times[winningLaps] - raceSeconds) > lastLapTime / 2.0:
-									winningLaps -= 1
-						categoryWinningTime[c] = times[winningLaps]
-						categoryWinningLaps[c] = winningLaps
-				except IndexError:
-					categoryWinningTime[c] = raceSeconds
-					categoryWinningLaps[c] = None
+						winner = riders[nums[winningLaps]]
+						entries = winner.interpolate()
+						if entries[winningLaps].interp:
+							lastLapTime = times[winningLaps] - times[winningLaps-1]
+							if (times[winningLaps] - raceSeconds) > lastLapTime / 2.0:
+								winningLaps -= 1
+					categoryWinningTime[c] = times[winningLaps]
+					categoryWinningLaps[c] = winningLaps
+			except IndexError:
+				categoryWinningTime[c] = raceSeconds
+				categoryWinningLaps[c] = None
+	
+	highPrecision = Model.highPrecisionTimes()
+	getCategory = race.getCategory
+	for rider in race.riders.itervalues():
+		riderCategory = getCategory( rider.num )
+		if (category and riderCategory != category) or riderCategory not in categoryWinningTime:
+			continue
 		
-		highPrecision = Model.highPrecisionTimes()
-		getCategory = race.getCategory
-		for rider in race.riders.itervalues():
-			riderCategory = getCategory( rider.num )
-			if (category and riderCategory != category) or riderCategory not in categoryWinningTime:
-				continue
-			
-			cutoffTime = categoryWinningTime.get(riderCategory, raceSeconds)
-			
-			riderTimes = getRiderTimes( rider )
-			times = [e.t for e in riderTimes]
-			interp = [e.interp for e in riderTimes]
-			
-			if len(times) >= 2:
-				times[0] = min(riderCategory.getStartOffsetSecs(), times[1])
-				if categoryWinningLaps.get(riderCategory, None) and getattr(riderCategory, 'lappedRidersMustContinue', False):
-					laps = min( categoryWinningLaps[riderCategory], len(times)-1 )
-				else:
-					laps = bisect_left( times, cutoffTime, hi=len(times)-1 )
-				
-				times = times[:laps+1]
-				interp = interp[:laps+1]
+		cutoffTime = categoryWinningTime.get(riderCategory, raceSeconds)
+		
+		riderTimes = getRiderTimes( rider )
+		times = [e.t for e in riderTimes]
+		interp = [e.interp for e in riderTimes]
+		
+		if len(times) >= 2:
+			times[0] = min(riderCategory.getStartOffsetSecs(), times[1])
+			if categoryWinningLaps.get(riderCategory, None) and getattr(riderCategory, 'lappedRidersMustContinue', False):
+				laps = min( categoryWinningLaps[riderCategory], len(times)-1 )
 			else:
-				laps = 0
-				times = []
-				interp = []
+				laps = bisect_left( times, cutoffTime, hi=len(times)-1 )
 			
-			lastTime = rider.tStatus
-			if not lastTime:
-				if times:
-					lastTime = times[-1]
-				else:
-					lastTime = 0.0
-			
-			status = Finisher if rider.status in rankStatus else rider.status
-			if isTimeTrial and not lastTime and rider.status == Finisher:
-				status = NP
-			rr = RiderResult(	rider.num, status, lastTime,
-								riderCategory.fullname,
-								[times[i] - times[i-1] for i in xrange(1, len(times))],
-								times,
-								interp )
-			
-			if isTimeTrial:
-				rr.startTime = getattr( rider, 'firstTime', None )
-				rr.clockStartTime = rr.startTime + raceStartSeconds if rr.startTime is not None else None
-				if rr.status == Finisher:
-					try:
-						if rr.lastTime > 0:
-							rr.finishTime = rr.startTime + rr.lastTime
-					except (TypeError, AttributeError):
-						pass
-						
+			times = times[:laps+1]
+			interp = interp[:laps+1]
+		else:
+			laps = 0
+			times = []
+			interp = []
+		
+		lastTime = rider.tStatus
+		if not lastTime:
+			if times:
+				lastTime = times[-1]
+			else:
+				lastTime = 0.0
+		
+		status = Finisher if rider.status in rankStatus else rider.status
+		if isTimeTrial and not lastTime and rider.status == Finisher:
+			status = NP
+		rr = RiderResult(	rider.num, status, lastTime,
+							riderCategory.fullname,
+							[times[i] - times[i-1] for i in xrange(1, len(times))],
+							times,
+							interp )
+		
+		if isTimeTrial:
+			rr.startTime = getattr( rider, 'firstTime', None )
+			rr.clockStartTime = rr.startTime + raceStartSeconds if rr.startTime is not None else None
+			if rr.status == Finisher:
 				try:
-					rr.lastTime += getattr(rider, 'ttPenalty', 0.0)
+					if rr.lastTime > 0:
+						rr.finishTime = rr.startTime + rr.lastTime
 				except (TypeError, AttributeError):
 					pass
+					
+			try:
+				rr.lastTime += getattr(rider, 'ttPenalty', 0.0)
+			except (TypeError, AttributeError):
+				pass
+		
+		# Compute the speeds for the rider.
+		if getattr(riderCategory, 'distance', None):
+			distance = getattr(riderCategory, 'distance')
+			if riderCategory.distanceIsByLap:
+				riderDistance = riderCategory.getDistanceAtLap(len(rr.lapTimes))
+				rr.lapSpeeds = [DefaultSpeed if t <= 0.0 else (riderCategory.getLapDistance(i+1) / (t / (60.0*60.0))) for i, t in enumerate(rr.lapTimes)]
+				# Ensure that the race speeds are always consistent with the lap times.
+				raceSpeeds = []
+				if rr.lapSpeeds:
+					tCur = 0.0
+					for i, t in enumerate(rr.lapTimes):
+						tCur += t
+						raceSpeeds.append( DefaultSpeed if tCur <= 0.0 else (riderCategory.getDistanceAtLap(i+1) / (tCur / (60.0*60.0))) )
+					rr.speed = '{:.2f} {}'.format(raceSpeeds[-1], ['km/h', 'mph'][getattr(race, 'distanceUnit', 0)] )
+				rr.raceSpeeds = raceSpeeds
+			else:	# Distance is by entire race.
+				if rider.status == Finisher and rr.raceTimes:
+					riderDistance = distance
+					try:
+						tCur = rr.raceTimes[-1] - rr.raceTimes[0]
+						speed = DefaultSpeed if tCur <= 0.0 else riderDistance / (tCur / (60.0*60.0))
+					except IndexError as e:
+						speed = DefaultSpeed
+					rr.speed = '{:.2f} {}'.format(speed, ['km/h', 'mph'][getattr(race, 'distanceUnit', 0)] )
+					
+		riderResults.append( rr )
+	
+	if not riderResults:
+		return tuple()
+	
+	if race.isRunning():
+		# Sequence the riders based on the last lap time, not the projected winner of the race.
+		t = race.curRaceTime()
+		statusLapsTimeBest = (999, 0, 24*60*60*200)
+		rrLeader = None
+		for rr in riderResults:
+			if not rr.raceTimes or not rr.status == Finisher:
+				continue
+			iT = bisect_left( rr.raceTimes, t )
+			try:
+				if rr.raceTimes[iT] != t:
+					iT -= 1
+			except IndexError:
+				iT -= 1
 			
-			# Compute the speeds for the rider.
-			if getattr(riderCategory, 'distance', None):
-				distance = getattr(riderCategory, 'distance')
-				if riderCategory.distanceIsByLap:
-					riderDistance = riderCategory.getDistanceAtLap(len(rr.lapTimes))
-					rr.lapSpeeds = [DefaultSpeed if t <= 0.0 else (riderCategory.getLapDistance(i+1) / (t / (60.0*60.0))) for i, t in enumerate(rr.lapTimes)]
-					# Ensure that the race speeds are always consistent with the lap times.
-					raceSpeeds = []
-					if rr.lapSpeeds:
-						tCur = 0.0
-						for i, t in enumerate(rr.lapTimes):
-							tCur += t
-							raceSpeeds.append( DefaultSpeed if tCur <= 0.0 else (riderCategory.getDistanceAtLap(i+1) / (tCur / (60.0*60.0))) )
-						rr.speed = '{:.2f} {}'.format(raceSpeeds[-1], ['km/h', 'mph'][getattr(race, 'distanceUnit', 0)] )
-					rr.raceSpeeds = raceSpeeds
-				else:	# Distance is by entire race.
-					if rider.status == Finisher and rr.raceTimes:
-						riderDistance = distance
-						try:
-							tCur = rr.raceTimes[-1] - rr.raceTimes[0]
-							speed = DefaultSpeed if tCur <= 0.0 else riderDistance / (tCur / (60.0*60.0))
-						except IndexError as e:
-							speed = DefaultSpeed
-						rr.speed = '{:.2f} {}'.format(speed, ['km/h', 'mph'][getattr(race, 'distanceUnit', 0)] )
-						
-			riderResults.append( rr )
+			if iT > 0:
+				statusLapsTime = (statusSortSeq[rr.status], -iT, rr.raceTimes[iT])
+				if statusLapsTime < statusLapsTimeBest:
+					statusLapsTimeBest = statusLapsTime
+					rrLeader = rr
 		
-		if not riderResults:
-			return tuple()
-		
-		if race.isRunning():
-			# Sequence the riders based on the last lap time, not the projected winner of the race.
-			t = race.curRaceTime()
-			statusLapsTimeBest = (999, 0, 24*60*60*200)
-			rrLeader = None
+		if rrLeader:
+			tBest = statusLapsTimeBest[2]
 			for rr in riderResults:
 				if not rr.raceTimes or not rr.status == Finisher:
 					continue
-				iT = bisect_left( rr.raceTimes, t )
-				try:
-					if rr.raceTimes[iT] != t:
-						iT -= 1
-				except IndexError:
-					iT -= 1
-				
-				if iT > 0:
-					statusLapsTime = (statusSortSeq[rr.status], -iT, rr.raceTimes[iT])
-					if statusLapsTime < statusLapsTimeBest:
-						statusLapsTimeBest = statusLapsTime
-						rrLeader = rr
+				iT = bisect_left( rr.raceTimes, tBest )
+				if 0 < iT < len(rr.raceTimes):
+					rr.laps = iT
+					rr.lastTime = rr.raceTimes[iT]
+					rr.lastTimeOrig = rr.lastTime
 			
-			if rrLeader:
-				tBest = statusLapsTimeBest[2]
-				for rr in riderResults:
-					if not rr.raceTimes or not rr.status == Finisher:
-						continue
-					iT = bisect_left( rr.raceTimes, tBest )
-					if 0 < iT < len(rr.raceTimes):
-						rr.laps = iT
-						rr.lastTime = rr.raceTimes[iT]
-						rr.lastTimeOrig = rr.lastTime
-				
-		riderResults.sort( key=RiderResult._getKey )
+	riderResults.sort( key=RiderResult._getKey )
+	
+	# Add the position (or status, if not a Finisher).
+	# Fill in the gap field (include laps down if appropriate).
+	leader = riderResults[0]
+	leaderRaceTimes = len( leader.raceTimes )
+	leaderLapTimes = len( leader.lapTimes )
+	for pos, rr in enumerate(riderResults):
+	
+		if len(rr.raceTimes) > leaderRaceTimes:
+			rr.raceTimes = rr.raceTimes[:leaderRaceTimes]
+		if len(rr.lapTimes) > leaderLapTimes:
+			rr.lapTimes = rr.lapTimes[:leaderLapTimes]
+			rr.laps = leader.laps
+	
+		if rr.status != Finisher:
+			rr.pos = Model.Rider.statusNames[rr.status]
+			continue
+			
+		rr.pos = u'{}'.format(pos+1)
 		
-		# Add the position (or status, if not a Finisher).
-		# Fill in the gap field (include laps down if appropriate).
-		leader = riderResults[0]
-		leaderRaceTimes = len( leader.raceTimes )
-		leaderLapTimes = len( leader.lapTimes )
+		# if gapValue is negative, it is laps down.  Otherwise, it is seconds.
+		rr.gapValue = 0
+		if rr.laps != leader.laps:
+			lapsDown = leader.laps - rr.laps
+			rr.gap = u'-{} {}'.format(lapsDown, _('lap') if lapsDown == 1 else _('laps'))
+			rr.gapValue = -lapsDown
+		elif (winAndOut or rr != leader) and not (isTimeTrial and rr.lastTime == leader.lastTime):
+			rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
+			rr.gapValue = rr.lastTime - leader.lastTime
+	
+	# Compute road race times and gaps.
+	if roadRaceFinishTimes and not isTimeTrial:
+		iTime = 0
+		lastFullLapsTime = 60.0
 		for pos, rr in enumerate(riderResults):
-		
-			if len(rr.raceTimes) > leaderRaceTimes:
-				rr.raceTimes = rr.raceTimes[:leaderRaceTimes]
-			if len(rr.lapTimes) > leaderLapTimes:
-				rr.lapTimes = rr.lapTimes[:leaderLapTimes]
-				rr.laps = leader.laps
-		
-			if rr.status != Finisher:
-				rr.pos = Model.Rider.statusNames[rr.status]
-				continue
-				
-			rr.pos = u'{}'.format(pos+1)
-			
-			# if gapValue is negative, it is laps down.  Otherwise, it is seconds.
-			rr.gapValue = 0
-			if rr.laps != leader.laps:
-				lapsDown = leader.laps - rr.laps
-				rr.gap = u'-{} {}'.format(lapsDown, _('lap') if lapsDown == 1 else _('laps'))
-				rr.gapValue = -lapsDown
-			elif (winAndOut or rr != leader) and not (isTimeTrial and rr.lastTime == leader.lastTime):
-				rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
-				rr.gapValue = rr.lastTime - leader.lastTime
-		
-		# Compute road race times and gaps.
-		if roadRaceFinishTimes and not isTimeTrial:
-			iTime = 0
-			lastFullLapsTime = 60.0
-			for pos, rr in enumerate(riderResults):
-				rr.projectedTime = rr.lastTime
-				if rr.status != Finisher or not rr.raceTimes:
-					rr.roadRaceLastTime = floor(rr.lastTime)
-					rr.roadRaceGap = rr.gap.split(u'.')[0]
-					rr.roadRaceGapValue = 0
-				elif rr.laps == leader.laps:
+			rr.projectedTime = rr.lastTime
+			if rr.status != Finisher or not rr.raceTimes:
+				rr.roadRaceLastTime = floor(rr.lastTime)
+				rr.roadRaceGap = rr.gap.split(u'.')[0]
+				rr.roadRaceGapValue = 0
+			elif rr.laps == leader.laps:
+				if not (groupFinishTimes[iTime] <= rr.lastTime < groupFinishTimes[iTime+1]):
+					iTime += 1
 					if not (groupFinishTimes[iTime] <= rr.lastTime < groupFinishTimes[iTime+1]):
-						iTime += 1
-						if not (groupFinishTimes[iTime] <= rr.lastTime < groupFinishTimes[iTime+1]):
-							iTime = bisect_left( groupFinishTimes, rr.lastTime, 0, len(groupFinishTimes) - 1 )
-							if groupFinishTimes[iTime] > rr.lastTime:
-								iTime -= 1
-					rr.roadRaceLastTime = groupFinishTimes[iTime]
-					rr.roadRaceGapValue = rr.roadRaceLastTime - leader.roadRaceLastTime
-					rr.roadRaceGap = Utils.formatTimeGap( rr.roadRaceGapValue, False )
-					lastFullLapsTime = rr.roadRaceLastTime + 60.0
+						iTime = bisect_left( groupFinishTimes, rr.lastTime, 0, len(groupFinishTimes) - 1 )
+						if groupFinishTimes[iTime] > rr.lastTime:
+							iTime -= 1
+				rr.roadRaceLastTime = groupFinishTimes[iTime]
+				rr.roadRaceGapValue = rr.roadRaceLastTime - leader.roadRaceLastTime
+				rr.roadRaceGap = Utils.formatTimeGap( rr.roadRaceGapValue, False )
+				lastFullLapsTime = rr.roadRaceLastTime + 60.0
+			else:
+				# Compute a projected finish time.  Try to skip the first lap in the calculation.
+				if len(rr.raceTimes) > 1:
+					lapStart = min( len(rr.raceTimes), 1 if len(rr.raceTimes) > 2 else 0 )
+					raceTime = rr.raceTimes[rr.laps] - rr.raceTimes[lapStart]
+					aveLapTime = raceTime / (float(rr.laps - lapStart) if rr.laps - lapStart > 0 else 0.000001)
+					lapsDown = leader.laps - rr.laps
+					rr.projectedTime = rr.raceTimes[-1] + lapsDown * aveLapTime
+					rr.roadRaceLastTime = max( lastFullLapsTime, floor(rr.projectedTime) )
 				else:
-					# Compute a projected finish time.  Try to skip the first lap in the calculation.
-					if len(rr.raceTimes) > 1:
-						lapStart = min( len(rr.raceTimes), 1 if len(rr.raceTimes) > 2 else 0 )
-						raceTime = rr.raceTimes[rr.laps] - rr.raceTimes[lapStart]
-						aveLapTime = raceTime / (float(rr.laps - lapStart) if rr.laps - lapStart > 0 else 0.000001)
-						lapsDown = leader.laps - rr.laps
-						rr.projectedTime = rr.raceTimes[-1] + lapsDown * aveLapTime
-						rr.roadRaceLastTime = max( lastFullLapsTime, floor(rr.projectedTime) )
-					else:
-						rr.roadRaceLastTime = rr.projectedTime = 5 * 24.0 * 60.0 * 60.0
-					rr.roadRaceGapValue = rr.roadRaceLastTime - leader.roadRaceLastTime
-					rr.roadRaceGap = Utils.formatTimeGap( rr.roadRaceGapValue, False ) if rr != leader else ''
-		
-		if isTimeTrial:
-			for rr in riderResults:
-				rider = riders[rr.num]
-				if rider.status == Finisher and hasattr(rider, 'ttPenalty'):
-					rr.ttPenalty = getattr(rider, 'ttPenalty')
-					rr.ttNote = getattr(rider, 'ttNote', u'')
-		elif winAndOut:
-			riderResults.sort( key=RiderResult._getWinAndOutKey )
-			assignFinishPositions( riderResults )
-			
-		if roadRaceFinishTimes and not isTimeTrial:
-			for rr in riderResults:
-				rr.lastTime = rr.lastTimeOrig = rr.roadRaceLastTime
-				rr.gap = rr.roadRaceGap
-				rr.gapValue = rr.roadRaceGapValue
-				del rr.roadRaceLastTime
-				del rr.roadRaceGap
-				del rr.roadRaceGapValue
-		
-		FixRelegations( riderResults )
-		
-		'''
+					rr.roadRaceLastTime = rr.projectedTime = 5 * 24.0 * 60.0 * 60.0
+				rr.roadRaceGapValue = rr.roadRaceLastTime - leader.roadRaceLastTime
+				rr.roadRaceGap = Utils.formatTimeGap( rr.roadRaceGapValue, False ) if rr != leader else ''
+	
+	if isTimeTrial:
 		for rr in riderResults:
-			rr.lastTime = rr.roadRaceLastTime
+			rider = riders[rr.num]
+			if rider.status == Finisher and hasattr(rider, 'ttPenalty'):
+				rr.ttPenalty = getattr(rider, 'ttPenalty')
+				rr.ttNote = getattr(rider, 'ttNote', u'')
+	elif winAndOut:
+		riderResults.sort( key=RiderResult._getWinAndOutKey )
+		assignFinishPositions( riderResults )
+		
+	if roadRaceFinishTimes and not isTimeTrial:
+		for rr in riderResults:
+			rr.lastTime = rr.lastTimeOrig = rr.roadRaceLastTime
 			rr.gap = rr.roadRaceGap
-		'''
+			rr.gapValue = rr.roadRaceGapValue
+			del rr.roadRaceLastTime
+			del rr.roadRaceGap
+			del rr.roadRaceGapValue
+	
+	FixRelegations( riderResults )
+	
+	'''
+	for rr in riderResults:
+		rr.lastTime = rr.roadRaceLastTime
+		rr.gap = rr.roadRaceGap
+	'''
 	
 	return tuple(riderResults)
 

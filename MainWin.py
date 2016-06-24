@@ -806,7 +806,7 @@ class MainWin( wx.Frame ):
 
 		#------------------------------------------------------------------------------
 		# Set the accelerator table so we can switch windows with the function keys.
-		accTable = [(wx.ACCEL_NORMAL, wx.WXK_F1 + i, jumpToIds[i]) for i in xrange(max(12,len(jumpToIds)))]
+		accTable = [(wx.ACCEL_NORMAL, wx.WXK_F1 + i, jumpToIds[i]) for i in xrange(max(11,len(jumpToIds)))]
 		self.contextHelp = wx.NewId()
 		self.Bind(wx.EVT_MENU, self.onContextHelp, id=self.contextHelp )
 		accTable.append( (wx.ACCEL_CTRL, ord('H'), self.contextHelp) )
@@ -2728,7 +2728,7 @@ class MainWin( wx.Frame ):
 		self.onCloseWindow( event )
 
 	def genTimes( self ):
-		regen = False
+		regen = True
 		if regen:
 			for k, v in SimulateData().iteritems():
 				setattr( self, k, v )
@@ -2896,6 +2896,7 @@ class MainWin( wx.Frame ):
 	def updateSimulation( self, num ):
 		if Model.race is None:
 			return
+		'''
 		if self.nextNum is not None and self.nextNum not in self.simulateSeen:
 			self.forecastHistory.logNum( self.nextNum )
 
@@ -2911,9 +2912,33 @@ class MainWin( wx.Frame ):
 					return
 		except IndexError:
 			pass
+		'''
+		
+		race = Model.race
+		aveLapTime = race.getAverageLapTime()
+		curRaceTime = race.curRaceTime()
+		tRaceEnd = self.raceMinutes*60.0 + aveLapTime*1.5
+		nums = []
+		while self.lapTimes:
+			t, nextNum = self.lapTimes[-1]
+			if t < curRaceTime:
+				self.lapTimes.pop()
+				if t < tRaceEnd:
+					nums.append( nextNum )
+				else:
+					self.simulateSeen.add( nextNum )
+			else:
+				break
+		
+		if nums:
+			self.forecastHistory.logNum( nums )
+			
+		if self.lapTimes:
+			self.simulateTimer.Restart( 500, True )
+			return
 		
 		self.simulateTimer.Stop()
-		self.nextNum = None
+		nextNum = None
 		with Model.LockRace() as race:
 			race.finishRaceNow()
 		ChipReader.chipReaderCur.CleanupListener()
