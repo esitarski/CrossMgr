@@ -2727,7 +2727,7 @@ class MainWin( wx.Frame ):
 	def menuExit(self, event):
 		self.onCloseWindow( event )
 
-	def genTimes( self, regen = True ):
+	def genTimes( self, regen = False ):
 		if regen:
 			for k, v in SimulateData().iteritems():
 				setattr( self, k, v )
