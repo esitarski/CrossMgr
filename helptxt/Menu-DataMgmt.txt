@@ -83,8 +83,10 @@ Remember Ctrl-Z (Undo) and Ctrl-Y (Redo) if you need to.
 Imports start times for a time trial from a spreadsheet.
 The race must be in TimeTrial mode (see [Properties][]).
 
+If CrossMgr has no imported start times, the first recorded time will start the rider's clock.  Otherwise the rider's clock will start automatically on the start time.
+
 The times must be relative to the start of the stopwatch start time, not clock time.  For example, the event starts when the stopwatches start at 00:00:00.
-This must also correspondes to when you push the Start Race button in Actions.
+This also corresponds to when you push the Start Race button on the [Actions][] screen.
 
 The first rider usually leaves a minute or two after the event start time, for example, at 00:01:00.  Subsequent riders leave on 30 second gaps with start times of 00:01:30, 00:02:00, etc.
 

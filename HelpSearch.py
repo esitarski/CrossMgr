@@ -1,12 +1,55 @@
 import Utils
 import wx
 import os
+import io
 import sys
+import time
+import threading
+import traceback
+import urlparse
+import urllib
 import cStringIO as StringIO
 from whoosh.index import open_dir
 from whoosh.qparser import QueryParser
 import  wx.html as html
 import  wx.lib.wxpTag
+from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+
+PORT_NUMBER = 8761
+
+with io.open( os.path.join(Utils.getImageFolder(), 'CrossMgr.ico'), 'rb' ) as f:
+	favicon = f.read()
+
+class HelpHandler( BaseHTTPRequestHandler ):
+	html_content = 'text/html; charset=utf-8'
+	
+	def do_GET(self):
+		up = urlparse.urlparse( self.path )
+		try:
+			if up.path=='/favicon.ico':
+				content = favicon
+				content_type = 'image/x-icon'
+			else:
+				file = urllib.url2pathname(os.path.basename(up.path.split('#')[0]))
+				fname = os.path.join( Utils.getHelpFolder(), file )
+				with open(fname, 'rb') as fp:
+					content = fp.read().encode('utf-8')
+				content_type = self.html_content
+		except Exception as e:
+			self.send_error(404,'File Not Found: {} {}\n{}'.format(self.path, e, traceback.format_exc()))
+			return
+		
+		self.send_response( 200 )
+		self.send_header('Content-type',content_type)
+		if content_type == self.html_content:
+			self.send_header( 'Cache-Control', 'no-cache, no-store, must-revalidate' )
+			self.send_header( 'Pragma', 'no-cache' )
+			self.send_header( 'Expires', '0' )
+		self.end_headers()
+		self.wfile.write( content )
+	
+	def log_message(self, format, *args):
+		return
 
 class HelpSearch( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY, style = 0, size=(-1-1) ):
@@ -64,17 +107,18 @@ class HelpSearch( wx.Panel ):
 				f.write( u'<table>\n' )
 				for i, hit in enumerate(results):
 					file = os.path.splitext(hit['path'].split('#')[0])[0]
+					url = 'http://localhost:{}/{}'.format(PORT_NUMBER, os.path.basename(hit['path']))
 					if not file.startswith('Menu'):
 						section = u'{}: {}'.format(file, hit['section'])
 					else:
 						section = u'Menu: {}'.format( hit['section'] )
 					f.write( u'''<tr>
 							<td valign="top">
-								<font size=+1><a href="{}">{}</a></font><br></br>
-								{}
+								<font size=+1><a href="{url}">{section}</a></font><br></br>
+								{content}
 								<font size=+1><br></br></font>
 							</td>
-						</tr>\n'''.format(hit['path'], section, hit.highlights('content') ) )
+						</tr>\n'''.format(url=url, section=section, content=hit.highlights('content') ) )
 				f.write( u'</table>\n' )
 			ix.close()
 		
@@ -98,7 +142,22 @@ class HelpSearchDialog( wx.Dialog ):
 		
 		self.SetSizer(sizer)
 		sizer.Fit(self)
+
+server = None
+def HelpServer():
+	global server
+	while 1:
+		try:
+			server = HTTPServer(('localhost', PORT_NUMBER), HelpHandler)
+			server.serve_forever( poll_interval = 2 )
+		except Exception as e:
+			server = None
+			time.sleep( 5 )
 		
+webThread = threading.Thread( target=HelpServer, name='HelpServer' )
+webThread.daemon = True
+webThread.start()
+
 if __name__ == '__main__':
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))

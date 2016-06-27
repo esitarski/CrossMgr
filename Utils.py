@@ -562,15 +562,15 @@ for firefoxProg in ['/usr/bin/firefox', '']:
 
 if 'WXMAC' in wx.Platform:
 	def showHelp( url ):
-		url = os.path.join( getHelpFolder(), url )
+		#url = os.path.join( getHelpFolder(), url )
 		os.system( 'open -a Safari %s' % url.split('#')[0] )
 elif firefoxProg:
 	def showHelp( url ):
-		url = os.path.join( getHelpFolder(), url )
+		#url = os.path.join( getHelpFolder(), url )
 		os.system( '"%s" "file://%s" &' % (firefoxProg, url) )
 else:
 	def showHelp( url ):
-		url = os.path.join( getHelpFolder(), url )
+		#url = os.path.join( getHelpFolder(), url )
 		LaunchApplication( url )
 
 #------------------------------------------------------------------------
