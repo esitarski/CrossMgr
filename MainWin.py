@@ -3262,7 +3262,7 @@ class MainWin( wx.Frame ):
 	
 	@logCall
 	def menuHelpQuickStart( self, event ):
-		Utils.showHelp( getHelpUrl('QuickStart.html') )
+		Utils.showHelp( getHelpURL('QuickStart.html') )
 	
 	@logCall
 	def menuHelpSearch( self, event ):
@@ -3270,11 +3270,11 @@ class MainWin( wx.Frame ):
 	
 	@logCall
 	def menuHelp( self, event ):
-		Utils.showHelp( getHelpUrl('Main.html') )
+		Utils.showHelp( getHelpURL('Main.html') )
 	
 	@logCall
 	def onContextHelp( self, event ):
-		Utils.showHelp( getHelpUrl(self.attrClassName[self.notebook.GetSelection()][2] + '.html') )
+		Utils.showHelp( getHelpURL(self.attrClassName[self.notebook.GetSelection()][2] + '.html') )
 		
 	@logCall
 	def menuWebIndexPage( self, event ):
