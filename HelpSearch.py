@@ -51,6 +51,9 @@ class HelpHandler( BaseHTTPRequestHandler ):
 	def log_message(self, format, *args):
 		return
 
+def getHelpURL( fname ):
+	return 'http://localhost:{}/{}'.format(PORT_NUMBER, os.path.basename( fname ))
+		
 class HelpSearch( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY, style = 0, size=(-1-1) ):
 		wx.Panel.__init__(self, parent, id, style=style, size=size )
@@ -107,7 +110,7 @@ class HelpSearch( wx.Panel ):
 				f.write( u'<table>\n' )
 				for i, hit in enumerate(results):
 					file = os.path.splitext(hit['path'].split('#')[0])[0]
-					url = 'http://localhost:{}/{}'.format(PORT_NUMBER, os.path.basename(hit['path']))
+					url = getHelpURL( os.path.basename(hit['path']) )
 					if not file.startswith('Menu'):
 						section = u'{}: {}'.format(file, hit['section'])
 					else:

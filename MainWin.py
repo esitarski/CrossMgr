@@ -63,7 +63,7 @@ from UCIExport			import UCIExport
 from VTTAExport			import VTTAExport
 from CrossResultsExport	import CrossResultsExport
 from WebScorerExport	import WebScorerExport
-from HelpSearch			import HelpSearchDialog
+from HelpSearch			import HelpSearchDialog, getHelpURL
 from Utils				import logCall, logException
 from FileDrop			import FileDrop
 from RaceDB				import RaceDB
@@ -3262,7 +3262,7 @@ class MainWin( wx.Frame ):
 	
 	@logCall
 	def menuHelpQuickStart( self, event ):
-		Utils.showHelp( 'QuickStart.html' )
+		Utils.showHelp( getHelpUrl('QuickStart.html') )
 	
 	@logCall
 	def menuHelpSearch( self, event ):
@@ -3270,11 +3270,11 @@ class MainWin( wx.Frame ):
 	
 	@logCall
 	def menuHelp( self, event ):
-		Utils.showHelp( 'Main.html' )
+		Utils.showHelp( getHelpUrl('Main.html') )
 	
 	@logCall
 	def onContextHelp( self, event ):
-		Utils.showHelp( self.attrClassName[self.notebook.GetSelection()][2] + '.html' )
+		Utils.showHelp( getHelpUrl(self.attrClassName[self.notebook.GetSelection()][2] + '.html') )
 		
 	@logCall
 	def menuWebIndexPage( self, event ):
