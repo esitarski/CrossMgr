@@ -178,7 +178,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 			try:
 				data = s.recv( 4096 )
 			except Exception as e:
-				qLog( 'connection', 'error: %s' % e )
+				qLog( 'connection', 'error: {}'.format(e) )
 				data = None
 			
 			if not data:

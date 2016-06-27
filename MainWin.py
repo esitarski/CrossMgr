@@ -2933,7 +2933,7 @@ class MainWin( wx.Frame ):
 			self.forecastHistory.logNum( nums )
 			
 		if self.lapTimes:
-			self.simulateTimer.Restart( 500, True )
+			self.simulateTimer.Restart( random.randint(200,600), True )
 			return
 		
 		self.simulateTimer.Stop()

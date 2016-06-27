@@ -17,10 +17,11 @@ When a rider's chip is read, the chip receiver sends a timestamped message to Cr
 
 CrossMgr always uses the chip reader's time.  This ensures accuracy even if CrossMgr gets busy and cannot look at its incoming messages for a few seconds.
 
-CrossMgr can work with any number of JChip readers connected to it simultaneously.
-It will compute a time correction between each reader's time and the CrossMgr computer's time.  This synchronizes the reads to a consistent time even if the clocks on all the readers are different, which is likely.
+CrossMgr supports __any number of simultaneous connections of JChip, CrossMgrImpinj or CrossMgrAlien readers__ (in any combination).
 
-For other readers, only one connection is supported.
+It computes a time correction between each reader's time and the CrossMgr computer's time.  This synchronizes the reads to a consistent time even if the clocks on all the readers are different (which is likely).
+
+For other readers, only one connection to one reader is supported at a time.
 
 Notes about Chip reader input:
 
