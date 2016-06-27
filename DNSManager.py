@@ -7,6 +7,7 @@ import itertools
 import Model
 import Utils
 from FixCategories import FixCategories
+import HelpSearch
 from Undo import undo
 
 class AutoWidthListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
@@ -241,7 +242,7 @@ class DNSManagerDialog( wx.Dialog ):
 		self.refresh()
 	
 	def onHelp( self, event ):
-		Utils.showHelp( 'Menu-DataMgmt.html#add-dns-from-external-excel-data' )
+		HelpSearch.showHelp( 'Menu-DataMgmt.html#add-dns-from-external-excel-data' )
 		
 	def onClose( self, event ):
 		wx.CallAfter( Utils.refresh )

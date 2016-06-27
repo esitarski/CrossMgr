@@ -555,25 +555,6 @@ def getDocumentsDir():
 	return dd
 	
 #------------------------------------------------------------------------
-# Use Firefox to display the help if we can find it.
-for firefoxProg in ['/usr/bin/firefox', '']:
-	if os.path.exists(firefoxProg) and os.access(firefoxProg, os.X_OK):
-		break
-
-if 'WXMAC' in wx.Platform:
-	def showHelp( url ):
-		#url = os.path.join( getHelpFolder(), url )
-		os.system( 'open -a Safari %s' % url.split('#')[0] )
-elif firefoxProg:
-	def showHelp( url ):
-		#url = os.path.join( getHelpFolder(), url )
-		os.system( '"%s" "file://%s" &' % (firefoxProg, url) )
-else:
-	def showHelp( url ):
-		#url = os.path.join( getHelpFolder(), url )
-		LaunchApplication( url )
-
-#------------------------------------------------------------------------
 
 reSpace = re.compile(r'\s')
 def approximateMatch( s1, s2 ):

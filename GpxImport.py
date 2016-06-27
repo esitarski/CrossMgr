@@ -9,6 +9,7 @@ import Utils
 from Utils import logException
 from GeoAnimation import GeoTrack, GpxHasTimes
 import Model
+import HelpSearch
 
 class IntroPage(wiz.WizardPageSimple):
 	def __init__(self, parent, controller):
@@ -208,7 +209,7 @@ class GetGeoTrack( object ):
 		self.wizard.Bind( wiz.EVT_WIZARD_PAGE_CHANGING, self.onPageChanging )
 		self.wizard.Bind( wiz.EVT_WIZARD_CANCEL, self.onCancel )
 		self.wizard.Bind( wiz.EVT_WIZARD_HELP,
-			lambda evt: Utils.showHelp('Menu-DataMgmt.html#import-course-in-gpx-format') )
+			lambda evt: HelpSearch.showHelp('Menu-DataMgmt.html#import-course-in-gpx-format') )
 		
 		wiz.WizardPageSimple_Chain( self.introPage, self.fileNamePage )
 		wiz.WizardPageSimple_Chain( self.fileNamePage, self.useTimesPage )

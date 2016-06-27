@@ -8,6 +8,7 @@ import threading
 import traceback
 import urlparse
 import urllib
+import webbrowser
 import cStringIO as StringIO
 from whoosh.index import open_dir
 from whoosh.qparser import QueryParser
@@ -52,8 +53,16 @@ class HelpHandler( BaseHTTPRequestHandler ):
 		return
 
 def getHelpURL( fname ):
-	return 'http://localhost:{}/{}'.format(PORT_NUMBER, os.path.basename( fname ))
-		
+	return 'http://localhost:{}/{}'.format(PORT_NUMBER, os.path.basename(fname))
+
+def showHelp( url ):
+	if not fname.startswith('http://'):
+		url = getHelpURL( url )
+	try:
+		webbrowser.open( url )
+	except Exception as e:
+		pass
+	
 class HelpSearch( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY, style = 0, size=(-1-1) ):
 		wx.Panel.__init__(self, parent, id, style=style, size=size )
@@ -82,7 +91,7 @@ class HelpSearch( wx.Panel ):
 	def doLink( self, event ):
 		info = event.GetLinkInfo()
 		href = info.GetHref()
-		Utils.showHelp( href )
+		showHelp( href )
 		
 	def doSearch( self, event = None ):
 		busy = wx.BusyCursor()

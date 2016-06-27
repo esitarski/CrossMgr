@@ -12,6 +12,7 @@ import traceback
 import Model
 from Undo import undo
 from Excel import GetExcelReader
+import HelpSearch
 
 #-----------------------------------------------------------------------------------------------------
 Fields = ['Bib#', 'StartTime']
@@ -239,7 +240,7 @@ class GetExcelTTStartTimeLink( object ):
 		self.wizard = prewizard
 		self.wizard.Bind( wiz.EVT_WIZARD_PAGE_CHANGING, self.onPageChanging )
 		self.wizard.Bind( wiz.EVT_WIZARD_HELP,
-			lambda evt: Utils.showHelp('Menu-DataMgmt.html#link-to-external-excel-data') )
+			lambda evt: HelpSearch.showHelp('Menu-DataMgmt.html#link-to-external-excel-data') )
 		
 		self.fileNamePage = FileNamePage( self.wizard )
 		self.sheetNamePage = SheetNamePage( self.wizard )

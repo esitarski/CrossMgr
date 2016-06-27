@@ -20,6 +20,7 @@ from ReadPropertiesFromExcel import ReadPropertiesFromExcel
 from ReadCategoriesFromExcel import sheetName as CategorySheetName
 from ReadPropertiesFromExcel import sheetName as PropertySheetName
 import MatchingCategory
+import HelpSearch
 
 with Utils.SuspendTranslation():
 	TagFields = [
@@ -413,7 +414,7 @@ class GetExcelLink( object ):
 		self.wizard = prewizard
 		self.wizard.Bind( wiz.EVT_WIZARD_PAGE_CHANGING, self.onPageChanging )
 		self.wizard.Bind( wiz.EVT_WIZARD_HELP,
-			lambda evt: Utils.showHelp('Menu-DataMgmt.html#link-to-external-excel-data') )
+			lambda evt: HelpSearch.showHelp('Menu-DataMgmt.html#link-to-external-excel-data') )
 		
 		self.fileNamePage = FileNamePage( self.wizard )
 		self.sheetNamePage = SheetNamePage( self.wizard )

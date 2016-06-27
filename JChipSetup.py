@@ -12,6 +12,7 @@ import ChipReader
 from JChip import EVT_CHIP_READER
 import RaceResult
 import Ultra
+import HelpSearch
 from ReadSignOnSheet import GetTagNums
 
 HOST, PORT = JChip.DEFAULT_HOST, JChip.DEFAULT_PORT
@@ -74,7 +75,7 @@ class JChipSetupDialog( wx.Dialog ):
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
 		self.helpBtn = wx.Button( self, wx.ID_HELP )
-		self.Bind( wx.EVT_BUTTON, lambda evt: Utils.showHelp('Menu-ChipReader.html#chip-reader-setup'), self.helpBtn )
+		self.Bind( wx.EVT_BUTTON, lambda evt: HelpSearch.showHelp('Menu-ChipReader.html#chip-reader-setup'), self.helpBtn )
 		
 		self.Bind(EVT_CHIP_READER, self.handleChipReaderEvent)
 		

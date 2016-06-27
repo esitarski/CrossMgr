@@ -10,6 +10,7 @@ import datetime
 import threading
 import Utils
 import Model
+import HelpSearch
 from ExportGrid import getHeaderBitmap, drawQRCode
 from WebServer import WriteHtmlIndexPage
 
@@ -338,7 +339,7 @@ def GetFtpPublish( isDialog=True ):
 				self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 				
 				self.helpBtn = wx.Button( self, wx.ID_HELP )
-				self.Bind( wx.EVT_BUTTON, lambda evt: Utils.showHelp('Menu-File.html#publish-html-results-with-ftp'), self.helpBtn )
+				self.Bind( wx.EVT_BUTTON, lambda evt: HelpSearch.showHelp('Menu-File.html#publish-html-results-with-ftp'), self.helpBtn )
 			
 			fgs.Add( wx.StaticText( self, label = _("Ftp Host Name")), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 			fgs.Add( self.ftpHost, 1, flag=wx.TOP|wx.ALIGN_LEFT|wx.EXPAND )

@@ -27,6 +27,7 @@ import Template
 from BatchPublishAttrs import batchPublishAttr, batchPublishRaceAttr
 import JChipSetup
 import WebServer
+import HelpSearch
 
 #------------------------------------------------------------------------------------------------
 
@@ -1493,7 +1494,7 @@ class PropertiesDialog( wx.Dialog ):
 		btnsizer.Add( btn, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM, border=4 )
 		
 		helpBtn = wx.Button( self, wx.ID_HELP )
-		self.Bind( wx.EVT_BUTTON, lambda evt: Utils.showHelp('Properties.html'), helpBtn )
+		self.Bind( wx.EVT_BUTTON, lambda evt: HelpSearch.showHelp('Properties.html'), helpBtn )
 		btnsizer.Add( helpBtn, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM, border=4 )
 		#-------------------------------------------------------------------------------------------------------------
 
