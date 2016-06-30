@@ -1063,6 +1063,7 @@ class Race( object ):
 	ftpUploadPhotos = False
 	
 	geoTrackFName = None
+	geoTrack = None
 	
 	groupByStartWave = True
 	winAndOut = False

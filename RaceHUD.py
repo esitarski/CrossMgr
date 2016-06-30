@@ -95,7 +95,7 @@ class RaceHUD(wx.PyControl):
 		lapCompleting = min( bisect.bisect_right(raceTimesMax, self.nowTime), lapsMax )
 		lapsToGo = lapsMax - lapCompleting
 		
-		leadersExpectedLapTime = (raceTimesMax[lapCompleting] - raceTimesMax[0]) / lapCompleting
+		leadersExpectedLapTime = (raceTimesMax[lapCompleting] - raceTimesMax[0]) / max(lapCompleting, 1)
 		laps = lapsMax - 1
 		return laps, lapsToGo, min(lapCompleting, laps), leadersExpectedLapTime, leaderNum, raceTimesMax[-2]
 

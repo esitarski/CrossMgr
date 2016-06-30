@@ -568,11 +568,13 @@ def approximateMatch( s1, s2 ):
 	
 #------------------------------------------------------------------------
 PlatformName = platform.system()
+from Version import AppVerName
+AppVer = 'v' + AppVerName.split(' ')[1]
 def writeLog( message ):
 	try:
 		dt = datetime.datetime.now()
 		dt = dt.replace( microsecond = 0 )
-		sys.stdout.write( '{} ({}) {}{}'.format(dt.isoformat(), PlatformName, message, '\n' if not message or message[-1] != '\n' else '' ) )
+		sys.stdout.write( '{} ({} {}) {}{}'.format(dt.isoformat(), AppVer, PlatformName, message, '\n' if not message or message[-1] != '\n' else '' ) )
 		sys.stdout.flush()
 	except IOError:
 		pass

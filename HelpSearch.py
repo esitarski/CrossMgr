@@ -56,7 +56,7 @@ def getHelpURL( fname ):
 	return 'http://localhost:{}/{}'.format(PORT_NUMBER, os.path.basename(fname))
 
 def showHelp( url ):
-	if not fname.startswith('http://'):
+	if not url.startswith('http://'):
 		url = getHelpURL( url )
 	try:
 		webbrowser.open( url )
