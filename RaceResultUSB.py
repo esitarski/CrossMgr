@@ -33,6 +33,7 @@ shutdownQ = None
 listener = None
 
 def readResponse( s ):
+	time.sleep( 0.1 )
 	response = []
 	while 1:
 		c = s.read()

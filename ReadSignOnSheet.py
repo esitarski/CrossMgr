@@ -974,16 +974,18 @@ class BibInfo( object ):
 		return u'{}: {}'.format(bib, u', '.join(values))
 	
 	def bibList( self, bibs ):
+		bibs = [b for b in bibs if b]
 		html = StringIO()
 		with tag( html, 'ul', 'bibList' ):
 			for bib in bibs:
-				if not bib:
-					continue
 				with tag( html, 'li' ):
 					html.write( self.bibField(bib) )
 		return html.getvalue()
 	
 	def bibTable( self, bibs ):
+		bibs = [b for b in bibs if b]
+		if not bibs:
+			return '<br/>'
 		GetTranslation = _
 		html = StringIO()
 		with tag( html, 'table', 'bibTable' ):
@@ -994,15 +996,17 @@ class BibInfo( object ):
 							html.write( GetTranslation(f) )
 			with tag( html, 'tbody' ):
 				for bib in bibs:
-					if not bib:
-						continue
 					with tag( html, 'tr' ):
 						data = self.getData( bib )
 						with tag( html, 'td', {'style':"text-align:right"} ):
 							html.write( unicode(bib) )
 						for f in self.fields:
 							with tag( html, 'td', {'style':"text-align:left"}):
-								html.write( cgi.escape(data.get(f,u'')) )
+								if 'Name' in f:
+									with tag( html,'strong'):
+										html.write( cgi.escape(data.get(f,u'')) )
+								else:
+									html.write( cgi.escape(data.get(f,u'')) )
 		return html.getvalue()
 		
 	def getSubValue( self, subkey ):
