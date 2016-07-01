@@ -473,24 +473,29 @@ class GPXProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(GPXProperties, self).__init__( parent, id )
 		
-		self.distance = wx.StaticText( self )
-		self.elevationGain = wx.StaticText( self )
-		self.courseType = wx.StaticText( self )
-		self.gpsPoints = wx.StaticText( self )
-		
-		fgs = wx.FlexGridSizer( rows=0, cols=2, vgap=7, hgap=6 )
+		fgs = wx.FlexGridSizer( rows=0, cols=4, vgap=7, hgap=6 )
 		fgs.AddGrowableCol( 1 )
+		fgs.AddGrowableCol( 3 )
 		
 		fgs.Add( wx.StaticText(self, label=_("Distance")), flag=wx.ALIGN_RIGHT )
+		self.distance = wx.StaticText( self,  )
+		boldFont = Utils.BoldFromFont(self.distance.GetFont())
+		self.distance.SetFont( boldFont )
 		fgs.Add( self.distance )
 		
 		fgs.Add( wx.StaticText(self, label=_("Elevation Gain")), flag=wx.ALIGN_RIGHT )
+		self.elevationGain = wx.StaticText( self )
+		self.elevationGain.SetFont( boldFont )
 		fgs.Add( self.elevationGain )
 
 		fgs.Add( wx.StaticText(self, label=_("Course Type")), flag=wx.ALIGN_RIGHT )
+		self.courseType = wx.StaticText( self )
+		self.courseType.SetFont( boldFont )
 		fgs.Add( self.courseType )
 
 		fgs.Add( wx.StaticText(self, label=_("Number of Coords")), flag=wx.ALIGN_RIGHT )
+		self.gpsPoints = wx.StaticText( self )
+		self.gpsPoints.SetFont( boldFont )
 		fgs.Add( self.gpsPoints )
 		
 		self.geoAnimation = GeoAnimation( self )
@@ -498,20 +503,28 @@ class GPXProperties( wx.Panel ):
 		self.setGPXCourse = wx.Button( self, label=_('Import GPX Course') )
 		self.setGPXCourse.Bind( wx.EVT_BUTTON, self.onSetGPXCourse )
 		
-		self.showGoogleMap = wx.Button( self, label=_('Show on Google Map') )
+		self.reverse = wx.BitmapButton( self, bitmap=Utils.GetPngBitmap('reverse-icon-48px.png') )
+		self.reverse.Bind( wx.EVT_BUTTON, self.onReverse )
+		self.reverse.SetToolTip(wx.ToolTip(_('Reverse Course Direction')))
+		
+		self.showGoogleMap = wx.BitmapButton( self, bitmap=Utils.GetPngBitmap('Google-Maps-icon-48.png') )
 		self.showGoogleMap.Bind( wx.EVT_BUTTON, self.onShowOnGoogleMap )
+		self.showGoogleMap.SetToolTip(wx.ToolTip(_('Show on Google Map')))
 		
-		self.exportAsGPX = wx.Button( self, label=_('Export in GPX Format') )
+		self.exportAsGPX = wx.BitmapButton( self, bitmap=Utils.GetPngBitmap('Files-Gpx-icon-48.png') )
 		self.exportAsGPX.Bind( wx.EVT_BUTTON, self.onExportAsGPX )
+		self.exportAsGPX.SetToolTip(wx.ToolTip(_('Export in GPX Format')))
 		
-		self.exportAsKML = wx.Button( self, label=_('Export in KML Format (requires Google Earth)') )
+		self.exportAsKML = wx.BitmapButton( self, bitmap=Utils.GetPngBitmap('Files-Kml-icon-48.png') )
 		self.exportAsKML.Bind( wx.EVT_BUTTON, self.onExportAsKML )
+		self.exportAsKML.SetToolTip(wx.ToolTip(_('Export in KML Format (requires Google Earth)')))
 		
 		hsButtons = wx.BoxSizer( wx.HORIZONTAL )
 		hsButtons.Add( self.setGPXCourse )
-		hsButtons.Add( self.showGoogleMap, flag=wx.LEFT, border=32 )
+		hsButtons.Add( self.showGoogleMap, flag=wx.LEFT, border=64 )
 		hsButtons.Add( self.exportAsGPX, flag=wx.LEFT, border=32 )
 		hsButtons.Add( self.exportAsKML, flag=wx.LEFT, border=4 )
+		hsButtons.Add( self.reverse, flag=wx.LEFT, border=32 )
 		
 		#-------------------------------------------------------------------------------
 		ms = wx.BoxSizer( wx.VERTICAL )
@@ -538,6 +551,13 @@ class GPXProperties( wx.Panel ):
 
 			race.showOval = (race.geoTrack is None)
 			race.setChanged()
+		self.refresh()
+	
+	def onReverse( self, event ):
+		try:
+			Model.race.geoTrack.reverse()
+		except:
+			pass
 		self.refresh()
 	
 	def onShowOnGoogleMap( self, event ):

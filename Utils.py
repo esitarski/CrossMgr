@@ -758,7 +758,30 @@ def LaunchApplication( fname ):
 		subprocess.call(('open', fname))
 	else:
 		subprocess.call( 'xdg-open', fname )
-	
+
+def BoldFromFont( font ):
+	# pointSize, family, style, weight, underline=False, face="", encoding
+	if font.IsUsingSizeInPixels():
+		return wx.FontFromPixelSize(
+			font.GetPixelSize(),
+			font.GetFamily(),
+			font.GetStyle(),
+			wx.FONTWEIGHT_BOLD,
+			font.GetUnderlined(),
+			font.GetFaceName(),
+			font.GetEncoding(),
+		)
+	else:
+		return wx.Font(
+			font.GetPointSize(),
+			font.GetFamily(),
+			font.GetStyle(),
+			wx.FONTWEIGHT_BOLD,
+			font.GetUnderlined(),
+			font.GetFaceName(),
+			font.GetEncoding(),
+		)
+		
 if __name__ == '__main__':
 	initTranslation()
 	app = wx.App(False)
