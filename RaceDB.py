@@ -103,6 +103,7 @@ class RaceDB( wx.Dialog ):
 		vsHeader.Add( fgs, 1, flag=wx.EXPAND )
 		
 		self.tree = gizmos.TreeListCtrl( self, style=wx.TR_DEFAULT_STYLE|wx.TR_FULL_ROW_HIGHLIGHT|wx.TR_ROW_LINES )
+		self.tree.Bind( wx.EVT_TREE_ITEM_ACTIVATED, self.onEventSelect )
 		
 		isz = (16,16)
 		self.il = wx.ImageList( *isz )
@@ -222,7 +223,14 @@ class RaceDB( wx.Dialog ):
 			self.dataSelect = self.tree.GetItemPyData(evt.GetItem())
 		except Exception as e:
 			self.dataSelect = None
-		
+	
+	def onEventSelect( self, evt ):
+		try:
+			self.dataSelect = self.tree.GetItemPyData(evt.GetItem())
+			self.doOK( evt )
+		except Exception as e:
+			self.dataSelect = None
+	
 	def refresh( self, events=None ):
 		if events is None:
 			try:
