@@ -18,8 +18,11 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 PORT_NUMBER = 8761
 
-with io.open( os.path.join(Utils.getImageFolder(), 'CrossMgr.ico'), 'rb' ) as f:
-	favicon = f.read()
+try:
+	with io.open( os.path.join(Utils.getImageFolder(), 'CrossMgr.ico'), 'rb' ) as f:
+		favicon = f.read()
+except:
+	favicon = None
 
 class HelpHandler( BaseHTTPRequestHandler ):
 	html_content = 'text/html; charset=utf-8'
@@ -27,7 +30,7 @@ class HelpHandler( BaseHTTPRequestHandler ):
 	def do_GET(self):
 		up = urlparse.urlparse( self.path )
 		try:
-			if up.path=='/favicon.ico':
+			if up.path=='/favicon.ico' and favicon:
 				content = favicon
 				content_type = 'image/x-icon'
 			else:

@@ -36,6 +36,7 @@ copyFiles = [
 	"GetResults.py",
 	"FitSheetWrapper.py",
 	"ReadSignOnSheet.py",
+	"HelpSearch.py",
 	"MatchingCategory.py",
 	"BatchPublishAttrs.py",
 	"ReadCategoriesFromExcel.py",
