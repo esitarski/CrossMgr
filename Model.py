@@ -2186,13 +2186,11 @@ class Race( object ):
 			return 1000
 			
 	def setDistanceForCategories( self, distanceKm ):
-		print( 'setDistanceForCategories:', distanceKm )
 		if distanceKm is not None and distanceKm > 0.0:
 			distance = distanceKm if self.distanceUnit == self.UnitKm else distanceKm*0.621371
 		else:
 			distance = None
 		for c in self.categories.itervalues():
-			print( 'setDistanceForCategories:', c.name, distanceKm )
 			c.distance = distance
 	
 	def resetCategoryCache( self ):
