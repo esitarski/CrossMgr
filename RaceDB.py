@@ -169,6 +169,9 @@ class RaceDB( wx.Dialog ):
 		return url
 	
 	def doOK( self, event ):
+		if not self.dataSelect:
+			return
+		
 		url = self.fixUrl()
 		
 		try:
