@@ -55,7 +55,7 @@ class URLDropTarget(wx.PyDropTarget):
 		return d
 
 class RaceDB( wx.Dialog ):
-	def __init__( self, parent, id=wx.ID_ANY, size=(800,500) ):
+	def __init__( self, parent, id=wx.ID_ANY, size=(1100,500) ):
 		super(RaceDB, self).__init__(parent, id, style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME, size=size, title=_('Open RaceDB Event'))
 		
 		fontPixels = 20
