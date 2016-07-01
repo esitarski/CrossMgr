@@ -768,8 +768,6 @@ def BoldFromFont( font ):
 			font.GetStyle(),
 			wx.FONTWEIGHT_BOLD,
 			font.GetUnderlined(),
-			font.GetFaceName(),
-			font.GetEncoding(),
 		)
 	else:
 		return wx.Font(
@@ -778,8 +776,6 @@ def BoldFromFont( font ):
 			font.GetStyle(),
 			wx.FONTWEIGHT_BOLD,
 			font.GetUnderlined(),
-			font.GetFaceName(),
-			font.GetEncoding(),
 		)
 		
 if __name__ == '__main__':

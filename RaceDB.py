@@ -55,7 +55,7 @@ class URLDropTarget(wx.PyDropTarget):
 		return d
 
 class RaceDB( wx.Dialog ):
-	def __init__( self, parent, id=wx.ID_ANY, size=(600,900) ):
+	def __init__( self, parent, id=wx.ID_ANY, size=(800,500) ):
 		super(RaceDB, self).__init__(parent, id, style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME, size=size, title=_('Open RaceDB Event'))
 		
 		fontPixels = 20
@@ -138,12 +138,19 @@ class RaceDB( wx.Dialog ):
 		hs.AddStretchSpacer()
 		hs.Add( self.cancelButton, flag=wx.LEFT, border=4 )
 		
-		vs = wx.BoxSizer( wx.VERTICAL )
-		vs.Add( explain, flag=wx.ALL, border=8 )
-		vs.Add( vsHeader, flag=wx.ALL|wx.EXPAND, border=8 )
-		vs.Add( self.tree, 1, flag=wx.EXPAND )
-		vs.Add( hs, 0, flag=wx.EXPAND|wx.ALL, border=8 )
-		self.SetSizer( vs )
+		hsMain = wx.BoxSizer( wx.HORIZONTAL )
+		
+		vs1 = wx.BoxSizer( wx.VERTICAL )
+		vs1.Add( explain, flag=wx.ALL, border=8 )
+		vs1.Add( vsHeader, flag=wx.ALL|wx.EXPAND, border=8 )
+		
+		vs2 = wx.BoxSizer( wx.VERTICAL )
+		vs2.Add( self.tree, 1, flag=wx.EXPAND )
+		vs2.Add( hs, 0, flag=wx.EXPAND|wx.ALL, border=8 )
+		
+		hsMain.Add( vs1 )
+		hsMain.Add( vs2, 1, flag=wx.EXPAND )
+		self.SetSizer( hsMain )
 		
 		self.refresh()
 
