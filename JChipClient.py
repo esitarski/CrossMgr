@@ -7,12 +7,12 @@ import re
 import os
 import sys
 import time
+import xlwt
 import socket
 import random
 import operator
 import datetime
 import subprocess
-from openpyxl.workbook import Workbook
 
 #------------------------------------------------------------------------------	
 # CrossMgr's port and socket.
@@ -289,11 +289,10 @@ Spin Doctors
 #------------------------------------------------------------------------------	
 # Write out as a .xlsx file with the number tag data.
 #
-wb = Workbook()
-ws = wb.get_active_sheet()
-ws.title = "JChipTest"
+wb = xlwt.Workbook()
+ws = wb.add_sheet( "JChipTest" )
 for col, label in enumerate('Bib#,LastName,FirstName,Team,Tag'.split(',')):
-	ws.cell( row = 0, column = col ).value = label
+	ws.write( 0, col, label )
 rdata = [d for d in getRandomData(len(tag))]
 rowCur = 1
 for r, (n, t) in enumerate(tag.iteritems()):
@@ -302,9 +301,9 @@ for r, (n, t) in enumerate(tag.iteritems()):
 	
 	bib, firstName, lastName, Team = rdata[r]
 	for c, v in enumerate([n, lastName, firstName, Team, t]):
-		ws.cell( row = rowCur, column = c ).value = v
+		ws.write( rowCur, c, v )
 	rowCur += 1
-wb.save('JChipTest.xlsx')
+wb.save('JChipTest.xls')
 wb = None
 
 #------------------------------------------------------------------------------	

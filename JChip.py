@@ -266,7 +266,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 						# Now, get the reader's current time.
 						cmd = 'GT'
 						qLog( 'transmitting', '{} command to "{}" (gettime)'.format(cmd, readerName[s]) )
-						readerWriteStr[s] += '%s%s' % (cmd, CR)
+						readerWriteStr[s] += '{}{}'.format(cmd, CR)
 						safeAppend( outputs, s )
 					
 					elif line.startswith( 'GT' ):
@@ -285,7 +285,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 							
 						readerComputerTimeDiff[s] = tNow - tJChip
 						
-						qLog( 'getTime', '(%s)=%02d:%02d:%02d.%02d' % (line[2:].strip(), hh,mm,ss,hs) )
+						qLog( 'getTime', '({})={:02d}:{:02d}:{:02d}.{:02d}'.format(line[2:].strip(), hh,mm,ss,hs) )
 						rtAdjust = readerComputerTimeDiff[s].total_seconds()
 						if rtAdjust > 0:
 							behindAhead = 'Behind'
@@ -301,8 +301,9 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 						
 						# Send command to start sending data.
 						cmd = 'S0000'
-						qLog( 'transmitting', '%s command to "%s" (start transmission)' % (cmd, readerName.get(s, '<<unknown>>')) )
-						readerWriteStr[s] += '%s%s' % (cmd, CR)
+						qLog( 'transmitting', '{} command to "{}" (start transmission)'.format(
+							cmd, readerName.get(s, '<<unknown>>')) )
+						readerWriteStr[s] += '{}{}'.format(cmd, CR)
 						safeAppend( outputs, s )
 					else:
 						q.put( ('unknown', line ) )
@@ -320,7 +321,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 			try:
 				readerWriteStr[s] = readerWriteStr[s][s.send(readerWriteStr[s]):]
 			except Exception as e:
-				qLog( 'exception', 'send error: %s' % e )
+				qLog( 'exception', 'send error: {}'.format(e) )
 				readerWriteStr[s] = ''
 			if not readerWriteStr[s]:
 				outputs.remove( s )
@@ -405,16 +406,6 @@ if __name__ == '__main__':
 		if messages:
 			sys.stdout.write( '\n' )
 		for m in messages:
-			if m[0] == 'data':
-				count += 1
-				print( '%d: %s, %s' % (count, m[1], m[2].time()) )
-			elif m[0] == 'name':
-				print( 'receiver name="%s"' % m[1] )
-			elif m[0] == 'connected':
-				print( 'connected' )
-			elif m[0] == 'disconnected':
-				print( 'disconnected' )
-			else:
-				print( 'other: %s, %s' % (m[0], ', '.join('"%s"' % '{}'.format(s) for s in m[1:])) )
+			print( m )
 		sys.stdout.flush()
 		
