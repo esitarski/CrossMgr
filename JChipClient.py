@@ -312,7 +312,7 @@ wb = None
 with open('JChipTest.csv', 'w') as f:
 	f.write( 'Bib#,Tag,dummy3,dummy4,dummy5\n' )
 	for n in nums:
-		f.write( '%d,%s\n' % (n, tag[n]) )
+		f.write( '{},{}\n'.format(n, tag[n]) )
 
 sendDate = True
 

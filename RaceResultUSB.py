@@ -36,11 +36,11 @@ def readResponse( s ):
 	time.sleep( 0.1 )
 	response = []
 	while 1:
-		c = s.read()
-		if len(c) != 1:
+		c = s.read( 1 )
+		if not c:
 			raise ValueError
 		if c == '\n' and response[-1] == '\n':
-			return ''.join( response )
+			return b''.join( response )
 		reponse.append( c )
 
 def AutoDetect( callback=None ):
@@ -238,6 +238,8 @@ def Server( q, shutdownQ, comPort, startTime ):
 			ret = makeCall( s, 'ASCII' )
 		except ValueError:
 			continue
+		time.sleep( 0.2 )
+		s.reset_input_buffer()
 			
 		#-----------------------------------------------------------------------------------------------------
 		# Switch to timing mode.
@@ -276,7 +278,7 @@ def Server( q, shutdownQ, comPort, startTime ):
 		# Set it to the computer's time.
 		if ref_epoch == 0 and ref_timestamp == 0:
 			try:
-				ret = makeCall( s, 'EPOCHREFSET;{:8x}'.format(int(time.time())) )
+				ret = makeCall( s, 'EPOCHREFSET;{:08x}'.format(int(time.time())) )
 			except ValueError:
 				continue
 			fields = ret.strip().split(';')

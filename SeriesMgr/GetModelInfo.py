@@ -265,10 +265,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 			except Exception as e:
 				info['rank'] = RaceResult.rankDNF
 				
-			try:
-				info['tFinish'] = rr.lastTime
-			except Exception as e:
-				info['tFinish'] = 1000.0*24.0*60.0*60.0
+			info['tFinish'] = getattr(rr, '_lastTimeOrig', None) or getattr(rr,'lastTime', 1000.0*24.0*60.0*60.0)
 				
 			try:
 				info['tProjected'] = rr.projectedTime
