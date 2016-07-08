@@ -16,7 +16,6 @@ import wx.lib.agw.flatnotebook as fnb
 
 FontSize = 20
 
-locale.setlocale(locale.LC_ALL, '')
 try:
 	localDateFormat = locale.nl_langinfo( locale.D_FMT )
 	localTimeFormat = locale.nl_langinfo( locale.T_FMT )
@@ -867,10 +866,12 @@ table.results tr td.fastest{
 # Set log file location.
 dataDir = ''
 redirectFileName = ''
-			
+locale = None
+
 def MainLoop():
 	global dataDir
 	global redirectFileName
+	global locale
 	
 	random.seed()
 
@@ -919,6 +920,9 @@ def MainLoop():
 		except:
 			pass
 	
+	Utils.initTranslation()
+	locale = wx.Locale(wx.LANGUAGE_ENGLISH)	
+
 	Utils.writeLog( 'start: {}'.format(Version.AppVerName) )
 	
 	# Configure the main window.

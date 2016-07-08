@@ -235,8 +235,9 @@ class SummaryPage(wiz.WizardPageSimple):
 	
 class GetExcelResultsLink( object ):
 	def __init__( self, parent, excelLink = None ):
-		img_filename = os.path.join( Utils.getImageFolder(), '20100718-Excel_icon.png' )
-		img = wx.Bitmap(img_filename) if img_filename and os.path.exists(img_filename) else wx.NullBitmap
+		#img_filename = os.path.join( Utils.getImageFolder(), '20100718-Excel_icon.png' )
+		#img = wx.Bitmap(img_filename) if img_filename and os.path.exists(img_filename) else wx.NullBitmap
+		img = wx.Bitmap(os.path.join( Utils.getImageFolder(), '20100718-Excel_icon.png' ))
 		
 		prewizard = wiz.PreWizard()
 		prewizard.SetExtraStyle( wiz.WIZARD_EX_HELPBUTTON )
