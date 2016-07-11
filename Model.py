@@ -1463,6 +1463,8 @@ class Race( object ):
 
 	@memoize
 	def interpolateCategory( self, category ):
+		if category is None:
+			return self.interpolate()
 		inCategory = self.inCategory
 		return [e for e in self.interpolate() if inCategory(e.num, category)]
 

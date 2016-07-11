@@ -8,11 +8,13 @@ from bisect import bisect_left
 import wx.lib.mixins.listctrl as listmix
 from copy import copy
 import cPickle as pickle
+from operator import itemgetter, attrgetter
+from collections import defaultdict
 
 import Utils
 import Model
 from ReadSignOnSheet	import ResetExcelLinkCache, SyncExcelLink
-from GetResults import GetResults
+from GetResults import GetResults, TimeDifference
 from FixCategories import FixCategories, SetCategory
 
 def shortFormatTimeGap( t ):
@@ -33,12 +35,14 @@ def GetRaceTMax( category ):
 	except:
 		return None
 	
-def GetLapLE( raceTimes, t ):
+def GetLapLE( t, raceTimes ):
 	lap = bisect_left( raceTimes, t, hi=len(raceTimes)-1 )
 	return lap-1 if raceTimes[lap] > t else lap
 	
-def GetPositionSpeed( raceTimes, t ):
-	lap = GetLapLE( raceTimes, t )
+def GetPositionSpeed( t, raceTimes ):
+	# Position is expressed in laps.
+	# Speed is expressed in laps/second.
+	lap = GetLapLE( t, raceTimes )
 	lapStartTime = raceTimes[lap]
 	try:
 		lapTime = raceTimes[lap+1] - raceTimes[lap]
@@ -47,21 +51,18 @@ def GetPositionSpeed( raceTimes, t ):
 	speed = 1.0 / lapTime
 	return lap + (t - lapStartTime) * speed, speed
 	
-def GetLeaderGap( leaderPosition, leaderSpeed, leaderRaceTimes, raceTimes, t ):
-	if not raceTimes:
+def GetLeaderGap( t, leaderPosition, leaderSpeed, leaderRaceTimes, riderPosition, riderSpeed, riderRaceTimes ):
+	if not riderRaceTimes:
 		return None, None
-	if t >= raceTimes[-1]:
+	if t >= riderRaceTimes[-1]:
 		if t >= leaderRaceTimes[-1]:
 			return (
-				raceTimes[-1] - leaderRaceTimes[-1] if len(leaderRaceTimes) == len(raceTimes) else None,
-				len(raceTimes) - len(leaderRaceTimes)
+				riderRaceTimes[-1] - leaderRaceTimes[-1] if len(leaderRaceTimes) == len(riderRaceTimes) else None,
+				len(riderRaceTimes) - len(leaderRaceTimes)
 			)
-		return None, len(raceTimes) - len(leaderRaceTimes)
-		
-	riderPosition, riderSpeed = GetPositionSpeed( raceTimes, t )
-	positionFraction = math.modf( leaderPosition - riderPosition )[0]
-	if positionFraction < 0.0:
-		positionFraction += 1.0
+		return None, len(riderRaceTimes) - len(leaderRaceTimes)
+	
+	positionFraction = math.modf( 1000 + leaderPosition - riderPosition )[0]
 	#print 'leaderPosition:', leaderPosition, 'riderPosition:', riderPosition, 'positionFraction:', positionFraction, 'lapsDown:', int(leaderPosition - riderPosition)
 	return positionFraction / leaderSpeed, int(riderPosition - leaderPosition)
 
@@ -69,40 +70,92 @@ def GetSituationGaps( category=None, t=None ):
 	race = Model.race
 	if not race:
 		return []
-		
-	results = [rr for rr in GetResults(category, True) if rr.raceTimes and len(rr.raceTimes) >= 2]
-	if not results:
+	getCategory = race.getCategory
+	
+	# Collect the race times from the raw data.
+	raceTimes = defaultdict(list)
+	for e in race.interpolateCategory(category):
+		raceTimes[e.num].append( e.t )
+	raceTimes = {bib:v for bib, v in raceTimes.iteritems() if getCategory(bib) and len(v) >= 2}
+	if not raceTimes:
 		return []
 	
-	maxLaps = max( rr.laps for rr in results )
+	# Trim the race times to the number of laps (if specified) or the race time.
+	raceSeconds = race.minutes * 60.0
+	for bib, v in raceTimes.iteritems():
+		numLaps = race.getNumLapsFromCategory(getCategory(bib)) or bisect_left(v, raceSeconds)
+		del v[numLaps+1:]
+
+	# For each category where lapped riders are pulled, get the winner's laps and times.
+	winningLapsTime = {}
+	if category is None or not getattr(category, 'lappedRidersMustContinue', False):
+		for bib, v in raceTimes.iteritems():
+			c = getCategory(bib)
+			if getattr(c, 'lappedRidersMustContinue', False):
+				continue
+			lapsTime = [-len(v), v[-1], bib]
+			try:
+				if winningLapsTime[c] <= lapsTime:
+					continue
+			except:
+				winningLapsTime[c] = lapsTime
+
+	# Trim out pulled rider's laps.
+	if winningLapsTime:
+		for c, ltb in winningLapsTime.iteritems():
+			numLaps = race.getNumLapsFromCategory(c)
+			if not numLaps:
+				laps, winningTime, bib = ltb
+				v = raceTimes[bib]
+				if winningTime - raceSeconds > (v[-1] - v[-2]) / 2.0:
+					ltb[1] = v[-2]
+		for bib, v in raceTimes.iteritems():
+			c = getCategory(bib)
+			if c in winningLapsTime:
+				del v[bisect_left(v, winningLapsTime[c][1])+1:]
+			
 	if t is None:
 		t = race.lastRaceTime() if not race.isRunning() else (datetime.datetime.now() - race.startTime).total_seconds()
-	t = min( t, max(rr.raceTimes[-1] for rr in results) )
+	t = min( t, max(rt[-1] for rt in raceTimes.itervalues()) )
 	
-	leaderRaceTimes = [min(rr.raceTimes[lap] for rr in results if rr.laps >= lap) for lap in xrange(maxLaps+1)]
+	psLeader = (-1, -1, None)
+	positionSpeeds = []
+	for bib, rt in raceTimes.iteritems():
+		position, speed = GetPositionSpeed(t, rt)
+		positionSpeeds.append( (position, speed, bib) )
+		if positionSpeeds[-1][0] > psLeader[0]:
+			psLeader = positionSpeeds[-1]
 	
-	def getInfo( rr, lapsDown ):
-		name = ','.join( n for n in [getattr(rr,'LastName',u'').upper(), getattr(rr,'FirstName',u'')[:1]] if n )	
+	leaderPosition, leaderSpeed, leaderRaceTimes = psLeader[0], psLeader[1], raceTimes[psLeader[2]]
+	
+	try:
+		externalInfo = race.excelLink.read()
+	except:
+		externalInfo = {}
+	
+	def getInfo( bib, lapsDown ):
+		name = ','.join( n for n in [
+			externalInfo.get(bib,{}).get('LastName',u'').upper(),
+			externalInfo.get(bib,{}).get('FirstName',u'')[:1]] if n )	
 		nameStr = u'' if not name else u' ' + name
 		lapsDownStr = u'' if lapsDown == 0 else u' ({})'.format(lapsDown)
-		return u''.join([unicode(rr.num), nameStr, lapsDownStr])
+		return u''.join([unicode(bib), nameStr, lapsDownStr])
 	
-	leaderPosition, leaderSpeed = GetPositionSpeed( leaderRaceTimes, t )
 	gaps = []
-	for rr in results:
+	for riderPosition, riderSpeed, bib in positionSpeeds:
 		try:
-			gap, lapsDown = GetLeaderGap( leaderPosition, leaderSpeed, leaderRaceTimes, rr.raceTimes, t )
+			gap, lapsDown = GetLeaderGap( t, leaderPosition, leaderSpeed, leaderRaceTimes, riderPosition, riderSpeed, raceTimes[bib] )
 		except TypeError:
 			continue
 		if gap is not None:
-			gaps.append( (gap, getInfo(rr, lapsDown)) )
-	
+			gaps.append( (gap, getInfo(bib, lapsDown)) )
+			
 	gaps.sort()
 	
 	if gaps:
 		gapMin = gaps[0][0]
-		gaps = [[g[0] - gapMin, g[1]] for g in gaps]
-	thisLap = GetLapLE(leaderRaceTimes, t)
+		gaps = [[TimeDifference(g[0], gapMin), g[1]] for g in gaps]
+	thisLap = GetLapLE(t, leaderRaceTimes)
 	
 	tCur = t
 	tClock = race.raceTimeToClockTime( tCur )
