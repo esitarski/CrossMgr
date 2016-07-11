@@ -144,7 +144,10 @@ def GetSituationGaps( category=None, t=None ):
 	gaps = []
 	for riderPosition, riderSpeed, bib in positionSpeeds:
 		try:
-			gap, lapsDown = GetLeaderGap( t, leaderPosition, leaderSpeed, leaderRaceTimes, riderPosition, riderSpeed, raceTimes[bib] )
+			gap, lapsDown = GetLeaderGap( t,
+				leaderPosition, leaderSpeed, leaderRaceTimes,
+				riderPosition, riderSpeed, raceTimes[bib]
+			)
 		except TypeError:
 			continue
 		if gap is not None:
