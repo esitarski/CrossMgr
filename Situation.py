@@ -70,32 +70,20 @@ def GetSituationGaps( category=None, t=None ):
 	if not race:
 		return []
 		
-	results = GetResults( category, True )
-	validRiders = {rr.num for rr in results if rr.raceTimes and len(rr.raceTimes) >= 2}
-	if not validRiders:
+	results = [rr for rr in GetResults(category, True) if rr.raceTimes and len(rr.raceTimes) >= 2]
+	if not results:
 		return []
-	results = [rr for rr in results if rr.num in validRiders]
 	
 	maxLaps = max( rr.laps for rr in results )
 	if t is None:
 		t = race.lastRaceTime() if not race.isRunning() else (datetime.datetime.now() - race.startTime).total_seconds()
-	Finisher = Model.Rider.Finisher
 	t = min( t, max(rr.raceTimes[-1] for rr in results) )
 	
 	leaderRaceTimes = [min(rr.raceTimes[lap] for rr in results if rr.laps >= lap) for lap in xrange(maxLaps+1)]
 	
 	def getInfo( rr, lapsDown ):
-		names = []
-		try:
-			names.append( rr.LastName.upper() )
-		except:
-			pass
-		try:
-			names.append( rr.FirstName[0] )
-		except:
-			pass
-		
-		nameStr = (u' ' + u','.join(names)) if names else u''
+		name = ','.join( n for n in [getattr(rr,'LastName',u'').upper(), getattr(rr,'FirstName',u'')[:1]] if n )	
+		nameStr = u'' if not name else u' ' + name
 		lapsDownStr = u'' if lapsDown == 0 else u' ({})'.format(lapsDown)
 		return u''.join([unicode(rr.num), nameStr, lapsDownStr])
 	
@@ -622,7 +610,7 @@ class TopPanel( wx.Panel ):
 		hbs = wx.BoxSizer( wx.HORIZONTAL )
 		hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		hbs.Add( self.categoryChoice, flag=wx.ALL, border=4 )
-		hbs.Add( wx.StaticText(self, label=u'{} \u2190        {} \u2193'.format(
+		hbs.Add( wx.StaticText(self, label=u'\u2190 {}        {} \u2193'.format(
 				_('Drag Slider at Left to Zoom'),
 				_('Drag Slider at Top to Change Time'),
 			)),

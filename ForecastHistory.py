@@ -596,7 +596,7 @@ class ForecastHistory( wx.Panel ):
 		
 		#------------------------------------------------------------------
 		# Update recorded.
-		recordedDisplayMax = 64
+		recordedDisplayMax = 200
 		recorded = []
 		for e in reversed(entries):
 			if not e.interp and e.t <= tRace:
