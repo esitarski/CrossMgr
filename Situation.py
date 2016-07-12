@@ -724,6 +724,8 @@ class Situation( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(Situation, self).__init__( parent, id )
 		
+		self.refreshTimer = None
+		
 		splitter = wx.SplitterWindow( self, wx.ID_ANY, style = wx.SP_3DSASH )
 		wx.CallAfter( splitter.SetSashPosition, 1000 )
 		
@@ -797,13 +799,28 @@ class Situation( wx.Panel ):
 		self.bottomPanel.refresh( groupIndex, groupInfo or [], situation.tCur,
 			Model.race.raceTimeToClockTime(situation.tCur) if Model.race else None )
 	
+	def timerRefresh( self, doRefresh=True ):
+		race = Model.race
+		if self.IsShown() and race and race.isRunning():
+			if doRefresh:
+				wx.CallAfter( self.refresh )
+			t = race.lastRaceTime()
+			tNext = int(t + 5.0)
+			tNext -= tNext % 5
+			self.refreshTimer = wx.CallLater( int((tNext - t)*1000), self.timerRefresh )
+	
 	def refresh( self ):
 		race = Model.race
 		if not race:
 			return
 		category = FixCategories( self.topPanel.categoryChoice, getattr(race, 'situationCategory', 0) )
 		self.topPanel.situation.SetData( *GetSituationGaps(category=category, t=None) )
-	
+		
+		if race and race.isRunning():
+			if self.refreshTimer:
+				self.refreshTimer.Stop()
+			self.timerRefresh( False )
+			
 if __name__ == '__main__':
 	Utils.disable_stdout_buffering()
 	app = wx.App(False)
