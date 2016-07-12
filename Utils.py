@@ -757,7 +757,7 @@ def LaunchApplication( fname ):
 	elif sys.platform.startswith('darwin'):
 		subprocess.call(('open', fname))
 	else:
-		subprocess.call( 'xdg-open', fname )
+		subprocess.call(('xdg-open', fname))	# Linux
 
 def BoldFromFont( font ):
 	# pointSize, family, style, weight, underline=False, face="", encoding

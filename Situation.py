@@ -1,8 +1,9 @@
 import wx
-import datetime
 import os
+import re
 import sys
 import math
+import datetime
 import itertools
 from bisect import bisect_left
 import wx.lib.mixins.listctrl as listmix
@@ -16,6 +17,8 @@ import Model
 from ReadSignOnSheet	import ResetExcelLinkCache, SyncExcelLink
 from GetResults import GetResults, TimeDifference
 from FixCategories import FixCategories, SetCategory
+
+reNonDigit = re.compile( '[^0-9]+' )
 
 def shortFormatTimeGap( t ):
 	tStr = Utils.formatTimeGap( t )
@@ -70,50 +73,21 @@ def GetSituationGaps( category=None, t=None ):
 	race = Model.race
 	if not race:
 		return []
-	getCategory = race.getCategory
 	
-	# Collect the race times from the raw data.
-	raceTimes = defaultdict(list)
-	for e in race.interpolateCategory(category):
-		raceTimes[e.num].append( e.t )
-	raceTimes = {bib:v for bib, v in raceTimes.iteritems() if getCategory(bib) and len(v) >= 2}
-	if not raceTimes:
-		return []
-	
-	# Trim the race times to the number of laps (if specified) or the race time.
-	raceSeconds = race.minutes * 60.0
-	for bib, v in raceTimes.iteritems():
-		numLaps = race.getNumLapsFromCategory(getCategory(bib)) or bisect_left(v, raceSeconds)
-		del v[numLaps+1:]
+	# Collect the race times from the results data.
+	raceTimes, riderName = {}, {}
+	for rr in GetResults(category, True):
+		if rr.raceTimes and len(rr.raceTimes) >= 2:
+			raceTimes[rr.num] = rr.raceTimes
+			lastName, firstName = getattr(rr,'LastName',u'').upper(), getattr(rr,'FirstName',u'')
+			if lastName and firstName:
+				name = u'{},{}'.format(lastName, firstName[:1])
+			elif lastName:
+				name = lastName
+			else:
+				name = firstName
+			riderName[rr.num] = name
 
-	# For each category where lapped riders are pulled, get the winner's laps and times.
-	winningLapsTime = {}
-	if category is None or not getattr(category, 'lappedRidersMustContinue', False):
-		for bib, v in raceTimes.iteritems():
-			c = getCategory(bib)
-			if getattr(c, 'lappedRidersMustContinue', False):
-				continue
-			lapsTime = [-len(v), v[-1], bib]
-			try:
-				if winningLapsTime[c] <= lapsTime:
-					continue
-			except:
-				winningLapsTime[c] = lapsTime
-
-	# Trim out pulled rider's laps.
-	if winningLapsTime:
-		for c, ltb in winningLapsTime.iteritems():
-			numLaps = race.getNumLapsFromCategory(c)
-			if not numLaps:
-				laps, winningTime, bib = ltb
-				v = raceTimes[bib]
-				if winningTime - raceSeconds > (v[-1] - v[-2]) / 2.0:
-					ltb[1] = v[-2]
-		for bib, v in raceTimes.iteritems():
-			c = getCategory(bib)
-			if c in winningLapsTime:
-				del v[bisect_left(v, winningLapsTime[c][1])+1:]
-			
 	if t is None:
 		t = race.lastRaceTime() if not race.isRunning() else (datetime.datetime.now() - race.startTime).total_seconds()
 	t = min( t, max(rt[-1] for rt in raceTimes.itervalues()) )
@@ -134,12 +108,15 @@ def GetSituationGaps( category=None, t=None ):
 		externalInfo = {}
 	
 	def getInfo( bib, lapsDown ):
-		name = ','.join( n for n in [
-			externalInfo.get(bib,{}).get('LastName',u'').upper(),
-			externalInfo.get(bib,{}).get('FirstName',u'')[:1]] if n )	
+		name = riderName[bib]
 		nameStr = u'' if not name else u' ' + name
-		lapsDownStr = u'' if lapsDown == 0 else u' ({})'.format(lapsDown)
-		return u''.join([unicode(bib), nameStr, lapsDownStr])
+		if lapsDown:
+			lapsDownStr = u' ({})'.format(lapsDown)
+			bibStr = u'\u2198{}'.format(bib)
+		else:
+			lapsDownStr = u''
+			bibStr = unicode(bib)
+		return u''.join([bibStr, nameStr, lapsDownStr])
 	
 	gaps = []
 	for riderPosition, riderSpeed, bib in positionSpeeds:
@@ -184,7 +161,7 @@ def GetSituationGaps( category=None, t=None ):
 	
 class SituationPanel(wx.PyPanel):
 	groupIndexColour = wx.Colour(0xFF, 0xCC, 0x99)
-	groupGapColour = wx.WHITE
+	groupGapColour = wx.Colour(255,255,102)
 	groupSizeColour = wx.Colour(0x99, 0xCC, 0xFF)
 
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
@@ -304,9 +281,9 @@ class SituationPanel(wx.PyPanel):
 			if len(group) > 10:
 				group[:] = group[:5] + [[group[5][0], u'...']] + group[-5:]
 			if i == 0:
-				group.insert( 0, [group[0][0], u'\u2714 \u200B {}'.format(groupSize)] )
+				group.insert( 0, [group[0][0], u'Lead  \u200B  {}'.format(groupSize)] )
 			else:
-				group.insert( 0, [group[0][0], u'{} {} {}'.format(i, shortFormatTimeGap(group[0][0]), groupSize)] )
+				group.insert( 0, [group[0][0], u'Chase\u00A0{}  {}gap  {}'.format(i, shortFormatTimeGap(group[0][0]), groupSize)] )
 		
 		fontHeight = height / 40
 		if fontHeight == 0:
@@ -448,7 +425,6 @@ class SituationPanel(wx.PyPanel):
 			
 			xText = gRect.GetLeft()
 
-			
 			# Draw the group text.
 			dc.SetPen( greyPen )
 			dc.SetBrush( groupTextBrush )
@@ -458,15 +434,15 @@ class SituationPanel(wx.PyPanel):
 				if i == 0:
 					# Draw the coloured rectangles to highlight the title fields.
 					title = g[1]
-					fieldWidths = [-spaceWidth+2]
+					fieldWidths = [-spaceWidth/2]
 					iSpace = 0
 					while True:
-						iSpace = title.find( u' ', iSpace )
+						iSpace = title.find( u'  ', iSpace )
 						if iSpace < 0:
-							fieldWidths.append( dc.GetTextExtent(title)[0] + spaceWidth/2 )
+							fieldWidths.append( dc.GetTextExtent(title)[0] + spaceWidth )
 							break
-						fieldWidths.append( dc.GetTextExtent(title[:iSpace])[0] + spaceWidth/2 )
-						iSpace += 1
+						fieldWidths.append( dc.GetTextExtent(title[:iSpace])[0] + spaceWidth )
+						iSpace += 2
 					
 					fieldWidths[-1] += spaceWidth/2
 					iBrush = 0 if len(fieldWidths) > 2 else 2
@@ -549,7 +525,7 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 		
 	def GetSortImages(self):
 		return (self.sm_dn, self.sm_up)
-		
+	
 	def refresh( self, groupInfo ):
 		with Model.LockRace() as race:
 			if not race:
@@ -574,7 +550,7 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 		sequence = {}
 		for i, (gap, info) in enumerate(groupInfo):
 			fields = info.split()
-			num = int( fields[0] )
+			num = int( reNonDigit.sub('',fields[0]) )
 			if fields[-1].startswith(u'(') and fields[-1].endswith(u')'):
 				lapsDown[num] = fields[-1][1:-1]
 			nums.append( num )
@@ -666,9 +642,9 @@ class TopPanel( wx.Panel ):
 		hbs = wx.BoxSizer( wx.HORIZONTAL )
 		hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		hbs.Add( self.categoryChoice, flag=wx.ALL, border=4 )
-		hbs.Add( wx.StaticText(self, label=u'\u2190 {}        {} \u2193'.format(
-				_('Drag Slider at Left to Zoom'),
+		hbs.Add( wx.StaticText(self, label=u'\u2193 {}        \u2190{}'.format(
 				_('Drag Slider at Top to Change Time'),
+				_('Drag Slider at Left to Zoom'),
 			)),
 			flag=wx.ALL, border=4
 		)
