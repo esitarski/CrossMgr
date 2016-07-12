@@ -4027,6 +4027,8 @@ function GetSituationGaps( t ) {
 		var names = [];
 		if( d.LastName ) names.push( d.LastName );
 		if( d.FirstName ) names.push( d.FirstName.slice(0, 1) );
+		if( lapsDown != 0 )
+			num = '\u2198' + num;
 		return num + ' ' + names.join(',') + (lapsDown != 0 ? ' (' + lapsDown + ')': '');
 	}
 	
@@ -4072,7 +4074,7 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 	this.detailDiv = detailDiv;
 
 	var groupIndexColour = '#FFCC99';
-	var groupGapColour = '#FFFFFF';
+	var groupGapColour = 'rgb(255,255,102)';
 	var groupSizeColour = '#99CCFF';
 	var groupColour = 'rgb(128,128,255)';
 	var packColour = 'rgb(200,255,200)';
@@ -4169,9 +4171,9 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 				group = [].concat( group.slice(0,5), [[group[5][0], '...']], group.slice(group.length-5, group.length) );
 			}
 			if( i == 0 )
-				group.splice( 0, 0, [group[0][0], '\u2714 \u200B ' + groupSize] );
+				group.splice( 0, 0, [group[0][0], 'Lead  \u200B  ' + groupSize] );
 			else
-				group.splice( 0, 0, [group[0][0], i + ' ' + ShortFormatTimeGap(group[0][0]) + ' ' + groupSize] );
+				group.splice( 0, 0, [group[0][0], 'Chase\u00A0' + i + '  ' + ShortFormatTimeGap(group[0][0]) + 'gap  ' + groupSize] );
 			groups[i] = group;
 		}
 		
@@ -4216,7 +4218,7 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 				
 				widthMax = Math.max( widthMax, widthCur );
 			}
-			return {"width":widthMax, "height":group.length*fontHeight};
+			return {"width":widthMax, "height":group.length*fontHeight*1.1};
 		}
 		
 		var lastWidth = GetGroupTextExtent( groups[groups.length-1] ).width;
@@ -4358,12 +4360,12 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 					var fieldWidths = [-spaceWidth+2];
 					var iSpace = 0;
 					while( true ) {
-						var iSpace = title.indexOf( ' ', iSpace );
+						var iSpace = title.indexOf( '  ', iSpace );
 						if( iSpace < 0 ) {
-							fieldWidths.push( dc.measureText(title).width + spaceWidth/2 );
+							fieldWidths.push( dc.measureText(title).width + spaceWidth );
 							break;
 						}
-						fieldWidths.push( dc.measureText(title.slice(0,iSpace)).width + spaceWidth/2 );
+						fieldWidths.push( dc.measureText(title.slice(0,iSpace)).width + spaceWidth );
 						iSpace += 1;
 					}
 					
@@ -4384,12 +4386,12 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 				if( numsToWatch[gap[2]] != undefined ) {
 					dc.save();
 					dc.font = boldFont;
-					dc.fillText( gap[1], xText + spaceWidth, yText );
+					dc.fillText( gap[1], xText + spaceWidth, yText+fontHeight*0.07 );
 					dc.restore();
 				}
 				else
-					dc.fillText( gap[1], xText + spaceWidth, yText );
-				yText += fontHeight;
+					dc.fillText( gap[1], xText + spaceWidth, yText+fontHeight*0.07 );
+				yText += fontHeight*1.1;
 			}
 		}
 				
@@ -4479,7 +4481,7 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 			var gap = groupInfo[i][0];
 			var info = groupInfo[i][1];
 			var fields = info.split(' ');
-			var num = parseInt( fields[0] );
+			var num = parseInt( fields[0].replace(/\D/g,'') );
 			var lastField = fields[fields.length-1];
 			if( lastField.slice(0, 1) == '(' && lastField.slice(-1) == ')')
 				lapsDown[num] = lastField.slice(1).slice(0, -1);
