@@ -23,6 +23,7 @@ def interpolateNonZeroFinishers():
 	Finisher = Model.Rider.Finisher
 	race = Model.race
 	if race and race.isTimeTrial:
+		# Add the race start time back to the recorded time.
 		startTimes = {r.num:getattr(r, 'startTime', 0.0) for r in results}
 		return sorted(
 			itertools.chain.from_iterable(
@@ -31,24 +32,24 @@ def interpolateNonZeroFinishers():
 			),
 			key=lambda e: (e.t + startTimes[e.num], e.num)
 		)
+	elif race and race.resetStartClockOnFirstTag and race.enableJChipIntegration:
+		# Report the first time read to show all the riders crossing the line initially.
+		return sorted(
+			itertools.chain.from_iterable(
+				((Entry(r.num, lap, t, r.interp[lap]) for lap, t in enumerate(r.raceTimes))
+					for r in results if r.status == Finisher)
+			),
+			key=Entry.key
+		)
 	else:
-		if race and race.enableJChipIntegration:
-			return sorted(
-				itertools.chain.from_iterable(
-					((Entry(r.num, lap, t, r.interp[lap]) for lap, t in enumerate(r.raceTimes))
-						for r in results if r.status == Finisher)
-				),
-				key=Entry.key
-			)
-		else:
-			# Skip the start time lap zero.
-			return sorted(
-				itertools.chain.from_iterable(
-					((Entry(r.num, lap, t, r.interp[lap]) for lap, t in enumerate(r.raceTimes[1:], 1))
-						for r in results if r.status == Finisher)
-				),
-				key=Entry.key
-			)
+		# Skip the start time lap zero (nothing was recorded at that time).
+		return sorted(
+			itertools.chain.from_iterable(
+				((Entry(r.num, lap, t, r.interp[lap]) for lap, t in enumerate(r.raceTimes[1:], 1))
+					for r in results if r.status == Finisher)
+			),
+			key=Entry.key
+		)
 	
 # Define columns for recorded and expected information.
 iNumCol, iNoteCol, iTimeCol, iLapCol, iGapCol, iNameCol, iWaveCol, iColMax = range(8)
