@@ -529,11 +529,11 @@ class Entry(object):
 		
 	def __cmp__( self, e ):
 		d = cmp( self.t, e.t )
-		if d != 0:	return d
+		if d:	return d
 		d = cmp( self.lap, e.lap )
-		if d != 0:	return -d
+		if d:	return -d
 		d = cmp(self.num, e.num)
-		if d != 0:	return d
+		if d:	return d
 		return cmp(self.interp, e.interp)
 
 	def key( self ):

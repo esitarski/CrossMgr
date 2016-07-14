@@ -16,56 +16,64 @@ from GetResults import GetResults
 from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, DeleteEntry, DoDNS, DoDNF, DoPull
 from FtpWriteFile import realTimeFtpPublish
 
-def getTimeRange( tMin, tMax, times, offset=0.0 ):
-	tMin -= offset
-	tMax -= offset
-	i = bisect.bisect_left( times, tMin )
-	for t in xrange( i, len(times) ):
-		if times[i] > tMax:
-			break
-		yield i, times[i] + offset
-
 @Model.memoize
-def interpolateNonZeroFinishers( tMin, tMax ):
-	results = GetResults( None, False )
+def getExpectedRecorded( tCutoff=0.0 ):
+	race = Model.race
+	if not race:
+		return [], []
 	Entry = Model.Entry
 	Finisher = Model.Rider.Finisher
-	race = Model.race
-	if race and race.isTimeTrial:
-		# Add the race start time as a recorded time.
-		tCutoff = race.lastRaceTime()
-		entries = [
-			Entry(rider.num, 0, (rider.firstTime or 0.0), (rider.firstTime or 0.0) > tCutoff)
-				for rider in race.riders.itervalues()
-					if tMin <= (rider.firstTime or 0.0) <= tMax and rider.status == Finisher
-		]
-		entries.extend(
-			itertools.chain.from_iterable(
-				((Entry(r.num, lap+1, t, r.interp[lap+1])
-						for lap, t in getTimeRange(tMin, tMax, r.raceTimes[1:], getattr(r,'startTime',0.0) or 0.0))
-					for r in results if r.status == Finisher)
-			),
-		)
-		entries.sort( key = Entry.key )		
-		return entries
-	elif race and race.resetStartClockOnFirstTag and race.enableJChipIntegration:
-		# Report the first time read to show all the riders crossing the line initially.
-		return sorted(
-			itertools.chain.from_iterable(
-				((Entry(r.num, lap, t, lap == 0 or r.interp[lap]) for lap, t in getTimeRange(tMin, tMax, r.raceTimes))
-					for r in results if r.status == Finisher)
-			),
-			key=Entry.key
-		)
-	else:
-		# Skip the start time at lap zero.
-		return sorted(
-			itertools.chain.from_iterable(
-				((Entry(r.num, lap+1, t, r.interp[lap+1]) for lap, t in getTimeRange(tMin, tMax, r.raceTimes[1:]))
-					for r in results if r.status == Finisher)
-			),
-			key=Entry.key
-		)
+	bisect_left = bisect.bisect_left
+	
+	tCur = race.lastRaceTime()
+	
+	expected, recorded = [], []
+	
+	results = GetResults( None, False )
+	
+	if race.isTimeTrial:
+		bibResults = set( rr.num for rr in results )
+		# Include the rider's TT start time.  This is not in the results as there are not results.
+		for rider in race.riders.itervalues():
+			if rider.status == Finisher and rider.num not in bibResults:
+				if (rider.firstTime or 0.0) < tCur:
+					recorded.append( Entry(rider.num, 0, (rider.firstTime or 0.0), True) )
+				else:
+					expected.append( Entry(rider.num, 0, (rider.firstTime or 0.0), True) )
+		
+	lapMin = 0 if (race.isTimeTrial or (race.resetStartClockOnFirstTag and race.enableJChipIntegration)) else 1
+	for rr in results:
+		if not rr.raceTimes or rr.status != Finisher:
+			continue
+		offset = (getattr(rr,'startTime',0.0) or 0.0) if race.isTimeTrial else 0.0
+		
+		i = bisect_left( rr.raceTimes, tCur - offset )
+		
+		# Get the next expected lap.  Consider that the rider could have been missed from the last lap.
+		try:
+			lap = i
+			if lap > 1 and rr.interp[lap-1] and rr.raceTimes[lap-1] + offset >= tCutoff:
+				lap -= 1
+			t = rr.raceTimes[lap] + offset if rr.interp[lap] else None
+		except IndexError:
+			t = None
+		if t is not None and lap >= lapMin:
+			expected.append( Entry(rr.num, lap, t, rr.interp[lap]) )
+		
+		# Get the last recorded lap.
+		try:
+			lap = i - 1
+			while lap > 0 and rr.interp[lap] and rr.raceTimes[lap-1] + offset >= tCutoff:
+				lap -= 1
+			t = rr.raceTimes[lap] + offset if (lap == 0 or not rr.interp[lap]) else None
+		except IndexError:
+			t = None
+		if t is not None and lap >= lapMin:
+			recorded.append( Entry(rr.num, lap, t, rr.interp[lap]) )
+	
+	expected.sort( key=Entry.key )
+	recorded.sort( key=Entry.key )
+	return expected, recorded
 	
 # Define columns for recorded and expected information.
 iNumCol, iNoteCol, iTimeCol, iLapCol, iGapCol, iNameCol, iWaveCol, iColMax = range(8)
@@ -245,26 +253,34 @@ class ForecastHistory( wx.Panel ):
 			menu.Destroy()
 		except Exception as e:
 			Utils.writeLog( 'ForecastHistory:doHistoryPopup: {}'.format(e) )
-		
+	
+	def fixTTEntry( self, e ):
+		race = Model.race
+		if race and race.isTimeTrial:
+			rider = race.riders.get(e.num, None)
+			startTime = (rider.getattr('firstTime',0.0) or 0.0) if rider else 0.0
+			return Model.Entry( e.num, e.lap, e.t-startTime, e.interp )
+		return e
+	
 	def OnPopupHistoryCorrect( self, event ):
 		if self.entryCur:
-			CorrectNumber( self, self.entryCur )
+			CorrectNumber( self, self.fixTTEntry(self.entryCur) )
 		
 	def OnPopupHistorySplit( self, event ):
 		if self.entryCur:
-			SplitNumber( self, self.entryCur )
+			SplitNumber( self, self.fixTTEntry(self.entryCur) )
 		
 	def OnPopupHistoryShift( self, event ):
 		if self.entryCur:
-			ShiftNumber( self, self.entryCur )
+			ShiftNumber( self, self.fixTTEntry(self.entryCur) )
 		
 	def OnPopupHistoryInsert( self, event ):
 		if self.entryCur:
-			InsertNumber( self, self.entryCur )
+			InsertNumber( self, self.fixTTEntry(self.entryCur) )
 		
 	def OnPopupHistoryDelete( self, event ):
 		if self.entryCur:
-			DeleteEntry( self, self.entryCur )
+			DeleteEntry( self, self.fixTTEntry(self.entryCur) )
 			
 	def OnPopupHistoryDNF( self, event ):
 		try:
@@ -460,15 +476,18 @@ class ForecastHistory( wx.Panel ):
 		
 		tMin = tRace - max( race.getAverageLapTime(), 10*60.0 )
 		tMax = tRace + max( race.getAverageLapTime(), 10*60.0 )
-		entries = interpolateNonZeroFinishers( tMin, tMax )
+		expected, recorded = getExpectedRecorded( tMin )
 		
 		isTimeTrial = race.isTimeTrial
-		if isTimeTrial and entries and entries[0].lap == 0:
-			# Schedule a refresh later to update started riders.
-			milliSeconds = max( 0, int((entries[0].t - tRace)*1000.0 + 10.0) )
-			if self.callLaterRefresh is None:
-				self.callLaterRefresh = wx.CallLater( milliSeconds, self.refresh )
-			self.callLaterRefresh.Restart( milliSeconds )
+		if isTimeTrial and expected:
+			for e in expected:
+				if e.lap == 0:
+					# Schedule a refresh later to update started riders.
+					milliSeconds = max( 0, int((e.t - tRace)*1000.0 + 10.0) )
+					if self.callLaterRefresh is None:
+						self.callLaterRefresh = wx.CallLater( milliSeconds, self.refresh )
+					self.callLaterRefresh.Restart( milliSeconds )
+					break
 
 		#------------------------------------------------------------------
 		# Highlight interpolated entries at race time.
@@ -478,16 +497,7 @@ class ForecastHistory( wx.Panel ):
 		
 		expectedShowMax = 80
 		
-		seen = set()
-		expected = []
-		for i, e in enumerate(entries):
-			e = entries[i]
-			if not e.interp or e.num in seen:
-				continue
-			seen.add( e.num )
-			expected.append( e )
-			if len(expected) >= expectedShowMax:
-				break
+		expected = expected[:expectedShowMax]
 		
 		prevCatLeaders, nextCatLeaders = race.getCatPrevNextLeaders( tRace )
 		prevRiderPosition, nextRiderPosition = race.getPrevNextRiderPositions( tRace )
@@ -527,7 +537,7 @@ class ForecastHistory( wx.Panel ):
 		getT = self.getETATimeFunc()
 		data[iTimeCol] = [formatTime(getT(e) - tRace) if e.lap > 0 else ('[%s]' % formatTime(max(0.0, getT(e) - tRace + 0.99999999)))\
 									for e in expected]
-		data[iLapCol] = ['{}'.format(e.lap) for e in expected]
+		data[iLapCol] = [u'{}'.format(e.lap) if e.lap > 0 else u'' for e in expected]
 		def getNoteExpected( e ):
 			if e.lap == 0:
 				return _('Start')
@@ -583,14 +593,6 @@ class ForecastHistory( wx.Panel ):
 		
 		#------------------------------------------------------------------
 		# Update recorded.
-		recordedDisplayMax = min( 200, len(race.riders) )
-		recorded = []
-		for e in reversed(entries):
-			if not e.interp and e.t <= tRace:
-				recorded.append( e )
-				if len(recorded) >= recordedDisplayMax:
-					break
-		recorded.reverse()			
 		recorded = self.quickRecorded = self.addGaps( recorded )
 			
 		backgroundColour = {}

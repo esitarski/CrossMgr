@@ -74,25 +74,29 @@ def GetSituationGaps( category=None, t=None ):
 	if not race:
 		return []
 	
+	if t is None:
+		t = race.lastRaceTime() if not race.isRunning() else (datetime.datetime.now() - race.startTime).total_seconds()
+	
 	# Collect the race times from the results data.
+	Finisher = Model.Rider.Finisher
 	raceTimes, riderName = {}, {}
 	for rr in GetResults(category, True):
-		if rr.raceTimes and len(rr.raceTimes) >= 2:
-			raceTimes[rr.num] = rr.raceTimes
-			lastName, firstName = getattr(rr,'LastName',u'').upper(), getattr(rr,'FirstName',u'')
-			if lastName and firstName:
-				name = u'{},{}'.format(lastName, firstName[:1])
-			elif lastName:
-				name = lastName
-			else:
-				name = firstName
-			riderName[rr.num] = name
+		if not (rr.raceTimes and len(rr.raceTimes) >= 2) or rr._lastTimeOrig < t:
+			continue
+			
+		raceTimes[rr.num] = rr.raceTimes
+		lastName, firstName = getattr(rr,'LastName',u'').upper(), getattr(rr,'FirstName',u'')
+		if lastName and firstName:
+			name = u'{},{}'.format(lastName, firstName[:1])
+		elif lastName:
+			name = lastName
+		else:
+			name = firstName
+		riderName[rr.num] = name
 
 	if not raceTimes:
 		return []
 	
-	if t is None:
-		t = race.lastRaceTime() if not race.isRunning() else (datetime.datetime.now() - race.startTime).total_seconds()
 	t = min( t, max(rt[-1] for rt in raceTimes.itervalues()) )
 	
 	psLeader = (-1, -1, None)
@@ -646,8 +650,8 @@ class TopPanel( wx.Panel ):
 		hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		hbs.Add( self.categoryChoice, flag=wx.ALL, border=4 )
 		hbs.Add( wx.StaticText(self, label=u'\u2193 {}        \u2190{}'.format(
-				_('Drag Slider at Top to Change Time'),
-				_('Drag Slider at Left to Zoom'),
+				_('Drag Top Slider to Change Time'),
+				_('Drag Left Slider to Zoom'),
 			)),
 			flag=wx.ALL, border=4
 		)
