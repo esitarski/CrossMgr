@@ -1279,8 +1279,7 @@ class Race( object ):
 
 	def lastRaceTime( self ):
 		if self.finishTime is not None:
-			t = self.finishTime - self.startTime
-			return t.total_seconds()
+			return (self.finishTime - self.startTime).total_seconds()
 		return self.curRaceTime()
 
 	def addTime( self, num, t = None ):

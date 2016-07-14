@@ -291,7 +291,7 @@ Spin Doctors
 #
 wb = xlwt.Workbook()
 ws = wb.add_sheet( "JChipTest" )
-for col, label in enumerate('Bib#,LastName,FirstName,Team,Tag'.split(',')):
+for col, label in enumerate('Bib#,LastName,FirstName,Team,Tag,StartTime'.split(',')):
 	ws.write( 0, col, label )
 rdata = [d for d in getRandomData(len(tag))]
 rowCur = 1
@@ -300,7 +300,7 @@ for r, (n, t) in enumerate(tag.iteritems()):
 		continue
 	
 	bib, firstName, lastName, Team = rdata[r]
-	for c, v in enumerate([n, lastName, firstName, Team, t]):
+	for c, v in enumerate([n, lastName, firstName, Team, t, rowCur/(24.0*60.0*60.0)]):
 		ws.write( rowCur, c, v )
 	rowCur += 1
 wb.save('JChipTest.xls')

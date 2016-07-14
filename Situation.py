@@ -88,6 +88,9 @@ def GetSituationGaps( category=None, t=None ):
 				name = firstName
 			riderName[rr.num] = name
 
+	if not raceTimes:
+		return []
+	
 	if t is None:
 		t = race.lastRaceTime() if not race.isRunning() else (datetime.datetime.now() - race.startTime).total_seconds()
 	t = min( t, max(rt[-1] for rt in raceTimes.itervalues()) )

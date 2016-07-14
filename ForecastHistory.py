@@ -16,36 +16,52 @@ from GetResults import GetResults
 from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, DeleteEntry, DoDNS, DoDNF, DoPull
 from FtpWriteFile import realTimeFtpPublish
 
+def getTimeRange( tMin, tMax, times, offset=0.0 ):
+	tMin -= offset
+	tMax -= offset
+	i = bisect.bisect_left( times, tMin )
+	for t in xrange( i, len(times) ):
+		if times[i] > tMax:
+			break
+		yield i, times[i] + offset
+
 @Model.memoize
-def interpolateNonZeroFinishers():
+def interpolateNonZeroFinishers( tMin, tMax ):
 	results = GetResults( None, False )
 	Entry = Model.Entry
 	Finisher = Model.Rider.Finisher
 	race = Model.race
 	if race and race.isTimeTrial:
-		# Add the race start time back to the recorded time.
-		startTimes = {r.num:getattr(r, 'startTime', 0.0) for r in results}
-		return sorted(
+		# Add the race start time as a recorded time.
+		tCutoff = race.lastRaceTime()
+		entries = [
+			Entry(rider.num, 0, (rider.firstTime or 0.0), (rider.firstTime or 0.0) > tCutoff)
+				for rider in race.riders.itervalues()
+					if tMin <= (rider.firstTime or 0.0) <= tMax and rider.status == Finisher
+		]
+		entries.extend(
 			itertools.chain.from_iterable(
-				((Entry(r.num, lap, t, r.interp[lap]) for lap, t in enumerate(r.raceTimes))
+				((Entry(r.num, lap+1, t, r.interp[lap+1])
+						for lap, t in getTimeRange(tMin, tMax, r.raceTimes[1:], getattr(r,'startTime',0.0) or 0.0))
 					for r in results if r.status == Finisher)
 			),
-			key=lambda e: (e.t + startTimes[e.num], e.num)
 		)
+		entries.sort( key = Entry.key )		
+		return entries
 	elif race and race.resetStartClockOnFirstTag and race.enableJChipIntegration:
 		# Report the first time read to show all the riders crossing the line initially.
 		return sorted(
 			itertools.chain.from_iterable(
-				((Entry(r.num, lap, t, r.interp[lap]) for lap, t in enumerate(r.raceTimes))
+				((Entry(r.num, lap, t, lap == 0 or r.interp[lap]) for lap, t in getTimeRange(tMin, tMax, r.raceTimes))
 					for r in results if r.status == Finisher)
 			),
 			key=Entry.key
 		)
 	else:
-		# Skip the start time lap zero (nothing was recorded at that time).
+		# Skip the start time at lap zero.
 		return sorted(
 			itertools.chain.from_iterable(
-				((Entry(r.num, lap, t, r.interp[lap]) for lap, t in enumerate(r.raceTimes[1:], 1))
+				((Entry(r.num, lap+1, t, r.interp[lap+1]) for lap, t in getTimeRange(tMin, tMax, r.raceTimes[1:]))
 					for r in results if r.status == Finisher)
 			),
 			key=Entry.key
@@ -398,17 +414,7 @@ class ForecastHistory( wx.Panel ):
 		self.expectedGrid.Reset()
 	
 	def getETATimeFunc( self ):
-		race = Model.race
-		if race.isTimeTrial:
-			def getT( e ):
-				try:
-					return e.t + race.riders[e.num].firstTime
-				except Exception as e:
-					print( 'getT: failure', e )
-					return e.t
-		else:
-			getT = operator.attrgetter('t')
-		return getT
+		return operator.attrgetter('t')
 	
 	def updatedExpectedTimes( self, tRace = None ):
 		if not self.quickExpected:
@@ -452,67 +458,36 @@ class ForecastHistory( wx.Panel ):
 		tRace = race.curRaceTime()
 		tRaceLength = race.minutes * 60.0
 		
-		entries = interpolateNonZeroFinishers()
+		tMin = tRace - max( race.getAverageLapTime(), 10*60.0 )
+		tMax = tRace + max( race.getAverageLapTime(), 10*60.0 )
+		entries = interpolateNonZeroFinishers( tMin, tMax )
 		
 		isTimeTrial = race.isTimeTrial
-		if isTimeTrial:
-			# Update the start times in as recorded times.
-			startTimes = [(rider.firstTime, rider.num) for rider in race.riders.itervalues() \
-							if rider.status == Model.Rider.Finisher and rider.firstTime]
-			startTimes.sort()
-			
-			# Find the next start time so we can update the display.
-			iClosestStartTime = bisect.bisect_left( startTimes, (tRace, 0) )
-			if iClosestStartTime < len(startTimes):
-				tClosestStartTime = startTimes[iClosestStartTime][0]
-				milliSeconds = max( 0, int((tClosestStartTime - tRace)*1000.0 + 10.0) )
-				if self.callLaterRefresh is None:
-					self.callLaterRefresh = wx.CallLater( milliSeconds, self.refresh )
-				self.callLaterRefresh.Restart( milliSeconds )
-			
-			startTimeEntries = [Model.Entry(st[1], 0, st[0], False) for st in startTimes]
-			
-			# Add the rider firstTime to correct the times back to race times.
-			correctedEntries = [Model.Entry(e.num, e.lap, (race.riders[e.num].firstTime or 0.0) + e.t, e.interp) for e in entries]
-			startTimeEntries.extend( correctedEntries )
-			entries = startTimeEntries
-		
+		if isTimeTrial and entries and entries[0].lap == 0:
+			# Schedule a refresh later to update started riders.
+			milliSeconds = max( 0, int((entries[0].t - tRace)*1000.0 + 10.0) )
+			if self.callLaterRefresh is None:
+				self.callLaterRefresh = wx.CallLater( milliSeconds, self.refresh )
+			self.callLaterRefresh.Restart( milliSeconds )
+
 		#------------------------------------------------------------------
-		# Select the interpolated entries around now.
+		# Highlight interpolated entries at race time.
 		leaderPrev, leaderNext = race.getPrevNextLeader( tRace )
 		averageLapTime = race.getAverageLapTime()
 		backSecs = averageLapTime
 		
 		expectedShowMax = 80
 		
-		tMin = tRace - max( race.getAverageLapTime(), 10*60.0 )
-		tMax = tRace + max( race.getAverageLapTime(), 10*60.0 )
-		iCur = bisect.bisect_left( entries, Model.Entry(0, 0, tRace, True) )
-		iLeft = max(0, iCur - expectedShowMax//2)
-		
 		seen = set()
 		expected = []
-		for i in xrange(iLeft, len(entries)):
+		for i, e in enumerate(entries):
 			e = entries[i]
-			if not e.interp or e.t < tMin or e.num in seen:
+			if not e.interp or e.num in seen:
 				continue
-			if e.t > tMax:
-				break
 			seen.add( e.num )
 			expected.append( e )
 			if len(expected) >= expectedShowMax:
 				break
-			
-		if isTimeTrial:
-			# Update the expected start times.
-			expectedStarters = [(rider.firstTime, rider.num) for rider in race.riders.itervalues() \
-							if rider.status == Model.Rider.Finisher and rider.firstTime and rider.firstTime >= tRace]
-			expectedStarters.sort()
-			expectedStarterEntries = [Model.Entry(st[1], 0, st[0], False) for st in expectedStarters]
-			expectedStarterEntries.extend( expected )
-			expected = expectedStarterEntries
-			
-		expected = expected[:expectedShowMax]
 		
 		prevCatLeaders, nextCatLeaders = race.getCatPrevNextLeaders( tRace )
 		prevRiderPosition, nextRiderPosition = race.getPrevNextRiderPositions( tRace )
