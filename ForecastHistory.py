@@ -31,17 +31,20 @@ def getExpectedRecorded( tCutoff=0.0 ):
 	
 	results = GetResults( None, False )
 	
-	if race.isTimeTrial:
+	considerStartTime = (race.isTimeTrial or (race.resetStartClockOnFirstTag and race.enableJChipIntegration))
+	
+	if considerStartTime:
 		bibResults = set( rr.num for rr in results )
 		# Include the rider's TT start time.  This is not in the results as there are not results.
 		for rider in race.riders.itervalues():
-			if rider.status == Finisher and rider.num not in bibResults:
-				if (rider.firstTime or 0.0) < tCur:
-					recorded.append( Entry(rider.num, 0, (rider.firstTime or 0.0), True) )
+			if rider.status == Finisher and rider.num not in bibResults and rider.firstTime is not None:
+				e = Entry( rider.num, 0, rider.firstTime, False )
+				if rider.firstTime > tCur:
+					expected.append( e )
 				else:
-					expected.append( Entry(rider.num, 0, (rider.firstTime or 0.0), True) )
+					recorded.append( e )
 		
-	lapMin = 0 if (race.isTimeTrial or (race.resetStartClockOnFirstTag and race.enableJChipIntegration)) else 1
+	lapMin = 0 if considerStartTime else 1
 	for rr in results:
 		if not rr.raceTimes or rr.status != Finisher:
 			continue
