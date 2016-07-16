@@ -790,7 +790,7 @@ class Situation( wx.Panel ):
 			t = race.lastRaceTime()
 			tNext = int(t + 5.0)
 			tNext -= tNext % 5
-			self.refreshTimer = wx.CallLater( int((tNext - t)*1000+1), self.timerRefresh )
+			self.refreshTimer = wx.CallLater( max(1,int((tNext - t)*1000)), self.timerRefresh )
 	
 	def refresh( self ):
 		race = Model.race
