@@ -36,15 +36,16 @@ def getExpectedRecorded( tCutoff=0.0 ):
 	if considerStartTime:
 		bibResults = set( rr.num for rr in results )
 		# Include the rider's TT start time.  This is not in the results as there are not results.
+		interpValue = not (race.resetStartClockOnFirstTag and race.enableJChipIntegration)
 		for rider in race.riders.itervalues():
 			if rider.status == Finisher and rider.num not in bibResults and rider.firstTime is not None:
-				e = Entry( rider.num, 0, rider.firstTime, False )
-				if rider.firstTime > tCur:
+				e = Entry( rider.num, 0, rider.firstTime, interpValue )
+				if rider.firstTime > tCur and e.interp:
 					expected.append( e )
 				else:
 					recorded.append( e )
 		
-	lapMin = 0 if considerStartTime else 1
+	lapMin = 1
 	for rr in results:
 		if not rr.raceTimes or rr.status != Finisher:
 			continue
@@ -442,7 +443,7 @@ class ForecastHistory( wx.Panel ):
 		if not tRace:
 			tRace = race.curRaceTime()
 		getT = self.getETATimeFunc()
-		self.expectedGrid.SetColumn( iTimeCol, [formatTime(getT(e) - tRace) if e.lap > 0 else ('[{}]'.format(formatTime(max(0.0, getT(e) - tRace + 0.99999999))))\
+		self.expectedGrid.SetColumn( iTimeCol, [formatTime(getT(e) - tRace) if e.lap > 0 else ('[{}]'.format(formatTime(max(0.0, getT(e) - tRace + 0.0000001))))\
 										for e in self.quickExpected] )
 	
 	def addGaps( self, recorded ):
