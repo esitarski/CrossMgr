@@ -806,7 +806,7 @@ class MainWin( wx.Frame ):
 
 		#------------------------------------------------------------------------------
 		# Set the accelerator table so we can switch windows with the function keys.
-		accTable = [(wx.ACCEL_NORMAL, wx.WXK_F1 + i, jumpToIds[i]) for i in xrange(max(11,len(jumpToIds)))]
+		accTable = [(wx.ACCEL_NORMAL, wx.WXK_F1 + i, jumpToIds[i]) for i in xrange(min(11,len(jumpToIds)))]
 		self.contextHelp = wx.NewId()
 		self.Bind(wx.EVT_MENU, self.onContextHelp, id=self.contextHelp )
 		accTable.append( (wx.ACCEL_CTRL, ord('H'), self.contextHelp) )
