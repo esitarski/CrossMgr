@@ -487,7 +487,7 @@ class ForecastHistory( wx.Panel ):
 			for e in expected:
 				if e.lap == 0:
 					# Schedule a refresh later to update started riders.
-					milliSeconds = max( 0, int((e.t - tRace)*1000.0 + 10.0) )
+					milliSeconds = max( 1, int((e.t - tRace)*1000.0 + 10.0) )
 					if self.callLaterRefresh is None:
 						self.callLaterRefresh = wx.CallLater( milliSeconds, self.refresh )
 					self.callLaterRefresh.Restart( milliSeconds )

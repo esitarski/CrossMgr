@@ -776,7 +776,7 @@ class Situation( wx.Panel ):
 		self.topPanel.situation.SetData( *GetSituationGaps(category=category, t=None) )
 		
 		if race and race.isRunning():
-			wx.CallLater( 1001-datetime.datetime.now().microsecond//1000, self.timerUpdate )
+			wx.CallLater( max(1,1001-datetime.datetime.now().microsecond//1000), self.timerUpdate )
 	
 	def groupClick( self, situation, rect, groupIndex, groupInfo ):
 		self.bottomPanel.refresh( groupIndex, groupInfo or [], situation.tCur,

@@ -283,6 +283,6 @@ if __name__ == '__main__':
 	photoSyncDialog.reset()
 	bib = 100
 	for d in xrange(0, 1000*60, 1000):
-		wx.CallLater( d, doRefresh, bib )
+		wx.CallLater( max(1,d), doRefresh, bib )
 		bib += 1
 	app.MainLoop()

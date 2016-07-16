@@ -139,7 +139,7 @@ class VideoBuffer( object ):
 
 		tFind = self.refTime + timedelta( seconds = t + Model.race.advancePhotoMilliseconds / 1000.0 )
 		if tFind > tNow:
-			wx.CallLater( int(((tFind - tNow).total_seconds() + 0.1) * 1000.0), self.takePhoto, bib, t )
+			wx.CallLater( max(1,int(((tFind - tNow).total_seconds() + 0.1) * 1000.0)), self.takePhoto, bib, t )
 			return
 		
 		# If burst mode, check if there was another rider before within frameDelay seconds.
