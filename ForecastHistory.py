@@ -36,7 +36,7 @@ def getExpectedRecorded( tCutoff=0.0 ):
 	if considerStartTime:
 		bibResults = set( rr.num for rr in results )
 		# Include the rider's TT start time.  This is not in the results as there are not results.
-		interpValue = not (race.resetStartClockOnFirstTag and race.enableJChipIntegration)
+		interpValue = race.isTimeTrial
 		for rider in race.riders.itervalues():
 			if rider.status == Finisher and rider.num not in bibResults and rider.firstTime is not None:
 				e = Entry( rider.num, 0, rider.firstTime, interpValue )
