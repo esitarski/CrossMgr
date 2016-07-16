@@ -204,6 +204,7 @@ setup = {
 		'tornado >= 4.3',
 		'PIL >= 1.1.6',
 		'ftputil >= 3.3',
+		'tornado >= 4.4',
 		# 'wxPython >= 3.0.0',
 	],
 }
