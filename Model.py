@@ -2517,6 +2517,7 @@ def getCurrentHtml():
 			html = fp.read()
 		return Utils.mainWin.addResultsToHtmlStr( html )
 	except Exception as e:
+		Utils.logException( e, sys.exc_info )
 		return None
 
 def getCurrentTTCountdownHtml():
@@ -2528,6 +2529,7 @@ def getCurrentTTCountdownHtml():
 			html = fp.read()
 		return Utils.mainWin.addTTStartToHtmlStr( html )
 	except Exception as e:
+		Utils.logException( e, sys.exc_info )
 		return None
 
 def getCurrentTTStartListHtml():
@@ -2539,6 +2541,7 @@ def getCurrentTTStartListHtml():
 			html = fp.read()
 		return Utils.mainWin.addTTStartToHtmlStr( html )
 	except Exception as e:
+		Utils.logException( e, sys.exc_info )
 		return None
 
 def writeModelUpdate( includeExcel=True, includePDF=True ):

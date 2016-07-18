@@ -92,6 +92,7 @@ var payload = null;
 /* !!! payload end !!! */
 
 var raceName = null;
+var isRunning = null;
 
 var raceScheduledStartTuple = null;
 var raceStartTuple = null;
@@ -221,7 +222,7 @@ function updateStartList() {
 		var category = sle[4];
 		var uci_code = sle[5];
 		
-		var tip = (tClock < tNow ? ' time-in-past' : '')
+		var tip = (isRunning && tClock < tNow ? ' time-in-past' : '')
 		createTextChild( td = createChild(tr, 'TD'), (i+1) + '.' ); td.className = 'numeric' + tip;
 		createTextChild( td = createChild(tr, 'TD'), clock ); td.className = 'numeric' + tip; td.style.whiteSpace = 'nowrap';
 		createTextChild( td = createChild(tr, 'TD'), stopwatch ); td.className = 'numeric start-time' + tip;
@@ -257,17 +258,22 @@ function doReload() {
 
 function onload() {
 	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
-	if( startList == null ) startList = [];
 	
 	lastUpdated = (lastUpdatedTuple == null ? new Date() : dateFromTuple(lastUpdatedTuple));
 	
 	if( raceStartTuple != null ) {
 		raceStart = dateFromTuple( raceStartTuple );
 	}
+	else if ( raceScheduledStartTuple != null ) {
+		raceStart = dateFromTuple( raceScheduledStartTuple );
+	}
 	else {
 		raceStart = new Date();
-		startList = startListTest;
+		if( startList == null )
+			startList = startListTest;
 	}
+	if( startList == null )
+		startList = [];
 	
 	if( raceName ) {
 		document.getElementById('idRaceName').appendChild( document.createTextNode(raceName) );

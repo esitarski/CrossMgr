@@ -623,7 +623,7 @@ class NumKeypad( wx.Panel ):
 			tSearch = t
 			if race.isTimeTrial:
 				try:
-					tSearch -= race[rr.num].firstTime
+					tSearch -= race.riders[rr.num].firstTime
 				except:
 					pass
 			lap = max( 1, bisect.bisect_left(rr.raceTimes, tSearch) )

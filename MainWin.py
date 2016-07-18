@@ -14,6 +14,7 @@ import json
 import random
 import bisect
 import datetime
+import operator
 import webbrowser
 import zipfile
 import base64
@@ -1873,6 +1874,7 @@ class MainWin( wx.Frame ):
 		payload['raceName'] = race.name
 		payload['isTimerCountdown'] = True
 		payload['organizer'] = getattr(race, 'organizer', '')
+		payload['isRunning'] = race.isRunning()
 		payload['raceScheduledStart'] = race.date + ' ' + race.scheduledStart
 		if race.isRunning():
 			payload['raceStartTuple'] = [
@@ -1890,33 +1892,48 @@ class MainWin( wx.Frame ):
 				tNow.year, tNow.month-1, tNow.day,
 				tNow.hour, tNow.minute, tNow.second, int(tNow.microsecond/1000)
 		]
+				
+		try:
+			externalInfo = race.excelLink.read()
+		except:
+			externalInfo = {}
 		
-		data = GetAnimationData(getExternalData = True)
+		Finisher = Model.Rider.Finisher
 		startList = []
-		for bib, info in data.iteritems():
-			try:
-				catName = race.getCategory(bib).fullname
-			except:
-				catName = ''
-			try:
-				firstTime = int(race[bib].firstTime + 0.1)
-			except:
-				continue
-			row = [
-				firstTime,
-				bib,
-				' '.join(v for v in [info.get('FirstName',''), info.get('LastName')] if v),
-				info.get('Team', ''),
-				catName,
-				info.get('UCICode', ''),
-			]
-			startList.append( row )
+		uciCodes = set()
+		for bib, rider in race.riders.iteritems():
+			if rider.status == Finisher:
+				try:
+					firstTime = int(rider.firstTime + 0.1)
+				except:
+					continue
+				try:
+					catName = race.getCategory(bib).fullname
+				except:
+					catName = ''
+				
+				info = externalInfo.get(bib, {})
+				
+				uci = info.get('UCICode', u'')
+				if uci:
+					uciCodes.add( uci )
+				
+				row = [
+					firstTime,
+					bib,
+					u' '.join(v for v in [info.get('FirstName',''), info.get('LastName')] if v),
+					info.get('Team', u''),
+					catName,
+					uci,
+				]
+				startList.append( row )
 
+		startList.sort( key=operator.itemgetter(0, 1) )
+		
 		payload['startList'] = startList
-		payload['flags'] = Flags.GetFlagBase64ForUCI( r['UCICode'] for r in data.itervalues() if r.get('UCICode',None) )
+		payload['flags'] = Flags.GetFlagBase64ForUCI( uciCodes )
 		payload['version'] = Version.AppVerName
 
-		
 		html = replaceJsonVar( html, 'payload', payload )
 		html = html.replace( '<title>TTStartPage</title>', '<title>TT {} {} {}</title>'.format(
 				cgi.escape(race.name),

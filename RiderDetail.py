@@ -542,7 +542,7 @@ class RiderDetail( wx.Panel ):
 				return
 			if not Model.race or num not in Model.race:
 				return
-			rider = Model.race[num]
+			rider = Model.race.riders[num]
 			times = []
 			for r in rows:
 				try:
@@ -893,7 +893,7 @@ class RiderDetail( wx.Panel ):
 			return
 		undo.pushState()
 		with Model.LockRace() as race:
-			rider = race[num]
+			rider = race.riders[num]
 			rider.autocorrectLaps = self.autocorrectLaps.GetValue()
 			race.setChanged()
 		self.refresh()

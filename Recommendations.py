@@ -215,7 +215,7 @@ class Recommendations( wx.Panel ):
 					for e in entries:
 						if not race.inCategory(e.num, catCur):
 							continue
-						rider = race[e.num]
+						rider = race.riders[e.num]
 						t = rider.getFirstKnownTime()
 						if t is None:
 							continue
@@ -321,7 +321,7 @@ class Recommendations( wx.Panel ):
 					riderEntries.setdefault( e.num, [] ).append( e )
 					
 				for num in sorted(r for r in race.getRiderNums() if match(r)):
-					rider = race[num]
+					rider = race.riders[num]
 					statusName = Model.Rider.statusNames[rider.status]
 					if rider.status == Model.Rider.Finisher:
 						# Check for unreported DNFs.
@@ -448,11 +448,11 @@ if __name__ == '__main__':
 	race = Model.getRace()
 	race._populate()
 	race.numLaps = 10
-	race[101].status = Model.Rider.DNS
-	race[102].status = Model.Rider.DNF
-	race[102].tStatus = race[102].interpolate()[2].t
-	race[103].status = Model.Rider.DNF
-	race[104].status = Model.Rider.Pulled
+	race.riders[101].status = Model.Rider.DNS
+	race.riders[102].status = Model.Rider.DNF
+	race.riders[102].tStatus = race.riders[102].interpolate()[2].t
+	race.riders[103].status = Model.Rider.DNF
+	race.riders[104].status = Model.Rider.Pulled
 	for i, category in enumerate(race.getCategories()):
 		category.startOffset = '00:{:02d}:00'.format(i * 5)
 	recommendations = Recommendations(mainWin)

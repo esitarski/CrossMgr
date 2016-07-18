@@ -105,23 +105,24 @@ class ContentBuffer( object ):
 		
 		fnameFull = os.path.join( self.dirRace, fname )
 		if race and self.fnameRace and coreName(self.fnameRace) == coreName(fnameFull):
-			if race.lastChangedTime <= cache.get('mtime',0.0):
-				return cache
+			if forceUpdate or race.lastChangedTime > cache.get('mtime',0.0):
+				
+				if '_TTCountdown' in fname:
+					content = getCurrentTTCountdownHtml()
+				elif '_TTStartList' in fname:
+					content = getCurrentTTStartListHtml()
+				else:
+					content = getCurrentHtml()
+				
+				if content:
+					cache['mtime'] = time.time()
+					result = ParseHtmlPayload( content=content )
+					cache['payload'] = result['payload'] if result['success'] else {}
+					cache['content'] = content.encode('utf-8')
+					cache['status'] = self.Changed
+					self.fileCache[fname] = cache
 			
-			if '_TTCountdown' in fname:
-				content = getCurrentTTCountdownHtml()
-			elif '_TTStartList' in fname:
-				content = getCurrentTTStartListHtml()
-			else:
-				content = getCurrentHtml()
-			
-			if content:
-				cache['mtime'] = time.time()
-				result = ParseHtmlPayload( content=content )
-				cache['payload'] = result['payload'] if result['success'] else {}
-				cache['content'] = content.encode('utf-8')
-				self.fileCache[fname] = cache
-				return cache
+			return cache
 			
 		try:
 			mtime = os.path.getmtime( fnameFull )
@@ -160,14 +161,12 @@ class ContentBuffer( object ):
 		with self.lock:
 			self.fnameRace = fnameRace
 			self.dirRace = os.path.dirname( fnameRace )
+			coreNameRace = coreName( os.path.basename(fnameRace) )
+			
 			self.fileCache = {}
-			newRace = True
+			self._updateFile( os.path.splitext(os.path.basename(fnameRace))[0] + '.html' )
 			for f in glob.glob( os.path.join(self.dirRace, '*.html') ):
-				self._updateFile( os.path.basename(f) )
-				if coreName(fnameRace) == coreName(f):
-					newRace = False
-			if newRace:
-				self._updateFile( '/' + os.path.basename(fnameRace) )
+				self._updateFile( os.path.basename(f), coreName(os.path.basename(f)) == coreNameRace )
 	
 	def _getFiles( self ):
 		return [fname for fname, cache in sorted(
@@ -184,7 +183,7 @@ class ContentBuffer( object ):
 			except KeyError:
 				cache = self._updateFile( fname, True )
 		return cache
-		
+	
 	def getContent( self, fname, checkForUpdate=True ):
 		with self.lock:
 			cache = self._getCache( fname, checkForUpdate )
@@ -236,7 +235,7 @@ contentBuffer = ContentBuffer()
 DEFAULT_HOST = None
 def SetFileName( fname ):
 	if fname.endswith( '.cmn' ):
-		fname = os.path.splitext( fname )[0] + '.html'
+		fname = os.path.splitext(fname)[0] + '.html'
 	q.put( {'cmd':'fileName', 'fileName':fname} )
 
 def getQRCodePage( urlPage ):
