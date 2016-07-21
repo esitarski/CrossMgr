@@ -17,6 +17,8 @@ import Model
 from ReadSignOnSheet	import ResetExcelLinkCache, SyncExcelLink
 from GetResults import GetResults, TimeDifference
 from FixCategories import FixCategories, SetCategory
+from RiderDetail import ShowRiderDetailDialog
+from Undo import undo
 
 reNonDigit = re.compile( '[^0-9]+' )
 
@@ -510,6 +512,10 @@ class AutoWidthListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 	def __init__( self, parent ):
 		wx.Panel.__init__( self, parent=parent, style=wx.BORDER_SUNKEN )
+		
+		self.numSelect = None
+		self.item = None
+		
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		
 		self.il = wx.ImageList(16, 16)
@@ -523,6 +529,10 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 														 | wx.LC_HRULES
 														 )
 		self.list.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
+		self.list.Bind( wx.EVT_COMMAND_RIGHT_CLICK, self.onRightClick )
+		self.list.Bind( wx.EVT_RIGHT_DOWN, self.onRightClick )
+		
+		self.list.Bind( wx.EVT_RIGHT_DOWN, self.onRightDown )
 		
 		sizer.Add( self.list, 1, flag=wx.EXPAND|wx.ALL, border=4 )
 		self.SetSizer( sizer )
@@ -532,6 +542,102 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 		
 	def GetSortImages(self):
 		return (self.sm_dn, self.sm_up)
+	
+	def onRightDown( self, event ):
+		item, flags = self.list.HitTest( (event.GetX(), event.GetY()) )
+		if item != wx.NOT_FOUND and flags & wx.LIST_HITTEST_ONITEM:
+			self.numSelect = int( self.list.GetItem(item, 1).GetText() )
+			self.item = item
+			self.list.Select( item )
+		else:
+			self.numSelect = None
+			self.item = None
+		if Utils.isMainWin():
+			Utils.getMainWin().setNumSelect( self.numSelect )
+
+		event.Skip()
+	
+	def onRightClick( self, event ):
+		if self.numSelect is None or not Model.race:
+			return
+		
+		if not hasattr(self, 'popupInfo'):
+			self.popupInfo = [
+				(wx.NewId(), _('RiderDetail'),	_('Show RiderDetail tab'), self.OnPopupRiderDetail),
+				(None, None, None, None),
+				(wx.NewId(), _('Pull After Last Recorded Time') + u'...',	_('Pull After Last Recorded Time'),	self.OnPopupPull),
+				(wx.NewId(), _('DNF After Last Recorded Time') + u'...',	_('DNF After Last Recorded Time'),	self.OnPopupDNF),
+			]
+			for id, name, text, callback in self.popupInfo:
+				if id:
+					self.Bind( wx.EVT_MENU, callback, id=id )
+
+		menu = wx.Menu()
+		for i, (id, name, text, callback) in enumerate(self.popupInfo):
+			if not id:
+				Utils.addMissingSeparator( menu )
+				continue
+			menu.Append( id, name, text )
+		
+		try:
+			self.PopupMenu( menu )
+			menu.Destroy()
+		except Exception as e:
+			Utils.writeLog( 'Situation:doRightClick: {}'.format(e) )
+	
+	def OnPopupRiderDetail( self, event ):
+		if self.numSelect is not None:
+			ShowRiderDetailDialog( self, self.numSelect )
+	
+	def OnPopupPull( self, event ):
+		if self.numSelect is None or not Model.race:
+			return
+		rider = Model.race.riders.get(self.numSelect, None)
+		if rider is None:
+			return
+		t = rider.getLastKnownTime()+1
+		if not Utils.MessageOKCancel( self,
+			u'{}: {}  {} {}?'.format(
+				_('Bib'), self.numSelect,
+				_('Pull at '), Utils.formatTime(t, True), ),
+			_('Pull Rider') ):
+			return
+		try:
+			undo.pushState()
+			with Model.LockRace() as race:
+				rider.setStatus( Model.Rider.Pulled, t )
+				race.setChanged()
+		except Exception as e:
+			Utils.logException( e, sys.exc_info() )
+			
+		self.list.DeleteItem( self.item )
+		wx.CallAfter( Utils.refresh )
+		wx.CallAfter( Utils.refreshForecastHistory )
+		
+	def OnPopupDNF( self, event ):
+		if self.numSelect is None or not Model.race:
+			return
+		rider = Model.race.riders.get(self.numSelect, None)
+		if rider is None:
+			return
+		t = rider.getLastKnownTime()+1
+		if not Utils.MessageOKCancel( self,
+			u'{}: {}  {} {}?'.format(
+				_('Bib'), self.numSelect,
+				_('DNF at '), Utils.formatTime(t, True), ),
+			_('DNF Rider') ):
+			return
+		try:
+			undo.pushState()
+			with Model.LockRace() as race:
+				rider.setStatus( Model.Rider.DNF, t )
+				race.setChanged()
+		except Exception as e:
+			Utils.logException( e, sys.exc_info() )
+			
+		self.list.DeleteItem( self.item )
+		wx.CallAfter( Utils.refresh )
+		wx.CallAfter( Utils.refreshForecastHistory )
 	
 	def refresh( self, groupInfo ):
 		with Model.LockRace() as race:

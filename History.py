@@ -7,7 +7,7 @@ import Model
 import Utils
 import ColGrid
 from FixCategories import FixCategories
-from GetResults import TimeDifference, GetEntries
+from GetResults import TimeDifference, GetEntries, GetResults
 import EditEntry
 from RiderDetail import ShowRiderDetailDialog
 from Undo import undo
@@ -20,6 +20,7 @@ class History( wx.Panel ):
 		wx.Panel.__init__(self, parent, id)
 
 		self.showTimes = False
+		self.showPosition = False
 		self.showLapTimes = False
 		self.showTimeDown = False
 		self.showRiderName = False
@@ -43,6 +44,10 @@ class History( wx.Panel ):
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
 		
+		self.showPositionToggle = wx.ToggleButton( self, label = _('Position'), style=wx.BU_EXACTFIT )
+		self.showPositionToggle.SetValue( self.showPosition )
+		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowPosition, self.showPositionToggle )
+		
 		self.showTimesToggle = wx.ToggleButton( self, label = _('Race Times'), style=wx.BU_EXACTFIT )
 		self.showTimesToggle.SetValue( self.showTimes )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowTimes, self.showTimesToggle )
@@ -55,7 +60,7 @@ class History( wx.Panel ):
 		self.showTimeDownToggle.SetValue( self.showTimeDown )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowTimeDown, self.showTimeDownToggle )
 		
-		self.showRiderNameToggle = wx.ToggleButton( self, label = _('Rider Names'), style=wx.BU_EXACTFIT )
+		self.showRiderNameToggle = wx.ToggleButton( self, label = _('Names'), style=wx.BU_EXACTFIT )
 		self.showRiderNameToggle.SetValue( self.showRiderName )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowRiderName, self.showRiderNameToggle )
 		
@@ -74,6 +79,7 @@ class History( wx.Panel ):
 		
 		self.hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.categoryChoice, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.showPositionToggle, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.showTimesToggle, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.showLapTimesToggle, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.showTimeDownToggle, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
@@ -294,7 +300,11 @@ class History( wx.Panel ):
 			
 	def OnPopupRiderDetail( self, event ):
 		ShowRiderDetailDialog( self, self.numSelect )
-		
+	
+	def onShowPosition( self, event ):
+		self.showPosition ^= True
+		self.refresh()	
+	
 	def onShowTimes( self, event ):
 		self.showTimes ^= True
 		self.refresh()
@@ -345,6 +355,9 @@ class History( wx.Panel ):
 		if row < self.grid.GetNumberRows() and col < self.grid.GetNumberCols():
 			value = self.grid.GetCellValue( row, col )
 			if value:
+				if ':' in value:
+					value = value.split(':', 1)[1].strip()
+				
 				m = reIntPrefix.match( value )
 				if m:
 					numSelect = m.group(0)
@@ -409,6 +422,14 @@ class History( wx.Panel ):
 		
 		category = FixCategories( self.categoryChoice, getattr(race, 'historyCategory', 0) )
 		self.hbs.Layout()
+		
+		Finisher = Model.Rider.Finisher
+		results = GetResults( category )
+		lapsDown = { rr.num:rr.gap for rr in results if unicode(rr.gap).startswith('-') }
+		position = { rr.num:pos for pos, rr in enumerate(results, 1) if rr.status == Finisher }
+		winnerLaps = None
+		if results and results[0].status == Finisher:
+			winnerLaps = results[0].laps
 
 		maxLaps = 0
 		doLapsToGo = True
@@ -494,10 +515,10 @@ class History( wx.Panel ):
 							)
 		
 		formatStr = ['$num']
-		if self.showTimes:		formatStr.append('=$raceTime')
-		if self.showLapTimes:	formatStr.append(' [$lapTime]')
-		if self.showTimeDown:	formatStr.append(' ($downTime)')
-		if self.showRiderName:	formatStr.append(' $riderName')
+		if self.showTimes:		formatStr.append(', $raceTime')
+		if self.showLapTimes:	formatStr.append(', $lapTime')
+		if self.showTimeDown:	formatStr.append(', $downTime')
+		if self.showRiderName:	formatStr.append(', $riderName')
 		template = Template( u''.join(formatStr) )
 		
 		try:
@@ -508,12 +529,21 @@ class History( wx.Panel ):
 		def getName( num ):
 			d = info.get(num, {})
 			return u', '.join( v for v in [d.get('LastName',None), d.get('FirstName',None)] if v )
-			
+		
+		templateSave = template
 		data = []
 		for col, h in enumerate(self.history):
+			template = templateSave
+			if col+1 == winnerLaps:
+				if self.showPosition:
+					formatStr.insert(0, '$pos$lapsDown: ')
+				template = Template( u''.join(formatStr) )
+			
 			data.append( [ template.safe_substitute(
 				{
 					'num':		e.num,
+					'pos':		Utils.ordinal(position.get(e.num, '')),
+					'lapsDown':	u' ({})'.format(lapsDown[e.num]) if e.num in lapsDown else u'',
 					'raceTime':	formatTime(e.t) if self.showTimes else '',
 					'lapTime':	formatTime(e.t - numTimes[(e.num,e.lap-1)]) if self.showLapTimes and (e.num,e.lap-1) in numTimes else '',
 					'downTime':	formatTimeDiff(e.t, leaderTimes[col]) if self.showTimeDown and col < len(leaderTimes) else '',
