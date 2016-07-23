@@ -2177,7 +2177,7 @@ class Race( object ):
 	
 	@memoize
 	def getNumLapsFromCategory( self, category ):
-		return category.getNumLaps()
+		return category.getNumLaps() if category else None
 	
 	def getCategoryNumLaps( self, num ):
 		try:
