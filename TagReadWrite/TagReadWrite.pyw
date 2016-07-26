@@ -76,7 +76,7 @@ class MainWin( wx.Frame ):
 		self.attemptBitmap = wx.BitmapFromXPMData( Images.attempt_xpm )
 		self.errorBitmap = wx.BitmapFromXPMData( Images.error_xpm )
 		
-		self.config = wx.Config(appName="CrossMgrImpinj",
+		self.config = wx.Config(appName="CrossMgrReadWrite",
 						vendorName="SmartCyclingSolutions",
 						style=wx.CONFIG_USE_LOCAL_FILE)
 		
