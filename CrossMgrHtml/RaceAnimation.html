@@ -7,7 +7,8 @@
 	For details, see sites.google.com/site/CrossMgrSoftware
 -->
 <head>
-<meta charset="UTF-8" author="Edward Sitarski" copyright="Edward Sitarski, 2011-2016" generator="CrossMgr" />  
+<meta charset="UTF-8" author="Edward Sitarski" copyright="Edward Sitarski, 2011-2016" generator="CrossMgr" />
+<!-- Meta -->
 <title id="idTitle">CrossMgr Race Results by Edward Sitarski</title>	<!-- Don't change this text! -->
 <style type="text/css">
 body { font-family: sans-serif; }
@@ -5734,14 +5735,19 @@ function RefreshPayload() {
 		
 		console.log( 'RefreshPayload: processing...' );
 		
-		var startSearch = ':* !!! payload begin !!! *:\nvar payload = '.replace(/:/g,'/');
-		var pStart = xhr.responseText.indexOf(startSearch);
-		if( pStart < 0 ) return TryAgain( 'missing payload start', xhr.responseText );
-		pStart += startSearch.length;
-		var pEnd = xhr.responseText.indexOf( ';\n:* !!! payload end !!! *:'.replace(/:/g,'/'), pStart );
-		if( pEnd < 0 ) return TryAgain( 'missing payload end', xhr.responseText );
+		// Parse the data payload out of the web page.
+		var startSearch = /\/\* !!! payload begin !!! \*\/[^{]+\{/g;
+		var result = startSearch.exec( xhr.responseText );
+		if( result == null ) return TryAgain( 'missing payload start', xhr.responseText );
+		var pStart = startSearch.lastIndex - 1;
 		
-		var payloadJSON = xhr.responseText.substring(pStart, pEnd);
+		var endSearch = /\}\s*;\s*\/\* !!! payload end !!! \*\//g;
+		var result = endSearch.exec( xhr.responseText );
+		if( result == null ) return TryAgain( 'missing payload end', xhr.responseText );
+		var pEnd = result.index + 1;
+		
+		var payloadJSON = xhr.responseText.substring(pStart, pEnd)
+		
 		var payload = null;
 		try {
 			payload = JSON.parse(payloadJSON);

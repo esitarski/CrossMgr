@@ -1555,7 +1555,12 @@ class MainWin( wx.Frame ):
 			html = html.replace( u'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
 			if getattr(race, 'gaTrackingID', None):
 				html = html.replace( u'<!-- Google Analytics -->', gaSnippet.replace('UA-XXXX-Y', race.gaTrackingID) )
-			
+			if race.isRunning():
+				html = html.replace( u'<!-- Meta -->', u'''
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>''' )
+
 			payload['organizer']		= getattr(race, 'organizer', '')
 			payload['reverseDirection']	= getattr(race, 'reverseDirection', False)
 			payload['finishTop']		= getattr(race, 'finishTop', False)
