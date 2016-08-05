@@ -255,21 +255,6 @@ class CrossMgrPrintout( wx.Printout ):
 			self.categories = categories
 		self.pageInfo = {}
 
-	def OnBeginDocument(self, start, end):
-		return super(CrossMgrPrintout, self).OnBeginDocument(start, end)
-
-	def OnEndDocument(self):
-		super(CrossMgrPrintout, self).OnEndDocument()
-
-	def OnBeginPrinting(self):
-		super(CrossMgrPrintout, self).OnBeginPrinting()
-
-	def OnEndPrinting(self):
-		super(CrossMgrPrintout, self).OnEndPrinting()
-
-	def OnPreparePrinting(self):
-		super(CrossMgrPrintout, self).OnPreparePrinting()
-
 	def HasPage(self, page):
 		return page in self.pageInfo
 
@@ -399,7 +384,7 @@ class CrossMgrPrintoutPDF( CrossMgrPrintout ):
 			self.pdf.output( fname, 'F' )
 			self.lastFName = fname
 			self.pdf = None
-		super(CrossMgrPrintoutPDF, self).OnEndPrinting()
+		return super(CrossMgrPrintoutPDF, self).OnEndPrinting()
 
 	def OnPrintPage( self, page ):
 		exportGrid = self.prepareGrid( page )

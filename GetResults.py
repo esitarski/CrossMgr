@@ -162,6 +162,7 @@ def GetResultsCore( category ):
 	if not race:
 		return tuple()
 	
+	isRunning = race.isRunning()
 	isTimeTrial = race.isTimeTrial
 	roadRaceFinishTimes = race.roadRaceFinishTimes
 	allCategoriesFinishAfterFastestRidersLastLap = race.allCategoriesFinishAfterFastestRidersLastLap
@@ -251,7 +252,10 @@ def GetResultsCore( category ):
 	getCategory = race.getCategory
 	for rider in race.riders.itervalues():
 		riderCategory = getCategory( rider.num )
-		if (category and riderCategory != category) or riderCategory not in categoryWinningTime:
+		
+		if category and riderCategory != category:
+			continue
+		if isRunning and riderCategory not in categoryWinningTime:
 			continue
 		
 		cutoffTime = categoryWinningTime.get(riderCategory, raceSeconds)
@@ -335,7 +339,7 @@ def GetResultsCore( category ):
 	if not riderResults:
 		return tuple()
 	
-	if race.isRunning():
+	if isRunning:
 		# Sequence the riders based on the last lap time, not the projected winner of the race.
 		t = race.curRaceTime()
 		statusLapsTimeBest = (999, 0, 24*60*60*200)
@@ -644,7 +648,7 @@ def UnstartedRaceDataProlog( getExternalData = True ):
 			try:
 				externalInfo = race.excelLink.read()
 			except:
-				pass
+				externalInfo = {}
 		
 		# Add all numbers from the spreadsheet if they are not already in the race.
 		# Default the status to NP.
@@ -654,7 +658,7 @@ def UnstartedRaceDataProlog( getExternalData = True ):
 					rider = race.getRider( num )
 					rider.status = Model.Rider.NP
 					tempNums.add( num )
-			race.resetCache()
+			race.resetAllCaches()
 	
 	return tempNums
 	
@@ -664,7 +668,7 @@ def UnstartedRaceDataEpilog( tempNums ):
 	if race and tempNums:
 		for num in tempNums:
 			race.deleteRider( num )
-		race.resetCache()
+		race.resetAllCaches()
 
 class UnstartedRaceWrapper( object ):
 	count = 0	# Ensure that we can nest calls without problems.
