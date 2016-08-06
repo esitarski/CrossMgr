@@ -711,6 +711,16 @@ class Rider(object):
 		# This avoids a whole lot of special cases later.
 		iTimes = self.times[:]
 		iTimes.insert( 0, race.getStartOffset(self.num) if race else 0.0 )
+		
+		# Clean up spurious reads based on minumum possible lap time.
+		if race.minPossibleLapTime > 0.0:
+			minPossibleLapTime = race.minPossibleLapTime
+			iTimesTrim = [iTimes[0]]
+			for t in iTimes[1:]:
+				if t - iTimesTrim[-1] > minPossibleLapTime:
+					iTimesTrim.append( t )
+			iTimes = iTimesTrim
+		
 		try:
 			numLaps = min( race.getCategory(self.num)._numLaps or 999999, len(iTimes) )
 		except Exception as e:
@@ -1068,6 +1078,7 @@ class Race( object ):
 	groupByStartWave = True
 	winAndOut = False
 	isTimeTrial = False
+	minPossibleLapTime = 0.0
 	
 	city = ''
 	stateProv = ''
@@ -1167,6 +1178,7 @@ class Race( object ):
 			u'Discipline':	self.discipline,
 			u'RaceType':	_('Time Trial') if self.isTimeTrial else _('Mass Start'),
 			u'RaceDate':	self.date,
+			u'MinPossibleLapTime':self.minPossibleLapTime,
 			u'InputMethod':	_('RFID') if self.enableJChipIntegration else _('Manual'),
 			u'StartTime':	self.startTime.strftime('%H:%M:%S.%f')[:-3] if self.startTime else unicode(self.scheduledStart),
 			u'StartMethod':	_('Automatic: Triggered by first tag read') if self.enableJChipIntegration and self.resetStartClockOnFirstTag else _('Manual'),

@@ -257,6 +257,8 @@ def GetResultsCore( category ):
 			continue
 		if isRunning and riderCategory not in categoryWinningTime:
 			continue
+		if not riderCategory:
+			continue
 		
 		cutoffTime = categoryWinningTime.get(riderCategory, raceSeconds)
 		
@@ -265,8 +267,8 @@ def GetResultsCore( category ):
 		interp = [e.interp for e in riderTimes]
 		
 		if len(times) >= 2:
-			times[0] = min(riderCategory.getStartOffsetSecs(), times[1])
-			if categoryWinningLaps.get(riderCategory, None) and getattr(riderCategory, 'lappedRidersMustContinue', False):
+			times[0] = min(riderCategory.getStartOffsetSecs() if riderCategory else 0, times[1])
+			if riderCategory and categoryWinningLaps.get(riderCategory, None) and getattr(riderCategory, 'lappedRidersMustContinue', False):
 				laps = min( categoryWinningLaps[riderCategory], len(times)-1 )
 			else:
 				laps = bisect_left( times, cutoffTime, hi=len(times)-1 )
