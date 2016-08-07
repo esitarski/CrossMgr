@@ -708,18 +708,15 @@ class Rider(object):
 
 		# Create a separate working list.
 		# Add a zero start time for the beginning of the race.
-		# This avoids a whole lot of special cases later.
-		iTimes = self.times[:]
-		iTimes.insert( 0, race.getStartOffset(self.num) if race else 0.0 )
+		# This lots of special cases later.
+		iTimes = [race.getStartOffset(self.num) if race else 0.0]
 		
 		# Clean up spurious reads based on minumum possible lap time.
-		if race.minPossibleLapTime > 0.0:
-			minPossibleLapTime = race.minPossibleLapTime
-			iTimesTrim = [iTimes[0]]
-			for t in iTimes[1:]:
-				if t - iTimesTrim[-1] > minPossibleLapTime:
-					iTimesTrim.append( t )
-			iTimes = iTimesTrim
+		# Also removes early times.
+		minPossibleLapTime = race.minPossibleLapTime
+		for t in self.times:
+			if t - iTimes[-1] > minPossibleLapTime:
+				iTimes.append( t )
 		
 		try:
 			numLaps = min( race.getCategory(self.num)._numLaps or 999999, len(iTimes) )
@@ -754,7 +751,7 @@ class Rider(object):
 			except StopIteration:
 				break
 
-		return self.removeEarlyTimes(iTimes)
+		return iTimes if len(iTimes) >= 2 else []
 
 	def getExpectedLapTime( self, iTimes = None ):
 		if iTimes is None:
@@ -778,6 +775,9 @@ class Rider(object):
 			
 		# Compute differences between times.
 		dTimes = [iTimes[i] - iTimes[i-1] for i in xrange(iStart, numLaps+1)]
+		if not dTimes:
+			return None
+		
 		dTimes.sort()
 		dTimesLen = len(dTimes)
 		if (dTimesLen & 1) == 1:
@@ -881,6 +881,7 @@ class Rider(object):
 
 		# Flag that these are not interpolated times.
 		expected = self.getExpectedLapTime( iTimes )
+		
 		iTimes = [(t, False) for t in iTimes]
 		
 		# Check for missing lap data and fill it in.
