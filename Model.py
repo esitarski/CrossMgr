@@ -527,15 +527,14 @@ class Entry(object):
 		self.t		= t
 		self.interp	= interp
 		
-	def __cmp__( self, e ):
-		d = cmp( self.t, e.t )
-		if d:	return d
-		d = cmp( self.lap, e.lap )
-		if d:	return -d
-		d = cmp(self.num, e.num)
-		if d:	return d
-		return cmp(self.interp, e.interp)
-
+	def __lt__( self, e ):
+		return (
+			((self.t > e.t) - (self.t < e.t)) or
+			-((self.lap > e.lap) - (self.lap < e.lap)) or
+			((self.num > e.num) - (self.num < e.num)) or
+			((self.interp > e.interp) - (self.interp < e.interp))
+		) < 0
+		
 	def key( self ):
 		return (self.t, -self.lap, self.num, self.interp)
 		

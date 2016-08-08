@@ -19,7 +19,7 @@ class CorrectNumberDialog( wx.Dialog ):
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
 		self.numEdit = wx.lib.intctrl.IntCtrl( self, size=(64,-1), style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
 		
-		self.timeMsEdit = HighPrecisionTimeEdit( self, seconds = entry.t )
+		self.timeMsEdit = HighPrecisionTimeEdit( self, seconds=entry.t, size=(120, -1) )
 				
 		self.okBtn = wx.Button( self, wx.ID_OK )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
@@ -362,12 +362,16 @@ def SplitNumber( parent, entry ):
 def DeleteEntry( parent, entry ):
 	if entry.lap == 0:
 		return
+	
+	race = Model.race
+	raceStartTimeOfDay = Utils.StrToSeconds(race.startTime.strftime('%H:%M:%S.%f')) if race and race.startTime else None
 		
 	dlg = wx.MessageDialog(parent,
-						   u'{}: {}  {}: {}   {}: {}\n\n{}?'.format(
-								_('Num'), entry.num,
+						   u'{}: {}\n{}: {}\n{}: {}\n{}: {}\n\n{}?'.format(
+								_('Bib'), entry.num,
 								_('Lap'), entry.lap,
 								_('Race Time'), Utils.formatTime(entry.t, True),
+								_('Clock Time'), Utils.formatTime(entry.t + raceStartTimeOfDay, True) if raceStartTimeOfDay is not None else u'',
 								_('Confirm Delete')), _('Delete Entry'),
 							wx.OK | wx.CANCEL | wx.ICON_QUESTION )
 	# dlg.CentreOnParent(wx.BOTH)

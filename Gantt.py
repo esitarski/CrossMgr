@@ -80,7 +80,7 @@ class Gantt( wx.Panel ):
 		
 	def onRightClick( self, xPos, yPos, num, iRider, iLap ):
 		with Model.LockRace() as race:
-			if not race or num not in race:
+			if not race or num not in race.riders:
 				return
 			category = FixCategories( self.categoryChoice, getattr(race, 'ganttCategory', 0) )
 			entries = race.getRider(num).interpolate()
@@ -210,7 +210,7 @@ class Gantt( wx.Panel ):
 		with Model.LockRace() as race:
 			if (not race or
 				num not in race or
-				numAdjacent not in race ):
+				numAdjacent not in race.riders ):
 				return
 			e1 = race.getRider(num).interpolate()
 			e2 = race.getRider(numAdjacent).interpolate()
@@ -305,7 +305,7 @@ class Gantt( wx.Panel ):
 		num = self.entry.num
 			
 		race = Model.race
-		if not race or num not in race:
+		if not race or num not in race.riders:
 			return
 			
 		rider = race.riders[num]

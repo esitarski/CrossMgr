@@ -345,7 +345,7 @@ class Results( wx.Panel ):
 		
 		num = int(self.numSelect)
 		with Model.LockRace() as race:
-			if not race or num not in race:
+			if not race or num not in race.riders:
 				return
 			entries = race.getRider(num).interpolate()
 			category = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
@@ -397,7 +397,7 @@ class Results( wx.Panel ):
 			return
 		with Model.LockRace() as race:
 			if (not race or
-				num not in race or
+				num not in race.riders or
 				numAdjacent not in race ):
 				return
 			e1 = race.getRider(num).interpolate()

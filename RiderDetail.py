@@ -368,11 +368,17 @@ class RiderDetail( wx.Panel ):
 		splitter = wx.SplitterWindow( self )
 		self.splitter = splitter
 		
-		self.grid = ColGrid.ColGrid(	splitter,
-										colnames = [_('Lap'), _('Lap Time'), _('Race Time'),
-													_('Edit'), _('By'), _('On'), _('Note'),
-													_('Lap Speed'), _('Race Speed')],
-										style = wx.BORDER_SUNKEN )
+		colnames = (
+			'Lap', 'Lap Time', 'Race', 'Clock',
+			'Edit', 'By', 'On', 'Note',
+			'Lap Speed', 'Race Speed',
+		)
+		self.nameCol = {c:i for i, c in enumerate(colnames)}
+		
+		translate = _
+		self.colnames = [translate(c) for c in colnames]
+		self.grid = ColGrid.ColGrid( splitter, self.colnames, style=wx.BORDER_SUNKEN )
+		
 		self.grid.SetRowLabelSize( 0 )
 		self.grid.SetRightAlign( True )
 		self.grid.SetLeftAlignCols( [4, 5, 6] )
@@ -424,7 +430,7 @@ class RiderDetail( wx.Panel ):
 			return
 		num = int(self.num.GetValue())
 		with Model.LockRace() as race:
-			if not getattr(race, 'isTimeTrial', False) or num not in race:
+			if not getattr(race, 'isTimeTrial', False) or num not in race.riders:
 				return
 			rider = race.getRider( num )
 		dlg = AdjustTimeDialog( self, rider, self.riderName.GetLabel() )
@@ -486,7 +492,7 @@ class RiderDetail( wx.Panel ):
 			return
 		
 		with Model.LockRace() as race:
-			if not race or num not in race:
+			if not race or num not in race.riders:
 				return
 			entries = race.getRider(num).interpolate()
 		
@@ -575,7 +581,7 @@ class RiderDetail( wx.Panel ):
 			return
 			
 		race = Model.race
-		if not race or num not in race:
+		if not race or num not in race.riders:
 			return
 			
 		rider = race.riders[num]
@@ -841,7 +847,7 @@ class RiderDetail( wx.Panel ):
 			return
 		num = int(self.num.GetValue())
 		with Model.LockRace() as race:
-			if num not in race:
+			if num not in race.riders:
 				return
 			rider = race.getRider( num )
 		dlg = ChangeOffsetDialog( self, rider, self.riderName.GetLabel() )
@@ -1141,7 +1147,7 @@ class RiderDetail( wx.Panel ):
 		visibleRow = self.visibleRow
 		self.visibleRow = None
 
-		data = [ [] for c in xrange(self.grid.GetNumberCols()) ]
+		data = [ [] for c in xrange(len(self.colnames)) ]
 		self.grid.Set( data = data )
 		self.grid.Reset()
 		self.category.Clear()
@@ -1219,7 +1225,7 @@ class RiderDetail( wx.Panel ):
 				
 			catName = category.fullname if category else ''
 			#--------------------------------------------------------------------------------------
-			if num not in race:
+			if num not in race.riders:
 				return
 				
 			if waveCategory and getattr(waveCategory, 'distance', None) and waveCategory.distanceIsByLap:
@@ -1302,10 +1308,12 @@ class RiderDetail( wx.Panel ):
 			except:
 				missingCount = 0
 			if missingCount:
-				notInLapStr = u'{}: {}'.format(_('Lapped by Race Leader'), ', '.join( '{}'.format(i) for i, b in enumerate(appearedInLap) if not b ))
+				notInLapStr = u'{}: {}'.format(_('Lapped by Race Leader'), u', '.join( '{}'.format(i) for i, b in enumerate(appearedInLap) if not b ))
 			else:
 				notInLapStr = ''
 			self.notInLap.SetLabel( notInLapStr )
+			
+			raceStartTimeOfDay = Utils.StrToSeconds(race.startTime.strftime('%H:%M:%S.%f')) if race and race.startTime else 0.0
 
 			# Populate the lap times.
 			try:
@@ -1314,7 +1322,7 @@ class RiderDetail( wx.Panel ):
 				raceTime = 0.0
 			ganttData = [raceTime]
 			ganttInterp = [False]
-			data = [ [] for c in xrange(self.grid.GetNumberCols()) ]
+			data = [ [] for c in xrange(len(self.colnames)) ]
 			graphData = []
 			backgroundColour = {}
 			numTimeInfo = race.numTimeInfo
@@ -1323,9 +1331,13 @@ class RiderDetail( wx.Panel ):
 				tLap = max( e.t - raceTime, 0.0 )
 				tSum += tLap
 				
-				row = [''] * self.grid.GetNumberCols()
-				
-				row[0:3] = ( '{}'.format(r+1), Utils.formatTime(tLap, highPrecisionTimes), Utils.formatTime(e.t, highPrecisionTimes) )
+				# 'Lap', 'Lap Time', 'Race', 'Clock', 'Edit', 'By', 'On', 'Note', 'Lap Speed', 'Race Speed'
+				fields = {
+					'Lap': u'{}'.format(r+1),
+					'Lap Time': Utils.formatTime(tLap, highPrecisionTimes),
+					'Race': Utils.formatTime(e.t, highPrecisionTimes),
+					'Clock': Utils.formatTime(e.t + raceStartTimeOfDay, highPrecisionTimes),
+				}
 				
 				graphData.append( tLap )
 				ganttData.append( e.t )
@@ -1333,27 +1345,31 @@ class RiderDetail( wx.Panel ):
 				
 				highlightColour = None
 				if e.interp:
-					row[3:5] = (_('Auto'), 'CrossMgr')
+					fields['Edit'] = _('Auto')
+					fields['By'] = u'CrossMgr'
 					highlightColour = self.yellowColour
 				else:
 					info = numTimeInfo.getInfo( e.num, e.t )
 					if info:
-						row[3:6] = ( Model.NumTimeInfo.ReasonName[info[0]], info[1], info[2].ctime() )
+						fields['Edit'] = Model.NumTimeInfo.ReasonName[info[0]]
+						fields['By'] = info[1]
+						fields['On'] =  info[2].ctime()
 						highlightColour = self.orangeColour
 						
-				row[6] = getattr(race, 'lapNote', {}).get( (e.num, e.lap), '' )
+				fields['Note'] = getattr(race, 'lapNote', {}).get( (e.num, e.lap), u'' )
 				if distanceByLap:
-					row[7:9] = ('%.2f' % (1000.0 if tLap <= 0.0 else (waveCategory.getLapDistance(r+1) / (tLap / (60.0*60.0)))),
-								'%.2f' % (1000.0 if tSum <= 0.0 else (waveCategory.getDistanceAtLap(r+1) / (tSum / (60.0*60.0)))) )
+					fields['Lap Speed'] = u'{:.2f}'.format(1000.0 if tLap <= 0.0 else (waveCategory.getLapDistance(r+1) / (tLap / (60.0*60.0))))
+					fields['Race Speed'] = u'{:.2f}'.format(1000.0 if tSum <= 0.0 else (waveCategory.getDistanceAtLap(r+1) / (tSum / (60.0*60.0))))
 				
-				for i, d in enumerate(row):
-					data[i].append( d )
+				for name, i in self.nameCol.iteritems():
+					data[i].append( fields.get(name, u'') )
+				
 				if highlightColour:
-					for i in xrange(self.grid.GetNumberCols()):
+					for i in xrange(len(self.colnames)):
 						backgroundColour[(r,i)] = highlightColour
 				raceTime = e.t
 
-			self.grid.Set( data = data, backgroundColour = backgroundColour )
+			self.grid.Set( data=data, backgroundColour=backgroundColour, colnames=self.colnames )
 			self.grid.AutoSizeColumns( True )
 			self.grid.Reset()
 			
@@ -1380,7 +1396,7 @@ class RiderDetail( wx.Panel ):
 		undo.pushState();
 		with Model.LockRace() as race:
 			# Allow new numbers to be added if status is DNS, DNF or DQ.
-			if race is None or (num not in race and status not in [Model.Rider.DNS, Model.Rider.DNF, Model.Rider.DQ]):
+			if race is None or (num not in race.riders and status not in [Model.Rider.DNS, Model.Rider.DNF, Model.Rider.DQ]):
 				return
 				
 			rider = race.getRider(num)

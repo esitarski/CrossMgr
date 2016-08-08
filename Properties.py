@@ -213,7 +213,7 @@ class RaceOptionsProperties( wx.Panel ):
 		self.winAndOut = wx.CheckBox( self, label=_("Win and Out") )
 		self.winAndOut.SetValue( False )
 
-		self.minPossibleLapTimeLabel = wx.StaticText( self, label=_('Min. Possible Lap Time: ') )
+		self.minPossibleLapTimeLabel = wx.StaticText( self, label=_('Min. Possible Lap Time (hh:mm:ss.ddd) ') )
 		self.minPossibleLapTime = HighPrecisionTimeEdit( self, seconds = 0.0 )
 
 		self.licenseLinkTemplateLabel = wx.StaticText( self, label=_('License Link HTML Template: ') )
