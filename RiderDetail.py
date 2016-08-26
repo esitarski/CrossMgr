@@ -21,7 +21,7 @@ from GetResults import GetResults, GetCategoryDetails
 def getStFtLaps( rider ):
 	with Model.LockRace() as race:
 		laps = race.getCategoryNumLaps( rider.num )
-	st = getattr( rider, 'firstTime', None )
+	st = rider.firstTime
 	try:
 		ft = st + rider.times[max( 0, min(laps-1, len(rider.times)-1) )]
 	except (TypeError, AttributeError, IndexError):
@@ -112,7 +112,7 @@ class AdjustTimeDialog( wx.Dialog ):
 		
 		undo.pushState()
 		
-		firstTime = getattr(self.rider, 'firstTime', None)
+		firstTime = self.rider.firstTime
 		if firstTime is None and not st:
 			Utils.MessageOK( self, _('You must specify the Missing Start Time'), _('Missing Start Time'), wx.ICON_ERROR )
 			return
@@ -219,7 +219,7 @@ class RiderDetail( wx.Panel ):
 		self.num = None
 		self.iLap = None
 		self.entry = None
-		self.firstTime = True
+		self.firstCall = True
 		
 		self.visibleRow = None
 		
@@ -1373,8 +1373,8 @@ class RiderDetail( wx.Panel ):
 			self.ganttChart.SetData( [ganttData], [num], Gantt.GetNowTime(), [ganttInterp], numTimeInfo = numTimeInfo )
 			self.lineGraph.SetData( [graphData], [[e.interp for e in entries]] )
 		
-		if self.firstTime:
-			self.firstTime = False
+		if self.firstCall:
+			self.firstCall = False
 			self.splitter.SetSashPosition( 300 )
 		self.hs.RecalcSizes()
 		self.hs.Layout()
