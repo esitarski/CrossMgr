@@ -286,10 +286,10 @@ def removeDiacritic(input):
 	Accept a unicode string, and return a normal string (bytes in Python 3)
 	without any diacritical marks.
 	'''
-	if type(input) == str:
-		return input
-	else:
+	if isinstance(input, unicode):
 		return unicodedata.normalize('NFKD', input).encode('ASCII', 'ignore')
+	else:
+		return input
 	
 soundCache = {}
 def Play( soundFile ):

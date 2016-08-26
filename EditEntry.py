@@ -88,6 +88,16 @@ class CorrectNumberDialog( wx.Dialog ):
 										_('Time Entry Error'), iconMask = wx.ICON_ERROR )
 				return
 			t = (dtInput - dtStart).total_seconds()
+		
+		offset = Model.race.getStartOffset( num )
+		if t <= offset:
+			Utils.MessageOK( self, u'{}: {}\n\n{}\n{}'.format(
+				_('Cannot enter a time that is before the Category Start Offset'), Utils.formatTime(offset, highPrecision=True),
+				_('All times earlier than the Start Offset are ignored.'),
+				_('Please enter a time after the Start Offset.')
+				), _('Time Entry Error'), iconMask = wx.ICON_ERROR
+			)
+			return
 			
 		if self.entry.num != num or self.entry.t != t:
 			undo.pushState()

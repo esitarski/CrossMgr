@@ -15,7 +15,7 @@ def FixCategories( choice, iSelection = None ):
 		choice.SetSelection( iSelection or 0 )
 
 	categories = race.getCategories( startWaveOnly=False ) if race else []
-	newItems = [(u'    ' if c.catType == Model.Category.CatComponent else u'') + c.name for c in categories]
+	newItems = [(u'    ' if c.catType == Model.Category.CatComponent else u'') + c.fullname for c in categories]
 	newItems.insert( 0, _('All') )
 	categories.insert( 0, None )
 	if items == newItems:

@@ -1449,6 +1449,7 @@ class Properties( wx.Panel ):
 			for prop, PropClass, name in self.propClassName:
 				getattr(self, prop).commit()
 			race.setChanged()
+			race.resetAllCaches()
 			
 		if Utils.getMainWin():
 			Utils.getMainWin().record.setTimeTrialInput( race.isTimeTrial )
