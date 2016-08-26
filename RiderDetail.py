@@ -1257,9 +1257,9 @@ class RiderDetail( wx.Panel ):
 					rider.tStatus = 0.0
 				self.setAtRaceTime( rider.tStatus, True )
 				
-			self.autocorrectLaps.SetValue( getattr(rider, 'autocorrectLaps', True) )
+			self.autocorrectLaps.SetValue( rider.autocorrectLaps )
 			
-			isTimeTrial = getattr(race, 'isTimeTrial', False)
+			isTimeTrial = race.isTimeTrial
 			if isTimeTrial:
 				st, ft, laps = getStFtLaps( rider )
 				self.startTime.SetLabel( Utils.formatTime(st, True) if st is not None else '')
@@ -1283,16 +1283,13 @@ class RiderDetail( wx.Panel ):
 				maxLap = race.getMaxLap()
 				
 			maxLap = (maxLap or 0)		# Ensure that maxLap is not None
-			
-			# Figure out which laps this rider was lapped in.
-			if getattr(rider, 'autocorrectLaps', True):
-				entries = race.interpolateLap( maxLap, False )
-			else:
-				entries = race.getRider(num).interpolate()
+
+			entries = race.interpolateLap(maxLap, False) if rider.autocorrectLaps else race.getRider(num).interpolate()
 			
 			startOffset = race.getStartOffset( num )
 			entries = [e for e in entries if e.num == num and e.t > startOffset]
-
+			
+			# Figure out which laps this rider was lapped in.
 			leaderTimes, leaderNums = race.getLeaderTimesNums()
 			appearedInLap = [False] * (maxLap + 1)
 			appearedInLap[0] = True

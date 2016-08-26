@@ -106,7 +106,7 @@ class CorrectNumberDialog( wx.Dialog ):
 				if self.entry.lap != 0:
 					race.numTimeInfo.change( self.entry.num, self.entry.t, t )
 					race.deleteTime( self.entry.num, self.entry.t )
-					race.addTime( num, t + (rider.firstTime if getattr(race, 'isTimeTrial', False) and getattr(rider, 'firstTime', None) is not None else 0.0) )
+					race.addTime( num, t + ((rider.firstTime or 0.0) if race.isTimeTrial else 0.0) )
 				else:
 					race.numTimeInfo.change( self.entry.num, rider.firstTime, t )
 					rider.firstTime = t
@@ -184,7 +184,7 @@ class ShiftNumberDialog( wx.Dialog ):
 				if self.entry.lap != 0:
 					race.numTimeInfo.change( self.entry.num, self.entry.t, t )
 					race.deleteTime( self.entry.num, self.entry.t )
-					race.addTime( num, t + (rider.firstTime if getattr(race, 'isTimeTrial', False) and getattr(rider, 'firstTime', None) is not None else 0.0) )
+					race.addTime( num, t + ((rider.firstTime or 0.0) if race.isTimeTrial else 0.0) )
 				else:
 					race.numTimeInfo.change( self.entry.num, rider.firstTime, t )
 					rider.firstTime = t
@@ -259,7 +259,7 @@ class InsertNumberDialog( wx.Dialog ):
 		with Model.LockRace() as race:
 			rider = race.getRider( num )
 			race.numTimeInfo.add( num, tInsert )
-			race.addTime( num, tInsert + (rider.firstTime if getattr(race, 'isTimeTrial', False) and getattr(rider, 'firstTime', None) is not None else 0.0) )
+			race.addTime( num, tInsert + ((rider.firstTime or 0.0) if race.isTimeTrial else 0.0) )
 			
 		Utils.refresh()
 		
@@ -329,8 +329,8 @@ class SplitNumberDialog( wx.Dialog ):
 			race.numTimeInfo.add( num2, t2 )
 			
 			race.deleteTime( self.entry.num, self.entry.t )
-			race.addTime( num1, t1 + (rider.firstTime if getattr(race, 'isTimeTrial', False) and getattr(rider, 'firstTime', None) is not None else 0.0) )
-			race.addTime( num2, t2 + (rider.firstTime if getattr(race, 'isTimeTrial', False) and getattr(rider, 'firstTime', None) is not None else 0.0) )
+			race.addTime( num1, t1 + ((rider.firstTime or 0.0) if race.isTimeTrial else 0.0) )
+			race.addTime( num2, t2 + ((rider.firstTime or 0.0) if race.isTimeTrial else 0.0) )
 			
 		Utils.refresh()
 		
@@ -418,8 +418,8 @@ def SwapEntry( a, b ):
 	
 	race.deleteTime( a.num, a.t )
 	race.deleteTime( b.num, b.t )
-	race.addTime( a.num, b_tNew + (riderB.firstTime if getattr(race, 'isTimeTrial', False) and riderB.firstTime is not None else 0.0) )
-	race.addTime( b.num, a_tNew + (riderA.firstTime if getattr(race, 'isTimeTrial', False) and riderA.firstTime is not None else 0.0) )
+	race.addTime( a.num, b_tNew + ((riderB.firstTime or 0.0) if race.isTimeTrial else 0.0) )
+	race.addTime( b.num, a_tNew + ((riderA.firstTime or 0.0) if race.isTimeTrial else 0.0) )
 
 class StatusChangeDialog( wx.Dialog ):
 	def __init__( self, parent, message, title, t=None, externalData=None, id=wx.ID_ANY ):
@@ -544,6 +544,7 @@ def DoDQ( parent, num, lapTime=None ):
 def AddLapSplits( num, lap, times, splits ):
 	undo.pushState()
 	with Model.LockRace() as race:
+		rider = race.riders[num]
 		try:
 			tLeft = times[lap-1]
 			tRight = times[lap]
@@ -566,7 +567,7 @@ def AddLapSplits( num, lap, times, splits ):
 			for i in xrange( 1, splits ):
 				newTime += (firstLapSplitTime if i == 1 else splitTime)
 				race.numTimeInfo.add( num, newTime, Model.NumTimeInfo.Split )
-				race.addTime( num, newTime )
+				race.addTime( num, newTime + ((rider.firstTime or 0.0) if race.isTimeTrial else 0.0) )
 			return True
 		except (TypeError, KeyError, ValueError, IndexError) as e:
 			Utils.logException( e, sys.exc_info )
