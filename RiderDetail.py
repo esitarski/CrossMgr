@@ -586,9 +586,8 @@ class RiderDetail( wx.Panel ):
 			
 		rider = race.riders[num]
 			
-		times = [t for t in rider.times]
-		if len(times) < 2:
-			return
+		times = list(rider.times)
+		times.insert(0, 0.0)		# Add a zero starting time.
 			
 		if rider.status != rider.Finisher:
 			Utils.MessageOK( self, _('Cannot add Last Lap unless Rider is Finisher'), _('Cannot add Last Lap') )
@@ -598,14 +597,19 @@ class RiderDetail( wx.Panel ):
 		if rider.autocorrectLaps:
 			if Utils.MessageOKCancel( self, _('Turn off Autocorrect first?'), _('Turn off Autocorrect') ):
 				rider.autocorrectLaps = False
-				
-		waveCategory = race.getCategory( num )
-		if waveCategory:
-			times[0] = waveCategory.getStartOffsetSecs()
-		tNewLast = times[-1] + times[-1] - times[-2]
+		
+		if not race.isTimeTrial:
+			waveCategory = race.getCategory( num )
+			if waveCategory:
+				times[0] = waveCategory.getStartOffsetSecs()
+		
+		if len(times) >= 2:
+			tNewLast = times[-1] + times[-1] - times[-2]
+		elif len(times) == 1:
+			tNewLast = times[0] + 10*60
 				
 		race.numTimeInfo.add( num, tNewLast )
-		race.addTime( num, tNewLast )
+		race.addTime( num, tNewLast + ((rider.firstTime or 0.0) if race.isTimeTrial else 0.0) )
 		race.setChanged()
 		self.visibleRow = self.grid.GetNumberRows()
 		
