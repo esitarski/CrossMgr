@@ -5,11 +5,9 @@ import datetime
 tCos60 = [cos((i/60.0)*2.0*pi-pi/2.0) for i in xrange(60)]
 tSin60 = [sin((i/60.0)*2.0*pi-pi/2.0) for i in xrange(60)]
 
-def GetCos( pos ):
-	return cos(pos*2.0*pi-pi/2.0)
-	
-def GetSin( pos ):
-	return sin(pos*2.0*pi-pi/2.0)
+def GetCosSin( pos ):
+	a = pos*2.0*pi-pi/2.0
+	return cos(a), sin(a)
 
 def GetPen( colour=wx.BLACK, cap=wx.CAP_ROUND, join=wx.JOIN_ROUND, width=1 ):
 	pen = wx.Pen( colour, width )
@@ -33,12 +31,6 @@ class Clock(wx.PyControl):
 		@param name: Window name.
 		"""
 
-		# Ok, let's see why we have used wx.PyControl instead of wx.Control.
-		# Basically, wx.PyControl is just like its wxWidgets counterparts
-		# except that it allows some of the more common C++ virtual method
-		# to be overridden in Python derived class. For StatusBar, we
-		# basically need to override DoGetBestSize and AcceptsFocusFromKeyboard
-		
 		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
 		
 		self.timer = wx.Timer( self )
@@ -56,7 +48,7 @@ class Clock(wx.PyControl):
 		self.checkFunc = checkFunc if checkFunc else lambda: True
 		self.tCur = datetime.datetime.now()
 		wx.CallAfter( self.onTimer )
-		
+	
 	def DoGetBestSize(self):
 		return wx.Size(100, 100) if self.initialSize is wx.DefaultSize else self.initialSize
 
@@ -69,17 +61,9 @@ class Clock(wx.PyControl):
 		self.Refresh()
 		
 	def GetDefaultAttributes(self):
-		"""
-		Overridden base class virtual.  By default we should use
-		the same font/colour attributes as the native wx.StaticText.
-		"""
 		return wx.StaticText.GetClassDefaultAttributes()
 
 	def ShouldInheritColours(self):
-		"""
-		Overridden base class virtual.  If the parent has non-default
-		colours then we want this control to inherit them.
-		"""
 		return True
 
 	def onTimer( self, event=None):
@@ -210,15 +194,13 @@ class Clock(wx.PyControl):
 		hourPos = (t.hour % 12 + minutePos) / 12.0
 		
 		ctx.SetPen( ctx.CreatePen( GetPen(colour=wx.Colour(0,0,180,128), width=wHourHand) ) )
-		cosCur = GetCos(hourPos)
-		sinCur = GetSin(hourPos)
+		cosCur, sinCur = GetCosSin(hourPos)
 		ctx.StrokeLine(
 			xCenter + rBack * cosCur, yCenter + rBack * sinCur,
 			xCenter + rHour * cosCur, yCenter + rHour * sinCur
 		)
 		ctx.SetPen( ctx.CreatePen( GetPen(colour=wx.Colour(0,150,0,128), width=wMinuteHand) ) )
-		cosCur = GetCos(minutePos)
-		sinCur = GetSin(minutePos)
+		cosCur, sinCur = GetCosSin(minutePos)
 		ctx.StrokeLine(
 			xCenter + rBack * cosCur,   yCenter + rBack * sinCur,
 			xCenter + rMinute * cosCur, yCenter + rMinute * sinCur
@@ -226,8 +208,7 @@ class Clock(wx.PyControl):
 		
 		ctx.SetPen( ctx.CreatePen( GetPen(colour=wx.RED,width=wSecondHand) ) )
 		ctx.SetBrush( ctx.CreateBrush(wx.Brush(wx.RED)) )
-		cosCur = GetCos(secondPos)
-		sinCur = GetSin(secondPos)
+		cosCur, sinCur = GetCosSin(secondPos)
 		ctx.StrokeLine(
 			xCenter + rDot * cosCur,    yCenter + rDot * sinCur,
 			xCenter + rMinute * cosCur, yCenter + rMinute * sinCur

@@ -78,6 +78,27 @@ class RiderResult( object ):
 			pass
 		return u', '.join( names )
 		
+	def short_name( self, maxLen=20 ):
+		name = self.full_name()
+		if len(name) <= maxLen:
+			return name
+		
+		names = []
+		try:
+			names.append( self.LastName.upper() )
+			if len(names[-1]) >= maxLen-2:
+				return names[0]
+		except AttributeError:
+			pass
+		try:
+			if names:
+				names.append( self.FirstName[:1] )
+			else:
+				names.append( self.FirstName )
+		except AttributeError:
+			pass
+		return u','.join( names )
+		
 	def __repr__( self ):
 		return str(self.__dict__)
 		
@@ -624,6 +645,22 @@ def GetEntries( category ):
 		),
 		key=Entry.key
 	)
+	
+@Model.memoize
+def GetLastRider( category ):
+	race = Model.race
+	if not race or race.isUnstarted() or race.isTimeTrial:
+		return None
+	
+	categories = [category] if category else race.getCategories( startWaveOnly=True )
+	finisher = Model.Rider.Finisher
+	rrLast = None
+	for c in categories:
+		for rr in GetResults( c, True ):
+			if rr.status == finisher and rr._lastTimeOrig:
+				if rrLast is None or rrLast._lastTimeOrig <= rr._lastTimeOrig:
+					rrLast = rr
+	return rrLast
 
 @Model.memoize
 def GetLastFinisherTime():
