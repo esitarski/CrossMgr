@@ -298,29 +298,39 @@ class RaceHUD(wx.PyControl):
 				textWidth, textHeight = dc.GetTextExtent( leaderText )
 				dc.DrawText( leaderText, xLeft - textWidth - textHeight / 8, yTop + hMiddle - textHeight / 2 )
 			
-			if iRaceTimes == self.iRaceTimesHover and self.lapInfoFunc:
-				tCur, tNext = raceTimes[self.iLapHover-1:self.iLapHover+1]
-				info = self.lapInfoFunc( self.iLapHover, len(raceTimes)-2, tCur, tNext, leader )
-				hoverLineHeight = min(24, max( 16, hudHeight//len(info) ) )
-				fontHover = wx.FontFromPixelSize( wx.Size(0,int(hoverLineHeight * 0.9)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
-				dc.SetFont( fontHover )
-				labelHoverWidth = max(dc.GetTextExtent(label)[0] for label, value in info)
-				valueHoverWidth = max(dc.GetTextExtent(value)[0] for label, value in info)
-				hoverBorder = dc.GetTextExtent(u'  ')[0]
-				hoverWidth = labelHoverWidth + valueHoverWidth + dc.GetTextExtent(u' ')[0]
-				hoverHeight = hoverLineHeight * len(info)
-				xHover = xLeft + int( tCur * xMult ) - hoverWidth
-				yHover = yTop + (hudHeight - hoverHeight)//2
-				#yHover = yTop
-				dc.SetBrush( wx.WHITE_BRUSH )
-				render.DrawPushButton( self, dc, (xHover - hoverBorder, yHover, hoverWidth + hoverBorder*2, hoverHeight), wx.CONTROL_ISDEFAULT )
-				for label, value in info:
-					dc.DrawText( label, xHover+labelHoverWidth-dc.GetTextExtent(label)[0], yHover )
-					dc.DrawText( value, xHover+hoverWidth-valueHoverWidth, yHover )
-					yHover += hoverLineHeight
-			
 			yTop += hudHeight
-					
+		
+		if self.iRaceTimesHover is not None and self.lapInfoFunc:
+			yTop = 0
+			for iRaceTimes, (leader, raceTimes) in enumerate(zip(self.leader, self.raceTimes)):
+				if not raceTimes:
+					continue
+				if iRaceTimes == self.iRaceTimesHover:
+					tCur, tNext = raceTimes[self.iLapHover-1:self.iLapHover+1]
+					info = self.lapInfoFunc( self.iLapHover, len(raceTimes)-2, tCur, tNext, leader )
+					hoverLineHeight = min(24, max( 16, hudHeight//len(info) ) )
+					fontHover = wx.FontFromPixelSize( wx.Size(0,int(hoverLineHeight * 0.85)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+					dc.SetFont( fontHover )
+					labelHoverWidth = max(dc.GetTextExtent(label)[0] for label, value in info)
+					valueHoverWidth = max(dc.GetTextExtent(value)[0] for label, value in info)
+					hoverBorderHeight = dc.GetTextExtent(u'  ')[1]//3
+					hoverBorderWidth = dc.GetTextExtent(u'  ')[0]
+					hoverWidth = labelHoverWidth + valueHoverWidth + dc.GetTextExtent(u' ')[0]
+					hoverHeight = hoverLineHeight * len(info)
+					xHover = xLeft + int( tCur * xMult ) - hoverWidth
+					yHover = max(yTop + (hudHeight - hoverHeight)//2 - hoverBorderHeight, 0)
+					#yHover = yTop
+					dc.SetBrush( wx.WHITE_BRUSH )
+					render.DrawPushButton( self, dc, (
+							xHover - hoverBorderWidth, yHover - hoverBorderHeight,
+							hoverWidth + hoverBorderWidth*2, hoverHeight + hoverBorderHeight*2
+						), wx.CONTROL_ISDEFAULT )
+					for label, value in info:
+						dc.DrawText( label, xHover+labelHoverWidth-dc.GetTextExtent(label)[0], yHover )
+						dc.DrawText( value, xHover+hoverWidth-valueHoverWidth, yHover )
+						yHover += hoverLineHeight
+				yTop += hudHeight
+			
 	def OnEraseBackground(self, event):
 		# This is intentionally empty, because we are using the combination
 		# of wx.BufferedPaintDC + an empty OnEraseBackground event to
