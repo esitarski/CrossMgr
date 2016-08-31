@@ -517,13 +517,6 @@ class NumKeypad( wx.Panel ):
 		Utils.mainWin.photoDialog.Show( True )
 		Utils.mainWin.photoDialog.refresh( Utils.mainWin.photoDialog.ShowAllPhotos )
 	
-	def getLapInfo( self ):
-		# Assumes Model is locked.
-		# Returns (laps, lapsToGo, lapCompleting,
-		#			leadersExpectedLapTime, leaderNum,
-		#			raceFinishTime)
-		return self.raceHUD.GetLapInfo()
-	
 	raceMessage = { 0:_("Finishers Arriving"), 1:_("Ring Bell"), 2:_("Prepare Bell") }
 	def refreshLaps( self ):
 		wx.CallAfter( self.refreshRaceHUD )

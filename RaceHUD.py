@@ -71,34 +71,6 @@ class RaceHUD(wx.PyControl):
 			self.leader = self.leader[:maxRaceTimes]
 		self.Refresh()
 	
-	def GetLapInfo(self):
-		# Returns laps, lapsToGo, lapCompleting, leadersExpectedLapTime, leaderNum, raceFinishTime
-		if not self.raceTimes:
-			return 0, 0, 1, None, None, None
-		
-		lapsMax = 0
-		raceTimesMax = None
-		leaderNum = None
-		for leader, raceTimes in zip(self.leader, self.raceTimes):
-			if raceTimes and lapsMax < len(raceTimes):
-				lapsMax = len(raceTimes)
-				raceTimesMax = raceTimes
-				try:
-					leaderNum = int(leader.split()[-1])
-				except (IndexError, ValueError):
-					leaderNum = None
-		
-		if not lapsMax:
-			return 0, 0, 1, None, None, None
-		
-		lapsMax -= 1	# Remove the red lantern time.
-		lapCompleting = min( bisect.bisect_right(raceTimesMax, self.nowTime), lapsMax )
-		lapsToGo = lapsMax - lapCompleting
-		
-		leadersExpectedLapTime = (raceTimesMax[lapCompleting] - raceTimesMax[0]) / max(lapCompleting, 1)
-		laps = lapsMax - 1
-		return laps, lapsToGo, min(lapCompleting, laps), leadersExpectedLapTime, leaderNum, raceTimesMax[-2]
-
 	def OnPaint(self, event):
 		dc = wx.BufferedPaintDC(self)
 		self.Draw(dc)
