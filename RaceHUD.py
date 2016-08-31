@@ -318,8 +318,11 @@ class RaceHUD(wx.PyControl):
 					hoverWidth = labelHoverWidth + valueHoverWidth + dc.GetTextExtent(u' ')[0]
 					hoverHeight = hoverLineHeight * len(info)
 					xHover = xLeft + int( tCur * xMult ) - hoverWidth
-					yHover = max(yTop + (hudHeight - hoverHeight)//2 - hoverBorderHeight, 0)
-					#yHover = yTop
+					yHover = yTop + (hudHeight - hoverHeight)//2 - hoverBorderHeight
+					if yHover < 0:
+						yHover = 0
+					elif yHover + hoverHeight + hoverBorderHeight*2 > height:
+						yHover = height - hoverHeight + hoverBorderHeight*2
 					dc.SetBrush( wx.WHITE_BRUSH )
 					render.DrawPushButton( self, dc, (
 							xHover - hoverBorderWidth, yHover - hoverBorderHeight,
