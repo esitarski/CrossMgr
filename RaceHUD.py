@@ -308,7 +308,7 @@ class RaceHUD(wx.PyControl):
 				if iRaceTimes == self.iRaceTimesHover:
 					tCur, tNext = raceTimes[self.iLapHover-1:self.iLapHover+1]
 					info = self.lapInfoFunc( self.iLapHover, len(raceTimes)-2, tCur, tNext, leader )
-					hoverLineHeight = min(24, max( 16, hudHeight//len(info) ) )
+					hoverLineHeight = min(20, max( 16, hudHeight//len(info) ) )
 					fontHover = wx.FontFromPixelSize( wx.Size(0,int(hoverLineHeight * 0.85)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 					dc.SetFont( fontHover )
 					labelHoverWidth = max(dc.GetTextExtent(label)[0] for label, value in info)
@@ -318,6 +318,8 @@ class RaceHUD(wx.PyControl):
 					hoverWidth = labelHoverWidth + valueHoverWidth + dc.GetTextExtent(u' ')[0]
 					hoverHeight = hoverLineHeight * len(info)
 					xHover = xLeft + int( tCur * xMult ) - hoverWidth
+					if xHover < 0:
+						xHover = 0
 					yHover = yTop + (hudHeight - hoverHeight)//2 - hoverBorderHeight
 					if yHover < 0:
 						yHover = 0
