@@ -570,5 +570,5 @@ def AddLapSplits( num, lap, times, splits ):
 				race.addTime( num, newTime + ((rider.firstTime or 0.0) if race.isTimeTrial else 0.0) )
 			return True
 		except (TypeError, KeyError, ValueError, IndexError) as e:
-			Utils.logException( e, sys.exc_info )
+			Utils.logException( e, sys.exc_info() )
 			return False

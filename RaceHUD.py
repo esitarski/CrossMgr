@@ -170,6 +170,8 @@ class RaceHUD(wx.PyControl):
 		for leader, raceTimes in zip(self.leader, self.raceTimes):
 			if not raceTimes:
 				continue
+				
+			nowTime = min( (self.nowTime or raceTimes[-1]), raceTimes[-1] )
 		
 			# Draw the legend.
 			dc.SetFont( fontLegend )
@@ -199,7 +201,7 @@ class RaceHUD(wx.PyControl):
 			dd = int(dy * 0.3)
 			
 			yCur = int(hMiddle - dy / 2)
-			xCur = ((self.nowTime - raceTimes[0]) * xMult)
+			xCur = (nowTime - raceTimes[0]) * xMult
 			xStart = raceTimes[0] * xMult + xLeft
 			b1 = ctx.CreateLinearGradientBrush( 0, yTop + yCur,      0, yTop + yCur + dd + 1, self.colour,        self.lighterColour )
 			b2 = ctx.CreateLinearGradientBrush( 0, yTop + yCur + dd, 0, yTop + yCur + dy    , self.lighterColour, self.colour )
@@ -246,15 +248,15 @@ class RaceHUD(wx.PyControl):
 			
 			# Draw the time to the leader's next lap (or the broom if the race is over).
 			dc.SetFont( fontRaceTime )
-			nextLap = bisect.bisect_left( raceTimes, self.nowTime )
+			nextLap = bisect.bisect_left( raceTimes, nowTime )
 			if nextLap < len(raceTimes):
-				t = raceTimes[nextLap] - self.nowTime
+				t = raceTimes[nextLap] - nowTime
 				tToLeader = t
 				tCur = Utils.formatTime( t )
 				if tCur[0] == '0':
 					tCur = tCur[1:]
 				textWidth, textHeight = dc.GetTextExtent( tCur )
-				t = self.nowTime
+				t = nowTime
 				x = xLeft + int( t * xMult )
 				x = max( x - textWidth - textHeight / 8, xLeft + 2 )
 				dc.DrawText( tCur, x, yTop + hMiddle - textHeight / 2 )

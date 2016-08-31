@@ -469,7 +469,7 @@ class NumKeypad( wx.Panel ):
 			elif category in self.lapReminder:
 				del self.lapReminder[category]
 		
-		self.raceHUD.SetData( nowTime = tCur, raceTimes = raceTimes, leader = leader )
+		self.raceHUD.SetData( raceTimes, leader, tCur if race.isRunning() else None )
 		if Utils.mainWin:
 			Utils.mainWin.updateLapCounter( lapCounter )
 		

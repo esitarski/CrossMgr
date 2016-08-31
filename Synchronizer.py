@@ -1,5 +1,8 @@
 import wx
+import sys
 import threading
+import traceback
+import Utils
 
 class Synchronizer( object ):
 	def __init__( self, func, *args, **kwargs ):
@@ -15,7 +18,9 @@ class Synchronizer( object ):
 		try:
 			self.result = self.func( *self.args, **self.kwargs )
 		except Exception as e:
+			traceback.print_exc()
 			self.exception = e
+			Utils.logException( e, sys.exc_info )
 		self._sync.release()
 	
 	def Run( self ):

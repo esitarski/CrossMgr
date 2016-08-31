@@ -12,7 +12,7 @@ statusNames = Model.Rider.statusNames
 
 def GetAnimationData( category=None, getExternalData=False ):
 	animationData = {}
-	ignoreFields = {'pos', 'num', 'gap', 'gapValue', 'laps', 'lapTimes', 'full_name'}
+	ignoreFields = {'pos', 'num', 'gap', 'gapValue', 'laps', 'lapTimes', 'full_name', 'short_name'}
 	
 	with UnstartedRaceWrapper( getExternalData ):
 		with Model.LockRace() as race:
