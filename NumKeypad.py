@@ -655,10 +655,10 @@ class NumKeypad( wx.Panel ):
 			lastRiderOnCourseTeam = u'{}'.format( getattr(lastRiderOnCourse, 'Team', u'Independent') )
 			if len(lastRiderOnCourseTeam) > maxLength:
 				lastRiderOnCourseTeam = lastRiderOnCourseTeam[:maxLength].strip() + u'...'
-				
+			
 			category = race.getCategory( lastRiderOnCourse.num )
 			lastRiderOnCourseCategory = category.fullname
-				
+			
 			t = (lastRiderOnCourse._lastTimeOrig or 0.0) + ((rider.firstTime or 0.0) if race.isTimeTrial else 0.0)
 			tFinish = race.startTime + datetime.timedelta( seconds=t )
 			lastRiderOnCourseTime = u'{} {}'.format(_('Finishing at'), tFinish.strftime('%H:%M:%S') )
