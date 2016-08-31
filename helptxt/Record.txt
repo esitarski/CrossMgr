@@ -37,16 +37,16 @@ Downhill|Time Trial
 
 When you enter a number in this mode, the number is "timestamped" when you press __Enter__.  This is the standard input mode for Road, Cyclo Cross and MTB races when you have number caller, and riders arrive in quick succession for laps.
 
-When you hear the number caller, you type in the number and press __Enter__.
-After the first lap of a race, CrossMgr will predict the arrival of each rider in the [Expected](MainScreen.html#expected) window.  To enter the number again, you can just click on it in the list rather than typing it in.
+When you hear the number caller, you type in the number on the keyboard and press __Enter__.
+After the first lap of a race, CrossMgr will predict the arrival of each rider in the [Expected](MainScreen.html#expected) window.  To enter the number again, you can just click on th number in the __Expcted__ list rather than typing it in again.
 
 Entering a number also triggers the [USB Webcam][].
 
-You can enter data through the regular keyboard or an external numeric keypad.  If you have a touchscreen, you can also enter data by pressing the on-screen buttons.
+You can enter data through the regular computer keyboard or an external numeric keypad.  If you have a touchscreen, you can also enter data by pressing the on-screen buttons.  To enable touchscreen mode, press on the touchscreen button.  This will toggle an on-screen keypad.
 
-Experience has shown that using a touch-screen is a slower and less accurate method.  Additionally, touch screens tend not to work well in cold or hot weather.  Use a keyboard or external keypad whenever possible.
+Experience has shown that using a touch-screen is a slower and less accurate method.  Additionally, touch screens tend not to work well in cold or hot weather.  Use the keyboard or external keypad whenever possible.
 
-Enter automatically enters the number and gives it a time.  The most accurate way to enter numbers is to type in the number when you hear the number caller, then press Enter just when the rider crosses the line.
+__Enter__ automatically enters the number and timestamps it.  The most accurate way to enter numbers is to type in the number when you hear the number caller, then press __Enter__ just when the rider crosses the line.
 
 You can also enter multiple numbers separated by commas on the same line.  When you press __Enter__, all these numbers be entered with exactly the same time.  This is useful for starting a team in a team time trial all with exactly the same start time. 
 
@@ -94,27 +94,13 @@ Warning: The Time Trial input mode only works when there are start gaps between 
 
 ## Race Information
 
-This view is especially useful if you are managing a multi-category race with one lap counter for the fastest category.
-If you want to run a multi-category race with separate lap counters, use the [Race Lap Chart](#race-lap-chart) described below which shows the race progress graphically.
-
 Field|Description
 :----|:----------
 Race Time|The time since the race started.
-Max Laps|Indicates the number of laps of the fastest category on course.  If the "Race Laps" field for a Category is empty, its laps will be computed from the Race Minutes, otherwise, the "Race Laps" field will be used for the laps for that category.
-Est. Leader Time|Projected leader race time of the fastest category on course.  This only works if Autocorrect is enabled for all riders.
-Est. Last Rider Time|Projected time of the last rider to finish for all categories.  This only works if Autocorrect is enabled for all riders.
-Ave Lap Time|Average lap time of the leader for the fastest category.
-Completing Lap|Lap current being completed for the fastest category.
-Show Laps to Go|Number of laps to go for the fastest category (to be shown on the Lap Counter).
-Start Time|Start time of the race, and whether it was started manually or with the first chip read.
-Est. Leader Finish|Projected clock time of the leader's finish time.  This only works if Autocorrect is enabled for all riders.  Disabled in time trial mode.
-Est. Last Rider Finish|Projected clock time of the last rider to finish.  This only works if Autocorrect is enabled Clock|The current time of day.  Disabled in time trial mode.
+Manual/Automatic Start|The time the race was started.  Start can be triggered by RFID depending on option.
+Last Rider on Course|The est. finish time of the last rider on course.  Includes name, team and category.  Projected lapped and pulled riders are taken into account.  The Last Rider on Course may have nothing to do with the last rider in the race if riders are lapped.
 Photo Count and Camera Button|Shows the photo count and camera button if the [USB Webcam][] is enabled.  Pressing the camera button brings up the last picture taken in the race.
-
-### Notes
-The __Max Laps__, __Completing Lap__ and __Show Laps to Go__ are all with respect to the category doing the most laps in the race (fastest).  This is important for managing a race with one lap counter even if the different categories do a different number of laps.
-
-Alternatively, you can manage the race with separate lap counters by category.  In this case, use the [Race Lap Chart](#race-lap-chart).
+Clock|The current time of day.
 
 ## Riders on Course
 
@@ -131,4 +117,4 @@ This display shows graphically, by Category:
 * the projected Finish Time of the race (finish line flag)
 * the projected Expected Time of the last rider on course (broom)
 
-Use this display to manage lap counters by category.  It allows you to easily see what lap each category is on, when to ring the bell, etc.
+Use this display to manage lap counters by category.  It allows you to easily see what lap each category is on, when to ring the last lap bell, etc.
