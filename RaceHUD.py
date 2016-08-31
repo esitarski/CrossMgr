@@ -16,13 +16,16 @@ def rescaleBitmap( b, s ):
 class RaceHUD(wx.PyControl):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
-				name=_("RaceHUD")):
+				name=_("RaceHUD"), lapInfoFunc=None ):
 		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
 		self.SetBackgroundColour(wx.WHITE)
 		self.raceTimes = None	# Last time is red lantern.
 		self.leader = None
 		self.nowTime = None
 		self.getNowTimeCallback = None
+		self.lapInfoFunc = lapInfoFunc
+		
+		self.resetDimensions()
 		
 		# self.colour = wx.Colour(0, 200, 0)
 		self.colour = wx.Colour(0, 191, 255)
@@ -41,6 +44,11 @@ class RaceHUD(wx.PyControl):
 		self.Bind(wx.EVT_PAINT, self.OnPaint)
 		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
 		self.Bind(wx.EVT_SIZE, self.OnSize)
+		self.Bind(wx.EVT_MOTION, self.OnMotion)
+		self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeave)
+
+	def resetDimensions(self):
+		self.xLeft = self.xRight = self.xMult = self.hudHeight = self.iRaceTimesHover = self.iLapHover = None
 
 	def DoGetBestSize(self):
 		return wx.Size(128, 100)
@@ -71,6 +79,47 @@ class RaceHUD(wx.PyControl):
 			self.leader = self.leader[:maxRaceTimes]
 		self.Refresh()
 	
+	def OnLeave(self, event):
+		if self.iRaceTimesHover is not None:
+			self.iRaceTimesHover = None
+			self.iLapHover = None
+			wx.CallAfter( self.Refresh )
+	
+	def OnMotion(self, event):
+		if not self.lapInfoFunc:
+			return
+		x, y = event.GetX(), event.GetY()
+		if self.xLeft is None or x < self.xLeft or self.xRight < x:
+			event.Skip()
+			return
+		
+		iRaceTimesHover = None
+		iLapHover = None
+		yTop = 0
+		for i, raceTimes in enumerate(self.raceTimes):
+			if not raceTimes:
+				continue
+			if yTop <= y < yTop + self.hudHeight:
+				iRaceTimesHover = i
+				break
+			yTop += self.hudHeight
+
+		if iRaceTimesHover is None:
+			if self.iRaceTimesHover != iRaceTimesHover:
+				wx.CallAfter( self.Refresh )
+			self.iRaceTimesHover = None
+			self.iLapHover = None
+			return
+		
+		iLapHover = (bisect.bisect(self.raceTimes[iRaceTimesHover], (x - self.xLeft) / self.xMult, hi=len(self.raceTimes[iRaceTimesHover])-1) or 1)
+		if iLapHover > len(self.raceTimes[iRaceTimesHover]):
+			iLapHover = None
+		
+		if iRaceTimesHover != self.iRaceTimesHover or iLapHover != self.iLapHover:
+			self.iRaceTimesHover = iRaceTimesHover
+			self.iLapHover = iLapHover
+			wx.CallAfter( self.Refresh )
+	
 	def OnPaint(self, event):
 		dc = wx.BufferedPaintDC(self)
 		self.Draw(dc)
@@ -90,6 +139,8 @@ class RaceHUD(wx.PyControl):
 		dc.SetBackground(backBrush)
 		dc.Clear()
 		
+		render = wx.RendererNative.Get()
+		
 		tooSmall = (width < 50 or height < 24)
 		
 		def drawTooSmall():
@@ -100,10 +151,11 @@ class RaceHUD(wx.PyControl):
 			self.empty = True
 			if tooSmall:
 				drawTooSmall()
+			self.resetDimensions()
 			return
 		self.empty = False
 		
-		hudHeight = min( height / len(self.raceTimes), 80 )
+		hudHeight = self.hudHeight = min( height / len(self.raceTimes), 80 )
 
 		legendHeight = max( hudHeight / 4, 10 )
 		fontLegend = wx.FontFromPixelSize( wx.Size(0,legendHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
@@ -129,17 +181,17 @@ class RaceHUD(wx.PyControl):
 		dy = int(tickHeight * 2 * 0.75)
 
 		labelsWidth = textWidth
-		xLeft = labelsWidth
-		xRight = width - max( self.broom.GetWidth(), broomTimeWidth )
+		xLeft = self.xLeft = labelsWidth
+		xRight = self.xRight = width - max( self.broom.GetWidth(), broomTimeWidth )
 		if xRight - xLeft < 16:
 			self.empty = True
 			drawTooSmall()
 			return
 
-		xMult = (xRight - xLeft) / float(max(rt[-1] if rt else 0 for rt in self.raceTimes))
+		xMult = self.xMult = (xRight - xLeft) / float(max(rt[-1] if rt else 0 for rt in self.raceTimes))
 
 		yTop = 0
-		for leader, raceTimes in zip(self.leader, self.raceTimes):
+		for iRaceTimes, (leader, raceTimes) in enumerate(zip(self.leader, self.raceTimes)):
 			if not raceTimes:
 				continue
 				
@@ -245,7 +297,28 @@ class RaceHUD(wx.PyControl):
 				dc.SetFont( fontLegend if legendHeight > raceTimeHeight else fontRaceTime )
 				textWidth, textHeight = dc.GetTextExtent( leaderText )
 				dc.DrawText( leaderText, xLeft - textWidth - textHeight / 8, yTop + hMiddle - textHeight / 2 )
-				
+			
+			if iRaceTimes == self.iRaceTimesHover and self.lapInfoFunc:
+				tCur, tNext = raceTimes[self.iLapHover-1:self.iLapHover+1]
+				info = self.lapInfoFunc( self.iLapHover, len(raceTimes)-2, tCur, tNext, leader )
+				hoverLineHeight = min(24, max( 16, hudHeight//len(info) ) )
+				fontHover = wx.FontFromPixelSize( wx.Size(0,int(hoverLineHeight * 0.9)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+				dc.SetFont( fontHover )
+				labelHoverWidth = max(dc.GetTextExtent(label)[0] for label, value in info)
+				valueHoverWidth = max(dc.GetTextExtent(value)[0] for label, value in info)
+				hoverBorder = dc.GetTextExtent(u'  ')[0]
+				hoverWidth = labelHoverWidth + valueHoverWidth + dc.GetTextExtent(u' ')[0]
+				hoverHeight = hoverLineHeight * len(info)
+				xHover = xLeft + int( tCur * xMult ) - hoverWidth
+				yHover = yTop + (hudHeight - hoverHeight)//2
+				#yHover = yTop
+				dc.SetBrush( wx.WHITE_BRUSH )
+				render.DrawPushButton( self, dc, (xHover - hoverBorder, yHover, hoverWidth + hoverBorder*2, hoverHeight), wx.CONTROL_ISDEFAULT )
+				for label, value in info:
+					dc.DrawText( label, xHover+labelHoverWidth-dc.GetTextExtent(label)[0], yHover )
+					dc.DrawText( value, xHover+hoverWidth-valueHoverWidth, yHover )
+					yHover += hoverLineHeight
+			
 			yTop += hudHeight
 					
 	def OnEraseBackground(self, event):
@@ -256,6 +329,25 @@ class RaceHUD(wx.PyControl):
 		
 if __name__ == '__main__':
 	import datetime
+	startTime = datetime.datetime.now()
+	
+	def lapInfoFunc( lap, lapsTotal, tCur, tNext, leader ):
+		info = []
+		
+		if lap > lapsTotal:
+			info.append( (_("Last Rider"), (startTime + datetime.timedelta(seconds=tNext)).strftime('%H:%M:%S')) )
+			return info		
+
+		tLap = tNext - tCur
+		info.append( (_("Lap"), u'{}/{} ({} {})'.format(lap,lapsTotal,lapsTotal-lap, _('to go'))) )
+		info.append( (_("Time"), Utils.formatTimeGap(tLap, highPrecision=False)) )
+		info.append( (_("Start"), (startTime + datetime.timedelta(seconds=tCur)).strftime('%H:%M:%S')) )
+		info.append( (_("End"), (startTime + datetime.timedelta(seconds=tNext)).strftime('%H:%M:%S')) )
+		lapDistance = 1.5
+		if lapDistance is not None:
+			sLap = (lapDistance / tLap) * 60.0*60.0
+			info.append( (u'', u'{:.02f} {}'.format(sLap, 'km/h')) )
+		return info
 	
 	multiple = 10
 	def GetData():
@@ -266,7 +358,7 @@ if __name__ == '__main__':
 
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title=_("RaceHUD"), size=(800,200))
-	RaceHUD = RaceHUD(mainWin)
+	RaceHUD = RaceHUD(mainWin, lapInfoFunc=lapInfoFunc)
 	
 	random.seed( 10 )
 	t = 55*60

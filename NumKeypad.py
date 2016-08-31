@@ -186,6 +186,34 @@ class Keypad( wx.Panel ):
 	def Enable( self, enable ):
 		wx.Panel.Enable( self, enable )
 		
+def getLapInfo( lap, lapsTotal, tCur, tNext, leader ):
+	race = Model.race
+	if not race or not race.startTime:
+		return
+	info = []
+	startTime = race.startTime
+	
+	if lap > lapsTotal:
+		info.append( (_("Last Rider"), (startTime + datetime.timedelta(seconds=tNext)).strftime('%H:%M:%S')) )
+		return info	
+	
+	tLap = tNext - tCur
+	info.append( (_("Lap"), u'{}/{} ({} {})'.format(lap,lapsTotal,lapsTotal-lap, _('to go'))) )
+	info.append( (_("Time"), Utils.formatTimeGap(tLap, highPrecision=False)) )
+	info.append( (_("Start"), (startTime + datetime.timedelta(seconds=tCur)).strftime('%H:%M:%S')) )
+	info.append( (_("End"), (startTime + datetime.timedelta(seconds=tNext)).strftime('%H:%M:%S')) )
+	lapDistance = None
+	try:
+		bib = int(leader.split()[-1])
+		category = race.getCategory( bib )
+		lapDistance = category.getLapDistance( lap )
+	except:
+		pass
+	if lapDistance is not None:
+		sLap = (lapDistance / tLap) * 60.0*60.0
+		info.append( (u'', u'{:.02f} {}'.format(sLap, 'km/h')) )
+	return info
+		
 class NumKeypad( wx.Panel ):
 	SwitchToTimeTrialEntryMessage = _('Switch to Time Trial Entry')
 	SwitchToNumberEntryMessage = _('Switch to Regular Number Entry')
@@ -334,7 +362,7 @@ class NumKeypad( wx.Panel ):
 		horizontalMainSizer.Add( rcVertical, 1, flag=wx.EXPAND|wx.LEFT, border = 4 )
 		
 		#----------------------------------------------------------------------------------------------
-		self.raceHUD = RaceHUD( splitter, wx.ID_ANY, style=wx.BORDER_SUNKEN )
+		self.raceHUD = RaceHUD( splitter, wx.ID_ANY, style=wx.BORDER_SUNKEN, lapInfoFunc=getLapInfo )
 		
 		splitter.SetMinimumPaneSize( 20 )
 		splitter.SplitHorizontally( panel, self.raceHUD, -100 )

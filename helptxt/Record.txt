@@ -118,3 +118,5 @@ This display shows graphically, by Category:
 * the projected Expected Time of the last rider on course (broom)
 
 Use this display to manage lap counters by category.  It allows you to easily see what lap each category is on, when to ring the last lap bell, etc.
+
+For additional information, move the mouse over the lap.  This will show more start/end times and lap time.
