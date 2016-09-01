@@ -186,6 +186,7 @@ var version = null;
 var raceNotes = null;
 var primes = null;
 var arrivalMode = null;
+var mapMode = null;
 var cycleCategoriesMode = null;
 var catPosIndex = null;
 var showCategorySummary = null;
@@ -577,6 +578,8 @@ function doReload( forceRefresh ) {
 		params.push( 'showCategorySummary=t' );
 	if( arrivalMode )
 		params.push( 'arrivalMode=t' );
+	if( mapMode )
+		params.push( 'mapMode=t' );
 	if( kioskMode )
 		params.push( 'kioskMode=t' );
 	
@@ -5627,6 +5630,11 @@ function SetArrivalMode() {
 	RefreshResultsTable();
 }
 
+function SetMapMode() {
+	mapMode = document.getElementById('idMapMode').checked;
+	document.getElementById('idResultsDiv').className = (mapMode ? 'hidden' : '');
+}
+
 function SelectCategoryNonAll() {
 	if( categories.length <= 1 || (categoryCur && categoryCur != 'All') )
 		return;
@@ -5854,22 +5862,27 @@ function SetRaceTime() {
 function displaySelect( select ) {
 	var k = (select.value.indexOf('kiosk') >= 0);
 	var a = (select.value.indexOf('arrival') >= 0);
-	if( k || a ) {
+	var m = (select.value.indexOf('map') >= 0);
+	if( k || a || m ) {
 		var message;
 		if( k && a )
 			message = 'Switch to Kiosk Arrival Mode?';
+		else if( k && m )
+			message = 'Switch to Kiosk Map Mode?';
 		else
 			message = 'Switch to Kiosk Mode?';
 		
 		if( !window.confirm(message) ) {
 			kioskMode = false;
 			arrivalMode = false;
+			mapMode = false;
 			select.selectedIndex = 0;
 			return;
 		}
 	}
 	kioskMode = k;
 	arrivalMode = a;
+	mapMode = m;
 	doReload( true );
 }
 
@@ -5993,6 +6006,9 @@ function onLoad()
 	arrivalMode = (getUrlParam('arrivalMode', undefined) == 't');
 	if( arrivalMode )
 		document.getElementById('idArrivalMode').checked = true;
+	mapMode = (getUrlParam('mapMode', undefined) == 't');
+	if( mapMode )
+		document.getElementById('idMapMode').checked = true;
 	cycleCategoriesMode = (getUrlParam( 'cycleCategoriesMode', undefined ) == 't');
 	if( cycleCategoriesMode ) {
 		document.getElementById('idCycleCategoriesMode').checked = true;
@@ -6000,19 +6016,26 @@ function onLoad()
 	}
 	kioskMode = (getUrlParam('kioskMode', undefined) == 't');
 	if( kioskMode ) {
-		document.getElementById('idTrackDiv').className = 'hidden';
-		document.getElementById('idRaceChartDiv').className = 'hidden';
-		document.getElementById('idSituationDiv').className = 'hidden';
-		document.getElementById('idLapChartDiv').className = 'hidden';
-		document.getElementById('idPageHeader').className = 'hidden';
+		document.getElementById('idRaceChartDiv').classList.add('hidden');
+		document.getElementById('idSituationDiv').classList.add('hidden');
+		document.getElementById('idLapChartDiv').classList.add('hidden');
+		document.getElementById('idPageHeader').classList.add('hidden');
+		document.getElementById('idResultOptions').classList.add('hidden');
 		
-		document.getElementById('idCycleCategoriesMode').checked = true;
-		document.getElementById('idShowCategorySummary').checked = true;
+		if( mapMode ) {
+			document.getElementById('idResultsDiv').classList.add('hidden');
+			document.getElementById('idMapMode').checked = true;
+		}
+		else {
+			document.getElementById('idTrackDiv').classList.add('hidden');
+		}
 		
-		//document.getElementById('idArrivalMode').checked = true;
+		document.getElementById('idCycleCategoriesMode').checked = cycleCategoriesMode = true;
+		document.getElementById('idShowCategorySummary').checked = showCategorySummary = true;
+		
 		SetShowCategorySummary();
 		SetArrivalMode();
-		SetCycleCategoriesMode();
+		SetCycleCategoriesMode();		
 	}
 	var numbers = getUrlParam( 'highlight', undefined );
 	if( numbers != '' )
@@ -6065,11 +6088,13 @@ function onLoad()
   <option value="normal" data-tr="Results"></option>
   <option value="kiosk" data-tr="Kiosk"></option>
   <option value="kiosk-arrival" data-tr="Kiosk A"></option>
+  <option value="kiosk-map" data-tr="Kiosk Map"></option>
 </select>
 <br/>
 <input id="idCycleCategoriesMode" type="checkbox" class="hidden" onclick="SetCycleCategoriesMode()"><span data-tr="CycleCategories" class="hidden"></span></input>&nbsp;&nbsp;
 <input id="idShowCategorySummary" type="checkbox" class="hidden" onclick="SetShowCategorySummary()"><span data-tr="ShowCategorySummary" class="hidden"></span></input>&nbsp;&nbsp;
 <input id="idArrivalMode" type="checkbox" class="hidden" onclick="SetArrivalMode()"><span id="idArrivalModeLabel" data-tr="ByFinishers" class="hidden"></span></input>
+<input id="idMapMode" type="checkbox" class="hidden" onclick="SetMapMode()"><span id="idMapModeLabel" data-tr="Map Only" class="hidden"></span></input>
 </span>
 </tr></table><span id="idReloadStatus"></span><span id="idRaceNotes"></span>
 </p>
@@ -6079,6 +6104,8 @@ function onLoad()
 <p/>
 <div class="noprint" id="idCategories"></div>
 </p>
+</div> <!-- idPageHeader -->
+
 <div id="idTrackDiv">
 <canvas id="idTrack" width="600" height="300" class="noprint">
 <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a> Race Results requires support the HTML5 Canvas.<br/>
@@ -6113,6 +6140,8 @@ Current versions of Chrome, FireFox and Opera work fine.
 </select>
 </p>
 </div> <!-- idTrackDiv -->
+
+<div id="idResultOptions">
 <p>
 <span class="noprint" id="idShowUnits">
 	<span data-tr="Units:"></span>
@@ -6141,7 +6170,7 @@ Current versions of Chrome, FireFox and Opera work fine.
 <span id="idTotalElevationGain"> </span>
 </p>
 <span id="idShowOptions"></span><br/>
-</div> <!-- idTopHeader -->
+</div>
 
 <div id="idResultsDiv"></div>
 
