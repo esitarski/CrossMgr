@@ -223,6 +223,13 @@ class MainWin( wx.Frame ):
 		
 		self.menuBar.Append( self.optionsMenu, _("&Options") )
 
+		self.optionsMenu = wx.Menu()
+		idCur = wx.NewId()
+		self.optionsMenu.Append( idCur , _("Set &Root Folder"), _("Set Root Folder") )
+		self.Bind(wx.EVT_MENU, self.menuSetRootFolder, id=idCur )
+		
+		self.menuBar.Append( self.optionsMenu, _("&Tools") )
+
 		#-----------------------------------------------------------------------
 
 		# Configure the field of the display.
@@ -335,7 +342,7 @@ class MainWin( wx.Frame ):
 			return None
 		try:
 			with open(graphicFName, 'rb') as f:
-				b64 = 'data:image/%s;base64,%s' % (fileType, base64.standard_b64encode(f.read()))
+				b64 = 'data:image/{};base64,{}'.format(fileType, base64.standard_b64encode(f.read()))
 				return b64
 		except IOError:
 			pass
@@ -348,6 +355,17 @@ class MainWin( wx.Frame ):
 			imgPath = dlg.GetValue()
 			self.config.Write( 'graphic', imgPath )
 			self.config.Flush()
+		dlg.Destroy()
+
+	def menuSetRootFolder( self, event ):
+		dlg = wx.DirDialog(
+			self,
+			message='Set Root Folder where All Race Files can be Found',
+			defaultPath=os.path.dirname(self.fileName) if self.fileName else '',
+		)
+		if dlg.ShowModal() == wx.ID_OK:
+			SeriesModel.model.setRootFolder( dlg.GetPath() )
+			self.refreshAll()
 		dlg.Destroy()
 
 	def menuPageSetup( self, event ):

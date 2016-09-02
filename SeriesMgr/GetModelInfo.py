@@ -5,6 +5,8 @@ import datetime
 import operator
 from collections import defaultdict
 
+import trueskill
+
 import Model
 import GpxParse
 import GeoAnimation
@@ -324,6 +326,7 @@ def AdjustForUpgrades( raceResults ):
 def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsCompleted=False, numPlacesTieBreaker=5 ):
 	scoreByTime = SeriesModel.model.scoreByTime
 	scoreByPercent = SeriesModel.model.scoreByPercent
+	scoreByTrueSkill = SeriesModel.model.scoreByTrueSkill
 	bestResultsToConsider = SeriesModel.model.bestResultsToConsider
 	mustHaveCompleted = SeriesModel.model.mustHaveCompleted
 	showLastToFirst = SeriesModel.model.showLastToFirst
@@ -476,6 +479,80 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		# List of:
 		# lastName, firstName, license, team, totalPercent, [list of (percent, position) for each race in series]
 		categoryResult = [list(riderNameLicense[rider]) + [riderTeam[rider], percentFormat.format(riderPercentTotal[rider]), riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
+		return categoryResult, races
+	
+	elif scoreByTrueSkill:
+		# Get an intial Rating for all riders.
+		tsEnv = trueskill.TrueSkill( draw_probability=0.0 )
+		
+		sigmaMultiple = 3.0
+		
+		def formatRating( rating ):
+			return u'{:0.2f} ({:0.2f},{:0.2f})'.format(
+				rating.mu-sigmaMultiple*rating.sigma,
+				rating.mu,
+				rating.sigma
+			)
+	
+		# Get the individual results for each rider, and the total points.
+		riderRating = {}
+		riderPoints = defaultdict( int )
+		for rr in raceResults:
+			rider = rr.key()
+			riderNameLicense[rider] = (rr.full_name, rr.license)
+			if rr.team and rr.team != u'0':
+				riderTeam[rider] = rr.team
+			if rr.rank != RaceResult.rankDNF:
+				riderResults[rider][raceSequence[rr.raceInSeries]] = (0, rr.rank, 0, 0)
+				riderFinishes[rider][raceSequence[rr.raceInSeries]] = rr.rank
+				riderPlaceCount[rider][rr.rank] += 1
+
+		riderRating = { rider:tsEnv.Rating() for rider in riderResults.iterkeys() }
+		for iRace in xrange(len(races)):
+			# Get the riders that participated in this race.
+			riderRank = sorted(
+				((rider, finishes[iRace]) for rider, finishes in riderFinishes.iteritems() if finishes[iRace] is not None),
+				key=operator.itemgetter(1)
+			)
+			
+			if len(riderRank) <= 1:
+				continue
+			
+			# Update the ratings based on this race's outcome.
+			# The TrueSkill rate function requires each rating to be a list even if there is only one.
+			ratingNew = tsEnv.rate( [[riderRating[rider]] for rider, rank in riderRank] )
+			riderRating.update( {rider:rating[0] for (rider, rank), rating in zip(riderRank, ratingNew)} )
+			
+			# Update the partial results.
+			for rider, rank in riderRank:
+				rating = riderRating[rider]
+				riderResults[rider][iRace] = (formatRating(rating), rank, 0, 0)
+
+		# Assign rider points based on mu-3*sigma.
+		riderPoints = { rider:rating.mu-sigmaMultiple*rating.sigma for rider, rating in riderRating.iteritems() }
+		
+		# Sort by rider points - greatest number of points first.
+		riderOrder = sorted( riderPoints.iterkeys(), key=lambda r: riderPoints[r], reverse=True )
+
+		# Compute the points gap.
+		riderGap = {}
+		if riderOrder:
+			leader = riderOrder[0]
+			leaderPoints = riderPoints[leader]
+			riderGap = { r : leaderPoints - riderPoints[r] for r in riderOrder }
+			riderGap = { r : u'{:0.2f}'.format(gap) if gap else u'' for r, gap in riderGap.iteritems() }
+		
+		riderPoints = { rider:formatRating(riderRating[rider]) for rider, points in riderPoints.iteritems() }
+		
+		# Reverse the race order if required.
+		if showLastToFirst:
+			races.reverse()
+			for results in riderResults.itervalues():
+				results.reverse()
+		
+		# List of:
+		# lastName, firstName, license, team, points, [list of (points, position) for each race in series]
+		categoryResult = [list(riderNameLicense[rider]) + [riderTeam[rider], riderPoints[rider], riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
 		return categoryResult, races
 		
 	else:

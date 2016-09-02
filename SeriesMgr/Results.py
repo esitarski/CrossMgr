@@ -52,6 +52,7 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	model = SeriesModel.model
 	scoreByTime = model.scoreByTime
 	scoreByPercent = model.scoreByPercent
+	scoreByTrueSkill = model.scoreByTrueSkill
 	bestResultsToConsider = model.bestResultsToConsider
 	mustHaveCompleted = model.mustHaveCompleted
 	hasUpgrades = model.upgradePaths
@@ -446,7 +447,7 @@ function sortTableId( iTable, iCol ) {
 											write( u'<br/>' )
 											with tag(html, 'span', {'class': 'smallFont'}):
 												write( unicode(r[0].strftime('%b %d, %Y')) )
-										if not scoreByTime and not scoreByPercent:
+										if not scoreByTime and not scoreByPercent and not scoreByTrueSkill:
 											write( u'<br/>' )
 											with tag(html, 'span', {'class': 'smallFont'}):
 												write( u'Top {}'.format(len(r[3].pointStructure)) )
@@ -502,13 +503,13 @@ function sortTableId( iTable, iCol ) {
 							with tag(html, 'span', {'style':'font-style: italic;'}):
 								write( u'-MM:SS' )
 						write( u' - {}'.format( u'Time Bonus subtracted from Finish Time.') )
-					elif not scoreByTime and not scoreByPercent:
+					elif not scoreByTime and not scoreByPercent and not scoreByTrueSkill:
 						with tag(html, 'strong'):
 							with tag(html, 'span', {'style':'font-style: italic;'}):
 								write( u'+N' )
 						write( u' - {}'.format( u'Bonus Points added to Points for Place.') )
 					
-			if bestResultsToConsider > 0:
+			if bestResultsToConsider > 0 and not scoreByTrueSkill:
 				with tag(html, 'p'):
 					with tag(html, 'strong'):
 						write( u'**' )
@@ -526,7 +527,7 @@ function sortTableId( iTable, iCol ) {
 			
 			#-----------------------------------------------------------------------------
 			
-			if not scoreByTime and not scoreByPercent:
+			if not scoreByTime and not scoreByPercent and not scoreByTrueSkill:
 				with tag(html, 'p'):
 					pass
 				with tag(html, 'hr'):
@@ -741,6 +742,7 @@ class Results(wx.Panel):
 		model = SeriesModel.model
 		scoreByTime = model.scoreByTime
 		scoreByPercent = model.scoreByPercent
+		scoreByTrueSkill = model.scoreByTrueSkill
 		HeaderNames = getHeaderNames()
 		
 		model = SeriesModel.model
@@ -768,7 +770,7 @@ class Results(wx.Panel):
 		)
 		results = [rr for rr in results if rr[3] > 0]
 		
-		headerNames = HeaderNames + [r[1] for r in races]
+		headerNames = HeaderNames + [u'{}\n{}'.format(r[1],r[0].strftime('%Y-%m-%d')) for r in races]
 		
 		Utils.AdjustGridSize( self.grid, len(results), len(headerNames) )
 		self.setColNames( headerNames )
@@ -848,6 +850,7 @@ class Results(wx.Panel):
 		
 		scoreByTime = model.scoreByTime
 		scoreByPercent = model.scoreByPercent
+		scoreByTrueSkill = model.scoreByTrueSkill
 		HeaderNames = getHeaderNames()
 		
 		if Utils.mainWin:
@@ -1005,9 +1008,9 @@ class Results(wx.Panel):
 			try:
 				subprocess.check_call( cmd, shell=True )
 			except subprocess.CalledProcessError as e:
-				Utils.MessageOK( mainWin, u'{}\n\n    {}\n{}: {}'.format('Post Publish Cmd Error', e, 'return code', e.returncode), _('Post Publish Cmd Error')  )
+				Utils.MessageOK( self, u'{}\n\n    {}\n{}: {}'.format('Post Publish Cmd Error', e, 'return code', e.returncode), _('Post Publish Cmd Error')  )
 			except Exception as e:
-				Utils.MessageOK( mainWin, u'{}\n\n    {}'.format('Post Publish Cmd Error', e), 'Post Publish Cmd Error'  )
+				Utils.MessageOK( self, u'{}\n\n    {}'.format('Post Publish Cmd Error', e), 'Post Publish Cmd Error'  )
 		
 ########################################################################
 

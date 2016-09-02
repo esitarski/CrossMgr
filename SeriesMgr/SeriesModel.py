@@ -121,6 +121,7 @@ class SeriesModel( object ):
 	useMostEventsCompleted = False
 	scoreByTime = False
 	scoreByPercent = False
+	scoreByTrueSkill = False
 	considerPrimePointsOrTimeBonus = True
 	licenseLinkTemplate = u''	# Used to create an html link from the rider's license number in the html output.
 	bestResultsToConsider = 0	# 0 == all
@@ -196,6 +197,17 @@ class SeriesModel( object ):
 			newRaces.append( Race(fileName, p, excelLink) )
 			
 		self.races = newRaces
+	
+	def setRootFolder( self, path ):
+		raceFileNames = set( os.path.basename(r.fileName) for r in self.races )
+		for top, directories, files in os.walk(path):
+			for f in files:
+				if f not in raceFileNames:
+					continue
+				for r in self.races:
+					if os.path.basename(r.fileName) == f:
+						r.fileName = os.path.join( top, f )
+						self.changed = True
 	
 	def setChanged( self, changed = True ):
 		self.changed = changed

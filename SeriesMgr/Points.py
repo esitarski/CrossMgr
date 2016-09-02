@@ -62,17 +62,20 @@ class Points(wx.Panel):
 		wx.Panel.__init__(self, parent)
 
 		#--------------------------------------------------------------------------
-		box = wx.StaticBox( self, -1, 'Scoring Rules' )
+		box = wx.StaticBox( self, -1, 'Score Competitors by' )
 		bsizer = wx.StaticBoxSizer( box, wx.VERTICAL )
 		
-		self.scoreByPoints = wx.RadioButton( self, label='Score by Points', style=wx.RB_GROUP )
+		self.scoreByPoints = wx.RadioButton( self, label='Points', style=wx.RB_GROUP )
 		self.scoreByPoints.Bind( wx.EVT_RADIOBUTTON, self.fixEnable )
 		
-		self.scoreByTime = wx.RadioButton( self, label='Score by Time' )
+		self.scoreByTime = wx.RadioButton( self, label='Time' )
 		self.scoreByTime.Bind( wx.EVT_RADIOBUTTON, self.fixEnable )
 		
-		self.scoreByPercent = wx.RadioButton( self, label='Score by Percent Time (WinnersTime / FinishTime) * 100' )
+		self.scoreByPercent = wx.RadioButton( self, label='Percent Time (100 * WinnersTime / FinishTime)' )
 		self.scoreByPercent.Bind( wx.EVT_RADIOBUTTON, self.fixEnable )
+		
+		self.scoreByTrueSkill = wx.RadioButton( self, label='TrueSkill' )
+		self.scoreByTrueSkill.Bind( wx.EVT_RADIOBUTTON, self.fixEnable )
 		
 		self.scoreByPoints.SetValue( True )
 		
@@ -80,6 +83,7 @@ class Points(wx.Panel):
 		hb.Add( self.scoreByPoints )
 		hb.Add( self.scoreByTime, flag=wx.LEFT, border=16 )
 		hb.Add( self.scoreByPercent, flag=wx.LEFT, border=16 )
+		hb.Add( self.scoreByTrueSkill, flag=wx.LEFT, border=16 )
 		bsizer.Add( hb, flag=wx.ALL, border=2 )
 		
 		#--------------------------------------------------------------------------
@@ -222,9 +226,11 @@ class Points(wx.Panel):
 		self.numPlacesTieBreaker.SetSelection( model.numPlacesTieBreaker )
 
 		if model.scoreByTime:
-			self.scoreByTime.SetValue( model.scoreByTime )
+			self.scoreByTime.SetValue( True )
 		elif model.scoreByPercent:
-			self.scoreByPercent.SetValue( model.scoreByPercent )
+			self.scoreByPercent.SetValue( True )
+		elif model.scoreByTrueSkill:
+			self.scoreByTrueSkill.SetValue( True )
 		else:
 			self.scoreByPoints.SetValue( True )
 		self.fixEnable()
@@ -253,6 +259,7 @@ class Points(wx.Panel):
 			'numPlacesTieBreaker': self.numPlacesTieBreaker.GetSelection(),
 			'scoreByTime': self.scoreByTime.GetValue(),
 			'scoreByPercent': self.scoreByPercent.GetValue(),
+			'scoreByTrueSkill': self.scoreByTrueSkill.GetValue(),
 		}
 		
 		for attr, value in modelUpdate.iteritems():
