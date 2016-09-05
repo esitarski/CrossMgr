@@ -16,7 +16,7 @@ from Undo import undo
 import Gantt
 from EditEntry import CorrectNumber, ShiftNumber, DeleteEntry
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
-from GetResults import GetResults, GetCategoryDetails
+from GetResults import GetResults, GetEntries, GetCategoryDetails
 
 def getStFtLaps( rider ):
 	with Model.LockRace() as race:
@@ -1288,7 +1288,7 @@ class RiderDetail( wx.Panel ):
 				
 			maxLap = (maxLap or 0)		# Ensure that maxLap is not None
 
-			entries = race.interpolateLap(maxLap, False) if rider.autocorrectLaps else race.getRider(num).interpolate()
+			entries = GetEntries(waveCategory) if rider.autocorrectLaps else race.getRider(num).interpolate()
 			
 			startOffset = race.getStartOffset( num )
 			entries = [e for e in entries if e.num == num and e.t > startOffset]
