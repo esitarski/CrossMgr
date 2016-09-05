@@ -1287,10 +1287,9 @@ class RiderDetail( wx.Panel ):
 				maxLap = race.getMaxLap()
 				
 			maxLap = (maxLap or 0)		# Ensure that maxLap is not None
-
-			entries = GetEntries(waveCategory) if rider.autocorrectLaps else race.getRider(num).interpolate()
 			
 			startOffset = race.getStartOffset( num )
+			entries = GetEntries(waveCategory) if rider.autocorrectLaps else race.getRider(num).interpolate()
 			entries = [e for e in entries if e.num == num and e.t > startOffset]
 			
 			# Figure out which laps this rider was lapped in.
