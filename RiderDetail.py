@@ -405,6 +405,13 @@ class RiderDetail( wx.Panel ):
 		splitter.SetMinimumPaneSize( 100 )
 		splitter.SplitVertically( self.grid, panel, 300 )
 		
+		sFirstRecordedTime = wx.BoxSizer( wx.HORIZONTAL )
+		self.firstRecordedTimeName = wx.StaticText( self, label=_('First Recorded Time') )
+		self.firstRecordedTime = wx.StaticText( self, label=_('            ') )
+		sFirstRecordedTime.Add( self.firstRecordedTimeName )
+		sFirstRecordedTime.Add( self.firstRecordedTime, flag=wx.LEFT, border=4 )
+		hs.Add( sFirstRecordedTime, flag=wx.LEFT|wx.RIGHT|wx.TOP, border=4 )
+		
 		hs.Add( splitter, proportion = 1, flag = wx.EXPAND|wx.TOP, border = 4 )
 		splitter.SizeWindows()
 		
@@ -1172,6 +1179,7 @@ class RiderDetail( wx.Panel ):
 					'rideTimeName',		'rideTime',
 					'penaltyTimeName',	'penaltyTime',
 					'noteName',			'note',
+					'firstRecordedTimeName', 'firstRecordedTime',
 					'adjustTime']:
 			getattr( self, w ).Show( False )
 		
@@ -1232,12 +1240,12 @@ class RiderDetail( wx.Panel ):
 			if num not in race.riders:
 				return
 				
+			rider = race.getRider( num )
+				
 			if waveCategory and getattr(waveCategory, 'distance', None) and waveCategory.distanceIsByLap:
 				distanceByLap = getattr(waveCategory, 'distance')
 			else:
 				distanceByLap = None
-			
-			rider = race.getRider( num )
 			
 			# Default set the relegated position.
 			self.relegatedPosition.SetValue( rider.relegatedPosition )
@@ -1278,6 +1286,12 @@ class RiderDetail( wx.Panel ):
 							'noteName',			'note',
 							'adjustTime']:
 					getattr( self, w ).Show( True )
+			elif self.enableJChipIntegration and self.skipFirstTagRead and race.startTime:
+				self.firstRecordedTimeName.Show( True )
+				self.firstRecordedTime.Show( True )
+				self.firstRecordedTime.SetLabel( u'{}, {}'.format(
+					Utils.formatTime(rider.firstTime) if rider.firstTime is not None else u'',
+					(race.startTime + datetime.timedelta(seconds=(rider.firstTime or 0.0)).strftime('%H:%M:%S.%f')[:-3] if rider.firstTime is not None else u'' )
 			
 			categoryDetails = dict( (cd['name'], cd) for cd in GetCategoryDetails() )
 			try:

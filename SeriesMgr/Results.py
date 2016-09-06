@@ -526,7 +526,26 @@ function sortTableId( iTable, iCol ) {
 					write( u'Participants completing fewer than {} events are not shown.'.format(mustHaveCompleted) )
 			
 			#-----------------------------------------------------------------------------
-			
+			if scoreByTrueSkill:
+				with tag(html, 'p'):
+					pass
+				with tag(html, 'hr'):
+					pass
+				
+				with tag(html, 'p'):
+					with tag(html, 'h2'):
+						write( u'TrueSkill' )
+					with tag(html, 'p'):
+						write( u"Results are shown in the form RR (MM,VV).  Competitor skill is represented by a normally distributed random variable with estimated mean (MM) and variance (VV).  The mean is an estimation of the skill of the competitor and the variance represents how unsure the system is about it.  Competitors all start with mean = 25 and variance = 25/3 which corresponds to a zero ranking (see below).")
+					with tag(html, 'p'):
+						write( u"The parameters of each distribution are updated based on the results from each race using a Bayesian approach.  The extent of updates depends on each player's variance and on how surprising the outcome is to the system. Changes to scores are negligible when outcomes are similar, but can be huge when favorites surprisingly do poorly or underdogs surprisingly do well.")
+					with tag(html, 'p'):
+						write( u"There is no meaning to positive or negative skill levels which are simply a result of the underlying mathematics.  The numbers are only meaningful relative to each other.")
+					with tag(html, 'p'):
+						write( u"RR is the skill ranking defined by RR = MM - 3 * VV.  This is a very conservative estimate of the actual skill which is expected to be higher than this estimate 99.7% of the time.  Full details " )
+						with tag(html, 'a', {'href': 'https://www.microsoft.com/en-us/research/publication/trueskilltm-a-bayesian-skill-rating-system/'} ):
+							write(u'here.')
+				
 			if not scoreByTime and not scoreByPercent and not scoreByTrueSkill:
 				with tag(html, 'p'):
 					pass
