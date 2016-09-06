@@ -1291,7 +1291,8 @@ class RiderDetail( wx.Panel ):
 				self.firstRecordedTime.Show( True )
 				self.firstRecordedTime.SetLabel( u'{}, {}'.format(
 					Utils.formatTime(rider.firstTime) if rider.firstTime is not None else u'',
-					(race.startTime + datetime.timedelta(seconds=(rider.firstTime or 0.0)).strftime('%H:%M:%S.%f')[:-3] if rider.firstTime is not None else u'' )
+					(race.startTime + datetime.timedelta(seconds=(rider.firstTime or 0.0))).strftime('%H:%M:%S.%f')[:-3] if rider.firstTime is not None else u'' )
+				)
 			
 			categoryDetails = dict( (cd['name'], cd) for cd in GetCategoryDetails() )
 			try:
