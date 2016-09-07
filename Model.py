@@ -930,6 +930,35 @@ class Rider(object):
 			numLaps = len(iTimes)
 		iTimes = iTimes[:numLaps+1]
 		return [b-a for b, a in zip(iTimes[1:], iTimes)]
+		
+	def getEarlyStartOffset( self ):
+		if (not race or
+			race.isTimeTrial or
+			self.firstTime is None or
+			not (race.enableJChipIntegration and race.resetStartClockOnFirstTag)
+		):
+			return None
+		
+		# If the rider is already in the first start wave then it is impossible to be in an earlier one.
+		startOffset = race.getStartOffset( self.num )
+		if not startOffset:
+			return None
+		
+		StartGapBefore = 2.0
+		
+		# Check if the first read is at or after the rider's offset.  If so, this start is good.
+		if (startOffset - StartGapBefore) <= self.firstTime:
+			return None
+
+		# Try to find an earlier wave that the rider started in.
+		startOffsets = race.getStartOffsets()
+		for startOffsetCur, startOffsetNext in zip(startOffsets, startOffsets[1:]):
+			if startOffsetCur >= startOffset:
+				break
+			if (startOffsetCur - StartGapBefore) <= self.firstTime < startOffsetNext:
+				return startOffsetCur
+			
+		return None
 
 class NumTimeInfo(object):
 
@@ -1811,7 +1840,11 @@ class Race( object ):
 		return sum( (1 for r in self.riders.itervalues() if r.status == Rider.Pulled) )
 
 	def getCategories( self, startWaveOnly=True, publishOnly=False, uploadOnly=False, excludeCustom=False, excludeCombined=False ):
-		activeCategories = [c for c in self.categories.itervalues() if c.active and (not startWaveOnly or c.catType == Category.CatWave)]
+		if startWaveOnly:
+			CatWave = Category.CatWave
+			activeCategories = [c for c in self.categories.itervalues() if c.active and c.catType == CatWave]
+		else:
+			activeCategories = [c for c in self.categories.itervalues() if c.active]
 		
 		if publishOnly:
 			activeCategories = [c for c in activeCategories if c.publishFlag]
@@ -1820,7 +1853,8 @@ class Race( object ):
 			activeCategories = [c for c in activeCategories if c.uploadFlag]
 			
 		if excludeCustom:
-			activeCategories = [c for c in activeCategories if c.catType != Category.CatCustom]
+			CatCustom = Category.CatCustom
+			activeCategories = [c for c in activeCategories if c.catType != CatCustom]
 			
 		activeCategories.sort( key = Category.key )
 		
@@ -1838,6 +1872,9 @@ class Race( object ):
 			activeCategories = [c for c in activeCategories if c not in toExclude]
 		
 		return activeCategories
+		
+	def getStartOffsets( self ):
+		return sorted( set(c.getStartOffsetSecs() for c in self.getCategories(startWaveOnly=True)) )
 
 	def setCategoryMask( self ):
 		self.categoryMask = ''
@@ -2167,6 +2204,12 @@ class Race( object ):
 			
 		self._buildCategoryCache()	
 		return self.startOffsetCache.get(num, 0.0)
+		
+	def getEarlyStartOffset( self, num ):
+		try:
+			return self.riders[num].getEarlyStartOffset()
+		except KeyError:
+			return None
 	
 	@memoize
 	def getCategoriesInUse( self ):

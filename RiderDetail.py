@@ -406,10 +406,10 @@ class RiderDetail( wx.Panel ):
 		splitter.SplitVertically( self.grid, panel, 300 )
 		
 		sFirstRecordedTime = wx.BoxSizer( wx.HORIZONTAL )
-		self.firstRecordedTimeName = wx.StaticText( self, label=_('First Recorded Time') )
-		self.firstRecordedTime = wx.StaticText( self, label=_('            ') )
-		sFirstRecordedTime.Add( self.firstRecordedTimeName )
-		sFirstRecordedTime.Add( self.firstRecordedTime, flag=wx.LEFT, border=4 )
+		self.earlyStartWaveName = wx.StaticText( self, label=_('Started in Early Wave') )
+		self.earlyStartWave = wx.StaticText( self, label=_('            ') )
+		sFirstRecordedTime.Add( self.earlyStartWaveName )
+		sFirstRecordedTime.Add( self.earlyStartWave, flag=wx.LEFT, border=4 )
 		hs.Add( sFirstRecordedTime, flag=wx.LEFT|wx.RIGHT|wx.TOP, border=4 )
 		
 		hs.Add( splitter, proportion = 1, flag = wx.EXPAND|wx.TOP, border = 4 )
@@ -1179,7 +1179,7 @@ class RiderDetail( wx.Panel ):
 					'rideTimeName',		'rideTime',
 					'penaltyTimeName',	'penaltyTime',
 					'noteName',			'note',
-					'firstRecordedTimeName', 'firstRecordedTime',
+					'earlyStartWaveName','earlyStartWave',
 					'adjustTime']:
 			getattr( self, w ).Show( False )
 		
@@ -1286,13 +1286,16 @@ class RiderDetail( wx.Panel ):
 							'noteName',			'note',
 							'adjustTime']:
 					getattr( self, w ).Show( True )
-			elif self.enableJChipIntegration and self.skipFirstTagRead and race.startTime:
-				self.firstRecordedTimeName.Show( True )
-				self.firstRecordedTime.Show( True )
-				self.firstRecordedTime.SetLabel( u'{}, {}'.format(
-					Utils.formatTime(rider.firstTime) if rider.firstTime is not None else u'',
-					(race.startTime + datetime.timedelta(seconds=(rider.firstTime or 0.0))).strftime('%H:%M:%S.%f')[:-3] if rider.firstTime is not None else u'' )
-				)
+			else:
+				earlyStartOffset = rider.getEarlyStartOffset()
+				if earlyStartOffset is not None:
+					self.earlyStartWaveName.Show( True )
+					self.earlyStartWave.SetLabel( u'offset: {}  firstRead:{}'.format(
+							Utils.formatTime(earlyStartOffset), 
+							Utils.formatTime(rider.firstTime) if rider.firstTime is not None else u'',
+						)
+					)
+					self.earlyStartWave.Show( True )
 			
 			categoryDetails = dict( (cd['name'], cd) for cd in GetCategoryDetails() )
 			try:
