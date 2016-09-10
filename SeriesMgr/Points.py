@@ -138,7 +138,7 @@ class Points(wx.Panel):
 		self.grid.SetRowLabelSize( 64 )
 		self.grid.CreateGrid( 50, len(self.headerNames) )
 		for col in xrange(self.grid.GetNumberCols()):
-			self.grid.SetColLabelValue( col, self.headerNames[col] )
+			self.grid.SetColLabelValue( col, self.headerNames[col] + (u'       ' if  self.headerNames[col] == 'DNF' else '') )
 		
 		attr = gridlib.GridCellAttr()
 		attr.SetReadOnly( True )
