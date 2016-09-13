@@ -1658,9 +1658,9 @@ class Race( object ):
 		try:
 			if leaderTimesLen > 1 and self.allCategoriesHaveRaceLapsDefined:
 				if category:
-					maxRaceLaps = self.getNumLapsFromCategory(category)
+					maxRaceLaps = (self.getNumLapsFromCategory(category) or 1000)
 				else:
-					maxRaceLaps = max( self.getNumLapsFromCategory(c) for c in self.getCategories() )
+					maxRaceLaps = max( (self.getNumLapsFromCategory(c) or 1000) for c in self.getCategories() )
 				leaderTimes = leaderTimes[:maxRaceLaps + 1]
 				leaderNums = leaderNums[:maxRaceLaps + 1]
 		except:
