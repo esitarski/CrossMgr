@@ -1326,7 +1326,7 @@ class RiderDetail( wx.Panel ):
 			except:
 				missingCount = 0
 			if missingCount:
-				notInLapStr = u'{}: {}'.format(_('Lapped by Race Leader'), u', '.join( '{}'.format(i) for i, b in enumerate(appearedInLap) if not b ))
+				notInLapStr = u'{}: {}'.format(_('Lapped by Leader'), u', '.join( '{}'.format(i) for i, b in enumerate(appearedInLap) if not b ))
 			else:
 				notInLapStr = ''
 			self.notInLap.SetLabel( notInLapStr )
