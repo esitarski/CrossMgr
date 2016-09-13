@@ -594,7 +594,7 @@ function sortTableId( iTable, iCol ) {
 					write( u'Tie Breaking Rules' )
 					
 				with tag(html, 'p'):
-					write( u"If two or more riders are tied on points, the following rules will be applied in sequence until the tie is broken:" )
+					write( u"If two or more riders are tied on points, the following rules are applied in sequence until the tie is broken:" )
 				isFirst = True
 				tieLink = u"if still a tie, use "
 				with tag(html, 'ol'):

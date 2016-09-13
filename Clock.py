@@ -2,6 +2,8 @@ import wx
 from math import cos, sin, pi
 import datetime
 
+now = datetime.datetime.now
+
 tCos60 = [cos((i/60.0)*2.0*pi-pi/2.0) for i in xrange(60)]
 tSin60 = [sin((i/60.0)*2.0*pi-pi/2.0) for i in xrange(60)]
 
@@ -33,8 +35,7 @@ class Clock(wx.PyControl):
 
 		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
 		
-		self.timer = wx.Timer( self )
-		self.Bind( wx.EVT_TIMER, self.onTimer )
+		self.timer = wx.CallLater( 10, self.onTimer )
 		
 		# Bind the events related to our control: first of all, we use a
 		# combination of wx.BufferedPaintDC and an empty handler for
@@ -46,8 +47,7 @@ class Clock(wx.PyControl):
 		self.initialSize = size
 		
 		self.checkFunc = checkFunc if checkFunc else lambda: True
-		self.tCur = datetime.datetime.now()
-		wx.CallAfter( self.onTimer )
+		self.tCur = now()
 	
 	def DoGetBestSize(self):
 		return wx.Size(100, 100) if self.initialSize is wx.DefaultSize else self.initialSize
@@ -67,18 +67,20 @@ class Clock(wx.PyControl):
 		return True
 
 	def onTimer( self, event=None):
-		if not self.timer.IsRunning():
-			self.tCur = datetime.datetime.now()
-			self.Refresh()
-			if self.checkFunc():
-				self.timer.Start( 1001 - datetime.datetime.now().microsecond//1000, True )
+		self.tCur = now()
+		self.Refresh()
+		if self.checkFunc():
+			if self.timer.IsRunning():
+				self.timer.Stop()
+			self.timer.Start( 1001 - now().microsecond//1000, True )
 	
 	def Start( self ):
 		self.onTimer()
 	
 	def OnPaint(self, event):
-		dc = wx.BufferedPaintDC(self)
-		self.Draw(dc)
+		if self.IsShown():
+			dc = wx.BufferedPaintDC( self )
+			self.Draw(dc)
 
 	def OnSize(self, event):
 		self.Refresh()
@@ -88,6 +90,7 @@ class Clock(wx.PyControl):
 		t = self.tCur
 		
 		size = self.GetClientSize()
+		
 		width = size.width
 		height = size.height
 		middle = min(width, height) // 2
@@ -176,7 +179,7 @@ class Clock(wx.PyControl):
 		#
 		ctx.SetFont( ctx.CreateFont(
 				wx.FontFromPixelSize(
-					(0,radius*0.37),
+					(0,max(1,radius*0.37)),
 					wx.FONTFAMILY_SWISS,
 					wx.FONTSTYLE_NORMAL,
 					wx.FONTWEIGHT_NORMAL,

@@ -1641,21 +1641,22 @@ class Race( object ):
 		return maxAnyLap
 
 	@memoize
-	def getLeaderTimesNums( self ):
+	def getLeaderTimesNums( self, category=None ):
 		entries = self.interpolate()
 		if not entries:
 			return None, None
 			
-		leaderTimes = [ 0.0 ]
+		leaderTimes = [ category.getStartOffsetSecs() if category else 0.0 ]
 		leaderNums = [ None ]
 		leaderTimesLen = 1
-		for e in (e for e in entries if e.lap == leaderTimesLen):
-			leaderTimes.append( e.t )
-			leaderNums.append( e.num )
-			leaderTimesLen += 1
+		for e in entries:
+			if e.lap == leaderTimesLen and (not category or self.getCategory(e.num) == category):
+				leaderTimes.append( e.t )
+				leaderNums.append( e.num )
+				leaderTimesLen += 1
 		
 		try:
-			if leaderTimesLen > 1 and self.allCategoriesHaveRaceLapsDefined:
+			if not category and leaderTimesLen > 1 and self.allCategoriesHaveRaceLapsDefined:
 				maxRaceLaps = max( self.getNumLapsFromCategory(category) for category in self.categories.itervalues() if category.active )
 				leaderTimes = leaderTimes[:maxRaceLaps + 1]
 				leaderNums = leaderNums[:maxRaceLaps + 1]

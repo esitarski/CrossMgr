@@ -1311,7 +1311,7 @@ class RiderDetail( wx.Panel ):
 			entries = [e for e in entries if e.num == num and e.t > startOffset]
 			
 			# Figure out which laps this rider was lapped in.
-			leaderTimes, leaderNums = race.getLeaderTimesNums()
+			leaderTimes, leaderNums = race.getLeaderTimesNums(waveCategory)
 			appearedInLap = [False] * (maxLap + 1)
 			appearedInLap[0] = True
 			for e in entries:

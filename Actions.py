@@ -233,7 +233,6 @@ class Actions( wx.Panel ):
 		self.splitter.SetMinimumPaneSize( 100 )
 		wx.CallAfter( self.refresh )
 		wx.CallAfter( self.splitter.SetSashPosition, 650 )
-		self.SetDoubleBuffered( True )
 		
 	def setWrappedRaceInfo( self, event = None ):
 		wrapWidth = self.leftPanel.GetClientSizeTuple()[0] - self.button.GetClientSizeTuple()[0] - 20
