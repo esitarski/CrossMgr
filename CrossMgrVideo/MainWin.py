@@ -233,12 +233,12 @@ class MainWin( wx.Frame, listmix.ColumnSorterMixin ):
 		self.targetProcessingTimeLabel = wx.StaticText(self, label='Target Frames:')
 		self.targetProcessingTime = wx.StaticText(self, label=u'{:.3f}'.format(self.fps))
 		self.targetProcessingTime.SetFont( boldFont )
-		self.targetProcessingTimeUnit = wx.StaticText(self, label='per sec')
+		self.targetProcessingTimeUnit = wx.StaticText(self, label='/ sec')
 		
 		self.framesPerSecondLabel = wx.StaticText(self, label='Actual Frames:')
 		self.framesPerSecond = wx.StaticText(self, label='25.000')
 		self.framesPerSecond.SetFont( boldFont )
-		self.framesPerSecondUnit = wx.StaticText(self, label='per sec')
+		self.framesPerSecondUnit = wx.StaticText(self, label='/ sec')
 		
 		self.availableMsPerFrameLabel = wx.StaticText(self, label='Available Time Per Frame:')
 		self.availableMsPerFrame = wx.StaticText(self, label=u'{:.0f}'.format(1000.0*self.frameDelay))
@@ -396,15 +396,16 @@ class MainWin( wx.Frame, listmix.ColumnSorterMixin ):
 		self.requestQ.put( {
 				'time':now(),
 				'bib':self.testCount,
-				'firstName':u'TestFirstName',
-				'lastName':u'TestLastName',
-				'team':u'TestTeam',
-				'wave':u'TestWave',
-				'raceName':u'TestRaceName',				
+				'firstName':u'Test',
+				'lastName':u'Test',
+				'team':u'Test',
+				'wave':u'Test',
+				'raceName':u'Test',				
 			}
 		)
 		wx.CallLater( 500, self.dbQ.put, ('flush',) )
 		wx.CallLater( 1000, self.refreshEvents )
+		wx.CallLater( 1500, lambda: self.eventList.Select(self.eventList.GetItemCount()-1) )
 		
 	def onEventSelected( self, event ):
 		item = event.m_itemIndex

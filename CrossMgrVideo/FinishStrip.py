@@ -35,7 +35,6 @@ class FinishStrip( wx.Panel ):
 		
 		self.fps = float(fps)
 		self.scale = 1.0
-		self.clip = 0.0
 		self.xTimeLine = None
 		self.magnification = 2.0
 		self.mouseWheelCallback = mouseWheelCallback
@@ -90,12 +89,25 @@ class FinishStrip( wx.Panel ):
 		self.refreshCompositeBitmap()
 		wx.CallAfter( self.Refresh )
 
+	def prefetchZoomBitmap( self, t=None ):
+		if not self.times:
+			return
+		if not t:
+			t = self.tDrawStart
+		if t is None:
+			return
+		for i in xrange(bisect_left(self.times, t, hi=len(self.times)-1), -1, -1):
+			tbm = self.times[i]
+			if tbm not in self.zoomBitmap:
+				image = wx.ImageFromStream( StringIO.StringIO(self.jpg[tbm]), wx.BITMAP_TYPE_JPEG )
+				image.Rescale( int(photoWidth*self.magnification), int(photoHeight*self.magnification), wx.IMAGE_QUALITY_HIGH )
+				self.zoomBitmap[tbm] = image.ConvertToBitmap()
+				wx.CallLater( 150, self.prefetchZoomBitmap, tbm )
+				break
+		
 	def SetDrawStartTime( self, tDrawStart ):
 		self.tDrawStart = tDrawStart
-		wx.CallAfter( self.Refresh )
-		
-	def SetClip( self, clip ):
-		self.clip = clip
+		wx.CallAfter( self.prefetchZoomBitmap )
 		wx.CallAfter( self.Refresh )
 		
 	def SetScale( self, scale ):
@@ -108,12 +120,6 @@ class FinishStrip( wx.Panel ):
 		
 	def GetTimePhotos( self ):
 		return self.times
-	
-	def scaledBitmapfromJpg( self, jpg ):
-		image = wx.ImageFromStream( StringIO.StringIO(jpg), wx.BITMAP_TYPE_JPEG )
-		if self.scale != 1.0:
-			image.Rescale( int(image.GetWidth()*self.scale), int(image.GetHeight()*self.scale), wx.IMAGE_QUALITY_HIGH )
-		return wx.BitmapFromImage( image )
 	
 	def SetTsJpgs( self, tsJpgs ):
 		self.zoomBitmap = {}
@@ -240,7 +246,7 @@ class FinishStrip( wx.Panel ):
 		winWidth, winHeight = self.GetClientSize()
 		
 		photoWidth, photoHeight = self.photoWidth, self.photoHeight
-		widthView, heightView = int(winHeight*0.90), int(winHeight*0.90)
+		widthView, heightView = int(winHeight*0.95), int(winHeight*0.95)
 		
 		widthMagnified, heightMagnified = int(photoWidth * self.magnification), int(photoHeight * self.magnification)
 		
@@ -261,7 +267,7 @@ class FinishStrip( wx.Panel ):
 			image.Rescale( int(photoWidth*self.magnification), int(photoHeight*self.magnification), wx.IMAGE_QUALITY_HIGH )
 			bm = self.zoomBitmap[tbm] = image.ConvertToBitmap()
 		
-		mx, my = int(x * self.magnification), int(y * self.magnification)
+		mx, my = int(x * self.magnification), int(y * self.magnification / self.scale)
 		
 		if self.leftToRight:
 			xViewPos, yViewPos = penWidth//2, penWidth//2
@@ -277,7 +283,7 @@ class FinishStrip( wx.Panel ):
 		
 		dc.SetBrush( wx.TRANSPARENT_BRUSH )
 		dc.SetPen( wx.Pen(wx.Colour(255,255,0), penWidth) )
-		dc.DrawRectangle( penWidth//2, penWidth//2, widthView, heightView )
+		dc.DrawRectangle( xViewPos, yViewPos, widthView, heightView )
 		
 	def OnEnterWindow( self, event ):
 		pass
@@ -355,21 +361,7 @@ class FinishStrip( wx.Panel ):
 		self.draw( wx.PaintDC(self) )
 		
 	def GetBitmap( self ):
-		if not self.timeBitmaps:
-			return wx.EmptyBitmap( 16, 16 )
-		
-		winWidth, winHeight = self.GetClientSize()
-		
-		bm = wx.EmptyBitmap( winWidth, winHeight )
-		dc = wx.MemoryDC( bm )
-		self.draw( dc )
-		dc.SelectObject( wx.NullBitmap )
-
-		if self.photoHeight != winHeight:
-			image = bm.ConvertToImage()
-			image.Resize( (winWidth,self.photoHeight), (0,0) )
-			bm = image.ConvertToBitmap()
-		return bm
+		return self.compositeBitmap if self.compositeBitmap else None
 
 class FinishStripPanel( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=0, fps=25.0 ):
@@ -398,11 +390,8 @@ class FinishStripPanel( wx.Panel ):
 		self.zoomSlider.Bind( wx.EVT_SCROLL_CHANGED, self.onChangeScale )
 		self.zoomSlider.SetValue( 100 )
 		
-		self.clipSlider = wx.Slider( self, style=wx.SL_HORIZONTAL, minValue=0, maxValue=90 )
-		self.clipSlider.Bind( wx.EVT_SCROLL, self.onChangeClip )
-		
 		self.direction = wx.RadioBox( self,
-			label=_('Direction'),
+			label=_('Finish Direction'),
 			choices=[_('Right to Left'), _('Left to Right')],
 			majorDimension=1,
 			style=wx.RA_SPECIFY_ROWS
@@ -418,19 +407,14 @@ class FinishStripPanel( wx.Panel ):
 		
 		fgs = wx.FlexGridSizer( cols=2, vgap=0, hgap=0 )
 		
-		fgs.Add( wx.StaticText(self, label=u'{}'.format(_('Time'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		fgs.Add( wx.StaticText(self, label=u'{}'.format(_('Click and Drag for Time'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		fgs.Add( self.timeSlider, flag=wx.EXPAND )
 		
-		fgs.Add( wx.StaticText(self, label=u'{}'.format(_('Stretch'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		fgs.Add( wx.StaticText(self, label=u'{}'.format(_('Mousewheel to Stretch'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		fgs.Add( self.stretchSlider, flag=wx.EXPAND )
 		
-		hsizer = wx.BoxSizer( wx.HORIZONTAL )
-		hsizer.Add( self.zoomSlider, 1, flag=wx.EXPAND )
-		hsizer.Add( wx.StaticText(self, label=u'{}:'.format(_('Clip'))), 0, flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
-		hsizer.Add( self.clipSlider, 1, flag=wx.EXPAND )
-		
-		fgs.Add( wx.StaticText(self, label=u'{}:'.format(_('Zoom'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
-		fgs.Add( hsizer, flag=wx.EXPAND )
+		fgs.Add( wx.StaticText(self, label=u'{}:'.format(_('Ctrl+Mousewheel to Zoom'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		fgs.Add( self.zoomSlider, flag=wx.EXPAND )
 		
 		fgs.AddGrowableCol( 1, 1 )
 		
@@ -468,9 +452,14 @@ class FinishStripPanel( wx.Panel ):
 		return minMax
 
 	def onCopyToClipboard( self, event ):
+		bm = self.finish.GetBitmap()
+		if not bm:
+			wx.MessageBox( _('Nothing to Copy'), _('Nothing to Copy') )
+			return
+			
 		if wx.TheClipboard.Open():
 			bitmapData = wx.BitmapDataObject()
-			bitmapData.SetBitmap( self.finish.GetBitmap() )
+			bitmapData.SetBitmap( bm )
 			wx.TheClipboard.SetData( bitmapData )
 			wx.TheClipboard.Flush() 
 			wx.TheClipboard.Close()
@@ -503,17 +492,14 @@ class FinishStripPanel( wx.Panel ):
 		if event:
 			event.Skip()
 	
-	def onChangeClip( self, event ):
-		clip = float(event.GetPosition()) / 100.0
-		self.finish.SetClip( clip )
-		event.Skip()
-	
 	def onChangeScale( self, event ):
 		scale = float(event.GetPosition()) / 100.0
 		self.finish.SetScale( scale )
 		event.Skip()
 	
 	def onMouseWheel( self, event ):
+		if event.ControlDown() or event.ShiftDown():
+			return
 		speedFactor = 0.90
 		if event.GetWheelRotation() > 0:
 			v = self.stretchSlider.GetValue() / speedFactor
