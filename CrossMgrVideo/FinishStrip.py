@@ -89,20 +89,19 @@ class FinishStrip( wx.Panel ):
 		self.refreshCompositeBitmap()
 		wx.CallAfter( self.Refresh )
 
-	def prefetchZoomBitmap( self, t=None ):
+	def prefetchZoomBitmap( self, iStart=None ):
 		if not self.times:
 			return
-		if not t:
-			t = self.tDrawStart
-		if t is None:
-			return
-		for i in xrange(bisect_left(self.times, t, hi=len(self.times)-1), -1, -1):
+		if iStart is None or not 0 <= iStart < len(self.times):
+			iStart = bisect_left(self.times, self.tDrawStart, hi=len(self.times)-1)
+		for i in xrange(iStart, -1, -1):
 			tbm = self.times[i]
 			if tbm not in self.zoomBitmap:
 				image = wx.ImageFromStream( StringIO.StringIO(self.jpg[tbm]), wx.BITMAP_TYPE_JPEG )
 				image.Rescale( int(photoWidth*self.magnification), int(photoHeight*self.magnification), wx.IMAGE_QUALITY_HIGH )
 				self.zoomBitmap[tbm] = image.ConvertToBitmap()
-				wx.CallLater( 150, self.prefetchZoomBitmap, tbm )
+				if i > 0:
+					wx.CallLater( 150, self.prefetchZoomBitmap, i-1 )
 				break
 		
 	def SetDrawStartTime( self, tDrawStart ):
