@@ -116,6 +116,8 @@ class FinishStrip( wx.Panel ):
 		return wx.BitmapFromImage( image )
 	
 	def SetTsJpgs( self, tsJpgs ):
+		self.zoomBitmap = {}
+		
 		if not tsJpgs:
 			self.compositeBitmap = None
 			self.tsFirst = datetime.datetime.now()
@@ -123,11 +125,6 @@ class FinishStrip( wx.Panel ):
 			return
 		
 		self.tsFirst = tsJpgs[0][0]
-		
-		image = wx.ImageFromStream( StringIO.StringIO(tsJpgs[0][1]), wx.BITMAP_TYPE_JPEG )
-		self.jpgWidth, self.jpgHeight = image.GetSize()
-		self.scale = float(self.GetSize()[1]) / float(self.jpgHeight)
-		
 		self.tsJpgs = tsJpgs
 		self.times = []
 		self.jpg = {}
@@ -135,7 +132,14 @@ class FinishStrip( wx.Panel ):
 			t = (ts-self.tsFirst).total_seconds()
 			self.times.append( t )
 			self.jpg[t] = jpg
-			
+					
+		image = wx.ImageFromStream( StringIO.StringIO(tsJpgs[0][1]), wx.BITMAP_TYPE_JPEG )
+		self.jpgWidth, self.jpgHeight = image.GetSize()
+		self.scale = min( 1.0, float(self.GetSize()[1]) / float(self.jpgHeight) )
+		if self.scale != 1.0:
+			image.Rescale( int(image.GetWidth()*self.scale), int(image.GetHeight()*self.scale), wx.IMAGE_QUALITY_HIGH )
+			self.zoomBitmap[0.0] = image.ConvertToBitmap()
+		
 		self.refreshCompositeBitmap()
 	
 	def refreshCompositeBitmap( self ):
@@ -149,7 +153,7 @@ class FinishStrip( wx.Panel ):
 	
 	def OnSize( self, event ):
 		if self.jpgHeight is not None:
-			self.scale = float(event.GetSize()[1]) / float(self.jpgHeight)
+			self.scale = min( 1.0, float(event.GetSize()[1]) / float(self.jpgHeight) )
 			self.refreshCompositeBitmap()
 		wx.CallAfter( self.Refresh )
 		event.Skip()
