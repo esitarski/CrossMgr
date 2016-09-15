@@ -2,11 +2,11 @@ import wx
 
 contrastColour = wx.Colour( 255, 130, 0 )
 
-def RescaleImage( image, width, height ):
+def RescaleImage( image, width, height, imageQuality=wx.IMAGE_QUALITY_NORMAL ):
 	wImage = image.GetWidth()
 	hImage = image.GetHeight()
 	ratio = min( float(width) / float(wImage), float(height) / float(hImage) )
-	return image.Copy().Rescale( int(wImage*ratio), int(hImage*ratio), wx.IMAGE_QUALITY_NORMAL ) if not (0.94 < ratio < 1.06) else image
+	return image.Copy().Rescale( int(wImage*ratio), int(hImage*ratio), imageQuality ) if not (0.94 < ratio < 1.06) else image
 	
 class ScaledImage( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=(640,480), style=0, drawFinishLine=False ):

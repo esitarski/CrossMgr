@@ -488,7 +488,7 @@ class MainWin( wx.Frame, listmix.ColumnSorterMixin ):
 		
 		image = PilImageToWxImage( image )
 		self.fcb.append( tNow, image )
-		if self.frameCount & 1:
+		if self.frameCount & 3 == 0:
 			wx.CallAfter( self.primaryImage.SetImage, image )
 		
 		# Record images as long as the timer is running.
