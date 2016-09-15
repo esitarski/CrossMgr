@@ -67,6 +67,7 @@ class FinishStrip( wx.Panel ):
 		self.pixelsPerSec = 25
 		
 		self.tDrawStartCallback = None
+		self.jpgWidth = self.jpgHeight = None
 		
 		tMin, tMax = self.GetTimeMinMax()
 		if tMin is not None:
@@ -123,6 +124,10 @@ class FinishStrip( wx.Panel ):
 		
 		self.tsFirst = tsJpgs[0][0]
 		
+		image = wx.ImageFromStream( StringIO.StringIO(tsJpgs[0][1]), wx.BITMAP_TYPE_JPEG )
+		self.jpgWidth, self.jpgHeight = image.GetSize()
+		self.scale = float(self.GetSize()[1]) / float(self.jpgHeight)
+		
 		self.tsJpgs = tsJpgs
 		self.times = []
 		self.jpg = {}
@@ -143,6 +148,9 @@ class FinishStrip( wx.Panel ):
 		pass
 	
 	def OnSize( self, event ):
+		if self.jpgHeight is not None:
+			self.scale = float(event.GetSize()[1]) / float(self.jpgHeight)
+			self.refreshCompositeBitmap()
 		wx.CallAfter( self.Refresh )
 		event.Skip()
 		
