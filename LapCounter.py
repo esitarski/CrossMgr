@@ -6,6 +6,8 @@ import datetime
 import Model
 import Utils
 
+defaultBackgroundColours = [wx.Colour(16,16,16), wx.Colour(34,139,34), wx.Colour(235,155,0), wx.Colour(147,112,219)]
+
 def getLapCounterOptions( isDialog ):
 	parentClass = wx.Dialog if isDialog else wx.Panel
 	class LapCounterOptionsClass( parentClass ):
@@ -27,13 +29,19 @@ def getLapCounterOptions( isDialog ):
 			self.counterType.SetSelection( 0 )
 			fgs.Add( self.counterType )
 			
-			fgs.Add( wx.StaticText(self, label=_('Foreground')), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-			self.foreground = csel.ColourSelect(self, colour=wx.GREEN, size=(100,-1))
-			fgs.Add( self.foreground )
+			fgs.Add( wx.StaticText(self, label=_('Foregrounds')), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
+			self.foregrounds = [csel.ColourSelect(self, colour=wx.WHITE, size=(40,-1)) for i in xrange(4)]
+			hs = wx.BoxSizer( wx.HORIZONTAL )
+			for i, cs in enumerate(self.foregrounds):
+				hs.Add( cs, flag=wx.LEFT, border=4 if i else 0 )
+			fgs.Add( hs )
 			
-			fgs.Add( wx.StaticText(self, label=_('Background')), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-			self.background = csel.ColourSelect(self, size=(100,-1))
-			fgs.Add( self.background )
+			fgs.Add( wx.StaticText(self, label=_('Backgrounds')), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
+			self.backgrounds = [csel.ColourSelect(self, size=(40,-1), colour=defaultBackgroundColours[i]) for i in xrange(4)]
+			hs = wx.BoxSizer( wx.HORIZONTAL )
+			for i, cs in enumerate(self.backgrounds):
+				hs.Add( cs, flag=wx.LEFT, border=4 if i else 0 )
+			fgs.Add( hs )
 			
 			fgs.Add( wx.StaticText(self, label=_('Lap Cycle')), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 			self.lapCounterCycle = intctrl.IntCtrl(self, min=0, max=None, limited=True, allow_none=True, )
@@ -71,8 +79,8 @@ def getLapCounterOptions( isDialog ):
 		def commit( self ):
 			race = Model.race
 			if race:
-				race.lapCounterForeground = self.foreground.GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
-				race.lapCounterBackground = self.background.GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
+				race.lapCounterForegrounds = [self.foregrounds[i].GetColour().GetAsString(wx.C2S_HTML_SYNTAX) for i in xrange(4)]
+				race.lapCounterBackgrounds = [self.backgrounds[i].GetColour().GetAsString(wx.C2S_HTML_SYNTAX) for i in xrange(4)]
 				race.lapCounterCycle = self.lapCounterCycle.GetValue() or None
 				race.countdownTimer = (self.counterType.GetSelection() == 1)
 				race.secondsBeforeLeaderToFlipLapCounter = self.slider.GetValue()
@@ -81,8 +89,17 @@ def getLapCounterOptions( isDialog ):
 			race = Model.race
 			if race:
 				self.counterType.SetSelection( 1 if race.countdownTimer else 0 )
-				self.foreground.SetColour( Utils.colorFromStr(race.lapCounterForeground) )
-				self.background.SetColour( Utils.colorFromStr(race.lapCounterBackground) )
+				
+				for i in xrange(4):
+					try:
+						self.foregrounds[i].SetColour( Utils.colorFromStr(race.lapCounterForegrounds[i]) )
+					except:
+						self.foregrounds[i].SetColour( wx.WHITE )
+					try:
+						self.backgrounds[i].SetColour( Utils.colorFromStr(race.lapCounterBackgrounds[i]) )
+					except:
+						self.backgrounds[i].SetColour( defaultBackgroundColours[i] )
+				
 				self.lapCounterCycle.SetValue( race.lapCounterCycle or None )
 				self.slider.SetValue( race.secondsBeforeLeaderToFlipLapCounter )
 			
@@ -124,6 +141,8 @@ class LapCounter( wx.Panel ):
 		self.SetCursor( wx.StockCursor(wx.CURSOR_RIGHT_BUTTON) )
 		self.SetBackgroundColour( wx.BLACK )
 		self.SetForegroundColour( wx.GREEN )
+		self.foregrounds = [wx.WHITE] * 4
+		self.backgrounds = list(defaultBackgroundColours)
 
 	def OnOptions( self, event ):
 		d = LapCounterOptions( self )
@@ -248,44 +267,56 @@ class LapCounter( wx.Panel ):
 					lapCur = self.lapCounterCycle
 			return u'{}'.format(lapCur)
 		
-		if len(self.labels) <= 2:
-			lineHeight = (height - border*2) // len(self.labels)
-			#lineHeight *= (1.4 if len(self.labels) == 1 else 1)
-			dc.SetFont( self.GetFont(lineHeight) )
+		dc.SetPen( wx.TRANSPARENT_PEN )
+		
+		def tessellate( numLabels ):
+			if numLabels == 1:
+				return ((0, 0, width, height),)
+			if numLabels == 2:
+				w = width // 2
+				return ((0, 0, w, height), (w, 0, w, height),)
+			w = width // 2
+			h = height // 2
+			return (
+				(0, 0, w, h), (w, 0, w, h),
+				(0, h, w, h), (w, h, w, h),
+			)
 			
-			maxWidth = max( dc.GetTextExtent(getCycleLap(label))[0] for label, flash in self.labels ) if self.labels else 0
-			if maxWidth > width - border*2:
-				lineHeight = int( lineHeight * float(width - border*2) / float(maxWidth) )
-				dc.SetFont( self.GetFont(lineHeight) )
-				maxWidth = max( dc.GetTextExtent(label)[0] for label, flash in self.labels ) if self.labels else 0
+		def getFontSizeToFit( text, w, h ):
+			w = int( w * 0.9 )
+			h = int( h * 0.9 )
+			fontSize = h
+			dc.SetFont( wx.FontFromPixelSize( wx.Size(0,fontSize), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD ) )
+			wText, hText = dc.GetTextExtent( text )
+			if wText > w:
+				fontSize = int( fontSize * w / wText )
+				dc.SetFont( wx.FontFromPixelSize( wx.Size(0,fontSize), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD ) )
+			return fontSize
+		
+		def drawLapText( label, colour, x, y, w, h ):
+			labelWidth, labelHeight = dc.GetTextExtent( label )
+			xText, yText = x + (w - labelWidth) // 2, y + (h - labelHeight) // 2
+			dc.SetTextForeground( wx.BLACK )
+			shadowOffset = labelHeight//52
+			dc.DrawText( label, xText + shadowOffset, yText + shadowOffset )
+			dc.SetTextForeground( colour )
+			dc.DrawText( label, xText, yText )
+		
+		rects = tessellate(len(self.labels))
+		for i, (label, flash) in enumerate(self.labels):
+			x, y, w, h = rects[i]
 			
-			xRight = width - (width - maxWidth) // 2
-			yTop = (height - (lineHeight * len(self.labels))) // 2
-			for label, flash in self.labels:
+			dc.SetBrush( wx.Brush(self.backgrounds[i], wx.SOLID) )
+			dc.DrawRectangle( x, y, w, h )
+			
+			lineBorderWidth = 4
+			dc.SetPen( wx.Pen(wx.BLACK, lineBorderWidth) )
+			dc.DrawRectangle( x, y, w, h )
+			
+			if not flash or self.flashOn:
 				label = getCycleLap(label)
-				if not flash or self.flashOn:
-					dc.DrawText( label, xRight - dc.GetTextExtent(label)[0], yTop )
-				yTop += lineHeight
-		else:
-			lineHeight = (height - border*2) // 2
-			width /= 2
-			dc.SetFont( self.GetFont(lineHeight) )
-			
-			maxWidth = max( dc.GetTextExtent(getCycleLap(label))[0] for label, flash in self.labels ) if self.labels else 0
-			if maxWidth > width - border*2:
-				lineHeight = int( lineHeight * float(width - border*2) / float(maxWidth) )
-				dc.SetFont( self.GetFont(lineHeight) )
-				maxWidth = max( dc.GetTextExtent(getCycleLap(label))[0] for label, flash in self.labels ) if self.labels else 0
-			
-			xRight = width - (width - maxWidth) // 2
-			for i in xrange(0, 4, 2):
-				yTop = (height - (lineHeight * 2)) // 2
-				for label, flash in self.labels[i:i+2]:
-					label = getCycleLap(label)
-					if not flash or self.flashOn:
-						dc.DrawText( label, xRight - dc.GetTextExtent(label)[0], yTop )
-					yTop += lineHeight
-				xRight += width
+				getFontSizeToFit( label, w, h )
+				drawLapText( label, self.foregrounds[i], x, y, w, h )
 	
 	def commit( self ):
 		pass
@@ -299,8 +330,20 @@ class LapCounter( wx.Panel ):
 		race = Model.race
 		if race:
 			self.SetCountdownTimer( race.countdownTimer )
-			self.SetForegroundColour( Utils.colorFromStr(race.lapCounterForeground) )
-			self.SetBackgroundColour( Utils.colorFromStr(race.lapCounterBackground) )
+			self.foregrounds = []
+			self.backgrounds = []
+			for i in xrange(4):
+				try:
+					self.foregrounds.append( Utils.colorFromStr(race.lapCounterForegrounds[i]) )
+				except (IndexError, AttributeError):
+					self.foregrounds.append( wx.WHITE )
+				try:
+					self.backgrounds.append( Utils.colorFromStr(race.lapCounterBackgrounds[i]) )
+				except (IndexError, AttributeError):
+					self.backgrounds.append( defaultBackgroundColours[i] )
+
+			self.SetForegroundColour( self.foregrounds[0] )
+			self.SetBackgroundColour( self.backgrounds[0] )
 			self.lapCounterCycle = race.lapCounterCycle or None
 			if race.isUnstarted():
 				if all( race.getNumLapsFromCategory(category) for category in race.getCategories(startWaveOnly=True) ):
@@ -331,8 +374,23 @@ if __name__ == '__main__':
 	mainWin.Show()
 	
 	for j, i in enumerate(xrange(0,40,4)):
-		wx.CallLater( 4000*i, lambda a=17-j, b=15-j: lapCounter.SetLabels( (('{}'.format(a), True), ('{}'.format(b), False)) ) )
-		wx.CallLater( 6000*i, lambda a=17-j, b=15-j : lapCounter.SetLabels( (('{}'.format(a), False), ('{}'.format(b), False)) ) )
-		wx.CallLater( 8000*i, lambda a=16-j, b=14-j : lapCounter.SetLabels( (('{}'.format(a), False), ('{}'.format(b), True)) ) )
+		wx.CallLater( 4000*i, lambda a=17-j, b=15-j, c=11-j, d=7-j: lapCounter.SetLabels( (
+			('{}'.format(a), True),
+			('{}'.format(b), False),
+			('{}'.format(c), False),
+			('{}'.format(d), False),
+		)) )
+		wx.CallLater( 6000*i, lambda a=17-j, b=15-j, c=11-j, d=7-j: lapCounter.SetLabels( (
+			('{}'.format(a), False),
+			('{}'.format(b), True),
+			('{}'.format(c), False),
+			('{}'.format(d), False),
+		)) )
+		wx.CallLater( 8000*i, lambda a=17-j, b=15-j, c=11-j, d=7-j: lapCounter.SetLabels( (
+			('{}'.format(a), False),
+			('{}'.format(b), False),
+			('{}'.format(c), True),
+			('{}'.format(d), True),
+		)) )
 	
 	app.MainLoop()

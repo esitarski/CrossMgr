@@ -33,8 +33,8 @@ class RaceInputState( object ):
 					getattr(race, 'geoTrack', None),
 					getattr(race, 'geoTrackFName', None),
 					
-					race.lapCounterForeground,
-					race.lapCounterBackground,
+					race.lapCounterForegrounds,
+					race.lapCounterBackgrounds,
 					race.lapCounterCycle,
 					race.countdownTimer,
 					race.secondsBeforeLeaderToFlipLapCounter,

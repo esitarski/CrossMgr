@@ -363,7 +363,7 @@ class Category(object):
 	
 	@property
 	def fullname( self ):
-		return Category.getFullName( self.name.strip(), getattr(self, 'gender', 'Open') )
+		return Category.getFullName( self.name.strip(), getattr(self, 'gender', u'Open') )
 	
 	@property
 	def firstLapRatio( self ):
@@ -1117,8 +1117,8 @@ class Race( object ):
 	licenseLinkTemplate = u''			# Used to create an html link from the rider's license number in the html output.
 	hideDetails = True
 	
-	lapCounterForeground = '#00FF00'
-	lapCounterBackground = '#000000'
+	lapCounterForegrounds = []
+	lapCounterBackgrounds = []
 	secondsBeforeLeaderToFlipLapCounter = 15.0
 	countdownTimer = False
 	lapCounterCycle = None
@@ -1641,26 +1641,22 @@ class Race( object ):
 		return maxAnyLap
 
 	@memoize
-	def getLeaderTimesNums( self, category=None ):
+	def getLeaderTimesNums( self ):
 		entries = self.interpolate()
 		if not entries:
 			return None, None
 			
-		leaderTimes = [ category.getStartOffsetSecs() if category else 0.0 ]
+		leaderTimes = [ 0.0 ]
 		leaderNums = [ None ]
 		leaderTimesLen = 1
-		for e in entries:
-			if e.lap == leaderTimesLen and (not category or self.getCategory(e.num) == category):
-				leaderTimes.append( e.t )
-				leaderNums.append( e.num )
-				leaderTimesLen += 1
+		for e in (e for e in entries if e.lap == leaderTimesLen):
+			leaderTimes.append( e.t )
+			leaderNums.append( e.num )
+			leaderTimesLen += 1
 		
 		try:
 			if leaderTimesLen > 1 and self.allCategoriesHaveRaceLapsDefined:
-				if category:
-					maxRaceLaps = (self.getNumLapsFromCategory(category) or 1000)
-				else:
-					maxRaceLaps = max( (self.getNumLapsFromCategory(c) or 1000) for c in self.getCategories() )
+				maxRaceLaps = max( self.getNumLapsFromCategory(category) for category in self.categories.itervalues() if category.active )
 				leaderTimes = leaderTimes[:maxRaceLaps + 1]
 				leaderNums = leaderNums[:maxRaceLaps + 1]
 		except:

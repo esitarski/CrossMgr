@@ -97,7 +97,7 @@ class Points(wx.Panel):
 		
 		maxOptions = 30
 		self.considerLabel = wx.StaticText( self, label='{}:'.format('Consider') )
-		self.bestResultsToConsider = wx.Choice( self, choices = ['All Scores', 'Best Score Only'] + ['{} {} {}'.format('Best', i, 'Scores Only') for i in xrange(2,maxOptions+1)] )
+		self.bestResultsToConsider = wx.Choice( self, choices = ['All Result', 'Best Result Only'] + ['{} {} {}'.format('Best', i, 'Results Only') for i in xrange(2,maxOptions+1)] )
 		
 		self.participationLabel = wx.StaticText( self, label='{}:'.format('Must have completed') )
 		self.mustHaveCompleted = wx.Choice( self, choices = ['{} {}'.format(i, 'or more Events') for i in xrange(0,maxOptions+1)] )

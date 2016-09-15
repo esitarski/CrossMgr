@@ -400,6 +400,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 						riderTFinish[rider] -= t
 						v = riderResults[rider][i]
 						riderResults[rider][i] = tuple([ignoreFormat.format(v[0])] + list(v[1:]))
+					riderEventsCompleted[rider] = bestResultsToConsider
 
 		# Filter out minimal events completed.
 		riderOrder = [rider for rider, results in riderResults.iteritems() if riderEventsCompleted[rider] >= mustHaveCompleted]

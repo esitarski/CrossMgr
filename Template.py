@@ -54,8 +54,8 @@ class Template( object ):
 			'licenseLinkTemplate',
 			'hideDetails',
 
-			'lapCounterForeground',
-			'lapCounterBackground',
+			'lapCounterForegrounds',
+			'lapCounterBackgrounds',
 			'secondsBeforeLeaderToFlipLapCounter',
 			'countdownTimer',
 			'lapCounterCycle',
