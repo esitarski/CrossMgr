@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from PIL import Image
 import cStringIO as StringIO
 
-def MakeComposite( tsJpgs, leftToRight, pixelsPerSec, scale ):
+def MakeComposite( tsJpgs, leftToRight, pixelsPerSec, scale, highQuality=False ):
 	if not tsJpgs:
 		return None, None, None
 
@@ -42,5 +42,8 @@ def MakeComposite( tsJpgs, leftToRight, pixelsPerSec, scale ):
 			
 	if scale != 1.0:
 		width, height = imgComposite.size
-		imgComposite = imgComposite.resize( (int(width*scale), int(height*scale)), Image.ANTIALIAS )
+		imgComposite = imgComposite.resize(
+			(int(width*scale), int(height*scale)),
+			Image.ANTIALIAS if highQuality else Image.BILINEAR
+		)
 	return widthPhoto, heightPhoto, imgComposite
