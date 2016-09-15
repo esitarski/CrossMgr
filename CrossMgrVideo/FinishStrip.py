@@ -39,6 +39,8 @@ class FinishStrip( wx.Panel ):
 		self.magnification = 2.0
 		self.mouseWheelCallback = mouseWheelCallback
 		
+		self.imageQuality = wx.IMAGE_QUALITY_NORMAL
+		
 		self.Bind( wx.EVT_PAINT, self.OnPaint )
 		self.Bind( wx.EVT_SIZE, self.OnSize )
 		self.Bind( wx.EVT_ERASE_BACKGROUND, self.OnErase )
@@ -78,6 +80,11 @@ class FinishStrip( wx.Panel ):
 	@property
 	def scaledPixelsPerSec( self ):
 		return self.pixelsPerSec * self.scale
+		
+	def SetImageQuality( self, iq ):
+		self.imageQuality = iq
+		self.zoomBitmap = {}
+		self.prefetchZoomBitmap()
 	
 	def SetLeftToRight( self, leftToRight=True ):
 		self.leftToRight = leftToRight
@@ -89,19 +96,22 @@ class FinishStrip( wx.Panel ):
 		self.refreshCompositeBitmap()
 		wx.CallAfter( self.Refresh )
 
-	def prefetchZoomBitmap( self, iStart=None ):
+	def prefetchZoomBitmap( self ):
 		if not self.times:
 			return
-		if iStart is None or not 0 <= iStart < len(self.times):
-			iStart = bisect_left(self.times, self.tDrawStart, hi=len(self.times)-1)
+		
+		iStart = bisect_left(self.times, self.tDrawStart, hi=len(self.times)-1)
 		for i in xrange(iStart, -1, -1):
 			tbm = self.times[i]
 			if tbm not in self.zoomBitmap:
 				image = wx.ImageFromStream( StringIO.StringIO(self.jpg[tbm]), wx.BITMAP_TYPE_JPEG )
-				image.Rescale( int(photoWidth*self.magnification), int(photoHeight*self.magnification), wx.IMAGE_QUALITY_HIGH )
+				image.Rescale(
+					int(photoWidth*self.magnification), int(photoHeight*self.magnification),
+					self.imageQuality
+				)
 				self.zoomBitmap[tbm] = image.ConvertToBitmap()
-				if i > 0:
-					wx.CallLater( 150, self.prefetchZoomBitmap, i-1 )
+				if self.tDrawStart - tbm < 0.25:
+					wx.CallLater( 150, self.prefetchZoomBitmap )
 				break
 		
 	def SetDrawStartTime( self, tDrawStart ):
@@ -142,7 +152,7 @@ class FinishStrip( wx.Panel ):
 		self.jpgWidth, self.jpgHeight = image.GetSize()
 		self.scale = min( 1.0, float(self.GetSize()[1]) / float(self.jpgHeight) )
 		if self.scale != 1.0:
-			image.Rescale( int(image.GetWidth()*self.scale), int(image.GetHeight()*self.scale), wx.IMAGE_QUALITY_HIGH )
+			image.Rescale( int(image.GetWidth()*self.scale), int(image.GetHeight()*self.scale), self.imageQuality )
 			self.zoomBitmap[0.0] = image.ConvertToBitmap()
 		
 		self.refreshCompositeBitmap()
@@ -177,6 +187,7 @@ class FinishStrip( wx.Panel ):
 		x, y = event.GetX(), event.GetY()
 		self.tDrawStart += (x - self.getXTimeLine()) / float(self.scaledPixelsPerSec) * (-1.0 if self.leftToRight else 1.0)
 		self.xTimeLine = x
+		wx.CallAfter( self.prefetchZoomBitmap )
 		wx.CallAfter( self.OnLeaveWindow )
 		wx.CallAfter( self.Refresh )
 		if self.tDrawStartCallback:
@@ -263,7 +274,7 @@ class FinishStrip( wx.Panel ):
 			bm = self.zoomBitmap[tbm]
 		except KeyError:
 			image = wx.ImageFromStream( StringIO.StringIO(self.jpg[tbm]), wx.BITMAP_TYPE_JPEG )
-			image.Rescale( int(photoWidth*self.magnification), int(photoHeight*self.magnification), wx.IMAGE_QUALITY_HIGH )
+			image.Rescale( int(photoWidth*self.magnification), int(photoHeight*self.magnification), self.imageQuality )
 			bm = self.zoomBitmap[tbm] = image.ConvertToBitmap()
 		
 		mx, my = int(x * self.magnification), int(y * self.magnification / self.scale)
@@ -373,6 +384,7 @@ class FinishStripPanel( wx.Panel ):
 		displayWidth, displayHeight = wx.GetDisplaySize()
 	
 		self.leftToRight = True
+		self.imageQuality = wx.IMAGE_QUALITY_NORMAL
 		self.finish = FinishStrip( self, size=(0, 480), leftToRight=self.leftToRight, mouseWheelCallback=self.onMouseWheel )
 		self.finish.tDrawStartCallback = self.tDrawStartCallback
 		
@@ -398,11 +410,17 @@ class FinishStripPanel( wx.Panel ):
 		self.direction.SetSelection( 1 if self.leftToRight else 0 )
 		self.direction.Bind( wx.EVT_RADIOBOX, self.onDirection )
 
+		self.imageQualitySelect = wx.RadioBox( self,
+			label=_('Zoom Image Quality'),
+			choices=[_('Normal (faster)'), _('High (slower)')],
+			majorDimension=1,
+			style=wx.RA_SPECIFY_ROWS
+		)
+		self.imageQualitySelect.SetSelection( 1 if self.imageQuality == wx.IMAGE_QUALITY_HIGH else 0 )
+		self.imageQualitySelect.Bind( wx.EVT_RADIOBOX, self.onImageQuality )
+
 		self.copyToClipboard = wx.Button( self, label=_('Copy to Clipboard') )
 		self.copyToClipboard.Bind( wx.EVT_BUTTON, self.onCopyToClipboard )
-		
-		self.save = wx.Button( self, label=u'{}...'.format(_('Save')) )
-		self.save.Bind( wx.EVT_BUTTON, self.onSave )
 		
 		fgs = wx.FlexGridSizer( cols=2, vgap=0, hgap=0 )
 		
@@ -420,9 +438,9 @@ class FinishStripPanel( wx.Panel ):
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.direction )
 		hs.AddSpacer( 16 )
+		hs.Add( self.imageQualitySelect )
+		hs.AddSpacer( 16 )
 		hs.Add( self.copyToClipboard, flag=wx.ALIGN_CENTRE_VERTICAL )
-		hs.AddSpacer( 4 )
-		hs.Add( self.save, flag=wx.ALIGN_CENTRE_VERTICAL )
 		
 		vs.Add( self.finish, 1, flag=wx.EXPAND )
 		vs.Add( fgs, flag=wx.EXPAND|wx.ALL, border=4 )
@@ -466,24 +484,12 @@ class FinishStripPanel( wx.Panel ):
 		else:
 			wx.MessageBox( _('Unable to open the clipboard'), _('Error') )
 
-	def onSave( self, event ):
-		dlg = wx.FileDialog(
-			self,
-			message=_('Save Finish as'),
-			wildcard=u"PNG {} (*.png)|*.png".format(_("files")),
-			defaultDir=os.path.dirname( Utils.getFileName() or '.' ),
-			defaultFile=os.path.splitext( os.path.basename(Utils.getFileName() or _('Default.cmn')) )[0] + u'_Finish.png',
-			style=wx.SAVE,
-		)
-		if dlg.ShowModal() == wx.ID_OK:
-			fname = dlg.GetPath()
-			bm = self.finish.GetBitmap()
-			image = wx.ImageFromBitmap( bm )
-			image.SaveFile( fname, wx.BITMAP_TYPE_PNG )
-		dlg.Destroy()
-
 	def onDirection( self, event ):
 		self.SetLeftToRight( event.GetInt() == 1 ) 
+		event.Skip()
+		
+	def onImageQuality( self, event ):
+		self.SetImageQuality( wx.IMAGE_QUALITY_HIGH if event.GetInt() == 1 else wx.IMAGE_QUALITY_NORMAL ) 
 		event.Skip()
 		
 	def onChangeSpeed( self, event=None ):
@@ -532,6 +538,11 @@ class FinishStripPanel( wx.Panel ):
 		self.leftToRight = leftToRight
 		self.finish.SetLeftToRight( self.leftToRight )
 		self.direction.SetSelection( 1 if self.leftToRight else 0 )
+		
+	def SetImageQuality( self, iq ):
+		self.imageQuality = iq
+		self.finish.SetImageQuality( self.imageQuality )
+		self.imageQualitySelect.SetSelection( 1 if self.imageQuality == wx.IMAGE_QUALITY_HIGH else 0 )
 		
 	def GetLeftToRight( self ):
 		return self.leftToRight

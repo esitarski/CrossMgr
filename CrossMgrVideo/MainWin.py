@@ -405,7 +405,6 @@ class MainWin( wx.Frame, listmix.ColumnSorterMixin ):
 		)
 		wx.CallLater( 500, self.dbQ.put, ('flush',) )
 		wx.CallLater( 1000, self.refreshEvents )
-		wx.CallLater( 1500, lambda: self.eventList.Select(self.eventList.GetItemCount()-1) )
 		
 	def onEventSelected( self, event ):
 		item = event.m_itemIndex
