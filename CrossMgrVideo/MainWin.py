@@ -31,7 +31,7 @@ from ManageDatabase import ManageDatabase
 imageWidth, imageHeight = 640, 480
 
 tdCaptureBefore = timedelta(seconds=0.5)
-tdCaptureAfter = timedelta(seconds=2.5)
+tdCaptureAfter = timedelta(seconds=3.5)
 
 try:
 	#from VideoCapture import Device
@@ -282,6 +282,7 @@ class MainWin( wx.Frame ):
 		
 		#------------------------------------------------------------------------------------------------
 		self.finishStrip = FinishStripPanel( self, size=(-1,wx.GetDisplaySize()[1]/2) )
+		#self.finishStrip.finish.Bind( wx.EVT_RIGHT_DOWN, self.onPopup )
 		
 		self.primaryImage = ScaledImage( self, style=wx.BORDER_SUNKEN, size=(imageWidth, imageHeight) )
 		self.primaryImage.SetTestImage()
@@ -340,6 +341,8 @@ class MainWin( wx.Frame ):
 		self.timer.Start( ms, False )
 		
 		wx.CallLater( 300, self.refreshEvents )
+		
+		self.popup = wx.Menu()
 	
 	def GetListCtrl( self ):
 		return self.eventList
@@ -409,6 +412,25 @@ class MainWin( wx.Frame ):
 		)
 		wx.CallLater( 500, self.dbQ.put, ('flush',) )
 		wx.CallLater( int(100+1000*int(tdCaptureBefore.total_seconds())), self.refreshEvents )
+	
+	def onPopup( self, event ):
+		if not hasattr(self, "menuInitialized"):
+			self.menuInitialized = True
+			#self.Bind(wx.EVT_MENU, self.onPopupPrint, id=wx.ID_PRINT)
+			self.copyToClipboardID = wx.NewId()
+			self.Bind(wx.EVT_MENU, self.onPopupCopyToClipboard, id=self.copyToClipboardID)
+
+		menu = wx.Menu()
+		menu.Append(wx.ID_PRINT, "Print")
+		menu.Append(self.copyToClipboardID, "Copy to Clipboard")
+		self.PopupMenu(menu)
+		menu.Destroy()
+
+	def onPopupPrint( self, event ):
+		pass
+		
+	def onPopupCopyToClipboard( self, event ):
+		pass
 		
 	def onEventSelected( self, event ):
 		item = event.m_itemIndex
@@ -544,7 +566,7 @@ class MainWin( wx.Frame ):
 				self.captureTimer.Stop()
 			
 			# Set a timer to stop recording after the capture window.
-			millis = int((tSearch + tdCaptureAfter - now()).total_seconds() * 1000.0)
+			millis = int((tSearch - now() + tdCaptureAfter).total_seconds() * 1000.0)
 			if millis > 0:
 				self.captureTimer.Start( millis )
 			
@@ -579,7 +601,7 @@ class MainWin( wx.Frame ):
 		if dlg.ShowModal() == wx.ID_OK:
 			tsUpper = dlg.GetDate()
 			self.db.cleanBefore( tsUpper )
-			wx.CallAfter( self.finishStrip, Clear )
+			wx.CallAfter( self.finishStrip.Clear )
 			wx.CallAfter( self.refreshEvents, True )
 		dlg.Destroy()
 	

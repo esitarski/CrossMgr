@@ -181,7 +181,7 @@ class FinishStrip( wx.Panel ):
 			return
 		self.tCursor = t
 		x = self.xFromT( t )
-		self.bitmapLeft = max(0, min(x, self.compositeBitmap.GetSize()[0] - self.GetSize()[0]))
+		self.bitmapLeft = max(0, min(x, self.compositeBitmap.GetSize()[0] - self.GetClientSize()[0]))
 		self.Refresh()
 		self.scrollCallback( self.bitmapLeft )
 	
@@ -234,16 +234,27 @@ class FinishStrip( wx.Panel ):
 		winWidth, winHeight = self.GetClientSize()
 		
 		photoWidth, photoHeight = self.photoWidth, self.photoHeight
-		viewWidth, viewHeight = int(winHeight*0.95), int(winHeight*0.95)
+		viewWidth, viewHeight = winHeight, winHeight
 		
 		tbm = self.times[bisect_left(self.times, self.tFromX(x), hi=len(self.times)-1)]
 		bm = self.getZoomBitmap( tbm )
 		
 		penWidth = 2
+		
 		if not self.leftToRight:
 			xViewPos, yViewPos = penWidth//2, penWidth//2
 		else:
 			xViewPos, yViewPos = winWidth - viewWidth - penWidth//2, penWidth//2
+			
+		if xViewPos <= x < xViewPos + viewWidth:
+			if self.leftToRight:
+				xViewPos, yViewPos = penWidth//2, penWidth//2
+			else:
+				xViewPos, yViewPos = winWidth - viewWidth - penWidth//2, penWidth//2
+			
+		if xViewPos != getattr(self,'xViewPosLast', -1):
+			self.xViewPosLast = xViewPos
+			self.Refresh()
 		
 		bmWidth, bmHeight = bm.GetSize()
 		
@@ -368,11 +379,11 @@ class FinishStrip( wx.Panel ):
 		gc.SetBrush( wx.Brush(wx.Colour(200,200,200)) )
 		rect = wx.Rect( xCursor - tWidth//2 - border, 0, tWidth + border*2, tHeight + border*2 )
 		gc.DrawRoundedRectangle( rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight(), border*1.5 )
-		rect.SetTop( winHeight - tHeight - border )
+		rect.SetTop( winHeight - tHeight - border*2 )
 		gc.DrawRoundedRectangle( rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight(), border*1.5 )
 		
 		gc.DrawText( text, xCursor - tWidth//2, border )
-		gc.DrawText( text, xCursor - tWidth//2, winHeight - tHeight - border/2 )
+		gc.DrawText( text, xCursor - tWidth//2, winHeight - tHeight - border )
 	
 	def OnPaint( self, event=None ):
 		self.draw( wx.PaintDC(self) )
@@ -435,15 +446,19 @@ class FinishStripPanel( wx.Panel ):
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.direction )
-		hs.AddSpacer( 16 )
-		hs.Add( self.imageQualitySelect )
-		hs.AddSpacer( 16 )
-		hs.Add( self.copyToClipboard, flag=wx.ALIGN_CENTRE_VERTICAL )
-		
+		hs.Add( self.imageQualitySelect, flag=wx.LEFT, border=16 )
+		hs.Add( self.copyToClipboard, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
+		hs.Add( wx.StaticText(self, label=
+				'Pan: Click and Drag\n'
+				'Stretch: Mousewheel\n'
+				'Zoom: Ctrl+Mousewheel\n'
+			),
+			flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16
+		)
 		vs.Add( self.finish, 1, flag=wx.EXPAND )
 		vs.Add( self.timeScrollbar, flag=wx.EXPAND )
-		vs.Add( fgs, flag=wx.EXPAND|wx.ALL, border=4 )
-		vs.Add( hs, flag=wx.EXPAND|wx.ALL, border=4 )
+		vs.Add( fgs, flag=wx.EXPAND|wx.ALL, border=0 )
+		vs.Add( hs, flag=wx.EXPAND|wx.ALL, border=0 )
 		
 		self.SetSizer( vs )
 		wx.CallAfter( self.initUI )
@@ -522,10 +537,10 @@ class FinishStripPanel( wx.Panel ):
 			position = self.timeScrollbar.GetThumbPosition()
 		
 		bitmap = self.finish.GetBitmap()
-		bmWidth =  bitmap.GetSize()[0] if bitmap else self.finish.GetSize()[0]
+		bmWidth =  bitmap.GetSize()[0] if bitmap else self.finish.GetClientSize()[0]
 		
 		range = bmWidth
-		thumbSize = min( self.finish.GetSize()[0], range )
+		thumbSize = min( self.finish.GetClientSize()[0], range )
 		pageSize = int(thumbSize * 0.95)
 		position = max(0, min(position, range-thumbSize))
 		self.timeScrollbar.SetScrollbar( position, thumbSize, range, pageSize, True )
