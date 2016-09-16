@@ -248,7 +248,7 @@ class FinishStrip( wx.Panel ):
 		bmWidth, bmHeight = bm.GetSize()
 		
 		ratioY = float(y) / float(winHeight)
-		centerY = ratioY * bmHeight/2.0
+		centerY = ratioY * bmHeight
 		bmY = int(centerY - viewHeight//2)
 		bmY = max( 0, min(bmY, bmHeight-viewHeight) )
 		
@@ -270,6 +270,7 @@ class FinishStrip( wx.Panel ):
 			self.scale = min( 1.0, float(event.GetSize()[1]) / float(self.jpgHeight) )
 			self.refreshCompositeBitmap()
 		wx.CallAfter( self.Refresh )
+		self.scrollCallback()
 		event.Skip()
 		
 	def OnLeftDown( self, event ):
@@ -314,9 +315,11 @@ class FinishStrip( wx.Panel ):
 			dx = -(x - self.xDragLast)
 			self.xDragLast = x
 			self.tCursor = self.tFromX( x )
-			self.bitmapLeft = max(0, min(self.compositeBitmap.GetSize()[0]-winWidth, self.bitmapLeft+dx)) 
-			wx.CallAfter( self.scrollCallback, self.bitmapLeft )
-			wx.CallAfter( self.Refresh )
+			bitmapLeft = max(0, min(self.compositeBitmap.GetSize()[0]-winWidth, self.bitmapLeft+dx)) 
+			if bitmapLeft != self.bitmapLeft:
+				self.bitmapLeft = bitmapLeft					
+				wx.CallAfter( self.scrollCallback, self.bitmapLeft )
+				wx.CallAfter( self.Refresh )
 		else:
 			self.drawZoomPhoto( x, y )
 		
@@ -397,7 +400,6 @@ class FinishStripPanel( wx.Panel ):
 		
 		self.timeScrollbar = wx.ScrollBar( self, style=wx.SB_HORIZONTAL )
 		self.timeScrollbar.Bind( wx.EVT_SCROLL, self.onChangeTime )
-		self.Bind( wx.EVT_SIZE, self.onSize )
 		
 		minPixelsPerSecond, maxPixelsPerSecond = self.getSpeedPixelsPerSecondMinMax()
 		self.stretchSlider = wx.Slider( self, style=wx.SL_HORIZONTAL, minValue=minPixelsPerSecond, maxValue=maxPixelsPerSecond )
@@ -497,7 +499,7 @@ class FinishStripPanel( wx.Panel ):
 		
 	def onChangeSpeed( self, event=None ):
 		self.SetPixelsPerSec( self.stretchSlider.GetValue(), False )
-		self.adjustTimeScrollbar()
+		self.scrollCallback()
 		if event:
 			event.Skip()
 	
@@ -515,24 +517,16 @@ class FinishStripPanel( wx.Panel ):
 	def getPhotoTimeMinMax( self ):
 		return self.finish.GetTimeMinMax()
 	
-	def onSize( self, event ):
-		self.adjustTimeScrollbar()
-		event.Skip()
-	
-	def adjustTimeScrollbar( self ):
-		thumbSize = self.finish.GetSize()[0]
-		bitmap = self.finish.GetBitmap()
-		range = bitmap.GetSize()[0] if bitmap else thumbSize
-		position = min(self.timeScrollbar.GetThumbPosition(), range-thumbSize)
-		pageSize = int(thumbSize * 0.9)
-		print 'adjustTimeScrollbar position={}, thumbSize={}, range={}, pageSize={}'.format(position, thumbSize, range, pageSize)
-		self.timeScrollbar.SetScrollbar( position, thumbSize, range, pageSize, True )
+	def scrollCallback( self, position=None ):
+		if position is None:
+			position = self.timeScrollbar.GetThumbPosition()
 		
-	def scrollCallback( self, position ):
-		thumbSize = self.finish.GetSize()[0]
 		bitmap = self.finish.GetBitmap()
-		range = bitmap.GetSize()[0] if bitmap else thumbSize
-		pageSize = int(thumbSize * 0.9)
+		bmWidth =  bitmap.GetSize()[0] if bitmap else self.finish.GetSize()[0]
+		
+		range = bmWidth
+		thumbSize = min( self.finish.GetSize()[0], range )
+		pageSize = int(thumbSize * 0.95)
 		position = max(0, min(position, range-thumbSize))
 		print 'scrollCallback position={}, thumbSize={}, range={}, pageSize={}'.format(position, thumbSize, range, pageSize)
 		self.timeScrollbar.SetScrollbar( position, thumbSize, range, pageSize, True )
@@ -567,7 +561,7 @@ class FinishStripPanel( wx.Panel ):
 		self.finish.SetTsJpgs( tsJpgs )
 		if ts and self.finish.tsFirst:
 			self.finish.SetT( (ts-self.finish.tsFirst).total_seconds() )
-		self.adjustTimeScrollbar()
+		self.scrollCallback()
 			
 	def Clear( self ):
 		self.info = {}
