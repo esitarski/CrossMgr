@@ -528,7 +528,6 @@ class FinishStripPanel( wx.Panel ):
 		thumbSize = min( self.finish.GetSize()[0], range )
 		pageSize = int(thumbSize * 0.95)
 		position = max(0, min(position, range-thumbSize))
-		print 'scrollCallback position={}, thumbSize={}, range={}, pageSize={}'.format(position, thumbSize, range, pageSize)
 		self.timeScrollbar.SetScrollbar( position, thumbSize, range, pageSize, True )
 			
 	def onChangeTime( self, event ):

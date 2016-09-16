@@ -30,8 +30,8 @@ from ManageDatabase import ManageDatabase
 
 imageWidth, imageHeight = 640, 480
 
-tdCaptureBefore = timedelta(seconds=1.0)
-tdCaptureAfter = timedelta(seconds=3.0)
+tdCaptureBefore = timedelta(seconds=0.5)
+tdCaptureAfter = timedelta(seconds=2.5)
 
 try:
 	#from VideoCapture import Device
@@ -408,7 +408,7 @@ class MainWin( wx.Frame ):
 			}
 		)
 		wx.CallLater( 500, self.dbQ.put, ('flush',) )
-		wx.CallLater( 1000, self.refreshEvents )
+		wx.CallLater( int(100+1000*int(tdCaptureBefore.total_seconds())), self.refreshEvents )
 		
 	def onEventSelected( self, event ):
 		item = event.m_itemIndex
