@@ -95,6 +95,12 @@ class Database( object ):
 		with self.conn:
 			return list( self.conn.execute( 'SELECT ts,jpg FROM photo WHERE ts BETWEEN ? AND ? ORDER BY ts', (tsLower, tsUpper)) )
 	
+	def getLastPhotos( self, count ):
+		with self.conn:
+			tsJpgs = list( self.conn.execute( 'SELECT ts,jpg FROM photo ORDER BY ts DESC LIMIT ?', (count,)) )
+		tsJpgs.reverse()
+		return tsJpgs
+	
 	def getLastTimestamp( self, tsLower, tsUpper ):
 		c = self.conn.cursor()
 		c.execute( 'SELECT max(ts) from event WHERE ts BETWEEN ? AND ?', (tsLower, tsUpper) )

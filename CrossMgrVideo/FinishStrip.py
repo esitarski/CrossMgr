@@ -30,15 +30,15 @@ photoHeight = 480
 class FinishStrip( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=0,
 			fps=25,
-			leftToRight=False, mouseWheelCallback = None ):
+			leftToRight=False, mouseWheelCallback=None, scrollCallback=None ):
 		super(FinishStrip, self).__init__( parent, id, size=size, style=style )
 		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )
 		
 		self.fps = float(fps)
 		self.scale = 1.0
-		self.xTimeLine = None
 		self.magnification = 2.0
-		self.mouseWheelCallback = mouseWheelCallback
+		self.mouseWheelCallback = mouseWheelCallback or (lambda event: None)
+		self.scrollCallback = scrollCallback or (lambda position: None)
 		
 		self.imageQuality = wx.IMAGE_QUALITY_NORMAL
 		
@@ -56,6 +56,7 @@ class FinishStrip( wx.Panel ):
 		self.yMotionLast = None
 		
 		self.compositeBitmap = None
+		self.xTime = None
 		self.tsFirst = datetime.datetime.now()
 		self.tsJpgs = []
 		self.photoWidth = self.photoHeight = None
@@ -65,15 +66,13 @@ class FinishStrip( wx.Panel ):
 		self.zoomBitmap = {}
 		
 		self.leftToRight = leftToRight
-		self.tDrawStart = 0.0
 		self.pixelsPerSec = 25
 		
-		self.tDrawStartCallback = None
 		self.jpgWidth = self.jpgHeight = None
 		
-		tMin, tMax = self.GetTimeMinMax()
-		if tMin is not None:
-			self.tDrawStart = tMin
+		self.bitmapLeft = 0
+		self.tCursor = 0.0
+		self.tMax = 0.0
 		
 	def formatTime( self, t ):
 		return (self.tsFirst + datetime.timedelta(seconds=t)).strftime('%H:%M:%S.%f'[:-3])
@@ -81,7 +80,7 @@ class FinishStrip( wx.Panel ):
 	@property
 	def scaledPixelsPerSec( self ):
 		return self.pixelsPerSec * self.scale
-		
+	
 	def SetImageQuality( self, iq ):
 		self.imageQuality = iq
 		self.zoomBitmap = {}
@@ -101,7 +100,7 @@ class FinishStrip( wx.Panel ):
 		if not self.times:
 			return
 		
-		iStart = bisect_left(self.times, self.tDrawStart, hi=len(self.times)-1)
+		iStart = bisect_left(self.times, self.tCursor, hi=len(self.times)-1)
 		for i in xrange(iStart, -1, -1):
 			tbm = self.times[i]
 			if tbm not in self.zoomBitmap:
@@ -111,18 +110,17 @@ class FinishStrip( wx.Panel ):
 					self.imageQuality
 				)
 				self.zoomBitmap[tbm] = image.ConvertToBitmap()
-				if self.tDrawStart - tbm < 0.25:
+				if self.tCursor - tbm < 0.25:
 					wx.CallLater( 150, self.prefetchZoomBitmap )
 				break
 		
-	def SetDrawStartTime( self, tDrawStart ):
-		self.tDrawStart = tDrawStart
+	def SetBitmapLeft( self, position ):
+		self.bitmapLeft = position
+		self.Refresh()
+	
+	def SetCursorTime( self, tCursor ):
+		self.tCursor = tCursor
 		wx.CallAfter( self.prefetchZoomBitmap )
-		wx.CallAfter( self.Refresh )
-		
-	def SetScale( self, scale ):
-		self.scale = scale
-		self.refreshCompositeBitmap()
 		wx.CallAfter( self.Refresh )
 		
 	def GetTimeMinMax( self ):
@@ -136,6 +134,7 @@ class FinishStrip( wx.Panel ):
 		self.tsJpgs = (tsJpgs or [])
 		self.times = []
 		self.jpg = {}
+		self.scale = 1.0
 		
 		if not tsJpgs:
 			self.tsFirst = datetime.datetime.now()
@@ -148,18 +147,21 @@ class FinishStrip( wx.Panel ):
 			t = (ts-self.tsFirst).total_seconds()
 			self.times.append( t )
 			self.jpg[t] = jpg
-					
+		
+		self.tMax = self.times[-1]
+		
 		image = wx.ImageFromStream( StringIO.StringIO(tsJpgs[0][1]), wx.BITMAP_TYPE_JPEG )
 		self.jpgWidth, self.jpgHeight = image.GetSize()
 		self.scale = min( 1.0, float(self.GetSize()[1]) / float(self.jpgHeight) )
 		if self.scale != 1.0:
 			image.Rescale( int(image.GetWidth()*self.scale), int(image.GetHeight()*self.scale), self.imageQuality )
-			self.zoomBitmap[0.0] = image.ConvertToBitmap()
-		
+
 		self.refreshCompositeBitmap()
 	
 	def refreshCompositeBitmap( self ):
-		self.photoWidth, self.photoHeight, self.compositeBitmap = MakeComposite(self.tsJpgs, self.leftToRight, self.pixelsPerSec, self.scale)
+		self.photoWidth, self.photoHeight, self.compositeBitmap = MakeComposite(
+			self.tsJpgs, self.leftToRight, self.pixelsPerSec, self.scale
+		)
 		if self.compositeBitmap:
 			self.compositeBitmap = wx.BitmapFromImage( PilImageToWxImage(self.compositeBitmap) )
 		self.zoomBitmap = {}
@@ -167,51 +169,27 @@ class FinishStrip( wx.Panel ):
 	def OnErase( self, event ):
 		pass
 	
-	def OnSize( self, event ):
-		if self.jpgHeight is not None:
-			self.scale = min( 1.0, float(event.GetSize()[1]) / float(self.jpgHeight) )
-			self.refreshCompositeBitmap()
-		wx.CallAfter( self.Refresh )
-		event.Skip()
+	def tFromX( self, x ):
+		x += self.bitmapLeft
+		t = x / (self.scale * self.pixelsPerSec)
+		if self.leftToRight:
+			t = self.tMax - t
+		return t
 		
-	def getXTimeLine( self ):
-		winWidth, winHeight = self.GetClientSize()
-		winWidthHalf = winWidth // 2
-		return min( winWidth, self.xTimeLine if self.xTimeLine is not None else winWidthHalf )
+	def xFromT( self, t ):
+		if self.leftToRight:
+			t = self.tMax - t
+		return int(t * self.scale * self.pixelsPerSec) - self.bitmapLeft
 		
-	def OnLeftDown( self, event ):
-		self.xDragLast = event.GetX()
-		self.SetCursor(wx.StockCursor(wx.CURSOR_HAND))
-		event.Skip()
-		
-	def OnLeftUp( self, event ):
-		x, y = event.GetX(), event.GetY()
-		self.tDrawStart += (x - self.getXTimeLine()) / float(self.scaledPixelsPerSec) * (-1.0 if self.leftToRight else 1.0)
-		self.xTimeLine = x
-		wx.CallAfter( self.prefetchZoomBitmap )
-		wx.CallAfter( self.OnLeaveWindow )
-		wx.CallAfter( self.Refresh )
-		if self.tDrawStartCallback:
-			wx.CallAfter( self.tDrawStartCallback, self.tDrawStart )
-		self.SetCursor( wx.NullCursor )
-		
-	def OnMouseWheel( self, event ):
-		if event.ControlDown() and not event.ShiftDown():
-			magnificationSave = self.magnification
-			magFactor = 0.90
-			if event.GetWheelRotation() < 0:
-				self.magnification /= magFactor
-			else:
-				self.magnification *= magFactor
-			
-			self.magnification = min( 5.0, max(1.0, self.magnification) )
-			if self.magnification != magnificationSave:
-				self.zoomBitmap = {}
-				wx.CallAfter( self.drawZoomPhoto, event.GetX(), event.GetY() )
-		
-		if self.mouseWheelCallback:
-			self.mouseWheelCallback( event )
-		
+	def SetT( self, t ):
+		if not self.times:
+			return
+		self.tCursor = t
+		x = self.xFromT( t )
+		self.bitmapLeft = max(0, min(x, self.compositeBitmap.GetSize()[0] - self.GetSize()[0]))
+		self.scrollCallback( self.bitmapLeft )
+		self.Refresh()
+	
 	def drawXorLine( self, x, y ):
 		if x is None or not self.times:
 			return
@@ -221,13 +199,8 @@ class FinishStrip( wx.Panel ):
 		
 		dc.SetPen( wx.WHITE_PEN )
 		winWidth, winHeight = self.GetClientSize()
-		winWidthHalf = winWidth // 2
 		
-		xTimeLine = self.getXTimeLine()
-		
-		t = self.tDrawStart + (x - xTimeLine) / float(self.scaledPixelsPerSec) * (-1.0 if self.leftToRight else 1.0)
-		
-		text = self.formatTime( t )
+		text = self.formatTime( self.tFromX( x ) )
 		fontHeight = max(5, winHeight//20)
 		font = wx.FontFromPixelSize(
 			wx.Size(0,fontHeight),
@@ -260,18 +233,9 @@ class FinishStrip( wx.Panel ):
 		widthView, heightView = int(winHeight*0.95), int(winHeight*0.95)
 		
 		widthMagnified, heightMagnified = int(photoWidth * self.magnification), int(photoHeight * self.magnification)
-		scaledPixelsPerSec = self.scale * self.pixelsPerSec
 		
-		xTimeLine = self.getXTimeLine()
-		
-		leftToRightSign = (-1.0,1.0)[int(self.leftToRight)]
-		xEdge = x + (photoWidth * leftToRightSign)//2
-		t = self.tDrawStart + (xEdge - xTimeLine) / scaledPixelsPerSec * leftToRightSign
-		
-		tbm = self.times[bisect_left(self.times, t, hi=len(self.times)-1)]
-		
-		penWidth = 2
-		
+		tbm = self.times[bisect_left(self.times, self.tFromX(x), hi=len(self.times)-1)]
+				
 		try:
 			bm = self.zoomBitmap[tbm]
 		except KeyError:
@@ -281,6 +245,7 @@ class FinishStrip( wx.Panel ):
 		
 		mx, my = int(x * self.magnification), int(y * self.magnification / self.scale)
 		
+		penWidth = 2
 		if self.leftToRight:
 			xViewPos, yViewPos = penWidth//2, penWidth//2
 		else:
@@ -300,6 +265,42 @@ class FinishStrip( wx.Panel ):
 	def OnEnterWindow( self, event ):
 		pass
 		
+	def OnSize( self, event ):
+		if self.jpgHeight is not None:
+			self.scale = min( 1.0, float(event.GetSize()[1]) / float(self.jpgHeight) )
+			self.refreshCompositeBitmap()
+		wx.CallAfter( self.Refresh )
+		event.Skip()
+		
+	def OnLeftDown( self, event ):
+		self.xDragLast = event.GetX()
+		self.SetCursor(wx.StockCursor(wx.CURSOR_HAND))
+		event.Skip()
+		
+	def OnLeftUp( self, event ):
+		self.tCursor = self.tFromX( event.GetX() )
+		wx.CallAfter( self.prefetchZoomBitmap )
+		wx.CallAfter( self.OnLeaveWindow )
+		wx.CallAfter( self.Refresh )
+		self.SetCursor( wx.NullCursor )
+		event.Skip()
+		
+	def OnMouseWheel( self, event ):
+		if event.ControlDown() and not event.ShiftDown():
+			magnificationSave = self.magnification
+			magFactor = 0.90
+			if event.GetWheelRotation() < 0:
+				self.magnification /= magFactor
+			else:
+				self.magnification *= magFactor
+			
+			self.magnification = min( 5.0, max(1.0, self.magnification) )
+			if self.magnification != magnificationSave:
+				self.zoomBitmap = {}
+				wx.CallAfter( self.drawZoomPhoto, event.GetX(), event.GetY() )
+		
+		self.mouseWheelCallback( event )
+	
 	def OnMotion( self, event ):		
 		x, y, dragging = event.GetX(), event.GetY(), event.Dragging()
 		
@@ -311,8 +312,10 @@ class FinishStrip( wx.Panel ):
 		
 		if dragging and hasattr(self, 'xDragLast'):
 			dx = -(x - self.xDragLast)
-			self.tDrawStart += float(dx) / float(self.scaledPixelsPerSec)
 			self.xDragLast = x
+			self.tCursor = self.tFromX( x )
+			self.bitmapLeft = max(0, min(self.compositeBitmap.GetSize()[0]-winWidth, self.bitmapLeft+dx)) 
+			wx.CallAfter( self.scrollCallback, self.bitmapLeft )
 			wx.CallAfter( self.Refresh )
 		else:
 			self.drawZoomPhoto( x, y )
@@ -323,33 +326,29 @@ class FinishStrip( wx.Panel ):
 		self.xMotionLast = None
 		
 	def draw( self, dc ):
-		dc.SetBackground( wx.Brush(wx.Colour(128,128,150)) )
-		dc.Clear()
-		
 		self.xMotionLast = None
 		if not self.compositeBitmap:
 			return
 		
 		winWidth, winHeight = self.GetClientSize()
 		
-		xTimeLine = self.getXTimeLine()
-		
 		compositeDC = wx.MemoryDC( self.compositeBitmap )
-		xStart = int(self.tDrawStart * self.scaledPixelsPerSec)
 		dc.Blit(
 			0, 0, winWidth, self.photoHeight,
 			compositeDC,
-			xStart, 0,
+			self.bitmapLeft, 0,
 		)
 		compositeDC.SelectObject( wx.NullBitmap )
+		
+		xCursor = self.xFromT( self.tCursor )
 		
 		# Draw the current time at the timeline.
 		gc = wx.GraphicsContext.Create( dc )
 		
 		gc.SetPen( wx.Pen(contrastColour, 1) )
-		gc.StrokeLine( xTimeLine, 0, xTimeLine, winHeight )
+		gc.StrokeLine( xCursor, 0, xCursor, winHeight )
 		
-		text = self.formatTime( self.tDrawStart )
+		text = self.formatTime( self.tCursor )
 		fontHeight = max(5, winHeight//20)
 		font = wx.FontFromPixelSize(
 			wx.Size(0,fontHeight),
@@ -361,13 +360,13 @@ class FinishStrip( wx.Panel ):
 		
 		gc.SetPen( wx.Pen(wx.Colour(64,64,64), 1) )
 		gc.SetBrush( wx.Brush(wx.Colour(200,200,200)) )
-		rect = wx.Rect( xTimeLine - tWidth//2 - border, 0, tWidth + border*2, tHeight + border*2 )
+		rect = wx.Rect( xCursor - tWidth//2 - border, 0, tWidth + border*2, tHeight + border*2 )
 		gc.DrawRoundedRectangle( rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight(), border*1.5 )
 		rect.SetTop( winHeight - tHeight - border )
 		gc.DrawRoundedRectangle( rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight(), border*1.5 )
 		
-		gc.DrawText( text, xTimeLine - tWidth//2, border )
-		gc.DrawText( text, xTimeLine - tWidth//2, winHeight - tHeight - border/2 )
+		gc.DrawText( text, xCursor - tWidth//2, border )
+		gc.DrawText( text, xCursor - tWidth//2, winHeight - tHeight - border/2 )
 	
 	def OnPaint( self, event=None ):
 		self.draw( wx.PaintDC(self) )
@@ -388,12 +387,12 @@ class FinishStripPanel( wx.Panel ):
 	
 		self.leftToRight = True
 		self.imageQuality = wx.IMAGE_QUALITY_NORMAL
-		self.finish = FinishStrip( self, size=(0, 480), leftToRight=self.leftToRight, mouseWheelCallback=self.onMouseWheel )
-		self.finish.tDrawStartCallback = self.tDrawStartCallback
+		self.finish = FinishStrip( self, size=(0, 480), leftToRight=self.leftToRight,
+			mouseWheelCallback=self.onMouseWheel, scrollCallback=self.scrollCallback )
 		
-		self.timeSlider = wx.Slider( self, style=wx.SL_HORIZONTAL, minValue=0, maxValue=displayWidth )
-		self.timeSlider.SetPageSize( 1 )
-		self.timeSlider.Bind( wx.EVT_SCROLL, self.onChangeTime )
+		self.timeScrollbar = wx.ScrollBar( self, style=wx.SB_HORIZONTAL )
+		self.timeScrollbar.Bind( wx.EVT_SCROLL, self.onChangeTime )
+		self.Bind( wx.EVT_SIZE, self.onSize )
 		
 		minPixelsPerSecond, maxPixelsPerSecond = self.getSpeedPixelsPerSecondMinMax()
 		self.stretchSlider = wx.Slider( self, style=wx.SL_HORIZONTAL, minValue=minPixelsPerSecond, maxValue=maxPixelsPerSecond )
@@ -426,10 +425,6 @@ class FinishStripPanel( wx.Panel ):
 		self.copyToClipboard.Bind( wx.EVT_BUTTON, self.onCopyToClipboard )
 		
 		fgs = wx.FlexGridSizer( cols=2, vgap=0, hgap=0 )
-		
-		fgs.Add( wx.StaticText(self, label=u'{}'.format(_('Time Line (Click and Drag'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
-		fgs.Add( self.timeSlider, flag=wx.EXPAND )
-		
 		fgs.Add( wx.StaticText(self, label=u'{}'.format(_('Stretch (Mousewheel)'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		fgs.Add( self.stretchSlider, flag=wx.EXPAND )
 		
@@ -446,6 +441,7 @@ class FinishStripPanel( wx.Panel ):
 		hs.Add( self.copyToClipboard, flag=wx.ALIGN_CENTRE_VERTICAL )
 		
 		vs.Add( self.finish, 1, flag=wx.EXPAND )
+		vs.Add( self.timeScrollbar, flag=wx.EXPAND )
 		vs.Add( fgs, flag=wx.EXPAND|wx.ALL, border=4 )
 		vs.Add( hs, flag=wx.EXPAND|wx.ALL, border=4 )
 		
@@ -523,26 +519,35 @@ class FinishStripPanel( wx.Panel ):
 		wx.CallAfter( self.onChangeSpeed )
 	
 	def getPhotoTimeMinMax( self ):
-		tMin, tMax = self.finish.GetTimeMinMax()
-		# Widen the range so we can see a few seconds before and after.
-		if tMin is not None:
-			tMin -= 0.1
-			tMax += 0.1
-		return tMin, tMax
+		return self.finish.GetTimeMinMax()
+	
+	def onSize( self, event ):
+		self.adjustTimeScrollbar()
+		event.Skip()
+	
+	def adjustTimeScrollbar( self ):
+		thumbSize = self.finish.GetSize()[0]
+		bitmap = self.finish.GetBitmap()
+		range = bitmap.GetSize()[0] if bitmap else thumbSize
+		position = min(self.timeScrollbar.GetThumbPosition(), range-thumbSize)
+		pageSize = int(thumbSize * 0.9)
+		print 'adjustTimeScrollbar position={}, thumbSize={}, range={}, pageSize={}'.format(position, thumbSize, range, pageSize)
+		self.timeScrollbar.SetScrollbar( position, thumbSize, range, pageSize, True )
 		
+	def scrollCallback( self, position ):
+		thumbSize = self.finish.GetSize()[0]
+		bitmap = self.finish.GetBitmap()
+		print bitmap.GetSize()
+		range = bitmap.GetSize()[0] if bitmap else thumbSize
+		pageSize = int(thumbSize * 0.9)
+		position = max(0, min(position, range-thumbSize))
+		print 'scrollCallback position={}, thumbSize={}, range={}, pageSize={}'.format(position, thumbSize, range, pageSize)
+		self.timeScrollbar.SetScrollbar( position, thumbSize, range, pageSize, True )
+			
 	def onChangeTime( self, event ):
-		r = float(event.GetPosition()) / float(event.GetEventObject().GetMax())
-		tMin, tMax = self.getPhotoTimeMinMax()
-		if tMin is not None:
-			self.finish.SetDrawStartTime( tMin + (tMax - tMin) * r )
+		self.finish.SetBitmapLeft( event.GetPosition() )
 		event.Skip()
 				
-	def tDrawStartCallback( self, tDrawStart ):
-		tMin, tMax = self.getPhotoTimeMinMax()
-		if tMin is not None:
-			vMin, vMax = self.timeSlider.GetMin(), self.timeSlider.GetMax()
-			self.timeSlider.SetValue( int((tDrawStart - tMin) * float(vMax - vMin) / float(tMax - tMin)) )
-			
 	def SetLeftToRight( self, leftToRight ):
 		self.leftToRight = leftToRight
 		self.finish.SetLeftToRight( self.leftToRight )
@@ -564,20 +569,11 @@ class FinishStripPanel( wx.Panel ):
 	def GetPixelsPerSec( self ):
 		return self.stretchSlider.GetValue()
 		
-	def SetT( self, t ):
-		tMin, tMax = self.getPhotoTimeMinMax()
-		if tMin is None or tMax is None:
-			return
-		t = min(max(t, tMin), tMax)
-		vMin, vMax = self.timeSlider.GetMin(), self.timeSlider.GetMax()
-		self.timeSlider.SetValue( int((t - tMin) * float(vMax - vMin) / float(tMax - tMin)) )
-		self.finish.SetDrawStartTime( t )
-		
 	def SetTsJpgs( self, tsJpgs, ts, info={} ):
 		self.info = info
 		self.finish.SetTsJpgs( tsJpgs )
 		if ts and self.finish.tsFirst:
-			self.SetT( (ts-self.finish.tsFirst).total_seconds() )
+			self.finish.SetT( (ts-self.finish.tsFirst).total_seconds() )
 			
 	def Clear( self ):
 		self.info = {}
@@ -620,16 +616,20 @@ class FinishStripDialog( wx.Dialog ):
 		}
 
 if __name__ == '__main__':
+	from Database import Database
 	app = wx.App(False)
 	
 	displayWidth, displayHeight = wx.GetDisplaySize()
 	
-	width = int(displayWidth * 0.9)
-	height = 780
+	width = int(displayWidth * 0.8)
+	height = int(displayHeight * 0.8)
 	
 	mainWin = wx.Frame(None,title="FinishStrip", size=(width, height))
 	fs = FinishStripPanel( mainWin )
 	mainWin.Show()
+	
+	tsJpgs = Database().getLastPhotos( 90 )
+	fs.SetTsJpgs( tsJpgs, tsJpgs[len(tsJpgs)//2][0], info={} )
 	
 	#fsd = FinishStripDialog( mainWin )
 	#fsd.ShowModal()
