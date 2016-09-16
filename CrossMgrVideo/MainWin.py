@@ -28,6 +28,7 @@ from FrameCircBuf import FrameCircBuf
 from AddPhotoHeader import PilImageToWxImage
 from ScaledImage import ScaledImage
 from FinishStrip import FinishStripPanel
+from CleanDatabase import CleanDatabase
 
 imageWidth, imageHeight = 640, 480
 
@@ -169,7 +170,7 @@ class AutoWidthListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 		wx.ListCtrl.__init__(self, parent, ID, pos, size, style)
 		listmix.ListCtrlAutoWidthMixin.__init__(self)
 
-class MainWin( wx.Frame, listmix.ColumnSorterMixin ):
+class MainWin( wx.Frame ):
 	def __init__( self, parent, id = wx.ID_ANY, title='', size=(1000,800) ):
 		wx.Frame.__init__(self, parent, id, title, size=size)
 		
@@ -220,6 +221,9 @@ class MainWin( wx.Frame, listmix.ColumnSorterMixin ):
 		self.reset = wx.Button( self, label="Reset Camera" )
 		self.reset.Bind( wx.EVT_BUTTON, self.resetCamera )
 		
+		self.manage = wx.Button( self, label="Manage Database" )
+		self.manage.Bind( wx.EVT_BUTTON, self.manageDatabase )
+		
 		self.test = wx.Button( self, label="Test" )
 		self.test.Bind( wx.EVT_BUTTON, self.testEvent )
 		
@@ -227,7 +231,8 @@ class MainWin( wx.Frame, listmix.ColumnSorterMixin ):
 		cameraDeviceSizer.Add( self.cameraDeviceLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 		cameraDeviceSizer.Add( self.cameraDevice, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
 		cameraDeviceSizer.Add( self.reset, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
-		cameraDeviceSizer.Add( self.test, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
+		cameraDeviceSizer.Add( self.manage, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
+		cameraDeviceSizer.Add( self.test, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
 
 		#------------------------------------------------------------------------------
 		self.targetProcessingTimeLabel = wx.StaticText(self, label='Target Frames:')
@@ -286,16 +291,15 @@ class MainWin( wx.Frame, listmix.ColumnSorterMixin ):
 		self.eventList = AutoWidthListCtrl( self, style=wx.LC_REPORT|wx.BORDER_SUNKEN|wx.LC_SORT_ASCENDING )
 		
 		self.il = wx.ImageList(16, 16)
-		self.sm_rt = self.il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'SmallRightArrow.png'), wx.BITMAP_TYPE_PNG))
-		self.sm_close = self.il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'SmallUpArrow.png'), wx.BITMAP_TYPE_PNG ))
+		self.sm_check = self.il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'check_icon.png'), wx.BITMAP_TYPE_PNG))
+		self.sm_close = self.il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'flame_icon.png'), wx.BITMAP_TYPE_PNG ))
 		self.sm_up = self.il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'SmallUpArrow.png'), wx.BITMAP_TYPE_PNG))
 		self.sm_dn = self.il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'SmallDownArrow.png'), wx.BITMAP_TYPE_PNG ))
 		self.eventList.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
 		
-		headers = ['Time', 'Bib', 'Name', 'Team', 'Category']
+		headers = ['Time', 'Bib', 'Name', 'Team', 'Wave']
 		for i, h in enumerate(headers):
 			self.eventList.InsertColumn(i, h, wx.LIST_FORMAT_RIGHT if h == 'Bib' else wx.LIST_FORMAT_LEFT)
-		listmix.ColumnSorterMixin.__init__( self, len(headers) )
 		self.itemDataMap = {}
 		
 		self.eventList.Bind( wx.EVT_LIST_ITEM_SELECTED, self.onEventSelected )
@@ -366,17 +370,19 @@ class MainWin( wx.Frame, listmix.ColumnSorterMixin ):
 		tsPrev = (self.tsMax or datetime(2000,1,1))
 		self.tsMax = events[-1][0]
 		
-		for i, (ts,bib,first_name,last_name,team,category,race_name) in enumerate(events):
+		for i, (ts,bib,first_name,last_name,team,wave,race_name) in enumerate(events):
 			closeFinish = ((ts-tsPrev).total_seconds() < 0.3)
-			row = self.eventList.InsertImageStringItem( sys.maxint, ts.strftime('%H:%M:%S.%f')[:-3], self.sm_close if closeFinish else self.sm_rt )
-			self.eventList.SetStringItem( row, 1, unicode(bib) )
+			row = self.eventList.InsertImageStringItem( sys.maxint, ts.strftime('%H:%M:%S.%f')[:-3], self.sm_close if closeFinish else self.sm_check )
+			if closeFinish and row > 0:
+				self.eventList.SetItemImage( row-1, self.sm_close )
+			self.eventList.SetStringItem( row, 1, u'{:>6}'.format(bib) )
 			name = u', '.join( n for n in (last_name, first_name) if n )
 			self.eventList.SetStringItem( row, 2, name )
 			self.eventList.SetStringItem( row, 3, team )
-			self.eventList.SetStringItem( row, 4, category )
+			self.eventList.SetStringItem( row, 4, wave )
 			
 			self.eventList.SetItemData( row, row )
-			self.itemDataMap[row] = (ts,bib,name,team,category)
+			self.itemDataMap[row] = (ts,bib,name,team,wave,race_name,first_name,last_name)
 			tsPrev = ts
 			
 		for i in xrange(5):
@@ -408,9 +414,10 @@ class MainWin( wx.Frame, listmix.ColumnSorterMixin ):
 		
 	def onEventSelected( self, event ):
 		item = event.m_itemIndex
-		data = self.eventList.GetItemData( item )
-		ts = self.itemDataMap[data][0]
-		self.finishStrip.SetTsJpgs( self.db.getPhotos(ts-tdCaptureAfter, ts+tdCaptureBefore), ts )
+		data = self.itemDataMap[self.eventList.GetItemData(item)]
+		info = { a:data[i] for i, a in enumerate(('ts','bib','name','team','wave','raceName','firstName','lastName')) }
+		ts = data[0]
+		self.finishStrip.SetTsJpgs( self.db.getPhotos(ts-tdCaptureAfter, ts+tdCaptureBefore), ts, info )
 		
 	def showMessages( self ):
 		while 1:
@@ -563,7 +570,15 @@ class MainWin( wx.Frame, listmix.ColumnSorterMixin ):
 		
 		self.setCameraDeviceNum( cameraDeviceNum )
 		self.grabFrameOK = self.startCamera()
-		
+	
+	def manageDatabase( self, event ):
+		dlg = CleanDatabase( self, self.db.getsize(), title='Manage Database' )
+		if dlg.ShowModal() == wx.ID_OK:
+			tsUpper = dlg.GetDate()
+			self.db.cleanBefore( tsUpper )
+			wx.CallAfter( self.refreshEvents, True )
+		dlg.Destroy()
+	
 	def setCameraDeviceNum( self, num ):
 		self.cameraDevice.SetLabel( unicode(num) )
 		

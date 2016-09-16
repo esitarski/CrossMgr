@@ -59,6 +59,12 @@ class Database( object ):
 			
 		self.lastUpdate = now() - timedelta(seconds=self.UpdateSeconds)
 
+	def getsize( self ):
+		try:
+			return os.path.getsize( self.fname )
+		except:
+			return None
+		
 	def write( self, tsEvents=None, tsJpgs=None ):
 		tsJpgs = [(ts, jpg) for ts, jpg in tsJpgs if ts not in self.photoTsCache]
 		
@@ -96,6 +102,14 @@ class Database( object ):
 	
 	def isDup( self, ts ):
 		return ts in self.photoTsCache
+		
+	def cleanBefore( self, tsUpper ):
+		with self.conn:
+			self.conn.execute( 'DELETE from photo WHERE ts < ?', (tsUpper,) )
+			self.conn.execute( 'DELETE from event WHERE ts < ?', (tsUpper,) )
+		with self.conn:
+			self.conn.execute( 'VACUUM' )
+		
 		
 def DBWriter( q ):
 	db = Database()
@@ -136,14 +150,19 @@ def DBWriter( q ):
 	flush()
 			
 if __name__ == '__main__':
+	'''
 	try:
 		os.remove( os.path.join( os.path.expanduser("~"), 'CrossMgrVideo.sqlite3' ) )
 	except:
 		pass
+	'''
 
 	d = Database()
 	
-	print d.getLastTimestamp(datetime(2000,1,1), datetime(2200,1,1))
+	ts = d.getLastTimestamp(datetime(2000,1,1), datetime(2200,1,1))
+	print ts
+	
+	d.cleanBefore( ts )
 	
 	'''
 	tsEvents = [((time.sleep(0.1) and False) or now(), 100+i, u'', u'', u'', u'', u'') for i in xrange(100)]

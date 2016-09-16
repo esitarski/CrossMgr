@@ -86,10 +86,8 @@ def setDrawResources( dc, w, h ):
 	drawResources.fadeLight = LightColour( drawResources.fadeDark, 50 )
 	drawResources.borderColour = wx.Colour( 71+50, 75+50, 122+50 )
 
-def AddPhotoHeader( image, bib=None, time=None, raceSeconds=None, firstNameTxt=u'', lastNameTxt=u'', teamTxt=u'', raceNameTxt=u'' ):
+def AddPhotoHeader( bitmap, bib=None, ts=None, raceSeconds=None, firstName=u'', lastName=u'', team=u'', raceName=u'' ):
 	global drawResources
-	
-	bitmap = wx.BitmapFromImage( image )
 	
 	w, h = bitmap.GetSize()
 	dcMemory = wx.MemoryDC( bitmap )
@@ -99,16 +97,17 @@ def AddPhotoHeader( image, bib=None, time=None, raceSeconds=None, firstNameTxt=u
 		setDrawResources( dc, w, h )
 	
 	bibTxt = u'{}'.format(bib) if bib else u''
-	if time and raceSeconds:
-		timeTxt = _('{}  {}').format(
-			formatTime(raceSeconds),
-			time.strftime('%Y-%m-%d %H:%M:%S'),
-		)
+	if ts and raceSeconds:
+		tsTxt = u'{}  {}'.format( formatTime(raceSeconds), ts.strftime('%Y-%m-%d %H:%M:%S') )
+	elif ts:
+		tsTxt = u'{}'.format( ts.strftime('%Y-%m-%d %H:%M:%S') )
+	elif raceSeconds:
+		tsTxt = u'{}'.format( formatTime(raceSeconds) )
 	else:
-		timeTxt = u''
-	if timeTxt.startswith('0'):
-		timeTxt = timeTxt[1:]
-	nameTxt = u' '.join( n for n in [firstNameTxt, lastNameTxt] if n )
+		tsTxt = u''
+	if tsTxt.startswith('0'):
+		tsTxt = tsTxt[1:]
+	nameTxt = u' '.join( n for n in [firstName, lastName] if n )
 	
 	frameWidth = 4
 	borderWidth = 1
@@ -157,9 +156,9 @@ def AddPhotoHeader( image, bib=None, time=None, raceSeconds=None, firstNameTxt=u
 	x += dc.GetTextExtent(nameTxt)[0] + spaceWidth
 	remainingWidth = w - x - spaceWidth - borderWidth
 	dc.SetFont( drawResources.font )
-	teamTxtWidth = dc.GetTextExtent(teamTxt)[0]
-	if teamTxtWidth < remainingWidth:
-		textInRect( teamTxt, x, y, remainingWidth, lineHeight, drawResources.font, wx.BLACK, alignment=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+	teamWidth = dc.GetTextExtent(team)[0]
+	if teamWidth < remainingWidth:
+		textInRect( team, x, y, remainingWidth, lineHeight, drawResources.font, wx.BLACK, alignment=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 	
 	y += lineHeight
 	
@@ -167,16 +166,16 @@ def AddPhotoHeader( image, bib=None, time=None, raceSeconds=None, firstNameTxt=u
 	shadedRect( 0, y, w, lineHeight )
 	dc.DrawLine( 0, y+lineHeight, w, y+lineHeight )
 	
-	# Draw the time, race time and raceName.
+	# Draw the ts, race ts and raceName.
 	dc.SetFont( drawResources.font )
 	x = borderWidth
 	x += xText + frameWidth + bibSpaceWidth
-	textInRect( timeTxt, x, y, w-x, lineHeight, drawResources.font, wx.BLACK, alignment=wx.ALIGN_LEFT|wx.ALIGN_CENTRE_VERTICAL )
-	x += dc.GetTextExtent(timeTxt)[0] + spaceWidth
+	textInRect( tsTxt, x, y, w-x, lineHeight, drawResources.font, wx.BLACK, alignment=wx.ALIGN_LEFT|wx.ALIGN_CENTRE_VERTICAL )
+	x += dc.GetTextExtent(tsTxt)[0] + spaceWidth
 	remainingWidth = w - x - spaceWidth - borderWidth
-	raceNameTxtWidth = dc.GetTextExtent(raceNameTxt)[0]
-	if raceNameTxtWidth < remainingWidth:
-		textInRect( raceNameTxt, x, y, remainingWidth, lineHeight, drawResources.font, wx.BLACK, alignment=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+	raceNameWidth = dc.GetTextExtent(raceName)[0]
+	if raceNameWidth < remainingWidth:
+		textInRect( raceName, x, y, remainingWidth, lineHeight, drawResources.font, wx.BLACK, alignment=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 	
 	# Draw the bitmap.
 	dc.DrawBitmap( drawResources.bitmap, frameWidth, frameWidth )

@@ -59,7 +59,6 @@ class ScaledImage( wx.Panel ):
 		self.SetImage( bitmap.ConvertToImage() )
 		
 	def SetTestImage( self ):
-		# Return a test image.
 		width, height = self.GetSize()
 		bitmap = wx.EmptyBitmap( width, height )
 		dc = wx.MemoryDC()

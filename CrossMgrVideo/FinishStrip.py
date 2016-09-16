@@ -7,6 +7,7 @@ import datetime
 import cStringIO as StringIO
 from bisect import bisect_left
 from MakeComposite import MakeComposite
+from AddPhotoHeader import AddPhotoHeader
 
 def _( s ):
 	return s
@@ -378,6 +379,7 @@ class FinishStripPanel( wx.Panel ):
 		super(FinishStripPanel, self).__init__( parent, id, size=size, style=style )
 		
 		self.fps = fps
+		self.info = {}
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		
@@ -419,18 +421,18 @@ class FinishStripPanel( wx.Panel ):
 		self.imageQualitySelect.SetSelection( 1 if self.imageQuality == wx.IMAGE_QUALITY_HIGH else 0 )
 		self.imageQualitySelect.Bind( wx.EVT_RADIOBOX, self.onImageQuality )
 
-		self.copyToClipboard = wx.Button( self, label=_('Copy to Clipboard') )
+		self.copyToClipboard = wx.Button( self, label=_('Copy Finish Strip to Clipboard') )
 		self.copyToClipboard.Bind( wx.EVT_BUTTON, self.onCopyToClipboard )
 		
 		fgs = wx.FlexGridSizer( cols=2, vgap=0, hgap=0 )
 		
-		fgs.Add( wx.StaticText(self, label=u'{}'.format(_('Click and Drag for Time'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		fgs.Add( wx.StaticText(self, label=u'{}'.format(_('Time Line (Click and Drag'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		fgs.Add( self.timeSlider, flag=wx.EXPAND )
 		
-		fgs.Add( wx.StaticText(self, label=u'{}'.format(_('Mousewheel to Stretch'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		fgs.Add( wx.StaticText(self, label=u'{}'.format(_('Stretch (Mousewheel)'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		fgs.Add( self.stretchSlider, flag=wx.EXPAND )
 		
-		fgs.Add( wx.StaticText(self, label=u'{}:'.format(_('Ctrl+Mousewheel to Zoom'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		fgs.Add( wx.StaticText(self, label=u'{}:'.format(_('Zoom (Ctrl+Mousewheel)'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		fgs.Add( self.zoomSlider, flag=wx.EXPAND )
 		
 		fgs.AddGrowableCol( 1, 1 )
@@ -475,6 +477,12 @@ class FinishStripPanel( wx.Panel ):
 			return
 			
 		if wx.TheClipboard.Open():
+			'''
+			bm = wx.BitmapFromImage( wx.ImageFromBitmap(bm) )
+			params = { a:self.info.get(a, u'') for a in ('ts', 'bib', 'firstName', 'lastName', 'team', 'raceName') }
+			params['bitmap'] = bm
+			AddPhotoHeader( **params )
+			'''
 			bitmapData = wx.BitmapDataObject()
 			bitmapData.SetBitmap( bm )
 			wx.TheClipboard.SetData( bitmapData )
@@ -564,7 +572,8 @@ class FinishStripPanel( wx.Panel ):
 		self.timeSlider.SetValue( int((t - tMin) * float(vMax - vMin) / float(tMax - tMin)) )
 		self.finish.SetDrawStartTime( t )
 		
-	def SetTsJpgs( self, tsJpgs, ts ):
+	def SetTsJpgs( self, tsJpgs, ts, info={} ):
+		self.info = info
 		self.finish.SetTsJpgs( tsJpgs )
 		if ts and self.finish.tsFirst:
 			self.SetT( (ts-self.finish.tsFirst).total_seconds() )
