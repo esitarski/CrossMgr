@@ -16,9 +16,9 @@ gds = [
 for googleDrive in gds:
 	if os.path.exists(googleDrive):
 		break
-googleDrive = os.path.join( googleDrive, 'CrossMgrCamera' )
+googleDrive = os.path.join( googleDrive, 'CrossMgrVideo' )
 
-distDir = r'dist\CrossMgrCamera'
+distDir = r'dist\CrossMgrVideo'
 distDirParent = os.path.dirname(distDir)
 if os.path.exists(distDirParent):
 	shutil.rmtree( distDirParent )
@@ -28,8 +28,8 @@ if not os.path.exists( distDirParent ):
 subprocess.call( [
 	'pyinstaller',
 	
-	'CrossMgrCamera.pyw',
-	'--icon=images\CrossMgrCamera.ico',
+	'CrossMgrVideo.pyw',
+	'--icon=images\CrossMgrVideo.ico',
 	'--clean',
 	'--windowed',
 	'--noconfirm',
@@ -89,7 +89,7 @@ def make_inno_version():
 		for k, v in setup.iteritems():
 			f.write( '{}={}\n'.format(k,v) )
 make_inno_version()
-cmd = '"' + inno + '" ' + 'CrossMgrCamera.iss'
+cmd = '"' + inno + '" ' + 'CrossMgrVideo.iss'
 print cmd
 os.system( cmd )
 
@@ -97,14 +97,14 @@ os.system( cmd )
 from Version import AppVerName
 vNum = AppVerName.split()[1]
 vNum = vNum.replace( '.', '_' )
-newExeName = 'CrossMgrCamera_Setup_v' + vNum + '.exe'
+newExeName = 'CrossMgrVideo_Setup_v' + vNum + '.exe'
 
 try:
 	os.remove( 'install\\' + newExeName )
 except:
 	pass
 	
-shutil.copy( 'install\\CrossMgrCamera_Setup.exe', 'install\\' + newExeName )
+shutil.copy( 'install\\CrossMgrVideo_Setup.exe', 'install\\' + newExeName )
 print 'executable copied to: ' + newExeName
 
 # Create comprssed executable.

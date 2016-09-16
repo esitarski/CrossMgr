@@ -133,17 +133,17 @@ class FinishStrip( wx.Panel ):
 	
 	def SetTsJpgs( self, tsJpgs ):
 		self.zoomBitmap = {}
+		self.tsJpgs = (tsJpgs or [])
+		self.times = []
+		self.jpg = {}
 		
 		if not tsJpgs:
-			self.compositeBitmap = None
 			self.tsFirst = datetime.datetime.now()
-			self.tsJpgs = []
+			self.compositeBitmap = None
+			self.Refresh()
 			return
 		
 		self.tsFirst = tsJpgs[0][0]
-		self.tsJpgs = tsJpgs
-		self.times = []
-		self.jpg = {}
 		for ts, jpg in tsJpgs:
 			t = (ts-self.tsFirst).total_seconds()
 			self.times.append( t )
@@ -260,12 +260,13 @@ class FinishStrip( wx.Panel ):
 		widthView, heightView = int(winHeight*0.95), int(winHeight*0.95)
 		
 		widthMagnified, heightMagnified = int(photoWidth * self.magnification), int(photoHeight * self.magnification)
+		scaledPixelsPerSec = self.scale * self.pixelsPerSec
 		
 		xTimeLine = self.getXTimeLine()
 		
-		leftToRightSign = (1,-1)[int(self.leftToRight)]
+		leftToRightSign = (-1.0,1.0)[int(self.leftToRight)]
 		xEdge = x + (photoWidth * leftToRightSign)//2
-		t = self.tDrawStart + (xEdge - xTimeLine) / float(self.scaledPixelsPerSec) * leftToRightSign
+		t = self.tDrawStart + (xEdge - xTimeLine) / scaledPixelsPerSec * leftToRightSign
 		
 		tbm = self.times[bisect_left(self.times, t, hi=len(self.times)-1)]
 		
@@ -577,6 +578,10 @@ class FinishStripPanel( wx.Panel ):
 		self.finish.SetTsJpgs( tsJpgs )
 		if ts and self.finish.tsFirst:
 			self.SetT( (ts-self.finish.tsFirst).total_seconds() )
+			
+	def Clear( self ):
+		self.info = {}
+		self.finish.SetTsJpgs( [] )
 
 class FinishStripDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.MAXIMIZE_BOX|wx.MINIMIZE_BOX,

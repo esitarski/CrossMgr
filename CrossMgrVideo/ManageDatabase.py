@@ -1,17 +1,22 @@
 import wx
 import datetime
 
-class CleanDatabase( wx.Dialog ):
-	def __init__( self, parent, dbSize, id=wx.ID_ANY, title='', size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE ):
-		super(CleanDatabase, self).__init__( parent, id, title=title, size=size, style=style )
+class ManageDatabase( wx.Dialog ):
+	def __init__( self, parent, dbSize, dbName, id=wx.ID_ANY, title='', size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE ):
+		super(ManageDatabase, self).__init__( parent, id, title=title, size=size, style=style )
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
-		vs.Add( wx.StaticText(self, label='Current Database Size: {:.1f} meg'.format(dbSize/1048576.0)),
+		
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( wx.StaticText(self, label='Database File:'), flag=wx.ALIGN_CENTER_VERTICAL )
+		hs.Add( wx.TextCtrl(self, value=dbName, style=wx.TE_READONLY, size=(300,-1)), flag=wx.LEFT, border=4 )
+		vs.Add( hs, flag=wx.ALL, border=4 )
+			
+		vs.Add( wx.StaticText(self, label='Database Size: {:.1f} meg'.format(dbSize/1048576.0)),
 			flag=wx.ALL, border=4 )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		
-		hs.Add( wx.StaticText(self, label='Delete all data before') )
+		hs.Add( wx.StaticText(self, label='Delete all data before'), flag=wx.ALIGN_CENTER_VERTICAL )
 		tQuery = datetime.datetime.now() - datetime.timedelta(days=7)
 		self.date = wx.DatePickerCtrl(
 			self,
@@ -34,7 +39,7 @@ class CleanDatabase( wx.Dialog ):
 		btnsizer.AddButton(btn)
 		btnsizer.Realize()
 
-		vs.Add( btnsizer, flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=5 )
+		vs.Add( btnsizer, flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.EXPAND, border=5 )
 
 		self.SetSizer(vs)
 		vs.Fit(self)
@@ -45,10 +50,10 @@ class CleanDatabase( wx.Dialog ):
 
 if __name__ == '__main__':
 	app = wx.App(False)
-	mainWin = wx.Frame(None,title="CleanDatabase", size=(200,100))
+	mainWin = wx.Frame(None,title="ManageDatabase", size=(200,100))
 	mainWin.Show()
 	
-	dlg = CleanDatabase( mainWin, 1000000 )
+	dlg = ManageDatabase( mainWin, 1000000, 'TestDatabase' )
 	print dlg.ShowModal() == wx.ID_OK
 	dlg.Destroy()
 	

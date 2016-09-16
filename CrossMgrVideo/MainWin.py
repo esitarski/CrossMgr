@@ -5,21 +5,19 @@ import os
 import re
 import time
 import math
+import threading
+import socket
+import atexit
+import time
+import platform
+from Queue import Queue, Empty, Full
+
 from datetime import datetime, timedelta
 
 HOST = 'localhost'
 PORT = 54111
 
 now = datetime.now
-
-import sys
-import threading
-import socket
-import atexit
-import time
-import threading
-import platform
-from Queue import Queue, Empty, Full
 
 import Utils
 from SocketListener import SocketListener
@@ -28,7 +26,7 @@ from FrameCircBuf import FrameCircBuf
 from AddPhotoHeader import PilImageToWxImage
 from ScaledImage import ScaledImage
 from FinishStrip import FinishStripPanel
-from CleanDatabase import CleanDatabase
+from ManageDatabase import ManageDatabase
 
 imageWidth, imageHeight = 640, 480
 
@@ -182,7 +180,7 @@ class MainWin( wx.Frame ):
 		
 		self.tFrameCount = self.tLaunch = self.tLast = now()
 		self.frameCount = 0
-		self.frameCountUpdate = self.fps * 2
+		self.frameCountUpdate = int(self.fps * 2)
 		self.fpsActual = 0.0
 		self.fpt = timedelta(seconds=0)
 		
@@ -190,7 +188,7 @@ class MainWin( wx.Frame ):
 		
 		self.fcb = FrameCircBuf( self.bufferSecs * self.fps )
 		
-		self.config = wx.Config(appName="CrossMgrCamera",
+		self.config = wx.Config(appName="CrossMgrVideo",
 						vendorName="SmartCyclingSolutions",
 						style=wx.CONFIG_USE_LOCAL_FILE)
 		
@@ -250,7 +248,7 @@ class MainWin( wx.Frame ):
 		self.availableMsPerFrame.SetFont( boldFont )
 		self.availableMsPerFrameUnit = wx.StaticText(self, label='ms')
 		
-		self.frameProcessingTimeLabel = wx.StaticText(self, label='Actual Frame Processing:')
+		self.frameProcessingTimeLabel = wx.StaticText(self, label='Frame Processing Time:')
 		self.frameProcessingTime = wx.StaticText(self, label='20')
 		self.frameProcessingTime.SetFont( boldFont )
 		self.frameProcessingTimeUnit = wx.StaticText(self, label='ms')
@@ -417,7 +415,7 @@ class MainWin( wx.Frame ):
 		data = self.itemDataMap[self.eventList.GetItemData(item)]
 		info = { a:data[i] for i, a in enumerate(('ts','bib','name','team','wave','raceName','firstName','lastName')) }
 		ts = data[0]
-		self.finishStrip.SetTsJpgs( self.db.getPhotos(ts-tdCaptureAfter, ts+tdCaptureBefore), ts, info )
+		self.finishStrip.SetTsJpgs( self.db.getPhotos(ts-tdCaptureBefore, ts+tdCaptureAfter), ts, info )
 		
 	def showMessages( self ):
 		while 1:
@@ -468,7 +466,7 @@ class MainWin( wx.Frame ):
 		return True
 	
 	def stopCapture( self ):
-		pass
+		self.dbQ.put( ('flush',) )
 	
 	def frameLoop( self, event=None ):
 		if not self.grabFrameOK:
@@ -494,20 +492,25 @@ class MainWin( wx.Frame ):
 			return
 		
 		image = PilImageToWxImage( image )
+		
+		# Add the image to the circular buffer.
 		self.fcb.append( tNow, image )
+		
+		# Update the monitor screen.
 		if self.frameCount & 3 == 0:
 			wx.CallAfter( self.primaryImage.SetImage, image )
 		
-		# Record images as long as the timer is running.
+		# Record images if the timer is running.
 		if self.captureTimer.IsRunning():
 			self.dbQ.put( ('photo', tNow, image) )
-			
+		
+		# Periodically update events.
 		if (tNow - self.lastEventRefresh).total_seconds() > 5.0:
 			self.refreshEvents()
 			self.lastEventRefresh = tNow
 			return
 		
-		# Process any event messages
+		# Process event messages
 		while 1:
 			try:
 				message = self.requestQ.get(False)
@@ -572,10 +575,11 @@ class MainWin( wx.Frame ):
 		self.grabFrameOK = self.startCamera()
 	
 	def manageDatabase( self, event ):
-		dlg = CleanDatabase( self, self.db.getsize(), title='Manage Database' )
+		dlg = ManageDatabase( self, self.db.getsize(), self.db.fname, title='Manage Database' )
 		if dlg.ShowModal() == wx.ID_OK:
 			tsUpper = dlg.GetDate()
 			self.db.cleanBefore( tsUpper )
+			wx.CallAfter( self.finishStrip, Clear )
 			wx.CallAfter( self.refreshEvents, True )
 		dlg.Destroy()
 	
@@ -620,7 +624,7 @@ def MainLoop():
 	mainWin = MainWin( None, title=AppVerName, size=(1600,864) )
 	
 	dataDir = Utils.getHomeDir()
-	redirectFileName = os.path.join(dataDir, 'CrossMgrCamera.log')
+	redirectFileName = os.path.join(dataDir, 'CrossMgrVideo.log')
 	
 	# Set up the log file.  Otherwise, show errors on the screen.
 	if __name__ == '__main__':
@@ -650,7 +654,7 @@ def MainLoop():
 
 	# Set the upper left icon.
 	try:
-		icon = wx.Icon( os.path.join(Utils.getImageFolder(), 'CrossMgrCamera.ico'), wx.BITMAP_TYPE_ICO )
+		icon = wx.Icon( os.path.join(Utils.getImageFolder(), 'CrossMgrVideo.ico'), wx.BITMAP_TYPE_ICO )
 		mainWin.SetIcon( icon )
 	except:
 		pass
