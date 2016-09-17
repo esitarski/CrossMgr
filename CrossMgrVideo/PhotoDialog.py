@@ -94,12 +94,16 @@ class PhotoDialog( wx.Dialog ):
 
 		btn = wx.Button(self, wx.ID_CLOSE)
 		btnsizer.Add(btn, flag=wx.LEFT, border=4)
+		btn.Bind( wx.EVT_BUTTON, self.onClose )
 
 		vs.Add( btnsizer, flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.EXPAND|wx.ALIGN_CENTRE, border=5 )
 
 		self.SetSizer(vs)
 		vs.Fit(self)
-		
+	
+	def onClose( self, event ):
+		self.EndModal( wx.ID_OK )
+	
 	def onPrint( self, event ):
 		PrintPhoto( self, self.scaledImage.GetImage() )
 		

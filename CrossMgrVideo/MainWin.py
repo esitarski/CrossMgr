@@ -187,8 +187,8 @@ class MainWin( wx.Frame ):
 		self.frameCountUpdate = int(self.fps * 2)
 		self.fpsActual = 0.0
 		self.fpt = timedelta(seconds=0)
-		self.iEventSelect = None
-		self.eventInfo = None
+		self.iTriggerSelect = None
+		self.triggerInfo = None
 		
 		self.captureTimer = wx.CallLater( 10, self.stopCapture )
 		
@@ -229,7 +229,7 @@ class MainWin( wx.Frame ):
 		self.manage.Bind( wx.EVT_BUTTON, self.manageDatabase )
 		
 		self.test = wx.Button( self, label="Test" )
-		self.test.Bind( wx.EVT_BUTTON, self.testEvent )
+		self.test.Bind( wx.EVT_BUTTON, self.onTest )
 		
 		cameraDeviceSizer = wx.BoxSizer( wx.HORIZONTAL )
 		cameraDeviceSizer.Add( self.cameraDeviceLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
@@ -294,7 +294,7 @@ class MainWin( wx.Frame ):
 		self.primaryImage.SetTestImage()
 		
 		hsDate = wx.BoxSizer( wx.HORIZONTAL )
-		hsDate.Add( wx.StaticText(self, label='Show Timestamps for'), flag=wx.ALIGN_CENTER_VERTICAL )
+		hsDate.Add( wx.StaticText(self, label='Show Triggers for'), flag=wx.ALIGN_CENTER_VERTICAL )
 		tQuery = now()
 		self.date = wx.DatePickerCtrl(
 			self,
@@ -307,28 +307,28 @@ class MainWin( wx.Frame ):
 		self.tsQueryLower = datetime(tQuery.year, tQuery.month, tQuery.day)
 		self.tsQueryUpper = self.tsQueryLower + timedelta(days=1)
 		
-		self.eventList = AutoWidthListCtrl( self, style=wx.LC_REPORT|wx.BORDER_SUNKEN|wx.LC_SORT_ASCENDING )
+		self.triggerList = AutoWidthListCtrl( self, style=wx.LC_REPORT|wx.BORDER_SUNKEN|wx.LC_SORT_ASCENDING )
 		
 		self.il = wx.ImageList(16, 16)
 		self.sm_check = self.il.Add( Utils.GetPngBitmap('check_icon.png'))
 		self.sm_close = self.il.Add( Utils.GetPngBitmap('flame_icon.png'))
 		self.sm_up = self.il.Add( Utils.GetPngBitmap('SmallUpArrow.png'))
 		self.sm_dn = self.il.Add( Utils.GetPngBitmap('SmallDownArrow.png'))
-		self.eventList.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
+		self.triggerList.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
 		
 		headers = ['Time', 'Bib', 'Name', 'Team', 'Wave']
 		for i, h in enumerate(headers):
-			self.eventList.InsertColumn(i, h, wx.LIST_FORMAT_RIGHT if h == 'Bib' else wx.LIST_FORMAT_LEFT)
+			self.triggerList.InsertColumn(i, h, wx.LIST_FORMAT_RIGHT if h == 'Bib' else wx.LIST_FORMAT_LEFT)
 		self.itemDataMap = {}
 		
-		self.eventList.Bind( wx.EVT_LIST_ITEM_SELECTED, self.onEventSelected )
+		self.triggerList.Bind( wx.EVT_LIST_ITEM_SELECTED, self.onTriggerSelected )
 		
 		self.messagesText = wx.TextCtrl( self, style=wx.TE_READONLY|wx.TE_MULTILINE|wx.HSCROLL, size=(250,-1) )
 		self.messageManager = MessageManager( self.messagesText )
 		
-		vsEvents = wx.BoxSizer( wx.VERTICAL )
-		vsEvents.Add( hsDate )
-		vsEvents.Add( self.eventList, 1, flag=wx.EXPAND|wx.TOP, border=2)
+		vsTriggers = wx.BoxSizer( wx.VERTICAL )
+		vsTriggers.Add( hsDate )
+		vsTriggers.Add( self.triggerList, 1, flag=wx.EXPAND|wx.TOP, border=2)
 		
 		#------------------------------------------------------------------------------------------------
 		mainSizer.Add( self.finishStrip, flag=wx.EXPAND )
@@ -336,7 +336,7 @@ class MainWin( wx.Frame ):
 		border = 2
 		row1Sizer = wx.BoxSizer( wx.HORIZONTAL )
 		row1Sizer.Add( self.primaryImage, flag=wx.ALL, border=border )
-		row1Sizer.Add( vsEvents, 1, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.EXPAND, border=border )
+		row1Sizer.Add( vsTriggers, 1, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.EXPAND, border=border )
 		row1Sizer.Add( self.messagesText, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.EXPAND, border=border )
 		mainSizer.Add( row1Sizer, 1, flag=wx.EXPAND )
 		
@@ -364,66 +364,66 @@ class MainWin( wx.Frame ):
 		ms = int(1000 * self.frameDelay * delayAdjustment)
 		self.timer.Start( ms, False )
 		
-		wx.CallLater( 300, self.refreshEvents )
+		wx.CallLater( 300, self.refreshTriggers )
 	
 	def onQueryDateChanged( self, event ):
 		v = self.date.GetValue()
 		self.tsQueryLower = datetime( v.GetYear(), v.GetMonth() + 1, v.GetDay() )
 		self.tsQueryUpper = self.tsQueryLower + timedelta( days=1 )
-		self.refreshEvents( True )
+		self.refreshTriggers( True )
 	
 	def GetListCtrl( self ):
-		return self.eventList
+		return self.triggerList
 	
 	def GetSortImages(self):
 		return (self.sm_dn, self.sm_up)
 	
 	def getItemData( self, i ):
-		data = self.eventList.GetItemData( i )
+		data = self.triggerList.GetItemData( i )
 		return self.itemDataMap[data]
 	
-	def refreshEvents( self, replace=False ):
+	def refreshTriggers( self, replace=False ):
 		tNow = now()
-		self.lastEventRefresh = tNow
+		self.lastTriggerRefresh = tNow
 		
 		if replace:
 			tsLower = self.tsQueryLower
 			tsUpper = self.tsQueryUpper
-			self.eventList.DeleteAllItems()
+			self.triggerList.DeleteAllItems()
 			self.itemDataMap = {}
 			self.tsMax = None
-			self.iEventSelect = None
-			self.eventInfo = {}
+			self.iTriggerSelect = None
+			self.triggerInfo = {}
 		else:
 			tsLower = (self.tsMax or datetime(tNow.year, tNow.month, tNow.day)) + timedelta(seconds=0.00001)
 			tsUpper = tsLower + timedelta(days=1)
 
-		events = self.db.getEvents( tsLower, tsUpper )
-		if not events:
+		triggers = self.db.getTriggers( tsLower, tsUpper )
+		if not triggers:
 			return
 			
 		tsPrev = (self.tsMax or datetime(2000,1,1))
-		self.tsMax = events[-1][0]
+		self.tsMax = triggers[-1][0]
 		
-		for i, (ts,bib,first_name,last_name,team,wave,race_name) in enumerate(events):
+		for i, (ts,bib,first_name,last_name,team,wave,race_name) in enumerate(triggers):
 			closeFinish = ((ts-tsPrev).total_seconds() < 0.3)
-			row = self.eventList.InsertImageStringItem( sys.maxint, ts.strftime('%H:%M:%S.%f')[:-3], self.sm_close if closeFinish else self.sm_check )
+			row = self.triggerList.InsertImageStringItem( sys.maxint, ts.strftime('%H:%M:%S.%f')[:-3], self.sm_close if closeFinish else self.sm_check )
 			if closeFinish and row > 0:
-				self.eventList.SetItemImage( row-1, self.sm_close )
-			self.eventList.SetStringItem( row, 1, u'{:>6}'.format(bib) )
+				self.triggerList.SetItemImage( row-1, self.sm_close )
+			self.triggerList.SetStringItem( row, 1, u'{:>6}'.format(bib) )
 			name = u', '.join( n for n in (last_name, first_name) if n )
-			self.eventList.SetStringItem( row, 2, name )
-			self.eventList.SetStringItem( row, 3, team )
-			self.eventList.SetStringItem( row, 4, wave )
+			self.triggerList.SetStringItem( row, 2, name )
+			self.triggerList.SetStringItem( row, 3, team )
+			self.triggerList.SetStringItem( row, 4, wave )
 			
-			self.eventList.SetItemData( row, row )
+			self.triggerList.SetItemData( row, row )
 			self.itemDataMap[row] = (ts,bib,name,team,wave,race_name,first_name,last_name)
 			tsPrev = ts
 			
 		for i in xrange(5):
-			self.eventList.SetColumnWidth(i, wx.LIST_AUTOSIZE)
+			self.triggerList.SetColumnWidth(i, wx.LIST_AUTOSIZE)
 
-		self.eventList.EnsureVisible( self.eventList.GetItemCount() - 1 )
+		self.triggerList.EnsureVisible( self.triggerList.GetItemCount() - 1 )
 
 	def Start( self ):
 		self.messageQ.put( ('', '************************************************') )
@@ -432,7 +432,7 @@ class MainWin( wx.Frame ):
 		self.startThreads()
 		self.startCamera()
 
-	def testEvent( self, event ):
+	def onTest( self, event ):
 		self.testCount = getattr(self, 'testCount', 0) + 1
 		self.requestQ.put( {
 				'time':now(),
@@ -445,7 +445,7 @@ class MainWin( wx.Frame ):
 			}
 		)
 		wx.CallLater( 500, self.dbQ.put, ('flush',) )
-		wx.CallLater( int(100+1000*int(tdCaptureBefore.total_seconds())), self.refreshEvents )
+		wx.CallLater( int(100+1000*int(tdCaptureBefore.total_seconds())), self.refreshTriggers )
 	
 	def getPhoto( self ):
 		jpg = self.finishStrip.finish.getJpg( self.xFinish )
@@ -454,32 +454,32 @@ class MainWin( wx.Frame ):
 		image = wx.ImageFromStream( StringIO.StringIO(jpg), wx.BITMAP_TYPE_JPEG )
 		bitmap = image.ConvertToBitmap()
 		AddPhotoHeader( bitmap,
-			ts=self.eventInfo['ts'],
-			bib=self.eventInfo['bib'],
-			firstName=self.eventInfo['firstName'],
-			lastName=self.eventInfo['firstName'],
-			team=self.eventInfo['team'],
-			raceName=self.eventInfo['raceName'],
+			ts=self.triggerInfo['ts'],
+			bib=self.triggerInfo['bib'],
+			firstName=self.triggerInfo['firstName'],
+			lastName=self.triggerInfo['firstName'],
+			team=self.triggerInfo['team'],
+			raceName=self.triggerInfo['raceName'],
 		)
 		return bitmap
 		
 	def onRightClick( self, event ):
-		if not self.eventInfo:
+		if not self.triggerInfo:
 			return
 		self.xFinish = event.GetX()
 		pd = PhotoDialog( self, wx.ImageFromBitmap(self.getPhoto()), self.finishStrip.GetTsJpgs() )
 		pd.ShowModal()
 		pd.Destroy()
 
-	def onEventSelected( self, event ):
-		self.iEventSelect = event.m_itemIndex
-		data = self.itemDataMap[self.eventList.GetItemData(self.iEventSelect)]
-		self.eventInfo = {
+	def onTriggerSelected( self, event ):
+		self.iTriggerSelect = event.m_itemIndex
+		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
+		self.triggerInfo = {
 			a:data[i] for i, a in enumerate(('ts','bib','name','team','wave','raceName','firstName','lastName'))
 		}
 		ts = data[0]
 		self.tsJpg = self.db.getPhotos(ts-tdCaptureBefore, ts+tdCaptureAfter)
-		self.finishStrip.SetTsJpgs( self.tsJpg, ts, self.eventInfo )
+		self.finishStrip.SetTsJpgs( self.tsJpg, ts, self.triggerInfo )
 		
 	def showMessages( self ):
 		while 1:
@@ -569,9 +569,9 @@ class MainWin( wx.Frame ):
 			self.dbQ.put( ('photo', tNow, image) )
 		
 		# Periodically update events.
-		if (tNow - self.lastEventRefresh).total_seconds() > 5.0:
-			self.refreshEvents()
-			self.lastEventRefresh = tNow
+		if (tNow - self.lastTriggerRefresh).total_seconds() > 5.0:
+			self.refreshTriggers()
+			self.lastTriggerRefresh = tNow
 			return
 		
 		# Process event messages
@@ -586,9 +586,9 @@ class MainWin( wx.Frame ):
 			if advanceSeconds:
 				tSearch += timedelta(seconds=advanceSeconds)
 			
-			# Record this event.
+			# Record this trigger.
 			self.dbQ.put( (
-				'event',
+				'trigger',
 				tSearch,
 				message.get('bib', 99999),
 				message.get('firstName',u''),
@@ -644,7 +644,7 @@ class MainWin( wx.Frame ):
 			tsUpper = dlg.GetDate()
 			self.db.cleanBefore( tsUpper )
 			wx.CallAfter( self.finishStrip.Clear )
-			wx.CallAfter( self.refreshEvents, True )
+			wx.CallAfter( self.refreshTriggers, True )
 		dlg.Destroy()
 	
 	def setCameraDeviceNum( self, num ):

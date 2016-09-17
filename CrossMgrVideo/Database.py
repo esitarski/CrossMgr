@@ -39,7 +39,7 @@ class Database( object ):
 						('jpg', 'BLOB', False),
 					)
 				)		
-				createTable( self.conn, 'event', (
+				createTable( self.conn, 'trigger', (
 						('id', 'INTEGER PRIMARY KEY', False),
 						('ts', 'timestamp', 'ASC'),
 						('bib', 'INTEGER', 'ASC'),
@@ -65,15 +65,15 @@ class Database( object ):
 		except:
 			return None
 		
-	def write( self, tsEvents=None, tsJpgs=None ):
+	def write( self, tsTriggers=None, tsJpgs=None ):
 		tsJpgs = [(ts, jpg) for ts, jpg in tsJpgs if ts not in self.photoTsCache]
 		
-		if not tsEvents and not tsJpgs:
+		if not tsTriggers and not tsJpgs:
 			return
 			
 		with self.conn:
-			if tsEvents:
-				self.conn.executemany( 'INSERT INTO event (ts,bib,first_name,last_name,team,wave,race_name) VALUES (?,?,?,?,?,?,?)', tsEvents )
+			if tsTriggers:
+				self.conn.executemany( 'INSERT INTO trigger (ts,bib,first_name,last_name,team,wave,race_name) VALUES (?,?,?,?,?,?,?)', tsTriggers )
 			if tsJpgs:
 				self.conn.executemany( 'INSERT INTO photo (ts,jpg) VALUES (?,?)', tsJpgs )
 		
@@ -84,10 +84,10 @@ class Database( object ):
 			self.photoTsCache = set( ts for ts in self.photoTsCache if ts > expired )
 			self.lastUpdate = now()
 			
-	def getEvents( self, tsLower, tsUpper ):
+	def getTriggers( self, tsLower, tsUpper ):
 		with self.conn:
 			return list( self.conn.execute(
-				'SELECT ts,bib,first_name,last_name,team,wave,race_name FROM event WHERE ts BETWEEN ? AND ? ORDER BY ts',
+				'SELECT ts,bib,first_name,last_name,team,wave,race_name FROM trigger WHERE ts BETWEEN ? AND ? ORDER BY ts',
 				(tsLower, tsUpper)
 			))
 			
@@ -103,7 +103,7 @@ class Database( object ):
 	
 	def getLastTimestamp( self, tsLower, tsUpper ):
 		c = self.conn.cursor()
-		c.execute( 'SELECT max(ts) from event WHERE ts BETWEEN ? AND ?', (tsLower, tsUpper) )
+		c.execute( 'SELECT max(ts) from trigger WHERE ts BETWEEN ? AND ?', (tsLower, tsUpper) )
 		return c.fetchone()[0]
 	
 	def isDup( self, ts ):
@@ -112,7 +112,7 @@ class Database( object ):
 	def cleanBefore( self, tsUpper ):
 		with self.conn:
 			self.conn.execute( 'DELETE from photo WHERE ts < ?', (tsUpper,) )
-			self.conn.execute( 'DELETE from event WHERE ts < ?', (tsUpper,) )
+			self.conn.execute( 'DELETE from trigger WHERE ts < ?', (tsUpper,) )
 		with self.conn:
 			self.conn.execute( 'VACUUM' )
 		
@@ -120,11 +120,11 @@ class Database( object ):
 def DBWriter( q ):
 	db = Database()
 	tsJpgs = []
-	tsEvents = []
+	tsTriggers = []
 	
 	def flush():
-		db.write( tsEvents, tsJpgs )
-		del tsEvents[:]
+		db.write( tsTriggers, tsJpgs )
+		del tsTriggers[:]
 		del tsJpgs[:]
 		
 	keepGoing = True
@@ -132,7 +132,7 @@ def DBWriter( q ):
 		try:
 			v = q.get( timeout=1 )
 		except Empty:
-			if tsEvents or tsJpgs:
+			if tsTriggers or tsJpgs:
 				flush()
 			continue
 			
@@ -141,8 +141,8 @@ def DBWriter( q ):
 				outStream = StringIO.StringIO()
 				v[2].SaveStream( outStream, wx.BITMAP_TYPE_JPEG )
 				tsJpgs.append( (v[1], sqlite3.Binary(outStream.getvalue())) )
-		elif v[0] == 'event':
-			tsEvents.append( (list(v[1:]) + [u''] * 6)[:7] )
+		elif v[0] == 'trigger':
+			tsTriggers.append( (list(v[1:]) + [u''] * 6)[:7] )
 		elif v[0] == 'flush':
 			flush()
 		elif v[0] == 'terminate':
@@ -156,12 +156,10 @@ def DBWriter( q ):
 	flush()
 			
 if __name__ == '__main__':
-	'''
 	try:
 		os.remove( os.path.join( os.path.expanduser("~"), 'CrossMgrVideo.sqlite3' ) )
 	except:
 		pass
-	'''
 
 	d = Database()
 	
@@ -171,12 +169,12 @@ if __name__ == '__main__':
 	d.cleanBefore( ts )
 	
 	'''
-	tsEvents = [((time.sleep(0.1) and False) or now(), 100+i, u'', u'', u'', u'', u'') for i in xrange(100)]
+	tsTriggers = [((time.sleep(0.1) and False) or now(), 100+i, u'', u'', u'', u'', u'') for i in xrange(100)]
 	
 	tsJpgs = [((time.sleep(0.01) and False) or now(), b'asdfasdfasdfasdfasdf') for i in xrange(100)]
-	d.write( tsEvents, tsJpgs )
+	d.write( tsTriggers, tsJpgs )
 	d.write( [], tsJpgs )
 		
-	print len(d.getEvents( now() - timedelta(seconds=5), now() ))
+	print len(d.getTriggers( now() - timedelta(seconds=5), now() ))
 	print len(d.getPhotos( now() - timedelta(seconds=5), now() ))
 	'''
