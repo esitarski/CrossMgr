@@ -189,6 +189,7 @@ class MainWin( wx.Frame ):
 		self.fpt = timedelta(seconds=0)
 		self.iEventSelect = None
 		self.eventInfo = None
+		self.tsJpg = []
 		
 		self.captureTimer = wx.CallLater( 10, self.stopCapture )
 		
@@ -392,6 +393,9 @@ class MainWin( wx.Frame ):
 			self.eventList.DeleteAllItems()
 			self.itemDataMap = {}
 			self.tsMax = None
+			self.iEventSelect = None
+			self.eventInfo = {}
+			self.tsJpg = []
 		else:
 			tsLower = (self.tsMax or datetime(tNow.year, tNow.month, tNow.day)) + timedelta(seconds=0.00001)
 			tsUpper = tsLower + timedelta(days=1)
@@ -462,8 +466,10 @@ class MainWin( wx.Frame ):
 		return bitmap
 		
 	def onRightClick( self, event ):
+		if not eventInfo:
+			return
 		self.xFinish = event.GetX()
-		pd = PhotoDialog( self, wx.ImageFromBitmap(self.getPhoto()) )
+		pd = PhotoDialog( self, wx.ImageFromBitmap(self.getPhoto()), self.tsJpg )
 		pd.ShowModal()
 		pd.Destroy()
 
@@ -474,7 +480,8 @@ class MainWin( wx.Frame ):
 			a:data[i] for i, a in enumerate(('ts','bib','name','team','wave','raceName','firstName','lastName'))
 		}
 		ts = data[0]
-		self.finishStrip.SetTsJpgs( self.db.getPhotos(ts-tdCaptureBefore, ts+tdCaptureAfter), ts, self.eventInfo )
+		self.tsJpg = self.db.getPhotos(ts-tdCaptureBefore, ts+tdCaptureAfter)
+		self.finishStrip.SetTsJpgs( self.tsJpg, ts, self.eventInfo )
 		
 	def showMessages( self ):
 		while 1:

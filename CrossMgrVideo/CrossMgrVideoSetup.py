@@ -51,7 +51,7 @@ try:
 except:
 	pass
 
-# Add images to the distribution folder.
+# Add images and ffmpeg to the distribution folder.
 
 def copyDir( d ):
 	destD = os.path.join(distDir, d)
@@ -63,6 +63,7 @@ def copyDir( d ):
 			shutil.copy( os.path.join(d, i), os.path.join(destD,i) )
 			
 copyDir( 'images' )
+copyDir( 'ffmpeg' )
 
 # Create the installer
 inno = r'\Program Files (x86)\Inno Setup 5\ISCC.exe'

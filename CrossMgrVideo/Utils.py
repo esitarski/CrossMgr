@@ -177,9 +177,10 @@ if 'CrossMgr?' in os.path.basename(dirName):
 	dirName = os.path.dirname(dirName)
 
 imageFolder = os.path.join(dirName, 'images')
+ffmpegFolder = os.path.join(dirName, 'ffmpeg')
 
 def getDirName():		return dirName
-def getImageFolder():	return imageFolder
+def getFFMegFolder():	return ffmpegFolder
 
 def GetPngBitmap( fname ):
 	return wx.Bitmap( os.path.join(imageFolder, fname), wx.BITMAP_TYPE_PNG )

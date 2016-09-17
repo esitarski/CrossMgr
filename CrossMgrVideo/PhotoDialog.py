@@ -59,10 +59,12 @@ def PrintPhoto( parent, image ):
 
 
 class PhotoDialog( wx.Dialog ):
-	def __init__( self, parent, photoImage, id=wx.ID_ANY, size=wx.DefaultSize,
+	def __init__( self, parent, photoImage, tsJpg, id=wx.ID_ANY, size=wx.DefaultSize,
 		style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.MAXIMIZE_BOX ):
 			
 		super(PhotoDialog, self).__init__( parent, id, size=size, style=style, title=_('Photo') )
+		
+		self.tsJpg = tsJpg
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		self.scaledImage = ScaledImage( self, image=photoImage )
@@ -79,8 +81,12 @@ class PhotoDialog( wx.Dialog ):
 		btn.Bind( wx.EVT_BUTTON, self.onCopyToClipboard )
 		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 
-		btn = wx.Button(self, label='Save...')
-		btn.Bind( wx.EVT_BUTTON, self.onSave )
+		btn = wx.Button(self, label='Save Photo...')
+		btn.Bind( wx.EVT_BUTTON, self.onSavePhoto )
+		btnsizer.Add(btn, flag=wx.LEFT, border=4)
+
+		btn = wx.Button(self, label='Save mpeg...')
+		btn.Bind( wx.EVT_BUTTON, self.onSaveMPeg )
 		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 
 		btn = wx.Button(self, wx.ID_CANCEL)
@@ -105,8 +111,18 @@ class PhotoDialog( wx.Dialog ):
 		else:
 			wx.MessageBox( _('Unable to open the clipboard'), _('Error') )
 		
-	def onSave( self, event ):
+	def onSavePhoto( self, event ):
 		fd = wx.FileDialog( self, message='Save Photo', wildcard='*.png' )
+		if fd.ShowModal() == wx.ID_OK:
+			try:
+				self.scaledImage.GetImage().SaveFile( fd.GetPath(), wx.BITMAP_TYPE_PNG )
+				wx.MessageBox( _('Save Successful'), _('Success') )
+			except Exception as e:
+				wx.MessageBox( _('Save Failed:\n\n{}').format(e), _('Save Failed') )
+		fd.Destroy()
+
+	def onSaveMPeg( self, event ):
+		fd = wx.FileDialog( self, message='Save MPeg', wildcard='*.mpeg' )
 		if fd.ShowModal() == wx.ID_OK:
 			try:
 				self.scaledImage.GetImage().SaveFile( fd.GetPath(), wx.BITMAP_TYPE_PNG )
