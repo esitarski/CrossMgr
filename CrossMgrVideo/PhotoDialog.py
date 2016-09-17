@@ -1,5 +1,8 @@
 import wx
+import subprocess
+import cStringIO as StringIO
 from ScaledImage import ScaledImage, RescaleImage
+import Utils
 
 def _( x ):
 	return x
@@ -89,7 +92,7 @@ class PhotoDialog( wx.Dialog ):
 		btn.Bind( wx.EVT_BUTTON, self.onSaveMPeg )
 		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 
-		btn = wx.Button(self, wx.ID_CANCEL)
+		btn = wx.Button(self, wx.ID_CLOSE)
 		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 
 		vs.Add( btnsizer, flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.EXPAND|wx.ALIGN_CENTRE, border=5 )
@@ -116,17 +119,35 @@ class PhotoDialog( wx.Dialog ):
 		if fd.ShowModal() == wx.ID_OK:
 			try:
 				self.scaledImage.GetImage().SaveFile( fd.GetPath(), wx.BITMAP_TYPE_PNG )
-				wx.MessageBox( _('Save Successful'), _('Success') )
+				wx.MessageBox( _('Photo Save Successful'), _('Success') )
 			except Exception as e:
-				wx.MessageBox( _('Save Failed:\n\n{}').format(e), _('Save Failed') )
+				wx.MessageBox( _('Photo Save Failed:\n\n{}').format(e), _('Save Failed') )
 		fd.Destroy()
 
 	def onSaveMPeg( self, event ):
 		fd = wx.FileDialog( self, message='Save MPeg', wildcard='*.mpeg' )
 		if fd.ShowModal() == wx.ID_OK:
+			image = wx.ImageFromStream( StringIO.StringIO(self.tsJpg[0][1]), wx.BITMAP_TYPE_JPEG )
 			try:
-				self.scaledImage.GetImage().SaveFile( fd.GetPath(), wx.BITMAP_TYPE_PNG )
-				wx.MessageBox( _('Save Successful'), _('Success') )
+				command = [
+					Utils.getFFMegExe(),
+					'-y', # (optional) overwrite output file if it exists
+					'-f', 'rawvideo',
+					'-vcodec','rawvideo',
+					'-s', '{}x{}'.format(*image.GetSize()), # size of one frame
+					'-pix_fmt', 'rgb24',
+					'-r', '25', # frames per second
+					'-i', '-', # The imput comes from a pipe
+					'-an', # Tells FFMPEG not to expect any audio
+					'-vcodec', 'mpeg1video',
+					fd.GetPath(),
+				]
+				proc = subprocess.Popen( command, stdin=subprocess.PIPE, stderr=subprocess.PIPE )
+				for ts, jpg in self.tsJpg:
+					image = wx.ImageFromStream( StringIO.StringIO(jpg), wx.BITMAP_TYPE_JPEG )
+					proc.stdin.write( image.GetData() )
+				proc.terminate()
+				wx.MessageBox( _('MPeg Save Successful'), _('Success') )
 			except Exception as e:
-				wx.MessageBox( _('Save Failed:\n\n{}').format(e), _('Save Failed') )
+				wx.MessageBox( _('MPeg Save Failed:\n\n{}').format(e), _('Save Failed') )
 		fd.Destroy()

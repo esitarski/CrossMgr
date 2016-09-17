@@ -582,6 +582,9 @@ class FinishStripPanel( wx.Panel ):
 		if ts and self.finish.tsFirst:
 			self.finish.SetT( (ts-self.finish.tsFirst).total_seconds() )
 		self.scrollCallback()
+		
+	def GetTsJpgs( self ):
+		return self.finish.tsJpgs
 			
 	def Clear( self ):
 		self.info = {}

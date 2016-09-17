@@ -189,7 +189,6 @@ class MainWin( wx.Frame ):
 		self.fpt = timedelta(seconds=0)
 		self.iEventSelect = None
 		self.eventInfo = None
-		self.tsJpg = []
 		
 		self.captureTimer = wx.CallLater( 10, self.stopCapture )
 		
@@ -311,10 +310,10 @@ class MainWin( wx.Frame ):
 		self.eventList = AutoWidthListCtrl( self, style=wx.LC_REPORT|wx.BORDER_SUNKEN|wx.LC_SORT_ASCENDING )
 		
 		self.il = wx.ImageList(16, 16)
-		self.sm_check = self.il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'check_icon.png'), wx.BITMAP_TYPE_PNG))
-		self.sm_close = self.il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'flame_icon.png'), wx.BITMAP_TYPE_PNG ))
-		self.sm_up = self.il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'SmallUpArrow.png'), wx.BITMAP_TYPE_PNG))
-		self.sm_dn = self.il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'SmallDownArrow.png'), wx.BITMAP_TYPE_PNG ))
+		self.sm_check = self.il.Add( Utils.GetPngBitmap('check_icon.png'))
+		self.sm_close = self.il.Add( Utils.GetPngBitmap('flame_icon.png'))
+		self.sm_up = self.il.Add( Utils.GetPngBitmap('SmallUpArrow.png'))
+		self.sm_dn = self.il.Add( Utils.GetPngBitmap('SmallDownArrow.png'))
 		self.eventList.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
 		
 		headers = ['Time', 'Bib', 'Name', 'Team', 'Wave']
@@ -395,7 +394,6 @@ class MainWin( wx.Frame ):
 			self.tsMax = None
 			self.iEventSelect = None
 			self.eventInfo = {}
-			self.tsJpg = []
 		else:
 			tsLower = (self.tsMax or datetime(tNow.year, tNow.month, tNow.day)) + timedelta(seconds=0.00001)
 			tsUpper = tsLower + timedelta(days=1)
@@ -466,10 +464,10 @@ class MainWin( wx.Frame ):
 		return bitmap
 		
 	def onRightClick( self, event ):
-		if not eventInfo:
+		if not self.eventInfo:
 			return
 		self.xFinish = event.GetX()
-		pd = PhotoDialog( self, wx.ImageFromBitmap(self.getPhoto()), self.tsJpg )
+		pd = PhotoDialog( self, wx.ImageFromBitmap(self.getPhoto()), self.finishStrip.GetTsJpgs() )
 		pd.ShowModal()
 		pd.Destroy()
 

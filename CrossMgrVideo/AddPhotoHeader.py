@@ -73,7 +73,7 @@ def setDrawResources( dc, w, h ):
 	
 	bitmapHeight = drawResources.bibHeight * 2.8
 	
-	bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), wx.BITMAP_TYPE_PNG )
+	bitmap = Utils.GetPngBitmap('CrossMgrHeader.png')
 	scaleMult = float(bitmapHeight) / float(bitmap.GetHeight())
 	
 	image = bitmap.ConvertToImage()
