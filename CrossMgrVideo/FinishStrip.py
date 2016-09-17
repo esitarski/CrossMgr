@@ -456,6 +456,11 @@ class FinishStripPanel( wx.Panel ):
 		hs.Add( wx.StaticText(self, label=u'\n'.join([
 					'Pan: Click and Drag',
 					'Stretch: Mousewheel',
+				])
+			),
+			flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16
+		)
+		hs.Add( wx.StaticText(self, label=u'\n'.join([
 					'Zoom: Ctrl+Mousewheel',
 					'Photo: Right-click',
 				])

@@ -293,6 +293,20 @@ class MainWin( wx.Frame ):
 		self.primaryImage = ScaledImage( self, style=wx.BORDER_SUNKEN, size=(imageWidth, imageHeight) )
 		self.primaryImage.SetTestImage()
 		
+		hsDate = wx.BoxSizer( wx.HORIZONTAL )
+		hsDate.Add( wx.StaticText(self, label='Show Timestamps for'), flag=wx.ALIGN_CENTER_VERTICAL )
+		tQuery = now()
+		self.date = wx.DatePickerCtrl(
+			self,
+			dt=wx.DateTimeFromDMY( tQuery.day, tQuery.month-1, tQuery.year ),
+			style=wx.DP_DROPDOWN|wx.DP_SHOWCENTURY
+		)
+		self.date.Bind( wx.EVT_DATE_CHANGED, self.onQueryDateChanged )
+		hsDate.Add( self.date, flag=wx.LEFT, border=4 )
+		
+		self.tsQueryLower = datetime(tQuery.year, tQuery.month, tQuery.day)
+		self.tsQueryUpper = self.tsQueryLower + timedelta(days=1)
+		
 		self.eventList = AutoWidthListCtrl( self, style=wx.LC_REPORT|wx.BORDER_SUNKEN|wx.LC_SORT_ASCENDING )
 		
 		self.il = wx.ImageList(16, 16)
@@ -312,13 +326,17 @@ class MainWin( wx.Frame ):
 		self.messagesText = wx.TextCtrl( self, style=wx.TE_READONLY|wx.TE_MULTILINE|wx.HSCROLL, size=(250,-1) )
 		self.messageManager = MessageManager( self.messagesText )
 		
+		vsEvents = wx.BoxSizer( wx.VERTICAL )
+		vsEvents.Add( hsDate )
+		vsEvents.Add( self.eventList, 1, flag=wx.EXPAND|wx.TOP, border=2)
+		
 		#------------------------------------------------------------------------------------------------
 		mainSizer.Add( self.finishStrip, flag=wx.EXPAND )
 		
 		border = 2
 		row1Sizer = wx.BoxSizer( wx.HORIZONTAL )
 		row1Sizer.Add( self.primaryImage, flag=wx.ALL, border=border )
-		row1Sizer.Add( self.eventList, 1, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.EXPAND, border=border )
+		row1Sizer.Add( vsEvents, 1, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.EXPAND, border=border )
 		row1Sizer.Add( self.messagesText, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.EXPAND, border=border )
 		mainSizer.Add( row1Sizer, 1, flag=wx.EXPAND )
 		
@@ -348,6 +366,12 @@ class MainWin( wx.Frame ):
 		
 		wx.CallLater( 300, self.refreshEvents )
 	
+	def onQueryDateChanged( self, event ):
+		v = self.date.GetValue()
+		self.tsQueryLower = datetime( v.GetYear(), v.GetMonth() + 1, v.GetDay() )
+		self.tsQueryUpper = self.tsQueryLower + timedelta( days=1 )
+		self.refreshEvents( True )
+	
 	def GetListCtrl( self ):
 		return self.eventList
 	
@@ -363,8 +387,8 @@ class MainWin( wx.Frame ):
 		self.lastEventRefresh = tNow
 		
 		if replace:
-			tsLower = datetime(tNow.year, tNow.month, tNow.day)
-			tsUpper = tsLower + timedelta(days=1)
+			tsLower = self.tsQueryLower
+			tsUpper = self.tsQueryUpper
 			self.eventList.DeleteAllItems()
 			self.itemDataMap = {}
 			self.tsMax = None
