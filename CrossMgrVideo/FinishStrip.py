@@ -225,7 +225,12 @@ class FinishStrip( wx.Panel ):
 			image.Rescale( int(photoWidth*self.magnification), int(photoHeight*self.magnification), self.imageQuality )
 			self.zoomBitmap[tbm] = image.ConvertToBitmap()
 			return self.zoomBitmap[tbm]
-		
+	
+	def getJpg( self, x ):
+		if not self.times:
+			return None
+		return self.tsJpgs[bisect_left(self.times, self.tFromX(x), hi=len(self.times)-1)][1]
+	
 	def drawZoomPhoto( self, x, y ):
 		if not self.times or not self.photoWidth:
 			return
@@ -439,7 +444,7 @@ class FinishStripPanel( wx.Panel ):
 		self.copyToClipboard.Bind( wx.EVT_BUTTON, self.onCopyToClipboard )
 		
 		fgs = wx.FlexGridSizer( cols=2, vgap=0, hgap=0 )
-		fgs.Add( wx.StaticText(self, label=u'{}'.format(_('Stretch (Mousewheel)'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		fgs.Add( wx.StaticText(self, label=u'{}'.format(_('Stretch'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		fgs.Add( self.stretchSlider, flag=wx.EXPAND )
 		
 		fgs.AddGrowableCol( 1, 1 )
@@ -448,10 +453,12 @@ class FinishStripPanel( wx.Panel ):
 		hs.Add( self.direction )
 		hs.Add( self.imageQualitySelect, flag=wx.LEFT, border=16 )
 		hs.Add( self.copyToClipboard, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
-		hs.Add( wx.StaticText(self, label=
-				'Pan: Click and Drag\n'
-				'Stretch: Mousewheel\n'
-				'Zoom: Ctrl+Mousewheel\n'
+		hs.Add( wx.StaticText(self, label=u'\n'.join([
+					'Pan: Click and Drag',
+					'Stretch: Mousewheel',
+					'Zoom: Ctrl+Mousewheel',
+					'Photo: Right-click',
+				])
 			),
 			flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16
 		)
@@ -489,12 +496,6 @@ class FinishStripPanel( wx.Panel ):
 			return
 			
 		if wx.TheClipboard.Open():
-			'''
-			bm = wx.BitmapFromImage( wx.ImageFromBitmap(bm) )
-			params = { a:self.info.get(a, u'') for a in ('ts', 'bib', 'firstName', 'lastName', 'team', 'raceName') }
-			params['bitmap'] = bm
-			AddPhotoHeader( **params )
-			'''
 			bitmapData = wx.BitmapDataObject()
 			bitmapData.SetBitmap( bm )
 			wx.TheClipboard.SetData( bitmapData )

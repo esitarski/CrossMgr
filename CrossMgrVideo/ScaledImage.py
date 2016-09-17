@@ -9,13 +9,17 @@ def RescaleImage( image, width, height, imageQuality=wx.IMAGE_QUALITY_NORMAL ):
 	return image.Copy().Rescale( int(wImage*ratio), int(hImage*ratio), imageQuality ) if not (0.94 < ratio < 1.06) else image
 	
 class ScaledImage( wx.Panel ):
-	def __init__( self, parent, id=wx.ID_ANY, size=(640,480), style=0, drawFinishLine=False ):
+	def __init__( self, parent, id=wx.ID_ANY, size=(640,480), style=0, image=None, drawFinishLine=False ):
 		super(ScaledImage, self).__init__( parent, id, size=size, style=style )
 		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )
-		self.image = None
+		self.image = image
 		self.drawFinishLine = drawFinishLine
 		self.Bind( wx.EVT_PAINT, self.OnPaint )
-		
+		self.Bind( wx.EVT_SIZE, self.OnSize )
+	
+	def OnSize( self, event ):
+		self.Refresh()
+	
 	def OnPaint( self, event=None ):
 		dc = wx.AutoBufferedPaintDC( self )
 		dc.SetBackground( wx.WHITE_BRUSH )

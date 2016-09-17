@@ -10,6 +10,7 @@ import socket
 import atexit
 import time
 import platform
+import cStringIO as StringIO
 from Queue import Queue, Empty, Full
 
 from datetime import datetime, timedelta
@@ -27,6 +28,8 @@ from AddPhotoHeader import PilImageToWxImage
 from ScaledImage import ScaledImage
 from FinishStrip import FinishStripPanel
 from ManageDatabase import ManageDatabase
+from AddPhotoHeader import AddPhotoHeader
+from PhotoDialog import PhotoDialog
 
 imageWidth, imageHeight = 640, 480
 
@@ -177,12 +180,15 @@ class MainWin( wx.Frame ):
 		self.fps = 25
 		self.frameDelay = 1.0 / self.fps
 		self.bufferSecs = 10
+		self.xFinish = None
 		
 		self.tFrameCount = self.tLaunch = self.tLast = now()
 		self.frameCount = 0
 		self.frameCountUpdate = int(self.fps * 2)
 		self.fpsActual = 0.0
 		self.fpt = timedelta(seconds=0)
+		self.iEventSelect = None
+		self.eventInfo = None
 		
 		self.captureTimer = wx.CallLater( 10, self.stopCapture )
 		
@@ -282,7 +288,7 @@ class MainWin( wx.Frame ):
 		
 		#------------------------------------------------------------------------------------------------
 		self.finishStrip = FinishStripPanel( self, size=(-1,wx.GetDisplaySize()[1]/2) )
-		#self.finishStrip.finish.Bind( wx.EVT_RIGHT_DOWN, self.onPopup )
+		self.finishStrip.finish.Bind( wx.EVT_RIGHT_DOWN, self.onRightClick )
 		
 		self.primaryImage = ScaledImage( self, style=wx.BORDER_SUNKEN, size=(imageWidth, imageHeight) )
 		self.primaryImage.SetTestImage()
@@ -341,14 +347,16 @@ class MainWin( wx.Frame ):
 		self.timer.Start( ms, False )
 		
 		wx.CallLater( 300, self.refreshEvents )
-		
-		self.popup = wx.Menu()
 	
 	def GetListCtrl( self ):
 		return self.eventList
 	
 	def GetSortImages(self):
 		return (self.sm_dn, self.sm_up)
+	
+	def getItemData( self, i ):
+		data = self.eventList.GetItemData( i )
+		return self.itemDataMap[data]
 	
 	def refreshEvents( self, replace=False ):
 		tNow = now()
@@ -413,31 +421,36 @@ class MainWin( wx.Frame ):
 		wx.CallLater( 500, self.dbQ.put, ('flush',) )
 		wx.CallLater( int(100+1000*int(tdCaptureBefore.total_seconds())), self.refreshEvents )
 	
-	def onPopup( self, event ):
-		if not hasattr(self, "menuInitialized"):
-			self.menuInitialized = True
-			#self.Bind(wx.EVT_MENU, self.onPopupPrint, id=wx.ID_PRINT)
-			self.copyToClipboardID = wx.NewId()
-			self.Bind(wx.EVT_MENU, self.onPopupCopyToClipboard, id=self.copyToClipboardID)
-
-		menu = wx.Menu()
-		menu.Append(wx.ID_PRINT, "Print")
-		menu.Append(self.copyToClipboardID, "Copy to Clipboard")
-		self.PopupMenu(menu)
-		menu.Destroy()
-
-	def onPopupPrint( self, event ):
-		pass
+	def getPhoto( self ):
+		jpg = self.finishStrip.finish.getJpg( self.xFinish )
+		if jpg is None:
+			return None
+		image = wx.ImageFromStream( StringIO.StringIO(jpg), wx.BITMAP_TYPE_JPEG )
+		bitmap = image.ConvertToBitmap()
+		AddPhotoHeader( bitmap,
+			ts=self.eventInfo['ts'],
+			bib=self.eventInfo['bib'],
+			firstName=self.eventInfo['firstName'],
+			lastName=self.eventInfo['firstName'],
+			team=self.eventInfo['team'],
+			raceName=self.eventInfo['raceName'],
+		)
+		return bitmap
 		
-	def onPopupCopyToClipboard( self, event ):
-		pass
-		
+	def onRightClick( self, event ):
+		self.xFinish = event.GetX()
+		pd = PhotoDialog( self, wx.ImageFromBitmap(self.getPhoto()) )
+		pd.ShowModal()
+		pd.Destroy()
+
 	def onEventSelected( self, event ):
-		item = event.m_itemIndex
-		data = self.itemDataMap[self.eventList.GetItemData(item)]
-		info = { a:data[i] for i, a in enumerate(('ts','bib','name','team','wave','raceName','firstName','lastName')) }
+		self.iEventSelect = event.m_itemIndex
+		data = self.itemDataMap[self.eventList.GetItemData(self.iEventSelect)]
+		self.eventInfo = {
+			a:data[i] for i, a in enumerate(('ts','bib','name','team','wave','raceName','firstName','lastName'))
+		}
 		ts = data[0]
-		self.finishStrip.SetTsJpgs( self.db.getPhotos(ts-tdCaptureBefore, ts+tdCaptureAfter), ts, info )
+		self.finishStrip.SetTsJpgs( self.db.getPhotos(ts-tdCaptureBefore, ts+tdCaptureAfter), ts, self.eventInfo )
 		
 	def showMessages( self ):
 		while 1:
