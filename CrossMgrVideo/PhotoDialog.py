@@ -119,7 +119,7 @@ class PhotoDialog( wx.Dialog ):
 			wx.MessageBox( _('Unable to open the clipboard'), _('Error') )
 		
 	def onSavePhoto( self, event ):
-		fd = wx.FileDialog( self, message='Save Photo', wildcard='*.png' )
+		fd = wx.FileDialog( self, message='Save Photo', wildcard='*.png', style=wx.FD_SAVE )
 		if fd.ShowModal() == wx.ID_OK:
 			try:
 				self.scaledImage.GetImage().SaveFile( fd.GetPath(), wx.BITMAP_TYPE_PNG )
@@ -129,7 +129,7 @@ class PhotoDialog( wx.Dialog ):
 		fd.Destroy()
 
 	def onSaveMPeg( self, event ):
-		fd = wx.FileDialog( self, message='Save MPeg', wildcard='*.mpeg' )
+		fd = wx.FileDialog( self, message='Save MPeg', wildcard='*.mpeg', style=wx.FD_SAVE )
 		if fd.ShowModal() == wx.ID_OK:
 			image = wx.ImageFromStream( StringIO.StringIO(self.tsJpg[0][1]), wx.BITMAP_TYPE_JPEG )
 			try:
