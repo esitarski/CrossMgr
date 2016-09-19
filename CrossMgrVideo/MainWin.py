@@ -28,7 +28,6 @@ from AddPhotoHeader import PilImageToWxImage
 from ScaledImage import ScaledImage
 from FinishStrip import FinishStripPanel
 from ManageDatabase import ManageDatabase
-from AddPhotoHeader import AddPhotoHeader
 from PhotoDialog import PhotoDialog
 
 imageWidth, imageHeight = 640, 480
@@ -331,14 +330,14 @@ class MainWin( wx.Frame ):
 		vsTriggers.Add( self.triggerList, 1, flag=wx.EXPAND|wx.TOP, border=2)
 		
 		#------------------------------------------------------------------------------------------------
-		mainSizer.Add( self.finishStrip, flag=wx.EXPAND )
+		mainSizer.Add( self.finishStrip, 1, flag=wx.EXPAND )
 		
 		border = 2
 		row1Sizer = wx.BoxSizer( wx.HORIZONTAL )
 		row1Sizer.Add( self.primaryImage, flag=wx.ALL, border=border )
 		row1Sizer.Add( vsTriggers, 1, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.EXPAND, border=border )
 		row1Sizer.Add( self.messagesText, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.EXPAND, border=border )
-		mainSizer.Add( row1Sizer, 1, flag=wx.EXPAND )
+		mainSizer.Add( row1Sizer, flag=wx.EXPAND )
 		
 		#------------------------------------------------------------------------------------------------
 		# Create a timer to update the frame loop.
@@ -447,27 +446,11 @@ class MainWin( wx.Frame ):
 		wx.CallLater( 500, self.dbQ.put, ('flush',) )
 		wx.CallLater( int(100+1000*int(tdCaptureBefore.total_seconds())), self.refreshTriggers )
 	
-	def getPhoto( self ):
-		jpg = self.finishStrip.finish.getJpg( self.xFinish )
-		if jpg is None:
-			return None
-		image = wx.ImageFromStream( StringIO.StringIO(jpg), wx.BITMAP_TYPE_JPEG )
-		bitmap = image.ConvertToBitmap()
-		AddPhotoHeader( bitmap,
-			ts=self.triggerInfo['ts'],
-			bib=self.triggerInfo['bib'],
-			firstName=self.triggerInfo['firstName'],
-			lastName=self.triggerInfo['firstName'],
-			team=self.triggerInfo['team'],
-			raceName=self.triggerInfo['raceName'],
-		)
-		return bitmap
-		
 	def onRightClick( self, event ):
 		if not self.triggerInfo:
 			return
 		self.xFinish = event.GetX()
-		pd = PhotoDialog( self, wx.ImageFromBitmap(self.getPhoto()), self.finishStrip.GetTsJpgs() )
+		pd = PhotoDialog( self, self.finishStrip.finish.getJpg(self.xFinish), self.triggerInfo, self.finishStrip.GetTsJpgs(), 25 )
 		pd.ShowModal()
 		pd.Destroy()
 

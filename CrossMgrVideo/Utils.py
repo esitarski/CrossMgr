@@ -180,7 +180,12 @@ imageFolder = os.path.join(dirName, 'images')
 
 def getDirName():		return dirName
 def getImageFolder():	return imageFolder
-def getFFMegExe():			return os.path.join( dirName, 'ffmpeg', 'ffmpeg.exe' )
+
+import platform
+def getFFMegExe():
+	if platform.system() == 'Windows':
+		return os.path.join( dirName, 'ffmpeg', 'ffmpeg.exe' )
+	return 'ffmpeg'
 
 def GetPngBitmap( fname ):
 	return wx.Bitmap( os.path.join(imageFolder, fname), wx.BITMAP_TYPE_PNG )

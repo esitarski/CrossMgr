@@ -1,6 +1,7 @@
 import wx
 import subprocess
 import cStringIO as StringIO
+from AddPhotoHeader import AddPhotoHeader
 from ScaledImage import ScaledImage, RescaleImage
 import Utils
 
@@ -62,18 +63,21 @@ def PrintPhoto( parent, image ):
 
 
 class PhotoDialog( wx.Dialog ):
-	def __init__( self, parent, photoImage, tsJpg, id=wx.ID_ANY, size=wx.DefaultSize,
+	def __init__( self, parent, jpg, triggerInfo, tsJpg, fps=25, id=wx.ID_ANY, size=wx.DefaultSize,
 		style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.MAXIMIZE_BOX ):
 			
 		super(PhotoDialog, self).__init__( parent, id, size=size, style=style, title=_('Photo') )
 		
+		self.jpg = jpg
+		self.triggerInfo = triggerInfo
 		self.tsJpg = tsJpg
+		self.fps = fps
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
-		self.scaledImage = ScaledImage( self, image=photoImage )
+		self.scaledImage = ScaledImage( self, image=self.getPhoto() )
 		vs.Add( self.scaledImage, 1, flag=wx.EXPAND|wx.ALL, border=4 )
 		
-		btnsizer = wx.WrapSizer()
+		btnsizer = wx.BoxSizer( wx.HORIZONTAL )
         
 		btn = wx.Button(self, wx.ID_PRINT)
 		btn.SetDefault()
@@ -84,12 +88,16 @@ class PhotoDialog( wx.Dialog ):
 		btn.Bind( wx.EVT_BUTTON, self.onCopyToClipboard )
 		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 
-		btn = wx.Button(self, label='Save Photo...')
-		btn.Bind( wx.EVT_BUTTON, self.onSavePhoto )
+		btn = wx.Button(self, label='Save as PNG...')
+		btn.Bind( wx.EVT_BUTTON, self.onSavePng )
 		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 
-		btn = wx.Button(self, label='Save mpeg...')
+		btn = wx.Button(self, label='Save as Mpeg...')
 		btn.Bind( wx.EVT_BUTTON, self.onSaveMPeg )
+		btnsizer.Add(btn, flag=wx.LEFT, border=4)
+
+		btn = wx.Button(self, label='Save as Anim. Gif...')
+		btn.Bind( wx.EVT_BUTTON, self.onSaveGif )
 		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 
 		btn = wx.Button(self, wx.ID_CLOSE)
@@ -101,6 +109,23 @@ class PhotoDialog( wx.Dialog ):
 		self.SetSizer(vs)
 		vs.Fit(self)
 	
+	def addPhotoHeaderToImage( self, image ):
+		bitmap = wx.BitmapFromImage( image )
+		AddPhotoHeader( bitmap,
+			ts=self.triggerInfo['ts'],
+			bib=self.triggerInfo['bib'],
+			firstName=self.triggerInfo['firstName'],
+			lastName=self.triggerInfo['firstName'],
+			team=self.triggerInfo['team'],
+			raceName=self.triggerInfo['raceName'],
+		)
+		return wx.ImageFromBitmap( bitmap )
+		
+	def getPhoto( self ):
+		if self.jpg is None:
+			return None
+		return self.addPhotoHeaderToImage( wx.ImageFromStream(StringIO.StringIO(self.jpg), wx.BITMAP_TYPE_JPEG) )
+		
 	def onClose( self, event ):
 		self.EndModal( wx.ID_OK )
 	
@@ -118,7 +143,7 @@ class PhotoDialog( wx.Dialog ):
 		else:
 			wx.MessageBox( _('Unable to open the clipboard'), _('Error') )
 		
-	def onSavePhoto( self, event ):
+	def onSavePng( self, event ):
 		fd = wx.FileDialog( self, message='Save Photo', wildcard='*.png', style=wx.FD_SAVE )
 		if fd.ShowModal() == wx.ID_OK:
 			try:
@@ -140,7 +165,7 @@ class PhotoDialog( wx.Dialog ):
 					'-vcodec','rawvideo',
 					'-s', '{}x{}'.format(*image.GetSize()), # size of one frame
 					'-pix_fmt', 'rgb24',
-					'-r', '25', # frames per second
+					'-r', '{}'.format(self.fps), # frames per second
 					'-i', '-', # The imput comes from a pipe
 					'-an', # Tells FFMPEG not to expect any audio
 					'-vcodec', 'mpeg1video',
@@ -148,10 +173,36 @@ class PhotoDialog( wx.Dialog ):
 				]
 				proc = subprocess.Popen( command, stdin=subprocess.PIPE, stderr=subprocess.PIPE )
 				for ts, jpg in self.tsJpg:
-					image = wx.ImageFromStream( StringIO.StringIO(jpg), wx.BITMAP_TYPE_JPEG )
-					proc.stdin.write( image.GetData() )
+					proc.stdin.write( self.addPhotoHeaderToImage(wx.ImageFromStream(StringIO.StringIO(jpg), wx.BITMAP_TYPE_JPEG)).GetData() )
 				proc.terminate()
 				wx.MessageBox( _('MPeg Save Successful'), _('Success') )
 			except Exception as e:
 				wx.MessageBox( _('MPeg Save Failed:\n\n{}').format(e), _('Save Failed') )
+		fd.Destroy()
+
+	def onSaveGif( self, event ):
+		fd = wx.FileDialog( self, message='Save Animaged Gif', wildcard='*.gif', style=wx.FD_SAVE )
+		if fd.ShowModal() == wx.ID_OK:
+			image = wx.ImageFromStream( StringIO.StringIO(self.tsJpg[0][1]), wx.BITMAP_TYPE_JPEG )
+			try:
+				command = [
+					Utils.getFFMegExe(),
+					'-y', # (optional) overwrite output file if it exists
+					'-f', 'rawvideo',
+					'-vcodec','rawvideo',
+					'-s', '{}x{}'.format(*image.GetSize()), # size of one frame
+					'-pix_fmt', 'rgb24',
+					'-r', '{}'.format(self.fps), # frames per second
+					'-i', '-', # The imput comes from a pipe
+					'-an', # Tells FFMPEG not to expect any audio
+					fd.GetPath(),
+				]
+				proc = subprocess.Popen( command, stdin=subprocess.PIPE, stderr=subprocess.PIPE )
+				for ts, jpg in self.tsJpg:
+					proc.stdin.write(self.addPhotoHeaderToImage(wx.ImageFromStream(StringIO.StringIO(jpg), wx.BITMAP_TYPE_JPEG)).GetData() )
+				images = None
+				proc.terminate()
+				wx.MessageBox( _('Gif Save Successful'), _('Success') )
+			except Exception as e:
+				wx.MessageBox( _('Gif Save Failed:\n\n{}').format(e), _('Save Failed') )
 		fd.Destroy()
