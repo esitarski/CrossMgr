@@ -239,7 +239,8 @@ class FinishStrip( wx.Panel ):
 		winWidth, winHeight = self.GetClientSize()
 		
 		photoWidth, photoHeight = self.photoWidth, self.photoHeight
-		viewWidth, viewHeight = winHeight, winHeight
+		viewHeight = winHeight
+		viewWidth = min(winWidth//2, int(viewHeight * float(photoWidth)/float(photoHeight)))
 		
 		tbm = self.times[bisect_left(self.times, self.tFromX(x), hi=len(self.times)-1)]
 		bm = self.getZoomBitmap( tbm )
