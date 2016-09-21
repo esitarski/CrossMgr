@@ -1,5 +1,6 @@
 import wx
 import wx.lib.mixins.listctrl as listmix
+import wx.lib.intctrl
 import sys
 import os
 import re
@@ -22,7 +23,7 @@ now = datetime.now
 
 import Utils
 from SocketListener import SocketListener
-from Database import Database, DBWriter
+from Database import Database, DBWriter, DBReader
 from FrameCircBuf import FrameCircBuf
 from AddPhotoHeader import PilImageToWxImage
 from ScaledImage import ScaledImage
@@ -198,7 +199,8 @@ class MainWin( wx.Frame ):
 						style=wx.CONFIG_USE_LOCAL_FILE)
 		
 		self.requestQ = Queue()		# Select photos from photobuf.
-		self.dbQ = Queue()			# Photos waiting to be renamed and possibly ftp'd.
+		self.dbWriterQ = Queue()	# Photos waiting to be renamed and possibly ftp'd.
+		self.dbReaderQ = Queue()	# Photos read as requested from user.
 		self.messageQ = Queue()		# Collection point for all status/failure messages.
 		
 		self.SetBackgroundColour( wx.Colour(232,232,232) )
@@ -301,10 +303,16 @@ class MainWin( wx.Frame ):
 			style=wx.DP_DROPDOWN|wx.DP_SHOWCENTURY
 		)
 		self.date.Bind( wx.EVT_DATE_CHANGED, self.onQueryDateChanged )
-		hsDate.Add( self.date, flag=wx.LEFT, border=4 )
+		hsDate.Add( self.date, flag=wx.LEFT, border=2 )
+		
+		hsDate.Add( wx.StaticText(self, label='Filter by Bib'), flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=12 )
+		self.bib = wx.lib.intctrl.IntCtrl( self, style=wx.TE_PROCESS_ENTER, size=(64,-1), min=1, allow_none=True, value=None )
+		self.bib.Bind( wx.EVT_TEXT_ENTER, self.onQueryBibChanged )
+		hsDate.Add( self.bib, flag=wx.LEFT, border=2 )
 		
 		self.tsQueryLower = datetime(tQuery.year, tQuery.month, tQuery.day)
 		self.tsQueryUpper = self.tsQueryLower + timedelta(days=1)
+		self.bibQuery = None
 		
 		self.triggerList = AutoWidthListCtrl( self, style=wx.LC_REPORT|wx.BORDER_SUNKEN|wx.LC_SORT_ASCENDING )
 		
@@ -371,6 +379,10 @@ class MainWin( wx.Frame ):
 		self.tsQueryUpper = self.tsQueryLower + timedelta( days=1 )
 		self.refreshTriggers( True )
 	
+	def onQueryBibChanged( self, event ):
+		self.bibQuery = self.bib.GetValue()
+		self.refreshTriggers( True )
+	
 	def GetListCtrl( self ):
 		return self.triggerList
 	
@@ -397,7 +409,7 @@ class MainWin( wx.Frame ):
 			tsLower = (self.tsMax or datetime(tNow.year, tNow.month, tNow.day)) + timedelta(seconds=0.00001)
 			tsUpper = tsLower + timedelta(days=1)
 
-		triggers = self.db.getTriggers( tsLower, tsUpper )
+		triggers = self.db.getTriggers( tsLower, tsUpper, self.bibQuery )
 		if not triggers:
 			return
 			
@@ -443,26 +455,30 @@ class MainWin( wx.Frame ):
 				'raceName':u'Test',				
 			}
 		)
-		wx.CallLater( 500, self.dbQ.put, ('flush',) )
+		wx.CallLater( 500, self.dbWriterQ.put, ('flush',) )
 		wx.CallLater( int(100+1000*int(tdCaptureBefore.total_seconds())), self.refreshTriggers )
 	
 	def onRightClick( self, event ):
 		if not self.triggerInfo:
 			return
 		self.xFinish = event.GetX()
-		pd = PhotoDialog( self, self.finishStrip.finish.getJpg(self.xFinish), self.triggerInfo, self.finishStrip.GetTsJpgs(), 25 )
+		pd = PhotoDialog( self, self.finishStrip.finish.getJpg(self.xFinish), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps )
 		pd.ShowModal()
 		pd.Destroy()
 
+	def setFinishStripJpgs( self, jpgs ):
+		self.tsJpg = jpgs
+		wx.CallAfter( self.finishStrip.SetTsJpgs, self.tsJpg, self.ts, self.triggerInfo )
+
 	def onTriggerSelected( self, event ):
+		print 'onTriggerSelected'
 		self.iTriggerSelect = event.m_itemIndex
 		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
 		self.triggerInfo = {
 			a:data[i] for i, a in enumerate(('ts','bib','name','team','wave','raceName','firstName','lastName'))
 		}
-		ts = data[0]
-		self.tsJpg = self.db.getPhotos(ts-tdCaptureBefore, ts+tdCaptureAfter)
-		self.finishStrip.SetTsJpgs( self.tsJpg, ts, self.triggerInfo )
+		self.ts = data[0]
+		self.dbReaderQ.put( ('getphotos', self.ts-tdCaptureBefore, self.ts+tdCaptureAfter) )
 		
 	def showMessages( self ):
 		while 1:
@@ -500,20 +516,24 @@ class MainWin( wx.Frame ):
 		self.listenerThread = threading.Thread( target=SocketListener, args=(self.listenerSocket, self.requestQ, self.messageQ) )
 		self.listenerThread.daemon = True
 		
-		self.dbThread = threading.Thread( target=DBWriter, args=(self.dbQ,) )
-		self.dbThread.daemon = True
+		self.dbWriterThread = threading.Thread( target=DBWriter, args=(self.dbWriterQ,) )
+		self.dbWriterThread.daemon = True
+		
+		self.dbReaderThread = threading.Thread( target=DBReader, args=(self.dbReaderQ, self.setFinishStripJpgs) )
+		self.dbReaderThread.daemon = True
 		
 		self.fcb = FrameCircBuf( int(self.bufferSecs * self.fps) )
 		
 		self.listenerThread.start()
-		self.dbThread.start()
+		self.dbWriterThread.start()
+		self.dbReaderThread.start()
 		
 		self.grabFrameOK = True
 		self.messageQ.put( ('threads', 'Successfully Launched') )
 		return True
 	
 	def stopCapture( self ):
-		self.dbQ.put( ('flush',) )
+		self.dbWriterQ.put( ('flush',) )
 	
 	def frameLoop( self, event=None ):
 		if not self.grabFrameOK:
@@ -549,7 +569,7 @@ class MainWin( wx.Frame ):
 		
 		# Record images if the timer is running.
 		if self.captureTimer.IsRunning():
-			self.dbQ.put( ('photo', tNow, image) )
+			self.dbWriterQ.put( ('photo', tNow, image) )
 		
 		# Periodically update events.
 		if (tNow - self.lastTriggerRefresh).total_seconds() > 5.0:
@@ -570,7 +590,7 @@ class MainWin( wx.Frame ):
 				tSearch += timedelta(seconds=advanceSeconds)
 			
 			# Record this trigger.
-			self.dbQ.put( (
+			self.dbWriterQ.put( (
 				'trigger',
 				tSearch,
 				message.get('bib', 99999),
@@ -586,7 +606,7 @@ class MainWin( wx.Frame ):
 				times, frames = self.fcb.getBackFrames( tSearch - tdCaptureBefore )
 				for t, f in zip(times, frames):
 					if f:
-						self.dbQ.put( ('photo', t, f) )
+						self.dbWriterQ.put( ('photo', t, f) )
 			else:
 				self.captureTimer.Stop()
 			
@@ -604,9 +624,11 @@ class MainWin( wx.Frame ):
 	def shutdown( self ):
 		# Ensure that all images in the queue are saved.
 		self.grabFrameOK = False
-		if hasattr(self, 'dbThread'):
-			self.dbQ.put( ('terminate', ) )
-			self.dbThread.join()
+		if hasattr(self, 'dbWriterThread'):
+			self.dbWriterQ.put( ('terminate', ) )
+			self.dbWriterThread.join()
+			self.dbReaderQ.put( ('terminate', ) )
+			self.dbReaderThread.join()
 	
 	def resetCamera( self, event ):
 		self.writeOptions()

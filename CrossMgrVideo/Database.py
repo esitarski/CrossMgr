@@ -19,8 +19,9 @@ class Database( object ):
 
 	UpdateSeconds = 10*60*60
 
-	def __init__( self, fname=None, initTables=True ):
+	def __init__( self, fname=None, initTables=True, fps=25 ):
 		self.fname = (fname or os.path.join( os.path.expanduser("~"), 'CrossMgrVideo.sqlite3' ) )
+		self.fps = fps
 		
 		'''
 		try:
@@ -84,12 +85,18 @@ class Database( object ):
 			self.photoTsCache = set( ts for ts in self.photoTsCache if ts > expired )
 			self.lastUpdate = now()
 			
-	def getTriggers( self, tsLower, tsUpper ):
+	def getTriggers( self, tsLower, tsUpper, bib=None ):
 		with self.conn:
-			return list( self.conn.execute(
-				'SELECT ts,bib,first_name,last_name,team,wave,race_name FROM trigger WHERE ts BETWEEN ? AND ? ORDER BY ts',
-				(tsLower, tsUpper)
-			))
+			if not bib:
+				return list( self.conn.execute(
+					'SELECT ts,bib,first_name,last_name,team,wave,race_name FROM trigger WHERE ts BETWEEN ? AND ? ORDER BY ts',
+					(tsLower, tsUpper)
+				))
+			else:
+				return list( self.conn.execute(
+					'SELECT ts,bib,first_name,last_name,team,wave,race_name FROM trigger WHERE bib=? AND ts BETWEEN ? AND ? ORDER BY ts',
+					(bib, tsLower, tsUpper)
+				))
 			
 	def getPhotos( self, tsLower, tsUpper ):
 		with self.conn:
@@ -117,8 +124,8 @@ class Database( object ):
 			self.conn.execute( 'VACUUM' )
 		
 		
-def DBWriter( q ):
-	db = Database()
+def DBWriter( q, fps=25 ):
+	db = Database( fps=fps )
 	tsJpgs = []
 	tsTriggers = []
 	
@@ -151,9 +158,22 @@ def DBWriter( q ):
 		
 		q.task_done()
 		
-		if len(tsJpgs) >= 25*4:
+		if len(tsJpgs) >= db.fps*4:
 			flush()
 	flush()
+	
+def DBReader( q, callback ):
+	db = Database( initTables=False )
+	
+	keepGoing = True
+	while keepGoing:
+		v = q.get()
+		if v[0] == 'getphotos':
+			callback( db.getPhotos(v[1], v[2]) )
+		elif v[0] == 'terminate':
+			keepGoing = False
+		
+		q.task_done()
 			
 if __name__ == '__main__':
 	try:
