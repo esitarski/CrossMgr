@@ -1641,7 +1641,7 @@ class Race( object ):
 		return maxAnyLap
 
 	@memoize
-	def getLeaderTimesNums( self, category ):
+	def getLeaderTimesNums( self, category=None ):
 		entries = self.interpolate()
 		if not entries:
 			return None, None

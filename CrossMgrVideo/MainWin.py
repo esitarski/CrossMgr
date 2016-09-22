@@ -288,7 +288,7 @@ class MainWin( wx.Frame ):
 		mainSizer.Add( headerSizer )
 		
 		#------------------------------------------------------------------------------------------------
-		self.finishStrip = FinishStripPanel( self, size=(-1,wx.GetDisplaySize()[1]/2) )
+		self.finishStrip = FinishStripPanel( self, size=(-1,wx.GetDisplaySize()[1]//2) )
 		self.finishStrip.finish.Bind( wx.EVT_RIGHT_DOWN, self.onRightClick )
 		
 		self.primaryImage = ScaledImage( self, style=wx.BORDER_SUNKEN, size=(imageWidth, imageHeight) )
@@ -471,7 +471,6 @@ class MainWin( wx.Frame ):
 		wx.CallAfter( self.finishStrip.SetTsJpgs, self.tsJpg, self.ts, self.triggerInfo )
 
 	def onTriggerSelected( self, event ):
-		print 'onTriggerSelected'
 		self.iTriggerSelect = event.m_itemIndex
 		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
 		self.triggerInfo = {
@@ -690,7 +689,7 @@ def MainLoop():
 		imageWidth /= 2
 		imageHeight /= 2
 
-	mainWin = MainWin( None, title=AppVerName, size=(1600,864) )
+	mainWin = MainWin( None, title=AppVerName, size=(1000,500) )
 	
 	dataDir = Utils.getHomeDir()
 	redirectFileName = os.path.join(dataDir, 'CrossMgrVideo.log')

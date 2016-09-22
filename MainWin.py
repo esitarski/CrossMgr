@@ -2908,11 +2908,19 @@ class MainWin( wx.Frame ):
 			race.startRaceNow()
 			if not race.isTimeTrial:
 				# Backup all the events and race start so we don't have to wait for the first lap.
-				race.startTime -= datetime.timedelta( seconds = (tMin-1) )
+				race.startTime -= datetime.timedelta( seconds = (tMin-5) )
+				'''
+				# Simulate RFID first read.
+				nums = set( num for t, num in self.lapTimes )
+				for num in nums:
+					rider = race.getRider( num )
+					rider.firstTime = 0.0
+				'''
 
 		OutputStreamer.writeRaceStart()
 		if race.isTimeTrial:
 			self.menuPublishHtmlTTStart()
+			
 		self.simulateTimer = wx.CallLater( 1, self.updateSimulation, True )
 		self.updateRaceClock()
 		self.refresh()

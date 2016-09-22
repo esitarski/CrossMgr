@@ -9,7 +9,7 @@ from collections import defaultdict
 
 import Utils
 from Utils import SetLabel
-from GetResults import GetResults, GetLastFinisherTime, GetLeaderFinishTime, GetLastRider
+from GetResults import GetResults, GetLastFinisherTime, GetLeaderFinishTime, GetLastRider, RiderResult
 import Model
 from keybutton import KeyButton
 from RaceHUD import RaceHUD
@@ -555,27 +555,40 @@ class NumKeypad( wx.Panel ):
 		if not race or not race.isRunning():
 			return
 		
-		results = GetResults( None, False )
+		Finisher = Model.Rider.Finisher
+		getCategory = race.getCategory
+		
+		results = GetResults(None, False)
+		if race.enableJChipIntegration and race.resetStartClockOnFirstTag:
+			# Add rider entries who have been read by RFID but have not completed the first lap.
+			results = list(results)
+			resultNums = set( rr.num for rr in results )
+			for a in race.riders.itervalues():
+				if a.num not in resultNums and a.firstTime is not None:
+					category = getCategory( a.num )
+					if category:
+						results.append(
+							#              num,   status,    lastTime, raceCat,           lapTimes, raceTimes, interp
+							RiderResult( a.num, a.status, a.firstTime, category.fullname,       [],        [],     [] )
+						)
 		if not results:
 			return
 		
-		categoryLapTotal = {}
+		categoryLapMax = defaultdict(int)
 		catLapCount = defaultdict(int)
 		catCount = defaultdict(int)
 		catRaceCount = defaultdict(int)
-		getCategory = race.getCategory
 		
-		t = Model.race.curRaceTime()
+		t = race.curRaceTime()
 		for rr in results:
 			category = getCategory( rr.num )
 			catCount[category] += 1
-			if rr.status != Model.Rider.Finisher:
-				continue
+			if rr.status == Finisher:
+				categoryLapMax[category] = max(1, len(rr.raceTimes)-1, categoryLapMax[category])
 			
-			if category not in categoryLapTotal:
-				categoryLapTotal[category] = max(1, len(rr.raceTimes)-1)
-			
-			numLaps = categoryLapTotal[category]
+		for rr in results:
+			category = getCategory( rr.num )
+			numLaps = categoryLapMax[category]
 			
 			tSearch = t
 			if race.isTimeTrial:

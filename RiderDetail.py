@@ -1430,6 +1430,7 @@ class RiderDetail( wx.Panel ):
 			newValues = (rider.status, rider.tStatus, rider.relegatedPosition)
 			if oldValues != newValues:
 				race.setChanged()
+				wx.CallAfter( Utils.refresh )
 	
 	def commit( self ):
 		self.commitChange()

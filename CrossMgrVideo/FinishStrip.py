@@ -34,6 +34,8 @@ class FinishStrip( wx.Panel ):
 		super(FinishStrip, self).__init__( parent, id, size=size, style=style )
 		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )
 		
+		self.SetMinSize( (wx.GetDisplaySize()[0]//4, wx.GetDisplaySize()[1]//4) )
+		
 		self.fps = float(fps)
 		self.scale = 1.0
 		self.magnification = 2.0
@@ -77,10 +79,6 @@ class FinishStrip( wx.Panel ):
 	def formatTime( self, t ):
 		return (self.tsFirst + datetime.timedelta(seconds=t)).strftime('%H:%M:%S.%f'[:-3])
 		
-	@property
-	def scaledPixelsPerSec( self ):
-		return self.pixelsPerSec * self.scale
-	
 	def SetImageQuality( self, iq ):
 		self.imageQuality = iq
 		self.zoomBitmap = {}
@@ -246,17 +244,18 @@ class FinishStrip( wx.Panel ):
 		bm = self.getZoomBitmap( tbm )
 		
 		penWidth = 2
+		penWidthDiv2 = penWidth//2
 		
 		if not self.leftToRight:
-			xViewPos, yViewPos = penWidth//2, penWidth//2
+			xViewPos, yViewPos = penWidthDiv2, penWidthDiv2
 		else:
-			xViewPos, yViewPos = winWidth - viewWidth - penWidth//2, penWidth//2
+			xViewPos, yViewPos = winWidth - viewWidth + penWidthDiv2, penWidthDiv2
 			
 		if xViewPos <= x < xViewPos + viewWidth:
 			if self.leftToRight:
-				xViewPos, yViewPos = penWidth//2, penWidth//2
+				xViewPos, yViewPos = penWidthDiv2, penWidthDiv2
 			else:
-				xViewPos, yViewPos = winWidth - viewWidth - penWidth//2, penWidth//2
+				xViewPos, yViewPos = winWidth - viewWidth + penWidthDiv2, penWidthDiv2
 			
 		if xViewPos != getattr(self,'xViewPosLast', -1):
 			self.xViewPosLast = xViewPos
@@ -276,8 +275,8 @@ class FinishStrip( wx.Panel ):
 		memDC.SelectObject( wx.NullBitmap )
 		
 		dc.SetBrush( wx.TRANSPARENT_BRUSH )
-		dc.SetPen( wx.Pen(wx.Colour(255,255,0), penWidth) )
-		dc.DrawRectangle( xViewPos, yViewPos, viewWidth, viewHeight )
+		dc.SetPen( wx.Pen(wx.Colour(255,255,51), penWidth) )
+		dc.DrawRectangle( xViewPos, yViewPos, viewWidth, viewHeight-penWidthDiv2 )
 		
 	def OnEnterWindow( self, event ):
 		pass
