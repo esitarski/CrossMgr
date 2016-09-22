@@ -222,6 +222,11 @@ class SeriesModel( object ):
 		self.races = [r for r in self.races if r.fileName != name]
 		if raceCount != len(self.races):
 			self.changed = True
+			
+	def removeAllRaces( self ):
+		if self.races:
+			self.races = []
+			self.changed = True
 	
 	def extractAllRaceResults( self ):
 		raceResults = []

@@ -223,10 +223,16 @@ class MainWin( wx.Frame ):
 		
 		self.menuBar.Append( self.optionsMenu, _("&Options") )
 
+		#-----------------------------------------------------------------------
+		
 		self.optionsMenu = wx.Menu()
 		idCur = wx.NewId()
 		self.optionsMenu.Append( idCur , _("Set &Root Folder"), _("Set Root Folder") )
 		self.Bind(wx.EVT_MENU, self.menuSetRootFolder, id=idCur )
+		
+		idCur = wx.NewId()
+		self.optionsMenu.Append( idCur , _("Delete All Races..."), _("Delete All Races") )
+		self.Bind(wx.EVT_MENU, self.menuDeleteAllRaces, id=idCur )
 		
 		self.menuBar.Append( self.optionsMenu, _("&Tools") )
 
@@ -368,6 +374,11 @@ class MainWin( wx.Frame ):
 			self.refreshAll()
 		dlg.Destroy()
 
+	def menuDeleteAllRaces( self, event ):
+		if Utils.MessageOKCancel(self, "Delete All Races\n\nThere is no undo.   Continue?", "Delete All Races"):
+			SeriesModel.model.removeAllRaces()
+			self.refreshAll()			
+		
 	def menuPageSetup( self, event ):
 		psdd = wx.PageSetupDialogData(self.printData)
 		psdd.CalculatePaperSizeFromId()

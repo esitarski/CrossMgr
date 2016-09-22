@@ -676,7 +676,7 @@ class Results(wx.Panel):
 		
 		self.postPublishCmdLabel = wx.StaticText( self, label='Post Publish Cmd:' )
 		self.postPublishCmd = wx.TextCtrl( self, size=(300,-1) )
-		self.postPublishExplain = wx.StaticText( self, label='Command to run after publish.  Use "%*" for filenames (eg. "cp %* dirname")' )
+		self.postPublishExplain = wx.StaticText( self, label='Command to run after publish.  Use %* for all filenames (eg. "copy %* dirname")' )
 
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.categoryLabel, 0, flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALL, border = 4 )
