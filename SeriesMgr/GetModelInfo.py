@@ -17,6 +17,8 @@ import SeriesModel
 import Utils
 from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, HasExcelLink
 from GetResults			import GetResults, GetCategoryDetails
+from Excel				import GetExcelReader
+from FieldMap			import standard_field_map
 
 def formatTime( secs, highPrecision = False ):
 	if secs is None:
@@ -139,56 +141,61 @@ def toInt( n ):
 		return n
 
 def ExtractRaceResultsExcel( raceInSeries ):
-	excelLink = raceInSeries.excelLink
-	if not excelLink:
-		return False, 'Missing Excel Link Definition', []
-
-	try:
-		data = excelLink.read()
-	except Exception as e:
-		return False, e, []
-	
-	raceFileName =  u'{}:{}'.format( excelLink.fileName, excelLink.sheetName )
-	raceName = u'{}:{}'.format(	os.path.basename(os.path.splitext(excelLink.fileName)[0]), excelLink.sheetName )
+	excel = GetExcelReader( raceInSeries.fileName )
+	raceName = os.path.splitext(os.path.basename(raceInSeries.fileName))[0]
 	raceResults = []
-	for d in data:
-		info = {'raceDate':		None,
-				'raceFileName':	raceFileName,
-				'raceName':		raceName,
-				'raceOrganizer': '',
-				'raceInSeries': raceInSeries,
-		}
-		for fTo, fFrom in [
-				('bib', 'Bib#'),
-				('rank', 'Pos'), ('tFinish', 'Time'),
-				('firstName', 'FirstName'), ('lastName', 'LastName'), ('license', 'License'),
-				('team', 'Team'), ('categoryName', 'Category')]:
-			info[fTo] = d.get( fFrom, u'' )
-		
-		if not info['categoryName']:
-			continue
-		
-		try:
-			info['rank'] = toInt(info['rank'])
-		except ValueError:
-			continue
-		
-		try:
-			info['bib'] = int(info['bib'])
-		except ValueError:
-			pass
-		
-		info['tFinish'] = (info['tFinish'] or 0.0)
-		if isinstance( info['tFinish'], basestring ) and ':' in info['tFinish']:
-			info['tFinish'] = Utils.StrToSeconds( info['tFinish'] )
-		else:
-			try:
-				info['tFinish'] = float( info['tFinish'] ) * 24.0 * 60.0 * 60.0	# Convert Excel day number to seconds.
-			except Exception as e:
-				info['tFinish'] = 0.0
-		
-		raceResults.append( RaceResult(**info) )
-	
+	for sheetName in excel.sheet_names():
+		fm = None
+		categoryName = sheetName.strip()
+		for row in excel.iter_list(sheetName):
+			if fm:
+				f = fm.finder( row )
+				info = {
+					'raceDate':		None,
+					'raceFileName':	raceInSeries.fileName,
+					'raceName':		raceName,
+					'raceOrganizer': '',
+					'raceInSeries': raceInSeries,					
+					'bib': 			f('bib',None),
+					'rank':			f('pos',None),
+					'tFinish':		f('time',0.0),
+					'firstName':	f('first_name',''),
+					'lastName'	:	f('last_name',''),
+					'license':		unicode(f('license_code','')),
+					'team':			f('team',''),
+					'categoryName': categoryName,
+				}
+				
+				try:
+					info['bib'] = int(unicode(info['bib']).strip())
+				except ValueError:
+					continue
+					
+				if info['rank'] is None:
+					continue
+				
+				info['rank'] = unicode(info['rank']).strip()
+				try:
+					info['rank'] = toInt(info['rank'])
+				except ValueError:
+					if info['rank'] not in ('DNS', 'DNF', 'DQ', 'NP'):
+						info['rank'] = 'NP'
+				
+				info['tFinish'] = (info['tFinish'] or 0.0)
+				if isinstance(info['tFinish'], basestring) and ':' in info['tFinish']:
+					info['tFinish'] = Utils.StrToSeconds( info['tFinish'].strip() )
+				else:
+					try:
+						info['tFinish'] = float( info['tFinish'] ) * 24.0 * 60.0 * 60.0	# Convert Excel day number to seconds.
+					except Exception as e:
+						info['tFinish'] = 0.0
+				
+				raceResults.append( RaceResult(**info) )
+				
+			elif row[0] == 'Pos' or row[0] == 'Rank':
+				fm = standard_field_map()
+				fm.set_headers( row )
+
 	return True, 'success', raceResults
 
 def ExtractRaceResultsCrossMgr( raceInSeries ):

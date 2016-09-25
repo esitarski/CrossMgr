@@ -100,13 +100,6 @@ class Races(wx.Panel):
 	
 	wildcard = 'CrossMgr or Excel files (*.cmn, *.xlsx, *.xlsm, *.xls)|*.cmn;*.xlsx;*.xlsm;*.xls;'
 	
-	def doExcelLink( self, race, row ):
-		excelLink = race.excelLink if race.excelLink else ExcelLink()
-		excelLink.setFileName( race.fileName )
-		race.excelLink = GetExcelResultsLink( self, excelLink ).show()
-		self.grid.SetCellValue( row, self.RaceCol, race.getRaceName() )
-		wx.CallAfter( self.refresh )
-	
 	def onEditRaceFileName( self, event ):
 		col = event.GetCol()
 		if col != self.RaceFileCol:
@@ -126,12 +119,6 @@ class Races(wx.Panel):
 			self.grid.SetCellValue( row, self.RaceFileCol, fileName )
 		dlg.Destroy()
 		self.commit()
-		if ret == wx.ID_OK and os.path.splitext(fileName)[1] != '.cmn':
-			race = SeriesModel.model.races[row]
-			race.fileName = fileName
-			race.excelLink = ExcelLink()
-			race.excelLink.setFileName( fileName )
-			wx.CallAfter( self.doExcelLink, race, row )
 	
 	def doAddRace( self, event ):
 		dlg = wx.FileDialog( self, message="Choose a CrossMgr or Excel file",
@@ -144,8 +131,6 @@ class Races(wx.Panel):
 			SeriesModel.model.addRace( fileName )
 		dlg.Destroy()
 		self.refresh()
-		if ret == wx.ID_OK and os.path.splitext(fileName)[1] != '.cmn':
-			wx.CallAfter( self.doExcelLink, SeriesModel.model.races[-1], len(SeriesModel.model.races) - 1 )
 		
 	def doRemoveRace( self, event ):
 		row = self.grid.GetGridCursorRow()

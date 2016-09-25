@@ -796,7 +796,7 @@ class Results(wx.Panel):
 		)
 		results = [rr for rr in results if rr[3] > 0]
 		
-		headerNames = HeaderNames + [u'{}\n{}'.format(r[1],r[0].strftime('%Y-%m-%d')) for r in races]
+		headerNames = HeaderNames + [u'{}\n{}'.format(r[1],r[0].strftime('%Y-%m-%d') if r[0] else u'') for r in races]
 		
 		Utils.AdjustGridSize( self.grid, len(results), len(headerNames) )
 		self.setColNames( headerNames )

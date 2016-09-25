@@ -84,23 +84,11 @@ class PointStructure( object ):
 		return u'({}: {} + {}, dnf={})'.format( self.name, self.getStr(), self.participationPoints, self.dnfPoints )
 
 class Race( object ):
-	excelLink = None
-	
-	def __init__( self, fileName, pointStructure, excelLink = None ):
+	def __init__( self, fileName, pointStructure ):
 		self.fileName = fileName
 		self.pointStructure = pointStructure
-		self.excelLink = excelLink
 		
 	def getRaceName( self ):
-		if os.path.splitext(self.fileName)[1] == '.cmn':
-			return RaceNameFromPath( self.fileName )
-			
-		if self.excelLink:
-			try:
-				return u'{}:{}'.format( os.path.basename(os.path.splitext(self.fileName)[0]), self.excelLink.sheetName )
-			except:
-				pass
-		
 		return RaceNameFromPath( self.fileName )
 		
 	def postReadFix( self ):
@@ -109,12 +97,10 @@ class Race( object ):
 			delattr( self, 'fname' )
 				
 	def getFileName( self ):
-		if os.path.splitext(self.fileName)[1] == '.cmn' or not self.excelLink:
-			return self.fileName
-		return u'{}:{}'.format( self.fileName, self.excelLink.sheetName )
+		return self.fileName
 		
 	def __repr__( self ):
-		return ', '.join( '{}={}'.format(a, repr(getattr(self, a))) for a in ['fileName', 'pointStructure', 'excelLink'] )
+		return ', '.join( '{}={}'.format(a, repr(getattr(self, a))) for a in ['fileName', 'pointStructure'] )
 		
 class SeriesModel( object ):
 	DefaultPointStructureName = 'Regular'
@@ -177,7 +163,7 @@ class SeriesModel( object ):
 		self.pointStructures = newPointStructures
 	
 	def setRaces( self, raceList ):
-		oldRaceList = [(r.fileName, r.pointStructure.name, r.excelLink) for r in self.races]
+		oldRaceList = [(r.fileName, r.pointStructure.name) for r in self.races]
 		if oldRaceList == raceList:
 			return
 		
@@ -185,7 +171,7 @@ class SeriesModel( object ):
 		
 		newRaces = []
 		ps = dict( (p.name, p) for p in self.pointStructures )
-		for fileName, pname, excelLink in raceList:
+		for fileName, pname in raceList:
 			fileName = fileName.strip()
 			pname = pname.strip()
 			if not fileName:
@@ -194,7 +180,7 @@ class SeriesModel( object ):
 				p = ps[pname]
 			except KeyError:
 				continue
-			newRaces.append( Race(fileName, p, excelLink) )
+			newRaces.append( Race(fileName, p) )
 			
 		self.races = newRaces
 	
