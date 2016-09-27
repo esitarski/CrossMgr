@@ -70,7 +70,7 @@ class Races(wx.Panel):
 		self.grid.Bind( wx.grid.EVT_GRID_EDITOR_CREATED, self.onGridEditorCreated )
 		self.grid.Bind( wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.onEditRaceFileName )
 		
-		self.addButton = wx.Button( self, wx.ID_ANY, 'Add Race' )
+		self.addButton = wx.Button( self, wx.ID_ANY, 'Add Races' )
 		self.addButton.Bind( wx.EVT_BUTTON, self.doAddRace )
 
 		self.removeButton = wx.Button( self, wx.ID_ANY, 'Remove Race' )
@@ -124,11 +124,11 @@ class Races(wx.Panel):
 		dlg = wx.FileDialog( self, message="Choose a CrossMgr or Excel file",
 					defaultFile = '',
 					wildcard = self.wildcard,
-					style=wx.OPEN | wx.CHANGE_DIR )
+					style=wx.OPEN | wx.CHANGE_DIR | wx.FD_MULTIPLE )
 		ret = dlg.ShowModal()
 		if ret == wx.ID_OK:
-			fileName = dlg.GetPath()
-			SeriesModel.model.addRace( fileName )
+			for fileName in dlg.GetPaths():
+				SeriesModel.model.addRace( fileName )
 		dlg.Destroy()
 		self.refresh()
 		
@@ -183,12 +183,11 @@ class Races(wx.Panel):
 		raceList = []
 		for row in xrange(self.grid.GetNumberRows()):
 			race = SeriesModel.model.races[row]
-			excelLink = race.excelLink
 			fileName = self.grid.GetCellValue(row, self.RaceFileCol).strip()
 			pname = self.grid.GetCellValue( row, self.PointsCol )
 			if not fileName or not pname:
 				continue
-			raceList.append( (fileName, pname, excelLink) )
+			raceList.append( (fileName, pname) )
 		
 		model = SeriesModel.model
 		model.setRaces( raceList )

@@ -154,32 +154,47 @@ def ExtractRaceResultsExcel( raceInSeries ):
 					'raceDate':		None,
 					'raceFileName':	raceInSeries.fileName,
 					'raceName':		raceName,
-					'raceOrganizer': '',
+					'raceOrganizer': u'',
 					'raceInSeries': raceInSeries,					
-					'bib': 			f('bib',None),
+					'bib': 			f('bib',99999),
 					'rank':			f('pos',None),
 					'tFinish':		f('time',0.0),
-					'firstName':	f('first_name',''),
-					'lastName'	:	f('last_name',''),
-					'license':		unicode(f('license_code','')),
-					'team':			f('team',''),
+					'firstName':	f('first_name',u'').strip(),
+					'lastName'	:	f('last_name',u'').strip(),
+					'license':		unicode(f('license_code',u'')).strip(),
+					'team':			f('team',u'').strip(),
 					'categoryName': categoryName,
 				}
 				
+				# Must have a rank.
+				if not info['rank']:
+					continue
+
+				# Check for comma-separated name.
+				name = unicode(f('name', u''))
+				if name and not info['firstName'] and not info['lastName']:
+					try:
+						info['lastName'], info['firstName'] = name.split(',',1)
+					except:
+						pass
+				
+				if not info['firstName'] and not info['lastName']:
+					continue
+				
+				# If there is a bib it must be numeric.
 				try:
 					info['bib'] = int(unicode(info['bib']).strip())
 				except ValueError:
 					continue
 					
-				if info['rank'] is None:
-					continue
-				
 				info['rank'] = unicode(info['rank']).strip()
 				try:
 					info['rank'] = toInt(info['rank'])
 				except ValueError:
-					if info['rank'] not in ('DNS', 'DNF', 'DQ', 'NP'):
-						info['rank'] = 'NP'
+					pass
+					
+				if not isinstance(info['rank'], (long,int)):
+					continue
 				
 				info['tFinish'] = (info['tFinish'] or 0.0)
 				if isinstance(info['tFinish'], basestring) and ':' in info['tFinish']:
