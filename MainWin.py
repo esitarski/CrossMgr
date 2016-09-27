@@ -1538,9 +1538,9 @@ class MainWin( wx.Frame ):
 	reTagTrainingSpaces = re.compile( '>\s+', re.MULTILINE|re.UNICODE )
 	def addResultsToHtmlStr( self, html ):
 		html = self.cleanHtml( html )
-	
+		
 		payload = {}
-		payload['raceName'] = os.path.basename(self.fileName)[:-4]
+		payload['raceName'] = os.path.basename(self.fileName or u'')[:-4]
 		iTeam = ReportFields.index('Team')
 		payload['infoFields'] = ReportFields[:iTeam] + ['Name'] + ReportFields[iTeam:]
 			
