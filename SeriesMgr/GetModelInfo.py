@@ -144,6 +144,7 @@ def ExtractRaceResultsExcel( raceInSeries ):
 	excel = GetExcelReader( raceInSeries.fileName )
 	raceName = os.path.splitext(os.path.basename(raceInSeries.fileName))[0]
 	raceResults = []
+	posHeader = set([u'pos', u'pos.', u'rank'])
 	for sheetName in excel.sheet_names():
 		fm = None
 		categoryName = sheetName.strip()
@@ -207,7 +208,7 @@ def ExtractRaceResultsExcel( raceInSeries ):
 				
 				raceResults.append( RaceResult(**info) )
 				
-			elif row[0] == 'Pos' or row[0] == 'Rank':
+			elif unicode(row[0]).strip().lower() in posHeader:
 				fm = standard_field_map()
 				fm.set_headers( row )
 
