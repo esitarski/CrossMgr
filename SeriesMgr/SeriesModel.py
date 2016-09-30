@@ -1,5 +1,6 @@
 
 import os
+import operator
 import GetModelInfo
 import StringIO
 
@@ -117,6 +118,8 @@ class SeriesModel( object ):
 	upgradeFactors = []
 	showLastToFirst = True		# If True, show the latest races first in the output.
 	postPublishCmd = ''
+	categorySequence = {}
+	categorySequencePrevious = {}
 
 	def __init__( self ):
 		self.name = '<Series Name>'
@@ -184,6 +187,40 @@ class SeriesModel( object ):
 			
 		self.races = newRaces
 	
+	def setCategorySequence( self, categoryList ):
+		categorySequenceNew = { c:i for i, c in enumerate(categoryList) }
+		if self.categorySequence != categorySequenceNew:
+			self.categorySequence = categorySequenceNew
+			self.changed = True
+	
+	def harmonizeCategorySequence( self, raceResults ):
+		categorySequenceSave = self.categorySequence
+		
+		categoriesFromRaces = set(rr.categoryName for rr in raceResults)
+		if not categoriesFromRaces:
+			if self.categorySequence:
+				self.categorySequence = {}
+				self.changed = True
+			return
+		
+		categorySequence = (self.categorySequence or self.categorySequencePrevious)
+		categoriesCur = set( categorySequence.iterkeys() )
+		categoriesNew = categoriesFromRaces - categoriesCur
+		categoriesDel = categoriesCur - categoriesFromRaces
+
+		categoriesCur = sorted( categoriesCur, key=lambda c: categorySequence[c] )
+		categoriesCur = [c for c in categoriesCur if c not in categoriesDel]
+		categoriesCur.extend( sorted(categoriesNew) )
+		
+		self.categorySequence = { c:i for i, c in enumerate(categoriesCur) }
+		self.categorySequencePrevious = self.categorySequence
+		if categorySequenceSave != self.categorySequence:
+			self.changed = True
+	
+	def getCategoryNamesSorted( self ):
+		cs = self.categorySequence
+		return sorted( (c for c in cs.iterkeys()), key=lambda c: cs[c] )
+	
 	def setRootFolder( self, path ):
 		raceFileNames = set( os.path.basename(r.fileName) for r in self.races )
 		for top, directories, files in os.walk(path):
@@ -226,6 +263,7 @@ class SeriesModel( object ):
 				self.errors.append( (r, ex) )
 				
 		GetModelInfo.AdjustForUpgrades( raceResults )
+		self.harmonizeCategorySequence( raceResults )
 		
 		if oldErrors != self.errors:
 			self.changed = True
