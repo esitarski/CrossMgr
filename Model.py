@@ -143,7 +143,10 @@ class Category(object):
 	
 	distance = None
 	firstLapDistance = None
+	distanceType = DistanceByLap
 	raceMinutes = None
+	
+	lappedRidersMustContinue = False
 	
 	MaxBib = 999999
 	
@@ -294,7 +297,7 @@ class Category(object):
 		except (ValueError, TypeError):
 			self.distanceType = None
 			
-		if self.distanceType not in [Category.DistanceByLap, Category.DistanceByRace]:
+		if self.distanceType not in (Category.DistanceByLap, Category.DistanceByRace):
 			self.distanceType = Category.DistanceByLap
 			
 		try:
@@ -326,35 +329,21 @@ class Category(object):
 			i.sort()
 	
 	def getLapDistance( self, lap ):
-		if getattr(self, 'distanceType', None) != Category.DistanceByLap:
+		if self.distanceType != Category.DistanceByLap:
 			return None
 		if lap <= 0:
 			return 0
 
-		if lap == 1:
-			firstLapDistance = getattr(self, 'firstLapDistance', None)
-			if firstLapDistance:
-				return firstLapDistance
-		return getattr(self, 'distance', None)
+		return self.firstLapDistance if lap == 1 and self.firstLapDistance else self.distance
 	
 	def getDistanceAtLap( self, lap ):
-		if getattr(self, 'distanceType', None) != Category.DistanceByLap:
+		if self.distanceType != Category.DistanceByLap:
+			return None
+		if lap == 1 and not (self.firstLapDistance or self.distance):
 			return None
 		if lap <= 0:
 			return 0
-		
-		firstLapDistance = getattr(self, 'firstLapDistance', None)
-		if lap <= 1 and firstLapDistance:
-			return firstLapDistance * lap
-		
-		distance = getattr(self, 'distance', None)
-		if not distance:
-			return None
-			
-		if firstLapDistance:
-			return firstLapDistance + distance * (lap-1)
-		else:
-			return distance * lap
+		return (self.firstLapDistance or self.distance or 0.0) + (self.distance or 0.0) * (lap-1)
 	
 	@staticmethod
 	def getFullName( name, gender ):

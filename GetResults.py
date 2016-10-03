@@ -209,11 +209,12 @@ def GetResultsCore( category ):
 		except KeyError:
 			allRiderTimes[e.num] = [e]
 	
+	noTimes = tuple()
 	def getRiderTimes( rider ):
 		try:
 			return allRiderTimes[rider.num]
 		except KeyError:
-			return tuple()
+			return noTimes
 	
 	startOffset = category.getStartOffsetSecs() if category else 0.0
 	
@@ -289,7 +290,7 @@ def GetResultsCore( category ):
 		
 		if len(times) >= 2:
 			times[0] = min(riderCategory.getStartOffsetSecs() if riderCategory else 0, times[1])
-			if riderCategory and categoryWinningLaps.get(riderCategory, None) and getattr(riderCategory, 'lappedRidersMustContinue', False):
+			if riderCategory and categoryWinningLaps.get(riderCategory, None) and riderCategory.lappedRidersMustContinue:
 				laps = min( categoryWinningLaps[riderCategory], len(times)-1 )
 			else:
 				laps = bisect_left( times, cutoffTime, hi=len(times)-1 )
@@ -318,7 +319,7 @@ def GetResultsCore( category ):
 							interp )
 		
 		if isTimeTrial:
-			rr.startTime = getattr( rider, 'firstTime', None )
+			rr.startTime = rider.firstTime
 			rr.clockStartTime = rr.startTime + raceStartSeconds if rr.startTime is not None else None
 			if rr.status == Finisher:
 				try:
@@ -333,8 +334,8 @@ def GetResultsCore( category ):
 				pass
 		
 		# Compute the speeds for the rider.
-		if getattr(riderCategory, 'distance', None):
-			distance = getattr(riderCategory, 'distance')
+		if riderCategory.distance:
+			distance = riderCategory.distance
 			if riderCategory.distanceIsByLap:
 				riderDistance = riderCategory.getDistanceAtLap(len(rr.lapTimes))
 				rr.lapSpeeds = [DefaultSpeed if t <= 0.0 else (riderCategory.getLapDistance(i+1) / (t / (60.0*60.0))) for i, t in enumerate(rr.lapTimes)]
@@ -345,7 +346,7 @@ def GetResultsCore( category ):
 					for i, t in enumerate(rr.lapTimes):
 						tCur += t
 						raceSpeeds.append( DefaultSpeed if tCur <= 0.0 else (riderCategory.getDistanceAtLap(i+1) / (tCur / (60.0*60.0))) )
-					rr.speed = '{:.2f} {}'.format(raceSpeeds[-1], ['km/h', 'mph'][getattr(race, 'distanceUnit', 0)] )
+					rr.speed = '{:.2f} {}'.format(raceSpeeds[-1], ['km/h', 'mph'][race.distanceUnit] )
 				rr.raceSpeeds = raceSpeeds
 			else:	# Distance is by entire race.
 				if rider.status == Finisher and rr.raceTimes:
@@ -355,7 +356,7 @@ def GetResultsCore( category ):
 						speed = DefaultSpeed if tCur <= 0.0 else riderDistance / (tCur / (60.0*60.0))
 					except IndexError as e:
 						speed = DefaultSpeed
-					rr.speed = '{:.2f} {}'.format(speed, ['km/h', 'mph'][getattr(race, 'distanceUnit', 0)] )
+					rr.speed = '{:.2f} {}'.format(speed, ['km/h', 'mph'][race.distanceUnit] )
 					
 		riderResults.append( rr )
 	

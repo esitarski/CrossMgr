@@ -2803,7 +2803,8 @@ class MainWin( wx.Frame ):
 		self.updateLapCounter()
 		self.refresh()
 		
-		self.lapTimes = self.genTimes()
+		bigSimulation = True
+		self.lapTimes = self.genTimes( bigSimulation )
 		tMin = self.lapTimes[0][0]
 		self.lapTimes.reverse()			# Reverse the times so we can pop them from the stack later.
 
