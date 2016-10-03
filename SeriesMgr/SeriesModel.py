@@ -87,7 +87,7 @@ class PointStructure( object ):
 		values.sort()
 		
 		html = StringIO.StringIO()
-		html.write( '<table>\n' )
+		html.write( '<table class="points">\n' )
 		html.write( '<tbody>\n' )
 		
 		pointsRange = []
@@ -103,8 +103,8 @@ class PointStructure( object ):
 				pointsForRange.append( [] )
 			pointsForRange[-1].append( points )
 			
-		for r, pfr in zip(pointsRange, pointsForRange):
-			html.write( '<tr>' )
+		for i, (r, pfr) in enumerate(zip(pointsRange, pointsForRange)):
+			html.write( '<tr{}>'.format(' class="odd"' if i & 1 else '') )
 			html.write( '<td class="points-cell">{}:</td>'.format(r) )
 			for p in pfr:
 				html.write( '<td class="points-cell">{}</td>'.format(p) )

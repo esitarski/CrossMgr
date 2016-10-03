@@ -165,19 +165,16 @@ h2{ font-size: 200%; }
 	color:#333;
 }
 
-table.results
-{
+table.results {
 	font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
 	border-collapse:collapse;
 }
-table.results td, table.results th 
-{
+table.results td, table.results th {
 	font-size:1em;
 	padding:3px 7px 2px 7px;
 	text-align: left;
 }
-table.results th 
-{
+table.results th {
 	font-size:1.1em;
 	text-align:left;
 	padding-top:5px;
@@ -186,8 +183,7 @@ table.results th
 	color:#000000;
 	vertical-align:bottom;
 }
-table.results tr.odd
-{
+table.results tr.odd {
 	color:#000000;
 	background-color:#EAF2D3;
 }
@@ -247,13 +243,19 @@ table.results th.centerAlign, table.results td.centerAlign {
 	font-style: italic;
 }
 
-tbody td.points {
-	text-align: right;
+table.points tr.odd {
+	color:#000000;
+	background-color:#EAF2D3;
 }
 
 .rank {
 	color: #999;
 	font-style: italic;
+}
+
+td.points-cell {
+	text-align: right;
+	padding:3px 7px 2px 7px;
 }
 
 hr { clear: both; }
@@ -564,7 +566,7 @@ function sortTableId( iTable, iCol ) {
 				with tag(html, 'table' ):
 					for ps in pointsStructuresList:
 						with tag(html, 'tr'):
-							for header in [ps.name, u'Races Scored with "{}"'.format(ps.name)]:
+							for header in [ps.name, u'Races Scored with {}'.format(ps.name)]:
 								with tag(html, 'th'):
 									write( header )
 						
