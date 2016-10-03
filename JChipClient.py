@@ -334,7 +334,7 @@ numLapTimes = []
 mean = 60.0							# Average lap time.
 varFactor = 9.0 * 4.0
 var = mean / varFactor				# Variance between riders.
-lapMax = 6
+lapMax = 61
 for n in nums:
 	lapTime = random.normalvariate( mean, mean/(varFactor * 4.0) )
 	for lap in xrange(0, lapMax+1):
@@ -408,7 +408,8 @@ while 1:
 		time.sleep( dt )
 		
 		message = formatMessage( n, lap, dBase + datetime.timedelta(seconds = t - 0.5) )
-		sys.stdout.write( 'sending: %d: %s\n' % (iMessage, message[:-1]) )
+		if iMessage & 15 == 0:
+			sys.stdout.write( 'sending: {}: {}\n'.format(iMessage, message[:-1]) )
 		try:
 			sock.send( message )
 			iMessage += 1

@@ -304,7 +304,7 @@ class Actions( wx.Panel ):
 			self.onStartRace( event )
 	
 	def onStartRace( self, event ):
-		if Model.race and Utils.MessageOKCancel(self, _('Start Race Now?'), _('Start Race')):
+		if Model.race and Utils.MessageOKCancel(self, _('Start Race Now?\n\n'), _('Start Race')):
 			StartRaceNow()
 	
 	def onStartRaceTime( self, event ):
