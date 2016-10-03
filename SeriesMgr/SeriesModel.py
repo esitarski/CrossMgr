@@ -1,8 +1,47 @@
 
 import os
 import operator
+import functools
 import GetModelInfo
 import StringIO
+
+#----------------------------------------------------------------------
+class memoize(object):
+	"""Decorator that caches a function's return value each time it is called.
+	If called later with the same arguments, the cached value is returned, and
+	not re-evaluated.
+	"""
+   
+	cache = {}
+	
+	@classmethod
+	def clear( cls ):
+		cls.cache = {}
+   
+	def __init__(self, func):
+		# print( 'memoize:', func.__name__ )
+		self.func = func
+		
+	def __call__(self, *args):
+		# print( self.func.__name__, args )
+		try:
+			return memoize.cache[self.func.__name__][args]
+		except KeyError:
+			value = self.func(*args)
+			memoize.cache.setdefault(self.func.__name__, {})[args] = value
+			return value
+		except TypeError:
+			# uncachable -- for instance, passing a list as an argument.
+			# Better to not cache than to blow up entirely.
+			return self.func(*args)
+			
+	def __repr__(self):
+		"""Return the function's docstring."""
+		return self.func.__doc__
+		
+	def __get__(self, obj, objtype):
+		"""Support instance methods."""
+		return functools.partial(self.__call__, obj)
 
 def RaceNameFromPath( p ):
 	raceName = os.path.basename( p )
@@ -49,25 +88,41 @@ class PointStructure( object ):
 		
 		html = StringIO.StringIO()
 		html.write( '<table>\n' )
+		html.write( '<tbody>\n' )
 		
-		for pos, points in values:
+		pointsRange = []
+		pointsForRange = []
+		for i, (pos, points) in enumerate(values):
+			if len(pointsRange) == i//10:
+				lb, ub = i+1, min(i+10, len(values))
+				if lb != ub:
+					pointsRange.append( '{}-{}'.format(lb, ub) )
+				else:
+					pointsRange.append( '{}'.format(lb) )
+					
+				pointsForRange.append( [] )
+			pointsForRange[-1].append( points )
+			
+		for r, pfr in zip(pointsRange, pointsForRange):
 			html.write( '<tr>' )
-			html.write( '<td style="text-align:right;">{}.</td>'.format(pos) )
-			html.write( '<td style="text-align:right;">{}</td>'.format(points) )
+			html.write( '<td class="points-cell">{}:</td>'.format(r) )
+			for p in pfr:
+				html.write( '<td class="points-cell">{}</td>'.format(p) )
 			html.write( '</tr>\n' )
 			
 		if self.participationPoints != 0:
 			html.write( '<tr>' )
-			html.write( '<td style="text-align:right;">Participation:</td>' )
-			html.write( '<td style="text-align:right;">{}</td>'.format(self.participationPoints) )
+			html.write( '<td class="points-cell">Participation:</td>' )
+			html.write( '<td class="points-cell">{}</td>'.format(self.participationPoints) )
 			html.write( '</tr>\n' )
 			
 		if self.dnfPoints != 0:
 			html.write( '<tr>' )
-			html.write( '<td style="text-align:right;">DNF:</td>' )
-			html.write( '<td style="text-align:right;">{}</td>'.format(self.dnfPoints) )
+			html.write( '<td class="points-cell">DNF:</td>' )
+			html.write( '<td class="points-cell">{}</td>'.format(self.dnfPoints) )
 			html.write( '</tr>\n' )
 			
+		html.write( '</tbody>\n' )
 		html.write( '</table>\n' )
 		return html.getvalue()
 	
@@ -130,6 +185,7 @@ class SeriesModel( object ):
 		self.changed = False
 		
 	def postReadFix( self ):
+		memoize.clear()
 		for r in self.races:
 			r.postReadFix()
 	
@@ -139,8 +195,6 @@ class SeriesModel( object ):
 		if oldPointsList == pointsList:
 			return
 			
-		self.changed = True
-		
 		newPointStructures = []
 		oldToNewName = {}
 		newPS = {}
@@ -164,6 +218,7 @@ class SeriesModel( object ):
 			r.pointStructure = newPS.get( oldToNewName.get(r.pointStructure.name, ''), newPointStructures[0] )
 			
 		self.pointStructures = newPointStructures
+		self.setChanged()
 	
 	def setRaces( self, raceList ):
 		oldRaceList = [(r.fileName, r.pointStructure.name) for r in self.races]
@@ -186,6 +241,7 @@ class SeriesModel( object ):
 			newRaces.append( Race(fileName, p) )
 			
 		self.races = newRaces
+		memoize.clear()
 	
 	def setCategorySequence( self, categoryList ):
 		categorySequenceNew = { c:i for i, c in enumerate(categoryList) }
@@ -230,27 +286,33 @@ class SeriesModel( object ):
 				for r in self.races:
 					if os.path.basename(r.fileName) == f:
 						r.fileName = os.path.join( top, f )
-						self.changed = True
+						self.setChanged()
 	
 	def setChanged( self, changed = True ):
 		self.changed = changed
+		if changed:
+			memoize.clear()
 	
 	def addRace( self, name ):
-		self.changed = True
 		race = Race( name, self.pointStructures[0] )
 		self.races.append( race )
+		self.setChanged()
 		
 	def removeRace( self, name ):
 		raceCount = len(self.races)
 		self.races = [r for r in self.races if r.fileName != name]
 		if raceCount != len(self.races):
-			self.changed = True
+			self.setChanged()
 			
 	def removeAllRaces( self ):
 		if self.races:
 			self.races = []
-			self.changed = True
+			self.setChanged()
 	
+	def clearCache( self ):
+		memoize.clear()		
+	
+	@memoize
 	def extractAllRaceResults( self ):
 		raceResults = []
 		oldErrors = self.errors

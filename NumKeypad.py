@@ -16,6 +16,7 @@ from RaceHUD import RaceHUD
 from EditEntry import DoDNF, DoDNS, DoPull, DoDQ
 from TimeTrialRecord import TimeTrialRecord
 from ClockDigital import ClockDigital
+from NonBusyCall import NonBusyCall
 
 SplitterMinPos = 390
 SplitterMaxPos = 530
@@ -420,7 +421,6 @@ class NumKeypad( wx.Panel ):
 		self.setKeypadInput( not b )
 	
 	def refreshRaceHUD( self ):
-		# Assumes Model is locked.
 		race = Model.race
 		if not race:
 			self.raceHUD.SetData()
@@ -537,7 +537,6 @@ class NumKeypad( wx.Panel ):
 				mainWin.refreshRaceAnimation()
 			except:
 				pass
-			mainWin.forecastHistory.updatedExpectedTimes( tRace )
 	
 	def onPhotoButton( self, event ):
 		if not Utils.mainWin:
@@ -559,7 +558,7 @@ class NumKeypad( wx.Panel ):
 		getCategory = race.getCategory
 		
 		results = GetResults(None, False)
-		if race.enableJChipIntegration and race.resetStartClockOnFirstTag:
+		if race.enableJChipIntegration and race.resetStartClockOnFirstTag and len(results) != len(race.riders):
 			# Add rider entries who have been read by RFID but have not completed the first lap.
 			results = list(results)
 			resultNums = set( rr.num for rr in results )
@@ -643,6 +642,40 @@ class NumKeypad( wx.Panel ):
 								bold = True )
 			appendListRow( (u'', count, u'{} {}'.format( _('on lap'), lap ) ) )
 			lastCategory = category
+
+	def refreshLastRiderOnCourse( self ):
+		race = Model.race
+		lastRiderOnCourse = GetLastRider( None )
+		if lastRiderOnCourse:
+			maxLength = 24
+			rider = race.riders[lastRiderOnCourse.num]
+			short_name = lastRiderOnCourse.short_name(maxLength)
+			if short_name:
+				lastRiderOnCourseName = u'{}: {}'.format(lastRiderOnCourse.num, lastRiderOnCourse.short_name())
+			else:
+				lastRiderOnCourseName = u'{}'.format(lastRiderOnCourse.num)
+			
+			lastRiderOnCourseTeam = u'{}'.format( getattr(lastRiderOnCourse, 'Team', u'Independent') )
+			if len(lastRiderOnCourseTeam) > maxLength:
+				lastRiderOnCourseTeam = lastRiderOnCourseTeam[:maxLength].strip() + u'...'
+			
+			category = race.getCategory( lastRiderOnCourse.num )
+			lastRiderOnCourseCategory = category.fullname
+			
+			t = (lastRiderOnCourse._lastTimeOrig or 0.0) + ((rider.firstTime or 0.0) if race.isTimeTrial else 0.0)
+			tFinish = race.startTime + datetime.timedelta( seconds=t )
+			lastRiderOnCourseTime = u'{} {}'.format(_('Finishing at'), tFinish.strftime('%H:%M:%S') )
+		else:
+			lastRiderOnCourseName = u''
+			lastRiderOnCourseTeam = u''
+			lastRiderOnCourseCategory = u''
+			lastRiderOnCourseTime = u''
+		changed |= SetLabel( self.lastRiderOnCourseName, lastRiderOnCourseName )
+		changed |= SetLabel( self.lastRiderOnCourseTeam, lastRiderOnCourseTeam )
+		changed |= SetLabel( self.lastRiderOnCourseCategory, lastRiderOnCourseCategory )
+		changed |= SetLabel( self.lastRiderOnCourseTime, lastRiderOnCourseTime )
+		if changed:
+			Utils.LayoutChildResize( self.raceStartTime )
 	
 	def commit( self ):
 		pass
@@ -683,40 +716,17 @@ class NumKeypad( wx.Panel ):
 			rst = '{:02d}:{:02d}:{:02d}.{:02d}'.format(st.hour, st.minute, st.second, int(st.microsecond / 10000.0))
 		changed |= SetLabel( self.raceStartMessage, rstSource )
 		changed |= SetLabel( self.raceStartTime, rst )
-		lastRiderOnCourse = GetLastRider( None )
-		if lastRiderOnCourse:
-			maxLength = 24
-			rider = race.riders[lastRiderOnCourse.num]
-			short_name = lastRiderOnCourse.short_name(maxLength)
-			if short_name:
-				lastRiderOnCourseName = u'{}: {}'.format(lastRiderOnCourse.num, lastRiderOnCourse.short_name())
-			else:
-				lastRiderOnCourseName = u'{}'.format(lastRiderOnCourse.num)
-			
-			lastRiderOnCourseTeam = u'{}'.format( getattr(lastRiderOnCourse, 'Team', u'Independent') )
-			if len(lastRiderOnCourseTeam) > maxLength:
-				lastRiderOnCourseTeam = lastRiderOnCourseTeam[:maxLength].strip() + u'...'
-			
-			category = race.getCategory( lastRiderOnCourse.num )
-			lastRiderOnCourseCategory = category.fullname
-			
-			t = (lastRiderOnCourse._lastTimeOrig or 0.0) + ((rider.firstTime or 0.0) if race.isTimeTrial else 0.0)
-			tFinish = race.startTime + datetime.timedelta( seconds=t )
-			lastRiderOnCourseTime = u'{} {}'.format(_('Finishing at'), tFinish.strftime('%H:%M:%S') )
-		else:
-			lastRiderOnCourseName = u''
-			lastRiderOnCourseTeam = u''
-			lastRiderOnCourseCategory = u''
-			lastRiderOnCourseTime = u''
-		changed |= SetLabel( self.lastRiderOnCourseName, lastRiderOnCourseName )
-		changed |= SetLabel( self.lastRiderOnCourseTeam, lastRiderOnCourseTeam )
-		changed |= SetLabel( self.lastRiderOnCourseCategory, lastRiderOnCourseCategory )
-		changed |= SetLabel( self.lastRiderOnCourseTime, lastRiderOnCourseTime )
-		if changed:
-			Utils.LayoutChildResize( self.raceStartTime )
 	
-		wx.CallAfter( self.refreshLaps )
-		wx.CallAfter( self.refreshRiderLapCountList )
+		if race and race.isRunning():
+			if not hasattr(self, 'refreshLapsNonBusy'):
+				self.refreshLapsNonBusy = NonBusyCall( self.refreshLaps )
+				self.refreshRiderLapCountListNonBusy = NonBusyCall( self.refreshRiderLapCountList )
+				
+			self.refreshLapsNonBusy()
+			self.refreshRiderLapCountListNonBusy()
+		else:
+			wx.CallAfter( self.refreshLaps )
+			wx.CallAfter( self.refreshRiderLapCountList )
 		
 		if self.isKeypadInputMode():
 			wx.CallLater( 100, self.keypad.numEdit.SetFocus )

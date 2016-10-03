@@ -69,6 +69,7 @@ from Utils				import logCall, logException
 from FileDrop			import FileDrop
 from RaceDB				import RaceDB
 from SimulateData		import SimulateData
+from NonBusyCall		import NonBusyCall
 import BatchPublishAttrs
 import Model
 import JChipSetup
@@ -101,6 +102,8 @@ import ChipReader
 import Flags
 import WebServer
 import ImageIO
+
+now = datetime.datetime.now
 
 import traceback
 '''
@@ -233,6 +236,8 @@ class MainWin( wx.Frame ):
 		
 		self.updateLater = None	# Used for delayed updates after chip reads.
 		self.numTimes = []
+		
+		self.nonBusyRefresh = NonBusyCall( self.refresh, min_millis=1500, max_millis=7500 )
 
 		# Add code to configure file history.
 		self.filehistory = wx.FileHistory(8)
@@ -821,7 +826,7 @@ class MainWin( wx.Frame ):
 		#------------------------------------------------------------------------------
 		self.Bind(wx.EVT_CLOSE, self.onCloseWindow)
 		self.Bind(EVT_CHIP_READER, self.handleChipReaderEvent)
-		self.lastPhotoTime = datetime.datetime.now()
+		self.lastPhotoTime = now()
 		
 		self.photoDialog = PhotoViewerDialog( self, title = _("PhotoViewer"), size=(600,400) )
 
@@ -1605,7 +1610,7 @@ class MainWin( wx.Frame ):
 				totalElevationGain = geoTrack.totalElevationGainM
 				isPointToPoint = getattr( geoTrack, 'isPointToPoint', False )
 		
-		tNow = datetime.datetime.now()
+		tNow = now()
 		payload['timestamp']			= [tNow.ctime(), tLastRaceTime]
 		payload['email']				= self.getEmail()
 		payload['data']					= GetAnimationData(getExternalData=True)
@@ -1742,7 +1747,7 @@ class MainWin( wx.Frame ):
 				lengthKm = geoTrack.lengthKm
 				isPointToPoint = getattr( geoTrack, 'isPointToPoint', False )
 		
-		tNow = datetime.datetime.now()
+		tNow = now()
 		payload['email']				= self.getEmail()
 		payload['version']				= Version.AppVerName
 		if courseCoordinates:
@@ -1892,7 +1897,7 @@ class MainWin( wx.Frame ):
 			HH, MM = [int(f) for f in race.scheduledStart.split(':')[:2]]
 			payload['raceScheduledStartTuple'] = [y, m, d, HH, MM, 0, 0]
 		
-		tNow = datetime.datetime.now()
+		tNow = now()
 		payload['lastUpdatedTuple'] = [
 				tNow.year, tNow.month-1, tNow.day,
 				tNow.hour, tNow.minute, tNow.second, int(tNow.microsecond/1000)
@@ -2208,7 +2213,7 @@ class MainWin( wx.Frame ):
 			html = html.replace( 'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
 			html = replaceJsonVar( html, 'organizer', getattr(race, 'organizer', '') )
 			
-		html = replaceJsonVar( html, 'timestamp', datetime.datetime.now().ctime() )
+		html = replaceJsonVar( html, 'timestamp', now().ctime() )
 		
 		graphicBase64 = self.getGraphicBase64()
 		if graphicBase64:
@@ -2500,7 +2505,7 @@ class MainWin( wx.Frame ):
 		raceSave = Model.race
 		Model.newRace()
 		race = Model.race
-		race.lastOpened = datetime.datetime.now()
+		race.lastOpened = now()
 		ApplyDefaultTemplate( race )
 		
 		# Create the link to the RaceDB excel sheet.
@@ -2638,7 +2643,7 @@ class MainWin( wx.Frame ):
 				isFinished = race.isFinished()
 				race.tagNums = None
 				race.resetAllCaches()
-				race.lastOpened = datetime.datetime.now()
+				race.lastOpened = now()
 				Model.setRace( race )
 			
 			ChipReader.chipReaderCur.reset( race.chipReaderType )
@@ -3339,7 +3344,7 @@ class MainWin( wx.Frame ):
 		info = wx.AboutDialogInfo()
 		info.Name = Version.AppVerName
 		info.Version = ''
-		info.Copyright = "(C) 2009-{}".format( datetime.datetime.now().year )
+		info.Copyright = "(C) 2009-{}".format( now().year )
 		info.Description = wordwrap(
 _("""Score Cycling races quickly and easily with little preparation.
 
@@ -3451,10 +3456,11 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 		self.forecastHistory.refresh()
 		if self.riderDetailDialog:
 			wx.CallAfter( self.riderDetailDialog.refresh )
+		race = Model.race
+		self.menuItemHighPrecisionTimes.Check( bool(race and race.highPrecisionTimes) )
+		self.menuItemSyncCategories.Check( bool(race and race.syncCategories) )
+		
 		self.updateRaceClock()
-		with Model.LockRace() as race:
-			self.menuItemHighPrecisionTimes.Check( bool(race and getattr(race, 'highPrecisionTimes', False)) ) 
-			self.menuItemSyncCategories.Check( bool(race and getattr(race, 'syncCategories', True)) ) 
 		if self.photoDialog.IsShown():
 			self.photoDialog.refresh()
 
@@ -3505,28 +3511,29 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 	#-------------------------------------------------------------
 	
 	def processNumTimes( self ):
+		if not self.numTimes:
+			return False
+		
 		race = Model.race
 		
 		for num, t in self.numTimes:
-			race.addTime( num, t )
+			race.addTime( num, t, doSetChanged=False )
+		race.setChanged()
 		
 		OutputStreamer.writeNumTimes( self.numTimes )
-		photoRequests = [(num, t) for num, t in self.numTimes if okTakePhoto(num, t)]
-		if photoRequests:
-			success, error = SendPhotoRequests( photoRequests )
-			if success:
-				race.photoCount += len(photoRequests) * 2
-			else:
-				Utils.writeLog( 'USB Camera Error: {}'.format(error) )
 		
-		if race.ftpUploadDuringRace:
-			realTimeFtpPublish.publishEntry()
+		if race.enableUSBCamera:
+			photoRequests = [(num, t) for num, t in self.numTimes if okTakePhoto(num, t)]
+			if photoRequests:
+				success, error = SendPhotoRequests( photoRequests )
+				if success:
+					race.photoCount += len(photoRequests)
+				else:
+					Utils.writeLog( 'USB Camera Error: {}'.format(error) )
 		
-		if self.getCurrentPage() == self.results:
-			wx.CallAfter( self.results.showLastLap )
-			
 		self.numTimes = []
 		self.updateLater = None
+		return True
 	
 	def processJChipListener( self ):
 		race = Model.race
@@ -3548,7 +3555,6 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 		if not race.tagNums:
 			return False
 		
-		lastNumTimesLen = len(self.numTimes)
 		for d in data:
 			if d[0] != 'data':
 				continue
@@ -3568,60 +3574,63 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 			if race.isRunning() and race.startTime <= dt:
 				self.numTimes.append( (num, (dt - race.startTime).total_seconds()) )
 		
-		doRefresh = (lastNumTimesLen != len(self.numTimes))
-		
-		self.processNumTimes()
-		return doRefresh
+		return self.processNumTimes()
 
 	def updateRaceClock( self, event = None ):
-		if hasattr(self, 'record'):
+		if self.getCurrentPage() == getattr(self, 'record', None):
 			self.record.refreshRaceTime()
+			self.record.refreshLaps()
 
 		doRefresh = False
-		with Model.LockRace() as race:
-			if race is None:
-				self.SetTitle( Version.AppVerName )
+		race = Model.race
+		
+		if race is None:
+			self.SetTitle( Version.AppVerName )
+			ChipReader.chipReaderCur.StopListener()
+			self.timer.Stop()
+			return
+
+		if race.isUnstarted():
+			status = _('Unstarted')
+		elif race.isRunning():
+			status = _('Running')
+			if race.enableJChipIntegration:
+				doRefresh = self.processJChipListener()
+			elif ChipReader.chipReaderCur.IsListening():
 				ChipReader.chipReaderCur.StopListener()
-				self.timer.Stop()
-				return
+			self.forecastHistory.updatedExpectedTimes( (now() - race.startTime).total_seconds() )
+		else:
+			status = _('Finished')
 
-			if race.isUnstarted():
-				status = _('Unstarted')
-			elif race.isRunning():
-				status = _('Running')
-				if race.enableJChipIntegration:
-					doRefresh = self.processJChipListener()
-				elif ChipReader.chipReaderCur.IsListening():
-					ChipReader.chipReaderCur.StopListener()
-			else:
-				status = _('Finished')
-
-			if not race.isRunning():
-				self.SetTitle( u'{}-r{} - {} - {} {}'.format(
-								race.name, race.raceNum,
-								status,
-								Version.AppVerName,
-								u'<{}>'.format(_('TimeTrial')) if race.isTimeTrial else u'') )
-				self.timer.Stop()
-				return
-
-			self.SetTitle( u'{} {}-r{} - {} - {} {} {}'.format(
-							Utils.formatTime(race.curRaceTime()),
+		if not race.isRunning():
+			self.SetTitle( u'{}-r{} - {} - {}{}'.format(
 							race.name, race.raceNum,
-							status, Version.AppVerName,
-							u'<{}>'.format(_('RFID')) if ChipReader.chipReaderCur.IsListening() else u'',
-							u'<{}>'.format(_('TimeTrial')) if race.isTimeTrial else u'') )
+							status,
+							Version.AppVerName,
+							u' <{}>'.format(_('TimeTrial')) if race.isTimeTrial else u'') )
+			self.timer.Stop()
+			return
 
-			if not self.timer.IsRunning():
-				wx.CallLater( 1000 - (datetime.datetime.now() - race.startTime).microseconds // 1000, self.timer.Start, 1000 )
+		self.SetTitle( u'{} {}-r{} - {} - {}{}{}{}'.format(
+						Utils.formatTime(race.curRaceTime()),
+						race.name, race.raceNum,
+						status, Version.AppVerName,
+						u' <{}>'.format(_('RFID')) if ChipReader.chipReaderCur.IsListening() else u'',
+						u' <{}>'.format(_('TimeTrial')) if race.isTimeTrial else u'',
+						u' <{}>'.format(_('Photos')) if race.enableUSBCamera else u'',
+		) )
+
+		if not self.timer.IsRunning():
+			wx.CallLater( 1000 - (now() - race.startTime).microseconds // 1000, self.timer.Start, 1000 )
 
 		self.secondCount += 1
-		if self.secondCount % 30 == 0 and race.isChanged():
+		if self.secondCount % 45 == 0 and race.isChanged():
 			self.writeRace()
 			
 		if doRefresh:
-			wx.CallAfter( self.refresh )
-			wx.CallAfter( self.record.refreshLaps )
+			self.nonBusyRefresh()
+			if race.ftpUploadDuringRace:
+				realTimeFtpPublish.publishEntry()		
 
 # Set log file location.
 dataDir = ''

@@ -1084,6 +1084,9 @@ class Race( object ):
 	finishKMH = 50.0
 	photoCount = 0
 	
+	highPrecisionTimes = False
+	syncCategories = True
+	
 	unmatchedTags = None
 	
 	ftpUploadDuringRace = False
@@ -1311,7 +1314,7 @@ class Race( object ):
 			return (self.finishTime - self.startTime).total_seconds()
 		return self.curRaceTime()
 
-	def addTime( self, num, t = None ):
+	def addTime( self, num, t = None, doSetChanged = True ):
 		if t is None:
 			t = self.curRaceTime()
 		
@@ -1348,7 +1351,8 @@ class Race( object ):
 			else:
 				self.getRider(num).addTime( t )
 		
-		self.setChanged()
+		if doSetChanged:
+			self.setChanged()
 		return t
 
 	def importTime( self, num, t ):
@@ -2138,7 +2142,7 @@ class Race( object ):
 		self.categoryCache = {}			# Returns wave category by num.
 		self.startOffsetCache = {}		# Returns start offset by num.
 		
-		# Handle bib exclusivity for wave categories.
+		# Handle wave categories only.
 		numsSeen = set()
 		for c in self.getCategories( startWaveOnly=True ):
 			c.bibSet = c.getMatchSet() - numsSeen
@@ -2149,7 +2153,7 @@ class Race( object ):
 				self.categoryCache[n] = c
 
 		# Now handle all categories.
-		# Bib exclusivity in enforced for component categories based on their wave.
+		# Bib exclusivity is enforced for component categories based on their wave.
 		# Custom categories have no exclusivity rules.		
 		waveCategory = None
 		waveNumsSeen = set()

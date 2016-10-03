@@ -699,7 +699,7 @@ table.results tr td.fastest{
 			with open(fileName, 'rb') as fp:
 				SeriesModel.model = pickle.load( fp )
 		except IOError:
-			Utils.MessageOK(self, 'Cannot Open File "%s".' % fileName, 'Cannot Open File', iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, 'Cannot Open File "{}".'.format(fileName), 'Cannot Open File', iconMask=wx.ICON_ERROR )
 			return
 		
 		SeriesModel.model.postReadFix()
@@ -707,7 +707,10 @@ table.results tr td.fastest{
 		self.updateRecentFiles()
 		SeriesModel.model.setChanged( False )
 		self.readResetAll()
-		self.refreshAll()
+		try:
+			self.refreshAll()
+		except Exception as e:
+			Utils.MessageOK(self, 'Error:\n\n"{}".'.format(e), 'Error', iconMask=wx.ICON_ERROR )
 		self.showPageName( 'Races' )
 
 	def menuOpen( self, event ):
@@ -780,7 +783,10 @@ table.results tr td.fastest{
 		fileName = self.filehistory.GetHistoryFile(fileNum)
 		self.filehistory.AddFileToHistory(fileName)  # move up the list
 		self.openSeries( fileName )
-		
+	
+	def menuHelp( self, event ):
+		self.menuAbout( event )
+	
 	def menuExit(self, event):
 		if SeriesModel.model.changed:
 			response = Utils.MessageYesNoCancel(self, 'You have Unsaved Changes.\nSave Before Closing?', 'Unsaved Changes')
@@ -791,15 +797,6 @@ table.results tr td.fastest{
 				
 		self.onCloseWindow( event )
 
-	def menuHelpQuickStart( self, event ):
-		Utils.showHelp( 'QuickStart.html' )
-	
-	def menuHelp( self, event ):
-		Utils.showHelp( 'Main.html' )
-	
-	def onContextHelp( self, event ):
-		Utils.showHelp( self.attrClassName[self.notebook.GetSelection()][2] + '.html' )
-	
 	def menuAbout( self, event ):
 		# First we create and fill the info object
 		info = wx.AboutDialogInfo()

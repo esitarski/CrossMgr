@@ -158,17 +158,29 @@ def ExtractRaceResultsExcel( raceInSeries ):
 					'raceOrganizer': u'',
 					'raceInSeries': raceInSeries,					
 					'bib': 			f('bib',99999),
-					'rank':			f('pos',None),
+					'rank':			f('pos',''),
 					'tFinish':		f('time',0.0),
 					'firstName':	f('first_name',u'').strip(),
 					'lastName'	:	f('last_name',u'').strip(),
 					'license':		unicode(f('license_code',u'')).strip(),
 					'team':			f('team',u'').strip(),
-					'categoryName': categoryName,
+					'categoryName': f('category_code',None),
 				}
 				
-				# Must have a rank.
-				if not info['rank']:
+				info['rank'] = unicode(info['rank']).strip()
+				if not info['rank']:	# If missing rank, assume end of input.
+					break
+				
+				if info['categoryName'] is None:
+					info['categoryName'] = categoryName
+				info['categoryName'] = unicode(info['categoryName']).strip()
+				
+				try:
+					info['rank'] = toInt(info['rank'])
+				except ValueError:
+					pass
+					
+				if not isinstance(info['rank'], (long,int)):
 					continue
 
 				# Check for comma-separated name.
@@ -188,15 +200,6 @@ def ExtractRaceResultsExcel( raceInSeries ):
 				except ValueError:
 					continue
 					
-				info['rank'] = unicode(info['rank']).strip()
-				try:
-					info['rank'] = toInt(info['rank'])
-				except ValueError:
-					pass
-					
-				if not isinstance(info['rank'], (long,int)):
-					continue
-				
 				info['tFinish'] = (info['tFinish'] or 0.0)
 				if isinstance(info['tFinish'], basestring) and ':' in info['tFinish']:
 					info['tFinish'] = Utils.StrToSeconds( info['tFinish'].strip() )

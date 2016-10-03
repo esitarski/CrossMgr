@@ -23,22 +23,18 @@ DEFAULT_HOST = '127.0.0.1'
 # JChip delimiter (CR, **not** LF)
 CR = chr( 0x0d )
 
+NumberOfStarters = 500
+
 #------------------------------------------------------------------------------	
 # Create some random rider numbers.
 random.seed( 10101010 )
-seen = set()
-nums = []
-for i in xrange(25):
-	while 1:
-		x = random.randint(1,200)
-		if x not in seen:
-			seen.add( x )
-			nums.append( x )
-			break
+nums = [n for n in xrange(1,799+1)]
+random.shuffle( nums )
+nums = nums[:NumberOfStarters]
 
 #------------------------------------------------------------------------------	
 # Create a JChip-style hex tag for each number.
-tag = dict( (n, '413A%02X' % n) for n in nums )
+tag = dict( (n, '41AA%03X' % n) for n in nums )
 tag[random.choice(list(tag.keys()))] = 'E2001018860B01290700D0D8'
 tag[random.choice(list(tag.keys()))] = 'E2001018860B01530700D138'
 tag[random.choice(list(tag.keys()))] = 'E2001018860B01370700D0F8'
@@ -46,7 +42,7 @@ tag[random.choice(list(tag.keys()))] = '1'
 tag[random.choice(list(tag.keys()))] = '2'
 
 #------------------------------------------------------------------------
-def getRandomData( starters = 64 ):
+def getRandomData( starters ):
 	firstNames = '''
 1. Noah
 2. Liam
@@ -276,15 +272,14 @@ Spin Doctors
 	firstNames = [line.split('.')[1].strip() for line in firstNames.split('\n') if line.strip()]
 	lastNames = [line.split('.')[1].strip() for line in lastNames.split('\n') if line.strip()]
 	teams = [line.strip() for line in teams.split('\n') if line.strip()]
-	bibs = range( 100, 100+starters )
+	bibs = [n for n in xrange(1,1+starters)]
 	
 	random.shuffle( firstNames )
 	random.shuffle( lastNames )
 	random.shuffle( teams )
-	random.shuffle( bibs )
 	
 	for i in xrange(starters):
-		yield bibs[i], firstNames[i%len(firstNames)], lastNames[i&len(lastNames)], teams[i%len(teams)]
+		yield bibs[i], firstNames[i%len(firstNames)], lastNames[i%len(lastNames)], teams[i%len(teams)]
 		
 #------------------------------------------------------------------------------	
 # Write out as a .xlsx file with the number tag data.
