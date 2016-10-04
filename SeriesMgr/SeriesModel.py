@@ -175,6 +175,7 @@ class SeriesModel( object ):
 	postPublishCmd = ''
 	categorySequence = {}
 	categorySequencePrevious = {}
+	categoryHide = set()
 
 	def __init__( self ):
 		self.name = '<Series Name>'
@@ -243,10 +244,11 @@ class SeriesModel( object ):
 		self.races = newRaces
 		memoize.clear()
 	
-	def setCategorySequence( self, categoryList ):
+	def setCategorySequence( self, categoryList, categoryHide ):
 		categorySequenceNew = { c:i for i, c in enumerate(categoryList) }
-		if self.categorySequence != categorySequenceNew:
+		if self.categorySequence != categorySequenceNew or self.categoryHide != categoryHide:
 			self.categorySequence = categorySequenceNew
+			self.categoryHide = categoryHide
 			self.changed = True
 	
 	def harmonizeCategorySequence( self, raceResults ):
@@ -272,10 +274,18 @@ class SeriesModel( object ):
 		self.categorySequencePrevious = self.categorySequence
 		if categorySequenceSave != self.categorySequence:
 			self.changed = True
-	
+			
+		for c in list(self.categoryHide):
+			if c not in self.categorySequence:
+				self.categoryHide.remove( c )
+				self.changed = True
+			
 	def getCategoryNamesSorted( self ):
 		cs = self.categorySequence
 		return sorted( (c for c in cs.iterkeys()), key=lambda c: cs[c] )
+		
+	def getCategoryNamesSortedPublish( self ):
+		return [c for c in self.getCategoryNamesSorted() if c not in self.categoryHide]
 	
 	def setRootFolder( self, path ):
 		raceFileNames = set( os.path.basename(r.fileName) for r in self.races )

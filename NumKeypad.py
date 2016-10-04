@@ -428,7 +428,7 @@ class NumKeypad( wx.Panel ):
 				Utils.mainWin.updateLapCounter()
 			return
 			
-		results = GetResults( None, False )
+		results = GetResults( None )
 		if not results:
 			self.raceHUD.SetData()
 			if Utils.mainWin:
@@ -557,7 +557,7 @@ class NumKeypad( wx.Panel ):
 		Finisher = Model.Rider.Finisher
 		getCategory = race.getCategory
 		
-		results = GetResults(None, False)
+		results = GetResults(None)
 		if race.enableJChipIntegration and race.resetStartClockOnFirstTag and len(results) != len(race.riders):
 			# Add rider entries who have been read by RFID but have not completed the first lap.
 			results = list(results)

@@ -59,7 +59,7 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	considerPrimePointsOrTimeBonus = model.considerPrimePointsOrTimeBonus
 	raceResults = model.extractAllRaceResults()
 	
-	categoryNames = model.getCategoryNamesSorted()
+	categoryNames = model.getCategoryNamesSortedPublish()
 	if not categoryNames:
 		return '<html><body>SeriesMgr: No Categories.</body></html>'
 	
@@ -253,14 +253,17 @@ table.points tr.odd {
 	font-style: italic;
 }
 
-td.points-cell {
+.points-cell {
 	text-align: right;
 	padding:3px 7px 2px 7px;
 }
 
 hr { clear: both; }
 
-@media print { .noprint { display: none; } }
+@media print {
+	.noprint { display: none; }
+	.title { page-break-after: avoid; }
+}
 ''')
 
 			with tag(html, 'script', dict( type="text/javascript")):
@@ -315,10 +318,10 @@ function sortTable( table, col, reverse ) {
 	if( col == 0 || col == 4 || col == 5 ) {		// Pos, Points or Gap
 		cmpFunc = cmpPos;
 	}
-	else if( col > 4 ) {				// Race Points/Time and Rank
+	else if( col >= 6 ) {				// Race Points/Time and Rank
 		cmpFunc = function( a, b ) {
-			var x = parseRank( a.cells[col].textContent.trim() );
-			var y = parseRank( b.cells[col].textContent.trim() );
+			var x = parseRank( a.cells[6+(col-6)*2+1].textContent.trim() );
+			var y = parseRank( b.cells[6+(col-6)*2+1].textContent.trim() );
 			return MakeCmpStable( a, b, x - y );
 		};
 	}
@@ -348,8 +351,11 @@ function sortTableId( iTable, iCol ) {
 	var row0Len = table.tBodies[0].rows[0].cells.length;
 	for( var i = 0; i < row0Len; ++i ) {
 		var idCur = 'idUpDn' + iTable + '_' + i;
-		document.getElementById(idCur).innerHTML = '';
-		ssPersist[idCur] = isNone;
+		var ele = document.getElementById(idCur);
+		if( ele ) {
+			ele.innerHTML = '';
+			ssPersist[idCur] = isNone;
+		}
 	}
 
 	if( iCol == 0 ) {
@@ -419,22 +425,23 @@ function sortTableId( iTable, iCol ) {
 					write( u'<p/>')
 					write( u'<hr/>')
 					
-					with tag(html, 'h2'):
+					with tag(html, 'h2', {'class':'title'}):
 						write( cgi.escape(categoryName) )
 					with tag(html, 'table', {'class': 'results', 'id': 'idTable{}'.format(iTable)} ):
 						with tag(html, 'thead'):
 							with tag(html, 'tr'):
 								for iHeader, col in enumerate(HeaderNames):
-									with tag(html, 'th', {
-											'onclick': 'sortTableId({}, {})'.format(iTable, iHeader),
-											} ):
+									colAttr = { 'onclick': 'sortTableId({}, {})'.format(iTable, iHeader) }
+									if col in ('License', 'Gap'):
+										colAttr['class'] = 'noprint'
+									with tag(html, 'th', colAttr):
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,iHeader)) ):
 											pass
 										write( unicode(cgi.escape(col).replace('\n', '<br/>\n')) )
 								for iRace, r in enumerate(races):
 									# r[0] = RaceData, r[1] = RaceName, r[2] = RaceURL, r[3] = Race
 									with tag(html, 'th', {
-											'class':'leftBorder centerAlign',
+											'class':'leftBorder centerAlign noprint',
 											'colspan': 2,
 											'onclick': 'sortTableId({}, {})'.format(iTable, len(HeaderNames) + iRace),
 										} ):
@@ -460,7 +467,7 @@ function sortTableId( iTable, iCol ) {
 										write( unicode(pos+1) )
 									with tag(html, 'td'):
 										write( unicode(name or u'') )
-									with tag(html, 'td'):
+									with tag(html, 'td', {'class':'noprint'}):
 										if licenseLinkTemplate and license:
 											with tag(html, 'a', {'href':u'{}{}'.format(licenseLinkTemplate, license), 'target':'_blank'}):
 												write( unicode(license or u'') )
@@ -470,36 +477,36 @@ function sortTableId( iTable, iCol ) {
 										write( unicode(team or '') )
 									with tag(html, 'td', {'class':'rightAlign'}):
 										write( unicode(points or '') )
-									with tag(html, 'td', {'class':'rightAlign'}):
+									with tag(html, 'td', {'class':'rightAlign noprint'}):
 										write( unicode(gap or '') )
 									for rPoints, rRank, rPrimePoints, rTimeBonus in racePoints:
 										if rPoints:
-											with tag(html, 'td', {'class':'leftBorder points' + (' ignored' if u'**' in u'{}'.format(rPoints) else '')}):
+											with tag(html, 'td', {'class':'leftBorder rightAlign noprint' + (' ignored' if u'**' in u'{}'.format(rPoints) else '')}):
 												write( u'{}'.format(rPoints).replace(u'[',u'').replace(u']',u'').replace(' ', '&nbsp;') )
 										else:
-											with tag(html, 'td', {'class':'leftBorder'}):
+											with tag(html, 'td', {'class':'leftBorder noprint'}):
 												pass
 										
 										if rRank:
 											if rPrimePoints:
-												with tag(html, 'td', {'class':'rank'}):
+												with tag(html, 'td', {'class':'rank noprint'}):
 													write( u'({})&nbsp;+{}'.format(Utils.ordinal(rRank).replace(' ', '&nbsp;'), rPrimePoints) )
 											elif rTimeBonus:
-												with tag(html, 'td', {'class':'rank'}):
+												with tag(html, 'td', {'class':'rank noprint'}):
 													write( u'({})&nbsp;-{}'.format(
 														Utils.ordinal(rRank).replace(' ', '&nbsp;'),
 														Utils.formatTime(rTimeBonus, twoDigitMinutes=False)),
 													)
 											else:
-												with tag(html, 'td', {'class':'rank'}):
+												with tag(html, 'td', {'class':'rank noprint'}):
 													write( u'({})'.format(Utils.ordinal(rRank).replace(' ', '&nbsp;')) )
 										else:
-											with tag(html, 'td'):
+											with tag(html, 'td', {'class':'noprint'}):
 												pass
 										
 			#-----------------------------------------------------------------------------
 			if considerPrimePointsOrTimeBonus:
-				with tag(html, 'p'):
+				with tag(html, 'p', {'class':'noprint'}):
 					if scoreByTime:
 						with tag(html, 'strong'):
 							with tag(html, 'span', {'style':'font-style: italic;'}):
@@ -512,124 +519,126 @@ function sortTableId( iTable, iCol ) {
 						write( u' - {}'.format( u'Bonus Points added to Points for Place.') )
 					
 			if bestResultsToConsider > 0 and not scoreByTrueSkill:
-				with tag(html, 'p'):
+				with tag(html, 'p', {'class':'noprint'}):
 					with tag(html, 'strong'):
 						write( u'**' )
 					write( u' - {}'.format( u'Result not considered.  Not in best of {} scores.'.format(bestResultsToConsider) ) )
 					
 			if hasUpgrades:
-				with tag(html, 'p'):
+				with tag(html, 'p', {'class':'noprint'}):
 					with tag(html, 'strong'):
 						write( u'pre-upg' )
 					write( u' - {}'.format( u'Points carried forward from pre-upgrade category results (see Upgrades Progression below).' ) )
 			
 			if mustHaveCompleted > 0:
-				with tag(html, 'p'):
+				with tag(html, 'p', {'class':'noprint'}):
 					write( u'Participants completing fewer than {} events are not shown.'.format(mustHaveCompleted) )
 			
 			#-----------------------------------------------------------------------------
 			if scoreByTrueSkill:
-				with tag(html, 'p'):
-					pass
-				with tag(html, 'hr'):
-					pass
-				
-				with tag(html, 'p'):
-					with tag(html, 'h2'):
-						write( u'TrueSkill' )
-					with tag(html, 'p'):
-						write( u"TrueSkill is a ranking method developed by Microsoft Research for the XBox.  ")
-						write( u"TrueSkill maintains an estimation of the skill of each competitor.  Every time a competitor races, the system accordingly changes the perceived skill of the competitor and acquires more confidence about this perception.  This is unlike a regular points system where a points can be accumulated through regular participation: not necessarily representing  overall racing ability.  ")
-					with tag(html, 'p'):
-						write( u"Results are shown above in the form RR (MM,VV).  Competitor skill is represented by a normally distributed random variable with estimated mean (MM) and variance (VV).  The mean is an estimation of the skill of the competitor and the variance represents how unsure the system is about it (bigger variance = more unsure).  Competitors all start with mean = 25 and variance = 25/3 which corresponds to a zero ranking (see below).  ")
-					with tag(html, 'p'):
-						write( u"The parameters of each distribution are updated based on the results from each race using a Bayesian approach.  The extent of updates depends on each player's variance and on how 'surprising' the outcome is to the system. Changes to scores are negligible when outcomes are expected, but can be large when favorites surprisingly do poorly or underdogs surprisingly do well.  ")
-					with tag(html, 'p'):
-						write( u"RR is the skill ranking defined by RR = MM - 3 * VV.  This is a conservative estimate of the 'actual skill', which is expected to be higher than the estimate 99.7% of the time.  " )
-						write( u"There is no meaning to positive or negative skill levels (a result of the underlying mathematics).  The numbers are only meaningful relative to each other.  ")
-					with tag(html, 'p'):
-						write( u"The TrueSkill score can be improved by 'consistently' (say, 2-3 times in a row) finishing ahead of higher ranked competitors.  ")
-						write( u"Repeatedly finishing with similarly ranked competitors will not change the score much as it isn't evidence of improvement.  ")
-					with tag(html, 'p'):
-						write("Full details ")
-						with tag(html, 'a', {'href': 'https://www.microsoft.com/en-us/research/publication/trueskilltm-a-bayesian-skill-rating-system/'} ):
-							write(u'here.')
-				
-			if not scoreByTime and not scoreByPercent and not scoreByTrueSkill:
-				with tag(html, 'p'):
-					pass
-				with tag(html, 'hr'):
-					pass
-				
-				with tag(html, 'h2'):
-					write( 'Point Structures' )
-				with tag(html, 'table' ):
-					for ps in pointsStructuresList:
-						with tag(html, 'tr'):
-							for header in [ps.name, u'Races Scored with {}'.format(ps.name)]:
-								with tag(html, 'th'):
-									write( header )
-						
-						with tag(html, 'tr'):
-							with tag(html, 'td', {'class': 'topAlign'}):
-								write( ps.getHtml() )
-							with tag(html, 'td', {'class': 'topAlign'}):
-								with tag(html, 'ul'):
-									for r in pointsStructures[ps]:
-										with tag(html, 'li'):
-											write( r.getRaceName() )
-					
-					with tag(html, 'tr'):
-						with tag(html, 'td'):
-							pass
-						with tag(html, 'td'):
-							pass
-						
-				#-----------------------------------------------------------------------------
-				
-				with tag(html, 'p'):
-					pass
-				with tag(html, 'hr'):
-					pass
-					
-				with tag(html, 'h2'):
-					write( u'Tie Breaking Rules' )
-					
-				with tag(html, 'p'):
-					write( u"If two or more riders are tied on points, the following rules are applied in sequence until the tie is broken:" )
-				isFirst = True
-				tieLink = u"if still a tie, use "
-				with tag(html, 'ol'):
-					if model.useMostEventsCompleted:
-						with tag(html, 'li'):
-							write( u"{}number of events completed".format( tieLink if not isFirst else "" ) )
-							isFirst = False
-					if model.numPlacesTieBreaker != 0:
-						finishOrdinals = [Utils.ordinal(p+1) for p in xrange(model.numPlacesTieBreaker)]
-						if model.numPlacesTieBreaker == 1:
-							finishStr = finishOrdinals[0]
-						else:
-							finishStr = u', '.join(finishOrdinals[:-1]) + u' then ' + finishOrdinals[-1]
-						with tag(html, 'li'):
-							write( u"{}number of {} place finishes".format( tieLink if not isFirst else "",
-								finishStr,
-							) )
-							isFirst = False
-					with tag(html, 'li'):
-						write( u"{}finish position in most recent event".format(tieLink if not isFirst else "") )
-						isFirst = False
-				
-				if hasUpgrades:
+				with tag(html, 'div', {'class':'noprint'} ):
 					with tag(html, 'p'):
 						pass
 					with tag(html, 'hr'):
 						pass
+					
+					with tag(html, 'p'):
+						with tag(html, 'h2'):
+							write( u'TrueSkill' )
+						with tag(html, 'p'):
+							write( u"TrueSkill is a ranking method developed by Microsoft Research for the XBox.  ")
+							write( u"TrueSkill maintains an estimation of the skill of each competitor.  Every time a competitor races, the system accordingly changes the perceived skill of the competitor and acquires more confidence about this perception.  This is unlike a regular points system where a points can be accumulated through regular participation: not necessarily representing  overall racing ability.  ")
+						with tag(html, 'p'):
+							write( u"Results are shown above in the form RR (MM,VV).  Competitor skill is represented by a normally distributed random variable with estimated mean (MM) and variance (VV).  The mean is an estimation of the skill of the competitor and the variance represents how unsure the system is about it (bigger variance = more unsure).  Competitors all start with mean = 25 and variance = 25/3 which corresponds to a zero ranking (see below).  ")
+						with tag(html, 'p'):
+							write( u"The parameters of each distribution are updated based on the results from each race using a Bayesian approach.  The extent of updates depends on each player's variance and on how 'surprising' the outcome is to the system. Changes to scores are negligible when outcomes are expected, but can be large when favorites surprisingly do poorly or underdogs surprisingly do well.  ")
+						with tag(html, 'p'):
+							write( u"RR is the skill ranking defined by RR = MM - 3 * VV.  This is a conservative estimate of the 'actual skill', which is expected to be higher than the estimate 99.7% of the time.  " )
+							write( u"There is no meaning to positive or negative skill levels which are a result of the underlying mathematics.  The numbers are only meaningful relative to each other.  ")
+						with tag(html, 'p'):
+							write( u"The TrueSkill score can be improved by 'consistently' (say, 2-3 times in a row) finishing ahead of higher ranked competitors.  ")
+							write( u"Repeatedly finishing with similarly ranked competitors will not change the score much as it isn't evidence of improvement.  ")
+						with tag(html, 'p'):
+							write("Full details ")
+							with tag(html, 'a', {'href': 'https://www.microsoft.com/en-us/research/publication/trueskilltm-a-bayesian-skill-rating-system/'} ):
+								write(u'here.')
+				
+			if not scoreByTime and not scoreByPercent and not scoreByTrueSkill:
+				with tag(html, 'div', {'class':'noprint'} ):
+					with tag(html, 'p'):
+						pass
+					with tag(html, 'hr'):
+						pass
+					
 					with tag(html, 'h2'):
-						write( u"Upgrades Progression" )
+						write( 'Point Structures' )
+					with tag(html, 'table' ):
+						for ps in pointsStructuresList:
+							with tag(html, 'tr'):
+								for header in [ps.name, u'Races Scored with {}'.format(ps.name)]:
+									with tag(html, 'th'):
+										write( header )
+							
+							with tag(html, 'tr'):
+								with tag(html, 'td', {'class': 'topAlign'}):
+									write( ps.getHtml() )
+								with tag(html, 'td', {'class': 'topAlign'}):
+									with tag(html, 'ul'):
+										for r in pointsStructures[ps]:
+											with tag(html, 'li'):
+												write( r.getRaceName() )
+						
+						with tag(html, 'tr'):
+							with tag(html, 'td'):
+								pass
+							with tag(html, 'td'):
+								pass
+						
+					#-----------------------------------------------------------------------------
+					
+					with tag(html, 'p'):
+						pass
+					with tag(html, 'hr'):
+						pass
+						
+					with tag(html, 'h2'):
+						write( u'Tie Breaking Rules' )
+						
+					with tag(html, 'p'):
+						write( u"If two or more riders are tied on points, the following rules are applied in sequence until the tie is broken:" )
+					isFirst = True
+					tieLink = u"if still a tie, use "
 					with tag(html, 'ol'):
-						for i in xrange(len(model.upgradePaths)):
+						if model.useMostEventsCompleted:
 							with tag(html, 'li'):
-								write( u"{}: {:.2f} points in pre-upgrade category carried forward".format(model.upgradePaths[i], model.upgradeFactors[i]) )
+								write( u"{}number of events completed".format( tieLink if not isFirst else "" ) )
+								isFirst = False
+						if model.numPlacesTieBreaker != 0:
+							finishOrdinals = [Utils.ordinal(p+1) for p in xrange(model.numPlacesTieBreaker)]
+							if model.numPlacesTieBreaker == 1:
+								finishStr = finishOrdinals[0]
+							else:
+								finishStr = u', '.join(finishOrdinals[:-1]) + u' then ' + finishOrdinals[-1]
+							with tag(html, 'li'):
+								write( u"{}number of {} place finishes".format( tieLink if not isFirst else "",
+									finishStr,
+								) )
+								isFirst = False
+						with tag(html, 'li'):
+							write( u"{}finish position in most recent event".format(tieLink if not isFirst else "") )
+							isFirst = False
+					
+					if hasUpgrades:
+						with tag(html, 'p'):
+							pass
+						with tag(html, 'hr'):
+							pass
+						with tag(html, 'h2'):
+							write( u"Upgrades Progression" )
+						with tag(html, 'ol'):
+							for i in xrange(len(model.upgradePaths)):
+								with tag(html, 'li'):
+									write( u"{}: {:.2f} points in pre-upgrade category carried forward".format(model.upgradePaths[i], model.upgradeFactors[i]) )
 			#-----------------------------------------------------------------------------
 			with tag(html, 'p'):
 				with tag(html, 'a', dict(href='http://sites.google.com/site/crossmgrsoftware')):
@@ -668,7 +677,7 @@ class Results(wx.Panel):
 		self.categoryChoice.Bind( wx.EVT_CHOICE, self.onCategoryChoice )
 		self.statsLabel = wx.StaticText( self, label='   /   ' )
 		self.refreshButton = wx.Button( self, label='Refresh' )
-		self.refreshButton.Bind( wx.EVT_BUTTON, lambda event, self = self: self.refresh() )
+		self.refreshButton.Bind( wx.EVT_BUTTON, self.onRefresh )
 		self.publishToHtml = wx.Button( self, label='Publish to Html' )
 		self.publishToHtml.Bind( wx.EVT_BUTTON, self.onPublishToHtml )
 		self.publishToFtp = wx.Button( self, label='Publish to Html with FTP' )
@@ -714,6 +723,10 @@ class Results(wx.Panel):
 		sizer.Add(self.grid, 1, flag=wx.EXPAND|wx.ALL, border = 6)
 		self.SetSizer(sizer)
 	
+	def onRefresh( self, event ):
+		SeriesModel.model.clearCache()
+		self.refresh()
+	
 	def onCategoryChoice( self, event ):
 		wx.CallAfter( self.refresh )
 	
@@ -756,7 +769,7 @@ class Results(wx.Panel):
 	
 	def fixCategories( self ):
 		model = SeriesModel.model
-		categoryNames = model.getCategoryNamesSorted()
+		categoryNames = model.getCategoryNamesSortedPublish()
 		lastSelection = self.categoryChoice.GetStringSelection()
 		self.categoryChoice.SetItems( categoryNames )
 		iCurSelection = 0
@@ -889,7 +902,7 @@ class Results(wx.Panel):
 		
 		self.raceResults = model.extractAllRaceResults()
 		
-		categoryNames = model.getCategoryNamesSorted()
+		categoryNames = model.getCategoryNamesSortedPublish()
 		if not categoryNames:
 			return
 			

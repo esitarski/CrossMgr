@@ -2,7 +2,7 @@ import random
 import bisect
 from Names import GetNameTeam
 
-def SimulateData( riders=1000 ):
+def SimulateData( riders=200 ):
 	# Generate random rider events.
 	random.seed( 10101021 )
 

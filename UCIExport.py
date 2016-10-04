@@ -43,7 +43,7 @@ def UCIExport( sheet, cat ):
 	rightAlignStyle = xlwt.XFStyle()
 	rightAlignStyle.alignment.horz = xlwt.Alignment.HORZ_RIGHT
 	
-	results = GetResults( cat, True )
+	results = GetResults( cat )
 		
 	def toInt( n ):
 		try:

@@ -17,7 +17,7 @@ def GetAnimationData( category=None, getExternalData=False ):
 	with UnstartedRaceWrapper( getExternalData ):
 		with Model.LockRace() as race:
 			for cat in ([category] if category else race.getCategories()):
-				results = GetResults( cat, getExternalData )
+				results = GetResults( cat )
 				
 				for rr in results:
 					info = { 'flr': race.getCategory(rr.num).firstLapRatio }

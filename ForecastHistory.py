@@ -29,13 +29,13 @@ def getExpectedRecorded( tCutoff=0.0 ):
 	
 	expected, recorded = [], []
 	
-	results = GetResults( None, False )
+	results = GetResults( None )
 	
 	considerStartTime = (race.isTimeTrial or (race.resetStartClockOnFirstTag and race.enableJChipIntegration))
 	
 	if considerStartTime:
 		bibResults = set( rr.num for rr in results )
-		# Include the rider's TT start time.  This is not in the results as there are not results.
+		# Include the rider's TT start time.  This is not in the results as there are no results.
 		interpValue = race.isTimeTrial
 		for rider in race.riders.itervalues():
 			if rider.status == Finisher and rider.num not in bibResults and rider.firstTime is not None:
@@ -387,37 +387,39 @@ class ForecastHistory( wx.Panel ):
 		Utils.PlaySound( 'blip6.wav' )
 	
 	def logNum( self, nums ):
-		if nums is None:
+		if not nums:
 			return
+		
+		race = Model.race
+		if not race or not race.isRunning():
+			return
+		
+		t = race.curRaceTime()
+		
 		if not isinstance(nums, (list, tuple)):
 			nums = [nums]
 			
-		with Model.LockRace() as race:
-			if race is None or not race.isRunning():
-				return
-				
-			t = race.curRaceTime()
+		# Add the times to the model and write to the log.
+		for num in nums:
+			try:
+				num = int(num)
+			except:
+				continue
+			race.addTime( num, t, False )
+			OutputStreamer.writeNumTime( num, t )
 			
-			# Add the times to the model and write to the log.
+		# Schedule a photo.
+		if race.enableUSBCamera:
 			for num in nums:
 				try:
 					num = int(num)
 				except:
 					continue
-				race.addTime( num, t )
-				OutputStreamer.writeNumTime( num, t )
 				
-			# Schedule a photo.
-			if race.enableUSBCamera:
-				for num in nums:
-					try:
-						num = int(num)
-					except:
-						continue
-					
-					race.photoCount += TakePhoto(num, t) if okTakePhoto(num, t) else 0
+				race.photoCount += TakePhoto(num, t) if okTakePhoto(num, t) else 0
 			
 		self.playBlip()
+		race.setChanged()
 		
 		mainWin = Utils.getMainWin()
 		if mainWin:

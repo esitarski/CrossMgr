@@ -37,7 +37,7 @@ def CrossResultsExport( fname ):
 	# Check for what fields are actually filled in.
 	publishCategories = race.getCategories( startWaveOnly = False, uploadOnly = True )
 	for cat in publishCategories:
-		results = GetResults( cat, True )
+		results = GetResults( cat )
 		if not results:
 			continue
 		for rr in results:
@@ -62,7 +62,7 @@ def CrossResultsExport( fname ):
 
 	maxLaps = 1
 	for cat in publishCategories:
-		results = GetResults( cat, True )
+		results = GetResults( cat )
 		if not results:
 			continue
 		maxLaps = max( maxLaps, max(rr.laps for rr in results) )
@@ -77,7 +77,7 @@ def CrossResultsExport( fname ):
 		csvWriter.writerow( crossResultsFields + lapHeaders )
 		
 		for cat in publishCategories:
-			results = GetResults( cat, True )
+			results = GetResults( cat )
 			if not results:
 				continue
 			

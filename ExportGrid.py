@@ -618,7 +618,7 @@ class ExportGrid( object ):
 		self.colnames = []
 		self.footer = None
 
-		results = GetResults( category, getExternalData )
+		results = GetResults( category )
 		if not results:
 			return
 		catDetails = dict( (cd['name'], cd) for cd in GetCategoryDetails() )

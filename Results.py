@@ -610,7 +610,7 @@ class Results( wx.Panel ):
 						return 0
 						
 			results = sorted(
-				(rr for rr in GetResults(category, getExternalData=True)
+				(rr for rr in GetResults(category)
 					if rr.status==Model.Rider.Finisher and rr.lapTimes and getSortTime(rr) > 0),
 				key = getSortTime
 			)

@@ -166,13 +166,12 @@ def FixRelegations( riderResults ):
 			posCur += 1
 	
 	riderResults = [v[1] for v in sorted(relegatedResults.iteritems(), key = operator.itemgetter(0))]
-	for pos, rr in enumerate(riderResults):
+	for pos, rr in enumerate(riderResults, 1):
 		if rr.status != Finisher:
 			break
-		rr.pos = u'{} {}'.format(pos+1, _('REL')) if rr in relegated else pos+1
+		rr.pos = u'{} {}'.format(pos, _('REL')) if rr in relegated else pos
 	
-@Model.memoize
-def GetResultsCore( category ):
+def _GetResultsCore( category ):
 	Finisher = Model.Rider.Finisher
 	PUL = Model.Rider.Pulled
 	NP = Model.Rider.NP
@@ -489,7 +488,7 @@ def GetResultsCore( category ):
 	'''
 	
 	return tuple(riderResults)
-
+	
 def GetNonWaveCategoryResults( category ):
 	race = Model.race
 	if not race:
@@ -510,7 +509,7 @@ def GetNonWaveCategoryResults( category ):
 		try:
 			rrFound = rrCache[num]
 		except KeyError:
-			rrCache.update( { rr.num: rr for rr in GetResults(getCategory(num), True) } )
+			rrCache.update( { rr.num: rr for rr in GetResults(getCategory(num)) } )
 			rrFound = rrCache.get( num, None )
 				
 		if not rrFound:
@@ -569,39 +568,41 @@ def GetNonWaveCategoryResults( category ):
 	
 	return tuple(riderResults)
 
-def GetResults( category, getExternalData = False ):
+@Model.memoize
+def GetResults( category ):
 
 	if category and category.catType != Model.Category.CatWave:
 		return GetNonWaveCategoryResults( category )
 
-	riderResults = GetResultsCore( category )
-	if not getExternalData or not riderResults:
-		return riderResults
+	riderResults = _GetResultsCore( category )
 	
 	# Add the linked external data.
-	with Model.LockRace() as race:
-		try:
-			excelLink = race.excelLink
-			externalFields = excelLink.getFields()
-			externalInfo = excelLink.read()
-			for ignoreField in IgnoreFields:
-				try:
-					externalFields.remove( ignoreField )
-				except ValueError:
-					pass
-		except:
-			excelLink = None
-			externalFields = []
-			externalInfo = {}
-				
-		for rr in riderResults:
-			for f in externalFields:
-				try:
-					setattr( rr, f, externalInfo[rr.num][f] )
-				except KeyError:
-					setattr( rr, f, '' )
+	race = Model.race
+	try:
+		excelLink = race.excelLink
+		externalFields = excelLink.getFields()
+		externalInfo = excelLink.read()
+		for ignoreField in IgnoreFields:
+			try:
+				externalFields.remove( ignoreField )
+			except ValueError:
+				pass
+	except:
+		excelLink = None
+		externalFields = []
+		externalInfo = {}
+			
+	if not excelLink or not riderResults:
+		return riderResults
 	
-	if excelLink and excelLink.hasField( 'Factor' ):
+	for rr in riderResults:
+		for f in externalFields:
+			try:
+				setattr( rr, f, externalInfo[rr.num][f] )
+			except KeyError:
+				setattr( rr, f, '' )
+	
+	if excelLink and excelLink.hasField('Factor'):
 		riderResults = [copy.copy(rr) for rr in riderResults]
 		for rr in riderResults:
 			try:
@@ -637,7 +638,7 @@ def GetResults( category, getExternalData = False ):
 
 @Model.memoize
 def GetEntries( category ):
-	results = GetResults( category, getExternalData=False )
+	results = GetResults( category )
 	Entry = Model.Entry
 	return sorted(
 		itertools.chain.from_iterable(
@@ -657,7 +658,7 @@ def GetLastRider( category ):
 	finisher = Model.Rider.Finisher
 	rrLast = None
 	for c in categories:
-		for rr in GetResults( c, True ):
+		for rr in GetResults( c ):
 			if rr.status == finisher and rr._lastTimeOrig:
 				if rrLast is None or rrLast._lastTimeOrig <= rr._lastTimeOrig:
 					rrLast = rr
@@ -665,7 +666,7 @@ def GetLastRider( category ):
 
 @Model.memoize
 def GetLastFinisherTime():
-	results = GetResultsCore( None )
+	results = GetResults( None )
 	finisher = Model.Rider.Finisher
 	try:
 		return max( r.lastTime for r in results if r.status == finisher )
@@ -673,7 +674,7 @@ def GetLastFinisherTime():
 		return 0.0
 	
 def GetLeaderFinishTime():
-	results = GetResultsCore( None )
+	results = GetResults( None )
 	if results and results[0].status == Model.Rider.Finisher:
 		return results[0].lastTime
 	else:
@@ -755,65 +756,65 @@ def GetCategoryDetails( ignoreEmptyCategories=True, publishOnly=False ):
 	tempNums = UnstartedRaceDataProlog()
 	unstarted = Model.race.isUnstarted()
 
-	results = GetResultsCore( None )
+	results = GetResults( None )
 	
 	catDetails = []
-	with Model.LockRace() as race:
+	race = Model.race
 	
-		# Create a custom category for all riders.
+	# Create a custom category for all riders.
+	info = {
+		'name'			: 'All',
+		'startOffset'	: 0,
+		'gender'		: 'Open',
+		'catType'		: 'Custom',
+		'laps'			: 0,
+		'pos'			: [rr.num for rr in results],
+		'gapValue'		: [getattr(rr, 'gapValue', 0) for rr in results],
+	}
+	catDetails.append( info )
+	
+	# Add the remainder of the categories.
+	lastWaveLaps = 0
+	lastWaveCat = None
+	lastWaveStartOffset = 0
+	for cat in race.getCategories( startWaveOnly=False, publishOnly=publishOnly ):
+		results = GetResults( cat )
+		if ignoreEmptyCategories and not results:
+			continue
+		
+		if cat.catType == cat.CatWave:
+			lastWaveLaps = race.getNumLapsFromCategory(cat)
+			lastWaveCat = cat
+			lastWaveStartOffset = cat.getStartOffsetSecs()
+			
 		info = {
-			'name'			: 'All',
-			'startOffset'	: 0,
-			'gender'		: 'Open',
-			'catType'		: 'Custom',
-			'laps'			: 0,
+			'name'			: cat.fullname,
+			'startOffset'	: lastWaveStartOffset if cat.catType == cat.CatWave or cat.catType == cat.CatComponent else 0.0,
+			'gender'		: getattr( cat, 'gender', 'Open' ),
+			'catType'		: ['Start Wave', 'Component', 'Custom'][cat.catType],
+			'laps'			: lastWaveLaps if unstarted else 0,
 			'pos'			: [rr.num for rr in results],
 			'gapValue'		: [getattr(rr, 'gapValue', 0) for rr in results],
 		}
+		
+		try:
+			info['laps'] = max( info['laps'], max(len(rr.lapTimes) for rr in results if rr.status == Model.Rider.Finisher) )
+		except ValueError:
+			pass
+		
 		catDetails.append( info )
 		
-		# Add the remainder of the categories.
-		lastWaveLaps = 0
-		lastWaveCat = None
-		lastWaveStartOffset = 0
-		for cat in race.getCategories( startWaveOnly=False, publishOnly=publishOnly ):
-			results = GetResults( cat, True )
-			if ignoreEmptyCategories and not results:
-				continue
-			
-			if cat.catType == cat.CatWave:
-				lastWaveLaps = race.getNumLapsFromCategory(cat)
-				lastWaveCat = cat
-				lastWaveStartOffset = cat.getStartOffsetSecs()
-				
-			info = {
-				'name'			: cat.fullname,
-				'startOffset'	: lastWaveStartOffset if cat.catType == cat.CatWave or cat.catType == cat.CatComponent else 0.0,
-				'gender'		: getattr( cat, 'gender', 'Open' ),
-				'catType'		: ['Start Wave', 'Component', 'Custom'][cat.catType],
-				'laps'			: lastWaveLaps if unstarted else 0,
-				'pos'			: [rr.num for rr in results],
-				'gapValue'		: [getattr(rr, 'gapValue', 0) for rr in results],
-			}
-			
-			try:
-				info['laps'] = max( info['laps'], max(len(rr.lapTimes) for rr in results if rr.status == Model.Rider.Finisher) )
-			except ValueError:
-				pass
-			
-			catDetails.append( info )
-			
-			waveCat = lastWaveCat
-			if waveCat:
-				if getattr(waveCat, 'distance', None):
-					if getattr(waveCat, 'distanceType', Model.Category.DistanceByLap) == Model.Category.DistanceByLap:
-						info['lapDistance'] = waveCat.distance
-						if getattr(waveCat, 'firstLapDistance', None):
-							info['firstLapDistance'] = waveCat.firstLapDistance
-						info['raceDistance'] = waveCat.getDistanceAtLap( info['laps'] )
-					else:
-						info['raceDistance'] = waveCat.distance
-			info['distanceUnit'] = race.distanceUnitStr
+		waveCat = lastWaveCat
+		if waveCat:
+			if getattr(waveCat, 'distance', None):
+				if getattr(waveCat, 'distanceType', Model.Category.DistanceByLap) == Model.Category.DistanceByLap:
+					info['lapDistance'] = waveCat.distance
+					if getattr(waveCat, 'firstLapDistance', None):
+						info['firstLapDistance'] = waveCat.firstLapDistance
+					info['raceDistance'] = waveCat.getDistanceAtLap( info['laps'] )
+				else:
+					info['raceDistance'] = waveCat.distance
+		info['distanceUnit'] = race.distanceUnitStr
 	
 	# Cleanup.
 	UnstartedRaceDataEpilog( tempNums )

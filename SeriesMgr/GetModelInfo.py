@@ -256,9 +256,9 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 		if not category.seriesFlag:
 			continue
 		
-		results = GetResults( category, True )
+		results = GetResults( category )
 		
-		for rr in results:
+		for pos, rr in enumerate(results,1):
 			if rr.status not in acceptedStatus:
 				continue
 			info = {
@@ -288,10 +288,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 					info['raceDate'] = None
 			
 			info['bib'] = int(rr.num)
-			try:
-				info['rank'] = toInt(rr.pos)
-			except Exception as e:
-				info['rank'] = RaceResult.rankDNF
+			info['rank'] = pos
 				
 			info['tFinish'] = getattr(rr, '_lastTimeOrig', None) or getattr(rr,'lastTime', 1000.0*24.0*60.0*60.0)
 				

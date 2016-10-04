@@ -4,7 +4,7 @@ import sys
 import math
 import shutil
 
-from GetResults import GetResultsCore
+from GetResults import GetResults
 from SendPhotoRequests import getPhotoDirName, SendPhotoRequests, PhotoAcknowledge
 import Utils
 from Utils				import logCall, logException
@@ -62,7 +62,7 @@ def okTakePhoto( num, t ):
 	if not race.photosAtRaceEndOnly or race.isTimeTrial or num == 9999 or not t:
 		return True
 	
-	results = GetResultsCore( race.getCategory(num) )
+	results = GetResults( race.getCategory(num) )
 	try:
 		return t > results[0].raceTimes[-1] - 60.0
 	except:

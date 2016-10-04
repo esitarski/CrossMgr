@@ -499,7 +499,7 @@ class Gantt( wx.Panel ):
 		if race.groupByStartWave and not category:
 			results = []
 			for c in sorted(race.getCategories(), key=lambda x:x.getStartOffsetSecs()):
-				catResults = GetResults(c, True)
+				catResults = GetResults(c)
 				if not catResults:
 					continue
 				# Create a name for the category as a bogus rider.
@@ -509,7 +509,7 @@ class Gantt( wx.Panel ):
 				results.append( rr )
 				results.extend( list(catResults) )
 		else:
-			results = GetResults( category, True )
+			results = GetResults( category )
 		
 		resultBest = (0, sys.float_info.max)
 		labels, status = [], []

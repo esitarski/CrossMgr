@@ -34,7 +34,7 @@ def GetRaceTMax( category ):
 	race = Model.race
 	if not race:
 		return None
-	results = GetResults( category, True )
+	results = GetResults( category )
 	try:
 		return max(rr.raceTimes[-1] for rr in results if rr.raceTimes and len(rr.raceTimes) >= 2)
 	except:
@@ -82,7 +82,7 @@ def GetSituationGaps( category=None, t=None ):
 	# Collect the race times from the results data.
 	Finisher = Model.Rider.Finisher
 	raceTimes, riderName = {}, {}
-	for rr in GetResults(category, True):
+	for rr in GetResults(category):
 		if not (rr.raceTimes and len(rr.raceTimes) >= 2) or rr._lastTimeOrig < t:
 			continue
 			

@@ -10,6 +10,7 @@ from ReadRaceResultsSheet import GetExcelResultsLink, ExcelLink
 	
 class CategorySequence(wx.Panel):
 	CategoryCol = 0
+	PublishCol = 1
 
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent)
@@ -22,7 +23,7 @@ class CategorySequence(wx.Panel):
 			] )
 		)
 		
-		self.headerNames = ['Category']
+		self.headerNames = ['Category', 'Publish']
 		
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.DisableDragRowSize()
@@ -33,8 +34,18 @@ class CategorySequence(wx.Panel):
 		
 		for col in xrange(self.grid.GetNumberCols()):
 			attr = gridlib.GridCellAttr()
-			attr.SetReadOnly( True )
+			if col == self.CategoryCol:
+				attr.SetReadOnly( True )
+			elif col == self.PublishCol:
+				boolEditor = gridlib.GridCellBoolEditor()
+				boolEditor.UseStringValues( '1', '0' )
+				attr.SetEditor( boolEditor )
+				attr.SetRenderer( gridlib.GridCellBoolRenderer() )
+				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+
 			self.grid.SetColAttr( col, attr )
+		
+		self.Bind( gridlib.EVT_GRID_CELL_LEFT_CLICK, self.onGridLeftClick )
 		
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		sizer.Add( self.alphaSort, 0, flag=wx.ALL|wx.ALIGN_RIGHT, border=4 )
@@ -42,6 +53,12 @@ class CategorySequence(wx.Panel):
 		sizer.Add( self.grid, 1, flag=wx.EXPAND|wx.ALL, border = 6 )
 		self.SetSizer( sizer )
 
+	def onGridLeftClick( self, event ):
+		if event.GetCol() == self.PublishCol:
+			r, c = event.GetRow(), event.GetCol()
+			self.grid.SetCellValue( r, c, '1' if self.grid.GetCellValue(r, c)[:1] != '1' else '0' )
+		event.Skip()
+	
 	def getGrid( self ):
 		return self.grid
 	
@@ -60,6 +77,7 @@ class CategorySequence(wx.Panel):
 		Utils.AdjustGridSize( self.grid, len(categories) )
 		for row, c in enumerate(categories):
 			self.grid.SetCellValue( row, self.CategoryCol, c )
+			self.grid.SetCellValue( row, self.PublishCol, '10'[int(c in model.categoryHide)] )
 		wx.CallAfter( self.gridAutoSize )
 	
 	def getCategories( self ):
@@ -68,8 +86,15 @@ class CategorySequence(wx.Panel):
 			categories.append( self.grid.GetCellValue(row, self.CategoryCol) )
 		return categories
 	
+	def getCategoryHide( self ):
+		categoryHide = set()
+		for row in xrange(self.grid.GetNumberRows()):
+			if self.grid.GetCellValue(row, self.PublishCol) != '1':
+				categoryHide.add( self.grid.GetCellValue(row, self.CategoryCol) )
+		return categoryHide
+	
 	def commit( self ):
-		SeriesModel.model.setCategorySequence( self.getCategories() )
+		SeriesModel.model.setCategorySequence( self.getCategories(), self.getCategoryHide() )
 	
 	def onSort( self, event ):
 		categories = self.getCategories()

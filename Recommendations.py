@@ -3,7 +3,7 @@ import bisect
 import Model
 import Utils
 import ColGrid
-from GetResults import GetResultsCore
+from GetResults import GetResults
 from FixCategories import FixCategories
 from RiderDetail import ShowRiderDetailDialog
 from ReadSignOnSheet import SyncExcelLink
@@ -224,7 +224,7 @@ class Recommendations( wx.Panel ):
 					if firstRiderTime:
 						firstRiderInCategory.append( firstRiderTime )
 						
-					results = GetResultsCore( catCur )
+					results = GetResults( catCur )
 					if not results:
 						continue
 						
@@ -398,7 +398,7 @@ class Recommendations( wx.Panel ):
 				# Show numbers with projected time.
 				if race.isFinished():
 					projectedNums = []
-					for r in GetResultsCore( category ):
+					for r in GetResults( category ):
 						pSum = sum( 1 for i in r.interp if i )
 						if pSum > 0:
 							projectedNums.append( (r.num, pSum) )

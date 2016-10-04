@@ -68,7 +68,7 @@ def USACExport( sheet ):
 	
 	publishCategories = race.getCategories( startWaveOnly = False, uploadOnly = True )
 	for cat in publishCategories:
-		results = GetResults( cat, True )
+		results = GetResults( cat )
 		if not results:
 			continue
 		cd = catDetails[cat.fullname]
@@ -86,7 +86,7 @@ def USACExport( sheet ):
 	
 	row = 0
 	for cat in publishCategories:
-		results = GetResults( cat, True )
+		results = GetResults( cat )
 		if not results:
 			continue
 		
