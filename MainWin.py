@@ -472,19 +472,19 @@ class MainWin( wx.Frame ):
 		
 		idCur = wx.NewId()
 		self.editMenu.Append( idCur, _('&Delete Bib Number...'), _('Delete Bib Number...') )
-		#self.Bind( wx.EVT_MENU, self.menuDeleteBib, id=idCur )
+		self.Bind( wx.EVT_MENU, self.menuDeleteBib, id=idCur )
 		
 		idCur = wx.NewId()
 		self.editMenu.Append( idCur, _('&Swap Bib Numbers...'), _('Swap Bib Numbers...') )
-		#self.Bind( wx.EVT_MENU, self.menuSwapBibs, id=idCur )
+		self.Bind( wx.EVT_MENU, self.menuSwapBibs, id=idCur )
 		
 		idCur = wx.NewId()
 		self.editMenu.Append( idCur, _('&Change Bib Number...'), _('Change Bib Number...') )
-		#self.Bind( wx.EVT_MENU, self.menuChangeBib, id=idCur )
+		self.Bind( wx.EVT_MENU, self.menuChangeBib, id=idCur )
 		
 		idCur = wx.NewId()
 		self.editMenu.Append( idCur, _('&Add Missing Bib Number...'), _('Add Missing Bib Number...') )
-		#self.Bind( wx.EVT_MENU, self.menuAddBibNumber, id=idCur )
+		self.Bind( wx.EVT_MENU, self.menuAddBibNumber, id=idCur )
 		
 		self.editMenu.AppendSeparator()
 		idCur = wx.NewId()
@@ -877,7 +877,19 @@ class MainWin( wx.Frame ):
 		labels = labels or []
 		self.lapCounter.SetLabels( labels )
 		self.lapCounterDialog.page.SetLabels( labels )
-	
+
+	def menuDeleteBib( self, event ):
+		pass
+		
+	def menuSwapBibs( self, event ):
+		pass
+		
+	def menuChangeBib( self, event ):
+		pass
+		
+	def menuAddBibNumber( self, event ):
+		pass
+		
 	def menuDNS( self, event ):
 		dns = DNSManagerDialog( self )
 		dns.ShowModal()
