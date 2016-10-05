@@ -469,6 +469,24 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_MENU, self.menuFind, id=wx.ID_FIND )
 		
 		self.editMenu.AppendSeparator()
+		
+		idCur = wx.NewId()
+		self.editMenu.Append( idCur, _('Delete Bib Number...'), _('Delete Bib Number...') )
+		#self.Bind( wx.EVT_MENU, self.menuDeleteBib, id=idCur )
+		
+		idCur = wx.NewId()
+		self.editMenu.Append( idCur, _('Swap Bib Numbers...'), _('Swap Bib Numbers...') )
+		#self.Bind( wx.EVT_MENU, self.menuSwapBibs, id=idCur )
+		
+		idCur = wx.NewId()
+		self.editMenu.Append( idCur, _('Change Bib Number...'), _('Change Bib Number...') )
+		#self.Bind( wx.EVT_MENU, self.menuChangeBib, id=idCur )
+		
+		idCur = wx.NewId()
+		self.editMenu.Append( idCur, _('Add Missing Bib Number...'), _('Add Missing Bib Number...') )
+		#self.Bind( wx.EVT_MENU, self.menuAddBibNumber, id=idCur )
+		
+		self.editMenu.AppendSeparator()
 		idCur = wx.NewId()
 		self.editMenu.Append( idCur, _('&Change "Autocorrect"...'), _('Change "Autocorrect"...') )
 		self.Bind( wx.EVT_MENU, self.menuAutocorrect, id=idCur )
@@ -656,12 +674,6 @@ class MainWin( wx.Frame ):
 		self.toolsMenu = wx.Menu()
 		
 		idCur = wx.NewId()
-		self.toolsMenu.Append( idCur , _("&Simulate Race..."), _("Simulate a race") )
-		self.Bind(wx.EVT_MENU, self.menuSimulate, id=idCur )
-
-		self.toolsMenu.AppendSeparator()
-		
-		idCur = wx.NewId()
 		self.toolsMenu.Append( idCur , _("&Change Race Start Time..."), _("Change the Start Time of the Race") )
 		self.Bind(wx.EVT_MENU, self.menuChangeRaceStartTime, id=idCur )
 		
@@ -671,7 +683,9 @@ class MainWin( wx.Frame ):
 		self.toolsMenu.Append( idCur , _("Copy Log File to &Clipboard..."), _("Copy Log File to Clipboard") )
 		self.Bind(wx.EVT_MENU, self.menuCopyLogFileToClipboard, id=idCur )
 
-		self.toolsMenu.AppendSeparator()
+		idCur = wx.NewId()
+		self.toolsMenu.Append( idCur , _("&Simulate Race..."), _("Simulate a race") )
+		self.Bind(wx.EVT_MENU, self.menuSimulate, id=idCur )
 
 		idCur = wx.NewId()
 		self.toolsMenu.Append( idCur , _("&Reload Checklist..."), _("Reload the Checklist from the Checklist File") )
