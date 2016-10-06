@@ -582,42 +582,42 @@ class Results( wx.Panel ):
 		CloseFinishTime = 0.07
 		self.closeFinishBibs = defaultdict( list )
 		
-		with Model.LockRace() as race:
-			if not race:
-				self.clearGrid()
-				return
-			category = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
-			self.hbs.RecalcSizes()
-			self.hbs.Layout()
-			for si in self.hbs.GetChildren():
-				if si.IsWindow():
-					si.GetWindow().Refresh()
-			self.category = category
-			sortLap = getattr( race, 'sortLap', None )
-			sortLabel = getattr( race, 'sortLabel', None )
+		race = Model.race
+		if not race:
+			self.clearGrid()
+			return
+		category = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
+		self.hbs.RecalcSizes()
+		self.hbs.Layout()
+		for si in self.hbs.GetChildren():
+			if si.IsWindow():
+				si.GetWindow().Refresh()
+		self.category = category
+		sortLap = getattr( race, 'sortLap', None )
+		sortLabel = getattr( race, 'sortLabel', None )
 
-			if race.isTimeTrial:
-				def getSortTime( rr ):
-					try:
-						return rr.firstTime + rr._lastTimeOrig
-					except:
-						return 0
-			else:
-				def getSortTime( rr ):
-					try:
-						return rr._lastTimeOrig
-					except:
-						return 0
-						
-			results = sorted(
-				(rr for rr in GetResults(category)
-					if rr.status==Model.Rider.Finisher and rr.lapTimes and getSortTime(rr) > 0),
-				key = getSortTime
-			)
-			for i in xrange(1, len(results)):
-				if results[i]._lastTimeOrig - results[i-1]._lastTimeOrig <= CloseFinishTime:
-					self.closeFinishBibs[results[i-1].num].append( results[i].num )
-					self.closeFinishBibs[results[i].num].append( results[i-1].num )
+		if race.isTimeTrial:
+			def getSortTime( rr ):
+				try:
+					return rr.firstTime + rr._lastTimeOrig
+				except:
+					return 0
+		else:
+			def getSortTime( rr ):
+				try:
+					return rr._lastTimeOrig
+				except:
+					return 0
+					
+		results = sorted(
+			(rr for rr in GetResults(category)
+				if rr.status==Model.Rider.Finisher and rr.lapTimes and getSortTime(rr) > 0),
+			key = getSortTime
+		)
+		for i in xrange(1, len(results)):
+			if results[i]._lastTimeOrig - results[i-1]._lastTimeOrig <= CloseFinishTime:
+				self.closeFinishBibs[results[i-1].num].append( results[i].num )
+				self.closeFinishBibs[results[i].num].append( results[i-1].num )
 		
 		labelLastX, labelLastY = self.labelGrid.GetViewStart()
 		lapLastX, lapLastY = self.lapGrid.GetViewStart()

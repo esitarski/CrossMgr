@@ -710,7 +710,7 @@ class RiderDetail( wx.Panel ):
 			return
 			
 		with Model.LockRace() as race:
-			inRace = (newNum in race)
+			inRace = (newNum in race.riders)
 		if inRace:
 			Utils.MessageOK(
 				self,
@@ -756,9 +756,8 @@ class RiderDetail( wx.Panel ):
 		except ValueError:
 			return
 			
-		with Model.LockRace() as race:
-			inRace = (newNum in race)
-		if not inRace:
+		race = Model.race
+		if newNum not in race.riders:
 			Utils.MessageOK(
 				self,
 				u'{}\n{}'.format(
@@ -769,11 +768,10 @@ class RiderDetail( wx.Panel ):
 			)
 			return
 			
-		if Utils.MessageOKCancel( self, u"{}\n\n   {} <==> {}.".format(_('Confirm Swap numbers'), num, newNum), _("Swap Rider Number") ):
+		if Utils.MessageOKCancel( self, u"{}\n\n   {} \u21D4 {}.".format(_('Confirm Swap numbers'), num, newNum), _("Swap Rider Number") ):
 			undo.pushState()
-			with Model.LockRace() as race:
-				race.swapRiders( num, newNum )
-				race.numTimeInfo.swapRiders( num, newNum )
+			race.swapRiders( num, newNum )
+			race.numTimeInfo.swapRiders( num, newNum )
 			self.setRider( newNum )
 			self.refresh()
 			wx.CallAfter( Utils.refreshForecastHistory )

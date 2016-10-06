@@ -29,6 +29,40 @@ With projected lap times, the "Expected:" section will show the expected riders 
 
 This option does not change the race [Properties][], it sets the Autocorrect option for all riders in the race.
 
+## Delete Bib Number
+
+Delete a bib number from the race.
+This could be as a result of a typo or a bad call (if entering numbers manually).
+
+If the race is running, there is no undo.  If the race is Finished, undo is enabled.
+
+## Swap Bib Numbers
+
+Swap two Bib Numbers in the race.
+This could be a result of two riders getting each other's number.
+
+If the race is running, there is no undo.  If the race is Finished, undo is enabled.
+
+## Change Bib Number
+
+Change the Bib Number of a rider.
+This could be a result of a rider getting the wrong bib number which is corrected to match the information in the spreadsheet.
+
+Note:  CrossMgr will warn you if the new Bib number does not match a Category.  You can change the Category number range later to see the rider show up.
+
+If the race is running, there is no undo.  If the race is Finished, undo is enabled.
+
+## Add Missing Bib Number
+
+Add a missing Bib number to a race.  CrossMgr also prompts you for a reference rider to get times to the new Bib number.
+Choose a reference rider who finished just after the rider you want to add.
+
+A rider could be missing from the race as a result of chip read failure.
+
+If the race is running, there is no undo.  If the race is Finished, undo is enabled.
+
+
+
 ## Clear "Autocorrect Lap Data" flag for All Riders
 Turns off the autocorrect flag for all riders.
 Data for all riders will not be corrected, and projected lap times will not be computed.

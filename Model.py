@@ -5,6 +5,7 @@ import re
 import sys
 import math
 import time
+import copy
 import bisect
 import socket
 import random
@@ -63,6 +64,7 @@ class memoize(object):
 			# uncachable -- for instance, passing a list as an argument.
 			# Better to not cache than to blow up entirely.
 			return self.func(*args)
+		return self.func(*args)
 			
 	def __repr__(self):
 		"""Return the function's docstring."""
@@ -599,11 +601,28 @@ class Rider(object):
 		self.status = Rider.Finisher
 		self.tStatus = None
 		self.autocorrectLaps = True
+	
+	def clearCache( self ):
+		for attr in ('_iTimesLast', '_entriesLast'):
+			try:
+				delattr( self, attr )
+			except AttributeError:
+				pass
+	
+	def swap( a, b ):
+		a.clearCache()
+		b.clearCache()
 
+		# Swap all attributes except the num.
+		for attr in ('times', 'status', 'tStatus', 'autocorrectLaps', 'firstTime', 'relegatedPosition'):
+			aVal = getattr( a, attr )
+			bVal = getattr( b, attr )
+			setattr( a, attr, bVal )
+			setattr( b, attr, aVal )
+	
 	def __getstate__( self ):
-		state = self.__dict__.copy()
-		
 		# Don't pickle cached entries.
+		state = self.__dict__.copy()		
 		state.pop( '_iTimesLast', None )
 		state.pop( '_entriesLast', None )
 		return state
@@ -670,7 +689,7 @@ class Rider(object):
 			return 0.0
 			
 	def getFirstKnownTime( self ):
-		t = getattr( self, 'firstTime', None )
+		t = self.firstTime
 		if t is None:
 			try:
 				t = self.times[0]
@@ -845,7 +864,7 @@ class Rider(object):
 		# Adjust the stop time.
 		st = stopTime
 		dnfPulledTime = None
-		if self.status in [Rider.DNF, Rider.Pulled]:
+		if self.status in (Rider.DNF, Rider.Pulled):
 			# If no given time, use the last recorded time for DNF and Pulled riders.
 			dnfPulledTime = self.tStatus if self.tStatus is not None else self.times[-1]
 			st = min(st, dnfPulledTime + 0.01)
@@ -1364,10 +1383,11 @@ class Race( object ):
 	def deleteRiderTimes( self, num ):
 		try:
 			rider = self.riders[num]
-			rider.times = []
-			rider.firstTime = None
 		except KeyError:
 			pass
+		rider.times = []
+		rider.firstTime = None
+		rider.clearCache()
 			
 	def clearAllRiderTimes( self ):
 		for num in self.riders.iterkeys():
@@ -1380,12 +1400,14 @@ class Race( object ):
 	def deleteRider( self, num ):
 		try:
 			del self.riders[num]
-			self.setChanged()
 		except KeyError:
-			pass
+			return
+		self.resetAllCaches()
+		self.setChanged()
 			
 	def deleteAllRiders( self ):
 		self.riders = {}
+		self.resetAllCaches()
 		self.setChanged()
 			
 	def renumberRider( self, num, newNum ):
@@ -1396,25 +1418,24 @@ class Race( object ):
 		if newNum in self.riders:
 			return False
 			
+		rider.clearCache()
 		del self.riders[rider.num]
 		rider.num = newNum
 		self.riders[rider.num] = rider
-		memoize.clear()
+		
+		self.resetAllCaches()
 		self.setChanged()
 		return True
 			
-	def swapRiders( self, num1, num2 ):
+	def swapRiders( self, na, nb ):
 		try:
-			r1 = self.riders[num1]
-			r2 = self.riders[num2]
+			a = self.riders[na]
+			b = self.riders[nb]
 		except KeyError:
 			return False
 		
-		del self.riders[num1]
-		del self.riders[num2]
-		r1.num, r2.num = r2.num, r1.num
-		self.riders[r1.num] = r1
-		self.riders[r2.num] = r2
+		a.swap( b )
+		self.resetAllCaches()
 		self.setChanged()
 		return True
 			
@@ -1433,6 +1454,7 @@ class Race( object ):
 		r2.autocorrectLaps = True
 		r2.firstTime = getattr(r1, 'firstTime', None)
 		
+		self.resetAllCaches()
 		self.setChanged()
 		return True
 	
@@ -2254,6 +2276,10 @@ class Race( object ):
 	def resetAllCaches( self ):
 		self.resetCategoryCache()
 		self.resetCache();
+		
+	def resetRiderCaches( self ):
+		for rider in self.riders.itervalues():
+			rider.clearCache()
 	
 	def getRaceIntro( self ):
 		intro = [
@@ -2317,7 +2343,7 @@ class Race( object ):
 		getCategory = self.getCategory
 		finisherStatusSet = Race.finisherStatusSet
 		localCat = {}
-		riders = race.riders
+		riders = self.riders
 		for e in self.interpolate():
 			if riders[e.num].status in finisherStatusSet:
 				try:

@@ -683,6 +683,8 @@ class MainWin( wx.Frame ):
 		self.toolsMenu.Append( idCur , _("Copy Log File to &Clipboard..."), _("Copy Log File to Clipboard") )
 		self.Bind(wx.EVT_MENU, self.menuCopyLogFileToClipboard, id=idCur )
 
+		self.toolsMenu.AppendSeparator()
+		
 		idCur = wx.NewId()
 		self.toolsMenu.Append( idCur , _("&Simulate Race..."), _("Simulate a race") )
 		self.Bind(wx.EVT_MENU, self.menuSimulate, id=idCur )
@@ -878,17 +880,127 @@ class MainWin( wx.Frame ):
 		self.lapCounter.SetLabels( labels )
 		self.lapCounterDialog.page.SetLabels( labels )
 
+	def getValidNum( self, message, mustBeInRace=True, exclude=[] ):
+		race = Model.race
+		if not race:
+			return None
+
+		while 1:
+			dlg = wx.TextEntryDialog(self, message, message, style=wx.OK|wx.CANCEL)
+			ret = dlg.ShowModal()
+			num = dlg.GetValue()
+			dlg.Destroy()
+			try:
+				num = int(re.sub( '[^0-9]', '', num ))
+			except ValueError:
+				num = None
+				
+			if ret != wx.ID_OK or not num:
+				return None
+				
+			if num in exclude:
+				Utils.MessageOK( self, u'{} {}:\n\n{}'.format(_('Bib'), num, _("This Bib number is choosen already.")), _("Not Available") )
+				continue
+			
+			if mustBeInRace:
+				if not num in race.riders:
+					Utils.MessageOK( self, u'{} {}:\n\n{}'.format(_('Bib'), num, _("This Bib Number is Not in the Race")), _("Not in Race") )
+				else:
+					break
+			else:
+				if num in race.riders:
+					Utils.MessageOK( self, u'{} {}:\n\n{}'.format(_('Bib'), num, _("This Bib number is Already in the Race")), _("Already in Race") )
+				else:
+					break
+		
+		return num
+
 	def menuDeleteBib( self, event ):
-		pass
+		num = self.getValidNum(_('Delete Bib'))
+		if num is None:
+			return
+
+		if Utils.MessageOKCancel( self, u'{} {}:\n\n{}'.format(_('Bib'), num, _("Confirm Delete")), _("Delete Rider") ):
+			undo.pushState()
+			Model.race.deleteRider( num )
+			wx.CallAfter( self.refresh )
 		
 	def menuSwapBibs( self, event ):
-		pass
+		num = self.getValidNum( _('First Bib Number') )
+		if num is None:
+			return
+		newNum = self.getValidNum( _('Second Bib Number'), exclude=(num,) )
+		if newNum is None:
+			return
+			
+		race = Model.race
+		if Utils.MessageOKCancel( self, u"{}\n\n   {} \u21D4 {}".format(_('Confirm Swap Bib Numbers'), num, newNum), _("Swap Bib Numbers") ):
+			self.closeFindDialog()
+
+			undo.pushState()
+			race.numTimeInfo.swapRiders( num, newNum )
+			race.swapRiders( num, newNum )
+			
+			self.refresh()
 		
 	def menuChangeBib( self, event ):
-		pass
+		num = self.getValidNum( _('Bib Number to Change') )
+		if num is None:
+			return
+		race = Model.race
+		while 1:
+			newNum = self.getValidNum( _('New Bib Number'), False )
+			if newNum is None:
+				return
+			if not race.getCategory(newNum) and Utils.MessageOKCancel( self,
+					u"{} {}:\n\n{}\n{}".format(_("New Bib"), newNum,
+						_("The new Bib number does not match a Category."),
+						_("Add this Bib number to a Category later, or press Cancel to select a different number."),
+						),
+					_("No Matching Category") ):
+				continue
+			break
+		
+		if Utils.MessageOKCancel( self, u"{}\n\n{} \u21D2 {}.".format(_("Confirm Change Bib Number"), num, newNum), _("Change Bib Number") ):
+			undo.pushState()
+			race.renumberRider( num, newNum )
+			race.numTimeInfo.renumberRider( num, newNum )
+			wx.CallAfter( self.refresh )
 		
 	def menuAddBibNumber( self, event ):
-		pass
+		while 1:
+			newNum = self.getValidNum( _('Bib Number to Add'), False )
+			if newNum is None:
+				return
+			if not race.getCategory(newNum) and Utils.MessageOKCancel( self,
+					u"{} {}:\n\n{}\n{}".format(_("New Bib"), newNum,
+						_("The new Bib number does not match a Category."),
+						_("Add this Bib number to a Category later, or press Cancel to select a different number."),
+						),
+					_("No Matching Category") ):
+				continue
+			break
+		
+		num = self.getValidNum( _('Existing Bib Number to get Lap Times') )
+		if num is None:
+			return
+			
+		race = Model.race
+		if Utils.MessageOKCancel( self,
+				u'{} {}:  {}: {}\n\n{}\n\n{}?'.format(
+					_('Bib'), num,
+					_('Times will be copied to new Bib'), newNum,
+					_('All times will be slightly earlier.'),
+					_('Continue'),
+				),
+				_("Confirm Add Bib Number") ):
+			undo.pushState()
+			race.copyRiderTimes( num, newNum )
+			rNew = race.getRider( newNum )
+			numTimeInfo = race.numTimeInfo
+			for t in rNew.times:
+				numTimeInfo.add( newNum, t )
+			wx.CallAfter( self.refresh )
 		
 	def menuDNS( self, event ):
 		dns = DNSManagerDialog( self )
@@ -2600,6 +2712,7 @@ class MainWin( wx.Frame ):
 		self.fileName = fileName
 		WebServer.SetFileName( self.fileName )
 		Model.resetCache()
+		Model.race.resetRiderCaches()
 		ResetExcelLinkCache()
 		
 		properties.commit()			# Apply the new properties
@@ -3491,10 +3604,9 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 			self.photoDialog.refresh()
 
 	def updateUndoStatus( self, event = None ):
-		with Model.LockRace() as race:
-			isRunning = bool(race and race.isRunning())
-		self.undoMenuButton.Enable( bool(not isRunning and undo.isUndo()) )
-		self.redoMenuButton.Enable( bool(not isRunning and undo.isRedo()) )
+		race = Model.race
+		self.undoMenuButton.Enable( bool(not race.isRunning() and undo.isUndo()) )
+		self.redoMenuButton.Enable( bool(not race.isRunning() and undo.isRedo()) )
 		
 	def onPageChanging( self, event ):
 		notebook = event.GetEventObject()

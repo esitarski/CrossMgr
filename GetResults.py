@@ -569,24 +569,34 @@ def GetNonWaveCategoryResults( category ):
 	return tuple(riderResults)
 
 @Model.memoize
-def GetResults( category ):
-
-	if category and category.catType != Model.Category.CatWave:
+def GetResultsWithData( category ):
+	CatWave =  Model.Category.CatWave
+	if category and category.catType != CatWave:
 		return GetNonWaveCategoryResults( category )
+
+	# If there is only one category in the race, use that category instead of None.
+	# This eliminates computing results twice.
+	race = Model.race
+	if category is None:
+		singleCategory = None
+		for c in race.categories.itervalues():
+			if c.active and c.catType == CatWave:
+				if not singleCategory:
+					singleCategory = c
+				else:
+					singleCategory = None
+					break
+		if singleCategory:
+			return GetResults( singleCategory )
 
 	riderResults = _GetResultsCore( category )
 	
 	# Add the linked external data.
-	race = Model.race
 	try:
 		excelLink = race.excelLink
-		externalFields = excelLink.getFields()
 		externalInfo = excelLink.read()
-		for ignoreField in IgnoreFields:
-			try:
-				externalFields.remove( ignoreField )
-			except ValueError:
-				pass
+		ignoreFields = set(IgnoreFields)
+		externalFields = [f for f in excelLink.getFields() if f not in ignoreFields]
 	except:
 		excelLink = None
 		externalFields = []
@@ -636,9 +646,21 @@ def GetResults( category ):
 	
 	return riderResults
 
+def GetResults( category ):
+	# If the spreadsheet changed, clear the cache to update the results with new data.
+	try:
+		excelLink = Model.race.excelLink
+		externalInfo = excelLink.read()
+		if excelLink.readFromFile:
+			Model.resetCache()
+	except Exception as e:
+		pass
+		
+	return GetResultsWithData( category )
+
 @Model.memoize
 def GetEntries( category ):
-	results = GetResults( category )
+	results = GetResultsWithData( category )
 	Entry = Model.Entry
 	return sorted(
 		itertools.chain.from_iterable(
@@ -658,7 +680,7 @@ def GetLastRider( category ):
 	finisher = Model.Rider.Finisher
 	rrLast = None
 	for c in categories:
-		for rr in GetResults( c ):
+		for rr in GetResultsWithData( c ):
 			if rr.status == finisher and rr._lastTimeOrig:
 				if rrLast is None or rrLast._lastTimeOrig <= rr._lastTimeOrig:
 					rrLast = rr
@@ -666,7 +688,7 @@ def GetLastRider( category ):
 
 @Model.memoize
 def GetLastFinisherTime():
-	results = GetResults( None )
+	results = GetResultsWithData( None )
 	finisher = Model.Rider.Finisher
 	try:
 		return max( r.lastTime for r in results if r.status == finisher )
@@ -674,7 +696,7 @@ def GetLastFinisherTime():
 		return 0.0
 	
 def GetLeaderFinishTime():
-	results = GetResults( None )
+	results = GetResultsWithData( None )
 	if results and results[0].status == Model.Rider.Finisher:
 		return results[0].lastTime
 	else:
@@ -737,7 +759,7 @@ def GetLapDetails():
 
 	numTimeInfo = race.numTimeInfo
 	lapNote = getattr(race, 'lapNote', {})
-	for rr in GetResults( None ):
+	for rr in GetResultsWithData( None ):
 		for lap, t in enumerate(rr.raceTimes):
 			i1 = lapNote.get((rr.num, lap), u'')
 			i2 = numTimeInfo.getInfoStr(rr.num, t)
@@ -751,8 +773,6 @@ def GetCategoryDetails( ignoreEmptyCategories=True, publishOnly=False ):
 	if not Model.race:
 		return []
 
-	SyncExcelLink( Model.race )
-	
 	tempNums = UnstartedRaceDataProlog()
 	unstarted = Model.race.isUnstarted()
 
