@@ -44,6 +44,10 @@ class History( wx.Panel ):
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
 		
+		self.sync = wx.ToggleButton( self, label=_('Sync Category'), style=wx.RB_GROUP )
+		self.sync.SetValue( True )
+		self.sync.Bind( wx.EVT_TOGGLEBUTTON, lambda event: self.refresh() )
+		
 		self.showPositionToggle = wx.ToggleButton( self, label = _('Position'), style=wx.BU_EXACTFIT )
 		self.showPositionToggle.SetValue( self.showPosition )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowPosition, self.showPositionToggle )
@@ -77,17 +81,18 @@ class History( wx.Panel ):
 		self.zoomOutButton = wx.BitmapButton( self, wx.ID_ZOOM_OUT, bitmap, style=wx.BU_EXACTFIT | wx.BU_AUTODRAW )
 		self.Bind( wx.EVT_BUTTON, self.onZoomOut, self.zoomOutButton )
 		
-		self.hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
-		self.hbs.Add( self.categoryChoice, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
-		self.hbs.Add( self.showPositionToggle, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
-		self.hbs.Add( self.showTimesToggle, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
-		self.hbs.Add( self.showLapTimesToggle, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
-		self.hbs.Add( self.showTimeDownToggle, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
-		self.hbs.Add( self.showRiderNameToggle, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.categoryLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
+		self.hbs.Add( self.categoryChoice, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=2 )
+		self.hbs.Add( self.sync, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=2 )
+		self.hbs.Add( self.showPositionToggle, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=18 )
+		self.hbs.Add( self.showTimesToggle, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.showLapTimesToggle, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.showTimeDownToggle, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.showRiderNameToggle, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( wx.StaticText(self, label = u' '), proportion=2 )
-		self.hbs.Add( self.search, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
-		self.hbs.Add( self.zoomInButton, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
-		self.hbs.Add( self.zoomOutButton, flag=wx.TOP | wx.BOTTOM | wx.RIGHT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.search, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.zoomInButton, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.zoomOutButton, flag=wx.RIGHT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 
 		self.grid = ColGrid.ColGrid( self )
 		self.grid.SetRightAlign( True )
@@ -106,8 +111,8 @@ class History( wx.Panel ):
 		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doRightClick )
 		
 		bs = wx.BoxSizer(wx.VERTICAL)
-		bs.Add(self.hbs, flag=wx.GROW|wx.HORIZONTAL)
-		bs.Add(self.grid, 1, wx.GROW|wx.ALL, 5)
+		bs.Add(self.hbs, flag=wx.GROW|wx.HORIZONTAL|wx.ALL, border=4)
+		bs.Add(self.grid, 1, wx.GROW|wx.LEFT|wx.RIGHT|wx.BOTTOM, 4)
 		self.SetSizer(bs)
 		bs.SetSizeHints(self)
 		self.SetDoubleBuffered( True )
@@ -422,7 +427,7 @@ class History( wx.Panel ):
 			formatTime = Utils.formatTime
 			formatTimeDiff = lambda a, b: Utils.formatTimeGap(TimeDifference(a, b, False), False)
 		
-		category = FixCategories( self.categoryChoice, getattr(race, 'historyCategory', 0) )
+		category = FixCategories( self.categoryChoice, getattr(race, 'historyCategory', 0), doSyncCategories=self.sync.GetValue() )
 		self.hbs.Layout()
 		
 		Finisher = Model.Rider.Finisher

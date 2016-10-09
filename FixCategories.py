@@ -1,12 +1,12 @@
 import wx
 import Model
 
-def FixCategories( choice, iSelection = None ):
+def FixCategories( choice, iSelection = None, doSyncCategories = True ):
 	choice.InvalidateBestSize() 
 	choice.SetSize(choice.GetBestSize()) 
 
 	race = Model.race
-	if race and getattr(race, 'syncCategories', True):
+	if race and doSyncCategories and getattr(race, 'syncCategories', True):
 		iSelection = getattr( race, 'modelCategory', 0 )
 	
 	items = choice.GetItems()
