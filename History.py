@@ -411,6 +411,8 @@ class History( wx.Panel ):
 			self.clearGrid()
 			return
 
+		lastGridX, lastGridY = self.grid.GetViewStart()
+		
 		highPrecision = Model.highPrecisionTimes()
 		
 		if highPrecision or race.isTimeTrial:
@@ -557,10 +559,10 @@ class History( wx.Panel ):
 		self.grid.Reset()
 		self.updateColours()
 		self.grid.Set( textColour = self.textColour, backgroundColour = self.backgroundColour )
-		self.grid.MakeCellVisible( 0, len(colnames)-1 )
 		
 		# Fix the grid's scrollbars.
 		self.grid.FitInside()
+		self.grid.Scroll( lastGridX, lastGridY )
 	
 	def commit( self ):
 		pass
