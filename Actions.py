@@ -115,7 +115,7 @@ class StartRaceAtTime( wx.Dialog ):
 		self.SetSizerAndFit( vs )
 		
 		self.CentreOnParent(wx.BOTH)
-		self.SetFocus()
+		wx.CallAfter( self.SetFocus )
 
 	def onCountdown( self, event ):
 		StartRaceNow()

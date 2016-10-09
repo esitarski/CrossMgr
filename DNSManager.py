@@ -181,7 +181,7 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 			
 		# Fixup the Bib number, as autosize gets confused with the graphic.
 		self.list.SetColumnWidth( 0, 64 )
-		self.list.SetFocus()
+		wx.CallAfter( self.list.SetFocus )
 
 	def commit( self ):
 		pass
@@ -226,7 +226,7 @@ class DNSManagerDialog( wx.Dialog ):
 		self.SetAcceleratorTable(accel_tbl)
 		
 		self.CentreOnParent(wx.BOTH)
-		self.SetFocus()
+		wx.CallAfter( self.SetFocus )
 		
 		wx.CallAfter( self.dnsManager.refresh )
 

@@ -241,7 +241,7 @@ class ChipImportDialog( wx.Dialog ):
 		bs.Fit( self )
 		
 		self.CentreOnParent(wx.BOTH)
-		self.SetFocus()
+		wx.CallAfter( self.SetFocus )
 
 	def onChangeManualStartTime( self, event ):
 		self.raceStartTime.Enable( event.IsChecked() )

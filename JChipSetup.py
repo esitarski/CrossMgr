@@ -161,7 +161,7 @@ class JChipSetupDialog( wx.Dialog ):
 		self.update()
 		
 		self.CentreOnParent(wx.BOTH)
-		self.SetFocus()
+		wx.CallAfter( self.SetFocus )
 
 	def skip(self, evt):
 		return

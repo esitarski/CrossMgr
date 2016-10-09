@@ -389,7 +389,7 @@ def GetFtpPublish( isDialog=True ):
 				mvs.Fit( self )
 			
 				self.CentreOnParent( wx.BOTH )
-				self.SetFocus()
+				wx.CallAfter( self.SetFocus )
 			else:
 				self.ftpTestButton = wx.Button( self, label=_('Test FTP Connection') )
 				self.ftpTestButton.Bind( wx.EVT_BUTTON, self.onFtpTest )

@@ -43,7 +43,7 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 		bs.Fit( self )
 		
 		self.CentreOnParent(wx.BOTH)
-		self.SetFocus()
+		wx.CallAfter( self.SetFocus )
 
 	def onSetTimeNow( self, event ):
 		tNow = datetime.datetime.now()

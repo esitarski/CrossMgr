@@ -53,7 +53,7 @@ class CorrectNumberDialog( wx.Dialog ):
 		bs.Fit( self )
 		
 		self.CentreOnParent(wx.BOTH)
-		self.SetFocus()
+		wx.CallAfter( self.SetFocus )
 
 	def doTimeChoice( self, event ):
 		iSelection = event.GetSelection()
@@ -168,7 +168,7 @@ class ShiftNumberDialog( wx.Dialog ):
 		
 		wx.CallAfter( self.updateNewTime )
 		self.CentreOnParent(wx.BOTH)
-		self.SetFocus()
+		wx.CallAfter( self.SetFocus )
 
 	def getNewTime( self ):
 		tAdjust = self.timeMsEdit.GetSeconds() * (-1 if self.shiftBox.GetSelection() == 0 else 1)
@@ -243,7 +243,7 @@ class InsertNumberDialog( wx.Dialog ):
 		bs.Fit( self )
 		
 		self.CentreOnParent(wx.BOTH)
-		self.SetFocus()
+		wx.CallAfter( self.SetFocus )
 
 	def onOK( self, event ):
 		num = self.numEdit.GetValue()
@@ -309,7 +309,7 @@ class SplitNumberDialog( wx.Dialog ):
 		bs.Fit( self )
 		
 		self.CentreOnParent(wx.BOTH)
-		self.SetFocus()
+		wx.CallAfter( self.SetFocus )
 
 	def onOK( self, event ):
 		num1 = self.numEdit1.GetValue()
@@ -467,7 +467,7 @@ class StatusChangeDialog( wx.Dialog ):
 		self.SetSizerAndFit( vs )
 		
 		self.CentreOnParent(wx.BOTH)
-		self.SetFocus()
+		wx.CallAfter( self.SetFocus )
 
 	def getSetEntryTime( self ):
 		return self.entryTime and self.entryTime.IsChecked()

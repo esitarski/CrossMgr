@@ -44,7 +44,7 @@ class SetAutoCorrectDialog( wx.Dialog ):
 		vs.Fit( self )
 		
 		self.CentreOnParent(wx.BOTH)
-		self.SetFocus()
+		wx.CallAfter( self.SetFocus )
 
 	def doSet( self, action ):
 		selections = self.categoryList.GetSelections()

@@ -87,7 +87,7 @@ class AdjustTimeDialog( wx.Dialog ):
 		sizer.Fit( self )
 		
 		self.CentreOnParent(wx.BOTH)
-		self.SetFocus()
+		wx.CallAfter( self.SetFocus )
 
 	def updateRideTime( self, event = None ):
 		st = self.startTime.GetSeconds()
@@ -187,7 +187,7 @@ class ChangeOffsetDialog( wx.Dialog ):
 		sizer.Fit( self )
 		
 		self.CentreOnParent(wx.BOTH)
-		self.SetFocus()
+		wx.CallAfter( self.SetFocus )
 
 	def onOK( self, event ):
 		race = Model.race
@@ -1469,7 +1469,7 @@ class RiderDetailDialog( wx.Dialog ):
 		self.SetAcceleratorTable(accel_tbl)
 		
 		self.CentreOnParent(wx.BOTH)
-		self.SetFocus()
+		wx.CallAfter( self.SetFocus )
 		
 		self.riderDetail.setRider( num )
 		wx.CallAfter( self.riderDetail.refresh )
