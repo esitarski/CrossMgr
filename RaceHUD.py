@@ -86,7 +86,7 @@ class RaceHUD(wx.PyControl):
 			wx.CallAfter( self.Refresh )
 	
 	def OnMotion(self, event):
-		if not self.lapInfoFunc:
+		if not self.lapInfoFunc or not self.raceTimes:
 			return
 		x, y = event.GetX(), event.GetY()
 		if self.xLeft is None or x < self.xLeft or self.xRight < x:
