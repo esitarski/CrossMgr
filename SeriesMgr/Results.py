@@ -411,7 +411,7 @@ function sortTableId( iTable, iCol ) {
 							with tag(html, 'span'):
 								write( unicode(cgi.escape(categoryName)) )
 			for iTable, categoryName in enumerate(categoryNames):
-				results, races = GetModelInfo.GetCategoryResults(
+				results, races, potentialDuplicates = GetModelInfo.GetCategoryResults(
 					categoryName,
 					raceResults,
 					pointsForRank,
@@ -803,7 +803,7 @@ class Results(wx.Panel):
 			
 		pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
 
-		results, races = GetModelInfo.GetCategoryResults(
+		results, races, potentialDuplicates = GetModelInfo.GetCategoryResults(
 			categoryName,
 			self.raceResults,
 			pointsForRank,
@@ -820,6 +820,7 @@ class Results(wx.Panel):
 		for row, (name, license, team, points, gap, racePoints) in enumerate(results):
 			self.grid.SetCellValue( row, 0, unicode(row+1) )
 			self.grid.SetCellValue( row, 1, unicode(name or u'') )
+			self.grid.SetCellBackgroundColour( row, 1, wx.Colour(255,255,0) if name in potentialDuplicates else wx.Colour(255,255,255) )
 			self.grid.SetCellValue( row, 2, unicode(license or u'') )
 			self.grid.SetCellValue( row, 3, unicode(team or u'') )
 			self.grid.SetCellValue( row, 4, unicode(points) )
@@ -911,7 +912,7 @@ class Results(wx.Panel):
 		wb = xlwt.Workbook()
 
 		for categoryName in categoryNames:
-			results, races = GetModelInfo.GetCategoryResults(
+			results, races, potentialDuplicates = GetModelInfo.GetCategoryResults(
 				categoryName,
 				self.raceResults,
 				pointsForRank,

@@ -106,7 +106,7 @@ class RaceResult( object ):
 		
 		self.upgradeFactor = 1
 		self.upgradeResult = False
-	
+			
 	def keySort( self ):
 		fields = ['categoryName', 'lastName', 'firstName', 'license', 'raceDate', 'raceName']
 		return tuple( safe_upper(getattr(self, a)) for a in fields )
@@ -240,7 +240,9 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 	if race.licenseLinkTemplate:
 		SeriesModel.model.licenseLinkTemplate = race.licenseLinkTemplate
 	
-	acceptedStatus = { Model.Rider.Finisher, Model.Rider.DNF }
+	Finisher = Model.Rider.Finisher
+	DNF = Model.Rider.DNF
+	acceptedStatus = { Finisher, DNF }
 	raceURL = getattr( race, 'urlFull', None )
 	
 	racePrimes = getattr( race, 'primes', None )
@@ -288,7 +290,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 					info['raceDate'] = None
 			
 			info['bib'] = int(rr.num)
-			info['rank'] = pos
+			info['rank'] = RaceResult.rankDNF if rr.status == DNF else pos
 				
 			info['tFinish'] = getattr(rr, '_lastTimeOrig', None) or getattr(rr,'lastTime', 1000.0*24.0*60.0*60.0)
 				
@@ -346,6 +348,15 @@ def AdjustForUpgrades( raceResults ):
 		
 			break
 
+def GetPotentialDuplicateFullNames( riderNameLicense ):
+	nameLicense = defaultdict( list )
+	for (full_name, license) in riderNameLicense.itervalues():
+		nameLicense[full_name].append( license )
+	
+	return {full_name for full_name, licenses in nameLicense.iteritems()
+		if len(licenses) > 1 and any(license == u'' or u'TEMP' in license for license in licenses)
+	}
+			
 def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsCompleted=False, numPlacesTieBreaker=5 ):
 	scoreByTime = SeriesModel.model.scoreByTime
 	scoreByPercent = SeriesModel.model.scoreByPercent
@@ -358,7 +369,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 	# Get all results for this category.
 	raceResults = [rr for rr in raceResults if rr.categoryName == categoryName]
 	if not raceResults:
-		return [], []
+		return [], [], set()
 		
 	# Assign a sequence number to the races in the specified order.
 	for i, r in enumerate(SeriesModel.model.races):
@@ -443,7 +454,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		# List of:
 		# lastName, firstName, license, team, tTotalFinish, [list of (points, position) for each race in series]
 		categoryResult = [list(riderNameLicense[rider]) + [riderTeam[rider], formatTime(riderTFinish[rider],True), riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
-		return categoryResult, races
+		return categoryResult, races, GetPotentialDuplicateFullNames(riderNameLicense)
 	
 	elif scoreByPercent:
 		# Get the individual results for each rider as a percentage of the winner's time.  Ignore DNF riders.
@@ -503,7 +514,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		# List of:
 		# lastName, firstName, license, team, totalPercent, [list of (percent, position) for each race in series]
 		categoryResult = [list(riderNameLicense[rider]) + [riderTeam[rider], percentFormat.format(riderPercentTotal[rider]), riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
-		return categoryResult, races
+		return categoryResult, races, GetPotentialDuplicateFullNames(riderNameLicense)
 	
 	elif scoreByTrueSkill:
 		# Get an intial Rating for all riders.
@@ -577,7 +588,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		# List of:
 		# lastName, firstName, license, team, points, [list of (points, position) for each race in series]
 		categoryResult = [list(riderNameLicense[rider]) + [riderTeam[rider], riderPoints[rider], riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
-		return categoryResult, races
+		return categoryResult, races, GetPotentialDuplicateFullNames(riderNameLicense)
 		
 	else:
 		# Get the individual results for each rider, and the total points.
@@ -640,7 +651,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		# List of:
 		# lastName, firstName, license, team, points, [list of (points, position) for each race in series]
 		categoryResult = [list(riderNameLicense[rider]) + [riderTeam[rider], riderPoints[rider], riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
-		return categoryResult, races
+		return categoryResult, races, GetPotentialDuplicateFullNames(riderNameLicense)
 
 def GetTotalUniqueParticipants( raceResults ):
 	return len( set( rr.key() for rr in raceResults ) )
@@ -666,7 +677,7 @@ if __name__ == '__main__':
 	pointsForRank = { files[0]: pointsForRank }
 		
 	for c in categories:
-		categoryResult, races = GetCategoryResults( c, raceResults, pointsForRank )
+		categoryResult, races, potentialDuplicates = GetCategoryResults( c, raceResults, pointsForRank )
 		print '--------------------------------------------------------'
 		print c
 		print
