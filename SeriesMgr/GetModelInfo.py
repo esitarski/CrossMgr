@@ -293,7 +293,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 			info['rank'] = RaceResult.rankDNF if rr.status == DNF else pos
 				
 			info['tFinish'] = getattr(rr, '_lastTimeOrig', None) or getattr(rr,'lastTime', 1000.0*24.0*60.0*60.0)
-				
+			
 			try:
 				info['tProjected'] = rr.projectedTime
 			except AttributeError:
@@ -353,9 +353,7 @@ def GetPotentialDuplicateFullNames( riderNameLicense ):
 	for (full_name, license) in riderNameLicense.itervalues():
 		nameLicense[full_name].append( license )
 	
-	return {full_name for full_name, licenses in nameLicense.iteritems()
-		if len(licenses) > 1 and any(license == u'' or u'TEMP' in license for license in licenses)
-	}
+	return {full_name for full_name, licenses in nameLicense.iteritems() if len(licenses) > 1}
 			
 def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsCompleted=False, numPlacesTieBreaker=5 ):
 	scoreByTime = SeriesModel.model.scoreByTime
