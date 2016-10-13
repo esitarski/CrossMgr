@@ -3,6 +3,7 @@ import wx
 import os
 import re
 import xlwt
+import uuid
 import datetime
 import Utils
 import Model
@@ -377,30 +378,19 @@ class ExportGrid( object ):
 		xPix = yPix = borderPix
 		
 		# Draw the graphic.
-		graphicFName = None
-		if Utils.getMainWin():
-			graphicFName = Utils.getMainWin().getGraphicFName()
-			if not os.path.exists(graphicFName):
-				graphicFName = None
-		if not graphicFName:
-			graphicFName = os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png')
-		
-		extension = os.path.splitext( graphicFName )[1].lower()
-		bitmapType = {
-			'.gif': wx.BITMAP_TYPE_GIF,
-			'.png': wx.BITMAP_TYPE_PNG,
-			'.jpg': wx.BITMAP_TYPE_JPEG,
-			'.jpeg':wx.BITMAP_TYPE_JPEG }.get( extension, wx.BITMAP_TYPE_PNG )
-		bitmap = wx.Bitmap( graphicFName, bitmapType )
+		bitmap = getHeaderBitmap()
 		bmWidth, bmHeight = bitmap.GetWidth(), bitmap.GetHeight()
-		bitmap = None
 		
 		graphicHeight = heightPix * 0.15
 		graphicWidth = float(bmWidth) / float(bmHeight) * graphicHeight
 		graphicBorder = int(graphicWidth * 0.15)
 
-		pdf.image( graphicFName, xPix, yPix, graphicWidth, graphicHeight )
+		image = wx.ImageFromBitmap( bitmap )
+		graphicFName = os.path.join( os.path.expanduser('~'), uuid.uuid4().hex + '.png' )
+		image.SaveFile( graphicFName, wx.BITMAP_TYPE_PNG )
 		image, bitmap = None, None
+		pdf.image( graphicFName, xPix, yPix, graphicWidth, graphicHeight )
+		os.remove( graphicFName )
 		
 		# Get the race URL (if defined).
 		with Model.LockRace() as race:
