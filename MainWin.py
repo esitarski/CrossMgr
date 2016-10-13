@@ -1245,6 +1245,7 @@ class MainWin( wx.Frame ):
 			value = dlg.GetValue()
 			if Model.race:
 				Model.race.email = value
+				Model.race.setChanged()
 		dlg.Destroy()
 	
 	def menuSetGraphic( self, event ):
