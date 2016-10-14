@@ -160,10 +160,10 @@ def ExtractRaceResultsExcel( raceInSeries ):
 					'bib': 			f('bib',99999),
 					'rank':			f('pos',''),
 					'tFinish':		f('time',0.0),
-					'firstName':	f('first_name',u'').strip(),
-					'lastName'	:	f('last_name',u'').strip(),
+					'firstName':	unicode(f('first_name',u'')).strip(),
+					'lastName'	:	unicode(f('last_name',u'')).strip(),
 					'license':		unicode(f('license_code',u'')).strip(),
-					'team':			f('team',u'').strip(),
+					'team':			unicode(f('team',u'')).strip(),
 					'categoryName': f('category_code',None),
 				}
 				
@@ -184,7 +184,7 @@ def ExtractRaceResultsExcel( raceInSeries ):
 					continue
 
 				# Check for comma-separated name.
-				name = unicode(f('name', u''))
+				name = unicode(f('name', u'')).strip()
 				if name and not info['firstName'] and not info['lastName']:
 					try:
 						info['lastName'], info['firstName'] = name.split(',',1)
