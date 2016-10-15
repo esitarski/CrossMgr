@@ -234,7 +234,7 @@ class ExportGrid( object ):
 		
 		# Draw the title.
 		font = self._getFontToFit( widthFieldPix - graphicWidth - graphicBorder - qrWidth, graphicHeight,
-									lambda font: dc.GetMultiLineTextExtent(self.title, font)[:-1], True )
+									lambda font: dc.GetMultiLineTextExtent(self.title, font)[:2], True )
 		dc.SetFont( font )
 		self._drawMultiLineText( dc, self.title, xPix + graphicWidth + graphicBorder, yPix )
 		# wText, hText, lineHeightText = dc.GetMultiLineTextExtent( self.title, font )
@@ -255,7 +255,7 @@ class ExportGrid( object ):
 		# Remember: _getDataSizeTuple understands self.rowDrawCount and will compute the height using the count.
 		font = self._getFontToFit( widthFieldPix, heightFieldPix, lambda font: self._getDataSizeTuple(dc, font) )
 		dc.SetFont( font )
-		wSpace, hSpace, textHeight = dc.GetMultiLineTextExtent( '    ', font )
+		wSpace, hSpace, textHeight = dc.GetMultiLineTextExtent( u'    ', font )
 		
 		# Get the row slice for each column.
 		dataDraw = [col[rowDrawStart:rowDrawStart+rowDrawCount] for col in self.data]

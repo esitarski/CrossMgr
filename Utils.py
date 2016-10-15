@@ -216,16 +216,24 @@ if 'WXMAC' in wx.Platform:
 	# wx.DC.GetMultiLineTextExtent does not work on the Mac.
 	# Replace it with our own function.
 	def GetMultiLineTextExtent( dc, text, font = None ):
-		textWidth, textHeight, lineHeight = 0, 0, None
+		textWidth, textHeight, lineHeight = 0, 0, 0
 		for line in text.split('\n'):
-			lineWidth, lineHeight = dc.GetFullTextExtent( line, font )[:2]
-			textWidth = max( textWidth, lineWidth )
-			textHeight += lineHeight
-		if lineHeight is None:
-			lineHeight = dc.GetFullTextExtent( '000Yy', font )[1]
+			# Handle empty lines.
+			if not line:
+				line = u'YyPpQq'
+				w, h = 0, dc.GetFullTextExtent( line, font )[1]
+			else:
+				w, h = dc.GetFullTextExtent( line, font )[:2]
+			textWidth = max( textWidth, w )
+			lineHeight = max( lineHeight, h  )
+			textHeight += h
 		return textWidth, textHeight, lineHeight
 	
 	wx.DC.GetMultiLineTextExtent = GetMultiLineTextExtent
+	'''
+	from types import MethodType
+	wx.DC.GetMultiLineTextExtent = MethodType( GetMultiLineTextExtent, None, wx.DC.GetMultiLineTextExtent )
+	'''
 
 	# Error, Information and Question dialogs have no icons on the Mac.
 	# Replace all message dialogs with generics dialogs.
