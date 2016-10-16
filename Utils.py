@@ -230,10 +230,6 @@ if 'WXMAC' in wx.Platform:
 		return textWidth, textHeight, lineHeight
 	
 	wx.DC.GetMultiLineTextExtent = GetMultiLineTextExtent
-	'''
-	from types import MethodType
-	wx.DC.GetMultiLineTextExtent = MethodType( GetMultiLineTextExtent, None, wx.DC.GetMultiLineTextExtent )
-	'''
 
 	# Error, Information and Question dialogs have no icons on the Mac.
 	# Replace all message dialogs with generics dialogs.

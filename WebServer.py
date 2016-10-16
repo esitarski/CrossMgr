@@ -2,6 +2,7 @@ import os
 import io
 import re
 import sys
+import gzip
 import glob
 import time
 import threading
@@ -53,6 +54,13 @@ with io.open(os.path.join(Utils.getHtmlFolder(), 'Index.html'), encoding='utf-8'
 	indexTemplate = Template( f.read() )
 
 PORT_NUMBER = 8765
+
+def gzipEncode( content ):
+	out = StringIO()
+	f = gzip.GzipFile(fileobj=out, mode='w', compresslevel=5)
+	f.write(content)
+	f.close()
+	return out.getvalue()
 
 def validContent( content ):
 	return content.strip().endswith( '</html>' )
@@ -119,6 +127,7 @@ class ContentBuffer( object ):
 					result = ParseHtmlPayload( content=content )
 					cache['payload'] = result['payload'] if result['success'] else {}
 					cache['content'] = content.encode('utf-8')
+					cache['gzip_content'] = gzipEncode( cache['content'] )
 					cache['status'] = self.Changed
 					self.fileCache[fname] = cache
 			
@@ -150,6 +159,7 @@ class ContentBuffer( object ):
 		result = ParseHtmlPayload( content=content )
 		cache['payload'] = result['payload'] if result['success'] else {}
 		cache['content'] = content.encode('utf-8')
+		cache['gzip_content'] = gzipEncode( cache['content'] )
 		self.fileCache[fname] = cache
 		return cache
 	
@@ -187,7 +197,9 @@ class ContentBuffer( object ):
 	def getContent( self, fname, checkForUpdate=True ):
 		with self.lock:
 			cache = self._getCache( fname, checkForUpdate )
-			return cache.get('content', '') if cache else ''
+			if cache:
+				return cache.get('content', ''), cache.get('gzip_content', None)
+			return '', None
 		
 	def getIndexInfo( self ):
 		with self.lock:
@@ -318,6 +330,7 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 	
 	def do_GET(self):
 		up = urlparse.urlparse( self.path )
+		content, gzip_content = None,  None
 		try:
 			if up.path=="/":
 				content = getIndexPage()
@@ -331,18 +344,22 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 				content_type = self.html_content
 			else:
 				file = urllib.url2pathname(os.path.basename(up.path))
-				content = contentBuffer.getContent( file )
+				content, gzip_content = contentBuffer.getContent( file )
 				content_type = self.html_content
 		except Exception as e:
 			self.send_error(404,'File Not Found: {} {}\n{}'.format(self.path, e, traceback.format_exc()))
 			return
 		
 		self.send_response( 200 )
-		self.send_header('Content-type',content_type)
+		self.send_header('Content-Type',content_type)
 		if content_type == self.html_content:
+			if gzip_content and 'Accept-Encoding' in self.headers and 'gzip' in self.headers['Accept-Encoding']:
+				content = gzip_content
+				self.send_header( 'Content-Encoding', 'gzip' )
 			self.send_header( 'Cache-Control', 'no-cache, no-store, must-revalidate' )
 			self.send_header( 'Pragma', 'no-cache' )
 			self.send_header( 'Expires', '0' )
+		self.send_header( 'Content-Length', len(content) )
 		self.end_headers()
 		self.wfile.write( content )
 	
