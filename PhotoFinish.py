@@ -76,4 +76,4 @@ def DeletePhotos( raceFileName ):
 		logException( e, sys.exc_info() )
 				
 def TakePhoto( bib, raceSeconds, includeFTP=False ):
-	return 2 if SendPhotoRequests( [(bib, raceSeconds)] )[0] else 0
+	return 1 if SendPhotoRequests( [(bib, raceSeconds)] )[0] else 0

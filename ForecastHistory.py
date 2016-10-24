@@ -88,7 +88,7 @@ colnames[iLapCol]  = _('Lap')
 colnames[iTimeCol] = _('Time')
 colnames[iGapCol]  = _('Gap')
 colnames[iNameCol] = _('Name')
-colnames[iWaveCol] = _('Wave')
+colnames[iWaveCol] = _('Wave/Cat')
 
 fontSize = 11
 
@@ -305,27 +305,36 @@ class ForecastHistory( wx.Panel ):
 	#--------------------------------------------------------------------
 	
 	def doExpectedSelect( self, event ):
+		race = Model.race
+		if not race or not race.isRunning():
+			return
 		r = event.GetRow()
-		try:
-			if self.quickExpected[r].lap == 0:
-				return
-		except:
-			pass
-		if r < self.expectedGrid.GetNumberRows():
-			self.logNum( self.expectedGrid.GetCellValue(r, 0) )
+		value = self.expectedGrid.GetCellValue( r, 0 ) if r < self.expectedGrid.GetNumberRows() else ''
+		if value:
+			self.logNum( value )
 		
 	def doExpectedPopup( self, event ):
+		race = Model.race
+		if not race or not race.isRunning():
+			return
 		r = event.GetRow()
-		with Model.LockRace() as race:
-			if r >= len(self.quickExpected) or not race or not race.isRunning():
-				return
-		value = ''
-		if r < self.expectedGrid.GetNumberRows():
-			value = self.expectedGrid.GetCellValue( r, 0 )
+		value = self.expectedGrid.GetCellValue(r, 0) if r < self.expectedGrid.GetNumberRows() else ''
 		if not value:
 			return
-			
-		self.entryCur = self.quickRecorded[r]
+		
+		value = int(value)
+		
+		self.entryCur = None
+		for k in xrange(1, 2*max(r, len(self.quickExpected) - r)):
+			i = r + (k//2 if k&1 else -k//2)
+			if 0 <= i < len(self.quickExpected):
+				if self.quickExpected[i].num == value:
+					self.entryCur = self.quickExpected[i]
+					break
+				
+		if not self.entryCur:
+			return
+		
 		if not hasattr(self, 'expectedPopupInfo'):
 			self.expectedPopupInfo = [
 				(_('Enter'),		wx.NewId(), self.OnPopupExpectedEnter),
@@ -581,7 +590,7 @@ class ForecastHistory( wx.Panel ):
 		
 		def getWave( e ):
 			try:
-				return race.getCategory( e.num ).fullname
+				return race.getCategory(e.num).fullname
 			except:
 				return u' '
 		data[iWaveCol] = [getWave(e) for e in expected]

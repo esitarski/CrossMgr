@@ -768,47 +768,22 @@ class Rider(object):
 			if iTimes is None:
 				return None
 
+		# If only 2 times, return what we have.
 		if len(iTimes) == 2:
 			return iTimes[1] - iTimes[0]
-
-		try:
-			numLaps = min( Model.race.getCategory(self.num)._numLaps, len(iTimes)-1 )
-		except Exception as e:
-			numLaps = len(iTimes) - 1
-
-		# Ignore the first lap time as there is often a staggered start or a different first lap length.
-		if numLaps > 2:
-			iStart = 2
-		else:
-			iStart = 1
-			
-		# Compute differences between times.
-		dTimes = [iTimes[i] - iTimes[i-1] for i in xrange(iStart, numLaps+1)]
+		
+		# Return the median of the lap times ignoring the first lap.
+		dTimes = sorted( t2-t1 for t2, t1 in zip(iTimes[2:], iTimes[1:]) )
 		if not dTimes:
 			return None
-		
-		dTimes.sort()
+			
 		dTimesLen = len(dTimes)
-		if (dTimesLen & 1) == 1:
+		if dTimesLen & 1:
 			median = dTimes[dTimesLen // 2]
 		else:
 			median = (dTimes[dTimesLen//2-1] + dTimes[dTimesLen//2]) / 2.0
 
-		mMin = median * Rider.pMin
-		mMax = median * Rider.pMax
-
-		# Compute the average lap time (ignore times that are way off based on the median).
-		# Check the most common case first (no wacky lap times).
-		if (mMin < dTimes[0] and dTimes[-1] < mMax) or len(dTimes) <= 2:
-			return math.fsum(dTimes) / len(dTimes)
-
-		# Ignore the outliers and compute the average based on the core data.
-		iLeft  = (i for i in xrange(0, len(dTimes))     if dTimes[i]   > mMin).next()
-		iRight = (i for i in xrange(len(dTimes), 0, -1) if dTimes[i-1] < mMax).next()
-		try:
-			return math.fsum(dTimes[iLeft:iRight]) / (iRight - iLeft)
-		except:
-			return median
+		return median
 
 	def removeEarlyTimes( self, times ):
 		try:
