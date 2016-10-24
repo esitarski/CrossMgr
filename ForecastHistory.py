@@ -88,7 +88,7 @@ colnames[iLapCol]  = _('Lap')
 colnames[iTimeCol] = _('Time')
 colnames[iGapCol]  = _('Gap')
 colnames[iNameCol] = _('Name')
-colnames[iWaveCol] = _('Wave/Cat')
+colnames[iWaveCol] = _('Wave')
 
 fontSize = 11
 
