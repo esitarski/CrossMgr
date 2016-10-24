@@ -4,7 +4,6 @@ import os
 import wx
 import wx.gizmos as gizmos
 import Utils
-import Clock
 import Model
 from ReadSignOnSheet	import ExcelLink
 
@@ -67,8 +66,6 @@ class RaceDB( wx.Dialog ):
 		
 		raceDBLogo = wx.StaticBitmap( self, bitmap=wx.Bitmap( os.path.join(Utils.getImageFolder(), 'RaceDB_big.png'), wx.BITMAP_TYPE_PNG ) )
 		
-		self.clock = Clock.Clock( self, size=(190,190) )
-		
 		self.raceFolder = wx.DirPickerCtrl( self, path=CrossMgrFolderDefault() )
 		self.raceDBUrl = wx.TextCtrl( self, value=RaceDBUrlDefault(), style=wx.TE_PROCESS_ENTER )
 		self.raceDBUrl.Bind( wx.EVT_TEXT_ENTER, self.onChange )
@@ -93,13 +90,8 @@ class RaceDB( wx.Dialog ):
 		hs.Add( self.updateButton, flag=wx.LEFT, border=16 )
 		fgs.Add( hs )
 		
-		hsHeader = wx.BoxSizer( wx.HORIZONTAL )
-		hsHeader.Add( raceDBLogo )
-		hsHeader.AddStretchSpacer()
-		hsHeader.Add( self.clock, flag=wx.TOP|wx.RIGHT, border=8 )
-		
 		vsHeader = wx.BoxSizer( wx.VERTICAL )
-		vsHeader.Add( hsHeader, flag=wx.EXPAND )
+		vsHeader.Add( raceDBLogo, flag=wx.ALIGN_CENTRE )
 		vsHeader.Add( fgs, 1, flag=wx.EXPAND )
 		
 		self.tree = gizmos.TreeListCtrl( self, style=wx.TR_DEFAULT_STYLE|wx.TR_FULL_ROW_HIGHLIGHT|wx.TR_ROW_LINES )
@@ -219,7 +211,8 @@ class RaceDB( wx.Dialog ):
 		mainWin = Utils.getMainWin()
 		if mainWin:
 			mainWin.openRaceDBExcel( excelFName, overwriteExisting=False )
-		self.EndModal( wx.ID_OK )
+		
+		self.EndModal( wx.ID_OK )		
 	
 	def selectChangedCB( self, evt ):
 		try:

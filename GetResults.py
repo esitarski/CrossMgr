@@ -1,13 +1,14 @@
 import Model
 from bisect import bisect_left
 from math import floor
+import re
 import sys
 import copy
 import Utils
 import itertools
 import operator
 
-from ReadSignOnSheet import IgnoreFields, SyncExcelLink
+from ReadSignOnSheet import IgnoreFields, NumericFields, SyncExcelLink
 statusSortSeq = Model.Rider.statusSortSeq
 
 def TimeDifference( a, b, highPrecision = False ):
@@ -66,38 +67,19 @@ class RiderResult( object ):
 		self.raceTimes	= raceTimes
 		self.interp		= interp
 		
+	_reMissingName = re.compile( '^, |, $' )
 	def full_name( self ):
-		names = []
-		try:
-			names.append( self.LastName.upper() )
-		except AttributeError:
-			pass
-		try:
-			names.append( self.FirstName )
-		except AttributeError:
-			pass
-		return u', '.join( names )
+		return self._reMissingName.sub( u'', u'{}, {}'.format(getattr(self, 'LastName', u''), getattr(self,'FirstName', u'')), 1 )
 		
+	_reMissingShortName = re.compile( '^,|,$' )
 	def short_name( self, maxLen=20 ):
-		name = self.full_name()
-		if len(name) <= maxLen:
-			return name
-		
-		names = []
-		try:
-			names.append( self.LastName.upper() )
-			if len(names[-1]) >= maxLen-2:
-				return names[0]
-		except AttributeError:
-			pass
-		try:
-			if names:
-				names.append( self.FirstName[:1] )
-			else:
-				names.append( self.FirstName )
-		except AttributeError:
-			pass
-		return u','.join( names )
+		lastName = getattr(self, 'LastName', u'')
+		if len(lastName) + 2 >= maxLen:
+			return lastName
+		firstName = getattr(self,'FirstName', u'')
+		if len(lastName) + len(firstName) + 1 <= maxLen:
+			return self._reMissingShortName.sub( u'', u'{},{}'.format(lastName, firstName), 1 )
+		return self._reMissingShortName.sub( u'', u'{},{}'.format(lastName, firstName[:1]), 1 )
 		
 	def __repr__( self ):
 		return str(self.__dict__)
@@ -608,9 +590,16 @@ def GetResultsWithData( category ):
 	for rr in riderResults:
 		for f in externalFields:
 			try:
-				setattr( rr, f, externalInfo[rr.num][f] )
-			except KeyError:
-				setattr( rr, f, '' )
+				v = externalInfo[rr.num][f]
+				if f in NumericFields:
+					v = float(v)
+					if float(v) == int(v):
+						v = int(v)
+				else:
+					v = unicode(v)
+				setattr( rr, f, v )
+			except (KeyError, ValueError):
+				setattr( rr, f, u'' )
 	
 	if excelLink and excelLink.hasField('Factor'):
 		riderResults = [copy.copy(rr) for rr in riderResults]

@@ -381,7 +381,7 @@ class Gantt( wx.Panel ):
 				riderInfo = race.excelLink.read()[self.entryEnd.num]
 			except:
 				riderInfo = {}
-				
+			
 			try:
 				riderName = u'{}, {} {}'.format(riderInfo['LastName'], riderInfo['FirstName'], self.entryEnd.num)
 			except KeyError:
@@ -514,7 +514,7 @@ class Gantt( wx.Panel ):
 		resultBest = (0, sys.float_info.max)
 		labels, status = [], []
 		for r in results:
-			label = u', '.join( n for n in [getattr(r,'LastName',None), getattr(r,'FirstName',None)] if n )
+			label = r.full_name()
 			if r.num:
 				label += u' {}'.format(r.num)
 			labels.append( label )

@@ -22,7 +22,7 @@ def tag( buf, name, attrs = {} ):
 	yield
 	buf.write( u'</{}>\n'.format(name) )
 
-brandText = 'Powered by SprintMgr (sites.google.com/site/crossmgrsoftware)'
+brandText = 'Powered by CrossMgrMgr (sites.google.com/site/crossmgrsoftware)'
 
 def ImageToPil( image ):
 	"""Convert wx.Image to PIL Image."""

@@ -361,23 +361,18 @@ class Category(object):
 	
 	@property
 	def firstLapRatio( self ):
-		if getattr(self, 'distanceType', None) != Category.DistanceByLap:
+		if self.distanceType == Category.DistanceByLap and self.firstLapDistance and self.distance:
+			return self.firstLapDistance / self.distance
+		else:
 			return 1.0
-		firstLapDistance = getattr(self, 'firstLapDistance', None)
-		if not firstLapDistance:
-			return 1.0
-		distance = getattr(self, 'distance', None)
-		if not distance:
-			return 1.0
-		return firstLapDistance / distance
 	
 	@property
 	def distanceIsByLap( self ):
-		return getattr(self, 'distanceType', Category.DistanceByLap) == Category.DistanceByLap
+		return self.distanceType == Category.DistanceByLap
 	
 	@property
 	def distanceIsByRace( self ):
-		return getattr(self, 'distanceType', Category.DistanceByLap) == Category.DistanceByRace
+		return self.distanceType == Category.DistanceByRace
 
 	def getNumLaps( self ):
 		laps = getattr( self, '_numLaps', None )
@@ -716,8 +711,8 @@ class Rider(object):
 			return None
 
 		# Create a separate working list.
-		# Add a zero start time for the beginning of the race.
-		# This lots of special cases later.
+		# Add the start offset for the beginning of the start wave.
+		# This avoids special cases later.
 		iTimes = [race.getStartOffset(self.num) if race else 0.0]
 		
 		# Clean up spurious reads based on minumum possible lap time.
@@ -768,9 +763,11 @@ class Rider(object):
 			if iTimes is None:
 				return None
 
-		# If only 2 times, return what we have.
+		# If only 2 times, return the first lap adjusted for lap distance.
 		if len(iTimes) == 2:
-			return iTimes[1] - iTimes[0]
+			d = iTimes[1] - iTimes[0]
+			category = race.getCategory( self.num )
+			return d / category.firstLapRatio if category else d
 		
 		# Return the median of the lap times ignoring the first lap.
 		dTimes = sorted( t2-t1 for t2, t1 in zip(iTimes[2:], iTimes[1:]) )

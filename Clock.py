@@ -66,9 +66,9 @@ class Clock(wx.PyControl):
 	def ShouldInheritColours(self):
 		return True
 
-	def onTimer( self, event=None):
+	def onTimer( self, event=None ):
 		self.tCur = now()
-		self.Refresh()
+		wx.CallAfter( self.Refresh )
 		if self.checkFunc():
 			if self.timer.IsRunning():
 				self.timer.Stop()

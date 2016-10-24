@@ -2735,7 +2735,6 @@ class MainWin( wx.Frame ):
 			race.showOval = False
 		
 		self.refreshAll()
-		self.showPageName( _('Actions') )
 		self.writeRace()
 		
 	@logCall

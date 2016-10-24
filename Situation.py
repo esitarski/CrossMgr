@@ -87,14 +87,7 @@ def GetSituationGaps( category=None, t=None ):
 			continue
 			
 		raceTimes[rr.num] = rr.raceTimes
-		lastName, firstName = getattr(rr,'LastName',u'').upper(), getattr(rr,'FirstName',u'')
-		if lastName and firstName:
-			name = u'{},{}'.format(lastName, firstName[:1])
-		elif lastName:
-			name = lastName
-		else:
-			name = firstName
-		riderName[rr.num] = name
+		riderName[rr.num] = rr.short_name(15)
 
 	if not raceTimes:
 		return []

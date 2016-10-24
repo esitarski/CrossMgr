@@ -309,7 +309,7 @@ class ForecastHistory( wx.Panel ):
 		if not race or not race.isRunning():
 			return
 		r = event.GetRow()
-		value = self.expectedGrid.GetCellValue( r, 0 ) if r < self.expectedGrid.GetNumberRows() else ''
+		value = self.expectedGrid.GetCellValue(r, 0) if r < self.expectedGrid.GetNumberRows() else ''
 		if value:
 			self.logNum( value )
 		

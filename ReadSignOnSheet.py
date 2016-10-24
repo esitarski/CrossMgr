@@ -40,7 +40,9 @@ with Utils.SuspendTranslation():
 	] + TagFields
 
 IgnoreFields = ['Bib#', 'Factor', 'EventCategory', 'CustomCategory'] + TagFields	# Fields to ignore when adding data to standard reports.
+NumericFields = ['Age','Factor']
 ReportFields = [f for f in Fields if f not in IgnoreFields]
+ReportFields = (lambda s: [f for f in Fields if f not in s])(set(IgnoreFields))
 
 class FileNamePage(wiz.WizardPageSimple):
 	def __init__(self, parent):
@@ -55,7 +57,7 @@ class FileNamePage(wiz.WizardPageSimple):
 		fileMask = [
 			'Excel Worksheets (*.xlsx;*.xlsm;*.xls)|*.xlsx;*.xlsm;*.xls',
 		]
-		self.fbb = filebrowse.FileBrowseButton( self, -1, size=(450, -1),
+		self.fbb = filebrowse.FileBrowseButton( self, size=(450, -1),
 												labelText = _('Excel Workbook:'),
 												fileMode=wx.OPEN,
 												fileMask='|'.join(fileMask) )
@@ -760,21 +762,21 @@ class ExcelLink( object ):
 				try:
 					try:
 						data[field] = row[col].strip()
-					except AttributeError as e:
+					except AttributeError:
 						data[field] = row[col]
 					
 					if data[field] == None:
-						data[field] = ''
+						data[field] = u''
 						
 					if field == 'LastName':
 						try:
 							data[field] = unicode(data[field] or '').upper()
 						except:
-							pass
+							data[field] = _('Unknown')
 					elif field.startswith('Tag'):
 						try:
 							data[field] = int( data[field] )
-						except (ValueError, TypeError) as e:
+						except (ValueError, TypeError):
 							pass
 						try:
 							data[field] = unicode(data[field] or '').upper()
@@ -791,9 +793,20 @@ class ExcelLink( object ):
 								data[field] = 'Women'
 							else:
 								data[field] = 'Open'		# Otherwise Open
-						except Exception as e:
+						except:
 							data[field] = 'Open'
 							pass
+					else:
+						if field in NumericFields:
+							try:
+								data[field] = float(data[field])
+								if data[field] == int(data[field]):
+									data[field] = int(data[field])
+							except ValueError:
+								data[field] = 0
+						else:
+							data[field] = unicode(data[field])
+						
 				except IndexError:
 					pass
 			
