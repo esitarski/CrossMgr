@@ -589,13 +589,13 @@ class Rider(object):
 	
 	firstTime = None				# Used for time trial mode.  Also used to flag the first start time.
 	relegatedPosition = None
+	autocorrectLaps = True
 	
 	def __init__( self, num ):
 		self.num = num
 		self.times = []
 		self.status = Rider.Finisher
 		self.tStatus = None
-		self.autocorrectLaps = True
 	
 	def clearCache( self ):
 		for attr in ('_iTimesLast', '_entriesLast'):
@@ -698,16 +698,16 @@ class Rider(object):
 	def isRelegated( self ):	return self.status == Rider.Finisher and self.relegatedPosition is not None
 
 	def setStatus( self, status, tStatus = None ):
-		if status in [Rider.Finisher, Rider.DNS, Rider.DQ]:
+		if status in (Rider.Finisher, Rider.DNS, Rider.DQ):
 			tStatus = None
-		elif status in [Rider.Pulled, Rider.DNF]:
+		elif status in (Rider.Pulled, Rider.DNF):
 			if tStatus is None:
 				tStatus = race.lastRaceTime() if race else None
 		self.status = status
 		self.tStatus = tStatus
 	
 	def getCleanLapTimes( self ):
-		if not self.times or self.status in [Rider.DNS, Rider.DQ]:
+		if not self.times or self.status in (Rider.DNS, Rider.DQ):
 			return None
 
 		# Create a separate working list.
@@ -728,9 +728,12 @@ class Rider(object):
 			numLaps = len(iTimes)
 		iTimes = iTimes[:numLaps+1]
 
-		averageLapTime = race.getAverageLapTime() if race else (iTimes[-1] - iTimes[0]) / float(len(iTimes) - 1)
-		mustBeRepeatInterval = averageLapTime * 0.5
-
+		#averageLapTime = race.getAverageLapTime() if race else (iTimes[-1] - iTimes[0]) / float(len(iTimes) - 1)
+		#mustBeRepeatInterval = averageLapTime * 0.5
+		
+		medianLapTime = race.getMedianLapTime() if race else (iTimes[-1] - iTimes[0]) / float(len(iTimes) - 1)
+		mustBeRepeatInterval = medianLapTime * 0.10
+		
 		# Remove duplicate entries.
 		while len(iTimes) > 2:
 			try:
@@ -763,24 +766,19 @@ class Rider(object):
 			if iTimes is None:
 				return None
 
-		# If only 2 times, return the first lap adjusted for lap distance.
+		# If only 2 times, return a second lap adjusted for lap distance.
 		if len(iTimes) == 2:
 			d = iTimes[1] - iTimes[0]
 			category = race.getCategory( self.num )
 			return d / category.firstLapRatio if category else d
 		
 		# Return the median of the lap times ignoring the first lap.
-		dTimes = sorted( t2-t1 for t2, t1 in zip(iTimes[2:], iTimes[1:]) )
+		dTimes = sorted( b-a for b, a in zip(iTimes[2:], iTimes[1:]) )
 		if not dTimes:
 			return None
 			
 		dTimesLen = len(dTimes)
-		if dTimesLen & 1:
-			median = dTimes[dTimesLen // 2]
-		else:
-			median = (dTimes[dTimesLen//2-1] + dTimes[dTimesLen//2]) / 2.0
-
-		return median
+		return dTimes[dTimesLen // 2] if dTimesLen & 1 else (dTimes[dTimesLen//2-1] + dTimes[dTimesLen//2]) / 2.0
 
 	def removeEarlyTimes( self, times ):
 		try:
@@ -830,7 +828,7 @@ class Rider(object):
 		return self._entriesLast
 			
 	def interpolate( self, stopTime = maxInterpolateTime ):
-		if not self.times or self.status in [Rider.DNS, Rider.DQ]:
+		if not self.times or self.status in (Rider.DNS, Rider.DQ):
 			return self.getEntries( [] )
 		
 		# Adjust the stop time.
@@ -842,7 +840,7 @@ class Rider(object):
 			st = min(st, dnfPulledTime + 0.01)
 		
 		# Check if we need to do any interpolation or if the user wants the raw data.
-		if not getattr(self, 'autocorrectLaps', True):
+		if not self.autocorrectLaps:
 			if not self.times:
 				return self.getEntries( [] )
 			# Add the start time for the beginning of the rider.
@@ -903,8 +901,7 @@ class Rider(object):
 		
 	def getRawLapTimes( self ):
 		# Create a separate working list.
-		# Add a zero start time for the beginning of the race.
-		# This avoids a whole lot of special cases later.
+		# Add start offset at the beginning of the race.
 		iTimes = [race.getStartOffset(self.num) if race else 0.0]
 		iTimes[1:] = self.times
 		try:
@@ -1475,13 +1472,12 @@ class Race( object ):
 		
 	@memoize
 	def getMedianLapTime( self, category=None ):
-		lapTimes = itertools.chain.from_iterable( r.getRawLapTimes()
-			for r in self.riders.itervalues() if race.inCategory(r.num, category) )		
+		lapTimes = sorted( itertools.chain.from_iterable( r.getRawLapTimes()
+			for r in self.riders.itervalues() if race.inCategory(r.num, category) ) )
 		if not lapTimes:
-			return None
-		lapTimes.sort()
-		iMid = len(lapTimes) // 2
-		return lapTimes[iMid] if len(lapTimes) & 1 == 1 else (lapTimes[iMid-1] + lapTimes[iMid]) / 2.0
+			return 8.0 * 60.0	# Default to 8 minutes.
+		lapTimesLen = len(lapTimes)
+		return lapTimes[lapTimesLen//2] if lapTimesLen & 1 else (lapTimes[lapTimesLen//2-1] + lapTimes[lapTimesLen//2]) / 2.0
 
 	@memoize
 	def interpolate( self ):
@@ -2643,6 +2639,7 @@ def writeModelUpdate( includeExcel=True, includePDF=True ):
 	return success
 		
 if __name__ == '__main__':
+	'''
 	s = set.union( set(xrange(10)), set(xrange(20,30)) )
 	i = SetToIntervals( s )
 	ss = IntervalsToSet( i )
@@ -2650,27 +2647,37 @@ if __name__ == '__main__':
 	print( i )
 	print( ss )
 	sys.exit()
+	'''
 	
 	r = newRace()
+	
+	'''
 	for i in xrange(1, 11):
 		r.addTime( 10, i*100 )
 	r.addTime( 10, 10*100 + 1 )
 	print( u'\n'.join( unicode(f) for f in r.interpolate()[:20] ) )
-	
 	'''
-	print( r.getTemplateValues() )
-	sys.exit()
 	
-	print( r.getMaxLap() )
-	
-	r.addTime( 10, 1 * 60 )
+	categories = [
+		{'name':'Junior', 'catStr':'1-99', 'startOffset':'00:00', 'distance':0.5, 'gender':'Men', 'raceLaps':10},
+	]
+	r.setCategories( categories )
+
+	#for i in xrange(1,8):
+	#	r.addTime( 10, i * 60 )
+	r.addTime( 10, 2 * 60 )
+	r.addTime( 10, 3 * 60 )
+	r.addTime( 10, 4 * 60 )
 	r.addTime( 10, 5 * 60 )
-	r.addTime( 10, 9 * 60 )
-	r.addTime( 10, 10 * 60 )
+	r.addTime( 10, 6 * 60 )
+	r.addTime( 10, 8 * 60 )
+	r.addTime( 10, 10*60+1 )
 	rider = r.getRider( 10 )
-	entries = rider.interpolate( 11 )
+	
+	entries = rider.interpolate( 11 * 60 )
+	
 	print( [(Utils.SecondsToMMSS(e.t), e.interp) for e in entries] )
-	#sys.exit( 0 )
+	sys.exit( 0 )
 	
 	r.addTime( 10,  5 )
 	#r.addTime( 10, 10 )
@@ -2698,5 +2705,4 @@ if __name__ == '__main__':
 						{'name':'test3', 'catStr':'1300-1399'}] )
 	print( r.getCategoryMask() )
 	print( r.getCategory( 2002 ) )
-	'''
 
