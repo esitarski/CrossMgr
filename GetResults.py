@@ -770,6 +770,9 @@ def GetCategoryDetails( ignoreEmptyCategories=True, publishOnly=False ):
 	catDetails = []
 	race = Model.race
 	
+	DNS = Model.Rider.DNS
+	Finisher = Model.Rider.Finisher
+	
 	# Create a custom category for all riders.
 	info = {
 		'name'			: 'All',
@@ -803,6 +806,8 @@ def GetCategoryDetails( ignoreEmptyCategories=True, publishOnly=False ):
 			'catType'		: ['Start Wave', 'Component', 'Custom'][cat.catType],
 			'laps'			: lastWaveLaps if unstarted else 0,
 			'pos'			: [rr.num for rr in results],
+			'starters'		: sum( 1 for rr in results if rr.status != DNS ),
+			'finishers'		: sum( 1 for rr in results if rr.status == Finisher ),
 			'gapValue'		: [getattr(rr, 'gapValue', 0) for rr in results],
 		}
 		

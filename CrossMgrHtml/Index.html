@@ -67,6 +67,10 @@ li ol,
 li ul {margin-top:6px;}
 ol ol li:last-child {margin-bottom:0;}
 
+.small-font {
+	font-size: 85%;
+}
+
 .racename {
 	font-size:170%;
 	margin:8px;
@@ -119,8 +123,14 @@ function onLoad() {
 			&nbsp;&nbsp;<a href="{{g.urlTTCountdown}}"><img class="countdown" title="Countdown Clock" /></a>
 		{% end %}
 		<br/>
-		{% for catName, catUrl in g.categories %}
+		{% for catName, catUrl, catStarters, catFinishers in g.categories %}
 			<a href="{{g.url}}?raceCat={{catUrl}}" class='btn'>{{catName}}</a>
+				{% if catStarters and catFinishers %}
+					<span>(<sup>{{catFinishers}}</sup>&frasl;<sub>{{catStarters}}</sub>)</span>
+				{% elif catStarters %}
+					<span>({{catStarters}})</span>
+				{% end %}
+			</a>
 		{% end %}
 	</li>
 {% end %}

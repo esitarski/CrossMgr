@@ -204,6 +204,9 @@ class ContentBuffer( object ):
 	def getIndexInfo( self ):
 		with self.lock:
 			race = Model.race
+			if not race:
+				return {}
+			
 			result = {
 				'logoSrc': race.headerImage or DefaultLogoSrc,
 				'organizer': race.organizer.encode('utf-8'),
@@ -225,7 +228,9 @@ class ContentBuffer( object ):
 					categories = [
 							(
 								c['name'].encode('utf-8'),
-								urllib.quote(unicode(c['name']).encode('utf-8'))
+								urllib.quote(unicode(c['name']).encode('utf-8')),
+								c.get( 'starters', 0 ),
+								c.get( 'finishers', 0 ),
 							)
 						for c in payload.get('catDetails',[]) if c['name'] != 'All'],
 					url = urllib.pathname2url(fname),
@@ -301,6 +306,8 @@ function Draw() {
 
 def getIndexPage( share=True ):
 	info = contentBuffer.getIndexInfo()
+	if not info:
+		return ''
 	info.update( {
 		'share': share,
 		'QRCodeIconSrc':  QRCodeIconSrc,
