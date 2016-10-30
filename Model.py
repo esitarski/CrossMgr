@@ -718,8 +718,10 @@ class Rider(object):
 		# Clean up spurious reads based on minumum possible lap time.
 		# Also removes early times.
 		minPossibleLapTime = race.minPossibleLapTime
+		medianLapTime = race.getMedianLapTime() if race else (iTimes[-1] - iTimes[0]) / float(len(iTimes) - 1)
+		mustBeRepeatInterval = max( minPossibleLapTime, medianLapTime * 0.5 )
 		for t in self.times:
-			if t - iTimes[-1] > minPossibleLapTime:
+			if t - iTimes[-1] > mustBeRepeatInterval:
 				iTimes.append( t )
 		
 		try:
@@ -727,6 +729,7 @@ class Rider(object):
 		except Exception as e:
 			numLaps = len(iTimes)
 
+		'''
 		medianLapTime = race.getMedianLapTime() if race else (iTimes[-1] - iTimes[0]) / float(len(iTimes) - 1)
 		mustBeRepeatInterval = medianLapTime * 0.5
 		
@@ -754,7 +757,8 @@ class Rider(object):
 				del iTimes[iDelete]
 			except StopIteration:
 				break
-				
+		'''
+		
 		# Ensure that there are no more times after the deleted ones.
 		iTimes = iTimes[:numLaps+1]
 
