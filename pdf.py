@@ -4,6 +4,47 @@ class PDF( fpdf.FPDF ):
 	def __init__( self, orientation='L', format='Letter' ):
 		super( PDF, self ).__init__( orientation=orientation, unit='pt', format=format )
 	
+	def center_in_rectangle( self, x, y, width, height, text ):
+		self.rect( x, y, width, height )
+		
+		xCenter = x + width / 2.0
+		yCenter = y + height / 2.0
+		width *= 1.1
+		height *= 1.25
+		
+		# Encode the text as windows-1252.
+		text = unicode(text).encode('windows-1252', 'ignore')
+		fs, fsMin, fsMax = 0.0, 0.0, 720.0
+		
+		def widthHeight( fs ):
+			self.set_font_size( fs )
+			return self.get_string_width(text), fs
+			
+		while fsMax - fsMin > 0.01:
+			fs = (fsMin + fsMax) / 2.0
+			widthMax, heightMax = widthHeight( fs )
+			if widthMax > width or heightMax > height:
+				fsMax = fs
+			else:
+				fsMin = fs
+		
+		fs = fsMin
+		widthMax, heightMax = widthHeight( fs )
+		
+		xCur = xCenter - widthMax / 2.0
+		yCur = yCenter + fs*1.2 / 2.0
+		#self.text( xCur, yCur, text )
+		self.set_xy( xCur, yCenter - heightMax / 2.0 )
+		self.cell( widthMax, heightMax, text, align='C' )
+		
+		self.set_draw_color(0, 0, 0)
+		self.set_line_width(1)
+		
+		yCur = yCenter - heightMax / 2.0
+		self.rect( xCur, yCur, widthMax, heightMax )
+		
+		return widthMax, heightMax
+	
 	def table_in_rectangle( self,
 			x, y, width, height, table,
 			leftJustifyCols=None, hasHeader=True, horizontalLines=True, verticalLines=False ):

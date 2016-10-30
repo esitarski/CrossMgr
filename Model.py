@@ -726,17 +726,14 @@ class Rider(object):
 			numLaps = min( race.getCategory(self.num)._numLaps or 999999, len(iTimes) )
 		except Exception as e:
 			numLaps = len(iTimes)
-		iTimes = iTimes[:numLaps+1]
 
-		#averageLapTime = race.getAverageLapTime() if race else (iTimes[-1] - iTimes[0]) / float(len(iTimes) - 1)
-		#mustBeRepeatInterval = averageLapTime * 0.5
-		
 		medianLapTime = race.getMedianLapTime() if race else (iTimes[-1] - iTimes[0]) / float(len(iTimes) - 1)
-		mustBeRepeatInterval = medianLapTime * 0.10
+		mustBeRepeatInterval = medianLapTime * 0.5
 		
 		# Remove duplicate entries.
 		while len(iTimes) > 2:
 			try:
+				# Don't correct the last lap - assume the rider looped around and cross the finish again.
 				i = (i for i in xrange(len(iTimes) - 1, 0, -1) \
 						if iTimes[i] - iTimes[i-1] < mustBeRepeatInterval).next()
 				if i == 1:
@@ -757,6 +754,9 @@ class Rider(object):
 				del iTimes[iDelete]
 			except StopIteration:
 				break
+				
+		# Ensure that there are no more times after the deleted ones.
+		iTimes = iTimes[:numLaps+1]
 
 		return iTimes if len(iTimes) >= 2 else []
 
