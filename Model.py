@@ -716,10 +716,17 @@ class Rider(object):
 		iTimes = [race.getStartOffset(self.num) if race else 0.0]
 		
 		# Clean up spurious reads based on minumum possible lap time.
+		# Also consider the median lap time.
 		# Also removes early times.
 		minPossibleLapTime = race.minPossibleLapTime
-		medianLapTime = race.getMedianLapTime() if race else (iTimes[-1] - iTimes[0]) / float(len(iTimes) - 1)
-		mustBeRepeatInterval = max( minPossibleLapTime, medianLapTime * 0.5 )
+		if race:
+			medianLapTime = race.getMedianLapTime( race.getCategory(self.num) )
+			if race.enableJChipIntegration:
+				medianLapTime /= 10.0
+		else:
+			medianLapTime = (iTimes[-1] - iTimes[0]) / float(len(iTimes) - 1)
+		
+		mustBeRepeatInterval = max( minPossibleLapTime, medianLapTime * 0.4 )
 		for t in self.times:
 			if t - iTimes[-1] > mustBeRepeatInterval:
 				iTimes.append( t )
@@ -1481,7 +1488,8 @@ class Race( object ):
 		if not lapTimes:
 			return 8.0 * 60.0	# Default to 8 minutes.
 		lapTimesLen = len(lapTimes)
-		return lapTimes[lapTimesLen//2] if lapTimesLen & 1 else (lapTimes[lapTimesLen//2-1] + lapTimes[lapTimesLen//2]) / 2.0
+		return	lapTimes[lapTimesLen//2] if lapTimesLen & 1 else (
+				lapTimes[lapTimesLen//2-1] + lapTimes[lapTimesLen//2]) / 2.0
 
 	@memoize
 	def interpolate( self ):
