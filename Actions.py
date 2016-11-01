@@ -149,6 +149,8 @@ class StartRaceAtTime( wx.Dialog ):
 		
 		self.CentreOnParent(wx.BOTH)
 		wx.CallAfter( self.SetFocus )
+		
+		wx.CallLater( 100, self.autoStartTime.SetSize, (48,-1) )
 
 	def startInFuture( self, event, seconds ):
 		startSeconds = GetNowSeconds() + seconds
