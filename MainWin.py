@@ -1324,8 +1324,6 @@ class MainWin( wx.Frame ):
 		self.writeRace()
 		bibTimes = Model.race.getBibTimes()
 		race = Model.race
-		race.name += u'-Playback'
-		race.raceNum -= 1
 		self.menuNewNext( event )
 		Model.race.startRaceNow()
 		self.playback = Playback( bibTimes, lambda: wx.CallAfter(NonBusyCall(self.refresh)) )
