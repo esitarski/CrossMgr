@@ -70,6 +70,7 @@ from FileDrop			import FileDrop
 from RaceDB				import RaceDB
 from SimulateData		import SimulateData
 from NonBusyCall		import NonBusyCall
+from Playback			import Playback
 import BatchPublishAttrs
 import Model
 import JChipSetup
@@ -693,6 +694,11 @@ class MainWin( wx.Frame ):
 		self.toolsMenu.Append( idCur , _("&Reload Checklist..."), _("Reload the Checklist from the Checklist File") )
 		self.Bind(wx.EVT_MENU, self.menuReloadChecklist, id=idCur )
 		
+		self.toolsMenu.AppendSeparator()
+		idCur = wx.NewId()
+		self.toolsMenu.Append( idCur , _("&Playback..."), _("Playback this race from original data.") )
+		self.Bind(wx.EVT_MENU, self.menuPlayback, id=idCur )
+		
 		self.menuBar.Append( self.toolsMenu, _("&Tools") )
 		
 		#-----------------------------------------------------------------------
@@ -1309,6 +1315,23 @@ class MainWin( wx.Frame ):
 			Utils.MessageOK(self, u'\n\n'.join( [_("Log file copied to clipboard."), _("You can now paste it into an email.")] ), _("Success") )
 		else:
 			Utils.MessageOK(self, _("Unable to open the clipboard."), _("Error"), wx.ICON_ERROR )
+	
+	def menuPlayback( self, event ):
+		if not Model.race or not Model.race.isFinished():
+			return
+		if not Utils.MessageOKCancel(self, u'{}\n\n{}?'.format(_('Playback this race in real-time.'), _('Continue')), _("Playback") ):
+			return
+		self.writeRace()
+		bibTimes = Model.race.getBibTimes()
+		race = Model.race
+		race.name += u'-Playback'
+		race.raceNum -= 1
+		self.menuNewNext( event )
+		Model.race.startRaceNow()
+		self.playback = Playback( bibTimes, lambda: wx.CallAfter(NonBusyCall(self.refresh)) )
+		self.playback.start()
+		self.showPageName( _('Chart') )
+		self.refresh()
 	
 	def menuReloadChecklist( self, event ):
 		try:
@@ -3715,9 +3738,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 		return self.processNumTimes()
 
 	def updateRaceClock( self, event = None ):
-		if self.getCurrentPage() == getattr(self, 'record', None):
-			self.record.refreshRaceTime()
-			self.record.refreshLaps()
+		self.record.refreshAll()
 
 		doRefresh = False
 		race = Model.race

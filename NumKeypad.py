@@ -225,6 +225,8 @@ class NumKeypad( wx.Panel ):
 		self.bell = None
 		self.lapReminder = {}
 		
+		self.refreshNonBusy = NonBusyCall( self.refreshAll, min_millis=1000, max_millis=3000 )
+		
 		self.SetBackgroundColour( wx.WHITE )
 		
 		fontPixels = 50
@@ -376,6 +378,10 @@ class NumKeypad( wx.Panel ):
 		self.firstTimeDraw = True
 		
 		self.refreshRaceTime()
+	
+	def refreshAll( self ):
+		self.refreshLaps()
+		self.refreshRiderLapCountList
 	
 	def updateClock( self ):
 		mainWin = Utils.getMainWin()
@@ -717,16 +723,8 @@ class NumKeypad( wx.Panel ):
 		changed |= SetLabel( self.raceStartMessage, rstSource )
 		changed |= SetLabel( self.raceStartTime, rst )
 	
-		if race and race.isRunning():
-			if not hasattr(self, 'refreshLapsNonBusy'):
-				self.refreshLapsNonBusy = NonBusyCall( self.refreshLaps )
-				self.refreshRiderLapCountListNonBusy = NonBusyCall( self.refreshRiderLapCountList )
-				
-			self.refreshLapsNonBusy()
-			self.refreshRiderLapCountListNonBusy()
-		else:
-			wx.CallAfter( self.refreshLaps )
-			wx.CallAfter( self.refreshRiderLapCountList )
+		self.refreshLapsNonBusy()
+		self.refreshRiderLapCountListNonBusy()
 		
 		if self.isKeypadInputMode():
 			wx.CallLater( 100, self.keypad.numEdit.SetFocus )

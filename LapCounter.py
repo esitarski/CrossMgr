@@ -325,7 +325,7 @@ class LapCounter( wx.Panel ):
 		race = Model.race
 		lap = race.getNumLapsFromCategory(category) if race else category.getNumLaps()
 		return lap % self.lapCounterCycle if self.lapCounterCycle else lap
-					
+	
 	def refresh( self ):
 		race = Model.race
 		if race:

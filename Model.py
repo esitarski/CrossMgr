@@ -770,7 +770,7 @@ class Rider(object):
 		iTimes = iTimes[:numLaps+1]
 
 		return iTimes if len(iTimes) >= 2 else []
-
+		
 	def getExpectedLapTime( self, iTimes = None ):
 		if iTimes is None:
 			iTimes = self.getCleanLapTimes()
@@ -910,16 +910,24 @@ class Rider(object):
 	def hasTimes( self ):
 		return self.times
 		
-	def getRawLapTimes( self ):
+	def getLapTimesForMedian( self ):
 		# Create a separate working list.
-		# Add start offset at the beginning of the race.
-		iTimes = [race.getStartOffset(self.num) if race else 0.0]
-		iTimes[1:] = self.times
+		startOffset = race.getStartOffset(self.num) if race else 0.0
+		iTimes = [t for t in self.times if t > startOffset]
+		if not iTimes:
+			return []
+		lenITimes = len(iTimes)
+		if lenITimes == 1:
+			# Use 1st lap time if we only have one lap.
+			return [iTimes[0] - startOffset]
+		
+		# Otherwise, ignore the first lap time.
 		try:
 			numLaps = min( race.getCategory(self.num)._numLaps or 999999, len(iTimes) )
 		except Exception as e:
 			numLaps = len(iTimes)
-		iTimes = iTimes[:numLaps+1]
+		if lenITimes > numLaps:
+			iTimes = iTimes[:numLaps]
 		return [b-a for b, a in zip(iTimes[1:], iTimes)]
 		
 	def getEarlyStartOffset( self ):
@@ -1214,6 +1222,14 @@ class Race( object ):
 			u'FileName':	os.path.basename(path),
 		}
 	
+	def getBibTimes( self ):
+		bibTimes = []
+		for bib, rider in self.riders.iteritems():
+			for t in rider.times:
+				bibTimes.append( (bib, t) )
+		bibTimes.sort( key=operator.itemgetter(1, 0) )
+		return bibTimes
+
 	@property
 	def numTimeInfo( self ):
 		try:
@@ -1483,7 +1499,7 @@ class Race( object ):
 		
 	@memoize
 	def getMedianLapTime( self, category=None ):
-		lapTimes = sorted( itertools.chain.from_iterable( r.getRawLapTimes()
+		lapTimes = sorted( itertools.chain.from_iterable( r.getLapTimesForMedian()
 			for r in self.riders.itervalues() if race.inCategory(r.num, category) ) )
 		if not lapTimes:
 			return 8.0 * 60.0	# Default to 8 minutes.
