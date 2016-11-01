@@ -18,7 +18,7 @@ from CountdownClock import CountdownClock, EVT_COUNTDOWN
 from SetNoDataDNS import SetNoDataDNS
 
 undoResetTimer = None
-def StartRaceNow():
+def StartRaceNow( page=_('Record') ):
 	global undoResetTimer
 	if undoResetTimer and undoResetTimer.IsRunning():
 		undoResetTimer.Stop()
@@ -40,10 +40,10 @@ def StartRaceNow():
 		
 	OutputStreamer.writeRaceStart()
 	
-	# Refresh the main window and switch to the Record pane.
+	# Refresh the main window and switch to the specified pane.
 	mainWin = Utils.getMainWin()
 	if mainWin is not None:
-		mainWin.showPageName( _('Record') )
+		mainWin.showPageName( page )
 		mainWin.updateLapCounter()
 		mainWin.refresh()
 		
@@ -82,15 +82,44 @@ class StartRaceAtTime( wx.Dialog ):
 			startOffset = 3 * 60
 			startSeconds = nowSeconds - nowSeconds % startOffset
 			startSeconds = nowSeconds + startOffset
-			value = u'%02d:%02d' % (startSeconds / (60*60), (startSeconds / 60) % 60)
+			value = u'{:02d}:{:02d}'.format(startSeconds / (60*60), (startSeconds / 60) % 60)
 		
-		self.autoStartTime = masked.TimeCtrl( self, fmt24hr=True, display_seconds=False, value=value )
+		self.autoStartTime = masked.TimeCtrl( self, fmt24hr=True, display_seconds=False, value=value, size=wx.Size(60,-1) )
 		
-		self.countdown = CountdownClock( self, size=(190,190), tFuture=None )
+		self.pagesLabel = wx.StaticText( self, label=_('After Start, Switch to:') )
+		mainWin = Utils.getMainWin()
+		if mainWin:
+			pageNames = [name for a, b, name in mainWin.attrClassName]
+		else:
+			pageNames = [
+				_('Actions'),
+				_('Record'),
+				_('Results'),
+				_('Passings'),
+				_('RiderDetail'),
+				_('Chart'),
+				_('Animation'),
+				_('Recommendations'),
+				_('Categories'),
+				_('Properties'),
+				_('Primes'),
+				_('Situation'),
+				_('LapCounter'),
+			]
+		pageNames = pageNames[1:]	# Skip the Actions screen.
+		self.pages = wx.Choice( self, choices=pageNames )
+		self.pages.SetSelection( 0 )	# Record screen.
+		
+		self.countdown = CountdownClock( self, size=(400,400), tFuture=None )
 		self.Bind( EVT_COUNTDOWN, self.onCountdown )
 		
-		self.okBtn = wx.Button( self, wx.ID_OK )
+		self.okBtn = wx.Button( self, wx.ID_OK, label=_('Start at Above Time') )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
+		
+		self.start30 = wx.Button( self, label=_('Start in 30s') )
+		self.start30.Bind( wx.EVT_BUTTON, lambda event: self.startInFuture(event, 30) )
+		self.start60 = wx.Button( self, label=_('Start in 60s') )
+		self.start60.Bind( wx.EVT_BUTTON, lambda event: self.startInFuture(event, 60) )
 
 		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
@@ -100,32 +129,47 @@ class StartRaceAtTime( wx.Dialog ):
 		border = 8
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( autoStartLabel, border = border, flag=wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL )
-		hs.Add( self.autoStartTime, border = border, flag=wx.RIGHT|wx.TOP|wx.BOTTOM|wx.ALIGN_BOTTOM )
+		hs.Add( self.autoStartTime, border = border, flag=wx.RIGHT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL )
+		hs.Add( self.pagesLabel, border = border, flag=wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL )
+		hs.Add( self.pages, border = border, flag=wx.RIGHT|wx.TOP|wx.BOTTOM|wx.ALIGN_BOTTOM|wx.ALIGN_CENTER_VERTICAL )
 		vs.Add( hs )
-		
-		vs.Add( self.countdown, 1, border = border, flag=wx.ALL|wx.ALIGN_CENTRE|wx.EXPAND )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.okBtn, border = border, flag=wx.ALL )
+		hs.Add( self.start30, border = border, flag=wx.TOP|wx.BOTTOM|wx.RIGHT)
+		hs.Add( self.start60, border = border, flag=wx.TOP|wx.BOTTOM|wx.RIGHT)
 		self.okBtn.SetDefault()
 		hs.AddStretchSpacer()
 		hs.Add( self.cancelBtn, border = border, flag=wx.ALL )
 		vs.Add( hs, flag=wx.EXPAND )
+		
+		vs.Add( self.countdown, 1, border = border, flag=wx.ALL|wx.ALIGN_CENTRE|wx.EXPAND )
 		
 		self.SetSizerAndFit( vs )
 		
 		self.CentreOnParent(wx.BOTH)
 		wx.CallAfter( self.SetFocus )
 
+	def startInFuture( self, event, seconds ):
+		startSeconds = GetNowSeconds() + seconds
+		
+		dt = wx.DateTime()
+		dt.SetToCurrent()
+		dt.SetHour( startSeconds//(60*60) )
+		dt.SetMinute( (startSeconds//60)%60 )
+		self.autoStartTime.SetValue( dt )
+		
+		return self.onOK( event, startSeconds )
+		
 	def onCountdown( self, event ):
-		StartRaceNow()
+		StartRaceNow( self.pages.GetStringSelection() )
 		self.startTime = self.futureRaceTime
 		self.EndModal( wx.ID_OK )
 	
-	def onOK( self, event ):
+	def onOK( self, event, startSeconds = None ):
 		startTime = self.autoStartTime.GetValue()
 
-		self.startSeconds = Utils.StrToSeconds( startTime ) * 60.0
+		self.startSeconds = Utils.StrToSeconds( startTime ) * 60.0 if startSeconds is None else startSeconds
 		if self.startSeconds < GetNowSeconds():
 			Utils.MessageOK(
 				None,
@@ -137,12 +181,14 @@ class StartRaceAtTime( wx.Dialog ):
 		dateToday = datetime.date.today()
 		self.futureRaceTime = datetime.datetime(
 					year=dateToday.year, month=dateToday.month, day=dateToday.day,
-					hour = 0, minute = 0, second = 0
+					hour=0, minute=0, second=0
 				) + datetime.timedelta( seconds = self.startSeconds )
 		self.countdown.Start( self.futureRaceTime )
 		
 		# Disable buttons and switch to countdown state.
 		self.okBtn.Enable( False )
+		self.start30.Enable( False )
+		self.start60.Enable( False )
 		self.autoStartTime.Enable( False )
 		
 	def onCancel( self, event ):
