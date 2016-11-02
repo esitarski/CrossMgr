@@ -68,7 +68,14 @@ class Clock(wx.PyControl):
 
 	def onTimer( self, event=None ):
 		self.tCur = now()
-		wx.CallAfter( self.Refresh )
+		
+		try:
+			self.Refresh()
+		except Exception as e:
+			if self.timer.IsRunning():
+				self.timer.Stop()
+			return
+			
 		if self.checkFunc():
 			if self.timer.IsRunning():
 				self.timer.Stop()
@@ -76,6 +83,18 @@ class Clock(wx.PyControl):
 	
 	def Start( self ):
 		self.onTimer()
+		
+	def Close( self, force=True ):
+		print '********************* Close'
+		if self.timer.IsRunning():
+			self.timer.Stop()
+		return super(Clock, self).Close()		
+	
+	def Destroy( self ):
+		print '********************* Destroy'
+		if self.timer.IsRunning():
+			self.timer.Stop()
+		return super(Clock, self).Destroy()
 	
 	def OnPaint(self, event):
 		if self.IsShown():
