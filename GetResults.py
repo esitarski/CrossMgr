@@ -71,15 +71,17 @@ class RiderResult( object ):
 	def full_name( self ):
 		return self._reMissingName.sub( u'', u'{}, {}'.format(getattr(self, 'LastName', u''), getattr(self,'FirstName', u'')), 1 )
 		
-	_reMissingShortName = re.compile( '^,|,$' )
+	_reMissingShortName = re.compile( '^, |, $' )
 	def short_name( self, maxLen=20 ):
 		lastName = getattr(self, 'LastName', u'')
-		if len(lastName) + 2 >= maxLen:
+		if len(lastName) + 3 >= maxLen:
 			return lastName
 		firstName = getattr(self,'FirstName', u'')
-		if len(lastName) + len(firstName) + 1 <= maxLen:
-			return self._reMissingShortName.sub( u'', u'{},{}'.format(lastName, firstName), 1 )
-		return self._reMissingShortName.sub( u'', u'{},{}'.format(lastName, firstName[:1]), 1 )
+		if not lastName:
+			return firstName
+		if len(lastName) + len(firstName) + 3 <= maxLen:
+			return self._reMissingShortName.sub( u'', u'{}, {}'.format(lastName, firstName), 1 )
+		return self._reMissingShortName.sub( u'', u'{}, {}.'.format(lastName, firstName[:1]), 1 )
 		
 	def __repr__( self ):
 		return str(self.__dict__)

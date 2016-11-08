@@ -514,7 +514,7 @@ class Gantt( wx.Panel ):
 		resultBest = (0, sys.float_info.max)
 		labels, status = [], []
 		for r in results:
-			label = r.full_name()
+			label = r.short_name(12)
 			if r.num:
 				label += u' {}'.format(r.num)
 			labels.append( label )

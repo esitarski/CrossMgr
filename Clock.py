@@ -67,35 +67,20 @@ class Clock(wx.PyControl):
 		return True
 
 	def onTimer( self, event=None ):
-		self.tCur = now()
-		
 		try:
+			self.tCur = now()
 			self.Refresh()
-		except Exception as e:
-			if self.timer.IsRunning():
-				self.timer.Stop()
-			return
 			
-		if self.checkFunc():
-			if self.timer.IsRunning():
-				self.timer.Stop()
-			self.timer.Start( 1001 - now().microsecond//1000, True )
+			if self.checkFunc():
+				if self.timer.IsRunning():
+					self.timer.Stop()
+				self.timer.Start( 1001 - now().microsecond//1000, True )			
+		except Exception as e:
+			pass
 	
 	def Start( self ):
 		self.onTimer()
 		
-	def Close( self, force=True ):
-		print '********************* Close'
-		if self.timer.IsRunning():
-			self.timer.Stop()
-		return super(Clock, self).Close()		
-	
-	def Destroy( self ):
-		print '********************* Destroy'
-		if self.timer.IsRunning():
-			self.timer.Stop()
-		return super(Clock, self).Destroy()
-	
 	def OnPaint(self, event):
 		if self.IsShown():
 			dc = wx.BufferedPaintDC( self )

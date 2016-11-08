@@ -225,9 +225,9 @@ class NumKeypad( wx.Panel ):
 		self.bell = None
 		self.lapReminder = {}
 		
-		self.refreshNonBusy = NonBusyCall( self.refreshAll, min_millis=1000, max_millis=3000 )
-		
 		self.SetBackgroundColour( wx.WHITE )
+		
+		self.refreshInputUpdateNonBusy = NonBusyCall( self.refreshInputUpdate, min_millis=1000, max_millis=3000 )
 		
 		fontPixels = 50
 		font = wx.FontFromPixelSize(wx.Size(0,fontPixels), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
@@ -301,7 +301,7 @@ class NumKeypad( wx.Panel ):
 		gbs.Add( line, pos=(rowCur, colCur), span=(1,2), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		
 		rowCur += 1
-		label = wx.StaticText( panel, label = u'{}'.format(_("Est. Last Rider on Course")) )
+		label = wx.StaticText( panel, label = u'{}:'.format(_("Est. Last Rider")) )
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,2), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
 		rowCur += 1
@@ -340,7 +340,7 @@ class NumKeypad( wx.Panel ):
 		gbs.Add( self.hbClockPhoto, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
 		rowCur += 1
 		
-		self.clock = ClockDigital( panel, size=(100,24), checkFunc=self.updateClock )
+		self.clock = ClockDigital( panel, size=(100,24), checkFunc=self.doClockUpdate )
 		self.clock.SetBackgroundColour( wx.WHITE )
 		gbs.Add( self.clock, pos=(rowCur, 0), span=(1, 2), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_RIGHT )
 		rowCur += 1
@@ -379,11 +379,7 @@ class NumKeypad( wx.Panel ):
 		
 		self.refreshRaceTime()
 	
-	def refreshAll( self ):
-		self.refreshLaps()
-		self.refreshRiderLapCountList
-	
-	def updateClock( self ):
+	def doClockUpdate( self ):
 		mainWin = Utils.getMainWin()
 		return not mainWin or mainWin.isShowingPage(self)
 	
@@ -652,6 +648,8 @@ class NumKeypad( wx.Panel ):
 	def refreshLastRiderOnCourse( self ):
 		race = Model.race
 		lastRiderOnCourse = GetLastRider( None )
+		changed = False
+		
 		if lastRiderOnCourse:
 			maxLength = 24
 			rider = race.riders[lastRiderOnCourse.num]
@@ -683,6 +681,10 @@ class NumKeypad( wx.Panel ):
 		if changed:
 			Utils.LayoutChildResize( self.raceStartTime )
 	
+	def refreshAll( self ):
+		self.refreshRaceTime()
+		self.refreshLaps()
+	
 	def commit( self ):
 		pass
 			
@@ -691,6 +693,11 @@ class NumKeypad( wx.Panel ):
 			self.firstTimeDraw = False
 			self.splitter.SetSashPosition( SplitterMinPos )
 		event.Skip()
+		
+	def refreshInputUpdate( self ):
+		self.refreshLaps()
+		self.refreshRiderLapCountList()
+		self.refreshLastRiderOnCourse()
 
 	def refresh( self ):
 		self.clock.Start()
@@ -722,9 +729,8 @@ class NumKeypad( wx.Panel ):
 			rst = '{:02d}:{:02d}:{:02d}.{:02d}'.format(st.hour, st.minute, st.second, int(st.microsecond / 10000.0))
 		changed |= SetLabel( self.raceStartMessage, rstSource )
 		changed |= SetLabel( self.raceStartTime, rst )
-	
-		self.refreshLapsNonBusy()
-		self.refreshRiderLapCountListNonBusy()
+
+		self.refreshInputUpdateNonBusy()
 		
 		if self.isKeypadInputMode():
 			wx.CallLater( 100, self.keypad.numEdit.SetFocus )
