@@ -15,18 +15,20 @@ class NonBusyCall( object ):
 		self.tLastCall = now() - timedelta( seconds=max_millis/1000.0 )
 		self.callLater = None
 		
-	def run( self ):
+	def run_callable( self ):
 		self.tLastCall = now()
 		self.callable( *self.args, **self.kwargs )
 		self.callLater = None
 		
 	def __call__( self ):
-		last_call_millis = (now() - self.tLastCall).total_seconds()*1000.0
+		tNow = now()
+		last_call_millis = (tNow - self.tLastCall).total_seconds()*1000.0
 		if last_call_millis >= self.max_millis:
 			if self.callLater:
-				self.callLater.Stop()		
-			self.run()
+				self.callLater.Stop()
+				self.callLater = None
+			self.callable( *self.args, **self.kwargs )
 			return		
 		if self.callLater:
 			self.callLater.Stop()		
-		self.callLater = wx.CallLater( self.min_millis, self.run )
+		self.callLater = wx.CallLater( self.min_millis, self.run_callable )
