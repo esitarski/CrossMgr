@@ -27,6 +27,7 @@ class NonBusyCall( object ):
 			if self.callLater:
 				self.callLater.Stop()
 				self.callLater = None
+			self.tLastCall = tNow
 			self.callable( *self.args, **self.kwargs )
 			return		
 		if self.callLater:
