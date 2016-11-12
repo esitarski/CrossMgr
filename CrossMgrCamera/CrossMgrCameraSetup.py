@@ -18,6 +18,13 @@ for googleDrive in gds:
 		break
 googleDrive = os.path.join( googleDrive, 'CrossMgrCamera' )
 
+# Copy all dependent files into this folder.
+copyFiles = [
+	"MultiCast.py",
+]
+for f in copyFiles:
+	shutil.copy( os.path.join( '..', f), f )
+	
 distDir = r'dist\CrossMgrCamera'
 distDirParent = os.path.dirname(distDir)
 if os.path.exists(distDirParent):

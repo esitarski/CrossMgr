@@ -7,9 +7,6 @@ import math
 import datetime
 from datetime import timedelta
 
-HOST = 'localhost'
-PORT = 54111
-
 now = datetime.datetime.now
 
 import sys
@@ -301,7 +298,6 @@ class MainWin( wx.Frame ):
 	def Start( self ):
 		self.messageQ.put( ('', '************************************************') )
 		self.messageQ.put( ('started', now().strftime('%Y/%m/%d %H:%M:%S')) )
-		self.startSocket()
 		self.startThreads()
 		self.startCamera()
 		
@@ -311,17 +307,6 @@ class MainWin( wx.Frame ):
 			assert len(message) == 2, 'Incorrect message length'
 			cmd, info = message
 			wx.CallAfter( self.messageManager.write, '{}:  {}'.format(cmd, info) if cmd else info )
-		
-	def startSocket( self ):
-		try:
-			self.listenerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			self.listenerSocket.bind((HOST, PORT))
-			self.listenerSocket.listen(5)
-			self.messageQ.put( ('socket', 'Listening on {}.{}'.format(HOST,PORT)) )
-			return True
-		except Exception as e:
-			self.messageQ.put( ('socket', 'Failed to connect: {}'.format(e)) )
-			return False
 		
 	def startCamera( self ):
 		self.camera = None
@@ -340,8 +325,7 @@ class MainWin( wx.Frame ):
 	def startThreads( self ):
 		self.grabFrameOK = False
 		
-		self.listenerThread = threading.Thread( target=SocketListener, args=(self.listenerSocket, self.requestQ, self.messageQ, self.renamerQ) )
-		self.listenerThread.daemon = True
+		self.listenerThread = SocketListener( self.requestQ, self.messageQ )
 		
 		self.writerThread = threading.Thread( target=PhotoWriter, args=(self.writerQ, self.messageQ, self.ftpQ) )
 		self.writerThread.daemon = True

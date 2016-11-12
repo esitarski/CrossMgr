@@ -233,11 +233,6 @@ class TimeTrialRecord( wx.Panel ):
 					OutputStreamer.writeNumTime( bib, raceSeconds )
 					bibRaceSeconds.append( (bib, raceSeconds) )
 				
-				# We had to record the photo initially with bib=0 when it was in the photo buffer.
-				# Now that we know the actual bib, we need to rename the photo and stamp it with the the rider info.
-				if race and race.enableUSBCamera:
-					SendRenameRequests( bibRaceSeconds )
-			
 			wx.CallAfter( Utils.refresh )
 			
 		self.grid.SetGridCursor( 0, 1 )

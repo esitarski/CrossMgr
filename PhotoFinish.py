@@ -53,7 +53,7 @@ def hasPhoto( bib, t ):
 		return False
 	
 def HasCamera():
-	return PhotoAcknowledge()[0]
+	return PhotoAcknowledge()
 
 def okTakePhoto( num, t ):
 	race = Model.race

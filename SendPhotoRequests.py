@@ -4,34 +4,19 @@ import socket
 import datetime
 import Utils
 import Model
-
-HOST = 'localhost'
-PORT = 54111
-
-delimiter = '\n\n\n'
+from MultiCast import MultiCastSender
 
 def getPhotoDirName( raceFileName ):
 	return os.path.join( os.path.dirname(raceFileName or '') or '.', os.path.splitext(raceFileName or '')[0] + '_Photos' )
 
-def sendMessages( messages ):
-	try:
-		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		s.connect((HOST, PORT))
-		s.sendall( delimiter.join(messages) )
-		s.close()
-	except Exception as e:
-		return False, e
-	
-	return True, None
-
-def PhotoGetRequest( kwargs, cmd ):
-	messageArgs = { k : v if k != 'time' else [v.year, v.month, v.day, v.hour, v.minute, v.second, v.microsecond]
-			for k, v in kwargs.iteritems() }
-	messageArgs['cmd'] = cmd	
-	return json.dumps( messageArgs, separators=(',',':') )
-	
-def PhotoSendRequests( messages, cmd='photo' ):
-	return sendMessages( [PhotoGetRequest(m, cmd) for m in messages] )
+multiCastSender = None
+def PhotoSendRequests( messages, cmd='trigger' ):
+	global multiCastSender
+	if multiCastSender is None:
+		multiCastSender = MultiCastSender( name='CrossMgrSender' )
+	for m in messages:
+		multiCastSender.put( m, cmd )
+	return True, ''
 	
 def getFtpInfo( race ):
 	try:
@@ -51,7 +36,7 @@ def getRequest( race, dirName, bib, raceSeconds, externalInfo ):
 	info = {
 		'dirName':			dirName,
 		'bib':				bib,
-		'time':				race.startTime + datetime.timedelta(seconds=raceSeconds),
+		'ts':				race.startTime + datetime.timedelta(seconds=raceSeconds),
 		'raceSeconds':		raceSeconds,
 		'raceName':			race.name,
 		'advanceSeconds':	race.advancePhotoMilliseconds/1000.0,
@@ -97,34 +82,12 @@ def SendPhotoRequests( bibRaceSeconds, includeFTP=True ):
 	return PhotoSendRequests( requests )
 
 def SendRenameRequests( bibRaceSeconds ):
-	if not bibRaceSeconds:
-		return True, 'no requests'
-	
-	race = Model.race
-	if not race or not race.startTime:
-		return False, 'race not started'
-
-	ftpInfo = getFtpInfo( race )
-		
-	try:
-		externalInfo = race.excelLink.read( True )
-	except:
-		externalInfo = {}
-	
-	dirName = getPhotoDirName( Utils.getFileName() )
-	
-	requests = []
-	for bib, raceSeconds in bibRaceSeconds:
-		request = getRequest( race, dirName, bib, raceSeconds, externalInfo )
-		if ftpInfo is not None:
-			request['ftpInfo'] = ftpInfo
-		
-		requests.append( request )
-	
-	return PhotoSendRequests( requests, 'rename' )
+	# Fixlater - do something about video support for time trials?
+	return
 	
 def PhotoAcknowledge():
-	return sendMessages( [json.dumps( {'cmd':'ack'}, separators=(',',':') )] )
+	global multiCastSender
+	return multiCastSender and multiCastSender.hasReceivers
 	
 if __name__ == '__main__':
 	print getFtpInfo( None )

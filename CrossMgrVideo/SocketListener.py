@@ -1,72 +1,26 @@
-
-import wx
-import socket
 import threading
-import json
 import datetime
-import time
+from MultiCast import MultiCastReceiver
 
 now = datetime.datetime.now
-delimiter = '\n\n\n'
 minDelay = 0.2
 
-def postRequests( requests, qRequest, delay ):
-	# If we process a message too early, it is possible that the before and after frame are
-	# not processed yet and could be missed.
-	# Or, if the photo request is in the future, we need to wait before we proess it.
-	time.sleep( delay )
-	for kwargs in requests:
-		qRequest.put( kwargs )
-
-def SocketListener( s, qRequest, qMessage ):
-	messageStrs = []
-	while 1:
-		client, addr = s.accept()
+class SocketListener( MultiCastReceiver ):
+	def __init__( self, qRequest, qMessage ):
+		self.qRequest = qRequest
+		self.qMessage = qMessage
 		
-		while 1:
-			data = client.recv( 4096 )
-			if not data:
-				break
-			messageStrs.append( data )
-		client.close()
+		super( SocketListener, self ).__init__( self.triggerCallback, name='CrossMgrVideoReceiver' )
+	
+	def triggerCallback( self, message ):
+		cmd = message[0]
+		if cmd != 'trigger':
+			return
+		info = message[1]
+		info['time'] = info['ts'] - datetime.timedelta( seconds=info['correction_secs'] )
 		
-		messages = ''.join( messageStrs )
-		del messageStrs[:]
-		
-		# Collect the photo messages.
-		tNow = now()
-		requests = []
-		for message in messages.split( delimiter ):
-			if not message:
-				continue
-			
-			try:
-				kwargs = json.loads( message )
-			except Exception as e:
-				qMessage.put( ('error', 'Bad request format: "{}": {}'.format(message, e)) )
-				continue
-				
-			try:
-				kwargs['time'] = datetime.datetime( *kwargs['time'] )
-			except KeyError:
-				pass
-			except Exception as e:
-				qMessage.put( ('error', 'Bad time format: "{}": {}'.format(kwargs['time'], e)) )
-				continue
-			
-			cmd = kwargs.get('cmd', None)
-			dtMax = minDelay
-			if cmd == 'photo':
-				dt = (tNow - kwargs['time']).total_seconds() - kwargs.get('advanceSeconds',0.0)
-				if dt < minDelay:
-					requests.append( kwargs )
-					dtMax = max(dtMax, -dt + minDelay if dt < 0 else minDelay)
-				else:
-					qRequest.put( kwargs )
-
-		# Post the messages in a thread to add a delay.
-		if requests:
-			thread = threading.Thread( target=postRequests, args=(requests, qRequest, dtMax) )
-			thread.daemon = True
-			thread.name = 'PostRequestDelay'
-			thread.start()
+		dt = (now() - info['time']).total_seconds() - info.get('advanceSeconds',0.0)
+		if dt < minDelay:
+			threading.Timer( dt + minDelay/2, self.qRequest.put, (info,) ).start()
+		else:
+			self.qRequest.put( info )

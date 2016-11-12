@@ -16,9 +16,6 @@ from Queue import Queue, Empty, Full
 
 from datetime import datetime, timedelta
 
-HOST = 'localhost'
-PORT = 54111
-
 now = datetime.now
 
 import Utils
@@ -439,7 +436,6 @@ class MainWin( wx.Frame ):
 	def Start( self ):
 		self.messageQ.put( ('', '************************************************') )
 		self.messageQ.put( ('started', now().strftime('%Y/%m/%d %H:%M:%S')) )
-		self.startSocket()
 		self.startThreads()
 		self.startCamera()
 
@@ -486,17 +482,6 @@ class MainWin( wx.Frame ):
 			cmd, info = message
 			wx.CallAfter( self.messageManager.write, '{}:  {}'.format(cmd, info) if cmd else info )
 		
-	def startSocket( self ):
-		try:
-			self.listenerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			self.listenerSocket.bind((HOST, PORT))
-			self.listenerSocket.listen(5)
-			self.messageQ.put( ('socket', 'Listening on {}.{}'.format(HOST,PORT)) )
-			return True
-		except Exception as e:
-			self.messageQ.put( ('socket', 'Failed to connect: {}'.format(e)) )
-			return False
-		
 	def startCamera( self ):
 		self.camera = None
 		try:
@@ -512,8 +497,7 @@ class MainWin( wx.Frame ):
 	def startThreads( self ):
 		self.grabFrameOK = False
 		
-		self.listenerThread = threading.Thread( target=SocketListener, args=(self.listenerSocket, self.requestQ, self.messageQ) )
-		self.listenerThread.daemon = True
+		self.listenerThread = SocketListener( self.requestQ, self.messageQ )
 		
 		self.dbWriterThread = threading.Thread( target=DBWriter, args=(self.dbWriterQ,) )
 		self.dbWriterThread.daemon = True
@@ -585,13 +569,12 @@ class MainWin( wx.Frame ):
 			
 			tSearch = message['time']
 			advanceSeconds = message.get('advanceSeconds', 0.0)
-			if advanceSeconds:
-				tSearch += timedelta(seconds=advanceSeconds)
+			tSearch += timedelta(seconds=advanceSeconds)
 			
 			# Record this trigger.
 			self.dbWriterQ.put( (
 				'trigger',
-				tSearch,
+				tSearch - timedelta(seconds=advanceSeconds),
 				message.get('bib', 99999),
 				message.get('firstName',u''),
 				message.get('lastName',u''),

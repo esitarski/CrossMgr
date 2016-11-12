@@ -26,18 +26,22 @@ class MultiCastSender( threading.Thread ):
 		Thread to multicast messages written to an output queue.
 		Also inventories receivers.
 	'''
-	def __init__( self, qIn, receiverCallback=None ):
+	def __init__( self, qIn=Queue(), receiverCallback=None, name='MultiCastSender' ):
 		super( MultiCastSender, self ).__init__()
 		
-		self.name = 'MultiCastSender'
+		self.name = name
 		self.daemon = True
+		self.hasReceivers = False
 	
 		self.qIn = qIn
 		self.receiverCallback = receiverCallback or (lambda receivers: None)
 		self.socket = None
-		
+	
+	def put( self, message, cmd='trigger' ):
+		self.qIn.put( (cmd, message) )
+	
 	def getReceivers( self, sock ):
-		# Take the opportunity to send our current time so the receivers can compute a clock correction.
+		# Send our current time so the receivers can compute a clock correction.
 		tNow = now()
 		message = [
 			'idrequest',
@@ -62,7 +66,7 @@ class MultiCastSender( threading.Thread ):
 				response[1]['server'] = server
 				response[1]['ts_receiver'] = datetime( *response[1]['ts_receiver'] )
 				receivers.append( response[1] )
-			
+		
 		return receivers
 
 	def openSocket( self ):
@@ -97,6 +101,7 @@ class MultiCastSender( threading.Thread ):
 				receivers = self.getReceivers( sock )
 				sock.close()
 				sock = None
+				self.hasReceivers = bool( receivers )
 				self.receiverCallback( receivers )
 				tLastReceiverQuery = now()
 			

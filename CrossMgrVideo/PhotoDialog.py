@@ -115,7 +115,7 @@ class PhotoDialog( wx.Dialog ):
 			ts=self.triggerInfo['ts'],
 			bib=self.triggerInfo['bib'],
 			firstName=self.triggerInfo['firstName'],
-			lastName=self.triggerInfo['firstName'],
+			lastName=self.triggerInfo['lastName'],
 			team=self.triggerInfo['team'],
 			raceName=self.triggerInfo['raceName'],
 		)
