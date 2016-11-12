@@ -4,18 +4,14 @@ import socket
 import datetime
 import Utils
 import Model
-from MultiCast import MultiCastSender
+from MultiCast import SendTrigger
 
 def getPhotoDirName( raceFileName ):
 	return os.path.join( os.path.dirname(raceFileName or '') or '.', os.path.splitext(raceFileName or '')[0] + '_Photos' )
 
-multiCastSender = None
 def PhotoSendRequests( messages, cmd='trigger' ):
-	global multiCastSender
-	if multiCastSender is None:
-		multiCastSender = MultiCastSender( name='CrossMgrSender' )
 	for m in messages:
-		multiCastSender.put( m, cmd )
+		SendTrigger( [cmd, m] )
 	return True, ''
 	
 def getFtpInfo( race ):

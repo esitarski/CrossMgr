@@ -10,13 +10,9 @@ class SocketListener( MultiCastReceiver ):
 		self.qRequest = qRequest
 		self.qMessage = qMessage
 		
-		super( SocketListener, self ).__init__( self.triggerCallback, name='CrossMgrCameraReceiver' )
+		super( SocketListener, self ).__init__( self.triggerCallback, name='CrossMgrVideoReceiver' )
 	
-	def triggerCallback( self, message ):
-		cmd = message[0]
-		if cmd != 'trigger':
-			return
-		info = message[1]
+	def triggerCallback( self, info ):
 		info['time'] = info['ts'] - datetime.timedelta( seconds=info['correction_secs'] )
 		
 		dt = (now() - info['time']).total_seconds() - info.get('advanceSeconds',0.0)

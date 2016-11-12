@@ -124,6 +124,7 @@ class MultiCastSender( threading.Thread ):
 					try:
 						sent = sock.sendto(json.dumps([message[0], makeJSONCompatible(message[1])]), (multicast_group, multicast_port))
 					except Exception as e:
+						print e
 						pass
 				elif message[0] == 'terminate':
 					keepGoing = False
@@ -159,18 +160,17 @@ def SendTrigger( message ):
 
 class MultiCastReceiver( threading.Thread ):
 	
-	def __init__( self, triggerCallback, name='MultiCastReceiver' ):
+	def __init__( self, triggerCallback, messageQ = None, name='MultiCastReceiver' ):
 		super( MultiCastReceiver, self ).__init__()
 		
 		self.triggerCallback = triggerCallback
+		self.messageQ = messageQ
 		self.name = name
 		self.daemon = True
 		
 		self.recentCorrections = deque( maxlen=32 )
 	
-	def run( self ):
-		now = datetime.now
-
+	def open( self ):
 		server_address = ('', multicast_port)
 
 		# Create the socket
@@ -184,7 +184,19 @@ class MultiCastReceiver( threading.Thread ):
 		group = socket.inet_aton(multicast_group)
 		mreq = struct.pack('4sL', group, socket.INADDR_ANY)
 		sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+		return sock
 		
+	def test( self ):
+		try:
+			self.open().close()
+			return None
+		except Exception as e:
+			return e
+		
+	def run( self ):
+		now = datetime.now
+
+		sock = self.open()
 		while 1:
 			data, address = sock.recvfrom(4096)
 			tNow = now()

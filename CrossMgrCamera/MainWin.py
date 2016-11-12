@@ -326,7 +326,14 @@ class MainWin( wx.Frame ):
 		self.grabFrameOK = False
 		
 		self.listenerThread = SocketListener( self.requestQ, self.messageQ )
-		
+		error = self.listenerThread.test()
+		if error:
+			wx.MessageBox('Socket Error:\n\n{}\n\nIs another CrossMgrVideo or CrossMgrCamera running on this computer?'.format(error),
+				"Socket Error",
+				wx.OK | wx.ICON_ERROR
+			)
+			wx.Exit()
+				
 		self.writerThread = threading.Thread( target=PhotoWriter, args=(self.writerQ, self.messageQ, self.ftpQ) )
 		self.writerThread.daemon = True
 		

@@ -497,7 +497,14 @@ class MainWin( wx.Frame ):
 	def startThreads( self ):
 		self.grabFrameOK = False
 		
-		self.listenerThread = SocketListener( self.requestQ, self.messageQ )
+		self.listenerThread = SocketListener( self.requestQ, self.messageQ )		
+		error = self.listenerThread.test()
+		if error:
+			wx.MessageBox('Socket Error:\n\n{}\n\nIs another CrossMgrVideo or CrossMgrCamera running on this computer?'.format(error),
+				"Socket Error",
+				wx.OK | wx.ICON_ERROR
+			)
+			wx.Exit()
 		
 		self.dbWriterThread = threading.Thread( target=DBWriter, args=(self.dbWriterQ,) )
 		self.dbWriterThread.daemon = True

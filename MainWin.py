@@ -2989,7 +2989,7 @@ class MainWin( wx.Frame ):
 			race.raceNum = 1
 			race.simulation = True	# Flag this as a simulation race.
 			#race.isTimeTrial = True
-			#race.enableUSBCamera = True
+			race.enableUSBCamera = True
 			#race.photosAtRaceEndOnly = True
 			#race.enableJChipIntegration = True
 			categories = getattr( self, 'categories', None )
