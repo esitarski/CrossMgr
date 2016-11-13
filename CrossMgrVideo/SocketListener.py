@@ -13,7 +13,7 @@ class SocketListener( MultiCastReceiver ):
 		super( SocketListener, self ).__init__( self.triggerCallback, name='CrossMgrVideoReceiver' )
 	
 	def triggerCallback( self, info ):
-		info['time'] = info['ts'] - datetime.timedelta( seconds=info['correction_secs'] )
+		info['time'] = info['ts'] + datetime.timedelta( seconds=info['correction_secs'] )
 		
 		dt = (now() - info['time']).total_seconds() - info.get('advanceSeconds',0.0)
 		if dt < minDelay:
