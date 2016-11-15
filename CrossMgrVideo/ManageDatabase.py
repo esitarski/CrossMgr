@@ -36,6 +36,7 @@ class ManageDatabase( wx.Dialog ):
 
 		vs.Add( hs, flag=wx.ALL, border=4)
 		
+		vs.Add( wx.StaticText(self, label='Uncheck dates for min/max values.'), flag=wx.ALL, border=4 )
 		vs.Add( wx.StaticText(self, label='Be Careful!  There is no undo.'), flag=wx.ALL, border=4 )
 		
 		btnsizer = wx.StdDialogButtonSizer()
