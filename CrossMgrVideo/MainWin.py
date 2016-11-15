@@ -635,8 +635,8 @@ class MainWin( wx.Frame ):
 	def manageDatabase( self, event ):
 		dlg = ManageDatabase( self, self.db.getsize(), self.db.fname, title='Manage Database' )
 		if dlg.ShowModal() == wx.ID_OK:
-			tsUpper = dlg.GetDate()
-			self.db.cleanBefore( tsUpper )
+			tsLower, tsUpper = dlg.GetDates()
+			self.db.cleanBetween( tsLower, tsUpper )
 			wx.CallAfter( self.finishStrip.Clear )
 			wx.CallAfter( self.refreshTriggers, True )
 		dlg.Destroy()

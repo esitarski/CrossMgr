@@ -116,13 +116,25 @@ class Database( object ):
 	def isDup( self, ts ):
 		return ts in self.photoTsCache
 		
-	def cleanBefore( self, tsUpper ):
-		with self.conn:
-			self.conn.execute( 'DELETE from photo WHERE ts < ?', (tsUpper,) )
-			self.conn.execute( 'DELETE from trigger WHERE ts < ?', (tsUpper,) )
+	def cleanBetween( self, tsLower, tsUpper ):
+		if not tsLower and not tsUpper:
+			return
+	
+		if tsLower is None:
+			with self.conn:
+				self.conn.execute( 'DELETE from photo WHERE ts <= ?', (tsUpper,) )
+				self.conn.execute( 'DELETE from trigger WHERE ts <= ?', (tsUpper,) )
+		elif tsUpper is None:
+			with self.conn:
+				self.conn.execute( 'DELETE from photo WHERE ts >= ?', (tsLower,) )
+				self.conn.execute( 'DELETE from trigger WHERE ts >= ?', (tsLower,) )
+		else:
+			with self.conn:
+				self.conn.execute( 'DELETE from photo WHERE ts BETWEEN ? AND ?', (tsLower,tsUpper) )
+				self.conn.execute( 'DELETE from trigger WHERE ts BETWEEN ? AND ?', (tsLower,tsUpper) )
+			
 		with self.conn:
 			self.conn.execute( 'VACUUM' )
-		
 		
 def DBWriter( q, fps=25 ):
 	db = Database( fps=fps )

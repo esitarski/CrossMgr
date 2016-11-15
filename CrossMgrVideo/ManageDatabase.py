@@ -16,14 +16,23 @@ class ManageDatabase( wx.Dialog ):
 			flag=wx.ALL, border=4 )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( wx.StaticText(self, label='Delete all data before'), flag=wx.ALIGN_CENTER_VERTICAL )
+		hs.Add( wx.StaticText(self, label='Delete all data (inclusive) from'), flag=wx.ALIGN_CENTER_VERTICAL )
 		tQuery = datetime.datetime.now() - datetime.timedelta(days=7)
-		self.date = wx.DatePickerCtrl(
+		self.dateFrom = wx.DatePickerCtrl(
 			self,
 			dt=wx.DateTimeFromDMY( tQuery.day, tQuery.month-1, tQuery.year ),
-			style=wx.DP_DROPDOWN|wx.DP_SHOWCENTURY
+			style=wx.DP_DROPDOWN|wx.DP_SHOWCENTURY|wx.DP_ALLOWNONE
 		)
-		hs.Add( self.date, flag=wx.LEFT, border=4 )
+		hs.Add( self.dateFrom, flag=wx.LEFT, border=4 )
+		
+		hs.Add( wx.StaticText(self, label='to'), flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4 )
+		tQuery = datetime.datetime.now() - datetime.timedelta(days=1)
+		self.dateTo = wx.DatePickerCtrl(
+			self,
+			dt=wx.DateTimeFromDMY( tQuery.day, tQuery.month-1, tQuery.year ),
+			style=wx.DP_DROPDOWN|wx.DP_SHOWCENTURY|wx.DP_ALLOWNONE
+		)
+		hs.Add( self.dateTo, flag=wx.LEFT, border=4 )
 
 		vs.Add( hs, flag=wx.ALL, border=4)
 		
@@ -44,9 +53,12 @@ class ManageDatabase( wx.Dialog ):
 		self.SetSizer(vs)
 		vs.Fit(self)
 		
-	def GetDate( self ):
-		v = self.date.GetValue()
-		return datetime.datetime( v.GetYear(), v.GetMonth() + 1, v.GetDay() )
+	def GetDates( self ):
+		v = self.dateFrom.GetValue()
+		dateFrom = datetime.datetime( v.GetYear(), v.GetMonth() + 1, v.GetDay() ) if v else None
+		v = self.dateTo.GetValue()
+		dateTo = datetime.datetime( v.GetYear(), v.GetMonth() + 1, v.GetDay() ) if v else None
+		return dateFrom, dateTo
 
 if __name__ == '__main__':
 	app = wx.App(False)
@@ -55,6 +67,7 @@ if __name__ == '__main__':
 	
 	dlg = ManageDatabase( mainWin, 1000000, 'TestDatabase' )
 	print dlg.ShowModal() == wx.ID_OK
+	print dlg.GetDates()
 	dlg.Destroy()
 	
 	app.MainLoop()
