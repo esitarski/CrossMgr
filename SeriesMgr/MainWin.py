@@ -36,6 +36,7 @@ from Points				import Points
 from Upgrades			import Upgrades
 from Results			import Results
 from CategorySequence	import CategorySequence
+from Aliases			import Aliases
 from Options			import Options
 from Errors				import Errors
 import Version
@@ -260,6 +261,7 @@ class MainWin( wx.Frame ):
 			[ 'points',			Points,				'Scoring Criteria' ],
 			[ 'upgrades',		Upgrades,			'Upgrades' ],
 			[ 'categorySequence',CategorySequence,	'Category Sequence' ],
+			[ 'aliases',		Aliases,			'Aliases' ],
 			[ 'options',		Options,			'Options' ],
 			[ 'errors',			Errors,				'Errors' ],
 		]

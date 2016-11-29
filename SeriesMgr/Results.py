@@ -712,6 +712,7 @@ class Results(wx.Panel):
 		self.grid.SetRowLabelSize( 0 )
 		self.grid.EnableReorderRows( False )
 		self.grid.Bind( wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.doLabelClick )
+		self.grid.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doCellClick )
 		self.sortCol = None
 
 		self.setColNames(getHeaderNames())
@@ -746,6 +747,39 @@ class Results(wx.Panel):
 		if not self.sortCol:
 			self.sortCol = None
 		wx.CallAfter( self.refresh )
+	
+	def doCellClick( self, event ):
+		if not hasattr(self, 'popupInfo'):
+			self.popupInfo = [
+				(u'{}...'.format(_('Copy Name to Clipboard')),	wx.NewId(), self.onCopy),
+			]
+			for p in self.popupInfo:
+				if p[2]:
+					self.Bind( wx.EVT_MENU, p[2], id=p[1] )
+
+		menu = wx.Menu()
+		for i, p in enumerate(self.popupInfo):
+			if p[2]:
+				menu.Append( p[1], p[0] )
+			else:
+				menu.AppendSeparator()
+		
+		self.rowCur, self.colCur = event.GetRow(), event.GetCol()
+		self.PopupMenu( menu )
+		menu.Destroy()		
+	
+	def onCopy( self, event ):
+		if wx.TheClipboard.Open():
+			# Create a wx.TextDataObject
+			do = wx.TextDataObject()
+			do.SetText( self.grid.GetCellValue(self.rowCur, 1) )
+
+			# Add the data to the clipboard
+			wx.TheClipboard.SetData(do)
+			# Close the clipboard
+			wx.TheClipboard.Close()
+		else:
+			wx.MessageBox(u"Unable to open the clipboard", u"Error")
 	
 	def setColNames( self, headerNames ):
 		for col, headerName in enumerate(headerNames):

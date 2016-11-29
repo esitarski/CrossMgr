@@ -4,6 +4,7 @@ import operator
 import functools
 import GetModelInfo
 import StringIO
+import Utils
 
 #----------------------------------------------------------------------
 class memoize(object):
@@ -176,6 +177,8 @@ class SeriesModel( object ):
 	categorySequence = {}
 	categorySequencePrevious = {}
 	categoryHide = set()
+	aliases = []
+	aliasLookup = {}
 
 	def __init__( self ):
 		self.name = '<Series Name>'
@@ -243,6 +246,27 @@ class SeriesModel( object ):
 			
 		self.races = newRaces
 		memoize.clear()
+		
+	def setAliases( self, aliases ):
+		if self.aliases != aliases:
+			self.aliases = aliases
+			self.aliasLookup = {}
+			for name, aliases in self.aliases:
+				for alias in aliases:
+					key = tuple( [Utils.removeDiacritic(n).lower() for n in alias] )
+					self.aliasLookup[key] = name
+			self.changed = True
+			memoize.clear()
+	
+	def addReferenceName( self, name ):
+		pass
+		
+	def addAlias( self, reference, name ):
+		pass
+	
+	def getReferenceName( self, lastName, firstName ):
+		key = (Utils.removeDiacritic(lastName).lower(), Utils.removeDiacritic(firstName).lower())
+		return self.aliasLookup.get( key, (lastName, firstName) )
 	
 	def setCategorySequence( self, categoryList, categoryHide ):
 		categorySequenceNew = { c:i for i, c in enumerate(categoryList) }

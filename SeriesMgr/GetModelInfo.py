@@ -141,6 +141,8 @@ def toInt( n ):
 		return n
 
 def ExtractRaceResultsExcel( raceInSeries ):
+	getReferenceName = SeriesModel.model.getReferenceName
+	
 	excel = GetExcelReader( raceInSeries.fileName )
 	raceName = os.path.splitext(os.path.basename(raceInSeries.fileName))[0]
 	raceResults = []
@@ -194,6 +196,8 @@ def ExtractRaceResultsExcel( raceInSeries ):
 				if not info['firstName'] and not info['lastName']:
 					continue
 				
+				info['lastName'], info['firstName'] = getReferenceName(info['lastName'], info['firstName'])
+				
 				# If there is a bib it must be numeric.
 				try:
 					info['bib'] = int(unicode(info['bib']).strip())
@@ -240,6 +244,8 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 	if race.licenseLinkTemplate:
 		SeriesModel.model.licenseLinkTemplate = race.licenseLinkTemplate
 	
+	getReferenceName = SeriesModel.model.getReferenceName
+	
 	Finisher = Model.Rider.Finisher
 	DNF = Model.Rider.DNF
 	acceptedStatus = { Finisher, DNF }
@@ -270,6 +276,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 			for fTo, fFrom in [('firstName', 'FirstName'), ('lastName', 'LastName'), ('license', 'License'), ('team', 'Team')]:
 				info[fTo] = getattr(rr, fFrom, '')
 			info['categoryName'] = category.fullname
+			info['lastName'], info['firstName'] = getReferenceName(info['lastName'], info['firstName'])
 			
 			for fTo, fFrom in [('raceName', 'name'), ('raceOrganizer', 'organizer')]:
 				info[fTo] = getattr(race, fFrom, '')
