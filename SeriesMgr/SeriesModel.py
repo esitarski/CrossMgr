@@ -177,7 +177,7 @@ class SeriesModel( object ):
 	categorySequence = {}
 	categorySequencePrevious = {}
 	categoryHide = set()
-	aliases = []
+	references = []
 	aliasLookup = {}
 
 	def __init__( self ):
@@ -247,15 +247,38 @@ class SeriesModel( object ):
 		self.races = newRaces
 		memoize.clear()
 		
-	def setAliases( self, aliases ):
-		if self.aliases != aliases:
-			self.aliases = aliases
+	def setReferences( self, references ):
+		dNew = dict( references )
+		dExisting = dict( self.references )
+		
+		changed = (len(dNew) != len(dExisting))
+		updated = False
+		
+		for name, aliases in dNew.iteritems():
+			if name not in dExisting:
+				changed = True
+				if aliases:
+					updated = True
+			elif aliases != dExisting[name]:
+				changed = True
+				updated = True
+	
+		for name, aliases in dExisting.iteritems():
+			if name not in dNew:
+				changed = True
+				if aliases:
+					updated = True
+				
+		if changed:
+			self.changed = changed
+			self.references = references
 			self.aliasLookup = {}
-			for name, aliases in self.aliases:
+			for name, aliases in self.references:
 				for alias in aliases:
 					key = tuple( [Utils.removeDiacritic(n).lower() for n in alias] )
-					self.aliasLookup[key] = name
-			self.changed = True
+					self.aliasLookup[key] = name				
+	
+		if updated:
 			memoize.clear()
 	
 	def addReferenceName( self, name ):

@@ -27,7 +27,7 @@ class Aliases(wx.Panel):
 			u'This can be more convenient than going into all your races to make the name spelling consistent.\n'
 			u'\n'
 			u'To use, add a Reference Name.  Then, right-click on the Reference Name to add Aliases (different spellings).\n'
-			u'SeriesMgr will then match all Aliases to the Reference Name in the results.\n'
+			u'SeriesMgr will then match all Aliases to the Reference Name in its Results.\n'
 			u'\n'
 			u'For example, if Reference Name="Bell, Robert", Aliases="Bell, Bobby", "Bell, Bob", those alternate spellings will match "Bell, Robert".\n'
 			u'\n'
@@ -43,6 +43,7 @@ class Aliases(wx.Panel):
 		
 		self.itemCur = None
 		self.tree = wx.TreeCtrl( self, style = wx.TR_HIDE_ROOT|wx.TR_HAS_BUTTONS )
+		self.tree.AddRoot( u'Aliases' )
 		self.tree.Bind( wx.EVT_TREE_ITEM_RIGHT_CLICK, self.onTreeRightClick )
 		
 		sizer = wx.BoxSizer(wx.VERTICAL)
@@ -58,6 +59,7 @@ class Aliases(wx.Panel):
 				(u'{}...'.format(_('Add Alias')),	wx.NewId(), self.onAddAlias),
 				(u'{}...'.format(_('Edit')),		wx.NewId(), self.onEdit),
 				(u'{}...'.format(_('Delete')),		wx.NewId(), self.onDelete),
+				(u'{}...'.format(_('Copy Name to Clipboard')),	wx.NewId(), self.onCopy),
 			]
 			for p in self.popupInfo:
 				if p[2]:
@@ -74,14 +76,28 @@ class Aliases(wx.Panel):
 		self.PopupMenu( menu )
 		menu.Destroy()
 	
+	def onCopy( self, event ):
+		if not self.itemCur:
+			return
+			
+		if wx.TheClipboard.Open():
+			# Create a wx.TextDataObject
+			do = wx.TextDataObject()
+			do.SetText( self.tree.GetItemText(self.itemCur) )
+
+			# Add the data to the clipboard
+			wx.TheClipboard.SetData(do)
+			# Close the clipboard
+			wx.TheClipboard.Close()
+		else:
+			wx.MessageBox(u"Unable to open the clipboard", u"Error")
+	
 	def onAddButton( self, event ):
 		defaultText = u''
 		
 		# Initialize the name with the clipboard.
 		if wx.TheClipboard.Open():
-			# Create a wx.TextDataObject
 			do = wx.TextDataObject()
-			# Get the data from the clipboard
 			if wx.TheClipboard.GetData(do):
 				defaultText = do.GetText()
 			wx.TheClipboard.Close()
@@ -95,7 +111,16 @@ class Aliases(wx.Panel):
 	def onAddAlias( self, event ):
 		if not self.itemCur:
 			return
-		text = getText( self, u'Alias (First, Last)', self.tree.GetItemText(self.itemCur) )
+			
+		defaultText = self.tree.GetItemText(self.itemCur)
+		# Initialize the name with the clipboard.
+		if wx.TheClipboard.Open():
+			do = wx.TextDataObject()
+			if wx.TheClipboard.GetData(do):
+				defaultText = do.GetText()
+			wx.TheClipboard.Close()
+			
+		text = getText( self, u'Alias (First, Last)', defaultText )
 		if not text:
 			return
 		item = self.tree.AppendItem( self.itemCur, text )
@@ -126,47 +151,58 @@ class Aliases(wx.Panel):
 	def getTree( self ):
 		return self.tree
 
+	def getName( self, item ):
+		name = [t.strip() for t in self.tree.GetItemText(item).split(u',')[:2]]
+		if not name:
+			return None
+		name.extend( [u''] * (2 - len(name)) )
+		return tuple( name )
+		
 	def refresh( self ):
 		model = SeriesModel.model
+		
+		expanded = set()
+		r, cookieReference = self.tree.GetFirstChild(self.tree.GetRootItem())
+		while r.IsOk():
+			if self.tree.GetItemText(r) and self.tree.ItemHasChildren(r) and self.tree.IsExpanded(r):
+				expanded.add( self.tree.GetItemText(r) )
+			r, cookieReference = self.tree.GetNextChild(r, cookieReference)		
+		
 		self.tree.DeleteAllItems()
 		rootItem = self.tree.AddRoot( u'Aliases' )
-		for name, aliases in model.aliases:
-			nameItem = self.tree.AppendItem( rootItem, u'{}, {}'.format(*name) )
-			for a in aliases:
-				aliasItem = self.tree.AppendItem( nameItem, u'{}, {}'.format(*a) )
+		for reference, aliases in model.references:
+			name = u'{}, {}'.format(*reference)
+			nameItem = self.tree.AppendItem( rootItem, name )
+			for alias in aliases:
+				aliasItem = self.tree.AppendItem( nameItem, u'{}, {}'.format(*alias) )
+			if name in expanded:
+				self.tree.Expand( nameItem )
 	
 	def commit( self ):
-		aliases = []
-		a, cookieRoot = self.tree.GetFirstChild(self.tree.GetRootItem())
+		references = []
 		
-		def getName( item ):
-			name = [t.strip() for t in self.tree.GetItemText(item).split(u',')[:2]]
-			if not name:
-				return None
-			name.extend( [u''] * (2 - len(name)) )
-			return tuple( name )
-		
-		while a.IsOk():
-			name = getName( a )
+		r, cookieReference = self.tree.GetFirstChild(self.tree.GetRootItem())
+		while r.IsOk():
+			name = self.getName( r )
 			
 			if name:
-				aliases.append( [name, []] )
+				references.append( [name, []] )
 				
-				v, cookieAlias = self.tree.GetFirstChild( a )
-				while v.IsOk():
-					name = getName( item )
+				a, cookieAlias = self.tree.GetFirstChild( r )
+				while a.IsOk():
+					name = self.getName( a )
 					if name:
-						aliases[-1][1].append( name )
-					v, cookieAlias = self.tree.GetNextChild( a, cookieAlias )
+						references[-1][1].append( name )
+					a, cookieAlias = self.tree.GetNextChild( a, cookieAlias )
 				
-			a, cookieRoot = self.tree.GetNextChild(a, cookieRoot)
+			r, cookieReference = self.tree.GetNextChild(r, cookieReference)
 		
-		aliases.sort()
-		for name, aliases in aliases:
+		references.sort()
+		for reference, aliases in references:
 			aliases.sort()
 		
 		model = SeriesModel.model
-		model.setAliases( aliases )
+		model.setReferences( references )
 		
 #----------------------------------------------------------------------------
 
