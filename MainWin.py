@@ -61,6 +61,7 @@ from SetAutoCorrect		import SetAutoCorrectDialog
 from DNSManager			import DNSManagerDialog
 from USACExport			import USACExport
 from UCIExport			import UCIExport
+from UCIExcel			import UCIExcel
 from VTTAExport			import VTTAExport
 from CrossResultsExport	import CrossResultsExport
 from WebScorerExport	import WebScorerExport
@@ -3288,10 +3289,36 @@ class MainWin( wx.Frame ):
 						_('Excel File Error'), iconMask=wx.ICON_ERROR )
 	
 	@logCall
+	def menuUploadUCI( self, event=None, silent=False ):
+		self.commit()
+		if self.fileName is None or len(self.fileName) < 4:
+			return
+
+		raceCategories = getRaceCategories()
+		for catName, category in raceCategories:
+			if catName == 'All':
+				continue
+			if not category.uploadFlag:
+				continue
+			
+			safeCatName = re.sub('[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', Utils.toAscii(catName))
+			xlFName = os.path.splitext(self.fileName)[0] + '-UCI-{}'.format(safeCatName) + '.xlsx'
+			print( xlFName )
+			
+			try:
+				UCIExcel( category, xlFName )
+			except IOError:
+				Utils.MessageOK(self,
+							u'{} "{}".\n\n{}\n{}'.format(_('Cannot write'), xlFName, _('Check if this spreadsheet is open.'), _('If so, close it, and try again.')),
+							_('Excel File Error'), iconMask=wx.ICON_ERROR )
+	
+	@logCall
 	def menuExportUCI( self, event=None, silent=False ):
 		self.commit()
 		if self.fileName is None or len(self.fileName) < 4:
 			return
+
+		self.menuUploadUCI()
 
 		xlFName = self.getFormatFilename( 'uciexcel' )
 

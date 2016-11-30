@@ -281,15 +281,13 @@ class SeriesModel( object ):
 		if updated:
 			memoize.clear()
 	
-	def addReferenceName( self, name ):
-		pass
-		
-	def addAlias( self, reference, name ):
-		pass
-	
 	def getReferenceName( self, lastName, firstName ):
 		key = (Utils.removeDiacritic(lastName).lower(), Utils.removeDiacritic(firstName).lower())
-		return self.aliasLookup.get( key, (lastName, firstName) )
+		try:
+			return self.aliasLookup[key]
+		except KeyError:
+			self.aliasLookup[key] = (lastName, firstName)
+			return lastName, firstName
 	
 	def setCategorySequence( self, categoryList, categoryHide ):
 		categorySequenceNew = { c:i for i, c in enumerate(categoryList) }
