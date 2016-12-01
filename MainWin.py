@@ -3318,7 +3318,8 @@ class MainWin( wx.Frame ):
 		if self.fileName is None or len(self.fileName) < 4:
 			return
 
-		self.menuUploadUCI()
+		#---------------------------------------------------------------
+		#self.menuUploadUCI()
 
 		xlFName = self.getFormatFilename( 'uciexcel' )
 

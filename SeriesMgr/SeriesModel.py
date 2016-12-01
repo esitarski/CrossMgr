@@ -1,4 +1,3 @@
-
 import os
 import operator
 import functools
@@ -278,8 +277,8 @@ class SeriesModel( object ):
 					key = tuple( [Utils.removeDiacritic(n).lower() for n in alias] )
 					self.aliasLookup[key] = name				
 	
-		if updated:
-			memoize.clear()
+		#if updated:
+		#	memoize.clear()
 	
 	def getReferenceName( self, lastName, firstName ):
 		key = (Utils.removeDiacritic(lastName).lower(), Utils.removeDiacritic(firstName).lower())

@@ -23,17 +23,21 @@ class Aliases(wx.Panel):
 		wx.Panel.__init__(self, parent)
 		
 		text =	(
-			u'Aliases allow you to match different name spellings to the same participant.\n'
-			u'This can be more convenient than going into all your races to make the name spelling consistent.\n'
+			u'Aliases match different name spellings to the same participant.\n'
+			u'This can be more convenient than editing race results to make the spelling consistent.\n'
 			u'\n'
-			u'To use, add a Reference Name.  Then, right-click on the Reference Name to add Aliases (different spellings).\n'
-			u'SeriesMgr will then match all Aliases to the Reference Name in its Results.\n'
+			u'To create an Alias, first press the "Add Reference Name" button.  This is the name that will appear in Results.'
+			u'Then, right-click on the Reference Name you just added, and choose "Add Alias...".  This is an alternate spelling.\n'
+			u'SeriesMgr will match all Aliases to the Reference Name in the Results.\n'
+			u'You can have any number of Aliases for the same Reference Name.\n'
 			u'\n'
-			u'For example, if Reference Name="Bell, Robert", Aliases="Bell, Bobby", "Bell, Bob", those alternate spellings will match "Bell, Robert".\n'
-			u'\n'
+			u'For example, Reference Name="Bell, Robert", Aliases="Bell, Bobby", "Bell, Bob".  Results for the alternate spellings will appear as "Bell, Robert".\n'
 			u'Accents and upper/lower case are ignored.\n'
 			u'\n'
-			u'Copy names from the Results screen by right-clicking in the table.\n'
+			u'You can Copy-and-Paste names from the Results without retyping them.  Right-click and Copy the name in the Results page,'
+			u'then Paste the name into a Reference Name or Alias field.\n'
+			u'Aliases will not be applied until you press the "Refresh" button on the Results screen (or on reload).\n'
+			u'This allows you to configure many Aliases without having to wait for the Results after each change.\n'
 		)
 		
 		self.explain = wx.StaticText( self, label=text )
