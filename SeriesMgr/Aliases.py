@@ -41,6 +41,7 @@ class Aliases(wx.Panel):
 		)
 		
 		self.explain = wx.StaticText( self, label=text )
+		self.explain.SetFont( wx.FontFromPixelSize((0,12), wx.SWISS, wx.NORMAL, wx.NORMAL, False) )
 		
 		self.addButton = wx.Button( self, label=u'Add Reference Name' )
 		self.addButton.Bind( wx.EVT_BUTTON, self.onAddButton )
@@ -51,9 +52,9 @@ class Aliases(wx.Panel):
 		self.tree.Bind( wx.EVT_TREE_ITEM_RIGHT_CLICK, self.onTreeRightClick )
 		
 		sizer = wx.BoxSizer(wx.VERTICAL)
-		sizer.Add(self.explain, 0, flag=wx.ALL, border=6 )
-		sizer.Add(self.addButton, 0, flag=wx.ALL, border = 6)
-		sizer.Add(self.tree, 1, flag=wx.EXPAND|wx.ALL, border = 6)
+		sizer.Add(self.explain, 0, flag=wx.ALL, border=4 )
+		sizer.Add(self.addButton, 0, flag=wx.ALL, border = 4)
+		sizer.Add(self.tree, 1, flag=wx.EXPAND|wx.ALL, border = 4)
 		self.SetSizer(sizer)
 	
 	def onTreeRightClick( self, event ):
@@ -181,6 +182,8 @@ class Aliases(wx.Panel):
 				aliasItem = self.tree.AppendItem( nameItem, u'{}, {}'.format(*alias) )
 			if name in expanded:
 				self.tree.Expand( nameItem )
+		
+		self.tree.ExpandAll()
 	
 	def commit( self ):
 		references = []
