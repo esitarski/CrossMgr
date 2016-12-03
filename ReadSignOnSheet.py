@@ -32,10 +32,10 @@ with Utils.SuspendTranslation():
 		_('Bib#'),
 		_('LastName'), _('FirstName'),
 		_('Team'),
-		_('Nat.'), _('State'), _('Prov'), _('StateProv'), _('City'),
+		_('City'), _('State'), _('Prov'), _('StateProv'), _('Nat.'),
 		_('Category'), _('EventCategory'), _('CustomCategory'), _('Age'), _('Gender'),
 		_('License'),
-		_('UCICode'),
+		_('NatCode'), _('UCIID'), _('UCICode'),
 		_('Factor'),
 	] + TagFields
 

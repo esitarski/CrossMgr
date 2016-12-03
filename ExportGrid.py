@@ -244,13 +244,22 @@ class ExportGrid( object ):
 		heightFieldPix = heightPix - yPix - borderPix
 		
 		# Draw the table.
-		# Add space for the flag on the UCICode.
+		# Add space for the flag on the NatCode.
+		def padCol( iCodeCol ):
+			for c, v in enumerate(self.data[iCodeCol]):
+				self.data[iCodeCol][c] = u'     ' + v
+				
 		try:
 			iUCICodeCol = self.colnames.index( _("UCICode") )
-			for c, v in enumerate(self.data[iUCICodeCol]):
-				self.data[iUCICodeCol][c] = u'     ' + v
+			padCol( iUCICodeCol )
 		except ValueError:
 			iUCICodeCol = None
+		
+		try:
+			iNatCodeCol = self.colnames.index( _("NatCode") )
+			padCol( iNatCodeCol )
+		except ValueError:
+			iNatCodeCol = None
 		
 		# Remember: _getDataSizeTuple understands self.rowDrawCount and will compute the height using the count.
 		font = self._getFontToFit( widthFieldPix, heightFieldPix, lambda font: self._getDataSizeTuple(dc, font) )
@@ -296,7 +305,7 @@ class ExportGrid( object ):
 						self._drawMultiLineText( dc, vStr, xPix, yPix )					# left justify
 					else:
 						self._drawMultiLineText( dc, vStr, xPix + colWidth - w, yPix )	# right justify
-				if col == iUCICodeCol:
+				if col == iUCICodeCol or col == iNatCodeCol:
 					ioc = vStr.strip()[:3]
 					try:
 						bmp = bitmapCache[ioc]
@@ -345,9 +354,10 @@ class ExportGrid( object ):
 			self._drawMultiLineText( dc, s, widthPix - w - borderPix, yFooter )
 			
 		# Clean up the extra spaces for the flags.
-		if iUCICodeCol is not None:
-			for c, v in enumerate(self.data[iUCICodeCol]):
-				self.data[iUCICodeCol][c] = v.strip()
+		for iColCode in (iUCICodeCol, iNatCodeCol):
+			if iColCode is not None:
+				for c, v in enumerate(self.data[iColCode]):
+					self.data[iColCode][c] = v.strip()
 	
 	def drawToFitPDF( self, pdf, orientation,
 						rowDrawStart = 0, rowDrawCount = 1000000,
@@ -420,6 +430,7 @@ class ExportGrid( object ):
 		headers = []
 		speedCol = None
 		uciCodeCol = None
+		natCodeCol = None
 		for col, c in enumerate(self.colnames):
 			if c == _('Speed'):
 				speedCol = col
@@ -429,6 +440,8 @@ class ExportGrid( object ):
 					pass
 			elif c == _('UCICode'):
 				uciCodeCol = col
+			elif c == _('NatCode'):
+				natCodeCol = col
 			headers.append( c )
 
 		table = [headers]
@@ -446,7 +459,7 @@ class ExportGrid( object ):
 					v = (v.split() or [''])[0]
 					if v == u'"':
 						v += u'    '
-				elif c == uciCodeCol:
+				elif c == uciCodeCol or c == natCodeCol:
 					v = u'     ' + v	# Add some spacing to fit the flag on the UCI code.
 				row.append( v )
 			table.append( row )
@@ -457,16 +470,18 @@ class ExportGrid( object ):
 			table, 
 			leftJustifyCols=self.leftJustifyCols, hasHeader=True, horizontalLines=True, verticalLines=False,
 		)
-		if uciCodeCol is not None:
+		for codeCol in [uciCodeCol, natCodeCol]:
+			if codeCol is None:
+				continue
 			flagStatus = {}
 			for r in xrange(1, len(table)):
-				ioc = table[r][uciCodeCol].strip()[:3].upper()
+				ioc = table[r][codeCol].strip()[:3].upper()
 				flagFName = Flags.GetFlagFName( ioc )
 				if ioc not in flagStatus:
 					flagStatus[ioc] = os.path.exists( flagFName )
 				if not flagStatus[ioc]:
 					continue
-				x, y, height = pdf.xCol[uciCodeCol], pdf.yRow[r], pdf.yRow[r+1] - pdf.yRow[r]
+				x, y, height = pdf.xCol[codeCol], pdf.yRow[r], pdf.yRow[r+1] - pdf.yRow[r]
 				img = Flags.GetFlagImage( ioc )
 				h = int( height * 0.66 )
 				w = int( float(img.GetWidth()) / float(img.GetHeight()) * float(h) )

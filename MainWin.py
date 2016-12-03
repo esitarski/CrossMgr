@@ -1775,10 +1775,12 @@ class MainWin( wx.Frame ):
 		payload['timestamp']			= [tNow.ctime(), tLastRaceTime]
 		payload['email']				= self.getEmail()
 		payload['data']					= GetAnimationData(getExternalData=True)
-		payload['flags'] = (
-			Flags.GetFlagBase64ForUCI( r['UCICode'] for r in payload['data'].itervalues() if r.get('UCICode',None) )
-			if 'UCICode' in payload['infoFields'] else {}
-		)
+		codes = []
+		if 'UCICode' in payload['infoFields']
+			codes.extend( r['UCICode'] for r in payload['data'].itervalues() if r.get('UCICode',None) )
+		if 'NatCode' in payload['infoFields']
+			codes.extend( r['NatCode'] for r in payload['data'].itervalues() if r.get('NatCode',None) )
+		payload['flags']				= Flags.GetFlagBase64ForUCI( codes )
 		payload['catDetails']			= GetCategoryDetails( True, True )
 		payload['version']				= Version.AppVerName
 		if gpsPoints:
