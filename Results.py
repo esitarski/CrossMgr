@@ -15,9 +15,9 @@ from Undo import undo
 import Flags
 
 bitmapCache = {}
-class UCICodeRenderer(wx.grid.PyGridCellRenderer):
+class IOCCodeRenderer(wx.grid.PyGridCellRenderer):
 	def __init__(self):
-		super( UCICodeRenderer, self ).__init__()
+		super( IOCCodeRenderer, self ).__init__()
 
 	def getImgWidth( self, ioc, height ):
 		img = Flags.GetFlagImage( ioc )
@@ -71,7 +71,7 @@ class UCICodeRenderer(wx.grid.PyGridCellRenderer):
 			return wx.Size(w, h)
 
 	def Clone(self):
-		return UCICodeRenderer()
+		return IOCCodeRenderer()
 
 reNonDigits = re.compile( '[^0-9]' )
 reLapMatch = re.compile( '<?Lap>? ([0-9]+)' )
@@ -806,7 +806,12 @@ class Results( wx.Panel ):
 		self.labelGrid.Reset()
 		try:
 			iUCICodeCol = colnamesLabels.index( _('UCICode') )
-			self.labelGrid.SetColRenderer( iUCICodeCol, UCICodeRenderer() )
+			self.labelGrid.SetColRenderer( iUCICodeCol, IOCCodeRenderer() )
+		except ValueError:
+			pass
+		try:
+			iNatCodeCol = colnamesLabels.index( _('NatCode') )
+			self.labelGrid.SetColRenderer( iNatCodeCol, IOCCodeRenderer() )
 		except ValueError:
 			pass
 		
