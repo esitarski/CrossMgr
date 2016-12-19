@@ -108,25 +108,15 @@ def UCIExcel( category, fname ):
 			return 'REL'
 		return u'' if rr.status == Finisher else statusNames[rr.status].replace('DQ', 'DSQ')
 	
-	def getGender( rr ):
-		g = getattr(rr, 'Gender', u'')[:1].upper()
-		if g in 'FLD':
-			g = 'W'
-		elif g in 'HU':
-			g = 'M'
-		if g not in 'MW':
-			g = ''
-		return g
-	
 	getValue = {
 		'Rank':			lambda rr: toInt(rr.pos) if rr.status == Finisher else '',
 		'BIB':			operator.attrgetter('num'),
-		'UCI ID':		lambda rr: formatUciId(getattr(rr, 'UCI Code', u'')),
+		'UCI ID':		lambda rr: formatUciId(getattr(rr, 'UCIID', u'')),
 		'Last Name':	lambda rr: getattr(rr, 'LastName', u''),
 		'First Name':	lambda rr: getattr(rr, 'FirstName', u''),
-		'Country':		lambda rr: countryFromUciId(getattr(rr, 'UCI Code', u'')),
+		'Country':		lambda rr: getattr(rr, 'NatCode', u''),
 		'Team':			lambda rr: getattr(rr, 'TeamCode', u''),
-		'Gender':		getGender,
+		'Gender':		lambda rr: getattr(rr, 'Gender', u'')[:1],
 		'Result':		getFinishTime,
 		'IRM':			getIRM,
 		'Phase':		lambda rr: u'Final',

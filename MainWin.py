@@ -1701,91 +1701,104 @@ class MainWin( wx.Frame ):
 		html = self.reTestCode.sub( '', html )
 		return html
 	
-	reTagTrainingSpaces = re.compile( '>\s+', re.MULTILINE|re.UNICODE )
-	def addResultsToHtmlStr( self, html ):
-		html = self.cleanHtml( html )
+	def getBasePayload( self ):
+		race = Model.race
 		
 		payload = {}
 		payload['raceName'] = os.path.basename(self.fileName or u'')[:-4]
 		iTeam = ReportFields.index('Team')
 		payload['infoFields'] = ReportFields[:iTeam] + ['Name'] + ReportFields[iTeam:]
-			
-		with Model.LockRace() as race:
-			year, month, day = [int(v) for v in race.date.split('-')]
-			timeComponents = [int(v) for v in race.scheduledStart.split(':')]
-			if len(timeComponents) < 3:
-				timeComponents.append( 0 )
-			hour, minute, second = timeComponents
-			raceTime = datetime.datetime( year, month, day, hour, minute, second )
-			title = u'{} - {} {} {}'.format( race.name, _('Starting'), raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
-			html = html.replace( u'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
-			if getattr(race, 'gaTrackingID', None):
-				html = html.replace( u'<!-- Google Analytics -->', gaSnippet.replace('UA-XXXX-Y', race.gaTrackingID) )
-			if race.isRunning():
-				html = html.replace( u'<!-- Meta -->', u'''
+		
+		year, month, day = [int(v) for v in race.date.split('-')]
+		timeComponents = [int(v) for v in race.scheduledStart.split(':')]
+		if len(timeComponents) < 3:
+			timeComponents.append( 0 )
+		hour, minute, second = timeComponents
+		raceTime = datetime.datetime( year, month, day, hour, minute, second )
+		payload['organizer']		= getattr(race, 'organizer', '')
+		payload['reverseDirection']	= getattr(race, 'reverseDirection', False)
+		payload['finishTop']		= getattr(race, 'finishTop', False)
+		payload['isTimeTrial']		= race.isTimeTrial
+		payload['winAndOut']		= race.winAndOut
+		payload['rfid']				= race.enableJChipIntegration
+		payload['primes']			= getattr(race, 'primes', [])
+		payload['raceNameText']		= race.name
+		payload['raceDate']			= race.date
+		payload['raceScheduledStart']= race.date + ' ' + race.scheduledStart
+		payload['raceAddress']      = u', '.join( n for n in [race.city, race.stateProv, race.country] if n )
+		payload['raceIsRunning']	= race.isRunning()
+		payload['raceIsUnstarted']	= race.isUnstarted()
+		payload['raceIsFinished']	= race.isFinished()
+		payload['lapDetails']		= GetLapDetails() if not race.hideDetails else {}
+		payload['hideDetails']		= race.hideDetails
+		payload['showCourseAnimation'] = race.showCourseAnimationInHtml
+		payload['licenseLinkTemplate'] = race.licenseLinkTemplate
+		payload['roadRaceFinishTimes'] = race.roadRaceFinishTimes
+		payload['email']				= self.getEmail()
+		payload['version']				= Version.AppVerName
+		
+		notes = getattr(race, 'notes', u'')
+		if notes.lstrip()[:6].lower().startswith( '<html>' ):
+			notes = TemplateSubstitute( notes, race.getTemplateValues() )
+			notes = self.reRemoveTags.sub( '', notes )
+			notes = notes.replace('<', '{-{').replace( '>', '}-}' )
+			payload['raceNotes']	= notes
+		else:
+			notes = TemplateSubstitute( cgi.escape(notes), race.getTemplateValues() )
+			notes = self.reTagTrainingSpaces.sub( u'>', notes ).replace( '</table>', '</table><br/>' )
+			notes = notes.replace('<', '{-{').replace( '>', '}-}' ).replace('\n','{-{br/}-}')
+			payload['raceNotes']	= notes
+		if race.startTime:
+			raceStartTime = (race.startTime - race.startTime.replace( hour=0, minute=0, second=0 )).total_seconds()
+			payload['raceStartTime']= raceStartTime
+		
+		tLastRaceTime = race.lastRaceTime()
+		tNow = now()
+		payload['timestamp']			= [tNow.ctime(), tLastRaceTime]
+		
+		payload['data']					= GetAnimationData(getExternalData=True)
+		payload['catDetails']			= GetCategoryDetails( True, True )
+		
+		return payload
+	
+	reTagTrainingSpaces = re.compile( '>\s+', re.MULTILINE|re.UNICODE )
+	def addResultsToHtmlStr( self, html ):
+		html = self.cleanHtml( html )
+		
+		payload = self.getBasePayload()		
+		race = Model.race
+		
+		#------------------------------------------------------------------------
+		title = u'{} - {} {} {}'.format( race.name, _('Starting'), raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
+		html = html.replace( u'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
+		if getattr(race, 'gaTrackingID', None):
+			html = html.replace( u'<!-- Google Analytics -->', gaSnippet.replace('UA-XXXX-Y', race.gaTrackingID) )
+		if race.isRunning():
+			html = html.replace( u'<!-- Meta -->', u'''
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>''' )
-
-			payload['organizer']		= getattr(race, 'organizer', '')
-			payload['reverseDirection']	= getattr(race, 'reverseDirection', False)
-			payload['finishTop']		= getattr(race, 'finishTop', False)
-			payload['isTimeTrial']		= race.isTimeTrial
-			payload['winAndOut']		= race.winAndOut
-			payload['rfid']				= race.enableJChipIntegration
-			payload['primes']			= getattr(race, 'primes', [])
-			payload['raceNameText']		= race.name
-			payload['raceDate']			= race.date
-			payload['raceScheduledStart']= race.date + ' ' + race.scheduledStart
-			payload['raceAddress']      = u', '.join( n for n in [race.city, race.stateProv, race.country] if n )
-			payload['raceIsRunning']	= race.isRunning()
-			payload['raceIsUnstarted']	= race.isUnstarted()
-			payload['raceIsFinished']	= race.isFinished()
-			payload['lapDetails']		= GetLapDetails() if not race.hideDetails else {}
-			payload['hideDetails']		= race.hideDetails
-			payload['showCourseAnimation'] = race.showCourseAnimationInHtml
-			payload['licenseLinkTemplate'] = race.licenseLinkTemplate
-			payload['roadRaceFinishTimes'] = race.roadRaceFinishTimes
-			
-			notes = getattr(race, 'notes', u'')
-			if notes.lstrip()[:6].lower().startswith( '<html>' ):
-				notes = TemplateSubstitute( notes, race.getTemplateValues() )
-				notes = self.reRemoveTags.sub( '', notes )
-				notes = notes.replace('<', '{-{').replace( '>', '}-}' )
-				payload['raceNotes']	= notes
-			else:
-				notes = TemplateSubstitute( cgi.escape(notes), race.getTemplateValues() )
-				notes = self.reTagTrainingSpaces.sub( u'>', notes ).replace( '</table>', '</table><br/>' )
-				notes = notes.replace('<', '{-{').replace( '>', '}-}' ).replace('\n','{-{br/}-}')
-				payload['raceNotes']	= notes
-			if race.startTime:
-				raceStartTime = (race.startTime - race.startTime.replace( hour=0, minute=0, second=0 )).total_seconds()
-				payload['raceStartTime']= raceStartTime
-			tLastRaceTime = race.lastRaceTime()
-			courseCoordinates, gpsPoints, gpsAltigraph, totalElevationGain, isPointToPoint = None, None, None, None, None
-			geoTrack = getattr(race, 'geoTrack', None)
-			if geoTrack is not None:
-				courseCoordinates = geoTrack.asCoordinates()
-				gpsPoints = geoTrack.asExportJson()
-				gpsAltigraph = geoTrack.getAltigraph()
-				totalElevationGain = geoTrack.totalElevationGainM
-				isPointToPoint = getattr( geoTrack, 'isPointToPoint', False )
 		
-		tNow = now()
-		payload['timestamp']			= [tNow.ctime(), tLastRaceTime]
-		payload['email']				= self.getEmail()
-		payload['data']					= GetAnimationData(getExternalData=True)
+		#------------------------------------------------------------------------
+		courseCoordinates, gpsPoints, gpsAltigraph, totalElevationGain, isPointToPoint = None, None, None, None, None
+		geoTrack = getattr(race, 'geoTrack', None)
+		if geoTrack is not None:
+			courseCoordinates = geoTrack.asCoordinates()
+			gpsPoints = geoTrack.asExportJson()
+			gpsAltigraph = geoTrack.getAltigraph()
+			totalElevationGain = geoTrack.totalElevationGainM
+			isPointToPoint = getattr( geoTrack, 'isPointToPoint', False )
+		
+		#------------------------------------------------------------------------
 		codes = []
 		if 'UCICode' in payload['infoFields']:
 			codes.extend( r['UCICode'] for r in payload['data'].itervalues() if r.get('UCICode',None) )
 		if 'NatCode' in payload['infoFields']:
 			codes.extend( r['NatCode'] for r in payload['data'].itervalues() if r.get('NatCode',None) )
 		payload['flags']				= Flags.GetFlagBase64ForUCI( codes )
-		payload['catDetails']			= GetCategoryDetails( True, True )
-		payload['version']				= Version.AppVerName
 		if gpsPoints:
 			payload['gpsPoints']		= gpsPoints
-			
+		
 		def sanitize( template ):
 			# Sanitize the template into a safe json string.
 			template = self.reLeadingWhitespace.sub( '', template )
@@ -1806,7 +1819,7 @@ class MainWin( wx.Frame ):
 				payload['courseViewerTemplate'] = sanitize( template )
 			except:
 				pass
-			
+	
 		# Add the rider dashboard.
 		templateFile = os.path.join(Utils.getHtmlFolder(), 'RiderDashboard.html')
 		try:
@@ -3298,14 +3311,11 @@ class MainWin( wx.Frame ):
 
 		raceCategories = getRaceCategories()
 		for catName, category in raceCategories:
-			if catName == 'All':
-				continue
-			if not category.uploadFlag:
+			if catName == 'All' or not category.uploadFlag:
 				continue
 			
 			safeCatName = re.sub('[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', Utils.toAscii(catName))
 			xlFName = os.path.splitext(self.fileName)[0] + '-UCI-{}'.format(safeCatName) + '.xlsx'
-			print( xlFName )
 			
 			try:
 				UCIExcel( category, xlFName )
@@ -3316,21 +3326,19 @@ class MainWin( wx.Frame ):
 	
 	@logCall
 	def menuExportUCI( self, event=None, silent=False ):
+		return self.menuUploadUCI()
+		
+		'''
 		self.commit()
 		if self.fileName is None or len(self.fileName) < 4:
 			return
-
-		#---------------------------------------------------------------
-		#self.menuUploadUCI()
 
 		xlFName = self.getFormatFilename( 'uciexcel' )
 
 		wb = xlwt.Workbook()
 		raceCategories = getRaceCategories()
 		for catName, category in raceCategories:
-			if catName == 'All':
-				continue
-			if not category.uploadFlag:
+			if catName == 'All' or not category.uploadFlag:
 				continue
 			sheetName = re.sub('[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', Utils.toAscii(catName))
 			sheetName = sheetName[:31]
@@ -3347,6 +3355,7 @@ class MainWin( wx.Frame ):
 			Utils.MessageOK(self,
 						u'{} "{}".\n\n{}\n{}'.format(_('Cannot write'), xlFName, _('Check if this spreadsheet is open.'), _('If so, close it, and try again.')),
 						_('Excel File Error'), iconMask=wx.ICON_ERROR )
+		'''
 	
 	def resultsCheck( self ):
 		return Utils.MessageOKCancel( self,
