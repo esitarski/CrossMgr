@@ -7,9 +7,11 @@ import Utils
 import Model
 from ReadSignOnSheet	import ExcelLink
 
+globalRaceDBUrl = ''
+
 def RaceDBUrlDefault():
 	#return 'http://{}:8000/RaceDB'.format( Utils.GetDefaultHost() )
-	return 'http://{}:8000/RaceDB'.format( '127.0.0.1' )
+	return globalRaceDBUrl or 'http://{}:8000/RaceDB'.format( '127.0.0.1' )
 	
 def CrossMgrFolderDefault():
 	return os.path.join( os.path.expanduser('~'), 'CrossMgrRaces' )
@@ -151,6 +153,7 @@ class RaceDB( wx.Dialog ):
 		wx.CallAfter( self.refresh )
 	
 	def fixUrl( self ):
+		global globalRaceDBUrl
 		url = self.raceDBUrl.GetValue().strip()
 		if not url:
 			url = RaceDBUrlDefault()
@@ -158,6 +161,7 @@ class RaceDB( wx.Dialog ):
 		while url.endswith( '/' ):
 			url = url[:-1]
 		self.raceDBUrl.SetValue( url )
+		globalRaceDBUrl = url
 		return url
 	
 	def doOK( self, event ):
@@ -302,15 +306,120 @@ class RaceDB( wx.Dialog ):
 			self.tree.SelectItem( eventClosest )
 			self.tree.Expand( eventClosest )
 
-if __name__ == '__main__':
-	events = GetRaceDBEvents()
-	print GetRaceDBEvents( date=datetime.date.today() )
-	print GetRaceDBEvents( date=datetime.date.today() - datetime.timedelta(days=2) )
+#----------------------------------------------------------------------------------------------------------------------------
+def PostEventCrossMgr( url ):
+	url = (url or RaceDBUrlDefault()) + '/UploadCrossMgr'
+	mainWin = Utils.getMainWin()
+	payload = mainWin.getBasePayload( publishOnly=False ) if mainWin else {}
+	req = requests.post( url + '/', json=payload )
+	return req.json()
+
+class RaceDBUpload( wx.Dialog ):
+	def __init__( self, parent, id=wx.ID_ANY, size=(700,500) ):
+		super(RaceDBUpload, self).__init__(parent, id, style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME, size=size, title=_('Upload Results to RaceDB'))
+		
+		fontPixels = 20
+		font = wx.FontFromPixelSize(wx.Size(0,fontPixels), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
+		self.headerDefault = u'{}\n{}'.format(_('Upload'),u'')
+		self.header = wx.StaticText( self, label=self.headerDefault )
+		self.header.SetFont( font )
+		
+		fontPixels = 15
+		font = wx.FontFromPixelSize(wx.Size(0,fontPixels), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
+		explain = wx.StaticText( self, label=(u'{}:').format(
+			_('Drag and Drop any RaceDB URL from the browser.\n\nDrag the small icon just to the left of the URL\non the browser page to the RaceDB logo below') ) )
+		explain.SetFont( font )
+		
+		raceDBLogo = wx.StaticBitmap( self, bitmap=wx.Bitmap( os.path.join(Utils.getImageFolder(), 'RaceDB_big.png'), wx.BITMAP_TYPE_PNG ) )
+		
+		self.raceDBUrl = wx.TextCtrl( self, value=RaceDBUrlDefault(), style=wx.TE_PROCESS_ENTER )
+		self.raceDBUrl.SetDropTarget(URLDropTarget(self.raceDBUrl, self.refresh))
+		raceDBLogo.SetDropTarget(URLDropTarget(self.raceDBUrl, self.refresh))
+		
+		self.uploadStatus = wx.TextCtrl( self, style=wx.TE_PROCESS_ENTER|wx.TE_READONLY|wx.TE_DONTWRAP)
+		
+		fgs = wx.FlexGridSizer( cols=2, rows=0, vgap=4, hgap=4 )
+		fgs.AddGrowableCol( 1, 1 )
+		
+		fgs.Add( wx.StaticText(self, label=_('RaceDB URL')), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		fgs.Add( self.raceDBUrl, 1, flag=wx.EXPAND )
+		
+		vsHeader = wx.BoxSizer( wx.VERTICAL )
+		vsHeader.Add( raceDBLogo, flag=wx.ALIGN_CENTRE )
+		vsHeader.Add( fgs, 1, flag=wx.EXPAND )
+		
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		self.okButton = wx.Button( self, label=_("Upload") )
+		self.okButton.Bind( wx.EVT_BUTTON, self.doUpload )
+		self.cancelButton = wx.Button( self, id=wx.ID_CANCEL )
+		hs.Add( self.okButton )
+		hs.AddStretchSpacer()
+		hs.Add( self.cancelButton, flag=wx.LEFT, border=4 )
+		
+		mainSizer = wx.BoxSizer( wx.HORIZONTAL )
+		
+		vs1 = wx.BoxSizer( wx.VERTICAL )
+		vs1.Add( self.header, flag=wx.ALL, border=8 )
+		vs1.Add( explain, flag=wx.ALL, border=8 )
+		vs1.Add( vsHeader, flag=wx.ALL|wx.EXPAND, border=8 )
+		vs1.Add( hs, flag=wx.ALL, border=4 )
+		
+		mainSizer.Add( vs1 )
+		mainSizer.Add( self.uploadStatus, 1, flag=wx.ALL|wx.EXPAND, border=4 )
+		
+		self.SetSizer( mainSizer )
+		
+		self.refresh()
+
+	def fixUrl( self ):
+		global globalRaceDBUrl
+		url = self.raceDBUrl.GetValue().strip()
+		if not url:
+			url = RaceDBUrlDefault()
+		url = url.split('RaceDB')[0] + 'RaceDB'
+		while url.endswith( '/' ):
+			url = url[:-1]
+		self.raceDBUrl.SetValue( url )
+		globalRaceDBUrl = url
+		return url
 	
-	app = wx.App(False)
-	mainWin = wx.Frame(None,title="CrossMan", size=(1000,400))
-	raceDB = RaceDB(mainWin)
-	raceDB.refresh( events )
-	raceDB.ShowModal()
-	#app.MainLoop()
+	def refresh( self, events=None ):
+		self.fixUrl()
+		headerText = self.headerDefault
+		race = Model.race
+		if race:
+			headerText = u'{}\n{} {}'.format(race.name, race.date, race.scheduledStart)
+		self.header.SetLabel( headerText )
+
+	def doUpload( self, event ):
+		url = self.fixUrl()
+		try:
+			response = PostEventCrossMgr( url )
+		except Exception as e:
+			response = {'errors':[unicode(e)], 'warnings':[]}
+		resultText = u'\n'.join( 'Error: {}'.format(e) for e in response.get('errors',[]) )
+		resultText += u'\n\n' + u'\n'.join( 'Warning: {}'.format(w) for w in response.get('warnings',[]) )
+		self.uploadStatus.SetValue( resultText )
+		if not resultText:
+			self.EndModal( wx.ID_OK )
+	
+if __name__ == '__main__':
+	if True:
+		app = wx.App(False)
+		mainWin = wx.Frame(None,title="CrossMan", size=(1000,400))
+		raceDBUpload = RaceDBUpload(mainWin)
+		raceDBUpload.ShowModal()
+	
+	else:
+
+		events = GetRaceDBEvents()
+		print GetRaceDBEvents( date=datetime.date.today() )
+		print GetRaceDBEvents( date=datetime.date.today() - datetime.timedelta(days=2) )
+		
+		app = wx.App(False)
+		mainWin = wx.Frame(None,title="CrossMan", size=(1000,400))
+		raceDB = RaceDB(mainWin)
+		raceDB.refresh( events )
+		raceDB.ShowModal()
+		#app.MainLoop()
 

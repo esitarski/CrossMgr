@@ -68,7 +68,7 @@ from WebScorerExport	import WebScorerExport
 from HelpSearch			import HelpSearchDialog, getHelpURL
 from Utils				import logCall, logException
 from FileDrop			import FileDrop
-from RaceDB				import RaceDB
+from RaceDB				import RaceDB, RaceDBUpload
 from SimulateData		import SimulateData
 from NonBusyCall		import NonBusyCall
 from Playback			import Playback
@@ -252,6 +252,7 @@ class MainWin( wx.Frame ):
 		self.numSelect = None
 		
 		self.raceDBDialog = None
+		self.raceDBUploadDialog = None
 		
 		# Setup the objects for the race clock.
 		self.timer = wx.Timer( self, id=wx.NewId() )
@@ -296,9 +297,13 @@ class MainWin( wx.Frame ):
 
 		self.fileMenu.AppendSeparator()
 		idCur = wx.NewId()
-		self.fileMenu.Append( idCur , _("Open from RaceDB..."), _("Open a Race from RaceDB") )
+		self.fileMenu.Append( idCur , _("Open from RaceDB Server..."), _("Open a Race directly from RaceDB server") )
 		self.Bind(wx.EVT_MENU, self.menuOpenRaceDB, id=idCur )
 
+		idCur = wx.NewId()
+		self.fileMenu.Append( idCur , _("Upload Results to RaceDB Server..."), _("Upload Results to RaceDB server") )
+		self.Bind(wx.EVT_MENU, self.menuUploadRaceDB, id=idCur )
+		
 		self.fileMenu.AppendSeparator()
 		
 		idCur = wx.NewId()
@@ -577,6 +582,10 @@ class MainWin( wx.Frame ):
 		self.dataMgmtMenu.Append( idCur , _("Export Raw Data as &HTML..."), _("Export raw data as HTML (.html)") )
 		self.Bind(wx.EVT_MENU, self.menuExportHtmlRawData, id=idCur )
 
+		idCur = wx.NewId()
+		self.dataMgmtMenu.Append( idCur , _("Export Results as &JSON..."), _("Export results as JSON (.json)") )
+		self.Bind(wx.EVT_MENU, self.menuExportResultsJSON, id=idCur )
+		
 		self.menuBar.Append( self.dataMgmtMenu, _("&DataMgmt") )
 
 		#----------------------------------------------------------------------------------------------
@@ -1701,7 +1710,7 @@ class MainWin( wx.Frame ):
 		html = self.reTestCode.sub( '', html )
 		return html
 	
-	def getBasePayload( self ):
+	def getBasePayload( self, publishOnly=True ):
 		race = Model.race
 		
 		payload = {}
@@ -1709,12 +1718,6 @@ class MainWin( wx.Frame ):
 		iTeam = ReportFields.index('Team')
 		payload['infoFields'] = ReportFields[:iTeam] + ['Name'] + ReportFields[iTeam:]
 		
-		year, month, day = [int(v) for v in race.date.split('-')]
-		timeComponents = [int(v) for v in race.scheduledStart.split(':')]
-		if len(timeComponents) < 3:
-			timeComponents.append( 0 )
-		hour, minute, second = timeComponents
-		raceTime = datetime.datetime( year, month, day, hour, minute, second )
 		payload['organizer']		= getattr(race, 'organizer', '')
 		payload['reverseDirection']	= getattr(race, 'reverseDirection', False)
 		payload['finishTop']		= getattr(race, 'finishTop', False)
@@ -1757,7 +1760,7 @@ class MainWin( wx.Frame ):
 		payload['timestamp']			= [tNow.ctime(), tLastRaceTime]
 		
 		payload['data']					= GetAnimationData(getExternalData=True)
-		payload['catDetails']			= GetCategoryDetails( True, True )
+		payload['catDetails']			= GetCategoryDetails( True, publishOnly )
 		
 		return payload
 	
@@ -1767,6 +1770,13 @@ class MainWin( wx.Frame ):
 		
 		payload = self.getBasePayload()		
 		race = Model.race
+		
+		year, month, day = [int(v) for v in race.date.split('-')]
+		timeComponents = [int(v) for v in race.scheduledStart.split(':')]
+		if len(timeComponents) < 3:
+			timeComponents.append( 0 )
+		hour, minute, second = timeComponents
+		raceTime = datetime.datetime( year, month, day, hour, minute, second )
 		
 		#------------------------------------------------------------------------
 		title = u'{} - {} {} {}'.format( race.name, _('Starting'), raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
@@ -2412,6 +2422,21 @@ class MainWin( wx.Frame ):
 							u'{} ({}).'.format(_('Cannot write HTML file'), fname),
 							_('Html Write Error'), iconMask=wx.ICON_ERROR )
 	
+	@logCall
+	def menuExportResultsJSON( self, event ):
+		race = Model.race
+		if self.fileName is None or len(self.fileName) < 4 or not race:
+			return
+			
+		payload = self.getBasePayload( publishOnly=False )
+		fname = os.path.splitext(self.fileName)[0] + '.json'
+		
+		try:
+			with open(fname, 'wb') as fp:
+				json.dump( payload, fp, separators=(',',':') )
+		except Exception as e:
+			Utils.writeLog( 'menuExportResultsJSON: error "{}"'.format(e) )			
+	
 	#--------------------------------------------------------------------------------------------
 	def doCleanup( self ):
 		self.showPageName( _('Results') )
@@ -2910,6 +2935,14 @@ class MainWin( wx.Frame ):
 		else:
 			self.raceDBDialog.refresh()
 		self.raceDBDialog.ShowModal()
+
+	@logCall
+	def menuUploadRaceDB( self, event ):
+		if self.raceDBUploadDialog is None:
+			self.raceDBUploadDialog = RaceDBUpload( self )
+		else:
+			self.raceDBUploadDialog.refresh()
+		self.raceDBUploadDialog.ShowModal()
 
 	@logCall
 	def menuCloseRace(self, event ):
