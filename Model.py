@@ -1113,6 +1113,7 @@ class Race( object ):
 	city = ''
 	stateProv = ''
 	country = ''
+	timezone = ''
 	discipline = 'Cyclo-cross'
 	
 	showCourseAnimationInHtml = True
