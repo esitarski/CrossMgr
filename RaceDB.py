@@ -336,7 +336,7 @@ class RaceDBUpload( wx.Dialog ):
 		self.raceDBUrl.SetDropTarget(URLDropTarget(self.raceDBUrl, self.refresh))
 		raceDBLogo.SetDropTarget(URLDropTarget(self.raceDBUrl, self.refresh))
 		
-		self.uploadStatus = wx.TextCtrl( self, style=wx.TE_PROCESS_ENTER|wx.TE_READONLY|wx.TE_DONTWRAP)
+		self.uploadStatus = wx.TextCtrl( self, style=wx.TE_PROCESS_ENTER|wx.TE_READONLY|wx.TE_MULTILINE|wx.TE_BESTWRAP)
 		
 		fgs = wx.FlexGridSizer( cols=2, rows=0, vgap=4, hgap=4 )
 		fgs.AddGrowableCol( 1, 1 )
@@ -393,6 +393,10 @@ class RaceDBUpload( wx.Dialog ):
 
 	def doUpload( self, event ):
 		busy = wx.BusyCursor()
+		
+		self.uploadStatus.SetValue( _("Starting Upload...") )
+		resultText = u''
+		
 		url = self.fixUrl()
 		try:
 			response = PostEventCrossMgr( url )
@@ -400,15 +404,15 @@ class RaceDBUpload( wx.Dialog ):
 			response = {'errors':[unicode(e)], 'warnings':[]}
 		
 		if response.get('errors',None) or response.get('warnings',None):
-			resultText = u'\n'.join( u'{}: {}'.format(_('Error'), e) for e in response.get('errors',[]) )
+			resultText = u'\n'.join( u'RaceDB{}: {}'.format(_('Error'), e) for e in response.get('errors',[]) )
 			if resultText:
 				resultText += u'\n\n'
-			resultText += u'\n'.join( u'{}: {}'.format(_('Warning'),w) for w in response.get('warnings',[]) )
+			resultText += u'\n'.join( u'RaceDB{}: {}'.format(_('Warning'),w) for w in response.get('warnings',[]) )
 		
 		if not response.get('errors',None):
 			if resultText:
 				resultText += u'\n\n'
-			resultText += u_('Upload Successful.')
+			resultText += _('Upload Successful.')
 		
 		self.uploadStatus.SetValue( resultText )
 	
