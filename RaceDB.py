@@ -351,7 +351,7 @@ class RaceDBUpload( wx.Dialog ):
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		self.okButton = wx.Button( self, label=_("Upload") )
 		self.okButton.Bind( wx.EVT_BUTTON, self.doUpload )
-		self.cancelButton = wx.Button( self, id=wx.ID_CANCEL )
+		self.cancelButton = wx.Button( self, id=wx.ID_CANCEL, label=_("Done") )
 		hs.Add( self.okButton )
 		hs.AddStretchSpacer()
 		hs.Add( self.cancelButton, flag=wx.LEFT, border=4 )
@@ -392,16 +392,25 @@ class RaceDBUpload( wx.Dialog ):
 		self.header.SetLabel( headerText )
 
 	def doUpload( self, event ):
+		busy = wx.BusyCursor()
 		url = self.fixUrl()
 		try:
 			response = PostEventCrossMgr( url )
 		except Exception as e:
 			response = {'errors':[unicode(e)], 'warnings':[]}
-		resultText = u'\n'.join( 'Error: {}'.format(e) for e in response.get('errors',[]) )
-		resultText += u'\n\n' + u'\n'.join( 'Warning: {}'.format(w) for w in response.get('warnings',[]) )
+		
+		if response.get('errors',None) or response.get('warnings',None):
+			resultText = u'\n'.join( u'{}: {}'.format(_('Error'), e) for e in response.get('errors',[]) )
+			if resultText:
+				resultText += u'\n\n'
+			resultText += u'\n'.join( u'{}: {}'.format(_('Warning'),w) for w in response.get('warnings',[]) )
+		
+		if not response.get('errors',None):
+			if resultText:
+				resultText += u'\n\n'
+			resultText += u_('Upload Successful.')
+		
 		self.uploadStatus.SetValue( resultText )
-		if not resultText:
-			self.EndModal( wx.ID_OK )
 	
 if __name__ == '__main__':
 	if True:
