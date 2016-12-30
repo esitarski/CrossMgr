@@ -412,7 +412,10 @@ class RaceDBUpload( wx.Dialog ):
 		if not response.get('errors',None):
 			if resultText:
 				resultText += u'\n\n'
-			resultText += _('Upload Successful.')
+			if response.get('warnings',None):
+				resultText += _('Otherwise, Upload Successful.')
+			else:
+				resultText += _('Upload Successful.')
 		
 		self.uploadStatus.SetValue( resultText )
 	

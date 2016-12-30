@@ -17,6 +17,9 @@ def ReadCategoriesFromExcel( reader ):
 		('Race Laps',		'numLaps'),
 		('Race Distance',	'distance'),
 		('Race Minutes',	None),
+		('Publish',			'publishFlag'),
+		('Upload',			'uploadFlag'),
+		('Series',			'seriesFlag'),
 	)
 
 	HeadersToFields = dict( (k, v) for k, v in HeadersFields )
