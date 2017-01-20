@@ -359,7 +359,10 @@ function updateLapTable() {
 			row.push( { v:d.lapSpeeds[r-1], f:d.lapSpeeds[r-1].toFixed(2) + spacer } );
 		dataTable.addRow( row );
 	}
-	container.table.draw( dataTable, {allowHtml: true} );
+	var options = {allowHtml: true};
+	if( dataTable.getNumberOfRows() > 10 )
+		options['page'] = 'enable';
+	container.table.draw( dataTable, options );
 }
 
 function GetGap( bib, bibRef ) {
@@ -687,11 +690,11 @@ function onLoad() {
 <h1 id="idHeader"></h1>
 <h4 id="idRaceName">Race Name</h4>
 <p id="idCategoryResults">Category Results</p>
-<div id="idLapTable" style="height: 190px;"></div>
+<div id="idLapTable"></div>
 <br/>
 Category:&nbsp;<select id="idCategorySelect" onchange="categorySelectChange(this)"></select>&nbsp;&nbsp;&nbsp;&nbsp;Compare&nbsp;to:&nbsp;<select id="idCompareSelect" onchange="compareSelectChange(this)"></select>
 <br/><br/>
-<div id="idInfoTable" style="height: 80px;"></div>
+<div id="idInfoTable"></div>
 <br/>
 <div id="idGanttChart" style="width: 720px; height: 136px;"></div>
 <div id="idLapTimesChart" style="width: 900px; height: 180px;"></div>
