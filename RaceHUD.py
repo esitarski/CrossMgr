@@ -79,6 +79,9 @@ class RaceHUD(wx.PyControl):
 			self.leader = self.leader[:maxRaceTimes]
 		self.Refresh()
 	
+	def GetLaps( self ):
+		return [max(0,len(rt)-2) for rt in self.raceTimes] if self.raceTimes else []
+	
 	def OnLeave(self, event):
 		if self.iRaceTimesHover is not None:
 			self.iRaceTimesHover = None

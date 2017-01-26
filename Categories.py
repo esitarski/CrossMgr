@@ -495,11 +495,16 @@ class Categories( wx.Panel ):
 				return True
 			return u'{:.3f}'.format(distance or 0.0) == cellValue
 		
+		def numLapsMatches( numLaps, cellValue ):
+			v = '{}'.format( numLaps if numLaps is not None else '' )
+			return v == cellValue
+		
 		return any(	(
 						cat.name != self.grid.GetCellValue(r, self.iCol['name']) or
 						cat.catStr != self.grid.GetCellValue(r, self.iCol['catStr']) or
 						not distanceMatches(cat.distance, self.grid.GetCellValue(r, self.iCol['distance'])) or
-						not distanceMatches(cat.firstLapDistance, self.grid.GetCellValue(r, self.iCol['firstLapDistance']))
+						not distanceMatches(cat.firstLapDistance, self.grid.GetCellValue(r, self.iCol['firstLapDistance'])) or
+						not numLapsMatches( cat.numLaps, self.grid.GetCellValue(r, self.iCol['numLaps']))
 					) for r, cat in enumerate(categories) )
 	
 	def pasteFromClipboard( self, event ):

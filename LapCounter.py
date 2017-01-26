@@ -6,6 +6,8 @@ import datetime
 import Model
 import Utils
 
+from GetResults import GetResults
+
 defaultBackgroundColours = [wx.Colour(16,16,16), wx.Colour(34,139,34), wx.Colour(235,155,0), wx.Colour(147,112,219)]
 
 def getLapCounterOptions( isDialog ):
@@ -129,7 +131,7 @@ class LapCounter( wx.Panel ):
 		self.labels = labels
 		self.Bind( wx.EVT_PAINT, self.OnPaint )
 		self.Bind( wx.EVT_SIZE, self.OnSize )
-		self.Bind( wx.EVT_RIGHT_UP, self.OnOptions )
+		self.Bind( wx.EVT_RIGHT_DOWN, self.OnRightClick )
 		self.timer = wx.Timer( self )
 		self.Bind( wx.EVT_TIMER, self.OnTimer )
 		self.timer.Start( self.millis )
@@ -143,6 +145,9 @@ class LapCounter( wx.Panel ):
 		self.SetForegroundColour( wx.GREEN )
 		self.foregrounds = [wx.WHITE] * 4
 		self.backgrounds = list(defaultBackgroundColours)
+		
+		self.xClick = 0
+		self.yClick = 0
 
 	def OnOptions( self, event ):
 		d = LapCounterOptions( self )
@@ -152,6 +157,55 @@ class LapCounter( wx.Panel ):
 			if mainWin:
 				wx.CallAfter( mainWin.lapCounterDialog.refresh )
 		d.Destroy()
+	
+	def OnPopupLockLapsToGo( self, event ):
+		race = Model.race
+		if not race or race.isUnstarted() or race.isTimeTrial:
+			return
+		
+		try:
+			categoryLaps = Utils.getMainWin().record.raceHUD.GetLaps()
+		except:
+			return
+		
+		for (x, y, w, h), laps, category in zip(self.tessellate(len(self.labels)), categoryLaps, race.getCategories(startWaveOnly=True)):
+			if x <= self.xClick < x+w and y <= self.yClick < y+h:
+				category._numLaps = laps
+				return
+	
+	def OnRightClick( self, event ):
+		race = Model.race
+		self.xClick, self.yClick = event.GetX(), event.GetY()
+
+		for (x, y, w, h), category in zip(self.tessellate(len(self.labels)), race.getCategories(startWaveOnly=True)):
+			if x <= self.xClick < x+w and y <= self.yClick < y+h:
+				break
+		else:
+			category = None
+		
+		if not category:
+			return
+
+		if not hasattr(self, 'popupInfo'):
+			self.popupInfo = [
+				(wx.NewId(), _('Lock in Laps to Go'),		_('Lock in Laps to Go'),	self.OnPopupLockLapsToGo),
+				(wx.NewId(), _('Options') + u'...',		_('Options'),			self.OnOptions),
+			]
+			for p in self.popupInfo:
+				if p[0]:
+					self.Bind( wx.EVT_MENU, p[3], id=p[0] )
+		
+		menu = wx.Menu()
+		for i, (id, name, text, callback) in enumerate(self.popupInfo):
+			if i == 0:
+				if race and race.isUnstarted():
+					continue
+				if category.isNumLapsLocked():
+					continue
+			menu.Append( id, name, text )
+		
+		self.PopupMenu( menu )
+		menu.Destroy()
 		
 	def OnTimer( self, event=None ):
 		if self.countdownTimer:
@@ -228,6 +282,20 @@ class LapCounter( wx.Panel ):
 			return '{}{}:{:02d}:{:02d}'.format( over, hours, minutes, seconds )
 		return '{}{}:{:02d}'.format( over, minutes, seconds )
 	
+	def tessellate( self, numLabels ):
+		width, height = self.GetSizeTuple()
+		if numLabels == 1:
+			return ((0, 0, width, height),)
+		if numLabels == 2:
+			w = width // 2
+			return ((0, 0, w, height), (w, 0, w, height),)
+		w = width // 2
+		h = height // 2
+		return (
+			(0, 0, w, h), (w, 0, w, h),
+			(0, h, w, h), (w, h, w, h),
+		)
+			
 	def OnPaint( self, event ):
 		dc = wx.AutoBufferedPaintDC( self )
 		dc.SetBackground( wx.Brush(self.GetBackgroundColour(), wx.SOLID) )
@@ -269,19 +337,6 @@ class LapCounter( wx.Panel ):
 		
 		dc.SetPen( wx.TRANSPARENT_PEN )
 		
-		def tessellate( numLabels ):
-			if numLabels == 1:
-				return ((0, 0, width, height),)
-			if numLabels == 2:
-				w = width // 2
-				return ((0, 0, w, height), (w, 0, w, height),)
-			w = width // 2
-			h = height // 2
-			return (
-				(0, 0, w, h), (w, 0, w, h),
-				(0, h, w, h), (w, h, w, h),
-			)
-			
 		def getFontSizeToFit( text, w, h ):
 			w = int( w * 0.9 )
 			h = int( h * 0.9 )
@@ -302,7 +357,7 @@ class LapCounter( wx.Panel ):
 			dc.SetTextForeground( colour )
 			dc.DrawText( label, xText, yText )
 		
-		rects = tessellate(len(self.labels))
+		rects = self.tessellate(len(self.labels))
 		for i, (label, flash) in enumerate(self.labels):
 			x, y, w, h = rects[i]
 			

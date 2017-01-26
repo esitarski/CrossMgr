@@ -404,11 +404,14 @@ class Category(object):
 	def setNumLaps( self, numLaps ):
 		try:
 			numLaps = int(numLaps)
-		except ValueError:
+		except (TypeError, ValueError):
 			numLaps = None
 		self._numLaps = numLaps if numLaps else None
 		
-	numLaps = property(getNumLaps, setNumLaps) 
+	numLaps = property(getNumLaps, setNumLaps)
+	
+	def isNumLapsLocked( self ):
+		return getattr(self, '_numLaps', None) is not None
 
 	def matches( self, num, ignoreActiveFlag = False ):
 		if not ignoreActiveFlag:
