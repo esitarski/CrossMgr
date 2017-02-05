@@ -255,7 +255,6 @@ class ExportGrid( object ):
 		except ValueError:
 			iUCICodeCol = None
 		
-		import pdb; pdb.set_trace()
 		try:
 			iNatCodeCol = self.colnames.index( _("NatCode") )
 			padCol( iNatCodeCol )
