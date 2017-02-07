@@ -164,7 +164,7 @@ class RaceHUD(wx.PyControl):
 		legendHeight = max( hudHeight / 4, 10 )
 		fontLegend = wx.FontFromPixelSize( wx.Size(0,legendHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		dc.SetFont( fontLegend )
-		textWidth, textHeight = dc.GetTextExtent( '1:00:00' )
+		textWidth, textHeight = dc.GetTextExtent( u'1:00:00' )
 		broomTimeWidth = textWidth
 		
 		tickHeight = (hudHeight - textHeight * 2) / 2
@@ -176,11 +176,11 @@ class RaceHUD(wx.PyControl):
 		raceTimeHeight = tickHeight * 2 * 0.6
 		fontRaceTime = wx.FontFromPixelSize( wx.Size(0,raceTimeHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		dc.SetFont( fontRaceTime )
-		textWidth, textHeight = dc.GetTextExtent( '0' )
+		textWidth, textHeight = dc.GetTextExtent( u'0' )
 		zeroCharWidth = textWidth
-		textWidth = max( dc.GetTextExtent('{}'.format(ldr))[0] for ldr in self.leader )
+		textWidth = max( dc.GetTextExtent(u'{}'.format(ldr))[0] for ldr in self.leader )
 		textWidth = max( textWidth, int(self.checkeredFlag.GetWidth() * 1.2) )
-		textWidth += dc.GetTextExtent('  ')[0]
+		textWidth += dc.GetTextExtent(u'  ')[0]
 		
 		dy = int(tickHeight * 2 * 0.75)
 
@@ -203,7 +203,7 @@ class RaceHUD(wx.PyControl):
 		
 			# Draw the legend.
 			dc.SetFont( fontLegend )
-			textWidth, textHeight = dc.GetTextExtent( '0:00:00' )
+			textWidth, textHeight = dc.GetTextExtent( u'0:00:00' )
 			hMiddle = textHeight + tickHeight
 			dc.DrawLine( xLeft, yTop + hMiddle, xLeft + raceTimes[-1] * xMult, yTop + hMiddle )
 			dc.DrawLine( xLeft, yTop + hMiddle - tickHeight, xLeft, yTop + hMiddle + tickHeight )

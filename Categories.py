@@ -496,7 +496,7 @@ class Categories( wx.Panel ):
 			return u'{:.3f}'.format(distance or 0.0) == cellValue
 		
 		def numLapsMatches( numLaps, cellValue ):
-			v = '{}'.format( numLaps if numLaps is not None else '' )
+			v = u'{}'.format( numLaps if numLaps is not None else '' )
 			return v == cellValue
 		
 		return any(	(
@@ -596,12 +596,12 @@ and remove them from other categories.'''),
 		self.grid.SetCellValue( r, self.iCol['gender'], GetTranslation(gender) )
 		self.grid.SetCellValue( r, self.iCol['catStr'], catStr )
 		self.grid.SetCellValue( r, self.iCol['startOffset'], startOffset )
-		self.grid.SetCellValue( r, self.iCol['numLaps'], u'{}'.format(numLaps) if numLaps else '' )
-		self.grid.SetCellValue( r, self.iCol['raceMinutes'], u'{}'.format(raceMinutes) if raceMinutes else '' )
+		self.grid.SetCellValue( r, self.iCol['numLaps'], u'{}'.format(numLaps) if numLaps else u'' )
+		self.grid.SetCellValue( r, self.iCol['raceMinutes'], u'{}'.format(raceMinutes) if raceMinutes else u'' )
 		self.grid.SetCellValue( r, self.iCol['lappedRidersMustContinue'], u'1' if lappedRidersMustContinue else u'0' )
-		self.grid.SetCellValue( r, self.iCol['rule80Time'], '' )
-		self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '' )
-		self.grid.SetCellValue( r, self.iCol['distance'], ('%.3f' % distance) if distance else '' )
+		self.grid.SetCellValue( r, self.iCol['rule80Time'], u'' )
+		self.grid.SetCellValue( r, self.iCol['suggestedLaps'], u'' )
+		self.grid.SetCellValue( r, self.iCol['distance'], ('%.3f' % distance) if distance else u'' )
 		self.grid.SetCellValue( r, self.iCol['distanceType'], self.DistanceTypeChoices[distanceType if distanceType else 0] )
 		self.grid.SetCellValue( r, self.iCol['firstLapDistance'], ('%.3f' % firstLapDistance) if firstLapDistance else '' )
 		self.grid.SetCellValue( r, self.iCol['publishFlag'], u'1' if publishFlag else u'0' )
@@ -623,7 +623,7 @@ and remove them from other categories.'''),
 		
 		laps = race.getCategoryRaceLaps().get(category, 0) if race else None
 		if laps:
-			self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '{}'.format(laps) )
+			self.grid.SetCellValue( r, self.iCol['suggestedLaps'], u'{}'.format(laps) )
 	
 	def fixRow( self, row, catType, active ):
 		activeColour = wx.WHITE if active else self.inactiveColour

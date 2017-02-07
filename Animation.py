@@ -493,7 +493,7 @@ class Animation(wx.PyControl):
 					else:
 						i = None
 				DrawShape( dc, num, x, y, riderRadius )
-				dc.DrawLabel('{}'.format(num), wx.Rect(x+numSize, y-numSize, numSize*2, numSize*2) )
+				dc.DrawLabel(u'{}'.format(num), wx.Rect(x+numSize, y-numSize, numSize*2, numSize*2) )
 				if i is not None:
 					dc.SetPen( wx.BLACK_PEN )
 					dc.SetFont( self.numberFont )
