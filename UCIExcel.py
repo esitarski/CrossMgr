@@ -29,8 +29,7 @@ def UCIExcel( category, fname, startList=False ):
 		results = GetResults( category )
 	
 	if startList:
-		results = list( copy.deepcopy( GetResults(category) ) )
-		results.sort( key=operator.attrgetter('num') )
+		results = sorted( copy.deepcopy(results), key=operator.attrgetter('num') )
 		for pos, rr in enumerate(results, 1):
 			rr.pos = u'{}'.format(pos)
 			rr.status = Finisher
