@@ -1507,6 +1507,19 @@ class MainWin( wx.Frame ):
 		printout.Destroy()
 
 	def getFormatFilename( self, filecode ):
+		if filecode == 'uciexcel' and not BatchPublishAttrs.formatFilename[filecode]:
+			def getUCIFileNames( fnameBase ):
+				xlFNames = []
+				path, fname = os.path.split( fnameBase )
+				for catName, category in getRaceCategories():
+					if catName == 'All' or not category.publishFlag:
+						continue
+					safeCatName = re.sub('[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', Utils.toAscii(catName))		
+					xlFNames.append( os.path.join( path, 'UCI-StartList-{}-{}.xlsx'.format(fname, safeCatName) ) )
+					xlFNames.append( os.path.join( path, 'UCI-Results-{}-{}.xlsx'.format(fname, safeCatName) ) )
+				return xlFNames
+			BatchPublishAttrs.formatFilename[filecode] = getUCIFileNames
+	
 		return BatchPublishAttrs.formatFilename[filecode]( os.path.splitext(self.fileName)[0] )
 
 	@logCall
@@ -3343,16 +3356,26 @@ class MainWin( wx.Frame ):
 		if self.fileName is None or len(self.fileName) < 4:
 			return
 
-		raceCategories = getRaceCategories()
-		for catName, category in raceCategories:
+		path, fname = os.path.split( self.fileName )
+		fname = os.path.splitext( fname )[0]
+		
+		xlFNames = (f for f in self.getFormatFilename('uciexcel'))
+		
+		for catName, category in getRaceCategories():
 			if catName == 'All' or not category.uploadFlag:
 				continue
-			
-			safeCatName = re.sub('[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', Utils.toAscii(catName))
-			xlFName = os.path.splitext(self.fileName)[0] + '-UCI-{}'.format(safeCatName) + '.xlsx'
-			
+				
+			xlFName = next(xlFNames)
 			try:
-				UCIExcel( category, xlFName )
+				UCIExcel( category, xlFName, True )
+			except IOError:
+				Utils.MessageOK(self,
+							u'{} "{}".\n\n{}\n{}'.format(_('Cannot write'), xlFName, _('Check if this spreadsheet is open.'), _('If so, close it, and try again.')),
+							_('Excel File Error'), iconMask=wx.ICON_ERROR )
+			
+			xlFName = next(xlFNames)
+			try:
+				UCIExcel( category, xlFName, False)
 			except IOError:
 				Utils.MessageOK(self,
 							u'{} "{}".\n\n{}\n{}'.format(_('Cannot write'), xlFName, _('Check if this spreadsheet is open.'), _('If so, close it, and try again.')),

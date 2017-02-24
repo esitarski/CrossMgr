@@ -16,7 +16,7 @@ batchPublishAttr = (
 	BatchAttr('USAC',	_('USAC'),			'usacexcel',	'menuExportUSAC', True, _('as .xls upload file'),
 		lambda fnameBase: fnameBase + '-USAC.xls'),
 	BatchAttr('UCI',	_('UCI'),			'uciexcel',		'menuExportUCI', True, _('as .xls upload file'),
-		lambda fnameBase: fnameBase + '-UCI.xls'),
+		None),
 	BatchAttr('VTTA',	_('VTTA'),	 		'vttaexcel', 	'menuExportVTTA', True, _('as .xls file'),
 		lambda fnameBase: fnameBase + '-VTTA.xls'),
 	BatchAttr('WebScorer', _('WebScorer'),	'webscorertxt',	'menuExportWebScorer', True, _('as .txt upload file'),

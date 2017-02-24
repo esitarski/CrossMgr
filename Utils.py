@@ -755,13 +755,14 @@ def GetDefaultHost():
 	
 	return DEFAULT_HOST	
 
-def LaunchApplication( fname ):
-	if os.name is 'nt':
-		subprocess.call(('cmd', '/C', 'start', '', fname))
-	elif sys.platform.startswith('darwin'):
-		subprocess.call(('open', fname))
-	else:
-		subprocess.call(('xdg-open', fname))	# Linux
+def LaunchApplication( fnames ):
+	for fname in (fnames if isinstance(fnames, list) else [fnames]):
+		if os.name is 'nt':
+			subprocess.call(('cmd', '/C', 'start', '', fname))
+		elif sys.platform.startswith('darwin'):
+			subprocess.call(('open', fname))
+		else:
+			subprocess.call(('xdg-open', fname))	# Linux
 
 def BoldFromFont( font ):
 	# pointSize, family, style, weight, underline=False, face="", encoding

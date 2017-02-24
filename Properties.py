@@ -949,9 +949,11 @@ def doBatchPublish( silent=False, iAttr=None ):
 		if v & 1:
 			getattr( mainWin, attr.func )( silent=True )
 			if attr.filecode:
-				allFiles.append( mainWin.getFormatFilename(attr.filecode) )
-				if v & 2:
-					ftpFiles.append( mainWin.getFormatFilename(attr.filecode) )
+				files = mainWin.getFormatFilename(attr.filecode)
+				for f in (files if isinstance(files, list) else [files]):
+					allFiles.append( f )
+					if v & 2:
+						ftpFiles.append( f )
 	
 	if iAttr is None:
 		publishFormatBikeReg = getattr(race, 'publishFormatBikeReg', 0)

@@ -2,6 +2,7 @@ import Model
 import Utils
 from GetResults import GetResults
 
+import copy
 import xlsxwriter
 import operator
 
@@ -13,13 +14,28 @@ def countryFromUciId( uci_id ):
 		return u''
 	return uci_id[:3]
 	
-def UCIExcel( category, fname ):
-	results = GetResults( category )
-	
-	wb = xlsxwriter.Workbook( fname )
+def UCIExcel( category, fname, startList=False ):
+	race = Model.race
+	if not startList and race.isUnstarted():
+		return
 	
 	Finisher = Model.Rider.Finisher
 	statusNames = Model.Rider.statusNames
+	
+	if race.isUnstarted():
+		with UnstartedRaceWrapper():
+			results = GetResults( category )
+	else:
+		results = GetResults( category )
+	
+	if startList:
+		results = list( copy.deepcopy( GetResults(category) ) )
+		results.sort( key=operator.attrgetter('num') )
+		for pos, rr in enumerate(results, 1):
+			rr.pos = u'{}'.format(pos)
+			rr.status = Finisher
+	
+	wb = xlsxwriter.Workbook( fname )
 	
 	title_format = wb.add_format( dict(font_size=24, valign='vcenter') )
 	
@@ -28,7 +44,10 @@ def UCIExcel( category, fname ):
 	
 	#-------------------------------------------------------------------------------------------------------
 	ws = wb.add_worksheet('General')
-	ws.write( 0, 0, u"UCI Event's Results File", title_format )
+	if startList:
+		ws.write( 0, 0, u"UCI Event's Start List File", title_format )
+	else:
+		ws.write( 0, 0, u"UCI Event's Results File", title_format )
 	ws.set_row( 0, 26 )
 	
 	general = [
@@ -75,14 +94,20 @@ def UCIExcel( category, fname ):
 	odd_format_right = wb.add_format( dict(align='right',bottom=1) )
 	even_format_right = wb.add_format( dict(align='right',bg_color=gray, bottom=1) )
 	
-	ws = wb.add_worksheet('Results')
+	if startList:
+		ws = wb.add_worksheet('StartList')
+	else:
+		ws = wb.add_worksheet('Results')
 	
-	colNames = ['Rank', 'BIB', 'UCI ID', 'Last Name', 'First Name', 'Country', 'Team', 'Gender', 'Phase', 'Heat', 'Result', 'IRM', 'Sort Order']
+	if startList:
+		colNames = ['Start Order', 'BIB', 'UCI ID', 'Last Name', 'First Name', 'Country', 'Team', 'Gender']
+	else:
+		colNames = ['Rank', 'BIB', 'UCI ID', 'Last Name', 'First Name', 'Country', 'Team', 'Gender', 'Phase', 'Heat', 'Result', 'IRM', 'Sort Order']
 	
 	def getFmt( name, row ):
 		if name == 'Sort Order':
 			return odd_format_last if row&1 else even_format_last
-		if name in {'Rank', 'BIB'}:
+		if name in ('Start Order', 'Rank', 'BIB'):
 			return odd_format_center if row&1 else even_format_center
 		if name == 'Result':
 			return odd_format_right if row&1 else even_format_right
@@ -109,6 +134,7 @@ def UCIExcel( category, fname ):
 		return u'' if rr.status == Finisher else statusNames[rr.status].replace('DQ', 'DSQ')
 	
 	getValue = {
+		'Start Order':	lambda rr: toInt(rr.pos),
 		'Rank':			lambda rr: toInt(rr.pos) if rr.status == Finisher else '',
 		'BIB':			operator.attrgetter('num'),
 		'UCI ID':		lambda rr: formatUciId(getattr(rr, 'UCIID', u'')),
