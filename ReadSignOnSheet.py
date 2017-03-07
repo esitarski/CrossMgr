@@ -35,11 +35,11 @@ with Utils.SuspendTranslation():
 		_('City'), _('State'), _('Prov'), _('StateProv'), _('Nat.'),
 		_('Category'), _('EventCategory'), _('CustomCategory'), _('Age'), _('Gender'),
 		_('License'),
-		_('NatCode'), _('UCIID'), _('UCICode'),
+		_('NatCode'), _('UCIID'), _('UCICode'), _('TeamCode'),
 		_('Factor'),
 	] + TagFields
 
-IgnoreFields = ['Bib#', 'Factor', 'EventCategory', 'CustomCategory'] + TagFields	# Fields to ignore when adding data to standard reports.
+IgnoreFields = ['Bib#', 'Factor', 'EventCategory', 'CustomCategory', 'TeamCode'] + TagFields	# Fields to ignore when adding data to standard reports.
 NumericFields = ['Age','Factor']
 ReportFields = [f for f in Fields if f not in IgnoreFields]
 ReportFields = (lambda s: [f for f in Fields if f not in s])(set(IgnoreFields))
