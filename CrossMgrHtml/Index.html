@@ -110,8 +110,8 @@ function onLoad() {
 </head>
 
 <body onload="onLoad()">
-<img id="idImgHeader" alt="CrossMgr Logo" onclick="location.reload(true)" style="cursor: pointer;" src="{{logoSrc}}"/>
-{% if share %}&nbsp;&nbsp;&nbsp;&nbsp;<a href="./qrcode.html">Share <img class="qrcode" /></a>{% end %}
+<img id="idImgHeader" alt="CrossMgr Logo" onclick="location.reload(true)" style="cursor: pointer;" src="{{logoSrc}}">
+{% if share %}&nbsp;&nbsp;&nbsp;&nbsp;<a href="./qrcode.html">Share <img class="qrcode"></a>{% end %}
 <h1>Race Results<br/><span style="font-size: 80%">{% if organizer %}by {% end %}{{organizer}}</span></h1>
 <ol>
 {% if not info %}
@@ -123,12 +123,12 @@ function onLoad() {
 		{% if g.raceScheduledStart %}<span style="white-space: nowrap;">{{g.raceScheduledStart.strftime('%H:%M %a %b %d, %Y')}}</span>{% end %}
 		<script>console.log( 'raceIsRunning=' + g.raceIsRunning + ', isTimeTrial=' + g.isTimeTrial, ' share=' + share );</script>
 		{% if g.isTimeTrial and share %}
-			&nbsp;&nbsp;<a href="{{g.urlTTStartList}}"><img class="startlist" title="Start List"/></a>
-			&nbsp;&nbsp;<a href="{{g.urlTTCountdown}}"><img class="countdown" title="Countdown Clock" /></a>
+			&nbsp;&nbsp;<a href="{{g.urlTTStartList}}"><img class="startlist" title="Start List"></a>
+			&nbsp;&nbsp;<a href="{{g.urlTTCountdown}}"><img class="countdown" title="Countdown Clock"></a>
 		{% end %}
 		<br/>
 		{% for catName, catUrl, catStarters, catFinishers in g.categories %}
-			<a href="{{g.url}}?raceCat={{catUrl}}" class='btn'>{{catName}}</a>
+			<a href="{{g.url}}?raceCat={{catUrl}}" class='btn'>{{catName}}
 				{% if catStarters and catFinishers %}
 					<span>(<sup>{{catFinishers}}</sup>&frasl;<sub>{{catStarters}}</sub>)</span>
 				{% elif catStarters %}
@@ -141,7 +141,7 @@ function onLoad() {
 </ol>
 <br/>
 Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.
-<p/>
-<p/>
+<p></p>
+<p></p>
 </body>
 </html>
