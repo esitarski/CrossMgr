@@ -376,6 +376,7 @@ while 1:
 		clientsocket.sendall( bytes(response + EOL) )
 	
 	print 'Connection from:', address
+	PROTOCOL = '1.1'
 
 	while 1:
 		try:
@@ -400,6 +401,13 @@ while 1:
 			
 		elif cmd == 'GETTIME':
 			sendResponse( 'GETTIME;{}'.format( dBase.strftime('%Y-%m-%d;%H:%M:%S.%f')[:-3], ) )
+			
+		elif cmd == 'SETPROTOCOL':
+			PROTOCOL = message.split( ';', 1 )[1].strip()
+			sendResponse( 'SETPROTOCOL;{}'.format(PROTOCOL) )
+			
+		elif cmd == 'GETPROTOCOL':
+			sendResponse( 'GETPROTOCOL;{};1.1;2.0'.format(PROTOCOL) )
 			
 		elif cmd == 'STARTOPERATION':
 			sendResponse( 'STARTOPERATION;OK' )

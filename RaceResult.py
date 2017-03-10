@@ -98,11 +98,9 @@ def AutoDetect( raceResultPort=3601, callback=None ):
 # if we get the same time, make sure we give it a small offset to make it unique, but preserve the order.
 tSmall = datetime.timedelta( seconds = 0.000001 )
 
-statusFields = [
-	'Date', 'Time', 'HasPower', 'Antennas', 'IsInTimingMode',
-	'FileNumber', 'GPSHasFix', 'Latitude', 'Longitude', 'LongInd', 'ReaderIsHealthy', 'ActiveExtConnected',
-	'Channel', 'LoopID', 'LoopPower', 'LoopConnected', 'LoopUnderPower', 'Temperature',
-]
+statusFields = (
+	'Date', 'Time', 'HasPower', 'Antennas', 'IsInTimingMode', 'FileNumber', 'GPSHasFix',
+)
 reNonDigit = re.compile( '[^0-9]+' )
 def Server( q, shutdownQ, HOST, PORT, startTime ):
 	global readerEventWindow
@@ -181,6 +179,34 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 			continue
 
 		#-----------------------------------------------------------------------------------------------------
+		crossMgrMinProtocol = (1,2)
+		crossMgrMinProtocolStr = '.'.join('{}'.format(p) for p in crossMgrMinProtocol)
+		try:
+			buffer = makeCall( s, 'GETPROTOCOL' )
+		except ValueError:
+			continue
+		
+		current, minSupported, maxSupported = [f.strip() for f in buffer.strip().split(';')[1:]]
+		
+		if tuple(int(i) for i in maxSupported.split('.')) < crossMgrMinProtocol:
+			qLog(
+				'connection',
+				u'{}. {} >={}. {} {}.'.format(
+					_("RaceResult requires Firmware Upgrade"),
+					_("CrossMgr requires PROTOCOL"), crossMgrMinProtocolStr,
+					_("RaceResult supports"), maxSupported,
+				)
+			)
+			time.sleep( delaySecs )
+			continue
+			
+		try:
+			buffer = makeCall( s, 'SETPROTOCOL;{}'.format(maxSupported) )
+		except ValueError:
+			continue
+		
+		qLog( 'status', u'{}'.format(buffer.strip()) )
+		
 		try:
 			buffer = makeCall( s, 'GETSTATUS' )
 		except ValueError:
