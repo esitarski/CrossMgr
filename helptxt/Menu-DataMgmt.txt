@@ -33,7 +33,7 @@ FirstName|Optional.  Rider's first name. Used for display only.
 Team|Optional.  Rider's team. Used for display only.
 Team Code|Optional.  Rider's 3-letter team. Used for UCI DataRiver Excel upload.
 Category|Optional.  Rider's category.  This field is shown in the Results as information only, and does not have to match the rider's racing category.
-EventCategpry|Optional.  If __Initialize CrossMgr Categories from Excel Category and Bib# columns__ is selected, values in this column will be added to the race as a category (if not already present), and this rider's bib number will be included in that category.  If __Initialize CrossMgr Categories from Excel Category and Bib# columns__ is not selected, the rider's category will be determined by matching the number ranges of the categories (see [Categories][] for details).
+EventCategory|Optional.  If __Initialize CrossMgr Categories from Excel Category and Bib# columns__ is selected, values in this column will be added to the race as a category (if not already present), and this rider's bib number will be included in that category.  If __Initialize CrossMgr Categories from Excel Category and Bib# columns__ is not selected, the rider's category will be determined by matching the number ranges of the categories (see [Categories][] for details).
 Age|Optional.  Rider's age.  Used for display only.
 License|Optional.  Rider's license.  This can be the UCI code, a national code, or a regional code.  CrossMgr uses this for display only.
 UCI ID|Optional.  Rider's UDI ID.  Will be included in UCI DataRiver upload Excel sheets.
