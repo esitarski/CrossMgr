@@ -630,19 +630,23 @@ class Results( wx.Panel ):
 			return
 
 		# Fix the speed column.
+		speedUnit = None
+		iSpeedCol = None
 		try:
-			speedUnit = None
 			iSpeedCol = (i for i, c in enumerate(exportGrid.colnames) if c == _('Speed')).next()
-			for r, d in enumerate(exportGrid.data[iSpeedCol]):
-				if not d:
-					continue
-				if not speedUnit:
-					exportGrid.colnames[iSpeedCol] = speedUnit = d.split()[1]
-				exportGrid.data[iSpeedCol][r] = d.split()[0]
-				if exportGrid.data[iSpeedCol][r] == '"':
-					exportGrid.data[iSpeedCol][r] += '    '
 		except StopIteration:
 			pass
+		if iSpeedCol is not None:
+			for r, d in enumerate(exportGrid.data[iSpeedCol]):
+				d = d.strip()
+				if not d:
+					continue
+				dSplit = d.split()
+				if not speedUnit and len(dSplit) > 1:
+					exportGrid.colnames[iSpeedCol] = speedUnit = dSplit[1]
+				exportGrid.data[iSpeedCol][r] = dSplit[0]
+				if exportGrid.data[iSpeedCol][r] == '"':
+					exportGrid.data[iSpeedCol][r] += '    '
 			
 		colnames = exportGrid.colnames
 		data = exportGrid.data
