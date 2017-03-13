@@ -329,14 +329,11 @@ class Impinj( object ):
 						self.messageQ.put( ('Impinj', 'Received {}.  Skipping: missing tagID.'.format(self.tagCount)) )
 						continue
 						
-					if isinstance( tagID, (int, long) ):
-						tagID = str(tagID)
-					else:
-						try:
-							tagID = HexFormatToStr( tagID )
-						except Exception as e:
-							self.messageQ.put( ('Impinj', 'Received {}.  Skipping: HexFormatToStr fails.  Error={}'.format(self.tagCount, e)) )
-							continue
+					try:
+						tagID = HexFormatToStr( tagID )
+					except Exception as e:
+						self.messageQ.put( ('Impinj', 'Received {}.  Skipping: HexFormatToStr fails.  Error={}'.format(self.tagCount, e)) )
+						continue
 					
 					try:
 						discoveryTime = tag['Timestamp']		# In microseconds since Jan 1, 1970
