@@ -41,7 +41,7 @@ def readResponse( s ):
 			raise ValueError
 		if c == '\n' and response[-1] == '\n':
 			return b''.join( response )
-		reponse.append( c )
+		response.append( c )
 
 def AutoDetect( callback=None ):
 	for comport in serial.tools.list_ports.comports():
