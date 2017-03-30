@@ -151,7 +151,7 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 			raise ValueError, 'Could not find a Header Row %s::%s.' % (fileName, sheetName)
 		
 		# Rename empty columns so as not to confuse the user.
-		self.headers = [h if h else 'BlankHeaderName%03d' % (c+1) for c, h in enumerate(self.headers)]
+		self.headers = [h if h else 'BlankHeaderName{:03d}'.format(c+1) for c, h in enumerate(self.headers)]
 		
 		# Create a map for the field names we are looking for
 		# and the self.headers we found in the Excel sheet.
@@ -375,7 +375,7 @@ def DoImportTTStartTimes( race, excelLink ):
 	
 	if not excelLink:
 		errors.append( _('Missing excelLink') )
-		return errors, startTimes
+		return errors, startTimes, 0
 		
 	info = excelLink.read()
 	
@@ -461,10 +461,12 @@ def ImportTTStartTimes( parent ):
 		errorStr = u'\n'.join( errors[:20] )
 		if len(errors) > 20:
 			errorStr += '\n...'
-		Utils.MessageOK( parent, errorStr, _('Start Time Errors') )
+		Utils.MessageOK( parent, errorStr, _('Start Time Import Errors') )
 		
 	Utils.refresh()
 	Utils.MessageOK( parent, u'{}: {}'.format(_('Start Times Changed'), changeCount), _('Start Times Success') )
+	if Utils.getMainWin():
+		Utils.getMainWin().menuFind()
 
 #-----------------------------------------------------------------------------------------------------
 

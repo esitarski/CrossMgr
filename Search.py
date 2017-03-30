@@ -159,8 +159,9 @@ class Search( wx.Panel ):
 		searchText = Utils.removeDiacritic(self.search.GetValue().lower())
 		
 		fields = ReadSignOnSheet.Fields
-		info = externalInfo.itervalues().next()
-		colnames = [f for f in fields if f in info]
+		info = next(externalInfo.itervalues())
+		colnames = [_('StartTime')] if race.isTimeTrial else []
+		colnames.extend( f for f in fields if f in info )
 		colnames.append( _('In Race') )
 		data = [ [] for c in colnames ]
 		for num, info in externalInfo.iteritems():
@@ -185,29 +186,41 @@ class Search( wx.Panel ):
 				else:
 					try:
 						data[c].append( unicode(info[f]) )
+						continue
 					except KeyError:
-						if f == _('In Race') and num in inRace:
-							data[c].append( _('yes') )
-						else:
-							data[c].append( '' )
+						pass
+					if f == _('In Race') and num in inRace:
+						data[c].append( _('yes') )
+					elif f == _('StartTime'):
+						r = race.riders.get(num, None)
+						st = r.firstTime if r and hasattr(r, 'firstTime') else None
+						data[c].append( Utils.formatTime(st) if st is not None else u'' )
+					else:
+						data[c].append( '' )
 					
 		sortPairs = []
 		
+		iBib = 1 if race.isTimeTrial else 0
+		
 		if colnames[self.sortCol].startswith('Bib'):
 			for r, d in enumerate(data[self.sortCol]):
-				sortPairs.append( (int(d), int(data[0][r]), r) )			# Sort bib numbers as ints.
+				sortPairs.append( (int(d), int(data[iBib][r]), r) )			# Sort bib numbers as ints.
 				
 		elif colnames[self.sortCol] == _('In Race'):
 			for r, d in enumerate(data[self.sortCol]):
-				sortPairs.append( (-1 if d else 1, int(data[0][r]), r) )	# Sort 'In Race' to the front.
+				sortPairs.append( (-1 if d else 1, int(data[iBib][r]), r) )	# Sort 'In Race' to the front.
 				
 		elif colnames[self.sortCol].startswith('Tag'):
 			for r, d in enumerate(data[self.sortCol]):
-				sortPairs.append( (d.zfill(32), int(data[0][r]), r) )		# Sort tags with leading zeros.
+				sortPairs.append( (d.zfill(32), int(data[iBib][r]), r) )		# Sort tags with leading zeros.
+				
+		elif colnames[self.sortCol] == _('StartTime'):
+			for r, d in enumerate(data[self.sortCol]):
+				sortPairs.append( (Utils.StrToSeconds(d), int(data[iBib][r]), r) )	# Sort by start time.
 				
 		else:
 			for r, d in enumerate(data[self.sortCol]):						# Default sort as non-diacritic text.
-				sortPairs.append( (Utils.removeDiacritic(d.lower()) if d else '~~~~~~~~~~~~~~~~~~', int(data[0][r]), r) )
+				sortPairs.append( (Utils.removeDiacritic(d.lower()) if d else '~~~~~~~~~~~~~~~~~~', int(data[iBib][r]), r) )
 
 		sortPairs.sort()
 		for c, col in enumerate(data):
