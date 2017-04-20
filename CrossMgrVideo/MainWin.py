@@ -161,7 +161,23 @@ class ConfigDialog( wx.Dialog ):
 		
 	def onCancel( self, event ):
 		self.EndModal( wx.ID_CANCEL )
-	
+		
+class FocusDialog( wx.Dialog ):
+	def __init__( self, parent, id=wx.ID_ANY ):
+		wx.Dialog.__init__( self, parent, id, title=_('CrossMgr Video Focus') )
+		
+		sizer = wx.BoxSizer( wx.VERTICAL )
+		
+		self.image = ScaledImage( self )
+		sizer.Add( self.image, 1, wx.EXPAND )
+		self.SetSizerAndFit( sizer )
+		
+	def SetImage( self, image ):
+		if self.GetSize() != image.GetSize():
+			self.SetSize( image.GetSize() )
+		self.Centre()
+		return self.image.SetImage( image )
+
 class AutoWidthListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 	def __init__(self, parent, ID = wx.ID_ANY, pos=wx.DefaultPosition,
 				 size=wx.DefaultSize, style=0):
@@ -229,12 +245,16 @@ class MainWin( wx.Frame ):
 		self.test = wx.Button( self, label="Test" )
 		self.test.Bind( wx.EVT_BUTTON, self.onTest )
 		
+		self.focus = wx.Button( self, label="Focus..." )
+		self.focus.Bind( wx.EVT_BUTTON, self.onFocus )
+		
 		cameraDeviceSizer = wx.BoxSizer( wx.HORIZONTAL )
 		cameraDeviceSizer.Add( self.cameraDeviceLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 		cameraDeviceSizer.Add( self.cameraDevice, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
 		cameraDeviceSizer.Add( self.reset, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
 		cameraDeviceSizer.Add( self.manage, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
 		cameraDeviceSizer.Add( self.test, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
+		cameraDeviceSizer.Add( self.focus, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
 
 		#------------------------------------------------------------------------------
 		self.targetProcessingTimeLabel = wx.StaticText(self, label='Target Frames:')
@@ -290,6 +310,8 @@ class MainWin( wx.Frame ):
 		
 		self.primaryImage = ScaledImage( self, style=wx.BORDER_SUNKEN, size=(imageWidth, imageHeight) )
 		self.primaryImage.SetTestImage()
+		
+		self.focusDialog = FocusDialog( self )
 		
 		hsDate = wx.BoxSizer( wx.HORIZONTAL )
 		hsDate.Add( wx.StaticText(self, label='Show Triggers for'), flag=wx.ALIGN_CENTER_VERTICAL )
@@ -454,6 +476,9 @@ class MainWin( wx.Frame ):
 		wx.CallLater( 500, self.dbWriterQ.put, ('flush',) )
 		wx.CallLater( int(100+1000*int(tdCaptureBefore.total_seconds())), self.refreshTriggers )
 	
+	def onFocus( self, event ):
+		self.focusDialog.ShowModal()
+	
 	def onRightClick( self, event ):
 		if not self.triggerInfo:
 			return
@@ -556,6 +581,8 @@ class MainWin( wx.Frame ):
 		# Update the monitor screen.
 		if self.frameCount & 3 == 0:
 			wx.CallAfter( self.primaryImage.SetImage, image )
+		if self.focusDialog.IsShown():
+			wx.CallAfter( self.focusDialog.SetImage, image )
 		
 		# Record images if the timer is running.
 		if self.captureTimer.IsRunning():
