@@ -169,13 +169,16 @@ class FocusDialog( wx.Dialog ):
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		
 		self.image = ScaledImage( self )
+		self.image.Bind( wx.EVT_LEFT_UP, self.onOK )
 		sizer.Add( self.image, 1, wx.EXPAND )
 		self.SetSizerAndFit( sizer )
-		
+	
+	def onOK( self, event ):
+		self.EndModal( wx.ID_OK )		
+	
 	def SetImage( self, image ):
 		if self.GetSize() != image.GetSize():
 			self.SetSize( image.GetSize() )
-		self.Centre()
 		return self.image.SetImage( image )
 
 class AutoWidthListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
@@ -477,6 +480,7 @@ class MainWin( wx.Frame ):
 		wx.CallLater( int(100+1000*int(tdCaptureBefore.total_seconds())), self.refreshTriggers )
 	
 	def onFocus( self, event ):
+		self.focusDialog.Move((4,4))
 		self.focusDialog.ShowModal()
 	
 	def onRightClick( self, event ):
