@@ -4,6 +4,20 @@ import bisect
 import sys
 import math
 
+def makeColourGradient(frequency1, frequency2, frequency3,
+                        phase1, phase2, phase3,
+                        center = 128, width = 127, len = 50 ):
+	fp = [(frequency1,phase1), (frequency2,phase2), (frequency3,phase3)]	
+	grad = [wx.Colour(*[math.sin(f*i + p) * width + center for f, p in fp]) for i in xrange(len+1)]
+	return grad[1:]
+	
+def makePastelColours( len = 50 ):
+	return makeColourGradient(2.4,2.4,2.4,0,2,4,128,127,len+1)
+
+def lighterColour( c ):
+	rgb = c.Get( False )
+	return wx.Colour( *[int(v + (255 - v) * 0.6) for v in rgb] )
+
 def ShimazakiMethod( data, minN = 2, maxN = None ):
 	# From shimazaki@brain.riken.jp
 	dataMin = float(min(data))
@@ -48,17 +62,14 @@ class Histogram(wx.PyControl):
 		@param name: Window name.
 		"""
 
-		# Ok, let's see why we have used wx.PyControl instead of wx.Control.
-		# Basically, wx.PyControl is just like its wxWidgets counterparts
-		# except that it allows some of the more common C++ virtual method
-		# to be overridden in Python derived class. For StatusBar, we
-		# basically need to override DoGetBestSize and AcceptsFocusFromKeyboard
-		
 		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
 		self.SetBackgroundColour('white')
 
 		self.data = None
 		self.bins = None
+		self.binWidth = None
+		self.rectField = None
+		self.iSelect = None
 		
 		# Bind the events related to our control: first of all, we use a
 		# combination of wx.BufferedPaintDC and an empty handler for
@@ -66,6 +77,7 @@ class Histogram(wx.PyControl):
 		self.Bind(wx.EVT_PAINT, self.OnPaint)
 		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
 		self.Bind(wx.EVT_SIZE, self.OnSize)
+		self.Bind(wx.EVT_MOTION, self.OnMove )
 		
 	def DoGetBestSize(self):
 		return wx.Size(100, 50)
@@ -91,20 +103,48 @@ class Histogram(wx.PyControl):
 		colours then we want this control to inherit them.
 		"""
 		return True
+	
+	def getIData( self, x, y ):
+		if not self.bins or not self.rectField:
+			return None
+		boxWidth = self.rectField[2] / len(self.bins)
+		boxHeight = self.rectField[3] / self.barMax
+		b = int((x - self.rectField[0]) / boxWidth)
+		h = self.barMax - 1 - int((y - self.rectField[1]) / boxHeight)
+		return self.coords.get( (b, h), None )
 
-	def SetData( self, data ):
+	def OnMove( self, event ):
+		iSelectNew = self.getIData( event.GetX(), event.GetY() )
+		if iSelectNew != self.iSelect:
+			self.iSelect = iSelectNew
+			self.Refresh()
+		
+	def SetData( self, data, label, category ):
 		self.bins = None
-		self.data = None
+		self.iSelect = None
+		self.data = []
+		self.label = [unicode(lab) for lab in label]
+		self.category = [unicode(cat) for cat in category]
 		if data:
 			self.data = [float(x) for x in data]
 			self.dataMax = max(self.data)
 			self.dataMin = min(self.data)
-			self.bins = ShimazakiMethod( self.data )[0]
+			self.bins, _, _, self.binWidth = ShimazakiMethod( self.data )
 			self.barMax = max(self.bins)
+		while len(self.label) < len(self.data):
+			self.label.append( u'' )
+		while len(self.category) < len(self.data):
+			self.category.append( u'' )
+		self.categoryColor = makePastelColours( len(set(category)) )
+		self.categoryMap = {}
+		i = 0
+		for c in self.category:
+			if c not in self.categoryMap:
+				self.categoryMap[c] = i
+				i += 1
 		self.Refresh()
 		
 	def OnPaint(self, event):
-		#dc = wx.BufferedPaintDC(self)
 		dc = wx.PaintDC(self)
 		self.Draw(dc)
 
@@ -116,26 +156,27 @@ class Histogram(wx.PyControl):
 		size = self.GetClientSize()
 		width = size.width
 		height = size.height
+		tickBorder = 4
 		
 		backColour = self.GetBackgroundColour()
 		backBrush = wx.Brush(backColour, wx.SOLID)
 		dc.SetBackground(backBrush)
 		dc.Clear()
 		
-		if not self.bins or width < 50 or height < 50:
+		if not self.bins or width < 50 or height < 50 or self.dataMax == self.dataMin:
 			return
 
 		textWidth, textHeight = dc.GetTextExtent( u'00:00' if self.dataMax < 60*60 else u'00:00:00' )
 			
-		xLeft = dc.GetTextExtent( unicode(self.barMax) )[0] + 4
-		xRight = width - 8
+		xLeft = dc.GetTextExtent( unicode(self.barMax) )[0] + 4 + tickBorder
+		xRight = width - 8 - tickBorder
 		yBottom = height - textHeight - 8
 		yTop = textHeight + 8
 
-		# Draw the horizontal labels.
+		# Draw the horizontal label.
 		# Find some reasonable tickmarks for the x axis.
-		numLabels = (xRight - xLeft) / (textWidth * 1.5)
-		d = (self.dataMax - self.dataMin) / float(numLabels)
+		numlabel = (xRight - xLeft) / (textWidth * 1.5)
+		d = (self.dataMax - self.dataMin) / float(numlabel)
 		intervals = [1, 2, 5, 10, 15, 20, 30, 1*60, 2*60, 5*60, 10*60, 15*60, 20*60, 30*60, 1*60*60, 2*60*60, 4*60*60, 8*60*60, 12*60*60, 24*60*60]
 		d = intervals[bisect.bisect_left(intervals, d, 0, len(intervals)-1)]
 		dFactor = (xRight - xLeft) / (self.dataMax - self.dataMin)
@@ -149,53 +190,91 @@ class Histogram(wx.PyControl):
 			if x < xLeft:
 				continue
 			if t < 60*60:
-				s = '%d:%02d' % ((t / 60), t%60)
+				s = '{}:{:02d}'.format((t / 60), t%60)
 			else:
-				s = '%d:%02d:%02d' % (t/(60*60), (t / 60)%60, t%60)
+				s = '{}:{:02d}:{:02d}'.format(t/(60*60), (t / 60)%60, t%60)
 			w, h = dc.GetTextExtent(s)
 			dc.DrawText( s, x - w/2, yBottom + 4)
 			dc.DrawText( s, x - w/2, 0 + 4 )
 			dc.DrawLine( x, yBottom+2, x, yTop )
 		
 		# Find some reasonable tickmarks for the y axis.
-		numLabels = float(yBottom - yTop) / (textHeight * 3)
-		d = self.barMax / numLabels
+		numlabel = float(yBottom - yTop) / (textHeight * 3)
+		d = self.barMax / numlabel
 		intervals = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500]
 		d = intervals[bisect.bisect_left(intervals, d, 0, len(intervals)-1)]
 		dFactor = (yBottom - yTop) / float(self.barMax)
 		dc.SetPen(wx.Pen('light gray', 1))
 		for i in xrange(0, self.barMax+1, d):
-			s = '{}'.format(i)
+			s = u'{}'.format(i)
 			y = yBottom - int(i * dFactor)
 			w, h = dc.GetTextExtent(s)
-			dc.DrawText( s, xLeft - w - 2, y-textHeight/2 - 1)
-			dc.DrawLine( xLeft, y, xRight, y )
-		
-		# set up the bars
-		# thick lines with flat ends
-		thick = int((xRight - xLeft) / len(self.bins))
-		if thick == 0:
-			return
-		pen = wx.Pen('blue', thick)
-		#pen = wx.Pen('black', thick)
-		pen.SetCap(wx.CAP_BUTT)
-		dc.SetPen(pen)
-		
-		x = xLeft + thick/2
-		bFactor = float(yBottom - yTop) / float(self.barMax)
-		for b in self.bins:
-			y2 = yBottom - b * bFactor
-			dc.DrawLine(x, yBottom, x, y2)
-			x += thick
+			dc.DrawText( s, xLeft - w - 2 - tickBorder, y-textHeight/2 - 1)
+			dc.DrawLine( xLeft, y, xRight + tickBorder, y )
 
+		# Draw the data rectangles.
+		pen = wx.Pen('dark gray', 1)
+		dc.SetPen( pen )
+		
+		rSelect = None
+		self.rectField = (xLeft, yTop, float(xRight-xLeft), float(yBottom-yTop))
+		boxWidth = self.rectField[2] / len(self.bins)
+		boxHeight = self.rectField[3] / self.barMax
+		iBin = [0 for i in xrange(len(self.bins))]
+		xBin = [xLeft + int(i * boxWidth) for i in xrange(len(self.bins)+1)]
+		yHeight = [yBottom - int(i * boxHeight) for i in xrange(self.barMax+1)]
+		self.coords = {}
+		brushes = [wx.Brush(c) for c in self.categoryColor]
+		for i, (v, lab, cat) in enumerate(zip(self.data, self.label, self.category)):
+			dc.SetBrush( brushes[self.categoryMap[cat]] )
+			b = int((v-self.dataMin-0.000001) / self.binWidth)
+			self.coords[(b, iBin[b])] = i
+			iBin[b] += 1
+			r = wx.Rect( xBin[b], yHeight[iBin[b]], xBin[b+1] - xBin[b], yHeight[iBin[b]-1] - yHeight[iBin[b]] )
+			if i == self.iSelect:
+				rSelect = r
+				dc.SetPen( wx.Pen(wx.Colour(255,255,0), 1) )
+			dc.DrawRectangleRect( r )
+			if i == self.iSelect:
+				dc.SetPen( pen )
+		
 		# draw the baseline
 		dc.SetPen(wx.Pen('black', 2))
-		dc.DrawLine(xLeft, yBottom, xRight, yBottom)
+		dc.DrawLine(xLeft-tickBorder, yBottom, xRight+tickBorder, yBottom)
+		
+		# draw the hoverhelp
+		if rSelect:
+			t = self.data[self.iSelect]
+			if t < 60:
+				s = '{:.2f}'.format( t )
+			else:
+				t = int(t)
+				if t < 60*60:
+					s = '{}:{:02d}'.format((t/60), t%60)
+				else:
+					s = '{}:{:02d}:{:02d}'.format(t/(60*60), (t/60)%60, t%60)
+
+			label = self.label[self.iSelect]
+			category = self.category[self.iSelect]
+			
+			margin = 4
+			dc.SetBrush( wx.Brush(wx.Colour(255,255,153)) )
+			dc.SetPen( wx.Pen('black', 1) )
+			widthMax = max( dc.GetTextExtent(v)[0] for v in (s, label, category) ) + margin * 2
+			textWidth, textHeight = dc.GetTextExtent( s )
+			heightMax = textHeight * 3 + margin * 2
+			if rSelect.GetY() + heightMax > height:
+				rSelect.SetY( height - heightMax )
+			if rSelect.GetX() + rSelect.GetWidth() + widthMax > width:
+				rSelect.SetX( rSelect.GetX() - rSelect.GetWidth() - widthMax )
+			dc.DrawRectangle( rSelect.GetX() + rSelect.GetWidth(), rSelect.GetY(), widthMax, heightMax )
+			xLeft = rSelect.GetX() + rSelect.GetWidth() + margin
+			yCur = rSelect.GetY() + margin
+			for v in (s, label, category):
+				dc.DrawText( v, xLeft, yCur )
+				yCur += textHeight
 		
 	def OnEraseBackground(self, event):
-		# This is intentionally empty, because we are using the combination
-		# of wx.BufferedPaintDC + an empty OnEraseBackground event to
-		# reduce flicker
 		pass
 		
 if __name__ == '__main__':
@@ -211,6 +290,8 @@ if __name__ == '__main__':
 1.83 4.13 1.83 4.65 4.20 3.93 4.33 1.83 4.53 2.03 4.18 4.43
 4.07 4.13 3.95 4.10 2.72 4.58 1.90 4.50 1.95 4.83 4.12'''.split()]
 
+	data = sorted(60.0*60.0 + random.normalvariate(10.0*60.0, 5.0*60.0) for i in xrange(100))
+
 	optimal = ShimazakiMethod( data )
 	sys.stdout.write( '{}\n'.format(optimal) )
 	
@@ -225,12 +306,13 @@ if __name__ == '__main__':
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="Histogram", size=(600,400))
 	histogram = Histogram(mainWin)
+	mainWin.SetDoubleBuffered(True)
 
 	random.seed( 10 )
 	t = 55*60
 	tVar = t * 0.15
 	#histogram.SetData( [random.normalvariate(t, tVar) for x in xrange(90)] )
-	histogram.SetData( data )
+	histogram.SetData( data, [], [random.randint(0,5) for d in data] )
 
 	mainWin.Show()
 	app.MainLoop()

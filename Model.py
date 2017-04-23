@@ -1893,7 +1893,22 @@ class Race( object ):
 			activeCategories = [c for c in activeCategories if c not in toExclude]
 		
 		return activeCategories
+	
+	def getComponentCategories( self, category ):
+		if category.catType != Category.CatWave:
+			return []
 		
+		categories = self.getCategories( excludeCustom=True, startWaveOnly=False )
+		CatComponent = Category.CatComponent
+		components = []
+		for i in xrange(len(categories)):
+			if categories[i] == category:
+				for j in xrange(i+1, len(categories)):
+					if categories[j].catType == CatComponent:
+						components.append( categories[j] )
+				return components
+		return []
+	
 	def getStartOffsets( self ):
 		return sorted( set(c.getStartOffsetSecs() for c in self.getCategories(startWaveOnly=True)) )
 

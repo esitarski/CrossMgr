@@ -54,6 +54,7 @@ from Search				import SearchDialog
 from Situation			import Situation
 from LapCounter			import LapCounter
 from Primes				import Primes, GetGrid
+from HistogramPanel		import HistogramPanel
 from UnmatchedTagsGantt	import UnmatchedTagsGantt
 import FtpWriteFile
 from FtpWriteFile		import realTimeFtpPublish
@@ -634,6 +635,7 @@ class MainWin( wx.Frame ):
 			[ 'primes',			Primes,				_('Primes') ],
 			[ 'situation',		Situation,			_('Situation') ],
 			[ 'lapCounter',		LapCounter,			_('LapCounter') ],
+			[ 'histogram',		HistogramPanel,		_('Histogram') ],
 		]
 		self.attrWindowSet = {'results', 'history', 'gantt', 'raceAnimation', 'situation', 'lapCounter'}
 		
