@@ -43,28 +43,42 @@ def ShimazakiMethod( data, minN = 2, maxN = None ):
 			best = (bins, cost, N, width)
 
 	return best
+	
+def BinByInterval( data, width, minN = 2 ):
+	dataMin = float(min(data))
+	N = int((float(max(data)) - dataMin) / width) + 1
+	bins = [0 for i in xrange(N)]
+	for x in data:
+		try:
+			bins[int((x-dataMin) / width)] += 1
+		except IndexError:
+			bins[-1] += 1
+	return bins, 0.0, N, width
+
+def BinBySecond( data, minN = 2, maxN = None ):
+	return BinByInterval( data, 1.0, minN )
+
+def BinBy30Second( data, minN = 2, maxN = None ):
+	return BinByInterval( data, 30.0, minN )
+
+def BinByMinute( data, minN = 2, maxN = None ):
+	return BinByInterval( data, 60.0, minN )
+
+def BinBy5Minute( data, minN = 2, maxN = None ):
+	return BinByInterval( data, 60.0*5.0, minN )
 			
 class Histogram(wx.PyControl):
+	BinFunc = [ShimazakiMethod, BinBySecond, BinBy30Second, BinByMinute, BinBy5Minute]
+	BinOptionAuto, BinOptionBySecond, BinOptionBy30Second, BinOptionByMinute, BinOptionBy5Minute = list(xrange(len(BinFunc)))
+	
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
 				name="LineGraph"):
-		"""
-		Default class constructor.
-
-		@param parent: Parent window. Must not be None.
-		@param id: StatusBar identifier. A value of -1 indicates a default value.
-		@param pos: StatusBar position. If the position (-1, -1) is specified
-					then a default position is chosen.
-		@param size: StatusBar size. If the default size (-1, -1) is specified
-					then a default size is chosen.
-		@param style: not used
-		@param validator: Window validator.
-		@param name: Window name.
-		"""
-
+		
 		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
 		self.SetBackgroundColour('white')
 
+		self.binOption = self.BinOptionAuto
 		self.data = None
 		self.bins = None
 		self.binWidth = None
@@ -81,6 +95,15 @@ class Histogram(wx.PyControl):
 		
 	def DoGetBestSize(self):
 		return wx.Size(100, 50)
+		
+	def SetBinOption( self, option ):
+		if option < 0:
+			option = 0
+		if option >= len(self.BinFunc):
+			option = len(self.BinFunc) - 1
+		self.binOption = option
+		self.setBins()
+		self.Refresh()
 
 	def SetForegroundColour(self, colour):
 		wx.PyControl.SetForegroundColour(self, colour)
@@ -91,17 +114,9 @@ class Histogram(wx.PyControl):
 		self.Refresh()
 		
 	def GetDefaultAttributes(self):
-		"""
-		Overridden base class virtual.  By default we should use
-		the same font/colour attributes as the native wx.StaticText.
-		"""
 		return wx.StaticText.GetClassDefaultAttributes()
 
 	def ShouldInheritColours(self):
-		"""
-		Overridden base class virtual.  If the parent has non-default
-		colours then we want this control to inherit them.
-		"""
 		return True
 	
 	def getIData( self, x, y ):
@@ -118,8 +133,18 @@ class Histogram(wx.PyControl):
 		if iSelectNew != self.iSelect:
 			self.iSelect = iSelectNew
 			self.Refresh()
-		
-	def SetData( self, data, label, category ):
+	
+	def setBins( self ):
+		if not self.data:
+			return
+		self.dataMax = max(self.data)
+		self.dataMin = min(self.data)
+		self.bins, _, _, self.binWidth = self.BinFunc[self.binOption]( self.data )
+		self.barMax = max(self.bins)
+	
+	def SetData( self, data, label, category, binOption=BinOptionAuto ):
+		self.binWidth = 60.0
+		self.binOption = binOption
 		self.bins = None
 		self.iSelect = None
 		self.data = []
@@ -127,10 +152,7 @@ class Histogram(wx.PyControl):
 		self.category = [unicode(cat) for cat in category]
 		if data:
 			self.data = [float(x) for x in data]
-			self.dataMax = max(self.data)
-			self.dataMin = min(self.data)
-			self.bins, _, _, self.binWidth = ShimazakiMethod( self.data )
-			self.barMax = max(self.bins)
+			self.setBins()
 		while len(self.label) < len(self.data):
 			self.label.append( u'' )
 		while len(self.category) < len(self.data):
@@ -220,14 +242,15 @@ class Histogram(wx.PyControl):
 		self.rectField = (xLeft, yTop, float(xRight-xLeft), float(yBottom-yTop))
 		boxWidth = self.rectField[2] / len(self.bins)
 		boxHeight = self.rectField[3] / self.barMax
-		iBin = [0 for i in xrange(len(self.bins))]
+		lenBins = len(self.bins)
+		iBin = [0 for i in xrange(lenBins)]
 		xBin = [xLeft + int(i * boxWidth) for i in xrange(len(self.bins)+1)]
 		yHeight = [yBottom - int(i * boxHeight) for i in xrange(self.barMax+1)]
 		self.coords = {}
 		brushes = [wx.Brush(c) for c in self.categoryColor]
 		for i, (v, lab, cat) in enumerate(zip(self.data, self.label, self.category)):
 			dc.SetBrush( brushes[self.categoryMap[cat]] )
-			b = int((v-self.dataMin-0.000001) / self.binWidth)
+			b = min(lenBins-1, int((v-self.dataMin) / self.binWidth))
 			self.coords[(b, iBin[b])] = i
 			iBin[b] += 1
 			r = wx.Rect( xBin[b], yHeight[iBin[b]], xBin[b+1] - xBin[b], yHeight[iBin[b]-1] - yHeight[iBin[b]] )
@@ -258,18 +281,22 @@ class Histogram(wx.PyControl):
 			category = self.category[self.iSelect]
 			
 			margin = 4
-			dc.SetBrush( wx.Brush(wx.Colour(255,255,153)) )
-			dc.SetPen( wx.Pen('black', 1) )
 			widthMax = max( dc.GetTextExtent(v)[0] for v in (s, label, category) ) + margin * 2
 			textWidth, textHeight = dc.GetTextExtent( s )
 			heightMax = textHeight * 3 + margin * 2
-			if rSelect.GetY() + heightMax > height:
-				rSelect.SetY( height - heightMax )
-			if rSelect.GetX() + rSelect.GetWidth() + widthMax > width:
-				rSelect.SetX( rSelect.GetX() - rSelect.GetWidth() - widthMax )
-			dc.DrawRectangle( rSelect.GetX() + rSelect.GetWidth(), rSelect.GetY(), widthMax, heightMax )
-			xLeft = rSelect.GetX() + rSelect.GetWidth() + margin
-			yCur = rSelect.GetY() + margin
+			
+			rHover = wx.Rect( rSelect.GetX() + rSelect.GetWidth() // 2 - widthMax, rSelect.GetY(), widthMax, heightMax )
+			if rHover.GetLeft() < 0:
+				rHover.SetX( 0 )
+			if rHover.GetBottom() > height:
+				rHover.SetY( height - rHover.GetHeight() )
+			
+			dc.SetPen( wx.Pen('black', 1) )
+			dc.SetBrush( wx.Brush(wx.Colour(255,255,153)) )
+			dc.DrawRectangleRect( rHover )
+			
+			xLeft = rHover.GetLeft() + margin
+			yCur = rHover.GetY() + margin
 			for v in (s, label, category):
 				dc.DrawText( v, xLeft, yCur )
 				yCur += textHeight
