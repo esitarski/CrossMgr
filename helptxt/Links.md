@@ -31,6 +31,7 @@
 [Facebook]:			Facebook.html
 [Para-Cycling]:		Para-Cycling.html
 [Primes]:			Primes.html
+[Histogram]:		Histogram.html
 [FAQ]:				FAQ.html
 
 [External Excel]:	Menu-DataMgmt.html#link-to-external-excel-data
