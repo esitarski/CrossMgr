@@ -61,7 +61,7 @@ def PrintPhoto( parent, image ):
 
 	printout.Destroy()	
 
-
+photoHeaderState = True
 class PhotoDialog( wx.Dialog ):
 	def __init__( self, parent, jpg, triggerInfo, tsJpg, fps=25, id=wx.ID_ANY, size=wx.DefaultSize,
 		style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.MAXIMIZE_BOX ):
@@ -79,14 +79,19 @@ class PhotoDialog( wx.Dialog ):
 		
 		btnsizer = wx.BoxSizer( wx.HORIZONTAL )
         
+		self.photoHeader = wx.CheckBox(self, label='Header')
+		self.photoHeader.SetValue( photoHeaderState )
+		self.photoHeader.Bind( wx.EVT_CHECKBOX, self.onPhotoHeader )
+		btnsizer.Add(self.photoHeader, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4)
+
 		btn = wx.Button(self, wx.ID_PRINT)
 		btn.SetDefault()
 		btn.Bind( wx.EVT_BUTTON, self.onPrint )
-		btnsizer.Add(btn)
-
+		btnsizer.Add(btn, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4)
+		
 		btn = wx.Button(self, label='Copy to Clipboard')
 		btn.Bind( wx.EVT_BUTTON, self.onCopyToClipboard )
-		btnsizer.Add(btn, flag=wx.LEFT, border=4)
+		btnsizer.Add(btn, flag=wx.LEFT, border=8)
 
 		btn = wx.Button(self, label='Save as PNG...')
 		btn.Bind( wx.EVT_BUTTON, self.onSavePng )
@@ -109,7 +114,15 @@ class PhotoDialog( wx.Dialog ):
 		self.SetSizer(vs)
 		vs.Fit(self)
 	
+	def onPhotoHeader( self, event ):
+		global photoHeaderState
+		photoHeaderState = self.photoHeader.GetValue()
+		self.scaledImage.SetImage(self.getPhoto())
+	
 	def addPhotoHeaderToImage( self, image ):
+		if not photoHeaderState:
+			return image
+		
 		bitmap = wx.BitmapFromImage( image )
 		AddPhotoHeader( bitmap,
 			ts=self.triggerInfo['ts'],
