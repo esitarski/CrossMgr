@@ -123,8 +123,8 @@ class PhotoDialog( wx.Dialog ):
 		if not photoHeaderState:
 			return image
 		
-		bitmap = wx.BitmapFromImage( image )
-		AddPhotoHeader( bitmap,
+		return AddPhotoHeader(
+			wx.BitmapFromImage( image ),
 			ts=self.triggerInfo['ts'],
 			bib=self.triggerInfo['bib'],
 			firstName=self.triggerInfo['firstName'],
@@ -132,7 +132,6 @@ class PhotoDialog( wx.Dialog ):
 			team=self.triggerInfo['team'],
 			raceName=self.triggerInfo['raceName'],
 		)
-		return wx.ImageFromBitmap( bitmap )
 		
 	def getPhoto( self ):
 		if self.jpg is None:
@@ -169,14 +168,13 @@ class PhotoDialog( wx.Dialog ):
 	def onSaveMPeg( self, event ):
 		fd = wx.FileDialog( self, message='Save MPeg', wildcard='*.mpeg', style=wx.FD_SAVE )
 		if fd.ShowModal() == wx.ID_OK:
-			image = wx.ImageFromStream( StringIO.StringIO(self.tsJpg[0][1]), wx.BITMAP_TYPE_JPEG )
 			try:
 				command = [
 					Utils.getFFMegExe(),
 					'-y', # (optional) overwrite output file if it exists
 					'-f', 'rawvideo',
 					'-vcodec','rawvideo',
-					'-s', '{}x{}'.format(*image.GetSize()), # size of one frame
+					'-s', '{}x{}'.format(*self.scaledImage.GetImage().GetSize()), # size of one frame
 					'-pix_fmt', 'rgb24',
 					'-r', '{}'.format(self.fps), # frames per second
 					'-i', '-', # The imput comes from a pipe
@@ -196,14 +194,13 @@ class PhotoDialog( wx.Dialog ):
 	def onSaveGif( self, event ):
 		fd = wx.FileDialog( self, message='Save Animaged Gif', wildcard='*.gif', style=wx.FD_SAVE )
 		if fd.ShowModal() == wx.ID_OK:
-			image = wx.ImageFromStream( StringIO.StringIO(self.tsJpg[0][1]), wx.BITMAP_TYPE_JPEG )
 			try:
 				command = [
 					Utils.getFFMegExe(),
 					'-y', # (optional) overwrite output file if it exists
 					'-f', 'rawvideo',
 					'-vcodec','rawvideo',
-					'-s', '{}x{}'.format(*image.GetSize()), # size of one frame
+					'-s', '{}x{}'.format(*self.scaledImage.GetImage().GetSize()), # size of one frame
 					'-pix_fmt', 'rgb24',
 					'-r', '{}'.format(self.fps), # frames per second
 					'-i', '-', # The imput comes from a pipe

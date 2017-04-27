@@ -85,6 +85,8 @@ def setDrawResources( dc, w, h ):
 	drawResources.fadeDark = wx.Colour(114+80,119+80,168+80)
 	drawResources.fadeLight = LightColour( drawResources.fadeDark, 50 )
 	drawResources.borderColour = wx.Colour( 71+50, 75+50, 122+50 )
+	
+	drawResources.labelHeight = int(drawResources.bibHeight * 1.25 + 0.5) + int(drawResources.fontHeight * 1.25 + 0.5)
 
 def AddPhotoHeader( bitmap, bib=None, ts=None, raceSeconds=None, firstName=u'', lastName=u'', team=u'', raceName=u'' ):
 	global drawResources
@@ -95,6 +97,14 @@ def AddPhotoHeader( bitmap, bib=None, ts=None, raceSeconds=None, firstName=u'', 
 	
 	if drawResources is None or drawResources.w != w or drawResources.h != h:
 		setDrawResources( dc, w, h )
+		
+	bitmap_new = wx.EmptyBitmap(w, h + drawResources.labelHeight)
+	dcMemoryNew = wx.MemoryDC( bitmap_new )
+	dcMemoryNew.Blit( 0, drawResources.labelHeight, w, h, dcMemory, 0, 0 )
+	h += drawResources.labelHeight
+	
+	dc = wx.GCDC( dcMemoryNew )
+	bitmap = bitmap_new
 	
 	bibTxt = u'{}'.format(bib) if bib else u''
 	if ts and raceSeconds:
