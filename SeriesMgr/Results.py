@@ -690,20 +690,20 @@ class Results(wx.Panel):
 		self.postPublishExplain = wx.StaticText( self, label='Command to run after publish.  Use %* for all filenames (eg. "copy %* dirname")' )
 
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.categoryLabel, 0, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border = 4 )
-		hs.Add( self.categoryChoice, 0, flag=wx.ALL, border = 4 )
-		hs.Add( self.statsLabel, 0, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT|wx.RIGHT, border = 4 )
+		hs.Add( self.categoryLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border = 4 )
+		hs.Add( self.categoryChoice, flag=wx.ALL, border = 4 )
+		hs.Add( self.statsLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT|wx.RIGHT, border = 4 )
 		hs.AddStretchSpacer()
-		hs.Add( self.refreshButton, 0, flag=wx.ALL, border = 4 )
+		hs.Add( self.refreshButton, flag=wx.ALL, border = 4 )
 		hs.AddSpacer( 52 )
-		hs.Add( self.publishToHtml, 0, flag=wx.ALL, border = 4 )
-		hs.Add( self.publishToFtp, 0, flag=wx.ALL, border = 4 )
-		hs.Add( self.publishToExcel, 0, flag=wx.ALL, border = 4 )
+		hs.Add( self.publishToHtml, flag=wx.ALL, border = 4 )
+		hs.Add( self.publishToFtp, flag=wx.ALL, border = 4 )
+		hs.Add( self.publishToExcel, flag=wx.ALL, border = 4 )
 		
 		hs2 = wx.BoxSizer( wx.HORIZONTAL )
-		hs2.Add( self.postPublishCmdLabel, 0, flag=wx.ALIGN_CENTRE_VERTICAL )
-		hs2.Add( self.postPublishCmd, 0, flag=wx.ALIGN_CENTRE_VERTICAL )
-		hs2.Add( self.postPublishExplain, 0, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=4 )
+		hs2.Add( self.postPublishCmdLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
+		hs2.Add( self.postPublishCmd, flag=wx.ALIGN_CENTRE_VERTICAL )
+		hs2.Add( self.postPublishExplain, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=4 )
 		
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.DisableDragRowSize()
@@ -717,10 +717,10 @@ class Results(wx.Panel):
 
 		self.setColNames(getHeaderNames())
 
-		sizer = wx.BoxSizer(wx.VERTICAL)
+		sizer = wx.BoxSizer( wx.VERTICAL )
 		
-		sizer.Add(hs, 0, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border = 6 )
-		sizer.Add(hs2, 0, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT, border = 6 )
+		sizer.Add(hs, flag=wx.ALIGN_CENTRE_VERTICAL|wx.TOP|wx.LEFT|wx.RIGHT, border = 6 )
+		sizer.Add(hs2, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT, border = 6 )
 		sizer.Add(self.grid, 1, flag=wx.EXPAND|wx.ALL, border = 6)
 		self.SetSizer(sizer)
 	
