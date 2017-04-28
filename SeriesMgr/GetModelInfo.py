@@ -146,10 +146,10 @@ def ExtractRaceResultsExcel( raceInSeries ):
 	excel = GetExcelReader( raceInSeries.fileName )
 	raceName = os.path.splitext(os.path.basename(raceInSeries.fileName))[0]
 	raceResults = []
-	posHeader = set([u'pos', u'pos.', u'rank'])
+	posHeader = set([u'pos', u'pos.', u'rank', 'rider place'])
 	for sheetName in excel.sheet_names():
 		fm = None
-		categoryName = sheetName.strip()
+		categoryNameSheet = sheetName.strip()
 		for row in excel.iter_list(sheetName):
 			if fm:
 				f = fm.finder( row )
@@ -174,7 +174,7 @@ def ExtractRaceResultsExcel( raceInSeries ):
 					break
 				
 				if info['categoryName'] is None:
-					info['categoryName'] = categoryName
+					info['categoryName'] = categoryNameSheet
 				info['categoryName'] = unicode(info['categoryName']).strip()
 				
 				try:
@@ -215,7 +215,7 @@ def ExtractRaceResultsExcel( raceInSeries ):
 				
 				raceResults.append( RaceResult(**info) )
 				
-			elif unicode(row[0]).strip().lower() in posHeader:
+			elif any( unicode(r).strip().lower() in posHeader for r in row ):
 				fm = standard_field_map()
 				fm.set_headers( row )
 
