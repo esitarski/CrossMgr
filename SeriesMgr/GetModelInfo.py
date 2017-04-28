@@ -18,7 +18,7 @@ import Utils
 from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, HasExcelLink
 from GetResults			import GetResults, GetCategoryDetails
 from Excel				import GetExcelReader
-from FieldMap			import standard_field_map
+from FieldMap			import standard_field_map, standard_field_aliases
 
 def formatTime( secs, highPrecision = False ):
 	if secs is None:
@@ -146,7 +146,12 @@ def ExtractRaceResultsExcel( raceInSeries ):
 	excel = GetExcelReader( raceInSeries.fileName )
 	raceName = os.path.splitext(os.path.basename(raceInSeries.fileName))[0]
 	raceResults = []
-	posHeader = set([u'pos', u'pos.', u'rank', 'rider place'])
+	
+	# Search for a "Pos" field to indicate the start of the data.
+	for sfa in standard_field_aliases:
+		if sfa[0] == 'pos':
+			posHeader = set( a.lower() for a in sfa[1] )
+			break
 	for sheetName in excel.sheet_names():
 		fm = None
 		categoryNameSheet = sheetName.strip()
