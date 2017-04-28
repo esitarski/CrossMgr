@@ -389,7 +389,12 @@ class CrossMgrPrintoutPDF( CrossMgrPrintout ):
 	def OnPrintPage( self, page ):
 		exportGrid = self.prepareGrid( page )
 
-		category = self.pageInfo[page][0]
+		try:
+			category = self.pageInfo[page][0]
+		except Exception as e:
+			# Handle case of no data.
+			return True
+		
 		pageNumber = self.pageInfo[page][3]
 		pageTotal = self.pageInfo[page][4]
 		
@@ -423,7 +428,8 @@ class CrossMgrPodiumPrintout( CrossMgrPrintout ):
 	def __init__(self, categories = None, positions = 5):
 		CrossMgrPrintout.__init__( self, categories )
 		self.positions = positions
-
+		self.pageInfo = {}
+	
 	def GetPageInfo(self):
 		self.pageInfo = {}
 		numCategories = len(self.categories)
