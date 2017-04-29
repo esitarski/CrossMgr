@@ -690,9 +690,9 @@ class Results(wx.Panel):
 		self.postPublishExplain = wx.StaticText( self, label='Command to run after publish.  Use %* for all filenames (eg. "copy %* dirname")' )
 
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.categoryLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border = 4 )
+		hs.Add( self.categoryLabel, 0, flag=wx.EXPAND|wx.ALIGN_CENTRE_VERTICAL|wx.LEFT|wx.TOP|wx.BOTTOM, border = 4 )
 		hs.Add( self.categoryChoice, flag=wx.ALL, border = 4 )
-		hs.Add( self.statsLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT|wx.RIGHT, border = 4 )
+		hs.Add( self.statsLabel, 0, flag=wx.EXPAND|wx.ALIGN_CENTRE_VERTICAL|wx.ALL, border = 4 )
 		hs.AddStretchSpacer()
 		hs.Add( self.refreshButton, flag=wx.ALL, border = 4 )
 		hs.AddSpacer( 52 )
