@@ -672,7 +672,7 @@ class Results(wx.Panel):
 		wx.Panel.__init__(self, parent)
  
 		self.categoryLabel = wx.StaticText( self, label='Category:' )
-		self.categoryChoice = wx.Choice( self, wx.ID_ANY, choices = ['No Categories'] )
+		self.categoryChoice = wx.Choice( self, choices = ['No Categories'] )
 		self.categoryChoice.SetSelection( 0 )
 		self.categoryChoice.Bind( wx.EVT_CHOICE, self.onCategoryChoice )
 		self.statsLabel = wx.StaticText( self, label='   /   ' )
@@ -690,15 +690,18 @@ class Results(wx.Panel):
 		self.postPublishExplain = wx.StaticText( self, label='Command to run after publish.  Use %* for all filenames (eg. "copy %* dirname")' )
 
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.categoryLabel, 0, flag=wx.EXPAND|wx.ALIGN_CENTRE_VERTICAL|wx.LEFT|wx.TOP|wx.BOTTOM, border = 4 )
-		hs.Add( self.categoryChoice, flag=wx.ALL, border = 4 )
-		hs.Add( self.statsLabel, 0, flag=wx.EXPAND|wx.ALIGN_CENTRE_VERTICAL|wx.ALL, border = 4 )
+		hs.Add( self.categoryLabel, flag=wx.TOP, border=4 )
+		hs.Add( self.categoryChoice )
+		hs.AddSpacer( 4 )
+		hs.Add( self.statsLabel, flag=wx.TOP|wx.LEFT|wx.RIGHT, border=4 )
 		hs.AddStretchSpacer()
-		hs.Add( self.refreshButton, flag=wx.ALL, border = 4 )
+		hs.Add( self.refreshButton )
 		hs.AddSpacer( 52 )
-		hs.Add( self.publishToHtml, flag=wx.ALL, border = 4 )
-		hs.Add( self.publishToFtp, flag=wx.ALL, border = 4 )
-		hs.Add( self.publishToExcel, flag=wx.ALL, border = 4 )
+		hs.Add( self.publishToHtml )
+		hs.AddSpacer( 4 )
+		hs.Add( self.publishToFtp )
+		hs.AddSpacer( 4 )
+		hs.Add( self.publishToExcel )
 		
 		hs2 = wx.BoxSizer( wx.HORIZONTAL )
 		hs2.Add( self.postPublishCmdLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
@@ -719,7 +722,7 @@ class Results(wx.Panel):
 
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		
-		sizer.Add(hs, flag=wx.ALIGN_CENTRE_VERTICAL|wx.TOP|wx.LEFT|wx.RIGHT, border = 6 )
+		sizer.Add(hs, flag=wx.TOP|wx.LEFT|wx.RIGHT, border = 6 )
 		sizer.Add(hs2, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT, border = 6 )
 		sizer.Add(self.grid, 1, flag=wx.EXPAND|wx.ALL, border = 6)
 		self.SetSizer(sizer)
