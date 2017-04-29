@@ -696,12 +696,9 @@ class Results(wx.Panel):
 		hs.Add( self.statsLabel, flag=wx.TOP|wx.LEFT|wx.RIGHT, border=4 )
 		hs.AddStretchSpacer()
 		hs.Add( self.refreshButton )
-		hs.AddSpacer( 52 )
-		hs.Add( self.publishToHtml )
-		hs.AddSpacer( 4 )
-		hs.Add( self.publishToFtp )
-		hs.AddSpacer( 4 )
-		hs.Add( self.publishToExcel )
+		hs.Add( self.publishToHtml, flag=wx.LEFT, border=48 )
+		hs.Add( self.publishToFtp, flag=wx.LEFT, border=4 )
+		hs.Add( self.publishToExcel, flag=wx.LEFT, border=4 )
 		
 		hs2 = wx.BoxSizer( wx.HORIZONTAL )
 		hs2.Add( self.postPublishCmdLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
@@ -722,9 +719,9 @@ class Results(wx.Panel):
 
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		
-		sizer.Add(hs, flag=wx.TOP|wx.LEFT|wx.RIGHT, border = 6 )
-		sizer.Add(hs2, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT, border = 6 )
-		sizer.Add(self.grid, 1, flag=wx.EXPAND|wx.ALL, border = 6)
+		sizer.Add(hs, flag=wx.TOP|wx.LEFT|wx.RIGHT, border = 4 )
+		sizer.Add(hs2, flag=wx.ALIGN_RIGHT|wx.TOP|wx.LEFT|wx.RIGHT, border = 4 )
+		sizer.Add(self.grid, 1, flag=wx.EXPAND|wx.TOP|wx.ALL, border = 4)
 		self.SetSizer(sizer)
 	
 	def onRefresh( self, event ):
