@@ -6,7 +6,6 @@ from FixCategories import FixCategories
 import GanttChartPanel
 from GetResults import GetResults, RidersCanSwap, RiderResult
 from Undo import undo
-from PhotoFinish import HasPhotoCache, updatePhotoFNameCache
 import EditEntry
 
 def UpdateSetNum( num ):
@@ -541,7 +540,6 @@ class Gantt( wx.Panel ):
 								status = status,
 		)
 		self.updateStats( results )
-		wx.CallAfter( updatePhotoFNameCache )
 	
 	def commit( self ):
 		wx.CallAfter( Utils.refreshForecastHistory )

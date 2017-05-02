@@ -7,6 +7,7 @@ import copy
 import Utils
 import itertools
 import operator
+from datetime import timedelta
 
 from ReadSignOnSheet import IgnoreFields, NumericFields, SyncExcelLink
 statusSortSeq = Model.Rider.statusSortSeq
@@ -692,6 +693,48 @@ def GetLeaderFinishTime():
 		return results[0].lastTime
 	else:
 		return 0.0
+
+def GetETA( category ):
+	race = Model.race
+	if not race or not race.isRunning():
+		return None
+	results = GetResultsWithData( category )
+	if not results:
+		return None
+	rr = results[0]
+	if rr.status != Model.Rider.Finisher or not rr.raceTimes:
+		return None
+	offsetSecs = category.getStartOffsetSecs() if category else 0.0
+	tSearch = race.curRaceTime() - offsetSecs
+	if tSearch > rr.raceTimes[-1]:
+		return None
+		
+	lap = bisect_left( rr.raceTimes, tSearch )
+	try:
+		return race.startTime + timedelta(seconds=rr.raceTimes[lap] + offsetSecs)
+	except IndexError:
+		return None
+
+def GetLeaderTime( category ):
+	race = Model.race
+	if not race or not race.isRunning():
+		return None
+	results = GetResultsWithData( category )
+	if not results:
+		return None
+	rr = results[0]
+	if rr.status != Model.Rider.Finisher or not rr.raceTimes:
+		return None
+	offsetSecs = category.getStartOffsetSecs() if category else 0.0
+	tSearch = race.curRaceTime() - offsetSecs
+	if tSearch > rr.raceTimes[-1]:
+		return None
+		
+	lap = bisect_left( rr.raceTimes, tSearch )
+	try:
+		return offsetSecs + rr.raceTimes[lap-1]
+	except IndexError:
+		return None
 
 def UnstartedRaceDataProlog( getExternalData = True ):
 	tempNums = set()
