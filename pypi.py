@@ -66,7 +66,7 @@ CrossMgr
 Free timing and results software for to get results for Cyclo-Cross, MTB, Time Trials, Criteriums and Road races
 (donations recommended for paid events).
 
-CrossMgr quickly produces professional looking results including rider lap times.
+CrossMgr quickly produces professional results including rider lap times.
 It reads rider data from Excel, and formats result in Excel format or Html for
 publishing to the web.
 CrossMgr was created by a cycling official, and has extensive features to
@@ -118,6 +118,7 @@ include doc *
 include CrossMgrHtmldoc *.html
 include CrossMgrHtml *.html
 include CrossMgrImages *
+include CrossMgrImages/flags *
 '''
 
 writeToFile( manifest, 'MANIFEST.in' )
@@ -126,7 +127,10 @@ writeToFile( manifest, 'MANIFEST.in' )
 
 srcDir = os.path.join( pypiDir, 'CrossMgr' )
 os.mkdir( srcDir )
-for dir in ['CrossMgrImages', 'CrossMgrHtml', 'CrossMgrLocale', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex']:
+for dir in (
+		'CrossMgrImages',
+		'CrossMgrHtml', 'CrossMgrLocale', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex',
+	):
 	print 'copying', dir, '...'
 	shutil.copytree( dir, os.path.join(pypiDir,dir) )
 
@@ -138,7 +142,10 @@ for f in ['MacInstallReadme.txt', 'LinuxInstallReadme.txt', 'CrossMgrTutorial.do
 	
 print 'Collecting data_files.'
 data_files = []
-for dir in ['CrossMgrImages', 'CrossMgrHtml', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex', 'CrossMgrDoc']:
+for dir in (
+		'CrossMgrImages', os.path.join('CrossMgrImages','flags'),
+		'CrossMgrHtml', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex', 'CrossMgrDoc',
+	):
 	dataDir = os.path.join(pypiDir, dir)
 	data_files.append( (dir, [os.path.join(dir,f) for f in os.listdir(dataDir)]) )
 
@@ -202,9 +209,9 @@ setup = {
 		'beautifulsoup4 >= 4.0.0',
 		'fpdf >= 1.7',
 		'tornado >= 4.3',
-		'PIL >= 1.1.6',
 		'ftputil >= 3.3',
 		'tornado >= 4.4',
+		'requests >= 2.13.0',
 		# 'wxPython >= 3.0.0',
 	],
 }
@@ -213,7 +220,7 @@ with open(os.path.join(pypiDir,'setup.py'), 'wb') as f:
 	f.write( 'from distutils.core import setup\n' )
 	f.write( 'setup(\n' )
 	for key, value in setup.iteritems():
-		f.write( '    %s=%s,\n' % (key, repr(value)) )
+		f.write( '    {}={},\n'.format(key, repr(value)) )
 	f.write( "    long_description=open('README.txt').read(),\n" )
 	f.write( ')\n' )
 
@@ -223,12 +230,12 @@ subprocess.call( ['python', 'setup.py', 'sdist'] )
 
 os.chdir( 'dist' )
 try:
-	shutil.move( 'CrossMgr-%s.zip' % version, 'PIP-Install-CrossMgr-%s.zip' % version )
+	shutil.move( 'CrossMgr-{}.zip'.format(version), 'PIP-Install-CrossMgr-{}.zip'.format(version) )
 except:
-	pipName = 'PIP-Install-CrossMgr-%s.tar.gz' % version
+	pipName = 'PIP-Install-CrossMgr-{}.tar.gz'.format(version)
 	installDir = os.path.join( os.path.expanduser("~"), 'Google Drive', 'Downloads', 'Mac', 'CrossMgr')
     
-	shutil.move( 'CrossMgr-%s.tar.gz' % version, pipName )
+	shutil.move( 'CrossMgr-{}.tar.gz'.format(version), pipName )
 	shutil.copyfile( pipName, os.path.join( installDir, pipName) )
 	print
 	print '********************'

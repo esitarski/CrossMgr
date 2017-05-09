@@ -1,21 +1,27 @@
 import wx
+from math import modf
 import datetime
+
+now = datetime.datetime.now
+
+def formatTime( s ):
+	if s < 0:
+		sgn = '-'
+		s = -s
+	else:
+		sgn = ''
+		
+	s = int(s)
+	hours, minutes, seconds = s//(60*60), (s//60)%60, s%60
+	if hours:
+		return '{}{:d}:{:02d}:{:02d}'.format( sgn, hours, minutes, seconds )
+	else:
+		return '{}{:d}:{:02d}'.format( sgn, minutes, seconds )
 
 class ClockDigital(wx.PyControl):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
-				name="ClockDigital", checkFunc=None ):
-		"""
-		Default class constructor.
-
-		@param parent: Parent window. Must not be None.
-		@param id: StatusBar identifier. A value of -1 indicates a default value.
-		@param pos: StatusBar position. If the position (-1, -1) is specified
-					then a default position is chosen.
-		@param style: not used
-		@param validator: Window validator.
-		@param name: Window name.
-		"""
+				name="ClockDigital", refTime=None, countDown=False, checkFunc=None ):
 
 		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
 		
@@ -32,7 +38,9 @@ class ClockDigital(wx.PyControl):
 		self.initialSize = size
 		
 		self.checkFunc = checkFunc if checkFunc else lambda: True
-		self.tCur = datetime.datetime.now()
+		self.refTime = refTime
+		self.countDown = countDown
+		self.tCur = now()
 		wx.CallAfter( self.onTimer )
 	
 	def DoGetBestSize(self):
@@ -54,10 +62,18 @@ class ClockDigital(wx.PyControl):
 
 	def onTimer( self, event=None):
 		if not self.timer.IsRunning():
-			self.tCur = datetime.datetime.now()
+			self.tCur = now()
 			self.Refresh()
 			if self.checkFunc():
-				self.timer.Start( 1001 - datetime.datetime.now().microsecond//1000, True )
+				if self.refTime:
+					s = (now() - self.refTime).total_seconds()
+					if s <= 0.0:
+						millis = int(modf(-s)[0] * 1000.0)
+					else:
+						millis = 1001 - int(modf(s)[0] * 1000.0)
+					self.timer.Start( millis, True )
+				else:
+					self.timer.Start( 1001 - now().microsecond//1000, True )
 	
 	def Start( self ):
 		self.onTimer()
@@ -82,7 +98,14 @@ class ClockDigital(wx.PyControl):
 		width = size.width
 		height = size.height
 		
-		tStr = t.strftime('%H:%M:%S')
+		if self.refTime:
+			if self.countDown:
+				tStr = formatTime( (self.refTime-t).total_seconds() )
+			else:
+				tStr = formatTime( (t-self.refTime).total_seconds() )
+		else:
+			tStr = t.strftime('%H:%M:%S')
+		
 		fontSize = int(height * workRatio)
 		font = wx.FontFromPixelSize(
 			(0,fontSize),
@@ -113,6 +136,7 @@ class ClockDigital(wx.PyControl):
 if __name__ == '__main__':
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="ClockDigital", size=(600,400))
-	ClockDigital = ClockDigital(mainWin)
+	ClockDigital = ClockDigital(mainWin, refTime=now()+datetime.timedelta(seconds=5), countDown=False)
+	#ClockDigital = ClockDigital(mainWin)
 	mainWin.Show()
 	app.MainLoop()
