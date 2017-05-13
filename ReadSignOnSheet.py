@@ -193,7 +193,7 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		vbs = wx.BoxSizer( wx.VERTICAL )
 		vbs.Add( wx.StaticText(self, label = _('Specify the spreadsheet columns corresponding to CrossMgr fields.')),
 				flag=wx.ALL, border = border )
-		vbs.Add( wx.StaticText(self, label = _('Set missing fields to blank.')),
+		vbs.Add( wx.StaticText(self, label = _('Set ignored or missing fields to blank.')),
 				flag=wx.ALL, border = border )
 		vbs.AddSpacer( 8 )
 				
