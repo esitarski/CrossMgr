@@ -103,35 +103,22 @@ def GpxHasTimes( fname ):
 		tLast = t
 	return True
 
-def ParseGpxFile( fname, useTimes = False, isPointToPoint = False ):
-	points = GpxParse( fname )
-	
+def LatLonElesToGpsPoints( latLonEles, useTimes = False, isPointToPoint = False ):
+	hasTimes = useTimes
 	latMin, lonMin = 1000.0, 1000.0
-	latLonEles = []
-	
-	hasTimes = True
-	for p in points:
-		lat, lon, ele, t = p['lat'], p['lon'], p.get('ele',0.0), p.get('time', None)
-		
-		latMin = min( latMin, lat )
-		lonMin = min( lonMin, lon )
-
-		# Skip consecutive duplicate points.
-		try:
-			if latLonEles[-1].lat == lat and latLonEles[-1].lon == lon:
-				continue
-		except IndexError:
-			pass
-		
-		latLonEles.append( LatLonEle(lat, lon, ele, t) )
-		if t is None:
+	for latLonEle in latLonEles:
+		if latLonEle.t is None:
 			hasTimes = False
-		
+		if latLonEle.lat < latMin:
+			latMin = latLonEle.lat
+		if latLonEle.lon < lonMin:
+			lonMin = latLonEle.lon
+
 	gpsPoints = []
 	dCum = 0.0
 	for i in xrange(len(latLonEles) - (1 if isPointToPoint else 0)):
 		p, pNext = latLonEles[i], latLonEles[(i+1) % len(latLonEles)]
-		if hasTimes and useTimes:
+		if hasTimes:
 			if pNext.t > p.t:
 				gad = (pNext.t - p.t).total_seconds()
 			else:
@@ -153,6 +140,25 @@ def ParseGpxFile( fname, useTimes = False, isPointToPoint = False ):
 			dCum += gad
 	
 	return gpsPoints
+	
+def ParseGpxFile( fname, useTimes = False, isPointToPoint = False ):
+	points = GpxParse( fname )
+	
+	latLonEles = []
+	
+	for p in points:
+		lat, lon, ele, t = p['lat'], p['lon'], p.get('ele',0.0), p.get('time', None)
+		
+		# Skip consecutive duplicate points.
+		try:
+			if latLonEles[-1].lat == lat and latLonEles[-1].lon == lon:
+				continue
+		except IndexError:
+			pass
+		
+		latLonEles.append( LatLonEle(lat, lon, ele, t) )
+	
+	return latLonEles
 
 def createAppendChild( doc, parent, name, textAttr={} ):
 	child = doc.createElement( name )
@@ -236,6 +242,8 @@ class GeoTrack( object ):
 	
 	def setPoints( self, gpsPoints, isPointToPoint = False ):
 		self.gpsPoints = gpsPoints
+		self.isPointToPoint = isPointToPoint
+
 		self.xMax = max( p.x for p in self.gpsPoints )
 		self.yMax = max( p.y for p in self.gpsPoints )
 		dCum = 0.0
@@ -248,7 +256,9 @@ class GeoTrack( object ):
 	
 	def read( self, fname, useTimes = False, isPointToPoint = False ):
 		self.isPointToPoint = isPointToPoint
-		self.setPoints( ParseGpxFile(fname, useTimes=useTimes, isPointToPoint=isPointToPoint), isPointToPoint=isPointToPoint )
+		latLonEles = ParseGpxFile( fname, useTimes=useTimes, isPointToPoint=isPointToPoint )
+		gpsPoints = LatLonElesToGpsPoints( latLonEles, useTimes=useTimes, isPointToPoint=isPointToPoint )
+		self.setPoints( gpsPoints, isPointToPoint=isPointToPoint )
 		
 	def getGPX( self, courseName ):
 		return CreateGPX( courseName, self.gpsPoints )
