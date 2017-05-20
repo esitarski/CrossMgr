@@ -77,7 +77,7 @@ class FinishStrip( wx.Panel ):
 		self.tMax = 0.0
 		
 	def formatTime( self, t ):
-		return (self.tsFirst + datetime.timedelta(seconds=t)).strftime('%H:%M:%S.%f'[:-3])
+		return (self.tsFirst + datetime.timedelta(seconds=t)).strftime('%H:%M:%S.%f')[:-3]
 		
 	def SetImageQuality( self, iq ):
 		self.imageQuality = iq
@@ -193,7 +193,7 @@ class FinishStrip( wx.Panel ):
 		dc.SetPen( wx.WHITE_PEN )
 		winWidth, winHeight = self.GetClientSize()
 		
-		text = self.formatTime( self.tFromX( x ) )
+		text = self.formatTime( self.tFromX(x) )
 		fontHeight = max(5, winHeight//20)
 		font = wx.FontFromPixelSize(
 			wx.Size(0,fontHeight),
