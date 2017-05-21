@@ -73,6 +73,7 @@ class PhotoDialog( wx.Dialog ):
 		self.triggerInfo = triggerInfo
 		self.tsJpg = tsJpg
 		self.fps = fps
+		self.mps, self.kmh, self.mph = None, None, None
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		self.scaledImage = ScaledImage( self, image=self.getPhoto() )
@@ -119,7 +120,7 @@ class PhotoDialog( wx.Dialog ):
 		self.SetSizer(vs)
 		vs.Fit(self)
 	
-	def onPhotoHeader( self, event ):
+	def onPhotoHeader( self, event=None ):
 		global photoHeaderState
 		photoHeaderState = self.photoHeader.GetValue()
 		self.scaledImage.SetImage(self.getPhoto())
@@ -136,6 +137,8 @@ class PhotoDialog( wx.Dialog ):
 			lastName=self.triggerInfo['lastName'],
 			team=self.triggerInfo['team'],
 			raceName=self.triggerInfo['raceName'],
+			kmh=self.kmh,
+			mph=self.mph,
 		)
 		
 	def getPhoto( self ):
@@ -159,7 +162,8 @@ class PhotoDialog( wx.Dialog ):
 		
 		size = (850,650)
 		computeSpeed = ComputeSpeed( self, size=size )
-		computeSpeed.Show( image1, t1, image2, t2 )
+		self.mps, self.kmh, self.mph = computeSpeed.Show( image1, t1, image2, t2 )
+		self.onPhotoHeader()
 	
 	def onPrint( self, event ):
 		PrintPhoto( self, self.scaledImage.GetImage() )
