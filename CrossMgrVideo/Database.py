@@ -185,6 +185,8 @@ def DBWriter( q, fps=25 ):
 				tsJpgs.append( (v[1], sqlite3.Binary(outStream.getvalue())) )
 		elif v[0] == 'trigger':
 			tsTriggers.append( (list(v[1:]) + [u''] * 6)[:7] )
+		elif v[0] == 'kmh':
+			db.updateTriggerKMH( v[1], v[2] )	# id, kmh
 		elif v[0] == 'flush':
 			flush()
 		elif v[0] == 'terminate':

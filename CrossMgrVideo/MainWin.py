@@ -455,6 +455,7 @@ class MainWin( wx.Frame ):
 			tsUpper = tsLower + timedelta(days=1)
 
 		triggers = self.db.getTriggers( tsLower, tsUpper, self.bibQuery )
+		
 		if not triggers:
 			return
 			
@@ -473,12 +474,12 @@ class MainWin( wx.Frame ):
 			self.triggerList.SetStringItem( row, 4, wave )
 			if kmh:
 				mph = kmh * 0.621371
-				kmh = u'{:.2f}'.format(kmh)
-				mph = u'{:.2f}'.format(mph)
+				kmh_text = u'{:.2f}'.format(kmh)
+				mph_text = u'{:.2f}'.format(mph)
 			else:
-				kmh = mph = u''
-			self.triggerList.SetStringItem( row, 5, kmh )
-			self.triggerList.SetStringItem( row, 6, mph )
+				kmh_text = mph_text = u''
+			self.triggerList.SetStringItem( row, 5, kmh_text )
+			self.triggerList.SetStringItem( row, 6, mph_text )
 			
 			self.triggerList.SetItemData( row, row )
 			self.itemDataMap[row] = (id,ts,bib,name,team,wave,race_name,first_name,last_name,kmh)
@@ -518,10 +519,11 @@ class MainWin( wx.Frame ):
 		if not self.triggerInfo:
 			return
 		self.xFinish = event.GetX()
+		
 		pd = PhotoDialog( self, self.finishStrip.finish.getJpg(self.xFinish), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps )
 		pd.ShowModal()
 		if pd.kmh:
-			self.database.updateTriggerKMH( self.triggerInfo['id'], pd.kmh or 0.0 )
+			self.dbWriterQ.put( ('kmh', self.triggerInfo['id'], pd.kmh or 0.0) )
 		pd.Destroy()
 
 	def setFinishStripJpgs( self, jpgs ):
