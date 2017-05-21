@@ -139,7 +139,7 @@ class ComputeSpeed( object ):
 		metersPerPixel = self.wheelDiameter / wheelPixels
 		frontWheelEdge = self.frontWheelEdgePage.getFrontWheelEdge()
 		dPixels = abs(frontWheelEdge - wheelLeading)
-		metersPerSecond = dPixels * metersPerPixel / (self.t2 - self.t1).total_seconds()
+		metersPerSecond = dPixels * metersPerPixel / max(0.0001, (self.t2 - self.t1).total_seconds())
 		return metersPerSecond, metersPerSecond*3.6, metersPerSecond*2.23694
 	
 	def Show( self, image1, t1, image2, t2 ):
