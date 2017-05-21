@@ -153,7 +153,7 @@ class PhotoDialog( wx.Dialog ):
 			if ts >= tSearch:
 				t1 = ts
 				image1 = wx.ImageFromStream( StringIO.StringIO(jpg), wx.BITMAP_TYPE_JPEG )
-				iNext = min( len(self.tsJpg)-1, i + self.fps // 4 )
+				iNext = min( len(self.tsJpg)-1, i + self.fps // 3 )
 				t2 = self.tsJpg[iNext][0]
 				image2 = wx.ImageFromStream( StringIO.StringIO(self.tsJpg[iNext][1]), wx.BITMAP_TYPE_JPEG )
 				break
