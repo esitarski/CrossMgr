@@ -156,11 +156,14 @@ class PhotoDialog( wx.Dialog ):
 		t1, image1, t2, image2 = None, None, None, None
 		for i, (ts, jpg) in enumerate(self.tsJpg):
 			if jpg == self.jpg:
-				t1 = ts
-				image1 = wx.ImageFromStream( StringIO.StringIO(jpg), wx.BITMAP_TYPE_JPEG )
-				iNext = min( len(self.tsJpg)-1, i + 1 )
-				t2 = self.tsJpg[iNext][0]
-				image2 = wx.ImageFromStream( StringIO.StringIO(self.tsJpg[iNext][1]), wx.BITMAP_TYPE_JPEG )
+				if i == 0:
+					i1, i2 = 0, 1
+				else:
+					i1, i2  = i-1, i
+				t1 = self.tsJpg[i1][0]
+				image1 = wx.ImageFromStream( StringIO.StringIO(self.tsJpg[i1][1]), wx.BITMAP_TYPE_JPEG )
+				t2 = self.tsJpg[i2][0]
+				image2 = wx.ImageFromStream( StringIO.StringIO(self.tsJpg[i2][1]), wx.BITMAP_TYPE_JPEG )
 				break
 		
 		size = (850,650)
