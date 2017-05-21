@@ -3,6 +3,7 @@ import subprocess
 import cStringIO as StringIO
 from AddPhotoHeader import AddPhotoHeader
 from ScaledImage import ScaledImage, RescaleImage
+from ComputeSpeed import ComputeSpeed
 import Utils
 
 def _( x ):
@@ -105,6 +106,10 @@ class PhotoDialog( wx.Dialog ):
 		btn.Bind( wx.EVT_BUTTON, self.onSaveGif )
 		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 
+		btn = wx.Button(self, label='Speed')
+		btn.Bind( wx.EVT_BUTTON, self.onGetSpeed )
+		btnsizer.Add(btn, flag=wx.LEFT, border=4)
+
 		btn = wx.Button(self, wx.ID_CLOSE)
 		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 		btn.Bind( wx.EVT_BUTTON, self.onClose )
@@ -140,6 +145,21 @@ class PhotoDialog( wx.Dialog ):
 		
 	def onClose( self, event ):
 		self.EndModal( wx.ID_OK )
+	
+	def onGetSpeed( self, event ):
+		tSearch = self.triggerInfo['ts']
+		t1, image1, t2, image2 = None, None, None, None
+		for i, (ts, jpg) in enumerate(self.tsJpg):
+			if ts >= tSearch:
+				t1 = ts
+				image1 = wx.ImageFromStream( StringIO.StringIO(jpg), wx.BITMAP_TYPE_JPEG )
+				iNext = min( len(self.tsJpg)-1, i + self.fps // 4 )
+				t2 = self.tsJpg[iNext][0]
+				image2 = wx.ImageFromStream( StringIO.StringIO(self.tsJpg[iNext][1]), wx.BITMAP_TYPE_JPEG )
+				break
+		
+		computeSpeed = ComputeSpeed(self, size=image1.GetSize())
+		computeSpeed.Show( image1, t1, image2, t2 )
 	
 	def onPrint( self, event ):
 		PrintPhoto( self, self.scaledImage.GetImage() )
