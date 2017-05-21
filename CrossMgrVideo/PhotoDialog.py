@@ -154,18 +154,21 @@ class PhotoDialog( wx.Dialog ):
 	
 	def onGetSpeed( self, event ):
 		t1, image1, t2, image2 = None, None, None, None
+		i1, i2 = len(self.tsJpg)-2, len(self.tsJpg)-1
+		
 		for i, (ts, jpg) in enumerate(self.tsJpg):
 			if jpg == self.jpg:
 				if i == 0:
 					i1, i2 = 0, 1
 				else:
 					i1, i2  = i-1, i
-				t1 = self.tsJpg[i1][0]
-				image1 = wx.ImageFromStream( StringIO.StringIO(self.tsJpg[i1][1]), wx.BITMAP_TYPE_JPEG )
-				t2 = self.tsJpg[i2][0]
-				image2 = wx.ImageFromStream( StringIO.StringIO(self.tsJpg[i2][1]), wx.BITMAP_TYPE_JPEG )
 				break
 		
+		t1 = self.tsJpg[i1][0]
+		image1 = wx.ImageFromStream( StringIO.StringIO(self.tsJpg[i1][1]), wx.BITMAP_TYPE_JPEG )
+		t2 = self.tsJpg[i2][0]
+		image2 = wx.ImageFromStream( StringIO.StringIO(self.tsJpg[i2][1]), wx.BITMAP_TYPE_JPEG )
+				
 		size = (850,650)
 		computeSpeed = ComputeSpeed( self, size=size )
 		self.mps, self.kmh, self.mph = computeSpeed.Show( image1, t1, image2, t2 )
