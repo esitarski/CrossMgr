@@ -37,7 +37,7 @@ def MPegToDatabase( fnameMPeg ):
 	#          ts,bib,first_name,last_name,team,wave,race_name
 	trigger = (ts,  1,   '',     fnameMPeg,  '',  '','Test'  )
 	database.write( tsTriggers=[trigger] )
-	#shutil.rmtree( 'frames', ignore_errors=True )
+	shutil.rmtree( 'frames', ignore_errors=True )
 
 if __name__ == '__main__':
 	MPegToDatabase( os.path.join('bugs', '290 Jacob Lifson.mpeg') )
