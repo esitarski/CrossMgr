@@ -73,7 +73,10 @@ class PhotoDialog( wx.Dialog ):
 		self.triggerInfo = triggerInfo
 		self.tsJpg = tsJpg
 		self.fps = fps
-		self.mps, self.kmh, self.mph = None, None, None
+		
+		self.kmh = triggerInfo['kmh'] or 0.0
+		self.mps = self.kmh / 3.6
+		self.mph = self.kmh * 0.621371
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		self.scaledImage = ScaledImage( self, image=self.getPhoto() )
@@ -155,7 +158,7 @@ class PhotoDialog( wx.Dialog ):
 			if jpg == self.jpg:
 				t1 = ts
 				image1 = wx.ImageFromStream( StringIO.StringIO(jpg), wx.BITMAP_TYPE_JPEG )
-				iNext = min( len(self.tsJpg)-1, i + self.fps // 3 )
+				iNext = min( len(self.tsJpg)-1, i + 1 )
 				t2 = self.tsJpg[iNext][0]
 				image2 = wx.ImageFromStream( StringIO.StringIO(self.tsJpg[iNext][1]), wx.BITMAP_TYPE_JPEG )
 				break

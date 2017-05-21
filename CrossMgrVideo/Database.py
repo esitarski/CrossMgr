@@ -10,8 +10,16 @@ from Queue import Queue, Empty
 now = datetime.now
 
 def createTable( c, table, fields ):
-	c.execute( 'CREATE TABLE IF NOT EXISTS {} ({})'.format(table, ','.join('{} {}'.format(field, type) for field, type, idx in fields ) ) )
-	for field, type, idx in fields:
+	def default_str( d ):
+		return ' DEFAULT {}'.format(d) if d is not None else ''
+	
+	c.execute(
+		'CREATE TABLE IF NOT EXISTS {} ({})'.format(table, ','.join('{} {}{}'.format(
+				field, type, default_str(default)
+			)
+			for field, type, idx, default in fields ) )
+	)
+	for field, type, idx, default in fields:
 		if idx:
 			c.execute( 'CREATE INDEX IF NOT EXISTS {}_{}_idx on {} ({} ASC)'.format(table, field, table, field) )
 
@@ -32,23 +40,32 @@ class Database( object ):
 		
 		self.conn = sqlite3.connect( self.fname, detect_types=sqlite3.PARSE_DECLTYPES )
 		
+		# Add kmh to the trigger table if necessary.
+		with self.conn:
+			cur = self.conn.cursor()
+			cur.execute( 'PRAGMA table_info(trigger)' )
+			cols = cur.fetchall()
+			if cols and not any( col[1] == 'kmh' for col in cols ):
+				self.conn.execute( 'ALTER TABLE trigger ADD COLUMN kmh DOUBLE DEFAULT 0.0' )
+		
 		if initTables:
 			with self.conn:
 				createTable( self.conn, 'photo', (
-						('id', 'INTEGER PRIMARY KEY', False),
-						('ts', 'timestamp', 'ASC'),
-						('jpg', 'BLOB', False),
+						('id', 'INTEGER PRIMARY KEY', False, None),
+						('ts', 'timestamp', 'ASC', None),
+						('jpg', 'BLOB', False, None),
 					)
 				)		
 				createTable( self.conn, 'trigger', (
-						('id', 'INTEGER PRIMARY KEY', False),
-						('ts', 'timestamp', 'ASC'),
-						('bib', 'INTEGER', 'ASC'),
-						('first_name', 'TEXT', 'ASC'),
-						('last_name', 'TEXT', 'ASC'),
-						('team', 'TEXT', 'ASC'),
-						('wave', 'TEXT', 'ASC'),
-						('race_name', 'TEXT', 'ASC'),
+						('id', 'INTEGER PRIMARY KEY', False, None),
+						('ts', 'timestamp', 'ASC', None),
+						('bib', 'INTEGER', 'ASC', None),
+						('first_name', 'TEXT', 'ASC', None),
+						('last_name', 'TEXT', 'ASC', None),
+						('team', 'TEXT', 'ASC', None),
+						('wave', 'TEXT', 'ASC', None),
+						('race_name', 'TEXT', 'ASC', None),
+						('kmh', 'DOUBLE', False, 0.0),
 					)
 				)
 				self.photoTsCache = set( row[0] for row in self.conn.execute(
@@ -67,34 +84,40 @@ class Database( object ):
 			return None
 		
 	def write( self, tsTriggers=None, tsJpgs=None ):
-		tsJpgs = [(ts, jpg) for ts, jpg in tsJpgs if ts not in self.photoTsCache]
-		
 		if not tsTriggers and not tsJpgs:
 			return
-			
+		
+		if tsJpgs:
+			tsJpgs = [(ts, jpg) for ts, jpg in tsJpgs if ts not in self.photoTsCache]
+		
 		with self.conn:
 			if tsTriggers:
 				self.conn.executemany( 'INSERT INTO trigger (ts,bib,first_name,last_name,team,wave,race_name) VALUES (?,?,?,?,?,?,?)', tsTriggers )
 			if tsJpgs:
 				self.conn.executemany( 'INSERT INTO photo (ts,jpg) VALUES (?,?)', tsJpgs )
 		
-		self.photoTsCache.update( ts for ts, jpg in tsJpgs )
+		if tsJpgs:
+			self.photoTsCache.update( ts for ts, jpg in tsJpgs )
 		
 		if (now() - self.lastUpdate).total_seconds() > self.UpdateSeconds:
 			expired = now() - timedelta(seconds=self.UpdateSeconds)
 			self.photoTsCache = set( ts for ts in self.photoTsCache if ts > expired )
 			self.lastUpdate = now()
-			
+	
+	def updateTriggerKMH( self, id, kmh ):
+		with self.conn:
+			self.conn.execute( 'UPDATE trigger SET kmh=? WHERE id=?', (kmh,id) )
+	
 	def getTriggers( self, tsLower, tsUpper, bib=None ):
 		with self.conn:
 			if not bib:
 				return list( self.conn.execute(
-					'SELECT ts,bib,first_name,last_name,team,wave,race_name FROM trigger WHERE ts BETWEEN ? AND ? ORDER BY ts',
+					'SELECT id,ts,bib,first_name,last_name,team,wave,race_name,kmh FROM trigger WHERE ts BETWEEN ? AND ? ORDER BY ts',
 					(tsLower, tsUpper)
 				))
 			else:
 				return list( self.conn.execute(
-					'SELECT ts,bib,first_name,last_name,team,wave,race_name FROM trigger WHERE bib=? AND ts BETWEEN ? AND ? ORDER BY ts',
+					'SELECT id,ts,bib,first_name,last_name,team,wave,race_name,kmh FROM trigger WHERE bib=? AND ts BETWEEN ? AND ? ORDER BY ts',
 					(bib, tsLower, tsUpper)
 				))
 			
@@ -188,17 +211,16 @@ def DBReader( q, callback ):
 		q.task_done()
 			
 if __name__ == '__main__':
-	try:
-		os.remove( os.path.join( os.path.expanduser("~"), 'CrossMgrVideo.sqlite3' ) )
-	except:
-		pass
+	if False:
+		try:
+			os.remove( os.path.join( os.path.expanduser("~"), 'CrossMgrVideo.sqlite3' ) )
+		except:
+			pass
 
 	d = Database()
 	
 	ts = d.getLastTimestamp(datetime(2000,1,1), datetime(2200,1,1))
 	print ts
-	
-	d.cleanBefore( ts )
 	
 	'''
 	tsTriggers = [((time.sleep(0.1) and False) or now(), 100+i, u'', u'', u'', u'', u'') for i in xrange(100)]

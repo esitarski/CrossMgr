@@ -232,7 +232,7 @@ class MainWin( wx.Frame ):
 						style=wx.CONFIG_USE_LOCAL_FILE)
 		
 		self.requestQ = Queue()		# Select photos from photobuf.
-		self.dbWriterQ = Queue()	# Photos waiting to be renamed and possibly ftp'd.
+		self.dbWriterQ = Queue()	# Photos waiting to be written
 		self.dbReaderQ = Queue()	# Photos read as requested from user.
 		self.messageQ = Queue()		# Collection point for all status/failure messages.
 		
@@ -365,9 +365,12 @@ class MainWin( wx.Frame ):
 		self.sm_dn = self.il.Add( Utils.GetPngBitmap('SmallDownArrow.png'))
 		self.triggerList.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
 		
-		headers = ['Time', 'Bib', 'Name', 'Team', 'Wave']
+		headers = ['Time', 'Bib', 'Name', 'Team', 'Wave', 'km/h', 'mph']
 		for i, h in enumerate(headers):
-			self.triggerList.InsertColumn(i, h, wx.LIST_FORMAT_RIGHT if h == 'Bib' else wx.LIST_FORMAT_LEFT)
+			self.triggerList.InsertColumn(
+				i, h,
+				wx.LIST_FORMAT_RIGHT if h in ('Bib','km/h','mph') else wx.LIST_FORMAT_LEFT
+			)
 		self.itemDataMap = {}
 		
 		self.triggerList.Bind( wx.EVT_LIST_ITEM_SELECTED, self.onTriggerSelected )
@@ -456,9 +459,9 @@ class MainWin( wx.Frame ):
 			return
 			
 		tsPrev = (self.tsMax or datetime(2000,1,1))
-		self.tsMax = triggers[-1][0]
+		self.tsMax = triggers[-1][1] # id,ts,bib,first_name,last_name,team,wave,race_name,kmh
 		
-		for i, (ts,bib,first_name,last_name,team,wave,race_name) in enumerate(triggers):
+		for i, (id,ts,bib,first_name,last_name,team,wave,race_name,kmh) in enumerate(triggers):
 			closeFinish = ((ts-tsPrev).total_seconds() < 0.3)
 			row = self.triggerList.InsertImageStringItem( sys.maxint, ts.strftime('%H:%M:%S.%f')[:-3], self.sm_close if closeFinish else self.sm_check )
 			if closeFinish and row > 0:
@@ -468,9 +471,17 @@ class MainWin( wx.Frame ):
 			self.triggerList.SetStringItem( row, 2, name )
 			self.triggerList.SetStringItem( row, 3, team )
 			self.triggerList.SetStringItem( row, 4, wave )
+			if kmh:
+				mph = kmh * 0.621371
+				kmh = u'{:.2f}'.format(kmh)
+				mph = u'{:.2f}'.format(mph)
+			else:
+				kmh = mph = u''
+			self.triggerList.SetStringItem( row, 5, kmh )
+			self.triggerList.SetStringItem( row, 6, mph )
 			
 			self.triggerList.SetItemData( row, row )
-			self.itemDataMap[row] = (ts,bib,name,team,wave,race_name,first_name,last_name)
+			self.itemDataMap[row] = (id,ts,bib,name,team,wave,race_name,first_name,last_name,kmh)
 			tsPrev = ts
 			
 		for i in xrange(5):
@@ -509,6 +520,8 @@ class MainWin( wx.Frame ):
 		self.xFinish = event.GetX()
 		pd = PhotoDialog( self, self.finishStrip.finish.getJpg(self.xFinish), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps )
 		pd.ShowModal()
+		if pd.kmh:
+			self.database.updateTriggerKMH( self.triggerInfo['id'], pd.kmh or 0.0 )
 		pd.Destroy()
 
 	def setFinishStripJpgs( self, jpgs ):
@@ -519,9 +532,9 @@ class MainWin( wx.Frame ):
 		self.iTriggerSelect = event.m_itemIndex
 		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
 		self.triggerInfo = {
-			a:data[i] for i, a in enumerate(('ts','bib','name','team','wave','raceName','firstName','lastName'))
+			a:data[i] for i, a in enumerate(('id','ts','bib','name','team','wave','raceName','firstName','lastName','kmh'))
 		}
-		self.ts = data[0]
+		self.ts = self.triggerInfo['ts']
 		self.dbReaderQ.put( ('getphotos', self.ts-tdCaptureBefore, self.ts+tdCaptureAfter) )
 		
 	def showMessages( self ):
