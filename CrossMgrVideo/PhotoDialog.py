@@ -147,10 +147,9 @@ class PhotoDialog( wx.Dialog ):
 		self.EndModal( wx.ID_OK )
 	
 	def onGetSpeed( self, event ):
-		tSearch = self.triggerInfo['ts']
 		t1, image1, t2, image2 = None, None, None, None
 		for i, (ts, jpg) in enumerate(self.tsJpg):
-			if ts >= tSearch:
+			if jpg == self.jpg:
 				t1 = ts
 				image1 = wx.ImageFromStream( StringIO.StringIO(jpg), wx.BITMAP_TYPE_JPEG )
 				iNext = min( len(self.tsJpg)-1, i + self.fps // 3 )
