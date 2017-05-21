@@ -158,7 +158,8 @@ class PhotoDialog( wx.Dialog ):
 				image2 = wx.ImageFromStream( StringIO.StringIO(self.tsJpg[iNext][1]), wx.BITMAP_TYPE_JPEG )
 				break
 		
-		computeSpeed = ComputeSpeed(self, size=image1.GetSize())
+		size = (850,650)
+		computeSpeed = ComputeSpeed( self, size=size )
 		computeSpeed.Show( image1, t1, image2, t2 )
 	
 	def onPrint( self, event ):
