@@ -2126,7 +2126,7 @@ class MainWin( wx.Frame ):
 				
 				info = externalInfo.get(bib, {})
 				
-				uci = info.get('UCICode', u'')
+				uci = info.get('NatCode', u'') or info.get('UCICode', u'')
 				if uci:
 					uciCodes.add( uci )
 				

@@ -112,15 +112,15 @@ var organizer = null;
 
 var startList = null;
 var startListTest = [/*(-*/
-	[5700-5760, 9, "Geraint Thomas", "Team Sky", "RME", "GBR19880303"], 
-	[5730-5760, 8, "Ian Stannard", "Team Sky", "RME", "GBR19880303"], 
-	[5760-5760, 7, "Kanstantsin Sivtsov", "Team Sky", "RME", "GBR19880303"], 
-	[5790-5760, 6, "Richie Porte", "Team Sky", "RME", "GBR19880303"], 
-	[5820-5760, 5, "David L\u00f3pez", "Team Sky", "RME", "GBR19880303"], 
-	[5850-5760, 4, "Vasil Kiryienka", "Team Sky", "RME", "GBR19880303"], 
-	[5880+30-5760, 3, "Peter Kennaugh", "Team Sky", "RME", "GBR19880303"], 
-	[5910+60-5760, 2, "Edvald Boasson Hagen", "Team Sky", "RME", "GBR19880303"], 
-	[5940+90-5760, 1, "Chris Froome", "Team Sky", "RME", "GBR19880303"]
+	[5700-5760, 9, "Geraint Thomas", "Team Sky", "RME", "GBR"], 
+	[5730-5760, 8, "Ian Stannard", "Team Sky", "RME", "GBR"], 
+	[5760-5760, 7, "Kanstantsin Sivtsov", "Team Sky", "RME", "GBR"], 
+	[5790-5760, 6, "Richie Porte", "Team Sky", "RME", "GBR"], 
+	[5820-5760, 5, "David L\u00f3pez", "Team Sky", "RME", "GBR"], 
+	[5850-5760, 4, "Vasil Kiryienka", "Team Sky", "RME", "GBR"], 
+	[5880+30-5760, 3, "Peter Kennaugh", "Team Sky", "RME", "GBR"], 
+	[5910+60-5760, 2, "Edvald Boasson Hagen", "Team Sky", "RME", "GBR"], 
+	[5940+90-5760, 1, "Chris Froome", "Team Sky", "RME", "GBR"]
 /*-)*/];
 
 var flags = {"GBR":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABYAAAAOCAYAAAArMezNAAAAAXNSR0IArs4c6QAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9oDBAo1B4Zxqq0AAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAADv0lEQVQ4y02Tf0zVZRTGP+/7fuGSiQoIMhTBMHUjA1O5sRJNnLOcTVcunfi7FrXZVqZMcmnRhMj1jxU0wMo0JwtqJWtozoQwkNR0osuxEoRxRfAORAfc+31Pf3yt9d85z9k5z55znqNOP5937skPCudHps9if2UTxZ834IYFQRCB4ZEQJ/YtJXHvbgACe4rILagnItJBBASLQrN7cxbrzn+P7Q8i+3a06s75C2zgw0/pLihi56a5NBx7hYVZKYRCLsYojFEoQBmDMhqUQhuF0YpwOEzughnUr45na8Mhxi9dyIxT1VwMDFv98a+32RGbwxj/E1zNXskjgwF+rMij7P0VWGsx2huG1qA0CjBGY0WoKFpB+cAZpradJ6m6krgta1m25Wve2X8SLVhONF5nbvlftOa9Tk/JAboKS9i8OJULx7exyD8NEQGjUUZjBRZlpXBmQzK5Bz8i+tnFTK+t4sjJduLmFVP/y5+ICOrN9440ixPjtxa0UaSnxPBS7BBDF66Q8Op6wuPGE+rspnNtPoiQUlPF4Omz6Nu9TMzfiBn7MGVHW7l8LYBrBVA4Ntji5GdEkxYfi1gBBNe6jLoPEZ2Tzb2LbWAtob5+xFqUCMONvzE2JQlSJzPUdA4EtiQ6mKQYREAraO9zUT8vXtWc2D/oRwAErPVCK/AA4sEqRATcsJdbQQAl4uGeRUCEW5NiWhy0tzsRTwbKcwH6fw0o0AYtFhEDIogSFF5dPRgo/8ZK4UzZtom0iQl4/GCtZWTEBQTt84EIo90Bbh2oAhEmvbEVJy7Ws53Phw2F8BlBKwWAQhHZdxvni7b7aN+gJ10pZqXFs2FlBu69+9z5qhobF0v00350xWEQweefS8SUJMzdQXorviE6M53DvWNouxHEhq1HGL6HuTUy8+UTTTendAUG2PTCHNYsn02wpo7+0k/oSZ7OnkthJo/RRLe2oLTi+rTZ7Co7yzz/o0z1P0ZfTR3JLQ2EUlKpPPU3LRc6CAaD3Xo0FCY7czIXf8hn6ZwErizPo7/2OD89t5GVx7povtSNNvq/BzFG0fxHF0vWVXK06SZJe98mcXs+WbUHaclPY9mimUQ4GqforSWsefEZAuWHGP7uOB2ZT1HaM46Gnd9CpIERl2B/kKgbnSituTswRFfPHaJ8Duu3V1NVfY59BcvIqvuS9l2l7O64SePj83AyJkXpa7mrURMmcCxnHSWHfsfaXoiK8OxmrHdx10Vcl3A4hB0e5b61AJw62072qs8ofC2HguJCRi5fJfndYv0Pm/a+HCONOTIAAAAASUVORK5CYII="};
@@ -156,7 +156,7 @@ function dateFromTuple( t ) {
 }
 
 var flagImages = null;
-function GetFlagImage( uci ) {
+function GetFlagImage( nation_code ) {
 	if( !flagImages ) {
 		if( !flags )
 			return null;
@@ -168,7 +168,7 @@ function GetFlagImage( uci ) {
 			flagImages[cc] = img;
 		}
 	}
-	return flagImages[uci.substring(0, 3)];
+	return flagImages[nation_code.substring(0, 3)];
 }
 
 function createChild( parent, tag ) {
@@ -226,7 +226,7 @@ function updateStartList() {
 		var name = sle[2];
 		var team = sle[3];
 		var category = sle[4];
-		var uci_code = sle[5];
+		var nation_code = sle[5];
 		
 		var tip = (isRunning && tClock < tNow ? ' time-in-past' : '')
 		createTextChild( td = createChild(tr, 'TD'), (i+1) + '.' ); td.className = 'numeric' + tip;
@@ -236,16 +236,16 @@ function updateStartList() {
 		createTextChild( td = createChild(tr, 'TD'), name );
 		createTextChild( td = createChild(tr, 'TD'), team );
 		createTextChild( td = createChild(tr, 'TD'), category );
-		if( uci_code ) {
+		if( nation_code ) {
 			td = createChild(tr, 'TD');
-			var img = GetFlagImage( uci_code );
+			var img = GetFlagImage( nation_code );
 			if( img ) {
 				td.style.whiteSpace = "nowrap";
 				td.appendChild( img.cloneNode(true) );
-				createTextChild( td, ' ' + uci_code );
+				createTextChild( td, ' ' + nation_code );
 			}
 			else
-				createTextChild( td, uci_code );
+				createTextChild( td, nation_code );
 		}
 		else
 			createTextChild( td = createChild(tr, 'TD'), '' );
