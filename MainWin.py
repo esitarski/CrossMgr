@@ -2110,25 +2110,38 @@ class MainWin( wx.Frame ):
 		except:
 			externalInfo = {}
 		
+		componentCategories = {}
+		def getComponentCategory( bib, categoryLast ):
+			if categoryLast and categoryLast.catType == Model.Category.CatComponent and race.inCategory(bib, categoryLast):
+				return categoryLast
+			
+			category = race.getCategory( bib )
+			if category:			
+				if category not in componentCategories:
+					componentCategories[category] = race.getComponentCategories(category)
+				for c in componentCategories[category]:
+					if race.inCategory( bib, c ):
+						return c
+			return category
+		
 		Finisher = Model.Rider.Finisher
 		startList = []
-		uciCodes = set()
+		nationCodes = set()
+		category = None
 		for bib, rider in race.riders.iteritems():
 			if rider.status == Finisher:
 				try:
 					firstTime = int(rider.firstTime + 0.1)
 				except:
 					continue
-				try:
-					catName = race.getCategory(bib).fullname
-				except:
-					catName = ''
+				category = getComponentCategory( bib, category )
+				catName = category.fullname if category else u''
 				
 				info = externalInfo.get(bib, {})
 				
-				uci = info.get('NatCode', u'') or info.get('UCICode', u'')
-				if uci:
-					uciCodes.add( uci )
+				nation = info.get('NatCode', u'') or info.get('UCICode', u'')
+				if nation:
+					nationCodes.add( nation )
 				
 				row = [
 					firstTime,
@@ -2136,14 +2149,14 @@ class MainWin( wx.Frame ):
 					u' '.join(v for v in [info.get('FirstName',''), info.get('LastName')] if v),
 					info.get('Team', u''),
 					catName,
-					uci,
+					nation,
 				]
 				startList.append( row )
 
 		startList.sort( key=operator.itemgetter(0, 1) )
 		
 		payload['startList'] = startList
-		payload['flags'] = Flags.GetFlagBase64ForUCI( uciCodes )
+		payload['flags'] = Flags.GetFlagBase64ForUCI( nationCodes )
 		payload['version'] = Version.AppVerName
 
 		html = replaceJsonVar( html, 'payload', payload )
