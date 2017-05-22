@@ -438,7 +438,7 @@ class MainWin( wx.Frame ):
 		data = self.triggerList.GetItemData( i )
 		return self.itemDataMap[data]
 	
-	def refreshTriggers( self, replace=False ):
+	def refreshTriggers( self, replace=False, iTriggerRow=None ):
 		tNow = now()
 		self.lastTriggerRefresh = tNow
 		
@@ -488,7 +488,11 @@ class MainWin( wx.Frame ):
 		for i in xrange(5):
 			self.triggerList.SetColumnWidth(i, wx.LIST_AUTOSIZE)
 
-		self.triggerList.EnsureVisible( self.triggerList.GetItemCount() - 1 )
+		if iTriggerRow is not None and (0 <= iTriggerRow < self.triggerList.GetItemCount()):
+			self.triggerList.EnsureVisible( iTriggerRow )
+			self.triggerList.Select( iTriggerRow )
+		else:
+			self.triggerList.EnsureVisible( self.triggerList.GetItemCount() - 1 )
 
 	def Start( self ):
 		self.messageQ.put( ('', '************************************************') )
@@ -522,8 +526,9 @@ class MainWin( wx.Frame ):
 		
 		pd = PhotoDialog( self, self.finishStrip.finish.getJpg(self.xFinish), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps )
 		pd.ShowModal()
-		if pd.kmh:
-			self.dbWriterQ.put( ('kmh', self.triggerInfo['id'], pd.kmh or 0.0) )
+		if self.triggerInfo['kmh'] != pd.kmh:
+			self.dbWriterQ.put( ('kmh', self.triggerInfo['id'], pd.kmh) )
+			wx.CallLater( 300, self.refreshTriggers, replace=True, iTriggerRow=self.iTriggerSelect )
 		pd.Destroy()
 
 	def setFinishStripJpgs( self, jpgs ):
