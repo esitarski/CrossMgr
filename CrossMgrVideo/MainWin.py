@@ -33,6 +33,21 @@ imageWidth, imageHeight = 640, 480
 tdCaptureBefore = timedelta(seconds=0.5)
 tdCaptureAfter = timedelta(seconds=3.5)
 
+closeFinishThreshold = 0.3
+closeColors = ('E50000','DB6D00','D1D200','64C800','00BF00')
+def getCloseFinishBitmaps( size=(16,16) ):
+	bm = []
+	dc = wx.MemoryDC()
+	dc.SetPen( wx.Pen(wx.Colour(0,0,0), 1) )
+	for c in closeColors:
+		bitmap = wx.EmptyBitmap( *size )
+		dc.SelectObject( bitmap )
+		dc.SetBrush( wx.Brush(wx.Colour(*[int(c[i:i+2],16) for i in xrange(0,6,2)]) ) )
+		dc.DrawRectangle( 0, 0, size[0]-1, size[1]-1 )
+		dc.SelectObject(wx.NullBitmap)
+		bm.append( bitmap )
+	return bm
+
 try:
 	#from VideoCapture import Device
 	from jaraco.video.capture_nofont import Device
@@ -359,8 +374,10 @@ class MainWin( wx.Frame ):
 		self.triggerList = AutoWidthListCtrl( self, style=wx.LC_REPORT|wx.BORDER_SUNKEN|wx.LC_SORT_ASCENDING )
 		
 		self.il = wx.ImageList(16, 16)
-		self.sm_check = self.il.Add( Utils.GetPngBitmap('check_icon.png'))
-		self.sm_close = self.il.Add( Utils.GetPngBitmap('flame_icon.png'))
+		self.sm_close = []
+		for bm in getCloseFinishBitmaps():
+			self.sm_close.append( self.il.Add(bm) )
+		self.sm_up = self.il.Add( Utils.GetPngBitmap('SmallUpArrow.png'))
 		self.sm_up = self.il.Add( Utils.GetPngBitmap('SmallUpArrow.png'))
 		self.sm_dn = self.il.Add( Utils.GetPngBitmap('SmallDownArrow.png'))
 		self.triggerList.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
@@ -462,11 +479,12 @@ class MainWin( wx.Frame ):
 		tsPrev = (self.tsMax or datetime(2000,1,1))
 		self.tsMax = triggers[-1][1] # id,ts,bib,first_name,last_name,team,wave,race_name,kmh
 		
+		closeFinishThreshold
+		
 		for i, (id,ts,bib,first_name,last_name,team,wave,race_name,kmh) in enumerate(triggers):
-			closeFinish = ((ts-tsPrev).total_seconds() < 0.3)
-			row = self.triggerList.InsertImageStringItem( sys.maxint, ts.strftime('%H:%M:%S.%f')[:-3], self.sm_close if closeFinish else self.sm_check )
-			if closeFinish and row > 0:
-				self.triggerList.SetItemImage( row-1, self.sm_close )
+			dtFinish = (ts-tsPrev).total_seconds()
+			itemImage = self.sm_close[min(len(self.sm_close)-1, int(len(self.sm_close) * dtFinish / closeFinishThreshold))]		
+			row = self.triggerList.InsertImageStringItem( sys.maxint, ts.strftime('%H:%M:%S.%f')[:-3], itemImage )
 			self.triggerList.SetStringItem( row, 1, u'{:>6}'.format(bib) )
 			name = u', '.join( n for n in (last_name, first_name) if n )
 			self.triggerList.SetStringItem( row, 2, name )
