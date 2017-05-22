@@ -2111,7 +2111,7 @@ class MainWin( wx.Frame ):
 			externalInfo = {}
 		
 		componentCategories = {}
-		def getComponentCategory( bib, categoryLast ):
+		def getComponentCategory( bib, categoryLast=None ):
 			if categoryLast and categoryLast.catType == Model.Category.CatComponent and race.inCategory(bib, categoryLast):
 				return categoryLast
 			
