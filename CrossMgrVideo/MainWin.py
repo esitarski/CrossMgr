@@ -479,8 +479,6 @@ class MainWin( wx.Frame ):
 		tsPrev = (self.tsMax or datetime(2000,1,1))
 		self.tsMax = triggers[-1][1] # id,ts,bib,first_name,last_name,team,wave,race_name,kmh
 		
-		closeFinishThreshold
-		
 		for i, (id,ts,bib,first_name,last_name,team,wave,race_name,kmh) in enumerate(triggers):
 			dtFinish = (ts-tsPrev).total_seconds()
 			itemImage = self.sm_close[min(len(self.sm_close)-1, int(len(self.sm_close) * dtFinish / closeFinishThreshold))]		
