@@ -33,8 +33,8 @@ imageWidth, imageHeight = 640, 480
 tdCaptureBefore = timedelta(seconds=0.5)
 tdCaptureAfter = timedelta(seconds=3.5)
 
-closeFinishThreshold = 0.3
-closeColors = ('E50000','DB6D00','D1D200','64C800','00BF00')
+closeFinishThreshold = 3.0/24.0
+closeColors = ('E50000','D1D200','00BF00')
 def getCloseFinishBitmaps( size=(16,16) ):
 	bm = []
 	dc = wx.MemoryDC()
