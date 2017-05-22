@@ -252,14 +252,14 @@ class Category(object):
 		self.startOffset = startOffset if startOffset else '00:00:00'
 		
 		self.catType = self.CatWave
-		catType = unicode(catType)
+		catType = unicode(catType).strip().lower()
 		try:
 			self.catType = int(catType)
 		except ValueError:
 			try:
-				if catType.lower().startswith(u'component') or catType.lower().startswith(_('Component')).lower():
+				if catType.startswith(u'component'):
 					self.catType = self.CatComponent
-				elif catType.lower().startswith(u'custom') or catType.lower().startswith(_('Custom')).lower():
+				elif catType.startswith(u'custom'):
 					self.catType = self.CatCustom
 			except:
 				pass
