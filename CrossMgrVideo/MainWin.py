@@ -489,9 +489,7 @@ class MainWin( wx.Frame ):
 			self.triggerList.SetStringItem( row, 3, team )
 			self.triggerList.SetStringItem( row, 4, wave )
 			if kmh:
-				mph = kmh * 0.621371
-				kmh_text = u'{:.2f}'.format(kmh)
-				mph_text = u'{:.2f}'.format(mph)
+				kmh_text, mph_text = u'{:.2f}'.format(kmh), u'{:.2f}'.format(kmh * 0.621371)
 			else:
 				kmh_text = mph_text = u''
 			self.triggerList.SetStringItem( row, 5, kmh_text )
