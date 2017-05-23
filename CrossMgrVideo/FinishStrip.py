@@ -24,9 +24,6 @@ def PilImageToWxImage(pil, alpha=False):
 
 contrastColour = wx.Colour( 255, 130, 0 )
 
-photoWidth = 640
-photoHeight = 480
-
 class FinishStrip( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=0,
 			fps=25,
@@ -61,7 +58,8 @@ class FinishStrip( wx.Panel ):
 		self.xTime = None
 		self.tsFirst = datetime.datetime.now()
 		self.tsJpgs = []
-		self.photoWidth = self.photoHeight = None
+		self.photoWidth, self.photoHeight = None, None
+		self.jpgWidth, self.jpgHeight = 600, 480
 
 		self.times = []
 		self.jpg = {}
@@ -69,8 +67,6 @@ class FinishStrip( wx.Panel ):
 		
 		self.leftToRight = leftToRight
 		self.pixelsPerSec = 25
-		
-		self.jpgWidth = self.jpgHeight = None
 		
 		self.bitmapLeft = 0
 		self.tCursor = 0.0
@@ -220,7 +216,7 @@ class FinishStrip( wx.Panel ):
 			return self.zoomBitmap[tbm]
 		except KeyError:
 			image = wx.ImageFromStream( StringIO.StringIO(self.jpg[tbm]), wx.BITMAP_TYPE_JPEG )
-			image.Rescale( int(photoWidth*self.magnification), int(photoHeight*self.magnification), self.imageQuality )
+			image.Rescale( int(self.jpgWidth*self.magnification), int(self.jpgWidth*self.magnification), self.imageQuality )
 			self.zoomBitmap[tbm] = image.ConvertToBitmap()
 			return self.zoomBitmap[tbm]
 	
@@ -230,18 +226,22 @@ class FinishStrip( wx.Panel ):
 		return self.tsJpgs[bisect_left(self.times, self.tFromX(x), hi=len(self.times)-1)][1]
 	
 	def drawZoomPhoto( self, x, y ):
-		if not self.times or not self.photoWidth:
+		if not self.times or not self.jpgWidth:
 			return
 			
 		dc = wx.ClientDC( self )
 		winWidth, winHeight = self.GetClientSize()
 		
-		photoWidth, photoHeight = self.photoWidth, self.photoHeight
+		jpgWidth, jpgHeight = self.jpgWidth, self.jpgHeight
 		viewHeight = winHeight
-		viewWidth = min(winWidth//2, int(viewHeight * float(photoWidth)/float(photoHeight)))
+		viewWidth = min(winWidth//2, int(viewHeight * float(jpgWidth)/float(jpgHeight)))
 		
 		tbm = self.times[bisect_left(self.times, self.tFromX(x), hi=len(self.times)-1)]
 		bm = self.getZoomBitmap( tbm )
+		bmWidth, bmHeight = bm.GetSize()
+		
+		viewWidth = min( viewWidth, bmWidth )
+		viewHeight = min( viewHeight, bmHeight )
 		
 		penWidth = 2
 		penWidthDiv2 = penWidth//2
@@ -257,18 +257,16 @@ class FinishStrip( wx.Panel ):
 			else:
 				xViewPos, yViewPos = winWidth - viewWidth + penWidthDiv2, penWidthDiv2
 			
-		if xViewPos != getattr(self,'xViewPosLast', -1):
-			self.xViewPosLast = xViewPos
-			self.Refresh()
-		
-		bmWidth, bmHeight = bm.GetSize()
-		
 		ratioY = float(y) / float(winHeight)
 		centerY = ratioY * bmHeight
 		bmY = int(centerY - viewHeight//2)
 		bmY = max( 0, min(bmY, bmHeight-viewHeight) )
 		
 		bmX = max( 0, (bmWidth - viewWidth) // 2 )
+		
+		if (xViewPos,viewWidth) != getattr(self,'zoomViewLast', (None,None)):
+			self.zoomViewLast = (xViewPos,viewWidth)
+			self.OnPaint()
 		
 		memDC = wx.MemoryDC( bm )
 		dc.Blit( xViewPos, yViewPos, viewWidth, viewHeight, memDC, bmX, bmY )
@@ -311,12 +309,12 @@ class FinishStrip( wx.Panel ):
 			else:
 				self.magnification *= magFactor
 			
-			self.magnification = min( 5.0, max(1.0, self.magnification) )
+			self.magnification = min( 5.0, max(0.25, self.magnification) )
 			if self.magnification != magnificationSave:
-				self.zoomBitmap = {}
+				self.zoomBitmap.clear()
 				wx.CallAfter( self.drawZoomPhoto, event.GetX(), event.GetY() )
-		
-		self.mouseWheelCallback( event )
+		else:
+			self.mouseWheelCallback( event )
 	
 	def OnMotion( self, event ):		
 		x, y, dragging = event.GetX(), event.GetY(), event.Dragging()
@@ -478,21 +476,20 @@ class FinishStripPanel( wx.Panel ):
 	def initUI( self ):
 		self.finish.SetPixelsPerSec( self.stretchSlider.GetMin() )
 		
-	def getSpeedPixelsPerSecondMinMax( self ):
+	def getSpeedPixelsPerSecond( self, speedKMH ):
 		frameTime = 1.0 / self.fps
 		
-		viewWidth = 4.0			# meters seen in the finish line with the finish camera
-		widthPix = photoWidth	# width of the photo
+		viewWidth = 4.0						# estimated meters seen in the finish line with the finish camera
+		widthPix = self.finish.jpgWidth		# width of a frame
 		
-		minMax = []
-		for speedKMH in (0.0, 80.0):			# Speed of the target (km/h)
-			speedMPS = speedKMH / 3.6			# Convert to m/s
-			d = speedMPS * frameTime			# Distance the target moves between each frame at speed.
-			pixels = widthPix * d / viewWidth	# Pixels the target moves between each frame at that speed.
-			pixelsPerSecond = max(300, pixels * self.fps)
-			minMax.append( int(pixelsPerSecond) )
+		speedMPS = speedKMH / 3.6			# Convert to m/s
+		d = speedMPS * frameTime			# Distance the target moves between each frame at speed.
+		pixels = widthPix * d / viewWidth	# Pixels the target moves between each frame at that speed.
+		pixelsPerSecond = max(300, pixels * self.fps)
+		return pixelsPerSecond
 		
-		return minMax
+	def getSpeedPixelsPerSecondMinMax( self ):
+		return [self.getSpeedPixelsPerSecond(speedKMH) for speedKMH in (0.0, 80.0)]
 
 	def onCopyToClipboard( self, event ):
 		bm = self.finish.GetBitmap()
@@ -581,6 +578,8 @@ class FinishStripPanel( wx.Panel ):
 		self.finish.SetTsJpgs( tsJpgs )
 		if ts and self.finish.tsFirst:
 			self.finish.SetT( (ts-self.finish.tsFirst).total_seconds() )
+		
+		self.stretchSlider.SetRange( *self.getSpeedPixelsPerSecondMinMax() )
 		self.scrollCallback()
 		
 	def GetTsJpgs( self ):
