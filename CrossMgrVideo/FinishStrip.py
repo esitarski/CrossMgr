@@ -8,6 +8,7 @@ import cStringIO as StringIO
 from bisect import bisect_left
 from MakeComposite import MakeComposite
 from AddPhotoHeader import AddPhotoHeader
+import Utils
 
 def _( s ):
 	return s
@@ -35,7 +36,7 @@ class FinishStrip( wx.Panel ):
 		
 		self.fps = float(fps)
 		self.scale = 1.0
-		self.magnification = 2.0
+		self.magnification = 0.25
 		self.mouseWheelCallback = mouseWheelCallback or (lambda event: None)
 		self.scrollCallback = scrollCallback or (lambda position: None)
 		
@@ -440,7 +441,8 @@ class FinishStripPanel( wx.Panel ):
 		self.imageQualitySelect.SetSelection( 1 if self.imageQuality == wx.IMAGE_QUALITY_HIGH else 0 )
 		self.imageQualitySelect.Bind( wx.EVT_RADIOBOX, self.onImageQuality )
 
-		self.copyToClipboard = wx.Button( self, label=_('Copy Finish Strip to Clipboard') )
+		self.copyToClipboard = wx.BitmapButton(self, bitmap=Utils.getBitmap('copy-to-clipboard.png'))
+		self.copyToClipboard.SetToolTip( wx.ToolTip('Copy Finish Strip to Clipboard') )
 		self.copyToClipboard.Bind( wx.EVT_BUTTON, self.onCopyToClipboard )
 		
 		fgs = wx.FlexGridSizer( cols=2, vgap=0, hgap=0 )
@@ -454,15 +456,15 @@ class FinishStripPanel( wx.Panel ):
 		hs.Add( self.imageQualitySelect, flag=wx.LEFT, border=16 )
 		hs.Add( self.copyToClipboard, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
 		hs.Add( wx.StaticText(self, label=u'\n'.join([
-					'Pan: Click and Drag',
-					'Stretch: Mousewheel',
+					'To Pan: Click and Drag',
+					'To Stretch: Mousewheel',
 				])
 			),
 			flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16
 		)
 		hs.Add( wx.StaticText(self, label=u'\n'.join([
-					'Zoom: Ctrl+Mousewheel',
-					'Photo: Right-click',
+					'To Zoom: Ctrl+Mousewheel',
+					'Show Photo: Right-click',
 				])
 			),
 			flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16
@@ -476,7 +478,9 @@ class FinishStripPanel( wx.Panel ):
 		wx.CallAfter( self.initUI )
 		
 	def initUI( self ):
-		self.finish.SetPixelsPerSec( self.stretchSlider.GetMin() )
+		v = self.stretchSlider.GetMin()  + (self.stretchSlider.GetMax()-self.stretchSlider.GetMin()) // 3
+		self.stretchSlider.SetValue( v )
+		self.finish.SetPixelsPerSec( v )
 		
 	def getSpeedPixelsPerSecond( self, speedKMH ):
 		frameTime = 1.0 / self.fps

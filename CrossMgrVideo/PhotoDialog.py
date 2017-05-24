@@ -1,4 +1,5 @@
 import wx
+import os
 import subprocess
 import cStringIO as StringIO
 from AddPhotoHeader import AddPhotoHeader
@@ -89,33 +90,42 @@ class PhotoDialog( wx.Dialog ):
 		self.photoHeader.Bind( wx.EVT_CHECKBOX, self.onPhotoHeader )
 		btnsizer.Add(self.photoHeader, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4)
 
-		btn = wx.Button(self, wx.ID_PRINT)
+		btn = wx.BitmapButton(self, wx.ID_PRINT, bitmap=Utils.getBitmap('print.png'))
+		btn.SetToolTip( wx.ToolTip('Print Image') )
 		btn.SetDefault()
 		btn.Bind( wx.EVT_BUTTON, self.onPrint )
-		btnsizer.Add(btn, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4)
+		btnsizer.Add(btn, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=32)
 		
-		btn = wx.Button(self, label='Copy to Clipboard')
+		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('copy-to-clipboard.png'))
+		btn.SetToolTip( wx.ToolTip('Copy Image to Clipboard') )
 		btn.Bind( wx.EVT_BUTTON, self.onCopyToClipboard )
-		btnsizer.Add(btn, flag=wx.LEFT, border=8)
+		btnsizer.Add(btn, flag=wx.LEFT, border=32)
 
-		btn = wx.Button(self, label='Save as PNG...')
+		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('png.png'))
+		btn.SetToolTip( wx.ToolTip('Save Image as PNG file') )
 		btn.Bind( wx.EVT_BUTTON, self.onSavePng )
-		btnsizer.Add(btn, flag=wx.LEFT, border=4)
+		btnsizer.Add(btn, flag=wx.LEFT, border=32)
 
-		btn = wx.Button(self, label='Save as Mpeg...')
+		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('mpg.png'))
+		btn.SetToolTip( wx.ToolTip('Save Sequence as Mpeg') )
 		btn.Bind( wx.EVT_BUTTON, self.onSaveMPeg )
-		btnsizer.Add(btn, flag=wx.LEFT, border=4)
+		btnsizer.Add(btn, flag=wx.LEFT, border=32)
 
-		btn = wx.Button(self, label='Save as Anim. Gif...')
+		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('gif.png'))
+		btn.SetToolTip( wx.ToolTip('Save Sequence as Animated Gif') )
 		btn.Bind( wx.EVT_BUTTON, self.onSaveGif )
 		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 
-		btn = wx.Button(self, label='Speed')
+		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('speedometer.png'))
+		btn.SetToolTip( wx.ToolTip('Get Speed') )
 		btn.Bind( wx.EVT_BUTTON, self.onGetSpeed )
-		btnsizer.Add(btn, flag=wx.LEFT, border=4)
+		btnsizer.Add(btn, flag=wx.LEFT, border=32)
+		
+		btnsizer.AddStretchSpacer()
 
-		btn = wx.Button(self, wx.ID_CLOSE)
-		btnsizer.Add(btn, flag=wx.LEFT, border=4)
+		btn = wx.BitmapButton(self, wx.ID_CLOSE, bitmap=Utils.getBitmap('close-window.png'))
+		btn.SetToolTip( wx.ToolTip('Close') )
+		btnsizer.Add(btn, flag=wx.LEFT|wx.ALIGN_RIGHT, border=4)
 		btn.Bind( wx.EVT_BUTTON, self.onClose )
 
 		vs.Add( btnsizer, flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.EXPAND|wx.ALIGN_CENTRE, border=5 )

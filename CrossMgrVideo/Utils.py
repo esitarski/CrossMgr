@@ -181,6 +181,10 @@ imageFolder = os.path.join(dirName, 'images')
 def getDirName():		return dirName
 def getImageFolder():	return imageFolder
 
+def getBitmap( fname ):
+	fname = os.path.join( imageFolder, fname )
+	return wx.Bitmap( fname, wx.BITMAP_TYPE_PNG )
+
 import platform
 def getFFMegExe():
 	if platform.system() == 'Windows':
