@@ -266,7 +266,9 @@ class FinishStrip( wx.Panel ):
 		
 		if (xViewPos,viewWidth) != getattr(self,'zoomViewLast', (None,None)):
 			self.zoomViewLast = (xViewPos,viewWidth)
-			self.OnPaint()
+			self.Refresh()
+			wx.CallLater( 10, self.drawZoomPhoto, x, y )
+			return
 		
 		memDC = wx.MemoryDC( bm )
 		dc.Blit( xViewPos, yViewPos, viewWidth, viewHeight, memDC, bmX, bmY )
@@ -309,7 +311,7 @@ class FinishStrip( wx.Panel ):
 			else:
 				self.magnification *= magFactor
 			
-			self.magnification = min( 5.0, max(0.25, self.magnification) )
+			self.magnification = min( 5.0, max(0.10, self.magnification) )
 			if self.magnification != magnificationSave:
 				self.zoomBitmap.clear()
 				wx.CallAfter( self.drawZoomPhoto, event.GetX(), event.GetY() )
