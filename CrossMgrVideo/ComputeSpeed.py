@@ -56,7 +56,7 @@ class FrontWheelEdgePage(wiz.WizardPageSimple):
 		vbs.Add( wx.StaticText(self, label = _('Drag the Green Square so the line is on the Leading Edge of the Front Wheel.')),
 					flag=wx.ALL, border = border )
 		self.speed = wx.StaticText( self )
-		bigFont = wx.FontFromPixelSize( (0,24), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		bigFont = wx.FontFromPixelSize( (0,32), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		self.speed.SetFont( bigFont )
 		vbs.Add( self.speed, flag=wx.ALL, border = border )
 		self.SetSizer( vbs )
