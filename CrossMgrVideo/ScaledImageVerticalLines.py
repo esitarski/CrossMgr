@@ -104,8 +104,8 @@ class ScaledImageVerticalLines( wx.Panel ):
 	def SetImage( self, image ):
 		self.image = image
 		width, height = self.GetSizeTuple()
-		dx = width / len(self.verticalLines)
-		self.verticalLines = [int(dx*(i+0.5)) for i in xrange(len(self.verticalLines))]
+		dx = width / (len(self.verticalLines) + 1)
+		self.verticalLines = [int(dx*(i+1)) for i in xrange(len(self.verticalLines))]
 		self.doResize = False
 		self.Refresh()
 		

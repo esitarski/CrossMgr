@@ -217,7 +217,7 @@ class FinishStrip( wx.Panel ):
 			return self.zoomBitmap[tbm]
 		except KeyError:
 			image = wx.ImageFromStream( StringIO.StringIO(self.jpg[tbm]), wx.BITMAP_TYPE_JPEG )
-			image.Rescale( int(self.jpgWidth*self.magnification), int(self.jpgWidth*self.magnification), self.imageQuality )
+			image.Rescale( int(self.jpgWidth*self.magnification), int(self.jpgHeight*self.magnification), self.imageQuality )
 			self.zoomBitmap[tbm] = image.ConvertToBitmap()
 			return self.zoomBitmap[tbm]
 	
