@@ -1,7 +1,7 @@
 import wx
 import wx.wizard as wiz
 import StringIO
-from ScaledImageVerticalLines import ScaledImageVerticalLines
+from ScaledImageVerticalLines import ScaledImageVerticalLines, EVT_VERTICAL_LINES
 
 _ = lambda x: x
 
@@ -43,72 +43,40 @@ class WheelEdgesPage(wiz.WizardPageSimple):
 		return self.sivl.GetVerticalLines()
 	
 class FrontWheelEdgePage(wiz.WizardPageSimple):
-	def __init__(self, parent):
+	def __init__(self, parent, getSpeed):
 		wiz.WizardPageSimple.__init__(self, parent)
+		
+		self.getSpeed = getSpeed
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
 		self.sivl = ScaledImageVerticalLines( self, numLines=1, colors=(wx.Colour(0, 255, 0),) )
+		self.sivl.Bind( EVT_VERTICAL_LINES, self.onVerticalLines )
 		vbs.Add( self.sivl, 1, wx.EXPAND|wx.ALL, border=border)
 		vbs.Add( wx.StaticText(self, label = _('Drag the Green Square so the line is on the Leading Edge of the Front Wheel.')),
 					flag=wx.ALL, border = border )
-		self.explain = wx.StaticText( self )
-		vbs.Add( self.explain, flag=wx.ALL, border = border )
+		self.speed = wx.StaticText( self )
+		bigFont = wx.FontFromPixelSize( (0,24), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		self.speed.SetFont( bigFont )
+		vbs.Add( self.speed, flag=wx.ALL, border = border )
 		self.SetSizer( vbs )
-	
-	def setExplain( self ):
-		self.explain.SetLabel(
-			'The front wheel edge in this frame (taken at {}) establishes the distance moved from the last frame.'.format(
-				self.t.strftime('%H:%M:%S.%f')[:-3] if self.t else 'None',
-			)
-		)
+		
+	def onVerticalLines( self, event=None ):
+		mps, kmh, mph = self.getSpeed()
+		if mps is None:
+			kmh = mph = 0.0
+		s = u'{:.2f} km/h     {:.2f} mph'.format(kmh, mph)
+		self.speed.SetLabel( s )
 		self.GetSizer().Layout()
 		
 	def Set( self, t, image, wheelDiameter ):
 		self.t = t
 		self.wheelDiameter = wheelDiameter
 		self.sivl.SetImage( image )
-		self.setExplain()
+		self.onVerticalLines()
 	
 	def getFrontWheelEdge( self ):
 		return self.sivl.GetVerticalLines()[0]
-	
-class SpeedPage(wiz.WizardPageSimple):
-	def __init__(self, parent):
-		wiz.WizardPageSimple.__init__(self, parent)
-		
-		bigFont = wx.FontFromPixelSize( (0,32), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
-		
-		fgs = wx.FlexGridSizer( cols=2, vgap=8, hgap=8 )
-		
-		self.kmh = wx.StaticText( self )
-		self.kmh.SetFont( bigFont )
-		label = wx.StaticText( self, label='km/h' )
-		label.SetFont( bigFont )
-		fgs.Add( self.kmh, flag=wx.ALIGN_RIGHT )
-		fgs.Add( label, flag=wx.ALIGN_LEFT )
-		
-		self.mph = wx.StaticText( self )
-		self.mph.SetFont( bigFont )
-		label = wx.StaticText( self, label='mph' )
-		label.SetFont( bigFont )
-		fgs.Add( self.mph, flag=wx.ALIGN_RIGHT )
-		fgs.Add( label, flag=wx.ALIGN_LEFT )
-		
-		self.mps = wx.StaticText( self )
-		self.mps.SetFont( bigFont )
-		label = wx.StaticText( self, label='m/s' )
-		label.SetFont( bigFont )
-		fgs.Add( self.mps, flag=wx.ALIGN_RIGHT )
-		fgs.Add( label, flag=wx.ALIGN_LEFT )
-		
-		self.SetSizer( fgs )
-	
-	def Set( self, mps, kmh, mph ):
-		self.mps.SetLabel( '{:.3f}'.format(mps) )
-		self.kmh.SetLabel( '{:.3f}'.format(kmh) )
-		self.mph.SetLabel( '{:.3f}'.format(mph) )
-		self.GetSizer().Layout()
 	
 class ComputeSpeed( object ):
 	wheelDiameter = 0.678
@@ -123,11 +91,9 @@ class ComputeSpeed( object ):
 		self.image2 = None
 		
 		self.wheelEdgesPage = WheelEdgesPage( self.wizard )
-		self.frontWheelEdgePage = FrontWheelEdgePage( self.wizard )
-		self.speedPage = SpeedPage( self.wizard )
+		self.frontWheelEdgePage = FrontWheelEdgePage( self.wizard, self.getSpeed )
 		
 		wiz.WizardPageSimple_Chain( self.wheelEdgesPage, self.frontWheelEdgePage )
-		wiz.WizardPageSimple_Chain( self.frontWheelEdgePage, self.speedPage )
 
 		self.wizard.SetPageSize( size )
 		self.wizard.GetPageAreaSizer().Add( self.wheelEdgesPage )
@@ -135,13 +101,16 @@ class ComputeSpeed( object ):
 	
 	def getSpeed( self ):
 		wheelTrailing, wheelLeading = self.wheelEdgesPage.getWheelEdges()
+		frontWheelEdge = self.frontWheelEdgePage.getFrontWheelEdge()
+		if wheelTrailing is None or wheelLeading is None or frontWheelEdge is None:
+			return None, None, None,
+		
 		wheelPixels = max( 1.0, abs(wheelLeading - wheelTrailing) )
 		metersPerPixel = self.wheelDiameter / wheelPixels
-		frontWheelEdge = self.frontWheelEdgePage.getFrontWheelEdge()
 		dPixels = abs(frontWheelEdge - wheelLeading)
 		metersPerSecond = dPixels * metersPerPixel / max(0.0001, (self.t2 - self.t1).total_seconds())
 		return metersPerSecond, metersPerSecond*3.6, metersPerSecond*2.23694
-	
+		
 	def Show( self, image1, t1, image2, t2 ):
 		self.t1, self.t2 = t1, t2
 		self.image1, self.image2 = image1, image2
@@ -159,8 +128,6 @@ class ComputeSpeed( object ):
 			page = evt.GetPage()
 			if page == self.wheelEdgesPage:
 				self.frontWheelEdgePage.sivl.verticalLines = [self.wheelEdgesPage.sivl.verticalLines[1]]
-			elif page == self.frontWheelEdgePage:
-				self.speedPage.Set( *self.getSpeed() )
 			
 	def onPageChanged( self, evt ):
 		isForward = evt.GetDirection()

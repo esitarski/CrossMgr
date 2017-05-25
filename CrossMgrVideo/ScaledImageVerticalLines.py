@@ -1,5 +1,21 @@
 import wx
 
+EVT_VERTICAL_LINES_Type = wx.NewEventType()
+EVT_VERTICAL_LINES = wx.PyEventBinder(EVT_VERTICAL_LINES_Type, 1)
+
+#----------------------------------------------------------------------
+
+class VerticalLineEvent(wx.PyCommandEvent):
+	def __init__(self, evtType, id):
+		wx.PyCommandEvent.__init__(self, evtType, id)
+		self.verticalLines = []
+
+	def SetVerticalLines(self, verticalLines):
+		self.verticalLine = verticalLines
+
+	def GetVerticalLines(self):
+		return self.verticalLines
+
 contrastColours = [
 	wx.Colour(255,   0,   0), wx.Colour(  0, 255,   0), wx.Colour(  0,   0, 255),
 	wx.Colour(  0, 255, 255), wx.Colour(255,   0, 255), wx.Colour(255, 255,   0),
@@ -57,6 +73,11 @@ class ScaledImageVerticalLines( wx.Panel ):
 	def OnMouseMotion( self, event ):
 		if self.iLineSelected is not None:
 			self.verticalLines[self.iLineSelected] = event.GetX() - self.xCorrection
+			
+			evt = VerticalLineEvent(EVT_VERTICAL_LINES_Type, self.GetId())
+			evt.SetVerticalLines( self.verticalLines )
+			self.GetEventHandler().ProcessEvent(evt)
+			
 			self.Refresh()
 	
 	def OnMouseUp( self, event ):
@@ -111,7 +132,7 @@ class ScaledImageVerticalLines( wx.Panel ):
 		
 	def GetVerticalLines( self ):
 		# Returned in image pixels.
-		return [None if v is None else (v / self.ratio) for v in self.verticalLines]
+		return [None if (v is None or not self.ratio) else (v / self.ratio) for v in self.verticalLines]
 		
 	def SetLinePosition( self, i, v ):
 		self.verticalLines[i] = v * self.ratio

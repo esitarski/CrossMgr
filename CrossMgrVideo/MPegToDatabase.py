@@ -58,4 +58,4 @@ def MPegToDatabase( fnameMPeg, tRecorded=None ):
 	shutil.rmtree( tmpdir, ignore_errors=True )
 
 if __name__ == '__main__':
-	MPegToDatabase( os.path.join('bugs', '290JacobLifeson.mpeg') )
+	MPegToDatabase( os.path.join('bugs', '290 Jacob Lifson.mpeg') )
