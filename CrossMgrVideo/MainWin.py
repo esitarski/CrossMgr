@@ -540,8 +540,8 @@ class MainWin( wx.Frame ):
 		
 		pd = PhotoDialog( self, self.finishStrip.finish.getJpg(self.xFinish), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps )
 		pd.ShowModal()
-		if self.triggerInfo['kmh'] != pd.kmh:
-			self.dbWriterQ.put( ('kmh', self.triggerInfo['id'], pd.kmh) )
+		if self.triggerInfo['kmh'] != (pd.kmh or 0.0):
+			self.dbWriterQ.put( ('kmh', self.triggerInfo['id'], pd.kmh or 0.0) )
 			wx.CallLater( 300, self.refreshTriggers, replace=True, iTriggerRow=self.iTriggerSelect )
 		pd.Destroy()
 
