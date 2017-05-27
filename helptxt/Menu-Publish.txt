@@ -29,13 +29,13 @@ The report will include the specified number of podium positions, or the number 
 ## Print Categories...
 Prints a summary of the Categories with number of laps and number ranges.  This can be useful as a quick reference to all the categories on course and not a bulky as a full start list.
 
-## PDF Publish...
-Publish the results in pdf format.  Creates a __pdf__ folder with your race file.  Write pdf files for all-in-one, as well as separate pdf flies for the selected categories.
+## Batch Publish Files...
 
-## Excel Publish...
-Publish the results in Excel format and opens Excel on the output file.
+This brings up a dialog that allows you to publish results in many formats.  __Batch Publish__ will update all the output file formats simultaneously so they are synchronized.  All output files are written to the same folder as the race file.
 
-## HTML Publish...
+Some files have the option to publish with FTP to a remote server, allowing results to be published to a web site.  You need to configure the connection details of the remote FTP server to make this work (see [Properties][]).
+
+### HTML
 Publish the results as an HTML file.  Includes the Race Animation and the Chart if specified in [Properties][].
 
 The HTML web page has a drop-down button next to the __Refresh__ button to control __Kiosk Mode__.
@@ -73,30 +73,14 @@ You can also change the default language of the page:
 	
 Where __xx__ is either __en__, __fr__ or __es__ for English, French or Spanish respectively.  When a language is specified with the __lang=xx__ option, it is shown first in the language list.
 
-## Ftp HTML Publish...
-Publishes HTML formatted Results and Photos with FTP.
+### Index HTML
+Creates the Index (navigation) page for the race.
 
-Also publishes an "index.html" page showing all CrossMgr races in the same folder.
+### PDF
+Publish the results in pdf format.
 
-You can also print a large QR-Code with the race results URL.  This enables spectators at the race to instantly access the results page from their smart phones.
-
-Field|Description
-:----|:----------
-Ftp Host Name|Host name of the FTP server
-Upload HTML to Path|Directory to upload the HTML results file on the server.
-Upload Photos to Path|Optional.  If not selected, photos will not be published if using CrossMgrCamera.  If selected, specifies the directory to upload the photos on the server.  Photos are uploaded as they are taken during the race.
-User|User to access the FTP server.
-Password|Password to access the FTP server.
-Automatically Upload Results During Race|If checked, CrossMgr will automatically upload results to the FTP server while the race is running (see below for details).
-URL Path (optional)|The path to the race results url.  The HTML file name will be added to this path.  This is useful for testing that the published html file can be accessed as expected.
-Race Results URL|Shows the full URL (URL Path + HTML file name)
-
-If __Automatically Upload Results During Race__ is selected, CrossMgr will automatically publish results with FTP while the race is running.
-
-If you fill in the __URL Path__, CrossMgr will open a browser on the __Race Results URL__ after you press OK.  Use this to test whether the upload worked correctly and that the __Race Results URL__ can access the FTP published file as expected.
-
-The __Print Results URL as a QR Code...__ button prints a page with the [QR Code](http://en.wikipedia.org/wiki/QR_code) corresponding to the URL Path and Race (QR Codes are square barcodes).
-Print out this page and post it at the race.  Then, spectators can read the QR Code with their Smartphones to easily access the web Results page.
+### Excel
+Publish the results in Excel format, one category per sheet.
 
 ### Details, Logic and Example of Live Results:
 
@@ -147,15 +131,15 @@ When the leaders return, the timer will reset back to 4 seconds because the gap 
 This approach follows race activity - no activity - no publish.
 If riders are so strung out that there are no discernible groups, it backs off to sending an update every 32 seconds - like a fixed-interval approach.
 
-## CrossResults.com Publish...
+### CrossResults.com
 Creates a CrossResults.com compatible file.  Only Categories flagged as __Upload__ will be considered.
 Launches your web browser to the CrossResults.com upload page to upload it automatically.
 
-## WebScorer.com Publish...
+### WebScorer.com
 Creates a WebScorer.com compatible file.  Only Categories flagged as __Upload__ will be considered.
 Follow the instructions on the WebScorer.com site to upload this file.
 
-## USAC Excel Publish...
+### USAC
 Export the results for race categories in a format acceptable to USA Cycling.  Only Categories flagged as __Upload__ will be considered.
 Follow the USAC instructions to upload this file.
 
@@ -185,66 +169,28 @@ Pulled|PUL|DNP
 Not Placed|NP|DNP
 Outside Time Bound|OTL|DNP
 
-## UCI (Infostrada) Excel Publish...
+### UCI
 
-Export the results for race categories in a format acceptable to Infostrade.  Only Categories flagged as __Upload__ will be considered.
-Follow the Infostrade instructions to upload this file.
+Export the results in standard UCI Dataride format (both start list and results).  Only Categories flagged as __Upload__ will be considered.
+Follow the UCI Dataride instructions to upload this file to the UCI site.
 
-Columns in the exported spreadsheet are as follows:
-
-Column|Description
-:-----|:----------
-Pos|Same as the __Pos__ field in CrossMgr [Results][].
-Nr.|The rider's Bib number.
-Name|Name of the rider in __LASTNAME, Firstname__ format
-UCI Code|Corresponds to the rider's __License__ as configured in the [External Excel][] sheet.
-Team|Corresponds to the rider's __Team__ as configured in the [External Excel][] sheet.
-
-## Facebook PNG Publish...
+### Facebook
 Publish the results as PNG image files suitable for posting to Facebook or Tumblr, which do not allow PDF or HTML content.
 The PNG files are written into a folder called __ResultsPNG__ in the same folder as the CrossMgr race file.
 
 Although __quick and dirty__, this is not a recommended way to publish to Facebook.
-The key problem is that image files cannot be indexed by Google, Bing, Yahoo or other search engines.  This makes it much more difficult for people to find your results by searching.
+The image files cannot be indexed by Google, Bing, Yahoo or other search engines.  This makes it impossible for people to find your results by searching.
 
 See [Facebook][] for some better suggestions about how to publish results in a search engine-friendly format.
 
-## TT Start HTML Publish
+### Post Publish Command
 
-Publish a page that provides a Time Trial countdown clock for each rider, with beeps on 10, 5, 4, 3, 2, 1 and 0.
+Runs a command after the publish.  This is useful if you want to move the files to another location, or perform other post-processing on the file.  You can use substitions in the command:
 
-The page can be published before the TT starts.
+Substitution|Description
+:-----------|:----------
+%*         |Inserts all the published file names.
+{=Value}    |Inserts a [Properties][] Notes value, for example {=Name}, {=RaceDate}
 
-The pre-race TTStart page shows the race name and a countdown clock to the scheduled race start.
-It also shows the first 8 riders in the start list, but does not show the time-of-day start times.
-The page beeps immediately on load or refresh, so you can check if the device supports beeps.
-This is __pre-race__ mode.
-Update it as much as you like.
 
-When the TTStart page counts down to the scheduled start time, it starts refreshing itself automatically every 10 seconds.  This is __pre-start__ mode.
 
-When you start the TT from CrossMgr (that is, press the "Start" button), CrossMgr generates and uploads a new version of TTStart with the actual start time in it.
-
-This signals the device to go into running mode and start beeping rider starts.
-
-No other intervention is required.
-
-CrossMgr also automatically prompts to publish the TTStart page so you don't forget.
-
-So, here is how it works in practice:
-
-You generate the TTStart pages well before the event, and make sure all the devices are showing it correctly.
-Make sure you have the correct scheduled start of the TT defined in CrossMgr, and have closely synced your devices' clocks.
-Open the pages on the devices - they will show a countdown to the TT (pre-race mode).
-Make sure there is at least one minute before the first rider's start.
-
-Then, relax ;)
-
-When you press the Start button for the TT, CrossMgr generates a new TTStart page with the actual race start time, and uploads it with ftp.
-Because this is at-or-after the Schedule Start time, all the devices will have switched to pre-start mode - refreshing themselves looking for the page update.
-After a few seconds, each device will find the new page, switches to running mode and starts the rider countdowns.
-
-No extra stuff to remember.
-
-Of course, if anything changes while the TT is running, you can republish from CrossMgr and refresh the devices at any time.
-Of, if you don't want to wait for the TTStart page to find the updated page and start countdown, hit refresh.
