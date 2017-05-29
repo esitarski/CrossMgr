@@ -1911,6 +1911,21 @@ class Race( object ):
 	
 	def getStartOffsets( self ):
 		return sorted( set(c.getStartOffsetSecs() for c in self.getCategories(startWaveOnly=True)) )
+		
+	def categoryStartOffset( self, category ):
+		# Get the start offset of the controlling Start Wave.
+		if category:
+			if category.catType == Category.CatWave:
+				return category.getStartOffsetSecs()
+			elif category.catType == Category.CatComponent:
+				CatWave = Category.CatWave
+				lastWave = None
+				for c in self.getCategories( startWaveOnly=False ):
+					if c.catType == CatWave:
+						lastWave = c
+					elif c == category:
+						return lastWave.getStartOffsetSecs() if lastWave else 0.0
+		return 0.0
 
 	def setCategoryMask( self ):
 		self.categoryMask = ''

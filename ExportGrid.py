@@ -626,7 +626,10 @@ class ExportGrid( object ):
 		results = GetResults( category )
 		if not results:
 			return
-		catDetails = dict( (cd['name'], cd) for cd in GetCategoryDetails() )
+		
+		race = Model.race
+		
+		catDetails = { cd['name']:cd for cd in GetCategoryDetails() }
 		try:
 			cd = catDetails[category.fullname]
 		except:
@@ -634,22 +637,26 @@ class ExportGrid( object ):
 			
 		if category:
 			starters, lapped, dnf = 0, 0, 0
-			for r in results:
-				if r.status != Model.Rider.DNS:
+			for rr in results:
+				if rr.status != Model.Rider.DNS:
 					starters += 1
-				if r.status == Model.Rider.DNF:
+				if rr.status == Model.Rider.DNF:
 					dnf += 1
-				if r.gap.startswith('-'):
+				if rr.gap.startswith('-'):
 					lapped += 1
 			self.footer = (u''.join([
 					_('Total'), u':',
 					u'   {} ', _('Starters'),
 					u',  {} ', _('DNF'),
 					u',  {} ', _('Lapped')])).format( starters, dnf, lapped )
-			
+
+		startOffset = race.categoryStartOffset( category )
+
 		leader = results[0]
 		hasSpeeds = (hasattr(leader, 'lapSpeeds') or hasattr(leader, 'raceSpeeds'))
 		hasFactor = (hasattr(leader, 'factor') and any( leader.factor != rr.factor for rr in results ))
+		
+		leaderTime = Utils.formatTime(leader.lastTime) if leader.lastTime else u''
 		
 		if showLapTimes and showLapsFrequency is None:
 			# Compute a reasonable number of laps to show (max around 10).
@@ -657,8 +664,7 @@ class ExportGrid( object ):
 			maxLaps = max( len(r.lapTimes or []) for r in results )
 			showLapsFrequency = max( 1, int(math.ceil(maxLaps / 10.0)) )
 		
-		race = Model.race
-		catStr = 'All' if not category else category.fullname
+		catStr = category.fullname if category else 'All'
 		catData = []
 		if cd and cd.get('raceDistance', None):
 			catData.append( u'{:.2f} {}'.format(cd['raceDistance'], cd['distanceUnit']) )
@@ -672,15 +678,16 @@ class ExportGrid( object ):
 					)
 				else:
 					catData.append( u'{} {} {:.2f} {}'.format(cd['laps'], _('laps of'), cd['lapDistance'], cd['distanceUnit']) )
-			if leader.status == Model.Rider.Finisher:
-				catData.append( u'{}: {} - {}'.format(_('winner'), Utils.formatTime(leader.lastTime - cd['startOffset']), leader.speed) )
+		if leader.status == Model.Rider.Finisher:
+			if getattr(leader, 'speed', None):
+				catData.append( u'{}: {} - {}'.format(_('winner'), leaderTime, leader.speed) )
+			else:
+				catData.append( u'{}: {}'.format(_('winner'), leaderTime) )
 	
 		self.title = u'\n'.join( [race.name, Utils.formatDate(race.date), catStr, u', '.join(catData)] )
 		isTimeTrial = getattr( race, 'isTimeTrial', False )
 		roadRaceFinishTimes = getattr( race, 'roadRaceFinishTimes', False )
 
-		startOffset = category.getStartOffsetSecs() if category else 0.0
-		
 		infoFields = ReportFields if getExternalData else []
 		infoFieldsPresent = set( infoFields ) & set( dir(leader) )
 		infoFields = [f for f in infoFields if f in infoFieldsPresent]
@@ -712,40 +719,38 @@ class ExportGrid( object ):
 		rrFields = (['pos', 'num'] +
 					infoFields +
 					(['clockStartTime','startTime','finishTime'] if isTimeTrial else []) +
-					(['lastTimeOrig', 'factor', 'lastTime'] if hasFactor else ['lastTimeOrig']) +
+					(['lastTimeOrig', 'factor', 'lastTime'] if hasFactor else ['lastTime']) +
 					(['gap'] if not hasFactor else [])
 		)
 		if hasSpeeds:
 			rrFields += ['speed']
 		for col, f in enumerate( rrFields ):
-			for row, r in enumerate(results):
-				if f in {'lastTime', 'lastTimeOrig'}:
-					ttt = getattr( r, f, 0.0 )
-					if ttt <= 0.0:
-						data[col].append( '' )
-					else:
-						if not isTimeTrial:
-							ttt = max( 0.0, ttt - startOffset )
-						data[col].append( Utils.formatTimeCompressed(ttt, highPrecision) )
-				elif f in {'clockStartTime', 'startTime', 'finishTime'}:
-					sfTime = getattr( r, f, None )
+			if f in ('lastTime', 'lastTimeOrig'):
+				for row, rr in enumerate(results):
+					ttt = getattr( rr, f, 0.0 )
+					data[col].append( Utils.formatTimeCompressed(ttt, highPrecision) if ttt > 0.0 else u'' )
+			elif f in ('clockStartTime', 'startTime', 'finishTime'):
+				for row, rr in enumerate(results):
+					sfTime = getattr( rr, f, None )
 					if sfTime is not None:
 						data[col].append( Utils.formatTimeCompressed(sfTime, highPrecision) )
 					else:
 						data[col].append( '' )
-				elif f == 'factor':
-					factor = getattr( r, f, None )
+			elif f == 'factor':
+				for row, rr in enumerate(results):
+					factor = getattr( rr, f, None )
 					if factor is not None:
-						data[col].append( '{:.2f}'.format(factor) )
+						data[col].append( u'{:.2f}'.format(factor) )
 					else:
-						data[col].append( '' )
-				else:
-					data[col].append( getattr(r, f, '') )
+						data[col].append( u'' )
+			else:
+				for row, rr in enumerate(results):
+					data[col].append( getattr(rr, f, u'') )
 		
 		if showLapTimes:
-			for row, r in enumerate(results):
+			for row, rr in enumerate(results):
 				iCol = self.iLapTimes
-				for i, t in enumerate(r.lapTimes):
+				for i, t in enumerate(rr.lapTimes):
 					lap = i + 1
 					if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax:
 						try:
@@ -757,7 +762,7 @@ class ExportGrid( object ):
 							break
 				
 				# Pad out the rest of the columns.
-				for i in xrange(len(r.lapTimes), lapsMax):
+				for i in xrange(len(rr.lapTimes), lapsMax):
 					lap = i + 1
 					if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax:
 						try:
