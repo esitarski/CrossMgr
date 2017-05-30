@@ -320,6 +320,21 @@ class CrossMgrPrintoutPNG( CrossMgrPrintout ):
 		self.lastFName = None
 
 	def OnPrintPage( self, page ):
+		fileSuffix = {
+			wx.BITMAP_TYPE_BMP:'bmp',
+			wx.BITMAP_TYPE_JPEG:'jpg',
+			wx.BITMAP_TYPE_PCX:'pcx',
+			wx.BITMAP_TYPE_PNG:'png',
+			wx.BITMAP_TYPE_PNM:'pnm',
+			wx.BITMAP_TYPE_TIFF:'tiff',
+			wx.BITMAP_TYPE_XPM:'xpm',
+			wx.BITMAP_TYPE_ICO:'ico',
+			wx.BITMAP_TYPE_CUR:'cur',
+		}
+		fileFormat = wx.BITMAP_TYPE_BMP
+
+		fileExt = '.' + fileSuffix[fileFormat]
+		
 		exportGrid = self.prepareGrid( page )
 		
 		pxPerInch = 148
@@ -335,33 +350,49 @@ class CrossMgrPrintoutPNG( CrossMgrPrintout ):
 		dc.SetBrush( wx.BLACK_BRUSH )
 		exportGrid.drawToFitDC( *([dc] + self.pageInfo[page][1:-1]) )
 		dc.SelectObject( wx.NullBitmap )
+		dc = None
 		image = bitmap.ConvertToImage()
+		bitmap = None
 		
 		category = self.pageInfo[page][0]
 		pageNumber = self.pageInfo[page][3]
 		pageTotal = self.pageInfo[page][4]
 		
 		if pageTotal != 1:
-			fname = u'{categoryName}-({pageNumber})-{fileBase}.png'.format(
+			fname = u'{categoryName}-({pageNumber})-{fileBase}{fileExt}'.format(
 				fileBase = self.fileBase,
 				categoryName = category.fullname if category != 'Primes' else 'Primes',
-				pageNumber = pageNumber
+				pageNumber = pageNumber,
+				fileExt=fileExt,
 			)
 		else:
-			fname = u'{categoryName}-{fileBase}.png'.format(
+			fname = u'{categoryName}-{fileBase}{fileExt}'.format(
 				fileBase = self.fileBase,
-				categoryName = category.fullname if category != 'Primes' else 'Primes'
+				categoryName = category.fullname if category != 'Primes' else 'Primes',
+				fileExt=fileExt,
 			)
 								
 		fname = Utils.RemoveDisallowedFilenameChars( fname ).replace( ' ', '-' )
 		
 		if self.dir and not os.path.isdir( self.dir ):
 			os.mkdir( self.dir )
-		fname = os.path.join( self.dir, fname )
 		
-		self.lastFName = fname
-			
-		image.SaveFile( fname, wx.BITMAP_TYPE_PNG )
+		fname = os.path.join( self.dir, fname )
+		fnamePNG = os.path.splitext(fname)[0] + '.png'
+		
+		self.lastFName = fnamePNG
+		
+		# First same the file as a bitmap.
+		image.SaveFile( fname, fileFormat )
+		
+		# The convert the saved file to a png.
+		# For some reason Windows requires this.
+		with open(fname, 'rb') as f:
+			image = wx.ImageFromStream( f, fileFormat )
+		image.SaveFile( fnamePNG, wx.BITMAP_TYPE_PNG )
+		
+		# Cleanup the old file.
+		os.remove( fname )
 		return True
 
 class CrossMgrPrintoutPDF( CrossMgrPrintout ):

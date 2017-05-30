@@ -269,7 +269,6 @@ class ExportGrid( object ):
 		# Get the row slice for each column.
 		dataDraw = [col[rowDrawStart:rowDrawStart+rowDrawCount] for col in self.data]
 		
-		flagDraw = []
 		yPixTop = yPixMax = yPix
 		for col, c in enumerate(self.colnames):
 			isSpeed = (c == _('Speed'))
@@ -320,9 +319,7 @@ class ExportGrid( object ):
 							bmp = flagCache[ioc] = None
 					if bmp:
 						padding = (textHeight - bmp.GetHeight()) // 2
-						flagDraw.append( (bmp, int(xPix), int(yPix+padding)) )
-						#dc.DrawBitmap( bmp, xPix, yPix+padding )
-						#dc.DrawRectangle( xPix, yPix+padding, bmp.GetWidth(), bmp.GetHeight() )
+						dc.DrawBitmap( bmp, int(xPix), int(yPix+padding) )
 
 				yPix += textHeight
 			yPixMax = max(yPixMax, yPix)
@@ -330,10 +327,6 @@ class ExportGrid( object ):
 			
 			if isSpeed:
 				self.colnames[col] = _('Speed')
-		
-		#for bmp, x, y in flagDraw:
-		#	print x, y
-		#	dc.DrawBitmap( bmp, x, y )
 		
 		# Switch to smaller font.
 		font = self._getFont( borderPix // 4, False )

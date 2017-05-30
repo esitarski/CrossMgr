@@ -1605,8 +1605,8 @@ class MainWin( wx.Frame ):
 				except Exception as e:
 					logException( e, sys.exc_info() )
 					Utils.MessageOK(self,
-								u'{}:\n\n    {}.'.format(_('Error creating PNG files'), e),
-								_('PNG File Error'), iconMask=wx.ICON_ERROR )
+								u'{}:\n\n    {}.'.format(_('Error creating Image files'), e),
+								_('Image File Error'), iconMask=wx.ICON_ERROR )
 					success = False
 					break
 
@@ -1615,7 +1615,7 @@ class MainWin( wx.Frame ):
 		if success and not silent:
 			if fname and self.launchExcelAfterPublishingResults:
 				Utils.LaunchApplication( fname )
-			Utils.MessageOK( self, u'{}:\n\n    {}'.format(_('Results written as PNG files to'), dir), _('Facebook Publish') )
+			Utils.MessageOK( self, u'{}:\n\n    {}'.format(_('Results written as Image files to'), dir), _('Facebook Publish') )
 
 	@logCall
 	def menuPrintCategories( self, event ):
