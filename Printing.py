@@ -385,7 +385,7 @@ class CrossMgrPrintoutPNG( CrossMgrPrintout ):
 		# First same the file as a bitmap.
 		image.SaveFile( fname, fileFormat )
 		
-		# The convert the saved file to a png.
+		# Then convert the saved file to a png.
 		# For some reason Windows requires this.
 		with open(fname, 'rb') as f:
 			image = wx.ImageFromStream( f, fileFormat )
