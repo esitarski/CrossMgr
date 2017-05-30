@@ -189,7 +189,7 @@ class ExportGrid( object ):
 						rowDrawStart = 0, rowDrawCount = 1000000,
 						pageNumber = None, pageNumberTotal = None ):
 		self.combineFirstLastNames()
-		bitmapCache = {}
+		flagCache = {}
 		
 		self.rowDrawCount = rowDrawCount
 			
@@ -309,15 +309,15 @@ class ExportGrid( object ):
 				if col == iUCICodeCol or col == iNatCodeCol:
 					ioc = vStr.strip()[:3].upper()
 					try:
-						bmp = bitmapCache[ioc]
+						bmp = flagCache[ioc]
 					except KeyError:
 						img = Flags.GetFlagImage( ioc )
 						if img:
 							h = int( textHeight * 0.66 )
 							w = int( float(img.GetWidth()) / float(img.GetHeight()) * float(h) )
-							bmp = bitmapCache[ioc] = wx.BitmapFromImage( img.Scale(w, h, wx.IMAGE_QUALITY_NORMAL) )
+							bmp = flagCache[ioc] = wx.BitmapFromImage( img.Scale(w, h, wx.IMAGE_QUALITY_NORMAL) )
 						else:
-							bmp = bitmapCache[ioc] = None
+							bmp = flagCache[ioc] = None
 					if bmp:
 						padding = (textHeight - bmp.GetHeight()) // 2
 						flagDraw.append( (bmp, int(xPix), int(yPix+padding)) )
@@ -331,9 +331,9 @@ class ExportGrid( object ):
 			if isSpeed:
 				self.colnames[col] = _('Speed')
 		
-		#for b, x, y in flagDraw:
+		#for bmp, x, y in flagDraw:
 		#	print x, y
-		#	dc.DrawBitmap( b, x, y )
+		#	dc.DrawBitmap( bmp, x, y )
 		
 		# Switch to smaller font.
 		font = self._getFont( borderPix // 4, False )
