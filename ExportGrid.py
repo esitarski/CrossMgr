@@ -292,7 +292,7 @@ class ExportGrid( object ):
 				for r in xrange(max(len(cData) for cData in dataDraw) + 1):
 					dc.DrawLine( borderPix, yLine + r * textHeight, widthPix - borderPix, yLine + r * textHeight )
 				dc.SetPen( wx.BLACK_PEN )
-					
+			
 			for v in dataDraw[col]:
 				vStr = u'{}'.format(v)
 				if vStr:
@@ -306,7 +306,7 @@ class ExportGrid( object ):
 					else:
 						self._drawMultiLineText( dc, vStr, xPix + colWidth - w, yPix )	# right justify
 				if col == iUCICodeCol or col == iNatCodeCol:
-					ioc = vStr.strip()[:3]
+					ioc = vStr.strip()[:3].upper()
 					try:
 						bmp = bitmapCache[ioc]
 					except KeyError:
@@ -314,13 +314,13 @@ class ExportGrid( object ):
 						if img:
 							h = int( textHeight * 0.66 )
 							w = int( float(img.GetWidth()) / float(img.GetHeight()) * float(h) )
-							bmp = bitmapCache[ioc] = wx.BitmapFromImage( img.Scale(w, h, wx.IMAGE_QUALITY_HIGH) )
+							bmp = bitmapCache[ioc] = wx.BitmapFromImage( img.Scale(w, h, wx.IMAGE_QUALITY_NORMAL) )
 						else:
 							bmp = bitmapCache[ioc] = None
 					if bmp:
 						padding = (textHeight - bmp.GetHeight()) // 2
-						dc.DrawBitmap( bmp, xPix, yPix+padding )
-						# dc.DrawRectangle( xPix, yPix+padding, bmp.GetWidth(), bmp.GetHeight() )
+						#dc.DrawBitmap( bmp, xPix, yPix+padding )
+						#dc.DrawRectangle( xPix, yPix+padding, bmp.GetWidth(), bmp.GetHeight() )
 
 				yPix += textHeight
 			yPixMax = max(yPixMax, yPix)
