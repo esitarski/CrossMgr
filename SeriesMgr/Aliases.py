@@ -41,7 +41,7 @@ class Aliases(wx.Panel):
 		)
 		
 		self.explain = wx.StaticText( self, label=text )
-		self.explain.SetFont( wx.FontFromPixelSize((0,12), wx.SWISS, wx.NORMAL, wx.NORMAL, False) )
+		self.explain.SetFont( wx.FontFromPixelSize((0,20), wx.SWISS, wx.NORMAL, wx.NORMAL, False) )
 		
 		self.addButton = wx.Button( self, label=u'Add Reference Name' )
 		self.addButton.Bind( wx.EVT_BUTTON, self.onAddButton )

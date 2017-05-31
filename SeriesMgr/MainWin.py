@@ -681,8 +681,10 @@ table.results tr td.fastest{
 				return
 			if ret == wx.ID_OK:
 				self.writeSeries()
-				
+		
 		SeriesModel.model = SeriesModel.SeriesModel()
+		SeriesModel.model.postReadFix()
+		
 		self.fileName = ''
 		self.showPageName( 'Races' )
 		self.refresh()
@@ -740,12 +742,12 @@ table.results tr td.fastest{
 		try:
 			self.writeSeries()
 		except:
-			Utils.MessageOK(self, 'Write Failed.  Series NOT saved."%s".' % fileName, 'Write Failed', iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, 'Write Failed.  Series NOT saved.\n\n    "{}".'.format(fileName), 'Write Failed', iconMask=wx.ICON_ERROR )
 		self.updateRecentFiles()
 
 	def setTitle( self ):
 		if self.fileName:
-			title = '%s%s - %s' % ('*' if SeriesModel.model.changed else '', self.fileName, Version.AppVerName)
+			title = '{}{} - {}'.format('*' if SeriesModel.model.changed else '', self.fileName, Version.AppVerName)
 		else:
 			title = Version.AppVerName
 		self.SetTitle( title )
@@ -762,10 +764,13 @@ table.results tr td.fastest{
 		if response != wx.ID_OK:
 			return
 		
+		if not fileName.endswith('.smn'):
+			fileName += '.smn'
+		
 		try:
 			with open(fileName, 'rb') as fp:
 				pass
-			if not Utils.MessageOKCancel(self, 'File Exists.  Replace?', 'File Exists'):
+			if not Utils.MessageOKCancel(self, 'File Exists.\n\n    "{}"\n\nReplace?'.format(fileName), 'File Exists'):
 				return
 		except IOError:
 			pass
@@ -774,7 +779,7 @@ table.results tr td.fastest{
 			with open(fileName, 'wb') as fp:
 				pass
 		except:
-			Utils.MessageOK(self, 'Cannot open file "%s".' % fileName, 'Cannot Open File', iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, 'Cannot open file:\n\n    "{}"'.format(fileName), 'Cannot Open File', iconMask=wx.ICON_ERROR )
 			return
 			
 		self.fileName = fileName
@@ -791,7 +796,7 @@ table.results tr td.fastest{
 	
 	def menuExit(self, event):
 		if SeriesModel.model.changed:
-			response = Utils.MessageYesNoCancel(self, 'You have Unsaved Changes.\nSave Before Closing?', 'Unsaved Changes')
+			response = Utils.MessageYesNoCancel(self, 'You have Unsaved Changes.\n\nSave Before Closing?', 'Unsaved Changes')
 			if response == wx.ID_CANCEL:
 				return
 			if response == wx.ID_OK:

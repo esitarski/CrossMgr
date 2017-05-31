@@ -6,19 +6,6 @@ import sys
 import datetime
 import subprocess
 
-if os.path.exists('build'):
-	shutil.rmtree( 'build' )
-
-gds = [
-	r"c:\GoogleDrive\Downloads\Windows",
-	r"C:\Users\edwar\Google Drive\Downloads\Windows",
-	r"C:\Users\Edward Sitarski\Google Drive\Downloads\Windows",
-]
-for googleDrive in gds:
-	if os.path.exists(googleDrive):
-		break
-googleDrive = os.path.join( googleDrive, 'SeriesMgr' )
-	
 # Copy all dependent files into this folder.
 copyFiles = [
 	"Model.py",
@@ -53,6 +40,22 @@ with open('Dependencies.py', 'w') as fp:
 	for f in copyFiles:
 		fp.write( 'import {}\n'.format(f[:-3]) )
 
+if os.path.exists('build'):
+	shutil.rmtree( 'build' )
+
+gds = [
+	r"c:\GoogleDrive\Downloads\Windows",
+	r"C:\Users\edwar\Google Drive\Downloads\Windows",
+	r"C:\Users\Edward Sitarski\Google Drive\Downloads\Windows",
+]
+for googleDrive in gds:
+	if os.path.exists(googleDrive):
+		break
+googleDrive = os.path.join( googleDrive, 'SeriesMgr' )
+
+if 'win' not in sys.platform.lower():
+	sys.exit()
+	
 #----------------------------------------------------------------------------------------------------
 
 distDir = os.path.join('dist', 'SeriesMgr')
