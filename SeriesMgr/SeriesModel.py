@@ -1,4 +1,5 @@
 import os
+import sys
 import operator
 import functools
 import GetModelInfo
@@ -332,15 +333,21 @@ class SeriesModel( object ):
 		return [c for c in self.getCategoryNamesSorted() if c not in self.categoryHide]
 	
 	def setRootFolder( self, path ):
-		raceFileNames = set( os.path.basename(r.fileName) for r in self.races )
+		if 'win' in sys.platform:
+			fixFName = lambda fn: fn.replace( '/', '\\' )
+		else:
+			fixFName = lambda fn: fn.replace( '\\', '/' )
+		
+		raceFileNames = {os.path.basename(fixFName(r.fileName)):r for r in self.races }
+		
 		for top, directories, files in os.walk(path):
 			for f in files:
-				if f not in raceFileNames:
+				try:
+					r = raceFileNames[f]
+				except KeyError:
 					continue
-				for r in self.races:
-					if os.path.basename(r.fileName) == f:
-						r.fileName = os.path.join( top, f )
-						self.setChanged()
+				r.fileName = os.path.join( top, f )
+				self.setChanged()
 	
 	def setChanged( self, changed = True ):
 		self.changed = changed

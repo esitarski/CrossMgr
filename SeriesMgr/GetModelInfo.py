@@ -600,7 +600,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		categoryResult = [list(riderNameLicense[rider]) + [riderTeam[rider], riderPoints[rider], riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
 		return categoryResult, races, GetPotentialDuplicateFullNames(riderNameLicense)
 		
-	else:
+	else: # Score by points.
 		# Get the individual results for each rider, and the total points.
 		riderPoints = defaultdict( int )
 		for rr in raceResults:
@@ -637,12 +637,13 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		
 		# Sort by rider points - greatest number of points first.  Break ties with place count, then
 		# most recent result.
-		iRank = 1
-		riderOrder.sort(key = lambda r:	[riderPoints[r]] +
-										([riderEventsCompleted[r]] if useMostEventsCompleted else []) +
-										[riderPlaceCount[r][k] for k in xrange(1, numPlacesTieBreaker+1)] +
-										[-rank for points, rank, primePoints, timeBonus in riderResults[r]],
-						reverse = True )
+		rankDNF = RaceResult.rankDNF
+		riderOrder.sort(
+			key = lambda r:	[-riderPoints[r]] +
+							([-riderEventsCompleted[r]] if useMostEventsCompleted else []) +
+							[-riderPlaceCount[r][k] for k in xrange(1, numPlacesTieBreaker+1)] +
+							[rank if rank>0 else rankDNF for points, rank, primePoints, timeBonus in reversed(riderResults[r])]
+		)
 		
 		# Compute the points gap.
 		riderGap = {}
@@ -652,7 +653,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			riderGap = { r : leaderPoints - riderPoints[r] for r in riderOrder }
 			riderGap = { r : unicode(gap) if gap else u'' for r, gap in riderGap.iteritems() }
 		
-		# Reverse the race order if required.
+		# Reverse the race order if required for display.
 		if showLastToFirst:
 			races.reverse()
 			for results in riderResults.itervalues():
