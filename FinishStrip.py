@@ -498,7 +498,7 @@ class FinishStripPanel( wx.Panel ):
 			self,
 			message=_('Save Finish as'),
 			wildcard=u"PNG {} (*.png)|*.png".format(_("files")),
-			defaultDir=os.path.dirname( Utils.getFileName() or '.' ),
+			defaultDir=Utils.getFileDir(),
 			defaultFile=os.path.splitext( os.path.basename(Utils.getFileName() or _('Default.cmn')) )[0] + u'_Finish.png',
 			style=wx.SAVE,
 		)

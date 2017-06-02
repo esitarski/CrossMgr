@@ -2833,6 +2833,7 @@ class MainWin( wx.Frame ):
 		# Get the RaceDB Excel sheet.
 		dlg = wx.FileDialog( self, message=_("Choose a RaceDB Excel file"),
 					defaultFile = '',
+					defaultDir = Utils.getFileDir(),
 					wildcard = _('RaceDB Excel files (*.xlsx)|*.xlsx'),
 					style=wx.OPEN | wx.CHANGE_DIR )
 		fname = dlg.GetPath() if dlg.ShowModal() == wx.ID_OK else None
@@ -2918,6 +2919,7 @@ class MainWin( wx.Frame ):
 	def menuOpen( self, event ):
 		dlg = wx.FileDialog( self, message=_("Choose a Race file"),
 							defaultFile = '',
+							defaultDir = Utils.getFileDir(),
 							wildcard = _('CrossMgr files (*.cmn)|*.cmn'),
 							style=wx.OPEN | wx.CHANGE_DIR )
 		if dlg.ShowModal() == wx.ID_OK:
@@ -3234,8 +3236,8 @@ class MainWin( wx.Frame ):
 			return
 			
 		dlg = wx.FileDialog( self, message=_("Choose Race Categories File"),
-							defaultDir=os.getcwd(), 
 							defaultFile="",
+							defaultDir=Utils.getFileDir(),
 							wildcard=_("Bicycle Race Categories (*.brc)|*.brc"),
 							style=wx.OPEN )
 		if dlg.ShowModal() == wx.ID_OK:
@@ -3261,8 +3263,8 @@ class MainWin( wx.Frame ):
 			return
 			
 		dlg = wx.FileDialog( self, message=_("Choose Race Categories File"),
-							defaultDir=os.getcwd(), 
-							defaultFile="",
+							defaultFile='',
+							defaultDir=Utils.getFileDir(), 
 							wildcard=_("Bicycle Race Categories (*.brc)|*.brc"),
 							style=wx.SAVE )
 							

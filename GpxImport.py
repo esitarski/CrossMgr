@@ -69,7 +69,7 @@ class FileNamePage(wiz.WizardPageSimple):
 												labelText = 'GPX File:',
 												fileMode=wx.OPEN,
 												fileMask='|'.join(fileMask),
-												startDirectory=os.path.dirname(Utils.getFileName()) if Utils.getFileName() else '.',
+												startDirectory=Utils.getFileDir(),
 												changeCallback=self.setElevationStatus )
 												
 		self.courseTypeRadioBox = wx.RadioBox( self, choices=[_('Course is a Loop'), _('Course is Point-to-Point')] )

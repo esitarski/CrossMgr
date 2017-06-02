@@ -648,7 +648,16 @@ def readConfig( key, defaultVal ):
 		return None
 	
 def getFileName():
-	return mainWin.fileName if mainWin is not None else None
+	try:
+		return mainWin.fileName
+	except:
+		return None
+	
+def getFileDir():
+	try:
+		return os.path.dirname(os.path.abspath(mainWin.fileName))
+	except:
+		return os.path.expanduser('~')
 	
 def isMainWin():
 	return mainWin is not None

@@ -248,7 +248,7 @@ class Categories( wx.Panel ):
 		self.Bind( wx.EVT_BUTTON, self.onDeactivateAll, self.deactivateAllButton )
 		hs.Add( self.deactivateAllButton, 0, border = border, flag = (flag & ~wx.LEFT) )
 
-		hs.AddSpacer( 8 )
+		hs.AddSpacer( 6 )
 		
 		self.newCategoryButton = wx.Button(self, label=_('New'), style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onNewCategory, self.newCategoryButton )
@@ -258,27 +258,35 @@ class Categories( wx.Panel ):
 		self.Bind( wx.EVT_BUTTON, self.onDelCategory, self.delCategoryButton )
 		hs.Add( self.delCategoryButton, 0, border = border, flag = (flag & ~wx.LEFT) )
 
-		hs.AddSpacer( 8 )
+		hs.AddSpacer( 6 )
 		
-		self.upCategoryButton = wx.Button(self, label=_('Move') + u' \u2191', style=wx.BU_EXACTFIT)
+		self.upCategoryButton = wx.Button(self, label=u'\u2191', style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onUpCategory, self.upCategoryButton )
 		hs.Add( self.upCategoryButton, 0, border = border, flag = flag )
 
-		self.downCategoryButton = wx.Button(self, label=_('Move') + u' \u2193', style=wx.BU_EXACTFIT)
+		self.downCategoryButton = wx.Button(self, label=u'\u2193', style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onDownCategory, self.downCategoryButton )
 		hs.Add( self.downCategoryButton, 0, border = border, flag = (flag & ~wx.LEFT) )
 
-		hs.AddSpacer( 8 )
+		hs.AddSpacer( 6 )
 		
-		self.addExceptionsButton = wx.Button(self, label=_('Add Bib Exceptions'), style=wx.BU_EXACTFIT)
+		self.setGpxDistanceButton = wx.Button(self, label=_('Set Gpx Distance'), style=wx.BU_EXACTFIT)
+		self.Bind( wx.EVT_BUTTON, self.onSetGpxDistance, self.setGpxDistanceButton )
+		hs.Add( self.setGpxDistanceButton, 0, border = border, flag = flag )
+		
+		hs.AddSpacer( 6 )
+		
+		self.addExceptionsButton = wx.Button(self, label=_('Bib Exceptions'), style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onAddExceptions, self.addExceptionsButton )
 		hs.Add( self.addExceptionsButton, 0, border = border, flag = flag )
 
-		hs.AddSpacer( 8 )
+		hs.AddSpacer( 6 )
 		
+		'''
 		self.updateStartWaveNumbersButton = wx.Button(self, label=_('Update Start Wave Bibs'), style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onUpdateStartWaveNumbers, self.updateStartWaveNumbersButton )
 		hs.Add( self.updateStartWaveNumbersButton, 0, border = border, flag = flag )
+		'''
 
 		self.normalizeButton = wx.Button(self, label=_('Normalize'), style=wx.BU_EXACTFIT)
 		self.Bind( wx.EVT_BUTTON, self.onNormalize, self.normalizeButton )
@@ -416,6 +424,19 @@ class Categories( wx.Panel ):
 	def onPrint( self, event ):
 		self.commit()
 		PrintCategories()
+	
+	def onSetGpxDistance( self, event ):
+		race = Model.race
+		geoTrack = getattr(race, 'geoTrack', None)
+		if not geoTrack:
+			return
+		if not Utils.MessageOK( self, _('Set the GPX distance for all Categories?'), _('Set GPX Distance'), wx.ICON_QUESTION ):
+			return
+		distance = geoTrack.lengthKm if race.distanceUnit == Model.Race.UnitKm else geoTrack.lengthMiles
+		for category in race.getCategories():
+			category.distance = distance
+		race.setChanged()
+		self.refresh( forceRefresh=True )
 	
 	def onNormalize( self, event ):
 		self.commit()
@@ -707,8 +728,10 @@ and remove them from other categories.'''),
 		self.grid.ClearSelection()
 		self.grid.SelectRow( min(r+1, self.grid.GetNumberRows()-1), True )
 		
-	def refresh( self ):
-		if not self.isExternalChange() and not self.state.changed():
+	def refresh( self, forceRefresh=False ):
+		self.setGpxDistanceButton.Enable( hasattr(Model.race, 'geoTrack') )
+		
+		if not (forceRefresh or self.isExternalChange() or self.state.changed()):
 			return
 			
 		# Fix the height of the column labels.
