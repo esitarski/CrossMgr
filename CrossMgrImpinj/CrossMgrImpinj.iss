@@ -2,6 +2,7 @@
 
 [Setup]
 #include "inno_setup.txt"
+ArchitecturesInstallIn64BitMode=x64
 DefaultDirName={pf}\CrossMgrImpinj
 DefaultGroupName=CrossMgrImpinj
 UninstallDisplayIcon={app}\CrossMgrImpinj.exe

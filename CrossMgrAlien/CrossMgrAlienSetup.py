@@ -1,8 +1,8 @@
 from distutils.core import setup
-import py2exe
 import os
 import shutil
 import zipfile
+import datetime
 import subprocess
 
 if os.path.exists('build'):
@@ -15,11 +15,21 @@ if os.path.exists(distDirParent):
 if not os.path.exists( distDirParent ):
 	os.makedirs( distDirParent )
 
+gds = [
+	r"c:\GoogleDrive\Downloads\Windows",
+	r"C:\Users\edwar\Google Drive\Downloads\Windows",
+	r"C:\Users\Edward Sitarski\Google Drive\Downloads\Windows",
+]
+for googleDrive in gds:
+	if os.path.exists(googleDrive):
+		break
+googleDrive = os.path.join( googleDrive, 'CrossMgrAlien' )
+	
 subprocess.call( [
 	'pyinstaller',
 	
 	'CrossMgrAlien.pyw',
-	'--icon=images\CrossMgrAlien.ico',
+	'--icon=' + os.path.join('Images','CrossMgrAlien.ico'),
 	'--clean',
 	'--windowed',
 	'--noconfirm',
@@ -52,16 +62,33 @@ def copyDir( d ):
 		if i[-3:] != '.db':	# Ignore .db files.
 			shutil.copy( os.path.join(d, i), os.path.join(destD,i) )
 			
-copyDir( 'images' )
+copyDir( 'Images' )
 
 # Create the installer
-inno = r'\Program Files\Inno Setup 5\ISCC.exe'
+inno = r'\Program Files (x86)\Inno Setup 5\ISCC.exe'
 # Find the drive it is installed on.
 for drive in ['C', 'D']:
 	innoTest = drive + ':' + inno
 	if os.path.exists( innoTest ):
 		inno = innoTest
 		break
+		
+from Version import AppVerName
+def make_inno_version():
+	setup = {
+		'AppName':				AppVerName.split()[0],
+		'AppPublisher':			"Edward Sitarski",
+		'AppContact':			"Edward Sitarski",
+		'AppCopyright':			"Copyright (C) 2004-{} Edward Sitarski".format(datetime.date.today().year),
+		'AppVerName':			AppVerName,
+		'AppPublisherURL':		"http://www.sites.google.com/site/crossmgrsoftware/",
+		'AppUpdatesURL':		"http://www.sites.google.com/site/crossmgrsoftware/downloads/",
+		'VersionInfoVersion':	AppVerName.split()[1],
+	}
+	with open('inno_setup.txt', 'w') as f:
+		for k, v in setup.iteritems():
+			f.write( '{}={}\n'.format(k,v) )
+make_inno_version()
 cmd = '"' + inno + '" ' + 'CrossMgrAlien.iss'
 print cmd
 os.system( cmd )
@@ -73,14 +100,14 @@ vNum = vNum.replace( '.', '_' )
 newExeName = 'CrossMgrAlien_Setup_v' + vNum + '.exe'
 
 try:
-	os.remove( 'install\\' + newExeName )
+	os.remove( os.path.join('install', newExeName) )
 except:
 	pass
 	
-shutil.copy( 'install\\CrossMgrAlien_Setup.exe', 'install\\' + newExeName )
+shutil.copy( os.path.join('install','CrossMgrAlien_Setup.exe'), os.path.join('install',newExeName) )
 print 'executable copied to: ' + newExeName
 
-# Create comprssed executable.
+# Create compressed executable.
 os.chdir( 'install' )
 newExeName = os.path.basename( newExeName )
 newZipName = newExeName.replace( '.exe', '.zip' )
@@ -95,5 +122,12 @@ z.write( newExeName )
 z.close()
 print 'executable compressed.'
 
-shutil.copy( newExeName, r"c:\GoogleDrive\Downloads\Windows\CrossMgrAlien"  )
+shutil.copy( newZipName, googleDrive  )
+#shutil.copy( '../CrossMgrAlienReadme.pdf', googleDrive  )
+
+cmd = 'python virustotal_submit.py "{}"'.format(os.path.abspath(newExeName))
+print cmd
+os.chdir( '..' )
+subprocess.call( cmd, shell=True )
+shutil.copy( 'virustotal.html', os.path.join(googleDrive, 'virustotal_v' + vNum + '.html') )
 

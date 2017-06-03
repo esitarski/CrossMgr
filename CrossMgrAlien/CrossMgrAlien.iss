@@ -3,6 +3,7 @@
 [Setup]
 AppName=CrossMgrAlien
 #include "Version.py"
+ArchitecturesInstallIn64BitMode=x64
 DefaultDirName={pf}\CrossMgrAlien
 DefaultGroupName=CrossMgrAlien
 UninstallDisplayIcon={app}\CrossMgrAlien.exe

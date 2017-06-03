@@ -29,7 +29,7 @@ subprocess.call( [
 	'pyinstaller',
 	
 	'CrossMgrImpinj.pyw',
-	'--icon=CrossMgrImpinjImages\CrossMgrImpinj.ico',
+	'--icon=' + os.path.join('CrossMgrImpinjImages','CrossMgrImpinj.ico'),
 	'--clean',
 	'--windowed',
 	'--noconfirm',
@@ -100,11 +100,11 @@ vNum = vNum.replace( '.', '_' )
 newExeName = 'CrossMgrImpinj_Setup_v' + vNum + '.exe'
 
 try:
-	os.remove( 'install\\' + newExeName )
+	os.remove( os.path.join('install', newExeName ) )
 except:
 	pass
 	
-shutil.copy( 'install\\CrossMgrImpinj_Setup.exe', 'install\\' + newExeName )
+shutil.copy( os.path.join('install', 'CrossMgrImpinj_Setup.exe'), os.path.join('install', newExeName) )
 print 'executable copied to: ' + newExeName
 
 # Create compressed executable.
