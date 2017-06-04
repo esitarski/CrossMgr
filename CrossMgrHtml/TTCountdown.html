@@ -54,8 +54,27 @@ body { font-family: Helvetica, sans-serif; }
     line-height: 85%;
 }
 
+.btn {
+  background: #3498db;
+  background-image: linear-gradient(to bottom, #3498db, #2980b9);
+  -webkit-border-radius: 28;
+  -moz-border-radius: 28;
+  border-radius: 28px;
+  font-family: Arial;
+  color: #ffffff;
+  font-size: 40%;
+  padding: 10px 20px 10px 20px;
+  text-decoration: none;
+}
+
+.btn:hover {
+  background: #3cb0fd;
+  background-image: linear-gradient(to bottom, #3cb0fd, #3498db);
+  text-decoration: none;
+}
+
 .disabled {
-	background-color: #333333;
+	background-color: #888;
 }
 
 #rider-next {
@@ -220,7 +239,11 @@ function updateCountdown() {
 	var btgNext = beepsToGive[iBeepCur+1];
 	
 	var countdown = document.getElementById('countdown-clock');
-	countdown.innerHTML = (btgNext.beep < 0 ? '0:00' : FormatTime(0.5 + (btgNext.tStart.getTime() - tNow.getTime()) / 1000.0));
+	if( enableBeeps )
+		countdown.innerHTML = (btgNext.beep < 0 ? '0:00' : FormatTime(0.5 + (btgNext.tStart.getTime() - tNow.getTime()) / 1000.0));
+	else
+		countdown.innerHTML = '<span class="btn">Click Here</span>';
+		
 
 	var bibCur = btgNext.startEntry[1];
 	if( bibCur != bibLast ) {
