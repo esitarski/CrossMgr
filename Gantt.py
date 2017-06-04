@@ -114,14 +114,14 @@ class Gantt( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(self.NewId(), _('Add Missing Last Lap'),			_('Add Missing Last Lap'),		self.OnPopupAddMissingLastLap, allCases),
+				(self.NewId(), _('Add Missing Last Lap'),		_('Add Missing Last Lap'),		self.OnPopupAddMissingLastLap, allCases),
 				(None, None, None, None, None),
-				(self.NewId(), _('Pull after Lap End') + u'...',	_('Pull after Lap End'),		self.OnPopupPull, allCases),
+				(self.NewId(), _('Pull after Lap End') + u'...',_('Pull after Lap End'),		self.OnPopupPull, allCases),
 				(self.NewId(), _('DNF after Lap End') + u'...',	_('DNF after Lap End'),			self.OnPopupDNF, allCases),
 				(None, None, None, None, None),
 				(self.NewId(), _('Correct Lap End Time') + u'...',_('Change number or lap end time'),		self.OnPopupCorrect, interpCase),
-				(self.NewId(), _('Shift Lap End Time') + u'...',	_('Move lap end time earlier/later'),	self.OnPopupShift, interpCase),
-				(self.NewId(), _('Delete Lap End Time') + u'...',	_('Delete Lap End Time'),		self.OnPopupDelete, nonInterpCase),
+				(self.NewId(), _('Shift Lap End Time') + u'...',_('Move lap end time earlier/later'),	self.OnPopupShift, interpCase),
+				(self.NewId(), _('Delete Lap End Time') + u'...',_('Delete Lap End Time'),		self.OnPopupDelete, nonInterpCase),
 				(None, None, None, None, None),
 				(self.NewId(), _('Note') + u'...',				_('Add/Edit lap Note'),			self.OnPopupLapNote, allCases),
 				(None, None, None, None, None),
@@ -132,8 +132,8 @@ class Gantt( wx.Panel ):
 				(None, None, None, None, None),
 				(self.NewId(), _('Show Lap Details') + u'...', 	_('Show Lap Details'),			self.OnPopupLapDetail, allCases),
 				(None, None, None, None, None),
-				(self.NewId(), _('RiderDetail'),					_('Show RiderDetail Dialog'),	self.OnPopupRiderDetail, allCases),
-				(self.NewId(), _('Results'), 						_('Switch to Results tab'),		self.OnPopupResults, allCases),
+				(self.NewId(), _('RiderDetail'),				_('Show RiderDetail Dialog'),	self.OnPopupRiderDetail, allCases),
+				(self.NewId(), _('Results'), 					_('Switch to Results tab'),		self.OnPopupResults, allCases),
 			]
 			
 			self.splitMenuInfo = [
