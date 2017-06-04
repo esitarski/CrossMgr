@@ -308,6 +308,7 @@ function initiateSound() {
 		document.getElementById('countdown-clock').className = '';
 		enableBeeps = true;
 		playBeep(10);
+		playBeep(0);
 	}
 }
 
@@ -317,12 +318,12 @@ function onload() {
 	
 	lastUpdated = (lastUpdatedTuple == null ? new Date() : dateFromTuple(lastUpdatedTuple));
 	
-	if( ['iPad', 'iPhone', 'iPod'].indexOf(navigator.platform) >= 0 ) {
-		// On iOS, the first sound must be triggered by a user action.
+	if( /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ) {
+		// On tablets, the first sound must be triggered by a user action.
 		enableBeeps = false;
 		var countdown_clock = document.getElementById('countdown-clock');
 		countdown_clock.className = 'disabled';
-		countdown_clock.addEventListener('click', initiateSound );
+		countdown_clock.addEventListener( 'click', initiateSound );
 	}
 	else
 		enableBeeps = true;
