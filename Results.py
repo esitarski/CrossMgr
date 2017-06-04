@@ -85,6 +85,8 @@ class Results( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
 		
+		self.idCur = 0
+		
 		self.category = None
 		self.showRiderData = True
 		self.selectDisplay = 0
@@ -315,6 +317,16 @@ class Results( wx.Panel ):
 		
 		wx.CallAfter( self.refresh )
 		
+	ids = []
+	def NewId( self ):
+		try:
+			id = Results.ids[self.idCur]
+		except IndexError:
+			id = wx.NewId()
+			Results.ids.append( id )
+		self.idCur += 1
+		return id
+	
 	def doRightClick( self, event ):
 		wx.CallAfter( self.search.SetFocus )
 
@@ -327,17 +339,17 @@ class Results( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(wx.NewId(), _('Passings'), 	_('Switch to Passings tab'), self.OnPopupHistory, allCases),
-				(wx.NewId(), _('RiderDetail'),	_('Show RiderDetail Dialog'), self.OnPopupRiderDetail, allCases),
+				(self.NewId(), _('Passings'), 	_('Switch to Passings tab'), self.OnPopupHistory, allCases),
+				(self.NewId(), _('RiderDetail'),	_('Show RiderDetail Dialog'), self.OnPopupRiderDetail, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Show Photos'),	_('Show Photos'), self.OnPopupShowPhotos, allCases),
+				(self.NewId(), _('Show Photos'),	_('Show Photos'), self.OnPopupShowPhotos, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Correct...'),	_('Change number or lap time...'),	self.OnPopupCorrect, interpCase),
-				(wx.NewId(), _('Shift...'),	_('Move lap time earlier/later...'),	self.OnPopupShift, interpCase),
-				(wx.NewId(), _('Delete...'),	_('Delete lap time...'),	self.OnPopupDelete, nonInterpCase),
+				(self.NewId(), _('Correct...'),	_('Change number or lap time...'),	self.OnPopupCorrect, interpCase),
+				(self.NewId(), _('Shift...'),	_('Move lap time earlier/later...'),	self.OnPopupShift, interpCase),
+				(self.NewId(), _('Delete...'),	_('Delete lap time...'),	self.OnPopupDelete, nonInterpCase),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Swap with Rider before'),	_('Swap with Rider before'),	self.OnPopupSwapBefore, allCases),
-				(wx.NewId(), _('Swap with Rider after'),	_('Swap with Rider after'),	self.OnPopupSwapAfter, allCases),
+				(self.NewId(), _('Swap with Rider before'),	_('Swap with Rider before'),	self.OnPopupSwapBefore, allCases),
+				(self.NewId(), _('Swap with Rider after'),	_('Swap with Rider after'),	self.OnPopupSwapAfter, allCases),
 			]
 			for p in self.popupInfo:
 				if p[0]:

@@ -506,6 +506,8 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 	def __init__( self, parent ):
 		wx.Panel.__init__( self, parent=parent, style=wx.BORDER_SUNKEN )
 		
+		self.idCur = 0
+		
 		self.numSelect = None
 		self.item = None
 		
@@ -550,16 +552,26 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 
 		event.Skip()
 	
+	ids = []
+	def NewId( self ):
+		try:
+			id = GroupInfoPopup.ids[self.idCur]
+		except IndexError:
+			id = wx.NewId()
+			GroupInfoPopup.ids.append( id )
+		self.idCur += 1
+		return id
+	
 	def onRightClick( self, event ):
 		if self.numSelect is None or not Model.race:
 			return
 		
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(wx.NewId(), _('RiderDetail'),	_('Show RiderDetail tab'), self.OnPopupRiderDetail),
+				(self.NewId(), _('RiderDetail'),	_('Show RiderDetail tab'), self.OnPopupRiderDetail),
 				(None, None, None, None),
-				(wx.NewId(), _('Pull After Last Recorded Time') + u'...',	_('Pull After Last Recorded Time'),	self.OnPopupPull),
-				(wx.NewId(), _('DNF After Last Recorded Time') + u'...',	_('DNF After Last Recorded Time'),	self.OnPopupDNF),
+				(self.NewId(), _('Pull After Last Recorded Time') + u'...',	_('Pull After Last Recorded Time'),	self.OnPopupPull),
+				(self.NewId(), _('DNF After Last Recorded Time') + u'...',	_('DNF After Last Recorded Time'),	self.OnPopupDNF),
 			]
 			for id, name, text, callback in self.popupInfo:
 				if id:

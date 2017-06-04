@@ -216,6 +216,8 @@ class RiderDetail( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
 		
+		self.idCur = 0
+
 		self.num = None
 		self.iLap = None
 		self.entry = None
@@ -466,6 +468,16 @@ class RiderDetail( wx.Panel ):
 			return None
 		return row + 1
 		
+	ids = []
+	def NewId( self ):
+		try:
+			id = RiderDetail.ids[self.idCur]
+		except IndexError:
+			id = wx.NewId()
+			RiderDetail.ids.append( id )
+		self.idCur += 1
+		return id
+	
 	def doRightClick( self, event ):
 		self.eventRow = event.GetRow()
 		self.visibleRow = self.eventRow
@@ -475,16 +487,16 @@ class RiderDetail( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(wx.NewId(), _('Add Missing Last Lap'),		_('Add Missing Last Lap'),	self.OnPopupAddMissingLastLap, allCases),
+				(self.NewId(), _('Add Missing Last Lap'),		_('Add Missing Last Lap'),	self.OnPopupAddMissingLastLap, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Pull After Lap') + u'...',	_('Pull After lap'),	self.OnPopupPull, allCases),
-				(wx.NewId(), _('DNF After Lap') + u'...',	_('DNF After lap'),	self.OnPopupDNF, allCases),
+				(self.NewId(), _('Pull After Lap') + u'...',	_('Pull After lap'),	self.OnPopupPull, allCases),
+				(self.NewId(), _('DNF After Lap') + u'...',	_('DNF After lap'),	self.OnPopupDNF, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Correct') + u'...',			_('Change number or lap time') + u'...',	self.OnPopupCorrect, interpCase),
-				(wx.NewId(), _('Shift') + u'...',			_('Move lap time earlier/later') + u'...',	self.OnPopupShift, interpCase),
-				(wx.NewId(), _('Delete') + u'...',			_('Delete lap time(s)') + u'...',	self.OnPopupDelete, nonInterpCase),
+				(self.NewId(), _('Correct') + u'...',			_('Change number or lap time') + u'...',	self.OnPopupCorrect, interpCase),
+				(self.NewId(), _('Shift') + u'...',			_('Move lap time earlier/later') + u'...',	self.OnPopupShift, interpCase),
+				(self.NewId(), _('Delete') + u'...',			_('Delete lap time(s)') + u'...',	self.OnPopupDelete, nonInterpCase),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Note') + u'...',			_('Add/Edit lap note'),	self.OnPopupNote, nonInterpCase),
+				(self.NewId(), _('Note') + u'...',			_('Add/Edit lap note'),	self.OnPopupNote, nonInterpCase),
 			]
 			for p in self.popupInfo:
 				if p[0]:

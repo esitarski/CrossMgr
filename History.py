@@ -19,6 +19,8 @@ class History( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
 
+		self.idCur = 0
+		
 		self.showTimes = False
 		self.showPosition = False
 		self.showLapTimes = False
@@ -145,6 +147,16 @@ class History( wx.Panel ):
 	def onZoomIn( self, event ):
 		self.grid.Zoom( True )
 		
+	ids = []
+	def NewId( self ):
+		try:
+			id = History.ids[self.idCur]
+		except IndexError:
+			id = wx.NewId()
+			History.ids.append( id )
+		self.idCur += 1
+		return id
+	
 	def doRightClick( self, event ):
 		wx.CallAfter( self.search.SetFocus )
 		
@@ -164,21 +176,21 @@ class History( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(wx.NewId(), _('Results'), 		_('Switch to Results tab'), self.OnPopupResults, allCases),
-				(wx.NewId(), _('RiderDetail'),	_('Show RiderDetail tab'), self.OnPopupRiderDetail, allCases),
+				(self.NewId(), _('Results'), 		_('Switch to Results tab'), self.OnPopupResults, allCases),
+				(self.NewId(), _('RiderDetail'),	_('Show RiderDetail tab'), self.OnPopupRiderDetail, allCases),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Correct...'),	_('Change number or time'),	self.OnPopupCorrect, interpCase),
-				(wx.NewId(), _('Shift...'),		_('Move time earlier/later'),	self.OnPopupShift, interpCase),
-				(wx.NewId(), _('Insert...'),	_('Insert a number before/after existing entry'),	self.OnPopupInsert, nonInterpCase),
+				(self.NewId(), _('Correct...'),	_('Change number or time'),	self.OnPopupCorrect, interpCase),
+				(self.NewId(), _('Shift...'),		_('Move time earlier/later'),	self.OnPopupShift, interpCase),
+				(self.NewId(), _('Insert...'),	_('Insert a number before/after existing entry'),	self.OnPopupInsert, nonInterpCase),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Delete...'),	_('Delete an entry'),	self.OnPopupDelete, nonInterpCase),
-				(wx.NewId(), _('Split...'),		_('Split an entry into two'),self.OnPopupSplit, nonInterpCase),
+				(self.NewId(), _('Delete...'),	_('Delete an entry'),	self.OnPopupDelete, nonInterpCase),
+				(self.NewId(), _('Split...'),		_('Split an entry into two'),self.OnPopupSplit, nonInterpCase),
 				(None, None, None, None, None),
-				(wx.NewId(), u'{}...'.format(_('Swap with Entry before')),	_('Swap with Entry before'), self.OnPopupSwapBefore, nonInterpCase),
-				(wx.NewId(), u'{}...'.format(_('Swap with Entry after')),_('Swap with Entry after'),	self.OnPopupSwapAfter, nonInterpCase),
+				(self.NewId(), u'{}...'.format(_('Swap with Entry before')),	_('Swap with Entry before'), self.OnPopupSwapBefore, nonInterpCase),
+				(self.NewId(), u'{}...'.format(_('Swap with Entry after')),_('Swap with Entry after'),	self.OnPopupSwapAfter, nonInterpCase),
 				(None, None, None, None, None),
-				(wx.NewId(), _('Pull After Lap') + u'...',	_('Pull After lap'),	self.OnPopupPull, nonInterpCase),
-				(wx.NewId(), _('DNF After Lap') + u'...',	_('DNF After lap'),	self.OnPopupDNF, nonInterpCase),
+				(self.NewId(), _('Pull After Lap') + u'...',	_('Pull After lap'),	self.OnPopupPull, nonInterpCase),
+				(self.NewId(), _('DNF After Lap') + u'...',	_('DNF After lap'),	self.OnPopupDNF, nonInterpCase),
 			]
 			for id, name, text, callback, cCode in self.popupInfo:
 				if id:
