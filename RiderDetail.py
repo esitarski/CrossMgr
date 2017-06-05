@@ -1061,6 +1061,7 @@ class RiderDetail( wx.Panel ):
 					self.Bind( wx.EVT_MENU, callback, id=id )
 			for id, name, callback in self.splitMenuInfo:
 				self.Bind( wx.EVT_MENU, callback, id=id )
+			self.splitMenuId = wx.NewId()
 		
 		menu = wx.Menu()
 		for id, name, text, callback, cCase in self.ganttMenuInfo:
@@ -1077,7 +1078,7 @@ class RiderDetail( wx.Panel ):
 				submenu.Append( id, name )
 			Utils.addMissingSeparator( menu )
 			menu.PrependSeparator()
-			menu.PrependMenu( wx.NewId(), _('Add Missing Split'), submenu )
+			menu.PrependMenu( self.splitMenuId, _('Add Missing Split'), submenu )
 			
 		Utils.deleteTrailingSeparators( menu )
 		try:

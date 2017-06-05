@@ -130,8 +130,6 @@ class ForecastHistory( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY, style = 0 ):
 		wx.Panel.__init__(self, parent, id, style=style)
 		
-		self.idCur = 0
-		
 		self.quickRecorded = None
 		self.quickExpected = None
 		self.entryCur = None
@@ -220,16 +218,6 @@ class ForecastHistory( wx.Panel ):
 			mainWin.setNumSelect( numSelect )
 			mainWin.showPageName( _('RiderDetail') )
 	
-	ids = []
-	def NewId( self ):
-		try:
-			id = ForecastHistory.ids[self.idCur]
-		except IndexError:
-			id = wx.NewId()
-			ForecastHistory.ids.append( id )
-		self.idCur += 1
-		return id
-	
 	def doHistoryPopup( self, event ):
 		r = event.GetRow()
 		with Model.LockRace() as race:
@@ -244,15 +232,15 @@ class ForecastHistory( wx.Panel ):
 		self.entryCur = self.quickRecorded[r]
 		if not hasattr(self, 'historyPopupInfo'):
 			self.historyPopupInfo = [
-				(u'{}...'.format(_('Correct')),	self.NewId(), self.OnPopupHistoryCorrect),
-				(u'{}...'.format(_('Split')),	self.NewId(), self.OnPopupHistorySplit),
-				(u'{}...'.format(_('Shift')),	self.NewId(), self.OnPopupHistoryShift),
-				(u'{}...'.format(_('Insert')),	self.NewId(), self.OnPopupHistoryInsert),
-				(u'{}...'.format(_('Delete')),	self.NewId(), self.OnPopupHistoryDelete),
+				(u'{}...'.format(_('Correct')),	wx.NewId(), self.OnPopupHistoryCorrect),
+				(u'{}...'.format(_('Split')),	wx.NewId(), self.OnPopupHistorySplit),
+				(u'{}...'.format(_('Shift')),	wx.NewId(), self.OnPopupHistoryShift),
+				(u'{}...'.format(_('Insert')),	wx.NewId(), self.OnPopupHistoryInsert),
+				(u'{}...'.format(_('Delete')),	wx.NewId(), self.OnPopupHistoryDelete),
 				(None,				None,		None),
-				(u'{}...'.format(_('DNF')),		self.NewId(), self.OnPopupHistoryDNF),
+				(u'{}...'.format(_('DNF')),		wx.NewId(), self.OnPopupHistoryDNF),
 				(None,				None,		None),
-				(_('RiderDetail'),	self.NewId(),self.OnPopupHistoryRiderDetail),
+				(_('RiderDetail'),	wx.NewId(),self.OnPopupHistoryRiderDetail),
 			]
 			for p in self.historyPopupInfo:
 				if p[2]:
