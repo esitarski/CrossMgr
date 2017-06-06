@@ -215,6 +215,10 @@ standard_field_aliases = (
 		('Waiver',),
 		"Waiver",
 	),
+	('laps',
+		('Laps',),
+		"Laps",
+	),
 )
 
 def standard_field_map( exclude = [] ):

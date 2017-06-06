@@ -76,7 +76,7 @@ class RaceResult( object ):
 	rankDNF = 999999
 	
 	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, raceFileName, bib, rank, raceOrganizer,
-					raceURL=None, raceInSeries=None, tFinish=None, tProjected=None, primePoints=0, timeBonus=0 ):
+					raceURL=None, raceInSeries=None, tFinish=None, tProjected=None, primePoints=0, timeBonus=0, laps=1 ):
 		self.firstName = unicode(firstName or u'')
 		self.lastName = unicode(lastName or u'')
 		
@@ -100,6 +100,7 @@ class RaceResult( object ):
 		self.rank = rank
 		self.primePoints = primePoints
 		self.timeBonus = timeBonus
+		self.laps = laps
 		
 		self.tFinish = tFinish
 		self.tProjected = tProjected if tProjected else tFinish
@@ -172,6 +173,7 @@ def ExtractRaceResultsExcel( raceInSeries ):
 					'license':		unicode(f('license_code',u'')).strip(),
 					'team':			unicode(f('team',u'')).strip(),
 					'categoryName': f('category_code',None),
+					'laps':			f('laps',1),
 				}
 				
 				info['rank'] = unicode(info['rank']).strip()
@@ -282,6 +284,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 				info[fTo] = getattr(rr, fFrom, '')
 			info['categoryName'] = category.fullname
 			info['lastName'], info['firstName'] = getReferenceName(info['lastName'], info['firstName'])
+			info['laps'] = rr.laps
 			
 			for fTo, fFrom in [('raceName', 'name'), ('raceOrganizer', 'organizer')]:
 				info[fTo] = getattr(race, fFrom, '')
@@ -413,10 +416,21 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 	riderResults = defaultdict( lambda : [(0,0,0,0)] * len(races) )
 	riderFinishes = defaultdict( lambda : [None] * len(races) )
 	if scoreByTime:
+	
+		raceLeader = { rr.raceInSeries: rr for rr in raceResults if rr.rank == 1 }
+		
 		# Get the individual results for each rider, and the total time.  Do not consider DNF riders as they have invalid times.
 		raceResults = [rr for rr in raceResults if rr.rank != RaceResult.rankDNF]
+		
 		riderTFinish = defaultdict( float )
 		for rr in raceResults:
+			try:
+				leader = raceLeader[rr.raceInSeries]
+				if rr.laps != leader.laps:
+					continue
+			except KeyError:
+				continue
+
 			try:
 				tFinish = float(rr.tFinish - (rr.timeBonus if considerPrimePointsOrTimeBonus else 0.0))
 			except ValueError:
@@ -476,8 +490,14 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		raceLeader = { rr.raceInSeries: rr for rr in raceResults if rr.rank == 1 }
 		
 		for rr in raceResults:
-			tFastest = raceLeader[rr.raceInSeries].tProjected
-			
+			try:
+				leader = raceLeader[rr.raceInSeries]
+				if rr.laps != leader.laps:
+					continue
+			except KeyError:
+				continue
+
+			tFastest = leader.tProjected
 			try:
 				tFinish = rr.tProjected
 			except ValueError:
