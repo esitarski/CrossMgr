@@ -1740,7 +1740,7 @@ class MainWin( wx.Frame ):
 		payload['winAndOut']		= race.winAndOut
 		payload['rfid']				= race.enableJChipIntegration
 		payload['primes']			= getattr(race, 'primes', [])
-		payload['raceNameText']		= race.title
+		payload['raceNameText']		= race.name
 		payload['raceDate']			= race.date
 		payload['raceScheduledStart']= race.date + ' ' + race.scheduledStart
 		payload['raceTimeZone']		= race.timezone
