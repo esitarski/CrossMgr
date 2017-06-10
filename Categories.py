@@ -233,7 +233,7 @@ class Categories( wx.Panel ):
 		vs = wx.BoxSizer( wx.VERTICAL )
 		
 		self.ignoreColour = wx.Colour( 80, 80, 80 )
-		self.inactiveColour = wx.Colour( 220, 220, 220 )
+		self.inactiveColour = wx.Colour( 200, 200, 200 )
 		
 		border = 4
 		flag = wx.ALL
