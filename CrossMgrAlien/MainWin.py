@@ -562,7 +562,7 @@ class MainWin( wx.Frame ):
 				self.cmdHost.SetValue( cmdHost )
 				self.cmdPort.SetValue( int(cmdPort) )
 			elif d[0] == 'BackupFile':
-				self.backupFile.SetLabel( os.path.basename(d[1]) )
+				self.backupFile.SetLabel( d[1] )
 
 def disable_stdout_buffering():
 	fileno = sys.stdout.fileno()

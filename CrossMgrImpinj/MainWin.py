@@ -636,7 +636,7 @@ class MainWin( wx.Frame ):
 	def updateMessages( self, event ):
 		tNow = datetime.datetime.now()
 		running = int((tNow - self.tStart).total_seconds())
-		self.runningTime.SetLabel( '%02d:%02d:%02d' % (running // (60*60), (running // 60) % 60, running % 60) )
+		self.runningTime.SetLabel( '{:02d}:{:02d}:{:02d}'.format(running // (60*60), (running // 60) % 60, running % 60) )
 		self.time.SetLabel( tNow.strftime('%H:%M:%S') )
 		
 		if not self.messageQ:
@@ -667,7 +667,7 @@ class MainWin( wx.Frame ):
 				else:
 					self.crossMgrMessages.write( message )
 			elif d[0] == 'BackupFile':
-				self.backupFile.SetLabel( os.path.basename(d[1]) )
+				self.backupFile.SetLabel( d[1] )
 
 def disable_stdout_buffering():
 	fileno = sys.stdout.fileno()
