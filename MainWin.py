@@ -1740,7 +1740,7 @@ class MainWin( wx.Frame ):
 		payload['winAndOut']		= race.winAndOut
 		payload['rfid']				= race.enableJChipIntegration
 		payload['primes']			= getattr(race, 'primes', [])
-		payload['raceNameText']		= race.name
+		payload['raceNameText']		= race.title
 		payload['raceDate']			= race.date
 		payload['raceScheduledStart']= race.date + ' ' + race.scheduledStart
 		payload['raceTimeZone']		= race.timezone
@@ -1795,7 +1795,7 @@ class MainWin( wx.Frame ):
 		raceTime = datetime.datetime( year, month, day, hour, minute, second )
 		
 		#------------------------------------------------------------------------
-		title = u'{} - {} {} {}'.format( race.name, _('Starting'), raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
+		title = u'{} - {} {} {}'.format( race.title, _('Starting'), raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
 		html = html.replace( u'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
 		if getattr(race, 'gaTrackingID', None):
 			html = html.replace( u'<!-- Google Analytics -->', gaSnippet.replace('UA-XXXX-Y', race.gaTrackingID) )
@@ -1925,10 +1925,10 @@ class MainWin( wx.Frame ):
 				timeComponents.append( 0 )
 			hour, minute, second = timeComponents
 			raceTime = datetime.datetime( year, month, day, hour, minute, second )
-			title = u'{} {} {}'.format( race.name, _('Course for'), raceTime.strftime(localDateFormat) )
+			title = u'{} {} {}'.format( race.title, _('Course for'), raceTime.strftime(localDateFormat) )
 			html = html.replace( 'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
 			
-			payload['raceName']			= cgi.escape(race.name)
+			payload['raceName']			= cgi.escape(race.title)
 			payload['organizer']		= getattr(race, 'organizer', '')
 			payload['rfid']				= getattr(race, 'enableJChipIntegration', False)
 			payload['displayUnits']		= race.distanceUnitStr
@@ -2161,7 +2161,7 @@ class MainWin( wx.Frame ):
 
 		html = replaceJsonVar( html, 'payload', payload )
 		html = html.replace( '<title>TTStartPage</title>', '<title>TT {} {} {}</title>'.format(
-				cgi.escape(race.name),
+				cgi.escape(race.title),
 				cgi.escape(race.date), cgi.escape(race.scheduledStart),
 			)
 		)
@@ -2424,7 +2424,7 @@ class MainWin( wx.Frame ):
 				timeComponents.append( 0 )
 			hour, minute, second = timeComponents
 			raceTime = datetime.datetime( year, month, day, hour, minute, second )
-			title = u'{} Raw Data for {} Start on {}'.format( race.name, raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
+			title = u'{} Raw Data for {} Start on {}'.format( race.title, raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
 			html = html.replace( 'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
 			html = replaceJsonVar( html, 'organizer', getattr(race, 'organizer', '') )
 			
@@ -3297,7 +3297,7 @@ class MainWin( wx.Frame ):
 			colnames = ['Count'] + colnames
 			data = [['{}'.format(i) for i in xrange(1, rowMax+1)]] + data
 		with Model.LockRace() as race:
-			title = u'{}\n{}\n{}'.format( race.name, Utils.formatDate(race.date), _('Race Passings') )
+			title = u'{}\n{}\n{}'.format( race.title, Utils.formatDate(race.date), _('Race Passings') )
 		export = ExportGrid( title, colnames, data )
 
 		wb = xlwt.Workbook()
@@ -3484,7 +3484,7 @@ class MainWin( wx.Frame ):
 		fname = os.path.splitext(self.fileName)[0] + '-{}.csv'.format(destination)
 		
 		year, month, day = race.date.split( '-' )
-		raceName = race.name
+		raceName = race.title
 		raceDate = datetime.date( year = int(year), month = int(month), day = int(day) ).strftime( '%m/%d/%Y' )
 		
 		try:
@@ -3500,7 +3500,7 @@ class MainWin( wx.Frame ):
 				Destination = destination.lower(),
 				RaceName	= urllib.quote(unicode(raceName).encode('utf-8')),
 				RaceDate	= urllib.quote(unicode(raceDate).encode('utf-8')),
-				MD5			= hashlib.md5( race.name + raceDate ).hexdigest(),
+				MD5			= hashlib.md5( race.title + raceDate ).hexdigest(),
 				Location	= urllib.quote(unicode(u', '.join([race.city, race.stateProv, race.country])).encode('utf-8')),
 				PresentedBy = urllib.quote(unicode(race.organizer).encode('utf-8')),
 			)

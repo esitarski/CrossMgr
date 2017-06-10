@@ -52,6 +52,10 @@ class GeneralInfoProperties( wx.Panel ):
 		self.raceName = wx.TextCtrl( self )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceName )
 		
+		self.raceLongNameLabel = wx.StaticText( self, label=_('Long Name:') )
+		self.raceLongName = wx.TextCtrl( self )
+		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceLongName )
+		
 		self.raceCityLabel = wx.StaticText( self, label=_('City') )
 		self.raceCity = wx.TextCtrl( self )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceCity )
@@ -126,6 +130,7 @@ class GeneralInfoProperties( wx.Panel ):
 		
 		labelFieldBatchPublish = [
 			(self.raceNameLabel,	0, labelAlign),	(self.raceName,				1, fieldAlign),
+			(self.raceLongNameLabel,0, labelAlign),	(self.raceLongName,			1, fieldAlign),
 			(self.raceCityLabel,	0, labelAlign),	(self.locationSizer,		1, fieldAlign),
 			(self.dateLabel,		0, labelAlign),	(self.dateDisciplineSizer,	1, fieldAlign),
 			(self.raceNumLabel,		0, labelAlign),	(self.numStartMinutesSizer,	1, fieldAlign),
@@ -140,6 +145,7 @@ class GeneralInfoProperties( wx.Panel ):
 	def refresh( self ):
 		race = Model.race
 		self.raceName.SetValue( race.name )
+		self.raceLongName.SetValue( race.longName )
 		self.raceCity.SetValue( race.city )
 		self.raceStateProv.SetValue( race.stateProv )
 		self.raceCountry.SetValue( race.country )
@@ -157,6 +163,7 @@ class GeneralInfoProperties( wx.Panel ):
 	def commit( self ):
 		race = Model.race
 		race.name = self.raceName.GetValue().strip()
+		race.longName = self.raceLongName.GetValue().strip()
 		race.city = self.raceCity.GetValue().strip()
 		race.stateProv = self.raceStateProv.GetValue().strip()
 		race.country = self.raceCountry.GetValue().strip()

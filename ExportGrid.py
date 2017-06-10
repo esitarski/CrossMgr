@@ -683,7 +683,7 @@ class ExportGrid( object ):
 			else:
 				catData.append( u'{}: {}'.format(_('winner'), leaderTime) )
 	
-		self.title = u'\n'.join( [race.name, Utils.formatDate(race.date), catStr, u', '.join(catData)] )
+		self.title = u'\n'.join( [race.title, Utils.formatDate(race.date), catStr, u', '.join(catData)] )
 		isTimeTrial = getattr( race, 'isTimeTrial', False )
 		roadRaceFinishTimes = getattr( race, 'roadRaceFinishTimes', False )
 

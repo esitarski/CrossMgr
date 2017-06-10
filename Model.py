@@ -1135,6 +1135,7 @@ class Race( object ):
 	headerImage = None
 	email = None
 	postPublishCmd = ''
+	longName = ''
 	
 	def __init__( self ):
 		self.reset()
@@ -1192,6 +1193,10 @@ class Race( object ):
 		self.lastOpened = datetime.datetime.now()
 		memoize.clear()
 	
+	@property
+	def title( self ):
+		return self.longName or self.name
+	
 	def getTemplateValues( self ):
 		excelLink = getattr(self, 'excelLink', None)
 		if excelLink:
@@ -1202,6 +1207,7 @@ class Race( object ):
 		path = Utils.getFileName() or ''
 		return {
 			u'EventName':	self.name,
+			u'EventTitle':	self.title,
 			u'RaceNum':		unicode(self.raceNum),
 			u'City':		self.city,
 			u'StateProv':	self.stateProv,

@@ -20,6 +20,7 @@ def getRaceAttr( race ):
 		('version',		Version.AppVerName),
 		('created',		datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
 		('raceName',	race.name),
+		('raceLongName',race.longName),
 		('raceDate',	race.date),
 		('raceTime',	race.scheduledStart),
 		('city',		race.city),

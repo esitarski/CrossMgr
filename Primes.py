@@ -381,7 +381,7 @@ def GetGrid():
 		externalFields = set()
 		externalInfo = {}
 	
-	title = u'\n'.join( [race.name, Utils.formatDate(race.date), u'Primes'] )
+	title = u'\n'.join( [race.title, Utils.formatDate(race.date), u'Primes'] )
 	
 	rightJustifyCols = set([0, 1])
 	colnames = [u'Prime', _('Bib'),]

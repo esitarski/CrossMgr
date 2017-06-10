@@ -58,7 +58,7 @@ class CategoriesPrintout( wx.Printout ):
 			catDetails = GetCategoryDetails( False, True )
 			catDetailsMap = dict( (cd['name'], cd) for cd in catDetails )
 			
-			title = u'\n'.join( [_('Categories'), race.name, race.scheduledStart + u' ' + _('Start on') + u' ' + Utils.formatDate(race.date)] )
+			title = u'\n'.join( [_('Categories'), race.title, race.scheduledStart + u' ' + _('Start on') + u' ' + Utils.formatDate(race.date)] )
 			colnames = [_('Start Time'), _('Category'), _('Gender'), _('Numbers'), _('Laps'), _('Distance'), _('Starters')]
 			
 			raceStart = Utils.StrToSeconds( race.scheduledStart + ':00' )

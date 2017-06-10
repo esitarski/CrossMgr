@@ -266,7 +266,7 @@ class FtpQRCodePrintout( wx.Printout ):
 		dc.DrawBitmap( bm, xPix, yPix )
 		
 		# Draw the title.
-		title = u'{}:{}\n{} {}\n{}   {}'.format( race.name, race.raceNum, _('by'), race.organizer, race.date, race.scheduledStart )
+		title = u'{}:{}\n{} {}\n{}   {}'.format( race.title, race.raceNum, _('by'), race.organizer, race.date, race.scheduledStart )
 		font = getFontToFit( dc, widthFieldPix - graphicWidth - graphicBorder, graphicHeight,
 									lambda font: dc.GetMultiLineTextExtent(title, font)[:-1], True )
 		dc.SetFont( font )

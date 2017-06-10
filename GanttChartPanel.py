@@ -404,7 +404,7 @@ class GanttChartPanel(wx.PyPanel):
 			viewWidth = minBarWidth * maxLaps
 			ratio = float(xRight - xLeft) / float(viewWidth)
 			sbMax = int(self.dataMax) + 1
-			pageSize = int(sbMax * ratio)
+			pageSize = int(sbMax * ratio) / 2.0
 			SetScrollbarParameters( self.horizontalSB, pageSize-1, sbMax, pageSize )
 			self.horizontalSB.SetPosition( (labelsWidthLeft, height) )
 			self.horizontalSB.SetSize( (xRight - xLeft, self.scrollbarWidth) )

@@ -15,9 +15,10 @@ It does not include data specific to the race like the Categories or the Excel s
 ## General Options
 Property|Description
 :-------|:----------
-Event Name|Name of the event.  Also used in the filename with the Race #.  Multiple races in the day will have the same Event Name, but with different race numbers.
+Event Name|Name of the event - also used for the event's filename (along with the Race #).  Multiple races in the day will have the same Event Name, but with different race numbers.
+Long Name|Long name of the event.  The __Long Name__ is useful if the __Event Name__ has organizers and sponsors that make the name unwieldy, or contain characers that don't work in file names.  For example "2017 National Championships p/b Trend Setter Organizer" is cumbersome to type as a filename and contains a "slash" that can't be in a filename.  The __Long Name__ will be shown on all results, spreadsheets and web output if it is defined.  Otherwise the __Event Name__ is used.
 Date|Date of the race.  Used in the filename and all output.
-Race #|The number of the race in the day at the event.  Also used in the filename.  This is automatically incremented when you do "File/New Next..."
+Race #|The number of the race in the day at the event.  Also used in the race filename.  This is automatically incremented when you do "File/New Next..."
 Scheduled Start|Scheduled start of the race.  This is used in the results output.  Of course, the race could actually start at a different time.
 Race Minutes|The __global__ number of minutes in the race for timed races (like CycloCross).  See __Notes__ below.
 Discipline|The type of race (default Cyclo-cross).  This should reflect the type of race (Road, Mountain Bike, Criterium, etc.).  Currently, this is only used in the [USAC Export][].
