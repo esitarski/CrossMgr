@@ -12,7 +12,7 @@ import StatusBar
 import OutputStreamer
 import NumKeypad
 from PhotoFinish import TakePhoto, okTakePhoto
-from GetResults import GetResults
+from GetResults import GetResults, IsRiderFinished
 from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, DeleteEntry, DoDNS, DoDNF, DoPull
 from FtpWriteFile import realTimeFtpPublish
 
@@ -158,7 +158,7 @@ class ForecastHistory( wx.Panel ):
 		self.expectedGrid.SetDoubleBuffered( True )
 		colnames[iTimeCol] = _('ETA')
 		self.expectedGrid.Set( colnames = colnames )
-		self.expectedName.SetLabel( _('Expected') )
+		self.expectedName.SetLabel( _('Expected (click on Bib to record entry)') )
 		self.expectedGrid.SetDefaultCellBackgroundColour( wx.Colour(230,255,255) )
 		self.Bind( wx.grid.EVT_GRID_SELECT_CELL, self.doExpectedSelect, self.expectedGrid )
 		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doExpectedPopup, self.expectedGrid )	
@@ -549,10 +549,10 @@ class ForecastHistory( wx.Panel ):
 				outsideTimeBound.add( e.num )
 		
 		data = [None] * iColMax
-		data[iNumCol] = ['{}'.format(e.num) for e in expected]
+		data[iNumCol] = [u'{}'.format(e.num) for e in expected]
 		getT = self.getETATimeFunc()
-		data[iTimeCol] = [formatTime(getT(e) - tRace) if e.lap > 0 else ('[%s]' % formatTime(max(0.0, getT(e) - tRace + 0.99999999)))\
-									for e in expected]
+		data[iTimeCol] = [formatTime(getT(e) - tRace) if e.lap > 0
+			else (u'[{}]'.format(formatTime(max(0.0, getT(e) - tRace + 0.99999999)))) for e in expected]
 		data[iLapCol] = [u'{}'.format(e.lap) if e.lap > 0 else u'' for e in expected]
 		def getNoteExpected( e ):
 			if e.lap == 0:
@@ -629,7 +629,7 @@ class ForecastHistory( wx.Panel ):
 				outsideTimeBound.add( e.num )
 								
 		data = [None] * iColMax
-		data[iNumCol] = [u'{}'.format(e.num) if e.num > 0 else u' ' for e in recorded]
+		data[iNumCol] = [u'{}{}'.format(e.num,u"\u0192" if IsRiderFinished(e.num, e.t) else u'') if e.num > 0 else u' ' for e in recorded]
 		data[iTimeCol] = [
 			formatTime(e.t) if e.lap > 0 else
 			(u'{}'.format(formatTimeGap(e.t)) if e.t is not None else u' ') if e.isGap() else
