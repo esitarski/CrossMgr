@@ -2134,7 +2134,7 @@ function SetData( aData, tCur )
 	
 	// Adjust the display options based on the data.
 	var options = [
-	{ i:0, name:'Lap Times',	value:'showraceTimes',		requiresMultipleLaps:false, requiresLapSpeeds:false },
+	{ i:0, name:'Lap Times',	value:'showLapTimes',		requiresMultipleLaps:false, requiresLapSpeeds:false },
 	{ i:1, name:'Race Times',	value:'showRaceTimes',		requiresMultipleLaps:true, requiresLapSpeeds:false },
 	{ i:2, name:'Time Gaps',	value:'showLapGaps',		requiresMultipleLaps:true, requiresLapSpeeds:false },
 	{ i:3, name:'Gap Percents',	value:'showGapPercent',		requiresMultipleLaps:false, requiresLapSpeeds:false },
@@ -3049,7 +3049,7 @@ function RefreshResultsTable()
 					if( roadRaceFinishTimes && gapValue == gapValueLast )
 						gap = sameValue;
 					else if( r != 0 && lapDataOption == 3 )
-						gap = '+' + (100.0 * gapValue) / (leaderTime - getStartOffset(num));
+						gap = '+' + ((100.0 * gapValue) / (leaderTime - getStartOffset(num))).toFixed(2);
 					else
 						gap = FormatTimeGap( gapValue );
 				}
