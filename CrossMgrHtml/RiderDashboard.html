@@ -126,8 +126,7 @@ function GetName( bib ) {
 	var d = data[bib];
 	if( !d )	return '';
 	if( d.LastName && d.FirstName )	return d.FirstName + ' ' + d.LastName;
-	if( d.LastName ) return d.LastName;
-	return d.FirstName;
+	return d.LastName || d.FirstName || '';
 }
 
 function GetBibName( bib ) {
