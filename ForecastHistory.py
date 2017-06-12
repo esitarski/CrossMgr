@@ -158,7 +158,7 @@ class ForecastHistory( wx.Panel ):
 		self.expectedGrid.SetDoubleBuffered( True )
 		colnames[iTimeCol] = _('ETA')
 		self.expectedGrid.Set( colnames = colnames )
-		self.expectedName.SetLabel( _('Expected (click on Bib to record entry)') )
+		self.expectedName.SetLabel( _('Expected (click Bib to record entry)') )
 		self.expectedGrid.SetDefaultCellBackgroundColour( wx.Colour(230,255,255) )
 		self.Bind( wx.grid.EVT_GRID_SELECT_CELL, self.doExpectedSelect, self.expectedGrid )
 		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doExpectedPopup, self.expectedGrid )	
@@ -605,7 +605,7 @@ class ForecastHistory( wx.Panel ):
 		if iBeforeLeader:
 			Utils.SetLabel( self.expectedName, u'{}: {} {}'.format(_('Expected'), iBeforeLeader, _('before race leader')) )
 		else:
-			Utils.SetLabel( self.expectedName, _('Expected') )
+			Utils.SetLabel( self.expectedName, _('Expected (click Bib to record entry)') )
 		
 		#------------------------------------------------------------------
 		# Update recorded.
