@@ -160,26 +160,22 @@ class GanttChartPanel(wx.PyPanel):
 				elif len(self.labels) > len(self.data):
 					self.labels = self.labels[:len(self.data)]
 			else:
-				self.labels = [''] * len(data)
-				self.status = [''] * len(data)
+				self.labels = [u''] * len(data)
+				self.status = [u''] * len(data)
 			self.nowTime = nowTime
 			
 		self.interp = interp
 		self.Refresh()
 	
 	def OnPaint(self, event ):
-		#dc = wx.PaintDC(self)
-		dc = wx.BufferedPaintDC(self)
+		dc = wx.PaintDC(self)
 		self.Draw(dc)
 
 	def OnVerticalScroll( self, event ):
-		dc = wx.ClientDC(self)
-		if not self.IsDoubleBuffered():
-			dc = wx.BufferedDC( dc )
-		self.Draw( dc )
+		self.Refresh()
 		
 	def OnHorizontalScroll( self, event ):
-		self.OnVerticalScroll( event )
+		self.Refresh()
 		
 	def OnSize(self, event):
 		self.Refresh()
@@ -219,7 +215,6 @@ class GanttChartPanel(wx.PyPanel):
 		self.xMove, self.yMove = event.GetPosition()
 		redrawRequired = (self.moveIRider is not None)
 		self.moveIRider, self.moveLap = None, None
-		self.Refresh()
 		self.moveTimer.Start( 100, True )
 	
 	def OnMoveTimer( self, event ):
@@ -276,7 +271,7 @@ class GanttChartPanel(wx.PyPanel):
 		width = size.width
 		height = size.height
 		
-		maxBib = unicode(999999)
+		maxBib = u'999999'
 		
 		minBarWidth = 48
 		minBarHeight = 18
@@ -328,7 +323,7 @@ class GanttChartPanel(wx.PyPanel):
 				textWidthLeftMax = max( textWidthLeftMax, dc.GetTextExtent(label)[0] + statusTextWidth )
 				num = numFromLabel(label)
 				if num is not None:
-					textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent('{}'.format(num))[0] )
+					textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent(u'{}'.format(num))[0] )
 		textWidthRightMax += statusTextWidth
 				
 		if textWidthLeftMax + textWidthRightMax > width:
@@ -375,7 +370,7 @@ class GanttChartPanel(wx.PyPanel):
 				textWidthLeftMax = max( textWidthLeftMax, dc.GetTextExtent(label)[0] + statusTextWidth )
 				num = numFromLabel(label)
 				if num is not None:
-					textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent( '{}'.format(num) )[0] )
+					textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent( u'{}'.format(num) )[0] )
 		textWidthRightMax += statusTextWidth
 				
 		if textWidthLeftMax + textWidthRightMax > width:
@@ -388,13 +383,6 @@ class GanttChartPanel(wx.PyPanel):
 		labelsWidthLeft = textWidthLeftMax + legendSep
 		labelsWidthRight = textWidthRightMax + legendSep
 			
-		'''
-		if labelsWidthLeft > width / 2:
-			labelsWidthLeft = 0
-			labelsWidthRight = 0
-			drawLabels = False
-		'''
-
 		xLeft = labelsWidthLeft
 		xRight = width - labelsWidthRight
 		yBottom = min( barHeight * (len(self.data) + 1), barHeight + drawHeight )
@@ -413,7 +401,7 @@ class GanttChartPanel(wx.PyPanel):
 		fontNote = wx.FontFromPixelSize( wx.Size(0,barHeight*.8), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 
 		dc.SetFont( fontLegend )
-		textWidth, textHeight = dc.GetTextExtent( '00:00' if self.dataMax < 60*60 else '00:00:00' )
+		textWidth, textHeight = dc.GetTextExtent( u'00:00' if self.dataMax < 60*60 else u'00:00:00' )
 			
 		# Draw the horizontal labels.
 		# Find some reasonable tickmarks for the x axis.
@@ -438,9 +426,9 @@ class GanttChartPanel(wx.PyPanel):
 			if x > xRight:
 				break
 			if t < 60*60:
-				s = '{}:{:02d}'.format((t / 60), t%60)
+				s = u'{}:{:02d}'.format((t / 60), t%60)
 			else:
-				s = '{}:{:02d}:{:02d}'.format(t/(60*60), (t / 60)%60, t%60)
+				s = u'{}:{:02d}:{:02d}'.format(t/(60*60), (t / 60)%60, t%60)
 			w, h = dc.GetTextExtent(s)
 			xText = x - w/2
 			#xText = x
@@ -495,6 +483,7 @@ class GanttChartPanel(wx.PyPanel):
 				xCur = xOriginal = int(labelsWidthLeft + (t-tAdjust) * xFactor)
 				if xCur < labelsWidthLeft:
 					continue
+					
 				if xCur > xRight:
 					xCur = xRight
 				if j == 0:
@@ -524,7 +513,7 @@ class GanttChartPanel(wx.PyPanel):
 						if note:
 							dc.SetFont( fontNote )
 							noteWidth, noteHeight = dc.GetTextExtent( note )
-							noteBorderWidth = int(dc.GetTextExtent( '   ' )[0] / 2)
+							noteBorderWidth = int(dc.GetTextExtent( u'   ' )[0] / 2)
 							noteBarWidth = xCur - xLast - noteBorderWidth * 2
 							if noteBarWidth <= 0:
 								noteBarWidth = xCur - xLast
@@ -540,7 +529,7 @@ class GanttChartPanel(wx.PyPanel):
 										lenLeft = lenMid
 									else:
 										lenRight = lenMid
-								note = note[:lenLeft].strip() + '...'
+								note = note[:lenLeft].strip() + u'...'
 								noteWidth, noteHeight = dc.GetTextExtent( note )
 							dc.DrawText( note, xLast + noteBorderWidth, yLast + (dy - noteHeight) / 2 )
 							dc.SetFont( fontBarLabel )
@@ -699,9 +688,7 @@ class GanttChartPanel(wx.PyPanel):
 		self.labelsWidthLeft = labelsWidthLeft
 			
 	def OnEraseBackground(self, event):
-		# This is intentionally empty, because we are using the combination
-		# of wx.BufferedPaintDC + an empty OnEraseBackground event to
-		# reduce flicker
+		# This is intentionally empty.
 		pass
 		
 if __name__ == '__main__':

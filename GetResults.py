@@ -882,10 +882,7 @@ def GetCategoryDetails( ignoreEmptyCategories=True, publishOnly=False ):
 
 @Model.memoize
 def GetResultMap( category ):
-	results = GetResults( category )
-	if not results:
-		return {}
-	return {rr.num:rr for rr in results}
+	return {rr.num:rr for rr in GetResults(category)} 
 	
 def IsRiderFinished( bib, t ):
 	race = Model.race
@@ -897,6 +894,6 @@ def IsRiderFinished( bib, t ):
 	results = GetResults( category )
 	if not results or results[0].status != Model.Rider.Finisher or results[0].laps != race.getNumLapsFromCategory( category ):
 		return False
-		
+	
 	rr = GetResultMap( category ).get( bib, None )
 	return rr and rr.status == Model.Rider.Finisher and rr.raceTimes and rr.raceTimes[-1] == t
