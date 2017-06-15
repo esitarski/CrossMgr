@@ -129,7 +129,7 @@ def getCameraResolutionChoice( resolution ):
 	return 0
 		
 class ConfigDialog( wx.Dialog ):
-	def __init__( self, parent, cameraDeviceNum=0, cameraResolution = (imageWidth,imageHeight), id=wx.ID_ANY ):
+	def __init__( self, parent, cameraDeviceNum=0, cameraResolution=(imageWidth,imageHeight), id=wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, title=_('CrossMgr Video Configuration') )
 		
 		sizer = wx.BoxSizer( wx.VERTICAL )
@@ -761,7 +761,7 @@ class MainWin( wx.Frame ):
 	
 	def readOptions( self ):
 		self.cameraDevice.SetLabel( self.config.Read('CameraDevice', u'0') )
-		self.cameraResolution.SetLabel( self.config.Read('CameraResolution', u'640x400') )
+		self.cameraResolution.SetLabel( self.config.Read('CameraResolution', u'640x480') )
 
 def disable_stdout_buffering():
 	fileno = sys.stdout.fileno()

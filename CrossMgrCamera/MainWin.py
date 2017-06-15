@@ -86,19 +86,23 @@ class MessageManager( object ):
 		self.messageList.ChangeValue( '' )
 		self.messageList.SetInsertionPointEnd()
 
-cameraResolution = (
-	(160,120),
-	(320,240),
-	(424,240),
-	(640,360),
-	(640,480),
-	(800,448),
-	(960,544),
-	(1280,720),
+cameraResolutionChoices = (
+	'640x480',
+	'1280x720',
+	'1280x1024',
+	'1920x1080',
+	'1600x1200',
 )
+
+def getCameraResolutionChoice( resolution ):
+	res = '{}x{}'.format( *resolution )
+	for i, c in enumerate(cameraResolutionChoices):
+		if c == res:
+			return i
+	return 0
 		
 class ConfigDialog( wx.Dialog ):
-	def __init__( self, parent, cameraDeviceNum=0, id=wx.ID_ANY ):
+	def __init__( self, parent, cameraDeviceNum=0, cameraResolution=(imageWidth,imageHeight), id=wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, title=_('CrossMgr Camera Configuration') )
 		
 		sizer = wx.BoxSizer( wx.VERTICAL )
@@ -115,6 +119,14 @@ class ConfigDialog( wx.Dialog ):
 		self.cameraDevice = wx.Choice( self, choices=[unicode(i) for i in xrange(8)] )
 		self.cameraDevice.SetSelection( cameraDeviceNum )
 		pfgs.Add( self.cameraDevice )
+		
+		pfgs.Add( wx.StaticText(self, label='Camera Resolution'+':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
+		self.cameraResolution = wx.Choice( self, choices=cameraResolutionChoices )
+		self.cameraResolution.SetSelection( getCameraResolutionChoice(cameraResolution) )
+		pfgs.Add( self.cameraResolution )
+		
+		pfgs.AddSpacer( 1 )
+		pfgs.Add( wx.StaticText(self, label='Your camera may not support all resolutions.\nYour Camera may not support the required frame rate at high resolutions.\nCheck your Camera specs for details.'), flag=wx.RIGHT, border=4 )
 		
 		sizer.Add( self.title, flag=wx.ALL, border=4 )
 		for i, e in enumerate(self.explanation):
@@ -143,6 +155,9 @@ class ConfigDialog( wx.Dialog ):
 		
 	def GetCameraDeviceNum( self ):
 		return self.cameraDevice.GetSelection()
+
+	def GetCameraResolution( self ):
+		return tuple(int(v) for v in cameraResolutionChoices[self.cameraResolution.GetSelection()].split('x'))
 
 	def onOK( self, event ):
 		self.EndModal( wx.ID_OK )
@@ -201,11 +216,14 @@ class MainWin( wx.Frame ):
 		boldFont = self.cameraDevice.GetFont()
 		boldFont.SetWeight( wx.BOLD )
 		self.cameraDevice.SetFont( boldFont )
+		self.cameraResolution = wx.StaticText( self )
+		self.cameraResolution.SetFont( boldFont )
 		self.reset = wx.Button( self, label="Reset Camera" )
 		self.reset.Bind( wx.EVT_BUTTON, self.resetCamera )
 		cameraDeviceSizer = wx.BoxSizer( wx.HORIZONTAL )
 		cameraDeviceSizer.Add( self.cameraDeviceLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 		cameraDeviceSizer.Add( self.cameraDevice, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
+		cameraDeviceSizer.Add( self.cameraResolution, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
 		cameraDeviceSizer.Add( self.reset, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
 
 		#------------------------------------------------------------------------------
@@ -316,7 +334,12 @@ class MainWin( wx.Frame ):
 			self.messageQ.put( ('camera', 'Error: {}'.format(e)) )
 			return False
 		
-		#self.camera.set_resolution( 640, 480 )
+		try:
+			self.camera.set_resolution( *self.getCameraResolution() )
+			self.messageQ.put( ('camera', '{}x{} Supported'.format(*self.getCameraResolution())) )
+		except Exception as e:
+			self.messageQ.put( ('camera', '{}x{} Unsupported Resolution'.format(*self.getCameraResolution())) )
+			
 		self.messageQ.put( ('camera', 'Successfully Connected: Device: {}'.format(self.getCameraDeviceNum()) ) )
 		for i in self.beforeAfterImages:
 			i.SetTestImage()
@@ -439,23 +462,36 @@ class MainWin( wx.Frame ):
 			self.writerThread.join()
 	
 	def resetCamera( self, event ):
-		self.writeOptions()
-		
-		dlg = ConfigDialog( self, self.getCameraDeviceNum() )
+		dlg = ConfigDialog( self, self.getCameraDeviceNum(), self.getCameraResolution() )
 		ret = dlg.ShowModal()
 		cameraDeviceNum = dlg.GetCameraDeviceNum()
+		cameraResolution = dlg.GetCameraResolution()
 		dlg.Destroy()
 		if ret != wx.ID_OK:
-			return
+			return False
 		
 		self.setCameraDeviceNum( cameraDeviceNum )
+		self.setCameraResolution( *cameraResolution )
+		self.writeOptions()
+
 		self.grabFrameOK = self.startCamera()
+		return True
 		
 	def setCameraDeviceNum( self, num ):
 		self.cameraDevice.SetLabel( unicode(num) )
 		
+	def setCameraResolution( self, width, height ):
+		self.cameraResolution.SetLabel( u'{}x{}'.format(width, height) )
+			
 	def getCameraDeviceNum( self ):
 		return int(self.cameraDevice.GetLabel())
+		
+	def getCameraResolution( self ):
+		try:
+			resolution = [int(v) for v in self.cameraResolution.GetLabel().split('x')]
+			return resolution[0], resolution[1]
+		except:
+			return 640, 400
 		
 	def onCloseWindow( self, event ):
 		self.shutdown()
@@ -463,10 +499,12 @@ class MainWin( wx.Frame ):
 		
 	def writeOptions( self ):
 		self.config.Write( 'CameraDevice', self.cameraDevice.GetLabel() )
+		self.config.Write( 'CameraResolution', self.cameraResolution.GetLabel() )
 		self.config.Flush()
 	
 	def readOptions( self ):
 		self.cameraDevice.SetLabel( self.config.Read('CameraDevice', u'0') )
+		self.cameraResolution.SetLabel( self.config.Read('CameraResolution', u'640x480') )
 
 def disable_stdout_buffering():
 	fileno = sys.stdout.fileno()
