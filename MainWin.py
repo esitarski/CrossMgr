@@ -1076,18 +1076,19 @@ class MainWin( wx.Frame ):
 				race.syncCategories = self.menuItemSyncCategories.IsChecked()
 				
 	def menuChangeRaceStartTime( self, event ):
-		with Model.LockRace() as race:
-			if not race:
-				return
-			if race.isUnstarted():
-				Utils.MessageOK( self, _('Cannot change Start Time of unstarted race.  Start the race from Actions.'), _('Race Not Started') )
-				return
-			if race.isTimeTrial and race.hasRiderTimes():
-				Utils.MessageOK( self, _('Cannot change Start Time of a Time Trial with recorded times'), _('Cannot Change Start Time') )
-				return
-			dlg = ChangeRaceStartTime.ChangeRaceStartTimeDialog( self )
-			dlg.ShowModal()
-			dlg.Destroy()
+		race = Model.race
+		if not race:
+			return
+		if race.isUnstarted():
+			Utils.MessageOK( self, _('Cannot change Start Time of unstarted race.  Start the race from Actions.'), _('Race Not Started') )
+			return
+		if race.isTimeTrial and race.hasRiderTimes():
+			Utils.MessageOK( self, _('Cannot change Start Time of a Time Trial with recorded times'), _('Cannot Change Start Time') )
+			return
+			
+		dlg = ChangeRaceStartTime.ChangeRaceStartTimeDialog( self )
+		dlg.ShowModal()
+		dlg.Destroy()
 	
 	def menuPlaySounds( self, event ):
 		self.playSounds = self.menuItemPlaySounds.IsChecked()

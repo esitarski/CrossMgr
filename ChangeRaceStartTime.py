@@ -52,14 +52,14 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 
 	def onOK( self, event ):
 		race = Model.race
-		if not race or not race.startTime:
+		if not race or not race.startTime or race.isTimeTrial:
 			return
 		
-		tNow = datetime.datetime.now()
-		startTimeNew = tNow.replace(hour=0, minute=0, second=0) + datetime.timedelta(seconds=self.timeMsEdit.GetSeconds())
+		tOld = race.startTime
+		startTimeNew = tOld.replace(hour=0, minute=0, second=0) + datetime.timedelta(seconds=self.timeMsEdit.GetSeconds())
 		dTime = (startTimeNew - race.startTime).total_seconds()
 		
-		if dTime == 0:
+		if not dTime:
 			return
 		
 		if dTime > 0.0 and not Utils.MessageOKCancel( self,
@@ -68,18 +68,17 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 		
 		undo.pushState()
 		
-		if not race.isTimeTrial:
-			for rider in race.riders.itervalues():
-				if getattr(rider, 'firstTime', None) is not None:
-					rider.firstTime -= dTime
+		# Adjust all rider times to account for the new start time.
+		for rider in race.riders.itervalues():
+			try:
+				rider.firstTime = max( 0.0, rider.firstTime - dTime )
+			except TypeError:
+				pass
+			rider.times[:] = [max(0.0, v - dTime) for v in rider.times]
+		
+		race.numTimeInfo.adjustAllTimes( -dTime )
 			
-				# Adjust all the recorded times to account for the new start time.
-				for k in xrange(len(rider.times)):
-					rider.times[k] -= dTime
-			
-			race.numTimeInfo.adjustAllTimes( -dTime )
-			
-		# Fix any unread tags.
+		# Also fix any unread tags.
 		if race.unmatchedTags:
 			for times in race.unmatchedTags.itervalues():
 				for k in xrange(len(times)):
