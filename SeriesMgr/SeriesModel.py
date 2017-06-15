@@ -178,7 +178,9 @@ class SeriesModel( object ):
 	categorySequencePrevious = {}
 	categoryHide = set()
 	references = []
+	referenceLicenses = []
 	aliasLookup = {}
+	aliasLicenseLookup = {}
 
 	def __init__( self ):
 		self.name = '<Series Name>'
@@ -281,6 +283,40 @@ class SeriesModel( object ):
 		#if updated:
 		#	memoize.clear()
 	
+	def setReferenceLicenses( self, referenceLicenses ):
+		dNew = dict( referenceLicenses )
+		dExisting = dict( self.referenceLicenses )
+		
+		changed = (len(dNew) != len(dExisting))
+		updated = False
+		
+		for name, aliases in dNew.iteritems():
+			if name not in dExisting:
+				changed = True
+				if aliases:
+					updated = True
+			elif aliases != dExisting[name]:
+				changed = True
+				updated = True
+	
+		for name, aliases in dExisting.iteritems():
+			if name not in dNew:
+				changed = True
+				if aliases:
+					updated = True
+				
+		if changed:
+			self.changed = changed
+			self.referenceLicenses = referenceLicenses
+			self.aliasLicenseLookup = {}
+			for license, aliases in self.referenceLicenses:
+				for alias in aliases:
+					key = Utils.removeDiacritic(alias).upper()
+					self.aliasLicenseLookup[key] = license				
+	
+		#if updated:
+		#	memoize.clear()
+	
 	def getReferenceName( self, lastName, firstName ):
 		key = (Utils.removeDiacritic(lastName).lower(), Utils.removeDiacritic(firstName).lower())
 		try:
@@ -288,6 +324,14 @@ class SeriesModel( object ):
 		except KeyError:
 			self.aliasLookup[key] = (lastName, firstName)
 			return lastName, firstName
+	
+	def getReferenceLicense( self, license ):
+		key = Utils.removeDiacritic(license).upper()
+		try:
+			return self.aliasLicenseLookup[key]
+		except KeyError:
+			self.aliasLicenseLookup[key] = key
+			return key
 	
 	def setCategorySequence( self, categoryList, categoryHide ):
 		categorySequenceNew = { c:i for i, c in enumerate(categoryList) }

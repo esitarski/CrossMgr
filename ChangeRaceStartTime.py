@@ -56,7 +56,7 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 			return
 		
 		tOld = race.startTime
-		startTimeNew = tOld.replace(hour=0, minute=0, second=0) + datetime.timedelta(seconds=self.timeMsEdit.GetSeconds())
+		startTimeNew = tOld.replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(seconds=self.timeMsEdit.GetSeconds())
 		dTime = (startTimeNew - race.startTime).total_seconds()
 		
 		if not dTime:

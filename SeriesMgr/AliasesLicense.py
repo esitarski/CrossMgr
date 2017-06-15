@@ -5,50 +5,46 @@ import sys
 import SeriesModel
 import Utils
 
-def normalizeText( text ):
-	return u', '.join( [t.strip() for t in text.split(',')][:2] )
-
 def getText(parent, message=u'', defaultValue=u'', pos=wx.DefaultPosition):
 	dlg = wx.TextEntryDialog(parent, message, defaultValue=defaultValue, pos=pos)
 	ret = dlg.ShowModal()
 	if ret == wx.ID_OK:
-		result = normalizeText( dlg.GetValue() )
+		result = dlg.GetValue()
 	else:
 		result = None
 	dlg.Destroy()
 	return result
 	
-class Aliases(wx.Panel):
+class AliasesLicense(wx.Panel):
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent)
 		
 		text =	(
-			u'Name Aliases match different name spellings to the same participant.\n'
-			u'This can be more convenient than editing race results when the same participant has resullts under different names.\n'
+			u'License Aliases match alternate license codes to the same code.\n'
+			u'This can be more convenient than editing race results when the same participant has results under different license codes.\n'
 			u'\n'
-			u'To create a name Alias, first press the "Add Reference Name" button.  This is the name that will appear in Results.'
-			u'Then, right-click on the Reference Name you just added, and choose "Add Alias...".  This is an alternate spelling.\n'
-			u'SeriesMgr will match all Aliases to the Reference Name in the Results.\n'
-			u'You can have any number of Aliases for the same Reference Name.\n'
+			u'To create a License Alias, first press the "Add Reference License" button.  This is the license that will appear in Results.'
+			u'Then, right-click on the Reference License you just added, and choose "Add Alias...".  This is an alternate license.\n'
+			u'SeriesMgr will match all aliased Licenses to the Reference License in the Results.\n'
+			u'You can have any number of License Aliases for the same Reference License.\n'
 			u'\n'
-			u'For example, Reference Name="Bell, Robert", Aliases="Bell, Bobby", "Bell, Bob".  Results for the alternate spellings will appear as "Bell, Robert".\n'
-			u'Accents and upper/lower case are ignored.\n'
+			u'For example, Reference License="BC03457", AliasesLicense="BC03449", "BC32749".  Results for the alternate licenses will appear as "BC03457".\n'
 			u'\n'
-			u'You can Copy-and-Paste names from the Results without retyping them.  Right-click and Copy the name in the Results page,'
-			u'then Paste the name into a Reference Name or Alias field.\n'
-			u'Aliases will not be applied until you press the "Refresh" button on the Results screen (or reload).\n'
-			u'This allows you to configure many Aliases without having to wait for the Results update after each change.\n'
+			u'You can Copy-and-Paste lilcenses from the Results without retyping them.  Right-click and Copy the name in the Results page,'
+			u'then Paste the license into a Reference License or Alias field.\n'
+			u'Aliased Licenses will not be applied until you press the "Refresh" button on the Results screen (or reload).\n'
+			u'This allows you to configure many licenses without having to wait for the Results update after each change.\n'
 		)
 		
 		self.explain = wx.StaticText( self, label=text )
 		self.explain.SetFont( wx.FontFromPixelSize((0,15), wx.SWISS, wx.NORMAL, wx.NORMAL, False) )
 		
-		self.addButton = wx.Button( self, label=u'Add Reference Name' )
+		self.addButton = wx.Button( self, label=u'Add Reference License' )
 		self.addButton.Bind( wx.EVT_BUTTON, self.onAddButton )
 		
 		self.itemCur = None
 		self.tree = wx.TreeCtrl( self, style = wx.TR_HIDE_ROOT|wx.TR_HAS_BUTTONS )
-		self.tree.AddRoot( u'Aliases' )
+		self.tree.AddRoot( u'AliaseLicenses' )
 		self.tree.Bind( wx.EVT_TREE_ITEM_RIGHT_CLICK, self.onTreeRightClick )
 		
 		sizer = wx.BoxSizer(wx.VERTICAL)
@@ -100,14 +96,14 @@ class Aliases(wx.Panel):
 	def onAddButton( self, event ):
 		defaultText = u''
 		
-		# Initialize the name with the clipboard.
+		# Initialize the license with the clipboard.
 		if wx.TheClipboard.Open():
 			do = wx.TextDataObject()
 			if wx.TheClipboard.GetData(do):
 				defaultText = do.GetText()
 			wx.TheClipboard.Close()
 
-		text = getText( self, u'Reference Name (Last, First)', defaultText )
+		text = getText( self, u'Reference License', defaultText )
 		if text:
 			item = self.tree.PrependItem( self.tree.GetRootItem(), text )
 			self.tree.SortChildren( self.tree.GetRootItem() )
@@ -125,7 +121,7 @@ class Aliases(wx.Panel):
 				defaultText = do.GetText()
 			wx.TheClipboard.Close()
 			
-		text = getText( self, u'Alias (First, Last)', defaultText )
+		text = getText( self, u'Alias License', defaultText )
 		if not text:
 			return
 		item = self.tree.AppendItem( self.itemCur, text )
@@ -136,7 +132,7 @@ class Aliases(wx.Panel):
 	def onEdit( self, event ):
 		if not self.itemCur:
 			return
-		text = getText( self, u'Name (First, Last)', self.tree.GetItemText(self.itemCur) )
+		text = getText( self, u'License', self.tree.GetItemText(self.itemCur) )
 		if not text:
 			return
 		self.tree.SetItemText( self.itemCur, text )
@@ -156,12 +152,11 @@ class Aliases(wx.Panel):
 	def getTree( self ):
 		return self.tree
 
-	def getName( self, item ):
-		name = [t.strip() for t in self.tree.GetItemText(item).split(u',')[:2]]
-		if not name:
+	def getLicense( self, item ):
+		license = self.tree.GetItemText(item).upper()
+		if not license:
 			return None
-		name.extend( [u''] * (2 - len(name)) )
-		return tuple( name )
+		return license
 		
 	def refresh( self ):
 		model = SeriesModel.model
@@ -174,12 +169,12 @@ class Aliases(wx.Panel):
 			r, cookieReference = self.tree.GetNextChild(r, cookieReference)		
 		
 		self.tree.DeleteAllItems()
-		rootItem = self.tree.AddRoot( u'Aliases' )
-		for reference, aliases in model.references:
-			name = u'{}, {}'.format(*reference)
+		rootItem = self.tree.AddRoot( u'AliasesLicense' )
+		for reference, aliases in model.referenceLicenses:
+			name = reference
 			nameItem = self.tree.AppendItem( rootItem, name )
 			for alias in aliases:
-				aliasItem = self.tree.AppendItem( nameItem, u'{}, {}'.format(*alias) )
+				aliasItem = self.tree.AppendItem( nameItem, alias )
 			if name in expanded:
 				self.tree.Expand( nameItem )
 		
@@ -190,14 +185,14 @@ class Aliases(wx.Panel):
 		
 		r, cookieReference = self.tree.GetFirstChild(self.tree.GetRootItem())
 		while r.IsOk():
-			name = self.getName( r )
+			name = self.getLicense( r )
 			
 			if name:
 				references.append( [name, []] )
 				
 				a, cookieAlias = self.tree.GetFirstChild( r )
 				while a.IsOk():
-					name = self.getName( a )
+					name = self.getLicense( a )
 					if name:
 						references[-1][1].append( name )
 					a, cookieAlias = self.tree.GetNextChild( a, cookieAlias )
@@ -209,24 +204,24 @@ class Aliases(wx.Panel):
 			aliases.sort()
 		
 		model = SeriesModel.model
-		model.setReferences( references )
+		model.setReferenceLicenses( references )
 		
 #----------------------------------------------------------------------------
 
-class AliasesFrame(wx.Frame):
+class AliasesLicenseFrame(wx.Frame):
 	def __init__(self):
-		wx.Frame.__init__(self, None, title="Aliases Test", size=(800,600) )
-		self.panel = Aliases(self)
+		wx.Frame.__init__(self, None, title="AliasesLicense Test", size=(800,600) )
+		self.panel = AliasesLicense(self)
 		self.Show()
  
 if __name__ == "__main__":
 	app = wx.App(False)
 	model = SeriesModel.model
-	model.setReferences( [
-		[('Bell', 'Robert'), [('Bell', 'Bobby'), ('Bell', 'Bob'), ('Bell', 'B')]],
-		[('Sitarski', 'Stephen'), [('Sitarski', 'Steve'), ('Sitarski', 'Steven')]],
+	model.setReferenceLicenses( [
+		['BC04567', ['BC1234', 'BC5678', 'BC445']],
+		['BC04567a', ['BC1234b', 'BC5678c', 'BC445d']],
 	] )
-	frame = AliasesFrame()
+	frame = AliasesLicenseFrame()
 	frame.panel.refresh()
 	frame.panel.getTree().ExpandAll()
 	app.MainLoop()

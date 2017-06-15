@@ -135,7 +135,6 @@ def ExtractRaceResults( r ):
 def toInt( n ):
 	if n == 'DNF':
 		return RaceResult.rankDNF
-	
 	try:
 		return int(n.split()[0])
 	except:
@@ -143,6 +142,7 @@ def toInt( n ):
 
 def ExtractRaceResultsExcel( raceInSeries ):
 	getReferenceName = SeriesModel.model.getReferenceName
+	getReferenceLicense = SeriesModel.model.getReferenceLicense
 	
 	excel = GetExcelReader( raceInSeries.fileName )
 	raceName = os.path.splitext(os.path.basename(raceInSeries.fileName))[0]
@@ -204,6 +204,7 @@ def ExtractRaceResultsExcel( raceInSeries ):
 					continue
 				
 				info['lastName'], info['firstName'] = getReferenceName(info['lastName'], info['firstName'])
+				info['license'] = getReferenceLicense(info['license'])
 				
 				# If there is a bib it must be numeric.
 				try:
@@ -252,6 +253,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 		SeriesModel.model.licenseLinkTemplate = race.licenseLinkTemplate
 	
 	getReferenceName = SeriesModel.model.getReferenceName
+	getReferenceLicense = SeriesModel.model.getReferenceLicense
 	
 	Finisher = Model.Rider.Finisher
 	DNF = Model.Rider.DNF
@@ -284,6 +286,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 				info[fTo] = getattr(rr, fFrom, '')
 			info['categoryName'] = category.fullname
 			info['lastName'], info['firstName'] = getReferenceName(info['lastName'], info['firstName'])
+			info['license'] = getReferenceLicense(info['license'])
 			info['laps'] = rr.laps
 			
 			for fTo, fFrom in [('raceName', 'name'), ('raceOrganizer', 'organizer')]:
