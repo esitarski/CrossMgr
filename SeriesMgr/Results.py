@@ -751,7 +751,8 @@ class Results(wx.Panel):
 	def doCellClick( self, event ):
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(u'{}...'.format(_('Copy Name to Clipboard')),	wx.NewId(), self.onCopy),
+				(u'{}...'.format(_('Copy Name to Clipboard')),	wx.NewId(), self.onCopyName),
+				(u'{}...'.format(_('Copy License to Clipboard')),	wx.NewId(), self.onCopyLicense),
 			]
 			for p in self.popupInfo:
 				if p[2]:
@@ -768,18 +769,24 @@ class Results(wx.Panel):
 		self.PopupMenu( menu )
 		menu.Destroy()		
 	
-	def onCopy( self, event ):
+	def copyCellToClipboard( self, r, c ):
 		if wx.TheClipboard.Open():
 			# Create a wx.TextDataObject
 			do = wx.TextDataObject()
-			do.SetText( self.grid.GetCellValue(self.rowCur, 1) )
+			do.SetText( self.grid.GetCellValue(r, c) )
 
 			# Add the data to the clipboard
 			wx.TheClipboard.SetData(do)
 			# Close the clipboard
 			wx.TheClipboard.Close()
 		else:
-			wx.MessageBox(u"Unable to open the clipboard", u"Error")
+			wx.MessageBox(u"Unable to open the clipboard", u"Error")		
+	
+	def onCopyName( self, event ):
+		self.copyCellToClipboard( self.rowCur, 1 )
+	
+	def onCopyLicense( self, event ):
+		self.copyCellToClipboard( self.rowCur, 2 )
 	
 	def setColNames( self, headerNames ):
 		for col, headerName in enumerate(headerNames):
