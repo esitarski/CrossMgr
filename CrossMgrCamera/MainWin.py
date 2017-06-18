@@ -55,6 +55,48 @@ except:
 				draw.rectangle( ((x1, y1), (x2, y2)), fill=c )
 			return image
 
+clipboard_xpm = [
+"16 15 23 1",
+"+ c #769CDA",
+": c #DCE6F6",
+"X c #3365B7",
+"* c #FFFFFF",
+"o c #9AB6E4",
+"< c #EAF0FA",
+"# c #B1C7EB",
+". c #6992D7",
+"3 c #F7F9FD",
+", c #F0F5FC",
+"$ c #A8C0E8",
+"  c None",
+"- c #FDFEFF",
+"& c #C4D5F0",
+"1 c #E2EAF8",
+"O c #89A9DF",
+"= c #D2DFF4",
+"4 c #FAFCFE",
+"2 c #F5F8FD",
+"; c #DFE8F7",
+"% c #B8CCEC",
+"> c #E5EDF9",
+"@ c #648FD6",
+" .....XX        ",
+" .oO+@X#X       ",
+" .$oO+X##X      ",
+" .%$o........   ",
+" .&%$.*=&#o.-.  ",
+" .=&%.*;=&#.--. ",
+" .:=&.*>;=&.... ",
+" .>:=.*,>;=&#o. ",
+" .<1:.*2,>:=&#. ",
+" .2<1.*32,>:=&. ",
+" .32<.*432,>:=. ",
+" .32<.*-432,>:. ",
+" .....**-432,>. ",
+"     .***-432,. ",
+"     .......... "
+]
+
 from Version import AppVerName
 
 def setFont( font, w ):
@@ -218,13 +260,17 @@ class MainWin( wx.Frame ):
 		self.cameraDevice.SetFont( boldFont )
 		self.cameraResolution = wx.StaticText( self )
 		self.cameraResolution.SetFont( boldFont )
+		bitmap = wx.BitmapFromXPMData( clipboard_xpm )
+		self.copyLogToClipboard = wx.BitmapButton( self, bitmap=bitmap )
+		self.copyLogToClipboard.Bind( wx.EVT_BUTTON, self.onCopyLogToClipboard )
 		self.reset = wx.Button( self, label="Reset Camera" )
 		self.reset.Bind( wx.EVT_BUTTON, self.resetCamera )
 		cameraDeviceSizer = wx.BoxSizer( wx.HORIZONTAL )
 		cameraDeviceSizer.Add( self.cameraDeviceLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 		cameraDeviceSizer.Add( self.cameraDevice, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
 		cameraDeviceSizer.Add( self.cameraResolution, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
-		cameraDeviceSizer.Add( self.reset, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
+		cameraDeviceSizer.Add( self.copyLogToClipboard, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
+		cameraDeviceSizer.Add( self.reset, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=24 )
 
 		#------------------------------------------------------------------------------
 		self.targetProcessingTimeLabel = wx.StaticText(self, label='Target Frames:')
@@ -318,7 +364,19 @@ class MainWin( wx.Frame ):
 		self.messageQ.put( ('started', now().strftime('%Y/%m/%d %H:%M:%S')) )
 		self.startThreads()
 		self.startCamera()
-		
+	
+	def onCopyLogToClipboard( self, event ):
+		with open( redirectFileName, 'r' ) as fp:
+			logData = fp.read()
+		dataObj = wx.TextDataObject()
+		dataObj.SetText(logData)
+		if wx.TheClipboard.Open():
+			wx.TheClipboard.SetData( dataObj )
+			wx.TheClipboard.Close()
+			Utils.MessageOK(self, u'\n\n'.join( [_("Log file copied to clipboard."), _("You can now paste it into an email.")] ), _("Success") )
+		else:
+			Utils.MessageOK(self, _("Unable to open the clipboard."), _("Error"), wx.ICON_ERROR )
+	
 	def showMessages( self ):
 		while 1:
 			message = self.messageQ.get()
@@ -552,7 +610,7 @@ def MainLoop():
 		try:
 			with open(redirectFileName, 'a') as pf:
 				pf.write( '********************************************\n' )
-				pf.write( '%s: %s Started.\n' % (datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'), AppVerName) )
+				pf.write( '{}: {} Started.\n'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'), AppVerName) )
 		except:
 			pass
 	
