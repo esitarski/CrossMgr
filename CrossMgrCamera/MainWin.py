@@ -458,6 +458,9 @@ class MainWin( wx.Frame ):
 			self.grabFrameOK = False
 			return
 		
+		if not image:
+			return
+		
 		image = AddPhotoHeader( PilImageToWxImage(image),
 			time=tNow, raceSeconds=(tNow - self.tLaunch).total_seconds(),
 			bib=999,

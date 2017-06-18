@@ -89,6 +89,9 @@ def setDrawResources( dc, w, h ):
 def AddPhotoHeader( image, bib=None, time=None, raceSeconds=None, firstNameTxt=u'', lastNameTxt=u'', teamTxt=u'', raceNameTxt=u'' ):
 	global drawResources
 	
+	if not image:
+		return wx.EmptyBitmap(8, 8)
+	
 	bitmap = wx.BitmapFromImage( image )
 	
 	w, h = bitmap.GetSize()

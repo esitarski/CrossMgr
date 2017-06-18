@@ -636,6 +636,9 @@ class MainWin( wx.Frame ):
 			self.grabFrameOK = False
 			return
 		
+		if not image:
+			return
+		
 		image = PilImageToWxImage( image )
 		
 		# Add the image to the circular buffer.

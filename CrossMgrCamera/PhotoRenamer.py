@@ -35,8 +35,8 @@ def PhotoRenamer( qRenamer, qWriter, qMessage ):
 		message = qRenamer.get()
 		
 		for i in xrange(2):
-			fnameOld = GetPhotoFName( message['dirName'], 0, message.get('raceSeconds',None), i )
-			fname = GetPhotoFName( message['dirName'], message.get('bib',None), message.get('raceSeconds',None), i )
+			fnameOld = GetPhotoFName( message['dirName'], 0, message.get('raceSeconds',None), i, message['time'].isoformat() )
+			fname = GetPhotoFName( message['dirName'], message.get('bib',None), message.get('raceSeconds',None), i, message['time'].isoformat() )
 			
 			try:
 				os.rename( fnameOld, fname )

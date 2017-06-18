@@ -214,9 +214,10 @@ class ChoosePrintCategoriesPodiumDialog( wx.Dialog ):
 		self.categories = []
 		race = Model.race
 		row = 0
+		
 		with UnstartedRaceWrapper():
-			for c in race.getCategories(startWaveOnly=False, publishOnly=False):
-				if self.catCount[c] == 0:
+			for c in race.getCategories(startWaveOnly=False, publishOnly=True):
+				if self.catCount.get(c, 0) == 0:
 					continue
 				if self.list.GetItemState(row, wx.LIST_STATE_SELECTED) == wx.LIST_STATE_SELECTED:
 					self.categories.append( c )
