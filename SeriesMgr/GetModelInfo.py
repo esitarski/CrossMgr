@@ -284,6 +284,10 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 			}
 			for fTo, fFrom in [('firstName', 'FirstName'), ('lastName', 'LastName'), ('license', 'License'), ('team', 'Team')]:
 				info[fTo] = getattr(rr, fFrom, '')
+				
+			if not info['firstName'] and not info['lastName']:
+				continue				
+
 			info['categoryName'] = category.fullname
 			info['lastName'], info['firstName'] = getReferenceName(info['lastName'], info['firstName'])
 			info['license'] = getReferenceLicense(info['license'])

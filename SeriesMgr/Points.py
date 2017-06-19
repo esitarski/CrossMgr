@@ -265,7 +265,7 @@ class Points(wx.Panel):
 		for attr, value in modelUpdate.iteritems():
 			if getattr(model, attr) != value:
 				setattr( model, attr, value )
-				model.changed = True
+				model.setChanged()
 		
 ########################################################################
 
