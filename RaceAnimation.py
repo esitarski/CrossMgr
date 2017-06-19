@@ -16,11 +16,15 @@ def GetAnimationData( category=None, getExternalData=False ):
 	
 	with UnstartedRaceWrapper( getExternalData ):
 		with Model.LockRace() as race:
+			riders = race.riders
 			for cat in ([category] if category else race.getCategories()):
 				results = GetResults( cat )
 				
 				for rr in results:
-					info = { 'flr': race.getCategory(rr.num).firstLapRatio }
+					info = {
+						'flr': race.getCategory(rr.num).firstLapRatio,
+						'relegated': riders[rr.num].isRelegated(),
+					}
 					bestLaps = race.getNumBestLaps( rr.num )
 					for a in dir(rr):
 						if a.startswith('_') or a in ignoreFields:

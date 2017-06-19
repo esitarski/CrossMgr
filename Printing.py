@@ -327,11 +327,15 @@ class CrossMgrPrintoutPNG( CrossMgrPrintout ):
 			wx.BITMAP_TYPE_PCX:'pcx',
 			wx.BITMAP_TYPE_PNG:'png',
 			wx.BITMAP_TYPE_PNM:'pnm',
-			wx.BITMAP_TYPE_TIFF:'tiff',
 			wx.BITMAP_TYPE_XPM:'xpm',
 			wx.BITMAP_TYPE_ICO:'ico',
 			wx.BITMAP_TYPE_CUR:'cur',
 		}
+		try:
+			fileSuffix[wx.BITMAP_TYPE_TIFF] = 'tiff'
+		except:
+			pass
+		
 		fileFormat = wx.BITMAP_TYPE_BMP
 
 		fileExt = '.' + fileSuffix[fileFormat]

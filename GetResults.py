@@ -8,6 +8,7 @@ import Utils
 import itertools
 import operator
 from datetime import timedelta
+from collections import deque
 
 from ReadSignOnSheet import IgnoreFields, NumericFields, SyncExcelLink
 statusSortSeq = Model.Rider.statusSortSeq
@@ -121,40 +122,34 @@ def FixRelegations( riderResults ):
 	race = Model.race
 	
 	riders = race.riders
-	if not any( riders[rr.num].isRelegated() for rr in riderResults ):
-		return
-		
-	relegatedResults = {}
-	relegated = set()
-	maxRelegatedPosition = 0
-	for rr in riderResults:
-		rider = riders[rr.num]
-		if rider.isRelegated():
-			rr.relegated = True
-			relegated.add( rr )
-			relegatedPosition = rider.relegatedPosition
-			while relegatedResults.get(relegatedPosition-1, None) is not None:
-				relegatedPosition += 1
-			relegatedResults[relegatedPosition-1] = rr
-			maxRelegatedPosition = max( maxRelegatedPosition, relegatedPosition )
-		
-	posCur = 0
-	doneFinishers = False
-	for rr in riderResults:
-		if rr not in relegated:
-			if not doneFinishers and rr.status != Finisher:
-				doneFinishers = True
-				posCur = maxRelegatedPosition
-			while relegatedResults.get(posCur, None) is not None:
-				posCur += 1
-			relegatedResults[posCur] = rr
-			posCur += 1
 	
-	riderResults = [v[1] for v in sorted(relegatedResults.iteritems(), key = operator.itemgetter(0))]
-	for pos, rr in enumerate(riderResults, 1):
-		if rr.status != Finisher:
+	relegated = []
+	nonRelegated = deque()
+	nonFinishers = []
+	
+	for i, rr in enumerate(riderResults):
+		if rr.status == Finisher:
+			rider = riders[rr.num]
+			if rider.isRelegated():
+				relegated.append( (rider.relegatedPosition, rr) )
+			else:
+				nonRelegated.append( rr )
+		else:
+			nonFinishers = riderResults[i:]
 			break
-		rr.pos = u'{} {}'.format(pos, _('REL')) if rr in relegated else pos
+
+	relegated.sort( key=lambda r: (r[0], r[1].num) )
+	relegated = deque( relegated )
+
+	riderResultsNew = []
+	while relegated or nonRelegated:
+		if nonRelegated and (not relegated or relegated[0][0] > len(riderResultsNew)):
+			riderResultsNew.append( nonRelegated.popleft() )
+		elif relegated:
+			riderResultsNew.append( relegated.popleft()[1] )
+	riderResultsNew.extend( nonFinishers )
+		
+	riderResults[:] = riderResultsNew
 	
 def _GetResultsCore( category ):
 	Finisher = Model.Rider.Finisher
@@ -381,6 +376,10 @@ def _GetResultsCore( category ):
 			
 	riderResults.sort( key=RiderResult._getKey )
 	
+	relegatedNums = { rr.num for rr in riderResults if race.riders[rr.num].isRelegated() }
+	if relegatedNums:
+		FixRelegations( riderResults )
+	
 	# Add the position (or status, if not a Finisher).
 	# Fill in the gap field (include laps down if appropriate).
 	leader = riderResults[0]
@@ -398,17 +397,20 @@ def _GetResultsCore( category ):
 			rr.pos = Model.Rider.statusNames[rr.status]
 			continue
 			
-		rr.pos = u'{}'.format(pos+1)
+		rr.pos = u'{}{}'.format(pos+1, u' '+_('REL') if rr.num in relegatedNums else u'')
 		
 		# if gapValue is negative, it is laps down.  Otherwise, it is seconds.
 		rr.gapValue = 0
-		if rr.laps != leader.laps:
+		if rr.laps < leader.laps:
 			lapsDown = leader.laps - rr.laps
 			rr.gap = u'-{} {}'.format(lapsDown, _('lap') if lapsDown == 1 else _('laps'))
 			rr.gapValue = -lapsDown
 		elif (winAndOut or rr != leader) and not (isTimeTrial and rr.lastTime == leader.lastTime):
-			rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
-			rr.gapValue = rr.lastTime - leader.lastTime
+			rr.gap = (
+				Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
+					if leader.lastTime < rr.lastTime else u''
+			)
+			rr.gapValue = max(0.0, rr.lastTime - leader.lastTime)
 	
 	# Compute road race times and gaps.
 	if roadRaceFinishTimes and not isTimeTrial:
@@ -463,8 +465,6 @@ def _GetResultsCore( category ):
 			del rr.roadRaceLastTime
 			del rr.roadRaceGap
 			del rr.roadRaceGapValue
-	
-	FixRelegations( riderResults )
 	
 	'''
 	for rr in riderResults:

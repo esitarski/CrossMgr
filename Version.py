@@ -1,1 +1,1 @@
-AppVerName="CrossMgr 2.9.26"
+AppVerName="CrossMgr 2.9.27"

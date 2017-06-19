@@ -649,13 +649,11 @@ class ExportGrid( object ):
 					u',  {} ', _('DNF'),
 					u',  {} ', _('Lapped')])).format( starters, dnf, lapped )
 
-		startOffset = race.categoryStartOffset( category )
-
 		leader = results[0]
 		hasSpeeds = (hasattr(leader, 'lapSpeeds') or hasattr(leader, 'raceSpeeds'))
 		hasFactor = (hasattr(leader, 'factor') and any( leader.factor != rr.factor for rr in results ))
 		
-		leaderTime = Utils.formatTime(leader.lastTime) if leader.lastTime else u''
+		leaderTime = Utils.formatTime(leader.lastTime - leader.raceTimes[0]) if leader.lastTime else u''
 		
 		if showLapTimes and showLapsFrequency is None:
 			# Compute a reasonable number of laps to show (max around 10).
@@ -726,7 +724,7 @@ class ExportGrid( object ):
 		for col, f in enumerate( rrFields ):
 			if f in ('lastTime', 'lastTimeOrig'):
 				for row, rr in enumerate(results):
-					ttt = getattr( rr, f, 0.0 )
+					ttt = getattr( rr, f, 0.0 ) - (rr.raceTimes[0] if rr.raceTimes else 0.0)
 					data[col].append( Utils.formatTimeCompressed(ttt, highPrecision) if ttt > 0.0 else u'' )
 			elif f in ('clockStartTime', 'startTime', 'finishTime'):
 				for row, rr in enumerate(results):
