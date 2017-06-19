@@ -166,6 +166,7 @@ class SeriesModel( object ):
 	scoreByPercent = False
 	scoreByTrueSkill = False
 	considerPrimePointsOrTimeBonus = True
+	teamResultsMax = 4			# Maximum number of team member results to consider per race.
 	licenseLinkTemplate = u''	# Used to create an html link from the rider's license number in the html output.
 	bestResultsToConsider = 0	# 0 == all
 	mustHaveCompleted = 0		# Number of events to complete to be eligible for results.

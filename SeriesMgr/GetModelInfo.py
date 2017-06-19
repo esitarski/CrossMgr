@@ -691,6 +691,107 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		categoryResult = [list(riderNameLicense[rider]) + [riderTeam[rider], riderPoints[rider], riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
 		return categoryResult, races, GetPotentialDuplicateFullNames(riderNameLicense)
 
+def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, numPlacesTieBreaker=5 ):
+	scoreByTime = SeriesModel.model.scoreByTimeTeam
+	teamResultsMax = SeriesModel.model.teamResultsMax
+	showLastToFirst = SeriesModel.model.showLastToFirst
+	considerPrimePointsOrTimeBonus = SeriesModel.model.considerPrimePointsOrTimeBonus
+	
+	# Get all results for this category.
+	raceResults = [rr for rr in raceResults
+		if rr.categoryName == categoryName and
+			rr.team and
+			rr.team.lower() not in {'no team', 'independent'}
+	]
+	if not raceResults:
+		return [], [], set()
+		
+	# Assign a sequence number to the races in the specified order.
+	for i, r in enumerate(SeriesModel.model.races):
+		r.iSequence = i
+		
+	# Get all races for this category.
+	races = set( (rr.raceDate, rr.raceName, rr.raceURL, rr.raceInSeries) for rr in raceResults )
+	races = sorted( races, key = lambda r: r[3].iSequence )
+	raceSequence = dict( (r[3], i) for i, r in enumerate(races) )
+	
+	def asInt( v ):
+		return int(v) if int(v) == v else v
+	
+	ignoreFormat = u'[{}**]'
+	upgradeFormat = u'{} pre-upg'
+	
+	def FixUpgradeFormat( riderUpgrades, riderResults ):
+		# Format upgrades so they are visible in the results.
+		for rider, upgrades in riderUpgrades.iteritems():
+			for i, u in enumerate(upgrades):
+				if u:
+					v = riderResults[rider][i]
+					riderResults[rider][i] = tuple([upgradeFormat.format(v[0] if v[0] else '')] + list(v[1:]))
+	
+	# Get the results for each team for each event.
+	resultsByTeam = {v[3]:defaultdict(list) for v in races}
+	for rr in raceResults:
+		resultsByTeam[rr.raceInSeries][rr.team].append( rr )
+	
+	teamResults = defaultdict( lambda : [(0,0,0,0)] * len(races) )
+	if True:
+		# Score by points.
+		# Get the individual results for each rider, and the total points.
+		teamPoints = defaultdict( int )
+		for race, teamResults in resultsByTeam.iteritems():
+			teamRiderPoints = {}
+			for team, rrs in teamResults.iteritems():
+				for rr in rrs:
+					rider = rr.key()
+					primePoints = rr.primePoints if considerPrimePointsOrTimeBonus else 0
+					earnedPoints = pointsForRank[rr.raceFileName][rr.rank] + primePoints
+					points = asInt( earnedPoints * rr.upgradeFactor )
+					teamRiderPoints[rider] = points
+					teamResults[rider][raceSequence[rr.raceInSeries]] = (points, rr.rank, primePoints, 0)
+				rrs.sort( key = lambda rr: teamRiderPoints[rr.key()], reverse=True )
+				# Adjust for best score.
+
+		# Adjust for the best scores.
+		if bestResultsToConsider > 0:
+			for rider, finishes in riderFinishes.iteritems():
+				iPoints = [(i, p) for i, p in enumerate(finishes) if p is not None]
+				if len(iPoints) > bestResultsToConsider:
+					iPoints.sort( key=lambda x: (-x[1], x[0]) )
+					for i, p in iPoints[bestResultsToConsider:]:
+						riderPoints[rider] -= p
+						v = riderResults[rider][i]
+						riderResults[rider][i] = tuple([ignoreFormat.format(v[0] if v[0] else '')] + list(v[1:]))
+
+		# Sort by rider points - greatest number of points first.  Break ties with place count, then
+		# most recent result.
+		rankDNF = RaceResult.rankDNF
+		riderOrder.sort(
+			key = lambda r:	[-riderPoints[r]] +
+							([-riderEventsCompleted[r]] if useMostEventsCompleted else []) +
+							[-riderPlaceCount[r][k] for k in xrange(1, numPlacesTieBreaker+1)] +
+							[rank if rank>0 else rankDNF for points, rank, primePoints, timeBonus in reversed(riderResults[r])]
+		)
+		
+		# Compute the points gap.
+		teamGap = {}
+		if teamOrder:
+			leader = teamOrder[0]
+			leaderPoints = teamPoints[leader]
+			teamGap = { r : leaderPoints - teamPoints[r] for r in teamOrder }
+			teamGap = { r : unicode(gap) if gap else u'' for r, gap in teamGap.iteritems() }
+		
+		# Reverse the race order if required for display.
+		if showLastToFirst:
+			races.reverse()
+			for results in teamResults.itervalues():
+				results.reverse()
+		
+		# List of:
+		# lastName, firstName, license, team, points, [list of (points, position) for each race in series]
+		categoryResult = [list(teamNameLicense[team]) + [teamTeam[team], teamPoints[team], teamGap[team]] + [teamResults[team]] for team in teamOrder]
+		return categoryResult, races, GetPotentialDuplicateFullNames(teamNameLicense)
+
 def GetTotalUniqueParticipants( raceResults ):
 	return len( set( rr.key() for rr in raceResults ) )
 	
