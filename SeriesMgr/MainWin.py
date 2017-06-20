@@ -35,9 +35,11 @@ from Races				import Races
 from Points				import Points
 from Upgrades			import Upgrades
 from Results			import Results
+from TeamResults		import TeamResults
 from CategorySequence	import CategorySequence
 from Aliases			import Aliases
 from AliasesLicense		import AliasesLicense
+from AliasesTeam		import AliasesTeam
 from Options			import Options
 from Errors				import Errors
 import Version
@@ -259,11 +261,13 @@ class MainWin( wx.Frame ):
 		self.attrClassName = [
 			[ 'races',			Races,				'Races' ],
 			[ 'results',		Results,			'Results' ],
+			[ 'teamResults',	TeamResults,		'TeamResults' ],
 			[ 'points',			Points,				'Scoring Criteria' ],
 			[ 'upgrades',		Upgrades,			'Upgrades' ],
 			[ 'categorySequence',CategorySequence,	'Category Sequence' ],
 			[ 'aliases',		Aliases,			'Name Aliases' ],
 			[ 'licenseAliases',	AliasesLicense,		'License Aliases' ],
+			[ 'teamAliases',	AliasesTeam,		'Team Aliases' ],
 			[ 'options',		Options,			'Options' ],
 			[ 'errors',			Errors,				'Errors' ],
 		]

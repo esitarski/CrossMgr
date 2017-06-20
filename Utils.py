@@ -428,7 +428,7 @@ def colorFromStr( s ):
 	s = s.lstrip('#')
 	assert len(s) in (3, 6), 'Invalid colour string'
 	if len(s) == 3:
-		r, g, b = [int(c, 16) for c in s]
+		r, g, b = [int(c, 16)<<4 for c in s]
 	else:
 		r, g, b = [int(s[i:i+2], 16) for i in xrange(0, 6, 2)]
 	return wx.Colour(r, g, b)

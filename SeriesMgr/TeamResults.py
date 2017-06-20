@@ -27,9 +27,9 @@ import platform
 
 reNoDigits = re.compile( '[^0-9]' )
 
-HeaderNamesTemplate = ['Pos', 'Name', 'License', 'Team']
+HeaderNamesTemplate = ['Pos', 'Team']
 def getHeaderNames():
-	return HeaderNamesTemplate + ['Total Time' if SeriesModel.model.scoreByTime else 'Points', 'Gap']
+	return HeaderNamesTemplate + ['Points', 'Gap']
 
 #----------------------------------------------------------------------------------
 
@@ -42,22 +42,29 @@ def getHeaderGraphicBase64():
 	with open(graphicFName, 'rb') as f:
 		return 'data:image/png;base64,{}'.format(base64.standard_b64encode(f.read()))
 
+def formatRaceTimes( rt ):
+	rt = [r for r in rt if r.points]
+	if not rt:
+		return u''
+	total = sum( r.points for r in rt )
+	if len(rt) == 1:
+		r = rt[0]
+		return u'{}({})'.format(r.points, Utils.ordinal(r.rank))
+	return u'{} = {}'.format(total, ' + '.join( u'{}({})'.format(r.points, Utils.ordinal(r.rank)) for r in rt) )
+
 def getHtmlFileName():
 	modelFileName = Utils.getFileName() if Utils.getFileName() else 'Test.smn'
-	fileName		= os.path.basename( os.path.splitext(modelFileName)[0] + '.html' )
+	fileName		= os.path.basename( os.path.splitext(modelFileName)[0] + '-Team.html' )
 	defaultPath = os.path.dirname( modelFileName )
 	return os.path.join( defaultPath, fileName )
 	
 def getHtml( htmlfileName=None, seriesFileName=None ):
 	model = SeriesModel.model
 	scoreByTime = model.scoreByTime
-	scoreByPercent = model.scoreByPercent
-	scoreByTrueSkill = model.scoreByTrueSkill
 	bestResultsToConsider = model.bestResultsToConsider
 	mustHaveCompleted = model.mustHaveCompleted
-	hasUpgrades = model.upgradePaths
 	considerPrimePointsOrTimeBonus = model.considerPrimePointsOrTimeBonus
-	raceResults = model.extractAllRaceResults()
+	raceResults = model.extractAllRaceResults( False )
 	
 	categoryNames = model.getCategoryNamesSortedPublish()
 	if not categoryNames:
@@ -68,9 +75,7 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 
 	if not seriesFileName:
 		seriesFileName = (os.path.splitext(Utils.mainWin.fileName)[0] if Utils.mainWin and Utils.mainWin.fileName else 'Series Results')
-	title = os.path.basename( seriesFileName )
-	
-	licenseLinkTemplate = model.licenseLinkTemplate
+	title = os.path.basename( seriesFileName ) + ' Team Results'
 	
 	pointsStructures = {}
 	pointsStructuresList = []
@@ -389,7 +394,7 @@ function sortTableId( iTable, iCol ) {
 						write( u'<img id="idImgHeader" src="{}" />'.format(getHeaderGraphicBase64()) )
 					with tag(html, 'td'):
 						with tag(html, 'h1', {'style': 'margin-left: 1cm;'}):
-							write( cgi.escape(model.name) )
+							write( cgi.escape(model.name + ' Team Results') )
 						if model.organizer:
 							with tag(html, 'h2', {'style': 'margin-left: 1cm;'}):
 								write( u'by {}'.format(cgi.escape(model.organizer)) )
@@ -411,13 +416,13 @@ function sortTableId( iTable, iCol ) {
 							with tag(html, 'span'):
 								write( unicode(cgi.escape(categoryName)) )
 			for iTable, categoryName in enumerate(categoryNames):
-				results, races, potentialDuplicates = GetModelInfo.GetCategoryResults(
+				results, races = GetModelInfo.GetCategoryResultsTeam(
 					categoryName,
 					raceResults,
 					pointsForRank,
 					useMostEventsCompleted=model.useMostEventsCompleted,
 					numPlacesTieBreaker=model.numPlacesTieBreaker )
-				results = [rr for rr in results if rr[3] > 0]
+				results = [rr for rr in results if rr[1] > 0]
 				
 				headerNames = HeaderNames + [u'{}'.format(r[1]) for r in races]
 				
@@ -432,7 +437,7 @@ function sortTableId( iTable, iCol ) {
 							with tag(html, 'tr'):
 								for iHeader, col in enumerate(HeaderNames):
 									colAttr = { 'onclick': 'sortTableId({}, {})'.format(iTable, iHeader) }
-									if col in ('License', 'Gap'):
+									if col in ('Gap',):
 										colAttr['class'] = 'noprint'
 									with tag(html, 'th', colAttr):
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,iHeader)) ):
@@ -441,9 +446,8 @@ function sortTableId( iTable, iCol ) {
 								for iRace, r in enumerate(races):
 									# r[0] = RaceData, r[1] = RaceName, r[2] = RaceURL, r[3] = Race
 									with tag(html, 'th', {
-											'class':'leftBorder centerAlign noprint',
-											'colspan': 2,
-											'onclick': 'sortTableId({}, {})'.format(iTable, len(HeaderNames) + iRace),
+											'class':'centerAlign noprint',
+											#'onclick': 'sortTableId({}, {})'.format(iTable, len(HeaderNames) + iRace),
 										} ):
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,len(HeaderNames) + iRace)) ):
 											pass
@@ -456,114 +460,28 @@ function sortTableId( iTable, iCol ) {
 											write( u'<br/>' )
 											with tag(html, 'span', {'class': 'smallFont'}):
 												write( unicode(r[0].strftime('%b %d, %Y')) )
-										if not scoreByTime and not scoreByPercent and not scoreByTrueSkill:
-											write( u'<br/>' )
-											with tag(html, 'span', {'class': 'smallFont'}):
-												write( u'Top {}'.format(len(r[3].pointStructure)) )
 						with tag(html, 'tbody'):
-							for pos, (name, license, team, points, gap, racePoints) in enumerate(results):
+							for pos, (team, points, gap, racePoints) in enumerate(results):
 								with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
 									with tag(html, 'td', {'class':'rightAlign'}):
 										write( unicode(pos+1) )
 									with tag(html, 'td'):
-										write( unicode(name or u'') )
-									with tag(html, 'td', {'class':'noprint'}):
-										if licenseLinkTemplate and license:
-											with tag(html, 'a', {'href':u'{}{}'.format(licenseLinkTemplate, license), 'target':'_blank'}):
-												write( unicode(license or u'') )
-										else:
-											write( unicode(license or u'') )
-									with tag(html, 'td'):
-										write( unicode(team or '') )
+										write( unicode(team or u'') )
 									with tag(html, 'td', {'class':'rightAlign'}):
 										write( unicode(points or '') )
 									with tag(html, 'td', {'class':'rightAlign noprint'}):
 										write( unicode(gap or '') )
-									for rPoints, rRank, rPrimePoints, rTimeBonus in racePoints:
-										if rPoints:
-											with tag(html, 'td', {'class':'leftBorder rightAlign noprint' + (' ignored' if u'**' in u'{}'.format(rPoints) else '')}):
-												write( u'{}'.format(rPoints).replace(u'[',u'').replace(u']',u'').replace(' ', '&nbsp;') )
-										else:
-											with tag(html, 'td', {'class':'leftBorder noprint'}):
-												pass
-										
-										if rRank:
-											if rPrimePoints:
-												with tag(html, 'td', {'class':'rank noprint'}):
-													write( u'({})&nbsp;+{}'.format(Utils.ordinal(rRank).replace(' ', '&nbsp;'), rPrimePoints) )
-											elif rTimeBonus:
-												with tag(html, 'td', {'class':'rank noprint'}):
-													write( u'({})&nbsp;-{}'.format(
-														Utils.ordinal(rRank).replace(' ', '&nbsp;'),
-														Utils.formatTime(rTimeBonus, twoDigitMinutes=False)),
-													)
-											else:
-												with tag(html, 'td', {'class':'rank noprint'}):
-													write( u'({})'.format(Utils.ordinal(rRank).replace(' ', '&nbsp;')) )
-										else:
-											with tag(html, 'td', {'class':'noprint'}):
-												pass
+									for rt in racePoints:
+										with tag(html, 'td', {'class': 'centerAlign noprint'}):
+											write( formatRaceTimes(rt) )
 										
 			#-----------------------------------------------------------------------------
 			if considerPrimePointsOrTimeBonus:
 				with tag(html, 'p', {'class':'noprint'}):
-					if scoreByTime:
-						with tag(html, 'strong'):
-							with tag(html, 'span', {'style':'font-style: italic;'}):
-								write( u'-MM:SS' )
-						write( u' - {}'.format( u'Time Bonus subtracted from Finish Time.') )
-					elif not scoreByTime and not scoreByPercent and not scoreByTrueSkill:
-						with tag(html, 'strong'):
-							with tag(html, 'span', {'style':'font-style: italic;'}):
-								write( u'+N' )
-						write( u' - {}'.format( u'Bonus Points added to Points for Place.') )
+					write( u'Bonus Points added to Points for Place.' )
 					
-			if bestResultsToConsider > 0 and not scoreByTrueSkill:
-				with tag(html, 'p', {'class':'noprint'}):
-					with tag(html, 'strong'):
-						write( u'**' )
-					write( u' - {}'.format( u'Result not considered.  Not in best of {} scores.'.format(bestResultsToConsider) ) )
-					
-			if hasUpgrades:
-				with tag(html, 'p', {'class':'noprint'}):
-					with tag(html, 'strong'):
-						write( u'pre-upg' )
-					write( u' - {}'.format( u'Points carried forward from pre-upgrade category results (see Upgrades Progression below).' ) )
-			
-			if mustHaveCompleted > 0:
-				with tag(html, 'p', {'class':'noprint'}):
-					write( u'Participants completing fewer than {} events are not shown.'.format(mustHaveCompleted) )
-			
 			#-----------------------------------------------------------------------------
-			if scoreByTrueSkill:
-				with tag(html, 'div', {'class':'noprint'} ):
-					with tag(html, 'p'):
-						pass
-					with tag(html, 'hr'):
-						pass
-					
-					with tag(html, 'p'):
-						with tag(html, 'h2'):
-							write( u'TrueSkill' )
-						with tag(html, 'p'):
-							write( u"TrueSkill is a ranking method developed by Microsoft Research for the XBox.  ")
-							write( u"TrueSkill maintains an estimation of the skill of each competitor.  Every time a competitor races, the system accordingly changes the perceived skill of the competitor and acquires more confidence about this perception.  This is unlike a regular points system where a points can be accumulated through regular participation: not necessarily representing  overall racing ability.  ")
-						with tag(html, 'p'):
-							write( u"Results are shown above in the form RR (MM,VV).  Competitor skill is represented by a normally distributed random variable with estimated mean (MM) and variance (VV).  The mean is an estimation of the skill of the competitor and the variance represents how unsure the system is about it (bigger variance = more unsure).  Competitors all start with mean = 25 and variance = 25/3 which corresponds to a zero ranking (see below).  ")
-						with tag(html, 'p'):
-							write( u"The parameters of each distribution are updated based on the results from each race using a Bayesian approach.  The extent of updates depends on each player's variance and on how 'surprising' the outcome is to the system. Changes to scores are negligible when outcomes are expected, but can be large when favorites surprisingly do poorly or underdogs surprisingly do well.  ")
-						with tag(html, 'p'):
-							write( u"RR is the skill ranking defined by RR = MM - 3 * VV.  This is a conservative estimate of the 'actual skill', which is expected to be higher than the estimate 99.7% of the time.  " )
-							write( u"There is no meaning to positive or negative skill levels which are a result of the underlying mathematics.  The numbers are only meaningful relative to each other.  ")
-						with tag(html, 'p'):
-							write( u"The TrueSkill score can be improved by 'consistently' (say, 2-3 times in a row) finishing ahead of higher ranked competitors.  ")
-							write( u"Repeatedly finishing with similarly ranked competitors will not change the score much as it isn't evidence of improvement.  ")
-						with tag(html, 'p'):
-							write("Full details ")
-							with tag(html, 'a', {'href': 'https://www.microsoft.com/en-us/research/publication/trueskilltm-a-bayesian-skill-rating-system/'} ):
-								write(u'here.')
-				
-			if not scoreByTime and not scoreByPercent and not scoreByTrueSkill:
+			if True:
 				with tag(html, 'div', {'class':'noprint'} ):
 					with tag(html, 'p'):
 						pass
@@ -605,7 +523,7 @@ function sortTableId( iTable, iCol ) {
 						write( u'Tie Breaking Rules' )
 						
 					with tag(html, 'p'):
-						write( u"If two or more riders are tied on points, the following rules are applied in sequence until the tie is broken:" )
+						write( u"If two or more teams are tied on points, the following rules are applied in sequence until the tie is broken:" )
 					isFirst = True
 					tieLink = u"if still a tie, use "
 					with tag(html, 'ol'):
@@ -625,20 +543,9 @@ function sortTableId( iTable, iCol ) {
 								) )
 								isFirst = False
 						with tag(html, 'li'):
-							write( u"{}finish position in most recent event".format(tieLink if not isFirst else "") )
+							write( u"{}best finish position in most recent event".format(tieLink if not isFirst else "") )
 							isFirst = False
 					
-					if hasUpgrades:
-						with tag(html, 'p'):
-							pass
-						with tag(html, 'hr'):
-							pass
-						with tag(html, 'h2'):
-							write( u"Upgrades Progression" )
-						with tag(html, 'ol'):
-							for i in xrange(len(model.upgradePaths)):
-								with tag(html, 'li'):
-									write( u"{}: {:.2f} points in pre-upgrade category carried forward".format(model.upgradePaths[i], model.upgradeFactors[i]) )
 			#-----------------------------------------------------------------------------
 			with tag(html, 'p'):
 				with tag(html, 'a', dict(href='http://sites.google.com/site/crossmgrsoftware')):
@@ -665,7 +572,7 @@ labelStyle = xlwt.easyxf(
     "borders: bottom medium;"
 )
 
-class Results(wx.Panel):
+class TeamResults(wx.Panel):
 	#----------------------------------------------------------------------
 	def __init__(self, parent):
 		"""Constructor"""
@@ -751,8 +658,6 @@ class Results(wx.Panel):
 	def doCellClick( self, event ):
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(u'{}...'.format(_('Copy Name to Clipboard')),	wx.NewId(), self.onCopyName),
-				(u'{}...'.format(_('Copy License to Clipboard')),	wx.NewId(), self.onCopyLicense),
 				(u'{}...'.format(_('Copy Team to Clipboard')),	wx.NewId(), self.onCopyTeam),
 			]
 			for p in self.popupInfo:
@@ -783,20 +688,14 @@ class Results(wx.Panel):
 		else:
 			wx.MessageBox(u"Unable to open the clipboard", u"Error")		
 	
-	def onCopyName( self, event ):
-		self.copyCellToClipboard( self.rowCur, 1 )
-	
-	def onCopyLicense( self, event ):
-		self.copyCellToClipboard( self.rowCur, 2 )
-	
 	def onCopyTeam( self, event ):
-		self.copyCellToClipboard( self.rowCur, 3 )
+		self.copyCellToClipboard( self.rowCur, 1 )
 	
 	def setColNames( self, headerNames ):
 		for col, headerName in enumerate(headerNames):
 			self.grid.SetColLabelValue( col, headerName )
 			attr = gridlib.GridCellAttr()
-			if headerName in ('Name', 'Team', 'License'):
+			if headerName in ('Team',):
 				attr.SetAlignment( wx.ALIGN_LEFT, wx.ALIGN_TOP )
 			elif headerName in ('Pos', 'Points', 'Gap'):
 				attr.SetAlignment( wx.ALIGN_RIGHT, wx.ALIGN_TOP )
@@ -827,57 +726,46 @@ class Results(wx.Panel):
 
 	def refresh( self ):
 		model = SeriesModel.model
-		scoreByTime = model.scoreByTime
-		scoreByPercent = model.scoreByPercent
-		scoreByTrueSkill = model.scoreByTrueSkill
 		HeaderNames = getHeaderNames()
 		
-		model = SeriesModel.model
 		self.postPublishCmd.SetValue( model.postPublishCmd )
 		
 		wait = wx.BusyCursor()
-		self.raceResults = model.extractAllRaceResults()
+		self.raceResults = model.extractAllRaceResults( False )
 		del wait
 		
 		self.fixCategories()
-		self.grid.ClearGrid()
 		
 		categoryName = self.categoryChoice.GetStringSelection()
-		if not categoryName:
+		if not categoryName or not model.scoreByPoints:
+			Utils.AdjustGridSize( self.grid, 0, 0 )
 			return
+		
+		self.grid.ClearGrid()
 			
 		pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
 
-		results, races, potentialDuplicates = GetModelInfo.GetCategoryResults(
+		results, races = GetModelInfo.GetCategoryResultsTeam(
 			categoryName,
 			self.raceResults,
 			pointsForRank,
 			useMostEventsCompleted=model.useMostEventsCompleted,
 			numPlacesTieBreaker=model.numPlacesTieBreaker,
 		)
-		results = [rr for rr in results if rr[3] > 0]
+		results = [rr for rr in results if rr[1] > 0]
 		
 		headerNames = HeaderNames + [u'{}\n{}'.format(r[1],r[0].strftime('%Y-%m-%d') if r[0] else u'') for r in races]
 		
 		Utils.AdjustGridSize( self.grid, len(results), len(headerNames) )
 		self.setColNames( headerNames )
 		
-		for row, (name, license, team, points, gap, racePoints) in enumerate(results):
+		for row, (team, points, gap, racePoints) in enumerate(results):
 			self.grid.SetCellValue( row, 0, unicode(row+1) )
-			self.grid.SetCellValue( row, 1, unicode(name or u'') )
-			self.grid.SetCellBackgroundColour( row, 1, wx.Colour(255,255,0) if name in potentialDuplicates else wx.Colour(255,255,255) )
-			self.grid.SetCellValue( row, 2, unicode(license or u'') )
-			self.grid.SetCellValue( row, 3, unicode(team or u'') )
-			self.grid.SetCellValue( row, 4, unicode(points) )
-			self.grid.SetCellValue( row, 5, unicode(gap) )
-			for q, (rPoints, rRank, rPrimePoints, rTimeBonus) in enumerate(racePoints):
-				self.grid.SetCellValue( row, 6 + q,
-					u'{} ({}) +{}'.format(rPoints, Utils.ordinal(rRank), rPrimePoints) if rPoints and rPrimePoints
-					else u'{} ({}) -{}'.format(rPoints, Utils.ordinal(rRank), Utils.formatTime(rTimeBonus, twoDigitMinutes=False)) if rPoints and rRank and rTimeBonus
-					else u'{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints
-					else u'({})'.format(Utils.ordinal(rRank)) if rRank
-					else u''
-				)
+			self.grid.SetCellValue( row, 1, unicode(team) )
+			self.grid.SetCellValue( row, 2, unicode(points) )
+			self.grid.SetCellValue( row, 3, unicode(gap) )
+			for q, rt in enumerate(racePoints):
+				self.grid.SetCellValue( row, 4 + q, formatRaceTimes(rt) )
 				
 			for c in xrange( 0, len(headerNames) ):
 				self.grid.SetCellBackgroundColour( row, c, wx.WHITE )
@@ -926,7 +814,7 @@ class Results(wx.Panel):
 							halign = wx.ALIGN_CENTRE
 						self.grid.SetCellAlignment( r, c, halign, wx.ALIGN_TOP )
 		
-		self.statsLabel.SetLabel( '{} / {}'.format(self.grid.GetNumberRows(), GetModelInfo.GetTotalUniqueParticipants(self.raceResults)) )
+		self.statsLabel.SetLabel( '{} / {}'.format(self.grid.GetNumberRows(), GetModelInfo.GetTotalUniqueTeams(self.raceResults)) )
 		
 		self.grid.AutoSizeColumns( False )
 		self.grid.AutoSizeRows( False )
@@ -946,7 +834,7 @@ class Results(wx.Panel):
 				Utils.MessageOK( self, 'You must save your Series to a file first.', 'Save Series' )
 				return
 		
-		self.raceResults = model.extractAllRaceResults()
+		self.raceResults = model.extractAllRaceResults( False )
 		
 		categoryNames = model.getCategoryNamesSortedPublish()
 		if not categoryNames:
@@ -957,14 +845,14 @@ class Results(wx.Panel):
 		wb = xlwt.Workbook()
 
 		for categoryName in categoryNames:
-			results, races, potentialDuplicates = GetModelInfo.GetCategoryResults(
+			results, races = GetModelInfo.GetCategoryResultsTeam(
 				categoryName,
 				self.raceResults,
 				pointsForRank,
 				useMostEventsCompleted=model.useMostEventsCompleted,
 				numPlacesTieBreaker=model.numPlacesTieBreaker,
 			)
-			results = [rr for rr in results if rr[3] > 0]
+			results = [rr for rr in results if rr[1] > 0]
 			
 			headerNames = HeaderNames + [r[1] for r in races]
 			
@@ -996,22 +884,13 @@ class Results(wx.Panel):
 				wsFit.write( rowCur, c, headerName, labelStyle, bold = True )
 			rowCur += 1
 			
-			for pos, (name, license, team, points, gap, racePoints) in enumerate(results):
+			for pos, (team, points, gap, racePoints) in enumerate(results):
 				wsFit.write( rowCur, 0, pos+1, numberStyle )
-				wsFit.write( rowCur, 1, name, textStyle )
-				wsFit.write( rowCur, 2, license, textStyle )
-				wsFit.write( rowCur, 3, team, textStyle )
-				wsFit.write( rowCur, 4, points, numberStyle )
-				wsFit.write( rowCur, 5, gap, numberStyle )
-				for q, (rPoints, rRank, rPrimePoints, rTimeBonus) in enumerate(racePoints):
-					wsFit.write( rowCur, 6 + q,
-						'{} ({}) +{}'.format(rPoints, Utils.ordinal(rRank), rPrimePoints) if rPoints and rPrimePoints
-						else '{} ({}) -{}'.format(rPoints, Utils.ordinal(rRank), Utils.formatTime(rTimeBonus, twoDigitMinutes=False)) if rPoints and rRank and rTimeBonus
-						else '{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints
-						else '({})'.format(Utils.ordinal(rRank)) if rRank
-						else '',
-						centerStyle
-				)
+				wsFit.write( rowCur, 1, team, textStyle )
+				wsFit.write( rowCur, 2, points, numberStyle )
+				wsFit.write( rowCur, 3, gap, numberStyle )
+				for q, rt in enumerate(racePoints):
+					wsFit.write( rowCur, 4 + q, formatRaceTimes(rt), centerStyle )
 				rowCur += 1
 		
 			# Add branding at the bottom of the sheet.
@@ -1020,9 +899,9 @@ class Results(wx.Panel):
 			ws.write( rowCur + 2, 0, brandText, style )
 		
 		if Utils.mainWin:
-			xlfileName = os.path.splitext(Utils.mainWin.fileName)[0] + '.xls'
+			xlfileName = os.path.splitext(Utils.mainWin.fileName)[0] + 'Team.xls'
 		else:
-			xlfileName = 'ResultsTest.xls'
+			xlfileName = 'ResultsTestTeam.xls'
 			
 		try:
 			wb.save( xlfileName )

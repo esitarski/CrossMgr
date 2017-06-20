@@ -3,7 +3,7 @@ import math
 import cPickle as pickle
 import datetime
 import operator
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 
 import trueskill
 
@@ -107,7 +107,11 @@ class RaceResult( object ):
 		
 		self.upgradeFactor = 1
 		self.upgradeResult = False
-			
+	
+	@property
+	def teamIsValid( self ):
+		return self.team and self.team.lower() not in {'no team', 'no-team', 'independent'}
+		
 	def keySort( self ):
 		fields = ['categoryName', 'lastName', 'firstName', 'license', 'raceDate', 'raceName']
 		return tuple( safe_upper(getattr(self, a)) for a in fields )
@@ -118,6 +122,9 @@ class RaceResult( object ):
 		
 	def key( self ):
 		return (Utils.removeDiacritic(self.full_name.upper()), Utils.removeDiacritic(self.license))
+		
+	def keyTeam( self ):
+		return Utils.removeDiacritic(self.team.upper())
 		
 	@property
 	def full_name( self ):
@@ -143,6 +150,7 @@ def toInt( n ):
 def ExtractRaceResultsExcel( raceInSeries ):
 	getReferenceName = SeriesModel.model.getReferenceName
 	getReferenceLicense = SeriesModel.model.getReferenceLicense
+	getReferenceTeam = SeriesModel.model.getReferenceTeam
 	
 	excel = GetExcelReader( raceInSeries.fileName )
 	raceName = os.path.splitext(os.path.basename(raceInSeries.fileName))[0]
@@ -205,6 +213,7 @@ def ExtractRaceResultsExcel( raceInSeries ):
 				
 				info['lastName'], info['firstName'] = getReferenceName(info['lastName'], info['firstName'])
 				info['license'] = getReferenceLicense(info['license'])
+				info['team'] = getReferenceTeam(info['team'])
 				
 				# If there is a bib it must be numeric.
 				try:
@@ -254,6 +263,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 	
 	getReferenceName = SeriesModel.model.getReferenceName
 	getReferenceLicense = SeriesModel.model.getReferenceLicense
+	getReferenceTeam = SeriesModel.model.getReferenceTeam
 	
 	Finisher = Model.Rider.Finisher
 	DNF = Model.Rider.DNF
@@ -291,6 +301,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 			info['categoryName'] = category.fullname
 			info['lastName'], info['firstName'] = getReferenceName(info['lastName'], info['firstName'])
 			info['license'] = getReferenceLicense(info['license'])
+			info['team'] = getReferenceTeam(info['team'])
 			info['laps'] = rr.laps
 			
 			for fTo, fFrom in [('raceName', 'name'), ('raceOrganizer', 'organizer')]:
@@ -691,18 +702,20 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		categoryResult = [list(riderNameLicense[rider]) + [riderTeam[rider], riderPoints[rider], riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
 		return categoryResult, races, GetPotentialDuplicateFullNames(riderNameLicense)
 
-def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, numPlacesTieBreaker=5 ):
+#------------------------------------------------------------------------------------------------
+
+RaceTuple = namedtuple('RaceTuple', ['date', 'name', 'url', 'raceInSeries'] )
+ResultTuple = namedtuple('ResultTuple', ['points', 'rank', 'primePoints', 'timeBonus'] )
+
+def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEventsCompleted=False, numPlacesTieBreaker=5 ):
 	scoreByTime = SeriesModel.model.scoreByTimeTeam
+	teamResultsMin = SeriesModel.model.teamResultsMin
 	teamResultsMax = SeriesModel.model.teamResultsMax
 	showLastToFirst = SeriesModel.model.showLastToFirst
 	considerPrimePointsOrTimeBonus = SeriesModel.model.considerPrimePointsOrTimeBonus
 	
 	# Get all results for this category.
-	raceResults = [rr for rr in raceResults
-		if rr.categoryName == categoryName and
-			rr.team and
-			rr.team.lower() not in {'no team', 'independent'}
-	]
+	raceResults = [rr for rr in raceResults if rr.categoryName == categoryName and rr.teamIsValid]
 	if not raceResults:
 		return [], [], set()
 		
@@ -711,66 +724,70 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, numPlacesT
 		r.iSequence = i
 		
 	# Get all races for this category.
-	races = set( (rr.raceDate, rr.raceName, rr.raceURL, rr.raceInSeries) for rr in raceResults )
-	races = sorted( races, key = lambda r: r[3].iSequence )
-	raceSequence = dict( (r[3], i) for i, r in enumerate(races) )
+	races = set( RaceTuple(rr.raceDate, rr.raceName, rr.raceURL, rr.raceInSeries) for rr in raceResults )
+	races = sorted( races, key = operator.attrgetter('raceInSeries.iSequence') )
+	raceSequence = dict( (r.raceInSeries, i) for i, r in enumerate(races) )
 	
 	def asInt( v ):
 		return int(v) if int(v) == v else v
 	
-	ignoreFormat = u'[{}**]'
-	upgradeFormat = u'{} pre-upg'
-	
-	def FixUpgradeFormat( riderUpgrades, riderResults ):
-		# Format upgrades so they are visible in the results.
-		for rider, upgrades in riderUpgrades.iteritems():
-			for i, u in enumerate(upgrades):
-				if u:
-					v = riderResults[rider][i]
-					riderResults[rider][i] = tuple([upgradeFormat.format(v[0] if v[0] else '')] + list(v[1:]))
-	
 	# Get the results for each team for each event.
-	resultsByTeam = {v[3]:defaultdict(list) for v in races}
+	teamName = {}
+	resultsByTeam = {r.raceInSeries:defaultdict(list) for r in races}
 	for rr in raceResults:
-		resultsByTeam[rr.raceInSeries][rr.team].append( rr )
+		resultsByTeam[rr.raceInSeries][rr.keyTeam()].append( rr )
+		teamName[rr.keyTeam()] = rr.team
 	
-	teamResults = defaultdict( lambda : [(0,0,0,0)] * len(races) )
+	# Remove team results that don't have minimum participation.
+	for race, teamResults in resultsByTeam.iteritems():
+		toDelete = []
+		for team, rrs in teamResults.iteritems():
+			if len(rrs) < teamResultsMin:
+				toDelete.append( team )
+		for team in toDelete:
+			del teamResults[team]
+	
+	teamResults = {r.raceInSeries:defaultdict(list) for r in races}
+	teamEventsCompleted = defaultdict( int )
+	teamPlaceCount = defaultdict( lambda : defaultdict(int) )
+	
 	if True:
 		# Score by points.
 		# Get the individual results for each rider, and the total points.
 		teamPoints = defaultdict( int )
-		for race, teamResults in resultsByTeam.iteritems():
-			teamRiderPoints = {}
-			for team, rrs in teamResults.iteritems():
+		for raceInSeries, teamParticipants in resultsByTeam.iteritems():
+			for team, rrs in teamParticipants.iteritems():
 				for rr in rrs:
 					rider = rr.key()
 					primePoints = rr.primePoints if considerPrimePointsOrTimeBonus else 0
 					earnedPoints = pointsForRank[rr.raceFileName][rr.rank] + primePoints
 					points = asInt( earnedPoints * rr.upgradeFactor )
-					teamRiderPoints[rider] = points
-					teamResults[rider][raceSequence[rr.raceInSeries]] = (points, rr.rank, primePoints, 0)
-				rrs.sort( key = lambda rr: teamRiderPoints[rr.key()], reverse=True )
-				# Adjust for best score.
+					teamResults[raceInSeries][team].append( ResultTuple(points, rr.rank, primePoints, 0) )
 
-		# Adjust for the best scores.
-		if bestResultsToConsider > 0:
-			for rider, finishes in riderFinishes.iteritems():
-				iPoints = [(i, p) for i, p in enumerate(finishes) if p is not None]
-				if len(iPoints) > bestResultsToConsider:
-					iPoints.sort( key=lambda x: (-x[1], x[0]) )
-					for i, p in iPoints[bestResultsToConsider:]:
-						riderPoints[rider] -= p
-						v = riderResults[rider][i]
-						riderResults[rider][i] = tuple([ignoreFormat.format(v[0] if v[0] else '')] + list(v[1:]))
+				teamResults[raceInSeries][team].sort( key=operator.attrgetter('points'), reverse=True )
+				# Record best scores only.
+				teamResults[raceInSeries][team] = teamResults[raceInSeries][team][:teamResultsMax]
+				teamPoints[team] += sum( rt.points for rt in teamResults[raceInSeries][team] )
+				teamEventsCompleted[team] += 1
+				for rt in teamResults[raceInSeries][team]:
+					teamPlaceCount[team][rt.rank] += 1
 
-		# Sort by rider points - greatest number of points first.  Break ties with place count, then
+		# Sort by team points - greatest number of points first.  Break ties with place count, then
 		# most recent result.
 		rankDNF = RaceResult.rankDNF
-		riderOrder.sort(
-			key = lambda r:	[-riderPoints[r]] +
-							([-riderEventsCompleted[r]] if useMostEventsCompleted else []) +
-							[-riderPlaceCount[r][k] for k in xrange(1, numPlacesTieBreaker+1)] +
-							[rank if rank>0 else rankDNF for points, rank, primePoints, timeBonus in reversed(riderResults[r])]
+		teamOrder = list( teamName.iterkeys() )
+		def getBestResults( t ):
+			results = []
+			for r in reversed(races):
+				tr = teamResults[r.raceInSeries][t]
+				results.append( tr[0].rank if tr else rankDNF )
+			return results
+		
+		teamOrder.sort(
+			key = lambda t:	[-teamPoints[t]] +
+							([-teamEventsCompleted[t]] if useMostEventsCompleted else []) +
+							[-teamPlaceCount[t][k] for k in xrange(1, numPlacesTieBreaker+1)] +
+							getBestResults( t )
 		)
 		
 		# Compute the points gap.
@@ -778,22 +795,23 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, numPlacesT
 		if teamOrder:
 			leader = teamOrder[0]
 			leaderPoints = teamPoints[leader]
-			teamGap = { r : leaderPoints - teamPoints[r] for r in teamOrder }
-			teamGap = { r : unicode(gap) if gap else u'' for r, gap in teamGap.iteritems() }
+			teamGap = { t : leaderPoints - teamPoints[t] for t in teamOrder }
+			teamGap = { t : unicode(gap) if gap else u'' for t, gap in teamGap.iteritems() }
 		
 		# Reverse the race order if required for display.
 		if showLastToFirst:
 			races.reverse()
-			for results in teamResults.itervalues():
-				results.reverse()
 		
 		# List of:
-		# lastName, firstName, license, team, points, [list of (points, position) for each race in series]
-		categoryResult = [list(teamNameLicense[team]) + [teamTeam[team], teamPoints[team], teamGap[team]] + [teamResults[team]] for team in teamOrder]
-		return categoryResult, races, GetPotentialDuplicateFullNames(teamNameLicense)
+		# team, points, gap, [list of ResultTuple for each race in series]
+		categoryResult = [[teamName[t], teamPoints[t], teamGap[t]] + [[teamResults[r.raceInSeries][t] for r in races]] for t in teamOrder]
+		return categoryResult, races
 
 def GetTotalUniqueParticipants( raceResults ):
 	return len( set( rr.key() for rr in raceResults ) )
+	
+def GetTotalUniqueTeams( raceResults ):
+	return len( set( rr.keyTeam() for rr in raceResults if rr.teamIsValid ) )
 	
 if __name__ == '__main__':
 	files = [

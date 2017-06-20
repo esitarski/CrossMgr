@@ -1,5 +1,6 @@
 import os
 import sys
+import copy
 import operator
 import functools
 import GetModelInfo
@@ -166,7 +167,11 @@ class SeriesModel( object ):
 	scoreByPercent = False
 	scoreByTrueSkill = False
 	considerPrimePointsOrTimeBonus = True
-	teamResultsMax = 4			# Maximum number of team member results to consider per race.
+	
+	teamResultsMin = 0			# Minimum number of team member results for the race to count.
+	teamResultsMax = 3			# Maximum number of team member results to consider per race.
+	scoreByTimeTeam = False
+	
 	licenseLinkTemplate = u''	# Used to create an html link from the rider's license number in the html output.
 	bestResultsToConsider = 0	# 0 == all
 	mustHaveCompleted = 0		# Number of events to complete to be eligible for results.
@@ -180,8 +185,14 @@ class SeriesModel( object ):
 	categoryHide = set()
 	references = []
 	referenceLicenses = []
+	referenceTeams = []
 	aliasLookup = {}
 	aliasLicenseLookup = {}
+	aliasTeamLookup = {}
+
+	@property
+	def scoreByPoints( self ):
+		return not (self.scoreByTime or self.scoreByPercent or self.scoreByTrueSkill)
 
 	def __init__( self ):
 		self.name = '<Series Name>'
@@ -318,6 +329,41 @@ class SeriesModel( object ):
 		#if updated:
 		#	memoize.clear()
 	
+	
+	def setReferenceTeams( self, referenceTeams ):
+		dNew = dict( referenceTeams )
+		dExisting = dict( self.referenceTeams )
+		
+		changed = (len(dNew) != len(dExisting))
+		updated = False
+		
+		for name, aliases in dNew.iteritems():
+			if name not in dExisting:
+				changed = True
+				if aliases:
+					updated = True
+			elif aliases != dExisting[name]:
+				changed = True
+				updated = True
+	
+		for name, aliases in dExisting.iteritems():
+			if name not in dNew:
+				changed = True
+				if aliases:
+					updated = True
+				
+		if changed:
+			self.changed = changed
+			self.referenceTeams = referenceTeams
+			self.aliasTeamLookup = {}
+			for Team, aliases in self.referenceTeams:
+				for alias in aliases:
+					key = Utils.removeDiacritic(alias).upper()
+					self.aliasTeamLookup[key] = Team				
+	
+		#if updated:
+		#	memoize.clear()
+	
 	def getReferenceName( self, lastName, firstName ):
 		key = (Utils.removeDiacritic(lastName).lower(), Utils.removeDiacritic(firstName).lower())
 		try:
@@ -333,6 +379,14 @@ class SeriesModel( object ):
 		except KeyError:
 			self.aliasLicenseLookup[key] = key
 			return key
+	
+	def getReferenceTeam( self, team ):
+		key = Utils.removeDiacritic(team).upper()
+		try:
+			return self.aliasTeamLookup[key]
+		except KeyError:
+			self.aliasTeamLookup[key] = team
+			return team
 	
 	def setCategorySequence( self, categoryList, categoryHide ):
 		categorySequenceNew = { c:i for i, c in enumerate(categoryList) }
@@ -419,7 +473,7 @@ class SeriesModel( object ):
 		memoize.clear()		
 	
 	@memoize
-	def extractAllRaceResults( self ):
+	def _extractAllRaceResultsCore( self ):
 		raceResults = []
 		oldErrors = self.errors
 		self.errors = []
@@ -429,12 +483,16 @@ class SeriesModel( object ):
 				raceResults.extend( results )
 			else:
 				self.errors.append( (r, ex) )
-				
-		GetModelInfo.AdjustForUpgrades( raceResults )
-		self.harmonizeCategorySequence( raceResults )
-		
 		if oldErrors != self.errors:
 			self.changed = True
+		self.harmonizeCategorySequence( raceResults )
+		return raceResults
+	
+	def extractAllRaceResults( self, adjustForUpgrades=True ):
+		raceResults = self._extractAllRaceResultsCore()
+		if adjustForUpgrades:
+			raceResults = copy.deepcopy( raceResults )
+			GetModelInfo.AdjustForUpgrades( raceResults )
 		return raceResults
 			
 model = SeriesModel()

@@ -30,7 +30,7 @@ class AliasesLicense(wx.Panel):
 			u'\n'
 			u'For example, Reference License="BC03457", AliasesLicense="BC03449", "BC32749".  Results for the alternate licenses will appear as "BC03457".\n'
 			u'\n'
-			u'You can Copy-and-Paste lilcenses from the Results without retyping them.  Right-click and Copy the name in the Results page,'
+			u'You can Copy-and-Paste licenses from the Results without retyping them.  Right-click and Copy the name in the Results page,'
 			u'then Paste the license into a Reference License or Alias field.\n'
 			u'Aliased Licenses will not be applied until you press the "Refresh" button on the Results screen (or reload).\n'
 			u'This allows you to configure many licenses without having to wait for the Results update after each change.\n'
