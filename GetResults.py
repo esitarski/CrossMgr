@@ -116,29 +116,26 @@ def assignFinishPositions( riderResults ):
 DefaultSpeed = 0.00001
 
 def FixRelegations( riderResults ):
-	Finisher = Model.Rider.Finisher
-	PUL = Model.Rider.Pulled
-	NP = Model.Rider.NP
 	race = Model.race
-	
 	riders = race.riders
 	
 	relegated = []
 	nonRelegated = deque()
 	nonFinishers = []
 	
+	Finisher = Model.Rider.Finisher
 	for i, rr in enumerate(riderResults):
 		if rr.status == Finisher:
 			rider = riders[rr.num]
-			if rider.isRelegated():
-				relegated.append( (rider.relegatedPosition, rr) )
+			if rider.relegatedPosition:
+				relegated.append( (rider.relegatedPosition, i, rr) )
 			else:
 				nonRelegated.append( rr )
 		else:
 			nonFinishers = riderResults[i:]
 			break
 
-	relegated.sort( key=lambda r: (r[0], r[1].num) )
+	relegated.sort()
 	relegated = deque( relegated )
 
 	riderResultsNew = []
@@ -146,7 +143,7 @@ def FixRelegations( riderResults ):
 		if nonRelegated and (not relegated or relegated[0][0] > len(riderResultsNew)):
 			riderResultsNew.append( nonRelegated.popleft() )
 		elif relegated:
-			riderResultsNew.append( relegated.popleft()[1] )
+			riderResultsNew.append( relegated.popleft()[-1] )
 	riderResultsNew.extend( nonFinishers )
 		
 	riderResults[:] = riderResultsNew
