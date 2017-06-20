@@ -698,7 +698,7 @@ class Rider(object):
 	def isDNF( self ):			return self.status == Rider.DNF
 	def isDNS( self ):			return self.status == Rider.DNS
 	def isPulled( self ):		return self.status == Rider.Pulled
-	def isRelegated( self ):	return self.status == Rider.Finisher and self.relegatedPosition is not None
+	def isRelegated( self ):	return self.status == Rider.Finisher and self.relegatedPosition
 
 	def setStatus( self, status, tStatus = None ):
 		if status in (Rider.Finisher, Rider.DNS, Rider.DQ):

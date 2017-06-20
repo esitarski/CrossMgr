@@ -139,10 +139,10 @@ def FixRelegations( riderResults ):
 	relegated = deque( relegated )
 
 	riderResultsNew = []
-	while relegated or nonRelegated:
-		if nonRelegated and (not relegated or relegated[0][0] > len(riderResultsNew)):
+	while nonRelegated or relegated:
+		if nonRelegated and (not relegated or relegated[0][0] > len(riderResultsNew)+1):
 			riderResultsNew.append( nonRelegated.popleft() )
-		elif relegated:
+		else:
 			riderResultsNew.append( relegated.popleft()[-1] )
 	riderResultsNew.extend( nonFinishers )
 		
