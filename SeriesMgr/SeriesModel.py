@@ -159,7 +159,29 @@ class Race( object ):
 		
 	def __repr__( self ):
 		return ', '.join( '{}={}'.format(a, repr(getattr(self, a))) for a in ['fileName', 'pointStructure'] )
+
+class Category( object ):
+	name = u''
+	iSequence = 0
+	teamN = 3
+	publish = False
+	teamPublish = False
+	useNthScore = False
+	
+	def __init__( self, name, iSequence=0, publish=True, teamN=3, useNthScore = False, teamPublish=True ):
+		self.name = name
+		self.iSquence = iSequence
+		self.publish = publish
+		self.teamN = teamN
+		self.useNthScore = useNthScore
+		self.teamPublish = teamPublish
 		
+	def __eq__( self, other ):
+		return self.__dict__ == other.__dict__
+		
+	def __ne__( self, other ):
+		return self.__dict__ != other.__dict__
+
 class SeriesModel( object ):
 	DefaultPointStructureName = 'Regular'
 	useMostEventsCompleted = False
@@ -167,10 +189,6 @@ class SeriesModel( object ):
 	scoreByPercent = False
 	scoreByTrueSkill = False
 	considerPrimePointsOrTimeBonus = True
-	
-	teamResultsMin = 0			# Minimum number of team member results for the race to count.
-	teamResultsMax = 3			# Maximum number of team member results to consider per race.
-	scoreByTimeTeam = False
 	
 	licenseLinkTemplate = u''	# Used to create an html link from the rider's license number in the html output.
 	bestResultsToConsider = 0	# 0 == all
@@ -180,9 +198,13 @@ class SeriesModel( object ):
 	upgradeFactors = []
 	showLastToFirst = True		# If True, show the latest races first in the output.
 	postPublishCmd = ''
+	
 	categorySequence = {}
 	categorySequencePrevious = {}
 	categoryHide = set()
+	categories = {}
+	categoriesPrevious = {}
+	
 	references = []
 	referenceLicenses = []
 	referenceTeams = []
@@ -388,48 +410,73 @@ class SeriesModel( object ):
 			self.aliasTeamLookup[key] = team
 			return team
 	
-	def setCategorySequence( self, categoryList, categoryHide ):
-		categorySequenceNew = { c:i for i, c in enumerate(categoryList) }
-		if self.categorySequence != categorySequenceNew or self.categoryHide != categoryHide:
+	def fixCategories( self ):
+		categorySequence = getattr( self, 'categorySequence', None )
+		if self.categorySequence:
+			self.categories = {name:Category(name, i, name not in self.categoryHide) for name, i in categorySequence.iteritems() }
+			self.categorySequence = {}
+			self.categoryHide = {}
+	
+	def setCategories( self, categoryList ):
+		self.fixCategries()
+		categoriesNew = { c:i for i, c in enumerate(categoryList) }
+		if self.categorySequence != categorySequenceNew:
 			self.categorySequence = categorySequenceNew
-			self.categoryHide = categoryHide
 			self.changed = True
 	
 	def harmonizeCategorySequence( self, raceResults ):
-		categorySequenceSave = self.categorySequence
+		self.fixCategories()
+		
+		categoriesSave = self.categories
 		
 		categoriesFromRaces = set(rr.categoryName for rr in raceResults)
 		if not categoriesFromRaces:
-			if self.categorySequence:
-				self.categorySequence = {}
+			if self.categories:
+				self.categories = {}
 				self.changed = True
 			return
 		
-		categorySequence = (self.categorySequence or self.categorySequencePrevious)
-		categoriesCur = set( categorySequence.iterkeys() )
-		categoriesNew = categoriesFromRaces - categoriesCur
-		categoriesDel = categoriesCur - categoriesFromRaces
+		categories = (self.categories or self.categoriesPrevious)
+		categoryNamesCur = set( categorySequence.iterkeys() )
+		categoryNamesNew = categoriesFromRaces - categoriesCur
+		categoryNamesDel = categoriesCur - categoriesFromRaces
 
-		categoriesCur = sorted( categoriesCur, key=lambda c: categorySequence[c] )
-		categoriesCur = [c for c in categoriesCur if c not in categoriesDel]
-		categoriesCur.extend( sorted(categoriesNew) )
+		categoriesCur = sorted( categoriesCur.itervalues(), key=operator.attrgetter('iSequence') )
+		categoriesCur = [c for c in categoriesCur if c.name not in categoryNamesDel]
+		categoriesCur.extend( [Category(c) for c in sorted(categoryNamesNew)] )
+		for i, c in enumerate(categoriesCur):
+			c.iSequence = i
 		
-		self.categorySequence = { c:i for i, c in enumerate(categoriesCur) }
-		self.categorySequencePrevious = self.categorySequence
-		if categorySequenceSave != self.categorySequence:
+		self.categories = { c.name:c for c in categoriesCur }
+		self.categoriesPrevious = self.categories
+		if categoriesSave != self.categories:
 			self.changed = True
 			
-		for c in list(self.categoryHide):
-			if c not in self.categorySequence:
-				self.categoryHide.remove( c )
-				self.changed = True
-			
-	def getCategoryNamesSorted( self ):
-		cs = self.categorySequence
-		return sorted( (c for c in cs.iterkeys()), key=lambda c: cs[c] )
+	def getCategoriesSorted( self ):
+		self.fixCategories()
+		return sorted( self.categories.iteritems(), key=operator.attrgetter('iSequence') )
 		
+	def getCategoriesSortedPublish( self ):
+		self.fixCategories()
+		return [c for c in self.getCategoriesSorted() if c.publish]
+	
+	def getCategoriesSortedTeamPublish( self ):
+		self.fixCategories()
+		return [c for c in self.getCategoriesSorted() if c.teamPublish]
+	
 	def getCategoryNamesSortedPublish( self ):
-		return [c for c in self.getCategoryNamesSorted() if c not in self.categoryHide]
+		return [c.name for c in self.getCategoriesSortedPublish()]
+	
+	def getCategoryNamesSortedTeamPublish( self ):
+		return [c.name for c in self.getCategoriesSortedTeamPublish()]
+		
+	def getTeamN( self, category ):
+		self.fixCategories()
+		return self.categories[category].teamN if category in self.categories else 3
+		
+	def getUseNthScore( self, category ):
+		self.fixCategories()
+		return self.categories[category].useNthScore if category in self.categories else False
 	
 	def setRootFolder( self, path ):
 		if 'win' in sys.platform:

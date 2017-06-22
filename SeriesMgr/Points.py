@@ -132,17 +132,6 @@ class Points(wx.Panel):
 		self.ifRidersAreStillTiedOnPoints = wx.StaticText(self, label=u'If Riders are still Tied on Points, use most Recent Results')
 		bsizer.Add( self.ifRidersAreStillTiedOnPoints, flag=wx.ALL, border=4 )
 
-		boxTeam = wx.StaticBox( self, -1, 'Team Results' )
-		bsizerTeam = wx.StaticBoxSizer( boxTeam, wx.HORIZONTAL )
-		self.teamResultsMaxLabel = wx.StaticText(self, label=u'Top Team Results per Race')
-		bsizerTeam.Add( self.teamResultsMaxLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
-		self.teamResultsMax = wx.lib.intctrl.IntCtrl( self, min = 0, allow_none = True, limited = True, size=(32,-1) )
-		bsizerTeam.Add( self.teamResultsMax )
-		self.teamResultsMinLabel = wx.StaticText(self, label=u'Min Team Members Required to Count')
-		bsizerTeam.Add( self.teamResultsMinLabel, flag=wx.LEFT|wx.ALIGN_CENTRE_VERTICAL, border=20 )
-		self.teamResultsMin = wx.lib.intctrl.IntCtrl( self, min = 0, allow_none = True, limited = True, size=(32,-1) )
-		bsizerTeam.Add( self.teamResultsMin )
-		
 		self.headerNames = ['Name', 'OldName', 'Depth', 'Points for Position', 'Participation', 'DNF']
 		
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
@@ -171,7 +160,6 @@ class Points(wx.Panel):
 
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		sizer.Add(bsizer, 0, flag=wx.EXPAND|wx.ALL, border = 4 )
-		sizer.Add(bsizerTeam, 0, flag=wx.EXPAND|wx.ALL, border = 4 )
 		self.pointsStructures = wx.StaticText(self, wx.ID_ANY, 'Points Structures:')
 		sizer.Add( self.pointsStructures, 0, flag=wx.ALL, border = 4 )
 		sizer.Add(self.grid, 1, flag=wx.EXPAND|wx.ALL, border = 6)
@@ -183,8 +171,6 @@ class Points(wx.Panel):
 			self.numPlacesTieBreaker,
 			self.ifRidersAreStillTiedOnPoints,
 			self.pointsStructures,
-			self.teamResultsMax, self.teamResultsMaxLabel,
-			self.teamResultsMin, self.teamResultsMinLabel,
 			self.grid,
 		]
 		

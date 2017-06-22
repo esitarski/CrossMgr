@@ -324,8 +324,13 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 			
 			info['bib'] = int(rr.num)
 			info['rank'] = RaceResult.rankDNF if rr.status == DNF else pos
-				
-			info['tFinish'] = getattr(rr, '_lastTimeOrig', None) or getattr(rr,'lastTime', 1000.0*24.0*60.0*60.0)
+			
+			if rr.hasattr('_lastTimeOrig') or rr.hasattr('lastTime'):
+				info['tFinish'] = getattr(rr, '_lastTimeOrig', None) or getattr(rr,'lastTime')
+				if rr.raceTimes:
+					info['tFinish'] = max( 0.0, info['tFinish'] - rr.raceTimes[0] )
+			else:
+				info['tFinish'] = 1000.0*24.0*60.0*60.0
 			
 			try:
 				info['tProjected'] = rr.projectedTime
@@ -705,19 +710,22 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 #------------------------------------------------------------------------------------------------
 
 RaceTuple = namedtuple('RaceTuple', ['date', 'name', 'url', 'raceInSeries'] )
-ResultTuple = namedtuple('ResultTuple', ['points', 'rank', 'primePoints', 'timeBonus'] )
+ResultTuple = namedtuple('ResultTuple', ['points', 'time', 'rank', 'primePoints', 'timeBonus', 'rr'] )
 
 def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEventsCompleted=False, numPlacesTieBreaker=5 ):
-	scoreByTime = SeriesModel.model.scoreByTimeTeam
-	teamResultsMin = SeriesModel.model.teamResultsMin
-	teamResultsMax = SeriesModel.model.teamResultsMax
+	scoreByPoints = SeriesModel.model.scoreByPoints
+	scoreByTime = SeriesModel.model.scoreByTime
+	
+	teamResultsN = SeriesModel.model.getTeamN( categoryName )
+	useNthScore = SeriesModel.model.getUseNthScore( categoryName )
+	
 	showLastToFirst = SeriesModel.model.showLastToFirst
 	considerPrimePointsOrTimeBonus = SeriesModel.model.considerPrimePointsOrTimeBonus
 	
 	# Get all results for this category.
 	raceResults = [rr for rr in raceResults if rr.categoryName == categoryName and rr.teamIsValid]
-	if not raceResults:
-		return [], [], set()
+	if not raceResults or not(scoreByPoints or scoreByTime):
+		return [], []
 		
 	# Assign a sequence number to the races in the specified order.
 	for i, r in enumerate(SeriesModel.model.races):
@@ -738,6 +746,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 		resultsByTeam[rr.raceInSeries][rr.keyTeam()].append( rr )
 		teamName[rr.keyTeam()] = rr.team
 	
+	'''
 	# Remove team results that don't have minimum participation.
 	for race, teamResults in resultsByTeam.iteritems():
 		toDelete = []
@@ -746,12 +755,13 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 				toDelete.append( team )
 		for team in toDelete:
 			del teamResults[team]
+	'''
 	
 	teamResults = {r.raceInSeries:defaultdict(list) for r in races}
 	teamEventsCompleted = defaultdict( int )
 	teamPlaceCount = defaultdict( lambda : defaultdict(int) )
 	
-	if True:
+	if scoreByPoints:
 		# Score by points.
 		# Get the individual results for each rider, and the total points.
 		teamPoints = defaultdict( int )
@@ -762,11 +772,11 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 					primePoints = rr.primePoints if considerPrimePointsOrTimeBonus else 0
 					earnedPoints = pointsForRank[rr.raceFileName][rr.rank] + primePoints
 					points = asInt( earnedPoints * rr.upgradeFactor )
-					teamResults[raceInSeries][team].append( ResultTuple(points, rr.rank, primePoints, 0) )
+					teamResults[raceInSeries][team].append( ResultTuple(points, rr.tFinish, rr.rank, primePoints, 0, rr) )
 
-				teamResults[raceInSeries][team].sort( key=operator.attrgetter('points'), reverse=True )
+				teamResults[raceInSeries][team].sort( key=lambda rt: (-rt.points, rt.rank) )
 				# Record best scores only.
-				teamResults[raceInSeries][team] = teamResults[raceInSeries][team][:teamResultsMax]
+				teamResults[raceInSeries][team] = teamResults[raceInSeries][team][:teamResultsN]
 				teamPoints[team] += sum( rt.points for rt in teamResults[raceInSeries][team] )
 				teamEventsCompleted[team] += 1
 				for rt in teamResults[raceInSeries][team]:
@@ -806,6 +816,68 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 		# team, points, gap, [list of ResultTuple for each race in series]
 		categoryResult = [[teamName[t], teamPoints[t], teamGap[t]] + [[teamResults[r.raceInSeries][t] for r in races]] for t in teamOrder]
 		return categoryResult, races
+		
+	elif scoreByTime:
+		# Score by time.
+		# Get the individual results for each rider, and the total time.
+		teamTime = defaultdict( int )
+		for raceInSeries, teamParticipants in resultsByTeam.iteritems():
+			for team, rrs in teamParticipants.iteritems():
+				for rr in rrs:
+					rider = rr.key()
+					timeBonus = rr.timeBonus if considerPrimePointsOrTimeBonus else 0
+					time = rr.tFinish + timeBonus
+					teamResults[raceInSeries][team].append( ResultTuple(0, rr.tFinish, rr.rank, 0, timeBonus, rr) )
+
+				teamResults[raceInSeries][team].sort( key=operator.attrgetter('time', 'rank') )
+				# Record best scores only.
+				teamResults[raceInSeries][team] = teamResults[raceInSeries][team][:teamResultsN]
+				
+				if len(teamResults[raceInSeries][team]) != teamResultsN:
+					del teamResults[raceInSeries][team]
+					continue
+				
+				if useNthScore:
+					teamResults[raceInSeries][team] = teamResults[raceInSeries][team][teamResultsN-1:teamResultsN]
+				
+				teamTime[team] += sum( rt.time for rt in teamResults[raceInSeries][team] )
+				teamEventsCompleted[team] += 1
+
+		# Sort by team time - least time first
+		rankDNF = RaceResult.rankDNF
+		teamOrder = list( teamName.iterkeys() )
+		def getBestResults( t ):
+			results = []
+			for r in reversed(races):
+				tr = teamResults[r.raceInSeries][t]
+				results.append( tr[0].time if tr else rankDNF )
+			return results
+		
+		teamOrder.sort(
+			key = lambda t:	[teamTime[t]] +
+							([-teamEventsCompleted[t]] if useMostEventsCompleted else []) +
+							[-teamPlaceCount[t][k] for k in xrange(1, numPlacesTieBreaker+1)] +
+							getBestResults( t )
+		)
+		
+		# Compute the time gap.
+		teamGap = {}
+		if teamOrder:
+			leader = teamOrder[0]
+			leaderTime = teamTime[leader]
+			teamGap = { t : leaderTime - teamTime[t] for t in teamOrder }
+			teamGap = { t : Utils.formatTime(gap) if gap else u'' for t, gap in teamGap.iteritems() }
+		
+		# Reverse the race order if required for display.
+		if showLastToFirst:
+			races.reverse()
+		
+		# List of:
+		# team, points, gap, [list of ResultTuple for each race in series]
+		categoryResult = [[teamName[t], teamTime[t], teamGap[t]] + [[teamResults[r.raceInSeries][t] for r in races]] for t in teamOrder]
+		return categoryResult, races
+		
+	return [], []
 
 def GetTotalUniqueParticipants( raceResults ):
 	return len( set( rr.key() for rr in raceResults ) )

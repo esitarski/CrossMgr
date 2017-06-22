@@ -66,7 +66,7 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	considerPrimePointsOrTimeBonus = model.considerPrimePointsOrTimeBonus
 	raceResults = model.extractAllRaceResults( False )
 	
-	categoryNames = model.getCategoryNamesSortedPublish()
+	categoryNames = model.getCategoryNamesSortedTeamPublish()
 	if not categoryNames:
 		return '<html><body>SeriesMgr: No Categories.</body></html>'
 	
@@ -713,7 +713,7 @@ class TeamResults(wx.Panel):
 	
 	def fixCategories( self ):
 		model = SeriesModel.model
-		categoryNames = model.getCategoryNamesSortedPublish()
+		categoryNames = model.getCategoryNamesSortedTeamPublish()
 		lastSelection = self.categoryChoice.GetStringSelection()
 		self.categoryChoice.SetItems( categoryNames )
 		iCurSelection = 0
@@ -836,7 +836,7 @@ class TeamResults(wx.Panel):
 		
 		self.raceResults = model.extractAllRaceResults( False )
 		
-		categoryNames = model.getCategoryNamesSortedPublish()
+		categoryNames = model.getCategoryNamesSortedTeamPublish()
 		if not categoryNames:
 			return
 			

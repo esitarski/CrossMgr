@@ -11,6 +11,9 @@ from ReadRaceResultsSheet import GetExcelResultsLink, ExcelLink
 class CategorySequence(wx.Panel):
 	CategoryCol = 0
 	PublishCol = 1
+	TeamNCol = 2
+	UseNthScoreCol = 3
+	TeamPublishCol = 4
 
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent)
@@ -23,7 +26,7 @@ class CategorySequence(wx.Panel):
 			] )
 		)
 		
-		self.headerNames = ['Category', 'Publish']
+		self.headerNames = ['Category', 'Publish', 'Team N', 'Team Publish']
 		
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.DisableDragRowSize()
@@ -36,12 +39,17 @@ class CategorySequence(wx.Panel):
 			attr = gridlib.GridCellAttr()
 			if col == self.CategoryCol:
 				attr.SetReadOnly( True )
-			elif col == self.PublishCol:
-				boolEditor = gridlib.GridCellBoolEditor()
-				boolEditor.UseStringValues( '1', '0' )
-				attr.SetEditor( boolEditor )
+			elif col in (self.PublishCol, self.TeamPublishCol, self.UseNthScoreCol):
+				editor = gridlib.GridCellBoolEditor()
+				editor.UseStringValues( '1', '0' )
+				attr.SetEditor( editor )
 				attr.SetRenderer( gridlib.GridCellBoolRenderer() )
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+			elif col == self.TeamNCol:
+				editor = gridlib.GridCellNumberEditor( min=1 )
+				attr.SetEditor( editor )
+				attr.SetRenderer( gridlib.GridCellNumberRenderer() )
+				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )				
 
 			self.grid.SetColAttr( col, attr )
 		
@@ -72,33 +80,38 @@ class CategorySequence(wx.Panel):
 	def refresh( self ):
 		model = SeriesModel.model
 		model.extractAllRaceResults()	# Also harmonizes the categorySequence
-		categories = model.getCategoryNamesSorted()
+		categories = model.getCategoriesSorted()
 		
 		Utils.AdjustGridSize( self.grid, len(categories) )
 		for row, c in enumerate(categories):
-			self.grid.SetCellValue( row, self.CategoryCol, c )
-			self.grid.SetCellValue( row, self.PublishCol, '10'[int(c in model.categoryHide)] )
+			self.grid.SetCellValue( row, self.CategoryCol, c.name )
+			self.grid.SetCellValue( row, self.PublishCol, '01'[int(c.publish)] )
+			self.grid.SetCellValue( row, self.TeamNCol, unicode(c.teamN) )
+			self.grid.SetCellValue( row, self.UseNthScoreCol, '01'[int(c.useNthScore)] )
+			self.grid.SetCellValue( row, self.TeamPublishCol, '01'[int(c.teamPublish)] )
 		wx.CallAfter( self.gridAutoSize )
 	
 	def getCategories( self ):
+		Category = SeriesModel.Category
+		gc = self.grid.GetCellValue
 		categories = []
 		for row in xrange(self.grid.GetNumberRows()):
-			categories.append( self.grid.GetCellValue(row, self.CategoryCol) )
+			c = Category(
+				gc(row, self.CategoryCol), row,
+				gc(row, self.PublishCol) == u'1',
+				int(gc(row, self.TeamNCol)),
+				gc(row, self.UseNthScoreCol) == u'1',
+				gc(row, self.TeamPublishCol) == u'1'
+			)
+			categories.append( c )
 		return categories
 	
-	def getCategoryHide( self ):
-		categoryHide = set()
-		for row in xrange(self.grid.GetNumberRows()):
-			if self.grid.GetCellValue(row, self.PublishCol) != '1':
-				categoryHide.add( self.grid.GetCellValue(row, self.CategoryCol) )
-		return categoryHide
-	
 	def commit( self ):
-		SeriesModel.model.setCategorySequence( self.getCategories(), self.getCategoryHide() )
+		SeriesModel.model.setCategories( self.getCategories() )
 	
 	def onSort( self, event ):
 		categories = self.getCategories()
-		categories.sort()
+		categories.sort( key = operator.attrgetter('name') )
 		SeriesModel.model.setCategorySequence( categories )
 		wx.CallAfter( self.refresh )
 		
