@@ -26,7 +26,7 @@ class CategorySequence(wx.Panel):
 			] )
 		)
 		
-		self.headerNames = ['Category', 'Publish', 'Team N', 'Team Publish']
+		self.headerNames = ['Category', 'Publish', 'Team N', 'Use Nth Result Only', 'Team Publish']
 		
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.DisableDragRowSize()
@@ -46,7 +46,7 @@ class CategorySequence(wx.Panel):
 				attr.SetRenderer( gridlib.GridCellBoolRenderer() )
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 			elif col == self.TeamNCol:
-				editor = gridlib.GridCellNumberEditor( min=1 )
+				editor = gridlib.GridCellNumberEditor()
 				attr.SetEditor( editor )
 				attr.SetRenderer( gridlib.GridCellNumberRenderer() )
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )				
@@ -99,7 +99,7 @@ class CategorySequence(wx.Panel):
 			c = Category(
 				gc(row, self.CategoryCol), row,
 				gc(row, self.PublishCol) == u'1',
-				int(gc(row, self.TeamNCol)),
+				min(1, int(gc(row, self.TeamNCol))),
 				gc(row, self.UseNthScoreCol) == u'1',
 				gc(row, self.TeamPublishCol) == u'1'
 			)

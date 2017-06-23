@@ -29,7 +29,7 @@ reNoDigits = re.compile( '[^0-9]' )
 
 HeaderNamesTemplate = ['Pos', 'Team']
 def getHeaderNames():
-	return HeaderNamesTemplate + ['Points', 'Gap']
+	return HeaderNamesTemplate + ['Points' if SeriesModel.model.scoreByPoints else 'Time', 'Gap']
 
 #----------------------------------------------------------------------------------
 
@@ -60,6 +60,7 @@ def getHtmlFileName():
 	
 def getHtml( htmlfileName=None, seriesFileName=None ):
 	model = SeriesModel.model
+	scoreByPoints = model.scoreByPoints
 	scoreByTime = model.scoreByTime
 	bestResultsToConsider = model.bestResultsToConsider
 	mustHaveCompleted = model.mustHaveCompleted
@@ -481,7 +482,7 @@ function sortTableId( iTable, iCol ) {
 					write( u'Bonus Points added to Points for Place.' )
 					
 			#-----------------------------------------------------------------------------
-			if True:
+			if scoreByPoints:
 				with tag(html, 'div', {'class':'noprint'} ):
 					with tag(html, 'p'):
 						pass
@@ -981,12 +982,12 @@ class TeamResults(wx.Panel):
 		
 ########################################################################
 
-class ResultsFrame(wx.Frame):
+class TeamResultsFrame(wx.Frame):
 	#----------------------------------------------------------------------
 	def __init__(self):
 		"""Constructor"""
 		wx.Frame.__init__(self, None, title="Results Grid Test", size=(800,600) )
-		panel = Results(self)
+		panel = TeamResults(self)
 		panel.refresh()
 		self.Show()
  
@@ -999,5 +1000,5 @@ if __name__ == "__main__":
 		r'C:\Projects\CrossMgr\ParkAvenue2\2013-06-26-Park Ave Bike Camp Arrowhead mtb 4-r1-.cmn',
 	]
 	model.races = [SeriesModel.Race(fileName, model.pointStructures[0]) for fileName in files]
-	frame = ResultsFrame()
+	frame = TeamResultsFrame()
 	app.MainLoop()

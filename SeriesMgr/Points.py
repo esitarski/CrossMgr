@@ -226,9 +226,6 @@ class Points(wx.Panel):
 		self.mostEventsCompleted.SetValue( model.useMostEventsCompleted )
 		self.numPlacesTieBreaker.SetSelection( model.numPlacesTieBreaker )
 		
-		self.teamResultsMax.SetValue( model.teamResultsMax )
-		self.teamResultsMin.SetValue( model.teamResultsMin )
-
 		if model.scoreByTime:
 			self.scoreByTime.SetValue( True )
 		elif model.scoreByPercent:
@@ -264,8 +261,6 @@ class Points(wx.Panel):
 			'scoreByTime': self.scoreByTime.GetValue(),
 			'scoreByPercent': self.scoreByPercent.GetValue(),
 			'scoreByTrueSkill': self.scoreByTrueSkill.GetValue(),
-			'teamResultsMax': self.teamResultsMax.GetValue(),
-			'teamResultsMin': self.teamResultsMin.GetValue(),
 		}
 		
 		for attr, value in modelUpdate.iteritems():

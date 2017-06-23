@@ -325,7 +325,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 			info['bib'] = int(rr.num)
 			info['rank'] = RaceResult.rankDNF if rr.status == DNF else pos
 			
-			if rr.hasattr('_lastTimeOrig') or rr.hasattr('lastTime'):
+			if hasattr(rr, '_lastTimeOrig') or hasattr(rr, 'lastTime'):
 				info['tFinish'] = getattr(rr, '_lastTimeOrig', None) or getattr(rr,'lastTime')
 				if rr.raceTimes:
 					info['tFinish'] = max( 0.0, info['tFinish'] - rr.raceTimes[0] )
@@ -746,17 +746,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 		resultsByTeam[rr.raceInSeries][rr.keyTeam()].append( rr )
 		teamName[rr.keyTeam()] = rr.team
 	
-	'''
-	# Remove team results that don't have minimum participation.
-	for race, teamResults in resultsByTeam.iteritems():
-		toDelete = []
-		for team, rrs in teamResults.iteritems():
-			if len(rrs) < teamResultsMin:
-				toDelete.append( team )
-		for team in toDelete:
-			del teamResults[team]
-	'''
-	
+
 	teamResults = {r.raceInSeries:defaultdict(list) for r in races}
 	teamEventsCompleted = defaultdict( int )
 	teamPlaceCount = defaultdict( lambda : defaultdict(int) )
@@ -818,6 +808,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 		return categoryResult, races
 		
 	elif scoreByTime:
+	
 		# Score by time.
 		# Get the individual results for each rider, and the total time.
 		teamTime = defaultdict( int )
@@ -826,7 +817,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 				for rr in rrs:
 					rider = rr.key()
 					timeBonus = rr.timeBonus if considerPrimePointsOrTimeBonus else 0
-					time = rr.tFinish + timeBonus
+					time = rr.tFinish - timeBonus
 					teamResults[raceInSeries][team].append( ResultTuple(0, rr.tFinish, rr.rank, 0, timeBonus, rr) )
 
 				teamResults[raceInSeries][team].sort( key=operator.attrgetter('time', 'rank') )
@@ -834,7 +825,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 				teamResults[raceInSeries][team] = teamResults[raceInSeries][team][:teamResultsN]
 				
 				if len(teamResults[raceInSeries][team]) != teamResultsN:
-					del teamResults[raceInSeries][team]
+					teamResults[raceInSeries][team] = []
 					continue
 				
 				if useNthScore:
@@ -845,28 +836,39 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 
 		# Sort by team time - least time first
 		rankDNF = RaceResult.rankDNF
-		teamOrder = list( teamName.iterkeys() )
+		teamOrder = list( tn for tn in teamName.iterkeys() if teamTime.get(tn,None) )
 		def getBestResults( t ):
 			results = []
 			for r in reversed(races):
 				tr = teamResults[r.raceInSeries][t]
-				results.append( tr[0].time if tr else rankDNF )
+				results.append( tr[0].rank if tr else rankDNF )
 			return results
 		
 		teamOrder.sort(
-			key = lambda t:	[teamTime[t]] +
-							([-teamEventsCompleted[t]] if useMostEventsCompleted else []) +
+			key = lambda t:	[-teamEventsCompleted[t], teamTime[t]] +
 							[-teamPlaceCount[t][k] for k in xrange(1, numPlacesTieBreaker+1)] +
 							getBestResults( t )
 		)
+		
+		def formatEventCount( count ):
+			if not count:
+				return u''
+			if count < -1:
+				return u'{} events'.format( count )
+			else:
+				return u'{} event'.format( count )
 		
 		# Compute the time gap.
 		teamGap = {}
 		if teamOrder:
 			leader = teamOrder[0]
 			leaderTime = teamTime[leader]
-			teamGap = { t : leaderTime - teamTime[t] for t in teamOrder }
-			teamGap = { t : Utils.formatTime(gap) if gap else u'' for t, gap in teamGap.iteritems() }
+			leaderEventsCompleted = teamEventsCompleted[leader]
+			teamGap = { t : teamTime[t] - leaderTime if teamEventsCompleted[t] == leaderEventsCompleted
+					else teamEventsCompleted[t] - leaderEventsCompleted
+				for t in teamOrder }
+			teamGap = { t : Utils.formatTime(gap) if gap > 0.0 else formatEventCount(gap)
+				for t, gap in teamGap.iteritems() }
 		
 		# Reverse the race order if required for display.
 		if showLastToFirst:
@@ -874,7 +876,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 		
 		# List of:
 		# team, points, gap, [list of ResultTuple for each race in series]
-		categoryResult = [[teamName[t], teamTime[t], teamGap[t]] + [[teamResults[r.raceInSeries][t] for r in races]] for t in teamOrder]
+		categoryResult = [[teamName[t], Utils.formatTime(teamTime[t]), teamGap[t]] + [[teamResults[r.raceInSeries][t] for r in races]] for t in teamOrder]
 		return categoryResult, races
 		
 	return [], []

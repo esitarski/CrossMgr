@@ -437,24 +437,24 @@ class SeriesModel( object ):
 			return
 		
 		categories = (self.categories or self.categoriesPrevious)
-		categoryNamesCur = set( categorySequence.iterkeys() )
-		categoryNamesNew = categoriesFromRaces - categoriesCur
-		categoryNamesDel = categoriesCur - categoriesFromRaces
+		categoryNamesCur = set( self.categorySequence.iterkeys() )
+		categoryNamesNew = categoriesFromRaces - categoryNamesCur
+		categoryNamesDel = categoryNamesCur - categoriesFromRaces
 
-		categoriesCur = sorted( categoriesCur.itervalues(), key=operator.attrgetter('iSequence') )
-		categoriesCur = [c for c in categoriesCur if c.name not in categoryNamesDel]
-		categoriesCur.extend( [Category(c) for c in sorted(categoryNamesNew)] )
-		for i, c in enumerate(categoriesCur):
+		categories = sorted( categoryNamesCur, key=operator.attrgetter('iSequence') )
+		categories = [c for c in categories if c.name not in categoryNamesDel]
+		categories.extend( [Category(c) for c in sorted(categoryNamesNew)] )
+		for i, c in enumerate(categories):
 			c.iSequence = i
 		
-		self.categories = { c.name:c for c in categoriesCur }
+		self.categories = { c.name:c for c in categories }
 		self.categoriesPrevious = self.categories
 		if categoriesSave != self.categories:
 			self.changed = True
 			
 	def getCategoriesSorted( self ):
 		self.fixCategories()
-		return sorted( self.categories.iteritems(), key=operator.attrgetter('iSequence') )
+		return sorted( self.categories.itervalues(), key=operator.attrgetter('iSequence') )
 		
 	def getCategoriesSortedPublish( self ):
 		self.fixCategories()
