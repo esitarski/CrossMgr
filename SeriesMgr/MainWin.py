@@ -264,7 +264,7 @@ class MainWin( wx.Frame ):
 			[ 'teamResults',	TeamResults,		'Team Results' ],
 			[ 'points',			Points,				'Scoring Criteria' ],
 			[ 'upgrades',		Upgrades,			'Upgrades' ],
-			[ 'categorySequence',CategorySequence,	'Category Sequence' ],
+			[ 'categorySequence',CategorySequence,	'Category Options' ],
 			[ 'aliases',		Aliases,			'Name Aliases' ],
 			[ 'licenseAliases',	AliasesLicense,		'License Aliases' ],
 			[ 'teamAliases',	AliasesTeam,		'Team Aliases' ],
