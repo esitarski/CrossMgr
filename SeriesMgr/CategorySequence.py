@@ -27,7 +27,7 @@ class CategorySequence(wx.Panel):
 			] )
 		)
 		
-		self.headerNames = ['Category', 'Publish', 'Team N', 'Use Nth Result Only', 'Team Publish']
+		self.headerNames = ['Category', 'Ind. Publish', 'Team N', 'Use Nth Result Only', 'Team Publish']
 		
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.DisableDragRowSize()
