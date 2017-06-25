@@ -23,10 +23,10 @@ def CmdLine( args ):
 		# Parse the points structure.
 		pos = r.rfind( '=' )
 		if pos >= 0:
-			pointsStructureName = r[pos+1:].strip()
+			pointStructuresName = r[pos+1:].strip()
 			r = r[:pos]
 		else:
-			pointsStructureName = None
+			pointStructuresName = None
 
 		fileName, sheetName = None, None
 		
@@ -41,21 +41,21 @@ def CmdLine( args ):
 				fileName, sheetName = components
 			else:
 				fileName = components[0]
-			if not any( fileName.endswith(suffix) for suffx in ('.xlsx', 'xlsm', '.xls') ):
+			if not any( fileName.endswith(suffix) for suffix in ('.xlsx', 'xlsm', '.xls') ):
 				print u'unrecognized file suffix "{}".'.format(fileName)
 				return 2
 				
-		pointsStructure = None
-		for ps in SeriesModel.model.pointsStructures:
-			if pointsStructureName is None or ps.name == pointsStructureName:
-				pointsStructure = ps
+		pointStructures = None
+		for ps in SeriesModel.model.pointStructures:
+			if pointStructuresName is None or ps.name == pointStructuresName:
+				pointStructures = ps
 				break
 				
-		if pointsStructure is None:
-			print u'cannot find points structure "{}".'.format(pointsStructureName)
+		if pointStructures is None:
+			print u'cannot find points structure "{}".'.format(pointStructuresName)
 			return 3
 		
-		races.append( SeriesModel.Race(fileName, pointsStructure) )
+		races.append( SeriesModel.Race(fileName, pointStructures) )
 		
 	if races:
 		SeriesModel.model.races = races

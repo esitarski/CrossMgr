@@ -111,12 +111,11 @@ class CategorySequence(wx.Panel):
 	def commit( self ):
 		categoryList = self.getCategoryList()
 		SeriesModel.model.setCategories( categoryList )
-		assert sorted(SeriesModel.model.categores.itervalues(), key=operator.attrgetter('iSequence')) == categoryList
 	
 	def onSort( self, event ):
 		categoryList = self.getCategoryList()
 		categoryList.sort( key = operator.attrgetter('name') )
-		SeriesModel.model.setCategorySequence( categoryList )
+		SeriesModel.model.setCategories( categoryList )
 		wx.CallAfter( self.Refresh )
 		
 #----------------------------------------------------------------------------
