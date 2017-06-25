@@ -729,7 +729,7 @@ table.results tr td.fastest{
 				try:
 					self.writeSeries()
 				except:
-					Utils.MessageOK(self, 'Write Failed.  Series NOT saved."%s".' % fileName, 'Write Failed', iconMask=wx.ICON_ERROR )
+					Utils.MessageOK(self, 'Write Failed.  Series NOT saved..\n\n    "{}"'.format(self.fileName), 'Write Failed', iconMask=wx.ICON_ERROR )
 					return
 				
 		dlg = wx.FileDialog( self, message="Choose a file for your Competition",
@@ -748,7 +748,7 @@ table.results tr td.fastest{
 		try:
 			self.writeSeries()
 		except:
-			Utils.MessageOK(self, 'Write Failed.  Series NOT saved.\n\n    "{}".'.format(fileName), 'Write Failed', iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, 'Write Failed.  Series NOT saved.\n\n    "{}".'.format(self.fileName), 'Write Failed', iconMask=wx.ICON_ERROR )
 		self.updateRecentFiles()
 
 	def setTitle( self ):
