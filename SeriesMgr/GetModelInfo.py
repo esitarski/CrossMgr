@@ -132,6 +132,9 @@ class RaceResult( object ):
 		
 	def __unicode__( self ):
 		return u', '.join( u'{}'.format(p) for p in [self.full_name, self.license, self.categoryName, self.raceName, self.raceDate] if p )
+		
+	def __repr__( self ):
+		return self.__unicode__()
 
 def ExtractRaceResults( r ):
 	if os.path.splitext(r.fileName)[1] == '.cmn':
@@ -705,7 +708,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		# List of:
 		# lastName, firstName, license, team, points, [list of (points, position) for each race in series]
 		categoryResult = [list(riderNameLicense[rider]) + [riderTeam[rider], riderPoints[rider], riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
-		return categoryResult, races, GetPotentialDuplicateFullNames(riderNameLicense)
+		return categoryResult, races, GetPo732tentialDuplicateFullNames(riderNameLicense)
 
 #------------------------------------------------------------------------------------------------
 
@@ -717,6 +720,8 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 	scoreByTime = SeriesModel.model.scoreByTime
 	
 	teamResultsN = SeriesModel.model.getTeamN( categoryName )
+	import pdb; pdb.set_trace()
+	
 	useNthScore = SeriesModel.model.getUseNthScore( categoryName )
 	
 	showLastToFirst = SeriesModel.model.showLastToFirst
@@ -815,21 +820,24 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 		for raceInSeries, teamParticipants in resultsByTeam.iteritems():
 			for team, rrs in teamParticipants.iteritems():
 				for rr in rrs:
+					if rr.rank == RaceResult.rankDNF:
+						continue
 					rider = rr.key()
 					timeBonus = rr.timeBonus if considerPrimePointsOrTimeBonus else 0
 					time = rr.tFinish - timeBonus
 					teamResults[raceInSeries][team].append( ResultTuple(0, rr.tFinish, rr.rank, 0, timeBonus, rr) )
 
-				teamResults[raceInSeries][team].sort( key=operator.attrgetter('time', 'rank') )
-				# Record best scores only.
-				teamResults[raceInSeries][team] = teamResults[raceInSeries][team][:teamResultsN]
-				
-				if len(teamResults[raceInSeries][team]) != teamResultsN:
+				if len(teamResults[raceInSeries][team]) < teamResultsN:
 					teamResults[raceInSeries][team] = []
 					continue
 				
+				teamResults[raceInSeries][team].sort( key=operator.attrgetter('time', 'rank') )
+				
 				if useNthScore:
 					teamResults[raceInSeries][team] = teamResults[raceInSeries][team][teamResultsN-1:teamResultsN]
+				else:
+					# Record best scores only.
+					teamResults[raceInSeries][team] = teamResults[raceInSeries][team][:teamResultsN]
 				
 				teamTime[team] += sum( rt.time for rt in teamResults[raceInSeries][team] )
 				teamEventsCompleted[team] += 1

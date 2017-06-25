@@ -39,7 +39,7 @@ class CategorySequence(wx.Panel):
 			attr = gridlib.GridCellAttr()
 			if col == self.CategoryCol:
 				attr.SetReadOnly( True )
-			elif col in (self.PublishCol, self.TeamPublishCol, self.UseNthScoreCol):
+			elif col in (self.PublishCol, self.UseNthScoreCol, self.TeamPublishCol):
 				editor = gridlib.GridCellBoolEditor()
 				editor.UseStringValues( '1', '0' )
 				attr.SetEditor( editor )
@@ -62,7 +62,7 @@ class CategorySequence(wx.Panel):
 		self.SetSizer( sizer )
 
 	def onGridLeftClick( self, event ):
-		if event.GetCol() == self.PublishCol:
+		if event.GetCol() in (self.PublishCol, self.UseNthScoreCol, self.TeamPublishCol):
 			r, c = event.GetRow(), event.GetCol()
 			self.grid.SetCellValue( r, c, '1' if self.grid.GetCellValue(r, c)[:1] != '1' else '0' )
 		event.Skip()
@@ -85,10 +85,10 @@ class CategorySequence(wx.Panel):
 		Utils.AdjustGridSize( self.grid, len(categories) )
 		for row, c in enumerate(categories):
 			self.grid.SetCellValue( row, self.CategoryCol, c.name )
-			self.grid.SetCellValue( row, self.PublishCol, '01'[int(c.publish)] )
+			self.grid.SetCellValue( row, self.PublishCol, u'01'[int(c.publish)] )
 			self.grid.SetCellValue( row, self.TeamNCol, unicode(c.teamN) )
-			self.grid.SetCellValue( row, self.UseNthScoreCol, '01'[int(c.useNthScore)] )
-			self.grid.SetCellValue( row, self.TeamPublishCol, '01'[int(c.teamPublish)] )
+			self.grid.SetCellValue( row, self.UseNthScoreCol, u'01'[int(c.useNthScore)] )
+			self.grid.SetCellValue( row, self.TeamPublishCol, u'01'[int(c.teamPublish)] )
 		wx.CallAfter( self.gridAutoSize )
 	
 	def getCategories( self ):
@@ -97,11 +97,12 @@ class CategorySequence(wx.Panel):
 		categories = []
 		for row in xrange(self.grid.GetNumberRows()):
 			c = Category(
-				gc(row, self.CategoryCol), row,
-				gc(row, self.PublishCol) == u'1',
-				min(1, int(gc(row, self.TeamNCol))),
-				gc(row, self.UseNthScoreCol) == u'1',
-				gc(row, self.TeamPublishCol) == u'1'
+				name=gc(row, self.CategoryCol),
+				iSequence=row,
+				publish=gc(row, self.PublishCol) == u'1',
+				teamN=max(1, int(gc(row, self.TeamNCol))),
+				useNthScore=gc(row, self.UseNthScoreCol) == u'1',
+				teamPublish=gc(row, self.TeamPublishCol) == u'1'
 			)
 			categories.append( c )
 		return categories

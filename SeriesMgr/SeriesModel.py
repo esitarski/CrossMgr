@@ -163,14 +163,14 @@ class Race( object ):
 class Category( object ):
 	name = u''
 	iSequence = 0
-	teamN = 3
 	publish = False
-	teamPublish = False
+	teamN = 3
 	useNthScore = False
+	teamPublish = False
 	
-	def __init__( self, name, iSequence=0, publish=True, teamN=3, useNthScore = False, teamPublish=True ):
+	def __init__( self, name, iSequence=0, publish=True, teamN=3, useNthScore=False, teamPublish=True ):
 		self.name = name
-		self.iSquence = iSequence
+		self.iSequence = iSequence
 		self.publish = publish
 		self.teamN = teamN
 		self.useNthScore = useNthScore
@@ -181,6 +181,11 @@ class Category( object ):
 		
 	def __ne__( self, other ):
 		return self.__dict__ != other.__dict__
+		
+	def __repr__( self ):
+		return 'Category(name="{}", iSequence={}, publish={}, teamN={}, useNthScore={}, teamPublish={})'.format(
+			self.name, self.iSequence, self.publish, self.teamN, self.useNthScore, self.teamPublish
+		)
 
 class SeriesModel( object ):
 	DefaultPointStructureName = 'Regular'
@@ -412,17 +417,20 @@ class SeriesModel( object ):
 	
 	def fixCategories( self ):
 		categorySequence = getattr( self, 'categorySequence', None )
-		if self.categorySequence:
+		if self.categorySequence or not isinstance(self.categories, dict):
 			self.categories = {name:Category(name, i, name not in self.categoryHide) for name, i in categorySequence.iteritems() }
 			self.categorySequence = {}
 			self.categoryHide = {}
 	
 	def setCategories( self, categoryList ):
-		self.fixCategries()
-		categoriesNew = { c:i for i, c in enumerate(categoryList) }
-		if self.categorySequence != categorySequenceNew:
-			self.categorySequence = categorySequenceNew
-			self.changed = True
+		self.fixCategories()
+		for i, c in enumerate(categoryList):
+			c.iSequence = i
+		
+		categories = {c.name: c for c in categoryList}
+		if self.categories != categories:
+			self.categories = categories
+			self.setChanged()
 	
 	def harmonizeCategorySequence( self, raceResults ):
 		self.fixCategories()
@@ -433,7 +441,7 @@ class SeriesModel( object ):
 		if not categoriesFromRaces:
 			if self.categories:
 				self.categories = {}
-				self.changed = True
+				self.setChanged()
 			return
 		
 		categories = (self.categories or self.categoriesPrevious)
@@ -450,7 +458,7 @@ class SeriesModel( object ):
 		self.categories = { c.name:c for c in categories }
 		self.categoriesPrevious = self.categories
 		if categoriesSave != self.categories:
-			self.changed = True
+			self.setChanged()
 			
 	def getCategoriesSorted( self ):
 		self.fixCategories()
@@ -470,13 +478,19 @@ class SeriesModel( object ):
 	def getCategoryNamesSortedTeamPublish( self ):
 		return [c.name for c in self.getCategoriesSortedTeamPublish()]
 		
-	def getTeamN( self, category ):
+	def getTeamN( self, categoryName ):
 		self.fixCategories()
-		return self.categories[category].teamN if category in self.categories else 3
+		try:
+			return self.categories[categoryName].teamN
+		except KeyError:
+			return 3
 		
-	def getUseNthScore( self, category ):
+	def getUseNthScore( self, categoryName ):
 		self.fixCategories()
-		return self.categories[category].useNthScore if category in self.categories else False
+		try:
+			return self.categories[categoryName].useNthScore
+		except KeyError:
+			return False
 	
 	def setRootFolder( self, path ):
 		if 'win' in sys.platform:

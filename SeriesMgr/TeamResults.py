@@ -42,15 +42,26 @@ def getHeaderGraphicBase64():
 	with open(graphicFName, 'rb') as f:
 		return 'data:image/png;base64,{}'.format(base64.standard_b64encode(f.read()))
 
-def formatRaceTimes( rt ):
-	rt = [r for r in rt if r.points]
-	if not rt:
-		return u''
-	total = sum( r.points for r in rt )
-	if len(rt) == 1:
-		r = rt[0]
-		return u'{}({})'.format(r.points, Utils.ordinal(r.rank))
-	return u'{} = {}'.format(total, ' + '.join( u'{}({})'.format(r.points, Utils.ordinal(r.rank)) for r in rt) )
+def formatTeamResults( scoreByPoints, rt ):
+	if scoreByPoints:
+		rt = [r for r in rt if r.points]
+		if not rt:
+			return u''
+		total = sum( r.points for r in rt )
+		if len(rt) == 1:
+			r = rt[0]
+			return u'{}({})'.format(r.points, Utils.ordinal(r.rank))
+		return u'{} = {}'.format(total, ' + '.join( u'{}({})'.format(r.points, Utils.ordinal(r.rank)) for r in rt) )
+	else:
+		rt = [r for r in rt if r.time]
+		if not rt:
+			return u''
+		total = sum( r.time for r in rt )
+		if len(rt) == 1:
+			r = rt[0]
+			return u'{}({})'.format(Utils.formatTime(r.time), Utils.ordinal(r.rank))
+		return u'{} = {}'.format(Utils.formatTime(total), ' + '.join( u'{}({})'.format(Utils.formatTime(r.time), Utils.ordinal(r.rank)) for r in rt) )
+		
 
 def getHtmlFileName():
 	modelFileName = Utils.getFileName() if Utils.getFileName() else 'Test.smn'
@@ -462,19 +473,19 @@ function sortTableId( iTable, iCol ) {
 											with tag(html, 'span', {'class': 'smallFont'}):
 												write( unicode(r[0].strftime('%b %d, %Y')) )
 						with tag(html, 'tbody'):
-							for pos, (team, points, gap, racePoints) in enumerate(results):
+							for pos, (team, result, gap, rrs) in enumerate(results):
 								with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
 									with tag(html, 'td', {'class':'rightAlign'}):
 										write( unicode(pos+1) )
 									with tag(html, 'td'):
 										write( unicode(team or u'') )
 									with tag(html, 'td', {'class':'rightAlign'}):
-										write( unicode(points or '') )
+										write( unicode(result or '') )
 									with tag(html, 'td', {'class':'rightAlign noprint'}):
 										write( unicode(gap or '') )
-									for rt in racePoints:
+									for rt in rrs:
 										with tag(html, 'td', {'class': 'centerAlign noprint'}):
-											write( formatRaceTimes(rt) )
+											write( formatTeamResults(scoreByPoints, rt) )
 										
 			#-----------------------------------------------------------------------------
 			if considerPrimePointsOrTimeBonus:
@@ -728,6 +739,8 @@ class TeamResults(wx.Panel):
 	def refresh( self ):
 		model = SeriesModel.model
 		HeaderNames = getHeaderNames()
+		scoreByPoints = model.scoreByPoints
+		scoreByTime = model.scoreByTime
 		
 		self.postPublishCmd.SetValue( model.postPublishCmd )
 		
@@ -738,7 +751,7 @@ class TeamResults(wx.Panel):
 		self.fixCategories()
 		
 		categoryName = self.categoryChoice.GetStringSelection()
-		if not categoryName or not model.scoreByPoints:
+		if not categoryName or not (scoreByPoints or scoreByTime):
 			Utils.AdjustGridSize( self.grid, 0, 0 )
 			return
 		
@@ -760,13 +773,13 @@ class TeamResults(wx.Panel):
 		Utils.AdjustGridSize( self.grid, len(results), len(headerNames) )
 		self.setColNames( headerNames )
 		
-		for row, (team, points, gap, racePoints) in enumerate(results):
+		for row, (team, points, gap, rrs) in enumerate(results):
 			self.grid.SetCellValue( row, 0, unicode(row+1) )
 			self.grid.SetCellValue( row, 1, unicode(team) )
 			self.grid.SetCellValue( row, 2, unicode(points) )
 			self.grid.SetCellValue( row, 3, unicode(gap) )
-			for q, rt in enumerate(racePoints):
-				self.grid.SetCellValue( row, 4 + q, formatRaceTimes(rt) )
+			for q, rt in enumerate(rrs):
+				self.grid.SetCellValue( row, 4 + q, formatTeamResults(scoreByPoints, rt) )
 				
 			for c in xrange( 0, len(headerNames) ):
 				self.grid.SetCellBackgroundColour( row, c, wx.WHITE )
@@ -825,6 +838,7 @@ class TeamResults(wx.Panel):
 	def onPublishToExcel( self, event ):
 		model = SeriesModel.model
 		
+		scoreByPoints = model.scoreByPoints
 		scoreByTime = model.scoreByTime
 		scoreByPercent = model.scoreByPercent
 		scoreByTrueSkill = model.scoreByTrueSkill
@@ -885,13 +899,13 @@ class TeamResults(wx.Panel):
 				wsFit.write( rowCur, c, headerName, labelStyle, bold = True )
 			rowCur += 1
 			
-			for pos, (team, points, gap, racePoints) in enumerate(results):
+			for pos, (team, points, gap, rrs) in enumerate(results):
 				wsFit.write( rowCur, 0, pos+1, numberStyle )
 				wsFit.write( rowCur, 1, team, textStyle )
 				wsFit.write( rowCur, 2, points, numberStyle )
 				wsFit.write( rowCur, 3, gap, numberStyle )
-				for q, rt in enumerate(racePoints):
-					wsFit.write( rowCur, 4 + q, formatRaceTimes(rt), centerStyle )
+				for q, rt in enumerate(rrs):
+					wsFit.write( rowCur, 4 + q, formatTeamResults(scoreByPoints, rt), centerStyle )
 				rowCur += 1
 		
 			# Add branding at the bottom of the sheet.
