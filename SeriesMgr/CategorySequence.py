@@ -3,6 +3,7 @@ import wx.grid as gridlib
 
 import os
 import sys
+import operator
 from ReorderableGrid import ReorderableGrid
 import SeriesModel
 import Utils
@@ -80,10 +81,10 @@ class CategorySequence(wx.Panel):
 	def refresh( self ):
 		model = SeriesModel.model
 		model.extractAllRaceResults()	# Also harmonizes the categorySequence
-		categories = model.getCategoriesSorted()
+		categoryList = model.getCategoriesSorted()
 		
-		Utils.AdjustGridSize( self.grid, len(categories) )
-		for row, c in enumerate(categories):
+		Utils.AdjustGridSize( self.grid, len(categoryList) )
+		for row, c in enumerate(categoryList):
 			self.grid.SetCellValue( row, self.CategoryCol, c.name )
 			self.grid.SetCellValue( row, self.PublishCol, u'01'[int(c.publish)] )
 			self.grid.SetCellValue( row, self.TeamNCol, unicode(c.teamN) )
@@ -91,7 +92,7 @@ class CategorySequence(wx.Panel):
 			self.grid.SetCellValue( row, self.TeamPublishCol, u'01'[int(c.teamPublish)] )
 		wx.CallAfter( self.gridAutoSize )
 	
-	def getCategories( self ):
+	def getCategoryList( self ):
 		Category = SeriesModel.Category
 		gc = self.grid.GetCellValue
 		categories = []
@@ -108,13 +109,15 @@ class CategorySequence(wx.Panel):
 		return categories
 	
 	def commit( self ):
-		SeriesModel.model.setCategories( self.getCategories() )
+		categoryList = self.getCategoryList()
+		SeriesModel.model.setCategories( categoryList )
+		assert sorted(SeriesModel.model.categores.itervalues(), key=operator.attrgetter('iSequence')) == categoryList
 	
 	def onSort( self, event ):
-		categories = self.getCategories()
-		categories.sort( key = operator.attrgetter('name') )
-		SeriesModel.model.setCategorySequence( categories )
-		wx.CallAfter( self.refresh )
+		categoryList = self.getCategoryList()
+		categoryList.sort( key = operator.attrgetter('name') )
+		SeriesModel.model.setCategorySequence( categoryList )
+		wx.CallAfter( self.Refresh )
 		
 #----------------------------------------------------------------------------
 

@@ -720,8 +720,6 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 	scoreByTime = SeriesModel.model.scoreByTime
 	
 	teamResultsN = SeriesModel.model.getTeamN( categoryName )
-	import pdb; pdb.set_trace()
-	
 	useNthScore = SeriesModel.model.getUseNthScore( categoryName )
 	
 	showLastToFirst = SeriesModel.model.showLastToFirst

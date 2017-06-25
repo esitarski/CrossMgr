@@ -435,8 +435,6 @@ class SeriesModel( object ):
 	def harmonizeCategorySequence( self, raceResults ):
 		self.fixCategories()
 		
-		categoriesSave = self.categories
-		
 		categoriesFromRaces = set(rr.categoryName for rr in raceResults)
 		if not categoriesFromRaces:
 			if self.categories:
@@ -445,19 +443,19 @@ class SeriesModel( object ):
 			return
 		
 		categories = (self.categories or self.categoriesPrevious)
-		categoryNamesCur = set( self.categorySequence.iterkeys() )
+		categoryNamesCur = set( self.categories.iterkeys() )
 		categoryNamesNew = categoriesFromRaces - categoryNamesCur
 		categoryNamesDel = categoryNamesCur - categoriesFromRaces
 
-		categories = sorted( categoryNamesCur, key=operator.attrgetter('iSequence') )
-		categories = [c for c in categories if c.name not in categoryNamesDel]
-		categories.extend( [Category(c) for c in sorted(categoryNamesNew)] )
-		for i, c in enumerate(categories):
+		categoryList = sorted( (c for c in categories.itervalues() if c.name not in categoryNamesDel), key=operator.attrgetter('iSequence') )
+		categoryList.extend( [Category(name) for name in sorted(categoryNamesNew)] )
+		for i, c in enumerate(categoryList):
 			c.iSequence = i
 		
-		self.categories = { c.name:c for c in categories }
-		self.categoriesPrevious = self.categories
-		if categoriesSave != self.categories:
+		categoriesNew = { c.name:c for c in categoryList }
+		self.categoriesPrevious = categoriesNew
+		if self.categories != categoriesNew:
+			self.categories = categoriesNew
 			self.setChanged()
 			
 	def getCategoriesSorted( self ):
@@ -491,7 +489,7 @@ class SeriesModel( object ):
 			return self.categories[categoryName].useNthScore
 		except KeyError:
 			return False
-	
+			
 	def setRootFolder( self, path ):
 		if 'win' in sys.platform:
 			fixFName = lambda fn: fn.replace( '/', '\\' )
