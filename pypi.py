@@ -208,7 +208,6 @@ setup = {
 		'qrcode >= 4.0.4',
 		'beautifulsoup4 >= 4.0.0',
 		'fpdf >= 1.7',
-		'tornado >= 4.3',
 		'ftputil >= 3.3',
 		'tornado >= 4.4',
 		'requests >= 2.13.0',
