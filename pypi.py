@@ -211,7 +211,7 @@ setup = {
 		'ftputil >= 3.3',
 		'tornado >= 4.4',
 		'requests >= 2.13.0',
-		# 'wxPython >= 3.0.0',
+		'wxPython >= 4.0.0',
 	],
 }
 

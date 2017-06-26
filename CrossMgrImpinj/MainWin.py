@@ -325,7 +325,7 @@ class MainWin( wx.Frame ):
 		
 		iRow += 1
 		
-		self.useHostName = wx.RadioButton( self, label='Host Name:', style=wx.wx.RB_GROUP )
+		self.useHostName = wx.RadioButton( self, label='Host Name:', style=wx.RB_GROUP )
 		gbs.Add( self.useHostName, pos=(iRow,0), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
 		hb = wx.BoxSizer( wx.HORIZONTAL )
 		hb.Add( wx.StaticText(self, label=ImpinjHostNamePrefix), flag=wx.ALIGN_CENTER_VERTICAL )
