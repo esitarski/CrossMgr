@@ -4,31 +4,11 @@ import bisect
 import copy
 import sys
 
-class LineGraph(wx.PyControl):
+class LineGraph(wx.Control):
 	def __init__(self, parent, id=wx.ID_ANY, startAtZero = False, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
 				name="LineGraph"):
-		"""
-		Default class constructor.
-
-		@param parent: Parent window. Must not be None.
-		@param id: StatusBar identifier. A value of -1 indicates a default value.
-		@param pos: StatusBar position. If the position (-1, -1) is specified
-					then a default position is chosen.
-		@param size: StatusBar size. If the default size (-1, -1) is specified
-					then a default size is chosen.
-		@param style: not used
-		@param validator: Window validator.
-		@param name: Window name.
-		"""
-
-		# Ok, let's see why we have used wx.PyControl instead of wx.Control.
-		# Basically, wx.PyControl is just like its wxWidgets counterparts
-		# except that it allows some of the more common C++ virtual method
-		# to be overridden in Python derived class. For StatusBar, we
-		# basically need to override DoGetBestSize and AcceptsFocusFromKeyboard
-		
-		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
+		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
 		self.SetBackgroundColour('white')
 		self.data = None
 		self.startAtZero = startAtZero
@@ -44,11 +24,11 @@ class LineGraph(wx.PyControl):
 		return wx.Size(100, 50)
 
 	def SetForegroundColour(self, colour):
-		wx.PyControl.SetForegroundColour(self, colour)
+		wx.Control.SetForegroundColour(self, colour)
 		self.Refresh()
 
 	def SetBackgroundColour(self, colour):
-		wx.PyControl.SetBackgroundColour(self, colour)
+		wx.Control.SetBackgroundColour(self, colour)
 		self.Refresh()
 		
 	def GetDefaultAttributes(self):
@@ -124,7 +104,7 @@ class LineGraph(wx.PyControl):
 		if not self.data or width < 50 or height < 50:
 			return
 			
-		ctx = wx.GraphicsContext_Create(dc)
+		ctx = wx.GraphicsContext.Create(dc)
 
 		textWidth, textHeight = dc.GetTextExtent( '00:00' if self.dataMax < 60*60 else '00:00:00' )
 		

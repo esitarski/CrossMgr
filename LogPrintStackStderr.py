@@ -3,7 +3,7 @@ import sys
 import datetime
 import traceback
 
-class LogPrintStackStderr( wx.PyLog ):
+class LogPrintStackStderr( wx.Log ):
     def logHeader( self ):
         sys.stderr.write( '*' * 78 + '\n' )
         sys.stderr.write( '* wxPython Exception: {}\n'.format( datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') ) )

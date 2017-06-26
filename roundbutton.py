@@ -108,7 +108,7 @@ class RoundButtonEvent(wx.PyCommandEvent):
 		return self.theButton
 
 	
-class RoundButton(wx.PyControl):
+class RoundButton(wx.Control):
 	""" This is the main class implementation of L{RoundButton}. """
 	
 	def __init__(self, parent, id=wx.ID_ANY, label="", pos=wx.DefaultPosition,
@@ -129,7 +129,7 @@ class RoundButton(wx.PyControl):
 		:param `name`: the button name.
 		"""
 		
-		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
+		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
 
 		self.Bind(wx.EVT_PAINT, self.OnPaint)
 		self.Bind(wx.EVT_ERASE_BACKGROUND, lambda event: None)
@@ -305,7 +305,7 @@ class RoundButton(wx.PyControl):
 		
 		if size is None:
 			size = wx.DefaultSize			
-		wx.PyControl.SetInitialSize(self, size)
+		wx.Control.SetInitialSize(self, size)
 
 	SetBestSize = SetInitialSize
 	
@@ -314,7 +314,7 @@ class RoundButton(wx.PyControl):
 		#"""
 		#Can this window be given focus by mouse click?
 
-		#:note: Overridden from `wx.PyControl`.
+		#:note: Overridden from `wx.Control`.
 		#"""
 		
 		#return self.IsShown() and self.IsEnabled()
@@ -339,7 +339,7 @@ class RoundButton(wx.PyControl):
 		Overridden base class virtual. Buttons usually don't inherit
 		the parent's colours.
 
-		:note: Overridden from `wx.PyControl`.
+		:note: Overridden from `wx.Control`.
 		"""
 		
 		return False
@@ -351,10 +351,10 @@ class RoundButton(wx.PyControl):
 
 		:param `enable`: ``True`` to enable the button, ``False`` to disable it.
 		
-		:note: Overridden from `wx.PyControl`.
+		:note: Overridden from `wx.Control`.
 		"""
 		
-		wx.PyControl.Enable(self, enable)
+		wx.Control.Enable(self, enable)
 		self.Refresh()
 
 
@@ -404,8 +404,8 @@ class RoundButton(wx.PyControl):
 		
 		# Get a known font size based on the font specification.
 		fontPixels = 48
-		fontCur = wx.FontFromPixelSize((0,fontPixels), font.GetFamily(), font.GetStyle(), font.GetWeight(),
-										font.GetUnderlined(), face=font.GetFaceName(), encoding=font.GetEncoding() )
+		fontCur = wx.Font((0,fontPixels), font.GetFamily(), font.GetStyle(), font.GetWeight(),
+										font.GetUnderlined(), font.GetFaceName(), font.GetEncoding() )
 		dc = wx.WindowDC( self )
 		dc.SetFont( fontCur )		
 		
@@ -434,8 +434,8 @@ class RoundButton(wx.PyControl):
 			
 		# Adjust the font size based on the ratio that we would have drawn outside the button circle.
 		fontPixels *= rDrawable / math.sqrt( r2Max )
-		fontCur = wx.FontFromPixelSize((0,fontPixels), font.GetFamily(), font.GetStyle(), font.GetWeight(),
-								font.GetUnderlined(), face=font.GetFaceName(), encoding=font.GetEncoding() )
+		fontCur = wx.Font((0,fontPixels), font.GetFamily(), font.GetStyle(), font.GetWeight(),
+								font.GetUnderlined(), font.GetFaceName(), font.GetEncoding() )
 		self.SetFont( fontCur )
 
 	def OnPaint(self, event):
@@ -572,7 +572,7 @@ if __name__ == '__main__':
 	btnSize = 150
 
 	# The font size does not matter here - we just it for the properties.
-	boldFont = wx.FFontFromPixelSize((0,32), wx.DEFAULT, flags=wx.FONTFLAG_BOLD)	
+	boldFont = wx.FFont((0,32), wx.DEFAULT, flags=wx.FONTFLAG_BOLD)	
 	
 	for i, (label, colour, boldFlag) in enumerate(btnDefs):
 		btn = RoundButton(mainWin, label=label, size=(btnSize, btnSize))

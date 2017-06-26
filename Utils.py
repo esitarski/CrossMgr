@@ -174,25 +174,14 @@ class UIBusy( object ):
 # Monkey-patch font function so we always fetch a nicer font face.
 #
 if 'WXMAC' not in wx.Platform:
-	FontFace = 'Arial'
-	FontFromPixelSize = wx.FontFromPixelSize
-	def FontFromPixelSizeFontFace( *args, **kwargs ):
-		if 'face' not in kwargs:
-			kwargs['face'] = FontFace
-		return FontFromPixelSize( *args, **kwargs )
-	wx.FontFromPixelSize = FontFromPixelSizeFontFace
-
-	Font = wx.Font
-	def FontFontFace( *args, **kwargs ):
-		if 'face' not in kwargs:
-			kwargs['face'] = FontFace
-		try:
-			return Font( *args, **kwargs )
-		except:
-			pass
-		del kwargs['face']
-		return Font( *args, **kwargs )
-	wx.Font = FontFontFace
+	'''
+	class ArialFont( wx.Font ):
+		def __init__( self, *args, **kwargs ):
+			kwargs['faceName'] = 'Arial'
+			super( ArialFont, self ).__init__( *args, **kwargs )
+			print 'override font'
+	wx.Font = ArialFont
+	'''
 
 #---------------------------------------------------------------------------
 from contextlib import contextmanager
@@ -789,22 +778,13 @@ def LaunchApplication( fnames ):
 
 def BoldFromFont( font ):
 	# pointSize, family, style, weight, underline=False, face="", encoding
-	if font.IsUsingSizeInPixels():
-		return wx.FontFromPixelSize(
-			font.GetPixelSize(),
-			font.GetFamily(),
-			font.GetStyle(),
-			wx.FONTWEIGHT_BOLD,
-			font.GetUnderlined(),
-		)
-	else:
-		return wx.Font(
-			font.GetPointSize(),
-			font.GetFamily(),
-			font.GetStyle(),
-			wx.FONTWEIGHT_BOLD,
-			font.GetUnderlined(),
-		)
+	return wx.Font(
+		font.GetPixelSize(),
+		font.GetFamily(),
+		font.GetStyle(),
+		wx.FONTWEIGHT_BOLD,
+		font.GetUnderlined(),
+	)
 		
 if __name__ == '__main__':
 	initTranslation()

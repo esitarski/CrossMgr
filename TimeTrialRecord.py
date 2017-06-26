@@ -25,12 +25,12 @@ def StrToSeconds( tStr ):
 		secs += 0.0001
 	return secs
 	
-class HighPrecisionTimeEditor(gridlib.PyGridCellEditor):
+class HighPrecisionTimeEditor(gridlib.GridCellEditor):
 	Empty = '00:00:00.000'
 	def __init__(self):
 		self._tc = None
 		self.startValue = self.Empty
-		gridlib.PyGridCellEditor.__init__(self)
+		gridlib.GridCellEditor.__init__(self)
 		
 	def Create( self, parent, id = wx.ID_ANY, evtHandler = None ):
 		self._tc = HighPrecisionTimeEdit(parent, id, allow_none = False, style = wx.TE_PROCESS_ENTER)
@@ -75,8 +75,8 @@ class TimeTrialRecord( wx.Panel ):
 		self.maxRows = 10
 		
 		fontSize = 18
-		self.font = wx.FontFromPixelSize( wx.Size(0,fontSize), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
-		self.bigFont = wx.FontFromPixelSize( wx.Size(0,int(fontSize*1.3)), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
+		self.font = wx.Font( (0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		self.bigFont = wx.Font( (0,int(fontSize*1.3)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		self.vbs = wx.BoxSizer(wx.VERTICAL)
 		
 		tapForTimeLabel = _('Tap for Time')

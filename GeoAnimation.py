@@ -545,28 +545,14 @@ shapes = [ [(cos(a), -sin(a)) \
 def DrawShape( dc, num, x, y, radius ):
 	dc.DrawPolygon( [ wx.Point(p*radius+x, q*radius+y) for p,q in shapes[num % len(shapes)] ] )
 	
-class GeoAnimation(wx.PyControl):
+class GeoAnimation(wx.Control):
 	topFewCount = 5
 	infoLines = 1
 
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
 				name="GeoAnimation"):
-		"""
-		Default class constructor.
-
-		@param parent: Parent window. Must not be None.
-		@param id: GeoAnimation identifier. A value of -1 indicates a default value.
-		@param pos: GeoAnimation position. If the position (-1, -1) is specified
-					then a default position is chosen.
-		@param size: GeoAnimation size. If the default size (-1, -1) is specified
-					then a default size is chosen.
-		@param style: not used
-		@param validator: Window validator.
-		@param name: Window name.
-		"""
-
-		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
+		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
 		self.SetBackgroundColour('white')
 		self.data = {}
 		self.categoryDetails = {}
@@ -705,11 +691,11 @@ class GeoAnimation(wx.PyControl):
 				self.StopAnimate()
 
 	def SetForegroundColour(self, colour):
-		wx.PyControl.SetForegroundColour(self, colour)
+		wx.Control.SetForegroundColour(self, colour)
 		self.Refresh()
 
 	def SetBackgroundColour(self, colour):
-		wx.PyControl.SetBackgroundColour(self, colour)
+		wx.Control.SetBackgroundColour(self, colour)
 		self.Refresh()
 		
 	def GetDefaultAttributes(self):
@@ -905,13 +891,13 @@ class GeoAnimation(wx.PyControl):
 		# Get the fonts if needed.
 		if self.rLast != r:
 			tHeight = int(r / 8.0)
-			self.numberFont	= wx.FontFromPixelSize( wx.Size(0,tHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
+			self.numberFont	= wx.Font( wx.Size(0,tHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 			self.timeFont = self.numberFont
-			self.highlightFont = wx.FontFromPixelSize( wx.Size(0,tHeight * 1.6), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
+			self.highlightFont = wx.Font( wx.Size(0,tHeight * 1.6), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 			
-			self.positionFont = wx.FontFromPixelSize( wx.Size(0,tHeight*0.85*0.7), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
-			self.bibFont = wx.FontFromPixelSize( wx.Size(0,tHeight*0.85), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_ITALIC, wx.FONTWEIGHT_BOLD )
-			self.nameFont = wx.FontFromPixelSize( wx.Size(0,tHeight*0.85), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD )
+			self.positionFont = wx.Font( wx.Size(0,tHeight*0.85*0.7), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+			self.bibFont = wx.Font( wx.Size(0,tHeight*0.85), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_ITALIC, wx.FONTWEIGHT_BOLD )
+			self.nameFont = wx.Font( wx.Size(0,tHeight*0.85), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD )
 			
 			self.rLast = r
 			

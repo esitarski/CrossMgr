@@ -25,7 +25,7 @@ def makeColourGradient(frequency1, frequency2, frequency3,
                         phase1, phase2, phase3,
                         center = 128, width = 127, len = 50 ):
 	fp = [(frequency1,phase1), (frequency2,phase2), (frequency3,phase3)]
-	grad = [wx.Colour(*[math.sin(f*i + p) * width + center for f, p in fp]) for i in xrange(len)]
+	grad = [wx.Colour(*[int(math.sin(f*i + p) * width + center) for f, p in fp]) for i in xrange(len)]
 	return grad
 	
 def makePastelColours( len = 50 ):
@@ -47,14 +47,14 @@ def numFromLabel( s ):
 		return int(s)
 	return int(s[:firstSpace])
 	
-class GanttChart(wx.PyControl):
+class GanttChart(wx.Control):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
 				name="GanttChart", showLabels = True ):
 		"""
 		Default class constructor.
 		"""
-		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
+		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
 		self.SetBackgroundColour(wx.WHITE)
 		self.data = None
 		self.labels = None
@@ -83,7 +83,7 @@ class GanttChart(wx.PyControl):
 		return wx.Size(128, 64)
 
 	def SetForegroundColour(self, colour):
-		wx.PyControl.SetForegroundColour(self, colour)
+		wx.Control.SetForegroundColour(self, colour)
 		self.Refresh()
 		
 	def SetShowLabels( self, showLabels = True ):
@@ -91,7 +91,7 @@ class GanttChart(wx.PyControl):
 		self.Refresh()
 
 	def SetBackgroundColour(self, colour):
-		wx.PyControl.SetBackgroundColour(self, colour)
+		wx.Control.SetBackgroundColour(self, colour)
 		self.Refresh()
 		
 	def GetDefaultAttributes(self):
@@ -250,7 +250,7 @@ class GanttChart(wx.PyControl):
 			return
 		barHeight = min( barHeight, 40 )
 
-		font = wx.FontFromPixelSize( wx.Size(0,barHeight - 1), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		font = wx.Font( (0,barHeight - 1), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		dc.SetFont( font )
 		textWidthLeftMax, textHeightMax = dc.GetTextExtent( '0000' )
 		if not self.showLabels:
@@ -279,7 +279,7 @@ class GanttChart(wx.PyControl):
 		yBottom = barHeight * (len(self.data) + 1)
 		yTop = barHeight
 
-		fontLegend = wx.FontFromPixelSize( wx.Size(0,barHeight*.75), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		fontLegend = wx.Font( (0,barHeight*.75), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		dc.SetFont( fontLegend )
 		textWidth, textHeight = dc.GetTextExtent( '00:00' if self.dataMax < 60*60 else '00:00:00' )
 			
@@ -315,7 +315,7 @@ class GanttChart(wx.PyControl):
 		brushBar = wx.Brush( wx.BLACK )
 		transparentBrush = wx.Brush( wx.WHITE, style = wx.TRANSPARENT )
 		
-		ctx = wx.GraphicsContext_Create(dc)
+		ctx = wx.GraphicsContext.Create(dc)
 		ctx.SetPen( wx.Pen(wx.BLACK, 1) )
 		
 		xyInterp = []

@@ -5,7 +5,7 @@ import  copy
 
 #---------------------------------------------------------------------------
 
-class ColTable( Grid.PyGridTableBase ):
+class ColTable( Grid.GridTableBase ):
 	"""
 	A custom wx.Grid Table using user supplied data
 	"""
@@ -19,7 +19,7 @@ class ColTable( Grid.PyGridTableBase ):
 		self.colRenderer = {}
 		
 		# The base class must be initialized *first*
-		Grid.PyGridTableBase.__init__(self)
+		Grid.GridTableBase.__init__(self)
 		
 		# Column-oriented data.
 		# textColour and backgroundColour are store as a dict indexed by (row, col).

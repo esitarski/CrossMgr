@@ -19,6 +19,7 @@ initTranslation()
 # Monkey-patch font so we always fetch a default font face.
 #
 FontFace = 'Arial'
+'''
 FontFromPixelSize = wx.FontFromPixelSize
 def FontFromPixelSizeFontFace( *args, **kwargs ):
 	if 'face' not in kwargs:
@@ -32,6 +33,7 @@ def FontFontFace( *args, **kwargs ):
 		kwargs['face'] = FontFace
 	return Font( *args, **kwargs )
 wx.Font = FontFontFace
+'''
 
 import datetime
 import os

@@ -17,7 +17,7 @@ def formatTime( secs ):
 	return '{:02d}:{:02d}:{:06.3f}'.format( hours, minutes, secs )
 	
 def PilImageToWxImage( pil ):
-	image = wx.EmptyImage( *pil.size )
+	image = wx.Image( *pil.size )
 	image.SetData( pil.convert('RGB').tobytes() )
 	return image
 
@@ -33,10 +33,10 @@ def setDrawResources( dc, w, h ):
 	fontFace = Utils.FontFace
 	
 	drawResources.bibFontSize = fontHeight * 1.5
-	drawResources.bibFont = wx.FontFromPixelSize(
-		wx.Size(0, drawResources.bibFontSize),
-		wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD,
-		face=fontFace,
+	drawResources.bibFont = wx.Font(
+		(0, drawResources.bibFontSize),
+		wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD,
+		faceName=fontFace,
 	)
 	
 	dc.SetFont( drawResources.bibFont )
@@ -45,27 +45,27 @@ def setDrawResources( dc, w, h ):
 	drawResources.bibSpaceWidth = dc.GetTextExtent( u'9999' )[0] / 4
 	
 	drawResources.nameFontSize = drawResources.bibFontSize
-	drawResources.nameFont = wx.FontFromPixelSize(
-		wx.Size(0, drawResources.nameFontSize),
-		wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL,
-		face=fontFace,
+	drawResources.nameFont = wx.Font(
+		(0, drawResources.nameFontSize),
+		wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL,
+		faceName=fontFace,
 	)
 	drawResources.nameTextColour = drawResources.bibTextColour
 	
 	drawResources.fontSize = fontHeight * 1.0
-	drawResources.font = wx.FontFromPixelSize(
-		wx.Size(0, drawResources.fontSize),
-		wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL,
-		face=fontFace,
+	drawResources.font = wx.Font(
+		(0, drawResources.fontSize),
+		wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL,
+		faceName=fontFace,
 	)
 	dc.SetFont( drawResources.font )
 	drawResources.spaceWidth = dc.GetTextExtent( u'9999' )[0] / 4
 	
 	drawResources.smallFontSize = drawResources.fontSize * 0.9
-	drawResources.smallFont = wx.FontFromPixelSize(
-		wx.Size(0, drawResources.smallFontSize),
-		wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL,
-		face=fontFace,
+	drawResources.smallFont = wx.Font(
+		(0, drawResources.smallFontSize),
+		wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL,
+		faceName=fontFace,
 	)
 	drawResources.fontColour = wx.BLACK
 	dc.SetFont( drawResources.font )
@@ -92,7 +92,7 @@ def AddPhotoHeader( image, bib=None, time=None, raceSeconds=None, firstNameTxt=u
 	if not image:
 		return wx.EmptyBitmap(8, 8)
 	
-	bitmap = wx.BitmapFromImage( image )
+	bitmap = wx.Bitmap( image )
 	
 	w, h = bitmap.GetSize()
 	dcMemory = wx.MemoryDC( bitmap )
@@ -197,5 +197,5 @@ def AddPhotoHeader( image, bib=None, time=None, raceSeconds=None, firstNameTxt=u
 	dc.SetPen( wx.Pen(drawResources.borderColour, 1) )
 	dc.DrawLine( w-1, 0, w-1, y+lineHeight )
 	
-	return wx.ImageFromBitmap( bitmap )
+	return bitmap.ConvertToImage()
 

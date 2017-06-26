@@ -40,7 +40,7 @@ def getCloseFinishBitmaps( size=(16,16) ):
 	dc = wx.MemoryDC()
 	dc.SetPen( wx.Pen(wx.Colour(0,0,0), 1) )
 	for c in closeColors:
-		bitmap = wx.EmptyBitmap( *size )
+		bitmap = wx.Bitmap( *size )
 		dc.SelectObject( bitmap )
 		dc.SetBrush( wx.Brush(wx.Colour(*[int(c[i:i+2],16) for i in xrange(0,6,2)]) ) )
 		dc.DrawRectangle( 0, 0, size[0]-1, size[1]-1 )
@@ -135,7 +135,7 @@ class ConfigDialog( wx.Dialog ):
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		
 		self.title = wx.StaticText( self, label='CrossMgr Video Configuration' )
-		self.title.SetFont( wx.FontFromPixelSize( wx.Size(0,24), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
+		self.title.SetFont( wx.Font( (0,24), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		self.explanation = [
 			'Check that the USB Webcam is plugged in.',
 			'Check the Camera Device (Usually 0 but could be 1, 2, etc.).',
@@ -244,7 +244,8 @@ class MainWin( wx.Frame ):
 		
 		self.config = wx.Config(appName="CrossMgrVideo",
 						vendorName="SmartCyclingSolutions",
-						style=wx.CONFIG_USE_LOCAL_FILE)
+						#style=wx.CONFIG_USE_LOCAL_FILE
+		)
 		
 		self.requestQ = Queue()		# Select photos from photobuf.
 		self.dbWriterQ = Queue()	# Photos waiting to be written
@@ -259,10 +260,10 @@ class MainWin( wx.Frame ):
 		headerSizer = wx.BoxSizer( wx.HORIZONTAL )
 		
 		self.logo = Utils.GetPngBitmap('CrossMgrHeader.png')
-		headerSizer.Add( wx.StaticBitmap(self, bitmap=self.logo) )
+		headerSizer.Add( wx.StaticBitmap(self, label=self.logo) )
 		
 		self.title = wx.StaticText(self, label='CrossMgr Video\nVersion {}'.format(AppVerName.split()[1]), style=wx.ALIGN_RIGHT )
-		self.title.SetFont( wx.FontFromPixelSize( wx.Size(0,28), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
+		self.title.SetFont( wx.Font( (0,28), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		headerSizer.Add( self.title, flag=wx.ALL, border=10 )
 		
 		#------------------------------------------------------------------------------
@@ -354,12 +355,12 @@ class MainWin( wx.Frame ):
 		hsDate = wx.BoxSizer( wx.HORIZONTAL )
 		hsDate.Add( wx.StaticText(self, label='Show Triggers for'), flag=wx.ALIGN_CENTER_VERTICAL )
 		tQuery = now()
-		self.date = wx.DatePickerCtrl(
+		self.date = wx.adv.DatePickerCtrl(
 			self,
-			dt=wx.DateTimeFromDMY( tQuery.day, tQuery.month-1, tQuery.year ),
-			style=wx.DP_DROPDOWN|wx.DP_SHOWCENTURY
+			dt=wx.DateTime.FromDMY( tQuery.day, tQuery.month-1, tQuery.year ),
+			style=wx.adv.DP_DROPDOWN|wx.adv.DP_SHOWCENTURY
 		)
-		self.date.Bind( wx.EVT_DATE_CHANGED, self.onQueryDateChanged )
+		self.date.Bind( wx.adv.EVT_DATE_CHANGED, self.onQueryDateChanged )
 		hsDate.Add( self.date, flag=wx.LEFT, border=2 )
 		
 		hsDate.Add( wx.StaticText(self, label='Filter by Bib'), flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=12 )
@@ -482,18 +483,18 @@ class MainWin( wx.Frame ):
 		for i, (id,ts,bib,first_name,last_name,team,wave,race_name,kmh) in enumerate(triggers):
 			dtFinish = (ts-tsPrev).total_seconds()
 			itemImage = self.sm_close[min(len(self.sm_close)-1, int(len(self.sm_close) * dtFinish / closeFinishThreshold))]		
-			row = self.triggerList.InsertImageStringItem( sys.maxint, ts.strftime('%H:%M:%S.%f')[:-3], itemImage )
-			self.triggerList.SetStringItem( row, 1, u'{:>6}'.format(bib) )
+			row = self.triggerList.InsertItem( sys.maxint, ts.strftime('%H:%M:%S.%f')[:-3], itemImage )
+			self.triggerList.SetItem( row, 1, u'{:>6}'.format(bib) )
 			name = u', '.join( n for n in (last_name, first_name) if n )
-			self.triggerList.SetStringItem( row, 2, name )
-			self.triggerList.SetStringItem( row, 3, team )
-			self.triggerList.SetStringItem( row, 4, wave )
+			self.triggerList.SetItem( row, 2, name )
+			self.triggerList.SetItem( row, 3, team )
+			self.triggerList.SetItem( row, 4, wave )
 			if kmh:
 				kmh_text, mph_text = u'{:.2f}'.format(kmh), u'{:.2f}'.format(kmh * 0.621371)
 			else:
 				kmh_text = mph_text = u''
-			self.triggerList.SetStringItem( row, 5, kmh_text )
-			self.triggerList.SetStringItem( row, 6, mph_text )
+			self.triggerList.SetItem( row, 5, kmh_text )
+			self.triggerList.SetItem( row, 6, mph_text )
 			
 			self.triggerList.SetItemData( row, row )
 			self.itemDataMap[row] = (id,ts,bib,name,team,wave,race_name,first_name,last_name,kmh)
@@ -550,7 +551,7 @@ class MainWin( wx.Frame ):
 		wx.CallAfter( self.finishStrip.SetTsJpgs, self.tsJpg, self.ts, self.triggerInfo )
 
 	def onTriggerSelected( self, event ):
-		self.iTriggerSelect = event.m_itemIndex
+		self.iTriggerSelect = event.Index
 		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
 		self.triggerInfo = {
 			a:data[i] for i, a in enumerate(('id','ts','bib','name','team','wave','raceName','firstName','lastName','kmh'))

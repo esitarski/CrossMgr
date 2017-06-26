@@ -58,7 +58,7 @@ def getLapCounterOptions( isDialog ):
 				size=(360, -1), 
 				style = wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS 
 			)
-			self.slider.SetTickFreq(5, 1)
+			self.slider.SetTickFreq(5)
 			vs.Add( self.slider, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM, border=8 )
 			
 			if isDialog:
@@ -140,7 +140,7 @@ class LapCounter( wx.Panel ):
 		self.font = None
 		self.fontSize = -1
 		
-		self.SetCursor( wx.StockCursor(wx.CURSOR_RIGHT_BUTTON) )
+		self.SetCursor( wx.Cursor(wx.CURSOR_RIGHT_BUTTON) )
 		self.SetBackgroundColour( wx.BLACK )
 		self.SetForegroundColour( wx.GREEN )
 		self.foregrounds = [wx.WHITE] * 4
@@ -254,7 +254,7 @@ class LapCounter( wx.Panel ):
 		if lineHeight == self.fontSize:
 			return self.font
 		self.fontSize = lineHeight
-		self.font = wx.FontFromPixelSize( wx.Size(0,lineHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD )
+		self.font = wx.Font( wx.Size(0,lineHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD )
 		return self.font
 		
 	def GetCountdownTime( self ):
@@ -283,7 +283,7 @@ class LapCounter( wx.Panel ):
 		return '{}{}:{:02d}'.format( over, minutes, seconds )
 	
 	def tessellate( self, numLabels ):
-		width, height = self.GetSizeTuple()
+		width, height = self.GetSize()
 		if numLabels == 1:
 			return ((0, 0, width, height),)
 		if numLabels == 2:
@@ -302,7 +302,7 @@ class LapCounter( wx.Panel ):
 		dc.SetTextForeground( self.GetForegroundColour() )
 		dc.Clear()
 		
-		width, height = self.GetSizeTuple()
+		width, height = self.GetSize()
 		border = 0
 
 		if self.countdownTimer:
@@ -310,12 +310,12 @@ class LapCounter( wx.Panel ):
 			if not label:
 				return
 			lineHeight = height - border*2
-			dc.SetFont( wx.FontFromPixelSize( wx.Size(0,lineHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD ) )
+			dc.SetFont( wx.Font( wx.Size(0,lineHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD ) )
 			sizeLabel = '000000000:00:00'[-len(label):]
 			w, h = dc.GetTextExtent(sizeLabel)
 			if w > width-8:
 				lineHeight *= float(width-8) / float(w)
-			dc.SetFont( wx.FontFromPixelSize( wx.Size(0,lineHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD ) )
+			dc.SetFont( wx.Font( wx.Size(0,lineHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD ) )
 			yTop = (height - lineHeight) // 2
 			dc.DrawText( label, (width - dc.GetTextExtent(sizeLabel)[0]) // 2, yTop )
 			if not self.timer.IsRunning():
@@ -341,11 +341,11 @@ class LapCounter( wx.Panel ):
 			w = int( w * 0.9 )
 			h = int( h * 0.9 )
 			fontSize = h
-			dc.SetFont( wx.FontFromPixelSize( wx.Size(0,fontSize), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD ) )
+			dc.SetFont( wx.Font( wx.Size(0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD ) )
 			wText, hText = dc.GetTextExtent( text )
 			if wText > w:
 				fontSize = int( fontSize * w / wText )
-				dc.SetFont( wx.FontFromPixelSize( wx.Size(0,fontSize), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD ) )
+				dc.SetFont( wx.Font( wx.Size(0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD ) )
 			return fontSize
 		
 		def drawLapText( label, colour, x, y, w, h ):

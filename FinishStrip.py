@@ -217,7 +217,7 @@ class FinishStrip( wx.Panel ):
 		xTimeLine = self.getXTimeLine()
 		text = formatTime( self.tDrawStart + (x - xTimeLine) / float(self.scaledPixelsPerSec) * (-1.0 if self.leftToRight else 1.0) )
 		fontHeight = max(5, heightWin//20)
-		font = wx.FontFromPixelSize(
+		font = wx.Font(
 			wx.Size(0,fontHeight),
 			wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD
 		)
@@ -342,7 +342,7 @@ class FinishStrip( wx.Panel ):
 		
 		text = formatTime( self.tDrawStart )
 		fontHeight = max(5, heightWin//20)
-		font = wx.FontFromPixelSize(
+		font = wx.Font(
 			wx.Size(0,fontHeight),
 			wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL
 		)

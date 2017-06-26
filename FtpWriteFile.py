@@ -188,7 +188,7 @@ def drawMultiLineText( dc, text, x, y ):
 		y += lineHeightText
 
 def getFont( pixelSize = 28, isBold = False ):
-	return wx.FontFromPixelSize( (0,pixelSize), wx.FONTFAMILY_SWISS, wx.NORMAL,
+	return wx.Font( (0,pixelSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL,
 								 wx.FONTWEIGHT_BOLD if isBold else wx.FONTWEIGHT_NORMAL )
 
 def getFontToFit( dc, widthToFit, heightToFit, sizeFunc, isBold = False ):
@@ -327,7 +327,7 @@ def GetFtpPublish( isDialog=True ):
 			
 			self.refresh()
 			
-			self.qrcodeBitmap = wx.StaticBitmap( self, bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'QRCodeIcon.png'), wx.BITMAP_TYPE_PNG ) )
+			self.qrcodeBitmap = wx.StaticBitmap( self, label = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'QRCodeIcon.png'), wx.BITMAP_TYPE_PNG ) )
 			self.printBtn = wx.Button( self, label = _('Print Results URL as a QR Code...') )
 			self.Bind( wx.EVT_BUTTON, self.onPrint, self.printBtn )
 			

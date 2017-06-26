@@ -142,34 +142,34 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.vbs = wx.BoxSizer(wx.VERTICAL)
 		
 		self.title = wx.StaticText( self )
-		self.title.SetFont( wx.FontFromPixelSize( wx.Size(0,24), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
+		self.title.SetFont( wx.Font( wx.Size(0,24), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		
 		self.toolbar = wx.ToolBar( self )
 		self.toolbar.Bind( wx.EVT_TOOL, self.OnToolBar )
 		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'Refresh.png'), wx.BITMAP_TYPE_PNG )
 		self.refreshID = wx.NewId()
-		self.toolbar.AddSimpleTool( self.refreshID, bitmap, _('Refresh Photos') )
+		self.toolbar.AddTool( self.refreshID, _('Refresh Photos'), bitmap )
 		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'ClipboardPlus.png'), wx.BITMAP_TYPE_PNG )
 		self.copyToClipboardID = wx.NewId()
-		self.toolbar.AddSimpleTool( self.copyToClipboardID, bitmap, _('Copy Photo to Clipboard...') )
+		self.toolbar.AddTool( self.copyToClipboardID, _('Copy Photo to Clipboard...'), bitmap )
 		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'FileBrowser.png'), wx.BITMAP_TYPE_PNG )
 		self.showFilesID = wx.NewId()
-		self.toolbar.AddSimpleTool( self.showFilesID, bitmap, _('Show Files...') )
+		self.toolbar.AddTool( self.showFilesID, _('Show Files...'), bitmap )
 		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'Printer.png'), wx.BITMAP_TYPE_PNG )
 		self.printID = wx.NewId()
-		self.toolbar.AddSimpleTool( self.printID, bitmap, _('Print Photo...') )
+		self.toolbar.AddTool( self.printID, _('Print Photo...'), bitmap )
 		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'camera_toolbar.png'), wx.BITMAP_TYPE_PNG )
 		self.takePhotoID = wx.NewId()
-		self.toolbar.AddSimpleTool( self.takePhotoID, bitmap, _('Photo Test') )
+		self.toolbar.AddTool( self.takePhotoID, _('Photo Test'), bitmap )
 		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CheckeredFlagIcon.png'), wx.BITMAP_TYPE_PNG )
 		self.finishStripID = wx.NewId()
-		self.toolbar.AddSimpleTool( self.finishStripID, bitmap, _('Composite Finish Photo') )
+		self.toolbar.AddTool( self.finishStripID, _('Composite Finish Photo'), bitmap )
 		
 		#self.closeButton = wx.Button( self, wx.ID_CANCEL, 'Close' )
 		#self.Bind(wx.EVT_BUTTON, self.OnClose, self.closeButton )

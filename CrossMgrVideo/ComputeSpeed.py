@@ -1,13 +1,13 @@
 import wx
-import wx.wizard as wiz
+import wx.adv as adv
 import StringIO
 from ScaledImageVerticalLines import ScaledImageVerticalLines, EVT_VERTICAL_LINES
 
 _ = lambda x: x
 
-class WheelEdgesPage(wiz.WizardPageSimple):
+class WheelEdgesPage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		wiz.WizardPageSimple.__init__(self, parent)
+		adv.WizardPageSimple.__init__(self, parent)
 		
 		self.t = None
 		self.wheelDiameter = None
@@ -42,9 +42,9 @@ class WheelEdgesPage(wiz.WizardPageSimple):
 	def getWheelEdges( self ):
 		return self.sivl.GetVerticalLines()
 	
-class FrontWheelEdgePage(wiz.WizardPageSimple):
+class FrontWheelEdgePage(adv.WizardPageSimple):
 	def __init__(self, parent, getSpeed):
-		wiz.WizardPageSimple.__init__(self, parent)
+		adv.WizardPageSimple.__init__(self, parent)
 		
 		self.getSpeed = getSpeed
 		
@@ -82,8 +82,8 @@ class ComputeSpeed( object ):
 	wheelDiameter = 0.678
 
 	def __init__( self, parent, size=wx.DefaultSize ):
-		self.wizard = wiz.Wizard( parent, wx.ID_ANY, _('Compute Speed') )
-		self.wizard.Bind( wiz.EVT_WIZARD_PAGE_CHANGING, self.onPageChanging )
+		self.wizard = adv.Wizard( parent, wx.ID_ANY, _('Compute Speed') )
+		self.wizard.Bind( adv.EVT_WIZARD_PAGE_CHANGING, self.onPageChanging )
 		
 		self.t1 = None
 		self.t2 = None
@@ -93,7 +93,7 @@ class ComputeSpeed( object ):
 		self.wheelEdgesPage = WheelEdgesPage( self.wizard )
 		self.frontWheelEdgePage = FrontWheelEdgePage( self.wizard, self.getSpeed )
 		
-		wiz.WizardPageSimple_Chain( self.wheelEdgesPage, self.frontWheelEdgePage )
+		adv.WizardPageSimple_Chain( self.wheelEdgesPage, self.frontWheelEdgePage )
 
 		self.wizard.SetPageSize( size )
 		self.wizard.GetPageAreaSizer().Add( self.wheelEdgesPage )

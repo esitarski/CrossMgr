@@ -2,7 +2,7 @@
 import os
 import sys
 import wx
-import wx.wizard as wiz
+import wx.adv as adv
 import wx.lib.filebrowsebutton as filebrowse
 import traceback
 import Utils
@@ -11,9 +11,9 @@ from GeoAnimation import GeoTrack, GpxHasTimes
 import Model
 import HelpSearch
 
-class IntroPage(wiz.WizardPageSimple):
+class IntroPage(adv.WizardPageSimple):
 	def __init__(self, parent, controller):
-		wiz.WizardPageSimple.__init__(self, parent)
+		adv.WizardPageSimple.__init__(self, parent)
 		
 		self.controller = controller
 		border = 4
@@ -54,9 +54,9 @@ class IntroPage(wiz.WizardPageSimple):
 		self.info.ChangeValue( s )
 		self.GetSizer().Layout()
 	
-class FileNamePage(wiz.WizardPageSimple):
+class FileNamePage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		wiz.WizardPageSimple.__init__(self, parent)
+		adv.WizardPageSimple.__init__(self, parent)
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
@@ -106,9 +106,9 @@ class FileNamePage(wiz.WizardPageSimple):
 	def getIsPointToPoint( self ):
 		return self.courseTypeRadioBox.GetSelection() == 1
 
-class UseTimesPage(wiz.WizardPageSimple):
+class UseTimesPage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		wiz.WizardPageSimple.__init__(self, parent)
+		adv.WizardPageSimple.__init__(self, parent)
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
@@ -131,9 +131,9 @@ class UseTimesPage(wiz.WizardPageSimple):
 		return self.useTimes.IsChecked()
 
 		
-class SummaryPage(wiz.WizardPageSimple):
+class SummaryPage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		wiz.WizardPageSimple.__init__(self, parent)
+		adv.WizardPageSimple.__init__(self, parent)
 		
 		self.distanceKm = None
 		self.distanceMiles = None
@@ -196,24 +196,23 @@ class GetGeoTrack( object ):
 		bitmap = wx.Bitmap(img_filename) if img_filename and os.path.exists(img_filename) else wx.NullBitmap
 		
 		self.parent = parent
-		prewizard = wiz.PreWizard()
-		prewizard.SetExtraStyle( wiz.WIZARD_EX_HELPBUTTON )
-		prewizard.Create( parent, title = _('Import GPX Course File'), bitmap = bitmap )
-		self.wizard = prewizard
+		self.wizard = adv.Wizard()
+		self.wizard.SetExtraStyle( adv.WIZARD_EX_HELPBUTTON )
+		self.wizard.Create( parent, title = _('Import GPX Course File'), bitmap = bitmap )
 		
 		self.introPage		= IntroPage( self.wizard, self )
 		self.fileNamePage	= FileNamePage( self.wizard )
 		self.useTimesPage	= UseTimesPage( self.wizard )
 		self.summaryPage	= SummaryPage( self.wizard )
 		
-		self.wizard.Bind( wiz.EVT_WIZARD_PAGE_CHANGING, self.onPageChanging )
-		self.wizard.Bind( wiz.EVT_WIZARD_CANCEL, self.onCancel )
-		self.wizard.Bind( wiz.EVT_WIZARD_HELP,
+		self.wizard.Bind( adv.EVT_WIZARD_PAGE_CHANGING, self.onPageChanging )
+		self.wizard.Bind( adv.EVT_WIZARD_CANCEL, self.onCancel )
+		self.wizard.Bind( adv.EVT_WIZARD_HELP,
 			lambda evt: HelpSearch.showHelp('Menu-DataMgmt.html#import-course-in-gpx-format') )
 		
-		wiz.WizardPageSimple_Chain( self.introPage, self.fileNamePage )
-		wiz.WizardPageSimple_Chain( self.fileNamePage, self.useTimesPage )
-		wiz.WizardPageSimple_Chain( self.useTimesPage, self.summaryPage )
+		adv.WizardPageSimple_Chain( self.introPage, self.fileNamePage )
+		adv.WizardPageSimple_Chain( self.fileNamePage, self.useTimesPage )
+		adv.WizardPageSimple_Chain( self.useTimesPage, self.summaryPage )
 
 		self.wizard.SetPageSize( wx.Size(500,200) )
 		self.wizard.GetPageAreaSizer().Add( self.introPage )

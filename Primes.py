@@ -91,7 +91,7 @@ class Primes( wx.Panel ):
 			if fieldName == 'lapsToGo':
 				self.lapsToGoCol = col
 		
-		self.grid.Bind( wx.grid.EVT_GRID_CELL_CHANGE, self.onCellChange )
+		self.grid.Bind( wx.grid.EVT_GRID_CELL_CHANGED, self.onCellChange )
 		self.grid.AutoSizeColumns( False )
 		self.grid.AutoSizeRows( False )
 

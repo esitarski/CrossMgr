@@ -14,7 +14,7 @@ class SetAutoCorrectDialog( wx.Dialog ):
 		self.categoryNames = ['All'] + [c.name for c in categories]
 		vs = wx.BoxSizer(wx.VERTICAL)
 		
-		font = wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.FONTWEIGHT_BOLD)
+		font = wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
 		self.title1 = wx.StaticText( self, label = _("Change the Autocorrect Flag by Category") )
 		self.title1.SetFont( font )
 		self.title2 = wx.StaticText( self, label = _("Select Categories:") )

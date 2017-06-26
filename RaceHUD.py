@@ -13,11 +13,11 @@ def rescaleBitmap( b, s ):
 	i = i.Scale( i.GetWidth() * s, i.GetHeight() * s, wx.IMAGE_QUALITY_HIGH )
 	return i.ConvertToBitmap()
 		
-class RaceHUD(wx.PyControl):
+class RaceHUD(wx.Control):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
 				name=_("RaceHUD"), lapInfoFunc=None ):
-		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
+		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
 		self.SetBackgroundColour(wx.WHITE)
 		self.raceTimes = None	# Last time is red lantern.
 		self.leader = None
@@ -54,11 +54,11 @@ class RaceHUD(wx.PyControl):
 		return wx.Size(128, 100)
 
 	def SetForegroundColour(self, colour):
-		wx.PyControl.SetForegroundColour(self, colour)
+		wx.Control.SetForegroundColour(self, colour)
 		self.Refresh()
 
 	def SetBackgroundColour(self, colour):
-		wx.PyControl.SetBackgroundColour(self, colour)
+		wx.Control.SetBackgroundColour(self, colour)
 		self.Refresh()
 		
 	def GetDefaultAttributes(self):
@@ -162,7 +162,7 @@ class RaceHUD(wx.PyControl):
 		hudHeight = self.hudHeight = min( height / len(self.raceTimes), 80 )
 
 		legendHeight = max( hudHeight / 4, 10 )
-		fontLegend = wx.FontFromPixelSize( wx.Size(0,legendHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		fontLegend = wx.Font( wx.Size(0,legendHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		dc.SetFont( fontLegend )
 		textWidth, textHeight = dc.GetTextExtent( u'1:00:00' )
 		broomTimeWidth = textWidth
@@ -174,7 +174,7 @@ class RaceHUD(wx.PyControl):
 			return
 		
 		raceTimeHeight = tickHeight * 2 * 0.6
-		fontRaceTime = wx.FontFromPixelSize( wx.Size(0,raceTimeHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		fontRaceTime = wx.Font( wx.Size(0,raceTimeHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		dc.SetFont( fontRaceTime )
 		textWidth, textHeight = dc.GetTextExtent( u'0' )
 		zeroCharWidth = textWidth
@@ -224,7 +224,7 @@ class RaceHUD(wx.PyControl):
 		
 			# Draw the progress bar.
 			transparentBrush = wx.Brush( wx.WHITE, style = wx.TRANSPARENT )
-			ctx = wx.GraphicsContext_Create(dc)
+			ctx = wx.GraphicsContext.Create(dc)
 			ctx.SetPen( wx.Pen(wx.WHITE, 1, style = wx.TRANSPARENT ) )
 			dd = int(dy * 0.3)
 			
@@ -313,7 +313,7 @@ class RaceHUD(wx.PyControl):
 					tCur, tNext = raceTimes[self.iLapHover-1:self.iLapHover+1]
 					info = self.lapInfoFunc( self.iLapHover, len(raceTimes)-2, tCur, tNext, leader )
 					hoverLineHeight = min(20, max( 16, hudHeight//len(info) ) )
-					fontHover = wx.FontFromPixelSize( wx.Size(0,int(hoverLineHeight * 0.85)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+					fontHover = wx.Font( (0,int(hoverLineHeight * 0.85)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 					dc.SetFont( fontHover )
 					labelHoverWidth = max(dc.GetTextExtent(label)[0] for label, value in info)
 					valueHoverWidth = max(dc.GetTextExtent(value)[0] for label, value in info)

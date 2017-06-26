@@ -65,7 +65,7 @@ class StartRaceAtTime( wx.Dialog ):
 		wx.Dialog.__init__( self, parent, id, _("Start Race at Time:"),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
 						
-		font = wx.Font(24, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
+		font = wx.Font(24, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
 		
 		self.startSeconds = None
 		self.timer = None
@@ -267,7 +267,7 @@ class Actions( wx.Panel ):
 		self.rightPanel = wx.Panel( self.splitter )
 		self.rightPanel.SetBackgroundColour( wx.Colour(255,255,255) )
 		checklistTitle = wx.StaticText( self.rightPanel, label = _('Checklist:') )
-		checklistTitle.SetFont( wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
+		checklistTitle.SetFont( wx.Font(14, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) )
 		self.checklist = Checklist.Checklist( self.rightPanel )
 		
 		hsSub = wx.BoxSizer( wx.VERTICAL )
@@ -283,7 +283,7 @@ class Actions( wx.Panel ):
 		wx.CallAfter( self.splitter.SetSashPosition, 650 )
 		
 	def setWrappedRaceInfo( self, event = None ):
-		wrapWidth = self.leftPanel.GetClientSizeTuple()[0] - self.button.GetClientSizeTuple()[0] - 20
+		wrapWidth = self.leftPanel.GetClientSize()[0] - self.button.GetClientSize()[0] - 20
 		dc = wx.WindowDC( self.raceIntro )
 		dc.SetFont( self.raceIntro.GetFont() )
 		label = wordwrap( Model.race.getRaceIntro() if Model.race else u'', wrapWidth, dc )

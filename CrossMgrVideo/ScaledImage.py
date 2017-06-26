@@ -25,9 +25,9 @@ class ScaledImage( wx.Panel ):
 		dc.SetBackground( wx.WHITE_BRUSH )
 		dc.Clear()
 		
-		width, height = self.GetSizeTuple()
+		width, height = self.GetSize()
 		try:
-			bitmap = wx.BitmapFromImage( RescaleImage(self.image, width, height) )
+			bitmap = wx.Bitmap( RescaleImage(self.image, width, height) )
 		except Exception as e:
 			return
 		
@@ -64,7 +64,7 @@ class ScaledImage( wx.Panel ):
 		
 	def SetTestImage( self ):
 		width, height = self.GetSize()
-		bitmap = wx.EmptyBitmap( width, height )
+		bitmap = wx.Bitmap( width, height )
 		dc = wx.MemoryDC()
 		dc.SelectObject( bitmap )
 		

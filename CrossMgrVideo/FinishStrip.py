@@ -15,7 +15,7 @@ def _( s ):
 	
 def PilImageToWxImage(pil, alpha=False):
 	"""Convert PIL Image to wx.Image."""
-	image = wx.EmptyImage( *pil.size )
+	image = wx.Image( *pil.size )
 	image.SetData( pil.convert("RGB").tobytes() )
 
 	if alpha and pilImage.mode[-1] == 'A':
@@ -140,7 +140,7 @@ class FinishStrip( wx.Panel ):
 		
 		self.tMax = self.times[-1]
 		
-		image = wx.ImageFromStream( StringIO.StringIO(tsJpgs[0][1]), wx.BITMAP_TYPE_JPEG )
+		image = wx.Image( StringIO.StringIO(tsJpgs[0][1]), wx.BITMAP_TYPE_JPEG )
 		self.jpgWidth, self.jpgHeight = image.GetSize()
 		self.scale = min( 1.0, float(self.GetSize()[1]) / float(self.jpgHeight) )
 		if self.scale != 1.0:
@@ -153,7 +153,7 @@ class FinishStrip( wx.Panel ):
 			self.tsJpgs, self.leftToRight, self.pixelsPerSec, self.scale
 		)
 		if self.compositeBitmap:
-			self.compositeBitmap = wx.BitmapFromImage( PilImageToWxImage(self.compositeBitmap) )
+			self.compositeBitmap = wx.Bitmap( PilImageToWxImage(self.compositeBitmap) )
 		self.zoomBitmap = {}
 		
 	def OnErase( self, event ):
@@ -192,31 +192,28 @@ class FinishStrip( wx.Panel ):
 		
 		text = self.formatTime( self.tFromX(x) )
 		fontHeight = max(5, winHeight//20)
-		font = wx.FontFromPixelSize(
-			wx.Size(0,fontHeight),
-			wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD
-		)
+		font = wx.Font( (0,fontHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD )
 		dc.SetFont( font )
 		tWidth, tHeight = dc.GetTextExtent( text )
 		border = int(tHeight / 3)
 		
-		bm = wx.BitmapFromImage( wx.EmptyImage(tWidth, tHeight) )
+		bm = wx.Bitmap( tWidth, tHeight )
 		memDC = wx.MemoryDC( bm )
 		memDC.SetBackground( wx.BLACK_BRUSH )
 		memDC.Clear()
 		memDC.SetFont( font )
 		memDC.SetTextForeground( wx.WHITE )
 		memDC.DrawText( text, 0, 0 )
-		bmMask = wx.BitmapFromImage( bm.ConvertToImage() )
+		bmMask = wx.Bitmap( bm.ConvertToImage() )
 		bm.SetMask( wx.Mask(bmMask, wx.BLACK) )
-		dc.Blit( x+border, y - tHeight, tWidth, tHeight, memDC, 0, 0, useMask=True, rop=wx.XOR )
+		dc.Blit( x+border, y - tHeight, tWidth, tHeight, memDC, 0, 0, useMask=True, logicalFunc=wx.XOR )
 		dc.DrawLine( x, 0, x, winHeight )
 
 	def getZoomBitmap( self, tbm ):
 		try:
 			return self.zoomBitmap[tbm]
 		except KeyError:
-			image = wx.ImageFromStream( StringIO.StringIO(self.jpg[tbm]), wx.BITMAP_TYPE_JPEG )
+			image = wx.Image( StringIO.StringIO(self.jpg[tbm]), wx.BITMAP_TYPE_JPEG )
 			image.Rescale( int(self.jpgWidth*self.magnification), int(self.jpgHeight*self.magnification), self.imageQuality )
 			self.zoomBitmap[tbm] = image.ConvertToBitmap()
 			return self.zoomBitmap[tbm]
@@ -373,10 +370,7 @@ class FinishStrip( wx.Panel ):
 		
 		text = self.formatTime( self.tCursor )
 		fontHeight = max(5, winHeight//20)
-		font = wx.FontFromPixelSize(
-			wx.Size(0,fontHeight),
-			wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL
-		)
+		font = wx.Font( (0,fontHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		gc.SetFont( font, wx.BLACK )
 		tWidth, tHeight = gc.GetTextExtent( text )
 		border = int(tHeight / 3)

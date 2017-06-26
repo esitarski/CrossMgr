@@ -57,7 +57,7 @@ def ShowSplashScreen():
 	w, h = bitmap.GetSize()
 	dc = wx.MemoryDC()
 	dc.SelectObject( bitmap )
-	dc.SetFont( wx.FontFromPixelSize( wx.Size(0,h//10), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
+	dc.SetFont( wx.Font( (0,h//10), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
 	dc.DrawText( Version.AppVerName.replace('SeriesMgr','Version'), w // 20, int(h * 0.4) )
 	dc.SelectObject( wx.NullBitmap )
 	
@@ -66,7 +66,7 @@ def ShowSplashScreen():
 
 #----------------------------------------------------------------------------------
 		
-class MyTipProvider( wx.PyTipProvider ):
+class MyTipProvider( wx.adv.TipProvider ):
 	def __init__( self, fileName, tipNo = None ):
 		self.tips = []
 		try:
@@ -82,7 +82,7 @@ class MyTipProvider( wx.PyTipProvider ):
 		if tipNo is None:
 			tipNo = 0
 		self.tipNo = tipNo
-		wx.PyTipProvider.__init__( self, self.tipNo )
+		wx.adv.TipProvider.__init__( self, self.tipNo )
 			
 	def GetCurrentTip( self ):
 		if self.tipNo < 0 or self.tipNo >= len(self.tips):
@@ -146,7 +146,8 @@ class MainWin( wx.Frame ):
 		self.filehistory = wx.FileHistory(8)
 		self.config = wx.Config(appName="SeriesMgr",
 								vendorName="SmartCyclingSolutions",
-								style=wx.CONFIG_USE_LOCAL_FILE)
+								#style=wx.CONFIG_USE_LOCAL_FILE
+		)
 		self.filehistory.Load(self.config)
 		
 		self.fileName = None
@@ -204,7 +205,7 @@ class MainWin( wx.Frame ):
 		'''
 		
 		recent = wx.Menu()
-		self.fileMenu.AppendMenu(wx.ID_ANY, "&Recent Files", recent)
+		self.fileMenu.Append(wx.ID_ANY, "&Recent Files", recent)
 		self.filehistory.UseMenu( recent )
 		self.filehistory.AddFilesToMenu()
 		
@@ -247,7 +248,7 @@ class MainWin( wx.Frame ):
 
 		sty = wx.BORDER_SUNKEN
 		self.notebook = fnb.FlatNotebook(self, wx.ID_ANY, agwStyle=fnb.FNB_VC8|fnb.FNB_NO_X_BUTTON)
-		font = wx.FontFromPixelSize( wx.Size(0,(FontSize*4)//5), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
+		font = wx.Font( (0,(FontSize*4)//5), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		self.notebook.SetFont( font )
 		self.notebook.Bind( fnb.EVT_FLATNOTEBOOK_PAGE_CHANGED, self.onPageChanging )
 		

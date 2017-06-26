@@ -388,7 +388,7 @@ class RiderDetail( wx.Panel ):
 		self.grid.AutoSizeColumns( True )
 		self.grid.DisableDragColSize()
 		self.grid.DisableDragRowSize()
-		self.grid.SetSelectionMode( wx.grid.Grid.wxGridSelectRows )
+		self.grid.SetSelectionMode( wx.grid.Grid.GridSelectRows )
 		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doRightClick )
 
 		panel = wx.Panel( splitter, wx.ID_ANY, style = wx.BORDER_SUNKEN )
@@ -415,7 +415,6 @@ class RiderDetail( wx.Panel ):
 		hs.Add( sFirstRecordedTime, flag=wx.LEFT|wx.RIGHT|wx.TOP, border=4 )
 		
 		hs.Add( splitter, proportion = 1, flag = wx.EXPAND|wx.TOP, border = 4 )
-		splitter.SizeWindows()
 		
 		self.setAtRaceTime()
 		mainSizer = wx.BoxSizer( wx.VERTICAL )

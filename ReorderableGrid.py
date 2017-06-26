@@ -5,9 +5,9 @@ import wx.lib.mixins.gridlabelrenderer as glr
 import wx.lib.mixins.grid as gae
 import Utils
 
-class GridCellMultiLineStringRenderer(gridlib.PyGridCellRenderer):   
+class GridCellMultiLineStringRenderer(gridlib.GridCellRenderer):   
 	def __init__(self):
-		gridlib.PyGridCellRenderer.__init__(self)
+		gridlib.GridCellRenderer.__init__(self)
 
 	def Draw(self, grid, attr, dc, rect, row, col, isSelected):
 		text = grid.GetCellValue(row, col)

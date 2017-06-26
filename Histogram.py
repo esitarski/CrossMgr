@@ -8,7 +8,7 @@ def makeColourGradient(frequency1, frequency2, frequency3,
                         phase1, phase2, phase3,
                         center = 128, width = 127, len = 50 ):
 	fp = [(frequency1,phase1), (frequency2,phase2), (frequency3,phase3)]	
-	grad = [wx.Colour(*[math.sin(f*i + p) * width + center for f, p in fp]) for i in xrange(len+1)]
+	grad = [wx.Colour(*[int(math.sin(f*i + p) * width + center) for f, p in fp]) for i in xrange(len+1)]
 	return grad[1:]
 	
 def makePastelColours( len = 50 ):
@@ -67,7 +67,7 @@ def BinByMinute( data, minN = 2, maxN = None ):
 def BinBy5Minute( data, minN = 2, maxN = None ):
 	return BinByInterval( data, 60.0*5.0, minN )
 			
-class Histogram(wx.PyControl):
+class Histogram(wx.Control):
 	BinFunc = [ShimazakiMethod, BinBySecond, BinBy30Second, BinByMinute, BinBy5Minute]
 	BinOptionAuto, BinOptionBySecond, BinOptionBy30Second, BinOptionByMinute, BinOptionBy5Minute = list(xrange(len(BinFunc)))
 	
@@ -75,7 +75,7 @@ class Histogram(wx.PyControl):
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
 				name="LineGraph"):
 		
-		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
+		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
 		self.SetBackgroundColour('white')
 
 		self.binOption = self.BinOptionAuto
@@ -106,11 +106,11 @@ class Histogram(wx.PyControl):
 		self.Refresh()
 
 	def SetForegroundColour(self, colour):
-		wx.PyControl.SetForegroundColour(self, colour)
+		wx.Control.SetForegroundColour(self, colour)
 		self.Refresh()
 
 	def SetBackgroundColour(self, colour):
-		wx.PyControl.SetBackgroundColour(self, colour)
+		wx.Control.SetBackgroundColour(self, colour)
 		self.Refresh()
 		
 	def GetDefaultAttributes(self):
@@ -257,7 +257,7 @@ class Histogram(wx.PyControl):
 			if i == self.iSelect:
 				rSelect = r
 				dc.SetPen( wx.Pen(wx.Colour(255,255,0), 1) )
-			dc.DrawRectangleRect( r )
+			dc.DrawRectangle( r )
 			if i == self.iSelect:
 				dc.SetPen( pen )
 		
@@ -293,7 +293,7 @@ class Histogram(wx.PyControl):
 			
 			dc.SetPen( wx.Pen('black', 1) )
 			dc.SetBrush( wx.Brush(wx.Colour(255,255,153)) )
-			dc.DrawRectangleRect( rHover )
+			dc.DrawRectangle( rHover )
 			
 			xLeft = rHover.GetLeft() + margin
 			yCur = rHover.GetY() + margin

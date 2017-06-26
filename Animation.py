@@ -34,7 +34,7 @@ def GetLapRatio( leaderRaceTimes, tCur, iLapHint ):
 		lapRatio = (tCur - leaderRaceTimes[iLapHint]) / (leaderRaceTimes[iLapHint + 1] - leaderRaceTimes[iLapHint])
 	return iLapHint, lapRatio
 	
-class Animation(wx.PyControl):
+class Animation(wx.Control):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
 				name="Animation"):
@@ -52,13 +52,13 @@ class Animation(wx.PyControl):
 		@param name: Window name.
 		"""
 
-		# Ok, let's see why we have used wx.PyControl instead of wx.Control.
-		# Basically, wx.PyControl is just like its wxWidgets counterparts
+		# Ok, let's see why we have used wx.Control instead of wx.Control.
+		# Basically, wx.Control is just like its wxWidgets counterparts
 		# except that it allows some of the more common C++ virtual method
 		# to be overridden in Python derived class. For Animation, we
 		# basically need to override DoGetBestSize and AcceptsFocusFromKeyboard
 		
-		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
+		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
 		self.SetBackgroundColour('white')
 		self.data = {}
 		self.categoryDetails = {}
@@ -199,11 +199,11 @@ class Animation(wx.PyControl):
 				self.StopAnimate()
 
 	def SetForegroundColour(self, colour):
-		wx.PyControl.SetForegroundColour(self, colour)
+		wx.Control.SetForegroundColour(self, colour)
 		self.Refresh()
 
 	def SetBackgroundColour(self, colour):
-		wx.PyControl.SetBackgroundColour(self, colour)
+		wx.Control.SetBackgroundColour(self, colour)
 		self.Refresh()
 		
 	def GetDefaultAttributes(self):
@@ -406,9 +406,9 @@ class Animation(wx.PyControl):
 		# Get the fonts if needed.
 		if self.rLast != r:
 			tHeight = r / 8.0
-			self.numberFont = wx.FontFromPixelSize( wx.Size(0,tHeight), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
+			self.numberFont = wx.Font( (0,tHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 			self.timeFont = self.numberFont
-			self.highlightFont = wx.FontFromPixelSize( wx.Size(0,tHeight * 1.6), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL )
+			self.highlightFont = wx.Font( wx.Size(0,tHeight * 1.6), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 			self.rLast = r
 			
 		# Draw the track.

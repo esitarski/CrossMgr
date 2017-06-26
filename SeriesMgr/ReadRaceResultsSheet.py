@@ -4,7 +4,7 @@ import wx
 import copy
 import wx.lib.filebrowsebutton as filebrowse
 import wx.lib.scrolledpanel as scrolled
-import wx.wizard as wiz
+import wx.adv
 import Utils
 import traceback
 import datetime
@@ -14,9 +14,9 @@ from Excel import GetExcelReader
 #-----------------------------------------------------------------------------------------------------
 Fields = ['Bib#', 'Pos', 'Time', 'FirstName', 'LastName', 'Category', 'License', 'Team']
 
-class FileNamePage(wiz.WizardPageSimple):
+class FileNamePage(wx.adv.WizardPageSimple):
 	def __init__(self, parent):
-		wiz.WizardPageSimple.__init__(self, parent)
+		wx.adv.WizardPageSimple.__init__(self, parent)
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
@@ -40,9 +40,9 @@ class FileNamePage(wiz.WizardPageSimple):
 	def getFileName( self ):
 		return self.fbb.GetValue()
 	
-class SheetNamePage(wiz.WizardPageSimple):
+class SheetNamePage(wx.adv.WizardPageSimple):
 	def __init__(self, parent):
-		wiz.WizardPageSimple.__init__(self, parent)
+		wx.adv.WizardPageSimple.__init__(self, parent)
 		self.choices = []
 		self.expectedSheetName = None
 		
@@ -71,9 +71,9 @@ class SheetNamePage(wiz.WizardPageSimple):
 	def getSheetName( self ):
 		return self.choices[self.ch.GetCurrentSelection()]
 	
-class HeaderNamesPage(wiz.WizardPageSimple):
+class HeaderNamesPage(wx.adv.WizardPageSimple):
 	def __init__(self, parent):
-		wiz.WizardPageSimple.__init__(self, parent)
+		wx.adv.WizardPageSimple.__init__(self, parent)
 
 		self.expectedFieldCol = None
 		
@@ -182,9 +182,9 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 			fieldCol[f] = self.choices[c].GetSelection()
 		return fieldCol
 			
-class SummaryPage(wiz.WizardPageSimple):
+class SummaryPage(wx.adv.WizardPageSimple):
 	def __init__(self, parent):
-		wiz.WizardPageSimple.__init__(self, parent)
+		wx.adv.WizardPageSimple.__init__(self, parent)
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
@@ -239,22 +239,22 @@ class GetExcelResultsLink( object ):
 		#img = wx.Bitmap(img_filename) if img_filename and os.path.exists(img_filename) else wx.NullBitmap
 		img = wx.Bitmap(os.path.join( Utils.getImageFolder(), '20100718-Excel_icon.png' ))
 		
-		prewizard = wiz.PreWizard()
-		prewizard.SetExtraStyle( wiz.WIZARD_EX_HELPBUTTON )
-		prewizard.Create( parent, wx.ID_ANY, _('Link Excel Info'), img )
-		self.wizard = prewizard
-		self.wizard.Bind( wiz.EVT_WIZARD_PAGE_CHANGING, self.onPageChanging )
-		self.wizard.Bind( wiz.EVT_WIZARD_HELP,
+		prewx.advard = wx.adv.PreWizard()
+		prewx.advard.SetExtraStyle( wx.adv.WIZARD_EX_HELPBUTTON )
+		prewx.advard.Create( parent, wx.ID_ANY, _('Link Excel Info'), img )
+		self.wx.advard = prewx.advard
+		self.wx.advard.Bind( wx.adv.EVT_WIZARD_PAGE_CHANGING, self.onPageChanging )
+		self.wx.advard.Bind( wx.adv.EVT_WIZARD_HELP,
 			lambda evt: Utils.showHelp('Menu-DataMgmt.html#link-to-external-excel-data') )
 		
-		self.fileNamePage = FileNamePage( self.wizard )
-		self.sheetNamePage = SheetNamePage( self.wizard )
-		self.headerNamesPage = HeaderNamesPage( self.wizard )
-		self.summaryPage = SummaryPage( self.wizard )
+		self.fileNamePage = FileNamePage( self.wx.advard )
+		self.sheetNamePage = SheetNamePage( self.wx.advard )
+		self.headerNamesPage = HeaderNamesPage( self.wx.advard )
+		self.summaryPage = SummaryPage( self.wx.advard )
 		
-		wiz.WizardPageSimple_Chain( self.fileNamePage, self.sheetNamePage )
-		wiz.WizardPageSimple_Chain( self.sheetNamePage, self.headerNamesPage )
-		wiz.WizardPageSimple_Chain( self.headerNamesPage, self.summaryPage )
+		wx.adv.WizardPageSimple_Chain( self.fileNamePage, self.sheetNamePage )
+		wx.adv.WizardPageSimple_Chain( self.sheetNamePage, self.headerNamesPage )
+		wx.adv.WizardPageSimple_Chain( self.headerNamesPage, self.summaryPage )
 
 		self.excelLink = excelLink
 		if excelLink:
@@ -265,12 +265,12 @@ class GetExcelResultsLink( object ):
 			if excelLink.fieldCol:
 				self.headerNamesPage.setExpectedFieldCol( excelLink.fieldCol )
 
-		self.wizard.GetPageAreaSizer().Add( self.fileNamePage )
-		self.wizard.SetPageSize( wx.Size(500,200) )
-		self.wizard.FitToPage( self.fileNamePage )
+		self.wx.advard.GetPageAreaSizer().Add( self.fileNamePage )
+		self.wx.advard.SetPageSize( wx.Size(500,200) )
+		self.wx.advard.FitToPage( self.fileNamePage )
 	
 	def show( self ):
-		if self.wizard.RunWizard(self.fileNamePage):
+		if self.wx.advard.RunWizard(self.fileNamePage):
 			if not self.excelLink:
 				self.excelLink = ExcelLink()
 			self.excelLink.setFileName( self.fileNamePage.getFileName() )
@@ -292,13 +292,13 @@ class GetExcelResultsLink( object ):
 						message = _('Please specify an Excel file.')
 					else:
 						message = _('Cannot open file "{}".\nPlease check the file name and/or its read permissions.').format(fileName)
-					Utils.MessageOK( self.wizard, message, title=_('File Open Error'), iconMask=wx.ICON_ERROR)
+					Utils.MessageOK( self.wx.advard, message, title=_('File Open Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 			elif page == self.sheetNamePage:
 				try:
 					self.headerNamesPage.setFileNameSheetName(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName())
 				except ValueError:
-					Utils.MessageOK( self.wizard, _('Cannot find at least 5 header names in the Excel sheet.\nCheck the format.'),
+					Utils.MessageOK( self.wx.advard, _('Cannot find at least 5 header names in the Excel sheet.\nCheck the format.'),
 										title=_('Excel Format Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 			elif page == self.headerNamesPage:
@@ -307,7 +307,7 @@ class GetExcelResultsLink( object ):
 				excelLink.setSheetName( self.sheetNamePage.getSheetName() )
 				fieldCol = self.headerNamesPage.getFieldCol()
 				if fieldCol[Fields[0]] < 0:
-					Utils.MessageOK( self.wizard, _('You must specify a "{}" column.').format(Fields[0]),
+					Utils.MessageOK( self.wx.advard, _('You must specify a "{}" column.').format(Fields[0]),
 										title=_('Excel Format Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 				else:
@@ -316,7 +316,7 @@ class GetExcelResultsLink( object ):
 						info = excelLink.read()
 						self.summaryPage.setFileNameSheetNameInfo(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName(), info)
 					except ValueError as e:
-						Utils.MessageOK( self.wizard, _('Problem extracting rider info.\nCheck the Excel format.'),
+						Utils.MessageOK( self.wx.advard, _('Problem extracting rider info.\nCheck the Excel format.'),
 											title=_('Data Error'), iconMask=wx.ICON_ERROR)
 						evt.Veto()
 		

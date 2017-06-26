@@ -8,14 +8,14 @@ from ReorderableGrid import ReorderableGrid
 import SeriesModel
 import Utils
 
-class PointsEditor(gridlib.PyGridCellEditor):
+class PointsEditor(gridlib.GridCellEditor):
 
 	DefaultStartValue = ''
 
 	def __init__(self):
 		self._tc = None
 		self.startValue = self.DefaultStartValue
-		gridlib.PyGridCellEditor.__init__(self)
+		gridlib.GridCellEditor.__init__(self)
 		
 	def Create( self, parent, id, evtHandler ):
 		self._tc = wx.TextCtrl( parent, id, value = self.DefaultStartValue, style=wx.TE_PROCESS_ENTER )

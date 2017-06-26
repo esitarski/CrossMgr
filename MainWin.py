@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import wx
+import wx.adv as adv
 from wx.lib.wordwrap import wordwrap
 import wx.lib.imagebrowser as imagebrowser
 import wx.lib.agw.flatnotebook as flatnotebook
@@ -130,7 +131,7 @@ def ShowSplashScreen():
 	w, h = bitmap.GetSize()
 	dc = wx.MemoryDC()
 	dc.SelectObject( bitmap )
-	dc.SetFont( wx.FontFromPixelSize( wx.Size(0,h//10), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
+	dc.SetFont( wx.Font( wx.Size(0,h//10), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
 	dc.DrawText( Version.AppVerName.replace('CrossMgr','Version'), w // 20, int(h * 0.44) )
 	dc.SelectObject( wx.NullBitmap )
 	
@@ -139,7 +140,7 @@ def ShowSplashScreen():
 			
 #----------------------------------------------------------------------------------
 
-class MyTipProvider( wx.PyTipProvider ):
+class MyTipProvider( adv.TipProvider ):
 	def __init__( self, fname, tipNo = None ):
 		self.tips = []
 		try:
@@ -229,7 +230,7 @@ setTimeout( function() {
 def AppendMenuItemBitmap( menu, id, name, help, bitmap ):
 	mi = wx.MenuItem( menu, id, name, help )
 	mi.SetBitmap( bitmap )
-	menu.AppendItem( mi )
+	menu.Append( mi )
 		
 class MainWin( wx.Frame ):
 	def __init__( self, parent, id = wx.ID_ANY, title='', size=(200,200) ):
@@ -246,7 +247,8 @@ class MainWin( wx.Frame ):
 		self.filehistory = wx.FileHistory(8)
 		self.config = wx.Config(appName="CrossMgr",
 								vendorName="SmartCyclingSolutions",
-								style=wx.CONFIG_USE_LOCAL_FILE)
+		#						style=wx.CONFIG_USE_LOCAL_FILE
+		)
 		self.filehistory.Load(self.config)
 		
 		self.fileName = None
@@ -315,7 +317,7 @@ class MainWin( wx.Frame ):
 		self.fileMenu.AppendSeparator()
 		
 		recent = wx.Menu()
-		menu = self.fileMenu.AppendMenu(wx.ID_ANY, _("Recent Fil&es"), recent)
+		menu = self.fileMenu.Append(wx.ID_ANY, _("Recent Fil&es"), recent)
 		menu.SetBitmap( Utils.GetPngBitmap('document-open-recent.png') )
 		self.filehistory.UseMenu( recent )
 		self.filehistory.AddFilesToMenu()
@@ -461,14 +463,14 @@ class MainWin( wx.Frame ):
 		self.undoMenuButton = wx.MenuItem( self.editMenu, wx.ID_UNDO , _("&Undo\tCtrl+Z"), _("Undo the last edit") )
 		img = wx.Image(os.path.join(Utils.getImageFolder(), 'Undo-icon.png'))
 		self.undoMenuButton.SetBitmap( img.ConvertToBitmap(8) )
-		self.editMenu.AppendItem( self.undoMenuButton )
+		self.editMenu.Append( self.undoMenuButton )
 		self.Bind(wx.EVT_MENU, self.menuUndo, id=wx.ID_UNDO )
 		self.undoMenuButton.Enable( False )
 
 		self.redoMenuButton = wx.MenuItem( self.editMenu, wx.ID_REDO , _("&Redo\tCtrl+Y"), _("Redo the last edit") )
 		img = wx.Image(os.path.join(Utils.getImageFolder(), 'Redo-icon.png'))
 		self.redoMenuButton.SetBitmap( img.ConvertToBitmap(8) )
-		self.editMenu.AppendItem( self.redoMenuButton )
+		self.editMenu.Append( self.redoMenuButton )
 		self.Bind(wx.EVT_MENU, self.menuRedo, id=wx.ID_REDO )
 		self.redoMenuButton.Enable( False )
 		self.editMenu.AppendSeparator()

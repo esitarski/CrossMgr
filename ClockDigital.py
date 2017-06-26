@@ -18,12 +18,12 @@ def formatTime( s ):
 	else:
 		return '{}{:d}:{:02d}'.format( sgn, minutes, seconds )
 
-class ClockDigital(wx.PyControl):
+class ClockDigital(wx.Control):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
 				name="ClockDigital", refTime=None, countDown=False, checkFunc=None ):
 
-		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
+		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
 		
 		self.timer = wx.Timer( self )
 		self.Bind( wx.EVT_TIMER, self.onTimer )
@@ -107,7 +107,7 @@ class ClockDigital(wx.PyControl):
 			tStr = t.strftime('%H:%M:%S')
 		
 		fontSize = int(height * workRatio)
-		font = wx.FontFromPixelSize(
+		font = wx.Font(
 			(0,fontSize),
 			wx.FONTFAMILY_SWISS,
 			wx.FONTSTYLE_NORMAL,
@@ -117,7 +117,7 @@ class ClockDigital(wx.PyControl):
 		tWidth, tHeight = dc.GetTextExtent( tStr )
 		if tWidth > width*workRatio:
 			fontSize = int( fontSize * width*workRatio / tWidth )
-			font = wx.FontFromPixelSize(
+			font = wx.Font(
 				(0,fontSize),
 				wx.FONTFAMILY_SWISS,
 				wx.FONTSTYLE_NORMAL,

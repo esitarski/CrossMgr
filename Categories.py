@@ -135,13 +135,13 @@ def PrintCategories():
 	printout.Destroy()	
 
 #--------------------------------------------------------------------------------
-class TimeEditor(gridlib.PyGridCellEditor):
+class TimeEditor(gridlib.GridCellEditor):
 	defaultValue = '00:00:00'
 
 	def __init__(self):
 		self._tc = None
 		self.startValue = self.defaultValue
-		gridlib.PyGridCellEditor.__init__(self)
+		gridlib.GridCellEditor.__init__(self)
 		
 	def Create( self, parent, id = wx.ID_ANY, evtHandler = None ):
 		self._tc = masked.TimeCtrl( parent, id, style=wx.TE_CENTRE, fmt24hr=True, displaySeconds = True, value=self.defaultValue )
@@ -172,7 +172,7 @@ class TimeEditor(gridlib.PyGridCellEditor):
 	def Clone( self ):
 		return TimeEditor()
 
-class CategoryIconRenderer(gridlib.PyGridCellRenderer):
+class CategoryIconRenderer(gridlib.GridCellRenderer):
 	def __init__( self ):
 		self.bitmaps = [
 			wx.Bitmap( os.path.join(Utils.getImageFolder(), 'bullhorn_2.png'), wx.BITMAP_TYPE_PNG ),
@@ -186,7 +186,7 @@ class CategoryIconRenderer(gridlib.PyGridCellRenderer):
 			hMax = max( hMax, h )
 		self.wMax = wMax
 		self.hMax = hMax
-		gridlib.PyGridCellRenderer.__init__(self)
+		gridlib.GridCellRenderer.__init__(self)
 
 	def Draw(self, grid, attr, dc, rect, row, col, isSelected):
 		if col+1 >= grid.GetNumberCols():
@@ -200,11 +200,11 @@ class CategoryIconRenderer(gridlib.PyGridCellRenderer):
 		else:
 			value = 2
 		
-		dc.SetClippingRect( rect )
+		dc.SetClippingRegion( rect )
 		dc.SetBackgroundMode(wx.SOLID)
 		dc.SetBrush(wx.WHITE_BRUSH)
 		dc.SetPen(wx.TRANSPARENT_PEN)
-		dc.DrawRectangleRect(rect)
+		dc.DrawRectangle(rect)
 		
 		bitmap = self.bitmaps[value]
 		w, h = bitmap.GetSize()
@@ -411,7 +411,7 @@ class Categories( wx.Panel ):
 		
 		self.Bind( gridlib.EVT_GRID_CELL_LEFT_CLICK, self.onGridLeftClick )
 		self.Bind( gridlib.EVT_GRID_SELECT_CELL, self.onCellSelected )
-		self.Bind( gridlib.EVT_GRID_CELL_CHANGE, self.onCellChanged )
+		self.Bind( gridlib.EVT_GRID_CELL_CHANGED, self.onCellChanged )
 		self.Bind( gridlib.EVT_GRID_EDITOR_CREATED, self.onEditorCreated )
 		
 		vs.Add( hs, 0, flag=wx.EXPAND|wx.ALL, border = 4 )

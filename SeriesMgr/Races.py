@@ -65,7 +65,7 @@ class Races(wx.Panel):
 		attr.SetReadOnly( True )
 		self.grid.SetColAttr( self.RaceFileCol, attr )
 		
-		self.grid.Bind( gridlib.EVT_GRID_CELL_CHANGE, self.onGridChange )
+		self.grid.Bind( gridlib.EVT_GRID_CELL_CHANGED, self.onGridChange )
 		self.gridAutoSize()
 		self.grid.Bind( wx.grid.EVT_GRID_EDITOR_CREATED, self.onGridEditorCreated )
 		self.grid.Bind( wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.onEditRaceFileName )

@@ -76,8 +76,8 @@ class GeneralInfoProperties( wx.Panel ):
 		self.locationSizer.Add( self.raceCountry, 2, flag=wx.EXPAND|wx.LEFT, border=3 )
 		
 		self.dateLabel = wx.StaticText( self, label = _('Date') )
-		self.date = wx.DatePickerCtrl( self, style = wx.DP_DROPDOWN, size=(160,-1) )
-		self.Bind(wx.EVT_DATE_CHANGED, self.onChanged, self.date)
+		self.date = wx.adv.DatePickerCtrl( self, style = wx.adv.DP_DROPDOWN, size=(160,-1) )
+		self.Bind(wx.adv.EVT_DATE_CHANGED, self.onChanged, self.date)
 		
 		self.raceDisciplineLabel = wx.StaticText( self, label = _('Discipline') )
 		self.raceDiscipline = wx.TextCtrl( self, value=u'Cyclo-cross', size=(160,-1) )
@@ -649,7 +649,7 @@ class CameraProperties( wx.Panel ):
 		
 		self.advancePhotoMillisecondsLabel = wx.StaticText( self, label=_('Milliseconds') )
 		self.advancePhotoMilliseconds = wx.Slider( self, style=wx.SL_HORIZONTAL|wx.SL_LABELS|wx.SL_AUTOTICKS, minValue=self.advanceMin, maxValue=self.advanceMax, )
-		self.advancePhotoMilliseconds.SetTickFreq( 100, 1 )
+		self.advancePhotoMilliseconds.SetTickFreq( 100 )
 		self.advancePhotoMilliseconds.SetBackgroundColour( wx.WHITE )
 		self.advancePhotoMilliseconds.Bind( wx.EVT_SCROLL, self.doAdvancePhotoMillisecondsScroll )
 		self.advancePhotoMillisecondsValue = intctrl.IntCtrl( self, style=wx.ALIGN_RIGHT, value=0, min=self.advanceMin, max=self.advanceMax, limited=True, allow_none=True, size=(60,-1) )

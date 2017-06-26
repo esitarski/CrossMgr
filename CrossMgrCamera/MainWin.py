@@ -150,7 +150,7 @@ class ConfigDialog( wx.Dialog ):
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		
 		self.title = wx.StaticText( self, label='CrossMgr Camera Configuration' )
-		self.title.SetFont( wx.FontFromPixelSize( wx.Size(0,24), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
+		self.title.SetFont( wx.Font( (0,24), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		self.explanation = [
 			'Check that the USB Webcam is plugged in.',
 			'Check the Camera Device (Usually 0 but could be 1, 2, etc.).',
@@ -225,7 +225,8 @@ class MainWin( wx.Frame ):
 		
 		self.config = wx.Config(appName="CrossMgrCamera",
 						vendorName="SmartCyclingSolutions",
-						style=wx.CONFIG_USE_LOCAL_FILE)
+						#style=wx.CONFIG_USE_LOCAL_FILE
+		)
 		
 		self.requestQ = Queue()			# Select photos from photobuf.
 		self.writerQ = Queue( 400 )		# Selected photos waiting to be written out.
@@ -246,10 +247,10 @@ class MainWin( wx.Frame ):
 		headerSizer = wx.BoxSizer( wx.HORIZONTAL )
 		
 		self.logo = Utils.GetPngBitmap('CrossMgrHeader.png')
-		headerSizer.Add( wx.StaticBitmap(self, bitmap=self.logo) )
+		headerSizer.Add( wx.StaticBitmap(self, label=self.logo) )
 		
 		self.title = wx.StaticText(self, label='CrossMgr Camera\nVersion {}'.format(AppVerName.split()[1]), style=wx.ALIGN_RIGHT )
-		self.title.SetFont( wx.FontFromPixelSize( wx.Size(0,28), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
+		self.title.SetFont( wx.Font( (0,28), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		headerSizer.Add( self.title, flag=wx.ALL, border=10 )
 		
 		#------------------------------------------------------------------------------
@@ -260,7 +261,7 @@ class MainWin( wx.Frame ):
 		self.cameraDevice.SetFont( boldFont )
 		self.cameraResolution = wx.StaticText( self )
 		self.cameraResolution.SetFont( boldFont )
-		bitmap = wx.BitmapFromXPMData( clipboard_xpm )
+		bitmap = wx.Bitmap( clipboard_xpm )
 		self.copyLogToClipboard = wx.BitmapButton( self, bitmap=bitmap )
 		self.copyLogToClipboard.Bind( wx.EVT_BUTTON, self.onCopyLogToClipboard )
 		self.reset = wx.Button( self, label="Reset Camera" )

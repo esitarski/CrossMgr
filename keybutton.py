@@ -102,7 +102,7 @@ class KeyButtonEvent(wx.PyCommandEvent):
 		return self.theButton
 
 	
-class KeyButton(wx.PyControl):
+class KeyButton(wx.Control):
 	""" This is the main class implementation of L{KeyButton}. """
 	
 	def __init__(self, parent, id=wx.ID_ANY, bitmap=None, label="", pos=wx.DefaultPosition,
@@ -124,7 +124,7 @@ class KeyButton(wx.PyControl):
 		:param `name`: the button name.
 		"""
 		
-		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
+		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
 
 		self.Bind(wx.EVT_PAINT, self.OnPaint)
 		self.Bind(wx.EVT_ERASE_BACKGROUND, lambda event: None)
@@ -188,7 +188,7 @@ class KeyButton(wx.PyControl):
 		g = colour.Green() + ((i*gd*100)/high)/100
 		b = colour.Blue() + ((i*bd*100)/high)/100
 
-		return wx.Colour(r, g, b)
+		return wx.Colour(int(r), int(g), int(b))
 
 	def DarkColour(self, colour, percent = 10.0):
 		"""
@@ -350,7 +350,7 @@ class KeyButton(wx.PyControl):
 		
 		if size is None:
 			size = wx.DefaultSize
-		wx.PyControl.SetInitialSize(self, size)
+		wx.Control.SetInitialSize(self, size)
 
 	SetBestSize = SetInitialSize
 	
@@ -359,7 +359,7 @@ class KeyButton(wx.PyControl):
 		"""
 		Can this window be given focus by mouse click?
 
-		:note: Overridden from `wx.PyControl`.
+		:note: Overridden from `wx.Control`.
 		"""
 		
 		return self.IsShown() and self.IsEnabled()
@@ -379,7 +379,7 @@ class KeyButton(wx.PyControl):
 		Overridden base class virtual. Buttons usually don't inherit
 		the parent's colours.
 
-		:note: Overridden from `wx.PyControl`.
+		:note: Overridden from `wx.Control`.
 		"""
 		
 		return False
@@ -391,10 +391,10 @@ class KeyButton(wx.PyControl):
 
 		:param `enable`: ``True`` to enable the button, ``False`` to disable it.
 		
-		:note: Overridden from `wx.PyControl`.
+		:note: Overridden from `wx.Control`.
 		"""
 		
-		wx.PyControl.Enable(self, enable)
+		wx.Control.Enable(self, enable)
 		self.Refresh()
 
 
@@ -506,10 +506,10 @@ class KeyButton(wx.PyControl):
 
 		:param `colour`: a valid `wx.Colour` object.
 
-		:note: Overridden from `wx.PyControl`.		
+		:note: Overridden from `wx.Control`.		
 		"""
 
-		wx.PyControl.SetForegroundColour(self, colour)
+		wx.Control.SetForegroundColour(self, colour)
 		self.Refresh()
 		
 		
@@ -629,7 +629,7 @@ class KeyButton(wx.PyControl):
 						xMiddle-1, insideRect.GetTop(),
 						insideRect.GetLeft() + insideRect.GetWidth(), insideRect.GetTop(),
 						insideCenter, insideEdge) )				
-		gc.ClipRegion( wx.Region(xMiddle, 0, width, height) )
+		gc.Clip( xMiddle, 0, width, height )
 		gc.FillPath( innerRoundedRect )
 		gc.ResetClip()
 		
@@ -685,7 +685,7 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None, title="keybutton", size=((rowHeight+0.75) * 15 + border * 2, rowHeight * (len(keyRows)+0.75) + border * 2))
 	mainWin.SetBackgroundColour( backgroundColour )
 	
-	font = wx.FontFromPixelSize( (0, fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD )
+	font = wx.Font( (0, fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD )
 	y = border
 	keyWidthCount = {}
 	for row in keyRows:
@@ -706,7 +706,7 @@ if __name__ == '__main__':
 			btn = KeyButton( mainWin, label = key, pos=(x, y), size=(width - rowHeight * (1.0-shrink), rowHeight * shrink) )
 			btn.SetBackgroundColour( backgroundColour )
 			if key in keyFontHeight:
-				btn.SetFont( wx.FontFromPixelSize( (0, fontSize*keyFontHeight[key]), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
+				btn.SetFont( wx.Font( (0, fontSize*keyFontHeight[key]), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
 			else:
 				btn.SetFont( font )
 			x += width + keySpaceAfter.get(key, 0) * rowHeight

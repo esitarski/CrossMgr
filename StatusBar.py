@@ -5,7 +5,7 @@ def lighterColour( c ):
 	rgb = c.Get( False )
 	return wx.Colour( *[int(v + (255 - v) * 0.6) for v in rgb] )
 
-class StatusBar(wx.PyControl):
+class StatusBar(wx.Control):
 	def __init__(self, parent, id=wx.ID_ANY, value=0, range=100, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
 				name="StatusBar"):
@@ -25,13 +25,13 @@ class StatusBar(wx.PyControl):
 		@param name: Window name.
 		"""
 
-		# Ok, let's see why we have used wx.PyControl instead of wx.Control.
-		# Basically, wx.PyControl is just like its wxWidgets counterparts
+		# Ok, let's see why we have used wx.Control instead of wx.Control.
+		# Basically, wx.Control is just like its wxWidgets counterparts
 		# except that it allows some of the more common C++ virtual method
 		# to be overridden in Python derived class. For StatusBar, we
 		# basically need to override DoGetBestSize and AcceptsFocusFromKeyboard
 		
-		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
+		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
 		
 		self._value = int(value)
 		self._range = int(range)
@@ -42,7 +42,7 @@ class StatusBar(wx.PyControl):
 		# Initialize the focus pen colour/dashes, for faster drawing later
 		self.InitializeColours()
 		
-		# Ok, set the wx.PyControl label, its initial size (formerly known an
+		# Ok, set the wx.Control label, its initial size (formerly known an
 		# SetBestFittingSize), and inherit the attributes from the standard
 		# wx.CheckBox
 		self.SetInitialSize(size)
@@ -59,7 +59,7 @@ class StatusBar(wx.PyControl):
 		self._green = wx.Colour(0, 0xC0, 0)
 			
 	def SetFont(self, font):
-		wx.PyControl.SetFont(self, font)
+		wx.Control.SetFont(self, font)
 
 		self.textWidth, self.textHeight = None, None
 
@@ -78,7 +78,7 @@ class StatusBar(wx.PyControl):
 		return wx.Size(textWidth, textHeight)
 
 	def SetForegroundColour(self, colour):
-		wx.PyControl.SetForegroundColour(self, colour)
+		wx.Control.SetForegroundColour(self, colour)
 
 		# We have to re-initialize the focus indicator per colour as it should
 		# always be the same as the foreground colour
@@ -88,7 +88,7 @@ class StatusBar(wx.PyControl):
 	def SetBackgroundColour(self, colour):
 		""" Overridden base class virtual. """
 
-		wx.PyControl.SetBackgroundColour(self, colour)
+		wx.Control.SetBackgroundColour(self, colour)
 
 		# We have to refresh ourselves
 		self.Refresh()
@@ -97,7 +97,7 @@ class StatusBar(wx.PyControl):
 	def Enable(self, enable=True):
 		""" Enables/Disables StatusBar. """
 
-		wx.PyControl.Enable(self, enable)
+		wx.Control.Enable(self, enable)
 
 		# We have to refresh ourselves, as our state changed        
 		self.Refresh()
@@ -183,7 +183,7 @@ class StatusBar(wx.PyControl):
 			lineHeight = 2 * int(radius * 0.25)
 			lineWidth = 2 * int(radius * 0.70)
 			sep = 4
-			ctx = wx.GraphicsContext_Create( dc )
+			ctx = wx.GraphicsContext.Create( dc )
 			ctx.SetPen( wx.GREY_PEN )
 			ctx.SetBrush( wx.GREY_BRUSH )
 			ctx.DrawEllipse( xCenter+2 - radius, yCenter+2 - radius, radius * 2, radius * 2 )
@@ -209,7 +209,7 @@ class StatusBar(wx.PyControl):
 			dc.DrawRectangle(x, y, width, height)
 			
 			#---------------------------------------------------------------------
-			ctx = wx.GraphicsContext_Create(dc)
+			ctx = wx.GraphicsContext.Create(dc)
 			ctx.SetPen( wx.Pen(wx.WHITE, 1, style=wx.TRANSPARENT ) )
 			
 			colour = self._green if value > range/4 else self._orange

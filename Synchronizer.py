@@ -25,7 +25,7 @@ class Synchronizer( object ):
 	
 	def Run( self ):
 		''' Call from background thread. '''
-		assert not wx.Thread_IsMain(), 'Deadlock'
+		assert not wx.IsMainThread(), 'Deadlock'
 		wx.CallAfter( self._ASyncWrapper )
 		self._sync.acquire()
 		try:
@@ -36,7 +36,7 @@ class Synchronizer( object ):
 def syncfunc( func ):
 	''' Decorator to synchronize a function call from a worker thread to the wx GUI thread. '''
 	def syncwrap( *args, **kwargs ):
-		if wx.Thread_IsMain():
+		if wx.IsMainThread():
 			return self.func( *args, **kwargs )
 		else:
 			sync = Synchronizer( func, *args, **kwargs )

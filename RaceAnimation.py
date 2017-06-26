@@ -47,9 +47,9 @@ def GetAnimationData( category=None, getExternalData=False ):
 		
 	return animationData
 		
-class NumListValidator(wx.PyValidator):
+class NumListValidator(wx.Validator):
     def __init__(self, pyVar=None):
-        wx.PyValidator.__init__(self)
+        wx.Validator.__init__(self)
         self.Bind(wx.EVT_CHAR, self.OnChar)
 
     def Clone(self):
@@ -142,7 +142,7 @@ class RaceAnimation( wx.Panel ):
 		self.watchText = wx.StaticText( self, label = _('Highlight Numbers') + u':' )
 		hs.Add( self.watchText, 0, flag=wx.ALIGN_CENTER|wx.ALL, border = 2 )
 		
-		self.watch = wx.TextCtrl( self, validator=NumListValidator(), style=wx.PROCESS_ENTER )
+		self.watch = wx.TextCtrl( self, validator=NumListValidator(), style=wx.TE_PROCESS_ENTER )
 		self.watch.Bind( wx.EVT_TEXT_ENTER, self.onUpdateWatch )
 		hs.Add( self.watch, 1, flag = wx.GROW|wx.ALL, border = 2 )
 		

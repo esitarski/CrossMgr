@@ -20,7 +20,7 @@ def GetPen( colour=wx.BLACK, cap=wx.CAP_ROUND, join=wx.JOIN_ROUND, width=1 ):
 	pen.SetJoin( join )
 	return pen
 
-class CountdownClock(wx.PyControl):
+class CountdownClock(wx.Control):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
 				name="CountdownClock", tFuture = None ):
@@ -36,13 +36,13 @@ class CountdownClock(wx.PyControl):
 		@param name: Window name.
 		"""
 
-		# Ok, let's see why we have used wx.PyControl instead of wx.Control.
-		# Basically, wx.PyControl is just like its wxWidgets counterparts
+		# Ok, let's see why we have used wx.Control instead of wx.Control.
+		# Basically, wx.Control is just like its wxWidgets counterparts
 		# except that it allows some of the more common C++ virtual method
 		# to be overridden in Python derived class. For StatusBar, we
 		# basically need to override DoGetBestSize and AcceptsFocusFromKeyboard
 		
-		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
+		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
 		
 		self.timer = wx.Timer( self )
 		self.Bind( wx.EVT_TIMER, self.onTimer )
@@ -64,11 +64,11 @@ class CountdownClock(wx.PyControl):
 		return wx.Size(100, 100) if self.initialSize is wx.DefaultSize else self.initialSize
 
 	def SetForegroundColour(self, colour):
-		wx.PyControl.SetForegroundColour(self, colour)
+		wx.Control.SetForegroundColour(self, colour)
 		self.Refresh()
 
 	def SetBackgroundColour(self, colour):
-		wx.PyControl.SetBackgroundColour(self, colour)
+		wx.Control.SetBackgroundColour(self, colour)
 		self.Refresh()
 		
 	def GetDefaultAttributes(self):
@@ -128,7 +128,7 @@ class CountdownClock(wx.PyControl):
 		dc.SetBackground(backBrush)
 		dc.Clear()
 		
-		ctx = wx.GraphicsContext_Create(dc)
+		ctx = wx.GraphicsContext.Create(dc)
 		
 		rOutside = radius * 0.98
 		rOutTicks = rOutside
@@ -216,7 +216,7 @@ class CountdownClock(wx.PyControl):
 		second = tt % 60
 		
 		ctx.SetFont( ctx.CreateFont(
-			wx.FontFromPixelSize(
+			wx.Font(
 				(0,radius*0.37),
 				wx.FONTFAMILY_SWISS,
 				wx.FONTSTYLE_NORMAL,

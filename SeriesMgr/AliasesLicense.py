@@ -37,7 +37,7 @@ class AliasesLicense(wx.Panel):
 		)
 		
 		self.explain = wx.StaticText( self, label=text )
-		self.explain.SetFont( wx.FontFromPixelSize((0,15), wx.SWISS, wx.NORMAL, wx.NORMAL, False) )
+		self.explain.SetFont( wx.Font((0,15), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False) )
 		
 		self.addButton = wx.Button( self, label=u'Add Reference License' )
 		self.addButton.Bind( wx.EVT_BUTTON, self.onAddButton )

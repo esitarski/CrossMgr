@@ -181,7 +181,7 @@ def DBWriter( q, fps=25 ):
 		if v[0] == 'photo':
 			if not db.isDup( v[1] ):
 				outStream = StringIO.StringIO()
-				v[2].SaveStream( outStream, wx.BITMAP_TYPE_JPEG )
+				v[2].SaveFile( outStream, wx.BITMAP_TYPE_JPEG )
 				tsJpgs.append( (v[1], sqlite3.Binary(outStream.getvalue())) )
 		elif v[0] == 'trigger':
 			tsTriggers.append( (list(v[1:]) + [u''] * 6)[:7] )

@@ -172,7 +172,8 @@ class MainWin( wx.Frame ):
 
 		self.config = wx.Config(appName="CrossMgrAlien",
 						vendorName="SmartCyclingSolutions",
-						style=wx.CONFIG_USE_LOCAL_FILE)
+						#style=wx.CONFIG_USE_LOCAL_FILE
+		)
 						
 		self.SetBackgroundColour( wx.Colour(232,232,232) )
 		
@@ -196,7 +197,7 @@ class MainWin( wx.Frame ):
 		bs.Add( self.reset, border = 8, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
 		bs.Add( setFont(italicFont,wx.StaticText(self, wx.ID_ANY, 'CrossMgrAlien')), border = 8, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
 		bs.AddStretchSpacer()
-		bitmap = wx.BitmapFromXPMData( clipboard_xpm )
+		bitmap = wx.Bitmap( clipboard_xpm )
 		self.copyToClipboard = wx.BitmapButton( self, wx.ID_ANY, bitmap )
 		self.copyToClipboard.SetToolTip(wx.ToolTip('Copy Configuration and Logs to Clipboard...'))
 		self.copyToClipboard.Bind( wx.EVT_BUTTON, self.doCopyToClipboard )

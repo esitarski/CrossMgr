@@ -426,7 +426,7 @@ class StatusChangeDialog( wx.Dialog ):
 		wx.Dialog.__init__( self, parent, id, title,
 						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
 						
-		font = wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
+		font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
 		
 		self.message = wx.StaticText( self, label=message )
 		self.message.SetFont( font )

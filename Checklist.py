@@ -1,6 +1,6 @@
 
 import wx
-import wx.gizmos
+import wx.dataview
 import io
 import os
 import rsonlite
@@ -155,16 +155,16 @@ class Checklist( wx.Panel ):
 		self.xImage = il.Add(wx.Bitmap(os.path.join(Utils.getImageFolder(), 'x-icon.png'), wx.BITMAP_TYPE_PNG))
 		
 		self.SetBackgroundColour( wx.Colour(255,255,255) )
-		self.tree = wx.gizmos.TreeListCtrl( self,
+		self.tree = wx.dataview.TreeListCtrl( self,
 							style = wx.TR_HIDE_ROOT | wx.TR_HAS_BUTTONS |
 									wx.TR_NO_LINES | wx.TR_ROW_LINES )
 		self.tree.SetImageList( il )
-		self.tree.SetFont( wx.FontFromPixelSize( wx.Size(0,16), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
+		self.tree.SetFont( wx.Font( wx.Size(0,16), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		self.imageList = il
 		
-		self.tree.AddColumn( _('Task (right click to change)') )
-		self.tree.AddColumn( _('Note') )
-		self.tree.SetMainColumn( 0 )
+		self.tree.AppendColumn( _('Task (right click to change)') )
+		self.tree.AppendColumn( _('Note') )
+		self.tree.SetSortColumn( 0 )
 		self.tree.SetColumnWidth( 0, 450 )
 		self.tree.SetColumnWidth( 1, 450 )
 		
@@ -214,25 +214,25 @@ class Checklist( wx.Panel ):
 
 	def onTreeItemCollapsed( self, event ):
 		treeNode = event.GetItem()
-		task = self.tree.GetPyData( treeNode )
+		task = self.tree.GetItemData( treeNode )
 		task.expand = False
 		self.setChanged()
 
 	def onTreeItemExpanded( self, event ):
 		treeNode = event.GetItem()
-		task = self.tree.GetPyData( treeNode )
+		task = self.tree.GetItemData( treeNode )
 		task.expand = True
 		self.setChanged()
 
 	def updateStatus( self, treeNode ):
-		task = self.tree.GetPyData( treeNode )
-		if self.tree.GetFirstChild(treeNode)[0].IsOk():
+		task = self.tree.GetItemData( treeNode )
+		if self.tree.GetFirstChild(treeNode).IsOk():
 			img = [self.uncheckedImage, self.partialCheckedImage, self.checkmarkImage][task.status]
 		else:
 			img = [self.xImage, self.partialCheckedImage, self.checkedImage][task.status]
 		self.tree.SetItemImage( treeNode, img, wx.TreeItemIcon_Normal )
 		self.tree.SetItemImage( treeNode, img, wx.TreeItemIcon_Expanded )
-		child = self.tree.GetFirstChild( treeNode )[0]
+		child = self.tree.GetFirstChild( treeNode )
 		while child.IsOk():
 			self.updateStatus( child )
 			child = self.tree.GetNextSibling( child )
@@ -243,7 +243,7 @@ class Checklist( wx.Panel ):
 		if self.tree.GetFirstChild(treeNode)[0].IsOk():
 			return
 			
-		task = self.tree.GetPyData( treeNode )
+		task = self.tree.GetItemData( treeNode )
 		task.status = task.NotDone if task.status else task.Done
 		
 		# Propagate the update child status to the parent.
@@ -256,7 +256,7 @@ class Checklist( wx.Panel ):
 			someChildrenDone = False
 			childNode = self.tree.GetFirstChild( parentNode )[0]
 			while childNode.IsOk():
-				childTask = self.tree.GetPyData( childNode )
+				childTask = self.tree.GetItemData( childNode )
 				if childTask.status == childTask.Done:
 					someChildrenDone = True
 				else:
@@ -264,7 +264,7 @@ class Checklist( wx.Panel ):
 				childNode = self.tree.GetNextSibling( childNode )
 				
 			# Check if the parent has the correct status.
-			parentTask = self.tree.GetPyData( parentNode )
+			parentTask = self.tree.GetItemData( parentNode )
 			if allChildrenDone:			# All children done.
 				if parentTask.status == parentTask.Done:
 					break
@@ -284,26 +284,26 @@ class Checklist( wx.Panel ):
 		self.setChanged()
 		
 	def expandTree( self, treeNode ):
-		child, cookie = self.tree.GetFirstChild( treeNode )
+		child = self.tree.GetFirstChild( treeNode )
 		while child.IsOk():
 			self.expandTree( child )
 			child = self.tree.GetNextSibling( child )
-		task = self.tree.GetPyData( treeNode )
+		task = self.tree.GetItemData( treeNode )
 		if task.expand:
 			self.tree.Expand( treeNode )
 
 	def addChildren( self, treeNode ):
-		task = self.tree.GetPyData( treeNode )
+		task = self.tree.GetItemData( treeNode )
 		for t in task.subtasks:
 			if t.meetsRequirements():
 				child = self.tree.AppendItem(	treeNode,
 												t.title,
-												data = wx.TreeItemData(t) )
-				self.tree.SetItemText( child, t.note, 1 )
+												data = t )
+				self.tree.SetItemText( child, 1, t.note )
 				self.addChildren( child )
 
 	def doCollapseAll( self, treeNode ):
-		child, cookie = self.tree.GetFirstChild( treeNode )
+		child = self.tree.GetFirstChild( treeNode )
 		while child.IsOk():
 			self.doCollapseAll( child )
 			child = self.tree.GetNextSibling( child )
@@ -312,7 +312,8 @@ class Checklist( wx.Panel ):
 	def refresh( self ):
 		self.updateChecklist()
 		self.tree.DeleteAllItems()
-		root = self.tree.AddRoot( 'root', data = wx.TreeItemData(self.checklist) )
+		root = self.tree.GetRootItem()
+		self.tree.SetItemData( root, self.checklist )
 		self.addChildren( root )
 		self.doCollapseAll( root )
 		self.updateStatus( root )

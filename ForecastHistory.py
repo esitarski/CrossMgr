@@ -94,7 +94,7 @@ colnames[iWaveCol] = _('Wave')
 fontSize = 11
 
 def GetLabelGrid( parent, bigFont=False ):
-	font = wx.Font( fontSize + (fontSize//3 if bigFont else 0), wx.DEFAULT, wx.NORMAL, wx.NORMAL )
+	font = wx.Font( fontSize + (fontSize//3 if bigFont else 0), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 	dc = wx.WindowDC( parent )
 	dc.SetFont( font )
 	w, h = dc.GetTextExtent( '999' )

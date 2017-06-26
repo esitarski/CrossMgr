@@ -13,7 +13,7 @@ def makeColourGradient(frequency1, frequency2, frequency3,
                         phase1, phase2, phase3,
                         center = 128, width = 127, len = 50 ):
 	fp = [(frequency1,phase1), (frequency2,phase2), (frequency3,phase3)]	
-	grad = [wx.Colour(*[math.sin(f*i + p) * width + center for f, p in fp]) for i in xrange(len+1)]
+	grad = [wx.Colour(*[int(math.sin(f*i + p) * width + center) for f, p in fp]) for i in xrange(len+1)]
 	return grad[1:]
 	
 def makePastelColours( len = 50 ):
@@ -38,12 +38,12 @@ def numFromLabel( s ):
 	except Exception as e:
 		return None
 	
-class GanttChartPanel(wx.PyPanel):
+class GanttChartPanel(wx.Panel):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER,
 				name="GanttChartPanel" ):
 		
-		wx.PyPanel.__init__(self, parent, id, pos, size, style, name)
+		wx.Panel.__init__(self, parent, id, pos, size, style, name)
 		
 		self.SetBackgroundColour(wx.WHITE)
 		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )
@@ -114,11 +114,11 @@ class GanttChartPanel(wx.PyPanel):
 		return wx.Size(128, 100)
 
 	def SetForegroundColour(self, colour):
-		wx.PyPanel.SetForegroundColour(self, colour)
+		wx.Panel.SetForegroundColour(self, colour)
 		self.Refresh()
 		
 	def SetBackgroundColour(self, colour):
-		wx.PyPanel.SetBackgroundColour(self, colour)
+		wx.Panel.SetBackgroundColour(self, colour)
 		self.Refresh()
 		
 	def GetDefaultAttributes(self):
@@ -301,7 +301,7 @@ class GanttChartPanel(wx.PyPanel):
 		barHeight = int(float(height) / float(len(self.data) + 2))
 		barHeight = max( barHeight, minBarHeight )
 		barHeight = min( barHeight, maxBarHeight )
-		fontBarLabel = wx.FontFromPixelSize( wx.Size(0,int(min(barHeight-2, barHeight*0.9))), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		fontBarLabel = wx.Font( (0,int(min(barHeight-2, barHeight*0.9))), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		dc.SetFont( fontBarLabel )
 		textWidthLeftMax, textHeightMax = dc.GetTextExtent( maxBib )
 		
@@ -397,8 +397,8 @@ class GanttChartPanel(wx.PyPanel):
 			self.horizontalSB.SetPosition( (labelsWidthLeft, height) )
 			self.horizontalSB.SetSize( (xRight - xLeft, self.scrollbarWidth) )
 		
-		fontLegend = wx.FontFromPixelSize( wx.Size(0,barHeight*.75), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
-		fontNote = wx.FontFromPixelSize( wx.Size(0,barHeight*.8), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		fontLegend = wx.Font( (0,barHeight*.75), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		fontNote = wx.Font( (0,barHeight*.8), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 
 		dc.SetFont( fontLegend )
 		textWidth, textHeight = dc.GetTextExtent( u'00:00' if self.dataMax < 60*60 else u'00:00:00' )
@@ -448,7 +448,7 @@ class GanttChartPanel(wx.PyPanel):
 		brushBar = wx.Brush( wx.BLACK )
 		transparentBrush = wx.Brush( wx.WHITE, style = wx.TRANSPARENT )
 		
-		ctx = wx.GraphicsContext_Create(dc)
+		ctx = wx.GraphicsContext.Create(dc)
 		ctx.SetPen( wx.Pen(wx.BLACK, 1) )
 		
 		xyInterp = []
@@ -672,10 +672,10 @@ class GanttChartPanel(wx.PyPanel):
 		dc.SetBrush( wx.Brush(ntColour) )
 		dc.SetPen( wx.Pen(ntColour,1) )
 		rect = wx.Rect( x - labelWidth/2-2, 0, labelWidth+4, labelHeight )
-		dc.DrawRectangleRect( rect )
+		dc.DrawRectangle( rect )
 		if not self.minimizeLabels:
 			rect.SetY( yLast+2 )
-			dc.DrawRectangleRect( rect )
+			dc.DrawRectangle( rect )
 
 		dc.SetTextForeground( wx.WHITE )
 		dc.DrawText( nowTimeStr, x - labelWidth / 2, 0 )

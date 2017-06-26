@@ -9,20 +9,20 @@ srcPrefix = bytes("data:image/png;base64,")
 
 def toBufFromImage( image ):
 	stream = StringIO.StringIO()
-	image.SaveStream( stream, wx.BITMAP_TYPE_PNG )
+	image.SaveFile( stream, wx.BITMAP_TYPE_PNG )
 	return srcPrefix + base64.b64encode(stream.getvalue())
 
 def toBufFromBitmap( bitmap ):
-	return toBufFromImage( wx.ImageFromBitmap(bitmap) )
+	return toBufFromImage( wx.Image(bitmap) )
 
 def toBufFromFile( fname, type=wx.BITMAP_TYPE_ANY ):
 	return toBufFromImage( wx.Image(fname, type) )
 
 def toImageFromBuf( buf ):
-	return wx.ImageFromStream( StringIO.StringIO(base64.b64decode(buf[len(srcPrefix):])), wx.BITMAP_TYPE_PNG )
+	return wx.Image( StringIO.StringIO(base64.b64decode(buf[len(srcPrefix):])), wx.BITMAP_TYPE_PNG )
 
 def toBitmapFromBuf( buf ):
-	return wx.BitmapFromImage( toImageFromBuf(buf) )
+	return wx.Bitmap( toImageFromBuf(buf) )
 
 if __name__ == '__main__':
 	app = wx.App(False)

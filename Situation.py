@@ -161,7 +161,7 @@ def GetSituationGaps( category=None, t=None ):
 	
 	return gaps, tAfterLeader, title, tCur
 	
-class SituationPanel(wx.PyPanel):
+class SituationPanel(wx.Panel):
 	groupIndexColour = wx.Colour(0xFF, 0xCC, 0x99)
 	groupGapColour = wx.Colour(255,255,102)
 	groupSizeColour = wx.Colour(0x99, 0xCC, 0xFF)
@@ -169,7 +169,7 @@ class SituationPanel(wx.PyPanel):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER,
 				name="GanttChartPanel" ):
-		wx.PyPanel.__init__(self, parent, id, pos, size, style, name)
+		wx.Panel.__init__(self, parent, id, pos, size, style, name)
 		self.SetBackgroundColour(wx.WHITE)
 		
 		self.gaps = []
@@ -220,7 +220,7 @@ class SituationPanel(wx.PyPanel):
 		x = event.GetX()
 		y = event.GetY()
 		for i, (group, gRect) in enumerate(self.groupRectList):
-			if gRect.ContainsXY( x, y ):
+			if gRect.Contains( x, y ):
 				self.groupClickHandler( self, rect=gRect, groupIndex=i, groupInfo=self.groupFullData[i] )
 				return
 		
@@ -291,13 +291,13 @@ class SituationPanel(wx.PyPanel):
 		if fontHeight == 0:
 			return
 
-		font = wx.FontFromPixelSize( wx.Size(0,fontHeight), wx.DEFAULT, wx.NORMAL, wx.NORMAL )
+		font = wx.Font( wx.Size(0,fontHeight), wx.DEFAULT, wx.NORMAL, wx.NORMAL )
 		dc.SetFont( font )
 		spaceWidth, fontHeight = dc.GetTextExtent( u'0 0' )
 		spaceWidth = fontHeight / 2
 		
 		smallFontHeight = fontHeight * 0.75
-		smallFont = wx.FontFromPixelSize( wx.Size(0,smallFontHeight), wx.DEFAULT, wx.NORMAL, wx.NORMAL )
+		smallFont = wx.Font( wx.Size(0,smallFontHeight), wx.DEFAULT, wx.NORMAL, wx.NORMAL )
 		dc.SetFont( smallFont )
 		smallFontHeight = dc.GetTextExtent( u'0 0' )[1]
 
@@ -636,7 +636,7 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 		with Model.LockRace() as race:
 			if not race:
 				self.list.ClearAll()
-				self.list.DeleteAllColumns()
+				self.list.DeleteAllItems()
 				return
 				
 			try:
@@ -648,7 +648,7 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 		
 		self.Show( False )
 		self.list.ClearAll()
-		self.list.DeleteAllColumns()
+		self.list.DeleteAllItems()
 		
 		# Get the bibs and laps down.
 		nums = []
@@ -702,9 +702,9 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 		
 		# Populate the list.
 		for row, d in enumerate(data):
-			index = self.list.InsertImageStringItem(sys.maxint, u'{}'.format(d[0]), self.sm_rt)
+			index = self.list.InsertItem(sys.maxint, u'{}'.format(d[0]), self.sm_rt)
 			for i, v in enumerate(itertools.islice(d, 1, len(d))):
-				self.list.SetStringItem( index, i+1, unicode(v) )
+				self.list.SetItem( index, i+1, unicode(v) )
 			self.list.SetItemData( row, d[0] )		# This key links to the sort fields used by ColumnSorterMixin
 		
 		# Set the sort fields and configure the sorter mixin.

@@ -2,7 +2,7 @@ import requests
 import datetime
 import os
 import wx
-import wx.gizmos as gizmos
+import wx.dataview as dataview
 import Utils
 import Model
 from ReadSignOnSheet	import ExcelLink
@@ -60,7 +60,7 @@ class RaceDB( wx.Dialog ):
 		super(RaceDB, self).__init__(parent, id, style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME, size=size, title=_('Open RaceDB Event'))
 		
 		fontPixels = 20
-		font = wx.FontFromPixelSize(wx.Size(0,fontPixels), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
+		font = wx.Font(wx.Size(0,fontPixels), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
 		
 		explain = wx.StaticText( self, label=(u'{}:').format(
 			_('Drag and Drop any RaceDB URL from the browser.\n\nDrag the small icon just to the left of the URL\non the browser page to the RaceDB logo below') ) )
@@ -96,7 +96,7 @@ class RaceDB( wx.Dialog ):
 		vsHeader.Add( raceDBLogo, flag=wx.ALIGN_CENTRE )
 		vsHeader.Add( fgs, 1, flag=wx.EXPAND )
 		
-		self.tree = gizmos.TreeListCtrl( self, style=wx.TR_DEFAULT_STYLE|wx.TR_FULL_ROW_HIGHLIGHT|wx.TR_ROW_LINES )
+		self.tree = dataview.TreeListCtrl( self, style=wx.TR_DEFAULT_STYLE|wx.TR_FULL_ROW_HIGHLIGHT|wx.TR_ROW_LINES )
 		self.tree.Bind( wx.EVT_TREE_ITEM_ACTIVATED, self.onEventSelect )
 		
 		isz = (16,16)
@@ -319,13 +319,13 @@ class RaceDBUpload( wx.Dialog ):
 		super(RaceDBUpload, self).__init__(parent, id, style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME, size=size, title=_('Upload Results to RaceDB'))
 		
 		fontPixels = 20
-		font = wx.FontFromPixelSize(wx.Size(0,fontPixels), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
+		font = wx.Font(wx.Size(0,fontPixels), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
 		self.headerDefault = u'{}\n{}'.format(_('Upload'),u'')
 		self.header = wx.StaticText( self, label=self.headerDefault )
 		self.header.SetFont( font )
 		
 		fontPixels = 15
-		font = wx.FontFromPixelSize(wx.Size(0,fontPixels), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
+		font = wx.Font(wx.Size(0,fontPixels), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
 		explain = wx.StaticText( self, label=(u'{}:').format(
 			_('Drag and Drop any RaceDB URL from the browser.\n\nDrag the small icon just to the left of the URL\non the browser page to the RaceDB logo below') ) )
 		explain.SetFont( font )

@@ -15,7 +15,7 @@ from Undo import undo
 import Flags
 
 bitmapCache = {}
-class IOCCodeRenderer(wx.grid.PyGridCellRenderer):
+class IOCCodeRenderer(wx.grid.GridCellRenderer):
 	def __init__(self):
 		super( IOCCodeRenderer, self ).__init__()
 
@@ -131,8 +131,7 @@ class Results( wx.Panel ):
 		self.showRaceSpeedsRadio.SetToolTip(wx.ToolTip(_("Useful to predict how long a race will take based on rider's average speed.")))
 		
 		f = self.showLapTimesRadio.GetFont()
-		self.boldFont = wx.Font( f.GetPointSize()+2, f.GetFamily(), f.GetStyle(),
-								wx.FONTWEIGHT_BOLD, f.GetUnderlined(), face=f.GetFaceName(), encoding=f.GetEncoding() )
+		self.boldFont = wx.Font( f.GetPointSize()+2, f.GetFamily(), f.GetStyle(), wx.FONTWEIGHT_BOLD, f.GetUnderlined() )
 		
 		self.search = wx.SearchCtrl(self, size=(80,-1), style=wx.TE_PROCESS_ENTER )
 		# self.search.ShowCancelButton( True )

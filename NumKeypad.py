@@ -38,7 +38,7 @@ class Keypad( wx.Panel ):
 		self.controller = controller
 		
 		fontPixels = 43
-		font = wx.FontFromPixelSize(wx.Size(0,fontPixels), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
+		font = wx.Font(wx.Size(0,fontPixels), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
 		dc = wx.WindowDC( self )
 		dc.SetFont( font )
 		wNum, hNum = dc.GetTextExtent( '999' )
@@ -97,7 +97,7 @@ class Keypad( wx.Panel ):
 		self.keypadPanel.Show( self.showTouchScreen )
 		vsizer.Add( self.keypadPanel, flag=wx.TOP, border=4 )
 			
-		font = wx.FontFromPixelSize(wx.Size(0,int(fontPixels*.6)), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
+		font = wx.Font((0,int(fontPixels*.6)), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
 		
 		hbs = wx.GridSizer( 2, 2, 4, 4 )
 		for label, actionFn in [(_('DN&F'),DoDNF), (_('DN&S'),DoDNS), (_('&Pull'),DoPull), (_('D&Q'),DoDQ)]:
@@ -230,7 +230,7 @@ class NumKeypad( wx.Panel ):
 		self.refreshInputUpdateNonBusy = NonBusyCall( self.refreshInputUpdate, min_millis=1000, max_millis=3000 )
 		
 		fontPixels = 50
-		font = wx.FontFromPixelSize(wx.Size(0,fontPixels), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
+		font = wx.Font((0,fontPixels), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
 
 		verticalMainSizer = wx.BoxSizer( wx.VERTICAL )
 		horizontalMainSizer = wx.BoxSizer( wx.HORIZONTAL )
@@ -281,8 +281,8 @@ class NumKeypad( wx.Panel ):
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
 		fontSize = 14
-		font = wx.Font(fontSize, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
-		fontBold = wx.Font(fontSize, wx.DEFAULT, wx.NORMAL, wx.BOLD)
+		font = wx.Font(fontSize, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
+		fontBold = wx.Font(fontSize, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
 
 		rowCur = 0
 		colCur = 0
@@ -613,9 +613,9 @@ class NumKeypad( wx.Panel ):
 		catLapList.sort( key=lambda x: (x[0].getStartOffsetSecs(), x[0].fullname, -x[1]) )
 		
 		def appendListRow( row = tuple(), colour = None, bold = None ):
-			r = self.lapCountList.InsertStringItem( sys.maxint, u'{}'.format(row[0]) if row else '' )
+			r = self.lapCountList.InsertItem( sys.maxint, u'{}'.format(row[0]) if row else u'' )
 			for c in xrange(1, len(row)):
-				self.lapCountList.SetStringItem( r, c, u'{}'.format(row[c]) )
+				self.lapCountList.SetItem( r, c, u'{}'.format(row[c]) )
 			if colour is not None:
 				item = self.lapCountList.GetItem( r )
 				item.SetTextColour( colour )

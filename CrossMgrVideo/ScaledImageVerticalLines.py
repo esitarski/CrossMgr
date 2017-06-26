@@ -98,11 +98,11 @@ class ScaledImageVerticalLines( wx.Panel ):
 			else:
 				self.verticalLines = [None if v is None else (v / self.ratio) for v in self.verticalLines]
 		
-		width, height = self.GetSizeTuple()
+		width, height = self.GetSize()
 		self.controlHeight = 32
 		bitmapHeight = height - self.controlHeight
 		try:
-			bitmap = wx.BitmapFromImage( self.rescaleImage(width, bitmapHeight) )
+			bitmap = wx.Bitmap( self.rescaleImage(width, bitmapHeight) )
 		except Exception as e:
 			print e
 			return
@@ -124,7 +124,7 @@ class ScaledImageVerticalLines( wx.Panel ):
 	
 	def SetImage( self, image ):
 		self.image = image
-		width, height = self.GetSizeTuple()
+		width, height = self.GetSize()
 		dx = width / (len(self.verticalLines) + 1)
 		self.verticalLines = [int(dx*(i+1)) for i in xrange(len(self.verticalLines))]
 		self.doResize = False
@@ -147,7 +147,7 @@ class ScaledImageVerticalLines( wx.Panel ):
 		
 	def SetTestImage( self ):
 		width, height = self.GetSize()
-		bitmap = wx.EmptyBitmap( width, height )
+		bitmap = wx.Bitmap( width, height )
 		dc = wx.MemoryDC()
 		dc.SelectObject( bitmap )
 		

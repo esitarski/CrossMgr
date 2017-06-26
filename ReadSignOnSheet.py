@@ -1,9 +1,9 @@
 from __future__ import print_function
 
 import wx
+import wx.adv as adv
 import wx.lib.filebrowsebutton as filebrowse
 import wx.lib.scrolledpanel as scrolled
-import wx.wizard as wiz
 import os
 import re
 import sys
@@ -44,9 +44,9 @@ NumericFields = ['Age','Factor']
 ReportFields = [f for f in Fields if f not in IgnoreFields]
 ReportFields = (lambda s: [f for f in Fields if f not in s])(set(IgnoreFields))
 
-class FileNamePage(wiz.WizardPageSimple):
+class FileNamePage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		wiz.WizardPageSimple.__init__(self, parent)
+		adv.WizardPageSimple.__init__(self, parent)
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
@@ -71,9 +71,9 @@ class FileNamePage(wiz.WizardPageSimple):
 	def getFileName( self ):
 		return self.fbb.GetValue()
 	
-class SheetNamePage(wiz.WizardPageSimple):
+class SheetNamePage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		wiz.WizardPageSimple.__init__(self, parent)
+		adv.WizardPageSimple.__init__(self, parent)
 		self.choices = []
 		self.expectedSheetName = None
 		
@@ -183,9 +183,9 @@ def getDefaultFieldMap( fileName, sheetName, expectedFieldCol = None ):
 		
 	return headers, fieldCol
 
-class HeaderNamesPage(wiz.WizardPageSimple):
+class HeaderNamesPage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		wiz.WizardPageSimple.__init__(self, parent)
+		adv.WizardPageSimple.__init__(self, parent)
 
 		self.expectedFieldCol = None
 		
@@ -279,9 +279,9 @@ class HeaderNamesPage(wiz.WizardPageSimple):
 		fieldCol = self.getFieldCol()
 		return any( fieldCol.get(tf,-1) >= 0 for tf in TagFields )
 			
-class SummaryPage(wiz.WizardPageSimple):
+class SummaryPage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		wiz.WizardPageSimple.__init__(self, parent)
+		adv.WizardPageSimple.__init__(self, parent)
 		
 		self.errors = []
 		
@@ -410,12 +410,11 @@ class GetExcelLink( object ):
 		img_filename = os.path.join( Utils.getImageFolder(), '20100718-Excel_icon.png' )
 		img = wx.Bitmap(img_filename) if img_filename and os.path.exists(img_filename) else wx.NullBitmap
 		
-		prewizard = wiz.PreWizard()
-		prewizard.SetExtraStyle( wiz.WIZARD_EX_HELPBUTTON )
-		prewizard.Create( parent, wx.ID_ANY, _('Define Excel Link'), img )
-		self.wizard = prewizard
-		self.wizard.Bind( wiz.EVT_WIZARD_PAGE_CHANGING, self.onPageChanging )
-		self.wizard.Bind( wiz.EVT_WIZARD_HELP,
+		self.wizard = adv.Wizard()
+		self.wizard.SetExtraStyle( adv.WIZARD_EX_HELPBUTTON )
+		self.wizard.Create( parent, wx.ID_ANY, _('Define Excel Link'), img )
+		self.wizard.Bind( adv.EVT_WIZARD_PAGE_CHANGING, self.onPageChanging )
+		self.wizard.Bind( adv.EVT_WIZARD_HELP,
 			lambda evt: HelpSearch.showHelp('Menu-DataMgmt.html#link-to-external-excel-data') )
 		
 		self.fileNamePage = FileNamePage( self.wizard )
@@ -423,9 +422,9 @@ class GetExcelLink( object ):
 		self.headerNamesPage = HeaderNamesPage( self.wizard )
 		self.summaryPage = SummaryPage( self.wizard )
 		
-		wiz.WizardPageSimple_Chain( self.fileNamePage, self.sheetNamePage )
-		wiz.WizardPageSimple_Chain( self.sheetNamePage, self.headerNamesPage )
-		wiz.WizardPageSimple_Chain( self.headerNamesPage, self.summaryPage )
+		adv.WizardPageSimple_Chain( self.fileNamePage, self.sheetNamePage )
+		adv.WizardPageSimple_Chain( self.sheetNamePage, self.headerNamesPage )
+		adv.WizardPageSimple_Chain( self.headerNamesPage, self.summaryPage )
 		
 		self.excelLink = excelLink
 		if excelLink:
