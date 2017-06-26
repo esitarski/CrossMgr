@@ -24,6 +24,8 @@ class CategorySequence(wx.Panel):
 
 		self.explanation = wx.StaticText( self, label=u'\n'.join( [
 				_("Change the Category order by dragging-and-dropping the first grey column in the table."),
+				_("If 'Use Nth Result Only' is True, 'Team N' specifies the top Nth rider's time to use for the team's time (eg. Team TT, scored on 3rd rider's result)"),
+				_("If 'Use Nth Result Only' if False, 'Team N' specifies the top riders' times to be totaled for the team result (eg. Team Stage Finish, scored on sum of top 3 results for each team)."),
 			] )
 		)
 		

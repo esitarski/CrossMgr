@@ -63,7 +63,7 @@ class Points(wx.Panel):
 		wx.Panel.__init__(self, parent)
 
 		#--------------------------------------------------------------------------
-		box = wx.StaticBox( self, -1, 'Score Competitors by' )
+		box = wx.StaticBox( self, label='Score Competitors and Teams by' )
 		bsizer = wx.StaticBoxSizer( box, wx.VERTICAL )
 		
 		self.scoreByPoints = wx.RadioButton( self, label='Points', style=wx.RB_GROUP )

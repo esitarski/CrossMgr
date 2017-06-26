@@ -59,8 +59,8 @@ def formatTeamResults( scoreByPoints, rt ):
 		total = sum( r.time for r in rt )
 		if len(rt) == 1:
 			r = rt[0]
-			return u'{}({})'.format(Utils.formatTime(r.time), Utils.ordinal(r.rank))
-		return u'{} = {}'.format(Utils.formatTime(total), ' + '.join( u'{}({})'.format(Utils.formatTime(r.time), Utils.ordinal(r.rank)) for r in rt) )
+			return u'{}'.format(Utils.formatTime(r.time))
+		return u'{} = {}'.format(Utils.formatTime(total), '+'.join( u'{}'.format(Utils.formatTime(r.time)) for r in rt) )
 		
 
 def getHtmlFileName():
