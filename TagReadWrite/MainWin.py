@@ -363,6 +363,8 @@ class MainWin( wx.Frame ):
 	def onWriteButton( self, event ):
 		if not self.tagWriter:
 			Utils.MessageOK( self, 'Reader not connected.\n\nSet reader connection parameters and press "Reset Connection".', 'Reader Not Connected' )
+			return
+		
 		busy = wx.BusyCursor()
 		wx.CallAfter( self.writeOptions )
 		
@@ -383,6 +385,8 @@ class MainWin( wx.Frame ):
 		if not self.tagWriter:
 			Utils.MessageOK( self,  u'Reader not connected.\n\nSet reader connection parameters and press "Reset Connection".',
 									u'Reader Not Connected' )
+			return
+		
 		busy = wx.BusyCursor()
 			
 		wx.CallAfter( self.writeOptions )
