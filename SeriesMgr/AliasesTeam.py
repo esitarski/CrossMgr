@@ -4,17 +4,8 @@ import os
 import sys
 import SeriesModel
 import Utils
+from Aliases import getText
 
-def getText(parent, message=u'', defaultValue=u'', pos=wx.DefaultPosition):
-	dlg = wx.TextEntryDialog(parent, message, value=defaultValue, pos=pos)
-	ret = dlg.ShowModal()
-	if ret == wx.ID_OK:
-		result = dlg.GetValue()
-	else:
-		result = None
-	dlg.Destroy()
-	return result
-	
 class AliasesTeam(wx.Panel):
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent)

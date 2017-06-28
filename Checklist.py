@@ -145,24 +145,12 @@ class Checklist( wx.Panel ):
 		wx.Panel.__init__(self, parent, id, style = style)
 		
 		self.Bind( wx.EVT_SIZE, self.onSize )
-		
-		isz = (16,16)
-		il = wx.ImageList( *isz )
-		self.checkedImage = il.Add(wx.Bitmap(os.path.join(Utils.getImageFolder(), 'ok-icon.png'), wx.BITMAP_TYPE_PNG))
-		self.checkmarkImage = il.Add(wx.Bitmap(os.path.join(Utils.getImageFolder(), 'checkmark-icon.png'), wx.BITMAP_TYPE_PNG))
-		self.uncheckedImage = il.Add(wx.Bitmap(os.path.join(Utils.getImageFolder(), 'checkbox_no.png'), wx.BITMAP_TYPE_PNG))
-		self.partialCheckedImage = il.Add(wx.Bitmap(os.path.join(Utils.getImageFolder(), 'checkbox_partial.png'), wx.BITMAP_TYPE_PNG))
-		self.xImage = il.Add(wx.Bitmap(os.path.join(Utils.getImageFolder(), 'x-icon.png'), wx.BITMAP_TYPE_PNG))
-		
+				
 		self.SetBackgroundColour( wx.Colour(255,255,255) )
-		self.tree = wx.dataview.TreeListCtrl( self,
-							style = wx.TR_HIDE_ROOT | wx.TR_HAS_BUTTONS |
-									wx.TR_NO_LINES | wx.TR_ROW_LINES )
-		self.tree.SetImageList( il )
+		self.tree = wx.dataview.TreeListCtrl( self, style = wx.TR_HAS_BUTTONS | wx.dataview.TL_3STATE )
 		self.tree.SetFont( wx.Font( (0,16), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
-		self.imageList = il
 		
-		self.tree.AppendColumn( _('Task (right click to change)') )
+		self.tree.AppendColumn( _('Task') )
 		self.tree.AppendColumn( _('Note') )
 		self.tree.SetSortColumn( 0 )
 		self.tree.SetColumnWidth( 0, 450 )
@@ -171,7 +159,6 @@ class Checklist( wx.Panel ):
 		self.tree.Bind( wx.EVT_TREE_ITEM_COLLAPSED, self.onTreeItemCollapsed )
 		self.tree.Bind( wx.EVT_TREE_ITEM_EXPANDED, self.onTreeItemExpanded )
 		self.tree.Bind( wx.EVT_TREE_ITEM_ACTIVATED, self.onTreeItemActivated )
-		self.tree.Bind( wx.EVT_TREE_ITEM_RIGHT_CLICK, self.onTreeItemActivated )
 		
 		self.checklist = None
 		self.refresh()
@@ -226,12 +213,8 @@ class Checklist( wx.Panel ):
 
 	def updateStatus( self, treeNode ):
 		task = self.tree.GetItemData( treeNode )
-		if self.tree.GetFirstChild(treeNode).IsOk():
-			img = [self.uncheckedImage, self.partialCheckedImage, self.checkmarkImage][task.status]
-		else:
-			img = [self.xImage, self.partialCheckedImage, self.checkedImage][task.status]
-		self.tree.SetItemImage( treeNode, img, wx.TreeItemIcon_Normal )
-		self.tree.SetItemImage( treeNode, img, wx.TreeItemIcon_Expanded )
+		state = [wx.CHK_UNCHECKED, wx.CHK_UNDETERMINED, wx.CHK_CHECKED][task.status]
+		self.tree.CheckItem( treeNode, state )
 		child = self.tree.GetFirstChild( treeNode )
 		while child.IsOk():
 			self.updateStatus( child )
@@ -296,9 +279,7 @@ class Checklist( wx.Panel ):
 		task = self.tree.GetItemData( treeNode )
 		for t in task.subtasks:
 			if t.meetsRequirements():
-				child = self.tree.AppendItem(	treeNode,
-												t.title,
-												data = t )
+				child = self.tree.AppendItem( treeNode, t.title, data = t )
 				self.tree.SetItemText( child, 1, t.note )
 				self.addChildren( child )
 
