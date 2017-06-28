@@ -1,5 +1,6 @@
 import wx
 from wx.lib.wordwrap import wordwrap
+import wx.adv as adv
 import sys
 import os
 import re
@@ -62,7 +63,7 @@ def ShowSplashScreen():
 	dc.SelectObject( wx.NullBitmap )
 	
 	showSeconds = 2.5
-	frame = wx.SplashScreen(bitmap, wx.SPLASH_CENTRE_ON_SCREEN|wx.SPLASH_TIMEOUT, int(showSeconds*1000), None)
+	frame = adv.SplashScreen(bitmap, wx.adv.SPLASH_CENTRE_ON_SCREEN|wx.adv.SPLASH_TIMEOUT, int(showSeconds*1000), None)
 
 #----------------------------------------------------------------------------------
 		
