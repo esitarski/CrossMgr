@@ -9,7 +9,7 @@ def normalizeText( text ):
 	return u', '.join( [t.strip() for t in text.split(',')][:2] )
 
 def getText(parent, message=u'', defaultValue=u'', pos=wx.DefaultPosition):
-	dlg = wx.TextEntryDialog(parent, message, defaultValue=defaultValue, pos=pos)
+	dlg = wx.TextEntryDialog(parent, message, value=defaultValue, pos=pos)
 	ret = dlg.ShowModal()
 	if ret == wx.ID_OK:
 		result = normalizeText( dlg.GetValue() )
