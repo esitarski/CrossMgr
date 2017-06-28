@@ -136,7 +136,7 @@ def ShowSplashScreen():
 	dc.SelectObject( wx.NullBitmap )
 	
 	showSeconds = 2.5
-	frame = wx.SplashScreen(bitmap, wx.SPLASH_CENTRE_ON_SCREEN|wx.SPLASH_TIMEOUT, int(showSeconds*1000), None)
+	frame = adv.SplashScreen(bitmap, adv.SPLASH_CENTRE_ON_SCREEN|adv.SPLASH_TIMEOUT, int(showSeconds*1000), None)
 			
 #----------------------------------------------------------------------------------
 

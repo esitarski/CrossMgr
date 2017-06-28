@@ -108,28 +108,13 @@ class RoundButtonEvent(wx.PyCommandEvent):
 		return self.theButton
 
 	
-class RoundButton(wx.PyControl):
+class RoundButton(wx.Control):
 	""" This is the main class implementation of L{RoundButton}. """
 	
 	def __init__(self, parent, id=wx.ID_ANY, label="", pos=wx.DefaultPosition,
 				 size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
 				 name="roundbutton"):
-		"""
-		Default class constructor.
-
-		:param `parent`: the L{RoundButton} parent;
-		:param `id`: window identifier. A value of -1 indicates a default value;
-		:param `label`: the button text label;
-		:param `pos`: the control position. A value of (-1, -1) indicates a default position,
-		 chosen by either the windowing system or wxPython, depending on platform;
-		:param `size`: the control size. A value of (-1, -1) indicates a default size,
-		 chosen by either the windowing system or wxPython, depending on platform;
-		:param `style`: the button style (unused);
-		:param `validator`: the validator associated to the button;
-		:param `name`: the button name.
-		"""
-		
-		wx.PyControl.__init__(self, parent, id, pos, size, style, validator, name)
+		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
 
 		self.Bind(wx.EVT_PAINT, self.OnPaint)
 		self.Bind(wx.EVT_ERASE_BACKGROUND, lambda event: None)
@@ -154,22 +139,11 @@ class RoundButton(wx.PyControl):
 		self.SetInitialSize(size)
 
 	def OnSize(self, event):
-		"""
-		Handles the ``wx.EVT_SIZE`` event for L{RoundButton}.
-
-		:param `event`: a `wx.SizeEvent` event to be processed.
-		"""
-		
 		event.Skip()
 		self.Refresh()
 
 		
 	def _containsEvent( self, event ):
-		"""
-		Checks that the event occured in the L{RoundButton} circle.
-
-		:param `event`: a `wx.MouseEvent` event.
-		"""
 		x, y, width, height = self.GetClientRect()
 		x += width // 2
 		y += height // 2
@@ -179,12 +153,6 @@ class RoundButton(wx.PyControl):
 		return dx * dx + dy * dy < self._buttonRadius * self._buttonRadius
 		
 	def OnLeftDown(self, event):
-		"""
-		Handles the ``wx.EVT_LEFT_DOWN`` event for L{RoundButton}.
-
-		:param `event`: a `wx.MouseEvent` event to be processed.
-		"""
-
 		if not self.IsEnabled() or not self._containsEvent(event):
 			return
 		
@@ -195,12 +163,6 @@ class RoundButton(wx.PyControl):
 
 
 	def OnLeftUp(self, event):
-		"""
-		Handles the ``wx.EVT_LEFT_UP`` event for L{RoundButton}.
-
-		:param `event`: a `wx.MouseEvent` event to be processed.
-		"""
-
 		if not self.IsEnabled() or not self.HasCapture():
 			return
 		
@@ -218,12 +180,6 @@ class RoundButton(wx.PyControl):
 
 
 	def OnMouseEnter(self, event):
-		"""
-		Handles the ``wx.EVT_ENTER_WINDOW`` event for L{RoundButton}.
-
-		:param `event`: a `wx.MouseEvent` event to be processed.
-		"""
-
 		if not self.IsEnabled():
 			return
 		
@@ -233,48 +189,24 @@ class RoundButton(wx.PyControl):
 
 
 	def OnMouseLeave(self, event):
-		"""
-		Handles the ``wx.EVT_LEAVE_WINDOW`` event for L{RoundButton}.
-
-		:param `event`: a `wx.MouseEvent` event to be processed.
-		"""
-
 		self._mouseAction = None
 		self.Refresh()
 		event.Skip()
 
 
 	def OnGainFocus(self, event):
-		"""
-		Handles the ``wx.EVT_SET_FOCUS`` event for L{RoundButton}.
-
-		:param `event`: a `wx.FocusEvent` event to be processed.
-		"""
-		
 		self._hasFocus = True
 		self.Refresh()
 		self.Update()
 
 
 	def OnLoseFocus(self, event):
-		"""
-		Handles the ``wx.EVT_KILL_FOCUS`` event for L{RoundButton}.
-
-		:param `event`: a `wx.FocusEvent` event to be processed.
-		"""
-
 		self._hasFocus = False
 		self.Refresh()
 		self.Update()
 
 
 	def OnKeyDown(self, event):
-		"""
-		Handles the ``wx.EVT_KEY_DOWN`` event for L{RoundButton}.
-
-		:param `event`: a `wx.KeyEvent` event to be processed.
-		"""
-		
 		if self._hasFocus and event.GetKeyCode() == ord(" "):
 			self._mouseAction = HOVER
 			self.Refresh()
@@ -282,12 +214,6 @@ class RoundButton(wx.PyControl):
 
 
 	def OnKeyUp(self, event):
-		"""
-		Handles the ``wx.EVT_KEY_UP`` event for L{RoundButton}.
-
-		:param `event`: a `wx.KeyEvent` event to be processed.
-		"""
-		
 		if self._hasFocus and event.GetKeyCode() == ord(" "):
 			self._mouseAction = HOVER
 			self.Notify()
@@ -296,60 +222,26 @@ class RoundButton(wx.PyControl):
 
 
 	def SetInitialSize(self, size=None):
-		"""
-		Given the current font and bezel width settings, calculate
-		and set a good size.
-
-		:param `size`: an instance of `wx.Size`.		
-		"""
-		
 		if size is None:
 			size = wx.DefaultSize			
-		wx.PyControl.SetInitialSize(self, size)
-
-	SetBestSize = SetInitialSize
+		wx.Control.SetInitialSize(self, size)
 	
+	SetBestSize = SetInitialSize
 
 	def AcceptsFocus(self):
-		"""
-		Can this window be given focus by mouse click?
-
-		:note: Overridden from `wx.PyControl`.
-		"""
-		
 		return self.IsShown() and self.IsEnabled()
 
 
 	def GetDefaultAttributes(self):
-		"""
-		Overridden base class virtual. By default we should use
-		the same font/colour attributes as the native `wx.Button`.
-		"""
-		
 		return wx.Button.GetClassDefaultAttributes()
 
 
 	def ShouldInheritColours(self):
-		"""
-		Overridden base class virtual. Buttons usually don't inherit
-		the parent's colours.
-
-		:note: Overridden from `wx.PyControl`.
-		"""
-		
 		return False
 	
 
 	def Enable(self, enable=True):
-		"""
-		Enables/disables the button.
-
-		:param `enable`: ``True`` to enable the button, ``False`` to disable it.
-		
-		:note: Overridden from `wx.PyControl`.
-		"""
-		
-		wx.PyControl.Enable(self, enable)
+		wx.Control.Enable(self, enable)
 		self.Refresh()
 
 
