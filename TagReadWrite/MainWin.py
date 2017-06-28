@@ -33,11 +33,11 @@ def toInt( s, d = 1 ):
 		n = d
 	return n
 
-class TemplateValidator(wx.PyValidator):
+class TemplateValidator(wx.Validator):
 	validChars = set( '0123456789ABCDEF#' )
 
 	def __init__( self ):
-		wx.PyValidator.__init__(self)
+		wx.Validator.__init__(self)
 		self.Bind(wx.EVT_CHAR, self.OnChar)
 
 	def Clone(self):
@@ -106,7 +106,7 @@ class MainWin( wx.Frame ):
 		
 		iRow = 0
 		
-		self.useHostName = wx.RadioButton( self, label = 'Host Name:', style=wx.wx.RB_GROUP )
+		self.useHostName = wx.RadioButton( self, label = 'Host Name:', style=wx.RB_GROUP )
 		gbs.Add( self.useHostName, pos=(iRow,0), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
 		hb = wx.BoxSizer( wx.HORIZONTAL )
 		hb.Add( wx.StaticText(self, label = ImpinjHostNamePrefix), flag=wx.ALIGN_CENTER_VERTICAL )
@@ -145,7 +145,7 @@ class MainWin( wx.Frame ):
 		
 		statusVS = wx.BoxSizer( wx.VERTICAL )
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		self.statusBitmap = wx.StaticBitmap( self, bitmap = self.attemptBitmap )
+		self.statusBitmap = wx.StaticBitmap( self, label = self.attemptBitmap )
 		self.statusLabel = wx.StaticText( self, label = 'Connecting...' )
 		hs.Add( self.statusBitmap )
 		hs.Add( self.statusLabel, flag = wx.ALIGN_CENTRE_VERTICAL )
