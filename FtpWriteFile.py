@@ -306,7 +306,7 @@ def GetFtpPublish( isDialog=True ):
 		def __init__( self, parent, id=wx.ID_ANY, uploadNowButton=True ):
 			if isDialog:
 				super(FtpPublishObject, self).__init__( parent, id, _("Ftp Publish Results"),
-								style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+								style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 			else:
 				super(FtpPublishObject, self).__init__( parent, id )
 							

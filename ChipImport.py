@@ -112,7 +112,7 @@ def DoChipImport(	fname, parseTagTime, startTime = None,
 class ChipImportDialog( wx.Dialog ):
 	def __init__( self, chipName, parseTagTime, parent, id = wx.ID_ANY, fileSuffix = 'txt' ):
 		wx.Dialog.__init__( self, parent, id, u'{} {}'.format(chipName, _('Import')),
-						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 		
 		self.chipName = chipName
 		self.parseTagTime = parseTagTime

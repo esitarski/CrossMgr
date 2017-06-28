@@ -9,7 +9,7 @@ from Undo import undo
 class ChangeRaceStartTimeDialog( wx.Dialog ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, "Change Race Start Time",
-						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		race = Model.race
 		if not race:

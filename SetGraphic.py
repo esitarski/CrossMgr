@@ -7,7 +7,7 @@ import Utils
 class SetGraphicDialog( wx.Dialog ):
 	def __init__( self, parent, id = wx.ID_ANY, graphic = None ):
 		wx.Dialog.__init__( self, parent, id, "Set Graphic",
-						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		mainSizer = wx.BoxSizer( wx.VERTICAL )
 		

@@ -206,7 +206,7 @@ class KeyButton(wx.Control):
 		g = colour.Green() * i
 		b = colour.Blue() * i
 
-		return wx.Colour(r, g, b)
+		return wx.Colour(int(r), int(g), int(b))
 
 
 	def OnSize(self, event):

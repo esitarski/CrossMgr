@@ -179,7 +179,7 @@ class CategoryPredicate( object ):
 class CategoryPredicateDialog( wx.Dialog ):
 	def __init__( self, parent, catPredicate, id = wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, "Category Predicate",
-						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 		
 		self.catPredicate = catPredicate
 		

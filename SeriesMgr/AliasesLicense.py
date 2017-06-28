@@ -153,11 +153,11 @@ class AliasesLicense(wx.Panel):
 		model = SeriesModel.model
 		
 		expanded = set()
-		r, cookieReference = self.tree.GetFirstChild(self.tree.GetRootItem())
+		r = self.tree.GetFirstChild(self.tree.GetRootItem())
 		while r.IsOk():
 			if self.tree.GetItemText(r) and self.tree.ItemHasChildren(r) and self.tree.IsExpanded(r):
 				expanded.add( self.tree.GetItemText(r) )
-			r, cookieReference = self.tree.GetNextChild(r, cookieReference)		
+			r = self.tree.GetNextChild(r)
 		
 		self.tree.DeleteAllItems()
 		rootItem = self.tree.AddRoot( u'AliasesLicense' )
@@ -174,21 +174,21 @@ class AliasesLicense(wx.Panel):
 	def commit( self ):
 		references = []
 		
-		r, cookieReference = self.tree.GetFirstChild(self.tree.GetRootItem())
+		r = self.tree.GetFirstChild(self.tree.GetRootItem())
 		while r.IsOk():
 			name = self.getLicense( r )
 			
 			if name:
 				references.append( [name, []] )
 				
-				a, cookieAlias = self.tree.GetFirstChild( r )
+				a = self.tree.GetFirstChild( r )
 				while a.IsOk():
 					name = self.getLicense( a )
 					if name:
 						references[-1][1].append( name )
-					a, cookieAlias = self.tree.GetNextChild( a, cookieAlias )
+					a = self.tree.GetNextChild( a )
 				
-			r, cookieReference = self.tree.GetNextChild(r, cookieReference)
+			r = self.tree.GetNextChild(r)
 		
 		references.sort()
 		for reference, aliases in references:

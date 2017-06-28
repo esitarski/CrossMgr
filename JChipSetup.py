@@ -49,7 +49,7 @@ def GetAllIps():
 class JChipSetupDialog( wx.Dialog ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, _("Chip Reader Setup"),
-						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 		
 		self.timer = None
 		self.receivedCount = 0

@@ -13,7 +13,7 @@ import datetime
 class CorrectNumberDialog( wx.Dialog ):
 	def __init__( self, parent, entry, id = wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, "Correct Number",
-						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		self.entry = entry
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
@@ -121,7 +121,7 @@ class CorrectNumberDialog( wx.Dialog ):
 class ShiftNumberDialog( wx.Dialog ):
 	def __init__( self, parent, entry, id = wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, "Shift Time",
-						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		self.entry = entry
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
@@ -203,7 +203,7 @@ class ShiftNumberDialog( wx.Dialog ):
 class InsertNumberDialog( wx.Dialog ):
 	def __init__( self, parent, entry, id = wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, "Insert Number",
-						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		self.entry = entry
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
@@ -272,7 +272,7 @@ class InsertNumberDialog( wx.Dialog ):
 class SplitNumberDialog( wx.Dialog ):
 	def __init__( self, parent, entry, id = wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, "Split Number",
-						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		self.entry = entry
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
@@ -424,7 +424,7 @@ def SwapEntry( a, b ):
 class StatusChangeDialog( wx.Dialog ):
 	def __init__( self, parent, message, title, t=None, externalData=None, id=wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, title,
-						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
 		

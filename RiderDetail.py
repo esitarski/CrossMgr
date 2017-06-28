@@ -31,7 +31,7 @@ def getStFtLaps( rider ):
 class AdjustTimeDialog( wx.Dialog ):
 	def __init__( self, parent, rider, riderName, id=wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, _("Adjust Time Trial Times"),
-						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		self.rider = rider
 		self.riderName = riderName
@@ -148,7 +148,7 @@ class AdjustTimeDialog( wx.Dialog ):
 class ChangeOffsetDialog( wx.Dialog ):
 	def __init__( self, parent, rider, riderName, id=wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, _("Adjust Start Time"),
-						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 		
 		self.rider = rider
 		self.riderName = riderName
@@ -1448,7 +1448,7 @@ class RiderDetail( wx.Panel ):
 class RiderDetailDialog( wx.Dialog ):
 	def __init__( self, parent, num = None, id = wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, _("RiderDetail"),
-						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		vs = wx.BoxSizer( wx.VERTICAL )
 		

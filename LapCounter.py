@@ -16,7 +16,7 @@ def getLapCounterOptions( isDialog ):
 		def __init__( self, parent, id=wx.ID_ANY ):
 			if isDialog:
 				super( LapCounterOptionsClass, self ).__init__( parent, id, _("Lap Counter Options"),
-							style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+							style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 			else:
 				super( LapCounterOptionsClass, self ).__init__( parent, id )
 			

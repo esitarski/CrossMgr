@@ -237,14 +237,14 @@ class Results( wx.Panel ):
 				pos = int(self.labelGrid.GetCellValue(row, 0))
 			except:
 				return
-			event.GetEventObject().SetToolTipString(u'{} {}, {} {}: {} {}'.format(
+			event.GetEventObject().SetToolTip(u'{} {}, {} {}: {} {}'.format(
 					_('Pos'), pos,
 					_('Bib'), num,
 					_('close finish to'), u','.join( u'{} {}'.format(_('Bib'), bib) for bib in self.closeFinishBibs[num]),
 				)
 			)
 		else:
-			event.GetEventObject().SetToolTipString(u'')
+			event.GetEventObject().SetToolTip(u'')
 	
 	def alignLabelToLapScroll(self): 
 		Utils.AlignVerticalScroll( self.labelGrid, self.lapGrid )

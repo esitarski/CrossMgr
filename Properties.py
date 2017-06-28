@@ -1034,7 +1034,7 @@ def doBatchPublish( silent=False, iAttr=None ):
 class BatchPublishPropertiesDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY ):
 		super(BatchPublishPropertiesDialog, self).__init__( parent, id, _("Batch Publish Results"),
-					style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+					style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 					
 		self.batchPublishProperties = BatchPublishProperties(self, testCallback=self.commit, ftpCallback=self.onToggleFtp)
 		self.batchPublishProperties.refresh()

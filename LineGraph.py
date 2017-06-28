@@ -109,7 +109,7 @@ class LineGraph(wx.Control):
 		textWidth, textHeight = dc.GetTextExtent( '00:00' if self.dataMax < 60*60 else '00:00:00' )
 		
 		if len(self.data) == 1:
-			colours = [wx.Colour(0, 0, 255, 1.0)]
+			colours = [wx.Colour(0, 0, 255)]
 		else:
 			colours = [ wx.Colour(255, 0, 0),
 						wx.Colour(0, 255, 0),

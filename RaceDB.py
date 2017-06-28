@@ -57,7 +57,7 @@ class URLDropTarget(wx.PyDropTarget):
 
 class RaceDB( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY, size=(1100,500) ):
-		super(RaceDB, self).__init__(parent, id, style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME, size=size, title=_('Open RaceDB Event'))
+		super(RaceDB, self).__init__(parent, id, style=wx.DEFAULT_DIALOG_STYLE, size=size, title=_('Open RaceDB Event'))
 		
 		fontPixels = 20
 		font = wx.Font((0,fontPixels), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
@@ -316,7 +316,7 @@ def PostEventCrossMgr( url ):
 
 class RaceDBUpload( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY, size=(700,500) ):
-		super(RaceDBUpload, self).__init__(parent, id, style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME, size=size, title=_('Upload Results to RaceDB'))
+		super(RaceDBUpload, self).__init__(parent, id, style=wx.DEFAULT_DIALOG_STYLE, size=size, title=_('Upload Results to RaceDB'))
 		
 		fontPixels = 20
 		font = wx.Font((0,fontPixels), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
