@@ -891,13 +891,13 @@ class GeoAnimation(wx.Control):
 		# Get the fonts if needed.
 		if self.rLast != r:
 			tHeight = int(r / 8.0)
-			self.numberFont	= wx.Font( wx.Size(0,tHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+			self.numberFont	= wx.Font( (0,tHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 			self.timeFont = self.numberFont
-			self.highlightFont = wx.Font( wx.Size(0,tHeight * 1.6), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+			self.highlightFont = wx.Font( (0,tHeight * 1.6), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 			
-			self.positionFont = wx.Font( wx.Size(0,tHeight*0.85*0.7), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
-			self.bibFont = wx.Font( wx.Size(0,tHeight*0.85), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_ITALIC, wx.FONTWEIGHT_BOLD )
-			self.nameFont = wx.Font( wx.Size(0,tHeight*0.85), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD )
+			self.positionFont = wx.Font( (0,tHeight*0.85*0.7), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+			self.bibFont = wx.Font( (0,tHeight*0.85), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_ITALIC, wx.FONTWEIGHT_BOLD )
+			self.nameFont = wx.Font((0,tHeight*0.85), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD )
 			
 			self.rLast = r
 			

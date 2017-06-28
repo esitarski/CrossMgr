@@ -38,7 +38,7 @@ class Keypad( wx.Panel ):
 		self.controller = controller
 		
 		fontPixels = 43
-		font = wx.Font(wx.Size(0,fontPixels), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
+		font = wx.Font((0,fontPixels), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
 		dc = wx.WindowDC( self )
 		dc.SetFont( font )
 		wNum, hNum = dc.GetTextExtent( '999' )

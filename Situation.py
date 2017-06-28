@@ -291,13 +291,13 @@ class SituationPanel(wx.Panel):
 		if fontHeight == 0:
 			return
 
-		font = wx.Font( wx.Size(0,fontHeight), wx.DEFAULT, wx.NORMAL, wx.NORMAL )
+		font = wx.Font( (0,fontHeight), wx.DEFAULT, wx.NORMAL, wx.NORMAL )
 		dc.SetFont( font )
 		spaceWidth, fontHeight = dc.GetTextExtent( u'0 0' )
 		spaceWidth = fontHeight / 2
 		
 		smallFontHeight = fontHeight * 0.75
-		smallFont = wx.Font( wx.Size(0,smallFontHeight), wx.DEFAULT, wx.NORMAL, wx.NORMAL )
+		smallFont = wx.Font( (0,smallFontHeight), wx.DEFAULT, wx.NORMAL, wx.NORMAL )
 		dc.SetFont( smallFont )
 		smallFontHeight = dc.GetTextExtent( u'0 0' )[1]
 

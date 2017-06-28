@@ -142,7 +142,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.vbs = wx.BoxSizer(wx.VERTICAL)
 		
 		self.title = wx.StaticText( self )
-		self.title.SetFont( wx.Font( wx.Size(0,24), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
+		self.title.SetFont( wx.Font( (0,24), wx.FONTFAMILY_SWISS, wx.NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		
 		self.toolbar = wx.ToolBar( self )
 		self.toolbar.Bind( wx.EVT_TOOL, self.OnToolBar )

@@ -254,7 +254,7 @@ class LapCounter( wx.Panel ):
 		if lineHeight == self.fontSize:
 			return self.font
 		self.fontSize = lineHeight
-		self.font = wx.Font( wx.Size(0,lineHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD )
+		self.font = wx.Font( (0,lineHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD )
 		return self.font
 		
 	def GetCountdownTime( self ):
@@ -310,12 +310,12 @@ class LapCounter( wx.Panel ):
 			if not label:
 				return
 			lineHeight = height - border*2
-			dc.SetFont( wx.Font( wx.Size(0,lineHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD ) )
+			dc.SetFont( wx.Font( (0,lineHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD ) )
 			sizeLabel = '000000000:00:00'[-len(label):]
 			w, h = dc.GetTextExtent(sizeLabel)
 			if w > width-8:
 				lineHeight *= float(width-8) / float(w)
-			dc.SetFont( wx.Font( wx.Size(0,lineHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD ) )
+			dc.SetFont( wx.Font( (0,lineHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD ) )
 			yTop = (height - lineHeight) // 2
 			dc.DrawText( label, (width - dc.GetTextExtent(sizeLabel)[0]) // 2, yTop )
 			if not self.timer.IsRunning():
@@ -341,11 +341,11 @@ class LapCounter( wx.Panel ):
 			w = int( w * 0.9 )
 			h = int( h * 0.9 )
 			fontSize = h
-			dc.SetFont( wx.Font( wx.Size(0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD ) )
+			dc.SetFont( wx.Font( (0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD ) )
 			wText, hText = dc.GetTextExtent( text )
 			if wText > w:
 				fontSize = int( fontSize * w / wText )
-				dc.SetFont( wx.Font( wx.Size(0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD ) )
+				dc.SetFont( wx.Font( (0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD ) )
 			return fontSize
 		
 		def drawLapText( label, colour, x, y, w, h ):

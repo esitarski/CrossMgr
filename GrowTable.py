@@ -88,8 +88,8 @@ class GrowTable( object ):
 		return len(self.table)
 		
 	def getFonts( self, fontSize ):
-		font = wx.Font( wx.Size(0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
-		fontBold = wx.Font( wx.Size(0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD )
+		font = wx.Font( (0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		fontBold = wx.Font( (0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD )
 		return font, fontBold
 		
 	def getCellBorder( self, fontSize ):

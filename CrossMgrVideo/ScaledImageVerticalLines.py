@@ -56,7 +56,7 @@ class ScaledImageVerticalLines( wx.Panel ):
 	def OnMouseDown( self, event ):
 		if not self.controlHeight:
 			return
-		width, height = self.GetSizeTuple()
+		width, height = self.GetSize()
 		y = height - self.controlHeight
 		if event.GetY() < y:
 			return

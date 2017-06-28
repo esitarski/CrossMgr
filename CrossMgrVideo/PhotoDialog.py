@@ -143,7 +143,7 @@ class PhotoDialog( wx.Dialog ):
 			return image
 		
 		return AddPhotoHeader(
-			wx.BitmapFromImage( image ),
+			image.ConvertToBitmap(),
 			ts=self.triggerInfo['ts'],
 			bib=self.triggerInfo['bib'],
 			firstName=self.triggerInfo['firstName'],
@@ -157,7 +157,7 @@ class PhotoDialog( wx.Dialog ):
 	def getPhoto( self ):
 		if self.jpg is None:
 			return None
-		return self.addPhotoHeaderToImage( wx.ImageFromStream(StringIO.StringIO(self.jpg), wx.BITMAP_TYPE_JPEG) )
+		return self.addPhotoHeaderToImage( wx.Image(StringIO.StringIO(self.jpg), wx.BITMAP_TYPE_JPEG) )
 		
 	def onClose( self, event ):
 		self.EndModal( wx.ID_OK )
@@ -175,9 +175,9 @@ class PhotoDialog( wx.Dialog ):
 				break
 		
 		t1 = self.tsJpg[i1][0]
-		image1 = wx.ImageFromStream( StringIO.StringIO(self.tsJpg[i1][1]), wx.BITMAP_TYPE_JPEG )
+		image1 = wx.Image( StringIO.StringIO(self.tsJpg[i1][1]), wx.BITMAP_TYPE_JPEG )
 		t2 = self.tsJpg[i2][0]
-		image2 = wx.ImageFromStream( StringIO.StringIO(self.tsJpg[i2][1]), wx.BITMAP_TYPE_JPEG )
+		image2 = wx.Image( StringIO.StringIO(self.tsJpg[i2][1]), wx.BITMAP_TYPE_JPEG )
 				
 		size = (850,650)
 		computeSpeed = ComputeSpeed( self, size=size )

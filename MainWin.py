@@ -131,7 +131,7 @@ def ShowSplashScreen():
 	w, h = bitmap.GetSize()
 	dc = wx.MemoryDC()
 	dc.SelectObject( bitmap )
-	dc.SetFont( wx.Font( wx.Size(0,h//10), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
+	dc.SetFont( wx.Font( (0,h//10), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
 	dc.DrawText( Version.AppVerName.replace('CrossMgr','Version'), w // 20, int(h * 0.44) )
 	dc.SelectObject( wx.NullBitmap )
 	

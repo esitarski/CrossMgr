@@ -162,7 +162,7 @@ class RaceHUD(wx.Control):
 		hudHeight = self.hudHeight = min( height / len(self.raceTimes), 80 )
 
 		legendHeight = max( hudHeight / 4, 10 )
-		fontLegend = wx.Font( wx.Size(0,legendHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		fontLegend = wx.Font( (0,legendHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		dc.SetFont( fontLegend )
 		textWidth, textHeight = dc.GetTextExtent( u'1:00:00' )
 		broomTimeWidth = textWidth
@@ -174,7 +174,7 @@ class RaceHUD(wx.Control):
 			return
 		
 		raceTimeHeight = tickHeight * 2 * 0.6
-		fontRaceTime = wx.Font( wx.Size(0,raceTimeHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		fontRaceTime = wx.Font( (0,raceTimeHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		dc.SetFont( fontRaceTime )
 		textWidth, textHeight = dc.GetTextExtent( u'0' )
 		zeroCharWidth = textWidth

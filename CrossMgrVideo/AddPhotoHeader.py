@@ -98,7 +98,7 @@ def AddPhotoHeader( bitmap, bib=None, ts=None, raceSeconds=None, firstName=u'', 
 	if drawResources is None or drawResources.w != w or drawResources.h != h:
 		setDrawResources( dc, w, h )
 		
-	bitmap_new = wx.EmptyBitmap(w, h + drawResources.labelHeight)
+	bitmap_new = wx.Bitmap(w, h + drawResources.labelHeight)
 	dcMemoryNew = wx.MemoryDC( bitmap_new )
 	dcMemoryNew.Blit( 0, drawResources.labelHeight, w, h, dcMemory, 0, 0 )
 	h += drawResources.labelHeight

@@ -159,7 +159,7 @@ class Checklist( wx.Panel ):
 							style = wx.TR_HIDE_ROOT | wx.TR_HAS_BUTTONS |
 									wx.TR_NO_LINES | wx.TR_ROW_LINES )
 		self.tree.SetImageList( il )
-		self.tree.SetFont( wx.Font( wx.Size(0,16), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
+		self.tree.SetFont( wx.Font( (0,16), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		self.imageList = il
 		
 		self.tree.AppendColumn( _('Task (right click to change)') )

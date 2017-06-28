@@ -60,7 +60,7 @@ class RaceDB( wx.Dialog ):
 		super(RaceDB, self).__init__(parent, id, style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME, size=size, title=_('Open RaceDB Event'))
 		
 		fontPixels = 20
-		font = wx.Font(wx.Size(0,fontPixels), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
+		font = wx.Font((0,fontPixels), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
 		
 		explain = wx.StaticText( self, label=(u'{}:').format(
 			_('Drag and Drop any RaceDB URL from the browser.\n\nDrag the small icon just to the left of the URL\non the browser page to the RaceDB logo below') ) )
@@ -319,13 +319,13 @@ class RaceDBUpload( wx.Dialog ):
 		super(RaceDBUpload, self).__init__(parent, id, style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME, size=size, title=_('Upload Results to RaceDB'))
 		
 		fontPixels = 20
-		font = wx.Font(wx.Size(0,fontPixels), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
+		font = wx.Font((0,fontPixels), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
 		self.headerDefault = u'{}\n{}'.format(_('Upload'),u'')
 		self.header = wx.StaticText( self, label=self.headerDefault )
 		self.header.SetFont( font )
 		
 		fontPixels = 15
-		font = wx.Font(wx.Size(0,fontPixels), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
+		font = wx.Font((0,fontPixels), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
 		explain = wx.StaticText( self, label=(u'{}:').format(
 			_('Drag and Drop any RaceDB URL from the browser.\n\nDrag the small icon just to the left of the URL\non the browser page to the RaceDB logo below') ) )
 		explain.SetFont( font )

@@ -408,7 +408,7 @@ class Animation(wx.Control):
 			tHeight = r / 8.0
 			self.numberFont = wx.Font( (0,tHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 			self.timeFont = self.numberFont
-			self.highlightFont = wx.Font( wx.Size(0,tHeight * 1.6), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+			self.highlightFont = wx.Font( (0,tHeight * 1.6), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 			self.rLast = r
 			
 		# Draw the track.
