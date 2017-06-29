@@ -32,7 +32,7 @@ class FileNamePage(adv.WizardPageSimple):
 		]
 		self.fbb = filebrowse.FileBrowseButton( self, size=(450, -1),
 												labelText = 'Excel Workbook:',
-												fileMode=wx.OPEN,
+												fileMode=wx.FD_OPEN,
 												fileMask='|'.join(fileMask) )
 		vbs.Add( self.fbb, flag=wx.ALL, border = border )
 		
@@ -96,7 +96,7 @@ class HeaderNamesPage(adv.WizardPageSimple):
 		
 		boldFont = None
 		
-		gs = wx.GridSizer( 2, len(Fields) )
+		gs = wx.GridSizer( 2, len(Fields), 4, 4 )
 		for c, f in enumerate(Fields):
 			label = wx.StaticText(sp, label=f)
 			if boldFont is None:
@@ -246,9 +246,9 @@ class GetExcelTTStartTimeLink( object ):
 		self.headerNamesPage = HeaderNamesPage( self.wizard )
 		self.summaryPage = SummaryPage( self.wizard )
 		
-		adv.WizardPageSimple_Chain( self.fileNamePage, self.sheetNamePage )
-		adv.WizardPageSimple_Chain( self.sheetNamePage, self.headerNamesPage )
-		adv.WizardPageSimple_Chain( self.headerNamesPage, self.summaryPage )
+		adv.WizardPageSimple.Chain( self.fileNamePage, self.sheetNamePage )
+		adv.WizardPageSimple.Chain( self.sheetNamePage, self.headerNamesPage )
+		adv.WizardPageSimple.Chain( self.headerNamesPage, self.summaryPage )
 
 		self.excelLink = excelLink
 		if excelLink:

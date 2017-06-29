@@ -67,7 +67,7 @@ class FileNamePage(adv.WizardPageSimple):
 		]
 		self.fbb = filebrowse.FileBrowseButton( self, -1, size=(450, -1),
 												labelText = 'GPX File:',
-												fileMode=wx.OPEN,
+												fileMode=wx.FD_OPEN,
 												fileMask='|'.join(fileMask),
 												startDirectory=Utils.getFileDir(),
 												changeCallback=self.setElevationStatus )
@@ -210,9 +210,9 @@ class GetGeoTrack( object ):
 		self.wizard.Bind( adv.EVT_WIZARD_HELP,
 			lambda evt: HelpSearch.showHelp('Menu-DataMgmt.html#import-course-in-gpx-format') )
 		
-		adv.WizardPageSimple_Chain( self.introPage, self.fileNamePage )
-		adv.WizardPageSimple_Chain( self.fileNamePage, self.useTimesPage )
-		adv.WizardPageSimple_Chain( self.useTimesPage, self.summaryPage )
+		adv.WizardPageSimple.Chain( self.introPage, self.fileNamePage )
+		adv.WizardPageSimple.Chain( self.fileNamePage, self.useTimesPage )
+		adv.WizardPageSimple.Chain( self.useTimesPage, self.summaryPage )
 
 		self.wizard.SetPageSize( wx.Size(500,200) )
 		self.wizard.GetPageAreaSizer().Add( self.introPage )

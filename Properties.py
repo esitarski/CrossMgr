@@ -1574,7 +1574,7 @@ class PropertiesDialog( wx.Dialog ):
 							defaultDir=dirName, 
 							defaultFile=fileName,
 							wildcard=_("Bicycle Race Categories (*.brc)|*.brc"),
-							style=wx.OPEN )
+							style=wx.FD_OPEN )
 		if dlg.ShowModal() == wx.ID_OK:
 			self.categoriesFile.SetValue( dlg.GetPath() )
 		dlg.Destroy()

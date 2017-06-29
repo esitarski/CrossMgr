@@ -500,7 +500,7 @@ class FinishStripPanel( wx.Panel ):
 			wildcard=u"PNG {} (*.png)|*.png".format(_("files")),
 			defaultDir=Utils.getFileDir(),
 			defaultFile=os.path.splitext( os.path.basename(Utils.getFileName() or _('Default.cmn')) )[0] + u'_Finish.png',
-			style=wx.SAVE,
+			style=wx.FD_SAVE,
 		)
 		if dlg.ShowModal() == wx.ID_OK:
 			fname = dlg.GetPath()

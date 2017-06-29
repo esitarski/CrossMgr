@@ -2838,7 +2838,7 @@ class MainWin( wx.Frame ):
 					defaultFile = '',
 					defaultDir = Utils.getFileDir(),
 					wildcard = _('RaceDB Excel files (*.xlsx)|*.xlsx'),
-					style=wx.OPEN | wx.CHANGE_DIR )
+					style=wx.FD_OPEN | wx.FD_CHANGE_DIR )
 		fname = dlg.GetPath() if dlg.ShowModal() == wx.ID_OK else None
 		dlg.Destroy()
 		if not fname:
@@ -2924,7 +2924,7 @@ class MainWin( wx.Frame ):
 							defaultFile = '',
 							defaultDir = Utils.getFileDir(),
 							wildcard = _('CrossMgr files (*.cmn)|*.cmn'),
-							style=wx.OPEN | wx.CHANGE_DIR )
+							style=wx.FD_OPEN | wx.FD_CHANGE_DIR )
 		if dlg.ShowModal() == wx.ID_OK:
 			busy = wx.BusyCursor()
 			self.openRace( dlg.GetPath() )
@@ -3242,7 +3242,7 @@ class MainWin( wx.Frame ):
 							defaultFile="",
 							defaultDir=Utils.getFileDir(),
 							wildcard=_("Bicycle Race Categories (*.brc)|*.brc"),
-							style=wx.OPEN )
+							style=wx.FD_OPEN )
 		if dlg.ShowModal() == wx.ID_OK:
 			categoriesFile = dlg.GetPath()
 			try:
@@ -3269,7 +3269,7 @@ class MainWin( wx.Frame ):
 							defaultFile='',
 							defaultDir=Utils.getFileDir(), 
 							wildcard=_("Bicycle Race Categories (*.brc)|*.brc"),
-							style=wx.SAVE )
+							style=wx.FD_SAVE )
 							
 		if dlg.ShowModal() == wx.ID_OK:
 			fname = dlg.GetPath()

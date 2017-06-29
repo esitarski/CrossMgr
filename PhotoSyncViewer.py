@@ -60,13 +60,7 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 			self, parent, ID = wx.ID_ANY, title=_('Photo Sync Previewer'), size=wx.DefaultSize, pos=wx.DefaultPosition, 
 			style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER ):
 
-		# Instead of calling wx.Dialog.__init__ we precreate the dialog
-		# so we can set an extra style that must be set before
-		# creation, and then we create the GUI object using the Create
-		# method.
-		pre = wx.PreDialog()
-		#pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-		pre.Create(parent, ID, title, pos, size, style)
+		super( PhotoSyncViewerDialog, self ).__init__(parent, ID, title, pos, size, style)
 
 		# This next step is the most important, it turns this Python
 		# object into the real wrapper of the dialog (instead of pre)
@@ -96,7 +90,7 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 		
 		self.photoBitmaps = [[wx.BitmapButton(
 									self.scrolledWindow,
-									bitmap=self.bitmap, size=(self.photoWidth+4,self.photoHeight+4),
+									label=self.bitmap, size=(self.photoWidth+4,self.photoHeight+4),
 									style=wx.BU_AUTODRAW)
 								for i in xrange(self.numPhotos)] for s in xrange(self.numPhotoSeries)]
 		self.photoLabels = [[wx.StaticText(self.scrolledWindow, style=wx.ALIGN_CENTRE) for i in xrange(self.numPhotos)]

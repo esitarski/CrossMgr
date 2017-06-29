@@ -110,7 +110,7 @@ class Races(wx.Panel):
 		dlg = wx.FileDialog( self, message="Choose a CrossMgr or Excel file",
 					defaultFile = '',
 					wildcard = self.wildcard,
-					style=wx.OPEN | wx.CHANGE_DIR )
+					style=wx.FD_OPEN | wx.FD_CHANGE_DIR )
 		ret = dlg.ShowModal()
 		fileName = ''
 		if ret == wx.ID_OK:
@@ -124,7 +124,7 @@ class Races(wx.Panel):
 		dlg = wx.FileDialog( self, message="Choose a CrossMgr or Excel file",
 					defaultFile = '',
 					wildcard = self.wildcard,
-					style=wx.OPEN | wx.CHANGE_DIR | wx.FD_MULTIPLE )
+					style=wx.FD_OPEN | wx.FD_CHANGE_DIR | wx.FD_MULTIPLE )
 		ret = dlg.ShowModal()
 		if ret == wx.ID_OK:
 			for fileName in dlg.GetPaths():

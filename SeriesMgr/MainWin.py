@@ -737,7 +737,7 @@ table.results tr td.fastest{
 		dlg = wx.FileDialog( self, message="Choose a file for your Competition",
 							defaultFile = '',
 							wildcard = 'SeriesMgr files (*.smn)|*.smn',
-							style=wx.OPEN | wx.CHANGE_DIR )
+							style=wx.FD_OPEN | wx.FD_CHANGE_DIR )
 		if dlg.ShowModal() == wx.ID_OK:
 			self.openSeries( dlg.GetPath() )
 		dlg.Destroy()

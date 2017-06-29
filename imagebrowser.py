@@ -463,7 +463,7 @@ class ImageDialog(wx.Dialog):
         split_left.SetSizer(vbox_left)
 
 
-        self.tb = tb = wx.ListBox( split_left, -1, wx.DefaultPosition, wx.DefaultSize,
+        self.tb = tb = wx.ListBox( split_left, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize,
                                    self.fl_list, wx.LB_SINGLE )
         self.Bind(wx.EVT_LISTBOX, self.OnListClick, tb)
         self.Bind(wx.EVT_LISTBOX_DCLICK, self.OnListDClick, tb)
@@ -471,7 +471,7 @@ class ImageDialog(wx.Dialog):
 
         width, height = self.tb.GetSize()
 
-        split_right = wx.Panel( splitter, -1, wx.DefaultPosition, wx.DefaultSize,
+        split_right = wx.Panel( splitter, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize,
                                 wx.NO_BORDER|wx.TAB_TRAVERSAL )
         vbox_right = wx.BoxSizer(wx.VERTICAL)
         split_right.SetSizer(vbox_right)

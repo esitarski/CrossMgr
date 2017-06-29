@@ -259,7 +259,7 @@ class ChipImportDialog( wx.Dialog ):
 			defaultPath, defaultFile = os.path.split(defaultPath)
 			
 		dlg = wx.FileDialog( self, u"{} {}".format( self.chipName, _('Import file') ),
-							style=wx.OPEN | wx.CHANGE_DIR,
+							style=wx.FD_OPEN | wx.FD_CHANGE_DIR,
 							wildcard="RFID (*.{})|*.{}".format(self.fileSuffix, self.fileSuffix),
 							defaultDir=defaultPath if defaultPath else '',
 							defaultFile=defaultFile if defaultFile else '',

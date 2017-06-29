@@ -28,7 +28,7 @@ class FileNamePage(wx.adv.WizardPageSimple):
 		]
 		self.fbb = filebrowse.FileBrowseButton( self, -1, size=(450, -1),
 												labelText = 'Excel Workbook:',
-												fileMode=wx.OPEN,
+												fileMode=wx.FD_OPEN,
 												fileMask='|'.join(fileMask) )
 		vbs.Add( self.fbb, flag=wx.ALL, border = border )
 		
@@ -94,7 +94,7 @@ class HeaderNamesPage(wx.adv.WizardPageSimple):
 		
 		boldFont = None
 		
-		gs = wx.GridSizer( 2, len(Fields) )
+		gs = wx.GridSizer( 2, len(Fields), 4, 4 )
 		for c, f in enumerate(Fields):
 			label = wx.StaticText(sp, label=f)
 			if boldFont is None:
@@ -252,9 +252,9 @@ class GetExcelResultsLink( object ):
 		self.headerNamesPage = HeaderNamesPage( self.wx.advard )
 		self.summaryPage = SummaryPage( self.wx.advard )
 		
-		wx.adv.WizardPageSimple_Chain( self.fileNamePage, self.sheetNamePage )
-		wx.adv.WizardPageSimple_Chain( self.sheetNamePage, self.headerNamesPage )
-		wx.adv.WizardPageSimple_Chain( self.headerNamesPage, self.summaryPage )
+		wx.adv.WizardPageSimple.Chain( self.fileNamePage, self.sheetNamePage )
+		wx.adv.WizardPageSimple.Chain( self.sheetNamePage, self.headerNamesPage )
+		wx.adv.WizardPageSimple.Chain( self.headerNamesPage, self.summaryPage )
 
 		self.excelLink = excelLink
 		if excelLink:
