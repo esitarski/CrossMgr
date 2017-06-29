@@ -150,8 +150,8 @@ class CountdownClock(wx.Control):
 		
 		tCos60Local = tCos60
 		tSin60Local = tSin60
-		penSecond = ctx.CreatePen( GetPen(width=wMinuteTicks, cap=wx.wx.CAP_BUTT) )
-		penHour = ctx.CreatePen( GetPen(width=wHourTicks, cap=wx.wx.CAP_BUTT) )
+		penSecond = ctx.CreatePen( GetPen(width=wMinuteTicks, cap=wx.CAP_BUTT) )
+		penHour = ctx.CreatePen( GetPen(width=wHourTicks, cap=wx.CAP_BUTT) )
 		
 		#-----------------------------------------------------------------------------
 		# Draw the metal ring

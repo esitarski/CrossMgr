@@ -74,7 +74,7 @@ class ExportGrid( object ):
 		return bitmap
 
 	def _getFont( self, pixelSize = 28, bold = False ):
-		return wx.wx.Font((0,pixelSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL,
+		return wx.Font((0,pixelSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL,
 			wx.FONTWEIGHT_BOLD if bold else wx.FONTWEIGHT_NORMAL, False)
 	
 	def _getColSizeTuple( self, dc, font, col ):
