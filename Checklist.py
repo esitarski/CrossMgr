@@ -212,9 +212,10 @@ class Checklist( wx.Panel ):
 		self.setChanged()
 
 	def updateStatus( self, treeNode ):
-		task = self.tree.GetItemData( treeNode )
-		state = [wx.CHK_UNCHECKED, wx.CHK_UNDETERMINED, wx.CHK_CHECKED][task.status]
-		self.tree.CheckItem( treeNode, state )
+		if treeNode != self.tree.GetRootItem():
+			task = self.tree.GetItemData( treeNode )
+			state = [wx.CHK_UNCHECKED, wx.CHK_UNDETERMINED, wx.CHK_CHECKED][task.status]
+			self.tree.CheckItem( treeNode, state )
 		child = self.tree.GetFirstChild( treeNode )
 		while child.IsOk():
 			self.updateStatus( child )
