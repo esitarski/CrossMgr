@@ -686,7 +686,7 @@ def MainLoop():
 	app = wx.App(False)
 	app.SetAppName("CrossMgrImpinj")
 
-	mainWin = MainWin( None, title=AppVerName, size=(800,1000) )
+	mainWin = MainWin( None, title=AppVerName, size=(800,800) )
 	
 	dataDir = Utils.getHomeDir()
 	redirectFileName = os.path.join(dataDir, 'CrossMgrImpinj.log')
