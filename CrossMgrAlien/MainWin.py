@@ -581,7 +581,7 @@ def MainLoop():
 	app = wx.App(False)
 	app.SetAppName("CrossMgrAlien")
 
-	mainWin = MainWin( None, title=AppVerName, size=(800,600) )
+	mainWin = MainWin( None, title=AppVerName, size=(800,min(int(wx.GetDisplaySize()[1]*0.85),1000)) )
 	
 	dataDir = Utils.getHomeDir()
 	redirectFileName = os.path.join(dataDir, 'CrossMgrAlien.log')
