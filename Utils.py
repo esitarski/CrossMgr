@@ -736,7 +736,10 @@ def ValidFilename( fname ):
 	return ''.join( c for c in fname if c not in invalidFNameChars and ord(c) > 31 )
 
 def GetDefaultHost():
-	DEFAULT_HOST = socket.gethostbyname(socket.gethostname())
+	try:
+		DEFAULT_HOST = socket.gethostbyname(socket.gethostname())
+	except:
+		DEFAULT_HOST = '0.0.0.0'
 	
 	if not DEFAULT_HOST or DEFAULT_HOST in ('127.0.0.1', '127.0.1.1'):
 		try:

@@ -126,7 +126,7 @@ class CameraTestDialog( wx.Dialog ):
 		fd = wx.FileDialog( self,
 			message=_("Save Photo as PNG File:"),
 			wildcard="PNG files (*.png)| *.png",
-			style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT
+			style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT,
 			defaultDir = Utils.getFileDir(),
 		)
 		fd.SetFilename( fname )
