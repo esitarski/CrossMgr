@@ -1,5 +1,6 @@
 import sys
 import collections
+from netifaces import interfaces, ifaddresses, AF_INET
 
 #-----------------------------------------------------------------------
 # Fix named tuple pickle issue.
@@ -741,38 +742,24 @@ def ValidFilename( fname ):
 
 def GetDefaultHost():
 	try:
-		DEFAULT_HOST = socket.gethostbyname(socket.gethostname())
+		DEFAULT_HOST = '127.0.0.1'
+		done = False
+		for ifaceName in interfaces():
+			if done == True:
+				break
+			ips = ifaddresses(ifaceName).setdefault(AF_INET)
+			if (ips != None):
+				for i in ips:
+					currentaddress = str(i['addr'])
+					# Only add real ips
+					if (currentaddress.startswith('127') == False and currentaddress.startswith('169') == False):
+						DEFAULT_HOST = currentaddress
+						done = True
+						break
 	except:
 		DEFAULT_HOST = '0.0.0.0'
-	
-	if not DEFAULT_HOST or DEFAULT_HOST in ('127.0.0.1', '127.0.1.1'):
-		try:
-			s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-			s.connect(('8.8.8.8', 0))  # connecting to a UDP address doesn't send packets
-			DEFAULT_HOST = s.getsockname()[0]
-		except:
-			pass
-		
-	if not DEFAULT_HOST or DEFAULT_HOST in ('127.0.0.1', '127.0.1.1'):
-		reSplit = re.compile('[: \t]+')
-		try:
-			co = subprocess.Popen(['ifconfig'], stdout=subprocess.PIPE)
-			ifconfig = co.stdout.read()
-			for line in ifconfig.split('\n'):
-				line = line.strip()
-				try:
-					if line.startswith('inet addr:'):
-						fields = reSplit.split( line )
-						addr = fields[2]
-						if addr != '127.0.0.1':
-							DEFAULT_HOST = addr
-							break
-				except:
-					pass
-		except:
-			pass
-	
-	return DEFAULT_HOST	
+
+	return DEFAULT_HOST
 	
 if sys.platform == 'darwin':
 	webbrowser.register("chrome", None, webbrowser.MacOSXOSAScript('chrome'), -1)
