@@ -76,7 +76,12 @@ class GeneralInfoProperties( wx.Panel ):
 		self.locationSizer.Add( self.raceCountry, 2, flag=wx.EXPAND|wx.LEFT, border=3 )
 		
 		self.dateLabel = wx.StaticText( self, label = _('Date') )
-		self.date = wx.adv.DatePickerCtrl( self, style = wx.adv.DP_DROPDOWN, size=(160,-1) )
+		self.date = wx.adv.DatePickerCtrl(
+			self,
+			dt = Utils.GetDateTimeToday(),
+			style = wx.adv.DP_DROPDOWN,
+			size=(160,-1)
+		)
 		self.Bind(wx.adv.EVT_DATE_CHANGED, self.onChanged, self.date)
 		
 		self.raceDisciplineLabel = wx.StaticText( self, label = _('Discipline') )

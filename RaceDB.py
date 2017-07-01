@@ -73,7 +73,13 @@ class RaceDB( wx.Dialog ):
 		self.raceDBUrl.Bind( wx.EVT_TEXT_ENTER, self.onChange )
 		self.raceDBUrl.SetDropTarget(URLDropTarget(self.raceDBUrl, self.refresh))
 		raceDBLogo.SetDropTarget(URLDropTarget(self.raceDBUrl, self.refresh))
-		self.datePicker = wx.adv.DatePickerCtrl( self, size=(120,-1), style = wx.adv.DP_DROPDOWN | wx.adv.DP_SHOWCENTURY )
+		self.datePicker = wx.adv.DatePickerCtrl(
+			self,
+			size=(120,-1),
+			dt=Utils.GetDateTimeToday(),
+			style=wx.adv.DP_DROPDOWN | wx.adv.DP_SHOWCENTURY
+		)
+		self.datePicker.SetValue( d )
 		self.datePicker.Bind( wx.adv.EVT_DATE_CHANGED, self.onChange )
 		
 		fgs = wx.FlexGridSizer( cols=2, rows=0, vgap=4, hgap=4 )

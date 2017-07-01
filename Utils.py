@@ -170,6 +170,10 @@ class UIBusy( object ):
 		wx.EndBusyCursor()
 		return False
 
+def GetDateTimeToday():
+	tQuery = datetime.datetime.now()
+	return wx.DateTime.FromDMY( tQuery.day, tQuery.month-1, tQuery.year )
+		
 #-----------------------------------------------------------------------
 # Monkey-patch font function so we always fetch a nicer font face.
 #
