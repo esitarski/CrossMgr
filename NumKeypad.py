@@ -264,6 +264,7 @@ class NumKeypad( wx.Panel ):
 		self.ttRecordBitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'stopwatch.png'), wx.BITMAP_TYPE_PNG )
 		
 		self.keypadTimeTrialToggleButton = wx.BitmapButton( panel, bitmap = self.ttRecordBitmap )
+		self.isKeypadState = True
 		self.keypadTimeTrialToggleButton.Bind( wx.EVT_BUTTON, self.swapKeypadTimeTrialRecord )
 		self.keypadTimeTrialToggleButton.SetToolTip(wx.ToolTip(self.SwitchToTimeTrialEntryMessage))
 		
@@ -384,13 +385,13 @@ class NumKeypad( wx.Panel ):
 		return not mainWin or mainWin.isShowingPage(self)
 	
 	def isKeypadInputMode( self ):
-		return self.keypadTimeTrialToggleButton.GetBitmapLabel() == self.ttRecordBitmap
+		return self.isKeypadState
 		
 	def isTimeTrialInputMode( self ):
 		return not self.isKeypadInputMode()
 	
 	def swapKeypadTimeTrialRecord( self, event = None ):
-		if self.isKeypadInputMode():
+		if self.isKeypadState:
 			self.keypad.Show( False )
 			self.timeTrialRecord.Show( True )
 			self.timeTrialRecord.refresh()
@@ -407,6 +408,7 @@ class NumKeypad( wx.Panel ):
 			self.keypadTimeTrialToggleButton.SetToolTip(wx.ToolTip(self.SwitchToTimeTrialEntryMessage))
 			wx.CallAfter( self.keypad.Refresh )
 			wx.CallLater( 100, self.keypad.numEdit.SetFocus )
+		self.isKeypadState = not self.isKeypadState
 		self.horizontalMainSizer.Layout()
 		self.GetSizer().Layout()
 		wx.CallAfter( self.Refresh )
