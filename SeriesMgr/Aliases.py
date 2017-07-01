@@ -111,7 +111,7 @@ class Aliases(wx.Panel):
 		if text:
 			item = self.tree.PrependItem( self.tree.GetRootItem(), text )
 			self.tree.SortChildren( self.tree.GetRootItem() )
-			self.tree.SelectItem( item )
+			self.tree.Select( item )
 	
 	def onAddAlias( self, event ):
 		if not self.itemCur:
@@ -131,7 +131,7 @@ class Aliases(wx.Panel):
 		item = self.tree.AppendItem( self.itemCur, text )
 		self.tree.Expand( self.itemCur )
 		self.tree.SortChildren( self.itemCur )
-		self.tree.SelectItem( item )
+		self.tree.Select( item )
 		
 	def onEdit( self, event ):
 		if not self.itemCur:
@@ -141,7 +141,7 @@ class Aliases(wx.Panel):
 			return
 		self.tree.SetItemText( self.itemCur, text )
 		self.tree.SortChildren( self.tree.GetParent(self.itemCur) )
-		self.tree.SelectItem( self.itemCur )
+		self.tree.Select( self.itemCur )
 	
 	def onDelete( self, event ):
 		if not self.itemCur:

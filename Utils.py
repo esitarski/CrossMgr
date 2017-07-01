@@ -769,6 +769,9 @@ def GetDefaultHost():
 			pass
 	
 	return DEFAULT_HOST	
+	
+if sys.platform == 'darwin':
+	webbrowser.register("chrome", None, webbrowser.MacOSXOSAScript('chrome'), -1)
 
 def LaunchApplication( fnames ):
 	for fname in (fnames if isinstance(fnames, list) else [fnames]):

@@ -305,7 +305,7 @@ class RaceDB( wx.Dialog ):
 						
 		self.tree.Expand( self.root )
 		if eventClosest:
-			self.tree.SelectItem( eventClosest )
+			self.tree.Select( eventClosest )
 			self.tree.Expand( eventClosest )
 
 #----------------------------------------------------------------------------------------------------------------------------
