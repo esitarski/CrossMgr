@@ -33,9 +33,9 @@ def GetEventCrossMgr( url, eventId, eventType ):
 	filename = content_disposition.split('=')[1].replace("'",'').replace('"','')
 	return filename, req.content
 
-class URLDropTarget(wx.PyDropTarget):
+class URLDropTarget(wx.DropTarget):
 	def __init__(self, window, callback=None):
-		wx.PyDropTarget.__init__(self)
+		super( URLDropTarget, self ).__init__()
 		self.window = window
 		self.callback = callback
 		self.data = wx.URLDataObject();
@@ -66,15 +66,15 @@ class RaceDB( wx.Dialog ):
 			_('Drag and Drop any RaceDB URL from the browser.\n\nDrag the small icon just to the left of the URL\non the browser page to the RaceDB logo below') ) )
 		explain.SetFont( font )
 		
-		raceDBLogo = wx.StaticBitmap( self, bitmap=wx.Bitmap( os.path.join(Utils.getImageFolder(), 'RaceDB_big.png'), wx.BITMAP_TYPE_PNG ) )
+		raceDBLogo = wx.StaticBitmap( self, label=wx.Bitmap( os.path.join(Utils.getImageFolder(), 'RaceDB_big.png'), wx.BITMAP_TYPE_PNG ) )
 		
 		self.raceFolder = wx.DirPickerCtrl( self, path=CrossMgrFolderDefault() )
 		self.raceDBUrl = wx.TextCtrl( self, value=RaceDBUrlDefault(), style=wx.TE_PROCESS_ENTER )
 		self.raceDBUrl.Bind( wx.EVT_TEXT_ENTER, self.onChange )
 		self.raceDBUrl.SetDropTarget(URLDropTarget(self.raceDBUrl, self.refresh))
 		raceDBLogo.SetDropTarget(URLDropTarget(self.raceDBUrl, self.refresh))
-		self.datePicker = wx.DatePickerCtrl( self, size=(120,-1), style = wx.DP_DROPDOWN | wx.DP_SHOWCENTURY )
-		self.datePicker.Bind( wx.EVT_DATE_CHANGED, self.onChange )
+		self.datePicker = wx.adv.DatePickerCtrl( self, size=(120,-1), style = wx.adv.DP_DROPDOWN | wx.adv.DP_SHOWCENTURY )
+		self.datePicker.Bind( wx.adv.EVT_DATE_CHANGED, self.onChange )
 		
 		fgs = wx.FlexGridSizer( cols=2, rows=0, vgap=4, hgap=4 )
 		fgs.AddGrowableCol( 1, 1 )
@@ -96,33 +96,33 @@ class RaceDB( wx.Dialog ):
 		vsHeader.Add( raceDBLogo, flag=wx.ALIGN_CENTRE )
 		vsHeader.Add( fgs, 1, flag=wx.EXPAND )
 		
-		self.tree = dataview.TreeListCtrl( self, style=wx.TR_DEFAULT_STYLE|wx.TR_FULL_ROW_HIGHLIGHT|wx.TR_ROW_LINES )
-		self.tree.Bind( wx.EVT_TREE_ITEM_ACTIVATED, self.onEventSelect )
+		self.tree = dataview.TreeListCtrl( self, style=wx.dataview.TL_SINGLE )
+		self.tree.Bind( dataview.EVT_TREELIST_ITEM_ACTIVATED, self.onEventSelect )
 		
 		isz = (16,16)
 		self.il = wx.ImageList( *isz )
-		self.closedIdx		= self.il.Add( wx.ArtProvider_GetBitmap(wx.ART_FOLDER,	 	wx.ART_OTHER, isz))
-		self.expandedIdx	= self.il.Add( wx.ArtProvider_GetBitmap(wx.ART_FILE_OPEN, 	wx.ART_OTHER, isz))
-		self.fileIdx		= self.il.Add( wx.ArtProvider_GetBitmap(wx.ART_NORMAL_FILE,	wx.ART_OTHER, isz))
-		self.selectedIdx	= self.il.Add( wx.ArtProvider_GetBitmap(wx.ART_LIST_VIEW, 	wx.ART_OTHER, isz))
+		self.closedIdx		= self.il.Add( wx.ArtProvider.GetBitmap(wx.ART_FOLDER,	 	wx.ART_OTHER, isz))
+		self.expandedIdx	= self.il.Add( wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, 	wx.ART_OTHER, isz))
+		self.fileIdx		= self.il.Add( wx.ArtProvider.GetBitmap(wx.ART_NORMAL_FILE,	wx.ART_OTHER, isz))
+		self.selectedIdx	= self.il.Add( wx.ArtProvider.GetBitmap(wx.ART_LIST_VIEW, 	wx.ART_OTHER, isz))
 		
 		self.tree.SetImageList( self.il )
 		
-		self.tree.AddColumn( _('Event Info') )
-		self.tree.AddColumn( _('Event Type'), flag=wx.ALIGN_LEFT )
+		self.tree.AppendColumn( _('Event Info') )
+		self.tree.AppendColumn( _('Event Type'), flags=wx.ALIGN_LEFT )
 		self.eventTypeCol = 1
-		self.tree.AddColumn( _('Start Time'), flag=wx.ALIGN_RIGHT )
+		self.tree.AppendColumn( _('Start Time'), flags=wx.ALIGN_RIGHT )
 		self.startTimeCol = 2
-		self.tree.AddColumn( _('Participants'), flag=wx.ALIGN_RIGHT)
+		self.tree.AppendColumn( _('Participants'), flags=wx.ALIGN_RIGHT)
 		self.participantCountCol = 3
 		
-		self.tree.SetMainColumn( 0 )
+		self.tree.SetSortColumn( 0 )
 		self.tree.SetColumnWidth( 0, 320 )
 		self.tree.SetColumnWidth( self.eventTypeCol, 80 )
 		self.tree.SetColumnWidth( self.startTimeCol, 80 )
 		self.tree.SetColumnWidth( self.participantCountCol, 80 )
 		
-		self.tree.Bind( wx.EVT_TREE_SEL_CHANGED, self.selectChangedCB )
+		self.tree.Bind( dataview.EVT_TREELIST_SELECTION_CHANGED, self.selectChangedCB )
 		self.dataSelect = None
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
@@ -220,13 +220,13 @@ class RaceDB( wx.Dialog ):
 	
 	def selectChangedCB( self, evt ):
 		try:
-			self.dataSelect = self.tree.GetItemPyData(evt.GetItem())
+			self.dataSelect = self.tree.GetItemData(evt.GetItem())
 		except Exception as e:
 			self.dataSelect = None
 	
 	def onEventSelect( self, evt ):
 		try:
-			self.dataSelect = self.tree.GetItemPyData(evt.GetItem())
+			self.dataSelect = self.tree.GetItemData(evt.GetItem())
 			self.doOK( evt )
 		except Exception as e:
 			self.dataSelect = None
@@ -258,11 +258,13 @@ class RaceDB( wx.Dialog ):
 			competition['participant_count'] += e['participant_count']
 		
 		self.tree.DeleteAllItems()
-		self.root = self.tree.AddRoot( _('All') )
+		self.root = self.tree.GetRootItem()
+		'''
 		self.tree.SetItemText(
 			self.root,
 			unicode(sum(c['participant_count'] for c in competitions.itervalues())), self.participantCountCol
 		)
+		'''
 		
 		def get_tod( t ):
 			return t.split()[1][:5].lstrip('0')
@@ -277,13 +279,13 @@ class RaceDB( wx.Dialog ):
 		for cName, events, participant_count, num in sorted(
 				((c['name'], c['events'], c['participant_count'], c['num']) for c in competitions.itervalues()), key=lambda x: x[-1] ):
 			competition = self.tree.AppendItem( self.root, cName )
-			self.tree.SetItemText( competition, unicode(participant_count), self.participantCountCol )
+			self.tree.SetItemText( competition, self.participantCountCol, unicode(participant_count) )
 			for e in events:
 				eventData = e
-				event = self.tree.AppendItem( competition, u'{}: {}'.format(_('Event'), e['name']), data=wx.TreeItemData(eventData) )
-				self.tree.SetItemText( event, get_tod(e['date_time']), self.startTimeCol )
-				self.tree.SetItemText( event, _('Mass Start') if e['event_type'] == 0 else _('Time Trial'), self.eventTypeCol )
-				self.tree.SetItemText( event, unicode(e['participant_count']), self.participantCountCol )
+				event = self.tree.AppendItem( competition, u'{}: {}'.format(_('Event'), e['name']), data=eventData )
+				self.tree.SetItemText( event, self.startTimeCol, get_tod(e['date_time']) )
+				self.tree.SetItemText( event, self.eventTypeCol, _('Mass Start') if e['event_type'] == 0 else _('Time Trial') )
+				self.tree.SetItemText( event, self.participantCountCol, unicode(e['participant_count']) )
 				
 				tEvent = datetime.datetime.combine( tNow.date(), get_time(e['date_time']) )
 				if eventClosest is None and tEvent > tNow:
@@ -291,14 +293,14 @@ class RaceDB( wx.Dialog ):
 					self.dataSelect = eventData
 				
 				for w in e['waves']:
-					wave = self.tree.AppendItem( event, u'{}: {}'.format(_('Wave'), w['name']), data=wx.TreeItemData(eventData) )
-					self.tree.SetItemText( wave, unicode(w['participant_count']), self.participantCountCol )
+					wave = self.tree.AppendItem( event, u'{}: {}'.format(_('Wave'), w['name']), data=eventData )
+					self.tree.SetItemText( wave, self.participantCountCol, unicode(w['participant_count']) )
 					start_offset = w.get('start_offset',None)
 					if start_offset:
-						self.tree.SetItemText( wave, '+' + start_offset, self.startTimeCol )
+						self.tree.SetItemText( wave, self.startTimeCol, '+' + start_offset )
 					for cat in w['categories']:
-						category = self.tree.AppendItem( wave, cat['name'], data=wx.TreeItemData(eventData) )
-						self.tree.SetItemText( category, unicode(cat['participant_count']), self.participantCountCol )
+						category = self.tree.AppendItem( wave, cat['name'], data=eventData )
+						self.tree.SetItemText( category, self.participantCountCol, unicode(cat['participant_count']) )
 			self.tree.Expand( competition )
 						
 		self.tree.Expand( self.root )
@@ -330,7 +332,7 @@ class RaceDBUpload( wx.Dialog ):
 			_('Drag and Drop any RaceDB URL from the browser.\n\nDrag the small icon just to the left of the URL\non the browser page to the RaceDB logo below') ) )
 		explain.SetFont( font )
 		
-		raceDBLogo = wx.StaticBitmap( self, bitmap=wx.Bitmap( os.path.join(Utils.getImageFolder(), 'RaceDB_big.png'), wx.BITMAP_TYPE_PNG ) )
+		raceDBLogo = wx.StaticBitmap( self, label=wx.Bitmap( os.path.join(Utils.getImageFolder(), 'RaceDB_big.png'), wx.BITMAP_TYPE_PNG ) )
 		
 		self.raceDBUrl = wx.TextCtrl( self, value=RaceDBUrlDefault(), style=wx.TE_PROCESS_ENTER )
 		self.raceDBUrl.SetDropTarget(URLDropTarget(self.raceDBUrl, self.refresh))

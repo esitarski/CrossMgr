@@ -156,9 +156,7 @@ class Checklist( wx.Panel ):
 		self.tree.SetColumnWidth( 0, 450 )
 		self.tree.SetColumnWidth( 1, 450 )
 		
-		self.tree.Bind( wx.EVT_TREE_ITEM_COLLAPSED, self.onTreeItemCollapsed )
-		self.tree.Bind( wx.EVT_TREE_ITEM_EXPANDED, self.onTreeItemExpanded )
-		self.tree.Bind( wx.EVT_TREE_ITEM_ACTIVATED, self.onTreeItemActivated )
+		self.tree.Bind( wx.dataview.EVT_TREELIST_ITEM_CHECKED, self.onTreeItemChecked )
 		
 		self.checklist = None
 		self.refresh()
@@ -199,18 +197,6 @@ class Checklist( wx.Panel ):
 		self.tree.SetSize( self.GetSize() )
 		event.Skip()
 
-	def onTreeItemCollapsed( self, event ):
-		treeNode = event.GetItem()
-		task = self.tree.GetItemData( treeNode )
-		task.expand = False
-		self.setChanged()
-
-	def onTreeItemExpanded( self, event ):
-		treeNode = event.GetItem()
-		task = self.tree.GetItemData( treeNode )
-		task.expand = True
-		self.setChanged()
-
 	def updateStatus( self, treeNode ):
 		if treeNode != self.tree.GetRootItem():
 			task = self.tree.GetItemData( treeNode )
@@ -221,10 +207,10 @@ class Checklist( wx.Panel ):
 			self.updateStatus( child )
 			child = self.tree.GetNextSibling( child )
 
-	def onTreeItemActivated( self, event ):
+	def onTreeItemChecked( self, event ):
 		treeNode = event.GetItem()
 		# If this is not a leaf node, skip it.
-		if self.tree.GetFirstChild(treeNode)[0].IsOk():
+		if self.tree.GetFirstChild(treeNode).IsOk():
 			return
 			
 		task = self.tree.GetItemData( treeNode )
@@ -238,7 +224,7 @@ class Checklist( wx.Panel ):
 				
 			allChildrenDone = True
 			someChildrenDone = False
-			childNode = self.tree.GetFirstChild( parentNode )[0]
+			childNode = self.tree.GetFirstChild( parentNode )
 			while childNode.IsOk():
 				childTask = self.tree.GetItemData( childNode )
 				if childTask.status == childTask.Done:
@@ -290,6 +276,19 @@ class Checklist( wx.Panel ):
 			self.doCollapseAll( child )
 			child = self.tree.GetNextSibling( child )
 		self.tree.Collapse( treeNode )
+
+	def updateExpanded( self ):
+		setChanged = Model.race.setChanged if Model.race else lambda: None
+		n = self.tree.GetFirstItem()
+		while n.IsOk():
+			task = self.tree.GetItemData( n )
+			if task.expand != self.tree.IsExpanded(n):
+				task.expand = self.tree.IsExpanded(n)
+				setChanged()
+			n = self.tree.GetNextItem( n )
+
+	def commit( self ):
+		self.updateExpanded()
 
 	def refresh( self ):
 		self.updateChecklist()

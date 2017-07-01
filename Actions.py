@@ -281,6 +281,7 @@ class Actions( wx.Panel ):
 		self.splitter.SetMinimumPaneSize( 100 )
 		wx.CallAfter( self.refresh )
 		wx.CallAfter( self.splitter.SetSashPosition, 650 )
+		wx.CallAfter( self.GetSizer().Layout )
 		
 	def setWrappedRaceInfo( self, event = None ):
 		wrapWidth = self.leftPanel.GetClientSize()[0] - self.button.GetClientSize()[0] - 20
@@ -385,6 +386,9 @@ class Actions( wx.Panel ):
 		
 		if getattr(Model.race, 'ftpUploadDuringRace', False):
 			realTimeFtpPublish.publishEntry( True )
+	
+	def commit( self ):
+		self.checklist.commit()
 	
 	def refresh( self ):
 		self.clock.Start()
