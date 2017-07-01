@@ -741,7 +741,7 @@ def GetDefaultHost():
 	except:
 		DEFAULT_HOST = '0.0.0.0'
 	
-	if not DEFAULT_HOST or DEFAULT_HOST in ('127.0.0.1', '127.0.1.1'):
+	if not DEFAULT_HOST or DEFAULT_HOST in ('127.0.0.1', '127.0.1.1', '0.0.0.0'):
 		try:
 			s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 			s.connect(('8.8.8.8', 0))  # connecting to a UDP address doesn't send packets
@@ -749,7 +749,7 @@ def GetDefaultHost():
 		except:
 			pass
 		
-	if not DEFAULT_HOST or DEFAULT_HOST in ('127.0.0.1', '127.0.1.1'):
+	if not DEFAULT_HOST or DEFAULT_HOST in ('127.0.0.1', '127.0.1.1', '0.0.0.0'):
 		reSplit = re.compile('[: \t]+')
 		try:
 			co = subprocess.Popen(['ifconfig'], stdout=subprocess.PIPE)
