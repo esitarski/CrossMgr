@@ -145,7 +145,7 @@ class MainWin( wx.Frame ):
 		
 		statusVS = wx.BoxSizer( wx.VERTICAL )
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		self.statusBitmap = wx.StaticBitmap( self, label = self.attemptBitmap )
+		self.statusBitmap = wx.StaticBitmap( self, wx.ID_ANY, self.attemptBitmap )
 		self.statusLabel = wx.StaticText( self, label = 'Connecting...' )
 		hs.Add( self.statusBitmap )
 		hs.Add( self.statusLabel, flag = wx.ALIGN_CENTRE_VERTICAL )

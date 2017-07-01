@@ -247,7 +247,7 @@ class MainWin( wx.Frame ):
 		headerSizer = wx.BoxSizer( wx.HORIZONTAL )
 		
 		self.logo = Utils.GetPngBitmap('CrossMgrHeader.png')
-		headerSizer.Add( wx.StaticBitmap(self, label=self.logo) )
+		headerSizer.Add( wx.StaticBitmap(self, wx.ID_ANY, self.logo) )
 		
 		self.title = wx.StaticText(self, label='CrossMgr Camera\nVersion {}'.format(AppVerName.split()[1]), style=wx.ALIGN_RIGHT )
 		self.title.SetFont( wx.Font( (0,28), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )

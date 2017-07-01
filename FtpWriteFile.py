@@ -327,7 +327,7 @@ def GetFtpPublish( isDialog=True ):
 			
 			self.refresh()
 			
-			self.qrcodeBitmap = wx.StaticBitmap( self, label = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'QRCodeIcon.png'), wx.BITMAP_TYPE_PNG ) )
+			self.qrcodeBitmap = wx.StaticBitmap( self, wx.ID_ANY, wx.Bitmap( os.path.join(Utils.getImageFolder(), 'QRCodeIcon.png'), wx.BITMAP_TYPE_PNG ) )
 			self.printBtn = wx.Button( self, label = _('Print Results URL as a QR Code...') )
 			self.Bind( wx.EVT_BUTTON, self.onPrint, self.printBtn )
 			

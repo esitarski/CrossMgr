@@ -66,7 +66,7 @@ class RaceDB( wx.Dialog ):
 			_('Drag and Drop any RaceDB URL from the browser.\n\nDrag the small icon just to the left of the URL\non the browser page to the RaceDB logo below') ) )
 		explain.SetFont( font )
 		
-		raceDBLogo = wx.StaticBitmap( self, label=wx.Bitmap( os.path.join(Utils.getImageFolder(), 'RaceDB_big.png'), wx.BITMAP_TYPE_PNG ) )
+		raceDBLogo = wx.StaticBitmap( self, wx.ID_ANY, wx.Bitmap( os.path.join(Utils.getImageFolder(), 'RaceDB_big.png'), wx.BITMAP_TYPE_PNG ) )
 		
 		self.raceFolder = wx.DirPickerCtrl( self, path=CrossMgrFolderDefault() )
 		self.raceDBUrl = wx.TextCtrl( self, value=RaceDBUrlDefault(), style=wx.TE_PROCESS_ENTER )
@@ -332,7 +332,7 @@ class RaceDBUpload( wx.Dialog ):
 			_('Drag and Drop any RaceDB URL from the browser.\n\nDrag the small icon just to the left of the URL\non the browser page to the RaceDB logo below') ) )
 		explain.SetFont( font )
 		
-		raceDBLogo = wx.StaticBitmap( self, label=wx.Bitmap( os.path.join(Utils.getImageFolder(), 'RaceDB_big.png'), wx.BITMAP_TYPE_PNG ) )
+		raceDBLogo = wx.StaticBitmap( self, wx.ID_ANY, wx.Bitmap( os.path.join(Utils.getImageFolder(), 'RaceDB_big.png'), wx.BITMAP_TYPE_PNG ) )
 		
 		self.raceDBUrl = wx.TextCtrl( self, value=RaceDBUrlDefault(), style=wx.TE_PROCESS_ENTER )
 		self.raceDBUrl.SetDropTarget(URLDropTarget(self.raceDBUrl, self.refresh))
