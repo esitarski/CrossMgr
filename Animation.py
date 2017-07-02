@@ -278,11 +278,11 @@ class Animation(wx.Control):
 		except KeyError:
 			return ''
 		
-		lastName = info.get('LastName','')
-		firstName = info.get('FirstName','')
+		lastName = info.get('LastName',u'')
+		firstName = info.get('FirstName',u'')
 		if lastName:
 			if firstName:
-				return '%s, %s.' % (lastName, firstName[:1])
+				return u'{}, {}.'.format(lastName, firstName[:1])
 			else:
 				return lastName
 		return firstName
