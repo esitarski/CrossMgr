@@ -72,11 +72,17 @@ import io
 
 if 'WXMAC' in wx.Platform:
 	try:
-		dirName = os.environ['RESOURCEPATH']
+		topdirName = os.environ['RESOURCEPATH']
 	except:
-		dirName = os.path.dirname(os.path.abspath(__file__))
-	if not os.path.isdir( os.path.join(dirName, 'CrossMgrImages') ):
-		dirName = '/System/Library/Frameworks/Python.framework/Versions/2.7'
+		topdirName = os.path.dirname(os.path.realpath(__file__))
+	if os.path.isdir( os.path.join(topdirName, 'CrossMgrImages') ):
+		dirName = topdirName
+	else:
+		dirName = os.path.normpath(topdirName + '/../Resources/')
+	if not os.path.isdir(dirName):
+		dirName = os.path.normpath(topdirName + '/../../Resources/')
+	if not os.path.isdir(dirName):
+		raise Exception("Resource Directory does not exist:" + dirName)
 else:
 	try:
 		dirName = os.path.dirname(os.path.abspath(__file__))
