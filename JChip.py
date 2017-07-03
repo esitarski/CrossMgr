@@ -411,7 +411,7 @@ def CleanupListener():
 if __name__ == '__main__':
 	StartListener()
 	count = 0
-	while 1:
+	for count in xrange(50):
 		time.sleep( 1 )
 		sys.stdout.write( '.' )
 		messages = GetData()
