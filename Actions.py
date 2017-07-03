@@ -379,11 +379,14 @@ class Actions( wx.Panel ):
 		mainWin = Utils.getMainWin()
 		if mainWin:
 			mainWin.refresh()
-			mainWin.chipReader.StopListener()
 		
 		OutputStreamer.writeRaceFinish()
 		OutputStreamer.StopStreamer()
-		
+		try:
+			ChipReader.chipReaderCur.StopListener()
+		except:
+			pass
+
 		if getattr(Model.race, 'ftpUploadDuringRace', False):
 			realTimeFtpPublish.publishEntry( True )
 	
