@@ -118,12 +118,24 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 	
 	#-----------------------------------------------------
 	# Support multiple connections to a JChip client.
+	# If we get a Address Already in use, we wait some time and try again
 	#
-	
-	server = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
-	server.setblocking( 0 )
-	server.bind((HOST, PORT))
-	server.listen( 5 )
+	while 1:
+		server = None
+		server = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+		server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+		server.setblocking( 0 )
+		try:
+			server.bind((HOST, PORT))
+		except IOError as e:
+			if e.errno == 48:
+				server = None
+				time.sleep(2)
+				continue
+			else:
+				raise e
+		server.listen( 5 )
+		break
 	
 	# List of ports for select.
 	inputs = [server]
