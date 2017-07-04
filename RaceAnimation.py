@@ -180,8 +180,8 @@ class RaceAnimation( wx.Panel ):
 			self.onRewind()
 			
 			newAnimation = self.animationGeo if needGeo else self.animationTrack
+			bs.Remove( i )
 			bs.Insert(i, newAnimation, 2, flag=wx.GROW|wx.ALL, border=0 )
-			bs.RemovePos( i + 1 )
 			
 			self.animation.Hide()
 			self.animation = newAnimation
