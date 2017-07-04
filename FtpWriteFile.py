@@ -431,7 +431,6 @@ def GetFtpPublish( isDialog=True ):
 			pd.SetOrientation( wx.PORTRAIT )
 			
 			pdd = wx.PrintDialogData( pd )
-			pdd.SetAllPages( True )
 			pdd.EnableSelection( False )
 			pdd.EnablePageNumbers( False )
 			pdd.EnableHelp( False )

@@ -46,7 +46,6 @@ def PrintPhoto( parent, image ):
 	printData.SetOrientation(wx.LANDSCAPE)
 	
 	pdd = wx.PrintDialogData(printData)
-	pdd.SetAllPages( True )
 	pdd.EnableSelection( False )
 	pdd.EnablePageNumbers( False )
 	pdd.EnableHelp( False )

@@ -1457,7 +1457,6 @@ class MainWin( wx.Frame ):
 		self.printData.SetFilename( os.path.splitext(self.fileName)[0] + '.pdf' if self.fileName else 'Results.pdf' )
 		pdd = wx.PrintDialogData(self.printData)
 		self.printData.SetPrintMode( wx.PRINT_MODE_FILE if 'pdf' in self.printData.GetPrinterName().lower() else wx.PRINT_MODE_PRINTER )
-		pdd.SetAllPages( True )
 		pdd.EnableSelection( False )
 		pdd.EnablePageNumbers( False )
 		pdd.EnableHelp( False )
@@ -1494,7 +1493,6 @@ class MainWin( wx.Frame ):
 	
 		self.printData.SetFilename( self.fileName if self.fileName else '' )
 		pdd = wx.PrintDialogData(self.printData)
-		pdd.SetAllPages( True )
 		pdd.EnableSelection( False )
 		pdd.EnablePageNumbers( False )
 		pdd.EnableHelp( False )

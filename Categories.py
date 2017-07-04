@@ -117,7 +117,6 @@ def PrintCategories():
 		return
 	
 	pdd = wx.PrintDialogData(mainWin.printData)
-	pdd.SetAllPages( True )
 	pdd.EnableSelection( False )
 	pdd.EnablePageNumbers( False )
 	pdd.EnableHelp( False )

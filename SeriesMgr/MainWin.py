@@ -455,7 +455,6 @@ class MainWin( wx.Frame ):
 				return
 		
 		pdd = wx.PrintDialogData(self.printData)
-		pdd.SetAllPages( 1 )
 		pdd.EnablePageNumbers( 0 )
 		pdd.EnableHelp( 0 )
 		

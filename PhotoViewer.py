@@ -258,7 +258,6 @@ class PhotoViewerDialog( wx.Dialog ):
 			printData.SetOrientation(wx.LANDSCAPE)
 			pdd = wx.PrintDialogData(printData)
 			
-		pdd.SetAllPages( 1 )
 		pdd.EnablePageNumbers( 0 )
 		pdd.EnableHelp( 0 )
 		
