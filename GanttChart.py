@@ -149,7 +149,7 @@ class GanttChart(wx.Control):
 				self.dClickCallback( self.numSelect )
 	
 	def getRiderLap( self, event ):
-		x, y = event.GetPositionTuple()
+		x, y = event.GetPosition()
 		y -= self.barHeight
 		x -= self.labelsWidthLeft
 		iRider = int(y / self.barHeight)
@@ -201,7 +201,7 @@ class GanttChart(wx.Control):
 								_('Lap End'), Utils.formatTime(tLapEnd),
 								_('Lap Time'), Utils.formatTime(tLapEnd - tLapStart)))
 
-		xPos, yPos = event.GetPositionTuple()
+		xPos, yPos = event.GetPosition()
 		width, height = bip.GetClientSize()
 		pos = self.ClientToScreen( (xPos - width - 2, yPos - height - 2) )
 		bip.Position( pos, (0,0) )
@@ -224,7 +224,7 @@ class GanttChart(wx.Control):
 			return
 		rClickCallback = getattr(self, 'rClickCallback', None)
 		if rClickCallback is not None:
-			xPos, yPos = event.GetPositionTuple()
+			xPos, yPos = event.GetPosition()
 			rClickCallback( xPos, yPos, self.numSelect, iRider, iLap )
 	
 	def Draw(self, dc):

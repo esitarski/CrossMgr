@@ -197,7 +197,7 @@ class GanttChartPanel(wx.Panel):
 		self.Refresh()
 		lClickCallback = getattr(self, 'lClickCallback', None)
 		if lClickCallback is not None:
-			xPos, yPos = event.GetPositionTuple()
+			xPos, yPos = event.GetPosition()
 			lClickCallback( xPos, yPos, self.numSelect, iRider, iLap, self.data[iRider][iLap] )
 	
 	def OnLeftDClick( self, event ):
@@ -243,7 +243,7 @@ class GanttChartPanel(wx.Panel):
 		return iRider, iLap
 		
 	def getRiderLap( self, event ):
-		x, y = event.GetPositionTuple()
+		x, y = event.GetPosition()
 		return self.getRiderLapXY( x, y )
 		
 	def OnRightClick( self, event ):
@@ -263,7 +263,7 @@ class GanttChartPanel(wx.Panel):
 			return
 		rClickCallback = getattr(self, 'rClickCallback', None)
 		if rClickCallback is not None:
-			xPos, yPos = event.GetPositionTuple()
+			xPos, yPos = event.GetPosition()
 			rClickCallback( xPos, yPos, self.numSelect, iRider, iLap )
 	
 	def Draw( self, dc ):
