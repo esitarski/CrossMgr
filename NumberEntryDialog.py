@@ -12,6 +12,7 @@ class NumberEntryDialog( wx.Dialog ):
 			'max': max,
 			'value': value,
 			'limited': True,
+			'allow_none': False,
 		}
 		self.intctrl = IntCtrl( **{k:v for k,v in kwargs.iteritems() if v is not None} )
 		
