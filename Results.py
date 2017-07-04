@@ -56,7 +56,7 @@ class IOCCodeRenderer(wx.grid.GridCellRenderer):
 		if img:
 			key = (ioc, imgHeight)
 			if key not in bitmapCache:
-				bitmapCache[key] = wx.BitmapFromImage(img.Scale(imgWidth, imgHeight, wx.IMAGE_QUALITY_HIGH))
+				bitmapCache[key] = img.Scale(imgWidth, imgHeight, wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
 			dc.DrawBitmap( bitmapCache[key], rect.GetX(), rect.GetY()+(rect.GetHeight()-imgHeight)//2 )
 
 	def GetBestSize(self, grid, attr, dc, row, col):

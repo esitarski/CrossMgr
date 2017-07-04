@@ -103,7 +103,7 @@ class History( wx.Panel ):
 		self.grid.DisableDragRowSize()
 
 		# Set the col labels tall enough for lap, lapsToGo, lapTime, raceTime.
-		width, height = wx.ClientDC(self).GetMultiLineTextExtent( "0\n0\n0\n0" )[:2]
+		width, height = wx.ClientDC(self).GetMultiLineTextExtent( "0\n0\n0\n0" )
 		self.grid.SetColLabelSize( height )
 		
 		self.Bind( wx.grid.EVT_GRID_SELECT_CELL, self.doNumSelect )

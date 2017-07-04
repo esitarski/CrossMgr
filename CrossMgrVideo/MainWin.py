@@ -38,13 +38,13 @@ closeColors = ('E50000','D1D200','00BF00')
 def getCloseFinishBitmaps( size=(16,16) ):
 	bm = []
 	dc = wx.MemoryDC()
-	dc.SetPen( wx.Pen(wx.Colour(0,0,0), 1) )
 	for c in closeColors:
 		bitmap = wx.Bitmap( *size )
 		dc.SelectObject( bitmap )
+		dc.SetPen( wx.Pen(wx.Colour(0,0,0), 1) )
 		dc.SetBrush( wx.Brush(wx.Colour(*[int(c[i:i+2],16) for i in xrange(0,6,2)]) ) )
 		dc.DrawRectangle( 0, 0, size[0]-1, size[1]-1 )
-		dc.SelectObject(wx.NullBitmap)
+		dc.SelectObject( wx.NullBitmap )
 		bm.append( bitmap )
 	return bm
 

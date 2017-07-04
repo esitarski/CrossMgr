@@ -182,7 +182,7 @@ realTimeFtpPublish = RealTimeFtpPublish()
 def drawMultiLineText( dc, text, x, y ):
 	if not text:
 		return
-	wText, hText, lineHeightText = dc.GetMultiLineTextExtent( text, dc.GetFont() )
+	lineHeightText = dc.GetTextExtent( 'Py' )[1]
 	for line in text.split( '\n' ):
 		dc.DrawText( line, x, y )
 		y += lineHeightText
@@ -238,7 +238,7 @@ class FtpQRCodePrintout( wx.Printout ):
 			
 		dc = self.GetDC()
 		
-		widthPix, heightPix = dc.GetSizeTuple()
+		widthPix, heightPix = dc.GetSize()
 		
 		# Get a reasonable border.
 		borderPix = max(widthPix, heightPix) / 20
@@ -267,8 +267,10 @@ class FtpQRCodePrintout( wx.Printout ):
 		
 		# Draw the title.
 		title = u'{}:{}\n{} {}\n{}   {}'.format( race.title, race.raceNum, _('by'), race.organizer, race.date, race.scheduledStart )
-		font = getFontToFit( dc, widthFieldPix - graphicWidth - graphicBorder, graphicHeight,
-									lambda font: dc.GetMultiLineTextExtent(title, font)[:-1], True )
+		def getTitleTextSize( font ):
+			dc.SetFont( font )
+			return dc.GetMultiLineTextExtent( title )
+		font = getFontToFit( dc, widthFieldPix - graphicWidth - graphicBorder, graphicHeight, getTitleTextSize, True )
 		dc.SetFont( font )
 		drawMultiLineText( dc, title, xPix + graphicWidth + graphicBorder, yPix )
 		yPix += graphicHeight + borderPix

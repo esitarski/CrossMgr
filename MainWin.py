@@ -270,7 +270,7 @@ class MainWin( wx.Frame ):
 		self.printData.SetPaperId(wx.PAPER_LETTER)
 		self.printData.SetPrintMode(wx.PRINT_MODE_PRINTER)
 		self.printData.SetOrientation(wx.LANDSCAPE)
-
+		
 		# Configure the main menu.
 		self.menuBar = wx.MenuBar(wx.MB_DOCKABLE)
 
@@ -461,15 +461,13 @@ class MainWin( wx.Frame ):
 		#-----------------------------------------------------------------------
 		self.editMenu = wx.Menu()
 		self.undoMenuButton = wx.MenuItem( self.editMenu, wx.ID_UNDO , _("&Undo\tCtrl+Z"), _("Undo the last edit") )
-		img = wx.Image(os.path.join(Utils.getImageFolder(), 'Undo-icon.png'))
-		self.undoMenuButton.SetBitmap( img.ConvertToBitmap(8) )
+		self.undoMenuButton.SetBitmap( Utils.GetPngBitmap('Undo-icon.png') )
 		self.editMenu.Append( self.undoMenuButton )
 		self.Bind(wx.EVT_MENU, self.menuUndo, id=wx.ID_UNDO )
 		self.undoMenuButton.Enable( False )
-
+		
 		self.redoMenuButton = wx.MenuItem( self.editMenu, wx.ID_REDO , _("&Redo\tCtrl+Y"), _("Redo the last edit") )
-		img = wx.Image(os.path.join(Utils.getImageFolder(), 'Redo-icon.png'))
-		self.redoMenuButton.SetBitmap( img.ConvertToBitmap(8) )
+		self.redoMenuButton.SetBitmap( Utils.GetPngBitmap('Redo-icon.png') )
 		self.editMenu.Append( self.redoMenuButton )
 		self.Bind(wx.EVT_MENU, self.menuRedo, id=wx.ID_REDO )
 		self.redoMenuButton.Enable( False )
@@ -501,7 +499,6 @@ class MainWin( wx.Frame ):
 		self.editMenu.Append( idCur, _('&Change "Autocorrect"...'), _('Change "Autocorrect"...') )
 		self.Bind( wx.EVT_MENU, self.menuAutocorrect, id=idCur )
 		
-		img = None
 		self.editMenuItem = self.menuBar.Append( self.editMenu, _("&Edit") )
 
 		#-----------------------------------------------------------------------
@@ -865,7 +862,7 @@ class MainWin( wx.Frame ):
 		self.lastPhotoTime = now()
 		
 		self.photoDialog = PhotoViewerDialog( self, title = _("PhotoViewer"), size=(600,400) )
-
+		
 	@property
 	def chipReader( self ):
 		return ChipReader.chipReaderCur
@@ -1426,7 +1423,7 @@ class MainWin( wx.Frame ):
 		self.preview = wx.PrintPreview(printout, printout2, data)
 
 		self.preview.SetZoom( 110 )
-		if not self.preview.Ok():
+		if not self.preview.IsOk():
 			return
 
 		pfrm = wx.PreviewFrame(self.preview, self, _("Print preview"))

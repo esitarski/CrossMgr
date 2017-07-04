@@ -330,7 +330,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		image = image.Rescale( int(wImage * ratio), int(hImage * ratio), wx.IMAGE_QUALITY_HIGH )
 		image = image.Resize( (wPhoto, hPhoto), (0,0), 255, 255, 255 )
 		
-		self.mainPhoto.SetBitmap( image.ConvertToBitmap(depth) )
+		self.mainPhoto.SetBitmap( image.ConvertToBitmap() )
 		self.mainPhoto.Refresh()
 		
 	def OnTakePhoto( self, event ):

@@ -31,7 +31,7 @@ class PhotoPrintout( wx.Printout ):
 		drawWidth, drawHeight = int(width*shrink), int(height*shrink)
 		border = (width-drawWidth)//2
 		image = RescaleImage( self.image, drawWidth, drawHeight, wx.IMAGE_QUALITY_HIGH )
-		bitmap = wx.BitmapFromImage( image )
+		bitmap = image.ConvertToBitmap()
 		dcBitmap = wx.MemoryDC( bitmap )
 		
 		dc.Blit( border, border, image.GetSize()[0], image.GetSize()[1], dcBitmap, 0, 0 )
@@ -189,7 +189,7 @@ class PhotoDialog( wx.Dialog ):
 	def onCopyToClipboard( self, event ):
 		if wx.TheClipboard.Open():
 			bmData = wx.BitmapDataObject()
-			bmData.SetBitmap( wx.BitmapFromImage(self.scaledImage.GetImage()) )
+			bmData.SetBitmap( self.scaledImage.GetImage().ConvertToBitmap() )
 			wx.TheClipboard.SetData( bmData )
 			wx.TheClipboard.Flush() 
 			wx.TheClipboard.Close()

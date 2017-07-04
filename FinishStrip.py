@@ -171,7 +171,7 @@ class FinishStrip( wx.Panel ):
 			
 			image = wx.Image( f, wx.BITMAP_TYPE_JPEG )
 			image.Rescale( int(image.GetWidth()*self.scale), int(image.GetHeight()*self.scale), wx.IMAGE_QUALITY_HIGH )
-			bitmaps[t] = wx.BitmapFromImage( image )
+			bitmaps[t] = image.ConvertToBitmap()
 		
 		self.timeBitmaps = [(t, bm) for t, bm in bitmaps.iteritems()]
 		self.timeBitmaps.sort( key=operator.itemgetter(0) )
@@ -225,14 +225,14 @@ class FinishStrip( wx.Panel ):
 		tWidth, tHeight = dc.GetTextExtent( text )
 		border = int(tHeight / 3)
 		
-		bm = wx.BitmapFromImage( wx.EmptyImage(tWidth, tHeight) )
+		bm = wx.Bitmap( tWidth, tHeight )
 		memDC = wx.MemoryDC( bm )
 		memDC.SetBackground( wx.BLACK_BRUSH )
 		memDC.Clear()
 		memDC.SetFont( font )
 		memDC.SetTextForeground( wx.WHITE )
 		memDC.DrawText( text, 0, 0 )
-		bmMask = wx.BitmapFromImage( bm.ConvertToImage() )
+		bmMask = wx.Bitmap( bm )
 		bm.SetMask( wx.Mask(bmMask, wx.BLACK) )
 		
 		dc.Blit( x+border, y - tHeight, tWidth, tHeight, memDC, 0, 0, useMask=True, rop=wx.XOR )
@@ -365,11 +365,11 @@ class FinishStrip( wx.Panel ):
 		
 	def GetBitmap( self ):
 		if not self.timeBitmaps:
-			return wx.EmptyBitmap( 16, 16 )
+			return wx.Bitmap( 16, 16 )
 		
 		widthWin, heightWin = self.GetClientSize()
 		
-		bm = wx.EmptyBitmap( widthWin, heightWin )
+		bm = wx.Bitmap( widthWin, heightWin )
 		dc = wx.MemoryDC( bm )
 		self.draw( dc )
 		dc.SelectObject( wx.NullBitmap )

@@ -102,7 +102,8 @@ class GrowTable( object ):
 		self.rowHeights = [0] * self.getNumberRows()
 		for row, r in enumerate(self.table):
 			for col, (value, attr) in enumerate(r):
-				vWidth, vHeight, lineHeight = dc.GetMultiLineTextExtent(value, fontBold if attr&self.bold else font)
+				dc.SetFont( fontBold if attr&self.bold else font )
+				vWidth, vHeight = dc.GetMultiLineTextExtent( value )
 				self.colWidths[col] = max(self.colWidths[col], vWidth + cellBorderX2)
 				self.rowHeights[row] = max(self.rowHeights[row], vHeight + cellBorderX2)
 		return sum( self.colWidths ), sum( self.rowHeights )
@@ -112,7 +113,8 @@ class GrowTable( object ):
 			dc.SetFont( font )
 		fontSize = dc.GetFont().GetPixelSize()[1]
 		cellBorder = self.getCellBorder( fontSize )
-		tWidth, tHeight, lineHeight = dc.GetMultiLineTextExtent(text, dc.GetFont())
+		lineHeight = dc.GetTextExtent( 'Py' )[1]
+		tWidth, tHeight = dc.GetMultiLineTextExtent( text )
 		xLeft = x + cellBorder
 		xRight = x + width - cellBorder
 		

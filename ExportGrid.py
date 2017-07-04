@@ -139,15 +139,17 @@ class ExportGrid( object ):
 									 wx.FONTWEIGHT_BOLD if bold else wx.FONTWEIGHT_NORMAL, False )
 	
 	def _getColSizeTuple( self, dc, font, col ):
-		wSpace, hSpace, lh = dc.GetMultiLineTextExtent( '    ', font )
-		extents = [ dc.GetMultiLineTextExtent(self.colnames[col], font) ]
-		extents.extend( dc.GetMultiLineTextExtent(u'{}'.format(v), font) for v in self.data[col] )
+		dc.SetFont( font )
+		wSpace, hSpace = dc.GetMultiLineTextExtent( '    ' )
+		extents = [ dc.GetMultiLineTextExtent(self.colnames[col]) ]
+		extents.extend( dc.GetMultiLineTextExtent(u'{}'.format(v)) for v in self.data[col] )
 		width = max( e[0] for e in extents )
 		height = sum( e[1] for e in extents[:self.rowDrawCount] )
 		return width, height + hSpace/4
 	
 	def _getDataSizeTuple( self, dc, font ):
-		wSpace, hSpace, lh = dc.GetMultiLineTextExtent( '    ', font )
+		dc.SetFont( font )
+		wSpace, hSpace = dc.GetMultiLineTextExtent( '    ' )
 		
 		wMax, hMax = 0, 0
 		
@@ -165,7 +167,7 @@ class ExportGrid( object ):
 	def _drawMultiLineText( self, dc, text, x, y ):
 		if not text:
 			return
-		wText, hText, lineHeightText = dc.GetMultiLineTextExtent( text, dc.GetFont() )
+		lineHeightText = dc.GetTextExtent( 'Py' )[1]
 		for line in text.split( '\n' ):
 			dc.DrawText( line, x, y )
 			y += lineHeightText
@@ -194,7 +196,7 @@ class ExportGrid( object ):
 		self.rowDrawCount = rowDrawCount
 			
 		# Get the dimensions of what we are printing on.
-		(widthPix, heightPix) = dc.GetSizeTuple()
+		widthPix, heightPix = dc.GetSize()
 		
 		# Get a reasonable border.
 		borderPix = max(widthPix, heightPix) / 20
@@ -215,7 +217,7 @@ class ExportGrid( object ):
 		# We cannot use a GraphicContext because it does not support a PrintDC.
 		image = bitmap.ConvertToImage()
 		image.Rescale( graphicWidth, graphicHeight, wx.IMAGE_QUALITY_HIGH )
-		bitmap = wx.BitmapFromImage( image.ConvertToGreyscale() if dc.GetDepth() == 8 else image )
+		bitmap = ( image.ConvertToGreyscale() if dc.GetDepth() == 8 else image ).ConvertToBitmap()
 		dc.DrawBitmap( bitmap, xPix, yPix )
 		image, bitmap = None, None
 		
@@ -233,12 +235,12 @@ class ExportGrid( object ):
 			url = url.replace( '%20', ' ' )
 		
 		# Draw the title.
-		font = self._getFontToFit( widthFieldPix - graphicWidth - graphicBorder - qrWidth, graphicHeight,
-									lambda font: dc.GetMultiLineTextExtent(self.title, font)[:2], True )
+		def getTitleTextSize( font ):
+			dc.SetFont( font )
+			return dc.GetMultiLineTextExtent( self.title )
+		font = self._getFontToFit( widthFieldPix - graphicWidth - graphicBorder - qrWidth, graphicHeight, getTitleTextSize, True )
 		dc.SetFont( font )
 		self._drawMultiLineText( dc, self.title, xPix + graphicWidth + graphicBorder, yPix )
-		# wText, hText, lineHeightText = dc.GetMultiLineTextExtent( self.title, font )
-		# yPix += hText + lineHeightText/4
 		yPix += graphicHeight + graphicBorder
 		
 		heightFieldPix = heightPix - yPix - borderPix
@@ -264,7 +266,8 @@ class ExportGrid( object ):
 		# Remember: _getDataSizeTuple understands self.rowDrawCount and will compute the height using the count.
 		font = self._getFontToFit( widthFieldPix, heightFieldPix, lambda font: self._getDataSizeTuple(dc, font) )
 		dc.SetFont( font )
-		wSpace, hSpace, textHeight = dc.GetMultiLineTextExtent( u'    ', font )
+		wSpace, hSpace = dc.GetMultiLineTextExtent( u'    ' )
+		textHeight = lh = dc.GetTextExtent( 'Py' )[1]
 		
 		# Get the row slice for each column.
 		dataDraw = [col[rowDrawStart:rowDrawStart+rowDrawCount] for col in self.data]
@@ -280,7 +283,7 @@ class ExportGrid( object ):
 		
 			colWidth = self._getColSizeTuple( dc, font, col )[0]
 			yPix = yPixTop
-			w, h, lh = dc.GetMultiLineTextExtent( c, font )
+			w, h = dc.GetMultiLineTextExtent( c )
 			if col in self.leftJustifyCols:
 				self._drawMultiLineText( dc, u'{}'.format(c), xPix, yPix )					# left justify
 			else:
@@ -300,7 +303,7 @@ class ExportGrid( object ):
 						vStr = vStr.split()[0]
 						if vStr == '"':
 							vStr += '    '
-					w, h, lh = dc.GetMultiLineTextExtent( vStr, font )
+					w, h = dc.GetMultiLineTextExtent( vStr )
 					if col in self.leftJustifyCols:
 						self._drawMultiLineText( dc, vStr, xPix, yPix )					# left justify
 					else:
@@ -314,7 +317,7 @@ class ExportGrid( object ):
 						if img:
 							h = int( textHeight * 0.66 )
 							w = int( float(img.GetWidth()) / float(img.GetHeight()) * float(h) )
-							bmp = flagCache[ioc] = wx.BitmapFromImage( img.Scale(w, h, wx.IMAGE_QUALITY_NORMAL) )
+							bmp = flagCache[ioc] = img.Scale(w, h, wx.IMAGE_QUALITY_NORMAL).ConvertToBitmap()
 						else:
 							bmp = flagCache[ioc] = None
 					if bmp:
@@ -334,11 +337,11 @@ class ExportGrid( object ):
 		
 		if url:
 			yPix = yPixMax + textHeight
-			w, h, lh = dc.GetMultiLineTextExtent( url, font )
+			w, h = dc.GetMultiLineTextExtent( url )
 			self._drawMultiLineText( dc, url, widthPix - borderPix - w, yPix )
 			
 		# Put CrossMgr branding at the bottom of the page.
-		w, h, lh = dc.GetMultiLineTextExtent( self.brandText, font )
+		w, h = dc.GetMultiLineTextExtent( self.brandText )
 		yFooter = heightPix - borderPix + int(h*1.8)
 		
 		self._drawMultiLineText( dc, self.brandText, borderPix, yFooter )
@@ -349,7 +352,7 @@ class ExportGrid( object ):
 				s = u'{} {} / {}'.format(_('Page'), pageNumber, pageNumberTotal)
 			else:
 				s = u'{} {}'.format(_('Page'), pageNumber)
-			w, h, lh = dc.GetMultiLineTextExtent( s, font )
+			w, h = dc.GetMultiLineTextExtent( s )
 			self._drawMultiLineText( dc, s, widthPix - w - borderPix, yFooter )
 			
 		# Clean up the extra spaces for the flags.
@@ -394,7 +397,7 @@ class ExportGrid( object ):
 		graphicWidth = float(bmWidth) / float(bmHeight) * graphicHeight
 		graphicBorder = int(graphicWidth * 0.15)
 
-		image = wx.ImageFromBitmap( bitmap )
+		image = bitmap.ConvertToImage()
 		graphicFName = os.path.join( os.path.expanduser('~'), uuid.uuid4().hex + '.png' )
 		image.SaveFile( graphicFName, wx.BITMAP_TYPE_PNG )
 		image, bitmap = None, None

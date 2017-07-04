@@ -53,7 +53,7 @@ def RescaleBitmap( dc, bitmap, width, height ):
 	image.Rescale( int(width), int(height), wx.IMAGE_QUALITY_HIGH )
 	if dc.GetDepth() == 8:
 		image = image.ConvertToGreyscale()
-	return image.ConvertToBitmap( dc.GetDepth() )
+	return image.ConvertToBitmap()
 	
 class PhotoSyncViewerDialog( wx.Dialog ):
 	def __init__(
@@ -208,7 +208,7 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 				photoLabels[i].SetLabel( u'{}ms'.format(deltaMS[i]) )
 				image = PhotoFinish.PilImageToWxImage( frame )
 				image = RescaleImage( image, self.photoWidth, self.photoHeight )
-				bitmap = image.ConvertToBitmap( dc.GetDepth() )
+				bitmap = image.ConvertToBitmap()
 				photoBitmaps[i].SetBitmapLabel( bitmap )
 
 		self.titles[self.iSeries] = getTitle( num, t )

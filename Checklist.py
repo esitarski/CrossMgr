@@ -259,7 +259,7 @@ class Checklist( wx.Panel ):
 			self.expandTree( child )
 			child = self.tree.GetNextSibling( child )
 		task = self.tree.GetItemData( treeNode )
-		if task.expand:
+		if task.expand and treeNode != self.tree.GetRootItem():
 			self.tree.Expand( treeNode )
 
 	def addChildren( self, treeNode ):
@@ -275,7 +275,8 @@ class Checklist( wx.Panel ):
 		while child.IsOk():
 			self.doCollapseAll( child )
 			child = self.tree.GetNextSibling( child )
-		self.tree.Collapse( treeNode )
+		if treeNode != self.tree.GetRootItem():
+			self.tree.Collapse( treeNode )
 
 	def updateExpanded( self ):
 		setChanged = Model.race.setChanged if Model.race else lambda: None

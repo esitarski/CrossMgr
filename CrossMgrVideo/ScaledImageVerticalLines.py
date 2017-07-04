@@ -142,8 +142,8 @@ class ScaledImageVerticalLines( wx.Panel ):
 		
 	def SetToEmpty( self ):
 		width, height = self.GetSize()
-		bitmap = wx.EmptyBitmapRGBA( width, height, 255, 255, 255, 0 )
-		self.image = wx.ImageFromBitmap( bitmap )
+		bitmap = wx.Bitmap( width, height )
+		self.image = bitmap.ConvertToImage()
 		
 	def SetTestImage( self ):
 		width, height = self.GetSize()

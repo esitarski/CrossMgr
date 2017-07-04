@@ -90,7 +90,7 @@ def AddPhotoHeader( image, bib=None, time=None, raceSeconds=None, firstNameTxt=u
 	global drawResources
 	
 	if not image:
-		return wx.EmptyBitmap(8, 8)
+		return wx.Bitmap(8, 8)
 	
 	bitmap = wx.Bitmap( image )
 	

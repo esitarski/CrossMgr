@@ -27,14 +27,14 @@ class ScaledImage( wx.Panel ):
 		dc.SetBackground( wx.WHITE_BRUSH )
 		dc.Clear()
 		
-		width, height = self.GetSizeTuple()
+		width, height = self.GetSize()
 		try:
 			image = self.image.Copy()
 			image = RescaleImage( image, width, height )
 		except:
 			return
 		
-		bitmap = wx.BitmapFromImage( image )
+		bitmap = image.ConvertToBitmap()
 		dc.DrawBitmap( bitmap, (width - bitmap.GetWidth())//2, (height - bitmap.GetHeight())//2 )
 	
 	def SetImage( self, image ):

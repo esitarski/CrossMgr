@@ -41,7 +41,7 @@ def getCatCountImagesCategoryList( parent ):
 				catCount[c] = race.catCount( c )
 				if catCount[c] == 0:
 					continue
-				index = list.InsertStringItem(sys.maxint, c.name, sm_rt)
+				index = list.InsertItem(sys.maxint, c.name, sm_rt)
 				list.SetItem( index, 1, getattr(c, 'gender', 'Open') )
 				list.SetItem( index, 2, [_('Start Wave'), _('Component'), _('Custom')][c.catType] )
 				list.SetItem( index, 3, u'{}'.format(catCount[c]) )
@@ -344,9 +344,9 @@ class CrossMgrPrintoutPNG( CrossMgrPrintout ):
 		
 		pxPerInch = 148
 		if self.orientation == wx.LANDSCAPE:
-			bitmap = wx.EmptyBitmap( pxPerInch*11, int(pxPerInch*8.5) )
+			bitmap = wx.Bitmap( pxPerInch*11, int(pxPerInch*8.5) )
 		else:
-			bitmap = wx.EmptyBitmap( int(pxPerInch*8.5), pxPerInch*11 )
+			bitmap = wx.Bitmap( int(pxPerInch*8.5), pxPerInch*11 )
 		dc = wx.MemoryDC()
 		dc.SelectObject( bitmap )
 		
@@ -393,7 +393,7 @@ class CrossMgrPrintoutPNG( CrossMgrPrintout ):
 		# Then convert the saved file to a png.
 		# For some reason Windows requires this.
 		with open(fname, 'rb') as f:
-			image = wx.ImageFromStream( f, fileFormat )
+			image = wx.Image( f, fileFormat )
 		image.SaveFile( fnamePNG, wx.BITMAP_TYPE_PNG )
 		
 		# Cleanup the old file.
