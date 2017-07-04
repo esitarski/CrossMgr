@@ -686,7 +686,7 @@ def addMissingSeparator( menu ):
 	
 def deleteTrailingSeparators( menu ):
 	while hasTrailingSeparator(menu):
-		menu.DeleteItem( menu.FindItemByPosition(menu.GetMenuItemCount()-1) )
+		menu.Delete( menu.FindItemByPosition(menu.GetMenuItemCount()-1) )
 	
 def AlignHorizontalScroll( gFrom, gTo ): 
 	xFrom, yFrom = gFrom.GetViewStart()

@@ -603,7 +603,7 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 		except Exception as e:
 			Utils.logException( e, sys.exc_info() )
 			
-		self.list.DeleteItem( self.item )
+		self.list.Delete( self.item )
 		wx.CallAfter( Utils.refresh )
 		wx.CallAfter( Utils.refreshForecastHistory )
 		
@@ -628,7 +628,7 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 		except Exception as e:
 			Utils.logException( e, sys.exc_info() )
 			
-		self.list.DeleteItem( self.item )
+		self.list.Delete( self.item )
 		wx.CallAfter( Utils.refresh )
 		wx.CallAfter( Utils.refreshForecastHistory )
 	
