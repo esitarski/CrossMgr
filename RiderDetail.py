@@ -17,6 +17,7 @@ import Gantt
 from EditEntry import CorrectNumber, ShiftNumber, DeleteEntry
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 from GetResults import GetResults, GetEntries, GetCategoryDetails
+from NumberEntryDialog import NumberEntryDialog
 
 def getStFtLaps( rider ):
 	with Model.LockRace() as race:
@@ -958,7 +959,7 @@ class RiderDetail( wx.Panel ):
 		self.refresh()
 	
 	def doCustomSplitLap( self ):
-		dlg = wx.NumberEntryDialog( self, message = "", caption = _("Add Missing Splits"), prompt = _("Missing Splits to Add:"),
+		dlg = NumberEntryDialog( self, message = "", caption = _("Add Missing Splits"), prompt = _("Missing Splits to Add:"),
 									value = 1, min = 1, max = 500 )
 		splits = None
 		if dlg.ShowModal() == wx.ID_OK:
@@ -1077,7 +1078,7 @@ class RiderDetail( wx.Panel ):
 				submenu.Append( id, name )
 			Utils.addMissingSeparator( menu )
 			menu.PrependSeparator()
-			menu.PrependMenu( self.splitMenuId, _('Add Missing Split'), submenu )
+			menu.Prepend( self.splitMenuId, _('Add Missing Split'), submenu )
 			
 		Utils.deleteTrailingSeparators( menu )
 		try:

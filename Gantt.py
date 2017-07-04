@@ -7,6 +7,7 @@ import GanttChartPanel
 from GetResults import GetResults, RidersCanSwap, RiderResult
 from Undo import undo
 import EditEntry
+from NumberEntryDialog import NumberEntryDialog
 
 def UpdateSetNum( num ):
 	if num is None:
@@ -167,7 +168,7 @@ class Gantt( wx.Panel ):
 				submenu.Append( id, name )
 			Utils.addMissingSeparator( menu )
 			menu.PrependSeparator()
-			menu.PrependMenu( self.splitMenuId, _('Add Missing Split'), submenu )
+			menu.Prepend( self.splitMenuId, _('Add Missing Split'), submenu )
 			
 		Utils.deleteTrailingSeparators( menu )
 		try:
@@ -189,7 +190,7 @@ class Gantt( wx.Panel ):
 		wx.CallAfter( self.refresh )
 		
 	def doCustomSplitLap( self ):
-		dlg = wx.NumberEntryDialog( self, message = "", caption = _("Add Missing Splits"), prompt = _("Missing Splits to Add:"),
+		dlg = NumberEntryDialog( self, message = "", caption = _("Add Missing Splits"), prompt = _("Missing Splits to Add:"),
 									value = 1, min = 1, max = 500 )
 		splits = None
 		if dlg.ShowModal() == wx.ID_OK:
