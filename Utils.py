@@ -180,19 +180,6 @@ class UIBusy( object ):
 def GetDateTimeToday():
 	tQuery = datetime.datetime.now()
 	return wx.DateTime.FromDMY( tQuery.day, tQuery.month-1, tQuery.year )
-		
-#-----------------------------------------------------------------------
-# Monkey-patch font function so we always fetch a nicer font face.
-#
-if 'WXMAC' not in wx.Platform:
-	'''
-	class ArialFont( wx.Font ):
-		def __init__( self, *args, **kwargs ):
-			kwargs['faceName'] = 'Arial'
-			super( ArialFont, self ).__init__( *args, **kwargs )
-			print 'override font'
-	wx.Font = ArialFont
-	'''
 
 #---------------------------------------------------------------------------
 from contextlib import contextmanager
@@ -227,24 +214,6 @@ import wx.grid		as gridlib
 
 import wx.lib.agw.genericmessagedialog
 if 'WXMAC' in wx.Platform:
-	# wx.DC.GetMultiLineTextExtent does not work on the Mac.
-	# Replace it with our own function.
-	def GetMultiLineTextExtent( dc, text, font = None ):
-		textWidth, textHeight, lineHeight = 0, 0, 0
-		for line in text.split('\n'):
-			# Handle empty lines.
-			if not line:
-				line = u'YyPpQq'
-				w, h = 0, dc.GetFullTextExtent( line, font )[1]
-			else:
-				w, h = dc.GetFullTextExtent( line, font )[:2]
-			textWidth = max( textWidth, w )
-			lineHeight = max( lineHeight, h  )
-			textHeight += h
-		return textWidth, textHeight, lineHeight
-	
-	wx.DC.GetMultiLineTextExtent = GetMultiLineTextExtent
-
 	# Error, Information and Question dialogs have no icons on the Mac.
 	# Replace all message dialogs with generics dialogs.
 	wx.MessageDialog = wx.lib.agw.genericmessagedialog.GenericMessageDialog
