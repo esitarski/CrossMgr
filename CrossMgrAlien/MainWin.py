@@ -182,7 +182,7 @@ class MainWin( wx.Frame ):
 		
 		font = self.GetFont()
 		bigFont = wx.Font( font.GetPointSize() * 1.5, font.GetFamily(), font.GetStyle(), wx.FONTWEIGHT_BOLD )
-		italicFont = wx.Font( bigFont.GetPointSize()*2.2, bigFont.GetFamily(), wx.FONTSTYLE_ITALIC, bigFont.GetWeight() )
+		titleFont = wx.Font( bigFont.GetPointSize()*2.2, bigFont.GetFamily(), bigFont.GetStyle(), bigFont.GetWeight() )
 		
 		self.vbs = wx.BoxSizer( wx.VERTICAL )
 		
@@ -195,7 +195,7 @@ class MainWin( wx.Frame ):
 		self.reset.Bind( wx.EVT_BUTTON, self.doReset )
 		self.reset.Refresh()
 		bs.Add( self.reset, border = 8, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
-		bs.Add( setFont(italicFont,wx.StaticText(self, wx.ID_ANY, 'CrossMgrAlien')), border = 8, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
+		bs.Add( setFont(titleFont,wx.StaticText(self, wx.ID_ANY, 'CrossMgrAlien')), border = 8, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
 		bs.AddStretchSpacer()
 		bitmap = wx.Bitmap( clipboard_xpm )
 		self.copyToClipboard = wx.BitmapButton( self, wx.ID_ANY, bitmap )
