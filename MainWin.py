@@ -1258,7 +1258,7 @@ class MainWin( wx.Frame ):
 			email = Model.race.email
 		else:
 			email = self.config.Read( 'email', 'results_name@results_address' )
-		dlg = wx.TextEntryDialog( self, message=_('Results Contact Email'), caption=_('Results Contact Email'), defaultValue=email )
+		dlg = wx.TextEntryDialog( self, message=_('Results Contact Email'), caption=_('Results Contact Email'), value=email )
 		result = dlg.ShowModal()
 		if result == wx.ID_OK:
 			value = dlg.GetValue()
