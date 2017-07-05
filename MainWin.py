@@ -106,6 +106,7 @@ import ChipReader
 import Flags
 import WebServer
 import ImageIO
+from ModuleUnpickler import ModuleUnpickler
 
 now = datetime.datetime.now
 
@@ -1389,7 +1390,6 @@ class MainWin( wx.Frame ):
 	
 	def menuPageSetup( self, event ):
 		psdd = wx.PageSetupDialogData(self.printData)
-		psdd.CalculatePaperSizeFromId()
 		dlg = wx.PageSetupDialog(self, psdd)
 		dlg.ShowModal()
 
@@ -2802,7 +2802,7 @@ class MainWin( wx.Frame ):
 		self.fileName = fileName
 		WebServer.SetFileName( self.fileName )
 		Model.resetCache()
-		Model.race.resetRiderCaches()
+		Model.race.resetAllCaches()
 		ResetExcelLinkCache()
 		
 		properties.commit()			# Apply the new properties
@@ -2867,7 +2867,11 @@ class MainWin( wx.Frame ):
 		
 		try:
 			with open(fileName, 'rb') as fp, Model.LockRace() as race:
-				race = pickle.load( fp )
+				try:
+					race = pickle.load( fp )
+				except:
+					fp.seek( 0 )
+					race = ModuleUnpickler( fp, module='CrossMgr' ).load()
 				race.sortLap = None			# Remove results lap sorting to avoid confusion.
 				isFinished = race.isFinished()
 				race.tagNums = None

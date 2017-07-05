@@ -708,7 +708,11 @@ table.results tr td.fastest{
 			return
 		try:
 			with open(fileName, 'rb') as fp:
-				SeriesModel.model = pickle.load( fp )
+				try:
+					SeriesModel.model = pickle.load( fp )
+				except:
+					fp.seek( 0 )
+					SeriesModel.model = ModuleUnpickler( fp, module='SeriesMgr' ).load()
 		except IOError:
 			Utils.MessageOK(self, 'Cannot Open File "{}".'.format(fileName), 'Cannot Open File', iconMask=wx.ICON_ERROR )
 			return

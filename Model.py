@@ -710,24 +710,21 @@ class Rider(object):
 		self.tStatus = tStatus
 	
 	def getCleanLapTimes( self ):
-		if not self.times or self.status in (Rider.DNS, Rider.DQ):
+		if not self.times or self.status in (Rider.DNS, Rider.DQ) or not race:
 			return None
 
 		# Create a separate working list.
 		# Add the start offset for the beginning of the start wave.
 		# This avoids special cases later.
-		iTimes = [race.getStartOffset(self.num) if race else 0.0]
+		iTimes = [race.getStartOffset(self.num)]
 		
 		# Clean up spurious reads based on minumum possible lap time.
 		# Also consider the median lap time.
 		# Also removes early times.
 		minPossibleLapTime = race.minPossibleLapTime
-		if race:
-			medianLapTime = race.getMedianLapTime( race.getCategory(self.num) )
-			if race.enableJChipIntegration:
-				medianLapTime /= 10.0
-		else:
-			medianLapTime = (iTimes[-1] - iTimes[0]) / float(len(iTimes) - 1)
+		medianLapTime = race.getMedianLapTime( race.getCategory(self.num) )
+		if race.enableJChipIntegration:
+			medianLapTime /= 10.0
 		
 		mustBeRepeatInterval = max( minPossibleLapTime, medianLapTime * 0.4 )
 		for t in self.times:

@@ -1449,7 +1449,7 @@ class RiderDetail( wx.Panel ):
 class RiderDetailDialog( wx.Dialog ):
 	def __init__( self, parent, num = None, id = wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, _("RiderDetail"),
-						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
+						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL|wx.RESIZE_BORDER )
 						
 		vs = wx.BoxSizer( wx.VERTICAL )
 		

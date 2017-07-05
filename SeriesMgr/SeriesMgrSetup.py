@@ -28,6 +28,7 @@ copyFiles = [
 	"BatchPublishAttrs.py",
 	"ReadCategoriesFromExcel.py",
 	"ReadPropertiesFromExcel.py",
+	"ModuleUnpickler.py",
 	"SetGraphic.py",
 	"imagebrowser.py",
 	"scramble.py",
