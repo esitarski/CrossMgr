@@ -212,11 +212,13 @@ import traceback
 import socket
 import wx.grid		as gridlib
 
+'''
 import wx.lib.agw.genericmessagedialog
 if 'WXMAC' in wx.Platform:
 	# Error, Information and Question dialogs have no icons on the Mac.
 	# Replace all message dialogs with generics dialogs.
 	wx.MessageDialog = wx.lib.agw.genericmessagedialog.GenericMessageDialog
+'''
 
 # Fix up numeric keypad keys.
 if 'WXMAC' in wx.Platform:
