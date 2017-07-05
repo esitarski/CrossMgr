@@ -124,6 +124,7 @@ try:
 except:
 	lang = locale.getdefaultlocale()[0]
 
+lang = 'en'
 try:
 	lang = os.environ['CrossMgrLanguage']
 except:
