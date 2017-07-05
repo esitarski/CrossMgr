@@ -124,11 +124,12 @@ try:
 except:
 	lang = locale.getdefaultlocale()[0]
 
-lang = 'en'
 try:
-	lang = os.environ['CrossMgrLanguage']
+	lang = os.environ['CrossMgrLanguage'] or 'en'
 except:
-	pass
+	lang = 'en'
+	
+lang = lang or 'en'
 
 #-----------------------------------------------------------------------
 # Setup translation.
