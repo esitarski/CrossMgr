@@ -1283,7 +1283,7 @@ class MainWin( wx.Frame ):
 	
 	def menuSetDefaultContactEmail( self, event = None ):
 		email = self.config.Read( 'email', 'my_name@my_address' )
-		dlg = wx.TextEntryDialog( self, message=_('Default Contact Email:'), caption=_('Default Contact Email for HTML output - New Races'), defaultValue=email )
+		dlg = wx.TextEntryDialog( self, message=_('Default Contact Email:'), caption=_('Default Contact Email for HTML output - New Races'), value=email )
 		result = dlg.ShowModal()
 		if result == wx.ID_OK:
 			value = dlg.GetValue()

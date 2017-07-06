@@ -83,6 +83,8 @@ if 'WXMAC' in wx.Platform:
 		dirName = os.path.normpath(topdirName + '/../../Resources/')
 	if not os.path.isdir(dirName):
 		raise Exception("Resource Directory does not exist:" + dirName)
+		
+	wx.MessageDialog = wx.lib.agw.genericmessagedialog
 else:
 	try:
 		dirName = os.path.dirname(os.path.abspath(__file__))

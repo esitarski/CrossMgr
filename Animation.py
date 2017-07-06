@@ -407,6 +407,7 @@ class Animation(wx.Control):
 		if self.rLast != r:
 			tHeight = r / 8.0
 			self.numberFont = wx.Font( (0,tHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+			self.leaderFont = wx.Font( (0,tHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 			self.timeFont = self.numberFont
 			self.highlightFont = wx.Font( (0,tHeight * 1.6), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 			self.rLast = r
@@ -568,6 +569,7 @@ class Animation(wx.Control):
 		xLeft = int(r * 0.85)
 		leaderWidth = 0
 		if leaders:
+			dc.SetFont( self.leaderFont )
 			x = xLeft
 			y = r / 2 + laneWidth * 1.5
 			tWidth, tHeight = dc.GetTextExtent( leaderHeader )
@@ -585,7 +587,7 @@ class Animation(wx.Control):
 				dc.SetBrush( wx.Brush(self.colours[num % len(self.colours)], wx.SOLID) )
 				DrawShape( dc, num, x + tHeight / 2, y + tHeight / 2, riderRadius )
 				
-				s = '%d %s' % (num, self.getShortName(num))
+				s = u'{} {}'.format(num, self.getShortName(num))
 				tWidth, tHeight = dc.GetTextExtent( s )
 				leaderWidth = max(tWidth, leaderWidth)
 				dc.DrawText( s, x + tHeight * 1.2, y)
@@ -610,7 +612,7 @@ class Animation(wx.Control):
 			for i, (pos, num) in enumerate(rp):
 				if i >= 4:
 					break
-				s = '(%s) %d %s' % (Utils.ordinal(pos), num, self.getShortName(num) )
+				s = u'({}) {} {}'.format(Utils.ordinal(pos), num, self.getShortName(num) )
 				dc.DrawText( s, x + tHeight * 1.2, y)
 				y += tHeight
 				if y > r * 1.5 - tHeight * 1.5:
@@ -623,9 +625,9 @@ class Animation(wx.Control):
 		# Draw the race time
 		secs = int( self.t )
 		if secs < 60*60:
-			tStr = '%d:%02d' % ((secs / 60)%60, secs % 60 )
+			tStr = '{}:{:02d}'.format((secs / 60)%60, secs % 60 )
 		else:
-			tStr = '%d:%02d:%02d' % (secs / (60*60), (secs / 60)%60, secs % 60 )
+			tStr = '{}:{:02d}:{:02d}'.format(secs / (60*60), (secs / 60)%60, secs % 60 )
 		tWidth, tHeight = dc.GetTextExtent( tStr )
 		dc.DrawText( tStr, 4*r - tWidth, 2*r - tHeight )
 		
