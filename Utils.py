@@ -140,7 +140,6 @@ import gettext
 import __builtin__
 initTranslationCalled = False
 def initTranslation():
-	global lang
 	global initTranslationCalled
 	
 	if not initTranslationCalled or (lang and not lang.startswith('en')):

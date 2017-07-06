@@ -39,6 +39,7 @@ def ReadPropertiesFromExcel( reader ):
 		('Chip Reader Type','chipReaderType',	'n'),
 		('Win and Out',		'winAndOut',		'b'),
 		('Event Long Name',	'longName', 		's'),
+		('Email',			'email', 			's'),
 	)
 
 	AttributeFromHeader = { h: a for h, a, t in HeadersFields }
