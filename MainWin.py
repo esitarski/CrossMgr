@@ -3616,7 +3616,7 @@ class MainWin( wx.Frame ):
 	@logCall
 	def menuAbout( self, event ):
 		# First we create and fill the info object
-		info = wx.AboutDialogInfo()
+		info = wx.adv.AboutDialogInfo()
 		info.Name = Version.AppVerName
 		info.Version = ''
 		info.Copyright = "(C) 2009-{}".format( now().year )
@@ -3637,7 +3637,8 @@ A brief list of features:
 		info.WebSite = ("http://sites.google.com/site/crossmgrsoftware/", "CrossMgr Home Page")
 		info.Developers = [
 					"Edward Sitarski (edward.sitarski@gmail.com)",
-					"Andrew Paradowski (andrew.paradowski@gmail.com)"
+					"Andrew Paradowski (andrew.paradowski@gmail.com)",
+					"Mark Buckaway"
 					]
 
 		licenseText = \
@@ -3658,7 +3659,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 """)
 		info.License = wordwrap(licenseText, 500, wx.ClientDC(self))
 
-		wx.AboutBox(info)
+		wx.adv.AboutBox(info)
 
 	#--------------------------------------------------------------------------------------
 
