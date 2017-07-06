@@ -70,6 +70,8 @@ import io
 	# return id
 # wx.NewId = NewIdNew
 
+import wx.lib.agw.genericmessagedialog
+
 if 'WXMAC' in wx.Platform:
 	try:
 		topdirName = os.environ['RESOURCEPATH']
@@ -84,7 +86,9 @@ if 'WXMAC' in wx.Platform:
 	if not os.path.isdir(dirName):
 		raise Exception("Resource Directory does not exist:" + dirName)
 		
-	wx.MessageDialog = wx.lib.agw.genericmessagedialog
+	# Make message not have the standard python icon on Mac.
+	wx.MessageDialog = wx.lib.agw.genericmessagedialog.GenericMessageDialog
+		
 else:
 	try:
 		dirName = os.path.dirname(os.path.abspath(__file__))
