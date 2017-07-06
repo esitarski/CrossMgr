@@ -385,11 +385,11 @@ class RiderDetail( wx.Panel ):
 		self.grid.SetRowLabelSize( 0 )
 		self.grid.SetRightAlign( True )
 		self.grid.SetLeftAlignCols( [4, 5, 6] )
-		#self.grid.SetDoubleBuffered( True )
 		self.grid.AutoSizeColumns( True )
 		self.grid.DisableDragColSize()
 		self.grid.DisableDragRowSize()
 		self.grid.SetSelectionMode( wx.grid.Grid.GridSelectRows )
+		self.Bind( wx.grid.EVT_GRID_CELL_LEFT_DCLICK, self.getPopupFuncCB(self.OnPopupCorrect) )
 		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doRightClick )
 
 		panel = wx.Panel( splitter, wx.ID_ANY, style = wx.BORDER_SUNKEN )
@@ -478,9 +478,43 @@ class RiderDetail( wx.Panel ):
 		self.idCur += 1
 		return id
 	
-	def doRightClick( self, event ):
+	def getEntryFromClick( self, event ):
 		self.eventRow = event.GetRow()
 		self.visibleRow = self.eventRow
+		if self.num.GetValue() is None:
+			return False
+		
+		try:
+			num = int(self.num.GetValue())
+		except:
+			return False
+			
+		self.iLap = self.getLapClicked( event )
+		if not self.iLap:
+			return False
+		
+		race = Model.race
+		if not race or num not in race.riders:
+			return False
+		
+		entries = race.riders[num].interpolate()
+		
+		try:
+			self.entry = entries[self.iLap]
+		except:
+			return False
+			
+		return True
+	
+	def getPopupFuncCB( self, func ):
+		def handler( event ):
+			if self.getEntryFromClick( event ):
+				func( event )
+		return handler
+	
+	def doRightClick( self, event ):
+		if not self.getEntryFromClick( event ):
+			return
 		
 		allCases = 0
 		interpCase = 1
@@ -502,21 +536,7 @@ class RiderDetail( wx.Panel ):
 				if p[0]:
 					self.Bind( wx.EVT_MENU, p[3], id=p[0] )
 		
-		if self.num.GetValue() is None:
-			return
-		num = int(self.num.GetValue())
-			
-		self.iLap = self.getLapClicked( event )
-		if self.iLap is None:
-			return
-		
-		with Model.LockRace() as race:
-			if not race or num not in race.riders:
-				return
-			entries = race.getRider(num).interpolate()
-		
 		try:
-			self.entry = entries[self.iLap]
 			caseCode = 1 if self.entry.interp else 2
 		except (TypeError, IndexError, KeyError):
 			caseCode = 0

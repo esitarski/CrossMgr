@@ -17,17 +17,9 @@ class CorrectNumberDialog( wx.Dialog ):
 						
 		self.entry = entry
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
-		self.numEdit = wx.lib.intctrl.IntCtrl( self, size=(64,-1), style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
+		self.numEdit = wx.lib.intctrl.IntCtrl( self, size=(64,-1), style=wx.TE_RIGHT, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
 		
-		self.timeMsEdit = HighPrecisionTimeEdit( self, seconds=entry.t, size=(120, -1) )
-				
-		self.okBtn = wx.Button( self, wx.ID_OK )
-		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
-
-		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
-		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
-		
-		border = 8
+		border = 4
 		bs.Add( wx.StaticText( self, label = u'{}: {}   {}: {}'.format(
 				_('Rider Lap'), self.entry.lap,
 				_('Race Time'), Utils.formatTime(self.entry.t, True)
@@ -36,18 +28,34 @@ class CorrectNumberDialog( wx.Dialog ):
 		bs.Add( wx.StaticText( self, label = u'{}:'.format(_("Rider"))),  pos=(1,0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.numEdit, pos=(1,1), span=(1,2), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		choices = [u'{}:'.format(_("Race Time"))]
-		if Model.race and Model.race.startTime:
+		race = Model.race
+		if race and race.startTime:
 			choices.append( _("24 hr Clock Time:") )
 		self.timeChoice = wx.Choice( self, -1, choices = choices )
 		self.timeChoiceLastSelection = 0
 		self.timeChoice.SetSelection( self.timeChoiceLastSelection )
 		self.timeChoice.Bind( wx.EVT_CHOICE, self.doTimeChoice, self.timeChoice )
+		self.timeMsEdit = HighPrecisionTimeEdit( self, seconds=entry.t, size=(120, -1) )
+				
 		bs.Add( self.timeChoice,  pos=(2,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.timeMsEdit, pos=(2,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.ALIGN_LEFT )
 		
-		bs.Add( self.okBtn, pos=(3, 0), span=(1,1), border = border, flag=wx.ALL )
+		bs.Add( wx.StaticText( self, label = u'{}:'.format(_("Lap Note"))),  pos=(3,0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )		
+		self.noteEdit = wx.TextCtrl( self, size=(250,-1) )
+		if race:
+			self.noteEdit.SetValue( getattr(race, 'lapNote', {}).get( (self.entry.num, self.entry.lap), u'' ) )
+		bs.Add( self.noteEdit, pos=(3,1), span=(1,2), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
+		
+		self.okBtn = wx.Button( self, wx.ID_OK )
+		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
+
+		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
+		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
+		
+		border = 4
+		bs.Add( self.okBtn, pos=(4, 0), span=(1,1), border = border, flag=wx.ALL )
 		self.okBtn.SetDefault()
-		bs.Add( self.cancelBtn, pos=(3, 1), span=(1,1), border = border, flag=wx.ALL )
+		bs.Add( self.cancelBtn, pos=(4, 1), span=(1,1), border = border, flag=wx.ALL )
 		
 		self.SetSizerAndFit(bs)
 		bs.Fit( self )
@@ -88,8 +96,9 @@ class CorrectNumberDialog( wx.Dialog ):
 										_('Time Entry Error'), iconMask = wx.ICON_ERROR )
 				return
 			t = (dtInput - dtStart).total_seconds()
-		
-		offset = Model.race.getStartOffset( num )
+
+		race = Model.race
+		offset = race.getStartOffset( num )
 		if t <= offset:
 			Utils.MessageOK( self, u'{}: {}\n\n{}\n{}'.format(
 				_('Cannot enter a time that is before the Category Start Offset'), Utils.formatTime(offset, highPrecision=True),
@@ -98,10 +107,18 @@ class CorrectNumberDialog( wx.Dialog ):
 				), _('Time Entry Error'), iconMask = wx.ICON_ERROR
 			)
 			return
-			
-		if self.entry.num != num or self.entry.t != t:
+
+		race.lapNote = getattr( race, 'lapNote', {} )
+		if self.noteEdit.GetValue() != race.lapNote.get( (self.entry.num, self.entry.lap), u'' ) or self.entry.num != num or self.entry.t != t:
 			undo.pushState()
-			with Model.LockRace() as race:
+			
+			note = self.noteEdit.GetValue().strip()
+			if not note:
+				race.lapNote.pop( (self.entry.num, self.entry.lap), None )
+			else:
+				race.lapNote[(self.entry.num, self.entry.lap)] = note
+				
+			if self.entry.num != num or self.entry.t != t:
 				rider = race.getRider( num )
 				if self.entry.lap != 0:
 					race.numTimeInfo.change( self.entry.num, self.entry.t, t )
@@ -110,8 +127,10 @@ class CorrectNumberDialog( wx.Dialog ):
 				else:
 					race.numTimeInfo.change( self.entry.num, rider.firstTime, t )
 					rider.firstTime = t
-					race.setChanged()
+					
+			race.setChanged()
 			Utils.refresh()
+		
 		self.EndModal( wx.ID_OK )
 		
 	def onCancel( self, event ):
@@ -126,13 +145,9 @@ class ShiftNumberDialog( wx.Dialog ):
 		self.entry = entry
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
 		self.numEdit = wx.lib.intctrl.IntCtrl( self, size=(40, -1),
-			style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER,
+			style=wx.TE_RIGHT,
 			value=int(self.entry.num),
 			allow_none=False, min=1, max=9999 )
-		
-		self.timeMsEdit = HighPrecisionTimeEdit( self )
-		self.timeMsEdit.Bind( wx.EVT_TEXT, self.updateNewTime )
-		self.newTime = wx.StaticText( self, label = u"00:00:00")
 		
 		shiftOptions = [_('Earlier'), _('Later')]
 		self.shiftBox = wx.RadioBox( self, wx.ID_ANY,
@@ -141,11 +156,9 @@ class ShiftNumberDialog( wx.Dialog ):
 			shiftOptions, 2, wx.RA_SPECIFY_COLS )
 		self.Bind(wx.EVT_RADIOBOX, self.updateNewTime, self.shiftBox)
 				
-		self.okBtn = wx.Button( self, wx.ID_OK )
-		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
-
-		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
-		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
+		self.timeMsEdit = HighPrecisionTimeEdit( self )
+		self.timeMsEdit.Bind( wx.EVT_TEXT, self.updateNewTime )
+		self.newTime = wx.StaticText( self, label = u"00:00:00")
 		
 		border = 8
 		bs.Add( wx.StaticText( self, label = u'{}: {}   {}: {}'.format(
@@ -158,6 +171,12 @@ class ShiftNumberDialog( wx.Dialog ):
 		bs.Add( wx.StaticText( self, label = u'{}:'.format(_("Shift Time"))),  pos=(3,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT|wx.BOTTOM )
 		bs.Add( self.timeMsEdit, pos=(3,1), span=(1,1), border = border, flag=wx.GROW|wx.LEFT|wx.RIGHT )
 		bs.Add( self.newTime, pos=(4,0), span=(1,2), border = border, flag=wx.GROW|wx.LEFT|wx.RIGHT )
+		
+		self.okBtn = wx.Button( self, wx.ID_OK )
+		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
+
+		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
+		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
 		bs.Add( self.okBtn, pos=(5, 0), span=(1,1), border = border, flag=wx.ALL )
 		self.okBtn.SetDefault()
@@ -208,7 +227,7 @@ class InsertNumberDialog( wx.Dialog ):
 		self.entry = entry
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
 		
-		self.numEdit = wx.lib.intctrl.IntCtrl( self, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
+		self.numEdit = wx.lib.intctrl.IntCtrl( self, style=wx.TE_RIGHT, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
 		
 		self.okBtn = wx.Button( self, wx.ID_OK )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
@@ -277,8 +296,8 @@ class SplitNumberDialog( wx.Dialog ):
 		self.entry = entry
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
 		
-		self.numEdit1 = wx.lib.intctrl.IntCtrl( self, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
-		self.numEdit2 = wx.lib.intctrl.IntCtrl( self, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
+		self.numEdit1 = wx.lib.intctrl.IntCtrl( self, style=wx.TE_RIGHT, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
+		self.numEdit2 = wx.lib.intctrl.IntCtrl( self, style=wx.TE_RIGHT, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
 		
 		self.okBtn = wx.Button( self, wx.ID_OK )
 		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
@@ -572,3 +591,11 @@ def AddLapSplits( num, lap, times, splits ):
 		except (TypeError, KeyError, ValueError, IndexError) as e:
 			Utils.logException( e, sys.exc_info() )
 			return False
+
+if __name__ == '__main__':
+	app = wx.App( False )
+	frame = wx.Frame( None )
+	
+	d = CorrectNumberDialog( frame, Model.Entry( 110, 3, 60*4+7, False ) )
+	d.Show()
+	app.MainLoop()
