@@ -29,8 +29,10 @@ ImpinjHostNameSuffix = '.local'
 ImpinjInboundPort = 5084
 #ImpinjInboundPort = 50840
 
-if 'WXMAC' in wx.Platform:
-	IpAddrCtrl = wx.TextCtrl
+if True or 'WXMAC' in wx.Platform:
+	class IpAddrCtrl( wx.TextCtrl ):
+		def GetAddress( self ):
+			return self.GetValue()
 else:
 	IpAddrCtrl = masked.IpAddrCtrl
 

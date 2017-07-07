@@ -22,7 +22,9 @@ import re
 import datetime
 
 if 'WXMAC' in wx.Platform:
-	IpAddrCtrl = wx.TextCtrl
+	class IpAddrCtrl( wx.TextCtrl ):
+		def GetAddress( self ):
+			return self.GetValue()
 else:
 	IpAddrCtrl = masked.IpAddrCtrl
 
