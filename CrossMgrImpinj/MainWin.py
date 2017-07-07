@@ -29,6 +29,11 @@ ImpinjHostNameSuffix = '.local'
 ImpinjInboundPort = 5084
 #ImpinjInboundPort = 50840
 
+if 'WXMAC' in wx.Platform:
+	IpAddrCtrl = wx.TextCtrl
+else:
+	IpAddrCtrl = masked.IpAddrCtrl
+
 clipboard_xpm = [
 "16 15 23 1",
 "+ c #769CDA",
@@ -345,7 +350,7 @@ class MainWin( wx.Frame ):
 		self.useStaticAddress = wx.RadioButton( self, label='IP:' )
 		gbs.Add( self.useStaticAddress, pos=(iRow,0), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
 		hb = wx.BoxSizer( wx.HORIZONTAL )
-		self.impinjHost = masked.IpAddrCtrl( self, style=wx.TE_PROCESS_TAB )
+		self.impinjHost = IpAddrCtrl( self, style=wx.TE_PROCESS_TAB )
 		hb.Add( self.impinjHost )
 		hb.Add( wx.StaticText(self, label=' : ' + '{}'.format(ImpinjInboundPort)), flag=wx.ALIGN_CENTER_VERTICAL )
 
@@ -374,7 +379,7 @@ class MainWin( wx.Frame ):
 		gbs.Add( wx.StaticText(self, label='CrossMgr Address:'), pos=(1,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		
 		hb = wx.BoxSizer( wx.HORIZONTAL )
-		self.crossMgrHost = masked.IpAddrCtrl( self, style = wx.TE_PROCESS_TAB )
+		self.crossMgrHost = IpAddrCtrl( self, style = wx.TE_PROCESS_TAB )
 		hb.Add( self.crossMgrHost, flag=wx.ALIGN_LEFT )
 		hb.Add( wx.StaticText( self, label=' : 53135' ), flag=wx.ALIGN_CENTER_VERTICAL )
 		gbs.Add( hb, pos=(1,1), span=(1,1), flag=wx.ALIGN_LEFT )

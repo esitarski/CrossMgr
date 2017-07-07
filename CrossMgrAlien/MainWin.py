@@ -21,6 +21,11 @@ import os
 import re
 import datetime
 
+if 'WXMAC' in wx.Platform:
+	IpAddrCtrl = wx.TextCtrl
+else:
+	IpAddrCtrl = masked.IpAddrCtrl
+
 from Version import AppVerName
 
 HeartbeatPort = 3988
@@ -275,7 +280,8 @@ class MainWin( wx.Frame ):
 		iRow += 1
 		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'Alien Cmd Address:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		hb = wx.BoxSizer( wx.HORIZONTAL )
-		self.cmdHost = masked.IpAddrCtrl( self, wx.ID_ANY, style = wx.TE_PROCESS_TAB )
+		self.cmdHost = IpAddrCtrl( self, wx.ID_ANY, style = wx.TE_PROCESS_TAB )
+
 		hb.Add( self.cmdHost )
 		hb.Add( wx.StaticText(self, wx.ID_ANY, ' : '), flag=wx.ALIGN_CENTER_VERTICAL )
 		self.cmdPort = intctrl.IntCtrl( self, size=( 50, -1 ), min=0, max=999999 )
@@ -297,7 +303,7 @@ class MainWin( wx.Frame ):
 		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'CrossMgr Address:'), pos=(1,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		
 		hb = wx.BoxSizer( wx.HORIZONTAL )
-		self.crossMgrHost = masked.IpAddrCtrl( self, wx.ID_ANY, style = wx.TE_PROCESS_TAB )
+		self.crossMgrHost = IpAddrCtrl( self, wx.ID_ANY, style = wx.TE_PROCESS_TAB )
 		hb.Add( self.crossMgrHost, flag=wx.ALIGN_LEFT )
 		hb.Add( wx.StaticText( self, wx.ID_ANY, ' : 53135' ), flag=wx.ALIGN_CENTER_VERTICAL )
 		gbs.Add( hb, pos=(1,1), span=(1,1), flag=wx.ALIGN_LEFT )
