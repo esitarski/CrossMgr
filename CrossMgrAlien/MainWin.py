@@ -267,30 +267,30 @@ class MainWin( wx.Frame ):
 		
 		hb = wx.BoxSizer( wx.HORIZONTAL )
 		ips = Utils.GetAllIps()
-		self.notifyHost = wx.Choice( self, wx.ID_ANY, choices = ips )
+		self.notifyHost = wx.Choice( self, choices = ips )
 		hb.Add( self.notifyHost )
-		hb.Add( wx.StaticText(self, wx.ID_ANY, ' : {}'.format(NotifyPort) ), flag=wx.ALIGN_CENTER_VERTICAL )
+		hb.Add( wx.StaticText(self, label=' : {}'.format(NotifyPort) ), flag=wx.ALIGN_CENTER_VERTICAL )
 		gbs.Add( hb, pos=(iRow ,1), span=(1,1) )
 		
 		iRow += 1
-		self.listenForHeartbeat = wx.CheckBox( self, wx.ID_ANY, 'Listen for Alien Heartbeat on Port: {}'.format(HeartbeatPort), style=wx.ALIGN_LEFT )
+		self.listenForHeartbeat = wx.CheckBox( self, label='Listen for Alien Heartbeat on Port: {}'.format(HeartbeatPort), style=wx.ALIGN_LEFT )
 		self.listenForHeartbeat.SetValue( True )
 		gbs.Add( self.listenForHeartbeat, pos=(iRow, 0), span=(1,2) )
 		
 		iRow += 1
-		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'Alien Cmd Address:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		gbs.Add( wx.StaticText(self, label='Alien Cmd Address:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		hb = wx.BoxSizer( wx.HORIZONTAL )
 		self.cmdHost = IpAddrCtrl( self, wx.ID_ANY, style = wx.TE_PROCESS_TAB )
 
 		hb.Add( self.cmdHost )
-		hb.Add( wx.StaticText(self, wx.ID_ANY, ' : '), flag=wx.ALIGN_CENTER_VERTICAL )
+		hb.Add( wx.StaticText(self,label=' : '), flag=wx.ALIGN_CENTER_VERTICAL )
 		self.cmdPort = intctrl.IntCtrl( self, size=( 50, -1 ), min=0, max=999999 )
 		hb.Add( self.cmdPort, flag=wx.ALIGN_CENTER_VERTICAL )
 		gbs.Add( hb, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
 		
 		iRow += 1
-		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'Backup File:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT )
-		self.backupFile = wx.StaticText( self, wx.ID_ANY, '' )
+		gbs.Add( wx.StaticText(self, label='Backup File:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT )
+		self.backupFile = wx.StaticText( self, label='' )
 		gbs.Add( self.backupFile, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
 		
 		#------------------------------------------------------------------------------------------------
@@ -299,23 +299,23 @@ class MainWin( wx.Frame ):
 		gbs = wx.GridBagSizer( 4, 4 )
 		fgs.Add( gbs, flag=wx.EXPAND|wx.ALL, border = 4 )
 		
-		gbs.Add( setFont(bigFont,wx.StaticText(self, wx.ID_ANY, 'CrossMgr Configuration:')), pos=(0,0), span=(1,2), flag=wx.ALIGN_LEFT )
-		gbs.Add( wx.StaticText(self, wx.ID_ANY, 'CrossMgr Address:'), pos=(1,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		gbs.Add( setFont(bigFont,wx.StaticText(self, label='CrossMgr Configuration:')), pos=(0,0), span=(1,2), flag=wx.ALIGN_LEFT )
+		gbs.Add( wx.StaticText(self, label='CrossMgr Address:'), pos=(1,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		
 		hb = wx.BoxSizer( wx.HORIZONTAL )
-		self.crossMgrHost = IpAddrCtrl( self, wx.ID_ANY, style = wx.TE_PROCESS_TAB )
+		self.crossMgrHost = IpAddrCtrl( self, style = wx.TE_PROCESS_TAB )
 		hb.Add( self.crossMgrHost, flag=wx.ALIGN_LEFT )
-		hb.Add( wx.StaticText( self, wx.ID_ANY, ' : 53135' ), flag=wx.ALIGN_CENTER_VERTICAL )
+		hb.Add( wx.StaticText( self,label=' : 53135' ), flag=wx.ALIGN_CENTER_VERTICAL )
 		gbs.Add( hb, pos=(1,1), span=(1,1), flag=wx.ALIGN_LEFT )
 		
 		#------------------------------------------------------------------------------------------------
 		# Add messages
 		#
-		self.alienMessagesText = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_READONLY|wx.TE_MULTILINE|wx.HSCROLL, size=(-1,400) )
+		self.alienMessagesText = wx.TextCtrl( self, style=wx.TE_READONLY|wx.TE_MULTILINE|wx.HSCROLL, size=(-1,400) )
 		fgs.Add( self.alienMessagesText, flag=wx.EXPAND, proportion=2 )
 		self.alienMessages = MessageManager( self.alienMessagesText )
 		
-		self.crossMgrMessagesText = wx.TextCtrl( self, wx.ID_ANY, style=wx.TE_READONLY|wx.TE_MULTILINE|wx.HSCROLL, size=(-1,400) )
+		self.crossMgrMessagesText = wx.TextCtrl( self, style=wx.TE_READONLY|wx.TE_MULTILINE|wx.HSCROLL, size=(-1,400) )
 		fgs.Add( self.crossMgrMessagesText, flag=wx.EXPAND, proportion=2 )
 		self.crossMgrMessages = MessageManager( self.crossMgrMessagesText )
 		self.fgs = fgs
