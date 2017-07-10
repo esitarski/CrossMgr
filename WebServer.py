@@ -5,6 +5,7 @@ import sys
 import gzip
 import glob
 import time
+import json
 import threading
 import datetime
 import traceback
@@ -98,7 +99,10 @@ class ContentBuffer( object ):
 	
 	def _updateFile( self, fname, forceUpdate=False ):
 		if not self.fnameRace:
-			return None		
+			return None
+			
+		if '_TTCountdown' in fname:		# Force update the countdown so we get a valid timestamp.
+			forceUpdate = True
 		
 		fnameBase = os.path.basename(fname).split('?')[0]
 		race = Model.race
@@ -334,12 +338,13 @@ def WriteHtmlIndexPage():
 
 class CrossMgrHandler( BaseHTTPRequestHandler ):
 	html_content = 'text/html; charset=utf-8'
+	json_content = 'application/json';
 	
 	def do_GET(self):
-		up = urlparse.urlparse( self.path )
+		up = urlparse.urlparse( self.path )		
 		content, gzip_content = None,  None
 		try:
-			if up.path=="/":
+			if up.path=='/':
 				content = getIndexPage()
 				content_type = self.html_content
 			elif up.path=='/favicon.ico':
@@ -349,6 +354,13 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 				urlPage = GetCrossMgrHomePage()
 				content = getQRCodePage( urlPage )
 				content_type = self.html_content
+			elif up.path=='/servertimestamp.html':
+				content = json.dumps( {
+						'servertimestamp':int(time.time()*1000.0),
+						'requesttimestamp':int(up.query),
+					}
+				)
+				content_type = self.json_content;
 			else:
 				file = urllib.url2pathname(os.path.basename(up.path))
 				content, gzip_content = contentBuffer.getContent( file )
@@ -377,6 +389,7 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 def GetCrossMgrHomePage( ip=None ):
 	if ip is None:
 		ip = not sys.platform.lower().startswith('win')
+		ip = True
 	
 	if ip:
 		hostname = DEFAULT_HOST

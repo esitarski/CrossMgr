@@ -423,6 +423,7 @@ var translations = {
 	'Projected Time':['Projected Time',	'Temps prévu',			'Tiempo projectada'],
 	'Est. Distance Gap': ['Est. Distance',	"Distance est.", 		'Est. distancia'],
 	'Race Chart':	['Race Chart',		'Tableau de la course',		'Tabla de carrera'],
+	'Race Position':	['Race Position',	'Position de course',		'Posición de carrera'],
 	'Show Start Offsets':	['Show Start Offsets',	'Afficher commencer décalages',	'Mostrar empezar a desplazamientos'],
 	'Show Details':	['Show Details',	'Afficher les détails',	'Mostrar los detalles'],
 	'Race Lightning':	['Race Lightning',		"Éclair de course",	'Rayo de carrera'],
@@ -6185,6 +6186,7 @@ Current versions of Chrome, FireFox and Opera work fine.
 <div id="idResultsDiv"></div>
 
 <div id="idLapChartDiv" class="noprint">
+<strong><span id="idLapChartName" data-tr="Race Position"></span></strong><br/>
 <canvas id="idLapChart" width="1000" height="800">
 <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a> Requires support for the HTML5 Canvas.<br/>
 Please upgrade to a more recent browser version.<br/>
@@ -6195,7 +6197,7 @@ Current versions of Chrome, FireFox and Opera work fine.
 
 <div id="idRaceChartDiv" class="noprint">
 <p>
-	<span id="idRaceChartName" data-tr="Race Chart"></span>&nbsp;&nbsp;&nbsp;&nbsp;
+	<strong><span id="idRaceChartName" data-tr="Race Chart"></span></strong>&nbsp;&nbsp;&nbsp;&nbsp;
 	<span id="idShowStartOffsetOption">
 		<input type="checkbox" id="idShowStartOffsets" checked onClick="RefreshRaceChart()">
 		<label for="idShowStartOffsets" data-tr="Show Start Offsets"></label>
@@ -6217,7 +6219,7 @@ Current versions of Chrome, FireFox and Opera work fine.
 <div id="idSituationDiv" class="noprint">
 <hr>
 <p>
-	<span id="idSituationName" data-tr="Situation"></span>
+	<strong><span id="idSituationName" data-tr="Situation"></span></strong>
 </p>
 <table><tr>
 	<td style="vertical-align:top; text-align:center;">

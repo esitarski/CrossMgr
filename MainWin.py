@@ -2102,6 +2102,7 @@ class MainWin( wx.Frame ):
 				tNow.year, tNow.month-1, tNow.day,
 				tNow.hour, tNow.minute, tNow.second, int(tNow.microsecond/1000)
 		]
+		payload['serverTimestamp'] = int(round(time.time() * 1000))	# milliseconds from epoch.
 				
 		try:
 			externalInfo = race.excelLink.read()
@@ -3069,8 +3070,8 @@ class MainWin( wx.Frame ):
 			race.memo = ''
 			race.minutes = self.raceMinutes
 			race.raceNum = 1
-			race.simulation = True	# Flag this as a simulation race.
-			#race.isTimeTrial = True
+			race.simulation = True	# Make sure we flag this as a simulation race.
+			race.isTimeTrial = True
 			race.enableUSBCamera = True
 			#race.photosAtRaceEndOnly = True
 			#race.enableJChipIntegration = True

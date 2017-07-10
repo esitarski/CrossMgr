@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
@@ -125,6 +126,7 @@ var raceStart = null;
 
 var lastUpdatedTuple = null;
 var lastUpdated = null;
+var serverTimestamp = null;
 
 var raceStarted = true;
 
@@ -208,12 +210,12 @@ function startIntervalTimer() {
 	}
 	setTimeout(
 		function(){ intervalID = setInterval(updateCountdown, 1000); updateCountdown(); },
-		(10000 - ((new Date()).getTime() - beepsToGive[0].t.getTime()) % 1000) % 1000 );
+		(10000 - (ServerDate().getTime() - beepsToGive[0].t.getTime()) % 1000) % 1000 );
 	secondsBetweenUpdate = 0;
 }
 
 function updateCountdown() {
-	var tNow = new Date();
+	var tNow = ServerDate();
 	var btg = null;
 	
 	if( !raceStarted )
@@ -284,7 +286,6 @@ function updateCountdown() {
 			if( i == startEntryNext.length - 1 )
 				tr.className += ' border-bottom';
 			
-			console.log( startEntryNext[i] );
 			for( var c = 1; c < startEntryNext[i].length; ++c ) {
 				var td = document.createElement('TD'); tr.appendChild( td );
 				var v = startEntryNext[i][c];
@@ -335,11 +336,62 @@ function initiateSound() {
 	}
 }
 
+// Keep track of the smallest correction which will be the best estimate of the server time.
+var millisDelta = null;
+function ServerDate() {
+	return new Date( (new Date()).getTime() + (millisDelta != null ? millisDelta : 0) );
+}
+function getJSON(url, successHandler, errorHandler) {
+	var xhr = typeof XMLHttpRequest != 'undefined'
+		? new XMLHttpRequest()
+		: new ActiveXObject('Microsoft.XMLHTTP');
+	xhr.open('get', url, true);
+	xhr.onreadystatechange = function() {
+		var status;
+		var data;
+		// https://xhr.spec.whatwg.org/#dom-xmlhttprequest-readystate
+		if (xhr.readyState == 4) { // `DONE`
+			status = xhr.status;
+			if (status == 200) {
+				data = JSON.parse(xhr.responseText);
+				successHandler && successHandler(data);
+			} else {
+				errorHandler && errorHandler(status);
+			}
+		}
+	};
+	xhr.send();
+};
+
+function ProcessServerTimestamp( ts ) {
+	var arrivaltimestamp = (new Date()).getTime();
+	var latency2 = Math.floor( (arrivaltimestamp - ts.requesttimestamp) / 2 );
+	var millisDeltaCur = ts.servertimestamp + latency2 - arrivaltimestamp;
+	if( millisDelta == null || millisDelta > millisDeltaCur )
+		millisDelta = millisDeltaCur;
+}
+
 function onload() {
 	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
 	if( startList == null ) startList = [];
 	
-	lastUpdated = (lastUpdatedTuple == null ? new Date() : dateFromTuple(lastUpdatedTuple));
+	// Get the initial timestamp on the server and compute a correction with our local time.
+	// This will get us within a second or two of the server's time.
+	// Schedule some ajax calls to improve this.
+	if( serverTimestamp != null )
+		millisDelta.push( serverTimestamp - (new Date()).getTime() );
+	if( window.location.protocol != 'file:' ) {
+		var url = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port + '/servertimestamp.html';
+		for( var i = 0; i < 30; ++i ) {
+			// Pass our current timestamp so we can estimate the latency.
+			setTimeout(
+				function() { getJSON(url + '?' + (new Date()).getTime(), ProcessServerTimestamp) },
+				Math.random() * 250 + i*500
+			);
+		}
+	}
+	
+	lastUpdated = (lastUpdatedTuple == null ? ServerDate() : dateFromTuple(lastUpdatedTuple));
 	
 	if( /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ) {
 		// On tablets, the first sound must be triggered by a user action.
@@ -351,6 +403,7 @@ function onload() {
 	else
 		enableBeeps = true;
 	
+	tServer = ServerDate();
 	if( raceStartTuple != null ) {
 		raceStart = dateFromTuple( raceStartTuple );
 	}
@@ -360,14 +413,14 @@ function onload() {
 							' (' + startList.length + ' Starters)'] );
 		
 		// Set up a callback to automatically refresh the page on or after the race start time.
-		setTimeout( Math.max(0, raceStart.getTime() - (new Date()).getTime()) + 5*1000, function() { location.reload(true); } );
-		if( raceStart.getTime() > (new Date()).getTime() )
+		setTimeout( Math.max(0, raceStart.getTime() - tServer.getTime()) + 5*1000, function() { location.reload(true); } );
+		if( raceStart.getTime() > tServer.getTime() )
 			playBeep( 1 );
 		enableBeeps = false;
 		raceStarted = false;
 	}
 	else {
-		raceStart = new Date(new Date().getTime() - 94*60*1000 - 3287);
+		raceStart = new Date(tServer.getTime() - 94*60*1000 - 3287);
 		startList = startListTest;
 		playBeep( 1 );
 	}
@@ -421,15 +474,14 @@ function onload() {
 		startList.sort( function(a, b) { return a[0] - b[0]; } );	// Sort by start time.
 	}
 	
-	var tNow = new Date();
 	for( var i = 0; i < startList.length; ++i ) {
 		var startEntry = startList[i];
 		var tStart = new Date(raceStart.getTime() + startEntry[0] * 1000);
-		if( tStart < tNow )
+		if( tStart < tServer )
 			continue;
 		for( var b = 0; b < beepTimes.length; ++b ) {
 			var tBeep = new Date(tStart.getTime() - beepTimes[b] * 1000);
-			if( tBeep < tNow || (beepsToGive.length > 0 && beepsToGive[beepsToGive.length-1].t >= tBeep) )
+			if( tBeep < tServer || (beepsToGive.length > 0 && beepsToGive[beepsToGive.length-1].t >= tBeep) )
 				continue;
 			beepsToGive.push( {
 					't':tBeep,
@@ -483,14 +535,14 @@ function onload() {
 </div>
 <div id="rider-next">
 <table>
-	<tr class="border-left border-right border-top border-bottom"><td>&nbsp</td></tr>
-	<tr class="border-left border-right border-bottom"><td>&nbsp</td></tr>
-	<tr class="border-left border-right border-bottom"><td>&nbsp</td></tr>
-	<tr class="border-left border-right border-bottom"><td>&nbsp</td></tr>
-	<tr class="border-left border-right border-bottom"><td>&nbsp</td></tr>
-	<tr class="border-left border-right border-bottom"><td>&nbsp</td></tr>
-	<tr class="border-left border-right border-bottom"><td>&nbsp</td></tr>
-	<tr class="border-left border-right border-bottom"><td>&nbsp</td></tr>
+	<tr class="border-left border-right border-top border-bottom"><td>&nbsp;</td></tr>
+	<tr class="border-left border-right border-bottom"><td>&nbsp;</td></tr>
+	<tr class="border-left border-right border-bottom"><td>&nbsp;</td></tr>
+	<tr class="border-left border-right border-bottom"><td>&nbsp;</td></tr>
+	<tr class="border-left border-right border-bottom"><td>&nbsp;</td></tr>
+	<tr class="border-left border-right border-bottom"><td>&nbsp;</td></tr>
+	<tr class="border-left border-right border-bottom"><td>&nbsp;</td></tr>
+	<tr class="border-left border-right border-bottom"><td>&nbsp;</td></tr>
 </table>
 </div>
 <br/>
