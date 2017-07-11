@@ -209,6 +209,59 @@ def ShowTipAtStartup():
 	except:
 		pass
 
+class SimulateDialog(wx.Dialog):
+	ID_MASS_START = wx.NewId()
+	ID_TIME_TRIAL = wx.NewId()
+
+	def __init__(
+			self, parent, fName, id=wx.ID_ANY, title=_('Simulation'), size=wx.DefaultSize, pos=wx.DefaultPosition,
+			style=wx.DEFAULT_DIALOG_STYLE, name='dialog'
+			):
+
+		super( SimulateDialog, self ).__init__(parent, id, title, pos, size, style, name)
+
+		explain = u'\n'.join( [
+				_('Simulate Race'),
+				u'',
+				_('This will simulate a race using randomly generated data.'),
+				_("It is a good illustration of CrossMgr's functionality with real time data."),
+				u'',
+				_('The simulation takes about 8 minutes.'),
+				_('Unlike a Mass Start real race, the simulation will show riders crossing the line right from the start.'),
+				_('In a real race, riders would have to finish the first lap before they were recorded.'),
+				_('In the Time Trial simulation, riders start on 15 second intervals.'),
+				u'',
+				u'{}: "{}".'.format(_('The race will be written to'), fName),
+				u'',
+				_('Continue?'),
+				] )
+		
+		# Now continue with the normal construction of the dialog
+		# contents
+		sizer = wx.BoxSizer(wx.VERTICAL)
+
+		label = wx.StaticText(self, label=explain )
+		sizer.Add(label, flag=wx.ALIGN_CENTRE|wx.ALL, border=4)
+
+		btnsizer = wx.BoxSizer(wx.HORIZONTAL)
+
+		btn = wx.Button(self, label=_('Mass Start Race') )
+		btn.Bind( wx.EVT_BUTTON, lambda e: self.EndModal(self.ID_MASS_START) )
+		btn.SetDefault()
+		btnsizer.Add(btn, flag=wx.ALL, border=4)
+		
+		btn = wx.Button(self, label=_('Time Trial') )
+		btn.Bind( wx.EVT_BUTTON, lambda e: self.EndModal(self.ID_TIME_TRIAL) )
+		btnsizer.Add(btn, flag=wx.ALL, border=4)
+				
+		btn = wx.Button(self, wx.ID_CANCEL)
+		btnsizer.Add(btn, flag=wx.ALL, border=4)
+
+		sizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 8)
+
+		self.SetSizer(sizer)
+		sizer.Fit(self)
+
 def replaceJsonVar( s, varName, value ):
 	return s.replace( u'{} = null'.format(varName), u'{} = {}'.format(varName, json.dumps(value, separators=(',',':'))), 1 )
 
@@ -3023,22 +3076,12 @@ class MainWin( wx.Frame ):
 	@logCall
 	def menuSimulate( self, event ):
 		fName = os.path.join( os.path.expanduser('~'), 'Simulation.cmn' )
-		if not Utils.MessageOKCancel(self, u'\n'.join( [
-				_('Simulate Race'),
-				u'',
-				_('This will simulate a race using randomly generated data.'),
-				_("It is a good illustration of CrossMgr's functionality with real time data."),
-				u'',
-				_('The simulation takes about 8 minutes.'),
-				_('Unlike a real race, the simulation will show riders crossing the line right from the start.'),
-				_('In a real race, riders would have to finish the first lap before they were recorded.'),
-				u'',
-				u'{}: "{}".'.format(_('The race will be written to'), fName),
-				u'',
-				_('Continue?'),
-				] ),
-				_('Simulate Race') ):
+		dlg = SimulateDialog( self, fName )
+		ret = dlg.ShowModal()
+		dlg.Destroy()
+		if ret == wx.ID_CANCEL:
 			return
+		isTimeTrial = (ret == SimulateDialog.ID_TIME_TRIAL)
 
 		try:
 			with open(fName, 'wb') as fp:
@@ -3071,7 +3114,7 @@ class MainWin( wx.Frame ):
 			race.minutes = self.raceMinutes
 			race.raceNum = 1
 			race.simulation = True	# Make sure we flag this as a simulation race.
-			race.isTimeTrial = True
+			race.isTimeTrial = isTimeTrial
 			race.enableUSBCamera = True
 			#race.photosAtRaceEndOnly = True
 			#race.enableJChipIntegration = True

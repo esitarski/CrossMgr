@@ -59,7 +59,7 @@ def StartRaceNow( page=_('Record') ):
 def GetNowSeconds():
 	t = datetime.datetime.now()
 	return t.hour * 60 * 60 + t.minute * 60 + t.second
-		
+
 class StartRaceAtTime( wx.Dialog ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, _("Start Race at Time:"),
