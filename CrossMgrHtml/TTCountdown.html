@@ -11,6 +11,29 @@
 <style>
 body { font-family: Arial, Helvetica, sans-serif; }
 
+#rider-starting {
+	font-size: 10vh;
+	font-weight: bold;
+	padding-left: .5cm;
+	padding-right: .5cm;
+}
+
+#team-starting {
+	font-size: 6vh;
+	font-weight: bold;
+	color: #66c;
+	padding-left: 2.2cm;
+}
+
+#countdown-clock {
+    font-size: 41vw;
+    font-weight: bold;
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+    line-height: 85%;
+}
+
 #rider-starting-div {
 	width: 100%;
 	background: linear-gradient(rgb(194,199,248), rgb(240,240,255), rgb(194,199,248)); 
@@ -30,29 +53,6 @@ body { font-family: Arial, Helvetica, sans-serif; }
 }
 
 #countdown-clock-div {
-}
-
-#rider-starting {
-	font-size: 10vh;
-	font-weight: bold;
-	padding-left: .5cm;
-	padding-right: .5cm;
-}
-
-#team-starting {
-	font-size: 4vh;
-	font-weight: bold;
-	color: #66c;
-	padding-left: 2.2cm;
-}
-
-#countdown-clock {
-    font-size: 41vw;
-    font-weight: bold;
-    display: inline-block;
-    width: 100%;
-    text-align: center;
-    line-height: 85%;
 }
 
 .btn {
@@ -77,7 +77,7 @@ body { font-family: Arial, Helvetica, sans-serif; }
 }
 
 #rider-next {
-	font-size: 3vw;
+	font-size: 2.5vw;
 	height: 200px;
 	overflow: auto;
 }
@@ -396,7 +396,9 @@ function SetRaceName() {
 	e.innerHTML = (
 		escapeHTML(raceName?raceName:'') + ' ' +
 		raceStart.toLocaleString() + '  Last Updated ' +
-		lastUpdated.toLocaleString() + ' (&delta;=' + (millisDelta/1000.0).toFixed(3) + 's)'
+		lastUpdated.toLocaleString() + ' ' + 
+		'(&Delta;=' + (millisDelta/1000.0).toFixed(3) + 's, ' +
+		'&Lambda;=' + (latency2Min/1000.0).toFixed(3) + 's)'
 	)
 }
 
