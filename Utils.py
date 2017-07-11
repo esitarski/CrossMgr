@@ -188,6 +188,12 @@ def GetDateTimeToday():
 	tQuery = datetime.datetime.now()
 	return wx.DateTime.FromDMY( tQuery.day, tQuery.month-1, tQuery.year )
 
+import wx.lib.agw.supertooltip as STT
+def SetSuperTooltip( target, header, message ):
+	tip = STT.SuperToolTip( header=header, message=message )
+	tip.ApplyStyle("Outlook Green")
+	tip.SetTarget( target )
+	
 #---------------------------------------------------------------------------
 from contextlib import contextmanager
 

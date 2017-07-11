@@ -89,28 +89,10 @@ class TimeTrialRecord( wx.Panel ):
 		
 		self.recordTimeButton.SetFont( self.bigFont )
 		
-		'''
-		tip = wx.adv.RichToolTip(
-			_('Tip'), 
-			u'\n'.join([
-				_('Tap button to Record Times, or press the "t" key.'),
-				_('Then enter the Bib numbers and Save as soon as possible.')
-			])
-		)
-		tip.SetIcon( wx.ICON_INFORMATION )
-		tip.ShowFor( self.recordTimeButton )
-		'''
-		import wx.lib.agw.supertooltip as STT
-		tip = STT.SuperToolTip(header=_('Tip'), message=u'\n'.join([
+		Utils.SetSuperTooltip( self.recordTimeButton, _('Tip'), u'\n'.join([
 				_('Tap to Record Times, or press the "t" key.'),
 				_('Then enter the Bib number(s) and Save.')
 			]))
-		tip.ApplyStyle("Outlook Green")
-		tip.SetTarget( self.recordTimeButton )
-		'''
-		self.recordTimeButton.SetToolTip(wx.ToolTip(u'\n'.join(
-			[_('Tap to Record Times (or press the "t" key).'), _('Enter Bib numbers, and Save as quickly as possible.')]) ))
-		'''
 		
 		hbs = wx.BoxSizer( wx.HORIZONTAL )
 		hbs.Add( self.recordTimeButton, 0 )
