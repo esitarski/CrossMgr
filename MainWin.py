@@ -3082,28 +3082,30 @@ class MainWin( wx.Frame ):
 			if race.isTimeTrial:
 				for c in categories:
 					c.pop( 'raceMinutes', None )
-				categories[0]['numLaps'] = 6
-				categories[1]['numLaps'] = 4
+				categories[0]['numLaps'] = 4
+				categories[1]['numLaps'] = 3
 				race.setCategories( categories )
-				nums = list( set( num for t, num in self.lapTimes if 100 <= num <= 299 ) )
 				
+				nums = set()
 				numTimes = defaultdict( list )
-				numMean = {}
 				for t, num in self.lapTimes:
+					nums.add( num )
 					numTimes[num].append( t )
+				
+				numRaceTimes = {}
 				for num, times in numTimes.iteritems():
 					times.sort()
-					dt = sorted( t2 - t1 for t2, t1 in zip(times[1:], times) )
-					try:
-						numMean[num] = dt[len(td)//2]
-					except:
-						numMean[num] = 99999
-				nums.sort( key = lambda n: (n//100, numMean.get(n, 99999)), reverse = True )
+					numRaceTimes[num] = [t - times[0] for t in times[1:]]	# Convert race times to zero start.
 				
-				offset = 5.0
-				numOffset = {n:i*offset for i, n in enumerate(nums)}
-				self.lapTimes = [(t + numOffset.get(num, 0.0), num) for t, num in self.lapTimes]
-				self.lapTimes.extend( [(offset+5.0, num) for num, offset in numOffset.iteritems()] )
+				preStartGap = 30.0
+				startGap = 15.0
+				nums = sorted( nums, reverse=True )				
+				numStartTime = {n:preStartGap + i*startGap for i, n in enumerate(nums)}	# Set start times for all competitors.
+				self.lapTimes = []
+				for num, raceTimes in numRaceTimes.iteritems():
+					startTime = numStartTime[num]
+					race.getRider( num ).firstTime = startTime
+					self.lapTimes.extend( [(t + startTime, num) for t in raceTimes] )
 				self.lapTimes.sort( reverse=True )
 			else:
 				race.setCategories( categories )

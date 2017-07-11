@@ -123,8 +123,8 @@ function onLoad() {
 		{% if g.raceScheduledStart %}<span style="white-space: nowrap;">{{g.raceScheduledStart.strftime('%H:%M %a %b %d, %Y')}}</span>{% end %}
 		<script>console.log( 'raceIsRunning=' + g.raceIsRunning + ', isTimeTrial=' + g.isTimeTrial, ' share=' + share );</script>
 		{% if g.isTimeTrial and share %}
-			&nbsp;&nbsp;<a href="{{g.urlTTStartList}}"><img class="startlist" title="Start List"></a>
-			&nbsp;&nbsp;<a href="{{g.urlTTCountdown}}"><img class="countdown" title="Countdown Clock"></a>
+			&nbsp;&nbsp;<a href="{{g.urlTTStartList}}"><img class="startlist" title="Start List">Start List</a>
+			&nbsp;&nbsp;<a href="{{g.urlTTCountdown}}"><img class="countdown" title="Countdown Clock">Countdown Clock</a>
 		{% end %}
 		<br/>
 		{% for catName, catUrl, catStarters, catFinishers in g.categories %}

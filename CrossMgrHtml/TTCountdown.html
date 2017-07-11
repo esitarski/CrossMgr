@@ -9,7 +9,7 @@
 
 <title>TTStartPage</title>
 <style>
-body { font-family: Ariel, sans-serif; }
+body { font-family: Arial, Helvetica, sans-serif; }
 
 #rider-starting-div {
 	width: 100%;
@@ -58,8 +58,6 @@ body { font-family: Ariel, sans-serif; }
 .btn {
   background: #3498db;
   background-image: linear-gradient(to bottom, #3498db, #2980b9);
-  -webkit-border-radius: 28;
-  -moz-border-radius: 28;
   border-radius: 28px;
   font-family: Arial;
   color: #ffffff;
@@ -153,6 +151,21 @@ var beepTimes = [resetSecond, 10, 5, 4, 3, 2, 1, 0, -3];
 var beepsToGive = [];
 var iBeepCur = 0;
 var bibLast = '';
+
+var escapeHTML = function(unsafe) {
+  return unsafe.replace(/[&<"']/g, function(m) {
+    switch (m) {
+      case '&':
+        return '&amp;';
+      case '<':
+        return '&lt;';
+      case '"':
+        return '&quot;';
+      default:
+        return '&#039;';
+    }
+  });
+};
 
 function FormatTime( t )
 {
@@ -336,11 +349,26 @@ function initiateSound() {
 	}
 }
 
-// Keep track of the smallest correction which will be the best estimate of the server time.
-var millisDelta = null;
-function ServerDate() {
-	return new Date( (new Date()).getTime() + (millisDelta != null ? millisDelta : 0) );
+// Keep track of the correction driven from the smallest latency.
+// This will be the best estimate of the server time.
+var syncIterations = 30;
+var millisDelta = 0.0;
+var latency2Min = Number.MAX_VALUE;
+
+function ProcessServerTimestamp( ts ) {
+	var arrivaltimestamp = Date.now();
+	var latency2 = Math.floor( (arrivaltimestamp - ts.requesttimestamp) / 2 );
+	if( latency2Min > latency2 ) {
+		latency2Min = latency2;
+		millisDelta = ts.servertimestamp + latency2 - arrivaltimestamp;
+		SetRaceName();
+	}
 }
+
+function ServerDate() {
+	return new Date( Date.now() + millisDelta );
+}
+
 function getJSON(url, successHandler, errorHandler) {
 	var xhr = typeof XMLHttpRequest != 'undefined'
 		? new XMLHttpRequest()
@@ -363,12 +391,13 @@ function getJSON(url, successHandler, errorHandler) {
 	xhr.send();
 };
 
-function ProcessServerTimestamp( ts ) {
-	var arrivaltimestamp = (new Date()).getTime();
-	var latency2 = Math.floor( (arrivaltimestamp - ts.requesttimestamp) / 2 );
-	var millisDeltaCur = ts.servertimestamp + latency2 - arrivaltimestamp;
-	if( millisDelta == null || millisDelta > millisDeltaCur )
-		millisDelta = millisDeltaCur;
+function SetRaceName() {
+	var e = document.getElementById('race-name');
+	e.innerHTML = (
+		escapeHTML(raceName?raceName:'') + ' ' +
+		raceStart.toLocaleString() + '  Last Updated ' +
+		lastUpdated.toLocaleString() + ' (&delta;=' + (millisDelta/1000.0).toFixed(3) + 's)'
+	)
 }
 
 function onload() {
@@ -377,15 +406,16 @@ function onload() {
 	
 	// Get the initial timestamp on the server and compute a correction with our local time.
 	// This will get us within a second or two of the server's time.
-	// Schedule some ajax calls to improve this.
 	if( serverTimestamp != null )
-		millisDelta.push( serverTimestamp - (new Date()).getTime() );
+		millisDelta = serverTimestamp - Date.now();
+	
+	// Schedule some ajax calls to improve the time sync.
 	if( window.location.protocol != 'file:' ) {
 		var url = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port + '/servertimestamp.html';
-		for( var i = 0; i < 30; ++i ) {
+		for( var i = 0; i < syncIterations; ++i ) {
 			// Pass our current timestamp so we can estimate the latency.
 			setTimeout(
-				function() { getJSON(url + '?' + (new Date()).getTime(), ProcessServerTimestamp) },
+				function() { getJSON(url + '?' + Date.now(), ProcessServerTimestamp) },
 				Math.random() * 250 + i*500
 			);
 		}
@@ -425,7 +455,7 @@ function onload() {
 		playBeep( 1 );
 	}
 	
-	document.getElementById('race-name').appendChild( document.createTextNode((raceName?raceName:'') + '    ' + raceStart.toLocaleString() + '    Last Updated ' + lastUpdated.toLocaleString()) );
+	SetRaceName();
 	
 	if( startList.length == 0 )
 		return;
@@ -546,6 +576,6 @@ function onload() {
 </table>
 </div>
 <br/>
-<h3><span id='race-name'></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://www.sites.google.com/site/crossmgrsoftware/">Powered by CrossMgr</a></h3>
+<h3><span id='race-name'></span><a style="padding-left: 1cm;" href="https://www.sites.google.com/site/crossmgrsoftware/">Powered by CrossMgr</a></h3>
 </body>
 </html>
