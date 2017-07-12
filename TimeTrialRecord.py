@@ -89,13 +89,17 @@ class TimeTrialRecord( wx.Panel ):
 		
 		self.recordTimeButton.SetFont( self.bigFont )
 		
-		Utils.SetSuperTooltip( self.recordTimeButton, _('Tip'), u'\n'.join([
-				_('Tap to Record Times, or press the "t" key.'),
+		self.recordTimeButton.SetToolTip( wx.ToolTip(u'\n'.join([
+				_('Tap to get a Time, or press "t".'),
 				_('Then enter the Bib number(s) and Save.')
-			]))
+			])) )
+			
+		tapExplain = wx.StaticText( self, label=_('(or press "t")') )
+		tapExplain.SetFont( self.font )
 		
 		hbs = wx.BoxSizer( wx.HORIZONTAL )
 		hbs.Add( self.recordTimeButton, 0 )
+		hbs.Add( tapExplain, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=20 )
 		
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.SetFont( self.font )
@@ -122,6 +126,8 @@ class TimeTrialRecord( wx.Panel ):
 				attr.SetEditor( gridlib.GridCellNumberEditor() )
 			self.grid.SetColAttr( col, attr )
 		
+		saveExplain = wx.StaticText( self, label=_('(or press "s")') )
+		saveExplain.SetFont( self.font )
 		saveLabel = _('Save')
 		if 'WXMAC' in wx.Platform:
 			self.commitButton = wx.lib.buttons.ThemedGenButton( self, label=saveLabel )
@@ -129,11 +135,15 @@ class TimeTrialRecord( wx.Panel ):
 			self.commitButton = wx.Button( self, label=saveLabel )
 		self.commitButton.Bind( wx.EVT_BUTTON, self.doCommit )
 		self.commitButton.SetFont( self.bigFont )
-		self.commitButton.SetToolTip(wx.ToolTip(_('Save Entries (or press the "s" key)')))
+		self.commitButton.SetToolTip(wx.ToolTip(_('Save Entries (or press "s")')))
+		
+		hbsCommit = wx.BoxSizer( wx.HORIZONTAL )
+		hbsCommit.Add( saveExplain, flag=wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT, border=20 )
+		hbsCommit.Add( self.commitButton, 0 )
 		
 		self.vbs.Add( hbs, 0, flag=wx.ALL|wx.EXPAND, border = 4 )
 		self.vbs.Add( self.grid, 1, flag=wx.ALL|wx.EXPAND, border = 4 )
-		self.vbs.Add( self.commitButton, flag=wx.ALL|wx.ALIGN_RIGHT, border = 4 )
+		self.vbs.Add( hbsCommit, flag=wx.ALL|wx.ALIGN_RIGHT, border = 4 )
 		
 		idRecordAcceleratorId, idCommitAccelleratorId = wx.NewId(), wx.NewId()
 		self.Bind(wx.EVT_MENU, self.doRecordTime, id=idRecordAcceleratorId)
