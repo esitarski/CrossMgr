@@ -3132,8 +3132,9 @@ class MainWin( wx.Frame ):
 				nums = set()
 				numTimes = defaultdict( list )
 				for t, num in self.lapTimes:
-					nums.add( num )
-					numTimes[num].append( t )
+					if num < 500:
+						nums.add( num )
+						numTimes[num].append( t )
 				
 				numRaceTimes = {}
 				for num, times in numTimes.iteritems():

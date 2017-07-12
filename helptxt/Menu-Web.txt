@@ -34,38 +34,51 @@ __Publish and Share the Page with Race Attendees__
 
 That's it!
 
-## Time Trials and the TTStart page.
+## Time Trials and the TT Countdown page.
 
-For Time Trials, the TTStart countdown page is available from the Index page.  Just click on the stopwatch icon next to the race name.
-This allows the starting official, wip, coaches, spectators and anyone else to see the start countdown in real-time.
-
-Of course, accessing the results of a time trial will also show the start times.
+For Time Trials, a live countdown page is available from the Index page.
+This allows the starting official, wip, coaches, spectators and anyone else countdown the riders to the start.
+The page beeps at 10 seconds, then a beep at 5, 4, 3, 2, 1 and 0 before each rider.
 
 ### Tutorial 1
 You can try this out for yourself.  For this experiment, you will need a CrossMgr computer and a tablet on the same wireless network.
+Make sure you install a __QR Code__ app onto the tablet.
 
 1. Start CrossMgr
-1. Do __Tools|Sumulate Race...__ to start the race simulation.
-1. Do __Web|Index Page...__ to show the index page.  This is live connected to the CrossMgr program.
+1. Do __Tools|Simulate Race...__.  Pick the Time Trial Option.
+1. After the TT starts, do __Web|Index Page...__ to show the index page.  This is live connected to the CrossMgr program.
 1. From the Index page, click on the __Share__ link at the top.  This brings up a __QR Code__ for the page.
-1. With a tablet on the same wireless network of the CrossMgr computer, launch the QR Code app and point it at the CrossMgr computer screen.  Follow the link on the tablet read from the QR cCode.
+1. With a tablet on the same wireless network of the CrossMgr computer, launch the tablet's QR Code app and point it at the CrossMgr computer screen.  Follow the link on the tablet read from the QR cCode.
 1. The tablet will now show the Index page.  Notice that the tablet also has access to the __Share__ link.  This allows other people to share the link to the race results.
 1. If this does not work, you may have to open port 8765 on your computer.  Check the instructions for how to do for your operating system.
 1. On the tablet, click on the __Simulation__ race.  The tablet now shows the live results of the race.  Clicking on the logo at the top of the screen will refresh the page.  The page will also refresh automatically after each leader's lap.
 1. All races in the same folder will be shown in the Index page - not just the race that is running.  If you have used CrossMgr previously and have a number of races with published html in the same folder, try opening one of the races and refreshing the Index page.
+1. Click on the "TT Countdown" link to see the countdown.
+
+What if the tablet and the computer's time don't match?
+
+On opening (or refresh), the "TT Countdown" page synchronizes the tablet's time with the CrossMgr computer.  This can take a second or two.  On a LAN, the countdown tablet is capable of synchronizing itself to within a few milliseconds of the CrossMgr computer.  If you are interested in the details, look at the bottom of the TT Countdown web page for &delta; (delta) and &lambda; (lambda).  Delta is the time correction added to the tablet's time to correct it to the computer's time.  The starts will then be with respect to the CrossMgr Computer's time.
+
+Lambda is the estimated one-way network latency between the CrossMgr and the tablet.  Look for a small lambda as this is an upper bound on the error of the correction estimate.  That does not mean that a longer network latency means a less accurate correction, however, a small latency (a few milliseconds) guarantees that the correction is also within a few milliseconds.
+
+If you really want to have some fun, start a tablet and compare it with a browser countdown page launched on the same computer.  See if you can hear the difference between the beeps.
+
+If at any time you believe that the "TT Countdown" page is out-of-sync with the computer, press the refresh button in the browser.  This will cause a re-sync.
+
+Try clicking on the live results frpom the Index page.
 
 Races in progress are highlighted on the Index page.
 
 ### Notes:
 __Remember:__ live results are a direct connection between your CrossMgr race and the web.  All changes you make will be immediately visible.  Use caution.
 
-__Multiple versions of CrossMgr open at the same time:__  The first one open will act as the web server.  If the first on is closed, another will take over after a few seconds.
+__Multiple versions of CrossMgr open at the same time:__  The first instance open will act as the web server.  If the first on is closed, another will take over after a few seconds.
 
 ## Index Page
 Opens a browser showing the CrossMgr web index page.
 
-The current race is connectd to real-time CrossMgr data.
-Other races in the same folder 
+The current race is connected to real-time CrossMgr data.
+Other races in the same folder will also be shown.
 
 ## QR Code Share Page
 Opens a browser and loads the CrossMgr web QR Code Share page.
