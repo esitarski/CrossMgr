@@ -351,22 +351,30 @@ function initiateSound() {
 
 // Keep track of the correction driven from the smallest latency.
 // This will be the best estimate of the server time.
-var syncIterations = 30;
+var syncIterations = 60;
 var millisDelta = 0.0;
 var latency2Min = Number.MAX_VALUE;
-
-function ProcessServerTimestamp( ts ) {
-	var arrivaltimestamp = Date.now();
-	var latency2 = Math.floor( (arrivaltimestamp - ts.requesttimestamp) / 2 );
-	if( latency2Min > latency2 ) {
-		latency2Min = latency2;
-		millisDelta = ts.servertimestamp + latency2 - arrivaltimestamp;
-		SetRaceName();
-	}
-}
-
 function ServerDate() {
 	return new Date( Date.now() + millisDelta );
+}
+
+var getTimestamp = null;
+if( performance.now  )
+	getTimestamp = function() { return performance.now(); };
+else if( performance.webkitNow )
+	getTimestamp = function() { return performance.webkitNow(); };
+else
+	getTimestamp = function() { return Date.now(); };
+
+function ProcessServerTimestamp( ts ) {
+	var arrivaltimestamp = getTimestamp();
+	var clienttime = Date.now();
+	var latency2 = (arrivaltimestamp - ts.requesttimestamp) / 2.0;
+	if( latency2Min > latency2 ) {
+		latency2Min = latency2;
+		millisDelta = ts.servertime + latency2 - clienttime;
+		SetRaceName();
+	}
 }
 
 function getJSON(url, successHandler, errorHandler) {
@@ -378,7 +386,7 @@ function getJSON(url, successHandler, errorHandler) {
 		var status;
 		var data;
 		// https://xhr.spec.whatwg.org/#dom-xmlhttprequest-readystate
-		if (xhr.readyState == 4) { // `DONE`
+		if (xhr.readyState == 4) { // 'DONE'
 			status = xhr.status;
 			if (status == 200) {
 				data = JSON.parse(xhr.responseText);
@@ -398,8 +406,23 @@ function SetRaceName() {
 		raceStart.toLocaleString() + '  Last Updated ' +
 		lastUpdated.toLocaleString() + ' ' + 
 		'(&delta;=' + (millisDelta/1000.0).toFixed(3) + 's, ' +
-		'&lambda;=' + (latency2Min/1000.0).toFixed(3) + 's)'
+		'&lambda;=' + Math.min(999.0,latency2Min/1000.0).toFixed(3) + 's)'
 	)
+}
+
+function getTimeCorrection() {
+	// Schedule some ajax calls to improve the time sync.
+	if( window.location.protocol != 'file:' ) {
+		latency2Min = Number.MAX_VALUE;
+		var url = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port + '/servertimestamp.html';
+		for( var i = 0; i < syncIterations; ++i ) {
+			// Pass our current timestamp so we can estimate the latency.
+			setTimeout(
+				function() { getJSON(url + '?' + getTimestamp(), ProcessServerTimestamp) },
+				i*1000 + 500
+			);
+		}
+	}
 }
 
 function onload() {
@@ -411,17 +434,7 @@ function onload() {
 	if( serverTimestamp != null )
 		millisDelta = serverTimestamp - Date.now();
 	
-	// Schedule some ajax calls to improve the time sync.
-	if( window.location.protocol != 'file:' ) {
-		var url = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port + '/servertimestamp.html';
-		for( var i = 0; i < syncIterations; ++i ) {
-			// Pass our current timestamp so we can estimate the latency.
-			setTimeout(
-				function() { getJSON(url + '?' + Date.now(), ProcessServerTimestamp) },
-				Math.random() * 250 + i*500
-			);
-		}
-	}
+	getTimeCorrection()
 	
 	lastUpdated = (lastUpdatedTuple == null ? ServerDate() : dateFromTuple(lastUpdatedTuple));
 	

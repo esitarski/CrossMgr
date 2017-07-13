@@ -249,9 +249,9 @@ class History( wx.Panel ):
 			return
 		try:
 			undo.pushState()
-			with Model.LockRace() as race:
-				race.getRider(entry.num).setStatus( Model.Rider.Pulled, entry.t + 1 )
-				race.setChanged()
+			race = Model.race
+			race.getRider(entry.num).setStatus( Model.Rider.Pulled, entry.t + 1 )
+			race.setChanged()
 		except:
 			pass
 		wx.CallAfter( self.refresh )
@@ -271,9 +271,9 @@ class History( wx.Panel ):
 			return
 		try:
 			undo.pushState()
-			with Model.LockRace() as race:
-				race.getRider(entry.num).setStatus( Model.Rider.DNF, entry.t + 1 )
-				race.setChanged()
+			race = Model.race
+			race.getRider(entry.num).setStatus( Model.Rider.DNF, entry.t + 1 )
+			race.setChanged()
 		except:
 			pass
 		wx.CallAfter( self.refresh )
@@ -416,11 +416,13 @@ class History( wx.Panel ):
 			self.clearGrid()
 			return
 
+		isTimeTrial = race.isTimeTrial
+		tRace = race.lastRaceTime()
 		lastGridX, lastGridY = self.grid.GetViewStart()
 		
 		highPrecision = Model.highPrecisionTimes()
 		
-		if highPrecision or race.isTimeTrial:
+		if highPrecision or isTimeTrial:
 			formatTime = lambda t: Utils.formatTime(t, True)
 			formatTimeDiff = lambda a, b: Utils.formatTimeGap(TimeDifference(a, b, True), True)
 		else:
@@ -466,8 +468,9 @@ class History( wx.Panel ):
 			entries = [e for e in entries if e.lap <= maxLaps]
 		entries = [e for e in entries if e.lap <= race.getCategoryNumLaps(e.num)]
 		
-		if race.isTimeTrial:
+		if isTimeTrial:
 			entries = [Model.Entry(e.num, e.lap, (race.riders[e.num].firstTime or 0.0) + e.t, e.interp) for e in entries]
+			entries.extend( [Model.Entry(r.num, 0, (race.riders[r.num].firstTime or 0.0), r.firstTime > tRace) for r in race.riders.itervalues()] )
 			entries.sort( key = operator.attrgetter('t', 'num') )
 		
 		# Collect the number and times for all entries so we can compute lap times.
@@ -475,8 +478,9 @@ class History( wx.Panel ):
 		
 		self.category = category
 		
-		# Trim out the lap 0 starts.
-		entries = [e for e in entries if e.lap > 0]
+		if not isTimeTrial:
+			# Trim out the lap 0 starts.
+			entries = [e for e in entries if e.lap > 0]
 		
 		if not entries:
 			self.clearGrid()
@@ -484,17 +488,26 @@ class History( wx.Panel ):
 		
 		# Organize all the entries into a grid as we would like to see them.
 		self.history = [ [] ]
-		numSeen = set()
-		lapCur = 0
-		leaderTimes = [entries[0].t]
-		for e in entries:
-			if e.num in numSeen:
-				numSeen.clear()
-				lapCur += 1
-				self.history.append( [] )
-				leaderTimes.append( e.t )
-			self.history[lapCur].append( e )
-			numSeen.add( e.num )
+		if isTimeTrial:
+			leaderTimes = []
+			for e in entries:
+				while len(self.history) < e.lap:
+					self.history.append( [] )
+				if e.lap >= len(leaderTimes):
+					leaderTimes.append( e.t )
+				self.history[e.lap].append( e )
+		else:
+			numSeen = set()
+			lapCur = 0
+			leaderTimes = [entries[0].t]
+			for e in entries:
+				if e.num in numSeen:
+					numSeen.clear()
+					lapCur += 1
+					self.history.append( [] )
+					leaderTimes.append( e.t )
+				self.history[lapCur].append( e )
+				numSeen.add( e.num )
 		
 		if not any( h for h in self.history ):
 			self.clearGrid()
@@ -515,7 +528,7 @@ class History( wx.Panel ):
 				lapTime = 0
 				
 			colnames.append( '{}\n{}\n{}\n{}'.format(
-								c+1,
+								c+(0 if isTimeTrial else 1),
 								(maxLaps - c - 1) if doLapsToGo else ' ',
 								formatTime(lapTime),
 								formatTime(raceTime))

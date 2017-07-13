@@ -161,6 +161,7 @@ def _GetResultsCore( category ):
 	
 	isRunning = race.isRunning()
 	isTimeTrial = race.isTimeTrial
+	
 	roadRaceFinishTimes = race.roadRaceFinishTimes
 	allCategoriesFinishAfterFastestRidersLastLap = race.allCategoriesFinishAfterFastestRidersLastLap
 	winAndOut = race.winAndOut
@@ -185,20 +186,13 @@ def _GetResultsCore( category ):
 		except KeyError:
 			allRiderTimes[e.num] = [e]
 	
-	noTimes = tuple()
-	def getRiderTimes( rider ):
-		try:
-			return allRiderTimes[rider.num]
-		except KeyError:
-			return noTimes
-	
+	noTimes = tuple()	
 	startOffset = category.getStartOffsetSecs() if category else 0.0
-	
 	raceSeconds = race.minutes * 60.0
 	
 	# Enforce All Categories Finish After Fastest Rider's Last Lap
 	fastestRidersLastLapTime = None
-	if allCategoriesFinishAfterFastestRidersLastLap:
+	if allCategoriesFinishAfterFastestRidersLastLap and not isTimeTrial:
 		resultBest = (0, sys.float_info.max)
 		for c, (times, nums) in race.getCategoryTimesNums().iteritems():
 			if not times:
@@ -253,14 +247,12 @@ def _GetResultsCore( category ):
 		
 		if category and riderCategory != category:
 			continue
-		if isRunning and riderCategory not in categoryWinningTime:
-			continue
 		if not riderCategory:
 			continue
 		
 		cutoffTime = categoryWinningTime.get(riderCategory, raceSeconds)
 		
-		riderTimes = getRiderTimes( rider )
+		riderTimes = allRiderTimes.get( rider, noTimes )
 		times = [e.t for e in riderTimes]
 		interp = [e.interp for e in riderTimes]
 		

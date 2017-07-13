@@ -696,6 +696,8 @@ class MainWin( wx.Frame ):
 			setattr( self, a, c(self.notebook) )
 			getattr( self, a ).SetDropTarget( self.fileDrop )
 			addPage( getattr(self, a), u'{}. {}'.format(i+1, n) )
+			if a == 'history':
+				self.iHistoryPage = i
 
 		self.riderDetailDialog = None
 		self.splitter.SplitVertically( self.forecastHistory, self.notebook, 256+80)
@@ -3786,6 +3788,10 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 		self.updateRaceClock()
 		if self.photoDialog.IsShown():
 			self.photoDialog.refresh()
+
+	def refreshHistory( self ):
+		if self.notebook.GetSelection() == self.iHistoryPage:
+			self.refreshCurrentPage()
 
 	def updateUndoStatus( self, event = None ):
 		race = Model.race
