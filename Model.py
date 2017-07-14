@@ -376,6 +376,8 @@ class Category(object):
 
 	def getNumLaps( self ):
 		laps = getattr( self, '_numLaps', None )
+		if (race and race.isTimeTrial) and ((laps or 0) < 1 and not self.raceMinutes):
+			laps = 1
 		if laps or not self.raceMinutes or not race or race.isTimeTrial:
 			return laps
 		
