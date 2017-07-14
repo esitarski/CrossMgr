@@ -2053,7 +2053,7 @@ class Race( object ):
 			args = dict( t )
 			if not 'name' in args or not args['name']:
 				continue
-			if unicode(args.get('active', True)).upper() in u'1YT':
+			if unicode(args.get('active', True)).strip().upper() in u'1YT':
 				allInactive = False
 				break
 		
