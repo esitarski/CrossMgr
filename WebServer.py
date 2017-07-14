@@ -356,8 +356,8 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 				content_type = self.html_content
 			elif up.path=='/servertimestamp.html':
 				content = json.dumps( {
-						'servertimestamp':int(time.time()*1000.0),
-						'requesttimestamp':int(up.query),
+						'servertime':time.time()*1000.0,
+						'requesttimestamp':float(up.query),
 					}
 				)
 				content_type = self.json_content;
