@@ -43,6 +43,7 @@ with io.open(pot, 'w', encoding='utf-8') as f:
 # Create/Merge translation file.
 #
 po = os.path.join(CrossMgrLocale, 'fr', 'LC_MESSAGES', 'messages.po')
+
 if os.path.exists( po ):
 	subprocess.call( cmd + ["update", "-d", CrossMgrLocale, "-i", pot] )
 else:

@@ -21,17 +21,6 @@ class Clock(wx.Control):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
 				name="Clock", checkFunc=None ):
-		"""
-		Default class constructor.
-
-		@param parent: Parent window. Must not be None.
-		@param id: StatusBar identifier. A value of -1 indicates a default value.
-		@param pos: StatusBar position. If the position (-1, -1) is specified
-					then a default position is chosen.
-		@param style: not used
-		@param validator: Window validator.
-		@param name: Window name.
-		"""
 
 		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
 		
