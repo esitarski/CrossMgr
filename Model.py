@@ -2047,6 +2047,16 @@ class Race( object ):
 		except  AttributeError:
 			firstLapDistance = None
 		
+		# Ensure that all categories were not set to inactive by mistake.
+		allInactive = True
+		for t in nameStrTuples:
+			args = dict( t )
+			if not 'name' in args or not args['name']:
+				continue
+			if unicode(args.get('active', True)).upper() in u'1YT':
+				allInactive = False
+				break
+		
 		i = 0
 		newCategories = {}
 		waveCategory = None
@@ -2055,6 +2065,8 @@ class Race( object ):
 			if not 'name' in args or not args['name']:
 				continue
 			args['sequence'] = i
+			if allInactive:
+				args['active'] = True
 			category = Category( **args )
 			
 			if category.active:

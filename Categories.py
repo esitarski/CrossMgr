@@ -243,10 +243,6 @@ class Categories( wx.Panel ):
 		self.Bind( wx.EVT_BUTTON, self.onActivateAll, self.activateAllButton )
 		hs.Add( self.activateAllButton, 0, border = border, flag = flag )
 
-		self.deactivateAllButton = wx.Button(self, label=_('Deactivate All'), style=wx.BU_EXACTFIT)
-		self.Bind( wx.EVT_BUTTON, self.onDeactivateAll, self.deactivateAllButton )
-		hs.Add( self.deactivateAllButton, 0, border = border, flag = (flag & ~wx.LEFT) )
-
 		hs.AddSpacer( 6 )
 		
 		self.newCategoryButton = wx.Button(self, label=_('New'), style=wx.BU_EXACTFIT)
