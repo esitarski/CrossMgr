@@ -16,8 +16,6 @@ import Flags
 import ImageIO
 # from reportlab.lib.pagesizes import letter, A4
 
-translate = _
-
 #---------------------------------------------------------------------------
 
 # Sort sequence by rider status.
@@ -817,7 +815,7 @@ class ExportGrid( object ):
 					else:
 						lastGap = curGap
 						
-		self.colnames = [translate(n) if n in infoFieldsPresent else n for n in self.colnames]
+		self.colnames = [Utils.translate(n) if n in infoFieldsPresent else n for n in self.colnames]
 
 if __name__ == '__main__':
 	pass

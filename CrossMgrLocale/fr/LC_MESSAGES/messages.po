@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2017-07-16 11:57-0400\n"
+"POT-Creation-Date: 2017-07-16 12:26-0400\n"
 "PO-Revision-Date: 2015-04-15 14:17-0400\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -452,8 +452,8 @@ msgid ""
 "Race\n"
 "Minutes"
 msgstr ""
-"Race\n"
-"Minutes"
+"Minutes\n"
+"de course"
 
 #: Categories.py:307
 msgid ""
@@ -1449,15 +1449,15 @@ msgstr "Photos"
 msgid "PUL"
 msgstr "PUL"
 
-#: GetResults.py:389 GetResults.py:526
+#: GetResults.py:385 GetResults.py:522
 msgid "REL"
 msgstr "REL"
 
-#: GetResults.py:395 GetResults.py:529 Model.py:2472 NumKeypad.py:645
+#: GetResults.py:391 GetResults.py:525 Model.py:2472 NumKeypad.py:645
 msgid "lap"
 msgstr "tour"
 
-#: GetResults.py:395 GetResults.py:529 Model.py:2472 NumKeypad.py:645
+#: GetResults.py:391 GetResults.py:525 Model.py:2472 NumKeypad.py:645
 msgid "laps"
 msgstr "tours"
 

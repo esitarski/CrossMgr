@@ -145,8 +145,10 @@ from Version import AppVerName
 import gettext
 import __builtin__
 initTranslationCalled = False
+__builtin__.__dict__['_'] = translate = lambda s: s
 def initTranslation():
 	global initTranslationCalled
+	global translate
 	
 	if not initTranslationCalled or (lang and not lang.startswith('en')):
 		initTranslationCalled = True
@@ -157,7 +159,7 @@ def initTranslation():
 		try:
 			translation = gettext.translation('messages', os.path.join(dirName,'CrossMgrLocale'), languages=[lang[:2]])
 			translation.install()
-			__builtin__.__dict__['_'] = translation.ugettext
+			__builtin__.__dict__['_'] = translate = translation.ugettext
 		except:
 			pass
 		

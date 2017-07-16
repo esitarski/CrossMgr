@@ -378,8 +378,7 @@ class RiderDetail( wx.Panel ):
 		)
 		self.nameCol = {c:i for i, c in enumerate(colnames)}
 		
-		translate = _
-		self.colnames = [translate(c) for c in colnames]
+		self.colnames = [Utils.translate(c) for c in colnames]
 		self.grid = ColGrid.ColGrid( splitter, self.colnames, style=wx.BORDER_SUNKEN )
 		
 		self.grid.SetRowLabelSize( 0 )

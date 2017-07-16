@@ -480,7 +480,7 @@ class Gantt( wx.Panel ):
 		category = FixCategories( self.categoryChoice, getattr(race, 'ganttCategory', 0) )
 		Finisher = Model.Rider.Finisher
 		statusNames = Model.Rider.statusNames
-		translate = _
+		translate = Utils.translate
 		
 		self.groupByStartWave.SetValue( race.groupByStartWave )
 		self.groupByStartWave.Enable( not category )
@@ -516,7 +516,7 @@ class Gantt( wx.Panel ):
 			
 			try:
 				riderStatus = race.riders[r.num].status
-				status.append( translate(statusNames[riderStatus] if riderStatus != Finisher else '') )
+				status.append( translate(statusNames[riderStatus]) if riderStatus != Finisher else '' )
 				if riderStatus == Finisher:
 					resultBest = min( resultBest, (-r.laps, r.raceTimes[-1]) )
 			except (IndexError, KeyError) as e:
@@ -528,6 +528,7 @@ class Gantt( wx.Panel ):
 			nowTime = min( resultBest[1], Model.race.lastRaceTime() )
 		except:
 			nowTime = None
+			
 		self.ganttChart.SetData(data, labels, nowTime, interp,
 								set(i for i, r in enumerate(results) if r.status != Finisher),
 								Model.race.numTimeInfo,
