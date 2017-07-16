@@ -132,10 +132,10 @@ except:
 
 try:
 	lang = os.environ['CrossMgrLanguage'] or 'en'
-except:
+except KeyError:
 	lang = 'en'
 	
-lang = lang or 'en'
+lang = (lang or 'en')[:2]
 
 #-----------------------------------------------------------------------
 # Setup translation.
@@ -525,13 +525,14 @@ def SecondsToMMSS( secs = 0 ):
 	return '{:02d}:{:02d}'.format((secs // 60)%60, secs % 60)
 
 def ordinal( value ):
-	try:
-		value = int(value)
-	except ValueError:
-		return u'{}'.format(value)
+	if not isinstance(value, int):
+		try:
+			value = int(value)
+		except ValueError:
+			return u'{}'.format(value)
 		
 	if value == 999999:
-		return u'DNF'
+		return Utils.translate(u'DNF')
 
 	return {
 		'fr': lambda v: '{}{}'.format(v, 'er' if v == 1 else 'e'),
