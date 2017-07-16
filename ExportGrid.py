@@ -817,7 +817,7 @@ class ExportGrid( object ):
 					else:
 						lastGap = curGap
 						
-		self.colnames = [translate(n) for n in self.colnames]
+		self.colnames = [translate(n) if n in infoFieldsPresent else n for n in self.colnames]
 
 if __name__ == '__main__':
 	pass

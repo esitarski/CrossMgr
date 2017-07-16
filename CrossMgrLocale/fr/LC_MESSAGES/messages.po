@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2017-07-14 12:09-0400\n"
+"POT-Creation-Date: 2017-07-16 11:57-0400\n"
 "PO-Revision-Date: 2015-04-15 14:17-0400\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -346,7 +346,7 @@ msgstr "Tours"
 msgid "Distance"
 msgstr "Distance"
 
-#: Categories.py:62 Categories.py:102 ExportGrid.py:651
+#: Categories.py:62 Categories.py:102 ExportGrid.py:652
 msgid "Starters"
 msgstr "Entrées"
 
@@ -378,7 +378,7 @@ msgstr "Composant"
 msgid "Custom"
 msgstr "Personnalisé"
 
-#: Categories.py:225 EditEntry.py:401 ExportGrid.py:713 ForecastHistory.py:88
+#: Categories.py:225 EditEntry.py:401 ExportGrid.py:714 ForecastHistory.py:88
 #: Gantt.py:337 Gantt.py:413 GanttChart.py:199 HistogramPanel.py:42
 #: NumKeypad.py:202 RaceHUD.py:361 Results.py:308 Results.py:657 Results.py:711
 #: Results.py:797 RiderDetail.py:601 RiderDetail.py:1031 Situation.py:151
@@ -426,7 +426,7 @@ msgstr "Catégorie type"
 msgid "Active"
 msgstr "Actif"
 
-#: Categories.py:301 ExportGrid.py:130 ExportGrid.py:705 ForecastHistory.py:91
+#: Categories.py:301 ExportGrid.py:131 ExportGrid.py:706 ForecastHistory.py:91
 #: Primes.py:390 Printing.py:29 Recommendations.py:190 RiderDetail.py:270
 msgid "Name"
 msgstr "Nom"
@@ -654,8 +654,8 @@ msgid ""
 "This is required so CrossMgr can link the tags in the import file back to"
 " rider numbers and info."
 msgstr ""
-"Ceci est nécessaire afin CrossMgr peut relier les Puces dans le fichier"
-" d'importation revenir aux chiffres des coureurs et d'info."
+"Ceci est nécessaire afin CrossMgr peut relier les Puces dans le fichier "
+"d'importation revenir aux chiffres des coureurs et d'info."
 
 #: ChipImport.py:127
 msgid "Race Data:"
@@ -936,7 +936,7 @@ msgstr "Nom1:"
 msgid "Num2:"
 msgstr "Nom2:"
 
-#: EditEntry.py:400 ExportGrid.py:695 ForecastHistory.py:86 Gantt.py:244
+#: EditEntry.py:400 ExportGrid.py:696 ForecastHistory.py:86 Gantt.py:244
 #: Gantt.py:264 Gantt.py:283 Gantt.py:337 History.py:246 History.py:268
 #: MainWin.py:975 MainWin.py:980 MainWin.py:985 MainWin.py:996 MainWin.py:1064
 #: NumKeypad.py:54 Primes.py:387 ReadSignOnSheet.py:858 ReadSignOnSheet.py:874
@@ -966,7 +966,7 @@ msgstr "Supprimer l'entrée"
 msgid "and Enter Last Lap Time at"
 msgstr "et Entrez le dernier temps au tour à:"
 
-#: EditEntry.py:548 ExportGrid.py:652 ForecastHistory.py:241
+#: EditEntry.py:548 ExportGrid.py:653 ForecastHistory.py:241
 #: ForecastHistory.py:342 Recommendations.py:333 Utils.py:166
 msgid "DNF"
 msgstr "DNF"
@@ -999,93 +999,93 @@ msgstr "DQ"
 msgid "Confirm Disqualify"
 msgstr "Confirmez Disqualifier"
 
-#: ExportGrid.py:25
+#: ExportGrid.py:26
 msgid "Powered by CrossMgr (sites.google.com/site/crossmgrsoftware)"
 msgstr "Propulsé par CrossMgr (sites.google.com/site/crossmgrsoftware)"
 
-#: ExportGrid.py:107
+#: ExportGrid.py:108
 msgid "Last Name"
 msgstr "Nom"
 
-#: ExportGrid.py:108
+#: ExportGrid.py:109
 msgid "First Name"
 msgstr "Prénom"
 
-#: ExportGrid.py:255 ExportGrid.py:443 ReadSignOnSheet.py:38 Results.py:811
+#: ExportGrid.py:256 ExportGrid.py:444 ReadSignOnSheet.py:38 Results.py:811
 msgid "UCICode"
 msgstr "UCICode"
 
-#: ExportGrid.py:261 ExportGrid.py:445 ReadSignOnSheet.py:38 Results.py:816
+#: ExportGrid.py:262 ExportGrid.py:446 ReadSignOnSheet.py:38 Results.py:816
 msgid "NatCode"
 msgstr "NatCode"
 
-#: ExportGrid.py:277 ExportGrid.py:332 ExportGrid.py:437 ExportGrid.py:574
-#: ExportGrid.py:596 ExportGrid.py:703 ExportGrid.py:785 Results.py:635
+#: ExportGrid.py:278 ExportGrid.py:333 ExportGrid.py:438 ExportGrid.py:575
+#: ExportGrid.py:597 ExportGrid.py:704 ExportGrid.py:786 Results.py:635
 msgid "Speed"
 msgstr "Vitesse"
 
-#: ExportGrid.py:352 ExportGrid.py:354 ExportGrid.py:532 ExportGrid.py:534
+#: ExportGrid.py:353 ExportGrid.py:355 ExportGrid.py:533 ExportGrid.py:535
 msgid "Page"
 msgstr "Page"
 
-#: ExportGrid.py:650 NumKeypad.py:634
+#: ExportGrid.py:651 NumKeypad.py:634
 msgid "Total"
 msgstr "Total"
 
-#: ExportGrid.py:653 Recommendations.py:355
+#: ExportGrid.py:654 Recommendations.py:355
 msgid "Lapped"
 msgstr "Doublés"
 
-#: ExportGrid.py:675
+#: ExportGrid.py:676
 msgid "1st lap"
 msgstr "1er tour"
 
-#: ExportGrid.py:676
+#: ExportGrid.py:677
 msgid "more laps of"
 msgstr "plus de tours de"
 
-#: ExportGrid.py:680
+#: ExportGrid.py:681
 msgid "laps of"
 msgstr "Tours de"
 
-#: ExportGrid.py:683 ExportGrid.py:685
+#: ExportGrid.py:684 ExportGrid.py:686
 msgid "winner"
 msgstr "gagnant"
 
-#: ExportGrid.py:695 Results.py:241 Results.py:662 Results.py:753
+#: ExportGrid.py:696 Results.py:241 Results.py:662 Results.py:753
 msgid "Pos"
 msgstr "Pos"
 
-#: ExportGrid.py:697 Situation.py:158 Situation.py:797
+#: ExportGrid.py:698 Situation.py:158 Situation.py:797
 msgid "Clock"
 msgstr "Chrono"
 
-#: ExportGrid.py:697 ForecastHistory.py:563 ForecastHistory.py:647
+#: ExportGrid.py:698 ForecastHistory.py:563 ForecastHistory.py:647
 #: Model.py:2334 NumKeypad.py:204 RaceHUD.py:363 Recommendations.py:426
 #: Results.py:747 RiderDetail.py:63 RiderDetail.py:276
 msgid "Start"
 msgstr "Début"
 
-#: ExportGrid.py:697 Results.py:747 RiderDetail.py:66 RiderDetail.py:289
+#: ExportGrid.py:698 Results.py:747 RiderDetail.py:66 RiderDetail.py:289
 msgid "Finish"
 msgstr "Arrivée"
 
-#: ExportGrid.py:698
+#: ExportGrid.py:699
 msgid "ElapsedTime"
 msgstr "Temps écoulé"
 
-#: ExportGrid.py:698
+#: ExportGrid.py:699
 msgid "Factor %"
 msgstr "Facteur %"
 
-#: ExportGrid.py:699 ExportGrid.py:790 FinishStrip.py:434 ForecastHistory.py:89
+#: ExportGrid.py:700 ExportGrid.py:791 FinishStrip.py:434 ForecastHistory.py:89
 #: NumKeypad.py:203 RaceHUD.py:362 Recommendations.py:376
 #: Recommendations.py:384 Results.py:463 Results.py:662 Results.py:747
 #: TimeTrialRecord.py:73 UnmatchedTagsGantt.py:67
 msgid "Time"
 msgstr "Temps"
 
-#: ExportGrid.py:700 ExportGrid.py:806 ForecastHistory.py:90 Results.py:662
+#: ExportGrid.py:701 ExportGrid.py:807 ForecastHistory.py:90 Results.py:662
 #: Situation.py:794
 msgid "Gap"
 msgstr "Écart"
@@ -4056,8 +4056,8 @@ msgstr "Remarques à apparaître sur la sortie HTML:"
 #: Properties.py:1108
 msgid "(notes containing Html tags must start with <html> and end with </html>)"
 msgstr ""
-"(Notes contenant des Puces HTML doit lancer par <html> et finissent par"
-" </ html>)"
+"(Notes contenant des Puces HTML doit lancer par <html> et finissent par "
+"</ html>)"
 
 #: Properties.py:1110
 msgid "Insert Variable..."
@@ -4484,11 +4484,11 @@ msgstr "Nat."
 
 #: ReadSignOnSheet.py:36
 msgid "EventCategory"
-msgstr "EventCategory"
+msgstr "Catégorie d'événement"
 
 #: ReadSignOnSheet.py:36
 msgid "CustomCategory"
-msgstr "CustomCategory"
+msgstr "Catégorie personnalisée"
 
 #: ReadSignOnSheet.py:37
 msgid "License"
@@ -4500,7 +4500,7 @@ msgstr "UCIID"
 
 #: ReadSignOnSheet.py:38
 msgid "TeamCode"
-msgstr "TeamCode"
+msgstr "Code de l'équipe"
 
 #: ReadSignOnSheet.py:39 Results.py:751
 msgid "Factor"
@@ -4551,8 +4551,8 @@ msgid ""
 "Initialize CrossMgr Categories from Excel EventCategory/CustomCategory "
 "and Bib# columns"
 msgstr ""
-"Initialiser les catégories CrossMgr à partir des colonnes Excel "
-"EventCategory / CustomCategory et Bib #"
+"Initialiser les catégories CrossMgr à partir des colonnes Excel Catégorie"
+" d'événement / Catégorie personnalisée et Dossard"
 
 #: ReadSignOnSheet.py:226
 msgid ""
@@ -4562,10 +4562,10 @@ msgid ""
 "changes.  Read the documentation first!"
 msgstr ""
 "Mises à jour, ajoute ou supprime les catégories CrossMgr, avec des "
-"nombres de dossard, en utilisant les colonnes EventCategory / "
-"CustomCategory et Bib # dans la feuille Excel. Utilisez avec précaution "
-"que les catégories seront mises à jour chaque fois que la feuille Excel "
-"changera. Lisez la documentation d'abord!"
+"nombres de dossard, en utilisant les colonnes Catégorie d'événement / "
+"Catégorie personnalisée et Dossard dans la feuille Excel. Utilisez avec "
+"précaution que les catégories seront mises à jour chaque fois que la "
+"feuille Excel changera. Lisez la documentation d'abord!"
 
 #: ReadSignOnSheet.py:238
 msgid "CrossMgr"
@@ -4589,7 +4589,7 @@ msgstr "Saisie des données coureurs"
 
 #: ReadSignOnSheet.py:307
 msgid "CrossMgr Categories from Excel EventCategory/CustomCategory"
-msgstr "CrossMgr Catégories de Excel EventCategory / CustomCategory"
+msgstr "CrossMgr Catégories de Excel Catégorie d'événement / Catégorie d'événement"
 
 #: ReadSignOnSheet.py:311
 msgid "Categories and Properties"

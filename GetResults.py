@@ -8,7 +8,7 @@ import Utils
 import itertools
 import operator
 from datetime import timedelta
-from collections import deque
+from collections import deque, defaultdict
 
 from ReadSignOnSheet import IgnoreFields, NumericFields, SyncExcelLink
 statusSortSeq = Model.Rider.statusSortSeq
@@ -171,7 +171,6 @@ def _GetResultsCore( category ):
 		else Utils.StrToSeconds(race.scheduledStart) * 60.0
 	)
 	
-	allRiderTimes = {}
 	entries = race.interpolate()
 	
 	# Group finish times are defined as times which are separated from the previous time by at least 1 second.
@@ -180,13 +179,10 @@ def _GetResultsCore( category ):
 		groupFinishTimes.extend( [floor(entries[i].t) for i in xrange(1, len(entries)) if entries[i].t - entries[i-1].t >= 1.0] )
 		groupFinishTimes.extend( [sys.float_info.max] * 5 )
 	
+	allRiderTimes = defaultdict( list )
 	for e in entries:
-		try:
-			allRiderTimes[e.num].append( e )
-		except KeyError:
-			allRiderTimes[e.num] = [e]
+		allRiderTimes[e.num].append( e )
 	
-	noTimes = tuple()	
 	startOffset = category.getStartOffsetSecs() if category else 0.0
 	raceSeconds = race.minutes * 60.0
 	
@@ -252,7 +248,7 @@ def _GetResultsCore( category ):
 		
 		cutoffTime = categoryWinningTime.get(riderCategory, raceSeconds)
 		
-		riderTimes = allRiderTimes.get( rider, noTimes )
+		riderTimes = allRiderTimes[rider.num]
 		times = [e.t for e in riderTimes]
 		interp = [e.interp for e in riderTimes]
 		

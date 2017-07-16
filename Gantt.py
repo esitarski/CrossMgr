@@ -471,12 +471,12 @@ class Gantt( wx.Panel ):
 			self.refreshTimer = wx.CallLater( max(1,int((tNext - t)*1000)), self.timerRefresh )
 	
 	def refresh( self ):
-		if not Model.race:
+		race = Model.race
+		if not race:
 			self.ganttChart.SetData( None )
 			self.updateStats( None )
 			return
 		
-		race = Model.race
 		category = FixCategories( self.categoryChoice, getattr(race, 'ganttCategory', 0) )
 		Finisher = Model.Rider.Finisher
 		statusNames = Model.Rider.statusNames
