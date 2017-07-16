@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2017-07-16 12:26-0400\n"
+"POT-Creation-Date: 2017-07-16 17:35-0400\n"
 "PO-Revision-Date: 2015-04-15 14:17-0400\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -55,7 +55,7 @@ msgstr "Passages"
 #: Actions.py:99 ForecastHistory.py:219 ForecastHistory.py:243
 #: ForecastHistory.py:302 ForecastHistory.py:345 ForecastHistory.py:390
 #: Gantt.py:124 History.py:168 MainWin.py:682 Results.py:330
-#: RiderDetail.py:1471 Search.py:106 Situation.py:559
+#: RiderDetail.py:1470 Search.py:106 Situation.py:559
 msgid "RiderDetail"
 msgstr "Détails du coureur"
 
@@ -309,8 +309,8 @@ msgstr "Nombres"
 msgid "Gender"
 msgstr "Sexe"
 
-#: CatPredicate.py:210 ReadSignOnSheet.py:36 RiderDetail.py:1018
-#: RiderDetail.py:1235
+#: CatPredicate.py:210 ReadSignOnSheet.py:36 RiderDetail.py:1017
+#: RiderDetail.py:1234
 msgid "Age"
 msgstr "Âge"
 
@@ -346,7 +346,7 @@ msgstr "Tours"
 msgid "Distance"
 msgstr "Distance"
 
-#: Categories.py:62 Categories.py:102 ExportGrid.py:652
+#: Categories.py:62 Categories.py:102 ExportGrid.py:650
 msgid "Starters"
 msgstr "Entrées"
 
@@ -374,14 +374,14 @@ msgid "Component"
 msgstr "Composant"
 
 #: Categories.py:224 Gantt.py:133 Primes.py:38 Printing.py:46
-#: RiderDetail.py:1077
+#: RiderDetail.py:1076
 msgid "Custom"
 msgstr "Personnalisé"
 
-#: Categories.py:225 EditEntry.py:401 ExportGrid.py:714 ForecastHistory.py:88
+#: Categories.py:225 EditEntry.py:401 ExportGrid.py:712 ForecastHistory.py:88
 #: Gantt.py:337 Gantt.py:413 GanttChart.py:199 HistogramPanel.py:42
 #: NumKeypad.py:202 RaceHUD.py:361 Results.py:308 Results.py:657 Results.py:711
-#: Results.py:797 RiderDetail.py:601 RiderDetail.py:1031 Situation.py:151
+#: Results.py:797 RiderDetail.py:600 RiderDetail.py:1030 Situation.py:151
 #: WebScorerExport.py:80
 msgid "Lap"
 msgstr "Tour"
@@ -398,7 +398,7 @@ msgstr "Tous Activer"
 msgid "New"
 msgstr "Nouveau"
 
-#: Categories.py:252 ForecastHistory.py:239 Model.py:978 RiderDetail.py:531
+#: Categories.py:252 ForecastHistory.py:239 Model.py:978 RiderDetail.py:530
 msgid "Delete"
 msgstr "Effacer"
 
@@ -426,7 +426,7 @@ msgstr "Catégorie type"
 msgid "Active"
 msgstr "Actif"
 
-#: Categories.py:301 ExportGrid.py:131 ExportGrid.py:706 ForecastHistory.py:91
+#: Categories.py:301 ExportGrid.py:129 ExportGrid.py:704 ForecastHistory.py:91
 #: Primes.py:390 Printing.py:29 Recommendations.py:190 RiderDetail.py:270
 msgid "Name"
 msgstr "Nom"
@@ -594,8 +594,8 @@ msgid "Task"
 msgstr "Tâche"
 
 #: Checklist.py:154 ForecastHistory.py:87 Gantt.py:115 Gantt.py:337
-#: Properties.py:824 RiderDetail.py:75 RiderDetail.py:339 RiderDetail.py:533
-#: RiderDetail.py:1068
+#: Properties.py:824 RiderDetail.py:75 RiderDetail.py:339 RiderDetail.py:532
+#: RiderDetail.py:1067
 msgid "Note"
 msgstr "Note"
 
@@ -834,7 +834,7 @@ msgstr "Les participants DNS"
 msgid "&Help"
 msgstr "&Aidez-Moi"
 
-#: DNSManager.py:204 RiderDetail.py:1481
+#: DNSManager.py:204 RiderDetail.py:1480
 msgid "&Close (Ctrl-Q)"
 msgstr "&Fermer (Ctrl-Q)"
 
@@ -848,7 +848,7 @@ msgid "Race Time"
 msgstr "Temps de course"
 
 #: EditEntry.py:28 EditEntry.py:168 Gantt.py:412 GanttChart.py:198
-#: RiderDetail.py:1030
+#: RiderDetail.py:1029
 msgid "Rider"
 msgstr "Coureur"
 
@@ -856,7 +856,7 @@ msgstr "Coureur"
 msgid "24 hr Clock Time:"
 msgstr "24h Heure de l'horloge"
 
-#: EditEntry.py:43 Gantt.py:338 RiderDetail.py:672 RiderDetail.py:1156
+#: EditEntry.py:43 Gantt.py:338 RiderDetail.py:671 RiderDetail.py:1155
 msgid "Lap Note"
 msgstr "Lap Remarque"
 
@@ -936,16 +936,16 @@ msgstr "Nom1:"
 msgid "Num2:"
 msgstr "Nom2:"
 
-#: EditEntry.py:400 ExportGrid.py:696 ForecastHistory.py:86 Gantt.py:244
+#: EditEntry.py:400 ExportGrid.py:694 ForecastHistory.py:86 Gantt.py:244
 #: Gantt.py:264 Gantt.py:283 Gantt.py:337 History.py:246 History.py:268
 #: MainWin.py:975 MainWin.py:980 MainWin.py:985 MainWin.py:996 MainWin.py:1064
 #: NumKeypad.py:54 Primes.py:387 ReadSignOnSheet.py:858 ReadSignOnSheet.py:874
 #: ReadSignOnSheet.py:887 ReadTTStartTimesSheet.py:385
 #: ReadTTStartTimesSheet.py:401 ReadTTStartTimesSheet.py:405 Results.py:242
-#: Results.py:243 Results.py:753 Results.py:771 RiderDetail.py:672
-#: RiderDetail.py:710 RiderDetail.py:829 RiderDetail.py:868 RiderDetail.py:1007
-#: RiderDetail.py:1010 RiderDetail.py:1013 RiderDetail.py:1015
-#: RiderDetail.py:1115 RiderDetail.py:1132 RiderDetail.py:1153 Situation.py:594
+#: Results.py:243 Results.py:753 Results.py:771 RiderDetail.py:671
+#: RiderDetail.py:709 RiderDetail.py:828 RiderDetail.py:867 RiderDetail.py:1006
+#: RiderDetail.py:1009 RiderDetail.py:1012 RiderDetail.py:1014
+#: RiderDetail.py:1114 RiderDetail.py:1131 RiderDetail.py:1152 Situation.py:594
 #: Situation.py:619 Situation.py:697 TimeTrialRecord.py:73
 msgid "Bib"
 msgstr "Dossard"
@@ -954,7 +954,7 @@ msgstr "Dossard"
 msgid "Clock Time"
 msgstr "Temps d'horloge"
 
-#: EditEntry.py:404 MainWin.py:996 RiderDetail.py:604 RiderDetail.py:710
+#: EditEntry.py:404 MainWin.py:996 RiderDetail.py:603 RiderDetail.py:709
 msgid "Confirm Delete"
 msgstr "Confirmer la suppression"
 
@@ -966,8 +966,8 @@ msgstr "Supprimer l'entrée"
 msgid "and Enter Last Lap Time at"
 msgstr "et Entrez le dernier temps au tour à:"
 
-#: EditEntry.py:548 ExportGrid.py:653 ForecastHistory.py:241
-#: ForecastHistory.py:342 Recommendations.py:333 Utils.py:166
+#: EditEntry.py:548 ExportGrid.py:651 ForecastHistory.py:241
+#: ForecastHistory.py:342 Recommendations.py:333 Utils.py:168
 msgid "DNF"
 msgstr "DNF"
 
@@ -983,7 +983,7 @@ msgstr "Tirer"
 msgid "Confirm PULL Rider"
 msgstr "Confirmez PULL coureur"
 
-#: EditEntry.py:556 Recommendations.py:368 Utils.py:166
+#: EditEntry.py:556 Recommendations.py:368 Utils.py:168
 msgid "DNS"
 msgstr "DNS"
 
@@ -991,7 +991,7 @@ msgstr "DNS"
 msgid "Confirm Did Not START"
 msgstr "Confirmez DNS"
 
-#: EditEntry.py:560 Utils.py:166
+#: EditEntry.py:560 Utils.py:168
 msgid "DQ"
 msgstr "DQ"
 
@@ -999,93 +999,93 @@ msgstr "DQ"
 msgid "Confirm Disqualify"
 msgstr "Confirmez Disqualifier"
 
-#: ExportGrid.py:26
+#: ExportGrid.py:24
 msgid "Powered by CrossMgr (sites.google.com/site/crossmgrsoftware)"
 msgstr "Propulsé par CrossMgr (sites.google.com/site/crossmgrsoftware)"
 
-#: ExportGrid.py:108
+#: ExportGrid.py:106
 msgid "Last Name"
 msgstr "Nom"
 
-#: ExportGrid.py:109
+#: ExportGrid.py:107
 msgid "First Name"
 msgstr "Prénom"
 
-#: ExportGrid.py:256 ExportGrid.py:444 ReadSignOnSheet.py:38 Results.py:811
+#: ExportGrid.py:254 ExportGrid.py:442 ReadSignOnSheet.py:38 Results.py:811
 msgid "UCICode"
 msgstr "UCICode"
 
-#: ExportGrid.py:262 ExportGrid.py:446 ReadSignOnSheet.py:38 Results.py:816
+#: ExportGrid.py:260 ExportGrid.py:444 ReadSignOnSheet.py:38 Results.py:816
 msgid "NatCode"
 msgstr "NatCode"
 
-#: ExportGrid.py:278 ExportGrid.py:333 ExportGrid.py:438 ExportGrid.py:575
-#: ExportGrid.py:597 ExportGrid.py:704 ExportGrid.py:786 Results.py:635
+#: ExportGrid.py:276 ExportGrid.py:331 ExportGrid.py:436 ExportGrid.py:573
+#: ExportGrid.py:595 ExportGrid.py:702 ExportGrid.py:784 Results.py:635
 msgid "Speed"
 msgstr "Vitesse"
 
-#: ExportGrid.py:353 ExportGrid.py:355 ExportGrid.py:533 ExportGrid.py:535
+#: ExportGrid.py:351 ExportGrid.py:353 ExportGrid.py:531 ExportGrid.py:533
 msgid "Page"
 msgstr "Page"
 
-#: ExportGrid.py:651 NumKeypad.py:634
+#: ExportGrid.py:649 NumKeypad.py:634
 msgid "Total"
 msgstr "Total"
 
-#: ExportGrid.py:654 Recommendations.py:355
+#: ExportGrid.py:652 Recommendations.py:355
 msgid "Lapped"
 msgstr "Doublés"
 
-#: ExportGrid.py:676
+#: ExportGrid.py:674
 msgid "1st lap"
 msgstr "1er tour"
 
-#: ExportGrid.py:677
+#: ExportGrid.py:675
 msgid "more laps of"
 msgstr "plus de tours de"
 
-#: ExportGrid.py:681
+#: ExportGrid.py:679
 msgid "laps of"
 msgstr "Tours de"
 
-#: ExportGrid.py:684 ExportGrid.py:686
+#: ExportGrid.py:682 ExportGrid.py:684
 msgid "winner"
 msgstr "gagnant"
 
-#: ExportGrid.py:696 Results.py:241 Results.py:662 Results.py:753
+#: ExportGrid.py:694 Results.py:241 Results.py:662 Results.py:753
 msgid "Pos"
 msgstr "Pos"
 
-#: ExportGrid.py:698 Situation.py:158 Situation.py:797
+#: ExportGrid.py:696 Situation.py:158 Situation.py:797
 msgid "Clock"
 msgstr "Chrono"
 
-#: ExportGrid.py:698 ForecastHistory.py:563 ForecastHistory.py:647
+#: ExportGrid.py:696 ForecastHistory.py:563 ForecastHistory.py:647
 #: Model.py:2334 NumKeypad.py:204 RaceHUD.py:363 Recommendations.py:426
 #: Results.py:747 RiderDetail.py:63 RiderDetail.py:276
 msgid "Start"
 msgstr "Début"
 
-#: ExportGrid.py:698 Results.py:747 RiderDetail.py:66 RiderDetail.py:289
+#: ExportGrid.py:696 Results.py:747 RiderDetail.py:66 RiderDetail.py:289
 msgid "Finish"
 msgstr "Arrivée"
 
-#: ExportGrid.py:699
+#: ExportGrid.py:697
 msgid "ElapsedTime"
 msgstr "Temps écoulé"
 
-#: ExportGrid.py:699
+#: ExportGrid.py:697
 msgid "Factor %"
 msgstr "Facteur %"
 
-#: ExportGrid.py:700 ExportGrid.py:791 FinishStrip.py:434 ForecastHistory.py:89
+#: ExportGrid.py:698 ExportGrid.py:789 FinishStrip.py:434 ForecastHistory.py:89
 #: NumKeypad.py:203 RaceHUD.py:362 Recommendations.py:376
 #: Recommendations.py:384 Results.py:463 Results.py:662 Results.py:747
 #: TimeTrialRecord.py:73 UnmatchedTagsGantt.py:67
 msgid "Time"
 msgstr "Temps"
 
-#: ExportGrid.py:701 ExportGrid.py:807 ForecastHistory.py:90 Results.py:662
+#: ExportGrid.py:699 ExportGrid.py:805 ForecastHistory.py:90 Results.py:662
 #: Situation.py:794
 msgid "Gap"
 msgstr "Écart"
@@ -1169,15 +1169,15 @@ msgstr "HAE"
 msgid "Expected (click Bib to record entry)"
 msgstr "Prévu (cliquez sur Dossard pour enregistrer l'entrée)"
 
-#: ForecastHistory.py:235 RiderDetail.py:529
+#: ForecastHistory.py:235 RiderDetail.py:528
 msgid "Correct"
 msgstr "Corriger"
 
-#: ForecastHistory.py:236 Gantt.py:130 Model.py:980 RiderDetail.py:1074
+#: ForecastHistory.py:236 Gantt.py:130 Model.py:980 RiderDetail.py:1073
 msgid "Split"
 msgstr "Divisé"
 
-#: ForecastHistory.py:237 RiderDetail.py:530
+#: ForecastHistory.py:237 RiderDetail.py:529
 msgid "Shift"
 msgstr "Décalage"
 
@@ -1289,15 +1289,15 @@ msgstr "Ftp téléchargement a échoué."
 msgid "Group by Start Wave"
 msgstr "Groupe par vague de départ"
 
-#: Gantt.py:106 RiderDetail.py:524 RiderDetail.py:1059
+#: Gantt.py:106 RiderDetail.py:523 RiderDetail.py:1058
 msgid "Add Missing Last Lap"
 msgstr "Ajouter manquant dernier tour"
 
-#: Gantt.py:108 RiderDetail.py:1061
+#: Gantt.py:108 RiderDetail.py:1060
 msgid "Pull after Lap End"
 msgstr "Tirez après la fin du tour..."
 
-#: Gantt.py:109 RiderDetail.py:1062
+#: Gantt.py:109 RiderDetail.py:1061
 msgid "DNF after Lap End"
 msgstr "Abandon après la fin du tour..."
 
@@ -1309,23 +1309,23 @@ msgstr "Corrigera fin de temps au tour..."
 msgid "Change number or lap end time"
 msgstr "Modifier le numéro ou à la fin de temps au tour"
 
-#: Gantt.py:112 RiderDetail.py:1065
+#: Gantt.py:112 RiderDetail.py:1064
 msgid "Shift Lap End Time"
 msgstr "Maj l'heure de fin de tour"
 
-#: Gantt.py:112 RiderDetail.py:1065
+#: Gantt.py:112 RiderDetail.py:1064
 msgid "Move lap end time earlier/later"
 msgstr "Déplacez heure de fin de tour plus tôt / tard"
 
-#: Gantt.py:113 RiderDetail.py:1066
+#: Gantt.py:113 RiderDetail.py:1065
 msgid "Delete Lap End Time"
 msgstr "Supprimer l'heure de fin de tour..."
 
-#: Gantt.py:115 RiderDetail.py:1068
+#: Gantt.py:115 RiderDetail.py:1067
 msgid "Add/Edit lap Note"
 msgstr "Ajouter/Editer note de tour"
 
-#: Gantt.py:117 Gantt.py:283 Gantt.py:284 Gantt.py:318 RiderDetail.py:637
+#: Gantt.py:117 Gantt.py:283 Gantt.py:284 Gantt.py:318 RiderDetail.py:636
 msgid "Turn off Autocorrect"
 msgstr "Éteignez Autocorrect"
 
@@ -1337,7 +1337,7 @@ msgstr "Swap avec coureur avant"
 msgid "Swap with Rider after"
 msgstr "Exchange avec coureur après"
 
-#: Gantt.py:122 RiderDetail.py:1070
+#: Gantt.py:122 RiderDetail.py:1069
 msgid "Show Lap Details"
 msgstr "Afficher détails de Tour"
 
@@ -1349,7 +1349,7 @@ msgstr "Afficher dialog de détail de coureur"
 msgid "Switch to Results tab"
 msgstr "Passer à l'onglet Résultats"
 
-#: Gantt.py:130 RiderDetail.py:1074
+#: Gantt.py:130 RiderDetail.py:1073
 msgid "Splits"
 msgstr "Fractionnement"
 
@@ -1361,15 +1361,15 @@ msgstr "avant"
 msgid "after"
 msgstr "après"
 
-#: Gantt.py:171 RiderDetail.py:1101
+#: Gantt.py:171 RiderDetail.py:1100
 msgid "Add Missing Split"
 msgstr "Ajouter de scission manquante"
 
-#: Gantt.py:193 RiderDetail.py:982
+#: Gantt.py:193 RiderDetail.py:981
 msgid "Add Missing Splits"
 msgstr "Ajouter scissions manquantes"
 
-#: Gantt.py:193 RiderDetail.py:982
+#: Gantt.py:193 RiderDetail.py:981
 msgid "Missing Splits to Add:"
 msgstr "Scissions manquant à ajouter:"
 
@@ -1377,7 +1377,7 @@ msgstr "Scissions manquant à ajouter:"
 msgid "Pull Rider after lap"
 msgstr "Tirez coureur après tour"
 
-#: Gantt.py:246 History.py:248 RiderDetail.py:1117 Situation.py:596
+#: Gantt.py:246 History.py:248 RiderDetail.py:1116 Situation.py:596
 msgid "Pull Rider"
 msgstr "Tirez coureur"
 
@@ -1385,19 +1385,19 @@ msgstr "Tirez coureur"
 msgid "DNF Rider after lap"
 msgstr "Coureur DNF après tour"
 
-#: Gantt.py:266 History.py:270 RiderDetail.py:1134 Situation.py:621
+#: Gantt.py:266 History.py:270 RiderDetail.py:1133 Situation.py:621
 msgid "DNF Rider"
 msgstr "Coureur DNF"
 
-#: Gantt.py:313 RiderDetail.py:632
+#: Gantt.py:313 RiderDetail.py:631
 msgid "Cannot add Last Lap unless Rider is Finisher"
 msgstr "Impossible d'ajouter dernier tour à moins coureur est un finisseur "
 
-#: Gantt.py:313 RiderDetail.py:632
+#: Gantt.py:313 RiderDetail.py:631
 msgid "Cannot add Last Lap"
 msgstr "Impossible d'ajouter Dernier tour"
 
-#: Gantt.py:318 RiderDetail.py:637
+#: Gantt.py:318 RiderDetail.py:636
 msgid "Turn off Autocorrect first?"
 msgstr "Éteignez Autocorrect en premier?"
 
@@ -1409,19 +1409,19 @@ msgstr "Lap Début bas de chef de file"
 msgid "Lap End down from leader"
 msgstr "Tour Fin bas de chef de file"
 
-#: Gantt.py:406 Gantt.py:414 GanttChart.py:200 RiderDetail.py:1032
+#: Gantt.py:406 Gantt.py:414 GanttChart.py:200 RiderDetail.py:1031
 msgid "Lap Start"
 msgstr "Tour Démarrer"
 
-#: Gantt.py:409 Gantt.py:415 GanttChart.py:201 RiderDetail.py:1033
+#: Gantt.py:409 Gantt.py:415 GanttChart.py:201 RiderDetail.py:1032
 msgid "Lap End"
 msgstr "Tour Fin"
 
-#: Gantt.py:416 GanttChart.py:202 RiderDetail.py:1034
+#: Gantt.py:416 GanttChart.py:202 RiderDetail.py:1033
 msgid "Lap Time"
 msgstr "Temps au tour"
 
-#: Gantt.py:419 RiderDetail.py:1036
+#: Gantt.py:419 RiderDetail.py:1035
 msgid "Lap Details"
 msgstr "Tour Détails"
 
@@ -1445,7 +1445,7 @@ msgstr "Projetées ou edité"
 msgid "Photos"
 msgstr "Photos"
 
-#: GanttChartPanel.py:576 Utils.py:166
+#: GanttChartPanel.py:576 Utils.py:168
 msgid "PUL"
 msgstr "PUL"
 
@@ -1630,7 +1630,7 @@ msgstr "Dernier"
 msgid "Bin by"
 msgstr "Bin par"
 
-#: HistogramPanel.py:50 RiderDetail.py:1397
+#: HistogramPanel.py:50 RiderDetail.py:1396
 msgid "Auto"
 msgstr "Auto"
 
@@ -1730,27 +1730,27 @@ msgstr "Échanger avec entrée avant"
 msgid "Swap with Entry after"
 msgstr "Échanger avec Entrée après"
 
-#: History.py:180 RiderDetail.py:526
+#: History.py:180 RiderDetail.py:525
 msgid "Pull After Lap"
 msgstr "PUL Après Lap"
 
-#: History.py:180 RiderDetail.py:526
+#: History.py:180 RiderDetail.py:525
 msgid "Pull After lap"
 msgstr "PUL après tour"
 
-#: History.py:181 RiderDetail.py:527
+#: History.py:181 RiderDetail.py:526
 msgid "DNF After Lap"
 msgstr "DNF après tour"
 
-#: History.py:181 RiderDetail.py:527
+#: History.py:181 RiderDetail.py:526
 msgid "DNF After lap"
 msgstr "DNF après tour"
 
-#: History.py:247 RiderDetail.py:1116
+#: History.py:247 RiderDetail.py:1115
 msgid "Pull after lap"
 msgstr "PUL après tour"
 
-#: History.py:269 RiderDetail.py:1133
+#: History.py:269 RiderDetail.py:1132
 msgid "DNF after lap"
 msgstr "DNF après tour"
 
@@ -2596,7 +2596,7 @@ msgstr "Déjà en course"
 msgid "Delete Bib"
 msgstr "Supprimer le dossard"
 
-#: MainWin.py:996 RiderDetail.py:710
+#: MainWin.py:996 RiderDetail.py:709
 msgid "Delete Rider"
 msgstr "Supprimer coureur"
 
@@ -2620,7 +2620,7 @@ msgstr "Échange de dossards"
 msgid "Bib Number to Change"
 msgstr "Numéro de dossard à changer"
 
-#: MainWin.py:1025 RiderDetail.py:831
+#: MainWin.py:1025 RiderDetail.py:830
 msgid "New Bib Number"
 msgstr "Nouveau dossard"
 
@@ -2668,7 +2668,7 @@ msgstr "Les inscriptions seront copiés nouvelle Dossard"
 msgid "All times will be slightly earlier."
 msgstr "Tout le temps sera un peu plus tôt."
 
-#: MainWin.py:1067 MainWin.py:1390 RiderDetail.py:871
+#: MainWin.py:1067 MainWin.py:1390 RiderDetail.py:870
 msgid "Continue"
 msgstr "Continuer"
 
@@ -5117,141 +5117,141 @@ msgstr "Relégué à"
 msgid "Autocorrect Lap Data"
 msgstr "Données au tour Autocorrect"
 
-#: RiderDetail.py:412
+#: RiderDetail.py:411
 msgid "Started in Early Wave"
 msgstr "Démarré dans Early Wave"
 
-#: RiderDetail.py:413
+#: RiderDetail.py:412
 msgid "            "
 msgstr "            "
 
-#: RiderDetail.py:529
+#: RiderDetail.py:528
 msgid "Change number or lap time"
 msgstr "Changer le nombre ou temps au tour"
 
-#: RiderDetail.py:530
+#: RiderDetail.py:529
 msgid "Move lap time earlier/later"
 msgstr "Déplacez temps au tour plus tôt / tard"
 
-#: RiderDetail.py:531
+#: RiderDetail.py:530
 msgid "Delete lap time(s)"
 msgstr "Supprimer temps de tour..."
 
-#: RiderDetail.py:533
+#: RiderDetail.py:532
 msgid "Add/Edit lap note"
 msgstr "Ajouter / Editer tour la note"
 
-#: RiderDetail.py:604
+#: RiderDetail.py:603
 msgid "Delete entries of Bib"
 msgstr "Supprimer les entrées de Bib"
 
-#: RiderDetail.py:605
+#: RiderDetail.py:604
 msgid "Delete Times"
 msgstr "Supprimer temps"
 
-#: RiderDetail.py:672
+#: RiderDetail.py:671
 msgid "Note on Lap"
 msgstr "Note sur Lap"
 
-#: RiderDetail.py:732
+#: RiderDetail.py:731
 msgid "Rider's new number:"
 msgstr "Nouveau numéro de coureur:"
 
-#: RiderDetail.py:732
+#: RiderDetail.py:731
 msgid "New Number"
 msgstr "Nouveau numéro"
 
-#: RiderDetail.py:750
+#: RiderDetail.py:749
 msgid "Cannot Change Bib."
 msgstr "Impossible de modifier Dossard."
 
-#: RiderDetail.py:751
+#: RiderDetail.py:750
 msgid "There is a rider with this number already."
 msgstr "Il est un coureur avec ce numéro déjà."
 
-#: RiderDetail.py:753
+#: RiderDetail.py:752
 msgid "Cannot Change Rider Number"
 msgstr "Vous ne pouvez pas changer le numéro coureur"
 
-#: RiderDetail.py:756
+#: RiderDetail.py:755
 msgid "Confirm Change rider's number"
 msgstr "Confirmez le numéro de changement coureur"
 
-#: RiderDetail.py:756
+#: RiderDetail.py:755
 msgid "Change Rider Number"
 msgstr "Changer Nombre coureur"
 
-#: RiderDetail.py:779
+#: RiderDetail.py:778
 msgid "Number to swap with:"
 msgstr "Nombre d'échanger avec:"
 
-#: RiderDetail.py:779
+#: RiderDetail.py:778
 msgid "Swap Numbers"
 msgstr "Numéros de swap"
 
-#: RiderDetail.py:796
+#: RiderDetail.py:795
 msgid "Cannot swap with specified rider."
 msgstr "Vous ne pouvez pas échanger avec le pilote spécifié."
 
-#: RiderDetail.py:797
+#: RiderDetail.py:796
 msgid "This rider is not in race."
 msgstr "Ce coureur ne est pas dans la course."
 
-#: RiderDetail.py:799
+#: RiderDetail.py:798
 msgid "Cannot Swap Rider Numbers"
 msgstr "Vous ne pouvez pas Swap numéros coureur"
 
-#: RiderDetail.py:803
+#: RiderDetail.py:802
 msgid "Confirm Swap numbers"
 msgstr "Confirmer le nombre de swap"
 
-#: RiderDetail.py:803
+#: RiderDetail.py:802
 msgid "Swap Rider Number"
 msgstr "Swap Nombre coureur"
 
-#: RiderDetail.py:830
+#: RiderDetail.py:829
 msgid "All time entries will be copied to the new bib number."
 msgstr ""
 "Toutes les entrées de temps seront copiés dans le nouveau numéro de "
 "dossard."
 
-#: RiderDetail.py:833
+#: RiderDetail.py:832
 msgid "Copy Rider Times"
 msgstr "Copie chronos de coureur"
 
-#: RiderDetail.py:853 RiderDetail.py:856
+#: RiderDetail.py:852 RiderDetail.py:855
 msgid "New Bib Number Already Exists"
 msgstr "Nouveau dossard existe déjà"
 
-#: RiderDetail.py:854
+#: RiderDetail.py:853
 msgid "If you really want to copy times to this number, delete it first."
 msgstr ""
 "Si vous voulez vraiment copier les heures à ce numéro, d'abord le "
 "supprimer."
 
-#: RiderDetail.py:861 RiderDetail.py:862
+#: RiderDetail.py:860 RiderDetail.py:861
 msgid "Cannot Copy to Same Number"
 msgstr "Impossible de copier à même numéro"
 
-#: RiderDetail.py:869
+#: RiderDetail.py:868
 msgid "Entries will be copied to new Bib"
 msgstr "Les inscriptions seront copiés nouvelle Dossard"
 
-#: RiderDetail.py:870
+#: RiderDetail.py:869
 msgid "All entries will be slightly earlier."
 msgstr "Toutes les entrées seront un peu plus tôt."
 
-#: RiderDetail.py:873
+#: RiderDetail.py:872
 msgid "Confirm Copy Rider Times"
 msgstr "Confirmer la copie coureur temps"
 
-#: RiderDetail.py:1024
+#: RiderDetail.py:1023
 msgid ""
 "\n"
 "Lap Start "
 msgstr "\\Tour commencer"
 
-#: RiderDetail.py:1027
+#: RiderDetail.py:1026
 msgid ""
 "\n"
 "Lap End "
@@ -5259,19 +5259,19 @@ msgstr ""
 "\n"
 "Tour Fin "
 
-#: RiderDetail.py:1059
+#: RiderDetail.py:1058
 msgid "Add missing last lap"
 msgstr "Ajouter manquant dernier tour"
 
-#: RiderDetail.py:1064
+#: RiderDetail.py:1063
 msgid "Correct lap End Time"
 msgstr "Corrigera fin de temps au tour..."
 
-#: RiderDetail.py:1154
+#: RiderDetail.py:1153
 msgid "Note for lap"
 msgstr "Note pour les tour"
 
-#: RiderDetail.py:1360
+#: RiderDetail.py:1359
 msgid "Lapped by Leader"
 msgstr "Porté par Leader"
 
@@ -5389,7 +5389,7 @@ msgstr "Appuyez sur pour l'heure"
 
 #: TimeTrialRecord.py:93
 msgid "Tap to get a Time, or press \"t\"."
-msgstr "Appuyez pour obtenir une heure, ou appuyez sur \\ \"t \"."
+msgstr "Appuyez pour obtenir une heure, ou appuyez sur \"t\"."
 
 #: TimeTrialRecord.py:94
 msgid "Then enter the Bib number(s) and Save."
@@ -5397,15 +5397,15 @@ msgstr "Ensuite, entrez le (s) numéro (s) de dossard et enregistrez."
 
 #: TimeTrialRecord.py:97
 msgid "(or press \"t\")"
-msgstr "(Ou appuyez sur \\ \"t \")"
+msgstr "(Ou appuyez sur \"t\")"
 
 #: TimeTrialRecord.py:129
 msgid "(or press \"s\")"
-msgstr "(Ou appuyez sur \\ \"s \")"
+msgstr "(Ou appuyez sur \"s\")"
 
 #: TimeTrialRecord.py:138
 msgid "Save Entries (or press \"s\")"
-msgstr "Enregistrer les entrées (ou appuyez sur \\ \"s \")"
+msgstr "Enregistrer les entrées (ou appuyez sur \"s\")"
 
 #: TimeTrialRecord.py:192
 msgid "Insufficient space to Record Time."
@@ -5455,21 +5455,21 @@ msgstr "Exporter vers Excel"
 msgid "Folder to write"
 msgstr "Dossier à écrire"
 
-#: Utils.py:165
+#: Utils.py:167
 msgid "Search"
 msgstr "Recherche"
 
-#: Utils.py:166
+#: Utils.py:168
 #, fuzzy
 msgid "Finisher"
 msgstr "Fini"
 
-#: Utils.py:166
+#: Utils.py:168
 #, fuzzy
 msgid "OTL"
-msgstr "Total"
+msgstr "OTL"
 
-#: Utils.py:166
+#: Utils.py:168
 msgid "NP"
 msgstr "NP"
 
@@ -5491,25 +5491,25 @@ msgstr "Nom doit être liée à une colonne dans la feuille Excel."
 #~ msgstr ""
 
 #~ msgid "Folder to write \"{}\""
-#~ msgstr ""
+#~ msgstr "Dossier pour écrire \"{}\""
 
 #~ msgid "CrossResults Error: \"{}\"."
-#~ msgstr ""
+#~ msgstr "CrossResults Erreur: \"{}\". "
 
 #~ msgid "CrossResults Error"
-#~ msgstr ""
+#~ msgstr "CrossResults Erreur"
 
 #~ msgid "CrossResults File Error"
-#~ msgstr ""
+#~ msgstr "rossResults Erreur de fichier\""
 
 #~ msgid "WebScorer Error: \"{}\"."
-#~ msgstr ""
+#~ msgstr "WebScorer Erreur: \"{}\"."
 
 #~ msgid "WebScorer Error"
-#~ msgstr ""
+#~ msgstr "WebScorer Error"
 
 #~ msgid "<TimeTrial>"
-#~ msgstr ""
+#~ msgstr "<Contre la montre>"
 
 #~ msgid "<JChip>"
 #~ msgstr ""
@@ -5590,7 +5590,7 @@ msgstr "Nom doit être liée à une colonne dans la feuille Excel."
 #~ msgstr ""
 
 #~ msgid "{} laps of {:.2f} {}"
-#~ msgstr ""
+#~ msgstr "{} tour de {:.2f} {}"
 
 #~ msgid "winner: {} at {}"
 #~ msgstr ""
@@ -5608,18 +5608,15 @@ msgstr "Nom doit être liée à une colonne dans la feuille Excel."
 #~ msgstr ""
 
 #~ msgid "{} laps"
-#~ msgstr ""
+#~ msgstr "{} tours"
 
 #~ msgid "{} lap"
-#~ msgstr ""
+#~ msgstr "{} tour"
 
 #~ msgid "<Missing>"
 #~ msgstr ""
 
 #~ msgid "{}: Leader Bell Lap Alert"
-#~ msgstr ""
-
-#~ msgid "{}: Leader Finish Alert"
 #~ msgstr ""
 
 #~ msgid "times"
@@ -5628,35 +5625,23 @@ msgstr "Nom doit être liée à une colonne dans la feuille Excel."
 #~ msgid "time"
 #~ msgstr ""
 
-#~ msgid "Distance ({})"
-#~ msgstr ""
-
-#~ msgid "and Enter Last Lap Time at: "
-#~ msgstr ""
-
-#~ msgid "{} {} {:.2f} {}"
-#~ msgstr ""
-
 #~ msgid " Name"
-#~ msgstr ""
-
-#~ msgid "Pull Rider {} at {} after lap {}?"
-#~ msgstr ""
+#~ msgstr "Nom"
 
 #~ msgid "Pull after lap end"
-#~ msgstr ""
+#~ msgstr "PUL après la fin du tour"
 
 #~ msgid "DNF after lap end"
-#~ msgstr ""
+#~ msgstr "DNF après la fin du tour"
 
 #~ msgid "Delete lap end time"
-#~ msgstr ""
+#~ msgstr "Supprimer le temps de fin de tour"
 
 #~ msgid "Swap with Entry before..."
-#~ msgstr ""
+#~ msgstr "Échangez avec l'entrée avant"
 
 #~ msgid "Swap with Entry after..."
-#~ msgstr ""
+#~ msgstr "Échangez avec l'entrée après"
 
 #~ msgid "{} {}"
 #~ msgstr ""
