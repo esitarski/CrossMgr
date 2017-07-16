@@ -147,7 +147,7 @@ msgstr "Feuille Excel Lire "
 
 #: Actions.py:344
 msgid "Cannot Start.  Excel Sheet missing Tag column."
-msgstr "Ne peux pas commencer. Colonne de la balise de la feuille Excel."
+msgstr "Ne peux pas commencer. Colonne de la Puce de la feuille Excel."
 
 #: Actions.py:344
 msgid "The Excel file must contain a Tag column to use RFID."
@@ -621,7 +621,7 @@ msgstr "Il est avant le début de la course"
 
 #: ChipImport.py:73
 msgid "tag missing from Excel sheet"
-msgstr "balise manquante de feuille Excel"
+msgstr "Puce manquante de feuille Excel"
 
 #: ChipImport.py:80
 msgid "No matching tags found in Excel link.  Import aborted."
@@ -654,7 +654,7 @@ msgid ""
 "This is required so CrossMgr can link the tags in the import file back to"
 " rider numbers and info."
 msgstr ""
-"Ceci est nécessaire afin CrossMgr peut relier les balises dans le fichier"
+"Ceci est nécessaire afin CrossMgr peut relier les Puces dans le fichier"
 " d'importation revenir aux chiffres des coureurs et d'info."
 
 #: ChipImport.py:127
@@ -1917,7 +1917,7 @@ msgstr "Excel Lien problème"
 
 #: JChipSetup.py:298
 msgid "All Tag entries in the Excel sheet are blank."
-msgstr "Toutes les entrées de balise dans une feuille Excel sont vides."
+msgstr "Toutes les entrées de Puce dans une feuille Excel sont vides."
 
 #: JChipSetup.py:346
 msgid "listening for RFID connection..."
@@ -4056,7 +4056,7 @@ msgstr "Remarques à apparaître sur la sortie HTML:"
 #: Properties.py:1108
 msgid "(notes containing Html tags must start with <html> and end with </html>)"
 msgstr ""
-"(Notes contenant des balises HTML doit lancer par <html> et finissent par"
+"(Notes contenant des Puces HTML doit lancer par <html> et finissent par"
 " </ html>)"
 
 #: Properties.py:1110
@@ -4420,39 +4420,39 @@ msgstr "Avertissement: Loop ID! = 0"
 
 #: ReadSignOnSheet.py:27 Recommendations.py:418 UnmatchedTagsGantt.py:65
 msgid "Tag"
-msgstr "Balise"
+msgstr "Puce"
 
 #: ReadSignOnSheet.py:27
 msgid "Tag2"
-msgstr "Balise2"
+msgstr "Puce2"
 
 #: ReadSignOnSheet.py:27
 msgid "Tag3"
-msgstr "Balise2"
+msgstr "Puce2"
 
 #: ReadSignOnSheet.py:27
 msgid "Tag4"
-msgstr "Balise2"
+msgstr "Puce2"
 
 #: ReadSignOnSheet.py:27
 msgid "Tag5"
-msgstr "Balise2"
+msgstr "Puce2"
 
 #: ReadSignOnSheet.py:27
 msgid "Tag6"
-msgstr "Balise2"
+msgstr "Puce2"
 
 #: ReadSignOnSheet.py:27
 msgid "Tag7"
-msgstr "Balise2"
+msgstr "Puce2"
 
 #: ReadSignOnSheet.py:27
 msgid "Tag8"
-msgstr "Balise2"
+msgstr "Puce2"
 
 #: ReadSignOnSheet.py:27
 msgid "Tag9"
-msgstr "Balise2"
+msgstr "Puce2"
 
 #: ReadSignOnSheet.py:32 Situation.py:667
 msgid "Bib#"
@@ -4658,7 +4658,7 @@ msgstr "Format Excel Erreur"
 
 #: ReadSignOnSheet.py:484
 msgid "No RFID Tag Columns Specified."
-msgstr "Pas de colonnes de balises RFID spécifiées."
+msgstr "Pas de colonnes de Puces RFID spécifiées."
 
 #: ReadSignOnSheet.py:484
 msgid "Fix it now?"
@@ -4666,7 +4666,7 @@ msgstr "Répare le maintenant?"
 
 #: ReadSignOnSheet.py:485
 msgid "No RFID Tag Columns"
-msgstr "Pas de colonnes de balises RFID"
+msgstr "Pas de colonnes de Puces RFID"
 
 #: ReadSignOnSheet.py:495 ReadTTStartTimesSheet.py:305
 msgid "You must specify column"

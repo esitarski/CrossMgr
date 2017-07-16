@@ -1,4 +1,3 @@
-
 import wx
 import os
 import re
@@ -16,6 +15,8 @@ import urllib
 import Flags
 import ImageIO
 # from reportlab.lib.pagesizes import letter, A4
+
+translate = _
 
 #---------------------------------------------------------------------------
 
@@ -815,6 +816,8 @@ class ExportGrid( object ):
 						gapCol[i] = sameValue
 					else:
 						lastGap = curGap
+						
+		self.colnames = [translate(n) for n in self.colnames]
 
 if __name__ == '__main__':
 	pass
