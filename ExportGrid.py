@@ -628,6 +628,7 @@ class ExportGrid( object ):
 		if not results:
 			return
 		
+		Finisher = Model.Rider.Finisher
 		race = Model.race
 		
 		catDetails = { cd['name']:cd for cd in GetCategoryDetails() }
@@ -677,7 +678,7 @@ class ExportGrid( object ):
 					)
 				else:
 					catData.append( u'{} {} {:.2f} {}'.format(cd['laps'], _('laps of'), cd['lapDistance'], cd['distanceUnit']) )
-		if leader.status == Model.Rider.Finisher:
+		if leader.status == Finisher:
 			if getattr(leader, 'speed', None):
 				catData.append( u'{}: {} - {}'.format(_('winner'), leaderTime, leader.speed) )
 			else:
@@ -726,15 +727,24 @@ class ExportGrid( object ):
 		for col, f in enumerate( rrFields ):
 			if f in ('lastTime', 'lastTimeOrig'):
 				for row, rr in enumerate(results):
-					ttt = getattr( rr, f, 0.0 ) - (rr.raceTimes[0] if rr.raceTimes else 0.0)
-					data[col].append( Utils.formatTimeCompressed(ttt, highPrecision) if ttt > 0.0 else u'' )
+					if rr.status == Finisher:
+						v = getattr( rr, f, 0.0 )
+						ttt = (v - rr.raceTimes[0]) if v and rr.raceTimes else 0.0
+						data[col].append( Utils.formatTimeCompressed(ttt, highPrecision) if ttt > 0.0 else u'' )
+					else:
+						data[col].append( u'' )
 			elif f in ('clockStartTime', 'startTime', 'finishTime'):
 				for row, rr in enumerate(results):
-					sfTime = getattr( rr, f, None )
-					if sfTime is not None:
-						data[col].append( Utils.formatTimeCompressed(sfTime, highPrecision) )
-					else:
+					if f == 'finishTime' and rr.status != Finisher:
 						data[col].append( '' )
+						continue
+						
+					sfTime = getattr( rr, f, None )
+					if sfTime is not None and (f != 'finishTime' and rr.status == Finisher):
+						data[col].append( Utils.formatTimeCompressed(sfTime, highPrecision) )
+						continue
+						
+					data[col].append( '' )
 			elif f == 'factor':
 				for row, rr in enumerate(results):
 					factor = getattr( rr, f, None )

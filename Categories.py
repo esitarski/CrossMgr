@@ -7,6 +7,8 @@ from Undo import undo
 import wx.grid			as gridlib
 from ReorderableGrid import ReorderableGrid
 import wx.lib.masked	as  masked
+import xlwt
+import xlsxwriter
 
 from GetResults import GetCategoryDetails, UnstartedRaceWrapper
 from ExportGrid import ExportGrid
@@ -15,6 +17,71 @@ from RaceInputState import RaceInputState
 #--------------------------------------------------------------------------------
 
 allName = _('All')
+
+def getExportGrid():
+	race = Model.race
+	try:
+		externalInfo = race.excelLink.read()
+	except:
+		externalInfo = {}
+	
+	GetTranslation = _
+	allZeroStarters = True
+	with UnstartedRaceWrapper():
+		catMap = dict( (c.fullname, c) for c in race.getCategories( startWaveOnly=False ) )
+		catDetails = GetCategoryDetails( False, True )
+		catDetailsMap = dict( (cd['name'], cd) for cd in catDetails )
+		
+		title = u'\n'.join( [_('Categories'), race.title, race.scheduledStart + u' ' + _('Start on') + u' ' + Utils.formatDate(race.date)] )
+		colnames = [_('Start Time'), _('Category'), _('Gender'), _('Numbers'), _('Laps'), _('Distance'), _('Starters')]
+		
+		raceStart = Utils.StrToSeconds( race.scheduledStart + ':00' )
+		catData = []
+		for catInfo in catDetails:
+			c = catMap.get( catInfo['name'], None )
+			if not c:
+				continue
+			
+			starters = race.catCount(c)
+			if starters:
+				allZeroStarters = False
+			else:
+				starters = ''
+			
+			laps = catInfo.get( 'laps', '' ) or ''
+			raceDistance = catInfo.get( 'raceDistance', '' )
+			raceDistanceUnit = catInfo.get( 'distanceUnit', '')
+			
+			if raceDistance:
+				raceDistance = '%.2f' % raceDistance
+				
+			if c.catType == c.CatWave:
+				catStart = Utils.SecondsToStr( raceStart + c.getStartOffsetSecs() )
+			elif c.catType == c.CatCustom:
+				catStart = Utils.SecondsToStr( raceStart )
+			else:
+				catStart = ''
+				
+			catData.append( [
+				catStart,
+				u' - ' + c.name if c.catType == c.CatComponent else c.name,
+				GetTranslation(catInfo.get('gender', 'Open')),
+				c.catStr,
+				u'{}'.format(laps),
+				u' '.join([raceDistance, raceDistanceUnit]) if raceDistance else '',
+				u'{}'.format(starters)
+			])
+	
+	if allZeroStarters:
+		colnames.remove( _('Starters') )
+	data = [[None] * len(catData) for i in xrange(len(colnames))]
+	for row in xrange(len(catData)):
+		for col in xrange(len(colnames)):
+			data[col][row] = catData[row][col]
+			
+	exportGrid = ExportGrid( title = title, colnames = colnames, data = data )
+	exportGrid.leftJustifyCols = { 1, 2, 3 }
+	return exportGrid
 
 class CategoriesPrintout( wx.Printout ):
 	def __init__(self, categories = None):
@@ -45,68 +112,7 @@ class CategoriesPrintout( wx.Printout ):
 		race = Model.race
 		if not race:
 			return
-		
-		try:
-			externalInfo = race.excelLink.read()
-		except:
-			externalInfo = {}
-		
-		GetTranslation = _
-		allZeroStarters = True
-		with UnstartedRaceWrapper():
-			catMap = dict( (c.fullname, c) for c in race.getCategories( startWaveOnly=False ) )
-			catDetails = GetCategoryDetails( False, True )
-			catDetailsMap = dict( (cd['name'], cd) for cd in catDetails )
-			
-			title = u'\n'.join( [_('Categories'), race.title, race.scheduledStart + u' ' + _('Start on') + u' ' + Utils.formatDate(race.date)] )
-			colnames = [_('Start Time'), _('Category'), _('Gender'), _('Numbers'), _('Laps'), _('Distance'), _('Starters')]
-			
-			raceStart = Utils.StrToSeconds( race.scheduledStart + ':00' )
-			catData = []
-			for catInfo in catDetails:
-				c = catMap.get( catInfo['name'], None )
-				if not c:
-					continue
-				
-				starters = race.catCount(c)
-				if starters:
-					allZeroStarters = False
-				else:
-					starters = ''
-				
-				laps = catInfo.get( 'laps', '' ) or ''
-				raceDistance = catInfo.get( 'raceDistance', '' )
-				raceDistanceUnit = catInfo.get( 'distanceUnit', '')
-				
-				if raceDistance:
-					raceDistance = '%.2f' % raceDistance
-					
-				if c.catType == c.CatWave:
-					catStart = Utils.SecondsToStr( raceStart + c.getStartOffsetSecs() )
-				elif c.catType == c.CatCustom:
-					catStart = Utils.SecondsToStr( raceStart )
-				else:
-					catStart = ''
-					
-				catData.append( [
-					catStart,
-					u' - ' + c.name if c.catType == c.CatComponent else c.name,
-					GetTranslation(catInfo.get('gender', 'Open')),
-					c.catStr,
-					u'{}'.format(laps),
-					u' '.join([raceDistance, raceDistanceUnit]) if raceDistance else '',
-					u'{}'.format(starters)
-				])
-		
-		if allZeroStarters:
-			colnames.remove( _('Starters') )
-		data = [[None] * len(catData) for i in xrange(len(colnames))]
-		for row in xrange(len(catData)):
-			for col in xrange(len(colnames)):
-				data[col][row] = catData[row][col]
-				
-		exportGrid = ExportGrid( title = title, colnames = colnames, data = data )
-		exportGrid.leftJustifyCols = { 1, 2, 3 }
+		exportGrid = getExportGrid()
 		exportGrid.drawToFitDC( self.GetDC() )
 		return True
 
@@ -293,6 +299,10 @@ class Categories( wx.Panel ):
 		self.Bind( wx.EVT_BUTTON, self.onPrint, self.printButton )
 		hs.Add( self.printButton, 0, border = border, flag = flag )
 		
+		self.excelButton = wx.Button( self, label=u'{}...'.format(_('Excel')), style=wx.BU_EXACTFIT )
+		self.Bind( wx.EVT_BUTTON, self.onExcel, self.excelButton )
+		hs.Add( self.excelButton, 0, border = border, flag = flag )
+		
 		self.grid = ReorderableGrid( self )
 		self.colNameFields = [
 			(u'',						None),
@@ -419,6 +429,29 @@ class Categories( wx.Panel ):
 	def onPrint( self, event ):
 		self.commit()
 		PrintCategories()
+		
+	def onExcel( self, event ):
+		self.commit()
+		export = getExportGrid()
+		xlFName = Utils.getMainWin().getFormatFilename('excel')
+		xlFName = os.path.splitext( xlFName )[0] + '-Categories' + os.path.splitext( xlFName )[1]
+
+		wb = xlwt.Workbook()
+		sheetCur = wb.add_sheet( _('Categories') )
+		export.toExcelSheet( sheetCur )
+		try:
+			wb.save( xlFName )
+			if Utils.getMainWin().launchExcelAfterPublishingResults:
+				Utils.LaunchApplication( xlFName )
+			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
+		except IOError:
+			Utils.MessageOK(self,
+						u'{} "{}"\n\n{}\n{}'.format(
+							_('Cannot write'), xlFName,
+							_('Check if this spreadsheet is already open.'),
+							_('If so, close it, and try again.')
+						),
+						_('Excel File Error'), iconMask=wx.ICON_ERROR )		
 	
 	def onSetGpxDistance( self, event ):
 		race = Model.race
