@@ -491,7 +491,7 @@ class History( wx.Panel ):
 		if isTimeTrial:
 			leaderTimes = []
 			for e in entries:
-				while len(self.history) < e.lap:
+				while len(self.history) <= e.lap:
 					self.history.append( [] )
 				if e.lap >= len(leaderTimes):
 					leaderTimes.append( e.t )

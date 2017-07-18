@@ -12,6 +12,7 @@ import sys
 import time
 import copy
 import json
+import shutil
 import random
 import bisect
 import datetime
@@ -698,6 +699,8 @@ class MainWin( wx.Frame ):
 			addPage( getattr(self, a), u'{}. {}'.format(i+1, n) )
 			if a == 'history':
 				self.iHistoryPage = i
+			if a == 'record':
+				self.iRecordPage = i
 
 		self.riderDetailDialog = None
 		self.splitter.SplitVertically( self.forecastHistory, self.notebook, 256+80)
@@ -3077,7 +3080,18 @@ class MainWin( wx.Frame ):
 		
 	@logCall
 	def menuSimulate( self, event ):
-		fName = os.path.join( os.path.expanduser('~'), 'Simulation.cmn' )
+		# Put simulation in user's home directory.
+		simulationDir = os.path.join( os.path.expanduser('~'), 'CrossMgrSimulation' )
+		
+		# Create the stub of the race so we can get the file name.
+		race = Model.Race()
+		race.name = 'Simulation'
+		race.raceNum = 1
+		race.organizer = 'Edward Sitarski'
+		race.memo = ''
+		race.simulation = True	# Flag this as a simulation race.
+		
+		fName = os.path.join( simulationDir, race.getFileName() )
 		dlg = SimulateDialog( self, fName )
 		ret = dlg.ShowModal()
 		dlg.Destroy()
@@ -3085,82 +3099,92 @@ class MainWin( wx.Frame ):
 			return
 		isTimeTrial = (ret == SimulateDialog.ID_TIME_TRIAL)
 
+		# Delete any pre-existing Simulation directory.
+		try:
+			shutil.rmtree( simulationDir, ignore_errors=True )
+		except:
+			pass
+		
+		# Create the simulation directory.
+		try:
+			os.makedirs( simulationDir )
+		except:
+			pass
+		
+		# Test if we can write something there.
 		try:
 			with open(fName, 'wb') as fp:
 				pass
 		except IOError:
-			Utils.MessageOK(self, u'{} "{}".'.format(_('Cannot open file'), fName), _('File Open Error'),iconMask = wx.ICON_ERROR)
+			Utils.MessageOK(self, u'{} "{}".'.format(_('Cannot open file'), fName), _('File Open Error'), iconMask=wx.ICON_ERROR)
 			return
 
-		self.showPageName( _('Results') )	# Switch to a read-only view.
+		self.showPageName( _('Results') )	# Switch to a read-only view and force a commit.
 		self.updateLapCounter()
+		self.closeFindDialog()
 		self.refresh()
 		
+		# Get the simulation times.
 		bigSimulation = False
 		self.lapTimes = self.genTimes( bigSimulation )
 		tMin = self.lapTimes[0][0]
-		self.lapTimes.reverse()			# Reverse the times so we can pop them from the stack later.
+		self.lapTimes.reverse()			# Reverse the times so we can pop them from the end later.
 
-		# Set up a new file and model for the simulation.
+		# Commit to the new race and file for the simulation.
+		undo.clear()
+		Model.setRace( race )
 		self.fileName = fName
 		WebServer.SetFileName( self.fileName )
-		OutputStreamer.DeleteStreamerFile()
+		
+		race.isTimeTrial = isTimeTrial
+		race.enableUSBCamera = True
+		race.minutes = self.raceMinutes
+		#race.photosAtRaceEndOnly = True
+		#race.enableJChipIntegration = True
+		
+		# Prep the simulation data.
 		self.simulateSeen = set()
-		undo.clear()
-		with Model.lock:
-			Model.setRace( None )
-			race = Model.newRace()
-			race.name = 'Simulate'
-			race.organizer = 'Edward Sitarski'
-			race.memo = ''
-			race.minutes = self.raceMinutes
-			race.raceNum = 1
-			race.simulation = True	# Make sure we flag this as a simulation race.
-			race.isTimeTrial = isTimeTrial
-			race.enableUSBCamera = True
-			#race.photosAtRaceEndOnly = True
-			#race.enableJChipIntegration = True
-			categories = getattr( self, 'categories', None )
-			if not categories:
-				categories = [	{'name':'Junior', 'catStr':'100-199', 'startOffset':'00:00', 'distance':0.5, 'gender':'Men'},
-								{'name':'Senior', 'catStr':'200-299', 'startOffset':'00:10', 'distance':0.5, 'gender':'Women', 'raceMinutes':6}]
-			if race.isTimeTrial:
-				for c in categories:
-					c.pop( 'raceMinutes', None )
-				categories[0]['numLaps'] = 4
-				categories[1]['numLaps'] = 3
-				race.setCategories( categories )
-				
-				nums = set()
-				numTimes = defaultdict( list )
-				for t, num in self.lapTimes:
-					if num < 500:
-						nums.add( num )
-						numTimes[num].append( t )
-				
-				numRaceTimes = {}
-				for num, times in numTimes.iteritems():
-					times.sort()
-					numRaceTimes[num] = [t - times[0] for t in times[1:]]	# Convert race times to zero start.
-				
-				preStartGap = 30.0
-				startGap = 15.0
-				nums = sorted( nums, reverse=True )				
-				numStartTime = {n:preStartGap + i*startGap for i, n in enumerate(nums)}	# Set start times for all competitors.
-				self.lapTimes = []
-				for num, raceTimes in numRaceTimes.iteritems():
-					startTime = numStartTime[num]
-					race.getRider( num ).firstTime = startTime
-					self.lapTimes.extend( [(t + startTime, num) for t in raceTimes] )
-				self.lapTimes.sort( reverse=True )
-			else:
-				race.setCategories( categories )
-				self.lapTimes = [(t + race.getStartOffset(num), num) for t, num in self.lapTimes]
+		categories = getattr( self, 'categories', None )
+		if not categories:
+			categories = [	{'name':'Junior', 'catStr':'100-199', 'startOffset':'00:00', 'distance':0.5, 'gender':'Men'},
+							{'name':'Senior', 'catStr':'200-299', 'startOffset':'00:10', 'distance':0.5, 'gender':'Women', 'raceMinutes':6}]
+		if race.isTimeTrial:
+			for c in categories:
+				c.pop( 'raceMinutes', None )
+				c['lappedRidersMustContinue'] = True
+			categories[0]['numLaps'] = 4
+			categories[1]['numLaps'] = 3
+			race.setCategories( categories )
+			
+			nums = set()
+			numTimes = defaultdict( list )
+			for t, num in self.lapTimes:
+				if num < 500:
+					nums.add( num )
+					numTimes[num].append( t )
+			
+			numRaceTimes = {}
+			for num, times in numTimes.iteritems():
+				times.sort()
+				numRaceTimes[num] = [t - times[0] for t in times[1:]]	# Convert race times to zero start.
+			
+			timeBeforeFirstRider = 30.0
+			startGap = 15.0
+			nums = sorted( nums, reverse=True )				
+			numStartTime = {n:timeBeforeFirstRider + i*startGap for i, n in enumerate(nums)}	# Set start times for all competitors.
+			self.lapTimes = []
+			for num, raceTimes in numRaceTimes.iteritems():
+				startTime = numStartTime[num]
+				race.getRider( num ).firstTime = startTime
+				self.lapTimes.extend( [(t + startTime, num) for t in raceTimes] )
+			self.lapTimes.sort( reverse=True )
+		else:
+			race.setCategories( categories )
+			self.lapTimes = [(t + race.getStartOffset(num), num) for t, num in self.lapTimes]
 
 		self.writeRace()
-		DeletePhotos( self.fileName )
 		
-		# Create an Excel data file of rider data.
+		# Create an Excel rider data file.
 		riderInfo = getattr( self, 'riderInfo', None )
 		if not riderInfo:
 			riderInfo = []
@@ -3178,7 +3202,7 @@ class MainWin( wx.Frame ):
 				pass
 			
 		if riderInfo:
-			fnameRiderInfo = os.path.join(Utils.getHomeDir(), 'SimulationRiderData.xlsx')
+			fnameRiderInfo = os.path.join(simulationDir, 'SimulationRiderData.xlsx')
 			sheetName = 'Registration'
 			wb = xlsxwriter.Workbook( fnameRiderInfo )
 			ws = wb.add_worksheet(sheetName)
@@ -3195,24 +3219,22 @@ class MainWin( wx.Frame ):
 			race.excelLink.setFieldCol( {'Bib#':0, 'LastName':1, 'FirstName':2, 'Team':3} )
 
 		# Start the simulation.
-		self.showPageName( _('Chart') )
-		self.refresh()
+		self.showPageName( _('Record') if isTimeTrial else _('Chart') )
 
 		ChipReader.chipReaderCur.reset( race.chipReaderType )
 
 		self.nextNum = None
-		with Model.LockRace() as race:
-			race.startRaceNow()
-			if not race.isTimeTrial:
-				# Backup all the events and race start so we don't have to wait for the first lap.
-				race.startTime -= datetime.timedelta( seconds = (tMin-5) )
-				'''
-				# Simulate RFID first read.
-				nums = set( num for t, num in self.lapTimes )
-				for num in nums:
-					rider = race.getRider( num )
-					rider.firstTime = 0.0
-				'''
+		race.startRaceNow()
+		if not race.isTimeTrial:
+			# Backup all the events and race start so we don't have to wait for the first lap.
+			race.startTime -= datetime.timedelta( seconds = (tMin-5) )
+			'''
+			# Simulate RFID first read.
+			nums = set( num for t, num in self.lapTimes )
+			for num in nums:
+				rider = race.getRider( num )
+				rider.firstTime = 0.0
+			'''
 
 		OutputStreamer.writeRaceStart()
 		if race.isTimeTrial:
@@ -3789,8 +3811,8 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 		if self.photoDialog.IsShown():
 			self.photoDialog.refresh()
 
-	def refreshHistory( self ):
-		if self.notebook.GetSelection() == self.iHistoryPage:
+	def refreshTTStart( self ):
+		if self.notebook.GetSelection() in (self.iHistoryPage, self.iRecordPage):
 			self.refreshCurrentPage()
 
 	def updateUndoStatus( self, event = None ):

@@ -1211,7 +1211,6 @@ class FilesProperties( wx.Panel ):
 #------------------------------------------------------------------------------------------------
 
 class Properties( wx.Panel ):
-	badFileCharsRE = re.compile( '[^a-zA-Z0-9_ ]+' )
 	dateFormat = '%Y-%m-%d'
 
 	def __init__( self, parent, id=wx.ID_ANY, addEditButton=True ):
@@ -1397,7 +1396,7 @@ class Properties( wx.Panel ):
 				mins += 15	# Add time for a break.
 				if (mins/60) >= 24:
 					mins = 0
-				sNew = '%02d:%02d:00' % (int(mins/60), mins%60)
+				sNew = '{:02d}:{:02d}:00'.format(int(mins/60), mins%60)
 				gi.scheduledStart.SetValue( sNew )
 	
 	def onChanged( self, event ):
@@ -1411,11 +1410,10 @@ class Properties( wx.Panel ):
 			return ''
 			
 		rDate = gi.date.GetValue().Format(Properties.dateFormat)
-		rName = Properties.badFileCharsRE.sub( ' ', gi.raceName.GetValue() ).strip()
+		rName = Utils.RemoveDisallowedFilenameChars( gi.raceName.GetValue() )
 		rNum = gi.raceNum.GetValue()
-		rMemo = Properties.badFileCharsRE.sub( ' ', gi.memo.GetValue() ).strip()
 		
-		fname = u'{}-{}-r{}-{}.cmn'.format(rDate, rName, rNum, rMemo)
+		fname = u'{}-{}-r{}-.cmn'.format(rDate, rName, rNum)
 		fi.fileName.SetLabel( fname )
 		return fname
 	
@@ -1424,7 +1422,7 @@ class Properties( wx.Panel ):
 			gi = self.generalInfoProperties
 		except AttributeError:
 			return ''		
-		for f in ['date', 'raceName', 'raceNum', 'memo']:
+		for f in ('date', 'raceName', 'raceNum'):
 			setattr(self, f + 'Original', getattr(gi, f).GetValue())
 		
 	def restoreFileNameFields( self ):
@@ -1432,7 +1430,7 @@ class Properties( wx.Panel ):
 			gi = self.generalInfoProperties
 		except AttributeError:
 			return ''
-		for f in ['date', 'raceName', 'raceNum', 'memo']:
+		for f in ('date', 'raceName', 'raceNum'):
 			getattr(gi, f).SetValue( getattr(self, f + 'Original') )
 	
 	def getFileName( self ):

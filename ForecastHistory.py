@@ -504,7 +504,7 @@ class ForecastHistory( wx.Panel ):
 						def doRefresh():
 							self.refresh()
 							if Utils.mainWin:
-								Utils.mainWin.refreshHistory()
+								Utils.mainWin.refreshTTStart()
 						self.callLaterRefresh = wx.CallLater( milliSeconds, doRefresh )
 					self.callLaterRefresh.Restart( milliSeconds )
 					break

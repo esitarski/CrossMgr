@@ -90,10 +90,10 @@ def newRace():
 
 def setRace( r ):
 	global race
+	memoize.clear()
 	race = r
 	if race:
 		race.setChanged()
-	memoize.clear()
 
 def resetCache():
 	memoize.clear()
@@ -1191,6 +1191,14 @@ class Race( object ):
 		self.tagNums = None
 		self.lastOpened = datetime.datetime.now()
 		memoize.clear()
+	
+	
+	def getFileName( self ):
+		rDate = self.date
+		rName = Utils.RemoveDisallowedFilenameChars( self.name )
+		rNum = self.raceNum
+		fname = u'{}-{}-r{}-.cmn'.format(rDate, rName, rNum)
+		return fname
 	
 	@property
 	def title( self ):

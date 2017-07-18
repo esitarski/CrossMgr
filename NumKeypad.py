@@ -1,10 +1,11 @@
 import wx
 import os
+import sys
+import copy
+import bisect
+import datetime
 import wx.lib.intctrl
 import wx.lib.buttons
-import bisect
-import sys
-import datetime
 from collections import defaultdict
 
 import Utils
@@ -559,39 +560,49 @@ class NumKeypad( wx.Panel ):
 			return
 		
 		Finisher = Model.Rider.Finisher
+		NP = Model.Rider.NP
 		getCategory = race.getCategory
+		t = race.curRaceTime()
 		
-		results = GetResults(None)
-		if race.enableJChipIntegration and race.resetStartClockOnFirstTag and len(results) != len(race.riders):
+		results = GetResults( None )
+		if race.isTimeTrial:
+			# Add TT riders who have started but not recoreded a lap yet.
+			results = copy.deepcopy(list(results))
+			for rr in results:
+				a = race.riders[rr.num]
+				if rr.status == NP and a.firstTime is not None and a.firstTime <= t:
+					rr.status = Finisher
+		elif race.enableJChipIntegration and race.resetStartClockOnFirstTag and len(results) != len(race.riders):
 			# Add rider entries who have been read by RFID but have not completed the first lap.
 			results = list(results)
 			resultNums = set( rr.num for rr in results )
 			for a in race.riders.itervalues():
-				if a.num not in resultNums and a.firstTime is not None:
+				if a.status == Finisher and a.num not in resultNums and a.firstTime is not None:
 					category = getCategory( a.num )
-					if category:
+					if category and t >= a.firstTime:
 						results.append(
-							#              num,   status,    lastTime, raceCat,           lapTimes, raceTimes, interp
-							RiderResult( a.num, a.status, a.firstTime, category.fullname,       [],        [],     [] )
+							#              num,   status,    lastTime, raceCat,           lapTimes,  raceTimes, interp
+							RiderResult( a.num, Finisher, a.firstTime, category.fullname,       [],      [],      []   )
 						)
+						
+		results = [rr for rr in results if rr.status == Finisher]
 		if not results:
 			return
 		
-		categoryLapMax = defaultdict(int)
 		catLapCount = defaultdict(int)
 		catCount = defaultdict(int)
 		catRaceCount = defaultdict(int)
+		catLapsMax = defaultdict(int)
 		
-		t = race.curRaceTime()
 		for rr in results:
 			category = getCategory( rr.num )
-			catCount[category] += 1
-			if rr.status == Finisher:
-				categoryLapMax[category] = max(1, len(rr.raceTimes)-1, categoryLapMax[category])
+			catLapsMax[category] = max( catLapsMax[category], race.getNumLapsFromCategory(category) or 1, len(rr.raceTimes)-1 )
+		
+		for rr in results:
+			category = getCategory( rr.num )
+			catCount[getCategory(rr.num)] += 1
 			
-		for rr in results:
-			category = getCategory( rr.num )
-			numLaps = categoryLapMax[category]
+			numLaps = catLapsMax[category]
 			
 			tSearch = t
 			if race.isTimeTrial:
@@ -603,15 +614,14 @@ class NumKeypad( wx.Panel ):
 			
 			if lap <= numLaps:
 				# Rider is still on course.
-				key = (category, lap, numLaps)
+				key = (category, lap)
 				catLapCount[key] += 1
 				catRaceCount[category] += 1
 		
 		if not catLapCount:
 			return
 			
-		catLapList = [(category, lap, categoryLaps, count)
-						for (category, lap, categoryLaps), count in catLapCount.iteritems()]
+		catLapList = [(category, lap, count) for (category, lap), count in catLapCount.iteritems()]
 		catLapList.sort( key=lambda x: (x[0].getStartOffsetSecs(), x[0].fullname, -x[1]) )
 		
 		def appendListRow( row = tuple(), colour = None, bold = None ):
@@ -639,10 +649,11 @@ class NumKeypad( wx.Panel ):
 						bold=True )
 
 		lastCategory = None
-		for category, lap, categoryLaps, count in catLapList:
+		for category, lap, count in catLapList:
+			categoryLaps = catLapsMax[category]
 			if category != lastCategory:
 				appendListRow( (category.fullname, u'{}/{}'.format(catRaceCount[category], catCount[category]),
-									(u'({} {})'.format(categoryLaps, _('laps') if categoryLaps > 1 else _('lap'))) ),
+									(u'({} {})'.format(categoryLaps if categoryLaps < 1000 else u'', _('laps') if categoryLaps > 1 else _('lap'))) ),
 								bold = True )
 			appendListRow( (u'', count, u'{} {}'.format( _('on lap'), lap ) ) )
 			lastCategory = category
