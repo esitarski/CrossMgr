@@ -220,13 +220,7 @@ function playBeep( beep ) {
 		var oscillator = audioCtx.createOscillator();
 		oscillator.frequency.value = (beep > 0 ? 440 : 880);
 		oscillator.type = 'triangle';
-
-		var gainNode = audioCtx.createGain();
-		gainNode.gain.value = 1;
-
-		oscillator.connect( gainNode );
-		gainNode.connect( audioCtx.destination );
-
+		oscillator.connect( audioCtx.destination );
 		oscillator.start();
 		setTimeout( function() { oscillator.stop(); }, 200 );
 	}
