@@ -337,9 +337,11 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 			
 			try:
 				info['tProjected'] = rr.projectedTime
+				if rr.raceTimes:
+					info['tProjected'] = max( 0.0, info['tProjected'] - rr.raceTimes[0] )				
 			except AttributeError:
-				info['tProjected'] = rr.lastTime
-				
+				info['tProjected'] = info['tFinish']
+			
 			info['primePoints'] = primePoints.get(rr.num, 0)
 			info['timeBonus'] = timeBonus.get(rr.num, 0.0)
 			
