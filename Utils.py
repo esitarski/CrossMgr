@@ -310,7 +310,7 @@ def Play( soundFile ):
 	try:
 		return soundCache[soundFile].Play()
 	except:
-		soundCache[soundFile] = wx.Sound( soundFile )
+		soundCache[soundFile] = wx.adv.Sound( soundFile )
 		return soundCache[soundFile].Play()
 		
 def PlaySound( soundFile ):
