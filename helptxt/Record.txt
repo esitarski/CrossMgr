@@ -35,9 +35,9 @@ Downhill|Time Trial
 
 ### Keypad Number Entry Mode
 
-When you enter a number in this mode, the number is "timestamped" when you press __Enter__.  This is the standard input mode for Road, Cyclo Cross and MTB races when you have number caller, and riders arrive in quick succession for laps.
+When you enter a number in this mode, the number is "timestamped" when you press __Enter__ (or __Tab__ or __Space__).  This is the standard input mode for Road, Cyclo Cross and MTB races when you have number caller, and riders arrive in quick succession on their laps.
 
-When you hear the number caller, you type in the number on the keyboard and press __Enter__.
+When you hear the number caller, you type in the number on the keyboard and press __Enter__ (or __Tab__ or __Space__, whichever is most comvenient).
 After the first lap of a race, CrossMgr will predict the arrival of each rider in the [Expected](MainScreen.html#expected) window.  To enter the number again, you can just click on th number in the __Expcted__ list rather than typing it in again.
 
 Entering a number also triggers the [USB Webcam][].
@@ -46,9 +46,9 @@ You can enter data through the regular computer keyboard or an external numeric 
 
 Experience has shown that using a touch-screen is a slower and less accurate method.  Additionally, touch screens tend not to work well in cold or hot weather.  Use the keyboard or external keypad whenever possible.
 
-__Enter__ automatically enters the number and timestamps it.  The most accurate way to enter numbers is to type in the number when you hear the number caller, then press __Enter__ just when the rider crosses the line.
+Enterine a number enters the number and timestamps it.  The most accurate way to enter numbers is to type in the number when you hear the number caller, then press an __Enter__ key just as the rider crosses the line.
 
-You can also enter multiple numbers separated by commas on the same line.  When you press __Enter__, all these numbers be entered with exactly the same time.  This is useful for starting a team in a team time trial all with exactly the same start time. 
+You can also enter multiple numbers separated by commas on the same line.  When you press an __Enter__ key, all these numbers be entered with exactly the same time.  This is useful for starting a team in a team time trial all with exactly the same start time. 
 
 There are a number of additional buttons:
 
