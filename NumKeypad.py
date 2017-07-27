@@ -155,9 +155,18 @@ class Keypad( wx.Panel ):
 			nums.append( int(num) )
 		return nums
 	
+	enterCodes = {
+		wx.WXK_RETURN,
+		wx.WXK_SPACE,
+		wx.WXK_TAB,
+		wx.WXK_NUMPAD_ENTER,
+		wx.WXK_NUMPAD_SPACE,
+		wx.WXK_NUMPAD_TAB,
+		wx.WXK_SEPARATOR,
+	}
 	def handleNumKeypress(self, event):
 		keycode = event.GetKeyCode()
-		if keycode == wx.WXK_NUMPAD_ENTER or keycode == wx.WXK_RETURN:
+		if keycode in self.enterCodes:
 			self.onEnterPress()
 		elif keycode < 255:
 			if keycode in validKeyCodes:
