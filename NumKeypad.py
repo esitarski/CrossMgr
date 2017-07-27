@@ -162,7 +162,6 @@ class Keypad( wx.Panel ):
 		wx.WXK_NUMPAD_ENTER,
 		wx.WXK_NUMPAD_SPACE,
 		wx.WXK_NUMPAD_TAB,
-		wx.WXK_SEPARATOR,
 	}
 	def handleNumKeypress(self, event):
 		keycode = event.GetKeyCode()
