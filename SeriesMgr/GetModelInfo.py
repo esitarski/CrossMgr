@@ -710,7 +710,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		# List of:
 		# lastName, firstName, license, team, points, [list of (points, position) for each race in series]
 		categoryResult = [list(riderNameLicense[rider]) + [riderTeam[rider], riderPoints[rider], riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
-		return categoryResult, races, GetPo732tentialDuplicateFullNames(riderNameLicense)
+		return categoryResult, races, GetPotentialDuplicateFullNames(riderNameLicense)
 
 #------------------------------------------------------------------------------------------------
 
