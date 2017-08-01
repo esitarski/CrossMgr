@@ -124,7 +124,7 @@ class ExportGrid( object ):
 	
 	def drawToFitDC( self, dc ):
 		# Get the dimentions of what we are printing on.
-		(widthPix, heightPix) = dc.GetSizeTuple()
+		(widthPix, heightPix) = dc.GetSize()
 		
 		# Get a reasonable border.
 		borderPix = max(widthPix, heightPix) / 20

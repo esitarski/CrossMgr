@@ -29,7 +29,7 @@ class GridCellMultiLineStringRenderer(gridlib.PyGridCellRenderer):
 	def GetBestSize(self, grid, attr, dc, row, col): 
 		text = grid.GetCellValue(row, col)
 		dc.SetFont(attr.GetFont())
-		w, h, lineHeight = dc.GetMultiLineTextExtent(text)                   
+		w, h = dc.GetMultiLineTextExtent( text )                   
 		return wx.Size(w, h)        
 
 	def Clone(self): 
