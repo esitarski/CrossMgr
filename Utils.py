@@ -145,6 +145,7 @@ from Version import AppVerName
 import gettext
 import __builtin__
 initTranslationCalled = False
+translate = None
 __builtin__.__dict__['_'] = translate = lambda s: s
 def initTranslation():
 	global initTranslationCalled
@@ -532,7 +533,7 @@ def ordinal( value ):
 			return u'{}'.format(value)
 		
 	if value == 999999:
-		return u'DNF'
+		return translate(u'DNF')
 
 	return {
 		'fr': lambda v: '{}{}'.format(v, 'er' if v == 1 else 'e'),
