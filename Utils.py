@@ -532,7 +532,7 @@ def ordinal( value ):
 			return u'{}'.format(value)
 		
 	if value == 999999:
-		return translate(u'DNF')
+		return u'DNF'
 
 	return {
 		'fr': lambda v: '{}{}'.format(v, 'er' if v == 1 else 'e'),
