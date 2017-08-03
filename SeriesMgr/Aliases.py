@@ -89,10 +89,12 @@ class Aliases(wx.Panel):
 		references = []
 		
 		for row in xrange(self.grid.GetNumberRows()):
-			reference = getName( self.grid.GetCellValue( row, 0 ) )
+			reference = self.getName( self.grid.GetCellValue( row, 0 ) )
 			if reference:
-				aliases = [getName(a) for a in self.grid.GetCellValue(row, 1).split(';')]
-				references.append( (reference, sorted( a for a in aliases if a )) )
+				aliases = [a.strip() for a in self.grid.GetCellValue(row, 1).split(';')]
+				aliases = [self.getName(a) for a in aliases if a]
+				aliases.sort()
+				references.append( (reference, aliases) )
 		
 		references.sort()
 		
