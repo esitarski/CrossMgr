@@ -241,11 +241,21 @@ def ExtractRaceResultsExcel( raceInSeries ):
 
 	return True, 'success', raceResults
 
+def FixExcelSheetLocal( fileName, race ):
+	# Check if we have a missing spreadsheet, but can find one in the same folder as the race.
+	if getattr(race, 'excelLink', None):
+		excelLink = race.excelLink
+		if excelLink.fileName and not os.path.isfile(excelLink.fileName):
+			newFileName = os.path.join( os.path.dirname(fileName), Utils.plat_ind_basename(excelLink.fileName) )
+			if os.path.isfile(newFileName):
+				race.excelLink.fileName = newFileName
+
 def ExtractRaceResultsCrossMgr( raceInSeries ):
 	fileName = raceInSeries.fileName
 	try:
 		with open(fileName, 'rb') as fp, Model.LockRace() as race:
 			race = pickle.load( fp )
+			FixExcelSheetLocal( fileName, race )
 			isFinished = race.isFinished()
 			race.tagNums = None
 			race.resetAllCaches()

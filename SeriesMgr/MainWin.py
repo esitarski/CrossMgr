@@ -662,11 +662,26 @@ table.results tr td.fastest{
 			Utils.MessageOK(self, "Unable to open the clipboard.", "Error", wx.ICON_ERROR )
 	
 	#--------------------------------------------------------------------------------------------
+
+	def saveExistingSeries( self ):
+		self.commit()
+		self.showPageName( 'Results' )
+		model = SeriesModel.model
+		if not model.changed:
+			return True
+			
+		ret = Utils.MessageYesNoCancel( self, 'Save Existing Series?', 'Save Existing Series?' ) 
+		if ret == wx.ID_YES:
+			self.writeSeries()
+			return True
+		elif ret == wx.ID_NO:
+			return True
+		else:
+			return False
 	
 	def onCloseWindow( self, event ):
-		self.showPageName( 'Results' )
-		self.writeSeries()
-		wx.Exit()
+		if self.saveExistingSeries():
+			wx.Exit()
 
 	def writeSeries( self ):
 		self.commit()
@@ -680,21 +695,14 @@ table.results tr td.fastest{
 		self.setTitle()
 
 	def menuNew( self, event ):
-		self.showPageName( 'Results' )
-		model = SeriesModel.model
-		if model.changed:
-			ret = Utils.MessageOKCancel( self, 'Save Existing Series?', 'Save Existing Series?' ) 
-			if ret == wx.ID_CANCEL:
-				return
-			if ret == wx.ID_OK:
-				self.writeSeries()
-		
-		SeriesModel.model = SeriesModel.SeriesModel()
-		SeriesModel.model.postReadFix()
-		
-		self.fileName = ''
-		self.showPageName( 'Races' )
-		self.refresh()
+		if self.saveExistingSeries():
+			model = SeriesModel.model
+			SeriesModel.model = SeriesModel.SeriesModel()
+			SeriesModel.model.postReadFix()
+			
+			self.fileName = ''
+			self.showPageName( 'Races' )
+			self.refresh()
 	
 	def updateRecentFiles( self ):
 		self.filehistory.AddFileToHistory(self.fileName)
@@ -806,13 +814,6 @@ table.results tr td.fastest{
 		self.menuAbout( event )
 	
 	def menuExit(self, event):
-		if SeriesModel.model.changed:
-			response = Utils.MessageYesNoCancel(self, 'You have Unsaved Changes.\n\nSave Before Closing?', 'Unsaved Changes')
-			if response == wx.ID_CANCEL:
-				return
-			if response == wx.ID_OK:
-				self.writeSeries()
-				
 		self.onCloseWindow( event )
 
 	def menuAbout( self, event ):

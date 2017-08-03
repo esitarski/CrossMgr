@@ -265,7 +265,8 @@ class GanttChartPanel(wx.Panel):
 		if rClickCallback is not None:
 			xPos, yPos = event.GetPosition()
 			rClickCallback( xPos, yPos, self.numSelect, iRider, iLap )
-	
+
+	intervals = [1, 2, 5, 10, 15, 20, 30, 1*60, 2*60, 5*60, 10*60, 15*60, 20*60, 30*60, 1*60*60, 2*60*60, 4*60*60, 6*60*60, 8*60*60, 12*60*60] + [24*60*60*k for k in xrange(1,200)]
 	def Draw( self, dc ):
 		size = self.GetClientSize()
 		width = size.width
@@ -407,9 +408,7 @@ class GanttChartPanel(wx.Panel):
 		# Find some reasonable tickmarks for the x axis.
 		numLabels = (xRight - xLeft) / (textWidth * 1.5)
 		tView = self.dataMax if not self.horizontalSB.IsShown() else self.horizontalSB.GetThumbSize()
-		d = tView / max(1.0, float(numLabels))
-		intervals = [1, 2, 5, 10, 15, 20, 30, 1*60, 2*60, 5*60, 10*60, 15*60, 20*60, 30*60, 1*60*60, 2*60*60, 4*60*60, 8*60*60, 12*60*60, 24*60*60]
-		d = intervals[bisect.bisect_left(intervals, d, 0, len(intervals)-1)]
+				
 		if self.horizontalSB.IsShown():
 			tAdjust = self.horizontalSB.GetThumbPosition()
 			viewWidth = minBarWidth * maxLaps
@@ -417,21 +416,58 @@ class GanttChartPanel(wx.Panel):
 		else:
 			tAdjust = 0
 			dFactor = (xRight - xLeft) / float(self.dataMax)
-		dc.SetPen(wx.Pen(wx.BLACK, 1))
 		
-		for t in xrange(0, int(self.dataMax), d):
-			x = xLeft + (t-tAdjust) * dFactor
-			if x < xLeft:
-				continue
-			if x > xRight:
-				break
-			if t < 60*60:
-				s = u'{}:{:02d}'.format((t / 60), t%60)
+		def getTickLabel( t ):
+			if t < 60:
+				return u':{:02d}'.format(t)
+			elif t < 60*60:
+				return u'{}:{:02d}'.format((t // 60), t%60)
+			elif t < 24*60*60:
+				return u'{}:{:02d}:{:02d}'.format(t//(60*60), (t // 60)%60, t%60)
 			else:
-				s = u'{}:{:02d}:{:02d}'.format(t/(60*60), (t / 60)%60, t%60)
+				if t % (24*60*60) == 0:
+					return u'{}d'.format(t//(24*60*60))
+				elif t % (60*60) == 0:
+					return u'{}d{:02d}h'.format( t//(24*60*60), (t%(24*60*60))//(60*60) )
+				else:
+					return u'{}d{:02d}:{02d}'.format( t//(24*60*60), (t%(24*60*60))//(60*60), (t // 60)%60 )
+			
+		def getXT( d ):
+			for t in xrange(int(tAdjust) - int(tAdjust)%d, int(self.dataMax), d):
+				x = xLeft + (t-tAdjust) * dFactor
+				if x < xLeft:
+					continue
+				if x > xRight:
+					return
+				yield x, t
+
+		def overlaps( d ):
+			wSpace = dc.GetTextExtent(' ')[0] * 1.25
+			xLast = None
+			for x, t in getXT( d ):
+				w = dc.GetTextExtent( getTickLabel(t) )[0]
+				w2 = w//2
+				if xLast is None:
+					xLast = x + w2
+					continue
+				xText = x - w2
+				if xText - xLast < wSpace:
+					return True
+				xLast = x + w2
+		
+		d = tView / max(1.0, float(numLabels))
+		iInterval = bisect.bisect_left(self.intervals, d, 0, len(self.intervals)-1)
+		
+		# Check if the labels will overlap in the space available.
+		while overlaps( self.intervals[iInterval] ):
+			iInterval += 1
+		
+		# Draw the labels.
+		dc.SetPen(wx.Pen(wx.BLACK, 1))
+		for x, t in getXT( self.intervals[iInterval] ):
+			s = getTickLabel( t )
 			w, h = dc.GetTextExtent(s)
 			xText = x - w/2
-			#xText = x
 			dc.DrawText( s, xText, 0 + 4 )
 			dc.DrawText( s, xText, yBottom + 4)
 			dc.DrawLine( x, yBottom+3, x, yTop-3 )
@@ -662,25 +698,25 @@ class GanttChartPanel(wx.Panel):
 		nowTimeStr = Utils.formatTime( timeLineTime )
 		labelWidth, labelHeight = dc.GetTextExtent( nowTimeStr )	
 		x = int(labelsWidthLeft + (timeLineTime - tAdjust) * xFactor)
-		
-		ntColour = '#339966'
-		dc.SetPen( wx.Pen(ntColour, 3) )
-		dc.DrawLine( x, barHeight - 4, x, yLast + 4 )
-		dc.SetPen( wx.Pen(wx.WHITE, 1) )
-		dc.DrawLine( x, barHeight - 4, x, yLast + 4 )
-		
-		dc.SetBrush( wx.Brush(ntColour) )
-		dc.SetPen( wx.Pen(ntColour,1) )
-		rect = wx.Rect( x - labelWidth/2-2, 0, labelWidth+4, labelHeight )
-		dc.DrawRectangle( rect )
-		if not self.minimizeLabels:
-			rect.SetY( yLast+2 )
+		if xLeft <= x < xRight:			
+			ntColour = '#339966'
+			dc.SetPen( wx.Pen(ntColour, 3) )
+			dc.DrawLine( x, barHeight - 4, x, yLast + 4 )
+			dc.SetPen( wx.Pen(wx.WHITE, 1) )
+			dc.DrawLine( x, barHeight - 4, x, yLast + 4 )
+			
+			dc.SetBrush( wx.Brush(ntColour) )
+			dc.SetPen( wx.Pen(ntColour,1) )
+			rect = wx.Rect( x - labelWidth/2-2, 0, labelWidth+4, labelHeight )
 			dc.DrawRectangle( rect )
+			if not self.minimizeLabels:
+				rect.SetY( yLast+2 )
+				dc.DrawRectangle( rect )
 
-		dc.SetTextForeground( wx.WHITE )
-		dc.DrawText( nowTimeStr, x - labelWidth / 2, 0 )
-		if not self.minimizeLabels:
-			dc.DrawText( nowTimeStr, x - labelWidth / 2, yLast + 2 )
+			dc.SetTextForeground( wx.WHITE )
+			dc.DrawText( nowTimeStr, x - labelWidth / 2, 0 )
+			if not self.minimizeLabels:
+				dc.DrawText( nowTimeStr, x - labelWidth / 2, yLast + 2 )
 		
 		# Store the drawing scale parameters.
 		self.xFactor = xFactor

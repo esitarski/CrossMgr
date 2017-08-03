@@ -78,13 +78,15 @@ class ExportGrid( object ):
 			wx.FONTWEIGHT_BOLD if bold else wx.FONTWEIGHT_NORMAL, False)
 	
 	def _getColSizeTuple( self, dc, font, col ):
-		wSpace, hSpace, lh = dc.GetMultiLineTextExtent( '    ', font )
-		extents = [ dc.GetMultiLineTextExtent(self.colnames[col], font) ]
-		extents.extend( dc.GetMultiLineTextExtent('{}'.format(v), font) for v in self.data[col] )
+		dc.SetFont( font )
+		wSpace, hSpace = dc.GetMultiLineTextExtent( '    ' )
+		extents = [ dc.GetMultiLineTextExtent(self.colnames[col]) ]
+		extents.extend( dc.GetMultiLineTextExtent(u'{}'.format(v)) for v in self.data[col] )
 		return max( e[0] for e in extents ), sum( e[1] for e in extents ) + hSpace/4
 	
 	def _getDataSizeTuple( self, dc, font ):
-		wSpace, hSpace, lh = dc.GetMultiLineTextExtent( '    ', font )
+		dc.SetFont( font )
+		wSpace, hSpace = dc.GetMultiLineTextExtent( '    ' )
 		
 		wMax, hMax = 0, 0
 		
@@ -102,7 +104,7 @@ class ExportGrid( object ):
 	def _drawMultiLineText( self, dc, text, x, y ):
 		if not text:
 			return
-		wText, hText, lineHeightText = dc.GetMultiLineTextExtent( text, dc.GetFont() )
+		lineHeightText = dc.GetTextExtent( 'PpJjYy' )[1]
 		for line in text.split( '\n' ):
 			dc.DrawText( line, x, y )
 			y += lineHeightText
@@ -158,8 +160,10 @@ class ExportGrid( object ):
 		image, bitmap = None, None
 		
 		# Draw the title.
-		font = self._getFontToFit( widthFieldPix - graphicWidth - graphicBorder - qrWidth, graphicHeight,
-									lambda font: dc.GetMultiLineTextExtent(self.title, font)[:-1], True )
+		def getTitleExtent( font ):
+			dc.SetFont( font )
+			return dc.GetMultiLineTextExtent( self.title )
+		font = self._getFontToFit( widthFieldPix - graphicWidth - graphicBorder - qrWidth, graphicHeight, getTitleExtent, True )
 		dc.SetFont( font )
 		self._drawMultiLineText( dc, self.title, xPix + graphicWidth + graphicBorder, yPix )
 		yPix += graphicHeight + graphicBorder
@@ -169,19 +173,20 @@ class ExportGrid( object ):
 		# Draw the table.
 		font = self._getFontToFit( widthFieldPix, heightFieldPix, lambda font: self._getDataSizeTuple(dc, font) )
 		dc.SetFont( font )
-		wSpace, hSpace, textHeight = dc.GetMultiLineTextExtent( '    ', font )
+		wSpace, hSpace = dc.GetMultiLineTextExtent( '    ' )
+		textHeight = dc.GetMultiLineTextExtent( 'PpJjYy' )[1]
 		
 		# Get the max height per row.
 		rowHeight = [0] * (self.grid.GetNumberRows() + 1)
 		for r in xrange(self.grid.GetNumberRows()):
-			rowHeight[r] = max( dc.GetMultiLineTextExtent(self.grid.GetCellValue(r, c), font)[1] for c in xrange(self.grid.GetNumberCols()))
+			rowHeight[r] = max( dc.GetMultiLineTextExtent(self.grid.GetCellValue(r, c))[1] for c in xrange(self.grid.GetNumberCols()))
 		
 		yPixTop = yPix
 		yPixMax = yPix
 		for col, c in enumerate(self.colnames):
 			colWidth = self._getColSizeTuple( dc, font, col )[0]
 			yPix = yPixTop
-			w, h, lh = dc.GetMultiLineTextExtent( c, font )
+			w, h = dc.GetMultiLineTextExtent( c )
 			if col in self.leftJustifyCols:
 				self._drawMultiLineText( dc, '{}'.format(c), xPix, yPix )					# left justify
 			else:
@@ -197,7 +202,7 @@ class ExportGrid( object ):
 			for r, v in enumerate(self.data[col]):
 				vStr = '{}'.format(v)
 				if vStr:
-					w, h, lh = dc.GetMultiLineTextExtent( vStr, font )
+					w, h = dc.GetMultiLineTextExtent( vStr )
 					if col in self.leftJustifyCols:
 						self._drawMultiLineText( dc, vStr, xPix, yPix )					# left justify
 					else:
@@ -209,7 +214,7 @@ class ExportGrid( object ):
 		# Put CrossMgr branding at the bottom of the page.
 		font = self._getFont( borderPix // 5, False )
 		dc.SetFont( font )
-		w, h, lh = dc.GetMultiLineTextExtent( brandText, font )
+		w, h = dc.GetMultiLineTextExtent( brandText )
 		self._drawMultiLineText( dc, brandText, borderPix, heightPix - borderPix + h )
 	
 	def toExcelSheet( self, sheet ):

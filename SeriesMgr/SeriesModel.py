@@ -401,19 +401,11 @@ class SeriesModel( object ):
 	
 	def getReferenceLicense( self, license ):
 		key = Utils.removeDiacritic(license).upper()
-		try:
-			return self.aliasLicenseLookup[key]
-		except KeyError:
-			self.aliasLicenseLookup[key] = key
-			return key
+		return self.aliasLicenseLookup.get( key, key )
 	
 	def getReferenceTeam( self, team ):
 		key = Utils.removeDiacritic(team).upper()
-		try:
-			return self.aliasTeamLookup[key]
-		except KeyError:
-			self.aliasTeamLookup[key] = team
-			return team
+		return self.aliasTeamLookup.get( key, team )
 	
 	def fixCategories( self ):
 		categorySequence = getattr( self, 'categorySequence', None )

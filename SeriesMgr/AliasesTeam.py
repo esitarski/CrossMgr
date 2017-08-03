@@ -4,7 +4,7 @@ import os
 import sys
 import SeriesModel
 import Utils
-from Aliases import getText
+from AliasGrid import AliasGrid
 
 class AliasesTeam(wx.Panel):
 	def __init__(self, parent):
@@ -33,166 +33,57 @@ class AliasesTeam(wx.Panel):
 		self.addButton = wx.Button( self, label=u'Add Reference Team' )
 		self.addButton.Bind( wx.EVT_BUTTON, self.onAddButton )
 		
+		headerNames = ('Team','Aliases separated by ";"')
 		self.itemCur = None
-		self.tree = wx.TreeCtrl( self, style = wx.TR_HIDE_ROOT|wx.TR_HAS_BUTTONS )
-		self.tree.AddRoot( u'AliaseTeams' )
-		self.tree.Bind( wx.EVT_TREE_ITEM_RIGHT_CLICK, self.onTreeRightClick )
-		
+		self.grid = AliasGrid( self )
+		self.grid.CreateGrid( 0, len(headerNames) )
+		self.grid.SetRowLabelSize( 64 )
+		for col in xrange(self.grid.GetNumberCols()):
+			self.grid.SetColLabelValue( col, headerNames[col] )
+
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		sizer.Add(self.explain, 0, flag=wx.ALL, border=4 )
 		sizer.Add(self.addButton, 0, flag=wx.ALL, border = 4)
-		sizer.Add(self.tree, 1, flag=wx.EXPAND|wx.ALL, border = 4)
+		sizer.Add(self.grid, 1, flag=wx.EXPAND|wx.ALL, border = 4)
 		self.SetSizer(sizer)
-	
-	def onTreeRightClick( self, event ):
-		item = event.GetItem()
-		if not hasattr(self, 'popupInfo'):
-			self.popupInfo = [
-				(u'{}...'.format(_('Add Alias')),	wx.NewId(), self.onAddAlias),
-				(u'{}...'.format(_('Edit')),		wx.NewId(), self.onEdit),
-				(u'{}...'.format(_('Delete')),		wx.NewId(), self.onDelete),
-				(u'{}...'.format(_('Copy to Clipboard')),	wx.NewId(), self.onCopy),
-			]
-			for p in self.popupInfo:
-				if p[2]:
-					self.Bind( wx.EVT_MENU, p[2], id=p[1] )
-
-		menu = wx.Menu()
-		for i, p in enumerate(self.popupInfo[0 if self.tree.GetItemParent(item) == self.tree.GetRootItem() else 1:]):
-			if p[2]:
-				menu.Append( p[1], p[0] )
-			else:
-				menu.AppendSeparator()
-		
-		self.itemCur = item
-		self.PopupMenu( menu )
-		menu.Destroy()
-	
-	def onCopy( self, event ):
-		if not self.itemCur:
-			return
-			
-		if wx.TheClipboard.Open():
-			# Create a wx.TextDataObject
-			do = wx.TextDataObject()
-			do.SetText( self.tree.GetItemText(self.itemCur) )
-
-			# Add the data to the clipboard
-			wx.TheClipboard.SetData(do)
-			# Close the clipboard
-			wx.TheClipboard.Close()
-		else:
-			wx.MessageBox(u"Unable to open the clipboard", u"Error")
 	
 	def onAddButton( self, event ):
 		defaultText = u''
 		
-		# Initialize the license with the clipboard.
+		# Initialize the team from the clipboard.
 		if wx.TheClipboard.Open():
 			do = wx.TextDataObject()
 			if wx.TheClipboard.GetData(do):
 				defaultText = do.GetText()
 			wx.TheClipboard.Close()
 
-		text = getText( self, u'Reference Team', defaultText )
-		if text:
-			item = self.tree.PrependItem( self.tree.GetRootItem(), text )
-			self.tree.SortChildren( self.tree.GetRootItem() )
-			self.tree.SelectItem( item )
+		self.grid.AppendRows( 1 )
+		self.grid.SetCellValue( self.grid.GetNumberRows()-1, 0, defaultText )
+		self.grid.AutoSize()
+		self.GetSizer().Layout()
+		self.grid.MakeCellVisiblt( self.grid.GetNumberRows()-1, 0 )
 	
-	def onAddAlias( self, event ):
-		if not self.itemCur:
-			return
-			
-		defaultText = self.tree.GetItemText(self.itemCur)
-		# Initialize the name with the clipboard.
-		if wx.TheClipboard.Open():
-			do = wx.TextDataObject()
-			if wx.TheClipboard.GetData(do):
-				defaultText = do.GetText()
-			wx.TheClipboard.Close()
-			
-		text = getText( self, u'Alias Team', defaultText )
-		if not text:
-			return
-		item = self.tree.AppendItem( self.itemCur, text )
-		self.tree.Expand( self.itemCur )
-		self.tree.SortChildren( self.itemCur )
-		self.tree.SelectItem( item )
-		
-	def onEdit( self, event ):
-		if not self.itemCur:
-			return
-		text = getText( self, u'Team', self.tree.GetItemText(self.itemCur) )
-		if not text:
-			return
-		self.tree.SetItemText( self.itemCur, text )
-		self.tree.SortChildren( self.tree.GetParent(self.itemCur) )
-		self.tree.SelectItem( self.itemCur )
-	
-	def onDelete( self, event ):
-		if not self.itemCur:
-			return
-		dlg = wx.MessageDialog( self, u'Confirm Delete:\n\n    {}'.format(self.tree.GetItemText(self.itemCur)), u'Confirm Delete')
-		ret = dlg.ShowModal()
-		if ret == wx.ID_OK:
-			self.tree.Delete( self.itemCur )
-			self.itemCur = None
-		dlg.Destroy()
-	
-	def getTree( self ):
-		return self.tree
-
-	def getTeam( self, item ):
-		team = self.tree.GetItemText(item)
-		if not team:
-			return None
-		return team
-		
 	def refresh( self ):
 		model = SeriesModel.model
 		
-		expanded = set()
-		r = self.tree.GetFirstChild(self.tree.GetRootItem())
-		while r.IsOk():
-			if self.tree.GetItemText(r) and self.tree.ItemHasChildren(r) and self.tree.IsExpanded(r):
-				expanded.add( self.tree.GetItemText(r) )
-			r = self.tree.GetNextChild(r)
-		
-		self.tree.DeleteAllItems()
-		rootItem = self.tree.AddRoot( u'AliasesTeam' )
-		for reference, aliases in model.referenceTeams:
-			name = reference
-			nameItem = self.tree.AppendItem( rootItem, name )
-			for alias in aliases:
-				aliasItem = self.tree.AppendItem( nameItem, alias )
-			if name in expanded:
-				self.tree.Expand( nameItem )
-		
-		self.tree.ExpandAll()
+		Utils.AdjustGridSize( self.grid, rowsRequired=len(model.referenceTeams) )
+		for row, (reference, aliases) in enumerate(model.referenceTeams):
+			self.grid.SetCellValue( row, 0, reference )
+			self.grid.SetCellValue( row, 1, u'; '.join(aliases) )
+			
+		self.grid.AutoSize()
+		self.GetSizer().Layout()
 	
 	def commit( self ):
 		references = []
 		
-		r = self.tree.GetFirstChild(self.tree.GetRootItem())
-		while r.IsOk():
-			name = self.getTeam( r )
-			
-			if name:
-				references.append( [name, []] )
-				
-				a = self.tree.GetFirstChild( r )
-				while a.IsOk():
-					name = self.getTeam( a )
-					if name:
-						references[-1][1].append( name )
-					a = self.tree.GetNextChild( a )
-				
-			r = self.tree.GetNextChild(r)
+		for row in xrange(self.grid.GetNumberRows()):
+			reference = self.grid.GetCellValue( row, 0 ).strip()
+			if reference:
+				aliases = [a.strip() for a in self.grid.GetCellValue(row, 1).split(';')]
+				references.append( (reference, sorted( a for a in aliases if a )) )
 		
 		references.sort()
-		for reference, aliases in references:
-			aliases.sort()
 		
 		model = SeriesModel.model
 		model.setReferenceTeams( references )
@@ -214,5 +105,4 @@ if __name__ == "__main__":
 	] )
 	frame = AliasesTeamFrame()
 	frame.panel.refresh()
-	frame.panel.getTree().ExpandAll()
 	app.MainLoop()
