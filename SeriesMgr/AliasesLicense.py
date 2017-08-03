@@ -14,10 +14,10 @@ class AliasesLicense(wx.Panel):
 			u'License Aliases match alternate license codes to the same code.\n'
 			u'This can be more convenient than editing race results when the same participant has results under different license codes.\n'
 			u'\n'
-			u'To create a License Alias, first press the "Add Reference License" button.  This is the license that will appear in Results.'
-			u'Then, right-click on the Reference License you just added, and choose "Add Alias...".  This is an alternate license.\n'
+			u'To create a License Alias, first press the "Add Reference License" button.\n'
+			u'The first column is the license that will appear in Results.\n'
+			u'Then, add license aliases in the next column.  These are the alternate licenses.\n'
 			u'SeriesMgr will match all aliased Licenses to the Reference License in the Results.\n'
-			u'You can have any number of License Aliases for the same Reference License.\n'
 			u'\n'
 			u'For example, Reference License="BC03457", Aliases="BC03449; BC32749".  Results for the alternate licenses will appear as "BC03457".\n'
 			u'\n'
@@ -61,7 +61,7 @@ class AliasesLicense(wx.Panel):
 		self.grid.SetCellValue( self.grid.GetNumberRows()-1, 0, defaultText )
 		self.grid.AutoSize()
 		self.GetSizer().Layout()
-		self.grid.MakeCellVisiblt( self.grid.GetNumberRows()-1, 0 )
+		self.grid.MakeCellVisible( self.grid.GetNumberRows()-1, 0 )
 
 	def refresh( self ):
 		model = SeriesModel.model

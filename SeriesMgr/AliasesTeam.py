@@ -14,12 +14,12 @@ class AliasesTeam(wx.Panel):
 			u'Team Aliases match alternate team names to the same team.\n'
 			u'This can be more convenient than editing race results when the same team appears with a different spelling.\n'
 			u'\n'
-			u'To create a Team Alias, first press the "Add Reference Team" button.  This is the Team that will appear in Results.'
-			u'Then, right-click on the Reference Team you just added, and choose "Add Alias...".  This is an alternate Team.\n'
+			u'To create a Team Alias, first press the "Add Reference Team" button.\n'
+			u'The first column is the Team that will appear in Results.\n'
+			u'The second column are the Team Aliases, separated by ";".  These are the alternate team names.\n'
 			u'SeriesMgr will match all aliased Teams to the Reference Team in the Results.\n'
-			u'You can have any number of Team Aliases for the same Reference Team.\n'
 			u'\n'
-			u'For example, Reference Team="Cannondale pb Fortius", AliasesTeam="Cannondale", "Cannondale Pro".  Results for the alternate Teams will appear as "Cannondale pb Fortius".\n'
+			u'For example, Reference Team="Cannondale pb Fortius", AliasesTeam="Cannondale; Cannondale Pro".  Results for the alternate Teams will appear as "Cannondale pb Fortius".\n'
 			u'\n'
 			u'You can Copy-and-Paste Teams from the Results without retyping them.  Right-click and Copy the name in the Results page,'
 			u'then Paste the Team into a Reference Team or Alias field.\n'
@@ -61,7 +61,7 @@ class AliasesTeam(wx.Panel):
 		self.grid.SetCellValue( self.grid.GetNumberRows()-1, 0, defaultText )
 		self.grid.AutoSize()
 		self.GetSizer().Layout()
-		self.grid.MakeCellVisiblt( self.grid.GetNumberRows()-1, 0 )
+		self.grid.MakeCellVisible( self.grid.GetNumberRows()-1, 0 )
 	
 	def refresh( self ):
 		model = SeriesModel.model

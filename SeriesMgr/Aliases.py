@@ -17,16 +17,16 @@ class Aliases(wx.Panel):
 			u'Name Aliases match different name spellings to the same participant.\n'
 			u'This can be more convenient than editing race results when the same participant has resullts under different names.\n'
 			u'\n'
-			u'To create a name Alias, first press the "Add Reference Name" button.  This is the name that will appear in Results.'
-			u'Then, right-click on the Reference Name you just added, and choose "Add Alias...".  This is an alternate spelling.\n'
+			u'To create a name Alias, first press the "Add Reference Name" button.\n'
+			u'The first column is the name that will appear in Results.'
+			u'Then, add Aliases in the next column separated by ";" (semicolons). These are the alternate spellings of the name.\n'
 			u'SeriesMgr will match all Aliases to the Reference Name in the Results.\n'
-			u'You can have any number of Aliases for the same Reference Name.\n'
 			u'\n'
 			u'For example, Reference Name="Bell, Robert", Aliases="Bell, Bobby; Bell, Bob".  Results for the alternate spellings will appear as "Bell, Robert".\n'
 			u'Accents and upper/lower case are ignored.\n'
 			u'\n'
 			u'You can Copy-and-Paste names from the Results without retyping them.  Right-click and Copy the name in the Results page,'
-			u'then Paste the name into a Reference Name or Alias field.\n'
+			u'then Paste the name into the Reference Name or Alias field.\n'
 			u'Aliases will not be applied until you press the "Refresh" button on the Results screen (or reload).\n'
 			u'This allows you to configure many Aliases without having to wait for the Results update after each change.\n'
 		)
@@ -65,7 +65,7 @@ class Aliases(wx.Panel):
 		self.grid.SetCellValue( self.grid.GetNumberRows()-1, 0, defaultText )
 		self.grid.AutoSize()
 		self.GetSizer().Layout()
-		self.grid.MakeCellVisiblt( self.grid.GetNumberRows()-1, 0 )
+		self.grid.MakeCellVisible( self.grid.GetNumberRows()-1, 0 )
 	
 	def getName( self, s ):
 		name = [t.strip() for t in s.split(u',')[:2]]
