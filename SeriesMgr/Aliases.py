@@ -69,7 +69,7 @@ class Aliases(wx.Panel):
 	
 	def getName( self, s ):
 		name = [t.strip() for t in s.split(u',')[:2]]
-		if not name:
+		if not name or not any(name):
 			return None
 		name.extend( [u''] * (2 - len(name)) )
 		return tuple( name )
@@ -88,12 +88,13 @@ class Aliases(wx.Panel):
 	def commit( self ):
 		references = []
 		
+		self.grid.SaveEditControlValue()
 		for row in xrange(self.grid.GetNumberRows()):
 			reference = self.getName( self.grid.GetCellValue( row, 0 ) )
 			if reference:
 				aliases = [a.strip() for a in self.grid.GetCellValue(row, 1).split(';')]
 				aliases = [self.getName(a) for a in aliases if a]
-				aliases.sort()
+				aliases = [a for a in aliases if a]
 				references.append( (reference, aliases) )
 		
 		references.sort()

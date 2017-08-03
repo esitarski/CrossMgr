@@ -77,6 +77,7 @@ class AliasesLicense(wx.Panel):
 	def commit( self ):
 		references = []
 		
+		self.grid.SaveEditControlValue()
 		for row in xrange(self.grid.GetNumberRows()):
 			reference = self.grid.GetCellValue( row, 0 ).strip()
 			if reference:
