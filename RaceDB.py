@@ -114,11 +114,11 @@ class RaceDB( wx.Dialog ):
 		self.tree.SetImageList( self.il )
 		
 		self.tree.AppendColumn( _('Event Info') )
-		self.tree.AppendColumn( _('Event Type'), flags=wx.ALIGN_LEFT )
+		self.tree.AppendColumn( _('Event Type'), align=wx.ALIGN_LEFT )
 		self.eventTypeCol = 1
-		self.tree.AppendColumn( _('Start Time'), flags=wx.ALIGN_RIGHT )
+		self.tree.AppendColumn( _('Start Time'), align=wx.ALIGN_RIGHT )
 		self.startTimeCol = 2
-		self.tree.AppendColumn( _('Participants'), flags=wx.ALIGN_RIGHT)
+		self.tree.AppendColumn( _('Participants'), align=wx.ALIGN_RIGHT)
 		self.participantCountCol = 3
 		
 		self.tree.SetColumnWidth( 0, 320 )
@@ -263,18 +263,18 @@ class RaceDB( wx.Dialog ):
 		
 		self.tree.DeleteAllItems()
 		self.root = self.tree.GetRootItem()
-		'''
-		self.tree.SetItemText(
-			self.root,
-			unicode(sum(c['participant_count'] for c in competitions.itervalues())), self.participantCountCol
-		)
-		'''
 		
 		def get_tod( t ):
 			return t.split()[1][:5].lstrip('0')
 			
 		def get_time( t ):
 			return datetime.time( *[int(f) for f in get_tod(t).split(':')] )
+		
+		dNow = datetime.datetime.now()
+		def in_the_past( t ):
+			values = t.replace(u'-',u' ').replace(u':', u' ').split()[:6]	# get Y M D H M S
+			d = datetime.datetime( *[int(v) for v in values] )
+			return d < dNow
 			
 		tNow = datetime.datetime.now()
 		eventClosest = None
@@ -286,7 +286,13 @@ class RaceDB( wx.Dialog ):
 			self.tree.SetItemText( competition, self.participantCountCol, unicode(participant_count) )
 			for e in events:
 				eventData = e
-				event = self.tree.AppendItem( competition, u'{}: {}'.format(_('Event'), e['name']), data=eventData )
+				event = self.tree.AppendItem( competition,
+					u'{}{}: {}'.format(
+						u'<{}> '.format(_('Past')) if in_the_past(e['date_time']) else u'',
+						_('Event'),
+						e['name']),
+					data=eventData
+				)
 				self.tree.SetItemText( event, self.startTimeCol, get_tod(e['date_time']) )
 				self.tree.SetItemText( event, self.eventTypeCol, _('Mass Start') if e['event_type'] == 0 else _('Time Trial') )
 				self.tree.SetItemText( event, self.participantCountCol, unicode(e['participant_count']) )
@@ -309,7 +315,7 @@ class RaceDB( wx.Dialog ):
 						
 		self.tree.Expand( self.root )
 		if eventClosest:
-			self.tree.SelectItem( eventClosest )
+			self.tree.Select( eventClosest )
 			self.tree.Expand( eventClosest )
 
 #----------------------------------------------------------------------------------------------------------------------------
