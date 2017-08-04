@@ -121,7 +121,6 @@ class RaceDB( wx.Dialog ):
 		self.tree.AppendColumn( _('Participants'), flags=wx.ALIGN_RIGHT)
 		self.participantCountCol = 3
 		
-		self.tree.SetSortColumn( 0 )
 		self.tree.SetColumnWidth( 0, 320 )
 		self.tree.SetColumnWidth( self.eventTypeCol, 80 )
 		self.tree.SetColumnWidth( self.startTimeCol, 80 )
