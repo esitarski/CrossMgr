@@ -104,6 +104,8 @@ class RaceDB( wx.Dialog ):
 		self.tree = dataview.TreeListCtrl( self, style=wx.dataview.TL_SINGLE )
 		self.tree.Bind( dataview.EVT_TREELIST_ITEM_ACTIVATED, self.onEventSelect )
 		
+		self.status = wx.StaticText( self, label=u'\n\n' )
+		
 		isz = (16,16)
 		self.il = wx.ImageList( *isz )
 		self.closedIdx		= self.il.Add( wx.ArtProvider.GetBitmap(wx.ART_FOLDER,	 	wx.ART_OTHER, isz))
@@ -145,6 +147,7 @@ class RaceDB( wx.Dialog ):
 		
 		vs2 = wx.BoxSizer( wx.VERTICAL )
 		vs2.Add( self.tree, 1, flag=wx.EXPAND )
+		vs2.Add( self.status, 0, flag=wx.ALL|wx.EXPAND, border=4 )
 		vs2.Add( hs, 0, flag=wx.EXPAND|wx.ALL, border=8 )
 		
 		hsMain.Add( vs1 )
@@ -236,6 +239,7 @@ class RaceDB( wx.Dialog ):
 			self.dataSelect = None
 	
 	def refresh( self, events=None ):
+		e = None
 		if events is None:
 			try:
 				d = self.datePicker.GetValue()
@@ -244,9 +248,12 @@ class RaceDB( wx.Dialog ):
 					date=datetime.date( d.GetYear(), d.GetMonth()+1, d.GetDay() ),
 				)
 			except Exception as e:
-				print e
 				events = {'events':[]}
-		
+
+		if not e and not (events and events.get('events',None)):
+			e = u'{} {:04d}-{:02d}-{:02d}'.format( _('No Events found on'), d.GetYear(), d.GetMonth()+1, d.GetDay() )
+		self.status.SetLabel( unicode(e) if e else u'{}.'.format(_('Events retrieved successfully')) )
+				
 		competitions = {}
 		for e in events['events']:
 			try:
@@ -270,7 +277,7 @@ class RaceDB( wx.Dialog ):
 		def get_time( t ):
 			return datetime.time( *[int(f) for f in get_tod(t).split(':')] )
 		
-		dNow = datetime.datetime.now()
+		dNow = datetime.datetime.now() + datetime.timedelta(minutes=15)
 		def in_the_past( t ):
 			values = t.replace(u'-',u' ').replace(u':', u' ').split()[:6]	# get Y M D H M S
 			d = datetime.datetime( *[int(v) for v in values] )
