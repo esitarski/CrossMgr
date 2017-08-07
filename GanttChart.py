@@ -439,10 +439,10 @@ class GanttChart(wx.Control):
 			dc.SetBrush( wx.Brush(ntColour) )
 			dc.SetPen( wx.Pen(ntColour,1) )
 			rect = wx.Rect( x - labelWidth/2-2, 0, labelWidth+4, labelHeight )
-			dc.DrawRectangleRect( rect )
+			dc.DrawRectangle( rect )
 			if not self.minimizeLabels:
 				rect.SetY( yLast+2 )
-				dc.DrawRectangleRect( rect )
+				dc.DrawRectangle( rect )
 
 			dc.SetTextForeground( wx.WHITE )
 			dc.DrawText( nowTimeStr, x - labelWidth / 2, 0 )

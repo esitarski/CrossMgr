@@ -23,7 +23,7 @@ class GridCellMultiLineStringRenderer(gridlib.PyGridCellRenderer):
 		dc.SetTextForeground(fg)
 		dc.SetBrush(wx.Brush(bg, wx.SOLID))
 		dc.SetPen(wx.TRANSPARENT_PEN)
-		dc.DrawRectangleRect(rect)            
+		dc.DrawRectangle(rect)            
 		grid.DrawTextRectangle(dc, text, rect, hAlign, vAlign)
 
 	def GetBestSize(self, grid, attr, dc, row, col): 
