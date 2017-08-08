@@ -15,7 +15,7 @@ batchPublishAttr = (
 		lambda fnameBase: fnameBase + '.xlsx'),
 	BatchAttr('USAC',	_('USAC'),			'usacexcel',	'menuExportUSAC', True, _('as .xlsx upload file'),
 		lambda fnameBase: fnameBase + '-USAC.xlsx'),
-	BatchAttr('UCI',	_('UCI'),			'uciexcel',		'menuExportUCI', True, _('as .xls upload file'),
+	BatchAttr('UCI',	_('UCI'),			'uciexcel',		'menuExportUCI', True, _('as .xlsx upload file'),
 		None),
 	BatchAttr('VTTA',	_('VTTA'),	 		'vttaexcel', 	'menuExportVTTA', True, _('as .xlsx file'),
 		lambda fnameBase: fnameBase + '-VTTA.xlsx'),
