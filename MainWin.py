@@ -1722,32 +1722,33 @@ class MainWin( wx.Frame ):
 
 		xlFName = self.getFormatFilename('excel')
 
-		wb = xlwt.Workbook()
+		wb = xlsxwriter.Workbook( xlFName )
+		formats = ExportGrid.getExcelFormatsXLSX( wb )
 		with UnstartedRaceWrapper():
 			raceCategories = getRaceCategories()
 			for catName, category in raceCategories:
 				if catName == 'All' and len(raceCategories) > 1:
 					continue
-				sheetCur = wb.add_sheet( Utils.RemoveDisallowedSheetChars(catName) )
+				sheetCur = wb.add_worksheet( Utils.RemoveDisallowedSheetChars(catName) )
 				export = ExportGrid()
 				export.setResultsOneList( category, showLapsFrequency = 1 )
-				export.toExcelSheet( sheetCur )
+				export.toExcelSheetXLSX( formats, sheetCur )
 				
 			race = Model.race
 			if race and getattr(race, 'primes', None):
-				sheetCur = wb.add_sheet( Utils.RemoveDisallowedSheetChars('Primes') )
+				sheetCur = wb.add_worksheet( Utils.RemoveDisallowedSheetChars('Primes') )
 				export = ExportGrid( **GetGrid() )
-				export.toExcelSheet( sheetCur )
+				export.toExcelSheetXLSX( formats, sheetCur )
 
 		if silent:
 			try:
-				wb.save( xlFName )
+				wb.close()
 			except:
 				pass
 			return
 			
 		try:
-			wb.save( xlFName )
+			wb.close()
 			if self.launchExcelAfterPublishingResults:
 				Utils.LaunchApplication( xlFName )
 			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
@@ -3361,7 +3362,7 @@ class MainWin( wx.Frame ):
 		self.history.setCategoryAll()
 		self.history.refresh()
 		
-		xlFName = os.path.splitext(self.fileName)[0] + '-Passings.xls'
+		xlFName = os.path.splitext(self.fileName)[0] + '-Passings.xlsx'
 
 		colnames = self.history.grid.GetColNames()
 		data = self.history.grid.GetData()
@@ -3373,12 +3374,13 @@ class MainWin( wx.Frame ):
 			title = u'{}\n{}\n{}'.format( race.title, Utils.formatDate(race.date), _('Race Passings') )
 		export = ExportGrid( title, colnames, data )
 
-		wb = xlwt.Workbook()
-		sheetCur = wb.add_sheet( 'Passings' )
-		export.toExcelSheet( sheetCur )
+		wb = xlsxwriter.Workbook( xlFName )
+		formats = ExportGrid.getExcelFormatsXLSX(wb)
+		sheetCur = wb.add_worksheet( 'Passings' )
+		export.toExcelSheet( formats, sheetCur )
 		
 		try:
-			wb.save( xlFName )
+			wb.close()
 			Utils.LaunchApplication( xlFName )
 			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
 		except IOError:
@@ -3400,12 +3402,12 @@ class MainWin( wx.Frame ):
 		
 		xlFName = self.getFormatFilename( 'usacexcel' )
 
-		wb = xlwt.Workbook()
-		sheetCur = wb.add_sheet( 'Combined Results' )
-		USACExport( sheetCur )
+		wb = xlsxwriter.Workbook( xlFName )
+		sheetCur = wb.add_worksheet( 'Combined Results' )
+		USACExport( wb, sheetCur )
 		
 		try:
-			wb.save( xlFName )
+			wb.close()
 			if not silent:
 				if self.launchExcelAfterPublishingResults:
 					Utils.LaunchApplication( xlFName )
@@ -3425,12 +3427,12 @@ class MainWin( wx.Frame ):
 		
 		xlFName = self.getFormatFilename( 'vttaexcel' )
 
-		wb = xlwt.Workbook()
-		sheetCur = wb.add_sheet( 'Combined Results' )
+		wb = xlsxwriter.Workbook( xlFName )
+		sheetCur = wb.add_worksheet( 'Combined Results' )
 		VTTAExport( sheetCur )
 		
 		try:
-			wb.save( xlFName )
+			wb.close()
 			if not silent:
 				if self.launchExcelAfterPublishingResults:
 					webbrowser.open( xlFName, new = 2, autoraise = True )

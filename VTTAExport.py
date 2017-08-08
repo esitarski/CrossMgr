@@ -4,7 +4,7 @@ import Model
 import Utils
 import datetime
 from GetResults import GetResults, GetCategoryDetails
-from FitSheetWrapper import FitSheetWrapper
+from FitSheetWrapper import FitSheetWrapperXLSX
 from ReadSignOnSheet import SyncExcelLink
 
 VTTAFields = (
@@ -41,7 +41,7 @@ def toInt( n ):
 		return n
 
 	
-def VTTAExport( sheet ):
+def VTTAExport( workbook, sheet ):
 	race = Model.race
 	if not race:
 		return
@@ -59,13 +59,9 @@ def VTTAExport( sheet ):
 
 	sheetFit = FitSheetWrapper( sheet )
 	
-	titleStyle = xlwt.XFStyle()
-	titleStyle.font.bold = True
-	
-	leftAlignStyle = xlwt.XFStyle()
-	
-	rightAlignStyle = xlwt.XFStyle()
-	rightAlignStyle.alignment.horz = xlwt.Alignment.HORZ_RIGHT
+	titleStyle = workbook.add_format({'bold': True})
+	leftAlignStyle = workbook.add_format()
+	rightAlignStyle = workbook.add_format({'align': 'right'})
 	
 	catDetails = dict( (cd['name'], cd) for cd in GetCategoryDetails() )
 	hasDistance = None

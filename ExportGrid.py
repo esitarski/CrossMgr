@@ -2,6 +2,7 @@ import wx
 import os
 import re
 import xlwt
+import xlsxwriter
 import uuid
 import datetime
 import Utils
@@ -9,7 +10,7 @@ import Model
 import math
 from GetResults import GetResults, GetCategoryDetails
 from ReadSignOnSheet import ReportFields
-from FitSheetWrapper import FitSheetWrapper
+from FitSheetWrapper import FitSheetWrapper, FitSheetWrapperXLSX
 import qrcode
 import urllib
 import Flags
@@ -566,6 +567,93 @@ class ExportGrid( object ):
 			rowTop += 1
 		
 		sheetFit = FitSheetWrapper( sheet )
+		
+		# Write the colnames and data.
+		rowMax = 0
+		for col, c in enumerate(self.colnames):
+			isSpeed = (c == _('Speed'))
+			if isSpeed and self.data[col]:
+				try:
+					c = self.colnames[col] = self.data[col][0].split()[1]
+				except IndexError:
+					c = self.colnames[col] = ''
+
+			headerStyle = headerStyleAlignLeft if col in self.leftJustifyCols else headerStyleAlignRight
+			style = styleAlignLeft if col in self.leftJustifyCols else styleAlignRight
+			
+			sheetFit.write( rowTop, col, c, headerStyle, bold=True )
+			for row, v in enumerate(self.data[col]):
+				if isSpeed and v:
+					v = (u'{}'.format(v).split() or [''])[0]
+					if v == u'"':
+						v += u'    '
+				rowCur = rowTop + 1 + row
+				if rowCur > rowMax:
+					rowMax = rowCur
+				sheetFit.write( rowCur, col, v, style )
+			
+			if isSpeed:
+				self.colnames[col] = _('Speed')
+		
+		if self.footer:
+			rowMax += 2
+			for line in self.footer.split('\n'):
+				sheet.write( rowMax, 0, line.strip(), styleAlignLeft )
+				rowMax += 1
+		
+		# Add branding at the bottom of the sheet.
+		sheet.write( rowMax + 2, 0, self.brandText, styleAlignLeft )
+	
+	@staticmethod
+	def getExcelFormatsXLSX( workbook ):
+		titleStyle = workbook.add_format({
+			'bold': True,
+			'font_size': 17,
+		})
+
+		headerStyleAlignLeft = workbook.add_format({
+			'bottom':	2,
+			'bold':		True,
+			'text_wrap':True,
+		})
+		
+		headerStyleAlignRight = workbook.add_format({
+			'bottom':	2,
+			'bold':		True,
+			'text_wrap':True,
+			'align':	'right',
+		})
+		
+		styleAlignLeft = workbook.add_format()
+		
+		styleAlignRight = workbook.add_format({
+			'align':	'right',
+		})
+		
+		return {
+			'titleStyle':				titleStyle,
+			'headerStyleAlignLeft':		headerStyleAlignLeft,
+			'headerStyleAlignRight':	headerStyleAlignRight,
+			'styleAlignLeft':			styleAlignLeft,
+			'styleAlignRight':			styleAlignRight,
+		}
+	
+	def toExcelSheetXLSX( self, formats, sheet ):
+		''' Write the contents of the grid to an xlwt excel sheet. '''
+		titleStyle				= formats['titleStyle']
+		headerStyleAlignLeft	= formats['headerStyleAlignLeft']
+		headerStyleAlignRight	= formats['headerStyleAlignRight']
+		styleAlignLeft			= formats['styleAlignLeft']
+		styleAlignRight			= formats['styleAlignRight']
+		
+		rowTop = 0
+		if self.title:
+			for line in self.title.split('\n'):
+				sheet.write(rowTop, 0, line, titleStyle)
+				rowTop += 1
+			rowTop += 1
+		
+		sheetFit = FitSheetWrapperXLSX( sheet )
 		
 		# Write the colnames and data.
 		rowMax = 0
