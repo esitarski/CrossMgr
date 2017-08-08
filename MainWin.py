@@ -1832,7 +1832,7 @@ class MainWin( wx.Frame ):
 		tNow = now()
 		payload['timestamp']			= [tNow.ctime(), tLastRaceTime]
 		
-		payload['data']					= GetAnimationData(getExternalData=True)
+		payload['data']					= GetAnimationData( None, True )
 		payload['catDetails']			= GetCategoryDetails( True, publishOnly )
 		
 		return payload

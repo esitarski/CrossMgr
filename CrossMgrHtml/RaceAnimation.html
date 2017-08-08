@@ -150,6 +150,10 @@ table.results tr td.same-value {
 	text-align:center;
 }
 
+.projected {
+	background-color: #D3D3D3;
+}
+
 .flag {
     border: 1px solid #CCC;
 }
@@ -2429,6 +2433,7 @@ function RefreshResultsTableArrival( raceTimesLength, raceTimesCopy )
 		tr = createChild(tbody, 'TR');
 		tr.className = ((i & 1) ? 'odd' : 'even');
 		
+		var projectedLap = (raceIsRunning && d.interp && d.laps && d.interp[d.laps]);
 		function createTD( tr ) {
 			var td = createChild(tr, 'TD');
 			return td;
@@ -2689,8 +2694,6 @@ function RefreshResultsTable()
 		for( var p = 0; p < catDetail.pos.length; ++p ) {
 			var num = catDetails[c].pos[p];
 			var d = data[num];
-			if( !d )
-				alert( num );
 			
 			if( d['factor'] ) {
 				if( firstFactor == null )
@@ -2887,11 +2890,9 @@ function RefreshResultsTable()
 			
 			function createTD( tr ) {
 				var td = createChild(tr, 'TD');
-				if( numsToWatch[num] )
-					td.className = 'highlight';
 				return td;
 			}
-			
+					
 			tr = createChild(tbody, 'TR');
 			tr.className = ((r & 1) ? 'odd' : 'even');
 			

@@ -68,6 +68,7 @@ class RiderResult( object ):
 		self.lapTimes	= lapTimes
 		self.raceTimes	= raceTimes
 		self.interp		= interp
+		self.lastInterp = False
 		
 	_reMissingName = re.compile( '^, |, $' )
 	def full_name( self ):
@@ -90,6 +91,15 @@ class RiderResult( object ):
 		
 	def _getKey( self ):
 		return (statusSortSeq[self.status], -self.laps, self.lastTime, getattr(self, 'startTime', 0.0) or 0.0, self.num)
+		
+	def _getRunningKey( self ):
+		self.lastInterp = (self.laps and self.interp[self.laps] and self.status == Model.Rider.Finisher)
+		return (
+			statusSortSeq[self.status], -self.laps,
+			statusSortSeq[Model.Rider.DNF if self.lastInterp else self.status],
+			self.lastTime, getattr(self, 'startTime', 0.0) or 0.0,
+			self.num
+		)
 		
 	def _getWinAndOutKey( self ):
 		k = self._getKey()
@@ -358,8 +368,8 @@ def _GetResultsCore( category ):
 					rr.laps = iT
 					rr.lastTime = rr.raceTimes[iT]
 					rr.lastTimeOrig = rr.lastTime
-			
-	riderResults.sort( key=RiderResult._getKey )
+	
+	riderResults.sort( key=RiderResult._getRunningKey if isRunning else RiderResult._getKey )
 	
 	relegatedNums = { rr.num for rr in riderResults if race.riders[rr.num].isRelegated() }
 	if relegatedNums:
@@ -904,31 +914,28 @@ def GetAnimationData( category=None, getExternalData=False ):
 		
 	return animationData
 
-deltaCount = 0
-snapshotLast = { 'categoryDetails':{}, 'info':{} }
-def GetSnapshotDelta():
-	global snapshotLast
-	categoryDetails = { c.fullName:c for c in GetCategoryDetails() }
-	info = GetAnimationData()
-	armCategory = Utils.dict_compare( categoryDetails, snapshotLast['categoryDetails'] )
-	armInfo = Utils.dict_compare( info, snapshotLast['info'] )
-	deltaCount += 1
-	delta = {
-		'categoryDelta': {
-			'added': {k:categoryDetails[k] for k in armCategory['added']},
-			'removed': [k for k in armCategory['removed']],
-			'modified': {k:categoryDetails[k] for k in armCategory['modified']},
-		},
-		'infoDelta': {
-			'added': {k:info[k] for k in armInfo['added']},
-			'removed': [k for k in armInfo['removed']],
-			'modified': {k:info[k] for k in armInfo['modified']},
-		},
+versionCount = 0
+resultsBaseline = { 'msg': 'bsln', 'versionCount': 0, 'categoryDetails':{}, 'info':{} }
+def GetResultsDelta():
+	global resultsBaseline
+	categoryDetails = { c.fullName:c for c in GetCategoryDetails(True, True) }
+	info = GetAnimationData( None, True )
+	if resultsBaseline['info'] == info and resultsBaseline['categoryDetails'] == categoryDetails:
+		return None
+
+	versionCount += 1
+	resultsBaseline['versionCount'] = versionCount
+	resultsBaseline['categoryDetails'] = categoryDetails
+	resultsBaseline['info'] = info
+	return {
+		'msg':				'ram',
+		'versionCount':		versionCount,
+		'categoryDelta':	Utils.dict_compare( categoryDetails, resultsBaseline['categoryDetails'] ),
+		'infoDelta':		Utils.dict_compare( info, resultsBaseline['info'] ),
 	}
-	snapshotLast['categoryDetails'] = categoryDetails
-	snapshotLast['info'] = info
 	
-	
+def GetResultsBaseline():
+	return resultsBaseline
 	
 @Model.memoize
 def GetResultMap( category ):
