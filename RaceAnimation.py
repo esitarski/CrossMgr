@@ -6,47 +6,8 @@ import re
 from Animation import Animation
 from GeoAnimation import GeoAnimation
 from FixCategories import FixCategories
-from GetResults import GetResults, GetCategoryDetails, UnstartedRaceWrapper
+from GetResults import GetAnimationData
 
-statusNames = Model.Rider.statusNames
-
-def GetAnimationData( category=None, getExternalData=False ):
-	animationData = {}
-	ignoreFields = {'pos', 'num', 'gap', 'gapValue', 'laps', 'lapTimes', 'full_name', 'short_name'}
-	
-	with UnstartedRaceWrapper( getExternalData ):
-		with Model.LockRace() as race:
-			riders = race.riders
-			for cat in ([category] if category else race.getCategories()):
-				results = GetResults( cat )
-				
-				for rr in results:
-					info = {
-						'flr': race.getCategory(rr.num).firstLapRatio,
-						'relegated': riders[rr.num].isRelegated(),
-					}
-					bestLaps = race.getNumBestLaps( rr.num )
-					for a in dir(rr):
-						if a.startswith('_') or a in ignoreFields:
-							continue
-						if a == 'raceTimes':
-							info['raceTimes'] = getattr(rr, a)
-							if bestLaps is not None and len(info['raceTimes']) > bestLaps:
-								info['raceTimes'] = info['raceTimes'][:bestLaps+1]
-						elif a == 'status':
-							info['status'] = statusNames[getattr(rr, a)]
-						elif a == 'lastTime':
-							try:
-								info[a] = rr.raceTimes[-1]
-							except IndexError:
-								info[a] = rr.lastTime
-						else:
-							info[a] = getattr( rr, a )
-					
-					animationData[rr.num] = info
-		
-	return animationData
-		
 class NumListValidator(wx.Validator):
     def __init__(self, pyVar=None):
         wx.Validator.__init__(self)

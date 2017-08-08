@@ -786,8 +786,11 @@ def dict_compare(d_new, d_old):
 	'''
 	d_new_keys = set(d_new.keys())
 	d_old_keys = set(d_old.keys())
-	#      added,                   removed,                 modified
-	return d_new_keys - d_old_keys, d_old_keys - d_new_keys, {o for o in d_new_keys.intersection(d_old_keys) if d_new[o] != d_old[o]}
+	return {
+		'added':		d_new_keys - d_old_keys,
+		'removed':		d_old_keys - d_new_keys,
+		'modified':		{o for o in d_new_keys.intersection(d_old_keys) if d_new[o] != d_old[o]},
+	}
 	
 if __name__ == '__main__':
 	initTranslation()

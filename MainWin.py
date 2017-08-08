@@ -51,7 +51,7 @@ from Results			import Results
 from Categories			import Categories, PrintCategories
 from Properties			import Properties, PropertiesDialog, ChangeProperties, ApplyDefaultTemplate, BatchPublishPropertiesDialog
 from Recommendations	import Recommendations
-from RaceAnimation		import RaceAnimation, GetAnimationData
+from RaceAnimation		import RaceAnimation
 from Search				import SearchDialog
 from Situation			import Situation
 from LapCounter			import LapCounter
@@ -95,7 +95,7 @@ import SimulationLapTimes
 import Version
 from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, ExcelLink, ReportFields, SyncExcelLink, IsValidRaceDBExcel, GetTagNums
 from SetGraphic			import SetGraphicDialog
-from GetResults			import GetCategoryDetails, UnstartedRaceWrapper, GetLapDetails
+from GetResults			import GetCategoryDetails, UnstartedRaceWrapper, GetLapDetails, GetAnimationData
 from PhotoFinish		import DeletePhotos, okTakePhoto
 from SendPhotoRequests	import SendPhotoRequests
 from PhotoViewer		import PhotoViewerDialog

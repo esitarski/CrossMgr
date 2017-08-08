@@ -819,7 +819,7 @@ def GetCategoryDetails( ignoreEmptyCategories=True, publishOnly=False ):
 	lastWaveLaps = 0
 	lastWaveCat = None
 	lastWaveStartOffset = 0
-	for cat in race.getCategories( startWaveOnly=False, publishOnly=publishOnly ):
+	for iSort, cat in enumerate(race.getCategories( startWaveOnly=False, publishOnly=publishOnly )):
 		results = GetResults( cat )
 		if ignoreEmptyCategories and not results:
 			continue
@@ -839,6 +839,7 @@ def GetCategoryDetails( ignoreEmptyCategories=True, publishOnly=False ):
 			'starters'		: sum( 1 for rr in results if rr.status != DNS ),
 			'finishers'		: sum( 1 for rr in results if rr.status == Finisher ),
 			'gapValue'		: [getattr(rr, 'gapValue', 0) for rr in results],
+			'iSort'			: iSort,
 		}
 		
 		try:
@@ -865,6 +866,70 @@ def GetCategoryDetails( ignoreEmptyCategories=True, publishOnly=False ):
 
 	return catDetails
 
+def GetAnimationData( category=None, getExternalData=False ):
+	animationData = {}
+	ignoreFields = {'pos', 'num', 'gap', 'gapValue', 'laps', 'lapTimes', 'full_name', 'short_name'}
+	statusNames = Model.Rider.statusNames
+	
+	with UnstartedRaceWrapper( getExternalData ):
+		with Model.LockRace() as race:
+			riders = race.riders
+			for cat in ([category] if category else race.getCategories()):
+				results = GetResults( cat )
+				
+				for rr in results:
+					info = {
+						'flr': race.getCategory(rr.num).firstLapRatio,
+						'relegated': riders[rr.num].isRelegated(),
+					}
+					bestLaps = race.getNumBestLaps( rr.num )
+					for a in dir(rr):
+						if a.startswith('_') or a in ignoreFields:
+							continue
+						if a == 'raceTimes':
+							info['raceTimes'] = getattr(rr, a)
+							if bestLaps is not None and len(info['raceTimes']) > bestLaps:
+								info['raceTimes'] = info['raceTimes'][:bestLaps+1]
+						elif a == 'status':
+							info['status'] = statusNames[getattr(rr, a)]
+						elif a == 'lastTime':
+							try:
+								info[a] = rr.raceTimes[-1]
+							except IndexError:
+								info[a] = rr.lastTime
+						else:
+							info[a] = getattr( rr, a )
+					
+					animationData[rr.num] = info
+		
+	return animationData
+
+deltaCount = 0
+snapshotLast = { 'categoryDetails':{}, 'info':{} }
+def GetSnapshotDelta():
+	global snapshotLast
+	categoryDetails = { c.fullName:c for c in GetCategoryDetails() }
+	info = GetAnimationData()
+	armCategory = Utils.dict_compare( categoryDetails, snapshotLast['categoryDetails'] )
+	armInfo = Utils.dict_compare( info, snapshotLast['info'] )
+	deltaCount += 1
+	delta = {
+		'categoryDelta': {
+			'added': {k:categoryDetails[k] for k in armCategory['added']},
+			'removed': [k for k in armCategory['removed']],
+			'modified': {k:categoryDetails[k] for k in armCategory['modified']},
+		},
+		'infoDelta': {
+			'added': {k:info[k] for k in armInfo['added']},
+			'removed': [k for k in armInfo['removed']],
+			'modified': {k:info[k] for k in armInfo['modified']},
+		},
+	}
+	snapshotLast['categoryDetails'] = categoryDetails
+	snapshotLast['info'] = info
+	
+	
+	
 @Model.memoize
 def GetResultMap( category ):
 	return {rr.num:rr for rr in GetResults(category)} 
