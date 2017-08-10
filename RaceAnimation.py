@@ -6,7 +6,7 @@ import re
 from Animation import Animation
 from GeoAnimation import GeoAnimation
 from FixCategories import FixCategories
-from GetResults import GetAnimationData
+from GetResults import GetAnimationData, GetCategoryDetails
 
 class NumListValidator(wx.Validator):
     def __init__(self, pyVar=None):
