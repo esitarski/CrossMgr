@@ -114,11 +114,10 @@ writeToFile( license, 'License.txt' )
 #--------------------------------------------------------
 
 manifest = '''include *.txt
-include doc *
-include CrossMgrHtmldoc *.html
-include CrossMgrHtml *.html
-include CrossMgrImages *
-include CrossMgrImages/flags *
+recursive-include doc *
+recursive-include CrossMgrHtmldoc *.html
+recursive-include CrossMgrHtml *.html
+recursive-include CrossMgrImages *
 '''
 
 writeToFile( manifest, 'MANIFEST.in' )
@@ -212,7 +211,7 @@ setup = {
 		'tornado >= 4.4',
 		'requests >= 2.13.0',
 		'bitstring',
-		'wxPython >= 4.0.0',
+		'wxPython',
 	],
 }
 
