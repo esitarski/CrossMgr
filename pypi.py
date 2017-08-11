@@ -112,13 +112,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 writeToFile( license, 'License.txt' )
 
 #--------------------------------------------------------
-
+# Get all suffixes in the CrossMmrImages folder.
+imageSuffixes = set()
+for path, subdirs, files in os.walk('CrossMgrImages'):
+	for name in files:
+		suffix = os.path.splitext(name)[1]
+		if suffix and suffix.startswith('.') and suffix != '.py':
+			imageSuffixes.add( '*' + os.path.splitext(name)[1] )
+			
 manifest = '''include *.txt
-recursive-include doc *
-recursive-include CrossMgrHtmldoc *.html
-recursive-include CrossMgrHtml *.html
-recursive-include CrossMgrImages *
-'''
+include CrossMgrHtmlDoc *.html
+include CrossMgrHtml *.html
+include CrossMgrImages {imageSuffixes}
+include CrossMgrImages/flags {imageSuffixes}
+'''.format( imageSuffixes = ' '.join(imageSuffixes) )
 
 writeToFile( manifest, 'MANIFEST.in' )
 
@@ -146,12 +153,12 @@ for dir in (
 		'CrossMgrHtml', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex', 'CrossMgrDoc',
 	):
 	dataDir = os.path.join(pypiDir, dir)
-	data_files.append( (dir, [os.path.join(dir,f) for f in os.listdir(dataDir)]) )
+	data_files.append( (dir, [os.path.join(dir,f) for f in os.listdir(dataDir) if not os.path.isdir(os.path.join(dir,f))]) )
 
 print 'Copy the src files and add the copyright notice.'
 license = license.replace( '\n', '\n# ' )
 for fname in glob.glob( '*.*' ):
-	if not (fname.endswith( '.py' ) or fname.endswith('.pyw')):
+	if not (fname.endswith('.py') or fname.endswith('.pyw')):
 		continue
 	print '   ', fname, '...'
 	with open(fname, 'rb') as f:
