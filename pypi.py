@@ -22,8 +22,9 @@ def removeTabs( buf, tabStop = 4 ):
 		for c in line:
 			if c == '\t':
 				lineOut.append( ' ' )
-				while len(lineOut) % tabStop != 0:
-					lineOut.append( ' ' )
+				pad = tabStop - len(lineOut) % tabStop
+				if pad != tabStop:
+					lineOut.append( ' ' * pad )
 			else:
 				lineOut.append( c )
 		lines.append( ''.join(lineOut) )
@@ -110,22 +111,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 ''' % datetime.datetime.now().year
 
 writeToFile( license, 'License.txt' )
-
-#--------------------------------------------------------
-# Get all suffixes in the CrossMmrImages folder.
-imageSuffixes = set()
-for path, subdirs, files in os.walk('CrossMgrImages'):
-	for name in files:
-		suffix = os.path.splitext(name)[1]
-		if suffix and suffix.startswith('.') and suffix != '.py':
-			imageSuffixes.add( '*' + os.path.splitext(name)[1] )
 			
 manifest = '''include *.txt
-include CrossMgrHtmlDoc *.html
-include CrossMgrHtml *.html
-include CrossMgrImages {imageSuffixes}
-include CrossMgrImages/flags {imageSuffixes}
-'''.format( imageSuffixes = ' '.join(imageSuffixes) )
+recursive-include CrossMgr/CrossMgrDoc *
+recursive-include CrossMgr/CrossMgrHtml *.html
+recursive-include CrossMgr/CrossMgrHtmlDoc *.html
+recursive-include CrossMgr/CrossMgrImages *
+recursive-include CrossMgr/CrossMgrLocale *
+recursive-include CrossMgr/CrossMgrHelpIndex *
+'''
 
 writeToFile( manifest, 'MANIFEST.in' )
 
@@ -133,27 +127,27 @@ writeToFile( manifest, 'MANIFEST.in' )
 
 srcDir = os.path.join( pypiDir, 'CrossMgr' )
 os.mkdir( srcDir )
-for dir in (
-		'CrossMgrImages',
-		'CrossMgrHtml', 'CrossMgrLocale', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex',
-	):
-	print 'copying', dir, '...'
-	shutil.copytree( dir, os.path.join(pypiDir,dir) )
+data_dirs = (
+	'CrossMgrImages',
+	'CrossMgrHtml', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex', 'CrossMgrLocale',
+)
+def get_dir_suffixes( data_dirs ):
+	dir_suffixes = set()
+	for d in data_dirs:
+		for root, dirs, files in os.walk(d):
+			for f in files:
+				dir_suffixes.add( '{}/*{}'.format(root.replace('\\','/'),os.path.splitext(f)[1]) )
+	return sorted(dir_suffixes)
+
+for dir in data_dirs:
+	print 'copying', dir, 'to', os.path.join(pypiDir,'CrossMgr',dir)
+	shutil.copytree( dir, os.path.join(pypiDir,'CrossMgr',dir) )
 
 print 'Copying doc files to doc directory.'
-docDir = os.path.join( pypiDir, 'CrossMgrDoc' )
+docDir = os.path.join( pypiDir, 'CrossMgr','CrossMgrDoc' )
 os.mkdir( docDir )
 for f in ['MacInstallReadme.txt', 'LinuxInstallReadme.txt', 'CrossMgrTutorial.doc']:
 	shutil.copy( f, os.path.join(docDir, f) )
-	
-print 'Collecting data_files.'
-data_files = []
-for dir in (
-		'CrossMgrImages', os.path.join('CrossMgrImages','flags'),
-		'CrossMgrHtml', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex', 'CrossMgrDoc',
-	):
-	dataDir = os.path.join(pypiDir, dir)
-	data_files.append( (dir, [os.path.join(dir,f) for f in os.listdir(dataDir) if not os.path.isdir(os.path.join(dir,f))]) )
 
 print 'Copy the src files and add the copyright notice.'
 license = license.replace( '\n', '\n# ' )
@@ -184,15 +178,17 @@ for fname in glob.glob( '*.*' ):
 	with open(os.path.join(srcDir, fname), 'wb' ) as f:
 		f.write( contents )
 
-
 print 'Adding script to bin dir..'
 binDir = os.path.join( pypiDir, 'bin' )
 os.mkdir( binDir )
-exeName = os.path.join(binDir,'CrossMgr')
+exeName = os.path.join(binDir,'CrossMgrRun')
 shutil.copy( os.path.join(srcDir,'CrossMgr.pyw'), exeName )
+shutil.copy( os.path.join(srcDir,'CrossMgr.pyw'), exeName+'.pyw' )
+
 # Make it executable.
 os.chmod( exeName, os.stat(exeName)[0] | stat.S_IXUSR|stat.S_IXGRP|stat.S_IXOTH )
-	
+os.chmod( exeName, os.stat(exeName+'.pyw')[0] | stat.S_IXUSR|stat.S_IXGRP|stat.S_IXOTH )
+
 print 'Creating setup.py...'
 setup = {
 	'name':			'CrossMgr',
@@ -200,8 +196,8 @@ setup = {
 	'author':		'Edward Sitarski',
 	'author_email':	'edward.sitarski@gmail.com',
 	'packages':		['CrossMgr'],
-	'data_files':	data_files,
-	'scripts':		['bin/CrossMgr'],
+	'package_data':	{'CrossMgr': get_dir_suffixes(data_dirs)},
+	'scripts':		[('bin/' + f) for f in os.listdir(binDir)],
 	'url':			'http://www.sites.google.com/site/crossmgrsoftware/',
 	'license':		'License.txt',
 	'include_package_data': True,

@@ -387,7 +387,7 @@ class RiderDetail( wx.Panel ):
 		self.grid.AutoSizeColumns( True )
 		self.grid.DisableDragColSize()
 		self.grid.DisableDragRowSize()
-		self.grid.SetSelectionMode( wx.grid.Grid.GridSelectRows )
+		self.grid.SetSelectionMode( wx.grid.Grid.SelectRows )
 		self.Bind( wx.grid.EVT_GRID_CELL_LEFT_DCLICK, self.getPopupFuncCB(self.OnPopupCorrect) )
 		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doRightClick )
 
