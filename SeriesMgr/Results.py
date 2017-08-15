@@ -89,11 +89,11 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 		with tag(html, 'head'):
 			with tag(html, 'title'):
 				write( title.replace('\n', ' ') )
-			with tag(html, 'meta', dict(charset="UTF-8",
-										author="Edward Sitarski",
-										copyright="Edward Sitarski, 2013-{}".format(datetime.datetime.now().strftime('%Y')),
-										generator="SeriesMgr")):
+			with tag(html, 'meta', {'charset':'UTF-8'}):
 				pass
+			for k, v in model.getMetaTags():
+				with tag(html, 'meta', {'name':k, 'content':v}):
+					pass
 			with tag(html, 'style', dict( type="text/css")):
 				write( u'''
 body{ font-family: sans-serif; }

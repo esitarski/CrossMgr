@@ -1,8 +1,11 @@
 import os
+import re
 import sys
+import cgi
 import copy
 import operator
 import functools
+import datetime
 import GetModelInfo
 import StringIO
 import Utils
@@ -519,6 +522,25 @@ class SeriesModel( object ):
 		if self.races:
 			self.races = []
 			self.setChanged()
+	
+	def getRaceNames( self ):
+		names = set()
+		for r in self.races:
+			names.add( os.path.splitext(os.path.basename(r.fileName))[0] )
+		return sorted( names )
+		
+	def getMetaTags( self ):
+		return (
+			('author', 'Edward Sitarski'),
+			('copyright', "Edward Sitarski, 2013-{}".format(datetime.datetime.now().year)),
+			('description', 'Series: {}, Races: {}'.format(
+					cgi.escape(self.name, quote=True),
+					u';'.join('{}'.format(cgi.escape(n, quote=True)) for n in self.getRaceNames())
+				)
+			),
+			('generator', "SeriesMgr"),
+			('keywords', "CrossMgr, SeriesMgr, cycling, race, series, results"),
+		)
 	
 	def clearCache( self ):
 		memoize.clear()		

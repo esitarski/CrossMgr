@@ -532,12 +532,12 @@ class MainWin( wx.Frame ):
 			pageTitle = self.attrClassName[iSelection][2]
 		
 		if not self.fileName or len(self.fileName) < 4:
-			Utils.MessageOK(self, 'You must Save before you can Export to Html', 'Excel Export')
+			Utils.MessageOK(self, 'You must Save before you can Export to Html', 'Html Export')
 			return
 
 		pageTitle = Utils.RemoveDisallowedFilenameChars( pageTitle.replace('/', '_') )
 		htmlfileName = self.fileName[:-4] + '-' + pageTitle + '.html'
-		dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(htmlfileName),
+		dlg = wx.DirDialog( self, 'Folder to write "{}"'.format(os.path.basename(htmlfileName)),
 						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(htmlfileName) )
 		ret = dlg.ShowModal()
 		dName = dlg.GetPath()
@@ -555,8 +555,11 @@ class MainWin( wx.Frame ):
 			with tag(html, 'head'):
 				with tag(html, 'title'):
 					html.write( title.replace('\n', ' ') )
-				with tag(html, 'meta', dict(charset="UTF-8", author="Edward Sitarski", copyright="Edward Sitarski, 2013", generator="SeriesMgr")):
+				with tag(html, 'meta', {'charset':'UTF-8'}):
 					pass
+				for k, v in SeriesModel.model.getMetaTags():
+					with tag(html, 'meta', {'name':k, 'content':v}):
+						pass
 				with tag(html, 'style', dict( type="text/css")):
 					html.write( '''
 body{ font-family: sans-serif; }
@@ -637,7 +640,7 @@ table.results tr td.fastest{
 			Utils.MessageOK(self, 'Html file written to:\n\n   %s' % htmlfileName, 'Html Write')
 		except IOError:
 			Utils.MessageOK(self,
-						'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % htmlfileName,
+						'Cannot write "%s".\n\nCheck if this file is open.\nIf so, close it, and try again.' % htmlfileName,
 						'Html File Error', iconMask=wx.ICON_ERROR )
 	
 	#--------------------------------------------------------------------------------------------
@@ -665,7 +668,7 @@ table.results tr td.fastest{
 
 	def saveExistingSeries( self ):
 		self.commit()
-		self.showPageName( 'Results' )
+		self.showPageName( 'Races' )
 		model = SeriesModel.model
 		if not model.changed:
 			return True
@@ -826,7 +829,7 @@ table.results tr td.fastest{
 		info = wx.AboutDialogInfo()
 		info.Name = Version.AppVerName
 		info.Version = ''
-		info.Copyright = "(C) 2013"
+		info.Copyright = "(C) 2013-{}".format(datetime.datetime.now().year)
 		info.Description = wordwrap(
 			"Combine CrossMgr results into a Series.\n\n"
 			"",
