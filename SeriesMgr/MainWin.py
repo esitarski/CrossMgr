@@ -714,6 +714,11 @@ table.results tr td.fastest{
 		
 		if not fileName:
 			return
+		
+		self.commit()
+		self.showPageName( 'Races' )
+		self.refresh()
+		
 		try:
 			with open(fileName, 'rb') as fp:
 				try:
