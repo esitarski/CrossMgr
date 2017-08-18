@@ -140,7 +140,7 @@ for p in dom.getElementsByTagName('customParameterDefinition'):
 with open('llrpdef.py', 'w') as fp:
 	fp.write( '#-----------------------------------------------------------\n' )
 	fp.write( '# DO NOT EDIT!\n' )
-	fp.write( '# MACHINE GENERATED from {}\n'.format(llrpDefXml) )
+	fp.write( '# MACHINE GENERATED from "{}" and "{}"\n'.format(llrpDefXml, llrpCustomDefXml) )
 	fp.write( '#\n' )
 	fp.write( '# Created: {}\n'.format(datetime.datetime.now()) )
 	fp.write( '#-----------------------------------------------------------\n' )

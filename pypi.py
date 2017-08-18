@@ -213,6 +213,7 @@ setup = {
 		'ftputil >= 3.3',
 		'tornado >= 4.4',
 		'requests >= 2.13.0',
+		'netifaces >= 0.10.6',
 		'bitstring',
 		'wxPython',
 	],

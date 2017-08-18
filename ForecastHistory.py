@@ -409,14 +409,18 @@ class ForecastHistory( wx.Panel ):
 		if not isinstance(nums, (list, tuple)):
 			nums = [nums]
 			
-		# Add the times to the model and write to the log.
+		# Add the times to the model.
+		numTimes = []
 		for num in nums:
 			try:
 				num = int(num)
 			except:
 				continue
 			race.addTime( num, t, False )
-			OutputStreamer.writeNumTime( num, t )
+			numTimes.append( (num, t) )
+		
+		# Write to the log.
+		OutputStreamer.writeNumTimes( numTimes )
 			
 		# Schedule a photo.
 		if race.enableUSBCamera:

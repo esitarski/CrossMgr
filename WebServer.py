@@ -32,7 +32,9 @@ import urlparse
 from StringIO import StringIO
 import Utils
 import Model
+from GetResults import GetResultsRAM, GetResultsBaseline, GetRaceName
 from Synchronizer import syncfunc
+
 
 from ThreadPoolMixIn import ThreadPoolMixIn
 class CrossMgrServer(ThreadPoolMixIn, HTTPServer):
@@ -420,8 +422,7 @@ def queueListener( q ):
 		if cmd == 'fileName':
 			DEFAULT_HOST = Utils.GetDefaultHost()
 			contentBuffer.setFNameRace( message['fileName'] )
-		
-		if cmd == 'exit':
+		elif cmd == 'exit':
 			keepGoing = False
 		q.task_done()
 	
@@ -437,6 +438,79 @@ qThread.start()
 webThread = threading.Thread( target=WebServer, name='WebServer' )
 webThread.daemon = True
 webThread.start()
+
+#-------------------------------------------------------------------
+
+from websocket_server import WebsocketServer
+
+class CrossMgrWebsocketServer( WebsocketServer ):
+	def __init__( self, port=None, host='0.0.0.0' )
+		port = port or (DEFAULT_PORT + 1)
+		super(CrossMgrWebsocketServer, self).__init__( port=port, host=host )
+
+	def message_received(self, client, server, message):
+		msg = json.loads( message )
+		if msg['cmd'] == 'send_bsln' and msg['raceName'] == GetRaceName():
+			self.send_messasge( client, json.dumps(GetResultsBaseline()) )
+
+wsServer = None
+def WsServer():
+	global wsServer
+	while 1:
+		try:
+			wsServer = CrossMgrWebsocketServer()
+			wsServer.serve_forever( poll_interval = 2 )
+		except Exception as e:
+			wsServer = None
+			time.sleep( 5 )
+
+def WsQueueListener( q ):
+	global wsServer
+	
+	keepGoing = True
+	while keepGoing:
+		message = q.get()
+		cmd = message.get('cmd', None)
+		if cmd == 'ram':
+			if wsServer:
+				wsServer.send_message_to_all( json.dumps(message) )
+		elif cmd == 'exit':
+			keepGoing = False
+		q.task_done()
+	
+	wsServer = None	
+
+wsQ = Queue()
+wsQThread = threading.Thread( target=WsQueueListener, name='WsQueueListener', args=(wsQ,) )
+wsQThread.daemon = True
+wsQThread.start()
+
+wsThread = threading.Thread( target=WsServer, name='WsServer' )
+wsThread.daemon = True
+wsThread.start()
+
+wsTimer = None
+wsTimerDur = wsTimeInc
+wsTimerDurMax = 3
+def WsPost():
+	global wsTimer
+	wsQ.put( GetResultsRAM() )
+	if wsTimer:
+		wsTimer.cancel()
+		wsTimer = None
+
+def WsRefresh():
+	global wsTimer
+	if not wsTimer:
+		wsTimerDur = 0.5
+		wsTimer = threading.Timer( wsTimerDur, WsPost )
+		wsTimer.start()
+	else:
+		if wsTimerDur < wsTimerDurMax:
+			wsTimerDur *= 1.5
+			wsTimer.cancel()
+			wsTimer = threading.Timer( wsTimerDur, WsPost )
+			wsTimer.start()
 
 if __name__ == '__main__':
 	SetFileName( os.path.join('Gemma', '2015-11-10-A Men-r4-.html') )

@@ -914,24 +914,33 @@ def GetAnimationData( category=None, getExternalData=False ):
 		
 	return animationData
 
+def GetRaceName():
+	return Model.race.getFileName()[:-4]
+	
 versionCount = 0
-resultsBaseline = { 'msg': 'bsln', 'versionCount': 0, 'categoryDetails':{}, 'info':{} }
-def GetResultsDelta():
-	global resultsBaseline
+resultsBaseline = { 'cmd': 'bsln', 'versionCount': 0, 'raceName':'', 'categoryDetails':{}, 'info':{} }
+def GetResultsRAM():
+	global versionCount, resultsBaseline
 	categoryDetails = { c.fullName:c for c in GetCategoryDetails(True, True) }
 	info = GetAnimationData( None, True )
 	if resultsBaseline['info'] == info and resultsBaseline['categoryDetails'] == categoryDetails:
 		return None
 
+	race = Model.race
 	versionCount += 1
 	resultsBaseline['versionCount'] = versionCount
 	resultsBaseline['categoryDetails'] = categoryDetails
 	resultsBaseline['info'] = info
+	resultsBaseline['raceName']		= GetRaceName()
+	resultsBaseline['raceStatus']	= 0 if race.isUnstarted else (1 if race.isRunning() else 2)
+
 	return {
-		'msg':				'ram',
-		'versionCount':		versionCount,
-		'categoryDelta':	Utils.dict_compare( categoryDetails, resultsBaseline['categoryDetails'] ),
-		'infoDelta':		Utils.dict_compare( info, resultsBaseline['info'] ),
+		'cmd':			'ram',
+		'versionCount':	versionCount,
+		'categoryRAM':	Utils.dict_compare( categoryDetails, resultsBaseline['categoryDetails'] ),
+		'infoRAM':		Utils.dict_compare( info, resultsBaseline['info'] ),
+		'raceName':		resultsBaseline['raceName'],
+		'raceStatus':	resultsBaseline['raceStatus'],
 	}
 	
 def GetResultsBaseline():

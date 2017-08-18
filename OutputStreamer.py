@@ -9,6 +9,7 @@ from Queue import Queue, Empty
 
 import Utils
 import Model
+from WebServer import WsRefresh
 
 q = None
 streamer = None
@@ -113,7 +114,8 @@ def writeRaceStart( t = None ):
 	if not streamer:
 		StartStreamer()
 	if streamer:
-		q.put( 'start,%s\n' % t.isoformat() )
+		q.put( 'start,{}\n'.format(t.isoformat()) )
+	WsRefresh()
 
 def writeRaceFinish( t = None ):
 	if t is None:
@@ -126,8 +128,9 @@ def writeRaceFinish( t = None ):
 	if not streamer:
 		StartStreamer()
 	if streamer:
-		q.put( 'end,%s\n' % t.isoformat() )
+		q.put( 'end,{}\n'.format(t.isoformat()) )
 		q.put( terminateMessage )
+	WsRefresh()
 
 def writeNumTime( num, t ):
 	if not streamer:
@@ -135,7 +138,8 @@ def writeNumTime( num, t ):
 
 	# Convert race time to days for Excel.  Also include quoted HH:MM:SS.ddd time format for convenience.
 	if streamer:
-		q.put( 'time,{:d},{:.15e},"{}"\n'.format(num, t / DaySeconds, formatTimeHHMMSS(t)) )
+		q.put( 'time,{},{:.15e},"{}"\n'.format(num, t / DaySeconds, formatTimeHHMMSS(t)) )
+	WsRefresh()
 		
 def writeNumTimes( numTimes ):
 	if not streamer:
@@ -146,7 +150,8 @@ def writeNumTimes( numTimes ):
 		for num, t in numTimes:
 			q.put( 'time,{:d},{:.15e},"{}"\n'.format(num, t / DaySeconds, formatTimeHHMMSS(t)) )
 	else:
-		Utils.writeLog( 'writeNumTimes failure: numTimes=%d' % numTimes )
+		Utils.writeLog( 'writeNumTimes failure: numTimes={}'.format(numTimes) )
+	WsRefresh()
 
 def ReadStreamFile( fname = None ):
 	if not fname:

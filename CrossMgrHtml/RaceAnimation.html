@@ -2286,6 +2286,119 @@ function GetAllCategoryResults( num ) {
 	return results.join( ',  ' );
 }
 
+//----------------------------------------------------------------------
+
+function applyRAM( dest, ram ) {
+	var src, i, k;
+	src = ram.r;
+	for( i = src.length-1; i >= 0; --i )
+		delete dest[src[i]];
+	src = ram.a;
+	for( k in src )
+		dest[k] = src[k];
+	src = ram.m;
+	for( k in src )
+		dest[k] = src[k];
+}
+
+function PostMessageRefresh() {
+	SetData( data, undefined );
+	setCategory( categoryCur );			
+	RefreshResultsTable();
+	RefreshRaceChart();
+	SituationRefresh();
+	
+	if( !raceIsRunning && raceWasRunning )
+		Animate( animationSeconds, undefined, getStartTime() );
+}
+
+var versionCount = 0;
+function ProcessRAM( ram ) {
+	if( ram.raceName != raceName )
+		return true;
+	if( ram.msg != 'ram' || ram.versionCount != versionCount + 1 )
+		return false;
+		
+	var c, k;
+	var catDetailsCur = {};
+	if( catDetails )
+		for( c = 0; c < catDetails.length; ++c )
+			catDetailsCur[catDetails[c].name] = catDetails[c];
+	
+	applyRAM( catDetailsCur, ram.categoryRAM );
+	
+	catDetails = [];
+	for( k in catDetailsCur )
+		catDetails.push( catDetailsCur[k] );
+	catDetails.sort( function(a, b) {return a.iSort - b.iSort;} );
+
+	if( !data )
+		data = {};
+	applyRAM( data, ram.infoRAM );
+	
+	versionCount = ram.versionCount;
+	raceIsRunning	= (ram.raceStatus == 0);
+	raceIsUnstarted = (ram.raceStatus == 1);
+	raceIsFinished  = (ram.raceStatus == 2);
+	
+	return true;
+}
+var baselinePending = false;
+function ProcessBaseline( bsln ) {
+	if( ram.raceName != raceName )
+		return true;
+	if( bsln.msg != 'bsln' )
+		return false;
+	
+	catDetails = [];
+	for( k in bsln.categoryDetails )
+		catDetails.push( bsln.categoryDetails[k] );
+	catDetails.sort( function(a, b) {return a.iSort - b.iSort;} );
+	
+	data = bsln.info;
+	
+	versionCount = bsln.versionCount;
+	raceIsRunning	= (bsln.raceStatus == 0);
+	raceIsUnstarted = (bsln.raceStatus == 1);
+	raceIsFinished  = (bsln.raceStatus == 2);
+	
+	baselinePending = false;
+	return true;
+}
+var websocket = null;
+function SetWebSocket() {
+	if ("WebSocket" in window) {
+		if( websocket )
+			websocket.close();
+
+		websocket = new WebSocket("ws://localhost:9998/echo");
+
+		websocket.onmessage = function( evt ) {
+			var msg = JSON.parse( evt.data );
+			if( msg.raceName == raceName ) {
+				if( msg.cmd == 'ram' ) {
+					if( ProcessRAM(msg) )
+						PostMessageRefresh();
+					else {
+						if( !baselinePending ) {
+							ws.send( JSON.stringify({'cmd':'send_bsln', 'raceName':raceName}) );
+							baselinePending = true;
+						}
+					}
+				}
+				else if( msg.cmd == 'bsln' )
+					if( ProcessBaseline( msg ) )
+						PostMessageRefresh();
+			}
+		};
+	}
+}
+function CloseWebSocket() {
+	if( websocket )
+		websocket.close();
+	websocket = null;
+}
+
 function RefreshResultsTableArrival( raceTimesLength, raceTimesCopy )
 {
 	var riderBib = [];		// Bib numbers in display sequence.
