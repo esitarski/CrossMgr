@@ -587,7 +587,7 @@ def writeLog( message ):
 			message,
 			'\n' if not message or message[-1] != '\n' else '',
 		)
-		sys.stdout.write( removeDiacritic(msg) )		
+		sys.stdout.write( removeDiacritic(msg) )
 		sys.stdout.flush()
 	except IOError:
 		pass
