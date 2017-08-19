@@ -2369,6 +2369,8 @@ function ProcessBaseline( bsln ) {
 }
 var websocket = null;
 function ResetWebSocket() {
+	return;
+
 	if ("WebSocket" in window) {
 		if( websocket )
 			websocket.close();

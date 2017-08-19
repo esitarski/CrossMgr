@@ -441,6 +441,7 @@ webThread.start()
 
 #-------------------------------------------------------------------
 
+'''
 from websocket_server import WebsocketServer
 
 class CrossMgrWebsocketServer( WebsocketServer ):
@@ -500,8 +501,10 @@ def WsPost():
 	if wsTimer:
 		wsTimer.cancel()
 		wsTimer = None
+'''
 
 def WsRefresh():
+	'''
 	global wsTimer, wsTimerDur
 	if not wsTimer:
 		wsTimerDur = 0.5
@@ -513,7 +516,8 @@ def WsRefresh():
 			wsTimer.cancel()
 			wsTimer = threading.Timer( wsTimerDur, WsPost )
 			wsTimer.start()
-
+	'''
+			
 if __name__ == '__main__':
 	SetFileName( os.path.join('Gemma', '2015-11-10-A Men-r4-.html') )
 	print 'Started httpserver on port ' , PORT_NUMBER
