@@ -595,6 +595,8 @@ function doReload( forceRefresh ) {
 	
 	href += '?' + params.join('&');
 	
+	CloseWebSocket();
+	
 	// Reload the location.
 	if( window.location.href != href )
 		window.location.href = href;
@@ -2366,12 +2368,14 @@ function ProcessBaseline( bsln ) {
 	return true;
 }
 var websocket = null;
-function SetWebSocket() {
+function ResetWebSocket() {
 	if ("WebSocket" in window) {
 		if( websocket )
 			websocket.close();
 
-		websocket = new WebSocket("ws://localhost:9998/echo");
+		var wsurl = 'ws://' + window.location.hostname + ':' + (parseInt(window.location.port) + 1) + '/';
+		console.log( 'wsurl="' + wsurl + '"' );
+		websocket = new window.WebSocket( wsurl );
 
 		websocket.onmessage = function( evt ) {
 			var msg = JSON.parse( evt.data );
@@ -2387,9 +2391,13 @@ function SetWebSocket() {
 					}
 				}
 				else if( msg.cmd == 'bsln' )
-					if( ProcessBaseline( msg ) )
+					if( ProcessBaseline(msg) )
 						PostMessageRefresh();
 			}
+		};
+		
+		websocket.onerror = function(e) {
+			console.log('WebSocket: ' + e);
 		};
 	}
 }
@@ -6177,6 +6185,8 @@ function onLoad()
 		setTimeout( RefreshPayload, 5*60*1000+10 );
 		
 	document.getElementById('idDisplaySelect').selectedIndex = (kioskMode && arrivalMode ? 2 : kioskMode ? 1 : 0);
+	
+	ResetWebSocket();
 }
 
 </script>

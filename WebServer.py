@@ -444,8 +444,8 @@ webThread.start()
 from websocket_server import WebsocketServer
 
 class CrossMgrWebsocketServer( WebsocketServer ):
-	def __init__( self, port=None, host='0.0.0.0' )
-		port = port or (DEFAULT_PORT + 1)
+	def __init__( self, port=None, host='' ):
+		port = port or (PORT_NUMBER + 1)
 		super(CrossMgrWebsocketServer, self).__init__( port=port, host=host )
 
 	def message_received(self, client, server, message):
@@ -490,17 +490,19 @@ wsThread.daemon = True
 wsThread.start()
 
 wsTimer = None
-wsTimerDur = wsTimeInc
+wsTimerDur = None
 wsTimerDurMax = 3
 def WsPost():
 	global wsTimer
-	wsQ.put( GetResultsRAM() )
+	ram = GetResultsRAM()
+	if ram:
+		wsQ.put( ram )
 	if wsTimer:
 		wsTimer.cancel()
 		wsTimer = None
 
 def WsRefresh():
-	global wsTimer
+	global wsTimer, wsTimerDur
 	if not wsTimer:
 		wsTimerDur = 0.5
 		wsTimer = threading.Timer( wsTimerDur, WsPost )

@@ -921,20 +921,29 @@ versionCount = 0
 resultsBaseline = { 'cmd': 'bsln', 'versionCount': 0, 'raceName':'', 'categoryDetails':{}, 'info':{} }
 def GetResultsRAM():
 	global versionCount, resultsBaseline
-	categoryDetails = { c.fullName:c for c in GetCategoryDetails(True, True) }
+	
+	race = Model.race
+	if not race:
+		return None
+	
+	categoryDetails = { c['name']:c for c in GetCategoryDetails(True, True) }
 	info = GetAnimationData( None, True )
-	if resultsBaseline['info'] == info and resultsBaseline['categoryDetails'] == categoryDetails:
+	raceStatus = 0 if race.isUnstarted() else (1 if race.isRunning() else 2)
+	raceName = GetRaceName()
+	
+	if (	resultsBaseline['info'] == info and
+			resultsBaseline['categoryDetails'] == categoryDetails and
+			resultsBaseline['raceStatus'] == raceStatus and
+			resultsBaseline['raceName']	== raceName
+		):
 		return None
 
-	race = Model.race
 	versionCount += 1
 	resultsBaseline['versionCount'] = versionCount
-	resultsBaseline['categoryDetails'] = categoryDetails
-	resultsBaseline['info'] = info
-	resultsBaseline['raceName']		= GetRaceName()
-	resultsBaseline['raceStatus']	= 0 if race.isUnstarted else (1 if race.isRunning() else 2)
+	resultsBaseline['raceName']		= raceName
+	resultsBaseline['raceStatus']	= raceStatus
 
-	return {
+	ram = {
 		'cmd':			'ram',
 		'versionCount':	versionCount,
 		'categoryRAM':	Utils.dict_compare( categoryDetails, resultsBaseline['categoryDetails'] ),
@@ -942,6 +951,10 @@ def GetResultsRAM():
 		'raceName':		resultsBaseline['raceName'],
 		'raceStatus':	resultsBaseline['raceStatus'],
 	}
+	
+	resultsBaseline['categoryDetails'] = categoryDetails
+	resultsBaseline['info'] = info	
+	return ram
 	
 def GetResultsBaseline():
 	return resultsBaseline
