@@ -441,26 +441,21 @@ webThread.start()
 
 #-------------------------------------------------------------------
 
-'''
 from websocket_server import WebsocketServer
 
-class CrossMgrWebsocketServer( WebsocketServer ):
-	def __init__( self, port=None, host='' ):
-		port = port or (PORT_NUMBER + 1)
-		super(CrossMgrWebsocketServer, self).__init__( port=port, host=host )
-
-	def message_received(self, client, server, message):
-		msg = json.loads( message )
-		if msg['cmd'] == 'send_bsln' and msg['raceName'] == GetRaceName():
-			self.send_messasge( client, json.dumps(GetResultsBaseline()) )
+def message_received(client, server, message):
+	msg = json.loads( message )
+	if msg['cmd'] == 'send_baseline' and msg['raceName'] == GetRaceName():
+		server.send_message( client, json.dumps(GetResultsBaseline()) )
 
 wsServer = None
-def WsServer():
+def WsServerLaunch():
 	global wsServer
 	while 1:
+		wsServer = WebsocketServer( port=PORT_NUMBER + 1, host='' )
+		wsServer.set_fn_message_received( message_received )
 		try:
-			wsServer = CrossMgrWebsocketServer()
-			wsServer.serve_forever( poll_interval = 2 )
+			wsServer.run_forever()
 		except Exception as e:
 			wsServer = None
 			time.sleep( 5 )
@@ -473,7 +468,7 @@ def WsQueueListener( q ):
 		message = q.get()
 		cmd = message.get('cmd', None)
 		if cmd == 'ram':
-			if wsServer:
+			if wsServer and wsServer.clients:
 				wsServer.send_message_to_all( json.dumps(message) )
 		elif cmd == 'exit':
 			keepGoing = False
@@ -486,7 +481,7 @@ wsQThread = threading.Thread( target=WsQueueListener, name='WsQueueListener', ar
 wsQThread.daemon = True
 wsQThread.start()
 
-wsThread = threading.Thread( target=WsServer, name='WsServer' )
+wsThread = threading.Thread( target=WsServerLaunch, name='WsServer' )
 wsThread.daemon = True
 wsThread.start()
 
@@ -495,16 +490,15 @@ wsTimerDur = None
 wsTimerDurMax = 3
 def WsPost():
 	global wsTimer
-	ram = GetResultsRAM()
-	if ram:
-		wsQ.put( ram )
+	if wsServer.clients:
+		ram = GetResultsRAM()
+		if ram:
+			wsQ.put( ram )
 	if wsTimer:
 		wsTimer.cancel()
 		wsTimer = None
-'''
 
 def WsRefresh():
-	'''
 	global wsTimer, wsTimerDur
 	if not wsTimer:
 		wsTimerDur = 0.5
@@ -516,7 +510,6 @@ def WsRefresh():
 			wsTimer.cancel()
 			wsTimer = threading.Timer( wsTimerDur, WsPost )
 			wsTimer.start()
-	'''
 			
 if __name__ == '__main__':
 	SetFileName( os.path.join('Gemma', '2015-11-10-A Men-r4-.html') )

@@ -174,6 +174,7 @@ var timestamp = null;
 var email = null;
 var raceAddress = null;
 var raceIsRunning = null;
+var raceWasRunning = null;
 var raceIsUnstarted = null;
 var raceIsFinished = null;
 var data = null;
@@ -966,6 +967,8 @@ function TrackAnimation()
 		xypt.push( positionTime[1] );
 		return xypt;
 	}
+	
+	this.resetCache = function() { this.cache = {}; }
 
 	this.Refresh = function()
 	{
@@ -1311,6 +1314,8 @@ function GeoTrack()
 		this.mult = 1.0;
 		this.cache = {};
 	}
+	
+	this.resetCache = function() { this.cache = {}; }
 			
 	this.getXYTrack = function()
 	{
@@ -1680,6 +1685,8 @@ function GeoAnimation()
 		this.tBannerLast = tBanner;
 	}
 	
+	this.resetCache = function() { this.geoTrack.resetCache(); }
+			
 	this.getRiderXYPT = function( num )
 	{
 		// Get the rider x, y, position (distance) and time.
@@ -2292,114 +2299,116 @@ function GetAllCategoryResults( num ) {
 
 function applyRAM( dest, ram ) {
 	var src, i, k;
-	src = ram.r;
-	for( i = src.length-1; i >= 0; --i )
-		delete dest[src[i]];
 	src = ram.a;
 	for( k in src )
 		dest[k] = src[k];
 	src = ram.m;
 	for( k in src )
 		dest[k] = src[k];
+	src = ram.r;
+	for( i = src.length-1; i >= 0; --i )
+		delete dest[src[i]];
 }
 
 function PostMessageRefresh() {
 	SetData( data, undefined );
+	SetRaceTime();
 	setCategory( categoryCur );			
 	RefreshResultsTable();
 	RefreshRaceChart();
 	SituationRefresh();
 	
-	if( !raceIsRunning && raceWasRunning )
-		Animate( animationSeconds, undefined, getStartTime() );
+	if( animationObj )
+		animationObj.resetCache();		
+
+	Animate( animationSeconds, undefined, t );
+}
+
+function SyncMsgPayload( msg ) {
+	for( f in msg.reference )
+		window[f] = msg.reference[f];
 }
 
 var versionCount = 0;
-function ProcessRAM( ram ) {
-	if( ram.raceName != raceName )
+function ProcessRAM( msg ) {
+	if( raceName && msg.reference.raceName != raceName )
 		return true;
-	if( ram.msg != 'ram' || ram.versionCount != versionCount + 1 )
+	if( msg.cmd != 'ram' || msg.reference.versionCount != versionCount + 1 )
 		return false;
 		
-	var c, k;
+	if( !data )
+		data = {};
+	applyRAM( data, msg.infoRAM );
+	
+	var c, k, f;
 	var catDetailsCur = {};
 	if( catDetails )
 		for( c = 0; c < catDetails.length; ++c )
 			catDetailsCur[catDetails[c].name] = catDetails[c];
 	
-	applyRAM( catDetailsCur, ram.categoryRAM );
+	applyRAM( catDetailsCur, msg.categoryRAM );
 	
 	catDetails = [];
 	for( k in catDetailsCur )
 		catDetails.push( catDetailsCur[k] );
 	catDetails.sort( function(a, b) {return a.iSort - b.iSort;} );
 
-	if( !data )
-		data = {};
-	applyRAM( data, ram.infoRAM );
-	
-	versionCount = ram.versionCount;
-	raceIsRunning	= (ram.raceStatus == 0);
-	raceIsUnstarted = (ram.raceStatus == 1);
-	raceIsFinished  = (ram.raceStatus == 2);
-	
+	SyncMsgPayload( msg );
 	return true;
 }
 var baselinePending = false;
-function ProcessBaseline( bsln ) {
-	if( ram.raceName != raceName )
+function ProcessBaseline( msg ) {
+	if( msg.reference.raceName != raceName )
 		return true;
-	if( bsln.msg != 'bsln' )
+	if( msg.cmd != 'baseline' )
 		return false;
 	
+	data = msg.info;
+	
+	var c, k, f;
 	catDetails = [];
-	for( k in bsln.categoryDetails )
-		catDetails.push( bsln.categoryDetails[k] );
+	for( k in msg.categoryDetails )
+		catDetails.push( msg.categoryDetails[k] );
 	catDetails.sort( function(a, b) {return a.iSort - b.iSort;} );
 	
-	data = bsln.info;
+	SyncMsgPayload( msg );
 	
-	versionCount = bsln.versionCount;
-	raceIsRunning	= (bsln.raceStatus == 0);
-	raceIsUnstarted = (bsln.raceStatus == 1);
-	raceIsFinished  = (bsln.raceStatus == 2);
-	
-	baselinePending = false;
+	baselinePending = false;	
 	return true;
 }
 var websocket = null;
 function ResetWebSocket() {
-	return;
 
 	if ("WebSocket" in window) {
 		if( websocket )
 			websocket.close();
 
 		var wsurl = 'ws://' + window.location.hostname + ':' + (parseInt(window.location.port) + 1) + '/';
-		console.log( 'wsurl="' + wsurl + '"' );
+		//var wsurl = 'ws://' + 'localhost' + ':' + (parseInt(window.location.port) + 1) + '/';
+		//console.log( 'wsurl="' + wsurl + '"' );
 		websocket = new window.WebSocket( wsurl );
 
 		websocket.onmessage = function( evt ) {
 			var msg = JSON.parse( evt.data );
-			if( msg.raceName == raceName ) {
+			if( msg.reference.raceName == raceName ) {
 				if( msg.cmd == 'ram' ) {
 					if( ProcessRAM(msg) )
 						PostMessageRefresh();
 					else {
 						if( !baselinePending ) {
-							ws.send( JSON.stringify({'cmd':'send_bsln', 'raceName':raceName}) );
+							websocket.send( JSON.stringify({'cmd':'send_baseline', 'raceName':raceName}) );
 							baselinePending = true;
 						}
 					}
 				}
-				else if( msg.cmd == 'bsln' )
+				else if( msg.cmd == 'baseline' )
 					if( ProcessBaseline(msg) )
 						PostMessageRefresh();
 			}
 		};
 		
 		websocket.onerror = function(e) {
-			console.log('WebSocket: ' + e);
+			console.log('WebSocket: ' + e.data);
 		};
 	}
 }
@@ -4046,9 +4055,11 @@ function GetRaceTMax() {
 	_raceTMax = 0.0;
 	for( var i = 0; i < resultsNums.length; ++i ) {
 		var d = data[resultsNums[i]];
-		var raceTimes = d['raceTimes'];
-		if( raceTimes.back() > _raceTMax )
-			_raceTMax = raceTimes.back();
+		if( d ) {		
+			var raceTimes = d['raceTimes'];
+			if( raceTimes.back() > _raceTMax )
+				_raceTMax = raceTimes.back();
+		}
 	}
 	return _raceTMax;
 }
@@ -4121,7 +4132,7 @@ function GetSituationGaps( t ) {
 	var maxLaps = 0;
 	for( var i = 0; i < resultsNums.length; ++i ) {
 		var d = data[resultsNums[i]];
-		if( d.raceTimes && d.raceTimes.length - 1 > maxLaps )
+		if( d && d.raceTimes && d.raceTimes.length - 1 > maxLaps )
 			maxLaps = d.raceTimes.length - 1;
 	}
 	
@@ -4144,7 +4155,7 @@ function GetSituationGaps( t ) {
 		var tMinLap = BigTime;
 		for( var i = 0; i < resultsNums.length; ++i ) {
 			var d = data[resultsNums[i]];
-			if( d.raceTimes.length > lap && d.raceTimes[lap] < tMinLap )
+			if( d && d.raceTimes.length > lap && d.raceTimes[lap] < tMinLap )
 				tMinLap = d.raceTimes[lap];
 		}
 		leaderRaceTimes.push( tMinLap );
@@ -4166,9 +4177,11 @@ function GetSituationGaps( t ) {
 	for( var i = 0; i < resultsNums.length; ++i ) {
 		var num = resultsNums[i];
 		var d = data[num];
-		gapLapsDown = GetLeaderGap( leaderPosition, leaderSpeed, leaderRaceTimes, d.raceTimes, t );
-		if( gapLapsDown != null && gapLapsDown.gap != null )
-			gaps.push( [gapLapsDown.gap, getInfo(num, gapLapsDown.lapsDown), num] );
+		if( d ) {
+			gapLapsDown = GetLeaderGap( leaderPosition, leaderSpeed, leaderRaceTimes, d.raceTimes, t );
+			if( gapLapsDown != null && gapLapsDown.gap != null )
+				gaps.push( [gapLapsDown.gap, getInfo(num, gapLapsDown.lapsDown), num] );
+		}
 	}
 	
 	gaps.sort( function(a, b) { return a[0] - b[0]; } );
@@ -5897,7 +5910,7 @@ function RefreshPayload() {
 				return;
 			}
 
-			var raceWasRunning = raceIsRunning;
+			raceWasRunning = raceIsRunning;
 			for( v in payload ) window[v] = payload[v]; payload = null;
 			
 			SetData( data, undefined );

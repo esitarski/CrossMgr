@@ -7,7 +7,7 @@ import copy
 import Utils
 import itertools
 import operator
-from datetime import timedelta
+from datetime import timedelta, datetime
 from collections import deque, defaultdict
 
 from ReadSignOnSheet import IgnoreFields, NumericFields, SyncExcelLink
@@ -916,9 +916,23 @@ def GetAnimationData( category=None, getExternalData=False ):
 
 def GetRaceName():
 	return Model.race.getFileName()[:-4]
-	
+
 versionCount = 0
-resultsBaseline = { 'cmd': 'bsln', 'versionCount': 0, 'raceName':'', 'categoryDetails':{}, 'info':{} }
+resultsBaseline = { 'cmd': 'baseline', 'categoryDetails':{}, 'info':{}, 'reference':{} }
+def getReferenceInfo():
+	race = Model.race
+	tLastRaceTime = race.lastRaceTime()
+	tNow = datetime.now()	
+	return {
+		'versionCount': versionCount,
+		'raceName': GetRaceName(),
+		'raceIsRunning': race.isRunning(),
+		'raceIsUnstarted': race.isUnstarted(),
+		'raceIsFinished': race.isFinished(),
+		'timestamp': [tNow.ctime(), tLastRaceTime],
+		'raceTimeZone': race.timezone,
+	}
+	
 def GetResultsRAM():
 	global versionCount, resultsBaseline
 	
@@ -928,28 +942,24 @@ def GetResultsRAM():
 	
 	categoryDetails = { c['name']:c for c in GetCategoryDetails(True, True) }
 	info = GetAnimationData( None, True )
-	raceStatus = 0 if race.isUnstarted() else (1 if race.isRunning() else 2)
 	raceName = GetRaceName()
 	
 	if (	resultsBaseline['info'] == info and
 			resultsBaseline['categoryDetails'] == categoryDetails and
-			resultsBaseline['raceStatus'] == raceStatus and
-			resultsBaseline['raceName']	== raceName
+			resultsBaseline['reference'].get('raceIsRunning',None) == race.isRunning() and
+			resultsBaseline['reference'].get('raceIsUnstarted',None) == race.isUnstarted() and
+			resultsBaseline['reference'].get('raceName',None) == raceName
 		):
 		return None
 
 	versionCount += 1
-	resultsBaseline['versionCount'] = versionCount
-	resultsBaseline['raceName']		= raceName
-	resultsBaseline['raceStatus']	= raceStatus
+	resultsBaseline['reference'] = getReferenceInfo()
 
 	ram = {
 		'cmd':			'ram',
-		'versionCount':	versionCount,
 		'categoryRAM':	Utils.dict_compare( categoryDetails, resultsBaseline['categoryDetails'] ),
 		'infoRAM':		Utils.dict_compare( info, resultsBaseline['info'] ),
-		'raceName':		resultsBaseline['raceName'],
-		'raceStatus':	resultsBaseline['raceStatus'],
+		'reference':    resultsBaseline['reference'],
 	}
 	
 	resultsBaseline['categoryDetails'] = categoryDetails
@@ -957,6 +967,7 @@ def GetResultsRAM():
 	return ram
 	
 def GetResultsBaseline():
+	resultsBaseline['reference'] = getReferenceInfo()
 	return resultsBaseline
 	
 @Model.memoize
