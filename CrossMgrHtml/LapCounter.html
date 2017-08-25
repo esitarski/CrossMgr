@@ -1,0 +1,187 @@
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<style>
+			* { margin:0; padding:0 }
+			html, body { width:100%; height:100%; }
+			canvas { display:block; }
+		</style>
+<script>
+	
+	
+function hex( n ) {
+	return ('0'+Number(n).toString(16)).slice(-2);
+}
+function color( r, g, b ) {
+	return '#' + hex(r) + hex(g) + hex(b);
+}
+	
+var lapCounts = null;
+function LapCounter( aCanvas ) {
+	this.canvas = aCanvas;
+	this.flashOn = false;
+	this.nTimer = 0;
+	this.labels = [['999',false],];
+	this.foregrounds = ['#FFFFFF','#FFFFFF','#FFFFFF','#FFFFFF'];
+	this.backgrounds = [color(16,16,16), color(34,139,34), color(235,155,0), color(147,112,219)];
+	
+	this.tessellate = function ( numLabels ) {
+		var width = this.canvas.width, height = this.canvas.height;
+		if( numLabels == 1 ) {
+			return [[0, 0, width, height]];
+		}
+		if( numLabels == 2 ) {
+			w = Math.floor(width / 2);
+			return [[0, 0, w, height], [w, 0, w, height]];
+		}
+		w = Math.floor(width / 2);
+		h = Math.floor(height / 2);
+		return [
+			[0, 0, w, h], [w, 0, w, h],
+			[0, h, w, h], [w, h, w, h],
+		]
+	}
+	
+	this.onResize = function() {
+		this.canvas.width = window.innerWidth;
+		this.canvas.height = window.innerHeight;
+		this.draw();
+	}
+
+	this.onTimer = function() {
+		this.flashOn = !this.flashOn;
+		this.draw();
+	}
+	
+	this.hasFlash = function() {
+		for( var i = 0; i < this.labels.length; ++i ) {
+			if( this.labels[i][1] ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	this.setLabels = function( labels ) {
+		labels = labels || [['999', false]];
+		
+		// labels is of the format [[label1, flash], [label2, flash]]
+		this.labels = labels.slice(0,4);
+		if( this.hasFlash() ) {
+			if( !this.nTimer ) {
+				this.nTimer = setInterval( this.onTimer.bind(this), 333 );
+				this.flashOn = true;
+			}
+		}
+		else {
+			if( this.nTimer ) {
+				clearInterval( this.nTimer );
+				this.nTimer = 0;
+			}
+		}
+		this.draw();
+	}
+
+	this.onRefresh = function( msg ) {
+		this.foregrounds = msg.foregrounds;
+		this.backgrounds = msg.backgrounds;
+		this.setLabels( msg.labels );
+	}
+	
+	this.draw = function() {
+		var dc = this.canvas.getContext('2d');
+		var width = this.canvas.width, height = this.canvas.height;
+
+		if( this.labels.length == 0 ) {
+			dc.fillStyle = '#000000';
+			dc.fillRect( 0, 0, width, height );
+			return;
+		}
+		
+		function getFontSizeToFit( dc, text, w, h ) {
+			w = Math.floor( w * 0.9 );
+			h = Math.floor( h * 0.9 );
+			var fontSize = h;
+			dc.font = 'bold ' + fontSize + "px Arial";
+			var wText = dc.measureText( text ).width;
+			if( wText > w ) {
+				fontSize *= w / wText;
+				dc.font = 'bold ' + fontSize + "px Arial";
+			}
+			return fontSize;
+		}
+		
+		function drawLapText( dc, label, colour, x, y, w, h ) {
+			var fontSize = getFontSizeToFit( dc, label, w, h );
+			var xText = x + w/2, yText = y + h / 2;
+			dc.textAlign = 'center';
+			dc.textBaseline = 'middle';
+			dc.fillStyle = '#000000';
+			var shadowOffset = fontSize/52;
+			dc.fillText( label, xText + shadowOffset, yText + shadowOffset );
+			dc.fillStyle = colour;
+			dc.fillText( label, xText, yText );
+		}
+		
+		var rects = this.tessellate(this.labels.length);
+		
+		var lineBorderWidth = 4;
+		for(var i = 0; i < this.labels.length; ++i ) {
+			var label = this.labels[i][0] + '', flash = this.labels[i][1];
+			var x = rects[i][0], y = rects[i][1], w = rects[i][2], h = rects[i][3];
+
+			dc.fillStyle = this.backgrounds[i];
+			dc.fillRect( x, y, w, h );
+			dc.lineWidth = lineBorderWidth;
+			dc.strokeStyle = '#000000';
+			dc.strokeRect( x, y, w, h );
+			
+			if( !flash || this.flashOn )
+				drawLapText( dc, label, this.foregrounds[i], x, y, w, h );
+		}
+	}
+	
+	this.setLabels( this.labels );
+}
+
+var websocket = null;
+function ResetWebSocket() {
+	if ("WebSocket" in window) {
+		if( websocket )
+			websocket.close();
+
+		var wsurl = 'ws://' + window.location.hostname + ':' + (parseInt(window.location.port) + 2) + '/';
+		//var wsurl = 'ws://' + 'localhost' + ':' + (parseInt(window.location.port) + 2) + '/';
+		//console.log( 'wsurl="' + wsurl + '"' );
+		websocket = new window.WebSocket( wsurl );
+
+		websocket.onmessage = function( evt ) {
+			var msg = JSON.parse( evt.data );
+			if( msg.cmd == 'refresh' ) {
+				lapCounter.onRefresh( msg );
+			}
+		};
+		
+		websocket.onerror = function(e) {
+			console.log('WebSocket: ' + e.data);
+		};
+	}
+}
+function CloseWebSocket() {
+	if( websocket )
+		websocket.close();
+	websocket = null;
+}
+
+function onLoad() {
+	lapCounter = new LapCounter( document.getElementById('lapCounter') );
+	window.addEventListener('resize', lapCounter.onResize.bind(lapCounter), false);
+	lapCounter.onResize();
+	ResetWebSocket();
+}
+</script>
+	</head>
+	<body onload="onLoad()">
+		<canvas id="lapCounter"></canvas>
+	</body>
+</html>

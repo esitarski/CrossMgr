@@ -955,6 +955,7 @@ class MainWin( wx.Frame ):
 		labels = labels or []
 		self.lapCounter.SetLabels( labels )
 		self.lapCounterDialog.page.SetLabels( labels )
+		WebServer.WsLapCounterRefresh()
 
 	def getValidNum( self, message, mustBeInRace=True, exclude=[] ):
 		race = Model.race

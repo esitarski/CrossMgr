@@ -53,6 +53,8 @@ with io.open( os.path.join(Utils.getImageFolder(), 'countdown.png'), 'rb' ) as f
 	CountdownIconSrc = "data:image/png;base64," + base64.b64encode( f.read() )
 with io.open( os.path.join(Utils.getImageFolder(), 'tt_start_list.png'), 'rb' ) as f:
 	StartListIconSrc = "data:image/png;base64," + base64.b64encode( f.read() )
+with io.open( os.path.join(Utils.getImageFolder(), 'lapcounter.png'), 'rb' ) as f:
+	LapCounterIconSrc = "data:image/png;base64," + base64.b64encode( f.read() )
 with io.open(os.path.join(Utils.getHtmlFolder(), 'Index.html'), encoding='utf-8') as f:
 	indexTemplate = Template( f.read() )
 
@@ -79,6 +81,11 @@ def getCurrentTTCountdownHtml():
 @syncfunc
 def getCurrentTTStartListHtml():
 	return Model.getCurrentTTStartListHtml()
+	
+with io.open(os.path.join(Utils.getHtmlFolder(), 'LapCounter.html'), encoding='utf-8') as f:
+	lapCounterTemplate = f.read()
+def getLapCounterHtml():
+	return lapCounterTemplate
 	
 def coreName( fname ):
 	return os.path.splitext(os.path.basename(fname).split('?')[0])[0].replace('_TTCountdown','').replace('_TTStartList','').strip('-')
@@ -243,6 +250,8 @@ class ContentBuffer( object ):
 				if g.isTimeTrial:
 					g.urlTTCountdown = urllib.pathname2url(os.path.splitext(fname)[0] + '_TTCountdown.html')
 					g.urlTTStartList = urllib.pathname2url(os.path.splitext(fname)[0] + '_TTStartList.html')
+				else:
+					g.urlLapCounter = urllib.pathname2url('LapCounter.html')
 				info.append( g )
 			
 			result['info'] = info
@@ -315,6 +324,7 @@ def getIndexPage( share=True ):
 		'QRCodeIconSrc':  QRCodeIconSrc,
 		'CountdownIconSrc': CountdownIconSrc,
 		'StartListIconSrc': StartListIconSrc,
+		'LapCounterIconSrc': LapCounterIconSrc,
 	} )
 	return indexTemplate.generate( **info )
 
@@ -348,6 +358,9 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 			elif up.path=='/favicon.ico':
 				content = favicon
 				content_type = 'image/x-icon'
+			elif up.path == '/LapCounter.html':
+				content = getLapCounterHtml()
+				content_type = self.html_content
 			elif up.path=='/qrcode.html':
 				urlPage = GetCrossMgrHomePage()
 				content = getQRCodePage( urlPage )
@@ -439,9 +452,8 @@ webThread = threading.Thread( target=WebServer, name='WebServer' )
 webThread.daemon = True
 webThread.start()
 
-#-------------------------------------------------------------------
-
 from websocket_server import WebsocketServer
+#-------------------------------------------------------------------
 
 def message_received(client, server, message):
 	msg = json.loads( message )
@@ -452,9 +464,9 @@ wsServer = None
 def WsServerLaunch():
 	global wsServer
 	while 1:
-		wsServer = WebsocketServer( port=PORT_NUMBER + 1, host='' )
-		wsServer.set_fn_message_received( message_received )
 		try:
+			wsServer = WebsocketServer( port=PORT_NUMBER + 1, host='' )
+			wsServer.set_fn_message_received( message_received )
 			wsServer.run_forever()
 		except Exception as e:
 			wsServer = None
@@ -510,6 +522,66 @@ def WsRefresh():
 			wsTimer.cancel()
 			wsTimer = threading.Timer( wsTimerDur, WsPost )
 			wsTimer.start()
+			
+#-------------------------------------------------------------------
+def GetLapCounterRefresh():
+	try:
+		return Utils.mainWin.lapCounter.GetState()
+	except:
+		return { 'cmd':'refresh', 'labels':[], 'foregrounds':[], 'backgrounds':[] }
+
+def lap_counter_new_client(client, server):
+	server.send_message( client, json.dumps(GetLapCounterRefresh()) )
+
+wsLapCounterServer = None
+def WsLapCounterServerLaunch():
+	global wsLapCounterServer
+	while 1:
+		try:
+			wsLapCounterServer = WebsocketServer( port=PORT_NUMBER + 2, host='' )
+			wsLapCounterServer.set_fn_new_client( lap_counter_new_client )
+			wsLapCounterServer.run_forever()
+		except Exception as e:
+			wsLapCounterServer = None
+			time.sleep( 5 )
+
+def WsLapCounterQueueListener( q ):
+	global wsLapCounterServer
+		
+	keepGoing = True
+	while keepGoing:
+		message = q.get()
+		cmd = message.get('cmd', None)
+		if cmd == 'refresh':
+			if wsLapCounterServer and wsLapCounterServer.clients:
+				wsLapCounterServer.send_message_to_all( json.dumps(message) )
+		elif cmd == 'exit':
+			keepGoing = False
+		q.task_done()
+	
+	wsLapCounterServer = None	
+
+wsLapCounterQ = Queue()
+wsLapCounterQThread = threading.Thread( target=WsLapCounterQueueListener, name='WsLapCounterQueueListener', args=(wsLapCounterQ,) )
+wsLapCounterQThread.daemon = True
+wsLapCounterQThread.start()
+
+wsLapCounterThread = threading.Thread( target=WsLapCounterServerLaunch, name='WsLapCounterServer' )
+wsLapCounterThread.daemon = True
+wsLapCounterThread.start()
+
+lastRaceName, lastMessage = None, None
+def WsLapCounterRefresh():
+	global lastRaceName, lastMessage
+	race = Model.race
+	if not (race and race.isRunning()):
+		return
+	if not (wsLapCounterServer and wsLapCounterServer.clients):
+		return
+	message, raceName = GetLapCounterRefresh(), GetRaceName()
+	if lastMessage != message or lastRaceName != raceName:
+		wsLapCounterQ.put( message )
+		lastMessage, lastRaceName = message, raceName
 			
 if __name__ == '__main__':
 	SetFileName( os.path.join('Gemma', '2015-11-10-A Men-r4-.html') )

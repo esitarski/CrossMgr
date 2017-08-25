@@ -149,6 +149,15 @@ class LapCounter( wx.Panel ):
 		self.xClick = 0
 		self.yClick = 0
 
+	def GetState( self ):
+		lenLabels = len(self.labels)
+		return {
+			'cmd': 'refresh',
+			'labels': self.labels,
+			'foregrounds': [c.GetAsString(wx.C2S_CSS_SYNTAX) for c in self.foregrounds[:lenLabels]],
+			'backgrounds': [c.GetAsString(wx.C2S_CSS_SYNTAX) for c in self.backgrounds[:lenLabels]],
+		}
+
 	def OnOptions( self, event ):
 		d = LapCounterOptions( self )
 		if d.ShowModal() == wx.ID_OK:
