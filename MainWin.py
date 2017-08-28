@@ -80,7 +80,7 @@ import Model
 import JChipSetup
 import JChipImport
 import RaceResultImport
-from JChip import EVT_CHIP_READER 
+import JChip
 import OrionImport
 import AlienImport
 import ImpinjImport
@@ -917,7 +917,7 @@ class MainWin( wx.Frame ):
 		
 		#------------------------------------------------------------------------------
 		self.Bind(wx.EVT_CLOSE, self.onCloseWindow)
-		self.Bind(EVT_CHIP_READER, self.handleChipReaderEvent)
+		self.Bind(JChip.EVT_CHIP_READER, self.handleChipReaderEvent)
 		self.lastPhotoTime = now()
 		
 		self.photoDialog = PhotoViewerDialog( self, title = _("PhotoViewer"), size=(600,400) )
@@ -3898,7 +3898,10 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 		
 		if not ChipReader.chipReaderCur.IsListening():
 			ChipReader.chipReaderCur.reset( race.chipReaderType )
-			ChipReader.chipReaderCur.StartListener( race.startTime )
+			ChipReader.chipReaderCur.StartListener(
+				race.startTime,
+				PORT=int(os.environ.get('JCHIP_REMOTE_PORT',JChip.DEFAULT_PORT)),
+			)
 			GetTagNums( True )
 		
 		data = ChipReader.chipReaderCur.GetData()
