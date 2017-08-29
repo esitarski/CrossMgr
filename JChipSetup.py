@@ -194,7 +194,7 @@ class JChipSetupDialog( wx.Dialog ):
 		selection = self.chipReaderType.GetSelection()
 		
 		if selection == 0:	# JChip/CrossMgrImpinj/CrossMgrAlien
-			self.port.SetValue( 53135 )
+			self.port.SetValue( JChip.DEFAULT_PORT )
 			self.port.SetEditable( False )
 			self.ipaddr.SetValue( Utils.GetDefaultHost() )
 			self.ipaddr.SetEditable( False )

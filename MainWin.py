@@ -3898,10 +3898,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 		
 		if not ChipReader.chipReaderCur.IsListening():
 			ChipReader.chipReaderCur.reset( race.chipReaderType )
-			ChipReader.chipReaderCur.StartListener(
-				race.startTime,
-				PORT=int(os.environ.get('JCHIP_REMOTE_PORT',JChip.DEFAULT_PORT)),
-			)
+			ChipReader.chipReaderCur.StartListener( race.startTime )
 			GetTagNums( True )
 		
 		data = ChipReader.chipReaderCur.GetData()

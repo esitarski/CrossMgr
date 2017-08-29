@@ -8,6 +8,7 @@ import atexit
 import math
 import subprocess
 import re
+import os
 import wx
 import wx.lib.newevent
 import Utils
@@ -44,7 +45,7 @@ def reset( raceDate = None ):
 	tSameCount = 0
 
 DEFAULT_HOST = '0.0.0.0'		# Listen to all available network cards on this computer.
-DEFAULT_PORT = 53135
+DEFAULT_PORT = int(os.environ.get('JCHIP_REMOTE_PORT',53135))
 
 q = None
 shutdownQ = None
