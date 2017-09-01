@@ -56,18 +56,21 @@ class ReadExcelXls( object ):
 			elif type == 3:
 				if isinstance(value, float) and value < 1.0:
 					t = value * (24.0*60.0*60.0)
-					if int(t + 0.000001) == int(t+1.0):
-						secs = int(t + 0.000001)
+					fract, secs = math.modf( t )
+					if fract >= 0.99999:
+						secs += 1.0
 						fract = 0.0
-					else:
-						fract, secs = math.modf( t )
-						if fract < 0.000000001:
-							fract = 0.0
-						secs = int(secs)
+					elif fract <= 0.00001:
+						fract = 0.0
+					
+					secs = int(secs)
 					if fract:
-						value = '%02d:%02d:%02d.%s' % ( secs // (60*60), (secs // 60) % 60, secs % 60, ('%.20f'%fract)[2:])
+						value = '{:02d}:{:02d}:{:02d}.{}'.format(
+							secs // (60*60), (secs // 60) % 60, secs % 60,
+							'{:.20f}'.format(fract)[2:],
+						)
 					else:
-						value = '%02d:%02d:%02d' % (secs // (60*60), (secs // 60) % 60, secs % 60)
+						value = '{:02d}:{:02d}:{:02d}'.format(secs // (60*60), (secs // 60) % 60, secs % 60)
 				else:
 					try:
 						datetuple = xlrd.xldate_as_tuple(value, self.book.datemode)
