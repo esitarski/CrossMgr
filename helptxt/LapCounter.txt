@@ -1,9 +1,11 @@
 [TOC]
 
 # Lap Counter and Countdown Timer
-Shows a __lap counter__, or a __countdown timer__ for the race.
+Shows a __lap counter__, or a __countdown timer__ for the race.  The lap counter flashes before it changes to draw attention to itself.
 
-For best effect:
+The Lap Counter is also available on a web page that can be displayed on any computer connected to the CrossMgr wifi.  See [Web][] for details on the web-based Lap Counter.
+
+Use:
 
 1. Create a separate __LapCounter__ screen from the __Windows__ menu.
 1. Drag the __LapCounter__ screen to separate monitor.
@@ -15,21 +17,21 @@ This is useful for Elimination races.
 
 ## Lap Counter Function
 
-The LapCounter function relies on CrossMgr's ability to predict the leader.  There are a few considerations:
+The LapCounter function relies on CrossMgr's ability to predict the leader.  Be default, it flips the lap counter 15 seconds before the leaders are expected.  There are a few considerations:
 
-1. Without any data, CrossMgr has no data to predict the first lap time.  The LapCounter will start working after the first data entry.  This means the leaders may not see anything on the lap counter for the first lap, if you are showing it.  This is fine in a timed Cyclo-cross race, but may an issue for MTB or Road races.
-1. If the first lap is a different distance than subsequent laps (due to a start area/run up), the LapCounter will not be correct until lap 3.  This is because CrossMgr has no timing information about lap 2 until the leader are timed.
+1. Without any data, CrossMgr has no method to predict the first lap time.  The LapCounter will start working after the first data entry.  This means the leader(s) will not see anything on the lap counter for the first lap, but all other riders will see the correct lap count.  This is fine in a timed Cyclo-cross race, but may an issue for MTB or Road races, especially with a small number of laps.
+1. If the first lap is a different distance than subsequent laps (due to a start area/run up), the LapCounter may not be correct until lap 3.  This is because CrossMgr has no timing information about lap 2 until the leaders are recorded.
 1. If the riders significantly speed up during a lap, they can get to the finish before CrossMgr expects them, and the lap counter will not have been changed early enough.
 
 To address (1) and (2), consider not showing the lap counter until the 2nd or 3rd lap of the race.  This also gives the riders some time to find their pace after the chaos of the first lap as riders establish themselves.
 
-Of course, if the race is shorter than 3 laps in its entirety, just bell the riders on their second lap.
+Of course, if the race is 2 laps, just bell the riders on their second lap.
 
 (3) generally only happens if the lap time is less than 3 minutes.  On longer lap times, rider's sprint and recovery intervals tend to cancel out and they stay closer to their average lap speed.  Riders also tend to slow down slightly lap-per-lap, so arriving earlier tends not to happen.
 
-For Cyclo-cross, MTB and Road races, the automatic lap counter should work well (with the exception of Cyclo-cross races with extremely short lap times - I have seen races with less than 4 minute lap times!).  The longer the lap time, the more in advance the lap counter can be flipped.  This also helps to solve the problem with riders arriving early, but can create a problem if some riders are just about to be lapped on their last lap.
+For Cyclo-cross, MTB and Road races longer than 2 laps, the automatic lap counter works fairly well.  The longer the lap time, the more in advance the lap counter can be flipped.  This also helps to solve the problem with riders arriving early, but can create a problem if some riders are just about to be lapped on their last lap.
 
-If the lap time is short and highly variable, like a criterium (especially with primes) or a track race, the automatic lap counter may not work well.   CrossMgr will by unable to predict the rider's tactics for fast-and-slow laps.
+If the lap time is short and highly variable, like a criterium (especially with primes) or a track race, the automatic lap counter may not work well.   CrossMgr will by unable to predict the rider's arrival times accurately.
 
 ## Countdown Timer Function
 

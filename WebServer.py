@@ -346,7 +346,8 @@ def WriteHtmlIndexPage():
 
 class CrossMgrHandler( BaseHTTPRequestHandler ):
 	html_content = 'text/html; charset=utf-8'
-	json_content = 'application/json';
+	json_content = 'application/json'
+	reLapCounterHtml = re.compile( r'^\/LapCounter\d*\.html$' )
 	
 	def do_GET(self):
 		up = urlparse.urlparse( self.path )		
@@ -358,7 +359,7 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 			elif up.path=='/favicon.ico':
 				content = favicon
 				content_type = 'image/x-icon'
-			elif up.path == '/LapCounter.html':
+			elif self.reLapCounterHtml.match( up.path ):
 				content = getLapCounterHtml()
 				content_type = self.html_content
 			elif up.path=='/qrcode.html':

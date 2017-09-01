@@ -34,6 +34,41 @@ __Publish and Share the Page with Race Attendees__
 
 That's it!
 
+## Web-based Lap Counters for Mass Start Races
+
+For Mass Start races, CrossMgr supports automatic Lap Counters for each start waves on course (see [LapCounter][] for details about automatic lap counter features).
+
+A web-based Lap Counter is also available from the web Index page.  The lap counter page receives message from CrossMgr's currently running race and changes accordingly.
+The same URL is used for all races, if you set up you lap counter displayes you  won't need to touch them again when new races start.  The LapCounter web page automatically changes laps exactly the same as the lap counter page in CrossMgr.
+
+The idea is that you would use a tablet or a computer with an LCD screen as a lap counter.  This device would be connected over wifi to the CrossMgr computer.  The Lap Counter(s) would automatically be flipped during the race.
+
+### Multiple Monitors
+
+You can use multiple monitors, each showing one lap count of each start wave.
+
+By default, the Lap Counter web page shows multiple lap counters on the same screen (max of 4).
+
+To configure a display to show one, two or any combination of lap couters, click anywhere on the Lap Counter web page.
+
+When the Prompt appears, enter text indicating of the lap counters you want to show.
+For example:
+
+* If you enter "1", only the first lap counter will be displayed.
+* If you entery "12" only the first lap counters will be displayed.
+* If you entery "34" only the last lap counters will be displayed.
+
+The following are valid:
+
+* 1, 2, 3, 4
+* 12, 34, 23, 14
+* 123, 234, 124
+* 1234 or blank
+
+To check how a display is currently configured, look at the web page URL.  The counters displayed are just before the .html in the LapCounter url.
+
+If there is no start wave corresponding to a LapCounter display number (or the leader has not come around yet to register a lap), that LapCounter web page will show a black screen to conserve power.
+
 ## Time Trials and the TT Countdown page.
 
 For Time Trials, a live countdown page is available from the Index page.
