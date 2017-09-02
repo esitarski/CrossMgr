@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 	<head>
 		<meta charset="UTF-8">
@@ -176,8 +177,10 @@ function LapCounter( aCanvas ) {
 var websocket = null;
 function ResetWebSocket() {
 	if ("WebSocket" in window) {
-		if( websocket )
+		if( websocket && websocket.readyState != websocket.CLOSED ) {
 			websocket.close();
+			websocket = null;
+		}
 
 		var wsurl = 'ws://' + window.location.hostname + ':' + (parseInt(window.location.port) + 2) + '/';
 		//var wsurl = 'ws://' + 'localhost' + ':' + (parseInt(window.location.port) + 2) + '/';
@@ -192,7 +195,8 @@ function ResetWebSocket() {
 		};
 		
 		websocket.onerror = function(e) {
-			console.log('WebSocket: ' + e.data);
+			console.log('WebSocket: Error.  Attempting reconnect in 5 seconds...');
+			setTimeout( ResetWebSocket, 5000 );
 		};
 	}
 }

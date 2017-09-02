@@ -3137,6 +3137,7 @@ class MainWin( wx.Frame ):
 		Model.setRace( race )
 		self.fileName = fName
 		WebServer.SetFileName( self.fileName )
+		self.updateRecentFiles()
 		
 		race.isTimeTrial = isTimeTrial
 		race.enableUSBCamera = True
@@ -3184,8 +3185,6 @@ class MainWin( wx.Frame ):
 			race.setCategories( categories )
 			self.lapTimes = [(t + race.getStartOffset(num), num) for t, num in self.lapTimes]
 
-		self.writeRace()
-		
 		# Create an Excel rider data file.
 		riderInfo = getattr( self, 'riderInfo', None )
 		if not riderInfo:
@@ -3238,6 +3237,7 @@ class MainWin( wx.Frame ):
 				rider.firstTime = 0.0
 			'''
 
+		self.writeRace()
 		OutputStreamer.writeRaceStart()
 		if race.isTimeTrial:
 			self.menuPublishHtmlTTStart()

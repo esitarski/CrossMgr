@@ -120,7 +120,6 @@ class API():
     def send_message_to_all(self, msg):
         self._multicast_(msg)
 
-
 # ------------------------- Implementation -----------------------------
 
 class WebsocketServer(ThreadingMixIn, TCPServer, API):
@@ -157,7 +156,12 @@ class WebsocketServer(ThreadingMixIn, TCPServer, API):
 		TCPServer.__init__(self, (host, port), WebSocketHandler)
 
 	def _message_received_(self, handler, msg):
-		self.message_received(self.handler_to_client(handler), self, msg)
+		try:
+			client = self.handler_to_client(handler)
+		except KeyError:
+			self._client_left( handler )
+			return			
+		self.message_received(client, self, msg)
 
 	def _ping_received_(self, handler, msg):
 		handler.send_pong(msg)
@@ -171,7 +175,12 @@ class WebsocketServer(ThreadingMixIn, TCPServer, API):
 		self.new_client( self.handler_to_client(handler), self )
 
 	def _client_left_(self, handler):
-		self.client_left(self.handler_to_client(handler), self)
+		try:
+			client = self.handler_to_client(handler)
+		except KeyError:
+			client = None
+		if client:
+			self.client_left(client, self)
 		self.clients.pop(handler, None)
 
 	def _unicast_(self, to_client, msg):

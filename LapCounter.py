@@ -9,6 +9,19 @@ import Utils
 from GetResults import GetResults
 
 defaultBackgroundColours = [wx.Colour(16,16,16), wx.Colour(34,139,34), wx.Colour(235,155,0), wx.Colour(147,112,219)]
+def getForegroundsBackgrounds():
+	race = Model.race
+	foregrounds, backgrounds = [], []
+	for i in xrange(len(defaultBackgroundColours)):
+		try:
+			foregrounds.append( Utils.colorFromStr(race.lapCounterForegrounds[i]) )
+		except (IndexError, AttributeError):
+			foregrounds.append( wx.WHITE )
+		try:
+			backgrounds.append( Utils.colorFromStr(race.lapCounterBackgrounds[i]) )
+		except (IndexError, AttributeError):
+			backgrounds.append( defaultBackgroundColours[i] )
+	return foregrounds, backgrounds
 
 def getLapCounterOptions( isDialog ):
 	parentClass = wx.Dialog if isDialog else wx.Panel
@@ -32,14 +45,16 @@ def getLapCounterOptions( isDialog ):
 			fgs.Add( self.counterType )
 			
 			fgs.Add( wx.StaticText(self, label=_('Foregrounds')), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-			self.foregrounds = [csel.ColourSelect(self, colour=wx.WHITE, size=(40,-1)) for i in xrange(4)]
+			self.foregrounds = [csel.ColourSelect(self, colour=wx.WHITE, size=(40,-1))
+				for i in xrange(len(defaultBackgroundColours))]
 			hs = wx.BoxSizer( wx.HORIZONTAL )
 			for i, cs in enumerate(self.foregrounds):
 				hs.Add( cs, flag=wx.LEFT, border=4 if i else 0 )
 			fgs.Add( hs )
 			
 			fgs.Add( wx.StaticText(self, label=_('Backgrounds')), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-			self.backgrounds = [csel.ColourSelect(self, size=(40,-1), colour=defaultBackgroundColours[i]) for i in xrange(4)]
+			self.backgrounds = [csel.ColourSelect(self, size=(40,-1), colour=defaultBackgroundColours[i])
+				for i in xrange(len(defaultBackgroundColours))]
 			hs = wx.BoxSizer( wx.HORIZONTAL )
 			for i, cs in enumerate(self.backgrounds):
 				hs.Add( cs, flag=wx.LEFT, border=4 if i else 0 )
@@ -81,26 +96,23 @@ def getLapCounterOptions( isDialog ):
 		def commit( self ):
 			race = Model.race
 			if race:
-				race.lapCounterForegrounds = [self.foregrounds[i].GetColour().GetAsString(wx.C2S_HTML_SYNTAX) for i in xrange(4)]
-				race.lapCounterBackgrounds = [self.backgrounds[i].GetColour().GetAsString(wx.C2S_HTML_SYNTAX) for i in xrange(4)]
+				race.lapCounterForegrounds = [self.foregrounds[i].GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
+					for i in xrange(len(defaultBackgroundColours))]
+				race.lapCounterBackgrounds = [self.backgrounds[i].GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
+					for i in xrange(len(defaultBackgroundColours))]
 				race.lapCounterCycle = self.lapCounterCycle.GetValue() or None
 				race.countdownTimer = (self.counterType.GetSelection() == 1)
 				race.secondsBeforeLeaderToFlipLapCounter = self.slider.GetValue()
-			
+		
 		def refresh( self ):
 			race = Model.race
 			if race:
 				self.counterType.SetSelection( 1 if race.countdownTimer else 0 )
 				
-				for i in xrange(4):
-					try:
-						self.foregrounds[i].SetColour( Utils.colorFromStr(race.lapCounterForegrounds[i]) )
-					except:
-						self.foregrounds[i].SetColour( wx.WHITE )
-					try:
-						self.backgrounds[i].SetColour( Utils.colorFromStr(race.lapCounterBackgrounds[i]) )
-					except:
-						self.backgrounds[i].SetColour( defaultBackgroundColours[i] )
+				fg, bg = getForegroundsBackgrounds()
+				for i in xrange(len(defaultBackgroundColours)):
+					self.foregrounds[i].SetColour( fg[i] )
+					self.backgrounds[i].SetColour( bg[i] )
 				
 				self.lapCounterCycle.SetValue( race.lapCounterCycle or None )
 				self.slider.SetValue( race.secondsBeforeLeaderToFlipLapCounter )
@@ -143,7 +155,7 @@ class LapCounter( wx.Panel ):
 		self.SetCursor( wx.Cursor(wx.CURSOR_RIGHT_BUTTON) )
 		self.SetBackgroundColour( wx.BLACK )
 		self.SetForegroundColour( wx.GREEN )
-		self.foregrounds = [wx.WHITE] * 4
+		self.foregrounds = [wx.WHITE] * len(defaultBackgroundColours)
 		self.backgrounds = list(defaultBackgroundColours)
 		
 		self.xClick = 0
@@ -151,11 +163,12 @@ class LapCounter( wx.Panel ):
 
 	def GetState( self ):
 		lenLabels = len(self.labels)
+		fg, bg = getForegroundsBackgrounds()
 		return {
 			'cmd': 'refresh',
 			'labels': self.labels,
-			'foregrounds': [c.GetAsString(wx.C2S_CSS_SYNTAX) for c in self.foregrounds[:lenLabels]],
-			'backgrounds': [c.GetAsString(wx.C2S_CSS_SYNTAX) for c in self.backgrounds[:lenLabels]],
+			'foregrounds': [c.GetAsString(wx.C2S_CSS_SYNTAX) for c in fg[:lenLabels]],
+			'backgrounds': [c.GetAsString(wx.C2S_CSS_SYNTAX) for c in bg[:lenLabels]],
 		}
 
 	def OnOptions( self, event ):
@@ -392,20 +405,10 @@ class LapCounter( wx.Panel ):
 	
 	def refresh( self ):
 		race = Model.race
+		self.foregrounds, self.backgrounds = getForegroundsBackgrounds()
+		
 		if race:
 			self.SetCountdownTimer( race.countdownTimer )
-			self.foregrounds = []
-			self.backgrounds = []
-			for i in xrange(4):
-				try:
-					self.foregrounds.append( Utils.colorFromStr(race.lapCounterForegrounds[i]) )
-				except (IndexError, AttributeError):
-					self.foregrounds.append( wx.WHITE )
-				try:
-					self.backgrounds.append( Utils.colorFromStr(race.lapCounterBackgrounds[i]) )
-				except (IndexError, AttributeError):
-					self.backgrounds.append( defaultBackgroundColours[i] )
-
 			self.SetForegroundColour( self.foregrounds[0] )
 			self.SetBackgroundColour( self.backgrounds[0] )
 			self.lapCounterCycle = race.lapCounterCycle or None
