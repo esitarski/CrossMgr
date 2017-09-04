@@ -175,7 +175,17 @@ function LapCounter( aCanvas ) {
 }
 
 var websocket = null;
+var timeoutID = null;
+function RetryResetWebSocket() {
+	if( timeoutID === null )
+		timeoutID = setTimeout( ResetWebSocket, 5000 );
+}
 function ResetWebSocket() {
+	if( timeoutID !== null ) {
+		clearTimeout( timeoutID );
+		timeoutID = null;
+	}
+
 	if ("WebSocket" in window) {
 		if( websocket && websocket.readyState != websocket.CLOSED ) {
 			websocket.close();
@@ -195,8 +205,13 @@ function ResetWebSocket() {
 		};
 		
 		websocket.onerror = function(e) {
-			console.log('WebSocket: Error.  Attempting reconnect in 5 seconds...');
-			setTimeout( ResetWebSocket, 5000 );
+			console.log('WebSocket: Error.  Scheduling reconnect in 5 seconds...');
+			RetryResetWebSocket();
+		};
+		
+		websocket.onclose = function(e) {
+			console.log('WebSocket: Closed.  Scheduling reconnect in 5 seconds...');
+			RetryResetWebSocket();
 		};
 	}
 }

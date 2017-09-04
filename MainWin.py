@@ -3092,6 +3092,7 @@ class MainWin( wx.Frame ):
 		race.organizer = 'Edward Sitarski'
 		race.memo = ''
 		race.simulation = True	# Flag this as a simulation race.
+		ApplyDefaultTemplate( race )
 		
 		fName = os.path.join( simulationDir, race.getFileName() )
 		dlg = SimulateDialog( self, fName )
