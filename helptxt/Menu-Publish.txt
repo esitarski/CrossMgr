@@ -33,6 +33,8 @@ Prints a summary of the Categories with number of laps and number ranges.  This 
 
 This brings up a dialog that allows you to publish results in many formats.  __Batch Publish__ will update all the output file formats simultaneously so they are synchronized.  All output files are written to the same folder as the race file.
 
+You can also generate individual output files by pressing the __Test__button.  __Test__ will also open the application associated with the generated file (Excel for .xlsx, your browser for .html, etc.).
+
 Some files have the option to publish with FTP to a remote server, allowing results to be published to a web site.  You need to configure the connection details of the remote FTP server to make this work (see [Properties][]).
 
 ### HTML
@@ -81,55 +83,6 @@ Publish the results in pdf format.
 
 ### Excel
 Publish the results in Excel format, one category per sheet.
-
-### Details, Logic and Example of Live Results:
-
-Publishing results during a race does not slow down or lock up CrossMgr even if it loses the connection with the FTP server or the publish fails.  This is because publishing is run in a separate background thread.  You will not notice it is happening.
-
-Results are published with FTP in a way that balances response time with bandwidth.
-
-You will see a publish latency of 4 seconds after each group passes the line, and no updates when there are no events.
-The latency will increase when riders get strung out, to a maximum of 32 seconds.
-
-The update logic was inspired by [exponential-backoff](http://en.wikipedia.org/wiki/Exponential_backoff), also used in TCP/IP.
-The idea is to minimize bandwidth and while while maximizing response time.
-
-An update timer is triggered when a rider's time is entered.  If all riders are on the back side of the course and there is no data input, no update will occur.
-
-A time entry (manual or chip) starts a timer.  When the timer fires, CrossMgr does the FTP upload.
-Additional time entries recorded while the timer is running are included in the upload.  The FTP publish time is recorded - let's call this the __LastPublishTime__.
-
-Initially, the timer interval is 4 seconds - let's call this the __TimerInterval__.
-
-Now, let's consider the next time entry - call it __T__.
-
-* If the timer is running:
-    * Do nothing - __T__ will be included when the timer fires.
-* Else, the timer is not running:
-    * If __T__ > __LastPublishTime__ + __TimerInterval__, then set __TimerInterval__ = 4
-    * Else set __TimerInterval__ = min(__TimerInterval__ * 2, 32)
-    * Start the timer
-
-In short, if the gap from the last update exceeds the last __TimerInterval__, reset it to 4.
-If the gap does not exceed the last __TimerInterval__, double it to a max of 32 seconds.
-
-For example, say the lap time is 5 minutes, and the bunch is all together on the first lap.
-The first rider in the bunch crosses the line and triggers the 4 second timer.  While the timer is running, the rest of the group crosses the line and is recorded.  After 4 seconds, the upload runs and includes the times of all riders.
-
-This is superior to publishing on a fixed schedule like every 30 or 60 seconds.  On a fixed schedule, bandwidth is wasted if nothing changed.  Worse, the results might not be updated for a full interval after some action.
-For example, if a new rider takes the lead, the update might take as long as 60 seconds to publish.
-This can feel like a very long time - especially if you are the race announcer.
-
-Back to our example.  Say a break develops with a gap of 10 seconds.  An update will occur 4 seconds after the break, then 4 seconds after the group.  The timer is reset between the groups because the gap time (10 seconds) exceeds the timer interval (4 seconds).
-
-Say the break increases to 30 seconds and a chase group forms 10 seconds after that.  No problem - the logic will now do three publishes, each 4 seconds after the break, group and the bunch respectively.
-
-Say the bunch now splits up with a line of stragglers, and the whole race now takes 2 minutes to pass the finish line.  We will see an update 4 seconds after the break, then 4 seconds after the chase group, then 4 seconds after the beginning of the bunch, then 8 seconds for the following stragglers, then 16 seconds, then 32 seconds (repeating) as all the stragglers go by.
-
-When the leaders return, the timer will reset back to 4 seconds because the gap between the last bunch rider and the leaders exceeds 32 seconds.
-
-This approach follows race activity - no activity - no publish.
-If riders are so strung out that there are no discernible groups, it backs off to sending an update every 32 seconds - like a fixed-interval approach.
 
 ### CrossResults.com
 Creates a CrossResults.com compatible file.  Only Categories flagged as __Upload__ will be considered.
@@ -192,5 +145,52 @@ Substitution|Description
 %*         |Inserts all the published file names.
 {=Value}    |Inserts a [Properties][] Notes value, for example {=Name}, {=RaceDate}
 
+### Details, Logic and Example of Live Results:
 
+Publishing results during a race does not slow down or lock up CrossMgr even if it loses the connection with the FTP server or the publish fails.  This is because publishing is run in a separate background thread.  You will not notice it is happening.
+
+Results are published with FTP in a way that balances response time with bandwidth.
+
+You will see a publish latency of 4 seconds after each group passes the line, and no updates when there are no events.
+The latency will increase when riders get strung out, to a maximum of 32 seconds.
+
+The update logic was inspired by [exponential-backoff](http://en.wikipedia.org/wiki/Exponential_backoff), also used in TCP/IP.
+The idea is to minimize bandwidth and while while maximizing response time.
+
+An update timer is triggered when a rider's time is entered.  If all riders are on the back side of the course and there is no data input, no update will occur.
+
+A time entry (manual or chip) starts a timer.  When the timer fires, CrossMgr does the FTP upload.
+Additional time entries recorded while the timer is running are included in the upload.  The FTP publish time is recorded - let's call this the __LastPublishTime__.
+
+Initially, the timer interval is 4 seconds - let's call this the __TimerInterval__.
+
+Now, let's consider the next time entry - call it __T__.
+
+* If the timer is running:
+    * Do nothing - __T__ will be included when the timer fires.
+* Else, the timer is not running:
+    * If __T__ > __LastPublishTime__ + __TimerInterval__, then set __TimerInterval__ = 4
+    * Else set __TimerInterval__ = min(__TimerInterval__ * 2, 32)
+    * Start the timer
+
+In short, if the gap from the last update exceeds the last __TimerInterval__, reset it to 4.
+If the gap does not exceed the last __TimerInterval__, double it to a max of 32 seconds.
+
+For example, say the lap time is 5 minutes, and the bunch is all together on the first lap.
+The first rider in the bunch crosses the line and triggers the 4 second timer.  While the timer is running, the rest of the group crosses the line and is recorded.  After 4 seconds, the upload runs and includes the times of all riders.
+
+This is superior to publishing on a fixed schedule like every 30 or 60 seconds.  On a fixed schedule, bandwidth is wasted if nothing changed.  Worse, the results might not be updated for a full interval after some action.
+For example, if a new rider takes the lead, the update might take as long as 60 seconds to publish.
+This can feel like a very long time - especially if you are the race announcer.
+
+Back to our example.  Say a break develops with a gap of 10 seconds.  An update will occur 4 seconds after the break, then 4 seconds after the group.  The timer is reset between the groups because the gap time (10 seconds) exceeds the timer interval (4 seconds).
+
+Say the break increases to 30 seconds and a chase group forms 10 seconds after that.  No problem - the logic will now do three publishes, each 4 seconds after the break, group and the bunch respectively.
+
+Say the bunch now splits up with a line of stragglers, and the whole race now takes 2 minutes to pass the finish line.  We will see an update 4 seconds after the break, then 4 seconds after the chase group, then 4 seconds after the beginning of the bunch, then 8 seconds for the following stragglers, then 16 seconds, then 32 seconds (repeating) as all the stragglers go by.
+
+When the leaders return, the timer will reset back to 4 seconds because the gap between the last bunch rider and the leaders exceeds 32 seconds.
+
+This approach follows race activity - no activity - no publish.
+If riders are so strung out that there are no discernible groups, it backs off to sending an update every 32 seconds - like a fixed-interval approach.
 
