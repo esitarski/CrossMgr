@@ -2333,6 +2333,10 @@ function isCurrentResults() {
 	return window.location.href.indexOf("CurrentResults.html") >= 0;
 }
 
+function isPreviousResults() {
+	return window.location.href.indexOf("PreviousResults.html") >= 0;
+}
+
 var versionCount = 0;
 function ProcessRAM( msg ) {
 	if( !isCurrentResults() ) {
@@ -2418,7 +2422,7 @@ function ResetWebSocket() {
 				console.log( evt.data );
 				return;
 			}
-			if( isCurResults || msg.reference.raceName == raceName ) {
+			if( msg.reference.raceName == raceName || isCurResults ) {
 				if( msg.cmd == 'ram' ) {
 					if( ProcessRAM(msg) )
 						PostMessageRefresh();
@@ -2429,9 +2433,13 @@ function ResetWebSocket() {
 						}
 					}
 				}
-				else if( msg.cmd == 'baseline' )
+				else if( msg.cmd == 'baseline' ) {
 					if( ProcessBaseline(msg) )
 						PostMessageRefresh();
+				}
+			}
+			else if( msg.cmd == 'reload_previous' && isPreviousResults() ) {
+				RefreshPayload();
 			}
 		};
 		

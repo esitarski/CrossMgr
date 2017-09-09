@@ -266,6 +266,25 @@ def SetFileName( fname ):
 		fname = os.path.splitext(fname)[0] + '.html'
 	q.put( {'cmd':'fileName', 'fileName':fname} )
 
+def GetPreviousFileName():
+	file = None
+	try:
+		fnameCur = os.path.splitext(Model.race.getFileName())[0] + '.html'
+	except:
+		fnameCur = None
+	
+	files = contentBuffer._getFiles()
+	try:
+		file = files[files.index(fnameCur)-1]
+	except:
+		pass
+	if file is None:
+		try:
+			file = files[-1]
+		except:
+			pass
+	return file
+	
 def getQRCodePage( urlPage ):
 	qr = QRCode()
 	qr.add_data( urlPage )
@@ -383,21 +402,7 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 						pass
 				
 				elif up.path == '/PreviousResults.html':
-					try:
-						fnameCur = os.path.splitext(Model.race.getFileName())[0] + '.html'
-					except:
-						fnameCur = None
-					
-					files = contentBuffer._getFiles()
-					try:
-						file = files[files.index(fnameCur)-1]
-					except:
-						pass
-					if file is None:
-						try:
-							file = files[-1]
-						except:
-							pass
+					file = GetPreviousFileName()
 				
 				if file is None: 
 					file = urllib.url2pathname(os.path.basename(up.path))
@@ -505,12 +510,10 @@ def WsQueueListener( q ):
 	keepGoing = True
 	while keepGoing:
 		message = q.get()
-		cmd = message.get('cmd', None)
-		if cmd == 'ram' or cmd == 'baseline':
-			if wsServer and wsServer.hasClients():
-				wsServer.send_message_to_all( json.dumps(message) )
-		elif cmd == 'exit':
+		if message.get('cmd', None) == 'exit':
 			keepGoing = False
+		elif wsServer and wsServer.hasClients():
+			wsServer.send_message_to_all( json.dumps(message) )
 		q.task_done()
 	
 	wsServer = None	
@@ -537,7 +540,10 @@ def WsPost():
 		wsTimer.cancel()
 		wsTimer = None
 
-def WsRefresh( baseline = False ):
+def WsRefresh( baseline=False, updatePrevious=False ):
+	if updatePrevious:
+		wsQ.put( {'cmd':'reload_previous'} )
+		return
 	if baseline:
 		wsQ.put( GetResultsBaseline() )
 		return

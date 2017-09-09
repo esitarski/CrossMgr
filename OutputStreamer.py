@@ -10,6 +10,7 @@ from Queue import Queue, Empty
 import Utils
 import Model
 from GetResults import ResetVersionRAM
+from WebServer import WsRefresh
 
 q = None
 streamer = None
@@ -116,6 +117,7 @@ def writeRaceStart( t = None ):
 	if streamer:
 		q.put( 'start,{}\n'.format(t.isoformat()) )
 	ResetVersionRAM()
+	WsRefresh( updatePrevious = True )
 
 def writeRaceFinish( t = None ):
 	if t is None:
