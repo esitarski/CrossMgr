@@ -374,7 +374,33 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 				)
 				content_type = self.json_content;
 			else:
-				file = urllib.url2pathname(os.path.basename(up.path))
+				file = None
+				
+				if up.path == '/CurrentResults.html':
+					try:
+						file = os.path.splitext(Model.race.getFileName())[0] + '.html'
+					except:
+						pass
+				
+				elif up.path == '/PreviousResults.html':
+					try:
+						fnameCur = os.path.splitext(Model.race.getFileName())[0] + '.html'
+					except:
+						fnameCur = None
+					
+					files = contentBuffer._getFiles()
+					try:
+						file = files[files.index(fnameCur)-1]
+					except:
+						pass
+					if file is None:
+						try:
+							file = files[-1]
+						except:
+							pass
+				
+				if file is None: 
+					file = urllib.url2pathname(os.path.basename(up.path))
 				content, gzip_content = contentBuffer.getContent( file )
 				content_type = self.html_content
 		except Exception as e:
@@ -458,7 +484,7 @@ from websocket_server import WebsocketServer
 
 def message_received(client, server, message):
 	msg = json.loads( message )
-	if msg['cmd'] == 'send_baseline' and msg['raceName'] == GetRaceName():
+	if msg['cmd'] == 'send_baseline' and (msg['raceName'] == 'CurrentResults' or msg['raceName'] == GetRaceName()):
 		server.send_message( client, json.dumps(GetResultsBaseline()) )
 
 wsServer = None
@@ -480,8 +506,8 @@ def WsQueueListener( q ):
 	while keepGoing:
 		message = q.get()
 		cmd = message.get('cmd', None)
-		if cmd == 'ram':
-			if wsServer and wsServer.clients:
+		if cmd == 'ram' or cmd == 'baseline':
+			if wsServer and wsServer.hasClients():
 				wsServer.send_message_to_all( json.dumps(message) )
 		elif cmd == 'exit':
 			keepGoing = False
@@ -500,10 +526,10 @@ wsThread.start()
 
 wsTimer = None
 wsTimerDur = None
-wsTimerDurMax = 3
+wsTimerDurMax = 4
 def WsPost():
 	global wsTimer
-	if wsServer.clients:
+	if wsServer.hasClients():
 		ram = GetResultsRAM()
 		if ram:
 			wsQ.put( ram )
@@ -511,10 +537,14 @@ def WsPost():
 		wsTimer.cancel()
 		wsTimer = None
 
-def WsRefresh():
+def WsRefresh( baseline = False ):
+	if baseline:
+		wsQ.put( GetResultsBaseline() )
+		return
+	
 	global wsTimer, wsTimerDur
 	if not wsTimer:
-		wsTimerDur = 0.5
+		wsTimerDur = 1.0
 		wsTimer = threading.Timer( wsTimerDur, WsPost )
 		wsTimer.start()
 	else:
@@ -554,7 +584,7 @@ def WsLapCounterQueueListener( q ):
 		message = q.get()
 		cmd = message.get('cmd', None)
 		if cmd == 'refresh':
-			if wsLapCounterServer and wsLapCounterServer.clients:
+			if wsLapCounterServer and wsLapCounterServer.hasClients():
 				wsLapCounterServer.send_message_to_all( json.dumps(message) )
 		elif cmd == 'exit':
 			keepGoing = False
@@ -577,7 +607,7 @@ def WsLapCounterRefresh():
 	race = Model.race
 	if not (race and race.isRunning()):
 		return
-	if not (wsLapCounterServer and wsLapCounterServer.clients):
+	if not (wsLapCounterServer and wsLapCounterServer.hasClients()):
 		return
 	message, raceName = GetLapCounterRefresh(), GetRaceName()
 	if lastMessage != message or lastRaceName != raceName:

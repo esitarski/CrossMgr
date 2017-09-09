@@ -1398,6 +1398,7 @@ class MainWin( wx.Frame ):
 		race = Model.race
 		self.menuNewNext( event )
 		Model.race.startRaceNow()
+		ResetVersionRAM()
 		self.playback = Playback( bibTimes, lambda: wx.CallAfter(NonBusyCall(self.refresh)) )
 		self.playback.start()
 		self.showPageName( _('Chart') )
@@ -3801,6 +3802,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 	def refreshCurrentPage( self ):
 		self.callPageRefresh( self.notebook.GetSelection() )
 		self.refreshWindows()
+		WebServer.WsRefresh()
 
 	def refresh( self ):
 		self.refreshCurrentPage()

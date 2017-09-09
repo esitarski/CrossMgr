@@ -9,7 +9,7 @@ from Queue import Queue, Empty
 
 import Utils
 import Model
-from WebServer import WsRefresh
+from GetResults import ResetVersionRAM
 
 q = None
 streamer = None
@@ -115,7 +115,7 @@ def writeRaceStart( t = None ):
 		StartStreamer()
 	if streamer:
 		q.put( 'start,{}\n'.format(t.isoformat()) )
-	WsRefresh()
+	ResetVersionRAM()
 
 def writeRaceFinish( t = None ):
 	if t is None:
@@ -130,7 +130,6 @@ def writeRaceFinish( t = None ):
 	if streamer:
 		q.put( 'end,{}\n'.format(t.isoformat()) )
 		q.put( terminateMessage )
-	WsRefresh()
 
 def writeNumTime( num, t ):
 	if not streamer:
@@ -139,7 +138,6 @@ def writeNumTime( num, t ):
 	# Convert race time to days for Excel.  Also include quoted HH:MM:SS.ddd time format for convenience.
 	if streamer:
 		q.put( 'time,{},{:.15e},"{}"\n'.format(num, t / DaySeconds, formatTimeHHMMSS(t)) )
-	WsRefresh()
 		
 def writeNumTimes( numTimes ):
 	if not streamer:
@@ -151,7 +149,6 @@ def writeNumTimes( numTimes ):
 			q.put( 'time,{:d},{:.15e},"{}"\n'.format(num, t / DaySeconds, formatTimeHHMMSS(t)) )
 	else:
 		Utils.writeLog( 'writeNumTimes failure: numTimes={}'.format(numTimes) )
-	WsRefresh()
 
 def ReadStreamFile( fname = None ):
 	if not fname:

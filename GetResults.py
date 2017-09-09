@@ -917,9 +917,11 @@ def GetAnimationData( category=None, getExternalData=False ):
 def GetRaceName():
 	return Model.race.getFileName()[:-4]
 
-versionCount = 0
+versionCountStart = 10000
+versionCount = versionCountStart
 resultsBaseline = { 'cmd': 'baseline', 'categoryDetails':{}, 'info':{}, 'reference':{} }
 def getReferenceInfo():
+	global versionCount
 	race = Model.race
 	tLastRaceTime = race.lastRaceTime()
 	tNow = datetime.now()	
@@ -932,6 +934,14 @@ def getReferenceInfo():
 		'timestamp': [tNow.ctime(), tLastRaceTime],
 		'raceTimeZone': race.timezone,
 	}
+
+def ResetVersionRAM():
+	global versionCountStart, versionCount
+	# If we decrease the versionCountStart, nothing can have a version + 1.
+	versionCountStart -= 100
+	if versionCountStart <= 0:
+		versionCountStart = 10000
+	versionCount = versionCountStart
 	
 def GetResultsRAM():
 	global versionCount, resultsBaseline

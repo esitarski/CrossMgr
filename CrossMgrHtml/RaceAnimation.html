@@ -2329,10 +2329,16 @@ function SyncMsgPayload( msg ) {
 		window[f] = msg.reference[f];
 }
 
+function isCurrentResults() {
+	return window.location.href.indexOf("CurrentResults.html") >= 0;
+}
+
 var versionCount = 0;
 function ProcessRAM( msg ) {
-	if( raceName && msg.reference.raceName != raceName )
-		return true;
+	if( !isCurrentResults() ) {
+		if( raceName && msg.reference.raceName != raceName )
+			return true;
+	}
 	if( msg.cmd != 'ram' || msg.reference.versionCount != versionCount + 1 )
 		return false;
 		
@@ -2358,8 +2364,10 @@ function ProcessRAM( msg ) {
 }
 var baselinePending = false;
 function ProcessBaseline( msg ) {
-	if( msg.reference.raceName != raceName )
-		return true;
+	if( !isCurrentResults() ) {
+		if( msg.reference.raceName != raceName )
+			return true;
+	}
 	if( msg.cmd != 'baseline' )
 		return false;
 	
@@ -2377,26 +2385,46 @@ function ProcessBaseline( msg ) {
 	return true;
 }
 var websocket = null;
+var timeoutID = null;
+function RetryResetWebSocket() {
+	if( timeoutID === null )
+		timeoutID = setTimeout( ResetWebSocket, 5000 );
+}
 function ResetWebSocket() {
+	if( window.location.port != '8765' )	// Set up a websocket if we are connected to CrossMgr.
+		return;
+		
+	if( timeoutID !== null ) {
+		clearTimeout( timeoutID );
+		timeoutID = null;
+	}
 
 	if ("WebSocket" in window) {
-		if( websocket )
+		if( websocket && websocket.readyState != websocket.CLOSED ) {
 			websocket.close();
+			websocket = null;
+		}
 
 		var wsurl = 'ws://' + window.location.hostname + ':' + (parseInt(window.location.port) + 1) + '/';
 		//var wsurl = 'ws://' + 'localhost' + ':' + (parseInt(window.location.port) + 1) + '/';
-		//console.log( 'wsurl="' + wsurl + '"' );
+		console.log( 'wsurl="' + wsurl + '"' );
 		websocket = new window.WebSocket( wsurl );
 
 		websocket.onmessage = function( evt ) {
+			var isCurResults = isCurrentResults();
+			var localRaceName = isCurResults ? 'CurrentResults' : raceName;
 			var msg = JSON.parse( evt.data );
-			if( msg.reference.raceName == raceName ) {
+			if( !msg.reference ) {
+				console.log( evt.data );
+				return;
+			}
+			if( isCurResults || msg.reference.raceName == raceName ) {
 				if( msg.cmd == 'ram' ) {
 					if( ProcessRAM(msg) )
 						PostMessageRefresh();
 					else {
 						if( !baselinePending ) {
-							websocket.send( JSON.stringify({'cmd':'send_baseline', 'raceName':raceName}) );
+							websocket.send( JSON.stringify({'cmd':'send_baseline', 'raceName':localRaceName}) );
 							baselinePending = true;
 						}
 					}
@@ -2408,7 +2436,13 @@ function ResetWebSocket() {
 		};
 		
 		websocket.onerror = function(e) {
-			console.log('WebSocket: ' + e.data);
+			console.log('WebSocket: Error.  Scheduling reconnect in 5 seconds...');
+			RetryResetWebSocket();
+		};
+		
+		websocket.onclose = function(e) {
+			console.log('WebSocket: Closed.  Scheduling reconnect in 5 seconds...');
+			RetryResetWebSocket();
 		};
 	}
 }

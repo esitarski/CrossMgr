@@ -147,14 +147,16 @@ class WebsocketServer(ThreadingMixIn, TCPServer, API):
 	allow_reuse_address = True
 	daemon_threads = True  # comment to keep threads alive until finished
 
-	clients = {}
-	id_counter = 0
-
 	def __init__(self, port, host='127.0.0.1', loglevel=logging.WARNING):
 		logger.setLevel(loglevel)
 		self.port = port
+		self.clients = {}
+		self.id_counter = 0
 		TCPServer.__init__(self, (host, port), WebSocketHandler)
 
+	def hasClients( self ):
+		return bool(self.clients)
+		
 	def _message_received_(self, handler, msg):
 		try:
 			client = self.handler_to_client(handler)

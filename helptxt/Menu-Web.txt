@@ -69,6 +69,16 @@ To check how a display is currently configured, look at the web page URL.  The c
 
 If there is no start wave corresponding to a LapCounter display number (or the leader has not come around yet to register a lap), that LapCounter web page will show a black screen to conserve power.
 
+## Current and Previous Race Results
+
+There are two additional URLs that are recognized:
+
+* CurrentResults.html
+* PreviousResults.html
+
+If you use these URLs to connect to the CrossMgr server, the Current and Previous race results are displayed on the web page.
+This is useful if you wish to show a Results Kiosk and have it connect to the current result.
+
 ## Time Trials and the TT Countdown page.
 
 For Time Trials, a live countdown page is available from the Index page.

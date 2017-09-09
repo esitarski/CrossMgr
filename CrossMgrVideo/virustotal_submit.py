@@ -85,7 +85,7 @@ def VTHTTPScanRequest(filename, options):
     req = urllib2.Request(VIRUSTOTAL_SCAN_URL, datagen, headers)
     try:
         if sys.hexversion >= 0x020601F0:
-            hRequest = urllib2.urlopen(req, timeout=15)
+            hRequest = urllib2.urlopen(req, timeout=600)
         else:
             hRequest = urllib2.urlopen(req)
     except urllib2.HTTPError as e:
