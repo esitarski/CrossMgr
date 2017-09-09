@@ -2391,7 +2391,7 @@ function RetryResetWebSocket() {
 		timeoutID = setTimeout( ResetWebSocket, 5000 );
 }
 function ResetWebSocket() {
-	if( window.location.port != '8765' )	// Set up a websocket if we are connected to CrossMgr.
+	if( window.location.port != '8765' )	// Set up a websocket only if we are connected to CrossMgr.
 		return;
 		
 	if( timeoutID !== null ) {
