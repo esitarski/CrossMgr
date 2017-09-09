@@ -540,12 +540,9 @@ def WsPost():
 		wsTimer.cancel()
 		wsTimer = None
 
-def WsRefresh( baseline=False, updatePrevious=False ):
+def WsRefresh( updatePrevious=False ):
 	if updatePrevious:
 		wsQ.put( {'cmd':'reload_previous'} )
-		return
-	if baseline:
-		wsQ.put( GetResultsBaseline() )
 		return
 	
 	global wsTimer, wsTimerDur
