@@ -69,15 +69,27 @@ To check how a display is currently configured, look at the web page URL.  The c
 
 If there is no start wave corresponding to a LapCounter display number (or the leader has not come around yet to register a lap), that LapCounter web page will show a black screen to conserve power.
 
-## Current and Previous Race Results
+## Current and Previous Race Results Web Pages
 
-There are two additional URLs that are recognized:
+Although the Index page makes it convenient to show results from races, if you want to show live results on a screen at the event, it is more convenient to have one web page that follows the current race so you don't have to change it during the event.
+
+There are two additional URLs that are recognized by CrossMgr:
 
 * CurrentResults.html
 * PreviousResults.html
 
-If you use these URLs to connect to the CrossMgr server, the Current and Previous race results are displayed on the web page.
-This is useful if you wish to show a Results Kiosk and have it connect to the current result.
+Current and Previous race results are displayed on the web page.
+
+To get to these pages, open the Index page, then type "CurrentResults.html" or "PreviousResults.html" to the end of the browser's URL.
+
+CurrentResults.html follows the running race in CrossMgr.
+PreviousResults.html is updated when a next race starts.
+
+These pages attempt to reconnect to CrossMgr if they lose their connection.  You can also press the browser Refresh button.
+
+Test this out yourself.  Start a Mass Start Race Simulation, open the Index page, and type "CurrentResults.html" in the browser's URL.
+Switch the CurrentResults to Kiosk mode by selecting "Kiosk" in the dropdown next to the "Results".
+To quick Kiosk mode, remove the options after the "?" in the URL.
 
 ## Time Trials and the TT Countdown page.
 
