@@ -843,24 +843,24 @@ class RiderDetail( wx.Panel ):
 			return
 			
 		with Model.LockRace() as race:
-			inRace = (newNum in race)
+			inRace = (newNum in race.riders)
 		if inRace:
 			if num != newNum:
-				Utils.MessageOK(
-					self,
-					u'{}.\n{}'.format(
-						_("New Bib Number Already Exists"),
-						_("If you really want to copy times to this number, delete it first.")
-					),
-					_('New Bib Number Already Exists'), iconMask = wx.ICON_ERROR
-				)
+				if not Utils.MessageOKCancel( self,
+							u'{} ({}).\n\n{}\n\n{}'.format(
+								_("New Bib Number Exists"), newNum,
+								_("This operation will replace all existing data."),
+								_("Continue?"),
+							),
+							_('New Bib Number Exists'), iconMask = wx.ICON_WARNING
+						):
+					return
 			else:
-				Utils.MessageOK(
-					self,
+				Utils.MessageOK( self,
 					u'{} ({})'.format(_('Cannot Copy to Same Number'), newNum),
 					_('Cannot Copy to Same Number'), iconMask = wx.ICON_ERROR
 				)
-			return
+				return
 			
 		if Utils.MessageOKCancel( self,
 				u'{} {}:  {}: {}\n\n{}\n\n{}?'.format(
@@ -872,6 +872,7 @@ class RiderDetail( wx.Panel ):
 				_("Confirm Copy Rider Times") ):
 			undo.pushState()
 			with Model.LockRace() as race:
+				race.riders.pop( newNum, None )
 				race.copyRiderTimes( num, newNum )
 				rNew = race.getRider( newNum )
 				numTimeInfo = race.numTimeInfo
