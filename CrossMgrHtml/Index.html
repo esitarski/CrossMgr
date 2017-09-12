@@ -85,39 +85,36 @@ ol ol li:last-child {margin-bottom:0;}
 
 </style>
 <script>
+function setIcons( icon, class_name ) {
+	var elements = document.getElementsByClassName( class_name );
+	for( var i = 0; i < elements.length; ++i ) {
+		elements[i].src = icon;
+	}
+}
 function onLoad() {
 {% if share %}
-	var QRCodeIconSrc = "{{QRCodeIconSrc}}";
-	var elements = document.getElementsByClassName( 'qrcode' );
-	for( var i = 0; i < elements.length; ++i ) {
-		elements[i].src = QRCodeIconSrc;
-	}
+	setIcons( "{{QRCodeIconSrc}}", 'qrcode' );
 {% end %}
 {% if any(g.isTimeTrial for g in info) %}
-	var StartListIconSrc = "{{StartListIconSrc}}";
-	var elements = document.getElementsByClassName( 'startlist' );
-	for( var i = 0; i < elements.length; ++i ) {
-		elements[i].src = StartListIconSrc;
-	}
-	var CountdownIconSrc = "{{CountdownIconSrc}}";
-	var elements = document.getElementsByClassName( 'countdown' );
-	for( var i = 0; i < elements.length; ++i ) {
-		elements[i].src = CountdownIconSrc;
-	}
+	setIcons( "{{StartListIconSrc}}", 'startlist' );
+	setIcons( "{{CountdownIconSrc}}", 'countdown' );
 {% else %}
-	var LapCounterIconSrc = "{{LapCounterIconSrc}}";
-	var elements = document.getElementsByClassName( 'lapcounter' );
-	for( var i = 0; i < elements.length; ++i ) {
-		elements[i].src = LapCounterIconSrc;
-	}
+	setIcons( "{{LapCounterIconSrc}}", 'lapcounter' );
 {% end %}
+	setIcons( "{{ResultsCurrentIconSrc}}", 'results_current' );
+	setIcons( "{{ResultsPreviousIconSrc}}", 'results_previous' );
 }
 </script>
 </head>
 
 <body onload="onLoad()">
 <img id="idImgHeader" alt="CrossMgr Logo" onclick="location.reload(true)" style="cursor: pointer;" src="{{logoSrc}}">
-{% if share %}&nbsp;&nbsp;&nbsp;&nbsp;<a href="./qrcode.html">Share <img class="qrcode"></a>{% end %}
+{% if share %}
+	&nbsp;&nbsp;&nbsp;&nbsp;<a href="./CurrentResults.html"><img class="results_current" title="Current Race Results">&nbsp;Current Race Results</a>
+	&nbsp;&nbsp;&nbsp;&nbsp;<a href="./PreviousResults.html"><img class="results_previous" title="Previous Race Results">&nbsp;Previous Race Results</a>
+	&nbsp;&nbsp;&nbsp;&nbsp;<a href="./qrcode.html"><img class="qrcode">&nbsp;Share</a>
+	&nbsp;&nbsp;&nbsp;&nbsp;<a href="./LapCounter.html"><img class="lapcounter" title="Lap Counter">&nbsp;Lap Counter</a>
+{% end %}
 <h1>Race Results<br/><span style="font-size: 80%">{% if organizer %}by {% end %}{{organizer}}</span></h1>
 <ol>
 {% if not info %}
@@ -132,8 +129,6 @@ function onLoad() {
 			{% if g.isTimeTrial %}
 				&nbsp;&nbsp;<a href="{{g.urlTTStartList}}"><img class="startlist" title="Start List">Start List</a>
 				&nbsp;&nbsp;<a href="{{g.urlTTCountdown}}"><img class="countdown" title="Countdown Clock">Countdown Clock</a>
-			{% elif g.raceIsRunning %}
-				&nbsp;&nbsp;<a href="{{g.urlLapCounter}}"><img class="lapcounter" title="Lap Counter">&nbsp;Lap Counter</a>
 			{% end %}
 		{% end %}
 		<br/>

@@ -45,16 +45,23 @@ futureDate = datetime.datetime( datetime.datetime.now().year+20, 1, 1 )
 
 with io.open( os.path.join(Utils.getImageFolder(), 'CrossMgr.ico'), 'rb' ) as f:
 	favicon = f.read()
+
+def readBase64( fname ):
+	with io.open( os.path.join(Utils.getImageFolder(), fname), 'rb' ) as f:
+		return "data:image/png;base64," + base64.b64encode( f.read() )
+
 with io.open( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), 'rb' ) as f:
-	DefaultLogoSrc = "data:image/png;base64," + base64.b64encode( f.read() )
-with io.open( os.path.join(Utils.getImageFolder(), 'QRCodeIcon.png'), 'rb' ) as f:
-	QRCodeIconSrc = "data:image/png;base64," + base64.b64encode( f.read() )
-with io.open( os.path.join(Utils.getImageFolder(), 'countdown.png'), 'rb' ) as f:
-	CountdownIconSrc = "data:image/png;base64," + base64.b64encode( f.read() )
-with io.open( os.path.join(Utils.getImageFolder(), 'tt_start_list.png'), 'rb' ) as f:
-	StartListIconSrc = "data:image/png;base64," + base64.b64encode( f.read() )
-with io.open( os.path.join(Utils.getImageFolder(), 'lapcounter.png'), 'rb' ) as f:
-	LapCounterIconSrc = "data:image/png;base64," + base64.b64encode( f.read() )
+	DefaultLogoSrc = readBase64('CrossMgrHeader.png')
+
+icons = {
+	'QRCodeIconSrc': readBase64('QRCodeIcon.png'),
+	'CountdownIconSrc': readBase64('countdown.png'),
+	'StartListIconSrc': readBase64('tt_start_list.png'),
+	'LapCounterIconSrc':  readBase64('lapcounter.png'), 
+	'ResultsCurrentIconSrc': readBase64('results_current.png'),
+	'ResultsPreviousIconSrc': readBase64('results_previous.png'),
+}
+
 with io.open(os.path.join(Utils.getHtmlFolder(), 'Index.html'), encoding='utf-8') as f:
 	indexTemplate = Template( f.read() )
 
@@ -338,13 +345,8 @@ def getIndexPage( share=True ):
 	info = contentBuffer.getIndexInfo()
 	if not info:
 		return ''
-	info.update( {
-		'share': share,
-		'QRCodeIconSrc':  QRCodeIconSrc,
-		'CountdownIconSrc': CountdownIconSrc,
-		'StartListIconSrc': StartListIconSrc,
-		'LapCounterIconSrc': LapCounterIconSrc,
-	} )
+	info['share'] = share
+	info.update( icons )
 	return indexTemplate.generate( **info )
 
 #---------------------------------------------------------------------------

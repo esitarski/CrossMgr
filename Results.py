@@ -44,7 +44,7 @@ class IOCCodeRenderer(wx.grid.GridCellRenderer):
 		
 		dc.SetBrush( wx.Brush(bg, wx.SOLID) )
 		dc.SetPen( wx.TRANSPARENT_PEN )
-		dc.DrawRectangleRect( rect )
+		dc.DrawRectangle( rect )
 
 		rectText = wx.Rect( rect.GetX()+padding+imgWidth, rect.GetY(), rect.GetWidth()-padding-imgWidth, rect.GetHeight() )
 		
