@@ -3404,13 +3404,13 @@ class MainWin( wx.Frame ):
 		self.showPageName( _('Results') )
 		
 		xlFName = self.getFormatFilename( 'usacexcel' )
-
-		wb = xlsxwriter.Workbook( xlFName )
-		sheetCur = wb.add_worksheet( 'Combined Results' )
-		USACExport( wb, sheetCur )
 		
+		wb = xlwt.Workbook()
+		sheetCur = wb.add_sheet( 'Combined Results' )
+		USACExport( wb, sheetCur )
+			
 		try:
-			wb.close()
+			wb.save( xlFName )
 			if not silent:
 				if self.launchExcelAfterPublishingResults:
 					Utils.LaunchApplication( xlFName )

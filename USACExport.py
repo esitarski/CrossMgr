@@ -4,7 +4,7 @@ import Model
 import Utils
 import datetime
 from GetResults import GetResults, GetCategoryDetails
-from FitSheetWrapper import FitSheetWrapperXLSX
+from FitSheetWrapper import FitSheetWrapper, FitSheetWrapperXLSX
 from ReadSignOnSheet import SyncExcelLink
 
 USACFields = (
@@ -51,11 +51,11 @@ def USACExport( workbook, sheet ):
 	elif 'road' in raceDiscipline.lower():
 		raceDiscipline = 'Road Race'
 
-	sheetFit = FitSheetWrapperXLSX( sheet )
+	sheetFit = FitSheetWrapper( sheet )
 	
-	titleStyle = workbook.add_format({'bold': True})
-	leftAlignStyle = workbook.add_format()
-	rightAlignStyle = workbook.add_format({'align': 'right'})
+	titleStyle = xlwt.easyxf('font: bold on')
+	leftAlignStyle = xlwt.easyxf()
+	rightAlignStyle = xlwt.easyxf('align: horiz right')
 	
 	catDetails = dict( (cd['name'], cd) for cd in GetCategoryDetails() )
 	hasDistance = None
