@@ -1,4 +1,5 @@
 import wx
+import wx.grid
 import wx.lib.intctrl as intctrl
 import wx.lib.masked as masked
 import random
@@ -387,7 +388,10 @@ class RiderDetail( wx.Panel ):
 		self.grid.AutoSizeColumns( True )
 		self.grid.DisableDragColSize()
 		self.grid.DisableDragRowSize()
-		self.grid.SetSelectionMode( wx.grid.Grid.SelectRows )
+		try:
+			self.grid.SetSelectionMode( wx.grid.Grid.SelectRows )
+		except AttributeError:
+			self.grid.SetSelectionMode( 1 )
 		self.Bind( wx.grid.EVT_GRID_CELL_LEFT_DCLICK, self.getPopupFuncCB(self.OnPopupCorrect) )
 		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doRightClick )
 
