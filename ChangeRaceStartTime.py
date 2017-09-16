@@ -52,8 +52,14 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 
 	def onOK( self, event ):
 		race = Model.race
-		if not race or not race.startTime or race.isTimeTrial:
+		if not race:
 			return
+		if race.isTimeTrial and race.hasRiderTimes():
+			Utils.MessageOKCancel( self,
+				_('Cannot change Time Trial Start Time') + u'\n\n' + _('There are already recorded results.'),
+				_('Cannot change Start Time')
+			)
+			self.EndModal( wx.ID_OK )
 		
 		tOld = race.startTime
 		startTimeNew = tOld.replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(seconds=self.timeMsEdit.GetSeconds())

@@ -3424,8 +3424,7 @@ function makeColorGradient(frequency1, frequency2, frequency3,
 	return grad.slice(1);  // Skip the first pink colour.
 }
 
-function lighterColor( k )
-{
+function lighterColor( k ) {
 	var s = '#';
 	for( var i = 0; i < 3; ++i )
 	{
@@ -3437,8 +3436,7 @@ function lighterColor( k )
 	return s;
 }
 
-function drawSegment( c, x, y, w, h, color, colorLighter )
-{
+function drawSegment( c, x, y, w, h, color, colorLighter ) {
 	c.save();
 	
 	var gr = c.createLinearGradient( x, y, x, y+h );
