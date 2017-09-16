@@ -101,6 +101,7 @@ from SendPhotoRequests	import SendPhotoRequests
 from PhotoViewer		import PhotoViewerDialog
 from ReadTTStartTimesSheet import ImportTTStartTimes, AutoImportTTStartTimes
 from TemplateSubstitute import TemplateSubstitute
+from GetMatchingExcelFile import GetMatchingExcelFile
 import ChangeRaceStartTime
 from PageDialog			import PageDialog
 import ChipReader
@@ -2961,11 +2962,11 @@ class MainWin( wx.Frame ):
 			if getattr(race, 'excelLink', None):
 				excelLink = race.excelLink
 				if excelLink.fileName and not os.path.isfile(excelLink.fileName):
-					newFileName = os.path.join( os.path.dirname(fileName), Utils.plat_ind_basename(excelLink.fileName) )
-					if os.path.isfile(newFileName) and Utils.MessageOKCancel(self,
+					newFileName = GetMatchingExcelFile(fileName, excelLink.fileName)
+					if newFileName and Utils.MessageOKCancel(self,
 							u'{}:\n\n"{}"\n\n{}:\n\n"{}"\n\n{}'.format(
 								_('Could not find Excel file'), excelLink.fileName,
-								_('Found this Excel file in the race folder with the same name'), newFileName, _('Use this Excel file from now on?')
+								_('Found this Excel file in the race folder with matching name'), newFileName, _('Use this Excel file from now on?')
 							),
 							_('Excel Link Not Found') ):
 						race.excelLink.fileName = newFileName

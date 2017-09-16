@@ -19,6 +19,7 @@ from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, HasExcelLink
 from GetResults			import GetResults, GetCategoryDetails
 from Excel				import GetExcelReader
 from FieldMap			import standard_field_map, standard_field_aliases
+from GetMatchingExcelFile import GetMatchingExcelFile
 
 def formatTime( secs, highPrecision = False ):
 	if secs is None:
@@ -246,8 +247,8 @@ def FixExcelSheetLocal( fileName, race ):
 	if getattr(race, 'excelLink', None):
 		excelLink = race.excelLink
 		if excelLink.fileName and not os.path.isfile(excelLink.fileName):
-			newFileName = os.path.join( os.path.dirname(fileName), Utils.plat_ind_basename(excelLink.fileName) )
-			if os.path.isfile(newFileName):
+			newFileName = GetMatchingExcelFile( fileName, excelLink.fileName )
+			if newFileName:
 				race.excelLink.fileName = newFileName
 
 def ExtractRaceResultsCrossMgr( raceInSeries ):

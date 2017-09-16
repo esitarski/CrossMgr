@@ -462,7 +462,7 @@ function onload() {
 	
 	// Get the initial timestamp on the server and compute a correction with our local time.
 	// This will get us within a second or two of the server's time.
-	if( serverTimestamp != null )
+	if( (window.location.protocol == 'http:' || window.location.protocol == 'https:') && serverTimestamp != null )
 		millisDelta = serverTimestamp - Date.now();
 	
 	getTimeCorrection()

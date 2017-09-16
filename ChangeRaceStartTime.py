@@ -75,19 +75,20 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 		undo.pushState()
 		
 		# Adjust all rider times to account for the new start time.
-		for rider in race.riders.itervalues():
-			try:
-				rider.firstTime = max( 0.0, rider.firstTime - dTime )
-			except TypeError:
-				pass
-			rider.times[:] = [max(0.0, v - dTime) for v in rider.times]
+		if not race.isTimeTrial:
+			for rider in race.riders.itervalues():
+				try:
+					rider.firstTime = max( 0.0, rider.firstTime - dTime )
+				except TypeError:
+					pass
+				rider.times[:] = [max(0.0, v - dTime) for v in rider.times]
 		
-		race.numTimeInfo.adjustAllTimes( -dTime )
+			race.numTimeInfo.adjustAllTimes( -dTime )
 			
-		# Also fix any unread tags.
-		if race.unmatchedTags:
-			for times in race.unmatchedTags.itervalues():
-				times[:] = [max(0.0, v - dTime) for v in times]
+			# Also fix any unread tags.
+			if race.unmatchedTags:
+				for times in race.unmatchedTags.itervalues():
+					times[:] = [max(0.0, v - dTime) for v in times]
 		
 		race.startTime = startTimeNew
 		race.setChanged()
