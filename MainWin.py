@@ -3158,8 +3158,8 @@ class MainWin( wx.Frame ):
 			for c in categories:
 				c.pop( 'raceMinutes', None )
 				c['lappedRidersMustContinue'] = True
-			categories[0]['numLaps'] = 4
-			categories[1]['numLaps'] = 3
+			categories[0]['numLaps'] = 3
+			categories[1]['numLaps'] = 2
 			race.setCategories( categories )
 			
 			nums = set()

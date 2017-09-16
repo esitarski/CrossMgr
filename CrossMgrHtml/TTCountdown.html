@@ -118,6 +118,7 @@ var payload = null;
 
 var raceName = null;
 
+var isDevice = false;
 var raceScheduledStartTuple = null;
 var raceStartTuple = null;
 var raceStart = null;
@@ -285,7 +286,7 @@ function updateCountdown() {
 	var btgNext = beepsToGive[iBeepCur+1];
 	
 	var countdown = document.getElementById('countdown-clock');
-	if( enableBeeps )
+	if( enableBeeps || !isDevice )
 		countdown.innerHTML = (btgNext.beep < 0 ? '0:00' : FormatTime(0.5 + (btgNext.tStart.getTime() - tNow.getTime()) / 1000.0));
 	else
 		countdown.innerHTML = '<span class="btn">Click Here</span>';
@@ -373,11 +374,11 @@ function dateFromTuple( t ) {
 
 function initiateSound() {
 	if( !enableBeeps ) {
-		document.getElementById('countdown-clock').className = '';
 		enableBeeps = true;
 		playBeep(10);
 		playBeep(0);
 	}
+	document.getElementById('countdown-clock').className = '';
 }
 
 // Keep track of the correction driven from the smallest latency.
@@ -443,7 +444,7 @@ function SetRaceName() {
 
 function getTimeCorrection() {
 	// Schedule some ajax calls to improve the time sync.
-	if( window.location.protocol != 'file:' ) {
+	if( window.location.protocol == 'http:' || window.location.protocol == 'https:' ) {
 		latency2Min = Number.MAX_VALUE;
 		var url = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port + '/servertimestamp.html';
 		for( var i = 0; i < syncIterations; ++i ) {
@@ -471,6 +472,7 @@ function onload() {
 	
 	if( /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ) {
 		// On tablets, the first sound must be triggered by a user action.
+		isDevice = true;
 		enableBeeps = false;
 		var countdown_clock = document.getElementById('countdown-clock');
 		countdown_clock.className = 'disabled';
@@ -485,8 +487,12 @@ function onload() {
 	}
 	else if( raceScheduledStartTuple != null ) {
 		raceStart = dateFromTuple( raceScheduledStartTuple );
-		startList.push( [0, 999999, raceName + ' (not started)', "Countdown to Scheduled Start at " + raceStart.toLocaleString() +
-							' (' + startList.length + ' Starters)'] );
+		startList.push( [0,
+						 999999,
+						 raceName + ' (not started)', "Countdown to Scheduled Start at " + raceStart.toLocaleString() + ' (' + startList.length + ' Starters)',
+						 '',
+						 '',
+						 ''] );
 		
 		// Set up a callback to automatically refresh the page on or after the race start time.
 		setTimeout( Math.max(0, raceStart.getTime() - tServer.getTime()) + 5*1000, function() { location.reload(true); } );
