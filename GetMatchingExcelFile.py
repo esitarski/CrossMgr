@@ -15,7 +15,7 @@ def removeExcelFileVersion( fname ):
 def getExcelFileVersion( fname ):
 	m = reExcelFileVersion.search( fname )
 	if not m:
-		return None
+		return 0
 	return int(m.group(1))
 
 def GetMatchingExcelFile( fileName, excelFileName ):
@@ -43,7 +43,7 @@ def GetMatchingExcelFile( fileName, excelFileName ):
 			if removeExcelFileVersion(baseNewName) != baseMatchName:
 				continue
 			newVersion = getExcelFileVersion( baseNewName )
-			if newVersion is not None and newVersion > lastVersion:
+			if newVersion > lastVersion:
 				lastVersion = newVersion
 				newFileName = f
 		
