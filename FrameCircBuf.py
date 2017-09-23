@@ -3,6 +3,7 @@ import datetime
 
 class FrameCircBuf( object ):
 	def __init__( self, bufSize = 75 ):
+		self.bufSize = bufSize
 		self.reset( bufSize )
 		
 	def reset( self, bufSize = None ):
