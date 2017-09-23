@@ -5,7 +5,7 @@ import math
 import shutil
 
 from GetResults import GetResults
-from SendPhotoRequests import getPhotoDirName, SendPhotoRequests, PhotoAcknowledge
+from SendPhotoRequests import getPhotoDirName, SendPhotoRequests
 import Utils
 from Utils				import logCall, logException
 import Model
@@ -52,9 +52,6 @@ def hasPhoto( bib, t ):
 	except Exception as e:
 		return False
 	
-def HasCamera():
-	return PhotoAcknowledge()
-
 def okTakePhoto( num, t ):
 	race = Model.race
 	if not race or not race.enableUSBCamera or not race.isRunning():

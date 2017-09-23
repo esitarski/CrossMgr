@@ -81,10 +81,6 @@ def SendRenameRequests( bibRaceSeconds ):
 	# Fixlater - do something about video support for time trials?
 	return
 	
-def PhotoAcknowledge():
-	global multiCastSender
-	return multiCastSender and multiCastSender.hasReceivers
-	
 if __name__ == '__main__':
 	print getFtpInfo( None )
 	

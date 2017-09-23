@@ -26,14 +26,14 @@ class MultiCastSender( threading.Thread ):
 		Thread to multicast messages written to an output queue.
 		Also inventories receivers.
 	'''
-	def __init__( self, qIn=Queue(), receiverCallback=None, name='MultiCastSender' ):
+	def __init__( self, qIn=None, receiverCallback=None, name='MultiCastSender' ):
 		super( MultiCastSender, self ).__init__()
 		
 		self.name = name
 		self.daemon = True
 		self.hasReceivers = False
 	
-		self.qIn = qIn
+		self.qIn = qIn or Queue()
 		self.receiverCallback = receiverCallback or (lambda receivers: None)
 		self.socket = None
 	
@@ -95,6 +95,8 @@ class MultiCastSender( threading.Thread ):
 				message = self.qIn.get( timeout=timeoutSecs )
 			except Empty:
 				pass
+			except TypeError:
+				break
 
 			if (now() - tLastReceiverQuery).total_seconds() >= timeoutSecs:
 				sock = self.openSocket()
@@ -155,6 +157,10 @@ def SendTrigger( message ):
 		sender = MultiCastSender( qTrigger )
 		sender.start()
 	qTrigger.put( message )
+
+def HasReceivers():
+	global sender
+	return sender and sender.hasReceivers()
 
 #-----------------------------------------------------------------------
 

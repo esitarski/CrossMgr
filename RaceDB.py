@@ -437,6 +437,8 @@ class RaceDBUpload( wx.Dialog ):
 				resultText += _('Upload Successful.')
 		
 		self.uploadStatus.SetValue( resultText )
+		del busy
+		Utils.MessageOK( self, u'{}:\n\n{}'.format(_('RaceDB Upload Status'), resultText), _('RaceDB Upload Status') )
 	
 if __name__ == '__main__':
 	if True:

@@ -5,7 +5,7 @@ import threading
 from Queue import Queue, Empty
 import Utils
 import Model
-from PhotoFinish import AddPhotoHeader, SetCameraState, SnapPhoto
+from PhotoFinish import SnapPhoto
 
 now = datetime.datetime.now
 
@@ -51,8 +51,6 @@ class CameraTestDialog( wx.Dialog ):
 			style=wx.CAPTION
 		)
 		
-		SetCameraState( False )
-
 		self.photo = ScaledImage( self )
 		self.status = wx.StaticText( self )
 		
