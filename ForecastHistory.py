@@ -637,7 +637,7 @@ class ForecastHistory( wx.Panel ):
 				outsideTimeBound.add( e.num )
 								
 		data = [None] * iColMax
-		data[iNumCol] = [u'{}{}'.format(e.num,u"\u25C0" if IsRiderFinished(e.num, e.t) else u'') if e.num > 0 else u' ' for e in recorded]
+		data[iNumCol] = [u'{}{}'.format(e.num,u"-" if IsRiderFinished(e.num, e.t) else u'') if e.num > 0 else u' ' for e in recorded]
 		data[iTimeCol] = [
 			formatTime(e.t) if e.lap > 0 else
 			(u'{}'.format(formatTimeGap(e.t)) if e.t is not None else u' ') if e.isGap() else
