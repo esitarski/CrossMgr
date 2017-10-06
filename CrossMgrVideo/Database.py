@@ -66,7 +66,7 @@ class Database( object ):
 				createTable( self.conn, 'trigger', (
 						('id', 'INTEGER PRIMARY KEY', False, None),
 						('ts', 'timestamp', 'ASC', None),
-						('ts_start', 'timestamp', 'ASC', None),
+						('ts_start', 'timestamp', False, None),
 						('bib', 'INTEGER', 'ASC', None),
 						('first_name', 'TEXT', 'ASC', None),
 						('last_name', 'TEXT', 'ASC', None),
