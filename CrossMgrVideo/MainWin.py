@@ -480,7 +480,7 @@ class MainWin( wx.Frame ):
 		tsPrev = (self.tsMax or datetime(2000,1,1))
 		self.tsMax = triggers[-1][1] # id,ts,bib,first_name,last_name,team,wave,race_name,kmh
 		
-		for i, (id,ts,bib,first_name,last_name,team,wave,race_name,kmh) in enumerate(triggers):
+		for i, (id,ts,ts_start,bib,first_name,last_name,team,wave,race_name,kmh) in enumerate(triggers):
 			dtFinish = (ts-tsPrev).total_seconds()
 			itemImage = self.sm_close[min(len(self.sm_close)-1, int(len(self.sm_close) * dtFinish / closeFinishThreshold))]		
 			row = self.triggerList.InsertItem( sys.maxint, ts.strftime('%H:%M:%S.%f')[:-3], itemImage )
@@ -554,7 +554,8 @@ class MainWin( wx.Frame ):
 		self.iTriggerSelect = event.Index
 		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
 		self.triggerInfo = {
-			a:data[i] for i, a in enumerate(('id','ts','bib','name','team','wave','raceName','firstName','lastName','kmh'))
+			a:data[i] for i, a in enumerate(('id','ts','ts_start','bib','name','team','wave','raceName',
+				'firstName','lastName','kmh'))
 		}
 		self.ts = self.triggerInfo['ts']
 		self.dbReaderQ.put( ('getphotos', self.ts-tdCaptureBefore, self.ts+tdCaptureAfter) )

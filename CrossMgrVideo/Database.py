@@ -40,13 +40,19 @@ class Database( object ):
 		
 		self.conn = sqlite3.connect( self.fname, detect_types=sqlite3.PARSE_DECLTYPES )
 		
-		# Add kmh to the trigger table if necessary.
+		# Add kmh and ts_start to the trigger table if necessary.
 		with self.conn:
 			cur = self.conn.cursor()
 			cur.execute( 'PRAGMA table_info(trigger)' )
 			cols = cur.fetchall()
 			if cols and not any( col[1] == 'kmh' for col in cols ):
 				self.conn.execute( 'ALTER TABLE trigger ADD COLUMN kmh DOUBLE DEFAULT 0.0' )
+			if cols and not any( col[1] == 'ts_start' for col in cols ):
+				tNow = now()
+				self.conn.execute( 'ALTER TABLE trigger ADD COLUMN ts_start timestamp DEFAULT ?', (tNow,) )
+				ts_id = list( self.conn.execute( 'SELECT ts,id from trigger' ))
+				self.conn.executemany( 'UPDATE trigger SET ts_start=? WHERE id=?', ts_id )
+				del ts_id
 		
 		if initTables:
 			with self.conn:
@@ -59,6 +65,7 @@ class Database( object ):
 				createTable( self.conn, 'trigger', (
 						('id', 'INTEGER PRIMARY KEY', False, None),
 						('ts', 'timestamp', 'ASC', None),
+						('ts_start', 'timestamp', 'ASC', None),
 						('bib', 'INTEGER', 'ASC', None),
 						('first_name', 'TEXT', 'ASC', None),
 						('last_name', 'TEXT', 'ASC', None),
@@ -92,7 +99,7 @@ class Database( object ):
 		
 		with self.conn:
 			if tsTriggers:
-				self.conn.executemany( 'INSERT INTO trigger (ts,bib,first_name,last_name,team,wave,race_name) VALUES (?,?,?,?,?,?,?)', tsTriggers )
+				self.conn.executemany( 'INSERT INTO trigger (ts,ts_start,bib,first_name,last_name,team,wave,race_name) VALUES (?,?,?,?,?,?,?,?)', tsTriggers )
 			if tsJpgs:
 				self.conn.executemany( 'INSERT INTO photo (ts,jpg) VALUES (?,?)', tsJpgs )
 		
@@ -112,12 +119,12 @@ class Database( object ):
 		with self.conn:
 			if not bib:
 				return list( self.conn.execute(
-					'SELECT id,ts,bib,first_name,last_name,team,wave,race_name,kmh FROM trigger WHERE ts BETWEEN ? AND ? ORDER BY ts',
+					'SELECT id,ts,ts_start,bib,first_name,last_name,team,wave,race_name,kmh FROM trigger WHERE ts BETWEEN ? AND ? ORDER BY ts',
 					(tsLower, tsUpper)
 				))
 			else:
 				return list( self.conn.execute(
-					'SELECT id,ts,bib,first_name,last_name,team,wave,race_name,kmh FROM trigger WHERE bib=? AND ts BETWEEN ? AND ? ORDER BY ts',
+					'SELECT id,ts,ts_start,bib,first_name,last_name,team,wave,race_name,kmh FROM trigger WHERE bib=? AND ts BETWEEN ? AND ? ORDER BY ts',
 					(bib, tsLower, tsUpper)
 				))
 			

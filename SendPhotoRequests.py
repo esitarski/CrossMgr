@@ -48,6 +48,15 @@ def getRequest( race, dirName, bib, raceSeconds, externalInfo ):
 				pass
 	except KeyError:
 		pass
+	
+	if race.isTimeTrial:
+		rider = race.riders.get( bib, None )
+		if rider and rider.firstTime is not None:
+			info['ts_start'] = race.startTime + datetime.timedelta(seconds=rider.firstTime)
+		else:
+			info['ts_start'] = race.startTime
+	else:
+		info['ts_start'] = race.startTime + datetime.timedelta(seconds=race.categoryStartOffset(category))
 	return info
 
 def SendPhotoRequests( bibRaceSeconds, includeFTP=True ):

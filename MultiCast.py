@@ -17,6 +17,8 @@ def makeJSONCompatible( info ):
 	info = info.copy()
 	v = info['ts']
 	info['ts'] = [v.year, v.month, v.day, v.hour, v.minute, v.second, v.microsecond]
+	v = info['ts_start']
+	info['ts_start'] = [v.year, v.month, v.day, v.hour, v.minute, v.second, v.microsecond]
 	v = now()
 	info['ts_sender'] = [v.year, v.month, v.day, v.hour, v.minute, v.second, v.microsecond]
 	return info
@@ -214,7 +216,10 @@ class MultiCastReceiver( threading.Thread ):
 			
 			if message[0] == 'trigger':
 				message[1]['ts_receiver'] = tNow
+				
+				# Convert the json values back to datetimes.
 				message[1]['ts'] = datetime( *message[1]['ts'] )
+				message[1]['ts_start'] = datetime( *message[1]['ts_start'] )
 				message[1]['ts_sender'] = datetime( *message[1]['ts_sender'] )
 
 				# Calculate a correction between the sender and the receiver.  Add it to the median list.

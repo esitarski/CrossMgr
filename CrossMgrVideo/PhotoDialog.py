@@ -180,7 +180,7 @@ class PhotoDialog( wx.Dialog ):
 				
 		size = (850,650)
 		computeSpeed = ComputeSpeed( self, size=size )
-		self.mps, self.kmh, self.mph = computeSpeed.Show( image1, t1, image2, t2 )
+		self.mps, self.kmh, self.mph = computeSpeed.Show( image1, t1, image2, t2, self.triggerInfo['ts_start'] )
 		self.onPhotoHeader()
 	
 	def onPrint( self, event ):
@@ -226,7 +226,7 @@ class PhotoDialog( wx.Dialog ):
 				]
 				proc = subprocess.Popen( command, stdin=subprocess.PIPE, stderr=subprocess.PIPE )
 				for ts, jpg in self.tsJpg:
-					proc.stdin.write( self.addPhotoHeaderToImage(wx.ImageFromStream(StringIO.StringIO(jpg), wx.BITMAP_TYPE_JPEG)).GetData() )
+					proc.stdin.write( self.addPhotoHeaderToImage(wx.Image(StringIO.StringIO(jpg), wx.BITMAP_TYPE_JPEG)).GetData() )
 				proc.terminate()
 				wx.MessageBox( _('MPeg Save Successful'), _('Success') )
 			except Exception as e:
@@ -251,7 +251,7 @@ class PhotoDialog( wx.Dialog ):
 				]
 				proc = subprocess.Popen( command, stdin=subprocess.PIPE, stderr=subprocess.PIPE )
 				for ts, jpg in self.tsJpg:
-					proc.stdin.write(self.addPhotoHeaderToImage(wx.ImageFromStream(StringIO.StringIO(jpg), wx.BITMAP_TYPE_JPEG)).GetData() )
+					proc.stdin.write(self.addPhotoHeaderToImage(wx.Image(StringIO.StringIO(jpg), wx.BITMAP_TYPE_JPEG)).GetData() )
 				images = None
 				proc.terminate()
 				wx.MessageBox( _('Gif Save Successful'), _('Success') )

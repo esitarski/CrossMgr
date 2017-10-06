@@ -1924,7 +1924,8 @@ class Race( object ):
 	
 	def getStartOffsets( self ):
 		return sorted( set(c.getStartOffsetSecs() for c in self.getCategories(startWaveOnly=True)) )
-		
+	
+	@memoize
 	def categoryStartOffset( self, category ):
 		# Get the start offset of the controlling Start Wave.
 		if category:
