@@ -50,9 +50,10 @@ class Database( object ):
 			if cols and not any( col[1] == 'ts_start' for col in cols ):
 				tNow = now()
 				self.conn.execute( 'ALTER TABLE trigger ADD COLUMN ts_start timestamp DEFAULT ?', (tNow,) )
-				ts_id = list( self.conn.execute( 'SELECT ts,id from trigger' ))
-				self.conn.executemany( 'UPDATE trigger SET ts_start=? WHERE id=?', ts_id )
-				del ts_id
+				#ts_id = list( self.conn.execute( 'SELECT ts,id from trigger' ))
+				#self.conn.executemany( 'UPDATE trigger SET ts_start=? WHERE id=?', ts_id )
+				#del ts_id
+				self.conn.execute( 'UPDATE trigger SET ts_start=ts' )
 		
 		if initTables:
 			with self.conn:

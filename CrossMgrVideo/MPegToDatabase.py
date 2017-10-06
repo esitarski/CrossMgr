@@ -50,10 +50,10 @@ def MPegToDatabase( fnameMPeg, tRecorded=None ):
 	database.write( tsJpgs=tsJpgs )
 	del tsJpgs[:]
 	
-	ts = tStart + datetime.timedelta( seconds = (t - tStart).total_seconds()/2.0 )
+	ts =  + datetime.timedelta( seconds = (t - tStart).total_seconds()/2.0 )
 	print tStart, ts, t
-	#          ts,bib,first_name,last_name,team,wave,race_name
-	trigger = (ts,  1,   '',     fnameMPeg,  '',  '','Test'  )
+	#          ts,ts_start,bib,first_name,last_name,team,wave,race_name
+	trigger = (ts,tStart,   1,     '',    fnameMPeg, '',  '','Test'  )
 	database.write( tsTriggers=[trigger] )
 	shutil.rmtree( tmpdir, ignore_errors=True )
 
