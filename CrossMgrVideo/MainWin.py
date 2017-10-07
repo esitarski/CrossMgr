@@ -497,7 +497,7 @@ class MainWin( wx.Frame ):
 			self.triggerList.SetItem( row, 6, mph_text )
 			
 			self.triggerList.SetItemData( row, row )
-			self.itemDataMap[row] = (id,ts,bib,name,team,wave,race_name,first_name,last_name,kmh)
+			self.itemDataMap[row] = (id,ts,ts_start,bib,name,team,wave,race_name,first_name,last_name,kmh)
 			tsPrev = ts
 			
 		for i in xrange(5):

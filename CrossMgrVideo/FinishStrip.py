@@ -289,7 +289,7 @@ class FinishStrip( wx.Panel ):
 		
 	def OnLeftDown( self, event ):
 		self.xDragLast = event.GetX()
-		self.SetCursor(wx.StockCursor(wx.CURSOR_HAND))
+		self.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 		event.Skip()
 		
 	def OnLeftUp( self, event ):

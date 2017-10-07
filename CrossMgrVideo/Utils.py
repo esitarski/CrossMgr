@@ -77,13 +77,13 @@ def formatTime( secs, highPrecision = False ):
 	minutes = int( (secs // 60) % 60 )
 	secs = secs % 60
 	if highPrecision:
-		decimal = '.%02d' % int( f * 100 )
+		decimal = '.{:03d}'.format(int(f * 1000))
 	else:
 		decimal = ''
 	if hours > 0:
-		return "{}{}:{:02d}:{:02d}{}" % (sign, hours, minutes, secs, decimal)
+		return "{}{}:{:02d}:{:02d}{}".format(sign, hours, minutes, secs, decimal)
 	else:
-		return "{}{:02d}:{:02d}{}" % (sign, minutes, secs, decimal)
+		return "{}{:02d}:{:02d}{}".format(sign, minutes, secs, decimal)
 
 def formatTimeGap( secs, highPrecision = False ):
 	if secs is None:

@@ -48,11 +48,7 @@ class Database( object ):
 			if cols and not any( col[1] == 'kmh' for col in cols ):
 				self.conn.execute( 'ALTER TABLE trigger ADD COLUMN kmh DOUBLE DEFAULT 0.0' )
 			if cols and not any( col[1] == 'ts_start' for col in cols ):
-				tNow = now()
-				self.conn.execute( 'ALTER TABLE trigger ADD COLUMN ts_start timestamp DEFAULT ?', (tNow,) )
-				#ts_id = list( self.conn.execute( 'SELECT ts,id from trigger' ))
-				#self.conn.executemany( 'UPDATE trigger SET ts_start=? WHERE id=?', ts_id )
-				#del ts_id
+				self.conn.execute( 'ALTER TABLE trigger ADD COLUMN ts_start timestamp DEFAULT 0' )
 				self.conn.execute( 'UPDATE trigger SET ts_start=ts' )
 		
 		if initTables:

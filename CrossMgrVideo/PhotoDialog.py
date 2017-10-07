@@ -77,6 +77,7 @@ class PhotoDialog( wx.Dialog ):
 		self.kmh = triggerInfo['kmh'] or 0.0
 		self.mps = self.kmh / 3.6
 		self.mph = self.kmh * 0.621371
+		self.pps = 2000.0
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		self.scaledImage = ScaledImage( self, image=self.getPhoto() )
@@ -180,7 +181,7 @@ class PhotoDialog( wx.Dialog ):
 				
 		size = (850,650)
 		computeSpeed = ComputeSpeed( self, size=size )
-		self.mps, self.kmh, self.mph = computeSpeed.Show( image1, t1, image2, t2, self.triggerInfo['ts_start'] )
+		self.mps, self.kmh, self.mph, self.pps = computeSpeed.Show( image1, t1, image2, t2, self.triggerInfo['ts_start'] )
 		self.onPhotoHeader()
 	
 	def onPrint( self, event ):
