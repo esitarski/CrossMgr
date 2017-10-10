@@ -12,7 +12,7 @@ import StatusBar
 import OutputStreamer
 import NumKeypad
 from PhotoFinish import TakePhoto, okTakePhoto
-from GetResults import GetResults, IsRiderFinished
+from GetResults import GetResults, GetResultsWithData, IsRiderFinished
 from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, DeleteEntry, DoDNS, DoDNF, DoPull
 from FtpWriteFile import realTimeFtpPublish
 
@@ -80,20 +80,29 @@ def getExpectedRecorded( tCutoff=0.0 ):
 	recorded.sort( key=Entry.key )
 	return expected, recorded
 	
-# Define columns for recorded and expected information.
-iNumCol, iNoteCol, iTimeCol, iLapCol, iGapCol, iNameCol, iWaveCol, iColMax = range(8)
-colnames = [None] * iColMax
-colnames[iNumCol]  = _('Bib')
-colnames[iNoteCol] = _('Note')
-colnames[iLapCol]  = _('Lap')
-colnames[iTimeCol] = _('Time')
-colnames[iGapCol]  = _('Gap')
-colnames[iNameCol] = _('Name')
-colnames[iWaveCol] = _('Wave')
+# Define columns for recorded and expected grids.
+iRecordedNumCol, iRecordedNoteCol, iRecordedTimeCol, iRecordedGapCol, iRecordedLapCol, iRecordedNameCol, iRecordedWaveCol, iRecordedColMax = range(8)
+recordedColnames = [None] * iRecordedColMax
+recordedColnames[iRecordedNumCol]  = _('Bib')
+recordedColnames[iRecordedNoteCol] = _('Note')
+recordedColnames[iRecordedTimeCol] = _('Time')
+recordedColnames[iRecordedGapCol]  = _('Gap')
+recordedColnames[iRecordedLapCol]  = _('Lap')
+recordedColnames[iRecordedNameCol] = _('Name')
+recordedColnames[iRecordedWaveCol] = _('Wave')
+
+iExpectedNumCol, iExpectedNoteCol, iExpectedTimeCol, iExpectedLapCol, iExpectedNameCol, iExpectedWaveCol, iExpectedColMax = range(7)
+expectedColnames = [None] * iExpectedColMax
+expectedColnames[iExpectedNumCol]  = _('Bib')
+expectedColnames[iExpectedNoteCol] = _('Note')
+expectedColnames[iExpectedLapCol]  = _('Lap')
+expectedColnames[iExpectedTimeCol] = _('ETA')
+expectedColnames[iExpectedNameCol] = _('Name')
+expectedColnames[iExpectedWaveCol] = _('Wave')
 
 fontSize = 11
 
-def GetLabelGrid( parent, bigFont=False ):
+def GetLabelGrid( parent, bigFont=False, colnames=[], leftAlignCols=[] ):
 	font = wx.Font( fontSize + (fontSize//3 if bigFont else 0), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 	dc = wx.WindowDC( parent )
 	dc.SetFont( font )
@@ -102,24 +111,23 @@ def GetLabelGrid( parent, bigFont=False ):
 	label = wx.StaticText( parent, label = u'{}:'.format(_('Recorded')) )
 	
 	grid = ColGrid.ColGrid( parent, colnames = colnames )
-	grid.SetLeftAlignCols( [iNameCol, iWaveCol] )
+	grid.SetLeftAlignCols( leftAlignCols )
 	grid.SetRowLabelSize( 0 )
 	grid.SetRightAlign( True )
 	grid.AutoSizeColumns( True )
 	grid.DisableDragColSize()
 	grid.DisableDragRowSize()
-	grid.SetDoubleBuffered( True )
 	grid.SetDefaultCellFont( font )
 	grid.SetDefaultRowSize( int(h * 1.15), True )
 	return label, grid
 		
 class LabelGrid( wx.Panel ):
-	def __init__( self, parent, id=wx.ID_ANY, style=0, bigFont=False ):
+	def __init__( self, parent, id=wx.ID_ANY, style=0, bigFont=False, colnames=[], leftAlignCols=[] ):
 		wx.Panel.__init__(self, parent, id, style=style)
 		
 		bsMain = wx.BoxSizer( wx.VERTICAL )
 		
-		self.label, self.grid = GetLabelGrid( self, bigFont )
+		self.label, self.grid = GetLabelGrid( self, bigFont, colnames, leftAlignCols )
 		bsMain.Add( self.label, 0, flag=wx.ALL, border=4 )
 		bsMain.Add( self.grid, 1, flag=wx.ALL|wx.EXPAND, border = 4 )
 		
@@ -138,6 +146,7 @@ class ForecastHistory( wx.Panel ):
 		self.groupColour = wx.Colour(220, 220, 220)
 
 		self.callLaterRefresh = None
+		self.SetDoubleBuffered( True )
 		
 		# Main sizer.
 		bsMain = wx.BoxSizer( wx.VERTICAL )
@@ -145,23 +154,22 @@ class ForecastHistory( wx.Panel ):
 		# Put Recorded and Expected in a splitter window.
 		self.splitter = wx.SplitterWindow( self )
 		
-		self.lgHistory = LabelGrid( self.splitter, style=wx.BORDER_SUNKEN )
+		self.lgExpected = LabelGrid( self.splitter, style=wx.BORDER_SUNKEN, bigFont=True,
+			colnames=expectedColnames, leftAlignCols=[iExpectedNameCol,iExpectedWaveCol] )
+		self.expectedName = self.lgExpected.label
+		self.expectedGrid = self.lgExpected.grid
+		self.expectedName.SetLabel( _('Expected (click Bib to record entry)') )
+		self.expectedGrid.SetDefaultCellBackgroundColour( wx.Colour(230,255,255) )
+		self.Bind( wx.grid.EVT_GRID_SELECT_CELL, self.doExpectedSelect, self.expectedGrid )
+		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doExpectedPopup, self.expectedGrid )	
+				
+		self.lgHistory = LabelGrid( self.splitter, style=wx.BORDER_SUNKEN,
+			colnames=recordedColnames, leftAlignCols=[iRecordedNameCol,iRecordedWaveCol] )
 		self.historyName = self.lgHistory.label
 		self.historyName.SetLabel( _('Recorded') )
 		self.historyGrid = self.lgHistory.grid
 		self.Bind( wx.grid.EVT_GRID_CELL_LEFT_DCLICK, self.doNumDrilldown, self.historyGrid )
 		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doHistoryPopup, self.historyGrid )
-		
-		self.lgExpected = LabelGrid( self.splitter, style=wx.BORDER_SUNKEN, bigFont=True )
-		self.expectedName = self.lgExpected.label
-		self.expectedGrid = self.lgExpected.grid
-		self.expectedGrid.SetDoubleBuffered( True )
-		colnames[iTimeCol] = _('ETA')
-		self.expectedGrid.Set( colnames = colnames )
-		self.expectedName.SetLabel( _('Expected (click Bib to record entry)') )
-		self.expectedGrid.SetDefaultCellBackgroundColour( wx.Colour(230,255,255) )
-		self.Bind( wx.grid.EVT_GRID_SELECT_CELL, self.doExpectedSelect, self.expectedGrid )
-		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doExpectedPopup, self.expectedGrid )	
 		
 		self.splitter.SetMinimumPaneSize( 4 )
 		self.splitter.SetSashGravity( 0.5 )
@@ -459,7 +467,7 @@ class ForecastHistory( wx.Panel ):
 		if not tRace:
 			tRace = race.curRaceTime()
 		getT = self.getETATimeFunc()
-		self.expectedGrid.SetColumn( iTimeCol, [formatTime(getT(e) - tRace) if e.lap > 0 else ('[{}]'.format(formatTime(max(0.0, getT(e) - tRace + 0.0000001))))\
+		self.expectedGrid.SetColumn( iExpectedTimeCol, [formatTime(getT(e) - tRace) if e.lap > 0 else ('[{}]'.format(formatTime(max(0.0, getT(e) - tRace + 0.0000001))))\
 										for e in self.quickExpected] )
 	
 	def addGaps( self, recorded ):
@@ -523,9 +531,28 @@ class ForecastHistory( wx.Panel ):
 		
 		expected = expected[:expectedShowMax]
 		
-		prevCatLeaders, nextCatLeaders = race.getCatPrevNextLeaders( tRace )
-		prevRiderPosition, nextRiderPosition = race.getPrevNextRiderPositions( tRace )
-		prevRiderGap, nextRiderGap = race.getPrevNextRiderGaps( tRace )
+		#-----------------------------------------------------------
+		nextCatLeaders = {}
+		prevRiderPosition, nextRiderPosition = {}, {}
+		prevRiderGap = {}
+		
+		if race.riders and race.isRunning():
+			Finisher = Model.Rider.Finisher
+			for c in race.getCategories(startWaveOnly=True):
+				results = GetResultsWithData( c )
+				if not results:
+					continue
+				rr = results[0]
+				if rr.status != Finisher:
+					continue
+				nextCatLeaders[rr.num] = c
+				for pos, rr in enumerate(results, 1):
+					if rr.status != Finisher:
+						break
+					prevRiderPosition[rr.num] = nextRiderPosition[rr.num] = pos
+					prevRiderGap[rr.num] = rr.gap
+	
+		#-----------------------------------------------------------
 		
 		backgroundColour = {}
 		textColour = {}
@@ -534,7 +561,7 @@ class ForecastHistory( wx.Panel ):
 		tMissing = tRace - averageLapTime / 8.0
 		iNotMissing = 0
 		for r in (i for i, e in enumerate(expected) if e.t < tMissing):
-			for c in xrange(iColMax):
+			for c in xrange(iExpectedColMax):
 				backgroundColour[(r, c)] = self.orangeColour
 			iNotMissing = r + 1
 			
@@ -546,22 +573,22 @@ class ForecastHistory( wx.Panel ):
 		outsideTimeBound = set()
 		for r, e in enumerate(expected):
 			if e.num in nextCatLeaders:
-				backgroundColour[(r, iNoteCol)] = wx.GREEN
+				backgroundColour[(r, iExpectedNoteCol)] = wx.GREEN
 				catNextTime[nextCatLeaders[e.num]] = e.t
 				if e.num == leaderNext:
-					backgroundColour[(r, iNumCol)] = wx.GREEN
+					backgroundColour[(r, iExpectedNumCol)] = wx.GREEN
 					iBeforeLeader = r
 			elif tRace < tRaceLength and race.isOutsideTimeBound(e.num):
-				backgroundColour[(r, iNoteCol)] = self.redColour
-				textColour[(r, iNoteCol)] = wx.WHITE
+				backgroundColour[(r, iExpectedNoteCol)] = self.redColour
+				textColour[(r, iExpectedNoteCol)] = wx.WHITE
 				outsideTimeBound.add( e.num )
 		
-		data = [None] * iColMax
-		data[iNumCol] = [u'{}'.format(e.num) for e in expected]
+		data = [None] * iExpectedColMax
+		data[iExpectedNumCol] = [u'{}'.format(e.num) for e in expected]
 		getT = self.getETATimeFunc()
-		data[iTimeCol] = [formatTime(getT(e) - tRace) if e.lap > 0
+		data[iExpectedTimeCol] = [formatTime(getT(e) - tRace) if e.lap > 0
 			else (u'[{}]'.format(formatTime(max(0.0, getT(e) - tRace + 0.99999999)))) for e in expected]
-		data[iLapCol] = [u'{}'.format(e.lap) if e.lap > 0 else u'' for e in expected]
+		data[iExpectedLapCol] = [u'{}'.format(e.lap) if e.lap > 0 else u'' for e in expected]
 		def getNoteExpected( e ):
 			if e.lap == 0:
 				return _('Start')
@@ -579,15 +606,7 @@ class ForecastHistory( wx.Panel ):
 				return Utils.ordinal(position)
 			else:
 				return ' '
-		data[iNoteCol] = [getNoteExpected(e) for e in expected]
-		def getGapExpected( e ):
-			try:
-				gap = prevRiderGap.get(e.num, ' ') if e.t < catNextTime[race.getCategory(e.num)] else \
-						   nextRiderGap.get(e.num, ' ')
-			except KeyError:
-				gap = prevRiderGap.get(e.num, ' ')
-			return gap
-		data[iGapCol] = [getGapExpected(e) for e in expected]
+		data[iExpectedNoteCol] = [getNoteExpected(e) for e in expected]
 		def getName( e ):
 			info = externalInfo.get(e.num, {})
 			last = info.get('LastName','')
@@ -595,14 +614,14 @@ class ForecastHistory( wx.Panel ):
 			if last and first:
 				return u'{}, {}'.format(last, first)
 			return last or first or u' '
-		data[iNameCol] = [getName(e) for e in expected]
+		data[iExpectedNameCol] = [getName(e) for e in expected]
 		
 		def getWave( e ):
 			try:
 				return race.getCategory(e.num).fullname
 			except:
 				return u' '
-		data[iWaveCol] = [getWave(e) for e in expected]
+		data[iExpectedWaveCol] = [getWave(e) for e in expected]
 		
 		self.quickExpected = expected
 		
@@ -628,21 +647,21 @@ class ForecastHistory( wx.Panel ):
 				for i in xrange( iColMax ):
 					backgroundColour[(r, i)] = self.groupColour
 			if prevRiderPosition.get(e.num,-1) == 1:
-				backgroundColour[(r, iNoteCol)] = wx.GREEN
+				backgroundColour[(r, iRecordedNoteCol)] = wx.GREEN
 				if e.num == leaderPrev:
-					backgroundColour[(r, iNumCol)] = wx.GREEN
+					backgroundColour[(r, iRecordedNumCol)] = wx.GREEN
 			elif tRace < tRaceLength and race.isOutsideTimeBound(e.num):
-				backgroundColour[(r, iNoteCol)] = self.redColour
-				textColour[(r, iNoteCol)] = wx.WHITE
+				backgroundColour[(r, iRecordedNoteCol)] = self.redColour
+				textColour[(r, iRecordedNoteCol)] = wx.WHITE
 				outsideTimeBound.add( e.num )
 								
-		data = [None] * iColMax
-		data[iNumCol] = [u'{}{}'.format(e.num,u"\u2190" if IsRiderFinished(e.num, e.t) else u'') if e.num > 0 else u' ' for e in recorded]
-		data[iTimeCol] = [
+		data = [None] * iRecordedColMax
+		data[iRecordedNumCol] = [u'{}{}'.format(e.num,u"\u2190" if IsRiderFinished(e.num, e.t) else u'') if e.num > 0 else u' ' for e in recorded]
+		data[iRecordedTimeCol] = [
 			formatTime(e.t) if e.lap > 0 else
 			(u'{}'.format(formatTimeGap(e.t)) if e.t is not None else u' ') if e.isGap() else
 			u'[{}]'.format(formatTime(e.t)) for e in recorded]
-		data[iLapCol] = [u'{}'.format(e.lap) if e.lap else u' ' for e in recorded]
+		data[iRecordedLapCol] = [u'{}'.format(e.lap) if e.lap else u' ' for e in recorded]
 		def getNoteHistory( e ):
 			if e.isGap():
 				return u'{}'.format(e.groupCount)
@@ -657,14 +676,14 @@ class ForecastHistory( wx.Panel ):
 				return Utils.ordinal(position)
 			else:
 				return ' '
-		data[iNoteCol] = [getNoteHistory(e) for e in recorded]
+		data[iRecordedNoteCol] = [getNoteHistory(e) for e in recorded]
 		def getGapHistory( e ):
 			if e.lap == 0:
 				return ' '
-			return prevRiderGap.get(e.num, ' ')
-		data[iGapCol] = [getGapHistory(e) for e in recorded]
-		data[iNameCol] = [getName(e) for e in recorded]
-		data[iWaveCol] = [getWave(e) for e in recorded]
+			return prevRiderGap.get(e.num, u'')
+		data[iRecordedGapCol] = [getGapHistory(e) for e in recorded]
+		data[iRecordedNameCol] = [getName(e) for e in recorded]
+		data[iRecordedWaveCol] = [getWave(e) for e in recorded]
 
 		self.historyGrid.Set( data = data, backgroundColour = backgroundColour, textColour = textColour )
 		self.historyGrid.AutoSizeColumns()
