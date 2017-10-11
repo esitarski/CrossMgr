@@ -517,8 +517,10 @@ class MainWin( wx.Frame ):
 
 	def onTest( self, event ):
 		self.testCount = getattr(self, 'testCount', 0) + 1
+		tNow = now()
 		self.requestQ.put( {
-				'time':now(),
+				'time':tNow,
+				'ts_start':tNow,
 				'bib':self.testCount,
 				'firstName':u'Test',
 				'lastName':u'Test',
@@ -587,7 +589,7 @@ class MainWin( wx.Frame ):
 	def startThreads( self ):
 		self.grabFrameOK = False
 		
-		self.listenerThread = SocketListener( self.requestQ, self.messageQ )		
+		self.listenerThread = SocketListener( self.requestQ, self.messageQ )
 		error = self.listenerThread.test()
 		if error:
 			wx.MessageBox('Socket Error:\n\n{}\n\nIs another CrossMgrVideo or CrossMgrCamera running on this computer?'.format(error),
@@ -677,6 +679,7 @@ class MainWin( wx.Frame ):
 			self.dbWriterQ.put( (
 				'trigger',
 				tSearch - timedelta(seconds=advanceSeconds),
+				message.get('ts_start', None) or datetime.now(),
 				message.get('bib', 99999),
 				message.get('firstName',u''),
 				message.get('lastName',u''),

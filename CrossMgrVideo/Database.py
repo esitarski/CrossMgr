@@ -90,12 +90,15 @@ class Database( object ):
 	def write( self, tsTriggers=None, tsJpgs=None ):
 		if not tsTriggers and not tsJpgs:
 			return
-		
+			
 		if tsJpgs:
 			tsJpgs = [(ts, jpg) for ts, jpg in tsJpgs if ts not in self.photoTsCache]
 		
 		with self.conn:
 			if tsTriggers:
+				print tsTriggers
+				assert isinstance(tsTriggers[0][0], datetime)
+				assert isinstance(tsTriggers[0][1], datetime)
 				self.conn.executemany( 'INSERT INTO trigger (ts,ts_start,bib,first_name,last_name,team,wave,race_name) VALUES (?,?,?,?,?,?,?,?)', tsTriggers )
 			if tsJpgs:
 				self.conn.executemany( 'INSERT INTO photo (ts,jpg) VALUES (?,?)', tsJpgs )
@@ -188,7 +191,7 @@ def DBWriter( q, fps=25 ):
 				v[2].SaveFile( outStream, wx.BITMAP_TYPE_JPEG )
 				tsJpgs.append( (v[1], sqlite3.Binary(outStream.getvalue())) )
 		elif v[0] == 'trigger':
-			tsTriggers.append( (list(v[1:]) + [u''] * 6)[:7] )
+			tsTriggers.append( (list(v[1:]) + [u''] * 7)[:8] )
 		elif v[0] == 'kmh':
 			db.updateTriggerKMH( v[1], v[2] )	# id, kmh
 		elif v[0] == 'flush':

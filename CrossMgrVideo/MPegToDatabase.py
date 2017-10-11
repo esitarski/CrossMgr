@@ -53,7 +53,7 @@ def MPegToDatabase( fnameMPeg, tRecorded=None ):
 	ts = tStart + datetime.timedelta( seconds = (t - tStart).total_seconds()/2.0 )
 	print tStart, ts, t
 	#          ts,ts_start,bib,first_name,last_name,team,wave,race_name
-	trigger = (ts,tStart,   1,     '',    fnameMPeg, '',  '','Test'  )
+	trigger = (ts, tStart,  1,     '',    fnameMPeg, '',  '',  'Test'  )
 	database.write( tsTriggers=[trigger] )
 	shutil.rmtree( tmpdir, ignore_errors=True )
 
