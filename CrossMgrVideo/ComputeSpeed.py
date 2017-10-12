@@ -86,11 +86,11 @@ class TimePage(adv.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		self.sivl = ScaledImageVerticalLines( self, numLines=1, colors=(wx.Colour(255,165,0),) )
+		self.sivl = ScaledImageVerticalLines( self, numLines=1, colors=(wx.Colour(255,0,255),) )
 		self.sivl.Bind( EVT_VERTICAL_LINES, self.onVerticalLines )
 		vbs.Add( self.sivl, 1, wx.EXPAND|wx.ALL, border=border)
 		vbs.Add( wx.StaticText(self,
-			label = _("Drag the Orange Square to show the Time anywhere in the photo.")),
+			label = _("Drag the Purple Square to show the Time in the photo.")),
 			flag=wx.ALL, border = border
 		)
 		self.speed = wx.StaticText( self )

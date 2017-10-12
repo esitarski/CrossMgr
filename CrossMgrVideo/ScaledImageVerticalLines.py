@@ -33,6 +33,7 @@ class ScaledImageVerticalLines( wx.Panel ):
 		self.controlHeight = None
 		self.doResize = False
 		self.xCorrection = None
+		self.yCur = None
 		self.colors = colors or contrastColours
 		self.Bind( wx.EVT_PAINT, self.OnPaint )
 		self.Bind( wx.EVT_SIZE, self.OnSize )
@@ -73,6 +74,7 @@ class ScaledImageVerticalLines( wx.Panel ):
 	def OnMouseMotion( self, event ):
 		if self.iLineSelected is not None:
 			self.verticalLines[self.iLineSelected] = event.GetX() - self.xCorrection
+			self.yCur = event.GetY()
 			
 			evt = VerticalLineEvent(EVT_VERTICAL_LINES_Type, self.GetId())
 			evt.SetVerticalLines( self.verticalLines )
@@ -82,6 +84,8 @@ class ScaledImageVerticalLines( wx.Panel ):
 	
 	def OnMouseUp( self, event ):
 		self.iLineSelected = None
+		self.yCur = None
+		self.Refresh()
 	
 	def OnSize( self, event ):
 		self.doResize = True
@@ -114,6 +118,10 @@ class ScaledImageVerticalLines( wx.Panel ):
 		dc.DrawBitmap( bitmap, 0, 0 )
 		
 		lenColors = len(self.colors)
+		if self.iLineSelected is not None and self.yCur is not None:
+			dc.SetPen( wx.Pen(self.colors[self.iLineSelected%lenColors], 1) )
+			dc.DrawLine( 0, self.yCur, width, self.yCur )
+		
 		for i, v in enumerate(self.verticalLines):
 			dc.SetPen( wx.Pen(self.colors[i%lenColors], 1) )
 			dc.DrawLine( v, 0, v, height )
