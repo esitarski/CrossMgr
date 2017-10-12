@@ -96,9 +96,6 @@ class Database( object ):
 		
 		with self.conn:
 			if tsTriggers:
-				print tsTriggers
-				assert isinstance(tsTriggers[0][0], datetime)
-				assert isinstance(tsTriggers[0][1], datetime)
 				self.conn.executemany( 'INSERT INTO trigger (ts,ts_start,bib,first_name,last_name,team,wave,race_name) VALUES (?,?,?,?,?,?,?,?)', tsTriggers )
 			if tsJpgs:
 				self.conn.executemany( 'INSERT INTO photo (ts,jpg) VALUES (?,?)', tsJpgs )
