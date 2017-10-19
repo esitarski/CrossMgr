@@ -117,6 +117,7 @@ class TimePage(adv.WizardPageSimple):
 		self.frontWheelEdge = frontWheelEdge
 		self.pixelsPerSecond = pixelsPerSecond
 		self.direction = 1.0 if leftToRight else -1.0
+		self.onVerticalLines()
 	
 	def getPosition( self ):
 		return self.sivl.GetVerticalLines()[0]

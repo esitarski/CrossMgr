@@ -121,6 +121,10 @@ class PhotoDialog( wx.Dialog ):
 		btn.Bind( wx.EVT_BUTTON, self.onGetSpeed )
 		btnsizer.Add(btn, flag=wx.LEFT, border=32)
 		
+		self.speedFrames = wx.Choice(self, choices=['Use 1 Frame', 'Use 2 Frames', 'Use 3 Frames', 'Use 4 Frames'] )
+		self.speedFrames.SetSelection( 1 )
+		btnsizer.Add(self.speedFrames, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=2)
+		
 		btnsizer.AddStretchSpacer()
 
 		btn = wx.BitmapButton(self, wx.ID_CLOSE, bitmap=Utils.getBitmap('close-window.png'))
@@ -164,15 +168,21 @@ class PhotoDialog( wx.Dialog ):
 	
 	def onGetSpeed( self, event ):
 		t1, image1, t2, image2 = None, None, None, None
-		i1, i2 = len(self.tsJpg)-2, len(self.tsJpg)-1
+		speedFrames = self.speedFrames.GetSelection() + 1
+		i1, i2 = len(self.tsJpg)-(speedFrames+1), len(self.tsJpg)-1
 		
 		for i, (ts, jpg) in enumerate(self.tsJpg):
 			if jpg == self.jpg:
 				if i == 0:
-					i1, i2 = 0, 1
+					i1, i2 = 0, speedFrames
 				else:
-					i1, i2  = i-1, i
+					i1, i2  = i-speedFrames, i
 				break
+		
+		i1 = min( max(0, i1), len(self.tsJpg)-1 )
+		i2 = min( max(0, i2), len(self.tsJpg)-1 )
+		if i1 == i2:
+			return
 		
 		t1 = self.tsJpg[i1][0]
 		image1 = wx.Image( StringIO.StringIO(self.tsJpg[i1][1]), wx.BITMAP_TYPE_JPEG )
