@@ -13,7 +13,7 @@ def PhotoWriter( qWriter, qMessage, qFTP ):
 			for i in xrange(2):
 				try:
 					with open(fname, 'wb') as f:
-						image.SaveStream( f, BITMAP_TYPE_JPEG )
+						image.SaveFile( f, BITMAP_TYPE_JPEG )
 					success = True
 					break
 				
