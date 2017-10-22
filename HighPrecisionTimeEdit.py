@@ -1,4 +1,3 @@
-
 import wx
 import math
 import Utils
@@ -21,7 +20,6 @@ if 'WXMAC' not in wx.Platform:
 				style		 = style,
 				size         = size,
 			)
-			
 			if seconds is not None:
 				self.SetSeconds( seconds )
 		
@@ -59,7 +57,6 @@ else:
 				style		= style,
 				size        = size,
 			)
-			
 			if seconds is not None:
 				self.SetSeconds( seconds )
 		
