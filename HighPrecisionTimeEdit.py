@@ -4,7 +4,7 @@ import math
 import Utils
 
 if 'WXMAC' not in wx.Platform:
-	import wx.lib.masked             as  masked
+	import wx.lib.masked  as  masked
 	class HighPrecisionTimeEdit( masked.TextCtrl ):
 		mask         = u'##:##:##.###'
 		defaultValue = u'00:00:00.000'
@@ -12,15 +12,15 @@ if 'WXMAC' not in wx.Platform:
 
 		def __init__( self, parent, id=wx.ID_ANY, seconds=None, allow_none=False, style=0, size=wx.DefaultSize ):
 			self.allow_none = allow_none
-			masked.TextCtrl.__init__(
-						self, parent, id,
-						mask		 = self.mask,
-						defaultValue = self.defaultValue,
-						validRegex   = u'[0-9][0-9]:[0-5][0-9]:[0-5][0-9]\.[0-9][0-9][0-9]',
-						useFixedWidthFont = False,
-						style		 = style,
-						size         = size,
-					)
+			super( HighPrecisionTimeEdit, self ).__init__(
+				parent, id,
+				mask		 = self.mask,
+				defaultValue = self.defaultValue,
+				validRegex   = u'[0-9][0-9]:[0-5][0-9]:[0-5][0-9]\.[0-9][0-9][0-9]',
+				useFixedWidthFont = False,
+				style		 = style,
+				size         = size,
+			)
 			
 			if seconds is not None:
 				self.SetSeconds( seconds )
@@ -34,14 +34,16 @@ if 'WXMAC' not in wx.Platform:
 			
 		def SetSeconds( self, secs ):
 			if secs is None and self.allow_none:
-				masked.TextCtrl.SetValue( self, self.emptyValue )
+				v = self.emptyValue
 			else:
-				masked.TextCtrl.SetValue( self, Utils.formatTime(
+				v = Utils.formatTime(
 						secs,
 						highPrecision=True,		extraPrecision=True,
 						forceHours=True, 		twoDigitHours=True,
 					)
 				)
+			super( HighPrecisionTimeEdit, self ).SetValue( v )
+
 else:
 	import re
 	class HighPrecisionTimeEdit( wx.TextCtrl ):
@@ -51,12 +53,12 @@ else:
 
 		def __init__( self, parent, id=wx.ID_ANY, seconds=None, allow_none=False, style=0, size=wx.DefaultSize ):
 			self.allow_none = allow_none
-			wx.TextCtrl.__init__(
-						self, parent, id,
-						value		= self.defaultValue,
-						style		= style,
-						size        = size,
-					)
+			super( HighPrecisionTimeEdit, self ).__init__(
+				parent, id,
+				value		= self.defaultValue,
+				style		= style,
+				size        = size,
+			)
 			
 			if seconds is not None:
 				self.SetSeconds( seconds )
@@ -70,11 +72,12 @@ else:
 			
 		def SetSeconds( self, secs ):
 			if secs is None and self.allow_none:
-				wx.TextCtrl.SetValue( self, self.emptyValue )
+				v = self.emptyValue
 			else:
-				wx.TextCtrl.SetValue( self, Utils.formatTime(
+				v = Utils.formatTime(
 						secs,
 						highPrecision=True,		extraPrecision=True,
 						forceHours=True, 		twoDigitHours=True,
 					)
 				)
+			super( HighPrecisionTimeEdit, self ).SetValue( v )
