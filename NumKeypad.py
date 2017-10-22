@@ -680,7 +680,7 @@ class NumKeypad( wx.Panel ):
 			else:
 				lastRiderOnCourseName = u'{}'.format(lastRiderOnCourse.num)
 			
-			lastRiderOnCourseTeam = u'{}'.format( getattr(lastRiderOnCourse, 'Team', u'Independent') )
+			lastRiderOnCourseTeam = u'{}'.format( getattr(lastRiderOnCourse, 'Team', u'') )
 			if len(lastRiderOnCourseTeam) > maxLength:
 				lastRiderOnCourseTeam = lastRiderOnCourseTeam[:maxLength].strip() + u'...'
 			

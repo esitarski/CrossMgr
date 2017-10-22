@@ -1118,6 +1118,8 @@ class Race( object ):
 	timezone = ''
 	discipline = 'Cyclo-cross'
 	
+	notes = u''
+	
 	showCourseAnimationInHtml = True
 	licenseLinkTemplate = u''			# Used to create an html link from the rider's license number in the html output.
 	hideDetails = True

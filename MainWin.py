@@ -1816,7 +1816,7 @@ class MainWin( wx.Frame ):
 		payload['email']				= self.getEmail()
 		payload['version']				= Version.AppVerName
 		
-		notes = getattr(race, 'notes', u'')
+		notes = race.notes
 		if notes.lstrip()[:6].lower().startswith( '<html>' ):
 			notes = TemplateSubstitute( notes, race.getTemplateValues() )
 			notes = self.reRemoveTags.sub( '', notes )
@@ -1993,7 +1993,7 @@ class MainWin( wx.Frame ):
 			payload['rfid']				= getattr(race, 'enableJChipIntegration', False)
 			payload['displayUnits']		= race.distanceUnitStr
 
-			notes = getattr(race, 'notes', '')
+			notes = race.notes
 			if notes.lstrip()[:6].lower().startswith( '<html>' ):
 				notes = self.reRemoveTags.sub( '', notes )
 				notes = notes.replace('<', '{-{').replace( '>', '}-}' )

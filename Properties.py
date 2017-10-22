@@ -1143,7 +1143,7 @@ class NotesProperties( wx.Panel ):
 	
 	def refresh( self ):
 		race = Model.race
-		self.notes.SetValue( getattr(race, 'notes', '') )
+		self.notes.SetValue( race.notes )
 		
 	def commit( self ):
 		race = Model.race
@@ -1347,6 +1347,7 @@ class Properties( wx.Panel ):
 				Utils.MessageOK( self, u'{}\n\n{}\n{}'.format(_("Template Load Failure"), e, path), _("Template Load Failure"), wx.ICON_ERROR )
 	
 	def saveTemplateButtonCallback( self, event ):
+		self.commit()
 		templatesFolder = os.path.join( os.path.expanduser("~"), 'CrossMgrTemplates' )
 		try:
 			os.makedirs( templatesFolder )
