@@ -39,7 +39,6 @@ if 'WXMAC' not in wx.Platform:
 						highPrecision=True,		extraPrecision=True,
 						forceHours=True, 		twoDigitHours=True,
 					)
-				)
 			super( HighPrecisionTimeEdit, self ).SetValue( v )
 
 else:
@@ -76,5 +75,4 @@ else:
 						highPrecision=True,		extraPrecision=True,
 						forceHours=True, 		twoDigitHours=True,
 					)
-				)
 			super( HighPrecisionTimeEdit, self ).SetValue( v )
