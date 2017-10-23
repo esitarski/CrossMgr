@@ -36,6 +36,7 @@ def getExpectedRecorded( tCutoff=0.0 ):
 	if considerStartTime:
 		NP = Model.Rider.NP
 		bibsWithResults = set( rr.num for rr in results if rr.status != NP )
+		
 		# Include the rider's start time.  This is not in the results if there are no results yet.
 		interpValue = race.isTimeTrial
 		for rider in race.riders.itervalues():
@@ -605,7 +606,7 @@ class ForecastHistory( wx.Panel ):
 			elif position >= 0:
 				return Utils.ordinal(position)
 			else:
-				return ' '
+				return u' '
 		data[iExpectedNoteCol] = [getNoteExpected(e) for e in expected]
 		def getName( e ):
 			info = externalInfo.get(e.num, {})
@@ -644,7 +645,7 @@ class ForecastHistory( wx.Panel ):
 		# Highlight the leader in the recorded list.
 		for r, e in enumerate(recorded):
 			if e.isGap():
-				for i in xrange( iColMax ):
+				for i in xrange( iRecordedColMax ):
 					backgroundColour[(r, i)] = self.groupColour
 			if prevRiderPosition.get(e.num,-1) == 1:
 				backgroundColour[(r, iRecordedNoteCol)] = wx.GREEN

@@ -3148,6 +3148,7 @@ class MainWin( wx.Frame ):
 		race.minutes = self.raceMinutes
 		#race.photosAtRaceEndOnly = True
 		#race.enableJChipIntegration = True
+		#race.resetStartClockOnFirstTag = True
 		
 		# Prep the simulation data.
 		self.simulateSeen = set()
