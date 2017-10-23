@@ -173,6 +173,7 @@ def _GetResultsCore( category ):
 	isTimeTrial = race.isTimeTrial
 	
 	roadRaceFinishTimes = race.roadRaceFinishTimes
+	estimateLapsDownFinishTime = race.estimateLapsDownFinishTime
 	allCategoriesFinishAfterFastestRidersLastLap = race.allCategoriesFinishAfterFastestRidersLastLap
 	winAndOut = race.winAndOut
 	riders = race.riders
@@ -452,7 +453,7 @@ def _GetResultsCore( category ):
 		riderResults.sort( key=RiderResult._getWinAndOutKey )
 		assignFinishPositions( riderResults )
 		
-	if roadRaceFinishTimes and not isTimeTrial:
+	if roadRaceFinishTimes and estimateLapsDownFinishTime and not isTimeTrial:
 		for rr in riderResults:
 			rr.lastTime = rr.lastTimeOrig = rr.roadRaceLastTime
 			rr.gap = rr.roadRaceGap

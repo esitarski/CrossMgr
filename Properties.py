@@ -201,6 +201,7 @@ class RaceOptionsProperties( wx.Panel ):
 
 		self.highPrecisionTimes = wx.CheckBox( self, label=_('Show Times to 100s of a Second') )
 		self.roadRaceFinishTimes = wx.CheckBox( self, label=_('Road Race Finish Times (ignore decimals, groups get same time)') )
+		self.estimateLapsDownFinishTime = wx.CheckBox( self, label=_('Estimate Laps Down Finish Time (requires Road Race Finish Times)') )
 		self.setNoDataDNS = wx.CheckBox( self, label=_('Consider Riders in Spreadsheet to be DNS if no race data') )
 		
 		self.rule80MinLapCountLabel = wx.StaticText( self, label=_("Lap Time for 80% Rule: ") )
@@ -249,6 +250,7 @@ class RaceOptionsProperties( wx.Panel ):
 			(blank(),				0, labelAlign),		(self.autocorrectLapsDefault,	1, fieldAlign),
 			(blank(),				0, labelAlign),		(self.highPrecisionTimes,		1, fieldAlign),
 			(blank(),				0, labelAlign),		(self.roadRaceFinishTimes,		1, fieldAlign),
+			(blank(),				0, labelAlign),		(self.estimateLapsDownFinishTime,		1, fieldAlign),
 			(blank(),				0, labelAlign),		(self.setNoDataDNS,				1, fieldAlign),
 			(self.rule80MinLapCountLabel, 0, labelAlign),(self.rule80MinLapCountSizer,	1, fieldAlign),
 			(self.distanceUnitLabel,0, labelAlign),		(self.distanceUnitSizer,		1, fieldAlign),
@@ -270,7 +272,8 @@ class RaceOptionsProperties( wx.Panel ):
 		self.allCategoriesFinishAfterFastestRidersLastLap.SetValue( getattr(race, 'allCategoriesFinishAfterFastestRidersLastLap', False) )
 		self.autocorrectLapsDefault.SetValue( getattr(race, 'autocorrectLapsDefault', True) )
 		self.highPrecisionTimes.SetValue( getattr(race, 'highPrecisionTimes', False) )
-		self.roadRaceFinishTimes.SetValue( getattr(race, 'roadRaceFinishTimes', False) )
+		self.roadRaceFinishTimes.SetValue( race.roadRaceFinishTimes )
+		self.estimateLapsDownFinishTime.SetValue( race.estimateLapsDownFinishTime )
 		self.setNoDataDNS.SetValue( getattr(race, 'setNoDataDNS', False) )
 		if race.rule80MinLapCount == 1:
 			self.rule80MinLapCount1.SetValue( True )
@@ -292,6 +295,7 @@ class RaceOptionsProperties( wx.Panel ):
 		race.autocorrectLapsDefault = self.autocorrectLapsDefault.IsChecked()
 		race.highPrecisionTimes = self.highPrecisionTimes.IsChecked()
 		race.roadRaceFinishTimes = self.roadRaceFinishTimes.IsChecked()
+		race.estimateLapsDownFinishTime = self.estimateLapsDownFinishTime.IsChecked()
 		race.setNoDataDNS = self.setNoDataDNS.IsChecked()
 		race.rule80MinLapCount = (1 if self.rule80MinLapCount1.GetValue() else 2)
 		race.distanceUnit = self.distanceUnit.GetSelection()

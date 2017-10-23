@@ -35,6 +35,7 @@ def ReadPropertiesFromExcel( reader ):
 		
 		('GATrackingID',	'gaTrackingID',		's'),
 		('Road Race Finish Times',	'roadRaceFinishTimes',	'b'),
+		('Estimate Laps Down Finish Time',	'estimateLapsDownFinishTime',	'b'),
 		('No Data DNS',		'setNoDataDNS',		'b'),
 		('Chip Reader Type','chipReaderType',	'n'),
 		('Win and Out',		'winAndOut',		'b'),

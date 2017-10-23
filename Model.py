@@ -1074,6 +1074,7 @@ class Race( object ):
 	isChangedFlag = False
 	isTimeTrial = False
 	roadRaceFinishTimes = False
+	estimateLapsDownFinishTime = False
 	
 	enableJChipIntegration = False
 	resetStartClockOnFirstTag = False

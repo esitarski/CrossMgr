@@ -1813,6 +1813,7 @@ class MainWin( wx.Frame ):
 		payload['showCourseAnimation'] = race.showCourseAnimationInHtml
 		payload['licenseLinkTemplate'] = race.licenseLinkTemplate
 		payload['roadRaceFinishTimes'] = race.roadRaceFinishTimes
+		payload['estimateLapsDownFinishTime'] = race.estimateLapsDownFinishTime
 		payload['email']				= self.getEmail()
 		payload['version']				= Version.AppVerName
 		

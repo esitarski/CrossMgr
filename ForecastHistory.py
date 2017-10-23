@@ -35,11 +35,11 @@ def getExpectedRecorded( tCutoff=0.0 ):
 	
 	if considerStartTime:
 		NP = Model.Rider.NP
-		bibResults = set( rr.num for rr in results if rr.status != NP )
-		# Include the rider's TT start time.  This is not in the results if there are no results yet.
+		bibsWithResults = set( rr.num for rr in results if rr.status != NP )
+		# Include the rider's start time.  This is not in the results if there are no results yet.
 		interpValue = race.isTimeTrial
 		for rider in race.riders.itervalues():
-			if rider.status == Finisher and rider.num not in bibResults and rider.firstTime is not None:
+			if rider.status == Finisher and rider.num not in bibsWithResults and rider.firstTime is not None:
 				e = Entry( rider.num, 0, rider.firstTime, interpValue )
 				if rider.firstTime > tCur and e.interp:
 					expected.append( e )

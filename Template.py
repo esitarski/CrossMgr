@@ -17,6 +17,7 @@ class Template( object ):
 
 			'isTimeTrial',
 			'roadRaceFinishTimes',
+			'estimateLapsDownFinishTime',
 
 			'enableJChipIntegration',
 			'resetStartClockOnFirstTag',

@@ -774,7 +774,7 @@ class ExportGrid( object ):
 	
 		self.title = u'\n'.join( [race.title, Utils.formatDate(race.date), catStr, u', '.join(catData)] )
 		isTimeTrial = getattr( race, 'isTimeTrial', False )
-		roadRaceFinishTimes = getattr( race, 'roadRaceFinishTimes', False )
+		roadRaceFinishTimes = race.roadRaceFinishTimes
 
 		infoFields = ReportFields if getExternalData else []
 		infoFieldsPresent = set( infoFields ) & set( dir(leader) )
