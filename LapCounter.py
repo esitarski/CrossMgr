@@ -63,6 +63,10 @@ def getLapCounterOptions( isDialog ):
 				hs.Add( cs, flag=wx.LEFT, border=4 if i else 0 )
 			fgs.Add( hs )
 			
+			fgs.Add( wx.StaticText(self, label=u''), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
+			self.lapElapsedClock = wx.CheckBox(self, label=_('Show Lap Elapsed Time'))
+			fgs.Add( self.lapElapsedClock )
+			
 			fgs.Add( wx.StaticText(self, label=_('Lap Cycle')), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 			self.lapCounterCycle = intctrl.IntCtrl(self, min=0, max=None, limited=True, allow_none=True, )
 			fgs.Add( self.lapCounterCycle )
@@ -106,6 +110,7 @@ def getLapCounterOptions( isDialog ):
 				race.lapCounterCycle = self.lapCounterCycle.GetValue() or None
 				race.countdownTimer = (self.counterType.GetSelection() == 1)
 				race.secondsBeforeLeaderToFlipLapCounter = self.slider.GetValue()
+				race.lapElapsedClock = self.lapElapsedClock.GetValue()
 		
 		def refresh( self ):
 			race = Model.race
@@ -119,6 +124,7 @@ def getLapCounterOptions( isDialog ):
 				
 				self.lapCounterCycle.SetValue( race.lapCounterCycle or None )
 				self.slider.SetValue( race.secondsBeforeLeaderToFlipLapCounter )
+				self.lapElapsedClock.SetValue( race.lapElapsedClock )
 			
 		def OnOK( self, event ):
 			self.commit()
@@ -139,11 +145,12 @@ class LapCounter( wx.Panel ):
 	millis = 333
 	lapCounterCycle = None
 	countdownTimer = False
+	lapElapsedClock = True
 	
-	def __init__( self, parent, labels=[], id=wx.ID_ANY, size=(640,480), style=0 ):
+	def __init__( self, parent, labels=None, id=wx.ID_ANY, size=(640,480), style=0 ):
 		super(LapCounter, self).__init__( parent, id, size=size, style=style )
 		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )
-		self.labels = labels
+		self.labels = labels or []
 		self.Bind( wx.EVT_PAINT, self.OnPaint )
 		self.Bind( wx.EVT_SIZE, self.OnSize )
 		self.Bind( wx.EVT_RIGHT_DOWN, self.OnRightClick )
@@ -167,11 +174,14 @@ class LapCounter( wx.Panel ):
 	def GetState( self ):
 		lenLabels = len(self.labels)
 		fg, bg = getForegroundsBackgrounds()
+		race = Model.race
 		return {
 			'cmd': 'refresh',
 			'labels': self.labels,
 			'foregrounds': [c.GetAsString(wx.C2S_CSS_SYNTAX) for c in fg[:lenLabels]],
 			'backgrounds': [c.GetAsString(wx.C2S_CSS_SYNTAX) for c in bg[:lenLabels]],
+			'raceStartTime': race.startTime.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] if race and race.startTime else None,
+			'lapElapsedClock': self.lapElapsedClock,
 		}
 
 	def OnOptions( self, event ):
@@ -242,7 +252,7 @@ class LapCounter( wx.Panel ):
 			self.Refresh()
 		else:
 			self.flashOn = not self.flashOn
-			if any( flash for label, flash in self.labels ):
+			if self.lapElapsedClock or any( flash for label, flash, tLapTime in self.labels ):
 				self.Refresh()
 
 	def SetCountdownTimer( self, countdownTimer ):
@@ -250,8 +260,8 @@ class LapCounter( wx.Panel ):
 		if self.countdownTimer and not self.timer.IsRunning():
 			self.OnTimer()
 
-	def SetLabels( self, labels=[], showTime=False ):
-		labels = labels or [(u'\u25AF\u25AF', False)]
+	def SetLabels( self, labels=None, showTime=False ):
+		labels = labels or [(u'\u25AF\u25AF', False, None)]
 		
 		self.showTime = showTime
 		
@@ -265,11 +275,13 @@ class LapCounter( wx.Panel ):
 				self.OnTimer()
 			return
 		
-		if not any( flash for label, flash in self.labels ):
+		if any( flash for label, flash, tLapStart in self.labels ) or (
+				self.lapElapsedClock and any(tLapStart is not None for label, flash, tLapStart in self.labels)):
+			if not self.timer.IsRunning():
+				self.timer.Start( self.millis )
+		else:
 			self.timer.Stop()
 			self.flashOn = True
-		elif not self.timer.IsRunning():
-			self.timer.Start( self.millis )
 		self.Refresh()
 	
 	def OnSize( self, event ):
@@ -326,8 +338,8 @@ class LapCounter( wx.Panel ):
 			w = width // 3
 			h = height // 2
 			return (
-				(0, 0, w, h), (w, 0, w, h), (2*w, 0, 2*w, h),
-				(0, h, w, h), (w, h, w, h), (2*w, h, 2*w, h),
+				(0, 0, w, h), (w, 0, w, h), (2*w, 0, w, h),
+				(0, h, w, h), (w, h, w, h), (2*w, h, w, h),
 			)
 			
 	def OnPaint( self, event ):
@@ -381,18 +393,28 @@ class LapCounter( wx.Panel ):
 				fontSize = int( fontSize * w / wText )
 				dc.SetFont( wx.Font( (0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD ) )
 			return fontSize
+
+		def drawText( label, colour, x, y, w, h ):
+			labelWidth, labelHeight = dc.GetTextExtent( label )
+			xText, yText = x + (w - labelWidth) // 2, y + (h - labelHeight) // 2
+			dc.SetTextForeground( colour )
+			dc.DrawText( label, xText, yText )			
 		
 		def drawLapText( label, colour, x, y, w, h ):
 			labelWidth, labelHeight = dc.GetTextExtent( label )
 			xText, yText = x + (w - labelWidth) // 2, y + (h - labelHeight) // 2
-			dc.SetTextForeground( wx.BLACK )
-			shadowOffset = labelHeight//52
-			dc.DrawText( label, xText + shadowOffset, yText + shadowOffset )
+			if colour.GetAsString(wx.C2S_HTML_SYNTAX) != '#000000':
+				dc.SetTextForeground( wx.BLACK )
+				shadowOffset = labelHeight//52
+				dc.DrawText( label, xText + shadowOffset, yText + shadowOffset )
 			dc.SetTextForeground( colour )
 			dc.DrawText( label, xText, yText )
 		
+		race = Model.race
+		tRace = race.curRaceTime() if self.lapElapsedClock and race and race.isRunning() else None
+		
 		rects = self.tessellate(len(self.labels))
-		for i, (label, flash) in enumerate(self.labels):
+		for i, (label, flash, tLapStart) in enumerate(self.labels):
 			x, y, w, h = rects[i]
 			
 			dc.SetBrush( wx.Brush(self.backgrounds[i], wx.SOLID) )
@@ -401,6 +423,16 @@ class LapCounter( wx.Panel ):
 			lineBorderWidth = 4
 			dc.SetPen( wx.Pen(wx.BLACK, lineBorderWidth) )
 			dc.DrawRectangle( x, y, w, h )
+						
+			if self.lapElapsedClock:
+				hCC = int( h * 0.15 )
+				yCC = y + h - hCC
+				h -= hCC
+				if tLapStart is not None and tRace:
+					secs = tRace - tLapStart
+					tElapsed = Utils.formatTime( secs )
+					getFontSizeToFit( tElapsed, w, hCC )
+					drawText( tElapsed, self.foregrounds[i], x, yCC, w, hCC )
 			
 			if not flash or self.flashOn:
 				label = getCycleLap(label)
@@ -414,25 +446,33 @@ class LapCounter( wx.Panel ):
 		race = Model.race
 		lap = race.getNumLapsFromCategory(category) if race else category.getNumLaps()
 		return lap % self.lapCounterCycle if self.lapCounterCycle else lap
+		
+	def getLapText( self, category ):
+		race = Model.race
+		if not race:
+			return u''
+		lap = race.getNumLapsFromCategory( category )
+		if lap:
+			lap = lap % self.lapCounterCycle if self.lapCounterCycle else lap
+			return u'{}'.format( lap )
+		minutes = category.raceMinutes if category.raceMinutes else race.raceMinutes
+		return u'{} min'.format( minutes ) if minutes else u''
 	
 	def refresh( self ):
 		race = Model.race
 		self.foregrounds, self.backgrounds = getForegroundsBackgrounds()
-		
 		if race:
 			self.SetCountdownTimer( race.countdownTimer )
 			self.SetForegroundColour( self.foregrounds[0] )
 			self.SetBackgroundColour( self.backgrounds[0] )
 			self.lapCounterCycle = race.lapCounterCycle or None
+			self.lapElapsedClock = race.lapElapsedClock
 			if race.isUnstarted():
-				if all( race.getNumLapsFromCategory(category) for category in race.getCategories(startWaveOnly=True) ):
-					lapCounter = [(u'{}'.format(self.getLapCycle(category)),False) for category in race.getCategories(startWaveOnly=True)]
-				else:
-					lapCounter = [(u'{} min'.format(race.minutes),False)] + [(u'{}'.format(self.getLapCycle(category)),False)
-						for category in race.getCategories(startWaveOnly=True) if race.getNumLapsFromCategory(category)]
-				self.SetLabels( lapCounter )
+				self.SetLabels( [getLapText(category) for category in race.getCategories(startWaveOnly=True)] )
 			elif race.isFinished():
 				self.SetLabels()
+			else:
+				self.SetLabels( self.labels, self.showTime )
 		else:
 			self.SetLabels()
 		
@@ -453,23 +493,29 @@ if __name__ == '__main__':
 	mainWin.Show()
 	
 	for j, i in enumerate(xrange(0,40,4)):
-		wx.CallLater( 4000*i, lambda a=17-j, b=15-j, c=11-j, d=7-j: lapCounter.SetLabels( (
-			('{}'.format(a), True),
-			('{}'.format(b), False),
-			('{}'.format(c), False),
-			('{}'.format(d), False),
+		wx.CallLater( 4000*i, lambda a=17-j, b=15-j, c=11-j, d=7-j, e=5-j, f=3-j: lapCounter.SetLabels( (
+			('{}'.format(a), True, i),
+			('{}'.format(b), False, i),
+			('{}'.format(c), False, i),
+			('{}'.format(d), False, i),
+			('{}'.format(e), False, i),
+			('{}'.format(f), False, i),
 		)) )
-		wx.CallLater( 6000*i, lambda a=17-j, b=15-j, c=11-j, d=7-j: lapCounter.SetLabels( (
-			('{}'.format(a), False),
-			('{}'.format(b), True),
-			('{}'.format(c), False),
-			('{}'.format(d), False),
+		wx.CallLater( 6000*i, lambda a=17-j, b=15-j, c=11-j, d=7-j, e=5-j, f=3-j: lapCounter.SetLabels( (
+			('{}'.format(a), False, i),
+			('{}'.format(b), True, i),
+			('{}'.format(c), False, i),
+			('{}'.format(d), False, i),
+			('{}'.format(e), False, i),
+			('{}'.format(f), False, i),
 		)) )
-		wx.CallLater( 8000*i, lambda a=17-j, b=15-j, c=11-j, d=7-j: lapCounter.SetLabels( (
-			('{}'.format(a), False),
-			('{}'.format(b), False),
-			('{}'.format(c), True),
-			('{}'.format(d), True),
+		wx.CallLater( 8000*i, lambda a=17-j, b=15-j, c=11-j, d=7-j, e=5-j, f=3-j: lapCounter.SetLabels( (
+			('{}'.format(a), False, i),
+			('{}'.format(b), False, i),
+			('{}'.format(c), True, i),
+			('{}'.format(d), True, i),
+			('{}'.format(e), False, i),
+			('{}'.format(f), False, i),
 		)) )
 	
 	app.MainLoop()

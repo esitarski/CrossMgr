@@ -420,6 +420,11 @@ def colorFromStr( s ):
 		r, g, b = [int(s[i:i+2], 16) for i in xrange(0, 6, 2)]
 	return wx.Colour(r, g, b)
 
+epoch = datetime.datetime.utcfromtimestamp(0)
+def millisFromEpoch( d = None ):
+	d = d or datetime.datetime.now()
+	return int((d - epoch).total_seconds() * 1000.0)
+
 def formatTime( secs,
 				highPrecision=False,	extraPrecision=False,
 				forceHours=False, 		twoDigitHours=False,

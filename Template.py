@@ -60,6 +60,7 @@ class Template( object ):
 			'secondsBeforeLeaderToFlipLapCounter',
 			'countdownTimer',
 			'lapCounterCycle',
+			'lapElapsedClock',
 
 			'setNoDataDNS',
 

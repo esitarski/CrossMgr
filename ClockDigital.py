@@ -59,6 +59,10 @@ class ClockDigital(wx.Control):
 
 	def ShouldInheritColours(self):
 		return True
+		
+	def SetRefTime( self, refTime ):
+		self.refTime = refTime
+		self.Refresh()
 
 	def onTimer( self, event=None):
 		if not self.timer.IsRunning():

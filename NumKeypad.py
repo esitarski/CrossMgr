@@ -458,12 +458,12 @@ class NumKeypad( wx.Panel ):
 		tCur = race.curRaceTime() if race.isRunning() else None
 		
 		def getNoDataCategoryLap( category ):
+			offset = race.categoryStartOffset(category)
+			tLapStart = offset if tCur >= offset else None
 			cn = race.getNumLapsFromCategory( category )
-			if not cn:
-				return (noLap, False)
-			if tCur and tCur > race.categoryStartOffset(category) + 30.0:
+			if cn and tCur and tCur > offset + 30.0:
 				cn -= 1
-			return (u'{}'.format(cn),False)
+			return (u'{}'.format(cn) if cn else noLap, False, tLapStart)
 		
 		lapCounter = [getNoDataCategoryLap(category) for category in categories]
 		categoryToLapCounterIndex = {category:i for i, category in enumerate(categories)}
@@ -485,17 +485,17 @@ class NumKeypad( wx.Panel ):
 		
 		secondsBeforeLeaderToFlipLapCounter = race.secondsBeforeLeaderToFlipLapCounter + 1.0
 		
-		def setLapCounter( leaderCategory, category, lapCur, lapMax, tLeader=sys.float_info.max ):
+		def setLapCounter( leaderCategory, category, lapCur, lapMax, tLeader=sys.float_info.max, tLapStart=None ):
 			if race.isTimeTrial or not(category == leaderCategory or race.getNumLapsFromCategory(category)):
 				return
 			
 			lapsToGo = max( 0, lapMax - lapCur )
 			if secondsBeforeLeaderToFlipLapCounter < tLeader <= secondsBeforeLeaderToFlipLapCounter+5.0:
-				v = ('{}'.format(lapsToGo), True)
+				v = ('{}'.format(lapsToGo), True, tLapStart)
 			elif 0.0 <= tLeader <= secondsBeforeLeaderToFlipLapCounter:
-				v = ('{}'.format(max(0,lapsToGo-1)), False)
+				v = ('{}'.format(max(0,lapsToGo-1)), False, tLapStart)
 			else:
-				v = ('{}'.format(lapsToGo), False)
+				v = ('{}'.format(lapsToGo), False, tLapStart)
 			lapCounter[categoryToLapCounterIndex[category]] = v
 		
 		for rr in results:
@@ -523,7 +523,18 @@ class NumKeypad( wx.Panel ):
 				setLapCounter( leaderCategory, category, len(rr.raceTimes)-1, len(rr.raceTimes)-1 )
 				continue
 			
-			setLapCounter( leaderCategory, category, lapCur, len(rr.raceTimes), tLeader )
+			if lapCur <= 1:
+				tLapStart = race.categoryStartOffset(category)
+			else:
+				lapPrev = lapCur-1
+				while lapPrev and rr.interp[lapPrev]:
+					lapPrev -= 1
+				try:
+					tLapStart = rr.raceTimes[lapPrev] if lapPrev else race.categoryStartOffset(category)
+				except IndexError:
+					tLapStart = None
+			
+			setLapCounter( leaderCategory, category, lapCur, len(rr.raceTimes), tLeader, tLapStart )
 				
 			if 0.0 <= tLeader <= 3.0 and not race.isTimeTrial:
 				if category not in self.lapReminder:

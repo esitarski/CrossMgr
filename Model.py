@@ -1130,6 +1130,7 @@ class Race( object ):
 	secondsBeforeLeaderToFlipLapCounter = 15.0
 	countdownTimer = False
 	lapCounterCycle = None
+	lapElapsedClock = True
 	
 	setNoDataDNS = False				# If True, will set all riders in the spreadsheet to DNS if they have no data in the race.
 	lastChangedTime = sys.float_info.max

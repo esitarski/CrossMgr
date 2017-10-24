@@ -564,7 +564,14 @@ def GetLapCounterRefresh():
 	try:
 		return Utils.mainWin.lapCounter.GetState()
 	except:
-		return { 'cmd':'refresh', 'labels':[], 'foregrounds':[], 'backgrounds':[] }
+		return {
+			'cmd': 'refresh',
+			'labels': [],
+			'foregrounds': [],
+			'backgrounds': [],
+			'raceStartTime': None,
+			'lapElapsedClock': False,
+		}
 
 def lap_counter_new_client(client, server):
 	server.send_message( client, json.dumps(GetLapCounterRefresh()) )
@@ -590,6 +597,8 @@ def WsLapCounterQueueListener( q ):
 		cmd = message.get('cmd', None)
 		if cmd == 'refresh':
 			if wsLapCounterServer and wsLapCounterServer.hasClients():
+				race = Model.race
+				message['tNow'] = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]
 				wsLapCounterServer.send_message_to_all( json.dumps(message) )
 		elif cmd == 'exit':
 			keepGoing = False

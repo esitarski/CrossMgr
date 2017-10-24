@@ -32,19 +32,40 @@ function GetILabelsToDraw() {
 		iLabelsToDraw.sort();
 	}
 	else {
-		for( var i = 0; i < 4; ++i )
+		for( var i = 0; i < 6; ++i )
 			iLabelsToDraw.push( i );
 	}
 	return iLabelsToDraw;
+}
+
+function formatTime( secs ) {
+	secs = Math.floor( secs );
+	var s = secs % 60;
+	var m = Math.floor(secs / 60) % 60;
+	var h = Math.floor(secs / (60*60));
+	return (h ? (h + ':') : '') +  ('0' + m + ':').slice(-3) + ('0' + s).slice(-2);
+}
+
+function strToMillis( s ) {
+	if( s == null )
+		return null;
+	s = s.replace(/[^0-9]/g,' ');
+	var v = s.split(' ');
+	return (new Date(
+		parseInt(v[0],10), parseInt(v[1],10)-1, parseInt(v[2],10),
+		parseInt(v[3],10), parseInt(v[4],10), parseInt(v[5],10), parseInt(v[6],10)
+	)).getTime();
 }
 
 function LapCounter( aCanvas ) {
 	this.canvas = aCanvas;
 	this.flashOn = false;
 	this.nTimer = 0;
-	this.labels = [['999',false],];
+	this.labels = [['999',false,null]];
 	this.foregrounds = ['#FFFFFF','#FFFFFF','#FFFFFF','#FFFFFF','#FFFFFF','#FFFFFF'];
 	this.backgrounds = [color(16,16,16), color(34,139,34), color(235,155,0), color(147,112,219), color(0,0,139), color(139,0,0)];
+	this.lapElapsedClock = true;
+	this.tRaceStart = null;
 	
 	this.MaxLabels = 6;
 	this.tessellate = function ( numLabels ) {
@@ -52,25 +73,25 @@ function LapCounter( aCanvas ) {
 		if( numLabels == 1 ) {
 			return [[0, 0, width, height]];
 		}
-		if( numLabels == 2 ) {
+		else if( numLabels == 2 ) {
 			w = Math.floor(width / 2);
 			return [[0, 0, w, height], [w, 0, w, height]];
 		}
-		if( numLabels <= 4 ) {
+		else if( numLabels <= 4 ) {
 			w = Math.floor(width / 2);
 			h = Math.floor(height / 2);
 			return [
 				[0, 0, w, h], [w, 0, w, h],
 				[0, h, w, h], [w, h, w, h],
-			]
+			];
 		}
 		else {
 			w = Math.floor(width / 3);
 			h = Math.floor(height / 2);
 			return [
-				[0, 0, w, h], [w, 0, w, h], [2*w, 0, 2*w, h],
-				[0, h, w, h], [w, h, w, h], [2*w, h, 2*w, h],
-			]
+				[0, 0, w, h], [w, 0, w, h], [2*w, 0, w, h],
+				[0, h, w, h], [w, h, w, h], [2*w, h, w, h],
+			];
 		}
 	}
 	
@@ -85,21 +106,28 @@ function LapCounter( aCanvas ) {
 		this.draw();
 	}
 	
-	this.hasFlash = function() {
+	this.needsTimer = function() {
 		for( var i = 0; i < this.labels.length; ++i ) {
 			if( this.labels[i][1] ) {
 				return true;
+			}
+		}
+		if( this.lapElapsedClock ) {
+			for( var i = 0; i < this.labels.length; ++i ) {
+				if( this.labels[i][2] != null ) {
+					return true;
+				}
 			}
 		}
 		return false;
 	}
 
 	this.setLabels = function( labels ) {
-		labels = labels || [['999', false]];
+		labels = labels || [['999', false, null]];
 		
-		// labels is of the format [[label1, flash], [label2, flash], ...]
+		// labels is of the format [[label1, flash, tLapStart], [label2, flash, tLapStart], ...]
 		this.labels = labels.slice(0, this.MaxLabels);
-		if( this.hasFlash() ) {
+		if( this.needsTimer() ) {
 			if( !this.nTimer ) {
 				this.nTimer = setInterval( this.onTimer.bind(this), 333 );
 				this.flashOn = true;
@@ -115,8 +143,12 @@ function LapCounter( aCanvas ) {
 	}
 
 	this.onRefresh = function( msg ) {
+		this.tRaceStart = strToMillis(msg.raceStartTime);
+		if( this.tRaceStart != null )
+			this.tRaceStart -= (new Date).getTime() - strToMillis(msg.tNow);
 		this.foregrounds = msg.foregrounds;
 		this.backgrounds = msg.backgrounds;
+		this.lapElapsedClock = msg.lapElapsedClock;
 		this.setLabels( msg.labels );
 	}
 	
@@ -153,14 +185,25 @@ function LapCounter( aCanvas ) {
 			return fontSize;
 		}
 		
+		function drawText( dc, label, colour, x, y, w, h ) {
+			var fontSize = getFontSizeToFit( dc, label, w, h );
+			var xText = x + w/2, yText = y + h / 2;
+			dc.textAlign = 'center';
+			dc.textBaseline = 'middle';
+			dc.fillStyle = colour;
+			dc.fillText( label, xText, yText );
+		}
+		
 		function drawLapText( dc, label, colour, x, y, w, h ) {
 			var fontSize = getFontSizeToFit( dc, label, w, h );
 			var xText = x + w/2, yText = y + h / 2;
 			dc.textAlign = 'center';
 			dc.textBaseline = 'middle';
-			dc.fillStyle = '#000000';
-			var shadowOffset = fontSize/52;
-			dc.fillText( label, xText + shadowOffset, yText + shadowOffset );
+			if( colour != '#000000' ) {
+				dc.fillStyle = '#000000';
+				var shadowOffset = fontSize/52;
+				dc.fillText( label, xText + shadowOffset, yText + shadowOffset );
+			}
 			dc.fillStyle = colour;
 			dc.fillText( label, xText, yText );
 		}
@@ -169,7 +212,8 @@ function LapCounter( aCanvas ) {
 		
 		var lineBorderWidth = 4;
 		for(var i = 0; i < iLabelsToDraw.length; ++i ) {
-			var label = this.labels[iLabelsToDraw[i]][0] + '', flash = this.labels[iLabelsToDraw[i]][1];
+			var entry = this.labels[iLabelsToDraw[i]];
+			var label = entry[0] + '', flash = entry[1], tLapStart = entry[2];
 			var x = rects[i][0], y = rects[i][1], w = rects[i][2], h = rects[i][3];
 
 			dc.fillStyle = this.backgrounds[iLabelsToDraw[i]];
@@ -178,6 +222,16 @@ function LapCounter( aCanvas ) {
 			dc.strokeStyle = '#000000';
 			dc.strokeRect( x, y, w, h );
 			
+			if( this.lapElapsedClock ) {
+				var hCC = h * 0.15;
+				var yCC = y + h - hCC;
+				h -= hCC;
+				if( tLapStart != null && this.tRaceStart ) {
+					var tLap = this.tRaceStart + tLapStart*1000.0;
+					var secs = ((new Date).getTime() - tLap)/1000.0;
+					drawText( dc, formatTime(secs), this.foregrounds[iLabelsToDraw[i]], x, yCC, w, hCC );
+				}
+			}
 			if( !flash || this.flashOn )
 				drawLapText( dc, label, this.foregrounds[iLabelsToDraw[i]], x, y, w, h );
 		}
