@@ -635,7 +635,6 @@ def refresh():
 def refreshForecastHistory():
 	if mainWin is not None:
 		mainWin.forecastHistory.refresh()
-		mainWin.record.refreshRaceHUD()
 
 def updateUndoStatus():
 	if mainWin is not None:
