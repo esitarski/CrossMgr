@@ -8,7 +8,10 @@ import Utils
 
 from GetResults import GetResults
 
-defaultBackgroundColours = [wx.Colour(16,16,16), wx.Colour(34,139,34), wx.Colour(235,155,0), wx.Colour(147,112,219)]
+defaultBackgroundColours = [
+	wx.Colour(16,16,16), wx.Colour(34,139,34), wx.Colour(235,155,0),
+	wx.Colour(147,112,219), wx.Colour(0,0,139), wx.Colour(139,0,0)
+]
 def getForegroundsBackgrounds():
 	race = Model.race
 	foregrounds, backgrounds = [], []
@@ -256,7 +259,7 @@ class LapCounter( wx.Panel ):
 		if self.labels == labels:
 			return
 			
-		self.labels = labels[:4]
+		self.labels = labels[:self.MaxLabels]
 		if self.countdownTimer:
 			if not self.timer.IsRunning():
 				self.OnTimer()
@@ -304,6 +307,7 @@ class LapCounter( wx.Panel ):
 			return '{}{}:{:02d}:{:02d}'.format( over, hours, minutes, seconds )
 		return '{}{}:{:02d}'.format( over, minutes, seconds )
 	
+	MaxLabels = 6
 	def tessellate( self, numLabels ):
 		width, height = self.GetSize()
 		if numLabels == 1:
@@ -311,12 +315,20 @@ class LapCounter( wx.Panel ):
 		if numLabels == 2:
 			w = width // 2
 			return ((0, 0, w, height), (w, 0, w, height),)
-		w = width // 2
-		h = height // 2
-		return (
-			(0, 0, w, h), (w, 0, w, h),
-			(0, h, w, h), (w, h, w, h),
-		)
+		if numLabels <= 4:
+			w = width // 2
+			h = height // 2
+			return (
+				(0, 0, w, h), (w, 0, w, h),
+				(0, h, w, h), (w, h, w, h),
+			)
+		else:
+			w = width // 3
+			h = height // 2
+			return (
+				(0, 0, w, h), (w, 0, w, h), (2*w, 0, 2*w, h),
+				(0, h, w, h), (w, h, w, h), (2*w, h, 2*w, h),
+			)
 			
 	def OnPaint( self, event ):
 		dc = wx.AutoBufferedPaintDC( self )

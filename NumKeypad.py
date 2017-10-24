@@ -223,7 +223,19 @@ def getLapInfo( lap, lapsTotal, tCur, tNext, leader ):
 		sLap = (lapDistance / tLap) * 60.0*60.0
 		info.append( (u'', u'{:.02f} {}'.format(sLap, 'km/h')) )
 	return info
-		
+
+def getLapCounterInfo():
+	race = Model.race
+	results = GetResults()
+	lapCounter = []
+	if not results:
+		for category in race.getCategories(startWaveOnly=True):
+			if race.getNumLapsFromCategory(category):
+				lapCounter.append( (u'{}'.format(race.getNumLapsFromCategory(category)),False) )
+			else:
+				lapCounter.append( (u'-',False) )
+		return lapCounter
+
 class NumKeypad( wx.Panel ):
 	SwitchToTimeTrialEntryMessage = _('Switch to Time Trial Entry')
 	SwitchToNumberEntryMessage = _('Switch to Regular Number Entry')
@@ -435,47 +447,56 @@ class NumKeypad( wx.Panel ):
 	
 	def refreshRaceHUD( self ):
 		race = Model.race
-		if not race:
+		if not race or race.isTimeTrial:
 			self.raceHUD.SetData()
 			if Utils.mainWin:
 				Utils.mainWin.updateLapCounter()
 			return
 			
+		categories = race.getCategories( startWaveOnly=True )
+		noLap = u''
+		tCur = race.curRaceTime() if race.isRunning() else None
+		
+		def getNoDataCategoryLap( category ):
+			cn = race.getNumLapsFromCategory( category )
+			if not cn:
+				return (noLap, False)
+			if tCur and tCur > race.categoryStartOffset(category) + 30.0:
+				cn -= 1
+			return (u'{}'.format(cn),False)
+		
+		lapCounter = [(getNoDataCategoryLap(category),False) for category in categories]
+		categoryToLapCounterIndex = {category:i for i, category in enumerate(categories)}
+
 		results = GetResults( None )
-		if not results:
+		if tCur is None or not results:
 			self.raceHUD.SetData()
 			if Utils.mainWin:
-				lapCounter = []
-				if all( race.getNumLapsFromCategory(category) for category in race.getCategories(startWaveOnly=True) ):
-					lapCounter = [(u'{}'.format(race.getNumLapsFromCategory(category)),False) for category in race.getCategories(startWaveOnly=True)]
-				else:
-					lapCounter = [(u'{} min'.format(race.minutes),False)] + [(u'{}'.format(race.getNumLapsFromCategory(category)),False)
-						for category in race.getCategories(startWaveOnly=True) if race.getNumLapsFromCategory(category)]
 				Utils.mainWin.updateLapCounter(lapCounter)
 			return
 
 		Finisher = Model.Rider.Finisher
-		tCur = race.curRaceTime()
 		raceTimes = []
 		leader = []
 		categoryRaceTimes = {}
 		categories_seen = set()
 		getCategory = race.getCategory
 		leaderCategory = None
-		lapCounter = []
 		
 		secondsBeforeLeaderToFlipLapCounter = race.secondsBeforeLeaderToFlipLapCounter + 1.0
 		
-		def appendLapCounter( leaderCategory, category, lapCur, lapMax, tLeader=sys.float_info.max ):
+		def setLapCouner( leaderCategory, category, lapCur, lapMax, tLeader=sys.float_info.max ):
 			if race.isTimeTrial or not(category == leaderCategory or race.getNumLapsFromCategory(category)):
 				return
+			
 			lapsToGo = max( 0, lapMax - lapCur )
 			if secondsBeforeLeaderToFlipLapCounter < tLeader <= secondsBeforeLeaderToFlipLapCounter+5.0:
-				lapCounter.append( ('{}'.format(lapsToGo), True) )
+				v = ('{}'.format(lapsToGo), True)
 			elif 0.0 <= tLeader <= secondsBeforeLeaderToFlipLapCounter:
-				lapCounter.append( ('{}'.format(max(0,lapsToGo-1)), False) )
+				v = ('{}'.format(max(0,lapsToGo-1)), False)
 			else:
-				lapCounter.append( ('{}'.format(lapsToGo), False) )
+				v = ('{}'.format(lapsToGo), False)
+			lapCounter[categoryToLapCounterIndex[category]] = v
 		
 		for rr in results:
 			if rr.status != Finisher or not rr.raceTimes:
@@ -499,10 +520,10 @@ class NumKeypad( wx.Panel ):
 				lapCur = bisect.bisect_left( rr.raceTimes, tCur )
 				tLeader = rr.raceTimes[lapCur] - tCur
 			except IndexError:
-				appendLapCounter( leaderCategory, category, len(rr.raceTimes)-1, len(rr.raceTimes)-1 )
+				setLapCouner( leaderCategory, category, len(rr.raceTimes)-1, len(rr.raceTimes)-1 )
 				continue
 			
-			appendLapCounter( leaderCategory, category, lapCur, len(rr.raceTimes), tLeader )
+			setLapCouner( leaderCategory, category, lapCur, len(rr.raceTimes), tLeader )
 				
 			if 0.0 <= tLeader <= 3.0 and not race.isTimeTrial:
 				if category not in self.lapReminder:

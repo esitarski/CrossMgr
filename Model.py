@@ -1195,7 +1195,6 @@ class Race( object ):
 		self.lastOpened = datetime.datetime.now()
 		memoize.clear()
 	
-	
 	def getFileName( self ):
 		rDate = self.date
 		rName = Utils.RemoveDisallowedFilenameChars( self.name )
@@ -1594,63 +1593,30 @@ class Race( object ):
 	
 	@memoize
 	def getRule80LapTime( self, category = None ):
+		if not category:
+			return None
 		entries = self.interpolate()
 		if not entries:
 			return None
-
+			
 		inCategory = self.inCategory
 		rule80MinLapCount = self.rule80MinLapCount
 		
-		iFirst = iSecond = None
-		
-		try:
-			iFirst = (i for i, e in enumerate(entries) if inCategory(e.num, category) and e.lap == 1).next()
-		except StopIteration:
-			return None
-		
-		if self.rule80MinLapCount > 1:
-			try:
-				iSecond = (i for i in xrange(iFirst+1, len(entries)) if inCategory(entries[i].num, category) and entries[i].lap == 2).next()
-			except StopIteration:
-				return None
-		
-		tFirst = entries[iFirst].t
-		if category:
-			tFirst -= category.getStartOffsetSecs()
-		
-		# Try to figure out if we should use the first lap or the second.
-		# The first lap may not be the same length as the second.
-		if iSecond is not None:
-			tSecond = entries[iSecond].t - entries[iFirst].t
-			tDifference = abs(tFirst - tSecond)
-			tAverage = (tFirst + tSecond) / 2.0
-			# If there is more than 5% difference, use the second lap (assume a run-up on the first lap).
-			if tDifference / tAverage > 0.05:
-				t = tSecond
-			else:
-				t = max(tFirst, tSecond)	# Else, use the maximum of the two (aren't we nice!).
-		else:
-			t = tFirst
-		
-		return t
+		categoryTimes = [self.categoryStartOffset(category)]
+		lapCur = 1
+		for e in entries:
+			if e.lap == lapCur and inCategory(e.num, category):
+				categoryTimes.append( e.t )
+				if len(categoryTimes) > rule80MinLapCount:
+					return categoryTimes[-1] - categoryTimes[-2]
+				lapCur += 1
+		return None
 
 	def getRule80CountdownTime( self, category = None ):
 		try:
 			return self.getRule80LapTime(category) * 0.8
 		except:
 			return None
-
-	def getRule80RemainingCountdown( self ):
-		rule80Begin, rule80End = self.getRule80BeginEndTimes()
-		if rule80Begin is None:
-			return None
-		raceTime = self.lastRaceTime()
-		if rule80Begin <= raceTime <= rule80End:
-			tRemaining = rule80End - raceTime
-			if tRemaining < 0.5:
-				tRemaining = None
-			return tRemaining
-		return None
 
 	@memoize
 	def getMaxLap( self, category = None ):

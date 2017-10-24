@@ -43,9 +43,10 @@ function LapCounter( aCanvas ) {
 	this.flashOn = false;
 	this.nTimer = 0;
 	this.labels = [['999',false],];
-	this.foregrounds = ['#FFFFFF','#FFFFFF','#FFFFFF','#FFFFFF'];
-	this.backgrounds = [color(16,16,16), color(34,139,34), color(235,155,0), color(147,112,219)];
+	this.foregrounds = ['#FFFFFF','#FFFFFF','#FFFFFF','#FFFFFF','#FFFFFF','#FFFFFF'];
+	this.backgrounds = [color(16,16,16), color(34,139,34), color(235,155,0), color(147,112,219), color(0,0,139), color(139,0,0)];
 	
+	this.MaxLabels = 6;
 	this.tessellate = function ( numLabels ) {
 		var width = this.canvas.width, height = this.canvas.height;
 		if( numLabels == 1 ) {
@@ -55,12 +56,22 @@ function LapCounter( aCanvas ) {
 			w = Math.floor(width / 2);
 			return [[0, 0, w, height], [w, 0, w, height]];
 		}
-		w = Math.floor(width / 2);
-		h = Math.floor(height / 2);
-		return [
-			[0, 0, w, h], [w, 0, w, h],
-			[0, h, w, h], [w, h, w, h],
-		]
+		if( numLabels <= 4 ) {
+			w = Math.floor(width / 2);
+			h = Math.floor(height / 2);
+			return [
+				[0, 0, w, h], [w, 0, w, h],
+				[0, h, w, h], [w, h, w, h],
+			]
+		}
+		else {
+			w = Math.floor(width / 3);
+			h = Math.floor(height / 2);
+			return [
+				[0, 0, w, h], [w, 0, w, h], [2*w, 0, 2*w, h],
+				[0, h, w, h], [w, h, w, h], [2*w, h, 2*w, h],
+			]
+		}
 	}
 	
 	this.onResize = function() {
@@ -86,8 +97,8 @@ function LapCounter( aCanvas ) {
 	this.setLabels = function( labels ) {
 		labels = labels || [['999', false]];
 		
-		// labels is of the format [[label1, flash], [label2, flash]]
-		this.labels = labels.slice(0,4);
+		// labels is of the format [[label1, flash], [label2, flash], ...]
+		this.labels = labels.slice(0, this.MaxLabels);
 		if( this.hasFlash() ) {
 			if( !this.nTimer ) {
 				this.nTimer = setInterval( this.onTimer.bind(this), 333 );
@@ -246,7 +257,7 @@ function SetLabelsToDraw() {
 	for( var i = 0; i < iLabelsToDraw.length; ++i )
 		labelStr += String.fromCharCode(one + iLabelsToDraw[i]);
 	
-	if( labelStr == '1234' )
+	if( labelStr == '123456' )
 		labelStr = '';
 		
 	window.location.assign( '/LapCounter' + labelStr + '.html' );

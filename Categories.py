@@ -663,14 +663,14 @@ and remove them from other categories.'''),
 			return
 			
 		# Get the 80% time cutoff.
-		if not active or not Model.race:
+		if not active or not race:
 			return
-			
+		
 		rule80Time = race.getRule80CountdownTime( category ) if race else None
 		if rule80Time:
 			self.grid.SetCellValue( r, self.iCol['rule80Time'], Utils.formatTime(rule80Time) )
 		
-		laps = race.getCategoryRaceLaps().get(category, 0) if race else None
+		laps = race.getNumLapsFromCategory( category ) if race else None
 		if laps:
 			self.grid.SetCellValue( r, self.iCol['suggestedLaps'], u'{}'.format(laps) )
 	

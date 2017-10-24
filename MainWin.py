@@ -229,8 +229,6 @@ class SimulateDialog(wx.Dialog):
 				_("It is a good illustration of CrossMgr's functionality with real time data."),
 				u'',
 				_('The simulation takes about 8 minutes.'),
-				_('Unlike a Mass Start real race, the simulation will show riders crossing the line right from the start.'),
-				_('In a real race, riders would have to finish the first lap before they were recorded.'),
 				_('In the Time Trial simulation, riders start on 15 second intervals.'),
 				u'',
 				u'{}: "{}".'.format(_('The race will be written to'), fName),
@@ -247,18 +245,36 @@ class SimulateDialog(wx.Dialog):
 
 		btnsizer = wx.BoxSizer(wx.HORIZONTAL)
 
-		btn = wx.Button(self, label=_('Mass Start Race') )
+		#---------------------------------------------------------------
+		box = wx.StaticBox( self, label=_('Mass Start Race') )
+		sboxsizer = wx.StaticBoxSizer( box, wx.VERTICAL )
+		
+		self.rfidResetStartClockOnFirstTag = wx.CheckBox( self, label=_('Simulate RFID Reset Start Clock on First Read') )
+		sboxsizer.Add( self.rfidResetStartClockOnFirstTag, flag=wx.ALL, border=4 )
+		
+		btn = wx.Button(self, label=_('Start') )
 		btn.Bind( wx.EVT_BUTTON, lambda e: self.EndModal(self.ID_MASS_START) )
 		btn.SetDefault()
-		btnsizer.Add(btn, flag=wx.ALL, border=4)
+		sboxsizer.Add( btn, flag=wx.ALL, border=4 )
 		
-		btn = wx.Button(self, label=_('Time Trial') )
+		btnsizer.Add(sboxsizer, flag=wx.ALL, border=4)
+		
+		#---------------------------------------------------------------
+		
+		box = wx.StaticBox( self, label=_('Time Trial') )
+		sboxsizer = wx.StaticBoxSizer( box, wx.VERTICAL )
+		
+		btn = wx.Button(self, label=_('Start') )
 		btn.Bind( wx.EVT_BUTTON, lambda e: self.EndModal(self.ID_TIME_TRIAL) )
-		btnsizer.Add(btn, flag=wx.ALL, border=4)
+		sboxsizer.Add(btn, flag=wx.ALL, border=4)
 				
+		btnsizer.Add(sboxsizer, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border=4)
+		
+		#---------------------------------------------------------------
 		btn = wx.Button(self, wx.ID_CANCEL)
-		btnsizer.Add(btn, flag=wx.ALL, border=4)
-
+		btnsizer.Add(btn, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border=4)
+				
+		#---------------------------------------------------------------
 		sizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 8)
 
 		self.SetSizer(sizer)
@@ -3100,6 +3116,7 @@ class MainWin( wx.Frame ):
 		fName = os.path.join( simulationDir, race.getFileName() )
 		dlg = SimulateDialog( self, fName )
 		ret = dlg.ShowModal()
+		rfidResetStartClockOnFirstTag = dlg.rfidResetStartClockOnFirstTag.GetValue()
 		dlg.Destroy()
 		if ret == wx.ID_CANCEL:
 			return
@@ -3146,9 +3163,8 @@ class MainWin( wx.Frame ):
 		race.isTimeTrial = isTimeTrial
 		race.enableUSBCamera = True
 		race.minutes = self.raceMinutes
+		race.enableJChipIntegration = race.resetStartClockOnFirstTag = rfidResetStartClockOnFirstTag
 		#race.photosAtRaceEndOnly = True
-		#race.enableJChipIntegration = True
-		#race.resetStartClockOnFirstTag = True
 		
 		# Prep the simulation data.
 		self.simulateSeen = set()
@@ -3189,6 +3205,10 @@ class MainWin( wx.Frame ):
 		else:
 			race.setCategories( categories )
 			self.lapTimes = [(t + race.getStartOffset(num), num) for t, num in self.lapTimes]
+			if race.enableJChipIntegration and race.resetStartClockOnFirstTag:
+				self.lapTimes.extend( (race.getStartOffset(num) + 2.0*random.random(), num) for num in set(tn[1] for tn in self.lapTimes) )
+				self.lapTimes = [(t+4.0, num) for t, num in self.lapTimes]
+				self.lapTimes.sort( reverse=True )
 
 		# Create an Excel rider data file.
 		riderInfo = getattr( self, 'riderInfo', None )
@@ -3231,7 +3251,7 @@ class MainWin( wx.Frame ):
 
 		self.nextNum = None
 		race.startRaceNow()
-		if not race.isTimeTrial:
+		if not (race.isTimeTrial or (race.enableJChipIntegration and race.resetStartClockOnFirstTag)):
 			# Backup all the events and race start so we don't have to wait for the first lap.
 			race.startTime -= datetime.timedelta( seconds = (tMin-5) )
 			'''

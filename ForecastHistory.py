@@ -43,14 +43,16 @@ def getExpectedRecorded( tCutoff=0.0 ):
 		
 		# Include the rider's start time.  This is will not be in the results if there are no results yet.
 		interpValue = race.isTimeTrial
-		for rider in race.riders.itervalues():
-			if rider.status == Finisher and rider.num in bibsWithoutResults and rider.firstTime is not None:
+		
+		for bib in bibsWithoutResults:
+			rider = race.riders[bib]
+			if rider.status == Finisher and rider.firstTime is not None:
 				e = Entry( rider.num, 0, rider.firstTime, interpValue )
 				if rider.firstTime > tCur and e.interp:
 					expected.append( e )
 				else:
 					recorded.append( e )
-		
+				
 	lapMin = 1
 	for rr in results:
 		if not rr.raceTimes or rr.status != Finisher:

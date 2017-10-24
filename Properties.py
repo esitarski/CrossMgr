@@ -848,7 +848,7 @@ class BatchPublishProperties( wx.Panel ):
 			else:
 				fgs.AddSpacer( 0 )
 				
-			testBtn = wx.Button( self, label=_('Test') )
+			testBtn = wx.Button( self, label=_('Publish') )
 			testBtn.Bind( wx.EVT_BUTTON, lambda event, iAttr=i: self.onTest(iAttr) )
 			fgs.Add( testBtn, flag=wx.LEFT|wx.ALIGN_CENTRE_VERTICAL, border=8 )
 			self.widget.append( (attrCB, ftpCB, testBtn) )
@@ -1052,7 +1052,7 @@ class BatchPublishPropertiesDialog( wx.Dialog ):
 		self.ftp.refresh()
 		self.ftp.Show( False )
 		
-		self.okBtn = wx.Button( self, label=_('Publish Now') )
+		self.okBtn = wx.Button( self, label=_('Publish All') )
 		self.okBtn.Bind( wx.EVT_BUTTON, self.onOK )
 		self.saveBtn = wx.Button( self, label=_('Save Options and Close') )
 		self.saveBtn.Bind( wx.EVT_BUTTON, self.onSave )
@@ -1061,9 +1061,9 @@ class BatchPublishPropertiesDialog( wx.Dialog ):
 
 		border = 4
 		hb = wx.BoxSizer( wx.HORIZONTAL )
-		hb.Add( self.okBtn, border = border, flag=wx.ALL )
-		hb.Add( self.saveBtn, border = border, flag=wx.ALL )
-		hb.Add( self.cancelBtn, border = border, flag=wx.ALL )
+		hb.Add( self.okBtn )
+		hb.Add( self.saveBtn, border = 60, flag=wx.LEFT )
+		hb.Add( self.cancelBtn, border = 24, flag=wx.LEFT )
 		self.okBtn.SetDefault()
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
