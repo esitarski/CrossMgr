@@ -485,7 +485,7 @@ class NumKeypad( wx.Panel ):
 		
 		secondsBeforeLeaderToFlipLapCounter = race.secondsBeforeLeaderToFlipLapCounter + 1.0
 		
-		def setLapCouner( leaderCategory, category, lapCur, lapMax, tLeader=sys.float_info.max ):
+		def setLapCounter( leaderCategory, category, lapCur, lapMax, tLeader=sys.float_info.max ):
 			if race.isTimeTrial or not(category == leaderCategory or race.getNumLapsFromCategory(category)):
 				return
 			
@@ -520,10 +520,10 @@ class NumKeypad( wx.Panel ):
 				lapCur = bisect.bisect_left( rr.raceTimes, tCur )
 				tLeader = rr.raceTimes[lapCur] - tCur
 			except IndexError:
-				setLapCouner( leaderCategory, category, len(rr.raceTimes)-1, len(rr.raceTimes)-1 )
+				setLapCounter( leaderCategory, category, len(rr.raceTimes)-1, len(rr.raceTimes)-1 )
 				continue
 			
-			setLapCouner( leaderCategory, category, lapCur, len(rr.raceTimes), tLeader )
+			setLapCounter( leaderCategory, category, lapCur, len(rr.raceTimes), tLeader )
 				
 			if 0.0 <= tLeader <= 3.0 and not race.isTimeTrial:
 				if category not in self.lapReminder:
