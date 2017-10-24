@@ -465,7 +465,7 @@ class NumKeypad( wx.Panel ):
 				cn -= 1
 			return (u'{}'.format(cn),False)
 		
-		lapCounter = [(getNoDataCategoryLap(category),False) for category in categories]
+		lapCounter = [getNoDataCategoryLap(category) for category in categories]
 		categoryToLapCounterIndex = {category:i for i, category in enumerate(categories)}
 
 		results = GetResults( None )
