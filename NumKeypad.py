@@ -520,7 +520,8 @@ class NumKeypad( wx.Panel ):
 				lapCur = bisect.bisect_left( rr.raceTimes, tCur )
 				tLeader = rr.raceTimes[lapCur] - tCur
 			except IndexError:
-				setLapCounter( leaderCategory, category, len(rr.raceTimes)-1, len(rr.raceTimes)-1 )
+				setLapCounter( leaderCategory, category, len(rr.raceTimes)-1, len(rr.raceTimes)-1,
+					tLapStart = rr.raceTimes[-1] )
 				continue
 			
 			if lapCur <= 1:
