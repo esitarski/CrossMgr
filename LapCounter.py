@@ -449,8 +449,6 @@ class LapCounter( wx.Panel ):
 		
 	def getLapText( self, category ):
 		race = Model.race
-		if not race:
-			return u''
 		lap = race.getNumLapsFromCategory( category )
 		if lap:
 			lap = lap % self.lapCounterCycle if self.lapCounterCycle else lap
@@ -468,7 +466,7 @@ class LapCounter( wx.Panel ):
 			self.lapCounterCycle = race.lapCounterCycle or None
 			self.lapElapsedClock = race.lapElapsedClock
 			if race.isUnstarted():
-				self.SetLabels( [self.getLapText(category) for category in race.getCategories(startWaveOnly=True)] )
+				self.SetLabels( [(self.getLapText(category),False,None) for category in race.getCategories(startWaveOnly=True)] )
 			elif race.isFinished():
 				self.SetLabels()
 			else:
